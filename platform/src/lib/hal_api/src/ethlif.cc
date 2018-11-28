@@ -1,4 +1,8 @@
-
+//-----------------------------------------------------------------------------
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+// Manages eth lif device
+//-----------------------------------------------------------------------------
 #include <iostream>
 #include <cmath>
 
@@ -9,16 +13,13 @@
 
 using namespace std;
 
-
 const char qstate_64[64] = { 0 };
 const char qstate_1024[1024] = { 0 };
-
 
 sdk::lib::indexer *EthLif::filter_allocator = sdk::lib::indexer::factory(EthLif::max_filters_per_lif, false, true);
 EthLif *EthLif::internal_mgmt_ethlif = NULL;
 
 EthLifMap EthLif::ethlif_db;
-
 
 EthLif *
 EthLif::Factory(hal_lif_info_t *info)
@@ -43,7 +44,6 @@ EthLif::Factory(hal_lif_info_t *info)
                      info->hw_lif_id);
         EthLif::SetInternalMgmtEthLif(eth_lif);
     }
-
 
     if (eth_lif->GetUplink() == NULL) {
         // HW: Admin Lif.
@@ -75,6 +75,54 @@ EthLif::Factory(hal_lif_info_t *info)
     // Store in DB for disruptive upgrade
     ethlif_db[eth_lif->GetHwLifId()] = eth_lif;
 
+    if (eth_lif->IsInternalManagement()) {
+        // For Internal Mgmt mnic, create vrf and native l2seg.
+        if (eth_lif->IsInternalManagementMnic()) {
+            // Create Internal Mgmt Vrf
+            vrf = HalVrf::Factory(types::VRF_TYPE_INTERNAL_MANAGEMENT);
+            eth_lif->SetVrf(vrf);
+            // Create native l2seg to hal
+            native_l2seg = HalL2Segment::Factory(eth_lif->GetVrf(),
+                                                 NATIVE_VLAN_ID);
+            eth_lif->SetNativeL2Seg(native_l2seg);
+        }
+    } else {
+        if (eth_lif->GetUplink()->GetNumLifs() == 1) {
+
+            NIC_LOG_INFO("First lif id: {}, hw_id: {} on uplink {}",
+                         eth_lif->GetLif()->GetId(),
+                         eth_lif->GetHwLifId(),
+                         eth_lif->GetUplink()->GetId());
+
+            // Create native l2seg to hal
+            native_l2seg = HalL2Segment::Factory(eth_lif->GetUplink()->GetVrf(),
+                                                 NATIVE_VLAN_ID);
+
+            // Update uplink structure with native l2seg
+            eth_lif->GetUplink()->SetNativeL2Seg(native_l2seg);
+
+            // Update native_l2seg on uplink to hal
+            eth_lif->GetUplink()->UpdateHalWithNativeL2seg(native_l2seg->GetId());
+
+            // Update l2seg's mbrifs on uplink
+            native_l2seg->AddUplink(eth_lif->GetUplink());
+        }
+    }
+
+    // Create Enic
+    eth_lif->SetEnic(Enic::Factory(eth_lif));
+
+    // Add Vlan filter on ethlif
+    eth_lif->AddVlan(NATIVE_VLAN_ID);
+
+    if (hal->GetMode() == FWD_MODE_SMART) {
+        // If its promiscuos. send (Lif, *, *) filter to HAL
+        if (info->receive_promiscuous) {
+            eth_lif->CreateMacVlanFilter(0, 0);
+        }
+    }
+
+#if 0
     // Create Enic for every Lif in Classic Mode
     if (eth_lif->IsClassicForwarding()) {
         if (eth_lif->IsInternalManagement()) {
@@ -123,6 +171,7 @@ EthLif::Factory(hal_lif_info_t *info)
             eth_lif->CreateMacVlanFilter(0, 0);
         }
     }
+#endif
 
 end:
     return eth_lif;
@@ -811,9 +860,21 @@ EthLif::IsInternalManagement()
 bool
 EthLif::IsClassicForwarding()
 {
+    // Classic:
+    // - All LIFs
+    // Smart (Hostpin):
+    // - All LIFs
+    //   - Host Mgmt - All traffic
+    //   - Host Data - Untag traffic
+    //   - ARM Internal Mgmt - All traffic
+    //   - ARM Internal Data - Untag traffic
+    //   - ARM OOB - All traffic
+    return true;
+#if 0
     return (hal->GetMode() == FWD_MODE_CLASSIC ||
             IsOOBMnic() ||
             IsInternalManagementMnic() ||
             IsHostManagement());
+#endif
 }
 

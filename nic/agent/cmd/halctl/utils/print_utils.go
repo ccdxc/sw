@@ -29,6 +29,12 @@ func VrfTypeToStr(vrfType halproto.VrfType) string {
 	switch vrfType {
 	case halproto.VrfType_VRF_TYPE_INFRA:
 		return "Infra"
+	case halproto.VrfType_VRF_TYPE_OOB_MANAGEMENT:
+		return "OOB"
+	case halproto.VrfType_VRF_TYPE_INTERNAL_MANAGEMENT:
+		return "Internal"
+	case halproto.VrfType_VRF_TYPE_INBAND_MANAGEMENT:
+		return "Inband"
 	case halproto.VrfType_VRF_TYPE_CUSTOMER:
 		return "Cust"
 	default:

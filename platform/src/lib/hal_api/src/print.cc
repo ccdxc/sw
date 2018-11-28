@@ -1,9 +1,16 @@
-
+//-----------------------------------------------------------------------------
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+// Print Utilities
+//-----------------------------------------------------------------------------
 #include <spdlog/fmt/ostr.h>
 
 #include "print.hpp"
 #include "platform/src/lib/nicmgr/include/logger.hpp"
 
+// ----------------------------------------------------------------------------
+// Mac address to string
+// ----------------------------------------------------------------------------
 char *
 macaddr2str (mac_t mac_addr)
 {
@@ -18,7 +25,6 @@ macaddr2str (mac_t mac_addr)
              mac_byte[2], mac_byte[1], mac_byte[0]);
     return buf;
 }
-
 
 // ----------------------------------------------------------------------------
 // Use this at the begin and end of an API

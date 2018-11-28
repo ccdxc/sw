@@ -1,6 +1,6 @@
 -I ../../../../..
 -I ../../../../sdk
 -I ../../../../sdk/include
--I ../../../../build/x86_64/iris
+-I ../../../../build/aarch64/iris
 -I ../../../../hal/third-party/spdlog/include
 -std=c++11

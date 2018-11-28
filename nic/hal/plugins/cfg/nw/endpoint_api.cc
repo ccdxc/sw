@@ -132,6 +132,19 @@ is_ep_management (const ep_t* ep)
     return false;
 }
 
+bool
+is_ep_classic (const ep_t *ep)
+{
+    if_t *intf;
+    intf = hal::find_if_by_handle(ep->if_handle);
+
+    if (intf->if_type == intf::IF_TYPE_ENIC) {
+        return (intf->enic_type == intf::IF_ENIC_TYPE_CLASSIC);
+    }
+
+    return false;
+}
+
 //----------------------------------------------------------------------------
 // Returns nwsec for the endpoint
 //----------------------------------------------------------------------------
@@ -143,7 +156,7 @@ ep_get_pi_nwsec (ep_t *pi_ep)
 
     pi_vrf = vrf_lookup_by_handle(pi_ep->vrf_handle);
     HAL_ASSERT_RETURN(pi_vrf != NULL, NULL);
-    
+
     pi_nwsec = find_nwsec_profile_by_handle(pi_vrf->nwsec_profile_handle);
 
     return pi_nwsec;

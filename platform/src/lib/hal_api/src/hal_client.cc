@@ -10,36 +10,21 @@
 using namespace std;
 
 HalCommonClient *HalCommonClient::instance = NULL;
-#if 0
-shared_ptr<HalCommonClient> HalCommonClient::instance = 0;
-shared_ptr<HalCommonClient>
-#endif
 
 HalCommonClient *
 HalCommonClient::GetInstance()
 {
     if (!instance) {
-        NIC_LOG_ERR("HalGRPCClient instance is not created!");
+        NIC_LOG_WARN("HalGRPCClient instance is not created!");
     }
 
     return instance;
 }
 
-HalCommonClient::HalCommonClient()
-{
-
-
-}
+HalCommonClient::HalCommonClient(){}
 HalCommonClient::HalCommonClient(enum HalForwardingMode mode)
 {
     this->mode = mode;
-
-#if 0
-    iris_c::utils::trace_init("iris-c", 0x3, true,
-                              "iris-c.log",
-                              hal::utils::trace_debug);
-#endif
-
 }
 
 enum HalForwardingMode

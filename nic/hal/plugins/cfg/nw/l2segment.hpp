@@ -199,6 +199,7 @@ l2seg_uplink_oif_compute_hash_func (void *key, uint32_t ht_size);
 bool l2seg_uplink_oif_compare_key_func (void *key1, void *key2);
 bool l2seg_is_mbr_if (l2seg_t *l2seg, if_id_t if_id);
 bool l2seg_is_oob_mgmt(l2seg_t *l2seg);
+bool l2seg_is_classic(l2seg_t *l2seg);
 
 }    // namespace hal
 

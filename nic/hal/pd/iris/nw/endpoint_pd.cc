@@ -149,7 +149,8 @@ pd_ep_delete (pd_func_args_t *pd_func_args)
         goto end;
     }
 
-    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
+    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC ||
+        is_ep_classic(args->ep)) {
         ret = ep_pd_depgm_registered_mac(ep_pd);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("PD-EP: Failed to depgm registered_mac, ret:{}", ret);
@@ -566,8 +567,20 @@ ep_pd_program_hw(pd_ep_t *pd_ep, bool is_upgrade)
 
     // Classic mode or if its behind OOB MNIC or internal  management MNIC pr
     // host management mnic
+#if 0
     if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC ||
         is_ep_management(pi_ep)) {
+#endif
+    // Classic Mode:
+    // - All EPs
+    // Smart(hostpin)
+    // - All EPs pointing to classic enic
+    //   - OOB Mnic
+    //   - Internal Management MNIC
+    //   - Host Management Mnic
+    //   - Untagged enics on Host Data and Naples Data LIFs
+    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC ||
+        is_ep_classic(pi_ep)) {
         ret = pd_ep_pgm_registered_mac(pd_ep, TABLE_OPER_INSERT);
     }
 

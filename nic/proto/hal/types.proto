@@ -96,10 +96,12 @@ message ObjectMeta {
 
 // Types of Vrfs
 enum VrfType {
-  VRF_TYPE_NONE          = 0;
-  VRF_TYPE_INFRA         = 1;    // infra Vrf
-  VRF_TYPE_CUSTOMER      = 2;    // customer Vrf
-  VRF_TYPE_MANAGEMENT    = 3;    // management Vrf
+  VRF_TYPE_NONE                 = 0;
+  VRF_TYPE_INFRA                = 1;    // infra Vrf
+  VRF_TYPE_CUSTOMER             = 2;    // customer Vrf
+  VRF_TYPE_OOB_MANAGEMENT       = 3;    // oob management Vrf
+  VRF_TYPE_INTERNAL_MANAGEMENT  = 4;    // internal management Vrf host <-> naples
+  VRF_TYPE_INBAND_MANAGEMENT    = 5;    // inband management Vrf (host/naples)
 }
 
 // Types of L2 segments

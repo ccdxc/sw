@@ -18,7 +18,8 @@
 -I ../../../../../nic/include/
 -I ../../../../../nic/sdk/
 -I ../../../../../nic/sdk/include/
--I ../../../../../nic/build/x86_64/iris/gen/proto/
+-I ../../../../../nic/build/aarch64/iris/gen/proto/
+-I ../../../../../nic/build/aarch64/iris
 -I ../../../../../nic/hal/pd/capri/
 -I ../../../../../nic/third-party/boost/include/
 -I ../../../../../nic/hal/third-party/include/

@@ -53,6 +53,7 @@ hal_initialize (const char c_file[], bool disable_fte=true)
         fprintf(stderr, "HAL initialization failed, quitting ...\n");
         exit(1);
     }
+    sleep(30);
     printf("HAL Initialized\n");
 }
 

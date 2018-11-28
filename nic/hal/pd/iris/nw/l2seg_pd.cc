@@ -595,9 +595,15 @@ l2seg_uplink_inp_prop_form_data (l2seg_t *l2seg, if_t *hal_if,
     inp_prop.mdest_flow_miss_action = l2seg_get_bcast_fwd_policy(l2seg);
     inp_prop.flow_miss_idx = l2seg_get_bcast_oif_list(l2seg);
 
-    // OOB Mgmt Uplink is in Classic mode
+    // Classic:
+    // - All Vlans are in Classic
+    // Hostpin:
+    // - OOB uplink is in Classic
+    // - Other uplinks are in classic for untagged l2seg.
     if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC ||
-        hal_if->is_oob_management) {
+        (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED &&
+        l2seg_is_classic(l2seg))) {
+        // (hal_if->is_oob_management || is_native))) {
         inp_prop.nic_mode = NIC_MODE_CLASSIC;
         if (num_prom_lifs == 0) {
             // No prom. lifs => no promiscuous repl. needed.
