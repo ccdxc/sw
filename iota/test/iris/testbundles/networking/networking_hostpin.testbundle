@@ -4,6 +4,7 @@ meta:
 testcases:
     -   name    : Ping_Mirror_Remote_Workloads
         testcase: testcases.telemetry.ping_mirror
+        ignore  : True
         args    :
             type: remote_only
         iterators :
