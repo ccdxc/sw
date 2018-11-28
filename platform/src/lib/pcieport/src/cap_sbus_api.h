@@ -272,18 +272,16 @@ extern "C" void top_sbus_ld_sbus_rom(int inst, const char * rom_file);
 #endif    
 
 // application functions
-#ifdef CAPRI_SW
-void *romfile_open(void *rom_info);
-#else
+#ifndef CAPRI_SW
 void *romfile_open(const void *rom_info);
-#endif
 int romfile_read(void *ctx, unsigned int *datap);
 void romfile_close(void *ctx);
+#endif
 
-void cap_ms_sbus_write(int chip_id, int rcvr_addr, int data_addr, int data);
-int  cap_ms_sbus_read(int chip_id, int rcvr_addr, int data_addr);
-void cap_pp_sbus_write(int chip_id, int rcvr_addr, int data_addr, int data);
-int  cap_pp_sbus_read(int chip_id, int rcvr_addr, int data_addr);
+void cap_ms_sbus_write(int chip_id, int rcvr_addr, int data_addr, unsigned int data);
+unsigned int  cap_ms_sbus_read(int chip_id, int rcvr_addr, int data_addr);
+void cap_pp_sbus_write(int chip_id, int rcvr_addr, int data_addr, unsigned int data);
+unsigned int  cap_pp_sbus_read(int chip_id, int rcvr_addr, int data_addr);
 void cap_pp_sbus_reset(int chip_id, int rcvr_addr);
 void cap_ms_sbus_reset(int chip_id, int rcvr_addr);
 void cap_sbus_pp_set_rom_enable(int chip_id, int inst_id, int val);

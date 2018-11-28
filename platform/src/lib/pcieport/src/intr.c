@@ -86,8 +86,12 @@ pcieport_intr_init(pcieport_t *p)
     pal_reg_wr32(PXC_(INT_C_MAC_INTREG, p->port), int_mac);
 #endif
 
-    portcfg_read_bus(p->port, NULL, &secbus, NULL);
     ltssm_st = sta_rst & 0x1f;
+    if (ltssm_st == 0x10) {
+        portcfg_read_bus(p->port, NULL, &secbus, NULL);
+    } else {
+        secbus = 0;
+    }
 
     pciesys_logdebug("int_mac 0x%x sta_rst 0x%x secbus 0x%02x\n",
                      int_mac, sta_rst, secbus);
@@ -113,7 +117,7 @@ pcieport_poweron(pcieport_t *p)
 #endif
     pcieport_set_ltssm_st_cnt(p, 0);
     r = pcieport_config(p);
-    if (r) pciesys_logerror("%d: poweron: %d\n", p->port, r);
+    if (r) pciesys_logwarn("%d: poweron config failed: %d\n", p->port, r);
 }
 
 /*

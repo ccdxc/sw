@@ -30,6 +30,10 @@ typedef u_int8_t bool;
 #define SLEEP(t) usleep(t)
 #define sleep(t) usleep(t)
 
+void *romfile_open(void *rom_info);
+int romfile_read(void *ctx, unsigned int *datap);
+void romfile_close(void *ctx);
+
 static inline int sknobs_get_value(const char *name, int defval)
 {
     return defval;

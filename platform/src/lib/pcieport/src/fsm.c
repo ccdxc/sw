@@ -17,6 +17,8 @@
 #include "portcfg.h"
 #include "pcieport.h"
 #include "pcieport_impl.h"
+#include "cap_sw_glue.h"
+#include "cap_pcie_api.h"
 
 int fsm_verbose = 1;
 
@@ -157,6 +159,15 @@ pcieport_linkup(pcieport_t *p)
     pcieport_set_crs(p, p->crs);
     pcieport_update_linkinfo(p);
     pcieport_event_linkup(p, ++p->linkup);
+
+    if ((p->req_gen   && p->cur_gen   < p->req_gen) ||
+        (p->req_width && p->cur_width < p->req_width)) {
+        pciesys_logwarn("port%d: req gen%dx%d got gen%dx%d, resetting\n",
+                        p->port,
+                        p->req_gen, p->req_width,
+                        p->cur_gen, p->cur_width);
+        cap_pcie_serdes_reset(0, 0);
+    }
 }
 
 static void

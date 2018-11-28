@@ -13,6 +13,9 @@
 #include "cap_pxb_csr.h"
 #endif
 
+#define CAP_PCIE_API_KEY_TYPE_CFG 0
+#define CAP_PCIE_API_KEY_TYPE_MEM 1
+#define CAP_PCIE_API_RESOURCE_PRT 0
 #ifndef CAPRI_SW
 #ifndef SWIG
 class cap_pcie_port_db {
@@ -57,7 +60,7 @@ typedef enum e_pcie_api_mode
 #endif
 
 // soft reset sequence 
-void cap_pcie_soft_reset(int chip_id, int inst_id);
+void cap_pcie_soft_reset(int chip_id, int inst_id, string hint="all");
 // soft reset, value = 1 means apply reset, value = 0 release soft reset
 void cap_pcie_set_soft_reset(int chip_id, int inst_id, int value);
 // init start, no polling yet
@@ -80,9 +83,10 @@ void pcie_core_interrupts (int chip_id, int inst_id, int int_code, int int_data,
 #endif
 
 #ifndef CAPRI_SW
-void cap_pcie_serdes_setup(int chip_id, int inst_id, int gen1, const void *rom_info);
+int cap_pcie_serdes_setup(int chip_id, int inst_id, int gen1, const void *rom_info);
 #else
-void cap_pcie_serdes_setup(int chip_id, int inst_id, int gen1, void *rom_info);
+int cap_pcie_serdes_setup(int chip_id, int inst_id, int gen1, void *rom_info);
+int cap_pcie_serdes_reset(int chip_id, int inst_id);
 #endif
 
 
@@ -182,10 +186,26 @@ class cap_pcie_atomic_db {
         void set_max_atomic_context(unsigned max_id);
 };
 #endif
-#endif
 
+void cap_pcie_serdes_setup_wrapper(int chip_id, int inst_id, int gen1, string rom_info);
+#endif
+void cap_pcie_toggle_pcs_reset(int chip_id, int inst_id, int l_port);
+int cap_pcie_complete_serdes_initialization(int chip_id, int inst_id);
+
+void  pcie_enable_interrupts(void);
 void cap_pp_set_rom_enable(int chip_id, int inst_id, int val); 
 void cap_pcie_bist_test(int chip_id, int inst_id); 
-int  cap_run_pcie_tcam_rdwr_test(int chip_id, int inst_id);
+#ifndef CAPRI_SW
+int  cap_run_pcie_tcam_rdwr_test(int chip_id, int inst_id, int fast_mode = 1, int verbosity = 0);
+int  cap_run_pcie_tcam_rdwr_test_NEW(int chip_id, int inst_id, int fast_mode = 0, int verbosity = 1);
+int cap_pcie_setup_pll_raw(void);
+void cap_pcie_set_port_values(int chip_id, int l_port, string name, int data);
+#endif
+#ifdef _COSIM_
+void cap_pcie_program_vnic_qspi();
+void cap_pcie_program_vnic_asic();
+void cap_pcie_program_vnic_asic_arm();
+#endif
 
+void cap_pcie_program_vnic_entries(int chip_id, int inst_id, uint64_t bar , uint64_t capri_address, int port, int tcam_idx, int bar_size, int prt_base, int prt_count);
 #endif // CAP_PCIE_API_H

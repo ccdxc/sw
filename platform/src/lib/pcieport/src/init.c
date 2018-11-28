@@ -93,12 +93,29 @@ pcieport_already_init(void)
      * Check port 0 for ltssm_en=1 indicating someone
      * initialized the port already.
      */
-    p->port = 0;
-    p->lanemask = 0xffff;
     if (pcieport_get_ltssm_en(p)) {
         return 1;
     }
     return 0;
+}
+
+static u_int64_t
+getenv_override_ull(const char *label, const char *name, const u_int64_t def)
+{
+    const char *env = getenv(name);
+    if (env) {
+        u_int64_t val = strtoull(env, NULL, 0);
+        pciesys_loginfo("%s: $%s override %" PRIu64 " (0x%" PRIx64 ")\n",
+                        label, name, val, val);
+        return val;
+    }
+    return def;
+}
+
+static u_int64_t
+pcieport_param_ull(const char *name, const u_int64_t def)
+{
+    return getenv_override_ull("pcieport", name, def);
 }
 
 int
@@ -110,6 +127,9 @@ pcieport_onetime_init(void)
         /* already initialized */
         return 0;
     }
+
+    pi->serdes_init_always = pcieport_param_ull("PCIE_SERDES_INIT_ALWAYS", 0);
+
     if (pcieport_already_init()) {
         pciesys_loginfo("pcieport: inherited init\n");
         pi->init = 1;
@@ -134,6 +154,13 @@ pcieport_onetime_portinit(pcieport_t *p)
         /* port already been through here */
         return 0;
     }
+
+    p->sris       = pcieport_param_ull("PCIE_SRIS", p->sris);
+    p->crs        = pcieport_param_ull("PCIE_STRICT_CRS", p->crs);
+    p->compliance = pcieport_param_ull("PCIE_COMPLIANCE", p->compliance);
+    p->req_gen    = pcieport_param_ull("PCIE_REQ_GEN", 0);
+    p->req_width  = pcieport_param_ull("PCIE_REQ_WIDTH", 0);
+
     /*
      * We have inherited a system already initialized by
      * uboot or an earlier instance of pcieport.

@@ -13,8 +13,6 @@
 #include "cap_sbus_api.h"
 
 #define NUM_PP_SBUS_DEV 52
-#define CAP_PCIE_API_KEY_TYPE_MEM 1
-#define CAP_PCIE_API_RESOURCE_PRT 0
 
 #ifndef SWPRINT
 #define SW_PRINT printf
@@ -84,19 +82,20 @@ int cap_pcie_setup_pll_raw(void) {
      pll_lock = 0;
      count = 0;
 
-     while ((pll_lock != 0xf) && (count < 1000000)) {
+     while ((pll_lock != 0xf) && (count < 1000)) {
+       SLEEP(1000);
        pll_lock_reg = cap_pcie_reg_read((CAP_ADDR_BASE_PP_PP_OFFSET) + CAP_PP_CSR_STA_PP_PCIE_PLL_BYTE_ADDRESS);
        pll_lock = (pll_lock_reg & (0xf));   
        count++;
      }
-     if (count < 1000000) {
+     if (pll_lock == 0xf) {
        PLOG_MSG("PCIE: " << count << ":STA_PLL locked = " <<  hex << pll_lock_reg << dec << endl);
-       SW_PRINT("PCIE PLL locked \n");
+       SW_PRINT("PCIE PLL locked in %d iterations\n", count);
        return 0;
      }
      else {
        PLOG_ERR("PCIE: " << "PCIE STA_PLL not locked after 100000 attempts:  status = " <<  pll_lock << endl);
-       SW_PRINT("ERROR:****PCIE PLL not locked \n");
+       SW_PRINT("ERROR:****PCIE PLL not locked 0x%x\n", pll_lock);
        return 1;
      }
   }
@@ -135,20 +134,18 @@ int pcie_check_sd_core_status (int chip_id, int inst_id) {
                }
 
                count++;
-               if(count > 1000000000) {
+               if(count > 1000) { /* 1s timeout */
                    PLOG_ERR("sta_pp_sd_core_status is not set" << endl);
-                   SW_PRINT("ERROR:sta_pp_sd_core_status is not set\n");
+                   SW_PRINT("ERROR:sta_pp_sd_core_status is not set 0x%x\n", rd_data);
 #ifndef CAPRI_SW
                    pp_csr.sta_pp_sd_core_status.show() ; 
 #endif
                    done = 1;
 		   return 1;
                }
-
-     }
-     SW_PRINT("INFO:sta_pp_sd_core_status is set\n");
-     return 0;
-
+    }
+    SW_PRINT("INFO:sta_pp_sd_core_status is set after %d iterations\n", count);
+    return 0;
 }
 
 void 
@@ -158,7 +155,7 @@ pcie_enable_interrupts(void)
    cap_pcie_reg_write((CAP_ADDR_BASE_PP_PP_OFFSET + (CAP_PP_CSR_CFG_PP_PCS_INTERRUPT_DISABLE_BYTE_ADDRESS)), 0x0);
 }
 
-void pcie_core_interrupts_sw (int chip_id, int inst_id, int int_code, int int_data, int l_port, int sd_rom_auto_download, int sbus_real_firmware_download, int phy_port, int lanes, int logical_ports) { 
+int pcie_core_interrupts_sw (int chip_id, int inst_id, int int_code, int int_data, int l_port, int sd_rom_auto_download, int sbus_real_firmware_download, int phy_port, int lanes, int logical_ports) {
    
     //cap_pp_csr_t & pp_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pp_csr_t, chip_id, inst_id);
 
@@ -209,10 +206,12 @@ void pcie_core_interrupts_sw (int chip_id, int inst_id, int int_code, int int_da
            done = ((rd_data & pp_pcsd_intr_lane) == pp_pcsd_intr_lane);
 
        count++;
-       if(count > 1000000000) {
+       if(count > 100) { /* 1s timeout */
            PLOG_ERR("sta_pp_pcsd_interrupt_in_progress is not set interupt_value=" << hex << rd_data << dec <<endl);
            /* pp_csr.sta_pp_pcsd_interrupt_in_progress.show() ; */
            done = 1;
+           SW_PRINT("sta_pp_pcsd_interrupt_in_progress high timeout rd_data 0x%x\n", rd_data);
+           return 1;
         }
       }
 
@@ -238,13 +237,15 @@ void pcie_core_interrupts_sw (int chip_id, int inst_id, int int_code, int int_da
            done = ((rd_data & pp_pcsd_intr_lane) == 0x0);
 
        count++;
-       if(count > 1000000000) {
+       if(count > 1000) { /* 1s timeout */
            PLOG_ERR("sta_pp_pcsd_interrupt_in_progress is set interupt_value=" << hex << rd_data << dec <<endl);
            /* pp_csr.sta_pp_pcsd_interrupt_in_progress.show() ; */
            /* PLOG_ERR("sta_pp_pcsd_interrupt_in_progress is not set" << endl);
            pp_csr.sta_pp_pcsd_interrupt_in_progress.show() ; 
 	   */
            done = 1;
+           SW_PRINT("sta_pp_pcsd_interrupt_in_progress low timeout rd_data 0x%x\n", rd_data);
+           return 1;
         }
       }
 
@@ -259,8 +260,14 @@ void pcie_core_interrupts_sw (int chip_id, int inst_id, int int_code, int int_da
      }
 
      PLOG_MSG("serdes core_interrupt complete " << endl);
+     return 0;
 }
 
+int cap_pcie_serdes_reset(int chip_id, int inst_id)
+{
+     return pcie_core_interrupts_sw(chip_id, inst_id, 0xa, 0x1,
+                                    0, 0, 0, 0, 16, 1);
+}
 
 #ifndef CAPRI_SW
 int cap_pcie_upload_firmware(int chip_id, int inst_id, const void *rom_info) {
@@ -278,6 +285,7 @@ int cap_pcie_upload_firmware(int chip_id, int inst_id, void *rom_info) {
          set_sbus_broadcast_grp(0, 0, aa, bcast_grp, 0);
    }
    upload_sbus_master_firmware(0, 0, bcast_grp, rom_info);
+
    // upload_sbus_master_firmware(0, 0, bcast_grp, "/home/asic/vendors/brcm/design_kit/latest/serdes/firmware/serdes.0x1066_2000.rom");
 
    return 0;
@@ -296,8 +304,10 @@ int cap_pcie_complete_serdes_initialization(int chip_id, int inst_id)
   // *** deassert PCS RESET_N  ***
   cap_pcie_reg_write((CAP_ADDR_BASE_PP_PP_OFFSET + (CAP_PP_CSR_CFG_PP_PCS_RESET_N_BYTE_ADDRESS)), 0xffff);
 
-  if(pcie_check_sd_core_status(chip_id, inst_id))
+  if(pcie_check_sd_core_status(chip_id, inst_id)) {
 	return_val = 1;
+        return 1;
+  }
 
   for (int l_port=0; l_port<1; l_port++) {
      // Hemant Please check
@@ -307,20 +317,32 @@ int cap_pcie_complete_serdes_initialization(int chip_id, int inst_id)
    
      SW_PRINT("Reading build ID\n");
      PLOG_MSG("reading build ID" << endl);
-     pcie_core_interrupts_sw(chip_id, inst_id, 0, 0, l_port, sd_rom_auto_download, sbus_real_firmware_download, phy_port, lanes, logical_ports);
+     if (pcie_core_interrupts_sw(chip_id, inst_id, 0, 0, l_port, sd_rom_auto_download, sbus_real_firmware_download, phy_port, lanes, logical_ports)) {
+         return 1;
+     }
    
      // Rev ID 
      SW_PRINT("Reading Rev ID\n");
      PLOG_MSG("reading Rev ID" << endl);
-     pcie_core_interrupts_sw(chip_id, inst_id, 0x3f, 0, l_port, sd_rom_auto_download, sbus_real_firmware_download, phy_port, lanes, logical_ports);
+     if (pcie_core_interrupts_sw(chip_id, inst_id, 0x3f, 0, l_port, sd_rom_auto_download, sbus_real_firmware_download, phy_port, lanes, logical_ports)) {
+         return 1;
+     }
    
      // Int_run_iCal_on_Eq_Eval for Equalization : 
-     pcie_core_interrupts_sw(chip_id, inst_id, 0x26, 0x5201, l_port, sd_rom_auto_download, sbus_real_firmware_download, phy_port, lanes, logical_ports);
+     if (pcie_core_interrupts_sw(chip_id, inst_id, 0x26, 0x5211, l_port, sd_rom_auto_download, sbus_real_firmware_download, phy_port, lanes, logical_ports)) {
+         return 1;
+     }
    
      // DFE_0, DFE_1 and DFE_2 params 
-     pcie_core_interrupts_sw(chip_id, inst_id, 0x26, 0x000E, l_port, sd_rom_auto_download, sbus_real_firmware_download, phy_port, lanes, logical_ports);
-     pcie_core_interrupts_sw(chip_id, inst_id, 0x26, 0x0102, l_port, sd_rom_auto_download, sbus_real_firmware_download, phy_port, lanes, logical_ports);
-     pcie_core_interrupts_sw(chip_id, inst_id, 0x26, 0x0238, l_port, sd_rom_auto_download, sbus_real_firmware_download, phy_port, lanes, logical_ports);
+     if (pcie_core_interrupts_sw(chip_id, inst_id, 0x26, 0x0006, l_port, sd_rom_auto_download, sbus_real_firmware_download, phy_port, lanes, logical_ports)) {
+         return 1;
+     }
+     if (pcie_core_interrupts_sw(chip_id, inst_id, 0x26, 0x010c, l_port, sd_rom_auto_download, sbus_real_firmware_download, phy_port, lanes, logical_ports)) {
+         return 1;
+     }
+     if (pcie_core_interrupts_sw(chip_id, inst_id, 0x26, 0x0200, l_port, sd_rom_auto_download, sbus_real_firmware_download, phy_port, lanes, logical_ports)) {
+         return 1;
+     }
   }
 
   pcie_enable_interrupts();
@@ -328,16 +350,23 @@ int cap_pcie_complete_serdes_initialization(int chip_id, int inst_id)
   return return_val;
 } 
 
+#ifndef CAPRI_SW
+void cap_pcie_serdes_setup_wrapper(int chip_id, int inst_id, int gen1, string rom_info) {
+    cap_pcie_serdes_setup(chip_id, inst_id, gen1,  (const void *) rom_info.c_str());
+}
+#endif
 
 #ifndef CAPRI_SW
-void cap_pcie_serdes_setup(int chip_id, int inst_id, int gen1, const void *rom_info) {
+int cap_pcie_serdes_setup(int chip_id, int inst_id, int gen1, const void *rom_info) {
 #else
-void cap_pcie_serdes_setup(int chip_id, int inst_id, int gen1, void *rom_info) {
+int cap_pcie_serdes_setup(int chip_id, int inst_id, int gen1, void *rom_info) {
 #endif
 
    PLOG_MSG("PCIE:SW FUNCTION 7 " << dec << endl);
-   if(cap_pcie_setup_pll_raw()) 
+   if(cap_pcie_setup_pll_raw()) {
      SW_PRINT("pcie pll lock failed");
+     return -1;
+   }
 
    PLOG_MSG("TEST:SBUS cap_top_pp_sbus_test clk divider =6 " << endl);
    cap_pp_sbus_write(chip_id, 0xfe, 0xa, 0x3);
@@ -348,13 +377,16 @@ void cap_pcie_serdes_setup(int chip_id, int inst_id, int gen1, void *rom_info) {
      cap_sbus_pp_set_rom_enable(chip_id, inst_id, 0);
    } else {
      cap_sbus_pp_set_rom_enable(chip_id, inst_id, 1);
-     if(cap_pcie_upload_firmware(chip_id, inst_id, rom_info)) // will set broadcast group; upload firmware; deassert pcs reset
+     if(cap_pcie_upload_firmware(chip_id, inst_id, rom_info) == 0) // will set broadcast group; upload firmware; deassert pcs reset
           SW_PRINT("serdes upload happened");
    }
    /* do the HAPS specific thing - BRAD */
    /* - Ensure port0 = 16x for ASIC v/s 4x for HAPS */
-   if(cap_pcie_complete_serdes_initialization(chip_id, inst_id)) // send core interrupts, check revision, check build id, load dfe/ical; enable interrupts
+   if(cap_pcie_complete_serdes_initialization(chip_id, inst_id)) {// send core interrupts, check revision, check build id, load dfe/ical; enable interrupts
           SW_PRINT("serdes initialization failed");
+          return -1;
+   }
+   return 0;
 }
 
 #ifndef CAPRI_SW
@@ -364,12 +396,18 @@ extern "C" void pcie_download_serdes_code(const char * id);
 #endif    
 
 // soft reset sequence 
-void cap_pcie_soft_reset(int chip_id, int inst_id) {
-    pcie_serdes_init(chip_id, inst_id);
-    cap_pcie_disable_backdoor_paths(chip_id, inst_id);
-    cap_pcie_tcam_rst(chip_id, inst_id, 1);
-    SLEEP(100);
-    cap_pcie_tcam_rst(chip_id, inst_id, 0);
+void cap_pcie_soft_reset(int chip_id, int inst_id, string hint) {
+
+    if ( (hint.compare("serdes_init") == 0) || (hint.compare("all") == 0)) {
+        pcie_serdes_init(chip_id, inst_id);
+    }
+
+    if((hint.compare("tcam_rst") == 0)  || (hint.compare("all") == 0)) {
+        cap_pcie_disable_backdoor_paths(chip_id, inst_id);
+        cap_pcie_tcam_rst(chip_id, inst_id, 1);
+        SLEEP(100);
+        cap_pcie_tcam_rst(chip_id, inst_id, 0);
+    }
 }
 
 // soft reset, value = 1 means apply reset, value = 0 release soft reset
@@ -380,7 +418,7 @@ void cap_pcie_set_soft_reset(int chip_id, int inst_id, int value) {
 void cap_pcie_init_start(int chip_id, int inst_id, int cur_l_port) {
     // TODO : download firmware
     int logical_ports = cap_pcie_port_db::access(chip_id)->get_logical_ports();
-#ifdef _CSV_INCLUDED_    
+#ifdef _CSV_INCLUDED_ 
     int sd_rom_auto_download = cap_pcie_port_db::access(chip_id)->get_port_values(0 , "sd_rom_auto_download");
     int sbus_real_firmware_download = cap_pcie_port_db::access(chip_id)->get_port_values(0 , "sbus_real_firmware_download");
     svScope old_scope = svGetScope();
@@ -388,6 +426,7 @@ void cap_pcie_init_start(int chip_id, int inst_id, int cur_l_port) {
     //svScope new_scope = svGetScopeFromName("\\LIBVERIF.top_tb");
     //svSetScope(new_scope);
     //} else {
+    //}
     svScope new_scope = svGetScopeFromName("top_tb");
     svSetScope(new_scope);
 
@@ -423,6 +462,36 @@ void cap_pcie_init_start(int chip_id, int inst_id, int cur_l_port) {
 #ifdef _ZEBU_
     for(int j = 0; j < logical_ports; j++) {
         pcie_pcs_reset(chip_id, inst_id, j);
+    }
+#endif    
+
+#ifdef _DIAG_
+
+    int sd_rom_auto_download = cap_pcie_port_db::access(chip_id)->get_port_values(0 , "sd_rom_auto_download");
+    int sbus_real_firmware_download = cap_pcie_port_db::access(chip_id)->get_port_values(0 , "sbus_real_firmware_download");
+    if(sbus_real_firmware_download) {
+        // broadcast grp0
+        for(int j = 0; j < logical_ports; j++) {
+            if( (cur_l_port == j) || (cur_l_port == -1)) {
+                cap_pcie_init_sbus(chip_id, inst_id, j);
+                pcie_pcs_reset(chip_id, inst_id, j);
+            }
+        }
+    } else if(sd_rom_auto_download) {
+        //pcie_download_serdes_code("sd_rom_auto_download");
+        for(int j = 0; j < logical_ports; j++) {
+            if( (cur_l_port == j) || (cur_l_port == -1)) {
+                pcie_pcs_reset(chip_id, inst_id, j);
+            }
+        }
+    } else {
+        PLOG_ERR("For DIAG, we should not be here" << endl);
+        //pcie_download_serdes_code("default");
+        //for(int j = 0; j < logical_ports; j++) {
+        //    if( (cur_l_port == j) || (cur_l_port == -1)) {
+        //        pcie_pcs_reset(chip_id, inst_id, j);
+        //    }
+        //}
     }
 #endif    
 }
@@ -681,8 +750,8 @@ void cap_pcie_init_sbus(int chip_id, int inst_id, int l_port) {
        }
        ////GROUP 0
        PLOG_MSG("TEST:SBUS upload_sbus_master_firmware grp0" << endl);
-       ///upload_sbus_master_firmware(0, 0, 0xe1, "/home/asic/vendors/brcm/design_kit/latest/serdes/firmware/serdes.0x1066_2000.rom");
-       upload_sbus_master_firmware(0, 0, 0xe1, "/home/asic/vendors/brcm/design_kit/latest/serdes/firmware/serdes.0x108C_2347.rom");
+       string asic_src  = string(std::getenv("ASIC_SRC"));
+       upload_sbus_master_firmware(0, 0, 0xe1, (void *) string(asic_src + "/ip/cosim/capri/serdes.0x108C_2347.rom").c_str());
     } else if (bcast_grp == 1) {
        for (int aa=1; aa<33; aa++) {
           if (aa == 2 || aa == 4 || aa == 6 || aa == 8 || aa == 10 || aa == 12 || aa == 14 || aa == 16) {
@@ -692,13 +761,20 @@ void cap_pcie_init_sbus(int chip_id, int inst_id, int l_port) {
        }
        ////GROUP 1
        PLOG_MSG("TEST:SBUS upload_sbus_master_firmware grp1" << endl);
-       ///upload_sbus_master_firmware(0, 0, 0xe2, "/home/asic/vendors/brcm/design_kit/latest/serdes/firmware/serdes.0x1066_2000.rom");
-       upload_sbus_master_firmware(0, 0, 0xe2, "/home/asic/vendors/brcm/design_kit/latest/serdes/firmware/serdes.0x108C_2347.rom");
+       string asic_src  = string(std::getenv("ASIC_SRC"));
+       upload_sbus_master_firmware(0, 0, 0xe2, (void *) string(asic_src + "/ip/cosim/capri/serdes.0x108C_2347.rom").c_str());
     } else {
+       for (int aa=1; aa<33; aa++) {
+          if ( ((aa == 2 || aa == 4 || aa == 6 || aa == 8 || aa == 10 || aa == 12 || aa == 14 || aa == 16)) ||
+               ((aa == 18 || aa == 20 || aa == 22 || aa == 24 || aa == 26 || aa == 28 || aa == 30 || aa == 32)) ) {
+             set_sbus_broadcast_grp(0, 0, aa, 0xe1, 0);
+          }
+       }
+
        // update to all serdes
        PLOG_MSG("TEST:SBUS upload_sbus_master_firmware" << endl);
-       upload_sbus_master_firmware(0, 0, 0xff, "/home/asic/vendors/brcm/design_kit/latest/serdes/firmware/serdes.0x108C_2347.rom");
-       //upload_sbus_master_firmware(0, 0, 0xe1, "/home/asic/vendors/brcm/design_kit/latest/serdes/firmware/serdes.0x1066_2000.rom");
+       string asic_src  = string(std::getenv("ASIC_SRC"));
+       upload_sbus_master_firmware(0, 0, 0xe1, (void *) string(asic_src + "/ip/cosim/capri/serdes.0x108C_2347.rom").c_str());
     }
 
 
@@ -710,6 +786,16 @@ void cap_pcie_init_sbus(int chip_id, int inst_id, int l_port) {
     //}
 
     SLEEP(1000);
+
+    // clear interrupts
+    for(int aa=1; aa<33;aa++) {
+        if( 
+                ( ((bcast_grp == 0) || (bcast_grp == -1)) && (aa == 18 || aa == 20 || aa == 22 || aa == 24 || aa == 26 || aa == 28 || aa == 30 || aa == 32))  ||
+                ( ((bcast_grp == 1) || (bcast_grp == -1)) && (aa == 2 || aa == 4 || aa == 6 || aa == 8 || aa == 10 || aa == 12 || aa == 14 || aa == 16)) 
+          ) {
+            cap_pp_sbus_write(0, aa, 0xc, 0xc0000000);
+        }
+    }
 
   //restore cpu access type
   cpu::access()->set_access_type(cpu_access_type);
@@ -743,7 +829,15 @@ void pcie_serdes_init(int chip_id, int inst_id) {
    //   Wait for min 64 sbus clocks, deassert core_sbus_reset and unreset PLL
    // *******************************************************************************
 
-   PLOG_MSG("pcie_serdes_init: wait for reset done" << endl);
+   int use_common_clk = cap_pcie_port_db::access(chip_id)->get_port_values(0, "use_common_clk");
+   if(use_common_clk) {
+       PLOG_MSG("Using common clk for pclk" << endl);
+       pp_csr.cfg_pp_pcie_pll_refclk_sel.all(0xff);
+       pp_csr.cfg_pp_pcie_pll_refclk_sel.write();
+       pp_csr.cfg_pp_pcie_pll_refclk_source_sel.all(0x3);
+       pp_csr.cfg_pp_pcie_pll_refclk_source_sel.write();
+   }
+
 
    // deassert sbus_reset,  i_rom_enable register is inverted outside (rom_enable ECO) i.e. sbus_master.rom_enable's default=0. Set it to 1 for
    // auto hard rom download. so write 0 to invert it outside   
@@ -751,6 +845,9 @@ void pcie_serdes_init(int chip_id, int inst_id) {
    	pp_csr.cfg_pp_sbus.all(0);
    	pp_csr.cfg_pp_sbus.write();
    }
+
+
+   PLOG_MSG("pcie_serdes_init: wait for reset done" << endl);
 
    int pipe_sim = cap_pcie_port_db::access(chip_id)->get_port_values(0, "pipe_sim");
    //int mac_test_in = cap_pcie_port_db::access(chip_id)->get_port_values(0, "mac_test_in");
@@ -780,7 +877,6 @@ void pcie_serdes_init(int chip_id, int inst_id) {
 
    */
 
-
    // PLL deassert nreset (not sure if hi-lo-hi is needed)
    pp_csr.cfg_pp_pcie_pll_rst_n.all(0x3);
    pp_csr.cfg_pp_pcie_pll_rst_n.write();
@@ -803,7 +899,7 @@ void pcie_serdes_init(int chip_id, int inst_id) {
        while(!done) {
            SLEEP(1000);
            pp_csr.sta_pp_pcie_pll.read();
-           pp_csr.sta_pp_pcie_pll.show();
+           if(PLOG_CHECK_MSG_LEVEL("pcie_api")) { pp_csr.sta_pp_pcie_pll.show(); }
            done = (((pp_csr.sta_pp_pcie_pll.pcie_0_pll_lock().convert_to<int>()) == 1) &&
                    ((pp_csr.sta_pp_pcie_pll.pcie_0_dll_lock().convert_to<int>()) == 1) &&
                    ((pp_csr.sta_pp_pcie_pll.pcie_1_pll_lock().convert_to<int>()) == 1) && 
@@ -894,6 +990,29 @@ void pcie_core_interrupts (int chip_id, int inst_id, int int_code, int int_data,
    //   core_sbus_reset=0; RESET_N=1; I_ASYNC_RESET_N =1; i_pcs_interrupt _disable=0
    // ******** ***********************************************************************
 
+
+void cap_pcie_toggle_pcs_reset(int chip_id, int inst_id, int l_port) {
+    cap_pp_csr_t & pp_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pp_csr_t, chip_id, inst_id);
+    int phy_port = cap_pcie_port_db::access(chip_id)->get_port_values(l_port,"phy_port");
+    int lanes = cap_pcie_port_db::access(chip_id)->get_port_values(l_port,"lanes");
+    cpp_int_helper hlp;
+
+   // *** deassert PCS RESET_N  ***
+   cpp_int pcs_reset_n_val;
+   pp_csr.cfg_pp_pcs_reset_n.read();
+   // write 0 first
+   pcs_reset_n_val = pp_csr.cfg_pp_pcs_reset_n.all();
+   pcs_reset_n_val = hlp.set_slc( pcs_reset_n_val , 0, (2*phy_port), (2*phy_port) + lanes - 1 ) ;
+   pp_csr.cfg_pp_pcs_reset_n.all(pcs_reset_n_val);
+   pp_csr.cfg_pp_pcs_reset_n.write();
+
+   // write 1 now
+   pcs_reset_n_val = pp_csr.cfg_pp_pcs_reset_n.all();
+   pcs_reset_n_val = hlp.set_slc( pcs_reset_n_val , 0xffff, (2*phy_port), (2*phy_port) + lanes - 1 ) ;
+   pp_csr.cfg_pp_pcs_reset_n.all(pcs_reset_n_val);
+   pp_csr.cfg_pp_pcs_reset_n.write();
+}
+
 void pcie_pcs_reset (int chip_id, int inst_id, int l_port) { 
     cap_pp_csr_t & pp_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pp_csr_t, chip_id, inst_id);
     int phy_port = cap_pcie_port_db::access(chip_id)->get_port_values(l_port,"phy_port");
@@ -941,7 +1060,10 @@ void pcie_pcs_reset (int chip_id, int inst_id, int l_port) {
        if(!poll_sd_core_status) {
            SLEEP(1000);
        } else {
-	   pcie_check_sd_core_status(chip_id, inst_id);
+           int logical_ports = cap_pcie_port_db::access(chip_id)->get_logical_ports();
+           if(l_port == logical_ports-1) {
+               pcie_check_sd_core_status(chip_id, inst_id);
+           }
        }
        // *** issue core interrupts to Serdes ***
        // build ID 
@@ -1036,11 +1158,20 @@ void pcie_per_port_mac_k_cfg(int chip_id, int inst_id, int port_no, string hint)
         // *** unreset Pcie Port  ***
         pp_csr.cfg_pp_sw_reset.read();
 
-        cpp_int tmp = pp_csr.cfg_pp_sw_reset.all();
+        cpp_int tmp;
 
+        // toggle reset
+        tmp = pp_csr.cfg_pp_sw_reset.all();
+        tmp = hlp.set_slc( tmp, 0xffffffff, (port_no*2), (port_no*2)+1); 
+        pp_csr.cfg_pp_sw_reset.all(tmp);
+        pp_csr.cfg_pp_sw_reset.write();
+
+        tmp = pp_csr.cfg_pp_sw_reset.all();
         tmp = hlp.set_slc( tmp, 0, (port_no*2), (port_no*2)+1); 
         pp_csr.cfg_pp_sw_reset.all(tmp);
         pp_csr.cfg_pp_sw_reset.write();
+
+
     }
 
     if(!hint.compare("rest_cfg")) {
@@ -1048,7 +1179,6 @@ void pcie_per_port_mac_k_cfg(int chip_id, int inst_id, int port_no, string hint)
         // *** set MAC's static K_* and TEST modes  ***
         int speed = cap_pcie_port_db::access(chip_id)->get_port_values(l_port, "speed");
         int pipe_sim = cap_pcie_port_db::access(chip_id)->get_port_values(l_port, "pipe_sim");
-        int mac_test_in = cap_pcie_port_db::access(chip_id)->get_port_values(l_port, "mac_test_in");
         string apci_test_name = cap_pcie_port_db::access(chip_id)->get_apci_test_name();
         int device_type = cap_pcie_port_db::access(chip_id)->get_port_values(l_port, "device_type");
         int serdes_ext_lpbk = cap_pcie_port_db::access(chip_id)->get_port_values(l_port, "serdes_ext_lpbk");
@@ -1060,7 +1190,8 @@ void pcie_per_port_mac_k_cfg(int chip_id, int inst_id, int port_no, string hint)
         else gen4_x16_reduced_credit_mode = 0;
         //speed = 1; pipe_sim = 0;
 
-#ifndef _ZEBU_
+#ifndef _COSIM_
+        int mac_test_in = cap_pcie_port_db::access(chip_id)->get_port_values(l_port, "mac_test_in");
         if(pipe_sim == 1) {
             // sim_mode, enable warnings and notes
             pp_csr.port_c[port_no].cfg_c_mac_test_in.dw0(0x19);
@@ -1260,7 +1391,7 @@ void pcie_per_port_mac_k_cfg(int chip_id, int inst_id, int port_no, string hint)
 
 
 
-#ifdef _ZEBU_
+#ifdef _COSIM_
         pp_csr.port_c[port_no].cfg_c_mac_k_gen.sris_mode(0);
 #endif        
         switch(lanes) {
@@ -1282,7 +1413,7 @@ void pcie_per_port_mac_k_cfg(int chip_id, int inst_id, int port_no, string hint)
         }
 
         pp_csr.port_c[port_no].cfg_c_mac_k_gen.write();   // FIXME_TEMP.. set to gen1 for now
-        pp_csr.port_c[port_no].cfg_c_mac_k_gen.show();
+        if(PLOG_CHECK_MSG_LEVEL("pcie_api")) { pp_csr.port_c[port_no].cfg_c_mac_k_gen.show(); }
 
         if( 0 
             ||(apci_test_name.compare("apcit_config_1_40") == 0) 
@@ -1390,6 +1521,7 @@ void pcie_per_port_mac_cfg(int chip_id, int inst_id, int port_no, string hint) {
 
 
         // *** unreset MAC, LTSSM_enable  ***
+        pp_csr.port_c[port_no].cfg_c_port_mac.read();
         pp_csr.port_c[port_no].cfg_c_port_mac.reset(0);
         pp_csr.port_c[port_no].cfg_c_port_mac.write();
         SLEEP(256);
@@ -1419,12 +1551,15 @@ void pcie_per_port_mac_cfg(int chip_id, int inst_id, int port_no, string hint) {
             case 2: { pp_csr.port_c[port_no].cfg_c_port_mac.tl_clock_freq(50); break; }
             case 3: { pp_csr.port_c[port_no].cfg_c_port_mac.tl_clock_freq(8); break; }
             case 4: { pp_csr.port_c[port_no].cfg_c_port_mac.tl_clock_freq(1000); break; }
+            case 5: { pp_csr.port_c[port_no].cfg_c_port_mac.tl_clock_freq(1100); break; }
             default : { pp_csr.port_c[port_no].cfg_c_port_mac.tl_clock_freq(830); break; }
         }
 #ifdef _ZEBU_
         pp_csr.port_c[port_no].cfg_c_port_mac.cfg_retry_en(0);
         pp_csr.port_c[port_no].cfg_c_port_mac.tx_stream(1);
         pp_csr.port_c[port_no].cfg_c_port_mac.tl_clock_freq(3320); 
+#elif _COSIM_        
+        pp_csr.port_c[port_no].cfg_c_port_mac.cfg_retry_en(0);
 #endif        
 
         pp_csr.port_c[port_no].cfg_c_port_mac.write();
@@ -1445,7 +1580,7 @@ void pcie_per_port_mac_cfg(int chip_id, int inst_id, int port_no, string hint) {
             while(!inner_done) {
                 SLEEP(100);
                 pp_csr.port_c[port_no].sta_c_port_mac.read();
-                pp_csr.port_c[port_no].sta_c_port_mac.show();
+                if(PLOG_CHECK_MSG_LEVEL("pcie_api")) { pp_csr.port_c[port_no].sta_c_port_mac.show(); }
                 inner_done = pp_csr.port_c[port_no].sta_c_port_mac.portgate_open().convert_to<int>() == 1;
                 count++;
                 if(count > 500) {
@@ -1485,7 +1620,7 @@ void pcie_per_port_mac_cfg(int chip_id, int inst_id, int port_no, string hint) {
         while(!done) {
             SLEEP(100);
             pp_csr.port_c[port_no].sta_c_port_mac.read();
-            pp_csr.port_c[port_no].sta_c_port_mac.show();
+            if(PLOG_CHECK_MSG_LEVEL("pcie_api")) { pp_csr.port_c[port_no].sta_c_port_mac.show(); }
             done = pp_csr.port_c[port_no].sta_c_port_mac.dl_up().convert_to<int>() == 1;
             done = (pp_csr.port_c[port_no].sta_c_port_mac.ltssm().convert_to<int>() == 0x10);
             // mac_test_in : bit0 - simulation mode
@@ -1497,9 +1632,9 @@ void pcie_per_port_mac_cfg(int chip_id, int inst_id, int port_no, string hint) {
             }
         }
         pp_csr.port_p[port_no].sat_p_port_cnt_ltssm_state_changed.read();
-        pp_csr.port_p[port_no].sat_p_port_cnt_ltssm_state_changed.show();
+        if(PLOG_CHECK_MSG_LEVEL("pcie_api")) { pp_csr.port_p[port_no].sat_p_port_cnt_ltssm_state_changed.show(); }
         pp_csr.port_p[port_no].sta_p_port_mac.read();
-        pp_csr.port_p[port_no].sta_p_port_mac.show();
+        if(PLOG_CHECK_MSG_LEVEL("pcie_api")) { pp_csr.port_p[port_no].sta_p_port_mac.show(); }
 
         if(device_type == 2) {
             pp_csr.port_c[port_no].dhs_c_mac_apb.entry[(0x18/4)].read();
@@ -1555,6 +1690,7 @@ void pcie_per_port_mac_cfg(int chip_id, int inst_id, int port_no, string hint) {
             SLEEP(100);
         }
     }
+    /*
     if(!hint.compare("sw_rst_port")) {
         // *** toggle  Pcie Port's Soft Reset  ***
         pp_csr.cfg_pp_sw_reset.read();
@@ -1568,6 +1704,7 @@ void pcie_per_port_mac_cfg(int chip_id, int inst_id, int port_no, string hint) {
            SLEEP(100);
         }
     }
+    */
     if(!hint.compare("pcs_rst_port")) {
         // *** toggle  Pcie Port 0 PCS Reset *** only called during cold reset barrier test  ***
 
@@ -1654,7 +1791,7 @@ void cap_pcie_block_level_setup(int chip_id, int inst_id) {
     }
 
     uint32_t force_lif_invalid = sknobs_get_value(const_cast<char *>(string("force_lif_invalid").c_str()), 0xffffffff);
-    if( (force_lif_invalid > 0) && (force_lif_invalid <  pxb_csr.dhs_itr_pcihdrt.get_depth_entry())) {
+    if( (force_lif_invalid > 0) && (force_lif_invalid <  (unsigned) pxb_csr.dhs_itr_pcihdrt.get_depth_entry())) {
         pxb_csr.dhs_itr_pcihdrt.entry[force_lif_invalid].valid(0);
         pxb_csr.dhs_itr_pcihdrt.entry[force_lif_invalid].write();
     }
@@ -1716,6 +1853,13 @@ void cap_pcie_program_tcam_sram_pair(int chip_id, int inst_id, uint32_t idx,
     cap_pxb_csr_t & pxb_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pxb_csr_t, chip_id, inst_id);
 
 
+    // key     mask ==>     x   y
+    //  0       0           0   1
+    //  0       1           0   0
+    //  1       0           1   0
+    //  1       1           0   0
+    //
+
     // key    mask  ==>     x   y
     //  0       0   ==>     0   1        
     //  0       1   ==>     1   0   
@@ -1751,16 +1895,21 @@ void cap_pcie_program_key_type_cfg_tcam_sram_pair(int chip_id, int inst_id, uint
         cap_pxb_decoders_pmr_key_type_cfg_t _sram,
         cap_pxb_decoders_pmt_tcam_key_type_cfg_entry_t _tcam) {
 
-    PLOG_MSG("programming entry @ " << idx << endl);
-    _tcam.show();
-    _sram.show();
+
+    if(PLOG_CHECK_MSG_LEVEL("pcie_api")) { 
+        PLOG_MSG("programming entry @ " << idx << endl);
+        _tcam.show();
+        _sram.show();
+    }
     cap_pxb_csr_dhs_tgt_pmt_entry_t tcam_entry;
     tcam_entry.all(_tcam.all());
 
     cap_pxb_csr_dhs_tgt_pmr_entry_t sram_entry;
     sram_entry.all(_sram.all());
-    tcam_entry.show();
-    sram_entry.show();
+    if(PLOG_CHECK_MSG_LEVEL("pcie_api")) { 
+        tcam_entry.show();
+        sram_entry.show();
+    }
 
 
     cap_pcie_program_tcam_sram_pair(chip_id, inst_id, idx, sram_entry, tcam_entry); 
@@ -2003,6 +2152,10 @@ cap_pcie_port_db::cap_pcie_port_db(int _chip_id) {
     populate_sknobs_data();
     
 }
+
+void cap_pcie_set_port_values(int chip_id, int l_port, string name, int data) {
+    cap_pcie_port_db::access(chip_id)->set_port_values(l_port, name, data);
+}
 void cap_pcie_port_db::set_port_values(int l_port, string name, uint32_t data) {
     port_values[l_port][name] = data;
 }
@@ -2046,6 +2199,7 @@ void cap_pcie_port_db::populate_sknobs_data() {
     logical_ports = sknobs_get_value(const_cast<char *>(string("chip/"+to_string(chip_id) + "/pcie_port/logical_ports").c_str()), 1);
     int glb_auto_enum = sknobs_get_value(const_cast<char *>(string("auto_enum").c_str()), 0);
     int pipe_sim = sknobs_get_value(const_cast<char *>(string("CAP_PCIE_PIPE_SIM").c_str()),0);
+    int use_common_clk = sknobs_get_value(const_cast<char *>(string("use_common_clk").c_str()),1);
     int serdes_ext_lpbk = sknobs_get_value(const_cast<char *>(string("SERDES_EXT_LPBK").c_str()),0);
     int mac_test_in = sknobs_get_value(const_cast<char *>(string("mac_test_in").c_str()),0);
     int sd_rom_auto_download = sknobs_get_value(const_cast<char *>(string("sd_rom_auto_download").c_str()),0);
@@ -2084,6 +2238,7 @@ void cap_pcie_port_db::populate_sknobs_data() {
         port_values[j]["sbus_real_firmware_download"] = sbus_real_firmware_download; 
         port_values[j]["ltssm_compliance_test"] = ltssm_compliance_test; 
         port_values[j]["clock_sel"] = clock_sel; 
+        port_values[j]["use_common_clk"] = use_common_clk; 
 
 
         PLOG_MSG("port_values for chip: " << chip_id << endl);
@@ -2469,12 +2624,16 @@ void inject_raw_tlp(int chip_id, int inst_id, vector<uint32_t> & hdr_array, vect
     pxb.cfg_itr_raw_tlp_cmd.dw_cnt(raw_array.size());
     pxb.cfg_itr_raw_tlp_cmd.cmd_go(1);
     pxb.cfg_itr_raw_tlp_cmd.write();
-    pxb.cfg_itr_raw_tlp_cmd.show();
+    if(PLOG_CHECK_MSG_LEVEL("pcie_api")) { 
+        pxb.cfg_itr_raw_tlp_cmd.show();
+    }
 
 
     pxb.cfg_itr_raw_tlp_cmd.cmd_go(0) ; 
     pxb.cfg_itr_raw_tlp_cmd.write();
-    pxb.cfg_itr_raw_tlp_cmd.show();
+    if(PLOG_CHECK_MSG_LEVEL("pcie_api")) { 
+        pxb.cfg_itr_raw_tlp_cmd.show();
+    }
     //auto write_vec = pxb.cfg_itr_raw_tlp.get_write_vec();
     //uint64_t write_addr = pxb.cfg_itr_raw_tlp.get_offset();
     //if(write_vec.size()) { 
@@ -2507,8 +2666,10 @@ void poll_done_raw_tlp(int chip_id, int inst_id) {
         }
     } 
     pxb.sta_itr_raw_tlp_data.read();
-    pxb.sta_itr_raw_tlp.show();
-    pxb.sta_itr_raw_tlp_data.show();
+    if(PLOG_CHECK_MSG_LEVEL("pcie_api")) { 
+        pxb.sta_itr_raw_tlp.show();
+        pxb.sta_itr_raw_tlp_data.show();
+    }
 }
 
 unsigned pcie_query_port_val(int chip_id, int inst_id, unsigned lif) {
@@ -2577,12 +2738,17 @@ void pcie_program_tgt_debug_catch_all(int chip_id, int inst_id, int port, int tc
     prt_memio_entry.vf_stride(0);
     prt_memio_entry.pmv_check_disable(1);
     PLOG_MSG("programming PMT & PMR for catch all" << endl);
-    pmt_memio_entry.show();
-    pmr_memio_entry.show();
+    if(PLOG_CHECK_MSG_LEVEL("pcie_api")) { 
+        pmt_memio_entry.show();
+        pmr_memio_entry.show();
+    }
 
     cap_pcie_program_key_type_memio_tcam_sram_pair(chip_id, inst_id, tcam_idx, pmr_memio_entry, pmt_memio_entry);
     for(unsigned i=0; i < pmr_memio_entry.prt_count().convert_to<unsigned>(); i++) {
-      prt_memio_entry.show();
+        if(PLOG_CHECK_MSG_LEVEL("pcie_api")) { 
+            prt_memio_entry.show();
+        }
+
       cpp_int tmp_addr;
       tmp_addr = hlp.set_slc(tmp_addr , i , 31-2, 34-2);
       prt_memio_entry.resource_dwaddr(tmp_addr); 
@@ -2699,7 +2865,9 @@ void cap_pcie_bist_test (int chip_id, int inst_id ) {
       }
 }
 
-int cap_run_pcie_tcam_rdwr_test(int chip_id, int inst_id) {
+
+
+int cap_run_pcie_tcam_rdwr_test(int chip_id, int inst_id, int fast_mode, int verbosity) {
 
 	    //cap_pp_csr_t & pp_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pp_csr_t, chip_id, inst_id);
 	    cap_pxb_csr_t & pxb_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pxb_csr_t, chip_id, inst_id);
@@ -2737,16 +2905,18 @@ int cap_run_pcie_tcam_rdwr_test(int chip_id, int inst_id) {
 	          }
 
                  // Read back what was written 
-	          for(uint32_t ii = 0; ii < 64 ; ii++) {
+                  unsigned numb_line = (fast_mode == 1) ? 1 : 64;
+	          for(uint32_t ii = 0; ii < numb_line ; ii++) {
 		          pxb_csr.dhs_tgt_pmt.entry[ii].read();
+		          if (verbosity == 1) pxb_csr.dhs_tgt_pmt.entry[ii].show();
 		          val = 1;
                           tmp_x_data = 0;
-          	 	  tmp_x_data = hlp.set_slc( tmp_x_data , val , ii % 64 , ii % 64 );
+          	 	  tmp_x_data = hlp.set_slc( tmp_x_data , val , ii % numb_line , ii % numb_line );
 			  inv_x_data = 1;	
                           inv_x_data <<= 64;
                           inv_x_data = inv_x_data - 1;
 		          val = 0;
-          	 	  inv_x_data = hlp.set_slc( inv_x_data , val, ii % 64 , ii % 64 );
+          	 	  inv_x_data = hlp.set_slc( inv_x_data , val, ii % numb_line , ii % numb_line );
 			  //inv_x_data = (~tmp_x_data & ((1 << 64)-1));
 
                           if (pxb_csr.dhs_tgt_pmt.entry[ii].x_data() != tmp_x_data) {
@@ -2773,7 +2943,7 @@ int cap_run_pcie_tcam_rdwr_test(int chip_id, int inst_id) {
                           pxb_csr.cfg_tgt_pmt_ind.write() ; 
                           pxb_csr.dhs_tgt_pmt_ind.entry.write() ; 
                           pxb_csr.sta_tgt_pmt_ind.read() ; 
-                          pxb_csr.sta_tgt_pmt_ind.show() ; 
+                          if (verbosity == 1) pxb_csr.sta_tgt_pmt_ind.show() ; 
                           exp_hit = n_iter ? 0 : 1 ; 
                           exp_hit_addr = ii ; 
                           if (pxb_csr.sta_tgt_pmt_ind.hit() != exp_hit) {
@@ -2812,7 +2982,7 @@ int cap_run_pcie_tcam_rdwr_test(int chip_id, int inst_id) {
                           pxb_csr.cfg_tgt_pmt_ind.write() ; 
                           pxb_csr.dhs_tgt_pmt_ind.entry.write() ; 
                           pxb_csr.sta_tgt_pmt_ind.read() ; 
-                          pxb_csr.sta_tgt_pmt_ind.show() ; 
+                          if (verbosity == 1) pxb_csr.sta_tgt_pmt_ind.show() ; 
                           exp_hit = 1 ; 
                           if (pxb_csr.sta_tgt_pmt_ind.hit() != exp_hit) {
 				fail = 1;
@@ -2835,7 +3005,7 @@ int cap_run_pcie_tcam_rdwr_test(int chip_id, int inst_id) {
                           pxb_csr.cfg_tgt_pmt_ind.write() ; 
                           pxb_csr.dhs_tgt_pmt_ind.entry.write() ; 
                           pxb_csr.sta_tgt_pmt_ind.read() ; 
-                          pxb_csr.sta_tgt_pmt_ind.show() ; 
+                          if (verbosity == 1) pxb_csr.sta_tgt_pmt_ind.show() ; 
                           exp_hit = 0 ; 
                           if (pxb_csr.sta_tgt_pmt_ind.hit() != exp_hit) {
 				fail = 1;
@@ -2854,5 +3024,315 @@ int cap_run_pcie_tcam_rdwr_test(int chip_id, int inst_id) {
 
             return (fail);
 }
+
+
+
+void randomize_csr_with_knob(cap_csr_base * csr_ptr , Knob * knob) {
+    int width = csr_ptr->get_width();
+    cpp_int data;
+    for(int i = 0; i < (width+31)/32; i++) {
+        data = (data << 32) | knob->eval();
+    }
+    csr_ptr->all(data);
+
+
+}
+
+
+
+int cap_run_pcie_tcam_rdwr_test_NEW(int chip_id, int inst_id, int fast_mode, int verbosity) {
+
+    //cap_pp_csr_t & pp_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pp_csr_t, chip_id, inst_id);
+    cap_pxb_csr_t & pxb_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pxb_csr_t, chip_id, inst_id);
+
+
+    cpp_int tmp_x_data;
+    cpp_int exp_hit; 
+    cpp_int exp_hit_addr; 
+
+    auto & mem_ref = pxb_csr.dhs_tgt_pmt;
+    auto & cfg_indirect = pxb_csr.cfg_tgt_pmt_ind; 
+    auto & sta_indirect = pxb_csr.sta_tgt_pmt_ind; 
+    auto & cfg_indirect_search = pxb_csr.dhs_tgt_pmt_ind.entry;
+    auto & cfg_tcam_reset = pxb_csr.cfg_tgt_pmt_grst;
+    uint32_t tcam_depth = pxb_csr.dhs_tgt_pmt.get_depth_entry();
+    if(verbosity) { 
+        PLOG_MSG("TCAM test starts for : " << pxb_csr.dhs_tgt_pmt.get_hier_path() << endl);
+    }
+
+    unsigned fail  = PLOG_GET_ERR_CNT();
+    uint32_t start_idx  = 0;
+    uint32_t n_tcam_addrbits = ceil(log2(tcam_depth));
+
+    pknobs::RRKnob rand_knob("rand", 0, 0xffffffff);
+    unsigned num_entries = mem_ref.get_depth_entry();
+    if(fast_mode >= 1) {
+        switch(fast_mode) {
+            case 2 : num_entries = (num_entries*2)/3; break; 
+            case 3 : num_entries = (num_entries*1)/2; break; 
+            case 4 : num_entries = (num_entries*1)/3; break; 
+            case 5 : num_entries = (num_entries*1)/4; break; 
+            case 6 : {
+                         num_entries = (num_entries*1)/10; 
+                         start_idx = tcam_depth - num_entries; 
+                         break; 
+                     }
+            case 7 : {
+                         num_entries = (num_entries*1)/10; 
+                         start_idx = 0; 
+                         break; 
+                     }
+
+            default: num_entries = 64; break; 
+        }
+    }
+    uint32_t n_tcam_key_size = (mem_ref.entry[0].get_width()-1)/2;
+
+    if(verbosity) { 
+        PLOG_MSG("tcam_depth    " << tcam_depth << endl);
+        PLOG_MSG("num_entries   " << num_entries << endl);
+        PLOG_MSG("n_tcam_key_size " << n_tcam_key_size << endl);
+        PLOG_MSG("n_tcam_addrbits " << n_tcam_addrbits << endl);
+        PLOG_MSG("start_idx " << start_idx << endl);
+    }
+
+
+    // issue TCAM grst
+    cfg_tcam_reset.vld(1);
+    cfg_tcam_reset.write();
+    SLEEP(2);
+
+
+
+    // Walking ones on TCAM data , all entries 
+    for (uint32_t n_iter=0; n_iter < 2; n_iter++ ) { 
+
+        if(verbosity) {
+            if(n_iter == 0) { PLOG_MSG("TCAM random write-read back test, case 0, X one hot, Y random" << endl); }
+            else if(n_iter == 1) { PLOG_MSG("TCAM random write-read back test, case 1, Y one hot, X random" << endl); }
+        }
+
+        // case 0 : Write TCAM entries, X one-hot and Y random value
+        // case 1 : Write TCAM entries, Y one-hot and X random value
+        for(uint32_t ii = start_idx; ii < num_entries; ii++) {
+            tmp_x_data = 1;
+            tmp_x_data <<= (ii % n_tcam_key_size);
+            uint32_t idx = ii % num_entries; 
+            randomize_csr_with_knob(&mem_ref.entry[idx], &rand_knob);
+            if(n_iter == 0) { 
+                mem_ref.entry[idx].x_data(tmp_x_data);
+                mem_ref.entry[idx].y_data( mem_ref.entry[idx].y_data() & ~tmp_x_data);
+            } else {
+                mem_ref.entry[idx].y_data(tmp_x_data);
+                mem_ref.entry[idx].x_data( mem_ref.entry[idx].x_data() & ~tmp_x_data);
+            }
+            mem_ref.entry[idx].write();
+        }
+
+        // Read back what was written 
+        for(uint32_t ii = start_idx; ii < num_entries; ii++) {
+            unsigned valid = mem_ref.entry[ii].valid().convert_to<unsigned>();
+            if(valid) {
+                mem_ref.entry[ii].read_compare();
+            } else {
+                mem_ref.entry[ii].read();
+                if(mem_ref.entry[ii].valid().convert_to<unsigned>()) {
+                    PLOG_ERR("PXB TCAM: idx " << ii << " valid expected 0 but got 1 " << endl);
+                }
+            }
+        }
+    }
+
+
+    // invalidate all entries
+    cfg_tcam_reset.vld(1);
+    cfg_tcam_reset.write();
+    SLEEP(2);
+
+    // Walking ones on TCAM data , all entries 
+    for (uint32_t n_iter=0; n_iter < 2; n_iter++ ) { 
+
+        if(verbosity) {
+            if(n_iter == 0) { PLOG_MSG("TCAM one-hot write on X, inverted Y, valid : 1 - indirect search to check" << endl); }
+            else if(n_iter == 1) { PLOG_MSG("TCAM one-hot write on X, inverted Y, valid : 0 - indirect search to check" << endl); }
+        }
+
+
+        // Write TCAM entries X = idx, Y=~X
+        for(uint32_t ii = start_idx; ii < n_tcam_key_size; ii++) {
+            tmp_x_data = 1;
+            tmp_x_data <<= (ii % n_tcam_key_size);
+            uint32_t idx = ii % num_entries;
+            mem_ref.entry[idx].x_data(tmp_x_data);
+            mem_ref.entry[idx].y_data(~tmp_x_data);
+            mem_ref.entry[idx].valid(~n_iter);
+            mem_ref.entry[idx].write();
+        }
+
+        // Search Indirect
+        for(uint32_t ii = start_idx; ii < n_tcam_key_size; ii++) {
+            tmp_x_data = 0;
+            cfg_indirect.mask(~tmp_x_data) ;     // TCAM Search enable= CEi=all_ones
+            tmp_x_data = 1;
+            tmp_x_data <<= (ii % n_tcam_key_size);
+            cfg_indirect.key(tmp_x_data) ; 
+            cfg_indirect.write() ; 
+            cfg_indirect_search.write() ; 
+            sta_indirect.read() ; 
+            //if (verbosity == 1) sta_indirect.show() ; 
+            exp_hit = n_iter ? 0 : 1 ; 
+            exp_hit_addr = ii % num_entries; 
+            if (sta_indirect.hit() != exp_hit) {
+                PLOG_ERR("TCAM Hit mismatches, rec 0x" << hex << sta_indirect.hit() << " expected: 0x" << exp_hit << endl << dec);
+            } else {
+                if (exp_hit && (sta_indirect.hit_addr().convert_to< uint32_t >() != exp_hit_addr)) {
+                    PLOG_ERR("TCAM Hit_addr mismatches, rec 0x" << hex << sta_indirect.hit() << " expected: 0x" << exp_hit_addr << endl << dec);
+                }
+            }
+        }
+    }
+
+    cfg_tcam_reset.vld(1);
+    cfg_tcam_reset.write();
+    SLEEP(2);
+
+
+    // Walking ones on addresses
+
+    // Write TCAM entries -- address bits
+    if(verbosity) {
+        PLOG_MSG("TCAM one-hot write on index - indirect search to check" << endl);
+    }
+    for(uint32_t ii = 0; ii < (n_tcam_addrbits); ii++) {
+        tmp_x_data = 1;
+        tmp_x_data <<= ii;
+        uint32_t idx = (start_idx + (1 << ii)) % tcam_depth; 
+        mem_ref.entry[idx].x_data(tmp_x_data);
+        mem_ref.entry[idx].y_data(~tmp_x_data);
+        mem_ref.entry[idx].valid(1);
+        mem_ref.entry[idx].write();
+    }
+
+    // Search Indirect
+    for(uint32_t ii = 0; ii < (n_tcam_addrbits) ; ii++) {
+        tmp_x_data = 0;
+        cfg_indirect.mask(~tmp_x_data) ;     // TCAM Search enable= CEi=all_ones
+        cfg_indirect.key( 1 << ii ) ; 
+        cfg_indirect.write() ; 
+        cfg_indirect_search.write() ; 
+        sta_indirect.read() ; 
+        //if (verbosity == 1) sta_indirect.show() ; 
+        exp_hit = 1 ; 
+        exp_hit_addr = (start_idx + (1 << ii)) % tcam_depth; 
+        if (sta_indirect.hit() != exp_hit) {
+            PLOG_ERR("TCAM Hit mismatches, rec 0x" << hex << sta_indirect.hit() << " expected: 0x" << exp_hit << endl << dec);
+        }
+        if (exp_hit && (sta_indirect.hit_addr().convert_to< uint32_t >() != exp_hit_addr)) {
+            PLOG_ERR("TCAM Hit_addr mismatches, rec 0x" << hex << sta_indirect.hit() << " expected: 0x" << exp_hit_addr << endl << dec);
+        }
+
+    }
+
+    if(verbosity) {
+        PLOG_MSG("TCAM invalid - indirect search to check" << endl);
+    }
+
+    // issue TCAM grst, only write event is necessary
+    // write event with data=1 is enough
+    cfg_tcam_reset.vld(1);
+    cfg_tcam_reset.write();
+    SLEEP(2);
+
+    // Search Again, now it should miss
+    for(uint32_t ii = 0; ii < (n_tcam_addrbits) ; ii++) {
+        tmp_x_data = 0;
+        cfg_indirect.mask(~tmp_x_data) ;     // TCAM Search enable= CEi=all_ones
+        cfg_indirect.key(1 << ii) ; 
+        cfg_indirect.write() ; 
+        cfg_indirect_search.write() ; 
+        sta_indirect.read() ; 
+        //if (verbosity == 1) sta_indirect.show() ; 
+        exp_hit = 0 ; 
+        if (sta_indirect.hit() != exp_hit) {
+            PLOG_ERR("TCAM Hit mismatches, rec 0x" << hex << sta_indirect.hit() << " expected: 0x" << exp_hit << endl << dec);
+        }
+    }
+
+    if(PLOG_GET_ERR_CNT() == fail) {
+        PLOG_MSG("=== PCIE TCAM pass chip_id:" << chip_id << " inst_id:" << inst_id << endl << dec);
+    } else {
+        PLOG_ERR("=== PCIE TCAM fail chip_id:" << chip_id << " inst_id:" << inst_id << endl << dec);
+    }
+
+    return (PLOG_GET_ERR_CNT() - fail);
+}
+
+void cap_pcie_program_vnic_entries(int chip_id, int inst_id, uint64_t bar , uint64_t capri_address, int port, int tcam_idx, int bar_size, int prt_base, int prt_count) {
+    cap_pxb_decoders_pmt_tcam_key_type_memio_entry_t pmt_memio_entry;
+    cap_pxb_decoders_pmr_key_type_memio_t pmr_memio_entry;
+    cpp_int_helper hlp;
+    pmt_memio_entry.set_name("pmt");
+    pmt_memio_entry.init();
+    pmr_memio_entry.set_name("pmr");
+    pmr_memio_entry.init();
+
+    pmt_memio_entry.valid(1);
+    pmt_memio_entry.mask.all(0);
+    pmt_memio_entry.mask.all( pmt_memio_entry.mask.all() -1 ); 
+    pmt_memio_entry.mask.common.port_id(0);
+    pmt_memio_entry.key.common.port_id(port);
+    pmt_memio_entry.mask.common.valid(0);
+    pmt_memio_entry.key.common.valid(1);
+    pmt_memio_entry.mask.common.key_type(0);
+    pmt_memio_entry.key.common.key_type(CAP_PCIE_API_KEY_TYPE_MEM);
+    pmt_memio_entry.mask.address( (1 << (bar_size-2))-1);
+    pmt_memio_entry.key.address(bar >> 2ULL);
+    // Address
+    // PRT SIZE: bar_size:0
+    // PRT IDX : constant 
+
+    pmr_memio_entry.valid(1);
+    pmr_memio_entry.prt_base(prt_base);
+    pmr_memio_entry.prt_size(bar_size);
+    pmr_memio_entry.prt_count(1);
+
+    pmr_memio_entry.vf_start(35);
+    pmr_memio_entry.vf_endplus1(2); 
+    pmr_memio_entry.vf_limit(0x7fff);
+
+
+    pmr_memio_entry.cpl_bdf(0x0);
+    pmr_memio_entry.vfid_start(0);
+    pmr_memio_entry.key_type(CAP_PCIE_API_KEY_TYPE_MEM);
+       
+
+    if(PLOG_CHECK_MSG_LEVEL("pcie_api")) { 
+        pmt_memio_entry.show();
+        pmr_memio_entry.show();
+    }
+
+    cap_pcie_program_key_type_memio_tcam_sram_pair(chip_id, inst_id, tcam_idx, pmr_memio_entry, pmt_memio_entry);
+    cap_pxb_decoders_prt_memio_t prt_memio_entry;
+    prt_memio_entry.all(0);
+    prt_memio_entry.valid(1);
+    prt_memio_entry.prt_type(CAP_PCIE_API_RESOURCE_PRT);
+    prt_memio_entry.resource_dwsize(0x7fff);
+    prt_memio_entry.vf_stride(0);
+    prt_memio_entry.pmv_check_disable(1);
+    for(unsigned i=0; i < (unsigned) prt_count; i++) {
+      cpp_int tmp_addr;
+      tmp_addr = capri_address + ((1ULL << bar_size) * i);
+      prt_memio_entry.resource_dwaddr(tmp_addr >> 2); 
+
+      if(PLOG_CHECK_MSG_LEVEL("pcie_api")) { 
+          prt_memio_entry.show();
+      }
+      cap_pcie_program_prt_type_memio_sram(chip_id, inst_id, prt_base + i, prt_memio_entry);
+    }
+
+} 
 #endif
 
+#ifdef _COSIM_
+#include "cap_pcie_enum_cfg.cc"
+#endif

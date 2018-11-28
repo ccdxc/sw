@@ -38,6 +38,8 @@ struct pcieport_s {
     int cap_width;
     int cur_gen;
     int cur_width;
+    int req_gen;
+    int req_width;
     u_int8_t pribus;
     u_int8_t secbus;
     u_int8_t subbus;
@@ -74,6 +76,7 @@ typedef struct pcieport_s pcieport_t;
 struct pcieport_info_s {
     u_int32_t init:1;
     u_int32_t serdes_init:1;
+    u_int32_t serdes_init_always:1;
     u_int32_t already_init:1;
     pcieport_t pcieport[PCIEPORT_NPORTS];
 };
@@ -110,7 +113,7 @@ u_int32_t pcieport_get_sta_rst(pcieport_t *p);
 int pcieport_get_perstn(pcieport_t *p);
 int pcieport_get_ltssm_st_cnt(pcieport_t *p);
 void pcieport_set_ltssm_st_cnt(pcieport_t *p, const int cnt);
-void pcieport_serdes_init(void);
+int pcieport_serdes_init(void);
 
 void pcieport_fault(pcieport_t *p, const char *fmt, ...)
     __attribute__((format (printf, 2, 3)));

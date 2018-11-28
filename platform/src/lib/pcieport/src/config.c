@@ -262,7 +262,7 @@ pcieport_config_host(pcieport_t *p)
     } else {
         pcieport_info_t *pi = pcieport_info_get();
 
-        if (!pi->serdes_init) {
+        if (!pi->serdes_init || pi->serdes_init_always) {
             int host_clock = 1;
             char *env = getenv("PCIEPORT_HOST_CLOCK");
 
@@ -272,7 +272,9 @@ pcieport_config_host(pcieport_t *p)
             }
 
             pcieport_select_pcie_refclk(host_clock);
-            pcieport_serdes_init();
+            if (pcieport_serdes_init() < 0) {
+                return -1;
+            }
             /*
              * Make pp_cfg_pp_pcsd_control.sris_en_grp_X follow
              * pp_port_c_cfg_c_mac_k_gen.sris_mode.  When

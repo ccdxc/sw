@@ -71,25 +71,20 @@ pcieport_serdes_fw_gen(void)
     return gen;
 }
 
-void
+int
 pcieport_serdes_init(void)
 {
-    /*
-     * Until we figure out how to teach bazel to build with the
-     * generated sbus_pcie_rom we'll leave it out of the bazel build
-     * and include it in the make build by having make add -DSBUS_PCIE_ROM.
-     */
-#ifdef SBUS_PCIE_ROM
     extern uint8_t sbus_pcie_rom_start[];
     const struct sbus_hdr *hdr;
     struct rom_ctx_s ctx;
-    int gen;
+    int r, gen;
 
     hdr = (struct sbus_hdr *)sbus_pcie_rom_start;
     pciesys_loginfo("pcie sbus ROM @ %p", hdr);
     if (hdr->magic != SBUS_ROM_MAGIC) {
-        pciesys_loginfo(", bad magic\n");
-        return;
+        pciesys_loginfo(", bad magic got 0x%x want 0x%x\n",
+                        hdr->magic, SBUS_ROM_MAGIC);
+        return -1;
     }
     pciesys_loginfo(", good magic.  %d words\n", hdr->nwords);
 
@@ -99,11 +94,7 @@ pcieport_serdes_init(void)
 
     gen = pcieport_serdes_fw_gen();
     pal_reg_trace("================ cap_pcie_serdes_setup start\n");
-    cap_pcie_serdes_setup(0, 0, gen == 1, &ctx);
-    pal_reg_trace("================ cap_pcie_serdes_setup end\n");
-#else
-    pciesys_logerror("pcieport_serdes_init: missing serdes rom!!!\n");
-    assert(0);
-    if (0) pcieport_serdes_fw_gen();
-#endif
+    r = cap_pcie_serdes_setup(0, 0, gen == 1, &ctx);
+    pal_reg_trace("================ cap_pcie_serdes_setup end %d\n", r);
+    return r;
 }

@@ -168,7 +168,7 @@ getenv_override_ull(const char *label, const char *name, const u_int64_t def)
     const char *env = getenv(name);
     if (env) {
         u_int64_t val = strtoull(env, NULL, 0);
-        pciesys_loginfo("%s: $%s override %" PRIu64 " (%" PRIx64 ")\n",
+        pciesys_loginfo("%s: $%s override %" PRIu64 " (0x%" PRIx64 ")\n",
                         label, name, val, val);
         return val;
     }

@@ -37,14 +37,7 @@ pcieport_open(const int port)
 {
     pcieport_info_t *pi = pcieport_info_get();
     pcieport_t *p;
-    int otrace;
 
-    otrace = pal_reg_trace_control(getenv("PCIEPORT_INIT_TRACE") != NULL);
-    pal_reg_trace("================ pcieport_open %d start\n", port);
-
-    if (pcieport_onetime_init() < 0) {
-        return -EIO;
-    }
     if (port < 0 || port >= PCIEPORT_NPORTS) {
         pciesys_logerror("pcieport_open port %d out of range\n", port);
         return -EBADF;
@@ -57,11 +50,7 @@ pcieport_open(const int port)
     p->open = 1;
     p->host = 0;
     p->config = 0;
-    if (pcieport_onetime_portinit(p) < 0) {
-        return -EFAULT;
-    }
-    pal_reg_trace("================ pcieport_open %d end\n", port);
-    pal_reg_trace_control(otrace);
+
     return 0;
 }
 
@@ -181,25 +170,6 @@ pcieport_default_cap(pcieport_t *p, int *gen, int *width)
     }
 }
 
-static u_int64_t
-getenv_override_ull(const char *label, const char *name, const u_int64_t def)
-{
-    const char *env = getenv(name);
-    if (env) {
-        u_int64_t val = strtoull(env, NULL, 0);
-        pciesys_loginfo("%s: $%s override %" PRIu64 " (%" PRIx64 ")\n",
-                        label, name, val, val);
-        return val;
-    }
-    return def;
-}
-
-static u_int64_t
-pcieport_param_ull(const char *name, const u_int64_t def)
-{
-    return getenv_override_ull("pcieport", name, def);
-}
-
 int
 pcieport_hostconfig(const int port, const pciehdev_params_t *params)
 {
@@ -221,10 +191,6 @@ pcieport_hostconfig(const int port, const pciehdev_params_t *params)
         p->sris = params->sris;
         p->crs = params->strict_crs;
     }
-
-    p->sris       = pcieport_param_ull("PCIE_SRIS", p->sris);
-    p->crs        = pcieport_param_ull("PCIE_STRICT_CRS", p->crs);
-    p->compliance = pcieport_param_ull("PCIE_COMPLIANCE", p->compliance);
 
     /*
      * Provide default params for any unspecified.
@@ -255,6 +221,13 @@ pcieport_hostconfig(const int port, const pciehdev_params_t *params)
     case  4: p->lanemask = 0x000f << (p->port << 1); break;
     case  8: p->lanemask = 0x00ff << (p->port << 2); break;
     case 16: p->lanemask = 0xffff << (p->port << 4); break;
+    }
+
+    if (pcieport_onetime_init() < 0) {
+        return -EIO;
+    }
+    if (pcieport_onetime_portinit(p) < 0) {
+        return -EFAULT;
     }
 
     /*
