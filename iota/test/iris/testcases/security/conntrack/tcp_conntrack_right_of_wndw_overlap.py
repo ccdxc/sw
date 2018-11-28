@@ -1,46 +1,7 @@
 #! /usr/bin/python3
 
 import iota.harness.api as api
-import yaml
-
-
-def get_conntrackinfo(cmd):
-    yaml_out = yaml.load_all(cmd.stdout)
-    print(type(yaml_out))
-    for data in yaml_out:
-        if data is not None:
-            spec = data['spec']
-            init_flow = spec['initiatorflow']
-            iseq_num = init_flow['flowdata']['conntrackinfo']['tcpseqnum']
-            iack_num = init_flow['flowdata']['conntrackinfo']['tcpacknum']
-            iwindosz = init_flow['flowdata']['conntrackinfo']['tcpwinsz']
-            iwinscale = init_flow['flowdata']['conntrackinfo']['tcpwinscale']
-            print('init flow: seq_num {} ack_num {} iwindosz {} iwinscale {}'.format(iseq_num, iack_num, iwindosz, iwinscale))
-            
-            resp_flow = spec['responderflow']
-            rseq_num = resp_flow['flowdata']['conntrackinfo']['tcpseqnum']
-            rack_num = resp_flow['flowdata']['conntrackinfo']['tcpacknum']
-            rwindosz = resp_flow['flowdata']['conntrackinfo']['tcpwinsz']
-            rwinscale = resp_flow['flowdata']['conntrackinfo']['tcpwinscale']
-            print('resp flow: seq_num {} ack_num {} iwindosz {} iwinscale {}'.format(rseq_num, rack_num, rwindosz, rwinscale))
-            return iseq_num, iack_num, iwindosz, iwinscale, rseq_num, rack_num, rwindosz, rwinscale
-
-def get_yaml(cmd):
-    yaml_out = yaml.load_all(cmd.stdout)
-    for data in yaml_out:
-        if data is not None:
-            return data
-
-def get_respflow(data):
-    return data['spec']['responderflow']
-
-def get_initflow(data):
-    return data['spec']['initiatorflow']
-
-def get_conntrack_info(flow):
-    return flow['flowdata']['conntrackinfo']
-def get_exceptions(conn_info):
-    return conn_info['exceptions']
+from iota.test.iris.testcases.security.conntrack.session_info import *
 
 def Setup(tc):
     api.Logger.info("Setup.")
@@ -66,19 +27,26 @@ def Trigger(tc):
     api.Trigger_AddNaplesCommand(req, client.node_name, cmd_cookie)
     trig_resp1 = api.Trigger(req)
     cmd = trig_resp1.commands[-1] 
-    print(trig_resp1)
-    print(cmd)
+    api.PrintCommandResults(cmd)
     iseq_num, iack_num, iwindosz, iwinscale, rseq_num, rack_num, rwindo_sz, rwinscale = get_conntrackinfo(cmd)
     new_seq_num = iseq_num + rwindo_sz * (2 ** rwinscale)
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
+    rwindo_size= rwindo_sz * (2 ** rwinscale)
+
     #right of window overlap
-    cmd_cookie = "hping3 -c 1 -s 52252 -p 1234 -M {}  -L {} --ack --tcp-timestamp {} -d {}".format(iseq_num + 100, iack_num, server.ip_address,rwindo_sz * (2 ** rwinscale) + 200)    
+    cmd_cookie = "hping3 -c 1 -s 52252 -p 1234 -M {}  -L {} --ack --tcp-timestamp {} -d {}".format(iseq_num + rwindo_size - 200, iack_num, server.ip_address, 500)    
     api.Trigger_AddCommand(req, client.node_name, client.workload_name, cmd_cookie)
+    print(cmd_cookie)
     tc.cmd_cookies['fail ping'] = cmd_cookie
 
-    cmd_cookie = "sleep 3 && /nic/bin/halctl show session --dstport 1234 --dstip {} --yaml".format(server.ip_address)
+    cmd_cookie = "sleep 3"
+    api.Trigger_AddNaplesCommand(req, client.node_name, cmd_cookie)
+    tc.cmd_cookies['sleep'] = cmd_cookie
+
+
+    cmd_cookie = "/nic/bin/halctl show session --dstport 1234 --dstip {} --yaml".format(server.ip_address)
     api.Trigger_AddNaplesCommand(req, client.node_name, cmd_cookie)
     tc.cmd_cookies['show after'] = cmd_cookie
     
@@ -92,17 +60,13 @@ def Trigger(tc):
 def Verify(tc):
     api.Logger.info("Verify.")
     for cmd in tc.resp.commands:
-        #api.PrintCommandResults(cmd)
-        with open("out_cmd", "w+") as f:
-            f.write(cmd.stdout)
-    
         if tc.cmd_cookies['show after'] == cmd.command:     
             print(cmd.stdout)
             yaml_out = get_yaml(cmd)
             init_flow = get_initflow(yaml_out)
             conn_info = get_conntrack_info(init_flow)
             excep =  get_exceptions(conn_info)
-            if (excep['tcpoutofwindow'] == 'false'):
+            if (excep['tcpoutofwindow'] == False):
                 return api.types.status.FAILURE 
         
     #print(tc.resp)

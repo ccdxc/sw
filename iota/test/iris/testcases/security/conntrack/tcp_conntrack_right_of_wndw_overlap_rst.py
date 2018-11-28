@@ -33,12 +33,20 @@ def Trigger(tc):
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
-    #left out of window - retransmit
-    cmd_cookie = "hping3 -c 1 -s 52252 -p 1234 -M {}  -L {} --ack --tcp-timestamp {} -d 10".format(iseq_num - 200, iack_num, server.ip_address)    
+    rwindo_size= rwindo_sz * (2 ** rwinscale)
+
+    #right of window overlap
+    cmd_cookie = "hping3 -c 1 -s 52252 -p 1234 -M {}  -L {}  --rst --ack --tcp-timestamp {} -d {}".format(iseq_num + rwindo_size - 200, iack_num, server.ip_address, 500)    
     api.Trigger_AddCommand(req, client.node_name, client.workload_name, cmd_cookie)
+    print(cmd_cookie)
     tc.cmd_cookies['fail ping'] = cmd_cookie
 
-    cmd_cookie = "sleep 3 && /nic/bin/halctl show session --dstport 1234 --dstip {} --yaml".format(server.ip_address)
+    cmd_cookie = "sleep 3"
+    api.Trigger_AddNaplesCommand(req, client.node_name, cmd_cookie)
+    tc.cmd_cookies['sleep'] = cmd_cookie
+
+
+    cmd_cookie = "/nic/bin/halctl show session --dstport 1234 --dstip {} --yaml".format(server.ip_address)
     api.Trigger_AddNaplesCommand(req, client.node_name, cmd_cookie)
     tc.cmd_cookies['show after'] = cmd_cookie
     
@@ -46,19 +54,20 @@ def Trigger(tc):
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)
     term_resp1 = api.Trigger_TerminateAllCommands(trig_resp1)
     tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
+    
     return api.types.status.SUCCESS    
         
 def Verify(tc):
     api.Logger.info("Verify.")
     for cmd in tc.resp.commands:
-        #api.PrintCommandResults(cmd)
         if tc.cmd_cookies['show after'] == cmd.command:     
             print(cmd.stdout)
             yaml_out = get_yaml(cmd)
             init_flow = get_initflow(yaml_out)
             conn_info = get_conntrack_info(init_flow)
             excep =  get_exceptions(conn_info)
-            if (excep['tcpfullretransmit'] == 'false'):
+            print(excep)
+            if (excep['tcpoutofwindow'] == False):
                 return api.types.status.FAILURE 
         
     #print(tc.resp)

@@ -12,7 +12,7 @@ def Trigger(tc):
     pairs = api.GetLocalWorkloadPairs()
     tc.cmd_cookies = {}
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-
+    tc.resp = []
     #for w1,w2 in pairs:
     server,client  = pairs[0]
     cmd_cookie = "nc -l 1234"
@@ -33,8 +33,8 @@ def Trigger(tc):
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
-    #left out of window - retransmit
-    cmd_cookie = "hping3 -c 1 -s 52252 -p 1234 -M {}  -L {} --ack --tcp-timestamp {} -d 10".format(iseq_num - 200, iack_num, server.ip_address)    
+    #hping3 -c 1 -s 52252 -p 1234 -M 0 -L 0 --ack --tcp-timestamp 192.168.100.102
+    cmd_cookie = "hping3 -c 1 -s 52252 -p 1234 -M {}  -L {} --rst --ack --tcp-timestamp {} -d 10".format(new_seq_num, iack_num, server.ip_address)    
     api.Trigger_AddCommand(req, client.node_name, client.workload_name, cmd_cookie)
     tc.cmd_cookies['fail ping'] = cmd_cookie
 
@@ -58,7 +58,7 @@ def Verify(tc):
             init_flow = get_initflow(yaml_out)
             conn_info = get_conntrack_info(init_flow)
             excep =  get_exceptions(conn_info)
-            if (excep['tcpfullretransmit'] == 'false'):
+            if (excep['tcpoutofwindow'] == 'false'):
                 return api.types.status.FAILURE 
         
     #print(tc.resp)
