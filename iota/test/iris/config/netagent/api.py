@@ -115,9 +115,8 @@ def ConfigureTenants(objlist, oper = CfgOper.ADD):
 
 
 def ConfigureSecurityProfiles(objlist, oper = CfgOper.ADD):
-    api.Logger.info(" - Skipping - AGENT TBD.")
+    __config(objlist, 'api/security/profiles/', oper)
     return
-
 
 def ConfigureSecurityGroupPolicies(objlist, oper = CfgOper.ADD):
     __config(objlist, 'api/security/policies/', oper)

@@ -7,7 +7,10 @@ testcases:
         args    :
             type: remote_only
 
-    -   name    : AgingTcpSessions
+    -   name    : AgingTcpUdpSessions
         testcase: testcases.aging.iperf
+        iterators:
+            type      : simple
+            proto     : [ udp, tcp ]
         args    :
             type: local_only

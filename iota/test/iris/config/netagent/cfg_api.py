@@ -42,6 +42,9 @@ def ReadJsons():
 
     global gl_mirror_json_obj
     gl_mirror_json_obj = __read_one_json('mirrors.json')
+
+    global gl_secprof_json_obj
+    gl_secprof_json_obj = __read_one_json('security_profile.json')
     return
 
 
@@ -52,6 +55,7 @@ def PushConfig():
         agent_api.ConfigureSecurityGroupPolicies(gl_sg_json_obj.sgpolicies)
         #agent_api.ConfigureTunnels(gl_tunnel_json_obj.tunnels)
         #agent_api.ConfigureMirror(gl_mirror_json_obj.mirrors)
+        agent_api.ConfigureSecurityProfiles(gl_secprof_json_obj.securityprofiles)
     return api.types.status.SUCCESS
 
 
@@ -90,6 +94,18 @@ def AddSgPolicies():
 
 def DeleteSgPolicies():
     agent_api.ConfigureSecurityGroupPolicies(gl_sg_json_obj.sgpolicies, oper = agent_api.CfgOper.DELETE)
+    return api.types.status.SUCCESS
+
+def AddSecurityProfiles():
+    agent_api.ConfigureSecurityProfiles(gl_sg_json_obj.sgpolicies, oper = agent_api.CfgOper.ADD)
+    return api.types.status.SUCCESS
+
+def DeleteSecurityProfiles():
+    agent_api.ConfigureSecurityProfiles(gl_sg_json_obj.sgpolicies, oper = agent_api.CfgOper.DELETE)
+    return api.types.status.SUCCESS
+
+def ModifySecurityProfiles():
+    agent_api.ConfigureSecurityProfiles(gl_sg_json_obj.sgpolicies, oper = agent_api.CfgOper.UPDATE)
     return api.types.status.SUCCESS
 
 def FlapPorts():

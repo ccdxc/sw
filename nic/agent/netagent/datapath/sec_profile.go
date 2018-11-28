@@ -115,7 +115,7 @@ func (hd *Datapath) CreateSecurityProfile(profile *netproto.SecurityProfile, vrf
 		if err != nil {
 			return fmt.Errorf("invalid time duration %s", timeouts.UDP)
 		}
-		udpTimeout = uint32(dur)
+		udpTimeout = uint32(dur.Seconds())
 	} else {
 		udpTimeout = constants.DefaultTimeout
 	}
@@ -125,7 +125,7 @@ func (hd *Datapath) CreateSecurityProfile(profile *netproto.SecurityProfile, vrf
 		if err != nil {
 			return fmt.Errorf("invalid time duration %s", timeouts.UDP)
 		}
-		udpDropTimeout = uint32(dur)
+		udpDropTimeout = uint32(dur.Seconds())
 	} else {
 		udpDropTimeout = constants.DefaultTimeout
 	}

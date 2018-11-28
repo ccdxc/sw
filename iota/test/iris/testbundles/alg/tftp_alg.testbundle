@@ -1,8 +1,0 @@
-meta:
-    name    : tftp
-
-testcases:
-    -   name    : tftp_Local_Workloads
-        testcase: testcases.alg.tftp
-        args    :
-            type: local_only

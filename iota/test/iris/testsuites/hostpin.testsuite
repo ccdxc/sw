@@ -29,7 +29,7 @@ testbundles:
     - networking/networking.testbundle
     - networking/networking_hostpin.testbundle
     - aging/aging.testbundle
-    - alg/tftp_alg.testbundle
+    - alg/alg.testbundle
     - firewall/policy_scale.testbundle
     - firewall/policy.testbundle
     - firewall/conntrack.testbundle

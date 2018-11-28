@@ -664,7 +664,7 @@ vrf_nwsec_update (VrfSpec& spec, vrf_t *vrf, bool *nwsec_change,
 
     if (vrf->nwsec_profile_handle != handle) {
         *nwsec_change = true;
-        *new_nwsec_handle = spec.security_key_handle().profile_handle();
+        *new_nwsec_handle = handle;
         HAL_TRACE_DEBUG("Updated nwsec profile to {}", *new_nwsec_handle);
     }
 
