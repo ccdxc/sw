@@ -3,6 +3,8 @@
 #include <algorithm>
 
 #include "delphi_server.hpp"
+#include "nic/delphi/sdk/delphi_sdk.hpp"
+#include "gen/proto/delphi_objects.hpp"
 
 namespace delphi {
 
@@ -13,8 +15,8 @@ using namespace delphi::messenger;
 // Checks if the service has mounted the (kind, key)
 bool ServiceInfo::HasMounted(string kind, string key) {
     for (auto mount: this->Mounts) {
-        if ((mount.MountPath == getMountPath(kind, "")) ||
-            (mount.MountPath == getMountPath(kind, key))) {
+        if ((mount.MountPath == getPath(kind, "")) ||
+            (mount.MountPath == getPath(kind, key))) {
             return true;
         }
     }
@@ -23,15 +25,16 @@ bool ServiceInfo::HasMounted(string kind, string key) {
 
 // DelphiServer constructor
 DelphiServer::DelphiServer() {
-    this->syncTimer.set<DelphiServer, &DelphiServer::syncTimerHandler>(this);
-    this->syncTimer.start(SYNC_PERIOD, SYNC_PERIOD);
-    this->currServiceId = 1;
+    this->syncTimer_.set<DelphiServer, &DelphiServer::syncTimerHandler>(this);
+    this->syncTimer_.start(SYNC_PERIOD, SYNC_PERIOD);
+    this->currServiceId_ = 1;
+    this->traceEnabled_ = false;
 }
 
 // Start starts the delphi server
 error DelphiServer::Start() {
     // create a messager server
-    this->msgServer = make_shared<MessangerServer>(shared_from_this());
+    this->msgServer_ = make_shared<MessangerServer>(shared_from_this());
 
     // init the delphi shared memory
     srv_shm_ = make_shared<delphi::shm::DelphiShm>();
@@ -39,7 +42,7 @@ error DelphiServer::Start() {
     assert(err.IsOK());
 
     // start the server
-    return this->msgServer->Start();
+    return this->msgServer_->Start();
 }
 
 // GetSubtree returns a subtree of objects for a kind
@@ -47,14 +50,14 @@ DbSubtreePtr DelphiServer::GetSubtree(string kind) {
     std::map<string, DbSubtreePtr>::iterator it;
 
     // find the subtree by kind
-    it = this->subtrees.find(kind);
-    if (it != this->subtrees.end()) {
+    it = this->subtrees_.find(kind);
+    if (it != this->subtrees_.end()) {
         return it->second;
     }
 
     // create a new subtree
     DbSubtreePtr subtree = make_shared<DbSubtree>();
-    this->subtrees[kind] = subtree;
+    this->subtrees_[kind] = subtree;
 
     return subtree;
 }
@@ -112,9 +115,9 @@ ServiceInfoPtr DelphiServer::addService(string svcName, int sockCtx) {
     }
 
     // save the svc
-    this->services[svcName] = svc;
-    this->serviceIds[svc->ServiceID] = svc;
-    this->sockets[sockCtx] = svc;
+    this->services_[svcName] = svc;
+    this->serviceIds_[svc->ServiceID] = svc;
+    this->sockets_[sockCtx] = svc;
 
     return svc;
 }
@@ -124,8 +127,8 @@ ServiceInfoPtr DelphiServer::findServiceName(string svcName) {
     std::map<string, ServiceInfoPtr>::iterator it;
 
     // find in the map
-    it = this->services.find(svcName);
-    if (it != this->services.end()) {
+    it = this->services_.find(svcName);
+    if (it != this->services_.end()) {
         return it->second;
     }
 
@@ -137,8 +140,8 @@ ServiceInfoPtr DelphiServer::findServiceID(uint16_t svcID) {
     std::map<uint16_t, ServiceInfoPtr>::iterator it;
 
     // find in the map
-    it = this->serviceIds.find(svcID);
-    if (it != this->serviceIds.end()) {
+    it = this->serviceIds_.find(svcID);
+    if (it != this->serviceIds_.end()) {
         return it->second;
     }
 
@@ -149,11 +152,11 @@ ServiceInfoPtr DelphiServer::findServiceID(uint16_t svcID) {
 uint16_t DelphiServer::getNewServiceID() {
     // keep trying to find the next available id
     for (int i = 0; i < 0xFFFF; i++) {
-        ServiceInfoPtr svc = findServiceID(this->currServiceId);
+        ServiceInfoPtr svc = findServiceID(this->currServiceId_);
         if (svc == NULL) {
-            return this->currServiceId++;
+            return this->currServiceId_++;
         }
-        this->currServiceId++;
+        this->currServiceId_++;
     }
 
     // we should never reach here
@@ -166,8 +169,8 @@ ServiceInfoPtr DelphiServer::findSock(int sockCtx) {
     std::map<int, ServiceInfoPtr>::iterator it;
 
     // find in the map
-    it = this->sockets.find(sockCtx);
-    if (it != this->sockets.end()) {
+    it = this->sockets_.find(sockCtx);
+    if (it != this->sockets_.end()) {
         return it->second;
     }
 
@@ -177,9 +180,9 @@ ServiceInfoPtr DelphiServer::findSock(int sockCtx) {
 // delService deletes a service
 error DelphiServer::delService(ServiceInfoPtr svc, int sockCtx) {
     // save the svc
-    this->services.erase(svc->ServiceName);
-    this->serviceIds.erase(svc->ServiceID);
-    this->sockets.erase(sockCtx);
+    this->services_.erase(svc->ServiceName);
+    this->serviceIds_.erase(svc->ServiceID);
+    this->sockets_.erase(sockCtx);
 
     return error::OK();
 }
@@ -187,7 +190,7 @@ error DelphiServer::delService(ServiceInfoPtr svc, int sockCtx) {
 // ListService lists all services in the delphi server
 vector<ServiceInfoPtr> DelphiServer::ListService() {
     vector<ServiceInfoPtr> svcs;
-    for (map<string, ServiceInfoPtr>::iterator iter=services.begin(); iter!=services.end(); ++iter) {
+    for (map<string, ServiceInfoPtr>::iterator iter=services_.begin(); iter!=services_.end(); ++iter) {
         svcs.push_back(iter->second);
     }
 
@@ -205,7 +208,7 @@ MountPointPtr DelphiServer::addMountPoint(string mountPath) {
     // add the mount point
     mountPoint = make_shared<MountPoint>();
     mountPoint->MountPath = mountPath;
-    this->mountPoints[mountPath] = mountPoint;
+    this->mountPoints_[mountPath] = mountPoint;
 
     return mountPoint;
 }
@@ -215,8 +218,8 @@ MountPointPtr DelphiServer::findMountPoint(string mountPath) {
     std::map<string, MountPointPtr>::iterator it;
 
     // find in the map
-    it = this->mountPoints.find(mountPath);
-    if (it != this->mountPoints.end()) {
+    it = this->mountPoints_.find(mountPath);
+    if (it != this->mountPoints_.end()) {
         return it->second;
     }
 
@@ -228,11 +231,11 @@ error DelphiServer::deleteMountPoint(string mountPath) {
     std::map<string, MountPointPtr>::iterator it;
 
     // delete the mount point
-    this->mountPoints.erase(mountPath);
-    it = this->mountPoints.find(mountPath);
-    if (it != this->mountPoints.end()) {
+    this->mountPoints_.erase(mountPath);
+    it = this->mountPoints_.find(mountPath);
+    if (it != this->mountPoints_.end()) {
         assert(it->second->Services.size() == 0);
-        this->mountPoints.erase(it);
+        this->mountPoints_.erase(it);
     }
 
     return error::OK();
@@ -241,7 +244,7 @@ error DelphiServer::deleteMountPoint(string mountPath) {
 // requestMount requests a kind to be mounted for a service
 error DelphiServer::requestMount(string kind, string key, string svcName, MountMode mode) {
     // first add the mount point
-    MountPointPtr mntPt = this->addMountPoint(getMountPath(kind, key));
+    MountPointPtr mntPt = this->addMountPoint(getPath(kind, key));
 
     // find the service
     ServiceInfoPtr svc = this->findServiceName(svcName);
@@ -254,18 +257,18 @@ error DelphiServer::requestMount(string kind, string key, string svcName, MountM
         for (map<string, MountInfo>::iterator iter=mntPt->Services.begin(); iter!=mntPt->Services.end(); ++iter) {
             if ((iter->second.Mode == ReadWriteMode) && (iter->first != svcName)) {
                 LogError("Service {} is mounting {} as RW while service {} has mounted it RW",
-                        svcName, getMountPath(kind, key), iter->first);
+                        svcName, getPath(kind, key), iter->first);
                 return error::New("Multiple services mounting in read-write mode");
             }
         }
 
         // if this is mounting a kind, key, verify no one has mounted the kind as RW
         if (key != "") {
-            MountPointPtr parentMnt = this->addMountPoint(getMountPath(kind, ""));
+            MountPointPtr parentMnt = this->addMountPoint(getPath(kind, ""));
             for (map<string, MountInfo>::iterator iter=parentMnt->Services.begin(); iter!=parentMnt->Services.end(); ++iter) {
                 if ((iter->second.Mode == ReadWriteMode) && (iter->first != svcName)) {
                     LogError("Service {} is mounting {} as RW while service {} has mounted it RW",
-                            svcName, getMountPath(kind, key), iter->first);
+                            svcName, getPath(kind, key), iter->first);
                     return error::New("Multiple services mounting in read-write mode");
                 }
             }
@@ -274,7 +277,7 @@ error DelphiServer::requestMount(string kind, string key, string svcName, MountM
 
     // add mount data
     MountInfo mnt;
-    mnt.MountPath = getMountPath(kind, key);
+    mnt.MountPath = getPath(kind, key);
     mnt.ServiceName = svcName;
     mnt.Mode = mode;
     mntPt->Services[svcName] = mnt;
@@ -396,6 +399,13 @@ error DelphiServer::HandleChangeReq(int sockCtx, vector<ObjectData> req, vector<
         // create a new object instance
         ObjectDataPtr newObj = make_shared<ObjectData>(*iter);
 
+        // log the update
+        if (traceEnabled_ && !isKindPeriodic(kind)) {
+            BaseObjectPtr objinfo = BaseObject::Create(kind, newObj->data());
+            LogInfo("{}: for {}/{} data: {}", ObjectOperation_Name(iter->op()),
+                        kind, key, objinfo->GetMessage()->ShortDebugString());
+        }
+
         // add or remove it from db
         switch (iter->op()) {
         case SetOp:
@@ -424,15 +434,15 @@ error DelphiServer::HandleChangeReq(int sockCtx, vector<ObjectData> req, vector<
         }
 
         // queue it for sync
-        this->syncQueue.push_back(newObj);
+        this->syncQueue_.push_back(newObj);
     }
 
     return error::OK();
 }
 
 error DelphiServer::Stop() {
-    this->syncTimer.stop();
-    return msgServer->Stop();
+    this->syncTimer_.stop();
+    return msgServer_->Stop();
 }
 
 // syncTimerHandler is called when sync time fires
@@ -441,17 +451,17 @@ error DelphiServer::Stop() {
 void DelphiServer::syncTimerHandler(ev::timer &watcher, int revents) {
 
     // see if we have any objects to send
-    if (syncQueue.size() == 0) {
+    if (syncQueue_.size() == 0) {
         return;
     }
 
     // walk all services and send the objects to them
-    for (map<int, ServiceInfoPtr>::iterator iter=sockets.begin(); iter!=sockets.end(); ++iter) {
+    for (map<int, ServiceInfoPtr>::iterator iter=sockets_.begin(); iter!=sockets_.end(); ++iter) {
         ServiceInfoPtr svc = iter->second;
         vector<ObjectData *> objlist;
 
         // walk all objects in sync queue
-        for (vector<ObjectDataPtr>::iterator i=syncQueue.begin(); i!=syncQueue.end(); ++i) {
+        for (vector<ObjectDataPtr>::iterator i=syncQueue_.begin(); i!=syncQueue_.end(); ++i) {
             // dequeue from the sync queue
             ObjectDataPtr syncObj = *i;
 
@@ -469,14 +479,21 @@ void DelphiServer::syncTimerHandler(ev::timer &watcher, int revents) {
 
         // send the object list to the client
         if (objlist.size() > 0) {
-            msgServer->SendNotify(iter->first, objlist);
+            msgServer_->SendNotify(iter->first, objlist);
         }
     }
 
     // clear the queue
-    syncQueue.clear();
+    syncQueue_.clear();
 
 }
 
+// isKindPeriodic checks if the kind is a periodic update kind
+bool DelphiServer::isKindPeriodic(string kind) {
+    if (kind == "DelphiClientStatus") return true;
+    else if (kind == "AccelHwRingInfo") return true;
+
+    return false;
+}
 
 } // namespace delphi

@@ -38,3 +38,9 @@ message ExampleStatus {
     repeated uint32        VlanIds           = 7 [(delphi.event) = true];
     map<string, string>    IPAddresses       = 8 [(delphi.event) = true];
 }
+
+message ExampleSingleton {
+    option (delphi.singleton) = true;
+    delphi.ObjectMeta      Meta                 = 1;
+    string                 DummySingletonField  = 2 [(delphi.event) = true];
+}

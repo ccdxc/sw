@@ -170,10 +170,9 @@ error MessangerClient::HandleMsg(int sock, MessagePtr msg) {
 
 // SocketClosed handle socket closed event
 error MessangerClient::SocketClosed(int sock) {
-    // FIXME: handle socket closing
-    LogError("Connection to server closed. Exiting...");
-    exit(1);
-    return error::OK();
+    this->connected = false;
+
+    return this->handler->SocketClosed();
 }
 
 error MessangerClient::Close() {

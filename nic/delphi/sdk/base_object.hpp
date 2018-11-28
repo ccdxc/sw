@@ -71,6 +71,7 @@ public:
 static inline string getPath(string kind, string key) {
     return kind + "|" + key;
 }
+
 } // namespace delphi
 
 #endif // _DELPHI_BASE_OBJECTS_H_

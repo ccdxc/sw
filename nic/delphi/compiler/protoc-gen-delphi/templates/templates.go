@@ -874,6 +874,7 @@ class {{.GetName}}Service : public delphi::Service, public enable_shared_from_th
 public: \
     {{.GetName}}Service(delphi::SdkPtr sk) { \
         this->sdk_ = sk; \
+        sk->enterAdminMode(); \
         delphi::objects::{{.GetName}}::Mount(sdk_, delphi::ReadWriteMode); \
         reactor_class##var_ = make_shared<reactor_class>(sdk_); \
         delphi::objects::{{.GetName}}::Watch(sdk_, reactor_class##var_); \

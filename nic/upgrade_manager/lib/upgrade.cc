@@ -27,6 +27,9 @@ UpgradeService::UpgradeService(delphi::SdkPtr sk, string name) : sysMgr_(sk, nam
     delphi::objects::UpgStateReq::Mount(sdk_, delphi::ReadWriteMode);
     delphi::objects::UpgAppResp::Mount(sdk_, delphi::ReadMode);
     delphi::objects::UpgApp::Mount(sdk_, delphi::ReadMode);
+    delphi::objects::UpgAppPtr objUpgAppPtr = make_shared<delphi::objects::UpgApp>();
+    objUpgAppPtr->set_key(svcName_);
+    delphi::objects::UpgApp::MountKey(sdk_, objUpgAppPtr, delphi::ReadWriteMode);
 
     // create upgrade manager event handler
     upgMgr_ = make_shared<UpgReqReact>(sdk_);

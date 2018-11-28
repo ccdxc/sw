@@ -423,7 +423,7 @@ targets:
   # feature:
 
   delphi:
-    commands: ["sh", "-c", "cd /sw/nic && make && cd ./delphi && make test && cd $GOPATH/src/github.com/pensando/sw && LD_LIBRARY_PATH=$GOPATH/src/github.com/pensando/sw/nic/build/x86_64/iris/lib/ go test -v ./nic/delphi/..." ]
+    commands: ["sh", "-c", "cd /sw/nic && make && cd ./delphi && make test" ]
     owners: ["email:shaleman@pensando.io"]
     area:
     sub-area:

@@ -1,39 +1,20 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 # This is a dummy target to build all delphi componentes
-MODULE_PREREQS = client.proto delphi_client_test.gtest delphictl.bin \
-                 delphi_example.bin delphi_example_test.gtest delphi_hub.bin \
-                 delphi_hub_test.gtest delphi_kvstore_test.gtest \
-                 delphi_messenger_test.gtest delphi_metrics_test.gtest \
-                 delphi.proto delphi_server_test.gtest delphi_shm_test.gtest \
-                 delphi_slab_test.gtest delphi_transport_test.gtest \
-                 delphi_utils_test.gtest delphi_example.proto libdelphiclientproto.a \
-                 libdelphiexampleproto.a libdelphimessenger.a libdelphiproto.a \
-                 libdelphisdk.so libdelphishm.a libdelphiutils.a \
-                 libmessengerproto.a messenger.proto protoc-gen-delphi.gobin
+MODULE_PREREQS = $(shell find . -name "module*.mk" -exec grep TARGET {} \; -print | grep TARGET | awk '{print $$3}' | tr " " "\n" | LC_ALL=C sort | tr "\n" " ")
 
-MODULE_TEST_TARGETS = delphi_example_test delphi_hub_test delphi_server_test \
-                      delphi_messenger_test delphi_transport_test \
-                      delphi_client_test delphi_metrics_test \
-                      delphi_kvstore_test delphi_shm_test delphi_slab_test \
-                      delphi_utils_test
-
-PROTO_GEN_TARGETS = sysmgr.proto nicmgr.proto gogo.proto hal.proto device.proto \
-                    common.proto upgrade.proto agent.proto delphi.proto \
-                    delphi_example.proto messenger.proto client.proto
+MODULE_TEST_TARGETS = $(shell find . -name "module*.mk" -exec grep TARGET {} \; | awk '{print $$3}' | grep gtest | awk -F\. '{print $$1}' | tr " " "\n" | LC_ALL=C sort | tr "\n" " ")
 
 
 default: build
 
 build:
+	@echo "+++ Building " $$MODULE_PREREQS
 	cd .. && make ${MODULE_PREREQS}
 
 deps:
 	@echo "+++ Building delphi dependencies..."
 	@cd .. && make libdelphisdk.so
-
-genproto:
-	cd .. && make ${PROTO_GEN_TARGETS}
 
 test: build
 	make test-only
@@ -46,4 +27,5 @@ test-only:
 		 fi; \
 	done
 	@echo "============= Running go test ========================"; \
-	go test github.com/pensando/sw/nic/delphi/...  -count 1 -v
+	LD_LIBRARY_PATH=$$GOPATH/src/github.com/pensando/sw/nic/build/x86_64/iris/lib/ go test -v github.com/pensando/sw/nic/delphi/...  -count 1
+	@echo "============= All tests passed ========================"; \

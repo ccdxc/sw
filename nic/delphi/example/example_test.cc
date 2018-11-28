@@ -32,6 +32,7 @@ TEST_F(ExampleReactorTest, BasicTest) {
     sdk_->QueueUpdate(intf);
 
     // verify spec object in db has changed
+    ASSERT_NE_EVENTUALLY(delphi::objects::ExampleSpec::FindObject(sdk_, intf), nullptr) << "Interface spec not found";
     ASSERT_EQ_EVENTUALLY(delphi::objects::ExampleSpec::FindObject(sdk_, intf)->adminstate(),
                         example::IntfStateUp) << "Interface spec object has wrong oper state";
 

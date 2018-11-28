@@ -10,6 +10,7 @@ Sdk::Sdk() {
     client_ = make_shared<DelphiClient>();
     stopAsync_.set<Sdk, &Sdk::asyncStop>(this);
     stopAsync_.start();
+    isRunning_= false;
 }
 
 // MainLoop runs the main event loop
@@ -22,6 +23,7 @@ int Sdk::MainLoop() {
     }
 
     // run event loop
+    isRunning_ = true;
     loop_.run(0);
 
     return 0;
@@ -62,6 +64,10 @@ error Sdk::SetObject(BaseObjectPtr objinfo) {
     return client_->SetObject(objinfo);
 }
 
+error Sdk::SyncObject(BaseObjectPtr objinfo) {
+    return client_->SyncObject(objinfo);
+}
+
 error Sdk::DeleteObject(BaseObjectPtr objinfo) {
     return client_->DeleteObject(objinfo);
 }
@@ -88,6 +94,7 @@ void Sdk::TestLoop() {
     client_->MockConnect(1);
 
     // run event loop without connecting to delphi hub
+    isRunning_ = true;
     loop_.run(0);
 }
 
@@ -100,10 +107,21 @@ error Sdk::Stop() {
 // asyncStop is the async handler to stop the event loop and close delphi client
 void Sdk::asyncStop(ev::async &watcher, int revents) {
     // break the loop
-    loop_.break_loop(ev::ALL);
+    if (isRunning_) {
+        loop_.break_loop(ev::ALL);
+        isRunning_ = false;
+        LogInfo("Stopped event thread");
+    }
+
     stopAsync_.stop();
 
     // close delphi hub client
     client_->Close();
 }
+
+// enterAdminMode enters special admin mode (to be used by utest code and delphictl)
+void Sdk::enterAdminMode() {
+    client_->enterAdminMode();
+}
+
 } // namespace delphi

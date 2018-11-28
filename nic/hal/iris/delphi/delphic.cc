@@ -75,6 +75,9 @@ delphi_client::delphi_client(delphi::SdkPtr &sdk)
     // mount interface status objects
     delphi::objects::InterfaceStatus::Mount(sdk, delphi::ReadWriteMode);
 
+    // mount hal status objects
+    delphi::objects::HalStatus::Mount(sdk, delphi::ReadWriteMode);
+
     // create HAL status (singleton) obj with STATUS_NONE
     status = std::make_shared<dobj::HalStatus>();
     if (status) {

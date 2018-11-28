@@ -59,6 +59,7 @@ message TestKey {
 }
 
 message TestObject {
+     option (delphi.update_event) = true;
      ObjectMeta  Meta        = 1;
      TestKey     Key         = 2;
      string      TestData1   = 3;

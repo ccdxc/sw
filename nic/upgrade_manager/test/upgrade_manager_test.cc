@@ -36,6 +36,7 @@ TEST_F(UpgradeReactorTest, BasicTest) {
 DELPHI_SERVICE_TEST(UpgradeTest, UpgradeService);
 
 TEST_F(UpgradeTest, UpgStateReqCreateTest) {
+    sdk_->enterAdminMode();
     usleep(1000);
 
     delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
@@ -77,6 +78,7 @@ TEST_F(UpgradeTest, UpgStateReqCreateTest) {
 }
 
 TEST_F(UpgradeTest, UpgTypeNonDisruptiveTest) {
+    sdk_->enterAdminMode();
     usleep(1000);
 
     delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
@@ -120,6 +122,7 @@ TEST_F(UpgradeTest, UpgTypeNonDisruptiveTest) {
 }
 
 TEST_F(UpgradeTest, UpgTypeDisruptiveTest) {
+    sdk_->enterAdminMode();
     usleep(1000);
 
     delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
@@ -163,6 +166,7 @@ TEST_F(UpgradeTest, UpgTypeDisruptiveTest) {
 }
 
 TEST_F(UpgradeTest, StateMachineMoveToCompatCheckTest) {
+    sdk_->enterAdminMode();
     usleep(1000);
 
     delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
@@ -216,6 +220,7 @@ TEST_F(UpgradeTest, StateMachineMoveToCompatCheckTest) {
 }
 
 TEST_F(UpgradeTest, CheckStateMachineWithNoAppRegistering) {
+    sdk_->enterAdminMode();
     usleep(1000);
 
     delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
@@ -258,6 +263,7 @@ TEST_F(UpgradeTest, CheckStateMachineWithNoAppRegistering) {
 }
 
 TEST_F(UpgradeTest, UpgradeNonDisruptiveStateMachineTest) {
+    sdk_->enterAdminMode();
     usleep(1000);
     delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
     ASSERT_TRUE(upgmetptr != NULL) << "Failed to create upgmetptr";
@@ -364,6 +370,7 @@ TEST_F(UpgradeTest, UpgradeNonDisruptiveStateMachineTest) {
 }
 
 TEST_F(UpgradeTest, UpgradeDisruptiveStateMachineTest) {
+    sdk_->enterAdminMode();
     usleep(1000);
     delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
     ASSERT_TRUE(upgmetptr != NULL) << "Failed to create upgmetptr";
@@ -484,6 +491,7 @@ TEST_F(UpgradeTest, UpgradeDisruptiveStateMachineTest) {
 }
 
 TEST_F(UpgradeTest, UpgradePossibleStateMachineTest) {
+    sdk_->enterAdminMode();
     usleep(1000);
     delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
     ASSERT_TRUE(upgmetptr != NULL) << "Failed to create upgmetptr";
@@ -540,6 +548,7 @@ TEST_F(UpgradeTest, UpgradePossibleStateMachineTest) {
 }
 
 TEST_F(UpgradeTest, UpgradePossibleFailStateMachineTest) {
+    sdk_->enterAdminMode();
     usleep(1000);
     delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
     ASSERT_TRUE(upgmetptr != NULL) << "Failed to create upgmetptr";
@@ -600,6 +609,7 @@ TEST_F(UpgradeTest, UpgradePossibleFailStateMachineTest) {
 }
 
 TEST_F(UpgradeTest, StateMachineTestWithTwoApps) {
+    sdk_->enterAdminMode();
     usleep(1000);
     delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
     ASSERT_TRUE(upgmetptr != NULL) << "Failed to create upgmetptr";
@@ -753,6 +763,7 @@ TEST_F(UpgradeTest, StateMachineTestWithTwoApps) {
 }
 
 TEST_F(UpgradeTest, StateMachineTestWithTwoAppsDisruptive) {
+    sdk_->enterAdminMode();
     usleep(1000);
     delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
     ASSERT_TRUE(upgmetptr != NULL) << "Failed to create upgmetptr";
@@ -935,6 +946,7 @@ TEST_F(UpgradeTest, StateMachineTestWithTwoAppsDisruptive) {
 }
 
 TEST_F(UpgradeTest, CleanupPostStateMachineTest) {
+    sdk_->enterAdminMode();
     usleep(1000);
     delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
     ASSERT_TRUE(upgmetptr != NULL) << "Failed to create upgmetptr";
@@ -1050,6 +1062,7 @@ TEST_F(UpgradeTest, CleanupPostStateMachineTest) {
 }
 
 TEST_F(UpgradeTest, StateMachineAbortTest) {
+    sdk_->enterAdminMode();
     usleep(1000);
     delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
     ASSERT_TRUE(upgmetptr != NULL) << "Failed to create upgmetptr";
@@ -1136,6 +1149,7 @@ TEST_F(UpgradeTest, StateMachineAbortTest) {
 }
 
 TEST_F(UpgradeTest, StateMachineAbortTestDisruptive) {
+    sdk_->enterAdminMode();
     usleep(1000);
     delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
     ASSERT_TRUE(upgmetptr != NULL) << "Failed to create upgmetptr";
@@ -1214,6 +1228,7 @@ TEST_F(UpgradeTest, StateMachineAbortTestDisruptive) {
 }
 
 TEST_F(UpgradeTest, StateMachineAppFailTest) {
+    sdk_->enterAdminMode();
     usleep(1000);
     delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
     ASSERT_TRUE(upgmetptr != NULL) << "Failed to create upgmetptr";
@@ -1299,6 +1314,7 @@ TEST_F(UpgradeTest, StateMachineAppFailTest) {
 }
 
 TEST_F(UpgradeTest, StateMachineAppFailTestDisruptive) {
+    sdk_->enterAdminMode();
     usleep(1000);
     delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
     ASSERT_TRUE(upgmetptr != NULL) << "Failed to create upgmetptr";
@@ -1376,6 +1392,7 @@ TEST_F(UpgradeTest, StateMachineAppFailTestDisruptive) {
 }
 
 TEST_F(UpgradeTest, StateMachineAppFailStringTest) {
+    sdk_->enterAdminMode();
     usleep(1000);
     delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
     ASSERT_TRUE(upgmetptr != NULL) << "Failed to create upgmetptr";
@@ -1469,6 +1486,7 @@ TEST_F(UpgradeTest, StateMachineAppFailStringTest) {
 }
 
 TEST_F(UpgradeTest, StateMachineAppFailStringTestWithTwoApps) {
+    sdk_->enterAdminMode();
     usleep(1000);
     delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
     ASSERT_TRUE(upgmetptr != NULL) << "Failed to create upgmetptr";
@@ -1593,6 +1611,7 @@ TEST_F(UpgradeTest, StateMachineAppFailStringTestWithTwoApps) {
 }
 
 TEST_F(UpgradeTest, StateMachineAppFailStringTestWithTwoAppsDisruptive) {
+    sdk_->enterAdminMode();
     usleep(1000);
     delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
     ASSERT_TRUE(upgmetptr != NULL) << "Failed to create upgmetptr";

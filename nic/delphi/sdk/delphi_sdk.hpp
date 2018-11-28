@@ -33,6 +33,9 @@ public:
     // SetObject updates an object in db (needs to be called inside the event loop)
     error SetObject(BaseObjectPtr objinfo);
 
+    // SyncObject updates and syncs object
+    error SyncObject(BaseObjectPtr objinfo);
+
     // DeleteObject deletes an object from DB (needs to be called from inside event loop)
     error DeleteObject(BaseObjectPtr objinfo);
 
@@ -63,10 +66,14 @@ public:
     // Stop the sdk  (mainly for test purposes)
     error Stop();
 
+    // enterAdminMode (to be used by test code and delphictl)
+    void enterAdminMode();
+
 private:
     DelphiClientPtr    client_;      // delphi client
     ev::default_loop   loop_;        // libev event loop
     ev::async          stopAsync_;   // async stop loop
+    bool               isRunning_;   // is the loop running
 
     void asyncStop(ev::async &watcher, int revents);
 };

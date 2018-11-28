@@ -6,9 +6,6 @@
 #include "nic/delphi/shm/delphi_metrics.hpp"
 #include "argh/argh.h"
 #include "gen/proto/delphi_objects.hpp"
-#include "gen/proto/nicmgr/accel_metrics.delphi.hpp"
-#include "gen/proto/nicmgr/metrics.delphi.hpp"
-#include "gen/proto/nicmgr/nicmgr.delphi.hpp"
 #include "nic/sdk/include/sdk/pal.hpp"
 
 using namespace delphi;
@@ -16,19 +13,15 @@ using namespace delphi;
 class DelphictlService : public delphi::Service, public enable_shared_from_this<DelphictlService> {
 private:
     delphi::SdkPtr            sdk_;
-    delphi::shm::DelphiShmPtr shm_;
     vector<string>            mount_kinds_;
 public:
+    string                    matchKey;
+
+    // constructor
     DelphictlService(delphi::SdkPtr sk);
 
     // OnMountComplete gets called when all the objects are mounted
     void OnMountComplete();
-
-    // DumpKvstore dumps kvstore info
-    void DumpKvstore(string tbl_name);
-
-    // DumpMetrics dumps metrics of a kind
-    void DumpMetrics(string met_name);
 
     // MountKind mounts a kind of object
     void MountKind(string kind);
@@ -36,8 +29,6 @@ public:
 
 DelphictlService::DelphictlService(delphi::SdkPtr sk) {
     sdk_ = sk;
-    // get the shared memory object
-    shm_ = delphi::metrics::DelphiMetrics::GetDelphiShm();
 
 }
 
@@ -49,34 +40,6 @@ void DelphictlService::MountKind(string kind) {
     mount_kinds_.push_back(kind);
 }
 
-void DelphictlService::DumpKvstore(string tbl_name) {
-    shm_->Kvstore()->DumpInfo();
-
-    if (tbl_name != "") {
-        printf("dumping table: %s\n", tbl_name.c_str());
-        delphi::shm::TableMgrUptr tbl = shm_->Kvstore()->Table(tbl_name.c_str());
-        tbl->DumpTable();
-    }
-}
-
-// DumpMetrics dumps a metric of a kind
-void DelphictlService::DumpMetrics(string met_name) {
-    // initialize pal
-#ifdef __x86_64__
-    assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_MOCK) == sdk::lib::PAL_RET_OK);
-#elif __aarch64__
-    assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_HAPS) == sdk::lib::PAL_RET_OK);
-#endif
-
-    // metrics iterator
-    delphi::metrics::DelphiMetricsIterator miter(met_name);
-    for (; miter.IsNotNil(); miter.Next()) {
-        auto tmp = miter.Get();
-        printf("%s\n", tmp->DebugString().c_str());
-    }
-}
-
-
 void DelphictlService::OnMountComplete() {
     // walk all the mounted kinds
     for (vector<string>::iterator it=mount_kinds_.begin(); it!=mount_kinds_.end(); ++it) {
@@ -86,56 +49,209 @@ void DelphictlService::OnMountComplete() {
         auto objlist = sdk_->ListKind(*it);
         // walk all objects
         for (vector<BaseObjectPtr>::iterator oi=objlist.begin(); oi!=objlist.end(); ++oi) {
-            printf("%s\n", (*oi)->GetMessage()->DebugString().c_str());
-            printf("------------------------------\n");
+            string key = (*oi)->GetKey();
+
+            // if match key was not specified or key contains the match
+            if ((this->matchKey == "") || (key.find(this->matchKey) != std::string::npos)) {
+                printf("%s\n", (*oi)->GetMessage()->DebugString().c_str());
+                printf("------------------------------\n");
+            }
         }
     }
 
-    LogInfo("Mount complete. Exiting");
     exit(0);
 }
 
-int main(int argc, char **argv) {
+void printKvstoreInfo(string tbl_name) {
+    auto shm = delphi::metrics::DelphiMetrics::GetDelphiShm();
+    shm->Kvstore()->DumpInfo();
+
+    if (tbl_name != "") {
+        printf("dumping table: %s\n", tbl_name.c_str());
+        delphi::shm::TableMgrUptr tbl = shm->Kvstore()->Table(tbl_name.c_str());
+        tbl->DumpTable();
+    }
+}
+
+void printShmInfo() {
+    auto shm = delphi::metrics::DelphiMetrics::GetDelphiShm();
+    shm->Kvstore()->DumpInfo();
+}
+
+void listMetricsKind(string kind, string matchstr) {
+    // initialize pal
+#ifdef __x86_64__
+    assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_MOCK) == sdk::lib::PAL_RET_OK);
+#elif __aarch64__
+    assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_HAPS) == sdk::lib::PAL_RET_OK);
+#endif
+
+    // get the shared memory object
+    delphi::shm::DelphiShmPtr shm = delphi::metrics::DelphiMetrics::GetDelphiShm();
+    assert(shm != NULL);
+
+    // get the table
+    delphi::shm::TableMgrUptr tbl = shm->Kvstore()->Table(kind);
+    if (tbl == NULL) {
+        printf("%s table not found\n", kind.c_str());
+        return;
+    }
+
+    // create the iterator
+    delphi::metrics::DelphiMetricsIterator miter(kind);
+    for (; miter.IsNotNil(); miter.Next()) {
+        auto tmp = miter.Get();
+        string dbgstr = tmp->DebugString();
+        if ((matchstr == "") || (dbgstr.find(matchstr) != std::string::npos)) {
+            printf("%s\n", dbgstr.c_str());
+        }
+    }
+}
+
+void printMetricsKindList() {
+    // factory list
+    map<string, delphi::metrics::MetricsFactory*> fctries = *(delphi::metrics::DelphiMetrics::GetFactoryMap());
+
+    cout << "Usage: delphictl metrics list <kind> [options]" << endl;
+    cout << "Available kinds:" << endl;
+
+    for (map<string, delphi::metrics::MetricsFactory *>::iterator i = fctries.begin(); i != fctries.end(); ++i) {
+        cout << "    " <<  i->first << endl;
+    }
+}
+
+void printMetricsCmdUsage() {
+    cout << "Usage: delphictl metrics <command> <kind> [options]" << endl;
+    cout << "Available options:" << endl;
+    cout << "    list      - list all objects of kind" << endl;
+    cout << "    get       - display an object of kind, key" << endl;
+}
+
+void listDbKind(string kind, string matchKey) {
     // Create delphi SDK
     delphi::SdkPtr sdk(make_shared<delphi::Sdk>());
-
-    // create parser
-    auto cmdl = argh::parser(argc, argv, argh::parser::PREFER_PARAM_FOR_UNREG_OPTION);
-
-    cout << "\nFlags:\n";
-    for (auto& flag : cmdl.flags())
-        cout << '\t' << flag << endl;
-
-    cout << "\nParameters:\n";
-    for (auto& param : cmdl.params())
-        cout << '\t' << param.first << " : " << param.second << endl;
 
     // Create a service instance
     shared_ptr<DelphictlService> dctl = make_shared<DelphictlService>(sdk);
     assert(dctl != NULL);
     sdk->RegisterService(dctl);
+    dctl->matchKey = matchKey;
 
-    // dump shared memory
-    if (cmdl["shm"]) {
-        // read arguments
-        string tbl_name = cmdl("tbl").str();
+    // enter admin mode so that we can read/write any object
+    sdk->enterAdminMode(); 
 
-        // dump kvstore contents
-        dctl->DumpKvstore(tbl_name);
-
-        // dump metrics if requested
-        if (cmdl("metrics").str() != "") {
-            dctl->DumpMetrics(cmdl("metrics").str());
-        }
-
-        exit(0);
-    }
-
-    // see if a kind was specified
-    if (cmdl("kind").str() != "") {
-        dctl->MountKind(cmdl("kind").str());
-    }
+    // mount kind
+    dctl->MountKind(kind);
 
     // run the main loop
-    return sdk->MainLoop();
+    sdk->MainLoop();
+}
+
+void printDbkindList() {
+    // factory list
+    map<string, ObjectFactory *> fctries = *(BaseObject::GetFactoryMap());
+
+    cout << "Usage: delphictl db list <kind> [options]" << endl;
+    cout << "Available kinds:" << endl;
+
+    for (map<string, ObjectFactory *>::iterator i = fctries.begin(); i != fctries.end(); ++i) {
+        cout << "    " <<  i->first << endl;
+    }
+}
+
+void printDbcmdUsage() {
+    cout << "Usage: delphictl db <command> <kind> [options]" << endl;
+    cout << "Available options:" << endl;
+    cout << "    list      - list all objects of kind" << endl;
+    cout << "    get       - display an object of kind and key" << endl;
+}
+
+void printUsage() {
+    cout << "Usage: delphictl <db> <command> <kind> [options]" << endl;
+    cout << "Available options:" << endl;
+    cout << "    db      - operations on delphi database" << endl;
+    cout << "    metrics - operations on metrics" << endl;
+    cout << "    shm     - information about shared memory" << endl;
+    cout << "    help    - this help string" << endl;
+}
+
+int main(int argc, char **argv) {
+
+    // create parser
+    auto cmdl = argh::parser(argc, argv, argh::parser::PREFER_PARAM_FOR_UNREG_OPTION);
+
+    // check first command
+    if (!cmdl(1)) {
+        printUsage();
+        exit(1);
+    }
+
+    if (cmdl[1] == "db") {
+        if (!cmdl(2)) {
+            printDbcmdUsage();
+            exit(1);
+        } else if (cmdl[2] == "list") {
+            if (!cmdl(3)) {
+                printDbkindList();
+                exit(1);
+            } else {
+                listDbKind(cmdl[3], "");
+                exit(0);
+            }
+        } else if (cmdl[2] == "get") {
+            if (!cmdl(3)) {
+                printDbkindList();
+                exit(1);
+            } else {
+                string matchstr("");
+                if (cmdl(4)) {
+                    matchstr = cmdl[4];
+                }
+                listDbKind(cmdl[3], matchstr);
+                exit(0);
+            }
+        } else {
+            printDbcmdUsage();
+            exit(1);
+        }
+    } else if (cmdl[1] == "metrics") {
+        if (!cmdl(2)) {
+            printMetricsCmdUsage();
+            exit(1);
+        } else if (cmdl[2] == "list") {
+            if (!cmdl(3)) {
+                printMetricsKindList();
+                exit(1);
+            } else {
+                listMetricsKind(cmdl[3], "");
+                exit(0);
+            }
+        } else if (cmdl[2] == "get") {
+            if (!cmdl(3)) {
+                printMetricsKindList();
+                exit(1);
+            } else {
+                string matchstr("");
+                if (cmdl(4)) {
+                    matchstr = cmdl[4];
+                }
+                listMetricsKind(cmdl[3], matchstr);
+                exit(0);
+            }
+        } else {
+            printMetricsCmdUsage();
+            exit(1);
+        }
+    } else if (cmdl[1] == "shm") {
+        if (!cmdl(2)) {
+            printShmInfo();
+            exit(0);
+        } else {
+            printKvstoreInfo(cmdl[2]);
+            exit(0);
+        }
+    } else {
+        printUsage();
+        exit(1);
+    }
 }

@@ -86,6 +86,7 @@ ExampleService::ExampleService(delphi::SdkPtr sk, string name) {
 
     // mount objects
     delphi::objects::ExampleSpec::Mount(sdk_, delphi::ReadWriteMode);
+    delphi::objects::ExampleStatus::Mount(sdk_, delphi::ReadWriteMode);
 
     // create interface event handler
     intf_mgr_ = make_shared<ExampleReactor>(sdk_);

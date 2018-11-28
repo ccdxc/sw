@@ -12,46 +12,47 @@ using namespace delphi::messenger;
 // DelphiClient constructor
 DelphiClient::DelphiClient() {
     // start the sync timer
-    this->syncTimer.set<DelphiClient, &DelphiClient::syncTimerHandler>(this);
-    this->syncTimer.start(CLIENT_SYNC_PERIOD, CLIENT_SYNC_PERIOD);
-    this->eventTimer.set<DelphiClient, &DelphiClient::eventTimerHandler>(this);
-    this->msgqAsync.set<DelphiClient, &DelphiClient::msgqAsyncHandler>(this);
-    this->msgqAsync.start();
-    this->heartbeatTimer.set<DelphiClient, &DelphiClient::heartbeatTimerHandler>(this);
-    pthread_mutex_init(&msgQlock, NULL);
-    this->isConnected = false;
-    this->isMountComplete = false;
-    this->currObjectID = 1;
-    this->service = nullptr;
+    this->syncTimer_.set<DelphiClient, &DelphiClient::syncTimerHandler>(this);
+    this->syncTimer_.start(CLIENT_SYNC_PERIOD, CLIENT_SYNC_PERIOD);
+    this->eventTimer_.set<DelphiClient, &DelphiClient::eventTimerHandler>(this);
+    this->msgqAsync_.set<DelphiClient, &DelphiClient::msgqAsyncHandler>(this);
+    this->msgqAsync_.start();
+    this->heartbeatTimer_.set<DelphiClient, &DelphiClient::heartbeatTimerHandler>(this);
+    this->reconnectTimer_.set<DelphiClient, &DelphiClient::reconnectTimerHandler>(this);
+    pthread_mutex_init(&msgQlock_, NULL);
+    this->isConnected_     = false;
+    this->isMountComplete_ = false;
+    this->adminMode_       = false;
+    this->currObjectID_    = 1;
+    this->service_         = nullptr;
 }
 
 // Connect connect to the server
 error DelphiClient::Connect() {
     // if service is not registered, return error
-    if (this->service == NULL) {
+    if (this->service_ == NULL) {
         return error::New("Service not registered");
     }
 
     // create a messenger client
-    this->mclient = make_shared<MessangerClient>(shared_from_this());
+    this->mclient_ = make_shared<MessangerClient>(shared_from_this());
 
-    // try forever to connect to delphi hub
-    while (1) {
-        // connect to server
-        error err = mclient->Connect();
-        if (err.IsNotOK()) {
-            LogInfo("Error({}) connecting to hub. Will try again", err);
-            std::this_thread::sleep_for(std::chrono::milliseconds(CONNECT_SLEEP_MS));
-            continue;
-        }
-        break;
+    // connect to server
+    error err = this->mclient_->Connect();
+    if (err.IsNotOK()) {
+        LogInfo("Error({}) connecting to hub. Will try again", err);
+
+        // reconnect in background
+        this->reconnectTimer_.start(0, CLIENT_RECONNECT_PERIOD);
+
+        return error::OK();
     }
 
     // mark ourselves as connected
-    isConnected = true;
+    this->isConnected_ = true;
 
     // send mout request
-    error err = mclient->SendMountReq(this->service->Name(), this->mounts);
+    err = this->mclient_->SendMountReq(this->service_->Name(), this->mounts_);
     if (err.IsNotOK()) {
         LogError("Error mounting. Err: {}", err);
         return err;
@@ -63,13 +64,13 @@ error DelphiClient::Connect() {
 // MountKind requests a kind to be mounted
 error DelphiClient::MountKind(string kind, MountMode mode) {
     // all mounts have to be requested before we connect to the server
-    assert(isConnected == false);
+    assert(this->isConnected_ == false);
 
     // add to the list
     MountDataPtr mnt(make_shared<MountData>());
     mnt->set_kind(kind);
     mnt->set_mode(mode);
-    mounts.push_back(mnt);
+    this->mounts_.push_back(mnt);
 
     return error::OK();
 }
@@ -77,16 +78,42 @@ error DelphiClient::MountKind(string kind, MountMode mode) {
 // MountKey requests a specific key to be mounted
 error DelphiClient::MountKey(string kind, string key, MountMode mode) {
     // all mounts have to be requested before we connect to the server
-    assert(isConnected == false);
+    assert(this->isConnected_ == false);
 
     // add to the list
     MountDataPtr mnt(make_shared<MountData>());
     mnt->set_kind(kind);
     mnt->set_key(key);
     mnt->set_mode(mode);
-    mounts.push_back(mnt);
+    this->mounts_.push_back(mnt);
 
     return error::OK();
+}
+
+// canWrite Checks if the service has mounted the (kind, key) as read/write
+bool DelphiClient::canWrite(string kind, string key) {
+    // if we are in admin mode, we can read/write any object
+    if (this->adminMode_) {
+        return true;
+    }
+
+    // walk all mount points
+    for (auto mount: this->mounts_) {
+        if ((getPath(mount->kind(), mount->key()) == getPath(kind, "")) ||
+            (getPath(mount->kind(), mount->key()) == getPath(kind, key))) {
+            if (mount->mode() == ReadWriteMode) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+// enterAdminMode is used by delphictl to enter a special admin mode
+// where service can read/write any object
+void DelphiClient::enterAdminMode() {
+    this->adminMode_ = true;
 }
 
 // WatchKind watches a kind of object
@@ -94,11 +121,11 @@ error DelphiClient::WatchKind(string kind, BaseReactorPtr rctr) {
     map<string, ReactorListPtr>::iterator it;
 
     // find the reactor list
-    it = this->watchers.find(kind);
-    if (it == this->watchers.end()) {
-        this->watchers[kind] = make_shared<ReactorList>();
+    it = this->watchers_.find(kind);
+    if (it == this->watchers_.end()) {
+        this->watchers_[kind] = make_shared<ReactorList>();
     }
-    ReactorListPtr rl = this->watchers[kind];
+    ReactorListPtr rl = this->watchers_[kind];
     rl->reactors.push_back(rctr);
 
     return error::OK();
@@ -108,8 +135,8 @@ error DelphiClient::WatchKind(string kind, BaseReactorPtr rctr) {
 ReactorListPtr DelphiClient::GetReactorList(string kind) {
     map<string, ReactorListPtr>::iterator it;
 
-    it = this->watchers.find(kind);
-    if (it != this->watchers.end()) {
+    it = this->watchers_.find(kind);
+    if (it != this->watchers_.end()) {
         return it->second;
     }
 
@@ -118,14 +145,14 @@ ReactorListPtr DelphiClient::GetReactorList(string kind) {
 
 void DelphiClient::MountClientStatus() {
     auto obj = make_shared<delphi::objects::DelphiClientStatus>();
-    obj->set_key(this->service->Name());
+    obj->set_key(this->service_->Name());
     this->MountKey(obj->GetDescriptor()->name(), obj->GetKey(), delphi::ReadWriteMode);
 }
 
 // RegisterService registers a service
 error DelphiClient::RegisterService(ServicePtr svc) {
-    assert(this->service == NULL);
-    this->service = svc;
+    assert(this->service_ == NULL);
+    this->service_ = svc;
 
     this->MountClientStatus();
 
@@ -134,7 +161,7 @@ error DelphiClient::RegisterService(ServicePtr svc) {
 
 // WatchMountComplete registers a reactor for a mount complete callback
 error DelphiClient::WatchMountComplete(BaseReactorPtr rctr) {
-    this->mountWatchers.push_back(rctr);
+    this->mountWatchers_.push_back(rctr);
     return error::OK();
 }
 
@@ -143,14 +170,14 @@ ObjSubtreePtr DelphiClient::getSubtree(string kind) {
     std::map<string, ObjSubtreePtr>::iterator it;
 
     // find the subtree by kind
-    it = this->subtrees.find(kind);
-    if (it != this->subtrees.end()) {
+    it = this->subtrees_.find(kind);
+    if (it != this->subtrees_.end()) {
         return it->second;
     }
 
     // create a new subtree
     ObjSubtreePtr subtree = make_shared<ObjSubtree>();
-    this->subtrees[kind] = subtree;
+    this->subtrees_[kind] = subtree;
 
     return subtree;
 }
@@ -184,7 +211,7 @@ error DelphiClient::HandleNotify(vector<ObjectData *> objlist) {
             // save it to the DB
             subtree->objects[key] = objinfo->Clone();
             assert((*oi)->meta().handle() != 0);
-            this->handleDB[(*oi)->meta().handle()] = objinfo;
+            this->handleDB_[(*oi)->meta().handle()] = objinfo;
             break;
         }
         case DeleteOp:
@@ -241,24 +268,27 @@ error DelphiClient::HandleMountResp(uint16_t svcID, string status, vector<Object
         string key = (*oi)->meta().key();
         subtree->objects[key] = objinfo;
         assert((*oi)->meta().handle() != 0);
-        this->handleDB[(*oi)->meta().handle()] = objinfo;
+        this->handleDB_[(*oi)->meta().handle()] = objinfo;
     }
 
     // save my service id and mark mount complete
-    this->myServiceID = svcID;
-    this->isMountComplete = true;
+    this->myServiceID_ = svcID;
+    this->isMountComplete_ = true;
     this->my_thread_ = pthread_self();
 
     // trigger  mount complete callback
-    this->service->OnMountComplete();
+    this->service_->OnMountComplete();
 
     // walk all the reactors and make On mount complete callbacks
-    for (vector<BaseReactorPtr>::iterator rc = mountWatchers.begin(); rc != mountWatchers.end(); ++rc) {
+    for (vector<BaseReactorPtr>::iterator rc = mountWatchers_.begin(); rc != mountWatchers_.end(); ++rc) {
         (*rc)->OnMountComplete();
     }
 
+    // process any pending async messages
+    this->msgqAsync_.send();
+
     // finally start the heartbeat
-    this->heartbeatTimer.start(0, CLIENT_HEARTBEAT_PERIOD);
+    this->heartbeatTimer_.start(0, CLIENT_HEARTBEAT_PERIOD);
 
     return error::OK();
 }
@@ -270,7 +300,7 @@ error DelphiClient::SetObject(BaseObjectPtr objinfo) {
     string kind = objinfo->GetMeta()->kind();
 
     // make sure mount is complete
-    if (!this->isMountComplete) {
+    if (!this->isMountComplete_) {
         LogError("Error creating object {}/{}. Mount is not complete", kind, key);
         return error::New("Can not create objects before mount complete");
     }
@@ -286,6 +316,12 @@ error DelphiClient::SetObject(BaseObjectPtr objinfo) {
     if (! pthread_equal(thread_id, this->my_thread_)) {
         LogError("Error creating object {}/{}. SetObject needs to be called from delphi thread", kind, key);
         return error::New("Called from invalid thread");
+    }
+
+    // make sure this service can write this object
+    if (!canWrite(kind, key)) {
+        LogError("Error creating object {}/{}. Object is not mounted read/write", kind, key);
+        return error::New("object not mounted read-write");
     }
 
     // set key in the meta
@@ -314,63 +350,79 @@ error DelphiClient::SetObject(BaseObjectPtr objinfo) {
     subtree->objects[key] = dbObj;
 
     // add it to sync and event queue
-    this->syncQueue.push_back(make_shared<ObjectMutation>(oldObj, dbObj, SetOp));
-    this->eventQueue.push_back(make_shared<ObjectMutation>(oldObj, objinfo, SetOp));
-    this->eventTimer.start(0, 0);
+    this->syncQueue_.push_back(make_shared<ObjectMutation>(oldObj, dbObj, SetOp));
+    this->eventQueue_.push_back(make_shared<ObjectMutation>(oldObj, objinfo, SetOp));
+    this->eventTimer_.start(0, 0);
+
+    return error::OK();
+}
+
+// SyncObject sets and syncs the object
+error DelphiClient::SyncObject(BaseObjectPtr objinfo) {
+    // set object
+    error err = SetObject(objinfo);
+    if (err.IsNotOK()) {
+        return err;
+    }
+
+    // immediately send the object to hub
+    this->syncTimerHandler(this->syncTimer_, 0);
 
     return error::OK();
 }
 
 // QueueUpdate queues object updates in a thread safe way to delphi client
 error DelphiClient::QueueUpdate(BaseObjectPtr objinfo) {
-    // make sure mount is complete
-    if (!this->isMountComplete) {
-        LogError("Error creating object {}/{}. Mount is not complete", objinfo->GetMeta()->kind(), objinfo->GetKey());
-        return error::New("Can not create objects before mount complete");
-    }
-
     // kind and key can not be empty
     if ((objinfo->GetKey() == "") || (objinfo->GetMeta()->kind()  == "")) {
         LogError("Object kind/key can not be empty {}", objinfo->GetMessage()->ShortDebugString());
         return error::New("Object key is empty");
     }
 
+    // make sure this service can write this object
+    if (!canWrite(objinfo->GetMeta()->kind(), objinfo->GetKey())) {
+        LogError("Error updating object {}/{}. Object is not mounted read/write", 
+                 objinfo->GetMeta()->kind(), objinfo->GetKey());
+        return error::New("object not mounted read-write");
+    }
+
     // lock message queue
-    pthread_mutex_lock(&msgQlock);
+    pthread_mutex_lock(&msgQlock_);
 
     // add it to the queue
-    this->msgQueue.push_back(make_shared<ObjectMutation>(nullptr, objinfo, SetOp));
-    this->msgqAsync.send();
+    this->msgQueue_.push_back(make_shared<ObjectMutation>(nullptr, objinfo, SetOp));
+    this->msgqAsync_.send();
 
     // unlock message queue
-    pthread_mutex_unlock(&msgQlock);
+    pthread_mutex_unlock(&msgQlock_);
 
     return error::OK();
 }
 
 // QueueDelete queues object deletes in a thread safe way to delphi client
 error DelphiClient::QueueDelete(BaseObjectPtr objinfo) {
-    // make sure mount is complete
-    if (!this->isMountComplete) {
-        LogError("Error creating object {}/{}. Mount is not complete", objinfo->GetMeta()->kind(), objinfo->GetKey());
-        return error::New("Can not create objects before mount complete");
-    }
-
     // kind and key can not be empty
     if ((objinfo->GetKey() == "") || (objinfo->GetMeta()->kind()  == "")) {
         LogError("Object kind/key can not be empty {}", objinfo->GetMessage()->ShortDebugString());
         return error::New("Object key is empty");
     }
 
+    // make sure this service can write this object
+    if (!canWrite(objinfo->GetMeta()->kind(), objinfo->GetKey())) {
+        LogError("Error deleting object {}/{}. Object is not mounted read/write", 
+                 objinfo->GetMeta()->kind(), objinfo->GetKey());
+        return error::New("object not mounted read-write");
+    }
+
     // lock message queue
-    pthread_mutex_lock(&msgQlock);
+    pthread_mutex_lock(&msgQlock_);
 
     // add it to the queue
-    this->msgQueue.push_back(make_shared<ObjectMutation>(nullptr, objinfo, DeleteOp));
-    this->msgqAsync.send();
+    this->msgQueue_.push_back(make_shared<ObjectMutation>(nullptr, objinfo, DeleteOp));
+    this->msgqAsync_.send();
 
     // unlock message queue
-    pthread_mutex_unlock(&msgQlock);
+    pthread_mutex_unlock(&msgQlock_);
 
     return error::OK();
 }
@@ -380,20 +432,20 @@ error DelphiClient::allocHandle(BaseObjectPtr objinfo) {
     map<uint64_t, BaseObjectPtr>::iterator it;
 
     for (int i = 0; i < MAX_OBJECTS; i++) {
-        uint64_t handle = OBJECT_HANDLE(this->myServiceID, this->currObjectID);
+        uint64_t handle = OBJECT_HANDLE(this->myServiceID_, this->currObjectID_);
 
         // see if the current id is taken
-        it = this->handleDB.find(handle);
-        if (it == this->handleDB.end()) {
+        it = this->handleDB_.find(handle);
+        if (it == this->handleDB_.end()) {
             objinfo->GetMeta()->set_handle(handle);
-            this->handleDB[handle] = objinfo;
-            this->currObjectID++;
+            this->handleDB_[handle] = objinfo;
+            this->currObjectID_++;
 
             return error::OK();
         }
 
         // try next object id
-        this->currObjectID++;
+        this->currObjectID_++;
     }
 
     return error::New("Could not allocate an object id");
@@ -405,14 +457,14 @@ error DelphiClient::freeHandle(BaseObjectPtr objinfo) {
     uint64_t handle = objinfo->GetMeta()->handle();
 
     // find the object in handle db
-    it = this->handleDB.find(handle);
-    if (it == this->handleDB.end()) {
+    it = this->handleDB_.find(handle);
+    if (it == this->handleDB_.end()) {
         LogError("Could not find the object for handle {}", handle);
         return error::New("Object handle not found");
     }
 
     // remove from the DB
-    this->handleDB.erase(it);
+    this->handleDB_.erase(it);
     return error::OK();
 }
 
@@ -440,7 +492,7 @@ error DelphiClient::DeleteObject(BaseObjectPtr objinfo) {
     string kind = objinfo->GetMeta()->kind();
 
     // make sure mount is complete
-    if (!this->isMountComplete) {
+    if (!this->isMountComplete_) {
         LogError("Error deleting object {}/{}. Mount is not complete", kind, key);
         return error::New("Can not create objects before mount complete");
     }
@@ -449,6 +501,12 @@ error DelphiClient::DeleteObject(BaseObjectPtr objinfo) {
     if (key == "") {
         LogError("Object key can not be empty {}", objinfo->GetMessage()->ShortDebugString());
         return error::New("Object key is empty");
+    }
+
+    // make sure this service can write this object
+    if (!canWrite(kind, key)) {
+        LogError("Error deleting object {}/{}. Object is not mounted read/write", kind, key);
+        return error::New("object not mounted read-write");
     }
 
     // make sure DeleteObject is not called from other threads
@@ -476,9 +534,9 @@ error DelphiClient::DeleteObject(BaseObjectPtr objinfo) {
     RETURN_IF_FAILED(this->freeHandle(objinfo));
 
     // add it to sync and event queue
-    this->syncQueue.push_back(make_shared<ObjectMutation>(nullptr, objinfo, DeleteOp));
-    this->eventQueue.push_back(make_shared<ObjectMutation>(nullptr, objinfo, DeleteOp));
-    this->eventTimer.start(0, 0);
+    this->syncQueue_.push_back(make_shared<ObjectMutation>(nullptr, objinfo, DeleteOp));
+    this->eventQueue_.push_back(make_shared<ObjectMutation>(nullptr, objinfo, DeleteOp));
+    this->eventTimer_.start(0, 0);
 
     return error::OK();
 }
@@ -489,8 +547,8 @@ vector<BaseObjectPtr> DelphiClient::ListKind(string kind) {
     std::map<string, ObjSubtreePtr>::iterator it;
 
     // find the subtree by kind
-    it = this->subtrees.find(kind);
-    if (it != this->subtrees.end()) {
+    it = this->subtrees_.find(kind);
+    if (it != this->subtrees_.end()) {
         ObjSubtreePtr subtree = it->second;
 
         // walk all objects in the DB
@@ -520,17 +578,18 @@ map<string, BaseObjectPtr> DelphiClient::GetSubtree(string kind) {
 
 // Close stops the client and closes connection to delphi hub
 error DelphiClient::Close() {
-    this->syncTimer.stop();
-    this->eventTimer.stop();
-    this->heartbeatTimer.stop();
-    this->msgqAsync.stop();
-    this->isConnected = true;
-    this->myServiceID = 0;
-    this->isMountComplete = false;
+    this->syncTimer_.stop();
+    this->eventTimer_.stop();
+    this->heartbeatTimer_.stop();
+    this->reconnectTimer_.stop();
+    this->msgqAsync_.stop();
+    this->isConnected_ = true;
+    this->myServiceID_ = 0;
+    this->isMountComplete_ = false;
 
     // close messenger
-    if (mclient != NULL) {
-        mclient->Close();
+    if (this->mclient_ != NULL) {
+        this->mclient_->Close();
     }
 
     return error::OK();
@@ -542,17 +601,17 @@ void DelphiClient::syncTimerHandler(ev::timer &watcher, int revents) {
     string out_str;
 
     // see if we have any objects to send
-    if (syncQueue.size() == 0) {
+    if (syncQueue_.size() == 0) {
         return;
     }
 
     // see if we are connected
-    if ((mclient == NULL) || (!mclient->IsConnected())) {
+    if ((this->mclient_ == NULL) || (!this->mclient_->IsConnected())) {
         return;
     }
 
     // walk all objects in sync queue
-    for (vector<ObjectMutationPtr>::iterator i=syncQueue.begin(); i!=syncQueue.end(); ++i) {
+    for (vector<ObjectMutationPtr>::iterator i=syncQueue_.begin(); i!=syncQueue_.end(); ++i) {
         // dequeue from the sync queue
         BaseObjectPtr objinfo = (*i)->newObj;
         ObjectOperation op = (*i)->op;
@@ -570,10 +629,10 @@ void DelphiClient::syncTimerHandler(ev::timer &watcher, int revents) {
         // add it to object list to be sent to clients
         objlist.push_back(od);
     }
-    syncQueue.clear();
+    syncQueue_.clear();
 
     // send it to the server
-    error err = mclient->SendChangeReq(objlist);
+    error err = this->mclient_->SendChangeReq(objlist);
     if (err.IsNotOK()) {
         LogError("Error sending object change req to server. Err: {}", err);
     }
@@ -582,19 +641,19 @@ void DelphiClient::syncTimerHandler(ev::timer &watcher, int revents) {
 // eventTimerHandler handles local object events
 void DelphiClient::eventTimerHandler(ev::timer &watcher, int revents) {
     // see if we have any objects to send
-    if (eventQueue.size() == 0) {
+    if (eventQueue_.size() == 0) {
         return;
     }
 
-    while (eventQueue.size() > 0) {
+    while (eventQueue_.size() > 0) {
         // handle one object at a time
-        vector<ObjectMutationPtr>::iterator iter=eventQueue.begin();
-        if (iter !=eventQueue.end()) {
+        vector<ObjectMutationPtr>::iterator iter=eventQueue_.begin();
+        if (iter !=eventQueue_.end()) {
             // dequeue from the event queue
             BaseObjectPtr     oldObj = (*iter)->oldObj;
             BaseObjectPtr     newObj = (*iter)->newObj;
             ObjectOperation   op     = (*iter)->op;
-            eventQueue.erase(iter);
+            eventQueue_.erase(iter);
 
             // find the watcher for the kind
             ReactorListPtr rl = this->GetReactorList(newObj->GetMeta()->kind());
@@ -612,18 +671,23 @@ void DelphiClient::eventTimerHandler(ev::timer &watcher, int revents) {
     }
 
     // restart the timer if we still have objects
-    if (eventQueue.size() > 0) {
-        this->eventTimer.start(0, 0);
+    if (eventQueue_.size() > 0) {
+        this->eventTimer_.start(0, 0);
     }
 }
 
 // msgqAsyncHandler handles msg queue events
 void DelphiClient::msgqAsyncHandler(ev::async &watcher, int revents) {
+    // dont process any messages till mount complete is done
+    if (!this->isMountComplete_) {
+        return;
+    }
+
     // lock message queue
-    pthread_mutex_lock(&msgQlock);
+    pthread_mutex_lock(&msgQlock_);
 
     // walk all objects in the message queue
-    for (vector<ObjectMutationPtr>::iterator iter=msgQueue.begin(); iter!=msgQueue.end(); ++iter) {
+    for (vector<ObjectMutationPtr>::iterator iter=msgQueue_.begin(); iter!=msgQueue_.end(); ++iter) {
         map<string, BaseObjectPtr>::iterator it;
         BaseObjectPtr objinfo = (*iter)->newObj;
         BaseObjectPtr oldObj = nullptr;
@@ -653,14 +717,14 @@ void DelphiClient::msgqAsyncHandler(ev::async &watcher, int revents) {
                 error err = this->allocHandle(objinfo);
                 if (err.IsNotOK()) {
                     LogError("Error allocating object handle {}", err);
-                    pthread_mutex_unlock(&msgQlock);
+                    pthread_mutex_unlock(&msgQlock_);
                     return;
                 }
             }
 
             // save it to the DB
             subtree->objects[key] = objinfo->Clone();
-            this->handleDB[objinfo->GetMeta()->handle()] = objinfo;
+            this->handleDB_[objinfo->GetMeta()->handle()] = objinfo;
             break;
         }
         case DeleteOp:
@@ -682,7 +746,7 @@ void DelphiClient::msgqAsyncHandler(ev::async &watcher, int revents) {
         }
 
 
-        this->syncQueue.push_back(make_shared<ObjectMutation>(oldObj, objinfo, (*iter)->op));
+        this->syncQueue_.push_back(make_shared<ObjectMutation>(oldObj, objinfo, (*iter)->op));
 
         // find the watcher for the kind
         ReactorListPtr rl = this->GetReactorList(kind);
@@ -696,23 +760,23 @@ void DelphiClient::msgqAsyncHandler(ev::async &watcher, int revents) {
             }
         }
     }
-    msgQueue.clear();
+    msgQueue_.clear();
 
     // unlock message queue
-    pthread_mutex_unlock(&msgQlock);
+    pthread_mutex_unlock(&msgQlock_);
 }
 
 // heartbeatTimerHandler handles msg queue events
 void DelphiClient::heartbeatTimerHandler(ev::timer &watcher, int revents) {
-    if (this->service->SkipHeartbeat()) {
+    if (this->service_->SkipHeartbeat()) {
         return;
     }
     // Check with the service first if it wants to override the status
-    auto service_status = this->service->Heartbeat();
+    auto service_status = this->service_->Heartbeat();
     // Set the status object in Delphi
     auto status = make_shared<delphi::objects::DelphiClientStatus>();
-    status->set_key(this->service->Name());
-    status->set_serviceid(this->myServiceID);
+    status->set_key(this->service_->Name());
+    status->set_serviceid(this->myServiceID_);
     status->set_pid(getpid());
     status->set_lastseen(time(NULL));
     status->set_isok(service_status.first.IsOK());
@@ -720,21 +784,64 @@ void DelphiClient::heartbeatTimerHandler(ev::timer &watcher, int revents) {
     this->SetObject(status);
 }
 
+// reconnectTimerHandler tries to reconnect in background
+// FIXME: do we need to force a sync of local objects to hub??
+void DelphiClient::reconnectTimerHandler(ev::timer &watcher, int revents) {
+    LogInfo("Trying to reconnect to delphi hub");
+
+    // connect to server
+    error err = this->mclient_->Connect();
+    if (err.IsNotOK()) {
+        LogInfo("Error({}) connecting to hub. Will try again", err);
+        return;
+    }
+
+    // mark ourselves as connected
+    this->isConnected_ = true;
+
+    // send mout request
+    err = this->mclient_->SendMountReq(this->service_->Name(), this->mounts_);
+    if (err.IsNotOK()) {
+        LogError("Error mounting. Err: {}", err);
+        return;
+    }
+
+    LogInfo("Connected to delphi hub..");
+
+    // stop the reconnect timer
+    this->reconnectTimer_.stop();
+}
 
 // MockConnect simulates a connection to delphi hub
 error DelphiClient::MockConnect(uint16_t mySvcId) {
     // if service is not registered, return error
-    if (this->service == NULL) {
+    if (this->service_ == NULL) {
         return error::New("Service not registered");
     }
 
     // save my service id and mark mount complete
-    this->myServiceID = mySvcId;
-    this->isMountComplete = true;
-    this->my_thread_ = pthread_self();
+    this->myServiceID_     = mySvcId;
+    this->isMountComplete_ = true;
+    this->isConnected_     = true;
+    this->my_thread_       = pthread_self();
 
     // fake a mount complete callback
-    this->service->OnMountComplete();
+    this->service_->OnMountComplete();
+
+    return error::OK();
+}
+// SocketClosed handles socket close event
+error DelphiClient::SocketClosed() {
+    LogWarn("Connection to delphi hub went down");
+
+    // remember that socket is not connected
+    this->isConnected_ = false;
+
+    // let the service know that delphi hub went down
+    this->service_->SocketClosed();
+
+    // reconnect in background
+    this->reconnectTimer_.start(0, CLIENT_RECONNECT_PERIOD);
 
     return error::OK();
 }

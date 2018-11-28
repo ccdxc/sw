@@ -7,6 +7,7 @@
 
 #include "nic/delphi/utils/utils.hpp"
 #include "nic/delphi/messenger/messenger_server.hpp"
+#include "nic/delphi/sdk/base_object.hpp"
 #include "nic/delphi/shm/shm.hpp"
 
 namespace delphi {
@@ -65,7 +66,7 @@ public:
         error HandleChangeReq(int sockCtx, vector<ObjectData> req, vector<ObjectData *> *resp);
         error HandleMountReq(int sockCtx, MountReqMsgPtr req, MountRespMsgPtr resp);
         error HandleSocketClosed(int sockCtx);
-
+        inline void enableTrace() { traceEnabled_ = true; };
 private:
     error          addObject(string kind,   string key, ObjectDataPtr obj);
     error          delObject(string kind,   string key);
@@ -80,27 +81,25 @@ private:
     error          deleteMountPoint(string kind);
     error          requestMount(string kind, string key, string svcName, MountMode mode);
     error          releaseMount(string mountPath, string svcName);
+    bool           isKindPeriodic(string kind);
 
-    MessangerServerPtr             msgServer;      // messenger server
-    map<string, DbSubtreePtr>      subtrees;       // subtree per object kind
-    vector<ObjectDataPtr>          syncQueue;      // sync queue of pending objects
-    ev::timer                      syncTimer;      // sync timer
-    uint32_t                       currServiceId;  // service id we are currently allocating
-    map<string, ServiceInfoPtr>    services;       // map of services indexed by name
-    map<uint16_t, ServiceInfoPtr>  serviceIds;     // map of services by service id
-    map<int, ServiceInfoPtr>       sockets;        // map of socket id to service
-    map<string, MountPointPtr>     mountPoints;    // map of object kind to mount point
+    MessangerServerPtr             msgServer_;     // messenger server
+    map<string, DbSubtreePtr>      subtrees_;      // subtree per object kind
+    vector<ObjectDataPtr>          syncQueue_;     // sync queue of pending objects
+    ev::timer                      syncTimer_;     // sync timer
+    uint32_t                       currServiceId_; // id we are currently allocating
+    map<string, ServiceInfoPtr>    services_;      // map of services indexed by name
+    map<uint16_t, ServiceInfoPtr>  serviceIds_;    // map of services by service id
+    map<int, ServiceInfoPtr>       sockets_;       // map of socket id to service
+    map<string, MountPointPtr>     mountPoints_;   // map of object kind to mount point
     delphi::shm::DelphiShmPtr      srv_shm_;       // shared memory instance
+    bool                           traceEnabled_;  // is object tracing enabled?
 
 protected:
     void syncTimerHandler(ev::timer &watcher, int revents);
 };
 typedef std::shared_ptr<DelphiServer> DelphiServerPtr;
 
-// internal functions
-static inline string getMountPath(string kind, string key) {
-    return kind + "|" + key;
-}
 
 } // namespace delphi
 

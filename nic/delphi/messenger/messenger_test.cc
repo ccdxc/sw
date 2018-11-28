@@ -117,6 +117,11 @@ public:
         usleep(1000);
     }
     virtual void TearDown() {
+        // kill the event loop thread
+        pthread_cancel(ev_thread_id);
+        pthread_join(ev_thread_id, NULL);
+        usleep(1000);
+
         // stop all clients
         for (int i = 0; i < NUM_CLIENTS; i++) {
             this->clients[i]->Close();
@@ -124,11 +129,6 @@ public:
 
         // stop the server
         this->server->Stop();
-        usleep(1000);
-
-        // kill the event loop thread
-        pthread_cancel(ev_thread_id);
-        pthread_join(ev_thread_id, NULL);
         usleep(1000);
 
         LogDebug("Stopping event loop");

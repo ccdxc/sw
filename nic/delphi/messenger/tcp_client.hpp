@@ -23,6 +23,7 @@ public:
     error Close();
 private:
     int                              hsock;
+    bool                             isConnected;
     TransportHandlerPtr              handler;
     SockReceiverUptr                  receiver;
 };

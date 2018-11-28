@@ -34,7 +34,7 @@ public:
         return this->mutable_meta();
     };
     virtual string GetKey() {
-        return this->key().ShortDebugString();
+        return this->key().SerializeAsString();
     };
     virtual ::google::protobuf::Message *GetMessage() {
         return this;
@@ -185,7 +185,8 @@ TEST_F(DelphiClientTest, BasicClientTest) {
     ASSERT_EQ_EVENTUALLY(service->inited, true) << "client was not inited";
 
     // create one object from client
-    service->CreateObject(1);
+    error err = service->CreateObject(1);
+    ASSERT_EQ(err, error::OK()) << "object create failed";
 
     ASSERT_EQ_EVENTUALLY(client->ListKind("TestObject").size(), 1) << "client did not have all the objects";
     ASSERT_EQ_EVENTUALLY(service->objMgr->numCreateCallbacks, 1) << "reactor did not receive create callbacks";
@@ -194,14 +195,14 @@ TEST_F(DelphiClientTest, BasicClientTest) {
     for (vector<BaseObjectPtr>::iterator iter=db.begin(); iter!=db.end(); ++iter) {
         TestObjectPtr tobj = static_pointer_cast<TestObject>(*iter);
         ASSERT_EQ(tobj->testdata1(), "Test Data") << "client has invalid objects";
-        ASSERT_EQ(tobj->GetMeta()->key(), tobj->key().ShortDebugString()) << "client meta is invalid";
+        ASSERT_EQ(tobj->GetMeta()->key(), tobj->key().SerializeAsString()) << "client meta is invalid";
         ASSERT_NE(tobj->GetMeta()->handle(), 0) << "client meta is invalid";
 
     }
 
     // try creating an object without key and verify it fails
     TestObjectPtr tobj2 = make_shared<TestObject>();
-    error err = client->QueueUpdate(tobj2);
+    err = client->QueueUpdate(tobj2);
     ASSERT_NE(err, error::OK()) << "creating object without key suceeded";
 
     // delete the object
@@ -254,7 +255,7 @@ TEST_F(DelphiMountTest, MountErrorTests) {
     tobj->set_testdata1("Test Data");
     tobj->mutable_key()->set_idx(1);
     err = client_->QueueUpdate(tobj);
-    ASSERT_NE(err, error::OK()) << "Creating object should have failed";
+    ASSERT_EQ(err, error::OK()) << "Queueing object failed";
     err = client_->SetObject(tobj);
     ASSERT_NE(err, error::OK()) << "Creating object should have failed";
 
@@ -262,7 +263,7 @@ TEST_F(DelphiMountTest, MountErrorTests) {
     err = client_->DeleteObject(tobj);
     ASSERT_NE(err, error::OK()) << "Deleting object should have failed";
     err = client_->QueueDelete(tobj);
-    ASSERT_NE(err, error::OK()) << "Deleting object should have failed";
+    ASSERT_EQ(err, error::OK()) << "Queuing delete failed";
 
     // close the client
     err = client_->Close();

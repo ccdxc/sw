@@ -1,6 +1,8 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
 
 #include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <ev++.h>
 #include "gtest/gtest.h"
 
@@ -56,6 +58,9 @@ public:
     virtual error OnTestObjectCreate(TestObjectPtr obj) {
         return error::OK();
     }
+    virtual error OnTestObjectUpdate(TestObjectPtr obj) {
+        return error::OK();
+    }
     virtual error OnTestObjectDelete(TestObjectPtr obj) {
         return error::OK();
     }
@@ -76,6 +81,8 @@ error TestObject::TriggerEvent(BaseObjectPtr oldObj, ObjectOperation op, Reactor
         if (op == delphi::SetOp) {
             if (oldObj == NULL) {
                 RETURN_IF_FAILED(rctr->OnTestObjectCreate(shared_from_this()));
+            } else if (this->SerializeAsString() != exObj->SerializeAsString()) {
+                RETURN_IF_FAILED(rctr->OnTestObjectUpdate(shared_from_this()));
             } else if (this->testdata1() != exObj->testdata1()) {
                 RETURN_IF_FAILED(rctr->OnTestData1(shared_from_this()));
             }
@@ -99,11 +106,17 @@ void * startEventLoop(void* arg) {
 class testObjMgr : public TestReactor {
 public:
     int  numCreateCallbacks;
+    int  numUpdateCallbacks;
     testObjMgr() {
         numCreateCallbacks = 0;
+        numUpdateCallbacks = 0;
     }
     virtual error OnTestObjectCreate(TestObjectPtr obj) {
         numCreateCallbacks++;
+        return error::OK();
+    }
+    virtual error OnTestObjectUpdate(TestObjectPtr obj) {
+        numUpdateCallbacks++;
         return error::OK();
     }
 };
@@ -117,9 +130,18 @@ private:
     int           numBatches;
     int           currBatch = 0;
 public:
+    // public state
+    bool inited = false;
+    shared_ptr<testObjMgr>   objMgr;
+    ev::async   msgqAsync;
+    vector<int> msgQueue;
     TestService(int clid, DelphiClientPtr cl) {
         this->service_id = clid;
         this->client = cl;
+        cl->enterAdminMode();
+
+        this->msgqAsync.set<TestService, &TestService::msgqAsyncHandler>(this);
+        this->msgqAsync.start();
 
         // mount and watch test objects
         objMgr = make_shared<testObjMgr>();
@@ -184,9 +206,22 @@ public:
         LogInfo("service {} Stopping", service_id);
         this->createTimer.stop();
     }
-    // public state
-    bool inited = false;
-    shared_ptr<testObjMgr>   objMgr;
+    void msgqAsyncHandler(ev::async &watcher, int revents) {
+        static int counter = 1;
+        static char buffer [33];
+        for (vector<int>::iterator iter=msgQueue.begin(); iter!=msgQueue.end(); ++iter) {
+            int unique_id = *iter;
+            TestObjectPtr tobj = make_shared<TestObject>("");
+            delphi::ObjectMeta *meta = tobj->mutable_meta();
+            meta->set_kind(tobj->GetDescriptor()->name());
+            sprintf(buffer, "-%d", counter++);
+            tobj->set_testdata1("Test Data" + string(buffer));
+            tobj->mutable_key()->set_idx(unique_id);
+
+            // update and sync
+            client->SyncObject(tobj);
+        }
+    }
 };
 typedef std::shared_ptr<TestService> TestServicePtr;
 
@@ -222,6 +257,11 @@ public:
         usleep(1000);
     }
     virtual void TearDown() {
+        // stop the thread
+        pthread_cancel(ev_thread_id);
+        pthread_join(ev_thread_id, NULL);
+        usleep(1000);
+
         for (int i = 0; i < NUM_CLIENTS; i++) {
             clients[i]->Close();
             services[i]->stop();
@@ -232,9 +272,6 @@ public:
         LogInfo("Stopping event loop");
         loop.break_loop(ev::ALL);
         usleep(1000 * 10);
-        pthread_cancel(ev_thread_id);
-        pthread_join(ev_thread_id, NULL);
-        usleep(1000);
     }
 };
 
@@ -270,8 +307,8 @@ TEST_F(DelphiHubTest, BasicServerTest) {
             ASSERT_EQ(tobj->pid(), getpid()) << "client pid is invalid";
             LogInfo("Client {} has DelphiClientStatus object: {}/{}/{}", i, tobj->key(), tobj->serviceid(), tobj->pid());
         }
-        // FIXME: uncomment this after we implement key filtering
-        // ASSERT_EQ(clients[i]->ListKind("DelphiClientStatus").size(), 1);
+
+        ASSERT_EQ(clients[i]->ListKind("DelphiClientStatus").size(), 1);
     }
 
     // verify hub has all client status
@@ -365,6 +402,46 @@ TEST_F(DelphiHubTest, ServerBenchmaskTest) {
     ASSERT_EQ(notFound, false) << "Not all objects were found in clients";
 }
 
+TEST_F(DelphiHubTest, SyncObjectTest) {
+    usleep(1000 * 100);
+    int numObjs = 2;
+    int numSyncUpdates = 2;
+
+    // verify all the clients are inited
+    for (int i = 0; i < NUM_CLIENTS; i++) {
+        ASSERT_EQ(services[i]->inited, true) << "client was not inited";
+    }
+
+    // create objects
+    for (int i = 0; i < numObjs; i++) {
+        services[0]->QueueObject(i+1);
+    }
+    usleep(1000 * 100);
+
+    // verify hub has all objects
+    ASSERT_EQ_EVENTUALLY(server->GetSubtree("TestObject")->objects.size(), numObjs) << "hub has invalid number of objects";
+
+    for (int i = 0; i < NUM_CLIENTS; i++) {
+        ASSERT_EQ_EVENTUALLY(clients[i]->ListKind("TestObject").size(), numObjs) << "client did not have all the objects";
+        ASSERT_EQ(services[i]->objMgr->numCreateCallbacks, numObjs) << "reactor did not receive create callbacks";
+    }
+
+    // create objects
+    for (int i = 0; i < numObjs; i++) {
+        for (int j = 0; j < numSyncUpdates; j++) {
+            services[0]->msgQueue.push_back(i+1);
+        }
+    }
+    services[0]->msgqAsync.send();
+    usleep(1000 * 100);
+
+    // verify all updates made it to all clients
+    for (int i = 1; i < NUM_CLIENTS; i++) {
+        ASSERT_EQ(clients[i]->ListKind("TestObject").size(), numObjs) << "client did not have all the objects";
+        ASSERT_EQ_EVENTUALLY(services[i]->objMgr->numUpdateCallbacks, (numObjs * numSyncUpdates)) << "reactor did not receive all update callbacks";
+    }
+
+}
 } // namespace
 
 int main(int argc, char **argv) {

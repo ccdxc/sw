@@ -12,6 +12,7 @@ int main(int argc, char **argv) {
 
     // instantiate the delphi server
     DelphiServerPtr server(make_shared<DelphiServer>());
+    server->enableTrace();
     server->Start();
     LogInfo("Delphi server is running.");
 

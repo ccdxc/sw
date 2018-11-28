@@ -30,6 +30,7 @@ using namespace google::protobuf::io;
 
 TcpClient::TcpClient(TransportHandlerPtr hndlr) {
     this->handler = hndlr;
+    this->isConnected = false;
 }
 
 error TcpClient::Connect(char *hostName, int hostPort) {

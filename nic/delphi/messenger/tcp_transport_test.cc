@@ -5,6 +5,7 @@
 
 #include "tcp_server.hpp"
 #include "tcp_client.hpp"
+#include "nic/delphi/utils/utest.hpp"
 
 namespace {
 
@@ -87,15 +88,15 @@ public:
     }
 
     void TearDown() {
+        // kill the event loop thread
+        pthread_cancel(ev_thread_id);
+        pthread_join(ev_thread_id, NULL);
+        usleep(1000);
+
         for (int i = 0; i < NUM_CLIENTS; i++) {
             clients[i]->Close();
         }
         server->Stop();
-        usleep(1000);
-
-        // kill the event loop thread
-        pthread_cancel(ev_thread_id);
-        pthread_join(ev_thread_id, NULL);
         usleep(1000);
 
         LogDebug("Stopping event loop\n");
@@ -126,10 +127,8 @@ TEST_F(TcpTransportTest, BasicMsgTest) {
         clients[i]->Send(msg);
     }
 
-    usleep(5000);
-
     // verify server received the messages
-    ASSERT_EQ(serverHandler->msgStats[ChangeReq], NUM_CLIENTS) << "Server did not receive all the messages";
+    ASSERT_EQ_EVENTUALLY(serverHandler->msgStats[ChangeReq], NUM_CLIENTS) << "Server did not receive all the messages";
     LogDebug("Server got {} messages\n", serverHandler->msgStats[ChangeReq]);
 
     usleep(1000);
@@ -154,11 +153,9 @@ TEST_F(TcpTransportTest, BasicMsgTest) {
         server->Send(*iter, msg);
     }
 
-    usleep(1000);
-
     // verify client received the messages
     for (j = 0; j < NUM_CLIENTS; j++) {
-        ASSERT_EQ(clientHandler[j]->msgStats[ChangeReq], 1) << "Client did not receive all the messages";
+        ASSERT_EQ_EVENTUALLY(clientHandler[j]->msgStats[ChangeReq], 1) << "Client did not receive all the messages";
         LogDebug("Client {} got {} messages\n", j, clientHandler[j]->msgStats[ChangeReq]);
     }
 }

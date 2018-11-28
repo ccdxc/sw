@@ -20,6 +20,9 @@ public:
     // call back when objetc mounting is complete
     virtual void OnMountComplete() = 0;
 
+    // callback when connection to delphi hub goes down
+    virtual void SocketClosed() {};
+
     // callbacks for transactional commit
     virtual void TxnBegin() {};
     virtual void TxnCommit() {};

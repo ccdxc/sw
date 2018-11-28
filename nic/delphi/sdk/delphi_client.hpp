@@ -24,6 +24,9 @@ using namespace delphi::messenger;
 // heartbeat interval in seconds for updating the client status
 #define CLIENT_HEARTBEAT_PERIOD 5
 
+// reconnect interval
+#define CLIENT_RECONNECT_PERIOD 1
+
 // max service id
 #define MAX_SERVICE_ID (0xFFFF)
 
@@ -76,6 +79,7 @@ public:
     error WatchKind(string kind, BaseReactorPtr rctr);        // watch a kind of objects
     error RegisterService(ServicePtr svc);                    // register a service
     error SetObject(BaseObjectPtr objinfo);                   // update an object
+    error SyncObject(BaseObjectPtr objinfo);                  // update and sync object
     error QueueUpdate(BaseObjectPtr objinfo);                 // queue update to object (thread safe)
     error QueueDelete(BaseObjectPtr objinfo);                 // queue delete object (thread safe)
     BaseObjectPtr FindObject(BaseObjectPtr objinfo);          // find an object
@@ -84,41 +88,47 @@ public:
     map<string, BaseObjectPtr> GetSubtree(string kind);       // reyurn a map of objects of a kind
     ReactorListPtr GetReactorList(string kind);               // get reactors for a kind
     error WatchMountComplete(BaseReactorPtr rctr);            // register a reactor for mount complete callback
+    void  enterAdminMode();                                   // special admin mode for delphictl
 
     // required by messenger::ClientHandler
-    error HandleNotify(vector<ObjectData *> objlist);
-    error HandleMountResp(uint16_t svcID, string status, vector<ObjectData *> objlist);
+    virtual error HandleNotify(vector<ObjectData *> objlist);
+    virtual error HandleMountResp(uint16_t svcID, string status, vector<ObjectData *> objlist);
+    virtual error SocketClosed();
 
 protected:
     void syncTimerHandler(ev::timer &watcher, int revents);      // sync object updates to delphi hub
     void eventTimerHandler(ev::timer &watcher, int revents);     // handle pending events
     void msgqAsyncHandler(ev::async &watcher, int revents);      // handle msq events
     void heartbeatTimerHandler(ev::timer &watcher, int revents); // publish client status
+    void reconnectTimerHandler(ev::timer &watcher, int revents); // reconnect to delphi hub
     error allocHandle(BaseObjectPtr objinfo);                    // allocate a object handle
     error freeHandle(BaseObjectPtr objinfo);                     // free object handle
     ObjSubtreePtr getSubtree(string kind);                       // get subtree of objects (use for testing only)
     void MountClientStatus();                                    // Mounts the DelphiClientStatus message as ReadWrite for self
+    bool canWrite(string kind, string key);                      // checks if this service can write the object
 
 private:
-    MessangerClientPtr             mclient;        // messenger
-    bool                           isConnected;    // are we connected to hub?
-    bool                           isMountComplete;
-    uint16_t                       myServiceID;    // my service id assigned by hub
-    vector<MountDataPtr>           mounts;         // mount points we requested
-    ServicePtr                     service;        // currently registered service
-    map<string, ObjSubtreePtr>     subtrees;       // map kind -> subtree
-    map<uint64_t, BaseObjectPtr>   handleDB;       // map obj handle -> object
-    vector<ObjectMutationPtr>      syncQueue;      // sync queue to send updates to hub
-    vector<ObjectMutationPtr>      eventQueue;     // pending events to be triggered
-    map<string, ReactorListPtr>    watchers;       // map object kind -> reactor list
-    vector<ObjectMutationPtr>      msgQueue;       // msg queue is thread safe way to update object state
-    pthread_mutex_t                msgQlock;       // lock for the message queue
-    ev::timer                      syncTimer;      // timer to sync to hub
-    ev::timer                      eventTimer;     // timer to trigger pending events
-    ev::async                      msgqAsync;      // async handler for message queue updates
-    ev::timer                      heartbeatTimer; // timer to handle message queue updates
-    uint64_t                       currObjectID;   // running counter of object handle
-    vector<BaseReactorPtr>         mountWatchers;  // reactors watching mount complete
+    MessangerClientPtr             mclient_;        // messenger
+    bool                           isConnected_;    // are we connected to hub?
+    bool                           isMountComplete_; // mount completed
+    bool                           adminMode_;      // special admin mode for debug only
+    uint16_t                       myServiceID_;    // my service id assigned by hub
+    vector<MountDataPtr>           mounts_;         // mount points we requested
+    ServicePtr                     service_;        // currently registered service
+    map<string, ObjSubtreePtr>     subtrees_;       // map kind -> subtree
+    map<uint64_t, BaseObjectPtr>   handleDB_;       // map obj handle -> object
+    vector<ObjectMutationPtr>      syncQueue_;      // sync queue to send updates to hub
+    vector<ObjectMutationPtr>      eventQueue_;     // pending events to be triggered
+    map<string, ReactorListPtr>    watchers_;       // map object kind -> reactor list
+    vector<ObjectMutationPtr>      msgQueue_;       // msg queue is thread safe way to update object state
+    pthread_mutex_t                msgQlock_;       // lock for the message queue
+    ev::timer                      syncTimer_;      // timer to sync to hub
+    ev::timer                      eventTimer_;     // timer to trigger pending events
+    ev::async                      msgqAsync_;      // async handler for message queue updates
+    ev::timer                      heartbeatTimer_; // timer to handle message queue updates
+    ev::timer                      reconnectTimer_; // timer to reconnect to hub
+    uint64_t                       currObjectID_;   // running counter of object handle
+    vector<BaseReactorPtr>         mountWatchers_;  // reactors watching mount complete
     pthread_t                      my_thread_;     // delphi thread id
 };
 typedef std::shared_ptr<DelphiClient> DelphiClientPtr;

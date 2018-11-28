@@ -25,6 +25,12 @@ class ClientHandler {
 public:
     virtual error HandleNotify(vector<ObjectData *> objlist) = 0;
     virtual error HandleMountResp(uint16_t svcID, string status, vector<ObjectData *> objlist) = 0;
+    // default socket closed handler
+    virtual error SocketClosed() {
+        LogError("Connection to server closed. Exiting...");
+        exit(1);
+        return error::OK();
+    };
 };
 typedef std::shared_ptr<ClientHandler> ClientHandlerPtr;
 

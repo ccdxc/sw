@@ -386,14 +386,26 @@ Here is an example:
 
 #### Datapath stats from PAL memory
 
-Delphi metrics also provides a way to read datapath stats from PAL memory directly. In this case publisher(for example, nicmgr) will simply create a metric entry and point it to PAL physical memory address. We can just use `NewDpMetrics` API to publish a stats from PAL memory. When agents read this stats, they will simply read the datapath stats directly from PAL memory.
+Delphi metrics also provides a way to read datapath stats from PAL memory directly. In this case publisher(for example, nicmgr) will simply create a metric entry and point it to PAL physical memory address. When agents read this stats, they will simply read the datapath stats directly from PAL memory. For datapath stats, proto file object needs to have `delphi.datapath_metrics` option added to the message.
 
-Here is an example:
+Here is an example proto file:
+
+```
+message InterfaceMetrics {
+    option (delphi.datapath_metrics) = true;
+    ExampleKey             Key          = 1;
+    delphi.Counter         RxPkts       = 2;
+    delphi.Counter         TxPkts       = 3;
+    delphi.Gauge           RxPktRate    = 4;
+}
+```
+
+then you can create metrics instance similar to before,
 
 ```
     // create a new datapath metric
     int32_t key = 100;
-    InterfaceMetricPtr tmptr = InterfaceMetrics::NewDpInterfaceMetrics(key, pal_addr);
+    InterfaceMetricPtr tmptr = InterfaceMetrics::NewInterfaceMetrics(key, pal_addr);
 ```
 
 ## Coding Style Guide
