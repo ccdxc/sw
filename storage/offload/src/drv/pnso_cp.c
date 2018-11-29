@@ -17,11 +17,13 @@
 #include "pnso_seq.h"
 #include "pnso_utils.h"
 
+#if 0
 static inline bool
 is_dflag_zero_pad_enabled(uint16_t flags)
 {
 	return (flags & PNSO_CP_DFLAG_ZERO_PAD) ? true : false;
 }
+#endif
 
 static inline bool
 is_dflag_insert_header_enabled(uint16_t flags)
