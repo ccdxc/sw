@@ -161,8 +161,7 @@ compress_chain(struct chain_entry *centry)
 	cp_desc = (struct cpdc_desc *) svc_info->si_desc;
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 
-	if (svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) {
-		/* TODO-cp: if chained, allow padding only to 'last' service */
+	if (!chn_service_has_sub_chain(svc_info)) {
 		if (is_dflag_zero_pad_enabled(svc_info->si_desc_flags)) {
 			err = seq_setup_cp_pad_chain_params(svc_info, cp_desc,
 					status_desc);
@@ -289,7 +288,7 @@ compress_poll(const struct service_info *svc_info)
 	 * and if cp/pad is not requested
 	 *
 	 */
-	if (!((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) &&
+	if (!(chn_service_has_sub_chain(svc_info) &&
 			(is_dflag_zero_pad_enabled(svc_info->si_desc_flags))))
 		goto out;
 
