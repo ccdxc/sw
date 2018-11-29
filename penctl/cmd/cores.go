@@ -18,9 +18,9 @@ import (
 )
 
 var coreShowCmd = &cobra.Command{
-	Use:   "cores",
-	Short: "Show cores from Naples",
-	Long:  "\n------------------------\n Show Cores From Naples \n------------------------\n",
+	Use:   "core-dumps",
+	Short: "Show core dumps from Naples",
+	Long:  "\n-----------------------------\n Show Core Dumps From Naples \n-----------------------------\n",
 	RunE:  coreShowCmdHandler,
 }
 

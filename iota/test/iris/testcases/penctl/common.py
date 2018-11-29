@@ -68,7 +68,7 @@ def CreateNaplesCores(n):
 
 def GetCores(n):
     req = api.Trigger_CreateExecuteCommandsRequest()
-    AddPenctlCommand(req, n, "list cores")
+    AddPenctlCommand(req, n, "list core-dumps")
     resp = api.Trigger(req)
     cmd_resp = resp.commands[0]
     api.PrintCommandResults(cmd_resp)

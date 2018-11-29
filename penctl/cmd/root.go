@@ -42,6 +42,8 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		if cmd.Flags().Changed("version") {
 			printPenctlVer()
+		} else {
+			fmt.Println(cmd.Help())
 		}
 	},
 }
@@ -78,7 +80,7 @@ func init() {
 	log.SetConfig(logConfig)
 
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "log", "z", false, "debug output")
-	rootCmd.PersistentFlags().BoolVarP(&version, "version", "v", false, "version")
+	rootCmd.PersistentFlags().BoolVarP(&version, "version", "v", false, "display version of penctl")
 	rootCmd.PersistentFlags().BoolVarP(&yamlFormat, "yaml", "y", false, "display in yaml format")
 	rootCmd.PersistentFlags().BoolVarP(&jsonFormat, "json", "j", false, "display in json format")
 	rootCmd.PersistentFlags().BoolVarP(&tabularFormat, "tabular", "t", true, "display in tabular format")
@@ -87,7 +89,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&ip, "ip", "", "", "ip of naples")
 
 	rootCmd.PersistentFlags().MarkHidden("localhost")
-	rootCmd.PersistentFlags().MarkHidden("verbose")
+	rootCmd.PersistentFlags().MarkHidden("log")
 	rootCmd.PersistentFlags().MarkHidden("ip")
 
 	// TODO generate this file only for linux/etc
