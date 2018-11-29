@@ -64,6 +64,7 @@ typedef struct pal_rwvectors_s {
     void*       (*mem_map)(uint64_t pa, uint32_t sz);
     void        (*mem_unmap)(void *va);
     pal_ret_t   (*qsfp_set_led)(int port, pal_qsfp_led_color_t led);
+    pal_ret_t   (*program_marvell)(uint8_t marvell_addr, uint32_t data);
 } __PACK__ pal_rwvectors_t;
 
 typedef struct pal_info_s {
@@ -209,6 +210,12 @@ static inline pal_ret_t
 pal_qsfp_set_led(int port, pal_qsfp_led_color_t led)
 {
     return gl_pal_info.rwvecs.qsfp_set_led(port, led);
+}
+
+static inline pal_ret_t
+pal_program_marvell(uint8_t addr, uint32_t data)
+{
+    return gl_pal_info.rwvecs.program_marvell(addr, data);
 }
 
 }    // namespace lib

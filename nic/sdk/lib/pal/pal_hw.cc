@@ -35,6 +35,7 @@ typedef int (*qsfp_write_fn_t)(const uint8_t *buffer, uint32_t size, uint32_t ad
 typedef void*(*mem_map_fn_t)(const uint64_t pa, const uint32_t sz, uint32_t flags);
 typedef void(*mem_unmap_fn_t)(void *va);
 typedef int (*qsfp_set_led_fn_t)(int port, pal_qsfp_led_color_t led);
+typedef int (*program_marvell_fn_t)(uint8_t addr, uint32_t data);
                                
 typedef struct pal_hw_vectors_s {
     hw_init_fn_t                hw_init;
@@ -58,6 +59,7 @@ typedef struct pal_hw_vectors_s {
     mem_map_fn_t                mem_map;
     mem_unmap_fn_t              mem_unmap;
     qsfp_set_led_fn_t           qsfp_set_led;
+    program_marvell_fn_t        program_marvell;
 } pal_hw_vectors_t;
 
 static pal_hw_vectors_t   gl_hw_vecs;
@@ -135,8 +137,12 @@ pal_init_hw_vectors (void)
     SDK_ASSERT(gl_hw_vecs.mem_unmap);
 
     gl_hw_vecs.qsfp_set_led = (qsfp_set_led_fn_t)dlsym(gl_lib_handle,
-                                      "pal_qsfp_set_led");
+                                                       "pal_qsfp_set_led");
     SDK_ASSERT(gl_hw_vecs.qsfp_set_led);
+
+    gl_hw_vecs.program_marvell = (program_marvell_fn_t)dlsym(gl_lib_handle,
+                                                             "pal_program_marvell");
+    SDK_ASSERT(gl_hw_vecs.program_marvell);
 
     return PAL_RET_OK;
 }
@@ -353,6 +359,17 @@ pal_hw_qsfp_set_led(int port_no, pal_qsfp_led_color_t led)
     return PAL_RET_NOK;
 }
 
+
+static pal_ret_t
+pal_hw_program_marvell(uint8_t addr, uint32_t data)
+{
+    if((*gl_hw_vecs.program_marvell)(addr, data) == 0) {
+        return PAL_RET_OK;
+    }
+
+    return PAL_RET_NOK;
+}
+
 static pal_ret_t
 pal_hw_init_rwvectors (void)
 {
@@ -378,6 +395,7 @@ pal_hw_init_rwvectors (void)
     gl_pal_info.rwvecs.mem_map = pal_hw_mem_map;
     gl_pal_info.rwvecs.mem_unmap = pal_hw_mem_unmap;
     gl_pal_info.rwvecs.qsfp_set_led = pal_hw_qsfp_set_led;
+    gl_pal_info.rwvecs.program_marvell = pal_hw_program_marvell;
 
     pal_init_hw_vectors();
 

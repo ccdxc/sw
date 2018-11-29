@@ -40,6 +40,11 @@ pal_qsfp_set_led(int port, pal_qsfp_led_color_t led) {
     return -1;
 }
 
+int
+pal_program_marvell(uint8_t marvell_addr, uint32_t data) {
+    return -1;
+}
+
 #else
 #include "internal.h"
 #include "cpld_int.h"
@@ -230,6 +235,26 @@ pal_qsfp_set_led(int port, pal_qsfp_led_color_t led) {
        default:
            return CPLD_FAIL;
     }
+}
+
+int
+pal_program_marvell(uint8_t marvell_addr, uint32_t data) {
+    if (!pal_wr_lock(CPLDLOCK)) {
+        printf("Could not lock pal.lck\n");
+        return CPLD_FAIL;
+    }
+
+    cpld_write(0x7, marvell_addr);
+    cpld_write(0x8, (data >> 8) && 0xff);
+    cpld_write(0x9, data && 0xff);
+    cpld_write(0x6, (0xc << 3) | 0x4 | 0x1);
+    cpld_write(0x6, 0);
+
+    if (!pal_wr_unlock(CPLDLOCK)) {
+        printf("Failed to unlock.\n");
+    }
+
+    return CPLD_SUCCESS;
 }
 
 #endif

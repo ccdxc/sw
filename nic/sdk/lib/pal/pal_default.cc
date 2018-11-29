@@ -157,6 +157,13 @@ pal_default_qsfp_set_led(int port, pal_qsfp_led_color_t led)
     return PAL_RET_OK;
 }
 
+static pal_ret_t
+pal_default_program_marvell(uint8_t addr, uint32_t data)
+{
+    SDK_TRACE_DEBUG("PAL default program marvell called.");
+    return PAL_RET_OK;
+}
+
 pal_ret_t
 pal_default_init_rwvectors (void)
 {
@@ -185,6 +192,7 @@ pal_default_init_rwvectors (void)
     gl_pal_info.rwvecs.mem_map = pal_default_mem_map;
     gl_pal_info.rwvecs.mem_unmap = pal_default_mem_unmap;
     gl_pal_info.rwvecs.qsfp_set_led = pal_default_qsfp_set_led;
+    gl_pal_info.rwvecs.program_marvell = pal_default_program_marvell;
 
     return PAL_RET_OK;
 }
