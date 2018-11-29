@@ -44,7 +44,7 @@ Enic::Enic(EthLif *ethlif)
     }
 
     id += HAL_NON_RSVD_IF_OFFSET;
-    NIC_LOG_INFO("Enic create id: {}", id);
+    NIC_LOG_DEBUG("Enic create id: {}", id);
 
     this->ethlif = ethlif;
 
@@ -63,7 +63,7 @@ Enic::Enic(EthLif *ethlif)
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
             handle = rsp.status().if_handle();
-            NIC_LOG_INFO("Created Enic id: {} for Lif: {} handle: {}",
+            NIC_LOG_DEBUG("Created Enic id: {} for Lif: {} handle: {}",
                             id, ethlif->GetLif()->GetId(), handle);
         } else {
             NIC_LOG_ERR("Failed to create Enic for Lif: {}. err: {}",
@@ -88,7 +88,7 @@ Enic::~Enic()
     intf::InterfaceDeleteRequestMsg       req_msg;
     intf::InterfaceDeleteResponseMsg      rsp_msg;
 
-    NIC_LOG_INFO("Enic delete id: {}", id);
+    NIC_LOG_DEBUG("Enic delete id: {}", id);
 
     req = req_msg.add_request();
     req->mutable_key_or_handle()->set_interface_id(id);
@@ -96,7 +96,7 @@ Enic::~Enic()
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
-            NIC_LOG_INFO("Deleted Enic id: {} handle: {}",
+            NIC_LOG_DEBUG("Deleted Enic id: {} handle: {}",
                             id, handle);
         } else {
             NIC_LOG_ERR("Failed to delete Enic for id: {}. err: {}",
@@ -141,7 +141,7 @@ Enic::TriggerHalUpdate()
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
             handle = rsp.status().if_handle();
-            NIC_LOG_INFO("Enic update succeeded id: {}, handle: {}",
+            NIC_LOG_DEBUG("Enic update succeeded id: {}, handle: {}",
                             id, handle);
         } else {
             NIC_LOG_ERR("Failed to update Enic: err: {}", rsp.api_status());
@@ -166,7 +166,7 @@ Enic::AddVlan(vlan_t vlan)
 
     }
 
-    NIC_LOG_INFO("Adding vlan {} on Enic {}", vlan, id);
+    NIC_LOG_DEBUG("Adding vlan {} on Enic {}", vlan, id);
 
     /*
      * Native vlan is added at the time of enic create. Native vlan
@@ -203,7 +203,7 @@ Enic::DelVlan(vlan_t vlan)
     l2seg_info_t *l2seg_info;
     HalL2Segment *l2seg = HalL2Segment::Lookup(ethlif->GetVrf(), vlan);
 
-    NIC_LOG_INFO("Deleting vlan {} on Enic {}", vlan, id);
+    NIC_LOG_DEBUG("Deleting vlan {} on Enic {}", vlan, id);
 
     if (vlan != NATIVE_VLAN_ID) {
         // Check for the presence of vlan

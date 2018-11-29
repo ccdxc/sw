@@ -50,7 +50,7 @@ MacVlanFilter::MacVlanFilter(
     _vlan = vlan;
     this->eth_lif = eth_lif;
 
-    NIC_LOG_INFO("Mac-Vlan entity creation. Type: {}, lif: {}, mac: {}, vlan: {}. ",
+    NIC_LOG_DEBUG("Mac-Vlan entity creation. Type: {}, lif: {}, mac: {}, vlan: {}. ",
                     _type,
                     eth_lif->GetLif()->GetId(),
                     macaddr2str(mac), vlan);
@@ -103,7 +103,7 @@ MacVlanFilter::MacVlanFilter(
             rsp = rsp_msg.response(0);
             if (rsp.api_status() == types::API_STATUS_OK) {
                 handle = rsp.filter_status().filter_handle();
-                NIC_LOG_INFO("Created Filter mac: {} vlan: {}, handle: {}",
+                NIC_LOG_DEBUG("Created Filter mac: {} vlan: {}, handle: {}",
                                 mac, vlan, handle);
             } else {
                 NIC_LOG_ERR("Failed to create Filter mac: {} vlan: {}. err: {}",
@@ -132,7 +132,7 @@ MacVlanFilter::~MacVlanFilter()
     HalL2Segment                            *l2seg;
     HalEndpoint                             *ep;
 
-    NIC_LOG_INFO("Mac-Vlan entity deletion. lif: {}, mac: {}, vlan: {}. ",
+    NIC_LOG_DEBUG("Mac-Vlan entity deletion. lif: {}, mac: {}, vlan: {}. ",
                     eth_lif->GetLif()->GetId(),
                     macaddr2str(_mac), _vlan);
 
@@ -180,7 +180,7 @@ MacVlanFilter::~MacVlanFilter()
         if (status.ok()) {
             rsp = rsp_msg.response(0);
             if (rsp.api_status() == types::API_STATUS_OK) {
-                NIC_LOG_INFO("Delted Filter mac: {} vlan: {}, handle: {}",
+                NIC_LOG_DEBUG("Delted Filter mac: {} vlan: {}, handle: {}",
                                 _mac, _vlan, handle);
             } else {
                 NIC_LOG_ERR("Failed to delete Filter mac: {} vlan: {}. err: {}",

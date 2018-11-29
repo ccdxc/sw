@@ -69,7 +69,7 @@ Lif::Lif(EthLif * eth_lif)
 
     eth_lif_ = eth_lif;
 
-    NIC_LOG_INFO("Creating Lif: {}, prom: {}, oob: {}, int_mgmt_mnic: {}, host_mgmt_mnic: {}, rdma_en: {}",
+    NIC_LOG_DEBUG("Creating Lif: {}, prom: {}, oob: {}, int_mgmt_mnic: {}, host_mgmt_mnic: {}, rdma_en: {}",
                  lif_info->name,
                  lif_info->receive_promiscuous,
                  eth_lif_->IsOOBMnic(),
@@ -98,10 +98,10 @@ Lif::Lif(EthLif * eth_lif)
     // Populate qstate map
     for (uint32_t i = 0; i < NUM_QUEUE_TYPES; i++) {
         auto & qinfo = lif_info->queue_info[i];
-        NIC_LOG_INFO("Processing queue type: {}, size: {}", i, qinfo.size);
+        NIC_LOG_DEBUG("Processing queue type: {}, size: {}", i, qinfo.size);
         if (qinfo.size < 1) continue;
 
-        NIC_LOG_INFO("Queue type_num: {}, entries: {}, purpose: {}, prog: {}, label: {}",
+        NIC_LOG_DEBUG("Queue type_num: {}, entries: {}, purpose: {}, prog: {}, label: {}",
                         qinfo.type_num,
                         qinfo.entries, qinfo.purpose, qinfo.prog, qinfo.label);
 
@@ -135,7 +135,7 @@ Lif::Lif(EthLif * eth_lif)
         if (rsp.api_status() == types::API_STATUS_OK) {
             handle_ = rsp.status().lif_handle();
             hw_lif_id_ = rsp.status().hw_lif_id();
-            NIC_LOG_INFO("Created Lif id: {} hw_lif_id: {}, handle: {}",
+            NIC_LOG_DEBUG("Created Lif id: {} hw_lif_id: {}, handle: {}",
                             id_, hw_lif_id_, handle_);
         } else {
             NIC_LOG_ERR("Failed to create Lif for hw_lif_id: {}. err: {}",
@@ -166,7 +166,7 @@ Lif::~Lif()
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
-            NIC_LOG_INFO("Deleted Lif id: {} hw_lif_id: {}, handle: {}",
+            NIC_LOG_DEBUG("Deleted Lif id: {} hw_lif_id: {}, handle: {}",
                             id_, eth_lif_->GetLifInfo()->hw_lif_id, handle_);
         } else {
             NIC_LOG_ERR("Failed to delete Lif for id: {}. err: {}",
@@ -239,7 +239,7 @@ Lif::TriggerHalUpdate()
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
-            NIC_LOG_INFO("Created Lif id: {} hw_lif_id: {}, handle: {}",
+            NIC_LOG_DEBUG("Created Lif id: {} hw_lif_id: {}, handle: {}",
                             id_, lif_info->hw_lif_id, handle_);
         } else {
             NIC_LOG_ERR("Failed to create Lif for id: {}. err: {}",

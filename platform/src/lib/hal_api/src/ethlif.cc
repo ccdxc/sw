@@ -40,7 +40,7 @@ EthLif::Factory(hal_lif_info_t *info)
     EthLif *eth_lif = new EthLif(info);
 
     if (eth_lif->IsInternalManagementMnic()) {
-        NIC_LOG_INFO("lif-{}:Setting Internal management lif",
+        NIC_LOG_DEBUG("lif-{}:Setting Internal management lif",
                      info->hw_lif_id);
         EthLif::SetInternalMgmtEthLif(eth_lif);
     }
@@ -50,7 +50,7 @@ EthLif::Factory(hal_lif_info_t *info)
         // DOL: HAL_LIF_ID_NICMGR_MIN lifs created in DevMgr constructor
         if (!eth_lif->IsInternalManagement()) {
             // All LIFs with uplink NULL except internal mgmt mnic and host mgmt.
-            NIC_LOG_INFO("lif-{}: Uplink is NULL", eth_lif->GetHwLifId());
+            NIC_LOG_DEBUG("lif-{}: Uplink is NULL", eth_lif->GetHwLifId());
             goto end;
         }
     }
@@ -59,9 +59,9 @@ EthLif::Factory(hal_lif_info_t *info)
     // Only for storage lif STORAGE_SEQ_SW_LIF_ID uplink is NULL
     // if (eth_lif->GetUplink() == NULL) {
     if (info->id == STORAGE_SEQ_SW_LIF_ID) {
-        NIC_LOG_INFO("Storage lif id: {}. Skip fwd entities creation.",
+        NIC_LOG_DEBUG("Storage lif id: {}. Skip fwd entities creation.",
                      info->id);
-        // NIC_LOG_INFO("lif-{}: Uplink is NULL", eth_lif->GetHwLifId());
+        // NIC_LOG_DEBUG("lif-{}: Uplink is NULL", eth_lif->GetHwLifId());
         goto end;
     }
 #endif
@@ -139,7 +139,7 @@ EthLif::Factory(hal_lif_info_t *info)
         } else {
             if (eth_lif->GetUplink()->GetNumLifs() == 1) {
 
-                NIC_LOG_INFO("First lif id: {}, hw_id: {} on uplink {}",
+                NIC_LOG_DEBUG("First lif id: {}, hw_id: {} on uplink {}",
                              eth_lif->GetLif()->GetId(),
                              eth_lif->GetHwLifId(),
                              eth_lif->GetUplink()->GetId());
@@ -214,7 +214,7 @@ EthLif::Destroy(EthLif *eth_lif)
             } else {
 
                 if (eth_lif->GetUplink()->GetNumLifs() == 0) {
-                    NIC_LOG_INFO("Last lif id: {}, hw_id: {} on uplink {}",
+                    NIC_LOG_DEBUG("Last lif id: {}, hw_id: {} on uplink {}",
                                  eth_lif->GetLif()->GetId(),
                                  eth_lif->GetHwLifId(),
                                  eth_lif->GetUplink()->GetId());
@@ -298,7 +298,7 @@ EthLif::AddMac(mac_t mac)
     mac_vlan_t mac_vlan;
 
     api_trace("Adding Mac Filter");
-    NIC_LOG_INFO("Adding Mac filter: {}", macaddr2str(mac));
+    NIC_LOG_DEBUG("Adding Mac filter: {}", macaddr2str(mac));
 
     if (mac_table_.find(mac) == mac_table_.end()) {
 
@@ -325,7 +325,7 @@ EthLif::AddMac(mac_t mac)
                     // No (MacVlan) filter. Creating (Mac, Vlan)
                     CreateMacVlanFilter(mac, *vlan_it);
                 } else {
-                    NIC_LOG_INFO("(Mac,Vlan) filter present. No-op");
+                    NIC_LOG_DEBUG("(Mac,Vlan) filter present. No-op");
                 }
             }
         } else {
@@ -346,7 +346,7 @@ EthLif::DelMac(mac_t mac)
     mac_vlan_t mac_vlan_key, mac_key, vlan_key;
 
     api_trace("Deleting Mac Filter");
-    NIC_LOG_INFO("Deleting Mac filter: {}", macaddr2str(mac));
+    NIC_LOG_DEBUG("Deleting Mac filter: {}", macaddr2str(mac));
 
     mac_key = make_tuple(mac, 0);
     if (mac_table_.find(mac) != mac_table_.end()) {
@@ -356,14 +356,14 @@ EthLif::DelMac(mac_t mac)
                 mac_vlan_key = make_tuple(mac, *vlan_it);
                 if (vlan_table_.find(*vlan_it) != vlan_table_.end() &&
                     mac_vlan_table_.find(mac_vlan_key) == mac_vlan_table_.end()) {
-                    NIC_LOG_INFO("Mac Delete: Mac, Vlan are present but (Mac,Vlan) is not. Remove (Mac,Vlan) entity");
+                    NIC_LOG_DEBUG("Mac Delete: Mac, Vlan are present but (Mac,Vlan) is not. Remove (Mac,Vlan) entity");
                     // Mac, Vlan are present and (Mac,Vlan) is not
                     DeleteMacVlanFilter(mac, *vlan_it);
                 } else {
                     // Case:
                     //  Case 1: Vlan filter not present but (Mac,Vlan) is either present or not.
                     //  Case 2: Vlan filter is present along with (Mac,Vlan)
-                    NIC_LOG_INFO("Mac Delete: No-op");
+                    NIC_LOG_DEBUG("Mac Delete: No-op");
                 }
             }
         } else {
@@ -384,7 +384,7 @@ EthLif::AddVlan(vlan_t vlan)
     mac_vlan_t mac_vlan;
 
     api_trace("Adding Vlan Filter");
-    NIC_LOG_INFO("Adding Vlan filter: {}", vlan);
+    NIC_LOG_DEBUG("Adding Vlan filter: {}", vlan);
     if (!vlan) {
         vlan = 8192;
     }
@@ -413,7 +413,7 @@ EthLif::AddVlan(vlan_t vlan)
                     // No (MacVlan) filter. Creating (Mac, Vlan)
                     CreateMacVlanFilter(*it, vlan);
                 } else {
-                    NIC_LOG_INFO("(Mac,Vlan) filter present. No-op");
+                    NIC_LOG_DEBUG("(Mac,Vlan) filter present. No-op");
                 }
             }
         } else {
@@ -434,9 +434,9 @@ EthLif::DelVlan(vlan_t vlan)
     mac_vlan_t mac_vlan_key;
 
     api_trace("Deleting Vlan Filter");
-    NIC_LOG_INFO("Deleting Vlan filter: {}", vlan);
+    NIC_LOG_DEBUG("Deleting Vlan filter: {}", vlan);
     if (!vlan) {
-        NIC_LOG_INFO("Ignoring Delete of Vlan filter 0");
+        NIC_LOG_DEBUG("Ignoring Delete of Vlan filter 0");
         return HAL_IRISC_RET_SUCCESS;
     }
 
@@ -446,14 +446,14 @@ EthLif::DelVlan(vlan_t vlan)
                 mac_vlan_key = make_tuple(*it, vlan);
                 if (mac_table_.find(*it) != mac_table_.end() &&
                     mac_vlan_table_.find(mac_vlan_key) == mac_vlan_table_.end()) {
-                    NIC_LOG_INFO("Vlan Delete: Mac, Vlan are present but (Mac,Vlan) is not. Remove (Mac,Vlan) entity");
+                    NIC_LOG_DEBUG("Vlan Delete: Mac, Vlan are present but (Mac,Vlan) is not. Remove (Mac,Vlan) entity");
                     // Mac, Vlan are present and (Mac,Vlan) is not
                     DeleteMacVlanFilter(*it, vlan);
                 } else {
                     // Case:
                     //  Case 1: Mac filter not present but (Mac,Vlan) is either present or not.
                     //  Case 2: Mac filter is present along with (Mac,Vlan)
-                    NIC_LOG_INFO("Vlan Delete: No-op");
+                    NIC_LOG_DEBUG("Vlan Delete: No-op");
                 }
             }
         } else {
@@ -474,7 +474,7 @@ EthLif::AddMacVlan(mac_t mac, vlan_t vlan)
     mac_vlan_t key(mac, vlan);
 
     api_trace("Adding (Mac,Vlan) Filter");
-    NIC_LOG_INFO("Adding (Mac,Vlan) mac: {}, filter: {}", macaddr2str(mac), vlan);
+    NIC_LOG_DEBUG("Adding (Mac,Vlan) mac: {}, filter: {}", macaddr2str(mac), vlan);
 
     if (mac_vlan_table_.find(key) == mac_vlan_table_.end()) {
         // Check if max limit reached
@@ -490,7 +490,7 @@ EthLif::AddMacVlan(mac_t mac, vlan_t vlan)
                 vlan_table_.find(vlan) == vlan_table_.end()) {
                 CreateMacVlanFilter(mac, vlan);
             } else {
-                NIC_LOG_INFO("Mac filter and Vlan filter preset. "
+                NIC_LOG_DEBUG("Mac filter and Vlan filter preset. "
                                 "No-op for (Mac,Vlan) filter");
             }
         } else {
@@ -511,7 +511,7 @@ EthLif::DelMacVlan(mac_t mac, vlan_t vlan)
     mac_vlan_t mac_vlan_key;
 
     api_trace("Deleting (Mac,Vlan) Filter");
-    NIC_LOG_INFO("Deleting (Mac,Vlan) mac: {}, filter: {}", macaddr2str(mac), vlan);
+    NIC_LOG_DEBUG("Deleting (Mac,Vlan) mac: {}, filter: {}", macaddr2str(mac), vlan);
 
     mac_vlan_key = make_tuple(mac, vlan);
     if (mac_vlan_table_.find(mac_vlan_key) != mac_vlan_table_.end()) {
@@ -523,7 +523,7 @@ EthLif::DelMacVlan(mac_t mac, vlan_t vlan)
                 DeleteMacVlanFilter(mac, vlan);
             } else {
                 // Mac filter and Vlan filter both exist
-                NIC_LOG_INFO("Mac filter and Vlan filter present. "
+                NIC_LOG_DEBUG("Mac filter and Vlan filter present. "
                                 "No-op for (Mac,Vlan) filter");
             }
         } else {
@@ -548,7 +548,7 @@ EthLif::UpdateReceivePromiscuous(bool receive_promiscuous)
         goto end;
     }
 
-    NIC_LOG_INFO("Lif: {}. Prom. flag change {} -> {}",
+    NIC_LOG_DEBUG("Lif: {}. Prom. flag change {} -> {}",
                     lif_->GetId(), info_.receive_promiscuous,
                     receive_promiscuous);
 
@@ -579,7 +579,7 @@ EthLif::UpdateReceiveBroadcast(bool receive_broadcast)
         goto end;
     }
 
-    NIC_LOG_INFO("Lif: {}. Prom. flag change {} -> {}",
+    NIC_LOG_DEBUG("Lif: {}. Prom. flag change {} -> {}",
                     lif_->GetId(), info_.receive_broadcast,
                     receive_broadcast);
 
@@ -601,7 +601,7 @@ EthLif::UpdateReceiveAllMulticast(bool receive_all_multicast)
         goto end;
     }
 
-    NIC_LOG_INFO("Lif: {}. Prom. flag change {} -> {}",
+    NIC_LOG_DEBUG("Lif: {}. Prom. flag change {} -> {}",
                     lif_->GetId(), info_.receive_all_multicast,
                     receive_all_multicast);
 
@@ -623,7 +623,7 @@ EthLif::UpdateVlanStripEn(bool vlan_strip_en)
         goto end;
     }
 
-    NIC_LOG_INFO("Lif: {}. Vlan strip change {} -> {}",
+    NIC_LOG_DEBUG("Lif: {}. Vlan strip change {} -> {}",
                     lif_->GetId(), info_.vlan_strip_en,
                     vlan_strip_en);
 
@@ -645,7 +645,7 @@ EthLif::UpdateVlanInsertEn(bool vlan_insert_en)
         goto end;
     }
 
-    NIC_LOG_INFO("Lif: {}. Prom. flag change {} -> {}",
+    NIC_LOG_DEBUG("Lif: {}. Prom. flag change {} -> {}",
                     lif_->GetId(), info_.vlan_insert_en,
                     vlan_insert_en);
 

@@ -38,10 +38,10 @@ HalClient::HalClient(enum ForwardingMode fwd_mode)
         url = string("localhost:") + getenv("HAL_GRPC_PORT");
     }
 
-    NIC_LOG_INFO("Connecting to HAL @ {}", url);
+    NIC_LOG_DEBUG("Connecting to HAL @ {}", url);
     channel = CreateChannel(url, InsecureChannelCredentials());
 
-    NIC_LOG_INFO("Waiting for HAL to be ready ...");
+    NIC_LOG_DEBUG("Waiting for HAL to be ready ...");
     auto state = channel->GetState(true);
     while (state != GRPC_CHANNEL_READY) {
         // Wait for State change or deadline
@@ -742,7 +742,7 @@ HalClient::LifGet(uint64_t lif_id, struct lif_info *lif_info)
 uint64_t
 HalClient::LifCreate(hal_lif_info_t *hal_lif_info)
 {
-    NIC_LOG_INFO("Creating with Lif: id: {}, type: {}, pinned_uplink: {}, hw_lif_id: {}, rdma_en: {}",
+    NIC_LOG_DEBUG("Creating with Lif: id: {}, type: {}, pinned_uplink: {}, hw_lif_id: {}, rdma_en: {}",
                  hal_lif_info->id,
                  hal_lif_info->type,
                  hal_lif_info->pinned_uplink ? hal_lif_info->pinned_uplink->GetId() : 0,
@@ -762,7 +762,7 @@ HalClient::LifCreate(hal_lif_info_t *hal_lif_info)
     // Passed hw_lif_id should be same as HAL returned
     NIC_ASSERT(hal_lif_info->hw_lif_id == eth_lif->GetLif()->GetHwLifId());
 
-    NIC_LOG_INFO("lif-{} Created with id: {}",
+    NIC_LOG_DEBUG("lif-{} Created with id: {}",
                  hal_lif_info->hw_lif_id, hal_lif_info->id);
 
     return 0;
@@ -784,7 +784,7 @@ HalClient::LifCreate(uint64_t lif_id,
     hal_lif_info.enable_rdma = lif_info->enable_rdma;
     memcpy(hal_lif_info.queue_info, queue_info, sizeof(hal_lif_info.queue_info));
 
-    NIC_LOG_INFO("Creating with Lif: id: {}, type: {}, pinned_uplink: {}, hw_lif_id: {}, rdma_en: {}",
+    NIC_LOG_DEBUG("Creating with Lif: id: {}, type: {}, pinned_uplink: {}, hw_lif_id: {}, rdma_en: {}",
                  hal_lif_info.id,
                  hal_lif_info.type,
                  hal_lif_info.pinned_uplink ? hal_lif_info.pinned_uplink->GetId() : 0,
@@ -802,7 +802,7 @@ HalClient::LifCreate(uint64_t lif_id,
     // Passed hw_lif_id should be same as HAL returned
     NIC_ASSERT(hal_lif_info.hw_lif_id == lif_info->hw_lif_id);
 
-    NIC_LOG_INFO("lif-{} Created with id: {}", lif_info->hw_lif_id, lif_id);
+    NIC_LOG_DEBUG("lif-{} Created with id: {}", lif_info->hw_lif_id, lif_id);
 
     return 0;
 }

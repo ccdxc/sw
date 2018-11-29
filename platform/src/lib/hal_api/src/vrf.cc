@@ -45,7 +45,7 @@ HalVrf::HalVrf(types::VrfType type, Uplink *uplink)
 
     id += VRF_ID_BASE;
 
-    NIC_LOG_INFO("HalVrf create id: {}", id);
+    NIC_LOG_DEBUG("HalVrf create id: {}", id);
 
     req = req_msg.add_request();
     req->mutable_key_or_handle()->set_vrf_id(id);
@@ -57,7 +57,7 @@ HalVrf::HalVrf(types::VrfType type, Uplink *uplink)
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
             handle = rsp.vrf_status().key_or_handle().vrf_handle();
-            NIC_LOG_INFO("HalVrf Create: id: {}, handle: {}", id, handle);
+            NIC_LOG_DEBUG("HalVrf Create: id: {}, handle: {}", id, handle);
             cout << "[INFO] VRF create succeeded,"
                  << " id = " << id << " handle = " << handle
                  << endl;
@@ -86,7 +86,7 @@ HalVrf::~HalVrf()
     vrf::VrfDeleteRequestMsg        req_msg;
     vrf::VrfDeleteResponseMsg       rsp_msg;
 
-    NIC_LOG_INFO("HalVrf delete id: {}", id);
+    NIC_LOG_DEBUG("HalVrf delete id: {}", id);
 
     req = req_msg.add_request();
     if (id == 0) {

@@ -24,7 +24,7 @@ Uplink::Factory(uplink_id_t id, bool is_oob)
         return NULL;
     }
 
-    NIC_LOG_INFO("Id: {}, is_oob: {}", id, is_oob);
+    NIC_LOG_DEBUG("Id: {}, is_oob: {}", id, is_oob);
 
 
     Uplink *uplink = new Uplink(id, is_oob);
@@ -64,7 +64,7 @@ Uplink::Destroy(Uplink *uplink)
 
 Uplink::Uplink(uplink_id_t id, bool is_oob)
 {
-    NIC_LOG_INFO("Uplink Create: {}", id);
+    NIC_LOG_DEBUG("Uplink Create: {}", id);
     this->id = id;
     this->is_oob = is_oob;
     this->num_lifs = 0;
@@ -113,7 +113,7 @@ Uplink::UpdateHalWithNativeL2seg(uint32_t native_l2seg_id)
     req->mutable_key_or_handle()->set_interface_id(id);
     status = hal->interface_get(req_msg, rsp_msg);
     if (status.ok()) {
-        NIC_LOG_INFO("Updated Uplink:{} with native l2seg:{}", id, native_l2seg_id);
+        NIC_LOG_DEBUG("Updated Uplink:{} with native l2seg:{}", id, native_l2seg_id);
         for (int i = 0; i < rsp_msg.response().size(); i++) {
             rsp = rsp_msg.response(i);
             if (rsp.api_status() == types::API_STATUS_OK) {
@@ -129,7 +129,7 @@ Uplink::UpdateHalWithNativeL2seg(uint32_t native_l2seg_id)
                     if (status.ok()) {
                         rsp = rsp_msg.response(0);
                         if (rsp.api_status() == types::API_STATUS_OK) {
-                            NIC_LOG_INFO("Uplink {} updated with "
+                            NIC_LOG_DEBUG("Uplink {} updated with "
                                             "native_l2seg_id: {} succeeded",
                                             id, native_l2seg_id);
                         } else {

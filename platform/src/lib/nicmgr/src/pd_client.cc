@@ -292,18 +292,18 @@ void PdClient::init(void)
     int ret;
     hal::hal_cfg_t hal_cfg;
 
-    NIC_LOG_INFO("Loading p4plus RxDMA asic lib tables cfg_path: {}...", hal_cfg_path_);
+    NIC_LOG_DEBUG("Loading p4plus RxDMA asic lib tables cfg_path: {}...", hal_cfg_path_);
     ret = p4plus_rxdma_init_tables();
     assert(ret == 0);
-    NIC_LOG_INFO("Loading p4plus TxDMA asic lib tables cfg_path: {}...", hal_cfg_path_);
+    NIC_LOG_DEBUG("Loading p4plus TxDMA asic lib tables cfg_path: {}...", hal_cfg_path_);
     ret = p4plus_txdma_init_tables();
     assert(ret == 0);
-    NIC_LOG_INFO("Initializing HBM Memory Partitions from: {}...", hal_cfg_path_);
+    NIC_LOG_DEBUG("Initializing HBM Memory Partitions from: {}...", hal_cfg_path_);
     mp_ = mpartition::factory((hal_cfg_path_ +
                                     "iris/hbm_mem.json").c_str(),
                                    CAPRI_HBM_BASE);
     assert(mp_);
-    NIC_LOG_INFO("Initializing NIC LIF Mgr ...");
+    NIC_LOG_DEBUG("Initializing NIC LIF Mgr ...");
     lm_ = LIFManager::factory(mp_, NULL, kLif2QstateHBMLabel);
     assert(lm_);
 
@@ -329,7 +329,7 @@ void PdClient::init(void)
     }
 
     hal_cfg.cfg_path = hal_cfg_path_;
-    NIC_LOG_INFO("Initializing table rw ...");
+    NIC_LOG_DEBUG("Initializing table rw ...");
     ret = capri_p4plus_table_rw_init(&hal_cfg);
     assert(ret == 0);
 
@@ -477,7 +477,7 @@ PdClient::lif_qstate_init(uint64_t hw_lif_id, struct queue_info* queue_info)
         total_queues++;
     }
 
-    NIC_LOG_INFO("# Queues: {}", total_queues);
+    NIC_LOG_DEBUG("# Queues: {}", total_queues);
     return 0;
 }
 
@@ -487,7 +487,7 @@ int PdClient::program_qstate(struct queue_info* queue_info,
 {
     int ret;
 
-    NIC_LOG_INFO("lif-{}: Programming qstate", lif_info->hw_lif_id);
+    NIC_LOG_DEBUG("lif-{}: Programming qstate", lif_info->hw_lif_id);
 
     // init queue state map
     ret = lif_qstate_map_init(lif_info->hw_lif_id, queue_info, coses);
@@ -507,7 +507,7 @@ int PdClient::program_qstate(struct queue_info* queue_info,
         if (qinfo.size < 1) continue;
 
         lif_info->qstate_addr[type] = lm_->GetLIFQStateAddr(lif_info->hw_lif_id, type, 0);
-        NIC_LOG_INFO("lif-{}: qtype: {}, qstate_base: {:#x}",
+        NIC_LOG_DEBUG("lif-{}: qtype: {}, qstate_base: {:#x}",
                      lif_info->hw_lif_id,
                      type, lif_info->qstate_addr[type]);
     }
@@ -575,7 +575,7 @@ PdClient::p4pd_common_p4plus_rxdma_rss_indir_table_entry_add(
     if (hw_lif_id >= MAX_LIFS ||
         index >= ETH_RSS_LIF_INDIR_TBL_SZ ||
         qid >= ETH_RSS_MAX_QUEUES) {
-        NIC_LOG_INFO("{}: {}, index : {}, qid : {}",
+        NIC_LOG_DEBUG("{}: {}, index : {}, qid : {}",
                      __FUNCTION__, hw_lif_id, index, qid);
         return -1;
     };
@@ -610,7 +610,7 @@ PdClient::p4pd_common_p4plus_rxdma_rss_indir_table_entry_get(
 
     if (hw_lif_id >= MAX_LIFS ||
         index >= ETH_RSS_LIF_INDIR_TBL_SZ) {
-        NIC_LOG_INFO("{}: hw_lif_id : {} index : {}",
+        NIC_LOG_DEBUG("{}: hw_lif_id : {} index : {}",
                      __FUNCTION__, hw_lif_id, index);
         return -1;
     };
@@ -697,7 +697,7 @@ PdClient::p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_add (
                     idx, pd_err);
         assert(0);
     }
-    NIC_LOG_INFO("stage0 rdma LIF table entry add successful for rxdma, "
+    NIC_LOG_DEBUG("stage0 rdma LIF table entry add successful for rxdma, "
                  "idx : {}, err : {}",
                  idx, pd_err);
     return 0;
@@ -722,7 +722,7 @@ PdClient::p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_get (uint32_t 
         assert(0);
     }
 
-    NIC_LOG_INFO("stage0 rdma LIF table entry get successful for "
+    NIC_LOG_DEBUG("stage0 rdma LIF table entry get successful for "
                  "rxdma, idx : {}, err : {}",
                  idx, pd_err);
     return 0;
@@ -778,7 +778,7 @@ PdClient::p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add (
                     "idx : {}, err : {}", idx, pd_err);
         assert(0);
     }
-    NIC_LOG_INFO("stage0 rdma LIF table entry add successful for "
+    NIC_LOG_DEBUG("stage0 rdma LIF table entry add successful for "
                  "txdma, idx : {}, err : {}", idx, pd_err);
     return HAL_RET_OK;
 }
@@ -802,7 +802,7 @@ PdClient::p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_get (
                     "txdma, idx : {}, err : {}", idx, pd_err);
         assert(0);
     }
-    NIC_LOG_INFO("stage0 rdma LIF table entry get successful for "
+    NIC_LOG_DEBUG("stage0 rdma LIF table entry get successful for "
                  "txdma, idx : {}, err : {}", idx, pd_err);
     return 0;
 }
@@ -824,7 +824,7 @@ PdClient::rdma_get_pt_base_addr (uint32_t lif)
 
     pt_table_base_addr = data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.pt_base_addr_page_id;
 
-    NIC_LOG_INFO("({},{}): Lif: {}: Rx LIF params - pt_base_addr_page_id {}",
+    NIC_LOG_DEBUG("({},{}): Lif: {}: Rx LIF params - pt_base_addr_page_id {}",
                  __FUNCTION__, __LINE__, lif,
                  pt_table_base_addr);
 
@@ -855,7 +855,7 @@ PdClient::rdma_get_kt_base_addr (uint32_t lif)
     key_table_base_addr = (pt_table_base_addr << HBM_PAGE_SIZE_SHIFT) +
         (sizeof(uint64_t) << log_num_pt_entries);
 
-    NIC_LOG_INFO("({},{}): Lif: {}: Rx LIF params - pt_base_addr_page_id {} "
+    NIC_LOG_DEBUG("({},{}): Lif: {}: Rx LIF params - pt_base_addr_page_id {} "
                  "log_num_pt_entries {} key_table_base_addr {}",
                  __FUNCTION__, __LINE__, lif,
                  pt_table_base_addr, log_num_pt_entries,
@@ -881,7 +881,7 @@ PdClient::rdma_get_ah_base_addr (uint32_t lif)
 
     ah_table_base_addr = data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.ah_base_addr_page_id;
 
-    NIC_LOG_INFO("({},{}): Lif: {}: Rx LIF params - ah_base_addr_page_id {}",
+    NIC_LOG_DEBUG("({},{}): Lif: {}: Rx LIF params - ah_base_addr_page_id {}",
                  __FUNCTION__, __LINE__, lif,
                  ah_table_base_addr);
 
@@ -906,7 +906,7 @@ PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
     uint64_t            pad_size;
     int                 rc;
 
-    NIC_LOG_INFO("({},{}): LIF: {} ",
+    NIC_LOG_DEBUG("({},{}): LIF: {} ",
                  __FUNCTION__, __LINE__, lif);
 
     LIFQState *qstate = lm_->GetLIFQState(lif);
@@ -921,7 +921,7 @@ PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
 
     // Fill the CQ info in sram_lif_entry
     cq_base_addr = lm_->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_CQ);
-    NIC_LOG_INFO("({},{}): Lif {} cq_base_addr: {:#x}, max_cqs: {} "
+    NIC_LOG_DEBUG("({},{}): Lif {} cq_base_addr: {:#x}, max_cqs: {} "
                   "log_num_cq_entries: {}",
                   __FUNCTION__, __LINE__, lif, cq_base_addr,
                   max_cqs, log2(roundup_to_pow_2(max_cqs)));
@@ -931,14 +931,14 @@ PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
 
     // Fill the SQ info in sram_lif_entry
     sq_base_addr = lm_->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_SQ);
-    NIC_LOG_INFO("({},{}): Lif {} sq_base_addr: {:#x}",
+    NIC_LOG_DEBUG("({},{}): Lif {} sq_base_addr: {:#x}",
                     __FUNCTION__, __LINE__, lif, sq_base_addr);
     HAL_ASSERT((sq_base_addr & ((1 << SQCB_SIZE_SHIFT) - 1)) == 0);
     sram_lif_entry.sqcb_base_addr_hi = sq_base_addr >> SQCB_ADDR_HI_SHIFT;
 
     // Fill the RQ info in sram_lif_entry
     rq_base_addr = lm_->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_RQ);
-    NIC_LOG_INFO("({},{}): Lif {} rq_base_addr: {:#x}",
+    NIC_LOG_DEBUG("({},{}): Lif {} rq_base_addr: {:#x}",
                     __FUNCTION__, __LINE__, lif, rq_base_addr);
     HAL_ASSERT((rq_base_addr & ((1 << RQCB_SIZE_SHIFT) - 1)) == 0);
     sram_lif_entry.rqcb_base_addr_hi = rq_base_addr >> RQCB_ADDR_HI_SHIFT;
@@ -978,7 +978,7 @@ PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
 
     base_addr = RdmaHbmAlloc(total_size);
 
-    NIC_LOG_INFO("{}: pt_size: {}, key_table_size: {}, "
+    NIC_LOG_DEBUG("{}: pt_size: {}, key_table_size: {}, "
                   "ah_table_size: {}, base_addr: {:#x}",
                   __FUNCTION__, pt_size, key_table_size,
                   ah_table_size, base_addr);
@@ -998,7 +998,7 @@ PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
     sram_lif_entry.rq_qtype = Q_TYPE_RDMA_RQ;
     sram_lif_entry.aq_qtype = Q_TYPE_ADMINQ;
 
-    NIC_LOG_INFO("({},{}): pt_base_addr_page_id: {}, log_num_pt: {}, "
+    NIC_LOG_DEBUG("({},{}): pt_base_addr_page_id: {}, log_num_pt: {}, "
                   "ah_base_addr_page_id: {}, rdma_en_qtype_mask: {} "
                   "sq_qtype: {} rq_qtype: {} aq_qtype: {}",
                     __FUNCTION__, __LINE__,
@@ -1024,7 +1024,7 @@ PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
 
         hbm_addr = RdmaHbmBarAlloc(hbm_size);
 
-        NIC_LOG_INFO("{}: hbm_bar_addr: {:#x}, hbm_size: {}, ",
+        NIC_LOG_DEBUG("{}: hbm_bar_addr: {:#x}, hbm_size: {}, ",
                      __FUNCTION__, hbm_addr, hbm_size);
 
         if (hbm_addr == 0) {
@@ -1085,10 +1085,10 @@ PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
                             sram_lif_entry.barmap_size);
     assert(rc == 0);
 
-    NIC_LOG_INFO("({},{}): Lif: {}: SRAM LIF INIT successful",
+    NIC_LOG_DEBUG("({},{}): Lif: {}: SRAM LIF INIT successful",
                   __FUNCTION__, __LINE__, lif);
 
-    NIC_LOG_INFO("({},{}): Lif: {}: LIF Init successful",
+    NIC_LOG_DEBUG("({},{}): Lif: {}: LIF Init successful",
                   __FUNCTION__, __LINE__, lif);
 
     return HAL_RET_OK;
@@ -1103,7 +1103,7 @@ PdClient::mem_start_addr (const char *region)
 void
 PdClient::set_program_info()
 {
-    NIC_LOG_INFO("Initializing Program Info ...");
+    NIC_LOG_DEBUG("Initializing Program Info ...");
     pinfo_ = program_info::factory((gen_dir_path_ +
                                     "mpu_prog_info.json").c_str());
     assert(pinfo_);

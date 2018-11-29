@@ -114,7 +114,7 @@ DeviceManager::lifs_reservation(platform_t platform)
     int ret;
 
     // Reserve hw_lif_id for uplinks which HAL will use from 1 - 32.
-    NIC_LOG_INFO("Reserving 1-{} hw_lif_ids for HAL(uplinks) to use. Nicmgr will start from {}.",
+    NIC_LOG_DEBUG("Reserving 1-{} hw_lif_ids for HAL(uplinks) to use. Nicmgr will start from {}.",
                  (HAL_LIF_ID_NICMGR_MIN - 1),
                  HAL_LIF_ID_NICMGR_MIN);
     ret = pd->lm_->LIFRangeAlloc(1, (HAL_LIF_ID_NICMGR_MIN - 1));
@@ -162,7 +162,7 @@ void DeviceManager::CreateUplinkVRFs()
     Uplink *uplink = NULL;
     for (auto it = uplinks.cbegin(); it != uplinks.cend(); it++) {
         uplink = (Uplink *)(it->second);
-        NIC_LOG_INFO("Creating VRF for uplink: {}", uplink->GetId());
+        NIC_LOG_DEBUG("Creating VRF for uplink: {}", uplink->GetId());
         uplink->CreateVrf();
     }
 }
@@ -206,7 +206,7 @@ void DeviceManager::Update()
     SetHalClient(hal, hal_common_client);
 
     // Create VRFs for uplinks
-    NIC_LOG_INFO("Creating VRFs for uplinks");
+    NIC_LOG_DEBUG("Creating VRFs for uplinks");
     CreateUplinkVRFs();
 
     uint64_t ret = hal->LifCreate(&hal_lif_info_);
@@ -231,10 +231,10 @@ void DeviceManager::Update()
     req_ring_base = hbm_base;
     resp_ring_base = hbm_base + (sizeof(struct nicmgr_req_desc) * ring_size);
 
-    NIC_LOG_INFO("nicmgr req qstate address {:#x}", hal_lif_info_.qstate_addr[NICMGR_QTYPE_REQ]);
-    NIC_LOG_INFO("nicmgr resp qstate address {:#x}", hal_lif_info_.qstate_addr[NICMGR_QTYPE_RESP]);
-    NIC_LOG_INFO("nicmgr req queue address {:#x}", req_ring_base);
-    NIC_LOG_INFO("nicmgr resp queue address {:#x}", resp_ring_base);
+    NIC_LOG_DEBUG("nicmgr req qstate address {:#x}", hal_lif_info_.qstate_addr[NICMGR_QTYPE_REQ]);
+    NIC_LOG_DEBUG("nicmgr resp qstate address {:#x}", hal_lif_info_.qstate_addr[NICMGR_QTYPE_RESP]);
+    NIC_LOG_DEBUG("nicmgr req queue address {:#x}", req_ring_base);
+    NIC_LOG_DEBUG("nicmgr resp queue address {:#x}", resp_ring_base);
 
     req_head = ring_size - 1;
     req_tail = 0;
@@ -345,7 +345,7 @@ DeviceManager::DeviceManager(std::string config_file, enum ForwardingMode fwd_mo
         memcpy(hal_lif_info_.queue_info, qinfo,
                sizeof(hal_lif_info_.queue_info));
     }
-    NIC_LOG_INFO("nicmgr lif id:{}, hw_lif_id: {}", hal_lif_info_.id, hal_lif_info_.hw_lif_id);
+    NIC_LOG_DEBUG("nicmgr lif id:{}, hw_lif_id: {}", hal_lif_info_.id, hal_lif_info_.hw_lif_id);
 }
 
 DeviceManager::~DeviceManager()
@@ -362,7 +362,7 @@ DeviceManager::LoadConfig(string path)
     uint64_t sys_mac_base;
 
     NIC_HEADER_TRACE("Loading Config");
-    NIC_LOG_INFO("Json: {}", path);
+    NIC_LOG_DEBUG("Json: {}", path);
 
 
     boost::property_tree::read_json(path, spec);
@@ -372,7 +372,7 @@ DeviceManager::LoadConfig(string path)
         sys_mac_base = mac_to_int(system_uuid);
     }
 
-    NIC_LOG_INFO("Entered SysUuid={} SysMacBase={}",
+    NIC_LOG_DEBUG("Entered SysUuid={} SysMacBase={}",
                  system_uuid, sys_mac_base);
 
 
@@ -382,7 +382,7 @@ DeviceManager::LoadConfig(string path)
         if (spec.get_child_optional("network.uplink")) {
             for (const auto &node : spec.get_child("network.uplink")) {
                 auto val = node.second;
-                NIC_LOG_INFO("Creating uplink: {}, oob: {}",
+                NIC_LOG_DEBUG("Creating uplink: {}, oob: {}",
                              val.get<uint64_t>("id"),
                              val.get<bool>("oob", false));
                 Uplink *up1 = Uplink::Factory(val.get<uint64_t>("id"), val.get<bool>("oob", false));
@@ -430,7 +430,7 @@ DeviceManager::LoadConfig(string path)
             }
             eth_spec->if_name = val.get<string>("name");
             eth_spec->qos_group = val.get<string>("qos_group", "DEFAULT");
-            NIC_LOG_INFO("Creating mnic device with name: {} type: {}, lif_id: {}, hw_lif_id: {},"
+            NIC_LOG_DEBUG("Creating mnic device with name: {} type: {}, lif_id: {}, hw_lif_id: {},"
                          "pinned_uplink: {} intr_count: {} qos_group {}",
                          eth_spec->if_name,
                          eth_dev_type_to_str(eth_spec->eth_type),
@@ -499,7 +499,7 @@ DeviceManager::LoadConfig(string path)
             }
             eth_spec->if_name = val.get<string>("name");
             eth_spec->qos_group = val.get<string>("qos_group", "DEFAULT");
-            NIC_LOG_INFO("Creating eth device with name: {}, type: {}, lif_id: {}, hw_lif_id: {}, "
+            NIC_LOG_DEBUG("Creating eth device with name: {}, type: {}, lif_id: {}, hw_lif_id: {}, "
                          "pinned_uplink: {}, qos_group {}",
                          eth_spec->if_name,
                          eth_dev_type_to_str(eth_spec->eth_type),
@@ -514,9 +514,9 @@ DeviceManager::LoadConfig(string path)
     NIC_HEADER_TRACE("Loading Accel devices");
     // Create Accelerator devices
     if (spec.get_child_optional("accel_dev")) {
-        NIC_LOG_INFO("Creating accel device");
+        NIC_LOG_DEBUG("Creating accel device");
         for (const auto &node : spec.get_child("accel_dev")) {
-            NIC_LOG_INFO("Creating accel device");
+            NIC_LOG_DEBUG("Creating accel device");
             accel_spec = new struct accel_devspec;
             memset(accel_spec, 0, sizeof(*accel_spec));
 
@@ -544,7 +544,7 @@ DeviceManager::LoadConfig(string path)
 
             accel_spec->pcie_port = val.get<uint8_t>("pcie.port", 0);
             accel_spec->qos_group = val.get<string>("qos_group", "DEFAULT");
-            NIC_LOG_INFO("Creating accel device with lif_id: {}, hw_lif_id: {} "
+            NIC_LOG_DEBUG("Creating accel device with lif_id: {}, hw_lif_id: {} "
                          "qos_group {}",
                          accel_spec->lif_id,
                          accel_spec->hw_lif_id,
@@ -706,14 +706,14 @@ DeviceManager::AdminQPoll()
 
     if (req_tail != c_index0) {
 
-        NIC_LOG_INFO("request: PRE: p_index0 {}, c_index0 {}, head {}, tail {}",
+        NIC_LOG_DEBUG("request: PRE: p_index0 {}, c_index0 {}, head {}, tail {}",
                p_index0, c_index0, req_head, req_tail);
 
         // Read nicmgr request descriptor
         req_desc_addr = req_ring_base + (sizeof(req_desc) * req_tail);
         READ_MEM(req_desc_addr, (uint8_t *)&req_desc, sizeof(req_desc), 0);
 
-        NIC_LOG_INFO("request: lif {} qtype {} qid {} comp_index {}"
+        NIC_LOG_DEBUG("request: lif {} qtype {} qid {} comp_index {}"
                " adminq_qstate_addr {:#x} desc_addr {:#x}",
                req_desc.lif, req_desc.qtype, req_desc.qid,
                req_desc.comp_index, req_desc.adminq_qstate_addr,
@@ -732,7 +732,7 @@ DeviceManager::AdminQPoll()
         req_head = (req_head + 1) & (ring_size - 1);
         req_tail = (req_tail + 1) & (ring_size - 1);
         req_db_data = req_head;
-        NIC_LOG_INFO("req_db_addr {:#x} req_db_data {:#x}", req_db_addr, req_db_data);
+        NIC_LOG_DEBUG("req_db_addr {:#x} req_db_data {:#x}", req_db_addr, req_db_data);
         WRITE_DB64(req_db_addr, req_db_data);
 
         invalidate_txdma_cacheline(req_qstate_addr);
@@ -743,7 +743,7 @@ DeviceManager::AdminQPoll()
         READ_MEM(req_qstate_addr + offsetof(admin_qstate_t, c_index0),
                  (uint8_t *)&c_index0, sizeof(c_index0), 0);
 
-        NIC_LOG_INFO("request: POST: p_index0 {}, c_index0 {}, head {}, tail {}",
+        NIC_LOG_DEBUG("request: POST: p_index0 {}, c_index0 {}, head {}, tail {}",
                p_index0, c_index0, req_head, req_tail);
 
         // Write nicmgr response descriptor
@@ -755,7 +755,7 @@ DeviceManager::AdminQPoll()
         READ_MEM(resp_qstate_addr + offsetof(admin_qstate_t, c_index0),
                  (uint8_t *)&c_index0, sizeof(c_index0), 0);
 
-        NIC_LOG_INFO("response: PRE: p_index0 {}, c_index0 {}, head {}, tail {}",
+        NIC_LOG_DEBUG("response: PRE: p_index0 {}, c_index0 {}, head {}, tail {}",
                p_index0, c_index0, resp_head, resp_tail);
 
         resp_desc_addr = resp_ring_base + (sizeof(resp_desc) * resp_tail);
@@ -766,7 +766,7 @@ DeviceManager::AdminQPoll()
         resp_desc.comp_index = req_desc.comp_index;
         resp_desc.adminq_qstate_addr = req_desc.adminq_qstate_addr;
 
-        NIC_LOG_INFO("response: lif {} qtype {} qid {} comp_index {}"
+        NIC_LOG_DEBUG("response: lif {} qtype {} qid {} comp_index {}"
                " adminq_qstate_addr {:#x} desc_addr {:#x}",
                resp_desc.lif, resp_desc.qtype, resp_desc.qid,
                resp_desc.comp_index, resp_desc.adminq_qstate_addr,
@@ -777,7 +777,7 @@ DeviceManager::AdminQPoll()
         // Ring doorbell to update the PI and run nicmgr response program
         resp_tail = (resp_tail + 1) & (ring_size - 1);
         resp_db_data = resp_tail;
-        NIC_LOG_INFO("resp_db_addr {:#x} resp_db_data {:#x}", resp_db_addr, resp_db_data);
+        NIC_LOG_DEBUG("resp_db_addr {:#x} resp_db_data {:#x}", resp_db_addr, resp_db_data);
         WRITE_DB64(resp_db_addr, resp_db_data);
 
         invalidate_txdma_cacheline(resp_qstate_addr);
@@ -788,7 +788,7 @@ DeviceManager::AdminQPoll()
         READ_MEM(resp_qstate_addr + offsetof(admin_qstate_t, c_index0),
                  (uint8_t *)&c_index0, sizeof(c_index0), 0);
 
-        NIC_LOG_INFO("response: POST: p_index0 {}, c_index0 {}, head {}, tail {}",
+        NIC_LOG_DEBUG("response: POST: p_index0 {}, c_index0 {}, head {}, tail {}",
                p_index0, c_index0, resp_head, resp_tail);
     }
 }
@@ -799,7 +799,7 @@ DeviceManager::DumpQstateInfo(pt::ptree &lifs)
     pt::ptree lif;
     pt::ptree qstates;
 
-    NIC_LOG_INFO("lif-{}: Qstate Info to Json", hal_lif_info_.hw_lif_id);
+    NIC_LOG_DEBUG("lif-{}: Qstate Info to Json", hal_lif_info_.hw_lif_id);
 
     lif.put("lif_id", hal_lif_info_.id);
     lif.put("hw_lif_id", hal_lif_info_.hw_lif_id);
@@ -831,7 +831,7 @@ DeviceManager::GenerateQstateInfoJson(std::string qstate_info_file)
 {
     pt::ptree root, lifs;
 
-    NIC_LOG_INFO("{}: file: {}", __FUNCTION__, qstate_info_file);
+    NIC_LOG_DEBUG("{}: file: {}", __FUNCTION__, qstate_info_file);
 
     DumpQstateInfo(lifs);
     for (auto it = devices.cbegin(); it != devices.cend(); it++) {
