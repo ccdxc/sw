@@ -112,7 +112,7 @@ static int sonic_poll_ev_list(struct sonic_event_list *evl, int budget)
 		next_id = id + 1;
 		data = (uint64_t *) evid_to_db_va(evl, id);
 		if (*data) {
-			//OSAL_LOG_NOTICE("TODO: found ev id %d with data 0x%llx\n",
+			//OSAL_LOG_DEBUG("found ev id %d with data 0x%llx\n",
 			//		id, (unsigned long long) *data);
 			evl->next_used_evid = next_id;
 			work = evid_to_work(evl, id);
@@ -121,7 +121,7 @@ static int sonic_poll_ev_list(struct sonic_event_list *evl, int budget)
 			queue_work(evl->wq, &work->work);
 			found++;
 		//} else {
-		//	OSAL_LOG_NOTICE("TODO: found ev id %d without data\n", id);
+		//	OSAL_LOG_DEBUG("found ev id %d without data\n", id);
 		}
 		loop_count++;
 	}
@@ -137,7 +137,7 @@ static void sonic_ev_work_handler(struct work_struct *work)
 	bool completed = false;
 	uint32_t evid = work_to_evid(evl, swd);
 
-	OSAL_LOG_NOTICE("sonic_ev_work_handler enter (evid %u)...\n", evid);
+	OSAL_LOG_DEBUG("sonic_ev_work_handler enter (evid %u)...\n", evid);
 
 	if (pnso_request_poller((void *) swd->data) == PNSO_OK) {
 		/* Done, release it */
@@ -169,9 +169,9 @@ static void sonic_ev_work_handler(struct work_struct *work)
 		sonic_intr_return_credits(&evl->pc_res->intr, 1,
 					  true, false);
 		//sonic_intr_mask(&evl->pc_res->intr, false);
-		OSAL_LOG_NOTICE("... exit sonic_ev_work_handler evid %u, status success\n", evid);
+		OSAL_LOG_DEBUG("... exit sonic_ev_work_handler evid %u, status success\n", evid);
 	} else {
-		OSAL_LOG_NOTICE("... exit sonic_ev_work_handler evid %u, status reenqueued\n", evid);
+		OSAL_LOG_DEBUG("... exit sonic_ev_work_handler evid %u, status reenqueued\n", evid);
 	}
 }
 
@@ -183,10 +183,10 @@ irqreturn_t sonic_async_ev_isr(int irq, void *evlptr)
 
 	was_armed = xchg(&evl->armed, false);
 
-	//OSAL_LOG_NOTICE("sonic_async_ev_isr enter ...\n");
+	//OSAL_LOG_DEBUG("sonic_async_ev_isr enter ...\n");
 
 	if (unlikely(!evl->enable) || !was_armed) {
-		//OSAL_LOG_WARN("... exit TODO: sonic_interrupt not armed\n");
+		//OSAL_LOG_DEBUG("... exit sonic_async_ev_isr, not armed\n");
 		//sonic_intr_mask(&evl->pc_res->intr, false);
 		return IRQ_HANDLED;
 	}
@@ -195,7 +195,7 @@ irqreturn_t sonic_async_ev_isr(int irq, void *evlptr)
 
 	xchg(&evl->armed, true);
 
-	//OSAL_LOG_NOTICE("... exit sonic_async_ev_isr, enqueued %d work items\n", npolled);
+	//OSAL_LOG_DEBUG("... exit sonic_async_ev_isr, enqueued %d work items\n", npolled);
 
 	return IRQ_HANDLED;
 }
@@ -215,7 +215,7 @@ uint64_t sonic_intr_get_db_addr(struct per_core_resource *pc_res)
 		return 0;
 	}
 
-	OSAL_LOG_WARN("Successfully allocated evid %u\n", evid);
+	OSAL_LOG_DEBUG("Successfully allocated evid %u\n", evid);
 
 	return sonic_hostpa_to_devpa((uint64_t) evid_to_db_pa(evl, evid));
 }
@@ -274,7 +274,7 @@ int sonic_create_ev_list(struct per_core_resource *pc_res, uint32_t ev_count)
 	int rc = 0;
 
 	if (ev_count > MAX_PER_CORE_EVENTS) {
-		OSAL_LOG_WARN("Truncating event count from %u to %u\n",
+		OSAL_LOG_INFO("Truncating event count from %u to %u\n",
 			      ev_count, (uint32_t) MAX_PER_CORE_EVENTS);
 		ev_count = MAX_PER_CORE_EVENTS;
 	}

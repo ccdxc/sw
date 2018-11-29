@@ -892,7 +892,8 @@ static void batch_completion_cb(void *cb_ctx, struct pnso_service_result *svc_re
 	struct batch_context *batch_ctx = (struct batch_context *) cb_ctx;
 	struct worker_context *worker_ctx;
 
-	PNSO_LOG_NOTICE("TODO: batch_completion_cb");
+	PNSO_LOG_DEBUG("batch_completion_cb cb_ctx=0x%llx\n",
+		       (unsigned long long) cb_ctx);
 
 	if (batch_ctx->req_rc == PNSO_OK)
 		batch_ctx->stats.agg_stats.total_latency =
@@ -909,7 +910,8 @@ static void batch_completion_poll_cb(void *cb_ctx, struct pnso_service_result *s
 {
 	struct batch_context *batch_ctx = (struct batch_context *) cb_ctx;
 
-	PNSO_LOG_NOTICE("TODO: batch_completion_poll_cb");
+	PNSO_LOG_DEBUG("batch_completion_poll_cb cb_ctx=0x%llx\n",
+		       (unsigned long long) cb_ctx);
 
 	if (batch_ctx->req_rc == PNSO_OK)
 		batch_ctx->stats.agg_stats.total_latency =
@@ -930,7 +932,7 @@ static pnso_error_t test_submit_request(struct request_context *req_ctx,
 	pnso_poll_fn_t *poll_fn;
 	void **poll_ctx;
 
-	PNSO_LOG_NOTICE("DEBUG: submitting request, mode %u\n",
+	PNSO_LOG_DEBUG("submitting request, mode %u\n",
 			(uint32_t) sync_mode);
 
 	/* Normalize sgls from virtual to physical addresses */
@@ -961,11 +963,15 @@ static pnso_error_t test_submit_request(struct request_context *req_ctx,
 	if (is_batched) {
 		rc = pnso_add_to_batch(&req_ctx->svc_req, &req_ctx->svc_res);
 		if (flush && rc == PNSO_OK) {
+			PNSO_LOG_DEBUG("calling flush_batch with cb_ctx=0x%llx\n",
+				       (unsigned long long) cb_ctx);
 			req_ctx->batch_ctx->start_time = osal_get_clock_nsec();
 			rc = pnso_flush_batch(cb, cb_ctx,
 					      poll_fn, poll_ctx);
 		}
 	} else {
+		PNSO_LOG_DEBUG("calling submit_request with cb_ctx=0x%llx\n",
+			       (unsigned long long) cb_ctx);
 		req_ctx->batch_ctx->start_time = osal_get_clock_nsec();
 		rc = pnso_submit_request(&req_ctx->svc_req,
 					 &req_ctx->svc_res,
@@ -1691,12 +1697,10 @@ static pnso_error_t run_testcase_batch(struct batch_context *batch_ctx)
 	/* Special handling for SYNC and POLL */
 	if (testcase->sync_mode == SYNC_MODE_SYNC) {
 		/* Manually call completion callback */
-		PNSO_LOG_NOTICE("TODO: batch_completion_cb for SYNC mode");
 		batch_completion_cb(batch_ctx,
 				    req_ctx ? &req_ctx->svc_res : NULL);
 	} else if (testcase->sync_mode == SYNC_MODE_POLL) {
 		/* Place on completion queue */
-		PNSO_LOG_NOTICE("TODO: NO batch_completion_cb for POLL mode");
 		if (!worker_queue_enqueue(worker_ctx->complete_q, batch_ctx))
 			PNSO_LOG_ERROR("Failed to enqueue polling batch_ctx to complete_q!\n");
 	}
@@ -1710,7 +1714,6 @@ error:
 	batch_ctx->stats.io_stats[0].failures++;
 	batch_ctx->poll_fn = NULL; /* prevent polling on error */
 	/* Manually call completion callback */
-	PNSO_LOG_NOTICE("TODO: batch_completion_cb for error %d", err);
 	batch_completion_cb(batch_ctx,
 			    req_ctx ? &req_ctx->svc_res : NULL);
 
@@ -2058,11 +2061,7 @@ static bool need_rate_limit(struct testcase_context *ctx, uint64_t elapsed_time)
 	return (in_rate > ctx->desc->limit_rate || out_rate > ctx->desc->limit_rate);
 }
 
-#if 0
 #define TESTCASE_IDLE_LOOP_TIMEOUT (5 * OSAL_NSEC_PER_SEC)
-#else
-#define TESTCASE_IDLE_LOOP_TIMEOUT (50000 * OSAL_NSEC_PER_SEC)
-#endif
 #define TESTCASE_LOOP_RESOLUTION_MASK ((1 << 8) - 1)
 
 static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
