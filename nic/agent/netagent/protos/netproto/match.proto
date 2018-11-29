@@ -27,12 +27,12 @@ message MatchSelector {
 
 message AppConfig {
     // Protocol for the app. If the protocol is icmp, then the port field gets interpreted as ICMP Type.
-    // ICMP Code will be fetched from its corresponding App Object
+    // If the app name is specified all the protocol port information will be fetched from the corresponding app object
     string Protocol     = 1 [(gogoproto.jsontag) = "protocol,omitempty"];
 
     // Port for the app
     string Port         = 2 [(gogoproto.jsontag) = "port,omitempty"];
-
-    // Additional ALG configurations
-    string AppName      = 3 [(gogoproto.jsontag) = "app-name,omitempty"];
+//
+//    // Additional ALG configurations
+//    string AppName      = 3 [(gogoproto.jsontag) = "app-name,omitempty"];
 }

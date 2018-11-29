@@ -536,7 +536,7 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 			Name:      "preCreatedApp",
 		},
 		Spec: netproto.AppSpec{
-			Protocol: []string{"udp/53"},
+			ProtoPorts: []string{"udp/53"},
 			ALG: &netproto.ALG{
 				DNS: &netproto.DNS{
 					DropLargeDomainPackets: true,

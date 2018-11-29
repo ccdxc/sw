@@ -389,15 +389,11 @@
       "properties": {
         "protocol": {
           "type": "string",
-          "title": "Protocol for the app. If the protocol is icmp, then the port field gets interpreted as ICMP Type.\nICMP Code will be fetched from its corresponding App Object"
+          "title": "Protocol for the app. If the protocol is icmp, then the port field gets interpreted as ICMP Type.\nIf the app name is specified all the protocol port information will be fetched from the corresponding app object"
         },
         "port": {
           "type": "string",
           "title": "Port for the app"
-        },
-        "app-name": {
-          "type": "string",
-          "title": "Additional ALG configurations"
         }
       }
     },
@@ -454,6 +450,10 @@
           "type": "string",
           "format": "uint64",
           "title": "Allocated ID"
+        },
+        "app-name": {
+          "type": "string",
+          "title": "Optional AppName to fetch additional ALG configurations. ICMP Code is inferred from its corresponding App definition.\nA single rule can have the match parameters through the selectors or its corresponding App object"
         }
       }
     },

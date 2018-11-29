@@ -389,7 +389,7 @@
       "properties": {
         "protocol": {
           "type": "string",
-          "title": "Protocol for the app. If the protocol is icmp, then the port field gets interpreted as ICMP Type.\nICMP Code will be fetched from its corresponding App Object"
+          "title": "Protocol for the app. If the protocol is icmp, then the port field gets interpreted as ICMP Type.\nIf the app name is specified all the protocol port information will be fetched from the corresponding app object"
         },
         "port": {
           "type": "string",

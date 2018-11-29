@@ -273,7 +273,7 @@ func (hd *Datapath) CreateNatPolicy(np *netproto.NatPolicy, natPoolLUT map[strin
 	var natRules []*halproto.NatRuleSpec
 
 	for _, r := range np.Spec.Rules {
-		ruleMatches, err := hd.convertMatchCriteria(r.Src, r.Dst)
+		ruleMatches, err := hd.buildHALRuleMatches(r.Src, r.Dst, nil, nil)
 		if err != nil {
 			log.Errorf("Could not convert match criteria Err: %v", err)
 			return err
@@ -352,7 +352,7 @@ func (hd *Datapath) UpdateNatPolicy(np *netproto.NatPolicy, natPoolLUT map[strin
 	var natRules []*halproto.NatRuleSpec
 
 	for _, r := range np.Spec.Rules {
-		ruleMatches, err := hd.convertMatchCriteria(r.Src, r.Dst)
+		ruleMatches, err := hd.buildHALRuleMatches(r.Src, r.Dst, nil, nil)
 		if err != nil {
 			log.Errorf("Could not convert match criteria Err: %v", err)
 			return err

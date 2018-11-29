@@ -122,6 +122,7 @@ type NetAgent struct {
 	PortDB            map[string]*netproto.Port            // HW Port DB
 	AppDB             map[string]*netproto.App             // App DB
 	SecurityProfileDB map[string]*netproto.SecurityProfile //Security Profile DB
+	RuleIDAppLUT      sync.Map                             // SGPolicy Rule ID to App Objects look up table.
 }
 
 // CtrlerAPI is the API provided by controller modules to netagent
@@ -277,8 +278,8 @@ type NetDatapathAPI interface {
 	CreateIPSecSADecrypt(np *netproto.IPSecSADecrypt, ns, tep *netproto.Namespace) error                                                                             // creates a IPSecSA decrypt rule in the datapath
 	UpdateIPSecSADecrypt(np *netproto.IPSecSADecrypt, ns *netproto.Namespace) error                                                                                  // updates a IPSecSA decrypt rule in the datapath
 	DeleteIPSecSADecrypt(np *netproto.IPSecSADecrypt, ns *netproto.Namespace) error                                                                                  // deletes a IPSecSA decrypt rule in the datapath
-	CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []*netproto.SecurityGroup) error                                                                        // creates a security group policy in the datapath
-	UpdateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64) error                                                                                                       // updates a security group policy in the datapath
+	CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []*netproto.SecurityGroup, ruleIDAppLUT *sync.Map) error                                                // creates a security group policy in the datapath
+	UpdateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, ruleIDAppLUT *sync.Map) error                                                                               // updates a security group policy in the datapath
 	DeleteSGPolicy(sgp *netproto.SGPolicy, vrfID uint64) error                                                                                                       // deletes a security group policy in the datapath
 	CreateTunnel(tun *netproto.Tunnel, ns *netproto.Namespace) error                                                                                                 // creates a tunnel in the datapath
 	UpdateTunnel(tun *netproto.Tunnel, ns *netproto.Namespace) error                                                                                                 // updates a tunnel in the datapath

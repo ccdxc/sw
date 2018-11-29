@@ -164,7 +164,7 @@ func (it *veniceIntegSuite) TestIcmpApp(c *C) {
 	for _, ag := range it.agents {
 		napp, cerr := ag.NetworkAgent.FindApp(icmpApp.ObjectMeta)
 		AssertOk(c, cerr, "App not found in agent")
-		AssertEquals(c, napp.Spec.AppTimeout, icmpApp.Spec.Timeout, "invalid alg params")
+		AssertEquals(c, napp.Spec.AppIdleTimeout, icmpApp.Spec.Timeout, "invalid alg params")
 		AssertEquals(c, napp.Spec.ALGType, icmpApp.Spec.ALG.Type, "invalid alg params")
 		AssertEquals(c, fmt.Sprintf("%d", napp.Spec.ALG.ICMP.Type), icmpApp.Spec.ALG.IcmpAlg.Type, "invalid alg params")
 		AssertEquals(c, fmt.Sprintf("%d", napp.Spec.ALG.ICMP.Code), icmpApp.Spec.ALG.IcmpAlg.Code, "invalid alg params")
@@ -202,12 +202,6 @@ func (it *veniceIntegSuite) TestIcmpApp(c *C) {
 				return false, cerr
 			}
 			if len(nsgp.Spec.Rules) != len(sgp.Spec.Rules) {
-				return false, nsgp
-			}
-			if len(nsgp.Spec.Rules[0].Dst.AppConfigs) != 1 {
-				return false, nsgp
-			}
-			if nsgp.Spec.Rules[0].Dst.AppConfigs[0].AppName != sgp.Spec.Rules[0].Apps[0] {
 				return false, nsgp
 			}
 		}
@@ -368,7 +362,7 @@ func (it *veniceIntegSuite) TestDnsApp(c *C) {
 	for _, ag := range it.agents {
 		napp, cerr := ag.NetworkAgent.FindApp(app.ObjectMeta)
 		AssertOk(c, cerr, "App not found in agent")
-		AssertEquals(c, napp.Spec.AppTimeout, app.Spec.Timeout, "invalid alg params")
+		AssertEquals(c, napp.Spec.AppIdleTimeout, app.Spec.Timeout, "invalid alg params")
 		AssertEquals(c, napp.Spec.ALGType, app.Spec.ALG.Type, "invalid alg params")
 		AssertEquals(c, napp.Spec.ALG.DNS.DropMultiQuestionPackets, app.Spec.ALG.DnsAlg.DropMultiQuestionPackets, "invalid alg params")
 		AssertEquals(c, napp.Spec.ALG.DNS.DropLargeDomainPackets, app.Spec.ALG.DnsAlg.DropLargeDomainNamePackets, "invalid alg params")
@@ -442,7 +436,7 @@ func (it *veniceIntegSuite) TestFtpApp(c *C) {
 	for _, ag := range it.agents {
 		napp, cerr := ag.NetworkAgent.FindApp(app.ObjectMeta)
 		AssertOk(c, cerr, "App not found in agent")
-		AssertEquals(c, napp.Spec.AppTimeout, app.Spec.Timeout, "invalid alg params")
+		AssertEquals(c, napp.Spec.AppIdleTimeout, app.Spec.Timeout, "invalid alg params")
 		AssertEquals(c, napp.Spec.ALGType, app.Spec.ALG.Type, "invalid alg params")
 		AssertEquals(c, napp.Spec.ALG.FTP.AllowMismatchIPAddresses, app.Spec.ALG.FtpAlg.AllowMismatchIPAddress, "invalid alg params")
 	}
@@ -541,17 +535,15 @@ func (it *veniceIntegSuite) TestRPCApp(c *C) {
 	for _, ag := range it.agents {
 		napp, cerr := ag.NetworkAgent.FindApp(sunapp.ObjectMeta)
 		AssertOk(c, cerr, "App not found in agent")
-		AssertEquals(c, napp.Spec.AppTimeout, sunapp.Spec.Timeout, "invalid alg params")
+		AssertEquals(c, napp.Spec.AppIdleTimeout, sunapp.Spec.Timeout, "invalid alg params")
 		AssertEquals(c, napp.Spec.ALGType, sunapp.Spec.ALG.Type, "invalid alg params")
 		AssertEquals(c, napp.Spec.ALG.SUNRPC.ProgramID, uint32(pgmID), "invalid alg params")
-		AssertEquals(c, napp.Spec.ALG.SUNRPC.MapEntryTimeout, sunapp.Spec.Timeout, "invalid alg params")
 
 		napp, cerr = ag.NetworkAgent.FindApp(msapp.ObjectMeta)
 		AssertOk(c, cerr, "App not found in agent")
-		AssertEquals(c, napp.Spec.AppTimeout, msapp.Spec.Timeout, "invalid alg params")
+		AssertEquals(c, napp.Spec.AppIdleTimeout, msapp.Spec.Timeout, "invalid alg params")
 		AssertEquals(c, napp.Spec.ALGType, msapp.Spec.ALG.Type, "invalid alg params")
 		AssertEquals(c, napp.Spec.ALG.MSRPC.ProgramID, uint32(pgmID), "invalid alg params")
-		AssertEquals(c, napp.Spec.ALG.MSRPC.MapEntryTimeout, msapp.Spec.Timeout, "invalid alg params")
 	}
 
 	// delete app

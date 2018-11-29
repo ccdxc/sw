@@ -24,11 +24,11 @@ type AppRPCServer struct {
 
 // convertApp converts from npm state to netproto app
 func convertApp(aps *statemgr.AppState) *netproto.App {
-	protoPort := []string{}
+	var protoPorts []string
 
 	// convert protocol/port
 	for _, pp := range aps.Spec.ProtoPorts {
-		protoPort = append(protoPort, fmt.Sprintf("%s/%s", pp.Protocol, pp.Ports))
+		protoPorts = append(protoPorts, fmt.Sprintf("%s/%s", pp.Protocol, pp.Ports))
 	}
 
 	// build sg message
@@ -36,9 +36,9 @@ func convertApp(aps *statemgr.AppState) *netproto.App {
 		TypeMeta:   aps.TypeMeta,
 		ObjectMeta: aps.ObjectMeta,
 		Spec: netproto.AppSpec{
-			Protocol:   protoPort,
-			AppTimeout: aps.Spec.Timeout,
-			ALG:        &netproto.ALG{},
+			ProtoPorts:     protoPorts,
+			AppIdleTimeout: aps.Spec.Timeout,
+			ALG:            &netproto.ALG{},
 		},
 	}
 	if aps.Spec.ALG != nil {
@@ -85,8 +85,7 @@ func convertApp(aps *statemgr.AppState) *netproto.App {
 			}
 			pgmID, _ := strconv.Atoi(sunrpcAlg.ProgramID)
 			app.Spec.ALG.SUNRPC = &netproto.RPC{
-				ProgramID:       uint32(pgmID),
-				MapEntryTimeout: aps.Spec.Timeout,
+				ProgramID: uint32(pgmID),
 			}
 		case "MSRPC":
 			msrpcAlg := security.MsrpcAlg{}
@@ -95,8 +94,7 @@ func convertApp(aps *statemgr.AppState) *netproto.App {
 			}
 			pgmID, _ := strconv.Atoi(msrpcAlg.ProgramUUID)
 			app.Spec.ALG.MSRPC = &netproto.RPC{
-				ProgramID:       uint32(pgmID),
-				MapEntryTimeout: aps.Spec.Timeout,
+				ProgramID: uint32(pgmID),
 			}
 		case "TFTP":
 		case "RTSP":
