@@ -5,6 +5,7 @@ RUN ["chmod", "+x", "/docker-entrypoint.sh"]
 ENV discovery.zen.hosts_provider=file
 ENV discovery.zen.fd.ping_timeout=10s
 ENV cluster.name=pen-elasticcluster
+ENV path.logs=/var/log/pensando/elastic
 ENV xpack.security.enabled=false
 ENV xpack.monitoring.enabled=false
 ENV xpack.graph.enabled=false
@@ -33,5 +34,6 @@ RUN bin/elasticsearch-plugin install -b com.floragunn:search-guard-6:6.3.2-23.1
 COPY sg_config.yml /usr/share/elasticsearch/plugins/search-guard-6/sgconfig
 COPY sg_roles.yml /usr/share/elasticsearch/plugins/search-guard-6/sgconfig
 COPY sg_roles_mapping.yml /usr/share/elasticsearch/plugins/search-guard-6/sgconfig
+COPY log4j2.properties /usr/share/elasticsearch/config/log4j2.properties
 
 ENTRYPOINT ["/docker-entrypoint.sh"]

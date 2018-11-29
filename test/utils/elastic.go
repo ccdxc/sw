@@ -24,7 +24,7 @@ import (
 
 var (
 	elasticImage        = "docker.elastic.co/elasticsearch/elasticsearch:6.3.2"
-	elasticClusterImage = "registry.test.pensando.io:5000/elasticsearch-cluster:v0.6"
+	elasticClusterImage = "registry.test.pensando.io:5000/elasticsearch-cluster:v0.7"
 	elasticHost         = "127.0.0.1"
 )
 
@@ -49,20 +49,37 @@ func StartElasticsearch(name string, signer certs.CSRSigner, trustRoots []*x509.
 
 	log.Info("starting elasticsearch ...")
 
+	tmpDir, err := ioutil.TempDir("/tmp", fmt.Sprintf("%s-elastic-test", name))
+	if err != nil {
+		return "", "", fmt.Errorf("failed to create temp dir, err: %v", err)
+	}
+	os.Chmod(tmpDir, 0777) // override default permissions to allow cleanup
+
+	logDir, err := ioutil.TempDir(tmpDir, "log")
+	if err != nil {
+		os.RemoveAll(tmpDir)
+		return "", "", fmt.Errorf("failed to create log dir, err: %v", err)
+	}
+
 	var authDir string
 	if signer != nil {
+		log.Infof("setting up TLS")
 		var err error
-		authDir, err = ioutil.TempDir("/tmp", fmt.Sprintf("%s-elastic-test", name))
-		os.Chmod(authDir, 0777) // override default permissions to allow cleanup
-		err = credentials.GenElasticHTTPSAuth("localhost", authDir, signer, trustRoots)
+		authDir, err = ioutil.TempDir(tmpDir, "auth")
 		if err != nil {
-			os.RemoveAll(authDir)
+			os.RemoveAll(tmpDir)
+			return "", "", fmt.Errorf("failed to create auth dir, err: %v", err)
+		}
+		os.Chmod(authDir, 0777)
+
+		if err := credentials.GenElasticHTTPSAuth("localhost", authDir, signer, trustRoots); err != nil {
+			os.RemoveAll(tmpDir)
 			return "", "", fmt.Errorf("error creating credentials in dir %s: err: %v", authDir, err)
 		}
 	}
 
 	// same port needs to be exposed outside as inside to make sure underlying sniffer works given that the
-	// test is run ousite the elasticsearch container.
+	// test is run outside the elasticsearch container.
 	for port := 6000; port < 7000; port++ {
 		// If we have a CSRSigner we generate credentials and start the Venice-specific container with Elastic + TLS plugin
 		// otherwise we just start the stock Elastic container without auth
@@ -77,6 +94,7 @@ func StartElasticsearch(name string, signer certs.CSRSigner, trustRoots []*x509.
 				"-e", fmt.Sprintf("http.publish_host=%s", elasticHost),
 				"-v", fmt.Sprintf("%s:/usr/share/elasticsearch/config/auth-node:ro", authDir),
 				"-v", fmt.Sprintf("%s:/usr/share/elasticsearch/config/auth-https:ro", authDir),
+				"-v", fmt.Sprintf("%s:/var/log/pensando/elastic", logDir),
 				elasticClusterImage}
 		} else {
 			cmd = []string{
@@ -92,6 +110,7 @@ func StartElasticsearch(name string, signer certs.CSRSigner, trustRoots []*x509.
 				"-e", "ES_JAVA_OPTS=-Xms512m -Xmx512m",
 				"-e", fmt.Sprintf("http.port=%d", port),
 				"-e", fmt.Sprintf("http.publish_host=%s", elasticHost),
+				"-v", fmt.Sprintf("%s:/var/log/pensando/elastic", logDir),
 				elasticImage}
 		}
 
@@ -112,17 +131,17 @@ func StartElasticsearch(name string, signer certs.CSRSigner, trustRoots []*x509.
 		}
 
 		if err != nil {
-			os.RemoveAll(authDir)
+			os.RemoveAll(tmpDir)
 			return "", "", fmt.Errorf("%s, err: %v", out, err)
 		}
 
 		elasticAddr := fmt.Sprintf("%s:%d", elasticHost, port)
 		log.Infof("started elasticsearch: %s", elasticAddr)
 
-		return elasticAddr, authDir, nil
+		return elasticAddr, tmpDir, nil
 	}
 
-	os.RemoveAll(authDir)
+	os.RemoveAll(tmpDir)
 	return "", "", fmt.Errorf("exhausted all the ports from 6000-6999, failed to start elasticsearch")
 }
 

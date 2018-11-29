@@ -132,7 +132,7 @@ func TestAuditManager(t *testing.T) {
 	}
 
 	// shutdown elastic server and test ProcessEvents
-	testutils.StopElasticsearch(ti.elasticSearchName, ti.elasticSearchAuthDir)
+	testutils.StopElasticsearch(ti.elasticSearchName, ti.elasticSearchDir)
 	for _, test := range tests {
 		err = auditor.ProcessEvents(test.events...)
 		Assert(t, err != nil, "elastic auditor should fail to process events if elastic server is down")

@@ -67,8 +67,8 @@ var (
 		},
 	}
 
-	elasticAddr    = ""
-	elasticAuthDir = ""
+	elasticAddr = ""
+	elasticDir  = ""
 )
 
 // Hook up gocheck into the "go test" runner.
@@ -579,7 +579,7 @@ func teardown(ctx context.Context, client elastic.ESClient, c *C, name string) {
 			fmt.Sprintf("failed to delete index: %v", indexName))
 	}
 
-	err := testutils.StopElasticsearch(name, elasticAuthDir)
+	err := testutils.StopElasticsearch(name, elasticDir)
 	Assert(c, err == nil || (err != nil && strings.Contains(err.Error(), "is already in progress")),
 		fmt.Sprintf("failed to stop elasticsearch container, err: %v", err))
 }
@@ -600,7 +600,7 @@ func setup(c *C, name string, signer certs.CSRSigner, trustRoots []*x509.Certifi
 
 	// spin up a single node elasticsearch with the given name; running separate elasticsearch for
 	// each test helps to run the tests in parallel.
-	elasticAddr, elasticAuthDir, err = testutils.StartElasticsearch(name, signer, trustRoots)
+	elasticAddr, elasticDir, err = testutils.StartElasticsearch(name, signer, trustRoots)
 	Assert(c, err == nil, fmt.Sprintf("failed to start elasticsearch container, err: %v", err))
 }
 

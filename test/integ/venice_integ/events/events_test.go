@@ -91,7 +91,7 @@ func TestEvents(t *testing.T) {
 	evtsRecorder.Event(eventType2, evtsapi.SeverityLevel_INFO, "test event - 2", nil)
 
 	// verify that it has reached elasticsearch; these are the first occurrences of an event
-	// so it should have reached elasticsearch wthout being deduped.
+	// so it should have reached elasticsearch without being deduped.
 	query := es.NewBoolQuery().Must(es.NewMatchQuery("source.component", componentID), es.NewTermQuery("type.keyword", eventType1))
 	ti.assertElasticUniqueEvents(t, query, true, 1, "4s") // unique == 1
 	ti.assertElasticTotalEvents(t, query, true, 1, "4s")  // total  == 1

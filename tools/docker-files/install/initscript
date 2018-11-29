@@ -27,6 +27,8 @@ mkdir -p /host/etc/pensando/configs/kubernetes/pen-kube-controller-manager
 mkdir -p /host/etc/pensando/configs/kubernetes/pen-kubelet
 mkdir -p /host/etc/pensando/configs/pen-ntp
 mkdir -p /host/var/log/pensando
+mkdir -p /host/var/log/pensando/elastic
+mkdir -p /host/var/lib/pensando
 
 # We need to differentiate build time configs from the configs that get generated runt-time based on user-config
 # as of now - keep a copy of the build time configs at /host/etc/pensando/configs.

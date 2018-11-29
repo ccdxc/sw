@@ -306,6 +306,7 @@ var k8sModules = map[string]protos.Module{
 					HostPath:  globals.ElasticHTTPSAuthDir,
 					MountPath: "/usr/share/elasticsearch/config/auth-https",
 				},
+				logVolume,
 			},
 		},
 	},

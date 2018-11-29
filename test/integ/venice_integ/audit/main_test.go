@@ -18,14 +18,14 @@ import (
 
 // tInfo represents test info.
 type tInfo struct {
-	logger               log.Logger
-	rslvr                *mockresolver.ResolverClient // resolver
-	esClient             elastic.ESClient             // elastic client to verify the results
-	elasticSearchAddr    string                       // elastic address
-	elasticSearchName    string                       // Elastic Search server name; used to stop the server
-	elasticSearchAuthDir string                       // name of the directory where Elastic credentials are stored
-	signer               certs.CSRSigner              // function to sign CSRs for TLS
-	trustRoots           []*x509.Certificate          // trust roots to verify TLS certs
+	logger            log.Logger
+	rslvr             *mockresolver.ResolverClient // resolver
+	esClient          elastic.ESClient             // elastic client to verify the results
+	elasticSearchAddr string                       // elastic address
+	elasticSearchName string                       // Elastic Search server name; used to stop the server
+	elasticSearchDir  string                       // name of the directory where Elastic credentials and logs are stored
+	signer            certs.CSRSigner              // function to sign CSRs for TLS
+	trustRoots        []*x509.Certificate          // trust roots to verify TLS certs
 }
 
 // setup helper function create evtsmgr, evtsproxy, etc. services
@@ -63,7 +63,7 @@ func (t *tInfo) startElasticSearch() error {
 	log.Infof("starting Elastic Search")
 
 	t.elasticSearchName = uuid.NewV4().String()
-	t.elasticSearchAddr, t.elasticSearchAuthDir, err = testutils.StartElasticsearch(t.elasticSearchName, t.signer, t.trustRoots)
+	t.elasticSearchAddr, t.elasticSearchDir, err = testutils.StartElasticsearch(t.elasticSearchName, t.signer, t.trustRoots)
 	if err != nil {
 		return fmt.Errorf("failed to start elasticsearch, err: %v", err)
 	}
@@ -90,5 +90,5 @@ func (t *tInfo) teardown() {
 	if t.esClient != nil {
 		t.esClient.Close()
 	}
-	testutils.StopElasticsearch(t.elasticSearchName, t.elasticSearchAuthDir)
+	testutils.StopElasticsearch(t.elasticSearchName, t.elasticSearchDir)
 }
