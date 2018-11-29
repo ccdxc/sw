@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strings"
 
 	"github.com/spf13/cobra"
 	yaml "gopkg.in/yaml.v2"
@@ -38,16 +39,249 @@ var coppShowCmd = &cobra.Command{
 	Run:   coppShowCmdHandler,
 }
 
+var qosStatsCmd = &cobra.Command{
+	Use:   "queue-statistics",
+	Short: "Show qos-class queue-statistics",
+	Long:  "Show qos-class queue-statistics",
+	Run:   qosStatsCmdHandler,
+}
+
+var qosInputStatsCmd = &cobra.Command{
+	Use:   "input",
+	Short: "Show qos-class queue-statistics input [buffer-occupancy | peak-occupancy]",
+	Long:  "Show qos-class queue-statistics input [buffer-occupancy | peak-occupancy]",
+	Run:   qosInputStatsCmdHandler,
+}
+
+var qosOutputStatsCmd = &cobra.Command{
+	Use:   "output",
+	Short: "Show qos-class queue-statistics output [queue-depth]",
+	Long:  "Show qos-class queue-statistics output [queue-depth]",
+	Run:   qosOutputStatsCmdHandler,
+}
+
 func init() {
 	showCmd.AddCommand(qosShowCmd)
 	showCmd.AddCommand(coppShowCmd)
+	qosShowCmd.AddCommand(qosStatsCmd)
+	qosStatsCmd.AddCommand(qosInputStatsCmd)
+	qosStatsCmd.AddCommand(qosOutputStatsCmd)
 
 	qosShowCmd.Flags().StringVar(&qosGroup, "qosgroup", "default", "Specify qos group")
 	qosShowCmd.Flags().Uint64Var(&qosClassHandle, "handle", 0, "Specify qos class handle")
+	qosStatsCmd.PersistentFlags().StringVar(&qosGroup, "qosgroup", "default", "Specify qos group")
+	qosStatsCmd.PersistentFlags().Uint64Var(&qosClassHandle, "handle", 0, "Specify qos class handle")
 	coppShowCmd.Flags().StringVar(&coppType, "copptype", "flow-miss", "Specify copp type")
 	coppShowCmd.Flags().Uint64Var(&coppHandle, "handle", 0, "Specify copp handle")
 }
 
+func handleQosStatsCmd(cmd *cobra.Command, args []string, inputQueue bool, outputQueue bool) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	defer c.Close()
+
+	bufferOccupancy := true
+	peakOccupancy := true
+	queueDepth := true
+
+	if len(args) > 0 {
+		if strings.Compare(args[0], "buffer-occupancy") == 0 {
+			peakOccupancy = false
+			queueDepth = false
+		} else if strings.Compare(args[0], "peak-occupancy") == 0 {
+			bufferOccupancy = false
+			queueDepth = false
+		} else if strings.Compare(args[0], "queue-depth") == 0 {
+			bufferOccupancy = false
+			peakOccupancy = false
+		} else {
+			fmt.Printf("Invalid argument\n")
+			return
+		}
+	} else {
+		if inputQueue == false {
+			bufferOccupancy = false
+			peakOccupancy = false
+		}
+		if outputQueue == false {
+			queueDepth = false
+		}
+	}
+
+	client := halproto.NewQOSClient(c.ClientConn)
+
+	var req *halproto.QosClassGetRequest
+	if cmd != nil && cmd.Flags().Changed("qosgroup") {
+		if isQosGroupValid(qosGroup) != true {
+			fmt.Printf("Invalid argument\n")
+			return
+		}
+		// Get specific qos class
+		req = &halproto.QosClassGetRequest{
+			KeyOrHandle: &halproto.QosClassKeyHandle{
+				KeyOrHandle: &halproto.QosClassKeyHandle_QosGroup{
+					QosGroup: inputToQosGroup(qosGroup),
+				},
+			},
+		}
+	} else if cmd != nil && cmd.Flags().Changed("handle") {
+		// Get specific qos class
+		req = &halproto.QosClassGetRequest{
+			KeyOrHandle: &halproto.QosClassKeyHandle{
+				KeyOrHandle: &halproto.QosClassKeyHandle_QosClassHandle{
+					QosClassHandle: qosClassHandle,
+				},
+			},
+		}
+	} else {
+		// Get all qos classes
+		req = &halproto.QosClassGetRequest{}
+	}
+	qosGetReqMsg := &halproto.QosClassGetRequestMsg{
+		Request: []*halproto.QosClassGetRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.QosClassGet(context.Background(), qosGetReqMsg)
+	if err != nil {
+		fmt.Printf("Getting qos class failed. %v\n", err)
+		return
+	}
+
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			continue
+		}
+		qosQueueStatsPrint(resp, bufferOccupancy, peakOccupancy, queueDepth)
+	}
+}
+
+func qosStatsCmdHandler(cmd *cobra.Command, args []string) {
+	handleQosStatsCmd(cmd, args, true, true)
+}
+
+func qosInputStatsCmdHandler(cmd *cobra.Command, args []string) {
+	handleQosStatsCmd(cmd, args, true, false)
+}
+
+func qosOutputStatsCmdHandler(cmd *cobra.Command, args []string) {
+	handleQosStatsCmd(cmd, args, false, true)
+}
+
+func qosQueueStatsPrint(resp *halproto.QosClassGetResponse, bufferOccupancy bool, peakOccupancy bool, queueDepth bool) {
+	portStats := resp.GetStats().GetPortStats()
+	var str string
+
+	fmt.Printf("QoS-Class Handle: %d\n\n", resp.GetSpec().GetKeyOrHandle().GetQosClassHandle())
+	if bufferOccupancy == true {
+		fmt.Printf("Buffer Occupancy:\n")
+		qosQueueStatsHeaderPrint()
+		for _, port := range portStats {
+			qVal := [16]uint32{}
+			qVal2 := [16]uint32{}
+			if port.GetPacketBufferPort().GetPortType() == 3 {
+				fmt.Printf("%-5d|", port.GetPacketBufferPort().GetPortNum())
+			} else {
+				fmt.Printf("%-5s|", strings.Replace(port.GetPacketBufferPort().GetPortType().String(), "PACKET_BUFFER_PORT_TYPE_", "", -1))
+			}
+			for _, input := range port.GetQosQueueStats().GetInputQueueStats() {
+				qIndex := input.GetInputQueueIdx()
+				if qIndex < 16 {
+					qVal[qIndex] = input.GetBufferOccupancy()
+				} else {
+					qVal2[qIndex-16] = input.GetBufferOccupancy()
+				}
+			}
+			str = fmt.Sprintf("%-6v\n", qVal)
+			str = strings.Replace(str, "[", "", -1)
+			str = strings.Replace(str, "]", "", -1)
+			fmt.Printf("%s\n", str)
+			fmt.Printf("     |")
+			str = fmt.Sprintf("%-6v\n", qVal2)
+			str = strings.Replace(str, "[", "", -1)
+			str = strings.Replace(str, "]", "", -1)
+			fmt.Printf("%s\n", str)
+		}
+	}
+
+	if peakOccupancy == true {
+		fmt.Printf("Peak Occupancy:\n")
+		qosQueueStatsHeaderPrint()
+		for _, port := range portStats {
+			qVal := [16]uint32{}
+			qVal2 := [16]uint32{}
+			if port.GetPacketBufferPort().GetPortType() == 3 {
+				fmt.Printf("%-5d|", port.GetPacketBufferPort().GetPortNum())
+			} else {
+				fmt.Printf("%-5s|", strings.Replace(port.GetPacketBufferPort().GetPortType().String(), "PACKET_BUFFER_PORT_TYPE_", "", -1))
+			}
+			for _, input := range port.GetQosQueueStats().GetInputQueueStats() {
+				qIndex := input.GetInputQueueIdx()
+				if qIndex < 16 {
+					qVal[qIndex] = input.GetPeakOccupancy()
+				} else {
+					qVal2[qIndex-16] = input.GetPeakOccupancy()
+				}
+			}
+			str = fmt.Sprintf("%-6v\n", qVal)
+			str = strings.Replace(str, "[", "", -1)
+			str = strings.Replace(str, "]", "", -1)
+			fmt.Printf("%s\n", str)
+			fmt.Printf("     |")
+			str = fmt.Sprintf("%-6v\n", qVal2)
+			str = strings.Replace(str, "[", "", -1)
+			str = strings.Replace(str, "]", "", -1)
+			fmt.Printf("%s\n", str)
+		}
+	}
+
+	if queueDepth == true {
+		fmt.Printf("Queue Depth:\n")
+		qosQueueStatsHeaderPrint()
+		for _, port := range portStats {
+			qVal := [16]uint32{}
+			qVal2 := [16]uint32{}
+			if port.GetPacketBufferPort().GetPortType() == 3 {
+				fmt.Printf("%-5d|", port.GetPacketBufferPort().GetPortNum())
+			} else {
+				fmt.Printf("%-5s|", strings.Replace(port.GetPacketBufferPort().GetPortType().String(), "PACKET_BUFFER_PORT_TYPE_", "", -1))
+			}
+			for _, output := range port.GetQosQueueStats().GetOutputQueueStats() {
+				qIndex := output.GetOutputQueueIdx()
+				if qIndex < 16 {
+					qVal[qIndex] = output.GetQueueDepth()
+				} else {
+					qVal2[qIndex-16] = output.GetQueueDepth()
+				}
+			}
+			str = fmt.Sprintf("%-6v\n", qVal)
+			str = strings.Replace(str, "[", "", -1)
+			str = strings.Replace(str, "]", "", -1)
+			fmt.Printf("%s\n", str)
+			fmt.Printf("     |")
+			str = fmt.Sprintf("%-6v\n", qVal2)
+			str = strings.Replace(str, "[", "", -1)
+			str = strings.Replace(str, "]", "", -1)
+			fmt.Printf("%s\n", str)
+		}
+	}
+}
+
+func qosQueueStatsHeaderPrint() {
+	hdrLine := strings.Repeat("-", 115)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-6s%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d\n"+
+		"%-6s%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d%-7d\n",
+		"     |", 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+		"     |", 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31)
+	fmt.Println(hdrLine)
+
+}
 func handleQosShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
