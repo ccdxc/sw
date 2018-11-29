@@ -53,6 +53,14 @@ def Trigger(tc):
                            tc.ib_prefix + cmd,
                            background = True)
 
+    # On Naples-Mellanox setups, with Mellanox as server, it takes a few seconds before the server
+    # starts listening. So sleep for a few seconds before trying to start the client
+    cmd = 'sleep 2'
+    api.Trigger_AddCommand(req,
+                           w1.node_name,
+                           w1.workload_name,
+                           cmd)
+
     # cmd for client
     cmd = "ib_atomic_bw -d " + tc.w2_device + " -n 10 -F -x " + tc.w2_gid + " --report_gbits " + w1.ip_address
     api.Trigger_AddCommand(req, 

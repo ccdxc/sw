@@ -4,6 +4,8 @@ import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
 import iota.test.iris.verif.utils.rdma_utils as rdma
 
 def Setup(tc):
+
+    # Install RDMA driver on naples nodes
     tc.nodes = api.GetNaplesHostnames()
     tc.pkgname = 'drivers-linux.tar.xz'
     fullpath = api.GetTopDir() + '/platform/gen/' + tc.pkgname
@@ -14,6 +16,20 @@ def Setup(tc):
         resp = api.CopyToHost(n, [fullpath], 'rdma-drivers')
         if not api.IsApiResponseOk(resp):
             api.Logger.error("Failed to copy Drivers to Node: %s" % n)
+            return api.types.status.FAILURE
+
+    # Copy show_gid on all nodes
+    tc.other_nodes = api.GetWorkloadNodeHostnames()
+    fullpath = api.GetTopDir() + '/platform/gen/drivers-linux/show_gid'
+
+    for n in tc.other_nodes:
+        if n in tc.nodes:
+            continue
+        api.Logger.info("Copying show_gid to the following node: {0}".format(n))
+        api.ChangeDirectory("")
+        resp = api.CopyToHost(n, [fullpath], 'rdma-drivers')
+        if not api.IsApiResponseOk(resp):
+            api.Logger.error("Failed to copy show_gid to Node: %s" % n)
             return api.types.status.FAILURE
 
     return api.types.status.SUCCESS
@@ -38,6 +54,13 @@ def Trigger(tc):
                                    rundir = 'rdma-drivers')
 
         api.Trigger_AddHostCommand(req, n, "cp -r drivers-linux %s" % api.GetHostToolsDir(),
+                                   rundir = 'rdma-drivers')
+
+    for n in tc.other_nodes:
+        if n in tc.nodes:
+            continue
+        api.Trigger_AddHostCommand(req, n, "mkdir -p %s" % api.GetHostToolsDir())
+        api.Trigger_AddHostCommand(req, n, "cp show_gid %s" % api.GetHostToolsDir(),
                                    rundir = 'rdma-drivers')
 
     tc.resp = api.Trigger(req)

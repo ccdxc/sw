@@ -23,11 +23,14 @@ def Setup(tc):
 
     tc.devices = []
     tc.gid = []
+    tc.ib_prefix = []
     for i in range(2):
         tc.devices.append(api.GetTestsuiteAttr(tc.w[i].ip_address+'_device'))
         tc.gid.append(api.GetTestsuiteAttr(tc.w[i].ip_address+'_gid'))
-
-    tc.ib_prefix = 'cd ' + tc.iota_path + ' && . ./env.sh && '
+        if tc.w[i].IsNaples():
+            tc.ib_prefix.append('cd ' + tc.iota_path + ' && . ./env.sh && ')
+        else:
+            tc.ib_prefix.append('')
 
     return api.types.status.SUCCESS
 
@@ -54,15 +57,23 @@ def Trigger(tc):
         api.Trigger_AddCommand(req, 
                                w1.node_name, 
                                w1.workload_name,
-                               tc.ib_prefix + cmd,
+                               tc.ib_prefix[i] + cmd,
                                background = True)
+
+        # On Naples-Mellanox setups, with Mellanox as server, it takes a few seconds before the server
+        # starts listening. So sleep for a few seconds before trying to start the client
+        cmd = 'sleep 2'
+        api.Trigger_AddCommand(req,
+                               w1.node_name,
+                               w1.workload_name,
+                               cmd)
 
         # cmd for client
         cmd = "ib_send_bw -d " + tc.devices[j] + " -n 10 -F -x " + tc.gid[j] + " -m 4096 -s 10000 -q " + str(tc.iterators.num_qp) + " --report_gbits " + w1.ip_address
         api.Trigger_AddCommand(req, 
                                w2.node_name, 
                                w2.workload_name,
-                               tc.ib_prefix + cmd)
+                               tc.ib_prefix[j] + cmd)
 
         i = i + 1
     # end while
