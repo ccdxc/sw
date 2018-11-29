@@ -854,8 +854,8 @@ static int ionic_lif_stats_dump_start(struct lif *lif, unsigned int ver)
 
 	ctx.cmd.stats_dump.addr = lif->stats_dump_pa;
 
-	netdev_info(netdev, "stats_dump START ver %d addr 0x%llx\n", ver,
-		    lif->stats_dump_pa);
+	pr_debug("stats_dump START ver %d addr 0x%llx\n", ver,
+		 lif->stats_dump_pa);
 
 	return 0;
 	err = ionic_adminq_post_wait(lif, &ctx);
@@ -882,7 +882,7 @@ static void ionic_lif_stats_dump_stop(struct lif *lif)
 	};
 	int err;
 
-	netdev_info(netdev, "stats_dump STOP\n");
+	pr_debug("stats_dump STOP\n");
 
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err) {
@@ -1055,6 +1055,7 @@ static int ionic_lif_adminq_init(struct lif *lif)
 
 static int ionic_get_features(struct lif *lif)
 {
+	struct device *dev = lif->ionic->dev;
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.features = {
@@ -1082,37 +1083,37 @@ static int ionic_get_features(struct lif *lif)
 			   ctx.comp.features.supported;
 
 	if (lif->hw_features & ETH_HW_VLAN_TX_TAG)
-		netdev_info(lif->netdev, "feature ETH_HW_VLAN_TX_TAG\n");
+		dev_dbg(dev, "feature ETH_HW_VLAN_TX_TAG\n");
 	if (lif->hw_features & ETH_HW_VLAN_RX_STRIP)
-		netdev_info(lif->netdev, "feature ETH_HW_VLAN_RX_STRIP\n");
+		dev_dbg(dev, "feature ETH_HW_VLAN_RX_STRIP\n");
 	if (lif->hw_features & ETH_HW_VLAN_RX_FILTER)
-		netdev_info(lif->netdev, "feature ETH_HW_VLAN_RX_FILTER\n");
+		dev_dbg(dev, "feature ETH_HW_VLAN_RX_FILTER\n");
 	if (lif->hw_features & ETH_HW_RX_HASH)
-		netdev_info(lif->netdev, "feature ETH_HW_RX_HASH\n");
+		dev_dbg(dev, "feature ETH_HW_RX_HASH\n");
 	if (lif->hw_features & ETH_HW_TX_SG)
-		netdev_info(lif->netdev, "feature ETH_HW_TX_SG\n");
+		dev_dbg(dev, "feature ETH_HW_TX_SG\n");
 	if (lif->hw_features & ETH_HW_TX_CSUM)
-		netdev_info(lif->netdev, "feature ETH_HW_TX_CSUM\n");
+		dev_dbg(dev, "feature ETH_HW_TX_CSUM\n");
 	if (lif->hw_features & ETH_HW_RX_CSUM)
-		netdev_info(lif->netdev, "feature ETH_HW_RX_CSUM\n");
+		dev_dbg(dev, "feature ETH_HW_RX_CSUM\n");
 	if (lif->hw_features & ETH_HW_TSO)
-		netdev_info(lif->netdev, "feature ETH_HW_TSO\n");
+		dev_dbg(dev, "feature ETH_HW_TSO\n");
 	if (lif->hw_features & ETH_HW_TSO_IPV6)
-		netdev_info(lif->netdev, "feature ETH_HW_TSO_IPV6\n");
+		dev_dbg(dev, "feature ETH_HW_TSO_IPV6\n");
 	if (lif->hw_features & ETH_HW_TSO_ECN)
-		netdev_info(lif->netdev, "feature ETH_HW_TSO_ECN\n");
+		dev_dbg(dev, "feature ETH_HW_TSO_ECN\n");
 	if (lif->hw_features & ETH_HW_TSO_GRE)
-		netdev_info(lif->netdev, "feature ETH_HW_TSO_GRE\n");
+		dev_dbg(dev, "feature ETH_HW_TSO_GRE\n");
 	if (lif->hw_features & ETH_HW_TSO_GRE_CSUM)
-		netdev_info(lif->netdev, "feature ETH_HW_TSO_GRE_CSUM\n");
+		dev_dbg(dev, "feature ETH_HW_TSO_GRE_CSUM\n");
 	if (lif->hw_features & ETH_HW_TSO_IPXIP4)
-		netdev_info(lif->netdev, "feature ETH_HW_TSO_IPXIP4\n");
+		dev_dbg(dev, "feature ETH_HW_TSO_IPXIP4\n");
 	if (lif->hw_features & ETH_HW_TSO_IPXIP6)
-		netdev_info(lif->netdev, "feature ETH_HW_TSO_IPXIP6\n");
+		dev_dbg(dev, "feature ETH_HW_TSO_IPXIP6\n");
 	if (lif->hw_features & ETH_HW_TSO_UDP)
-		netdev_info(lif->netdev, "feature ETH_HW_TSO_UDP\n");
+		dev_dbg(dev, "feature ETH_HW_TSO_UDP\n");
 	if (lif->hw_features & ETH_HW_TSO_UDP_CSUM)
-		netdev_info(lif->netdev, "feature ETH_HW_TSO_UDP_CSUM\n");
+		dev_dbg(dev, "feature ETH_HW_TSO_UDP_CSUM\n");
 
 	return 0;
 }
@@ -1171,6 +1172,7 @@ static int ionic_set_features(struct lif *lif)
 
 static int ionic_lif_txq_init(struct lif *lif, struct qcq *qcq)
 {
+	struct device *dev = lif->ionic->dev;
 	struct queue *q = &qcq->q;
 	struct cq *cq = &qcq->cq;
 	struct napi_struct *napi = &qcq->napi;
@@ -1191,11 +1193,11 @@ static int ionic_lif_txq_init(struct lif *lif, struct qcq *qcq)
 	};
 	int err;
 
-	netdev_info(lif->netdev, "txq_init.pid %d\n", ctx.cmd.txq_init.pid);
-	netdev_info(lif->netdev, "txq_init.index %d\n", ctx.cmd.txq_init.index);
-	netdev_info(lif->netdev, "txq_init.ring_base 0x%llx\n",
+	dev_dbg(dev, "txq_init.pid %d\n", ctx.cmd.txq_init.pid);
+	dev_dbg(dev, "txq_init.index %d\n", ctx.cmd.txq_init.index);
+	dev_dbg(dev, "txq_init.ring_base 0x%llx\n",
 	           ctx.cmd.txq_init.ring_base);
-	netdev_info(lif->netdev, "txq_init.ring_size %d\n",
+	dev_dbg(dev, "txq_init.ring_size %d\n",
 		   ctx.cmd.txq_init.ring_size);
 
 	err = ionic_adminq_post_wait(lif, &ctx);
@@ -1217,9 +1219,9 @@ static int ionic_lif_txq_init(struct lif *lif, struct qcq *qcq)
 
 	qcq->flags |= QCQ_F_INITED;
 
-	netdev_info(lif->netdev, "txq->qid %d\n", q->qid);
-	netdev_info(lif->netdev, "txq->qtype %d\n", q->qtype);
-	netdev_info(lif->netdev, "txq->db %p\n", q->db);
+	dev_dbg(dev, "txq->qid %d\n", q->qid);
+	dev_dbg(dev, "txq->qtype %d\n", q->qtype);
+	dev_dbg(dev, "txq->db %p\n", q->db);
 
 	err = ionic_debugfs_add_qcq(lif, qcq);
 	if (err)
@@ -1251,6 +1253,7 @@ err_out:
 
 static int ionic_lif_rxq_init(struct lif *lif, struct qcq *qcq)
 {
+	struct device *dev = lif->ionic->dev;
 	struct queue *q = &qcq->q;
 	struct cq *cq = &qcq->cq;
 	struct napi_struct *napi = &qcq->napi;
@@ -1270,11 +1273,11 @@ static int ionic_lif_rxq_init(struct lif *lif, struct qcq *qcq)
 	};
 	int err;
 
-	netdev_info(lif->netdev, "rxq_init.pid %d\n", ctx.cmd.rxq_init.pid);
-	netdev_info(lif->netdev, "rxq_init.index %d\n", ctx.cmd.rxq_init.index);
-	netdev_info(lif->netdev, "rxq_init.ring_base 0x%llx\n",
+	dev_dbg(dev, "rxq_init.pid %d\n", ctx.cmd.rxq_init.pid);
+	dev_dbg(dev, "rxq_init.index %d\n", ctx.cmd.rxq_init.index);
+	dev_dbg(dev, "rxq_init.ring_base 0x%llx\n",
 		   ctx.cmd.rxq_init.ring_base);
-	netdev_info(lif->netdev, "rxq_init.ring_size %d\n",
+	dev_dbg(dev, "rxq_init.ring_size %d\n",
 		   ctx.cmd.rxq_init.ring_size);
 
 	err = ionic_adminq_post_wait(lif, &ctx);
@@ -1296,9 +1299,9 @@ static int ionic_lif_rxq_init(struct lif *lif, struct qcq *qcq)
 
 	qcq->flags |= QCQ_F_INITED;
 
-	netdev_info(lif->netdev, "rxq->qid %d\n", q->qid);
-	netdev_info(lif->netdev, "rxq->qtype %d\n", q->qtype);
-	netdev_info(lif->netdev, "rxq->db %p\n", q->db);
+	dev_dbg(dev, "rxq->qid %d\n", q->qid);
+	dev_dbg(dev, "rxq->qtype %d\n", q->qtype);
+	dev_dbg(dev, "rxq->db %p\n", q->db);
 
 	err = ionic_debugfs_add_qcq(lif, qcq);
 	if (err)

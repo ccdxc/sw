@@ -149,10 +149,10 @@ static int ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
 		done = ionic_dev_cmd_done(idev);
 #ifdef HAPS
 		if (done)
-			printk(KERN_ERR "DEVCMD %d done took %ld secs (%ld jiffies)\n",
-			       idev->dev_cmd->cmd.cmd.opcode,
-			       (jiffies + max_wait - time)/HZ,
-			       jiffies + max_wait - time);
+			pr_debug("DEVCMD %d done took %ld secs (%ld jiffies)\n",
+				 idev->dev_cmd->cmd.cmd.opcode,
+				 (jiffies + max_wait - time)/HZ,
+				 jiffies + max_wait - time);
 #endif
 		if (done)
 			return 0;
@@ -169,9 +169,9 @@ static int ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
 	} while (time_after(time, jiffies));
 
 #ifdef HAPS
-	printk(KERN_ERR "DEVCMD %d timeout after %ld secs\n",
-	       idev->dev_cmd->cmd.cmd.opcode,
-	       max_wait/HZ);
+	pr_debug("DEVCMD %d timeout after %ld secs\n",
+		 idev->dev_cmd->cmd.cmd.opcode,
+		 max_wait/HZ);
 #endif
 	return -ETIMEDOUT;
 }
