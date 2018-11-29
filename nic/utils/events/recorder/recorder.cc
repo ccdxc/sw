@@ -16,64 +16,50 @@
 
 #define EVENT_SIZE(evt) evt.ByteSizeLong()
 
-// singleton recorder object
-events_recorder *recorder;
-
 // initialize the events recorder; size is defaulted to SHM_SIZE if undefined (shm_size = 0)
-int events_recorder::init(const char* shm_name, int shm_size, const char *component, const ::google::protobuf::EnumDescriptor* event_types_descriptor)
+events_recorder* events_recorder::init(const char* shm_name, int shm_size, const char *component, const ::google::protobuf::EnumDescriptor* event_types_descriptor)
 {
     if (!event_types_descriptor) {
         SDK_TRACE_ERR("events_recorder {%s}: event_types enum descriptor is required", shm_name);
-        return -1;
+        return nullptr;
     }
 
-    if (!recorder) {
-        if(shm_size == 0) {
-            shm_size = SHM_SIZE;
-        }
-
-        std::string abs_shm_name = shm_name;
-        if (shm_name[0] != '/') {
-            abs_shm_name =  std::string("/") + shm_name; // /dev/shm/{shm_name}
-        }
-
-        // create events queue
-        events_queue *evts_queue = events_queue::init(abs_shm_name.c_str(), shm_size, SHM_BUF_SIZE);
-        if (!evts_queue) {
-            SDK_TRACE_ERR("events_recorder {%s}: failed to create events queue", shm_name);
-            return -1;
-        }
-
-        recorder = new(events_recorder);
-        recorder->component_ = component;
-        recorder->queue_ = evts_queue;
-        recorder->event_types_descriptor = event_types_descriptor;
+    if(shm_size == 0) {
+        shm_size = SHM_SIZE;
     }
 
-    return 0;
+    std::string abs_shm_name = shm_name;
+    if (shm_name[0] != '/') {
+        abs_shm_name =  std::string("/") + shm_name; // /dev/shm/{shm_name}
+    }
+
+    // create events queue
+    events_queue *evts_queue = events_queue::init(abs_shm_name.c_str(), shm_size, SHM_BUF_SIZE);
+    if (!evts_queue) {
+        SDK_TRACE_ERR("events_recorder {%s}: failed to create events queue", shm_name);
+        return nullptr;
+    }
+
+    events_recorder* recorder = new(events_recorder);
+    recorder->component_ = component;
+    recorder->queue_ = evts_queue;
+    recorder->event_types_descriptor = event_types_descriptor;
+    return recorder;
 }
 
 // tear down the underlying events queue
 void events_recorder::deinit()
 {
-    if (recorder) {
-        recorder->queue_->deinit();
-        recorder = nullptr;
-    }
+    this->queue_->deinit();
 }
 
 // construct and record event in the shared memory queue
 int events_recorder::event(events::Severity severity, const int type, const char* kind, const ::google::protobuf::Message& key, const char* msg...)
 {
-    if (!recorder) {
-        SDK_TRACE_ERR("events_recorder: recorder not created");
-        return -1;
-    }
-
     // this ensures the event type belongs to given descriptor
-    const std::string event_type_str = ::google::protobuf::internal::NameOfEnum(recorder->event_types_descriptor, type);
+    const std::string event_type_str = ::google::protobuf::internal::NameOfEnum(this->event_types_descriptor, type);
     if (event_type_str.empty()) {
-        SDK_TRACE_ERR("events_recorder {%s}: event type {%d} does not exist", recorder->queue_->get_name(), type);
+        SDK_TRACE_ERR("events_recorder {%s}: event type {%d} does not exist", this->queue_->get_name(), type);
         return -1;
     }
 
@@ -83,7 +69,7 @@ int events_recorder::event(events::Severity severity, const int type, const char
 
     evt.set_severity(severity);                 // severity
     evt.set_type(event_type_str.c_str());       // type
-    evt.set_component(recorder->component_);    // component
+    evt.set_component(this->component_);        // component
     evt.set_time(std::time(0));                 // time
     evt.set_object_kind(kind);                  // object_kind
     evt.set_allocated_object_key(toAny(key));   // object_key
@@ -93,7 +79,7 @@ int events_recorder::event(events::Severity severity, const int type, const char
     va_end(args);
     evt.set_message(buffer);                    // message
 
-    return write_event(evt);
+    return this->write_event(evt);
 }
 
 // write given event to the shared memory queue
@@ -101,16 +87,16 @@ int events_recorder::write_event(events::Event evt)
 {
     int size  = EVENT_SIZE(evt);
 
-    uint8_t *buf = recorder->queue_->get_buffer(size);
+    uint8_t *buf = this->queue_->get_buffer(size);
     if(buf) {
         if (!evt.SerializeToArray(buf, size)) {
             return -1;
         }
 
-        return recorder->queue_->write_msg_size(buf, size);
+        return this->queue_->write_msg_size(buf, size);
     }
 
-    SDK_TRACE_ERR("events_recorder {%s}: requested buffer size {%d} not available", recorder->queue_->get_name(), size);
+    SDK_TRACE_ERR("events_recorder {%s}: requested buffer size {%d} not available", this->queue_->get_name(), size);
     return -1;
 }
 
