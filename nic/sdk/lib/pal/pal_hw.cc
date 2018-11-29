@@ -36,6 +36,8 @@ typedef void*(*mem_map_fn_t)(const uint64_t pa, const uint32_t sz, uint32_t flag
 typedef void(*mem_unmap_fn_t)(void *va);
 typedef int (*qsfp_set_led_fn_t)(int port, pal_qsfp_led_color_t led);
 typedef int (*program_marvell_fn_t)(uint8_t addr, uint32_t data);
+typedef int (*get_cpld_id_fn_t)();
+typedef int (*get_cpld_rev_fn_t)();
                                
 typedef struct pal_hw_vectors_s {
     hw_init_fn_t                hw_init;
@@ -60,6 +62,8 @@ typedef struct pal_hw_vectors_s {
     mem_unmap_fn_t              mem_unmap;
     qsfp_set_led_fn_t           qsfp_set_led;
     program_marvell_fn_t        program_marvell;
+    get_cpld_id_fn_t            get_cpld_id;
+    get_cpld_rev_fn_t           get_cpld_rev;
 } pal_hw_vectors_t;
 
 static pal_hw_vectors_t   gl_hw_vecs;
@@ -143,6 +147,14 @@ pal_init_hw_vectors (void)
     gl_hw_vecs.program_marvell = (program_marvell_fn_t)dlsym(gl_lib_handle,
                                                              "pal_program_marvell");
     SDK_ASSERT(gl_hw_vecs.program_marvell);
+
+    gl_hw_vecs.get_cpld_id = (get_cpld_id_fn_t)dlsym(gl_lib_handle,
+                                                     "pal_get_cpld_id");
+    SDK_ASSERT(gl_hw_vecs.get_cpld_id);
+
+    gl_hw_vecs.get_cpld_rev = (get_cpld_rev_fn_t)dlsym(gl_lib_handle,
+                                                     "pal_get_cpld_rev");
+    SDK_ASSERT(gl_hw_vecs.get_cpld_rev);
 
     return PAL_RET_OK;
 }
@@ -370,6 +382,16 @@ pal_hw_program_marvell(uint8_t addr, uint32_t data)
     return PAL_RET_NOK;
 }
 
+static int
+pal_hw_get_cpld_id() {
+    return (*gl_hw_vecs.get_cpld_id)();
+}
+
+static int
+pal_hw_get_cpld_rev() {
+    return (*gl_hw_vecs.get_cpld_rev)();
+}
+
 static pal_ret_t
 pal_hw_init_rwvectors (void)
 {
@@ -396,6 +418,8 @@ pal_hw_init_rwvectors (void)
     gl_pal_info.rwvecs.mem_unmap = pal_hw_mem_unmap;
     gl_pal_info.rwvecs.qsfp_set_led = pal_hw_qsfp_set_led;
     gl_pal_info.rwvecs.program_marvell = pal_hw_program_marvell;
+    gl_pal_info.rwvecs.get_cpld_rev = pal_hw_get_cpld_rev;
+    gl_pal_info.rwvecs.get_cpld_id = pal_hw_get_cpld_id;
 
     pal_init_hw_vectors();
 

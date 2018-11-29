@@ -45,6 +45,16 @@ pal_program_marvell(uint8_t marvell_addr, uint32_t data) {
     return -1;
 }
 
+int
+pal_get_cpld_rev() {
+    return -1;
+}
+
+int
+pal_get_cpld_id() {
+    return -1;
+}
+
 #else
 #include "internal.h"
 #include "cpld_int.h"
@@ -255,6 +265,16 @@ pal_program_marvell(uint8_t marvell_addr, uint32_t data) {
     }
 
     return CPLD_SUCCESS;
+}
+
+int
+pal_get_cpld_rev() {
+    return cpld_reg_rd(0x0);
+}
+
+int
+pal_get_cpld_id() {
+    return cpld_reg_rd(0x80);
 }
 
 #endif

@@ -164,6 +164,20 @@ pal_default_program_marvell(uint8_t addr, uint32_t data)
     return PAL_RET_OK;
 }
 
+static int
+pal_default_get_cpld_rev()
+{
+    SDK_TRACE_DEBUG("PAL default get cpld_rev");
+    return -1;
+}
+
+static int
+pal_default_get_cpld_id()
+{
+    SDK_TRACE_DEBUG("PAL default get cpld_id");
+    return -1;
+}
+
 pal_ret_t
 pal_default_init_rwvectors (void)
 {
@@ -193,6 +207,8 @@ pal_default_init_rwvectors (void)
     gl_pal_info.rwvecs.mem_unmap = pal_default_mem_unmap;
     gl_pal_info.rwvecs.qsfp_set_led = pal_default_qsfp_set_led;
     gl_pal_info.rwvecs.program_marvell = pal_default_program_marvell;
+    gl_pal_info.rwvecs.get_cpld_id = pal_default_get_cpld_id;
+    gl_pal_info.rwvecs.get_cpld_rev = pal_default_get_cpld_rev;
 
     return PAL_RET_OK;
 }
