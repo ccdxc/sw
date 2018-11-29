@@ -1942,15 +1942,42 @@ static void free_testcase_context(struct testcase_context *ctx)
 	TEST_FREE(ctx);
 }
 
+/* return max cores supported for given cpu_mask */
+static uint16_t cpu_mask_to_core_count(uint64_t cpu_mask)
+{
+	uint16_t max_core_count = 0;
+
+	/* mask off invalid cores */
+	if (osal_get_core_count() < 64)
+		cpu_mask &= ((1 << osal_get_core_count()) - 1);
+
+	/* count bits */
+	while (cpu_mask) {
+		if (cpu_mask & 1)
+			max_core_count++;
+		cpu_mask >>= 1;
+	}
+
+	/* truncate to max supported */
+	if (max_core_count > TEST_MAX_CORE_COUNT) {
+		max_core_count = TEST_MAX_CORE_COUNT;
+	}
+	if (max_core_count > osal_get_core_count()) {
+		max_core_count = osal_get_core_count();
+	}
+
+	return max_core_count;
+}
+
 static struct testcase_context *alloc_testcase_context(const struct test_desc *desc,
 						       const struct test_testcase *testcase)
 {
 	struct testcase_context *test_ctx;
 	struct batch_context *batch_ctx;
 	struct worker_context *worker_ctx;
-	int i, max_core_count, core_id;
+	int i, core_id;
+	uint16_t max_core_count;
 	uint32_t worker_count = 0;
-	uint64_t cpu_mask;
 
 	test_ctx = (struct testcase_context *) TEST_ALLOC(sizeof(*test_ctx));
 	if (!test_ctx) {
@@ -1963,22 +1990,8 @@ static struct testcase_context *alloc_testcase_context(const struct test_desc *d
 	osal_atomic_init(&test_ctx->stats_lock, 0);
 	test_ctx->output_file_tbl = test_get_output_file_table();
 
-	max_core_count = 0;
-	cpu_mask = desc->cpu_mask;
-	if (osal_get_core_count() < 64)
-		cpu_mask &= ((1 << osal_get_core_count()) - 1);
-	while (cpu_mask) {
-		if (cpu_mask & 1)
-			max_core_count++;
-		cpu_mask >>= 1;
-	}
-	if (max_core_count > TEST_MAX_CORE_COUNT) {
-		max_core_count = TEST_MAX_CORE_COUNT;
-	}
-	if (max_core_count > osal_get_core_count()) {
-		max_core_count = osal_get_core_count();
-	}
-	if (max_core_count <= 0) {
+	max_core_count = cpu_mask_to_core_count(desc->cpu_mask);
+	if (!max_core_count) {
 		PNSO_LOG_ERROR("Cannot run testcase %u with 0 cores\n",
 			       testcase->node.idx);
 		goto error;
@@ -2275,13 +2288,16 @@ pnso_error_t pnso_test_run_all(struct test_desc *desc)
 {
 	pnso_error_t err = PNSO_OK;
 	struct test_node *node;
+	struct pnso_init_params init_params;
 
 	if (desc->node.type != NODE_ROOT) {
 		PNSO_LOG_ERROR("Invalid test description\n");
 		return EINVAL;
 	}
 
-	err = pnso_init(&desc->init_params);
+	init_params = desc->init_params;
+	init_params.core_count = cpu_mask_to_core_count(desc->cpu_mask);
+	err = pnso_init(&init_params);
 	if (err != PNSO_OK) {
 		PNSO_LOG_ERROR("pnso_init failed with rc = %d\n", err);
 		return err;

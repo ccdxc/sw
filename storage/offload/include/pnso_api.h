@@ -186,11 +186,13 @@ struct pnso_compression_header_format {
  * struct pnso_init_params - represents the initialization parameters for
  * Pensando accelerators.
  * @per_core_qdepth: specifies the maximum number of parallel requests per core.
+ * @core_count: specifies the maximum number of concurrent cores.
  * @block_size: specifies the size of a block in bytes.
  *
  */
 struct pnso_init_params {
 	uint16_t per_core_qdepth;
+	uint16_t core_count;
 	uint32_t block_size;
 };
 

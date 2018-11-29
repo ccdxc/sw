@@ -56,6 +56,7 @@ static struct test_desc default_desc = {
 	.node = { NODE_ROOT, 0, NULL, { NULL, NULL } },
 	.init_params = {
 		.per_core_qdepth = 16,
+		.core_count = 1,
 		.block_size = 4096 },
 	.output_file_prefix = "sim_",
 	.output_file_suffix = ".bin",

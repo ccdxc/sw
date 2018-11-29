@@ -44,7 +44,7 @@ pnso_init(struct pnso_init_params *pnso_init)
 {
 	struct lif			*lif = sonic_get_lif();
 	struct per_core_resource	*pcr;
-	uint32_t			num_pc_res;
+	uint32_t			num_pc_res = sonic_get_num_per_core_res(lif);
 	uint32_t			avail_bufs;
 	uint32_t			pc_num_bufs;
 	uint32_t			i;
@@ -54,13 +54,30 @@ pnso_init(struct pnso_init_params *pnso_init)
 		return EAGAIN;
 
 	if (pnso_initialized) {
-		if ((pnso_init->per_core_qdepth <=
-		     pc_initialized_params.max_seq_sq_descs) &&
-		    (pnso_init->block_size ==
-		     pc_initialized_params.pnso_init.block_size))
-			return PNSO_OK;
-		else
-			return EINVAL;
+		if (pnso_init->per_core_qdepth >
+		    pc_initialized_params.max_seq_sq_descs) {
+			OSAL_LOG_ERROR("per_core_qdepth %u larger than max %u\n",
+				       pnso_init->per_core_qdepth,
+				       pc_initialized_params.max_seq_sq_descs);
+			err = EINVAL;
+		}
+		if (pnso_init->block_size !=
+		    pc_initialized_params.pnso_init.block_size) {
+			OSAL_LOG_ERROR("block_size %u does not match previous cfg %u\n",
+				       pnso_init->block_size,
+				       pc_initialized_params.pnso_init.block_size);
+			err = EINVAL;
+		}
+		if (pnso_init->core_count < 1 ||
+		    pnso_init->core_count > num_pc_res) {
+			OSAL_LOG_ERROR("invalid core_count %u, max is %u\n",
+				       pnso_init->core_count, num_pc_res);
+			err = EINVAL;
+		}
+
+		OSAL_LOG_INFO("pnso_init previously initialized, status %d\n",
+			      err);
+		return err;
 	}
 
 	pc_initialized_params.pnso_init = *pnso_init;
@@ -91,9 +108,15 @@ pnso_init(struct pnso_init_params *pnso_init)
 	 *         rmem status descriptors. Note that rmem_total_pages
 	 *         gets continually adjusted as resources get allocated.
 	 */
-	num_pc_res = sonic_get_num_per_core_res(lif);
 	if (!num_pc_res) {
 		OSAL_LOG_ERROR("num_pc_res must be at least 1");
+		err = EPERM;
+		goto out;
+	}
+	if (pnso_init->core_count < 1 ||
+	    pnso_init->core_count > num_pc_res) {
+		OSAL_LOG_ERROR("invalid core_count %u, max %u\n",
+			       pnso_init->core_count, num_pc_res);
 		err = EPERM;
 		goto out;
 	}
@@ -101,6 +124,10 @@ pnso_init(struct pnso_init_params *pnso_init)
 	for (i = 0; (err == PNSO_OK) && (i < num_pc_res); i++) {
 		pcr = sonic_get_per_core_res_by_res_id(lif, i);
 		err = pc_res_init(&pc_initialized_params, pcr);
+	}
+	if (err) {
+		OSAL_LOG_ERROR("failed to init pc_res(%d)\n", i);
+		goto out;
 	}
 
 	/*
@@ -132,6 +159,11 @@ pnso_init(struct pnso_init_params *pnso_init)
 		pcr = sonic_get_per_core_res_by_res_id(lif, i);
 		err = pc_res_interm_buf_init(&pc_initialized_params, pcr, pc_num_bufs);
 	}
+	if (err) {
+		OSAL_LOG_ERROR("failed to init intermediate buffers\n");
+		goto out;
+	}
+	OSAL_LOG_INFO("pnso_init success\n");
 
 out:
 	pnso_initialized = true;
