@@ -49,7 +49,7 @@ const (
 	IOTARandomSeed = 42
 
 	// IotaWorkloadImage is the docker image that will be used for workloads
-	IotaWorkloadImage = "registry.test.pensando.io:5000/pensando/iota/centos:1.0"
+	IotaWorkloadImage = "registry.test.pensando.io:5000/pensando/iota/centos:1.1"
 )
 
 // incrementing constants. List all constants whose value you don't care here

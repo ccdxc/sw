@@ -8,21 +8,21 @@ nodes:
       role: PERSONALITY_NAPLES_SIM
       workloads:
         type    : WORKLOAD_TYPE_CONTAINER
-        image   : "registry.test.pensando.io:5000/pensando/iota/centos:1.0" 
+        image   : "registry.test.pensando.io:5000/pensando/iota/centos:1.1" 
 
     - node: node2
       name: naples2
       role: PERSONALITY_NAPLES_SIM
       workloads:
         type    : WORKLOAD_TYPE_CONTAINER
-        image   : "registry.test.pensando.io:5000/pensando/iota/centos:1.0" 
+        image   : "registry.test.pensando.io:5000/pensando/iota/centos:1.1" 
 
     - node: node3
       name: naples3
       role: PERSONALITY_NAPLES_SIM
       workloads:
         type    : WORKLOAD_TYPE_CONTAINER
-        image   : "registry.test.pensando.io:5000/pensando/iota/centos:1.0" 
+        image   : "registry.test.pensando.io:5000/pensando/iota/centos:1.1" 
 
     - node: node4
       name: venice1

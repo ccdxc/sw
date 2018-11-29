@@ -8,7 +8,7 @@ nodes:
       role: PERSONALITY_NAPLES
       workloads:
             type:   WORKLOAD_TYPE_CONTAINER
-            image:  "registry.test.pensando.io:5000/pensando/iota/centos:1.0"
+            image:  "registry.test.pensando.io:5000/pensando/iota/centos:1.1"
 
 
     - node: node2
@@ -16,4 +16,4 @@ nodes:
       role: PERSONALITY_MELLANOX
       workloads:
             type    : WORKLOAD_TYPE_CONTAINER
-            image   : "registry.test.pensando.io:5000/pensando/iota/centos:1.0"
+            image   : "registry.test.pensando.io:5000/pensando/iota/centos:1.1"

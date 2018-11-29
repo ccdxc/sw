@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	IotaWorkloadImage = "registry.test.pensando.io:5000/pensando/iota/centos:1.0"
+	IotaWorkloadImage = "registry.test.pensando.io:5000/pensando/iota/centos:1.1"
 	naplesSimName     = "naples-sim"
 	naplesUserName    = "root"
 	naplesPassword    = "root"

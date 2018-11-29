@@ -18,6 +18,7 @@ PIP3_PACKAGES = %w[
   scapy-python3
   enum34
   pyyaml
+  pyftpdlib
 ]
 
 PACKAGES = %w[
@@ -43,6 +44,12 @@ PACKAGES = %w[
   ftp
   live555-tools
   nc
+  tftp-server
+  xinetd
+  vsftpd
+  bind-utils
+  nfs-utils
+  nfs-utils-lib
 ]
 
 run "yum install -y #{PACKAGES.join(" ")}"
