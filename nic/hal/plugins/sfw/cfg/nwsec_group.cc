@@ -1002,9 +1002,9 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRule spec, nwsec_rule_t *rule)
             opt->dns_opts.max_msg_length = app.dns_option_info().max_msg_length();
             opt->dns_opts.query_response_timeout = app.dns_option_info().query_response_timeout();
         } else if (app.AppOptions_case() == AppData::kMsrpcOptionInfo) {
-            opt->msrpc_opts.map_entry_timeout = app.msrpc_option_info().map_entry_timeout();
+            opt->msrpc_opts.map_entry_timeout = app.idle_timeout();
         } else if (app.AppOptions_case() == AppData::kSunRpcOptionInfo) {
-            opt->sunrpc_opts.map_entry_timeout = app.sun_rpc_option_info().map_entry_timeout();
+            opt->sunrpc_opts.map_entry_timeout = app.idle_timeout();
         } else if (app.AppOptions_case() == AppData::kSipOptions) {
             opt->sip_opts.ctimeout = app.sip_options().ctimeout();
             opt->sip_opts.dscp_code_point = app.sip_options().dscp_code_point();

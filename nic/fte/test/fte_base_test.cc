@@ -229,10 +229,10 @@ hal_handle_t fte_base_test::add_nwsec_policy(hal_handle_t vrfh, std::vector<fte_
                     app_data->mutable_ftp_option_info()->set_allow_mismatch_ip_address(\
                                           rule.app.alg_opt.opt.ftp_opts.allow_mismatch_ip_address); 
                 } else if (rule.app.alg == nwsec::APP_SVC_SUN_RPC) {
-                    app_data->mutable_sun_rpc_option_info()->set_map_entry_timeout(\
+                    app_data->set_idle_timeout(\
                                       rule.app.alg_opt.opt.sunrpc_opts.map_entry_timeout);
                 } else if (rule.app.alg == nwsec::APP_SVC_MSFT_RPC) {
-                    app_data->mutable_msrpc_option_info()->set_map_entry_timeout(\
+                    app_data->set_idle_timeout(\
                                       rule.app.alg_opt.opt.msrpc_opts.map_entry_timeout);
                 } else if (rule.app.alg == nwsec::APP_SVC_DNS) {
                     app_data->mutable_dns_option_info()->set_drop_multi_question_packets(\

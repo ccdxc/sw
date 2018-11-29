@@ -553,11 +553,9 @@ message AppData {
   }
   message MSRPCOptions {
     uint32 uuid                          = 1;
-    uint32 map_entry_timeout             = 2;
   }
   message SunRPCOptions {
     uint32 program_number                = 1;
-    uint32 map_entry_timeout             = 2;
   }
   message SIPOptions {
     uint32 ctimeout                      = 1;

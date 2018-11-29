@@ -33,9 +33,9 @@ class SvcObject(base.ConfigObjectBase):
             if (alg_name == "APP_SVC_FTP"):
                 app_data.ftp_option_info.allow_mismatch_ip_address=1
             elif (alg_name == "APP_SVC_MSFT_RPC"):
-                app_data.msrpc_option_info.map_entry_timeout = 3600000
+                app_data.idle_timeout = 3600000
             elif (alg_name == "APP_SVC_SUN_RPC"):
-                app_data.sun_rpc_option_info.map_entry_timeout = 3600000
+                app_data.idle_timeout = 3600000
         return
 
 class RuleObject(base.ConfigObjectBase):
