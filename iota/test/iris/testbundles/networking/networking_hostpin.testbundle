@@ -4,10 +4,9 @@ meta:
 testcases:
     -   name    : Ping_Mirror_Remote_Workloads
         testcase: testcases.telemetry.ping_mirror
-        ignore  : True
         args    :
             type: remote_only
         iterators :
             type    : simple
-            pktsize : [128]
+            pktsize : [128, 256, 512, 1024, 2048, 4096, 8192]
 

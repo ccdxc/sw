@@ -31,7 +31,7 @@ def Trigger(tc):
                                "ping -f -c 50 -s %d %s" % (tc.iterators.pktsize, w2.ip_address))
         iter_num = iter_num + 1
     trig_resp = api.Trigger(req)
-    time.sleep(30)
+    time.sleep(10)
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)
     tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
     return api.types.status.SUCCESS
@@ -48,6 +48,15 @@ def Verify(tc):
             api.Logger.info('Setting API FAILURE for command: ' + cmd.command)
         if 'tcpdump' in cmd.command:
             # Check stdout first
+            matchObj = re.search( r'(.*) GREv0, length 158(.*)', cmd.stdout, 0)
+            if matchObj is None:
+                result = api.types.status.FAILURE
+    return result
+    # Capture packets based on num pkts. Commented out due to iota issue where stdout
+    # is not returned correctly
+'''
+        if 'tcpdump' in cmd.command:
+            # Check stdout first
             matchObj = re.search( r'(.*) packets received by filter', cmd.stdout, 0)
             if matchObj is None:
                 # Check stderr
@@ -60,7 +69,7 @@ def Verify(tc):
             else:
                 api.Logger.info('matchObj is None! Return failure!!')
                 result = api.types.status.FAILURE
-    return result
+'''
 
 def Teardown(tc):
     return api.types.status.SUCCESS
