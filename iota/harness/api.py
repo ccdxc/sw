@@ -363,36 +363,31 @@ def GetCurrentDirectory():
     return __gl_rundir
 
 def __CopyCommon(direction, node_name, entity_name, files, dest_dir):
-    #if direction == topo_svc.DIR_IN:
-    #    ret = __CreateDir(node_name, entity_name, dest_dir)
-    #    if ret != types.status.SUCCESS:
-    #        return ret
     req = topo_svc.EntityCopyMsg()
     req.direction = direction
     req.node_name = node_name
     req.entity_name = entity_name
-    for f in files:
-        req.files.append(f)
+    
     req.dest_dir = dest_dir
     if direction == topo_svc.DIR_IN:
         req.dest_dir = __gl_rundir + '/' + dest_dir
+
+    for f in files:
+        srcfile = f
+        if direction == topo_svc.DIR_OUT:
+            srcfile = __gl_rundir + '/' + f
+        req.files.append(srcfile)
     return EntityCopy(req)
 
 def CopyToWorkload(node_name, workload_name, files, dest_dir = ""):
-    return __CopyCommon(topo_svc.DIR_IN, node_name,
-                        workload_name, files, dest_dir)
+    return __CopyCommon(topo_svc.DIR_IN, node_name, workload_name, files, dest_dir)
 
 def CopyToHost(node_name, files, dest_dir = ""):
-    return __CopyCommon(topo_svc.DIR_IN, node_name,
-                        "%s_host" % node_name, files, dest_dir)
+    return __CopyCommon(topo_svc.DIR_IN, node_name, "%s_host" % node_name, files, dest_dir)
 
 def CopyToHostTools(node_name, files):
     return __CopyCommon(topo_svc.DIR_IN, node_name,
                         "%s_host" % node_name, files, GetHostToolsDir())
-
-def CopyFromHost(node_name, files, dest_dir):
-    return __CopyCommon(topo_svc.DIR_OUT, node_name,
-                        "%s_host" % node_name, files, dest_dir)
 
 def CopyToNaples(node_name, files, dest_dir):
     copy_resp = __CopyCommon(topo_svc.DIR_IN, node_name,
@@ -409,9 +404,14 @@ def CopyToNaples(node_name, files, dest_dir):
 
     return copy_resp
 
+def CopyFromHost(node_name, files, dest_dir):
+    return __CopyCommon(topo_svc.DIR_OUT, node_name, "%s_host" % node_name, files, dest_dir)
+
 def CopyFromNaples(node_name, files, dest_dir):
-    return __CopyCommon(topo_svc.DIR_OUT, node_name,
-                        "%s_naples" % node_name, files, dest_dir)
+    return __CopyCommon(topo_svc.DIR_OUT, node_name, "%s_naples" % node_name, files, dest_dir)
+
+def CopyFromWorkload(node_name, workload_name, files, dest_dir):
+    return __CopyCommon(topo_svc.DIR_OUT, node_name, workload_name, files, dest_dir)
 
 def RestartNodes(nodes):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().RestartNodes(nodes)
