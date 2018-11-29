@@ -1,7 +1,9 @@
 package reader
 
 import (
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"regexp"
 	"sync"
 	"time"
@@ -66,6 +68,9 @@ func (r *Reader) Start() error {
 		r.fileWatcher = fileWatcher
 	}
 
+	// start reader on the existing "*.events" files
+	r.startReaderOnExistingFiles()
+
 	if r.fileWatcher != nil {
 		go r.watchFileEvents()
 	}
@@ -109,13 +114,7 @@ func (r *Reader) watchFileEvents() {
 					continue
 				}
 
-				ok, err := regexp.MatchString("^*.events$", fs.Name())
-				if err != nil {
-					log.Errorf("failed to match the file name with pattern {^*.events$} , err: %v", err)
-					continue
-				}
-
-				if fs.Mode().IsRegular() && ok {
+				if fs.Mode().IsRegular() && r.isEventsFile(fs.Name()) {
 					r.startEvtsReader(event.Name)
 				}
 			}
@@ -129,11 +128,29 @@ func (r *Reader) watchFileEvents() {
 	}
 }
 
+// startReaderOnExistingFiles helper function to start readers on the existing event files that
+// were created before initializing the file watcher.
+func (r *Reader) startReaderOnExistingFiles() {
+	log.Infof("starting reader on existing event files on dir {%s}", r.dir)
+
+	files, err := ioutil.ReadDir(r.dir)
+	if err != nil {
+		log.Errorf("failed to read list of files from directory {%s}, err: %v", r.dir, err)
+		return
+	}
+
+	for _, f := range files {
+		if f.Mode().IsRegular() && r.isEventsFile(f.Name()) {
+			r.startEvtsReader(filepath.Join(r.dir, f.Name()))
+		}
+	}
+}
+
 // startEvtsReader helper function to start events reader to reader events
 // from the given shared memory file (shmPath)
 func (r *Reader) startEvtsReader(shmPath string) {
 	if _, ok := r.evtReaders[shmPath]; ok {
-		log.Errorf("something wrong, reader already exists for %s", shmPath)
+		log.Debugf("reader already exists for %s", shmPath)
 		return
 	}
 
@@ -147,4 +164,15 @@ func (r *Reader) startEvtsReader(shmPath string) {
 
 	r.evtReaders[shmPath] = eRdr
 	log.Infof("successfully created reader for %s", shmPath)
+}
+
+// return true if the filename ends with ".events". Otherwise, false.
+func (r *Reader) isEventsFile(filename string) bool {
+	ok, err := regexp.MatchString("^*.events$", filename)
+	if err != nil {
+		log.Errorf("failed to match the file name with pattern {^*.events$}, err: %v", err)
+		return false
+	}
+
+	return ok
 }

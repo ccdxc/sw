@@ -41,6 +41,6 @@
 }, {
     "name": "nevtsproxy",
     "command": "/nic/bin/nevtsproxy",
-    "dependencies": ["delphi"],
+    "dependencies": ["delphi",  "hal"],
     "flags": ["no_watchdog", "non_critical"]
 }]

@@ -33,6 +33,7 @@ using delphi::objects::PortStatusPtr;
 typedef struct linkmgr_svc_s {
     delphi::SdkPtr    sdk;
     port_svc_ptr_t    port_svc;
+    events_recorder   *recorder;
 } linkmgr_svc_t;
 linkmgr_svc_t g_linkmgr_svc;
 
@@ -79,6 +80,13 @@ port_svc_ptr_t
 port_svc_get (void)
 {
     return g_linkmgr_svc.port_svc;
+}
+
+// events_recorder_get returns the pointer to event recorder object
+events_recorder*
+events_recorder_get(void)
+{
+    return g_linkmgr_svc.recorder;
 }
 
 // OnPortSpecCreate gets called when PortSpec object is created
@@ -195,8 +203,8 @@ port_event_notify (uint32_t port_num, port_event_t event,
                    port_speed_t port_speed)
 {
     kh::PortKeyHandle port_key_handle;
-    port_key_handle.set_port_id(port_num);
 
+    port_key_handle.set_port_id(port_num);
     switch (event) {
     case port_event_t::PORT_EVENT_LINK_UP:
         HAL_TRACE_DEBUG("port: {}, Link UP", port_num);
