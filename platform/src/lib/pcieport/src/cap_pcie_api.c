@@ -94,7 +94,7 @@ int cap_pcie_setup_pll_raw(void) {
        return 0;
      }
      else {
-       PLOG_ERR("PCIE: " << "PCIE STA_PLL not locked after 100000 attempts:  status = " <<  pll_lock << endl);
+       PLOG_ERR("PCIE: " << "PCIE STA_PLL not locked: status = " <<  pll_lock << endl);
        SW_PRINT("ERROR:****PCIE PLL not locked 0x%x\n", pll_lock);
        return 1;
      }
@@ -364,7 +364,7 @@ int cap_pcie_serdes_setup(int chip_id, int inst_id, int gen1, void *rom_info) {
 
    PLOG_MSG("PCIE:SW FUNCTION 7 " << dec << endl);
    if(cap_pcie_setup_pll_raw()) {
-     SW_PRINT("pcie pll lock failed");
+     SW_PRINT("pcie pll lock failed\n");
      return -1;
    }
 
@@ -378,12 +378,12 @@ int cap_pcie_serdes_setup(int chip_id, int inst_id, int gen1, void *rom_info) {
    } else {
      cap_sbus_pp_set_rom_enable(chip_id, inst_id, 1);
      if(cap_pcie_upload_firmware(chip_id, inst_id, rom_info) == 0) // will set broadcast group; upload firmware; deassert pcs reset
-          SW_PRINT("serdes upload happened");
+          SW_PRINT("serdes upload happened\n");
    }
    /* do the HAPS specific thing - BRAD */
    /* - Ensure port0 = 16x for ASIC v/s 4x for HAPS */
    if(cap_pcie_complete_serdes_initialization(chip_id, inst_id)) {// send core interrupts, check revision, check build id, load dfe/ical; enable interrupts
-          SW_PRINT("serdes initialization failed");
+          SW_PRINT("serdes initialization failed\n");
           return -1;
    }
    return 0;
