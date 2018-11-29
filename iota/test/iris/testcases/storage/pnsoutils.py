@@ -55,7 +55,7 @@ def __get_batch_depth(tc):
         return getattr(tc.args, 'batch_depth')
     if getattr(tc.iterators, 'batch_depth', None) is not None:
         return getattr(tc.iterators, 'batch_depth')
-    return pnsodefs.PNSO_TEST_DEFAULT_BLOCKSIZE
+    return pnsodefs.PNSO_TEST_DEFAULT_BATCH_DEPTH
 
 def __setup_default_params(tc):
     def __set(tc, key, value):
