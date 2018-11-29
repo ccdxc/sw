@@ -145,9 +145,31 @@ action update_ttl(ttl_val) {
     modify_field(ipv4.ttl, ttl_val);
 }
 
+@pragma index_table
+table A_idx {
+    reads {
+        ipv4.valid     : exact;
+    }
+    actions {
+        update_ttl;
+    }
+    size : 2;
+}
+@pragma index_table
+table B_idx {
+    reads {
+        ipv6.version     : exact;
+    }
+    actions {
+        update_ttl;
+    }
+    size : 256;
+}
+
+@pragma index_table
 table C_idx {
     reads {
-        ipv4.ttl     : exact;
+        ipv6.flowLabel     : exact;
     }
     actions {
         update_ttl;
@@ -156,6 +178,8 @@ table C_idx {
 }
 
 control ingress {
+    apply(A_idx);
+    apply(B_idx);
     apply(C_idx);
 }
 

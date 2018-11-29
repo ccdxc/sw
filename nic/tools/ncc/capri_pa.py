@@ -2300,8 +2300,9 @@ class capri_gress_pa:
             else:
                 align = 0
             if hf.is_index_key:
-                if hf.storage_size() >= 4:
-                    justify = JUSTIFY_RIGHT
+                # Earlier the alignment was done only for flds >= 4 size (not sure why)
+                justify = JUSTIFY_RIGHT
+                align = 8
 
             # try to allocate in prior flits and then this flit
             for fid in range(flit.id-1, -1, -1):
@@ -2537,12 +2538,9 @@ class capri_gress_pa:
                 if n_hf.is_key or n_hf.is_input or (self.d == xgress.INGRESS and n_hf.is_i2e_meta):
                     # XXX for fld unions - propagate the flags is_key... to union storage field
                     if n_hf.is_index_key:
-                        if n_hf.storage_size() >= 4:
-                            # if more than 4 bits align and right justify to avoid bit extraction
-                            # pdb.set_trace()
-                            # rigth justify the key on a byte boundary
-                            justify = JUSTIFY_RIGHT
-                            alignment = 8
+                        # Earlier the alignment was done only for flds >= 4 size (not sure why)
+                        justify = JUSTIFY_RIGHT
+                        alignment = 8
                     elif (self.d == xgress.INGRESS and n_hf.is_i2e_meta) or n_hf.storage_size() > 8:
                         # align it on byte boudary to make it easy for key_maker programming
                         # i2e flds need to be byte-aligned for the ingress-deparser

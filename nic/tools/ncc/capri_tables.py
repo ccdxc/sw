@@ -341,7 +341,7 @@ class capri_table:
 
     def num_actions(self):
         return len(self.action_data)
-
+    
     def ct_compute_phv_size(self, cflist):
         # compute the phv size based on phv bits to handle any unions/overlaps
         # sorted_cflist = sorted(cflist, key=lambda k: k.phv_bit) - by caller
@@ -899,15 +899,23 @@ class capri_table:
             new_i_phv_chunks = copy.copy(i_phv_chunks)
             # if index table has >1 k_phv_chunks, it means different bit fields are concatenated
             # into an index. Don't convert them to bytes
+            # phv allocator takes care of byte alignment and right_justification of index keys
+            # that come from metadata, no need to worry about them here
             if len(new_k_phv_chunks) and \
                 (not self.is_index_table() or \
                     (self.is_index_table() and len(new_k_phv_chunks) == 1)):
                 cs,cw = new_k_phv_chunks[0]
+                ce = cs+cw
+
                 if cs % 8:
                     # check if end is byte-aligned. This is to weed out small bit fields
                     # (like hv bit) that appear at the front
+                    # if index table has hv bits or other header fields that cannot be phv aligned,
+                    # add padding at start only if end is byte aligned
+                    
                     start_pad = cs % 8
-                    if self.is_index_table() or (start_pad < 4 and ((cs+cw)%8) == 0):
+                    if (self.is_index_table() and ((ce % 8) == 0)) or \
+                        (not self.is_index_table() and (start_pad < 4 and ((cs+cw)%8) == 0)):
                         # more bits than pad
                         cs -= start_pad
                         cw += start_pad
@@ -915,17 +923,12 @@ class capri_table:
                         new_k_phv_chunks.insert(0,(cs,cw))
                         k_start_delta = start_pad
 
-                # This can done for TCAM/Index tables. For other tables if there are other k-bits
+                # This can done for TCAM tables. For other tables if there are other k-bits
                 # then last partial K-byte cannot be extended into full byte
-                # handle only for IDX table for now
+                # Cannot be done for index tables.. key must be byte aligned in key maker
+                # (this restriction was not known when this code was written)
                 cs,cw = new_k_phv_chunks[-1]
                 ce = cs+cw
-                if ce % 8 and self.is_index_table():
-                    new_k_phv_chunks.pop()
-                    end_pad = (8-(ce % 8))
-                    cw += end_pad
-                    new_k_phv_chunks.append((cs,cw))
-                    k_end_delta = end_pad
 
                 # for tcam table, make sure that the last chunk start is byte aligned
                 # so that it is eligible for byte extraction
