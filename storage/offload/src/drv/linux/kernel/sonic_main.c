@@ -91,13 +91,21 @@ int sonic_adminq_check_err(struct lif *lif, struct sonic_admin_ctx *ctx)
 
 int sonic_adminq_post_wait(struct lif *lif, struct sonic_admin_ctx *ctx)
 {
-	int err;
+	int err, timeout;
 
 	err = sonic_api_adminq_post(lif, ctx);
 	if (err)
 		return err;
 
-	wait_for_completion(&ctx->work);
+	timeout = wait_for_completion_timeout(&ctx->work, HZ * devcmd_timeout);
+
+	/*
+	 * No ISR from device was generated, timeout condition.
+	 */
+	if (timeout == 0) {
+		OSAL_LOG_ERROR("adminq post timeout");
+		return ETIMEDOUT;
+	}
 
 	return sonic_adminq_check_err(lif, ctx);
 }
@@ -480,6 +488,8 @@ static void sonic_api_adminq_cb(struct queue *q, struct desc_info *desc_info,
 			comp, sizeof(*comp), true); 
 		dynamic_hex_dump("sonic: cmd ", DUMP_PREFIX_OFFSET, 16, 1,
 			&ctx->cmd, sizeof(ctx->cmd), true); 
+		/* Completion with error. */
+		complete_all(&ctx->work);
 		return;
 	}
 
