@@ -15,6 +15,7 @@ import (
 	"github.com/pensando/sw/nic/delphi/proto/goproto"
 	_ "github.com/pensando/sw/nic/utils/ntranslate/accel_metrics"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ntranslate"
 )
 
 func init() {
@@ -37,10 +38,13 @@ func (s *RestServer) runAccelHwRingMetricsListHandler(r *http.Request) (interfac
 	if err != nil {
 		log.Infof("Error: %s", err)
 	}
-	var mtr []*goproto.AccelHwRingMetrics
+	var mtr []goproto.AccelHwRingMetrics
+	tstr := ntranslate.MustGetTranslator()
 	for iter.HasNext() {
-		mtr = append(mtr, iter.Next())
-		log.Infof("New AccelHwRingMetrics: %+v", mtr)
+		temp := iter.Next()
+		temp.ObjectMeta = *(tstr.GetObjectMeta("AccelHwRingMetricsKey", temp.GetKey()))
+		mtr = append(mtr, *temp)
+		log.Infof("New AccelHwRingMetrics: %+v", *temp)
 	}
 	log.Infof("Got GET LIST request")
 	return mtr, nil
@@ -72,10 +76,13 @@ func (s *RestServer) runAccelSeqQueueMetricsListHandler(r *http.Request) (interf
 	if err != nil {
 		log.Infof("Error: %s", err)
 	}
-	var mtr []*goproto.AccelSeqQueueMetrics
+	var mtr []goproto.AccelSeqQueueMetrics
+	tstr := ntranslate.MustGetTranslator()
 	for iter.HasNext() {
-		mtr = append(mtr, iter.Next())
-		log.Infof("New AccelSeqQueueMetrics: %+v", mtr)
+		temp := iter.Next()
+		temp.ObjectMeta = *(tstr.GetObjectMeta("AccelSeqQueueMetricsKey", temp.GetKey()))
+		mtr = append(mtr, *temp)
+		log.Infof("New AccelSeqQueueMetrics: %+v", *temp)
 	}
 	log.Infof("Got GET LIST request")
 	return mtr, nil

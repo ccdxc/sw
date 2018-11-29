@@ -15,6 +15,7 @@ import (
 	"github.com/pensando/sw/nic/delphi/proto/goproto"
 	_ "github.com/pensando/sw/nic/utils/ntranslate/upgrade"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ntranslate"
 )
 
 func init() {
@@ -37,10 +38,13 @@ func (s *RestServer) runUpgradeMetricsListHandler(r *http.Request) (interface{},
 	if err != nil {
 		log.Infof("Error: %s", err)
 	}
-	var mtr []*goproto.UpgradeMetrics
+	var mtr []goproto.UpgradeMetrics
+	tstr := ntranslate.MustGetTranslator()
 	for iter.HasNext() {
-		mtr = append(mtr, iter.Next())
-		log.Infof("New UpgradeMetrics: %+v", mtr)
+		temp := iter.Next()
+		temp.ObjectMeta = *(tstr.GetObjectMeta("UpgradeMetricsKey", temp.GetKey()))
+		mtr = append(mtr, *temp)
+		log.Infof("New UpgradeMetrics: %+v", *temp)
 	}
 	log.Infof("Got GET LIST request")
 	return mtr, nil

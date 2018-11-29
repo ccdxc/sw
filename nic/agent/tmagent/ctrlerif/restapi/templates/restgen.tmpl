@@ -35,10 +35,13 @@ import (
 		if err != nil {
 			log.Infof("Error: %s", err)
 		}
-		var mtr []*goproto.{{.GetName}}
+		var mtr []goproto.{{.GetName}}
+		tstr := ntranslate.MustGetTranslator()
 		for iter.HasNext() {
-			mtr = append(mtr, iter.Next())
-			log.Infof("New {{.GetName}}: %+v", mtr)
+			temp := iter.Next()
+			temp.ObjectMeta = *(tstr.GetObjectMeta("{{.GetName}}Key", temp.GetKey()))
+			mtr = append(mtr, *temp)
+			log.Infof("New {{.GetName}}: %+v", *temp)
 		}
 		log.Infof("Got GET LIST request")
 		return mtr, nil

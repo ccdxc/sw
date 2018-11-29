@@ -15,6 +15,7 @@ import (
 	"github.com/pensando/sw/nic/delphi/proto/goproto"
 	_ "github.com/pensando/sw/nic/utils/ntranslate/metrics"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ntranslate"
 )
 
 func init() {
@@ -37,10 +38,13 @@ func (s *RestServer) runLifMetricsListHandler(r *http.Request) (interface{}, err
 	if err != nil {
 		log.Infof("Error: %s", err)
 	}
-	var mtr []*goproto.LifMetrics
+	var mtr []goproto.LifMetrics
+	tstr := ntranslate.MustGetTranslator()
 	for iter.HasNext() {
-		mtr = append(mtr, iter.Next())
-		log.Infof("New LifMetrics: %+v", mtr)
+		temp := iter.Next()
+		temp.ObjectMeta = *(tstr.GetObjectMeta("LifMetricsKey", temp.GetKey()))
+		mtr = append(mtr, *temp)
+		log.Infof("New LifMetrics: %+v", *temp)
 	}
 	log.Infof("Got GET LIST request")
 	return mtr, nil
