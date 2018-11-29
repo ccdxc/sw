@@ -710,7 +710,8 @@ chn_create_chain(struct request_params *req_params)
 		goto out_chain;
 
 	/* setup interrupt params in last chain's last service */
-	if ((req_params->rp_flags & REQUEST_RFLAG_MODE_ASYNC) && chain) {
+	if (!(req_params->rp_flags & REQUEST_RFLAG_TYPE_BATCH) &&
+		(req_params->rp_flags & REQUEST_RFLAG_MODE_ASYNC) && chain) {
 		last_ce = chn_get_last_centry(chain);
 		svc_info = &last_ce->ce_svc_info;
 		svc_info->si_ops.enable_interrupt(svc_info, chain);
