@@ -204,6 +204,10 @@ qos_class_pd_port_to_packet_buffer_port (tm_port_t port, qos::PacketBufferPort *
     }
 }
 
+hal_ret_t
+qos_class_pd_get_queue_stats (tm_port_t port,
+                              qos::QosClassQueueStats *q_stats);
+
 }   // namespace pd
 }   // namespace hal
 

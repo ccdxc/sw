@@ -310,6 +310,12 @@ capri_tm_get_num_iqs_for_port_type (tm_port_type_e port_type)
     return 0;
 }
 
+uint32_t
+capri_tm_get_num_iqs_for_port (tm_port_t port)
+{
+    return capri_tm_get_num_iqs_for_port_type(capri_tm_get_port_type(port));
+}
+
 static inline uint32_t
 capri_tm_get_num_oqs_for_port_type (tm_port_type_e port_type)
 {
@@ -324,6 +330,12 @@ capri_tm_get_num_oqs_for_port_type (tm_port_type_e port_type)
             return 0;
     }
     return 0;
+}
+
+uint32_t
+capri_tm_get_num_oqs_for_port (tm_port_t port)
+{
+    return capri_tm_get_num_oqs_for_port_type(capri_tm_get_port_type(port));
 }
 
 static inline uint32_t

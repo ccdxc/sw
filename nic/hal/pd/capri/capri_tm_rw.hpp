@@ -336,4 +336,9 @@ capri_tm_get_pb_debug_stats(tm_port_t port,
                             tm_pb_debug_stats_t *debug_stats, 
                             bool reset);
 
+uint32_t
+capri_tm_get_num_iqs_for_port (tm_port_t port);
+uint32_t
+capri_tm_get_num_oqs_for_port (tm_port_t port);
+
 #endif

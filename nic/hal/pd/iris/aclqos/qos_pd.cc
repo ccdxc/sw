@@ -977,14 +977,66 @@ qos_class_pd_populate_status (pd_qos_class_t *qos_class_pd, QosClassStatusEpd *e
 }
 
 static hal_ret_t
+qos_class_pd_populate_qos_queue_stats (tm_port_t port,
+                                       pd_qos_iq_t iqs[HAL_PD_QOS_MAX_IQS],
+                                       pd_qos_oq_t oqs[HAL_PD_QOS_MAX_OQS],
+                                       qos::QosClassQueueStats *q_stats)
+{
+    hal_ret_t                first_err_ret = HAL_RET_OK;
+    hal_ret_t                ret = HAL_RET_OK;
+    tm_iq_stats_t            iq_stats;
+    tm_oq_stats_t            oq_stats;
+
+    for (unsigned i = 0; i < HAL_PD_QOS_MAX_IQS; i++) {
+        if (iqs[i].valid) {
+            ret = capri_tm_get_iq_stats(port, iqs[i].iq, &iq_stats);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Failed to get iq stats for port {} queue {} ret {}",
+                              port, iqs[i].iq, ret);
+                // Continue
+                if (first_err_ret == HAL_RET_OK) {
+                    first_err_ret = ret;
+                }
+            }
+
+            auto input_stats = q_stats->add_input_queue_stats();
+            input_stats->set_input_queue_idx(iqs[i].iq);
+            input_stats->mutable_oflow_fifo_stats()->set_good_pkts_in(iq_stats.oflow.good_pkts_in);
+            input_stats->mutable_oflow_fifo_stats()->set_good_pkts_out(iq_stats.oflow.good_pkts_out);
+            input_stats->mutable_oflow_fifo_stats()->set_errored_pkts_in(iq_stats.oflow.errored_pkts_in);
+            input_stats->mutable_oflow_fifo_stats()->set_fifo_depth(iq_stats.oflow.fifo_depth);
+            input_stats->mutable_oflow_fifo_stats()->set_max_fifo_depth(iq_stats.oflow.max_fifo_depth);
+            input_stats->set_buffer_occupancy(iq_stats.buffer_occupancy);
+            input_stats->set_peak_occupancy(iq_stats.peak_occupancy);
+        }
+    }
+
+    for (unsigned i = 0; i < HAL_PD_QOS_MAX_OQS; i++) {
+        if (oqs[i].valid) {
+            ret = capri_tm_get_oq_stats(port, oqs[i].oq, &oq_stats);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Failed to get oq stats for port {} queue {} ret {}",
+                              port, oqs[i].oq, ret);
+                // Continue
+                if (first_err_ret == HAL_RET_OK) {
+                    first_err_ret = ret;
+                }
+            }
+            auto output_stats = q_stats->add_output_queue_stats();
+            output_stats->set_output_queue_idx(oqs[i].oq);
+            output_stats->set_queue_depth(oq_stats.queue_depth);
+        }
+    }
+    return first_err_ret;
+}
+
+static hal_ret_t
 qos_class_pd_populate_stats (pd_qos_class_t *qos_class_pd, QosClassStats *stats)
 {
     hal_ret_t                first_err_ret = HAL_RET_OK;
     hal_ret_t                ret = HAL_RET_OK;
     pd_qos_iq_t              iqs[TM_NUM_PORTS][HAL_PD_QOS_MAX_IQS] = {};
     pd_qos_oq_t              oqs[TM_NUM_PORTS][HAL_PD_QOS_MAX_OQS] = {};
-    tm_iq_stats_t            iq_stats;
-    tm_oq_stats_t            oq_stats;
 
     qos_class_pd_get_all_queues(qos_class_pd,
                                 iqs, oqs);
@@ -997,48 +1049,38 @@ qos_class_pd_populate_stats (pd_qos_class_t *qos_class_pd, QosClassStats *stats)
         qos_class_pd_port_to_packet_buffer_port(port,
                                                 port_stats->mutable_packet_buffer_port());
         auto q_stats = port_stats->mutable_qos_queue_stats();
-        for (unsigned i = 0; i < HAL_ARRAY_SIZE(iqs[0]); i++) {
-            if (iqs[port][i].valid) {
-                ret = capri_tm_get_iq_stats(port, iqs[port][i].iq, &iq_stats);
-                if (ret != HAL_RET_OK) {
-                    HAL_TRACE_ERR("Failed to get iq stats for port {} queue {} ret {}",
-                                  port, iqs[port][i].iq, ret);
-                    // Continue
-                    if (first_err_ret != HAL_RET_OK) {
-                        first_err_ret = ret;
-                    }
-                }
-
-                auto input_stats = q_stats->add_input_queue_stats();
-                input_stats->set_input_queue_idx(iqs[port][i].iq);
-                input_stats->mutable_oflow_fifo_stats()->set_good_pkts_in(iq_stats.oflow.good_pkts_in);
-                input_stats->mutable_oflow_fifo_stats()->set_good_pkts_out(iq_stats.oflow.good_pkts_out);
-                input_stats->mutable_oflow_fifo_stats()->set_errored_pkts_in(iq_stats.oflow.errored_pkts_in);
-                input_stats->mutable_oflow_fifo_stats()->set_fifo_depth(iq_stats.oflow.fifo_depth);
-                input_stats->mutable_oflow_fifo_stats()->set_max_fifo_depth(iq_stats.oflow.max_fifo_depth);
-                input_stats->set_buffer_occupancy(iq_stats.buffer_occupancy);
-                input_stats->set_peak_occupancy(iq_stats.peak_occupancy);
-            }
-        }
-
-        for (unsigned i = 0; i < HAL_ARRAY_SIZE(oqs[0]); i++) {
-            if (oqs[port][i].valid) {
-                ret = capri_tm_get_oq_stats(port, oqs[port][i].oq, &oq_stats);
-                if (ret != HAL_RET_OK) {
-                    HAL_TRACE_ERR("Failed to get oq stats for port {} queue {} ret {}",
-                                  port, oqs[port][i].oq, ret);
-                    // Continue
-                    if (first_err_ret != HAL_RET_OK) {
-                        first_err_ret = ret;
-                    }
-                }
-                auto output_stats = q_stats->add_output_queue_stats();
-                output_stats->set_output_queue_idx(oqs[port][i].oq);
-                output_stats->set_queue_depth(oq_stats.queue_depth);
-            }
+        ret = qos_class_pd_populate_qos_queue_stats(port, iqs[port], 
+                                                    oqs[port], q_stats);
+        if (first_err_ret == HAL_RET_OK) {
+            first_err_ret = ret;
         }
     }
     return first_err_ret;
+}
+
+hal_ret_t
+qos_class_pd_get_queue_stats (tm_port_t port,
+                              qos::QosClassQueueStats *q_stats)
+{
+    pd_qos_iq_t iqs[HAL_PD_QOS_MAX_IQS] = {};
+    pd_qos_oq_t oqs[HAL_PD_QOS_MAX_OQS] = {};
+    uint32_t    num_iqs = 0, num_oqs = 0;
+
+    num_iqs = capri_tm_get_num_iqs_for_port(port);
+    num_oqs = capri_tm_get_num_oqs_for_port(port);
+
+    for (unsigned i = 0; i < num_iqs; i++) {
+        iqs[i].valid = true;
+        iqs[i].iq = i;
+    }
+
+    for (unsigned i = 0; i < num_oqs; i++) {
+        oqs[i].valid = true;
+        oqs[i].oq = i;
+    }
+    
+    return qos_class_pd_populate_qos_queue_stats(port, iqs, 
+                                                 oqs, q_stats);
 }
 
 // ----------------------------------------------------------------------------

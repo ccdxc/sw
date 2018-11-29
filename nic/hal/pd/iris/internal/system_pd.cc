@@ -790,7 +790,7 @@ pd_pb_stats_get (pd_func_args_t *pd_func_args)
             HAL_TRACE_ERR("Failed to get pb debug stats for port {} ret {}",
                           port, ret);
             // Continue
-            if (first_err_ret != HAL_RET_OK) {
+            if (first_err_ret == HAL_RET_OK) {
                 first_err_ret = ret;
             }
         }
@@ -826,6 +826,12 @@ pd_pb_stats_get (pd_func_args_t *pd_func_args)
         port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts()->mutable_entry(4)->set_count(debug_stats.oflow_fifo_stats.drop_counts.write_buffer_full_drop_count);
         port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts()->add_entry()->set_type(sys::OflowFifoDropType::CONTROL_FIFO_FULL_DROP);
         port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts()->mutable_entry(5)->set_count(debug_stats.oflow_fifo_stats.drop_counts.control_fifo_full_drop_count);
+
+        ret = qos_class_pd_get_queue_stats(port, 
+                                           port_stats->mutable_qos_queue_stats());
+        if (first_err_ret == HAL_RET_OK) {
+            first_err_ret = ret;
+        }
     }
 
     return first_err_ret;
