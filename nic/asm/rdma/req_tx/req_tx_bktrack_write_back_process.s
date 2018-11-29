@@ -20,9 +20,9 @@ struct sqcb0_t d;
 .align
 req_tx_bktrack_write_back_process:
 
-     tblwr         d.busy, CAPRI_KEY_FIELD(IN_P, busy)
-     //seq           c1, k.args.release_cb1_busy, 1
-     //tblwr.c1      d.cb1_busy, 0
+     bbeq          CAPRI_KEY_FIELD(IN_P, drop_phv), 1, end
+     tblwr         d.busy, 0 // Branch Delay Slot
+
      tblwr         d.num_sges, K_NUM_SGES
      tblwr         d.in_progress, CAPRI_KEY_FIELD(IN_P, in_progress)
      tblwr         d.bktrack_in_progress, CAPRI_KEY_FIELD(IN_P, bktrack_in_progress)
@@ -44,13 +44,11 @@ update_spec_cindex:
  
      // Set speculative cindex to next cindex so that speculative wqe 
      // processing can take place after backtrack 
-     tblwr         SPEC_SQ_C_INDEX, SQ_C_INDEX
      bbeq          CAPRI_KEY_FIELD(IN_P, in_progress), 0, end
-     CAPRI_SET_TABLE_0_VALID(0) // Branch Delay Slot
+     tblwr         SPEC_SQ_C_INDEX, SQ_C_INDEX // Branch Delay Slot
 
      tblmincri     SPEC_SQ_C_INDEX,  d.log_num_wqes, 1
-     phvwr  p.common.p4_intr_global_drop, 1
 
 end:
-     nop.e
-     nop
+     phvwr.e  p.common.p4_intr_global_drop, 1
+     CAPRI_SET_TABLE_0_VALID(0)

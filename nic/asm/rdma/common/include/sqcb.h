@@ -200,7 +200,7 @@ struct sqcb2_t {
     err_retry_ctr                  : 4; // RW S1 (WO RXDMA)
     rnr_retry_ctr                  : 4; // RW S1 (WO RXDMA)
     rnr_timeout                    : 8; // RW S1 (WO RXDMA)
-    in_progress                    : 1; // RW S5
+    busy                           : 1; // RW S1, WO S3-7
     need_credits                   : 1; // RW S5
     timer_on                       : 1; // RW S5
     local_ack_timeout              : 5; // RO S5

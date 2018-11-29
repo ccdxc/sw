@@ -65,12 +65,10 @@ req_tx_bktrack_sqcb2_write_back_process:
      tblwr          d.{rrq_pindex, rrq_cindex}, 0
  
      tblwr          d.need_credits, 0
-     tblwr          d.in_progress, CAPRI_KEY_FIELD(IN_P, in_progress)
 
      // Update exp_rsp_psn to be one less than rexmit_psn
      sub            r3, d.rexmit_psn, 1
      tblwr          d.exp_rsp_psn, r3
-     CAPRI_SET_TABLE_1_VALID(0)
 
      // Finally, clear bktrack_in_progress
      bbeq           K_BKTRACK_IN_PROGRESS, 1, exit
@@ -78,5 +76,5 @@ req_tx_bktrack_sqcb2_write_back_process:
      memwr.b        r2, 0
 
 exit:
-     nop.e
-     nop
+     tblwr.e         d.busy, 0
+     CAPRI_SET_TABLE_1_VALID(0)

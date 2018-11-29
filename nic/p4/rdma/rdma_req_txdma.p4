@@ -339,7 +339,8 @@ header_type req_tx_sqcb_write_back_info_t {
         rate_enforce_failed              :    1;
         non_packet_wqe                   :    1;
         credit_check_failed              :    1;
-        rsvd                             :    5;
+        drop_phv                         :    1;
+        rsvd                             :    4;
         op_info                          :   64;
     }
 }
@@ -367,7 +368,8 @@ header_type req_tx_sqcb_write_back_info_rd_t {
         rate_enforce_failed              :    1;
         non_packet_wqe                   :    1;
         credit_check_failed              :    1;
-        rsvd                             :    5;
+        drop_phv                         :    1;
+        rsvd                             :    4;
         op_rd_read_len                   :   32;
         op_rd_log_pmtu                   :    5;
         op_rd_pad                        :   27;
@@ -397,7 +399,8 @@ header_type req_tx_sqcb_write_back_info_send_wr_t {
         rate_enforce_failed              :    1;
         non_packet_wqe                   :    1;
         credit_check_failed              :    1;
-        rsvd                             :    5;
+        drop_phv                         :    1;
+        rsvd                             :    4;
         op_send_wr_imm_data_or_inv_key   :   32;
         op_send_wr_ah_handle             :   32;
     }
@@ -1279,6 +1282,7 @@ action req_tx_bktrack_write_back_process_s2 () {
     modify_field(t0_s2s_sqcb_write_back_info_scr.rate_enforce_failed, t0_s2s_sqcb_write_back_info.rate_enforce_failed);
     modify_field(t0_s2s_sqcb_write_back_info_scr.non_packet_wqe, t0_s2s_sqcb_write_back_info.non_packet_wqe);
     modify_field(t0_s2s_sqcb_write_back_info_scr.credit_check_failed, t0_s2s_sqcb_write_back_info.credit_check_failed);
+    modify_field(t0_s2s_sqcb_write_back_info_scr.drop_phv, t0_s2s_sqcb_write_back_info.drop_phv);
     modify_field(t0_s2s_sqcb_write_back_info_scr.rsvd, t0_s2s_sqcb_write_back_info.rsvd);
     modify_field(t0_s2s_sqcb_write_back_info_scr.op_info, t0_s2s_sqcb_write_back_info.op_info);
 
@@ -1319,6 +1323,7 @@ action req_tx_bktrack_write_back_process_s3 () {
     modify_field(t0_s2s_sqcb_write_back_info_scr.rate_enforce_failed, t0_s2s_sqcb_write_back_info.rate_enforce_failed);
     modify_field(t0_s2s_sqcb_write_back_info_scr.non_packet_wqe, t0_s2s_sqcb_write_back_info.non_packet_wqe);
     modify_field(t0_s2s_sqcb_write_back_info_scr.credit_check_failed, t0_s2s_sqcb_write_back_info.credit_check_failed);
+    modify_field(t0_s2s_sqcb_write_back_info_scr.drop_phv, t0_s2s_sqcb_write_back_info.drop_phv);
     modify_field(t0_s2s_sqcb_write_back_info_scr.rsvd, t0_s2s_sqcb_write_back_info.rsvd);
     modify_field(t0_s2s_sqcb_write_back_info_scr.op_info, t0_s2s_sqcb_write_back_info.op_info);
 
@@ -1358,6 +1363,7 @@ action req_tx_bktrack_write_back_process_s4 () {
     modify_field(t0_s2s_sqcb_write_back_info_scr.rate_enforce_failed, t0_s2s_sqcb_write_back_info.rate_enforce_failed);
     modify_field(t0_s2s_sqcb_write_back_info_scr.non_packet_wqe, t0_s2s_sqcb_write_back_info.non_packet_wqe);
     modify_field(t0_s2s_sqcb_write_back_info_scr.credit_check_failed, t0_s2s_sqcb_write_back_info.credit_check_failed);
+    modify_field(t0_s2s_sqcb_write_back_info_scr.drop_phv, t0_s2s_sqcb_write_back_info.drop_phv);
     modify_field(t0_s2s_sqcb_write_back_info_scr.rsvd, t0_s2s_sqcb_write_back_info.rsvd);
     modify_field(t0_s2s_sqcb_write_back_info_scr.op_info, t0_s2s_sqcb_write_back_info.op_info);
 
@@ -1397,6 +1403,7 @@ action req_tx_bktrack_write_back_process_s5 () {
     modify_field(t0_s2s_sqcb_write_back_info_scr.rate_enforce_failed, t0_s2s_sqcb_write_back_info.rate_enforce_failed);
     modify_field(t0_s2s_sqcb_write_back_info_scr.non_packet_wqe, t0_s2s_sqcb_write_back_info.non_packet_wqe);
     modify_field(t0_s2s_sqcb_write_back_info_scr.credit_check_failed, t0_s2s_sqcb_write_back_info.credit_check_failed);
+    modify_field(t0_s2s_sqcb_write_back_info_scr.drop_phv, t0_s2s_sqcb_write_back_info.drop_phv);
     modify_field(t0_s2s_sqcb_write_back_info_scr.rsvd, t0_s2s_sqcb_write_back_info.rsvd);
     modify_field(t0_s2s_sqcb_write_back_info_scr.op_info, t0_s2s_sqcb_write_back_info.op_info);
 
@@ -1437,6 +1444,7 @@ action req_tx_bktrack_write_back_process_s6 () {
     modify_field(t0_s2s_sqcb_write_back_info_scr.rate_enforce_failed, t0_s2s_sqcb_write_back_info.rate_enforce_failed);
     modify_field(t0_s2s_sqcb_write_back_info_scr.non_packet_wqe, t0_s2s_sqcb_write_back_info.non_packet_wqe);
     modify_field(t0_s2s_sqcb_write_back_info_scr.credit_check_failed, t0_s2s_sqcb_write_back_info.credit_check_failed);
+    modify_field(t0_s2s_sqcb_write_back_info_scr.drop_phv, t0_s2s_sqcb_write_back_info.drop_phv);
     modify_field(t0_s2s_sqcb_write_back_info_scr.rsvd, t0_s2s_sqcb_write_back_info.rsvd);
     modify_field(t0_s2s_sqcb_write_back_info_scr.op_info, t0_s2s_sqcb_write_back_info.op_info);
 
@@ -1477,6 +1485,7 @@ action req_tx_bktrack_write_back_process_s7 () {
     modify_field(t0_s2s_sqcb_write_back_info_scr.rate_enforce_failed, t0_s2s_sqcb_write_back_info.rate_enforce_failed);
     modify_field(t0_s2s_sqcb_write_back_info_scr.non_packet_wqe, t0_s2s_sqcb_write_back_info.non_packet_wqe);
     modify_field(t0_s2s_sqcb_write_back_info_scr.credit_check_failed, t0_s2s_sqcb_write_back_info.credit_check_failed);
+    modify_field(t0_s2s_sqcb_write_back_info_scr.drop_phv, t0_s2s_sqcb_write_back_info.drop_phv);
     modify_field(t0_s2s_sqcb_write_back_info_scr.rsvd, t0_s2s_sqcb_write_back_info.rsvd);
     modify_field(t0_s2s_sqcb_write_back_info_scr.op_info, t0_s2s_sqcb_write_back_info.op_info);
 
@@ -2132,6 +2141,7 @@ action req_tx_write_back_process () {
     modify_field(t2_s2s_sqcb_write_back_info_scr.rate_enforce_failed, t2_s2s_sqcb_write_back_info.rate_enforce_failed);
     modify_field(t2_s2s_sqcb_write_back_info_scr.non_packet_wqe, t2_s2s_sqcb_write_back_info.non_packet_wqe);
     modify_field(t2_s2s_sqcb_write_back_info_scr.credit_check_failed, t2_s2s_sqcb_write_back_info.credit_check_failed);
+    modify_field(t2_s2s_sqcb_write_back_info_scr.drop_phv, t2_s2s_sqcb_write_back_info.drop_phv);
     modify_field(t2_s2s_sqcb_write_back_info_scr.rsvd, t2_s2s_sqcb_write_back_info.rsvd);
 
 }
@@ -2183,6 +2193,7 @@ action req_tx_write_back_process_rd () {
     modify_field(t2_s2s_sqcb_write_back_info_rd_scr.rate_enforce_failed, t2_s2s_sqcb_write_back_info_rd.rate_enforce_failed);
     modify_field(t2_s2s_sqcb_write_back_info_rd_scr.non_packet_wqe, t2_s2s_sqcb_write_back_info_rd.non_packet_wqe);
     modify_field(t2_s2s_sqcb_write_back_info_rd_scr.credit_check_failed, t2_s2s_sqcb_write_back_info_rd.credit_check_failed);
+    modify_field(t2_s2s_sqcb_write_back_info_rd_scr.drop_phv, t2_s2s_sqcb_write_back_info_rd.drop_phv);
     modify_field(t2_s2s_sqcb_write_back_info_rd_scr.rsvd, t2_s2s_sqcb_write_back_info_rd.rsvd);
     modify_field(t2_s2s_sqcb_write_back_info_rd_scr.op_rd_read_len, t2_s2s_sqcb_write_back_info_rd.op_rd_read_len);
     modify_field(t2_s2s_sqcb_write_back_info_rd_scr.op_rd_log_pmtu, t2_s2s_sqcb_write_back_info_rd.op_rd_log_pmtu);
@@ -2242,6 +2253,8 @@ action req_tx_write_back_process_send_wr () {
                  t2_s2s_sqcb_write_back_info_send_wr.non_packet_wqe);
     modify_field(t2_s2s_sqcb_write_back_info_send_wr_scr.credit_check_failed,
                  t2_s2s_sqcb_write_back_info_send_wr.credit_check_failed);
+    modify_field(t2_s2s_sqcb_write_back_info_send_wr_scr.drop_phv,
+                 t2_s2s_sqcb_write_back_info_send_wr.drop_phv);
     modify_field(t2_s2s_sqcb_write_back_info_send_wr_scr.rsvd,
                  t2_s2s_sqcb_write_back_info_send_wr.rsvd);
     modify_field(t2_s2s_sqcb_write_back_info_send_wr_scr.op_send_wr_imm_data_or_inv_key,

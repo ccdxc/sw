@@ -6,7 +6,7 @@ struct req_tx_s1_t0_k k;
 struct sqcb2_t d;
 
 #define SQ_BKTRACK_P t0_s2s_sq_bktrack_info
-#define SQCB_WRITE_BACK_P t2_s2s_sqcb_write_back_info
+#define SQCB_WRITE_BACK_P t0_s2s_sqcb_write_back_info
 
 #define TO_S2_BT_P to_s2_bt_info
 #define TO_S3_BT_P to_s3_bt_info
@@ -35,13 +35,17 @@ struct sqcb2_t d;
 
 .align
 req_tx_bktrack_sqcb2_process:
+    bbeq           d.busy, 1, exit
+
     // Infinite retries if retry_ctr is set to 7
     seq            c1, d.err_retry_ctr, 7 // Branch Delay Slot
     tblsub.!c1     d.err_retry_ctr, 1
 
     // Check err_retry_ctr for NAK (seq error), implicit NAK 
-    seq            c1, d.err_retry_ctr, 0 // Branch Delay Slot
+    seq            c1, d.err_retry_ctr, 0
     bcf            [c1], err_completion
+
+    tblwr          d.busy, 1
 
     phvwrpair CAPRI_PHV_FIELD(TO_S2_BT_P, rexmit_psn), d.rexmit_psn, \
               CAPRI_PHV_FIELD(TO_S3_BT_P, rexmit_psn), d.rexmit_psn
@@ -102,15 +106,14 @@ bktrack_sqpt:
     sll            r5, K_PT_BASE_ADDR, PT_BASE_ADDR_SHIFT
     add            r3, r5, r3, CAPRI_LOG_SIZEOF_U64
 
-    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqpt_process, r3)
-
-    nop.e
-    nop
+    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqpt_process, r3)
 
 err_completion:
-    phvwr   p.common.p4_intr_global_drop, 1
+    phvwr.e   p.common.p4_intr_global_drop, 1
     CAPRI_SET_TABLE_0_VALID(0)
-    nop.e
-    nop
 
-
+exit:
+    SQCB0_ADDR_GET(r1)
+    CAPRI_RESET_TABLE_0_ARG()
+    phvwr          CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, drop_phv), 1
+    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_write_back_process, r1)
