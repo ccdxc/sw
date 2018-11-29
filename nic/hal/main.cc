@@ -43,7 +43,6 @@
 #include "gen/hal/svc/endpoint_svc_gen.hpp"
 #include "gen/hal/svc/session_svc_gen.hpp"
 #include "gen/hal/svc/telemetry_svc_gen.hpp"
-#include "gen/hal/svc/tls_proxy_cb2_svc_gen.hpp"
 #include "gen/hal/svc/internal_svc_gen.hpp"
 #include "gen/hal/svc/nwsec_svc_gen.hpp"
 #include "gen/hal/svc/nat_svc_gen.hpp"
@@ -88,7 +87,6 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
     QOSServiceImpl           qos_svc;
     AclServiceImpl           acl_svc;
     TelemetryServiceImpl     telemetry_svc;
-    TlsProxyCbServiceImpl    tls_proxy_cb_svc;
     ProxyServiceImpl         proxy_svc;
     IpsecServiceImpl         ipsec_svc;
     CpuCbServiceImpl         cpucb_svc;
@@ -114,7 +112,6 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
         //server_builder->RegisterService(&ipsec_svc);
         server_builder->RegisterService(&cpucb_svc);
         server_builder->RegisterService(&tcp_proxy_svc);
-        server_builder->RegisterService(&tls_proxy_cb_svc);
         server_builder->RegisterService(&event_svc);
         server_builder->RegisterService(&accel_rgroup_svc);
         server_builder->RegisterService(&system_svc);

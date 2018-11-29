@@ -23,7 +23,6 @@
 #include "nic/hal/plugins/cfg/ipsec/ipsec.hpp"
 #include "nic/hal/plugins/cfg/l4lb/l4lb.hpp"
 #include "nic/hal/plugins/cfg/tcp_proxy/tcp_proxy.hpp"
-#include "nic/hal/plugins/cfg/tls_proxy/tls_proxy_cb2.hpp"
 #include "nic/hal/src/internal/cpucb.hpp"
 #include "nic/hal/src/internal/system.hpp"
 #include "nic/hal/src/internal/rawrcb.hpp"
@@ -962,6 +961,7 @@ pd_tlscb_get_args_init (pd_tlscb_get_args_t *args)
     return;
 }
 
+#if 0
 // tls_proxy_cb
 typedef struct pd_tls_proxy_cb_create_args_s {
     tls_proxy_cb_t            *tls_proxy_cb;
@@ -1006,6 +1006,8 @@ pd_tls_proxy_cb_get_args_init (pd_tls_proxy_cb_get_args_t *args)
     args->tls_proxy_cb = NULL;
     return;
 }
+
+#endif
 
 // tcpcb
 typedef struct pd_tcpcb_create_args_s {
@@ -3280,12 +3282,6 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_tlscb_update);
         PD_UNION_ARGS_FIELD(pd_tlscb_delete);
         PD_UNION_ARGS_FIELD(pd_tlscb_get);
-
-        // tlscb calls
-        PD_UNION_ARGS_FIELD(pd_tls_proxy_cb_create);
-        PD_UNION_ARGS_FIELD(pd_tls_proxy_cb_update);
-        PD_UNION_ARGS_FIELD(pd_tls_proxy_cb_delete);
-        PD_UNION_ARGS_FIELD(pd_tls_proxy_cb_get);
 
         // tcpcb calls
         PD_UNION_ARGS_FIELD(pd_tcpcb_create);

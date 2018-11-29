@@ -37,7 +37,6 @@ It is generated from these files:
 	table.proto
 	tcp_proxy.proto
 	telemetry.proto
-	tls_proxy_cb2.proto
 	types.proto
 	vrf.proto
 
@@ -1236,20 +1235,6 @@ It has these top-level messages:
 	MirrorSessionStats
 	MirrorSessionGetResponse
 	MirrorSessionGetResponseMsg
-	TlsProxyCbKeyHandle
-	TlsProxyCbSpec
-	TlsProxyCbRequestMsg
-	TlsProxyCbStatus
-	TlsProxyCbResponse
-	TlsProxyCbResponseMsg
-	TlsProxyCbDeleteRequest
-	TlsProxyCbDeleteRequestMsg
-	TlsProxyCbDeleteResponseMsg
-	TlsProxyCbGetRequest
-	TlsProxyCbGetRequestMsg
-	TlsProxyCbStats
-	TlsProxyCbGetResponse
-	TlsProxyCbGetResponseMsg
 	ObjectMeta
 	EncapInfo
 	IPAddress
