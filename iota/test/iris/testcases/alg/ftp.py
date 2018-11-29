@@ -30,10 +30,10 @@ def Trigger(tc):
 
     if tc.iterators.mode == 'active':
        api.Trigger_AddCommand(req, w2.node_name, w2.workload_name,
-                           "wget ftp://admin:root@%s/home/ftpdir/ftp.py --no-passive-ftp" % w1.ip_address)
+                           "wget ftp://admin:root@%s/ftp.py --no-passive-ftp" % w1.ip_address)
     else:
        api.Trigger_AddCommand(req, w2.node_name, w2.workload_name,
-                           "wget ftp://admin:root@%s/home/ftpdir/ftp.py " % w1.ip_address)
+                           "wget ftp://admin:root@%s/ftp.py " % w1.ip_address)
  
     api.Trigger_AddCommand(req, w2.node_name, w2.workload_name,
                            "ls -al ftp.py")

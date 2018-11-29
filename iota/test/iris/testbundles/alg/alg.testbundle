@@ -7,10 +7,10 @@ testcases:
         args    :
             type: local_only
 
-    #-   name    : ftp_Local_Workloads
-    #    testcase: testcases.alg.ftp
-    #    iterators:
-    #        type      : simple
-    #        mode      : [ active, passive ]
-    #    args    :
-    #        type: local_only
+    -   name    : ftp_Local_Workloads
+        testcase: testcases.alg.ftp
+        iterators:
+            type      : simple
+            mode      : [ active, passive ]
+        args    :
+            type: local_only

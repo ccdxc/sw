@@ -19,7 +19,11 @@
           "udp-drop": "30s",
           "icmp": "6s",
           "icmp-drop": "30s"
-        }
+        },
+        "enable-connection-tracking": true,
+        "enable-tcp-normalization": true,
+        "enable-ip-normalization": true,
+        "enable-icmp-normalization": true
       }
    }
    ]
