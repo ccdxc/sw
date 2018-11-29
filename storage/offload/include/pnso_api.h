@@ -109,7 +109,7 @@ typedef int32_t pnso_error_t;
 struct pnso_flat_buffer {
 	uint32_t len;
 	uint64_t buf;
-} __packed;
+};
 
 /**
  * struct pnso_buffer_list - describes a scatter/gather buffer list.
@@ -422,7 +422,7 @@ struct pnso_service_status {
 			struct pnso_buffer_list *sgl;
 		} dst;
 	} u;
-} __attribute__ ((__packed__));
+};
 
 /**
  * struct pnso_service_result - represents the result of the request upon
@@ -469,7 +469,7 @@ struct pnso_service {
 		struct pnso_checksum_desc chksum_desc;
 		struct pnso_decompaction_desc decompact_desc;
 	} u;
-} __attribute__ ((__packed__));
+};
 
 /**
  * struct pnso_service_request - represents an array of services that are to be
