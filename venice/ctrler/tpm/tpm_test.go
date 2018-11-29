@@ -180,6 +180,9 @@ func (m *mockMonitoringV1) Watch(ctx context.Context, options *api.ListWatchOpti
 func (m *mockMonitoringV1) TroubleshootingSession() telemetry.MonitoringV1TroubleshootingSessionInterface {
 	return nil
 }
+func (m *mockMonitoringV1) TechSupportRequest() telemetry.MonitoringV1TechSupportRequestInterface {
+	return nil
+}
 
 type mockClusterV1 struct {
 	mTnt cluster.ClusterV1TenantInterface

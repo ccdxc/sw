@@ -2040,8 +2040,8 @@ func (tsa *Tagent) deletePacketCaptureSession(pcSession *tsproto.MirrorSession) 
 	return err
 }
 
-// CreatePacketCaptureSession creates mirror session to enable packet capture
-func (tsa *Tagent) CreatePacketCaptureSession(pcSession *tsproto.MirrorSession) error {
+// CreateMirrorSession creates mirror session to enable packet capture
+func (tsa *Tagent) CreateMirrorSession(pcSession *tsproto.MirrorSession) error {
 	log.Debugf("Processing packet capture session create... {%+v}", pcSession.Name)
 	if pcSession.Name == "" {
 		log.Errorf("mirror session name is empty")
@@ -2071,8 +2071,8 @@ func (tsa *Tagent) CreatePacketCaptureSession(pcSession *tsproto.MirrorSession) 
 	return tsa.createUpdatePacketCaptureSession(pcSession, false)
 }
 
-// UpdatePacketCaptureSession updates mirror session
-func (tsa *Tagent) UpdatePacketCaptureSession(pcSession *tsproto.MirrorSession) error {
+// UpdateMirrorSession updates mirror session
+func (tsa *Tagent) UpdateMirrorSession(pcSession *tsproto.MirrorSession) error {
 	log.Debugf("Processing packet capture session update... %+v", pcSession.Name)
 	if pcSession.Name == "" {
 		log.Errorf("mirror session name is empty")
@@ -2094,8 +2094,8 @@ func (tsa *Tagent) UpdatePacketCaptureSession(pcSession *tsproto.MirrorSession) 
 	return nil
 }
 
-// DeletePacketCaptureSession deletes packet capture session.
-func (tsa *Tagent) DeletePacketCaptureSession(pcSession *tsproto.MirrorSession) error {
+// DeleteMirrorSession deletes packet capture session.
+func (tsa *Tagent) DeleteMirrorSession(pcSession *tsproto.MirrorSession) error {
 	log.Debugf("Processing packet capture session delete... %v", pcSession.Name)
 	_, err := tsa.findMirrorSession(pcSession.ObjectMeta)
 	if err != nil {
@@ -2105,8 +2105,8 @@ func (tsa *Tagent) DeletePacketCaptureSession(pcSession *tsproto.MirrorSession) 
 	return tsa.deletePacketCaptureSession(pcSession)
 }
 
-// GetPacketCaptureSession gets a mirror session
-func (tsa *Tagent) GetPacketCaptureSession(pcSession *tsproto.MirrorSession) *tsproto.MirrorSession {
+// GetMirrorSession gets a mirror session
+func (tsa *Tagent) GetMirrorSession(pcSession *tsproto.MirrorSession) *tsproto.MirrorSession {
 	log.Debugf("Processing packet capture session get... %v", pcSession)
 	if pcSession.Name == "" {
 		log.Errorf("mirror session name is empty")
@@ -2120,9 +2120,34 @@ func (tsa *Tagent) GetPacketCaptureSession(pcSession *tsproto.MirrorSession) *ts
 	return oldMs
 }
 
-// ListPacketCaptureSession lists all mirror sessions
-func (tsa *Tagent) ListPacketCaptureSession() []*tsproto.MirrorSession {
+// ListMirrorSession lists all mirror sessions
+func (tsa *Tagent) ListMirrorSession() []*tsproto.MirrorSession {
 	log.Debugf("Processing packet capture session list...")
 	//TODO
+	return nil
+}
+
+// CreateTechSupportRequest is not implemented
+func (tsa *Tagent) CreateTechSupportRequest(*tsproto.TechSupportRequest) error {
+	return errors.New("not implemented")
+}
+
+// UpdateTechSupportRequest is not implemented
+func (tsa *Tagent) UpdateTechSupportRequest(pcSession *tsproto.TechSupportRequest) error {
+	return errors.New("not implemented")
+}
+
+// DeleteTechSupportRequest is not implemented
+func (tsa *Tagent) DeleteTechSupportRequest(pcSession *tsproto.TechSupportRequest) error {
+	return errors.New("not implemented")
+}
+
+// GetTechSupportRequest is not implemented
+func (tsa *Tagent) GetTechSupportRequest(pcSession *tsproto.TechSupportRequest) *tsproto.TechSupportRequest {
+	return nil
+}
+
+// ListTechSupportRequest is not implemented
+func (tsa *Tagent) ListTechSupportRequest() []*tsproto.TechSupportRequest {
 	return nil
 }

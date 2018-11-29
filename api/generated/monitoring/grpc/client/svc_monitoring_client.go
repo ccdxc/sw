@@ -141,6 +141,20 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		).Endpoint()
 		lAutoAddStatsPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoAddStatsPolicy")(lAutoAddStatsPolicyEndpoint)
 	}
+	var lAutoAddTechSupportRequestEndpoint endpoint.Endpoint
+	{
+		lAutoAddTechSupportRequestEndpoint = grpctransport.NewClient(
+			conn,
+			"monitoring.MonitoringV1",
+			"AutoAddTechSupportRequest",
+			monitoring.EncodeGrpcReqTechSupportRequest,
+			monitoring.DecodeGrpcRespTechSupportRequest,
+			&monitoring.TechSupportRequest{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoAddTechSupportRequestEndpoint = trace.ClientEndPoint("MonitoringV1:AutoAddTechSupportRequest")(lAutoAddTechSupportRequestEndpoint)
+	}
 	var lAutoAddTroubleshootingSessionEndpoint endpoint.Endpoint
 	{
 		lAutoAddTroubleshootingSessionEndpoint = grpctransport.NewClient(
@@ -266,6 +280,20 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoDeleteStatsPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoDeleteStatsPolicy")(lAutoDeleteStatsPolicyEndpoint)
+	}
+	var lAutoDeleteTechSupportRequestEndpoint endpoint.Endpoint
+	{
+		lAutoDeleteTechSupportRequestEndpoint = grpctransport.NewClient(
+			conn,
+			"monitoring.MonitoringV1",
+			"AutoDeleteTechSupportRequest",
+			monitoring.EncodeGrpcReqTechSupportRequest,
+			monitoring.DecodeGrpcRespTechSupportRequest,
+			&monitoring.TechSupportRequest{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoDeleteTechSupportRequestEndpoint = trace.ClientEndPoint("MonitoringV1:AutoDeleteTechSupportRequest")(lAutoDeleteTechSupportRequestEndpoint)
 	}
 	var lAutoDeleteTroubleshootingSessionEndpoint endpoint.Endpoint
 	{
@@ -393,6 +421,20 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		).Endpoint()
 		lAutoGetStatsPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoGetStatsPolicy")(lAutoGetStatsPolicyEndpoint)
 	}
+	var lAutoGetTechSupportRequestEndpoint endpoint.Endpoint
+	{
+		lAutoGetTechSupportRequestEndpoint = grpctransport.NewClient(
+			conn,
+			"monitoring.MonitoringV1",
+			"AutoGetTechSupportRequest",
+			monitoring.EncodeGrpcReqTechSupportRequest,
+			monitoring.DecodeGrpcRespTechSupportRequest,
+			&monitoring.TechSupportRequest{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoGetTechSupportRequestEndpoint = trace.ClientEndPoint("MonitoringV1:AutoGetTechSupportRequest")(lAutoGetTechSupportRequestEndpoint)
+	}
 	var lAutoGetTroubleshootingSessionEndpoint endpoint.Endpoint
 	{
 		lAutoGetTroubleshootingSessionEndpoint = grpctransport.NewClient(
@@ -518,6 +560,20 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoListStatsPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoListStatsPolicy")(lAutoListStatsPolicyEndpoint)
+	}
+	var lAutoListTechSupportRequestEndpoint endpoint.Endpoint
+	{
+		lAutoListTechSupportRequestEndpoint = grpctransport.NewClient(
+			conn,
+			"monitoring.MonitoringV1",
+			"AutoListTechSupportRequest",
+			monitoring.EncodeGrpcReqListWatchOptions,
+			monitoring.DecodeGrpcRespTechSupportRequestList,
+			&monitoring.TechSupportRequestList{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoListTechSupportRequestEndpoint = trace.ClientEndPoint("MonitoringV1:AutoListTechSupportRequest")(lAutoListTechSupportRequestEndpoint)
 	}
 	var lAutoListTroubleshootingSessionEndpoint endpoint.Endpoint
 	{
@@ -645,6 +701,20 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		).Endpoint()
 		lAutoUpdateStatsPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoUpdateStatsPolicy")(lAutoUpdateStatsPolicyEndpoint)
 	}
+	var lAutoUpdateTechSupportRequestEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateTechSupportRequestEndpoint = grpctransport.NewClient(
+			conn,
+			"monitoring.MonitoringV1",
+			"AutoUpdateTechSupportRequest",
+			monitoring.EncodeGrpcReqTechSupportRequest,
+			monitoring.DecodeGrpcRespTechSupportRequest,
+			&monitoring.TechSupportRequest{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateTechSupportRequestEndpoint = trace.ClientEndPoint("MonitoringV1:AutoUpdateTechSupportRequest")(lAutoUpdateTechSupportRequestEndpoint)
+	}
 	var lAutoUpdateTroubleshootingSessionEndpoint endpoint.Endpoint
 	{
 		lAutoUpdateTroubleshootingSessionEndpoint = grpctransport.NewClient(
@@ -670,6 +740,7 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		AutoAddFwlogPolicyEndpoint:               lAutoAddFwlogPolicyEndpoint,
 		AutoAddMirrorSessionEndpoint:             lAutoAddMirrorSessionEndpoint,
 		AutoAddStatsPolicyEndpoint:               lAutoAddStatsPolicyEndpoint,
+		AutoAddTechSupportRequestEndpoint:        lAutoAddTechSupportRequestEndpoint,
 		AutoAddTroubleshootingSessionEndpoint:    lAutoAddTroubleshootingSessionEndpoint,
 		AutoDeleteAlertEndpoint:                  lAutoDeleteAlertEndpoint,
 		AutoDeleteAlertDestinationEndpoint:       lAutoDeleteAlertDestinationEndpoint,
@@ -679,6 +750,7 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		AutoDeleteFwlogPolicyEndpoint:            lAutoDeleteFwlogPolicyEndpoint,
 		AutoDeleteMirrorSessionEndpoint:          lAutoDeleteMirrorSessionEndpoint,
 		AutoDeleteStatsPolicyEndpoint:            lAutoDeleteStatsPolicyEndpoint,
+		AutoDeleteTechSupportRequestEndpoint:     lAutoDeleteTechSupportRequestEndpoint,
 		AutoDeleteTroubleshootingSessionEndpoint: lAutoDeleteTroubleshootingSessionEndpoint,
 		AutoGetAlertEndpoint:                     lAutoGetAlertEndpoint,
 		AutoGetAlertDestinationEndpoint:          lAutoGetAlertDestinationEndpoint,
@@ -688,6 +760,7 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		AutoGetFwlogPolicyEndpoint:               lAutoGetFwlogPolicyEndpoint,
 		AutoGetMirrorSessionEndpoint:             lAutoGetMirrorSessionEndpoint,
 		AutoGetStatsPolicyEndpoint:               lAutoGetStatsPolicyEndpoint,
+		AutoGetTechSupportRequestEndpoint:        lAutoGetTechSupportRequestEndpoint,
 		AutoGetTroubleshootingSessionEndpoint:    lAutoGetTroubleshootingSessionEndpoint,
 		AutoListAlertEndpoint:                    lAutoListAlertEndpoint,
 		AutoListAlertDestinationEndpoint:         lAutoListAlertDestinationEndpoint,
@@ -697,6 +770,7 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		AutoListFwlogPolicyEndpoint:              lAutoListFwlogPolicyEndpoint,
 		AutoListMirrorSessionEndpoint:            lAutoListMirrorSessionEndpoint,
 		AutoListStatsPolicyEndpoint:              lAutoListStatsPolicyEndpoint,
+		AutoListTechSupportRequestEndpoint:       lAutoListTechSupportRequestEndpoint,
 		AutoListTroubleshootingSessionEndpoint:   lAutoListTroubleshootingSessionEndpoint,
 		AutoUpdateAlertEndpoint:                  lAutoUpdateAlertEndpoint,
 		AutoUpdateAlertDestinationEndpoint:       lAutoUpdateAlertDestinationEndpoint,
@@ -706,6 +780,7 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		AutoUpdateFwlogPolicyEndpoint:            lAutoUpdateFwlogPolicyEndpoint,
 		AutoUpdateMirrorSessionEndpoint:          lAutoUpdateMirrorSessionEndpoint,
 		AutoUpdateStatsPolicyEndpoint:            lAutoUpdateStatsPolicyEndpoint,
+		AutoUpdateTechSupportRequestEndpoint:     lAutoUpdateTechSupportRequestEndpoint,
 		AutoUpdateTroubleshootingSessionEndpoint: lAutoUpdateTroubleshootingSessionEndpoint,
 	}
 }
@@ -2319,6 +2394,181 @@ func (a *restObjMonitoringV1TroubleshootingSession) Allowed(oper apiserver.APIOp
 	}
 }
 
+type grpcObjMonitoringV1TechSupportRequest struct {
+	logger log.Logger
+	client monitoring.ServiceMonitoringV1Client
+}
+
+func (a *grpcObjMonitoringV1TechSupportRequest) Create(ctx context.Context, in *monitoring.TechSupportRequest) (*monitoring.TechSupportRequest, error) {
+	a.logger.DebugLog("msg", "received call", "object", "TechSupportRequest", "oper", "create")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoAddTechSupportRequest(nctx, in)
+}
+
+func (a *grpcObjMonitoringV1TechSupportRequest) Update(ctx context.Context, in *monitoring.TechSupportRequest) (*monitoring.TechSupportRequest, error) {
+	a.logger.DebugLog("msg", "received call", "object", "TechSupportRequest", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateTechSupportRequest(nctx, in)
+}
+
+func (a *grpcObjMonitoringV1TechSupportRequest) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.TechSupportRequest, error) {
+	a.logger.DebugLog("msg", "received call", "object", "TechSupportRequest", "oper", "get")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := monitoring.TechSupportRequest{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoGetTechSupportRequest(nctx, &in)
+}
+
+func (a *grpcObjMonitoringV1TechSupportRequest) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.TechSupportRequest, error) {
+	a.logger.DebugLog("msg", "received call", "object", "TechSupportRequest", "oper", "delete")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := monitoring.TechSupportRequest{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoDeleteTechSupportRequest(nctx, &in)
+}
+
+func (a *grpcObjMonitoringV1TechSupportRequest) List(ctx context.Context, options *api.ListWatchOptions) ([]*monitoring.TechSupportRequest, error) {
+	a.logger.DebugLog("msg", "received call", "object", "TechSupportRequest", "oper", "list")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	r, err := a.client.AutoListTechSupportRequest(nctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *grpcObjMonitoringV1TechSupportRequest) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "TechSupportRequest", "oper", "WatchOper")
+	nctx := addVersion(ctx, "v1")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	stream, err := a.client.AutoWatchTechSupportRequest(nctx, options)
+	if err != nil {
+		return nil, err
+	}
+	wstream := stream.(monitoring.MonitoringV1_AutoWatchTechSupportRequestClient)
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			r, err := wstream.Recv()
+			if err != nil {
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				close(lw.OutCh)
+				return
+			}
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
+	lw.Run()
+	return lw, nil
+}
+
+func (a *grpcObjMonitoringV1TechSupportRequest) Allowed(oper apiserver.APIOperType) bool {
+	return true
+}
+
+type restObjMonitoringV1TechSupportRequest struct {
+	endpoints monitoring.EndpointsMonitoringV1RestClient
+	instance  string
+}
+
+func (a *restObjMonitoringV1TechSupportRequest) Create(ctx context.Context, in *monitoring.TechSupportRequest) (*monitoring.TechSupportRequest, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoAddTechSupportRequest(ctx, in)
+}
+
+func (a *restObjMonitoringV1TechSupportRequest) Update(ctx context.Context, in *monitoring.TechSupportRequest) (*monitoring.TechSupportRequest, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoUpdateTechSupportRequest(ctx, in)
+}
+
+func (a *restObjMonitoringV1TechSupportRequest) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.TechSupportRequest, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := monitoring.TechSupportRequest{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoGetTechSupportRequest(ctx, &in)
+}
+
+func (a *restObjMonitoringV1TechSupportRequest) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.TechSupportRequest, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := monitoring.TechSupportRequest{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoDeleteTechSupportRequest(ctx, &in)
+}
+
+func (a *restObjMonitoringV1TechSupportRequest) List(ctx context.Context, options *api.ListWatchOptions) ([]*monitoring.TechSupportRequest, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+
+	r, err := a.endpoints.AutoListTechSupportRequest(ctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *restObjMonitoringV1TechSupportRequest) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoWatchTechSupportRequest(ctx, options)
+}
+
+func (a *restObjMonitoringV1TechSupportRequest) Allowed(oper apiserver.APIOperType) bool {
+	switch oper {
+	case apiserver.CreateOper:
+		return true
+	case apiserver.UpdateOper:
+		return true
+	case apiserver.GetOper:
+		return true
+	case apiserver.DeleteOper:
+		return true
+	case apiserver.ListOper:
+		return true
+	case apiserver.WatchOper:
+		return false
+	default:
+		return false
+	}
+}
+
 type crudClientMonitoringV1 struct {
 	logger log.Logger
 	client monitoring.ServiceMonitoringV1Client
@@ -2332,6 +2582,7 @@ type crudClientMonitoringV1 struct {
 	grpcAlertDestination       monitoring.MonitoringV1AlertDestinationInterface
 	grpcMirrorSession          monitoring.MonitoringV1MirrorSessionInterface
 	grpcTroubleshootingSession monitoring.MonitoringV1TroubleshootingSessionInterface
+	grpcTechSupportRequest     monitoring.MonitoringV1TechSupportRequestInterface
 }
 
 // NewGrpcCrudClientMonitoringV1 creates a GRPC client for the service
@@ -2350,6 +2601,7 @@ func NewGrpcCrudClientMonitoringV1(conn *grpc.ClientConn, logger log.Logger) mon
 		grpcAlertDestination:       &grpcObjMonitoringV1AlertDestination{client: client, logger: logger},
 		grpcMirrorSession:          &grpcObjMonitoringV1MirrorSession{client: client, logger: logger},
 		grpcTroubleshootingSession: &grpcObjMonitoringV1TroubleshootingSession{client: client, logger: logger},
+		grpcTechSupportRequest:     &grpcObjMonitoringV1TechSupportRequest{client: client, logger: logger},
 	}
 }
 
@@ -2387,6 +2639,10 @@ func (a *crudClientMonitoringV1) MirrorSession() monitoring.MonitoringV1MirrorSe
 
 func (a *crudClientMonitoringV1) TroubleshootingSession() monitoring.MonitoringV1TroubleshootingSessionInterface {
 	return a.grpcTroubleshootingSession
+}
+
+func (a *crudClientMonitoringV1) TechSupportRequest() monitoring.MonitoringV1TechSupportRequestInterface {
+	return a.grpcTechSupportRequest
 }
 
 func (a *crudClientMonitoringV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
@@ -2441,6 +2697,7 @@ type crudRestClientMonitoringV1 struct {
 	restAlertDestination       monitoring.MonitoringV1AlertDestinationInterface
 	restMirrorSession          monitoring.MonitoringV1MirrorSessionInterface
 	restTroubleshootingSession monitoring.MonitoringV1TroubleshootingSessionInterface
+	restTechSupportRequest     monitoring.MonitoringV1TechSupportRequestInterface
 }
 
 // NewRestCrudClientMonitoringV1 creates a REST client for the service.
@@ -2460,6 +2717,7 @@ func NewRestCrudClientMonitoringV1(url string) monitoring.MonitoringV1Interface 
 		restAlertDestination:       &restObjMonitoringV1AlertDestination{endpoints: endpoints, instance: url},
 		restMirrorSession:          &restObjMonitoringV1MirrorSession{endpoints: endpoints, instance: url},
 		restTroubleshootingSession: &restObjMonitoringV1TroubleshootingSession{endpoints: endpoints, instance: url},
+		restTechSupportRequest:     &restObjMonitoringV1TechSupportRequest{endpoints: endpoints, instance: url},
 	}
 }
 
@@ -2480,6 +2738,7 @@ func NewStagedRestCrudClientMonitoringV1(url string, id string) monitoring.Monit
 		restAlertDestination:       &restObjMonitoringV1AlertDestination{endpoints: endpoints, instance: url},
 		restMirrorSession:          &restObjMonitoringV1MirrorSession{endpoints: endpoints, instance: url},
 		restTroubleshootingSession: &restObjMonitoringV1TroubleshootingSession{endpoints: endpoints, instance: url},
+		restTechSupportRequest:     &restObjMonitoringV1TechSupportRequest{endpoints: endpoints, instance: url},
 	}
 }
 
@@ -2517,6 +2776,10 @@ func (a *crudRestClientMonitoringV1) MirrorSession() monitoring.MonitoringV1Mirr
 
 func (a *crudRestClientMonitoringV1) TroubleshootingSession() monitoring.MonitoringV1TroubleshootingSessionInterface {
 	return a.restTroubleshootingSession
+}
+
+func (a *crudRestClientMonitoringV1) TechSupportRequest() monitoring.MonitoringV1TechSupportRequestInterface {
+	return a.restTechSupportRequest
 }
 
 func (a *crudRestClientMonitoringV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {

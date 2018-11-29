@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package techsupport;
+
+// ActionItem defines a action to be performed for tech support
+message ActionItem {
+  enum ActionMethod {
+    ShellCmd    = 0;
+    DelphiObj   = 1;
+    RESTCall    = 2;
+    CollectFile = 3;
+  }
+  string            Name            = 1;
+  // Method defines the kind of action to be taken for this entry
+  ActionMethod      Method          = 2;
+  // Labels associated with this item. These labels are used to match against the selector specified
+  //  in the tech support collection request.
+  repeated string   Labels          = 3;
+  // Actions are selected for execution depending on the verbosity level specified in the techsupport
+  //  collection request. This is the Minimum verbosity level at which this action will be selected
+  int32             MinVerbosity    = 4;
+  // All actions are executed in parallel except if the Group parameter is not empty. In that case
+  //  actions with the same Group specified are executed sequentially in the order they are specified.
+  string            Group           = 5;
+  // Command to execute. This specifies the shell command to execute when method is ShellCmd, URI when
+  //  method is RESTCall and unused for other methods.
+  string            Command         = 6;
+  // Arguments needed to execute this action. The format of the arguments is specific to the method
+  //  specified.
+  repeated string   Arguments       = 7;
+  // Number of retries when action fails
+  int32             Retries         = 8;
+  // Execution of the action will allow for Timeout interval specified. If the action does not
+  //  complete within the specified interval then the action is deemed as failed. Value is specified
+  //  as a duration string. Eg. 10s, 2m
+  string            Timeout         = 9;
+  // Default is 0, but when a non-zero value is specified, this action will be repeated
+  //  specified number of times.
+  int32             RepeatCnt       = 10;
+  // This parameter is used in conjunction with the RepeatCnt parameter. This specifies the time interval
+  //  between repeated executions of this action. Value is specified as a duration string. Eg. 10s, 2m
+  string            RepeatIntvl     = 11;
+}
+
+message TechSupportConfig {
+  enum RetentionPolicy {
+    DelOnExport = 0;
+    Manual      = 1;
+  }
+  string              Name            = 1;
+  // Filesystem root where all tech support collected files will be saved
+  string              FileSystemRoot  = 2;
+  // REST URI to listen at. If empty REST Service is not started
+  string              RESTUri         = 4;
+  // gRPC port to run the gRPC service. If empty gRPC service is not started
+  string              GRPCPort	      = 5;
+  RetentionPolicy     Retention       = 6;
+  string              DefaultTimeout  = 7;
+  int32               DefaultRetries  = 8;
+  // PrepActions are actions for Prep phase
+  repeated ActionItem PrepActions     = 9;
+  // CollectActions are actions for Collection phase
+  repeated ActionItem CollectActions  = 10;
+  // ExportActions are actions for Export phase
+  repeated ActionItem ExportActions   = 11;
+}

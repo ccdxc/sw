@@ -64,12 +64,14 @@
           "AlertPolicy",
           "AlertDestination",
           "MirrorSession",
-          "TroubleshootingSession"
+          "TroubleshootingSession",
+          "TechSupportRequest"
         ]
       }
     },
     "Files": [
       "svc_monitoring.proto",
+      "techsupport.proto",
       "telemetry.proto",
       "troubleshooting.proto"
     ]

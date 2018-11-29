@@ -1,0 +1,79 @@
+// TechSupport
+
+syntax = "proto3";
+
+package tsproto;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+message DestinationSpec {
+  enum Protocol {
+    Local   = 0;
+    SCP     = 1;
+    Venice  = 2;
+    HTTPS   = 3;
+  }
+  Protocol        Proto           = 1 [(gogoproto.jsontag) = "proto,omitempty"];
+  string          Path            = 2 [(gogoproto.jsontag) = "path,omitempty"];
+  string          Destination    = 3 [(gogoproto.jsontag) = "destination,omitempty"];
+}
+
+message TechSupportRequestSpec {
+  string                    InstanceId    = 1 [(gogoproto.jsontag) = "instance-id,omitempty"];
+  repeated string           Labels        = 2 [(gogoproto.jsontag) = "labels,omitempty"];
+  repeated DestinationSpec  Destinations  = 3 [(gogoproto.jsontag) = "destinations,omitempty"];
+  int32 		            Verbosity     = 4 [(gogoproto.jsontag) = "verbosity,omitempty"];
+}
+
+message TechSupportRequestStatus {
+  enum ActionStatus {
+    Queued      = 0;
+    Scheduled   = 1;
+    InProgress  = 2;
+    Failed      = 3;
+    Completed   = 4;
+  }
+  ActionStatus      Status        = 1 [(gogoproto.jsontag) = "status,omitempty"];
+  api.Timestamp     StartTime     = 2 [(gogoproto.jsontag) = "start-time,omitempty"];
+  api.Timestamp     EndTime       = 3 [(gogoproto.jsontag) = "end-time,omitempty"];
+  string            URI           = 4 [(gogoproto.jsontag) = "uri,omitempty"];
+}
+
+message TechSupportRequest {
+  api.TypeMeta              T       = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+  api.ObjectMeta            O       = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+  TechSupportRequestSpec    Spec    = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+  TechSupportRequestStatus  Status  = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+message TechSupportRequestEvent {
+  api.EventType       EventType = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+  TechSupportRequest  Request   = 2 [(gogoproto.jsontag) = "request,omitempty"];
+}
+
+message TechSupportRequestEventList {
+  repeated TechSupportRequestEvent Events = 1 [(gogoproto.jsontag) = "events,omitempty"];
+}
+
+message TechSupportRequestList {
+  repeated TechSupportRequest Requests = 1 [(gogoproto.jsontag) = "requests,omitempty"];
+}
+
+message UpdateResponse {
+  string Status = 1 [(gogoproto.jsontag) = "status,omitempty"];
+}
+
+service TechSupportApi {
+  option(venice.naplesRestService) = {
+      Object: "TechSupportRequest",
+      Method: ["get", "list", "post", "put", "delete"],
+      Pattern: "/{ObjectMeta.Name}/{Spec.InstanceId}"
+  };
+
+  rpc WatchTechSupportRequests (api.ListWatchOptions) returns (stream TechSupportRequestEventList) {};
+  rpc UpdateResult(TechSupportRequest) returns (UpdateResponse) {};
+}

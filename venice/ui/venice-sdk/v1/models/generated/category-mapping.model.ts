@@ -15,6 +15,7 @@ import { MonitoringAlert } from './monitoring';
 import { MonitoringAlertPolicy } from './monitoring';
 import { MonitoringAlertDestination } from './monitoring';
 import { MonitoringMirrorSession } from './monitoring';
+import { MonitoringTechSupportRequest } from './monitoring';
 import { EventsEvent } from './events';
 import { NetworkNetwork } from './network';
 import { NetworkService } from './network';
@@ -51,6 +52,7 @@ export const CategoryMapping  = {
     "AlertPolicy" : new MonitoringAlertPolicy(),
     "AlertDestination" : new MonitoringAlertDestination(),
     "MirrorSession" : new MonitoringMirrorSession(),
+    "TechSupportRequest" : new MonitoringTechSupportRequest(),
     "Event" : new EventsEvent(),
   },
   "Network" : {

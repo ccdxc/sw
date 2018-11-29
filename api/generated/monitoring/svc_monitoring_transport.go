@@ -33,6 +33,7 @@ type grpcServerMonitoringV1 struct {
 	AutoAddFwlogPolicyHdlr               grpctransport.Handler
 	AutoAddMirrorSessionHdlr             grpctransport.Handler
 	AutoAddStatsPolicyHdlr               grpctransport.Handler
+	AutoAddTechSupportRequestHdlr        grpctransport.Handler
 	AutoAddTroubleshootingSessionHdlr    grpctransport.Handler
 	AutoDeleteAlertHdlr                  grpctransport.Handler
 	AutoDeleteAlertDestinationHdlr       grpctransport.Handler
@@ -42,6 +43,7 @@ type grpcServerMonitoringV1 struct {
 	AutoDeleteFwlogPolicyHdlr            grpctransport.Handler
 	AutoDeleteMirrorSessionHdlr          grpctransport.Handler
 	AutoDeleteStatsPolicyHdlr            grpctransport.Handler
+	AutoDeleteTechSupportRequestHdlr     grpctransport.Handler
 	AutoDeleteTroubleshootingSessionHdlr grpctransport.Handler
 	AutoGetAlertHdlr                     grpctransport.Handler
 	AutoGetAlertDestinationHdlr          grpctransport.Handler
@@ -51,6 +53,7 @@ type grpcServerMonitoringV1 struct {
 	AutoGetFwlogPolicyHdlr               grpctransport.Handler
 	AutoGetMirrorSessionHdlr             grpctransport.Handler
 	AutoGetStatsPolicyHdlr               grpctransport.Handler
+	AutoGetTechSupportRequestHdlr        grpctransport.Handler
 	AutoGetTroubleshootingSessionHdlr    grpctransport.Handler
 	AutoListAlertHdlr                    grpctransport.Handler
 	AutoListAlertDestinationHdlr         grpctransport.Handler
@@ -60,6 +63,7 @@ type grpcServerMonitoringV1 struct {
 	AutoListFwlogPolicyHdlr              grpctransport.Handler
 	AutoListMirrorSessionHdlr            grpctransport.Handler
 	AutoListStatsPolicyHdlr              grpctransport.Handler
+	AutoListTechSupportRequestHdlr       grpctransport.Handler
 	AutoListTroubleshootingSessionHdlr   grpctransport.Handler
 	AutoUpdateAlertHdlr                  grpctransport.Handler
 	AutoUpdateAlertDestinationHdlr       grpctransport.Handler
@@ -69,6 +73,7 @@ type grpcServerMonitoringV1 struct {
 	AutoUpdateFwlogPolicyHdlr            grpctransport.Handler
 	AutoUpdateMirrorSessionHdlr          grpctransport.Handler
 	AutoUpdateStatsPolicyHdlr            grpctransport.Handler
+	AutoUpdateTechSupportRequestHdlr     grpctransport.Handler
 	AutoUpdateTroubleshootingSessionHdlr grpctransport.Handler
 }
 
@@ -136,6 +141,13 @@ func MakeGRPCServerMonitoringV1(ctx context.Context, endpoints EndpointsMonitori
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddStatsPolicy", logger)))...,
 		),
 
+		AutoAddTechSupportRequestHdlr: grpctransport.NewServer(
+			endpoints.AutoAddTechSupportRequestEndpoint,
+			DecodeGrpcReqTechSupportRequest,
+			EncodeGrpcRespTechSupportRequest,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddTechSupportRequest", logger)))...,
+		),
+
 		AutoAddTroubleshootingSessionHdlr: grpctransport.NewServer(
 			endpoints.AutoAddTroubleshootingSessionEndpoint,
 			DecodeGrpcReqTroubleshootingSession,
@@ -197,6 +209,13 @@ func MakeGRPCServerMonitoringV1(ctx context.Context, endpoints EndpointsMonitori
 			DecodeGrpcReqStatsPolicy,
 			EncodeGrpcRespStatsPolicy,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteStatsPolicy", logger)))...,
+		),
+
+		AutoDeleteTechSupportRequestHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteTechSupportRequestEndpoint,
+			DecodeGrpcReqTechSupportRequest,
+			EncodeGrpcRespTechSupportRequest,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteTechSupportRequest", logger)))...,
 		),
 
 		AutoDeleteTroubleshootingSessionHdlr: grpctransport.NewServer(
@@ -262,6 +281,13 @@ func MakeGRPCServerMonitoringV1(ctx context.Context, endpoints EndpointsMonitori
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetStatsPolicy", logger)))...,
 		),
 
+		AutoGetTechSupportRequestHdlr: grpctransport.NewServer(
+			endpoints.AutoGetTechSupportRequestEndpoint,
+			DecodeGrpcReqTechSupportRequest,
+			EncodeGrpcRespTechSupportRequest,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetTechSupportRequest", logger)))...,
+		),
+
 		AutoGetTroubleshootingSessionHdlr: grpctransport.NewServer(
 			endpoints.AutoGetTroubleshootingSessionEndpoint,
 			DecodeGrpcReqTroubleshootingSession,
@@ -325,6 +351,13 @@ func MakeGRPCServerMonitoringV1(ctx context.Context, endpoints EndpointsMonitori
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListStatsPolicy", logger)))...,
 		),
 
+		AutoListTechSupportRequestHdlr: grpctransport.NewServer(
+			endpoints.AutoListTechSupportRequestEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespTechSupportRequestList,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListTechSupportRequest", logger)))...,
+		),
+
 		AutoListTroubleshootingSessionHdlr: grpctransport.NewServer(
 			endpoints.AutoListTroubleshootingSessionEndpoint,
 			DecodeGrpcReqListWatchOptions,
@@ -386,6 +419,13 @@ func MakeGRPCServerMonitoringV1(ctx context.Context, endpoints EndpointsMonitori
 			DecodeGrpcReqStatsPolicy,
 			EncodeGrpcRespStatsPolicy,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateStatsPolicy", logger)))...,
+		),
+
+		AutoUpdateTechSupportRequestHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateTechSupportRequestEndpoint,
+			DecodeGrpcReqTechSupportRequest,
+			EncodeGrpcRespTechSupportRequest,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateTechSupportRequest", logger)))...,
 		),
 
 		AutoUpdateTroubleshootingSessionHdlr: grpctransport.NewServer(
@@ -537,6 +577,24 @@ func decodeHTTPrespMonitoringV1AutoAddStatsPolicy(_ context.Context, r *http.Res
 		return nil, errorDecoder(r)
 	}
 	var resp StatsPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerMonitoringV1) AutoAddTechSupportRequest(ctx oldcontext.Context, req *TechSupportRequest) (*TechSupportRequest, error) {
+	_, resp, err := s.AutoAddTechSupportRequestHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respMonitoringV1AutoAddTechSupportRequest).V
+	return &r, resp.(respMonitoringV1AutoAddTechSupportRequest).Err
+}
+
+func decodeHTTPrespMonitoringV1AutoAddTechSupportRequest(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp TechSupportRequest
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -703,6 +761,24 @@ func decodeHTTPrespMonitoringV1AutoDeleteStatsPolicy(_ context.Context, r *http.
 	return &resp, err
 }
 
+func (s *grpcServerMonitoringV1) AutoDeleteTechSupportRequest(ctx oldcontext.Context, req *TechSupportRequest) (*TechSupportRequest, error) {
+	_, resp, err := s.AutoDeleteTechSupportRequestHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respMonitoringV1AutoDeleteTechSupportRequest).V
+	return &r, resp.(respMonitoringV1AutoDeleteTechSupportRequest).Err
+}
+
+func decodeHTTPrespMonitoringV1AutoDeleteTechSupportRequest(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp TechSupportRequest
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerMonitoringV1) AutoDeleteTroubleshootingSession(ctx oldcontext.Context, req *TroubleshootingSession) (*TroubleshootingSession, error) {
 	_, resp, err := s.AutoDeleteTroubleshootingSessionHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -861,6 +937,24 @@ func decodeHTTPrespMonitoringV1AutoGetStatsPolicy(_ context.Context, r *http.Res
 		return nil, errorDecoder(r)
 	}
 	var resp StatsPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerMonitoringV1) AutoGetTechSupportRequest(ctx oldcontext.Context, req *TechSupportRequest) (*TechSupportRequest, error) {
+	_, resp, err := s.AutoGetTechSupportRequestHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respMonitoringV1AutoGetTechSupportRequest).V
+	return &r, resp.(respMonitoringV1AutoGetTechSupportRequest).Err
+}
+
+func decodeHTTPrespMonitoringV1AutoGetTechSupportRequest(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp TechSupportRequest
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -1027,6 +1121,24 @@ func decodeHTTPrespMonitoringV1AutoListStatsPolicy(_ context.Context, r *http.Re
 	return &resp, err
 }
 
+func (s *grpcServerMonitoringV1) AutoListTechSupportRequest(ctx oldcontext.Context, req *api.ListWatchOptions) (*TechSupportRequestList, error) {
+	_, resp, err := s.AutoListTechSupportRequestHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respMonitoringV1AutoListTechSupportRequest).V
+	return &r, resp.(respMonitoringV1AutoListTechSupportRequest).Err
+}
+
+func decodeHTTPrespMonitoringV1AutoListTechSupportRequest(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp TechSupportRequestList
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerMonitoringV1) AutoListTroubleshootingSession(ctx oldcontext.Context, req *api.ListWatchOptions) (*TroubleshootingSessionList, error) {
 	_, resp, err := s.AutoListTroubleshootingSessionHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -1189,6 +1301,24 @@ func decodeHTTPrespMonitoringV1AutoUpdateStatsPolicy(_ context.Context, r *http.
 	return &resp, err
 }
 
+func (s *grpcServerMonitoringV1) AutoUpdateTechSupportRequest(ctx oldcontext.Context, req *TechSupportRequest) (*TechSupportRequest, error) {
+	_, resp, err := s.AutoUpdateTechSupportRequestHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respMonitoringV1AutoUpdateTechSupportRequest).V
+	return &r, resp.(respMonitoringV1AutoUpdateTechSupportRequest).Err
+}
+
+func decodeHTTPrespMonitoringV1AutoUpdateTechSupportRequest(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp TechSupportRequest
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerMonitoringV1) AutoUpdateTroubleshootingSession(ctx oldcontext.Context, req *TroubleshootingSession) (*TroubleshootingSession, error) {
 	_, resp, err := s.AutoUpdateTroubleshootingSessionHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -1245,6 +1375,10 @@ func (s *grpcServerMonitoringV1) AutoWatchMirrorSession(in *api.ListWatchOptions
 
 func (s *grpcServerMonitoringV1) AutoWatchTroubleshootingSession(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchTroubleshootingSessionServer) error {
 	return s.Endpoints.AutoWatchTroubleshootingSession(in, stream)
+}
+
+func (s *grpcServerMonitoringV1) AutoWatchTechSupportRequest(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchTechSupportRequestServer) error {
+	return s.Endpoints.AutoWatchTechSupportRequest(in, stream)
 }
 
 func encodeHTTPAlertDestinationList(ctx context.Context, req *http.Request, request interface{}) error {
@@ -1516,6 +1650,40 @@ func EncodeGrpcRespStatsPolicyList(ctx context.Context, response interface{}) (i
 
 // DecodeGrpcRespStatsPolicyList decodes the GRPC response
 func DecodeGrpcRespStatsPolicyList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPTechSupportRequestList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPTechSupportRequestList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req TechSupportRequestList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqTechSupportRequestList encodes GRPC request
+func EncodeGrpcReqTechSupportRequestList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*TechSupportRequestList)
+	return req, nil
+}
+
+// DecodeGrpcReqTechSupportRequestList decodes GRPC request
+func DecodeGrpcReqTechSupportRequestList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*TechSupportRequestList)
+	return req, nil
+}
+
+// EncodeGrpcRespTechSupportRequestList endodes the GRPC response
+func EncodeGrpcRespTechSupportRequestList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespTechSupportRequestList decodes the GRPC response
+func DecodeGrpcRespTechSupportRequestList(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

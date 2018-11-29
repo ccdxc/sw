@@ -103,6 +103,16 @@ func (m *StatsPolicyList) MakeURI(ver, prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
+func (m *TechSupportRequestList) MakeKey(prefix string) string {
+	obj := TechSupportRequest{}
+	return obj.MakeKey(prefix)
+}
+
+func (m *TechSupportRequestList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *TroubleshootingSessionList) MakeKey(prefix string) string {
 	obj := TroubleshootingSession{}
 	return obj.MakeKey(prefix)
@@ -157,6 +167,12 @@ func (m *AutoMsgMirrorSessionWatchHelper) MakeKey(prefix string) string {
 // MakeKey generates a KV store key for the object
 func (m *AutoMsgStatsPolicyWatchHelper) MakeKey(prefix string) string {
 	obj := StatsPolicy{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *AutoMsgTechSupportRequestWatchHelper) MakeKey(prefix string) string {
+	obj := TechSupportRequest{}
 	return obj.MakeKey(prefix)
 }
 
@@ -566,6 +582,48 @@ func (m *AutoMsgStatsPolicyWatchHelper_WatchEvent) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgTechSupportRequestWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgTechSupportRequestWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgTechSupportRequestWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgTechSupportRequestWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgTechSupportRequestWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgTechSupportRequestWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgTechSupportRequestWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgTechSupportRequestWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgTechSupportRequestWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgTechSupportRequestWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *AutoMsgTroubleshootingSessionWatchHelper) Clone(into interface{}) (interface{}, error) {
 	var out *AutoMsgTroubleshootingSessionWatchHelper
 	var ok bool
@@ -709,6 +767,27 @@ func (m *StatsPolicyList) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *StatsPolicyList) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *TechSupportRequestList) Clone(into interface{}) (interface{}, error) {
+	var out *TechSupportRequestList
+	var ok bool
+	if into == nil {
+		out = &TechSupportRequestList{}
+	} else {
+		out, ok = into.(*TechSupportRequestList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *TechSupportRequestList) Defaults(ver string) bool {
 	return false
 }
 
@@ -1020,6 +1099,36 @@ func (m *AutoMsgStatsPolicyWatchHelper_WatchEvent) Validate(ver, path string, ig
 	return ret
 }
 
+func (m *AutoMsgTechSupportRequestWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Events {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgTechSupportRequestWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if m.Object != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Object"
+		if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
 func (m *AutoMsgTroubleshootingSessionWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	for k, v := range m.Events {
@@ -1111,6 +1220,21 @@ func (m *MirrorSessionList) Validate(ver, path string, ignoreStatus bool) []erro
 }
 
 func (m *StatsPolicyList) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Items {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *TechSupportRequestList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	for k, v := range m.Items {
 		dlmtr := "."

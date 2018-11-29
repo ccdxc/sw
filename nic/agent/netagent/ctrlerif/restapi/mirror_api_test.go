@@ -16,6 +16,9 @@ import (
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
+// Dummy imports
+var _ Evaluator
+
 func TestMirrorSessionList(t *testing.T) {
 	t.Parallel()
 	var mirrorsessionList []*tsproto.MirrorSession

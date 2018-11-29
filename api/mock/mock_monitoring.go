@@ -1033,6 +1033,119 @@ func (mr *MockMonitoringV1TroubleshootingSessionInterfaceMockRecorder) Allowed(o
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Allowed", reflect.TypeOf((*MockMonitoringV1TroubleshootingSessionInterface)(nil).Allowed), oper)
 }
 
+// MockMonitoringV1TechSupportRequestInterface is a mock of (monitoring.MonitoringV1TechSupportRequestInterface)interface
+type MockMonitoringV1TechSupportRequestInterface struct {
+	ctrl     *gomock.Controller
+	recorder *MockMonitoringV1TechSupportRequestInterfaceMockRecorder
+}
+
+// MockMonitoringV1TechSupportRequestInterfaceMockRecorder is the mock recorder for MockMonitoringV1TechSupportRequestInterface
+type MockMonitoringV1TechSupportRequestInterfaceMockRecorder struct {
+	mock *MockMonitoringV1TechSupportRequestInterface
+}
+
+// NewMockMonitoringV1TechSupportRequestInterface creates a new mock instance
+func NewMockMonitoringV1TechSupportRequestInterface(ctrl *gomock.Controller) *MockMonitoringV1TechSupportRequestInterface {
+	mock := &MockMonitoringV1TechSupportRequestInterface{ctrl: ctrl}
+	mock.recorder = &MockMonitoringV1TechSupportRequestInterfaceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockMonitoringV1TechSupportRequestInterface) EXPECT() *MockMonitoringV1TechSupportRequestInterfaceMockRecorder {
+	return m.recorder
+}
+
+// Create mocks base method
+func (m *MockMonitoringV1TechSupportRequestInterface) Create(ctx context.Context, in *monitoring.TechSupportRequest) (*monitoring.TechSupportRequest, error) {
+	ret := m.ctrl.Call(m, "Create", ctx, in)
+	ret0, _ := ret[0].(*monitoring.TechSupportRequest)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Create indicates an expected call of Create
+func (mr *MockMonitoringV1TechSupportRequestInterfaceMockRecorder) Create(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockMonitoringV1TechSupportRequestInterface)(nil).Create), ctx, in)
+}
+
+// Update mocks base method
+func (m *MockMonitoringV1TechSupportRequestInterface) Update(ctx context.Context, in *monitoring.TechSupportRequest) (*monitoring.TechSupportRequest, error) {
+	ret := m.ctrl.Call(m, "Update", ctx, in)
+	ret0, _ := ret[0].(*monitoring.TechSupportRequest)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Update indicates an expected call of Update
+func (mr *MockMonitoringV1TechSupportRequestInterfaceMockRecorder) Update(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockMonitoringV1TechSupportRequestInterface)(nil).Update), ctx, in)
+}
+
+// Get mocks base method
+func (m *MockMonitoringV1TechSupportRequestInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.TechSupportRequest, error) {
+	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
+	ret0, _ := ret[0].(*monitoring.TechSupportRequest)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get
+func (mr *MockMonitoringV1TechSupportRequestInterfaceMockRecorder) Get(ctx, objMeta interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockMonitoringV1TechSupportRequestInterface)(nil).Get), ctx, objMeta)
+}
+
+// Delete mocks base method
+func (m *MockMonitoringV1TechSupportRequestInterface) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.TechSupportRequest, error) {
+	ret := m.ctrl.Call(m, "Delete", ctx, objMeta)
+	ret0, _ := ret[0].(*monitoring.TechSupportRequest)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Delete indicates an expected call of Delete
+func (mr *MockMonitoringV1TechSupportRequestInterfaceMockRecorder) Delete(ctx, objMeta interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockMonitoringV1TechSupportRequestInterface)(nil).Delete), ctx, objMeta)
+}
+
+// List mocks base method
+func (m *MockMonitoringV1TechSupportRequestInterface) List(ctx context.Context, options *api.ListWatchOptions) ([]*monitoring.TechSupportRequest, error) {
+	ret := m.ctrl.Call(m, "List", ctx, options)
+	ret0, _ := ret[0].([]*monitoring.TechSupportRequest)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// List indicates an expected call of List
+func (mr *MockMonitoringV1TechSupportRequestInterfaceMockRecorder) List(ctx, options interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockMonitoringV1TechSupportRequestInterface)(nil).List), ctx, options)
+}
+
+// Watch mocks base method
+func (m *MockMonitoringV1TechSupportRequestInterface) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	ret := m.ctrl.Call(m, "Watch", ctx, options)
+	ret0, _ := ret[0].(kvstore.Watcher)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Watch indicates an expected call of Watch
+func (mr *MockMonitoringV1TechSupportRequestInterfaceMockRecorder) Watch(ctx, options interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Watch", reflect.TypeOf((*MockMonitoringV1TechSupportRequestInterface)(nil).Watch), ctx, options)
+}
+
+// Allowed mocks base method
+func (m *MockMonitoringV1TechSupportRequestInterface) Allowed(oper apiserver.APIOperType) bool {
+	ret := m.ctrl.Call(m, "Allowed", oper)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// Allowed indicates an expected call of Allowed
+func (mr *MockMonitoringV1TechSupportRequestInterfaceMockRecorder) Allowed(oper interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Allowed", reflect.TypeOf((*MockMonitoringV1TechSupportRequestInterface)(nil).Allowed), oper)
+}
+
 // MockMonitoringV1Interface is a mock of MonitoringV1Interface interface
 type MockMonitoringV1Interface struct {
 	ctrl     *gomock.Controller
@@ -1162,6 +1275,18 @@ func (m *MockMonitoringV1Interface) TroubleshootingSession() monitoring.Monitori
 // TroubleshootingSession indicates an expected call of TroubleshootingSession
 func (mr *MockMonitoringV1InterfaceMockRecorder) TroubleshootingSession() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TroubleshootingSession", reflect.TypeOf((*MockMonitoringV1Interface)(nil).TroubleshootingSession))
+}
+
+// TechSupportRequest mocks base method
+func (m *MockMonitoringV1Interface) TechSupportRequest() monitoring.MonitoringV1TechSupportRequestInterface {
+	ret := m.ctrl.Call(m, "TechSupportRequest")
+	ret0, _ := ret[0].(monitoring.MonitoringV1TechSupportRequestInterface)
+	return ret0
+}
+
+// TechSupportRequest indicates an expected call of TechSupportRequest
+func (mr *MockMonitoringV1InterfaceMockRecorder) TechSupportRequest() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TechSupportRequest", reflect.TypeOf((*MockMonitoringV1Interface)(nil).TechSupportRequest))
 }
 
 // Watch mocks base method

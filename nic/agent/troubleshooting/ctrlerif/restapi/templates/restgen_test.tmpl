@@ -9,6 +9,9 @@ import (
 . "github.com/pensando/sw/venice/utils/testutils"
 )
 
+// Dummy imports
+var _ Evaluator
+
 {{range .Services}}
     {{$svcname := .Name}}
     {{if (hasExtension "venice.naplesRestService" .)}}
@@ -18,6 +21,7 @@ import (
            {{$crudObject := .CrudObject}}
            {{$pattern := .Pattern}}
            {{$methods := .Methods}}
+           {{if strEq $crudObject "MirrorSession"}}
            {{range $methods}}
                 {{if strEq . "list"}}
                     func Test{{title $crudObject}}{{title .}}(t *testing.T){
@@ -144,8 +148,7 @@ import (
                     }
                 {{end}}
            {{end}}
-
-
+        {{end}}
       {{end}}
    {{end}}
 {{end}}

@@ -154,13 +154,20 @@ type CtrlerAPI interface {
 type CtrlerIntf interface {
 	GetAgentID() string
 	RegisterCtrlerIf(ctrlerif CtrlerAPI) error
-	CreatePacketCaptureSession(pcSession *tsproto.MirrorSession) error
-	ListPacketCaptureSession() []*tsproto.MirrorSession
-	GetPacketCaptureSession(pcSession *tsproto.MirrorSession) *tsproto.MirrorSession
-	UpdatePacketCaptureSession(pcSession *tsproto.MirrorSession) error
-	DeletePacketCaptureSession(pcSession *tsproto.MirrorSession) error
+	CreateMirrorSession(pcSession *tsproto.MirrorSession) error
+	ListMirrorSession() []*tsproto.MirrorSession
+	GetMirrorSession(pcSession *tsproto.MirrorSession) *tsproto.MirrorSession
+	UpdateMirrorSession(pcSession *tsproto.MirrorSession) error
+	DeleteMirrorSession(pcSession *tsproto.MirrorSession) error
 	//EnablePacketCaptureSession(pcSession *tsproto.PacketCaptureSession) error
 	//DisablePacketCaptureSession(pcSession *tsproto.PacketCaptureSession) error
+
+	// TechSupportRequest APIs
+	CreateTechSupportRequest(pcSession *tsproto.TechSupportRequest) error
+	ListTechSupportRequest() []*tsproto.TechSupportRequest
+	GetTechSupportRequest(pcSession *tsproto.TechSupportRequest) *tsproto.TechSupportRequest
+	UpdateTechSupportRequest(pcSession *tsproto.TechSupportRequest) error
+	DeleteTechSupportRequest(pcSession *tsproto.TechSupportRequest) error
 }
 
 // TsDatapathAPI is all APIs provided by datapath/hal module. Implemented in datapath/hal.go (and in mockhal.go)

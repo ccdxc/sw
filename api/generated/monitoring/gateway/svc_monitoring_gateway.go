@@ -234,6 +234,29 @@ func (a adapterMonitoringV1) AutoAddStatsPolicy(oldctx oldcontext.Context, t *mo
 	return ret.(*monitoring.StatsPolicy), err
 }
 
+func (a adapterMonitoringV1) AutoAddTechSupportRequest(oldctx oldcontext.Context, t *monitoring.TechSupportRequest, options ...grpc.CallOption) (*monitoring.TechSupportRequest, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddTechSupportRequest")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "TechSupportRequest", t.Tenant, t.Namespace, "monitoring", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*monitoring.TechSupportRequest)
+		return a.service.AutoAddTechSupportRequest(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*monitoring.TechSupportRequest), err
+}
+
 func (a adapterMonitoringV1) AutoAddTroubleshootingSession(oldctx oldcontext.Context, t *monitoring.TroubleshootingSession, options ...grpc.CallOption) (*monitoring.TroubleshootingSession, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -441,6 +464,29 @@ func (a adapterMonitoringV1) AutoDeleteStatsPolicy(oldctx oldcontext.Context, t 
 	return ret.(*monitoring.StatsPolicy), err
 }
 
+func (a adapterMonitoringV1) AutoDeleteTechSupportRequest(oldctx oldcontext.Context, t *monitoring.TechSupportRequest, options ...grpc.CallOption) (*monitoring.TechSupportRequest, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteTechSupportRequest")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "TechSupportRequest", t.Tenant, t.Namespace, "monitoring", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*monitoring.TechSupportRequest)
+		return a.service.AutoDeleteTechSupportRequest(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*monitoring.TechSupportRequest), err
+}
+
 func (a adapterMonitoringV1) AutoDeleteTroubleshootingSession(oldctx oldcontext.Context, t *monitoring.TroubleshootingSession, options ...grpc.CallOption) (*monitoring.TroubleshootingSession, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -646,6 +692,29 @@ func (a adapterMonitoringV1) AutoGetStatsPolicy(oldctx oldcontext.Context, t *mo
 		return nil, err
 	}
 	return ret.(*monitoring.StatsPolicy), err
+}
+
+func (a adapterMonitoringV1) AutoGetTechSupportRequest(oldctx oldcontext.Context, t *monitoring.TechSupportRequest, options ...grpc.CallOption) (*monitoring.TechSupportRequest, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetTechSupportRequest")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "TechSupportRequest", t.Tenant, t.Namespace, "monitoring", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*monitoring.TechSupportRequest)
+		return a.service.AutoGetTechSupportRequest(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*monitoring.TechSupportRequest), err
 }
 
 func (a adapterMonitoringV1) AutoGetTroubleshootingSession(oldctx oldcontext.Context, t *monitoring.TroubleshootingSession, options ...grpc.CallOption) (*monitoring.TroubleshootingSession, error) {
@@ -887,6 +956,31 @@ func (a adapterMonitoringV1) AutoListStatsPolicy(oldctx oldcontext.Context, t *a
 	return ret.(*monitoring.StatsPolicyList), err
 }
 
+func (a adapterMonitoringV1) AutoListTechSupportRequest(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*monitoring.TechSupportRequestList, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListTechSupportRequest")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+
+	t.Tenant, t.Namespace = "", ""
+	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "TechSupportRequestList", t.Tenant, t.Namespace, "monitoring", ""
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListTechSupportRequest(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*monitoring.TechSupportRequestList), err
+}
+
 func (a adapterMonitoringV1) AutoListTroubleshootingSession(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*monitoring.TroubleshootingSessionList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -1096,6 +1190,29 @@ func (a adapterMonitoringV1) AutoUpdateStatsPolicy(oldctx oldcontext.Context, t 
 		return nil, err
 	}
 	return ret.(*monitoring.StatsPolicy), err
+}
+
+func (a adapterMonitoringV1) AutoUpdateTechSupportRequest(oldctx oldcontext.Context, t *monitoring.TechSupportRequest, options ...grpc.CallOption) (*monitoring.TechSupportRequest, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateTechSupportRequest")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "TechSupportRequest", t.Tenant, t.Namespace, "monitoring", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*monitoring.TechSupportRequest)
+		return a.service.AutoUpdateTechSupportRequest(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*monitoring.TechSupportRequest), err
 }
 
 func (a adapterMonitoringV1) AutoUpdateTroubleshootingSession(oldctx oldcontext.Context, t *monitoring.TroubleshootingSession, options ...grpc.CallOption) (*monitoring.TroubleshootingSession, error) {
@@ -1506,6 +1623,45 @@ func (a adapterMonitoringV1) AutoWatchTroubleshootingSession(oldctx oldcontext.C
 	return ret.(monitoring.MonitoringV1_AutoWatchTroubleshootingSessionClient), err
 }
 
+func (a adapterMonitoringV1) AutoWatchTechSupportRequest(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (monitoring.MonitoringV1_AutoWatchTechSupportRequestClient, error) {
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchTechSupportRequest")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+
+	in.Tenant, in.Namespace = "", ""
+	oper, kind, tenant, namespace, group := apiserver.WatchOper, "TechSupportRequest", in.Tenant, in.Namespace, "monitoring"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
+		if ok && iws.(bool) {
+			ir, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPReq)
+			if !ok {
+				return nil, errors.New("unable to retrieve request")
+			}
+			iw, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPWriter)
+			if !ok {
+				return nil, errors.New("unable to retrieve writer")
+			}
+			conn, err := wsUpgrader.Upgrade(iw.(http.ResponseWriter), ir.(*http.Request), nil)
+			if err != nil {
+				log.Errorf("WebSocket Upgrade failed (%s)", err)
+				return nil, err
+			}
+			ctx = apiutils.SetVar(ctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+		}
+		return a.service.AutoWatchTechSupportRequest(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(monitoring.MonitoringV1_AutoWatchTechSupportRequestClient), err
+}
+
 func (e *sMonitoringV1GwService) setupSvcProfile() {
 	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "monitoring", apiserver.UnknownOper)
 	e.defSvcProf.SetDefaults()
@@ -1521,6 +1677,8 @@ func (e *sMonitoringV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoAddMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "MirrorSession", "monitoring", apiserver.CreateOper)
 
+	e.svcProf["AutoAddTechSupportRequest"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TechSupportRequest", "monitoring", apiserver.CreateOper)
+
 	e.svcProf["AutoAddTroubleshootingSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TroubleshootingSession", "monitoring", apiserver.CreateOper)
 
 	e.svcProf["AutoDeleteAlertDestination"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AlertDestination", "monitoring", apiserver.DeleteOper)
@@ -1532,6 +1690,8 @@ func (e *sMonitoringV1GwService) setupSvcProfile() {
 	e.svcProf["AutoDeleteFlowExportPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "FlowExportPolicy", "monitoring", apiserver.DeleteOper)
 
 	e.svcProf["AutoDeleteMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "MirrorSession", "monitoring", apiserver.DeleteOper)
+
+	e.svcProf["AutoDeleteTechSupportRequest"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TechSupportRequest", "monitoring", apiserver.DeleteOper)
 
 	e.svcProf["AutoDeleteTroubleshootingSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TroubleshootingSession", "monitoring", apiserver.DeleteOper)
 
@@ -1551,6 +1711,8 @@ func (e *sMonitoringV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoGetStatsPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "StatsPolicy", "monitoring", apiserver.GetOper)
 
+	e.svcProf["AutoGetTechSupportRequest"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TechSupportRequest", "monitoring", apiserver.GetOper)
+
 	e.svcProf["AutoGetTroubleshootingSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TroubleshootingSession", "monitoring", apiserver.GetOper)
 
 	e.svcProf["AutoListAlert"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AlertList", "monitoring", apiserver.ListOper)
@@ -1566,6 +1728,8 @@ func (e *sMonitoringV1GwService) setupSvcProfile() {
 	e.svcProf["AutoListMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "MirrorSessionList", "monitoring", apiserver.ListOper)
 
 	e.svcProf["AutoListStatsPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "StatsPolicyList", "monitoring", apiserver.ListOper)
+
+	e.svcProf["AutoListTechSupportRequest"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TechSupportRequestList", "monitoring", apiserver.ListOper)
 
 	e.svcProf["AutoListTroubleshootingSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TroubleshootingSessionList", "monitoring", apiserver.ListOper)
 
@@ -1584,6 +1748,8 @@ func (e *sMonitoringV1GwService) setupSvcProfile() {
 	e.svcProf["AutoUpdateMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "MirrorSession", "monitoring", apiserver.UpdateOper)
 
 	e.svcProf["AutoUpdateStatsPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "StatsPolicy", "monitoring", apiserver.UpdateOper)
+
+	e.svcProf["AutoUpdateTechSupportRequest"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TechSupportRequest", "monitoring", apiserver.UpdateOper)
 
 	e.svcProf["AutoUpdateTroubleshootingSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TroubleshootingSession", "monitoring", apiserver.UpdateOper)
 

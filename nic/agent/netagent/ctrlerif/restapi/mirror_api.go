@@ -16,7 +16,7 @@ import (
 	"github.com/gogo/protobuf/types"
 	"github.com/gorilla/mux"
 
-	"github.com/pensando/sw/api"
+	api "github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/httputils"
 	"github.com/pensando/sw/venice/ctrler/tsm/rpcserver/tsproto"
 )
@@ -24,19 +24,19 @@ import (
 // addMirrorSessionAPIRoutes adds MirrorSession
 func addMirrorSessionAPIRoutes(r *mux.Router, srv *RestServer) {
 
-	r.Methods("GET").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.PacketCaptureGetHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.getMirrorSessionHandler))
 
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.PacketCaptureListHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.listMirrorSessionHandler))
 
-	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.PacketCapturePostHandler))
+	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.postMirrorSessionHandler))
 
-	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.PacketCapturePutHandler))
+	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.putMirrorSessionHandler))
 
-	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.PacketCaptureDeleteHandler))
+	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.deleteMirrorSessionHandler))
 
 }
 
-func (s *RestServer) PacketCaptureGetHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) getMirrorSessionHandler(r *http.Request) (interface{}, error) {
 	var o tsproto.MirrorSession
 
 	o.TypeMeta.Kind = "MirrorSession"
@@ -44,15 +44,15 @@ func (s *RestServer) PacketCaptureGetHandler(r *http.Request) (interface{}, erro
 	o.ObjectMeta.Namespace = mux.Vars(r)["ObjectMeta.Namespace"]
 	o.ObjectMeta.Name = mux.Vars(r)["ObjectMeta.Name"]
 
-	return s.TsAgent.GetPacketCaptureSession(&o), nil
+	return s.TsAgent.GetMirrorSession(&o), nil
 
 }
 
-func (s *RestServer) PacketCaptureListHandler(r *http.Request) (interface{}, error) {
-	return s.TsAgent.ListPacketCaptureSession(), nil
+func (s *RestServer) listMirrorSessionHandler(r *http.Request) (interface{}, error) {
+	return s.TsAgent.ListMirrorSession(), nil
 }
 
-func (s *RestServer) PacketCapturePostHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) postMirrorSessionHandler(r *http.Request) (interface{}, error) {
 	var o tsproto.MirrorSession
 
 	var res Response
@@ -68,7 +68,7 @@ func (s *RestServer) PacketCapturePostHandler(r *http.Request) (interface{}, err
 	o.ModTime = api.Timestamp{
 		Timestamp: *c,
 	}
-	err = s.TsAgent.CreatePacketCaptureSession(&o)
+	err = s.TsAgent.CreateMirrorSession(&o)
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
@@ -80,7 +80,7 @@ func (s *RestServer) PacketCapturePostHandler(r *http.Request) (interface{}, err
 
 }
 
-func (s *RestServer) PacketCapturePutHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) putMirrorSessionHandler(r *http.Request) (interface{}, error) {
 	var o tsproto.MirrorSession
 
 	var res Response
@@ -93,7 +93,7 @@ func (s *RestServer) PacketCapturePutHandler(r *http.Request) (interface{}, erro
 	o.ModTime = api.Timestamp{
 		Timestamp: *m,
 	}
-	err = s.TsAgent.UpdatePacketCaptureSession(&o)
+	err = s.TsAgent.UpdateMirrorSession(&o)
 	if err != nil {
 		res.StatusCode = http.StatusInternalServerError
 		res.Error = err.Error()
@@ -105,7 +105,7 @@ func (s *RestServer) PacketCapturePutHandler(r *http.Request) (interface{}, erro
 
 }
 
-func (s *RestServer) PacketCaptureDeleteHandler(r *http.Request) (interface{}, error) {
+func (s *RestServer) deleteMirrorSessionHandler(r *http.Request) (interface{}, error) {
 	var o tsproto.MirrorSession
 
 	o.TypeMeta.Kind = "MirrorSession"
@@ -113,6 +113,6 @@ func (s *RestServer) PacketCaptureDeleteHandler(r *http.Request) (interface{}, e
 	o.ObjectMeta.Namespace = mux.Vars(r)["ObjectMeta.Namespace"]
 	o.ObjectMeta.Name = mux.Vars(r)["ObjectMeta.Name"]
 
-	return nil, s.TsAgent.DeletePacketCaptureSession(&o)
+	return nil, s.TsAgent.DeleteMirrorSession(&o)
 
 }

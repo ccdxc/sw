@@ -12,6 +12,7 @@
 		export.proto
 		mirror.proto
 		svc_monitoring.proto
+		techsupport.proto
 		telemetry.proto
 		troubleshooting.proto
 
@@ -60,13 +61,19 @@
 		AutoMsgFwlogPolicyWatchHelper
 		AutoMsgMirrorSessionWatchHelper
 		AutoMsgStatsPolicyWatchHelper
+		AutoMsgTechSupportRequestWatchHelper
 		AutoMsgTroubleshootingSessionWatchHelper
 		EventPolicyList
 		FlowExportPolicyList
 		FwlogPolicyList
 		MirrorSessionList
 		StatsPolicyList
+		TechSupportRequestList
 		TroubleshootingSessionList
+		TechSupportNodeResult
+		TechSupportRequest
+		TechSupportRequestSpec
+		TechSupportRequestStatus
 		FlowExportPolicy
 		FlowExportPolicySpec
 		FlowExportPolicyStatus

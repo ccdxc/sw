@@ -27,6 +27,7 @@ type ServiceMonitoringV1Client interface {
 	AutoAddFwlogPolicy(ctx context.Context, t *FwlogPolicy) (*FwlogPolicy, error)
 	AutoAddMirrorSession(ctx context.Context, t *MirrorSession) (*MirrorSession, error)
 	AutoAddStatsPolicy(ctx context.Context, t *StatsPolicy) (*StatsPolicy, error)
+	AutoAddTechSupportRequest(ctx context.Context, t *TechSupportRequest) (*TechSupportRequest, error)
 	AutoAddTroubleshootingSession(ctx context.Context, t *TroubleshootingSession) (*TroubleshootingSession, error)
 	AutoDeleteAlert(ctx context.Context, t *Alert) (*Alert, error)
 	AutoDeleteAlertDestination(ctx context.Context, t *AlertDestination) (*AlertDestination, error)
@@ -36,6 +37,7 @@ type ServiceMonitoringV1Client interface {
 	AutoDeleteFwlogPolicy(ctx context.Context, t *FwlogPolicy) (*FwlogPolicy, error)
 	AutoDeleteMirrorSession(ctx context.Context, t *MirrorSession) (*MirrorSession, error)
 	AutoDeleteStatsPolicy(ctx context.Context, t *StatsPolicy) (*StatsPolicy, error)
+	AutoDeleteTechSupportRequest(ctx context.Context, t *TechSupportRequest) (*TechSupportRequest, error)
 	AutoDeleteTroubleshootingSession(ctx context.Context, t *TroubleshootingSession) (*TroubleshootingSession, error)
 	AutoGetAlert(ctx context.Context, t *Alert) (*Alert, error)
 	AutoGetAlertDestination(ctx context.Context, t *AlertDestination) (*AlertDestination, error)
@@ -45,6 +47,7 @@ type ServiceMonitoringV1Client interface {
 	AutoGetFwlogPolicy(ctx context.Context, t *FwlogPolicy) (*FwlogPolicy, error)
 	AutoGetMirrorSession(ctx context.Context, t *MirrorSession) (*MirrorSession, error)
 	AutoGetStatsPolicy(ctx context.Context, t *StatsPolicy) (*StatsPolicy, error)
+	AutoGetTechSupportRequest(ctx context.Context, t *TechSupportRequest) (*TechSupportRequest, error)
 	AutoGetTroubleshootingSession(ctx context.Context, t *TroubleshootingSession) (*TroubleshootingSession, error)
 	AutoListAlert(ctx context.Context, t *api.ListWatchOptions) (*AlertList, error)
 	AutoListAlertDestination(ctx context.Context, t *api.ListWatchOptions) (*AlertDestinationList, error)
@@ -54,6 +57,7 @@ type ServiceMonitoringV1Client interface {
 	AutoListFwlogPolicy(ctx context.Context, t *api.ListWatchOptions) (*FwlogPolicyList, error)
 	AutoListMirrorSession(ctx context.Context, t *api.ListWatchOptions) (*MirrorSessionList, error)
 	AutoListStatsPolicy(ctx context.Context, t *api.ListWatchOptions) (*StatsPolicyList, error)
+	AutoListTechSupportRequest(ctx context.Context, t *api.ListWatchOptions) (*TechSupportRequestList, error)
 	AutoListTroubleshootingSession(ctx context.Context, t *api.ListWatchOptions) (*TroubleshootingSessionList, error)
 	AutoUpdateAlert(ctx context.Context, t *Alert) (*Alert, error)
 	AutoUpdateAlertDestination(ctx context.Context, t *AlertDestination) (*AlertDestination, error)
@@ -63,6 +67,7 @@ type ServiceMonitoringV1Client interface {
 	AutoUpdateFwlogPolicy(ctx context.Context, t *FwlogPolicy) (*FwlogPolicy, error)
 	AutoUpdateMirrorSession(ctx context.Context, t *MirrorSession) (*MirrorSession, error)
 	AutoUpdateStatsPolicy(ctx context.Context, t *StatsPolicy) (*StatsPolicy, error)
+	AutoUpdateTechSupportRequest(ctx context.Context, t *TechSupportRequest) (*TechSupportRequest, error)
 	AutoUpdateTroubleshootingSession(ctx context.Context, t *TroubleshootingSession) (*TroubleshootingSession, error)
 
 	AutoWatchEventPolicy(ctx context.Context, in *api.ListWatchOptions) (MonitoringV1_AutoWatchEventPolicyClient, error)
@@ -74,6 +79,7 @@ type ServiceMonitoringV1Client interface {
 	AutoWatchAlertDestination(ctx context.Context, in *api.ListWatchOptions) (MonitoringV1_AutoWatchAlertDestinationClient, error)
 	AutoWatchMirrorSession(ctx context.Context, in *api.ListWatchOptions) (MonitoringV1_AutoWatchMirrorSessionClient, error)
 	AutoWatchTroubleshootingSession(ctx context.Context, in *api.ListWatchOptions) (MonitoringV1_AutoWatchTroubleshootingSessionClient, error)
+	AutoWatchTechSupportRequest(ctx context.Context, in *api.ListWatchOptions) (MonitoringV1_AutoWatchTechSupportRequestClient, error)
 }
 
 // ServiceMonitoringV1Server is the server interface for the service.
@@ -88,6 +94,7 @@ type ServiceMonitoringV1Server interface {
 	AutoAddFwlogPolicy(ctx context.Context, t FwlogPolicy) (FwlogPolicy, error)
 	AutoAddMirrorSession(ctx context.Context, t MirrorSession) (MirrorSession, error)
 	AutoAddStatsPolicy(ctx context.Context, t StatsPolicy) (StatsPolicy, error)
+	AutoAddTechSupportRequest(ctx context.Context, t TechSupportRequest) (TechSupportRequest, error)
 	AutoAddTroubleshootingSession(ctx context.Context, t TroubleshootingSession) (TroubleshootingSession, error)
 	AutoDeleteAlert(ctx context.Context, t Alert) (Alert, error)
 	AutoDeleteAlertDestination(ctx context.Context, t AlertDestination) (AlertDestination, error)
@@ -97,6 +104,7 @@ type ServiceMonitoringV1Server interface {
 	AutoDeleteFwlogPolicy(ctx context.Context, t FwlogPolicy) (FwlogPolicy, error)
 	AutoDeleteMirrorSession(ctx context.Context, t MirrorSession) (MirrorSession, error)
 	AutoDeleteStatsPolicy(ctx context.Context, t StatsPolicy) (StatsPolicy, error)
+	AutoDeleteTechSupportRequest(ctx context.Context, t TechSupportRequest) (TechSupportRequest, error)
 	AutoDeleteTroubleshootingSession(ctx context.Context, t TroubleshootingSession) (TroubleshootingSession, error)
 	AutoGetAlert(ctx context.Context, t Alert) (Alert, error)
 	AutoGetAlertDestination(ctx context.Context, t AlertDestination) (AlertDestination, error)
@@ -106,6 +114,7 @@ type ServiceMonitoringV1Server interface {
 	AutoGetFwlogPolicy(ctx context.Context, t FwlogPolicy) (FwlogPolicy, error)
 	AutoGetMirrorSession(ctx context.Context, t MirrorSession) (MirrorSession, error)
 	AutoGetStatsPolicy(ctx context.Context, t StatsPolicy) (StatsPolicy, error)
+	AutoGetTechSupportRequest(ctx context.Context, t TechSupportRequest) (TechSupportRequest, error)
 	AutoGetTroubleshootingSession(ctx context.Context, t TroubleshootingSession) (TroubleshootingSession, error)
 	AutoListAlert(ctx context.Context, t api.ListWatchOptions) (AlertList, error)
 	AutoListAlertDestination(ctx context.Context, t api.ListWatchOptions) (AlertDestinationList, error)
@@ -115,6 +124,7 @@ type ServiceMonitoringV1Server interface {
 	AutoListFwlogPolicy(ctx context.Context, t api.ListWatchOptions) (FwlogPolicyList, error)
 	AutoListMirrorSession(ctx context.Context, t api.ListWatchOptions) (MirrorSessionList, error)
 	AutoListStatsPolicy(ctx context.Context, t api.ListWatchOptions) (StatsPolicyList, error)
+	AutoListTechSupportRequest(ctx context.Context, t api.ListWatchOptions) (TechSupportRequestList, error)
 	AutoListTroubleshootingSession(ctx context.Context, t api.ListWatchOptions) (TroubleshootingSessionList, error)
 	AutoUpdateAlert(ctx context.Context, t Alert) (Alert, error)
 	AutoUpdateAlertDestination(ctx context.Context, t AlertDestination) (AlertDestination, error)
@@ -124,6 +134,7 @@ type ServiceMonitoringV1Server interface {
 	AutoUpdateFwlogPolicy(ctx context.Context, t FwlogPolicy) (FwlogPolicy, error)
 	AutoUpdateMirrorSession(ctx context.Context, t MirrorSession) (MirrorSession, error)
 	AutoUpdateStatsPolicy(ctx context.Context, t StatsPolicy) (StatsPolicy, error)
+	AutoUpdateTechSupportRequest(ctx context.Context, t TechSupportRequest) (TechSupportRequest, error)
 	AutoUpdateTroubleshootingSession(ctx context.Context, t TroubleshootingSession) (TroubleshootingSession, error)
 
 	AutoWatchEventPolicy(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchEventPolicyServer) error
@@ -135,4 +146,5 @@ type ServiceMonitoringV1Server interface {
 	AutoWatchAlertDestination(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchAlertDestinationServer) error
 	AutoWatchMirrorSession(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchMirrorSessionServer) error
 	AutoWatchTroubleshootingSession(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchTroubleshootingSessionServer) error
+	AutoWatchTechSupportRequest(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchTechSupportRequestServer) error
 }

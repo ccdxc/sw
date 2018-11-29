@@ -1,0 +1,55 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package monitoring;
+
+import "google/api/annotations.proto";
+import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+import "github.com/pensando/sw/api/labels/selector.proto";
+
+enum TechSupportJobStatus {
+    Scheduled = 0;
+    Running   = 1;
+    Completed = 2;
+    Failed    = 3;
+}
+
+message TechSupportNodeResult {
+  api.Timestamp StartTime = 1 [(gogoproto.jsontag) = "start-time,omitempty"];
+  api.Timestamp EndTime   = 2 [(gogoproto.jsontag) = "end-time,omitempty"];
+  string        Status    = 3 [(gogoproto.jsontag) = "status,omitempty", (venice.check) = "StrEnum(TechSupportJobStatus)"];
+  string        URI       = 4 [(gogoproto.jsontag) = "uri,omitempty"];
+}
+
+message TechSupportRequestSpec {
+  // NodeSelectorSpec specifies criteria for selecting nodes to collect from. Names is a list of node names
+  //  while Labels is a label selector. Neither, one or both names and labels can be specified.  If both of
+  //  them are specified a union of nodes selected by them is used as the set of nodes. When neither is
+  //  specified all nodes are selected.
+  message NodeSelectorSpec {
+    repeated string Names = 1  [(gogoproto.jsontag) = "names,omitempty"];
+    labels.Selector Labels = 2 [(gogoproto.jsontag) = "labels,omitempty"];
+  }
+  // CollectionSelector is a Label selector for modules to collect
+  labels.Selector   CollectionSelector = 1 [(gogoproto.jsontag) = "collection-selector,omitempty"];
+  // NodeSelector is a label selector that selects nodes to collect tech support from
+  NodeSelectorSpec  NodeSelector       = 2 [(gogoproto.jsontag) = "node-selector,omitempty"];
+  // Verbosity defines the verbosity level
+  int32             Verbosity          = 3 [(gogoproto.jsontag) = "verbosity,omitempty"];
+}
+
+message TechSupportRequestStatus {
+  string Status = 1 [(gogoproto.jsontag) = "status,omitempty", (venice.check) = "StrEnum(TechSupportJobStatus)"];
+  map<string, TechSupportNodeResult> NodeResults = 2 [(gogoproto.jsontag) = "node-results,omitempty"];
+}
+
+message TechSupportRequest {
+  option (venice.objectPrefix) = {Collection: "techsupport"};
+  api.TypeMeta                T       = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+  api.ObjectMeta              O       = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+  TechSupportRequestSpec      Spec    = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,inline"];
+  TechSupportRequestStatus    Status  = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}

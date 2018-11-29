@@ -105,11 +105,11 @@ func (client *TsClient) runTroubleShootingWatcher(ctx context.Context) {
 				for _, evt := range evtList.MirrorSessionEvents {
 					switch evt.EventType {
 					case api.EventType_CreateEvent:
-						client.tsagent.CreatePacketCaptureSession(&evt.MirrorSession)
+						client.tsagent.CreateMirrorSession(&evt.MirrorSession)
 					case api.EventType_UpdateEvent:
-						client.tsagent.UpdatePacketCaptureSession(&evt.MirrorSession)
+						client.tsagent.UpdateMirrorSession(&evt.MirrorSession)
 					case api.EventType_DeleteEvent:
-						client.tsagent.DeletePacketCaptureSession(&evt.MirrorSession)
+						client.tsagent.DeleteMirrorSession(&evt.MirrorSession)
 					default:
 						log.Errorf("Invalid mirror event type: {%+v}", evt.EventType)
 					}

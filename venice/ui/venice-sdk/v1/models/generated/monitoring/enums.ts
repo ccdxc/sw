@@ -17,6 +17,13 @@ export enum FieldsRequirement_operator {
     'lte' = "lte",
 }
 
+export enum LabelsRequirement_operator {
+    'equals' = "equals",
+    'notEquals' = "notEquals",
+    'in' = "in",
+    'notIn' = "notIn",
+}
+
 export enum MonitoringAlertPolicySpec_severity {
     'INFO' = "INFO",
     'WARNING' = "WARNING",
@@ -146,6 +153,20 @@ export enum MonitoringSyslogExportConfig_facility_override {
     'LOG_LOCAL7' = "LOG_LOCAL7",
 }
 
+export enum MonitoringTechSupportNodeResult_status {
+    'Scheduled' = "Scheduled",
+    'Running' = "Running",
+    'Completed' = "Completed",
+    'Failed' = "Failed",
+}
+
+export enum MonitoringTechSupportRequestStatus_status {
+    'Scheduled' = "Scheduled",
+    'Running' = "Running",
+    'Completed' = "Completed",
+    'Failed' = "Failed",
+}
+
 export enum MonitoringTroubleshootingSessionStatus_state {
     'TS_RUNNING' = "TS_RUNNING",
     'TS_STOPPED' = "TS_STOPPED",
@@ -158,6 +179,11 @@ export enum FieldsRequirement_operator_uihint {
     'gte' = "greater than or equals",
     'lt' = "less than",
     'lte' = "less than or equals",
+    'notEquals' = "not equals",
+    'notIn' = "not in",
+}
+
+export enum LabelsRequirement_operator_uihint {
     'notEquals' = "not equals",
     'notIn' = "not in",
 }
@@ -284,6 +310,7 @@ export class AllEnums {
     }
 
     FieldsRequirement_operator = FieldsRequirement_operator;
+    LabelsRequirement_operator = LabelsRequirement_operator;
     MonitoringAlertPolicySpec_severity = MonitoringAlertPolicySpec_severity;
     MonitoringAlertSpec_state = MonitoringAlertSpec_state;
     MonitoringAlertStatus_severity = MonitoringAlertStatus_severity;
@@ -302,9 +329,12 @@ export class AllEnums {
     MonitoringSNMPTrapServer_version = MonitoringSNMPTrapServer_version;
     MonitoringSyslogExport_format = MonitoringSyslogExport_format;
     MonitoringSyslogExportConfig_facility_override = MonitoringSyslogExportConfig_facility_override;
+    MonitoringTechSupportNodeResult_status = MonitoringTechSupportNodeResult_status;
+    MonitoringTechSupportRequestStatus_status = MonitoringTechSupportRequestStatus_status;
     MonitoringTroubleshootingSessionStatus_state = MonitoringTroubleshootingSessionStatus_state;
 
     FieldsRequirement_operator_uihint = FieldsRequirement_operator_uihint;
+    LabelsRequirement_operator_uihint = LabelsRequirement_operator_uihint;
     MonitoringAlertPolicySpec_severity_uihint = MonitoringAlertPolicySpec_severity_uihint;
     MonitoringAlertSpec_state_uihint = MonitoringAlertSpec_state_uihint;
     MonitoringAlertStatus_severity_uihint = MonitoringAlertStatus_severity_uihint;

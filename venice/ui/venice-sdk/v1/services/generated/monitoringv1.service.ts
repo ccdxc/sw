@@ -3,7 +3,7 @@ import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http
 import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 
-import { IMonitoringMirrorSessionList,IApiStatus,IMonitoringMirrorSession,IMonitoringTroubleshootingSessionList,IMonitoringTroubleshootingSession,IMonitoringAlertDestinationList,IMonitoringAlertDestination,IMonitoringAlertPolicyList,IMonitoringAlertPolicy,IMonitoringAlertList,IMonitoringAlert,IMonitoringEventPolicy,IMonitoringFlowExportPolicyList,IMonitoringFlowExportPolicy,IMonitoringFwlogPolicyList,IMonitoringFwlogPolicy,IMonitoringStatsPolicyList,IMonitoringStatsPolicy,IMonitoringAutoMsgMirrorSessionWatchHelper,IMonitoringAutoMsgAlertDestinationWatchHelper,IMonitoringAutoMsgAlertPolicyWatchHelper,IMonitoringAutoMsgAlertWatchHelper,IMonitoringAutoMsgEventPolicyWatchHelper,IMonitoringAutoMsgFlowExportPolicyWatchHelper,IMonitoringAutoMsgFwlogPolicyWatchHelper,IMonitoringAutoMsgStatsPolicyWatchHelper } from '../../models/generated/monitoring';
+import { IMonitoringMirrorSessionList,IApiStatus,IMonitoringMirrorSession,IMonitoringTroubleshootingSessionList,IMonitoringTroubleshootingSession,IMonitoringAlertDestinationList,IMonitoringAlertDestination,IMonitoringAlertPolicyList,IMonitoringAlertPolicy,IMonitoringAlertList,IMonitoringAlert,IMonitoringEventPolicy,IMonitoringFlowExportPolicyList,IMonitoringFlowExportPolicy,IMonitoringFwlogPolicyList,IMonitoringFwlogPolicy,IMonitoringStatsPolicyList,IMonitoringStatsPolicy,IMonitoringTechSupportRequestList,IMonitoringTechSupportRequest,IMonitoringAutoMsgMirrorSessionWatchHelper,IMonitoringAutoMsgAlertDestinationWatchHelper,IMonitoringAutoMsgAlertPolicyWatchHelper,IMonitoringAutoMsgAlertWatchHelper,IMonitoringAutoMsgEventPolicyWatchHelper,IMonitoringAutoMsgFlowExportPolicyWatchHelper,IMonitoringAutoMsgFwlogPolicyWatchHelper,IMonitoringAutoMsgStatsPolicyWatchHelper } from '../../models/generated/monitoring';
 
 @Injectable()
 export class Monitoringv1Service extends AbstractService {
@@ -269,6 +269,39 @@ export class Monitoringv1Service extends AbstractService {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/statsPolicy/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     return this.invokeAJAXPutCall(url, body, 'UpdateStatsPolicy_1') as Observable<{body: IMonitoringStatsPolicy | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** List TechSupportRequest objects */
+  public ListTechSupportRequest(queryParam: any = null):Observable<{body: IMonitoringTechSupportRequestList | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/techsupport';
+    return this.invokeAJAXGetCall(url, queryParam, 'ListTechSupportRequest') as Observable<{body: IMonitoringTechSupportRequestList | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Create TechSupportRequest object */
+  public AddTechSupportRequest(body: IMonitoringTechSupportRequest):Observable<{body: IMonitoringTechSupportRequest | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/techsupport';
+    return this.invokeAJAXPostCall(url, body, 'AddTechSupportRequest') as Observable<{body: IMonitoringTechSupportRequest | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Get TechSupportRequest object */
+  public GetTechSupportRequest(O_Name, queryParam: any = null):Observable<{body: IMonitoringTechSupportRequest | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/techsupport/{O.Name}';
+    url = url.replace('{O.Name}', O_Name);
+    return this.invokeAJAXGetCall(url, queryParam, 'GetTechSupportRequest') as Observable<{body: IMonitoringTechSupportRequest | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Delete TechSupportRequest object */
+  public DeleteTechSupportRequest(O_Name):Observable<{body: IMonitoringTechSupportRequest | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/techsupport/{O.Name}';
+    url = url.replace('{O.Name}', O_Name);
+    return this.invokeAJAXDeleteCall(url, 'DeleteTechSupportRequest') as Observable<{body: IMonitoringTechSupportRequest | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Update TechSupportRequest object */
+  public UpdateTechSupportRequest(O_Name, body: IMonitoringTechSupportRequest):Observable<{body: IMonitoringTechSupportRequest | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/techsupport/{O.Name}';
+    url = url.replace('{O.Name}', O_Name);
+    return this.invokeAJAXPutCall(url, body, 'UpdateTechSupportRequest') as Observable<{body: IMonitoringTechSupportRequest | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List MirrorSession objects */

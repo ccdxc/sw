@@ -114,6 +114,17 @@ type MonitoringV1TroubleshootingSessionInterface interface {
 	Allowed(oper apiserver.APIOperType) bool
 }
 
+// MonitoringV1TechSupportRequestInterface exposes the CRUD methods for TechSupportRequest
+type MonitoringV1TechSupportRequestInterface interface {
+	Create(ctx context.Context, in *TechSupportRequest) (*TechSupportRequest, error)
+	Update(ctx context.Context, in *TechSupportRequest) (*TechSupportRequest, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*TechSupportRequest, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*TechSupportRequest, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*TechSupportRequest, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiserver.APIOperType) bool
+}
+
 // MonitoringV1Interface exposes objects with CRUD operations allowed by the service
 type MonitoringV1Interface interface {
 	EventPolicy() MonitoringV1EventPolicyInterface
@@ -125,5 +136,6 @@ type MonitoringV1Interface interface {
 	AlertDestination() MonitoringV1AlertDestinationInterface
 	MirrorSession() MonitoringV1MirrorSessionInterface
 	TroubleshootingSession() MonitoringV1TroubleshootingSessionInterface
+	TechSupportRequest() MonitoringV1TechSupportRequestInterface
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 }

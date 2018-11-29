@@ -1,12 +1,19 @@
 OutDir := ${GOPATH}/src/github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi
 
-DEST := mirror.pb.go  ${OutDir}/mirror_api.go ${OutDir}/mirror_api_test.go
+DEST := mirror.pb.go  techsupport.pb.go ${OutDir}/mirror_api.go ${OutDir}/mirror_api_test.go ${OutDir}/techsupport_api.go
 default: ${DEST}
 
 mirror.pb.go: mirror.proto
 	protoc -I/usr/local/include -I. -I../../../../../vendor -I${GOPATH}/src -I../../../../../vendor/github.com/pensando/grpc-gateway/third_party -I../../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
 	-I../../../../../vendor/github.com/gogo/protobuf/protobuf \
 	--gofast_out=plugins=grpc:. mirror.proto
+	sed -i.bak_ 's/api\/protos/api\/generated\/monitoring/g' *.go
+	rm -f *.bak_
+
+techsupport.pb.go: techsupport.proto
+	protoc -I/usr/local/include -I. -I../../../../../vendor -I${GOPATH}/src -I../../../../../vendor/github.com/pensando/grpc-gateway/third_party -I../../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
+	-I../../../../../vendor/github.com/gogo/protobuf/protobuf \
+	--gofast_out=plugins=grpc:. techsupport.proto
 	sed -i.bak_ 's/api\/protos/api\/generated\/monitoring/g' *.go
 	rm -f *.bak_
 

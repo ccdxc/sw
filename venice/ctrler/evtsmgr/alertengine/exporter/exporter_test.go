@@ -189,3 +189,6 @@ func (m *mockMonitoringV1) Watch(ctx context.Context, options *api.ListWatchOpti
 func (m *mockMonitoringV1) TroubleshootingSession() monitoring.MonitoringV1TroubleshootingSessionInterface {
 	return nil
 }
+func (m *mockMonitoringV1) TechSupportRequest() monitoring.MonitoringV1TechSupportRequestInterface {
+	return nil
+}

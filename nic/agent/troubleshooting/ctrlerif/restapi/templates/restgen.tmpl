@@ -21,11 +21,11 @@ import (
             {{$methods := .Methods}}
             {{range $methods}}
                 {{if strEq . "list"}}
-                    r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.PacketCapture{{title .}}Handler))
+                    r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.{{lower .}}{{title $crudObject}}Handler))
                 {{else if strEq . "post"}}
-                    r.Methods("{{upper .}}").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.PacketCapture{{title .}}Handler))
+                    r.Methods("{{upper .}}").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.{{lower .}}{{title $crudObject}}Handler))
                 {{else}}
-                    r.Methods("{{upper .}}").Subrouter().HandleFunc("{{$pattern}}", httputils.MakeHTTPHandler(srv.PacketCapture{{title .}}Handler))
+                    r.Methods("{{upper .}}").Subrouter().HandleFunc("{{$pattern}}", httputils.MakeHTTPHandler(srv.{{lower .}}{{title $crudObject}}Handler))
                 {{end}}
             {{end}}
             }
@@ -36,27 +36,27 @@ import (
            {{$methods := .Methods}}
            {{range $methods}}
                 {{if strEq . "list"}}
-                    func (s *RestServer) PacketCapture{{title .}}Handler(r *http.Request) (interface{}, error){
-                        return s.TsAgent.ListPacketCaptureSession(), nil
+                    func (s *RestServer) {{lower .}}{{title $crudObject}}Handler(r *http.Request) (interface{}, error){
+                        return s.TsAgent.List{{title $crudObject}}(), nil
                     }
                 {{else}}
-                    func (s *RestServer) PacketCapture{{title .}}Handler(r *http.Request) (interface{}, error){
+                    func (s *RestServer) {{lower .}}{{title $crudObject}}Handler(r *http.Request) (interface{}, error){
                         var o tsproto.{{title $crudObject}}
 
                         {{if strEq . "get"}}
-                             o.TypeMeta.Kind = "MirrorSession"
+                             o.TypeMeta.Kind = "{{title $crudObject}}"
                              o.ObjectMeta.Tenant = mux.Vars(r)["ObjectMeta.Tenant"]
                              o.ObjectMeta.Namespace = mux.Vars(r)["ObjectMeta.Namespace"]
                              o.ObjectMeta.Name = mux.Vars(r)["ObjectMeta.Name"]
 
-                             return s.TsAgent.GetPacketCaptureSession(&o), nil
+                             return s.TsAgent.Get{{title $crudObject}}(&o), nil
                         {{else if strEq . "delete"}}
                              o.TypeMeta.Kind = "MirrorSession"
                              o.ObjectMeta.Tenant = mux.Vars(r)["ObjectMeta.Tenant"]
                              o.ObjectMeta.Namespace = mux.Vars(r)["ObjectMeta.Namespace"]
                              o.ObjectMeta.Name = mux.Vars(r)["ObjectMeta.Name"]
 
-                             return nil, s.TsAgent.DeletePacketCaptureSession(&o)
+                             return nil, s.TsAgent.Delete{{title $crudObject}}(&o)
                         {{else if strEq . "post"}}
                             var res Response
                              b, _ := ioutil.ReadAll(r.Body)
@@ -71,7 +71,7 @@ import (
                              o.ModTime = api.Timestamp{
                                 Timestamp: *c,
                              }
-                             err = s.TsAgent.CreatePacketCaptureSession(&o)
+                             err = s.TsAgent.Create{{title $crudObject}}(&o)
                              if err != nil {
                                  res.StatusCode = http.StatusInternalServerError
                                  res.Error = err.Error()
@@ -91,7 +91,7 @@ import (
                              o.ModTime = api.Timestamp{
                                 Timestamp: *m,
                              }
-                             err = s.TsAgent.UpdatePacketCaptureSession(&o)
+                             err = s.TsAgent.Update{{title $crudObject}}(&o)
                              if err != nil {
                                  res.StatusCode = http.StatusInternalServerError
                                  res.Error = err.Error()
