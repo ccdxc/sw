@@ -87,22 +87,22 @@ static inline uint32_t get_max_output_len_by_type(uint16_t svc_type,
 	}
 }
 
-struct input_buffer_context {
+struct buffer_context {
 	bool initialized;
+	bool is_sgl_pa; /* physical addr or not */
 	uint32_t svc_chain_idx;
-	uint32_t alloc_sz;
-	uint32_t len;
-	uint8_t *buf;
+	uint32_t buf_alloc_sz;
+	uint32_t buflist_alloc_count;
+	struct pnso_buffer_list *buflist;
+	struct pnso_flat_buffer buf;
 };
 
 struct request_context {
 	struct batch_context *batch_ctx;
 	const struct test_svc_chain *svc_chain;
 
-	struct input_buffer_context input;
-
-	bool is_req_sgl_pa; /* physical addr or not */
-	bool is_res_sgl_pa; /* physical addr or not */
+	struct buffer_context input;
+	struct buffer_context outputs[PNSO_SVC_TYPE_MAX];
 
 	/* MUST keep these 2 in order, due to zero-length array */
 	struct pnso_service_request svc_req;
@@ -113,8 +113,10 @@ struct request_context {
 	struct pnso_service_status res_statuses[PNSO_SVC_TYPE_MAX];
 
 	/* MUST keep these 2 in order, due to zero-length array */
+#if 0
 	struct pnso_buffer_list src_buflist;
 	struct pnso_flat_buffer src_bufs[MAX_INPUT_BUF_COUNT];
+#endif
 
 	/* Initial values inherited from parent */
 	uint32_t vars[TEST_VAR_MAX];
