@@ -1432,11 +1432,9 @@ void ionic_lifs_free(struct ionic *ionic)
 	}
 }
 
-#ifdef notyet
 static int ionic_lif_stats_dump_start(struct lif *lif, unsigned int ver)
 {
 	struct net_device *netdev = lif->netdev;
-	struct device *dev = lif->ionic->dev;
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.stats_dump = {
@@ -1444,37 +1442,45 @@ static int ionic_lif_stats_dump_start(struct lif *lif, unsigned int ver)
 			.ver = ver,
 		},
 	};
-	int err;
+	int error;
 
-	lif->stats_dump = dma_alloc_coherent(dev, sizeof(*lif->stats_dump),
-					     &lif->stats_dump_pa, GFP_KERNEL);
-
-	if (!lif->stats_dump) {
-		IONIC_NETDEV_ERROR(netdev, "%s OOM\n", __func__);
-		return ENOMEM;
+	if ((error = ionic_dma_alloc(lif->ionic, sizeof(struct stats_dump), &lif->stats_dma, BUS_DMA_NOWAIT))) {
+		IONIC_NETDEV_ERROR(netdev, "failed to allocated stats DMA, err: %d\n", error);
+		return error;
 	}
 
+	lif->stats_dump_pa = lif->stats_dma.dma_paddr;
+	lif->stats_dump = (struct stats_dump *)lif->stats_dma.dma_vaddr;
+
+	if (!lif->stats_dump) {
+		IONIC_NETDEV_ERROR(netdev, "failed to allocate stats buffer\n");
+		return ENOMEM;
+	}
+	bzero(lif->stats_dump, sizeof(struct stats_dump));
 	ctx.cmd.stats_dump.addr = lif->stats_dump_pa;
 
-	IONIC_NETDEV_INFO(netdev, "stats_dump START ver %d addr 0x%llx\n", ver,
-		    lif->stats_dump_pa);
+	IONIC_NETDEV_INFO(netdev, "stats_dump START ver %d addr %p(0x%lx)\n", ver,
+		    lif->stats_dump, lif->stats_dump_pa);
 
-	err = ionic_adminq_post_wait(lif, &ctx);
-	if (err)
+	error = ionic_adminq_post_wait(lif, &ctx);
+	if (error)
 		goto err_out_free;
 
 	return 0;
 
 err_out_free:
-	dma_free_coherent(dev, sizeof(*lif->stats_dump), lif->stats_dump,
-			  lif->stats_dump_pa);
-	return err;
+	if (lif->stats_dump) {
+		ionic_dma_free(lif->ionic, &lif->stats_dma);
+		lif->stats_dump = NULL;
+		lif->stats_dump_pa = 0;
+	}
+
+	return error;
 }
 
 static void ionic_lif_stats_dump_stop(struct lif *lif)
 {
 	struct net_device *netdev = lif->netdev;
-	struct device *dev = lif->ionic->dev;
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.stats_dump = {
@@ -1491,10 +1497,12 @@ static void ionic_lif_stats_dump_stop(struct lif *lif)
 		return;
 	}
 
-	dma_free_coherent(dev, sizeof(*lif->stats_dump), lif->stats_dump,
-			  lif->stats_dump_pa);
+	if (lif->stats_dump) {
+		ionic_dma_free(lif->ionic, &lif->stats_dma);
+		lif->stats_dump = NULL;
+		lif->stats_dump_pa = 0;
+	}
 }
-#endif /* notyet */
 
 int
 ionic_rss_ind_tbl_set(struct lif *lif, const u32 *indir)
@@ -1604,6 +1612,11 @@ static void ionic_lif_rxqs_deinit(struct lif *lif)
 
 static void ionic_lif_deinit(struct lif *lif)
 {
+
+	ionic_lif_stats_dump_stop(lif);
+	ionic_rx_filters_deinit(lif);
+	ionic_lif_rss_teardown(lif);
+
 	/* Unregister VLAN events */
 	if (lif->vlan_attach != NULL)
 		EVENTHANDLER_DEREGISTER(vlan_config, lif->vlan_attach);
@@ -2178,11 +2191,10 @@ static int ionic_lif_init(struct lif *lif)
 		goto err_out_rxqs_deinit;
 	}
 
-#ifdef notyet
 	err = ionic_lif_stats_dump_start(lif, STATS_DUMP_VERSION_1);
 	if (err)
 		goto err_out_rss_teardown;
-#endif
+
 	ionic_set_rx_mode(lif->netdev);
 
 	ionic_setup_sysctls(lif);
@@ -2191,7 +2203,7 @@ static int ionic_lif_init(struct lif *lif)
 
 	return 0;
 
-//err_out_rss_teardown:
+err_out_rss_teardown:
 	ionic_lif_rss_teardown(lif);
 err_out_rxqs_deinit:
 	ionic_lif_rxqs_deinit(lif);

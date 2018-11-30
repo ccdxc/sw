@@ -236,7 +236,9 @@ struct lif {
 
 	u32 hw_features;			/* Features enabled in hardware, e.g. checksum, TSO etc. */
 
+	struct ionic_dma_info stats_dma; 	/* DMA ring for command and completion. */
 	struct stats_dump *stats_dump;
+
 	dma_addr_t stats_dump_pa;
 
 	u8 rss_hash_key[RSS_HASH_KEY_SIZE];
