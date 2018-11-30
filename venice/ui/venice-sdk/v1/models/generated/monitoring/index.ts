@@ -70,7 +70,6 @@ export * from './monitoring-flow-export-policy.model';
 export * from './monitoring-flow-export-policy-list.model';
 export * from './monitoring-flow-export-policy-spec.model';
 export * from './monitoring-flow-export-policy-status.model';
-export * from './monitoring-flow-export-target.model';
 export * from './monitoring-fwlog-export.model';
 export * from './monitoring-fwlog-policy.model';
 export * from './monitoring-fwlog-policy-list.model';

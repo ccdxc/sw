@@ -1,6 +1,7 @@
 package rpcserver
 
 import (
+	"encoding/json"
 	"fmt"
 	"sync"
 	"sync/atomic"
@@ -211,18 +212,16 @@ func (p *flowExportPolicyRPCServer) WatchFlowExportPolicy(in *api.ObjectMeta, ou
 
 	// send existing policy
 	for _, obj := range p.policyDb.ListObjects("FlowExportPolicy") {
-		policy, ok := obj.(*apiProtos.FlowExportPolicy)
-		if !ok {
+		p, err := json.Marshal(obj)
+		if err != nil {
 			rpcLog.Errorf("invalid flow export policy from list %+v", obj)
 			return fmt.Errorf("invalid flow export policy from list")
 		}
+		flowExportPolicy := &tpmProtos.FlowExportPolicy{}
 
-		flowExportPolicy := &tpmProtos.FlowExportPolicy{
-			TypeMeta:   policy.TypeMeta,
-			ObjectMeta: policy.ObjectMeta,
-			Spec: tpmProtos.FlowExportPolicySpec{
-				Targets: policy.Spec.Targets,
-			},
+		if err := json.Unmarshal(p, &flowExportPolicy); err != nil {
+			rpcLog.Errorf("failed to convert flow export policy from list %+v", obj)
+			return fmt.Errorf("failed to convert flow export policy from list")
 		}
 
 		if err := out.Send(&tpmProtos.FlowExportPolicyEvent{EventType: api.EventType_CreateEvent,
@@ -241,13 +240,16 @@ func (p *flowExportPolicyRPCServer) WatchFlowExportPolicy(in *api.ObjectMeta, ou
 				return fmt.Errorf("invalid event from watch channel")
 			}
 
-			policy := event.Obj.(*apiProtos.FlowExportPolicy)
-			flowExportPolicy := &tpmProtos.FlowExportPolicy{
-				TypeMeta:   policy.TypeMeta,
-				ObjectMeta: policy.ObjectMeta,
-				Spec: tpmProtos.FlowExportPolicySpec{
-					Targets: policy.Spec.Targets,
-				},
+			p, err := json.Marshal(event.Obj)
+			if err != nil {
+				rpcLog.Errorf("invalid flow export policy from list %+v", event.Obj)
+				return fmt.Errorf("invalid flow export policy from list")
+			}
+			flowExportPolicy := &tpmProtos.FlowExportPolicy{}
+
+			if err := json.Unmarshal(p, &flowExportPolicy); err != nil {
+				rpcLog.Errorf("failed to convert flow export policy from list %+v", event.Obj)
+				return fmt.Errorf("failed to convert flow export policy from list")
 			}
 
 			if err := out.Send(&tpmProtos.FlowExportPolicyEvent{EventType: apiEventTypeMap[event.EventType],

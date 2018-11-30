@@ -14,6 +14,7 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 import "github.com/pensando/sw/api/protos/telemetry.proto";
 import "export.proto";
+import "github.com/pensando/sw/venice/ctrler/tsm/rpcserver/tsproto/matchrule.proto";
 
 //================================ statsPolicy ==========================================================
 
@@ -101,7 +102,16 @@ message FlowExportPolicyEvent {
 }
 
 message FlowExportPolicySpec {
-    repeated monitoring.FlowExportTarget Targets = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "targets,omitempty"];
+    // Interval defines how often to push the records to an external or internal collector
+    // The value is specified as a string format to be '10s', '20m', '20mins', '10secs', '10seconds'
+    string Interval = 1 [(gogoproto.jsontag) = "interval,omitempty"];
+
+    string Format = 2 [(gogoproto.jsontag) = "format,omitempty"];
+
+    repeated tsproto.MatchRule  MatchRules = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "match-rules,omitempty"];
+
+    // Export contains export parameters.
+    repeated monitoring.ExportConfig Exports = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "exports,omitempty"];
 }
 
 message FlowExportPolicyStatus {

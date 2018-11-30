@@ -61,7 +61,7 @@ func NewPolicyAgent(nodeUUID string, ctrlerURL string, resolverClient resolver.I
 		agent.hal = mockdatapath.MockHal()
 	}
 
-	tpAgent, err := state.NewTpAgent(netAgent, agent.hal)
+	tpAgent, err := state.NewTpAgent(netAgent, agent.hal, "")
 	if err != nil {
 		log.Errorf("Error creating telemetry policy state, Err: %v", err)
 		return nil, err

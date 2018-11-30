@@ -78,7 +78,6 @@
 		FlowExportPolicy
 		FlowExportPolicySpec
 		FlowExportPolicyStatus
-		FlowExportTarget
 		FwlogExport
 		FwlogPolicy
 		FwlogPolicySpec

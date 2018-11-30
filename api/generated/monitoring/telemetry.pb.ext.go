@@ -102,9 +102,10 @@ func (m *FlowExportPolicySpec) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *FlowExportPolicySpec) Defaults(ver string) bool {
 	var ret bool
-	for k := range m.Targets {
-		i := m.Targets[k]
-		ret = i.Defaults(ver) || ret
+	ret = true
+	switch ver {
+	default:
+		m.Format = "Ipfix"
 	}
 	return ret
 }
@@ -128,33 +129,6 @@ func (m *FlowExportPolicyStatus) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *FlowExportPolicyStatus) Defaults(ver string) bool {
 	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *FlowExportTarget) Clone(into interface{}) (interface{}, error) {
-	var out *FlowExportTarget
-	var ok bool
-	if into == nil {
-		out = &FlowExportTarget{}
-	} else {
-		out, ok = into.(*FlowExportTarget)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *FlowExportTarget) Defaults(ver string) bool {
-	var ret bool
-	ret = true
-	switch ver {
-	default:
-		m.Format = "Ipfix"
-	}
-	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -368,26 +342,6 @@ func (m *FlowExportPolicy) Validate(ver, path string, ignoreStatus bool) []error
 
 func (m *FlowExportPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
-	for k, v := range m.Targets {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := fmt.Sprintf("%s%sTargets[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
-		}
-	}
-	return ret
-}
-
-func (m *FlowExportPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	return ret
-}
-
-func (m *FlowExportTarget) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
 	for k, v := range m.Exports {
 		dlmtr := "."
 		if path == "" {
@@ -408,19 +362,24 @@ func (m *FlowExportTarget) Validate(ver, path string, ignoreStatus bool) []error
 			ret = append(ret, errs...)
 		}
 	}
-	if vs, ok := validatorMapTelemetry["FlowExportTarget"][ver]; ok {
+	if vs, ok := validatorMapTelemetry["FlowExportPolicySpec"][ver]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
 				ret = append(ret, err)
 			}
 		}
-	} else if vs, ok := validatorMapTelemetry["FlowExportTarget"]["all"]; ok {
+	} else if vs, ok := validatorMapTelemetry["FlowExportPolicySpec"]["all"]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
 				ret = append(ret, err)
 			}
 		}
 	}
+	return ret
+}
+
+func (m *FlowExportPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
 	return ret
 }
 
@@ -572,18 +531,18 @@ func init() {
 
 	validatorMapTelemetry = make(map[string]map[string][]func(string, interface{}) error)
 
-	validatorMapTelemetry["FlowExportTarget"] = make(map[string][]func(string, interface{}) error)
-	validatorMapTelemetry["FlowExportTarget"]["all"] = append(validatorMapTelemetry["FlowExportTarget"]["all"], func(path string, i interface{}) error {
-		m := i.(*FlowExportTarget)
+	validatorMapTelemetry["FlowExportPolicySpec"] = make(map[string][]func(string, interface{}) error)
+	validatorMapTelemetry["FlowExportPolicySpec"]["all"] = append(validatorMapTelemetry["FlowExportPolicySpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*FlowExportPolicySpec)
 
-		if _, ok := FlowExportTarget_Formats_value[m.Format]; !ok {
-			return errors.New("FlowExportTarget.Format did not match allowed strings")
+		if _, ok := FlowExportPolicySpec_Formats_value[m.Format]; !ok {
+			return errors.New("FlowExportPolicySpec.Format did not match allowed strings")
 		}
 		return nil
 	})
 
-	validatorMapTelemetry["FlowExportTarget"]["all"] = append(validatorMapTelemetry["FlowExportTarget"]["all"], func(path string, i interface{}) error {
-		m := i.(*FlowExportTarget)
+	validatorMapTelemetry["FlowExportPolicySpec"]["all"] = append(validatorMapTelemetry["FlowExportPolicySpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*FlowExportPolicySpec)
 		if !validators.Duration(m.Interval) {
 			return fmt.Errorf("%v validation failed", path+"."+"Interval")
 		}

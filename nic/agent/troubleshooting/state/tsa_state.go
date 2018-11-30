@@ -4,9 +4,9 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"net"
-	"strconv"
 	"strings"
+
+	"github.com/pensando/sw/nic/agent/troubleshooting/utils"
 
 	"github.com/gogo/protobuf/proto"
 
@@ -23,7 +23,6 @@ import (
 const (
 	halMaxMirrorSession         = 8
 	mirrorSessionDropRuleIDType = "MirrorSessionDropRuleID"
-	mirrorSessionFlowRuleIDType = "MirrorSessionFlowRuleID"
 )
 
 // Tagent is an instance of Troubleshooting agent
@@ -34,9 +33,6 @@ var ErrInvalidMirrorSpec = errors.New("Mirror specification is incorrect")
 
 // ErrMirrorSpecResource error code is returned when mirror create failed due to resource error
 var ErrMirrorSpecResource = errors.New("Out of resource. No more mirror resource available")
-
-// ErrInvalidFlowMonitorRule error code is returned when flow monitor rule is invalid
-var ErrInvalidFlowMonitorRule = errors.New("Flow monitor rule is incorrect")
 
 // ErrMsInternal error code is returned when mirror session agent code runs into data discrepency
 var ErrMsInternal = errors.New("Mirror Session internal error")
@@ -297,7 +293,7 @@ func (tsa *Tagent) allocateFlowMonitorRuleID(flowRule types.FlowMonitorRuleSpec)
 	if _, v := tsa.DB.FlowMonitorRuleToID[flowRule]; v {
 		ruleID = tsa.DB.FlowMonitorRuleToID[flowRule]
 	} else {
-		ruleID, err = tsa.Store.GetNextID(mirrorSessionFlowRuleIDType)
+		ruleID, err = tsa.Store.GetNextID(types.FlowMonitorRuleIDType)
 		if err != nil {
 			log.Errorf("Could not allocate drop rule id. {%+v}", err)
 			return 0, allocated, err
@@ -370,418 +366,6 @@ func getFireWallPolicyDropReasons() []halproto.DropReasons {
 	return FwPolicyDropReasons
 }
 
-func isIpv4(ip string) bool {
-	for i := 0; i < len(ip); i++ {
-		switch ip[i] {
-		case '.':
-			return true
-		case ':':
-			return false
-		}
-	}
-	return false
-}
-func isRangeAddr(ip string) bool {
-	for i := 0; i < len(ip); i++ {
-		switch ip[i] {
-		case '-':
-			return true
-		}
-	}
-	return false
-}
-func isSubnetAddr(ip string) bool {
-	for i := 0; i < len(ip); i++ {
-		switch ip[i] {
-		case '/':
-			return true
-		}
-	}
-	return false
-}
-func getPrefixLen(ip string) int32 {
-	strs := strings.Split(ip, "/")
-	if len(strs) > 1 {
-		v, err := strconv.Atoi(strs[1])
-		if err == nil {
-			return int32(v)
-		}
-	}
-	return -1
-}
-
-//returns ipaddr type, is Range (only last byte is allowed to have range), is ip prefix
-func getIPAddrDetails(ipAddr string) (bool, bool, bool) {
-	return isIpv4(ipAddr), isRangeAddr(ipAddr), isSubnetAddr(ipAddr)
-}
-
-func buildIPAddrDetails(ipaddr string) *types.IPAddrDetails {
-	var ip net.IP
-
-	if ipaddr == "any" {
-		ipaddr = "0.0.0.0/0"
-	}
-	isIpv4, isRange, isSubnet := getIPAddrDetails(ipaddr)
-	ipAddr := &types.IPAddrDetails{}
-	if !isRange {
-		if !isSubnet {
-			if isIpv4 {
-				ip = net.ParseIP(ipaddr).To4()
-			} else {
-				ip = net.ParseIP(ipaddr)
-			}
-			ipAddr = &types.IPAddrDetails{
-				IP:       ip,
-				IsIpv4:   isIpv4,
-				IsSubnet: isSubnet,
-				//prefixLen: 0
-			}
-		} else {
-			ip, _, _ = net.ParseCIDR(ipaddr)
-			if isIpv4 {
-				ip = ip.To4()
-			}
-			ipAddr = &types.IPAddrDetails{
-				IP:        ip,
-				IsIpv4:    isIpv4,
-				IsSubnet:  isSubnet,
-				PrefixLen: uint32(getPrefixLen(ipaddr)),
-			}
-		}
-	} else {
-		// TODO Handle address range.
-	}
-	return ipAddr
-}
-
-//Given protocol string "TCP/123", return IPProtocol value corresponding to "TCP"
-func getProtocol(portString string) int32 {
-	strs := strings.Split(portString, "/")
-	if len(strs) > 1 {
-		protoStr := "IPPROTO_" + strings.ToUpper(strs[0])
-		return halproto.IPProtocol_value[protoStr]
-	}
-	return -1
-}
-
-//Given protocol string "TCP/123", return IPProtocol value corresponding to "TCP"
-func getPort(portString string) int32 {
-	strs := strings.Split(portString, "/")
-	if len(strs) > 1 {
-		v, err := strconv.Atoi(strs[1])
-		if err == nil {
-			return int32(v)
-		}
-	}
-	return -1
-}
-
-// If all rules in the spec pass sanity check, then return true.
-// sanity check include correctness of  IPaddr string, mac addr string,
-// application selectors
-func matchRuleSanityCheck(mirrorSession *tsproto.MirrorSession) bool {
-	for _, rule := range mirrorSession.Spec.MatchRules {
-		srcSelectors := rule.Src
-		destSelectors := rule.Dst
-		appSelectors := rule.AppProtoSel
-		if srcSelectors != nil {
-			if len(srcSelectors.Endpoints) > 0 {
-				tmeta := api.TypeMeta{Kind: "Endpoint"}
-				ometa := api.ObjectMeta{
-					Tenant:    mirrorSession.Tenant,
-					Namespace: mirrorSession.Namespace,
-				}
-				for _, ep := range srcSelectors.Endpoints {
-					ometa.Name = ep
-					nAgent.Lock()
-					_, ok := nAgent.EndpointDB[nAgent.Solver.ObjectKey(ometa, tmeta)]
-					nAgent.Unlock()
-					if !ok {
-						log.Errorf("Src Endpoint %s not found", nAgent.Solver.ObjectKey(ometa, tmeta))
-						return false
-					}
-				}
-			} else if len(srcSelectors.IPAddresses) > 0 {
-				for _, ipAddr := range srcSelectors.IPAddresses {
-					if ipAddr == "any" {
-						continue
-					}
-					_, isRange, isSubnet := getIPAddrDetails(ipAddr)
-					if !isRange {
-						if !isSubnet {
-							if net.ParseIP(ipAddr) == nil {
-								return false
-							}
-						} else {
-							_, _, err := net.ParseCIDR(ipAddr)
-							if err != nil {
-								return false
-							}
-						}
-					} else {
-						// TODO: Handle IPaddr range
-					}
-				}
-			} else if len(srcSelectors.MACAddresses) > 0 {
-				for _, macAddr := range srcSelectors.MACAddresses {
-					_, err := net.ParseMAC(macAddr)
-					if err != nil {
-						return false
-					}
-				}
-			}
-		}
-		if destSelectors != nil {
-			if len(destSelectors.Endpoints) > 0 {
-				tmeta := api.TypeMeta{Kind: "Endpoint"}
-				ometa := api.ObjectMeta{
-					Tenant:    mirrorSession.Tenant,
-					Namespace: mirrorSession.Namespace,
-				}
-				for _, ep := range destSelectors.Endpoints {
-					ometa.Name = ep
-					nAgent.Lock()
-					_, ok := nAgent.EndpointDB[nAgent.Solver.ObjectKey(ometa, tmeta)]
-					nAgent.Unlock()
-					if !ok {
-						log.Errorf("Dest Endpoint %s not found", nAgent.Solver.ObjectKey(ometa, tmeta))
-						return false
-					}
-				}
-			} else if len(destSelectors.IPAddresses) > 0 {
-				for _, ipAddr := range destSelectors.IPAddresses {
-					if ipAddr == "any" {
-						continue
-					}
-					_, isRange, isSubnet := getIPAddrDetails(ipAddr)
-					if !isRange {
-						if !isSubnet {
-							if net.ParseIP(ipAddr) == nil {
-								return false
-							}
-						} else {
-							_, _, err := net.ParseCIDR(ipAddr)
-							if err != nil {
-								return false
-							}
-						}
-					} else {
-						// TODO: Handle IPaddr range
-					}
-				}
-			} else if len(destSelectors.MACAddresses) > 0 {
-				for _, macAddr := range destSelectors.MACAddresses {
-					_, err := net.ParseMAC(macAddr)
-					if err != nil {
-						return false
-					}
-				}
-			}
-		}
-
-		if appSelectors != nil {
-			if len(appSelectors.Ports) > 0 {
-				// Ports specified by controller will be in the form
-				// "tcp/5000"
-				// When Protocol is invalid or when port# is not specified
-				// fail sanity check.
-				for _, protoPort := range appSelectors.Ports {
-					if !strings.Contains(protoPort, "any") && getProtocol(protoPort) == -1 {
-						return false
-					}
-					if !strings.Contains(protoPort, "any") && getPort(protoPort) == -1 {
-						return false
-					}
-				}
-			} else if len(appSelectors.Apps) > 0 {
-				//TODO: Handle Application selection later. "Ex: Redis"
-			}
-		}
-	}
-	// TODO need to check if both srcIP and destIP are of same type (either both v4 or both v6)
-	return true
-}
-
-// Process trouble shooting controller sent MatchRule (Which can be composite)
-// and prepare list of first class match items.
-//      List of source IPAddr or source MacAddrs
-//      List of Destination IPAddr or Destination  MacAddrs
-//      List of Application Selectors
-// The caller of the function is expected to create cross product of
-// these 3 lists and use each tuple (src, dest, app) as an atomic rule
-// that can be sent to HAL
-func expandCompositeMatchRule(mirrorSession *tsproto.MirrorSession, rule *tsproto.MatchRule) ([]*types.IPAddrDetails, []*types.IPAddrDetails, []uint64, []uint64, []*types.AppPortDetails, []string, []string) {
-	srcSelectors := rule.Src
-	destSelectors := rule.Dst
-	appSelectors := rule.AppProtoSel
-	var srcIPs []*types.IPAddrDetails
-	var srcIPStrings []string
-	var srcMACs []uint64
-	var destIPs []*types.IPAddrDetails
-	var destIPStrings []string
-	var destMACs []uint64
-	var appPorts []*types.AppPortDetails
-	if srcSelectors != nil {
-		if len(srcSelectors.Endpoints) > 0 {
-			tmeta := api.TypeMeta{Kind: "Endpoint"}
-			ometa := api.ObjectMeta{
-				Tenant:    mirrorSession.Tenant,
-				Namespace: mirrorSession.Namespace,
-			}
-			for _, ep := range srcSelectors.Endpoints {
-				ometa.Name = ep
-				nAgent.Lock()
-				epObj, ok := nAgent.EndpointDB[nAgent.Solver.ObjectKey(ometa, tmeta)]
-				nAgent.Unlock()
-				if ok {
-					if epObj.Spec.IPv4Address != "" {
-						srcIPs = append(srcIPs, buildIPAddrDetails(epObj.Spec.IPv4Address))
-						srcIPStrings = append(srcIPStrings, epObj.Spec.IPv4Address)
-					}
-					if epObj.Spec.IPv6Address != "" {
-						srcIPs = append(srcIPs, buildIPAddrDetails(epObj.Spec.IPv6Address))
-						srcIPStrings = append(srcIPStrings, epObj.Spec.IPv6Address)
-					}
-				}
-			}
-		} else if len(srcSelectors.IPAddresses) > 0 {
-			for _, ipaddr := range srcSelectors.IPAddresses {
-				srcIPs = append(srcIPs, buildIPAddrDetails(ipaddr))
-				srcIPStrings = append(srcIPStrings, ipaddr)
-			}
-		} else if len(srcSelectors.MACAddresses) > 0 {
-			for _, macAddr := range srcSelectors.MACAddresses {
-				hwMac, _ := net.ParseMAC(macAddr)
-				srcMACs = append(srcMACs, binary.BigEndian.Uint64(hwMac))
-			}
-		}
-	} else {
-		srcIPs = append(srcIPs, buildIPAddrDetails("0.0.0.0/0"))
-		srcIPStrings = append(srcIPStrings, "0.0.0.0/0")
-	}
-	if destSelectors != nil {
-		if len(destSelectors.Endpoints) > 0 {
-			tmeta := api.TypeMeta{Kind: "Endpoint"}
-			ometa := api.ObjectMeta{
-				Tenant:    mirrorSession.Tenant,
-				Namespace: mirrorSession.Namespace,
-			}
-			for _, ep := range destSelectors.Endpoints {
-				ometa.Name = ep
-				nAgent.Lock()
-				epObj, ok := nAgent.EndpointDB[nAgent.Solver.ObjectKey(ometa, tmeta)]
-				nAgent.Unlock()
-				if ok {
-					if epObj.Spec.IPv4Address != "" {
-						destIPs = append(destIPs, buildIPAddrDetails(epObj.Spec.IPv4Address))
-						destIPStrings = append(destIPStrings, epObj.Spec.IPv4Address)
-					}
-					if epObj.Spec.IPv6Address != "" {
-						destIPs = append(destIPs, buildIPAddrDetails(epObj.Spec.IPv6Address))
-						destIPStrings = append(destIPStrings, epObj.Spec.IPv6Address)
-					}
-				}
-			}
-		} else if len(destSelectors.IPAddresses) > 0 {
-			for _, ipaddr := range destSelectors.IPAddresses {
-				destIPs = append(destIPs, buildIPAddrDetails(ipaddr))
-				destIPStrings = append(destIPStrings, ipaddr)
-			}
-		} else if len(destSelectors.MACAddresses) > 0 {
-			for _, macAddr := range destSelectors.MACAddresses {
-				hwMac, _ := net.ParseMAC(macAddr)
-				destMACs = append(destMACs, binary.BigEndian.Uint64(hwMac))
-			}
-		}
-	} else {
-		destIPs = append(destIPs, buildIPAddrDetails("0.0.0.0/0"))
-		destIPStrings = append(destIPStrings, "0.0.0.0/0")
-	}
-	if appSelectors != nil {
-		if len(appSelectors.Ports) > 0 {
-			// Ports specified by controller will be in the form
-			// "tcp/5000"
-			for _, protoPort := range appSelectors.Ports {
-				protoAny := false
-				portAny := false
-				protoType := int32(0)
-				portNum := int32(0)
-				strs := strings.Split(protoPort, "/")
-				if !strings.Contains(strs[0], "any") {
-					protoType = getProtocol(protoPort)
-				} else {
-					protoAny = true
-				}
-				if len(strs) > 1 && !strings.Contains(strs[1], "any") {
-					portNum = getPort(protoPort)
-				} else {
-					portAny = true
-				}
-				appPort := &types.AppPortDetails{}
-				if !protoAny {
-					appPort.Ipproto = protoType
-				}
-				if !portAny {
-					appPort.L4port = portNum
-				}
-				appPorts = append(appPorts, appPort)
-			}
-		} else if len(appSelectors.Apps) > 0 {
-			//TODO: Handle Application selection later. "Ex: Redis"
-		}
-	} else {
-		appPort := &types.AppPortDetails{}
-		appPorts = append(appPorts, appPort)
-	}
-	return srcIPs, destIPs, srcMACs, destMACs, appPorts, srcIPStrings, destIPStrings
-}
-
-func createIPAddrCrossProductRuleList(srcIPs, destIPs []*types.IPAddrDetails, appPorts []*types.AppPortDetails, srcIPStrings []string, destIPStrings []string) ([]*types.FlowMonitorIPRuleDetails, error) {
-
-	if len(srcIPs) == 0 && len(destIPs) == 0 {
-		return nil, ErrInvalidFlowMonitorRule
-	}
-	var flowMonitorRules []*types.FlowMonitorIPRuleDetails
-
-	for i := 0; i < len(srcIPs); i++ {
-		for j := 0; j < len(destIPs); j++ {
-			for k := 0; k < len(appPorts); k++ {
-				iprule := &types.FlowMonitorIPRuleDetails{
-					SrcIPObj:     srcIPs[i],
-					SrcIPString:  srcIPStrings[i],
-					DestIPObj:    destIPs[j],
-					DestIPString: destIPStrings[j],
-					AppPortObj:   appPorts[k],
-				}
-				flowMonitorRules = append(flowMonitorRules, iprule)
-			}
-		}
-	}
-	return flowMonitorRules, nil
-}
-
-func createMACAddrCrossProductRuleList(srcMACs, destMACs []uint64, appPorts []*types.AppPortDetails) ([]*types.FlowMonitorMACRuleDetails, error) {
-
-	if len(srcMACs) == 0 && len(destMACs) == 0 {
-		return nil, ErrInvalidFlowMonitorRule
-	}
-	var flowMonitorRules []*types.FlowMonitorMACRuleDetails
-
-	for i := 0; i < len(srcMACs); i++ {
-		for j := 0; j < len(destMACs); j++ {
-			for k := 0; k < len(appPorts); k++ {
-				iprule := &types.FlowMonitorMACRuleDetails{
-					SrcMAC:     srcMACs[i],
-					DestMAC:    destMACs[j],
-					AppPortObj: appPorts[k],
-				}
-				flowMonitorRules = append(flowMonitorRules, iprule)
-			}
-		}
-	}
-	return flowMonitorRules, nil
-}
-
 func buildIPAddrProtoObj(ipaddr *types.IPAddrDetails) *halproto.IPAddress {
 	IPAddr := &halproto.IPAddress{}
 	if ipaddr.IsIpv4 && !ipaddr.IsSubnet {
@@ -804,146 +388,6 @@ func buildIPAddrProtoObj(ipaddr *types.IPAddrDetails) *halproto.IPAddress {
 	return IPAddr
 }
 
-func buildIPAddrObjProtoObj(ipaddr *types.IPAddrDetails) *halproto.IPAddressObj {
-
-	addrObj := &halproto.IPAddressObj{}
-
-	if ipaddr.IsIpv4 && !ipaddr.IsSubnet {
-		//v4, no-cidr
-		addrObj.Formats = &halproto.IPAddressObj_Address{
-			Address: &halproto.Address{
-				Address: &halproto.Address_Range{
-					Range: &halproto.AddressRange{
-						Range: &halproto.AddressRange_Ipv4Range{
-							Ipv4Range: &halproto.IPRange{
-								LowIpaddr: &halproto.IPAddress{
-									IpAf: halproto.IPAddressFamily_IP_AF_INET,
-									V4OrV6: &halproto.IPAddress_V4Addr{
-										V4Addr: binary.BigEndian.Uint32(ipaddr.IP),
-									},
-								},
-								HighIpaddr: &halproto.IPAddress{
-									IpAf: halproto.IPAddressFamily_IP_AF_INET,
-									V4OrV6: &halproto.IPAddress_V4Addr{
-										V4Addr: binary.BigEndian.Uint32(ipaddr.IP),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		}
-	} else if ipaddr.IsIpv4 && ipaddr.IsSubnet {
-		//v4, cidr
-		addrObj.Formats = &halproto.IPAddressObj_Address{
-			Address: &halproto.Address{
-				Address: &halproto.Address_Prefix{
-					Prefix: &halproto.IPSubnet{
-						Subnet: &halproto.IPSubnet_Ipv4Subnet{
-							Ipv4Subnet: &halproto.IPPrefix{
-								Address: &halproto.IPAddress{
-									IpAf: halproto.IPAddressFamily_IP_AF_INET,
-									V4OrV6: &halproto.IPAddress_V4Addr{
-										V4Addr: binary.BigEndian.Uint32(ipaddr.IP),
-									},
-								},
-								PrefixLen: ipaddr.PrefixLen,
-							},
-						},
-					},
-				},
-			},
-		}
-	} else if !ipaddr.IsIpv4 && !ipaddr.IsSubnet {
-		//v6, no-cidr
-		addrObj.Formats = &halproto.IPAddressObj_Address{
-			Address: &halproto.Address{
-				Address: &halproto.Address_Range{
-					Range: &halproto.AddressRange{
-						Range: &halproto.AddressRange_Ipv6Range{
-							Ipv6Range: &halproto.IPRange{
-								LowIpaddr: &halproto.IPAddress{
-									IpAf: halproto.IPAddressFamily_IP_AF_INET6,
-									V4OrV6: &halproto.IPAddress_V6Addr{
-										V6Addr: ipaddr.IP,
-									},
-								},
-								HighIpaddr: &halproto.IPAddress{
-									IpAf: halproto.IPAddressFamily_IP_AF_INET6,
-									V4OrV6: &halproto.IPAddress_V6Addr{
-										V6Addr: ipaddr.IP,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		}
-	} else if !ipaddr.IsIpv4 && ipaddr.IsSubnet {
-		//v6, cidr
-		addrObj.Formats = &halproto.IPAddressObj_Address{
-			Address: &halproto.Address{
-				Address: &halproto.Address_Prefix{
-					Prefix: &halproto.IPSubnet{
-						Subnet: &halproto.IPSubnet_Ipv6Subnet{
-							Ipv6Subnet: &halproto.IPPrefix{
-								Address: &halproto.IPAddress{
-									IpAf: halproto.IPAddressFamily_IP_AF_INET6,
-									V4OrV6: &halproto.IPAddress_V6Addr{
-										V6Addr: ipaddr.IP,
-									},
-								},
-								PrefixLen: ipaddr.PrefixLen,
-							},
-						},
-					},
-				},
-			},
-		}
-	}
-
-	return addrObj
-}
-
-func buildAppMatchInfoObj(appPort *types.AppPortDetails) *halproto.RuleMatch_AppMatch {
-
-	appMatch := &halproto.RuleMatch_AppMatch{}
-	if appPort.Ipproto == int32(halproto.IPProtocol_IPPROTO_TCP) || appPort.Ipproto == int32(halproto.IPProtocol_IPPROTO_UDP) {
-		l4port := &halproto.L4PortRange{
-			PortLow:  uint32(appPort.L4port),
-			PortHigh: uint32(appPort.L4port),
-		}
-		appMatch.App = &halproto.RuleMatch_AppMatch_PortInfo{
-			PortInfo: &halproto.RuleMatch_L4PortAppInfo{
-				//Controller provided port# and proto is applied on only dest
-				// srcPort is not populated.
-				DstPortRange: []*halproto.L4PortRange{l4port},
-				//SrcPortRange:
-			},
-		}
-	}
-	if appPort.Ipproto == int32(halproto.IPProtocol_IPPROTO_ICMP) {
-		appMatch.App = &halproto.RuleMatch_AppMatch_IcmpInfo{
-			IcmpInfo: &halproto.RuleMatch_ICMPAppInfo{
-				IcmpType: 0, //TODO : Get this value from ctrler
-				IcmpCode: 0, //TODO : Get this value from ctrler
-			},
-		}
-	}
-	if appPort.Ipproto == int32(halproto.IPProtocol_IPPROTO_ICMPV6) {
-		appMatch.App = &halproto.RuleMatch_AppMatch_Icmpv6Info{
-			Icmpv6Info: &halproto.RuleMatch_ICMPv6AppInfo{
-				Icmpv6Type: 0, //TODO : Get this value from ctrler
-				Icmpv6Code: 0, //TODO : Get this value from ctrler
-			},
-		}
-	}
-
-	return appMatch
-}
-
 func buildVeniceCollectorProtoObj(mirrorSession *tsproto.MirrorSession, mirrorSessID uint64) []*halproto.MirrorSessionSpec_LocalSpanIf {
 	var mirrorCollectors []*halproto.MirrorSessionSpec_LocalSpanIf
 	for _, mirrorCollector := range mirrorSession.Spec.Collectors {
@@ -961,7 +405,7 @@ func buildErspanCollectorProtoObj(mirrorSession *tsproto.MirrorSession, mirrorSe
 	for _, mirrorCollector := range mirrorSession.Spec.Collectors {
 		if mirrorCollector.Type == "ERSPAN" {
 			//mirrorCollector.ExportCfg.Transport -- Does this info from ctrler need to be used ??
-			destIPDetails := buildIPAddrDetails(mirrorCollector.ExportCfg.Destination)
+			destIPDetails := utils.BuildIPAddrDetails(mirrorCollector.ExportCfg.Destination)
 			mirrorDestObj := &halproto.MirrorSessionSpec_ErspanSpec{
 				ErspanSpec: &halproto.ERSpanSpec{
 					DestIp: buildIPAddrProtoObj(destIPDetails),
@@ -1288,17 +732,17 @@ func (tsa *Tagent) createFlowMonitorRuleIDMatchingHALProtoObj(mirrorSession *tsp
 		return nil, nil, ErrInvalidMirrorSpec
 	}
 	for _, rule := range mirrorSession.Spec.MatchRules {
-		srcIPs, destIPs, srcMACs, destMACs, appPorts, srcIPStrings, destIPStrings := expandCompositeMatchRule(mirrorSession, &rule)
+		srcIPs, destIPs, srcMACs, destMACs, appPorts, srcIPStrings, destIPStrings := utils.ExpandCompositeMatchRule(mirrorSession.ObjectMeta, &rule, nAgent.FindEndpoint)
 		// Create protobuf requestMsgs on cross product of
 		//  - srcIPs, destIPs, Apps
 		//  - srcMACs, destMACs, Apps
 		flowMonitorRuleSpecified := false
-		ipFmRuleList, err := createIPAddrCrossProductRuleList(srcIPs, destIPs, appPorts, srcIPStrings, destIPStrings)
+		ipFmRuleList, err := utils.CreateIPAddrCrossProductRuleList(srcIPs, destIPs, appPorts, srcIPStrings, destIPStrings)
 		if err == nil {
 			flowMonitorRuleSpecified = true
 		}
 
-		macFmRuleList, err := createMACAddrCrossProductRuleList(srcMACs, destMACs, appPorts)
+		macFmRuleList, err := utils.CreateMACAddrCrossProductRuleList(srcMACs, destMACs, appPorts)
 		if err == nil {
 			flowMonitorRuleSpecified = true
 		}
@@ -1307,7 +751,7 @@ func (tsa *Tagent) createFlowMonitorRuleIDMatchingHALProtoObj(mirrorSession *tsp
 
 		if !flowMonitorRuleSpecified {
 			log.Errorf("Match Rules specified with only AppPort Selector without IP/MAC")
-			return nil, nil, ErrInvalidFlowMonitorRule
+			return nil, nil, utils.ErrInvalidFlowMonitorRule
 		}
 
 		updateReqMsg := halproto.FlowMonitorRuleRequestMsg{}
@@ -1355,9 +799,9 @@ func (tsa *Tagent) createFlowMonitorRuleIDMatchingHALProtoObj(mirrorSession *tsp
 					}
 					msIDs = append(msIDs, midObj)
 				}
-				srcAddrObj := buildIPAddrObjProtoObj(ipFmRule.SrcIPObj)
-				destAddrObj := buildIPAddrObjProtoObj(ipFmRule.DestIPObj)
-				appMatchObj := buildAppMatchInfoObj(ipFmRule.AppPortObj)
+				srcAddrObj := utils.BuildIPAddrObjProtoObj(ipFmRule.SrcIPObj)
+				destAddrObj := utils.BuildIPAddrObjProtoObj(ipFmRule.DestIPObj)
+				appMatchObj := utils.BuildAppMatchInfoObj(ipFmRule.AppPortObj)
 				flowRuleSpec := halproto.FlowMonitorRuleSpec{
 					KeyOrHandle: &halproto.FlowMonitorRuleKeyHandle{
 						KeyOrHandle: &halproto.FlowMonitorRuleKeyHandle_FlowmonitorruleId{
@@ -1446,7 +890,7 @@ func (tsa *Tagent) createFlowMonitorRuleIDMatchingHALProtoObj(mirrorSession *tsp
 					msIDs = append(msIDs, midObj)
 				}
 
-				appMatchObj := buildAppMatchInfoObj(macRule.AppPortObj)
+				appMatchObj := utils.BuildAppMatchInfoObj(macRule.AppPortObj)
 				flowRuleSpec := halproto.FlowMonitorRuleSpec{
 					KeyOrHandle: &halproto.FlowMonitorRuleKeyHandle{
 						KeyOrHandle: &halproto.FlowMonitorRuleKeyHandle_FlowmonitorruleId{
@@ -1508,17 +952,17 @@ func (tsa *Tagent) createHALFlowMonitorRulesProtoObj(mirrorSession *tsproto.Mirr
 	}
 
 	for _, rule := range mirrorSession.Spec.MatchRules {
-		srcIPs, destIPs, srcMACs, destMACs, appPorts, srcIPStrings, destIPStrings := expandCompositeMatchRule(mirrorSession, &rule)
+		srcIPs, destIPs, srcMACs, destMACs, appPorts, srcIPStrings, destIPStrings := utils.ExpandCompositeMatchRule(mirrorSession.ObjectMeta, &rule, nAgent.FindEndpoint)
 		// Create protobuf requestMsgs on cross product of
 		//  - srcIPs, destIPs, Apps
 		//  - srcMACs, destMACs, Apps
 		flowMonitorRuleSpecified := false
-		ipFmRuleList, err := createIPAddrCrossProductRuleList(srcIPs, destIPs, appPorts, srcIPStrings, destIPStrings)
+		ipFmRuleList, err := utils.CreateIPAddrCrossProductRuleList(srcIPs, destIPs, appPorts, srcIPStrings, destIPStrings)
 		if err == nil {
 			flowMonitorRuleSpecified = true
 		}
 
-		macFmRuleList, err := createMACAddrCrossProductRuleList(srcMACs, destMACs, appPorts)
+		macFmRuleList, err := utils.CreateMACAddrCrossProductRuleList(srcMACs, destMACs, appPorts)
 		if err == nil {
 			flowMonitorRuleSpecified = true
 		}
@@ -1527,7 +971,7 @@ func (tsa *Tagent) createHALFlowMonitorRulesProtoObj(mirrorSession *tsproto.Mirr
 
 		if !flowMonitorRuleSpecified {
 			log.Errorf("Match Rules specified with only AppPort Selector without IP/MAC")
-			return nil, nil, ErrInvalidFlowMonitorRule
+			return nil, nil, utils.ErrInvalidFlowMonitorRule
 		}
 
 		ReqMsg := halproto.FlowMonitorRuleRequestMsg{}
@@ -1577,9 +1021,9 @@ func (tsa *Tagent) createHALFlowMonitorRulesProtoObj(mirrorSession *tsproto.Mirr
 				}
 				msIDs = append(msIDs, midObj)
 			}
-			srcAddrObj := buildIPAddrObjProtoObj(ipFmRule.SrcIPObj)
-			destAddrObj := buildIPAddrObjProtoObj(ipFmRule.DestIPObj)
-			appMatchObj := buildAppMatchInfoObj(ipFmRule.AppPortObj)
+			srcAddrObj := utils.BuildIPAddrObjProtoObj(ipFmRule.SrcIPObj)
+			destAddrObj := utils.BuildIPAddrObjProtoObj(ipFmRule.DestIPObj)
+			appMatchObj := utils.BuildAppMatchInfoObj(ipFmRule.AppPortObj)
 			flowRuleSpec := halproto.FlowMonitorRuleSpec{
 				KeyOrHandle: &halproto.FlowMonitorRuleKeyHandle{
 					KeyOrHandle: &halproto.FlowMonitorRuleKeyHandle_FlowmonitorruleId{
@@ -1656,7 +1100,7 @@ func (tsa *Tagent) createHALFlowMonitorRulesProtoObj(mirrorSession *tsproto.Mirr
 				msIDs = append(msIDs, midObj)
 			}
 
-			appMatchObj := buildAppMatchInfoObj(macRule.AppPortObj)
+			appMatchObj := utils.BuildAppMatchInfoObj(macRule.AppPortObj)
 			flowRuleSpec := halproto.FlowMonitorRuleSpec{
 				KeyOrHandle: &halproto.FlowMonitorRuleKeyHandle{
 					KeyOrHandle: &halproto.FlowMonitorRuleKeyHandle_FlowmonitorruleId{
@@ -1726,9 +1170,9 @@ func (tsa *Tagent) createPacketCaptureSessionProtoObjs(mirrorSession *tsproto.Mi
 	if len(mirrorSession.Spec.MatchRules) > 0 {
 		dropMonitor = false
 	}
-	if !dropMonitor && !matchRuleSanityCheck(mirrorSession) {
+	if err := utils.ValidateMatchRule(mirrorSession.ObjectMeta, mirrorSession.Spec.MatchRules, nAgent.FindEndpoint); err != nil && !dropMonitor {
 		// Rule santy check failed.
-		log.Errorf("Neither drop rule nor match selector rules specified in mirror spec")
+		log.Errorf("Neither drop rule nor match selector rules specified in mirror spec, err:%s", err)
 		return nil, ErrInvalidMirrorSpec
 	}
 

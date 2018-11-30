@@ -12,8 +12,9 @@ default: ${DEST} ${NICFILES}
 	-I../../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
 	-I../../../../../vendor/github.com/gogo/protobuf/protobuf \
         --gofast_out=plugins=grpc:. $<
-	sed -i.bak_ 's/api\/protos/api\/generated\/monitoring/g' $@
-	sed -i.bak_ '/import _ "."/d' $@
+	sed -i.bak_ '/import monitoring "."/d' $@
+	sed -i.bak_ 's/import monitoring2.*/import monitoring "github.com\/pensando\/sw\/api\/generated\/monitoring"/g' $@
+	sed -i.bak_ 's/monitoring2/monitoring/g' $@
 	rm -f *.bak_
 	goimports -local "github.com/pensando/sw" -w *.go
 

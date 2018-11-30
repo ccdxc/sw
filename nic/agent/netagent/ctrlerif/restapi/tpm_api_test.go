@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	api "github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/monitoring"
+	monitoring "github.com/pensando/sw/api/generated/monitoring"
 	tpmprotos "github.com/pensando/sw/venice/ctrler/tpm/rpcserver/protos"
 	"github.com/pensando/sw/venice/utils/netutils"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -34,16 +34,13 @@ func TestFlowExportPolicyPost(t *testing.T) {
 			Name:      "testPostFlowExportPolicy",
 		},
 		Spec: tpmprotos.FlowExportPolicySpec{
-			Targets: []monitoring.FlowExportTarget{{
-				Interval: "15s",
-				Format:   "IPFIX",
-				Exports: []monitoring.ExportConfig{
-					{
-						Destination: "10.1.1.0",
-						Transport:   "UDP/2055",
-					},
+			Interval: "15s",
+			Format:   "IPFIX",
+			Exports: []monitoring.ExportConfig{
+				{
+					Destination: "10.1.1.0",
+					Transport:   "UDP/2055",
 				},
-			},
 			},
 		},
 	}
@@ -64,16 +61,13 @@ func TestFlowExportPolicyDelete(t *testing.T) {
 			Name:      "testDeleteFlowExportPolicy",
 		},
 		Spec: tpmprotos.FlowExportPolicySpec{
-			Targets: []monitoring.FlowExportTarget{{
-				Interval: "15s",
-				Format:   "IPFIX",
-				Exports: []monitoring.ExportConfig{
-					{
-						Destination: "10.1.1.0",
-						Transport:   "UDP/2055",
-					},
+			Interval: "15s",
+			Format:   "IPFIX",
+			Exports: []monitoring.ExportConfig{
+				{
+					Destination: "10.1.1.0",
+					Transport:   "UDP/2055",
 				},
-			},
 			},
 		},
 	}

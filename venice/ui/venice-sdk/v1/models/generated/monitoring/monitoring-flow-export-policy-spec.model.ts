@@ -7,17 +7,42 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
-import { MonitoringFlowExportTarget, IMonitoringFlowExportTarget } from './monitoring-flow-export-target.model';
+import { MonitoringFlowExportPolicySpec_format,  } from './enums';
+import { MonitoringMatchRule, IMonitoringMatchRule } from './monitoring-match-rule.model';
+import { MonitoringExportConfig, IMonitoringExportConfig } from './monitoring-export-config.model';
 
 export interface IMonitoringFlowExportPolicySpec {
-    'targets'?: Array<IMonitoringFlowExportTarget>;
+    'interval'?: string;
+    'format'?: MonitoringFlowExportPolicySpec_format;
+    'match-rules'?: Array<IMonitoringMatchRule>;
+    'exports'?: Array<IMonitoringExportConfig>;
 }
 
 
 export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonitoringFlowExportPolicySpec {
-    'targets': Array<MonitoringFlowExportTarget> = null;
+    /** should be a valid time duration
+     */
+    'interval': string = null;
+    'format': MonitoringFlowExportPolicySpec_format = null;
+    'match-rules': Array<MonitoringMatchRule> = null;
+    /** Export contains export parameters. */
+    'exports': Array<MonitoringExportConfig> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'targets': {
+        'interval': {
+            description:  'should be a valid time duration ',
+            hint:  '2h',
+            type: 'string'
+        },
+        'format': {
+            enum: MonitoringFlowExportPolicySpec_format,
+            default: 'Ipfix',
+            type: 'string'
+        },
+        'match-rules': {
+            type: 'object'
+        },
+        'exports': {
+            description:  'Export contains export parameters.',
             type: 'object'
         },
     }
@@ -41,7 +66,8 @@ export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonito
     */
     constructor(values?: any) {
         super();
-        this['targets'] = new Array<MonitoringFlowExportTarget>();
+        this['match-rules'] = new Array<MonitoringMatchRule>();
+        this['exports'] = new Array<MonitoringExportConfig>();
         this.setValues(values);
     }
 
@@ -50,8 +76,21 @@ export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonito
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['interval'] != null) {
+            this['interval'] = values['interval'];
+        } else if (fillDefaults && MonitoringFlowExportPolicySpec.hasDefaultValue('interval')) {
+            this['interval'] = MonitoringFlowExportPolicySpec.propInfo['interval'].default;
+        }
+        if (values && values['format'] != null) {
+            this['format'] = values['format'];
+        } else if (fillDefaults && MonitoringFlowExportPolicySpec.hasDefaultValue('format')) {
+            this['format'] = <MonitoringFlowExportPolicySpec_format>  MonitoringFlowExportPolicySpec.propInfo['format'].default;
+        }
         if (values) {
-            this.fillModelArray<MonitoringFlowExportTarget>(this, 'targets', values['targets'], MonitoringFlowExportTarget);
+            this.fillModelArray<MonitoringMatchRule>(this, 'match-rules', values['match-rules'], MonitoringMatchRule);
+        }
+        if (values) {
+            this.fillModelArray<MonitoringExportConfig>(this, 'exports', values['exports'], MonitoringExportConfig);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -60,10 +99,15 @@ export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonito
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'targets': new FormArray([]),
+                'interval': new FormControl(this['interval']),
+                'format': new FormControl(this['format'], [enumValidator(MonitoringFlowExportPolicySpec_format), ]),
+                'match-rules': new FormArray([]),
+                'exports': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<MonitoringFlowExportTarget>('targets', this['targets'], MonitoringFlowExportTarget);
+            this.fillFormArray<MonitoringMatchRule>('match-rules', this['match-rules'], MonitoringMatchRule);
+            // generate FormArray control elements
+            this.fillFormArray<MonitoringExportConfig>('exports', this['exports'], MonitoringExportConfig);
         }
         return this._formGroup;
     }
@@ -74,7 +118,10 @@ export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonito
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<MonitoringFlowExportTarget>(this, 'targets', this['targets'], MonitoringFlowExportTarget);
+            this._formGroup.controls['interval'].setValue(this['interval']);
+            this._formGroup.controls['format'].setValue(this['format']);
+            this.fillModelArray<MonitoringMatchRule>(this, 'match-rules', this['match-rules'], MonitoringMatchRule);
+            this.fillModelArray<MonitoringExportConfig>(this, 'exports', this['exports'], MonitoringExportConfig);
         }
     }
 }

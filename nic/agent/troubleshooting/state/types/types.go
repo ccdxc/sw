@@ -12,6 +12,8 @@ import (
 
 const (
 	halMaxMirrorSession = 8
+	// FlowMonitorRuleIDType is the resource type used by netflow export and mirror session to get a unique id
+	FlowMonitorRuleIDType = "FlowMonitorRuleID"
 )
 
 // IPAddrDetails maintains ip details.

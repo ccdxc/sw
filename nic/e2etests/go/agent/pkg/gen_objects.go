@@ -607,16 +607,12 @@ func (c *Config) generateFlowExportPolicy(o *Object, manifestFile string) (*Obje
 				Name:      name,
 			},
 			Spec: monitoring.FlowExportPolicySpec{
-				Targets: []monitoring.FlowExportTarget{
+				Interval: "15s",
+				Format:   "IPFIX",
+				Exports: []monitoring.ExportConfig{
 					{
-						Interval: "15s",
-						Format:   "IPFIX",
-						Exports: []monitoring.ExportConfig{
-							{
-								Destination: remoteEP,
-								Transport:   "UDP/2055",
-							},
-						},
+						Destination: remoteEP,
+						Transport:   "UDP/2055",
 					},
 				},
 			},

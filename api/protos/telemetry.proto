@@ -133,7 +133,7 @@ message FwlogPolicy {
 message FlowExportPolicyStatus {
 }
 
-message FlowExportTarget {
+message FlowExportPolicySpec {
     enum Formats {
         Ipfix = 0;
     }
@@ -142,16 +142,12 @@ message FlowExportTarget {
     // The value is specified as a string format to be '10s', '20m', '20mins', '10secs', '10seconds'
     string Interval = 1 [(gogoproto.jsontag) = "interval,omitempty", (venice.check)="Duration()"];
 
-    string Format = 2 [(gogoproto.jsontag) = "format,omitempty", (venice.check) = "StrEnum(FlowExportTarget.Formats)"];
+    string Format = 2 [(gogoproto.jsontag) = "format,omitempty", (venice.check) = "StrEnum(FlowExportPolicySpec.Formats)"];
 
     repeated MatchRule  MatchRules = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "match-rules,omitempty"];
 
     // Export contains export parameters.
     repeated ExportConfig Exports = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "exports,omitempty"];
-}
-
-message FlowExportPolicySpec {
-    repeated FlowExportTarget Targets = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "targets,omitempty"];
 }
 
 message FlowExportPolicy {

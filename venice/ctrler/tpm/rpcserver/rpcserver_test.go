@@ -315,16 +315,12 @@ func TestWatchFlowExportPolicy(t *testing.T) {
 			TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: "flow-1"},
 			Spec: monitoring.FlowExportPolicySpec{
-				Targets: []monitoring.FlowExportTarget{
+				Interval: "60s",
+				Format:   "syslog_bsd",
+				Exports: []monitoring.ExportConfig{
 					{
-						Interval: "60s",
-						Format:   "syslog_bsd",
-						Exports: []monitoring.ExportConfig{
-							{
-								Destination: "collector1.test.com",
-								Transport:   "TCP/514",
-							},
-						},
+						Destination: "collector1.test.com",
+						Transport:   "TCP/514",
 					},
 				},
 			},
@@ -333,16 +329,12 @@ func TestWatchFlowExportPolicy(t *testing.T) {
 			TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: "flow-2"},
 			Spec: monitoring.FlowExportPolicySpec{
-				Targets: []monitoring.FlowExportTarget{
+				Interval: "100s",
+				Format:   "syslog_bsd",
+				Exports: []monitoring.ExportConfig{
 					{
-						Interval: "100s",
-						Format:   "syslog_bsd",
-						Exports: []monitoring.ExportConfig{
-							{
-								Destination: "collector2.test.com",
-								Transport:   "UDP/514",
-							},
-						},
+						Destination: "collector2.test.com",
+						Transport:   "UDP/514",
 					},
 				},
 			},

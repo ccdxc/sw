@@ -39,7 +39,6 @@ import (
                                 Name: "test{{title .}}{{title $crudObject}}",
                             },
                             Spec:   tpmprotos.{{title $crudObject}}Spec{
-                                Targets: []monitoring.FlowExportTarget{ {
                                     Interval: "15s",
                                     Format:"IPFIX",
                                     Exports: []monitoring.ExportConfig{
@@ -49,8 +48,6 @@ import (
                                         },
                                    },
                                 },
-                              },
-                           },
                         }
                         err := netutils.HTTPPost("http://"+agentRestURL+"/api/telemetry/flowexports/", &{{lower .}}Data, &resp)
                         AssertOk(t, err, "Error posting {{lower $crudObject}} to REST Server")
@@ -70,7 +67,6 @@ import (
                                 Name: "test{{title .}}{{title $crudObject}}",
                             },
                              Spec:   tpmprotos.{{title $crudObject}}Spec{
-                                Targets: []monitoring.FlowExportTarget{ {
                                     Interval: "15s",
                                     Format:"IPFIX",
                                     Exports: []monitoring.ExportConfig{
@@ -80,8 +76,6 @@ import (
                                         },
                                    },
                                 },
-                              },
-                           },
                         }
 
                          {{lower .}}Meta := tpmprotos.{{title $crudObject}}{

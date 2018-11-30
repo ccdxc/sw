@@ -1,16 +1,13 @@
 package state
 
 import (
-	"testing"
-
-	"github.com/pensando/sw/venice/utils/emstore"
-
-	agstate "github.com/pensando/sw/nic/agent/netagent/state"
-	tu "github.com/pensando/sw/venice/utils/testutils"
-
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http/httptest"
 	"os"
 	"reflect"
+	"testing"
 
 	"github.com/golang/mock/gomock"
 	"golang.org/x/net/context"
@@ -19,18 +16,25 @@ import (
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
+	agstate "github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/nic/agent/netagent/state/dependencies"
 	mockdatapath "github.com/pensando/sw/nic/agent/tpa/datapath"
-	"github.com/pensando/sw/nic/agent/tpa/protos"
+	"github.com/pensando/sw/nic/agent/tpa/state/types"
 	"github.com/pensando/sw/venice/ctrler/tpm/rpcserver/protos"
+	"github.com/pensando/sw/venice/ctrler/tsm/rpcserver/tsproto"
+	"github.com/pensando/sw/venice/utils/emstore"
+	"github.com/pensando/sw/venice/utils/log"
+	tu "github.com/pensando/sw/venice/utils/testutils"
 )
 
 const emDbPath = "/tmp/naples-tpagent.db"
+const dbgSock = "/tmp/test_tpa_sock"
 
 func cleanup(t *testing.T, ag *PolicyState) {
-	l, err := ag.store.List(&tpaprotos.FlowExportPolicyObj{
-		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
-		ObjectMeta: api.ObjectMeta{},
+	l, err := ag.store.List(&types.FlowExportPolicyTable{
+		FlowExportPolicy: &tpmprotos.FlowExportPolicy{
+			TypeMeta: api.TypeMeta{Kind: "FlowExportPolicy"},
+		},
 	})
 
 	if err == nil {
@@ -44,7 +48,6 @@ func cleanup(t *testing.T, ag *PolicyState) {
 }
 
 func createDataStore() (emstore.Emstore, error) {
-
 	mstore, err := emstore.NewEmstore(emstore.BoltDBType, emDbPath)
 	if err != nil {
 		return nil, err
@@ -53,7 +56,6 @@ func createDataStore() (emstore.Emstore, error) {
 }
 
 func TestValidateMeta(t *testing.T) {
-
 	ds, err := createDataStore()
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create database"))
 
@@ -64,7 +66,7 @@ func TestValidateMeta(t *testing.T) {
 		Store:       ds,
 	}
 
-	ag, err := NewTpAgent(na, mockdatapath.MockHal())
+	ag, err := NewTpAgent(na, mockdatapath.MockHal(), dbgSock)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, ag)
@@ -81,8 +83,7 @@ func TestValidateMeta(t *testing.T) {
 	tu.Assert(t, err != nil, fmt.Sprintf("create succeeded with invalid meta"))
 }
 
-func TestFindNumExports(t *testing.T) {
-
+func TestStoreOps(t *testing.T) {
 	ds, err := createDataStore()
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create database"))
 
@@ -93,46 +94,167 @@ func TestFindNumExports(t *testing.T) {
 		Store:       ds,
 	}
 
-	ag, err := NewTpAgent(na, mockdatapath.MockHal())
+	ag, err := NewTpAgent(na, mockdatapath.MockHal(), dbgSock)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, ag)
-
-	spec := monitoring.FlowExportTarget{
-
-		Interval: "15s",
-		Format:   "IPFIX",
-		Exports: []monitoring.ExportConfig{
-			{
-				Destination: fmt.Sprintf("192.168.3.1"),
-				Transport:   "TCP/1234",
+	for i := 1; i < 4; i++ {
+		pol := &types.FlowExportPolicyTable{
+			FlowExportPolicy: &tpmprotos.FlowExportPolicy{
+				TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
+				ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("test-%d", i), Tenant: "default", Namespace: "default"},
 			},
-			{
-				Destination: fmt.Sprintf("192.168.3.2"),
-				Transport:   "TCP/1234",
-			},
-		},
+		}
+
+		err = ag.store.Write(pol)
+		tu.AssertOk(t, err, fmt.Sprintf("failed to write to store , %s", err))
 	}
 
 	for i := 1; i < 4; i++ {
-		pol := &tpaprotos.FlowExportPolicyObj{
+		pol := &types.FlowExportPolicyTable{
+			FlowExportPolicy: &tpmprotos.FlowExportPolicy{
+				TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
+				ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("test-%d", i), Tenant: "default", Namespace: "default"},
+			},
+			CollectorKeys: map[string]bool{"test": true},
+			FlowRuleKeys:  map[string]bool{"test": true},
+			Vrf:           uint64(i),
+		}
+
+		_, err = ag.store.Read(pol)
+		tu.AssertOk(t, err, fmt.Sprintf("failed to write to store , %s", err))
+	}
+}
+
+func TestFindNumExports(t *testing.T) {
+	ds, err := createDataStore()
+	tu.AssertOk(t, err, fmt.Sprintf("failed to create database"))
+
+	na := &agstate.Nagent{
+		TenantDB:    map[string]*netproto.Tenant{},
+		NetworkDB:   map[string]*netproto.Network{},
+		EndpointDB:  map[string]*netproto.Endpoint{},
+		NamespaceDB: map[string]*netproto.Namespace{},
+		Solver:      dependencies.NewDepSolver(),
+		Store:       ds,
+	}
+
+	key := na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "default"}, api.TypeMeta{Kind: "tenant"})
+	na.TenantDB[key] = &netproto.Tenant{
+		ObjectMeta: api.ObjectMeta{Tenant: "default"},
+		Spec:       netproto.TenantSpec{Meta: &api.ObjectMeta{Tenant: "default"}},
+		Status: netproto.TenantStatus{
+			TenantID: uint64(501),
+		},
+	}
+
+	key = na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Name: "default"}, api.TypeMeta{Kind: "namespace"})
+	na.NamespaceDB[key] = &netproto.Namespace{
+		ObjectMeta: api.ObjectMeta{Tenant: "default"},
+		Spec:       netproto.NamespaceSpec{},
+		Status: netproto.NamespaceStatus{
+			NamespaceID: uint64(501),
+		},
+	}
+
+	key = na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "default"}, api.TypeMeta{Kind: "network"})
+	na.NetworkDB[key] = &netproto.Network{
+		ObjectMeta: api.ObjectMeta{Name: "default", Namespace: "default", Tenant: "default"},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet: "",
+		},
+		Status: netproto.NetworkStatus{
+			NetworkID: uint64(101),
+		},
+	}
+
+	for i := 1; i < maxFlowExportCollectors; i++ {
+		name := fmt.Sprintf("ep3-%d", i)
+		addr := fmt.Sprintf("192.168.3.%d/32", i)
+		key = na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: name}, api.TypeMeta{Kind: "endpoint"})
+		na.EndpointDB[key] = &netproto.Endpoint{
+			ObjectMeta: api.ObjectMeta{Name: "ep1", Namespace: "default", Tenant: "default"},
+			Spec: netproto.EndpointSpec{
+				NetworkName: "default",
+				IPv4Address: addr,
+			},
+			Status: netproto.EndpointStatus{},
+		}
+
+		name = fmt.Sprintf("ep4-%d", i)
+		addr = fmt.Sprintf("192.168.4.%d/32", i)
+		key = na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: name}, api.TypeMeta{Kind: "endpoint"})
+		na.EndpointDB[key] = &netproto.Endpoint{
+			ObjectMeta: api.ObjectMeta{Name: "ep1", Namespace: "default", Tenant: "default"},
+			Spec: netproto.EndpointSpec{
+				NetworkName: "default",
+				IPv4Address: addr,
+			},
+			Status: netproto.EndpointStatus{},
+		}
+	}
+
+	s, err := NewTpAgent(na, mockdatapath.MockHal(), dbgSock)
+	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
+	defer cleanup(t, s)
+
+	for i := 1; i <= 8; i++ {
+		spec := tpmprotos.FlowExportPolicy{
 			TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("test-%d", i), Tenant: "default", Namespace: "default"},
-			P: &tpmprotos.FlowExportPolicy{
-				Spec: tpmprotos.FlowExportPolicySpec{
-					Targets: []monitoring.FlowExportTarget{spec, spec},
+			Spec: tpmprotos.FlowExportPolicySpec{
+				MatchRules: []tsproto.MatchRule{
+					{
+						Src: &tsproto.MatchSelector{
+							IPAddresses: []string{"any"},
+						},
+						Dst: &tsproto.MatchSelector{
+							IPAddresses: []string{"any"},
+						},
+						AppProtoSel: &tsproto.AppProtoSelector{
+							Ports: []string{"any"},
+						},
+					},
+				},
+				Interval: "15s",
+				Format:   "IPFIX",
+				Exports: []monitoring.ExportConfig{
+					{
+						Destination: fmt.Sprintf("192.168.3.%d", i+1),
+						Transport:   "TCP/1234",
+					},
+					{
+						Destination: fmt.Sprintf("192.168.4.%d", i+1),
+						Transport:   "TCP/1234",
+					},
+					{
+						Destination: fmt.Sprintf("192.168.4.%d", i),
+						Transport:   "TCP/1234",
+					},
 				},
 			},
 		}
-		err = ag.store.Write(pol)
-		n, err := ag.findNumExports(nil)
-		tu.AssertOk(t, err, fmt.Sprintf("failed to find num exports, %s", err))
-		tu.Assert(t, n == i*4, fmt.Sprintf("invalid num exports, require %d got %d", i*4, n))
 
-		// exclude the current policy
-		n, err = ag.findNumExports(&api.ObjectMeta{Name: fmt.Sprintf("test-%d", i), Tenant: "default", Namespace: "default"})
-		tu.AssertOk(t, err, fmt.Sprintf("failed to find num exports, %s", err))
-		tu.Assert(t, n == (i-1)*4, fmt.Sprintf("invalid num exports, require %d got %d", (i-1)*4, n))
+		err := s.CreateFlowExportPolicy(context.Background(), &spec)
+
+		if i <= 7 {
+			tu.AssertOk(t, err, fmt.Sprintf("failed to find num exports, %s", err))
+		} else {
+			// > 8
+			tu.Assert(t, err != nil, fmt.Sprintf("didn't fail for max collectors"))
+		}
+
+		pctx := policyDb{
+			state: s,
+		}
+		pctx.collectorTable, _ = pctx.readCollectorTable()
+		num := pctx.findNumCollectors()
+
+		if i <= 7 {
+			tu.Assert(t, num == 2*i+1, fmt.Sprintf("invalid num exports, require %d got %d", 2*i+1, num))
+		} else {
+			tu.Assert(t, num == 2*(i-1)+1, fmt.Sprintf("invalid num exports, require %d got %d", 2*(i-1)+1, num))
+		}
 	}
 }
 
@@ -143,14 +265,44 @@ func TestValidatePolicy(t *testing.T) {
 
 	na := &agstate.Nagent{
 		TenantDB:    map[string]*netproto.Tenant{},
+		NetworkDB:   map[string]*netproto.Network{},
+		EndpointDB:  map[string]*netproto.Endpoint{},
 		NamespaceDB: map[string]*netproto.Namespace{},
 		Solver:      dependencies.NewDepSolver(),
 		Store:       ds,
 	}
 
-	ag, err := NewTpAgent(na, mockdatapath.MockHal())
-	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
+	key := na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "default"}, api.TypeMeta{Kind: "tenant"})
+	na.TenantDB[key] = &netproto.Tenant{
+		ObjectMeta: api.ObjectMeta{Tenant: "default"},
+		Spec:       netproto.TenantSpec{Meta: &api.ObjectMeta{Tenant: "default"}},
+		Status: netproto.TenantStatus{
+			TenantID: uint64(501),
+		},
+	}
 
+	key = na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Name: "default"}, api.TypeMeta{Kind: "namespace"})
+	na.NamespaceDB[key] = &netproto.Namespace{
+		ObjectMeta: api.ObjectMeta{Tenant: "default"},
+		Spec:       netproto.NamespaceSpec{},
+		Status: netproto.NamespaceStatus{
+			NamespaceID: uint64(501),
+		},
+	}
+
+	key = na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "default"}, api.TypeMeta{Kind: "network"})
+	na.NetworkDB[key] = &netproto.Network{
+		ObjectMeta: api.ObjectMeta{Name: "default", Namespace: "default", Tenant: "default"},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet: "",
+		},
+		Status: netproto.NetworkStatus{
+			NetworkID: uint64(101),
+		},
+	}
+
+	ag, err := NewTpAgent(na, mockdatapath.MockHal(), dbgSock)
+	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 	defer cleanup(t, ag)
 
 	pol := &tpmprotos.FlowExportPolicy{
@@ -165,13 +317,33 @@ func TestValidatePolicy(t *testing.T) {
 		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 		ObjectMeta: api.ObjectMeta{Name: "test1", Tenant: "default"},
 		Spec: tpmprotos.FlowExportPolicySpec{
-			Targets: []monitoring.FlowExportTarget{
+			MatchRules: []tsproto.MatchRule{
 				{
-					Interval: "15s",
-					Format:   "IPFIX",
-					Exports:  []monitoring.ExportConfig{},
+					Src: &tsproto.MatchSelector{
+						IPAddresses: []string{"1.1.1.1"},
+					},
+					Dst: &tsproto.MatchSelector{
+						IPAddresses: []string{"1.1.1.2"},
+					},
+					AppProtoSel: &tsproto.AppProtoSelector{
+						Ports: []string{"TCP/1000"},
+					},
+				},
+				{
+					Src: &tsproto.MatchSelector{
+						IPAddresses: []string{"1.1.2.1"},
+					},
+					Dst: &tsproto.MatchSelector{
+						IPAddresses: []string{"1.1.2.2"},
+					},
+					AppProtoSel: &tsproto.AppProtoSelector{
+						Ports: []string{"TCP/1010"},
+					},
 				},
 			},
+			Interval: "15s",
+			Format:   "IPFIX",
+			Exports:  []monitoring.ExportConfig{},
 		}}
 
 	_, err = ag.validatePolicy(pol)
@@ -181,14 +353,10 @@ func TestValidatePolicy(t *testing.T) {
 		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 		ObjectMeta: api.ObjectMeta{Name: "test1", Tenant: "default"},
 		Spec: tpmprotos.FlowExportPolicySpec{
-			Targets: []monitoring.FlowExportTarget{
-				{
-					Interval: "15s",
-					Format:   "IPFIX",
-					Exports: []monitoring.ExportConfig{
-						{Transport: "TCP/1234"},
-					},
-				},
+			Interval: "15s",
+			Format:   "IPFIX",
+			Exports: []monitoring.ExportConfig{
+				{Transport: "TCP/1234"},
 			},
 		}}
 
@@ -199,15 +367,12 @@ func TestValidatePolicy(t *testing.T) {
 		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 		ObjectMeta: api.ObjectMeta{Name: "test1", Tenant: "default"},
 		Spec: tpmprotos.FlowExportPolicySpec{
-			Targets: []monitoring.FlowExportTarget{
+
+			Interval: "15s",
+			Format:   "IPFIX",
+			Exports: []monitoring.ExportConfig{
 				{
-					Interval: "15s",
-					Format:   "IPFIX",
-					Exports: []monitoring.ExportConfig{
-						{
-							Destination: destAddr,
-						},
-					},
+					Destination: destAddr,
 				},
 			},
 		}}
@@ -217,40 +382,80 @@ func TestValidatePolicy(t *testing.T) {
 
 	pol = &tpmprotos.FlowExportPolicy{
 		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
-		ObjectMeta: api.ObjectMeta{Name: "test1", Tenant: "default"},
+		ObjectMeta: api.ObjectMeta{Name: "test1", Tenant: "default", Namespace: "default"},
 		Spec: tpmprotos.FlowExportPolicySpec{
-			Targets: []monitoring.FlowExportTarget{
+			MatchRules: []tsproto.MatchRule{
 				{
-					Interval: "15s",
-					Format:   "IPFIX",
-					Exports: []monitoring.ExportConfig{
-						{
-							Destination: destAddr,
-							Transport:   "TCP/1234",
-						},
+					Src: &tsproto.MatchSelector{
+						IPAddresses: []string{"1.1.1.1"},
 					},
+					Dst: &tsproto.MatchSelector{
+						IPAddresses: []string{"1.1.1.2"},
+					},
+					AppProtoSel: &tsproto.AppProtoSelector{
+						Ports: []string{"TCP/1000"},
+					},
+				},
+				{
+					Src: &tsproto.MatchSelector{
+						IPAddresses: []string{"1.1.2.1"},
+					},
+					Dst: &tsproto.MatchSelector{
+						IPAddresses: []string{"1.1.2.2"},
+					},
+					AppProtoSel: &tsproto.AppProtoSelector{
+						Ports: []string{"TCP/1010"},
+					},
+				},
+			},
+			Interval: "15s",
+			Format:   "IPFIX",
+			Exports: []monitoring.ExportConfig{
+				{
+					Destination: destAddr,
+					Transport:   "TCP/1234",
 				},
 			},
 		}}
 
 	c, err := ag.validatePolicy(pol)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to find num exports"))
-	tu.Assert(t, c == 1, fmt.Sprintf("expected num exports: 1, got %d", c))
+	tu.Assert(t, len(c) == 1, fmt.Sprintf("expected num exports: 1, got %+v", c))
 
 	// check interval
 	pol = &tpmprotos.FlowExportPolicy{
 		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 		ObjectMeta: api.ObjectMeta{Name: "test1", Tenant: "default"},
 		Spec: tpmprotos.FlowExportPolicySpec{
-			Targets: []monitoring.FlowExportTarget{
+			MatchRules: []tsproto.MatchRule{
 				{
-					Format: "IPFIX",
-					Exports: []monitoring.ExportConfig{
-						{
-							Destination: destAddr,
-							Transport:   "TCP/1234",
-						},
+					Src: &tsproto.MatchSelector{
+						IPAddresses: []string{"1.1.1.1"},
 					},
+					Dst: &tsproto.MatchSelector{
+						IPAddresses: []string{"1.1.1.2"},
+					},
+					AppProtoSel: &tsproto.AppProtoSelector{
+						Ports: []string{"TCP/1000"},
+					},
+				},
+				{
+					Src: &tsproto.MatchSelector{
+						IPAddresses: []string{"1.1.2.1"},
+					},
+					Dst: &tsproto.MatchSelector{
+						IPAddresses: []string{"1.1.2.2"},
+					},
+					AppProtoSel: &tsproto.AppProtoSelector{
+						Ports: []string{"TCP/1010"},
+					},
+				},
+			},
+			Format: "IPFIX",
+			Exports: []monitoring.ExportConfig{
+				{
+					Destination: destAddr,
+					Transport:   "TCP/1234",
 				},
 			},
 		}}
@@ -268,12 +473,12 @@ func TestValidatePolicy(t *testing.T) {
 	}
 
 	for _, i := range testInterval {
-		pol.Spec.Targets[0].Interval = i.interval
+		pol.Spec.Interval = i.interval
 		_, err = ag.validatePolicy(pol)
 		if i.pass {
-			tu.AssertOk(t, err, fmt.Sprintf("failed to validate interval: %s", pol.Spec.Targets[0].Interval))
+			tu.AssertOk(t, err, fmt.Sprintf("failed to validate interval: %s", pol.Spec.Interval))
 		} else {
-			tu.Assert(t, err != nil, fmt.Sprintf("didnt fail interval: %s", pol.Spec.Targets[0].Interval))
+			tu.Assert(t, err != nil, fmt.Sprintf("didnt fail interval: %s", pol.Spec.Interval))
 		}
 	}
 }
@@ -290,14 +495,16 @@ func TestNewTpAgent(t *testing.T) {
 		Store:       ds,
 	}
 
-	ag, err := NewTpAgent(na, mockdatapath.MockHal())
+	ag, err := NewTpAgent(na, mockdatapath.MockHal(), dbgSock)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, ag)
 
-	pol := &tpaprotos.FlowExportPolicyObj{
-		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
-		ObjectMeta: api.ObjectMeta{Name: "test1", Tenant: "default"},
+	pol := &types.FlowExportPolicyTable{
+		FlowExportPolicy: &tpmprotos.FlowExportPolicy{
+			TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
+			ObjectMeta: api.ObjectMeta{Name: "test1", Tenant: "default"},
+		},
 	}
 
 	err = ag.store.Write(pol)
@@ -305,20 +512,24 @@ func TestNewTpAgent(t *testing.T) {
 
 	obj, err := ag.store.Read(pol)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to read export policy"))
-	rp, ok := obj.(*tpaprotos.FlowExportPolicyObj)
+	rp, ok := obj.(*types.FlowExportPolicyTable)
 	tu.Assert(t, ok == true, fmt.Sprintf("invalid export policy %+v", obj))
 	tu.Assert(t, rp == pol, fmt.Sprintf("export policy  didn't match, %+v, %+v", rp, pol))
 
-	pol2 := &tpaprotos.FlowExportPolicyObj{
-		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
-		ObjectMeta: api.ObjectMeta{Name: "test2", Tenant: "default"},
+	pol2 := &types.FlowExportPolicyTable{
+		FlowExportPolicy: &tpmprotos.FlowExportPolicy{
+			TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
+			ObjectMeta: api.ObjectMeta{Name: "test2", Tenant: "default"},
+		},
 	}
 
 	err = ag.store.Write(pol2)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create export policy"))
-	l, err := ag.store.List(&tpaprotos.FlowExportPolicyObj{
-		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
-		ObjectMeta: api.ObjectMeta{},
+	l, err := ag.store.List(&types.FlowExportPolicyTable{
+		FlowExportPolicy: &tpmprotos.FlowExportPolicy{
+			TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
+			ObjectMeta: api.ObjectMeta{},
+		},
 	})
 	tu.AssertOk(t, err, fmt.Sprintf("failed to list export policy"))
 	tu.Assert(t, len(l) == 2, fmt.Sprintf("invalid number of export policy, expectec 2 got %d, %+v", len(l), l))
@@ -380,7 +591,7 @@ func TestCreateFlowExportPolicy(t *testing.T) {
 		}
 	}
 
-	s, err := NewTpAgent(na, mockdatapath.MockHal())
+	s, err := NewTpAgent(na, mockdatapath.MockHal(), dbgSock)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 	defer cleanup(t, s)
 
@@ -391,16 +602,25 @@ func TestCreateFlowExportPolicy(t *testing.T) {
 			ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("%s-%d", policyPrefix, l), Tenant: "default", Namespace: "default"},
 
 			Spec: tpmprotos.FlowExportPolicySpec{
-				Targets: []monitoring.FlowExportTarget{
+				MatchRules: []tsproto.MatchRule{
 					{
-						Interval: "15s",
-						Format:   "IPFIX",
-						Exports: []monitoring.ExportConfig{
-							{
-								Destination: fmt.Sprintf("192.168.3.%d", 10+l),
-								Transport:   "TCP/1234",
-							},
+						Src: &tsproto.MatchSelector{
+							IPAddresses: []string{"any"},
 						},
+						Dst: &tsproto.MatchSelector{
+							IPAddresses: []string{"any"},
+						},
+						AppProtoSel: &tsproto.AppProtoSelector{
+							Ports: []string{"any"},
+						},
+					},
+				},
+				Interval: "15s",
+				Format:   "IPFIX",
+				Exports: []monitoring.ExportConfig{
+					{
+						Destination: fmt.Sprintf("192.168.3.%d", 10+l),
+						Transport:   "TCP/1234",
 					},
 				},
 			},
@@ -425,16 +645,25 @@ func TestCreateFlowExportPolicy(t *testing.T) {
 			ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("%s-%d", policyPrefix, l), Tenant: "default", Namespace: "default"},
 
 			Spec: tpmprotos.FlowExportPolicySpec{
-				Targets: []monitoring.FlowExportTarget{
+				MatchRules: []tsproto.MatchRule{
 					{
-						Interval: "15s",
-						Format:   "IPFIX",
-						Exports: []monitoring.ExportConfig{
-							{
-								Destination: fmt.Sprintf("192.168.3.%d", 10+l),
-								Transport:   "TCP/1234",
-							},
+						Src: &tsproto.MatchSelector{
+							IPAddresses: []string{"any"},
 						},
+						Dst: &tsproto.MatchSelector{
+							IPAddresses: []string{"any"},
+						},
+						AppProtoSel: &tsproto.AppProtoSelector{
+							Ports: []string{"any"},
+						},
+					},
+				},
+				Interval: "15s",
+				Format:   "IPFIX",
+				Exports: []monitoring.ExportConfig{
+					{
+						Destination: fmt.Sprintf("192.168.3.%d", 10+l),
+						Transport:   "TCP/1234",
 					},
 				},
 			},
@@ -459,8 +688,13 @@ func TestCreateFlowExportPolicy(t *testing.T) {
 	}
 
 	// verify all policie are removed
-	pl, err := s.store.List(&tpmprotos.FlowExportPolicy{
-		TypeMeta: api.TypeMeta{Kind: "FlowExportPolicy"}})
+	pl, err := s.store.List(&types.FlowExportPolicyTable{
+		FlowExportPolicy: &tpmprotos.FlowExportPolicy{
+			TypeMeta: api.TypeMeta{
+				Kind: "FlowExportPolicy",
+			},
+		},
+	})
 	tu.AssertOk(t, err, fmt.Sprintf("failed to list  export policy"))
 	tu.Assert(t, len(pl) == 0, fmt.Sprintf("policies exists after delete, %+v", pl))
 }
@@ -525,7 +759,7 @@ func TestCreateFlowExportPolicyWithMock(t *testing.T) {
 		}
 	}
 
-	s, err := NewTpAgent(na, halMock)
+	s, err := NewTpAgent(na, halMock, dbgSock)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, s)
@@ -561,16 +795,25 @@ func TestCreateFlowExportPolicyWithMock(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("%s", policyPrefix), Tenant: "default", Namespace: "default"},
 
 		Spec: tpmprotos.FlowExportPolicySpec{
-			Targets: []monitoring.FlowExportTarget{
+			Interval: "15s",
+			Format:   "IPFIX",
+			MatchRules: []tsproto.MatchRule{
 				{
-					Interval: "15s",
-					Format:   "IPFIX",
-					Exports: []monitoring.ExportConfig{
-						{
-							Destination: fmt.Sprintf("192.168.3.11"),
-							Transport:   "UDP/1234",
-						},
+					Src: &tsproto.MatchSelector{
+						IPAddresses: []string{"any"},
 					},
+					Dst: &tsproto.MatchSelector{
+						IPAddresses: []string{"any"},
+					},
+					AppProtoSel: &tsproto.AppProtoSelector{
+						Ports: []string{"any"},
+					},
+				},
+			},
+			Exports: []monitoring.ExportConfig{
+				{
+					Destination: fmt.Sprintf("192.168.3.11"),
+					Transport:   "UDP/1234",
 				},
 			},
 		},
@@ -619,7 +862,7 @@ func TestNetagentInfo(t *testing.T) {
 		Store:       ds,
 	}
 
-	s, err := NewTpAgent(na, halMock)
+	s, err := NewTpAgent(na, halMock, dbgSock)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, s)
@@ -629,16 +872,36 @@ func TestNetagentInfo(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{Name: "flowexport", Tenant: "default", Namespace: "default"},
 
 		Spec: tpmprotos.FlowExportPolicySpec{
-			Targets: []monitoring.FlowExportTarget{
+			MatchRules: []tsproto.MatchRule{
 				{
-					Interval: "15s",
-					Format:   "IPFIX",
-					Exports: []monitoring.ExportConfig{
-						{
-							Destination: "10.10.10.1",
-							Transport:   "UDP/1234",
-						},
+					Src: &tsproto.MatchSelector{
+						IPAddresses: []string{"1.1.1.1"},
 					},
+					Dst: &tsproto.MatchSelector{
+						IPAddresses: []string{"1.1.1.2"},
+					},
+					AppProtoSel: &tsproto.AppProtoSelector{
+						Ports: []string{"TCP/1000"},
+					},
+				},
+				{
+					Src: &tsproto.MatchSelector{
+						IPAddresses: []string{"1.1.2.1"},
+					},
+					Dst: &tsproto.MatchSelector{
+						IPAddresses: []string{"1.1.2.2"},
+					},
+					AppProtoSel: &tsproto.AppProtoSelector{
+						Ports: []string{"TCP/1010"},
+					},
+				},
+			},
+			Interval: "15s",
+			Format:   "IPFIX",
+			Exports: []monitoring.ExportConfig{
+				{
+					Destination: "10.10.10.1",
+					Transport:   "UDP/1234",
 				},
 			},
 		},
@@ -692,26 +955,27 @@ func TestNetagentInfo(t *testing.T) {
 		},
 	}
 
-	pol.Spec.Targets[0].Exports[0].Transport = "IPIP/100"
+	pol.Spec.Exports[0].Transport = "IPIP/100"
 	err = s.CreateFlowExportPolicy(context.Background(), pol)
 	tu.Assert(t, err != nil, fmt.Sprintf("invalid protocol didn't fail"))
 
-	pol.Spec.Targets[0].Exports[0].Transport = "ICMP/1000"
+	pol.Spec.Exports[0].Transport = "ICMP/1000"
 	err = s.CreateFlowExportPolicy(context.Background(), pol)
 	tu.Assert(t, err != nil, fmt.Sprintf("invalid protocol didn't fail"))
 
-	pol.Spec.Targets[0].Exports[0].Transport = "TCP/UDP"
+	pol.Spec.Exports[0].Transport = "TCP/UDP"
 	err = s.CreateFlowExportPolicy(context.Background(), pol)
 	tu.Assert(t, err != nil, fmt.Sprintf("invalid port didn't fail"))
 
-	pol.Spec.Targets[0].Exports[0].Transport = "TCP/65536"
+	pol.Spec.Exports[0].Transport = "TCP/65536"
 	err = s.CreateFlowExportPolicy(context.Background(), pol)
 	tu.Assert(t, err != nil, fmt.Sprintf("invalid port didn't fail"))
 
-	pol.Spec.Targets[0].Exports[0].Transport = "UDP/1234"
-	pol.Spec.Targets[0].Format = "NETFLOW"
+	pol.Spec.Exports[0].Transport = "UDP/1234"
+	pol.Spec.Format = "NETFLOW"
 	err = s.CreateFlowExportPolicy(context.Background(), pol)
 	tu.Assert(t, err != nil, fmt.Sprintf("invalid format didn't fail"))
+
 }
 
 func TestHalIPAddr(t *testing.T) {
@@ -723,4 +987,182 @@ func TestHalIPAddr(t *testing.T) {
 
 	_, _, err = convertToHalIPAddr("2001:0db8:85a3:0000:0000:8a2e:0370:7334")
 	tu.AssertOk(t, err, fmt.Sprintf("failed to parse ipv6"))
+}
+
+func TestCollectorDebug(t *testing.T) {
+	c := gomock.NewController(t)
+	defer c.Finish()
+	halMock := halproto.NewMockTelemetryClient(c)
+
+	ds, err := createDataStore()
+	tu.AssertOk(t, err, fmt.Sprintf("failed to create database"))
+
+	na := &agstate.Nagent{
+		TenantDB:    map[string]*netproto.Tenant{},
+		NetworkDB:   map[string]*netproto.Network{},
+		EndpointDB:  map[string]*netproto.Endpoint{},
+		NamespaceDB: map[string]*netproto.Namespace{},
+		Solver:      dependencies.NewDepSolver(),
+		Store:       ds,
+	}
+
+	s, err := NewTpAgent(na, halMock, dbgSock)
+	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
+
+	defer cleanup(t, s)
+
+	pol := &tpmprotos.FlowExportPolicy{
+		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
+		ObjectMeta: api.ObjectMeta{Name: "flowexport", Tenant: "default", Namespace: "default"},
+
+		Spec: tpmprotos.FlowExportPolicySpec{
+			MatchRules: []tsproto.MatchRule{
+				{
+					Src: &tsproto.MatchSelector{
+						IPAddresses: []string{"1.1.1.1"},
+					},
+					Dst: &tsproto.MatchSelector{
+						IPAddresses: []string{"1.1.1.2"},
+					},
+					AppProtoSel: &tsproto.AppProtoSelector{
+						Ports: []string{"TCP/1000"},
+					},
+				},
+				{
+					Src: &tsproto.MatchSelector{
+						IPAddresses: []string{"1.1.2.1"},
+					},
+					Dst: &tsproto.MatchSelector{
+						IPAddresses: []string{"1.1.2.2"},
+					},
+					AppProtoSel: &tsproto.AppProtoSelector{
+						Ports: []string{"TCP/1010"},
+					},
+				},
+			},
+			Interval: "15s",
+			Format:   "IPFIX",
+			Exports: []monitoring.ExportConfig{
+				{
+					Destination: "10.10.10.1",
+					Transport:   "UDP/1234",
+				},
+				{
+					Destination: "10.10.10.2",
+					Transport:   "UDP/1234",
+				},
+			},
+		},
+	}
+
+	key := na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "default"}, api.TypeMeta{Kind: "tenant"})
+	na.TenantDB[key] = &netproto.Tenant{
+		ObjectMeta: api.ObjectMeta{Tenant: "default"},
+		Spec:       netproto.TenantSpec{Meta: &api.ObjectMeta{Tenant: "default"}},
+		Status: netproto.TenantStatus{
+			TenantID: uint64(501),
+		},
+	}
+
+	key = na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Name: "default"}, api.TypeMeta{Kind: "namespace"})
+	na.NamespaceDB[key] = &netproto.Namespace{
+		ObjectMeta: api.ObjectMeta{Tenant: "default"},
+		Spec:       netproto.NamespaceSpec{},
+		Status: netproto.NamespaceStatus{
+			NamespaceID: uint64(501),
+		},
+	}
+
+	key = na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "flowexport"}, api.TypeMeta{Kind: "endpoint"})
+	na.EndpointDB[key] = &netproto.Endpoint{
+		ObjectMeta: api.ObjectMeta{Name: "flowexport", Namespace: "default", Tenant: "default"},
+		Spec: netproto.EndpointSpec{
+			NetworkName: "default",
+			IPv4Address: "10.10.10.1/32",
+		},
+		Status: netproto.EndpointStatus{},
+	}
+
+	key = na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "flowexport1"}, api.TypeMeta{Kind: "endpoint"})
+	na.EndpointDB[key] = &netproto.Endpoint{
+		ObjectMeta: api.ObjectMeta{Name: "flowexport", Namespace: "default", Tenant: "default"},
+		Spec: netproto.EndpointSpec{
+			NetworkName: "default",
+			IPv4Address: "10.10.10.2/32",
+		},
+		Status: netproto.EndpointStatus{},
+	}
+
+	key = na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "default"}, api.TypeMeta{Kind: "network"})
+	na.NetworkDB[key] = &netproto.Network{
+		ObjectMeta: api.ObjectMeta{Name: "default", Namespace: "default", Tenant: "default"},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet: "",
+		},
+		Status: netproto.NetworkStatus{
+			NetworkID: uint64(101),
+		},
+	}
+
+	collResp := &halproto.CollectorResponseMsg{
+		Response: []*halproto.CollectorResponse{
+			{
+				ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+				Status: &halproto.CollectorStatus{
+					Handle: uint64(105),
+				},
+			},
+		},
+	}
+
+	flowResp := &halproto.FlowMonitorRuleResponseMsg{
+		Response: []*halproto.FlowMonitorRuleResponse{
+			{
+				ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+				Status: &halproto.FlowMonitorRuleStatus{
+					Handle: uint64(105),
+				},
+			},
+		},
+	}
+
+	halMock.EXPECT().CollectorCreate(gomock.Any(), gomock.Any()).Return(collResp, nil).AnyTimes()
+	halMock.EXPECT().FlowMonitorRuleCreate(gomock.Any(), gomock.Any()).Return(flowResp, nil).AnyTimes()
+
+	err = s.CreateFlowExportPolicy(context.Background(), pol)
+	tu.AssertOk(t, err, "failed to create policy")
+
+	resp := httptest.NewRecorder()
+	s.debug(resp, nil)
+	b, err := ioutil.ReadAll(resp.Body)
+	tu.AssertOk(t, err, "failed to read debug")
+
+	dbgInfo := &debugInfo{}
+	err = json.Unmarshal(b, dbgInfo)
+	tu.AssertOk(t, err, "failed to unmarshal debug")
+
+	pdebug := dbgInfo.Policy[fmt.Sprintf("%s/%s/%s", pol.Tenant, pol.Namespace, pol.Name)]
+	tu.Assert(t, pdebug.FlowExportPolicy != nil, "failed to find policy")
+	tu.Assert(t, len(pdebug.Collectors) == 2, "mismatch in collectors", pdebug.Collectors)
+	tu.Assert(t, len(dbgInfo.CollectorTable) == 2, "invalid collectors", dbgInfo.CollectorTable)
+
+	// update name
+	pol.Name = "flowexport-1"
+	err = s.CreateFlowExportPolicy(context.Background(), pol)
+	tu.AssertOk(t, err, "failed to create policy")
+
+	s.debug(resp, nil)
+	b, err = ioutil.ReadAll(resp.Body)
+	tu.AssertOk(t, err, "failed to read debug")
+	dbgInfo = &debugInfo{}
+	err = json.Unmarshal(b, dbgInfo)
+	tu.AssertOk(t, err, "failed to unmarshal debug")
+
+	pdebug = dbgInfo.Policy[fmt.Sprintf("%s/%s/%s", pol.Tenant, pol.Namespace, pol.Name)]
+	tu.Assert(t, pdebug.FlowExportPolicy != nil, "failed to find policy")
+	tu.Assert(t, len(pdebug.Collectors) == 2, "failed to find collectors", pdebug.Collectors)
+	tu.Assert(t, len(dbgInfo.CollectorTable) == 2, "invalid collectors", dbgInfo.CollectorTable)
+	log.Infof("+++%v", dbgInfo.CollectorTable)
+	log.Infof("+++%v", string(b))
+
 }

@@ -10,6 +10,7 @@ import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.p
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 import "github.com/pensando/sw/api/protos/export.proto";
+import "matchrule.proto";
 //========================================================================================
 // Packet Mirroring
 //========================================================================================
@@ -69,39 +70,6 @@ message MirrorCollector {
     monitoring.ExportConfig    ExportCfg   = 2 [(gogoproto.nullable)=false, (gogoproto.jsontag) = "export-config,omitempty"];
     string              PcapDirName = 3 [(gogoproto.jsontag) = "pcap-dir-name"];
 }
-
-// Traffic Selection Rules
-// Traffic can be matched using EP names or IPv4/v6 addresses/ranges/prefixes or MAC addresses
-message MatchSelector {
-    // only one of the following match selector can be specified to select a packet from mirroring
-    repeated string Endpoints       = 1 [(gogoproto.jsontag) = "endpoints,omitempty"];
-    // Each IPAddress can be single address(10.1.1.1)/range(10.1.1.10-20)/subnet(10.1.0.0/16)
-    repeated string IPAddresses     = 2 [(gogoproto.jsontag) = "ip-addresses,omitempty"];
-    // List of MacAddresses - "aa:bb:cc:dd:ee:ff", "00:01:02:03:04:05"
-    repeated string MACAddresses    = 3 [(gogoproto.jsontag) = "mac-addresses,omitempty"];
-}
-
-// Application/protocol selector
-message AppProtoSelector {
-    // ports - Includes protocol name and port Eg ["tcp/1234", "udp"]
-    repeated string Ports   = 1 [(gogoproto.jsontag) = "ports,omitempty"];
-    // Apps - E.g. ["Redis"]
-    repeated string Apps    = 2 [(gogoproto.jsontag) = "applications,omitempty"];
-}
-
-// MatchRule : This is used to select packets that need to be monitored (mirrored)
-message MatchRule {
-    // Either Src or Dst or both must be specified, both cannot be *
-    // Src = * when not specified
-    // When Src is specified and resides on Pesnsando SmartNIC, matching pkts to/from src will be mirrored
-    MatchSelector       Src         = 1 [(gogoproto.jsontag) = "source,omitempty"];
-    // Dst = * when not specified
-    // When Dst is specified and resides on Pesnsando SmartNIC, matching pkts to/from dst will be mirrored
-    MatchSelector       Dst         = 2 [(gogoproto.jsontag) = "destination,omitempty"];;
-    // App = * when not specified
-    AppProtoSelector   AppProtoSel  = 3 [(gogoproto.jsontag) = "app-protocol-selectors,omitempty"];;
-}
-
 
 enum MirrorSrcDst {
     SRC_DST = 0;    // both src and dst are on the same SamrtNIC

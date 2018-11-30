@@ -2049,17 +2049,17 @@ func makeURIAuthV1AutoUpdateUserUpdateOper(in *User) string {
 
 //
 func makeURIAuthV1AutoWatchAuthenticationPolicyWatchOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/configs/auth/v1", "/watch/authn-policy")
+	return fmt.Sprint("/configs/auth/v1")
 }
 
 //
 func makeURIAuthV1AutoWatchRoleWatchOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/configs/auth/v1", "/watch/tenant/", in.Tenant, "/roles")
+	return fmt.Sprint("/configs/auth/v1")
 }
 
 //
 func makeURIAuthV1AutoWatchRoleBindingWatchOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/configs/auth/v1", "/watch/tenant/", in.Tenant, "/role-bindings")
+	return fmt.Sprint("/configs/auth/v1")
 }
 
 //
@@ -2070,7 +2070,7 @@ func makeURIAuthV1AutoWatchSvcAuthV1WatchOper(in *api.ListWatchOptions) string {
 
 //
 func makeURIAuthV1AutoWatchUserWatchOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/configs/auth/v1", "/watch/tenant/", in.Tenant, "/users")
+	return fmt.Sprint("/configs/auth/v1")
 }
 
 //

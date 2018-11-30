@@ -59,7 +59,7 @@ export enum MonitoringExternalCred_auth_type {
     'AUTHTYPE_CERTS' = "AUTHTYPE_CERTS",
 }
 
-export enum MonitoringFlowExportTarget_format {
+export enum MonitoringFlowExportPolicySpec_format {
     'Ipfix' = "Ipfix",
 }
 
@@ -317,7 +317,7 @@ export class AllEnums {
     MonitoringAuthConfig_algo = MonitoringAuthConfig_algo;
     MonitoringEventPolicySpec_format = MonitoringEventPolicySpec_format;
     MonitoringExternalCred_auth_type = MonitoringExternalCred_auth_type;
-    MonitoringFlowExportTarget_format = MonitoringFlowExportTarget_format;
+    MonitoringFlowExportPolicySpec_format = MonitoringFlowExportPolicySpec_format;
     MonitoringFwlogExport_format = MonitoringFwlogExport_format;
     MonitoringFwlogExport_export_filter = MonitoringFwlogExport_export_filter;
     MonitoringFwlogPolicySpec_filter = MonitoringFwlogPolicySpec_filter;

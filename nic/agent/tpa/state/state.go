@@ -2,22 +2,29 @@ package state
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net"
+	"net/http"
+	"os"
+	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
 	"sync"
-
 	"time"
 
+	"github.com/gorilla/mux"
+
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	agstate "github.com/pensando/sw/nic/agent/netagent/state"
-	"github.com/pensando/sw/nic/agent/tpa/protos"
+	"github.com/pensando/sw/nic/agent/tpa/state/types"
+	tstype "github.com/pensando/sw/nic/agent/troubleshooting/state/types"
+	"github.com/pensando/sw/nic/agent/troubleshooting/utils"
 	"github.com/pensando/sw/venice/ctrler/tpm/rpcserver/protos"
+	"github.com/pensando/sw/venice/ctrler/tsm/rpcserver/tsproto"
 	"github.com/pensando/sw/venice/utils/emstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -26,30 +33,66 @@ import (
 const (
 	flowExportPolicyID      = "flowExportPolicyId"
 	maxFlowExportCollectors = 16
+	defaultDbgSock          = "/var/run/pensando/tpa.sock"
 )
 
-// PolicyState keeps the policy agent state
+// PolicyState keeps the agent state
 type PolicyState struct {
-	sync.Mutex // global lock
-	netAgent   *agstate.Nagent
-	store      emstore.Emstore
-	hal        halproto.TelemetryClient
+	// global lock
+	sync.Mutex
+	netAgent *agstate.Nagent
+	store    emstore.Emstore
+	hal      halproto.TelemetryClient
 }
 
-// networkMeta is the meta data passed to functions
-type networkMeta struct {
-	vrf       uint64
-	tenant    string
-	namespace string
+// internal state from db
+type policyDb struct {
+	state *PolicyState
+	//validated matchrules for the current policy
+	matchRules []tsproto.MatchRule
+	// collector keys for the current policy
+	collectorKeys map[types.CollectorKey]bool
+	//FlowMonitorRule keys for the current policy
+	flowRuleKeys map[types.FlowMonitorRuleKey]bool
+	// vrf for the current policy
+	vrf uint64
+	//object meta
+	objMeta api.ObjectMeta
+
+	// policy from db
+	tpmPolicy *types.FlowExportPolicyTable
+	// collectors saved in db
+	collectorTable *types.CollectorTable
+	// flowmonitor saved in db
+	flowMonitorTable *types.FlowMonitorTable
 }
 
 // NewTpAgent creates new telemetry policy agent state
-func NewTpAgent(netAgent *agstate.Nagent, halTm halproto.TelemetryClient) (*PolicyState, error) {
+func NewTpAgent(netAgent *agstate.Nagent, halTm halproto.TelemetryClient, dbgSock string) (*PolicyState, error) {
 	state := &PolicyState{
 		store:    netAgent.Store,
 		netAgent: netAgent,
 		hal:      halTm,
 	}
+
+	// debug
+	if dbgSock == "" {
+		dbgSock = defaultDbgSock
+	}
+	router := mux.NewRouter()
+	router.HandleFunc("/debug", state.debug).Methods("GET")
+	// sudo curl --unix-socket /var/run/pensando/tpa.sock http://localhost/debug
+	os.Remove(dbgSock)
+	os.MkdirAll(filepath.Dir(dbgSock), 0644)
+	l, err := net.Listen("unix", dbgSock)
+	if err != nil {
+
+		log.Fatalf("failed to initialize debug, %s", err)
+	}
+
+	go func() {
+		log.Fatal(http.Serve(l, router))
+	}()
 
 	return state, nil
 }
@@ -62,86 +105,134 @@ func (s *PolicyState) validateMeta(p *tpmprotos.FlowExportPolicy) error {
 	if p.Name == "" || p.Kind == "" {
 		return fmt.Errorf("name/kind can't be empty")
 	}
+
+	if p.Namespace == "" {
+		p.Namespace = "default"
+	}
 	return nil
 }
 
-func (s *PolicyState) findNumExports(p *api.ObjectMeta) (int, error) {
-	numExports := 0
+// count collectors in policydb
+func (p *policyDb) findNumCollectors() int {
+	// configured collectors
+	numCollectors := len(p.collectorTable.Collector)
 
-	// list all, to check the total number of collector policies
-	pl, err := s.store.List(&tpaprotos.FlowExportPolicyObj{
-		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
-		ObjectMeta: api.ObjectMeta{},
-	})
-	if err == nil {
-		for _, obj := range pl {
-			//TODO:  debug emstore.list()
-			v, err := s.store.Read(&tpaprotos.FlowExportPolicyObj{
-				TypeMeta:   api.TypeMeta{Kind: obj.GetObjectKind()},
-				ObjectMeta: *obj.GetObjectMeta()})
-			if err != nil || v == nil {
-				return numExports, fmt.Errorf("failed to read policy %s, %s", obj.GetObjectMeta(), err)
-			}
-			if flowExp, ok := v.(*tpaprotos.FlowExportPolicyObj); ok {
-				if p != nil && flowExp.GetName() == p.GetName() &&
-					flowExp.GetTenant() == p.GetTenant() &&
-					flowExp.GetNamespace() == p.GetNamespace() {
-					continue
-				}
-
-				for _, tgt := range flowExp.P.Spec.Targets {
-					numExports += len(tgt.Exports)
-				}
-			}
+	// check if there are any new collectors
+	for key := range p.collectorKeys {
+		if _, ok := p.collectorTable.Collector[key.String()]; !ok {
+			numCollectors++
 		}
 	}
 
-	return numExports, nil
+	return numCollectors
 }
 
-func (s *PolicyState) validatePolicy(p *tpmprotos.FlowExportPolicy) (int, error) {
-	numExports := 0
+func parsePortProto(src string) (halproto.IPProtocol, uint32, error) {
+	s := strings.Split(src, "/")
+	if len(s) != 2 {
+		return halproto.IPProtocol_IPPROTO_NONE, 0, fmt.Errorf("invalid protocol/port in %s", src)
+	}
 
+	p, ok := halproto.IPProtocol_value["IPPROTO_"+strings.ToUpper(s[0])]
+	if !ok {
+		return halproto.IPProtocol_IPPROTO_NONE, 0, fmt.Errorf("invalid protocol in %s", src)
+	}
+	proto := halproto.IPProtocol(p)
+
+	switch proto {
+	case halproto.IPProtocol_IPPROTO_UDP:
+	case halproto.IPProtocol_IPPROTO_TCP:
+
+	default:
+		return halproto.IPProtocol_IPPROTO_NONE, 0, fmt.Errorf("invalid protocol in %s", src)
+	}
+
+	port, err := strconv.Atoi(s[1])
+	if err != nil {
+		return halproto.IPProtocol_IPPROTO_NONE, 0, fmt.Errorf("invalid port in %s", src)
+	}
+	if uint(port) > uint(^uint16(0)) {
+		return halproto.IPProtocol_IPPROTO_NONE, 0, fmt.Errorf("invalid port in %s", src)
+	}
+
+	return proto, uint32(port), nil
+}
+
+func (s *PolicyState) validatePolicy(p *tpmprotos.FlowExportPolicy) (map[types.CollectorKey]bool, error) {
 	if err := s.validateMeta(p); err != nil {
-		return numExports, err
+		return nil, err
+	}
+	spec := p.Spec
+
+	interval, err := time.ParseDuration(spec.Interval)
+	if err != nil {
+		return nil, fmt.Errorf("invalid interval %s", spec.Interval)
 	}
 
-	if len(p.Spec.Targets) == 0 {
-		return numExports, fmt.Errorf("export targets can't be empty")
+	if interval < time.Second {
+		return nil, fmt.Errorf("too small interval %s", spec.Interval)
 	}
 
-	for _, t := range p.Spec.Targets {
-		if len(t.Exports) == 0 {
-			return 0, fmt.Errorf("exports can't be empty")
+	if interval > 24*time.Hour {
+		return nil, fmt.Errorf("too large interval %s", spec.Interval)
+	}
+
+	if halproto.ExportFormat_name[int32(halproto.ExportFormat_IPFIX)] != strings.ToUpper(spec.Format) {
+		return nil, fmt.Errorf("invalid format %s", spec.Format)
+	}
+
+	if len(spec.MatchRules) == 0 {
+		return nil, fmt.Errorf("no matchrule in %s", p.Name)
+	}
+
+	if err := utils.ValidateMatchRule(p.ObjectMeta, spec.MatchRules, s.netAgent.FindEndpoint); err != nil {
+		return nil, fmt.Errorf("error in matchrule in %s, %s", p.Name, err)
+	}
+
+	if len(spec.Exports) == 0 {
+		return nil, fmt.Errorf("exports can't be empty")
+	}
+
+	// get vrf
+	vrf, err := s.getVrfID(p.GetTenant(), p.GetNamespace())
+	if err != nil {
+		return nil, fmt.Errorf("failed to find vrf for %s/%s", p.GetTenant(), p.GetNamespace())
+	}
+
+	collKeys := map[types.CollectorKey]bool{}
+	for _, export := range spec.Exports {
+		dest := export.Destination
+		if dest == "" {
+			return nil, fmt.Errorf("destination can't be empty")
 		}
 
-		for _, export := range t.Exports {
-			numExports++
-
-			if export.Destination == "" {
-				return numExports, fmt.Errorf("destination can't be empty")
+		netIP := net.ParseIP(dest)
+		if netIP == nil {
+			// treat it as hostname and resolve
+			s, err := net.LookupHost(dest)
+			if err != nil || len(s) == 0 {
+				return nil, fmt.Errorf("failed to resolve name {%s}, error: %s", dest, err)
 			}
-
-			if _, _, err := parsePortProto(export.Transport); err != nil {
-				return numExports, err
-			}
+			dest = s[0] // pick the first address from dns
 		}
 
-		val, err := time.ParseDuration(t.Interval)
+		proto, port, err := parsePortProto(export.Transport)
 		if err != nil {
-			return 0, fmt.Errorf("invalid interval format %s", err)
+			return nil, err
 		}
 
-		if val < time.Second {
-			return 0, fmt.Errorf("too small interval %s", t.Interval)
+		newKey := types.CollectorKey{
+			Interval:    uint32(interval.Seconds()),
+			Format:      halproto.ExportFormat_IPFIX,
+			Protocol:    proto,
+			Destination: dest,
+			Port:        port,
+			VrfID:       vrf,
 		}
-
-		if val > 24*time.Hour {
-			return 0, fmt.Errorf("too large interval %s", t.Interval)
-		}
+		collKeys[newKey] = true
 	}
 
-	return numExports, nil
+	return collKeys, nil
 }
 
 // get vrf from tenant/namespace
@@ -158,7 +249,6 @@ func (s *PolicyState) getVrfID(tenant string, namespace string) (uint64, error) 
 func (s *PolicyState) getL2SegID(tenant, namespace, address string) (*netproto.NetworkStatus, error) {
 	epList := s.netAgent.ListEndpoint()
 	for _, ep := range epList {
-
 		epAddr, _, err := net.ParseCIDR(ep.Spec.GetIPv4Address())
 		if err != nil {
 			log.Errorf("failed to parse endpoint address {%+v} ", ep)
@@ -205,120 +295,124 @@ func convertToHalIPAddr(src string) (*halproto.IPAddress, string, error) {
 	return halIP, src, nil
 }
 
-func parsePortProto(src string) (halproto.IPProtocol, uint32, error) {
-	s := strings.Split(src, "/")
-	if len(s) != 2 {
-		return halproto.IPProtocol_IPPROTO_NONE, 0, fmt.Errorf("invalid protocol/port in %s", src)
+// createCollectorPolicy creates collector policy in HAL
+func (p *policyDb) createCollectorPolicy(ctx context.Context) (err error) {
+
+	// todo: move to a function
+	defer func() {
+		if err != nil {
+			log.Infof("cleaning up collectors")
+			for ckey := range p.collectorKeys {
+				if cdata, ok := p.collectorTable.Collector[ckey.String()]; ok {
+					delete(cdata.PolicyNames, getObjMetaKey(&p.objMeta))
+					if len(cdata.PolicyNames) == 0 { // no one is using it
+						log.Infof("removing collector {%+v}", ckey)
+						p.deleteCollectorPolicy(ctx, cdata.CollectorID)
+						p.writecollectorTable()
+					}
+				}
+			}
+		}
+	}()
+
+	for ckey := range p.collectorKeys {
+		// check if collector already exists
+		if cdata, ok := p.collectorTable.Collector[ckey.String()]; ok {
+			log.Infof("collector %s exists", ckey.Destination)
+			cdata.PolicyNames[getObjMetaKey(&p.objMeta)] = true
+			continue
+		}
+
+		halDestAddr, destAddr, err := convertToHalIPAddr(ckey.Destination)
+		if err != nil {
+			return fmt.Errorf("invalid destination address %s, %s", ckey.Destination, err)
+		}
+
+		netObj, err := p.state.getL2SegID(p.objMeta.Tenant, p.objMeta.Namespace, destAddr)
+		if err != nil {
+			return fmt.Errorf("invalid l2 segment, %s", err)
+		}
+
+		collectorID, err := p.state.store.GetNextID(flowExportPolicyID)
+		if err != nil {
+			return fmt.Errorf("failed to allocate object id for collector policy")
+		}
+
+		log.Infof("create new collector %v(policy %v), id %d", destAddr, p.objMeta.Name, collectorID)
+
+		var req []*halproto.CollectorSpec
+		req = append(req, &halproto.CollectorSpec{
+			KeyOrHandle: &halproto.CollectorKeyHandle{
+				KeyOrHandle: &halproto.CollectorKeyHandle_CollectorId{
+					CollectorId: collectorID,
+				},
+			},
+			VrfKeyHandle: &halproto.VrfKeyHandle{
+				KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+					VrfId: p.vrf,
+				},
+			},
+			//  TODO: will be removed from HAL
+			Encap: &halproto.EncapInfo{
+				EncapType:  halproto.EncapType_ENCAP_TYPE_DOT1Q,
+				EncapValue: netObj.AllocatedVlanID,
+			},
+
+			L2SegKeyHandle: &halproto.L2SegmentKeyHandle{
+				KeyOrHandle: &halproto.L2SegmentKeyHandle_SegmentId{
+					SegmentId: netObj.NetworkID,
+				},
+			},
+
+			//todo: set src ip from mnic
+			SrcIp: &halproto.IPAddress{
+				V4OrV6: &halproto.IPAddress_V4Addr{
+					V4Addr: 0,
+				},
+			},
+			DestIp:         halDestAddr,
+			Protocol:       ckey.Protocol,
+			DestPort:       ckey.Port,
+			ExportInterval: ckey.Interval,
+			Format:         ckey.Format,
+		})
+
+		log.Infof("create hal collector policy, req: {%+v}", req)
+
+		// send to hal
+		resp, err := p.state.hal.CollectorCreate(ctx, &halproto.CollectorRequestMsg{Request: req})
+		if err != nil {
+			log.Errorf("failed to create collector policy in hal, %s", err)
+			return err
+		}
+
+		if resp != nil && len(resp.Response) > 0 && resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("failed to create collector policy in hal, api returned %v", resp.Response[0].ApiStatus)
+			return fmt.Errorf("api error %v", resp.Response[0].ApiStatus)
+		}
+
+		// save table in db
+		p.collectorTable.Collector[ckey.String()] = &types.CollectorData{
+			CollectorID: collectorID,
+			PolicyNames: map[string]bool{
+				getObjMetaKey(&p.objMeta): true,
+			},
+		}
+		p.writecollectorTable()
 	}
 
-	p, ok := halproto.IPProtocol_value["IPPROTO_"+strings.ToUpper(s[0])]
-	if !ok {
-		return halproto.IPProtocol_IPPROTO_NONE, 0, fmt.Errorf("invalid protocol in %s", src)
-	}
-	proto := halproto.IPProtocol(p)
-
-	switch proto {
-	case halproto.IPProtocol_IPPROTO_UDP:
-	case halproto.IPProtocol_IPPROTO_TCP:
-
-	default:
-		return halproto.IPProtocol_IPPROTO_NONE, 0, fmt.Errorf("invalid protocol in %s", src)
-	}
-
-	port, err := strconv.Atoi(s[1])
-	if err != nil {
-		return halproto.IPProtocol_IPPROTO_NONE, 0, fmt.Errorf("invalid port in %s", src)
-	}
-	if uint(port) > uint((^uint16(0))) {
-		return halproto.IPProtocol_IPPROTO_NONE, 0, fmt.Errorf("invalid port in %s", src)
-	}
-
-	return proto, uint32(port), nil
+	return nil
 }
 
-// createCollectorPolicy() create collector policy in HAL and return the key
-func (s *PolicyState) createCollectorPolicy(ctx context.Context, netMeta *networkMeta, fmtStr string, interval uint32, export *monitoring.ExportConfig) (uint64, error) {
-
-	objID, err := s.store.GetNextID(flowExportPolicyID)
-	if err != nil {
-		return uint64(0), fmt.Errorf("failed to allocate object id for collector policy")
-	}
-
-	halDestAddr, destAddr, err := convertToHalIPAddr(export.Destination)
-	if err != nil {
-		return uint64(0), fmt.Errorf("invalid destination address %s, %s", export.Destination, err)
-	}
-
-	proto, port, err := parsePortProto(export.Transport)
-	if err != nil {
-		return uint64(0), fmt.Errorf("failed to parse %s, %s", export.Transport, err)
-	}
-
-	// only IPFIX is supported
-	format, ok := halproto.ExportFormat_value[fmtStr]
-	if !ok || halproto.ExportFormat(format) != halproto.ExportFormat_IPFIX {
-		return uint64(0), fmt.Errorf("invalid format %s", fmtStr)
-	}
-
-	netObj, err := s.getL2SegID(netMeta.tenant, netMeta.namespace, destAddr)
-	if err != nil {
-		return uint64(0), fmt.Errorf("invalid l2 segment, %s", err)
-	}
-
-	var req []*halproto.CollectorSpec
-	req = append(req, &halproto.CollectorSpec{
-		KeyOrHandle: &halproto.CollectorKeyHandle{
-			KeyOrHandle: &halproto.CollectorKeyHandle_CollectorId{
-				CollectorId: objID,
-			},
-		},
-		VrfKeyHandle: &halproto.VrfKeyHandle{
-			KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
-				VrfId: netMeta.vrf,
-			},
-		},
-		//  TODO: will be removed from HAL
-		Encap: &halproto.EncapInfo{
-			EncapType:  halproto.EncapType_ENCAP_TYPE_DOT1Q,
-			EncapValue: netObj.AllocatedVlanID,
-		},
-
-		L2SegKeyHandle: &halproto.L2SegmentKeyHandle{
-			KeyOrHandle: &halproto.L2SegmentKeyHandle_SegmentId{
-				SegmentId: netObj.NetworkID,
-			},
-		},
-		DestIp:         halDestAddr,
-		Protocol:       proto,
-		DestPort:       port,
-		ExportInterval: interval,
-		Format:         halproto.ExportFormat(format),
-	})
-
-	log.Infof("create hal collector policy, req: {%+v}", req)
-
-	// send to hal
-	resp, err := s.hal.CollectorCreate(ctx, &halproto.CollectorRequestMsg{Request: req})
-	if err != nil {
-		log.Errorf("failed to create collector policy in hal, %s", err)
-		return uint64(0), err
-	}
-
-	if resp != nil && len(resp.Response) > 0 && resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-		log.Errorf("failed to create collector policy in hal, api returned %v", resp.Response[0].ApiStatus)
-		return uint64(0), fmt.Errorf("api error %v", resp.Response[0].ApiStatus)
-	}
-
-	return objID, nil
-}
-
-// deleteCollectorPolicy() delete collector policy in HAL from the key
-func (s *PolicyState) deleteCollectorPolicy(ctx context.Context, netMeta *networkMeta, key uint64) error {
-	var req []*halproto.CollectorDeleteRequest
+// deleteCollectorPolicy deletes collector policy in HAL
+func (p *policyDb) deleteCollectorPolicy(ctx context.Context, key uint64) error {
+	log.Infof("delete collector id: %+v", key)
 
 	if key == 0 {
 		return nil
 	}
+
+	var req []*halproto.CollectorDeleteRequest
 
 	req = append(req, &halproto.CollectorDeleteRequest{
 		KeyOrHandle: &halproto.CollectorKeyHandle{
@@ -329,7 +423,7 @@ func (s *PolicyState) deleteCollectorPolicy(ctx context.Context, netMeta *networ
 
 	// send to hal
 	log.Infof("delete hal collector policy {%+v}", req)
-	resp, err := s.hal.CollectorDelete(ctx, &halproto.CollectorDeleteRequestMsg{Request: req})
+	resp, err := p.state.hal.CollectorDelete(ctx, &halproto.CollectorDeleteRequestMsg{Request: req})
 	if err != nil {
 		log.Errorf("failed to delete hal collector policy, %s", err)
 		return err
@@ -344,14 +438,10 @@ func (s *PolicyState) deleteCollectorPolicy(ctx context.Context, netMeta *networ
 	return nil
 }
 
-func (s *PolicyState) deleteFlowMonitorRule(ctx context.Context, netMeta *networkMeta, flowMon *tpaprotos.FlowMonitorObj) error {
-	log.Infof("delete flow monitor rule: %+v", flowMon)
+func (p *policyDb) deleteFlowMonitorRule(ctx context.Context, ruleID uint64) error {
+	log.Infof("delete flow monitor rule: %+v", ruleID)
 
-	for _, c := range flowMon.CollectorKey {
-		s.deleteCollectorPolicy(ctx, netMeta, c)
-	}
-
-	if flowMon.Key == 0 {
+	if ruleID == 0 {
 		return nil
 	}
 
@@ -359,18 +449,18 @@ func (s *PolicyState) deleteFlowMonitorRule(ctx context.Context, netMeta *networ
 	req = append(req, &halproto.FlowMonitorRuleDeleteRequest{
 		KeyOrHandle: &halproto.FlowMonitorRuleKeyHandle{
 			KeyOrHandle: &halproto.FlowMonitorRuleKeyHandle_FlowmonitorruleId{
-				FlowmonitorruleId: flowMon.Key,
+				FlowmonitorruleId: ruleID,
 			},
 		},
 		VrfKeyHandle: &halproto.VrfKeyHandle{
 			KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
-				VrfId: netMeta.vrf,
+				VrfId: p.vrf,
 			},
 		},
 	})
 
-	log.Infof("delete hal flow monitor, req: {%+v}", flowMon)
-	resp, err := s.hal.FlowMonitorRuleDelete(ctx, &halproto.FlowMonitorRuleDeleteRequestMsg{
+	log.Infof("delete hal flow monitor, req: {%+v}", req)
+	resp, err := p.state.hal.FlowMonitorRuleDelete(ctx, &halproto.FlowMonitorRuleDeleteRequestMsg{
 		Request: req,
 	})
 
@@ -383,103 +473,109 @@ func (s *PolicyState) deleteFlowMonitorRule(ctx context.Context, netMeta *networ
 		log.Errorf("failed to delete hal flow monitor rule policy, api returned %v", resp.Response[0].ApiStatus)
 		return fmt.Errorf("api error %v", resp.Response[0].ApiStatus)
 	}
+
 	return nil
 }
 
-func (s *PolicyState) createFlowMonitorRule(ctx context.Context, meta *networkMeta, dbFlowExp *tpaprotos.FlowExportPolicyObj, target *monitoring.FlowExportTarget) error {
-	flowMon := &tpaprotos.FlowMonitorObj{}
-	dbFlowExp.FlowMonObj = append(dbFlowExp.FlowMonObj, flowMon)
+func (p *policyDb) createHalFlowMonitorRule(ctx context.Context, ruleKey types.FlowMonitorRuleKey) error {
+	// update in cache
+	p.flowRuleKeys[ruleKey] = true
 
-	duration, err := time.ParseDuration(target.Interval)
+	// create rule id
+	var ruleID uint64
+	var err error
+
+	log.Infof("create new rule %+v ", ruleKey)
+	ruleID, err = p.state.store.GetNextID(tstype.FlowMonitorRuleIDType)
 	if err != nil {
-		return fmt.Errorf("invalid interval %s", target.Interval)
+		log.Errorf("failed to allocate object id for flow monitor %s", err)
+		return fmt.Errorf("failed to allocate object id for flow monitor %s", err)
 	}
 
-	interval := uint32(duration.Seconds()) // convert to seconds
-
-	var collectorKeys []*halproto.CollectorKeyHandle
-
-	for i := 0; i < len(target.Exports); i++ {
-		// configure collector policy
-		collectorKey, err := s.createCollectorPolicy(ctx, meta, strings.ToUpper(target.Format), interval, &target.Exports[i])
-		if err != nil {
-			log.Errorf("failed to create collector policy for %s, %+v, error:%s ", dbFlowExp.P.Name, target.Exports[i], err)
-			return fmt.Errorf("failed to create policy, %s", err)
+	flowRuleData, ok := p.flowMonitorTable.FlowRules[ruleKey.String()]
+	if ok {
+		log.Infof("rule already exists, %+v ", ruleKey)
+		// delete and set new id
+		p.deleteFlowMonitorRule(ctx, flowRuleData.RuleID)
+		flowRuleData.RuleID = ruleID
+	} else {
+		flowRuleData = &types.FlowMonitorData{
+			RuleID:      ruleID,
+			RuleKey:     ruleKey,
+			Collectors:  map[string]map[string]bool{},
+			PolicyNames: map[string]bool{},
 		}
-		// save HAL ids
-		flowMon.CollectorKey = append(flowMon.CollectorKey, collectorKey)
-		collectorKeys = append(collectorKeys, &halproto.CollectorKeyHandle{
-			KeyOrHandle: &halproto.CollectorKeyHandle_CollectorId{
-				CollectorId: collectorKey,
-			},
-		})
+		flowRuleData.Collectors[getObjMetaKey(&p.objMeta)] = map[string]bool{}
+		p.flowMonitorTable.FlowRules[ruleKey.String()] = flowRuleData
 	}
 
-	objID, err := s.store.GetNextID(flowExportPolicyID)
-	if err != nil {
-		log.Errorf("failed to allocate object id for export control %s", dbFlowExp.P.Name)
-		return fmt.Errorf("failed to allocate unique object id ")
+	srcIPObj := utils.BuildIPAddrDetails(ruleKey.SourceIP)
+	destIPObj := utils.BuildIPAddrDetails(ruleKey.DestIP)
+	appPortObj := &tstype.AppPortDetails{
+		Ipproto: int32(ruleKey.Protocol),
+		L4port:  int32(ruleKey.DestL4Port),
 	}
-	flowMon.Key = objID
 
-	// create flow monitor rule
-	var req []*halproto.FlowMonitorRuleSpec
-	req = append(req, &halproto.FlowMonitorRuleSpec{
-		VrfKeyHandle: &halproto.VrfKeyHandle{
-			KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
-				VrfId: meta.vrf,
-			},
-		},
+	srcAddrObj := utils.BuildIPAddrObjProtoObj(srcIPObj)
+	destAddrObj := utils.BuildIPAddrObjProtoObj(destIPObj)
+	appMatchObj := utils.BuildAppMatchInfoObj(appPortObj)
+
+	// create collector keys for hal
+	collectorKeys := []*halproto.CollectorKeyHandle{}
+
+	// add new collectors
+	for ckey := range p.collectorKeys {
+		if cdata, ok := p.collectorTable.Collector[ckey.String()]; ok {
+			collectorKeys = append(collectorKeys, &halproto.CollectorKeyHandle{
+				KeyOrHandle: &halproto.CollectorKeyHandle_CollectorId{
+					CollectorId: cdata.CollectorID,
+				}})
+		}
+	}
+
+	// now pick up existing collectors
+	for _, cmap := range flowRuleData.Collectors {
+		for ckey := range cmap {
+			if cdata, ok := p.collectorTable.Collector[ckey]; ok {
+				collectorKeys = append(collectorKeys, &halproto.CollectorKeyHandle{
+					KeyOrHandle: &halproto.CollectorKeyHandle_CollectorId{
+						CollectorId: cdata.CollectorID,
+					}})
+			}
+		}
+	}
+
+	flowRuleSpec := halproto.FlowMonitorRuleSpec{
 		KeyOrHandle: &halproto.FlowMonitorRuleKeyHandle{
 			KeyOrHandle: &halproto.FlowMonitorRuleKeyHandle_FlowmonitorruleId{
-				FlowmonitorruleId: objID,
+				FlowmonitorruleId: ruleID,
 			},
+		},
+		VrfKeyHandle: &halproto.VrfKeyHandle{
+			KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+				VrfId: p.vrf,
+			},
+		},
+
+		Match: &halproto.RuleMatch{
+			SrcMacAddress: []uint64{ruleKey.SourceMac},
+			DstMacAddress: []uint64{ruleKey.DestMac},
+			SrcAddress:    []*halproto.IPAddressObj{srcAddrObj},
+			DstAddress:    []*halproto.IPAddressObj{destAddrObj},
+			Protocol:      halproto.IPProtocol(appPortObj.Ipproto),
+			AppMatch:      appMatchObj,
 		},
 		CollectorKeyHandle: collectorKeys,
-		// match all, 0.0.0.0/0
-		Match: &halproto.RuleMatch{
-			SrcAddress: []*halproto.IPAddressObj{
-				{
-					Formats: &halproto.IPAddressObj_Address{
-						Address: &halproto.Address{
-							Address: &halproto.Address_Prefix{
-								Prefix: &halproto.IPSubnet{
-									Subnet: &halproto.IPSubnet_Ipv4Subnet{
-										Ipv4Subnet: &halproto.IPPrefix{
-											Address: &halproto.IPAddress{
-												IpAf:   halproto.IPAddressFamily_IP_AF_INET,
-												V4OrV6: &halproto.IPAddress_V4Addr{},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			AppMatch: &halproto.RuleMatch_AppMatch{
-				App: &halproto.RuleMatch_AppMatch_PortInfo{
-					PortInfo: &halproto.RuleMatch_L4PortAppInfo{
-						DstPortRange: []*halproto.L4PortRange{
-							{
-								PortLow:  0,
-								PortHigh: 65535, // all ports
-							},
-						},
-					},
-				},
-			},
-		},
-		Action: &halproto.MonitorAction{
-			Action: []halproto.RuleAction{
-				halproto.RuleAction_COLLECT_FLOW_STATS,
-			},
-		},
-	})
 
-	log.Infof("create hal flow monitor, req: {%+v}", req)
-	resp, err := s.hal.FlowMonitorRuleCreate(ctx, &halproto.FlowMonitorRuleRequestMsg{Request: req})
+		Action: &halproto.MonitorAction{
+			Action: []halproto.RuleAction{halproto.RuleAction_COLLECT_FLOW_STATS},
+		},
+	}
+	reqMsg := &halproto.FlowMonitorRuleRequestMsg{Request: []*halproto.FlowMonitorRuleSpec{&flowRuleSpec}}
+
+	// program hal
+	log.Infof("create hal flow monitor, req: {%+v}", reqMsg)
+	resp, err := p.state.hal.FlowMonitorRuleCreate(ctx, reqMsg)
 	if err != nil {
 		log.Errorf("failed to create hal flow monitor rule policy, %s", err)
 		return err
@@ -490,14 +586,245 @@ func (s *PolicyState) createFlowMonitorRule(ctx context.Context, meta *networkMe
 		return fmt.Errorf("api error %v", resp.Response[0].ApiStatus)
 	}
 
+	// update collectors in flowrule
+	if policyData, ok := flowRuleData.Collectors[getObjMetaKey(&p.objMeta)]; ok {
+		for ckey := range p.collectorKeys {
+			policyData[ckey.String()] = true
+		}
+	}
+
+	// save
+	p.writecollectorTable()
+	p.writeFlowMonitorTable()
+	return nil
+
+}
+
+func (p *policyDb) createIPFlowMonitorRule(ctx context.Context, ipFmRuleList []*tstype.FlowMonitorIPRuleDetails) error {
+	for _, ipFmRule := range ipFmRuleList {
+		ruleKey := types.FlowMonitorRuleKey{
+			SourceIP:     ipFmRule.SrcIPString,
+			DestIP:       ipFmRule.DestIPString,
+			Protocol:     uint32(ipFmRule.AppPortObj.Ipproto),
+			SourceL4Port: uint32(ipFmRule.AppPortObj.L4port), // not sent to hal
+			DestL4Port:   uint32(ipFmRule.AppPortObj.L4port),
+			VrfID:        p.vrf,
+		}
+
+		if err := p.createHalFlowMonitorRule(ctx, ruleKey); err != nil {
+			log.Errorf("failed to create ip rule %+v in hal, %s", ruleKey, err)
+			return err
+		}
+	}
 	return nil
 }
 
+func (p *policyDb) createMacFlowMonitorRule(ctx context.Context, macFmRuleList []*tstype.FlowMonitorMACRuleDetails) error {
+	for _, macRule := range macFmRuleList {
+		ruleKey := types.FlowMonitorRuleKey{
+			SourceIP:  "",
+			DestIP:    "",
+			SourceMac: macRule.SrcMAC,
+			DestMac:   macRule.DestMAC,
+			//EtherType: 0,
+			// ??? : Does it make sense to use proto, l4ports when src/dest MAC based matching is used ?
+			Protocol:     uint32(macRule.AppPortObj.Ipproto),
+			SourceL4Port: uint32(macRule.AppPortObj.L4port), //  not sent to hal
+			DestL4Port:   uint32(macRule.AppPortObj.L4port),
+			VrfID:        p.vrf,
+		}
+
+		if err := p.createHalFlowMonitorRule(ctx, ruleKey); err != nil {
+			log.Errorf("failed to create ip rule %+v in hal, %s", ruleKey, err)
+			return err
+		}
+	}
+	return nil
+}
+
+func (p *policyDb) createFlowMonitorRule(ctx context.Context) (err error) {
+
+	// configure collector policy
+	if err := p.createCollectorPolicy(ctx); err != nil {
+		log.Errorf("failed to create collector policy, error: %s", err)
+		return fmt.Errorf("failed to create collector policy, %s", err)
+	}
+
+	defer func() {
+		if err != nil {
+			p.cleanupTables(ctx, false)
+			p.writecollectorTable()
+			p.writeFlowMonitorTable()
+		}
+	}()
+
+	p.flowRuleKeys = map[types.FlowMonitorRuleKey]bool{}
+	// process match-rule
+	for _, rule := range p.matchRules {
+		srcIPs, destIPs, srcMACs, destMACs, appPorts, srcIPStrings, destIPStrings := utils.ExpandCompositeMatchRule(p.collectorTable.ObjectMeta, &rule, p.state.netAgent.FindEndpoint)
+		// Create protobuf requestMsgs on cross product of
+		//  - srcIPs, destIPs, Apps
+		//  - srcMACs, destMACs, Apps
+		ipFmRuleList, _ := utils.CreateIPAddrCrossProductRuleList(srcIPs, destIPs, appPorts, srcIPStrings, destIPStrings)
+		macFmRuleList, _ := utils.CreateMACAddrCrossProductRuleList(srcMACs, destMACs, appPorts)
+
+		//TODO: Fold in ether-type in monitor rule
+		if len(ipFmRuleList) == 0 && len(macFmRuleList) == 0 {
+			log.Errorf("Match Rules specified with only AppPort Selector without IP/MAC")
+			return utils.ErrInvalidFlowMonitorRule
+		}
+
+		if err := p.createIPFlowMonitorRule(ctx, ipFmRuleList); err != nil {
+			log.Errorf("failed to create ip flow monitor rule %s", err)
+			return fmt.Errorf("failed to create ip flow monitor rule %s", err)
+		}
+
+		if err := p.createMacFlowMonitorRule(ctx, macFmRuleList); err != nil {
+			log.Errorf("failed to create mac flow monitor rule %s", err)
+			return fmt.Errorf("failed to create mac flow monitor rule %s", err)
+		}
+	}
+
+	return nil
+}
+
+func (p *policyDb) readFlowMonitorTable() (*types.FlowMonitorTable, error) {
+	fmObj := &types.FlowMonitorTable{
+		TypeMeta:  api.TypeMeta{Kind: "tpaFlowMonitorTable"},
+		FlowRules: map[string]*types.FlowMonitorData{},
+	}
+
+	obj, err := p.state.store.Read(fmObj)
+	if err != nil {
+		log.Warnf("failed to read FlowMonitor table, %s", err)
+		return fmObj, nil
+	}
+
+	dbObj, ok := obj.(*types.FlowMonitorTable)
+	if ok != true {
+		log.Errorf("invalid flow monitor object in db for %+v", fmObj.ObjectMeta)
+		return fmObj, nil
+	}
+
+	return dbObj, nil
+}
+
+func (p *policyDb) writeFlowMonitorTable() (err error) {
+	if err := p.state.store.Write(p.flowMonitorTable); err != nil {
+		return fmt.Errorf("failed to write  flowmonitor object in db, %s", err)
+	}
+	return nil
+}
+
+func (p *policyDb) readCollectorTable() (*types.CollectorTable, error) {
+	collObj := &types.CollectorTable{
+		TypeMeta:  api.TypeMeta{Kind: "tpacollectorTable"},
+		Collector: map[string]*types.CollectorData{},
+	}
+
+	obj, err := p.state.store.Read(collObj)
+	if err != nil {
+		log.Warnf("failed to read collector table, %s", err)
+		return collObj, nil
+	}
+
+	dbObj, ok := obj.(*types.CollectorTable)
+	if ok != true {
+		log.Errorf("invalid collector object in db for %+v", collObj.ObjectMeta)
+		return collObj, nil
+	}
+	return dbObj, nil
+}
+
+func (p *policyDb) writecollectorTable() (err error) {
+	if err := p.state.store.Write(p.collectorTable); err != nil {
+		return fmt.Errorf("failed to write  collector object in db, %s", err)
+	}
+	return nil
+}
+
+func (p *policyDb) readFlowExportPolicyTable(tpmPolicy *tpmprotos.FlowExportPolicy) (*types.FlowExportPolicyTable, error) {
+	obj, err := p.state.store.Read(&types.FlowExportPolicyTable{
+		FlowExportPolicy: &tpmprotos.FlowExportPolicy{
+			TypeMeta:   tpmPolicy.TypeMeta,
+			ObjectMeta: tpmPolicy.ObjectMeta,
+		}})
+	if err != nil {
+		return nil, fmt.Errorf("failed to read collectors, %s", err)
+	}
+
+	flowObj, ok := obj.(*types.FlowExportPolicyTable)
+	if ok != true {
+		return nil, fmt.Errorf("invalid collector object in db")
+	}
+
+	return flowObj, nil
+}
+
+func (p *policyDb) writeFlowExportPolicyTable(fp *tpmprotos.FlowExportPolicy) (err error) {
+
+	ckey := map[string]bool{}
+	for k, v := range p.collectorKeys {
+		ckey[k.String()] = v
+	}
+
+	fkey := map[string]bool{}
+	for k, v := range p.flowRuleKeys {
+		fkey[k.String()] = v
+	}
+
+	polObj := &types.FlowExportPolicyTable{
+		Vrf:              p.vrf,
+		CollectorKeys:    ckey,
+		FlowRuleKeys:     fkey,
+		FlowExportPolicy: fp,
+	}
+
+	if err := p.state.store.Write(polObj); err != nil {
+		return fmt.Errorf("failed to write flow monitor object in db, %s", err)
+	}
+
+	return nil
+}
+
+func (s *PolicyState) createPolicyContext(p *tpmprotos.FlowExportPolicy) (*policyDb, error) {
+	policyCtx := &policyDb{
+		objMeta:       p.ObjectMeta,
+		state:         s,
+		flowRuleKeys:  map[types.FlowMonitorRuleKey]bool{},
+		collectorKeys: map[types.CollectorKey]bool{},
+		matchRules:    p.Spec.MatchRules,
+	}
+
+	polObj, err := policyCtx.readFlowExportPolicyTable(p)
+	if err != nil {
+		log.Warnf("flow export policy %s doesn't exist ", p.Name)
+
+	} else {
+		policyCtx.tpmPolicy = polObj
+	}
+
+	// read collector object
+	policyCtx.collectorTable, _ = policyCtx.readCollectorTable()
+
+	// read flowmonitor object
+	policyCtx.flowMonitorTable, _ = policyCtx.readFlowMonitorTable()
+
+	// get vrf
+	vrf, err := s.getVrfID(p.GetTenant(), p.GetNamespace())
+	if err != nil {
+		return nil, fmt.Errorf("failed to find tenant/namespace, %s/%s", p.GetTenant(), p.GetNamespace())
+	}
+	policyCtx.vrf = vrf
+
+	return policyCtx, nil
+}
+
 // CreateFlowExportPolicy is the POST() entry point
-func (s *PolicyState) CreateFlowExportPolicy(ctx context.Context, p *tpmprotos.FlowExportPolicy) (err error) {
+func (s *PolicyState) CreateFlowExportPolicy(ctx context.Context, p *tpmprotos.FlowExportPolicy) error {
 	log.Infof("POST: %+v", p)
 
-	newExports, err := s.validatePolicy(p)
+	collKeys, err := s.validatePolicy(p)
 	if err != nil {
 		log.Errorf("invalid policy, %s", err)
 		return err
@@ -506,69 +833,98 @@ func (s *PolicyState) CreateFlowExportPolicy(ctx context.Context, p *tpmprotos.F
 	s.Lock()
 	defer s.Unlock()
 
-	numExports, err := s.findNumExports(&api.ObjectMeta{})
+	policyCtx, err := s.createPolicyContext(p)
 	if err != nil {
+		log.Errorf("failed to create policy context, %s", err)
 		return err
 	}
 
-	if numExports+newExports > maxFlowExportCollectors {
-		return fmt.Errorf("exceeds maximum(%d) export configs", maxFlowExportCollectors)
+	policyCtx.collectorKeys = collKeys
+
+	numCollector := policyCtx.findNumCollectors()
+	log.Infof("total num. of collectors %d", numCollector)
+
+	if numCollector > maxFlowExportCollectors {
+		return fmt.Errorf("exceeds(%d>%d) maximum collector configs", numCollector, maxFlowExportCollectors)
 	}
 
-	db, err := s.store.Read(&tpaprotos.FlowExportPolicyObj{TypeMeta: p.TypeMeta, ObjectMeta: p.ObjectMeta})
-	if err == nil && db != nil {
-		log.Infof("flow export policy %s already exists", p.Name)
-		// todo: update ?
-		return nil
+	if err := policyCtx.createFlowMonitorRule(ctx); err != nil {
+		return fmt.Errorf("failed to create policy, err:%s", err)
 	}
 
-	vrf, err := s.getVrfID(p.GetTenant(), p.GetNamespace())
-	if err != nil {
-		return fmt.Errorf("failed to find tenant/namespace, %s/%s", p.GetTenant(), p.GetNamespace())
-	}
-
-	netMeta := &networkMeta{
-		vrf:       vrf,
-		tenant:    p.GetTenant(),
-		namespace: p.GetNamespace(),
-	}
-
-	// hal tracking object to save in db
-	dbFlowExp := &tpaprotos.FlowExportPolicyObj{}
-	dbFlowExp.TypeMeta = p.TypeMeta
-	dbFlowExp.ObjectMeta = p.ObjectMeta
-	dbFlowExp.P = p
-	dbFlowExp.FlowMonObj = []*tpaprotos.FlowMonitorObj{}
-
-	// clean up on error
-	defer func() {
-		if err != nil {
-			for _, k := range dbFlowExp.FlowMonObj {
-				s.deleteFlowMonitorRule(ctx, netMeta, k)
-			}
-		}
-	}()
-
-	for i := 0; i < len(p.Spec.Targets); i++ {
-		if err := s.createFlowMonitorRule(ctx, netMeta, dbFlowExp, &p.Spec.Targets[i]); err != nil {
-			return fmt.Errorf("failed to create policy, err:%s", err)
-		}
-	}
-
-	// all success? save it in db
-	if err = s.store.Write(dbFlowExp); err != nil {
-		log.Errorf("failed to write flow export policy in db, err:%s", err)
-		return fmt.Errorf("failed to write flow export policy in db")
-	}
-
-	return nil
+	// all success? save context
+	return policyCtx.writeFlowExportPolicyTable(p)
 }
 
 // UpdateFlowExportPolicy is the PUT entry point
 func (s *PolicyState) UpdateFlowExportPolicy(ctx context.Context, p *tpmprotos.FlowExportPolicy) error {
 	log.Infof("PUT: %+v", p)
-	//todo: update or delete/add ?
-	return nil
+	if err := s.DeleteFlowExportPolicy(ctx, p); err != nil {
+		return fmt.Errorf("failed to delete policy %s, error %s", p.Name, err)
+	}
+
+	return s.CreateFlowExportPolicy(ctx, p)
+}
+
+func (p *policyDb) cleanupTables(ctx context.Context, del bool) {
+	// caller must write to db
+	flowRuleKeys := map[string]bool{}
+	collectorKeys := map[string]bool{}
+
+	// read it from policy for delete
+	if del {
+		for fkey := range p.tpmPolicy.FlowRuleKeys {
+			flowRuleKeys[fkey] = true
+		}
+		for ckey := range p.tpmPolicy.CollectorKeys {
+			collectorKeys[ckey] = true
+		}
+
+	} else {
+		// read it from context for cleanup
+		for fkey := range p.flowRuleKeys {
+			flowRuleKeys[fkey.String()] = true
+		}
+		for ckey := range p.collectorKeys {
+			collectorKeys[ckey.String()] = true
+		}
+	}
+
+	delColl := map[string]uint64{}
+	delRule := map[string]uint64{}
+
+	for fkey := range flowRuleKeys {
+		for ckey := range collectorKeys {
+			if fdata, ok := p.flowMonitorTable.FlowRules[fkey]; ok {
+				// todo: update flowmonitor
+				delete(fdata.Collectors[getObjMetaKey(&p.objMeta)], ckey)
+				// update new collectors to hal, delete & add
+				p.deleteFlowMonitorRule(ctx, fdata.RuleID)
+
+				delete(fdata.PolicyNames, getObjMetaKey(&p.objMeta))
+				if len(fdata.PolicyNames) == 0 {
+					delRule[fkey] = fdata.RuleID
+				}
+			}
+			if cdata, ok := p.collectorTable.Collector[ckey]; ok {
+				delete(cdata.PolicyNames, getObjMetaKey(&p.objMeta))
+				if len(cdata.PolicyNames) == 0 {
+					delColl[ckey] = cdata.CollectorID
+				}
+			}
+		}
+	}
+
+	for key, ruleID := range delRule {
+		p.deleteFlowMonitorRule(ctx, ruleID)
+		delete(p.flowMonitorTable.FlowRules, key)
+	}
+
+	for key, collID := range delColl {
+		p.deleteCollectorPolicy(ctx, collID)
+		delete(p.collectorTable.Collector, key)
+	}
+
 }
 
 // DeleteFlowExportPolicy is the DELETE entry point
@@ -579,41 +935,152 @@ func (s *PolicyState) DeleteFlowExportPolicy(ctx context.Context, p *tpmprotos.F
 		return err
 	}
 
-	req := &tpaprotos.FlowExportPolicyObj{}
-	req.TypeMeta = p.TypeMeta
-	req.ObjectMeta = p.ObjectMeta
+	s.Lock()
+	defer s.Unlock()
 
-	vrf, err := s.getVrfID(p.ObjectMeta.Tenant, p.ObjectMeta.Namespace)
+	polCtx, err := s.createPolicyContext(p)
 	if err != nil {
-		return fmt.Errorf("failed to find tenant/namespace %s/%s", p.GetTenant(), p.GetNamespace())
+		return fmt.Errorf("failed to create context, %s", err)
 	}
 
-	netMeta := &networkMeta{
-		vrf:       vrf,
-		tenant:    p.Tenant,
-		namespace: p.Namespace,
+	if polCtx.tpmPolicy == nil {
+		return fmt.Errorf("policy %s doesn't exist", p.Name)
+	}
+
+	polCtx.cleanupTables(ctx, true)
+	polCtx.writecollectorTable()
+	polCtx.writeFlowMonitorTable()
+
+	err = s.store.Delete(&types.FlowExportPolicyTable{
+		FlowExportPolicy: &tpmprotos.FlowExportPolicy{
+			TypeMeta:   p.TypeMeta,
+			ObjectMeta: p.ObjectMeta,
+		}})
+	return nil
+}
+
+type debugPolicy struct {
+	FlowExportPolicy *tpmprotos.FlowExportPolicy
+	Collectors       []string
+	FlowRules        []string
+}
+
+type debugCollector struct {
+	StrKey       string
+	CollectorKey types.CollectorKey
+	CollectorID  uint64
+	PolicyNames  []string
+}
+
+type debugFlowRules struct {
+	StrKey      string
+	RuleKey     types.FlowMonitorRuleKey
+	RuleID      uint64
+	Collector   map[string][]string
+	PolicyNames []string
+}
+
+type debugInfo struct {
+	Policy         map[string]debugPolicy
+	CollectorTable []debugCollector
+	FlowRuleTable  []debugFlowRules
+}
+
+func (s *PolicyState) debug(w http.ResponseWriter, r *http.Request) {
+	dbgInfo := debugInfo{
+		Policy:         map[string]debugPolicy{},
+		CollectorTable: []debugCollector{},
+		FlowRuleTable:  []debugFlowRules{},
 	}
 
 	s.Lock()
 	defer s.Unlock()
 
-	dbr, err := s.store.Read(req)
-	if err != nil || dbr == nil {
-		log.Errorf("failed to find flow export policy %s, err:%s", p.Name, err)
-		return fmt.Errorf("failed to find flow export policy %s", p.Name)
+	// flow export policy
+	if objList, err := s.store.List(&types.FlowExportPolicyTable{
+		FlowExportPolicy: &tpmprotos.FlowExportPolicy{
+			TypeMeta: api.TypeMeta{
+				Kind: "FlowExportPolicy",
+			},
+		},
+	}); err == nil {
+		for _, obj := range objList {
+			readObj, err := s.store.Read(obj)
+			if err != nil || readObj == nil {
+				continue
+			}
+			flowExp, ok := readObj.(*types.FlowExportPolicyTable)
+			if !ok {
+				continue
+			}
+
+			ckey := []string{}
+			for k := range flowExp.CollectorKeys {
+				ckey = append(ckey, k)
+			}
+
+			fkey := []string{}
+			for k := range flowExp.FlowRuleKeys {
+				fkey = append(fkey, k)
+			}
+
+			dbgInfo.Policy[fmt.Sprintf("%s/%s/%s", flowExp.Tenant, flowExp.Namespace, flowExp.Name)] = debugPolicy{
+				FlowExportPolicy: flowExp.FlowExportPolicy,
+				Collectors:       ckey,
+				FlowRules:        fkey,
+			}
+		}
 	}
 
-	flowExp, ok := dbr.(*tpaprotos.FlowExportPolicyObj)
-	if !ok {
-		log.Errorf("invalid data in flow export db for %s, %+v", p.Name, flowExp)
-		return fmt.Errorf("invalid flow export policy")
-	}
-	for _, k := range flowExp.FlowMonObj {
-		s.deleteFlowMonitorRule(ctx, netMeta, k)
+	// collectors
+	if readObj, err := s.store.Read(&types.CollectorTable{
+		TypeMeta: api.TypeMeta{Kind: "tpacollectorTable"},
+	}); err == nil {
+		if cobj, ok := readObj.(*types.CollectorTable); ok {
+			for k, v := range cobj.Collector {
+				names := []string{}
+				for f := range v.PolicyNames {
+					names = append(names, f)
+				}
 
+				dbgInfo.CollectorTable = append(dbgInfo.CollectorTable, debugCollector{
+					CollectorKey: types.ParseCollectorKey(k), CollectorID: v.CollectorID,
+					StrKey:      k,
+					PolicyNames: names,
+				})
+			}
+
+		}
 	}
-	s.store.Delete(req)
-	return nil
+
+	// flow rules
+	if readObj, err := s.store.Read(&types.FlowMonitorTable{
+		TypeMeta: api.TypeMeta{Kind: "tpaFlowMonitorTable"},
+	}); err == nil {
+
+		fobj, ok := readObj.(*types.FlowMonitorTable)
+		if ok {
+
+			cmap := map[string][]string{}
+
+			for k, v := range fobj.FlowRules {
+				for pname, value := range v.Collectors {
+					cr := []string{}
+					for k := range value {
+						cr = append(cr, k)
+					}
+					cmap[pname] = cr
+
+				}
+
+				dbgInfo.FlowRuleTable = append(dbgInfo.FlowRuleTable, debugFlowRules{
+					RuleKey: types.ParseFlowMonitorRuleKey(k), RuleID: v.RuleID,
+					StrKey: k, Collector: cmap})
+			}
+		}
+	}
+
+	json.NewEncoder(w).Encode(dbgInfo)
 }
 
 // GetFlowExportPolicy is the GET entry point
@@ -624,61 +1091,70 @@ func (s *PolicyState) GetFlowExportPolicy(tx context.Context, p *tpmprotos.FlowE
 		return nil, err
 	}
 
-	req := &tpaprotos.FlowExportPolicyObj{}
-	req.TypeMeta = p.TypeMeta
-	req.ObjectMeta = p.ObjectMeta
-
 	s.Lock()
-	dbr, err := s.store.Read(req)
-	s.Unlock()
-	if err != nil || dbr == nil {
-		log.Errorf("failed to read flow export policy, err:%s", err)
-		return nil, fmt.Errorf("failed to read flow export policy")
+	defer s.Unlock()
+
+	polObj, err := s.store.Read(&types.FlowExportPolicyTable{
+		FlowExportPolicy: &tpmprotos.FlowExportPolicy{
+			TypeMeta:   p.TypeMeta,
+			ObjectMeta: p.ObjectMeta,
+		}})
+	if err != nil || polObj == nil {
+		log.Errorf("failed to find flow export policy %s, err:%s", p.Name, err)
+		return nil, fmt.Errorf("failed to find flow export policy %s", p.Name)
 	}
 
-	flowExp, ok := dbr.(*tpaprotos.FlowExportPolicyObj)
+	flowExp, ok := polObj.(*types.FlowExportPolicyTable)
 	if !ok {
-		log.Errorf("invalid type %v in getflow export", reflect.TypeOf(dbr))
-		return nil, fmt.Errorf("failed to read data from flow export policy")
+		log.Errorf("invalid data in flow export db for %s, %+v", p.Name, flowExp)
+		return nil, fmt.Errorf("invalid flow export policy")
 	}
 
-	return flowExp.GetP(), nil
+	return flowExp.FlowExportPolicy, nil
 }
 
 // ListFlowExportPolicy is the LIST all entry point
 func (s *PolicyState) ListFlowExportPolicy(tx context.Context) ([]*tpmprotos.FlowExportPolicy, error) {
 	log.Infof("LIST:")
 
-	req := &tpaprotos.FlowExportPolicyObj{}
-	req.Kind = "FlowExportPolicy"
-
+	// todo: fix
 	s.Lock()
-	objList, err := s.store.List(req)
-	s.Unlock()
+	defer s.Unlock()
+
+	objList, err := s.store.List(&types.FlowExportPolicyTable{
+		FlowExportPolicy: &tpmprotos.FlowExportPolicy{
+			TypeMeta: api.TypeMeta{
+				Kind: "FlowExportPolicy",
+			},
+		},
+	})
 
 	if err != nil {
 		log.Errorf("failed to list flow export policy, err:%s", err)
-		return []*tpmprotos.FlowExportPolicy{}, fmt.Errorf("failed to list flow export policy")
+		return nil, fmt.Errorf("failed to list flow export policy")
 	}
 
 	flowExpList := []*tpmprotos.FlowExportPolicy{}
 	for _, obj := range objList {
-		s.Lock()
 		readObj, err := s.store.Read(obj)
-		s.Unlock()
 		if err != nil || readObj == nil {
 			log.Errorf("failed to read flow export policy, err:%s", err)
-			return []*tpmprotos.FlowExportPolicy{}, fmt.Errorf("failed to read flow export policy")
+			return nil, fmt.Errorf("failed to read flow export policy")
 		}
-		flowExp, ok := readObj.(*tpaprotos.FlowExportPolicyObj)
+		flowExp, ok := readObj.(*types.FlowExportPolicyTable)
 		if !ok {
 			log.Errorf("invalid type %v in  export", reflect.TypeOf(readObj))
-			return []*tpmprotos.FlowExportPolicy{}, fmt.Errorf("failed to read data from flow export policy")
+			return nil, fmt.Errorf("failed to read data from flow export policy")
 		}
-		flowExpList = append(flowExpList, flowExp.P)
+		flowExpList = append(flowExpList, flowExp.FlowExportPolicy)
 	}
 
 	return flowExpList, nil
+}
+
+// getObjMetaKey creates a key string from objmeta
+func getObjMetaKey(m *api.ObjectMeta) string {
+	return fmt.Sprintf("%s:%s:%s", m.Tenant, m.Namespace, m.Name)
 }
 
 // dummy functions, these polcies are handled in tmagent

@@ -3553,6 +3553,19 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "spec.interval",
+            "description": "Interval defines how often to push the records to an external or internal collector\nThe value is specified as a string format to be '10s', '20m', '20mins', '10secs', '10seconds'. should be a valid time duration",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "spec.format",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -8565,6 +8578,19 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "spec.interval",
+            "description": "Interval defines how often to push the records to an external or internal collector\nThe value is specified as a string format to be '10s', '20m', '20mins', '10secs', '10seconds'. should be a valid time duration",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "spec.format",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -13224,21 +13250,6 @@
     "monitoringFlowExportPolicySpec": {
       "type": "object",
       "properties": {
-        "targets": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/monitoringFlowExportTarget"
-          }
-        }
-      }
-    },
-    "monitoringFlowExportPolicyStatus": {
-      "type": "object",
-      "title": "========================================================================================\n flow export policy\n========================================================================================"
-    },
-    "monitoringFlowExportTarget": {
-      "type": "object",
-      "properties": {
         "interval": {
           "type": "string",
           "example": "2h",
@@ -13266,6 +13277,10 @@
           "description": "Export contains export parameters."
         }
       }
+    },
+    "monitoringFlowExportPolicyStatus": {
+      "type": "object",
+      "title": "========================================================================================\n flow export policy\n========================================================================================"
     },
     "monitoringFwlogExport": {
       "type": "object",

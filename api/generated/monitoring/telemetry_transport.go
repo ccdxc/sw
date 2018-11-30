@@ -119,40 +119,6 @@ func DecodeGrpcRespFlowExportPolicyStatus(ctx context.Context, response interfac
 	return response, nil
 }
 
-func encodeHTTPFlowExportTarget(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPFlowExportTarget(_ context.Context, r *http.Request) (interface{}, error) {
-	var req FlowExportTarget
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqFlowExportTarget encodes GRPC request
-func EncodeGrpcReqFlowExportTarget(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*FlowExportTarget)
-	return req, nil
-}
-
-// DecodeGrpcReqFlowExportTarget decodes GRPC request
-func DecodeGrpcReqFlowExportTarget(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*FlowExportTarget)
-	return req, nil
-}
-
-// EncodeGrpcRespFlowExportTarget encodes GRC response
-func EncodeGrpcRespFlowExportTarget(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespFlowExportTarget decodes GRPC response
-func DecodeGrpcRespFlowExportTarget(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
 func encodeHTTPFwlogExport(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }

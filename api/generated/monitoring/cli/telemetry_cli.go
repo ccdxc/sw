@@ -16,14 +16,14 @@ import (
 var CreateFlowExportPolicyFlags = []gen.CliFlag{
 	{
 		ID:     "format",
-		Type:   "StringSlice",
+		Type:   "String",
 		Help:   "",
 		Skip:   false,
 		Insert: "",
 	},
 	{
 		ID:     "interval",
-		Type:   "StringSlice",
+		Type:   "String",
 		Help:   "",
 		Skip:   false,
 		Insert: "",

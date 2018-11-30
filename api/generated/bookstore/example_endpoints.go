@@ -2893,7 +2893,7 @@ func makeURIBookstoreV1AutoWatchCustomerWatchOper(in *api.ListWatchOptions) stri
 
 //
 func makeURIBookstoreV1AutoWatchOrderWatchOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/configs/bookstore/v1", "/watch/orders")
+	return fmt.Sprint("/configs/bookstore/v1")
 }
 
 //

@@ -239,7 +239,6 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 
 		"monitoring.FlowExportPolicySpec":   apisrvpkg.NewMessage("monitoring.FlowExportPolicySpec"),
 		"monitoring.FlowExportPolicyStatus": apisrvpkg.NewMessage("monitoring.FlowExportPolicyStatus"),
-		"monitoring.FlowExportTarget":       apisrvpkg.NewMessage("monitoring.FlowExportTarget"),
 		"monitoring.FwlogExport":            apisrvpkg.NewMessage("monitoring.FwlogExport"),
 		"monitoring.FwlogPolicy": apisrvpkg.NewMessage("monitoring.FwlogPolicy").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
