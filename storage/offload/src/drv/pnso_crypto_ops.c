@@ -188,7 +188,7 @@ crypto_src_dst_aol_fill(struct service_info *svc_info)
 	 * 2) Part of a chain (and is not first): use a sparse vector of AOLs
 	 *    for the src/dst buf info to facilitate sequencer padding.
 	 */
-	if (!chn_service_is_in_chain(svc_info) || chn_service_is_first(svc_info)) {
+	if (chn_service_is_starter(svc_info)) {
 		src_err = crypto_aol_packed_get(pcr, &svc_info->si_src_blist,
 						&svc_info->si_src_aol);
 		dst_err = crypto_aol_packed_get(pcr, &svc_info->si_dst_blist,
@@ -360,7 +360,7 @@ crypto_sub_chain_from_cpdc(struct service_info *svc_info,
 	cpdc_chain->ccp_cmd.ccpc_next_doorbell_en = true;
 	cpdc_chain->ccp_cmd.ccpc_next_db_action_ring_push = true;
 
-	return ring_spec_info_fill(svc_info->si_seq_info.sqi_ring_id,
+	return ring_spec_info_fill(svc_info->si_seq_info.sqi_ring,
 				   &cpdc_chain->ccp_ring_spec,
 				   svc_info->si_desc, 1);
 }
@@ -376,7 +376,7 @@ crypto_sub_chain_from_crypto(struct service_info *svc_info,
 	crypto_chain->ccp_cmd.ccpc_next_doorbell_en = true;
 	crypto_chain->ccp_cmd.ccpc_next_db_action_ring_push = true;
 
-	return ring_spec_info_fill(svc_info->si_seq_info.sqi_ring_id,
+	return ring_spec_info_fill(svc_info->si_seq_info.sqi_ring,
 				   &crypto_chain->ccp_ring_spec,
 				   svc_info->si_desc, 1);
 }
@@ -390,8 +390,7 @@ crypto_enable_interrupt(const struct service_info *svc_info, void *poll_ctx)
 static pnso_error_t
 crypto_ring_db(const struct service_info *svc_info)
 {
-	if (!chn_service_is_in_chain(svc_info) ||
-			chn_service_is_first(svc_info)) {
+	if (chn_service_is_starter(svc_info)) {
 		seq_ring_db(svc_info);
 		return PNSO_OK;
 	}
@@ -517,6 +516,7 @@ crypto_teardown(struct service_info *svc_info)
 	pc_res_sgl_pdma_put(pcr, svc_info->si_sgl_pdma);
 	pc_res_sgl_put(pcr, &svc_info->si_src_sgl);
 	seq_cleanup_crypto_chain(svc_info);
+	seq_cleanup_desc(svc_info);
 
 	OSAL_LOG_DEBUG("exit!");
 }

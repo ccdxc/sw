@@ -437,45 +437,47 @@ init_service_info(enum pnso_service_type svc_type,
 		struct service_params *svc_params,
 		struct service_info *svc_info)
 {
+	accel_ring_id_t ring_id = ACCEL_RING_ID_MAX;
+
 	switch (svc_type) {
 	case PNSO_SVC_TYPE_ENCRYPT:
 		svc_info->si_ops = encrypt_ops;
-		svc_info->si_seq_info.sqi_ring_id = ACCEL_RING_XTS0;
+		ring_id = ACCEL_RING_XTS0;
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CRYPTO_ENC_SQ;
 		svc_info->si_seq_info.sqi_status_qtype =
 			SONIC_QTYPE_CRYPTO_STATUS;
 		break;
 	case PNSO_SVC_TYPE_DECRYPT:
 		svc_info->si_ops = decrypt_ops;
-		svc_info->si_seq_info.sqi_ring_id = ACCEL_RING_XTS1;
+		ring_id = ACCEL_RING_XTS1;
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CRYPTO_DEC_SQ;
 		svc_info->si_seq_info.sqi_status_qtype =
 			SONIC_QTYPE_CRYPTO_STATUS;
 		break;
 	case PNSO_SVC_TYPE_COMPRESS:
 		svc_info->si_ops = cp_ops;
-		svc_info->si_seq_info.sqi_ring_id = ACCEL_RING_CP;
+		ring_id = ACCEL_RING_CP;
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CP_SQ;
 		svc_info->si_seq_info.sqi_status_qtype =
 			SONIC_QTYPE_CPDC_STATUS;
 		break;
 	case PNSO_SVC_TYPE_DECOMPRESS:
 		svc_info->si_ops = dc_ops;
-		svc_info->si_seq_info.sqi_ring_id = ACCEL_RING_DC;
+		ring_id = ACCEL_RING_DC;
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_DC_SQ;
 		svc_info->si_seq_info.sqi_status_qtype =
 			SONIC_QTYPE_CPDC_STATUS;
 		break;
 	case PNSO_SVC_TYPE_HASH:
 		svc_info->si_ops = hash_ops;
-		svc_info->si_seq_info.sqi_ring_id = ACCEL_RING_CP_HOT;
+		ring_id = ACCEL_RING_CP_HOT;
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CP_SQ;
 		svc_info->si_seq_info.sqi_status_qtype =
 			SONIC_QTYPE_CPDC_STATUS;
 		break;
 	case PNSO_SVC_TYPE_CHKSUM:
 		svc_info->si_ops = chksum_ops;
-		svc_info->si_seq_info.sqi_ring_id = ACCEL_RING_CP;
+		ring_id = ACCEL_RING_CP;
 		/* TODO-chain: rolling back to previous PR setting DCq failed */
 		// svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_DC_SQ;
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CP_SQ;
@@ -488,6 +490,12 @@ init_service_info(enum pnso_service_type svc_type,
 		OSAL_ASSERT(0);
 		return EINVAL;
 	}
+
+	/* Set reasonable default here and allow service op to modify if necessary */
+	chn_service_hw_ring_take_set(svc_info, 1);
+	svc_info->si_seq_info.sqi_ring = sonic_get_accel_ring(ring_id);
+	if (!svc_info->si_seq_info.sqi_ring)
+		return EINVAL;
 
 	/* svc_info->si_flags updated outside TODO-chain: leave this here?? */
 	svc_info->si_block_size = 4096;	/* TODO-chain: get via init params??  */
@@ -541,6 +549,7 @@ chn_destroy_chain(struct service_chain *chain)
 		svc_info = &sc_entry->ce_svc_info;
 		svc_info->si_ops.teardown(svc_info);
 
+		chn_service_hw_ring_give(svc_info);
 		sc_next = sc_entry->ce_next;
 
 		mpool_put_object(svc_chain_entry_mpool, sc_entry);
@@ -694,6 +703,10 @@ chn_create_chain(struct request_params *req_params)
 		if (err)
 			goto out_chain;
 
+		err = chn_service_hw_ring_take(svc_info);
+		if (err)
+			goto out_chain;
+
 		PPRINT_SERVICE_INFO(svc_info);
 
 		interm_blist = svc_info->si_dst_blist;
@@ -827,3 +840,37 @@ out:
 	OSAL_LOG_DEBUG("exit! err: %d", err);
 	return err;
 }
+
+pnso_error_t
+chn_service_hw_ring_take(struct service_info *svc_info)
+{
+	pnso_error_t err;
+
+	err = sonic_accel_ring_take(svc_info->si_seq_info.sqi_ring,
+				    svc_info->si_seq_info.sqi_hw_dflt_takes);
+	if (err == PNSO_OK) {
+		svc_info->si_seq_info.sqi_hw_total_takes +=
+			svc_info->si_seq_info.sqi_hw_dflt_takes;
+		svc_info->si_seq_info.sqi_hw_dflt_takes = 0;
+	} else
+		OSAL_LOG_ERROR("HW ring %s potential overflow",
+			       svc_info->si_seq_info.sqi_ring->name);
+
+	return err;
+}
+
+pnso_error_t
+chn_service_hw_ring_give(struct service_info *svc_info)
+{
+	pnso_error_t err;
+
+	err = sonic_accel_ring_give(svc_info->si_seq_info.sqi_ring,
+				    svc_info->si_seq_info.sqi_hw_total_takes);
+	svc_info->si_seq_info.sqi_hw_total_takes = 0;
+	if (err != PNSO_OK)
+		OSAL_LOG_ERROR("HW ring %s potential underflow",
+			       svc_info->si_seq_info.sqi_ring->name);
+
+	return err;
+}
+

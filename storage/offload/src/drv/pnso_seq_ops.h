@@ -20,6 +20,8 @@ struct sequencer_ops {
 	void * (*setup_desc)(struct service_info *svc_info,
 			const void *src_desc, size_t desc_size);
 
+	void (*cleanup_desc)(struct service_info *svc_info);
+
 	void (*ring_db)(const struct service_info *svc_info);
 
 	pnso_error_t (*setup_cp_chain_params)(struct service_info *svc_info,
@@ -39,12 +41,12 @@ struct sequencer_ops {
 	void * (*setup_cpdc_chain_desc)(struct service_info *svc_info,
 		const void *src_desc, size_t desc_size);
 
-	void (*cleanup_cpdc_chain)(const struct service_info *svc_info);
+	void (*cleanup_cpdc_chain)(struct service_info *svc_info);
 
 	pnso_error_t (*setup_crypto_chain)(struct service_info *svc_info,
 			struct crypto_desc *desc);
 
-	void (*cleanup_crypto_chain)(const struct service_info *svc_info);
+	void (*cleanup_crypto_chain)(struct service_info *svc_info);
 
 };
 

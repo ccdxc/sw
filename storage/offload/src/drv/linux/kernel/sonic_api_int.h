@@ -3,6 +3,7 @@
 
 #include <linux/types.h>
 #include "accel_ring.h"
+#include "osal_atomic.h"
 
 struct per_core_resource;
 
@@ -36,7 +37,18 @@ bool sonic_validate_crypto_key_idx(uint32_t user_key_idx, uint32_t *ret_keys_max
 uint32_t sonic_get_crypto_key_idx(uint32_t user_key_idx);
 uint64_t sonic_get_intr_assert_addr(uint32_t intr_idx);
 uint32_t sonic_get_intr_assert_data(void);
-accel_ring_t *sonic_get_accel_ring(uint32_t accel_ring_id);
+struct sonic_accel_ring *sonic_get_accel_ring(uint32_t accel_ring_id);
+const char *sonic_accel_ring_name_get(uint32_t accel_ring_id);
+int sonic_accounting_atomic_take(osal_atomic_int_t *atomic_c,
+				 uint32_t count,
+				 uint32_t high_water);
+int sonic_accounting_atomic_give(osal_atomic_int_t *atomic_c,
+				 uint32_t count);
+int sonic_accounting_atomic_give_safe(osal_atomic_int_t *atomic_c,
+				      uint32_t count);
+int sonic_accel_ring_take(struct sonic_accel_ring *ring, uint32_t count);
+int sonic_accel_ring_give(struct sonic_accel_ring *ring, uint32_t count);
+int sonic_accel_rings_sanity_check(void);
 
 bool sonic_pnso_async_poll(uint64_t data);
 uint64_t sonic_intr_get_db_addr(struct per_core_resource *pc_res);

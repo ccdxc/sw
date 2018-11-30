@@ -13,6 +13,17 @@
 #include "osal_logger.h"
 #include "osal_assert.h"
 
+const char *accel_ring_name_tbl[] = {
+	[ACCEL_RING_CP]		= "cp",
+	[ACCEL_RING_CP_HOT]	= "cp_hot",
+	[ACCEL_RING_DC]		= "dc",
+	[ACCEL_RING_DC_HOT]	= "dc_hot",
+	[ACCEL_RING_XTS0]	= "xts0",
+	[ACCEL_RING_XTS1]	= "xts1",
+	[ACCEL_RING_GCM0]	= "gcm0",
+	[ACCEL_RING_GCM1]	= "gcm1",
+};
+
 static identity_t *sonic_get_identity(void);
 
 static uint32_t
@@ -277,20 +288,148 @@ dbg_check_ring_id(uint32_t accel_ring_id)
 	return (accel_ring_id >= ACCEL_RING_ID_MAX) ? -EINVAL : PNSO_OK;
 }
 
-accel_ring_t *sonic_get_accel_ring(uint32_t accel_ring_id)
+struct sonic_accel_ring *sonic_get_accel_ring(uint32_t accel_ring_id)
 {
 	int err;
-	identity_t *ident;
+	struct sonic_dev *idev;
 
 	err = DBG_CHK_RING_ID(accel_ring_id);
 	if (err)
 		return NULL;
 
-	ident = sonic_get_identity();
-	if (!ident)
+	idev = sonic_get_idev();
+	if (!idev)
 		return NULL;
 
-	return &ident->dev.accel_ring_tbl[accel_ring_id];
+	return &idev->ring_tbl[accel_ring_id];
+}
+
+const char *sonic_accel_ring_name_get(uint32_t accel_ring_id)
+{
+	if ((accel_ring_id < ARRAY_SIZE(accel_ring_name_tbl)) &&
+	    accel_ring_name_tbl[accel_ring_id])
+		return accel_ring_name_tbl[accel_ring_id];
+
+	return "unknown";
+}
+
+/*
+ * Resource accounting with atomic counter
+ */
+int sonic_accounting_atomic_take(osal_atomic_int_t *atomic_c,
+				 uint32_t count,
+				 uint32_t high_water)
+{
+	/* Optimize for the most common case */
+	if (likely(count == 1)) {
+		if (likely(osal_atomic_add_unless(atomic_c, 1, high_water)))
+			return PNSO_OK;
+
+		return -EPERM;
+	}
+
+	/*
+	 * Elsewhere in callers, code has been written such that the callers
+	 * are expected to almost never enter here with count > 1.
+	 */
+	while (count--) {
+		if (unlikely(!osal_atomic_add_unless(atomic_c, 1, high_water)))
+			return -EPERM;
+	}
+	return PNSO_OK;
+}
+
+int sonic_accounting_atomic_give(osal_atomic_int_t *atomic_c,
+				 uint32_t count)
+{
+	/* Optimize for the most common case */
+	if (likely(count == 1)) {
+		if (likely(osal_atomic_dec_if_positive(atomic_c) >= 0))
+			return PNSO_OK;
+
+		return -EPERM;
+	}
+
+	if (unlikely(osal_atomic_fetch_sub_post(atomic_c, count) < 0)) {
+		OSAL_LOG_ERROR("Accounting counter underflow on sub count %u",
+			       count);
+		OSAL_ASSERT(0);
+		return -EPERM;
+	}
+
+	return PNSO_OK;
+}
+
+int sonic_accounting_atomic_give_safe(osal_atomic_int_t *atomic_c,
+				      uint32_t count)
+{
+	/* Optimize for the most common case */
+	if (likely(count == 1)) {
+		if (likely(osal_atomic_dec_if_positive(atomic_c) >= 0))
+			return PNSO_OK;
+
+		return -EPERM;
+	}
+
+	/*
+	 * "safe" means never lets atomic counter go negative
+	 * at the cost of performance.
+	 */
+	while (count--) {
+		if (unlikely(osal_atomic_dec_if_positive(atomic_c) < 0))
+			return -EPERM;
+	}
+
+	return PNSO_OK;
+}
+
+/*
+ * Ring accounting
+ */
+int sonic_accel_ring_take(struct sonic_accel_ring *ring,
+			  uint32_t count)
+{
+	return sonic_accounting_atomic_take(&ring->descs_inuse, count,
+					    ring->accel_ring.ring_size);
+}
+
+int sonic_accel_ring_give(struct sonic_accel_ring *ring, uint32_t count)
+{
+	return sonic_accounting_atomic_give(&ring->descs_inuse, count);
+}
+
+int sonic_accel_rings_sanity_check(void)
+{
+	struct sonic_dev *idev;
+	struct sonic_accel_ring *ring;
+	int count;
+	int err = PNSO_OK;
+
+	idev = sonic_get_idev();
+	if (idev) {
+		for (ring = &idev->ring_tbl[0];
+		     ring < &idev->ring_tbl[ACCEL_RING_ID_MAX];
+		     ring++) {
+
+			/*
+			 * Ring would have been initialized if name is valid.
+			 * Print out all rings with resources still outstanding.
+			 */
+			if (ring->name) {
+				count = osal_atomic_read(&ring->descs_inuse);
+				if (count) {
+					OSAL_LOG_WARN("HW ring %s descs_inuse %d",
+						      ring->name, count);
+					err = -EBUSY;
+				}
+			}
+		}
+	}
+
+	if (err == PNSO_OK)
+		OSAL_LOG_DEBUG("HW rings all descs returned");
+
+	return err;
 }
 
 uint64_t sonic_hostpa_to_devpa(uint64_t hostpa)
