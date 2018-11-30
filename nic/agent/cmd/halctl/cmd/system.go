@@ -62,16 +62,225 @@ var threadShowCmd = &cobra.Command{
 	Run:   threadShowCmdHandler,
 }
 
+var queueStatsCmd = &cobra.Command{
+	Use:   "queue-statistics",
+	Short: "show system queue-statistics",
+	Long:  "show system queue-statistics",
+	Run:   systemQueueStatsCmdHandler,
+}
+
+var inputQueueStatsCmd = &cobra.Command{
+	Use:   "input",
+	Short: "show system queue-statistics input [buffer-occupancy | peak-occupancy]",
+	Long:  "show system queue-statistics input [buffer-occupancy | peak-occupancy]",
+	Run:   systemInputQueueStatsCmdHandler,
+}
+
+var outputQueueStatsCmd = &cobra.Command{
+	Use:   "output",
+	Short: "show system queue-statistics output [queue-depth]",
+	Long:  "show system queue-statistics output [queue-depth]",
+	Run:   systemOutputQueueStatsCmdHandler,
+}
+
 func init() {
 	showCmd.AddCommand(systemShowCmd)
 	systemShowCmd.AddCommand(systemStatsShowCmd)
 	systemShowCmd.AddCommand(threadShowCmd)
 	systemShowCmd.AddCommand(systemClockShowCmd)
+	systemShowCmd.AddCommand(queueStatsCmd)
+	queueStatsCmd.AddCommand(inputQueueStatsCmd)
+	queueStatsCmd.AddCommand(outputQueueStatsCmd)
 	systemStatsShowCmd.AddCommand(systemStatsTableShowCmd)
 	systemStatsShowCmd.AddCommand(systemDropStatsShowCmd)
 
 	systemShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	threadShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+	queueStatsCmd.PersistentFlags().Uint32Var(&portNum, "port", 0, "Port number")
+}
+
+func handleSystemQueueStatsCmd(cmd *cobra.Command, args []string, inputQueue bool, outputQueue bool) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	defer c.Close()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	client := halproto.NewSystemClient(c.ClientConn)
+
+	portSet := false
+	if cmd.Flags().Changed("port") {
+		portSet = true
+	}
+
+	// HAL call
+	var empty *halproto.Empty
+	resp, err := client.SystemGet(context.Background(), empty)
+	if err != nil {
+		fmt.Printf("Getting System Stats failed. %v\n", err)
+		return
+	}
+
+	if resp.GetApiStatus() != halproto.ApiStatus_API_STATUS_OK {
+		fmt.Printf("HAL Returned non OK status. %v\n", resp.GetApiStatus())
+		return
+	}
+
+	bufferOccupancy := true
+	peakOccupancy := true
+	queueDepth := true
+
+	if len(args) > 0 {
+		if strings.Compare(args[0], "buffer-occupancy") == 0 {
+			peakOccupancy = false
+			queueDepth = false
+		} else if strings.Compare(args[0], "peak-occupancy") == 0 {
+			bufferOccupancy = false
+			queueDepth = false
+		} else if strings.Compare(args[0], "queue-depth") == 0 {
+			bufferOccupancy = false
+			peakOccupancy = false
+		} else {
+			fmt.Printf("Invalid argument\n")
+			return
+		}
+	} else {
+		if inputQueue == false {
+			bufferOccupancy = false
+			peakOccupancy = false
+		}
+		if outputQueue == false {
+			queueDepth = false
+		}
+	}
+
+	systemQueueStatsPrint(resp, portSet, bufferOccupancy, peakOccupancy, queueDepth)
+}
+
+func systemQueueStatsCmdHandler(cmd *cobra.Command, args []string) {
+	handleSystemQueueStatsCmd(cmd, args, true, true)
+}
+
+func systemInputQueueStatsCmdHandler(cmd *cobra.Command, args []string) {
+	handleSystemQueueStatsCmd(cmd, args, true, false)
+}
+
+func systemOutputQueueStatsCmdHandler(cmd *cobra.Command, args []string) {
+	handleSystemQueueStatsCmd(cmd, args, false, true)
+}
+
+func systemQueueStatsPrint(resp *halproto.SystemResponse, portSet bool, bufferOccupancy bool, peakOccupancy bool, queueDepth bool) {
+	portStats := resp.GetStats().GetPacketBufferStats().GetPortStats()
+	var str string
+
+	if bufferOccupancy == true {
+		fmt.Printf("Buffer Occupancy:\n")
+		qosQueueStatsHeaderPrint()
+		for _, port := range portStats {
+			if portSet == true {
+				if port.GetPacketBufferPort().GetPortNum() != portNum {
+					continue
+				}
+			}
+			qVal := [16]uint32{}
+			qVal2 := [16]uint32{}
+			if port.GetPacketBufferPort().GetPortType() == 3 {
+				fmt.Printf("%-5d|", port.GetPacketBufferPort().GetPortNum())
+			} else {
+				fmt.Printf("%-5s|", strings.Replace(port.GetPacketBufferPort().GetPortType().String(), "PACKET_BUFFER_PORT_TYPE_", "", -1))
+			}
+			for _, input := range port.GetQosQueueStats().GetInputQueueStats() {
+				qIndex := input.GetInputQueueIdx()
+				if qIndex < 16 {
+					qVal[qIndex] = input.GetBufferOccupancy()
+				} else {
+					qVal2[qIndex-16] = input.GetBufferOccupancy()
+				}
+			}
+			str = fmt.Sprintf("%-6v\n", qVal)
+			str = strings.Replace(str, "[", "", -1)
+			str = strings.Replace(str, "]", "", -1)
+			fmt.Printf("%s\n", str)
+			fmt.Printf("     |")
+			str = fmt.Sprintf("%-6v\n", qVal2)
+			str = strings.Replace(str, "[", "", -1)
+			str = strings.Replace(str, "]", "", -1)
+			fmt.Printf("%s\n", str)
+		}
+	}
+
+	if peakOccupancy == true {
+		fmt.Printf("Peak Occupancy:\n")
+		qosQueueStatsHeaderPrint()
+		for _, port := range portStats {
+			if portSet == true {
+				if port.GetPacketBufferPort().GetPortNum() != portNum {
+					continue
+				}
+			}
+			qVal := [16]uint32{}
+			qVal2 := [16]uint32{}
+			if port.GetPacketBufferPort().GetPortType() == 3 {
+				fmt.Printf("%-5d|", port.GetPacketBufferPort().GetPortNum())
+			} else {
+				fmt.Printf("%-5s|", strings.Replace(port.GetPacketBufferPort().GetPortType().String(), "PACKET_BUFFER_PORT_TYPE_", "", -1))
+			}
+			for _, input := range port.GetQosQueueStats().GetInputQueueStats() {
+				qIndex := input.GetInputQueueIdx()
+				if qIndex < 16 {
+					qVal[qIndex] = input.GetPeakOccupancy()
+				} else {
+					qVal2[qIndex-16] = input.GetPeakOccupancy()
+				}
+			}
+			str = fmt.Sprintf("%-6v\n", qVal)
+			str = strings.Replace(str, "[", "", -1)
+			str = strings.Replace(str, "]", "", -1)
+			fmt.Printf("%s\n", str)
+			fmt.Printf("     |")
+			str = fmt.Sprintf("%-6v\n", qVal2)
+			str = strings.Replace(str, "[", "", -1)
+			str = strings.Replace(str, "]", "", -1)
+			fmt.Printf("%s\n", str)
+		}
+	}
+
+	if queueDepth == true {
+		fmt.Printf("Queue Depth:\n")
+		qosQueueStatsHeaderPrint()
+		for _, port := range portStats {
+			if portSet == true {
+				if port.GetPacketBufferPort().GetPortNum() != portNum {
+					continue
+				}
+			}
+			qVal := [16]uint32{}
+			qVal2 := [16]uint32{}
+			if port.GetPacketBufferPort().GetPortType() == 3 {
+				fmt.Printf("%-5d|", port.GetPacketBufferPort().GetPortNum())
+			} else {
+				fmt.Printf("%-5s|", strings.Replace(port.GetPacketBufferPort().GetPortType().String(), "PACKET_BUFFER_PORT_TYPE_", "", -1))
+			}
+			for _, output := range port.GetQosQueueStats().GetOutputQueueStats() {
+				qIndex := output.GetOutputQueueIdx()
+				if qIndex < 16 {
+					qVal[qIndex] = output.GetQueueDepth()
+				} else {
+					qVal2[qIndex-16] = output.GetQueueDepth()
+				}
+			}
+			str = fmt.Sprintf("%-6v\n", qVal)
+			str = strings.Replace(str, "[", "", -1)
+			str = strings.Replace(str, "]", "", -1)
+			fmt.Printf("%s\n", str)
+			fmt.Printf("     |")
+			str = fmt.Sprintf("%-6v\n", qVal2)
+			str = strings.Replace(str, "[", "", -1)
+			str = strings.Replace(str, "]", "", -1)
+			fmt.Printf("%s\n", str)
+		}
+	}
 }
 
 func handleSystemDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
