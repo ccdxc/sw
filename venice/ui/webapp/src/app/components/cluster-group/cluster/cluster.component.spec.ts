@@ -91,11 +91,7 @@ describe('ClusterComponent', () => {
     events.push({ type: 'Created', object: node5 });
     const service = TestBed.get(ClusterService);
     const ret = {
-      body: {
-        result: {
-          events: events
-        }
-      }
+      events: events
     };
     spyOn(service, 'WatchNode').and.returnValue(
       new BehaviorSubject(ret)

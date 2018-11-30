@@ -6,6 +6,7 @@ import { tap, catchError } from 'rxjs/internal/operators';
 
 import { Utility } from '@app/common/Utility';
 import { LogService } from '@app/services/logging/log.service';
+import { AUTH_KEY } from '@app/core';
 
 /**
  * This is an angular http-client inteceptor
@@ -52,7 +53,7 @@ export class VeniceUIHttpInterceptor implements HttpInterceptor {
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     const started = Date.now();
     this.getLogger();
-    const headerName = Utility.XSRF_NAME;
+    const headerName = AUTH_KEY;
     const token = Utility.getInstance().getXSRFtoken();
     if (!this.isURLlogin(req.url)) {
       if (!req.headers.has(headerName)) {

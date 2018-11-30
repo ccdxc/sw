@@ -209,7 +209,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
    * handles case when user logout event occurs
    */
   private onLogout(payload: any) {
-    this._controllerService.LoginUserInfo = null;
+    this.store.dispatch(logout());
     this._boolInitApp = false;
     this.navigate(['/login']);
   }
@@ -294,7 +294,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
     this.idle.onIdleEnd.subscribe(() => { this.showIdleWarning = false; });
     this.idle.onTimeout.subscribe(() => {
       this.idleDialogRef.close();
-      this.onLogoutClick();
+      this._controllerService.publish(Eventtypes.LOGOUT, { 'reason': 'Idle timeout' });
     });
     this.idle.onTimeoutWarning.subscribe((countdown) => {
       if (!this.showIdleWarning) {
@@ -360,7 +360,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
   }
 
   onLogoutClick() {
-    this.store.dispatch(logout());
+    this._controllerService.publish(Eventtypes.LOGOUT, { 'reason': 'User logged out' });
   }
 
   /**

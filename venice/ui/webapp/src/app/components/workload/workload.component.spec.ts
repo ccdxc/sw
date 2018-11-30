@@ -197,24 +197,20 @@ describe('WorkloadComponent', () => {
     const service = TestBed.get(WorkloadServiceGen);
     spyOn(service, 'WatchWorkload').and.returnValue(
       new BehaviorSubject({
-        body: {
-          result: {
-            events: [
-              {
-                type: 'Created',
-                object: workload1.getFormGroupValues()
-              },
-              {
-                type: 'Created',
-                object: workload2.getFormGroupValues()
-              },
-              {
-                type: 'Created',
-                object: workload3.getFormGroupValues()
-              }
-            ]
+        events: [
+          {
+            type: 'Created',
+            object: workload1.getFormGroupValues()
+          },
+          {
+            type: 'Created',
+            object: workload2.getFormGroupValues()
+          },
+          {
+            type: 'Created',
+            object: workload3.getFormGroupValues()
           }
-        }
+        ]
       })
     );
     fixture.detectChanges();

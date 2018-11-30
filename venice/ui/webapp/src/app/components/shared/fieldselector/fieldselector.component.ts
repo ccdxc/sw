@@ -54,7 +54,7 @@ export class FieldselectorComponent implements OnInit, OnChanges {
   /**
    * If the user hasn't specified a value, we don't add
    * it into the values we return to the consumer.
-   * If a field is free form text, we split by comma to turn 
+   * If a field is free form text, we split by comma to turn
    * it into an array of values
    */
   formatRepeaterData(data) {
@@ -72,9 +72,9 @@ export class FieldselectorComponent implements OnInit, OnChanges {
         const arrVal = item[this.valueFormName].split(',');
         item[this.valueFormName] = arrVal.map(val => {
           return val.trim();
-        })
+        });
       }
-    })
+    });
     return retData;
   }
 

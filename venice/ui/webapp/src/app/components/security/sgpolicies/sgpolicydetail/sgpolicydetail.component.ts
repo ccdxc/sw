@@ -178,7 +178,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
     // Ex. /sgpolicies/policy1 -> /sgpolicies/policy2
     this.subscriptions.forEach(sub => {
       sub.unsubscribe();
-    })
+    });
     this.subscriptions = [];
     this.sgPolicies = [];
     this.sgPolicyRules = [];
@@ -406,8 +406,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
     // const subscription = this.securityService.WatchSGPolicy({ 'field-selector': 'meta.name=' + this.selectedPolicyId}).subscribe(
     const subscription = this.securityService.WatchSGPolicy({ 'field-selector': 'meta.name=' + this.selectedPolicyId }).subscribe(
       response => {
-        const body: any = response.body;
-        this.sgPoliciesEventUtility.processEvents(body);
+        this.sgPoliciesEventUtility.processEvents(response);
         if (this.sgPolicies.length > 1) {
           // because of the name selector, we should
           // have only got one object

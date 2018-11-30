@@ -1,6 +1,3 @@
-
-
-
 import {
   ApplicationRef,
   ComponentFactoryResolver,
@@ -20,6 +17,7 @@ import { Promise } from 'q';
 import { Subject, Subscription } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import { LogService } from '@app/services/logging/log.service';
+import { AUTH_KEY } from '@app/core/auth/auth.reducer';
 
 interface Message {
   type: Eventtypes;
@@ -173,9 +171,7 @@ export class ControllerService {
   }
 
   public isUserLogin(): boolean {
-
-    // TODO: refine this once user-management REST is available
-    return (this.LoginUserInfo && this.LoginUserInfo['kind'] !== undefined);
+    return sessionStorage.getItem(AUTH_KEY) != null;
   }
 
   public directPageAsUserAlreadyLogin() {

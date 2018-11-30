@@ -83,7 +83,7 @@ export class DashboardComponent extends BaseComponent implements OnInit, OnDestr
             console.log('dashboard toolbar splitbutton refresh');
           },
           items: [
-            {              
+            {
 label: '5 days', icon: 'pi pi-cog', command: () => {
                 console.log('dashboard toolbar menuitem 5-days');
               }

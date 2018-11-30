@@ -7,9 +7,9 @@ import { Eventtypes } from '../../enum/eventtypes.enum';
 import { AuthService } from '../../services/auth.service';
 import { ControllerService } from '../../services/controller.service';
 import { UIAction } from '../core.interfaces';
-import { LocalStorageService } from '../local-storage/local-storage.service';
+import { LocalStorageService, LocalStorageEvents } from '../local-storage/local-storage.service';
 import * as authReducer from './auth.reducer';
-import { AUTH_KEY, AUTH_LOGIN, AUTH_LOGOUT } from './auth.reducer';
+import { AUTH_KEY, AUTH_BODY, AUTH_LOGIN, AUTH_LOGOUT } from './auth.reducer';
 
 
 
@@ -41,7 +41,11 @@ export class AuthEffects {
             const userData = data;
             const isAuthOK = (data) ? true : false;
             if (isAuthOK) {
-              this.localStorageService.setItem(AUTH_KEY, { isAuthenticated: true });
+              sessionStorage.setItem(AUTH_KEY, userData.headers.get(AUTH_KEY));
+              sessionStorage.setItem(AUTH_BODY, JSON.stringify(userData.body));
+              this.localStorageService.setItem(LocalStorageEvents.NEW_LOGIN_DATA, sessionStorage);
+              this.localStorageService.removeItem(LocalStorageEvents.NEW_LOGIN_DATA);
+
               this._controllerService.publish(Eventtypes.LOGIN_SUCCESS, userData);
               this._store.dispatch(authReducer.login_success(userData));
             } else {
@@ -57,7 +61,8 @@ export class AuthEffects {
   }
 
   protected onLoginFailure(err: any) {
-    this.localStorageService.setItem(AUTH_KEY, { isAuthenticated: false });
+    sessionStorage.setItem(AUTH_KEY, null);
+    sessionStorage.setItem(AUTH_BODY, null);
     this._store.dispatch(authReducer.login_failure(err));
     this._controllerService.publish(Eventtypes.LOGIN_FAILURE, { 'ajax': 'end', 'name': 'login', 'message': err });
   }
@@ -67,8 +72,10 @@ export class AuthEffects {
     return this.actions$.pipe(
       ofType(AUTH_LOGOUT),
       tap(action => {
-        this.localStorageService.setItem(AUTH_KEY, { isAuthenticated: false });
-        this._controllerService.publish(Eventtypes.LOGOUT, {});
+        sessionStorage.clear();
+        this.localStorageService.setItem(LocalStorageEvents.LOGOUT_REQUEST, true);
+        this.localStorageService.removeItem(LocalStorageEvents.LOGOUT_REQUEST);
+
         this._store.dispatch(authReducer.logout_success());
       })
     );

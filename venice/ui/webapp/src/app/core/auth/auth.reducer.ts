@@ -4,7 +4,8 @@ export const initialState = {
   isAuthenticated: false
 };
 
-export const AUTH_KEY = 'AUTH';
+export const AUTH_KEY = 'Grpc-Metadata-Csrf-Token';
+export const AUTH_BODY = 'AUTH_BODY';
 export const AUTH_LOGIN = 'AUTH_LOGIN';
 export const AUTH_LOGOUT = 'AUTH_LOGOUT';
 export const AUTH_LOGIN_SUCCESS = 'AUTH_LOGIN_SUCCESS';

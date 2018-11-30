@@ -1,25 +1,25 @@
 import { HttpClient, HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { Utility } from '@app/common/Utility';
 import * as oboe from 'oboe';
-import { publishReplay, refCount } from 'rxjs/operators'
-
-
-
-
+import { publishReplay, refCount } from 'rxjs/operators';
 import { Observable ,  Subject } from 'rxjs';
 import { VeniceResponse } from '@app/models/frontend/shared/veniceresponse.interface';
 import { MockDataUtil } from '@app/common/MockDataUtil';
+import { AUTH_KEY } from '@app/core';
+import { WebSocketSubject } from 'rxjs/observable/dom/WebSocketSubject';
 
 export class GenServiceUtility {
   protected _http;
-  protected oboeServiceMap: { [method: string]: Observable<VeniceResponse> } = {};
+  protected urlServiceMap: { [method: string]: Observable<VeniceResponse> } = {};
   protected ajaxStartCallback: (payload: any) => void;
   protected ajaxEndCallback: (payload: any) => void;
+  protected useWebSockets: boolean;
 
-  constructor(http: HttpClient, ajaxStartCallback, ajaxEndCallback) {
+  constructor(http: HttpClient, ajaxStartCallback, ajaxEndCallback, useWebSockets = true) {
     this._http = http;
     this.ajaxStartCallback = ajaxStartCallback;
     this.ajaxEndCallback = ajaxEndCallback;
+    this.useWebSockets = useWebSockets;
   }
 
   /**
@@ -34,7 +34,7 @@ export class GenServiceUtility {
   protected oboeObserverCreate(url: string, payload: any, eventPayload: any) {
     return (observer) => {
       const headers = {};
-      headers[Utility.XSRF_NAME] = Utility.getInstance().getXSRFtoken();
+      headers[AUTH_KEY] = Utility.getInstance().getXSRFtoken();
 
       const config = {
         'url': url,
@@ -58,7 +58,7 @@ export class GenServiceUtility {
         unsubscribe: () => {
           oboeService.abort();
           this.ajaxEndCallback(eventPayload);
-          delete this.oboeServiceMap[url];
+          delete this.urlServiceMap[url];
         }
       };
     };
@@ -79,17 +79,24 @@ export class GenServiceUtility {
       // we add the query params to the url
       url += '?' + Utility.getJQuery().param(payload);
     }
-    if (this.oboeServiceMap[url] == null)  {
-      // Creating cold observer that emits events when oboe receives new data
-      const oboeObserver: Observable<any> = Observable.create(this.oboeObserverCreate(url, payload, eventPayload));
-      // Creating a replay subject that subscribes and unsubscribes from the oboeObserver source
-      // only if it has subscribers.
-      // The connection will only be open if there is a listener, and closed as soon as there
-      // are no more listeners
-      const observer = oboeObserver.pipe(publishReplay(), refCount());
-      this.oboeServiceMap[url] = observer;
+    if (this.urlServiceMap[url] == null)  {
+      if (this.useWebSockets) {
+        url = url.replace('http://', 'ws://');
+        url = url.replace('https://', 'wss://');
+        const observer: any = new WebSocketSubject(url);
+        this.urlServiceMap[url] = observer;
+      } else {
+        // Creating cold observer that emits events when oboe receives new data
+        const oboeObserver: Observable<any> = Observable.create(this.oboeObserverCreate(url, payload, eventPayload));
+        // Creating a replay subject that subscribes and unsubscribes from the oboeObserver source
+        // only if it has subscribers.
+        // The connection will only be open if there is a listener, and closed as soon as there
+        // are no more listeners
+        const observer = oboeObserver.pipe(publishReplay(), refCount());
+        this.urlServiceMap[url] = observer;
+      }
     }
-    const retObserver = this.oboeServiceMap[url];
+    const retObserver = this.urlServiceMap[url];
     return retObserver;
   }
 

@@ -25,121 +25,111 @@ describe('HttpEventUtility', () => {
   const serviceUtilitySingleton = new HttpEventUtility<any>(null, true);
 
   const createEvents = {
-    result: {
-      events: [
-        {
-          type: 'Created',
-          object: {
-            meta: {
-              name: 'obj1',
-              'mod-time': '1'
-            },
-            filter: 'include'
+    events: [
+      {
+        type: 'Created',
+        object: {
+          meta: {
+            name: 'obj1',
+            'mod-time': '1'
+          },
+          filter: 'include'
+        }
+      },
+      {
+        type: 'Created',
+        object: {
+          meta: {
+            name: 'obj2',
+            'mod-time': '2'
           }
-        },
-        {
-          type: 'Created',
-          object: {
-            meta: {
-              name: 'obj2',
-              'mod-time': '2'
-            }
+        }
+      },
+      {
+        type: 'Created',
+        object: {
+          meta: {
+            name: 'obj3',
+            'mod-time': '3'
           }
-        },
-        {
-          type: 'Created',
-          object: {
-            meta: {
-              name: 'obj3',
-              'mod-time': '3'
-            }
+        }
+      },
+      {
+        type: 'Created',
+        object: {
+          meta: {
+            name: 'obj4',
+            'mod-time': '4'
           }
-        },
-        {
-          type: 'Created',
-          object: {
-            meta: {
-              name: 'obj4',
-              'mod-time': '4'
-            }
-          }
-        },
-      ]
-    }
+        }
+      },
+    ]
   };
 
   const createEvent = {
-    result: {
-      events: [
-        {
-          type: 'Created',
-          object: {
-            meta: {
-              name: 'obj1',
-              'mod-time': '1'
-            },
-          }
-        },
-      ]
-    }
+    events: [
+      {
+        type: 'Created',
+        object: {
+          meta: {
+            name: 'obj1',
+            'mod-time': '1'
+          },
+        }
+      },
+    ]
   };
 
   const putEvent = {
-    result: {
-      events: [
-        {
-          type: 'Updated',
-          object: {
-            meta: {
-              name: 'obj2',
-              'mod-time': '1'
-            },
-          }
-        },
-      ]
-    }
+    events: [
+      {
+        type: 'Updated',
+        object: {
+          meta: {
+            name: 'obj2',
+            'mod-time': '1'
+          },
+        }
+      },
+    ]
   };
 
   const deleteEvent = {
-    result: {
-      events: [
-        {
-          type: 'Deleted',
-          object: {
-            meta: {
-              name: 'obj2',
-              'mod-time': '1'
-            }
+    events: [
+      {
+        type: 'Deleted',
+        object: {
+          meta: {
+            name: 'obj2',
+            'mod-time': '1'
           }
-        },
-      ]
-    }
+        }
+      },
+    ]
   };
 
   const putAndCreateEvents = {
-    result: {
-      events: [
-        {
-          type: 'Updated',
-          object: {
-            meta: {
-              name: 'obj3',
-              'mod-time': '6'
-            }
+    events: [
+      {
+        type: 'Updated',
+        object: {
+          meta: {
+            name: 'obj3',
+            'mod-time': '6'
           }
-        },
-        {
-          type: 'Created',
-          object: {
-            meta: {
-              name: 'obj5',
-              'mod-time': '8'
-            },
-            filter: 'include'
-          }
-        },
-      ]
-    }
+        }
+      },
+      {
+        type: 'Created',
+        object: {
+          meta: {
+            name: 'obj5',
+            'mod-time': '8'
+          },
+          filter: 'include'
+        }
+      },
+    ]
   };
 
   it('Should process events to the same array', () => {

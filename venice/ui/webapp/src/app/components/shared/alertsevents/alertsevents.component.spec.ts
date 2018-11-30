@@ -3,7 +3,7 @@
  ------------------*/
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { Component } from '@angular/core';
-import { async, ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { async, ComponentFixture, TestBed, fakeAsync, tick, discardPeriodicTasks } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatIconRegistry } from '@angular/material';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -147,7 +147,10 @@ describe('AlertseventsComponent', () => {
 
       // Checking that the table entry is there
       tableBody = eventsContainer.query(By.css('.mat-tab-body-active .ui-table-scrollable-body-table tbody'));
-      fixture.whenStable().then(() => {
+      fixture.whenRenderingDone().then(() => {
+        // Allows rendering for the setTimeout(.., 0) we have
+        setTimeout(() => {
+          fixture.detectChanges();
         expect(tableBody.children.length).toBe(1);
         const caseMap = {
           'severity': (field, rowData, rowIndex) => {
@@ -163,10 +166,11 @@ describe('AlertseventsComponent', () => {
           },
           'source': (field, rowData, rowIndex) => {
             expect(field.nativeElement.textContent).toContain(
-              rowData.source['node-name'] + '  :  ' + rowData.source.component, 'source column did not match');
+              rowData.source['node-name'] + ' : ' + rowData.source.component, 'source column did not match');
           }
         };
         TestingUtility.verifyTable(poll1, component.eventCols, tableBody, caseMap);
+      }, 0);
       });
     });
 

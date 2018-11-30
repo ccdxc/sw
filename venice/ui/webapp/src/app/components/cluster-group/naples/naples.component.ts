@@ -72,7 +72,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
   avgData: IMetrics_queryQueryResponse;
   maxObjData: IMetrics_queryQueryResponse;
 
-  telemetryKind: string = "SmartNIC";
+  telemetryKind: string = 'SmartNIC';
 
   constructor(private clusterService: ClusterService,
     protected controllerService: ControllerService,
@@ -97,8 +97,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
     this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterSmartNIC>;
     const subscription = this.clusterService.WatchSmartNIC().subscribe(
       response => {
-        const body: any = response.body;
-        this.naplesEventUtility.processEvents(body);
+        this.naplesEventUtility.processEvents(response);
       },
       this.restErrorHandler('Failed to get NAPLES info')
     );
@@ -230,7 +229,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
       heroCard.thirdStat.value = null;
     } else {
       // Removing SmartNIC- prefix from the name and adding value
-      const thirdStatName = maxNaples.name.substring(this.telemetryKind.length + 1)
+      const thirdStatName = maxNaples.name.substring(this.telemetryKind.length + 1);
       let thirdStat = thirdStatName;
       if (thirdStat.length > 10) {
         thirdStat = thirdStat.substring(0, 11) + '...';

@@ -8,8 +8,7 @@ import { AuthService } from '../../services/auth.service';
 import { ControllerService } from '../../services/controller.service';
 import { Router } from '@angular/router';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-
-
+import { LocalStorageService } from '@app/core';
 
 @Component({
   selector: 'app-login',
@@ -35,7 +34,8 @@ export class LoginComponent extends CommonComponent implements OnInit, OnDestroy
     private _controllerService: ControllerService,
     private uiconfigService: UIConfigsService,
     private router: Router,
-    private store$: Store<any>
+    private store$: Store<any>,
+    private localStorage: LocalStorageService
   ) {
     super();
   }
@@ -48,6 +48,14 @@ export class LoginComponent extends CommonComponent implements OnInit, OnDestroy
       this.redirect();
       return;
     }
+    this.subscriptions[Utility.USER_DATA_OBSERVABLE] = this.localStorage.getUserdataObservable().subscribe(
+      (data) => {
+        if (this._controllerService.isUserLogin()) {
+          this.redirect();
+          return;
+        }
+      },
+    );
     this._controllerService.publish(Eventtypes.COMPONENT_INIT, { 'component': 'LoginComponent', 'state': Eventtypes.COMPONENT_INIT });
 
     // setting up subscription
@@ -102,8 +110,6 @@ export class LoginComponent extends CommonComponent implements OnInit, OnDestroy
   onLoginSuccess(payload) {
     // Not setting loginInProgress back to false because we should be getting redirected
     // and this component will be destroyed.
-    this._controllerService.LoginUserInfo = (payload['body']) ? payload['body'] : payload;
-    this._controllerService.LoginUserInfo[Utility.XSRF_NAME] = (payload.headers) ? payload.headers.get(Utility.XSRF_NAME) : '';
     this.redirect();
   }
 
@@ -124,14 +130,14 @@ export class LoginComponent extends CommonComponent implements OnInit, OnDestroy
     const msgFailtoLogin = 'Failed to login! ';
     const msgConsultAdmin = 'Please consult system administrator';
     if (!errPayload) {
-      return msgFailtoLogin + 'for unknown reason. ' +  msgConsultAdmin;
+      return msgFailtoLogin + 'for unknown reason. ' + msgConsultAdmin;
     }
-    if (errPayload.message && errPayload.message.status === 0 ) {
-        // This handles case where user is not connected in nework and using the browser cached Venice-UI. Give user-friendly message
-        return msgFailtoLogin  + ' Please refresh browser and ensure you have network connection';
-    } else  if (errPayload.message && errPayload.message.status === 401 ) {
-        // handle status =401 authentication failure.
-        return msgFailtoLogin + ' Incorrect credentials';
+    if (errPayload.message && errPayload.message.status === 0) {
+      // This handles case where user is not connected in nework and using the browser cached Venice-UI. Give user-friendly message
+      return msgFailtoLogin + ' Please refresh browser and ensure you have network connection';
+    } else if (errPayload.message && errPayload.message.status === 401) {
+      // handle status =401 authentication failure.
+      return msgFailtoLogin + ' Incorrect credentials';
     }
     // Here, most likely, there is server error.
     return msgFailtoLogin + 'Server error. ' + msgConsultAdmin;

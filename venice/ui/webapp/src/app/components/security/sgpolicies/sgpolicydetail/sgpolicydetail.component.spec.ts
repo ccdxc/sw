@@ -328,16 +328,12 @@ describe('SgpolicydetailComponent', () => {
     };
 
     sgPolicyObserver = new BehaviorSubject({
-      body: {
-        result: {
-          events: [
-            {
-              type: 'Created',
-              object: sgPolicy1
-            }
-          ]
-        }
-      }
+        events: [
+          {
+            type: 'Created',
+            object: sgPolicy1
+          }
+        ]
     });
     sgPolicyWatchSpy = spyOn(securityService, 'WatchSGPolicy').and.returnValue(
       sgPolicyObserver
@@ -655,16 +651,12 @@ describe('SgpolicydetailComponent', () => {
 
     // Add object
     policyWatchObserver.next({
-      body: {
-        result: {
-          events: [
-            {
-              type: 'Created',
-              object: sgPolicy2
-            }
-          ]
+      events: [
+        {
+          type: 'Created',
+          object: sgPolicy2
         }
-      }
+      ]
     });
 
     fixture.detectChanges();
@@ -679,16 +671,12 @@ describe('SgpolicydetailComponent', () => {
 
     // Delete policy
     policyWatchObserver.next({
-      body: {
-        result: {
-          events: [
-            {
-              type: 'Deleted',
-              object: sgPolicy2
-            }
-          ]
+      events: [
+        {
+          type: 'Deleted',
+          object: sgPolicy2
         }
-      }
+      ]
     });
 
     fixture.detectChanges();
@@ -736,16 +724,12 @@ describe('SgpolicydetailComponent', () => {
     let mockActivatedRoute: MockActivatedRoute = TestBed.get(ActivatedRoute);
     sgPolicyWatchSpy.and.returnValue(
       new BehaviorSubject({
-        body: {
-          result: {
-            events: [
-              {
-                type: 'Created',
-                object: sgPolicy2
-              }
-            ]
+        events: [
+          {
+            type: 'Created',
+            object: sgPolicy2
           }
-        }
+        ]
       })
     );
     mockActivatedRoute.setPolicyId('policy2');

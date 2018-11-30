@@ -48,7 +48,7 @@ import { HeroCardOptions } from '@app/components/shared/herocard/herocard.compon
               "Node-node2"
             ],
             ...
-  * 
+  *
   * If it is grouped by a field then it is of the following form:
     "results": [
         {
@@ -291,7 +291,7 @@ export class MetricsUtility {
       },
       themeColor: themeColor,
       icon: icon
-    }
+    };
   }
 
   public static clusterLevelMemHeroCard(themeColor: string, icon: Icon): HeroCardOptions {
@@ -322,7 +322,7 @@ export class MetricsUtility {
       },
       themeColor: themeColor,
       icon: icon
-    }
+    };
   }
 
   public static clusterLevelDiskHeroCard(themeColor: string, icon: Icon): HeroCardOptions {
@@ -353,7 +353,7 @@ export class MetricsUtility {
       },
       themeColor: themeColor,
       icon: icon
-    }
+    };
   }
 
   public static detailLevelCPUHeroCard(themeColor: string, icon: Icon): HeroCardOptions {

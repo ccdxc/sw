@@ -89,8 +89,7 @@ export class SgpoliciesComponent extends BaseComponent implements OnInit, OnDest
     this.sgPolicies = this.sgPoliciesEventUtility.array;
     const subscription = this.securityService.WatchSGPolicy().subscribe(
       response => {
-        const body: any = response.body;
-        this.sgPoliciesEventUtility.processEvents(body);
+        this.sgPoliciesEventUtility.processEvents(response);
         // we currently don't support filter searching, so we
         // set all the policies to be the filtered set
         this.filteredSGPolicies = this.sgPolicies as any;

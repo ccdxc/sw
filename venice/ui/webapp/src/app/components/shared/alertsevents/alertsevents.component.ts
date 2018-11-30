@@ -22,8 +22,8 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { MessageService } from 'primeng/primeng';
 
 export interface AlertsEventsSelector {
-  alertSelector: string,
-  eventSelector: string
+  alertSelector: string;
+  eventSelector: string;
 }
 
 /**
@@ -193,7 +193,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   genQueryBodies() {
     if (this.selector != null) {
       this.eventsPostBody = {
-        "field-selector": this.selector.eventSelector
+        'field-selector': this.selector.eventSelector
       };
       this.alertQuery = {
         'field-selector': this.selector.alertSelector
@@ -250,8 +250,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
     }
     this.alertSubscription = this.monitoringService.WatchAlert(this.alertQuery).subscribe(
       response => {
-        const body: any = response.body;
-        this.alertsEventUtility.processEvents(body);
+        this.alertsEventUtility.processEvents(response);
         // Reset counters
         Object.keys(MonitoringAlertStatus_severity).forEach(severity => {
           this.alertNumbers[severity] = 0;

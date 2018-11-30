@@ -219,8 +219,7 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
     this.workloads = this.workloadEventUtility.array;
     const subscription = this.workloadService.WatchWorkload().subscribe(
       (response) => {
-        const body: any = response.body;
-        this.workloadEventUtility.processEvents(body);
+        this.workloadEventUtility.processEvents(response);
       },
       this.restErrorHandler('Failed to get workloads')
     );

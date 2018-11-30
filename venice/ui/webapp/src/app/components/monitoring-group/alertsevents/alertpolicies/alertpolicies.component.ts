@@ -78,10 +78,9 @@ export class AlertpoliciesComponent extends BaseComponent implements OnInit, OnD
     this.objectPolicies = this.objectPoliciesEventUtility.array;
     const subscription = this._monitoringService.WatchAlertPolicy().subscribe(
       (response) => {
-        const body: any = response.body;
-        this.eventPoliciesEventUtility.processEvents(body);
-        this.metricPoliciesEventUtility.processEvents(body);
-        this.objectPoliciesEventUtility.processEvents(body);
+        this.eventPoliciesEventUtility.processEvents(response);
+        this.metricPoliciesEventUtility.processEvents(response);
+        this.objectPoliciesEventUtility.processEvents(response);
       },
       this.restErrorHandler('Failed to get Alert Policies')
     );
@@ -93,8 +92,7 @@ export class AlertpoliciesComponent extends BaseComponent implements OnInit, OnD
     this.destinations = this.destinationsEventUtility.array;
     const subscription = this._monitoringService.WatchAlertDestination().subscribe(
       (response) => {
-        const body: any = response.body;
-        this.destinationsEventUtility.processEvents(body);
+        this.destinationsEventUtility.processEvents(response);
       },
       this.restErrorHandler('Failed to get Alert Destinations')
     );

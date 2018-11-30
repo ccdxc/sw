@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { BaseComponent } from '@app/components/base/base.component';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
@@ -23,7 +23,7 @@ import { map } from 'rxjs/internal/operators';
   templateUrl: './naplesdetail.component.html',
   styleUrls: ['./naplesdetail.component.scss']
 })
-export class NaplesdetailComponent extends BaseComponent implements OnInit {
+export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDestroy {
   subscriptions = [];
 
   bodyicon: any = {
@@ -47,7 +47,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit {
   selectedId: string;
   selectedObj: ClusterSmartNIC;
 
-  //Holds all objects, should be only one item in the array
+  // Holds all objects, should be only one item in the array
   objList: ReadonlyArray<ClusterSmartNIC>;
   objEventUtility: HttpEventUtility<ClusterSmartNIC>;
 
@@ -108,7 +108,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit {
     // Ex. /cluster/naples/naples1-> /cluster/naples/naples2
     this.subscriptions.forEach(sub => {
       sub.unsubscribe();
-    })
+    });
     this.subscriptions = [];
     this.objList = [];
     this.showDeletionScreen = false;
@@ -153,8 +153,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit {
     this.objList = this.objEventUtility.array;
     const subscription = this.clusterService.WatchSmartNIC({ 'field-selector': 'meta.name=' + this.selectedId }).subscribe(
       response => {
-        const body: any = response.body;
-        this.objEventUtility.processEvents(body);
+        this.objEventUtility.processEvents(response);
         if (this.objList.length > 1) {
           // because of the name selector, we should
           // have only got one object
@@ -172,9 +171,9 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit {
           this.alertseventsSelector = {
             eventSelector: 'object-ref.name=' + this.selectedId + ',object-ref.kind=SmartNIC',
             alertSelector: 'status.object-ref.name=' + this.selectedId + ',status.object-ref.kind=SmartNIC',
-          }
+          };
           this.startMetricPolls();
-        } else if (this.objList.length == 0) {
+        } else if (this.objList.length === 0) {
           // Must have received a delete event.
           this.showDeletionScreen = true;
           this.heroCards.forEach(card => {

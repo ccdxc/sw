@@ -8,6 +8,7 @@ import { SelectItem } from 'primeng/primeng';
 import * as $ from 'jquery';
 import * as pluralize from 'pluralize';
 import { CategoryMapping } from '@sdk/v1/models/generated/category-mapping.model';
+import { AUTH_KEY, AUTH_BODY } from '@app/core/auth/auth.reducer';
 
 
 
@@ -18,6 +19,8 @@ export class Utility {
   // Determines wheter to use on-line or off-line REST API
   public static isOffLine = true;
   public static XSRF_NAME = 'Grpc-Metadata-Csrf-Token';
+  // Key for the observable obtained from localStorage.getUserdataObservable
+  public static USER_DATA_OBSERVABLE = 'UserDataObservable';
 
   myControllerService: ControllerService;
   myLogService: LogService;
@@ -798,18 +801,16 @@ export class Utility {
   }
 
   getXSRFtoken(): string {
-    if (this.getControllerService() && this.getControllerService().LoginUserInfo) {
-      return this.getControllerService().LoginUserInfo[Utility.XSRF_NAME];
-    }
-    return '';
+    const token = sessionStorage.getItem(AUTH_KEY);
+    return token ? token : '';
   }
 
   getLoginName(): string | null {
-    if (this.getControllerService() && this.getControllerService().LoginUserInfo) {
-      if (this.getControllerService().LoginUserInfo['meta']) {
-        return this.getControllerService().LoginUserInfo['meta'].name;
-      }
+    const body = JSON.parse(sessionStorage.getItem(AUTH_BODY));
+    if (body != null && body.meta != null) {
+      return body.meta.name;
     }
+
     return null;
   }
 }

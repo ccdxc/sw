@@ -95,8 +95,7 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
     this.clusterArray = this.clusterEventUtility.array as ReadonlyArray<ClusterCluster>;
     const subscription = this._clusterService.WatchCluster().subscribe(
       response => {
-        const body: any = response.body;
-        this.clusterEventUtility.processEvents(body);
+        this.clusterEventUtility.processEvents(response);
         if (this.clusterArray.length > 0) {
           this.cluster = this.clusterArray[0];
         }
@@ -111,8 +110,7 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
     this.nodes = this.nodeEventUtility.array;
     const subscription = this._clusterService.WatchNode().subscribe(
       response => {
-        const body: any = response.body;
-        this.nodeEventUtility.processEvents(body);
+        this.nodeEventUtility.processEvents(response);
       },
       this.restErrorHandler('Failed to get Node info')
     );
@@ -238,7 +236,7 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
       heroCard.thirdStat.value = null;
     } else {
       // Removing Node- prefix from the name and adding value
-      const thirdStatName = maxNode.name.substring(this.telemetryKind.length + 1)
+      const thirdStatName = maxNode.name.substring(this.telemetryKind.length + 1);
       let thirdStat = thirdStatName;
       if (thirdStat.length > 10) {
         thirdStat = thirdStat.substring(0, 11) + '...';

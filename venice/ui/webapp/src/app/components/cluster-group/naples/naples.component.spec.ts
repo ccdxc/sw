@@ -107,20 +107,16 @@ describe('NaplesComponent', () => {
     const service = TestBed.get(ClusterService);
     spyOn(service, 'WatchSmartNIC').and.returnValue(
       new BehaviorSubject({
-        body: {
-          result: {
-            events: [
-              {
-                type: 'Created',
-                object: naples1
-              },
-              {
-                type: 'Created',
-                object: naples2
-              }
-            ]
+        events: [
+          {
+            type: 'Created',
+            object: naples1
+          },
+          {
+            type: 'Created',
+            object: naples2
           }
-        }
+        ]
       })
     );
     fixture.detectChanges();

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { BaseComponent } from '@app/components/base/base.component';
 import { ControllerService } from '@app/services/controller.service';
 import { ActivatedRoute } from '@angular/router';
@@ -33,7 +33,7 @@ import { map } from 'rxjs/internal/operators';
   templateUrl: './nodedetail.component.html',
   styleUrls: ['./nodedetail.component.scss']
 })
-export class NodedetailComponent extends BaseComponent implements OnInit {
+export class NodedetailComponent extends BaseComponent implements OnInit, OnDestroy {
   subscriptions = [];
 
   bodyicon: any = {
@@ -57,7 +57,7 @@ export class NodedetailComponent extends BaseComponent implements OnInit {
   selectedId: string;
   selectedObj: ClusterNode;
 
-  //Holds all objects, should be only one item in the array
+  // Holds all objects, should be only one item in the array
   objList: ReadonlyArray<ClusterNode>;
   objEventUtility: HttpEventUtility<ClusterNode>;
 
@@ -86,7 +86,7 @@ export class NodedetailComponent extends BaseComponent implements OnInit {
   alertseventsSelector: AlertsEventsSelector = {
     eventSelector: 'source.node-name=' + this.selectedId,
     alertSelector: 'status.source.node-name=' + this.selectedId
-  }
+  };
 
   constructor(protected _controllerService: ControllerService,
     private _route: ActivatedRoute,
@@ -121,7 +121,7 @@ export class NodedetailComponent extends BaseComponent implements OnInit {
     // Ex. /cluster/node1-> /cluster/node2
     this.subscriptions.forEach(sub => {
       sub.unsubscribe();
-    })
+    });
     this.subscriptions = [];
     this.objList = [];
     this.showDeletionScreen = false;
@@ -163,8 +163,7 @@ export class NodedetailComponent extends BaseComponent implements OnInit {
     this.objList = this.objEventUtility.array;
     const subscription = this.clusterService.WatchNode({ 'field-selector': 'meta.name=' + this.selectedId }).subscribe(
       response => {
-        const body: any = response.body;
-        this.objEventUtility.processEvents(body);
+        this.objEventUtility.processEvents(response);
         if (this.objList.length > 1) {
           // because of the name selector, we should
           // have only got one object
@@ -183,7 +182,7 @@ export class NodedetailComponent extends BaseComponent implements OnInit {
           this.alertseventsSelector = {
             eventSelector: 'source.node-name=' + this.selectedId,
             alertSelector: 'status.source.node-name=' + this.selectedId,
-          }
+          };
         } else {
           // Must have received a delete event.
           this.showDeletionScreen = true;

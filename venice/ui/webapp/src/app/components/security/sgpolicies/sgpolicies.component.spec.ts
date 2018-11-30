@@ -70,16 +70,12 @@ describe('SgpoliciesComponent', () => {
       }
     });
     sgPolicyObserver = new BehaviorSubject({
-      body: {
-        result: {
-          events: [
-            {
-              type: 'Created',
-              object: policy1
-            }
-          ]
+      events: [
+        {
+          type: 'Created',
+          object: policy1
         }
-      }
+      ]
     });
     spyOn(securityService, 'WatchSGPolicy').and.returnValue(
       sgPolicyObserver
@@ -94,31 +90,23 @@ describe('SgpoliciesComponent', () => {
 
     // Watch events
     sgPolicyObserver.next({
-      body: {
-        result: {
-          events: [
-            {
-              type: 'Created',
-              object: policy2
-            }
-          ]
+      events: [
+        {
+          type: 'Created',
+          object: policy2
         }
-      }
+      ]
     });
     fixture.detectChanges();
     testingUtility.verifyTable([policy2, policy1], component.cols, tableElem, {});
 
     sgPolicyObserver.next({
-      body: {
-        result: {
-          events: [
-            {
-              type: 'Deleted',
-              object: policy1
-            }
-          ]
+      events: [
+        {
+          type: 'Deleted',
+          object: policy1
         }
-      }
+      ]
     });
     fixture.detectChanges();
     testingUtility.verifyTable([policy2], component.cols, tableElem, {});

@@ -7,7 +7,7 @@ export const environment = {
   log_format: 'JSON',
   log_level: 0,
   logger_console: true,
-  logger_localstorage: true,
+  logger_localstorage: false,
   logger_webapi: false,
 
   server_url: 'http://192.168.69.189',

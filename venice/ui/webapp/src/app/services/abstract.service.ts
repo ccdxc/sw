@@ -7,7 +7,7 @@ import { MockDataUtil } from '../common/MockDataUtil';
 import { Utility } from '../common/Utility';
 import { LogService } from './logging/log.service';
 import { environment } from '../../environments/environment';
-import { delay } from 'rxjs/operators'
+import { delay } from 'rxjs/operators';
 
 @Injectable()
 export class AbstractService {

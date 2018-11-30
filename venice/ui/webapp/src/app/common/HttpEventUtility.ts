@@ -51,53 +51,53 @@ export class HttpEventUtility<T> {
   }
 
   public processEvents(eventChunk): ReadonlyArray<T> {
-    if (eventChunk.result == null) {
-      console.log('event chunk was blank', eventChunk);
-      return;
-    }
-    const events = eventChunk.result.events;
-    events.forEach(event => {
-      let obj;
-      if (this.objectConstructor != null) {
-        obj = new this.objectConstructor(event.object);
-      } else {
-        obj = event.object;
-      }
-      const objName = obj.meta.name;
-      if (this.filter != null && !this.filter(obj)) {
-        return;
-      }
-      let index;
-      switch (event.type) {
-        case EventTypes.create:
-          this.addItem(obj, objName);
-          break;
-        case EventTypes.delete:
-          this.deleteItem(objName);
-          break;
-        case EventTypes.update:
-          if (this.isSingleton && this.dataArray.length > 0) {
-            // Can only be one object, so all updates are happening
-            // to the one object we have
-            index = 0;
-          } else {
-            index = this.dataMapping[objName];
-          }
-          if (index != null) {
-            // We move the object to the end to maintain
-            // last modified time ordering.
-            this.deleteItem(objName);
+    try {
+      const events = eventChunk.events;
+      events.forEach(event => {
+        let obj;
+        if (this.objectConstructor != null) {
+          obj = new this.objectConstructor(event.object);
+        } else {
+          obj = event.object;
+        }
+        const objName = obj.meta.name;
+        if (this.filter != null && !this.filter(obj)) {
+          return;
+        }
+        let index;
+        switch (event.type) {
+          case EventTypes.create:
             this.addItem(obj, objName);
-          } else {
-            console.log('Update event but object was not found');
-          }
-          break;
-        default:
-          break;
-      }
-    });
+            break;
+          case EventTypes.delete:
+            this.deleteItem(objName);
+            break;
+          case EventTypes.update:
+            if (this.isSingleton && this.dataArray.length > 0) {
+              // Can only be one object, so all updates are happening
+              // to the one object we have
+              index = 0;
+            } else {
+              index = this.dataMapping[objName];
+            }
+            if (index != null) {
+              // We move the object to the end to maintain
+              // last modified time ordering.
+              this.deleteItem(objName);
+              this.addItem(obj, objName);
+            } else {
+              console.error('Update event received but object was not found');
+            }
+            break;
+          default:
+            break;
+        }
+      });
 
-    return this.dataArray;
+      return this.dataArray;
+    } catch (e) {
+      console.error(e, 'This is likely due to the backend response being in an unsupported format')
+    }
   }
 
   /**
