@@ -11,6 +11,7 @@
 #include "nic/hal/pd/capri/capri_tm_rw.hpp"
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 #include "nic/include/hal.hpp"
+#include "nic/hal/svc/hal_ext.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/include/asic_pd.hpp"
 #include "nic/hal/pd/p4pd/p4pd_api.hpp"
@@ -1357,6 +1358,7 @@ capri_init (capri_cfg_t *cfg = NULL)
 
     ret = capri_prd_init();
     HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+    hal::svc::set_hal_status(hal::HAL_STATUS_ASIC_INIT_DONE);
 
     return ret;
 }

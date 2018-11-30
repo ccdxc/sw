@@ -29,6 +29,7 @@
 #include "nic/hal/core/heartbeat/heartbeat.hpp"
 #include "nic/hal/src/stats/stats.hpp"
 #include "nic/hal/iris/delphi/delphi.hpp"
+#include "nic/hal/svc/hal_ext.hpp"
 #include "nic/delphi/utils/log.hpp"
 
 extern "C" void __gcov_flush(void);
@@ -255,7 +256,7 @@ hal_init (hal_cfg_t *hal_cfg)
     }
 
     // notify sysmgr that we are up
-    hal::svc::init_done();
+    hal::svc::hal_init_done();
 
     if (!getenv("DISABLE_FTE") &&
         (hal_cfg->forwarding_mode != HAL_FORWARDING_MODE_CLASSIC) &&

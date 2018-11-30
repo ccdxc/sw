@@ -7,9 +7,8 @@ MODULE_SOLIBS   := nicmgr nicmgr_sysmgr nicmgr_upgrade hal_api mnet \
                     ${NIC_SDK_SOLIBS} trace mtrack bm_allocator \
                     commonproto nicmgrproto halproto \
                     delphisdk upgrade upgrade_app upgradeutils sysmgr \
-                    hal_mock \
                     capri_csrint capri_csr_cpu_hal \
-                    pdcapri pdcommon \
+                    pdcapri pdcommon hal_mock \
                     p4pd p4pd_common_p4plus_rxdma p4pd_common_p4plus_txdma p4pd_${PIPELINE} \
                     asicpd ${NIC_HAL_PD_SOLIBS_${ARCH}}
 MODULE_LDLIBS   := crypto ${NIC_COMMON_LDLIBS} \

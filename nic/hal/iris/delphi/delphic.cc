@@ -9,6 +9,7 @@
 #include "nic/hal/iris/delphi/delphi.hpp"
 #include "nic/hal/iris/delphi/delphic.hpp"
 #include "nic/hal/iris/sysmgr/sysmgr.hpp"
+#include "nic/hal/svc/hal_ext.hpp"
 #include "nic/linkmgr/delphi/linkmgr_delphi.hpp"
 #include "gen/proto/hal.delphi.hpp"
 
@@ -106,7 +107,7 @@ delphi_client::init_done(void)
 
 // API to invoke when HAL is ready for external world
 void
-init_done (void)
+hal_init_done (void)
 {
     g_delphic->init_done();
 }

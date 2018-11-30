@@ -7,7 +7,7 @@
 #include "nic/hal/svc/interface_svc.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/hal/plugins/cfg/lif/lif.hpp"
-#include "nic/hal/iris/delphi/delphic.hpp"
+#include "nic/hal/svc/hal_ext.hpp"
 
 Status
 InterfaceServiceImpl::LifCreate(ServerContext *context,

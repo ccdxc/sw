@@ -23,6 +23,7 @@
 #include "nic/hal/pd/capri/capri.hpp"
 #include "nic/hal/pd/capri/capri_state.hpp"
 #include "nic/sdk/include/sdk/utils.hpp"
+#include "nic/hal/svc/hal_ext.hpp"
 
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
@@ -277,6 +278,7 @@ capri_txs_scheduler_init (uint32_t admin_cos, hal::hal_cfg_t *hal_cfg)
 
     // init timer post init done
     capri_txs_timer_init_post(CAPRI_TIMER_NUM_KEY_CACHE_LINES);
+    hal::svc::set_hal_status(hal::HAL_STATUS_SCHEDULER_INIT_DONE);
 
     HAL_TRACE_DEBUG("Set hbm base addr for TXS sched to {:#x}, dtdm_lo_map {:#x}, dtdm_hi_map {:#x}",
                     txs_sched_hbm_base_addr, dtdm_lo_map, dtdm_hi_map);

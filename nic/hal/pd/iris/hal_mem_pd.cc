@@ -21,6 +21,7 @@
 #include "nic/hal/pd/iris/aclqos/acl_pd.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/hal/pd/p4pd/p4pd_api.hpp"
+#include "nic/hal/svc/hal_ext.hpp"
 #include "gen/p4gen/p4/include/p4pd.h"
 #include "nic/include/hal_pd.hpp"
 #include "nic/sdk/include/sdk/periodic.hpp"
@@ -1141,6 +1142,7 @@ pd_mem_init_phase2 (pd_func_args_t *pd_func_args)
     HAL_ASSERT(asicpd_program_table_mpu_pc() == HAL_RET_OK);
     HAL_ASSERT(asicpd_deparser_init() == HAL_RET_OK);
     HAL_ASSERT(asicpd_program_hbm_table_base_addr() == HAL_RET_OK);
+    hal::svc::set_hal_status(hal::HAL_STATUS_MEM_INIT_DONE);
 
     return HAL_RET_OK;
 }

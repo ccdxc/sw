@@ -5,6 +5,7 @@
 #include "nic/include/hal_mem.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 #include "gen/proto/types.pb.h"
+#include "nic/hal/svc/hal_ext.hpp"
 
 namespace hal {
 
@@ -144,6 +145,16 @@ hal_prepare_rsp (hal_ret_t ret)
 {
     return types::API_STATUS_OK;
 }
+
+namespace svc {
+
+void
+set_hal_status (hal::hal_status_t hal_status)
+{
+    return;
+}
+
+}    // namespace svc
 
 namespace pd {
 
