@@ -4,7 +4,7 @@ import { Utility } from '@app/common/Utility';
 import { ControllerService } from '@app/services/controller.service';
 import { MetricsqueryService as MetricsqueryGenService } from '@app/services/generated/metricsquery.service';
 import { PollingInstance, PollUtility } from '@app/services/PollUtility';
-import { IMetrics_queryQuerySpec, Metrics_queryQuerySpec } from '@sdk/v1/models/generated/metrics_query';
+import { IMetrics_queryQuerySpec, Metrics_queryQuerySpec, Metrics_queryQueryList } from '@sdk/v1/models/generated/metrics_query';
 
 import { IMetrics_queryQueryResponse, Metrics_queryQueryResponse } from '@sdk/v1/models/metrics_query';
 
@@ -58,7 +58,9 @@ export class MetricsqueryService extends MetricsqueryGenService {
    */
   protected pollingFetchData(key, body, useRealData): void {
     const query = new Metrics_queryQuerySpec(body);
-    this.PostQuery(query).subscribe(
+    const queryList = new Metrics_queryQueryList();
+    queryList.queries = [query.getModelValues()]
+    this.PostQuery(queryList).subscribe(
       (resp) => {
         const options = this.pollingOptionsMap[key];
         const respBody = new Metrics_queryQueryResponse(resp.body as any);

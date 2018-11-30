@@ -17,40 +17,6 @@ import (
 // Dummy definitions to suppress nonused warnings
 var _ api.ObjectMeta
 
-func encodeHTTPObjectSelector(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPObjectSelector(_ context.Context, r *http.Request) (interface{}, error) {
-	var req ObjectSelector
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqObjectSelector encodes GRPC request
-func EncodeGrpcReqObjectSelector(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*ObjectSelector)
-	return req, nil
-}
-
-// DecodeGrpcReqObjectSelector decodes GRPC request
-func DecodeGrpcReqObjectSelector(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*ObjectSelector)
-	return req, nil
-}
-
-// EncodeGrpcRespObjectSelector encodes GRC response
-func EncodeGrpcRespObjectSelector(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespObjectSelector decodes GRPC response
-func DecodeGrpcRespObjectSelector(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
 func encodeHTTPPaginationSpec(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -82,6 +48,40 @@ func EncodeGrpcRespPaginationSpec(ctx context.Context, response interface{}) (in
 
 // DecodeGrpcRespPaginationSpec decodes GRPC response
 func DecodeGrpcRespPaginationSpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPQueryList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPQueryList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req QueryList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqQueryList encodes GRPC request
+func EncodeGrpcReqQueryList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*QueryList)
+	return req, nil
+}
+
+// DecodeGrpcReqQueryList decodes GRPC request
+func DecodeGrpcReqQueryList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*QueryList)
+	return req, nil
+}
+
+// EncodeGrpcRespQueryList encodes GRC response
+func EncodeGrpcRespQueryList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespQueryList decodes GRPC response
+func DecodeGrpcRespQueryList(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

@@ -32,7 +32,7 @@ var _ = utilities.NewDoubleArray
 var _ = apiutils.CtxKeyObjKind
 
 func request_MetricsV1_Query_0(ctx context.Context, marshaler runtime.Marshaler, client MetricsV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	protoReq := &QuerySpec{}
+	protoReq := &QueryList{}
 	var smetadata runtime.ServerMetadata
 
 	ver := req.Header.Get("Grpc-Metadata-Req-Version")
@@ -65,7 +65,7 @@ var (
 )
 
 func request_MetricsV1_Query_1(ctx context.Context, marshaler runtime.Marshaler, client MetricsV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	protoReq := &QuerySpec{}
+	protoReq := &QueryList{}
 	var smetadata runtime.ServerMetadata
 
 	ver := req.Header.Get("Grpc-Metadata-Req-Version")

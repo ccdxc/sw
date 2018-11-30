@@ -13,8 +13,8 @@ import (
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
-func decodeHTTPQuerySpec(r *http.Request) (*metrics_query.QuerySpec, error) {
-	var req metrics_query.QuerySpec
+func decodeHTTPQueryList(r *http.Request) (*metrics_query.QueryList, error) {
+	var req metrics_query.QueryList
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
@@ -39,15 +39,19 @@ func TestQuery(t *testing.T) {
 
 	cases := []struct {
 		name          string
-		querySpec     *metrics_query.QuerySpec
+		queryList     *metrics_query.QueryList
 		queryResponse *QueryResponse
 		headerCode    int
 		result        bool
 	}{
 		{
 			name: "Field Query [pass]",
-			querySpec: &metrics_query.QuerySpec{
-				Fields: []string{"Field1"},
+			queryList: &metrics_query.QueryList{
+				Queries: []*metrics_query.QuerySpec{
+					&metrics_query.QuerySpec{
+						Fields: []string{"Field1"},
+					},
+				},
 			},
 			queryResponse: sampleQueryResponse,
 			headerCode:    200,
@@ -55,8 +59,12 @@ func TestQuery(t *testing.T) {
 		},
 		{
 			name: "Invalid Query [fail]",
-			querySpec: &metrics_query.QuerySpec{
-				Fields: []string{"Field1"},
+			queryList: &metrics_query.QueryList{
+				Queries: []*metrics_query.QuerySpec{
+					&metrics_query.QuerySpec{
+						Fields: []string{"Field1"},
+					},
+				},
 			},
 			queryResponse: sampleQueryResponse,
 			headerCode:    400,
@@ -67,13 +75,13 @@ func TestQuery(t *testing.T) {
 	testCaseNumber := 0
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		querySpec, err := decodeHTTPQuerySpec(r)
+		queryList, err := decodeHTTPQueryList(r)
 		if err != nil {
 			t.Errorf("Failed to decode request %s", err)
 		}
 		c := cases[testCaseNumber]
-		Assert(t, reflect.DeepEqual(c.querySpec, querySpec),
-			fmt.Sprintf("expected returned object [%v], got [%v], [%s] test failed", c.querySpec, querySpec, c.name))
+		Assert(t, reflect.DeepEqual(c.queryList, queryList),
+			fmt.Sprintf("expected returned object [%v], got [%v], [%s] test failed", c.queryList, queryList, c.name))
 
 		// Sending response back
 		w.WriteHeader(c.headerCode)
@@ -93,7 +101,7 @@ func TestQuery(t *testing.T) {
 	for index, c := range cases {
 		testCaseNumber = index
 		t.Logf(" -> Test [ %s ]", c.name)
-		resp, err := client.Query(ctx, c.querySpec)
+		resp, err := client.Query(ctx, c.queryList)
 		if err != nil && c.result {
 			t.Errorf("   ** [%s] Query should have passed, [%s] test failed", c.name, err)
 		}

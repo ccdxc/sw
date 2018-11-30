@@ -49,7 +49,7 @@ type adapterMetricsV1 struct {
 	gw      apigw.APIGateway
 }
 
-func (a adapterMetricsV1) Query(oldctx oldcontext.Context, t *metrics_query.QuerySpec, options ...grpc.CallOption) (*metrics_query.QueryResponse, error) {
+func (a adapterMetricsV1) Query(oldctx oldcontext.Context, t *metrics_query.QueryList, options ...grpc.CallOption) (*metrics_query.QueryResponse, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("Query")
@@ -58,7 +58,7 @@ func (a adapterMetricsV1) Query(oldctx oldcontext.Context, t *metrics_query.Quer
 	}
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
-		in := i.(*metrics_query.QuerySpec)
+		in := i.(*metrics_query.QueryList)
 		return a.service.Query(ctx, in)
 	}
 	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)

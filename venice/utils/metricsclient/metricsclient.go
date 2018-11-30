@@ -63,9 +63,9 @@ func NewMetricsClient(instance string) (*MetricsClient, error) {
 }
 
 // Query makes a metrics query and returns the Query Response
-func (r *MetricsClient) Query(ctx context.Context, qs *metrics_query.QuerySpec) (*QueryResponse, error) {
+func (r *MetricsClient) Query(ctx context.Context, ql *metrics_query.QueryList) (*QueryResponse, error) {
 	path := "/metrics/v1/query"
-	req, err := r.getHTTPRequest(ctx, qs, "POST", path)
+	req, err := r.getHTTPRequest(ctx, ql, "POST", path)
 	if err != nil {
 		return nil, err
 	}

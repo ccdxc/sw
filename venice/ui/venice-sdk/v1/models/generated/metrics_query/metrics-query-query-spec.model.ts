@@ -7,14 +7,15 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
-import { Metrics_queryObjectSelector, IMetrics_queryObjectSelector } from './metrics-query-object-selector.model';
+import { LabelsSelector, ILabelsSelector } from './labels-selector.model';
 import { Metrics_queryQuerySpec_function,  } from './enums';
 import { Metrics_queryPaginationSpec, IMetrics_queryPaginationSpec } from './metrics-query-pagination-spec.model';
 
 export interface IMetrics_queryQuerySpec {
     'kind'?: string;
     'api-version'?: string;
-    'meta'?: IMetrics_queryObjectSelector;
+    'name'?: string;
+    'selector'?: ILabelsSelector;
     'fields'?: Array<string>;
     'function'?: Metrics_queryQuerySpec_function;
     'start-time'?: Date;
@@ -28,7 +29,9 @@ export interface IMetrics_queryQuerySpec {
 export class Metrics_queryQuerySpec extends BaseModel implements IMetrics_queryQuerySpec {
     'kind': string = null;
     'api-version': string = null;
-    'meta': Metrics_queryObjectSelector = null;
+    /** Name is the name of the API object. */
+    'name': string = null;
+    'selector': LabelsSelector = null;
     /** must start and end with alpha numeric and can have alphanumeric, -, _, ., : */
     'fields': Array<string> = null;
     'function': Metrics_queryQuerySpec_function = null;
@@ -47,7 +50,11 @@ export class Metrics_queryQuerySpec extends BaseModel implements IMetrics_queryQ
         'api-version': {
             type: 'string'
         },
-        'meta': {
+        'name': {
+            description:  'Name is the name of the API object.',
+            type: 'string'
+        },
+        'selector': {
             type: 'object'
         },
         'fields': {
@@ -98,7 +105,7 @@ export class Metrics_queryQuerySpec extends BaseModel implements IMetrics_queryQ
     */
     constructor(values?: any) {
         super();
-        this['meta'] = new Metrics_queryObjectSelector();
+        this['selector'] = new LabelsSelector();
         this['fields'] = new Array<string>();
         this['pagination'] = new Metrics_queryPaginationSpec();
         this.setValues(values);
@@ -119,8 +126,13 @@ export class Metrics_queryQuerySpec extends BaseModel implements IMetrics_queryQ
         } else if (fillDefaults && Metrics_queryQuerySpec.hasDefaultValue('api-version')) {
             this['api-version'] = Metrics_queryQuerySpec.propInfo['api-version'].default;
         }
+        if (values && values['name'] != null) {
+            this['name'] = values['name'];
+        } else if (fillDefaults && Metrics_queryQuerySpec.hasDefaultValue('name')) {
+            this['name'] = Metrics_queryQuerySpec.propInfo['name'].default;
+        }
         if (values) {
-            this['meta'].setValues(values['meta']);
+            this['selector'].setValues(values['selector']);
         }
         if (values && values['fields'] != null) {
             this['fields'] = values['fields'];
@@ -162,7 +174,8 @@ export class Metrics_queryQuerySpec extends BaseModel implements IMetrics_queryQ
             this._formGroup = new FormGroup({
                 'kind': new FormControl(this['kind']),
                 'api-version': new FormControl(this['api-version']),
-                'meta': this['meta'].$formGroup,
+                'name': new FormControl(this['name']),
+                'selector': this['selector'].$formGroup,
                 'fields': new FormControl(this['fields']),
                 'function': new FormControl(this['function'], [enumValidator(Metrics_queryQuerySpec_function), ]),
                 'start-time': new FormControl(this['start-time']),
@@ -183,7 +196,8 @@ export class Metrics_queryQuerySpec extends BaseModel implements IMetrics_queryQ
         if (this._formGroup) {
             this._formGroup.controls['kind'].setValue(this['kind']);
             this._formGroup.controls['api-version'].setValue(this['api-version']);
-            this['meta'].setFormGroupValuesToBeModelValues();
+            this._formGroup.controls['name'].setValue(this['name']);
+            this['selector'].setFormGroupValuesToBeModelValues();
             this._formGroup.controls['fields'].setValue(this['fields']);
             this._formGroup.controls['function'].setValue(this['function']);
             this._formGroup.controls['start-time'].setValue(this['start-time']);

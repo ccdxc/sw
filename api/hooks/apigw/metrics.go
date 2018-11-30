@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/api/generated/metrics_query"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/utils/authz"
@@ -17,13 +18,22 @@ type metricsHooks struct {
 // operations is a pre authz hook to determine authz.Operation
 func (e *metricsHooks) operations(ctx context.Context, in interface{}) (context.Context, interface{}, error) {
 	e.logger.Debugf("APIGw metrics operations authz hook called for obj [%#v]", in)
+	// If tenant is not set in the request, we mutate the request to have the user's tenant
 	user, ok := apigwpkg.UserFromContext(ctx)
 	if !ok {
 		e.logger.Errorf("No user present in context passed to metrics operations authz hook")
 		return ctx, in, apigwpkg.ErrNoUserInContext
 	}
+	req, ok := in.(*metrics_query.QueryList)
+	if !ok {
+		e.logger.Errorf("Unable to parse metric query request")
+		return ctx, in, apigwpkg.ErrNoUserInContext
+	}
+	if req.Tenant == "" {
+		req.Tenant = user.GetTenant()
+	}
 	resource := authz.NewResource(
-		user.GetTenant(),
+		req.Tenant,
 		"metrics_query",
 		auth.Permission_MetricsQuery.String(),
 		"",
@@ -34,7 +44,7 @@ func (e *metricsHooks) operations(ctx context.Context, in interface{}) (context.
 	operations = append(operations, authz.NewOperation(resource, auth.Permission_Read.String()))
 
 	nctx := apigwpkg.NewContextWithOperations(ctx, operations...)
-	return nctx, in, nil
+	return nctx, req, nil
 }
 
 func registerMetricsHooks(svc apigw.APIGatewayService, l log.Logger) error {

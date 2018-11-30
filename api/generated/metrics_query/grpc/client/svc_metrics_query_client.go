@@ -29,7 +29,7 @@ func NewMetricsV1(conn *grpc.ClientConn, logger log.Logger) metrics_query.Servic
 			conn,
 			"metrics_query.MetricsV1",
 			"Query",
-			metrics_query.EncodeGrpcReqQuerySpec,
+			metrics_query.EncodeGrpcReqQueryList,
 			metrics_query.DecodeGrpcRespQueryResponse,
 			&metrics_query.QueryResponse{},
 			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -109,6 +110,18 @@ func TestBrokerTstoreBasic(t *testing.T) {
 		restr, _ := json.Marshal(results)
 		log.Infof("Got result: %v", string(restr))
 	}
+
+	// Perform query with multiple statements
+	queries := make([]string, 0)
+	for idx := 0; idx < numNodes; idx++ {
+		queries = append(queries, fmt.Sprintf("SELECT * FROM cpu%d", idx))
+	}
+	queryString := strings.Join(queries, ";")
+	results, err := brokers[0].ExecuteQuery(context.Background(), "db0", queryString)
+	AssertOk(t, err, "Error executing query")
+	Assert(t, len(results) == numNodes, "got invalid number of results", results)
+	Assert(t, len(results[0].Series) == 1, "got invalid number of series", results[0].Series)
+	Assert(t, len(results[1].Series) == 1, "got invalid number of series", results[1].Series)
 
 	// delete the database
 	err = brokers[0].DeleteDatabase(context.Background(), "db0")

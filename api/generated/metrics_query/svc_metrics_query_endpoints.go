@@ -62,7 +62,7 @@ type EndpointsMetricsV1Server struct {
 }
 
 // Query is endpoint for Query
-func (e EndpointsMetricsV1Client) Query(ctx context.Context, in *QuerySpec) (*QueryResponse, error) {
+func (e EndpointsMetricsV1Client) Query(ctx context.Context, in *QueryList) (*QueryResponse, error) {
 	resp, err := e.QueryEndpoint(ctx, in)
 	if err != nil {
 		return &QueryResponse{}, err
@@ -80,7 +80,7 @@ func (e EndpointsMetricsV1Client) AutoWatchSvcMetricsV1(ctx context.Context, in 
 }
 
 // Query implementation on server Endpoint
-func (e EndpointsMetricsV1Server) Query(ctx context.Context, in QuerySpec) (QueryResponse, error) {
+func (e EndpointsMetricsV1Server) Query(ctx context.Context, in QueryList) (QueryResponse, error) {
 	resp, err := e.QueryEndpoint(ctx, in)
 	if err != nil {
 		return QueryResponse{}, err
@@ -91,7 +91,7 @@ func (e EndpointsMetricsV1Server) Query(ctx context.Context, in QuerySpec) (Quer
 // MakeMetricsV1QueryEndpoint creates  Query endpoints for the service
 func MakeMetricsV1QueryEndpoint(s ServiceMetricsV1Server, logger log.Logger) endpoint.Endpoint {
 	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*QuerySpec)
+		req := request.(*QueryList)
 		v, err := s.Query(ctx, *req)
 		return respMetricsV1Query{
 			V:   v,
@@ -147,7 +147,7 @@ type loggingMetricsV1MiddlewareServer struct {
 	next   ServiceMetricsV1Server
 }
 
-func (m loggingMetricsV1MiddlewareClient) Query(ctx context.Context, in *QuerySpec) (resp *QueryResponse, err error) {
+func (m loggingMetricsV1MiddlewareClient) Query(ctx context.Context, in *QueryList) (resp *QueryResponse, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -165,7 +165,7 @@ func (m loggingMetricsV1MiddlewareClient) AutoWatchSvcMetricsV1(ctx context.Cont
 	return nil, errors.New("not implemented")
 }
 
-func (m loggingMetricsV1MiddlewareServer) Query(ctx context.Context, in QuerySpec) (resp QueryResponse, err error) {
+func (m loggingMetricsV1MiddlewareServer) Query(ctx context.Context, in QueryList) (resp QueryResponse, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -212,7 +212,7 @@ func makeURIMetricsV1AutoWatchSvcMetricsV1WatchOper(in *api.ListWatchOptions) st
 
 }
 
-func (r *EndpointsMetricsV1RestClient) MetricsV1QueryEndpoint(ctx context.Context, in *QuerySpec) (*QueryResponse, error) {
+func (r *EndpointsMetricsV1RestClient) MetricsV1QueryEndpoint(ctx context.Context, in *QueryList) (*QueryResponse, error) {
 	return nil, errors.New("not allowed")
 }
 

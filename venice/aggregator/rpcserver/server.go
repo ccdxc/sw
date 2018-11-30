@@ -59,7 +59,7 @@ func (a *AggRPCSrv) Stop() {
 }
 
 // Query implements the grpc method
-func (a *AggRPCSrv) Query(c context.Context, qs *metrics_query.QuerySpec) (*metrics_query.QueryResponse, error) {
+func (a *AggRPCSrv) Query(c context.Context, qs *metrics_query.QueryList) (*metrics_query.QueryResponse, error) {
 	/*
 		// based on the query spec, build an influx query.
 		iQuery, err := InfluxQuery(qs)

@@ -30,102 +30,18 @@
         },
         "parameters": [
           {
-            "name": "T.kind",
-            "description": "Kind represents the type of the API object.",
+            "name": "tenant",
+            "description": "Tenant for the request.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "T.api-version",
-            "description": "APIVersion defines the version of the API object. This can only be set by the server.",
+            "name": "namespace",
+            "description": "Namespace for the request.",
             "in": "query",
             "required": false,
             "type": "string"
-          },
-          {
-            "name": "meta.name",
-            "description": "Name is the name of the API object.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "meta.tenant",
-            "description": "Tenant the object belongs to.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "meta.namespace",
-            "description": "Namespace the object belongs to.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "fields",
-            "description": "Fields select the metric fields to be included in the result\nEmpty will include all fields, must contain at least one non-tag field. must start and end with alpha numeric and can have alphanumeric, -, _, ., :",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "function",
-            "description": "Functions specify an operation function to be applied, example mean()/max().",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "start-time",
-            "description": "StartTime selects all metrics with timestamp greater than the StartTime, example 2018-10-18T00:12:00Z.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "end-time",
-            "description": "EndTime selects all metrics with timestamp less than the EndTime, example 2018-09-18T00:12:00Z.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "group-by-time",
-            "description": "GroupbyTime groups series based on the interval specified. should be a valid time duration",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "group-by-field",
-            "description": "GroupbyField groups series based on the field specified. must start and end with alpha numeric and can have alphanumeric, -, _, ., :",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "pagination.offset",
-            "description": "Offset specifies the starting point.",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "pagination.count",
-            "description": "Count specifies the number of series to include.",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
           }
         ],
         "tags": [
@@ -149,7 +65,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/metrics_queryQuerySpec"
+              "$ref": "#/definitions/metrics_queryQueryList"
             }
           }
         ],
@@ -486,28 +402,6 @@
       },
       "description": "Selector is used to select objects by labels. Requirements in the selector are ANDed.\nA selector with no Requirements does not select anything."
     },
-    "metrics_queryObjectSelector": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Name is the name of the API object."
-        },
-        "tenant": {
-          "type": "string",
-          "description": "Tenant the object belongs to."
-        },
-        "namespace": {
-          "type": "string",
-          "description": "Namespace the object belongs to."
-        },
-        "selector": {
-          "$ref": "#/definitions/labelsSelector",
-          "title": "Selector is an expression that selects one or more points"
-        }
-      },
-      "title": "ObjectSelector selects one or more objects of the same Kind\nfor the metrics query"
-    },
     "metrics_queryPaginationSpec": {
       "type": "object",
       "properties": {
@@ -524,18 +418,43 @@
       },
       "description": "PaginationSpec specifies how many metrics instances to include\nin the result."
     },
+    "metrics_queryQueryList": {
+      "type": "object",
+      "properties": {
+        "tenant": {
+          "type": "string",
+          "title": "Tenant for the request"
+        },
+        "namespace": {
+          "type": "string",
+          "title": "Namespace for the request"
+        },
+        "queries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/metrics_queryQuerySpec"
+          },
+          "title": "List of queries to execute"
+        }
+      },
+      "title": "QueryList contains a list of queries to execute"
+    },
     "metrics_queryQueryResponse": {
       "type": "object",
       "properties": {
+        "tenant": {
+          "type": "string",
+          "title": "Tenant for the request"
+        },
+        "namespace": {
+          "type": "string",
+          "title": "Namespace for the request"
+        },
         "results": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/metrics_queryQueryResult"
           }
-        },
-        "meta": {
-          "$ref": "#/definitions/metrics_queryObjectSelector",
-          "title": "ObjectSelector is the selectors used for the query"
         }
       },
       "title": "QueryResponse is the response send out"
@@ -565,9 +484,12 @@
         "api-version": {
           "type": "string"
         },
-        "meta": {
-          "$ref": "#/definitions/metrics_queryObjectSelector",
-          "title": "ObjectSelectot selects one or more objects of the same kind for query"
+        "name": {
+          "type": "string",
+          "description": "Name is the name of the API object."
+        },
+        "selector": {
+          "$ref": "#/definitions/labelsSelector"
         },
         "fields": {
           "type": "array",

@@ -255,9 +255,12 @@ func (br *Broker) ExecuteQuery(ctx context.Context, database string, qry string)
 
 	// parse each statement
 	var results []*query.Result
-	for _, stmt := range pq.Statements {
+	for i, stmt := range pq.Statements {
 		if selStmt, ok := stmt.(*influxql.SelectStatement); ok {
 			// get the measurement name
+			if len(selStmt.Sources.Measurements()) != 1 {
+				return nil, errors.New("Query must have only one measurement")
+			}
 			for _, measurement := range selStmt.Sources.Measurements() {
 				// get the cluster
 				cl := br.GetCluster(meta.ClusterTypeTstore)
@@ -272,7 +275,7 @@ func (br *Broker) ExecuteQuery(ctx context.Context, database string, qry string)
 					return nil, err
 				}
 
-				resp, err := br.queryShard(ctx, shard, database, qry)
+				resp, err := br.queryShard(ctx, shard, database, selStmt.String())
 				if err != nil {
 					log.Errorf("Error during ExecuteQuery rpc call. Err: %v", err)
 					return nil, err
@@ -285,6 +288,9 @@ func (br *Broker) ExecuteQuery(ctx context.Context, database string, qry string)
 					if err != nil {
 						return nil, err
 					}
+					// Since we are making each query individually,
+					// we need to manually set the StatementID
+					rslt.StatementID = i
 					results = append(results, &rslt)
 				}
 			}

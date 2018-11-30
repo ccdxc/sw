@@ -25,7 +25,7 @@ service MetricsV1 {
     option (venice.apiVersion) = "v1";
 
     //  Query is the telemetry metrics query RPC, http://localhost:9000/metrics/v1/query
-    rpc Query (QuerySpec) returns (QueryResponse) {
+    rpc Query (QueryList) returns (QueryResponse) {
         option (google.api.http) = {
             post: "/query"
             body: "*"

@@ -12,19 +12,6 @@ import "github.com/pensando/sw/api/meta.proto";
 import "github.com/pensando/sw/api/fields/selector.proto";
 import "github.com/pensando/sw/api/labels/selector.proto";
 
-// ObjectSelector selects one or more objects of the same Kind
-// for the metrics query
-message ObjectSelector {
-    // Name is the name of the API object.
-    string Name         = 2 [(gogoproto.jsontag) = "name,omitempty"];
-    // Tenant the object belongs to.
-    string Tenant       = 3 [(gogoproto.jsontag) = "tenant,omitempty"];
-    // Namespace the object belongs to.
-    string Namespace    = 4 [(gogoproto.jsontag) = "namespace,omitempty"];
-    // Selector is an expression that selects one or more points
-    labels.Selector Selector   = 5 [(gogoproto.jsontag) = "selector,omitempty"];
-}
-
 // TSDBFunctionType specifies an operation to perform on metrics
 enum TsdbFunctionType {
     NONE = 0; // none
@@ -48,23 +35,34 @@ message PaginationSpec {
 //     -  A pagination spec
 message QuerySpec {
     api.TypeMeta T            = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-    // ObjectSelectot selects one or more objects of the same kind for query
-    ObjectSelector O          = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    // Name is the name of the API object.
+    string Name               = 2 [(gogoproto.jsontag) = "name,omitempty"];
+    labels.Selector Selector  = 3 [(gogoproto.jsontag) = "selector,omitempty"];
     // Fields select the metric fields to be included in the result
     // Empty will include all fields, must contain at least one non-tag field
-    repeated string Fields    = 3 [(gogoproto.jsontag) = "fields,omitempty", (venice.check)="RegExp(name)"];
+    repeated string Fields    = 4 [(gogoproto.jsontag) = "fields,omitempty", (venice.check)="RegExp(name)"];
     // Functions specify an operation function to be applied, example mean()/max()
-    string Function           = 4 [(gogoproto.jsontag) = "function,omitempty", (venice.check) = "StrEnum(TsdbFunctionType)"];
+    string Function           = 5 [(gogoproto.jsontag) = "function,omitempty", (venice.check) = "StrEnum(TsdbFunctionType)"];
     // StartTime selects all metrics with timestamp greater than the StartTime, example 2018-10-18T00:12:00Z
-    api.Timestamp StartTime   = 5 [(gogoproto.jsontag) = "start-time,omitempty"];
+    api.Timestamp StartTime   = 6 [(gogoproto.jsontag) = "start-time,omitempty"];
     // EndTime selects all metrics with timestamp less than the EndTime, example 2018-09-18T00:12:00Z
-    api.Timestamp EndTime     = 6 [(gogoproto.jsontag) = "end-time,omitempty"];
+    api.Timestamp EndTime     = 7 [(gogoproto.jsontag) = "end-time,omitempty"];
     // GroupbyTime groups series based on the interval specified
-    string GroupbyTime        = 7 [(gogoproto.jsontag) = "group-by-time,omitempty", (venice.check)="Duration()"];
+    string GroupbyTime        = 8 [(gogoproto.jsontag) = "group-by-time,omitempty", (venice.check)="Duration()"];
     // GroupbyField groups series based on the field specified
-    string GroupbyField       = 8 [(gogoproto.jsontag) = "group-by-field,omitempty", (venice.check)="RegExp(name)"];
+    string GroupbyField       = 9 [(gogoproto.jsontag) = "group-by-field,omitempty", (venice.check)="RegExp(name)"];
     // PaginatioSpec specifies the number of series to include
-    PaginationSpec Pagination = 9 [(gogoproto.jsontag) = "pagination,omitempty"];
+    PaginationSpec Pagination = 10 [(gogoproto.jsontag) = "pagination,omitempty"];
+}
+
+// QueryList contains a list of queries to execute
+message QueryList {
+    // Tenant for the request
+    string Tenant     = 1 [(gogoproto.jsontag) = "tenant,omitempty"];
+    // Namespace for the request
+    string Namespace  = 2 [(gogoproto.jsontag) = "namespace,omitempty"];
+    // List of queries to execute
+    repeated QuerySpec Queries = 3 [(gogoproto.jsontag) = "queries,omitempty"];
 }
 
 //
@@ -88,7 +86,9 @@ message QueryResult {
 
 // QueryResponse is the response send out
 message QueryResponse {
-   repeated QueryResult Results = 1 [(gogoproto.jsontag) = "results,omitempty"];
-    // ObjectSelector is the selectors used for the query 
-    ObjectSelector O          = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    // Tenant for the request
+    string Tenant     = 1 [(gogoproto.jsontag) = "tenant,omitempty"];
+    // Namespace for the request
+    string Namespace  = 2 [(gogoproto.jsontag) = "namespace,omitempty"];
+   repeated QueryResult Results = 3 [(gogoproto.jsontag) = "results,omitempty"];
 }

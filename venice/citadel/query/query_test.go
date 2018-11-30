@@ -102,15 +102,23 @@ func TestBuildCitadelQuery(t *testing.T) {
 				TypeMeta: api.TypeMeta{
 					Kind: "test-db",
 				},
-				ObjectSelector: metrics_query.ObjectSelector{
-					Tenant: "default",
-					Selector: &labels.Selector{
-						Requirements: []*labels.Requirement{
-							&labels.Requirement{
-								Key:      "meta.name",
-								Operator: "equals",
-								Values:   []string{"test"},
-							},
+				Name:   "test",
+				Fields: []string{"cpu"},
+			},
+			resp: "SELECT cpu FROM test-db WHERE \"meta.name\" = 'test'",
+			pass: true,
+		},
+		{
+			qs: &metrics_query.QuerySpec{
+				TypeMeta: api.TypeMeta{
+					Kind: "test-db",
+				},
+				Selector: &labels.Selector{
+					Requirements: []*labels.Requirement{
+						&labels.Requirement{
+							Key:      "meta.name",
+							Operator: "equals",
+							Values:   []string{"test"},
 						},
 					},
 				},
@@ -167,7 +175,85 @@ func TestBuildCitadelQuery(t *testing.T) {
 	}
 }
 
-func TestValidate(t *testing.T) {
+func TestValidateQueryList(t *testing.T) {
+	q := &Server{
+		grpcSrv: nil,
+		broker:  nil,
+	}
+	testQs := []struct {
+		ql      *metrics_query.QueryList
+		errMsg  string
+		errCode codes.Code
+		pass    bool
+	}{
+		{
+			ql:      nil,
+			errMsg:  "query required",
+			errCode: codes.InvalidArgument,
+			pass:    false,
+		},
+		{
+			ql:      &metrics_query.QueryList{},
+			errMsg:  "query required",
+			errCode: codes.InvalidArgument,
+			pass:    false,
+		},
+		{
+			ql: &metrics_query.QueryList{
+				Queries: []*metrics_query.QuerySpec{
+					&metrics_query.QuerySpec{
+						TypeMeta: api.TypeMeta{
+							Kind: "Node",
+						},
+						Function: "none",
+					},
+				},
+			},
+			errMsg:  "tenant required",
+			errCode: codes.InvalidArgument,
+			pass:    false,
+		},
+		{
+			ql: &metrics_query.QueryList{
+				Queries: []*metrics_query.QuerySpec{
+					&metrics_query.QuerySpec{
+						TypeMeta: api.TypeMeta{
+							Kind: "Node",
+						},
+						Function: "none",
+					},
+				},
+				Tenant: "testTenant",
+			},
+			errMsg:  "",
+			errCode: codes.OK,
+			pass:    true,
+		},
+	}
+
+	for _, i := range testQs {
+		err := q.validateQueryList(i.ql)
+		if i.pass && err != nil {
+			t.Errorf("Expected error to be nil but was %v", err)
+		} else if !i.pass && err == nil {
+			t.Errorf("Expected test to fail but err was nil")
+		} else if err != nil {
+			errStatus, ok := status.FromError(err)
+			if !ok {
+				t.Errorf("Expected GRPC error, but was unable to parse the returned error %v", err)
+				return
+			}
+			if i.errMsg != errStatus.Message() {
+				t.Errorf("Expected error message to be %s but error was %v", i.errMsg, errStatus.Message())
+			}
+			if i.errCode != errStatus.Code() {
+				t.Errorf("Expected error code to be %d but error was %v", i.errCode, errStatus.Code())
+			}
+		}
+	}
+}
+
+func TestValidateQuerySpec(t *testing.T) {
 	q := &Server{
 		grpcSrv: nil,
 		broker:  nil,
@@ -215,8 +301,10 @@ func TestValidate(t *testing.T) {
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
 				},
+				Name:     "invalid name",
+				Function: "none",
 			},
-			errMsg:  "tenant required",
+			errMsg:  "Name selector invalid name was invalid",
 			errCode: codes.InvalidArgument,
 			pass:    false,
 		},
@@ -225,8 +313,17 @@ func TestValidate(t *testing.T) {
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
 				},
-				ObjectSelector: metrics_query.ObjectSelector{
-					Tenant: "default",
+				Name:     "validname",
+				Function: "none",
+			},
+			errMsg:  "",
+			errCode: codes.OK,
+			pass:    true,
+		},
+		{
+			qs: &metrics_query.QuerySpec{
+				TypeMeta: api.TypeMeta{
+					Kind: "Node",
 				},
 				Function: "fakeFunction",
 			},
@@ -239,9 +336,6 @@ func TestValidate(t *testing.T) {
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
 				},
-				ObjectSelector: metrics_query.ObjectSelector{
-					Tenant: "default",
-				},
 				Function: "max",
 			},
 			errMsg:  "Function MAX requires exactly one field",
@@ -252,9 +346,6 @@ func TestValidate(t *testing.T) {
 			qs: &metrics_query.QuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
-				},
-				ObjectSelector: metrics_query.ObjectSelector{
-					Tenant: "default",
 				},
 				Function: "max",
 				Fields:   []string{"f1"},
@@ -268,9 +359,6 @@ func TestValidate(t *testing.T) {
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
 				},
-				ObjectSelector: metrics_query.ObjectSelector{
-					Tenant: "default",
-				},
 				Function: "max",
 				Fields:   []string{"f1", "f2"},
 			},
@@ -283,9 +371,6 @@ func TestValidate(t *testing.T) {
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
 				},
-				ObjectSelector: metrics_query.ObjectSelector{
-					Tenant: "default",
-				},
 				Function: "mean",
 			},
 			errMsg:  "",
@@ -296,9 +381,6 @@ func TestValidate(t *testing.T) {
 			qs: &metrics_query.QuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
-				},
-				ObjectSelector: metrics_query.ObjectSelector{
-					Tenant: "default",
 				},
 				Function: "mean",
 				Fields:   []string{"f1"},
@@ -312,9 +394,6 @@ func TestValidate(t *testing.T) {
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
 				},
-				ObjectSelector: metrics_query.ObjectSelector{
-					Tenant: "default",
-				},
 				Function: "mean",
 				Fields:   []string{"f1", "f2"},
 			},
@@ -326,9 +405,6 @@ func TestValidate(t *testing.T) {
 			qs: &metrics_query.QuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
-				},
-				ObjectSelector: metrics_query.ObjectSelector{
-					Tenant: "default",
 				},
 				Function: "mean",
 				Fields:   []string{"valid", "invalid field"},
@@ -342,10 +418,7 @@ func TestValidate(t *testing.T) {
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
 				},
-				ObjectSelector: metrics_query.ObjectSelector{
-					Tenant:   "default",
-					Selector: &labels.Selector{},
-				},
+				Selector:     &labels.Selector{},
 				Function:     "mean",
 				Fields:       []string{},
 				GroupbyField: "invalid field",
@@ -359,11 +432,8 @@ func TestValidate(t *testing.T) {
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
 				},
-				ObjectSelector: metrics_query.ObjectSelector{
-					Tenant: "default",
-					Selector: &labels.Selector{
-						Requirements: nil,
-					},
+				Selector: &labels.Selector{
+					Requirements: nil,
 				},
 				Function:     "mean",
 				Fields:       []string{},
@@ -378,11 +448,8 @@ func TestValidate(t *testing.T) {
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
 				},
-				ObjectSelector: metrics_query.ObjectSelector{
-					Tenant: "default",
-					Selector: &labels.Selector{
-						Requirements: []*labels.Requirement{},
-					},
+				Selector: &labels.Selector{
+					Requirements: []*labels.Requirement{},
 				},
 				Function:     "mean",
 				Fields:       []string{},
@@ -397,14 +464,11 @@ func TestValidate(t *testing.T) {
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
 				},
-				ObjectSelector: metrics_query.ObjectSelector{
-					Tenant: "default",
-					Selector: &labels.Selector{
-						Requirements: []*labels.Requirement{
-							&labels.Requirement{
-								Key:      "meta.name",
-								Operator: "equals",
-							},
+				Selector: &labels.Selector{
+					Requirements: []*labels.Requirement{
+						&labels.Requirement{
+							Key:      "meta.name",
+							Operator: "equals",
 						},
 					},
 				},
@@ -421,15 +485,12 @@ func TestValidate(t *testing.T) {
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
 				},
-				ObjectSelector: metrics_query.ObjectSelector{
-					Tenant: "default",
-					Selector: &labels.Selector{
-						Requirements: []*labels.Requirement{
-							&labels.Requirement{
-								Key:      "meta.name",
-								Operator: "equals",
-								Values:   []string{"test"},
-							},
+				Selector: &labels.Selector{
+					Requirements: []*labels.Requirement{
+						&labels.Requirement{
+							Key:      "meta.name",
+							Operator: "equals",
+							Values:   []string{"test"},
 						},
 					},
 				},
@@ -446,15 +507,12 @@ func TestValidate(t *testing.T) {
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
 				},
-				ObjectSelector: metrics_query.ObjectSelector{
-					Tenant: "default",
-					Selector: &labels.Selector{
-						Requirements: []*labels.Requirement{
-							&labels.Requirement{
-								Key:      "meta.name",
-								Operator: "equals",
-								Values:   []string{"test"},
-							},
+				Selector: &labels.Selector{
+					Requirements: []*labels.Requirement{
+						&labels.Requirement{
+							Key:      "meta.name",
+							Operator: "equals",
+							Values:   []string{"test"},
 						},
 					},
 				},
@@ -470,7 +528,7 @@ func TestValidate(t *testing.T) {
 	}
 
 	for _, i := range testQs {
-		err := q.validate(i.qs)
+		err := q.validateQuerySpec(i.qs)
 		if i.pass && err != nil {
 			t.Errorf("Expected error to be nil but was %v", err)
 		} else if !i.pass && err == nil {
@@ -511,7 +569,7 @@ func TestQuery(t *testing.T) {
 	}
 
 	testQs := []struct {
-		querySpec    *metrics_query.QuerySpec
+		queryList    *metrics_query.QueryList
 		citadelQuery string
 		errMsg       string
 		// If clusterCheckResponse is not nil, it will mock the given value
@@ -521,22 +579,24 @@ func TestQuery(t *testing.T) {
 		queryResponse        *metrics_query.QueryResponse
 	}{
 		{
-			querySpec:            &metrics_query.QuerySpec{},
+			queryList:            &metrics_query.QueryList{},
 			citadelQuery:         "",
-			errMsg:               "rpc error: code = InvalidArgument desc = kind required",
+			errMsg:               "rpc error: code = InvalidArgument desc = query required",
 			clusterCheckResponse: nil,
 			executeQueryResponse: nil,
 			queryResponse:        nil,
 		},
 		{
-			querySpec: &metrics_query.QuerySpec{
-				TypeMeta: api.TypeMeta{
-					Kind: "Node",
+			queryList: &metrics_query.QueryList{
+				Tenant: "test",
+				Queries: []*metrics_query.QuerySpec{
+					&metrics_query.QuerySpec{
+						TypeMeta: api.TypeMeta{
+							Kind: "Node",
+						},
+						Function: "none",
+					},
 				},
-				ObjectSelector: metrics_query.ObjectSelector{
-					Tenant: "default",
-				},
-				Function: "none",
 			},
 			citadelQuery: "",
 			errMsg:       "Cluster check failed",
@@ -547,27 +607,58 @@ func TestQuery(t *testing.T) {
 			queryResponse:        nil,
 		},
 		{
-			querySpec: &metrics_query.QuerySpec{
-				TypeMeta: api.TypeMeta{
-					Kind: "Node",
-				},
-				ObjectSelector: metrics_query.ObjectSelector{
-					Name:      "testName",
-					Tenant:    "testTenant",
-					Namespace: "testNamespace",
-					Selector: &labels.Selector{
-						Requirements: []*labels.Requirement{
-							&labels.Requirement{
-								Key:      "meta.name",
-								Operator: "equals",
-								Values:   []string{"test"},
+			queryList: &metrics_query.QueryList{
+				Tenant:    "testTenant",
+				Namespace: "testNamespace",
+				Queries: []*metrics_query.QuerySpec{
+					&metrics_query.QuerySpec{
+						TypeMeta: api.TypeMeta{
+							Kind: "Node",
+						},
+						Selector: &labels.Selector{
+							Requirements: []*labels.Requirement{
+								&labels.Requirement{
+									Key:      "meta.name",
+									Operator: "equals",
+									Values:   []string{"test"},
+								},
 							},
 						},
+						Function: "none",
+					},
+					&metrics_query.QuerySpec{
+						TypeMeta: api.TypeMeta{
+							Kind: "Node",
+						},
+						Selector: &labels.Selector{
+							Requirements: []*labels.Requirement{
+								&labels.Requirement{
+									Key:      "meta.name",
+									Operator: "equals",
+									Values:   []string{"test1"},
+								},
+							},
+						},
+						Function: "none",
+					},
+					&metrics_query.QuerySpec{
+						TypeMeta: api.TypeMeta{
+							Kind: "Node",
+						},
+						Selector: &labels.Selector{
+							Requirements: []*labels.Requirement{
+								&labels.Requirement{
+									Key:      "meta.name",
+									Operator: "equals",
+									Values:   []string{"test2"},
+								},
+							},
+						},
+						Function: "none",
 					},
 				},
-				Function: "none",
 			},
-			citadelQuery: "SELECT * FROM Node WHERE \"meta.name\" = 'test'",
+			citadelQuery: "SELECT * FROM Node WHERE \"meta.name\" = 'test'; SELECT * FROM Node WHERE \"meta.name\" = 'test1'; SELECT * FROM Node WHERE \"meta.name\" = 'test2'",
 			errMsg:       "",
 			clusterCheckResponse: &ClusterCheckResponse{
 				err: nil,
@@ -575,10 +666,44 @@ func TestQuery(t *testing.T) {
 			executeQueryResponse: &ExecuteQueryResponse{
 				qr: []*query.Result{
 					&query.Result{
-						StatementID: 1,
+						StatementID: 0,
 						Series: models.Rows{
 							&models.Row{
 								Name:    "test",
+								Tags:    nil,
+								Columns: []string{"time", "value"},
+								Values: [][]interface{}{
+									{8, 10.123, "string", true},
+								},
+								Partial: false,
+							},
+						},
+						Messages: nil,
+						Partial:  false,
+						Err:      nil,
+					},
+					&query.Result{
+						StatementID: 1,
+						Series: models.Rows{
+							&models.Row{
+								Name:    "test1",
+								Tags:    nil,
+								Columns: []string{"time", "value"},
+								Values: [][]interface{}{
+									{8, 10.123, "string", true},
+								},
+								Partial: false,
+							},
+						},
+						Messages: nil,
+						Partial:  false,
+						Err:      nil,
+					},
+					&query.Result{
+						StatementID: 2,
+						Series: models.Rows{
+							&models.Row{
+								Name:    "test2",
 								Tags:    nil,
 								Columns: []string{"time", "value"},
 								Values: [][]interface{}{
@@ -597,7 +722,7 @@ func TestQuery(t *testing.T) {
 			queryResponse: &metrics_query.QueryResponse{
 				Results: []*metrics_query.QueryResult{
 					&metrics_query.QueryResult{
-						StatementID: 1,
+						StatementID: 0,
 						Series: []*metrics_query.ResultSeries{
 							&metrics_query.ResultSeries{
 								Name:    "test",
@@ -632,21 +757,81 @@ func TestQuery(t *testing.T) {
 							},
 						},
 					},
-				},
-				ObjectSelector: metrics_query.ObjectSelector{
-					Name:      "testName",
-					Tenant:    "testTenant",
-					Namespace: "testNamespace",
-					Selector: &labels.Selector{
-						Requirements: []*labels.Requirement{
-							&labels.Requirement{
-								Key:      "meta.name",
-								Operator: "equals",
-								Values:   []string{"test"},
+					&metrics_query.QueryResult{
+						StatementID: 1,
+						Series: []*metrics_query.ResultSeries{
+							&metrics_query.ResultSeries{
+								Name:    "test1",
+								Tags:    nil,
+								Columns: []string{"time", "value"},
+								Values: []*api.InterfaceSlice{
+									&api.InterfaceSlice{
+										Values: []*api.Interface{
+											&api.Interface{
+												Value: &api.Interface_Int64{
+													Int64: 8,
+												},
+											},
+											&api.Interface{
+												Value: &api.Interface_Float{
+													Float: 10.123,
+												},
+											},
+											&api.Interface{
+												Value: &api.Interface_Str{
+													Str: "string",
+												},
+											},
+											&api.Interface{
+												Value: &api.Interface_Bool{
+													Bool: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					&metrics_query.QueryResult{
+						StatementID: 2,
+						Series: []*metrics_query.ResultSeries{
+							&metrics_query.ResultSeries{
+								Name:    "test2",
+								Tags:    nil,
+								Columns: []string{"time", "value"},
+								Values: []*api.InterfaceSlice{
+									&api.InterfaceSlice{
+										Values: []*api.Interface{
+											&api.Interface{
+												Value: &api.Interface_Int64{
+													Int64: 8,
+												},
+											},
+											&api.Interface{
+												Value: &api.Interface_Float{
+													Float: 10.123,
+												},
+											},
+											&api.Interface{
+												Value: &api.Interface_Str{
+													Str: "string",
+												},
+											},
+											&api.Interface{
+												Value: &api.Interface_Bool{
+													Bool: true,
+												},
+											},
+										},
+									},
+								},
 							},
 						},
 					},
 				},
+				Tenant:    "testTenant",
+				Namespace: "testNamespace",
 			},
 		},
 	}
@@ -658,10 +843,10 @@ func TestQuery(t *testing.T) {
 			mockBroker.EXPECT().ClusterCheck().Return(i.clusterCheckResponse.err)
 		}
 		if i.executeQueryResponse != nil {
-			mockBroker.EXPECT().ExecuteQuery(ctx, i.querySpec.Tenant, i.citadelQuery).Return(i.executeQueryResponse.qr, i.executeQueryResponse.err)
+			mockBroker.EXPECT().ExecuteQuery(ctx, i.queryList.Tenant, i.citadelQuery).Return(i.executeQueryResponse.qr, i.executeQueryResponse.err)
 		}
 
-		res, err := srv.Query(context.Background(), i.querySpec)
+		res, err := srv.Query(context.Background(), i.queryList)
 		if i.errMsg == "" {
 			AssertOk(t, err, "Query returned unexpected error %v", err)
 		} else {

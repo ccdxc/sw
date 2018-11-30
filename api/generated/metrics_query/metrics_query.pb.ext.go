@@ -28,27 +28,6 @@ var _ validators.DummyVar
 var validatorMapMetrics_query = make(map[string]map[string][]func(string, interface{}) error)
 
 // Clone clones the object into into or creates one of into is nil
-func (m *ObjectSelector) Clone(into interface{}) (interface{}, error) {
-	var out *ObjectSelector
-	var ok bool
-	if into == nil {
-		out = &ObjectSelector{}
-	} else {
-		out, ok = into.(*ObjectSelector)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *ObjectSelector) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
 func (m *PaginationSpec) Clone(into interface{}) (interface{}, error) {
 	var out *PaginationSpec
 	var ok bool
@@ -67,6 +46,34 @@ func (m *PaginationSpec) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *PaginationSpec) Defaults(ver string) bool {
 	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *QueryList) Clone(into interface{}) (interface{}, error) {
+	var out *QueryList
+	var ok bool
+	if into == nil {
+		out = &QueryList{}
+	} else {
+		out, ok = into.(*QueryList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *QueryList) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Queries {
+		if m.Queries[k] != nil {
+			i := m.Queries[k]
+			ret = i.Defaults(ver) || ret
+		}
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -161,37 +168,28 @@ func (m *ResultSeries) Defaults(ver string) bool {
 
 // Validators
 
-func (m *ObjectSelector) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *PaginationSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
-	if m.Selector != nil {
+	return ret
+}
+
+func (m *QueryList) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Queries {
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := path + dlmtr + "Selector"
-		if errs := m.Selector.Validate(ver, npath, ignoreStatus); errs != nil {
+		npath := fmt.Sprintf("%s%sQueries[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
 	return ret
 }
 
-func (m *PaginationSpec) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	return ret
-}
-
 func (m *QueryResponse) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
-
-	dlmtr := "."
-	if path == "" {
-		dlmtr = ""
-	}
-	npath := path + dlmtr + "ObjectSelector"
-	if errs := m.ObjectSelector.Validate(ver, npath, ignoreStatus); errs != nil {
-		ret = append(ret, errs...)
-	}
 	return ret
 }
 
@@ -202,14 +200,15 @@ func (m *QueryResult) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *QuerySpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
-
-	dlmtr := "."
-	if path == "" {
-		dlmtr = ""
-	}
-	npath := path + dlmtr + "ObjectSelector"
-	if errs := m.ObjectSelector.Validate(ver, npath, ignoreStatus); errs != nil {
-		ret = append(ret, errs...)
+	if m.Selector != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Selector"
+		if errs := m.Selector.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
 	}
 	if vs, ok := validatorMapMetrics_query["QuerySpec"][ver]; ok {
 		for _, v := range vs {

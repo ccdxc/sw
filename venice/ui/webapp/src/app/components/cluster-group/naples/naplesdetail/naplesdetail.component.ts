@@ -16,7 +16,6 @@ import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { Utility } from '@app/common/Utility';
 import { Metrics_queryQuerySpec, IMetrics_queryQuerySpec, Metrics_queryQuerySpec_function } from '@sdk/v1/models/generated/metrics_query';
 import { AlertsEventsSelector } from '@app/components/shared/alertsevents/alertsevents.component';
-import { map } from 'rxjs/internal/operators';
 
 @Component({
   selector: 'app-naplesdetail',
@@ -229,9 +228,6 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
   clusterAvgQuery() {
     const clusterAvgQuery: IMetrics_queryQuerySpec = {
       'kind': 'SmartNIC',
-      'meta': {
-        'tenant': Utility.getInstance().getTenant()
-      },
       function: Metrics_queryQuerySpec_function.MEAN,
       // We don't specify the fields we need, as specifying more than one field
       // while using the average function isn't supported by the backend.

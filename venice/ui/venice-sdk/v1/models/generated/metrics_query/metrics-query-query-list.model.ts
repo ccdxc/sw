@@ -7,53 +7,42 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
-import { LabelsSelector, ILabelsSelector } from './labels-selector.model';
+import { Metrics_queryQuerySpec, IMetrics_queryQuerySpec } from './metrics-query-query-spec.model';
 
-export interface IMetrics_queryObjectSelector {
-    'name'?: string;
+export interface IMetrics_queryQueryList {
     'tenant'?: string;
     'namespace'?: string;
-    'selector'?: ILabelsSelector;
+    'queries'?: Array<IMetrics_queryQuerySpec>;
 }
 
 
-export class Metrics_queryObjectSelector extends BaseModel implements IMetrics_queryObjectSelector {
-    /** Name is the name of the API object. */
-    'name': string = null;
-    /** Tenant the object belongs to. */
+export class Metrics_queryQueryList extends BaseModel implements IMetrics_queryQueryList {
     'tenant': string = null;
-    /** Namespace the object belongs to. */
     'namespace': string = null;
-    'selector': LabelsSelector = null;
+    'queries': Array<Metrics_queryQuerySpec> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'name': {
-            description:  'Name is the name of the API object.',
-            type: 'string'
-        },
         'tenant': {
-            description:  'Tenant the object belongs to.',
             type: 'string'
         },
         'namespace': {
-            description:  'Namespace the object belongs to.',
             type: 'string'
         },
-        'selector': {
+        'queries': {
             type: 'object'
         },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return Metrics_queryObjectSelector.propInfo[propName];
+        return Metrics_queryQueryList.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (Metrics_queryObjectSelector.propInfo[prop] != null &&
-                        Metrics_queryObjectSelector.propInfo[prop].default != null &&
-                        Metrics_queryObjectSelector.propInfo[prop].default != '');
+        return (Metrics_queryQueryList.propInfo[prop] != null &&
+                        Metrics_queryQueryList.propInfo[prop].default != null &&
+                        Metrics_queryQueryList.propInfo[prop].default != '');
     }
 
     /**
@@ -62,7 +51,7 @@ export class Metrics_queryObjectSelector extends BaseModel implements IMetrics_q
     */
     constructor(values?: any) {
         super();
-        this['selector'] = new LabelsSelector();
+        this['queries'] = new Array<Metrics_queryQuerySpec>();
         this.setValues(values);
     }
 
@@ -71,23 +60,18 @@ export class Metrics_queryObjectSelector extends BaseModel implements IMetrics_q
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values && values['name'] != null) {
-            this['name'] = values['name'];
-        } else if (fillDefaults && Metrics_queryObjectSelector.hasDefaultValue('name')) {
-            this['name'] = Metrics_queryObjectSelector.propInfo['name'].default;
-        }
         if (values && values['tenant'] != null) {
             this['tenant'] = values['tenant'];
-        } else if (fillDefaults && Metrics_queryObjectSelector.hasDefaultValue('tenant')) {
-            this['tenant'] = Metrics_queryObjectSelector.propInfo['tenant'].default;
+        } else if (fillDefaults && Metrics_queryQueryList.hasDefaultValue('tenant')) {
+            this['tenant'] = Metrics_queryQueryList.propInfo['tenant'].default;
         }
         if (values && values['namespace'] != null) {
             this['namespace'] = values['namespace'];
-        } else if (fillDefaults && Metrics_queryObjectSelector.hasDefaultValue('namespace')) {
-            this['namespace'] = Metrics_queryObjectSelector.propInfo['namespace'].default;
+        } else if (fillDefaults && Metrics_queryQueryList.hasDefaultValue('namespace')) {
+            this['namespace'] = Metrics_queryQueryList.propInfo['namespace'].default;
         }
         if (values) {
-            this['selector'].setValues(values['selector']);
+            this.fillModelArray<Metrics_queryQuerySpec>(this, 'queries', values['queries'], Metrics_queryQuerySpec);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -96,11 +80,12 @@ export class Metrics_queryObjectSelector extends BaseModel implements IMetrics_q
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'name': new FormControl(this['name']),
                 'tenant': new FormControl(this['tenant']),
                 'namespace': new FormControl(this['namespace']),
-                'selector': this['selector'].$formGroup,
+                'queries': new FormArray([]),
             });
+            // generate FormArray control elements
+            this.fillFormArray<Metrics_queryQuerySpec>('queries', this['queries'], Metrics_queryQuerySpec);
         }
         return this._formGroup;
     }
@@ -111,10 +96,9 @@ export class Metrics_queryObjectSelector extends BaseModel implements IMetrics_q
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this._formGroup.controls['name'].setValue(this['name']);
             this._formGroup.controls['tenant'].setValue(this['tenant']);
             this._formGroup.controls['namespace'].setValue(this['namespace']);
-            this['selector'].setFormGroupValuesToBeModelValues();
+            this.fillModelArray<Metrics_queryQuerySpec>(this, 'queries', this['queries'], Metrics_queryQuerySpec);
         }
     }
 }

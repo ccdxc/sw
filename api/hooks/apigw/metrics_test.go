@@ -41,14 +41,39 @@ func TestMetricsOperationsHook(t *testing.T) {
 					Type:     auth.UserSpec_Local.String(),
 				},
 			},
-			in: &metrics_query.QuerySpec{},
+			in: &metrics_query.QueryList{},
 			expectedOperations: []authz.Operation{
 				authz.NewOperation(authz.NewResource("testTenant",
 					"metrics_query", auth.Permission_MetricsQuery.String(),
 					"", ""),
 					auth.Permission_Read.String()),
 			},
-			out: &metrics_query.QuerySpec{},
+			out: &metrics_query.QueryList{Tenant: "testTenant"},
+			err: false,
+		},
+		{
+			name: "metrics operations hook test",
+			user: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: "User"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testUser",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "password",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			in: &metrics_query.QueryList{Tenant: "differentTenant"},
+			expectedOperations: []authz.Operation{
+				authz.NewOperation(authz.NewResource("differentTenant",
+					"metrics_query", auth.Permission_MetricsQuery.String(),
+					"", ""),
+					auth.Permission_Read.String()),
+			},
+			out: &metrics_query.QueryList{Tenant: "differentTenant"},
 			err: false,
 		},
 	}
@@ -61,7 +86,7 @@ func TestMetricsOperationsHook(t *testing.T) {
 		Assert(t, test.err == (err != nil), fmt.Sprintf("got error [%v], [%s] test failed", err, test.name))
 		operations, _ := apigwpkg.OperationsFromContext(nctx)
 		Assert(t, areOperationsEqual(test.expectedOperations, operations),
-			fmt.Sprintf("unexpected operations, [%s] test failed, expected opqrtaions:%+v, got:%+v", test.name, test.expectedOperations,
+			fmt.Sprintf("unexpected operations, [%s] test failed, expected opertaions:%+v, got:%+v", test.name, test.expectedOperations,
 				operations))
 		Assert(t, reflect.DeepEqual(test.out, out),
 			fmt.Sprintf("expected returned object [%v], got [%v], [%s] test failed", test.out, out, test.name))

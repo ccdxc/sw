@@ -239,9 +239,6 @@ export class NodedetailComponent extends BaseComponent implements OnInit, OnDest
   clusterAvgQuery() {
     const clusterAvgQuery: IMetrics_queryQuerySpec = {
       'kind': 'Node',
-      'meta': {
-        'tenant': Utility.getInstance().getTenant()
-      },
       function: Metrics_queryQuerySpec_function.MEAN,
       // We don't specify the fields we need, as specifying more than one field
       // while using the average function isn't supported by the backend.

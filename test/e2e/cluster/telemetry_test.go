@@ -20,13 +20,15 @@ func testQueryingMetrics(kind string) {
 	Expect(err).Should(BeNil())
 
 	Eventually(func() bool {
-		nodeQuery := &metrics_query.QuerySpec{
-			TypeMeta: api.TypeMeta{
-				Kind: kind,
-			},
-			ObjectSelector: metrics_query.ObjectSelector{
-				Tenant:    globals.DefaultTenant,
-				Namespace: globals.DefaultNamespace,
+		nodeQuery := &metrics_query.QueryList{
+			Tenant:    globals.DefaultTenant,
+			Namespace: globals.DefaultNamespace,
+			Queries: []*metrics_query.QuerySpec{
+				&metrics_query.QuerySpec{
+					TypeMeta: api.TypeMeta{
+						Kind: kind,
+					},
+				},
 			},
 		}
 		ctx := ts.tu.NewLoggedInContext(context.Background())

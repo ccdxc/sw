@@ -10,6 +10,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/pensando/sw/api/labels"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/metrics_query"
 	"github.com/pensando/sw/venice/globals"
@@ -56,8 +58,26 @@ func (q *Server) Stop() {
 	q.grpcSrv.Stop()
 }
 
-// validate is the function to validate query parameters
-func (q *Server) validate(qs *metrics_query.QuerySpec) error {
+// validateQueryList validates a query list request
+func (q *Server) validateQueryList(ql *metrics_query.QueryList) error {
+	if ql == nil || len(ql.Queries) == 0 {
+		return status.Errorf(codes.InvalidArgument, "query required")
+	}
+
+	if ql.Tenant == "" {
+		return status.Errorf(codes.InvalidArgument, "tenant required")
+	}
+
+	for _, qs := range ql.Queries {
+		if err := q.validateQuerySpec(qs); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// validateQuerySpec validates individual query parameters
+func (q *Server) validateQuerySpec(qs *metrics_query.QuerySpec) error {
 
 	if qs == nil {
 		return status.Errorf(codes.InvalidArgument, "query parameter required")
@@ -69,10 +89,6 @@ func (q *Server) validate(qs *metrics_query.QuerySpec) error {
 
 	if !validators.RegExp(qs.Kind, []string{"name"}) {
 		return status.Errorf(codes.InvalidArgument, "invalid kind")
-	}
-
-	if qs.Tenant == "" {
-		return status.Errorf(codes.InvalidArgument, "tenant required")
 	}
 
 	qs.Function = strings.ToUpper(qs.Function)
@@ -107,6 +123,10 @@ func (q *Server) validate(qs *metrics_query.QuerySpec) error {
 		}
 	}
 
+	if qs.Name != "" && !validators.RegExp(qs.Name, []string{"name"}) {
+		return status.Errorf(codes.InvalidArgument, "Name selector %s was invalid", qs.Name)
+	}
+
 	if qs.Selector != nil && len(qs.Selector.Requirements) > 0 {
 		if _, err := qs.Selector.PrintSQL(); err != nil {
 			return status.Errorf(codes.InvalidArgument, "Failed to parse selector requirements: %v", err)
@@ -120,29 +140,11 @@ func (q *Server) validate(qs *metrics_query.QuerySpec) error {
 	return nil
 }
 
-// Query implements the metrics query method
-func (q *Server) Query(c context.Context, qs *metrics_query.QuerySpec) (*metrics_query.QueryResponse, error) {
-
-	if err := q.validate(qs); err != nil {
-		return nil, err
-	}
-
-	qc, err := buildCitadelQuery(qs)
+func (q *Server) executeQuery(c context.Context, tenant string, qs string) ([]*metrics_query.QueryResult, error) {
+	citadelResults, err := q.broker.ExecuteQuery(c, tenant, qs)
 	if err != nil {
 		return nil, err
 	}
-
-	if err := q.broker.ClusterCheck(); err != nil {
-		return nil, err
-	}
-
-	log.Infof("citadel query: %v", qc)
-
-	citadelResults, err := q.broker.ExecuteQuery(c, qs.Tenant, qc)
-	if err != nil {
-		return nil, err
-	}
-
 	queryResults := []*metrics_query.QueryResult{}
 
 	for _, citadelResp := range citadelResults {
@@ -195,14 +197,40 @@ func (q *Server) Query(c context.Context, qs *metrics_query.QuerySpec) (*metrics
 		}
 		queryResults = append(queryResults, result)
 	}
+	return queryResults, nil
+}
+
+// Query implements the metrics query method
+func (q *Server) Query(c context.Context, ql *metrics_query.QueryList) (*metrics_query.QueryResponse, error) {
+	if err := q.validateQueryList(ql); err != nil {
+		return nil, err
+	}
+
+	queries := []string{}
+	for _, qs := range ql.Queries {
+		qc, err := buildCitadelQuery(qs)
+		if err != nil {
+			return nil, err
+		}
+		queries = append(queries, qc)
+	}
+
+	if err := q.broker.ClusterCheck(); err != nil {
+		return nil, err
+	}
+	queryString := strings.Join(queries, "; ")
+
+	log.Infof("citadel query: %v", queryString)
+	queryRes, err := q.executeQuery(c, ql.Tenant, queryString)
+	if err != nil {
+		return nil, err
+	}
+
 	return &metrics_query.QueryResponse{
-		Results: queryResults,
-		ObjectSelector: metrics_query.ObjectSelector{
-			Name:      qs.Name,
-			Tenant:    qs.Tenant,
-			Namespace: qs.Namespace,
-			Selector:  qs.Selector,
-		}}, nil
+		Results:   queryRes,
+		Tenant:    ql.Tenant,
+		Namespace: ql.Namespace,
+	}, nil
 }
 
 func buildCitadelQuery(qs *metrics_query.QuerySpec) (string, error) {
@@ -232,6 +260,19 @@ func buildCitadelQuery(qs *metrics_query.QuerySpec) (string, error) {
 	}
 
 	q := fmt.Sprintf("SELECT %s FROM %s", strings.Join(fields, ","), measurement)
+
+	if qs.Name != "" {
+		req := &labels.Requirement{
+			Key:      "meta.name",
+			Operator: "equals",
+			Values:   []string{qs.Name},
+		}
+		sel, err := req.PrintSQL()
+		if err != nil {
+			return "", err
+		}
+		selectors = append(selectors, sel)
+	}
 
 	if qs.Selector != nil && len(qs.Selector.Requirements) > 0 {
 		sel, err := qs.Selector.PrintSQL()

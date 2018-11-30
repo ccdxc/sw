@@ -19,12 +19,12 @@ var _ api.ObjectMeta
 type ServiceMetricsV1Client interface {
 	AutoWatchSvcMetricsV1(ctx context.Context, in *api.ListWatchOptions) (MetricsV1_AutoWatchSvcMetricsV1Client, error)
 
-	Query(ctx context.Context, t *QuerySpec) (*QueryResponse, error)
+	Query(ctx context.Context, t *QueryList) (*QueryResponse, error)
 }
 
 // ServiceMetricsV1Server is the server interface for the service.
 type ServiceMetricsV1Server interface {
 	AutoWatchSvcMetricsV1(in *api.ListWatchOptions, stream MetricsV1_AutoWatchSvcMetricsV1Server) error
 
-	Query(ctx context.Context, t QuerySpec) (QueryResponse, error)
+	Query(ctx context.Context, t QueryList) (QueryResponse, error)
 }

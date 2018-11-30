@@ -11,8 +11,8 @@
 		svc_metrics_query.proto
 
 	It has these top-level messages:
-		ObjectSelector
 		PaginationSpec
+		QueryList
 		QueryResponse
 		QueryResult
 		QuerySpec
@@ -71,52 +71,6 @@ func (x TsdbFunctionType) String() string {
 }
 func (TsdbFunctionType) EnumDescriptor() ([]byte, []int) { return fileDescriptorMetricsQuery, []int{0} }
 
-// ObjectSelector selects one or more objects of the same Kind
-// for the metrics query
-type ObjectSelector struct {
-	// Name is the name of the API object.
-	Name string `protobuf:"bytes,2,opt,name=Name,json=name,omitempty,proto3" json:"name,omitempty"`
-	// Tenant the object belongs to.
-	Tenant string `protobuf:"bytes,3,opt,name=Tenant,json=tenant,omitempty,proto3" json:"tenant,omitempty"`
-	// Namespace the object belongs to.
-	Namespace string `protobuf:"bytes,4,opt,name=Namespace,json=namespace,omitempty,proto3" json:"namespace,omitempty"`
-	// Selector is an expression that selects one or more points
-	Selector *labels.Selector `protobuf:"bytes,5,opt,name=Selector,json=selector,omitempty" json:"selector,omitempty"`
-}
-
-func (m *ObjectSelector) Reset()                    { *m = ObjectSelector{} }
-func (m *ObjectSelector) String() string            { return proto.CompactTextString(m) }
-func (*ObjectSelector) ProtoMessage()               {}
-func (*ObjectSelector) Descriptor() ([]byte, []int) { return fileDescriptorMetricsQuery, []int{0} }
-
-func (m *ObjectSelector) GetName() string {
-	if m != nil {
-		return m.Name
-	}
-	return ""
-}
-
-func (m *ObjectSelector) GetTenant() string {
-	if m != nil {
-		return m.Tenant
-	}
-	return ""
-}
-
-func (m *ObjectSelector) GetNamespace() string {
-	if m != nil {
-		return m.Namespace
-	}
-	return ""
-}
-
-func (m *ObjectSelector) GetSelector() *labels.Selector {
-	if m != nil {
-		return m.Selector
-	}
-	return nil
-}
-
 // PaginationSpec specifies how many metrics instances to include
 // in the result.
 type PaginationSpec struct {
@@ -129,7 +83,7 @@ type PaginationSpec struct {
 func (m *PaginationSpec) Reset()                    { *m = PaginationSpec{} }
 func (m *PaginationSpec) String() string            { return proto.CompactTextString(m) }
 func (*PaginationSpec) ProtoMessage()               {}
-func (*PaginationSpec) Descriptor() ([]byte, []int) { return fileDescriptorMetricsQuery, []int{1} }
+func (*PaginationSpec) Descriptor() ([]byte, []int) { return fileDescriptorMetricsQuery, []int{0} }
 
 func (m *PaginationSpec) GetOffset() int32 {
 	if m != nil {
@@ -145,18 +99,70 @@ func (m *PaginationSpec) GetCount() int32 {
 	return 0
 }
 
+// QueryList contains a list of queries to execute
+type QueryList struct {
+	// Tenant for the request
+	Tenant string `protobuf:"bytes,1,opt,name=Tenant,json=tenant,omitempty,proto3" json:"tenant,omitempty"`
+	// Namespace for the request
+	Namespace string `protobuf:"bytes,2,opt,name=Namespace,json=namespace,omitempty,proto3" json:"namespace,omitempty"`
+	// List of queries to execute
+	Queries []*QuerySpec `protobuf:"bytes,3,rep,name=Queries,json=queries,omitempty" json:"queries,omitempty"`
+}
+
+func (m *QueryList) Reset()                    { *m = QueryList{} }
+func (m *QueryList) String() string            { return proto.CompactTextString(m) }
+func (*QueryList) ProtoMessage()               {}
+func (*QueryList) Descriptor() ([]byte, []int) { return fileDescriptorMetricsQuery, []int{1} }
+
+func (m *QueryList) GetTenant() string {
+	if m != nil {
+		return m.Tenant
+	}
+	return ""
+}
+
+func (m *QueryList) GetNamespace() string {
+	if m != nil {
+		return m.Namespace
+	}
+	return ""
+}
+
+func (m *QueryList) GetQueries() []*QuerySpec {
+	if m != nil {
+		return m.Queries
+	}
+	return nil
+}
+
 // QueryResponse is the response send out
 type QueryResponse struct {
+	// Tenant for the request
+	Tenant string `protobuf:"bytes,1,opt,name=Tenant,json=tenant,omitempty,proto3" json:"tenant,omitempty"`
+	// Namespace for the request
+	Namespace string `protobuf:"bytes,2,opt,name=Namespace,json=namespace,omitempty,proto3" json:"namespace,omitempty"`
 	//
-	Results []*QueryResult `protobuf:"bytes,1,rep,name=Results,json=results,omitempty" json:"results,omitempty"`
-	// ObjectSelector is the selectors used for the query
-	ObjectSelector `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
+	Results []*QueryResult `protobuf:"bytes,3,rep,name=Results,json=results,omitempty" json:"results,omitempty"`
 }
 
 func (m *QueryResponse) Reset()                    { *m = QueryResponse{} }
 func (m *QueryResponse) String() string            { return proto.CompactTextString(m) }
 func (*QueryResponse) ProtoMessage()               {}
 func (*QueryResponse) Descriptor() ([]byte, []int) { return fileDescriptorMetricsQuery, []int{2} }
+
+func (m *QueryResponse) GetTenant() string {
+	if m != nil {
+		return m.Tenant
+	}
+	return ""
+}
+
+func (m *QueryResponse) GetNamespace() string {
+	if m != nil {
+		return m.Namespace
+	}
+	return ""
+}
 
 func (m *QueryResponse) GetResults() []*QueryResult {
 	if m != nil {
@@ -200,29 +206,45 @@ func (m *QueryResult) GetSeries() []*ResultSeries {
 type QuerySpec struct {
 	//
 	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
-	// ObjectSelectot selects one or more objects of the same kind for query
-	ObjectSelector `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
+	// Name is the name of the API object.
+	Name string `protobuf:"bytes,2,opt,name=Name,json=name,omitempty,proto3" json:"name,omitempty"`
+	//
+	Selector *labels.Selector `protobuf:"bytes,3,opt,name=Selector,json=selector,omitempty" json:"selector,omitempty"`
 	// Fields select the metric fields to be included in the result
 	// Empty will include all fields, must contain at least one non-tag field
-	Fields []string `protobuf:"bytes,3,rep,name=Fields,json=fields,omitempty" json:"fields,omitempty"`
+	Fields []string `protobuf:"bytes,4,rep,name=Fields,json=fields,omitempty" json:"fields,omitempty"`
 	// Functions specify an operation function to be applied, example mean()/max()
-	Function string `protobuf:"bytes,4,opt,name=Function,json=function,omitempty,proto3" json:"function,omitempty"`
+	Function string `protobuf:"bytes,5,opt,name=Function,json=function,omitempty,proto3" json:"function,omitempty"`
 	// StartTime selects all metrics with timestamp greater than the StartTime, example 2018-10-18T00:12:00Z
-	StartTime *api.Timestamp `protobuf:"bytes,5,opt,name=StartTime,json=start-time,omitempty" json:"start-time,omitempty"`
+	StartTime *api.Timestamp `protobuf:"bytes,6,opt,name=StartTime,json=start-time,omitempty" json:"start-time,omitempty"`
 	// EndTime selects all metrics with timestamp less than the EndTime, example 2018-09-18T00:12:00Z
-	EndTime *api.Timestamp `protobuf:"bytes,6,opt,name=EndTime,json=end-time,omitempty" json:"end-time,omitempty"`
+	EndTime *api.Timestamp `protobuf:"bytes,7,opt,name=EndTime,json=end-time,omitempty" json:"end-time,omitempty"`
 	// GroupbyTime groups series based on the interval specified
-	GroupbyTime string `protobuf:"bytes,7,opt,name=GroupbyTime,json=group-by-time,omitempty,proto3" json:"group-by-time,omitempty"`
+	GroupbyTime string `protobuf:"bytes,8,opt,name=GroupbyTime,json=group-by-time,omitempty,proto3" json:"group-by-time,omitempty"`
 	// GroupbyField groups series based on the field specified
-	GroupbyField string `protobuf:"bytes,8,opt,name=GroupbyField,json=group-by-field,omitempty,proto3" json:"group-by-field,omitempty"`
+	GroupbyField string `protobuf:"bytes,9,opt,name=GroupbyField,json=group-by-field,omitempty,proto3" json:"group-by-field,omitempty"`
 	// PaginatioSpec specifies the number of series to include
-	Pagination *PaginationSpec `protobuf:"bytes,9,opt,name=Pagination,json=pagination,omitempty" json:"pagination,omitempty"`
+	Pagination *PaginationSpec `protobuf:"bytes,10,opt,name=Pagination,json=pagination,omitempty" json:"pagination,omitempty"`
 }
 
 func (m *QuerySpec) Reset()                    { *m = QuerySpec{} }
 func (m *QuerySpec) String() string            { return proto.CompactTextString(m) }
 func (*QuerySpec) ProtoMessage()               {}
 func (*QuerySpec) Descriptor() ([]byte, []int) { return fileDescriptorMetricsQuery, []int{4} }
+
+func (m *QuerySpec) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *QuerySpec) GetSelector() *labels.Selector {
+	if m != nil {
+		return m.Selector
+	}
+	return nil
+}
 
 func (m *QuerySpec) GetFields() []string {
 	if m != nil {
@@ -319,60 +341,14 @@ func (m *ResultSeries) GetValues() []*api.InterfaceSlice {
 }
 
 func init() {
-	proto.RegisterType((*ObjectSelector)(nil), "metrics_query.ObjectSelector")
 	proto.RegisterType((*PaginationSpec)(nil), "metrics_query.PaginationSpec")
+	proto.RegisterType((*QueryList)(nil), "metrics_query.QueryList")
 	proto.RegisterType((*QueryResponse)(nil), "metrics_query.QueryResponse")
 	proto.RegisterType((*QueryResult)(nil), "metrics_query.QueryResult")
 	proto.RegisterType((*QuerySpec)(nil), "metrics_query.QuerySpec")
 	proto.RegisterType((*ResultSeries)(nil), "metrics_query.ResultSeries")
 	proto.RegisterEnum("metrics_query.TsdbFunctionType", TsdbFunctionType_name, TsdbFunctionType_value)
 }
-func (m *ObjectSelector) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *ObjectSelector) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.Name) > 0 {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintMetricsQuery(dAtA, i, uint64(len(m.Name)))
-		i += copy(dAtA[i:], m.Name)
-	}
-	if len(m.Tenant) > 0 {
-		dAtA[i] = 0x1a
-		i++
-		i = encodeVarintMetricsQuery(dAtA, i, uint64(len(m.Tenant)))
-		i += copy(dAtA[i:], m.Tenant)
-	}
-	if len(m.Namespace) > 0 {
-		dAtA[i] = 0x22
-		i++
-		i = encodeVarintMetricsQuery(dAtA, i, uint64(len(m.Namespace)))
-		i += copy(dAtA[i:], m.Namespace)
-	}
-	if m.Selector != nil {
-		dAtA[i] = 0x2a
-		i++
-		i = encodeVarintMetricsQuery(dAtA, i, uint64(m.Selector.Size()))
-		n1, err := m.Selector.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n1
-	}
-	return i, nil
-}
-
 func (m *PaginationSpec) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -401,6 +377,48 @@ func (m *PaginationSpec) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *QueryList) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryList) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Tenant) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintMetricsQuery(dAtA, i, uint64(len(m.Tenant)))
+		i += copy(dAtA[i:], m.Tenant)
+	}
+	if len(m.Namespace) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintMetricsQuery(dAtA, i, uint64(len(m.Namespace)))
+		i += copy(dAtA[i:], m.Namespace)
+	}
+	if len(m.Queries) > 0 {
+		for _, msg := range m.Queries {
+			dAtA[i] = 0x1a
+			i++
+			i = encodeVarintMetricsQuery(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
 func (m *QueryResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -416,9 +434,21 @@ func (m *QueryResponse) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.Tenant) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintMetricsQuery(dAtA, i, uint64(len(m.Tenant)))
+		i += copy(dAtA[i:], m.Tenant)
+	}
+	if len(m.Namespace) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintMetricsQuery(dAtA, i, uint64(len(m.Namespace)))
+		i += copy(dAtA[i:], m.Namespace)
+	}
 	if len(m.Results) > 0 {
 		for _, msg := range m.Results {
-			dAtA[i] = 0xa
+			dAtA[i] = 0x1a
 			i++
 			i = encodeVarintMetricsQuery(dAtA, i, uint64(msg.Size()))
 			n, err := msg.MarshalTo(dAtA[i:])
@@ -428,14 +458,6 @@ func (m *QueryResponse) MarshalTo(dAtA []byte) (int, error) {
 			i += n
 		}
 	}
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintMetricsQuery(dAtA, i, uint64(m.ObjectSelector.Size()))
-	n2, err := m.ObjectSelector.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n2
 	return i, nil
 }
 
@@ -492,22 +514,30 @@ func (m *QuerySpec) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0xa
 	i++
 	i = encodeVarintMetricsQuery(dAtA, i, uint64(m.TypeMeta.Size()))
-	n3, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	n1, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n3
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintMetricsQuery(dAtA, i, uint64(m.ObjectSelector.Size()))
-	n4, err := m.ObjectSelector.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
+	i += n1
+	if len(m.Name) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintMetricsQuery(dAtA, i, uint64(len(m.Name)))
+		i += copy(dAtA[i:], m.Name)
 	}
-	i += n4
+	if m.Selector != nil {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintMetricsQuery(dAtA, i, uint64(m.Selector.Size()))
+		n2, err := m.Selector.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n2
+	}
 	if len(m.Fields) > 0 {
 		for _, s := range m.Fields {
-			dAtA[i] = 0x1a
+			dAtA[i] = 0x22
 			i++
 			l = len(s)
 			for l >= 1<<7 {
@@ -521,52 +551,52 @@ func (m *QuerySpec) MarshalTo(dAtA []byte) (int, error) {
 		}
 	}
 	if len(m.Function) > 0 {
-		dAtA[i] = 0x22
+		dAtA[i] = 0x2a
 		i++
 		i = encodeVarintMetricsQuery(dAtA, i, uint64(len(m.Function)))
 		i += copy(dAtA[i:], m.Function)
 	}
 	if m.StartTime != nil {
-		dAtA[i] = 0x2a
-		i++
-		i = encodeVarintMetricsQuery(dAtA, i, uint64(m.StartTime.Size()))
-		n5, err := m.StartTime.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n5
-	}
-	if m.EndTime != nil {
 		dAtA[i] = 0x32
 		i++
-		i = encodeVarintMetricsQuery(dAtA, i, uint64(m.EndTime.Size()))
-		n6, err := m.EndTime.MarshalTo(dAtA[i:])
+		i = encodeVarintMetricsQuery(dAtA, i, uint64(m.StartTime.Size()))
+		n3, err := m.StartTime.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n6
+		i += n3
+	}
+	if m.EndTime != nil {
+		dAtA[i] = 0x3a
+		i++
+		i = encodeVarintMetricsQuery(dAtA, i, uint64(m.EndTime.Size()))
+		n4, err := m.EndTime.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n4
 	}
 	if len(m.GroupbyTime) > 0 {
-		dAtA[i] = 0x3a
+		dAtA[i] = 0x42
 		i++
 		i = encodeVarintMetricsQuery(dAtA, i, uint64(len(m.GroupbyTime)))
 		i += copy(dAtA[i:], m.GroupbyTime)
 	}
 	if len(m.GroupbyField) > 0 {
-		dAtA[i] = 0x42
+		dAtA[i] = 0x4a
 		i++
 		i = encodeVarintMetricsQuery(dAtA, i, uint64(len(m.GroupbyField)))
 		i += copy(dAtA[i:], m.GroupbyField)
 	}
 	if m.Pagination != nil {
-		dAtA[i] = 0x4a
+		dAtA[i] = 0x52
 		i++
 		i = encodeVarintMetricsQuery(dAtA, i, uint64(m.Pagination.Size()))
-		n7, err := m.Pagination.MarshalTo(dAtA[i:])
+		n5, err := m.Pagination.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n7
+		i += n5
 	}
 	return i, nil
 }
@@ -648,28 +678,6 @@ func encodeVarintMetricsQuery(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
-func (m *ObjectSelector) Size() (n int) {
-	var l int
-	_ = l
-	l = len(m.Name)
-	if l > 0 {
-		n += 1 + l + sovMetricsQuery(uint64(l))
-	}
-	l = len(m.Tenant)
-	if l > 0 {
-		n += 1 + l + sovMetricsQuery(uint64(l))
-	}
-	l = len(m.Namespace)
-	if l > 0 {
-		n += 1 + l + sovMetricsQuery(uint64(l))
-	}
-	if m.Selector != nil {
-		l = m.Selector.Size()
-		n += 1 + l + sovMetricsQuery(uint64(l))
-	}
-	return n
-}
-
 func (m *PaginationSpec) Size() (n int) {
 	var l int
 	_ = l
@@ -682,17 +690,43 @@ func (m *PaginationSpec) Size() (n int) {
 	return n
 }
 
+func (m *QueryList) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Tenant)
+	if l > 0 {
+		n += 1 + l + sovMetricsQuery(uint64(l))
+	}
+	l = len(m.Namespace)
+	if l > 0 {
+		n += 1 + l + sovMetricsQuery(uint64(l))
+	}
+	if len(m.Queries) > 0 {
+		for _, e := range m.Queries {
+			l = e.Size()
+			n += 1 + l + sovMetricsQuery(uint64(l))
+		}
+	}
+	return n
+}
+
 func (m *QueryResponse) Size() (n int) {
 	var l int
 	_ = l
+	l = len(m.Tenant)
+	if l > 0 {
+		n += 1 + l + sovMetricsQuery(uint64(l))
+	}
+	l = len(m.Namespace)
+	if l > 0 {
+		n += 1 + l + sovMetricsQuery(uint64(l))
+	}
 	if len(m.Results) > 0 {
 		for _, e := range m.Results {
 			l = e.Size()
 			n += 1 + l + sovMetricsQuery(uint64(l))
 		}
 	}
-	l = m.ObjectSelector.Size()
-	n += 1 + l + sovMetricsQuery(uint64(l))
 	return n
 }
 
@@ -716,8 +750,14 @@ func (m *QuerySpec) Size() (n int) {
 	_ = l
 	l = m.TypeMeta.Size()
 	n += 1 + l + sovMetricsQuery(uint64(l))
-	l = m.ObjectSelector.Size()
-	n += 1 + l + sovMetricsQuery(uint64(l))
+	l = len(m.Name)
+	if l > 0 {
+		n += 1 + l + sovMetricsQuery(uint64(l))
+	}
+	if m.Selector != nil {
+		l = m.Selector.Size()
+		n += 1 + l + sovMetricsQuery(uint64(l))
+	}
 	if len(m.Fields) > 0 {
 		for _, s := range m.Fields {
 			l = len(s)
@@ -793,176 +833,6 @@ func sovMetricsQuery(x uint64) (n int) {
 }
 func sozMetricsQuery(x uint64) (n int) {
 	return sovMetricsQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (m *ObjectSelector) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowMetricsQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: ObjectSelector: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ObjectSelector: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowMetricsQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthMetricsQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Name = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Tenant", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowMetricsQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthMetricsQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Tenant = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Namespace", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowMetricsQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthMetricsQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Namespace = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 5:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Selector", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowMetricsQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthMetricsQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Selector == nil {
-				m.Selector = &labels.Selector{}
-			}
-			if err := m.Selector.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipMetricsQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthMetricsQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
 }
 func (m *PaginationSpec) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -1052,6 +922,145 @@ func (m *PaginationSpec) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *QueryList) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMetricsQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryList: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryList: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tenant", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetricsQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMetricsQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Tenant = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Namespace", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetricsQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMetricsQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Namespace = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Queries", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetricsQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthMetricsQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Queries = append(m.Queries, &QuerySpec{})
+			if err := m.Queries[len(m.Queries)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMetricsQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthMetricsQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *QueryResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1083,6 +1092,64 @@ func (m *QueryResponse) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tenant", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetricsQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMetricsQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Tenant = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Namespace", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetricsQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMetricsQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Namespace = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Results", wireType)
 			}
 			var msglen int
@@ -1109,36 +1176,6 @@ func (m *QueryResponse) Unmarshal(dAtA []byte) error {
 			}
 			m.Results = append(m.Results, &QueryResult{})
 			if err := m.Results[len(m.Results)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ObjectSelector", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowMetricsQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthMetricsQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.ObjectSelector.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1324,7 +1361,36 @@ func (m *QuerySpec) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ObjectSelector", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetricsQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMetricsQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Name = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Selector", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1348,11 +1414,14 @@ func (m *QuerySpec) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.ObjectSelector.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if m.Selector == nil {
+				m.Selector = &labels.Selector{}
+			}
+			if err := m.Selector.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
-		case 3:
+		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Fields", wireType)
 			}
@@ -1381,7 +1450,7 @@ func (m *QuerySpec) Unmarshal(dAtA []byte) error {
 			}
 			m.Fields = append(m.Fields, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
-		case 4:
+		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Function", wireType)
 			}
@@ -1410,7 +1479,7 @@ func (m *QuerySpec) Unmarshal(dAtA []byte) error {
 			}
 			m.Function = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 5:
+		case 6:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field StartTime", wireType)
 			}
@@ -1443,7 +1512,7 @@ func (m *QuerySpec) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 6:
+		case 7:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field EndTime", wireType)
 			}
@@ -1476,7 +1545,7 @@ func (m *QuerySpec) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 7:
+		case 8:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field GroupbyTime", wireType)
 			}
@@ -1505,7 +1574,7 @@ func (m *QuerySpec) Unmarshal(dAtA []byte) error {
 			}
 			m.GroupbyTime = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 8:
+		case 9:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field GroupbyField", wireType)
 			}
@@ -1534,7 +1603,7 @@ func (m *QuerySpec) Unmarshal(dAtA []byte) error {
 			}
 			m.GroupbyField = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 9:
+		case 10:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
 			}
@@ -1953,65 +2022,64 @@ var (
 func init() { proto.RegisterFile("metrics_query.proto", fileDescriptorMetricsQuery) }
 
 var fileDescriptorMetricsQuery = []byte{
-	// 953 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x55, 0xcf, 0x6e, 0xe3, 0x44,
-	0x18, 0x5f, 0x27, 0x4d, 0xd2, 0x4c, 0xda, 0x12, 0x26, 0x85, 0x75, 0x03, 0xd4, 0x51, 0xc4, 0x4a,
-	0x59, 0xd4, 0xc6, 0xab, 0x56, 0x62, 0x81, 0x0b, 0x5a, 0xef, 0xa6, 0x68, 0x85, 0x9a, 0xee, 0x26,
-	0x81, 0x05, 0x09, 0x69, 0x35, 0x71, 0xbe, 0x18, 0x83, 0x3d, 0x36, 0x9e, 0xf1, 0x42, 0x0e, 0x5c,
-	0x7b, 0xe1, 0x01, 0x78, 0x87, 0x3e, 0x03, 0x67, 0xb4, 0xc7, 0x7d, 0x02, 0x0b, 0xf5, 0x98, 0x07,
-	0xe0, 0x8c, 0x66, 0x6c, 0x97, 0x89, 0x9b, 0xae, 0xf6, 0xb2, 0x27, 0xcf, 0xf7, 0x9b, 0xef, 0xfb,
-	0xcd, 0xf7, 0xdf, 0xa8, 0xe5, 0x03, 0x8f, 0x5c, 0x9b, 0x3d, 0xff, 0x25, 0x86, 0x68, 0xd1, 0x0f,
-	0xa3, 0x80, 0x07, 0x78, 0x7b, 0x05, 0x6c, 0x7f, 0xe8, 0x04, 0x81, 0xe3, 0x81, 0x49, 0x42, 0xd7,
-	0x24, 0x94, 0x06, 0x9c, 0x70, 0x37, 0xa0, 0x2c, 0x55, 0x6e, 0x0f, 0x1c, 0x97, 0xff, 0x18, 0x4f,
-	0xfb, 0x76, 0xe0, 0x9b, 0x21, 0x50, 0x46, 0xe8, 0x2c, 0x30, 0xd9, 0xaf, 0xe6, 0x0b, 0xa0, 0xae,
-	0x0d, 0x66, 0xcc, 0x5d, 0x8f, 0x09, 0x53, 0x07, 0xa8, 0x6a, 0x6d, 0xba, 0xd4, 0xf6, 0xe2, 0x19,
-	0xe4, 0x34, 0x87, 0x0a, 0x8d, 0x13, 0x38, 0x81, 0x29, 0xe1, 0x69, 0x3c, 0x97, 0x92, 0x14, 0xe4,
-	0x29, 0x53, 0xbf, 0x73, 0xc3, 0xab, 0xc2, 0x47, 0x1f, 0x38, 0xc9, 0xd4, 0xee, 0xbd, 0x46, 0x6d,
-	0xee, 0x82, 0x37, 0x63, 0x26, 0x03, 0x0f, 0x6c, 0x1e, 0x44, 0x6f, 0x60, 0xe1, 0x91, 0x29, 0x78,
-	0x45, 0x8b, 0xee, 0x1f, 0x25, 0xb4, 0x73, 0x36, 0xfd, 0x09, 0x6c, 0x3e, 0xce, 0x2e, 0xf0, 0x3d,
-	0xb4, 0x31, 0x24, 0x3e, 0xe8, 0xa5, 0x8e, 0xd6, 0xab, 0x5b, 0x78, 0x99, 0x18, 0x3b, 0x94, 0xf8,
-	0x70, 0x10, 0xf8, 0x2e, 0x07, 0x3f, 0xe4, 0x8b, 0x51, 0x41, 0xc6, 0x9f, 0xa2, 0xea, 0x04, 0x28,
-	0xa1, 0x5c, 0x2f, 0x4b, 0x9b, 0xdd, 0x65, 0x62, 0x34, 0xb9, 0x44, 0x14, 0xab, 0x6b, 0x08, 0xfe,
-	0x12, 0xd5, 0xc5, 0x4b, 0x2c, 0x24, 0x36, 0xe8, 0x1b, 0xd2, 0xf4, 0xf6, 0x32, 0x31, 0x5a, 0x34,
-	0x07, 0x15, 0xeb, 0x75, 0x20, 0x1e, 0xa2, 0xcd, 0xdc, 0x6d, 0xbd, 0xd2, 0xd1, 0x7a, 0x8d, 0xa3,
-	0x66, 0x3f, 0x8d, 0xb3, 0x9f, 0xe3, 0xd6, 0xfb, 0xcb, 0xc4, 0xc0, 0x79, 0xd4, 0x0a, 0xe1, 0x1a,
-	0xac, 0xfb, 0x3b, 0xda, 0x79, 0x42, 0x1c, 0x97, 0xca, 0x2a, 0x8f, 0x43, 0xb0, 0x45, 0x68, 0x67,
-	0xf3, 0x39, 0x03, 0xae, 0x6b, 0x1d, 0xad, 0x57, 0x49, 0x43, 0x0b, 0x24, 0xa2, 0x86, 0x56, 0x44,
-	0xf0, 0x31, 0xaa, 0x3c, 0x0c, 0x62, 0xca, 0x65, 0x16, 0x2b, 0x56, 0x6b, 0x99, 0x18, 0xef, 0xd8,
-	0x02, 0x50, 0xac, 0x8a, 0x40, 0xf7, 0x2f, 0x0d, 0x6d, 0x3f, 0x15, 0x5d, 0x3b, 0x02, 0x16, 0x06,
-	0x94, 0x01, 0xfe, 0x06, 0xd5, 0x46, 0xc0, 0x62, 0x8f, 0x33, 0x5d, 0xeb, 0x94, 0x7b, 0x8d, 0xa3,
-	0x76, 0x7f, 0xb5, 0xe7, 0x73, 0xf5, 0xd8, 0xe3, 0xd6, 0x7b, 0xcb, 0xc4, 0x78, 0x37, 0x4a, 0xd5,
-	0x95, 0x67, 0xae, 0x43, 0x78, 0x82, 0xb4, 0x33, 0xe9, 0x59, 0xe3, 0xe8, 0xa3, 0x02, 0xe1, 0x6a,
-	0x33, 0x58, 0xed, 0x97, 0x89, 0x71, 0xeb, 0x55, 0x62, 0x68, 0xa2, 0x0d, 0x44, 0x6f, 0xaa, 0x6d,
-	0xb0, 0x2a, 0x77, 0xff, 0xd4, 0x50, 0x43, 0xf1, 0x07, 0x1f, 0xa3, 0xc6, 0x98, 0x13, 0x0e, 0x3e,
-	0x50, 0xfe, 0xf8, 0x51, 0x96, 0xc0, 0xe6, 0x32, 0x31, 0xb6, 0x58, 0x0e, 0x3f, 0x77, 0x67, 0xa3,
-	0x15, 0x09, 0x8f, 0x51, 0x75, 0x0c, 0x91, 0x0b, 0x4c, 0x2f, 0xc9, 0x80, 0x3f, 0x28, 0xf8, 0x97,
-	0x72, 0xa7, 0x2a, 0x69, 0x35, 0x98, 0x3c, 0xab, 0xd5, 0x28, 0x22, 0xdd, 0x7f, 0x2b, 0xa8, 0x2e,
-	0x3d, 0xcb, 0x6a, 0xaa, 0x4d, 0xa4, 0x37, 0x8d, 0xa3, 0xed, 0x3e, 0x09, 0xdd, 0xfe, 0x64, 0x11,
-	0xc2, 0x29, 0x70, 0x62, 0xb5, 0x94, 0x68, 0x6b, 0x07, 0x2e, 0xf5, 0x5c, 0x0a, 0xa3, 0xfc, 0xf0,
-	0x76, 0xb2, 0x86, 0x4f, 0x50, 0xf5, 0x44, 0x0e, 0xb3, 0x5e, 0xee, 0x94, 0x7b, 0x75, 0xeb, 0xe3,
-	0x8b, 0xf3, 0xbd, 0xad, 0x11, 0x38, 0x83, 0xdf, 0xc2, 0x9e, 0xe8, 0xf9, 0xbb, 0x22, 0xc6, 0x74,
-	0xdc, 0xd5, 0x18, 0x8b, 0x08, 0xfe, 0x1e, 0x6d, 0x9e, 0xc4, 0xd4, 0x16, 0x9d, 0x9b, 0xcd, 0xd2,
-	0xf1, 0xc5, 0xf9, 0xde, 0xde, 0x98, 0x47, 0x03, 0x1a, 0xfb, 0xbd, 0x09, 0x9b, 0x4d, 0xf3, 0x7b,
-	0x11, 0xaf, 0xa0, 0xc5, 0xf3, 0x0c, 0x50, 0xc7, 0xe2, 0x3a, 0x86, 0x9f, 0xa2, 0xfa, 0x98, 0x93,
-	0x88, 0x4f, 0x5c, 0x1f, 0xb2, 0x39, 0xdb, 0x49, 0x13, 0xe7, 0xfa, 0xc0, 0x38, 0xf1, 0x43, 0x4b,
-	0x5f, 0x26, 0xc6, 0x2e, 0x13, 0x4a, 0x87, 0xdc, 0x5d, 0x59, 0x16, 0x6b, 0x51, 0xfc, 0x35, 0xaa,
-	0x0d, 0xe8, 0x4c, 0x12, 0x56, 0xd7, 0x12, 0xca, 0xb1, 0x05, 0x3a, 0x2b, 0xd2, 0xad, 0xc1, 0xf0,
-	0x33, 0xd4, 0xf8, 0x2a, 0x0a, 0xe2, 0x70, 0xba, 0x90, 0x84, 0x35, 0x19, 0xfd, 0xdd, 0x8b, 0xf3,
-	0x3d, 0xf4, 0x28, 0x8e, 0xe4, 0x2c, 0xf7, 0x44, 0xb8, 0xb7, 0x1d, 0xa1, 0x74, 0x38, 0x5d, 0x14,
-	0x39, 0x6f, 0xba, 0xc0, 0x3f, 0xa0, 0xad, 0x8c, 0x58, 0x96, 0x48, 0xdf, 0x94, 0xcc, 0x07, 0x6b,
-	0x2a, 0xa4, 0x5f, 0x51, 0xc8, 0xc2, 0x28, 0xe4, 0x37, 0xde, 0x60, 0x82, 0xd0, 0xff, 0xdb, 0x46,
-	0xaf, 0xaf, 0x6d, 0xac, 0xd5, 0x75, 0x94, 0xa6, 0x39, 0xbc, 0xc2, 0xd4, 0x34, 0xaf, 0x43, 0xbb,
-	0x7f, 0x97, 0xd0, 0x96, 0x3a, 0x31, 0x57, 0xcb, 0x5d, 0x7b, 0xe3, 0xe5, 0xfe, 0x0c, 0x6d, 0x4c,
-	0x88, 0x93, 0x8f, 0xe3, 0x9d, 0xd7, 0x8c, 0x63, 0x5f, 0xe8, 0x0d, 0x28, 0x8f, 0x16, 0x29, 0x31,
-	0x27, 0x8e, 0xda, 0xb2, 0x05, 0x19, 0x7f, 0x8e, 0x6a, 0x0f, 0x03, 0x2f, 0xf6, 0x69, 0xde, 0xf9,
-	0x72, 0x7f, 0xd9, 0x29, 0xa4, 0xee, 0xaf, 0x6b, 0x10, 0xbe, 0x8f, 0xaa, 0xdf, 0x12, 0x2f, 0x06,
-	0xa6, 0x6f, 0x48, 0xaf, 0x5a, 0xb2, 0x79, 0x1e, 0x53, 0x0e, 0xd1, 0x9c, 0xd8, 0x30, 0xf6, 0x5c,
-	0x1b, 0x2c, 0xb4, 0x4c, 0x8c, 0xea, 0x0b, 0xa9, 0x36, 0xca, 0xbe, 0xed, 0xfb, 0xa8, 0x7e, 0xe5,
-	0x24, 0x6e, 0xa2, 0xf2, 0xcf, 0xb0, 0x48, 0x53, 0x31, 0x12, 0x47, 0xbc, 0x8b, 0x2a, 0x52, 0x31,
-	0xfd, 0xf7, 0x8d, 0x52, 0xe1, 0x8b, 0xd2, 0x67, 0xda, 0x27, 0x26, 0x6a, 0x16, 0x27, 0x08, 0x6f,
-	0xa2, 0x8d, 0xe1, 0xd9, 0x70, 0xd0, 0xbc, 0x25, 0x4e, 0xa7, 0x83, 0x07, 0xc3, 0xa6, 0x86, 0x6b,
-	0xa8, 0x7c, 0xfa, 0xe0, 0xbb, 0x66, 0xc9, 0xda, 0x7a, 0x79, 0xb9, 0xaf, 0xbd, 0xba, 0xdc, 0xd7,
-	0xfe, 0xb9, 0xdc, 0xd7, 0x9e, 0x68, 0xd3, 0xaa, 0xfc, 0xdf, 0x1e, 0xff, 0x17, 0x00, 0x00, 0xff,
-	0xff, 0x64, 0x2c, 0xdb, 0x3b, 0xb4, 0x08, 0x00, 0x00,
+	// 941 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x55, 0x41, 0x6f, 0x1b, 0x45,
+	0x14, 0xee, 0xda, 0x89, 0x1d, 0x8f, 0xdd, 0x60, 0xc6, 0x81, 0x6e, 0x02, 0x64, 0x23, 0x8b, 0x4a,
+	0x2e, 0x4a, 0xbc, 0x55, 0x22, 0x51, 0xe0, 0x82, 0xea, 0xd6, 0x41, 0x15, 0xc4, 0x6d, 0x6d, 0x43,
+	0x41, 0x42, 0xaa, 0xc6, 0xeb, 0xe7, 0x65, 0xc4, 0xee, 0xec, 0x76, 0x67, 0xb6, 0xe0, 0x03, 0xd7,
+	0xfc, 0x05, 0xee, 0x1c, 0xf3, 0x43, 0x50, 0x8f, 0xbd, 0x72, 0x59, 0x50, 0x8e, 0xfb, 0x2b, 0xd0,
+	0xcc, 0xac, 0xc3, 0x7a, 0xed, 0x54, 0xbd, 0x71, 0xf2, 0xcc, 0xb7, 0xef, 0x7d, 0xef, 0xbd, 0x6f,
+	0xde, 0x7b, 0x46, 0x2d, 0x1f, 0x44, 0x44, 0x1d, 0xfe, 0xfc, 0x45, 0x0c, 0xd1, 0xbc, 0x1b, 0x46,
+	0x81, 0x08, 0xf0, 0xcd, 0x25, 0x70, 0xef, 0x43, 0x37, 0x08, 0x5c, 0x0f, 0x6c, 0x12, 0x52, 0x9b,
+	0x30, 0x16, 0x08, 0x22, 0x68, 0xc0, 0xb8, 0x36, 0xde, 0xeb, 0xbb, 0x54, 0xfc, 0x14, 0x4f, 0xba,
+	0x4e, 0xe0, 0xdb, 0x21, 0x30, 0x4e, 0xd8, 0x34, 0xb0, 0xf9, 0x2f, 0xf6, 0x4b, 0x60, 0xd4, 0x01,
+	0x3b, 0x16, 0xd4, 0xe3, 0xd2, 0xd5, 0x05, 0x96, 0xf7, 0xb6, 0x29, 0x73, 0xbc, 0x78, 0x0a, 0x0b,
+	0x9a, 0xa3, 0x1c, 0x8d, 0x1b, 0xb8, 0x81, 0xad, 0xe0, 0x49, 0x3c, 0x53, 0x37, 0x75, 0x51, 0xa7,
+	0xcc, 0xfc, 0xf6, 0x35, 0x51, 0x65, 0x8e, 0x3e, 0x08, 0x92, 0x99, 0xdd, 0x7d, 0x83, 0xd9, 0x8c,
+	0x82, 0x37, 0xe5, 0x36, 0x07, 0x0f, 0x1c, 0x11, 0x44, 0x6f, 0xe1, 0xe1, 0x91, 0x09, 0x78, 0x45,
+	0x8f, 0xf6, 0x6f, 0x68, 0xfb, 0x09, 0x71, 0x29, 0x53, 0x75, 0x8d, 0x42, 0x70, 0xf0, 0xa7, 0xa8,
+	0xf2, 0x78, 0x36, 0xe3, 0x20, 0x4c, 0xe3, 0xc0, 0xe8, 0x6c, 0xf6, 0x76, 0xd2, 0xc4, 0x6a, 0x06,
+	0x0a, 0x39, 0x0c, 0x7c, 0x2a, 0xc0, 0x0f, 0xc5, 0x7c, 0xb8, 0x82, 0xe0, 0x13, 0xb4, 0xf9, 0x20,
+	0x88, 0x99, 0x30, 0x4b, 0xca, 0xad, 0x95, 0x26, 0xd6, 0x3b, 0x8e, 0x04, 0x72, 0x5e, 0x45, 0xa0,
+	0xfd, 0x97, 0x81, 0x6a, 0x4f, 0xe5, 0x3b, 0x7d, 0x43, 0xb9, 0x90, 0xa1, 0xc7, 0xc0, 0x08, 0xd3,
+	0xa1, 0x6b, 0x3a, 0xb4, 0x50, 0x48, 0x3e, 0x74, 0x11, 0xc1, 0x5f, 0xa2, 0xda, 0x80, 0xf8, 0xc0,
+	0x43, 0xe2, 0x80, 0x0a, 0x5f, 0xeb, 0xdd, 0x4a, 0x13, 0xab, 0xc5, 0x16, 0x60, 0xce, 0x7b, 0x1d,
+	0x88, 0x47, 0xa8, 0x2a, 0xb3, 0xa0, 0xc0, 0xcd, 0xf2, 0x41, 0xb9, 0x53, 0x3f, 0x36, 0xbb, 0xcb,
+	0xad, 0xa5, 0x72, 0x94, 0xf2, 0xf4, 0xde, 0x4b, 0x13, 0xeb, 0xdd, 0x17, 0xda, 0x38, 0x47, 0xbb,
+	0x0a, 0xb5, 0xff, 0x36, 0xd0, 0x4d, 0xe5, 0x37, 0x04, 0x1e, 0x06, 0x8c, 0xc3, 0xff, 0x57, 0xdf,
+	0xb7, 0xa8, 0x3a, 0x04, 0x1e, 0x7b, 0x62, 0x51, 0xdf, 0xde, 0xba, 0xfa, 0xb4, 0x89, 0xae, 0x30,
+	0xd2, 0xe6, 0xf9, 0x0a, 0x57, 0xa0, 0xf6, 0xef, 0x06, 0xaa, 0xe7, 0x3c, 0xf1, 0x09, 0xaa, 0x8f,
+	0x04, 0x11, 0xe0, 0x03, 0x13, 0x8f, 0x1e, 0x66, 0xfd, 0xd3, 0x4c, 0x13, 0xab, 0xc1, 0x17, 0xf0,
+	0x73, 0x3a, 0x1d, 0x2e, 0xdd, 0xf0, 0x08, 0x55, 0x46, 0x5a, 0xfa, 0x92, 0x4a, 0xed, 0x83, 0x42,
+	0x6a, 0x9a, 0x5b, 0x9b, 0x68, 0xc5, 0x78, 0x51, 0xfc, 0x15, 0xa4, 0xfd, 0x47, 0x25, 0xeb, 0xab,
+	0xac, 0xa5, 0x8d, 0xb1, 0xca, 0xa6, 0x7e, 0x7c, 0xb3, 0x4b, 0x42, 0xda, 0x1d, 0xcf, 0x43, 0x38,
+	0x03, 0x41, 0x7a, 0xad, 0x57, 0x89, 0x75, 0xe3, 0x75, 0x62, 0x19, 0x69, 0x62, 0x55, 0x0f, 0x29,
+	0xf3, 0x28, 0x83, 0xe1, 0xe2, 0x80, 0xef, 0xa2, 0x0d, 0xa9, 0x7b, 0x26, 0x39, 0x4e, 0x13, 0x6b,
+	0x5b, 0xaa, 0x9b, 0x8b, 0x5c, 0xb8, 0xe3, 0x01, 0xda, 0x1a, 0x65, 0x03, 0x66, 0x96, 0x55, 0xc0,
+	0x66, 0x57, 0x0f, 0x5e, 0x77, 0x81, 0xf7, 0xde, 0x4f, 0x13, 0x0b, 0x2f, 0xc6, 0x30, 0xc7, 0xb5,
+	0x06, 0xc3, 0xa7, 0xa8, 0x72, 0xaa, 0x26, 0xdd, 0xdc, 0x38, 0x28, 0x77, 0x6a, 0xbd, 0x8f, 0x2f,
+	0xce, 0x77, 0x1b, 0x43, 0x70, 0xfb, 0xbf, 0x86, 0x1d, 0x19, 0xfa, 0x8e, 0xd4, 0x43, 0xef, 0x82,
+	0xbc, 0x1e, 0x45, 0x04, 0xff, 0x80, 0xb6, 0x4e, 0x63, 0xe6, 0xc8, 0x21, 0x37, 0x37, 0x55, 0x35,
+	0x27, 0x17, 0xe7, 0xbb, 0xbb, 0x23, 0x11, 0xf5, 0x59, 0xec, 0x77, 0xc6, 0x7c, 0x3a, 0x59, 0x7c,
+	0x97, 0xda, 0x48, 0x5a, 0x3c, 0xcb, 0x80, 0x7c, 0x8a, 0xab, 0x18, 0x7e, 0x8a, 0x6a, 0x23, 0x41,
+	0x22, 0x31, 0xa6, 0x3e, 0x98, 0x15, 0x55, 0xf3, 0xb6, 0x16, 0x99, 0xfa, 0xc0, 0x05, 0xf1, 0xc3,
+	0x9e, 0x99, 0x26, 0xd6, 0x0e, 0x97, 0x46, 0x47, 0x82, 0x2e, 0xe9, 0xb7, 0x16, 0xc5, 0x5f, 0xa3,
+	0x6a, 0x9f, 0x4d, 0x15, 0x61, 0x75, 0x2d, 0xa1, 0x92, 0x10, 0xd8, 0xb4, 0x48, 0xb7, 0x06, 0xc3,
+	0xcf, 0x50, 0xfd, 0xab, 0x28, 0x88, 0xc3, 0xc9, 0x5c, 0x11, 0x6e, 0xa9, 0xea, 0xef, 0x5c, 0x9c,
+	0xef, 0xa2, 0x87, 0x71, 0xa4, 0xd6, 0x5e, 0x47, 0x96, 0x7b, 0xcb, 0x95, 0x46, 0x47, 0x93, 0x79,
+	0x91, 0xf3, 0xba, 0x0f, 0xf8, 0x47, 0xd4, 0xc8, 0x88, 0xd5, 0x13, 0x99, 0x35, 0xc5, 0x7c, 0xb8,
+	0xe6, 0x85, 0xcc, 0x2b, 0x0a, 0xf5, 0x30, 0x39, 0xf2, 0x6b, 0xbf, 0x60, 0x82, 0xd0, 0x7f, 0x8b,
+	0xd9, 0x44, 0x4a, 0x86, 0x8f, 0x0a, 0xa3, 0xb1, 0xbc, 0xb9, 0xb5, 0xcc, 0xe1, 0x15, 0x96, 0x97,
+	0x79, 0x1d, 0xda, 0xfe, 0xb3, 0x84, 0x1a, 0xf9, 0xe9, 0xba, 0xea, 0x77, 0xe3, 0xad, 0xfb, 0xfd,
+	0x19, 0xda, 0x18, 0x13, 0x77, 0x31, 0xba, 0xb7, 0xdf, 0x30, 0xba, 0x5d, 0x69, 0xd7, 0x67, 0x22,
+	0x9a, 0x6b, 0x62, 0x41, 0xdc, 0x7c, 0xcb, 0x16, 0xee, 0xf8, 0x73, 0x54, 0x7d, 0x10, 0x78, 0xb1,
+	0xcf, 0xf4, 0xc6, 0xaa, 0xe9, 0xad, 0xe4, 0x68, 0x28, 0xbf, 0x95, 0x56, 0x20, 0x7c, 0x0f, 0x55,
+	0xbe, 0x23, 0x5e, 0x0c, 0x7a, 0x66, 0xea, 0xc7, 0x2d, 0xd5, 0x3c, 0x8f, 0x98, 0x80, 0x68, 0x46,
+	0x1c, 0x18, 0x79, 0xd4, 0x81, 0x1e, 0x4a, 0x13, 0xab, 0xf2, 0x52, 0x99, 0x0d, 0xb3, 0xdf, 0xbd,
+	0x7b, 0xa8, 0x76, 0x95, 0x24, 0x6e, 0xa2, 0xf2, 0xcf, 0x30, 0xd7, 0x52, 0x0c, 0xe5, 0x11, 0xef,
+	0xa0, 0x4d, 0x65, 0xa8, 0xd7, 0xc1, 0x50, 0x5f, 0xbe, 0x28, 0x7d, 0x66, 0x7c, 0x62, 0xa3, 0x66,
+	0x71, 0x82, 0xf0, 0x16, 0xda, 0x18, 0x3c, 0x1e, 0xf4, 0x9b, 0x37, 0xe4, 0xe9, 0xac, 0x7f, 0x7f,
+	0xd0, 0x34, 0x70, 0x15, 0x95, 0xcf, 0xee, 0x7f, 0xdf, 0x2c, 0xf5, 0x1a, 0xaf, 0x2e, 0xf7, 0x8d,
+	0xd7, 0x97, 0xfb, 0xc6, 0x3f, 0x97, 0xfb, 0xc6, 0x13, 0x63, 0x52, 0x51, 0x7f, 0xc6, 0x27, 0xff,
+	0x06, 0x00, 0x00, 0xff, 0xff, 0x7a, 0x66, 0xbc, 0x0d, 0xd1, 0x08, 0x00, 0x00,
 }

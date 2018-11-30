@@ -7,8 +7,8 @@ Input file: metrics_query.proto
 
 The following Messages are defined.
 
-  ObjectSelector
   PaginationSpec
+  QueryList
   QueryResponse
   QueryResult
   QuerySpec

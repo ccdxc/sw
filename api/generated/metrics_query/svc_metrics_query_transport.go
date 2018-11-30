@@ -39,14 +39,14 @@ func MakeGRPCServerMetricsV1(ctx context.Context, endpoints EndpointsMetricsV1Se
 		Endpoints: endpoints,
 		QueryHdlr: grpctransport.NewServer(
 			endpoints.QueryEndpoint,
-			DecodeGrpcReqQuerySpec,
+			DecodeGrpcReqQueryList,
 			EncodeGrpcRespQueryResponse,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("Query", logger)))...,
 		),
 	}
 }
 
-func (s *grpcServerMetricsV1) Query(ctx oldcontext.Context, req *QuerySpec) (*QueryResponse, error) {
+func (s *grpcServerMetricsV1) Query(ctx oldcontext.Context, req *QueryList) (*QueryResponse, error) {
 	_, resp, err := s.QueryHdlr.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, err
