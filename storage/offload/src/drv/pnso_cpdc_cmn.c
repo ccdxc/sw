@@ -54,7 +54,7 @@ cpdc_poll(const struct service_info *svc_info)
 
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 
-	if ((svc_info->si_flags & CHAIN_SFLAG_MODE_POLL) &&
+	if ((svc_info->si_flags & CHAIN_SFLAG_MODE_POLL) ||
 		(svc_info->si_flags & CHAIN_SFLAG_MODE_ASYNC)) {
 		err = status_desc->csd_valid ? PNSO_OK : EBUSY;
 		goto out;
