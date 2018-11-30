@@ -128,12 +128,15 @@ cpdc_common_read_status(struct cpdc_desc *desc,
 
 	if (status_desc->csd_err) {
 		err = status_desc->csd_err;
-		OSAL_LOG_ERROR("hw error reported! csd_err: %d err: %d",
+
+		/* propagate error code; for perf, keep log level higher */
+		OSAL_LOG_DEBUG("hw error reported! csd_err: %d err: %d",
 				status_desc->csd_err, err);
-		goto out;
+		goto pass_err;
 	}
 
 	err = PNSO_OK;
+pass_err:
 	OSAL_LOG_DEBUG("exit!");
 	return err;
 out:

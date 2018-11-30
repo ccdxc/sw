@@ -373,8 +373,11 @@ compress_read_status(struct service_info *svc_info)
 			svc_info->si_batch_info.sbi_desc_idx);
 
 	err = cpdc_common_read_status(cp_desc, status_desc);
-	if (err)
-		goto out;
+	if (err) {
+		/* propagate error code; for perf, keep log level higher */
+		OSAL_LOG_DEBUG("cp operation failed! err: %d", err);
+		goto pass_err;
+	}
 
 	if (cp_desc->u.cd_bits.cc_enabled &&
 			cp_desc->u.cd_bits.cc_insert_header) {
@@ -433,9 +436,9 @@ compress_read_status(struct service_info *svc_info)
 
 done:
 	err = PNSO_OK;
+pass_err:
 	OSAL_LOG_DEBUG("exit!");
 	return err;
-
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
@@ -473,8 +476,11 @@ compress_write_result(struct service_info *svc_info)
 
 	if (status_desc->csd_err) {
 		svc_status->err = cpdc_convert_desc_error(status_desc->csd_err);
-		OSAL_LOG_ERROR("service failed! err: %d", err);
-		goto out;
+
+		/* propagate error code; for perf, keep log level higher */
+		OSAL_LOG_DEBUG("hw error reported! csd_err: %d err: %d",
+				status_desc->csd_err, err);
+		goto pass_err;
 	}
 
 	svc_status->u.dst.data_len = cpdc_desc_data_len_get_eval(svc_info->si_type,
@@ -484,9 +490,10 @@ compress_write_result(struct service_info *svc_info)
 			svc_status->u.dst.data_len);
 
 	err = PNSO_OK;
-	OSAL_LOG_DEBUG("exit! status/result update success!");
+	OSAL_LOG_DEBUG("status/result update success!");
+pass_err:
+	OSAL_LOG_DEBUG("exit!");
 	return err;
-
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;

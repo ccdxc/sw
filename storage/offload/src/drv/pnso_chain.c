@@ -332,12 +332,12 @@ chn_read_write_result(struct service_chain *chain)
 		svc_ops = &sc_entry->ce_svc_info.si_ops;
 		err = svc_ops->read_status(&sc_entry->ce_svc_info);
 		if (err)
-			OSAL_LOG_ERROR("read status failed svc_type: %d err: %d",
+			OSAL_LOG_DEBUG("read status failed svc_type: %d err: %d",
 				       sc_entry->ce_svc_info.si_type, err);
 
 		err = svc_ops->write_result(&sc_entry->ce_svc_info);
 		if (err)
-			OSAL_LOG_ERROR("write result failed svc_type: %d err: %d",
+			OSAL_LOG_DEBUG("write result failed svc_type: %d err: %d",
 				       sc_entry->ce_svc_info.si_type, err);
 
 		sc_entry = sc_entry->ce_next;
