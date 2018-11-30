@@ -291,10 +291,6 @@
             "size_kb": 1
         },
         {
-            "name":"ipsec_ip_header",
-            "size_kb": 64
-        },
-        {
             "_comment": "Combines sesq and asesq",
             "name": "sesq",
             "size_kb": 32768

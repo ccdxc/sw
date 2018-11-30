@@ -8,9 +8,7 @@ struct tx_table_s4_t0_tx_table_s4_t0_cfg_action_d d;
 struct phv_ p;
 
 %%
-        .param IPSEC_IP_HDR_BASE
         .param IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N
-
         .align
 esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet:
     phvwri p.{app_header_table0_valid...app_header_table3_valid}, 0

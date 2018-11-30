@@ -342,13 +342,11 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     i++;
 
     symbols[i].name = "esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet.bin";
-    symbols[i].num_params = 3;
+    symbols[i].num_params = 2;
     symbols[i].params[0].name = IPSEC_CB_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_IPSECCB);
-    symbols[i].params[1].name = IPSEC_IP_HDR_BASE;
-    symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_IPSEC_IP_HDR);
-    symbols[i].params[2].name = IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N;
-    symbols[i].params[2].val = get_start_offset(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS);
+    symbols[i].params[1].name = IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N;
+    symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS);
     i++;
 
     symbols[i].name = "esp_ipv4_tunnel_h2n_update_input_desc_aol.bin";
