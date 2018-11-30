@@ -76,9 +76,7 @@ func main() {
 		if err != nil {
 			logger.Fatalf("error creating events proxy instance: %v", err)
 		}
-		if result != nil {
-			break
-		}
+		break
 	}
 
 	eps := result.(*evtsproxy.EventsProxy)

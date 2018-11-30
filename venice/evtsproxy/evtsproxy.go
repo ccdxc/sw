@@ -122,7 +122,7 @@ func (ep *EventsProxy) RegisterEventsWriter(writerType WriterType, config interf
 			}
 		}
 
-		veniceWriter, err := writers.NewVeniceWriter(writerType.String(), writerChLen, evtsMgrURL, ep.resolverClient, ep.logger)
+		veniceWriter, err := writers.NewVeniceWriter("venice", writerChLen, evtsMgrURL, ep.resolverClient, ep.logger)
 		if err != nil {
 			return err
 		}
