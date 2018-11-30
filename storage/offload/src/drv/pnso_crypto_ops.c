@@ -423,7 +423,8 @@ crypto_poll(const struct service_info *svc_info)
 	cpl_data = svc_info->si_type == PNSO_SVC_TYPE_DECRYPT ?
 		CRYPTO_DECRYPT_CPL_DATA : CRYPTO_ENCRYPT_CPL_DATA;
 
-	if (svc_info->si_flags & CHAIN_SFLAG_MODE_POLL) {
+	if ((svc_info->si_flags & CHAIN_SFLAG_MODE_POLL) &&
+		(svc_info->si_flags & CHAIN_SFLAG_MODE_ASYNC)) {
 		err = (status_desc->csd_cpl_data == cpl_data) ? PNSO_OK : EBUSY;
 		goto out;
 	}
