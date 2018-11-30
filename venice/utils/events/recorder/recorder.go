@@ -284,7 +284,7 @@ func (r *recorderImpl) writeToFile(event *evtsapi.Event) error {
 // createEvtsProxyRPCClient helper function to create the events proxy RPC client.
 func (r *recorderImpl) createEvtsProxyRPCClient() error {
 	for {
-		evtsProxyClient, err := rpckit.NewRPCClient(r.getID(), r.eventsProxy.url, rpckit.WithRemoteServerName(globals.EvtsProxy))
+		evtsProxyClient, err := rpckit.NewRPCClient(r.getID(), r.eventsProxy.url, rpckit.WithTLSProvider(nil))
 		if err != nil {
 			log.Errorf("error connecting to proxy server using URL: %v, err: %v", r.eventsProxy.url, err)
 			time.Sleep(2 * time.Second)
