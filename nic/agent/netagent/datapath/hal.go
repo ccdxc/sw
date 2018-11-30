@@ -3,6 +3,7 @@
 package datapath
 
 import (
+	"math"
 	"os"
 	"time"
 
@@ -219,7 +220,10 @@ func (hd *Hal) waitForHAL(halURL string) (rpcClient *rpckit.RPCClient, err error
 		select {
 		case <-ticker.C:
 			log.Debugf("Trying to connect to HAL at %s", halURL)
-			rpcClient, err = rpckit.NewRPCClient("hal", halURL, rpckit.WithTLSProvider(nil))
+			var rpcopts []rpckit.Option
+			rpcopts = append(rpcopts, rpckit.WithTLSProvider(nil))
+			rpcopts = append(rpcopts, rpckit.WithMaxMsgSize(math.MaxUint32))
+			rpcClient, err = rpckit.NewRPCClient("hal", halURL, rpcopts...)
 			if err == nil {
 				halUP <- true
 			}
