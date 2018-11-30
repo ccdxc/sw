@@ -798,6 +798,7 @@ static int sonic_lif_per_core_resource_init(struct lif *lif,
 	/* Initialize local driver structures */
 	res->lif = lif;
 	res->core_id = -1; /* determined later */
+	spin_lock_init(&res->seq_statusq_lock);
 
 	err = sonic_cpdc_qs_init(res, seq_q_count / 2);
 	if (err)
@@ -1115,10 +1116,14 @@ sonic_get_seq_statusq(struct lif *lif, enum sonic_queue_type sonic_qtype,
 		break;
 	}
 
+	spin_lock(&pc_res->seq_statusq_lock);
 	free_qid = find_first_zero_bit(bmp, max);
-	if (free_qid >= max)
+	if (free_qid >= max) {
+		spin_unlock(&pc_res->seq_statusq_lock);
 		return err;
+	}
 	set_bit(free_qid, bmp);
+	spin_unlock(&pc_res->seq_statusq_lock);
 
 	switch (sonic_qtype) {
 	case SONIC_QTYPE_CPDC_STATUS:
@@ -1159,7 +1164,9 @@ sonic_put_seq_statusq(struct queue *q)
 			break;
 		}
 
+		spin_lock(&pc_res->seq_statusq_lock);
 		clear_bit(q->qpos, bmp);
+		spin_unlock(&pc_res->seq_statusq_lock);
 	}
 }
 
