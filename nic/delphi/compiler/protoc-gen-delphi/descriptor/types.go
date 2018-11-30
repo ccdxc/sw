@@ -331,9 +331,48 @@ func (f *Field) GetGolangTypeName() string {
 	}
 }
 
+// GetWireTypeName returns wire type for the field
+func (f *Field) GetWireTypeName() string {
+	var proto3TypeNames = map[descriptor.FieldDescriptorProto_Type]string{
+		descriptor.FieldDescriptorProto_TYPE_DOUBLE:  "fixed64",
+		descriptor.FieldDescriptorProto_TYPE_FLOAT:   "fixed32",
+		descriptor.FieldDescriptorProto_TYPE_INT64:   "varint",
+		descriptor.FieldDescriptorProto_TYPE_UINT64:  "varint",
+		descriptor.FieldDescriptorProto_TYPE_INT32:   "varint",
+		descriptor.FieldDescriptorProto_TYPE_UINT32:  "varint",
+		descriptor.FieldDescriptorProto_TYPE_FIXED64: "fixed64",
+		descriptor.FieldDescriptorProto_TYPE_FIXED32: "fixed32",
+		descriptor.FieldDescriptorProto_TYPE_BOOL:    "bool",
+		descriptor.FieldDescriptorProto_TYPE_STRING:  "bytes",
+		// FieldDescriptorProto_TYPE_GROUP
+		// FieldDescriptorProto_TYPE_MESSAGE
+		descriptor.FieldDescriptorProto_TYPE_BYTES: "bytes",
+		// FieldDescriptorProto_TYPE_ENUM
+		// TODO(yugui) Handle Enum
+		descriptor.FieldDescriptorProto_TYPE_SFIXED32: "fixed32",
+		descriptor.FieldDescriptorProto_TYPE_SFIXED64: "fixed64",
+		descriptor.FieldDescriptorProto_TYPE_SINT32:   "zigzag32",
+		descriptor.FieldDescriptorProto_TYPE_SINT64:   "zigzag64",
+	}
+
+	switch f.GetType() {
+	case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
+		sl := strings.Split(f.GetTypeName(), ".")
+		if len(sl) > 2 {
+			return sl[2]
+		} else if len(sl) > 1 {
+			return sl[1]
+		} else {
+			return sl[0]
+		}
+	default:
+		return proto3TypeNames[f.GetType()]
+	}
+}
+
 // GetCamelCaseName returns camel cased name
 func (f *Field) GetCamelCaseName() string {
-        return gogen.CamelCase(f.GetName())
+	return gogen.CamelCase(f.GetName())
 }
 
 // IsRepeated checks if the field is a repeated field

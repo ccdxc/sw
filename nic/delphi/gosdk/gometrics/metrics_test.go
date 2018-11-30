@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/golang/protobuf/proto"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -38,8 +37,7 @@ func (mtr *TestMetrics) Size() int {
 // Unmarshall unmarshall the raw counters from shared memory
 func (mtr *TestMetrics) Unmarshall() error {
 	var offset int
-	val, _ := proto.DecodeVarint([]byte(mtr.metrics.GetKey()))
-	mtr.key = uint32(val)
+	DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
 	mtr.RxCounter = mtr.metrics.GetCounter(offset)
 	offset += mtr.RxCounter.Size()
 	mtr.TxCounter = mtr.metrics.GetCounter(offset)
@@ -120,7 +118,7 @@ func (it *TestMetricsIterator) Next() *TestMetrics {
 
 // Find finds the metrics object by key
 func (it *TestMetricsIterator) Find(key uint32) (*TestMetrics, error) {
-	mtr, err := it.iter.Find(string(proto.EncodeVarint(uint64(key))))
+	mtr, err := it.iter.Find(EncodeScalarKey(key))
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +130,7 @@ func (it *TestMetricsIterator) Find(key uint32) (*TestMetrics, error) {
 // Create creates the object in shared memory
 func (it *TestMetricsIterator) Create(key uint32) (*TestMetrics, error) {
 	tmtr := &TestMetrics{}
-	mtr := it.iter.Create(string(proto.EncodeVarint(uint64(key))), tmtr.Size())
+	mtr := it.iter.Create(EncodeScalarKey(key), tmtr.Size())
 	tmtr = &TestMetrics{metrics: mtr, key: key}
 	tmtr.Unmarshall()
 	return tmtr, nil
@@ -140,7 +138,7 @@ func (it *TestMetricsIterator) Create(key uint32) (*TestMetrics, error) {
 
 // Delete deletes the object from shared memory
 func (it *TestMetricsIterator) Delete(key uint32) error {
-	return it.iter.Delete(string(proto.EncodeVarint(uint64(key))))
+	return it.iter.Delete(EncodeScalarKey(key))
 }
 
 // NewTestMetricsIterator returns an iterator
@@ -176,10 +174,10 @@ func TestMetricsGeneric(t *testing.T) {
 	Assert(t, (count == 0), "Iterator found objects before create")
 
 	// create an entry
-	iter.Create("TestKey", 100)
+	iter.Create([]byte("TestKey"), 100)
 
 	// find the key
-	met, err := iter.Find("TestKey")
+	met, err := iter.Find([]byte("TestKey"))
 	AssertOk(t, err, "Error finding metrics entry")
 	fmt.Printf("found Metrics: %v\n", met.String())
 
@@ -194,10 +192,10 @@ func TestMetricsGeneric(t *testing.T) {
 	Assert(t, (count == 1), "Iterator found invalid objects")
 
 	// delete the entry
-	iter.Delete("TestKey")
+	iter.Delete([]byte("TestKey"))
 
 	// make sure we dont find it againa
-	_, err = iter.Find("TestKey")
+	_, err = iter.Find([]byte("TestKey"))
 	Assert(t, (err != nil), "metrics find auceeded after delete")
 
 	// make sure iterator doesnt find it

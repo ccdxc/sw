@@ -3,8 +3,6 @@
 package goproto
 
 import (
-	"encoding/json"
-
 	"github.com/golang/protobuf/proto"
 
 	"github.com/pensando/sw/api"
@@ -59,8 +57,7 @@ func (mtr *ExampleMetrics) Size() int {
 func (mtr *ExampleMetrics) Unmarshal() error {
 	var offset int
 
-	val, _ := proto.DecodeVarint([]byte(mtr.metrics.GetKey()))
-	mtr.key = uint32(val)
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
 
 	mtr.RxPkts = mtr.metrics.GetCounter(offset)
 	offset += mtr.RxPkts.Size()
@@ -178,7 +175,7 @@ func (it *ExampleMetricsIterator) Next() *ExampleMetrics {
 
 func (it *ExampleMetricsIterator) Find(key uint32) (*ExampleMetrics, error) {
 
-	mtr, err := it.iter.Find(string(proto.EncodeVarint(uint64(key))))
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
 
 	if err != nil {
 		return nil, err
@@ -193,7 +190,7 @@ func (it *ExampleMetricsIterator) Find(key uint32) (*ExampleMetrics, error) {
 func (it *ExampleMetricsIterator) Create(key uint32) (*ExampleMetrics, error) {
 	tmtr := &ExampleMetrics{}
 
-	mtr := it.iter.Create(string(proto.EncodeVarint(uint64(key))), tmtr.Size())
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
 
 	tmtr = &ExampleMetrics{metrics: mtr, key: key}
 	tmtr.Unmarshal()
@@ -204,7 +201,7 @@ func (it *ExampleMetricsIterator) Create(key uint32) (*ExampleMetrics, error) {
 
 func (it *ExampleMetricsIterator) Delete(key uint32) error {
 
-	return it.iter.Delete(string(proto.EncodeVarint(uint64(key))))
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
 
 }
 
@@ -223,8 +220,14 @@ func NewExampleMetricsIterator() (*ExampleMetricsIterator, error) {
 }
 
 type ExampleKey struct {
-	Ifidx uint32
+	Ifidx uint32 `protobuf:"varint,1,opt,name=Ifidx,json=Ifidx" json:"Ifidx,omitempty"`
+
+	Lifid uint32 `protobuf:"varint,2,opt,name=Lifid,json=Lifid" json:"Lifid,omitempty"`
 }
+
+func (m *ExampleKey) Reset()         { *m = ExampleKey{} }
+func (m *ExampleKey) String() string { return proto.CompactTextString(m) }
+func (*ExampleKey) ProtoMessage()    {}
 
 type NestedKeyExampleMetrics struct {
 	ObjectMeta api.ObjectMeta
@@ -274,7 +277,7 @@ func (mtr *NestedKeyExampleMetrics) Size() int {
 func (mtr *NestedKeyExampleMetrics) Unmarshal() error {
 	var offset int
 
-	json.Unmarshal([]byte(mtr.metrics.GetKey()), &mtr.key)
+	proto.Unmarshal(mtr.metrics.GetKey(), &mtr.key)
 
 	mtr.RxPkts = mtr.metrics.GetCounter(offset)
 	offset += mtr.RxPkts.Size()
@@ -392,8 +395,8 @@ func (it *NestedKeyExampleMetricsIterator) Next() *NestedKeyExampleMetrics {
 
 func (it *NestedKeyExampleMetricsIterator) Find(key ExampleKey) (*NestedKeyExampleMetrics, error) {
 
-	buf, _ := json.Marshal(key)
-	mtr, err := it.iter.Find(string(buf))
+	buf, _ := proto.Marshal(&key)
+	mtr, err := it.iter.Find(buf)
 
 	if err != nil {
 		return nil, err
@@ -408,8 +411,8 @@ func (it *NestedKeyExampleMetricsIterator) Find(key ExampleKey) (*NestedKeyExamp
 func (it *NestedKeyExampleMetricsIterator) Create(key ExampleKey) (*NestedKeyExampleMetrics, error) {
 	tmtr := &NestedKeyExampleMetrics{}
 
-	buf, _ := json.Marshal(key)
-	mtr := it.iter.Create(string(buf), tmtr.Size())
+	buf, _ := proto.Marshal(&key)
+	mtr := it.iter.Create(buf, tmtr.Size())
 
 	tmtr = &NestedKeyExampleMetrics{metrics: mtr, key: key}
 	tmtr.Unmarshal()
@@ -420,8 +423,8 @@ func (it *NestedKeyExampleMetricsIterator) Create(key ExampleKey) (*NestedKeyExa
 
 func (it *NestedKeyExampleMetricsIterator) Delete(key ExampleKey) error {
 
-	buf, _ := json.Marshal(key)
-	return it.iter.Delete(string(buf))
+	buf, _ := proto.Marshal(&key)
+	return it.iter.Delete(buf)
 
 }
 
@@ -603,7 +606,7 @@ func (it *SingletonExampleMetricsIterator) Next() *SingletonExampleMetrics {
 
 func (it *SingletonExampleMetricsIterator) Find() (*SingletonExampleMetrics, error) {
 	var key int
-	mtr, err := it.iter.Find(string(proto.EncodeVarint(uint64(0))))
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(uint32(0)))
 
 	if err != nil {
 		return nil, err
@@ -618,7 +621,7 @@ func (it *SingletonExampleMetricsIterator) Find() (*SingletonExampleMetrics, err
 func (it *SingletonExampleMetricsIterator) Create() (*SingletonExampleMetrics, error) {
 	var key int
 	tmtr := &SingletonExampleMetrics{}
-	mtr := it.iter.Create(string(proto.EncodeVarint(uint64(0))), tmtr.Size())
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(uint32(0)), tmtr.Size())
 
 	tmtr = &SingletonExampleMetrics{metrics: mtr, key: key}
 	tmtr.Unmarshal()
@@ -628,7 +631,7 @@ func (it *SingletonExampleMetricsIterator) Create() (*SingletonExampleMetrics, e
 // Delete deletes the object from shared memory
 
 func (it *SingletonExampleMetricsIterator) Delete() error {
-	return it.iter.Delete(string(proto.EncodeVarint(uint64(0))))
+	return it.iter.Delete(gometrics.EncodeScalarKey(uint32(0)))
 
 }
 
@@ -694,8 +697,7 @@ func (mtr *DpExampleMetrics) Size() int {
 func (mtr *DpExampleMetrics) Unmarshal() error {
 	var offset int
 
-	val, _ := proto.DecodeVarint([]byte(mtr.metrics.GetKey()))
-	mtr.key = uint32(val)
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
 
 	mtr.RxPkts = mtr.metrics.GetCounter(offset)
 	offset += mtr.RxPkts.Size()
@@ -813,7 +815,7 @@ func (it *DpExampleMetricsIterator) Next() *DpExampleMetrics {
 
 func (it *DpExampleMetricsIterator) Find(key uint32) (*DpExampleMetrics, error) {
 
-	mtr, err := it.iter.Find(string(proto.EncodeVarint(uint64(key))))
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
 
 	if err != nil {
 		return nil, err
@@ -828,7 +830,7 @@ func (it *DpExampleMetricsIterator) Find(key uint32) (*DpExampleMetrics, error) 
 func (it *DpExampleMetricsIterator) Create(key uint32) (*DpExampleMetrics, error) {
 	tmtr := &DpExampleMetrics{}
 
-	mtr := it.iter.Create(string(proto.EncodeVarint(uint64(key))), tmtr.Size())
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
 
 	tmtr = &DpExampleMetrics{metrics: mtr, key: key}
 	tmtr.Unmarshal()
@@ -839,7 +841,7 @@ func (it *DpExampleMetricsIterator) Create(key uint32) (*DpExampleMetrics, error
 
 func (it *DpExampleMetricsIterator) Delete(key uint32) error {
 
-	return it.iter.Delete(string(proto.EncodeVarint(uint64(key))))
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
 
 }
 
@@ -905,7 +907,7 @@ func (mtr *NestedKeyDpExampleMetrics) Size() int {
 func (mtr *NestedKeyDpExampleMetrics) Unmarshal() error {
 	var offset int
 
-	json.Unmarshal([]byte(mtr.metrics.GetKey()), &mtr.key)
+	proto.Unmarshal(mtr.metrics.GetKey(), &mtr.key)
 
 	mtr.RxPkts = mtr.metrics.GetCounter(offset)
 	offset += mtr.RxPkts.Size()
@@ -1023,8 +1025,8 @@ func (it *NestedKeyDpExampleMetricsIterator) Next() *NestedKeyDpExampleMetrics {
 
 func (it *NestedKeyDpExampleMetricsIterator) Find(key ExampleKey) (*NestedKeyDpExampleMetrics, error) {
 
-	buf, _ := json.Marshal(key)
-	mtr, err := it.iter.Find(string(buf))
+	buf, _ := proto.Marshal(&key)
+	mtr, err := it.iter.Find(buf)
 
 	if err != nil {
 		return nil, err
@@ -1039,8 +1041,8 @@ func (it *NestedKeyDpExampleMetricsIterator) Find(key ExampleKey) (*NestedKeyDpE
 func (it *NestedKeyDpExampleMetricsIterator) Create(key ExampleKey) (*NestedKeyDpExampleMetrics, error) {
 	tmtr := &NestedKeyDpExampleMetrics{}
 
-	buf, _ := json.Marshal(key)
-	mtr := it.iter.Create(string(buf), tmtr.Size())
+	buf, _ := proto.Marshal(&key)
+	mtr := it.iter.Create(buf, tmtr.Size())
 
 	tmtr = &NestedKeyDpExampleMetrics{metrics: mtr, key: key}
 	tmtr.Unmarshal()
@@ -1051,8 +1053,8 @@ func (it *NestedKeyDpExampleMetricsIterator) Create(key ExampleKey) (*NestedKeyD
 
 func (it *NestedKeyDpExampleMetricsIterator) Delete(key ExampleKey) error {
 
-	buf, _ := json.Marshal(key)
-	return it.iter.Delete(string(buf))
+	buf, _ := proto.Marshal(&key)
+	return it.iter.Delete(buf)
 
 }
 

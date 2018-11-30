@@ -185,6 +185,10 @@ func isTrue(boolPtr *bool) bool {
 	return *boolPtr
 }
 
+func getQuote() string {
+	return "`"
+}
+
 var funcMap = template.FuncMap{
 	"ToUpper":    strings.ToUpper,
 	"ToLower":    strings.ToLower,
@@ -192,6 +196,7 @@ var funcMap = template.FuncMap{
 	"HasPrefix":  strings.HasPrefix,
 	"ThrowError": throwError,
 	"IsTrue":     isTrue,
+	"Quote":      getQuote,
 }
 
 // ApplyTemplate applies template on a proto file

@@ -40,8 +40,8 @@ func newMetricsIterator(kind string) (MetricsIterator, error) {
 }
 
 // Find returns a metrics by its key
-func (it *delphiMetricsIterator) Find(key string) (Metrics, error) {
-	mtr := C.MetricsIteratorFind_cgo(it.cgo_iter, C.CString(key), C.int(len(key)))
+func (it *delphiMetricsIterator) Find(key []byte) (Metrics, error) {
+	mtr := C.MetricsIteratorFind_cgo(it.cgo_iter, C.CString(string(key)), C.int(len(key)))
 	if mtr == nil {
 		return nil, errors.New("Could not find the key")
 	}
@@ -77,36 +77,36 @@ func (it *delphiMetricsIterator) Next() Metrics {
 	return nil
 }
 
-func (it *delphiMetricsIterator) Create(key string, length int) Metrics {
+func (it *delphiMetricsIterator) Create(key []byte, length int) Metrics {
 
 	return &delphiMetrics{
-		entry:  C.MetricsCreateEntry(C.CString(it.kind), C.CString(key), C.int(len(key)), C.int(length)),
+		entry:  C.MetricsCreateEntry(C.CString(it.kind), C.CString(string(key)), C.int(len(key)), C.int(length)),
 		keylen: len(key),
 		vallen: length,
 	}
 }
 
-func (it *delphiMetricsIterator) Delete(key string) error {
-	C.MetricsIteratorDelete_cgo(it.cgo_iter, C.CString(key), C.int(len(key)))
+func (it *delphiMetricsIterator) Delete(key []byte) error {
+	C.MetricsIteratorDelete_cgo(it.cgo_iter, C.CString(string(key)), C.int(len(key)))
 	return nil
 }
 
 func (m *delphiMetrics) String() string {
 	// keystr := C.GoString(C.MetricsEntryKey(m.entry))
 	// valstr := C.GoString(MetricsEntryValue(m.entry))
-	kbytes := C.GoBytes(unsafe.Pointer(C.MetricsEntryKey(m.entry)), C.int(m.keylen))
+	kBytes := C.GoBytes(unsafe.Pointer(C.MetricsEntryKey(m.entry)), C.int(m.keylen))
 	retstr := ""
 
 	for i := 0; i < m.keylen; i++ {
-		retstr += fmt.Sprintf("%d ", kbytes[i])
+		retstr += fmt.Sprintf("%d ", kBytes[i])
 	}
 
 	return retstr
 }
 
 // returns the key for the metrics
-func (m *delphiMetrics) GetKey() string {
-	return C.GoString(C.MetricsEntryKey(m.entry))
+func (m *delphiMetrics) GetKey() []byte {
+	return C.GoBytes(unsafe.Pointer(C.MetricsEntryKey(m.entry)), C.MetricsEntryKeylen(m.entry))
 }
 
 func (m *delphiMetrics) GetCounter(offset int) Counter {

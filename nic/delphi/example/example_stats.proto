@@ -17,6 +17,7 @@ message ExampleMetrics {
 // example key with nested fields
 message ExampleKey {
     uint32    Ifidx = 1;
+    uint32    Lifid = 2;
 }
 
 // example with nested key

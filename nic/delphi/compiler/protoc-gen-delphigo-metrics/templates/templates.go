@@ -73,10 +73,9 @@ func (mtr *{{.GetName}}) Unmarshal() error {
 	{{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}}
 	{{if (eq .GetName "Key") }}
 	{{ if .TypeIsMessage }}
-	json.Unmarshal([]byte(mtr.metrics.GetKey()), &mtr.key)
+	proto.Unmarshal(mtr.metrics.GetKey(), &mtr.key)
 	{{else}}
-	val, _ := proto.DecodeVarint([]byte(mtr.metrics.GetKey()))
-	mtr.key = {{.GetGolangTypeName}}(val)
+        gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
 	{{end}}
 	{{else if (eq .GetTypeName ".delphi.Counter") }}
 	mtr.{{.GetCamelCaseName}} = mtr.metrics.GetCounter(offset)
@@ -146,16 +145,16 @@ func (it *{{.GetName}}Iterator) Next() *{{.GetName}} {
 {{if (.HasExtOption "delphi.singleton")}}
 func (it *{{.GetName}}Iterator) Find() (*{{.GetName}}, error) {
 	var key int
-	mtr, err := it.iter.Find(string(proto.EncodeVarint(uint64(0))))
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(uint32(0)))
 {{else}}
 {{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}}
 {{if (eq .GetName "Key") }}
 func (it *{{$msgName}}Iterator) Find(key {{.GetGolangTypeName}}) (*{{$msgName}}, error) {
 	{{ if .TypeIsMessage }}
-	buf, _ := json.Marshal(key)
-	mtr, err := it.iter.Find(string(buf))
+	buf, _ := proto.Marshal(&key)
+	mtr, err := it.iter.Find(buf)
 	{{else}}
-	mtr, err := it.iter.Find(string(proto.EncodeVarint(uint64(key))))
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
 	{{end}}
 {{end}}{{end}}{{end}}
 	if err != nil {
@@ -171,17 +170,17 @@ func (it *{{$msgName}}Iterator) Find(key {{.GetGolangTypeName}}) (*{{$msgName}},
 func (it *{{.GetName}}Iterator) Create() (*{{.GetName}}, error) {
 	var key int
 	tmtr := &{{.GetName}}{}
-	mtr := it.iter.Create(string(proto.EncodeVarint(uint64(0))), tmtr.Size())
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(uint32(0)), tmtr.Size())
 {{else}}
 {{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}}
 {{if (eq .GetName "Key") }}
 func (it *{{$msgName}}Iterator) Create(key {{.GetGolangTypeName}}) (*{{$msgName}}, error) {
 	tmtr := &{{$msgName}}{}
 	{{ if .TypeIsMessage }}
-	buf, _ := json.Marshal(key)
-	mtr := it.iter.Create(string(buf), tmtr.Size())
+	buf, _ := proto.Marshal(&key)
+	mtr := it.iter.Create(buf, tmtr.Size())
 	{{else}}
-	mtr := it.iter.Create(string(proto.EncodeVarint(uint64(key))), tmtr.Size())
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
 	{{end}}
 {{end}}{{end}}{{end}}
 	tmtr = &{{.GetName}}{metrics: mtr, key: key}
@@ -192,16 +191,16 @@ func (it *{{$msgName}}Iterator) Create(key {{.GetGolangTypeName}}) (*{{$msgName}
 // Delete deletes the object from shared memory
 {{if (.HasExtOption "delphi.singleton")}}
 func (it *{{.GetName}}Iterator) Delete() error {
-	return it.iter.Delete(string(proto.EncodeVarint(uint64(0))))
+	return it.iter.Delete(gometrics.EncodeScalarKey(uint32(0)))
 {{else}}
 {{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}}
 {{if (eq .GetName "Key") }}
 func (it *{{$msgName}}Iterator) Delete(key {{.GetGolangTypeName}}) error {
 	{{ if .TypeIsMessage }}
-	buf, _ := json.Marshal(key)
-	return it.iter.Delete(string(buf))
+	buf, _ := proto.Marshal(&key)
+	return it.iter.Delete(buf)
 	{{else}}
-	return it.iter.Delete(string(proto.EncodeVarint(uint64(key))))
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
 	{{end}}
 {{end}}{{end}}{{end}}
 }
@@ -223,9 +222,13 @@ func New{{.GetName}}Iterator() (*{{.GetName}}Iterator, error) {
   {{if (HasSuffix .GetName "Key")}}
 type {{.GetName}} struct {
     {{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}}
-	{{.GetName}}	{{.GetGolangTypeName}}
+	{{.GetName}}	{{.GetGolangTypeName}} {{Quote}}protobuf:"{{.GetWireTypeName}},{{.GetNumber}},opt,name={{.GetName}},json={{.GetName}}" json:"{{.GetName}},omitempty"{{Quote}}
     {{end}}
 }
+func (m *{{$msgName}}) Reset()                    { *m = {{$msgName}}{} }
+func (m *{{$msgName}}) String() string            { return proto.CompactTextString(m) }
+func (*{{$msgName}}) ProtoMessage()               {}
+
   {{end}}
 {{end}}
 {{end}}

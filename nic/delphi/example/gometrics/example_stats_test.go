@@ -41,11 +41,56 @@ func TestMetricsSpecific(t *testing.T) {
 	for iter.HasNext() {
 		mtr := iter.Next()
 		fmt.Printf("new TestMetrics: %+v\n", mtr)
-		Assert(t, (mtr.GetKey() == 3000), "Invalid key value")
+		Assert(t, (mtr.GetKey() == 3000), "Invalid key value", mtr.GetKey())
 		count++
 	}
 	Assert(t, (count == 1), "Iterator found invalid objects", count)
 
 	// delete the metrics
 	iter.Delete(3000)
+}
+
+func TestMetricsNested(t *testing.T) {
+	iter, err := goproto.NewNestedKeyExampleMetricsIterator()
+	AssertOk(t, err, "Error creating metrics iterator")
+	if iter == nil {
+		// skip the test on osx
+		return
+	}
+
+	// nested key
+	key := goproto.ExampleKey{
+		Ifidx: 5000,
+	}
+
+	// create an entry
+	tmtr, err := iter.Create(key)
+	AssertOk(t, err, "Error creating test metrics entry")
+	fmt.Printf("Created metrics: %+v\n", tmtr)
+
+	// set some values
+	tmtr.SetRxPkts(200)
+	tmtr.SetTxPkts(300)
+	tmtr.SetRxPktRate(400.0)
+	tmtr.SetTxPktRate(500.0)
+
+	tmtr, err = iter.Find(key)
+	AssertOk(t, err, "Error finding test metrics entry")
+	fmt.Printf("Found metrics: %+v\n", tmtr)
+	Assert(t, (tmtr.RxPkts == 200), "Invalid counter value")
+	Assert(t, (tmtr.RxPktRate == 400.0), "Invalid gauge value")
+	Assert(t, (tmtr.GetKey() == key), "Invalid key value")
+
+	iter, err = goproto.NewNestedKeyExampleMetricsIterator()
+	count := 0
+	for iter.HasNext() {
+		mtr := iter.Next()
+		fmt.Printf("new TestMetrics: %+v\n", mtr)
+		Assert(t, (mtr.GetKey() == key), "Invalid key value", mtr.GetKey())
+		count++
+	}
+	Assert(t, (count == 1), "Iterator found invalid objects", count)
+
+	// delete the metrics
+	iter.Delete(key)
 }

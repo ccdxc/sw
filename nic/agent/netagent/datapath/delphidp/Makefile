@@ -10,7 +10,6 @@ build:
                 -I ../../../../../vendor/github.com/gogo/protobuf/gogoproto/ \
                 -I ../../../../delphi/proto/delphi/ 
 	goimports -w ./halproto/*.go
-	go build -o ${BLD_BIN_DIR}/delphidp_halproto  ./halproto/
 
 clean:
 	rm -f ./halproto/*.pb.go

@@ -3,8 +3,6 @@
 package goproto
 
 import (
-	"github.com/golang/protobuf/proto"
-
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/delphi/gosdk/gometrics"
 )
@@ -257,8 +255,7 @@ func (mtr *LifMetrics) Size() int {
 func (mtr *LifMetrics) Unmarshal() error {
 	var offset int
 
-	val, _ := proto.DecodeVarint([]byte(mtr.metrics.GetKey()))
-	mtr.key = uint64(val)
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
 
 	mtr.RxUnicastPackets = mtr.metrics.GetCounter(offset)
 	offset += mtr.RxUnicastPackets.Size()
@@ -1076,7 +1073,7 @@ func (it *LifMetricsIterator) Next() *LifMetrics {
 
 func (it *LifMetricsIterator) Find(key uint64) (*LifMetrics, error) {
 
-	mtr, err := it.iter.Find(string(proto.EncodeVarint(uint64(key))))
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
 
 	if err != nil {
 		return nil, err
@@ -1091,7 +1088,7 @@ func (it *LifMetricsIterator) Find(key uint64) (*LifMetrics, error) {
 func (it *LifMetricsIterator) Create(key uint64) (*LifMetrics, error) {
 	tmtr := &LifMetrics{}
 
-	mtr := it.iter.Create(string(proto.EncodeVarint(uint64(key))), tmtr.Size())
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
 
 	tmtr = &LifMetrics{metrics: mtr, key: key}
 	tmtr.Unmarshal()
@@ -1102,7 +1099,7 @@ func (it *LifMetricsIterator) Create(key uint64) (*LifMetrics, error) {
 
 func (it *LifMetricsIterator) Delete(key uint64) error {
 
-	return it.iter.Delete(string(proto.EncodeVarint(uint64(key))))
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
 
 }
 

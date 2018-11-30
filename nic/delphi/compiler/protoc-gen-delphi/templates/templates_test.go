@@ -1,6 +1,8 @@
 package templates
 
 import (
+	"fmt"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -57,9 +59,11 @@ func runTemplates(req *plugin.CodeGeneratorRequest) (map[string]string, error) {
 }
 
 func checkForString(t *testing.T, ret map[string]string, prefix, expected string) {
+         _, file, line, _ := runtime.Caller(1)
+	lineStr := fmt.Sprintf("(%v:%v)", file, line)
 	code, ok := ret[prefix]
-	Assert(t, ok, prefix+" code wasnt generated", ret)
-	Assert(t, strings.Contains(code, expected), expected+" string not found", code)
+	Assert(t, ok, prefix+" code wasnt generated "+lineStr, ret)
+	Assert(t, strings.Contains(code, expected), expected+" string not found "+lineStr, code)
 }
 
 func checkStringDoesntExist(t *testing.T, ret map[string]string, prefix, expected string) {
@@ -539,7 +543,7 @@ func TestDelphicMetricsKeyType(t *testing.T) {
 	checkForString(t, ret, ".delphi.hpp", "delphi::metrics::CounterPtr   PktCounter_;")
 	checkForString(t, ret, ".delphi.hpp", "delphi::metrics::GaugePtr     PktRate_;")
 	checkForString(t, ret, ".delphi.hpp", "InterfaceMetrics(test::InterfaceIdx key, char *ptr);")
-	checkForString(t, ret, ".delphi.hpp", "InterfaceMetrics(char *kptr, char *vptr) : InterfaceMetrics(*(test::InterfaceIdx *)kptr, vptr){ };")
+	checkForString(t, ret, ".delphi.hpp", "InterfaceMetrics(char *kptr, char *vptr) : InterfaceMetrics(getInterfaceIdxFromPtr(kptr), vptr){ };")
 	checkForString(t, ret, ".delphi.hpp", "InterfaceIdx GetKey() { return key_; };")
 	checkForString(t, ret, ".delphi.hpp", "static InterfaceMetricsPtr NewInterfaceMetrics(test::InterfaceIdx key);")
 	checkForString(t, ret, ".delphi.hpp", "delphi::metrics::CounterPtr PktCounter() { return PktCounter_; };")
@@ -548,8 +552,10 @@ func TestDelphicMetricsKeyType(t *testing.T) {
 	checkForString(t, ret, ".delphi.hpp", "class InterfaceMetricsIterator {")
 	checkForString(t, ret, ".delphi.hpp", "explicit InterfaceMetricsIterator(delphi::shm::TableIterator tbl_iter) {")
 	checkForString(t, ret, ".delphi.hpp", "inline InterfaceMetricsPtr Get() {")
-	checkForString(t, ret, ".delphi.hpp", "test::InterfaceIdx *key = (test::InterfaceIdx *)tbl_iter_.Key();")
-	checkForString(t, ret, ".delphi.hpp", "return make_shared<InterfaceMetrics>(*key, tbl_iter_.Value());")
+	checkForString(t, ret, ".delphi.hpp", "char *keyptr = tbl_iter_.Key();")
+	checkForString(t, ret, ".delphi.hpp", "test::InterfaceIdx key;")
+	checkForString(t, ret, ".delphi.hpp", "key.ParseFromString(keystr)")
+	checkForString(t, ret, ".delphi.hpp", "return make_shared<InterfaceMetrics>(key, tbl_iter_.Value());")
 
 	checkForString(t, ret, ".delphi.cc", "InterfaceMetrics::InterfaceMetrics(test::InterfaceIdx key, char *ptr) {")
 	checkForString(t, ret, ".delphi.cc", "PktCounter_ = make_shared<delphi::metrics::Counter>((uint64_t *)ptr);\n    ptr += delphi::metrics::Counter::Size();")

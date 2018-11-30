@@ -250,8 +250,14 @@ public:
         {{ if .TypeIsMessage }}
     {{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key, char *ptr);
     {{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key, uint64_t pal_addr);
-	{{$msgName}}(char *kptr, char *vptr) : {{$msgName}}(*({{$pkgName}}::{{.GetCppTypeName}} *)kptr, vptr){ };
-	{{$msgName}}(char *kptr, uint64_t pal_addr) : {{$msgName}}(*({{$pkgName}}::{{.GetCppTypeName}} *)kptr, pal_addr){ };
+    inline {{$pkgName}}::{{.GetCppTypeName}} get{{.GetCppTypeName}}FromPtr(char *kptr) {
+        string keystr(kptr);
+        {{$pkgName}}::{{.GetCppTypeName}} key;
+        key.ParseFromString(keystr);
+        return key;
+    }
+    {{$msgName}}(char *kptr, char *vptr) : {{$msgName}}(get{{.GetCppTypeName}}FromPtr(kptr), vptr){ };
+    {{$msgName}}(char *kptr, uint64_t pal_addr) : {{$msgName}}(get{{.GetCppTypeName}}FromPtr(kptr), pal_addr){ };
     {{$pkgName}}::{{.GetCppTypeName}} GetKey() { return key_; };
           {{if $msg.HasExtOption "delphi.datapath_metrics" }}
     static {{$msgName}}Ptr New{{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key, uint64_t pal_addr);
@@ -307,16 +313,26 @@ public:
     {{range $fields}} 
       {{if (eq .GetName "Key") }}
         {{ if .TypeIsMessage }}
-        {{$pkgName}}::{{.GetCppTypeName}} *key = ({{$pkgName}}::{{.GetCppTypeName}} *)tbl_iter_.Key();
-	{{else}}
-		{{.GetCppTypeName}} *key = ({{.GetCppTypeName}} *)tbl_iter_.Key();
+        char *keyptr = tbl_iter_.Key();
+        string keystr(keyptr);
+        {{$pkgName}}::{{.GetCppTypeName}} key;
+        key.ParseFromString(keystr);
+
+        if (!tbl_iter_.IsDpstats()) {
+            return make_shared<{{$msgName}}>(key, tbl_iter_.Value());
+        } else {
+            uint64_t pal_addr = *(uint64_t *)tbl_iter_.Value();
+            return make_shared<{{$msgName}}>(key, pal_addr);
+        }
+        {{else}}
+        {{.GetCppTypeName}} *key = ({{.GetCppTypeName}} *)tbl_iter_.Key();
+        if (!tbl_iter_.IsDpstats()) {
+            return make_shared<{{$msgName}}>(*key, tbl_iter_.Value());
+        } else {
+            uint64_t pal_addr = *(uint64_t *)tbl_iter_.Value();
+            return make_shared<{{$msgName}}>(*key, pal_addr);
+        }
         {{end}}
-                if (!tbl_iter_.IsDpstats()) {
-                    return make_shared<{{$msgName}}>(*key, tbl_iter_.Value());
-                } else {
-                    uint64_t pal_addr = *(uint64_t *)tbl_iter_.Value();
-                    return make_shared<{{$msgName}}>(*key, pal_addr);
-                }
 
       {{end}} 
     {{end}} 
@@ -581,7 +597,8 @@ delphi::error  {{.GetName}}::CreateTable() {
     static delphi::shm::TableMgrUptr tbl = shm->Kvstore()->CreateTable("{{$msgName}}", DEFAULT_METRIC_TBL_SIZE);
 
     // create an entry in hash table
-    auto err = tbl->CreateDpstats((char *)&key, sizeof(key), pal_addr, {{$msgName}}::Size());
+    auto keystr = key.SerializeAsString();
+    auto err = tbl->CreateDpstats((char *)keystr.c_str(), keystr.length(), pal_addr, {{$msgName}}::Size());
     assert(err.IsOK());
 
     // return an instance of {{$msgName}}
@@ -599,7 +616,8 @@ delphi::error  {{.GetName}}::CreateTable() {
     static delphi::shm::TableMgrUptr tbl = shm->Kvstore()->CreateTable("{{$msgName}}", DEFAULT_METRIC_TBL_SIZE);
 
     // create an entry in hash table
-    char *shmptr = (char *)tbl->Create((char *)&key, sizeof(key), {{$msgName}}::Size());
+    auto keystr = key.SerializeAsString();
+    char *shmptr = (char *)tbl->Create((char *)keystr.c_str(), keystr.length(), {{$msgName}}::Size());
 
     // return an instance of {{$msgName}}
     return make_shared<{{$msgName}}>(key, shmptr);
@@ -705,7 +723,8 @@ delphi::error {{$msgName}}::Publish({{$pkgName}}::{{.GetCppTypeName}} key, {{$ms
     assert(tbl != NULL);
 
     // publish to hash table
-    return tbl->Publish((char *)&key, sizeof(key), (char *)mptr, {{$msgName}}::Size());
+    auto keystr = key.SerializeAsString();
+    return tbl->Publish((char *)keystr.c_str(), keystr.length(), (char *)mptr, {{$msgName}}::Size());
 }
 
 // Find finds a metrics by key
@@ -714,10 +733,12 @@ delphi::error {{$msgName}}::Publish({{$pkgName}}::{{.GetCppTypeName}} key, {{$ms
     delphi::shm::DelphiShmPtr shm = DelphiMetrics::GetDelphiShm();
     assert(shm != NULL);
 
+    auto keystr = key.SerializeAsString();
+
     // find the key
     delphi::shm::TableMgrUptr tbl = shm->Kvstore()->Table("{{$msgName}}");
           {{if $msg.HasExtOption "delphi.datapath_metrics" }}
-    uint64_t *pal_addr = (uint64_t *)tbl->Find((char *)&key, sizeof(key));
+    uint64_t *pal_addr = (uint64_t *)tbl->Find((char *)keystr.c_str(), keystr.length());
     if (pal_addr == NULL) {
         return NULL;
     }
@@ -725,7 +746,7 @@ delphi::error {{$msgName}}::Publish({{$pkgName}}::{{.GetCppTypeName}} key, {{$ms
     // return an instance of {{$msgName}}
     return make_shared<{{$msgName}}>(key, *pal_addr);
           {{else}}
-    char *shmptr = (char *)tbl->Find((char *)&key, sizeof(key));
+    char *shmptr = (char *)tbl->Find((char *)keystr.c_str(), keystr.length());
     if (shmptr == NULL) {
         return NULL;
     }

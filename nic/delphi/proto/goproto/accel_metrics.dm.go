@@ -3,17 +3,21 @@
 package goproto
 
 import (
-	"encoding/json"
+	"github.com/golang/protobuf/proto"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/delphi/gosdk/gometrics"
 )
 
 type AccelSeqQueueKey struct {
-	LifId uint64
+	LifId uint64 `protobuf:"fixed64,1,opt,name=LifId,json=LifId" json:"LifId,omitempty"`
 
-	QId uint32
+	QId uint32 `protobuf:"varint,2,opt,name=QId,json=QId" json:"QId,omitempty"`
 }
+
+func (m *AccelSeqQueueKey) Reset()         { *m = AccelSeqQueueKey{} }
+func (m *AccelSeqQueueKey) String() string { return proto.CompactTextString(m) }
+func (*AccelSeqQueueKey) ProtoMessage()    {}
 
 type AccelSeqQueueMetrics struct {
 	ObjectMeta api.ObjectMeta
@@ -107,7 +111,7 @@ func (mtr *AccelSeqQueueMetrics) Size() int {
 func (mtr *AccelSeqQueueMetrics) Unmarshal() error {
 	var offset int
 
-	json.Unmarshal([]byte(mtr.metrics.GetKey()), &mtr.key)
+	proto.Unmarshal(mtr.metrics.GetKey(), &mtr.key)
 
 	mtr.InterruptsRaised = mtr.metrics.GetCounter(offset)
 	offset += mtr.InterruptsRaised.Size()
@@ -379,8 +383,8 @@ func (it *AccelSeqQueueMetricsIterator) Next() *AccelSeqQueueMetrics {
 
 func (it *AccelSeqQueueMetricsIterator) Find(key AccelSeqQueueKey) (*AccelSeqQueueMetrics, error) {
 
-	buf, _ := json.Marshal(key)
-	mtr, err := it.iter.Find(string(buf))
+	buf, _ := proto.Marshal(&key)
+	mtr, err := it.iter.Find(buf)
 
 	if err != nil {
 		return nil, err
@@ -395,8 +399,8 @@ func (it *AccelSeqQueueMetricsIterator) Find(key AccelSeqQueueKey) (*AccelSeqQue
 func (it *AccelSeqQueueMetricsIterator) Create(key AccelSeqQueueKey) (*AccelSeqQueueMetrics, error) {
 	tmtr := &AccelSeqQueueMetrics{}
 
-	buf, _ := json.Marshal(key)
-	mtr := it.iter.Create(string(buf), tmtr.Size())
+	buf, _ := proto.Marshal(&key)
+	mtr := it.iter.Create(buf, tmtr.Size())
 
 	tmtr = &AccelSeqQueueMetrics{metrics: mtr, key: key}
 	tmtr.Unmarshal()
@@ -407,8 +411,8 @@ func (it *AccelSeqQueueMetricsIterator) Create(key AccelSeqQueueKey) (*AccelSeqQ
 
 func (it *AccelSeqQueueMetricsIterator) Delete(key AccelSeqQueueKey) error {
 
-	buf, _ := json.Marshal(key)
-	return it.iter.Delete(string(buf))
+	buf, _ := proto.Marshal(&key)
+	return it.iter.Delete(buf)
 
 }
 
@@ -427,10 +431,14 @@ func NewAccelSeqQueueMetricsIterator() (*AccelSeqQueueMetricsIterator, error) {
 }
 
 type AccelHwRingKey struct {
-	RId uint32
+	RId uint32 `protobuf:"varint,1,opt,name=RId,json=RId" json:"RId,omitempty"`
 
-	SubRId uint32
+	SubRId uint32 `protobuf:"varint,2,opt,name=SubRId,json=SubRId" json:"SubRId,omitempty"`
 }
+
+func (m *AccelHwRingKey) Reset()         { *m = AccelHwRingKey{} }
+func (m *AccelHwRingKey) String() string { return proto.CompactTextString(m) }
+func (*AccelHwRingKey) ProtoMessage()    {}
 
 type AccelHwRingMetrics struct {
 	ObjectMeta api.ObjectMeta
@@ -468,7 +476,7 @@ func (mtr *AccelHwRingMetrics) Size() int {
 func (mtr *AccelHwRingMetrics) Unmarshal() error {
 	var offset int
 
-	json.Unmarshal([]byte(mtr.metrics.GetKey()), &mtr.key)
+	proto.Unmarshal(mtr.metrics.GetKey(), &mtr.key)
 
 	mtr.InputBytes = mtr.metrics.GetCounter(offset)
 	offset += mtr.InputBytes.Size()
@@ -544,8 +552,8 @@ func (it *AccelHwRingMetricsIterator) Next() *AccelHwRingMetrics {
 
 func (it *AccelHwRingMetricsIterator) Find(key AccelHwRingKey) (*AccelHwRingMetrics, error) {
 
-	buf, _ := json.Marshal(key)
-	mtr, err := it.iter.Find(string(buf))
+	buf, _ := proto.Marshal(&key)
+	mtr, err := it.iter.Find(buf)
 
 	if err != nil {
 		return nil, err
@@ -560,8 +568,8 @@ func (it *AccelHwRingMetricsIterator) Find(key AccelHwRingKey) (*AccelHwRingMetr
 func (it *AccelHwRingMetricsIterator) Create(key AccelHwRingKey) (*AccelHwRingMetrics, error) {
 	tmtr := &AccelHwRingMetrics{}
 
-	buf, _ := json.Marshal(key)
-	mtr := it.iter.Create(string(buf), tmtr.Size())
+	buf, _ := proto.Marshal(&key)
+	mtr := it.iter.Create(buf, tmtr.Size())
 
 	tmtr = &AccelHwRingMetrics{metrics: mtr, key: key}
 	tmtr.Unmarshal()
@@ -572,8 +580,8 @@ func (it *AccelHwRingMetricsIterator) Create(key AccelHwRingKey) (*AccelHwRingMe
 
 func (it *AccelHwRingMetricsIterator) Delete(key AccelHwRingKey) error {
 
-	buf, _ := json.Marshal(key)
-	return it.iter.Delete(string(buf))
+	buf, _ := proto.Marshal(&key)
+	return it.iter.Delete(buf)
 
 }
 

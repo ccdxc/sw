@@ -3,8 +3,6 @@
 package goproto
 
 import (
-	"github.com/golang/protobuf/proto"
-
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/delphi/gosdk/gometrics"
 )
@@ -69,8 +67,7 @@ func (mtr *UpgradeMetrics) Size() int {
 func (mtr *UpgradeMetrics) Unmarshal() error {
 	var offset int
 
-	val, _ := proto.DecodeVarint([]byte(mtr.metrics.GetKey()))
-	mtr.key = uint32(val)
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
 
 	mtr.IsUpgPossible = mtr.metrics.GetCounter(offset)
 	offset += mtr.IsUpgPossible.Size()
@@ -230,7 +227,7 @@ func (it *UpgradeMetricsIterator) Next() *UpgradeMetrics {
 
 func (it *UpgradeMetricsIterator) Find(key uint32) (*UpgradeMetrics, error) {
 
-	mtr, err := it.iter.Find(string(proto.EncodeVarint(uint64(key))))
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
 
 	if err != nil {
 		return nil, err
@@ -245,7 +242,7 @@ func (it *UpgradeMetricsIterator) Find(key uint32) (*UpgradeMetrics, error) {
 func (it *UpgradeMetricsIterator) Create(key uint32) (*UpgradeMetrics, error) {
 	tmtr := &UpgradeMetrics{}
 
-	mtr := it.iter.Create(string(proto.EncodeVarint(uint64(key))), tmtr.Size())
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
 
 	tmtr = &UpgradeMetrics{metrics: mtr, key: key}
 	tmtr.Unmarshal()
@@ -256,7 +253,7 @@ func (it *UpgradeMetricsIterator) Create(key uint32) (*UpgradeMetrics, error) {
 
 func (it *UpgradeMetricsIterator) Delete(key uint32) error {
 
-	return it.iter.Delete(string(proto.EncodeVarint(uint64(key))))
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
 
 }
 

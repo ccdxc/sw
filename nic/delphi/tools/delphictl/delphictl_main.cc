@@ -63,7 +63,7 @@ void DelphictlService::DumpKvstore(string tbl_name) {
 void DelphictlService::DumpMetrics(string met_name) {
     // initialize pal
 #ifdef __x86_64__
-    assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM) == sdk::lib::PAL_RET_OK);
+    assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_MOCK) == sdk::lib::PAL_RET_OK);
 #elif __aarch64__
     assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_HAPS) == sdk::lib::PAL_RET_OK);
 #endif
