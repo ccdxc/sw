@@ -116,7 +116,7 @@ int sonic_q_alloc(struct lif *lif, struct queue *q,
 		unsigned int total_size =
 			ALIGN(num_descs * desc_size, PAGE_SIZE);
 
-		q->base = dma_alloc_coherent(lif->sonic->dev, total_size,
+		q->base = dma_zalloc_coherent(lif->sonic->dev, total_size,
 					     &q->base_pa, GFP_KERNEL);
 		if (!q->base) {
 			sonic_q_free(lif, q);
@@ -184,7 +184,7 @@ static int sonic_qcq_alloc(struct lif *lif, unsigned int index,
 	if (err)
 		goto err_out_free_intr;
 
-	new->base = dma_alloc_coherent(dev, total_size, &new->base_pa,
+	new->base = dma_zalloc_coherent(dev, total_size, &new->base_pa,
 				 GFP_KERNEL);
 	if (!new->base) {
 		err = -ENOMEM;

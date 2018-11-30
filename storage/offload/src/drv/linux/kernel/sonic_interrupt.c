@@ -295,7 +295,7 @@ int sonic_create_ev_list(struct per_core_resource *pc_res, uint32_t ev_count)
 	evl->enable = false;
 
 	evl->db_total_size = sizeof(uint64_t) * ev_count;
-	evl->db_base = dma_alloc_coherent(dev,
+	evl->db_base = dma_zalloc_coherent(dev,
 					  evl->db_total_size,
 					  &evl->db_base_pa, GFP_KERNEL);
 	if (!evl->db_base) {
