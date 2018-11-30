@@ -74,6 +74,8 @@ cpdc_poll(const struct service_info *svc_info)
 					(uint64_t) status_desc, err);
 			break;
 		}
+
+		osal_yield();
 	}
 
 out:
