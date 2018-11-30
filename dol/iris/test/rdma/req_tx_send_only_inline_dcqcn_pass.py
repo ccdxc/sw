@@ -28,7 +28,7 @@ def TestCaseSetup(tc):
     rs.lqp.ReadDcqcnCb()
     tc.pvtdata.dcqcn_pre_qstate = rs.lqp.dcqcn_data
     rs.lqp.dcqcn_data.last_sched_timestamp = 0xC350 # 50k ticks
-    rs.lqp.dcqcn_data.cur_timestamp = 0x19E10 # 106k ticks
+    rs.lqp.dcqcn_data.cur_timestamp = 0x17988 # 96648 ticks
     rs.lqp.dcqcn_data.rate_enforced = 1  # 1 Mbps (rate_enforced is in Mbps)
     rs.lqp.dcqcn_data.cur_avail_tokens = 200
     rs.lqp.dcqcn_data.delta_tokens_last_sched = 0
@@ -102,7 +102,7 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify that last_sched_timestamp in dcqcn state is set to cur_timestamp
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.dcqcn_post_qstate, 'last_sched_timestamp', 0x19E10):
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.dcqcn_post_qstate, 'last_sched_timestamp', 0x17988):
             return False
 
     return True

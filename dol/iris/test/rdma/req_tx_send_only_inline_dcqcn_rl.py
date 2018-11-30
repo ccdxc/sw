@@ -95,9 +95,10 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'p_index4', tc.pvtdata.sq_post_qstate, 'p_index4'):
             return False
 
-        # verify that cur_avail_tokens in dcqcn state is 44. Since at end of 3 iteration 300 bits will be accumulated.
-        # 256 bits will be consumed by packet. So 300-256 = 44 tokens remain.
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.dcqcn_post_qstate, 'cur_avail_tokens',44):          
+        # verify that cur_avail_tokens in dcqcn state is 104. Since at end of 3 iteration 360 bits will be accumulated.
+        # with core-clock frequency of 833 ticks per us.
+        # 256 bits will be consumed by packet. So 360-256 = 104 tokens remain.
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.dcqcn_post_qstate, 'cur_avail_tokens',104):          
             return False
 
         # verify that last_sched_timestamp in dcqcn state is set to cur_timestamp of iteration 3 which is 300000 ticks

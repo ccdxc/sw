@@ -9,6 +9,7 @@ struct sqcb2_t d;
 #define TO_S7_STATS_P         to_s7_stats_info
 
 %%
+    .param rdma_num_clock_ticks_per_us
     .param req_tx_stats_process
 
 .align
@@ -27,8 +28,11 @@ req_tx_timer_expiry_process:
     bcf            [!c1], spurious_expiry
     // Check if at this expiry event retransmit time has reached
     slt            c1, r4, d.last_ack_or_req_ts // Branch Delay Slot
-    sub.c1         r1, d.last_ack_or_req_ts, r4
-    sub.!c1        r1, r4, d.last_ack_or_req_ts
+    // Handle rollover by adding max-timer-ticks to cur-timestamp. 
+    // Capri supports 48-bit timestamp. Add ((1 << 48) - 1) to timestamp.
+    add.c1         r4, r4, 1, 48
+    subi.c1        r4, r4, 1
+    sub            r1, r4, d.last_ack_or_req_ts
 
 check_rnr_timeout:
     seq            c1, d.rnr_timeout, 0
@@ -61,14 +65,23 @@ check_local_ack_timeout:
     bcf            [c1], spurious_expiry
 
 local_ack_timeout:
-    // 4.096 * (2 ^ local_ack_timeout) usec  = 1 << (12 + local_ack_timeout) nsec
-    // Minimum local_ack_timeout that can be supported in capri is 2 (> 10usec)
-    // local_ack_timeout in sqcb2 is programmed to include multiplication factor
-    // of 4096 as well
-    sll            r2, 4096, d.local_ack_timeout
+
+    /*
+     * 4.096 * (2 ^ local_ack_timeout) usec.
+     * Rounded-off to 4 * (2 ^ local_ack_timeout) usec since floating-point is not supported.
+     * Spec says - "The timeout condition should be detected in no less than the timeout
+     * interval, Tr, and no more than four times the timeout interval, 4Tr."
+     * Because of round-off, timer can expire before Tr, hence bumping it up by a factor of 2.
+     * So actual timeout interval will be 8 * (2 ^ local_ack_timeout) usec.
+     */
+
+    sll            r2, 8, d.local_ack_timeout
+    mul            r2, r2, rdma_num_clock_ticks_per_us
+
     // Ignore expiry event if retransmit time has not reached
     // TODO comment out this check for now as in model cur_timestamp
     // is not populated in r4
+  
 #if defined (HAPS) || defined (HW)
     blt            r1, r2, restart_timer
 #endif
@@ -120,7 +133,7 @@ process_expiry:
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_stats_process, r0)
 
 restart_timer:
-    CAPRI_START_SLOW_TIMER(r1, r2, K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, TIMER_RING_ID, 10)
+    CAPRI_START_FAST_TIMER(r1, r2, K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, TIMER_RING_ID, 10)
     //phvwr.e   p.common.p4_intr_global_drop, 1
     nop.e
     nop

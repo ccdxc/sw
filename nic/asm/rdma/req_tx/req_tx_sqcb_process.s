@@ -372,7 +372,7 @@ sq_bktrack1:
         nop
 
 restart_timer:
-        CAPRI_START_SLOW_TIMER(r1, r2, CAPRI_TXDMA_INTRINSIC_LIF, \
+        CAPRI_START_FAST_TIMER(r1, r2, CAPRI_TXDMA_INTRINSIC_LIF, \
                                CAPRI_TXDMA_INTRINSIC_QTYPE, \
                                CAPRI_TXDMA_INTRINSIC_QID, TIMER_RING_ID, 10)
         phvwr.e        p.common.p4_intr_global_drop, 1

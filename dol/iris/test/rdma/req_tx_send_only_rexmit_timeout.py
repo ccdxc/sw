@@ -31,13 +31,13 @@ def TestCaseStepTrigger(tc, step):
     if step.step_id == 0:
         if tc.pvtdata.test_timer:
             logger.info("RDMA TestCaseStepTrigger() - Setting the system time for SLOW_TIMER to 0")
-            timer = tc.infra_data.ConfigStore.objects.db['SLOW_TIMER']
+            timer = tc.infra_data.ConfigStore.objects.db['FAST_TIMER']
             timer.Step(0)
 
     if step.step_id == 1:
         if tc.pvtdata.test_timer:
             logger.info("RDMA TestCaseStepTrigger() - Fast Forwarding the system time by by 101 ticks for SLOW_TIMER wheel")
-            timer = tc.infra_data.ConfigStore.objects.db['SLOW_TIMER']
+            timer = tc.infra_data.ConfigStore.objects.db['FAST_TIMER']
             timer.Step(101)
 
     return

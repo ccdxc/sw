@@ -26,7 +26,7 @@ def TestCaseSetup(tc):
     tc.pvtdata.sq_cindex = tc.pvtdata.sq_pre_qstate.c_index0
 
     # Feeding timestamp from dcqcn_cb since model doesn't support timestamps.
-    # CNP delay timer is set to 50us. Capri clock runs at 1 tick per ns.
+    # CNP delay timer is set to 50us. Capri clock runs at 833 ticks per us.
     # So below clock values  should NOT generate CNP packet.
     rs.lqp.ReadDcqcnCb()
     rs.lqp.dcqcn_data.last_cnp_timestamp = 0xC350 # 50k ticks

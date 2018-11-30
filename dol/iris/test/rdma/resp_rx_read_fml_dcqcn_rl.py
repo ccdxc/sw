@@ -27,6 +27,7 @@ def TestCaseSetup(tc):
     rs.lqp.dcqcn_data.num_sched_drop = 0
     rs.lqp.dcqcn_data.token_bucket_size = 150000 #150kb
     rs.lqp.dcqcn_data.byte_counter_thr = 3072
+    rs.lqp.dcqcn_data.delta_tokens_last_sched = 0
     rs.lqp.WriteDcqcnCb()
     # Read RQ pre state
     rs.lqp.rq.qstate.Read()
@@ -84,19 +85,20 @@ def TestCaseVerify(tc):
         return False
 
 
-    # verify that cur_avail_tokens in dcqcn state is 7680. Since at end of 3 iteration 3*8192=24576 bits will be accumulated.
-    # 8*2112=16896  bits will be consumed by packet. So 24576-16896=7680 tokens remain.
-    if not VerifyFieldAbsolute(tc, tc.pvtdata.dcqcn_post_qstate, 'cur_avail_tokens', 7680):
+    # verify that cur_avail_tokens in dcqcn state is 7680. Since at end of 2 iteration 2*9834=19668 bits will be accumulated 
+    # with core-clock running at 833 MHz.
+    # 8*2112=16896  bits will be consumed by packet. So 19668-16896=2772 tokens remain.
+    if not VerifyFieldAbsolute(tc, tc.pvtdata.dcqcn_post_qstate, 'cur_avail_tokens', 2772):
         return False
 
-    # verify that last_sched_timestamp in dcqcn state is set to cur_timestamp of iteration 3 which is 3*8192000 ticks
-    if not VerifyFieldAbsolute(tc, tc.pvtdata.dcqcn_post_qstate, 'last_sched_timestamp', 0x1770000):
+    # verify that last_sched_timestamp in dcqcn state is set to cur_timestamp of iteration 2 which is 2*8192000 ticks
+    if not VerifyFieldAbsolute(tc, tc.pvtdata.dcqcn_post_qstate, 'last_sched_timestamp', 0xFA0000):
         return False
 
-    # verify that packets dropped = 2 to accumulate the required tokens to send out Middle and Last packets eventually.
-    # It requires 2 iterations to accumulate enough tokens to send 1024B packet at rate 1 Mbps,
-    # for clock which ticks 1000 times per us and program scheduled every 8192K ticks.
-    if not VerifyFieldAbsolute(tc, tc.pvtdata.dcqcn_post_qstate, 'num_sched_drop', 2):
+    # verify that packets dropped = 1 to accumulate the required tokens to send out Middle and Last packets eventually.
+    # It requires 1 iterations to accumulate enough tokens to send 1024B packet at rate 1 Mbps,
+    # for clock which ticks 833 times per us and program scheduled every 8192K ticks.
+    if not VerifyFieldAbsolute(tc, tc.pvtdata.dcqcn_post_qstate, 'num_sched_drop', 1):
         return False
 
    ############     CQ VALIDATIONS #################

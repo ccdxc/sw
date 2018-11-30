@@ -34,12 +34,14 @@
 #include "nic/hal/pd/capri/capri_quiesce.hpp"
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
 #include "nic/asic/capri/model/cap_prd/cap_prd_csr.h"
+#include "nic/asic/capri/model/utils/cap_csr_py_if.h"
 
-#define P4PLUS_SYMBOLS_MAX  134
+#define P4PLUS_SYMBOLS_MAX  133
 
 class capri_state_pd *g_capri_state_pd;
 uint64_t capri_hbm_base;
 uint64_t hbm_repl_table_offset;
+uint32_t capri_coreclk_freq; //Mhz
 
 /* capri_default_config_init
  * Load any bin files needed for initializing default configs
@@ -200,7 +202,7 @@ capri_p4_pgm_init (capri_cfg_t *cfg)
 }
 
 static hal_ret_t
-capri_p4p_asm_init (capri_cfg_t *cfg)
+capri_p4p_asm_init (capri_cfg_t *cfg, hal::hal_cfg_t *hal_cfg)
 {
     hal_ret_t                  ret = HAL_RET_OK;
     uint64_t                   p4plus_prm_base_addr;
@@ -218,6 +220,10 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
         HAL_TRACE_ERR("{} not_present/no_read_permissions", full_path.c_str());
         HAL_ASSERT_RETURN(0, HAL_RET_ERR);
     }
+
+    capri_coreclk_freq = (uint32_t)(capri_get_coreclk_freq(hal_cfg) / 1000000);
+
+    HAL_TRACE_DEBUG("Capri core clock freq is {} Mhz", capri_coreclk_freq);
 
     symbols = (capri_prog_param_info_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_PD,
                         P4PLUS_SYMBOLS_MAX * sizeof(capri_prog_param_info_t));
@@ -631,22 +637,6 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDPR_BIG_RX);
     i++;
 
-    // TODO: This is a placeholder. Replace this with appropriate value based on
-    // clock frequency.
-    symbols[i].name = "resp_rx_dcqcn_ecn_process.bin";
-    symbols[i].num_params = 1;
-    symbols[i].params[0].name = NUM_CLOCK_TICKS_PER_CNP;
-    symbols[i].params[0].val = 50000;
-    i++;
-
-    // TODO: This is a placeholder. Replace this with appropriate value based on
-    // clock frequency.
-    symbols[i].name = "req_rx_dcqcn_ecn_process.bin";
-    symbols[i].num_params = 1;
-    symbols[i].params[0].name = NUM_CLOCK_TICKS_PER_CNP;
-    symbols[i].params[0].val = 50000;
-    i++;
-
     symbols[i].name = "tls-enc-queue-brq-mpp.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = BRQ_BASE;
@@ -825,20 +815,23 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_TX);
     i++;
 
-    // Replace this with appropriate value based on
-    // clock frequency.
     symbols[i].name = "req_tx_dcqcn_enforce_process.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = NUM_CLOCK_TICKS_PER_US;
-    symbols[i].params[0].val = 1000;
+    symbols[i].params[0].val = capri_coreclk_freq;
     i++;
 
-    // Replace this with appropriate value based on
-    // clock frequency.
     symbols[i].name = "resp_tx_dcqcn_enforce_process.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = NUM_CLOCK_TICKS_PER_US;
-    symbols[i].params[0].val = 1000;
+    symbols[i].params[0].val = capri_coreclk_freq;
+    i++;
+
+
+    symbols[i].name = "req_tx_timer_expiry_process.bin";
+    symbols[i].num_params = 1;
+    symbols[i].params[0].name = NUM_CLOCK_TICKS_PER_US;
+    symbols[i].params[0].val = capri_coreclk_freq;
     i++;
 
     symbols[i].name = "cpu_hash_calc_id.bin";
@@ -1035,7 +1028,7 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
 }
 
 static hal_ret_t
-capri_hbm_regions_init (capri_cfg_t *cfg)
+capri_hbm_regions_init (capri_cfg_t *cfg, hal::hal_cfg_t *hal_cfg)
 {
     hal_ret_t           ret = HAL_RET_OK;
 
@@ -1044,7 +1037,7 @@ capri_hbm_regions_init (capri_cfg_t *cfg)
         return ret;
     }
 
-    ret = capri_p4p_asm_init(cfg);
+    ret = capri_p4p_asm_init(cfg, hal_cfg);
     if (ret != HAL_RET_OK) {
         return ret;
     }
@@ -1306,12 +1299,12 @@ capri_init (capri_cfg_t *cfg = NULL)
     ret = capri_hbm_parse(cfg);
     HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
 
-    ret = capri_hbm_regions_init(cfg);
-    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
-
     if (capri_table_rw_init(hal_cfg) != CAPRI_OK) {
         return HAL_RET_ERR;
     }
+
+    ret = capri_hbm_regions_init(cfg, hal_cfg);
+    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
 
     ret = capri_block_init(cfg);
     HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);

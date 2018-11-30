@@ -110,6 +110,10 @@
 
 #define BTH_OPC_SVC_SHIFT 5
 
+// This will be made DCQCN configurable parameter.
+// Unit is micro-seconds converted to core-clock-ticks. so 50us will be (50 * 833) = 41650
+#define DCQCN_MIN_TIME_BTWN_CNPS 41650
+
 struct rdma_bth_t {
     opcode  : 8;
     se      : 1;

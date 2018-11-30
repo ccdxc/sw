@@ -925,6 +925,27 @@ capri_get_action_id (uint32_t tableid, uint8_t actionpc)
     return (0xff);
 }
 
+uint32_t
+capri_get_coreclk_freq(hal::hal_cfg_t *hal_cfg) 
+{
+
+    cap_top_csr_t       &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_ms_csr_t        &ms_csr = cap0.ms.ms;
+
+    static const uint32_t core_freq[] = {
+        CORECLK_FREQ_ASIC_00, CORECLK_FREQ_ASIC_01,
+        CORECLK_FREQ_ASIC_10, CORECLK_FREQ_ASIC_11
+    };
+
+    // Below status register is not modelled in Model. So return 833 MHz always.
+    if (hal_cfg->platform == hal::HAL_PLATFORM_SIM) {
+        return CORECLK_FREQ_ASIC_10;
+    }
+
+    ms_csr.sta_pll_cfg.read();
+    return core_freq[((ms_csr.sta_pll_cfg.core_muldiv().convert_to<uint8_t>()) & 0x3)];
+}
+
 static void
 capri_sram_entry_details_get (uint32_t index,
                               int *sram_row, int *entry_start_block,

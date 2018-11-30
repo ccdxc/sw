@@ -511,7 +511,7 @@ local_ack_timer:
     tblwr          d.exp_rsp_psn, r7 // Branch Delay Slot
     tblwr          d.last_ack_or_req_ts, r4
     bbeq           d.timer_on, 1, load_hdr_template
-    CAPRI_START_SLOW_TIMER(r1, r2, K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, TIMER_RING_ID, 10)
+    CAPRI_START_FAST_TIMER(r1, r2, K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, TIMER_RING_ID, 10)
     tblwr          d.timer_on, 1
 
 load_hdr_template:
