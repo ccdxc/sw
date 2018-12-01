@@ -61,6 +61,16 @@ write_back:
 
 skip_poll_success:
     tblwr.c1      d.curr_wqe_ptr, 0
+
+    // Update drain cindex every time first/only pkt is transmitted.
+    // If state changes to SQD through admin Q, stage0 sends a sq_drain
+    // feedback as a flush marker beyond which no phvs are sent from stage0
+    // If its retransmission, sqd_cindex is not updated so that wqes until
+    // that cindex can be drained.
+    seq           c2, CAPRI_KEY_FIELD(IN_P, first), 1
+    sne.c2        c2, K_GLOBAL_FLAG(_rexmit), 1
+    tblwr.c2      d.sqd_cindex, SQ_C_INDEX
+
     // if (write_back_info_p->last)
     // RING_C_INDEX_INCREMENT(sqcb0_p, SQ_RING_ID)
     tblmincri.c1  SQ_C_INDEX, d.log_num_wqes, 1
@@ -68,15 +78,6 @@ skip_poll_success:
     tblmincri.c2  d.color, 1, 1
 
     tblwr.c1      d.read_req_adjust, 0
-    // Update drain cindex every time first/only pkt is transmitted.
-    // If state changes to SQD through admin Q, stage0 sends a sq_drain
-    // feedback as a flush marker beyond which no phvs are sent from stage0
-    // Whenever this feedback phv is seen by writebac (sq_drained == 1),
-    // it can stop updating sqd_cindex.
-    seq           c2, CAPRI_KEY_FIELD(IN_P, first), 1
-    sne.c2        c2, d.sq_drained, 1
-    tblwr.c2      d.sqd_cindex, SQ_C_INDEX
-
     // Ordering rules:
     // We decided NOT to ring doorbell to update the c_index and there by re-evaluate scheduler.
     // The decision is taken because of the ordering complexity between cb0/cb1 busy bit release

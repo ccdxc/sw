@@ -32,7 +32,10 @@ struct req_tx_s2_t0_k k;
 #define K_CURRENT_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit6, current_sge_offset_sbit31_ebit31)
 #define K_NUM_SGES   CAPRI_KEY_RANGE(IN_P, num_sges_sbit0_ebit6, num_sges_sbit7_ebit7)
 
-#define WQE_OP_TO_NUM_PKTS(_num_pkts_r, _wqe, _log_pmtu, _cf1, _cf2)   \
+#define WQE_OP_TO_NUM_PKTS(_num_pkts_r, _wqe, _log_pmtu, _cf1, _cf2, _cf3)\
+    slt            _cf3, OP_TYPE_FETCH_N_ADD, _wqe.base.op_type;         \
+    bcf            [_cf3], _wqe_op_to_num_pkts_end;                      \
+    add            _num_pkts_r, 0, 0;                                    \
     seq            _cf1,  _wqe.base.op_type, OP_TYPE_FETCH_N_ADD;        \
     seq            _cf2,  _wqe.base.op_type, OP_TYPE_CMP_N_SWAP;         \
     bcf            [_cf1 | _cf2], _wqe_op_to_num_pkts_end;               \
@@ -59,11 +62,11 @@ req_tx_bktrack_sqwqe_process:
     seq            c1, CAPRI_KEY_FIELD(IN_P, in_progress), 1 
     bcf            [c1], wqe_bktrack
     add            r1, K_TX_PSN, r0 // Branch Delay Slot
-    WQE_OP_TO_NUM_PKTS(r2, d, CAPRI_KEY_FIELD(IN_TO_S_P, log_pmtu), c1, c2)
+    WQE_OP_TO_NUM_PKTS(r2, d, CAPRI_KEY_FIELD(IN_TO_S_P, log_pmtu), c1, c2, c3)
     sub            r1, K_TX_PSN, r2
     mincr          r1, 24, r0 
-    sub            r6, K_SSN, 1
-    mincr          r6, 24, r0
+    sub.!c3        r6, K_SSN, 1
+    mincr.!c3      r6, 24, r0
 
 wqe_bktrack:
     // set bktrack_in_progress to true to start with

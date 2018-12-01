@@ -26,7 +26,7 @@ req_tx_sqcb_process_ext:
     CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, qid, CAPRI_TXDMA_INTRINSIC_QID)
     // Is it UD service?
     seq            c1, d.service, RDMA_SERV_TYPE_UD
-    CAPRI_SET_FIELD_C(r1, PHV_GLOBAL_COMMON_T, flags, REQ_TX_FLAG_UD, c1)
+    CAPRI_SET_FIELD_C(r1, PHV_GLOBAL_COMMON_T, flags.req_tx._ud, 1, c1) // REQ_TX_FLAG_UD
 
     //set dma_cmd_ptr in phv
     TXDMA_DMA_CMD_PTR_SET(REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_START_FLIT_CMD_ID) // Branch Delay Slot

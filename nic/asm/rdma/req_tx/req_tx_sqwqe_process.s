@@ -62,10 +62,11 @@ skip_color_check:
 skip_fence_check:
     // Populate wrid in phv to post error-completion for wqes or completion for non-packet-wqes.
     phvwr          p.rdma_feedback.completion.wrid, d.base.wrid
+    add            r2, r0, K_GLOBAL_FLAGS
 
     .brbegin
     br             r1[3:0]
-    nop            // Branch Delay Slot
+    IS_ANY_FLAG_SET(c7, r2, REQ_TX_FLAG_REXMIT) // Branch Delay Slot
 
     .brcase OP_TYPE_SEND
         b               send_or_write
@@ -100,15 +101,18 @@ skip_fence_check:
         nop             //Branch Delay slot 
 
     .brcase OP_TYPE_FRPMR
-        b               frpmr
+        b.!c7           frpmr
+        b.c7            skip_npg_wqe // Branch Delay Slot
         nop             //Branch Delay slot 
 
     .brcase OP_TYPE_LOCAL_INV
-        b               local_inv
+        b.!c7           local_inv
+        b.c7            skip_npg_wqe // Branch Delay Slot
         nop             //Branch Delay slot
 
     .brcase OP_TYPE_BIND_MW
-        b               bind_mw   
+        b.!c7           bind_mw
+        b.c7            skip_npg_wqe // Branch Delay Slot
         nop             //Branch Delay slot
       
     .brcase OP_TYPE_SEND_INV_IMM
@@ -432,3 +436,16 @@ clear_poll_in_progress:
     CAPRI_SET_TABLE_0_1_VALID(0, 0)
     nop.e
     nop
+
+skip_npg_wqe:
+    CAPRI_RESET_TABLE_2_ARG()
+    // Clear fence bit if SQ is in the retransmission mode
+    phvwr      CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, fence), 0
+    phvwrpair  CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, op_type), r1, \
+               CAPRI_PHV_RANGE(SQCB_WRITE_BACK_P, first, last_pkt), 3
+    phvwr      CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, non_packet_wqe), 1
+    // Drop the phv as there is no completion to be posted for NPG
+    // wqes on retransmission
+    phvwr      p.common.p4_intr_global_drop, 1
+    CAPRI_SET_TABLE_0_1_VALID(0, 0)
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r2)

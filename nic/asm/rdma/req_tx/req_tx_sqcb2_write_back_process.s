@@ -65,6 +65,8 @@ req_tx_sqcb2_write_back_process:
     tblwr          d.li_fence, 0
     tblwr          d.fence_done, 1
 
+    bbeq           K_GLOBAL_FLAG(_rexmit), 1, end
+
     // Send Feedback PHV to RxDMA to post completion.
     phvwrpair      p.rdma_feedback.feedback_type, RDMA_COMPLETION_FEEDBACK, \
                    p.rdma_feedback.completion.status, CQ_STATUS_SUCCESS
@@ -107,6 +109,7 @@ exit:
     CAPRI_SET_TABLE_2_VALID(0)
 rate_enforce_fail:
 poll_fail:
+end:
     nop.e
     nop
 

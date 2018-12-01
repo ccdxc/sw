@@ -135,7 +135,7 @@
     modify_field(phv_global_common_scr._ud, phv_global_common._ud);\
     modify_field(phv_global_common_scr._inline, phv_global_common._inline);\
     modify_field(phv_global_common_scr._rsvd2, phv_global_common._rsvd2);\
-    modify_field(phv_global_common_scr._rsvd1, phv_global_common._rsvd1);\
+    modify_field(phv_global_common_scr._rexmit, phv_global_common._rexmit);\
     modify_field(phv_global_common_scr._inv_rkey, phv_global_common._inv_rkey);\
     modify_field(phv_global_common_scr._immdt, phv_global_common._immdt);\
     modify_field(phv_global_common_scr._atomic_cswap, phv_global_common._atomic_cswap);\
@@ -164,7 +164,7 @@ header_type phv_global_common_t {
         _ud                              :    1;
         _inline                          :    1;
         _rsvd2                           :    1;
-        _rsvd1                           :    1;
+        _rexmit                          :    1;
         _inv_rkey                        :    1;
         _immdt                           :    1;
         _atomic_cswap                    :    1;

@@ -80,7 +80,7 @@ process_req_tx:
 
     .brbegin
     brpri          r7[MAX_SQ_DOORBELL_RINGS-1: 0], [CNP_PRI, TIMER_PRI, SQ_BKTRACK_PRI, SQ_PRI]
-    nop
+    add            r1, r0, offsetof(struct phv_, common_global_global_data)  // Branch Delay Slot
 
     .brcase        SQ_RING_ID
 
@@ -102,6 +102,13 @@ process_req_tx:
         tblwr          d.dcqcn_rl_failure, 0
 
 process_send:
+        sub            r2, SQ_P_INDEX, d.sqd_cindex
+        mincr          r2, d.log_num_wqes, r0
+        sub            r3, SQ_P_INDEX, SPEC_SQ_C_INDEX
+        mincr          r3, d.log_num_wqes, r0
+        sle            c1, r2, r3
+        CAPRI_SET_FIELD_C(r1, PHV_GLOBAL_COMMON_T, flags.req_tx._rexmit, 1, c1) // REQ_TX_FLAG_REXMIT
+
         bbeq           d.frpmr_in_progress, 1, frpmr
                               
         // if (sqcb0_p->fence) goto fence
@@ -587,6 +594,15 @@ process_sq_drain:
     bcf            [c7 | c2 | c3 | c4 | c5], process_req_tx
     nop            // Branch Delay Slot
 
+    seq            c2, d.dcqcn_rl_failure, 1 // Branch Delay Slot
+    tblwr.c2       SPEC_SQ_C_INDEX, SQ_C_INDEX
+    tblwr.c2       d.dcqcn_rl_failure, 0
+
+    seq            c2, SPEC_SQ_C_INDEX, SQ_C_INDEX // Branch Delay Slot
+    bcf            [!c2], drop
+    nop            // Branch Delay Slot
+
+drain_feedback:
     // Upon draining SQ, send feedback to RxDMA to denote completion of
     // SQ drain in TxDMA which includes all packet and non-packet generating
     // wqes. RxDMA on reeciving this feedback will mark completion of
@@ -598,17 +614,7 @@ process_sq_drain:
     // has already recorded the fact in sqcb1 that non-packet gernating wqes
     // are drained in TxDMA
     bbeq           d.sq_drained, 1, drop
-
-    seq            c2, d.dcqcn_rl_failure, 1 // Branch Delay Slot
-    tblwr.c2       SPEC_SQ_C_INDEX, SQ_C_INDEX
-    tblwr.c2       d.dcqcn_rl_failure, 0
-
-    seq            c2, SPEC_SQ_C_INDEX, SQ_C_INDEX // Branch Delay Slot
-    bcf            [!c2], drop
-    nop            // Branch Delay Slot
-
-drain_feedback:
-    tblwr          d.sq_drained, 1
+    tblwr          d.sq_drained, 1 // Branch Delay Slot
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_sq_drain_feedback_process, r0)
 
 drop:

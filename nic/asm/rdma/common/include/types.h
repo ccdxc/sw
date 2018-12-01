@@ -425,7 +425,7 @@ struct req_tx_flags_t {
     _ud:1;
     _inline:1;
     _rsvd2:1;
-    _rsvd1:1;
+    _rexmit:1;
     _inv_rkey:1;
     _immdt:1;
     _atomic_cswap:1;
@@ -452,7 +452,7 @@ struct req_tx_flags_t {
 #define REQ_TX_FLAG_ATOMIC_CSWAP       0x0200
 #define REQ_TX_FLAG_IMMDT              0x0400
 #define REQ_TX_FLAG_INV_RKEY           0x0800
-#define REQ_TX_FLAG_RSVD1              0x1000
+#define REQ_TX_FLAG_REXMIT             0x1000
 #define REQ_TX_FLAG_RSVD2              0x2000
 #define REQ_TX_FLAG_INLINE             0x4000
 #define REQ_TX_FLAG_UD                 0x8000
