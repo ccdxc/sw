@@ -149,7 +149,7 @@ loop(void)
     }
 
     evutil_timer timer;
-    evutil_timer_start(&timer, nicmgrd_poll, NULL, 0.1, 0.1);
+    evutil_timer_start(&timer, nicmgrd_poll, NULL, 0.01, 0.01);
 
     evutil_run();
     /* NOTREACHED */

@@ -48,7 +48,7 @@ module_param(devcmd_timeout, uint, 0);
 MODULE_PARM_DESC(devcmd_timeout, "Devcmd timeout in seconds (default 30 secs)");
 #endif
 
-unsigned int core_count = 1;
+unsigned int core_count = SONIC_DEFAULT_CORES;
 module_param(core_count, uint, 0444);
 MODULE_PARM_DESC(core_count, "max number of cores to use for sonic driver (default=1)");
 

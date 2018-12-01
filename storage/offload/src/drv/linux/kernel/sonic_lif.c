@@ -898,7 +898,7 @@ static int sonic_lif_init(struct lif *lif)
 	lif->api_private = NULL;
 
 	lif->flags |= LIF_F_INITED;
-	OSAL_LOG_WARN("sonic lif init successful");
+	OSAL_LOG_WARN("sonic lif init successful\n");
 
 	return 0;
 
