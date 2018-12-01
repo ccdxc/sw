@@ -187,7 +187,7 @@ clean:
 	@rm -fr bin/* venice/ui/webapp/node_modules  venice/ui/web-app-framework/node_modules  venice/ui/venice-sdk/node_modules venice/ui/webapp/dist
 
 helper-containers:
-	@cd tools/docker-files/ntp; docker build -t ${REGISTRY_URL}/pens-ntp:v0.3 .
+	@cd tools/docker-files/ntp; docker build -t ${REGISTRY_URL}/pens-ntp:v0.4 .
 	@cd tools/docker-files/pens-base; docker build -t ${REGISTRY_URL}/pens-base:v0.3 .
 	@cd tools/docker-files/pens-base-2; docker build -t ${REGISTRY_URL}/pens-base-2:v0.2 .
 	@cd tools/docker-files/build-container; docker build -t ${REGISTRY_URL}/${BUILD_CONTAINER} .
