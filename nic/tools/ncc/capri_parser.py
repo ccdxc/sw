@@ -14,7 +14,7 @@ from enum import IntEnum
 from p4_hlir.main import HLIR
 import p4_hlir.hlir.p4 as p4
 
-import capri_logging
+from capri_logging import ncc_assert as ncc_assert
 
 from capri_utils import *
 
@@ -187,8 +187,8 @@ class capri_parser_set_op:
         self.rid = None # store rid allocated to this operation - required for register programming
 
         # dst is a capri_field, could be parser_only or in phv
-        assert dst.is_meta, "%s: %s must be metadata field" % \
-            (self.cstate.name, dst.hfname)
+        ncc_assert(dst.is_meta, "%s: %s must be metadata field" % \
+            (self.cstate.name, dst.hfname))
 
         if isinstance(src, int):
             # loading a const into register(local_var) has to be done indirectly
@@ -205,7 +205,7 @@ class capri_parser_set_op:
                 self.op_type = meta_op.EXTRACT_CONST
                 self.const = src
                 if (dst.width % 8):
-                    assert dst.is_meta
+                    ncc_assert(dst.is_meta)
                     if (dst.width % 8) < 4:
                         # don;t pad below 4 bits.
                         cstate.parser.logger.debug("%s:%s:set_metadata to %s will use OR instn" % \
@@ -226,10 +226,10 @@ class capri_parser_set_op:
             cf = cstate.parser.be.pa.get_field(hf_name, cstate.parser.d)
             if cf.is_meta:
                 # phv <- reg : must use expression to address lkp_reg
-                assert cf.parser_local, "%s:Unsupported source %s for set_metadata" % \
-                    (self.cstate.parser.d.name, cf.hfname)
-                assert not dst.parser_local, "%s:Unsupported local reg dst %s for set_metadata" % \
-                    (self.cstate.parser.d.name, dst.hfname)
+                ncc_assert(cf.parser_local, "%s:Unsupported source %s for set_metadata" % \
+                    (self.cstate.parser.d.name, cf.hfname))
+                ncc_assert(not dst.parser_local, "%s:Unsupported local reg dst %s for set_metadata" % \
+                    (self.cstate.parser.d.name, dst.hfname))
                 self.op_type = meta_op.EXTRACT_REG
                 self.src_reg = cf
                 self.capri_expr = capri_parser_expr(cstate.parser, None)
@@ -273,7 +273,7 @@ class capri_parser_set_op:
                             (cstate.name, cf.hfname))
                         cstate.parser.logger.critical("Use an expression like %s + 0" % \
                             (cf.hfname))
-                        assert 0, "Un-supported metadata extraction"
+                        ncc_assert(0, "Un-supported metadata extraction")
                     if src_eoff:
                         dst_w = cf.width + (src_boff + 8 - src_eoff)
                     else:
@@ -306,7 +306,7 @@ class capri_parser_set_op:
                     self.op_type = meta_op.EXTRACT_CURRENT_OFF
                 # metaPhv <- (pkt_off, size) : ExtractCopy
                 elif (dst.width % 8):
-                    assert dst.is_meta
+                    ncc_assert(dst.is_meta)
                     pad = 8-(dst.width % 8)
                     dst.width += pad
                     cstate.parser.logger.warning("%s:%s:Pad Metadata %s to %d" % \
@@ -327,14 +327,14 @@ class capri_parser_set_op:
                 elif self.capri_expr.const:
                     self.op_type = meta_op.LOAD_REG
                 else:
-                    #assert 0, pdb.set_trace()
+                    #ncc_assert(0)
                     pass
             else:
                 # EXTRACT_REG uses meta_instruction to perform the operation
                 # Also any time an expression is involved, use EXTRACT_META
                 # to indicate that meta_inst must be used
                 if (dst.width % 8):
-                    assert dst.is_meta
+                    ncc_assert(dst.is_meta)
                     pad = 8-(dst.width % 8)
                     dst.width += pad
                     cstate.parser.logger.warning("%s:%s:Pad Metadata %s to %d" % \
@@ -347,14 +347,14 @@ class capri_parser_set_op:
                         self.op_type = meta_op.EXTRACT_CURRENT_OFF
                     else:
                         self.op_type = meta_op.EXTRACT_META
-                        assert(self.capri_expr.src1), "Need pkt data oprand for set_metadata()"
+                        ncc_assert((self.capri_expr.src1), "Need pkt data oprand for set_metadata()")
                     self.src1 = self.capri_expr.src1
         else:
-            assert 0, "unknown source for set_metadata operation %s" % src
+            ncc_assert(0, "unknown source for set_metadata operation %s" % src)
 
         if self.op_type == meta_op.LOAD_REG:
-            assert self.dst.parser_local, \
-                "Field %s must be defined as parser_local" % (self.dst.hfname)
+            ncc_assert(self.dst.parser_local, \
+                "Field %s must be defined as parser_local" % (self.dst.hfname))
 
     def __repr__(self):
         pstr =''
@@ -485,7 +485,7 @@ class capri_parse_state:
                     self.parser.logger.debug("%s:state %s:Reserve LF %s reg %d" % \
                             (self.parser.d.name, self.name, lf.hfname, i))
                     return i
-            assert 0, pdb.set_trace() # out of lkp registers
+            ncc_assert(0 )# out of lkp registers
         else:
             if self.active_lkp_lfs[rid] == None:
                 self.active_lkp_lfs[rid] = lf
@@ -493,7 +493,7 @@ class capri_parse_state:
                             (self.parser.d.name, self.name, lf.hfname, rid))
                 return rid
             else:
-                assert self.active_lkp_lfs[rid] == lf, pdb.set_trace() # duplicate assignment
+                ncc_assert(self.active_lkp_lfs[rid] == lf )# duplicate assignment
                 return rid
 
     def lkp_reg_alloc(self):
@@ -502,14 +502,14 @@ class capri_parse_state:
                 return i
         self.parser.logger.critical("%s:%s:No free lkp register - regs used: %s" % \
                         (self.parser.d.name, self.name, self.lkp_regs))
-        assert 0, pdb.set_trace()
+        ncc_assert(0)
 
     def get_hdr_off(self, hdr):
         for cf in self.extracted_fields:
             h = cf.get_p4_hdr()
             if h == hdr:
                 return self.fld_off[cf]
-        assert 0, pdb.set_trace()
+        ncc_assert(0)
         return -1
 
     def dont_advance_packet(self):
@@ -540,9 +540,9 @@ class capri_parse_state:
             return None
 
     def create_payload_offset_expr(self):
-        assert (isinstance(self.extract_len, capri_parser_expr)), pdb.set_trace()
+        ncc_assert(isinstance(self.extract_len, capri_parser_expr))
         # need one of the terms free to use it for current offset
-        assert (not self.extract_len.op2 or not self.extract_len.op3), pdb.set_trace()
+        ncc_assert(not self.extract_len.op2 or not self.extract_len.op3)
         # payload_offset = current_offset + self.extract_len
         payload_expr = copy.copy(self.extract_len)
         # [cf2 OP2] [(cf1 [OP1 shft]) OP3] [const]
@@ -682,21 +682,21 @@ class capri_parser_expr:
                 if not self.op2:
                     self.op2 = p4_expr.op
                 else:
-                    assert not self.op3, pdb.set_trace()
+                    ncc_assert(not self.op3)
                     self.op3 = p4_expr.op
                 if not isinstance(p4_expr.right, p4.p4_expression):
                     if not self.src_reg:
                         self.src_reg = right_cf if right_cf else p4_expr.right
                     else:
-                        assert not self.src1, pdb.set_trace()
+                        ncc_assert(not self.src1)
                         self.src1 = right_cf if right_cf else p4_expr.right
             # elif right is const
             elif isinstance(p4_expr.right, int):
-                assert not self.op3, pdb.set_trace()
+                ncc_assert(not self.op3)
                 self.op3 = p4_expr.op
                 self.const = p4_expr.right
             else:
-                assert 0, pdb.set_trace()
+                ncc_assert(0)
             return
         elif isinstance(p4_expr.right, p4.p4_expression):
             # if left is expr/cf/tuple
@@ -704,21 +704,21 @@ class capri_parser_expr:
                 if not self.op2:
                     self.op2 = p4_expr.op
                 else:
-                    assert not self.op3, pdb.set_trace()
+                    ncc_assert(not self.op3)
                     self.op3 = p4_expr.op
                 if not isinstance(p4_expr.left, p4.p4_expression):
                     if not self.src_reg:
                         self.src_reg = left_cf if left_cf else p4_expr.left
                     else:
-                        assert not self.src1, pdb.set_trace()
+                        ncc_assert(not self.src1)
                         self.src1 = left_cf if left_cf else p4_expr.left
             # elif left is const
             elif isinstance(p4_expr.left, int):
-                assert not self.op3, pdb.set_trace()
+                ncc_assert(not self.op3)
                 self.op3 = p4_expr.op
                 self.const = p4_expr.left
             else:
-                assert 0, pdb.set_trace()
+                ncc_assert(0)
             return
         # cases:
         # cf/tuple +- cf/tuple
@@ -729,19 +729,19 @@ class capri_parser_expr:
             # left must be pkt_field/reg and right must be int
             if self.op1:
                 # set due to dummy expression creation
-                assert self.shft == 0 and not self.src_reg, pdb.set_trace()
+                ncc_assert(self.shft == 0 and not self.src_reg)
                 self.src_reg = self.src1
             self.op1 = p4_expr.op
-            assert isinstance(p4_expr.left, p4.p4_field) or \
+            ncc_assert(isinstance(p4_expr.left, p4.p4_field) or \
                    isinstance(p4_expr.left, tuple), \
                    "%s:unsupported left oprand - Must refer to packet data (found %s)" % \
-                   (self.parser.d.name, p4_expr.left)
+                   (self.parser.d.name, p4_expr.left))
             if left_cf:
                 self.src1 = left_cf #p4_expr.left
             else:
                 self.src1 = p4_expr.left # tuple
-            assert isinstance(p4_expr.right, int), "invalid operand %s for as shift val" % \
-                (p4_expr.right)
+            ncc_assert(isinstance(p4_expr.right, int), "invalid operand %s for as shift val" % \
+                (p4_expr.right))
             self.shft = p4_expr.right
         else:
             # top level is +-, left or right can be expr involving << >>
@@ -760,8 +760,8 @@ class capri_parser_expr:
 
             # handle : reg/pkt_fld +- reg/pkt_fld
             if cf1 and cf2:
-                assert not self.src_reg, pdb.set_trace()
-                assert not self.src1, pdb.set_trace()
+                ncc_assert(not self.src_reg)
+                ncc_assert(not self.src1)
 
                 if isinstance(cf1, capri_field) and cf1.parser_local:
                     self.src_reg = cf1
@@ -775,8 +775,8 @@ class capri_parser_expr:
                 self.op2 = p4_expr.op
 
             elif cf1:
-                assert isinstance(p4_expr.right, int), pdb.set_trace()
-                assert not self.op3, pdb.set_trace()
+                ncc_assert(isinstance(p4_expr.right, int))
+                ncc_assert(not self.op3)
                 self.op3 = p4_expr.op
                 self.const = p4_expr.right
 
@@ -787,8 +787,8 @@ class capri_parser_expr:
                 else:
                     self.src_reg = cf1
             elif cf2:
-                assert isinstance(p4_expr.left, int), pdb.set_trace()
-                assert not self.op3, pdb.set_trace()
+                ncc_assert(isinstance(p4_expr.left, int))
+                ncc_assert(not self.op3)
                 self.op3 = p4_expr.op
                 self.const = p4_expr.left
 
@@ -974,7 +974,7 @@ class capri_parser:
         if _parser_topo_sort(self, self.d, capri_parse_states, self.start_state, \
                                 marker, sorted_states):
             self.logger.critical("Loops in parse graph are not supported")
-            assert(0)
+            ncc_assert(0)
 
         self.logger.info("%s States: %d" % (self.d.name, len(sorted_states)))
         # un-roll the states that use virtual headers (aka header stacks)
@@ -983,7 +983,7 @@ class capri_parser:
             if len(vhdrs) == 0:
                 self.states.append(s)
                 continue
-            assert(len(vhdrs) == 1) # support only one header-stack
+            ncc_assert((len(vhdrs) == 1) )# support only one header-stack
             vhdr = vhdrs[0]
             unrolled_states = []
             next_unrolled_state = None
@@ -1006,7 +1006,7 @@ class capri_parser:
                 unrolled_states.insert(0,cs)
             # connect un-rolled state sequence to branch_to for the original state.prev XXX
             # or keep it for now as virtual
-            assert len(unrolled_states), "Header Stack of 0 size?? Not allowed"
+            ncc_assert(len(unrolled_states), "Header Stack of 0 size?? Not allowed")
             # remove other branches and add a branch to unrolled states
             # XXX Need to change all incoming branches to skip this virtual state and
             # point to unrolled states below it
@@ -1019,7 +1019,7 @@ class capri_parser:
                 self.states.append(us)
 
         # TBD - Same header is not expected to appear multiple times in a parse graph
-        # accept it for now - add assert later
+        # accept it for now - add ncc_assert(later)
         hdr_processed = {}
         syn_headers = []
         # initialize headers and fields extracted in each state and in a global list
@@ -1039,7 +1039,7 @@ class capri_parser:
                         if not s.unrolled_state:
                             self.logger.critical("Header stack not allowed in this state - %s" % \
                                                     s.name)
-                            assert(0)
+                            ncc_assert(0)
                         unrolled_hdr_name = hdr.base_name + '[%d]' % s.unrolled_idx
                         # get the real header instance for the virtual header
                         hdr = self.be.h.p4_header_instances[unrolled_hdr_name]
@@ -1054,8 +1054,8 @@ class capri_parser:
                     if not self.be.args.no_ohi:
                         # check if header has no-ohi pragma
                         if 'no_ohi' in hdr._parsed_pragmas:
-                            assert len(hdr._parsed_pragmas['no_ohi'].keys()), \
-                            "Provide direction as no_ohi [xgress/ingress/egress]"
+                            ncc_assert(len(hdr._parsed_pragmas['no_ohi'].keys()), \
+                            "Provide direction as no_ohi [xgress/ingress/egress]")
                             pdirection = hdr._parsed_pragmas['no_ohi'].keys()[0]
                             if pdirection.upper() == 'XGRESS' or \
                                 pdirection.upper() == self.d.name:
@@ -1074,15 +1074,15 @@ class capri_parser:
                                 (self.be.h.p4_fields[hf_name].egress_read or \
                                  self.be.h.p4_fields[hf_name].egress_write)):
                             cfield = self.be.pa.get_field(hf_name, self.d)
-                            assert(cfield)
+                            ncc_assert(cfield)
                             if hdr not in hdr_processed:
                                 # many roce headers are extracted from multiple states
                                 self.extracted_fields.append(cfield)
                             s.extracted_fields.append(cfield)
                             # check if this is variable len fld
-                            assert cfield.width != 0, \
+                            ncc_assert(cfield.width != 0, \
                                 "%s:Variable len fld %s cannot be used in the pipeline" % \
-                                (self.d.name, s.name)
+                                (self.d.name, s.name))
                         else:
                             cfield = self.be.pa.get_field(hf_name, self.d)
                             if not cfield:
@@ -1100,8 +1100,8 @@ class capri_parser:
                                     s_ohi_flds[hdr].append(cfield)
                             else:
                                 # if --no-ohi is set, cannot allow variable len flds
-                                assert not cfield.is_ohi, \
-                                    "Cannot allow %s without ohi support" % cfield.hfname
+                                ncc_assert(not cfield.is_ohi, \
+                                    "Cannot allow %s without ohi support" % cfield.hfname)
 
                     # common processing for i2e_meta header and regular headers
                     s.headers.append(hdr)
@@ -1258,19 +1258,19 @@ class capri_parser:
                     if not len_chk_profile:
                         len_chk_profile = capri_parser_len_chk_profile(self, _name)
                         if self.len_chk_profile_alloc(len_chk_profile) == None:
-                            assert 0, "No len check profile avaialble for %s" % _name
+                            ncc_assert(0, "No len check profile avaialble for %s" % _name)
                     if 'start' in len_chk_pragma[_name].keys():
-                        assert len_chk_profile.start_hfname == None, pdb.set_trace()
+                        ncc_assert(len_chk_profile.start_hfname == None)
                         len_chk_profile.start_hfname = len_chk_pragma[_name]['start'].keys()[0]
                     if 'len' in len_chk_pragma[_name].keys():
                         len_params = get_pragma_param_list(len_chk_pragma[_name]['len'])
-                        assert len(len_params) > 1, pdb.set_trace()
-                        assert len_params[0] == 'eq' or len_params[0] == 'gt', pdb.set_trace()
+                        ncc_assert(len(len_params) > 1)
+                        ncc_assert(len_params[0] == 'eq' or len_params[0] == 'gt')
                         len_chk_profile.cmp_op = len_params[0]
-                        assert len_chk_profile.len_hfname == None, pdb.set_trace()
+                        ncc_assert(len_chk_profile.len_hfname == None)
                         len_chk_profile.len_hfname = len_params[1]
                         if len(len_params) > 3:
-                            assert len_params[2] == '+' or len_params[2] == '-', pdb.set_trace()
+                            ncc_assert(len_params[2] == '+' or len_params[2] == '-')
                             len_chk_profile.offset_op = len_params[2]
                             len_chk_profile.start_offset = int(len_params[3])
                     cs.len_chk_profiles.append(len_chk_profile)
@@ -1281,7 +1281,7 @@ class capri_parser:
                 if isinstance(b_on, p4.p4_field):
                     hdr = b_on.instance
                     if hdr.virtual:
-                        assert cs.unrolled_state
+                        ncc_assert(cs.unrolled_state)
                         # used un-rolled header
                         unrolled_hdr_name = hdr.base_name + '[%d]' % cs.unrolled_idx
                         hf_name = unrolled_hdr_name + '.' + b_on.name
@@ -1291,10 +1291,10 @@ class capri_parser:
                         cf = self.be.pa.get_field(hf_name, self.d)
                     if not cf:
                         cf = self.be.pa.allocate_field(b_on, self.d)
-                    assert cf
+                    ncc_assert(cf)
                     if cf.is_meta:
-                        assert cf.parser_local, "%s:%s %s must be parser_local for using as select" % \
-                            (self.d.name, cs.name, cf.hfname)
+                        ncc_assert(cf.parser_local, "%s:%s %s must be parser_local for using as select" % \
+                            (self.d.name, cs.name, cf.hfname))
                     if cf.parser_local:
                         # if metadata is used for select(), it must be parser local
                         if hf_name not in cs.local_flds:
@@ -1334,21 +1334,21 @@ class capri_parser:
                 # field from any other header
                 hlen_fld_name = hdr._parsed_pragmas['hdr_len'].keys()[0]
                 hlen_fld = self.be.h.p4_fields[hlen_fld_name]
-                assert hlen_fld, "hdr_len specified %s does not exists" % hlen_fld_name
+                ncc_assert(hlen_fld, "hdr_len specified %s does not exists" % hlen_fld_name)
                 # find p4_fld 'hdr_len' in the header
                 p4f = None
                 for p4f in hdr.fields:
                     if p4f.name == 'hdr_len':
                         hlen_dummy = p4f.name
                         break
-                assert hlen_dummy, "Header %s must have a field \'hdr_len\'" % hdr.name
+                ncc_assert(hlen_dummy, "Header %s must have a field \'hdr_len\'" % hdr.name)
 
                 # remove the dummy fields from various lists
                 p4cf = self.be.pa.get_field(hdr.name + '.' + hlen_dummy, self.d)
-                assert p4cf in self.extracted_fields, pdb.set_trace()
+                ncc_assert(p4cf in self.extracted_fields)
                 self.extracted_fields.remove(p4cf)
                 for cs in self.hdr_ext_states[hdr]:
-                    assert p4cf in cs.extracted_fields, pdb.set_trace()
+                    ncc_assert(p4cf in cs.extracted_fields)
                     cs.extracted_fields.remove(p4cf)
                 # HACK - hlir seems to keep a single instance (copy) of a header for both
                 # ingress and egrss.. for now assume that we process ingress before egress
@@ -1358,7 +1358,7 @@ class capri_parser:
                 # build_ohi is called multiple times which fixes the problem
                 if self.d == xgress.EGRESS or (self.d == xgress.INGRESS and self.be.args.single_pipe):
                     hdr.fields.remove(p4f)
-                    assert len(hdr.fields) == 1, pdb.set_trace() # HACK only 2 flds allowed, 1 removed
+                    ncc_assert(len(hdr.fields) == 1 )# HACK only 2 flds allowed, 1 removed
                     hdr.fields[0].offset = 0
 
             if isinstance(hdr.header_type.length, p4.p4_expression):
@@ -1369,7 +1369,7 @@ class capri_parser:
                     hlen_fld_name = hdr.name + '.' + hdr.header_type.length
                 v_size_exp = hlen_fld_name
             else:
-                assert 0, "Invalid len spec %s for variable len header" % hlen_fld_name
+                ncc_assert(0, "Invalid len spec %s for variable len header" % hlen_fld_name)
 
             self.logger.debug("%s:Variable hdr %s len %s" % (self.d.name, hdr.name, v_size_exp))
             self.var_len_headers[hdr.name] = v_size_exp
@@ -1398,7 +1398,7 @@ class capri_parser:
             for hdr in path:
                 hdrs_covered[hdr] = True
         for h in self.headers:
-            assert h in hdrs_covered, "Missed header %s in path calculations" % h.name
+            ncc_assert(h in hdrs_covered, "Missed header %s in path calculations" % h.name)
         # Remove impossible branches - these are added to create deparser parse-graph
         # Removing them will reduce processing and resource requirements like saved registers
         # 'impossible' branch is the one where mask is set to mask off non-zero bits in case val
@@ -1503,7 +1503,7 @@ class capri_parser:
                         num_ohis -= 1
                     if num_ohis <= (max_ohi_per_state/2):
                         break
-            assert  num_ohis <= (max_ohi_per_state/2), "Too many OHIs in state %s\n" % cs.name
+            ncc_assert(num_ohis <= (max_ohi_per_state/2), "Too many OHIs in state %s\n" % cs.name)
         # rebuild ohi
         self.ohi = self._build_ohi(None)
 
@@ -1533,18 +1533,18 @@ class capri_parser:
             vl = None
             if header_is_variable_len(hdr):
                 vcf = fld_ohi[hdr][-1] # last field has to be the only variable len fld
-                assert vcf.width == 0
+                ncc_assert(vcf.width == 0)
                 v_size_exp = self.get_header_size(hdr)
                 if isinstance(v_size_exp, p4.p4_expression):
                     vl = capri_parser_expr(self, v_size_exp)
                 else:
-                    assert isinstance(v_size_exp, str)
+                    ncc_assert(isinstance(v_size_exp, str))
                     # no real expression, convert str to p4_field
                     vl = capri_parser_expr(self, None)
                     # get the name of the len field and find capri_field obj
                     hfname = v_size_exp
                     cf = self.be.pa.get_field(hfname, self.d)
-                    assert cf, pdb.set_trace()
+                    ncc_assert(cf)
                     if cf.is_meta:
                         vl.src_reg = cf
                         vl.op2 = '+'
@@ -1572,7 +1572,7 @@ class capri_parser:
                         ohi_bits = cf.width
                         nxt = cf.p4_fld.offset + cf.width
                 else:
-                    assert(nxt)
+                    ncc_assert(nxt)
                     if cf.p4_fld.offset == nxt:
                         # continue the ohi segment if the fld is contiguous
                         ohi_bits += cf.width
@@ -1590,7 +1590,7 @@ class capri_parser:
                                     fld_ohi[hdr][r].hfname)
                                 fld_ohi[hdr][r].reset_ohi()
                         if ohi_bits:
-                            assert((ohi_bits % 8) == 0)
+                            ncc_assert((ohi_bits % 8) == 0)
                             if hdr in ohi:
                                 ohi[hdr].append(capri_ohi(ohi_start/8, ohi_bits/8))
                             else:
@@ -1617,7 +1617,7 @@ class capri_parser:
                     self.logger.debug("terminate - remove last mis-aligned ohi field %s" % \
                         fld_ohi[hdr][r].hfname)
                     fld_ohi[hdr][r].reset_ohi()
-                assert((ohi_bits % 8) == 0)
+                ncc_assert((ohi_bits % 8) == 0)
 
             if ohi_bits:
                 if hdr in ohi:
@@ -1626,7 +1626,7 @@ class capri_parser:
                     ohi[hdr] = [capri_ohi(ohi_start/8, ohi_bits/8)]
 
             if vcf:
-                assert (vcf.p4_fld.offset % 8) == 0
+                ncc_assert((vcf.p4_fld.offset % 8) == 0)
                 if hdr in ohi:
                     ohi[hdr].append(capri_ohi(vcf.p4_fld.offset/8, vl))
                 else:
@@ -1670,7 +1670,7 @@ class capri_parser:
                     ohi_id += self.be.hw_model['parser']['ohi_threshold'] + 1 +\
                             + (self.be.hw_model['parser']['max_csum_engines'] * 2)
                 except:
-                    assert(0), pdb.set_trace()
+                    ncc_assert(0)
 
         return ohi_id
 
@@ -1721,7 +1721,7 @@ class capri_parser:
                     wr_only_ohi_name = hdr.name + '___start_off'
                     if self.ohi[hdr][0].start == 0 and wr_only_ohi_name in self.wr_only_ohi:
                         ohid = self.wr_only_ohi[wr_only_ohi_name]
-                        assert ohid != None, pdb.set_trace()
+                        ncc_assert(ohid != None)
                         self.logger.debug("%s:%s use global ohi slot %d" % \
                                 (self.d.name, wr_only_ohi_name, ohid))
                     else:
@@ -1748,7 +1748,7 @@ class capri_parser:
                             ohid = self.wr_only_ohi[wr_only_ohi_name]
                             self.logger.debug("%s:%s use global ohi slot %d" % \
                                 (self.d.name, wr_only_ohi_name, ohid))
-                            assert ohid != None, pdb.set_trace()
+                            ncc_assert(ohid != None)
                         else:
                             try:
                                 ohid = free_slots.index(True)
@@ -1938,8 +1938,8 @@ class capri_parser:
                 continue; # loop to itself, ideally shoud use header stack.. but not mandatory
             if self._find_paths(next_node, paths, path_states, current_path+traversed_nodes, \
                     path_hdrs+extracted_hdrs, dbg_on):
-                assert 0, "Unhandled parser loop at %s - Path %s??" % \
-                    (next_node.name, current_path+traversed_nodes)
+                ncc_assert(0, "Unhandled parser loop at %s - Path %s??" % \
+                    (next_node.name, current_path+traversed_nodes))
         return False
 
     def _prune_next_states(self, state, next_states):
@@ -1983,7 +1983,7 @@ class capri_parser:
                 n_ohi = 0
                 break
             n_ohi -= h_ohi
-        assert n_ohi == 0, "Could not reduce ohi count"
+        ncc_assert(n_ohi == 0, "Could not reduce ohi count")
         # rebuild the ohi information
         self.ohi = self._build_ohi(None)
 
@@ -2076,7 +2076,7 @@ class capri_parser:
                 csum_hv_bit_and_hf = []
                 for hf_name in csum_hv_names:
                     csum_cf = self.be.pa.get_field(hf_name, self.d)
-                    assert csum_cf and cf.is_hv, pdb.set_trace()
+                    ncc_assert(csum_cf and cf.is_hv)
                     csum_cf.phv_bit = hv_bit
                     self.be.pa.replace_hv_field(hv_bit, csum_cf, self.d)
                     csum_hv_bit_and_hf.append((max_hv_bits - hidx - 1, hv_bit, hf_name))
@@ -2110,7 +2110,7 @@ class capri_parser:
             #Allocate HV for header.valid
             hf_name = h.name + '.valid'
             cf = self.be.pa.get_field(hf_name, self.d)
-            assert cf and cf.is_hv, pdb.set_trace()
+            ncc_assert(cf and cf.is_hv)
             # point to copy of hv_bits in flit0
             hv_align_off = 0
             if self.align_hv_bit(h):
@@ -2132,7 +2132,7 @@ class capri_parser:
                 if 'deparser_variable_length_header' in hdr._parsed_pragmas:
                     hf_name = hdr.name + '.trunc'
                     cf = self.be.pa.get_field(hf_name, self.d)
-                    assert cf and cf.is_hv, pdb.set_trace()
+                    ncc_assert(cf and cf.is_hv)
                     # point to copy of hv_bits in flit0
                     cf.phv_bit = self.be.hw_model['parser']['phv_pkt_trunc_location']
                     self.be.pa.replace_hv_field(cf.phv_bit, cf, self.d)
@@ -2143,7 +2143,7 @@ class capri_parser:
                 if 'deparser_pad_header' in hdr._parsed_pragmas:
                     hf_name = hdr.name + '.pad'
                     cf = self.be.pa.get_field(hf_name, self.d)
-                    assert cf and cf.is_hv, pdb.set_trace()
+                    ncc_assert(cf and cf.is_hv)
                     # point to copy of hv_bits in flit0
                     cf.phv_bit = self.be.hw_model['parser']['phv_pad_hdr_location']
                     self.be.pa.replace_hv_field(cf.phv_bit, cf, self.d)
@@ -2155,7 +2155,7 @@ class capri_parser:
             #Assign special payload len HV bits
             hf_name = 'capri_intrinsic' + '.payload'
             cf = self.be.pa.get_field(hf_name, self.d)
-            assert cf and cf.is_hv, pdb.set_trace()
+            ncc_assert(cf and cf.is_hv)
             # point to copy of hv_bits in flit0
             cf.phv_bit = self.be.hw_model['parser']['phv_pkt_len_location']
             self.be.pa.replace_hv_field(cf.phv_bit, cf, self.d)
@@ -2179,8 +2179,8 @@ class capri_parser:
                     self.be.checksum.IsHdrInGsoCsumCompute(name, self.d):
                     hf_name = hdr.name + '.gso'
                     cf = self.be.pa.get_field(hf_name, self.d)
-                    assert cf and cf.is_hv, pdb.set_trace()
-                    assert hidx < max_rw_phv_hv_bits, pdb.set_trace()
+                    ncc_assert(cf and cf.is_hv)
+                    ncc_assert(hidx < max_rw_phv_hv_bits)
                     # point to copy of hv_bits in flit0
                     cf.phv_bit = hv_bit
                     self.be.pa.replace_hv_field(cf.phv_bit, cf, self.d)
@@ -2217,7 +2217,7 @@ class capri_parser:
                     if b_on not in self.saved_lkp_scope:
                         self.saved_lkp_scope[b_on] = _scope(None, cs)
                 elif hdr.metadata and b_on.hfname not in cs.local_flds:
-                    assert 0, pdb.set_trace()
+                    ncc_assert(0)
 
         for cf in self.saved_lkp_scope.keys():
             hdr = cf.get_p4_hdr()
@@ -2285,7 +2285,7 @@ class capri_parser:
                 for lf,r in out_lfs.items():
                     if lf not in in_lfs:
                         in_lfs[lf] = r
-                        assert r == None
+                        ncc_assert(r == None)
 
                 out_lfs = cs_lfs[cs][1]
                 sol_lfs = []    # start of life for this variable
@@ -2298,7 +2298,7 @@ class capri_parser:
                     elif rd:
                         out_lfs[lf] = None
                     else:
-                        assert 0, pdb.set_trace # must be either wr or rd
+                        ncc_assert(0, pdb.set_trace )# must be either wr or rd
 
                 for lf in in_lfs.keys():
                     if lf not in out_lfs and lf not in sol_lfs and lf not in cs.load_saved_lkp:
@@ -2310,7 +2310,7 @@ class capri_parser:
                 for lf in out_lfs.keys():
                     self.logger.critical("%s:Un-initialized variable %s on path %s" % \
                         (self.d.name, lf.hfname, path))
-                assert 0, pdb.set_trace()
+                ncc_assert(0)
 
         for cs in self.states:
             if cs not in cs_lfs:
@@ -2353,7 +2353,7 @@ class capri_parser:
                 # previous (downstream out_lf is now in_lf) copy it
                 for lf,r in out_lfs.items():
                     if lf in in_lfs:
-                        assert in_lfs[lf] == None or r == None or in_lfs[lf] == r, pdb.set_trace()
+                        ncc_assert(in_lfs[lf] == None or r == None or in_lfs[lf] == r)
                         pass
                     else:
                         in_lfs[lf] = r
@@ -2385,7 +2385,7 @@ class capri_parser:
                         if lf not in path_lfs and rid != None:
                             path_lfs[lf] = rid
                     else:
-                        assert 0, pdb.set_trace # must be either wr or rd
+                        ncc_assert(0, pdb.set_trace )# must be either wr or rd
 
                 for lf in in_lfs.keys():
                     if lf not in out_lfs and lf not in sol_lfs and lf not in cs.load_saved_lkp:
@@ -2397,7 +2397,7 @@ class capri_parser:
                 for lf in out_lfs.keys():
                     self.logger.critical("%s:Un-initialized variable %s on path %s" % \
                         (self.d.name, lf.hfname, path))
-                assert 0, pdb.set_trace()
+                ncc_assert(0)
                 pass
 
             # allocate reg ids for new lfs
@@ -2410,14 +2410,14 @@ class capri_parser:
                 #if cs.name == 'parse_inner_ipv6': pdb.set_trace()
                 for lf,r in upstream_lfs.items():
                     if r == None:
-                        assert 0, pdb.set_trace()
+                        ncc_assert(0)
                         continue
                     if lf in downstream_lfs or lf.hfname in cs.local_flds:
                         r_used = cs.active_reg_find(lf)
                         if r_used == None:
                             cs.active_reg_alloc(lf, r)
                         else:
-                            assert r_used == r, pdb.set_trace()
+                            ncc_assert(r_used == r)
                             pass
                         if lf in downstream_lfs:
                             downstream_lfs[lf] = r
@@ -2431,7 +2431,7 @@ class capri_parser:
                         continue
                     if lf in path_lfs:
                         rid = path_lfs[lf]
-                        assert rid != None, pdb.set_trace()
+                        ncc_assert(rid != None)
                         self.logger.debug("%s:%s Reuse rid %d for LF %s" % \
                                 (self.d.name, cs.name, rid, lf.hfname))
                         _ = cs.active_reg_alloc(lf, rid)
@@ -2511,14 +2511,14 @@ class capri_parser:
             for i, sr in enumerate(self.saved_lkp_reg_allocation):
                 if sr == saved_reg:
                     return i, sr
-        assert 0, pdb.set_trace()
+        ncc_assert(0)
         return None, None
 
     def saved_lkp_reg_alloc(self, lf, rid):
         self.logger.debug("%s:saved_lkp_reg_alloc(), lf= %s, rid= %d" % \
             (self.d.name, lf.hfname, rid))
-        assert lf not in self.saved_lkp_fld, pdb.set_trace()
-        assert self.saved_lkp_reg_allocation[rid] == None, pdb.set_trace()
+        ncc_assert(lf not in self.saved_lkp_fld)
+        ncc_assert(self.saved_lkp_reg_allocation[rid] == None)
         lkp_reg = _saved_lkp_reg(lf)
         self.saved_lkp_fld[lf] = lkp_reg
         self.saved_lkp_reg_allocation[rid] = lkp_reg
@@ -2555,7 +2555,7 @@ class capri_parser:
             if rid == None and lf.no_register():
                 continue
 
-            assert rid != None, pdb.set_trace()
+            ncc_assert(rid != None)
 
             if not lf.is_meta:
                 cs.lkp_regs[rid].first_pkt_fld = lf
@@ -2580,8 +2580,8 @@ class capri_parser:
                 # lkp field is not used in this state, pass-thru
                 continue
             rid, sr = self.saved_lkp_reg_find(cf)
-            assert cs.lkp_regs[rid].type == lkp_reg_type.LKP_REG_NONE, \
-                "Lkp register is double-booked"
+            ncc_assert(cs.lkp_regs[rid].type == lkp_reg_type.LKP_REG_NONE, \
+                "Lkp register is double-booked")
             cs.lkp_regs[rid].type = lkp_reg_type.LKP_REG_STORED
             # create lkp_fld - used for l2p key mapping
             lkp_fld = capri_lkp_fld(cf, lkp_fld_type.FLD_SAVED_REG)
@@ -2622,20 +2622,20 @@ class capri_parser:
             self.logger.debug("set_metadata: %s" % op)
 
             if op.op_type == meta_op.EXTRACT_FIELD:
-                assert op.src1
+                ncc_assert(op.src1)
                 pass
             elif op.op_type == meta_op.EXTRACT_REG:
                 # meta instruction - find lkp_reg holding this local variable
                 cf = op.src_reg
                 rid = cs.active_reg_find(cf)
-                assert rid != None, "Invalid src reg  %s for EXTRACT_REG" % (cf.hfname)
+                ncc_assert(rid != None, "Invalid src reg  %s for EXTRACT_REG" % (cf.hfname))
                 op.rid = rid
             elif op.op_type == meta_op.EXTRACT_META:
                 # meta instruction - phv <- expr(pkt_data) or parser_local (reg)
                 cf = op.src1
                 if cf.parser_local:
                     rid = cs.active_reg_find(cf)
-                    assert rid != None, "Invalid src %s for EXTRACT_META" % (cf.hfname)
+                    ncc_assert(rid != None, "Invalid src %s for EXTRACT_META" % (cf.hfname))
                     op.rid = rid
             elif op.op_type == meta_op.EXTRACT_CONST:
                 # meta instruction - handled by output generation
@@ -2646,7 +2646,7 @@ class capri_parser:
                 # create lkp_reg object for this state
                 if op.dst in cs.reserved_lfs:
                     rid = cs.active_reg_find(op.dst)
-                    assert rid != None, pdb.set_trace()
+                    ncc_assert(rid != None)
                     # parser local variables can be updated (reloaded)
                     if cs.lkp_regs[rid].type == lkp_reg_type.LKP_REG_RETAIN:
                         self.logger.debug("%s:%s:Reg %d changed from RETAIN to LOAD- %s" % \
@@ -2669,7 +2669,7 @@ class capri_parser:
                 # allocate/find lkp_reg, set capri-expression
                 # allocation is done up-front
                 rid = cs.active_reg_find(op.dst)
-                assert rid != None, pdb.set_trace()
+                ncc_assert(rid != None)
                 cs.lkp_regs[rid].type = lkp_reg_type.LKP_REG_UPDATE
                 cs.lkp_regs[rid].capri_expr = op.capri_expr
                 if op.capri_expr:
@@ -2681,7 +2681,7 @@ class capri_parser:
             elif op.op_type == meta_op.EXTRACT_CURRENT_OFF:
                 pass
             else:
-                assert(0), pdb.set_trace()
+                ncc_assert(0)
 
     def split_one_state(self, cs, split_off):
         new_cs = capri_parse_state(self, None, cs.name + '__split')
@@ -2696,7 +2696,7 @@ class capri_parser:
             split_cf = cf
 
         split_off = cs.fld_off[split_cf] / 8
-        assert split_cf
+        ncc_assert(split_cf)
         split_idx = cs.extracted_fields.index(split_cf)
         for i in range(split_idx, len(cs.extracted_fields)):
             new_cs.extracted_fields.append(cs.extracted_fields[i])
@@ -2772,7 +2772,7 @@ class capri_parser:
         cs.key_len = 0      # no lookup on first state
 
         # adjust extract_len
-        assert isinstance(cs.extract_len, int)
+        ncc_assert(isinstance(cs.extract_len, int))
         new_cs.extract_len = cs.extract_len - split_off
         cs.extract_len = split_off
         # rebuild the fld offset dictionary
@@ -2812,9 +2812,9 @@ class capri_parser:
                     if (ohi.start+ohi.length) <= (cf.p4_fld.offset/8):
                         continue
                     # a cf cannot straddle ohi chunk
-                    assert ohi.start < (cf.p4_fld.offset/8)
+                    ncc_assert(ohi.start < (cf.p4_fld.offset/8))
                     max_ohi = self.be.hw_model['parser']['num_ohi']
-                    assert self.ohi_used < max_ohi
+                    ncc_assert(self.ohi_used < max_ohi)
                     self.logger.info("Allocate new ohi slots for %s %s" % (new_cs.name, cf.hfname))
                     new_ohi = capri_ohi(cf.p4_fld.offset/8,
                                         ohi.start + ohi.length - (cf.p4_fld.offset / 8))
@@ -2891,7 +2891,7 @@ class capri_parser:
             # split is due to extract len limit
             split_off = max_extract
         '''
-        assert split_off, pdb.set_trace()
+        ncc_assert(split_off)
         # XXX Now no need to split state if ohi extraction crosses 64B (hw allows upto 14b
         # increment to offset - added to skip udp payload
         self.logger.warning("%s:Splitting states %s, %s, split_off %d" % \
@@ -2969,9 +2969,9 @@ class capri_parser:
                 if isinstance(b_on, capri_field):
                     hdr = b_on.get_p4_hdr()
                     if hdr.metadata:
-                        assert b_on.parser_local, \
+                        ncc_assert(b_on.parser_local, \
                             "Metadata fld %s used for lookup must be parser_local" % \
-                            (b_on.hfname)
+                            (b_on.hfname))
                         lkp_fld = cs.lkp_flds[b_on.hfname]
                         lkp_fld.key_off = koff
                         lkp_fld.is_key = True
@@ -2980,8 +2980,8 @@ class capri_parser:
                     elif hdr not in cs.headers:
                         # use saved lookup - must be the same lkp register that was
                         # used earlier state to save the value.. also align it on 16b
-                        assert b_on in cs.saved_lkp, "%s:saved lookup error for %s in %s" % \
-                            (self.d.name, b_on.hfname, cs.name)
+                        ncc_assert(b_on in cs.saved_lkp, "%s:saved lookup error for %s in %s" % \
+                            (self.d.name, b_on.hfname, cs.name))
                         lkp_fld = cs.lkp_flds[b_on.hfname]
                         lkp_fld.key_off = koff
                         lkp_fld.is_key = True
@@ -2991,7 +2991,7 @@ class capri_parser:
                     # normal packet field
                     off = cs.fld_off[b_on]
                     l = b_on.width
-                    assert l != p4.P4_AUTO_WIDTH, "Cannot support variable len match field"
+                    ncc_assert(l != p4.P4_AUTO_WIDTH, "Cannot support variable len match field")
                     lkp_fld = capri_lkp_fld(b_on, lkp_fld_type.FLD_PKT, off, l)
                     lkp_fld.is_key = True
                     lkp_fld.key_off = koff
@@ -3020,7 +3020,7 @@ class capri_parser:
             for k,v in cs.branch_to.items():
                 # maintain user provided order
                 br_info = capri_branch_info()
-                assert isinstance(v, capri_parse_state), pdb.set_trace()
+                ncc_assert(isinstance(v, capri_parse_state))
                 br_info.nxt_state = v
                 if isinstance(k, int):
                     br_info.val = k
@@ -3083,7 +3083,7 @@ class capri_parser:
                     else:
                         reg_in_use = None
 
-                assert l==0, "Not enough registers for lkp_val"
+                ncc_assert(l==0, "Not enough registers for lkp_val")
 
             # fix pkt_off for all lkp_regs that load from pkt
             for lkp_reg in cs.lkp_regs:
@@ -3101,7 +3101,7 @@ class capri_parser:
                         if isinstance(lkp_reg.capri_expr.src_reg, tuple):
                             off = lkp_reg.capri_expr.src_reg[0]
                         else:
-                            assert lkp_reg.capri_expr.src_reg in cs.fld_off, pdb.set_trace()
+                            ncc_assert(lkp_reg.capri_expr.src_reg in cs.fld_off)
                             off = cs.fld_off[lkp_reg.capri_expr.src_reg]
                         lkp_reg.pkt_off2 = off
 
@@ -3112,7 +3112,7 @@ class capri_parser:
                         if isinstance(lkp_reg.capri_expr.src1, tuple):
                             off = lkp_reg.capri_expr.src1[0]
                         else:
-                            assert lkp_reg.capri_expr.src1 in cs.fld_off, pdb.set_trace()
+                            ncc_assert(lkp_reg.capri_expr.src1 in cs.fld_off)
                             off = cs.fld_off[lkp_reg.capri_expr.src1]
                         lkp_reg.pkt_off = off
                 else:
@@ -3143,7 +3143,7 @@ class capri_parser:
                         cs.key_l2p_map[koff+k] = phys_off+roff+k
                 phys_off += reg.size
 
-            assert cs.key_l2p_map.count(-1) == 0, pdb.set_trace()
+            ncc_assert(cs.key_l2p_map.count(-1) == 0)
             # "Internal Error unmapped lkp bits"
 
             self.logger.debug("State LKP_FLDS: %s: lkp_flds %s" % (cs.name, cs.lkp_flds.values()))
@@ -3158,9 +3158,9 @@ class capri_parser:
                 # cannot be extracted in a state -
                 # cannot specify offset inst with multiple pkt fields
                 num_var_hdrs = sum([1 if header_is_variable_len(h) else 0 for h in cs.headers])
-                assert num_var_hdrs == 1, "Too many var len headers extracted in state %s" % \
-                    cs.name
-                assert header_is_variable_len(cs.headers[-1]), "Only last header can be variable"
+                ncc_assert(num_var_hdrs == 1, "Too many var len headers extracted in state %s" % \
+                    cs.name)
+                ncc_assert(header_is_variable_len(cs.headers[-1]), "Only last header can be variable")
                 if len(cs.headers) > 1:
                     # fixed size of the last (variable len) hdr needs to be subtracted.
                     fixed_size = sum([get_header_fixed_size(h) for h in cs.headers])
@@ -3173,7 +3173,7 @@ class capri_parser:
                 if isinstance(v_size_exp, p4.p4_expression):
                     cs.extract_len = capri_parser_expr(cs.parser, v_size_exp)
                 else:
-                    assert isinstance(v_size_exp, str)
+                    ncc_assert(isinstance(v_size_exp, str))
                     # no real expression, convert str to p4_field
                     capri_expr = capri_parser_expr(cs.parser, None)
                     hfname = v_size_exp
@@ -3207,7 +3207,7 @@ class capri_parser:
 
     def get_ext_cstates(self, hdr):
         if hdr not in self.hdr_ext_states:
-            assert hdr.metadata, pdb.set_trace()
+            ncc_assert(hdr.metadata)
             # not a real header, but atomic meta header
             return []
         return [cs for cs in self.hdr_ext_states[hdr] if not cs.deparse_only]
@@ -3256,7 +3256,7 @@ class capri_parser:
                 last_cf = dst_cf # for logging
             else:
                 if ext_len:
-                    assert start_phv_bit != None, pdb.set_trace()
+                    ncc_assert(start_phv_bit != None)
                     if (start_ext_off % 8) or (ext_len % 8):
                         self.logger.warning('Padding mis-alingned extraction at %s, start %d, len %d' % \
                             (last_cf.hfname, start_ext_off, ext_len))
@@ -3376,7 +3376,7 @@ class capri_parser:
                     (self.d.name, nxt_cs.name, fl1, fl2))
                 self.logger.debug("%s:extracted flds=%s, meta_flds %s" % \
                     (nxt_cs.name, nxt_cs.extracted_fields, nxt_cs.meta_extracted_fields))
-                assert 0, "Fix the critical problems and try again"
+                ncc_assert(0, "Fix the critical problems and try again")
             current_flit = fl1
 
         insts = self.create_extract_instructions(extractions)
@@ -3391,7 +3391,7 @@ class capri_parser:
     def len_chk_profile_alloc(self, len_chk_profile):
         for p in self.len_chk_profiles:
             if p and p == len_chk_profile:
-                assert 0, pdb.set_trace() # duplicate allocation
+                ncc_assert(0 )# duplicate allocation
         for i,p in enumerate(self.len_chk_profiles):
             if p == None:
                 self.len_chk_profiles[i] = len_chk_profile
@@ -3497,7 +3497,7 @@ class capri_parser:
                         self.logger.critical( \
                         "%s:Flit violation at %s phv %d, cs %s last_cs %s last_flit %d on path:\n %s" % \
                             (self.d.name, hdr.name, hdr_phv_bit, cs.name, last_cs.name, last_flit, path))
-                        assert 0, pdb.set_trace()
+                        ncc_assert(0)
                         return True
 
                 for cf in cs.meta_extracted_fields:
@@ -3506,7 +3506,7 @@ class capri_parser:
                         self.logger.critical( \
                         "%s:Flit violation at %s phv %d, cs %s last_cs %s last_flit %d on path:\n %s" % \
                             (self.d.name, cf.hfname, cf.phv_bit, cs.name, last_cs.name, last_flit, path))
-                        assert 0, pdb.set_trace()
+                        ncc_assert(0)
                         return True
 
                 if cs_flit >= 0:

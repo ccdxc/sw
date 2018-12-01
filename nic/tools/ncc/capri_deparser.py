@@ -17,7 +17,7 @@ import p4_hlir.hlir.table_dependency as table_dependency
 from p4_hlir.graphs.dependency_graph import *
 import p4_hlir.hlir.analysis_utils as hlir_utils
 
-import capri_logging
+from capri_logging import ncc_assert as ncc_assert
 from capri_utils import *
 from capri_model import capri_model as capri_model
 from capri_pa import capri_field as capri_field
@@ -62,27 +62,27 @@ class capri_deparser:
             #check for byte alignment
             for pc in phv_chunks:
                 if pc[0] % 8:
-                    assert(0), pdb.set_trace()
+                    ncc_assert(0)
                 if (pc[1] % 8):
-                    assert(0), pdb.set_trace()
+                    ncc_assert(0)
 
             cur_offset = 0
 
             for f in hdr.fields:
                 cf = self.be.pa.gress_pa[self.d].get_field(get_hfname(f))
-                assert cf, "unknown field %s" % (hdr.name + f.name)
+                ncc_assert(cf, "unknown field %s" % (hdr.name + f.name))
                 field_byte_offset = cf.get_field_offset() / 8
                 if field_byte_offset < cur_offset:
                     continue
                 if cf.is_ohi:
                     ohi = ohi_list.pop(0)
-                    assert field_byte_offset == ohi.start
+                    ncc_assert(field_byte_offset == ohi.start)
                     dp_hdr_fields.append((ohi, self.field_type_ohi, cf))
                     if (isinstance(ohi.length, int)):
                         cur_offset += ohi.length
                 else:
                     pc = phv_chunks.pop(0)
-                    assert pc[0] == cf.phv_bit, pdb.set_trace()
+                    ncc_assert(pc[0] == cf.phv_bit)
                     dp_hdr_fields.append((pc, self.field_type_phv, cf))
                     cur_offset += pc[1]/8
             self.topo_ordered_phv_ohi_chunks[hdr] = dp_hdr_fields
@@ -94,9 +94,9 @@ class capri_deparser:
             #check for byte alignment
             for pc in phv_chunks:
                 if pc[0] % 8:
-                    assert(0), pdb.set_trace()
+                    ncc_assert(0)
                 if (pc[1] % 8):
-                    assert(0), pdb.set_trace()
+                    ncc_assert(0)
             phvchunklist = []
             for chunks in phv_chunks:
                 phvchunklist.append((chunks, self.field_type_phv, None))

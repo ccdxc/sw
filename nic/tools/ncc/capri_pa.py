@@ -15,7 +15,7 @@ from enum import IntEnum
 from p4_hlir.main import HLIR
 import p4_hlir.hlir.p4 as p4
 import p4_hlir.hlir.table_dependency as table_dependency
-import capri_logging
+from capri_logging import ncc_assert as ncc_assert
 from capri_utils import *
 from capri_model import capri_model as capri_model
 from capri_output import capri_asm_output_pa as capri_asm_output_pa
@@ -36,7 +36,7 @@ class capri_phc:
     def get_flds(self, sb, sz):
         # return field name(s) that occupy specified bits within the container
         flds = OrderedDict()
-        assert sb >= 0 and sb < 8 and sz > 0 and sz <= 8, pdb.set_trace()
+        ncc_assert(sb >= 0 and sb < 8 and sz > 0 and sz <= 8)
         for f,(cs, fs, w) in self.fields.items():
             ce = cs+w
             if sb >= cs and sb < ce:
@@ -180,7 +180,7 @@ class capri_flit:
         self.reserved = reserve # temp val
         self.flit_reserve = reserve # user provided value (used for reset)
         if reserve:
-            assert reserve < fsize/2, "Cannot reserve more than half the flit"
+            ncc_assert(reserve < fsize/2, "Cannot reserve more than half the flit")
             self.flit_size = fsize - reserve
         else:
             self.flit_size = fsize
@@ -275,9 +275,9 @@ class capri_flit:
                 return False
 
             if cf.need_phv() and cf.width:
-                assert cf.width > 0
+                ncc_assert(cf.width > 0)
                 self.flit_used += cf.width
-                assert self.flit_used <= self.flit_size
+                ncc_assert(self.flit_used <= self.flit_size)
                 if self.reserved and self.flit_used >= phv_flit_sz:
                     # this field is crossing the 512b boundary
                     # add pad - reset the reserved bytes
@@ -386,13 +386,13 @@ class capri_flit:
             self.headers[hdr] = cf
         # flit has space
         if cf.need_phv() and cf.width:
-            assert cf.width > 0, pdb.set_trace()
+            ncc_assert(cf.width > 0)
             cf_end = self.flit_used + cf.width
             if cf.is_index_key and cf.width > 8 and (cf_end % 8):
                 self.gress_pa.pa.logger.critical( \
                     "ERROR:Hdr field not right justified to byte boundary in phv" % \
                         (cf.hfname))
-                assert 0, pdb.set_trace()
+                ncc_assert(0)
 
             elif cf.get_field_offset() == 0:
                 # make sure header is byte aligned
@@ -402,7 +402,7 @@ class capri_flit:
                         return False
 
             self.flit_used += cf.width
-            assert self.flit_used <= self.flit_size, pdb.set_trace()
+            ncc_assert(self.flit_used <= self.flit_size)
 
             if self.reserved and self.flit_used >= phv_flit_sz:
                 # this field is crossing the 512b boundary
@@ -459,14 +459,14 @@ class capri_flit:
         flit_bits = 0
         for f in self.field_order:
             if f.need_phv():
-                assert f.width >= 0, pdb.set_trace()
+                ncc_assert(f.width >= 0)
                 flit_bits += f.width
         if full:
-            assert flit_bits == self.flit_size, pdb.set_trace()
-        assert flit_bits == self.flit_used, pdb.set_trace()
+            ncc_assert(flit_bits == self.flit_size)
+        ncc_assert(flit_bits == self.flit_used)
 
     def flit_close(self):
-        if len(self.field_order) == 0: pdb.set_trace()
+        ncc_assert(len(self.field_order) != 0)
 
         self.gress_pa.logger.debug("%s:Close flit[%d], used %d, at %s" % \
             (self.gress_pa.d.name, self.id, self.flit_used, self.field_order[-1].hfname))
@@ -518,10 +518,9 @@ class capri_flit:
         # - (smaller) holes due to allocation of meta bit fields
         # For new request, just find a chunk that can satisfy a given request, no need to find
         # a best fit (for now)
-        #pdb.set_trace()
         if location >= 0:
-            assert location >= self.base_phv_bit and location < (self.base_phv_bit+self.fsize), pdb.set_trace()
-            assert (location+csize) <= (self.base_phv_bit+self.fsize), pdb.set_trace()
+            ncc_assert(location >= self.base_phv_bit and location < (self.base_phv_bit+self.fsize))
+            ncc_assert(location+csize) <= (self.base_phv_bit+self.fsize)
             floc = location - self.base_phv_bit
         else:
             if location == -2:
@@ -590,32 +589,31 @@ class capri_flit:
             # allocate from this chunk
             if a_cs == cs:
                 # from the beginning of the chunk
-                assert(cw-csize) >= 0, pdb.set_trace()
+                ncc_assert((cw-csize) >= 0)
                 if cw-csize == 0:
                     self.free_chunks.pop(i)
                 else:
                     self.free_chunks[i] = (cs+csize, cw-csize)
             else:
-                assert(a_cs-cs) >= 0, pdb.set_trace()
+                ncc_assert((a_cs-cs) >= 0)
                 if a_cs+csize == cs+cw:
                     # from the end of the chunk, tail-trim
                     self.free_chunks[i] = (cs, a_cs-cs)
                 else:
                     # take from the middle of the chunk
                     self.free_chunks[i] = (cs, a_cs-cs)
-                    assert(cs+cw-a_cs-csize) >= 0, pdb.set_trace()
+                    ncc_assert((cs+cw-a_cs-csize) >= 0)
                     self.free_chunks.insert(i+1, (a_cs+csize, cs+cw-a_cs-csize))
 
-            assert csize > 0, pdb.set_trace()
+            ncc_assert(csize > 0)
             self.flit_avail -= csize
             return self.base_phv_bit + a_cs # return global phv bit#
         # did not find any sutable free chunk
         return -1
 
     def flit_chunk_free(self, location, csize):
-        assert location >= self.base_phv_bit and location < (self.base_phv_bit+self.fsize)
-        assert (location+csize) <= (self.base_phv_bit+self.fsize)
-        #pdb.set_trace()
+        ncc_assert(location >= self.base_phv_bit and location < (self.base_phv_bit+self.fsize))
+        ncc_assert(location+csize) <= (self.base_phv_bit+self.fsize)
 
         floc = location - self.base_phv_bit
         if len(self.free_chunks) == 0 or \
@@ -630,8 +628,8 @@ class capri_flit:
                     # merge with this chunk
                     self.free_chunks[i] = (floc, cw+csize)
                 else:
-                    assert (floc+csize < cs), "overlapping free (%d, %d) -> (%d, %d)" % \
-                        (floc, csize, cs, cw)
+                    ncc_assert((floc+csize < cs), "overlapping free (%d, %d) -> (%d, %d)" % \
+                        (floc, csize, cs, cw))
                     if i > 0:
                         # check if this can be merged with previous chunk
                         (prev_cs, prev_cw) = self.free_chunks[i-1]
@@ -643,7 +641,7 @@ class capri_flit:
                         self.free_chunks.insert(i, (floc, csize))
                 self.flit_avail += csize
                 return
-        assert 0, pdb.set_trace()
+        ncc_assert(0)
 
 
 class capri_gress_pa:
@@ -716,7 +714,7 @@ class capri_gress_pa:
             else:
                 pass
 
-        assert hv_bits <= self.pa.be.hw_model['parser']['max_hv_bits'], pdb.set_trace()
+        ncc_assert(hv_bits <= self.pa.be.hw_model['parser']['max_hv_bits'])
         # ignore trailing flit pad
         tail_pad = 0
         if len(self.field_order):
@@ -747,7 +745,7 @@ class capri_gress_pa:
         for cf in self.field_order:
             if cf in dup_fields:
                 self.logger.warning("Duplicate field - %s" % cf.hfname)
-                assert(0)
+                ncc_assert(0)
                 return False
             else:
                 dup_fields[cf] = True
@@ -772,15 +770,15 @@ class capri_gress_pa:
             # if there is a field whose size is not multiple of 8bits, then all flds must be of
             # the same size
             for uf in transitive_union:
-                assert uf.width == non_byte_field.width, \
+                ncc_assert(uf.width == non_byte_field.width, \
                     "Cannot unionize flds %s(%d) and %s(%d) - must be same size" % \
-                    (uf.hfname, uf.width, non_byte_field.hfname, non_byte_field.width)
+                    (uf.hfname, uf.width, non_byte_field.hfname, non_byte_field.width))
                 if uf in self.fld_unions:
                     # check other fields in the union
                     for of in self.fld_unions[uf][0]:
-                        assert of.width == non_byte_field.width, \
+                        ncc_assert(of.width == non_byte_field.width, \
                             "Cannot unionize flds %s(%d) and %s(%d) - must be same size" % \
-                            (of.hfname, of.width, non_byte_field.hfname, non_byte_field.width)
+                            (of.hfname, of.width, non_byte_field.hfname, non_byte_field.width))
 
         for uf in transitive_union:
             if uf not in self.fld_unions:
@@ -899,7 +897,7 @@ class capri_gress_pa:
                 self.field_order.append(tcf)
                 continue
 
-            assert self.field_order.index(i_cf) == cfidx, pdb.set_trace() # makes it slow
+            ncc_assert(self.field_order.index(i_cf) == cfidx )# makes it slow
             hdr = i_cf.get_p4_hdr()
             idx = cfidx
             for idx in range(cfidx, len(self.field_order)):
@@ -980,8 +978,8 @@ class capri_gress_pa:
                 self.hdr_fld_order.append(h)
 
         var_flds = [f.hfname for f in self.field_order if f.width == p4.P4_AUTO_WIDTH]
-        # XXX : no assert yet - ip_options are causing problem due to add/copy_header()
-        # assert(len(var_flds) == 0)
+        # XXX : no ncc_assert(yet - ip_options are causing problem due to add/copy_header())
+        # ncc_assert(len(var_flds) == 0)
 
         for hdr in self.pa.be.parsers[self.d].deparse_only_hdrs:
             # add deparse only hdrs at the end as they are not bound by flit order
@@ -1023,7 +1021,7 @@ class capri_gress_pa:
                 if hidx < first_idx:
                     first_idx = hidx
 
-            assert first_idx < len(hdr_list), "%s:Union-ed headers %s are not used" % (self.d.name, v[1]) 
+            ncc_assert(first_idx < len(hdr_list), "%s:Union-ed headers %s are not used" % (self.d.name, v[1]) )
             self.hdr_unions[h] = (v[0], v[1], hdr_list[first_idx])
             for uh in v[1]:
                 # fix other header entries in this union
@@ -1157,7 +1155,7 @@ class capri_gress_pa:
 
             bit_idx += cf.width
             if cf.is_alignment_pad:
-                #assert (bit_idx % 8) == 0
+                #ncc_assert((bit_idx % 8) == 0)
                 alignment_pads.append((cf.phv_bit, cf.width))
 
         # fix union-ed hdrs/fields
@@ -1182,7 +1180,7 @@ class capri_gress_pa:
                         # entire destination header is in OHI, just get phv_bit from
                         # any of its fields
                         phv_flds, ohi_flds = self.get_header_cfields(dhdr)
-                        assert len(phv_flds) == 0 and len(ohi_flds) != 0
+                        ncc_assert(len(phv_flds) == 0 and len(ohi_flds) != 0)
                         dcf = ohi_flds[0]
                     hdr_idx[hdr] = dcf.phv_bit
                     bit_idx = dcf.phv_bit
@@ -1200,7 +1198,7 @@ class capri_gress_pa:
             else:
                 # fld union
                 dcf = self.fld_unions[cf][1]
-                assert dcf, pdb.set_trace()
+                ncc_assert(dcf)
                 if cf == dcf:
                     continue
                 cf.phv_bit = dcf.phv_bit
@@ -1220,7 +1218,7 @@ class capri_gress_pa:
             c_off = cf.phv_bit % 8
             c_part = 8 - c_off
             while fw:
-                assert fw > 0, pdb.set_trace()
+                ncc_assert(fw > 0)
                 cw = fw if (fw < c_part) else c_part
                 self.phcs[idx].fields[cf.hfname] = (c_off, f_off, cw)
                 cf.phcs.append(idx)
@@ -1246,7 +1244,7 @@ class capri_gress_pa:
         if cfield:
             if not cfield.is_intrinsic:
                 self.logger.warning("Field %s already present" % hfname)
-                assert(0)
+                ncc_assert(0)
         else:
             cfield = capri_field(p4_fld, self.d)
             self.fields[hfname] = cfield
@@ -1346,7 +1344,7 @@ class capri_gress_pa:
     def header_has_ohi(self, hdr):
         for f in hdr.fields:
             cf = self.get_field(get_hfname(f))
-            assert(cf)
+            ncc_assert(cf)
             if cf.is_ohi:
                 return True
             return False
@@ -1355,16 +1353,16 @@ class capri_gress_pa:
         hphv = 0
         for f in hdr.fields:
             cf = self.get_field(get_hfname(f))
-            assert cf, "unknown field %s" % (hdr.name + f.name)
+            ncc_assert(cf, "unknown field %s" % (hdr.name + f.name))
             if is_synthetic_header(hdr):
-                assert not cf.is_ohi, pdb.set_trace() # cannot have ohi flds in syn header
+                ncc_assert(not cf.is_ohi )# cannot have ohi flds in syn header
                 if not cf.is_union():
                     hphv += cf.width
             elif not cf.is_ohi:
                hphv += cf.width
             else:
                 pass
-        assert((hphv % 8) == 0)
+        ncc_assert((hphv % 8) == 0)
         return (hphv+7)/8
 
     def get_header_storage_size(self, hdr):
@@ -1379,18 +1377,18 @@ class capri_gress_pa:
                                         for uh in self.hdr_unions[hdr][1]])
         for f in hdr.fields:
             cf = self.get_field(get_hfname(f))
-            assert cf, "unknown field %s" % get_hfname(f)
+            ncc_assert(cf, "unknown field %s" % get_hfname(f))
             if cf.is_union() or cf.is_ohi:
                 continue
             hphv += cf.width + cf.union_pad_size
 
-        assert((hphv % 8) == 0), pdb.set_trace()
+        ncc_assert((hphv % 8) == 0)
         return (hphv+7)/8
 
     def get_header_start_phv_cfield(self, hdr):
         for f in hdr.fields:
             cf = self.get_field(get_hfname(f))
-            assert cf, "unknown field %s" % (hdr.name + f.name)
+            ncc_assert(cf, "unknown field %s" % (hdr.name + f.name))
             if not cf.is_ohi:
                 return cf
 
@@ -1399,7 +1397,7 @@ class capri_gress_pa:
         ohi_fields = []
         for f in hdr.fields:
             cf = self.get_field(get_hfname(f))
-            assert cf, "unknown field %s" % (hdr.name + f.name)
+            ncc_assert(cf, "unknown field %s" % (hdr.name + f.name))
             if cf.is_ohi:
                 ohi_fields.append(cf)
             else:
@@ -1410,25 +1408,25 @@ class capri_gress_pa:
         hdrfields = []
         for f in hdr.fields:
             cf = self.get_field(get_hfname(f))
-            assert cf, "unknown field %s" % (hdr.name + f.name)
+            ncc_assert(cf, "unknown field %s" % (hdr.name + f.name))
             hdrfields.append(cf)
         return hdrfields
 
     def get_phv_offset(self, cf):
         # count offset of a field within header based on fields that are in phv
-        assert(not cf.is_ohi)
+        ncc_assert(not cf.is_ohi)
         coff = 0
         hdr = cf.p4_fld.instance
-        assert(hdr)
+        ncc_assert(hdr)
         for f in hdr.fields:
             cf2 = self.get_field(get_hfname(f))
-            assert(cf2)
+            ncc_assert(cf2)
             if cf2 == cf:
                 return coff
             if cf2.is_ohi:
                 continue
             coff += cf2.width
-        assert(0) # field not found??
+        ncc_assert((0) )# field not found??
         return 0
 
     '''
@@ -1439,14 +1437,14 @@ class capri_gress_pa:
             flit.add_cfield(hv_field)
 
     def _add_intrinsic_meta_and_hv(self, flit, add_hv):
-        assert flit.id == 0
+        ncc_assert(flit.id == 0)
         bits_used = 0
         if self.capri_intr_hdr:
             for f in self.capri_intr_hdr.fields:
                 cf = self.get_field(get_hfname(f))
-                assert cf
+                ncc_assert(cf)
                 cf.is_ohi = False
-                assert cf.is_intrinsic
+                ncc_assert(cf.is_intrinsic)
                 flit.add_cfield(cf)
 
             bits_used += (get_header_size(self.capri_intr_hdr) * 8)
@@ -1454,7 +1452,7 @@ class capri_gress_pa:
         if self.capri_p4_intr_hdr:
             for f in self.capri_p4_intr_hdr.fields:
                 cf = self.get_field(get_hfname(f))
-                assert cf
+                ncc_assert(cf)
                 cf.is_ohi = False
                 flit.add_cfield(cf)
 
@@ -1466,14 +1464,14 @@ class capri_gress_pa:
             dpa_variable_len_phv_start_bit = self.pa.be.hw_model['deparser']['len_phv_start']
             phv_bit = flit.flit_chunk_alloc((get_header_size(self.capri_deparser_len_hdr) * 8),\
                                              dpa_variable_len_phv_start_bit, 0, 0, 1, False)
-            assert phv_bit == dpa_variable_len_phv_start_bit, pdb.set_trace()
+            ncc_assert(phv_bit == dpa_variable_len_phv_start_bit)
             self.assign_phv_to_hdr_flds(flit, self.capri_deparser_len_hdr, phv_bit)
 
         if self.capri_deparser_pad_hdr:
             dpa_pad_hdr_phv_start_bit = self.pa.be.hw_model['deparser']['pad_phv_start']
             phv_bit = flit.flit_chunk_alloc((get_header_size(self.capri_deparser_pad_hdr) * 8),\
                                              dpa_pad_hdr_phv_start_bit, 0, 0, 1, False)
-            assert phv_bit == dpa_pad_hdr_phv_start_bit, pdb.set_trace()
+            ncc_assert(phv_bit == dpa_pad_hdr_phv_start_bit)
             self.assign_phv_to_hdr_flds(flit, self.capri_deparser_pad_hdr, phv_bit)
 
 
@@ -1486,7 +1484,7 @@ class capri_gress_pa:
                     if cf.is_hv or cf.is_intrinsic:
                         continue
                     # cannot use hdr flds as predicate, as they cannot be placed in 1st 512 bits
-                    assert cf.is_meta, pdb.set_trace()
+                    ncc_assert(cf.is_meta)
                     cf.is_predicate = True
                     flit.add_cfield(cf)
                     bits_used += cf.width
@@ -1545,8 +1543,7 @@ class capri_gress_pa:
         if cfid != len(self.field_order):
             self.logger.critical("Not enough space in phv")
             self.print_field_order_info("PHV order(PHV FAILURE)")
-            pdb.set_trace()
-            assert 0
+            ncc_assert(0)
 
         # combine lists from flits into a common list
         self.logger.info("%s:Number of flits = %d" % (self.d.name, flits_used))
@@ -1566,13 +1563,13 @@ class capri_gress_pa:
 
         for f in hdr.fields:
             cf = self.get_field(get_hfname(f))
-            assert cf
+            ncc_assert(cf)
             if cf.is_ohi:
                 continue
 
             if f.offset % 8:
-                assert last_cf, pdb.set_trace()
-                assert hoff == f.offset, pdb.set_trace()
+                ncc_assert(last_cf)
+                ncc_assert(hoff == f.offset)
                 hoff += cf.storage_size()
                 clen += cf.storage_size()
             else:
@@ -1588,7 +1585,6 @@ class capri_gress_pa:
         return hdr_byte_flds
 
     def clear_new_flit_phv_assignment(self, flit, allocated_chunks, new_allocated_hfs):
-        #pdb.set_trace() # free all allocations, reset phv_bits...
         for ac in allocated_chunks:
             flit.flit_chunk_free(ac[0], ac[1])
 
@@ -1602,7 +1598,7 @@ class capri_gress_pa:
     def hdr_free_phv(self, hdr):
         for f in hdr.fields:
             cf = self.get_field(get_hfname(f))
-            assert cf
+            ncc_assert(cf)
             cf.phv_bit = -1
             # remove phv bits from fld union-ed flds, these are not added to new_allocated_hfs
             if cf.is_fld_union_storage:
@@ -1630,7 +1626,7 @@ class capri_gress_pa:
             foffset = start_phv - flit.base_phv_bit
             for f in h.fields:
                 cf = self.get_field(get_hfname(f))
-                assert cf
+                ncc_assert(cf)
                 if cf in hdr_byte_aligned_cfs:
                     if cf.is_fld_union:
                         # XXX more checks are needed XXX
@@ -1639,7 +1635,6 @@ class capri_gress_pa:
                     blen = hdr_byte_aligned_cfs[cf]
                     if foffset < 512 and foffset+blen > 512:
                         extra_bits = 512-foffset
-                        #pdb.set_trace()
                         if extra_bits > max_extra_bits:
                             max_extra_bits = extra_bits
 
@@ -1650,27 +1645,26 @@ class capri_gress_pa:
     def assign_phv_to_hdr_flds(self, flit, hdr, start_phv):
         # assumption: 512b fld crossing check is done by the caller
         # this is called for hdr unions as well hdrs that may some some fld union flds
-        if hdr.name == 'i2e_metadata': pdb.set_trace()
+        ncc_assert(hdr.name != 'i2e_metadata')
         foffset = start_phv
         flit_phv = start_phv - flit.base_phv_bit
 
         hdr_byte_aligned_cfs = self.hdr_get_byte_aligned_fld_chunks(hdr)
         for f in hdr.fields:
             cf = self.get_field(get_hfname(f))
-            assert cf
+            ncc_assert(cf)
             if hdr_is_intrinsic(hdr):
                 cf.is_ohi = False
-                assert cf.is_intrinsic, pdb.set_trace()
+                ncc_assert(cf.is_intrinsic)
 
             if not cf.is_fld_union and cf in hdr_byte_aligned_cfs:
                 blen = hdr_byte_aligned_cfs[cf]
                 if flit_phv < 512 and flit_phv+blen > 512:
-                    #pdb.set_trace()
                     foffset += 512-flit_phv
             # fix union-ed flds if this is storage for the union
             if cf.is_fld_union_storage:
                 for uf in self.fld_unions[cf][0]:
-                    assert uf.phv_bit < 0 or uf.phv_bit == foffset, pdb.set_trace()
+                    ncc_assert(uf.phv_bit < 0 or uf.phv_bit == foffset)
                     uf.phv_bit = foffset
 
             if cf.storage_size() and not cf.is_fld_union:
@@ -1692,15 +1686,14 @@ class capri_gress_pa:
         for f in hdr.fields:
             flit_phv = foffset % flit_sz
             cf = self.get_field(get_hfname(f))
-            assert cf
+            ncc_assert(cf)
             if hdr_is_intrinsic(hdr):
                 cf.is_ohi = False
-                assert cf.is_intrinsic, pdb.set_trace()
+                ncc_assert(cf.is_intrinsic)
 
             if not cf.is_fld_union:
                 blen = cf.storage_size()
                 if flit_phv < 512 and flit_phv+blen > 512:
-                    #pdb.set_trace()
                     foffset += 512-flit_phv
                     self.logger.warning("Field %s crosses 512b boundary, at %d, %d " % \
                         (cf.hfname, flit_phv, blen))
@@ -1711,7 +1704,7 @@ class capri_gress_pa:
             # fix union-ed flds if this is storage for the union
             if cf.is_fld_union_storage:
                 for uf in self.fld_unions[cf][0]:
-                    assert uf.phv_bit < 0 or uf.phv_bit == foffset, pdb.set_trace()
+                    ncc_assert(uf.phv_bit < 0 or uf.phv_bit == foffset)
                     uf.phv_bit = foffset
 
             if cf.storage_size() and not cf.is_fld_union:
@@ -1725,12 +1718,12 @@ class capri_gress_pa:
 
     def add_intrinsic_meta_and_hv(self, flit, add_hv):
         # New phv allocation
-        assert flit.id == 0
+        ncc_assert(flit.id == 0)
         bits_used = 0
         if self.capri_intr_hdr:
             phv_bit = flit.flit_chunk_alloc((get_header_size(self.capri_intr_hdr) * 8), 0, 0, 0, 1,
                                                                 False)
-            assert phv_bit == 0
+            ncc_assert(phv_bit == 0)
             self.assign_phv_to_hdr_flds(flit, self.capri_intr_hdr, phv_bit)
             bits_used += (get_header_size(self.capri_intr_hdr) * 8)
             self.allocated_hf[self.capri_intr_hdr] = phv_bit
@@ -1738,7 +1731,7 @@ class capri_gress_pa:
         if self.capri_p4_intr_hdr:
             phv_bit = flit.flit_chunk_alloc((get_header_size(self.capri_p4_intr_hdr) * 8),
                                             bits_used, 0, 0, 1, False)
-            assert phv_bit == bits_used
+            ncc_assert(phv_bit == bits_used)
             self.assign_phv_to_hdr_flds(flit, self.capri_p4_intr_hdr, phv_bit)
             bits_used += (get_header_size(self.capri_p4_intr_hdr) * 8)
             self.allocated_hf[self.capri_p4_intr_hdr] = phv_bit
@@ -1752,7 +1745,7 @@ class capri_gress_pa:
                     if cf.is_hv or cf.is_intrinsic:
                         continue
                     # cannot use hdr flds as predicate, as they cannot be placed in 1st 512 bits
-                    assert cf.is_meta, pdb.set_trace()
+                    ncc_assert(cf.is_meta)
                     cf.is_predicate = True
                     flit.add_cfield(cf)
                     bits_used += cf.width
@@ -1765,21 +1758,21 @@ class capri_gress_pa:
 
                     phv_bit = flit.flit_chunk_alloc(cf.width, -1,
                                             alignment, justify, 0, False)
-                    assert phv_bit >= 0, pdb.set_trace()
+                    ncc_assert(phv_bit >= 0)
                     cf.phv_bit = phv_bit
                     self.allocated_hf[cf] = phv_bit
         if add_hv:
             hv_location = self.pa.be.hw_model['parser']['hv_location']
             max_hv_bits = self.pa.be.hw_model['parser']['max_hv_bits']
             phv_bit = flit.flit_chunk_alloc(max_hv_bits, hv_location, 0, 0, 1, False)
-            assert phv_bit == hv_location
+            ncc_assert(phv_bit == hv_location)
             self.create_flit_hv_flds(flit, 'flit_%d_hv' % (flit.id),
                                         hv_location, max_hv_bits)
         # add p4_intr hdr flds to field_order
         if self.capri_p4_intr_hdr:
             for f in reversed(self.capri_p4_intr_hdr.fields):
                 cf = self.get_field(get_hfname(f))
-                assert cf
+                ncc_assert(cf)
                 if cf not in self.field_order:
                     self.field_order.insert(0,cf)
 
@@ -1789,14 +1782,14 @@ class capri_gress_pa:
             dpa_variable_len_phv_start_bit = self.pa.be.hw_model['deparser']['len_phv_start']
             phv_bit = flit.flit_chunk_alloc((get_header_size(self.capri_deparser_len_hdr) * 8),\
                                              dpa_variable_len_phv_start_bit, 0, 0, 1, False)
-            assert phv_bit == dpa_variable_len_phv_start_bit, pdb.set_trace()
+            ncc_assert(phv_bit == dpa_variable_len_phv_start_bit)
             self.assign_phv_to_hdr_flds(flit, self.capri_deparser_len_hdr, phv_bit)
 
         if self.capri_deparser_pad_hdr:
             dpa_pad_hdr_phv_start_bit = self.pa.be.hw_model['deparser']['pad_phv_start']
             phv_bit = flit.flit_chunk_alloc((get_header_size(self.capri_deparser_pad_hdr) * 8),\
                                              dpa_pad_hdr_phv_start_bit, 0, 0, 1, False)
-            assert phv_bit == dpa_pad_hdr_phv_start_bit, pdb.set_trace()
+            ncc_assert(phv_bit == dpa_pad_hdr_phv_start_bit)
             self.assign_phv_to_hdr_flds(flit, self.capri_deparser_pad_hdr, phv_bit)
 
         '''
@@ -1808,7 +1801,7 @@ class capri_gress_pa:
             #gso_flit = self.flits[gso_phv_start_bit / self.pa.be.hw_model['parser']['flit_size']]
             phv_bit = flit.flit_chunk_alloc((get_header_size(self.capri_gso_csum_hdr) * 8),\
                                              flit.base_phv_bit+gso_phv_start_bit, 0, 0, 1, False)
-            assert phv_bit >= 0, pdb.set_trace()
+            ncc_assert(phv_bit >= 0)
             self.assign_phv_to_hdr_flds(flit, self.capri_gso_csum_hdr, phv_bit)
             self.allocated_hf[self.capri_gso_csum_hdr] = phv_bit
         '''
@@ -1844,7 +1837,7 @@ class capri_gress_pa:
             reserve = 0
             id_size = max(wct.i_size, wct.d_size)
             if wct.collision_cf:
-                assert (wct.collision_cf.width + id_size) < phv_flit_sz, pdb.set_trace()
+                ncc_assert((wct.collision_cf.width + id_size) < phv_flit_sz)
                 reserve = wct.collision_cf.width
             elif wct.num_actions() > 1:
                 reserve = 8
@@ -1865,12 +1858,12 @@ class capri_gress_pa:
                 phv_bit = flit.flit_chunk_alloc(cf.width, fstart,
                                         align=0, justify=0, fixed_loc=1, cross_512b=False)
                 cf.phv_bit = phv_bit
-                assert phv_bit == fstart, pdb.set_trace()
+                ncc_assert(phv_bit == fstart)
                 fstart = phv_bit+cf.width
                 remaining_key_size -= cf.width
                 self.allocated_hf[cf] = phv_bit
 
-            assert i > 0, pdb.set_trace()
+            ncc_assert(i > 0)
 
             fid = fstart/phv_flit_sz
             flit = self.flits[fid/2]    # use parser flits for allocation
@@ -1878,7 +1871,7 @@ class capri_gress_pa:
                 cf = wct.collision_cf
                 phv_bit = flit.flit_chunk_alloc(cf.width, fstart,
                                         align=0, justify=0, fixed_loc=1, cross_512b=False)
-                assert phv_bit == fstart, pdb.set_trace()
+                ncc_assert(phv_bit == fstart)
                 cf.phv_bit = phv_bit
                 fstart += cf.width
                 self.allocated_hf[cf] = phv_bit
@@ -1890,18 +1883,18 @@ class capri_gress_pa:
                 cf, _, _ = wct.keys[i]
                 phv_bit = flit.flit_chunk_alloc(cf.width, fstart,
                                         align=0, justify=0, fixed_loc=1, cross_512b=False)
-                assert phv_bit == fstart, pdb.set_trace()
+                ncc_assert(phv_bit == fstart)
                 cf.phv_bit = phv_bit
                 fstart += cf.width
                 self.allocated_hf[cf] = phv_bit
 
             # add input fields
             for cf in wct.input_fields:
-                assert not cf.is_union(), pdb.set_trace()   # no unions in wide key
+                ncc_assert(not cf.is_union()   )# no unions in wide key
                 phv_bit = flit.flit_chunk_alloc(cf.width, fstart,
                                         align=0, justify=0, fixed_loc=1, cross_512b=False)
                 cf.phv_bit = phv_bit
-                assert phv_bit == fstart, pdb.set_trace()
+                ncc_assert(phv_bit == fstart)
                 fstart += cf.width
                 self.allocated_hf[cf] = phv_bit
 
@@ -1923,8 +1916,7 @@ class capri_gress_pa:
                 self.pa.logger.critical("Not enough space in phv")
                 self.print_field_order_info("PHV order(PHV FAILURE)")
                 self.pa.logger.debug("%s:Field Allocation %s" % (self.d.name, self.field_order))
-                pdb.set_trace()
-                assert 0
+                ncc_assert(0)
             self.field_order = sorted(self.field_order, key=lambda cf: cf.phv_bit)
             return
 
@@ -1967,8 +1959,7 @@ class capri_gress_pa:
             self.print_field_order_info("PHV order(PHV FAILURE)")
             self.pa.logger.debug("%s:Field Allocation %s" % (self.d.name,
                                 sorted(self.field_order, key=lambda cf: cf.phv_bit)))
-            pdb.set_trace()
-            assert 0
+            ncc_assert(0)
         
         # Allocate deparse-only headers
         if self.pa.be.args.split_deparse_only_headers:
@@ -1997,10 +1988,9 @@ class capri_gress_pa:
                     self.print_field_order_info("PHV order(PHV FAILURE)")
                     self.pa.logger.debug("%s:Field Allocation %s" % (self.d.name,
                                         sorted(self.field_order, key=lambda cf: cf.phv_bit)))
-                    pdb.set_trace()
-                    assert 0
+                    ncc_assert(0)
 
-                assert hfid == len(self.hdr_fld_order), pdb.set_trace()
+                ncc_assert(hfid == len(self.hdr_fld_order))
 
         # print the un-used flit bits
         total_unused_bits = 0
@@ -2043,7 +2033,7 @@ class capri_gress_pa:
         for cf in self.field_order:
             if cf.is_ohi or cf.is_internal:
                 continue
-            assert cf.phv_bit >= 0, pdb.set_trace()
+            ncc_assert(cf.phv_bit >= 0)
 
     def allocate_p4_plus_phv_for_hf(self):
         # hdr_fld_order consists for only headers
@@ -2078,7 +2068,7 @@ class capri_gress_pa:
                         # P4plus - special case with hdr unions
                         # start all hdrs at the same phv as the storage header
                         first_cf = self.get_field(get_hfname(hf.fields[0]))
-                        assert first_cf
+                        ncc_assert(first_cf)
                         phv_bit = first_cf.phv_bit
 
                     for uh in self.hdr_unions[hf][1]:
@@ -2088,22 +2078,20 @@ class capri_gress_pa:
                         if used_offset > max_offset:
                             self.logger.critical("Header %s size %d cannot exceed size of %s %d" % \
                                 (uh.name, used_offset-phv_bit, hf.name, max_offset-phv_bit));
-                            #assert 0, pdb.set_trace()
+                            #ncc_assert(0)
                             max_offset = used_offset
-                        assert uh not in self.allocated_hf, pdb.set_trace() # duplicate allocation
+                        ncc_assert(uh not in self.allocated_hf )# duplicate allocation
                         self.allocated_hf[uh] = phv_bit
                 else:
-                    #pdb.set_trace()
                     max_offset = self.p4_plus_assign_phv_to_hdr_flds(hf, phv_bit)
-                    assert hf not in self.allocated_hf, pdb.set_trace() # duplicate allocation
+                    ncc_assert(hf not in self.allocated_hf )# duplicate allocation
                     self.allocated_hf[hf] = phv_bit
                 if max_offset > (phv_bit+hdr_size):
                     # pad is added while generating output
-                    #pdb.set_trace()
                     pass
                 phv_bit = max_offset
             else:
-                assert 0, pdb.set_trace()
+                ncc_assert(0)
 
         if len(self.hdr_fld_order) and hf != self.hdr_fld_order[-1]:
             return False
@@ -2146,10 +2134,9 @@ class capri_gress_pa:
             if phv_bit >= 0:
                 cf.phv_bit = phv_bit
                 return
-        assert 0, "No phv location free for parser_end_offset"
+        ncc_assert(0, "No phv location free for parser_end_offset")
 
     def split_allocate_deparse_only_header(self, hf):
-        #pdb.set_trace()
         # Hdr and fld unions
         # Hdr union - get the byte aligned flds for all unioned headers
         # Fld union - allocate phv for  the largest field (unioned flds are byte aligned)
@@ -2189,7 +2176,6 @@ class capri_gress_pa:
                 if aligned_hdrs == num_hdrs:
                     aligned_offsets.append(nxt_offset)
             
-            #pdb.set_trace()
             offset = 0
             for nxt_offset in aligned_offsets:
                 num_bits = nxt_offset - offset
@@ -2202,7 +2188,7 @@ class capri_gress_pa:
                         # try next flit
                         continue
                     break
-                assert phv_bit >= 0, pdb.set_trace()
+                ncc_assert(phv_bit >= 0)
                 # assign phv_bits to all covered fields in all headers
                 for hdr in hdrs:
                     hdr_bit = -1
@@ -2212,7 +2198,7 @@ class capri_gress_pa:
                         if f.offset >= nxt_offset:
                             break
                         if hdr_bit < 0:
-                            assert f.offset == offset
+                            ncc_assert(f.offset == offset)
                             hdr_bit = phv_bit
                         cf = self.get_field(get_hfname(f))
                         cf.phv_bit = hdr_bit
@@ -2229,13 +2215,13 @@ class capri_gress_pa:
         phv_bit = -1
         for f in hf.fields:
             cf = self.get_field(get_hfname(f))
-            assert cf
+            ncc_assert(cf)
             if not cf.need_phv():
                 continue
             if cf in hdr_byte_aligned_cfs:
                 if cf.is_fld_union or cf.is_fld_union_storage:
                     self.logger.critical("Field unions in deparse-only headers are TBD")
-                    assert 0, pdb.set_trace()
+                    ncc_assert(0)
                 for flit in self.flits:
                     # allocate for all conscutive fields until byte boundary
                     phv_bit = flit.flit_chunk_alloc(hdr_byte_aligned_cfs[cf], location=-1,
@@ -2244,7 +2230,7 @@ class capri_gress_pa:
                         # try next flit
                         continue
                     break
-            assert phv_bit >= 0, pdb.set_trace()
+            ncc_assert(phv_bit >= 0)
             cf.phv_bit = phv_bit
             phv_bit += cf.width
         self.allocated_hf[hf] = phv_bit
@@ -2270,7 +2256,7 @@ class capri_gress_pa:
 
         if isinstance(hf, capri_field):
             if hf.is_union():
-                assert hf.phv_bit >= 0, pdb.set_trace()
+                ncc_assert(hf.phv_bit >= 0)
 
             if hf.phv_bit >= 0:
                 # already assigned a phv
@@ -2352,7 +2338,7 @@ class capri_gress_pa:
             if isinstance(n_hf, capri_field):
                 if not n_hf.need_phv():
                     continue
-                assert n_hf.phv_bit < 0, pdb.set_trace()
+                ncc_assert(n_hf.phv_bit < 0)
                 if n_hf.phv_bit >= 0:
                     # already assigned a phv
                     continue
@@ -2373,13 +2359,12 @@ class capri_gress_pa:
                                     (self.d.name))
             self.pa.logger.critical("%s:Need %d bits for hdr/flds %s" % \
                 (self.d.name, total_bits_needed, hf_list))
-            assert 0, pdb.set_trace()
+            ncc_assert(0)
             return False
 
         if total_bits_needed > flit.flit_avail:
             self.pa.logger.debug("%s:Close flit %d, bits avail %d needed %d for %s" % \
                 (self.d.name, flit.id, flit.flit_avail, total_bits_needed, hf_list))
-            #pdb.set_trace()
             return False
 
         if total_bits_needed == 0:
@@ -2423,14 +2408,12 @@ class capri_gress_pa:
                 continue
 
             hdr_storage_size = self.get_header_storage_size(n_hf) * 8
-            #pdb.set_trace()
 
             # allocate on next byte boundary
             align = get_header_alignment(n_hf)
             if align == 0:
                 align = 8
             else:
-                # pdb.set_trace()
                 pass
 
             phv_bit = flit.flit_chunk_alloc(hdr_storage_size, -1, align, 0, 0, True)
@@ -2444,7 +2427,6 @@ class capri_gress_pa:
             allocated_chunks.append((phv_bit, hdr_storage_size))
             extra_bits = self.check_512b_fld_crossing(flit, n_hf, phv_bit)
             if extra_bits:
-                #pdb.set_trace()
                 # XXX defer this header allocation to see if another header fits here - TBD
                 extra_phv_bit = flit.flit_chunk_alloc(extra_bits, phv_bit+hdr_storage_size,
                                                         0, 0, 1, True)
@@ -2455,18 +2437,17 @@ class capri_gress_pa:
 
             if n_hf in self.hdr_unions:
                 for uh in self.hdr_unions[n_hf][1]:
-                    #pdb.set_trace()
                     self.pa.logger.debug("%s:Allocate phv %d for union-ed hdr %s" % \
                         (self.d.name, phv_bit, uh.name))
                     self.assign_phv_to_hdr_flds(flit, uh, phv_bit)
-                    assert uh not in self.allocated_hf, pdb.set_trace() # duplicate allocation
+                    ncc_assert(uh not in self.allocated_hf )# duplicate allocation
                     self.allocated_hf[uh] = phv_bit
                     new_allocated_hfs.append(uh)
             else:
                 self.pa.logger.debug("%s:Allocate phv %d for hdr %s" % \
                         (self.d.name, phv_bit, n_hf.name))
                 self.assign_phv_to_hdr_flds(flit, n_hf, phv_bit)
-                assert n_hf not in self.allocated_hf, pdb.set_trace() # duplicate allocation
+                ncc_assert(n_hf not in self.allocated_hf )# duplicate allocation
                 self.allocated_hf[n_hf] = phv_bit
                 new_allocated_hfs.append(n_hf)
 
@@ -2476,14 +2457,13 @@ class capri_gress_pa:
             self.clear_new_flit_phv_assignment(flit, allocated_chunks, new_allocated_hfs)
             return False
 
-        #pdb.set_trace()
         if capri_i2e_hdr:
             # breakup i2e header in byte aligned fields and place it
             hdr_byte_aligned_cfs = self.hdr_get_byte_aligned_fld_chunks(capri_i2e_hdr)
             phv_bit = -1
             for f in capri_i2e_hdr.fields:
                 cf = self.get_field(get_hfname(f))
-                assert cf
+                ncc_assert(cf)
                 if cf in hdr_byte_aligned_cfs:
                     fsize = hdr_byte_aligned_cfs[cf]
                     phv_bit = flit.flit_chunk_alloc(fsize, -1, align=8, justify=0, fixed_loc=0,
@@ -2494,9 +2474,9 @@ class capri_gress_pa:
 
                     allocated_chunks.append((phv_bit, fsize))
                 else:
-                    assert phv_bit >= 0, pdb.set_trace()
+                    ncc_assert(phv_bit >= 0)
 
-                assert cf not in self.allocated_hf, pdb.set_trace() # duplicate allocation
+                ncc_assert(cf not in self.allocated_hf )# duplicate allocation
                 if capri_i2e_hdr not in self.allocated_hf:
                     self.allocated_hf[capri_i2e_hdr] = phv_bit
                 # check fld unions
@@ -2526,7 +2506,7 @@ class capri_gress_pa:
             # if a meta fld is used as tbl key or tbl input, just align it on byte
             # boundary and pad its size to be multiple of bytes (will increase phv util)
             # small consecutive fields if used as key/input can be combined ... XXX
-            assert n_hf.is_meta, pdb.set_trace()
+            ncc_assert(n_hf.is_meta)
             alignment = 0; justify = JUSTIFY_LEFT
             use_last_hdr_bit = False
             hdr_alignment = 0
@@ -2569,7 +2549,7 @@ class capri_gress_pa:
                 break
 
             allocated_chunks.append((phv_bit, n_hf.storage_size()))
-            assert n_hf not in self.allocated_hf, pdb.set_trace() # duplicate allocation
+            ncc_assert(n_hf not in self.allocated_hf )# duplicate allocation
             self.allocated_hf[n_hf] = phv_bit
             new_allocated_hfs.append(n_hf)
             n_hf.phv_bit = phv_bit
@@ -2592,7 +2572,7 @@ class capri_gress_pa:
     def hdr_has_fld_unions(self, hf):
         for f in hf.fields:
             cf = self.get_field(get_hfname(f))
-            assert cf
+            ncc_assert(cf)
             if cf in self.fld_unions:
                 return True
         return False
@@ -2601,7 +2581,7 @@ class capri_gress_pa:
         uhdrs = []
         for f in hf.fields:
             cf = self.get_field(get_hfname(f))
-            assert cf
+            ncc_assert(cf)
             if cf in self.fld_unions:
                 for uf in self.fld_unions[cf][0]:
                     # XXX return metadata fld
@@ -2636,7 +2616,7 @@ class capri_gress_pa:
         if hf in hf_list:
             return
         if isinstance(hf, capri_field):
-            assert hf.is_meta, pdb.set_trace()
+            ncc_assert(hf.is_meta)
             ext_css = self.pa.be.parsers[self.d].get_meta_ext_cstates(hf)
             hf_list.append(hf)
         else:
@@ -2645,10 +2625,8 @@ class capri_gress_pa:
                 return
             uhdrs = []
             if hf in self.hdr_unions:
-                #pdb.set_trace()
                 uhdrs += self.hdr_unions[hf][1]
             elif self.hdr_has_fld_unions(hf):
-                #pdb.set_trace()
                 # fld unions may be with other meta flds not headers
                 # XXX need to get the meta flds and their ext_css
                 uhdrs = self.hdr_get_hdrs_from_fld_unions(hf)
@@ -2736,7 +2714,7 @@ class capri_gress_pa:
     def get_hdr_phv_start(self, hdr):
         for f in hdr.fields:
             cf = self.get_field(get_hfname(f))
-            assert cf, "unknown field %s" % (hdr.name + f.name)
+            ncc_assert(cf, "unknown field %s" % (hdr.name + f.name))
             if not cf.is_ohi:
                 return cf.phv_bit
         return -1
@@ -2798,7 +2776,7 @@ class capri_gress_pa:
                         continue
                     for f in uh.fields:
                         cf = self.get_field(get_hfname(f))
-                        assert cf
+                        ncc_assert(cf)
                         if cf.is_ohi:
                             cf.is_ohi = False
                             self.logger.debug("Set no_ohi on synthetic header fld %s" % cf.hfname)
@@ -2809,7 +2787,7 @@ class capri_gress_pa:
             # check field unions
             for f in hdr.fields:
                 cf = self.get_field(get_hfname(f))
-                assert cf
+                ncc_assert(cf)
                 if cf.is_ohi:
                     cf.is_ohi = False
                     self.logger.debug("Set no_ohi on synthetic header fld %s" % cf.hfname)
@@ -3032,7 +3010,7 @@ class capri_pa:
         egress_i2e_fields = []
         for f in self.be.h.p4_fields.values():
             if f.offset == None:
-                assert f.name == 'valid'
+                ncc_assert(f.name == 'valid')
                 # capri fields for all header valid bits are already created
                 continue
             is_scratch = False
@@ -3067,26 +3045,26 @@ class capri_pa:
                 if cfi and is_scratch:
                     self.logger.debug('INGRESS:%s is scratch field' % (cfi.hfname))
                     cfi.is_scratch = True
-                    assert not cfi.parser_local, \
+                    ncc_assert(not cfi.parser_local, \
                         "Cannot used parser local field %s in ingress pipeline" % \
-                        (cfi.hfname)
+                        (cfi.hfname))
                 if cfi and 'parser_end_offset' in f.instance._parsed_pragmas and \
                     f.name == f.instance._parsed_pragmas['parser_end_offset'].keys()[0]:
                     cfi.is_parser_end_offset = True
-                    assert self.gress_pa[xgress.INGRESS].parser_end_off_cf == None, pdb.set_trace()
+                    ncc_assert(self.gress_pa[xgress.INGRESS].parser_end_off_cf == None)
                     self.gress_pa[xgress.INGRESS].parser_end_off_cf = cfi
             if (f.egress_read or f.egress_write):
                 cfe = self.gress_pa[xgress.EGRESS].allocate_field(f)
                 if cfe and is_scratch:
                     self.logger.debug('EGRESS:%s is scratch field' % (cfe.hfname))
                     cfe.is_scratch = True
-                    assert not cfe.parser_local, \
+                    ncc_assert(not cfe.parser_local, \
                         "Cannot used parser local field %s in egress pipeline" % \
-                        (cfe.hfname)
+                        (cfe.hfname))
                 if cfe and 'parser_end_offset' in f.instance._parsed_pragmas and \
                     f.name == f.instance._parsed_pragmas['parser_end_offset'].keys()[0]:
                     cfe.is_parser_end_offset = True
-                    assert self.gress_pa[xgress.EGRESS].parser_end_off_cf == None, pdb.set_trace()
+                    ncc_assert(self.gress_pa[xgress.EGRESS].parser_end_off_cf == None)
                     self.gress_pa[xgress.EGRESS].parser_end_off_cf = cfe
 
             # create all header fields.. if direction is not known, do it in both dir
@@ -3105,9 +3083,9 @@ class capri_pa:
                 if cfi and is_scratch:
                     self.logger.debug('INGRESS:%s is scratch field' % (cfi.hfname))
                     cfi.is_scratch = True
-                    assert not cfi.parser_local, \
+                    ncc_assert(not cfi.parser_local, \
                         "Cannot used parser local field %s in ingress pipeline" % \
-                        (cfi.hfname)
+                        (cfi.hfname))
 
             if not self.be.args.i2e_user and \
                 cfi and cfi.is_meta and \
@@ -3186,7 +3164,7 @@ class capri_pa:
         for cf in self.gress_pa[xgress.INGRESS].i2e_fields:
             ecf = self.gress_pa[xgress.EGRESS].get_field(cf.hfname)
             if cf.width != ecf.width:
-                assert cf.width < ecf.width
+                ncc_assert(cf.width < ecf.width)
                 pad = ecf.width - cf.width
                 cf.width = ecf.width
                 cf.pad = pad
@@ -3211,7 +3189,7 @@ class capri_pa:
             if len(hdr._parsed_pragmas) == 0:
                 continue
             if 'pa_header_union' in hdr._parsed_pragmas:
-                assert len(hdr._parsed_pragmas['pa_header_union'])
+                ncc_assert(len(hdr._parsed_pragmas['pa_header_union']))
                 union_prg = hdr._parsed_pragmas['pa_header_union']
                 for direction in union_prg.keys():
                     hdr_list = []
@@ -3224,9 +3202,9 @@ class capri_pa:
                             uh = prg.keys()[0]
                             if uh not in self.be.h.p4_header_instances or \
                                 is_scratch_header(self.be.h.p4_header_instances[uh]):
-                                assert 0, "union header %s not defined or is scratch header" % (uh)
+                                ncc_assert(0, "union header %s not defined or is scratch header" % (uh))
                             n_hdr = self.be.h.p4_header_instances[uh]
-                            assert(n_hdr)
+                            ncc_assert(n_hdr)
                             if n_hdr not in hdr_list:
                                 hdr_list.append(n_hdr)
                             prg = prg[uh]
@@ -3250,7 +3228,7 @@ class capri_pa:
             if 'pa_field_union' in hdr._parsed_pragmas:
                 # if header union is specified, field union has no effect
                 # NOTE: fields that are put into an union MUST be byte aligned (both offset and len)
-                assert len(hdr._parsed_pragmas['pa_field_union'])
+                ncc_assert(len(hdr._parsed_pragmas['pa_field_union']))
                 if 'ingress' in hdr._parsed_pragmas['pa_field_union'] and \
                     (is_synthetic_header(hdr) or \
                         hdr not in self.gress_pa[xgress.INGRESS].hdr_unions):
@@ -3317,7 +3295,7 @@ class capri_pa:
             if self.be.args.old_phv_allocation:
                 self.gress_pa[d].assign_phv()
             new_phv_bits = self.gress_pa[d].print_field_order_info("PHV order(Post relocate Meta)")
-            assert total_phv_bits == new_phv_bits, pdb.set_trace()
+            ncc_assert(total_phv_bits == new_phv_bits)
             self.logger.debug("%s" % [cf for cf in self.gress_pa[d].field_order \
                 if not cf.is_ohi and not cf.is_flit_pad])
 

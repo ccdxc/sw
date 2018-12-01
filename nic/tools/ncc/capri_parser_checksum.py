@@ -128,7 +128,7 @@ from collections import OrderedDict
 from enum import IntEnum
 from p4_hlir.main import HLIR
 import p4_hlir.hlir.p4 as p4
-import capri_logging
+from capri_logging import ncc_assert as ncc_assert
 from capri_output import *
 from capri_utils import *
 
@@ -396,7 +396,7 @@ class ParserCalField:
                                             p4_field_list_calculations\
                                             [VerifyOrUpdateFunc]
         #P4 code should have atleast one input field list.
-        assert(self.P4FieldListCalculation.input[0].fields[0] != None)
+        ncc_assert(self.P4FieldListCalculation.input[0].fields[0] != None)
 
         #Check last input field and last field within the last input field
         #to determine 'payload' keyword is part of field list.
@@ -426,7 +426,7 @@ class ParserCalField:
                 self.be.checksum.ProcessCalFields(\
                                             self.P4FieldListCalculation,\
                                             self.dstField)
-            assert self.l4_verify_len_field  != '', pdb.set_trace()
+            ncc_assert(self.l4_verify_len_field  != '')
         elif 'checksum' in self.P4FieldListCalculation._parsed_pragmas.keys():
             if 'hdr_len_expr' in self.P4FieldListCalculation.\
                                     _parsed_pragmas['checksum'].keys():
@@ -436,17 +436,17 @@ class ParserCalField:
                 param_list = get_pragma_param_list(self.P4FieldListCalculation.\
                                                    _parsed_pragmas['checksum']['hdr_len_expr'])
                 self.end_adj_const = int(param_list[2])
-                assert param_list[1] == '+', pdb.set_trace()
+                ncc_assert(param_list[1] == '+')
             if 'verify_len' in \
                 self.P4FieldListCalculation._parsed_pragmas['checksum']:
                 self.l4_verify_len_field = self.P4FieldListCalculation._parsed_pragmas\
                                    ['checksum']['verify_len'].keys()[0]
-            #assert self.hdrlen_verify_field != '', pdb.set_trace()
-            assert self.l4_verify_len_field  != '', pdb.set_trace()
+            #ncc_assert(self.hdrlen_verify_field != '')
+            ncc_assert(self.l4_verify_len_field  != '')
 
-        assert(self.P4FieldListCalculation != None)
-        assert((self.P4FieldListCalculation.algorithm == 'csum16') \
-               or (self.P4FieldListCalculation.algorithm == 'csum8'))
+        ncc_assert(self.P4FieldListCalculation != None)
+        ncc_assert(((self.P4FieldListCalculation.algorithm == 'csum16') \
+               or (self.P4FieldListCalculation.algorithm == 'csum8')))
 
 
     def CalculatedFieldHdrGet(self):
@@ -617,7 +617,7 @@ class ParserCalField:
         '''
         log_str = ''
         log_str += 'Pseudo Header Profile Values\n'
-        assert(len(self.phdr_fields) >= 3), pdb.set_trace()
+        ncc_assert(len(self.phdr_fields) >= 3)
 
         if not isinstance(self.phdr_fields[0], int):
             phdr_field                     = self.phdr_fields[0]
@@ -696,7 +696,7 @@ class ParserCalField:
             # Phdr start offset is same as IP hdr start offset
             csum_profile_obj.CsumProfilePhdrSet(addsub_phdr, phdr_adj)
         elif parse_state:
-            assert(0), pdb.set_trace()
+            ncc_assert(0)
 
         #One of the phdr fields (ipv4.protocol / ipv6.nextHdr) are programmed as constants.
         #The reason being when ipv6 options are present, protocol value ipv6.nextHdr is 
@@ -762,7 +762,7 @@ class ParserGsoCalField:
                                             p4_field_list_calculations\
                                             [UpdateFunc]
         #P4 code should have atleast one input field list.
-        assert(self.P4FieldListCalculation.input[0].fields[0] != None)
+        ncc_assert(self.P4FieldListCalculation.input[0].fields[0] != None)
         self.gso_start_field = self.P4FieldListCalculation.input[0].fields[0].name
 
         #Check last input field and last field within the last input field
@@ -782,18 +782,18 @@ class ParserGsoCalField:
                 self.gso_csum_result_fld_name  = self.P4FieldListCalculation._parsed_pragmas\
                                                  ['checksum']['update_len'].keys()[0]
         else:
-            assert(0), pdb.set_trace()
+            ncc_assert(0)
 
         if 'gso_checksum_offset' in \
             self.P4FieldListCalculation._parsed_pragmas['checksum']:
             self.csum_hfield_name = self.P4FieldListCalculation._parsed_pragmas\
                                                  ['checksum']['gso_checksum_offset'].keys()[0]
 
-        assert(self.P4FieldListCalculation != None)
-        assert(self.P4FieldListCalculation.algorithm == 'gso')
-        assert(self.P4FieldListCalculation.output_width == 16)
-        assert(self.csum_hfield_name != '')
-        assert(self.payload_checksum)
+        ncc_assert(self.P4FieldListCalculation != None)
+        ncc_assert(self.P4FieldListCalculation.algorithm == 'gso')
+        ncc_assert(self.P4FieldListCalculation.output_width == 16)
+        ncc_assert(self.csum_hfield_name != '')
+        ncc_assert(self.payload_checksum)
 
     def CalculatedFieldHdrGet(self):
         hdrinst = self.dstField.split(".")[0]

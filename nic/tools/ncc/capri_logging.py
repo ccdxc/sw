@@ -45,3 +45,18 @@ def logger_init(log_dir, prog_name='P4Prog', loglevel='DEBUG', floglevel='DEBUG'
         logger.addHandler(chdlr)
         # set global level to more verbose (i.e floglevel)
         logger.setLevel(getattr(logging, floglevel.upper()))
+
+pdb_on_assert = False
+
+def set_pdb_on_assert(v):
+    global pdb_on_assert
+    pdb_on_assert = v
+
+def ncc_assert(condition, msg=""):
+    pdb_on_assert
+    if condition:
+        return
+    if pdb_on_assert == True:
+        print msg
+        pdb.set_trace()
+    assert condition, msg

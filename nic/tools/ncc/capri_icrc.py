@@ -301,10 +301,10 @@ class IcrcParserCalField:
             else:
                 self.icrc_verify_len_field = ''
         #P4 code should have atleast one input field list.
-        assert(self.P4FieldListCalculation.input[0].fields[0] != None)
-        assert(self.P4FieldListCalculation != None)
-        assert(self.P4FieldListCalculation.algorithm == 'icrc')
-        assert(self.P4FieldListCalculation.output_width == 32)
+        ncc_assert(self.P4FieldListCalculation.input[0].fields[0] != None)
+        ncc_assert(self.P4FieldListCalculation != None)
+        ncc_assert(self.P4FieldListCalculation.algorithm == 'icrc')
+        ncc_assert(self.P4FieldListCalculation.output_width == 32)
 
         self.l3hdr_name, self.l3hdr_invariant_fields, self.l4_hdr_name, \
         self.l4_hdr_invariant_fields, self.l5_hdr_name, self.l5_hdr_invariant_fields = \
@@ -319,7 +319,7 @@ class IcrcParserCalField:
         l3hdr_ifields = []
         for idx, field in enumerate(field_list_calculation.input[0].fields[0:-2]):
             if idx == 0:
-                assert field.instance.name != icrc_hdr, pdb.set_trace()
+                ncc_assert(field.instance.name != icrc_hdr)
                 l3hdr_name = field.instance.name
             l3hdr_ifields.append(field)
         #Last invariant field in the list is udp.checksum field.
@@ -704,7 +704,7 @@ class IcrcDeParserCalField:
                                               p4_field_list_calculations\
                                                  [VerifyOrUpdateFunc]
         #P4 code should have atleast one input field list.
-        assert(self.P4FieldListCalculation.input[0].fields[0] != None)
+        ncc_assert(self.P4FieldListCalculation.input[0].fields[0] != None)
 
         if 'icrc' in \
             self.P4FieldListCalculation._parsed_pragmas.keys():
@@ -715,10 +715,10 @@ class IcrcDeParserCalField:
         else:
             self.icrc_update_len_field = ''
 
-        assert(self.P4FieldListCalculation.input[0].fields[0] != None)
-        assert(self.P4FieldListCalculation != None)
-        assert(self.P4FieldListCalculation.algorithm == 'icrc')
-        assert(self.P4FieldListCalculation.output_width == 32)
+        ncc_assert(self.P4FieldListCalculation.input[0].fields[0] != None)
+        ncc_assert(self.P4FieldListCalculation != None)
+        ncc_assert(self.P4FieldListCalculation.algorithm == 'icrc')
+        ncc_assert(self.P4FieldListCalculation.output_width == 32)
         self.l3hdr_name, self.l3hdr_invariant_fields, self.l4_hdr_name, \
         self.l4_hdr_invariant_fields, self.l5_hdr_name, self.l5_hdr_invariant_fields  = \
             self.ProcessIcrcCalFields(self.P4FieldListCalculation, dstField)
@@ -736,7 +736,7 @@ class IcrcDeParserCalField:
         l3hdr_ifields = []
         for idx, field in enumerate(field_list_calculation.input[0].fields[0:-2]):
             if idx == 0:
-                assert field.instance.name != icrc_hdr, pdb.set_trace()
+                ncc_assert(field.instance.name != icrc_hdr)
                 l3hdr_name = field.instance.name
             l3hdr_ifields.append(field)
         l4_hdr_ifields = []
@@ -1209,13 +1209,12 @@ class Icrc:
                                                      else self.eg_verify_cal_fieldlist
         icrc_l3_hdrs = []
         for calfldobj in verify_cal_fieldlist:
-            assert calfldobj != None, pdb.set_trace()
+            ncc_assert(calfldobj != None)
             calfldhdr = calfldobj.CalculatedFieldHdrGet()
-            assert calfldhdr != None, pdb.set_trace()
+            ncc_assert(calfldhdr != None)
             l3_name = calfldobj.IcrcL3HdrNameGet()
-            assert(l3_name != ''), pdb.set_trace()
-            assert(l3_name in self.be.h.p4_header_instances),\
-                                                    pdb.set_trace()
+            ncc_assert(l3_name != '')
+            ncc_assert(l3_name in self.be.h.p4_header_instances)
             #Also allocate l3 profile obj
             calfldobj.IcrcParserProfileObjSet(IcrcParserProfile())
             icrc_l3_hdrs.append(l3_name)
@@ -1226,7 +1225,7 @@ class Icrc:
         # be verified has been created and also build profile.
         for calfldobj in verify_cal_fieldlist:
             if calfldobj.IcrcParserProfileObjGet() == None:
-                assert(0), pdb.set_trace()
+                ncc_assert(0)
             #L4HdrIFldProfileBuild should be invoked after calling L3hdrProfileBuild
             self.IcrcParserL3HdrIFldProfileBuild(calfldobj)
             self.IcrcParserL4HdrIFldProfileBuild(calfldobj)
@@ -1312,8 +1311,8 @@ class Icrc:
                     parsestate.icrc_verify_cal_field_objs.\
                                             append(("L3_IFLD", calfldobj))
 
-        assert(len(icrc_l5_hdrs) == 0 and len(icrc_l4_hdrs) == 0 and \
-               len(icrc_l3hdrs) == 0), pdb.set_trace()
+        ncc_assert((len(icrc_l5_hdrs) == 0 and len(icrc_l4_hdrs) == 0 and \
+               len(icrc_l3hdrs) == 0))
 
 
     def AllocateParserIcrcResources(self, parser):
@@ -1336,7 +1335,7 @@ class Icrc:
 
             rhdr = parse_path_hdrs.intersection(all_roce_hdr_names)
             if len(rhdr):
-                assert(len(rhdr) == 1), pdb.set_trace()
+                ncc_assert(len(rhdr) == 1)
                 roce_hdr_name = list(rhdr)[0]
                 program_icrc = True
             if program_icrc:
@@ -1346,7 +1345,7 @@ class Icrc:
                     l3_hdrs = _s
                 else:
                     #roce hdr in parse path; but no associated L3 hdr is in the path.
-                    assert(0), pdb.set_trace()
+                    ncc_assert(0)
 
                 for _i, hdr in enumerate(parse_path):
                     if hdr.name != roce_hdr_name:
@@ -1398,13 +1397,13 @@ class Icrc:
                             else:
                                 ohi_start_id = parser.get_ohi_hdr_start_off(\
                                             self.be.h.p4_header_instances[l3hdr])
-                                assert(ohi_start_id != None), pdb.set_trace()
+                                ncc_assert(ohi_start_id != None)
                                 icrc_calfldobj.IcrcOhiStartSelSet(ohi_start_id)
 
                                 if icrc_calfldobj.icrc_verify_len_field != '':
                                     ohi_len_id = parser.get_ohi_slot_wr_only_field_name(\
                                       icrc_calfldobj.icrc_verify_len_field.split('.')[1])
-                                    assert(ohi_len_id != None), pdb.set_trace()
+                                    ncc_assert(ohi_len_id != None)
                                     icrc_calfldobj.IcrcOhiLenSelSet(ohi_len_id)
                                 else:
                                     #when verify length is not computed in parser,
@@ -1439,7 +1438,7 @@ class Icrc:
                             else:
                                 ohi_start_id = parser.get_ohi_hdr_start_off(\
                                             self.be.h.p4_header_instances[l4_hdr_name])
-                                assert(ohi_start_id != None), pdb.set_trace()
+                                ncc_assert(ohi_start_id != None)
                                 icrc_calfldobj.IcrcOhiMaskSelSet(ohi_start_id)
 
                             self.icrc_verify_logger.debug(\
@@ -1464,7 +1463,7 @@ class Icrc:
                     break
 
         #Assert if all calfld objects are allocated resources
-        assert(len(icrc_objects) == 0), pdb.set_trace()
+        ncc_assert(len(icrc_objects) == 0)
 
         #In parse states where L3,L4 hdrs are extracted, and where roce_bth
         #is extracted, insert reference to calculated fld objects so that
@@ -1484,7 +1483,7 @@ class Icrc:
                 if icrc_l3hdr != '' and icrc_l3hdr not in icrc_l3hdrs:
                     icrc_l3hdrs.add(icrc_l3hdr)
 
-        assert len(icrc_l3hdrs) > 0, pdb.set_trace()
+        ncc_assert(len(icrc_l3hdrs) > 0)
 
         matched_calobj = False
         matched_l3hdr = False
@@ -1497,7 +1496,7 @@ class Icrc:
                 if calfldobj.IcrcL3HdrNameGet() == l3hdr.name:
                     matched_calobj = True
                     break
-        assert matched_calobj and matched_l3hdr, pdb.set_trace()
+        ncc_assert(matched_calobj and matched_l3hdr)
 
         return hdr_type, calfldobj
 
@@ -1523,15 +1522,15 @@ class Icrc:
             hdr_type, calfldobj = parse_state.icrc_verify_cal_field_objs[0]
 
         if calfldobj == None:
-            assert(0), pdb.set_trace()
+            ncc_assert(0)
 
         hdr_ohi_id = calfldobj.IcrcOhiStartSelGet()
         mask_ohi_id = calfldobj.IcrcOhiMaskSelGet()
         len_ohi_id = calfldobj.IcrcOhiLenSelGet()
 
-        assert hdr_ohi_id != -1, pdb.set_trace()
-        assert len_ohi_id != -1, pdb.set_trace()
-        assert mask_ohi_id != -1, pdb.set_trace()
+        ncc_assert(hdr_ohi_id != -1)
+        ncc_assert(len_ohi_id != -1)
+        ncc_assert(mask_ohi_id != -1)
 
         extracted_hdrs = [hdr for hdr in parse_state.headers]
         if calfldobj.roce_hdr in extracted_hdrs:
@@ -1575,13 +1574,13 @@ class Icrc:
             profile = copy.deepcopy(icrc_t)
             p = profile_obj.icrc_profile
             if p == -1:
-                assert(0), pdb.set_trace()
+                ncc_assert(0)
             profile_obj.ConfigGenerate(profile)
             calfldobj.IcrcAddLog(profile_obj.LogGenerate())
             #Only one calFld processed in any parse state
             return profile, p
         elif profile_obj == None:
-            assert(0), pdb.set_trace()
+            ncc_assert(0)
 
         return profile, p
 
@@ -1603,13 +1602,13 @@ class Icrc:
             profile = copy.deepcopy(icrc_mask_t)
             p = profile_obj.mask_profile
             if p == -1:
-                assert(0), pdb.set_trace()
+                ncc_assert(0)
             profile_obj.MaskProfileConfigGenerate(profile)
             calfldobj.IcrcAddLog(profile_obj.MaskProfileLogGenerate())
             #Only one calFld processed in any parse state
             return profile, p
         elif profile_obj == None:
-            assert(0), pdb.set_trace()
+            ncc_assert(0)
 
         return profile, p
 
@@ -1631,7 +1630,7 @@ class Icrc:
         return True if self.UpdateIcrcCalFieldObjGet(hdrname, d) else False
 
     def DeParserIcrcPayLoadLenSlotGet(self, calfldobj, parser):
-        assert calfldobj.icrc_update_len_field != '', pdb.set_trace()
+        ncc_assert(calfldobj.icrc_update_len_field != '')
         cf_icrc_update_len = self.be.pa.get_field(calfldobj.icrc_update_len_field, parser.d)
         dpr_variable_len_phv_start = self.be.hw_model['phv']['flit_size']
         pl_slot = (cf_icrc_update_len.phv_bit - dpr_variable_len_phv_start) / 16
@@ -1757,13 +1756,12 @@ class Icrc:
         icrc_l3_hdrs = []
         update_cal_fieldlist = self.update_cal_fieldlist if parser.d == xgress.INGRESS else self.eg_update_cal_fieldlist
         for calfldobj in update_cal_fieldlist:
-            assert calfldobj != None, pdb.set_trace()
+            ncc_assert(calfldobj != None)
             calfldhdr = calfldobj.CalculatedFieldHdrGet()
-            assert calfldhdr != None, pdb.set_trace()
+            ncc_assert(calfldhdr != None)
             l3_name = calfldobj.IcrcL3HdrNameGet()
-            assert(l3_name != ''), pdb.set_trace()
-            assert(l3_name in self.be.h.p4_header_instances),\
-                                                    pdb.set_trace()
+            ncc_assert(l3_name != '')
+            ncc_assert(l3_name in self.be.h.p4_header_instances)
             #Also allocate l3 profile obj
             calfldobj.IcrcDeParserProfileObjSet(IcrcDeParserProfile())
             icrc_l3_hdrs.append(l3_name)
@@ -1774,7 +1772,7 @@ class Icrc:
         # be verified has been created and also build profile.
         for calfldobj in update_cal_fieldlist:
             if calfldobj.IcrcDeParserProfileObjGet() == None:
-                assert(0), pdb.set_trace()
+                ncc_assert(0)
             #L4HdrIFldProfileBuild should be invoked after calling L3hdrProfileBuild
             self.IcrcDeParserProfileBuild(calfldobj, parser)
             self.IcrcDeParserL4HdrIFldProfileBuild(calfldobj)
@@ -1822,9 +1820,9 @@ class Icrc:
         for calfldobj in update_cal_fieldlist:
             l3hdr = calfldobj.IcrcL3HdrNameGet()
             icrc_profile_obj = calfldobj.IcrcDeParserProfileObjGet()
-            assert icrc_profile_obj != None, pdb.set_trace()
-            assert calfldobj.hv != -1, pdb.set_trace()
-            assert calfldobj.icrc_hv != -1, pdb.set_trace()
+            ncc_assert(icrc_profile_obj != None)
+            ncc_assert(calfldobj.hv != -1)
+            ncc_assert(calfldobj.icrc_hv != -1)
             fldstart, fldend, _ = hv_fld_slots[calfldobj.icrc_hv]
             calfldobj.HdrFldStartEndSet(fldstart,fldend)
 

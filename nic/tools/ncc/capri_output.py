@@ -17,6 +17,7 @@ import errno
 from collections import OrderedDict
 from enum import IntEnum
 from capri_utils import *
+from capri_logging import ncc_assert as ncc_assert
 
 def _get_output_name(s):
     # XXX use regex or something better
@@ -238,7 +239,7 @@ def _build_mux_inst2(parser, cs, mux_inst, rid1, rid2, mux_id1, mux_id2, _capri_
             mux_inst['load_mux_pkt']['value'] = str(1)
             mux_inst['lkpsel']['value'] = str(mux_id2)
         else:
-            assert rid1 != None, pdb.set_trace()
+            ncc_assert(rid1 != None)
             mux_inst['load_mux_pkt']['value'] = str(0)
             mux_inst['lkpsel']['value'] = str(rid1)
     else:
@@ -249,14 +250,14 @@ def _build_mux_inst2(parser, cs, mux_inst, rid1, rid2, mux_id1, mux_id2, _capri_
     op1 = capri_expr.op1
     if capri_expr.op1:
         if rid2 != None:
-            assert mux_id1 != None, pdb.set_trace()
+            ncc_assert(mux_id1 != None)
             mux_inst['muxsel']['value'] = str(mux_id1)
-            assert not isinstance(capri_expr.src1, tuple), pdb.set_trace() # Cannot have tuple w/ rid2
+            ncc_assert(not isinstance(capri_expr.src1, tuple) )# Cannot have tuple w/ rid2
             mask = (1<<capri_expr.src1.width) - 1
             mux_inst['mask_val']['value'] = str(mask)
             mux_inst['shift_val']['value'] = str(capri_expr.shft)
         else:
-            assert mux_id1 != None, pdb.set_trace()
+            ncc_assert(mux_id1 != None)
             mux_inst['muxsel']['value'] = str(mux_id1)
             # need to adjust mask and shift vals based on alignment
             # hw pull 16b from a specified byte boundary
@@ -267,7 +268,7 @@ def _build_mux_inst2(parser, cs, mux_inst, rid1, rid2, mux_id1, mux_id2, _capri_
             else:
                 off = cs.fld_off[capri_expr.src1]
                 eoff = off + capri_expr.src1.width
-                assert capri_expr.src1.width <= 16
+                ncc_assert(capri_expr.src1.width <= 16)
             # lookup fields > 16 bits are not currently supported. That requires concatenation
             # of multiple lkp regs - TBD
             c_soff = (off / 8) * 8
@@ -315,7 +316,7 @@ def _build_mux_inst2(parser, cs, mux_inst, rid1, rid2, mux_id1, mux_id2, _capri_
                 op1 = '>>'
                 new_shft = capri_expr.shft + c_shft
 
-            assert (new_shft >= 0 and new_shft < 16), pdb.set_trace()
+            ncc_assert(new_shft >= 0 and new_shft < 16)
             mux_inst['mask_val']['value'] = str(mask)
             mux_inst['shift_val']['value'] = str(new_shft)
     else:
@@ -352,7 +353,7 @@ def _build_mux_inst(parser, cs, rid, mux_inst, mux_id, _capri_expr):
     # DO NOT modify _capri_expr, this function is called multiple times for the same state
     capri_expr = copy.copy(_capri_expr)
     if capri_expr.op2:
-        assert rid != -1, pdb.set_trace()
+        ncc_assert(rid != -1)
         mux_inst['sel']['value'] = str(1)
         mux_inst['lkpsel']['value'] = str(rid)
         mux_inst['lkp_addsub']['value'] = str(1) if capri_expr.op2 == '+' else str(0)
@@ -366,7 +367,7 @@ def _build_mux_inst(parser, cs, rid, mux_inst, mux_id, _capri_expr):
         # hw pull 16b from a specified byte boundary
         if isinstance(capri_expr.src1, tuple) and capri_expr.src1[1] == 0:
             # special case for using current_offset
-            assert not capri_expr.mask, pdb.set_trace()
+            ncc_assert(not capri_expr.mask)
             mask = 0xFFFF
             off = 0
             eoff = 16
@@ -387,7 +388,7 @@ def _build_mux_inst(parser, cs, rid, mux_inst, mux_id, _capri_expr):
                     mask = (1<<capri_expr.src1.width) - 1
             # lookup fields > 16 bits are not currently supported. That requires concatenation
             # of multiple lkp regs - TBD
-            assert capri_expr.src1.width <= 16
+            ncc_assert(capri_expr.src1.width <= 16)
         c_soff = (off / 8) * 8
         c_eoff = ((eoff+7)/8) * 8
         # since the lkp regs are 16bits each, end offset must be aligned to register
@@ -417,7 +418,7 @@ def _build_mux_inst(parser, cs, rid, mux_inst, mux_id, _capri_expr):
             capri_expr.op1 = '>>'
             capri_expr.shft += c_shft
 
-        assert (capri_expr.shft >= 0 and capri_expr.shft < 16), pdb.set_trace()
+        ncc_assert(capri_expr.shft >= 0 and capri_expr.shft < 16)
         mux_inst['muxsel']['value'] = str(mux_id)
         mux_inst['mask_val']['value'] = str(mask)
         mux_inst['shift_val']['value'] = str(capri_expr.shft)
@@ -589,7 +590,7 @@ def capri_asm_output_pa(gress_pa, asm_output=True):
                 phv_bit = active_union.end_phv
                 active_union = None
             flit_pad = cf.phv_bit - phv_bit
-            assert flit_pad >= 0, pdb.set_trace()
+            ncc_assert(flit_pad >= 0)
             if flit_pad > 0:
                 cstr = cstruct_data_type_get(asm_output, flit_pad, indent)
                 width_str = phv_width_string_get(asm_output, flit_pad)
@@ -620,7 +621,7 @@ def capri_asm_output_pa(gress_pa, asm_output=True):
                 active_union = None
             # check for gaps
             if phv_bit != cf.phv_bit:
-                assert (cf.phv_bit - phv_bit) >= 0, pdb.set_trace()
+                ncc_assert((cf.phv_bit - phv_bit) >= 0)
                 cstr = cstruct_data_type_get(asm_output, cf.phv_bit - phv_bit, indent)
                 width_str = phv_width_string_get(asm_output, cf.phv_bit - phv_bit)
                 cstr += '_pad_%d_%s; // FLE[%d:%d]\n' % \
@@ -982,7 +983,7 @@ def _capri_asm_output_pa(gress_pa):
 
                 else:
                     # fld union
-                    assert cf in gress_pa.fld_unions
+                    ncc_assert(cf in gress_pa.fld_unions)
                     pstr += indent+'union {\n'
                     # create union of all non-ohi flds
                     uf_list, _ = gress_pa.fld_unions[cf]
@@ -1065,7 +1066,7 @@ def _capri_asm_output_pa(gress_pa):
                 pstr_flit[flit_inst + 1] = nextflit_pstr
         else:
             if len(nextflit_pstr):
-                assert(0), pdb.set_trace()
+                ncc_assert(0)
 
     for i in range (num_flits):
         comment = '/* --------------- Phv Flit %d ------------ */\n\n' % i
@@ -1130,7 +1131,7 @@ def capri_asm_output_table(be, ctable):
             for (cf, fs, fw, full_fld) in flist:
                 if not cf: pdb.set_trace()
                 s_name = cf_get_hname(cf)
-                assert s_name not in self.ustreams, pdb.set_trace()
+                ncc_assert(s_name not in self.ustreams)
                 self.ustreams[s_name] = [(cf, fs, fw, full_fld)]
                 if (km_off+fw) > self.union_end:
                     self.union_end = km_off+fw
@@ -1138,7 +1139,7 @@ def capri_asm_output_table(be, ctable):
         def fladd(self, km_off, flist):
             for (cf, fs, fw, full_fld) in flist:
                 s_name = cf_get_hname(cf)
-                assert s_name in self.ustreams, pdb.set_trace()
+                ncc_assert(s_name in self.ustreams)
                 self.ustreams[s_name].append((cf, fs, fw, full_fld))
                 if (km_off+fw) > self.union_end:
                     self.union_end = km_off+fw
@@ -1210,7 +1211,7 @@ def capri_asm_output_table(be, ctable):
         if not km_prof:
             # mpu-only table no K or I
             continue
-        assert km_prof, pdb.set_trace()
+        ncc_assert(km_prof)
         for i,phc in enumerate(km_prof.byte_sel):   #{
             new_cfs = []
             if phc == -1:   #{
@@ -1231,7 +1232,7 @@ def capri_asm_output_table(be, ctable):
                         else:
                             bit_sel.append(-1)
                 else:
-                    assert i == km_prof.bit_loc1
+                    ncc_assert(i == km_prof.bit_loc1)
                     for b in range(8, 16):
                         if b < len(km_prof.bit_sel):
                             bit_sel.append(km_prof.bit_sel[b])
@@ -1286,7 +1287,7 @@ def capri_asm_output_table(be, ctable):
         new_cfs = []
         _close_active_cfs(new_cfs, active_cfs, fld_map)
 
-    assert len(active_cfs) == 0, pdb.set_trace()
+    ncc_assert(len(active_cfs) == 0)
 
     # mpu-only table with no k+i
     if len(fld_map) == 0:
@@ -1311,7 +1312,7 @@ def capri_asm_output_table(be, ctable):
                 active_union.fladd(km_off, flist)
                 continue
 
-        assert active_union == None, pdb.set_trace()
+        ncc_assert(active_union == None)
 
         if len(flist) > 1:
             active_union = _ki_union(km_off, flist)
@@ -1439,7 +1440,7 @@ def capri_deparser_logical_output(deparser):
 
         if (h == None): continue
 
-        assert h in deparser.topo_ordered_phv_ohi_chunks, pdb.set_trace()
+        ncc_assert(h in deparser.topo_ordered_phv_ohi_chunks)
         dp_hdr_fields = deparser.topo_ordered_phv_ohi_chunks[h]
         pstr += "\nHeader: %s \n" % (h.name)
         pstr += " Absolute HV Bit position %d\n" % (hvb)
@@ -1553,7 +1554,7 @@ def capri_deparser_cfg_output(deparser):
             if 'deparser_variable_length_header' in hdr._parsed_pragmas:
                 hf_name = hdr.name + '.trunc'
                 cf = deparser.be.pa.get_field(hf_name, deparser.d)
-                assert cf, pdb.set_trace()
+                ncc_assert(cf)
                 rstr = 'cap_dpphdr_csr_cfg_hdr_info[%d]' % (trunc_hv_bit_idx)
                 dpp_json['cap_dpp']['registers'][rstr]['fld_start']['value'] = str(max_hdr_flds-3)
                 dpp_json['cap_dpp']['registers'][rstr]['fld_end']['value'] = str(2)
@@ -1565,7 +1566,7 @@ def capri_deparser_cfg_output(deparser):
                 dpp_rstr['size_sel']['value'] = str(phv_sel)
                 hf_name = hdr.name + '.trunc_pkt_len'
                 cf = deparser.be.pa.get_field(hf_name, deparser.d)
-                assert cf, pdb.set_trace()
+                ncc_assert(cf)
                 dpr_slot = cf.phv_bit - deparser.be.hw_model['phv']['flit_size']
                 dpr_slot = dpr_slot / 16
                 dpp_rstr['size_val']['value'] = str(dpr_slot)
@@ -1578,7 +1579,7 @@ def capri_deparser_cfg_output(deparser):
             if 'deparser_pad_header' in hdr._parsed_pragmas:
                 hf_name = hdr.name + '.pad'
                 cf = deparser.be.pa.get_field(hf_name, deparser.d)
-                assert cf, pdb.set_trace()
+                ncc_assert(cf)
                 rstr = 'cap_dpphdr_csr_cfg_hdr_info[%d]' % (pad_hv_bit_idx)
                 dpp_json['cap_dpp']['registers'][rstr]['fld_start']['value'] = str(max_hdr_flds-1)
                 dpp_json['cap_dpp']['registers'][rstr]['fld_end']['value'] = str(0)
@@ -1590,7 +1591,7 @@ def capri_deparser_cfg_output(deparser):
                 dpp_rstr['size_sel']['value'] = str(phv_sel)
                 hf_name = hdr.name + '.pad_len'
                 cf = deparser.be.pa.get_field(hf_name, deparser.d)
-                assert cf, pdb.set_trace()
+                ncc_assert(cf)
                 dpr_slot = cf.phv_bit - deparser.be.hw_model['phv']['flit_size']
                 dpr_slot = dpr_slot / 16
                 dpp_rstr['size_val']['value'] = str(dpr_slot)
@@ -1614,7 +1615,7 @@ def capri_deparser_cfg_output(deparser):
         if (h == None):
             continue
 
-        assert h in deparser.topo_ordered_phv_ohi_chunks, pdb.set_trace()
+        ncc_assert(h in deparser.topo_ordered_phv_ohi_chunks)
 
         dp_hdr_fields = deparser.topo_ordered_phv_ohi_chunks[h]
 
@@ -1651,7 +1652,7 @@ def capri_deparser_cfg_output(deparser):
         end_fld_info_adjust = False
         if not csum_hvb and not icrc_hvb:
             for i, chunks in enumerate(dp_hdr_fields):
-                assert used_hdr_fld_info_slots < (max_hdr_flds-1), "No hdr fld slots avaialble"
+                ncc_assert(used_hdr_fld_info_slots < (max_hdr_flds-1), "No hdr fld slots avaialble")
                 dpp_rstr_name = 'cap_dpphdrfld_csr_cfg_hdrfld_info[%d]' % (used_hdr_fld_info_slots)
                 dpr_rstr_name = 'cap_dprhdrfld_csr_cfg_hdrfld_info[%d]' % (used_hdr_fld_info_slots)
                 dpp_rstr = dpp_json['cap_dpp']['registers'][dpp_rstr_name]
@@ -1686,7 +1687,7 @@ def capri_deparser_cfg_output(deparser):
             if h in deparser.be.parsers[deparser.d].csum_hdr_hv_bit.keys():
                 end_fld_info_adjust = True
         elif csum_hvb or icrc_hvb:
-            assert used_hdr_fld_info_slots < (max_hdr_flds-1), "No hdr fld slots avaialble"
+            ncc_assert(used_hdr_fld_info_slots < (max_hdr_flds-1), "No hdr fld slots avaialble")
             dpp_rstr_name = 'cap_dpphdrfld_csr_cfg_hdrfld_info[%d]' % (used_hdr_fld_info_slots)
             dpr_rstr_name = 'cap_dprhdrfld_csr_cfg_hdrfld_info[%d]' % (used_hdr_fld_info_slots)
             dpp_rstr = dpp_json['cap_dpp']['registers'][dpp_rstr_name]
@@ -1717,9 +1718,9 @@ def capri_deparser_cfg_output(deparser):
         else:
             if icrc_hvb:
                 #This should not happen. Assert
-                assert(0), pdb.set_trace()
+                ncc_assert(0)
             csum_bits_assigned_for_hdr = len(deparser.be.parsers[deparser.d].csum_hdr_hv_bit[h])
-            assert csum_bits_assigned_for_hdr > 0, pdb.set_trace()
+            ncc_assert(csum_bits_assigned_for_hdr > 0)
             #Adjust end slot for hdr.valid
             dpp_json['cap_dpp']['registers'][rstr]['fld_end']['value'] = \
                 str(max_hdr_flds - (used_hdr_fld_info_slots + csum_bits_assigned_for_hdr))
@@ -1860,7 +1861,7 @@ def _expand_decoder(decoder_json, dname):
     return tmplt
 
 def _create_template(reg_json, decoder_json, ename):
-    assert ename in reg_json
+    ncc_assert(ename in reg_json)
     elem = reg_json[ename]
     if 'decoder' in elem.keys():
         decoder_name = elem['decoder']
@@ -1877,7 +1878,7 @@ def mux_idx_alloc(mux_idx_allocator, pkt_off):
         if used == None:
             mux_idx_allocator[i] = pkt_off
             return i
-    assert 0, pdb.set_trace()
+    ncc_assert(0)
 
 def mux_inst_alloc(mux_inst_allocator, expr, adjust_const=False):
     if expr:
@@ -1893,7 +1894,7 @@ def mux_inst_alloc(mux_inst_allocator, expr, adjust_const=False):
                 if _flat_expr_wo_const_str == flat_expr_wo_const_str:
                     #Found mux instruction that can be shared by adjusting
                     #constant value of offset_instr
-                    assert _expr.const <= expr.const, pdb.set_trace()
+                    ncc_assert(_expr.const <= expr.const)
 
                     # Adjust constant in the expression
                     expr.const = expr.const - _expr.const
@@ -1917,7 +1918,7 @@ def mux_inst_alloc(mux_inst_allocator, expr, adjust_const=False):
         if _flat_expr_str == None:
             mux_inst_allocator[i] = (flat_expr_str, flat_expr_wo_const_str, expr)
             return i, 0
-    assert 0, pdb.set_trace()
+    ncc_assert(0)
 
 def _allocate_mux_inst_resoures(capri_expr, nxt_cs, r, pkt_off1, pkt_off2, \
     mux_idx_allocator, sram):
@@ -1942,8 +1943,8 @@ def _allocate_mux_inst_resoures(capri_expr, nxt_cs, r, pkt_off1, pkt_off2, \
             if capri_expr.src1.hfname not in nxt_cs.lkp_flds:
                 reg_id2 = r
             else:
-                assert capri_expr.src1.hfname in nxt_cs.lkp_flds, \
-                    "%s is not availabe in state %s" % (capri_expr.src1.hfname, nxt_cs,name)
+                ncc_assert(capri_expr.src1.hfname in nxt_cs.lkp_flds, \
+                    "%s is not availabe in state %s" % (capri_expr.src1.hfname, nxt_cs,name))
                 reg_id2 = nxt_cs.lkp_flds[capri_expr.src1.hfname].reg_id
                 mux_id1 = mux_idx_alloc(mux_idx_allocator, capri_expr.src1.hfname)
                 sram['mux_idx'][mux_id1]['sel']['value'] = str(1)
@@ -2073,7 +2074,7 @@ def _fill_parser_sram_entry_for_csum(sram, parse_states_in_path, nxt_cs,        
         #parse state updates l4 len and hdr len.
         csum_l4len_mux_idx_id, mux_id2 = mux_inst_id_to_mux_index_id_map[csum_l4len_mux_instr_id]
         csum_hdrlen_mux_idx_id, mux_id2 = mux_inst_id_to_mux_index_id_map[csum_hdrlen_mux_instr_id]
-        assert (csum_l4len_mux_idx_id != -1 and csum_hdrlen_mux_idx_id != -1), pdb.set_trace()
+        ncc_assert(csum_l4len_mux_idx_id != -1 and csum_hdrlen_mux_idx_id != -1)
 
     if len(nxt_cs.verify_cal_field_objs) > 0:
         ohi_instr_allocated_count = parser.be.checksum.CsumParserConfigGenerate(parser, \
@@ -2114,9 +2115,9 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
     add_off = 0 # Bytes
     if add_cs:
         add_off = add_cs.extract_len    # in Bytes
-        assert isinstance(add_off, int), \
+        ncc_assert(isinstance(add_off, int), \
             "Variable size extraction not allowed on start state %s" % \
-                (add_cs.name)
+                (add_cs.name))
 
     mux_idx_allocator = [None for _ in sram['mux_idx']]
     mux_inst_allocator = [(None, None, None) for _ in sram['mux_inst']]
@@ -2146,8 +2147,8 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                 parser.logger.critical( \
                         "Cannot store this registers in state %s as it is loaded in next state %s" % \
                         (add_cs.name, nxt_cs.name))
-                assert 0, pdb.set_trace()
-                assert 0, "Add a dummy start state to avoid this problem"
+                ncc_assert(0)
+                ncc_assert(0, "Add a dummy start state to avoid this problem")
 
         if lkp_reg.type == lkp_reg_type.LKP_REG_NONE:
             continue
@@ -2198,7 +2199,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
             else:
                 # local var load from pkt
                 if lkp_reg.first_pkt_fld:
-                    assert lkp_reg.pkt_off != -1
+                    ncc_assert(lkp_reg.pkt_off != -1)
                     off = lkp_reg.pkt_off
                     mux_id = mux_idx_alloc(mux_idx_allocator, (lkp_reg.pkt_off/8) + add_off)
                     sram['mux_idx'][mux_id]['sel']['value'] = str(0)
@@ -2206,7 +2207,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                     sram['mux_idx'][mux_id]['idx']['value'] = str((lkp_reg.pkt_off/8) + add_off)
                 else:
                     # Load current_offset
-                    assert lkp_reg.pkt_off == -1, pdb.set_trace()
+                    ncc_assert(lkp_reg.pkt_off == -1)
                     mux_id = mux_idx_alloc(mux_idx_allocator, 'current')
                     sram['mux_idx'][mux_id]['sel']['value'] = str(3)
                     sram['mux_idx'][mux_id]['lkpsel']['value'] = str(0)   # NA
@@ -2241,7 +2242,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
     #Generate instructions to evaluate expressions that are not
     #used for lookup purposes but other pursposes (csum, icrc, option len computation etc).
     for set_op in nxt_cs.no_reg_set_ops:
-        assert set_op.capri_expr, pdb.set_trace()
+        ncc_assert(set_op.capri_expr)
         if set_op.capri_expr:
             reg_id1, reg_id2, mux_id1, mux_id2 = \
                     _allocate_mux_inst_resoures2(set_op.capri_expr, nxt_cs, add_off, \
@@ -2255,7 +2256,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
             mux_inst_id_to_capri_expr_map[mux_inst_id] = set_op.capri_expr
             mux_inst_id_to_mux_index_id_map[mux_inst_id] = (mux_id1, mux_id2)
         else:
-            assert 0, "Must use expression when writing to write-only register"
+            ncc_assert(0, "Must use expression when writing to write-only register")
 
     # extract_inst
     # For all fields that go to phv, check if fields can be combined to extract
@@ -2271,15 +2272,15 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
         insts = parser.generate_extract_instructions(nxt_cs, add_cs)
     for i in range(len(insts)):
         if current_flit != None:
-            assert current_flit == (insts[i][2] / flit_sizeB), pdb.set_trace()
+            ncc_assert(current_flit == (insts[i][2] / flit_sizeB))
         else:
             current_flit = insts[i][2] / flit_sizeB
-    #assert len(insts) <= len(sram['extract_inst']), "%s:Too many(%d) extractions" % \
-    #    (nxt_cs.name, len(insts))
+    #ncc_assert(len(insts) <= len(sram['extract_inst']), "%s:Too many(%d) extractions" % \
+    #    (nxt_cs.name, len(insts)))
     if len(insts) > len(sram['extract_inst']):
         parser.logger.critical("Violation:%s:Too many(%d) extractions" % \
             (nxt_cs.name, len(insts)))
-        assert 0, pdb.set_trace()   # possibly internal error, may need state splitting
+        ncc_assert(0   )# possibly internal error, may need state splitting
 
     for e, ext_ins in enumerate(insts):
         sram['extract_inst'][e]['pkt_idx']['value'] = str(ext_ins[0])
@@ -2333,10 +2334,10 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                 # no need to store this offset/len info
                 continue
 
-            assert s < hw_max_ohi_per_state, pdb.set_trace() # 'Too many OHIs in a state %s' % cs.name
+            ncc_assert(s < hw_max_ohi_per_state )# 'Too many OHIs in a state %s' % cs.name
 
             if ohi.id == -1:
-                assert len(parser.ohi[hdr]) > 1, pdb.set_trace() # ERROR
+                ncc_assert(len(parser.ohi[hdr]) > 1 )# ERROR
             else:
                 # slot[0] : pkt offset
                 '''
@@ -2370,13 +2371,13 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                     sram['mux_idx'][mux_id]['idx']['value'] = str(ohi_len_fld_off)
                     reg_id = -1
                 elif ohi.length.src_reg:
-                    assert ohi.length.src_reg.hfname in nxt_cs.lkp_flds, \
+                    ncc_assert(ohi.length.src_reg.hfname in nxt_cs.lkp_flds, \
                         "%s:%s:ohi len fld %s is not available" % \
-                        (parser.d.name, nxt_cs.name, ohi.length.src_reg.hfname)
+                        (parser.d.name, nxt_cs.name, ohi.length.src_reg.hfname))
                     reg_id = nxt_cs.lkp_flds[ohi.length.src_reg.hfname].reg_id
                     mux_id = -1
                 else:
-                    assert 0, pdb.set_trace()
+                    ncc_assert(0)
 
                 _build_mux_inst(parser, cs, reg_id,
                     sram['mux_inst'][mux_inst_id], mux_id, ohi.length)
@@ -2401,7 +2402,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
 
     # add ohi instructions for write-only variables
     for set_op in nxt_cs.no_reg_set_ops:
-        assert set_op.capri_expr, pdb.set_trace()
+        ncc_assert(set_op.capri_expr)
         ohi_id = None
         # remove hdr name
         dst_name = set_op.dst.hfname.split('.')[1]
@@ -2423,7 +2424,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                 (set_op.dst))
             continue
         # create new ohi instruction, mux inst may be already allocated
-        assert s < hw_max_ohi_per_state, pdb.set_trace()
+        ncc_assert(s < hw_max_ohi_per_state)
         mux_inst_id, _ = mux_inst_alloc(mux_inst_allocator, set_op.capri_expr)
         mux_inst_id_to_capri_expr_map[mux_inst_id] = set_op.capri_expr
         ohi_id = parser.wr_only_ohi[dst_name]
@@ -2465,7 +2466,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                 else:
                     sram['pkt_size']['value'] = str(nxt_cs.extract_len + add_off)
         else:
-            #assert isinstance(nxt_cs.extract_len, capri_parser_expr)
+            #ncc_assert(isinstance(nxt_cs.extract_len, capri_parser_expr))
             expr_const = nxt_cs.extract_len.const
             if nxt_cs.capture_payload_offset():
                 adjust_const = False
@@ -2485,13 +2486,13 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                 sram['mux_idx'][mux_id]['idx']['value'] = str((off/8)+add_off)
                 reg_id = -1
             elif nxt_cs.extract_len.src_reg:
-                assert ohi.length.src_reg.hfname in nxt_cs.lkp_flds, \
+                ncc_assert(ohi.length.src_reg.hfname in nxt_cs.lkp_flds, \
                     "%s:%s:ohi len fld %s is not available" % \
-                    (parser.d.name, nxt_cs.name, ohi.length.src_reg.hfname)
+                    (parser.d.name, nxt_cs.name, ohi.length.src_reg.hfname))
                 reg_id = nxt_cs.lkp_flds[ohi.length.src_reg.hfname].reg_id
                 mux_id = -1
             else:
-                assert 0, pdb.set_trace()
+                ncc_assert(0)
             _build_mux_inst(parser, nxt_cs, reg_id,
                 sram['mux_inst'][mux_inst_id], mux_id, nxt_cs.extract_len)
             mux_inst_id_to_mux_index_id_map[mux_inst_id] = (mux_id, None)
@@ -2523,7 +2524,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
         parser.be.icrc.IcrcParserConfigGenerate(parser, parse_states_in_path, nxt_cs, sram)
 
     if nxt_cs.is_end:
-        assert(s < hw_max_ohi_per_state), pdb.set_trace()
+        ncc_assert(s < hw_max_ohi_per_state)
 
     if nxt_cs.capture_payload_offset():
         # need to capture current_offset where parser stops parsing. This is needed for the
@@ -2532,14 +2533,14 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
         # but that is incorrect, especially when dont_advance_offset pragma is also used
         # is used, offset_instruction will be 0
         ohi_payload_slot = parser.be.hw_model['parser']['ohi_threshold']
-        assert s < hw_max_ohi_per_state, pdb.set_trace()# 'No OHI instr available in end state %s' % cs.name
+        ncc_assert(s < hw_max_ohi_per_state)# 'No OHI instr available in end state %s' % cs.name
         if isinstance(nxt_cs.extract_len, int):
             sram['ohi_inst'][s]['sel']['value'] = str(1)    # current_offset + idx_val
             sram['ohi_inst'][s]['muxsel']['value'] = str(0) # NA
             sram['ohi_inst'][s]['idx_val']['value'] = str(nxt_cs.extract_len + add_off)
             sram['ohi_inst'][s]['slot_num']['value'] = str((ohi_payload_slot))
         else:
-            assert add_off == 0, "XXX add_off and exit is not a common case, need to support this"
+            ncc_assert(add_off == 0, "XXX add_off and exit is not a common case, need to support this")
             # since extract len is an expression
             # create new expression for payload offset as
             # payload_offset = current_offset + extract_len
@@ -2610,7 +2611,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
     # select values
     meta_ops = parser.be.hw_model['parser']['parser_consts']['meta_ops']
     for hv_byte,hv in hv_bits.items():
-        assert mid < max_mid, pdb.set_trace()
+        ncc_assert(mid < max_mid)
         sram['meta_inst'][mid]['sel']['value'] = meta_ops['set_hv']
         sram['meta_inst'][mid]['phv_idx']['value'] = str(hv_byte)
         sram['meta_inst'][mid]['val']['value'] = str(hv)
@@ -2630,14 +2631,14 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
         use_or = False
         if op.op_type == meta_op.EXTRACT_REG:
             #pdb.set_trace() # un-tested so far
-            assert op.rid != None
+            ncc_assert(op.rid != None)
             mux_inst_id, _ = mux_inst_alloc(mux_inst_allocator, op.capri_expr)
             _build_mux_inst(parser, op.cstate, op.rid, sram['mux_inst'][mux_inst_id],
                 0, op.capri_expr)
             dst_phv = op.dst.phv_bit
         elif op.op_type == meta_op.EXTRACT_META:
             #pdb.set_trace()
-            assert op.src1
+            ncc_assert(op.src1)
             mux_inst_id, _ = mux_inst_alloc(mux_inst_allocator, op.capri_expr)
             op_off = op.cstate.fld_off[op.src1]
             if op.cstate == nxt_cs:
@@ -2653,9 +2654,9 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                 mux_id, op.capri_expr)
             dst_phv = op.dst.phv_bit
         elif op.op_type == meta_op.EXTRACT_CURRENT_OFF:
-            assert isinstance(op.src1, tuple), pdb.set_trace()
-            assert op.src1[1] == 0, pdb.set_trace()
-            assert op.capri_expr, "Must use expression"
+            ncc_assert(isinstance(op.src1, tuple))
+            ncc_assert(op.src1[1] == 0)
+            ncc_assert(op.capri_expr, "Must use expression")
             mux_inst_id, _ = mux_inst_alloc(mux_inst_allocator, op.capri_expr)
             mux_id = mux_idx_alloc(mux_idx_allocator, 'current')
             sram['mux_idx'][mux_id]['sel']['value'] = str(3)
@@ -2667,12 +2668,12 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
         elif op.op_type == meta_op.EXTRACT_CONST:
             #pdb.set_trace()
             dst_phv = op.dst.phv_bit
-            #assert (dst_phv % 8) == 0, "Destination phv %s must be byte aligned" % op.dst.hfname
+            #ncc_assert((dst_phv % 8) == 0, "Destination phv %s must be byte aligned" % op.dst.hfname)
             val = op.const
             if (dst_phv %8) or (op.dst.width % 8):
                 # if not writing integral byte, OR the value
-                assert op.dst.width < 8, "%s:%s must be <8bit wide to use set_metadata()" % \
-                    (nxt_cs, op.dst.hfname)
+                ncc_assert(op.dst.width < 8, "%s:%s must be <8bit wide to use set_metadata()" % \
+                    (nxt_cs, op.dst.hfname))
                 use_or = True
         else:
             continue
@@ -2680,9 +2681,9 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
         flit = dst_phv / flit_size
         if current_flit == None:
             current_flit = flit
-        assert current_flit == flit, pdb.set_trace()
+        ncc_assert(current_flit == flit)
 
-        assert mid < max_mid, "%s:%s:Out of meta instructions %s" % (parser.d, nxt_cs.name, set_ops)
+        ncc_assert(mid < max_mid, "%s:%s:Out of meta instructions %s" % (parser.d, nxt_cs.name, set_ops))
 
         sram['meta_inst'][mid]['phv_idx']['value'] = str((dst_phv / 8) & 0x7F)
         if mux_inst_id == None:
@@ -2720,14 +2721,14 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
     # program len_chk instructions if specified
     len_chk_inst_id = 0
     max_len_chk_inst = parser.be.hw_model['parser']['num_len_chk_inst']
-    assert len(nxt_cs.len_chk_profiles) <= max_len_chk_inst, pdb.set_trace()
+    ncc_assert(len(nxt_cs.len_chk_profiles) <= max_len_chk_inst)
     for len_chk_prof in nxt_cs.len_chk_profiles:
-        assert len_chk_prof.start_hfname, pdb.set_trace()
-        assert len_chk_prof.len_hfname, pdb.set_trace()
+        ncc_assert(len_chk_prof.start_hfname)
+        ncc_assert(len_chk_prof.len_hfname)
         start_cfname = len_chk_prof.start_hfname.split('.')[1]
         len_cfname = len_chk_prof.len_hfname.split('.')[1]
-        assert start_cfname in parser.wr_only_ohi, pdb.set_trace()
-        assert len_cfname in parser.wr_only_ohi, pdb.set_trace()
+        ncc_assert(start_cfname in parser.wr_only_ohi)
+        ncc_assert(len_cfname in parser.wr_only_ohi)
         start_ohi_slot = parser.wr_only_ohi[start_cfname]
         len_ohi_slot = parser.wr_only_ohi[len_cfname]
         sram['len_chk_inst'][len_chk_inst_id]['en']['value'] = str(1)
@@ -2868,7 +2869,7 @@ def capri_parser_output_decoders(parser):
     parse_state_stack.append((parser.states[0], [parser.states[0]]))
     while len(parse_state_stack):
         cs, parse_states_in_path = parse_state_stack.pop(0)
-        assert cs != None, pdb.set_trace()
+        ncc_assert(cs != None)
         for bi in cs.branches:
             if bi not in bi_processed_list:
                 bi_processed_list.append(bi)
@@ -3006,7 +3007,7 @@ def capri_parser_output_decoders(parser):
 
     idx += 1
     parser.logger.info('%s:Tcam states used (including catch-all) %d' % (parser.d.name, idx))
-    assert idx <= parser.be.hw_model['parser']['num_states'], "Parser TCAM overflow"
+    ncc_assert(idx <= parser.be.hw_model['parser']['num_states'], "Parser TCAM overflow")
 
     # program catch all entry register
     ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_ctrl']['pe_enable']['value'] = str(0x3ff)
@@ -3171,7 +3172,7 @@ def capri_te_cfg_output(stage):
         if prof == None:
             continue
         hw_id = prof.hw_id
-        assert hw_id < max_km_profiles, pdb.set_trace()
+        ncc_assert(hw_id < max_km_profiles)
         sel_id = (hw_id * max_km_wB)
         bit_sel_id = (hw_id * max_km_bits)
         bit_loc_id = (hw_id * (max_km_bits/8))
@@ -3224,7 +3225,7 @@ def capri_te_cfg_output(stage):
 
         # bit_loc1 is bit0-7, bit_loc0 is bit8-15
         # since bit_sels are written from 15 down to 0, no need to switch bit_loc here
-        # XXX check for <= 8 can be removed or turned into assert, just look at bit_locX >= 0
+        # XXX check for <= 8 can be removed or turned into ncc_assert(, just look at bit_locX >= 0)
         if len(prof.bit_sel) <= 8:
             json_km_profile = json_regs['cap_te_csr_cfg_km_profile_bit_loc[%d]' % (bit_loc_id)]
             if prof.bit_loc >= 0:
@@ -3330,7 +3331,7 @@ def capri_te_cfg_output(stage):
                         "%s:Stage %d: Table profile TCAM: profile_val %d Skip Invalid condition" % \
                         (stage.gtm.d.name, stage.id, prof_val))
                 continue
-            assert len(tcam_vms) == 1, pdb.set_trace()
+            ncc_assert(len(tcam_vms) == 1)
             (val, mask) = tcam_vms[0]
             if (val, mask) in tcam_entries:
                 stage.gtm.tm.logger.warning( \
@@ -3362,7 +3363,7 @@ def capri_te_cfg_output(stage):
 
         # h/w allows a flexible partitioning of the total (192) ctrl_sram entries per profile
         json_tbl_prof['seq_base']['value'] = str(sidx)
-        assert sidx < max_cycles, pdb.set_trace()
+        ncc_assert(sidx < max_cycles)
 
         stage.gtm.tm.logger.debug( \
             "%s:Stage %d:Profile %d SRAM start_idx %d" % \
@@ -3370,7 +3371,7 @@ def capri_te_cfg_output(stage):
 
         flit_kms = [[] for _ in range(num_flits)]
         for ct in active_ctg:
-            assert not ct.is_otcam
+            ncc_assert(not ct.is_otcam)
             for _km in ct.key_makers:
                 if _km.shared_km:
                     km = _km.shared_km
@@ -3410,13 +3411,13 @@ def capri_te_cfg_output(stage):
                 # used anymore
                 pass
             else:
-                assert fid <= num_flits, pdb.set_trace()    # error in advancing flits
+                ncc_assert(fid <= num_flits    )# error in advancing flits
                 for km in flit_kms[fid]:
                     km_prof = km.combined_profile
                     kmid = km.hw_id
 
                     if kmid in cyc_km_used:
-                        assert cyc_km_used[kmid] == km_prof.hw_id, pdb.set_trace()
+                        ncc_assert(cyc_km_used[kmid] == km_prof.hw_id)
                     else:
                         cyc_km_used[kmid] = km_prof.hw_id
 
@@ -3436,7 +3437,7 @@ def capri_te_cfg_output(stage):
 
             ct = stage.table_sequencer[prof_val][cyc].tbl
             if ct:
-                assert se['tableid']['value'] == '-1', pdb.set_trace()
+                ncc_assert(se['tableid']['value'] == '-1')
                 if stage.table_sequencer[prof_val][cyc].thread == 0:
                     se['tableid']['value'] = str(ct.tbl_id)
                 else:
@@ -3454,7 +3455,7 @@ def capri_te_cfg_output(stage):
                 elif ct.match_type == match_type.MPU_ONLY:
                     se['lkup']['value'] = te_consts['mpu_only']
                 else:
-                    assert 0, pdb.set_trace()
+                    ncc_assert(0)
                 if ct.is_wide_key:
                     if fid == ct.flits_used[0]:
                         se['hash_chain']['value'] = str(0)
@@ -3596,7 +3597,7 @@ def capri_te_cfg_output(stage):
                 key_mask_hi = 512 - ct.last_flit_start_key_off
                 key_mask_lo = 512 - ct.last_flit_end_key_off
             elif not ct.is_mpu_only():
-                assert ct.start_key_off >= 0, pdb.set_trace()
+                ncc_assert(ct.start_key_off >= 0)
                 key_mask_hi = 512 - ct.start_key_off
                 key_mask_lo = 512 - ct.end_key_off
             else:

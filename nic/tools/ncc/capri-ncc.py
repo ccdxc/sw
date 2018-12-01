@@ -18,12 +18,14 @@ sys.path.insert(1, _top_dir + '/p4-hlir')
 from p4_hlir.main import HLIR
 import p4_hlir.hlir.p4 as p4
 import p4_hlir.hlir.table_dependency as table_dependency
-import capri_logging, capri_tables, capri_parser, capri_pa, \
+import capri_tables, capri_parser, capri_pa, \
        capri_deparser, capri_checksum, capri_icrc
 from capri_utils import *
 from capri_model import capri_model as capri_model
 from capri_output import capri_model_dbg_output as capri_model_dbg_output
 from capri_p4pd import capri_p4pd_code_generate as capri_p4pd_code_generate
+from capri_logging import logger_init as logger_init, ncc_assert as ncc_assert, \
+        set_pdb_on_assert as set_pdb_on_assert
 
 def get_parser():
     parser = argparse.ArgumentParser(description='p4 compiler for Capri')
@@ -95,6 +97,9 @@ def get_parser():
     parser.add_argument('--pipeline', dest='pipeline', action='store',
                         help='Pipeline', choices=['iris', 'gft', 'apollo'],
                         default=None, required=False)
+    parser.add_argument('--pdb-on-assert', dest='pdb_on_assert', action='store_true',
+                        help='Enter pdb on assert',
+                        default=False, required=False)
     return parser
 
 # Main back-end class that holds everything needed by the backend
@@ -155,7 +160,7 @@ def setup_p4_plus_hw_parameters(capri_model):
     setup_num_phv_flits(capri_model, 12)
 
 def setup_num_phv_flits(capri_model, num_flits):
-    assert (num_flits % 2) == 0, "Only even number of phv flits is allowed"
+    ncc_assert( (num_flits % 2) == 0, "Only even number of phv flits is allowed")
     max_hw_flits = capri_model['phv']['max_hw_flits']
     assert num_flits <= max_hw_flits, "Value must be less than %d" % max_hw_flits
     capri_model['phv']['num_flits'] = num_flits
@@ -172,7 +177,7 @@ def main():
         sys.exit(1)
     prog_name = os.path.split(args.sources[0])
     prog_name = prog_name[1].replace('.p4', '')
-    capri_logging.logger_init(log_dir=args.gen_dir, prog_name=prog_name,
+    logger_init(log_dir=args.gen_dir, prog_name=prog_name,
                                 loglevel=args.loglevel, floglevel=args.floglevel)
 
     # TBD - Insert toplevel try-except block
@@ -196,6 +201,7 @@ def main():
         setup_num_phv_flits(capri_model, capri_model['phv']['num_flits'])
 
     capri_be = capri_backend(h, capri_model, args)
+    set_pdb_on_assert(args.pdb_on_assert)
 
     capri_be.initialize()
 

@@ -37,7 +37,7 @@ def get_logical_stages(graph):
         # empty control flow
         return []
     has_cycle, sorted_list = graph.topo_sorting()
-    assert(not has_cycle)
+    ncc_assert(not has_cycle)
     nb_stages = 0
     stage_list = []
     stage_dependencies_list = []
@@ -49,7 +49,7 @@ def get_logical_stages(graph):
             stage_dependencies = stage_dependencies_list[i]
             if table in stage_dependencies:
                 d_type_ = stage_dependencies[table]
-                assert(d_type_ > 0)
+                ncc_assert(d_type_ > 0)
                 break
             else:
                 i -= 1
@@ -163,7 +163,7 @@ def _remove_duplicate_chunks(dst_chunks, src_chunks):
 
     for cs, cw in src_chunks:
         while cw:
-            assert cw > 0
+            ncc_assert(cw > 0)
             # remove src bytes from dst
             valid_bytes[cs/8] = False
             cs += 8
@@ -192,7 +192,7 @@ def _phv_chunks_to_bytes(phv_chunks):
     byte_sel = []
     for b, w in phv_chunks:
         while w:
-            assert w > 0, pdb.set_trace()
+            ncc_assert(w > 0)
             byte_sel.append(b/8)
             b += 8
             w -= 8
@@ -240,7 +240,7 @@ class capri_km_flit:
                 w -= 1
 
         # sorted_bytes = sorted(self.km_profile.byte_sel)
-        # assert sorted_bytes == self.km_profile.byte_sel, pdb.set_trace()
+        # ncc_assert(sorted_bytes == self.km_profile.byte_sel)
 
 # Table Management
 class capri_table:
@@ -358,7 +358,7 @@ class capri_table:
             else:
                 pass
         if len(cflist):
-            assert ksize, 'Invalid key size computed for %s' % self.p4_table.name
+            ncc_assert(ksize, 'Invalid key size computed for %s' % self.p4_table.name)
         return ksize
 
 
@@ -458,7 +458,7 @@ class capri_table:
                  self.input_fields))
             violation = True
 
-        assert violation == False, pdb.set_trace() #"Fix violations and try again"
+        ncc_assert(violation == False )#"Fix violations and try again"
         if len(self.key_makers) == 0:
             self.gtm.tm.logger.critical("%s:Problem:%s has no km created for it" % \
                     (self.gtm.d.name, self.p4_table.name))
@@ -480,12 +480,12 @@ class capri_table:
             if self.is_hash_table() or self.is_index_table():
                 self.gtm.tm.logger.critical("%s:BUG:key_size computation for %s" % \
                     (self.gtm.d.name, self.p4_table.name))
-                assert new_key_size == old_key_size, pdb.set_trace()
+                ncc_assert(new_key_size == old_key_size)
 
         km_used = [-1 for _ in self.key_makers]
         for _km in self.key_makers:
             hw_id = _km.get_hw_id()
-            assert hw_id not in km_used, pdb.set_trace()
+            ncc_assert(hw_id not in km_used)
             km_used[_km.km_id] = hw_id
 
     def ct_build_tbl_ki_info_from_flits(self):
@@ -545,11 +545,11 @@ class capri_table:
                 (self.gtm.d.name, self.p4_table.name, self.keys, self.input_fields))
             if self.is_hash_table() or self.is_otcam:
                 # QQQ: what is the k size % 512 check is for ??
-                assert self.i_size < (2 * key_maker_width) and \
-                    (self.key_size % (2 * key_maker_width)), pdb.set_trace() # invalid k or i sizes
+                ncc_assert(self.i_size < (2 * key_maker_width) and \
+                    (self.key_size % (2 * key_maker_width)))
                 self.is_wide_key = True
                 return False
-        assert num_km <= 2, "K+I exceed key maker width for table %s" % (self.p4_table.name)
+        ncc_assert(num_km <= 2, "K+I exceed key maker width for table %s" % (self.p4_table.name))
         max_ki = num_km * key_maker_width
         max_bits = num_km * bit_extractors
 
@@ -715,7 +715,7 @@ class capri_table:
 
         if (ki_size + add_bits) > max_ki:
             # still a problem - needs to change the program
-            assert 0, pdb.set_trace()
+            ncc_assert(0)
 
         # move i_bits chunk to byte extraction
         for rc in rm_chunks:
@@ -729,7 +729,6 @@ class capri_table:
             if w % 8:
                 w += (8-(w%8))
 
-            #pdb.set_trace()
             self.i_bit_ext.remove(rc)
             fid = b/flit_size
             self.km_flits[fid].i_bit_ext.remove(rc)
@@ -756,7 +755,6 @@ class capri_table:
                 fid = b/flit_size
                 # record the bits added to the front and back of this chunk
                 # remove this chunk from i_bit_ext to k_phv_chunks
-                #pdb.set_trace()
                 start = b; width = w; pad = 0
                 pad_chunk1 = None; pad_chunk2 = None
                 if b % 8:
@@ -774,7 +772,6 @@ class capri_table:
                     pad += ep_w
 
                 if (ki_size + pad) > max_ki:
-                    pdb.set_trace()
                     continue
                 if pad_chunk1:
                     self.i2k_pad_chunks.append(pad_chunk1)
@@ -796,7 +793,7 @@ class capri_table:
 
                 ## extra_bits -= w
 
-            ## assert extra_bits <= 0, pdb.set_trace()
+            ## ncc_assert(extra_bits <= 0)
         return True
 
     def _remove_overlapping_chunks(self, phv_chunks):
@@ -814,7 +811,7 @@ class capri_table:
                 continue
 
             # add to last chunk (merge contiguous/overlapping chunks)
-            if len(new_phv_chunks) == 0: pdb.set_trace()
+            ncc_assert(len(new_phv_chunks) != 0)
             (l_cs, l_cw) = new_phv_chunks.pop()
             add_w = (cs+cw) - c_offset
             new_phv_chunks.append((l_cs, l_cw+add_w))
@@ -1004,14 +1001,13 @@ class capri_table:
                     (self.gtm.d.name, self.p4_table.name))
                 self.gtm.tm.logger.debug("%s:%s:(k,I) new:(%d, %d) old:(%d,%d)" % \
                     (self.gtm.d.name, self.p4_table.name, new_k_size, new_i_size, k_size, i_size))
-                #pdb.set_trace()
 
         flit_k_phv_chunks = {f:[] for f in range(num_flits)}
         flit_i_phv_chunks = {f:[] for f in range(num_flits)}
 
         for cs, cw in k_phv_chunks:
             start_fid = cs/flit_size
-            if start_fid < 0: pdb.set_trace()
+            ncc_assert(start_fid >= 0)
             end_fid = (cs+cw-1)/flit_size
             if start_fid == end_fid:
                 flit_k_phv_chunks[start_fid].append((cs,cw))
@@ -1019,7 +1015,7 @@ class capri_table:
             # crossing the flit
             w_flit = ((start_fid+1) * flit_size) - cs
             w = min(flit_size, w_flit)
-            assert w > 0, pdb.set_trace()
+            ncc_assert(w > 0)
             flit_k_phv_chunks[start_fid].append((cs,w))
             new_cs = cs+w
             for fid in range(start_fid+1, end_fid):
@@ -1031,7 +1027,7 @@ class capri_table:
 
         for cs, cw in i_phv_chunks:
             start_fid = cs/flit_size
-            if start_fid < 0: pdb.set_trace()
+            ncc_assert(start_fid >= 0)
             end_fid = (cs+cw-1)/flit_size
             if start_fid == end_fid:
                 flit_i_phv_chunks[start_fid].append((cs,cw))
@@ -1040,7 +1036,7 @@ class capri_table:
             w_flit = ((start_fid+1) * flit_size) - cs
             w = min(flit_size, w_flit)
             flit_i_phv_chunks[start_fid].append((cs,w))
-            assert w > 0, pdb.set_trace()
+            ncc_assert(w > 0)
             new_cs = cs+w
             for fid in range(start_fid+1, end_fid):
                 flit_i_phv_chunks[fid].append((new_cs,flit_size))
@@ -1068,7 +1064,7 @@ class capri_table:
                         cs = 0
                         cw = 0
 
-                assert (cs % 8) == 0
+                ncc_assert((cs % 8) == 0)
                 part_bits = cw % 8
                 if part_bits:
                     kf.k_bit_ext.append((cs+cw-part_bits, part_bits))
@@ -1088,7 +1084,7 @@ class capri_table:
             # move non-byte aligned flds from the i vector to a separate list
             # for toeplitz table, key is split between two key-makers as key and seed
             # so i-bytes will apprear to be within key, for now just ignore it, there will
-            # an assert later.
+            # an ncc_assert(later.)
             # XXX check portions of seed/key separately to find i_in_key
             i_in_key = 0
             if not self.is_toeplitz_hash():
@@ -1197,7 +1193,6 @@ class capri_table:
         #
         # make sure to leave unused byte_sels when profiles are combined
         # What about bit_sel???? Can they be combined?
-        #pdb.set_trace()
         combined_profile = capri_km_profile(self.gtm)
         for kf in self.km_flits:
             kf.flit_create_km_profile()
@@ -1237,7 +1232,6 @@ class capri_table:
         self.num_km = (ki_size + reserve_bytes + key_maker_width - 1) / key_maker_width
         self.gtm.tm.logger.debug("%s:%s:Table-Logical-Profile: %s" % \
             (self.gtm.d.name, self.p4_table.name, self.combined_profile))
-        #pdb.set_trace()
 
     def create_toeplitz_key_makers(self):
         # Toeplitz table has special requirements for the constucting the key-makers
@@ -1254,7 +1248,7 @@ class capri_table:
         # flit.. once the calculation is started each subsequent flit must feed the
         # key-maker until the last flit
         # first 2 flits
-        assert len(self.flits_used) == 2, "Must use two consecutive flits for Toeplitz Hash"
+        ncc_assert(len(self.flits_used) == 2, "Must use two consecutive flits for Toeplitz Hash")
         self.num_km = len(self.flits_used) * 2
         max_km_width = self.gtm.tm.be.hw_model['match_action']['key_maker_width']
         max_kmB = max_km_width/8
@@ -1297,10 +1291,10 @@ class capri_table:
 
             for i in range(bytes_avail):
                 if b < s_len:
-                    assert (seed_phv_bytes[b] / flit_szB) == fid
+                    ncc_assert((seed_phv_bytes[b] / flit_szB) == fid)
                     flit_profile0.k_byte_sel.append(seed_phv_bytes[b])
                 if b < k_len:
-                    assert (key_phv_bytes[b] / flit_szB) == fid
+                    ncc_assert((key_phv_bytes[b] / flit_szB) == fid)
                     flit_profile1.k_byte_sel.append(key_phv_bytes[b])
                 b += 1
 
@@ -1339,8 +1333,8 @@ class capri_table:
         i_bytes = i1_bytes + i2_bytes
 
         if i_bytes > bytes_avail:
-            assert 0, "Only %d bytes are available for I for Toeplitz table %s, need %d" % \
-                (bytes_avail, self.p4_table.name, i_bytes)
+            ncc_assert(0, "Only %d bytes are available for I for Toeplitz table %s, need %d" % \
+                (bytes_avail, self.p4_table.name, i_bytes))
 
         # last key maker contains last chunk of the key
         last_key_flit_profile.i1_byte_sel += kf.km_profile.i1_byte_sel
@@ -1392,7 +1386,7 @@ class capri_table:
 
         if self.num_km == 0:
             # always use KM0 for this, it does not matter if km is used for another table
-            assert self.is_mpu_only()
+            ncc_assert(self.is_mpu_only())
             km = capri_key_maker(self, [self])
             km.km_id = 0
             self.key_makers.append(km)
@@ -1446,7 +1440,7 @@ class capri_table:
         if self.num_km > 2:
             # wide key table
             # need a pair of kms per flit
-            assert self.is_wide_key, pdb.set_trace()
+            ncc_assert(self.is_wide_key)
             # split the combined profile into profiles of max km width
             # make sure that any 'i' data is only in the last profile
             km_id = 0
@@ -1485,7 +1479,7 @@ class capri_table:
                     flit_profile0.bit_sel = flit_profile0.k_bit_sel + flit_profile0.i_bit_sel
 
                     if fid != last_fid:
-                        assert len(flit_profile0.i_bit_sel) == 0, pdb.set_trace()
+                        ncc_assert(len(flit_profile0.i_bit_sel) == 0)
                         #"Cannot have i-bits until last flit"
 
                     k1_bits = 0 if len(kf.km_profile.k_bit_sel) < k0_bits else \
@@ -1502,7 +1496,7 @@ class capri_table:
                     flit_profile1.bit_sel = flit_profile1.k_bit_sel + flit_profile1.i_bit_sel
 
                     if fid != last_fid:
-                        assert len(flit_profile1.i_bit_sel) == 0, pdb.set_trace()
+                        ncc_assert(len(flit_profile1.i_bit_sel) == 0)
                         #"Cannot have i-bits until last flit"
 
                     bytes_avail0 -= (k0_bits+i0_bits+7)/8
@@ -1516,11 +1510,11 @@ class capri_table:
                 if fid == last_fid:
                     bytes_avail0 -= reserve_bytes
 
-                assert bytes_needed <= (bytes_avail0+bytes_avail1), pdb.set_trace()
+                ncc_assert(bytes_needed <= (bytes_avail0+bytes_avail1))
                 k0_bytes = min(bytes_avail0, len(kf.km_profile.k_byte_sel))
 
                 k1_bytes = len(kf.km_profile.k_byte_sel) - k0_bytes
-                assert k1_bytes <= bytes_avail1, pdb.set_trace()
+                ncc_assert(k1_bytes <= bytes_avail1)
 
                 # for wide-key, we can have i1 and i2 bytes only on the last flit as -
                 # action_pc/collision_idx - i1bytes - key - i2bytes
@@ -1534,13 +1528,13 @@ class capri_table:
                 i21_bytes = len(kf.km_profile.i2_byte_sel) - i20_bytes
 
                 if fid != last_fid:
-                    assert (i10_bytes+i20_bytes+i11_bytes+i21_bytes) == 0, pdb.set_trace()
+                    ncc_assert((i10_bytes+i20_bytes+i11_bytes+i21_bytes) == 0)
                     #"Cannot have i-bytes until last flit"
                 else:
                     if k1_bytes:
                         # key spans into km1
-                        assert i20_bytes == 0, pdb.set_trace()
-                        assert i11_bytes == 0, pdb.set_trace()
+                        ncc_assert(i20_bytes == 0)
+                        ncc_assert(i11_bytes == 0)
 
                 for i in range(i10_bytes):
                     flit_profile0.i1_byte_sel.append(kf.km_profile.i1_byte_sel[i])
@@ -1575,8 +1569,7 @@ class capri_table:
             self.num_km = len(self.key_makers)
             return
 
-        assert self.num_km <= 2 # max km_per_key
-        #pdb.set_trace()
+        ncc_assert(self.num_km <= 2 )# max km_per_key
         # multiple kms
         # check how to split
         # prefer if key and i can be separated into two kms
@@ -1591,7 +1584,6 @@ class capri_table:
         total_iB = (self.i_phv_size + 7) / 8
 
         if total_kB <= max_kmB and total_iB <= max_kmB:
-            #pdb.set_trace()
             self.gtm.tm.logger.debug("%s:Split key_makers as K and I" % self.p4_table.name)
             # K and I can be split into separate key makers
             # XXX reserved bytes not really added to the key maker... it might cause problem
@@ -1637,12 +1629,11 @@ class capri_table:
                 flit_profile.bit_sel += kf.km_profile.i_bit_sel
                 km1.flit_km_profiles[fid] = flit_profile
 
-            #pdb.set_trace()
         else:
             self.gtm.tm.logger.debug("%s:%s:Split key_makers (K+I) as it fits" % \
                 (self.gtm.d.name, self.p4_table.name))
 
-            assert len(self.oo_flits) == 0
+            ncc_assert(len(self.oo_flits) == 0)
 
             km0 = self.key_makers[0]
             km0_profile = capri_km_profile(self.gtm)
@@ -1660,14 +1651,13 @@ class capri_table:
                 self.gtm.tm.logger.debug("%s:%s:Split key_makers K > max_km" % \
                     (self.gtm.d.name, self.p4_table.name))
                 km0_free -= reserve_bytes
-                #pdb.set_trace()
                 # not much can be done. just place in order(i1,k,...) as it fits
                 # if k_bits > max_km_bits : split k bits in km0(end) and km1 after k bytes
                 # if k_bits < max_km_bits : move them all to km1 after k bytes. In this case
                 # any i-bits in km0 will have to be placed before k-bytes
                 # if i_bits > max_km_bits : move some i-bits before key in km0
                 if total_i1B:
-                    assert total_i1B < max_kmB, pdb.set_trace()
+                    ncc_assert(total_i1B < max_kmB)
                     km0_profile.i1_byte_sel += self.combined_profile.i1_byte_sel
                     km0_free -= total_i1B
                 if num_kbits > max_km_bits:
@@ -1693,7 +1683,6 @@ class capri_table:
                     km1_free -= ((num_ibits-km0_bits+7)/8)
 
                 # split k into km0 and km1
-                #pdb.set_trace()
                 for b in range(km0_free):
                     km0_profile.k_byte_sel.append(self.combined_profile.k_byte_sel[b])
                 for b in range(km0_free, len(self.combined_profile.k_byte_sel)):
@@ -1728,12 +1717,12 @@ class capri_table:
                                 len(self.combined_profile.i2_byte_sel)
                 num_bitB = (num_ibits + num_kbits + 7) / 8
                 keep_free = (km0_free + km1_free - num_byte_sel - num_bitB) / 2
-                assert keep_free >= 0, pdb.set_trace()
+                ncc_assert(keep_free >= 0)
 
                 # copy k bytes and bits to km0
                 km0_profile.k_byte_sel += self.combined_profile.k_byte_sel
                 km0_free -= len(self.combined_profile.k_byte_sel)
-                assert num_kbits <= max_km_bits, pdb.set_trace() # XXX TBD
+                ncc_assert(num_kbits <= max_km_bits )# XXX TBD
                 km0_profile.k_bit_sel += self.combined_profile.k_bit_sel
 
                 byte_avail = (self.num_km * max_kmB) - num_byte_sel
@@ -1846,7 +1835,6 @@ class capri_table:
                         else:
                             # these are fields that are not byte aligned..
                             # just place in in km if below threshold
-                            # pdb.set_trace()
                             if not km1_iB:
                                 break
                             b = self.combined_profile.i1_byte_sel[iB]
@@ -1883,7 +1871,7 @@ class capri_table:
                             km0_iB -= 1
                         iB += 1
 
-                    assert i1B_remain <= km1_free, pdb.set_trace()
+                    ncc_assert(i1B_remain <= km1_free)
                     while i1B_remain:
                         b = self.combined_profile.i1_byte_sel[iB]
                         km1_profile.i2_byte_sel.append(b)
@@ -1893,7 +1881,7 @@ class capri_table:
                             km1_iB -= 1
                         iB += 1
 
-                    assert i1B_remain == 0, pdb.set_trace()
+                    ncc_assert(i1B_remain == 0)
                     iB = 0
                     i2B_remain = total_i2B
                     while i2B_remain:
@@ -1957,7 +1945,7 @@ class capri_table:
                             km0_iB -= 1
                         iB += 1
 
-                    assert i2B_remain <= km1_free, pdb.set_trace()
+                    ncc_assert(i2B_remain <= km1_free)
                     while i2B_remain:
                         b = self.combined_profile.i2_byte_sel[iB]
                         km1_profile.i2_byte_sel.append(b)
@@ -1967,8 +1955,8 @@ class capri_table:
                             km1_iB -= 1
                         iB += 1
 
-                    assert i2B_remain == 0, pdb.set_trace()
-                    assert km1_free >=0 and km0_free >= 0, pdb.set_trace()
+                    ncc_assert(i2B_remain == 0)
+                    ncc_assert(km1_free >=0 and km0_free >= 0)
 
                 km0_profile.i1_byte_sel = sorted(km0_profile.i1_byte_sel)
                 km0_profile.i2_byte_sel = sorted(km0_profile.i2_byte_sel)
@@ -1988,7 +1976,6 @@ class capri_table:
 
             # common code for split profiles
             # copy new profiles into flits for future use
-            #pdb.set_trace()
             for fid,kf in enumerate(self.km_flits):
                 km0_flit_profile = capri_km_profile(self.gtm)
                 km1_flit_profile = capri_km_profile(self.gtm)
@@ -2008,7 +1995,7 @@ class capri_table:
                     elif b in km1_profile.i2_byte_sel:
                         km1_flit_profile.i2_byte_sel.append(b)
                     else:
-                        assert 0, pdb.set_trace()
+                        ncc_assert(0)
 
                 for b in kf.km_profile.k_bit_sel:
                     if b in km0_profile.bit_sel:
@@ -2050,11 +2037,11 @@ class capri_table:
         total_i_bytes = total_i1_bytes + total_i2_bytes
         total_k_bits = sum([len(km.combined_profile.k_bit_sel) for km in self.key_makers])
         total_i_bits = sum([len(km.combined_profile.i_bit_sel) for km in self.key_makers])
-        assert total_k_bytes == len(self.combined_profile.k_byte_sel), pdb.set_trace()
-        assert total_i_bytes == len(self.combined_profile.i1_byte_sel) + \
-                                len(self.combined_profile.i2_byte_sel), pdb.set_trace()
-        assert total_k_bits == len(self.combined_profile.k_bit_sel), pdb.set_trace()
-        assert total_i_bits == len(self.combined_profile.i_bit_sel), pdb.set_trace()
+        ncc_assert(total_k_bytes == len(self.combined_profile.k_byte_sel))
+        ncc_assert(total_i_bytes == len(self.combined_profile.i1_byte_sel) + \
+                                len(self.combined_profile.i2_byte_sel))
+        ncc_assert(total_k_bits == len(self.combined_profile.k_bit_sel))
+        ncc_assert(total_i_bits == len(self.combined_profile.i_bit_sel))
 
         self.gtm.tm.logger.debug("%s:%s:Split Profiles km0:%s, km1%s" % \
                     (self.gtm.d.name, self.p4_table.name, km0_profile, km1_profile))
@@ -2068,16 +2055,16 @@ class capri_table:
         # To get correct key size, keep start_offset to 0 for now and compute real-start
         # address based on last flit and action_pc/collision idx etc while programming
         # the hw
-        assert self.start_key_off == 0, pdb.set_trace()
+        ncc_assert(self.start_key_off == 0)
 
         # final key_size is computed as (n-1)*512 + end_key_off, where n=flits used
         self.final_key_size = ((len(self.flits_used)-1) * wide_key_km_width) + \
                         self.last_flit_end_key_off - self.last_flit_start_key_off
-        assert self.final_key_size >= self.key_size
+        ncc_assert(self.final_key_size >= self.key_size)
 
     def ct_tcam_get_key_end_bytes(self):
         # get first and last k bytes and bits from key makers
-        assert self.num_km, pdb.set_trace()
+        ncc_assert(self.num_km)
         _km = self.key_makers[0]
         km0 = _km.shared_km if _km.shared_km else _km
         km1 = None
@@ -2100,7 +2087,7 @@ class capri_table:
                     if b in self.combined_profile.k_byte_sel:
                         t_fk_byte = b
                         break
-            assert t_fk_byte != -1, pdb.set_trace()
+            ncc_assert(t_fk_byte != -1)
 
             if km1 != None:
                 for b in reversed(km1.combined_profile.byte_sel):
@@ -2112,7 +2099,7 @@ class capri_table:
                     if b in self.combined_profile.k_byte_sel:
                         t_lk_byte = b
                         break
-            assert t_lk_byte != -1, pdb.set_trace()
+            ncc_assert(t_lk_byte != -1)
 
         t_fk_bit = -1; t_lk_bit = -1
         if len(self.combined_profile.k_bit_sel):
@@ -2125,7 +2112,7 @@ class capri_table:
                     if b in self.combined_profile.k_bit_sel:
                         t_fk_bit = b
                         break
-            assert t_fk_bit != -1, pdb.set_trace()
+            ncc_assert(t_fk_bit != -1)
             if km1 != None:
                 for b in reversed(km1.combined_profile.bit_sel):
                     if b in self.combined_profile.k_bit_sel:
@@ -2136,7 +2123,7 @@ class capri_table:
                     if b in self.combined_profile.k_bit_sel:
                         t_lk_bit = b
                         break
-            assert t_lk_bit != -1, pdb.set_trace()
+            ncc_assert(t_lk_bit != -1)
 
         self.gtm.tm.logger.debug("%s:TCAM fk_byte %d lk_byte %d, bits %d, %d" % \
                         (self.p4_table.name, t_fk_byte, t_lk_byte, t_fk_bit, t_lk_bit))
@@ -2173,7 +2160,7 @@ class capri_table:
             fk_bit = self.combined_profile.k_bit_sel[0]
             lk_bit = self.combined_profile.k_bit_sel[-1]
 
-        assert self.num_km, pdb.set_trace()
+        ncc_assert(self.num_km)
         km0 = None; km1 = None
         _km0 = None; _km1 = None
         if self.is_wide_key:
@@ -2221,11 +2208,10 @@ class capri_table:
                         self.start_key_off_delta + bit_idx
                 self.gtm.tm.logger.debug("%s:Using km0 bit_location %d as k-start" % \
                         (self.p4_table.name, self.start_key_off))
-                #pdb.set_trace() # need to test
 
         if self.start_key_off == -1:
             fk_idx = max_kmB
-            assert km1, pdb.set_trace()
+            ncc_assert(km1)
             if fk_byte in km1.combined_profile.byte_sel:
                 fk_idx = km1.combined_profile.byte_sel.index(fk_byte)
                 self.start_key_off = (fk_idx * 8) + self.start_key_off_delta + max_km_width
@@ -2236,9 +2222,8 @@ class capri_table:
                         self.start_key_off_delta + bit_index
                     self.gtm.tm.logger.debug("%s:Using km1 bit_location %d as k-start" % \
                         (self.p4_table.name, self.start_key_off))
-                    #pdb.set_trace() # need to test
 
-        assert self.start_key_off != -1, pdb.set_trace()
+        ncc_assert(self.start_key_off != -1)
 
         # compute end offset
         # check km1 first
@@ -2278,7 +2263,7 @@ class capri_table:
                     self.end_key_off = (lk_idx * 8) + 8 - self.end_key_off_delta
                     self.gtm.tm.logger.debug("%s:Using km0 byte_location %d as k-end" % \
                             (self.p4_table.name, self.end_key_off))
-        assert self.end_key_off != -1, pdb.set_trace()
+        ncc_assert(self.end_key_off != -1)
         # For index and hash tables that use multiple key makers,
         # if key is split between the two kms and if
         # km0 is not fully used, right justify the key
@@ -2319,11 +2304,11 @@ class capri_table:
             # overflow hash table - use same key-maker/profiles of the parent hash table
             # collision table index key is added (earlier by caller) into the parent table's km
             # Only check that the overflow index are the very first bytes in the km of the parent
-            # If not... just assert for now.. can try to move around bytes in km XXX??
+            # If not... just ncc_assert(for now.. can try to move around bytes in km XXX??)
             cf = self.collision_ct.keys[0][0]
             collision_key_size = self.gtm.tm.be.hw_model['match_action']['collision_index_sz']
-            assert cf.width == collision_key_size, pdb.set_trace()
-            assert (cf.phv_bit % 8) == 0, pdb.set_trace()
+            ncc_assert(cf.width == collision_key_size)
+            ncc_assert((cf.phv_bit % 8) == 0)
             phvB = cf.phv_bit / 8
             if self.is_wide_key:
                 km0 = self.key_makers[-2]
@@ -2334,8 +2319,8 @@ class capri_table:
             km_prof = km0.combined_profile
 
             for i in range(collision_key_size/8):
-                assert km_prof.byte_sel[i] == phvB + i, \
-                    pdb.set_trace() # incorrect placement of the overflow key
+                ncc_assert(km_prof.byte_sel[i] == phvB + i, \
+                    "incorrect placement of the overflow key")
             self.collision_ct.start_key_off = self.start_key_off
             self.collision_ct.end_key_off = self.end_key_off
             self.collision_ct.final_key_size = self.final_key_size
@@ -2360,13 +2345,12 @@ class capri_table:
             km_prof = self.key_makers[start_km].combined_profile
 
         if self.num_actions() > 1 and self.start_key_off < action_id_size:
-            #pdb.set_trace()
             if shared_km:
                 # XXX need to fix all shared tables.. if shared table is an idx table, more checks
                 # so far does not run into it
-                pdb.set_trace()
+                ncc_assert(0, "need test case")
             else:
-                assert(len(km_prof.byte_sel) < max_kmB)
+                ncc_assert(len(km_prof.byte_sel) < max_kmB)
                 for _ in range((action_id_size+7)/8):
                     km_prof.byte_sel.insert(0, -1)
                     self.start_key_off += 8
@@ -2379,7 +2363,7 @@ class capri_table:
         if self.otcam_ct and (self.start_key_off % 16):
             # if key maker is full - need to move things around.. XXX
             # this does not happen so far, but needs to be done
-            assert(len(km_prof.byte_sel) < max_kmB), pdb.set_trace()
+            ncc_assert(len(km_prof.byte_sel) < max_kmB)
             km_prof.byte_sel.insert(0, -1)
             self.start_key_off += 8
             self.end_key_off += 8
@@ -2403,7 +2387,7 @@ class capri_table:
 
         if self.is_otcam:
             # This needs to be fixed by fixing its parent hash table key - XXX
-            assert (k_start % 2) == 0, pdb.set_trace()
+            ncc_assert((k_start % 2) == 0)
 
         if (k_start % 2) == 0:
             return False
@@ -2492,7 +2476,7 @@ class capri_table:
                     fix_km_prof.bit_loc1 -= 1
                 return False
 
-            pdb.set_trace() # need a test case
+            ncc_assert(0, "need a test case")
             for i in range(km_kstart, max_kmB):
                 if i == fix_km_prof.bit_loc or i == fix_km_prof.bit_loc1:
                     continue
@@ -2500,7 +2484,7 @@ class capri_table:
                     fix_km_prof.byte_sel.insert(km_kstart,-1) # add to front
                     fix_km_prof.byte_sel.pop(i)
                     break
-            assert i < max_kmB, pdb.set_trace() # cannot find free byte for alignment
+            ncc_assert(i < max_kmB )# cannot find free byte for alignment
             if fix_km_prof.bit_loc < i and fix_km_prof.bit_loc > km_kstart:
                 fix_km_prof.bit_loc += 1
             if fix_km_prof.bit_loc1 < i and fix_km_prof.bit_loc1 > km_kstart:
@@ -2591,7 +2575,7 @@ class capri_table:
         max_km_width = self.gtm.tm.be.hw_model['match_action']['key_maker_width']
         max_kmB = max_km_width/8
 
-        assert km0_shared or km1_shared, pdb.set_trace()
+        ncc_assert(km0_shared or km1_shared)
 
         common_byte_sel = set(km0_prof.byte_sel) & set(km1_prof.byte_sel)
         common_bit_sel = set(km0_prof.bit_sel) & set(km1_prof.bit_sel)
@@ -2667,7 +2651,7 @@ class capri_table:
         else:
             end_km_prof = self.key_makers[end_km].combined_profile
 
-        assert km_prof == end_km_prof, pdb.set_trace() # not allowed
+        ncc_assert(km_prof == end_km_prof )# not allowed
 
         max_km_bits = self.gtm.tm.be.hw_model['match_action']['num_bit_extractors']
 
@@ -2681,7 +2665,6 @@ class capri_table:
                 is_shared_idx_table = True
 
         if len(self.combined_profile.k_bit_sel):
-            #pdb.set_trace()
             num_k_bits = len(km_prof.k_bit_sel)
             # since k bits are at the start, use bit_loc0 to compute start offset
             k_bit_start_off = (km_prof.bit_loc * 8)
@@ -2743,13 +2726,12 @@ class capri_table:
                             (self.gtm.d.name, self.p4_table.name, self.start_key_off, self.end_key_off))
                     else:
                         # just don't insert middle of another key XXX ???
-                        assert 0, pdb.set_trace() # TBD
+                        ncc_assert(0 )# TBD
             return
 
         # no k-bits, but there could be i-bits...
         if self.end_key_off % 16:
-            #pdb.set_trace()
-            assert (self.end_key_off % 8) == 0, pdb.set_trace()
+            ncc_assert((self.end_key_off % 8) == 0)
             # when two idx tables share a profile, it is possible to mis-align other table's
             # key while fixing alignment for this
             # if tables are processed based on sorted key_offsets order, we can keep adjusting
@@ -2810,7 +2792,7 @@ class capri_table:
                     self.gtm.tm.logger.critical( \
                         "Need to implement more sophisticated algo to align key for %s" % \
                         (self.p4_table.name))
-                    assert 0, pdb.set_trace()
+                    ncc_assert(0)
 
                 # sort based on num contiguous bytes
                 i_byte_chunks = sorted(i_byte_chunks, key=lambda t: t[1])
@@ -2842,7 +2824,7 @@ class capri_table:
                 elif byte_to_bit in km_prof.i2_byte_sel:
                     km_prof.i2_byte_sel.remove(byte_to_bit)
                 else:
-                    assert 0, pdb.set_trace() # Bug
+                    ncc_assert(0 )# Bug
                     pass
 
                 if self not in shared_idx_tables:
@@ -2862,7 +2844,7 @@ class capri_table:
             # move the i-bits around to shift k by 1 byte
             # XXX - when this is used for shared table, can mis-align first table
             # need to check
-            assert km_prof.bit_loc != -1, pdb.set_trace()
+            ncc_assert(km_prof.bit_loc != -1)
             if km_prof.bit_loc1 != -1:
                 if km_prof.bit_loc1 < k_byte_start_idx:
                     # move it after the k_bytes
@@ -2922,16 +2904,16 @@ class capri_predicate:
 
         def _expand(p4_expr):
             supported_ops = ['and', '==', 'valid']
-            assert p4_expr.op in supported_ops, \
-                "Unsupported op %s in control-flow. Allowed ops %s" % (p4_expr.op, supported_ops)
+            ncc_assert(p4_expr.op in supported_ops, \
+                "Unsupported op %s in control-flow. Allowed ops %s" % (p4_expr.op, supported_ops))
 
             if p4_expr.op == 'and':
-                assert isinstance(p4_expr.left, p4.p4_expression), "Invalid condition"
-                assert isinstance(p4_expr.right, p4.p4_expression), "Invalid condition"
+                ncc_assert(isinstance(p4_expr.left, p4.p4_expression), "Invalid condition")
+                ncc_assert(isinstance(p4_expr.right, p4.p4_expression), "Invalid condition")
                 # check bits accumulated so far
-                assert self.cwidth <= 8, pdb.set_trace()
+                ncc_assert(self.cwidth <= 8)
                 _expand(p4_expr.left)
-                assert self.cwidth <= 8, pdb.set_trace()
+                ncc_assert(self.cwidth <= 8)
                 _expand(p4_expr.right)
                 return
 
@@ -2939,25 +2921,25 @@ class capri_predicate:
                 if isinstance(p4_expr.left, p4.p4_field):
                     hf_name = get_hfname(p4_expr.left)
                     cf = self.gtm.tm.be.pa.get_field(hf_name, self.gtm.d)
-                    assert cf, pdb.set_trace()
-                    assert isinstance(p4_expr.right, int)
+                    ncc_assert(cf)
+                    ncc_assert(isinstance(p4_expr.right, int))
                     cval = p4_expr.right
                 elif isinstance(p4_expr.right, p4.p4_field):
                     hf_name = get_hfname(p4_expr.right)
                     cf = self.gtm.tm.be.pa.get_field(hf_name, self.gtm.d)
-                    assert cf, pdb.set_trace()
-                    assert isinstance(p4_expr.left, int)
+                    ncc_assert(cf)
+                    ncc_assert(isinstance(p4_expr.left, int))
                     cval = p4_expr.left
                 else:
-                    assert 0, pdb.set_trace()
+                    ncc_assert(0)
             elif p4_expr.op == 'valid':
-                assert isinstance(p4_expr.right, p4.p4_header_instance), pdb.set_trace()
+                ncc_assert(isinstance(p4_expr.right, p4.p4_header_instance))
                 hf_name = p4_expr.right.name + '.valid'
                 cf = self.gtm.tm.be.pa.get_field(hf_name, self.gtm.d)
-                assert cf, pdb.set_trace()
+                ncc_assert(cf)
                 cval = 1
             else:
-                assert 0, pdb.set_trace()
+                ncc_assert(0)
 
             self.cfield_vals.append((cf, cval))
             self.cwidth += cf.width
@@ -2976,7 +2958,7 @@ class capri_key_maker:
         # multiple tables can share this key_maker
         # use ctable info to decide lkp_type, launch flit etc
         self.stage = stage
-        assert isinstance(cts, list)
+        ncc_assert(isinstance(cts, list))
         self.km_id = -1 # logical id 0, 1 when multiple key-makers used
         self.hw_id = -1
         self.is_shared = False
@@ -2992,7 +2974,6 @@ class capri_key_maker:
         self.has_overflow_key = False   # set it when overflow key is added
 
     def _merge(self, rhs, is_overflow_key_merge=False):
-        #pdb.set_trace()
         # merge two key_makers XXX can be __add__
         for ct in rhs.ctables:
             if ct not in self.ctables:
@@ -3003,7 +2984,7 @@ class capri_key_maker:
         h_tbls = [ct for ct in self.ctables if ct.is_hash_table()]
 
         if len(h_tbls):
-            assert len(idx_tbls) == 0, pdb.set_trace()
+            ncc_assert(len(idx_tbls) == 0)
             base_table = h_tbls[0]
 
         elif len(idx_tbls):
@@ -3032,7 +3013,6 @@ class capri_key_maker:
             if fid not in self.flit_km_profiles:
                 self.flit_km_profiles[fid] = copy.deepcopy(fkp)
             else:
-                #pdb.set_trace()
                 self.flit_km_profiles[fid] += fkp
 
         # rebuild the combined profile
@@ -3138,7 +3118,6 @@ class capri_key_maker:
             self.combined_profile.bit_sel = self.combined_profile.k_bit_sel + \
                 self.combined_profile.i_bit_sel
 
-        #pdb.set_trace()
 
     def _assign_bit_loc(self):
         # compute bit location for the combined profile based on tables that share this km
@@ -3168,21 +3147,18 @@ class capri_key_maker:
         hash_ctbls = [ct for ct in self.ctables if ct.is_hash_table()]
         idx_ctbls = [ct for ct in self.ctables if ct.is_index_table()]
 
-        #pdb.set_trace()
         hash_ct = None
         if len(hash_ctbls):
-            #pdb.set_trace()
             hash_ct = hash_ctbls[0]
-            # assert on un-supported km sharing
-            assert len(hash_ctbls) == 1, pdb.set_trace()
-            assert len(idx_ctbls) == 0, pdb.set_trace()
+            # ncc_assert(on un-supported km sharing)
+            ncc_assert(len(hash_ctbls) == 1)
+            ncc_assert(len(idx_ctbls) == 0)
 
         if len(idx_ctbls) > 1:
-            # assert on un-supported km sharing
+            # ncc_assert(on un-supported km sharing)
             # I think multiple idx tables can share km if both do not need k_bits XXX
             self.stage.gtm.tm.logger.debug("Merging multiple index tables %s" % \
                 ([ct.p4_table.name for ct in idx_ctbls]))
-            #pdb.set_trace()
 
         if hash_ct:
             k_bits = set(self.combined_profile.k_bit_sel) & set(hash_ct.combined_profile.k_bit_sel)
@@ -3198,7 +3174,7 @@ class capri_key_maker:
                         if b in hash_ct.combined_profile.k_byte_sel:
                             k_byte = b
                             break
-                    assert k_byte >= 0, pdb.set_trace()
+                    ncc_assert(k_byte >= 0)
                     bit_loc = self.combined_profile.byte_sel.index(k_byte) + 1
                     num_bytes = (len(self.combined_profile.bit_sel)+7) / 8
                     for i in range(num_bytes):
@@ -3210,7 +3186,7 @@ class capri_key_maker:
                     self.combined_profile._update_bit_loc_key_off()
             else:
                 self.combined_profile._update_bit_loc_key_off()
-            assert len(self.combined_profile.byte_sel) <= max_kmB, pdb.set_trace()
+            ncc_assert(len(self.combined_profile.byte_sel) <= max_kmB)
             return
 
         if len(idx_ctbls):
@@ -3229,7 +3205,7 @@ class capri_key_maker:
                         if b in idx_ct.combined_profile.k_byte_sel:
                             k_byte = b
                             break
-                    assert k_byte >= 0, pdb.set_trace()
+                    ncc_assert(k_byte >= 0)
                     bit_loc = self.combined_profile.byte_sel.index(k_byte) + 1
                     num_bytes = (len(self.combined_profile.bit_sel)+7) / 8
                     for i in range(num_bytes):
@@ -3252,7 +3228,7 @@ class capri_key_maker:
                         self.combined_profile.bit_loc1 = bit_loc + 1
                 else:
                     self.combined_profile._update_bit_loc_key_off()
-            assert len(self.combined_profile.byte_sel) <= max_kmB, pdb.set_trace()
+            ncc_assert(len(self.combined_profile.byte_sel) <= max_kmB)
             return
         else:
             # tcam tables - can place bits after K
@@ -3266,7 +3242,7 @@ class capri_key_maker:
                     if b in ct.combined_profile.k_byte_sel:
                         k_byte = b
                         break
-                assert k_byte >= 0, pdb.set_trace()
+                ncc_assert(k_byte >= 0)
                 bit_loc = self.combined_profile.byte_sel.index(k_byte) + 1
                 num_bytes = (len(self.combined_profile.bit_sel)+7) / 8
                 for i in range(num_bytes):
@@ -3277,7 +3253,7 @@ class capri_key_maker:
             else:
                 self.combined_profile._update_bit_loc_key_off()
 
-        assert len(self.combined_profile.byte_sel) <= max_kmB, pdb.set_trace()
+        ncc_assert(len(self.combined_profile.byte_sel) <= max_kmB)
         return
 
     def get_hw_id(self):
@@ -3335,16 +3311,15 @@ class capri_km_profile:
         my_flit = -1; rhs_flit = -1
         if len(self.byte_sel):
             my_flit = self.byte_sel[0] / flit_szB
-            assert my_flit == self.byte_sel[-1] / flit_szB, pdb.set_trace()
+            ncc_assert(my_flit == self.byte_sel[-1] / flit_szB)
         if len(rhs.byte_sel):
             rhs_flit = rhs.byte_sel[0] / flit_szB
-            assert rhs_flit == rhs.byte_sel[-1] / flit_szB, pdb.set_trace()
+            ncc_assert(rhs_flit == rhs.byte_sel[-1] / flit_szB)
 
         if my_flit != -1 and rhs_flit != -1:
-            assert my_flit == rhs_flit, pdb.set_trace()
+            ncc_assert(my_flit == rhs_flit)
 
 
-        #pdb.set_trace()
         old_size = self.km_prof_size()
         rhs_size = rhs.km_prof_size()
 
@@ -3386,7 +3361,6 @@ class capri_km_profile:
         i1_byte_sel = []
         i2_byte_sel = []
 
-        #pdb.set_trace()
         for b in byte_sel:
             if b < k_start:
                 i1_byte_sel.append(b)
@@ -3403,7 +3377,7 @@ class capri_km_profile:
         self.i1_byte_sel = sorted(i1_byte_sel)
         self.i2_byte_sel = sorted(i2_byte_sel)
         self.byte_sel = self.i1_byte_sel + self.k_byte_sel + self.i2_byte_sel
-        assert(self.byte_sel) == sorted(self.byte_sel)
+        ncc_assert(self.byte_sel) == sorted(self.byte_sel)
 
         for b in rhs.k_bit_sel:
             if b not in self.bit_sel:
@@ -3413,7 +3387,7 @@ class capri_km_profile:
                 self.i_bit_sel.append(b)
         self.bit_sel = self.k_bit_sel + self.i_bit_sel
 
-        assert self.km_prof_size() <= (old_size + rhs_size), pdb.set_trace()
+        ncc_assert(self.km_prof_size() <= (old_size + rhs_size))
         self.gtm.tm.logger.debug("Added km_profiles: %d + %d = %d" % \
             (old_size, rhs_size, self.km_prof_size()))
 
@@ -3449,9 +3423,9 @@ class capri_km_profile:
         km_size2B = km_sizeB/2
 
         if use_low:
-            assert len(self.byte_sel) == 0, pdb.set_trace() # low portion is already used
+            ncc_assert(len(self.byte_sel) == 0 )# low portion is already used
         else:
-            assert len(self.byte_sel) == km_size2B, pdb.set_trace() # low portion is not yet used
+            ncc_assert(len(self.byte_sel) == km_size2B )# low portion is not yet used
             b = -2
         # append to exsting byte_sel.. if lo half is already added, it is also padded upto half size
         for b in range(0, len(km_prof.byte_sel), 2):
@@ -3483,7 +3457,6 @@ class capri_km_profile:
                 else:
                     # place bits at the front of (before) K bytes
                     bit_loc = self.byte_sel.index(self.k_byte_sel[0])
-                    #pdb.set_trace()
             elif len(self.i2_byte_sel):
                 # place before i2_bytes
                 bit_loc = self.byte_sel.index(self.i2_byte_sel[0])
@@ -3491,7 +3464,7 @@ class capri_km_profile:
                 bit_loc = self.byte_sel.index(self.i1_byte_sel[0]) + 1
             else:
                 bit_loc = 0
-            assert bit_loc >= 0, pdb.set_trace()
+            ncc_assert(bit_loc >= 0)
             num_bytes = (len(self.bit_sel)+7)/8
             for i in range(num_bytes):
                 self.byte_sel.insert(bit_loc, -1)
@@ -3536,13 +3509,13 @@ class capri_km_profile:
         for b in self.byte_sel:
             if b < 0:
                 continue
-            assert b not in bytes_sel, pdb.set_trace()
+            ncc_assert(b not in bytes_sel)
             bytes_sel[b/flit_szB].append(b)
 
         for b in self.bit_sel:
             if b < 0:
                 continue
-            assert b not in bits_used, pdb.set_trace()
+            ncc_assert(b not in bits_used)
             if b not in bits_used:
                 bits_used[b] = 1
 
@@ -3625,7 +3598,6 @@ class capri_stage:
                 # must keep the k bits next to K byte for hash table
                 # XXX I think this can be allowed for tcam table
                 #return False
-                #pdb.set_trace()
                 pass
         return True
 
@@ -3719,7 +3691,7 @@ class capri_stage:
                         if len(n_fkp.byte_sel) == 0:
                             continue
                         # XXX don't remeber if bit_sel positions are already added
-                        assert n_fkp.byte_sel[0] > 0, pdb.set_trace()
+                        ncc_assert(n_fkp.byte_sel[0] > 0)
                         if kt.is_overflow:
                             if len(fkp.k_byte_sel) == 0:
                                 continue
@@ -3747,7 +3719,7 @@ class capri_stage:
                         if len(n_fkp.byte_sel) == 0:
                             continue
                         # XXX don't remeber if bit_sel positions are already added
-                        assert n_fkp.byte_sel[0] > 0, pdb.set_trace()
+                        ncc_assert(n_fkp.byte_sel[0] > 0)
                         if ct.is_overflow:
                             if len(fkp.k_byte_sel) == 0:
                                 continue
@@ -3771,10 +3743,8 @@ class capri_stage:
                 u_byte_sel = u_byte_sel - set([-1])
                 u_bit_sel = set(km_profile.bit_sel) | ct_bit_sel
                 if len(u_bit_sel) > km_max_bits:
-                    #pdb.set_trace()
                     continue
                 if (len(u_byte_sel) + (len(u_bit_sel)+7)/8) > (km_width/8):
-                    #pdb.set_trace()
                     self.gtm.tm.logger.debug(\
                         "u_bytes+u_bits exceed km_width:%s:%s\nNeed Bytes %d Bits %d" % \
                         (ct.p4_table.name, kt.p4_table.name, len(u_byte_sel),
@@ -3875,7 +3845,7 @@ class capri_stage:
                 if shared_km != km_found:
                     shared_km._merge(km_found)
 
-            assert km_found.hw_id != -1
+            ncc_assert(km_found.hw_id != -1)
             shared_km.hw_id = km_found.hw_id
             km.hw_id = -1
             new_km.hw_id = -1
@@ -3918,9 +3888,9 @@ class capri_stage:
                 if ct.is_wide_key and fid == ct.flits_used[0]:
                     # This is first flit of toeplitz/wide table but this km is not for this flit
                     # First two kms must be already allocated, reuse them
-                    assert len(c_km.flits_used) == 1, pdb.set_trace() # BUG
+                    ncc_assert(len(c_km.flits_used) == 1 )# BUG
                     for _f in c_km.flits_used:
-                        assert km_used[c_km.km_id % 2] != -1, pdb.set_trace() # BUG
+                        ncc_assert(km_used[c_km.km_id % 2] != -1 )# BUG
                         c_km.hw_id = km_used[c_km.km_id % 2]
                         self.km_allocator[_f][c_km.hw_id] = c_km
 
@@ -4006,7 +3976,7 @@ class capri_stage:
             # allocate new key maker
             if self.km_allocator[fid].count(None) == 0:
                 return False
-            assert self.km_allocator[fid].count(None), pdb.set_trace()
+            ncc_assert(self.km_allocator[fid].count(None))
             new_km.hw_id = self.km_allocator[fid].index(None)
             self.km_allocator[fid][new_km.hw_id] = new_km
             km_used[c_km.km_id] = new_km.hw_id
@@ -4018,7 +3988,7 @@ class capri_stage:
             km_allocated += 1
             total_km_allocated += 1
 
-        assert total_km_allocated == ct.num_km, pdb.set_trace()
+        ncc_assert(total_km_allocated == ct.num_km)
         return True
 
     def get_2B_mode(self, km_prof, ct):
@@ -4105,7 +4075,6 @@ class capri_stage:
         key_makers = []
         per_flit_kms = [[] for _ in range(num_flits)]
         per_flit_tables = [[] for _ in range(num_flits)]
-        #pdb.set_trace()
         for ct in self.ct_list:
             for km in ct.key_makers:
                 if len(ct.flits_used) == 0:
@@ -4130,7 +4099,6 @@ class capri_stage:
             for ct in ctg:
                 p_excl_tbls[ct] -= set(ctg)
 
-        #pdb.set_trace()
         new_per_flit_kms = [[] for _ in range(num_flits)]
         max_km = self.gtm.tm.be.hw_model['match_action']['num_key_makers']
 
@@ -4161,7 +4129,7 @@ class capri_stage:
                     self.gtm.tm.logger.critical( \
                         "%s:%d:Not enough key-makers for %s Revise P4 program and try" % \
                         (self.gtm.d.name, self.id, ct.p4_table.name))
-                    assert 0, pdb.set_trace()
+                    ncc_assert(0)
                     continue
 
         # XXX calculate the bit_loc for combined KMs - tricky when hash tables are involved
@@ -4170,7 +4138,6 @@ class capri_stage:
                 continue
             for km in ct.key_makers:
                 if km.shared_km:
-                    # pdb.set_trace()
                     km.shared_km._assign_bit_loc()
 
         # update key offsets so that all offsets are initialized before sorting and fixing
@@ -4259,7 +4226,6 @@ class capri_stage:
         i = 0
         hw_prof2B = None
         for i, km_prof in enumerate(km_prof_2B):
-            #pdb.set_trace()
             km_prof.hw_id = hw_id
             if hw_prof2B == None:
                 hw_prof2B = capri_km_profile(self.gtm)
@@ -4278,7 +4244,7 @@ class capri_stage:
         if hw_id > max_km_profiles:
             # "Not enough km_profiles"
             self.gtm.tm.logger.critical("Not enough km_profiles")
-            assert 0, pdb.set_trace()
+            ncc_assert(0)
         # fix table key-makers E.g. assign otcams/collision tbl to get the same km as its hash table
         for ct in self.ct_list:
             if ct.is_overflow:
@@ -4311,7 +4277,7 @@ class capri_stage:
                 if not km_prof:
                     continue # key-less mpu only table
 
-                assert len(km_prof.byte_sel) <= max_kmB, pdb.set_trace()
+                ncc_assert(len(km_prof.byte_sel) <= max_kmB)
 
                 pstr = 'KM_PROF:%s,%d,%d,%d,' % \
                     (self.gtm.d.name, self.id, km_prof.hw_id, km_prof.mode)
@@ -4360,7 +4326,7 @@ class capri_stage:
             if ct.is_otcam:
                 continue
             if ct.num_km == 0:
-                assert ct.is_mpu_only()
+                ncc_assert(ct.is_mpu_only())
                 ct.key_makers[0].hw_id = 0 # force km0
                 launch_any_time.append(ct)
                 continue
@@ -4382,7 +4348,7 @@ class capri_stage:
         cycle = 0
 
         for fid in range(last_flit_used+1):
-            #assert cycle < max_cycles, pdb.set_trace()
+            #ncc_assert(cycle < max_cycles)
             te_cycle = capri_te_cycle()
 
             if len(flit_launch_tbls[fid]) == 0:
@@ -4489,7 +4455,7 @@ class capri_stage:
 
         for ct in launch_any_time:
             # still some key-less mpu-only tables need to be launched
-            #assert cycle < max_cycles
+            #ncc_assert(cycle < max_cycles)
             for thd in range(1, ct.num_threads):
                 # launch threads (parent aka thread0 will be launched last
                 te_cyc = capri_te_cycle()
@@ -4508,9 +4474,9 @@ class capri_stage:
             launch_seq.append(te_cyc)
             cycle += 1
 
-        assert len(launch_seq) == cycle, pdb.set_trace() # bug in calculation
+        ncc_assert(len(launch_seq) == cycle )# bug in calculation
         # Advance flit on the very last flit
-        #assert cycle <= max_cycles, pdb.set_trace()
+        #ncc_assert(cycle <= max_cycles)
         launch_seq[cycle-1].adv_flit = True
         self.table_sequencer[prof_id] = launch_seq
         # set last cycle
@@ -4531,7 +4497,6 @@ class capri_stage:
             if te_cycle.is_last:
                 break
 
-        #pdb.set_trace()
 
     def stg_get_tbl_profile_key(self):
         total_w = 0
@@ -4541,11 +4506,11 @@ class capri_stage:
         for cond in self.active_predicates:
             cp = self.gtm.table_predicates[cond]
             for cf,_ in cp.cfield_vals:
-                assert cf.phv_bit < max_pred_phv_bit, pdb.set_trace()
+                ncc_assert(cf.phv_bit < max_pred_phv_bit)
                 if cf not in cf_list:
                     cf_list.append(cf)
                     total_w += cf.width
-        assert total_w <= max_pred_bits, pdb.set_trace()
+        ncc_assert(total_w <= max_pred_bits)
         # "Too-many %d bits in predicates, only %d are allowed" % \
         #     (total_w, max_pred_bits)
         self.pred_sel_bits = total_w
@@ -4560,13 +4525,12 @@ class capri_stage:
         # be covered by corresponding True condition
 
         test_val = 1 << len(self.active_predicates)
-        assert val < test_val, pdb.set_trace()
+        ncc_assert(val < test_val)
 
         # same cfield can appear in multiple condition, get list of unique fields and
         # create a map
         total_w, cf_list = self.stg_get_tbl_profile_key()
         cf_val_mask = OrderedDict() # {cf: (val, mask, flag[False = cannot be X]}
-        #pdb.set_trace()
         for ki,c_name in enumerate(self.active_predicates):
             test_val >>= 1
             mask = self.table_profile_masks[val]
@@ -4577,7 +4541,7 @@ class capri_stage:
                     if val & test_val:
                         # condition is true
                         if cf in cf_val_mask and cf_val_mask[cf][1] != 0:
-                            assert cf_val_mask[cf][0] == v, pdb.set_trace()
+                            ncc_assert(cf_val_mask[cf][0] == v)
                         cf_val_mask[cf] = (v, ((1<<cf.width) - 1))
                     else:
                         # condition is false
@@ -4585,7 +4549,7 @@ class capri_stage:
                             # For a single bit field, false value is opposite (1-v) or True value
                             # Programming this may result in redundant entries in TCAM - XXX optimize
                             if cf in cf_val_mask and cf_val_mask[cf][1] != 0:
-                                assert cf_val_mask[cf][0] == (1-v), pdb.set_trace()
+                                ncc_assert(cf_val_mask[cf][0] == (1-v))
                             cf_val_mask[cf] = ((1-v), ((1<<cf.width) - 1))
                         else:
                             # multibit false condition is masked out, must have more specific
@@ -4604,7 +4568,6 @@ class capri_stage:
             tcam_val = (tcam_val << cf.width) | v
             tcam_mask = (tcam_mask << cf.width) | m
 
-        #pdb.set_trace()
         return [(tcam_val, tcam_mask)]
 
     def prune_impossible_table_profiles(self):
@@ -4878,7 +4841,7 @@ class capri_gress_tm:
                         if km_usage[k] == 2:
                             self.tm.logger.critical("Error - %s:km %d reused at %d" %\
                                 (ct.p4_table.name, k, f))
-                            #assert(0), pdb.set_trace()
+                            #ncc_assert(0)
                         else:
                             km_usage[k] = 1
                     else:
@@ -4936,30 +4899,30 @@ class capri_gress_tm:
                     # Check if a hash type has been specified for the table.
                     if t._parsed_pragmas and 'hash_type' in t._parsed_pragmas:
                         ctable.hash_type = int(t._parsed_pragmas['hash_type'].keys()[0])
-                        assert ctable.hash_type <= \
+                        ncc_assert(ctable.hash_type <= \
                             self.tm.be.hw_model['match_action']['te_consts']['num_hash_types'], \
                             "%s:Unsupported hash type %d, must be 0-3:CRC hash, 4:Toeplitz" % \
-                            (ctable.p4_table.name, ctable.hash_type)
+                            (ctable.p4_table.name, ctable.hash_type))
 
                         if ctable.hash_type == 4:
                             # for toeplitz hash - key and seed are also specified via pragmas
                             # from P4 perspetive, both key and seed are part of the table key
-                            assert 'toeplitz_key' in t._parsed_pragmas, \
-                                "Specify toeplitz keys using pragma toeplitz_key"
+                            ncc_assert('toeplitz_key' in t._parsed_pragmas, \
+                                "Specify toeplitz keys using pragma toeplitz_key")
                             key_flds = get_pragma_param_list(t._parsed_pragmas['toeplitz_key'])
-                            assert len(key_flds), "Error in toeplitz_key pragma"
+                            ncc_assert(len(key_flds), "Error in toeplitz_key pragma")
                             for hfname in key_flds:
                                 cf = self.tm.be.pa.get_field(hfname, self.d)
-                                assert cf, "Invalid field specified as toeplitz key"
+                                ncc_assert(cf, "Invalid field specified as toeplitz key")
                                 ctable.toeplitz_key_cfs.append(cf)
 
-                            assert 'toeplitz_seed' in t._parsed_pragmas, \
-                                "Specify toeplitz seed fields using pragma toeplitz_seed"
+                            ncc_assert('toeplitz_seed' in t._parsed_pragmas, \
+                                "Specify toeplitz seed fields using pragma toeplitz_seed")
                             seed_flds = get_pragma_param_list(t._parsed_pragmas['toeplitz_seed'])
-                            assert len(seed_flds), "Error in toeplitz_seed pragma"
+                            ncc_assert(len(seed_flds), "Error in toeplitz_seed pragma")
                             for hfname in seed_flds:
                                 cf = self.tm.be.pa.get_field(hfname, self.d)
-                                assert cf, "Invalid field specified as toeplitz seed"
+                                ncc_assert(cf, "Invalid field specified as toeplitz seed")
                                 ctable.toeplitz_seed_cfs.append(cf)
 
                     # Check if table is marked as HBM table.
@@ -4985,15 +4948,15 @@ class capri_gress_tm:
 
                     if ctable.is_policer or ctable.is_rate_limit_en:
                         if self.next_free_refresh_profile >= 16:
-                            assert 0, "%s: Can't have more than 15 Policer/Rate-Limit tables" % (self.d.name)
+                            ncc_assert(0, "%s: Can't have more than 15 Policer/Rate-Limit tables" % (self.d.name))
 
                         ctable.token_refresh_profile = self.next_free_refresh_profile
                         self.next_free_refresh_profile += 1
 
                     if t._parsed_pragmas and 'numthreads' in t._parsed_pragmas:
                         ctable.num_threads = int(t._parsed_pragmas['numthreads'].keys()[0])
-                        assert ctable.num_threads > 0 and ctable.num_threads <= 4, \
-                            "Max 4 threads per table are supported"
+                        ncc_assert(ctable.num_threads > 0 and ctable.num_threads <= 4, \
+                            "Max 4 threads per table are supported")
                         # No need to make it multithreaded if only 1 thread is specified
                         if ctable.num_threads > 1:
                             ctable.is_multi_threaded = True
@@ -5008,11 +4971,11 @@ class capri_gress_tm:
                             mtype != p4.p4_match_type.P4_MATCH_TERNARY:
                             self.tm.logger.critical("%s:Unsupported match type %s for %s:%s" % \
                                 (self.d.name, mtype, t.name, get_hfname(f)))
-                            assert 0, pdb.set_trace()
+                            ncc_assert(0)
                         if mtype != p4.p4_match_type.P4_MATCH_VALID:
                             hf_name = get_hfname(f)
                             cf = self.tm.be.pa.get_field(hf_name, self.d)
-                            assert cf, "%s:%s not found" % (self.d.name, hf_name)
+                            ncc_assert(cf, "%s:%s not found" % (self.d.name, hf_name))
                             ctable.keys.append((cf, mtype, mask))
                             cf.is_key = True
                             if mtype == p4.p4_match_type.P4_MATCH_TERNARY:
@@ -5020,10 +4983,10 @@ class capri_gress_tm:
                         else:
                             # When ternary match is used, hlir gives pseudo field which gets
                             # handled in the if condition above. Handle exact match here
-                            assert isinstance(f, p4.p4_header_instance), pdb.set_trace()
+                            ncc_assert(isinstance(f, p4.p4_header_instance))
                             hf_name = f.name + '.valid'
                             cf = self.tm.be.pa.get_field(hf_name, self.d)
-                            assert cf
+                            ncc_assert(cf)
                             ctable.keys.append((cf, mtype, mask))
 
                     ctable.num_entries = t.min_size if t.min_size else t.max_size
@@ -5043,7 +5006,7 @@ class capri_gress_tm:
                         # record initial key_size - over-written later
                         # does not take into a/c unions etc.. will be inaccurate
                         ctable.key_size = key_size
-                        assert ctable not in self.wide_key_tables, pdb.set_trace()
+                        ncc_assert(ctable not in self.wide_key_tables)
                         self.wide_key_tables.append(ctable)
                         for cf, _, _ in ctable.keys:
                             cf.is_wide_key = True
@@ -5057,13 +5020,12 @@ class capri_gress_tm:
                         # add the metadata.mpu_pc to the keys of the raw table, remove it later
                         # while programming (HW may need the PC at a specific location in key-maker)
                         cf = self.tm.be.pa.get_field(raw_tbl_pc_fld_name, self.d)
-                        assert cf, "%s:%s not found (used as raw table mpu_pc" % \
-                            (self.d.name, raw_tbl_pc_fld_name)
+                        ncc_assert(cf, "%s:%s not found (used as raw table mpu_pc" % \
+                            (self.d.name, raw_tbl_pc_fld_name))
                         raw_pc_size = self.tm.be.hw_model['match_action']['raw_pc_size']
-                        assert cf.width == raw_pc_size, "raw table pc field must be 32 bit" % \
-                            raw_pc_size
-                        assert(len(ctable.keys) == 1), \
-                            "Only one field is allowed as key for a raw table"
+                        ncc_assert(cf.width == raw_pc_size, "raw table pc field must be 32 bit")
+                        ncc_assert(len(ctable.keys) == 1, \
+                            "Only one field is allowed as key for a raw table")
                         # mask not supported, use it as 0 while adding mpu_pc as key
                         # mpu pc appears before the key
                         ctable.keys.insert(0, (cf, p4.p4_match_type.P4_MATCH_EXACT, 0))
@@ -5080,9 +5042,9 @@ class capri_gress_tm:
                             (key_size < 32 and (ctable.num_entries >= (1<<key_size))):
                             ctable.match_type = match_type.EXACT_IDX
                             if key_size > 16:
-                                assert len(key_cfs) == 1, \
+                                ncc_assert(len(key_cfs) == 1, \
                                     "Only one key field is supported for index table %s with idx > 16" % \
-                                    ctable.p4_table.name
+                                    ctable.p4_table.name)
                             for cf in key_cfs:
                                 cf.is_index_key = True
                     else:
@@ -5096,7 +5058,7 @@ class capri_gress_tm:
                         # can be p4_field or p4_pseudo_field(.valid)
                         hf_name = get_hfname(f)
                         cf = self.tm.be.pa.get_field(hf_name, self.d)
-                        assert cf, pdb.set_trace()
+                        ncc_assert(cf)
                         if cf.is_scratch:
                             continue
                         if cf not in ctable.input_fields and cf not in key_cfs:
@@ -5116,7 +5078,7 @@ class capri_gress_tm:
                         if isinstance(f, p4.p4_field):
                             hf_name = get_hfname(f)
                             cf = self.tm.be.pa.get_field(hf_name, self.d)
-                            assert cf, pdb.set_trace()
+                            ncc_assert(cf)
                             if cf.is_scratch:
                                 continue
                             if cf not in ctable.action_output:
@@ -5163,18 +5125,18 @@ class capri_gress_tm:
                                 (ctable.p4_table.name))
                         ctable.d_size += 128    # capri-hw uses 128b wide mem for meters - XXX
                 else:
-                    assert(0), pdb.set_trace()
+                    ncc_assert(0)
 
         # match overflow-tcam and hash tables
         for ct in self.tables.values():
             if not ct.is_overflow:
                 continue
             # find hash table
-            assert ct.htable_name in self.tables, \
+            ncc_assert(ct.htable_name in self.tables, \
                 "No parent hash table %s for overflow table %s" % \
-                 (ct.p4_table.name, ct.htable_name)
+                 (ct.p4_table.name, ct.htable_name))
             ct.hash_ct = self.tables[ct.htable_name]
-            assert ct.hash_ct.match_type == match_type.EXACT_HASH, pdb.set_trace()
+            ncc_assert(ct.hash_ct.match_type == match_type.EXACT_HASH)
             if ct.is_otcam:
                 ct.hash_ct.match_type = match_type.EXACT_HASH_OTCAM
                 ct.hash_ct.otcam_ct = ct
@@ -5182,14 +5144,14 @@ class capri_gress_tm:
                 collision_key_size = self.tm.be.hw_model['match_action']['collision_index_sz']
                 ct.hash_ct.collision_ct = ct
                 ct.match_type = match_type.EXACT_HASH
-                assert len(ct.keys) == 1, \
+                ncc_assert(len(ct.keys) == 1, \
                     "Only single %dbit key is allowed for overflow hash table %s" % \
-                    (collision_index_sz, ct.p4_table.name)
+                    (collision_key_size, ct.p4_table.name))
                 cf = ct.keys[0][0]
                 ct.hash_ct.collision_cf = cf
-                assert cf.width == collision_key_size, \
+                ncc_assert(cf.width == collision_key_size, \
                     "Invalid key width %d (allowed %d) for overflow hash table %s" % \
-                    (cf.width, collision_key_size, ct.p4_table.name)
+                    (cf.width, collision_key_size, ct.p4_table.name))
                 # remove all the input_fields from the collision table, these will come from the
                 # hash table's action routine
                 ct.input_fields = []
@@ -5350,7 +5312,7 @@ class capri_gress_tm:
 
     def find_table_paths(self, table_list):
         def _find_paths(node, paths, current_path, tables_visited):
-            assert node not in current_path, "Table LOOP at %s" % node.name
+            ncc_assert(node not in current_path, "Table LOOP at %s" % node.name)
             tables_visited.append(node)
             if isinstance(node, p4.p4_conditional_node):
                 for nxt_node in node.next_.values():
@@ -5361,7 +5323,7 @@ class capri_gress_tm:
             else:
                 # no support for action function dependency, so really it should be just one
                 # next node
-                assert len(set(node.next_.values())) == 1, pdb.set_trace()
+                ncc_assert(len(set(node.next_.values())) == 1)
                 for nxt_node in set(node.next_.values()):
                     if not nxt_node:
                         paths.append(current_path + [node])
@@ -5402,8 +5364,8 @@ class capri_gress_tm:
                         # so merge the overflow table key in last km0
                         # for GFT program this does not work.. since overflow table is not in the
                         # same stage using recirc... need different way to initialize this
-                        assert not ct.is_otcam
-                        assert ct.num_km == 1, pdb.set_trace()
+                        ncc_assert(not ct.is_otcam)
+                        ncc_assert(ct.num_km == 1)
                         km0 = ct.hash_ct.key_makers[-2]
                         km1 = ct.hash_ct.key_makers[-1]
                         km0._merge(ct.key_makers[0], is_overflow_key_merge=True)
@@ -5463,7 +5425,6 @@ class capri_gress_tm:
                             km.km_id = k
                             ct.key_makers[k] = km
                         else:
-                            #pdb.set_trace()
                             km = _km.copy_km()
                             km.ctables.append(ct)
                             km.km_id = k
@@ -5909,7 +5870,7 @@ class capri_table_mapper:
                                 self.logger.critical("Could not allocate memory for %s %s table \'%s\'." % \
                                                      (region, mem_type, table['name']))
                                 capri_dump_table_memory(self.be, self.memory, self.tables, mem_type, region)
-                                assert 0
+                                ncc_assert(0)
 
                 capri_dump_table_memory(self.be, self.memory, self.tables, mem_type, region)
 
@@ -6125,7 +6086,7 @@ class capri_table_manager:
                 if ctable.is_rate_limit_en or ctable.is_policer:
                     num_entries = num_entries + ctable.num_entries
             min_cycles_reqd = num_entries * 16
-            assert min_cycles_reqd < cycles_per_250us, "Too many policer/rate-limiter entries to support 250us refresh"
+            ncc_assert(min_cycles_reqd < cycles_per_250us, "Too many policer/rate-limiter entries to support 250us refresh")
             cycles_per_250us = cycles_per_250us >> 1
             timers['scale'][d] = 0
             while cycles_per_250us & 0xFFFFFFFFFFFF0000L:

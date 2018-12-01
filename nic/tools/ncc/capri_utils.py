@@ -9,7 +9,7 @@ import sys
 import pdb
 from enum import IntEnum
 from enum import Enum
-import capri_logging
+from capri_logging import ncc_assert as ncc_assert
 
 from p4_hlir.main import HLIR
 import p4_hlir.hlir.p4 as p4
@@ -159,9 +159,9 @@ def is_scratch_header(h):
     return True if 'scratch_metadata' in h._parsed_pragmas else False
 
 def log2(x):
-    assert(x != 0)
+    ncc_assert((x != 0))
     log = log2size(x)
-    assert x == 1 << log, 'Only log of powers of 2 allowed'
+    ncc_assert(x == 1 << log, 'Only log of powers of 2 allowed')
     return log
 
 def pad_to_power2(x):

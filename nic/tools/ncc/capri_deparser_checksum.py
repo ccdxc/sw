@@ -15,8 +15,8 @@ from collections import OrderedDict
 from enum import IntEnum
 from p4_hlir.main import HLIR
 import p4_hlir.hlir.p4 as p4
-import capri_logging
 from capri_utils import *
+from capri_logging import ncc_assert as ncc_assert
 
 
 
@@ -365,8 +365,8 @@ class DeParserCsumObj:
         return self.profile
 
     def PhdrValidSet(self, v):
-        #Before setting obj as phdr valid, make sure its invalid with assert check.
-        assert self.phdr_vld == 0, pdb.set_trace()
+        #Before setting obj as phdr valid, make sure its invalid with ncc_assert(check.)
+        ncc_assert(self.phdr_vld == 0)
         self.phdr_vld = v
         if self.phdr_vld:
             self.phdr_only = True
@@ -377,8 +377,8 @@ class DeParserCsumObj:
         return self.phdr_vld
 
     def PhdrProfileNumSet(self, p):
-        assert self.phdr_profile == -1, pdb.set_trace()
-        assert p != -1, pdb.set_trace()
+        ncc_assert(self.phdr_profile == -1)
+        ncc_assert(p != -1)
         self.phdr_profile = p
 
     def PhdrProfileNumGet(self):
@@ -388,8 +388,8 @@ class DeParserCsumObj:
         '''
             Csum Engine Unit which uses this pseudo hdr
         '''
-        assert self.phdr_unit == -1 or \
-               self.phdr_unit == csum_unit, pdb.set_trace()
+        ncc_assert(self.phdr_unit == -1 or \
+               self.phdr_unit == csum_unit)
         self.phdr_unit = csum_unit
 
     def PhdrUnitGet(self):
@@ -484,7 +484,7 @@ class DeParserCalField:
                                               p4_field_list_calculations\
                                                  [VerifyOrUpdateFunc]
         #P4 code should have atleast one input field list.
-        assert(self.P4FieldListCalculation.input[0].fields[0] != None)
+        ncc_assert(self.P4FieldListCalculation.input[0].fields[0] != None)
         #Check last input field and last field within the last input field
         #to determine 'payload' keyword is part of field list.
         self.payload_checksum      = True\
@@ -539,8 +539,8 @@ class DeParserCalField:
         else:
             self.option_checksum = False
 
-        assert(self.P4FieldListCalculation != None)
-        assert(self.P4FieldListCalculation.algorithm == 'csum16' or \
+        ncc_assert(self.P4FieldListCalculation != None)
+        ncc_assert(self.P4FieldListCalculation.algorithm == 'csum16' or \
                self.P4FieldListCalculation.algorithm == 'csum8' or \
                self.P4FieldListCalculation.algorithm == 'l2_complete_csum')
 
@@ -649,7 +649,7 @@ class DeParserGsoCalField:
                                               p4_field_list_calculations\
                                                  [UpdateFunc]
         #P4 code should have atleast one input field list.
-        assert(self.P4FieldListCalculation.input[0].fields[0] != None)
+        ncc_assert(self.P4FieldListCalculation.input[0].fields[0] != None)
         #Check last input field and last field within the last input field
         #to determine 'payload' keyword is part of field list.
         self.payload_checksum      = True\
@@ -666,18 +666,18 @@ class DeParserGsoCalField:
                 self.gso_csum_result_fld_name  = self.P4FieldListCalculation._parsed_pragmas\
                                                  ['checksum']['update_len'].keys()[0]
         else:
-            assert(0), pdb.set_trace()
+            ncc_assert(0)
 
         if 'gso_checksum_offset' in \
             self.P4FieldListCalculation._parsed_pragmas['checksum']:
             self.csum_hfield_name = self.P4FieldListCalculation._parsed_pragmas\
                                                  ['checksum']['gso_checksum_offset'].keys()[0]
 
-        assert(self.P4FieldListCalculation != None)
-        assert(self.P4FieldListCalculation.algorithm == 'gso')
-        assert(self.P4FieldListCalculation.output_width == 16)
-        assert(self.csum_hfield_name != '')
-        assert(self.payload_checksum)
+        ncc_assert(self.P4FieldListCalculation != None)
+        ncc_assert(self.P4FieldListCalculation.algorithm == 'gso')
+        ncc_assert(self.P4FieldListCalculation.output_width == 16)
+        ncc_assert(self.csum_hfield_name != '')
+        ncc_assert(self.payload_checksum)
 
 
     def GsoCalculatedFieldHdrGet(self):

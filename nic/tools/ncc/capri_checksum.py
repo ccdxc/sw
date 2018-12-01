@@ -53,7 +53,7 @@ from collections import OrderedDict
 from enum import IntEnum
 from p4_hlir.main import HLIR
 import p4_hlir.hlir.p4 as p4
-import capri_logging
+from capri_logging import ncc_assert as ncc_assert
 from capri_utils import *
 from capri_parser_checksum import *
 from capri_deparser_checksum import *
@@ -96,7 +96,7 @@ class ParserCsumEngine:
                 self.allocated_csum_units[self.csum_units[csumField]] = True
                 self.csum_units_in_use += 1
             return self.csum_units[csumField]
-        assert(self.csum_units_in_use < self.max_csum_units), pdb.set_trace()
+        ncc_assert(self.csum_units_in_use < self.max_csum_units)
         if not is_l3:
             self.csum_units[csumField] = self.allocated_csum_units.index(False)
             self.allocated_csum_units[self.csum_units[csumField]] = True
@@ -109,7 +109,7 @@ class ParserCsumEngine:
                     self.csum_units_in_use += 1
                     break
             if i >= len(self.allocated_csum_units):
-                assert(0), pdb.set_trace()
+                ncc_assert(0)
         self.allocated_csum_is_l3[self.csum_units[csumField]] = is_l3
         return (self.csum_units[csumField])
 
@@ -121,7 +121,7 @@ class ParserCsumEngine:
             del self.csum_units[csumField]
 
     def AlreadyAllocatedCsumUnitSet(self, csumField, csumUnit, is_l3):
-        assert csumUnit != -1, pdb.set_trace()
+        ncc_assert(csumUnit != -1)
         if not is_l3:
             if self.allocated_csum_units[csumUnit] == False:
                 self.csum_units_in_use += 1
@@ -144,7 +144,7 @@ class ParserCsumEngine:
     def AllocateCsumProfile(self, csumField):
         if csumField in self.csum_profile.keys():
             return self.csum_profile[csumField]
-        assert(self.allocated_cprofile < self.max_cprofiles), pdb.set_trace()
+        ncc_assert(self.allocated_cprofile < self.max_cprofiles)
         self.csum_profile[csumField] = self.allocated_cprofile
         self.allocated_cprofile += 1
         return (self.allocated_cprofile - 1)
@@ -152,7 +152,7 @@ class ParserCsumEngine:
     def AllocatePhdrProfile(self, csumField, phdr):
         if (csumField,phdr) in self.csum_phdr_profile.keys():
             return self.csum_phdr_profile[(csumField, phdr)]
-        assert(self.allocated_phdr_profile < self.max_phdr_profiles), pdb.set_trace()
+        ncc_assert(self.allocated_phdr_profile < self.max_phdr_profiles)
         self.csum_phdr_profile[(csumField, phdr)] = self.allocated_phdr_profile
         self.allocated_phdr_profile += 1
         return (self.allocated_phdr_profile - 1)
@@ -201,7 +201,7 @@ class DeParserCsumEngine:
                 self.allocated_csum_units[self.csum_units[csumField]] = True
                 self.csum_units_in_use += 1
             return self.csum_units[csumField]
-        assert(self.csum_units_in_use < self.max_csum_units), pdb.set_trace()
+        ncc_assert(self.csum_units_in_use < self.max_csum_units)
         if not is_l3:
             self.csum_units[csumField] = self.allocated_csum_units.index(False)
             self.allocated_csum_units[self.csum_units[csumField]] = True
@@ -213,8 +213,7 @@ class DeParserCsumEngine:
                     self.allocated_csum_units[self.csum_units[csumField]] = True
                     self.csum_units_in_use += 1
                     break
-            if i >= len(self.allocated_csum_units):
-                pdb.set_trace()
+            ncc_assert(i < len(self.allocated_csum_units))
         self.allocated_csum_is_l3[self.csum_units[csumField]] = is_l3
 
         return (self.csum_units[csumField])
@@ -227,7 +226,7 @@ class DeParserCsumEngine:
             del self.csum_units[csumField]
 
     def AlreadyAllocatedCsumUnitSet(self, csumField, csumUnit, is_l3):
-        assert csumUnit != -1, pdb.set_trace()
+        ncc_assert(csumUnit != -1)
         if not is_l3:
             if self.allocated_csum_units[csumUnit] == False:
                 self.csum_units_in_use += 1
@@ -250,7 +249,7 @@ class DeParserCsumEngine:
     def AllocateCsumProfile(self, csumField):
         if csumField in self.csum_profile.keys():
             return self.csum_profile[csumField]
-        assert(self.allocated_cprofile < self.max_cprofiles), pdb.set_trace()
+        ncc_assert(self.allocated_cprofile < self.max_cprofiles)
         self.csum_profile[csumField] = self.allocated_cprofile
         self.allocated_cprofile += 1
         return (self.allocated_cprofile - 1)
@@ -258,7 +257,7 @@ class DeParserCsumEngine:
     def AllocatePhdrProfile(self, csumField, phdr):
         if (csumField, phdr) in self.csum_phdr_profile.keys():
             return self.csum_phdr_profile[(csumField, phdr)]
-        assert(self.allocated_phdr_profile < self.max_phdr_profiles), pdb.set_trace()
+        ncc_assert(self.allocated_phdr_profile < self.max_phdr_profiles)
         self.csum_phdr_profile[(csumField, phdr)] = self.allocated_phdr_profile
         self.allocated_phdr_profile += 1
         return (self.allocated_phdr_profile - 1)
@@ -402,7 +401,7 @@ class Checksum:
             if field.name == csum_field:
                 csum_p4_field = field
                 break
-        assert csum_p4_field != None , pdb.set_trace()
+        ncc_assert(csum_p4_field != None )
         if csum_p4_field.offset == 128:
             payload_hdr_type = 'tcp'
         elif csum_p4_field.offset == 48:
@@ -518,9 +517,8 @@ class Checksum:
                             calfldobj.ParserCsumProfileSet(ParserCsumProfile())
                             if calfldobj.payload_checksum:
                                 phdr_name = calfldobj.CsumPhdrNameGet()
-                                assert(phdr_name != ''), pdb.set_trace()
-                                assert(phdr_name in self.be.h.p4_header_instances),\
-                                             pdb.set_trace()
+                                ncc_assert(phdr_name != '')
+                                ncc_assert(phdr_name in self.be.h.p4_header_instances)
                                 #Also allocate phdr profile obj
                                 calfldobj.ParserPhdrProfileSet(ParserPhdrProfile())
 
@@ -528,7 +526,7 @@ class Checksum:
         # be verified has been allocated checksum unit and checksumprofile.
         for calfldobj in verify_cal_fieldlist:
             if calfldobj.ParserCsumObjGet() == None:
-                assert(0), pdb.set_trace()
+                ncc_assert(0)
 
 
     def InsertCsumObjReferenceInParseState(self, parser):
@@ -550,10 +548,9 @@ class Checksum:
 
                         if calfldobj.payload_checksum:
                             phdr_name = calfldobj.CsumPhdrNameGet()
-                            assert(phdr_name != ''), pdb.set_trace()
-                            assert(phdr_name in self.be.h.p4_header_instances),\
-                                         pdb.set_trace()
-                            #Using phdr_name, assert there is parser
+                            ncc_assert(phdr_name != '')
+                            ncc_assert(phdr_name in self.be.h.p4_header_instances)
+                            #Using phdr_name, ncc_assert(there is parser)
                             #state where the phdr hdr is extracted. In
                             #working case it will be either ipv4 or
                             #ipv6 parser state.
@@ -688,7 +685,7 @@ class Checksum:
                 pseudo_hdrs = None
                 _s = parse_path_hdrs.intersection(csum_phdrs)
                 if len(_s):
-                    assert(len(_s) <= 2), pdb.set_trace()
+                    ncc_assert(len(_s) <= 2)
                     pseudo_hdrs = _s
 
                 #After resetting csum unit allocation to start from start,
@@ -810,8 +807,8 @@ class Checksum:
                                             CsumProfileUnitNumSet(\
                                 ParserCsumEngineObj.\
                                             AllocateCsumProfile(calfldhdr))
-                            assert(pl_calfldobj.ParserPhdrProfileGet().\
-                                 CsumPhdrProfileUnitNumGet() == -1), pdb.set_trace()
+                            ncc_assert((pl_calfldobj.ParserPhdrProfileGet().\
+                                 CsumPhdrProfileUnitNumGet() == -1), "")
                             pl_calfldobj.ParserPhdrProfileGet().\
                                             CsumPhdrProfileUnitNumSet(\
                                 ParserCsumEngineObj.
@@ -854,7 +851,7 @@ class Checksum:
                 if not len(csum_objects):
                     break
         #Assert if all calfld objects are allocated resources
-        assert(len(csum_objects) == 0), pdb.set_trace()
+        ncc_assert(len(csum_objects) == 0)
 
         ParserCsumEngineObj.CsumUnitAllocationFinalize()
 
@@ -875,9 +872,9 @@ class Checksum:
         '''
         gen_ohi_instr, ohi_id, calfldobj = \
                         parse_state.csum_payloadlen_ohi_instr_gen
-        assert gen_ohi_instr, pdb.set_trace()
-        assert ohi_id != -1, pdb.set_trace()
-        assert calfldobj, pdb.set_trace()
+        ncc_assert(gen_ohi_instr)
+        ncc_assert(ohi_id != -1)
+        ncc_assert(calfldobj)
         #len_local_var_str is parser local variable that captures payloadLen. In
         #each option parsing state, payloadLen is updated to decrement by
         #option header size.
@@ -971,9 +968,9 @@ class Checksum:
          - Use lkp reg instr to store payload len
         '''
         log_str = ''
-        assert(parse_state.phdr_type != ''), pdb.set_trace()
+        ncc_assert(parse_state.phdr_type != '')
         if parse_state.phdr_type == 'v4':
-            assert(reuse_mux_idx_id != -1), pdb.set_trace()
+            ncc_assert(reuse_mux_idx_id != -1)
             mux_sel_ihl = reuse_mux_idx_id
             #Allocate mux idx instr to load totalLen
             index       = 2 # 2nd byte in hdr
@@ -994,7 +991,7 @@ class Checksum:
                             mask, add_sub, add_sub_val, shift_val,\
                             shift_left, load_mux_pkt, mux_sel_totalLen)
             #Save totalLen - ihl*4 in OHI slot
-            assert(parse_state.totalLen_ohi_id != -1), pdb.set_trace()
+            ncc_assert(parse_state.totalLen_ohi_id != -1)
             select  = 3 # Load mux_instr_data into OHI
             na      = 0 # NA
             log_str += ParserCalField._build_ohi_instr(sram, ohi_instr_inst,\
@@ -1011,7 +1008,7 @@ class Checksum:
                                                          mux_inst_allocator,\
                                                          mux_idx_allocator)
         else:
-            assert(0), pdb.set_trace()
+            ncc_assert(0)
 
         self.CalFldListAddLog(log_str)
 
@@ -1054,14 +1051,14 @@ class Checksum:
             if calfldobj.CsumPhdrNameGet() == phdr.name:
                 matched_calobj = True
                 break
-        assert matched_calobj and matched_phdr, pdb.set_trace()
+        ncc_assert(matched_calobj and matched_phdr)
         #Find the pseudo hdr parse state that is in the parse path.
         phdr_parse_state_found = False
         for i, phdr_parse_state in enumerate(calfldobj.CsumPhdrParseStateGet()):
             if phdr_parse_state in parse_states_in_path:
                 phdr_parse_state_found = True
                 break
-        assert phdr_parse_state_found == True, pdb.set_trace()
+        ncc_assert(phdr_parse_state_found == True)
 
         return calfldobj, phdr_parse_state
 
@@ -1081,7 +1078,7 @@ class Checksum:
         # code to capture header offset of the calculated field will be a bit
         # complicated. For now working with an approach that atmost one header
         # is extracted is in parse state.
-        #assert len(parse_state.verify_cal_field_objs) == 1, pdb.set_trace()
+        #ncc_assert(len(parse_state.verify_cal_field_objs) == 1)
 
         from_parse_state = parse_states_in_path[-2]
         headers_in_parse_path = []
@@ -1098,7 +1095,7 @@ class Checksum:
         l4_calfldobj, phdr_parse_state = self._CsumFindCalFldObjMatchingPhdr(\
                                               parse_state, parse_states_in_path)
         if l4_calfldobj != None:
-            assert phdr_parse_state != None, pdb.set_trace()
+            ncc_assert(phdr_parse_state != None)
             phdr_calfldobj = None
             for calfldobj in phdr_parse_state.verify_cal_field_objs:
                 if l4_calfldobj.phdr_name == calfldobj.CalculatedFieldHdrGet():
@@ -1139,10 +1136,10 @@ class Checksum:
                                        phdr_calfldobj):
 
         if calfldobj == None:
-            assert(0), pdb.set_trace()
+            ncc_assert(0)
         phdr_ohi_id = -1
         if calfldobj.payload_checksum and not calfldobj.option_checksum:
-            assert phdr_parse_state != None, pdb.set_trace()
+            ncc_assert(phdr_parse_state != None)
             if calfldobj.payload_checksum and \
                 phdr_parse_state.phdr_offset_ohi_id != -1:
                 phdr_ohi_id = phdr_parse_state.phdr_offset_ohi_id
@@ -1152,22 +1149,22 @@ class Checksum:
                 #Go back to calfld obj where ipv4 hdr is processed to compute
                 #header checksum; Use the same ohi slot where start of ipv4 hdr
                 #is captured and where TotalLen-ihl*4 is captured as PayloadLen.
-                assert phdr_calfldobj != None, pdb.set_trace()
+                ncc_assert(phdr_calfldobj != None)
                 phdr_ohi_id = phdr_calfldobj.ParserCsumObjGet().\
                                 CsumOhiPhdrSelGet()
                 totalLen_ohi_id = phdr_calfldobj.ParserCsumObjGet().\
                                 CsumOhiTotalLenGet()
             elif calfldobj.payload_checksum:
-                assert(0), pdb.set_trace()
+                ncc_assert(0)
 
         hdr_ohi_id = calfldobj.ParserCsumObjGet().CsumOhiStartSelGet()
         len_ohi_id = calfldobj.ParserCsumObjGet().CsumOhiLenSelGet()
-        assert hdr_ohi_id != -1, pdb.set_trace()
-        assert len_ohi_id != -1, pdb.set_trace()
+        ncc_assert(hdr_ohi_id != -1)
+        ncc_assert(len_ohi_id != -1)
 
         if calfldobj.payload_checksum and not calfldobj.option_checksum:
-            assert phdr_ohi_id != -1, pdb.set_trace()
-            assert totalLen_ohi_id != -1, pdb.set_trace()
+            ncc_assert(phdr_ohi_id != -1)
+            ncc_assert(totalLen_ohi_id != -1)
             # Save phdr_ohi_id, totalLen_ohi_id,
             # in calfldobj where payload checksum is verified (udp/tcp checksum)
             calfldobj.ParserCsumObjGet().CsumOhiPhdrSelSet(phdr_ohi_id)
@@ -1176,7 +1173,7 @@ class Checksum:
         ohi_id = parser.get_ohi_hdr_start_off(self.be.h.p4_header_instances[\
                                               calfldobj.CalculatedFieldHdrGet()])
         if ohi_id != None:
-            assert hdr_ohi_id == ohi_id, pdb.set_trace()
+            ncc_assert(hdr_ohi_id == ohi_id)
             ohi_instr_generated = False
             for allocated_ohi_instr in ohi_inst_allocator:
                 if allocated_ohi_instr:
@@ -1185,7 +1182,7 @@ class Checksum:
                         ohi_instr_generated = True
                         break
             if not ohi_instr_generated:
-                assert ohi_instr_inst < len(sram['ohi_inst']), pdb.set_trace()
+                ncc_assert(ohi_instr_inst < len(sram['ohi_inst']))
                 # Ohi Instr to capture HdrStart Offset
                 select          = 1 # Load current offset + index
                 na              = 0 # NA
@@ -1253,7 +1250,7 @@ class Checksum:
                 addlen = 1
                 csum_loc_adj = 6
             else:
-                assert(0), pdb.set_trace()
+                ncc_assert(0)
             log_str += calfldobj.PhdrProfileBuild(phdr_parse_state,\
                                               phdr_profile_obj, addlen)
             log_str += calfldobj.PayloadCsumProfileBuild(phdr_parse_state,                  \
@@ -1285,7 +1282,7 @@ class Checksum:
             phdr_ohi_id = calfldobj.ParserCsumObjGet().CsumOhiPhdrSelGet()
             phdr_profile = calfldobj.ParserPhdrProfileGet().\
                                         CsumPhdrProfileUnitNumGet()
-            assert(phdr_profile != None), pdb.set_trace()
+            ncc_assert(phdr_profile != None)
             #Get ohi id that has totalLen/PayloadLen - v6-option-size or ihl * 4
             len_ohi_id = calfldobj.ParserCsumObjGet().CsumOhiTotalLenGet()
         else:
@@ -1300,7 +1297,7 @@ class Checksum:
                                           parse_state.enable_udp_zero_csum_error)
         csum_instr += 1
         calfldobj.ParserCsumObjAddLog(log_str)
-        assert(csum_instr < len(sram['csum_inst'])), pdb.set_trace()
+        ncc_assert(csum_instr < len(sram['csum_inst']))
 
         return ohi_instr_inst
 
@@ -1329,7 +1326,7 @@ class Checksum:
                 profile = copy.deepcopy(csum_t)
                 p = profile_obj.csum_profile
                 if p == -1:
-                    assert(0), pdb.set_trace()
+                    ncc_assert(0)
                 log_str = profile_obj.ConfigGenerate(profile)
                 calfldobj.ParserCsumObjAddLog(log_str)
                 #Only one calFld processed in any parse state
@@ -1397,7 +1394,7 @@ class Checksum:
                 if csum_hdr not in HdrCsumD.keys():
                     HdrCsumD[csum_hdr] = csum_unit
                 else:
-                    assert HdrCsumD[csum_hdr] == csum_unit
+                    ncc_assert(HdrCsumD[csum_hdr] == csum_unit)
             csum_str = '//The file contaiins mapping of checksum header to checksum '\
                        'engine allocation.\n'
             csum_str += '//Checksum Engine allcation number can be used to check '\
@@ -1463,7 +1460,7 @@ class Checksum:
             csum_obj.CsumOhiStartSelSet(parser.\
                     get_ohi_slot_wr_only_field_name(calfldobj.gso_start_field))
             cf = self.be.pa.get_field(calfldobj.gso_csum_result_fld_name, parser.d)
-            assert cf != None, pdb.set_trace()
+            ncc_assert(cf != None)
             csum_profile_obj.CsumProfileCsumPhvFlitSet(cf.phv_bit / self.be.hw_model['phv']['flit_size'])
             for field in self.be.h.p4_header_instances[calfldobj.csum_hfield_name.split(".")[0]].fields:
                 if field.name == calfldobj.csum_hfield_name.split(".")[1] and field.width <= 8:
@@ -1486,9 +1483,9 @@ class Checksum:
 
         calfldobj = parse_state.gso_csum_calfldobj
         if calfldobj == None:
-            assert(0), pdb.set_trace()
+            ncc_assert(0)
         gso_start_ohi_id = calfldobj.ParserCsumObjGet().CsumOhiStartSelGet()
-        assert gso_start_ohi_id != -1, pdb.set_trace()
+        ncc_assert(gso_start_ohi_id != -1)
         csum_obj = calfldobj.ParserCsumObjGet()
         csum_profile_obj = calfldobj.ParserCsumProfileGet()
         calfldobj.GsoCsumProfileBuild(parse_state, csum_profile_obj)
@@ -1503,7 +1500,7 @@ class Checksum:
                                                        start_ohi_id, 0)
         csum_instr += 1
         calfldobj.GsoCsumObjAddLog(log_str)
-        assert(csum_instr < len(sram['csum_inst'])), pdb.set_trace()
+        ncc_assert(csum_instr < len(sram['csum_inst']))
 
     def GsoCsumParserProfileGenerate(self, parser, parse_states_in_path,\
                                      parse_state, csum_t):
@@ -1519,13 +1516,13 @@ class Checksum:
             profile = copy.deepcopy(csum_t)
             p = profile_obj.csum_profile
             if p == -1:
-                assert(0), pdb.set_trace()
+                ncc_assert(0)
             log_str = profile_obj.ConfigGenerate(profile)
             calfldobj.GsoCsumObjAddLog(log_str)
             #Only one calFld processed in any parse state
             return profile, p
         else:
-            assert(0), pdb.set_trace()
+            ncc_assert(0)
         return profile, p
 
     # -- Methods to process update calculated field list to compute checksum --
@@ -1632,7 +1629,7 @@ class Checksum:
         return count
 
     def DeParserPayLoadLenSlotGet(self, calfldobj, parser):
-        assert calfldobj.payload_update_len_field != '', pdb.set_trace()
+        ncc_assert(calfldobj.payload_update_len_field != '')
         cf_pl_update_len = self.be.pa.get_field(calfldobj.payload_update_len_field, parser.d)
         pl_slot = (cf_pl_update_len.phv_bit - 
                    self.be.hw_model['phv']['flit_size']) / 16
@@ -1674,15 +1671,14 @@ class Checksum:
                 calfldobj.DeParserCsumProfileObjSet(DeParserCsumProfile())
                 if calfldobj.payload_checksum:
                     phdr_name = calfldobj.CsumPhdrNameGet()
-                    assert(phdr_name != ''), pdb.set_trace()
-                    assert(phdr_name in self.be.h.p4_header_instances),\
-                             pdb.set_trace()
+                    ncc_assert(phdr_name != '')
+                    ncc_assert(phdr_name in self.be.h.p4_header_instances)
 
         # Ensure/CrossCheck that every calculated field that needs to
         # be updated has been allocated necessary sw objects.
         for calfldobj in update_cal_fieldlist:
             if calfldobj.DeParserCsumObjGet() == None:
-                assert(0), pdb.set_trace()
+                ncc_assert(0)
 
         # In case of deparser, PseudoHdrs also need object representation
         # because deparser csum computation works using HV bits.
@@ -1731,7 +1727,7 @@ class Checksum:
             if field.name == calfldobj.dstField.split(".")[1]:
                 csum_field_offset = field.offset/8 #bit to byte offset
                 break
-        assert csum_field_offset != -1, pdb.set_trace()
+        ncc_assert(csum_field_offset != -1)
         csum_profile_obj.CsumProfileCsumLocSet(csum_field_offset)
         if calfldobj.option_checksum:
             csum_profile_obj.CsumProfileCsumLocSet(1)
@@ -1772,7 +1768,7 @@ class Checksum:
             if elem[2] == l3hf_name:
                 csumhv = elem[0]
                 break
-        assert csumhv != -1, pdb.set_trace()
+        ncc_assert(csumhv != -1)
         csum_obj.CsumHvBitNumSet(csumhv)
         csum_obj.CsumHvBitStrSet(l3hf_name)
         csum_obj.CsumProfileNumSet(csum_profile)
@@ -1809,7 +1805,7 @@ class Checksum:
             #Phdr that this payload csum uses.
             phdr_csum_obj = \
                     self.DeParserPhdrCsumObjGet(phdr, -1, '', parser.d)
-            assert phdr_csum_obj != None, pdb.set_trace()
+            ncc_assert(phdr_csum_obj != None)
             phdr_csum_obj = copy.copy(phdr_csum_obj)
             phdr_inst = self.be.h.p4_header_instances[phdr]
             phdr_csum_obj.HvBitNumSet(parser.hdr_hv_bit[phdr_inst])
@@ -1820,7 +1816,7 @@ class Checksum:
                     if elem[2] == l3hf_name:
                         csumhv = elem[0]
                         break
-                assert csumhv != -1, pdb.set_trace()
+                ncc_assert(csumhv != -1)
                 phdr_csum_obj.CsumHvBitNumSet(csumhv)
                 phdr_csum_obj.CsumHvBitStrSet(l3hf_name)
             elif pl_calfldobj.CsumPayloadHdrTypeGet() == 'udp':
@@ -1830,7 +1826,7 @@ class Checksum:
                     if elem[2] == l3hf_name:
                         csumhv = elem[0]
                         break
-                assert csumhv != -1, pdb.set_trace()
+                ncc_assert(csumhv != -1)
                 phdr_csum_obj.CsumHvBitNumSet(csumhv)
                 phdr_csum_obj.CsumHvBitStrSet(l3hf_name)
             elif pl_calfldobj.CsumPayloadHdrTypeGet() == 'icmp':
@@ -1841,7 +1837,7 @@ class Checksum:
                     if elem[2] == l3hf_name:
                         csumhv = elem[0]
                         break
-                assert csumhv != -1, pdb.set_trace()
+                ncc_assert(csumhv != -1)
                 phdr_csum_obj.CsumHvBitNumSet(csumhv)
                 phdr_csum_obj.CsumHvBitStrSet(l3hf_name)
             else:
@@ -1851,7 +1847,7 @@ class Checksum:
             phdr_csum_obj.PhdrProfileNumSet(phdr_profile)
             self.DeParserPhdrCsumObjSet(phdr, phdr_csum_obj, csum_unit, hdr.name, parser.d)
             pl_calfldobj.DeParserPhdrCsumObjSet(phdr_csum_obj)
-            assert pl_calfldobj.DeParserPhdrProfileObjGet() == None, pdb.set_trace()
+            ncc_assert(pl_calfldobj.DeParserPhdrProfileObjGet() == None)
             use_payload_len_from_l3_hdr = 1 if pl_calfldobj.CsumPayloadHdrTypeGet() == 'icmp' else 0
             pl_calfldobj.DeParserPhdrProfileObjSet(\
                           DeParserPhdrProfile(phdr_profile,  \
@@ -1859,7 +1855,7 @@ class Checksum:
                                               pl_calfldobj.phdr_fields, 0, \
                                               use_payload_len_from_l3_hdr))
         else:
-            assert(0), pdb.set_trace()
+            ncc_assert(0)
 
         phdr_csum_obj.PhdrValidSet(1)
         phdr_csum_obj.PhdrUnitSet(csum_unit)
@@ -1908,7 +1904,7 @@ class Checksum:
                 pseudo_hdrs = None
                 _s = parse_path_hdrs.intersection(csum_phdrs)
                 if len(_s):
-                    assert(len(_s) <= 3), pdb.set_trace()
+                    ncc_assert(len(_s) <= 3)
                     pseudo_hdrs = _s
 
                 #After resetting csum unit allocation to start from start,
@@ -1940,7 +1936,7 @@ class Checksum:
                     if calfldobjlist == None:
                         # ipv6 doesn't have calculated field object..
                         phdr_csum_obj = self.DeParserPhdrCsumObjGet(hdr.name, -1, '', parser.d)
-                        assert phdr_csum_obj != None, pdb.set_trace()
+                        ncc_assert(phdr_csum_obj != None)
                         #CsumHV bit for phdrs that are not calfldobjs (ipv6) is
                         #same as HV bit.
                         continue
@@ -2024,7 +2020,7 @@ class Checksum:
 
                             csum_objects.remove(calfldobj)
 
-        assert(len(csum_objects) == 0), pdb.set_trace()
+        ncc_assert(len(csum_objects) == 0)
         DeParserCsumEngineObj.CsumUnitAllocationFinalize()
 
 
@@ -2046,18 +2042,18 @@ class Checksum:
             csum_hdr = calfldobj.CalculatedFieldHdrGet()
             _csum_obj = calfldobj.DeParserCsumObjGet()
             _csum_profile_obj = calfldobj.DeParserCsumProfileObjGet()
-            assert _csum_obj != None, pdb.set_trace()
-            assert _csum_profile_obj != None, pdb.set_trace()
-            assert _csum_obj.hv != -1, pdb.set_trace()
-            assert _csum_obj.csum_hv != -1, pdb.set_trace()
+            ncc_assert(_csum_obj != None)
+            ncc_assert(_csum_profile_obj != None)
+            ncc_assert(_csum_obj.hv != -1)
+            ncc_assert(_csum_obj.csum_hv != -1)
             fldstart, fldend, _ = hv_fld_slots[_csum_obj.csum_hv]
             _csum_obj.HdrFldStartEndSet(fldstart,fldend)
             if calfldobj.payload_checksum:
                 _phdr_csum_obj = calfldobj.DeParserPhdrCsumObjGet()
                 _phdr_profile_obj = calfldobj.DeParserPhdrProfileObjGet()
-                assert _phdr_csum_obj != None, pdb.set_trace()
-                assert _phdr_profile_obj != None, pdb.set_trace()
-                assert _phdr_csum_obj.csum_hv != None, pdb.set_trace()
+                ncc_assert(_phdr_csum_obj != None)
+                ncc_assert(_phdr_profile_obj != None)
+                ncc_assert(_phdr_csum_obj.csum_hv != None)
                 fldstart, fldend, _ = hv_fld_slots[_phdr_csum_obj.csum_hv]
                 _phdr_csum_obj.HdrFldStartEndSet(fldstart,fldend)
 
@@ -2151,15 +2147,15 @@ class Checksum:
             calfldhdr = calfldobj.GsoCalculatedFieldHdrGet()
             hf_name = calfldhdr + '.gso'
             cf = self.be.pa.get_field(hf_name, parser.d)
-            assert cf and cf.is_hv, pdb.set_trace()
+            ncc_assert(cf and cf.is_hv)
             calfldobj.hdr_valid = (hv_location + max_hv_bits - 1) - cf.phv_bit
             calfldobj.hdrfld_slot = calfldobj.hdr_valid
             cf = self.be.pa.get_field(calfldobj.gso_csum_result_fld_name, parser.d)
-            assert cf != None, pdb.set_trace()
+            ncc_assert(cf != None)
             calfldobj.gso_csum_result_phv = cf.phv_bit
             calfldobj.csum_field_ohi_slot = \
                 parser.get_ohi_slot_wr_only_field_name(calfldobj.csum_hfield_name.split(".")[1])
-            assert (calfldobj.csum_field_ohi_slot != None), pdb.set_trace()
+            ncc_assert(calfldobj.csum_field_ohi_slot != None)
 
     def GsoCsumDeParserConfigGenerate(self, deparser, dpp_json, dpr_json):
         if deparser.d == xgress.INGRESS:
@@ -2196,7 +2192,7 @@ class Checksum:
                 if elem[2] == hf_name:
                     csumhv = elem[0]
                     break
-            assert csumhv != -1, pdb.set_trace()
+            ncc_assert(csumhv != -1)
             _csum_obj.CsumHvBitNumSet(csumhv)
             _csum_obj.CsumHvBitStrSet(hf_name)
             _csum_obj.CsumUnitNumSet(DeParserCsumEngineObj.\
@@ -2217,7 +2213,7 @@ class Checksum:
                     if p4f.name == calfldobj.dstField.split(".")[1]:
                         locadj = p4f.offset / 8
                         break
-                assert locadj != -1, pdb.set_trace()
+                ncc_assert(locadj != -1)
                 _csum_profile_obj.CsumProfileCsumLocSet(locadj)
                 _csum_profile_obj.CsumProfilePhvLenSelSet(0, 0)
             else:
@@ -2252,10 +2248,10 @@ class Checksum:
             phdr_name = calfldobj.phdr_name
             _csum_obj = calfldobj.DeParserCsumObjGet()
             _csum_profile_obj = calfldobj.DeParserCsumProfileObjGet()
-            assert _csum_obj != None, pdb.set_trace()
-            assert _csum_profile_obj != None, pdb.set_trace()
-            assert _csum_obj.hv != -1, pdb.set_trace()
-            assert _csum_obj.csum_hv != -1, pdb.set_trace()
+            ncc_assert(_csum_obj != None)
+            ncc_assert(_csum_profile_obj != None)
+            ncc_assert(_csum_obj.hv != -1)
+            ncc_assert(_csum_obj.csum_hv != -1)
             fldstart, fldend, _ = hv_fld_slots[_csum_obj.csum_hv]
             _csum_obj.HdrFldStartEndSet(fldstart,fldend)
 
