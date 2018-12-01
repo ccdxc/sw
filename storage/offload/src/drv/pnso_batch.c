@@ -18,12 +18,19 @@
 
 #ifdef NDEBUG
 #define PPRINT_BATCH_INFO(bi)
+#define PPRINT_SERVICE_RESULT(sr)
 #else
 #define PPRINT_BATCH_INFO(bi)						\
 	do {								\
 		OSAL_LOG_DEBUG("%.*s", 30, "=========================================");\
 		pprint_batch_info(bi);					\
 		OSAL_LOG_DEBUG("%.*s", 30, "=========================================");\
+	} while (0)
+#define PPRINT_SERVICE_RESULT(sr)				\
+	do {								\
+		OSAL_LOG_INFO("%.*s", 30, "=========================================");\
+		pprint_service_result(sr);					\
+		OSAL_LOG_INFO("%.*s", 30, "=========================================");\
 	} while (0)
 #endif
 
@@ -70,6 +77,54 @@ pprint_batch_info(struct batch_info *batch_info)
 			(uint64_t) batch_info->bi_req_cb);
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "bi_req_cb_ctx",
 			(uint64_t) batch_info->bi_req_cb_ctx);
+}
+
+static void __attribute__((unused))
+pprint_service_result(struct pnso_service_result *res)
+{
+	uint32_t i;
+
+	if (!res)
+		return;
+
+	OSAL_LOG_DEBUG("%30s: %p", "=== pnso_service_result", res);
+
+	OSAL_LOG_DEBUG("%30s: %d", "err", res->err);
+
+	OSAL_LOG_DEBUG("%30s: %d", "num_services", res->num_services);
+	for (i = 0; i < res->num_services; i++) {
+		OSAL_LOG_DEBUG("%30s: %d", "service #", i+1);
+
+		OSAL_LOG_DEBUG("%30s: %d", "err", res->svc[i].err);
+		OSAL_LOG_DEBUG("%30s: %d", "svc_type", res->svc[i].svc_type);
+		OSAL_LOG_DEBUG("%30s: %d", "rsvd_1", res->svc[i].rsvd_1);
+
+		switch (res->svc[i].svc_type) {
+		case PNSO_SVC_TYPE_ENCRYPT:
+		case PNSO_SVC_TYPE_DECRYPT:
+		case PNSO_SVC_TYPE_COMPRESS:
+		case PNSO_SVC_TYPE_DECOMPRESS:
+		case PNSO_SVC_TYPE_DECOMPACT:
+			OSAL_LOG_DEBUG("%30s: %d", "data_len",
+					res->svc[i].u.dst.data_len);
+			break;
+		case PNSO_SVC_TYPE_HASH:
+			OSAL_LOG_DEBUG("%30s: %d", "num_tags",
+					res->svc[i].u.hash.num_tags);
+			OSAL_LOG_DEBUG("%30s: %d", "rsvd_2",
+					res->svc[i].u.hash.rsvd_2);
+			break;
+		case PNSO_SVC_TYPE_CHKSUM:
+			OSAL_LOG_DEBUG("%30s: %d", "num_tags",
+					res->svc[i].u.chksum.num_tags);
+			OSAL_LOG_DEBUG("%30s: %d", "rsvd_3",
+					res->svc[i].u.chksum.rsvd_3);
+			break;
+		default:
+			OSAL_ASSERT(0);
+			break;
+		}
+	}
 }
 
 static void *
@@ -624,6 +679,8 @@ read_write_result_all_chains(struct batch_info *batch_info)
 		chn_update_overall_result(page_entry->bpe_chain);
 
 		chn_notify_caller(page_entry->bpe_chain);
+
+		PPRINT_SERVICE_RESULT(page_entry->bpe_res);
 	}
 }
 

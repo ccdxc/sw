@@ -427,7 +427,8 @@ pbuf_pprint_buffer_list(const struct pnso_buffer_list *buf_list)
 	if (!buf_list)
 		return;
 
-	OSAL_LOG_INFO("buf_list: 0x" PRIx64 " count: %d\n", (uint64_t)buf_list, buf_list->count);
+	OSAL_LOG_INFO("buf_list: 0x" PRIx64 " count: %d\n",
+			(uint64_t) buf_list, buf_list->count);
 
 	for (i = 0; i < buf_list->count; i++) {
 		flat_buf = (struct pnso_flat_buffer *) &buf_list->buffers[i];
