@@ -20,7 +20,6 @@
 #include <linux/netdevice.h>
 
 #include "ionic.h"
-#include "ionic_if.h"
 #include "ionic_api.h"
 #include "ionic_bus.h"
 #include "ionic_lif.h"

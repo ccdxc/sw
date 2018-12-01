@@ -46,7 +46,7 @@ RDMA="$TOP/platform/src/third-party/rdma"
 
 # Products generated
 : ${GEN_DIR:="$TOP/platform/gen/drivers-linux"}
-: ${COMMON_GEN_DIR:="$GEN_DIR/drivers/eth/ionic/"}
+: ${COMMON_GEN_DIR:="$GEN_DIR/common/"}
 : ${GEN_PKG:="$GEN_DIR.tar.xz"}
 
 # Package will identify version of sources

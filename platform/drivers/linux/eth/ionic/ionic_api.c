@@ -1,7 +1,6 @@
 #include <linux/kernel.h>
 
 #include "ionic.h"
-#include "ionic_if.h"
 #include "ionic_bus.h"
 #include "ionic_dev.h"
 #include "ionic_lif.h"

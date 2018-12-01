@@ -19,12 +19,10 @@
 #ifndef _IONIC_DEV_H_
 #define _IONIC_DEV_H_
 
-#include <linux/workqueue.h>
-
 #include <linux/mutex.h>
 #include <linux/workqueue.h>
 
-#include "ionic_if.h"
+#include <ionic_if.h>
 
 #define IONIC_MIN_MTU		ETH_MIN_MTU
 #define IONIC_MAX_MTU		9200
