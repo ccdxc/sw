@@ -235,8 +235,9 @@ proxy_tcp_cb_init_def_params(TcpCbSpec& spec)
 
     HAL_TRACE_DEBUG("tcp rcv window = {}", window);
 
-    spec.set_snd_wnd(window);
+    spec.set_rcv_wnd(window);
     spec.set_snd_cwnd(8000);
+    spec.set_snd_wnd(8000);
     spec.set_rcv_mss(9216);
     // pred_flags
     //   header len = 8 (32 bytes with timestamp)
@@ -368,12 +369,17 @@ tcp_update_cb(void *tcpcb, uint32_t qid, uint16_t src_lif)
                         hal::pd::lkl_get_tcpcb_rcv_tsval(tcpcb),
                         hal::pd::lkl_get_tcpcb_ts_recent(tcpcb),
                         hal::pd::lkl_get_tcpcb_state(tcpcb));
+        HAL_TRACE_DEBUG("lkl snd_wscale={} rcv_wscale={}",
+                        hal::pd::lkl_get_tcpcb_snd_wscale(tcpcb),
+                        hal::pd::lkl_get_tcpcb_rcv_wscale(tcpcb));
 
         spec->set_rcv_nxt(hal::pd::lkl_get_tcpcb_rcv_nxt(tcpcb));
         spec->set_snd_nxt(hal::pd::lkl_get_tcpcb_snd_nxt(tcpcb));
         spec->set_snd_una(hal::pd::lkl_get_tcpcb_snd_una(tcpcb));
         spec->set_rcv_tsval(hal::pd::lkl_get_tcpcb_rcv_tsval(tcpcb));
         spec->set_ts_recent(hal::pd::lkl_get_tcpcb_ts_recent(tcpcb));
+        spec->set_snd_wscale(hal::pd::lkl_get_tcpcb_snd_wscale(tcpcb));
+        spec->set_rcv_wscale(hal::pd::lkl_get_tcpcb_rcv_wscale(tcpcb));
     }
     spec->set_serq_base(get_rsp.mutable_spec()->serq_base());
     spec->set_debug_dol(get_rsp.mutable_spec()->debug_dol());
@@ -381,6 +387,7 @@ tcp_update_cb(void *tcpcb, uint32_t qid, uint16_t src_lif)
     spec->set_sesq_pi(get_rsp.mutable_spec()->sesq_pi());
     spec->set_sesq_ci(get_rsp.mutable_spec()->sesq_ci());
     spec->set_snd_wnd(get_rsp.mutable_spec()->snd_wnd());
+    spec->set_rcv_wnd(get_rsp.mutable_spec()->rcv_wnd());
     spec->set_snd_cwnd(get_rsp.mutable_spec()->snd_cwnd());
     spec->set_rcv_mss(get_rsp.mutable_spec()->rcv_mss());
     spec->set_source_port(get_rsp.mutable_spec()->source_port());
@@ -453,6 +460,7 @@ tcp_trigger_ack_send(uint32_t qid, tcp_header_t *tcp)
     spec->set_sesq_pi(get_rsp.mutable_spec()->sesq_pi());
     spec->set_sesq_ci(get_rsp.mutable_spec()->sesq_ci());
     spec->set_snd_wnd(get_rsp.mutable_spec()->snd_wnd());
+    spec->set_rcv_wnd(get_rsp.mutable_spec()->rcv_wnd());
     spec->set_snd_cwnd(get_rsp.mutable_spec()->snd_cwnd());
     spec->set_rcv_mss(get_rsp.mutable_spec()->rcv_mss());
     spec->set_source_port(get_rsp.mutable_spec()->source_port());

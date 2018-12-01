@@ -91,6 +91,9 @@ class TcpCbObject(base.ConfigObjectBase):
            req_spec.serq_ci                   = self.serq_ci
            req_spec.pred_flags                = self.pred_flags
            req_spec.rto_backoff               = self.rto_backoff
+           req_spec.rcv_wnd                   = self.rcv_wnd
+           req_spec.snd_wscale                = self.snd_wscale 
+           req_spec.rcv_wscale                = self.rcv_wscale 
            if hasattr(self, 'header_template'):
                req_spec.header_template           = self.header_template
         return
@@ -132,6 +135,9 @@ class TcpCbObject(base.ConfigObjectBase):
             self.rto_pi = resp_spec.spec.rto_pi
             self.retx_timer_ci = resp_spec.spec.retx_timer_ci
             self.rto_backoff = resp_spec.spec.rto_backoff
+            self.rcv_wnd = resp_spec.spec.rcv_wnd
+            self.snd_wscale = resp_spec.spec.snd_wscale
+            self.rcv_wscale = resp_spec.spec.rcv_wscale
 
             self.bytes_rcvd = resp_spec.stats.bytes_rcvd
             self.pkts_rcvd = resp_spec.stats.pkts_rcvd

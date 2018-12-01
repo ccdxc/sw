@@ -82,7 +82,7 @@ tls_enc_post_crypto_process:
      * the scheduler re-evaluate if ci != pi. We can optimize to not ring the doorbell if
      * we can do the ci != pi check ourselves (in stage-0)
      */
-    CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid, TLS_SCHED_RING_BSQ)
+    CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid)
 
     memwr.dx     r4, r3
 

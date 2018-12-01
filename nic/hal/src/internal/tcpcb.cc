@@ -152,6 +152,9 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->rto = spec.rto();
     tcpcb->rto_backoff = spec.rto_backoff();
     tcpcb->cpu_id = spec.cpu_id();
+    tcpcb->rcv_wnd = spec.rcv_wnd();
+    tcpcb->snd_wscale = spec.snd_wscale();
+    tcpcb->rcv_wscale = spec.rcv_wscale();
 
     tcpcb->hal_handle = hal_alloc_handle();
 
@@ -236,6 +239,9 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->rto = spec.rto();
     tcpcb->rto_backoff = spec.rto_backoff();
     tcpcb->cpu_id = spec.cpu_id();
+    tcpcb->rcv_wnd = spec.rcv_wnd();
+    tcpcb->snd_wscale = spec.snd_wscale();
+    tcpcb->rcv_wscale = spec.rcv_wscale();
     memcpy(tcpcb->header_template, spec.header_template().c_str(),
             std::max(sizeof(tcpcb->header_template), spec.header_template().size()));
     pd_tcpcb_args.tcpcb = tcpcb;
@@ -316,6 +322,7 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_spec()->set_header_template(rtcpcb.header_template,
                                              sizeof(rtcpcb.header_template));
     rsp->mutable_spec()->set_sesq_retx_ci(rtcpcb.sesq_retx_ci);
+    rsp->mutable_spec()->set_sesq_tx_ci(rtcpcb.sesq_tx_ci);
     rsp->mutable_spec()->set_retx_snd_una(rtcpcb.retx_snd_una);
     rsp->mutable_spec()->set_rto(rtcpcb.rto);
 
@@ -333,6 +340,9 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_spec()->set_retx_timer_ci(rtcpcb.retx_timer_ci);
     rsp->mutable_spec()->set_rto_backoff(rtcpcb.rto_backoff);
     rsp->mutable_spec()->set_cpu_id(rtcpcb.cpu_id);
+    rsp->mutable_spec()->set_rcv_wnd(rtcpcb.rcv_wnd);
+    rsp->mutable_spec()->set_snd_wscale(rtcpcb.snd_wscale);
+    rsp->mutable_spec()->set_rcv_wscale(rtcpcb.rcv_wscale);
 
     // fill operational state of this TCP CB
     rsp->mutable_status()->set_tcpcb_handle(tcpcb->hal_handle);
@@ -384,6 +394,7 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_stats()->set_rto_pi(rtcpcb.rto_pi);
     rsp->mutable_stats()->set_tx_ring_pi(rtcpcb.tx_ring_pi);
     rsp->mutable_stats()->set_partial_ack_cnt(rtcpcb.partial_ack_cnt);
+    rsp->mutable_stats()->set_sesq_tx_ci(rtcpcb.sesq_tx_ci);
 
     rsp->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;

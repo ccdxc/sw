@@ -225,8 +225,8 @@ flow_rx_process_done:
 table_read_setup_next:
     phvwr           p.rx2tx_extra_snd_wnd, d.u.tcp_rx_d.snd_wnd
     phvwr           p.rx2tx_extra_rcv_mss, d.u.tcp_rx_d.rcv_mss
-    phvwr           p.rx2tx_rcv_nxt, d.u.tcp_rx_d.rcv_nxt
-    phvwr           p.rx2tx_state, d.u.tcp_rx_d.state
+    phvwr           p.rx2tx_extra_rcv_nxt, d.u.tcp_rx_d.rcv_nxt
+    phvwr           p.rx2tx_extra_state, d.u.tcp_rx_d.state
     phvwr           p.to_s3_flag, d.u.tcp_rx_d.flag
 flow_cpu_rx_process_done:
     /*

@@ -469,6 +469,32 @@ modules:
               dstseg    : filter://fabencap=VXLAN
 
     - module:
+        name    : UL_TO_UL_BYPASS_BARCO_WINDOW_FULL
+        spec    : uplink_to_uplink_window_full.testspec
+        module  : pkt_to_p4
+        args    :
+            bypass_barco : 1
+            maxflows: 1
+            snd_wnd : 64
+            num_rx_pkts : 2
+            num_tx_pkts : 1
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_WINDOW_OPEN_ON_ACK
+        spec    : uplink_to_uplink_window_full_open_on_ack.testspec
+        module  : pkt_to_p4
+        args    :
+            bypass_barco : 1
+            maxflows: 1
+            snd_wnd : 64
+            num_rx_pkts : 2
+            num_tx_pkts : 2
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
         name    : UL_TO_UL_BYPASS_BARCO_SERQ_FULL
         spec    : uplink_to_uplink_serq_full.testspec
         module  : pkt_to_p4

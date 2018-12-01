@@ -26,6 +26,9 @@ struct s5_t0_tcp_tx_xmit_d d;
 
 #define c_sesq c5
 #define c_snd_una c6
+#define c_retval c7
+
+#define r_linkaddr r7
 
 tcp_xmit_process_start:
     seq             c_sesq, k.common_phv_pending_sesq, 1
@@ -35,9 +38,6 @@ tcp_xmit_process_start:
     seq             c1, k.t0_s2s_state, TCP_RST
     bcf             [c1 & !c_snd_una], tcp_tx_end_program_and_drop
 
-    seq             c1, k.common_phv_pending_ack_send, 1
-    bcf             [c1], tcp_tx_enqueue
-
     bcf             [c_snd_una], tcp_tx_xmit_snd_una_update
 
     bbeq            k.common_phv_pending_rto, 1, tcp_tx_retransmit
@@ -46,57 +46,53 @@ tcp_xmit_process_start:
 
 tcp_tx_enqueue:
     /*
+     * If we have no window, bail out
+     */
+    seq             c1, d.no_window, 1
+    seq             c2, k.to_s5_window_open, 1
+    bcf             [c1 & !c2], tcp_tx_end_program_and_drop
+    nop
+    tblwr           d.no_window, 0
+    /*
      * For RTO case, snd_nxt is snd_una, initialize snd_nxt for other cases
      */
     seq             c1, k.t0_s2s_snd_nxt, r0
     phvwr.c1        p.t0_s2s_snd_nxt, d.snd_nxt
 
-    /* check SESQ for pending data to be transmitted */
-    bal.c_sesq      r7, tcp_init_xmit
-    nop
-
     seq             c1, k.common_phv_fin, 1
-    bal.c1          r7, tcp_tx_handle_fin
+    bal.c1          r_linkaddr, tcp_tx_handle_fin
     nop
 
-    /* Check if cwnd allows transmit of data */
-    /* Return value in r6 */
-    /* cwnd permits transmit of data if r6 != 0*/
-    bal             r7, tcp_cwnd_test
-    nop
-    sne             c1, r6, r0
-
-    /* Check if peer rcv wnd allows transmit of data
-     * Return value in r6
-     * Peer rcv wnd allows transmit of data if r6 != 0
+    /* Check if cwnd allows transmit of data
+     * Return value in c_retval
      */
-    bal.c1          r7, tcp_snd_wnd_test
+    bal             r_linkaddr, tcp_cwnd_test
     nop
-    sne             c2, r6, r0
-
-    seq             c3, k.common_phv_pending_ack_send, 1
-    bcf             [c3], table_read_TSO
+    b.!c_retval     tcp_tx_no_window
     nop
 
-    // TODO : window checks
-    //bcf             [!c1 | !c2], tcp_tx_end_program
+    /* 
+     * Check if peer rcv wnd allows transmit of data.
+     * Return value in c_retval
+     */
+    bal             r_linkaddr, tcp_snd_wnd_test
     nop
+    b.!c_retval     tcp_tx_no_window
+    nop
+
     /* Inform TSO stage following later to check for any data to
      * send from retx queue
      */
-    tblwr           d.pending_tso_data, 1
     phvwri          p.to_s6_pending_tso_data, 1
 
 flow_read_xmit_cursor_start:
     /* Get the point where we are supposed to read from */
-    seq             c1, d.xmit_cursor_addr, r0
+    seq             c1, k.t0_s2s_addr, r0
     bcf             [c1], flow_read_xmit_cursor_done
 
     // TODO : r1 needs to be capped by the window size
-    add             r1, d.xmit_len, r0
+    add             r1, k.t0_s2s_len, r0
 
-    phvwrpair       p.to_s6_xmit_cursor_addr, d.xmit_cursor_addr[33:0], \
-                        p.to_s6_xmit_cursor_len, r1
     tbladd          d.snd_nxt, r1
 
     seq             c1, d.packets_out, 0
@@ -170,6 +166,7 @@ flow_read_xmit_cursor_done:
 
 
 tcp_cwnd_test:
+    // TODO 
     /* in_flight = packets_out - (sacked_out + lost_out) + retrans_out
     */
     /* r1 = packets_out + retrans_out */
@@ -197,32 +194,27 @@ tcp_cwnd_test:
     add.c2          r6, r5, r0
     /* At this point r6 = min((max(cwnd >>1, 1) , (cwnd - in_flight)) */
 tcp_cwnd_test_done:
-    sne             c4, r7, r0
-    jr.c4           r7
-    add             r7, r0, r0
+    // TODO
+    // for now unconditionally return cwnd available
+    setcf           c_retval, [c0]
+    jr              r_linkaddr
+    nop
 
+/*
+ * Return snd_wnd available
+ *
+ * r1 = snd_nxt + len
+ * r2 = snd_una + snd_wnd
+ * return (r1 <= r2)
+ */
 tcp_snd_wnd_test:
-    /* r1 = bytes_sent = snd_nxt - snd_una */
-    sub             r1, d.snd_nxt, k.common_phv_snd_una
-    /* r1 = snd_wnd - bytes_sent */
-    sub             r1, k.t0_s2s_snd_wnd, r1
-    /* r1 = (snd_wnd - bytes_sent) / mss_cache */
-    srl             r6, r1, k.to_s5_rcv_mss_shft
-    sne             c4, r7, r0
-    jr.c4           r7
-    add             r7, r0, r0
-
-
-
-tcp_init_xmit:
-    seq             c1, d.xmit_cursor_addr, r0
-    jr.!c1          r7
+    add             r1, d.snd_nxt, k.t0_s2s_len
+    sll             r2, k.to_s5_snd_wnd, d.snd_wscale
+    add             r2, r2, k.common_phv_snd_una
+    scwle           c_retval, r1, r2
+    jr              r_linkaddr
     nop
-    tblwr           d.xmit_cursor_addr, k.to_s5_addr
-    tblwr           d.xmit_offset, k.to_s5_offset
-    tblwr           d.xmit_len, k.to_s5_len
-    jr              r7
-    nop
+
 
 tcp_tx_handle_fin:
     seq             c1, k.t0_s2s_state, TCP_ESTABLISHED
@@ -230,7 +222,7 @@ tcp_tx_handle_fin:
     setcf           c1, [c1 | c2]
     tbladd.c1       d.snd_nxt, 1
     phvwr           p.tx2rx_fin_sent, 1
-    jr              r7
+    jr              r_linkaddr
     nop
 
 tcp_tx_xmit_snd_una_update:
@@ -276,3 +268,10 @@ tcp_tx_retransmit:
     nop
     b               rearm_rto
     tbladd          d.rto_backoff, 1
+
+tcp_tx_no_window:
+    add             r1, k.common_phv_qstate_addr, TCP_TCB_RX2TX_TX_CI_OFFSET
+    // Bail out, but remember the current ci in stage 0 CB
+    tblwr           d.no_window, 1
+    b               tcp_tx_end_program_and_drop
+    memwr.h         r1, k.to_s5_sesq_tx_ci

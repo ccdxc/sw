@@ -45,33 +45,31 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
 
 
 #define RX2TX_SHARED_STATE \
-        rcv_nxt                         : SEQ_NUMBER_WIDTH      ;\
         ft_pi                           : 16                    ;\
-        state                           : 8                     ;\
         pending_ack_send                : 1                     ;\
-        saved_pending_ack_send          : 1                     ;\
         pending_dup_ack_send            : 1                     ;\
-        pad1_rx2tx                      : 5                     ;
+        pad1_rx2tx                      : 6                     ;
 
 
 #define RX2TX_SHARED_EXTRA_STATE \
+        rcv_nxt                         : SEQ_NUMBER_WIDTH      ;\
         snd_wnd                         : 16                    ;\
+        rcv_wnd                         : 16                    ;\
         rto                             : 16                    ;\
         ato_deadline                    : TS_WIDTH              ;\
         snd_una                         : SEQ_NUMBER_WIDTH      ;\
         rcv_tsval                       : TS_WIDTH              ;\
         srtt_us                         : TS_WIDTH              ;\
-        rcv_wnd                         : WINDOW_WIDTH          ;\
         prior_ssthresh                  : WINDOW_WIDTH          ;\
         high_seq                        : SEQ_NUMBER_WIDTH      ;\
         ooo_datalen                     : COUNTER16             ;\
         reordering                      : COUNTER32             ;\
-        undo_marker                     : SEQ_NUMBER_WIDTH      ;\
         undo_retrans                    : SEQ_NUMBER_WIDTH      ;\
         snd_ssthresh                    : WINDOW_WIDTH          ;\
         loss_cwnd                       : WINDOW_WIDTH          ;\
         write_seq                       : SEQ_NUMBER_WIDTH      ;\
         rcv_mss                         : 16                    ;\
+        state                           : 8                     ;\
         ca_state                        : 8                     ;\
         ecn_flags                       : 8                     ;\
         num_sacks                       : 8                     ;\
@@ -100,6 +98,7 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         retx_snd_una                    : SEQ_NUMBER_WIDTH      ;\
         sesq_ci_addr                    : HBM_ADDRESS_WIDTH     ;\
         gc_base                         : 64                    ;\
+        last_ack                        : 32                    ;\
         partial_ack_cnt                 : 32                    ;\
         tx_ring_pi                      : 16                    ;\
         tx_rst_sent                     : 1                     ;\
@@ -124,8 +123,9 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
 
 #define TCB_XMIT_SHARED_STATE \
         snd_nxt                         : SEQ_NUMBER_WIDTH      ;\
-        xmit_next_desc                  : HBM_ADDRESS_WIDTH     ;\
+        snd_wscale                      : 16                    ;\
         xmit_cursor_addr                : 40                    ;\
+        sesq_tx_ci                      : 16                    ;\
         xmit_offset                     : 16                    ;\
         xmit_len                        : 16                    ;\
         packets_out                     : 16                    ;\
@@ -133,13 +133,9 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         rto_pi                          : 16                    ;\
         retrans_out                     : 16                    ;\
         lost_out                        : 16                    ;\
-        flag                            : 16                    ;\
         is_cwnd_limited                 : 8                     ;\
         rto_backoff                     : 8                     ;\
-        pending_ack_tx                  : 1                     ;\
-        pending_delayed_ack_tx          : 1                     ;\
-        pending_tso_data                : 1                     ;\
-        pending_pad                     : 9                     ;\
+        no_window                       : 1                     ;\
 
 #define TCB_TSO_STATE \
         ip_id                           : 32                    ;\
@@ -157,6 +153,7 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
 retx_snd_una,\
 sesq_ci_addr,\
 gc_base,\
+last_ack,\
 partial_ack_cnt,\
 tx_ring_pi,\
 tx_rst_sent
@@ -170,12 +167,11 @@ tune_reordering, sack_reordering,\
 max_packets_out, ca_state, delayed_ack
 
 #define XMIT_SHARED_PARAMS \
-snd_nxt,\
-xmit_cursor_addr, xmit_next_desc,\
+snd_nxt,snd_wscale,\
+xmit_cursor_addr, sesq_tx_ci,\
 xmit_offset, xmit_len,\
 packets_out, sacked_out, rto_pi, retrans_out, lost_out,\
-is_cwnd_limited, flag, ca_state, rto_backoff,\
-pending_ack_tx,pending_delayed_ack_tx, pending_tso_data, pending_pad
+is_cwnd_limited, rto_backoff, no_window
 
 #define TSO_PARAMS                                                        \
 ip_id, source_lif, source_port, dest_port, header_len,\
@@ -187,6 +183,7 @@ quick_acks_decr
     modify_field(retx_d.retx_snd_una, retx_snd_una); \
     modify_field(retx_d.sesq_ci_addr, sesq_ci_addr); \
     modify_field(retx_d.gc_base, gc_base); \
+    modify_field(retx_d.last_ack, last_ack); \
     modify_field(retx_d.partial_ack_cnt, partial_ack_cnt); \
     modify_field(retx_d.tx_ring_pi, tx_ring_pi); \
     modify_field(retx_d.tx_rst_sent, tx_rst_sent); \
@@ -211,8 +208,9 @@ quick_acks_decr
 
 #define GENERATE_XMIT_SHARED_D \
     modify_field(xmit_d.snd_nxt, snd_nxt); \
+    modify_field(xmit_d.snd_wscale, snd_wscale); \
     modify_field(xmit_d.xmit_cursor_addr, xmit_cursor_addr); \
-    modify_field(xmit_d.xmit_next_desc, xmit_next_desc); \
+    modify_field(xmit_d.sesq_tx_ci, sesq_tx_ci); \
     modify_field(xmit_d.xmit_offset, xmit_offset); \
     modify_field(xmit_d.xmit_len, xmit_len); \
     modify_field(xmit_d.packets_out, packets_out); \
@@ -220,15 +218,11 @@ quick_acks_decr
     modify_field(xmit_d.rto_pi, rto_pi); \
     modify_field(xmit_d.retrans_out, retrans_out); \
     modify_field(xmit_d.lost_out, lost_out); \
-    modify_field(xmit_d.flag, flag); \
     modify_field(xmit_d.is_cwnd_limited, is_cwnd_limited); \
     modify_field(xmit_d.rto_backoff, rto_backoff); \
-    modify_field(xmit_d.pending_ack_tx, pending_ack_tx); \
-    modify_field(xmit_d.pending_delayed_ack_tx, pending_delayed_ack_tx); \
-    modify_field(xmit_d.pending_tso_data, pending_tso_data);\
-    modify_field(xmit_d.pending_pad, pending_pad);\
+    modify_field(xmit_d.no_window, no_window); \
 
-#define GENERATE_TSO_SHARED_D                                                                               \
+#define GENERATE_TSO_SHARED_D \
     modify_field(tso_d.ip_id, ip_id); \
     modify_field(tso_d.source_lif, source_lif); \
     modify_field(tso_d.source_port, source_port); \

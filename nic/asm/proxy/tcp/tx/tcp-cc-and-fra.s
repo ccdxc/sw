@@ -19,18 +19,30 @@ struct s4_t0_tcp_tx_cc_and_fra_d d;
 %%
     .align
     .param          tcp_xmit_process_start
+    .param          tcp_xmit_ack_process_start
     .param          bictcp_cong_avoid
 
 tcp_cc_and_fra_process_start:
+    bbeq            k.common_phv_pending_ack_send, 1, tcp_cc_and_fra_ack
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
                         tcp_xmit_process_start,
                         k.common_phv_qstate_addr,
                         TCP_TCB_XMIT_OFFSET, TABLE_SIZE_512_BITS)
 
-    smeqb           c1, k.common_phv_pending_retx_cleanup, \
-                        PENDING_RETX_CLEANUP, PENDING_RETX_CLEANUP
-    seq             c2, k.common_phv_pending_ack_send, 1
-    bcf             [c1 & !c2], tcp_cong_control
+    bbeq            k.common_phv_pending_retx_cleanup, 1, tcp_cong_control
+
+    phvwr           p.to_s5_snd_cwnd, d.snd_cwnd
+
+    nop.e
+    nop
+
+tcp_cc_and_fra_ack:
+    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
+                        tcp_xmit_ack_process_start,
+                        k.common_phv_qstate_addr,
+                        TCP_TCB_XMIT_OFFSET, TABLE_SIZE_512_BITS)
+
+    bbeq            k.common_phv_pending_retx_cleanup, 1, tcp_cong_control
 
     phvwr           p.to_s5_snd_cwnd, d.snd_cwnd
 

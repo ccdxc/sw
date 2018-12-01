@@ -683,9 +683,7 @@ tcp_proxy_cb_p4pd_add_or_del_tcp_tx_read_rx2tx_entry(pd_tcp_proxy_cb_t* tcp_prox
             debug_dol_test_timer_full(DEBUG_DOL_TEST_TIMER_FULL_RESET);
             debug_dol_timer_full_hw_id = 0;
         }
-        data.u.read_rx2tx_d.rcv_nxt = htonl(tcp_proxy_cb_pd->tcp_proxy_cb->rcv_nxt);
         data.u.read_rx2tx_d.pending_ack_send = tcp_proxy_cb_pd->tcp_proxy_cb->pending_ack_send;
-        data.u.read_rx2tx_d.state = (uint8_t)tcp_proxy_cb_pd->tcp_proxy_cb->state;
         HAL_TRACE_DEBUG("TCPCB rx2tx debug_dol_tx: {:#x}", data.u.read_rx2tx_d.debug_dol_tx);
         HAL_TRACE_DEBUG("TCPCB rx2tx shared pending_ack_send: {:#x}",
                     data.u.read_rx2tx_d.pending_ack_send);
@@ -726,6 +724,8 @@ tcp_proxy_cb_p4pd_add_or_del_tcp_tx_read_rx2tx_extra_entry(pd_tcp_proxy_cb_t* tc
         data.u.read_rx2tx_extra_d.snd_una = htonl(tcp_proxy_cb_pd->tcp_proxy_cb->snd_una);
         data.u.read_rx2tx_extra_d.rcv_mss = htons((uint16_t)tcp_proxy_cb_pd->tcp_proxy_cb->rcv_mss);
         data.u.read_rx2tx_extra_d.snd_wnd = htons(tcp_proxy_cb_pd->tcp_proxy_cb->snd_wnd);
+        data.u.read_rx2tx_extra_d.rcv_nxt = htonl(tcp_proxy_cb_pd->tcp_proxy_cb->rcv_nxt);
+        data.u.read_rx2tx_extra_d.state = (uint8_t)tcp_proxy_cb_pd->tcp_proxy_cb->state;
         // TODO : fix this hardcoding
         data.u.read_rx2tx_extra_d.rto = htons(100);
 

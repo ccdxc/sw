@@ -74,7 +74,7 @@ tls_enc_pre_crypto_process:
     addi    r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TLS)
 
     /* data will be in r3 */
-    CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid[15:0], TLS_SCHED_RING_SERQ)
+    CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid[15:0])
 
 	memwr.dx  	 r4, r3
 

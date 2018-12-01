@@ -8,12 +8,18 @@
 // NOTE : ** These offsets need to match the offsets in 
 // tcp_proxy_api.h **
 #define TCP_TCB_RX2TX_SHARED_OFFSET     0
-#define TCP_TCB_RX2TX_RETX_CI_OFFSET \
+
+// offset of ci_3 in TCP Tx stage 0
+#define TCP_TCB_RETX_TIMER_CI_OFFSET    (TCP_TCB_RX2TX_SHARED_OFFSET + 22)
+
+#define TCP_TCB_RX2TX_TX_CI_OFFSET \
                     (TCP_TCB_RX2TX_SHARED_OFFSET + 40)
+#define TCP_TCB_RX2TX_RETX_CI_OFFSET \
+                    (TCP_TCB_RX2TX_SHARED_OFFSET + 42)
 #define TCP_TCB_RX2TX_RETX_PENDING_OFFSET \
-                    (TCP_TCB_RX2TX_SHARED_OFFSET + 44)
+                    (TCP_TCB_RX2TX_SHARED_OFFSET + 46)
 #define TCP_TCB_RX2TX_SHARED_WRITE_OFFSET \
-                    (TCP_TCB_RX2TX_SHARED_OFFSET + 56)  // skip intrinsic part etc
+                    (TCP_TCB_RX2TX_SHARED_OFFSET + 61)  // skip intrinsic part etc
 #define TCP_TCB_TX2RX_SHARED_OFFSET     64
 #define TCP_TCB_TX2RX_SHARED_WRITE_OFFSET \
                     (TCP_TCB_TX2RX_SHARED_OFFSET + 32)  // skip intrinsic part etc
@@ -32,9 +38,6 @@
 #define TCP_TCB_TX_STATS_OFFSET         896
 #define TCP_TCB_WRITE_L7Q_OFFSET        960
 #define TCP_TCB_SACK_OFFSET             96
-
-// offset of ci_3 in TCP Tx stage 0
-#define TCP_TCB_RETX_TIMER_CI_OFFSET    (TCP_TCB_RX2TX_SHARED_OFFSET + 22)
 
 #define flow_sack2_process             0x00010000
 #define flow_fc_process                0x00010400

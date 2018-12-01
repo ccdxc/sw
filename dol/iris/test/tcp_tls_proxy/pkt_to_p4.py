@@ -241,11 +241,17 @@ def TestCaseVerify(tc):
 
     num_pkts = tc.pvtdata.num_pkts
     num_ack_pkts = tc.pvtdata.num_ack_pkts
-    num_rx_pkts = tc.pvtdata.num_pkts
+    if tc.pvtdata.num_rx_pkts:
+        num_rx_pkts = tc.pvtdata.num_rx_pkts
+    else:
+        num_rx_pkts = tc.pvtdata.num_pkts
     num_retx_pkts = 0
     if hasattr(tc.module.args, 'num_retx_pkts'):
         num_retx_pkts = tc.module.args.num_retx_pkts
-    num_tx_pkts = num_rx_pkts + num_retx_pkts
+    if tc.pvtdata.num_tx_pkts:
+        num_tx_pkts = tc.pvtdata.num_tx_pkts
+    else:
+        num_tx_pkts = num_rx_pkts + num_retx_pkts
 
     if hasattr(tc.module.args, 'num_retx_pkts'):
         tc.pvtdata.flow2_bytes_txed += (tc.packets.Get('PKT1').payloadsize * int(tc.module.args.num_retx_pkts))

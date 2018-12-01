@@ -72,13 +72,13 @@ done
 if [ "$X86_64" -eq "1" ]
 then
     echo "Building for x86_64"
-    LKL_EXPORT_BIN_DIR="../export/x86_64/bin/"
+    LKL_EXPORT_BIN_DIR="../export/x86_64/lib/"
 fi
 
 if [ "$AARCH64" -eq "1" ]
 then
     echo "Building for aarch64"
-    LKL_EXPORT_BIN_DIR="../export/aarch64/bin/"
+    LKL_EXPORT_BIN_DIR="../export/aarch64/lib/"
 fi
 
 if [ "$CLONE" -eq "1" ]

@@ -27,10 +27,9 @@ tcp_tx_read_descr_start:
     CAPRI_OPERAND_DEBUG(d.O0)
     CAPRI_OPERAND_DEBUG(d.L0)
     bbeq            k.common_phv_pending_retx_cleanup, 1, tcp_tx_asesq_cleanup
-    phvwr           p.to_s3_addr, d.{A0}.dx
-    phvwr           p.to_s3_offset, d.{O0}.wx
-    phvwr           p.to_s3_len, d.{L0}.wx
-    phvwr           p.t0_s2s_next_addr, d.{next_addr}.dx
+    add             r2, d.{A0}.dx, d.{O0}.wx
+    phvwr           p.t0_s2s_addr, r2
+    phvwr           p.t0_s2s_len, d.{L0}.wx
 
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
                         tcp_retx_process_start,

@@ -79,6 +79,7 @@ bytes_acked_stats_update_end:
      */
 tcp_ack_done:
     phvwr           p.rx2tx_extra_snd_una, d.snd_una
+    phvwr           p.rx2tx_extra_snd_wnd, k.s1_s2s_window
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
                         tcp_rx_rtt_start,
                         k.common_phv_qstate_addr,

@@ -36,14 +36,14 @@ dma_cmd_write_rx2tx_shared:
      * DMA rx2tx shared
      */
     add         r5, TCP_TCB_RX2TX_SHARED_WRITE_OFFSET, k.common_phv_qstate_addr
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(rx2tx_or_cpu_hdr_dma_dma_cmd, r5, rx2tx_rcv_nxt, rx2tx_pad1_rx2tx)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(rx2tx_or_cpu_hdr_dma_dma_cmd, r5, rx2tx_ft_pi, rx2tx_pad1_rx2tx)
 
 dma_cmd_write_rx2tx_extra_shared:
     /*
      * DMA rx2tx shared extra
      */
     add         r5, TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, k.common_phv_qstate_addr
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(rx2tx_extra_dma_dma_cmd, r5, rx2tx_extra_snd_wnd, rx2tx_extra__padding)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(rx2tx_extra_dma_dma_cmd, r5, rx2tx_extra_rcv_nxt, rx2tx_extra__padding)
 
     smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_PKT_TO_SERQ, TCP_DDOL_PKT_TO_SERQ
     smeqb       c2, k.common_phv_debug_dol, TCP_DDOL_DONT_QUEUE_TO_SERQ, TCP_DDOL_DONT_QUEUE_TO_SERQ

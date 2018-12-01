@@ -407,6 +407,10 @@ message TcpCbSpec {
   uint32                rto_backoff                = 39;
   uint32                cpu_id                     = 40;
   uint32                serq_ci                    = 41;
+  uint32                rcv_wnd                    = 42;
+  uint32                snd_wscale                 = 43;
+  uint32                rcv_wscale                 = 44;
+  uint32                sesq_tx_ci                 = 45;
 }
 
 // TcpCbRequestMsg is batched add or modify tcpcb request
@@ -502,6 +506,7 @@ message TcpCbStats {
   uint32                asesq_retx_ci              = 10024;
   uint32                tx_ring_pi                 = 10025;
   uint32                partial_ack_cnt            = 10026;
+  uint32                sesq_tx_ci                 = 10027;
 }
 
 // TcpCbGetResponse captures all the information about a tcpcb

@@ -9,11 +9,11 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 #include "INGRESS_s0_t0_tcp_tx_k.h"
-	
+
 struct phv_ p;
 struct s0_t0_tcp_tx_k_ k;
 struct s0_t0_tcp_tx_read_rx2tx_d d;
-	
+
 %%
     .align
     .param          tcp_tx_read_rx2tx_shared_extra_stage1_start
@@ -24,7 +24,7 @@ struct s0_t0_tcp_tx_read_rx2tx_d d;
 
 
 // mask ring clean_retx and pending_tx when barrier is set
-#define CLEAN_RETX_PENDING_MASK         0x5f
+#define CLEAN_RETX_PENDING_MASK         0x7f
 
 tcp_tx_read_rx2tx_shared_process:
     CAPRI_OPERAND_DEBUG(r7)
@@ -32,41 +32,40 @@ tcp_tx_read_rx2tx_shared_process:
     // to eval
     seq             c1, d.clean_retx_pending, CLEAN_RETX_PENDING_MASK
     and.c1          r7, r7, d.clean_retx_pending
-	.brbegin
+    .brbegin
         // priorities are 0 (highest) to 7 (lowest)
         // The rightmost value specifies the priority of r7[0]
         // tx ring (5) is highest priority so that we finish pending activity
-	    brpri		r7[7:0], [1,3,0,5,7,6,2,4]
-	    nop
-	        .brcase 0
-	            b tcp_tx_launch_sesq            // prio 4
-	            nop
-	        .brcase 1
-	            b tcp_tx_send_ack               // prio 2
-	            nop
-	        .brcase 2
-	            b tcp_tx_ft_expired             // prio 6
-	            nop
-	        .brcase 3
-	            b tcp_tx_retx_timer_expired     // prio 7
-	            nop
-	        .brcase 4
-	            b tcp_tx_launch_asesq           // prio 5
-	            nop
-	        .brcase 5
-                // unused
-	            b tcp_tx_launch_pending_tx      // prio 0
-	            nop
-	        .brcase 6
-	            b tcp_tx_fast_retrans           // prio 3
-	            nop
+        brpri        r7[7:0], [1,3,0,5,7,6,4,2]
+        nop
+            .brcase 0
+                b tcp_tx_launch_sesq            // prio 2
+                nop
+            .brcase 1
+                b tcp_tx_send_ack               // prio 4
+                nop
+            .brcase 2
+                b tcp_tx_ft_expired             // prio 6
+                nop
+            .brcase 3
+                b tcp_tx_retx_timer_expired     // prio 7
+                nop
+            .brcase 4
+                b tcp_tx_launch_asesq           // prio 5
+                nop
+            .brcase 5
+                b tcp_tx_launch_pending_tx      // prio 0
+                nop
+            .brcase 6
+                b tcp_tx_fast_retrans           // prio 3
+                nop
             .brcase 7
-	            b tcp_tx_clean_retx             // prio 1
-	            nop
+                b tcp_tx_clean_retx             // prio 1
+                nop
             .brcase 8
-	            b tcp_tx_abort
-	            nop
-	.brend
+                b tcp_tx_abort
+                nop
+    .brend
 
 /******************************************************************************
  * tcp_tx_launch_sesq
@@ -80,6 +79,7 @@ tcp_tx_launch_sesq:
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_FORCE_TBL_SETADDR, TCP_TX_DDOL_FORCE_TBL_SETADDR
     phvwri.c1       p.common_phv_debug_dol_force_tbl_setaddr, 1
 #endif
+    bbeq            d.sesq_tx_ci[15], 0, tcp_tx_sesq_no_window
     add             r5, d.{sesq_base}.wx, d.{ci_0}.hx, NIC_SESQ_ENTRY_SIZE_SHIFT
 
     /* Check if we have pending del ack timer (fast timer)
@@ -87,10 +87,13 @@ tcp_tx_launch_sesq:
      */
     sne             c1, d.{pi_2}.hx, d.ft_pi
     tblwr.c1        d.{ci_2}, d.{ft_pi}.hx
-    tblwr           d.old_ack_no, d.rcv_nxt
+
+    // store current ci in r6
+    add             r6, r0, d.{ci_0}.hx
 
     tblmincri.f     d.{ci_0}.hx, CAPRI_SESQ_RING_SLOTS_SHIFT, 1
     phvwr           p.common_phv_debug_dol_bypass_barco, d.debug_dol_tx[TCP_TX_DDOL_BYPASS_BARCO_BIT]
+    phvwr           p.to_s5_sesq_tx_ci, r6
 
     /*
      * Ring doorbell to set CI if pi == ci
@@ -99,7 +102,7 @@ tcp_tx_launch_sesq:
     b.!c1           tcp_tx_skip_sesq_doorbell
 
     addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
-    CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid, TCP_SCHED_RING_SESQ)
+    CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid)
     memwr.dx        r4, r3
 
 tcp_tx_skip_sesq_doorbell:
@@ -111,10 +114,8 @@ tcp_tx_skip_sesq_doorbell:
                         tcp_tx_read_rx2tx_shared_extra_stage1_start,
                         k.p4_txdma_intr_qstate_addr,
                         TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, TABLE_SIZE_512_BITS)
-    phvwr           p.to_s6_rcv_nxt, d.rcv_nxt
     phvwrpair       p.common_phv_fid, k.p4_txdma_intr_qid, \
                         p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
-    phvwr           p.t0_s2s_state, d.state
 
     phvwri          p.common_phv_pending_sesq, 1
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_tx_sesq_read_ci_stage1_start,
@@ -130,6 +131,13 @@ tcp_tx_launch_sesq_end:
 #endif
     // END of DEBUG code
     nop.e
+    nop
+
+tcp_tx_sesq_no_window:
+    tblwr.f         d.{ci_0}.hx, d.{pi_0}.hx
+    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
+    CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid)
+    memwr.dx.e      r4, r3
     nop
 
 
@@ -159,10 +167,8 @@ tcp_tx_launch_asesq:
                         tcp_tx_read_rx2tx_shared_extra_stage1_start,
                         k.p4_txdma_intr_qstate_addr,
                         TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, TABLE_SIZE_512_BITS)
-    phvwr           p.to_s6_rcv_nxt, d.rcv_nxt
     phvwrpair       p.common_phv_fid, k.p4_txdma_intr_qid, \
                         p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
-    phvwr           p.t0_s2s_state, d.state
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_tx_sesq_read_ci_stage1_start,
                      r3, TABLE_SIZE_64_BITS)
 
@@ -174,7 +180,7 @@ tcp_tx_launch_asesq:
 
     addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
     /* data will be in r3 */
-    CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid, TCP_SCHED_RING_ASESQ)
+    CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid)
     memwr.dx        r4, r3
 
 tcp_tx_launch_asesq_end:
@@ -186,17 +192,21 @@ tcp_tx_launch_asesq_end:
  * tcp_tx_launch_pending_tx
  *****************************************************************************/
 tcp_tx_launch_pending_tx:
-    // unused
-    nop.e
-    nop
+    // if sesq_tx_ci is invalid, quit
+    bbeq            d.sesq_tx_ci[15], 1, tcp_tx_abort
+
+    tblwr           d.{ci_0}.hx, d.sesq_tx_ci
+    tblwr           d.sesq_tx_ci, TCP_TX_INVALID_SESQ_TX_CI
+    phvwr           p.to_s5_window_open, 1
+    b               tcp_tx_launch_sesq
+    tblwr           d.{ci_5}.hx, d.{pi_5}.hx
 
 
 /******************************************************************************
  * tcp_tx_send_ack
  *****************************************************************************/
 tcp_tx_send_ack:
-    phvwr           p.common_phv_debug_dol_bypass_barco, d.debug_dol_tx[TCP_TX_DDOL_BYPASS_BARCO_BIT]
-
+#if 0
     /*
      * c1 = send ack
      *
@@ -204,9 +214,12 @@ tcp_tx_send_ack:
      * else if old_ack_no != rcv_nxt, c1 = d.pending_ack_send
      */
     seq             c1, d.pending_dup_ack_send, 1
-    sne.!c1         c1, d.old_ack_no, d.rcv_nxt          
+    sne.!c1         c1, d.old_ack_no, d.rcv_nxt
     tblwr.c1        d.old_ack_no, d.rcv_nxt
+#endif
     tblwr.f         d.{ci_1}.hx, d.{pi_1}.hx
+    phvwr           p.common_phv_pending_dup_ack_send, d.pending_dup_ack_send
+    phvwr           p.common_phv_debug_dol_bypass_barco, d.debug_dol_tx[TCP_TX_DDOL_BYPASS_BARCO_BIT]
 send_ack_doorbell:
 
     /*
@@ -214,8 +227,7 @@ send_ack_doorbell:
      */
     addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
     /* data will be in r3 */
-    CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid, TCP_SCHED_RING_SEND_ACK)
-    b.!c1           tcp_tx_rx2tx_end
+    CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid)
     memwr.dx        r4, r3
 
     // This table need not be locked since it is read-only.
@@ -226,10 +238,8 @@ send_ack_doorbell:
                         tcp_tx_read_rx2tx_shared_extra_stage1_start,
                         k.p4_txdma_intr_qstate_addr,
                         TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, TABLE_SIZE_512_BITS)
-    phvwr           p.to_s6_rcv_nxt, d.rcv_nxt
     phvwrpair       p.common_phv_fid, k.p4_txdma_intr_qid, \
                         p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
-    phvwr           p.t0_s2s_state, d.state
 
 #ifndef HW
     smeqb           c2, d.debug_dol_tx, TCP_TX_DDOL_DONT_SEND_ACK, TCP_TX_DDOL_DONT_SEND_ACK
@@ -257,6 +267,7 @@ tcp_tx_clean_retx:
                         p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
     //tblwr           d.debug_dol_tblsetaddr, d.sesq_retx_ci[7:0]
     tblwr.f         d.clean_retx_pending, CLEAN_RETX_PENDING_MASK
+    phvwr           p.to_s3_window_not_restricted, d.sesq_tx_ci[15]
 
     // This table need not be locked since it is read-only.
     // Moreover it should not be locked to prevent the bypass
@@ -266,7 +277,6 @@ tcp_tx_clean_retx:
                         tcp_tx_read_rx2tx_shared_extra_clean_retx_stage1_start,
                         k.p4_txdma_intr_qstate_addr,
                         TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, TABLE_SIZE_512_BITS)
-    phvwr           p.t0_s2s_state, d.state
     phvwr           p.common_phv_debug_dol_bypass_barco, d.debug_dol_tx[TCP_TX_DDOL_BYPASS_BARCO_BIT]
     phvwrpair       p.common_phv_pending_retx_cleanup, PENDING_RETX_CLEANUP, \
                         p.common_phv_pending_rx2tx, 1
@@ -345,7 +355,7 @@ clean_retx_flush_and_drop:
      */
     addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
     /* data will be in r3 */
-    CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid, TCP_SCHED_RING_CLEAN_RETX)
+    CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid)
     memwr.dx        r4, r3
 
 clean_retx_drop:
@@ -372,7 +382,7 @@ tcp_tx_retx_timer_expired:
 
     addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
     // data will be in r3
-    CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid, TCP_SCHED_RING_RTO)
+    CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid)
     memwr.dx        r4, r3
 
     b.c1            tcp_tx_rx2tx_end
@@ -388,10 +398,8 @@ tcp_tx_retx_timer_expired:
                         tcp_tx_read_rx2tx_shared_extra_stage1_start,
                         k.p4_txdma_intr_qstate_addr,
                         TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, TABLE_SIZE_512_BITS)
-    phvwr           p.to_s6_rcv_nxt, d.rcv_nxt
     phvwrpair       p.common_phv_fid, k.p4_txdma_intr_qid, \
                         p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
-    phvwr           p.t0_s2s_state, d.state
     /*
      * Launch sesq entry ready with RETX CI as index
      */
@@ -430,10 +438,8 @@ tcp_tx_fast_retrans:
                         tcp_tx_read_rx2tx_shared_extra_stage1_start,
                         k.p4_txdma_intr_qstate_addr,
                         TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, TABLE_SIZE_512_BITS)
-    phvwr           p.to_s6_rcv_nxt, d.rcv_nxt
     phvwrpair       p.common_phv_fid, k.p4_txdma_intr_qid, \
                         p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
-    phvwr           p.t0_s2s_state, d.state
 
     /*
      * Ring doorbell to set CI
@@ -441,7 +447,7 @@ tcp_tx_fast_retrans:
 
     addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
     // data will be in r3
-    CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid, TCP_SCHED_RING_FAST_RETRANS)
+    CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid)
     memwr.dx        r4, r3
 
     /*
@@ -494,13 +500,11 @@ tcp_tx_cancel_fast_timer:
                         tcp_tx_read_rx2tx_shared_extra_stage1_start,
                         k.p4_txdma_intr_qstate_addr,
                         TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, TABLE_SIZE_512_BITS)
-    phvwr           p.to_s6_rcv_nxt, d.rcv_nxt
     phvwrpair       p.common_phv_fid, k.p4_txdma_intr_qid, \
                         p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
-    phvwr           p.t0_s2s_state, d.state
     nop.e
     nop
-    
+
 
 /******************************************************************************
  * tcp_tx_abort

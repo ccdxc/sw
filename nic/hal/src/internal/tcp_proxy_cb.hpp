@@ -62,6 +62,7 @@ typedef struct tcpcb_s {
     uint32_t              sesq_retx_ci;            // for testing, check in DOL
     uint32_t              asesq_retx_ci;           // for testing, check in DOL
     uint32_t              retx_snd_una;            // for testing, check in DOL
+    uint32_t              sesq_tx_ci;              // for testing, check in DOL
     uint32_t              rto;
     uint32_t              snd_cwnd_cnt;
     uint32_t              serq_pi;
@@ -70,6 +71,9 @@ typedef struct tcpcb_s {
     uint32_t              rto_backoff;
     uint8_t               cpu_id;
     bool                  bypass_tls;
+    uint32_t              snd_wscale;
+    uint32_t              rcv_wscale;
+    uint32_t              rcv_wnd;
 
     // operational state of TCP Proxy CB
     hal_handle_t          hal_handle;              // HAL allocated handle

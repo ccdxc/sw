@@ -38,7 +38,7 @@ tcp_write_xmit:
     seq             c1, k.common_phv_pending_ack_send, 1
     bcf             [c1], dma_cmd_intrinsic
 
-    seq             c1, k.to_s6_xmit_cursor_addr, r0
+    seq             c1, k.t0_s2s_addr, r0
     bcf             [c1], flow_tso_process_done
     nop
 
@@ -54,6 +54,10 @@ dma_cmd_intrinsic:
 
     // app header
 #ifdef HW
+    /*
+     * In real HW, we want to increment ip_id, otherwise linux does not perform
+     * GRO
+     */
     phvwr           p.{tcp_app_header_p4plus_app_id...tcp_app_header_flags}, \
                         ((P4PLUS_APPTYPE_TCPTLS << 12) | \
                             P4PLUS_TO_P4_FLAGS_LKP_INST | \
@@ -64,6 +68,10 @@ dma_cmd_intrinsic:
     phvwr           p.tcp_app_header_ip_id_delta, d.ip_id
     tbladd          d.ip_id, 1
 #else
+    /*
+     * In simulation, don't increment ip_id, otherwise a lot of DOL cases need
+     * to change
+     */
     phvwr           p.{tcp_app_header_p4plus_app_id...tcp_app_header_flags}, \
                         ((P4PLUS_APPTYPE_TCPTLS << 12) | \
                             P4PLUS_TO_P4_FLAGS_LKP_INST | \
@@ -86,11 +94,11 @@ dma_cmd_tcp_header:
     phvwr           p.{tcp_header_source_port...tcp_header_dest_port}, \
                         d.{source_port...dest_port}
     phvwrpair       p.tcp_header_seq_no, k.t0_s2s_snd_nxt, \
-                        p.tcp_header_ack_no, k.to_s6_rcv_nxt
+                        p.tcp_header_ack_no, k.t0_s2s_rcv_nxt
 
     //phvwr           p.tcp_header_data_ofs, 8		// 32 bytes
     phvwrpair       p.tcp_header_data_ofs, 5, \
-                        p.tcp_header_window, k.t0_s2s_snd_wnd
+                        p.tcp_header_window, k.to_s6_rcv_wnd
 	phvwr           p.{tcp_nop_opt1_kind...tcp_nop_opt2_kind}, \
                         (TCPOPT_NOP << 8 | TCPOPT_NOP)
 
@@ -101,7 +109,7 @@ dma_cmd_tcp_header:
     //CAPRI_DMA_CMD_PHV2PKT_SETUP(tcp_header_dma_dma_cmd, tcp_header_source_port, tcp_ts_opts_ts_ecr)
 
 dma_cmd_data:
-    seq             c2, k.to_s6_xmit_cursor_addr, r0
+    seq             c2, k.t0_s2s_addr, r0
     /* r6 has tcp data len being sent */
     addi            r6, r0, 0
     /* We can end up taking this branch if we ended up here
@@ -112,20 +120,16 @@ dma_cmd_data:
     bcf             [c2], flow_tso_process_done
     nop
 
-    /* Write A = xmit_cursor_addr + xmit_cursor_offset */
-
-    add             r2, k.to_s6_xmit_cursor_addr, k.to_s6_xmit_cursor_offset
-
     /* Write L = min(mss, descriptor entry len) */
-    seq             c1, k.to_s6_xmit_cursor_len, 0
+    seq             c1, k.t0_s2s_len, 0
     b.c1            pkts_sent_stats_update_start
     phvwri.c1       p.tcp_header_dma_dma_pkt_eop, 1
-    slt             c1, k.to_s6_rcv_mss, k.to_s6_xmit_cursor_len
+    slt             c1, k.to_s6_rcv_mss, k.t0_s2s_len
     add.c1          r6, k.to_s6_rcv_mss, r0
-    add.!c1         r6, k.to_s6_xmit_cursor_len, r0
+    add.!c1         r6, k.t0_s2s_len, r0
 
     phvwrpair       p.data_dma_dma_cmd_size, r6, \
-                        p.data_dma_dma_cmd_addr, r2
+                        p.data_dma_dma_cmd_addr[33:0], k.t0_s2s_addr
     phvwri          p.{data_dma_dma_pkt_eop...data_dma_dma_cmd_type}, \
                         1 << 4 | CAPRI_DMA_COMMAND_MEM_TO_PKT
         

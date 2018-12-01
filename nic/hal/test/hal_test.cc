@@ -1887,6 +1887,9 @@ public:
                 std::cout << "debug_dol: " << std::hex << "0x" << spec.debug_dol() << std::endl;
                 std::cout << "sesq_base: " << std::hex << "0x" << spec.sesq_base() << std::endl;
                 std::cout << "snd_wnd: " << std::dec << spec.snd_wnd() << std::endl;
+                std::cout << "snd_wscale: " << std::dec << spec.snd_wscale() << std::endl;
+                std::cout << "rcv_wnd: " << std::dec << spec.rcv_wnd() << std::endl;
+                std::cout << "rcv_wscale: " << std::dec << spec.rcv_wscale() << std::endl;
                 std::cout << "snd_cwnd: " << std::dec << spec.snd_cwnd() << std::endl;
                 std::cout << "rcv_mss: " << std::dec << spec.rcv_mss() << std::endl;
                 std::cout << "source_port: " << std::dec << spec.source_port() << std::endl;
@@ -1945,6 +1948,8 @@ public:
                 std::cout << "sesq_pi: " << stats.sesq_pi() << std::endl;
                 std::cout << "sesq_ci: " << stats.sesq_ci() << std::endl;
                 std::cout << "sesq_retx_ci: " << stats.sesq_retx_ci() << std::endl;
+                std::cout << "asesq_retx_ci: " << stats.asesq_retx_ci() << std::endl;
+                std::cout << "sesq_tx_ci: " << stats.sesq_tx_ci() << std::endl;
                 std::cout << "send_ack_pi: " << stats.send_ack_pi() << std::endl;
                 std::cout << "send_ack_ci: " << stats.send_ack_ci() << std::endl;
                 std::cout << "del_ack_pi: " << stats.del_ack_pi() << std::endl;
@@ -1953,7 +1958,6 @@ public:
                 std::cout << "retx_timer_ci: " << stats.retx_timer_ci() << std::endl;
                 std::cout << "asesq_pi: " << stats.asesq_pi() << std::endl;
                 std::cout << "asesq_ci: " << stats.asesq_ci() << std::endl;
-                std::cout << "asesq_retx_ci: " << stats.asesq_retx_ci() << std::endl;
                 std::cout << "pending_tx_pi: " << stats.pending_tx_pi() << std::endl;
                 std::cout << "pending_tx_ci: " << stats.pending_tx_ci() << std::endl;
                 std::cout << "fast_retrans_pi: " << stats.fast_retrans_pi() << std::endl;

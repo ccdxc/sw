@@ -59,6 +59,8 @@ def SetupProxyArgs(tc):
     test_mpu_tblsetaddr = 0
     ooo_seq_delta = 0
     num_pkts = 1
+    num_rx_pkts = 0
+    num_tx_pkts = 0
     num_ack_pkts = 0
     test_retx = None
     sem_full = None
@@ -73,6 +75,7 @@ def SetupProxyArgs(tc):
     serq_full = False
     snd_cwnd = 0
     rto_backoff = 0
+    snd_wnd = 0
     if hasattr(tc.module.args, 'same_flow'):
         same_flow = tc.module.args.same_flow
         logger.info("- same_flow %s" % tc.module.args.same_flow)
@@ -137,7 +140,16 @@ def SetupProxyArgs(tc):
         logger.info("- snd_cwnd %s" % tc.module.args.snd_cwnd)
     if hasattr(tc.module.args, 'rto_backoff'):
         rto_backoff = tc.module.args.rto_backoff
-        logger.info("- snd_cwnd %s" % tc.module.args.rto_backoff)
+        logger.info("- rto_backoff %s" % tc.module.args.rto_backoff)
+    if hasattr(tc.module.args, 'snd_wnd'):
+        snd_wnd = tc.module.args.snd_wnd
+        logger.info("- snd_wnd %s" % tc.module.args.snd_wnd)
+    if hasattr(tc.module.args, 'num_rx_pkts'):
+        num_rx_pkts = tc.module.args.num_rx_pkts
+        logger.info("- num_rx_pkts %s" % tc.module.args.num_rx_pkts)
+    if hasattr(tc.module.args, 'num_tx_pkts'):
+        num_tx_pkts = tc.module.args.num_tx_pkts
+        logger.info("- num_tx_pkts %s" % tc.module.args.num_tx_pkts)
 
     logger.info("Testcase Iterators:")
     iterelem = tc.module.iterator.Get()
@@ -189,6 +201,8 @@ def SetupProxyArgs(tc):
     tc.pvtdata.ooo_seq_delta = ooo_seq_delta
     tc.pvtdata.num_pkts = num_pkts
     tc.pvtdata.num_ack_pkts = num_ack_pkts
+    tc.pvtdata.num_rx_pkts = num_rx_pkts
+    tc.pvtdata.num_tx_pkts = num_tx_pkts
     tc.pvtdata.test_retx = test_retx
     tc.pvtdata.sem_full = sem_full
     tc.pvtdata.test_cong_avoid = test_cong_avoid
@@ -202,6 +216,7 @@ def SetupProxyArgs(tc):
     tc.pvtdata.serq_full = serq_full
     tc.pvtdata.snd_cwnd = snd_cwnd
     tc.pvtdata.rto_backoff = rto_backoff
+    tc.pvtdata.snd_wnd = snd_wnd
 
 def init_flow_pvtdata(tc, tcb1, tcb2):
     tc.pvtdata.flow1_rcv_nxt = tcb1.rcv_nxt
@@ -279,7 +294,7 @@ def init_tcb_inorder(tc, tcb):
     tc.pvtdata.flow1_bytes_txed = 0
     tcb.rcv_tsval = 0x1AFAFAFA
     tcb.ts_recent = 0x1AFAFAF0
-    tcb.snd_wnd = 1000
+    tcb.snd_wnd = 10000
     if tc.pvtdata.snd_cwnd:
         tcb.snd_cwnd = tc.pvtdata.snd_cwnd
     else:
@@ -312,6 +327,8 @@ def init_tcb_inorder(tc, tcb):
         tcb.debug_dol |= tcp_debug_dol_bypass_barco
     if tc.pvtdata.rto_backoff:
         tcb.rto_backoff = tc.pvtdata.rto_backoff
+    if tc.pvtdata.snd_wnd:
+        tcb.snd_wnd = tc.pvtdata.snd_wnd
 
     vlan_id = 0
     if tc.pvtdata.same_flow:
@@ -435,7 +452,7 @@ def init_tcb_inorder2(tc, tcb):
     tc.pvtdata.flow2_bytes_txed = 0
     tcb.rcv_tsval = 0x2AFAFAFA
     tcb.ts_recent = 0x2AFAFAF0
-    tcb.snd_wnd = 1000
+    tcb.snd_wnd = 10000
     if tc.pvtdata.snd_cwnd:
         tcb.snd_cwnd = tc.pvtdata.snd_cwnd
     else:
@@ -462,6 +479,8 @@ def init_tcb_inorder2(tc, tcb):
         tcb.debug_dol |= tcp_debug_dol_bypass_barco
     if tc.pvtdata.rto_backoff:
         tcb.rto_backoff = tc.pvtdata.rto_backoff
+    if tc.pvtdata.snd_wnd:
+        tcb.snd_wnd = tc.pvtdata.snd_wnd
 
     tcb.source_port = tc.config.flow.sport
     tcb.dest_port = tc.config.flow.dport

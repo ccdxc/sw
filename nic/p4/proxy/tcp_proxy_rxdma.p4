@@ -261,6 +261,8 @@ header_type tcp_fc_d_t {
         page_cnt                : 16;
         dummy                   : 16;
         l7_descr                : 32;
+        rcv_wnd                 : 16;
+        rcv_wscale              : 16;
         cpu_id                  : 8;
     }
 }
@@ -950,7 +952,7 @@ action l7_rdesc_alloc(desc, pad) {
 /*
  * Stage 5 table 0 action
  */
-action tcp_fc(page, descr, page_cnt, l7_descr, cpu_id) {
+action tcp_fc(page, descr, page_cnt, l7_descr, rcv_wnd, rcv_wscale, cpu_id) {
     // k + i for stage 5
 
     // from to_stage 5
@@ -968,6 +970,8 @@ action tcp_fc(page, descr, page_cnt, l7_descr, cpu_id) {
     modify_field(tcp_fc_d.descr, descr);
     modify_field(tcp_fc_d.page_cnt, page_cnt);
     modify_field(tcp_fc_d.l7_descr, l7_descr);
+    modify_field(tcp_fc_d.rcv_wnd, rcv_wnd);
+    modify_field(tcp_fc_d.rcv_wscale, rcv_wscale);
     modify_field(tcp_fc_d.cpu_id, cpu_id);
 }
 

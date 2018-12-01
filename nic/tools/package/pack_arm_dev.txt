@@ -75,7 +75,7 @@ nic/build/aarch64/iris/lib/*upgrade*                                 /nic/lib/
 nic/build/aarch64/iris/lib/libcommonproto.so                         /nic/lib/
 nic/build/aarch64/iris/lib/libproto.so                               /nic/lib/
 
-nic/hal/third-party/lkl/export/aarch64/bin/liblkl.so                 /nic/lib/
+nic/hal/third-party/lkl/export/aarch64/lib/liblkl.so                 /nic/lib/
 nic/asic/capri/model/capsim-master/gen/aarch64/lib/libmpuobj.so      /nic/lib/
 nic/asic/capri/model/capsim-master/gen/aarch64/lib/libcapisa.so      /nic/lib/
 nic/asic/capri/model/capsim-master/gen/aarch64/lib/libisa.so         /nic/lib/

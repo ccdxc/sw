@@ -89,6 +89,8 @@
 
 #define TCP_GC_CB_SW_PI_OFFSET              32
 
+#define TCP_TX_INVALID_SESQ_TX_CI           0xffff
+
 // Global stats
 #define TCP_PROXY_STATS_RNMDR_FULL              (0 << 3)
 #define TCP_PROXY_STATS_INVALID_SESQ_DESCR      (1 << 3)

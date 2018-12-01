@@ -27,6 +27,8 @@ tcp_retx_process_start:
                         tcp_cc_and_fra_process_start, k.common_phv_qstate_addr,
                         TCP_TCB_CC_AND_FRA_OFFSET, TABLE_SIZE_512_BITS)
 
+    bbeq            k.common_phv_pending_ack_send, 1, tcp_retx_ack_send
+
     seq             c1, k.common_phv_pending_rto, 1
     seq             c2, k.common_phv_pending_fast_retx, 1
     bcf             [c1 | c2], tcp_retx_retransmit
@@ -42,25 +44,26 @@ tcp_retx_process_start:
 
 
 tcp_retx_enqueue:
-    add             r2, k.to_s3_addr, k.to_s3_offset
-    phvwr           p.to_s5_addr, r2
-    phvwr           p.to_s5_offset, k.to_s3_offset
-
     // If sending RST, reschedule to cleanup retx queue
     seq             c1, k.common_phv_rst, 1
-    tblwr.c1        d.tx_rst_sent, 1
     j.c1            tcp_retx_reschedule_tx
-    phvwr           p.to_s5_len, k.to_s3_len
+    tblwr.c1        d.tx_rst_sent, 1
 
     nop.e
     nop
 
 tcp_retx_retransmit:
     phvwr           p.t0_s2s_snd_nxt, d.retx_snd_una
-    add             r2, k.to_s3_addr, k.to_s3_offset
-    phvwr           p.to_s6_xmit_cursor_addr, r2
-    phvwr           p.to_s6_xmit_cursor_len, k.to_s3_len
     phvwri          p.to_s6_pending_tso_data, 1
     nop.e
     nop
 
+tcp_retx_ack_send:
+    /*
+     * Check if we need to send ack, else clear table_valid
+     */
+    seq             c1, k.common_phv_pending_dup_ack_send, 1
+    seq             c2, d.last_ack, k.t0_s2s_rcv_nxt
+    setcf           c3, [!c1 & c2]
+    tblwr.e         d.last_ack, k.t0_s2s_rcv_nxt
+    phvwri.c3       p.app_header_table0_valid, 0

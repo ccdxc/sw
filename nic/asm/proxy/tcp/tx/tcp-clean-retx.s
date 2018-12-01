@@ -153,6 +153,21 @@ tcp_retx_cleanup_sesq_end:
     b.c1            free_descriptor
     phvwr.c1        p.common_phv_partial_retx_cleanup, 1
 
+    // if window is not restricted currently, ring clean_retx doorbell
+    // and continue, else we need to schedule ourselves to transmit packets
+    // that are held in sesq, as window may have opened up
+    bbeq            k.to_s3_window_not_restricted, 1, tcp_retx_clean_retx_doorbell
+
+tcp_retx_handle_window_opening_up:
+    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET,
+                        DB_SCHED_UPD_EVAL, 0, LIF_TCP)
+    tbladd          d.tx_ring_pi, 1
+    /* data will be in r3 */
+    CAPRI_RING_DOORBELL_DATA(0, k.common_phv_fid,
+                        TCP_SCHED_RING_PENDING_TX, d.tx_ring_pi)
+    memwr.dx        r4, r3
+
+tcp_retx_clean_retx_doorbell:
     addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET,
                         DB_SCHED_UPD_EVAL, 0, LIF_TCP)
     //tbladd          d.tx_ring_pi, 1
