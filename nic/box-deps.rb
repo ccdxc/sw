@@ -97,6 +97,7 @@ PACKAGES = %w[
   sudo
   telnet
   sshpass
+  ipmi
 ]
 
 run "yum install -y #{PACKAGES.join(" ")}"
@@ -230,6 +231,7 @@ inside BASE_BUILD_DIR do
 end
 
 inside "#{BASE_BUILD_DIR}/bind9" do
+  run "git checkout v9_10"
   run "./configure "
   run "make"
   run "make install"
@@ -283,7 +285,7 @@ workdir "/sw/nic"
 entrypoint []
 cmd "bash"
 
-tag "pensando/nic:1.28"
+tag "pensando/nic:1.29"
 
 run "rm -rf #{BASE_BUILD_DIR}" # this has no effect on size until the flatten is processed
 

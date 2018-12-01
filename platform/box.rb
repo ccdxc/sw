@@ -1,4 +1,4 @@
-from "registry.test.pensando.io:5000/pensando/nic:1.28"
+from "registry.test.pensando.io:5000/pensando/nic:1.29"
 
 PACKAGES = %w[
   patch libedit2 libedit-devel

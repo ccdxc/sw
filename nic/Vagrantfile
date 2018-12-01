@@ -79,6 +79,7 @@ yum install -y python-setuptools python-enum34 swig openssl-devel libpcap-devel
 yum install -y cscope 
 yum install -y ctags
 yum install -y telnet sshpass
+yum install -y ipmi
 
 # install golang
 ln -s /usr/share/pkgconfig /usr/lib/pkgconfig
@@ -156,6 +157,7 @@ ldconfig
 cd /tmp
 git clone https://source.isc.org/git/bind9.git
 cd bind9
+git checkout v9_10
 ./configure --without-openssl
 make
 make install
