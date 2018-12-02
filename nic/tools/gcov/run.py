@@ -45,6 +45,9 @@ def get_obj_dirs(obj_dir_type, top_dir, relative_path):
                          }
     return obj_dir_map_func[obj_dir_type](top_dir, relative_path)
 
+def get_mk_target(file):
+    cmd = "cat " + file + " | grep MODULE_TARGET | sed 's/ //g'"
+    return subprocess.check_output(cmd, shell=True).decode("utf-8").replace("\n", "").split("=")[1]
 
 coverage_registry = {}
 
@@ -288,25 +291,33 @@ class CapcovCoverage(CoverageBase):
                 root_output_dir = cov_output_dir + "/" + "capcov_out" + "/" + "/".join(root.split("/")[1:])
                 subprocess.call(["mkdir", "-p", root_output_dir])
                 cur_dir = os.getcwd()
-                os.chdir(root)
+                #os.chdir(root)
                 for file in files:
-                    if file.endswith(tuple(data.get("file_patterns"))):
+                    actual_file = root + "/" + file
+                    if actual_file.endswith(tuple(data.get("file_patterns"))):
                         bin_file = file.rsplit(".", 1)[0] + ".bin"
                         program_info = cap_loader_info.get(bin_file)
                         if not program_info:
                             continue
-                        cano_file = file.rsplit(".", 1)[0] + ".cano"
-                        capcov_out_file = file + ".cacov"
-                        cano_file = cur_dir + "/" + obj_dir_path + cano_file
+                        try:
+                            mk_target = get_mk_target(os.path.dirname(actual_file) + "/module.mk")
+                            mk_target = mk_target.replace('.', '_')
+                        except:
+                            print("MK target not found ", os.path.dirname(actual_file) + "/module.mk")
+                            continue
+
+                        bin_file = obj_dir_path + "/" + mk_target + "/"  + actual_file
+                        cano_file = obj_dir_path + "/" + mk_target + "/" + actual_file.rsplit(".", 1)[0] + ".cano"
+                        capcov_out_file = cur_dir + "/" +  actual_file + ".cacov"
                         cmd =  [env.capcov_cmd]
                         cmd.append("-s")
                         cmd.append(program_info["start_addr"])
                         cmd.append(gcda_file)
                         cmd.append(cano_file)
-                        subprocess.call(cmd, stdout=FNULL, stderr=FNULL)
+                        subprocess.call(cmd)
                         subprocess.call(["mv", capcov_out_file, root_output_dir], stderr=FNULL)
                         #Copy Source file too to generate HTML output.
-                        subprocess.call(["cp", file, root_output_dir], stderr=FNULL)
+                        subprocess.call(["cp", actual_file, root_output_dir], stderr=FNULL)
                 try:
                     #Generate Directory level (Feature) coverage information.
                     if len(root.split("/")) == 2:
@@ -434,6 +445,7 @@ def run_cmd(cmd, timeout=None):
     if ret and not args.ignore_errors:
         print("Cmd failed.: ", cmd)
         sys.exit(1)
+    return ret
 
 def build_modules(data):
     # build all modules.
@@ -444,7 +456,10 @@ def build_modules(data):
         if "clean_cmd" in module_data:
             run_cmd(module_data["clean_cmd"])
         if "build_cmd" in module_data:
-            run_cmd(module_data["build_cmd"])
+            ret = run_cmd(module_data["build_cmd"])
+            if ret:
+                print("Build :%s failed" % module_data["build_cmd"])
+                sys.exit(1)
 
         #This is hack for now, move  *.gcno files to same level.
         if module_data["obj_dir_type"] == "bazel":

@@ -10,11 +10,9 @@ CONTAINER_NAME:=${CUR_USER}_${CUR_TIME}
 # get a shell with the dependencies image loaded, with the host filesystem mounted.
 ifeq ($(USER),)
 docker/shell:
-	mkdir -p ${SW_DIR}/bazel-cache;
 	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v $(SW_DIR)/bazel-cache:/root/.cache -w /sw/nic pensando/nic bash
 else
 docker/shell: docker/build-shell-image
-	mkdir -p ${SW_DIR}/bazel-cache;
 	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v $(SW_DIR)/bazel-cache:/home/$(CUR_USER)/.cache -w /sw/nic pensando/nic su -l $(CUR_USER)
 endif
 
@@ -23,11 +21,12 @@ docker/build-shell-image: docker/install_box
 	cd .. && BOX_INCLUDE_ENV="USER USER_UID USER_GID GROUP_NAME" USER_UID=$$(id -u) USER_GID=$$(id -g) GROUP_NAME=$$(id -gn) box -t pensando/nic nic/box.rb
 
 docker/coverage: docker/build-runtime-image
-	mkdir -p ${SW_DIR}/bazel-cache;
-	docker run --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw  -v /home/asic/tools:/home/asic/tools -v $(SW_DIR)/bazel-cache:/root/.cache -w /sw/nic pensando/nic  bash -c 'tools/coverage_script.sh'
+	docker run --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw  -v /home/asic/tools:/home/asic/tools -v $(SW_DIR)/bazel-cache:/$(CUR_USER)/.cache -w /sw/nic pensando/nic  su  -l $(CUR_USER)  -c 'tools/coverage_script.sh'
+
+docker/coverage-shell: docker/build-runtime-image
+	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw  -v /home/asic/tools:/home/asic/tools -v $(SW_DIR)/bazel-cache:/$(CUR_USER)/.cache -w /sw/nic pensando/nic  su -l $(CUR_USER)  
 
 docker/e2e-sanity-build: docker/build-runtime-image
-	mkdir -p ${SW_DIR}/bazel-cache;
 	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v $(SW_DIR)/bazel-cache:/root/.cache -w /sw/nic pensando/nic bash -c 'make'
 
 docker/e2e-sanity-hal-bringup:

@@ -11,6 +11,8 @@ import atexit
 import pdb
 import glob
 import shlex
+from pwd import getpwnam  
+
 
 from subprocess import Popen, PIPE, call
 
@@ -44,7 +46,7 @@ mbt_log = nic_dir + "/mbt.log"
 storage_dol_log = nic_dir + "/storage_dol.log"
 sample_client_log = nic_dir + "/sample_client.log"
 bullseye_model_cov_file = nic_dir + "/coverage/bullseye_model.cov"
-bullseye_hal_cov_file = nic_dir + "/../bazel-out/../../bullseye_hal.cov"
+bullseye_hal_cov_file = nic_dir + "/coverage/bullseye_hal.cov"
 halctl_dir = nic_dir + "/agent/cmd/halctl"
 
 naples_container_image_dir = nic_dir + "/obj/images"
@@ -222,7 +224,9 @@ def run_model(args):
     log = open(model_log, "w")
     model_env = os.environ.copy()
     model_env["COVFILE"] = bullseye_model_cov_file
-    p = Popen(model_cmd, stdout=log, stderr=log, env=model_env)
+    p = Popen(model_cmd, preexec_fn=demote, env=model_env, stdout=log, stderr=log)
+   
+    #p = Popen(model_cmd, stdout=log, stderr=log, env=model_env)
     print "* Starting ASIC model pid (" + str(p.pid) + ")"
     print "- Log file: " + model_log + "\n"
 
@@ -258,6 +262,15 @@ def wait_for_hal():
     log2.close()
     return
 
+
+def demote():
+    if 'SUDO_USER' in os.environ:
+        #model/hal cannot be started with running as sudo user as pthread real time thread will fail.
+        uid = getpwnam(os.environ['SUDO_USER']).pw_uid
+        gid = getpwnam(os.environ['SUDO_USER']).pw_gid
+        os.setgid(gid)
+        os.setuid(uid)
+        os.environ['USER'] = (os.environ['SUDO_USER'])
 
 def run_hal(args):
     snort_dir = nic_dir + "/hal/third-party/snort3/export"
@@ -302,7 +315,8 @@ def run_hal(args):
         os.system("cp " + nic_dir + "/conf/hal_classic.ini " + nic_dir + "/conf/hal.ini")
 
     FNULL = open(os.devnull, 'w')
-    p = Popen([bin_dir+'/hal', "--config", jsonfile], stdout=FNULL, stderr=FNULL)
+    print (bin_dir + '/hal', jsonfile)
+    p = Popen([bin_dir+'/hal', "--config", jsonfile], preexec_fn=demote, stdout=FNULL, stderr=FNULL)
     global hal_process
     hal_process = p
     print "* Starting HAL pid (" + str(p.pid) + ")"

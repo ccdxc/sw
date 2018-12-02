@@ -87,3 +87,4 @@ model.json
 mpu_prog_info.json
 *.tar
 compile_commands.json
+bullseye_hal.cov

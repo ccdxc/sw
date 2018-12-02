@@ -9,13 +9,13 @@ package-clean:
 package: ${PKG_PREREQS}
 ifneq ($(PIPELINE),hello)
 	${MAKE} package-clean
-	cd $(NICDIR)/../ && python $(NICDIR)/tools/package/package.py --target host
+	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py --target host
 ifeq ($(ARCH),aarch64)
 	ARCH=${ARCH} ${TOPDIR}/nic/tools/update_version.sh
-	cd $(NICDIR)/../ && python $(NICDIR)/tools/package/package.py
+	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py
 else
 	ARCH=${ARCH} ${TOPDIR}/nic/tools/update_version.sh
-	cd $(NICDIR)/../ && python $(NICDIR)/tools/package/package.py \
+	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py \
 		--pipeline $(PIPELINE) --target sim --no-strip
 endif
 endif
@@ -29,23 +29,23 @@ package-clean-debug:
 	@rm -f  $(TOPDIR)/debug_x86_64_iris.tar
 
 package-debug: package-clean-debug
-	cd $(NICDIR)/../ && python $(NICDIR)/tools/package/package.py --target debug --no-strip
+	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py --target debug --no-strip
 
 package-debug-arm: package-clean-debug-arm
-	cd $(NICDIR)/../ && python $(NICDIR)/tools/package/package.py --target debug-arm --no-strip
+	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py --target debug-arm --no-strip
 
 package-zebu: package-clean ${PKG_PREREQS}
 ifneq ($(ARCH),aarch64)
-	cd $(NICDIR)/../ && python $(NICDIR)/tools/package/package.py --target zebu --no-strip
+	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py --target zebu --no-strip
 endif
 
 package-arm-dev: package-clean ${PKG_PREREQS}
 	ARCH=${ARCH} ${TOPDIR}/nic/tools/update_version.sh
-	cd $(NICDIR)/../ && python $(NICDIR)/tools/package/package.py --target arm-dev --no-strip
+	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py --target arm-dev --no-strip
 
 package-haps-dbg: package-clean ${PKG_PREREQS}
 	ARCH=${ARCH} ${TOPDIR}/nic/tools/update_version.sh
-	cd $(NICDIR)/../ && python $(NICDIR)/tools/package/package.py --target haps-dbg
+	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py --target haps-dbg
 
 .PHONY: package-storage-offload
 package-storage-offload:

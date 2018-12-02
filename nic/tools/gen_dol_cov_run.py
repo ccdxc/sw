@@ -14,7 +14,7 @@ parser.add_argument('--skip-targets', dest='skip_targets',
                         default=[], help='Skip targets')
 args = parser.parse_args()
 
-DOL_JOB_PREFIX = "./run.py"
+DOL_JOB_PREFIX = "jobd"
 DOL_COVERAGE_OPTION = "--coveragerun"
 MODEL_LOG_OPTION = "--modellogs"
 OUTPUT_FILE = "dol_cov_runs.json"
@@ -53,15 +53,9 @@ job_cfg = {}
 for target in job["targets"]:
     if target in args.skip_targets:
         continue
-    job_info = job["targets"][target]
-    for cmd in job_info:
-    	if DOL_JOB_PREFIX in cmd:
-            run_args = re.split("&& | ; ", cmd.split(DOL_JOB_PREFIX, 1)[1])[0]
-	    options = [DOL_JOB_PREFIX, DOL_COVERAGE_OPTION, run_args]
-            if model_logging_enabled:
-	        options.append(MODEL_LOG_OPTION)
-            cov_cmd = " ".join(options)
-            job_cfg[target] = cov_cmd
+    job_info = job["targets"][target]["commands"]
+    cov_cmd = "JOB_ID=1 " + " ".join(job_info) + " COVERAGE=1"
+    job_cfg[target.split('/')[-1]] = cov_cmd
 
 json.dump(job_cfg, output_file, indent=4)
 output_file.close()

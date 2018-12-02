@@ -22,6 +22,7 @@ if user != ""
   run "echo 'cd /sw/nic' >> /home/#{user}/.bash_profile"
   run "echo 'sudo chown -R #{user} /sw/' >> /home/#{user}/.bash_profile"
   run "echo 'sudo chgrp -R #{user} /sw/' >> /home/#{user}/.bash_profile"
+  run "echo 'Defaults secure_path = /usr/local/go/bin:$PATH:/bin:/usr/sbin/' >> /etc/sudoers"
 
   run "echo '#{user} ALL=(root) NOPASSWD:ALL' > /etc/sudoers.d/#{user} && chmod 0440 /etc/sudoers.d/#{user}"
 

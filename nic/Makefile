@@ -1,13 +1,22 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 .SUFFIXES:
-export ARCH     ?= x86_64
-export PIPELINE ?= iris
-export TOPDIR   := ${realpath ${CURDIR}/../}
-export NICDIR   := ${TOPDIR}/nic
-export SDKDIR   := ${NICDIR}/sdk
-export BLDTOP   := ${realpath .}
-export MKINFRA  := ${SDKDIR}/mkinfra
-export MKDEFS   := ${NICDIR}/mkdefs
+export ARCH         ?= x86_64
+export PIPELINE     ?= iris
+export TOPDIR       := ${realpath ${CURDIR}/../}
+export NICDIR       := ${TOPDIR}/nic
+export SDKDIR       := ${NICDIR}/sdk
+export BLDTOP       := ${realpath .}
+export MKINFRA      := ${SDKDIR}/mkinfra
+export MKDEFS       := ${NICDIR}/mkdefs
+export COVDIR       := ${NICDIR}/coverage
+export COVFILE_NAME := bullseye_hal.cov
+export COVFILE      := ${COVDIR}/${COVFILE_NAME}
+
+ifeq ($(COVERAGE),1)
+    export COVERAGE_OPTS := --coveragerun
+    export SUDO_OPT := sudo
+.ONESHELL:
+endif
 
 include ${MKDEFS}/common.mk
 include ${MKINFRA}/config.mk

@@ -2,8 +2,14 @@
 include ${MKINFRA}/common.mk
 include ${MKINFRA}/release.mk
 
-CMD_GCC             := gcc
-CMD_GXX             := g++
+ifeq ($(COVERAGE),1)
+    CMD_GCC := /home/asic/tools/eda/bullseye/bin/gcc
+    CMD_GXX := /home/asic/tools/eda/bullseye/bin/g++
+else
+    CMD_GCC := gcc
+    CMD_GXX := g++
+endif
+
 CMD_GXX_FLAGS       := ${COMMON_GXX_FLAGS} ${RELEASE_GXX_FLAGS}
 CMD_GPP_FLAGS       := ${COMMON_GPP_FLAGS} ${RELEASE_GXX_FLAGS}
 

@@ -70,9 +70,11 @@ COMMON_CAPAS_OPTS           := -t
 ifeq ($(PLATFORM),haps)
     COMMON_CAPAS_OPTS       += -DHAPS
 endif
+
 ifeq ($(PLATFORM),hw)
     COMMON_CAPAS_OPTS       += -DHW
 endif
-ifneq "${GCOV}" ""
+
+ifeq ($(COVERAGE), 1)
     COMMON_CAPAS_OPTS       += -C
 endif
