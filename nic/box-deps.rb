@@ -97,7 +97,7 @@ PACKAGES = %w[
   sudo
   telnet
   sshpass
-  ipmi
+  ipmitool
 ]
 
 run "yum install -y #{PACKAGES.join(" ")}"
@@ -285,7 +285,7 @@ workdir "/sw/nic"
 entrypoint []
 cmd "bash"
 
-tag "pensando/nic:1.29"
+tag "pensando/nic:1.30"
 
 run "rm -rf #{BASE_BUILD_DIR}" # this has no effect on size until the flatten is processed
 
