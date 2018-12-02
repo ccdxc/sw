@@ -8,7 +8,7 @@ import iota.test.iris.testcases.drivers.interface as interface
 
 
 def Setup(tc):
-    tc.nodes = api.GetNaplesHostnames()
+    tc.nodes = api.GetWorkloadNodeHostnames()
 
     tc.node_intfs = {}
     for node in tc.nodes:

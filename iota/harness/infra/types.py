@@ -9,6 +9,7 @@ __status = [
     'UNAVAIL',
     'IGNORED',
     'ABORTED',
+    'ERROR',
 ]
 status = utils.List2Enum(__status)
 

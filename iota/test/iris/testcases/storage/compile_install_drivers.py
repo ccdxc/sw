@@ -39,9 +39,9 @@ def Trigger(tc):
     for n in tc.nodes:
         api.Trigger_AddHostCommand(req, n, "tar xf %s" % pkgname)
         if tc.os == 'linux':
-            api.Trigger_AddHostCommand(req, n, "make modules", rundir = pnsodefs.PNSO_DRIVER_DIR)
+            api.Trigger_AddHostCommand(req, n, "make modules", rundir = pnsodefs.PNSO_DRIVER_DIR, timeout=120)
         else:
-            api.Trigger_AddHostCommand(req, n, "./freebsd_build.sh", rundir = pnsodefs.PNSO_DRIVER_DIR)
+            api.Trigger_AddHostCommand(req, n, "./freebsd_build.sh", rundir = pnsodefs.PNSO_DRIVER_DIR, timeout=120)
         api.Trigger_AddHostCommand(req, n, "ls sonic.ko", rundir = pnsodefs.PNSO_DRIVER_DIR)
         api.Trigger_AddHostCommand(req, n, "ls pencake.ko", rundir = pnsodefs.PNSO_DRIVER_DIR)
         api.Trigger_AddHostCommand(req, n, "dmesg -c 2>&1 > /dev/null")

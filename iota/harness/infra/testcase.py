@@ -8,6 +8,7 @@ import iota.harness.infra.utils.timeprofiler as timeprofiler
 import iota.harness.infra.types as types
 import iota.harness.infra.utils.loader as loader
 import iota.harness.api as api
+import iota.harness.infra.utils.utils as utils
 
 from iota.harness.infra.utils.logger import Logger as Logger
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
@@ -372,7 +373,12 @@ class Testcase:
         Logger.SetTestcase(self.Name())
         Logger.info("Starting Testcase: %s" % self.Name())
         self.__timer.Start()
-        self.status = self.__execute()
+        try:
+            self.status = self.__execute()
+        except:
+            utils.LogException(Logger)
+            Logger.error("EXCEPTION: Aborting Testcase Execution.")
+            self.status = types.status.ERROR
         self.__timer.Stop()
         Logger.info("Testcase %s FINAL RESULT = %d" % (self.Name(), self.status))
         return self.status

@@ -3,7 +3,6 @@ package topo
 import (
 	"context"
 	"fmt"
-	"net"
 
 	"github.com/pensando/sw/iota/svcs/common"
 
@@ -69,12 +68,6 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 
 		for idx, node := range req.Nodes {
 			nodeName := fmt.Sprintf("iota-node-%d", idx)
-			ipAddr := net.ParseIP(node.IpAddress)
-			if len(ipAddr) == 0 {
-				log.Errorf("TOPO SVC | InitTestBed | Invalid IP Address format. %v", node.IpAddress)
-				return fmt.Errorf("invalid ip address format. %v", node.IpAddress)
-			}
-
 			n := testbed.TestNode{
 				Node: &iota.Node{
 					IpAddress: node.IpAddress,

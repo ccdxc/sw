@@ -14,7 +14,7 @@ logdirs = [
 
 def __collect_onenode(node):
     SSHCMD = "sshpass -p docker scp -r -o StrictHostKeyChecking=no root@"
-    print("Collecting Logs for Node: %s" % node)
+    print("Collecting Logs for Node: %s (%s)" % (node.Name(), node.MgmtIpAddress()))
     localdir = "%s/iota/logs/%s/nodes/%s/" % (api.GetTopDir(), api.GetTestsuiteName(), node.Name())
     os.system("mkdir -p %s" % localdir)
     for logdir in logdirs:

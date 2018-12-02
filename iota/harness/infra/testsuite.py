@@ -225,7 +225,6 @@ class TestSuite:
             self.__timer.Stop()
             return status
         
-        # Use try/except block to not let testcase crash the overall run.
         self.__import_testbundles()
         self.__resolve_testcases()
         self.__resolve_teardown()
@@ -241,13 +240,7 @@ class TestSuite:
             self.__timer.Stop()
             return status
     
-        try:
-            self.result = self.__execute_testcases()
-        except:
-            utils.LogException(Logger)
-            Logger.error("EXCEPTION: Aborting Testcase Execution.")
-            self.result = types.status.FAILURE
-
+        self.result = self.__execute_testcases()
         self.__update_stats()
         Logger.info("Testsuite %s FINAL STATUS = %d" % (self.Name(), self.result))
         
