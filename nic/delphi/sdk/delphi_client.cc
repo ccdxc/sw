@@ -696,6 +696,7 @@ void DelphiClient::msgqAsyncHandler(ev::async &watcher, int revents) {
             }
         }
     }
+    msgQueue.clear();
 
     // unlock message queue
     pthread_mutex_unlock(&msgQlock);

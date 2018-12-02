@@ -147,6 +147,8 @@ handle_hal_up (void)
 
 // OnHalStatusCreate gets called when HalStatus object is created
 error hal_status_handler::OnHalStatusCreate(HalStatusPtr halStatus) {
+    NIC_LOG_DEBUG("Rcvd OnHalStatusCreate notification for {}", halStatus->ShortDebugString());
+
     if (halStatus->state() == ::hal::HAL_STATE_UP) {
         handle_hal_up();
     }
@@ -155,6 +157,8 @@ error hal_status_handler::OnHalStatusCreate(HalStatusPtr halStatus) {
 
 // OnHalStatusUpdate gets called when HalStatus object is updated
 error hal_status_handler::OnHalStatusUpdate(HalStatusPtr halStatus) {
+    NIC_LOG_DEBUG("Rcvd OnHalStatusUpdate notification for {}", halStatus->ShortDebugString());
+
     if (halStatus->state() == ::hal::HAL_STATE_UP) {
         handle_hal_up();
     }
