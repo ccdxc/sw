@@ -240,15 +240,14 @@ func enicShowStatusOneResp(resp *halproto.InterfaceGetResponse) {
 
 func enicShowHeader() {
 	fmt.Printf("\n")
-	fmt.Printf("Id:     Interface ID         Handle: IF's handle\n")
-	fmt.Printf("Ifype:  Interface type       EType:  Enic type\n")
+	fmt.Printf("Id:     Interface ID         EType:  Enic type\n")
 	fmt.Printf("EL2seg: Enic's l2seg         Emac:   Enic's mac\n")
 	fmt.Printf("Encap:  Enic's encap         ELif:   Enic's Lif\n")
 	fmt.Printf("\n")
-	hdrLine := strings.Repeat("-", 80)
+	hdrLine := strings.Repeat("-", 70)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-10s%-10s%-10s%-20s%-10s%-10s\n",
-		"Id", "IfType", "EType", "EL2seg", "Emac", "Eencap", "ELif")
+	fmt.Printf("%-10s%-10s%-10s%-20s%-10s%-10s\n",
+		"Id", "EType", "EL2seg", "Emac", "Eencap", "ELif")
 	fmt.Println(hdrLine)
 }
 
@@ -258,9 +257,9 @@ func enicShowOneResp(resp *halproto.InterfaceGetResponse) {
 		return
 	}
 	enicType := resp.GetSpec().GetIfEnicInfo().GetEnicType()
-	fmt.Printf("%-10d%-10s%-10s",
-		resp.GetSpec().GetKeyOrHandle().GetInterfaceId(),
-		ifTypeToStr(ifType),
+	ifID := fmt.Sprintf("enic-%d", resp.GetSpec().GetKeyOrHandle().GetInterfaceId())
+	fmt.Printf("%-10s%-10s",
+		ifID,
 		enicTypeToStr(enicType))
 
 	switch enicType {

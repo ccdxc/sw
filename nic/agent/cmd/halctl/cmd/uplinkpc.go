@@ -190,14 +190,13 @@ func uplinkPcDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 
 func uplinkPcShowHeader() {
 	fmt.Printf("\n")
-	fmt.Printf("Id:       Interface ID                        Ifype: Interface type\n")
-	fmt.Printf("UpNL2seg: Uplink's Native L2seg               #Mbrs: Num. of member uplinks\n")
-	fmt.Printf("Mbrs:     Uplink Members\n")
+	fmt.Printf("Id:       Interface ID                        UpNL2seg: Uplink's Native L2seg\n")
+	fmt.Printf("#Mbrs:    Num. of member uplinks              Mbrs:     Uplink Members\n")
 	fmt.Printf("\n")
-	hdrLine := strings.Repeat("-", 50)
+	hdrLine := strings.Repeat("-", 40)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-10s%-10s%-10s%-10s\n",
-		"Id", "IfType", "NatL2seg", "NMbrs", "Mbrs")
+	fmt.Printf("%-10s%-10s%-10s%-10s\n",
+		"Id", "NatL2seg", "NMbrs", "Mbrs")
 	fmt.Println(hdrLine)
 }
 
@@ -207,17 +206,35 @@ func uplinkPcShowOneResp(resp *halproto.InterfaceGetResponse) {
 		return
 	}
 	mbrs := resp.GetSpec().GetIfUplinkPcInfo().GetMemberIfKeyHandle()
-	fmt.Printf("%-10d%-10s%-10d%-10d",
-		resp.GetSpec().GetKeyOrHandle().GetInterfaceId(),
-		ifTypeToStr(ifType),
+	ifID := fmt.Sprintf("uplinkpc-%d", resp.GetSpec().GetKeyOrHandle().GetInterfaceId())
+	fmt.Printf("%-10s%-10d%-10d",
+		ifID,
 		resp.GetSpec().GetIfUplinkPcInfo().GetNativeL2SegmentId(),
 		len(mbrs))
 
-	for _, mbr := range mbrs {
-		fmt.Printf("%-5d", mbr.GetInterfaceId())
-	}
 	if len(mbrs) == 0 {
 		fmt.Printf("%-5s", "-")
+	} else {
+		ifIndex := 0
+		var mbrIfID []uint64
+		for _, mbr := range mbrs {
+			mbrIfID[ifIndex] = mbr.GetInterfaceId()
+			ifIndex++
+		}
+		ret, mbrIfIDStr := ifGetStrFromID(mbrIfID)
+		if ret == 0 {
+			ifIndex = 0
+			for _, mbrStr := range mbrIfIDStr {
+				fmt.Printf("%-5s ", mbrStr)
+				ifIndex++
+				if ifIndex == 2 {
+					fmt.Printf("\n%-30s", "")
+					ifIndex = 0
+				}
+			}
+		} else {
+			fmt.Printf("%-5s", "-")
+		}
 	}
 	fmt.Printf("\n")
 }

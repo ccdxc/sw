@@ -188,14 +188,14 @@ func tunnelDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 
 func tunnelShowHeader() {
 	fmt.Printf("\n")
-	fmt.Printf("Id:       Interface ID                Ifype:    Interface type\n")
-	fmt.Printf("EncType:  Tunnel Encap type           LTep:     Local Tep IP\n")
-	fmt.Printf("RTep:     Remote TEP IP               VrfId:    Vrf ID\n")
+	fmt.Printf("Id:       Interface ID                EncType:  Tunnel Encap type\n")
+	fmt.Printf("LTep:     Local Tep IP                RTep:     Remote TEP IP\n")
+	fmt.Printf("VrfId:    Vrf ID\n")
 	fmt.Printf("\n")
-	hdrLine := strings.Repeat("-", 60)
+	hdrLine := strings.Repeat("-", 50)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-10s%-10s%-10s%-10s%-10s\n",
-		"Id", "IfType", "EncType", "LTep", "RTep", "VrfId")
+	fmt.Printf("%-10s%-10s%-10s%-10s%-10s\n",
+		"Id", "EncType", "LTep", "RTep", "VrfId")
 	fmt.Println(hdrLine)
 }
 
@@ -205,9 +205,9 @@ func tunnelShowOneResp(resp *halproto.InterfaceGetResponse) {
 		return
 	}
 	encType := resp.GetSpec().GetIfTunnelInfo().GetEncapType()
-	fmt.Printf("%-10d%-10s%-10s",
-		resp.GetSpec().GetKeyOrHandle().GetInterfaceId(),
-		ifTypeToStr(ifType),
+	ifID := fmt.Sprintf("tunnel-%d", resp.GetSpec().GetKeyOrHandle().GetInterfaceId())
+	fmt.Printf("%-10s%-10s",
+		ifID,
 		utils.TnnlEncTypeToStr(encType))
 	if encType == halproto.IfTunnelEncapType_IF_TUNNEL_ENCAP_TYPE_VXLAN {
 		fmt.Printf("%-10s%-10s",

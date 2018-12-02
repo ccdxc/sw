@@ -307,23 +307,54 @@ func aclShowSpecOneResp(resp *halproto.AclGetResponse,
 	if action.GetCoppKeyHandle().GetCoppHandle() != 0 {
 		coppHandleStr = strconv.Itoa(int(action.GetCoppKeyHandle().GetCoppHandle()))
 	}
+
 	redirectIfIDStr := "-"
+	srcIfIDStr := "*"
+	dstIfIDStr := "*"
+
+	// Convert all ifIDs to Strings
+	var ifID []uint64
+	var ifIDStr []string
+	ifIndex := 0
 	if action.GetRedirectIfKeyHandle().GetInterfaceId() != 0 {
-		redirectIfIDStr = strconv.Itoa(int(action.GetRedirectIfKeyHandle().GetInterfaceId()))
+		ifID = append(ifID, action.GetRedirectIfKeyHandle().GetInterfaceId())
+	}
+	if match.GetSrcIfKeyHandle().GetInterfaceId() != 0 {
+		ifID = append(ifID, match.GetSrcIfKeyHandle().GetInterfaceId())
+	}
+	if match.GetDstIfKeyHandle().GetInterfaceId() != 0 {
+		ifID = append(ifID, match.GetDstIfKeyHandle().GetInterfaceId())
+	}
+	ret, ifIDStr := ifGetStrFromID(ifID)
+	if ret == 0 {
+		ifIndex = 0
+		if action.GetRedirectIfKeyHandle().GetInterfaceId() != 0 {
+			redirectIfIDStr = ifIDStr[ifIndex]
+			ifIndex++
+		}
+		if match.GetSrcIfKeyHandle().GetInterfaceId() != 0 {
+			srcIfIDStr = ifIDStr[ifIndex]
+			ifIndex++
+		}
+		if match.GetDstIfKeyHandle().GetInterfaceId() != 0 {
+			dstIfIDStr = ifIDStr[ifIndex]
+			ifIndex++
+		}
+	} else {
+		if action.GetRedirectIfKeyHandle().GetInterfaceId() != 0 {
+			redirectIfIDStr = strconv.Itoa(int(action.GetRedirectIfKeyHandle().GetInterfaceId()))
+		}
+		if match.GetSrcIfKeyHandle().GetInterfaceId() != 0 {
+			srcIfIDStr = strconv.Itoa(int(match.GetSrcIfKeyHandle().GetInterfaceId()))
+		}
+		if match.GetDstIfKeyHandle().GetInterfaceId() != 0 {
+			dstIfIDStr = strconv.Itoa(int(match.GetDstIfKeyHandle().GetInterfaceId()))
+		}
 	}
 
 	vrfIDStr := "*"
 	l2SegIDStr := "*"
 
-	srcIfIDStr := "*"
-	if match.GetSrcIfKeyHandle().GetInterfaceId() != 0 {
-		srcIfIDStr = strconv.Itoa(int(match.GetSrcIfKeyHandle().GetInterfaceId()))
-	}
-	dstIfIDStr := "*"
-	if match.GetDstIfKeyHandle().GetInterfaceId() != 0 {
-		dstIfIDStr = strconv.Itoa(int(match.GetDstIfKeyHandle().GetInterfaceId()))
-	}
-	match.GetDstIfKeyHandle().GetInterfaceId()
 	aclID := spec.GetKeyOrHandle().GetAclId()
 	prio := spec.GetPriority()
 

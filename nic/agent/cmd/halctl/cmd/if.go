@@ -116,6 +116,60 @@ func ifShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 }
 
+func ifGetStrFromID(ifID []uint64) (int, []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	client := halproto.NewInterfaceClient(c.ClientConn)
+
+	defer c.Close()
+
+	var ifStr []string
+
+	index := 0
+	reqArray := make([]*halproto.InterfaceGetRequest, len(ifID))
+	for index < len(ifID) {
+		var req halproto.InterfaceGetRequest
+		req = halproto.InterfaceGetRequest{
+			KeyOrHandle: &halproto.InterfaceKeyHandle{
+				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+					InterfaceId: ifID[index],
+				},
+			},
+		}
+		reqArray[index] = &req
+		index++
+	}
+
+	ifGetReqMsg := &halproto.InterfaceGetRequestMsg{
+		Request: reqArray,
+	}
+
+	// HAL call
+	respMsg, err := client.InterfaceGet(context.Background(), ifGetReqMsg)
+	if err != nil {
+		fmt.Printf("Getting if failed. %v\n", err)
+		return -1, nil
+	}
+
+	index = 0
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			return -1, nil
+		}
+
+		ifStr = append(ifStr, fmt.Sprintf("%s-%d",
+			strings.ToLower(ifTypeToStr(resp.GetSpec().GetType())),
+			ifID[index]))
+	}
+
+	return 0, ifStr
+}
+
 func ifShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()

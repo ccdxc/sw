@@ -292,7 +292,11 @@ func l2segShowOneResp(resp *halproto.L2SegmentGetResponse) {
 		resp.GetStatus().GetMcastIdx(),
 		resp.GetStatus().GetPromIdx())
 
-	fmt.Printf("%-10d%-10d%-10d%-15s%-15s%-10s%-10s%-15s%-10d%-20s%-10d\n",
+	ifIDStr := "-"
+	if resp.GetSpec().GetPinnedUplinkIfKeyHandle().GetInterfaceId() != 0 {
+		ifIDStr = fmt.Sprintf("uplink-%d", resp.GetSpec().GetPinnedUplinkIfKeyHandle().GetInterfaceId())
+	}
+	fmt.Printf("%-10d%-10d%-10d%-15s%-15s%-10s%-10s%-15s%-10d%-20s%-10s\n",
 		resp.GetSpec().GetKeyOrHandle().GetSegmentId(),
 		resp.GetStatus().GetKeyOrHandle().GetL2SegmentHandle(),
 		resp.GetSpec().GetVrfKeyHandle().GetVrfId(),
@@ -302,8 +306,7 @@ func l2segShowOneResp(resp *halproto.L2SegmentGetResponse) {
 		replIndices,
 		resp.GetStats().GetNumEndpoints(),
 		ifStr,
-		resp.GetSpec().GetPinnedUplinkIfKeyHandle().GetInterfaceId())
-
+		ifIDStr)
 }
 
 func l2segPdShowHeader(cmd *cobra.Command, args []string) {
@@ -330,48 +333,106 @@ func l2segPdShowOneResp(resp *halproto.L2SegmentGetResponse) {
 func l2segEPdShowOneResp(resp *halproto.L2SegmentGetResponse) {
 	status := resp.GetStatus()
 	epdStatus := resp.GetStatus().GetEpdInfo()
-	inpPropIdxStr := ""
-	inpPropIdxPrTagStr := ""
 
 	inpPropIdx := epdStatus.GetInpPropIdx()
 	inpPropIdxPrTag := epdStatus.GetInpPropIdxPrTag()
+
+	inpPropStr := ""
 	first := true
+	firstLine := true
+	count := 0
+	inpPropArrayIdx := 0
+	inpPropPrArrayIdx := 0
+	nonePrinted := false
+	nonePrPrinted := false
 
-	for idx := range inpPropIdx {
-		if first == true {
-			first = false
-			inpPropIdxStr += fmt.Sprintf("%d", inpPropIdx[idx])
+	for inpPropArrayIdx < len(inpPropIdx) || inpPropPrArrayIdx < len(inpPropIdxPrTag) {
+		inpPropStr = ""
+		count = 0
+		first = true
+		for inpPropArrayIdx < len(inpPropIdx) {
+			if (inpPropIdx[inpPropArrayIdx]&(1<<28))>>28 == 1 {
+				inpPropIdx[inpPropArrayIdx] = inpPropIdx[inpPropArrayIdx] ^ (1 << 28)
+				if first == true {
+					first = false
+					inpPropStr += fmt.Sprintf("otcam:%d", inpPropIdx[inpPropArrayIdx])
+				} else {
+					inpPropStr += fmt.Sprintf(",otcam:%d", inpPropIdx[inpPropArrayIdx])
+				}
+			} else {
+				if first == true {
+					first = false
+					inpPropStr += fmt.Sprintf("hash:%d", inpPropIdx[inpPropArrayIdx])
+				} else {
+					inpPropStr += fmt.Sprintf(",hash:%d", inpPropIdx[inpPropArrayIdx])
+				}
+			}
+			count++
+			inpPropArrayIdx++
+			if count == 2 || inpPropArrayIdx == len(inpPropIdx) {
+				inpPropStr = fmt.Sprintf("%-45s", inpPropStr)
+				break
+			}
+		}
+
+		if len(inpPropIdx) == 0 {
+			if nonePrinted == false {
+				nonePrinted = true
+				inpPropStr = fmt.Sprintf("%-45s", "None")
+			} else {
+				inpPropStr = fmt.Sprintf("%-45s", "")
+			}
+		}
+
+		count = 0
+		first = true
+		for inpPropPrArrayIdx < len(inpPropIdxPrTag) {
+			if (inpPropIdxPrTag[inpPropPrArrayIdx]&(1<<28))>>28 == 1 {
+				inpPropIdxPrTag[inpPropPrArrayIdx] = inpPropIdxPrTag[inpPropPrArrayIdx] ^ (1 << 28)
+				if first == true {
+					first = false
+					inpPropStr += fmt.Sprintf("otcam:%d", inpPropIdxPrTag[inpPropPrArrayIdx])
+				} else {
+					inpPropStr += fmt.Sprintf(",otcam:%d", inpPropIdxPrTag[inpPropPrArrayIdx])
+				}
+			} else {
+				if first == true {
+					first = false
+					inpPropStr += fmt.Sprintf("hash:%d", inpPropIdxPrTag[inpPropPrArrayIdx])
+				} else {
+					inpPropStr += fmt.Sprintf(",hash:%d", inpPropIdxPrTag[inpPropPrArrayIdx])
+				}
+			}
+			count++
+			inpPropPrArrayIdx++
+			if count == 2 {
+				break
+			}
+		}
+
+		if len(inpPropIdx) == 0 {
+			if nonePrPrinted == false {
+				nonePrPrinted = true
+				inpPropStr = fmt.Sprintf("%-45s%-45s\n", inpPropStr, "None")
+			} else {
+				inpPropStr = fmt.Sprintf("%-45s%-45s\n", inpPropStr, "")
+			}
+		}
+
+		if firstLine == true {
+			firstLine = false
+			fmt.Printf("%-10d%-10d%-10d%-10d%-12d%-10d%-90s\n",
+				resp.GetSpec().GetKeyOrHandle().GetSegmentId(),
+				epdStatus.GetHwL2SegId(),
+				epdStatus.GetL2SegLookupId(),
+				epdStatus.GetL2SegVlanIdCpu(),
+				epdStatus.GetInpPropCpuIdx(),
+				status.GetBcastIdx(),
+				inpPropStr)
 		} else {
-			inpPropIdxStr += fmt.Sprintf(",%d", inpPropIdx[idx])
+			fmt.Printf("%-62s%-90s\n", "", inpPropStr)
 		}
 	}
-
-	if first == true {
-		inpPropIdxStr = "None"
-	}
-	first = true
-	for idx := range inpPropIdxPrTag {
-		if first == true {
-			first = false
-			inpPropIdxPrTagStr += fmt.Sprintf("%d", inpPropIdxPrTag[idx])
-		} else {
-			inpPropIdxPrTagStr += fmt.Sprintf(",%d", inpPropIdxPrTag[idx])
-		}
-	}
-
-	if first == true {
-		inpPropIdxPrTagStr = "None"
-	}
-
-	fmt.Printf("%-10d%-10d%-10d%-10d%-12d%-10d%-45s%-45s\n",
-		resp.GetSpec().GetKeyOrHandle().GetSegmentId(),
-		epdStatus.GetHwL2SegId(),
-		epdStatus.GetL2SegLookupId(),
-		epdStatus.GetL2SegVlanIdCpu(),
-		epdStatus.GetInpPropCpuIdx(),
-		status.GetBcastIdx(),
-		inpPropIdxStr,
-		inpPropIdxPrTagStr)
 }
 
 func bcastFwdPolToStr(pol halproto.BroadcastFwdPolicy) string {

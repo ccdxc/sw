@@ -205,13 +205,13 @@ func cpuShowStatusOneResp(resp *halproto.InterfaceGetResponse) {
 
 func cpuShowHeader() {
 	fmt.Printf("\n")
-	fmt.Printf("Id:      Interface ID         IfType: Interface type\n")
-	fmt.Printf("Status:  IF's status          LifId: LIF's ID\n")
+	fmt.Printf("Id:      Interface ID         Status:  IF's status\n")
+	fmt.Printf("LifId:   LIF's ID\n")
 	fmt.Printf("\n")
-	hdrLine := strings.Repeat("-", 40)
+	hdrLine := strings.Repeat("-", 30)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-10s%-10s%-10s\n",
-		"Id", "IfType", "Status", "LifID")
+	fmt.Printf("%-10s%-10s%-10s\n",
+		"Id", "Status", "LifID")
 	fmt.Println(hdrLine)
 }
 
@@ -220,9 +220,9 @@ func cpuShowOneResp(resp *halproto.InterfaceGetResponse) {
 	if ifType != halproto.IfType_IF_TYPE_CPU {
 		return
 	}
-	fmt.Printf("%-10d%-10s%-10s%-10d\n",
-		resp.GetSpec().GetKeyOrHandle().GetInterfaceId(),
-		ifTypeToStr(ifType),
+	ifID := fmt.Sprintf("cpu-%d", resp.GetSpec().GetKeyOrHandle().GetInterfaceId())
+	fmt.Printf("%-10s%-10s%-10d\n",
+		ifID,
 		strings.ToLower(strings.Replace(resp.GetSpec().GetAdminStatus().String(), "IF_STATUS_", "", -1)),
 		resp.GetSpec().GetIfCpuInfo().GetLifKeyOrHandle().GetLifId())
 }

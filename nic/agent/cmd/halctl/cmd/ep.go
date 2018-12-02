@@ -203,6 +203,7 @@ func epStatusShowCmdHandler(cmd *cobra.Command, args []string) {
 		} else {
 			uplink = 0
 		}
+		uplinkStr := "-"
 		// Retrieve uplink interface from handle
 		if uplink != 0 {
 			ifReq := &halproto.InterfaceGetRequest{
@@ -229,11 +230,11 @@ func epStatusShowCmdHandler(cmd *cobra.Command, args []string) {
 					fmt.Printf("HAL Returned non OK status. %v\n", hResp.ApiStatus)
 					continue
 				}
-				uplink = hResp.GetSpec().GetKeyOrHandle().GetInterfaceId()
+				uplinkStr = fmt.Sprintf("uplink-%d", hResp.GetSpec().GetKeyOrHandle().GetInterfaceId())
 			}
 		}
 
-		epStatusShowOneResp(uplink, resp)
+		epStatusShowOneResp(uplinkStr, resp)
 	}
 }
 
@@ -318,11 +319,18 @@ func epShowOneResp(resp *halproto.EndpointGetResponse) {
 
 	macStr := utils.MactoStr(resp.GetSpec().GetKeyOrHandle().GetEndpointKey().GetL2Key().GetMacAddress())
 
-	fmt.Printf("%-12d%-12d%-24s%-10d%-10t%-5d%-10d%-20s\n",
+	var ifID []uint64
+	var ifIDStr []string
+
+	ifID = append(ifID, resp.GetSpec().GetEndpointAttrs().GetInterfaceKeyHandle().GetInterfaceId())
+	ifIDStr = append(ifIDStr, "-")
+	_, ifIDStr = ifGetStrFromID(ifID)
+
+	fmt.Printf("%-12d%-12d%-24s%-10s%-10t%-5d%-10d%-20s\n",
 		resp.GetStatus().GetKeyOrHandle().GetEndpointHandle(),
 		resp.GetSpec().GetKeyOrHandle().GetEndpointKey().GetL2Key().GetL2SegmentKeyHandle().GetSegmentId(),
 		macStr,
-		resp.GetSpec().GetEndpointAttrs().GetInterfaceKeyHandle().GetInterfaceId(),
+		ifIDStr[0],
 		resp.GetStatus().GetIsEndpointLocal(),
 		resp.GetSpec().GetEndpointAttrs().GetUsegVlan(),
 		len(resp.GetStatus().GetIpAddress()),
@@ -341,7 +349,7 @@ func epStatusShowHeader(cmd *cobra.Command, args []string) {
 	fmt.Println(hdrLine)
 }
 
-func epStatusShowOneResp(uplink uint64, resp *halproto.EndpointGetResponse) {
+func epStatusShowOneResp(uplinkStr string, resp *halproto.EndpointGetResponse) {
 	epd := resp.GetStatus().GetEpdStatus()
 
 	rwTblStr := ""
@@ -369,9 +377,9 @@ func epStatusShowOneResp(uplink uint64, resp *halproto.EndpointGetResponse) {
 		regMacTblStr = fmt.Sprintf("%d", regMacTblIdx)
 	}
 
-	fmt.Printf("%-12d%-13d%-12d%-12s%-36s\n",
+	fmt.Printf("%-12d%-13s%-12d%-12s%-36s\n",
 		resp.GetStatus().GetKeyOrHandle().GetEndpointHandle(),
-		uplink,
+		uplinkStr,
 		resp.GetSpec().GetKeyOrHandle().GetEndpointKey().GetL2Key().GetL2SegmentKeyHandle().GetSegmentId(),
 		regMacTblStr,
 		rwTblStr)

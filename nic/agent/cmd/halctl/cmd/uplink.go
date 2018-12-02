@@ -190,13 +190,13 @@ func uplinkDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 
 func uplinkShowHeader() {
 	fmt.Printf("\n")
-	fmt.Printf("Id:       Interface ID                        Ifype:    Interface type\n")
-	fmt.Printf("UpPort:   Uplink's Port                       UpNL2seg: Uplink's Native L2seg\n")
+	fmt.Printf("Id:       Interface ID                        UpPort:   Uplink's Port\n")
+	fmt.Printf("UpNL2seg: Uplink's Native L2seg\n")
 	fmt.Printf("\n")
-	hdrLine := strings.Repeat("-", 40)
+	hdrLine := strings.Repeat("-", 30)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-10s%-10s%-10s\n",
-		"Id", "IfType", "UpPort", "UpNL2seg")
+	fmt.Printf("%-10s%-10s%-10s\n",
+		"Id", "UpPort", "UpNL2seg")
 	fmt.Println(hdrLine)
 }
 
@@ -205,9 +205,9 @@ func uplinkShowOneResp(resp *halproto.InterfaceGetResponse) {
 	if ifType != halproto.IfType_IF_TYPE_UPLINK {
 		return
 	}
-	fmt.Printf("%-10d%-10s%-10d%-10d\n",
-		resp.GetSpec().GetKeyOrHandle().GetInterfaceId(),
-		ifTypeToStr(ifType),
+	ifID := fmt.Sprintf("uplink-%d", resp.GetSpec().GetKeyOrHandle().GetInterfaceId())
+	fmt.Printf("%-10s%-10d%-10d\n",
+		ifID,
 		resp.GetSpec().GetIfUplinkInfo().GetPortNum(),
 		resp.GetSpec().GetIfUplinkInfo().GetNativeL2SegmentId())
 }
