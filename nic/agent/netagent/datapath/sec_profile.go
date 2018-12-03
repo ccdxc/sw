@@ -47,7 +47,7 @@ func (hd *Datapath) CreateSecurityProfile(profile *netproto.SecurityProfile, vrf
 		Request: []*halproto.VrfSpec{&vrfSpec},
 	}
 
-	var sessionIdleTimeout, tcpTimeout, tcpDropTimeout, tcpConnectionSetupTimeout, tcpCloseTimeout, dropTimeout, udpTimeout, udpDropTimeout, icmpTimeout, icmpDropTimeout uint32
+	var sessionIdleTimeout, tcpTimeout, tcpDropTimeout, tcpConnectionSetupTimeout, tcpHalfCloseTimeout, tcpCloseTimeout, dropTimeout, udpTimeout, udpDropTimeout, icmpTimeout, icmpDropTimeout uint32
 	timeouts := profile.Spec.Timeouts
 
 	if len(timeouts.SessionIdle) > 0 {
@@ -88,6 +88,16 @@ func (hd *Datapath) CreateSecurityProfile(profile *netproto.SecurityProfile, vrf
 		tcpConnectionSetupTimeout = uint32(dur.Seconds())
 	} else {
 		tcpConnectionSetupTimeout = constants.DefaultConnectionSetUpTimeout
+	}
+
+	if len(timeouts.TCPHalfClose) > 0 {
+		dur, err := time.ParseDuration(timeouts.TCPHalfClose)
+		if err != nil {
+			return fmt.Errorf("invalid time duration %s", timeouts.TCPHalfClose)
+		}
+		tcpHalfCloseTimeout = uint32(dur.Seconds())
+	} else {
+		tcpHalfCloseTimeout = constants.DefaultTimeout
 	}
 
 	if len(timeouts.TCPClose) > 0 {
@@ -165,16 +175,17 @@ func (hd *Datapath) CreateSecurityProfile(profile *netproto.SecurityProfile, vrf
 				IcmpNormalizationEn: profile.Spec.EnableICMPNormalization,
 
 				// User Specified timeout values
-				SessionIdleTimeout:  sessionIdleTimeout,
-				TcpTimeout:          tcpTimeout,
-				TcpDropTimeout:      tcpDropTimeout,
-				TcpCnxnSetupTimeout: tcpConnectionSetupTimeout,
-				TcpCloseTimeout:     tcpCloseTimeout,
-				DropTimeout:         dropTimeout,
-				UdpTimeout:          udpTimeout,
-				UdpDropTimeout:      udpDropTimeout,
-				IcmpTimeout:         icmpTimeout,
-				IcmpDropTimeout:     icmpDropTimeout,
+				SessionIdleTimeout:   sessionIdleTimeout,
+				TcpTimeout:           tcpTimeout,
+				TcpDropTimeout:       tcpDropTimeout,
+				TcpCnxnSetupTimeout:  tcpConnectionSetupTimeout,
+				TcpHalfClosedTimeout: tcpHalfCloseTimeout,
+				TcpCloseTimeout:      tcpCloseTimeout,
+				DropTimeout:          dropTimeout,
+				UdpTimeout:           udpTimeout,
+				UdpDropTimeout:       udpDropTimeout,
+				IcmpTimeout:          icmpTimeout,
+				IcmpDropTimeout:      icmpDropTimeout,
 
 				// Defaults Enables
 				TcpTsNotPresentDrop:    true,

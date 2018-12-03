@@ -13,13 +13,18 @@
           "tcp": "45s",
           "tcp-drop": "90s",
           "tcp-connection-setup": "30s",
+          "tcp-half-close": "60s",
           "tcp-close": "30s",
           "drop": "30s",
           "udp": "30s",
           "udp-drop": "30s",
           "icmp": "6s",
           "icmp-drop": "30s"
-        }
+        },
+        "enable-connection-tracking": true,
+        "enable-tcp-normalization": true,
+        "enable-ip-normalization": true,
+        "enable-icmp-normalization": true
       }
    }
    ]

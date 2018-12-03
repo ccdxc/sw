@@ -1495,6 +1495,8 @@ build_tcp_packet (hal::flow_t *flow, hal_handle_t vrf_handle,
 
     //Fill the P4 plus header
     p4plus_header->p4plus_app_id = P4PLUS_APPTYPE_CPU;
+    p4plus_header->compute_l4_csum = 1;
+    p4plus_header->compute_ip_csum = 1;
 
     // Fill in P4Plus and CPU header info
     cpu_header->src_lif = hal::SERVICE_LIF_CPU;
@@ -1826,8 +1828,9 @@ build_and_send_tcp_pkt (void *data)
             SDK_ATOMIC_INC_UINT64(&session->iflow->stats.num_tcp_tickles_sent, 1);
         }
 
-        HAL_TRACE_DEBUG("Sending another tickle and starting timer {}",
-                         session->hal_handle);
+        HAL_TRACE_DEBUG("Sending another tickle and starting timer {} iflow stats: {} rflow stats {}",
+                         session->hal_handle, session->iflow->stats.num_tcp_tickles_sent, 
+                         session->rflow->stats.num_tcp_tickles_sent);
    
         /*
          * If Tickles were generated then we increment the tickle count

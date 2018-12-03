@@ -18,6 +18,7 @@ __json_template = { "security-profiles" : [
           "tcp": "",
           "tcp-drop": "",
           "tcp-connection-setup": "",
+          "tcp-half-close": "",
           "tcp-close": "",
           "drop": "",
           "udp": "",

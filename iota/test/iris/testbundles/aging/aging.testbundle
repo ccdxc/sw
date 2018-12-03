@@ -14,3 +14,44 @@ testcases:
             proto     : [ udp, tcp ]
         args    :
             type: local_only
+
+    -   name    : ConnSetupTimeout
+        testcase: testcases.aging.tcp_conn_setup_timeout
+        #iterators:
+        #    type   : simple
+        #    values : [0, 30, 120]
+        args    :
+            type: local_only
+
+    -   name    : HalfCloseTimeout
+        testcase: testcases.aging.tcp_half_closed_timeout
+        #iterators:
+        #    type   : simple
+        #    values : [0, 200, 1000]
+        args    :
+            type: local_only
+   
+    -   name    : CloseTimeout
+        testcase: testcases.aging.tcp_close_timeout
+        #iterators:
+        #    type   : simple
+        #    values : [0, 100, 330]
+        args    :
+            type: local_only 
+
+    -   name    : ShowClearTcpUdpSessions
+        testcase: testcases.aging.clear_show
+        iterators:
+            type      : nested
+            proto     : [ udp, tcp ]
+        args    :
+            type: local_only
+            count: 10 
+
+    -   name    : TCPTickleTimeout
+        testcase: testcases.aging.tcp_timeout_tickle
+        #iterators:
+        #    type   : simple
+        #    values : [0, 100, 330]
+        args    :
+            type: local_only
