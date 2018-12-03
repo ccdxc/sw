@@ -411,6 +411,8 @@ void ionic_q_post(struct queue *q, bool ring_doorbell, desc_cb cb,
 	q->head->cb_arg = cb_arg;
 	q->head = q->head->next;
 
+	pr_debug("qname=%s qid=%d p_index=%d ringdb=%d q->db=0x%08llx\n",
+		 q->name, q->qid, q->head->index, ring_doorbell, (u64)q->db);
 	if (ring_doorbell) {
 		struct doorbell db = {
 			.qid_lo = q->qid,
@@ -419,9 +421,6 @@ void ionic_q_post(struct queue *q, bool ring_doorbell, desc_cb cb,
 			.p_index = q->head->index,
 		};
 
-		//printk(KERN_ERR "XXXX  ring doorbell name %s qid %d ring "
-		//	 "0 p_index %d db %p\n", q->name, q->qid,
-		//	 q->head->index, q->db);
 		writeq(*(u64 *)&db, q->db);
 	}
 }

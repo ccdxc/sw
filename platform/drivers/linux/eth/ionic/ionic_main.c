@@ -49,7 +49,14 @@ unsigned int devcmd_timeout = 30;
 module_param(devcmd_timeout, uint, 0);
 MODULE_PARM_DESC(devcmd_timeout, "Devcmd timeout in seconds (default 30 secs)");
 
-int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx)
+#ifdef FAKE_ADMINQ
+unsigned int use_AQ = 1;
+module_param(use_AQ, uint, 1);
+MODULE_PARM_DESC(use_AQ, "Set to non-0 to enable AQ testing, defaults to 1");
+#endif
+
+int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx,
+			   bool timeout)
 {
 	struct net_device *netdev = lif->netdev;
 	static struct cmds {
@@ -77,15 +84,16 @@ int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx)
 	char *name = "UNKNOWN";
 	int i;
 
-	if (ctx->comp.comp.status) {
+	if (ctx->comp.comp.status || timeout) {
 		for (i = 0; i < list_len; i++) {
 			if (cmd[i].cmd == ctx->cmd.cmd.opcode) {
 				name = cmd[i].name;
 				break;
 			}
 		}
-		netdev_err(netdev, "(%d) %s failed: %d\n", ctx->cmd.cmd.opcode,
-			   name, ctx->comp.comp.status);
+		netdev_err(netdev, "(%d) %s failed: %d %s\n",
+			   ctx->cmd.cmd.opcode, name, ctx->comp.comp.status,
+			   (timeout ? "(timeout)" : ""));
 		return -EIO;
 	}
 
@@ -94,6 +102,7 @@ int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx)
 
 int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
 {
+	unsigned long remaining;
 	int err;
 
 	err = ionic_api_adminq_post(lif, ctx);
@@ -106,9 +115,9 @@ int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
 		return err;
 	}
 
-	wait_for_completion(&ctx->work);
-
-	return ionic_adminq_check_err(lif, ctx);
+	remaining = wait_for_completion_timeout(&ctx->work,
+						HZ * devcmd_timeout);
+	return ionic_adminq_check_err(lif, ctx, (remaining == 0));
 }
 
 int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
@@ -119,13 +128,14 @@ int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
 	unsigned int work_done;
 
 	work_done = ionic_cq_service(cq, budget, cb, cb_arg);
-
 	if (work_done > 0)
-		ionic_intr_return_credits(cq->bound_intr, work_done, 0, true);
+		ionic_intr_return_credits(cq->bound_intr, work_done,
+					  false, true);
 
 	if ((work_done < budget) && napi_complete_done(napi, work_done)) {
 		DEBUG_STATS_INTR_REARM(cq->bound_intr);
-		ionic_intr_mask(cq->bound_intr, false);
+		ionic_intr_return_credits(cq->bound_intr, 0,
+					  true, true);
 	}
 	DEBUG_STATS_NAPI_POLL(qcq, work_done);
 
@@ -157,13 +167,17 @@ static int ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
 		if (done)
 			return 0;
 
-#ifdef ADMINQ
-		wait = schedule_timeout_interruptible(HZ / 10);
-		if (wait > 0)
-			return -EINTR;
-#else
-		(void)wait;
-		mdelay(100);
+#ifdef FAKE_ADMINQ
+		if (use_AQ) {
+#endif
+			wait = schedule_timeout_interruptible(HZ / 10);
+			if (wait > 0)
+				return -EINTR;
+#ifdef FAKE_ADMINQ
+		} else {
+			(void)wait;
+			mdelay(100);
+		}
 #endif
 
 	} while (time_after(time, jiffies));
@@ -213,7 +227,7 @@ int ionic_set_dma_mask(struct ionic *ionic)
 	return err;
 }
 
-#ifndef ADMINQ
+#ifdef FAKE_ADMINQ
 #define XXX_DEVCMD_HALF_PAGE 0x800
 
 // XXX temp func to get side-band data from 2nd half page of dev_cmd reg space.
@@ -331,7 +345,7 @@ int ionic_setup(struct ionic *ionic)
 	if (err)
 		return err;
 
-#ifndef ADMINQ
+#ifdef FAKE_ADMINQ
 	spin_lock_init(&ionic->cmd_lock);
 	INIT_LIST_HEAD(&ionic->cmd_list);
 	INIT_WORK(&ionic->cmd_work, ionic_dev_cmd_work);

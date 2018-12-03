@@ -5,6 +5,11 @@
 #include <linux/netdevice.h>
 #include <linux/types.h>
 
+/* remove code protected by this when ready to
+ * remove all DEV_CMD fakery of AdminQ
+ */
+#define FAKE_ADMINQ	1
+
 #include "ionic_if.h"
 
 /** IONIC_API_VERSION - Version number of this interface.
@@ -196,11 +201,11 @@ struct ionic_admin_ctx {
 	union adminq_cmd cmd;
 	union adminq_comp comp;
 
-#ifndef ADMINQ
+#ifdef FAKE_ADMINQ
 	struct list_head list;
-#endif
 	void *side_data;
 	size_t side_data_len;
+#endif
 };
 
 /** ionic_api_adminq_post - Post an admin command.

@@ -19,11 +19,9 @@
 #ifndef _IONIC_H_
 #define _IONIC_H_
 
+#include "ionic_api.h"
 #include "ionic_dev.h"
 #include "ionic_debugfs.h"
-#include "ionic_api.h"
-
-//#define ADMINQ
 
 #define DRV_NAME		"ionic"
 #define DRV_DESCRIPTION		"Pensando Ethernet NIC Driver"
@@ -34,6 +32,9 @@ extern unsigned int nrxq_descs;
 extern unsigned int ntxqs;
 extern unsigned int nrxqs;
 extern unsigned int devcmd_timeout;
+#ifdef FAKE_ADMINQ
+extern unsigned int use_AQ;
+#endif
 
 struct ionic {
 	struct pci_dev *pdev;
@@ -59,7 +60,7 @@ struct ionic {
 	struct debugfs_blob_wrapper scratch_bufs_blob[NUM_SCRATCH_BUFS];
 #endif
 #endif
-#ifndef ADMINQ
+#ifdef FAKE_ADMINQ
 	spinlock_t cmd_lock;
 	struct list_head cmd_list;
 	struct work_struct cmd_work;
@@ -68,7 +69,8 @@ struct ionic {
 	struct notifier_block nb;
 };
 
-int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx);
+int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx,
+			   bool timeout);
 int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx);
 int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
 	       void *cb_arg);

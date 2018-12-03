@@ -174,7 +174,7 @@ int ionic_mnic_dev_setup(struct ionic *ionic)
 	idev->db_pages = ionic->bars[5].vaddr;
 	idev->phy_db_pages = ionic->bars[5].bus_addr;
 
-#ifndef ADMINQ
+#ifdef FAKE_ADMINQ
 	spin_lock_init(&ionic->cmd_lock);
 	INIT_LIST_HEAD(&ionic->cmd_list);
 	INIT_WORK(&ionic->cmd_work, ionic_dev_cmd_work);

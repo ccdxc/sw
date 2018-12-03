@@ -124,6 +124,8 @@ struct lif_stats {
 	u64 rx_csum_ip_bad;
 };
 
+#define LIF_F_INITED		BIT(0)
+
 #define LIF_NAME_MAX_SZ		(32)
 struct lif {
 	char name[LIF_NAME_MAX_SZ];
@@ -158,6 +160,7 @@ struct lif {
 	void *api_private;
 	void (*api_reset_cb)(void *api_private);
 	struct dentry *dentry;
+	u32 flags;
 };
 
 #define lif_to_txqcq(lif, i)	(lif->txqcqs[i])

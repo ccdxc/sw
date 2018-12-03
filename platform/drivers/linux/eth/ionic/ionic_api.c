@@ -1,7 +1,5 @@
 #include <linux/kernel.h>
 
-#include "ionic_api.h"
-
 #include "ionic.h"
 #include "ionic_if.h"
 #include "ionic_bus.h"
@@ -188,31 +186,36 @@ void ionic_api_put_dbid(struct lif *lif, int dbid)
 }
 EXPORT_SYMBOL_GPL(ionic_api_put_dbid);
 
-#ifdef ADMINQ
 static void ionic_api_adminq_cb(struct queue *q, struct desc_info *desc_info,
 				struct cq_info *cq_info, void *cb_arg)
 {
 	struct ionic_admin_ctx *ctx = cb_arg;
 	struct admin_comp *comp = cq_info->cq_desc;
+	struct device *dev = &q->lif->netdev->dev;
 
 	if (WARN_ON(comp->comp_index != desc_info->index))
 		return;
 
 	memcpy(&ctx->comp, comp, sizeof(*comp));
 
-	dev_dbg(&lif->netdev->dev, "comp admin queue command:\n");
+	dev_dbg(dev, "comp admin queue command:\n");
 	dynamic_hex_dump("comp ", DUMP_PREFIX_OFFSET, 16, 1,
 			 &ctx->comp, sizeof(ctx->comp), true);
 
 	complete_all(&ctx->work);
 }
-#endif
 
 int ionic_api_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx)
 {
-#ifdef ADMINQ
 	struct queue *adminq = &lif->adminqcq->q;
-	int err;
+	int err = 0;
+#ifdef FAKE_ADMINQ
+	struct ionic *ionic = lif->ionic;
+	unsigned long irqflags;
+
+	if (!use_AQ)
+		goto fake_adminq;
+#endif
 
 	WARN_ON(in_interrupt());
 
@@ -234,9 +237,8 @@ err_out:
 	spin_unlock(&lif->adminq_lock);
 
 	return err;
-#else
-	struct ionic *ionic = lif->ionic;
-	unsigned long irqflags;
+#ifdef FAKE_ADMINQ
+fake_adminq:
 
 	spin_lock_irqsave(&ionic->cmd_lock, irqflags);
 	list_add(&ctx->list, &ionic->cmd_list);
