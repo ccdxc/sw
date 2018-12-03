@@ -1312,10 +1312,11 @@ pd_l2seg_update_prom_lifs(pd_l2seg_t *pd_l2seg,
     hal_ret_t                   ret = HAL_RET_OK;
     bool                        trigger_inp_prp_pgm = false;
     l2seg_t                     *l2seg = (l2seg_t *)pd_l2seg->l2seg;
-    if_t                        *hal_if = NULL;
+    if_t                        *hal_if = NULL, *eff_prom_enic_if = NULL;
     hal_handle_t                *p_hdl_id = NULL;
     intf::IfType                if_type;
     pd_add_l2seg_uplink_args_t  up_args = {0};
+    lif_t                       *lif = NULL;
     pd_enicif_t                 *pd_enicif = (pd_enicif_t *)prom_enic_if->pd_if;
 
     if (inc) {
@@ -1323,11 +1324,12 @@ pd_l2seg_update_prom_lifs(pd_l2seg_t *pd_l2seg,
         if (pd_l2seg->num_prom_lifs == 1) {
             pd_l2seg->prom_if_handle = prom_enic_if->hal_handle;
             pd_l2seg->prom_if_dest_lport = pd_enicif->enic_lport_id;
+            eff_prom_enic_if = prom_enic_if;
             trigger_inp_prp_pgm = true;
-        }
-        if (pd_l2seg->num_prom_lifs == 2) {
+        } else if (pd_l2seg->num_prom_lifs == 2) {
             pd_l2seg->prom_if_handle = HAL_HANDLE_INVALID;
-            pd_l2seg->prom_if_dest_lport = pd_enicif->enic_lport_id;
+            pd_l2seg->prom_if_dest_lport = 0;
+            // pd_l2seg->prom_if_dest_lport = pd_enicif->enic_lport_id;
             trigger_inp_prp_pgm = true;
         }
         HAL_TRACE_DEBUG("L2seg id: {}, Incrementing prom lifs to: {}, "
@@ -1337,13 +1339,28 @@ pd_l2seg_update_prom_lifs(pd_l2seg_t *pd_l2seg,
     } else {
         pd_l2seg->num_prom_lifs--;
         if (pd_l2seg->num_prom_lifs == 1) {
-            pd_l2seg->prom_if_handle = prom_enic_if->hal_handle;
+            // Walk l2seg's enics and pick up the one enic which has prom. lif
+            for (const void *ptr : *l2seg->if_list) {
+                p_hdl_id = (hal_handle_t *)ptr;
+                hal_if = find_if_by_handle(*p_hdl_id);
+                if_type = hal::intf_get_if_type(hal_if);
+                if (if_type == intf::IF_TYPE_ENIC) {
+                    lif = if_get_lif(hal_if);
+                    if (lif->packet_filters.receive_promiscuous) {
+                        eff_prom_enic_if = hal_if;
+
+                    }
+                }
+            }
+            HAL_ASSERT(eff_prom_enic_if != NULL);
+            pd_enicif = (pd_enicif_t *)eff_prom_enic_if->pd_if;
+            pd_l2seg->prom_if_handle = eff_prom_enic_if->hal_handle;
             pd_l2seg->prom_if_dest_lport = pd_enicif->enic_lport_id;
             trigger_inp_prp_pgm = true;
-        }
-        if (pd_l2seg->num_prom_lifs == 0) {
+        } else if (pd_l2seg->num_prom_lifs == 0) {
             pd_l2seg->prom_if_handle = HAL_HANDLE_INVALID;
-            pd_l2seg->prom_if_dest_lport = pd_enicif->enic_lport_id;
+            pd_l2seg->prom_if_dest_lport = 0;
+            // pd_l2seg->prom_if_dest_lport = pd_enicif->enic_lport_id;
             trigger_inp_prp_pgm = true;
         }
         HAL_TRACE_DEBUG("L2seg id: {}, Decrementing prom lifs to: {}, "
@@ -1374,7 +1391,7 @@ pd_l2seg_update_prom_lifs(pd_l2seg_t *pd_l2seg,
                                                             L2SEG_UPLINK_UPD_FLAGS_NUM_PROM_LIFS,
                                                             NULL,
                                                             pd_l2seg->num_prom_lifs,
-                                                            prom_enic_if);
+                                                            eff_prom_enic_if);
                 break;
             case intf::IF_TYPE_UPLINK_PC:
                 // Handle Uplink PCs
@@ -1403,7 +1420,7 @@ pd_l2seg_update_prom_lifs(pd_l2seg_t *pd_l2seg,
                                                             L2SEG_UPLINK_UPD_FLAGS_NUM_PROM_LIFS,
                                                             NULL,
                                                             pd_l2seg->num_prom_lifs,
-                                                            prom_enic_if);
+                                                            eff_prom_enic_if);
                 break;
             case intf::IF_TYPE_UPLINK_PC:
                 // Handle Uplink PCs

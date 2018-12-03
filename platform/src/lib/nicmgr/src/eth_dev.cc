@@ -52,13 +52,6 @@ memrev (uint8_t *block, size_t elnum)
     return block;
 }
 
-#if 0
-static bool
-mac_is_multicast(uint64_t mac) {
-    return ((mac & 0x010000000000) == 0x010000000000);
-}
-#endif
-
 template<typename ... Args>
 string string_format( const std::string& format, Args ... args )
 {
@@ -226,17 +219,11 @@ Eth::Eth(HalClient *hal_client,
     }
     stats_mem_addr += hal_lif_info_.hw_lif_id << LIF_STATS_SIZE_LOG;
 
-    // Allocate mnic id if its mnic
-    if (isMnic()) {
-        if (mnic_allocator->alloc(&mnic_id) != sdk::lib::indexer::SUCCESS) {
-            NIC_LOG_ERR("Failed to allocate mnic id");
-            return;
-        }
-    }
-
-    NIC_LOG_DEBUG("lif created: name: {}, id:{}, hw_lif_id: {}, mnic_id: {}, stats_mem_addr {:#x}, rdma sqs: {}"
-                 " rqs: {} HAL: sqs: {} rqs: {}", hal_lif_info_.name, hal_lif_info_.id, hal_lif_info_.hw_lif_id,
-                 mnic_id, stats_mem_addr, spec->rdma_sq_count, spec->rdma_rq_count,
+    NIC_LOG_INFO("lif created: name: {}, id:{}, type: {}, hw_lif_id: {}, mac:{}, stats_mem_addr {:#x}, rdma sqs: {}"
+                 " rqs: {} HAL: sqs: {} rqs: {}", hal_lif_info_.name, hal_lif_info_.id,
+                 eth_dev_type_to_str(spec->eth_type),
+                 hal_lif_info_.hw_lif_id, macaddr2str(spec->mac_addr),
+                 stats_mem_addr, spec->rdma_sq_count, spec->rdma_rq_count,
                  hal_lif_info_.queue_info[ETH_QTYPE_SQ].entries,
                  hal_lif_info_.queue_info[ETH_QTYPE_RQ].entries);
 
@@ -247,11 +234,6 @@ Eth::Eth(HalClient *hal_client,
                     spec->lif_id);
         return;
     }
-
-
-    NIC_LOG_DEBUG("lif hw_lif_id{}: mac {:#x}", hal_lif_info_.hw_lif_id, spec->mac_addr);
-
-    name = string_format("eth{}", spec->lif_id);
 
     // Configure PCI resources
     pci_resources.lif_valid = 1;
@@ -327,7 +309,7 @@ Eth::Eth(HalClient *hal_client,
     // } else if (spec->host_dev) {
     } else if (isHost()) {
         // Create PCI device
-        pdev = pciehdev_eth_new(name.c_str(), &pci_resources);
+        pdev = pciehdev_eth_new(spec->if_name.c_str(), &pci_resources);
         if (pdev == NULL) {
             NIC_LOG_ERR("lif-{}: Failed to create Eth PCI device",
                 hal_lif_info_.hw_lif_id);
@@ -811,8 +793,6 @@ Eth::_CmdIdentify(void *req, void *req_data, void *resp, void *resp_data)
 {
     union identity *rsp = (union identity *)resp_data;
     struct identify_comp *comp = (struct identify_comp *)resp;
-
-    NIC_LOG_DEBUG("lif-{}: CMD_OPCODE_IDENTIFY", hal_lif_info_.hw_lif_id);
 
     // TODO: Get these from hw
     rsp->dev.asic_type = 0x00;

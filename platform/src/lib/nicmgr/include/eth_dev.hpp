@@ -165,7 +165,6 @@ private:
     static sdk::lib::indexer *fltr_allocator;
     static sdk::lib::indexer *mnic_allocator;
     /* Members */
-    string name;
     struct eth_devspec *spec;
     hal_lif_info_t hal_lif_info_;
     /* Mnet Info */
@@ -182,7 +181,6 @@ private:
     // Coses
     uint8_t  coses; // {uint8_t CosA:4; uint8_t CosB:4;}
     // Mnic Info
-    uint32_t mnic_id;
     static uint32_t intr_base;
     // Rss config
     uint16_t rss_type;

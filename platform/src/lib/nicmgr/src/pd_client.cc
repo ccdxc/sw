@@ -194,7 +194,7 @@ void PdClient::rdma_manager_init (void)
     rdma_hbm_base_ = hbm_addr;
     rdma_hbm_allocator_.reset(new hal::BMAllocator(num_units));
 
-    NIC_LOG_DEBUG("{}: rdma_hbm_base_ : {}\n", __FUNCTION__, rdma_hbm_base_);
+    NIC_LOG_DEBUG("{}: rdma_hbm_base_ : {}", __FUNCTION__, rdma_hbm_base_);
 
     hbm_addr = mp_->start_addr(kRdmaHBMBarLabel);
     assert(hbm_addr > 0);
@@ -251,7 +251,7 @@ uint64_t PdClient::RdmaHbmBarAlloc (uint32_t size)
 
     rdma_bar_allocation_sizes_[alloc_offset] = alloc_units;
     alloc_offset *= kRdmaBarAllocUnit;
-    NIC_LOG_DEBUG("{}: size: {} alloc_offset: {} hbm_addr: {}\n",
+    NIC_LOG_DEBUG("{}: size: {} alloc_offset: {} hbm_addr: {}",
                     __FUNCTION__, size, alloc_offset, rdma_hbm_bar_base_ + alloc_offset);
     return rdma_hbm_bar_base_ + alloc_offset;
 }
@@ -632,7 +632,7 @@ int
 PdClient::eth_program_rss(uint32_t hw_lif_id, uint16_t rss_type, uint8_t *rss_key, uint8_t *rss_indir,
                 uint16_t num_queues)
 {
-    NIC_LOG_DEBUG("{}: Entered\n", __FUNCTION__);
+    NIC_LOG_DEBUG("{}: Entered", __FUNCTION__);
 
     assert(hw_lif_id < MAX_LIFS);
     assert(num_queues < ETH_RSS_MAX_QUEUES);
@@ -641,14 +641,14 @@ PdClient::eth_program_rss(uint32_t hw_lif_id, uint16_t rss_type, uint8_t *rss_ke
 
     if (num_queues > 0) {
         for (unsigned int index = 0; index < ETH_RSS_LIF_INDIR_TBL_LEN; index++) {
-            NIC_LOG_DEBUG("{}: hw_lif_id {} index {} type {} qid {}\n",
+            NIC_LOG_DEBUG("{}: hw_lif_id {} index {} type {} qid {}",
                           __FUNCTION__, hw_lif_id, index, rss_type, rss_indir[index]);
             p4pd_common_p4plus_rxdma_rss_indir_table_entry_add(
                     hw_lif_id, index, rss_type, rss_indir[index]);
         }
     }
 
-    NIC_LOG_DEBUG("{}: Leaving\n", __FUNCTION__);
+    NIC_LOG_DEBUG("{}: Leaving", __FUNCTION__);
     return 0;
 }
 

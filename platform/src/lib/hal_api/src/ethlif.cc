@@ -263,9 +263,12 @@ EthLif::~EthLif()
 hal_irisc_ret_t
 EthLif::remove_mac_filters()
 {
+    mac_t mac;
     // Remove mac filters
-    for (auto it = mac_table_.begin(); it != mac_table_.end(); it++) {
-        DelMac(*it);
+    for (auto it = mac_table_.begin(); it != mac_table_.end();) {
+        mac = *it;
+        it++;
+        DelMac(mac);
     }
     return HAL_IRISC_RET_SUCCESS;
 }
@@ -273,9 +276,12 @@ EthLif::remove_mac_filters()
 hal_irisc_ret_t
 EthLif::remove_vlan_filters()
 {
+    vlan_t vlan;
     // Remove vlan filters
-    for (auto it = vlan_table_.begin(); it != vlan_table_.end(); it++) {
-        DelVlan(*it);
+    for (auto it = vlan_table_.begin(); it != vlan_table_.end();) {
+        vlan = *it;
+        it++;
+        DelVlan(vlan);
     }
 
     return HAL_IRISC_RET_SUCCESS;
@@ -284,13 +290,17 @@ EthLif::remove_vlan_filters()
 hal_irisc_ret_t
 EthLif::remove_mac_vlan_filters()
 {
+    mac_t mac;
+    vlan_t vlan;
     // Remove (mac,vlan) filters
     for (auto it = mac_vlan_table_.begin(); it != mac_vlan_table_.end(); it++) {
-        DelMacVlan(std::get<0>(*it), std::get<1>(*it));
+        mac = std::get<0>(*it);
+        vlan = std::get<1>(*it);
+        it++;
+        DelMacVlan(mac,vlan);
     }
     return HAL_IRISC_RET_SUCCESS;
 }
-
 
 hal_irisc_ret_t
 EthLif::AddMac(mac_t mac)

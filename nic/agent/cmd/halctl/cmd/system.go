@@ -491,7 +491,6 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	if intf {
 		intfStatsShow(c)
-		return
 	}
 
 	client := halproto.NewSystemClient(c.ClientConn)

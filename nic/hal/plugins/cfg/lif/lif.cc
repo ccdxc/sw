@@ -1043,7 +1043,8 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
 
     if (app_ctxt->pkt_filter_bcast_changed ||
-        app_ctxt->pkt_filter_allmc_changed) {
+        app_ctxt->pkt_filter_allmc_changed ||
+        app_ctxt->pkt_filter_prom_changed) {
         lif_bcast_filter_update(lif, app_ctxt);
     }
 

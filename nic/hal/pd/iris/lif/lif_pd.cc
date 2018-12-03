@@ -809,7 +809,6 @@ lif_pd_rx_policer_deprogram_hw (pd_lif_t *pd_lif)
     return ret;
 }
 
-#define LIF_STATS_SIZE_LOG  9
 static hal_ret_t
 lif_pd_stats_read (intf::LifRxStats *rx_stats,
                    intf::LifTxStats *tx_stats,
@@ -822,7 +821,9 @@ lif_pd_stats_read (intf::LifRxStats *rx_stats,
     sdk::types::mem_addr_t stats_mem_addr =
         get_start_offset(CAPRI_HBM_REG_LIF_STATS);
 
-    stats_mem_addr += pd_lif->hw_lif_id << LIF_STATS_SIZE_LOG;
+    stats_mem_addr += pd_lif->hw_lif_id << LIF_STATS_SIZE_SHIFT;
+
+    HAL_TRACE_DEBUG("lif:{}, stats_mem_addr: {:x}", pd_lif->hw_lif_id, stats_mem_addr);
 
     ret = asic_mem_read(stats_mem_addr, (uint8_t *)&lif_metrics,
                         sizeof(delphi::objects::lifmetrics_t));

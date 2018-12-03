@@ -589,6 +589,16 @@ enicif_classic_update_l2seg_oiflist(if_t *hal_if, l2seg_t *l2seg,
         }
     }
 
+    if (lif_upd->pkt_filter_prom_changed) {
+        if (lif_upd->receive_promiscous) {
+            ret = oif_list_add_oif(l2seg_get_prmsc_oif_list(l2seg), &oif);
+            HAL_ASSERT(ret == HAL_RET_OK);
+        } else {
+            ret = oif_list_remove_oif(l2seg_get_prmsc_oif_list(l2seg), &oif);
+            HAL_ASSERT(ret == HAL_RET_OK);
+        }
+    }
+
     return ret;
 }
 

@@ -24,7 +24,7 @@ std::shared_ptr<sysmgr_client> create_sysmgr_client(delphi::SdkPtr &sdk)
 
 void sysmgr_client::register_for_service(std:: string name)
 {
-    NIC_LOG_DEBUG("Registering for {} up|down notifications\n", name);
+    NIC_LOG_DEBUG("Registering for {} up|down notifications", name);
     this->sysmgr_->register_service_reactor(name, shared_from_this());
 }
 
@@ -35,18 +35,18 @@ sysmgr_client::sysmgr_client(delphi::SdkPtr &sdk)
 
 void sysmgr_client::init_done(void)
 {
-    NIC_LOG_DEBUG("Indicating init_done to sysmgr\n");
+    NIC_LOG_DEBUG("Indicating init_done to sysmgr");
     this->sysmgr_->init_done();
 }
 
 void sysmgr_client::ServiceUp(std::string name)
 {
-    NIC_LOG_DEBUG("Rcvd {} up ntfn\n", name);
+    NIC_LOG_DEBUG("Rcvd {} up ntfn", name);
 }
 
 void sysmgr_client::ServiceDown(std::string name)
 {
-    NIC_LOG_DEBUG("Rcvd {} down ntfn\n", name);
+    NIC_LOG_DEBUG("Rcvd {} down ntfn", name);
 }
 
-}    // namespace nicmgr 
+}    // namespace nicmgr
