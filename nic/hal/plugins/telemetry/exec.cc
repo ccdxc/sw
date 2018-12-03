@@ -15,7 +15,7 @@ namespace telemetry {
  *   Update flow from TELEMETRY policy
  */
 static inline hal_ret_t
-update_flow_from_telemetry_rules (fte::ctx_t& ctx)
+update_flow_from_telemetry_rules (fte::ctx_t& ctx, bool mirror_action)
 {
     fte::flow_update_t                  mirror_flowupd;
     fte::flow_update_t                  export_flowupd;
@@ -29,11 +29,11 @@ update_flow_from_telemetry_rules (fte::ctx_t& ctx)
     memset(&export_flowupd, 0, sizeof(fte::flow_update_t));
     mirror_flowupd.mirror_info.mirror_en = 0;
     export_flowupd.export_info.export_en = 0;
-    const char *ctx_name = flowmon_acl_ctx_name(ctx.get_key().svrf_id);
+    const char *ctx_name = flowmon_acl_ctx_name(ctx.get_key().svrf_id, mirror_action);
     acl_ctx = acl::acl_get(ctx_name);
     if (acl_ctx == NULL) {
-        HAL_TRACE_DEBUG("telemetry::No telemetry acl_ctx for vrf {} id {}",
-                         ctx_name, ctx.get_key().svrf_id);
+        HAL_TRACE_DEBUG("telemetry::No telemetry acl_ctx for vrf {} id {} mirror_action {}",
+                         ctx_name, ctx.get_key().svrf_id, mirror_action);
         ret = HAL_RET_OK;
         goto end;
     }
@@ -151,7 +151,10 @@ telemetry_exec (fte::ctx_t &ctx)
     hal_ret_t ret;
     
     /* Iflow and Rflow are independently evaluated */
-    ret = update_flow_from_telemetry_rules(ctx);
+    /* Update mirror rules */
+    ret = update_flow_from_telemetry_rules(ctx, true);
+    /* Update flowmon rules */
+    ret = update_flow_from_telemetry_rules(ctx, false);
 
     if (ret != HAL_RET_OK) {
         ctx.set_feature_status(ret);

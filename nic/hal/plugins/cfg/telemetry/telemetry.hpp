@@ -264,10 +264,14 @@ flow_monitor_rule_free(flow_monitor_rule_t *rule)
 }
 
 static inline const char *
-flowmon_acl_ctx_name (vrf_id_t vrf_id)
+flowmon_acl_ctx_name (vrf_id_t vrf_id, bool mirror_action)
 {
     thread_local static char name[ACL_NAMESIZE];
-    std::snprintf(name, sizeof(name), "flowmon-rules:%lu", vrf_id);
+    if (mirror_action) {
+        std::snprintf(name, sizeof(name), "flowmon-rules-mirror:%lu", vrf_id);
+    } else {
+        std::snprintf(name, sizeof(name), "flowmon-rules-collect:%lu", vrf_id);
+    }
     return name;
 }
 

@@ -418,6 +418,25 @@ flow_monitor_acl_ctx_create()
     return HAL_RET_OK;
 }
 
+hal_ret_t get_flowmon_action (FlowMonitorRuleSpec &spec,
+                              telemetry::RuleAction *action)
+{
+    if (spec.has_action()) {
+        if (spec.action().action(0) == telemetry::MIRROR_TO_CPU) {
+            return (HAL_RET_INVALID_ARG);
+        }
+        *action = spec.action().action(0);
+        /*
+        telemetry::MIRROR
+        telemetry::MIRROR_TO_CPU
+        telemetry::COLLECT_FLOW_STATS;
+        */
+    } else {
+        return (HAL_RET_INVALID_ARG);
+    }
+    return HAL_RET_OK;
+}
+
 static hal_ret_t
 populate_flow_monitor_rule (FlowMonitorRuleSpec &spec,
                             flow_monitor_rule_t *rule)
@@ -488,10 +507,12 @@ hal_ret_t
 flow_monitor_rule_create (FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rsp)
 {
     uint64_t            vrf_id;
+    bool                mirror_action = false;
     rule_key_t          rule_id;
     hal_ret_t           ret = HAL_RET_OK;
     flow_monitor_rule_t *rule = NULL;
     const acl_ctx_t     *flowmon_acl_ctx = NULL;
+    telemetry::RuleAction action;
 
     HAL_TRACE_DEBUG("PI-FlowMonitorRule create");
     flowmonrule_spec_dump(spec);
@@ -513,14 +534,23 @@ flow_monitor_rule_create (FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rs
     rule->vrf_id = vrf_id;
     rule->rule_id = rule_id;
     flow_mon_rules[rule_id] = rule;
-    
-    flowmon_acl_ctx = acl::acl_get(flowmon_acl_ctx_name(rule->vrf_id));
+
+    ret = get_flowmon_action(spec, &action);
+    if (ret != HAL_RET_OK) {
+        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+        HAL_TRACE_ERR("Invalid action, ruleid {}", spec.key_or_handle().flowmonitorrule_id());
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    } else {
+        mirror_action = (action == telemetry::MIRROR);
+    }
+    flowmon_acl_ctx = acl::acl_get(flowmon_acl_ctx_name(rule->vrf_id, mirror_action));
     if (!flowmon_acl_ctx) {
         /* Create a new acl context */
-        flowmon_acl_ctx = hal::rule_lib_init(flowmon_acl_ctx_name(rule->vrf_id),
+        flowmon_acl_ctx = hal::rule_lib_init(flowmon_acl_ctx_name(rule->vrf_id, mirror_action),
                                              &flowmon_rule_config_glbl);
         HAL_TRACE_DEBUG("Creating new ACL ctx for vrf {} id {}", 
-                         flowmon_acl_ctx_name(rule->vrf_id), rule->vrf_id);
+                         flowmon_acl_ctx_name(rule->vrf_id, mirror_action), rule->vrf_id);
     }
     ret = populate_flow_monitor_rule(spec, rule);
     if (ret != HAL_RET_OK) {
@@ -541,7 +571,7 @@ end:
         ret = acl::acl_commit(flowmon_acl_ctx);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("ACL commit fail vrf {} id {}",
-                           flowmon_acl_ctx_name(vrf_id), vrf_id);
+                           flowmon_acl_ctx_name(vrf_id, mirror_action), vrf_id);
             rsp->set_api_status(types::API_STATUS_ERR);
             goto end;
         }
@@ -560,6 +590,7 @@ flow_monitor_rule_update (FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rs
 hal_ret_t
 flow_monitor_rule_delete (FlowMonitorRuleDeleteRequest &req, FlowMonitorRuleDeleteResponse *rsp)
 {
+    bool                mirror_action = false;
     hal_ret_t           ret;
     uint64_t            vrf_id;
     rule_key_t          rule_id;
@@ -580,14 +611,19 @@ flow_monitor_rule_delete (FlowMonitorRuleDeleteRequest &req, FlowMonitorRuleDele
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
-    flowmon_acl_ctx = acl::acl_get(flowmon_acl_ctx_name(vrf_id));
-    if (!flowmon_acl_ctx) {
-        //rsp->set_api_status(types::API_STATUS_INVALID_ARG);
-        HAL_TRACE_ERR("Did not find flowmon acl ctx for vrf_id {}", vrf_id);
-        ret = HAL_RET_INVALID_ARG;
+    rule = flow_mon_rules[rule_id];
+    if (!rule) {
+        HAL_TRACE_DEBUG("Ruleid {} does not exist", rule_id);
+        ret = HAL_RET_OK;
         goto end;
     }
-    rule = flow_mon_rules[rule_id];
+    mirror_action = (rule->action.num_mirror_dest > 0);
+    flowmon_acl_ctx = acl::acl_get(flowmon_acl_ctx_name(vrf_id, mirror_action));
+    if (!flowmon_acl_ctx) {
+        HAL_TRACE_DEBUG("Did not find flowmon acl ctx for vrf_id {}", vrf_id);
+        ret = HAL_RET_OK;
+        goto end;
+    }
     ret = rule_match_rule_del(&flowmon_acl_ctx, &rule->rule_match, 0, rule_id,
                               (void *)&rule->ref_count);
     flow_mon_rules[rule_id] = NULL;
