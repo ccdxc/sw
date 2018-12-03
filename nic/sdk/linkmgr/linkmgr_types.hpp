@@ -11,7 +11,7 @@ namespace linkmgr {
 
 #define CONTROL_CORE_ID          0
 #define LINKMGR_CONTROL_Q_SIZE   128
-#define LINKMGR_LINK_POLL_TIME   10000 // 10000 msecs = 10 secs
+#define LINKMGR_LINK_POLL_TIME   1000  //  1000 msecs = 1 sec
 #define MAX_LINK_BRINGUP_TIMEOUT 10000 // 10000 msecs = 10 secs
 
 #define MXP_BASE_HAPS           0x01d00000
@@ -84,7 +84,7 @@ typedef struct linkmgr_entry_data_s {
 //------------------------------------------------------------------------------
 typedef struct linkmgr_entry_ {
     uint8_t              opn;     // operation requested to perform
-    std::atomic<bool>    done;    // TRUE if thread performed operation
+    bool                 done;    // TRUE if thread performed operation
     sdk_ret_t            status;  // result status of operation requested
     linkmgr_entry_data_t data;    // data passed by caller
 } linkmgr_entry_t;
@@ -94,10 +94,10 @@ typedef struct linkmgr_entry_ {
 // operations requested by other thread, thus avoiding locking altogether
 //------------------------------------------------------------------------------
 typedef struct linkmgr_queue_s {
-    std::atomic<uint32_t> nentries;    // no. of entries in the queue
-    uint16_t              pindx;       // producer index
-    uint16_t              cindx;       // consumer index
-    linkmgr_entry_t      entries[LINKMGR_CONTROL_Q_SIZE];    // entries
+    uint32_t         nentries;                        // no. of entries in the queue
+    uint16_t         pindx;                           // producer index
+    uint16_t         cindx;                           // consumer index
+    linkmgr_entry_t  entries[LINKMGR_CONTROL_Q_SIZE]; // entries
 } linkmgr_queue_t;
 
 }    // namespace linkmgr

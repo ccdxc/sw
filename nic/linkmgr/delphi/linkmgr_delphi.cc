@@ -11,7 +11,7 @@
 #include "nic/hal/hal_trace.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/sdk/include/sdk/port_mac.hpp"
-
+#include "nic/linkmgr/linkmgr_utils.hpp"
 
 namespace linkmgr {
 
@@ -153,34 +153,47 @@ error port_svc::OnPortSpecDelete(PortSpecPtr portSpec) {
 }
 
 // update_port_status updates port status in delphi
-error port_svc::update_port_status(google::protobuf::uint32 port_id,
-                                    PortOperStatus status) {
+error port_svc::update_port_status(google::protobuf::uint32 port_num,
+                                   PortOperStatus           status,
+                                   PortSpeed                speed)
+{
     // create port status object
     PortStatusPtr port = std::make_shared<PortStatus>();
-    port->mutable_key_or_handle()->set_port_id(port_id);
+
+    port->mutable_key_or_handle()->set_port_id(port_num);
     port->set_oper_status(status);
+    port->set_port_speed(speed);
 
     // add it to database
     sdk_->QueueUpdate(port);
 
-    HAL_TRACE_DEBUG("Updated port status object for port_id {} oper state {} "
-                    "port: {}", port_id, status, port);
+    HAL_TRACE_DEBUG("Updated port status object for "
+                    "port_id: {} oper_state: {} "
+                    "speed: {}, port: {}",
+                    port_num, status, speed, port);
 
     return error::OK();
 }
 
 void
-port_event_cb (uint32_t port_num, port_event_t event)
+port_event_notify (uint32_t port_num, port_event_t event,
+                   port_speed_t port_speed)
 {
     switch (event) {
     case port_event_t::PORT_EVENT_LINK_UP:
         HAL_TRACE_DEBUG("port: {}, Link UP", port_num);
-        port_svc_get()->update_port_status(port_num, port::PORT_OPER_STATUS_UP);
+        port_svc_get()->update_port_status(
+                            port_num,
+                            port::PORT_OPER_STATUS_UP,
+                            sdk_port_speed_to_port_speed_spec(port_speed));
         break;
 
     case port_event_t::PORT_EVENT_LINK_DOWN:
         HAL_TRACE_DEBUG("port: {}, Link DOWN", port_num);
-        port_svc_get()->update_port_status(port_num, port::PORT_OPER_STATUS_DOWN);
+        port_svc_get()->update_port_status(
+                            port_num,
+                            port::PORT_OPER_STATUS_DOWN,
+                            sdk_port_speed_to_port_speed_spec(port_speed));
         break;
 
     default:
@@ -189,47 +202,48 @@ port_event_cb (uint32_t port_num, port_event_t event)
 }
 
 // update_xcvr_status updates xcvr status in delphi
-error port_svc::update_xcvr_status(google::protobuf::uint32 port_id,
+error port_svc::update_xcvr_status(google::protobuf::uint32 port_num,
                                    PortXcvrState state,
                                    PortXcvrPid pid) {
     // create port status object
     PortStatusPtr port = std::make_shared<PortStatus>();
-    port->mutable_key_or_handle()->set_port_id(port_id);
+    port->mutable_key_or_handle()->set_port_id(port_num);
     port->mutable_xcvr_status()->set_state(state);
     port->mutable_xcvr_status()->set_pid(pid);
 
     // add it to database
     sdk_->QueueUpdate(port);
 
-    HAL_TRACE_DEBUG("Updated port status object for xcvr port_id {} state {} pid {}"
-                    " port: {}", port_id + 1, state, pid, port);
+    HAL_TRACE_DEBUG("Updated port status object for xcvr "
+                    "port_id: {} state: {} pid: {} port: {}",
+                    port_num, state, pid, port);
 
     return error::OK();
 }
 
 void
-xcvr_event_cb (uint32_t port_num, xcvr_state_t state, xcvr_pid_t pid)
+xcvr_event_notify (uint32_t port_num, xcvr_state_t state, xcvr_pid_t pid)
 {
     switch (state) {
     case xcvr_state_t::XCVR_REMOVED:
-        HAL_TRACE_DEBUG("Xcvr removed; port: {}", port_num + 1);
+        HAL_TRACE_DEBUG("Xcvr removed; port: {}", port_num);
         port_svc_get()->update_xcvr_status(port_num, port::XCVR_STATE_REMOVED, port::XCVR_PID_UNKNOWN);
         break;
 
     case xcvr_state_t::XCVR_INSERTED:
-        HAL_TRACE_DEBUG("Xcvr inserted; port: {}", port_num + 1);
+        HAL_TRACE_DEBUG("Xcvr inserted; port: {}", port_num);
         port_svc_get()->update_xcvr_status(port_num, port::XCVR_STATE_INSERTED, port::XCVR_PID_UNKNOWN);
         break;
 
     case xcvr_state_t::XCVR_SPROM_READ:
-        HAL_TRACE_DEBUG("Xcvr sprom read; port: {}, pid: {}", port_num + 1,
+        HAL_TRACE_DEBUG("Xcvr sprom read; port: {}, pid: {}", port_num,
                         (pid == 0) ? "Unknown" : (pid == 1) ? "SFP-10G-CR" : "QSFP-100G-CR4");
         port_svc_get()->update_xcvr_status(port_num, port::XCVR_STATE_SPROM_READ,
                         (pid == 0) ? port::XCVR_PID_UNKNOWN : (pid == 1) ? port::XCVR_PID_SFP_10G_CR : port::XCVR_PID_QSFP_100G_CR4);
         break;
 
     case xcvr_state_t::XCVR_SPROM_READ_ERR:
-        HAL_TRACE_DEBUG("Xcvr sprom read error; port: {}", port_num + 1);
+        HAL_TRACE_DEBUG("Xcvr sprom read error; port: {}", port_num);
         port_svc_get()->update_xcvr_status(port_num, port::XCVR_STATE_SPROM_READ_ERR, port::XCVR_PID_UNKNOWN);
         break;
 

@@ -18,7 +18,7 @@ using namespace hal::plugins::alg_utils;
 using namespace hal::plugins::sfw;
 
 static void incr_parse_error(ftp_info_t *info) {
-    HAL_ATOMIC_INC_UINT32(&info->parse_errors, 1);
+    SDK_ATOMIC_INC_UINT32(&info->parse_errors, 1);
 }
 
 /*
@@ -570,7 +570,7 @@ size_t __parse_ftp_rsp(void *ctxt, uint8_t *payload, size_t data_len) {
                  * Increment login errors
                  */
                 if (found) {
-                    HAL_ATOMIC_INC_UINT32(&((ftp_info_t *)l4_sess->info)->login_errors, 1);
+                    SDK_ATOMIC_INC_UINT32(&((ftp_info_t *)l4_sess->info)->login_errors, 1);
                     return data_len;
                 }
 
@@ -631,7 +631,7 @@ size_t __parse_ftp_req(void *ctxt, uint8_t *payload, size_t data_len) {
         /*
          * Parse errors -- update ctrl session info with this
          */
-        HAL_ATOMIC_INC_UINT32(&((ftp_info_t *)l4_sess->info)->parse_errors, 1);
+        SDK_ATOMIC_INC_UINT32(&((ftp_info_t *)l4_sess->info)->parse_errors, 1);
     } else {
         /*
          * Found a match -- update the callback

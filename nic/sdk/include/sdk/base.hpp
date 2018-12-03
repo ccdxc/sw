@@ -123,8 +123,22 @@ do {                                                       \
 #define SDK_ATOMIC_DEC_UINT32(ptr, val)     __atomic_sub_fetch(ptr, val, __ATOMIC_SEQ_CST)
 #define SDK_ATOMIC_STORE_UINT32(ptr, vptr)  __atomic_store(ptr, vptr, __ATOMIC_SEQ_CST)
 #define SDK_ATOMIC_LOAD_UINT32(ptr, vptr)   __atomic_load(ptr, vptr, __ATOMIC_SEQ_CST)
-#define SDK_ATOMIC_INC_UINT64(ptr, val)     __atomic_add_fetch(ptr, val, __ATOMIC_SEQ_CST)
-#define SDK_ATOMIC_DEC_UINT64(ptr, val)     __atomic_sub_fetch(ptr, val, __ATOMIC_SEQ_CST)
+
+#define SDK_ATOMIC_INC_UINT64(ptr, val)     SDK_ATOMIC_INC_UINT32(ptr, val)
+#define SDK_ATOMIC_DEC_UINT64(ptr, val)     SDK_ATOMIC_DEC_UINT32(ptr, val)
+#define SDK_ATOMIC_STORE_UINT64(ptr, vptr)  SDK_ATOMIC_STORE_UINT32(ptr, vptr)
+#define SDK_ATOMIC_LOAD_UINT64(ptr, vptr)   SDK_ATOMIC_LOAD_UINT32(ptr, vptr)
+
+#define SDK_ATOMIC_FETCH_ADD(ptr, val)      __atomic_fetch_add(ptr, val, __ATOMIC_RELAXED)
+#define SDK_ATOMIC_FETCH_SUB(ptr, val)      __atomic_fetch_sub(ptr, val, __ATOMIC_RELAXED)
+
+#define SDK_ATOMIC_LOAD_BOOL(ptr)           __atomic_load_n(ptr, __ATOMIC_SEQ_CST)
+#define SDK_ATOMIC_STORE_BOOL(ptr, val)     __atomic_store_n(ptr, val, __ATOMIC_SEQ_CST)
+
+#define SDK_ATOMIC_LOAD_UINT16(ptr)         SDK_ATOMIC_LOAD_BOOL(ptr)
+
+#define SDK_ATOMIC_COMPARE_EXCHANGE_WEAK(ptr, vptr, val) \
+   __atomic_compare_exchange_n(ptr, vptr, val, true, __ATOMIC_RELEASE, __ATOMIC_RELAXED)
 
 #define SDK_ARRAY_SIZE(arr)                (sizeof((arr))/sizeof((arr)[0]))
 

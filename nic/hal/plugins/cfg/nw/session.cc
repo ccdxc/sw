@@ -1179,11 +1179,11 @@ flow_create_fte (const flow_cfg_t *cfg,
 }
 
 void incr_global_session_tcp_rst_stats (void) {
-    HAL_ATOMIC_INC_UINT64(&g_session_stats.num_tcp_rst_sent, 1);
+    SDK_ATOMIC_INC_UINT64(&g_session_stats.num_tcp_rst_sent, 1);
 }
 
 void incr_global_session_icmp_error_stats (void) {
-    HAL_ATOMIC_INC_UINT64(&g_session_stats.num_icmp_error_sent, 1);
+    SDK_ATOMIC_INC_UINT64(&g_session_stats.num_icmp_error_sent, 1);
 }
 
 inline void
@@ -1192,18 +1192,18 @@ update_global_session_stats (session_t *session, bool decr=false)
     flow_key_t key = session->iflow->config.key;
 
     if (session->iflow->pgm_attrs.drop)
-        HAL_ATOMIC_INC_UINT64(&g_session_stats.drop_sessions, (decr)?(-1):1);
+        SDK_ATOMIC_INC_UINT64(&g_session_stats.drop_sessions, (decr)?(-1):1);
 
     if (key.flow_type == FLOW_TYPE_L2) {
-        HAL_ATOMIC_INC_UINT64(&g_session_stats.l2_sessions, (decr)?(-1):1);
+        SDK_ATOMIC_INC_UINT64(&g_session_stats.l2_sessions, (decr)?(-1):1);
     } else if (key.flow_type == FLOW_TYPE_V4 ||
                key.flow_type == FLOW_TYPE_V6) {
         if (key.proto == types::IPPROTO_TCP) {
-            HAL_ATOMIC_INC_UINT64(&g_session_stats.tcp_sessions, (decr)?(-1):1);
+            SDK_ATOMIC_INC_UINT64(&g_session_stats.tcp_sessions, (decr)?(-1):1);
         } else if (key.proto == types::IPPROTO_UDP) {
-            HAL_ATOMIC_INC_UINT64(&g_session_stats.udp_sessions, (decr)?(-1):1);
+            SDK_ATOMIC_INC_UINT64(&g_session_stats.udp_sessions, (decr)?(-1):1);
         } else if (key.proto == types::IPPROTO_ICMP) {
-            HAL_ATOMIC_INC_UINT64(&g_session_stats.icmp_sessions, (decr)?(-1):1);
+            SDK_ATOMIC_INC_UINT64(&g_session_stats.icmp_sessions, (decr)?(-1):1);
         }
     }
 }
@@ -1329,7 +1329,7 @@ session_create (const session_args_t *args, hal_handle_t *session_handle,
     if (session && ret != HAL_RET_OK) {
         HAL_TRACE_ERR("session create failure, err={}", ret);
         session_cleanup(session);
-        HAL_ATOMIC_INC_UINT64(&g_session_stats.num_session_create_err, 1);
+        SDK_ATOMIC_INC_UINT64(&g_session_stats.num_session_create_err, 1);
     } else {
         update_global_session_stats(session);
     }
@@ -1815,7 +1815,7 @@ build_and_send_tcp_pkt (void *data)
                              ctxt->session_state.rflow_state, &cpu_header, &p4plus_header,
                              pkt, send_ts);
             fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
-            HAL_ATOMIC_INC_UINT64(&session->rflow->stats.num_tcp_tickles_sent, 1);
+            SDK_ATOMIC_INC_UINT64(&session->rflow->stats.num_tcp_tickles_sent, 1);
         }
         if ((ctxt->aged_flow == SESSION_AGED_RFLOW ||
              ctxt->aged_flow == SESSION_AGED_BOTH)) {
@@ -1823,7 +1823,7 @@ build_and_send_tcp_pkt (void *data)
                              ctxt->session_state.iflow_state, &cpu_header, &p4plus_header, 
                              pkt, send_ts);
             fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
-            HAL_ATOMIC_INC_UINT64(&session->iflow->stats.num_tcp_tickles_sent, 1);
+            SDK_ATOMIC_INC_UINT64(&session->iflow->stats.num_tcp_tickles_sent, 1);
         }
 
         HAL_TRACE_DEBUG("Sending another tickle and starting timer {}",
@@ -1848,7 +1848,7 @@ build_and_send_tcp_pkt (void *data)
                               ctxt->session_state.iflow_state, &cpu_header, &p4plus_header,
                               pkt, send_ts, true);
         fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
-        HAL_ATOMIC_INC_UINT64(&session->iflow->stats.num_tcp_rst_sent, 1); 
+        SDK_ATOMIC_INC_UINT64(&session->iflow->stats.num_tcp_rst_sent, 1); 
     }
     if (ctxt->aged_flow == SESSION_AGED_RFLOW ||
         ctxt->aged_flow == SESSION_AGED_BOTH) {
@@ -1857,10 +1857,10 @@ build_and_send_tcp_pkt (void *data)
                               pkt, send_ts, true);
         fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
   
-        HAL_ATOMIC_INC_UINT64(&session->rflow->stats.num_tcp_rst_sent, 1);
+        SDK_ATOMIC_INC_UINT64(&session->rflow->stats.num_tcp_rst_sent, 1);
     }
 
-    HAL_ATOMIC_INC_UINT64(&g_session_stats.aged_sessions, 1);
+    SDK_ATOMIC_INC_UINT64(&g_session_stats.aged_sessions, 1);
     // time to clean up the session
     ret = fte::session_delete_in_fte(session->hal_handle);
     if (ret != HAL_RET_OK) {
@@ -2005,7 +2005,7 @@ session_age_cb (void *entry, void *ctxt)
                 HAL_ASSERT(args->session_list[session->fte_id] != NULL);
                 args->num_del_sess[session->fte_id] = 0;
             }
-            HAL_ATOMIC_INC_UINT64(&g_session_stats.aged_sessions, 1); 
+            SDK_ATOMIC_INC_UINT64(&g_session_stats.aged_sessions, 1); 
         }
     }
 
@@ -2406,7 +2406,7 @@ tcp_cxnsetup_cb (void *timer, uint32_t timer_id, void *ctxt)
         state.rflow_state.state != session::FLOW_TCP_STATE_ESTABLISHED) {
         // session is not in established state yet.
         // Cleanup the session
-        HAL_ATOMIC_INC_UINT64(&g_session_stats.num_cxnsetup_timeout, 1);
+        SDK_ATOMIC_INC_UINT64(&g_session_stats.num_cxnsetup_timeout, 1);
         ret = fte::session_delete_async(session);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to delete session {}",

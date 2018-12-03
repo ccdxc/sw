@@ -12,18 +12,18 @@ namespace fte {
 //-----------------------------------------------------------------------------
 bool mpscq_t::enqueue(void *op, void *data)
 {
-    uint16_t pi = HAL_ATOMIC_LOAD_BOOL(&pi_);
+    uint16_t pi = SDK_ATOMIC_LOAD_BOOL(&pi_);
 
     do {
         if(slots_[pi].full) {
             return false;
         }
-    } while(!HAL_ATOMIC_COMPARE_EXCHANGE_WEAK(&pi_, &pi, 
+    } while(!SDK_ATOMIC_COMPARE_EXCHANGE_WEAK(&pi_, &pi, 
                                               (pi+1)%nslots_));
 
     slots_[pi].op = op;
     slots_[pi].data = data;
-    HAL_ATOMIC_STORE_BOOL(&slots_[pi].full, true);
+    SDK_ATOMIC_STORE_BOOL(&slots_[pi].full, true);
 
     return true;
 }
@@ -46,7 +46,7 @@ bool mpscq_t::dequeue(void **op, void **data)
         *data = slots_[ci_].data;
     }
 
-    HAL_ATOMIC_STORE_BOOL(&slots_[ci_].full, false);
+    SDK_ATOMIC_STORE_BOOL(&slots_[ci_].full, false);
 
     ci_ = (ci_+1) % nslots_;
     return true;

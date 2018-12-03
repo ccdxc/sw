@@ -10,12 +10,7 @@
 namespace sdk {
 namespace platform {
 
-using sdk::linkmgr::xcvr_event_notify_t;
-using sdk::types::xcvr_type_t;
-using sdk::types::xcvr_cable_type_t;
-using sdk::types::xcvr_state_t;
 using sdk::types::xcvr_pid_t;
-using sdk::types::xcvr_type_t;
 
 xcvr_t g_xcvr[XCVR_MAX_PORTS];
 xcvr_event_notify_t g_xcvr_notify_cb;
@@ -39,15 +34,37 @@ xcvr_get_type (uint8_t first_byte) {
 static bool
 xcvr_state_change (int port) {
     // Detect xcvr and set state
-    if (sdk::lib::pal_is_qsfp_port_present(port + 1)) {
+    bool present = sdk::lib::pal_is_qsfp_port_present(port + 1);
+
+    // TODO For testing
+#if 0
+    int qsfp_port = 0;
+    int qsfp_present = 0;
+    FILE *d_fp = fopen("/qsfp_presence", "r");
+    if (d_fp) {
+        fscanf(d_fp, "%d %d", &qsfp_port, &qsfp_present);
+        if (qsfp_port == port + 1) {
+            present = qsfp_present == 1? true : false;
+        }
+        fclose(d_fp);
+    }
+#endif
+
+    if (present) {
         if (xcvr_state(port) == xcvr_state_t::XCVR_REMOVED) {
-            SDK_TRACE_DEBUG("Xcvr port %d state changed from %d to %d", port + 1, xcvr_state(port), xcvr_state_t::XCVR_INSERTED);
+            SDK_TRACE_DEBUG("Xcvr port %d state changed from %d to %d",
+                            port + 1,
+                            xcvr_state(port),
+                            xcvr_state_t::XCVR_INSERTED);
             xcvr_set_state(port, xcvr_state_t::XCVR_INSERTED);
             return true;
         }
     } else {
         if (xcvr_state(port) != xcvr_state_t::XCVR_REMOVED) {
-            SDK_TRACE_DEBUG("Xcvr port %d state changed from %d to %d", port + 1, xcvr_state(port), xcvr_state_t::XCVR_REMOVED);
+            SDK_TRACE_DEBUG("Xcvr port %d state changed from %d to %d",
+                            port + 1,
+                            xcvr_state(port),
+                            xcvr_state_t::XCVR_REMOVED);
             xcvr_set_state(port, xcvr_state_t::XCVR_REMOVED);
             return true;
         }
@@ -59,19 +76,30 @@ xcvr_state_change (int port) {
 // Send notification for xcvr_state
 static sdk_ret_t
 xcvr_send_notification (int port) {
+    // Front panel ports are 1 based
+    int qsfp_port = port + 1;
+
     if (g_xcvr_notify_cb) {
         switch (xcvr_state(port)) {
         case xcvr_state_t::XCVR_REMOVED:
-            g_xcvr_notify_cb(port, xcvr_state(port), xcvr_pid_t::XCVR_PID_UNKNOWN);
+            g_xcvr_notify_cb(qsfp_port,
+                             xcvr_state(port),
+                             xcvr_pid_t::XCVR_PID_UNKNOWN);
             break;
         case xcvr_state_t::XCVR_INSERTED:
-            g_xcvr_notify_cb(port, xcvr_state(port), xcvr_pid_t::XCVR_PID_UNKNOWN);
+            g_xcvr_notify_cb(qsfp_port,
+                             xcvr_state(port),
+                            xcvr_pid_t::XCVR_PID_UNKNOWN);
             break;
         case xcvr_state_t::XCVR_SPROM_READ:
-            g_xcvr_notify_cb(port, xcvr_state(port), xcvr_pid_t::XCVR_PID_QSFP_100G_CR4);
+            g_xcvr_notify_cb(qsfp_port,
+                             xcvr_state(port),
+                             xcvr_pid_t::XCVR_PID_QSFP_100G_CR4);
             break;
         case xcvr_state_t::XCVR_SPROM_READ_ERR:
-            g_xcvr_notify_cb(port, xcvr_state(port), xcvr_pid_t::XCVR_PID_UNKNOWN);
+            g_xcvr_notify_cb(qsfp_port,
+                             xcvr_state(port),
+                             xcvr_pid_t::XCVR_PID_UNKNOWN);
             break;
         default:
             break;
@@ -112,7 +140,8 @@ xcvr_sprom_read (int port, bool cached) {
     buffer = xcvr_cache(port);
 
     // Read first 128 bytes
-    ret = qsfp_read_page(port, sdk::lib::QSFP_PAGE_LOW, 0, XCVR_SPROM_READ_SIZE, &buffer[0]);
+    ret = qsfp_read_page(port, sdk::lib::QSFP_PAGE_LOW, 0,
+                         XCVR_SPROM_READ_SIZE, &buffer[0]);
     if (ret != SDK_RET_OK) {
         return NULL;
     }
@@ -120,37 +149,50 @@ xcvr_sprom_read (int port, bool cached) {
     switch (xcvr_get_type(buffer[0])) {
     case xcvr_type_t::XCVR_TYPE_QSFP:
         xcvr_set_type(port, xcvr_type_t::XCVR_TYPE_QSFP);
-        ret = qsfp_read_page(port, sdk::lib::QSFP_PAGE_HIGH0, 0, XCVR_SPROM_READ_SIZE, &buffer[XCVR_SPROM_READ_SIZE]);
+        ret = qsfp_read_page(port, sdk::lib::QSFP_PAGE_HIGH0,
+                             XCVR_SPROM_READ_SIZE, XCVR_SPROM_READ_SIZE,
+                             &buffer[XCVR_SPROM_READ_SIZE]);
         if (ret != SDK_RET_OK) {
             return NULL;
         }
         break;
     case xcvr_type_t::XCVR_TYPE_QSFP28:
         xcvr_set_type(port, xcvr_type_t::XCVR_TYPE_QSFP28);
-        ret = qsfp_read_page(port, sdk::lib::QSFP_PAGE_HIGH0, 0, XCVR_SPROM_READ_SIZE, &buffer[XCVR_SPROM_READ_SIZE]);
+        ret = qsfp_read_page(port, sdk::lib::QSFP_PAGE_HIGH0,
+                             XCVR_SPROM_READ_SIZE, XCVR_SPROM_READ_SIZE,
+                             &buffer[XCVR_SPROM_READ_SIZE]);
         if (ret != SDK_RET_OK) {
             return NULL;
         }
         break;
     case xcvr_type_t::XCVR_TYPE_SFP:
         xcvr_set_type(port, xcvr_type_t::XCVR_TYPE_SFP);
-        ret = qsfp_read_page(port, sdk::lib::QSFP_PAGE_LOW, XCVR_SPROM_READ_SIZE, XCVR_SPROM_READ_SIZE, &buffer[XCVR_SPROM_READ_SIZE]);
+        ret = qsfp_read_page(port, sdk::lib::QSFP_PAGE_LOW,
+                             XCVR_SPROM_READ_SIZE, XCVR_SPROM_READ_SIZE,
+                             &buffer[XCVR_SPROM_READ_SIZE]);
         if (ret != SDK_RET_OK) {
             return NULL;
         }
         break;
     default:
-        SDK_TRACE_DEBUG("Xcvr port %d Xcvr type unknown. First byte is %#x", port + 1, buffer[0]);
+        SDK_TRACE_DEBUG("Xcvr port %d Xcvr type unknown. First byte is %#x",
+                        port + 1, buffer[0]);
         return NULL;
     }
 
     xcvr_hex_dump(port, buffer);
-    
+
     return buffer;
 }
 
 static sdk_ret_t
-xcvr_sprom_parse (uint8_t *data) {
+xcvr_sprom_parse (int port, uint8_t *data) {
+    g_xcvr[port].cable_type = sdk::types::cable_type_t::CABLE_TYPE_CU;
+
+    if (data[XCVR_OFFSET_LENGTH_CU] == 0) {
+        g_xcvr[port].cable_type = sdk::types::cable_type_t::CABLE_TYPE_FIBER;
+    }
+
     return SDK_RET_OK;
 }
 
@@ -200,7 +242,8 @@ xcvr_poll_timer (void)
                     // Reached max read attempts
                     xcvr_set_state(port, xcvr_state_t::XCVR_SPROM_READ_ERR);
                     xcvr_send_notification(port);
-                    SDK_TRACE_DEBUG("Xcvr port %d sprom read failed after 10 retries", port + 1);
+                    SDK_TRACE_DEBUG("Xcvr port %d sprom read failed after "
+                                    "10 retries", port + 1);
                 } else {
                     SDK_TRACE_DEBUG("Xcvr port %d sprom read error", port + 1);
                 }
@@ -208,7 +251,7 @@ xcvr_poll_timer (void)
             }
 
             // Parse sprom
-            xcvr_sprom_parse(data);
+            xcvr_sprom_parse(port, data);
 
             // Send sprom_read notification
             xcvr_set_state(port, xcvr_state_t::XCVR_SPROM_READ);

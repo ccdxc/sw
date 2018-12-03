@@ -31,6 +31,11 @@ typedef struct port_ht_cb_ctxt_s {
     port_get_cb_t cb;
 } port_ht_cb_ctxt_t;
 
+typedef struct xcvr_event_port_ctxt_s {
+    uint32_t     port_num;
+    xcvr_state_t state;
+} xcvr_event_port_ctxt_t;
+
 typedef struct linkmgr_cfg_s {
     std::string        cfg_file;
     std::string        catalog_file;

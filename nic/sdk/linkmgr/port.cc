@@ -9,6 +9,7 @@
 #include "include/sdk/periodic.hpp"
 #include "include/sdk/asic/capri/cap_mx_api.h"
 #include "spidev.h"
+#include "platform/drivers/xcvr.hpp"
 
 namespace sdk {
 namespace linkmgr {
@@ -448,6 +449,58 @@ port::port_serdes_an_wait_hcd (void)
     return serdes_fns()->serdes_an_wait_hcd(port_sbus_addr(0));
 }
 
+bool
+port::port_serdes_an_link_train_check (void)
+{
+    uint32_t lane           = 0;
+    uint32_t sbus_addr      = 0;
+    int      o_core_status  = 0x0;
+    bool     training_fail  = false;
+    int      training_done  = 0x0;
+    int      all_lanes_mask = 0x0;
+    int      o_core_status_arr[4] = {0};
+
+    while (true) {
+        for (lane = 0; lane < num_lanes_; ++lane) {
+
+            all_lanes_mask = all_lanes_mask | (1 << lane);
+
+            if ( (training_done & (1 << lane)) != 0) {
+                continue;
+            }
+
+            sbus_addr = port_sbus_addr(lane);
+
+            o_core_status = serdes_fns()->serdes_an_core_status(sbus_addr);
+
+            if ( (o_core_status & 0x2) == 0x0) {
+                if (o_core_status != 0x34) {
+                    training_fail = true;
+                }
+                o_core_status_arr[lane] = o_core_status;
+                training_done = training_done | (1 << lane);
+            }
+        }
+
+        if (training_done == all_lanes_mask) {
+            break;
+        }
+
+        usleep(100);
+    }
+
+    for (lane = 0; lane < num_lanes_; ++lane) {
+        sbus_addr = port_sbus_addr(lane);
+        SDK_LINKMGR_TRACE_DEBUG("sbus_addr: %u, o_core_status: 0x%x, "
+                                "training_fail: %d",
+                                sbus_addr,
+                                o_core_status_arr[lane],
+                                training_fail);
+    }
+
+    return training_fail == false? true:false;
+}
+
 int
 port::port_serdes_an_hcd_cfg (void)
 {
@@ -503,9 +556,7 @@ port::port_serdes_an_hcd_cfg (void)
     }
 
     // configure divider, width, start link training
-    serdes_fns()->serdes_an_hcd_cfg(port_sbus_addr(0), this->sbus_addr_);
-
-    return 0;
+    return serdes_fns()->serdes_an_hcd_cfg(port_sbus_addr(0), this->sbus_addr_);
 }
 
 int
@@ -579,12 +630,12 @@ port::port_set_an_resolved_params (int an_hcd, int fec_enable, int rsfec_enable)
     return ret;
 }
 
-bool
+an_ret_t
 port::port_link_sm_an_process(void)
 {
     bool an_good = false;
-    bool ret     = true;
     int  timeout = 100; //msecs
+    an_ret_t an_ret = AN_DONE;
 
     switch(this->link_an_sm_) {
     case port_link_sm_t::PORT_LINK_SM_AN_DISABLED:
@@ -605,19 +656,18 @@ port::port_link_sm_an_process(void)
 
     case port_link_sm_t::PORT_LINK_SM_AN_WAIT_HCD:
 
-        /*
-        // TODO use timers
-        while(an_good == false) {
-            SDK_PORT_SM_TRACE(this, "wait AN HCD");
-            usleep(500);
-            an_good = port_serdes_an_wait_hcd();
-        }
-        */
-
         SDK_PORT_SM_TRACE(this, "wait AN HCD");
 
-        an_good = port_serdes_an_wait_hcd();
+        // 100 * 1000 usecs = 100 msecs
+        for (int i = 0; i < 100; ++i) {
+            an_good = port_serdes_an_wait_hcd();
+            if (an_good == true) {
+                break;
+            }
+            usleep(1000);
+        }
 
+        // 100 msecs
         if(an_good == false) {
             this->bringup_timer_val_ += timeout;
             this->link_bring_up_timer_ =
@@ -625,7 +675,7 @@ port::port_link_sm_an_process(void)
                         0, timeout, this,
                         (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
                         false);
-            ret = false;
+            an_ret = AN_WAIT;
             break;
         }
 
@@ -639,11 +689,15 @@ port::port_link_sm_an_process(void)
 
         port_serdes_an_hcd_cfg();
 
+        if (port_serdes_an_link_train_check() == false) {
+            an_ret = AN_RESET;
+        }
+
     default:
         break;
     }
 
-    return ret;
+    return an_ret;
 }
 
 bool
@@ -734,130 +788,177 @@ port::port_link_sm_dfe_process(void)
 sdk_ret_t
 port::port_link_sm_process(void)
 {
-    int timeout = 500; // msecs
+    int timeout     = 500; // msecs
     bool sig_detect = false;
     bool serdes_rdy = false;
     bool mac_faults = true;
     bool mac_sync   = true;
+    bool retry_sm   = false;
+    an_ret_t an_ret = AN_DONE;
+    int  training_fail_count = 0;
 
-    switch (this->link_sm_) {
-        case port_link_sm_t::PORT_LINK_SM_DISABLED:
+    while (true) {
+        retry_sm = false;
 
-            // reset timers
+        switch (this->link_sm_) {
+            case port_link_sm_t::PORT_LINK_SM_DISABLED:
 
-            if (this->link_bring_up_timer_ != NULL) {
-                sdk::lib::timer_delete(this->link_bring_up_timer_);
-                this->link_bring_up_timer_ = NULL;
-            }
+                // reset timers
 
-            if (this->link_debounce_timer_ != NULL) {
-                sdk::lib::timer_delete(this->link_debounce_timer_);
-                this->link_debounce_timer_ = NULL;
-            }
-
-            // remove from link poll timer if present
-            port_link_poll_timer_delete(this);
-
-            this->bringup_timer_val_ = 0;
-
-            // set operational status as down
-            this->set_oper_status(port_oper_status_t::PORT_OPER_STATUS_DOWN);
-
-            // disable and clear mac interrupts
-            port_mac_intr_en(false);
-            port_mac_intr_clr();
-
-            // disable serdes
-            port_serdes_output_enable(false);
-
-            // disable and put mac in reset
-            port_mac_soft_reset(true);
-            port_mac_enable(false);
-            port_mac_stats_reset(true);
-
-            // reset number of link bringup retries
-            set_num_retries(0);
-
-            SDK_PORT_SM_DEBUG(this, "Disabled");
-
-            break;
-
-        case port_link_sm_t::PORT_LINK_SM_ENABLED:
-
-            SDK_PORT_SM_DEBUG(this, "Enabled");
-
-            // transition to AN cfg state
-            this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_AN_CFG);
-
-         case port_link_sm_t::PORT_LINK_SM_AN_CFG:
-
-            if (auto_neg_enable() == true) {
-                if (port_link_sm_an_process() == false) {
-                    // AN is pending
-                    // Timer will already be started. Just break.
-                    break;
+                if (this->link_bring_up_timer_ != NULL) {
+                    sdk::lib::timer_delete(this->link_bring_up_timer_);
+                    this->link_bring_up_timer_ = NULL;
                 }
-            }
 
-            // transition to serdes cfg state
-            this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_SERDES_CFG);
+                if (this->link_debounce_timer_ != NULL) {
+                    sdk::lib::timer_delete(this->link_debounce_timer_);
+                    this->link_debounce_timer_ = NULL;
+                }
 
-        case port_link_sm_t::PORT_LINK_SM_SERDES_CFG:
+                // remove from link poll timer if present
+                port_link_poll_timer_delete(this);
 
-            // If AN is enabled, serdes will be configured with negotiated speed
-            if (auto_neg_enable() == false) {
+                this->bringup_timer_val_ = 0;
+
+                // set operational status as down
+                this->set_oper_status(port_oper_status_t::PORT_OPER_STATUS_DOWN);
+
+                // disable and clear mac interrupts
+                port_mac_intr_en(false);
+                port_mac_intr_clr();
+
+                // disable serdes
+                port_serdes_output_enable(false);
+
+                // disable and put mac in reset
+                port_mac_soft_reset(true);
+                port_mac_enable(false);
+                port_mac_stats_reset(true);
+
+                // reset number of link bringup retries
+                set_num_retries(0);
+
+                // reset MAC global programming since serdes config
+                // is changed to run AN
+                if (auto_neg_enable() == true) {
+                    port_deinit();
+                }
+
+                SDK_PORT_SM_DEBUG(this, "Disabled");
+
+                break;
+
+            case port_link_sm_t::PORT_LINK_SM_ENABLED:
+
+                SDK_PORT_SM_DEBUG(this, "Enabled");
+
+                // transition to AN cfg state
+                this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_AN_CFG);
+
+             case port_link_sm_t::PORT_LINK_SM_AN_CFG:
+
+                if (auto_neg_enable() == true) {
+                    an_ret = port_link_sm_an_process();
+
+                    if (an_ret == AN_RESET) {
+                        // Link training failed. Restart AN.
+
+                        if (++training_fail_count == MAX_LINK_TRAIN_FAIL_COUNT) {
+                            // TODO no need to increment timeout since state is
+                            // reset to ENABLED?
+                            this->bringup_timer_val_ += timeout;
+
+                            this->link_bring_up_timer_ =
+                                sdk::lib::timer_schedule(
+                                    0, timeout, this,
+                                    (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
+                                    false);
+                        } else {
+                            retry_sm = true;
+                        }
+
+                        // reset all SM states
+                        port_link_sm_reset();
+
+                        this->set_port_link_sm(
+                                port_link_sm_t::PORT_LINK_SM_ENABLED);
+
+                        break;
+                    } else if (an_ret == AN_WAIT) {
+                        // Timers started by AN SM. Just exit.
+                        break;
+                    } else {
+                        // AN SM configures serdes
+                        // transition to wait serdes rdy state
+                        this->set_port_link_sm(
+                                port_link_sm_t::PORT_LINK_SM_WAIT_SERDES_RDY);
+                        retry_sm = true;
+                        break;
+                    }
+                }
+
+                // transition to serdes cfg state
+                this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_SERDES_CFG);
+
+            case port_link_sm_t::PORT_LINK_SM_SERDES_CFG:
+
                 SDK_PORT_SM_DEBUG(this, "SerDes CFG");
 
                 // configure the serdes
                 port_serdes_cfg();
                 // enable serdes tx and rx
                 port_serdes_tx_rx_enable(true);
-            }
 
-            // transition to wait for serdes rdy state
-            this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_WAIT_SERDES_RDY);
+                // transition to wait for serdes rdy state
+                this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_WAIT_SERDES_RDY);
 
-        case port_link_sm_t::PORT_LINK_SM_WAIT_SERDES_RDY:
+            case port_link_sm_t::PORT_LINK_SM_WAIT_SERDES_RDY:
 
-            SDK_PORT_SM_DEBUG(this, "Wait SerDes RDY");
+                SDK_PORT_SM_DEBUG(this, "Wait SerDes RDY");
 
-            serdes_rdy = port_serdes_rdy();
+                serdes_rdy = port_serdes_rdy();
 
-            if(serdes_rdy == false) {
-                this->bringup_timer_val_ += timeout;
+                if(serdes_rdy == false) {
+                    this->bringup_timer_val_ += timeout;
 
-                this->link_bring_up_timer_ =
-                    sdk::lib::timer_schedule(
-                        0, timeout, this,
-                        (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
-                        false);
-                break;
-            }
+                    this->link_bring_up_timer_ =
+                        sdk::lib::timer_schedule(
+                            0, timeout, this,
+                            (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
+                            false);
+                    break;
+                }
 
-            // transition to mac cfg state
-            this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_MAC_CFG);
+                // transition to mac cfg state
+                this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_MAC_CFG);
 
-        case port_link_sm_t::PORT_LINK_SM_MAC_CFG:
+            case port_link_sm_t::PORT_LINK_SM_MAC_CFG:
 
-            SDK_PORT_SM_DEBUG(this, "MAC CFG");
+                SDK_PORT_SM_DEBUG(this, "MAC CFG");
 
-            // configure the mac
-            port_mac_cfg();
+                // configure the mac
+                port_mac_cfg();
 
-            // put port in flush
-            port_flush_set(true);
+                // put port in flush
+                port_flush_set(true);
 
-            // bring MAC out of reset and enable
-            port_mac_stats_reset(false);
-            port_mac_enable(true);
-            port_mac_soft_reset(false);
+                // bring MAC out of reset and enable
+                port_mac_stats_reset(false);
+                port_mac_enable(true);
+                port_mac_soft_reset(false);
 
-            // transition to serdes signal detect state
-            this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_SIGNAL_DETECT);
+                if (auto_neg_enable() == true) {
+                    // transition to wait MAC sync for AN
+                    this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_WAIT_MAC_SYNC);
+                    retry_sm = true;
+                    break;
+                }
 
-        case port_link_sm_t::PORT_LINK_SM_SIGNAL_DETECT:
+                // transition to serdes signal detect state
+                this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_SIGNAL_DETECT);
 
-            if (auto_neg_enable() == false) {
+            case port_link_sm_t::PORT_LINK_SM_SIGNAL_DETECT:
+
                 // enable serdes
                 port_serdes_output_enable(true);
 
@@ -876,14 +977,12 @@ port::port_link_sm_process(void)
                                 false);
                     break;
                 }
-            }
 
-            // transition to DFE tuning stage
-            this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_DFE_TUNING);
+                // transition to DFE tuning stage
+                this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_DFE_TUNING);
 
-        case port_link_sm_t::PORT_LINK_SM_DFE_TUNING:
+            case port_link_sm_t::PORT_LINK_SM_DFE_TUNING:
 
-            if (auto_neg_enable() == false) {
                 if (port_dfe_tuning_enabled()) {
                     if (port_link_sm_dfe_process() == false) {
                         // DFE tuning is pending
@@ -891,81 +990,85 @@ port::port_link_sm_process(void)
                         break;
                     }
                 }
-            }
 
-            // transition to wait for mac sync
-            this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_WAIT_MAC_SYNC);
+                // transition to wait for mac sync
+                this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_WAIT_MAC_SYNC);
 
-        case port_link_sm_t::PORT_LINK_SM_WAIT_MAC_SYNC:
+            case port_link_sm_t::PORT_LINK_SM_WAIT_MAC_SYNC:
 
-            SDK_PORT_SM_DEBUG(this, "Wait MAC SYNC");
+                SDK_PORT_SM_DEBUG(this, "Wait MAC SYNC");
 
-            mac_sync = port_mac_sync_get();
+                mac_sync = port_mac_sync_get();
 
-            if(mac_sync == false) {
-                this->bringup_timer_val_ += timeout;
+                if(mac_sync == false) {
+                    this->bringup_timer_val_ += timeout;
 
-                this->link_bring_up_timer_ =
-                    sdk::lib::timer_schedule(
-                        0, timeout, this,
-                        (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
-                        false);
+                    this->link_bring_up_timer_ =
+                        sdk::lib::timer_schedule(
+                            0, timeout, this,
+                            (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
+                            false);
 
+                    break;
+                }
+
+                // transition to mac faults to be cleared
+                this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_WAIT_MAC_FAULTS_CLEAR);
+
+            case port_link_sm_t::PORT_LINK_SM_WAIT_MAC_FAULTS_CLEAR:
+
+                SDK_PORT_SM_DEBUG(this, "Wait MAC faults clear");
+
+                mac_faults = port_mac_faults_get();
+
+                if(mac_faults == true) {
+                    this->bringup_timer_val_ += timeout;
+
+                    this->link_bring_up_timer_ =
+                        sdk::lib::timer_schedule(
+                            0, timeout, this,
+                            (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
+                            false);
+                    break;
+                }
+
+                // transition to link up state
+                this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_UP);
+
+            case port_link_sm_t::PORT_LINK_SM_UP:
+
+                if (auto_neg_enable() == false) {
+                    SDK_PORT_SM_DEBUG(this, "PCAL continuous");
+                    port_serdes_pcal_continuous_start();
+                }
+
+                SDK_PORT_SM_TRACE(this, "Link UP");
+
+                // enable mac interrupts
+                port_mac_intr_en(true);
+
+                // bring port out of flush
+                port_flush_set(false);
+
+                // set operational status as up
+                this->set_oper_status(port_oper_status_t::PORT_OPER_STATUS_UP);
+
+                // enable pCal
+
+                // add to link poll timer
+                port_link_poll_timer_add(this);
+
+                // notify others that link is up
+                port_event_notify(port_event_t::PORT_EVENT_LINK_UP);
                 break;
-            }
 
-            // transition to mac faults to be cleared
-            this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_WAIT_MAC_FAULTS_CLEAR);
-
-        case port_link_sm_t::PORT_LINK_SM_WAIT_MAC_FAULTS_CLEAR:
-
-            SDK_PORT_SM_DEBUG(this, "Wait MAC faults clear");
-
-            mac_faults = port_mac_faults_get();
-
-            if(mac_faults == true) {
-                this->bringup_timer_val_ += timeout;
-
-                this->link_bring_up_timer_ =
-                    sdk::lib::timer_schedule(
-                        0, timeout, this,
-                        (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
-                        false);
+            default:
                 break;
-            }
+        }
 
-            // transition to link up state
-            this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_UP);
-
-        case port_link_sm_t::PORT_LINK_SM_UP:
-
-            if (auto_neg_enable() == false) {
-                SDK_PORT_SM_DEBUG(this, "PCAL continuous");
-                port_serdes_pcal_continuous_start();
-            }
-
-            SDK_PORT_SM_TRACE(this, "Link UP");
-
-            // enable mac interrupts
-            port_mac_intr_en(true);
-
-            // bring port out of flush
-            port_flush_set(false);
-
-            // set operational status as up
-            this->set_oper_status(port_oper_status_t::PORT_OPER_STATUS_UP);
-
-            // enable pCal
-
-            // add to link poll timer
-            port_link_poll_timer_add(this);
-
-            // notify others that link is up
-            port_event_notify(port_event_t::PORT_EVENT_LINK_UP);
+        if (retry_sm == false) {
             break;
-
-        default:
-            break;
+        }
     }
 
     return SDK_RET_OK;
@@ -976,6 +1079,15 @@ port::port_enable(void)
 {
     // check if already enabled
     if (this->admin_state_ == port_admin_state_t::PORT_ADMIN_STATE_UP) {
+        return SDK_RET_OK;
+    }
+
+    int qsfp_port = sdk::lib::catalog::port_num_to_qsfp_port(port_num());
+
+    // dont try link up if no xcvr is present
+    if (qsfp_port != -1
+        && (sdk::platform::xcvr_state(qsfp_port-1) !=
+            sdk::types::xcvr_state_t::XCVR_SPROM_READ)) {
         return SDK_RET_OK;
     }
 
@@ -992,6 +1104,15 @@ port::port_enable(void)
 }
 
 sdk_ret_t
+port::port_link_sm_reset (void)
+{
+    set_port_link_sm(port_link_sm_t::PORT_LINK_SM_DISABLED);
+    set_port_link_dfe_sm(port_link_sm_t::PORT_LINK_SM_DFE_DISABLED);
+    set_port_link_an_sm(port_link_sm_t::PORT_LINK_SM_AN_DISABLED);
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 port::port_disable(void)
 {
     // check if already disabled
@@ -1002,10 +1123,7 @@ port::port_disable(void)
     // store the current link status
     port_oper_status_t prev_oper_status = oper_status();
 
-    // disable the port
-    set_port_link_sm(port_link_sm_t::PORT_LINK_SM_DISABLED);
-    set_port_link_dfe_sm(port_link_sm_t::PORT_LINK_SM_DFE_DISABLED);
-    set_port_link_an_sm(port_link_sm_t::PORT_LINK_SM_AN_DISABLED);
+    port_link_sm_reset();
 
     port_link_sm_process();
 
@@ -1035,7 +1153,7 @@ port::port_event_notify(port_event_t event)
     }
 
     if (g_linkmgr_cfg.port_event_cb) {
-        g_linkmgr_cfg.port_event_cb(port_num(), event);
+        g_linkmgr_cfg.port_event_cb(port_num(), event, port_speed());
     }
 
     return SDK_RET_OK;
@@ -1164,7 +1282,8 @@ port::port_enable(port *port_p)
         data.ctxt  = port_p;
         data.timer = NULL;
 
-        ret = linkmgr_notify(LINKMGR_OPERATION_PORT_ENABLE, &data);
+        ret = linkmgr_notify(LINKMGR_OPERATION_PORT_ENABLE, &data,
+                             q_notify_mode_t::Q_NOTIFY_MODE_BLOCKING);
 
         if (ret != SDK_RET_OK) {
             SDK_TRACE_ERR("Error notifying control-thread for port enable");
@@ -1188,7 +1307,8 @@ port::port_disable(port *port_p)
         data.ctxt  = port_p;
         data.timer = NULL;
 
-        ret = linkmgr_notify(LINKMGR_OPERATION_PORT_DISABLE, &data);
+        ret = linkmgr_notify(LINKMGR_OPERATION_PORT_DISABLE, &data,
+                             q_notify_mode_t::Q_NOTIFY_MODE_BLOCKING);
 
         if (ret != SDK_RET_OK) {
             SDK_TRACE_ERR("Error notifying control-thread for port disable");

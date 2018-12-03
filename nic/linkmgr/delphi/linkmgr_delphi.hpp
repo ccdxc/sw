@@ -19,6 +19,7 @@ namespace linkmgr {
 using grpc::Status;
 using delphi::error;
 using delphi::objects::PortSpecPtr;
+using port::PortSpeed;
 using port::PortOperStatus;
 using port::PortXcvrState;
 using port::PortXcvrPid;
@@ -44,7 +45,8 @@ public:
 
     // update_port_status updates port status in delphi
     error update_port_status(::google::protobuf::uint32 port_id,
-                           PortOperStatus status);
+                           PortOperStatus status,
+                           PortSpeed      speed);
 
     // update_xcvr_status updates port status in delphi
     error update_xcvr_status(::google::protobuf::uint32 port_id,

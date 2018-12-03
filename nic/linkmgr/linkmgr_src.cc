@@ -10,6 +10,8 @@
 #include "nic/linkmgr/utils.hpp"
 #include "nic/linkmgr/linkmgr_utils.hpp"
 #include "nic/sdk/include/sdk/asic/capri/cap_mx_api.h"
+#include "lib/pal/pal.hpp"
+#include "platform/src/lib/pal/include/pal_types.h"
 
 using hal::cfg_op_ctxt_t;
 using hal::dhl_entry_t;
@@ -138,6 +140,137 @@ void linkmgr_log(std::string log_type,
 {
     linkmgr_logger->logger()->debug("{}", buf);
     linkmgr_logger->logger()->flush();
+}
+
+static void
+port_set_leds (uint32_t port_num, port_event_t event)
+{
+    int qsfp_port = sdk::lib::catalog::port_num_to_qsfp_port(port_num);
+
+    if (qsfp_port == -1) {
+        return;
+    }
+
+    switch (event) {
+    case port_event_t::PORT_EVENT_LINK_UP:
+        sdk::lib::pal_qsfp_set_led(qsfp_port,
+                                   pal_qsfp_led_color_t::QSFP_LED_COLOR_GREEN);
+        break;
+
+    case port_event_t::PORT_EVENT_LINK_DOWN:
+        sdk::lib::pal_qsfp_set_led(qsfp_port,
+                                   pal_qsfp_led_color_t::QSFP_LED_COLOR_NONE);
+        break;
+
+    default:
+        break;
+    }
+}
+
+static bool
+xcvr_event_port_get_ht_cb (void *ht_entry, void *ctxt)
+{
+    sdk_ret_t         sdk_ret     = SDK_RET_OK;
+    port_t            *port       = NULL;
+    port_args_t       port_args   = { 0 };
+
+    port_ht_cb_ctxt_t      *ht_cb_ctxt = (port_ht_cb_ctxt_t*) ctxt;
+    xcvr_event_port_ctxt_t *xcvr_event_port_ctxt =
+                            (xcvr_event_port_ctxt_t*) ht_cb_ctxt->ctxt;
+
+    hal_handle_id_ht_entry_t *entry = (hal_handle_id_ht_entry_t *)ht_entry;
+
+    port = (port_t *)hal_handle_get_obj(entry->handle_id);
+
+    sdk::linkmgr::port_args_init(&port_args);
+    port_args.port_num = port->port_num;
+
+    sdk_ret = sdk::linkmgr::port_get(port->pd_p, &port_args);
+    if (sdk_ret != SDK_RET_OK) {
+        HAL_TRACE_ERR("Failed to get pd for port: {}, err: {}",
+                      port->port_num, sdk_ret);
+        return false;
+    }
+
+    int qsfp_port =
+        sdk::lib::catalog::port_num_to_qsfp_port(port_args.port_num);
+
+    HAL_TRACE_DEBUG("port: {}, qsfp_port: {}, xcvr_event_port: {}, "
+                    "xcvr_state: {}, user_admin: {}, admin: {}",
+                    port_args.port_num, qsfp_port, xcvr_event_port_ctxt->port_num,
+                    static_cast<uint32_t>(xcvr_event_port_ctxt->state),
+                    static_cast<uint32_t>(port_args.user_admin_state),
+                    static_cast<uint32_t>(port_args.admin_state));
+
+    if (qsfp_port == -1 || qsfp_port != (int)xcvr_event_port_ctxt->port_num) {
+        return false;
+    }
+
+    if (xcvr_event_port_ctxt->state == xcvr_state_t::XCVR_SPROM_READ) {
+        if (port_args.user_admin_state ==
+                port_admin_state_t::PORT_ADMIN_STATE_UP) {
+            port_args.admin_state = port_admin_state_t::PORT_ADMIN_STATE_UP;
+
+            sdk_ret = sdk::linkmgr::port_update(port->pd_p, &port_args);
+
+            if (sdk_ret != SDK_RET_OK) {
+                HAL_TRACE_ERR("Failed to update for port: {}, err: {}",
+                              port->port_num, sdk_ret);
+            }
+        }
+    } else if (xcvr_event_port_ctxt->state == xcvr_state_t::XCVR_REMOVED) {
+        if (port_args.user_admin_state ==
+                port_admin_state_t::PORT_ADMIN_STATE_UP) {
+            port_args.admin_state = port_admin_state_t::PORT_ADMIN_STATE_DOWN;
+
+            sdk_ret = sdk::linkmgr::port_update(port->pd_p, &port_args);
+
+            if (sdk_ret != SDK_RET_OK) {
+                HAL_TRACE_ERR("Failed to update for port: {}, err: {}",
+                              port->port_num, sdk_ret);
+            }
+        }
+    }
+
+    return false;
+}
+
+static void
+xcvr_event_port_enable (uint32_t port_num, xcvr_state_t state)
+{
+    // If xcvr is removed, bring link down
+    // If xcvr sprom read is successful, bring linkup if user admin enabled.
+    // Ignore all other xcvr states.
+
+    if (state != xcvr_state_t::XCVR_REMOVED &&
+        state != xcvr_state_t::XCVR_SPROM_READ) {
+        return;
+    }
+
+    xcvr_event_port_ctxt_t xcvr_event_port_ctxt;
+    port_ht_cb_ctxt_t      ht_cb_ctxt;
+
+    xcvr_event_port_ctxt.port_num = port_num;
+    xcvr_event_port_ctxt.state    = state;
+
+    ht_cb_ctxt.ctxt = &xcvr_event_port_ctxt;
+
+    // Walk the objects and invoke ht cb
+    g_linkmgr_state->port_id_ht()->walk(xcvr_event_port_get_ht_cb, &ht_cb_ctxt);
+}
+
+static void
+port_event_cb (uint32_t port_num, port_event_t event, port_speed_t port_speed)
+{
+    port_set_leds(port_num, event);
+    port_event_notify(port_num, event, port_speed);
+}
+
+static void
+xcvr_event_cb (uint32_t port_num, xcvr_state_t state, xcvr_pid_t pid)
+{
+    xcvr_event_port_enable(port_num, state);
+    xcvr_event_notify(port_num, state, pid);
 }
 
 hal_ret_t
@@ -433,6 +566,9 @@ port_create (port_args_t *port_args, hal_handle_t *hal_handle)
 
     pi_p->port_num = port_args->port_num;
 
+    // For config push, user_admin_state = admin_state
+    port_args->user_admin_state = port_args->admin_state;
+
     dhl_entry.handle  = pi_p->hal_handle_id;
     dhl_entry.obj     = pi_p;
     cfg_ctxt.app_ctxt = port_args;
@@ -641,6 +777,9 @@ port_update (port_args_t *port_args)
     }
 
     HAL_TRACE_DEBUG("port update for port: {}", port_args->port_num);
+
+    // For config push, user_admin_state = admin_state
+    port_args->user_admin_state = port_args->admin_state;
 
     // form ctxt and call infra update object
     dhl_entry.handle     = pi_p->hal_handle_id;

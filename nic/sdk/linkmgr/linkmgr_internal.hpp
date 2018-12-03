@@ -14,6 +14,9 @@ namespace linkmgr {
 #define XCVR_POLL_TIME          1000 // 1000 ms = 1 s
 #define MAX_LOG_SIZE            1024
 
+// max link training fail count until the busy loop is exited
+#define MAX_LINK_TRAIN_FAIL_COUNT 10
+
 extern linkmgr_cfg_t g_linkmgr_cfg;
 extern char log_buf[];
 
@@ -59,7 +62,8 @@ extern char log_buf[];
 }
 
 sdk_ret_t
-linkmgr_notify (uint8_t operation, linkmgr_entry_data_t *data);
+linkmgr_notify (uint8_t operation, linkmgr_entry_data_t *data,
+                q_notify_mode_t mode);
 
 sdk_ret_t
 port_link_poll_timer_add(port *port);

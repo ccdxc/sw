@@ -34,6 +34,11 @@ typedef enum port_breakout_mode_e {
     BREAKOUT_MODE_2x50G
 } port_breakout_mode_t;
 
+typedef enum q_notify_mode_e {
+    Q_NOTIFY_MODE_BLOCKING     = 0,
+    Q_NOTIFY_MODE_NON_BLOCKING = 1
+} q_notify_mode_t;
+
 enum class port_speed_t {
     PORT_SPEED_NONE    = 0,
     PORT_SPEED_1G      = 1,
@@ -99,11 +104,6 @@ typedef enum xcvr_type_s {
     XCVR_TYPE_QSFP28,
 } xcvr_type_t;
 
-typedef enum xcvr_cable_type_s {
-    XCVR_CABLE_TYPE_COPPER,
-    XCVR_CABLE_TYPE_OPTIC,
-} xcvr_cable_type_t;
-
 typedef enum xcvr_pid_s {
     XCVR_PID_UNKNOWN,
     XCVR_PID_SFP_10G_CR,
@@ -124,6 +124,7 @@ using sdk::types::port_event_t;
 using sdk::types::port_breakout_mode_t;
 using sdk::types::mem_addr_t;
 using sdk::types::hbm_addr_t;
+using sdk::types::q_notify_mode_t;
 
 #endif    // __SDK_TYPES_HPP__
 

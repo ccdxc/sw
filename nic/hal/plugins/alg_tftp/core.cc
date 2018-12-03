@@ -15,14 +15,14 @@ using namespace hal::plugins::alg_utils;
 using namespace hal::plugins::sfw;
 
 static void incr_parse_error(l4_alg_status_t *sess) {
-    HAL_ATOMIC_INC_UINT32(&((tftp_info_t *)sess->info)->parse_errors, 1);
+    SDK_ATOMIC_INC_UINT32(&((tftp_info_t *)sess->info)->parse_errors, 1);
 }
 
 /*
  * APP Session delete handler
  */
 static void incr_unknown_opcode(l4_alg_status_t *sess) {
-    HAL_ATOMIC_INC_UINT32(&((tftp_info_t *)sess->info)->unknown_opcode, 1);
+    SDK_ATOMIC_INC_UINT32(&((tftp_info_t *)sess->info)->unknown_opcode, 1);
 }
 
 /*

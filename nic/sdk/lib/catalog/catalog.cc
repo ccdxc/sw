@@ -9,6 +9,21 @@
 namespace sdk {
 namespace lib {
 
+int
+catalog::port_num_to_qsfp_port (uint32_t port_num)
+{
+    switch(port_num) {
+    case 1 ... 4:
+        return 1;
+
+    case 5 ... 8:
+        return 2;
+
+    default:
+        return -1;
+    }
+}
+
 sdk_ret_t
 catalog::populate_asic_port(ptree::value_type &asic_port,
                             catalog_asic_port_t *asic_port_p)

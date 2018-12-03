@@ -7,65 +7,71 @@
 #include "include/sdk/types.hpp"
 #include "include/sdk/linkmgr.hpp"
 
+namespace sdk {
+namespace platform {
+
 #define XCVR_SPROM_CACHE_SIZE   512
 #define XCVR_MAX_PORTS          2
 #define XCVR_SPROM_READ_MAX     10
 #define XCVR_SPROM_READ_SIZE    128
-
-namespace sdk {
-namespace platform {
+#define XCVR_OFFSET_LENGTH_CU   146 // 0x92
 
 using sdk::linkmgr::xcvr_event_notify_t;
 using sdk::types::xcvr_type_t;
-using sdk::types::xcvr_cable_type_t;
+using sdk::types::cable_type_t;
 using sdk::types::xcvr_state_t;
 
 typedef struct xcvr_s {
-    xcvr_type_t             type;
-    xcvr_cable_type_t       cable_type;
-    xcvr_state_t            state;
-    uint8_t                 sprom_read_count;
-    uint8_t                 cache[XCVR_SPROM_CACHE_SIZE];
+    xcvr_type_t   type;
+    cable_type_t  cable_type;
+    xcvr_state_t  state;
+    uint8_t       sprom_read_count;
+    uint8_t       cache[XCVR_SPROM_CACHE_SIZE];
 } __PACK__ xcvr_t;
 
 extern xcvr_t g_xcvr[XCVR_MAX_PORTS];
 
-void
+inline void
 xcvr_reset (int port) {
     memset(&g_xcvr[port], 0, sizeof(xcvr_t));
 }
 
-xcvr_state_t
+inline xcvr_state_t
 xcvr_state (int port) {
     return g_xcvr[port].state;
 }
 
-void
+inline void
 xcvr_set_state (int port, xcvr_state_t state) {
     g_xcvr[port].state = state;
 }
 
-uint8_t *
+inline uint8_t *
 xcvr_cache (int port) {
     return g_xcvr[port].cache;
 }
 
-void
+inline void
 xcvr_set_cache (int port, uint8_t *data, int len) {
     memcpy(g_xcvr[port].cache, data, len);
 }
 
-xcvr_type_t
+inline xcvr_type_t
 xcvr_type (int port) {
     return g_xcvr[port].type;
 }
 
-void
+inline cable_type_t
+cable_type (int port) {
+    return g_xcvr[port].cable_type;
+}
+
+inline void
 xcvr_set_type (int port, xcvr_type_t type) {
     g_xcvr[port].type = type;
 }
 
-bool
+inline bool
 xcvr_sprom_read_count_inc (int port) {
     g_xcvr[port].sprom_read_count ++;
     if (g_xcvr[port].sprom_read_count == XCVR_SPROM_READ_MAX) {

@@ -20,6 +20,7 @@ typedef struct serdes_fn_s_ {
                                     serdes_info_t *serdes_info);
     bool (*serdes_an_wait_hcd)     (uint32_t sbus_addr);
     int (*serdes_an_hcd_read)      (uint32_t sbus_addr);
+    int (*serdes_an_core_status)   (uint32_t sbus_addr);
     int (*serdes_an_hcd_cfg)       (uint32_t sbus_addr,
                                     uint32_t *sbus_addr_arr);
     int (*serdes_ical_start)       (uint32_t sbus_addr);

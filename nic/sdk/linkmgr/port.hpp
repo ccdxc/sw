@@ -13,6 +13,12 @@
 namespace sdk {
 namespace linkmgr {
 
+typedef enum an_ret_e {
+    AN_RESET,
+    AN_WAIT,
+    AN_DONE,
+} an_ret_t;
+
 class port {
 public:
     port_oper_status_t oper_status(void) const {
@@ -50,6 +56,14 @@ public:
 
     port_admin_state_t admin_state(void) const {
         return this->admin_state_;
+    }
+
+    void set_user_admin_state(port_admin_state_t user_admin_state) {
+        this->user_admin_state_ = user_admin_state;
+    }
+
+    port_admin_state_t user_admin_state(void) const {
+        return this->user_admin_state_;
     }
 
     uint32_t mac_ch(void) const { return this->mac_ch_; }
@@ -125,7 +139,7 @@ public:
     sdk_ret_t port_disable(void);
     sdk_ret_t port_link_sm_process(void);
     bool      port_link_sm_dfe_process(void);
-    bool      port_link_sm_an_process(void);
+    an_ret_t  port_link_sm_an_process(void);
     bool      port_dfe_tuning_enabled(void);
     bool      port_link_status(void);
 
@@ -223,6 +237,7 @@ public:
     int  port_serdes_an_start(void);
     bool port_serdes_an_wait_hcd(void);
     int  port_serdes_an_hcd_cfg(void);
+    bool port_serdes_an_link_train_check(void);
 
     // set the sbus addr for each serdes
     sdk_ret_t sbus_addr_set (uint32_t lane, uint32_t sbus_addr);
@@ -251,6 +266,7 @@ private:
     port_speed_t          port_speed_;                // port speed
     port_type_t           port_type_;                 // port type
     port_admin_state_t    admin_state_;               // port admin state
+    port_admin_state_t    user_admin_state_;          // port user configured admin state
     port_link_sm_t        link_sm_;                   // port link state machine
     port_link_sm_t        link_dfe_sm_;               // port link DFE state machine
     port_link_sm_t        link_an_sm_;                // port link AN state machine
@@ -279,6 +295,8 @@ private:
 
     // Get serdes sbus address for a port lane
     uint32_t port_sbus_addr(uint32_t lane);
+
+    sdk_ret_t port_link_sm_reset (void);
 
     int port_set_an_resolved_params(int an_hcd,
                                     int fec_enable,

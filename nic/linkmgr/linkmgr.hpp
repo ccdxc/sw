@@ -31,8 +31,9 @@ hal_ret_t port_delete(port_args_t *port_args);
 hal_ret_t port_get(port_args_t *port_args);
 hal_ret_t port_get_all(port_get_cb_t port_get_cb, void *ctxt);
 hal_ret_t port_disable(uint32_t port_num = 0);
-void port_event_cb(uint32_t port_num, port_event_t event);
-void xcvr_event_cb(uint32_t port_num, xcvr_state_t state, xcvr_pid_t pid);
+void port_event_notify(uint32_t port_num, port_event_t event,
+                       port_speed_t port_speed);
+void xcvr_event_notify(uint32_t port_num, xcvr_state_t state, xcvr_pid_t pid);
 hal_ret_t port_metrics_update(void);
 
 }    // namespace linkmgr

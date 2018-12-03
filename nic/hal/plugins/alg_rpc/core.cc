@@ -15,19 +15,19 @@ using namespace hal::plugins::sfw;
 using namespace hal::plugins::alg_utils;
 
 void incr_parse_error(rpc_info_t *info) {
-    HAL_ATOMIC_INC_UINT32(&info->parse_errors, 1);
+    SDK_ATOMIC_INC_UINT32(&info->parse_errors, 1);
 }
 
 void incr_data_sess(rpc_info_t *info) {
-    HAL_ATOMIC_INC_UINT32(&info->data_sess, 1);
+    SDK_ATOMIC_INC_UINT32(&info->data_sess, 1);
 }
 
 void incr_max_pkt_sz(rpc_info_t  *info) {
-    HAL_ATOMIC_INC_UINT32(&info->maxpkt_sz_exceeded, 1);
+    SDK_ATOMIC_INC_UINT32(&info->maxpkt_sz_exceeded, 1);
 }
 
 void incr_num_exp_flows(rpc_info_t *info) {
-    HAL_ATOMIC_INC_UINT32(&info->num_exp_flows, 1);
+    SDK_ATOMIC_INC_UINT32(&info->num_exp_flows, 1);
 }
 
 /*

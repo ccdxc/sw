@@ -30,7 +30,7 @@ typedef struct dns_question {
 
 static void incr_parse_error (l4_alg_status_t *sess)
 {
-    HAL_ATOMIC_INC_UINT32(&((dns_info_t *)sess->info)->parse_errors, 1);
+    SDK_ATOMIC_INC_UINT32(&((dns_info_t *)sess->info)->parse_errors, 1);
 }
 
 /*

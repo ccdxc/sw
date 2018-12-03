@@ -257,7 +257,7 @@ hal_handle_alloc (hal_obj_id_t obj_id, hal_handle_t handle_id,
     }
     // allocate unique handle id, if not provided
     if (handle_id == HAL_HANDLE_INVALID) {
-        handle_id = HAL_ATOMIC_INC_UINT32(&g_hal_handle, 1);
+        handle_id = SDK_ATOMIC_INC_UINT32(&g_hal_handle, 1);
     }
     handle->set_handle_id(handle_id);
 

@@ -17,7 +17,9 @@ xcvr_poll_timer_cb(void *timer, uint32_t timer_id, void *ctxt)
     data.timer = timer;
 
     // wake up the hal control thread to process port event
-    ret = linkmgr_notify(LINKMGR_OPERATION_XCVR_POLL_TIMER, &data);
+    ret = linkmgr_notify(LINKMGR_OPERATION_XCVR_POLL_TIMER,
+                         &data,
+                         q_notify_mode_t::Q_NOTIFY_MODE_NON_BLOCKING);
     if (ret != SDK_RET_OK) {
         SDK_TRACE_ERR("Error notifying control-thread for"
                       " xcvr poll timer");
@@ -38,7 +40,9 @@ port_link_poll_timer_cb(void *timer, uint32_t timer_id, void *ctxt)
     data.timer = timer;
 
     // wake up the hal control thread to process port event
-    ret = linkmgr_notify(LINKMGR_OPERATION_PORT_LINK_POLL_TIMER, &data);
+    ret = linkmgr_notify(LINKMGR_OPERATION_PORT_LINK_POLL_TIMER,
+                         &data,
+                         q_notify_mode_t::Q_NOTIFY_MODE_NON_BLOCKING);
     if (ret != SDK_RET_OK) {
         SDK_TRACE_ERR("Error notifying control-thread for"
                       " port link poll timer");
@@ -60,7 +64,9 @@ link_bring_up_timer_cb(void *timer, uint32_t timer_id, void *ctxt)
     data.timer = timer;
 
     // wake up the hal control thread to process port event
-    ret = linkmgr_notify(LINKMGR_OPERATION_PORT_BRINGUP_TIMER, &data);
+    ret = linkmgr_notify(LINKMGR_OPERATION_PORT_BRINGUP_TIMER,
+                         &data,
+                         q_notify_mode_t::Q_NOTIFY_MODE_NON_BLOCKING);
     if (ret != SDK_RET_OK) {
         SDK_TRACE_ERR("Error notifying control-thread for port timer");
     }
@@ -81,7 +87,9 @@ link_debounce_timer_cb(void *timer, uint32_t timer_id, void *ctxt)
     data.timer = timer;
 
     // wake up the hal control thread to process port event
-    ret = linkmgr_notify(LINKMGR_OPERATION_PORT_DEBOUNCE_TIMER, &data);
+    ret = linkmgr_notify(LINKMGR_OPERATION_PORT_DEBOUNCE_TIMER,
+                         &data,
+                         q_notify_mode_t::Q_NOTIFY_MODE_NON_BLOCKING);
     if (ret != SDK_RET_OK) {
         SDK_TRACE_ERR("Error notifying control-thread for port debounce timer");
     }

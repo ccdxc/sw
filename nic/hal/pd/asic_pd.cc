@@ -102,7 +102,7 @@ is_asic_rw_thread (void)
 bool
 is_asic_rw_ready (void)
 {
-    return HAL_ATOMIC_LOAD_BOOL(&g_asic_rw_ready_);
+    return SDK_ATOMIC_LOAD_BOOL(&g_asic_rw_ready_);
 }
 
 //------------------------------------------------------------------------------
@@ -133,7 +133,7 @@ asic_do_read (uint8_t opn, uint64_t addr, uint8_t *data, uint32_t len)
     // move the producer index to next slot.
     // consumer is unaware of the blocking/non-blocking call and always
     // moves to the next slot.
-    while(!HAL_ATOMIC_COMPARE_EXCHANGE_WEAK(&g_asic_rw_workq[curr_tid].pindx, &pindx,
+    while(!SDK_ATOMIC_COMPARE_EXCHANGE_WEAK(&g_asic_rw_workq[curr_tid].pindx, &pindx,
                                        (pindx+1)%HAL_ASIC_RW_Q_SIZE));
 
     rw_entry = &g_asic_rw_workq[curr_tid].entries[pindx];
@@ -142,11 +142,11 @@ asic_do_read (uint8_t opn, uint64_t addr, uint8_t *data, uint32_t len)
     rw_entry->addr = addr;
     rw_entry->len = len;
     rw_entry->data = data;
-    HAL_ATOMIC_STORE_BOOL(&rw_entry->done, false);
+    SDK_ATOMIC_STORE_BOOL(&rw_entry->done, false);
 
-    HAL_ATOMIC_FETCH_ADD(&g_asic_rw_workq[curr_tid].nentries, 1);
+    SDK_ATOMIC_FETCH_ADD(&g_asic_rw_workq[curr_tid].nentries, 1);
 
-    while (HAL_ATOMIC_LOAD_BOOL(&rw_entry->done) == false) {
+    while (SDK_ATOMIC_LOAD_BOOL(&rw_entry->done) == false) {
         if (curr_thread->can_yield()) {
             pthread_yield();
         }
@@ -226,7 +226,7 @@ asic_do_write (uint8_t opn, uint64_t addr, uint8_t *data,
         return HAL_RET_HW_PROG_ERR;
     }
 
-    while(!HAL_ATOMIC_COMPARE_EXCHANGE_WEAK(&g_asic_rw_workq[curr_tid].pindx, &pindx,
+    while(!SDK_ATOMIC_COMPARE_EXCHANGE_WEAK(&g_asic_rw_workq[curr_tid].pindx, &pindx,
                                        (pindx+1)%HAL_ASIC_RW_Q_SIZE));
 
     rw_entry = &g_asic_rw_workq[curr_tid].entries[pindx];
@@ -235,12 +235,12 @@ asic_do_write (uint8_t opn, uint64_t addr, uint8_t *data,
     rw_entry->addr = addr;
     rw_entry->len = len;
     rw_entry->data = data;
-    HAL_ATOMIC_STORE_BOOL(&rw_entry->done, false);
+    SDK_ATOMIC_STORE_BOOL(&rw_entry->done, false);
 
-    HAL_ATOMIC_FETCH_ADD(&g_asic_rw_workq[curr_tid].nentries, 1);
+    SDK_ATOMIC_FETCH_ADD(&g_asic_rw_workq[curr_tid].nentries, 1);
 
     if (mode == ASIC_WRITE_MODE_BLOCKING) {
-        while (HAL_ATOMIC_LOAD_BOOL(&rw_entry->done) == false) {
+        while (SDK_ATOMIC_LOAD_BOOL(&rw_entry->done) == false) {
             if (curr_thread->can_yield()) {
                 pthread_yield();
             }
@@ -368,7 +368,7 @@ asic_port_cfg (uint32_t port_num,
         return HAL_RET_HW_PROG_ERR;
     }
 
-    while(!HAL_ATOMIC_COMPARE_EXCHANGE_WEAK(&g_asic_rw_workq[curr_tid].pindx, &pindx,
+    while(!SDK_ATOMIC_COMPARE_EXCHANGE_WEAK(&g_asic_rw_workq[curr_tid].pindx, &pindx,
                                        (pindx+1)%HAL_ASIC_RW_Q_SIZE));
 
     rw_entry = &g_asic_rw_workq[curr_tid].entries[pindx];
@@ -383,11 +383,11 @@ asic_port_cfg (uint32_t port_num,
     port_entry->num_lanes = num_lanes;
     port_entry->val       = val;
 
-    HAL_ATOMIC_STORE_BOOL(&rw_entry->done, false);
+    SDK_ATOMIC_STORE_BOOL(&rw_entry->done, false);
 
-    HAL_ATOMIC_FETCH_ADD(&g_asic_rw_workq[curr_tid].nentries, 1);
+    SDK_ATOMIC_FETCH_ADD(&g_asic_rw_workq[curr_tid].nentries, 1);
 
-    while (HAL_ATOMIC_LOAD_BOOL(&rw_entry->done) == false) {
+    while (SDK_ATOMIC_LOAD_BOOL(&rw_entry->done) == false) {
         if (curr_thread->can_yield()) {
             pthread_yield();
         }
@@ -521,7 +521,7 @@ asic_rw_loop (void *ctxt)
             // populate the results
             rw_entry->status =
                 IS_PAL_API_SUCCESS(rv) ? HAL_RET_OK : HAL_RET_ERR;
-            HAL_ATOMIC_STORE_BOOL(&rw_entry->done, true);
+            SDK_ATOMIC_STORE_BOOL(&rw_entry->done, true);
 
             // advance to next entry in the queue
             g_asic_rw_workq[qid].cindx++;
@@ -529,7 +529,7 @@ asic_rw_loop (void *ctxt)
                 g_asic_rw_workq[qid].cindx = 0;
             }
 
-            HAL_ATOMIC_FETCH_SUB(&g_asic_rw_workq[qid].nentries, 1);
+            SDK_ATOMIC_FETCH_SUB(&g_asic_rw_workq[qid].nentries, 1);
             work_done = true;
         }
         curr_thread->punch_heartbeat();
@@ -615,7 +615,7 @@ asic_rw_start (void *ctxt)
     asic_rw_init(hal_cfg);
 
     // announce asic-rw thread as ready
-    HAL_ATOMIC_STORE_BOOL(&g_asic_rw_ready_, true);
+    SDK_ATOMIC_STORE_BOOL(&g_asic_rw_ready_, true);
 
     // keep polling the queue and serve the read/write requests
     asic_rw_loop(ctxt);

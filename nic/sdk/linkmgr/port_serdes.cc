@@ -949,6 +949,11 @@ serdes_an_rsfec_enable_read_hw (uint32_t sbus_addr)
             aapl, sbus_addr, AVAGO_SERDES_AN_READ_RSFEC_ENABLE);
 }
 
+int serdes_an_core_status_hw (uint32_t sbus_addr)
+{
+    return avago_serdes_mem_rd(aapl, sbus_addr, AVAGO_LSB_DIRECT, 0x27);
+}
+
 int
 serdes_an_hcd_cfg_hw (uint32_t sbus_addr, uint32_t *sbus_addr_arr)
 {
@@ -966,10 +971,6 @@ serdes_an_hcd_cfg_hw (uint32_t sbus_addr, uint32_t *sbus_addr_arr)
 
     an_hcd =
         avago_serdes_an_read_status(aapl, sbus_addr, AVAGO_SERDES_AN_READ_HCD);
-
-    SDK_LINKMGR_TRACE_DEBUG("an_hcd: %d, an_hcd_string: %s",
-                            an_hcd,
-                            aapl_an_hcd_to_str(an_hcd));
 
     switch (an_hcd) {
         case 0x08: /* 100GBASE-KR4 */
@@ -1302,6 +1303,7 @@ port_serdes_fn_init(platform_type_t platform_type,
         serdes_fn->serdes_an_wait_hcd   = &serdes_an_wait_hcd_hw;
         serdes_fn->serdes_an_hcd_read   = &serdes_an_hcd_read_hw;
         serdes_fn->serdes_an_hcd_cfg    = &serdes_an_hcd_cfg_hw;
+        serdes_fn->serdes_an_core_status = &serdes_an_core_status_hw;
 
         serdes_fn->serdes_an_fec_enable_read   =
                                           &serdes_an_fec_enable_read_hw;

@@ -40,30 +40,30 @@ public:
 
         do {
             HAL_SPINLOCK_LOCK(&mutex_);
-            HAL_ATOMIC_LOAD_UINT32(&nwriters_, &wcount);
+            SDK_ATOMIC_LOAD_UINT32(&nwriters_, &wcount);
             if (wcount) {
                 HAL_SPINLOCK_UNLOCK(&mutex_);
             } else {
                 break;
             }
         } while (true);
-        HAL_ATOMIC_INC_UINT32(&nreaders_, 1);
+        SDK_ATOMIC_INC_UINT32(&nreaders_, 1);
         HAL_SPINLOCK_UNLOCK(&mutex_);
     }
 
     void runlock(void) {
         HAL_SPINLOCK_LOCK(&mutex_);
-        HAL_ATOMIC_DEC_UINT32(&nreaders_, 1);
+        SDK_ATOMIC_DEC_UINT32(&nreaders_, 1);
         HAL_SPINLOCK_UNLOCK(&mutex_);
     }
 
     void wlock(void) {
 		uint32_t rcount;
 
-		HAL_ATOMIC_INC_UINT32(&nwriters_, 1);
+		SDK_ATOMIC_INC_UINT32(&nwriters_, 1);
 		do {
 		    HAL_SPINLOCK_LOCK(&mutex_);
-		    HAL_ATOMIC_LOAD_UINT32(&nreaders_, &rcount);
+		    SDK_ATOMIC_LOAD_UINT32(&nreaders_, &rcount);
 		    if (rcount) {
 		        HAL_SPINLOCK_UNLOCK(&mutex_);
 		    } else {
@@ -73,7 +73,7 @@ public:
     }
 
     void wunlock(void) {
-        HAL_ATOMIC_DEC_UINT32(&nwriters_, 1);
+        SDK_ATOMIC_DEC_UINT32(&nwriters_, 1);
         HAL_SPINLOCK_UNLOCK(&mutex_);
     }
 

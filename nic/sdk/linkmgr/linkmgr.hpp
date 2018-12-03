@@ -14,7 +14,8 @@ using sdk::types::xcvr_state_t;
 using sdk::types::xcvr_pid_t;
 
 typedef void (*port_event_notify_t)(uint32_t port_num,
-                                    port_event_t port_event);
+                                    port_event_t port_event,
+                                    port_speed_t port_speed);
 
 typedef void (*port_log_fn_t)(std::string log_type,
                               const char *buf,
@@ -51,6 +52,7 @@ typedef struct port_args_s {
     port_type_t           port_type;                  // port type
     port_speed_t          port_speed;                 // port speed
     port_admin_state_t    admin_state;                // admin state of the port
+    port_admin_state_t    user_admin_state;           // user configured admin state of the port
     port_oper_status_t    oper_status;                // oper status of the port
     port_fec_type_t       fec_type;                   // FEC type
     port_pause_type_t     pause;                      // mac pause

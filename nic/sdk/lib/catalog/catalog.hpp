@@ -153,6 +153,7 @@ public:
     static sdk_ret_t get_child_str(std::string catalog_file,
                                    std::string path,
                                    std::string& child_str);
+    static int port_num_to_qsfp_port(uint32_t port_num);
 
     catalog_t *catalog_db(void) { return &catalog_db_; }
     uint32_t num_uplink_ports(void) const { return catalog_db_.num_uplink_ports; }

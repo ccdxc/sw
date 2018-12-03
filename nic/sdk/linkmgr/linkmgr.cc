@@ -220,12 +220,14 @@ is_linkmgr_ctrl_thread()
 // linkmgr thread notification by other threads
 //------------------------------------------------------------------------------
 sdk_ret_t
-linkmgr_notify (uint8_t operation, linkmgr_entry_data_t *data)
+linkmgr_notify (uint8_t operation, linkmgr_entry_data_t *data,
+                q_notify_mode_t mode)
 {
     uint16_t            pindx;
     sdk::lib::thread    *curr_thread = current_thread();
     uint32_t            curr_tid = curr_thread->thread_id();
     linkmgr_entry_t     *rw_entry;
+    sdk_ret_t           ret = SDK_RET_OK;
 
     if (g_linkmgr_workq[curr_tid].nentries >= LINKMGR_CONTROL_Q_SIZE) {
         SDK_TRACE_ERR("Error: operation %d for thread %s, tid %d full",
@@ -236,7 +238,10 @@ linkmgr_notify (uint8_t operation, linkmgr_entry_data_t *data)
     // SDK_TRACE_DEBUG("Thread: %s, Notify op %d",
     //                 current_thread()->name(), operation);
 
-    pindx = g_linkmgr_workq[curr_tid].pindx;
+    while(!SDK_ATOMIC_COMPARE_EXCHANGE_WEAK(
+                                &g_linkmgr_workq[curr_tid].pindx,
+                                &pindx,
+                                (pindx+1) % LINKMGR_CONTROL_Q_SIZE));
 
     rw_entry = &g_linkmgr_workq[curr_tid].entries[pindx];
     rw_entry->opn = operation;
@@ -244,25 +249,22 @@ linkmgr_notify (uint8_t operation, linkmgr_entry_data_t *data)
 
     memcpy(&rw_entry->data, data, sizeof(linkmgr_entry_data_t));
 
-    rw_entry->done.store(false);
+    SDK_ATOMIC_STORE_BOOL(&rw_entry->done, false);
 
-    g_linkmgr_workq[curr_tid].nentries++;
+    SDK_ATOMIC_FETCH_ADD(&g_linkmgr_workq[curr_tid].nentries, 1);
 
-    while (rw_entry->done.load() == false) {
-        if (curr_thread->can_yield()) {
-            pthread_yield();
+    if (mode == q_notify_mode_t::Q_NOTIFY_MODE_BLOCKING) {
+        while (SDK_ATOMIC_LOAD_BOOL(&rw_entry->done) == false) {
+            if (curr_thread->can_yield()) {
+                pthread_yield();
+            }
         }
+        ret = rw_entry->status;
+    } else {
+        ret = SDK_RET_OK;
     }
 
-    // move the producer index to next slot.
-    // consumer is unaware of the blocking/non-blocking call and always
-    // moves to the next slot.
-    g_linkmgr_workq[curr_tid].pindx++;
-    if (g_linkmgr_workq[curr_tid].pindx >= LINKMGR_CONTROL_Q_SIZE) {
-        g_linkmgr_workq[curr_tid].pindx = 0;
-    }
-
-    return rw_entry->status;
+    return ret;
 }
 
 void
@@ -437,14 +439,16 @@ linkmgr_event_loop (void* ctxt)
 
             // populate the results
             rw_entry->status =  rv ? SDK_RET_OK : SDK_RET_ERR;
-            rw_entry->done.store(true);
+            SDK_ATOMIC_STORE_BOOL(&rw_entry->done, true);
 
             // advance to next entry in the queue
             g_linkmgr_workq[qid].cindx++;
             if (g_linkmgr_workq[qid].cindx >= LINKMGR_CONTROL_Q_SIZE) {
                 g_linkmgr_workq[qid].cindx = 0;
             }
-            g_linkmgr_workq[qid].nentries--;
+
+            SDK_ATOMIC_FETCH_SUB(&g_linkmgr_workq[qid].nentries, 1);
+
             work_done = true;
         }
 
@@ -685,6 +689,9 @@ port_create (port_args_t *args)
     port_p->set_mtu(args->mtu);
     port_p->set_pause(args->pause);
 
+    // store the user configured admin state
+    port_p->set_user_admin_state(args->user_admin_state);
+
     port_p->set_mac_fns(&mac_fns);
     port_p->set_serdes_fns(&serdes_fns);
 
@@ -700,6 +707,23 @@ port_create (port_args_t *args)
     ret = port::port_disable(port_p);
     if (ret != SDK_RET_OK) {
         SDK_TRACE_ERR("port disable failed");
+    }
+
+    int qsfp_port = sdk::lib::catalog::port_num_to_qsfp_port(args->port_num);
+
+    if (qsfp_port != -1) {
+        // dont enable the port if no xcvr is present
+        if (sdk::platform::xcvr_state(qsfp_port-1) !=
+                        sdk::types::xcvr_state_t::XCVR_SPROM_READ) {
+            return port_p;
+        }
+
+        // TODO enable AN always until agent is aware of cables?
+        // port_p->set_auto_neg_enable(true);
+        if (sdk::platform::cable_type(qsfp_port-1) ==
+                  sdk::types::cable_type_t::CABLE_TYPE_FIBER) {
+            port_p->set_auto_neg_enable(false);
+        }
     }
 
     // if admin up is set, enable the port
@@ -764,9 +788,17 @@ port_update (void *pd_p, port_args_t *args)
         args->admin_state != port_p->admin_state()) {
         SDK_TRACE_DEBUG("admin_state updated. new: %d, old: %d",
                         args->admin_state, port_p->admin_state());
+
         // Do not update admin_state here
         // port_disable following configured=true will update it
         configured = true;
+    }
+
+    if (args->user_admin_state != port_admin_state_t::PORT_ADMIN_STATE_NONE &&
+        args->user_admin_state != port_p->user_admin_state()) {
+        SDK_TRACE_DEBUG("user_admin_state updated. new: %d, old: %d",
+                        args->user_admin_state, port_p->user_admin_state());
+        port_p->set_user_admin_state(args->user_admin_state);
     }
 
     // FEC_TYPE_NONE is valid
@@ -817,6 +849,16 @@ port_update (void *pd_p, port_args_t *args)
     // Disable the port if any config has changed
     if (configured == true) {
         ret = port::port_disable(port_p);
+    }
+
+    int qsfp_port = sdk::lib::catalog::port_num_to_qsfp_port(args->port_num);
+
+    if (qsfp_port != -1) {
+        // dont enable the port if no xcvr is present
+        if (sdk::platform::xcvr_state(qsfp_port-1) !=
+                        sdk::types::xcvr_state_t::XCVR_SPROM_READ) {
+            return ret;
+        }
     }
 
     // Enable the port if -
@@ -879,8 +921,9 @@ port_get (void *pd_p, port_args_t *args)
     args->num_lanes   = port_p->num_lanes();
     args->fec_type    = port_p->fec_type();
     args->mtu         = port_p->mtu();
-    args->debounce_time = port_p->debounce_time();
-    args->auto_neg_enable = port_p->auto_neg_enable();
+    args->debounce_time    = port_p->debounce_time();
+    args->auto_neg_enable  = port_p->auto_neg_enable();
+    args->user_admin_state = port_p->user_admin_state();
 
     // TODO send live link status until poll timer is reduced
     // args->oper_status = port_p->oper_status();
@@ -890,7 +933,9 @@ port_get (void *pd_p, port_args_t *args)
         args->oper_status = port_oper_status_t::PORT_OPER_STATUS_DOWN;
     }
 
-    port_p->port_mac_stats_get (args->stats_data);
+    if (NULL != args->stats_data) {
+        port_p->port_mac_stats_get (args->stats_data);
+    }
 
     return SDK_RET_OK;
 }
