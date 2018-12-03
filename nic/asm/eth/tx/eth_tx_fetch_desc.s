@@ -26,6 +26,7 @@ struct tx_table_s0_t0_eth_tx_fetch_desc_d d;
 
 .align
 eth_tx_fetch_desc:
+  INIT_STATS(_r_stats)
 
   seq             c1, d.enable, 0
   bcf             [c1], eth_tx_queue_disabled

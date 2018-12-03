@@ -37,7 +37,7 @@
 #include "nic/asic/capri/model/cap_prd/cap_prd_csr.h"
 #include "nic/asic/capri/model/utils/cap_csr_py_if.h"
 
-#define P4PLUS_SYMBOLS_MAX  133
+#define P4PLUS_SYMBOLS_MAX  135
 
 class capri_state_pd *g_capri_state_pd;
 uint64_t capri_hbm_base;
@@ -1013,6 +1013,18 @@ capri_p4p_asm_init (capri_cfg_t *cfg, hal::hal_cfg_t *hal_cfg)
      */
     symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) +
                                  BARCO_MPP1_PI_HBM_TABLE_OFFSET;
+    i++;
+
+    symbols[i].name = "eth_rx_stats.bin";
+    symbols[i].num_params = 1;
+    symbols[i].params[0].name = LIF_STATS_BASE;
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_LIF_STATS);
+    i++;
+
+    symbols[i].name = "eth_tx_stats.bin";
+    symbols[i].num_params = 1;
+    symbols[i].params[0].name = LIF_STATS_BASE;
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_LIF_STATS);
     i++;
 
     HAL_ASSERT(i <= P4PLUS_SYMBOLS_MAX);

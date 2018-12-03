@@ -33,7 +33,7 @@ eth_rx:
     phvwr           p.eth_rx_global_dma_cur_index, (ETH_DMA_CMD_START_FLIT << LOG_NUM_DMA_CMDS_PER_FLIT) | ETH_DMA_CMD_START_INDEX
 
     // Packet length check
-    add             _r_pktlen, r0, k.eth_rx_t0_s2s_packet_len
+    add             _r_pktlen, r0, k.eth_rx_global_pkt_len
     add             _r_len, r0, d.{len}.hx
     blt             _r_len, _r_pktlen, eth_rx_desc_data_error
 
@@ -42,7 +42,7 @@ eth_rx:
 
     // DMA packet
     DMA_CMD_PTR(_r_ptr, _r_index, r7)
-    DMA_PKT(_r_ptr, _r_addr, k.eth_rx_t0_s2s_packet_len)
+    DMA_PKT(_r_ptr, _r_addr, k.eth_rx_global_pkt_len)
     DMA_CMD_NEXT(_r_index)
 
     b               eth_rx_done
@@ -63,6 +63,8 @@ eth_rx_desc_data_error:
 
 eth_rx_done:
     SAVE_STATS(_r_stats)
+
+    phvwri          p.{app_header_table0_valid...app_header_table3_valid}, ((1 << 3) | 1)
 
     // Launch eth_rx_stats action
     phvwri          p.common_te3_phv_table_pc, eth_rx_stats[38:6]

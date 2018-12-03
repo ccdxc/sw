@@ -196,6 +196,8 @@ int32_t capri_hbm_write_mem(uint64_t addr, const uint8_t *buf, uint32_t size);
 
 #define TLS_PROXY_GLOBAL_STATS          "tls_proxy_global_stats"
 
+#define LIF_STATS_BASE                  "lif_stats_base"
+
 typedef struct capri_descr_s {
         uint64_t        scratch[8];
         uint64_t        A0;

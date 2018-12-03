@@ -100,12 +100,15 @@ header_type eth_rx_global_k {
         intr_enable : 1;
         lif : 11;
         stats : 32;
+        l2_pkt_type : 2;
+        pkt_type : 6;
+        pkt_len : 16;
+        drop : 1;
     }
 }
 
 header_type eth_rx_t0_s2s_k {
     fields {
-        packet_len : 16;
         cq_desc_addr : 64;
         intr_assert_index : 16;
         intr_assert_data : 32;  // Should be byte-aligned for PHV2MEM

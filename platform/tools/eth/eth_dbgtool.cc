@@ -8,7 +8,9 @@
 
 #include "nic/include/adminq.h"
 #include "nic/include/eth_common.h"
+#include "nic/include/capri_common.h"
 #include "nic/sdk/include/sdk/pal.hpp"
+#include "nic/sdk/include/sdk/platform/utils/mpartition.hpp"
 
 #include "nic/asic/capri/model/cap_top/cap_top_csr_defines.h"
 #include "nic/asic/capri/model/cap_top/csr_defines/cap_wa_c_hdr.h"
@@ -146,7 +148,7 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
     }
 
     uint64_t addr = qinfo[qtype].base + qid * qinfo[qtype].size;
-    printf("addr: %lx\n\n", addr);
+    printf("\naddr: 0x%lx\n\n", addr);
 
     switch (qtype) {
     case 0:
@@ -220,6 +222,89 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
     default:
         assert(0);
     }
+}
+
+void
+eth_stats(uint16_t lif)
+{
+    sdk::platform::utils::mpartition *mp_ = sdk::platform::utils::mpartition::factory(
+        "/nic/conf/iris/hbm_mem.json", CAPRI_HBM_BASE);
+    assert(mp_);
+
+    uint64_t addr = mp_->start_addr("lif_stats") + (lif << 10);
+    printf("\naddr: 0x%lx\n\n", addr);
+
+    typedef struct {
+        // RX
+        uint64_t rx_ucast_bytes;
+        uint64_t rx_ucast_packets;
+        uint64_t rx_mcast_bytes;
+        uint64_t rx_mcast_packets;
+        uint64_t rx_bcast_bytes;
+        uint64_t rx_bcast_packets;
+        uint64_t rx_dma_error;
+        uint64_t __rsvd0;
+        // RX drops
+        uint64_t rx_ucast_drop_bytes;
+        uint64_t rx_ucast_drop_packets;
+        uint64_t rx_mcast_drop_bytes;
+        uint64_t rx_mcast_drop_packets;
+        uint64_t rx_bcast_drop_bytes;
+        uint64_t rx_bcast_drop_packets;
+        uint64_t __rsvd1;
+        uint64_t __rsvd2;
+        // TX
+        uint64_t tx_ucast_bytes;
+        uint64_t tx_ucast_packets;
+        uint64_t tx_mcast_bytes;
+        uint64_t tx_mcast_packets;
+        uint64_t tx_bcast_bytes;
+        uint64_t tx_bcast_packets;
+        uint64_t tx_dma_error;
+        uint64_t __rsvd3;
+        // TX drops
+        uint64_t tx_ucast_drop_bytes;
+        uint64_t tx_ucast_drop_packets;
+        uint64_t tx_mcast_drop_bytes;
+        uint64_t tx_mcast_drop_packets;
+        uint64_t tx_bcast_drop_bytes;
+        uint64_t tx_bcast_drop_packets;
+        uint64_t __rsvd4;
+        uint64_t __rsvd5;
+    } __attribute__((packed)) eth_stats_t;
+
+    eth_stats_t stats;
+    sdk::lib::pal_mem_read(addr, (uint8_t *)&stats, sizeof(eth_stats_t));
+
+    printf("rx_ucast_bytes              : %lu\n", stats.rx_ucast_bytes);
+    printf("rx_ucast_packets            : %lu\n", stats.rx_ucast_packets);
+    printf("rx_mcast_bytes              : %lu\n", stats.rx_mcast_bytes);
+    printf("rx_mcast_packets            : %lu\n", stats.rx_mcast_packets);
+    printf("rx_bcast_bytes              : %lu\n", stats.rx_bcast_bytes);
+    printf("rx_bcast_packets            : %lu\n", stats.rx_bcast_packets);
+
+    printf("rx_ucast_drop_bytes         : %lu\n", stats.rx_ucast_drop_bytes);
+    printf("rx_ucast_drop_packets       : %lu\n", stats.rx_ucast_drop_packets);
+    printf("rx_mcast_drop_bytes         : %lu\n", stats.rx_mcast_drop_bytes);
+    printf("rx_mcast_drop_packets       : %lu\n", stats.rx_mcast_drop_packets);
+    printf("rx_bcast_drop_bytes         : %lu\n", stats.rx_bcast_drop_bytes);
+    printf("rx_bcast_drop_packets       : %lu\n", stats.rx_bcast_drop_packets);
+    printf("rx_dma_error                : %lu\n", stats.rx_dma_error);
+
+    printf("tx_ucast_bytes              : %lu\n", stats.tx_ucast_bytes);
+    printf("tx_ucast_packets            : %lu\n", stats.tx_ucast_packets);
+    printf("tx_mcast_bytes              : %lu\n", stats.tx_mcast_bytes);
+    printf("tx_mcast_packets            : %lu\n", stats.tx_mcast_packets);
+    printf("tx_bcast_bytes              : %lu\n", stats.tx_bcast_bytes);
+    printf("tx_bcast_packets            : %lu\n", stats.tx_bcast_packets);
+
+    printf("tx_ucast_drop_bytes         : %lu\n", stats.tx_ucast_drop_bytes);
+    printf("tx_ucast_drop_packets       : %lu\n", stats.tx_ucast_drop_packets);
+    printf("tx_mcast_drop_bytes         : %lu\n", stats.tx_mcast_drop_bytes);
+    printf("tx_mcast_drop_packets       : %lu\n", stats.tx_mcast_drop_packets);
+    printf("tx_bcast_drop_bytes         : %lu\n", stats.tx_bcast_drop_bytes);
+    printf("tx_bcast_drop_packets       : %lu\n", stats.tx_bcast_drop_packets);
+    printf("tx_dma_error                : %lu\n", stats.tx_dma_error);
 }
 
 void
@@ -339,6 +424,7 @@ usage()
     printf("   qinfo          <lif>\n");
     printf("   qstate         <lif> <qtype> <qid>\n");
     printf("   qpoll          <lif> <qtype>\n");
+    printf("   stats          <lif>\n");
     printf("   nicmgr_qstate  <lif> <qtype> <qid>\n");
     printf("   nicmgr_qpoll   <lif> <qtype>\n");
     printf("   memrd          <addr> <size_in_bytes>\n");
@@ -351,11 +437,16 @@ usage()
 }
 
 int
+debug_logger(const char *format, ...) { return 0; }
+
+int
 main(int argc, char **argv)
 {
     if (argc < 2) {
         usage();
     }
+
+    sdk::lib::logger::init(&debug_logger, &debug_logger);
 
 #ifdef __x86_64__
     assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM) ==
@@ -391,6 +482,12 @@ main(int argc, char **argv)
         uint16_t lif = std::strtoul(argv[2], NULL, 0);
         uint8_t qtype = std::strtoul(argv[3], NULL, 0);
         eth_qpoll(lif, qtype);
+    } else if (strcmp(argv[1], "stats") == 0) {
+        if (argc != 3) {
+            usage();
+        }
+        uint16_t lif = std::strtoul(argv[2], NULL, 0);
+        eth_stats(lif);
     } else if (strcmp(argv[1], "nicmgr_qstate") == 0) {
         if (argc != 5) {
             usage();

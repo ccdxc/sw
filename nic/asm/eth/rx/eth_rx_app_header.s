@@ -16,6 +16,7 @@ struct common_p4plus_stage0_app_header_table_eth_rx_app_header_d d;
 
 .align
 eth_rx_app_header:
+  INIT_STATS(_r_stats)
 
   tblwr.l.f       d.rsvd1, 0
   // !!! No table updates after this point !!!
@@ -23,17 +24,11 @@ eth_rx_app_header:
   // Save all required information from APP header
   phvwr           p.eth_rx_global_lif, k.p4_intr_global_lif
   phvwr           p.eth_rx_global_qstate_addr, k.p4_rxdma_intr_qstate_addr
-  phvwr           p.eth_rx_t0_s2s_packet_len, k.p4_to_p4plus_packet_len
+  phvwr           p.eth_rx_global_l2_pkt_type, k.p4_to_p4plus_l2_pkt_type
+  phvwr           p.eth_rx_global_pkt_type, k.p4_to_p4plus_pkt_type
+  phvwr           p.eth_rx_global_pkt_len, k.p4_to_p4plus_packet_len
 
   // Build completion entry in the PHV
-
-  // Packet type
-  seq             c1, k.p4_to_p4plus_l2_pkt_type, L2_PKT_TYPE_UNICAST
-  SET_STAT(_r_stats, c1, unicast_packets)
-  seq             c1, k.p4_to_p4plus_l2_pkt_type, L2_PKT_TYPE_MULTICAST
-  SET_STAT(_r_stats, c1, multicast_packets)
-  seq             c1, k.p4_to_p4plus_l2_pkt_type, L2_PKT_TYPE_BROADCAST
-  SET_STAT(_r_stats, c1, broadcast_packets)
 
   // L2/Complete checksum offload
   sne             c1, k.p4_to_p4plus_pkt_type, PKT_TYPE_NON_IP

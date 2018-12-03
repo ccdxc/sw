@@ -26,6 +26,7 @@ struct tx_table_s1_t0_eth_tx_prep_d d;
 
 .align
 eth_tx_prep:
+  LOAD_STATS(_r_stats)
 
   bcf             [c2 | c3 | c7], eth_tx_prep_error
   nop

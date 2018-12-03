@@ -34,6 +34,9 @@
  * Stats Macros
  */
 
+#define INIT_STATS(_r) \
+    add         _r, r0, r0
+
 #define LOAD_STATS(_r) \
     add         _r, r0, k.eth_tx_global_stats;
 

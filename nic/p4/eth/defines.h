@@ -24,10 +24,13 @@
     modify_field(eth_rx_global_scratch.host_queue, eth_rx_global.host_queue); \
     modify_field(eth_rx_global_scratch.intr_enable, eth_rx_global.intr_enable); \
     modify_field(eth_rx_global_scratch.lif, eth_rx_global.lif); \
-    modify_field(eth_rx_global_scratch.stats, eth_rx_global.stats);
+    modify_field(eth_rx_global_scratch.stats, eth_rx_global.stats); \
+    modify_field(eth_rx_global_scratch.l2_pkt_type, eth_rx_global.l2_pkt_type); \
+    modify_field(eth_rx_global_scratch.pkt_type, eth_rx_global.pkt_type); \
+    modify_field(eth_rx_global_scratch.pkt_len, eth_rx_global.pkt_len); \
+    modify_field(eth_rx_global_scratch.drop, eth_rx_global.drop);
 
 #define MODIFY_ETH_RX_T0_S2S \
-    modify_field(eth_rx_t0_s2s_scratch.packet_len, eth_rx_t0_s2s.packet_len); \
     modify_field(eth_rx_t0_s2s_scratch.cq_desc_addr, eth_rx_t0_s2s.cq_desc_addr); \
     modify_field(eth_rx_t0_s2s_scratch.intr_assert_index, eth_rx_t0_s2s.intr_assert_index); \
     modify_field(eth_rx_t0_s2s_scratch.intr_assert_data, eth_rx_t0_s2s.intr_assert_data);

@@ -16,10 +16,19 @@ struct tx_table_s7_t3_k_ k;
 
 %%
 
+.param  lif_stats_base
+
 .align
 eth_tx_stats:
+
+#ifdef GFT
+    b               eth_tx_stats_done
+    nop
+#endif
+
     addi            _r_base, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
-    add             _r_lif_offset, r0, k.eth_tx_global_lif, LIF_STATS_SIZE_SHIFT
+    addi            _r_lif_offset, r0, lif_stats_base[30:0] // substract 0x80000000 because hw adds it
+    add             _r_lif_offset, _r_lif_offset, k.eth_tx_global_lif, LIF_STATS_SIZE_SHIFT
 
     // Update queue & desc counters
     addi            _r_offset, _r_lif_offset, LIF_STATS_TX_QUEUE_DISABLED_OFFSET
@@ -29,6 +38,7 @@ eth_tx_stats:
                     k.eth_tx_global_stats[STAT_desc_fetch_error],
                     k.eth_tx_global_stats[STAT_desc_data_error])
 
+#if 0
     // Update operation counters
     addi            _r_offset, _r_lif_offset, LIF_STATS_TX_CSUM_HW_OFFSET
     ATOMIC_INC_VAL_7(_r_base, _r_offset, _r_addr, _r_val,
@@ -39,6 +49,9 @@ eth_tx_stats:
                     k.eth_tx_global_stats[STAT_oper_tso_sg],
                     k.eth_tx_global_stats[STAT_oper_tso_sot],
                     k.eth_tx_global_stats[STAT_oper_tso_eot])
+#endif
 
-    nop.e
+eth_tx_stats_done:
+    // End of pipeline - Make sure no more tables will be launched
+    phvwri.e.f      p.{app_header_table0_valid...app_header_table3_valid}, 0
     nop

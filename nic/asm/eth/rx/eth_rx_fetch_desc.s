@@ -19,6 +19,7 @@ struct rx_table_s2_t0_eth_rx_fetch_desc_d d;
 %%
 
 .param  eth_rx
+.param  eth_rx_stats
 
 .align
 eth_rx_fetch_desc:
@@ -72,5 +73,9 @@ eth_rx_queue_disabled:
 
   SAVE_STATS(_r_stats)
 
-  phvwri.e        p.p4_intr_global_drop, 1
-  phvwri.f        p.{app_header_table0_valid...app_header_table3_valid}, 0
+  phvwr           p.p4_intr_global_drop, 1
+
+  // Launch eth_rx_stats action
+  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, 1
+  phvwri.e        p.common_te3_phv_table_pc, eth_rx_stats[38:6]
+  phvwri.f        p.common_te3_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY

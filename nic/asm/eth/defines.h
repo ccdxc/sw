@@ -347,7 +347,7 @@ struct mem2mem {
     add         _r_a, _r_b, _r_o[26:0]; \
     or          _r_v, r0, _v0; \
     or          _r_v, _r_v, _r_o[31:27], 58; \
-    memwr.d     _r_a, _r_v
+    memwr.dx    _r_a, _r_v
 
 #define ATOMIC_INC_VAL_2(_r_b, _r_o, _r_a, _r_v, _v0, _v1)   \
     add         _r_a, _r_b, _r_o[26:0]; \
@@ -355,7 +355,7 @@ struct mem2mem {
     or          _r_v, _r_v, _v1, 32; \
     or          _r_v, _r_v, 1, 56; \
     or          _r_v, _r_v, _r_o[31:27], 58; \
-    memwr.d     _r_a, _r_v
+    memwr.dx    _r_a, _r_v
 
 #define ATOMIC_INC_VAL_3(_r_b, _r_o, _r_a, _r_v, _v0, _v1, _v2)   \
     add         _r_a, _r_b, _r_o[26:0]; \
@@ -364,7 +364,7 @@ struct mem2mem {
     or          _r_v, _r_v, _v2, 32; \
     or          _r_v, _r_v, 2, 56; \
     or          _r_v, _r_v, _r_o[31:27], 58; \
-    memwr.d     _r_a, _r_v
+    memwr.dx    _r_a, _r_v
 
 #define ATOMIC_INC_VAL_4(_r_b, _r_o, _r_a, _r_v, _v0, _v1, _v2, _v3)   \
     add         _r_a, _r_b, _r_o[26:0]; \
@@ -374,7 +374,7 @@ struct mem2mem {
     or          _r_v, _r_v, _v3, 48; \
     or          _r_v, _r_v, 2, 56; \
     or          _r_v, _r_v, _r_o[31:27], 58; \
-    memwr.d     _r_a, _r_v
+    memwr.dx    _r_a, _r_v
 
 #define ATOMIC_INC_VAL_5(_r_b, _r_o, _r_a, _r_v, _v0, _v1, _v2, _v3, _v4)   \
     add         _r_a, _r_b, _r_o[26:0]; \
@@ -385,7 +385,7 @@ struct mem2mem {
     or          _r_v, _r_v, _v4, 32; \
     or          _r_v, _r_v, 3, 56; \
     or          _r_v, _r_v, _r_o[31:27], 58; \
-    memwr.d     _r_a, _r_v
+    memwr.dx    _r_a, _r_v
 
 #define ATOMIC_INC_VAL_6(_r_b, _r_o, _r_a, _r_v, _v0, _v1, _v2, _v3, _v4, _v5)   \
     add         _r_a, _r_b, _r_o[26:0]; \
@@ -397,7 +397,7 @@ struct mem2mem {
     or          _r_v, _r_v, _v5, 40; \
     or          _r_v, _r_v, 3, 56; \
     or          _r_v, _r_v, _r_o[31:27], 58; \
-    memwr.d     _r_a, _r_v
+    memwr.dx    _r_a, _r_v
 
 #define ATOMIC_INC_VAL_7(_r_b, _r_o, _r_a, _r_v, _v0, _v1, _v2, _v3, _v4, _v5, _v6)   \
     add         _r_a, _r_b, _r_o[26:0]; \
@@ -410,4 +410,4 @@ struct mem2mem {
     or          _r_v, _r_v, _v6, 48; \
     or          _r_v, _r_v, 3, 56; \
     or          _r_v, _r_v, _r_o[31:27], 58; \
-    memwr.d     _r_a, _r_v
+    memwr.dx    _r_a, _r_v
