@@ -16,149 +16,92 @@
 namespace api {
 
 /**
- * @defgroup OCI_INT_SUBNET - Internal subnet
+ * @defgroup OCI_SUBNET_ENTRY - subnet functionality
+ * @ingroup OCI_SUBNET
  * @{
  */
 
 /**
- * @brief Internal subnet structure
+ * @brief    subnet entry
  */
-typedef struct subnet_s {
-    oci_subnet_key_t    key;               /**< subnet Key */
-    mac_addr_t          vr_mac;            /**< virtual router MAC */
-    ht_ctxt_t           ht_ctxt;           /**< Hash table context */
-
-    /**< P4 datapath specific state */
-    uint16_t            hw_id;             /**< Internal ID */
-    mem_addr_t          lpm_base_addr;     /**< LPM base address for current
-                                                epoch */
-    mem_addr_t          policy_base_addr;  /**< security policy rules base
-                                                address for current epoch */
-} __PACK__ subnet_t;
-
-/**
- * @brief state maintained for subnets
- */
-class subnet_state {
-public:
+class subnet_entry : public oci_base {
+ public:
     /**
-     * constructor
+     * @brief    factory method to allocate and initialize a subnet entry
+     * @param[in] oci_subnet    subnet information
+     * @return    new instance of subnet or NULL, in case of error
      */
-    subnet_state();
+    static subnet_entry *factory(oci_subnet_t *oci_subnet);
 
     /**
-     * destructor
+     * @brief    release all the s/w state associate with the given subnet, if
+     *           any, and free the memory
+     * @param[in] subnet     subnet to be freed
+     * NOTE: h/w entries should have been cleaned up (by calling cleanup_hw()
+     * before calling this
      */
-    ~subnet_state();
+    static void destroy(subnet_entry *subnet);
 
     /**
-     * @brief handle subnet create message
+     * @brief    process a create/delete/update/get operation on a subnet
+     * @param[in] api_ctxt    transient state associated with this API
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t process_api(api_ctxt_t *api_ctxt);
+
+    /**
+     * @brief    commit() is invokved during commit phase of the API processing
+     *           and is not expected to fail as all required resources are
+     *           already allocated by now. Based on the API operation, this API
+     *           is expected to process either create/retrieve/update/delete. If
+     *           any temporary state was stashed in the api_ctxt while
+     *           processing this API, it should be freed here
+     * @param[in] api_ctxt    transient state associated with this API
+     * @return   SDK_RET_OK on success, failure status code on error
      *
-     * @param[in] subnet subnet information
-     * @return #SDK_RET_OK on success, failure status code on error
+     * NOTE:     commit() is not expected to fail
      */
-    sdk_ret_t subnet_create(_In_ oci_subnet_t *oci_subnet);
+    sdk_ret_t commit(api_ctxt_t *api_ctxt);
 
     /**
-     * @brief handle subnet delete API
-     *
-     * @param[in] subnet_key subnet key information
-     * @return #SDK_RET_OK on success, failure status code on error
+     * @brief     abort() is invoked during abort phase of the API processing
+     *            and is not expected to fail. During this phase, all associated
+     *            resources must be freed and global DBs need to be restored
+     *            back to their original state and any transient state stashed
+     *            in api_ctxt while processing this API should also be freed
+     *            here
+     * @param[in] api_ctxt    transient state associated with this API
+     * @return   SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t subnet_delete(_In_ oci_subnet_key_t *key);
-
-    subnet_t *subnet_get(_In_ oci_subnet_key_t *key);
+    sdk_ret_t abort(api_ctxt_t *api_ctxt);
 
     /**
-     * @brief   return subnet slab
-     */
-    slab *subnet_slab(void) const { return subnet_slab_; }
-
-private:
-    /**
-     * @brief add subnet to database
-     *
-     * @param[in] subnet subnet
-     */ 
-    sdk_ret_t subnet_add_to_db(subnet_t *subnet);
-
-    /**
-     * @brief delete subnet from database
-     *
-     * @param[in] subnet_key subnet key
-     */
-    subnet_t *subnet_del_from_db(oci_subnet_key_t *subnet_key);
-
-    /**
-     * @brief Lookup subnet in database
-     *
-     * @param[in] subnet_key subnet key
-     */
-    subnet_t *subnet_find(oci_subnet_key_t *subnet_key) const;
-
-    /**
-     * @brief Allocate subnet structure
-     *
-     * @return Pointer to the allocated subnet, NULL if no memory
-     */
-    subnet_t *subnet_alloc(void);
-
-    /**
-     * @brief Initialize subnet structure
-     *
-     * @param[in] subnet subnet structure to store the state
-     * @param[in] oci_subnet subnet specific information
-     */
-    sdk_ret_t subnet_init(subnet_t *subnet, oci_subnet_t *oci_subnet);
-
-    /**
-     * @brief Allocate and initialize subnet structure
-     *
-     * @return Pointer to the allocated and initialized subnet,
-     *         NULL if no memory
-     */
-    subnet_t *subnet_alloc_init(oci_subnet_t *oci_subnet);
-
-    /**
-     * @brief cleanup state maintained for given subnet
-     *
-     * @param[in] subnet subnet
-     */
-    void subnet_cleanup(subnet_t *subnet);
-
-    /**
-     * @brief Free subnet structure
-     *
-     * @param[in] subnet subnet
-     */
-    void subnet_free(subnet_t *subnet);
-
-    /**
-     * @brief Uninitialize and free subnet structure
-     *
-     * @param[in] subnet subnet
-     */
-    void subnet_delete(_In_ subnet_t *subnet);
-
-    /**
-     * @brief helper function to get key given subnet entry
+     * @brief     helper function to get key given subnet entry
+     * @param[in] entry    pointer to subnet instance
+     * @return    pointer to the subnet instance's key
      */
     static void *subnet_key_func_get(void *entry) {
-        subnet_t *subnet = (subnet_t *)entry;
-        return (void *)&(subnet->key);
+        subnet_entry *subnet = (subnet_entry *)entry;
+        return (void *)&(subnet->key_);
     }
 
     /**
-     * @brief helper function to compute hash value for given subnet id
+     * @brief     helper function to compute hash value for given subnet id
+     * @param[in] key        subnet's key
+     * @param[in] ht_size    hash table size
+     * @return    hash value
      */
-    static uint32_t subnet_hash_func_compute (void *key, uint32_t ht_size) {
+    static uint32_t subnet_hash_func_compute(void *key, uint32_t ht_size) {
         return hash_algo::fnv_hash(key, sizeof(oci_subnet_key_t)) % ht_size;
     }
 
     /**
-     * @brief helper function to compare two subnet keys
+     * @brief     helper function to compare two subnet keys
+     * @param[in] key1        pointer to subnet's key
+     * @param[in] key2        pointer to subnet's key
+     * @return    0 if keys are same or else non-zero value
      */
-    static bool subnet_key_func_compare (void *key1, void *key2) {
+    static bool subnet_key_func_compare(void *key1, void *key2) {
         SDK_ASSERT((key1 != NULL) && (key2 != NULL));
         if (!memcmp(key1, key2, sizeof(oci_subnet_key_t)))
             return true;
@@ -167,14 +110,132 @@ private:
     }
 
 private:
+    /**
+     * @brief    constructor
+     */
+    subnet_entry() {}
+    /**
+     * @brief    destructor
+     */
+    ~subnet_entry() {}
+    /**
+     * @brief     initialize subnet entry with the given config
+     * @param[in] oci_subnet    subnet information
+     * @return    SDK_RET_OK on success, failure status code on error
+     *
+     * NOTE:     allocate all h/w resources (i.e., table indices as well here, we
+     *           can always release them in abort phase if something goes wrong
+     */
+    sdk_ret_t init(oci_subnet_t *oci_subnet);
+    /**
+     * @brief     handle a subnet create by allocating all required resources
+     *            and keeping them ready for commit phase
+     * @param[in] api_ctxt    transient state associated with this API
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t process_create(api_ctxt_t *api_ctxt);
+    /**
+     * @brief     handle a subnet update by allocating all required resources
+     *            and keeping them ready for commit phase
+     * @param[in] api_ctxt    transient state associated with this API
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t process_update(api_ctxt_t *api_ctxt);
+    /**
+     * @brief     handle a subnet delete by allocating all required resources
+     *            and keeping them ready for commit phase
+     * @param[in] api_ctxt    transient state associated with this API
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t process_delete(api_ctxt_t *api_ctxt);
+    /**
+     * @brief     handle a subnet get by allocating all required resources
+     *            and keeping them ready for commit phase
+     * @param[in] api_ctxt    transient state associated with this API
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t process_get(api_ctxt_t *api_ctxt);
+
+    /**
+     * @brief     add given subnet to the database
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t add_to_db(void);
+
+    /**
+     * @brief     delete given subnet from the database
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t del_from_db(void);
+
+ private:
+    oci_subnet_key_t    key_;               /**< subnet Key */
+    mac_addr_t          vr_mac_;            /**< virtual router MAC */
+    ht_ctxt_t           ht_ctxt_;           /**< Hash table context */
+
+    /**< P4 datapath specific state */
+    uint16_t            hw_id_;             /**< Internal ID */
+    mem_addr_t          lpm_base_addr_;     /**< LPM base address for current
+                                                 epoch */
+    mem_addr_t          policy_base_addr_;  /**< security policy rules base
+                                                 address for current epoch */
+} __PACK__;
+
+/** @} */ // end of OCI_SUBNET_ENTRY
+
+/**
+ * @defgroup OCI_SUBNET_STATE - subnet state functionality
+ * @ingroup OCI_SUBNET
+ * @{
+ */
+
+/**
+ * @brief    state maintained for subnets
+ */
+class subnet_state {
+public:
+    /**
+     * @brief    constructor
+     */
+    subnet_state();
+
+    /**
+     * @brief    destructor
+     */
+    ~subnet_state();
+
+    /**
+     * @brief    allocate memory required for a subnet
+     * @return pointer to the allocated subnet, NULL if no memory
+     */
+    subnet_entry *subnet_alloc(void);
+
+    /**
+     * @brief     destroy subnet and free the memory back to the slab
+     * @param[in] subnet subnet
+     */
+    void subnet_free(subnet_entry *subnet);
+
+    /**
+     * @brief     lookup a subnet in database given the key
+     * @param[in] subnet_key subnet key
+     */
+    subnet_entry *subnet_find(oci_subnet_key_t *subnet_key) const;
+
+private:
+    ht *subnet_ht(void) { return subnet_ht_; }
+    indexer *subnet_idxr(void) { return subnet_idxr_; }
+    slab *subnet_slab(void) { return subnet_slab_; }
+    friend class subnet_entry;   /**< subnet_entry class is friend of subnet_state */
+
+private:
     ht      *subnet_ht_;      /**< Hash table root */
     indexer *subnet_idxr_;    /**< Indexer to allocate hw subnet id */
     slab    *subnet_slab_;    /**< slab for allocating subnet state */
 };
-extern subnet_state g_subnet_state;
 
-/** * @} */ // end of OCI_INT_SUBNET
+/** * @} */ // end of OCI_SUBNET_STATE
 
 }    // namespace api
 
-#endif /** __SUBNET_HPP__ */
+#endif    /** __SUBNET_HPP__ */

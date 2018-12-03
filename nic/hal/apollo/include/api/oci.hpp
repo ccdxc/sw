@@ -91,6 +91,7 @@ typedef uint16_t  oci_vnic_id_t;
 typedef uint32_t  oci_rule_id_t;
 typedef uint32_t  oci_rsc_pool_id_t;
 typedef uint32_t  oci_epoch_t;
+typedef uint32_t  oci_slot_id_t;
 
 /**
  * @}

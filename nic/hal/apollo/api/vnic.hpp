@@ -6,8 +6,15 @@
  * @brief   This file deals with OCI VNIC functionality
  */
 
-#if !defined (__VNIC_HPP_)
-#define __VNIC_HPP_
+#if !defined (__VNIC_HPP__)
+#define __VNIC_HPP__
+
+#include "nic/hal/apollo/api/api.hpp"
+#include "nic/hal/apollo/include/api/oci_vnic.hpp"
+#include "nic/sdk/lib/table/directmap/directmap.hpp"
+#include "nic/sdk/lib/table/hash/hash.hpp"
+
+using sdk::table::directmap;
 
 namespace api {
 
@@ -21,8 +28,10 @@ namespace api {
  */
 typedef struct vnic_s {
     oci_vnic_key_t    key;        /**< VNIC Key */
-    uint32_t          id;         /**< Internal ID */
     ht_ctxt_t         ht_ctxt;    /**< Hash table context */
+
+    /**< P4 datapath specific state */
+    uint32_t          hw_id;      /**< hardware ID */
 } __PACK__ vnic_t;
 
 /**
@@ -41,7 +50,7 @@ public:
     ~vnic_state();
 
     /**
-     * @brief Handle VNIC create message
+     * @brief handle VNIC create message
      *
      * @param[in] vnic VNIC information
      * @return #SDK_RET_OK on success, failure status code on error
@@ -49,43 +58,44 @@ public:
     sdk_ret_t vnic_create(_In_ oci_vnic_t *oci_vnic);
 
     /**
-     * @brief Handle VNIC delete API
+     * @brief handle VNIC delete API
      *
      * @param[in] vnic_key VNIC key information
      * @return #SDK_RET_OK on success, failure status code on error
      */
     sdk_ret_t vnic_delete(_In_ oci_vnic_key_t *vnic_key);
+
 private:
     /**
-     * @brief Add VNIC to database
+     * @brief add VNIC to database
      *
      * @param[in] vnic VNIC
      */
     sdk_ret_t vnic_add_to_db(vnic_t *vnic);
 
     /**
-     * @brief Delete VNIC from database
+     * @brief delete VNIC from database
      *
      * @param[in] vnic_key VNIC key
      */
     vnic_t *vnic_del_from_db(oci_vnic_key_t *vnic_key);
 
     /**
-     * @brief Lookup VNIC in database
+     * @brief lookup VNIC in database
      *
      * @param[in] vnic_key VNIC key
      */
     vnic_t *vnic_find(oci_vnic_key_t *vnic_key) const;
 
     /**
-     * @brief Allocate VNIC structure
+     * @brief allocate VNIC structure
      *
      * @return Pointer to the allocated VNIC, NULL if no memory
      */
     vnic_t *vnic_alloc(void);
 
     /**
-     * @brief Initialize VNIC structure
+     * @brief initialize VNIC structure
      *
      * @param[in] vnic VNIC structure to store the state
      * @param[in] oci_vnic VNIC specific information
@@ -93,7 +103,7 @@ private:
     sdk_ret_t vnic_init(vnic_t *vnic, oci_vnic_t *oci_vnic);
 
     /**
-     * @brief Allocate and initialize VNIC structure
+     * @brief allocate and initialize VNIC structure
      *
      * @return Pointer to the allocated and initialized VNIC,
      *         NULL if no memory
@@ -108,14 +118,14 @@ private:
     void vnic_cleanup(vnic_t *vnic);
 
     /**
-     * @brief Free VNIC structure
+     * @brief free VNIC structure
      *
      * @param[in] vnic VNIC
      */
     void vnic_free(vnic_t *vnic);
 
     /**
-     * @brief Uninitialize and free VNIC structure
+     * @brief uninitialize and free VNIC structure
      *
      * @param[in] vnic VNIC
      */
@@ -147,18 +157,36 @@ private:
         return false;
     }
 
+    /**
+     * @brief program the P4/P4+ datapath for given vnic
+     *
+     * @param[in] oci_vnic VNIC configuration
+     * @param[in] vnic     VNIC information to be stored in the db
+     *
+     * program_datapath() should be called during batch_commit()
+     */
+    sdk_ret_t program_datapath(_In_ oci_vnic_t *oci_vnic, _In_ vnic_t *vnic);
+
 private:
     ht      *ht_;      /**< vnic database
                             NOTE: even though VNIC scale is 1K, ids can be in
                                   the range [0, 4095], so to save memory,
                                   instead of 4k index table, we use hash
                                   table */
+    indexer *idxr_;    /**< Indexer to allocate hw VNIC id */
     slab    *slab_;    /**< slab for allocating VNIC state */
+
+    /**< P4 datapath tables for vnic
+     *   NOTE: there is no explicit table mgmt. for rx and tx stats,
+     *         we directly index and bzero out when we create a vnic
+     */
+    directmap       *local_vnic_by_vlan_tx_;
+    sdk_hash        *local_vnic_by_slot_rx_;
+    directmap       *egress_local_vnic_info_rx_;
 };
-extern vnic_state g_vnic_state;
 
 /** * @} */ // end of OCI_VNIC
 
 }    // namespace api
 
-#endif /** __VNIC_HPP_ */
+#endif    /** __VNIC_HPP__ */

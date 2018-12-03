@@ -10,6 +10,7 @@
 #include "nic/hal/apollo/core/mem.hpp"
 #include "nic/hal/apollo/core/trace.hpp"
 #include "nic/hal/apollo/api/vcn.hpp"
+#include "nic/hal/apollo/api/oci_state.hpp"
 
 namespace api {
 
@@ -20,12 +21,12 @@ namespace api {
  * @param[in]    slab_id    identifier of the slab to free the element to
  * @param[in]    elem       element to free to the given slab
  */
-static inline void
+void
 slab_delay_delete_cb (void *timer, uint32_t slab_id, void *elem)
 {
     switch (slab_id) {
     case OCI_SLAB_VCN:
-        g_vcn_state.vcn_slab()->free(elem);
+        vcn_db()->vcn_slab()->free(elem);
         break;
 
     default:

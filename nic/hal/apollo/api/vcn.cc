@@ -11,33 +11,224 @@
 #include "nic/sdk/include/sdk/timestamp.hpp"
 #include "nic/hal/apollo/core/mem.hpp"
 #include "nic/hal/apollo/api/vcn.hpp"
+#include "nic/hal/apollo/api/oci_state.hpp"
 
 namespace api {
 
 /**
- * @defgroup OCI_VCN_DB - vcn database functionality
+ * @defgroup OCI_VCN_ENTRY - vcn entry functionality
  * @ingroup OCI_VCN
  * @{
  */
 
-vcn_state g_vcn_state;
+/**
+ * @brief    release all the s/w state associate with the given vcn, if any,
+ *           and free the memory
+ * @param[in] vcn     vcn to be freed
+ * NOTE: h/w entries should have been cleaned up (by calling cleanup_hw()
+ * before calling this
+ */
+void
+vcn_entry::destroy(vcn_entry *vcn) {
+    vcn->~vcn_entry();
+    vcn_db()->vcn_free(vcn);
+}
 
 /**
- * constructor
+ * @brief     initialize vcn entry with the given config
+ * @param[in] oci_vcn    vcn information
+ * @return    SDK_RET_OK on success, failure status code on error
+ *
+ * NOTE:     allocate all h/w resources (i.e., table indices as well here, we
+ *           can always release them in abort phase if something goes wrong
+ */
+sdk_ret_t
+vcn_entry::init(oci_vcn_t *oci_vcn) {
+    //SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_SHARED);
+    memcpy(&this->key_, &oci_vcn->key, sizeof(oci_vcn_key_t));
+    this->ht_ctxt_.reset();
+    if (vcn_db()->vcn_idxr()->alloc((uint32_t *)&this->hw_id_) !=
+            sdk::lib::indexer::SUCCESS) {
+        return sdk::SDK_RET_NO_RESOURCE;
+    }
+    return sdk::SDK_RET_OK;
+}
+
+/**
+ * @brief    factory method to allocate and initialize a vcn entry
+ * @param[in] oci_vcn    vcn information
+ * @return    new instance of vcn or NULL, in case of error
+ */
+vcn_entry *
+vcn_entry::factory(oci_vcn_t *oci_vcn) {
+    vcn_entry *vcn;
+
+    vcn = vcn_db()->vcn_alloc();
+    if (vcn) {
+        new (vcn) vcn_entry();
+        if (vcn->init(oci_vcn) == sdk::SDK_RET_OK) {
+            return vcn;
+        } else {
+            vcn_entry::destroy(vcn);
+            return NULL;
+        }
+    }
+    return NULL;
+}
+
+/**
+ * @brief    process a create/delete/update/get operation on a vcn
+ * @param[in] api_ctxt    transient state associated with this API
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+vcn_entry::process_api(api_ctxt_t *api_ctxt) {
+    switch (api_ctxt->op) {
+    case API_OP_CREATE:
+        return process_create(api_ctxt);
+        break;
+    case API_OP_UPDATE:
+        return process_delete(api_ctxt);
+        break;
+    case API_OP_DELETE:
+        return process_delete(api_ctxt);
+        break;
+    case API_OP_GET:
+        return process_get(api_ctxt);
+        break;
+    default:
+        return sdk::SDK_RET_INVALID_OP;
+    }
+}
+
+/**
+ * @brief     handle a vcn create by allocating all required resources
+ *            and keeping them ready for commit phase
+ * @param[in] api_ctxt    transient state associated with this API
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+vcn_entry::process_create(api_ctxt_t *api_ctxt)
+{
+    return sdk::SDK_RET_OK;
+}
+
+/**
+ * @brief     handle a vcn update by allocating all required resources
+ *            and keeping them ready for commit phase
+ * @param[in] api_ctxt    transient state associated with this API
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+vcn_entry::process_update(api_ctxt_t *api_ctxt)
+{
+    return sdk::SDK_RET_OK;
+}
+
+/**
+ * @brief     handle a vcn delete by allocating all required resources
+ *            and keeping them ready for commit phase
+ * @param[in] api_ctxt    transient state associated with this API
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+vcn_entry::process_delete(api_ctxt_t *api_ctxt)
+{
+    return sdk::SDK_RET_OK;
+}
+
+/**
+ * @brief     handle a vcn get by allocating all required resources
+ *            and keeping them ready for commit phase
+ * @param[in] api_ctxt    transient state associated with this API
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+vcn_entry::process_get(api_ctxt_t *api_ctxt)
+{
+    return sdk::SDK_RET_OK;
+}
+
+/**
+ * @brief    commit() is invokved during commit phase of the API processing and
+ *           is not expected to fail as all required resources are already
+ *           allocated by now. Based on the API operation, this API is expected
+ *           to process either create/retrieve/update/delete. If any temporary
+ *           state was stashed in the api_ctxt while processing this API, it
+ *           should be freed here
+ * @param[in] api_ctxt    transient state associated with this API
+ * @return   SDK_RET_OK on success, failure status code on error
+ *
+ * NOTE:     commit() is not expected to fail
+ */
+sdk_ret_t
+vcn_entry::commit(api_ctxt_t *api_ctxt) {
+    return sdk::SDK_RET_OK;
+}
+
+/**
+ * @brief     abort() is invoked during abort phase of the API processing and is
+ *            not expected to fail. During this phase, all associated resources
+ *            must be freed and global DBs need to be restored back to their
+ *            original state and any transient state stashed in api_ctxt while
+ *            processing this API should also be freed here
+ * @param[in] api_ctxt    transient state associated with this API
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+vcn_entry::abort(api_ctxt_t *api_ctxt) {
+    return sdk::SDK_RET_OK;
+}
+
+/**
+ * @brief add vcn to database
+ *
+ * @param[in] vcn vcn
+ */
+sdk_ret_t
+vcn_entry::add_to_db(void) {
+    return vcn_db()->vcn_ht()->insert_with_key(&key_, this,
+                                               &ht_ctxt_);
+}
+
+/**
+ * @brief delete vcn from database
+ *
+ * @param[in] vcn_key vcn key
+ */
+sdk_ret_t
+vcn_entry::del_from_db(void) {
+    vcn_db()->vcn_ht()->remove(&key_);
+    return sdk::SDK_RET_OK;
+}
+
+/** @} */    // end of OCI_VCN_ENTRY
+
+/**
+ * @defgroup OCI_VCN_STATE - vcn database functionality
+ * @ingroup OCI_VCN
+ * @{
+ */
+
+/**
+ * @brief    constructor
  */
 vcn_state::vcn_state() {
     // TODO: need to tune multi-threading related params later
     vcn_ht_ = ht::factory(OCI_MAX_VCN >> 1,
-                          vcn_key_func_get,
-                          vcn_hash_func_compute,
-                          vcn_key_func_compare);
+                          vcn_entry::vcn_key_func_get,
+                          vcn_entry::vcn_hash_func_compute,
+                          vcn_entry::vcn_key_func_compare);
+    SDK_ASSERT(vcn_ht_!= NULL);
     vcn_idxr_ = indexer::factory(OCI_MAX_VCN);
-    vcn_slab_ = slab::factory("vcn", OCI_SLAB_VCN, sizeof(vcn_t),
+    SDK_ASSERT(vcn_idxr_ != NULL);
+    vcn_slab_ = slab::factory("vcn", OCI_SLAB_VCN, sizeof(vcn_entry),
                               16, true, true, NULL);
+    SDK_ASSERT(vcn_slab_ != NULL);
 }
 
 /**
- * destructor
+ * @brief    destructor
  */
 vcn_state::~vcn_state() {
     ht::destroy(vcn_ht_);
@@ -46,13 +237,44 @@ vcn_state::~vcn_state() {
 }
 
 /**
+ * @brief     allocate vcn instance
+ * @return    pointer to the allocated vcn , NULL if no memory
+ */
+vcn_entry *
+vcn_state::vcn_alloc(void) {
+    return ((vcn_entry *)vcn_slab_->alloc());
+}
+
+/**
+ * @brief        lookup vcn in database with given key
+ * @param[in]    vcn_key vcn key
+ * @return       pointer to the vcn instance found or NULL
+ */
+vcn_entry *
+vcn_state::vcn_find(oci_vcn_key_t *vcn_key) const {
+    return (vcn_entry *)(vcn_ht_->lookup(vcn_key));
+}
+
+/**
+ * @brief free vcn instance
+ * @param[in] vcn vcn instance
+ */
+void
+vcn_state::vcn_free(vcn_entry *vcn) {
+    api::delay_delete_to_slab(OCI_SLAB_VCN, vcn);
+}
+
+/** @} */    // end of OCI_VCN_STATE
+
+#if 0
+/**
  * @brief handle vcn create message
  *
  * @param[in] vcn vcn information
  * @return #SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-vcn_state::vcn_create(_In_ oci_vcn_t *oci_vcn) {
+vcn_db::vcn_create(_In_ oci_vcn_t *oci_vcn) {
     vcn_t *vcn;
 
     if ((vcn = vcn_alloc_init(oci_vcn)) == NULL) {
@@ -68,7 +290,7 @@ vcn_state::vcn_create(_In_ oci_vcn_t *oci_vcn) {
  * @return #SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-vcn_state::vcn_delete(_In_ oci_vcn_key_t *vcn_key) {
+vcn_db::vcn_delete(_In_ oci_vcn_key_t *vcn_key) {
     vcn_t *vcn;
 
     if ((vcn = vcn_del_from_db(vcn_key)) == NULL) {
@@ -80,101 +302,15 @@ vcn_state::vcn_delete(_In_ oci_vcn_key_t *vcn_key) {
 }
 
 /**
- * @brief add vcn to database
- *
- * @param[in] vcn vcn
- */
-sdk_ret_t
-vcn_state::vcn_add_to_db(vcn_t *vcn) {
-    return vcn_ht_->insert_with_key(&vcn->key, vcn,
-                                    &vcn->ht_ctxt);
-}
-
-/**
- * @brief delete vcn from database
- *
- * @param[in] vcn_key vcn key
- */
-vcn_t *
-vcn_state::vcn_del_from_db(oci_vcn_key_t *vcn_key) {
-    return (vcn_t *)(vcn_ht_->remove(vcn_key));
-}
-
-/**
- * @brief Lookup vcn in database
- *
- * @param[in] vcn_key vcn key
- */
-vcn_t *
-vcn_state::vcn_find(oci_vcn_key_t *vcn_key) const {
-    return (vcn_t *)(vcn_ht_->lookup(vcn_key));
-}
-
-/**
- * @brief Allocate vcn structure
- *
- * @return Pointer to the allocated internal vcn, NULL if no memory
- */
-vcn_t *
-vcn_state::vcn_alloc(void) {
-    return ((vcn_t *)vcn_slab_->alloc());
-}
-
-/**
- * @brief Initialize internal vcn structure
- *
- * @param[in] vcn vcn structure to store the state
- * @param[in] oci_vcn vcn specific information
- */
-sdk_ret_t
-vcn_state::vcn_init(vcn_t *vcn, oci_vcn_t *oci_vcn) {
-    //SDK_SPINLOCK_INIT(&vcn->slock, PTHREAD_PROCESS_SHARED);
-    memcpy(&vcn->key, &oci_vcn->key, sizeof(oci_vcn_key_t));
-    vcn->ht_ctxt.reset();
-    if (vcn_idxr_->alloc((uint32_t *)&vcn->hw_id) !=
-            sdk::lib::indexer::SUCCESS) {
-        return sdk::SDK_RET_NO_RESOURCE;
-    }
-    return sdk::SDK_RET_OK;
-}
-
-/**
- * @brief Allocate and initialize internal vcn structure
- *
- * @return Pointer to the allocated and initialized internal vcn,
- *         NULL if no memory
- */
-vcn_t *
-vcn_state::vcn_alloc_init(oci_vcn_t *oci_vcn) {
-    vcn_t *vcn;
-
-    if ((vcn = vcn_alloc()) == NULL) {
-        return NULL;
-    }
-    vcn_init(vcn, oci_vcn);
-    return vcn;
-}
-
-/**
  * @brief cleanup state maintained for given vcn
  *
  * @param[in] vcn vcn
  */
 void
-vcn_state::vcn_cleanup(vcn_t *vcn) {
+vcn_db::vcn_cleanup(vcn_t *vcn) {
     // TODO: fix me
     //SDK_SPINLOCK_DESTROY(&vcn->slock);
     vcn_idxr_->free(vcn->hw_id);
-}
-
-/**
- * @brief Free vcn structure
- *
- * @param[in] vcn vcn
- */
-void
-vcn_state::vcn_free(vcn_t *vcn) {
-    api::delay_delete_to_slab(OCI_SLAB_VCN, vcn);
 }
 
 /**
@@ -183,16 +319,15 @@ vcn_state::vcn_free(vcn_t *vcn) {
  * @param[in] vcn vcn
  */
 void
-vcn_state::vcn_delete(_In_ vcn_t *vcn) {
+vcn_db::vcn_delete(_In_ vcn_t *vcn) {
     if (vcn) {
         vcn_cleanup(vcn);
         vcn_free(vcn);
     }
 }
-/** @} */ // end of OCI_VCN_DB
 
 /**
- * @defgroup OCI_VCN_API - First level of SUBNET API handling
+ * @defgroup OCI_VCN_API - first level of vcn API handling
  * @ingroup OCI_VCN
  * @{
  */
@@ -208,7 +343,7 @@ oci_vcn_create (_In_ oci_vcn_t *vcn)
 {
     sdk_ret_t rv;
 
-    if ((rv = g_vcn_state.vcn_create(vcn)) != sdk::SDK_RET_OK) {
+    if ((rv = g_vcn_db.vcn_create(vcn)) != sdk::SDK_RET_OK) {
         return rv;
     }
 
@@ -226,13 +361,14 @@ oci_vcn_delete (_In_ oci_vcn_key_t *vcn_key)
 {
     sdk_ret_t rv;
 
-    if ((rv = g_vcn_state.vcn_delete(vcn_key)) != sdk::SDK_RET_OK) {
+    if ((rv = g_vcn_db.vcn_delete(vcn_key)) != sdk::SDK_RET_OK) {
         return rv;
     }
 
     return sdk::SDK_RET_OK;
 }
 
-/** @} */ // end of OCI_VCN_API
+/** @} */    // end of OCI_VCN_API
+#endif
 
 }    // namespace api

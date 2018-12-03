@@ -6,9 +6,10 @@
  * @brief   This module defines OCI VNIC interface
  */
 
-#if !defined (__OCI_VNIC_HPP_)
-#define __OCI_VNIC_HPP_
+#if !defined (__OCI_VNIC_HPP__)
+#define __OCI_VNIC_HPP__
 
+#include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/hal/apollo/include/api/oci.hpp"
 
 /**
@@ -17,15 +18,16 @@
  * @{
  */
 
-#define OCI_MAX_VNIC        4096
+#define OCI_MAX_VNIC               1024
+#define OCI_MAX_IP_PER_VNIC        32
 
 /**
  * @brief VNIC IP Information
  */
 typedef struct oci_vnic_ip_s {
-    oci_ip_addr_t overlay_ip;      /**< Overlay/Private IP address */
-    oci_ip_addr_t public_ip;       /**< Public IP address */
-    uint32_t public_ip_valid:1;    /**< TRUE if public IP is valid */
+    ip_addr_t    overlay_ip;          /**< Overlay/Private IP address */
+    ip_addr_t    public_ip;           /**< Public IP address */
+    uint32_t     public_ip_valid:1;    /**< TRUE if public IP is valid */
 } oci_vnic_ip_t;
 
 /**
@@ -46,14 +48,14 @@ typedef struct oci_vnic_s {
     oci_vcn_id_t       vcn_id;                   /**< VCN ID */
     oci_subnet_id_t    subnet_id;                /**< Subnet ID */
     oci_vnic_key_t     key;                      /**< VNIC Key */
-    oci_vlan_id_t      vlan_id;                  /**< VLAN ID */
+    uint16_t           vlan_id;                  /**< VLAN ID */
     oci_slot_id_t      slot;                     /**< Virtual slot
                                                       (Encap: MPLS Tag) */
-    oci_mac_t          mac_addr;                 /**< MAC address */
-    oci_rsrc_pool_id_t rsrc_pool_id;             /**< Resource pool associated
+    mac_addr_t         mac_addr;                 /**< MAC address */
+    oci_rsc_pool_id_t  rsc_pool_id;              /**< Resource pool associated
                                                       with this VNIC */
     uint16_t           num_ips;                  /**< no. of IPs for this VNIC */
-    oci_vnic_ip_t      ip_info[MAX_IP_PER_VNIC]; /**< IP information */
+    oci_vnic_ip_t      ip_info[OCI_MAX_IP_PER_VNIC]; /**< IP information */
     uint32_t           src_dst_check : 1;        /**< TRUE if source/destination
                                                       check is enabled */
     uint32_t           local : 1;                /**< TRUE if vnic is local */
@@ -83,4 +85,4 @@ oci_status_t oci_vnic_delete(_In_ oci_vnic_key_t *vnic_key);
  * @}
  */
 
-#endif /** __OCI_VNIC_HPP_ */
+#endif    /** __OCI_VNIC_HPP__ */
