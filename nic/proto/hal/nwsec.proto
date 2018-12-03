@@ -546,8 +546,8 @@ message AppData {
   message DNSOptions {
     bool      drop_multi_question_packets       = 1; // drop pkt if number of questions > 1
     bool      drop_large_domain_name_packets    = 2; // drop if domain name size is > 255 bytes
-    uint32    drop_long_label_packets           = 3; // drop if label length > 63
-    uint32    drop_multizone_packets            = 4; // (DDNS) drop if number of zones > 1
+    bool      drop_long_label_packets           = 3; // drop if label length > 63
+    bool      drop_multizone_packets            = 4; // (DDNS) drop if number of zones > 1
     uint32    max_msg_length                    = 5; // default 512 (max. 8192) bytes
     uint32    query_response_timeout            = 6; // default 60 secs
   }

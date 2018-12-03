@@ -313,8 +313,8 @@ typedef struct alg_options {
         struct dns_options {
             bool      drop_multi_question_packets;
             bool      drop_large_domain_name_packets;
-            uint32_t  drop_long_label_packets;
-            uint32_t  drop_multizone_packets;
+            bool      drop_long_label_packets;
+            bool      drop_multizone_packets;
             uint32_t  max_msg_length;
             uint32_t  query_response_timeout;
         } dns_opts;
