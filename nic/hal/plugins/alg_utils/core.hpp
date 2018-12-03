@@ -166,9 +166,11 @@ inline uint64_t __pack_uint64(const uint8_t *buf, uint32_t *idx,
 typedef struct app_session_s {
     hal_spinlock_t       slock;                     // lock to protect this structure
     hal::flow_key_t      key;                       // Key for app session hash table
+    bool                 isCtrl;                    // Is this a control APP session (RTSP/SIP)
     void                *oper;                      // per-ALG app session operational status
     dllist_ctxt_t        l4_sess_lhead;             // List of all L4 control and data sessions for this app session
     dllist_ctxt_t        exp_flow_lhead;            // List of expected flows that this app session has created
+    dllist_ctxt_t        app_sess_lentry;            // List of App sessions that this App session has created
     ht_ctxt_t            app_sess_ht_ctxt;          // App session hash table context
 } app_session_t;
 
@@ -250,7 +252,7 @@ public:
     hal_ret_t alloc_and_insert_l4_sess(app_session_t *app_sess,
                                        l4_alg_status_t **alg_status);
     hal_ret_t alloc_and_init_app_sess(hal::flow_key_t key, app_session_t **app_sess);
-    hal_ret_t insert_app_sess(app_session_t *app_sess);
+    hal_ret_t insert_app_sess(app_session_t *app_sess, app_session_t *ctrl_app_sess=NULL);
     hal_ret_t lookup_app_sess(const void *key, app_session_t **app_sess);
 
     void move_expflow_to_l4sess(app_session_t *app_sess,

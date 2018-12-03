@@ -709,8 +709,7 @@ hal_ret_t alg_sunrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
         }
     } else if (l4_sess && l4_sess->info && (ctx.role() == hal::FLOW_ROLE_INITIATOR)) {
         rpc_info = (rpc_info_t *)l4_sess->info;
-        if ((ctx.cpu_rxhdr()->tcp_flags & (TCP_FLAG_SYN | TCP_FLAG_ACK)) ==
-                     (TCP_FLAG_SYN | TCP_FLAG_ACK)) {
+        if (!l4_sess->tcpbuf[DIR_RFLOW] && ctx.is_flow_swapped()) {
             // Set up TCP buffer for RFLOW
             l4_sess->tcpbuf[DIR_RFLOW] = tcp_buffer_t::factory(
                                                htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1,

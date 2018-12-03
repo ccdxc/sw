@@ -317,6 +317,7 @@ rtsp_parse_addr_list(const char *buf, uint32_t len, uint32_t *poff,
 //                       |    ";" "server_port" "=" port [ "-" port ]
 //                       |    ";" "src_addr" "=" addr-list
 //                       |    ";" "dst_addr" "=" addr-list
+//                       |    ";" "interleaved" "=" channel-list
 //  addr-list            = quoted-addr *(SLASH quoted-addr)
 //  quoted-addr          = DQUOTE (host-port) DQUOTE
 //  host-port            = ( host [":" port] ) | ( ":" port )
@@ -357,6 +358,8 @@ rtsp_parse_transport_spec(const char *buf, uint32_t len, rtsp_transport_t* spec)
         } else if (alg_utils::alg_mime_token_cmp(buf, paramlen, &paramoff, "src_addr", '=')) {
             rtsp_parse_addr_list(buf, paramlen, &paramoff, &spec->server_ip,
                                  &spec->server_port_start, &spec->server_port_end);
+        } else if (alg_utils::alg_mime_token_cmp(buf, paramlen, &paramoff, "interleaved", '=')) {
+            spec->interleaved = true;
         }
 
         alg_utils::alg_mime_skipws(buf, len, &off);

@@ -107,12 +107,12 @@ fte::pipeline_action_t alg_ftp_session_delete_cb(fte::ctx_t &ctx) {
                     (ctx.session()->rflow->state >= session::FLOW_TCP_STATE_FIN_RCVD))) {
             /*
              * We received FIN/RST on the control session
-             * We let the HAL cleanup happen while we keep the
-             * app_session state if there are data sessions
+             * and we have data sessions hanging. We cannot
+             * honor this
              */
-            l4_sess->sess_hdl = HAL_HANDLE_INVALID;
-            HAL_TRACE_DEBUG("Received FIN/RST.. keeping the control context");
-            return fte::PIPELINE_CONTINUE;
+            HAL_TRACE_DEBUG("Received FIN/RST when data session is active - bailing");
+            ctx.set_feature_status(HAL_RET_INVALID_CTRL_SESSION_OP);
+            return fte::PIPELINE_END;
         } else {
             /*
              * Dont cleanup if control session is timed out
@@ -460,7 +460,7 @@ hal_ret_t expected_flow_handler(fte::ctx_t &ctx, expected_flow_t *wentry) {
     entry = (l4_alg_status_t *)wentry;
     HAL_TRACE_DEBUG("Entry: {:p}", (void *)entry);
     ftp_info = (ftp_info_t *)entry->info;
-    if (entry->isCtrl != TRUE && sfw_info != NULL) {
+    if (entry->isCtrl != true && sfw_info != NULL) {
         sfw_info->skip_sfw = ftp_info->skip_sfw;
     }
     ctx.set_feature_name(FTE_FEATURE_ALG_FTP.c_str());
@@ -505,7 +505,7 @@ static void add_expected_flow(fte::ctx_t &ctx, l4_alg_status_t *l4_sess,
     }
     g_ftp_state->alloc_and_insert_exp_flow(l4_sess->app_session, key, &exp_flow);
     exp_flow->entry.handler = expected_flow_handler;
-    exp_flow->isCtrl = FALSE;
+    exp_flow->isCtrl = false;
     exp_flow->alg = l4_sess->alg;
     exp_flow->sess_hdl = l4_sess->sess_hdl;
     data_ftp_info = (ftp_info_t *)g_ftp_state->alg_info_slab()->alloc();
@@ -659,7 +659,7 @@ static void ftp_completion_hdlr (fte::ctx_t& ctx, bool status) {
         }
     } else {
         l4_sess->sess_hdl = ctx.session()->hal_handle;
-        if (l4_sess && l4_sess->isCtrl == FALSE) {
+        if (l4_sess && l4_sess->isCtrl == false) {
             /*
              * Data session flow has been installed sucessfully
              * Cleanup expected flow from the exp flow table and app
@@ -737,8 +737,7 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
         l4_sess = (l4_alg_status_t *)alg_status(ctx.feature_session_state());
         ftp_info = (ftp_info_t *)l4_sess->info;
         if (l4_sess != NULL && (l4_sess->alg == nwsec::APP_SVC_FTP)) {
-            if ((ctx.cpu_rxhdr()->tcp_flags & (TCP_FLAG_SYN | TCP_FLAG_ACK)) == 
-                           (TCP_FLAG_SYN | TCP_FLAG_ACK)) {
+            if (!l4_sess->tcpbuf[DIR_RFLOW] && ctx.is_flow_swapped()) {
                 // Set up TCP buffer for RFLOW
                 l4_sess->tcpbuf[DIR_RFLOW] = tcp_buffer_t::factory(
                                           htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1, 
@@ -747,7 +746,7 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
             /*
              * Process only when we are expecting something.
              */
-            if (l4_sess->isCtrl == TRUE) {
+            if (l4_sess->isCtrl == true) {
                 /*
                  * This will only be executed for control channel packets that
                  * would lead to opening up pinholes for FTP data sessions.
@@ -755,7 +754,7 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
                 uint8_t buff = ctx.is_flow_swapped()?1:0;
                 if ((ctx.pkt_len() > payload_offset) && l4_sess->tcpbuf[buff])
                     l4_sess->tcpbuf[buff]->insert_segment(ctx, ftp_info->callback);
-            } else {
+            } else if (!ctx.existing_session()) {
                 /*
                  * We have received request for data session. Register completion
                  * handler to cleanup the exp_flow and move it to l4_session list

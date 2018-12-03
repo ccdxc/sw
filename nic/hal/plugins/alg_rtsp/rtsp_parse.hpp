@@ -57,6 +57,7 @@ struct rtsp_transport_t {
     uint16_t  server_port_start;
     uint16_t  server_port_end;
     uint16_t  ip_proto;
+    bool      interleaved;
 };
 
 struct rtsp_hdrs_t {
@@ -70,7 +71,7 @@ struct rtsp_hdrs_t {
     uint32_t cseq;
     struct {
         rtsp_session_id_t  id;
-        uint32_t      timeout; //seconds
+        uint32_t           timeout;
     } session;
     struct {
         uint8_t nspecs;

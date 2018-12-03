@@ -264,6 +264,7 @@ message FTPALGInfo {
 // RTSPALGInfo captures the operational status of RTSP ALG session
 message RTSPALGInfo {
   bool                 iscontrol      = 1; // Is this flow control/data RTSP flow
+  string               sessionid      = 2; // RTSP Session id
 }
 
 // DNSALGInfo captures the operational status of DNS ALG session

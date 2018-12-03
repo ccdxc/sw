@@ -265,7 +265,7 @@ ctx_t::init_ctxt_from_session(hal::session_t *sess)
     key_ = hflow->config.key;
 
     // Init feature sepcific session state
-    sdk::lib::dllist_ctxt_t   *entry;
+    sdk::lib::dllist_ctxt_t   *entry = NULL;
     dllist_for_each(entry, &sess->feature_list_head) {
         feature_session_state_t *state =
             dllist_entry(entry, feature_session_state_t, session_feature_lentry);

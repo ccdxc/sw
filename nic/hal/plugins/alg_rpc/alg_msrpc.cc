@@ -735,7 +735,7 @@ size_t parse_msrpc_cn_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
     uint32_t                 pgm_offset = 0;
     rpc_info_t              *rpc_info = (rpc_info_t *)l4_sess->info;
 
-    HAL_TRACE_DEBUG("In parse_msrpc_cn_control_flow");
+    HAL_TRACE_DEBUG("In parse_msrpc_cn_control_flow {:p}", (void *)ctxt);
 
     if (pkt_len < (rpc_msg_offset + sizeof(msrpc_cn_common_hdr_t))) {
         HAL_TRACE_ERR("Cannot process further -- packet len: {} is smaller than expected: {}",

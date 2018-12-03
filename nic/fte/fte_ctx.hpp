@@ -608,6 +608,7 @@ public:
     bool tcp_proxy_pipeline() const { return (arm_lifq_.lif == TCP_PROXY_LIFQ.lif); }
     bool tcp_close() const { return (arm_lifq_ == TCP_CLOSE_LIFQ); }
     bool fte_span() const { return (arm_lifq_ == FTE_SPAN_LIFQ); }
+    bool alg_cflow() const { return (arm_lifq_ == ALG_CFLOW_LIFQ); }
 
     bool valid_iflow() const { return valid_iflow_; }
     void set_valid_iflow(bool val) { valid_iflow_ = val; }

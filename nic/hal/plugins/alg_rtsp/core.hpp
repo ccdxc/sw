@@ -51,11 +51,15 @@ inline std::ostream& operator<<(std::ostream& os, const rtsp_session_key_t& key)
 struct rtsp_session_t {
     rtsp_session_key_t sess_key;
     uint32_t           timeout;  // session timeout
+    bool               isCtrl;   // Is this a control session
 };
 
-fte::pipeline_action_t alg_rtsp_exec(fte::ctx_t &ctx);
-fte::pipeline_action_t alg_ftp_session_delete_cb(fte::ctx_t &ctx);
-size_t process_control_message(void *ctxt, uint8_t *payload, size_t pkt_len);
+fte::pipeline_action_t alg_rtsp_exec (fte::ctx_t &ctx);
+fte::pipeline_action_t alg_rtsp_session_delete_cb (fte::ctx_t &ctx);
+fte::pipeline_action_t alg_rtsp_session_get_cb (fte::ctx_t &ctx);
+size_t process_control_message (void *ctxt, uint8_t *payload, size_t pkt_len);
+void rtsp_app_sess_cleanup_hdlr (alg_utils::app_session_t *app_sess);
+void rtsp_info_cleanup_hdlr (alg_utils::l4_alg_status_t *l4_sess);
 
 } // namespace alg_rtsp
 } // namespace plugins

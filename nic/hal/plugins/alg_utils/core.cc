@@ -422,23 +422,37 @@ hal_ret_t alg_state::lookup_app_sess(const void *key, app_session_t **app_sess) 
     return HAL_RET_ENTRY_NOT_FOUND;
 }
 
-hal_ret_t alg_state::insert_app_sess(app_session_t *app_session) {
+hal_ret_t alg_state::insert_app_sess (app_session_t *app_session, 
+                                      app_session_t *ctrl_app_sess) {
     sdk_ret_t ret;
+    hal_ret_t rc;
+
+    if (ctrl_app_sess)
+        HAL_SPINLOCK_LOCK(&ctrl_app_sess->slock);
 
     HAL_SPINLOCK_INIT(&app_session->slock, PTHREAD_PROCESS_PRIVATE);
 
     ret = app_sess_ht()->insert(app_session, &app_session->app_sess_ht_ctxt);
-
-    if (ret == sdk::SDK_RET_OK) {
-        return HAL_RET_OK;
-    } else if (ret == sdk::SDK_RET_ENTRY_EXISTS) {
-        return HAL_RET_ENTRY_EXISTS;
+    rc = hal_sdk_ret_to_hal_ret(ret);
+    if (rc != HAL_RET_OK) {
+        HAL_TRACE_ERR("App session insert failed with rc: {}", rc);
+        goto end;
     }
 
-    return HAL_RET_ERR;
+    dllist_reset(&app_session->app_sess_lentry);
+
+end:
+    if (ctrl_app_sess) {
+        // Link this app session to the control app session
+        dllist_add(&ctrl_app_sess->app_sess_lentry, &app_session->app_sess_lentry);
+        HAL_SPINLOCK_UNLOCK(&ctrl_app_sess->slock);
+    }
+
+    return rc;
 }
 
-hal_ret_t alg_state::alloc_and_init_app_sess(hal::flow_key_t key, app_session_t **app_session) {
+hal_ret_t alg_state::alloc_and_init_app_sess(hal::flow_key_t key, 
+                                             app_session_t **app_session) {
     hal_ret_t       ret = HAL_RET_OK;
 
     // Lookup if app session already exists
@@ -549,6 +563,9 @@ void alg_state::cleanup_app_session(app_session_t *app_sess) {
     // hash context
     if (app_sess_cleanup_hdlr_)
         app_sess_cleanup_hdlr_(app_sess);
+
+    if (!dllist_empty(&app_sess->app_sess_lentry))
+        dllist_del(&app_sess->app_sess_lentry);
 
     HAL_SPINLOCK_UNLOCK(&app_sess->slock);
 
