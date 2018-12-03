@@ -132,6 +132,10 @@ def ConfigureNetworks(objlist, oper = CfgOper.ADD):
     __config(objlist, 'api/networks/', oper)
     return
 
+def ConfigureFlowExport(objlist, oper = CfgOper.ADD):
+    __config(objlist, 'api/telemetry/flowexports/', oper)
+    return
+
 def ConfigureTunnels(objlist, oper = CfgOper.ADD):
     __config(objlist, 'api/tunnels/', oper)
     return

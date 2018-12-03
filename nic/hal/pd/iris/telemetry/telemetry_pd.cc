@@ -320,11 +320,17 @@ pd_collector_create(pd_func_args_t *pd_func_args)
     d->ipfix_hdr.vlan.vlan_tag = htons(cfg->vlan);
     d->ipfix_hdr.iphdr.tos = 0;
     d->ipfix_hdr.iphdr.ttl = 64;
+    // Total len will be updated correctly in the P4 datapath
+    d->ipfix_hdr.iphdr.tot_len = htons(0xFFFF);
     d->ipfix_hdr.udphdr.sport = htons(32007);
     d->ipfix_hdr.udphdr.dport = htons(cfg->dport);
     d->template_id = cfg->template_id;
     d->export_intvl = cfg->export_intvl;
     d->valid = true;
+    // TODO: Hardcode src-ip to 192.168.100.103
+    // This will be removed after getting agent change
+    // The src ip for IPFIX pkts will be the MNIC mgmt interface ip
+    //cfg->src_ip.addr.v4_addr = 0xc0a86467;
     telemetry_export_dest_set_ip(d, cfg->src_ip, true);
     telemetry_export_dest_set_ip(d, cfg->dst_ip, false);
     telemetry_export_dest_set_mac(d, cfg->src_mac, true);
