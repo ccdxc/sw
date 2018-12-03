@@ -1,6 +1,8 @@
 package metrics
 
 import (
+	"strconv"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/ntranslate"
 )
@@ -8,15 +10,15 @@ import (
 func init() {
 	tstr := ntranslate.MustGetTranslator()
 
-	tstr.Register("MetricsMetricsKey", &metricsTranslatorFns{})
+	tstr.Register("LifMetricsKey", &metricsTranslatorFns{})
 }
 
 type metricsTranslatorFns struct{}
 
 // KeyToMeta converts network key to meta
 func (n *metricsTranslatorFns) KeyToMeta(key interface{}) *api.ObjectMeta {
-	if str, ok := key.(string); ok {
-		return &api.ObjectMeta{Tenant: "default", Namespace: "default", Name: str}
+	if str, ok := key.(uint64); ok {
+		return &api.ObjectMeta{Tenant: "default", Namespace: "default", Name: strconv.FormatUint(str, 10)}
 	}
 	return nil
 }
