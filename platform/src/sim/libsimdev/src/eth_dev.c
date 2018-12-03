@@ -33,7 +33,7 @@ typedef u_int64_t u64;
 typedef u_int64_t dma_addr_t;
 #define BIT(n)  (1 << (n))
 
-#include "platform/drivers/linux/eth/ionic/ionic_if.h"
+#include "platform/drivers/common/ionic_if.h"
 
 typedef struct ethparams_s {
     int lif;

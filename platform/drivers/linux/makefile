@@ -16,7 +16,8 @@ KSRC ?= /lib/modules/$(shell uname -r)/build
 #KOPT += W=1		# extra warnings
 #KOPT += C=1		# static analysis
 #KOPT += CHECK=sparse	# static analysis tool
-KOPT += KCPPFLAGS=-DHAPS
+KOPT += KCPPFLAGS="-DHAPS -I$(CURDIR)/../common" 
+#KOPT += KCPPFLAGS="-DHAPS -I/home/anish/sw/platform/drivers/common" 
 
 KOPT += CONFIG_IONIC=m
 KOPT += CONFIG_INFINIBAND_IONIC_RDMA=m

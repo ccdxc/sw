@@ -39,12 +39,14 @@ RDMA="$TOP/platform/src/third-party/rdma"
 # Sources for generation
 : ${SCRIPTS_SRC:="$TOP/platform/tools/drivers-linux"}
 : ${DRIVERS_SRC:="$TOP/platform/drivers/linux"}
+: ${COMMON_SRC:="$TOP/platform/drivers/common"}
 : ${RDMACORE_SRC:="$RDMA/rdma-core"}
 : ${PERFTEST_SRC:="$RDMA/perftest"}
 : ${QPERF_SRC:="$RDMA/qperf"}
 
 # Products generated
 : ${GEN_DIR:="$TOP/platform/gen/drivers-linux"}
+: ${COMMON_GEN_DIR:="$GEN_DIR/drivers/eth/ionic/"}
 : ${GEN_PKG:="$GEN_DIR.tar.xz"}
 
 # Package will identify version of sources
@@ -91,6 +93,18 @@ rsync -r --delete --delete-excluded --copy-links \
   --exclude="Module.symvers" \
   --exclude=".tmp_versions/" \
   "$DRIVERS_SRC/" "$GEN_DIR/drivers"
+
+rsync -r --copy-links \
+  --exclude=".git/" \
+  --exclude=".cache.mk" \
+  --exclude=".*.cmd" \
+  --exclude="*.o" \
+  --exclude="*.ko" \
+  --exclude="*.mod.c" \
+  --exclude="modules.order" \
+  --exclude="Module.symvers" \
+  --exclude=".tmp_versions/" \
+  "$COMMON_SRC/" "$COMMON_GEN_DIR"
 
 # Copy rdma-core sources to gen dir
 report_version "$RDMACORE_SRC" > "$GEN_DIR/version.rdma-core"

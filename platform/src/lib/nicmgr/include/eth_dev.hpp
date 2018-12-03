@@ -24,7 +24,7 @@
 #define u64 uint64_t
 #define dma_addr_t uint64_t
 
-#include "platform/drivers/linux/eth/ionic/ionic_if.h"
+#include "platform/drivers/common/ionic_if.h"
 
 
 
