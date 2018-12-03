@@ -81,7 +81,7 @@ out:
 	return err;
 }
 
-static void
+static void __attribute__((unused))
 cpdc_common_teardown(void *desc)
 {
 	/* TODO-chain: EOPNOTSUPP */

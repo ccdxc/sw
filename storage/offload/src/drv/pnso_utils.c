@@ -47,6 +47,7 @@ pc_res_sgl_packed_get(const struct per_core_resource *pcr,
 	struct buffer_list_iter *iter;
 	struct cpdc_sgl *sgl_prev = NULL;
 	struct cpdc_sgl *sgl;
+	struct buffer_addr_len addr_len;
 	uint32_t total_len;
 	pnso_error_t err;
 
@@ -66,14 +67,18 @@ pc_res_sgl_packed_get(const struct per_core_resource *pcr,
 			goto out;
 		}
 		memset(sgl, 0, sizeof(*sgl));
-		iter = buffer_list_iter_addr_len_get(iter, block_size,
-					&sgl->cs_addr_0, &sgl->cs_len_0);
-		if (iter)
-			iter = buffer_list_iter_addr_len_get(iter, block_size,
-					&sgl->cs_addr_1, &sgl->cs_len_1);
-		if (iter)
-			iter = buffer_list_iter_addr_len_get(iter, block_size,
-					&sgl->cs_addr_2, &sgl->cs_len_2);
+		iter = buffer_list_iter_addr_len_get(iter, block_size, &addr_len);
+		BUFFER_ADDR_LEN_SET(sgl->cs_addr_0, sgl->cs_len_0, addr_len);
+
+		if (iter) {
+			iter = buffer_list_iter_addr_len_get(iter, block_size, &addr_len);
+			BUFFER_ADDR_LEN_SET(sgl->cs_addr_1, sgl->cs_len_1, addr_len);
+		}
+		if (iter) {
+			iter = buffer_list_iter_addr_len_get(iter, block_size, &addr_len);
+			BUFFER_ADDR_LEN_SET(sgl->cs_addr_2, sgl->cs_len_2, addr_len);
+		}
+
 		/*
 		 * See comments in crypto_aol_packed_get() regarding dropping
 		 * AOL when ca_len_0 == 0. The same logic applies here.
@@ -146,6 +151,7 @@ pc_res_sgl_vec_packed_get(const struct per_core_resource *pcr,
 	struct buffer_list_iter *iter;
 	struct cpdc_sgl *sgl_prev = NULL;
 	struct cpdc_sgl *sgl_vec;
+	struct buffer_addr_len addr_len;
 	uint32_t total_len;
 	uint32_t num_vec_elems;
 	uint32_t cur_count;
@@ -171,16 +177,18 @@ pc_res_sgl_vec_packed_get(const struct per_core_resource *pcr,
 	cur_count = 0;
 	while (iter && (cur_count < num_vec_elems)) {
 		memset(sgl_vec, 0, sizeof(*sgl_vec));
-		iter = buffer_list_iter_addr_len_get(iter, block_size,
-				&sgl_vec->cs_addr_0, &sgl_vec->cs_len_0);
-		if (iter)
-			iter = buffer_list_iter_addr_len_get(iter, block_size,
-					&sgl_vec->cs_addr_1,
-					&sgl_vec->cs_len_1);
-		if (iter)
-			iter = buffer_list_iter_addr_len_get(iter, block_size,
-					&sgl_vec->cs_addr_2,
-					&sgl_vec->cs_len_2);
+		iter = buffer_list_iter_addr_len_get(iter, block_size, &addr_len);
+		BUFFER_ADDR_LEN_SET(sgl_vec->cs_addr_0, sgl_vec->cs_len_0, addr_len);
+
+		if (iter) {
+			iter = buffer_list_iter_addr_len_get(iter, block_size, &addr_len);
+			BUFFER_ADDR_LEN_SET(sgl_vec->cs_addr_1, sgl_vec->cs_len_1, addr_len);
+		}
+		if (iter) {
+			iter = buffer_list_iter_addr_len_get(iter, block_size, &addr_len);
+			BUFFER_ADDR_LEN_SET(sgl_vec->cs_addr_2, sgl_vec->cs_len_2, addr_len);
+		}
+
 		/*
 		 * See comments in crypto_aol_packed_get() regarding dropping
 		 * AOL when ca_len_0 == 0. The same logic applies here.
@@ -231,6 +239,7 @@ pc_res_sgl_pdma_packed_get(const struct per_core_resource *pcr,
 	struct chain_sgl_pdma	*sgl_pdma;
 	struct buffer_list_iter	buffer_list_iter;
 	struct buffer_list_iter	*iter;
+	struct buffer_addr_len	addr_len;
 	uint32_t		total_len = 0;
 	uint32_t		i;
 
@@ -240,8 +249,9 @@ pc_res_sgl_pdma_packed_get(const struct per_core_resource *pcr,
 		iter = buffer_list_iter_init(&buffer_list_iter, svc_blist);
 		for (i = 0; iter && (i < ARRAY_SIZE(sgl_pdma->tuple)); i++) {
 			iter = buffer_list_iter_addr_len_get(iter,
-				SGL_PDMA_TUPLE_MAX_LEN, &sgl_pdma->tuple[i].addr,
-				&sgl_pdma->tuple[i].len);
+				SGL_PDMA_TUPLE_MAX_LEN, &addr_len);
+			BUFFER_ADDR_LEN_SET(sgl_pdma->tuple[i].addr,
+					    sgl_pdma->tuple[i].len, addr_len);
 			total_len += sgl_pdma->tuple[i].len;
 		}
 
@@ -308,14 +318,13 @@ buffer_list_iter_next(struct buffer_list_iter *iter)
 struct buffer_list_iter *
 buffer_list_iter_addr_len_get(struct buffer_list_iter *iter,
 			      uint32_t max_len,
-			      uint64_t *ret_addr,
-			      uint32_t *ret_len)
+			      struct buffer_addr_len *ret_addr_len)
 {
 	uint32_t len = 0;
 
 	OSAL_ASSERT(max_len);
-	*ret_addr = 0;
-	*ret_len = 0;
+	ret_addr_len->addr = 0;
+	ret_addr_len->len = 0;
 	while (iter) {
 		if (iter->cur_len == 0) {
 			iter = buffer_list_iter_next(iter);
@@ -326,8 +335,8 @@ buffer_list_iter_addr_len_get(struct buffer_list_iter *iter,
 			break;
 
 		len = iter->cur_len > max_len ? max_len : iter->cur_len;
-		*ret_addr = iter->cur_addr;
-		*ret_len = len;
+		ret_addr_len->addr = iter->cur_addr;
+		ret_addr_len->len = len;
 		iter->cur_addr += len;
 		iter->cur_len -= len;
 	}
