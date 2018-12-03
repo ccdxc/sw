@@ -23,10 +23,13 @@ var upgrademetricsShowCmd = &cobra.Command{
 func upgrademetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
 	tabularFormat = false
 	jsonFormat = true
-	_, err := restGet(revProxyPort, "telemetry/v1/metrics/upgrademetrics/")
+	bodyBytes, err := restGet(revProxyPort, "telemetry/v1/metrics/upgrademetrics/")
 	if err != nil {
 		fmt.Println(err)
 		return err
+	}
+	if bodyBytes == nil {
+		fmt.Println("No upgrade object(s) found")
 	}
 	return nil
 }

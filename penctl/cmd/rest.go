@@ -14,6 +14,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/ghodss/yaml"
 )
@@ -144,13 +145,16 @@ func restGet(port string, url string) ([]byte, error) {
 		if error != nil {
 			return nil, err
 		}
-		b, err := yaml.JSONToYAML(bodyBytes)
-		if err != nil {
-			return nil, err
+		if bodyBytes == nil || strings.Compare(string(bodyBytes), "null\n") == 0 {
+			return nil, nil
 		}
 		if jsonFormat {
 			fmt.Println(string(prettyJSON.Bytes()))
 		} else if yamlFormat {
+			b, err := yaml.JSONToYAML(bodyBytes)
+			if err != nil {
+				return nil, err
+			}
 			fmt.Println(string(b))
 		}
 	}
@@ -200,13 +204,16 @@ func restGetWithBody(v interface{}, port string, url string) ([]byte, error) {
 		if error != nil {
 			return nil, err
 		}
-		b, err := yaml.JSONToYAML(bodyBytes)
-		if err != nil {
-			return nil, err
+		if bodyBytes == nil || strings.Compare(string(bodyBytes), "null\n") == 0 {
+			return nil, nil
 		}
 		if jsonFormat {
 			fmt.Println(string(prettyJSON.Bytes()))
 		} else if yamlFormat {
+			b, err := yaml.JSONToYAML(bodyBytes)
+			if err != nil {
+				return nil, err
+			}
 			fmt.Println(string(b))
 		}
 	}
@@ -279,13 +286,16 @@ func restDelete(port string, url string) ([]byte, error) {
 		if error != nil {
 			return nil, err
 		}
-		b, err := yaml.JSONToYAML(bodyBytes)
-		if err != nil {
-			return nil, err
+		if bodyBytes == nil || strings.Compare(string(bodyBytes), "null\n") == 0 {
+			return nil, nil
 		}
 		if jsonFormat {
 			fmt.Println(string(prettyJSON.Bytes()))
 		} else if yamlFormat {
+			b, err := yaml.JSONToYAML(bodyBytes)
+			if err != nil {
+				return nil, err
+			}
 			fmt.Println(string(b))
 		}
 	}

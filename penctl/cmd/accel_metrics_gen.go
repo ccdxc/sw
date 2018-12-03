@@ -23,10 +23,13 @@ var accelhwringmetricsShowCmd = &cobra.Command{
 func accelhwringmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
 	tabularFormat = false
 	jsonFormat = true
-	_, err := restGet(revProxyPort, "telemetry/v1/metrics/accelhwringmetrics/")
+	bodyBytes, err := restGet(revProxyPort, "telemetry/v1/metrics/accelhwringmetrics/")
 	if err != nil {
 		fmt.Println(err)
 		return err
+	}
+	if bodyBytes == nil {
+		fmt.Println("No accelhwring object(s) found")
 	}
 	return nil
 }
@@ -42,10 +45,13 @@ var accelseqqueuemetricsShowCmd = &cobra.Command{
 func accelseqqueuemetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
 	tabularFormat = false
 	jsonFormat = true
-	_, err := restGet(revProxyPort, "telemetry/v1/metrics/accelseqqueuemetrics/")
+	bodyBytes, err := restGet(revProxyPort, "telemetry/v1/metrics/accelseqqueuemetrics/")
 	if err != nil {
 		fmt.Println(err)
 		return err
+	}
+	if bodyBytes == nil {
+		fmt.Println("No accelseqqueue object(s) found")
 	}
 	return nil
 }
