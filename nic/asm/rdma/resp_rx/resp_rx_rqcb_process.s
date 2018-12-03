@@ -126,11 +126,7 @@ skip_cnp_send:
     bcf     [c2], skip_cnp_receive
 
     add     r5, AH_ENTRY_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT //dcqcn_cb addr // BD Slot
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_dcqcn_cnp_process, r5) 
-    // For a CNP packet, write_back is not invoked
-    // nxt_to_go_token_id is not incremented. so decrement token_id
-    tblsub.e    d.token_id, 1 
-    nop
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_dcqcn_cnp_process, r5) 
 
 skip_cnp_receive:
     // TODO: Migrate ACK_REQ flag to P4 table
@@ -908,7 +904,7 @@ recirc_pkt:
     bcf     [c2], recirc_sge_work_pending
     seq     c3, CAPRI_APP_DATA_RECIRC_REASON, CAPRI_RECIRC_REASON_INORDER_WORK_NOT_DONE // BD Slot
     bcf     [c3], recirc_work_not_done
-    tblsub.c3  d.work_not_done_recirc_cnt, 1 // BD Slot
+    tblsub.c3 d.work_not_done_recirc_cnt, 1 // BD Slot
     seq     c4, CAPRI_APP_DATA_RECIRC_REASON, CAPRI_RECIRC_REASON_ATOMIC_RNR
     bcf     [c4], recirc_atomic_rnr
     seq     c5, CAPRI_APP_DATA_RECIRC_REASON, CAPRI_RECIRC_REASON_INORDER_WORK_DONE // BD Slot
