@@ -4,6 +4,8 @@ import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
 import iota.test.iris.verif.utils.rdma_utils as rdma
 
 def Setup(tc):
+    tc.nodes = api.GetWorkloadNodeHostnames() 
+    tc.os = api.GetNodeOs(tc.nodes[0])
     return api.types.status.SUCCESS
 
 def Trigger(tc):
@@ -20,13 +22,18 @@ def Trigger(tc):
     api.Logger.info("Setting MTU to 8192 on the following interfaces: {0} on {1}, and {2} on {3}"\
                      .format(w1.interface, w1.node_name, w2.interface, w2.node_name))
 
-    cmd = "sudo ifconfig -s " + w1.interface + " mtu 8192"
+    if tc.os == 'linux':
+       opt_s = " -s "
+    else:
+       opt_s = " "
+
+    cmd = "sudo ifconfig " + opt_s + w1.interface + " mtu 8192"
     api.Trigger_AddCommand(req,
                            w1.node_name,
                            w1.workload_name,
                            cmd)
 
-    cmd = "sudo ifconfig -s " + w2.interface + " mtu 8192"
+    cmd = "sudo ifconfig "  + opt_s + w2.interface + " mtu 8192"
     api.Trigger_AddCommand(req,
                            w2.node_name,
                            w2.workload_name,

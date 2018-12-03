@@ -27,7 +27,7 @@ def Setup(tc):
         tc.devices.append(api.GetTestsuiteAttr(tc.w[i].ip_address+'_device'))
         tc.gid.append(api.GetTestsuiteAttr(tc.w[i].ip_address+'_gid'))
         if tc.w[i].IsNaples():
-            tc.ib_prefix.append('cd ' + tc.iota_path + ' && . ./env.sh && ')
+            tc.ib_prefix.append('cd ' + tc.iota_path + ' && ./run_rdma.sh ')
         else:
             tc.ib_prefix.append('')
 

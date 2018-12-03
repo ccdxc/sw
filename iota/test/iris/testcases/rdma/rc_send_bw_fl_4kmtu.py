@@ -16,7 +16,7 @@ def Setup(tc):
     tc.w2_device = api.GetTestsuiteAttr(tc.w2.ip_address+'_device')
     tc.w2_gid = api.GetTestsuiteAttr(tc.w2.ip_address+'_gid')
 
-    tc.ib_prefix = 'cd ' + tc.iota_path + ' && . ./env.sh && '
+    tc.ib_prefix = 'cd ' + tc.iota_path + ' && ./run_rdma.sh '
 
     return api.types.status.SUCCESS
 

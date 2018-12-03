@@ -7,8 +7,13 @@ def Setup(tc):
 
     # Install RDMA driver on naples nodes
     tc.nodes = api.GetNaplesHostnames()
-    tc.pkgname = 'drivers-linux.tar.xz'
-    fullpath = api.GetTopDir() + '/platform/gen/' + tc.pkgname
+    tc.os = api.GetNodeOs(tc.nodes[0])
+    tc.pkgname_linux = 'drivers-linux.tar.xz'
+    tc.pkgname_freebsd = 'drivers-freebsd.tar.xz'
+    if tc.os == 'linux':
+        fullpath = api.GetTopDir() + '/platform/gen/' + tc.pkgname_linux
+    else:
+        fullpath = api.GetTopDir() + '/platform/gen/' + tc.pkgname_freebsd
     api.Logger.info("Copying RDMA driver package to the following nodes: {0}".format(tc.nodes))
 
     for n in tc.nodes:
@@ -20,7 +25,10 @@ def Setup(tc):
 
     # Copy show_gid on all nodes
     tc.other_nodes = api.GetWorkloadNodeHostnames()
-    fullpath = api.GetTopDir() + '/platform/gen/drivers-linux/show_gid'
+    if tc.os == 'linux':
+        fullpath = api.GetTopDir() + '/platform/gen/drivers-linux/show_gid'
+    else:
+        fullpath = api.GetTopDir() + '/platform/gen/drivers-freebsd/show_gid'
 
     for n in tc.other_nodes:
         if n in tc.nodes:
@@ -39,22 +47,30 @@ def Trigger(tc):
     api.Logger.info("Installing RDMA driver on the following nodes: {0}".format(tc.nodes))
 
     for n in tc.nodes:
-        api.Trigger_AddHostCommand(req, n, "tar xaf %s" % tc.pkgname,
+        if tc.os == 'linux':
+            api.Trigger_AddHostCommand(req, n, "tar xaf %s" % tc.pkgname_linux,
                                    rundir = 'rdma-drivers')
-
-        api.Trigger_AddHostCommand(req, n, "cd drivers-linux && ./setup_apt.sh",
-                                   rundir = 'rdma-drivers')
-
-        api.Trigger_AddHostCommand(req, n, "cd drivers-linux && ./build.sh",
+            api.Trigger_AddHostCommand(req, n, "cd drivers-linux && ./setup_apt.sh",
+                                       rundir = 'rdma-drivers')
+            api.Trigger_AddHostCommand(req, n, "cd drivers-linux && ./build.sh",
                                    rundir = 'rdma-drivers',
                                    timeout = 60)
-
-        api.Trigger_AddHostCommand(req, n, "modprobe ib_uverbs")
-        api.Trigger_AddHostCommand(req, n, "cd drivers-linux && insmod drivers/rdma/drv/ionic/ionic_rdma.ko",
+            api.Trigger_AddHostCommand(req, n, "modprobe ib_uverbs")
+            api.Trigger_AddHostCommand(req, n, "cd drivers-linux && insmod drivers/rdma/drv/ionic/ionic_rdma.ko",
+                                       rundir = 'rdma-drivers')
+            api.Trigger_AddHostCommand(req, n, "cp -r drivers-linux %s" % api.GetHostToolsDir(),
+                                       rundir = 'rdma-drivers')
+        else:
+            api.Trigger_AddHostCommand(req, n, "tar xJf %s" % tc.pkgname_freebsd,
                                    rundir = 'rdma-drivers')
+            api.Trigger_AddHostCommand(req, n, "cd drivers-freebsd && ./build.sh",
+                                   rundir = 'rdma-drivers',
+                                   timeout = 60)
+            api.Trigger_AddHostCommand(req, n, "cd drivers-freebsd && kldload sys/modules/ionic_rdma/ionic_rdma.ko",
+                                       rundir = 'rdma-drivers')
 
-        api.Trigger_AddHostCommand(req, n, "cp -r drivers-linux %s" % api.GetHostToolsDir(),
-                                   rundir = 'rdma-drivers')
+            api.Trigger_AddHostCommand(req, n, "cp -r drivers-freebsd %s" % api.GetHostToolsDir(),
+                                       rundir = 'rdma-drivers')
 
     for n in tc.other_nodes:
         if n in tc.nodes:

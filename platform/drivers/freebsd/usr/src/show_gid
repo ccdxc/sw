@@ -1,0 +1,37 @@
+#!/usr/bin/env perl
+
+my %dev_port_gid;
+
+print "DEV\tPORT\tINDEX\tGID\t\t\t\t\tIPv4  \t\tVER\tDEV\n";
+print "---\t----\t-----\t---\t\t\t\t\t------------  \t---\t---\n";
+
+foreach (`sysctl sys.class.infiniband`) {
+	if (/^sys\.class\.infiniband\.(\w+)\.ports\.(\w+)\.gids\.(\w+):\s*(.*)$/) {
+		$dev_port_gid{$1}{$2}{$3}{gid} = $4;
+	}
+	elsif (/^sys\.class\.infiniband\.(\w+)\.ports\.(\w+)\.gid_attrs.ndevs\.(\w+):\s*(.*)$/) {
+		$dev_port_gid{$1}{$2}{$3}{ndev} = $4;
+	}
+	elsif (/^sys\.class\.infiniband\.(\w+)\.ports\.(\w+)\.gid_attrs.types\.(\w+):\s*(.*)$/) {
+		$dev_port_gid{$1}{$2}{$3}{type} = $4;
+	}
+}
+
+foreach my $dev (sort keys %dev_port_gid) {
+	foreach my $port (sort keys %{$dev_port_gid{$dev}}) {
+		foreach my $gid (sort keys %{$dev_port_gid{$dev}{$port}}) {
+
+			my $rec = $dev_port_gid{$dev}{$port}{$gid};
+			next if ($rec->{gid} eq '0000:0000:0000:0000:0000:0000:0000:0000');
+			next if ($rec->{gid} eq 'fe80:0000:0000:0000:0000:0000:0000:0000');
+
+			my $ip = "\t";
+			if ($rec->{gid} =~ /^0000:.*:(..)(..):(..)(..)$/) {
+				my ($a, $b, $c, $d) = (hex $1, hex $2, hex $3, hex $4);
+				$ip = "$a.$b.$c.$d ";
+			}
+
+			print "$dev\t$port\t$gid\t$rec->{gid}\t$ip\t$rec->{type}\t$rec->{ndev}\n";
+		}
+	}
+}
