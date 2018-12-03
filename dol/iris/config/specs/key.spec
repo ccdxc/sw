@@ -2,5 +2,5 @@
 meta:
     id: KEY_RDMA
 
-count   : 100
-
+count    : 100
+useAdmin : True

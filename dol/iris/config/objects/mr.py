@@ -50,7 +50,7 @@ class MrObject(base.ConfigObjectBase):
                      self.pd.ep.intf.lif.hw_lif_id, self.lkey, self.local_wr, self.tbl_pos))
         # op = IONIC_V1_ADMIN_REG_MR
         req_spec.op = 3
-        req_spec.dbid_flags = self.flags
+        req_spec.dbid_flags = self.flags | (0xB << 8)
         req_spec.id_ver = self.lkey
         req_spec.va = self.slab.address
         req_spec.length = self.slab.size

@@ -58,8 +58,8 @@ req_tx_frpmr_sqlkey_process:
     bbeq         K_FAST_REG_ENABLE, 0, error_completion
     CAPRI_RESET_TABLE_2_ARG() //BD-slot
     // State check. 
-    seq          c2, d.state, KEY_STATE_FREE  
-    // num-pt-entries reserved during alloc_lkey 
+    seq          c2, d.state, KEY_STATE_FREE
+    // num-pt-entries set to max available space in PT table during alloc_lkey.
     sle          c3, K_NUM_PT_ENTRIES, d.num_pt_entries_rsvd  
     bcf           [!c1 | !c2 | !c3], error_completion
     // Consumer lkey ownership check.

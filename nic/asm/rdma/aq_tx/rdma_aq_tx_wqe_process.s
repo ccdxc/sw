@@ -100,28 +100,33 @@ reg_mr:
     //TODO: Need to add host_addr bit after Madhav's checkin
     KEY_INDEX_GET(r1, d.{id_ver}.wx)
     KEY_USER_KEY_GET(r2, d.{id_ver}.wx)
-    
-    phvwrpair   p.key.user_key, r2, p.key.state, KEY_STATE_VALID
-    phvwrpair   p.key.type, MR_TYPE_MR, p.key.acc_ctrl, d.dbid_flags[15:8]
-    add         r3, d.{mr.length}.dx, r0
-    phvwr       p.key.len, r3[31:0]
-    phvwr       p.key.log_page_size, d.mr.page_size_log2
 
+    phvwrpair   p.key.type, MR_TYPE_MR, p.key.acc_ctrl, d.dbid_flags[15:8]
     //TODO: ideally host_addr bit should come from driver.
-    phvwr       p.key.host_addr, 1
-    add         r2, d.{mr.tbl_index}.wx, r0
-    add         r3, d.{mr.va}.dx, r0
-    phvwrpair   p.key.base_va, r3, p.key.pt_base, r2
-    add         r2, d.{mr.pd_id}.wx, r0
-    phvwrpair   p.key.pd, r2, p.key.flags, 0x0B
-    phvwrpair   p.key.mr_l_key, 0, p.key.mr_cookie, 0
+    add         r3, d.{mr.pd_id}.wx, r0
+    phvwrpair   p.key.pd, r3, p.key.flags, d.dbid_flags[7:0]
 
     KT_BASE_ADDR_GET2(r3, r4)
-    // XXX: Use KEY_ENTRY_ADDR_GET after lkey format update
     // key_entry_p = key_base_addr + (lkey_index * sizeof(struct key_entry_t))
     add         r4, r3, r1, LOG_SIZEOF_KEY_ENTRY_T
+    srl         r3, r3, CAPRI_SIZEOF_U64_BYTES
+    // r5 = pt_base
+    add         r5, d.{mr.tbl_index}.wx, r0
+    blt         r3, r5, report_failure
+    phvwrpair   p.key.pt_base, r5, p.key.host_addr, 1   // BD Slot
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_MR_KT_UPDATE)
     DMA_PHV2MEM_SETUP(r6, c2, key, key, r4)
+
+    add         r6, r0, d.{mr.map_count}.wx, CAPRI_LOG_SIZEOF_U64
+    beq         r6, r0, alloc_lkey
+    phvwrpair   p.key.mr_l_key, 0, p.key.mr_cookie, 0   // BD slot
+
+create_mr:
+    phvwrpair   p.key.user_key, r2, p.key.state, KEY_STATE_VALID
+    add         r3, d.{mr.va}.dx, r0
+    phvwrpair   p.key.log_page_size, d.mr.page_size_log2, p.key.base_va, r3
+    add         r3, d.{mr.length}.dx, r0
+    phvwr       p.key.len, r3[31:0]
 
     // pt_seg_size = HBM_NUM_PT_ENTRIES_PER_CACHE_LINE * lkey->hostmem_page_size
     sll         r4, HBM_NUM_PT_ENTRIES_PER_CACHE_LINE, d.mr.page_size_log2
@@ -134,17 +139,15 @@ reg_mr:
     // hbm_add = (start_page_id + lkey->pt_base) * 8 + (pt_base_addr)
     PT_BASE_ADDR_GET2(r2)
     add         r4, r4, d.{mr.tbl_index}.wx
-    add         r5, r2, r4, CAPRI_LOG_SIZEOF_U64
-    
-    add         r3, r0, d.{mr.map_count}.wx, CAPRI_LOG_SIZEOF_U64
-    beqi        r3, 1<<CAPRI_LOG_SIZEOF_U64, mr_skip_dma_pt
-    nop
-    
-    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_MR_PT_SRC)
-    DMA_HOST_MEM2MEM_SRC_SETUP(r6, r3, d.{mr.dma_addr}.dx)
-    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_MR_PT_DST)
+    // r6 holds the map_count
+    beqi        r6, 1<<CAPRI_LOG_SIZEOF_U64, mr_skip_dma_pt
+    add         r5, r2, r4, CAPRI_LOG_SIZEOF_U64    // BD Slot
 
-    DMA_HBM_MEM2MEM_DST_SETUP(r6, r3, r5)
+    DMA_CMD_STATIC_BASE_GET(r4, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_MR_PT_SRC)
+    DMA_HOST_MEM2MEM_SRC_SETUP(r4, r6, d.{mr.dma_addr}.dx)
+    DMA_CMD_STATIC_BASE_GET(r4, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_MR_PT_DST)
+
+    DMA_HBM_MEM2MEM_DST_SETUP(r4, r6, r5)
     b           mr_no_skip_dma_pt
     nop
 
@@ -152,7 +155,16 @@ mr_skip_dma_pt:
 
     //copy      the phy address of a single page directly.
     //TODO: how     do we ensure this memwr is completed by the time we generate CQ for admin cmd.
-    memwr.d    r5, d.mr.dma_addr //BD slot
+    b           mr_no_skip_dma_pt
+    memwr.d    r5, d.mr.dma_addr // BD slot
+
+alloc_lkey:
+    // num_pt_entries_rsvd (max) = kt_base_page_id - pt_base
+    sub         r3, r3, r5
+    phvwr       p.key.num_pt_entries_rsvd, r3
+    phvwrpair   p.key.user_key, r0, p.key.state, KEY_STATE_FREE
+    phvwrpair   p.key.log_page_size, r0, p.key.len, r0
+    phvwr       p.key.base_va, r0
 
 mr_no_skip_dma_pt: 
 
