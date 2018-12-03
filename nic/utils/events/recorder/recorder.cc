@@ -17,15 +17,11 @@
 #define EVENT_SIZE(evt) evt.ByteSizeLong()
 
 // initialize the events recorder; size is defaulted to SHM_SIZE if undefined (shm_size = 0)
-events_recorder* events_recorder::init(const char* shm_name, int shm_size, const char *component, const ::google::protobuf::EnumDescriptor* event_types_descriptor)
+events_recorder* events_recorder::init(const char* shm_name, int shm_size, const char *component,
+                                       const ::google::protobuf::EnumDescriptor* event_types_descriptor, Logger logger)
 {
-    if (!event_types_descriptor) {
-        SDK_TRACE_ERR("events_recorder {%s}: event_types enum descriptor is required", shm_name);
+    if (logger == nullptr) {
         return nullptr;
-    }
-
-    if(shm_size == 0) {
-        shm_size = SHM_SIZE;
     }
 
     std::string abs_shm_name = shm_name;
@@ -33,10 +29,21 @@ events_recorder* events_recorder::init(const char* shm_name, int shm_size, const
         abs_shm_name =  std::string("/") + shm_name; // /dev/shm/{shm_name}
     }
 
+    logger->info("{}: initializing events recorder...", abs_shm_name);
+
+    if (!event_types_descriptor) {
+        logger->error("{}: event_types enum descriptor is required for event recorder", abs_shm_name);
+        return nullptr;
+    }
+
+    if(shm_size == 0) {
+        shm_size = SHM_SIZE;
+    }
+
     // create events queue
-    events_queue *evts_queue = events_queue::init(abs_shm_name.c_str(), shm_size, SHM_BUF_SIZE);
+    events_queue *evts_queue = events_queue::init(abs_shm_name.c_str(), shm_size, SHM_BUF_SIZE, logger);
     if (!evts_queue) {
-        SDK_TRACE_ERR("events_recorder {%s}: failed to create events queue", shm_name);
+        logger->error("{}: failed to create events queue", abs_shm_name);
         return nullptr;
     }
 
@@ -44,6 +51,9 @@ events_recorder* events_recorder::init(const char* shm_name, int shm_size, const
     recorder->component_ = component;
     recorder->queue_ = evts_queue;
     recorder->event_types_descriptor = event_types_descriptor;
+    recorder->logger_ = logger;
+
+    recorder->logger_->info("{}: events recorder created", abs_shm_name);
     return recorder;
 }
 
@@ -59,7 +69,7 @@ int events_recorder::event(events::Severity severity, const int type, const char
     // this ensures the event type belongs to given descriptor
     const std::string event_type_str = ::google::protobuf::internal::NameOfEnum(this->event_types_descriptor, type);
     if (event_type_str.empty()) {
-        SDK_TRACE_ERR("events_recorder {%s}: event type {%d} does not exist", this->queue_->get_name(), type);
+        this->logger_->error("{}: event type {} does not exist", this->queue_->get_name(), type);
         return -1;
     }
 
@@ -96,7 +106,7 @@ int events_recorder::write_event(events::Event evt)
         return this->queue_->write_msg_size(buf, size);
     }
 
-    SDK_TRACE_ERR("events_recorder {%s}: requested buffer size {%d} not available", this->queue_->get_name(), size);
+    this->logger_->error("{}: requested buffer size {} not available", this->queue_->get_name(), size);
     return -1;
 }
 

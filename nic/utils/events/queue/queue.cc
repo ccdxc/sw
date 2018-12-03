@@ -8,10 +8,10 @@
 // events queue implemented on top of nic/utils/ipc/ipc.hpp
 
 // events_recorder sets up shared memory for use by the events recorder
-events_queue* events_queue::init(const char* name, int size, int buff_size)
+events_queue* events_queue::init(const char* name, int size, int buff_size, Logger logger)
 {
     // create shared memory
-    shm *shm_ = shm::setup_shm(name, size, SHM_INSTANCES, buff_size);
+    shm *shm_ = shm::setup_shm(name, size, SHM_INSTANCES, buff_size, logger);
     if (!shm_) {
         return nullptr;
     }
@@ -25,6 +25,7 @@ events_queue* events_queue::init(const char* name, int size, int buff_size)
     events_queue *evtsQ_ = new(events_queue);
     evtsQ_->shm_ = shm_;
     evtsQ_->ipc_ = ipc_;
+    evtsQ_->logger_ = logger;
     return evtsQ_;
 }
 
@@ -34,6 +35,7 @@ void events_queue::deinit (void)
     this->shm_->tear_down_shm();
     this->shm_ = nullptr;
     this->ipc_ = nullptr;
+    this->logger_ = nullptr;
 }
 
 // get buffer of given size or SHM_BUF_SIZE

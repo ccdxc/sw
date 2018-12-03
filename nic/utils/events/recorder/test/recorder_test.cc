@@ -10,8 +10,12 @@
 #include <fcntl.h>           /* For O_* constants */
 #include <string>
 
+
 class events_recorder_test : public ::testing::Test {
 protected:
+    Logger logger;
+    const char* test_case_name;
+
     events_recorder_test() {
     }
 
@@ -20,10 +24,14 @@ protected:
 
     // will be called immediately after the constructor before each test
     virtual void SetUp() {
+        test_case_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
+        logger = spdlog::stdout_color_mt(test_case_name);
+        logger->set_pattern("%L [%Y-%m-%d %H:%M:%S.%f] %P/%n: %v");
     }
 
     // will be called immediately after each test before the destructor
     virtual void TearDown() {
+        spdlog::drop(test_case_name);
     }
 };
 
@@ -36,7 +44,7 @@ TEST_F(events_recorder_test, basic) {
     int max_events_allowed = ((shm_size - IPC_OVH_SIZE)/SHM_BUF_SIZE) - 1;
 
     // initialize events recorder
-    events_recorder* recorder = events_recorder::init(shm_name, shm_size, component, example_event_types::EventTypes_descriptor());
+    events_recorder* recorder = events_recorder::init(shm_name, shm_size, component, example_event_types::EventTypes_descriptor(), logger);
     ASSERT_NE(recorder, nullptr);
 
     // invalid event type (event type does not exist)
@@ -68,7 +76,7 @@ TEST_F(events_recorder_test, verify_rw) {
     int shm_size           = 512; // 512 bytes
 
     // initialize events recorder
-    events_recorder* recorder = events_recorder::init(shm_name, shm_size, component, example_event_types::EventTypes_descriptor());
+    events_recorder* recorder = events_recorder::init(shm_name, shm_size, component, example_event_types::EventTypes_descriptor(), logger);
     ASSERT_NE(recorder, nullptr);
 
     // WRITE to shared mem.
@@ -189,7 +197,7 @@ TEST_F(events_recorder_test, multiple_events) {
     int total_events      = 100;
 
     // initialize events recorder
-    events_recorder* recorder = events_recorder::init(shm_name, shm_size, component, example_event_types::EventTypes_descriptor());
+    events_recorder* recorder = events_recorder::init(shm_name, shm_size, component, example_event_types::EventTypes_descriptor(), logger);
     ASSERT_NE(recorder, nullptr);
 
     args.shm_name = shm_name;

@@ -32,7 +32,10 @@ void run_server(std::string &addr) {
 
 int main(int argc, char **argv) {
     int ix;
+    Logger logger;
 
+    logger = spdlog::stdout_color_mt("fte_sim");
+    logger->set_pattern("%L [%Y-%m-%d %H:%M:%S.%f] %P/%n: %v");
     std::string server_addr("0.0.0.0:");
     if (argc > 1) {
         server_addr.append(argv[1]);
@@ -40,7 +43,7 @@ int main(int argc, char **argv) {
         server_addr.append("14990");
     }
 
-    int ret = ipc_logger::init();
+    int ret = ipc_logger::init(logger);
     if (ret != 0) {
         std::cout << "Error initializing ipc";
         exit(ret);
@@ -56,6 +59,7 @@ int main(int argc, char **argv) {
 
     std::cout << "Starting fwlogsim.." << server_addr << std::endl;
     run_server(server_addr);
+    spdlog::drop("fte_sim");
 }
 
 int channel = 0;

@@ -2,6 +2,9 @@
 #define __IPC__HPP__
 #include <stdint.h>
 #include <pthread.h>
+#include <spdlog/spdlog.h>
+
+typedef std::shared_ptr<spdlog::logger> Logger;
 
 // Shared memory can be split into multiple instances/segment.
 // IPC represents single segment within shared memory.
@@ -10,7 +13,7 @@ public:
     ipc(void){};
 
     // initialize a shared memory with defaults
-    void init (uint8_t*, int, uint32_t, int);
+    void init (uint8_t*, int, uint32_t, int, Logger);
 
     // allocate the buffer of given size from IPC instance
     uint8_t *get_buffer(int); // size
@@ -37,6 +40,7 @@ private:
     uint32_t size_;                     // size of IPC segment
     int num_buffers_;                   // total number of buffer available in this IPC segment
     int buf_size_;                      // size of each buffer
+    Logger logger_;
 
     // return number of empty buffers available on this IPC segment
     int get_avail_size(uint32_t);
@@ -48,7 +52,7 @@ private:
 class shm {
 public:
     // create and mmap shared memory with the given size
-    static shm *setup_shm(const char*, int, int, int);
+    static shm *setup_shm(const char*, int, int, int, Logger);
 
     // tear down the shared memory
     void tear_down_shm(void);
@@ -57,7 +61,7 @@ public:
     ipc *factory(void);
 
     // return the shared memory name
-    const char *get_name();
+    const char *get_name(void);
 private:
     int fd_;            // file descriptor of shared mem.
     void *mmap_addr_;   // memory mapped address
@@ -65,6 +69,8 @@ private:
     int buf_size_;      // size of each buffer allocated from this shared mem.
     int inst_count_;    // total IPC instances allocated on this shared mem.
     int max_inst_;      // total number of allowed/possible IPC instances on this shared mem.
-    const char* name_;  // name of the shared mem.
+    std::string name_;  // name of the shared mem.
+    Logger logger_;
+
 };
 #endif

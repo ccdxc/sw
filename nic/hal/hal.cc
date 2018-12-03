@@ -266,7 +266,8 @@ hal_init (hal_cfg_t *hal_cfg)
         // start fte threads
         for (uint32_t i = 0; i < hal_cfg->num_data_threads; i++) {
             // init IPC logger infra for FTE
-            if (!i && hal_cfg->shm_mode && ipc_logger::init() != HAL_RET_OK) {
+            if (!i && hal_cfg->shm_mode &&
+                ipc_logger::init(std::shared_ptr<logger>(hal::utils::hal_logger())) != HAL_RET_OK) {
                 HAL_TRACE_ERR("IPC logger init failed");
             }
             tid = HAL_THREAD_ID_FTE_MIN + i;

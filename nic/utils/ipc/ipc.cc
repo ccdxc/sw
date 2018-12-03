@@ -18,23 +18,23 @@
 // Shared memory implemented as a circular buffer. Messages will be discarded once the buffer is full.
 
 // sets up shared memory of given size, name, buffer size, etc.
-shm *shm::setup_shm(const char* name, int size, int num_inst, int buf_size)
+shm *shm::setup_shm(const char* name, int size, int num_inst, int buf_size, Logger logger)
 {
     if (num_inst == 0) {
-        SDK_TRACE_ERR("ipc {%s}: number of ipc instances must be >0", name);
+        logger->error("{}: number of ipc instances must be >0", name);
         return nullptr;
     }
 
     if (buf_size >= size) {
-        SDK_TRACE_ERR("ipc {%s}: buffer size should be less than the shared memory size", name);
+        logger->error("{}: buffer size should be less than the shared memory size", name);
         return nullptr;
     }
 
-    SDK_TRACE_PRINT("ipc {%s}: setting up shared memory with size: %d", name, size);
+    logger->info("{}: setting up shared memory with size: {}", name, size);
 
     int fd = shm_open(name, O_RDWR | O_CREAT, 0666);
     if (fd < 0) {
-        SDK_TRACE_ERR("ipc {%s}: failed to create shared memory, errno: %d", name, errno);
+        logger->error("{}: failed to create shared memory, errno: {}", name, errno);
         return nullptr;
     }
 
@@ -46,20 +46,20 @@ shm *shm::setup_shm(const char* name, int size, int num_inst, int buf_size)
 
     void *mmap_addr = mmap(0, size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
     if (mmap_addr == MAP_FAILED) {
-        SDK_TRACE_ERR("ipc {%s}: mmap failed", name);
+        logger->error("{}: mmap failed", name);
         close(fd);
         return nullptr;
     }
 
     shm *inst = new(shm);
-
     inst->fd_         = fd;
     inst->mmap_addr_  = mmap_addr;
     inst->mmap_size_  = size;
     inst->inst_count_ = 0;
     inst->max_inst_   = num_inst;
-    inst->name_       = name;
+    inst->name_       = std::string(name);
     inst->buf_size_   = buf_size;
+    inst->logger_     = logger;
 
     return inst;
 }
@@ -74,14 +74,14 @@ void shm::tear_down_shm(void)
     // unmap, release shm.
     munmap(this->mmap_addr_, this->mmap_size_);
     close(this->fd_);
-    shm_unlink(this->name_);
+    shm_unlink(this->name_.c_str());
 }
 
 // initializes/creates an instance of IPC from the shared memory. Assumes single thread for now.
 ipc *shm::factory(void)
 {
     if (this->inst_count_ == this->max_inst_) {
-        SDK_TRACE_ERR("ipc: 0 instances left on the shared memory");
+        this->logger_->error("{}: 0 instances left on the shared memory", this->name_);
         return NULL;
     }
 
@@ -89,19 +89,19 @@ ipc *shm::factory(void)
     uint32_t ipc_size  = ROUND_DOWN4(this->mmap_size_/this->max_inst_);
 
     ipc *inst =  new(ipc);
-    inst->init(addr, this->inst_count_, ipc_size, this->buf_size_);
+    inst->init(addr, this->inst_count_, ipc_size, this->buf_size_, this->logger_);
     this->inst_count_++;
     return inst;
 }
 
 // returns the shared memory name
-const char *shm::get_name()
+const char *shm::get_name(void)
 {
-    return this->name_;
+    return this->name_.c_str();
 }
 
 // initializes the ipc instance with defaults
-void ipc::init(uint8_t *addr, int inst_count, uint32_t ipc_size, int buf_size)
+void ipc::init(uint8_t *addr, int inst_count, uint32_t ipc_size, int buf_size, Logger logger)
 {
     // initialize IPC attributes
     this->buf_size_     = buf_size;
@@ -116,6 +116,7 @@ void ipc::init(uint8_t *addr, int inst_count, uint32_t ipc_size, int buf_size)
     this->num_buffers_  = (this->size_ - IPC_OVH_SIZE)/this->buf_size_;
     memset(this->base_addr_, 0, IPC_OVH_SIZE);
     this->base_addr_   = &this->base_addr_[IPC_OVH_SIZE];
+    this->logger_      = logger;
 }
 
 // Note: buffer could include wrap-around.
@@ -125,7 +126,6 @@ uint8_t *ipc::get_buffer(int size)
     uint32_t offset;
 
     if (get_avail_size(*this->write_index_) == 0) {
-        SDK_TRACE_ERR("ipc: shm full, cannot get a buffer of requested size:", size);
         *this->err_count_ = *this->err_count_ + 1;
         return NULL;
     }

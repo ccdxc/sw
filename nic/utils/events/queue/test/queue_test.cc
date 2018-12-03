@@ -11,6 +11,9 @@
 
 class events_queue_test : public ::testing::Test {
 protected:
+    Logger logger;
+    const char* test_case_name;
+
     events_queue_test() {
     }
 
@@ -19,10 +22,14 @@ protected:
 
     // will be called immediately after the constructor before each test
     virtual void SetUp() {
+        test_case_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
+        logger = spdlog::stdout_color_mt(test_case_name);
+        logger->set_pattern("%L [%Y-%m-%d %H:%M:%S.%f] %P/%n: %v");
     }
 
     // will be called immediately after each test before the destructor
     virtual void TearDown() {
+        spdlog::drop(test_case_name);
     }
 };
 
@@ -34,13 +41,13 @@ TEST_F(events_queue_test, single_thread) {
     const char* shm_name = "/events_shm_test_single_thread";
 
     // buf size > shm size
-    ASSERT_EQ(events_queue::init(shm_name, TEST_SHM_SIZE, TEST_SHM_SIZE+1), nullptr);
+    ASSERT_EQ(events_queue::init(shm_name, TEST_SHM_SIZE, TEST_SHM_SIZE+1, logger), nullptr);
 
     int buf_size = TEST_BUF_SIZE;
     int index = 0;
 
     // 1. test init/factory
-    events_queue *evts_queue = events_queue::init(shm_name, TEST_SHM_SIZE, buf_size);
+    events_queue *evts_queue = events_queue::init(shm_name, TEST_SHM_SIZE, buf_size, logger);
     ASSERT_NE(evts_queue, nullptr);
 
     int total_num_bufs = ((TEST_SHM_SIZE - IPC_OVH_SIZE)/buf_size)-1;

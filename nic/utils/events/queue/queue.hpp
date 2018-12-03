@@ -3,11 +3,14 @@
 
 #include "nic/utils/ipc/ipc.hpp"
 #include <stdio.h>
+#include <spdlog/spdlog.h>
+
+typedef std::shared_ptr<spdlog::logger> Logger;
 
 class events_queue {
 public:
     // initializes events queue
-    static events_queue* init(const char*, int, int);
+    static events_queue* init(const char*, int, int, Logger);
 
     // tear down events queue
     void deinit(void);
@@ -28,6 +31,7 @@ public:
 private:
     shm* shm_;  // shared memory
     ipc* ipc_;  // instance of shared memory; events queue will have only one instance
+    Logger logger_;
 
     events_queue (void) {};
 };

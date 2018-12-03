@@ -39,6 +39,9 @@ typedef struct testInfo_ {
 
 class ipc_test : public ::testing::Test {
 protected:
+    Logger logger;
+    const char* test_case_name;
+
     ipc_test() {
     }
 
@@ -47,10 +50,14 @@ protected:
 
     // will be called immediately after the constructor before each test
     virtual void SetUp() {
+        test_case_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
+        logger = spdlog::stdout_color_mt(test_case_name);
+        logger->set_pattern("%L [%Y-%m-%d %H:%M:%S.%f] %P/%n: %v");
     }
 
     // will be called immediately after each test before the destructor
     virtual void TearDown() {
+        spdlog::drop(test_case_name);
     }
 };
 
@@ -94,7 +101,7 @@ TEST_F(ipc_test, basic) {
     uint8_t *buf;
     int ix;
 
-    shm *shm_inst = shm::setup_shm(FWLOG_SHM, TEST_SHM_SIZE, 1, TEST_SHM_BUF_SIZE);
+    shm *shm_inst = shm::setup_shm(FWLOG_SHM, TEST_SHM_SIZE, 1, TEST_SHM_BUF_SIZE, logger);
     ASSERT_NE(shm_inst, nullptr);
     ipc *ipc1 = shm_inst->factory();
     ASSERT_NE(ipc1, nullptr);
@@ -141,7 +148,7 @@ TEST_F(ipc_test, multi) {
     int ix;
     ipc *ipc_inst[3];
 
-    shm *shm_inst = shm::setup_shm(FWLOG_SHM, TEST_SHM_SIZE*3, 3, TEST_SHM_BUF_SIZE);
+    shm *shm_inst = shm::setup_shm(FWLOG_SHM, TEST_SHM_SIZE*3, 3, TEST_SHM_BUF_SIZE, logger);
     ASSERT_NE(shm_inst, nullptr);
     for (ix = 0; ix < 3; ix++) {
         ipc_inst[ix] = shm_inst->factory();
@@ -198,7 +205,7 @@ TEST_F(ipc_test, fw_log_api) {
     int ret;
     int ix;
 
-    ret = ipc_logger::init();
+    ret = ipc_logger::init(logger);
     ASSERT_EQ(ret, 0);
 
     ipc_logger *il = ipc_logger::factory();

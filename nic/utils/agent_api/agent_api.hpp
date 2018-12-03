@@ -3,6 +3,8 @@
 
 #include "nic/utils/ipc/ipc.hpp"
 
+typedef std::shared_ptr<spdlog::logger> Logger;
+
 // ipc_logger supports reporting fw events to the agent.
 // Multiple instances can be created using the factory method after init.
 // Each instance needs to be called from a single thread.
@@ -11,7 +13,7 @@ public:
     // static methods for init-deinit and instantiate-destroy
     static void set_ipc_buf_sz(void);
     static void set_ipc_instances(int);
-    static int init(void);
+    static int init(Logger);
     static void deinit(void);
     static ipc_logger *factory(void);
     // destroy is not supported. deinit can be used to free all instances.
