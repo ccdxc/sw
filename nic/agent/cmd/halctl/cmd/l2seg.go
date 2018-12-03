@@ -410,12 +410,12 @@ func l2segEPdShowOneResp(resp *halproto.L2SegmentGetResponse) {
 			}
 		}
 
-		if len(inpPropIdx) == 0 {
+		if len(inpPropIdxPrTag) == 0 {
 			if nonePrPrinted == false {
 				nonePrPrinted = true
-				inpPropStr = fmt.Sprintf("%-45s%-45s\n", inpPropStr, "None")
+				inpPropStr = fmt.Sprintf("%-45s%-45s", inpPropStr, "None")
 			} else {
-				inpPropStr = fmt.Sprintf("%-45s%-45s\n", inpPropStr, "")
+				inpPropStr = fmt.Sprintf("%-45s%-45s", inpPropStr, "")
 			}
 		}
 
