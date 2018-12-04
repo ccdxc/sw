@@ -6,6 +6,8 @@
 #include <memory>
 #include <set>
 
+#include "nic/utils/penlog/lib/penlog.hpp"
+
 #include "service.hpp"
 #include "spec.hpp"
 #include "watchdog.hpp"
@@ -39,6 +41,7 @@ class Scheduler
 {
 public:
     Scheduler(vector<Spec> specs);
+    Scheduler(vector<Spec> specs, penlog::LoggerPtr logger);
     void debug();
     unique_ptr<Action> next_action();
     void service_launched(shared_ptr<Service> srv, pid_t pid);
@@ -51,6 +54,7 @@ public:
     void set_service_status_watcher(ServiceStatusWatcherPtr watcher);
 
 private:
+    penlog::LoggerPtr logger;
     void service_ready(shared_ptr<Service> srv);
     shared_ptr<Service> get_for_pid(pid_t pid);
     shared_ptr<Service> get_for_name(const string &name);

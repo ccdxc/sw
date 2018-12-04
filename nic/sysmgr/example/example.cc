@@ -8,13 +8,15 @@
 
 #include <boost/program_options.hpp>
 
+#include "gen/proto/sysmgr.delphi.hpp"
 #include "nic/delphi/sdk/delphi_sdk.hpp"
-#include "gen/proto/sysmgr.delphi.hpp"
-#include "gen/proto/sysmgr.delphi.hpp"
 #include "nic/sysmgr/lib/sysmgr_client.hpp"
+#include "nic/utils/penlog/lib/penlog.hpp"
 
 using namespace std;
 using namespace boost::program_options;
+
+static penlog::LoggerPtr logger;
 
 class ExampleService :
     public delphi::Service,
@@ -73,8 +75,7 @@ public:
 
     virtual delphi::error OnSysmgrSystemStatusCreate(
         delphi::objects::SysmgrSystemStatusPtr obj) {
-        printf("SystemStatus System Halted\n");
-        fflush(stdout);
+        logger->info("SystemStatus System Halted\n");
         return delphi::error::OK();
     }
 
@@ -85,17 +86,15 @@ public:
 
     virtual delphi::error OnSysmgrProcessStatusCreate(
         delphi::objects::SysmgrProcessStatusPtr obj) {
-        printf("ProcessStatus %s, %i, %i, %s\n", obj->key().c_str(),
-            obj->pid(), obj->state(), obj->exitreason().c_str());
-        fflush(stdout);
+        logger->info("ProcessStatus {}, {}, {}, {}", obj->key(),
+            obj->pid(), obj->state(), obj->exitreason());
         return delphi::error::OK();
     }
 
     virtual delphi::error OnSysmgrProcessStatusUpdate(
         delphi::objects::SysmgrProcessStatusPtr obj) {
-        printf("ProcessStatus %s, %i, %i, %s\n", obj->key().c_str(),
-            obj->pid(), obj->state(), obj->exitreason().c_str());
-        fflush(stdout);
+        logger->info("ProcessStatus {}, {}, {}, {}", obj->key(),
+            obj->pid(), obj->state(), obj->exitreason());
         return delphi::error::OK();
     }
 };
@@ -119,8 +118,9 @@ int main(int argc, char *argv[]) {
     if (vm.count("exit") > 0) {
         std::exit(vm["exit"].as<int>());
     }
-    
+
     delphi::SdkPtr sdk(make_shared<delphi::Sdk>());
+    logger = penlog::logger_init(sdk, vm["name"].as<string>());
     
     shared_ptr<ExampleService> svc = make_shared<ExampleService>(sdk,
         vm["name"].as<string>(), vm.count("no-heartbeat") > 0);

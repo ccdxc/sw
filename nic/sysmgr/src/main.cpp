@@ -19,8 +19,10 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include "nic/utils/penlog/lib/penlog.hpp"
+#include "nic/utils/penlog/lib/null_logger.hpp"
+
 #include "delphi_messages.hpp"
-#include "logger.hpp"
 #include "pipe_t.hpp"
 #include "scheduler.hpp"
 #include "sysmgr_service.hpp"
@@ -33,6 +35,8 @@ struct died_pid_t {
     pid_t pid;
     int   status;
 };
+
+penlog::LoggerPtr logger = make_shared<penlog::NullLogger>();
 
 static auto died_pids = make_shared<Pipe<died_pid_t>>();
 static auto started_pids = make_shared<Pipe<pid_t>>();
@@ -47,14 +51,14 @@ void exists_or_mkdir(const char *dir) {
     struct stat sb;
     if (stat(dir, &sb) == 0) {
         if (!S_ISDIR(sb.st_mode)) {
-            ERR("%s is not a directory");
+            logger->critical("%s is not a directory");
             exit(-1);
         }
         return;
     }
     
     mkdir(dir, S_IRWXU);
-    DEBUG("Creating directory {}", dir);
+    logger->debug("Creating directory {}", dir);
 }
 
 void mkdirs(const char *dir) {
@@ -66,7 +70,7 @@ void mkdirs(const char *dir) {
     // if file exists bail out
     if (stat(dir, &sb) == 0) {
         if (!S_ISDIR(sb.st_mode)) {
-            ERR("%s is not a directory");
+            logger->error("%s is not a directory");
             exit(-1);
         }
         return;
@@ -138,7 +142,7 @@ pid_t launch(const string &name, const string &command)
 
     if (pid == -1)
     {
-        ERR("Fork failed: {}", strerror(errno));
+        logger->error("Fork failed: {}", strerror(errno));
         exit(1);
     }
     else if (pid == 0)
@@ -147,7 +151,7 @@ pid_t launch(const string &name, const string &command)
         exec_command(command);
     }
 
-    INFO("Fork success. Child pid: {}", pid);
+    logger->info("Fork success. Child pid: {}", pid);
 
     return pid;
 }
@@ -177,7 +181,7 @@ void install_sigchld_handler()
     sa.sa_flags = SA_RESTART | SA_NOCLDSTOP;
     if (sigaction(SIGCHLD, &sa, 0) == -1)
     {
-        ERR("sigaction(): {}", strerror(errno));
+        logger->error("sigaction(): {}", strerror(errno));
         exit(1);
     }
 }
@@ -188,55 +192,55 @@ void wait_for_events(Scheduler &scheduler, int epollfd, int sleep)
 
     int fds = epoll_wait(epollfd, events, MAX_EVENTS, sleep * 1000);
     if (fds == -1) {
-        ERR("epoll_wait() error: {}", strerror(errno));
+        logger->error("epoll_wait() error: {}", strerror(errno));
     }
-    DEBUG("Number of events: {}", fds);
+    logger->debug("Number of events: {}", fds);
     for (int i = 0; i < fds; i++)
     {
         if (events[i].data.fd == died_pids->raw_fd())
         {
-            INFO("died_pids event");
+            logger->info("died_pids event");
             died_pid_t dp;
             while (died_pids->pipe_read(&dp) == 0)
             {
-                INFO("died_pids: pipe_read(): {}", dp.pid);
+                logger->info("died_pids: pipe_read(): {}", dp.pid);
                 scheduler.service_died(dp.pid, dp.status);
             }
         }
         else if (events[i].data.fd == started_pids->raw_fd())
         {
-            INFO("started_pids event");
+            logger->info("started_pids event");
             pid_t pid;
             while (started_pids->pipe_read(&pid) == 0)
             {
-                INFO("started_pids: pipe_read(): {}", pid);
+                logger->info("started_pids: pipe_read(): {}", pid);
                 scheduler.service_started(pid);
             }
         }
         else if (events[i].data.fd == delphi_messages->raw_fd())
         {
-            INFO("delphi_messages event");
+            logger->info("delphi_messages event");
             int32_t msg;
             while (delphi_messages->pipe_read(&msg) == 0)
             {
-                INFO("delphi_messages: pipe_read(): {}", msg);
+                logger->info("delphi_messages: pipe_read(): {}", msg);
                 if (msg == DELPHI_UP)
                 {
                     scheduler.service_started("delphi");
                 }
                 else
                 {
-                    INFO("UKNOWN delphi_messages message");
+                    logger->info("UKNOWN delphi_messages message");
                 }
             }
         }
         else if (events[i].data.fd == heartbeats->raw_fd())
         {
-            DEBUG("heartbeat event");
+            logger->debug("heartbeat event");
             pid_t pid;
             while(heartbeats->pipe_read(&pid) == 0)
             {
-                DEBUG("heartbeat: pipe_read(): {}", pid);
+                logger->debug("heartbeat: pipe_read(): {}", pid);
                 scheduler.heartbeat(pid);
             }
         }
@@ -245,14 +249,14 @@ void wait_for_events(Scheduler &scheduler, int epollfd, int sleep)
             int sig;
             while(quit_pipe->pipe_read(&sig) == 0)
             {
-                INFO("Signal {} received. Exiting", sig);
+                logger->info("Signal {} received. Exiting", sig);
                 kill(-mypid, SIGTERM);
                 exit(-1);
             }
         }
         else
         {
-            INFO("UNKOWN EVENT");
+            logger->info("UNKOWN EVENT");
         }
     }
 }
@@ -265,7 +269,7 @@ void epollfd_register(int epollfd, int fd)
     ev.data.fd = fd;
     if (epoll_ctl(epollfd, EPOLL_CTL_ADD, fd, &ev) == -1)
     {
-        ERR("epoll_ctl: {}", strerror(errno));
+        logger->error("epoll_ctl: {}", strerror(errno));
         exit(1);
     }
 }
@@ -275,7 +279,7 @@ void loop(Scheduler &scheduler, shared_ptr<SysmgrService> delphi_svc)
     int epollfd = epoll_create1(0);
     if (epollfd == -1)
     {
-        ERR("epoll_create1: {}", strerror(errno));
+        logger->error("epoll_create1: {}", strerror(errno));
         exit(1);
     }
 
@@ -288,25 +292,25 @@ void loop(Scheduler &scheduler, shared_ptr<SysmgrService> delphi_svc)
     for (;;)
     {
         auto action = scheduler.next_action();
-        DEBUG("Next action: {}", action->type);
+        logger->debug("Next action: {}", action->type);
         if (action->type == LAUNCH)
         {
-            INFO("Launching services");
+            logger->info("Launching services");
             for (auto service : action->launch_list)
             {
-                INFO("Launching {}: {}", service->name, service->command);
+                logger->info("Launching {}: {}", service->name, service->command);
                 pid_t pid = launch(service->name, service->command);
                 scheduler.service_launched(service, pid);
             }
         }
         else if (action->type == WAIT)
         {
-            DEBUG("Waiting for events");
+            logger->debug("Waiting for events");
             wait_for_events(scheduler, epollfd, action->sleep);
         }
         else if (action->type == REBOOT)
         {
-            INFO("Fault");
+            logger->info("Fault");
             delphi_svc->set_system_fault();
             wait_for_events(scheduler, epollfd, -1);
         }
@@ -318,9 +322,9 @@ void *delphi_thread_run(void *ctx)
 {
     delphi::SdkPtr sdk = *reinterpret_cast<delphi::SdkPtr*>(ctx);
 
-    INFO("Starting Delphi MainLoop()");
+    logger->info("Starting Delphi MainLoop()");
     sdk->MainLoop();
-    INFO("Delphi main loop exited");
+    logger->info("Delphi main loop exited");
 
     return NULL;
 }
@@ -350,6 +354,7 @@ int main(int argc, char *argv[])
     shared_ptr<SysmgrService> svc = make_shared<SysmgrService>(sdk,
         "SystemManager", started_pids, delphi_messages, heartbeats);
     sdk->RegisterService(svc);
+    logger = penlog::logger_init(sdk, "sysmgr");
 
     pthread_t delphi_thread;
     pthread_create(&delphi_thread, NULL, delphi_thread_run,
@@ -357,7 +362,7 @@ int main(int argc, char *argv[])
 
     // The scheduler
     auto spec = specs_from_json(argv[1]);
-    Scheduler scheduler(spec);
+    Scheduler scheduler(spec, logger);
     scheduler.set_service_status_watcher(svc);
     
     install_sigchld_handler();

@@ -73,6 +73,7 @@ nic/build/x86_64/iris/lib/libsdkxcvrdriver.so                       /nic/lib/
 nic/build/x86_64/iris/lib/libsdkxcvrdriver.so                       /nic/lib/
 nic/build/x86_64/iris/lib/libdelphi*.so                             /nic/lib/
 nic/build/x86_64/iris/lib/libsysmgr.so                              /nic/lib/
+nic/build/x86_64/iris/lib/libpenlog.so                              /nic/lib/
 nic/build/x86_64/iris/lib/*upgrade*                                 /nic/lib/
 nic/build/x86_64/iris/lib/libproto.so                               /nic/lib/
 nic/build/x86_64/iris/lib/libcommonproto.so                         /nic/lib/

@@ -4,8 +4,12 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "nic/utils/penlog/lib/penlog.hpp"
+
 using namespace std;
 using namespace sysmgr;
+
+static penlog::LoggerPtr logger = penlog::logger_init_for_lib("sysmgr");
 
 template <class T>
 void mountKey(delphi::SdkPtr &delphi, std::string key)
@@ -53,7 +57,7 @@ void Client::init_done()
 void Client::OnMountComplete()
 {  
     for (auto obj: delphi::objects::SysmgrServiceStatus::List(this->delphi)) {
-	this->service_up(obj->key());
+        this->service_up(obj->key());
     }
 }
 
@@ -66,12 +70,14 @@ void Client::register_service_reactor(std::string name, ServiceStatusReactorPtr 
 delphi::error Client::OnSysmgrServiceStatusCreate(delphi::objects::SysmgrServiceStatusPtr obj)
 {
     this->service_up(obj->key());
+    logger->debug("Got service create notification for {}", obj->key());
     return delphi::error::OK();
 }
 
 delphi::error Client::OnSysmgrServiceStatusUpdate(delphi::objects::SysmgrServiceStatusPtr obj)
 {
     this->service_up(obj->key());
+    logger->debug("Got service update notification for {}", obj->key());
     return delphi::error::OK();
 }
 
@@ -79,6 +85,9 @@ void Client::service_up(std::string name)
 {
     ServiceStatusReactorPtr r = this->reactors[name];
     if (r != nullptr) {
-	r->ServiceUp(name);
+        r->ServiceUp(name);
+        logger->debug("Found service up reactor for {}", name);
+    } else {
+        logger->debug("No service up reactor for {}", name);
     }
 }

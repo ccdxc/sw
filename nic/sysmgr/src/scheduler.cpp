@@ -3,11 +3,14 @@
 
 #include <boost/format.hpp>
 
-#include "logger.hpp"
+#include "nic/utils/penlog/lib/penlog.hpp"
+#include "nic/utils/penlog/lib/null_logger.hpp"
+
 #include "scheduler.hpp"
 #include "spec.hpp"
 
 using namespace std;
+
 
 string parse_status(int status)
 {
@@ -33,7 +36,7 @@ shared_ptr<Service> Scheduler::get_for_pid(pid_t pid)
     auto s = this->pids.find(pid);
     if (s == this->pids.end())
     {
-        DEBUG("PID {} not found", pid);
+        this->logger->debug("PID {} not found", pid);
         return nullptr;
     }
 
@@ -45,15 +48,22 @@ shared_ptr<Service> Scheduler::get_for_name(const string &name)
     auto s = this->services.find(name);
     if (s == this->services.end())
     {
-       DEBUG("Name {} not found", name);
+       logger->debug("Name {} not found", name);
     }
     assert(s != this->services.end());
 
     return s->second;
 }
 
-Scheduler::Scheduler(vector<Spec> specs)
+Scheduler::Scheduler(vector<Spec> specs) :
+    Scheduler(specs, std::make_shared<penlog::NullLogger>())
 {
+    
+}
+
+Scheduler::Scheduler(vector<Spec> specs, penlog::LoggerPtr logger)
+{
+    this->logger = logger;
     // Populate the services map based on the spec
     for (auto &sp : specs)
     {
@@ -62,7 +72,7 @@ Scheduler::Scheduler(vector<Spec> specs)
             (sp.flags & NO_WATCHDOG) == NO_WATCHDOG,
             (sp.flags & NON_CRITICAL) != NON_CRITICAL);
         this->services.insert(pair<const string &, shared_ptr<Service>>(service->name, service));
-        INFO("Added service {}", service->name);
+        this->logger->info("Added service {}", service->name);
     }
 
     // Populate the dependencies of the services or add them to the read list if they have no dependencies
@@ -81,7 +91,7 @@ Scheduler::Scheduler(vector<Spec> specs)
                 shared_ptr<Service> &dependency = services.find(dependency_name)->second;
                 dependee->add_depenency(dependency);
                 dependency->add_dependee(dependee);
-                INFO("{} depends on {}", dependee->name, dependency->name);
+                this->logger->info("{} depends on {}", dependee->name, dependency->name);
 
                 dependee->set_status(WAITING);
                 if (this->watcher) {
@@ -131,14 +141,14 @@ bool Scheduler::should_reboot()
 {
     if (deadlocked())
     {
-        INFO("Deadlock restart");
+        this->logger->info("Deadlock restart");
         return true;
     }
     for (auto s: this->dead)
     {
         if (s->is_restartable == false && s->is_critical)
         {
-            INFO("Non-restartable process({}) restart", s->name);
+            this->logger->info("Non-restartable process({}) restart", s->name);
             return true;
         }
     }
@@ -148,14 +158,14 @@ bool Scheduler::should_reboot()
         for (auto ex: this->watchdog->expired()) {
             auto pr = get_for_name(ex);
             if (pr->is_watchdog_disabled == false) {
-               INFO("Expired watchdog process: {}", ex);
+               this->logger->info("Expired watchdog process: {}", ex);
                reboot = true;
             } else {
-               DEBUG("Expired watchdog ignored for process: {}", ex);
+               this->logger->debug("Expired watchdog ignored for process: {}", ex);
             }
         }
         if (reboot) {
-            INFO("Watchdog restart");
+            this->logger->info("Watchdog restart");
         }
         return reboot;
     }
@@ -164,7 +174,7 @@ bool Scheduler::should_reboot()
 
 unique_ptr<Action> Scheduler::next_action()
 {
-    DEBUG("Waiting: {}, Starting: {}, Ready: {}, Running: {}, Dead: {}",
+    this->logger->debug("Waiting: {}, Starting: {}, Ready: {}, Running: {}, Dead: {}",
         this->waiting.size(), this->starting.size(), this->ready.size(),
         this->running.size(), this->dead.size());
 
@@ -192,7 +202,7 @@ void Scheduler::service_ready(shared_ptr<Service> service)
     if (this->watcher) {
         this->watcher->service_status_changed(service->name, 0, READY, "");
     }
-    INFO("{} -> ready", service->name);
+    this->logger->info("{} -> ready", service->name);
 }
 
 void Scheduler::service_launched(shared_ptr<Service> service, pid_t pid)
@@ -214,7 +224,7 @@ void Scheduler::service_launched(shared_ptr<Service> service, pid_t pid)
     if (this->watcher) {
         this->watcher->service_status_changed(service->name, pid, STARTING, "");
     }
-    INFO("{} -> launched with pid({})", service->name, pid);
+    this->logger->info("{} -> launched with pid({})", service->name, pid);
 }
 
 void Scheduler::service_started(const string &name)
@@ -234,7 +244,7 @@ void Scheduler::service_started(pid_t pid)
     if (this->watcher) {
         this->watcher->service_status_changed(service->name, pid, RUNNING, "");
     }
-    INFO("{} -> started", service->name);
+    this->logger->info("{} -> started", service->name);
 
     // Remove it from all dependencies. If a dependee has no more dependencies, move it to ready.
     for (auto dependee : service->get_dependees())
@@ -268,21 +278,21 @@ void Scheduler::service_died(pid_t pid, int status)
         this->watcher->service_status_changed(service->name, pid, DIED,
             parse_status(status));
     }
-    INFO("{} -> {}", service->name, parse_status(status));
+    this->logger->info("{} -> {}", service->name, parse_status(status));
 }
 
 void Scheduler::debug()
 {
-    INFO("- Debug start -");
-    INFO("Ready list:");
+    this->logger->info("- Debug start -");
+    this->logger->info("Ready list:");
     for (auto kv : this->services)
     {
         if (auto srv = kv.second)
         {
-            INFO("{}: {}", srv->name.c_str(), srv->get_status());
+            this->logger->info("{}: {}", srv->name.c_str(), srv->get_status());
         }
     }
-    INFO("- Debug end -");
+    this->logger->info("- Debug end -");
 }
 
 void Scheduler::heartbeat(const string &name)
@@ -297,7 +307,7 @@ void Scheduler::heartbeat(pid_t pid)
     if (service == nullptr) {
         return;
     }
-    DEBUG("Received heartbeat from {}", service->name);
+    this->logger->debug("Received heartbeat from {}", service->name);
 
     if (service->is_watchdog_disabled == false)
     {

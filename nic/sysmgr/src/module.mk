@@ -2,7 +2,7 @@
 include ${MKDEFS}/pre.mk
 
 MODULE_TARGET   = sysmgr.bin
-MODULE_SOLIBS   = delphisdk
+MODULE_SOLIBS   = delphisdk penlog
 MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} rt ev pthread
 MODULE_ARLIBS   = sysmgrproto delphiproto
 ALL_CC_FILES    = $(wildcard ${MODULE_SRC_DIR}/*.cpp)

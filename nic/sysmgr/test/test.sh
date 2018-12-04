@@ -4,6 +4,8 @@ WS_TOP="/sw"
 TOPDIR="/sw/nic"
 BUILD_DIR=${TOPDIR}/build/x86_64/iris/
 
+export PENLOG_LOCATION="."
+
 pushd ${TOPDIR}
 
 make delphi_hub.bin sysmgr.bin sysmgr_scheduler_test.gtest \
@@ -37,7 +39,7 @@ runtest () {
     timeout $tm ${BUILD_DIR}/bin/sysmgr $json .
     cat *.log
     for ln in "${lines[@]}"
-    do grep -c "$ln" *.out.log
+    do grep -c "$ln" *.log
        RET=$?
        if [ $RET -ne 0 ]
        then
