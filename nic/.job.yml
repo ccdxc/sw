@@ -469,7 +469,7 @@ warmd:
     commands: ["make", "jobd/iota/base"]
     owners: ["email:sudhiaithal@pensando.io"]
   create:
-    image: build-111
+    image: build-112
     count: 6
     resources:
       cpus  : 8
