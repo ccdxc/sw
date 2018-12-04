@@ -16,7 +16,6 @@
 #include "nic/hal/pd/p4pd/p4pd_api.hpp"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/include/hal.hpp"
-#include "nic/include/hal_cfg.hpp"
 #include "nic/asic/capri/model/utils/cap_csr_py_if.h"
 
 #include "nic/include/asic_pd.hpp"
@@ -393,7 +392,7 @@ capri_toeplitz_init (int stage, int stage_tableid)
 }
 
 int
-capri_p4plus_table_init (hal::hal_cfg_t *hal_cfg,
+capri_p4plus_table_init (platform_type_t platform_type,
                          int stage_apphdr, int stage_tableid_apphdr,
                          int stage_apphdr_ext, int stage_tableid_apphdr_ext,
                          int stage_apphdr_off, int stage_tableid_apphdr_off,
@@ -404,8 +403,6 @@ capri_p4plus_table_init (hal::hal_cfg_t *hal_cfg,
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_te_csr_t *te_csr = NULL;
     uint64_t capri_action_p4plus_asm_base;
-
-    HAL_ASSERT(hal_cfg);
 
     // Resolve the p4plus rxdma stage 0 program to its action pc
     if (capri_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
@@ -482,8 +479,8 @@ capri_p4plus_table_init (hal::hal_cfg_t *hal_cfg,
             stage_tableid_txdma_act, te_csr,
             capri_action_p4plus_asm_base, 0);
 
-    if (stage_txdma_act == 0 &&
-        hal_cfg->platform != hal::HAL_PLATFORM_SIM) {
+    if ((stage_txdma_act == 0) &&
+        (platform_type != platform_type_t::PLATFORM_TYPE_SIM)) {
         // TODO: This should 16 as we can process 16 packets per doorbell.
         te_csr->cfg_table_property[stage_tableid_txdma_act].max_bypass_cnt(0x10);
         te_csr->cfg_table_property[stage_tableid_txdma_act].write();
@@ -509,8 +506,8 @@ capri_p4plus_table_init (hal::hal_cfg_t *hal_cfg,
             stage_tableid_txdma_act_ext, te_csr,
             capri_action_p4plus_asm_base, 0);
 
-    if (stage_txdma_act_ext == 0 &&
-        hal_cfg->platform != hal::HAL_PLATFORM_SIM) {
+    if ((stage_txdma_act_ext == 0) &&
+        (platform_type != platform_type_t::PLATFORM_TYPE_SIM)) {
         // TODO: This should 16 as we can process 16 packets per doorbell.
         te_csr->cfg_table_property[stage_tableid_txdma_act_ext].max_bypass_cnt(0x10);
         te_csr->cfg_table_property[stage_tableid_txdma_act_ext].write();
@@ -705,11 +702,11 @@ capri_mpu_icache_invalidate (void)
  * Reset tcam memories
  */
 static void
-capri_tcam_memory_init (hal::hal_cfg_t *hal_cfg)
+capri_tcam_memory_init (capri_cfg_t *capri_cfg)
 {
-    if (!hal_cfg ||
-        ((hal_cfg->platform != hal::HAL_PLATFORM_HAPS) &&
-         (hal_cfg->platform != hal::HAL_PLATFORM_HW))) {
+    if (!capri_cfg ||
+        ((capri_cfg->platform != platform_type_t::PLATFORM_TYPE_HAPS) &&
+        (capri_cfg->platform != platform_type_t::PLATFORM_TYPE_HW))) {
         return;
     }
 
@@ -755,11 +752,11 @@ capri_p4_shadow_init (void)
 }
 
 static void
-capri_sram_memory_init (hal::hal_cfg_t *hal_cfg)
+capri_sram_memory_init (capri_cfg_t *capri_cfg)
 {
-    if (!hal_cfg ||
-        ((hal_cfg->platform != hal::HAL_PLATFORM_HAPS) &&
-         (hal_cfg->platform != hal::HAL_PLATFORM_HW))) {
+    if (!capri_cfg ||
+        ((capri_cfg->platform != platform_type_t::PLATFORM_TYPE_HAPS) &&
+        (capri_cfg->platform != platform_type_t::PLATFORM_TYPE_HW))) {
         return;
     }
 
@@ -800,7 +797,7 @@ capri_p4plus_shadow_init (void)
 }
 
 int
-capri_table_rw_init (hal::hal_cfg_t *hal_cfg)
+capri_table_rw_init (capri_cfg_t *capri_cfg)
 {
     int ret;
     // !!!!!!
@@ -840,16 +837,16 @@ capri_table_rw_init (hal::hal_cfg_t *hal_cfg)
     capri_debug_hbm_reset();
 
     /* Initialize tcam memories */
-    capri_tcam_memory_init(hal_cfg);
+    capri_tcam_memory_init(capri_cfg);
 
     /* Initialize sram memories */
-    capri_sram_memory_init(hal_cfg);
+    capri_sram_memory_init(capri_cfg);
 
     return (CAPRI_OK);
 }
 
 int
-capri_p4plus_table_rw_init (hal::hal_cfg_t *hal_cfg)
+capri_p4plus_table_rw_init (void)
 {
     // !!!!!!
     // Before making this call, it is expected that
@@ -869,9 +866,6 @@ capri_p4plus_table_rw_init (hal::hal_cfg_t *hal_cfg)
     cap0_ptr->init(0);
     CAP_BLK_REG_MODEL_REGISTER(cap_top_csr_t, 0, 0, cap0_ptr);
     register_chip_inst("cap0", 0, 0);
-
-    /* Zero all sram memories in P4+ pipeline */
-    // capri_p4plus_zero_srams(hal_cfg);
 
     return (CAPRI_OK);
 }
@@ -926,7 +920,7 @@ capri_get_action_id (uint32_t tableid, uint8_t actionpc)
 }
 
 uint32_t
-capri_get_coreclk_freq(hal::hal_cfg_t *hal_cfg) 
+capri_get_coreclk_freq(platform_type_t platform_type)
 {
 
     cap_top_csr_t       &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
@@ -938,7 +932,7 @@ capri_get_coreclk_freq(hal::hal_cfg_t *hal_cfg)
     };
 
     // Below status register is not modelled in Model. So return 833 MHz always.
-    if (hal_cfg->platform == hal::HAL_PLATFORM_SIM) {
+    if (platform_type == platform_type_t::PLATFORM_TYPE_SIM) {
         return CORECLK_FREQ_ASIC_10;
     }
 

@@ -570,18 +570,19 @@ hal_logger_init (hal_cfg_t *hal_cfg)
     return HAL_RET_OK;
 }
 
-// TODO remove duplicate in asic_pd
 platform_type_t
 hal_platform_to_sdk_platform_type (hal_platform_t platform)
 {
     switch(platform) {
     case HAL_PLATFORM_SIM:
-    case HAL_PLATFORM_RTL:
         return sdk::types::platform_type_t::PLATFORM_TYPE_SIM;
+    case HAL_PLATFORM_RTL:
+        return sdk::types::platform_type_t::PLATFORM_TYPE_RTL;
 
     case HAL_PLATFORM_HW:
-    case HAL_PLATFORM_HAPS:
         return sdk::types::platform_type_t::PLATFORM_TYPE_HW;
+    case HAL_PLATFORM_HAPS:
+        return sdk::types::platform_type_t::PLATFORM_TYPE_HAPS;
 
     case HAL_PLATFORM_MOCK:
         return sdk::types::platform_type_t::PLATFORM_TYPE_MOCK;

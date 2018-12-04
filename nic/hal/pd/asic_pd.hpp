@@ -7,6 +7,7 @@
 #include <tuple>
 #include "nic/sdk/include/sdk/catalog.hpp"
 #include "nic/include/base.hpp"
+#include "nic/include/hal_cfg.hpp"
 
 using std::vector;
 using std::tuple;
@@ -14,14 +15,37 @@ using std::tuple;
 namespace hal {
 namespace pd {
 
+#define ASIC_PGM_CFG_MAX        3
+#define ASIC_ASM_CFG_MAX        3
+
+typedef void (*mpu_pgm_sort_t)(std::vector <std::string> &);
+typedef uint32_t (*mpu_pgm_symbols_t)(void **, platform_type_t);
+
+typedef struct asic_pgm_cfg_s {
+    std::string                 path;
+} asic_pgm_cfg_t;
+
+typedef struct asic_asm_cfg_s {
+    std::string                 name;
+    std::string                 path;
+    std::string                 base_addr;
+    mpu_pgm_sort_t              sort_func;
+    mpu_pgm_symbols_t           symbols_func;
+} asic_asm_cfg_t;
+
 typedef struct asic_cfg_s {
-    std::string          loader_info_file;
-    std::string          default_config_dir;    // TODO: vasanth, pls. remove this up eventually
-    uint32_t             admin_cos;
-    uint32_t             repl_entry_width;
-    std::string          pgm_name;
-    std::string          cfg_path;              // HAL config path
-    sdk::lib::catalog    *catalog;
+    std::string                 loader_info_file;
+    std::string                 default_config_dir;    // TODO: vasanth, pls. remove this up eventually
+    uint32_t                    admin_cos;
+    uint32_t                    repl_entry_width;
+    std::string                 cfg_path;
+    std::string                 pgm_name;
+    uint8_t                     num_pgm_cfgs;
+    uint8_t                     num_asm_cfgs;
+    asic_pgm_cfg_t              pgm_cfg[ASIC_PGM_CFG_MAX];
+    asic_asm_cfg_t              asm_cfg[ASIC_ASM_CFG_MAX];
+    sdk::lib::catalog           *catalog;
+    sdk::types::platform_type_t platform;
 } asic_cfg_t;
 
 // asic init
@@ -86,6 +110,7 @@ void *asic_rw_start(void *ctxt);
 
 // initialize the asic
 hal_ret_t asic_init(asic_cfg_t *asic_cfg);
+hal_ret_t asic_hbm_parse(asic_cfg_t *asic_cfg);
 
 // return TRUE if asic is initialized and ready for read/writes
 bool is_asic_rw_ready(void);
@@ -104,6 +129,7 @@ std::string asic_pd_csr_dump(char *csr_str);
 std::string asic_csr_dump(char *csr_str);
 vector< tuple <std::string, std::string, std::string>> asic_csr_dump_reg(char *block_name, bool exlude_mem);
 vector<std::string> asic_csr_list_get(std::string path, int level);
+platform_type_t hal_platform_to_sdk_platform_type(hal_platform_t platform);
 
 }    // namespace pd
 }    // namespace hal

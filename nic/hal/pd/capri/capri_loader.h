@@ -19,28 +19,12 @@
 #include <iostream>
 #include <fstream>
 #include <dirent.h>
-#ifndef P4PD_CLI
-#include "nic/asic/capri/model/capsim-master/lib/libcapisa/include/libcapisa.h"
-#include "nic/asic/capri/model/capsim-master/lib/libmpuobj/include/libmpuobj.h"
-#endif
 
 /* Definition of maximum number of programs and parameters.
  * TODO: Remove these artificial limits.
  */
 // #define MAX_PROGRAMS	512
 #define MAX_PARAMS	512
-
-/* Capri loader's MPU program information structure */
-typedef struct {
-    std::string name;
-    uint64_t base_addr;
-    uint64_t size;
-    MpuProgram prog;
-    MpuProgram copy;
-    MpuSymbolTable unresolved_params;
-    MpuSymbolTable resolved_params;
-    MpuSymbolTable labels;
-} capri_program_info_t;
 
 /* Capri loader's initialization parameter structure */
 typedef struct {
@@ -57,14 +41,6 @@ typedef struct {
     int num_params;
     capri_param_info_t params[MAX_PARAMS];
 } capri_prog_param_info_t;
-
-/* Capri loader's context structure */
-typedef struct {
-    std::string handle;
-    uint64_t prog_hbm_base_addr;
-    capri_program_info_t *program_info = NULL;
-    int num_programs;
-} capri_loader_ctx_t;
 
 typedef void (*mpu_pgm_sort_t)(std::vector <std::string> &);
 

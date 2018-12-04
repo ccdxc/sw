@@ -8,6 +8,8 @@
 #include "nic/hal/pd/gft/gft_state.hpp"
 #include "nic/p4/gft/include/defines.h"
 #include "nic/sdk/include/sdk/tcam.hpp"
+#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/hal/pd/common_p4plus/common_p4plus.hpp"
 
 using sdk::table::tcam;
 
@@ -628,9 +630,32 @@ pd_gft_exact_match_flow_entry_create (pd_gft_exact_match_flow_entry_args_t *gft_
 hal_ret_t
 pd_asic_init (pd_func_args_t *pd_func_args)
 {
+    hal_ret_t ret = HAL_RET_OK;
     pd_asic_init_args_t *args = pd_func_args->pd_asic_init;
+
     args->cfg->pgm_name = std::string("gft");
-    asic_init(args->cfg);
+
+    ret = asic_hbm_parse(args->cfg);
+    HAL_ASSERT(ret == HAL_RET_OK);
+
+    args->cfg->num_pgm_cfgs = 1;
+    args->cfg->pgm_cfg[0].path = std::string("pgm_bin");
+
+    args->cfg->num_asm_cfgs = 2;
+    args->cfg->asm_cfg[0].name = std::string("gft");
+    args->cfg->asm_cfg[0].path = std::string("asm_bin");
+    args->cfg->asm_cfg[0].symbols_func = NULL;
+    args->cfg->asm_cfg[0].sort_func = NULL;
+    args->cfg->asm_cfg[0].base_addr = std::string(JP4_PRGM);
+
+    args->cfg->asm_cfg[1].name = std::string("p4plus");
+    args->cfg->asm_cfg[1].path = std::string("p4plus_bin");
+    args->cfg->asm_cfg[1].symbols_func = common_p4plus_symbols_init;
+    args->cfg->asm_cfg[1].sort_func = NULL;
+    args->cfg->asm_cfg[1].base_addr = std::string(JP4PLUS_PRGM);
+
+    ret = asic_init(args->cfg);
+
     return HAL_RET_OK;
 }
 

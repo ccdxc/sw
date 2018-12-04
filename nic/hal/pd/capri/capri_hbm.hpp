@@ -17,13 +17,13 @@ using hal::pd::asic_hbm_bw_t;
 #include "nic/include/hal_cfg.hpp"
 #include "nic/hal/pd/capri/capri.hpp"
 
-hal_ret_t capri_hbm_parse(capri_cfg_t *cfg);
+hal_ret_t capri_hbm_parse(std::string cfg_path, std::string pgm_name);
 mpartition_region_t *get_hbm_region(char *name);
 uint64_t get_hbm_base(void);
 uint64_t get_hbm_offset(const char *reg_name);
 uint64_t get_start_offset(const char *reg_name);
 uint32_t get_size_kb(const char *reg_name);
-void reset_hbm_regions(void);
+void reset_hbm_regions(capri_cfg_t *cfg);
 int32_t capri_hbm_read_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 int32_t capri_hbm_write_mem(uint64_t addr, const uint8_t *buf, uint32_t size);
 
@@ -242,4 +242,5 @@ capri_hbm_cache_regions_init();
 extern mpartition_region_t*
 get_hbm_region_by_address(uint64_t addr);
 
+uint32_t capri_get_coreclk_freq(platform_type_t type);
 #endif    // __CAPRI_HBM_HPP__

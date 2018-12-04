@@ -33,12 +33,9 @@ std::string barco_hex_dump(const uint8_t *buf, size_t sz)
     return result.str();
 }
 
-hal_ret_t capri_barco_crypto_init(void)
+hal_ret_t capri_barco_crypto_init(capri_cfg_t *capri_cfg)
 {
     hal_ret_t                           ret = HAL_RET_OK;
-    hal_cfg_t *hal_cfg =
-        (hal::hal_cfg_t *)hal::hal_get_current_thread()->data();
-    HAL_ASSERT(hal_cfg);
     cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_hens_csr_t &                    hens = cap0.md.hens;
 
@@ -96,7 +93,7 @@ hal_ret_t capri_barco_crypto_init(void)
     /*
      * Initialize the barco DRBG random number generator.
      */
-    if (hal_cfg->platform != hal::HAL_PLATFORM_HAPS) {
+    if (capri_cfg->platform != platform_type_t::PLATFORM_TYPE_HAPS) {
         /* HAPS does not contain the DRBG block */
         capri_barco_init_drbg();
     }

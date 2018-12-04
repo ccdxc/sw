@@ -13,7 +13,6 @@
 #include <cmath>
 
 #include "nic/include/base.hpp"
-#include "nic/include/hal_cfg.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 #include "nic/asic/capri/model/cap_psp/cap_psp_csr.h"
@@ -58,7 +57,7 @@ capri_txs_timer_init_hsh_depth(uint32_t key_lines)
 
 // pre init and call timer hbm and sram init
 static void
-capri_txs_timer_init_pre (uint32_t key_lines, hal::hal_cfg_t *hal_cfg)
+capri_txs_timer_init_pre (uint32_t key_lines, capri_cfg_t *capri_cfg)
 {
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_txs_csr_t *txs_csr = &cap0.txs.txs;
@@ -70,17 +69,17 @@ capri_txs_timer_init_pre (uint32_t key_lines, hal::hal_cfg_t *hal_cfg)
     // timer hbm and sram init
 
     // sram_hw_init is not implemented in the C++ model, so skip it there
-    HAL_ASSERT(hal_cfg);
+    HAL_ASSERT(capri_cfg);
     txs_csr->cfw_timer_glb.read();
-    if (hal_cfg->platform != hal::HAL_PLATFORM_SIM) {
+    if (capri_cfg->platform != platform_type_t::PLATFORM_TYPE_SIM) {
         HAL_TRACE_DEBUG("timer sram init");
         txs_csr->cfw_timer_glb.sram_hw_init(1);
     }
 
     // skip hbm init in model (C++ and RTL) as memory is 0 there and this
     // takes a long time
-    if (hal_cfg->platform != hal::HAL_PLATFORM_SIM &&
-            hal_cfg->platform != hal::HAL_PLATFORM_RTL) {
+    if (capri_cfg->platform != platform_type_t::PLATFORM_TYPE_SIM &&
+          capri_cfg->platform != platform_type_t::PLATFORM_TYPE_RTL) {
         HAL_TRACE_DEBUG("timer hbm init");
         txs_csr->cfw_timer_glb.hbm_hw_init(1);
     }
@@ -140,7 +139,7 @@ capri_txs_timer_init_post (uint32_t key_lines)
 
 
 hal_ret_t
-capri_txs_scheduler_init (uint32_t admin_cos, hal::hal_cfg_t *hal_cfg)
+capri_txs_scheduler_init (uint32_t admin_cos, capri_cfg_t *capri_cfg)
 {
 
     cap_top_csr_t       &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
@@ -184,9 +183,9 @@ capri_txs_scheduler_init (uint32_t admin_cos, hal::hal_cfg_t *hal_cfg)
     // Init sram.
     txs_csr.cfw_scheduler_glb.read();
     // skip init on RTL/Model.
-    HAL_ASSERT(hal_cfg);
-    if (hal_cfg->platform != hal::HAL_PLATFORM_SIM &&
-            hal_cfg->platform != hal::HAL_PLATFORM_RTL) {
+    HAL_ASSERT(capri_cfg);
+    if (capri_cfg->platform != platform_type_t::PLATFORM_TYPE_SIM &&
+        capri_cfg->platform != platform_type_t::PLATFORM_TYPE_RTL) {
         txs_csr.cfw_scheduler_glb.hbm_hw_init(1);
     }
     txs_csr.cfw_scheduler_glb.sram_hw_init(1);
@@ -209,7 +208,7 @@ capri_txs_scheduler_init (uint32_t admin_cos, hal::hal_cfg_t *hal_cfg)
 
 
     // init timer
-    capri_txs_timer_init_pre(CAPRI_TIMER_NUM_KEY_CACHE_LINES, hal_cfg);
+    capri_txs_timer_init_pre(CAPRI_TIMER_NUM_KEY_CACHE_LINES, capri_cfg);
 
 #if 0
     // Find admin_cos and program it in dtdmhi-calendar for higher priority.

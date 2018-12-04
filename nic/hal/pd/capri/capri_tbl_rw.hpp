@@ -14,8 +14,7 @@
 #ifndef P4PD_CLI
 #include "nic/include/base.hpp"
 #endif
-#include "nic/include/hal.hpp"
-#include "nic/include/hal_cfg.hpp"
+#include "nic/hal/pd/capri/capri.hpp"
 
 #define CAPRI_P4_NUM_STAGES     6
 #define CAPRI_P4PLUS_NUM_STAGES 8
@@ -54,8 +53,8 @@ typedef struct capri_table_mem_layout_ {
     char        *tablename;
 } capri_table_mem_layout_t;
 
-int capri_table_rw_init(hal::hal_cfg_t *hal_cfg);
-int capri_p4plus_table_rw_init(hal::hal_cfg_t *hal_cfg);
+int capri_table_rw_init(capri_cfg_t *capri_cfg);
+int capri_p4plus_table_rw_init(void);
 
 void capri_table_rw_cleanup();
 
@@ -152,7 +151,7 @@ void capri_program_table_mpu_pc(int tableid, bool gress, int stage, int stage_ta
 
 int capri_toeplitz_init(int stage, int stage_tableid);
 
-int capri_p4plus_table_init(hal::hal_cfg_t *hal_cfg,
+int capri_p4plus_table_init(platform_type_t platform_type,
                             int stage_apphdr, int stage_tableid_apphdr,
                             int stage_apphdr_ext, int stage_tableid_apphdr_ext,
                             int stage_apphdr_off, int stage_tableid_apphdr_off,
@@ -174,6 +173,5 @@ uint8_t capri_get_action_pc(uint32_t tableid, uint8_t actionid);
 bool p4plus_invalidate_cache(uint64_t addr, uint32_t size_in_bytes,
                              p4plus_cache_action_t action);
 
-uint32_t capri_get_coreclk_freq(hal::hal_cfg_t *hal_cfg);
 
 #endif

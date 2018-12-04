@@ -330,7 +330,7 @@ void PdClient::init(void)
 
     hal_cfg.cfg_path = hal_cfg_path_;
     NIC_LOG_DEBUG("Initializing table rw ...");
-    ret = capri_p4plus_table_rw_init(&hal_cfg);
+    ret = capri_p4plus_table_rw_init();
     assert(ret == 0);
 
     rdma_manager_init();

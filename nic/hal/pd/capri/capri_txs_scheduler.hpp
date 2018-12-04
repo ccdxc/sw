@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "nic/include/base.hpp"
-#include "nic/include/hal_cfg.hpp"
+#include "nic/hal/pd/capri/capri.hpp"
 
 #define NUM_MAX_COSES 16
 
@@ -66,7 +66,7 @@ typedef struct capri_txs_policer_lif_params_s {
  * @return hal_ret_t: Status of the operation
  */
 
-hal_ret_t capri_txs_scheduler_init(uint32_t admin_cos, hal::hal_cfg_t *hal_cfg);
+hal_ret_t capri_txs_scheduler_init(uint32_t admin_cos, capri_cfg_t *capri_cfg);
 
 void capri_txs_timer_init_hsh_depth(uint32_t key_lines);
 

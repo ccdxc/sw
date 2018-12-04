@@ -542,7 +542,7 @@ asic_rw_loop (void *ctxt)
     }
 }
 
-static platform_type_t
+platform_type_t
 hal_platform_to_sdk_platform_type (hal_platform_t platform)
 {
     switch(platform) {
@@ -578,8 +578,7 @@ asic_rw_init (hal_cfg_t *hal_cfg)
 
     // initialize PAL
     palrv = sdk::lib::pal_init(
-                hal_platform_to_sdk_platform_type(hal_cfg->platform));
-    //palrv = sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_MOCK);
+        hal::pd::hal_platform_to_sdk_platform_type(hal_cfg->platform));
     HAL_ABORT(IS_PAL_API_SUCCESS(palrv));
 
     // do asic initialization
@@ -589,6 +588,7 @@ asic_rw_init (hal_cfg_t *hal_cfg)
     asic_cfg.admin_cos = 1;
     asic_cfg.cfg_path = hal_cfg->cfg_path;
     asic_cfg.catalog = hal_cfg->catalog;
+    asic_cfg.platform = hal::pd::hal_platform_to_sdk_platform_type(hal_cfg->platform);
     args.cfg = &asic_cfg;
     pd_func_args.pd_asic_init = &args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_ASIC_INIT, &pd_func_args);

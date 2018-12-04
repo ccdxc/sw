@@ -14,8 +14,32 @@
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/include/asic_pd.hpp"
+#ifndef P4PD_CLI
+#include "nic/asic/capri/model/capsim-master/lib/libcapisa/include/libcapisa.h"
+#include "nic/asic/capri/model/capsim-master/lib/libmpuobj/include/libmpuobj.h"
+#endif
 
 namespace pt = boost::property_tree;
+
+/* Capri loader's MPU program information structure */
+typedef struct {
+    std::string name;
+    uint64_t base_addr;
+    uint64_t size;
+    MpuProgram prog;
+    MpuProgram copy;
+    MpuSymbolTable unresolved_params;
+    MpuSymbolTable resolved_params;
+    MpuSymbolTable labels;
+} capri_program_info_t;
+
+/* Capri loader's context structure */
+typedef struct {
+    std::string handle;
+    uint64_t prog_hbm_base_addr;
+    capri_program_info_t *program_info = NULL;
+    int num_programs;
+} capri_loader_ctx_t;
 
 #define LDD_INFO_FILE_NAME    "mpu_prog_info.json"
 

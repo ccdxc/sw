@@ -76,10 +76,6 @@
             "size_kb": 1
         },
         {
-            "name": "key-desc-array",
-            "size_kb": 1024
-        },
-        {
             "name": "rdma-eq-intr-table",
             "size_kb": 32
         },
