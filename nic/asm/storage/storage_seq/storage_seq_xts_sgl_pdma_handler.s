@@ -55,18 +55,20 @@ storage_seq_xts_sgl_pdma_xfer:
    // plus padding
    
    CHAIN_SGL_PDMA(dma_m2m_4, dma_m2m_5,
-                  d.addr0, d.len0, exit, pdma_xfer_error)
+                  d.addr0, d.len0, pdma_xfer_done, pdma_xfer_error)
    CHAIN_SGL_PDMA(dma_m2m_6, dma_m2m_7,
-                  d.addr1, d.len1, exit, pdma_xfer_error)
+                  d.addr1, d.len1, pdma_xfer_done, pdma_xfer_error)
    CHAIN_SGL_PDMA(dma_m2m_8, dma_m2m_9,
-                  d.addr2, d.len2, exit, pdma_xfer_error)
+                  d.addr2, d.len2, pdma_xfer_done, pdma_xfer_error)
    CHAIN_SGL_PDMA(dma_m2m_10, dma_m2m_11,
-                  d.addr3, d.len3, exit, pdma_xfer_error)
+                  d.addr3, d.len3, pdma_xfer_done, pdma_xfer_error)
 
    // Catch any driver errors here for debugging, i.e., driver did not 
    // provision the SGL correctly relative to comp output data length.
    bne          r_src_len, r0, pdma_xfer_error
    nop
+   
+pdma_xfer_done:   
    SEQ_METRICS_SET(sgl_pdma_xfers)
    
 exit:

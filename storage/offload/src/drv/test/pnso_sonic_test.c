@@ -257,18 +257,30 @@ submit_requests(struct thread_state *tstate)
 	struct req_state *rstate = NULL;
 	struct pnso_service_request *svc_req = NULL;
 	struct pnso_service_result *svc_res = NULL;
+	pnso_poll_fn_t poll_fn;
+	void *poll_ctx;
 
 	for (batch_id = 0; batch_id < PNSO_TEST_BATCH_DEPTH; batch_id++) {
 		rstate = &tstate->reqs[batch_id];
 		svc_req = &rstate->req.req;
 		svc_res = &rstate->res.res;
 
+		poll_fn = NULL;
+		poll_ctx = NULL;
 		err = pnso_submit_request(svc_req, svc_res, comp_cb, rstate,
-					 NULL, NULL);
+					 &poll_fn, &poll_ctx);
 		if (err != 0) {
 			OSAL_LOG_ERROR("pnso_submit_request(svc %u) failed with %d",
 				 svc_req->svc[0].svc_type, err);
 			return err;
+		}
+		if (poll_fn) {
+			err = (*poll_fn)(poll_ctx);
+			if (err != 0) {
+				OSAL_LOG_ERROR("poll_fn(svc %u) failed with %d",
+                                         svc_req->svc[0].svc_type, err);
+				return err;
+			}
 		}
 	}
 
@@ -284,7 +296,7 @@ verify_service_overall_err(void)
 	struct req_state *rstate;
 	struct pnso_service_result *svc_res = NULL;
 
-	OSAL_LOG_INFO("verify overall err ...");
+	OSAL_LOG_INFO("verify overall status ...");
 
 	osal_yield();
 	count = 0;
@@ -1831,6 +1843,7 @@ body(void)
 	/* Initialize session */
 	memset(&init_params, 0, sizeof(init_params));
 	init_params.per_core_qdepth = 16;
+	init_params.core_count = 1;
 	init_params.block_size = PNSO_TEST_BLOCK_SIZE;
 
 	if ((err = pnso_init(&init_params)) != 0) {

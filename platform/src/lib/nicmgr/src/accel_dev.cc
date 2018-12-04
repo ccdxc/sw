@@ -178,13 +178,6 @@ static accel_rgroup_map_t   accel_pf_rgroup_map;
     } while (false)
 
 
-/*
- * accel Delphi ring ID
- * - with workaround for Delphi optimizing out key defaul value 0.
- */
-#define ACCEL_HW_RING_RID(rid)          ((rid) + 1)
-#define ACCEL_HW_RING_SUB_RID(sub_rid)  ((sub_rid) + 1)
-
 Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
                    const hal_lif_info_t *nicmgr_lif_info,
                    PdClient *pd_client,
@@ -382,7 +375,7 @@ Accel_PF::DelphiDeviceInit(void)
     if (g_nicmgr_svc) {
         delphi_pf = make_shared<delphi::objects::AccelPfInfo>();
         delphi::objects::AccelPfInfoPtr shared_pf(delphi_pf);
-        shared_pf->set_key(info.hw_lif_id);
+        shared_pf->set_key(std::to_string(info.hw_lif_id));
         shared_pf->set_hwlifid(info.hw_lif_id);
         shared_pf->set_numseqqueues(spec->seq_created_count);
         shared_pf->set_cryptokeyidxbase(crypto_key_idx_base);
@@ -391,9 +384,9 @@ Accel_PF::DelphiDeviceInit(void)
         shared_pf->set_intrcount(pci_resources.intrc);
         g_nicmgr_svc->sdk()->SetObject(shared_pf);
 
-        seq_qkey.set_lifid(info.hw_lif_id);
+        seq_qkey.set_lifid(std::to_string(info.hw_lif_id));
         for (qid = 0; qid < spec->seq_created_count; qid++) {
-            seq_qkey.set_qid(qid);
+            seq_qkey.set_qid(std::to_string(qid));
             qmetrics_addr = GetQstateAddr(STORAGE_SEQ_QTYPE_SQ, qid) +
                             offsetof(storage_seq_qstate_t, metrics);
             auto qmetrics = delphi::objects::AccelSeqQueueMetrics::
@@ -405,8 +398,8 @@ Accel_PF::DelphiDeviceInit(void)
              * issues _DevcmdSeqQueueInit().
              */
             auto qinfo = make_shared<delphi::objects::AccelSeqQueueInfo>();
-            qinfo->mutable_key()->set_lifid(info.hw_lif_id);
-            qinfo->mutable_key()->set_qid(qid);
+            qinfo->mutable_key()->set_lifid(std::to_string(info.hw_lif_id));
+            qinfo->mutable_key()->set_qid(std::to_string(qid));
             qinfo->set_qstateaddr(GetQstateAddr(STORAGE_SEQ_QTYPE_SQ, qid));
             delphi_qinfo_vec.push_back(std::move(qinfo));
             seq_queue_info_publish(qid, STORAGE_SEQ_QGROUP_CPDC, 0);
@@ -1302,7 +1295,7 @@ Accel_PF::accel_rgroup_rinfo_get(void)
 /*
  * Accelerator ring group ring indices response callback handler
  */
-static void
+void
 accel_rgroup_rindices_rsp_cb(void *user_ctx,
                              const accel_rgroup_rindices_rsp_t& indices)
 {
@@ -1311,6 +1304,9 @@ accel_rgroup_rindices_rsp_cb(void *user_ctx,
     ACCEL_RGROUP_GET_CB_HANDLE_CHECK(indices.ring_handle);
     accel_rgroup_ring_t& rgroup_ring =
             accel_pf_rgroup_find_create(indices.ring_handle, indices.sub_ring);
+    if (memcmp(&rgroup_ring.indices, &indices, sizeof(indices))) {
+        accel_pf->rgroup_indices_chg = true;
+    }
     rgroup_ring.indices = indices;
 }
 
@@ -1333,7 +1329,7 @@ Accel_PF::accel_rgroup_rindices_get(void)
 /*
  * Accelerator ring group ring metrics response callback handler
  */
-static void
+void
 accel_rgroup_rmetrics_rsp_cb(void *user_ctx,
                              const accel_rgroup_rmetrics_rsp_t& metrics)
 {
@@ -1342,6 +1338,9 @@ accel_rgroup_rmetrics_rsp_cb(void *user_ctx,
     ACCEL_RGROUP_GET_CB_HANDLE_CHECK(metrics.ring_handle);
     accel_rgroup_ring_t& rgroup_ring =
             accel_pf_rgroup_find_create(metrics.ring_handle, metrics.sub_ring);
+    if (memcmp(&rgroup_ring.metrics, &metrics, sizeof(metrics))) {
+        accel_pf->rgroup_metrics_chg = true;
+    }
     rgroup_ring.metrics = metrics;
 }
 
@@ -1370,14 +1369,19 @@ Accel_PF::delphi_update(void)
     accel_rgroup_iter_c     iter;
 
     if (g_nicmgr_svc) {
+        rgroup_indices_chg = false;
+        rgroup_metrics_chg = false;
+
         accel_rgroup_rindices_get();
         accel_rgroup_rmetrics_get();
 
-        for (iter  = accel_pf_rgroup_map.begin();
-             iter != accel_pf_rgroup_map.end();
-             iter++) {
+        if (rgroup_indices_chg || rgroup_metrics_chg) {
+            for (iter  = accel_pf_rgroup_map.begin();
+                 iter != accel_pf_rgroup_map.end();
+                 iter++) {
 
-            accel_ring_info_publish(iter->second);
+                accel_ring_info_publish(iter->second);
+            }
         }
     }
 }
@@ -1508,11 +1512,11 @@ accel_pf_rgroup_find_create(uint32_t ring_handle,
 
     accel_rgroup_ring_t& rgroup_ring = accel_pf_rgroup_map[key];
     rgroup_ring.delphi_ring = make_shared<delphi::objects::AccelHwRingInfo>();
-    rgroup_ring.delphi_ring->mutable_key()->set_rid(ACCEL_HW_RING_RID(ring_handle));
-    rgroup_ring.delphi_ring->mutable_key()->set_subrid(ACCEL_HW_RING_SUB_RID(sub_ring));
+    rgroup_ring.delphi_ring->mutable_key()->set_rid(accel_ring_id2name_get(ring_handle));
+    rgroup_ring.delphi_ring->mutable_key()->set_subrid(std::to_string(sub_ring));
 
-    delphi_key.set_rid(ACCEL_HW_RING_RID(ring_handle));
-    delphi_key.set_subrid(ACCEL_HW_RING_SUB_RID(sub_ring));
+    delphi_key.set_rid(accel_ring_id2name_get(ring_handle));
+    delphi_key.set_subrid(std::to_string(sub_ring));
     rgroup_ring.delphi_metrics = delphi::objects::AccelHwRingMetrics::
                                  NewAccelHwRingMetrics(delphi_key);
     return rgroup_ring;
