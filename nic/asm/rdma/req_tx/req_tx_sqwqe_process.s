@@ -330,7 +330,10 @@ bind_mw:
     CAPRI_RESET_TABLE_0_ARG()
     phvwr          CAPRI_PHV_RANGE(SQWQE_TO_LKEY_MW_T0_P, va, len), d.{bind_mw.va, bind_mw.len}
     phvwrpair      CAPRI_PHV_FIELD(SQWQE_TO_LKEY_MW_T0_P, r_key), d.base.key, CAPRI_PHV_FIELD(SQWQE_TO_LKEY_MW_T0_P, new_r_key_key), d.base.new_r_key_key
-    phvwr          CAPRI_PHV_RANGE(SQWQE_TO_LKEY_MW_T0_P, acc_ctrl, zbva), d.{bind_mw.access_ctrl, bind_mw.mw_type, bind_mw.zbva}
+    phvwrpair      CAPRI_PHV_FIELD(SQWQE_TO_LKEY_MW_T0_P, acc_ctrl), d.{bind_mw.access_ctrl}, \
+                   CAPRI_PHV_FIELD(SQWQE_TO_LKEY_MW_T0_P, zbva), d.{bind_mw.access_ctrl.zbva}
+    add            r4, 1, d.bind_mw.inv_en
+    phvwr          CAPRI_PHV_FIELD(SQWQE_TO_LKEY_MW_T0_P, mw_type), r4
 
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_bind_mw_sqlkey_process, r2)
 
@@ -385,23 +388,21 @@ frpmr:
 
     phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, fast_reg_rsvd_lkey_enable), K_FAST_REG_ENABLE, \
                    CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, base_va), d.frpmr.base_va
-    phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, zbva), d.frpmr.zbva, \
+    phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, zbva), d.frpmr.access_ctrl.zbva, \
                    CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, new_user_key), d.{base.new_user_key}
     phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, sge_index), 0, \
-                   CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, pt_start_offset), d.frpmr.pt_start_offset
-    phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, mw_en), d.frpmr.mw_en, \
-                   CAPRI_PHV_RANGE(WQE_TO_FRPMR_LKEY_T0, num_pt_entries, acc_ctrl), d.{frpmr.num_pt_entries, frpmr.access_ctrl}
-    phvwr          CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, log_page_size), d.frpmr.log_page_size
+                   CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, log_page_size), d.frpmr.log_page_size
+    phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, num_pt_entries), d.{frpmr.num_pt_entries}, \
+                   CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, acc_ctrl), d.{frpmr.access_ctrl}
 
     phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, fast_reg_rsvd_lkey_enable), K_FAST_REG_ENABLE, \
                    CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, base_va), d.frpmr.base_va
-    phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, zbva), d.frpmr.zbva, \
+    phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, zbva), d.frpmr.access_ctrl.zbva, \
                    CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, new_user_key), d.{base.new_user_key}
-    phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, sge_index), 0, \
-                   CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, pt_start_offset), d.frpmr.pt_start_offset
-    phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, mw_en), d.frpmr.mw_en, \
-                   CAPRI_PHV_RANGE(WQE_TO_FRPMR_LKEY_T1, num_pt_entries, acc_ctrl), d.{frpmr.num_pt_entries, frpmr.access_ctrl}
-    phvwr          CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, log_page_size), d.frpmr.log_page_size
+    phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, sge_index), 1, \
+                   CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, log_page_size), d.frpmr.log_page_size
+    phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, num_pt_entries), d.{frpmr.num_pt_entries}, \
+                   CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, acc_ctrl), d.{frpmr.access_ctrl}
 
 
     phvwr          CAPRI_PHV_FIELD(TO_S4_FRPMR_LKEY_P, len), d.frpmr.len

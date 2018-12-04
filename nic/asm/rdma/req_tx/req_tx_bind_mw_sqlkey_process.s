@@ -35,8 +35,8 @@ req_tx_bind_mw_sqlkey_process:
     // is zero based virtual address region, then do not allow memory window
     // binding to this region
     sne            c1, d.state, KEY_STATE_VALID // Branch Delay Slot
-    ARE_ALL_FLAGS_SET_B(c2, d.flags, MR_FLAG_MW_EN)
-    ARE_ALL_FLAGS_SET_B(c3, d.flags, MR_FLAG_ZBVA)
+    ARE_ALL_FLAGS_SET_B(c2, d.acc_ctrl, ACC_CTRL_MW_BIND)
+    ARE_ALL_FLAGS_SET_B(c3, d.acc_ctrl, ACC_CTRL_ZERO_BASED)
     bcf            [c3 | !c2 | c1], invalid_mr
 
     // if memory region doesn't have local write permission, do not allow

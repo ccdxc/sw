@@ -96,9 +96,10 @@ def TestCaseStepVerify(tc, step):
 
         if ((mw_kt_entry.data.state != 2) or (mw_kt_entry.data.pt_base != mr_kt_entry.data.pt_base)
             or (mw_kt_entry.data.base_va != (tc.pvtdata.mw_va + mr_kt_entry.data.base_va))
-            or ((mw_kt_entry.data.flags & 0x4) != 0x4)):
-            logger.info("RDMA TestCaseVerify(): Bind MW Rkey fails for hw_lif %d qp %s rkey %d " %
-                    (rs.lqp.pd.ep.intf.lif.hw_lif_id, rs.lqp.GID(), tc.pvtdata.r_key))
+            or ((mw_kt_entry.data.acc_ctrl) != 0x2e) #(ACC_CTRL_REMOTE_WRITE | ACC_CTRL_REMOTE_READ | ACC_CTRL_REMOTE_ATOMIC | ACC_CTRL_ZERO_BASED)
+            or ((mw_kt_entry.data.flags & 0xe0) != 0xe0)): #MR_FLAG_INV_EN, MR_FLAG_IS_MW, MR_FLAG_UKEY_EN
+            logger.info("RDMA TestCaseVerify(): Bind MW Rkey fails for hw_lif %d qp %s rkey %d mr_flags: 0x%x" %
+                    (rs.lqp.pd.ep.intf.lif.hw_lif_id, rs.lqp.GID(), tc.pvtdata.r_key, mw_kt_entry.data.flags))
             return False
 
     elif step.step_id == 1:

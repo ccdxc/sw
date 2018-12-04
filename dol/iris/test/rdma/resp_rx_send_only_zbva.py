@@ -34,8 +34,8 @@ def TestCaseSetup(tc):
     tc.pvtdata.user_key = 132
 
     kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, tc.pvtdata.l_key)
-    # change the flags of the MR lkey to have zbva
-    kt_entry.data.flags = kt_entry.data.flags | 4
+    # change the acc_ctrl of the MR lkey to have zbva
+    kt_entry.data.acc_ctrl = kt_entry.data.acc_ctrl |0x20 #ACC_CTRL_ZERO_BASED
     kt_entry.WriteWithDelay();
 
     tc.pvtdata.base_va = kt_entry.data.base_va

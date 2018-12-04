@@ -49,7 +49,7 @@ resp_rx_rqrkey_process:
     bcf         [!c1], error_completion
 
     add         ABS_VA, K_VA, r0 // BD Slot
-    smeqb       c1, d.flags, MR_FLAG_ZBVA, MR_FLAG_ZBVA
+    IS_ANY_FLAG_SET_B(c1, d.acc_ctrl, ACC_CTRL_ZERO_BASED)
     // if ZBVA, add key table's base_va to k_va
     add.c1      ABS_VA, ABS_VA, d.base_va
 

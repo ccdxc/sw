@@ -36,10 +36,10 @@ req_tx_sqlkey_invalidate_process:
     // Skip invalidate if li_fence is set (first pass)
     seq           c2, CAPRI_KEY_FIELD(IN_P, set_li_fence), 1 
     bcf           [c2], exit
+    nop
 
     // it is an error to invalidate an MR not eligible for invalidation
-    and          r2, d.flags, MR_FLAG_INV_EN //BD-slot
-    beq          r2, r0, error_completion
+    bbeq         d.mr_flags.inv_en, 0, error_completion
 
     // it is an error to invalidate an MR in INVALID state
     seq          c1, d.state, KEY_STATE_INVALID // BD-slot 

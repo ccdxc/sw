@@ -589,8 +589,8 @@ header_type req_tx_sqwqe_to_lkey_frpmr_info_t {
         fast_reg_rsvd_lkey_enable        :    1;
         zbva                             :    1;
         lkey_state_update                :    1;
-        pt_start_offset                  :    3;
-        mw_en                            :    1;
+        rsvd1                            :    3;
+        rsvd3                            :    1;
         new_user_key                     :    8;
         log_page_size                    :    8;
         num_pt_entries                   :    32;
@@ -1618,8 +1618,8 @@ action req_tx_frpmr_sqlkey_process_t0 () {
     modify_field(t0_s2s_sqwqe_to_lkey_frpmr_info_scr.fast_reg_rsvd_lkey_enable, t0_s2s_sqwqe_to_lkey_frpmr_info.fast_reg_rsvd_lkey_enable);
     modify_field(t0_s2s_sqwqe_to_lkey_frpmr_info_scr.zbva, t0_s2s_sqwqe_to_lkey_frpmr_info.zbva);
     modify_field(t0_s2s_sqwqe_to_lkey_frpmr_info_scr.lkey_state_update, t0_s2s_sqwqe_to_lkey_frpmr_info.lkey_state_update);
-    modify_field(t0_s2s_sqwqe_to_lkey_frpmr_info_scr.pt_start_offset, t0_s2s_sqwqe_to_lkey_frpmr_info.pt_start_offset);
-    modify_field(t0_s2s_sqwqe_to_lkey_frpmr_info_scr.mw_en, t0_s2s_sqwqe_to_lkey_frpmr_info.mw_en);
+    modify_field(t0_s2s_sqwqe_to_lkey_frpmr_info_scr.zbva, t0_s2s_sqwqe_to_lkey_frpmr_info.zbva);
+    modify_field(t0_s2s_sqwqe_to_lkey_frpmr_info_scr.rsvd3, t0_s2s_sqwqe_to_lkey_frpmr_info.rsvd3);
     modify_field(t0_s2s_sqwqe_to_lkey_frpmr_info_scr.new_user_key, t0_s2s_sqwqe_to_lkey_frpmr_info.new_user_key);
     modify_field(t0_s2s_sqwqe_to_lkey_frpmr_info_scr.acc_ctrl, t0_s2s_sqwqe_to_lkey_frpmr_info.acc_ctrl);
     modify_field(t0_s2s_sqwqe_to_lkey_frpmr_info_scr.log_page_size, t0_s2s_sqwqe_to_lkey_frpmr_info.log_page_size);
@@ -1643,7 +1643,7 @@ action req_tx_frpmr_sqlkey_process_t1 () {
     modify_field(t1_s2s_sqwqe_to_lkey_frpmr_info_scr.fast_reg_rsvd_lkey_enable, t1_s2s_sqwqe_to_lkey_frpmr_info.fast_reg_rsvd_lkey_enable);
     modify_field(t1_s2s_sqwqe_to_lkey_frpmr_info_scr.zbva, t1_s2s_sqwqe_to_lkey_frpmr_info.zbva);
     modify_field(t1_s2s_sqwqe_to_lkey_frpmr_info_scr.lkey_state_update, t1_s2s_sqwqe_to_lkey_frpmr_info.lkey_state_update);
-    modify_field(t1_s2s_sqwqe_to_lkey_frpmr_info_scr.mw_en, t1_s2s_sqwqe_to_lkey_frpmr_info.mw_en);
+    modify_field(t1_s2s_sqwqe_to_lkey_frpmr_info_scr.rsvd3, t1_s2s_sqwqe_to_lkey_frpmr_info.rsvd3);
     modify_field(t1_s2s_sqwqe_to_lkey_frpmr_info_scr.new_user_key, t1_s2s_sqwqe_to_lkey_frpmr_info.new_user_key);
     modify_field(t1_s2s_sqwqe_to_lkey_frpmr_info_scr.acc_ctrl, t1_s2s_sqwqe_to_lkey_frpmr_info.acc_ctrl);
     modify_field(t1_s2s_sqwqe_to_lkey_frpmr_info_scr.log_page_size, t1_s2s_sqwqe_to_lkey_frpmr_info.log_page_size);

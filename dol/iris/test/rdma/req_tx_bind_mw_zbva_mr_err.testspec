@@ -33,9 +33,8 @@ descriptors:
                 #r_key         : callback://rdma/rdma/GetNewType1MWRkey
                 r_key         : ref://testcase/pvtdata/r_key
                 new_r_key_key : 192
-                access_ctrl   : 0xe # (ACC_CTRL_REMOTE_WRITE | ACC_CTRL_REMOTE_READ | ACC_CTRL_REMOTE_ATOMIC)
+                access_ctrl   : 0xe # (ACC_CTRL_REMOTE_WRITE | ACC_CTRL_REMOTE_READ | ACC_CTRL_REMOTE_ATOMIC | ACC_CTRL_ZERO_BASED(0))
                 mw_type       : 1
-                zbva          : 0
 
     - descriptor:
         id      : EXP_CQ_DESC

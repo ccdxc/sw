@@ -45,7 +45,7 @@ def TestCasePreTrigger(tc):
     rs = tc.config.rdmasession
     kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, (tc.pvtdata.l_key & 0xFFFFFF))
     # Set MR to be zbva based and request MW bind to the region
-    kt_entry.data.flags |= 4 # MR_FLAG_ZBVA based MR region
+    kt_entry.data.acc_ctrl |= (1 << 5) #ACC_CTRL_ZERO_BASED
     kt_entry.WriteWithDelay()
 
     logger.info("RDMA TestCasePreTrigger() Implementation.")
@@ -129,7 +129,7 @@ def TestCaseTeardown(tc):
     rs = tc.config.rdmasession
     kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, tc.pvtdata.l_key)
     # Restore flags at the end of the test
-    kt_entry.data.flags &= ~4 # MR_FLAG_ZBVA
+    kt_entry.data.acc_ctrl &= ~(1 << 5) #ACC_CTRL_ZERO_BASED
     kt_entry.WriteWithDelay()
 
     ResetErrQState(tc)

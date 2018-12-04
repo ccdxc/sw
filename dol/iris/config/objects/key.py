@@ -52,6 +52,8 @@ class KeyObject(base.ConfigObjectBase):
         req_spec.va = 0
         req_spec.length = 0
         req_spec.page_size_log2 = 0
+        req_spec.host_addr = 1
+
 
     def PrepareHALRequestSpec(self, req_spec):
         logger.info("Key: %s PD: %s LIF: %s lkey: %s remote_access %s" %\
@@ -80,9 +82,9 @@ class KeyObject(base.ConfigObjectBase):
     def GetFuncFlags(self):
         flags = 0
         #INV_EN
-        flags |= 2
+        flags |= 128
         #UKEY_EN
-        flags |= 8
+        flags |= 32
 
         return flags
 

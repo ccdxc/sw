@@ -580,6 +580,31 @@ struct sge_t {
 #define TXWQE_SGE_OFFSET  32 //
 #define TXWQE_SGE_OFFSET_BITS   256 // 32 * 8
 
+union access_ctrl_flags_t {
+    struct {
+        rsvd_acc_flags: 1;
+        on_demand     : 1;
+        zbva          : 1;
+        mw_bind       : 1;
+        remote_atomic : 1;
+        remote_rd     : 1;
+        remote_wr     : 1;
+        local_wr      : 1;
+    };
+    flags             : 8;
+};
+
+union mr_flags_t {
+    struct {
+        inv_en        : 1;
+        is_mw         : 1;
+        ukey_en       : 1;
+        rsvd          : 5;
+    };
+    flags             : 8;
+};
+
+
 //16B
 struct sqwqe_base_t {
     wrid               : 64;
@@ -643,15 +668,17 @@ struct sqwqe_bind_mw_t {
     len                : 32;
     l_key              : 32;
 
-    //flags - u16
-    access_ctrl        : 8;
-    mw_type            : 2;
-    zbva               : 1;
-    rsvd_flags         : 5;
+    //total flags - 16 bits
+    //other flags -  8 bits
+    inv_en             : 1;
+    rsvd_flags         : 7;
+    //8 bit access_ctrl flags
+    union access_ctrl_flags_t access_ctrl; //8 bits
 
     //30B
     pad                : 240;
 };
+
 
 // 48 Bytes
 // Fast-Register Physical MR (FRPMR)
@@ -662,12 +689,12 @@ struct sqwqe_frpmr_t {
     dma_src_address    : 64;
     num_pt_entries     : 32;
 
-    //flags - u16
-    access_ctrl        : 8;
-    pt_start_offset    : 3;
-    zbva               : 1;
-    mw_en              : 1;
-    rsvd_flags         : 3;
+    //total flags - 16 bits
+    //other flags -  8 bits
+    rsvd_inv_en        : 1;
+    rsvd_flags         : 7;
+    //8 bit access_ctrl flags
+    union access_ctrl_flags_t access_ctrl; //8 bits
 
     log_page_size      : 8;
     log_dir_size       : 8;
@@ -675,6 +702,8 @@ struct sqwqe_frpmr_t {
     //8B
     pad                : 64;
 };
+
+
 
 //16B
 // FRMR
@@ -922,6 +951,9 @@ struct rsqwqe_t {
 #define ACC_CTRL_REMOTE_WRITE       0x2
 #define ACC_CTRL_REMOTE_READ        0x4
 #define ACC_CTRL_REMOTE_ATOMIC      0x8
+#define ACC_CTRL_MW_BIND            0x10
+#define ACC_CTRL_ZERO_BASED         0x20
+#define ACC_CTRL_ON_DEMAND          0x40
 
 #define INVALID_KEY                 0xFFFFFF //24b
 
@@ -943,16 +975,14 @@ struct rsqwqe_t {
 //#define MR_TYPE_MW_TYPE_2B  3
 
 //MR_FLAG
-#define MR_FLAG_MW_EN   0x1 // is memory window enabled ?
-#define MR_FLAG_INV_EN  0x2 // is memory invalidation enabled ?
-#define MR_FLAG_ZBVA    0x4 //is it a zbva ?
-#define MR_FLAG_UKEY_EN 0x8 //user-key is enabled
+#define MR_FLAG_INV_EN  0x80 // is memory invalidation enabled ?
+#define MR_FLAG_IS_MW   0x40 // is memory window
+#define MR_FLAG_UKEY_EN 0x20 //user-key is enabled
 
 // Bit positions of MR Flags
-#define LOG_MR_FLAG_MW_EN    0 
-#define LOG_MR_FLAG_INV_EN   1
-#define LOG_MR_FLAG_ZBVA     2
-#define LOG_MR_FLAG_UKEY_EN  3
+#define LOG_MR_FLAG_INV_EN   7
+#define LOG_MR_FLAG_IS_MW    6
+#define LOG_MR_FLAG_UKEY_EN  5
 
 #define KEY_ENTRY_T struct key_entry_t
 #define LOG_SIZEOF_KEY_ENTRY_T  6   // 2^6 = 64 bytes
@@ -984,7 +1014,7 @@ struct key_entry_t {
     user_key: 8;
     state: 4;
     type: 4;
-    acc_ctrl: 8;
+    union access_ctrl_flags_t acc_ctrl; //8 bits
     log_page_size: 8;
     len: 32;
     base_va: 64;
@@ -994,7 +1024,7 @@ struct key_entry_t {
     override_lif_vld: 1;
     override_lif: 12;
     rsvd1: 18;
-    flags: 8;
+    union mr_flags_t mr_flags; //8 bits
     qp: 24; //qp which bound the MW ?
     mr_l_key: 32;
     mr_cookie: 32;
@@ -1006,7 +1036,7 @@ struct key_entry_aligned_t {
     user_key: 8;
     state: 4;
     type: 4;
-    acc_ctrl: 8;
+    union access_ctrl_flags_t acc_ctrl; //8 bits
     log_page_size: 8;
     len: 32;
     base_va: 64;
@@ -1016,7 +1046,7 @@ struct key_entry_aligned_t {
     override_lif_vld: 1;
     override_lif: 12;
     rsvd1: 18;
-    flags: 8;
+    union mr_flags_t mr_flags; //8 bits
     qp: 24; //qp which bound the MW ?
     mr_l_key: 32;
     mr_cookie: 32;
@@ -1414,6 +1444,8 @@ struct resp_rx_send_fml_t {
 #define AQ_QPF_REMOTE_READ      0x00000004
 #define AQ_QPF_REMOTE_ATOMIC    0x00000008
 #define AQ_QPF_MW_BIND          0x00000010
+#define AQ_QPF_ZERO_BASED       0x00000020
+#define AQ_QPF_ON_DEMAND        0x00000040
 
 #define AQ_QPF_SQD_NOTIFY       0x00001000
 #define AQ_QPF_SQ_CMB           0x00002000
@@ -1423,7 +1455,13 @@ struct resp_rx_send_fml_t {
 struct aqwqe_t {
 	op: 8;
     type_state: 8;
-    dbid_flags: 16;
+    union {
+        dbid_flags: 16;
+        struct {
+            union access_ctrl_flags_t acc_ctrl; //8 bits
+            union mr_flags_t mr_flags; //8 bits
+        };
+    };
     id_ver: 32;
 	union {
 		struct {
@@ -1435,7 +1473,7 @@ struct aqwqe_t {
 			va: 64;
 			length: 64;
 			pd_id: 32;
-            access_flags: 16;            
+            rsvd_flags: 16;            
 			rsvd: 128;
 			dir_size_log2: 8;
 			page_size_log2: 8;

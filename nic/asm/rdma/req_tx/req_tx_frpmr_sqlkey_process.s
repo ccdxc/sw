@@ -19,14 +19,11 @@ struct key_entry_aligned_t d;
 #define K_VA               CAPRI_KEY_RANGE(IN_P, base_va_sbit0_ebit7, base_va_sbit56_ebit63)
 #define K_LEN              CAPRI_KEY_RANGE(IN_TO_S_P, len_sbit0_ebit7, len_sbit48_ebit63)
 #define K_SPEC_CINDEX      CAPRI_KEY_FIELD(IN_TO_S_P, spec_cindex)
-#define K_ZBVA             CAPRI_KEY_FIELD(IN_P, zbva)
-#define K_MW_EN            CAPRI_KEY_FIELD(IN_P, mw_en)
 #define K_LOG_PAGE_SIZE    CAPRI_KEY_FIELD(IN_P, log_page_size)
 #define K_USER_KEY         CAPRI_KEY_FIELD(IN_P, new_user_key)
 #define K_SGE_INDEX        CAPRI_KEY_FIELD(IN_P, sge_index)
 #define K_FAST_REG_ENABLE  CAPRI_KEY_FIELD(IN_P, fast_reg_rsvd_lkey_enable)
 #define K_NUM_PT_ENTRIES   CAPRI_KEY_RANGE(IN_P, num_pt_entries_sbit0_ebit7,num_pt_entries_sbit24_ebit31)
-#define K_PT_START_OFFSET  CAPRI_KEY_FIELD(IN_P, pt_start_offset)
 #define K_LKEY_STATE_UPD   CAPRI_KEY_FIELD(IN_P, lkey_state_update)
 
 #define K_HEADER_TEMPLATE_ADDR CAPRI_KEY_FIELD(IN_TO_S_P, header_template_addr_or_pd)
@@ -62,10 +59,13 @@ req_tx_frpmr_sqlkey_process:
     // num-pt-entries set to max available space in PT table during alloc_lkey.
     sle          c3, K_NUM_PT_ENTRIES, d.num_pt_entries_rsvd  
     bcf           [!c1 | !c2 | !c3], error_completion
+    nop
     // Consumer lkey ownership check.
-    and          r2, d.flags, MR_FLAG_UKEY_EN //BD-slot
-    beq          r2, r0, error_completion
-    add            r3, K_NUM_PT_ENTRIES, K_PT_START_OFFSET //BD-slot
+    bbeq         d.mr_flags.ukey_en, 0, error_completion
+    srl          r4, K_VA, K_LOG_PAGE_SIZE //BD Slot
+    andi         r4, r4, 0x7
+    add          r3, K_NUM_PT_ENTRIES, r4
+    
 
 frpmr:
     // State will be updated to valid in the second pass after DMA of pt-table entries.
@@ -77,9 +77,6 @@ frpmr:
     tblwr          d.len, K_LEN
     // Not required for MR.
 //    tblwr          d.qp, K_GLOBAL_QID
-    or             r1, r0, K_ZBVA, LOG_MR_FLAG_ZBVA
-    or             r1, r1, K_MW_EN, LOG_MR_FLAG_MW_EN
-    tblor          d.flags, r1
     tblwr          d.mr_cookie, MR_COOKIE_RANDOM_NUM
 
     phvwrpair CAPRI_PHV_FIELD(FRPMR_WRITE_BACK_P, pt_base), d.pt_base, \

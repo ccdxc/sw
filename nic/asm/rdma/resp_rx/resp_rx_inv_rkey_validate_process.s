@@ -40,7 +40,7 @@ resp_rx_inv_rkey_validate_process:
      */
 
     // it is an error to invalidate an MR not eligible for invalidation
-    smneb       c1, d.flags, MR_FLAG_INV_EN, MR_FLAG_INV_EN // BD slot
+    seq         c1, d.mr_flags.inv_en, 0 //BD Slot
     // it is an error to invalidate an MR/MW in INVALID state
     seq         c2, d.state, KEY_STATE_INVALID
     // invalidation is not allowed for type 1 MW

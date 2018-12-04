@@ -65,10 +65,9 @@ class RdmaSqDescriptorBindMw(Packet):
          LongField("va", 0),
          IntField("len", 0),
          IntField("l_key", 0),
+         BitField("inv_en", 0, 1),
+         BitField("rsvd_flags", 0, 7),
          ByteField("access_ctrl", 0),
-         BitField("mw_type", 0, 2),
-         BitField("zbva", 0, 1),
-         BitField("rsvd_flags", 0, 5),
          BitField("pad", 0, 240),
      ]
 
@@ -80,11 +79,9 @@ class RdmaSqDescriptorFrpmr(Packet):
          LongField("offset", 0),
          LongField("dma_src_address", 0),
          IntField("num_pt_entries", 0),
+         BitField("rsvd_inv_en", 0, 1),
+         BitField("rsvd_flags", 0, 7),
          ByteField("access_ctrl", 0),
-         BitField("pt_start_offset", 0, 3),
-         BitField("zbva", 0, 1),
-         BitField("mw_en", 0, 1),
-         BitField("rsvd_flags", 0, 3),
          ByteField("log_page_size", 0),
          ByteField("log_dir_size", 0),
          BitField("pad", 0, 64),
@@ -442,11 +439,10 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
            access_ctrl = self.spec.fields.bind_mw.access_ctrl if hasattr(self.spec.fields.bind_mw, 'access_ctrl') else 0
            logger.info("access_ctrl = 0x%x" % access_ctrl)
            mw_type = self.spec.fields.bind_mw.mw_type if hasattr(self.spec.fields.bind_mw, 'mw_type') else 0
-           logger.info("mw_type = 0x%x" % mw_type)
-           zbva = self.spec.fields.bind_mw.zbva if hasattr(self.spec.fields.bind_mw, 'zbva') else 0
-           logger.info("zbva = 0x%x" % zbva)
+           inv_en = 1 if (mw_type == 2) else 0
+           logger.info("mw_type = 0x%x inv_en: %d" % (mw_type, inv_en))
             
-           bind_mw = RdmaSqDescriptorBindMw(va=va, len=data_len, l_key=l_key, access_ctrl=access_ctrl, mw_type=mw_type, zbva=zbva)
+           bind_mw = RdmaSqDescriptorBindMw(va=va, len=data_len, l_key=l_key, access_ctrl=access_ctrl, inv_en=inv_en)
            desc = desc/bind_mw
 
 
@@ -473,14 +469,8 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
            logger.info("dma_src_address = 0x%x" % dma_src_address)
            data_len = self.spec.fields.frpmr.len if hasattr(self.spec.fields.frpmr, 'len') else 0
            logger.info("len = 0x%x" % data_len)
-           pt_start_offset = self.spec.fields.frpmr.pt_start_offset if hasattr(self.spec.fields.frpmr, 'pt_start_offset') else 0
-           logger.info("pt_start_offset = 0x%x" % pt_start_offset)
-           zbva = self.spec.fields.frpmr.zbva if hasattr(self.spec.fields.frpmr, 'zbva') else 0
-           logger.info("zbva = 0x%x" % zbva)
-           mw_en = self.spec.fields.frpmr.mw_en if hasattr(self.spec.fields.frpmr, 'mw_en') else 0
-           logger.info("mw_en = 0x%x" % mw_en)
 
-           frpmr = RdmaSqDescriptorFrpmr(access_ctrl=access_ctrl, log_page_size=log_page_size, num_pt_entries=num_pt_entries, base_va=base_va, dma_src_address=dma_src_address, len=data_len, pt_start_offset=pt_start_offset, zbva=zbva, mw_en=mw_en)
+           frpmr = RdmaSqDescriptorFrpmr(access_ctrl=access_ctrl, log_page_size=log_page_size, num_pt_entries=num_pt_entries, base_va=base_va, dma_src_address=dma_src_address, len=data_len)
            desc = desc/frpmr
 
         if inline_data_vld:

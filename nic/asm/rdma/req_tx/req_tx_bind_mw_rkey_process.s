@@ -62,7 +62,7 @@ type1_mw_bind:
     b              update_key
     // Type 1 MW cannot be invalidated by local/remote invalidate, hence do not
     // set MR_FLAG_INV
-    tblwr          d.flags, MR_FLAG_UKEY_EN // Branch Delay Slot
+    tblwr          d.mr_flags.ukey_en, 1 // Branch Delay Slot
 
 type2_mw_bind:
     // type2 mw bind is allowed only if current state is free but not if 
@@ -78,7 +78,8 @@ type2_mw_bind:
 
     tblwr          d.type, MR_TYPE_MW_TYPE_2
     // Type2 MW can be invalidated by local/remote invalidate so set MR_FLAG_INV
-    tblwr          d.flags, (MR_FLAG_INV_EN|MR_FLAG_UKEY_EN)
+    tblwr          d.mr_flags.inv_en, 1
+    tblwr          d.mr_flags.ukey_en, 1
 
 update_key:
     tblwr          d.state, KEY_STATE_VALID
@@ -92,8 +93,7 @@ update_key:
     tblwr          d.mr_l_key, K_MR_L_KEY
     tblwr          d.mr_cookie, K_MR_COOKIE
     tblwr          d.host_addr, K_HOST_ADDR
-    or             r1, r0, K_ZBVA, LOG_MR_FLAG_ZBVA
-    tblor.e        d.flags, r1
+    tblwr.e        d.acc_ctrl.zbva, K_ZBVA
     
     CAPRI_SET_TABLE_0_VALID(0)
 

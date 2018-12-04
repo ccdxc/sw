@@ -19,7 +19,9 @@ from infra.common.glopts import GlobalOptions
 class MrObject(base.ConfigObjectBase):
     def __init__(self, pd, slab, id_substr="",
                  local_wr=False, remote_wr=False, 
-                 remote_rd=False, remote_atomic=False):
+                 remote_rd=False, remote_atomic=False,
+                 mw_bind=False, zero_based=False,
+                 on_demand=False):
         super().__init__()
         self.Clone(Store.templates.Get('RDMA_MR'))
         self.pd = pd
@@ -38,6 +40,9 @@ class MrObject(base.ConfigObjectBase):
         self.remote_wr = remote_wr
         self.remote_rd = remote_rd
         self.remote_atomic = remote_atomic
+        self.mw_bind = mw_bind
+        self.zero_based = zero_based
+        self.on_demand = on_demand
         self.flags = self.GetAccessFlags()
         return
 
@@ -78,6 +83,9 @@ class MrObject(base.ConfigObjectBase):
         req_spec.ac_remote_wr = self.remote_wr
         req_spec.ac_remote_rd = self.remote_rd
         req_spec.ac_remote_atomic = self.remote_atomic
+        req_spec.ac_mw_bind = self.mw_bind
+        req_spec.ac_zero_based = self.zero_based
+        req_spec.ac_on_demand = self.on_demand
         req_spec.lkey = self.lkey
         req_spec.rkey = self.rkey
         req_spec.hostmem_pg_size = self.slab.page_size
@@ -104,6 +112,17 @@ class MrObject(base.ConfigObjectBase):
             flags |= 4
         if self.remote_atomic is True:
             flags |= 8
+        if self.mw_bind is True:
+            flags |= 16
+        if self.zero_based is True:
+            flags |= 32
+        if self.on_demand is True:
+            flags |= 64
+
+        #inv_en
+        flags |= (128 << 8)
+        #ukey_en
+        flags |= (32 << 8)
 
         return flags
 
@@ -136,9 +155,9 @@ class MrObjectHelper:
                        (count, pd.GID(), self.useAdmin))
         for i in range(count):
             slab = pd.ep.slabs.Get('SLAB%04d' % i)
-            mr = MrObject(pd, slab, id_substr=None, local_wr=True, remote_wr=True, remote_rd=True, remote_atomic=True)
+            mr = MrObject(pd, slab, id_substr=None, local_wr=True, remote_wr=True, remote_rd=True, remote_atomic=True, mw_bind=True)
             self.mrs.append(mr)
-            mr = MrObject(pd, slab, id_substr="RONLY", local_wr=False, remote_wr=False, remote_rd=True, remote_atomic=True)
+            mr = MrObject(pd, slab, id_substr="RONLY", local_wr=False, remote_wr=False, remote_rd=True, remote_atomic=True, mw_bind=True)
             self.mrs.append(mr)
 
     def AddMr(self, mr):

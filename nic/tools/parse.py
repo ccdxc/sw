@@ -17,6 +17,8 @@ if nic_dir is None:
     print "WS_TOP is not set!"
     sys.exit(1)
 
+skip_config = 0
+
 model_log = nic_dir + "/model.log"
 model1_log = nic_dir + "/model1.log"
 model_csv = nic_dir+"/model.log.csv"
@@ -61,7 +63,17 @@ def parse_logs():
     inscount_sort_file  = open(inscount_sort_log, "a+")
     program = ""
     programline = 0
-    for linenum, line in enumerate(modelfile):
+    tc_start_linenum = 0
+
+    if skip_config:
+        for tc_start_linenum, line in enumerate(modelfile):
+            if 'Starting Testcase TC' in line:
+                print "\'Found Starting Testcase TC\' at linenum: ", tc_start_linenum
+                break
+            else:
+                continue
+
+    for linenum, line in enumerate(modelfile, tc_start_linenum - 1):
         if re.match("(.*) Setting PC to 0x([0-9a-fA-F]+)(.*)", line, re.I):
             fields = re.split(r'(.*) Setting PC to 0x([0-9a-fA-F]+)(.*)', line)
             key = '0x'+fields[2].upper()

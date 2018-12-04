@@ -40,7 +40,7 @@ req_tx_sqlkey_process:
      bcf          [!c2], pd_check_failure
 
      // If zbva, va = reth_va + MR_base_va else va = reth_va
-     IS_ANY_FLAG_SET_B(c1, d.flags, MR_FLAG_ZBVA) // Branch Delay Slot
+     IS_ANY_FLAG_SET_B(c1, d.acc_ctrl, ACC_CTRL_ZERO_BASED) // Branch Delay Slot
      add.c1       r1, K_SGE_VA, d.base_va
      add.!c1      r1, K_SGE_VA, r0
 

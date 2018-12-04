@@ -109,11 +109,11 @@ def TestCaseStepVerify(tc, step):
             (frpmr_kt_entry.data.log_page_size != tc.pvtdata.log_pg_size) or
             (frpmr_kt_entry.data.user_key != tc.pvtdata.user_key) or
             (frpmr_kt_entry.data.len != tc.pvtdata.len) or
-            (frpmr_kt_entry.data.acc_ctrl != 0xf) or # (ACC_CTRL_REMOTE_WRITE | ACC_CTRL_REMOTE_READ | ACC_CTRL_REMOTE_ATOMIC | ACC_CTRL_LOCAL_WRITE)
-            (frpmr_kt_entry.data.flags != 0xb) or # (MR_FLAG_MW_EN | MR_FLAG_INV_EN | MR_FLAG_UKEY_EN)
+            (frpmr_kt_entry.data.acc_ctrl != 0x1f) or # (ACC_CTRL_MW_BIND | ACC_CTRL_REMOTE_WRITE | ACC_CTRL_REMOTE_READ | ACC_CTRL_REMOTE_ATOMIC | ACC_CTRL_LOCAL_WRITE)
+            (frpmr_kt_entry.data.flags != 0xa0) or # (MR_FLAG_INV_EN | MR_FLAG_UKEY_EN)
             (frpmr_kt_entry.data.base_va != tc.pvtdata.base_va)):
                 logger.info("RDMA TestCaseVerify(): state: %d (exp: 2) type %d (exp: 0) log_page_size %d (pvt: %d) user_key: %d (exp: %d) "
-                            "len: %d (exp: %d) acc_ctrl: 0x%x (exp: 0xf) flags: 0x%x (exp: 0xb) base_va: 0x%x (exp: 0x%x)" %
+                            "len: %d (exp: %d) acc_ctrl: 0x%x (exp: 0x1f) flags: 0x%x (exp: 0xa0) base_va: 0x%x (exp: 0x%x)" %
                             (frpmr_kt_entry.data.state, frpmr_kt_entry.data.type, frpmr_kt_entry.data.log_page_size, tc.pvtdata.log_pg_size,
                              frpmr_kt_entry.data.user_key, tc.pvtdata.user_key, frpmr_kt_entry.data.len, tc.pvtdata.len,
                              frpmr_kt_entry.data.acc_ctrl, frpmr_kt_entry.data.flags, frpmr_kt_entry.data.base_va, tc.pvtdata.base_va))

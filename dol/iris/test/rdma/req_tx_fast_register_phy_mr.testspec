@@ -162,10 +162,8 @@ descriptors:
                 num_pt_entries  : callback://rdma/rdma/GetNumPTEntries/id=BUF
                 dma_src_address : callback://rdma/rdma/GetHostPTEntriesDMAData/id=BUF
                 log_page_size   : callback://rdma/rdma/GetSlabPageSize/id=BUF
-                access_ctrl     : 0xf # (ACC_CTRL_REMOTE_WRITE | ACC_CTRL_REMOTE_READ | ACC_CTRL_REMOTE_ATOMIC | ACC_CTRL_LOCAL_WRITE)
+                access_ctrl     : 0x1f # (ACC_CTRL_REMOTE_WRITE | ACC_CTRL_REMOTE_READ | ACC_CTRL_REMOTE_ATOMIC | ACC_CTRL_LOCAL_WRITE | ACC_CTRL_MW_BIND | ACC_CTRL_ZBVA(0))
                 pt_start_offset : callback://rdma/rdma/GetPTStartOffset/id=BUF
-                zbva            : 0
-                mw_en           : 1
 
     - descriptor:
         id      : EXP_CQ_DESC

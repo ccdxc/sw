@@ -2,6 +2,8 @@
 meta:
     id: MW_RDMA
 
+useAdmin : True
+
 type1_2:
     count   : 128
 

@@ -101,10 +101,27 @@ reg_mr:
     KEY_INDEX_GET(r1, d.{id_ver}.wx)
     KEY_USER_KEY_GET(r2, d.{id_ver}.wx)
 
-    phvwrpair   p.key.type, MR_TYPE_MR, p.key.acc_ctrl, d.dbid_flags[15:8]
-    //TODO: ideally host_addr bit should come from driver.
+    #c4 - inv_en
+    #c3 - is_mw
+    #c2 - ukey_en
+    crestore    [c4, c3, c2], d.{mr_flags.inv_en, mr_flags.is_mw, mr_flags.ukey_en}, 0x7
+
+    bbne        d.mr_flags.is_mw, 1, skip_mw
+    phvwr.!c3   p.key.type, MR_TYPE_MR //BD Slot
+
+    #c6 - mw_type2
+    setcf       c6, [c3 & c4]
+    phvwr.c6    p.key.type, MR_TYPE_MW_TYPE_2
+
+    #c5 - mw_type1
+    setcf       c5, [c3 & !c4]
+    phvwrpair.c5 p.key.state, KEY_STATE_VALID, p.key.type, MR_TYPE_MW_TYPE_1
+
+skip_mw:
+
+    phvwr       p.key.acc_ctrl, d.acc_ctrl
     add         r3, d.{mr.pd_id}.wx, r0
-    phvwrpair   p.key.pd, r3, p.key.flags, d.dbid_flags[7:0]
+    phvwrpair   p.key.pd, r3, p.key.mr_flags, d.mr_flags
 
     KT_BASE_ADDR_GET2(r3, r4)
     // key_entry_p = key_base_addr + (lkey_index * sizeof(struct key_entry_t))
@@ -159,12 +176,12 @@ mr_skip_dma_pt:
     memwr.d    r5, d.mr.dma_addr // BD slot
 
 alloc_lkey:
-    // num_pt_entries_rsvd (max) = kt_base_page_id - pt_base
+    # num_pt_entries_rsvd (max) = kt_base_page_id - pt_base
     sub         r3, r3, r5
     phvwr       p.key.num_pt_entries_rsvd, r3
-    phvwrpair   p.key.user_key, r0, p.key.state, KEY_STATE_FREE
+    phvwrpair   p.key.user_key, r0, p.key.base_va, r0
+    phvwr.!c5   p.key.state, KEY_STATE_FREE
     phvwrpair   p.key.log_page_size, r0, p.key.len, r0
-    phvwr       p.key.base_va, r0
 
 mr_no_skip_dma_pt: 
 
