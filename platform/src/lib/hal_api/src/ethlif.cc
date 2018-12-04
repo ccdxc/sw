@@ -10,6 +10,7 @@
 
 #include "ethlif.hpp"
 #include "print.hpp"
+#include "utils.hpp"
 
 using namespace std;
 
@@ -302,18 +303,27 @@ EthLif::remove_mac_vlan_filters()
     return HAL_IRISC_RET_SUCCESS;
 }
 
+/**
+ * @re_add: Mac is already added without any registration. So re-adding.
+ *          Happens for ALL_MC filter.
+ */
 hal_irisc_ret_t
-EthLif::AddMac(mac_t mac)
+EthLif::AddMac(mac_t mac, bool re_add)
 {
     mac_vlan_t mac_vlan;
+    bool       skip_registration = false;
 
     api_trace("Adding Mac Filter");
     NIC_LOG_DEBUG("Adding Mac filter: {}", macaddr2str(mac));
 
-    if (mac_table_.find(mac) == mac_table_.end()) {
+    // re_add
+    // - True: Has to exist and should not be counted against max limit
+    // - False: Should not exists and should be counted against max limit
+    if ((re_add && mac_table_.find(mac) != mac_table_.end()) ||
+        mac_table_.find(mac) == mac_table_.end()) {
 
         // Check if max limit reached
-        if (mac_table_.size() == info_.max_mac_filters) {
+        if (!re_add && mac_table_.size() == info_.max_mac_filters) {
             NIC_LOG_ERR("Reached Max Mac filter limit of {} for lif: {}",
                           info_.max_mac_filters,
                           GetHwLifId());
@@ -327,33 +337,43 @@ EthLif::AddMac(mac_t mac)
          *      - Create Mac filter
          */
         if (IsClassicForwarding()) {
-            // Register new mac across all existing vlans
-            for (auto vlan_it = vlan_table_.cbegin(); vlan_it != vlan_table_.cend(); vlan_it++) {
-                // Check if (MacVlan) filter is already present
-                mac_vlan = make_tuple(mac, *vlan_it);
-                if (mac_vlan_table_.find(mac_vlan) == mac_vlan_table_.end()) {
-                    // No (MacVlan) filter. Creating (Mac, Vlan)
-                    CreateMacVlanFilter(mac, *vlan_it);
-                } else {
-                    NIC_LOG_DEBUG("(Mac,Vlan) filter present. No-op");
+
+            if (is_multicast(mac) && IsReceiveAllMulticast()) {
+                skip_registration = true;
+            }
+
+            if (!skip_registration) {
+                // Register new mac across all existing vlans
+                for (auto vlan_it = vlan_table_.cbegin(); vlan_it != vlan_table_.cend(); vlan_it++) {
+                    // Check if (MacVlan) filter is already present
+                    mac_vlan = make_tuple(mac, *vlan_it);
+                    if (mac_vlan_table_.find(mac_vlan) == mac_vlan_table_.end()) {
+                        // No (MacVlan) filter. Creating (Mac, Vlan)
+                        CreateMacVlanFilter(mac, *vlan_it);
+                    } else {
+                        NIC_LOG_DEBUG("(Mac,Vlan) filter present. No-op");
+                    }
                 }
             }
         } else {
             CreateMacFilter(mac);
         }
 
-        // Store mac filter
-        mac_table_.insert(mac);
+        if (!re_add) {
+            // Store mac filter
+            mac_table_.insert(mac);
+        }
     } else {
-        NIC_LOG_WARN("Mac already registered: {}", mac);
+        NIC_LOG_WARN("Mac already registered: {}", macaddr2str(mac));
     }
     return HAL_IRISC_RET_SUCCESS;
 }
 
 hal_irisc_ret_t
-EthLif::DelMac(mac_t mac)
+EthLif::DelMac(mac_t mac, bool update_db)
 {
     mac_vlan_t mac_vlan_key, mac_key, vlan_key;
+    bool skipped_registration = false;
 
     api_trace("Deleting Mac Filter");
     NIC_LOG_DEBUG("Deleting Mac filter: {}", macaddr2str(mac));
@@ -361,27 +381,38 @@ EthLif::DelMac(mac_t mac)
     mac_key = make_tuple(mac, 0);
     if (mac_table_.find(mac) != mac_table_.end()) {
         if (IsClassicForwarding()) {
-            for (auto vlan_it = vlan_table_.cbegin(); vlan_it != vlan_table_.cend(); vlan_it++) {
-                vlan_key = make_tuple(0, *vlan_it);
-                mac_vlan_key = make_tuple(mac, *vlan_it);
-                if (vlan_table_.find(*vlan_it) != vlan_table_.end() &&
-                    mac_vlan_table_.find(mac_vlan_key) == mac_vlan_table_.end()) {
-                    NIC_LOG_DEBUG("Mac Delete: Mac, Vlan are present but (Mac,Vlan) is not. Remove (Mac,Vlan) entity");
-                    // Mac, Vlan are present and (Mac,Vlan) is not
-                    DeleteMacVlanFilter(mac, *vlan_it);
-                } else {
-                    // Case:
-                    //  Case 1: Vlan filter not present but (Mac,Vlan) is either present or not.
-                    //  Case 2: Vlan filter is present along with (Mac,Vlan)
-                    NIC_LOG_DEBUG("Mac Delete: No-op");
+
+            if (is_multicast(mac)) {
+                if (IsReceiveAllMulticast()) {
+                    skipped_registration = true;
+                }
+            }
+
+            if (!skipped_registration) {
+                for (auto vlan_it = vlan_table_.cbegin(); vlan_it != vlan_table_.cend(); vlan_it++) {
+                    vlan_key = make_tuple(0, *vlan_it);
+                    mac_vlan_key = make_tuple(mac, *vlan_it);
+                    if (vlan_table_.find(*vlan_it) != vlan_table_.end() &&
+                        mac_vlan_table_.find(mac_vlan_key) == mac_vlan_table_.end()) {
+                        NIC_LOG_DEBUG("Mac Delete: Mac, Vlan are present but (Mac,Vlan) is not. Remove (Mac,Vlan) entity");
+                        // Mac, Vlan are present and (Mac,Vlan) is not
+                        DeleteMacVlanFilter(mac, *vlan_it);
+                    } else {
+                        // Case:
+                        //  Case 1: Vlan filter not present but (Mac,Vlan) is either present or not.
+                        //  Case 2: Vlan filter is present along with (Mac,Vlan)
+                        NIC_LOG_DEBUG("Mac Delete: No-op");
+                    }
                 }
             }
         } else {
             DeleteMacFilter(mac);
         }
 
-        // Erase mac filter
-        mac_table_.erase(mac);
+        if (update_db) {
+            // Erase mac filter
+            mac_table_.erase(mac);
+        }
     } else {
         NIC_LOG_ERR("Mac not registered: {}", mac);
     }
@@ -417,6 +448,10 @@ EthLif::AddVlan(vlan_t vlan)
         if (IsClassicForwarding()) {
             // Register new mac across all existing vlans
             for (auto it = mac_table_.cbegin(); it != mac_table_.cend(); it++) {
+                if (is_multicast(*it) && IsReceiveAllMulticast()) {
+                    // skip Mcast macs if ALL_MC is set
+                    continue;
+                }
                 // Check if (MacVlan) filter is already present
                 mac_vlan = make_tuple(*it, vlan);
                 if (mac_vlan_table_.find(mac_vlan) == mac_vlan_table_.end()) {
@@ -453,6 +488,10 @@ EthLif::DelVlan(vlan_t vlan)
     if (vlan_table_.find(vlan) != vlan_table_.end()) {
         if (IsClassicForwarding()) {
             for (auto it = mac_table_.cbegin(); it != mac_table_.cend(); it++) {
+                if (is_multicast(*it) && IsReceiveAllMulticast()) {
+                    // skip Mcast macs if ALL_MC is set
+                    continue;
+                }
                 mac_vlan_key = make_tuple(*it, vlan);
                 if (mac_table_.find(*it) != mac_table_.end() &&
                     mac_vlan_table_.find(mac_vlan_key) == mac_vlan_table_.end()) {
@@ -606,16 +645,32 @@ EthLif::UpdateReceiveAllMulticast(bool receive_all_multicast)
 {
     api_trace("AllHalMulticast change");
     if (receive_all_multicast == info_.receive_all_multicast) {
-        NIC_LOG_WARN("Prom flag: {}. No change in all_multicast flag. Nop",
+        NIC_LOG_WARN("ALL_MC flag: {}. No change in all_multicast flag. Nop",
                        receive_all_multicast);
         goto end;
     }
 
-    NIC_LOG_DEBUG("Lif: {}. Prom. flag change {} -> {}",
+    NIC_LOG_DEBUG("Lif: {}. ALL_MC flag change {} -> {}",
                     lif_->GetId(), info_.receive_all_multicast,
                     receive_all_multicast);
 
-    info_.receive_all_multicast = receive_all_multicast;
+    /*
+     * False -> True
+     * - False: Call RemoveMCFilters
+     * True -> False
+     * - False: Call AddMCFilters
+     */
+
+    if (receive_all_multicast) {
+        // Enable ALL_MC: Remove all MC filters on this lif
+        RemoveMCFilters();
+        info_.receive_all_multicast = receive_all_multicast;
+    } else {
+        // Disable ALL_MC: Add all MC filters on this lif
+        info_.receive_all_multicast = receive_all_multicast;
+        AddMCFilters();
+    }
+
 
     // Update Lif to Hal
     lif_->TriggerHalUpdate();
@@ -750,6 +805,32 @@ EthLif::DeleteVlanFilter(vlan_t vlan)
     MacVlanFilter::Destroy(filter);
 }
 
+void
+EthLif::AddMCFilters()
+{
+    mac_t mac;
+    for (auto it = mac_table_.begin(); it != mac_table_.end();it++) {
+        mac = *it;
+        if (is_multicast(mac)) {
+            NIC_LOG_DEBUG("Trigger multicast MAC:{} filter add", macaddr2str(mac));
+            AddMac(mac, true);
+        }
+    }
+}
+
+void
+EthLif::RemoveMCFilters()
+{
+    mac_t mac;
+    for (auto it = mac_table_.begin(); it != mac_table_.end();it++) {
+        mac = *it;
+        if (is_multicast(mac)) {
+            NIC_LOG_DEBUG("Trigger multicast MAC:{} filter del", macaddr2str(mac));
+            DelMac(mac, false);
+        }
+    }
+}
+
 
 Lif *
 EthLif::GetLif()
@@ -865,6 +946,12 @@ EthLif::IsInternalManagement()
 {
     return (IsInternalManagementMnic() ||
             IsHostManagement());
+}
+
+bool
+EthLif::IsReceiveAllMulticast()
+{
+    return info_.receive_all_multicast;
 }
 
 bool

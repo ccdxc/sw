@@ -21,8 +21,8 @@ public:
 
     static void Destroy(EthLif *eth_lif);
 
-    hal_irisc_ret_t AddMac(mac_t mac);
-    hal_irisc_ret_t DelMac(mac_t mac);
+    hal_irisc_ret_t AddMac(mac_t mac, bool re_add = false);
+    hal_irisc_ret_t DelMac(mac_t mac, bool update_db = true);
 
     hal_irisc_ret_t AddVlan(vlan_t vlan);
     hal_irisc_ret_t DelVlan(vlan_t vlan);
@@ -60,6 +60,9 @@ public:
     bool IsHostManagement();
     bool IsInternalManagement();
     bool IsClassicForwarding();
+    bool IsReceiveAllMulticast();
+    void AddMCFilters();
+    void RemoveMCFilters();
 
 private:
     EthLif(hal_lif_info_t *info);

@@ -3,14 +3,10 @@
 #include "filter.hpp"
 #include "ethlif.hpp"
 #include "print.hpp"
+#include "utils.hpp"
 
 using namespace std;
 
-
-static bool
-is_multicast(uint64_t mac) {
-    return ((mac & 0x010000000000) == 0x010000000000);
-}
 
 MacVlanFilter *
 MacVlanFilter::Factory(EthLif *eth_lif, mac_t mac, vlan_t vlan,
