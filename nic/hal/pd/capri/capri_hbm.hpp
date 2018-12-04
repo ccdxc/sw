@@ -126,6 +126,8 @@ int32_t capri_hbm_write_mem(uint64_t addr, const uint8_t *buf, uint32_t size);
 #define CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS "ipsec-global-drop-stats"
 #define CAPRI_HBM_REG_TCP_PROXY_STATS       "tcp_proxy_stats"
 #define CAPRI_HBM_REG_TLS_PROXY_GLOBAL_STATS    "tls_proxy_global_stats"
+#define CAPRI_HBM_REG_TCP_OOO_DESCR    "tcp_ooo_descr_global_pool"
+
 #define CAPRI_NUM_SEMAPHORES            512
 
 #define PAGE_SCRATCH_SIZE               512

@@ -483,7 +483,10 @@
             "name": "tls_proxy_global_stats",
             "size_kb": 1,
             "reset": true
+        },
+        {
+            "name": "tcp_ooo_descr_global_pool",
+            "size_kb": 8192
         }
-
     ]
 }

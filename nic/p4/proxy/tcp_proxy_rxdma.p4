@@ -611,6 +611,11 @@ metadata dma_cmd_pkt2mem_t pkt_dma;                 // dma cmd 1
 @pragma dont_trim
 @pragma pa_header_union ingress pkt_dma
 metadata dma_cmd_skip_t pkt_dma_skip;
+
+@pragma dont_trim
+@pragma pa_header_union ingress pkt_dma
+metadata dma_cmd_pkt2mem_t ooo_pkt_dma;
+
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t pkt_descr_dma;           // dma cmd 2
 @pragma dont_trim
@@ -629,6 +634,11 @@ metadata dma_cmd_phv2mem_t tx_doorbell_or_timer;    // dma cmd 8
 metadata dma_cmd_phv2mem_t tls_doorbell;            // dma cmd 9
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t l7_descr;                // dma cmd 10
+
+@pragma dont_trim
+@pragma pa_header_union ingress l7_descr
+metadata dma_cmd_phv2mem_t ooo_slot_addr;
+ 
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t l7_ring_slot;            // dma cmd 11
 @pragma dont_trim

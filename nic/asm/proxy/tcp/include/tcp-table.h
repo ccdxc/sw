@@ -24,20 +24,21 @@
 #define TCP_TCB_TX2RX_SHARED_WRITE_OFFSET \
                     (TCP_TCB_TX2RX_SHARED_OFFSET + 32)  // skip intrinsic part etc
 #define TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET     128
-#define TCP_TCB_RX_OFFSET               192
-#define TCP_TCB_RTT_OFFSET              256
-#define TCP_TCB_RETX_OFFSET             384
-#define TCP_TCB_FC_OFFSET               448
-#define TCP_TCB_WRITE_SERQ_OFFSET       512
-
-#define TCP_TCB_CC_AND_FRA_OFFSET       320
-#define TCP_TCB_XMIT_OFFSET             576
-#define TCP_TCB_TSO_OFFSET              640
-#define TCP_TCB_HEADER_TEMPLATE_OFFSET  704
-#define TCP_TCB_RX_STATS_OFFSET         768
-#define TCP_TCB_TX_STATS_OFFSET         896
-#define TCP_TCB_WRITE_L7Q_OFFSET        960
-#define TCP_TCB_SACK_OFFSET             96
+#define TCP_TCB_RX_OFFSET                     192
+#define TCP_TCB_RTT_OFFSET                    256
+#define TCP_TCB_CC_AND_FRA_OFFSET             320
+#define TCP_TCB_RETX_OFFSET                   384
+#define TCP_TCB_FC_OFFSET                     448
+#define TCP_TCB_WRITE_SERQ_OFFSET             512
+#define TCP_TCB_XMIT_OFFSET                   576
+#define TCP_TCB_TSO_OFFSET                    640
+#define TCP_TCB_HEADER_TEMPLATE_OFFSET        704
+#define TCP_TCB_RX_STATS_OFFSET               768
+#define TCP_TCB_TX_STATS_OFFSET               832
+#define TCP_TCB_BOOK_KEEPING_OFFSET0          896
+#define TCP_TCB_BOOK_KEEPING_OFFSET1          960
+#define TCP_TCB_WRITE_L7Q_OFFSET              960
+#define TCP_TCB_SACK_OFFSET                   96
 
 #define flow_sack2_process             0x00010000
 #define flow_fc_process                0x00010400
