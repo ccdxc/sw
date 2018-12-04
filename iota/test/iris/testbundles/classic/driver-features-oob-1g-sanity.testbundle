@@ -1,6 +1,6 @@
 meta:
     name    : oob1g
-    os      : [ linux, freebsd ]
+    os      : [ linux ]
 
 testcases:
     -   name    : Oob1G_TX_CHECKSUM

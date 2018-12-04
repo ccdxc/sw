@@ -1,6 +1,6 @@
 meta:
     name    : ionicdrv_regr
-    os      : [ linux, freebsd ]
+    os      : [ linux ]
 
 testcases:
     -   name    : UplinkIntf_TX_RING_SIZE

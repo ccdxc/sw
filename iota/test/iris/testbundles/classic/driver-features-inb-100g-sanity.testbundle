@@ -1,6 +1,6 @@
 meta:
     name    : inband100g
-    os      : [ linux, freebsd ]
+    os      : [ linux ]
 
 testcases:
     -   name    : Inband100G_TX_CHECKSUM

@@ -1,6 +1,6 @@
 meta:
     name    : internalmgmt
-    os      : [ linux, freebsd ]
+    os      : [ linux ]
 
 testcases:
     -   name    : InternalMgmt_TX_CHECKSUM
