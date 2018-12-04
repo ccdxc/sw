@@ -1,6 +1,5 @@
 meta:
     name    : rdma
-    os      : [ linux, freebsd ]
 
 testcases:
 
