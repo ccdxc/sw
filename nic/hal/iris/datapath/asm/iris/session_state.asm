@@ -194,11 +194,21 @@ lb_tss_i_tcp_state_transition:
   // Delay slot Instruction for lb_tss_i_4
   sle          c1, FLOW_STATE_ESTABLISHED, d.u.tcp_session_state_info_d.iflow_tcp_state
   sne          c1, d.u.tcp_session_state_info_d.iflow_tcp_state, FLOW_STATE_RESET
-  phvwr.c1     p.capri_intrinsic_tm_replicate_en, 1
-  phvwr.c1     p.capri_intrinsic_tm_replicate_ptr, P4_NW_MCAST_INDEX_RST_COPY
-  tblwr.c1     d.u.tcp_session_state_info_d.iflow_tcp_state, FLOW_STATE_RESET
+  b.!c1        lb_tss_i_exit
+  slt          c1, d.u.tcp_session_state_info_d.rflow_tcp_state, FLOW_STATE_TCP_ACK_RCVD
+  b.c1         lb_tss_i_reset
+  seq          c1, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31},  d.u.tcp_session_state_info_d.rflow_tcp_ack_num
+  b.c1         lb_tss_i_reset
+  b.!c1        lb_tss_i_exit
+  nop
+
+lb_tss_i_reset:
+  phvwr        p.capri_intrinsic_tm_replicate_en, 1
+  phvwr        p.capri_intrinsic_tm_replicate_ptr, P4_NW_MCAST_INDEX_RST_COPY
+  tblwr        d.u.tcp_session_state_info_d.iflow_tcp_state, FLOW_STATE_RESET
   b            lb_tss_i_exit
-  tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_state, FLOW_STATE_RESET
+  tblwr        d.u.tcp_session_state_info_d.rflow_tcp_state, FLOW_STATE_RESET
+
 
 lb_tss_i_4:
   // Below instruction is coming from where we branching to this label (delay slot)
@@ -470,12 +480,21 @@ lb_tss_r_tcp_state_transition:
   b.!c1        lb_tss_r_4
   // Delay slot Instruction for lb_tss_r_4
   sle          c1, FLOW_STATE_ESTABLISHED, d.u.tcp_session_state_info_d.rflow_tcp_state
-  sne          c1, d.u.tcp_session_state_info_d.iflow_tcp_state, FLOW_STATE_RESET
-  phvwr.c1     p.capri_intrinsic_tm_replicate_en, 1
-  phvwr.c1     p.capri_intrinsic_tm_replicate_ptr, P4_NW_MCAST_INDEX_RST_COPY
-  tblwr.c1     d.u.tcp_session_state_info_d.iflow_tcp_state, FLOW_STATE_RESET
+  sne          c1, d.u.tcp_session_state_info_d.rflow_tcp_state, FLOW_STATE_RESET
+  b.!c1        lb_tss_r_exit
+  slt          c1, d.u.tcp_session_state_info_d.iflow_tcp_state, FLOW_STATE_TCP_ACK_RCVD
+  b.c1         lb_tss_r_reset
+  seq          c1, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31},  d.u.tcp_session_state_info_d.iflow_tcp_ack_num
+  b.c1         lb_tss_r_reset
+  b.!c1        lb_tss_r_exit
+  nop
+
+lb_tss_r_reset:
+  phvwr        p.capri_intrinsic_tm_replicate_en, 1
+  phvwr        p.capri_intrinsic_tm_replicate_ptr, P4_NW_MCAST_INDEX_RST_COPY
+  tblwr        d.u.tcp_session_state_info_d.rflow_tcp_state, FLOW_STATE_RESET
   b            lb_tss_r_exit
-  tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_state, FLOW_STATE_RESET
+  tblwr        d.u.tcp_session_state_info_d.iflow_tcp_state, FLOW_STATE_RESET
 
 lb_tss_r_4:
   // Below instruction is coming from where we branching to this label (delay slot)

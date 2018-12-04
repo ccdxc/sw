@@ -464,9 +464,33 @@ action tcp_session_state_info(iflow_tcp_seq_num,
        // RST Handling
        if (tcp.flags & TCP_FLAG_RST == TCP_FLAG_RST) {
            if (scratch_metadata.iflow_tcp_state != FLOW_STATE_RESET) {
-               modify_field(scratch_metadata.iflow_tcp_state, FLOW_STATE_RESET);
-               modify_field(scratch_metadata.rflow_tcp_state, FLOW_STATE_RESET);
-               // Mark the packet to redirect to CPU.
+               // Goal here is to reset the connection only if the sequence
+               // number matches the next expected sequence number from the
+               // point of view of the receiver who is receiving the reset.
+               // For all other resets with sequence number in window, we 
+               // assuming that the challenge ack rfc is supported and we
+               // eventually get the reset with right sequence number.
+               // RFC 5961
+               if (scratch_metadata.rflow_tcp_state < FLOW_STATE_TCP_ACK_RCVD) {
+                   modify_field(scratch_metadata.iflow_tcp_state, FLOW_STATE_RESET);
+                   modify_field(scratch_metadata.rflow_tcp_state, FLOW_STATE_RESET);
+                   // Mark the packet to redirect to CPU.
+                   // goto INITIATOR_TCP_SESSION_STATE_INFO_EXIT
+               }
+               // If we really want to add a knob to support end hosts which support
+               // and which don't support challenge ack then we can add here and
+               // handle accordingly
+               // RFC 5961
+               if (tcp.seqNo == scratch_metadata.rflow_tcp_ack_num) {
+                   modify_field(scratch_metadata.iflow_tcp_state, FLOW_STATE_RESET);
+                   modify_field(scratch_metadata.rflow_tcp_state, FLOW_STATE_RESET);
+                   // Mark the packet to redirect to CPU.
+                   // goto INITIATOR_TCP_SESSION_STATE_INFO_EXIT
+               } else {
+                   // We will let it go and let the Challege ack take care of it
+                   // to send the reset with the right seq number
+                   // goto INITIATOR_TCP_SESSION_STATE_INFO_EXIT
+               }
            } else {
                // Duplicate RST, Let it go.
                // Not adding a exception here for now.
@@ -491,6 +515,10 @@ action tcp_session_state_info(iflow_tcp_seq_num,
        }
        // we will do a switch case based on iflow_tcp_state for reducing the number
        // of instructions executed.
+       if (scratch_metadata.iflow_tcp_state == FLOW_STATE_TCP_SYN_RCVD)  {
+          // INITIATOR_TCP_SESSION_STATE_INFO_EXIT:
+       }
+
        if (scratch_metadata.iflow_tcp_state == FLOW_STATE_TCP_SYN_RCVD)  {
            if ((scratch_metadata.rflow_tcp_state == FLOW_STATE_TCP_SYN_ACK_RCVD) and
                (tcp.flags & TCP_FLAG_ACK == TCP_FLAG_ACK) and
@@ -788,9 +816,33 @@ action tcp_session_state_info(iflow_tcp_seq_num,
        // RST Handling
        if (tcp.flags & TCP_FLAG_RST == TCP_FLAG_RST) {
            if (scratch_metadata.rflow_tcp_state != FLOW_STATE_RESET) {
-               modify_field(scratch_metadata.rflow_tcp_state, FLOW_STATE_RESET);
-               modify_field(scratch_metadata.iflow_tcp_state, FLOW_STATE_RESET);
-               // Mark the packet to redirect to CPU.
+               // Goal here is to reset the connection only if the sequence
+               // number matches the next expected sequence number from the
+               // point of view of the receiver who is receiving the reset.
+               // For all other resets with sequence number in window, we 
+               // assuming that the challenge ack rfc is supported and we
+               // eventually get the reset with right sequence number.
+               // RFC 5961
+               if (scratch_metadata.iflow_tcp_state < FLOW_STATE_TCP_ACK_RCVD) {
+                   modify_field(scratch_metadata.iflow_tcp_state, FLOW_STATE_RESET);
+                   modify_field(scratch_metadata.rflow_tcp_state, FLOW_STATE_RESET);
+                   // Mark the packet to redirect to CPU.
+                   // goto INITIATOR_TCP_SESSION_STATE_INFO_EXIT
+               }
+               // If we really want to add a knob to support end hosts which support
+               // and which don't support challenge ack then we can add here and
+               // handle accordingly
+               // RFC 5961
+               if (tcp.seqNo == scratch_metadata.iflow_tcp_ack_num) {
+                   modify_field(scratch_metadata.iflow_tcp_state, FLOW_STATE_RESET);
+                   modify_field(scratch_metadata.rflow_tcp_state, FLOW_STATE_RESET);
+                   // Mark the packet to redirect to CPU.
+                   // goto INITIATOR_TCP_SESSION_STATE_INFO_EXIT
+               } else {
+                   // We will let it go and let the Challege ack take care of it
+                   // to send the reset with the right seq number
+                   // goto INITIATOR_TCP_SESSION_STATE_INFO_EXIT
+               }
            } else {
                // Duplicate RST, Let it go.
                // Not adding a exception here for now.

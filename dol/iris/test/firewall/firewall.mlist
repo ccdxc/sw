@@ -1796,6 +1796,7 @@ modules:
             # Send some data in both directions
             - step  : ref://trackerstore/steps/id=IFLOW_DATA
             - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Reset from the Initator Side
             - step  : ref://trackerstore/steps/id=RFLOW_RST
               cpu   : True
@@ -1892,6 +1893,7 @@ modules:
             # Send some data in both directions
             - step  : ref://trackerstore/steps/id=IFLOW_DATA
             - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Reset from the Initator Side
             - step  : ref://trackerstore/steps/id=RFLOW_RST
               cpu   : True
@@ -1913,6 +1915,7 @@ modules:
             # Send some data in both directions
             - step  : ref://trackerstore/steps/id=IFLOW_DATA
             - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Reset from the Initator Side
             - step  : ref://trackerstore/steps/id=RFLOW_RST
               cpu   : True
