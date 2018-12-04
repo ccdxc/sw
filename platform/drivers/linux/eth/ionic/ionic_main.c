@@ -51,7 +51,7 @@ MODULE_PARM_DESC(devcmd_timeout, "Devcmd timeout in seconds (default 30 secs)");
 
 #ifdef FAKE_ADMINQ
 unsigned int use_AQ = 1;
-module_param(use_AQ, uint, 1);
+module_param(use_AQ, uint, 0);
 MODULE_PARM_DESC(use_AQ, "Set to non-0 to enable AQ testing, defaults to 1");
 #endif
 
