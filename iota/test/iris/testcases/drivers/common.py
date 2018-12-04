@@ -114,7 +114,7 @@ def setup_features(tc):
                 continue
             os_type = intfObj.OsType()
             callback = cmdBuilderDict[os_type]["cmd"]
-            cmds = callback(intf, feature_value)
+            cmds = callback(n, intf, feature_value)
             if not isinstance(cmds, list):
                 cmds = [cmds]
             for cmd in cmds:
@@ -135,7 +135,11 @@ def setup_features(tc):
             api.Logger.error("Error running cmd : %s " % cmd.command)
             api.Logger.error("Std Output : %s " % cmd.stdout)
             api.Logger.error("Std Err :  %s "% cmd.stdout)
-            return api.types.status.FAILURE
+            if api.IsNaplesNode(cmd.node_name):
+                return api.types.status.FAILURE
+            else:
+                api.Logger.info("Ignoring cmd error its non-naples node : %s" % cmd.command)
+
         api.Logger.info("Success running cmd : %s" % cmd.command)
 
     if driverReloaded:

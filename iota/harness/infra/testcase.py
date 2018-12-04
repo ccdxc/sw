@@ -233,7 +233,7 @@ class Testcase:
         Logger.debug("Creating Testcase directory: %s" % newdir)
         command = "mkdir -p %s && chmod 777 %s" % (newdir, newdir)
         req = api.Trigger_CreateExecuteCommandsRequest()
-        for nodename in api.GetNaplesHostnames():
+        for nodename in api.GetWorkloadNodeHostnames():
             api.Trigger_AddHostCommand(req, nodename, command)
         for wl in api.GetWorkloads():
             api.Trigger_AddCommand(req, wl.node_name, wl.workload_name, command)

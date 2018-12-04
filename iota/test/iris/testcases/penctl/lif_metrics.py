@@ -24,7 +24,8 @@ def Trigger(tc):
 
     req = api.Trigger_CreateExecuteCommandsRequest()
     for n in tc.nodes:
-        common.AddPenctlCommand(req, n, "show metrics lif > metrics_lif.out.before")
+        if api.IsNaplesNode(n):
+            common.AddPenctlCommand(req, n, "show metrics lif > metrics_lif.out.before")
 
     tc.lif_metrics_old = api.Trigger(req)
 
@@ -32,7 +33,8 @@ def Trigger(tc):
 
     req = api.Trigger_CreateExecuteCommandsRequest()
     for n in tc.nodes:
-        common.AddPenctlCommand(req, n, "show metrics lif > metrics.lif.out.after")
+        if api.IsNaplesNode(n):
+            common.AddPenctlCommand(req, n, "show metrics lif > metrics.lif.out.after")
 
     tc.lif_metrics_new = api.Trigger(req)
 

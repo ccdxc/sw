@@ -242,6 +242,9 @@ def GetNicMode():
 def GetNicType(node_name):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNicType(node_name)
 
+def IsNaplesNode(node_name):
+    return  GetNicType(node_name) == 'pensando'
+
 def IsConfigOnly():
     return store.GetTestbed().GetCurrentTestsuite().IsConfigOnly()
 
@@ -367,7 +370,7 @@ def __CopyCommon(direction, node_name, entity_name, files, dest_dir):
     req.direction = direction
     req.node_name = node_name
     req.entity_name = entity_name
-    
+
     req.dest_dir = dest_dir
     if direction == topo_svc.DIR_IN:
         req.dest_dir = __gl_rundir + '/' + dest_dir
