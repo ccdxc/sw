@@ -1086,8 +1086,7 @@ port::port_enable(void)
 
     // dont try link up if no xcvr is present
     if (qsfp_port != -1
-        && (sdk::platform::xcvr_state(qsfp_port-1) !=
-            sdk::types::xcvr_state_t::XCVR_SPROM_READ)) {
+        && (sdk::platform::xcvr_valid(qsfp_port-1) == false)) {
         return SDK_RET_OK;
     }
 

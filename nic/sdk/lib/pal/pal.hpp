@@ -23,8 +23,9 @@ typedef enum qsfp_page {
     QSFP_PAGE_HIGH3,
 } qsfp_page_t;
 
+#define MAX_CPLD_REV_OLD  0x6
 #define QSFP_PAGE_OFFSET  127
-#define MAX_QSFP_RETRIES 5
+#define MAX_QSFP_RETRIES  5
 
 #define IS_PAL_API_SUCCESS(_ret) ((_ret) == sdk::lib::PAL_RET_OK)
 #define IS_PAL_API_FAILURE(_ret) ((_ret) != sdk::lib::PAL_RET_OK)
@@ -228,6 +229,12 @@ pal_get_cpld_rev() {
 static inline int
 pal_get_cpld_id() {
     return gl_pal_info.rwvecs.get_cpld_id();
+}
+
+inline bool
+pal_cpld_rev_old (void)
+{
+    return pal_get_cpld_rev() <= MAX_CPLD_REV_OLD? true : false;
 }
 
 }    // namespace lib

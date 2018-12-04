@@ -84,6 +84,7 @@ xcvr_sprom_read_count_inc (int port) {
 sdk_ret_t xcvr_poll_init(void);
 void xcvr_poll_timer(void);
 void xcvr_init(xcvr_event_notify_t xcvr_notify_cb);
+bool xcvr_valid(int port);
 
 } // namespace platform
 } // namespace sdk

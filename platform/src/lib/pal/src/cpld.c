@@ -60,8 +60,9 @@ pal_get_cpld_id() {
 #include "cpld_int.h"
 #include <assert.h>
 
-const int CPLD_FAIL = -1;
-const int CPLD_SUCCESS = 0;
+const  int CPLD_FAIL    = -1;
+const  int CPLD_SUCCESS = 0;
+static int cpld_rev     = -1;
 
 static inline int
 cpld_reg_rd(int reg) {
@@ -269,7 +270,11 @@ pal_program_marvell(uint8_t marvell_addr, uint32_t data) {
 
 int
 pal_get_cpld_rev() {
-    return cpld_reg_rd(0x0);
+    if (cpld_rev == -1) {
+        cpld_rev = cpld_reg_rd(0x0);
+    }
+
+    return cpld_rev;
 }
 
 int

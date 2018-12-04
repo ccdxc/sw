@@ -712,12 +712,6 @@ port_create (port_args_t *args)
     int qsfp_port = sdk::lib::catalog::port_num_to_qsfp_port(args->port_num);
 
     if (qsfp_port != -1) {
-        // dont enable the port if no xcvr is present
-        if (sdk::platform::xcvr_state(qsfp_port-1) !=
-                        sdk::types::xcvr_state_t::XCVR_SPROM_READ) {
-            return port_p;
-        }
-
         // TODO enable AN always until agent is aware of cables?
         // port_p->set_auto_neg_enable(true);
         if (sdk::platform::cable_type(qsfp_port-1) ==
