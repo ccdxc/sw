@@ -171,3 +171,12 @@ def PortDown(objlist, oper = CfgOper.UPDATE):
         setattr(portCopy.spec, "admin-status", "DOWN")
         newObjList.append(portCopy)
     __config(newObjList, 'api/system/ports/', oper)
+
+def PortAttrSet(objlist, oper,attrName, attrVal):
+    newObjList = []
+    for port in objlist:
+        portCopy = copy.deepcopy(port)
+        setattr(portCopy.spec, attrName, attrVal)
+        newObjList.append(portCopy)
+    __config(newObjList, 'api/system/ports/', oper)
+

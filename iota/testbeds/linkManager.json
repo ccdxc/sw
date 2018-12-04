@@ -1,0 +1,24 @@
+{
+    "Instances": [
+        {
+            "Type": "bm",
+            "NodeMgmtIP"    : "192.168.70.144",
+            "NodeCimcIP"    : "192.168.70.134",
+            "NodeOs"        : "linux",
+            "NicConsoleIP"  : "192.168.71.167",
+            "NicConsolePort": "2030",
+            "NicMgmtIP"     : "1.0.0.1",
+            "Name"          : "lab-bm4-29",
+            "Resource"      : {
+                "NICType"   :  "pensando",
+        "NICUuid"   :  "00:AE:CD:00:0B:E8",
+        "NICSerialNum" : "FLM1842002F"
+        
+            }
+    }  ],
+  "Provision": {
+    "Username": "vm",
+    "Password": "vm",
+    "PrivateKeyFile": ""
+  }
+}

@@ -1,0 +1,11 @@
+meta:
+    name    : linkstress 
+    os      : [ linux ]
+
+testcases:
+    -   name    : link_up_down_status
+        testcase: testcases.linktest.link_test
+        ignore: False
+        verifs:
+            #-   step    : verif.operstate.verify_stats_agent
+            #-   step    : verif.operstate.verify_stats_hw

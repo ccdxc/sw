@@ -28,12 +28,14 @@ testbundles:
     # Relative paths from iota/test/iris/testbundles/
     - networking/networking.testbundle
     - networking/networking_hostpin.testbundle
+    - linktest/linktest.testbundle
     - aging/aging.testbundle
     - alg/alg.testbundle
     - firewall/policy_scale.testbundle
     - firewall/policy.testbundle
     - firewall/conntrack.testbundle
     - firewall/normalization.testbundle
+    - linktest/linktest.testbundle
     - mnic/mnic_hostpin.testbundle
     - cruds/cruds.testbundle
 
