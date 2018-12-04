@@ -209,7 +209,7 @@ tcp_cwnd_test_done:
  */
 tcp_snd_wnd_test:
     add             r1, d.snd_nxt, k.t0_s2s_len
-    sll             r2, k.to_s5_snd_wnd, d.snd_wscale
+    sll             r2, k.t0_s2s_snd_wnd, d.snd_wscale
     add             r2, r2, k.common_phv_snd_una
     scwle           c_retval, r1, r2
     jr              r_linkaddr

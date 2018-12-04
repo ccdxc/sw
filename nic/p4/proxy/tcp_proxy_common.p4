@@ -101,6 +101,7 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         last_ack                        : 32                    ;\
         partial_ack_cnt                 : 32                    ;\
         tx_ring_pi                      : 16                    ;\
+        last_snd_wnd                    : 16                    ;\
         tx_rst_sent                     : 1                     ;\
 
 #define TCB_CC_AND_FRA_SHARED_STATE \
@@ -156,6 +157,7 @@ gc_base,\
 last_ack,\
 partial_ack_cnt,\
 tx_ring_pi,\
+last_snd_wnd,\
 tx_rst_sent
 
 #define CC_AND_FRA_SHARED_PARAMS \
@@ -186,6 +188,7 @@ quick_acks_decr
     modify_field(retx_d.last_ack, last_ack); \
     modify_field(retx_d.partial_ack_cnt, partial_ack_cnt); \
     modify_field(retx_d.tx_ring_pi, tx_ring_pi); \
+    modify_field(retx_d.last_snd_wnd, last_snd_wnd); \
     modify_field(retx_d.tx_rst_sent, tx_rst_sent); \
 
 #define GENERATE_CC_AND_FRA_SHARED_D \

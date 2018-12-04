@@ -241,17 +241,9 @@ def TestCaseVerify(tc):
 
     num_pkts = tc.pvtdata.num_pkts
     num_ack_pkts = tc.pvtdata.num_ack_pkts
-    if tc.pvtdata.num_rx_pkts:
-        num_rx_pkts = tc.pvtdata.num_rx_pkts
-    else:
-        num_rx_pkts = tc.pvtdata.num_pkts
-    num_retx_pkts = 0
-    if hasattr(tc.module.args, 'num_retx_pkts'):
-        num_retx_pkts = tc.module.args.num_retx_pkts
-    if tc.pvtdata.num_tx_pkts:
-        num_tx_pkts = tc.pvtdata.num_tx_pkts
-    else:
-        num_tx_pkts = num_rx_pkts + num_retx_pkts
+    num_rx_pkts = tc.pvtdata.num_rx_pkts
+    num_retx_pkts = tc.pvtdata.num_retx_pkts
+    num_tx_pkts = tc.pvtdata.num_tx_pkts
 
     if hasattr(tc.module.args, 'num_retx_pkts'):
         tc.pvtdata.flow2_bytes_txed += (tc.packets.Get('PKT1').payloadsize * int(tc.module.args.num_retx_pkts))
@@ -326,12 +318,20 @@ def TestCaseVerify(tc):
             (other_tcpcb.pkts_sent + num_tx_pkts)))
         return False
 
-    if other_tcpcb_cur.bytes_sent - other_tcpcb.bytes_sent != \
-            tc.pvtdata.flow2_bytes_txed:
-        print("Warning! pkt tx byte stats not as expected 0x%x 0x%x" % \
+    if hasattr(tc.module.args, 'byte_calc_based_on_tx_pkts'):
+        if other_tcpcb_cur.bytes_sent - other_tcpcb.bytes_sent != \
+                tc.packets.Get('PKT1').payloadsize * num_tx_pkts:
+            print("Warning! pkt tx byte stats not as expected %d %d" % \
+                (other_tcpcb_cur.bytes_sent - other_tcpcb.bytes_sent,
+                    tc.packets.Get('PKT1').payloadsize * num_tx_pkts))
+            return False
+    else:
+        if other_tcpcb_cur.bytes_sent - other_tcpcb.bytes_sent != \
+                tc.pvtdata.flow2_bytes_txed:
+            print("Warning! pkt tx byte stats not as expected %d %d" % \
                 (other_tcpcb_cur.bytes_sent - other_tcpcb.bytes_sent,
                     tc.pvtdata.flow2_bytes_txed))
-        return False
+            return False
 
     # 7. Verify phv2pkt
     if other_tcpcb_cur.debug_num_phv_to_pkt != other_tcpcb.debug_num_phv_to_pkt + 2 * num_tx_pkts:

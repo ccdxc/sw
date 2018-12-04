@@ -44,6 +44,8 @@ tcp_retx_process_start:
 
 
 tcp_retx_enqueue:
+    tblwr           d.last_snd_wnd, k.t0_s2s_snd_wnd
+
     // If sending RST, reschedule to cleanup retx queue
     seq             c1, k.common_phv_rst, 1
     j.c1            tcp_retx_reschedule_tx

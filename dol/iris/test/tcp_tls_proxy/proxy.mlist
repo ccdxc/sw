@@ -478,6 +478,7 @@ modules:
             snd_wnd : 64
             num_rx_pkts : 2
             num_tx_pkts : 1
+            byte_calc_based_on_tx_pkts : True
         iterate :
             - flow: filter://type=IPV4
 
@@ -491,6 +492,46 @@ modules:
             snd_wnd : 64
             num_rx_pkts : 2
             num_tx_pkts : 2
+            byte_calc_based_on_tx_pkts : True
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_ZERO_WINDOW
+        spec    : uplink_to_uplink_zero_window.testspec
+        module  : pkt_to_p4
+        args    :
+            bypass_barco : 1
+            maxflows: 1
+            num_rx_pkts : 2
+            num_tx_pkts : 0
+            byte_calc_based_on_tx_pkts : True
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_ZERO_WINDOW_ONE_OPEN
+        spec    : uplink_to_uplink_zero_window_one_open.testspec
+        module  : pkt_to_p4
+        args    :
+            bypass_barco : 1
+            maxflows: 1
+            num_rx_pkts : 2
+            num_tx_pkts : 1
+            byte_calc_based_on_tx_pkts : True
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_ZERO_WINDOW_TWO_OPEN
+        spec    : uplink_to_uplink_zero_window_two_open.testspec
+        module  : pkt_to_p4
+        args    :
+            bypass_barco : 1
+            maxflows: 1
+            num_rx_pkts : 2
+            num_tx_pkts : 2
+            byte_calc_based_on_tx_pkts : True
         iterate :
             - flow: filter://type=IPV4
 

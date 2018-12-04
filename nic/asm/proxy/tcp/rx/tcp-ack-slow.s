@@ -273,9 +273,11 @@ tcp_in_ack_event:
      nop
 
 tcp_in_ack_event_end:
+    tblwr           d.snd_wnd, k.s1_s2s_window
     phvwrmi         p.common_phv_pending_txdma, TCP_PENDING_TXDMA_SND_UNA_UPDATE, \
                         TCP_PENDING_TXDMA_SND_UNA_UPDATE
-    phvwr           p.rx2tx_extra_snd_una, d.snd_una
+    phvwrpair       p.rx2tx_extra_snd_wnd, k.s1_s2s_window, \
+                        p.rx2tx_extra_snd_una, d.snd_una
     phvwr           p.common_phv_snd_una, d.snd_una
     /*
      * Launch next stage

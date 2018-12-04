@@ -29,10 +29,10 @@ tcp_tx_read_rx2tx_shared_extra_stage1_start:
     CAPRI_OPERAND_DEBUG(k.common_phv_pending_rx2tx)
     phvwr           p.common_phv_snd_una, d.snd_una
     phvwri          p.tcp_header_flags, TCPHDR_ACK
-    phvwr           p.t0_s2s_state, d.state
+    phvwrpair       p.t0_s2s_snd_wnd, d.snd_wnd, \
+                        p.t0_s2s_state, d.state
     // HACK: Force a timer of 100 ticks
-    phvwrpair       p.to_s5_rto, 100, \
-                        p.to_s5_snd_wnd, d.snd_wnd
+    phvwr           p.to_s5_rto, 100
     phvwrpair       p.to_s6_rcv_mss, d.rcv_mss, \
                         p.to_s6_rcv_wnd, d.rcv_wnd
     phvwr           p.t0_s2s_rcv_nxt, d.rcv_nxt

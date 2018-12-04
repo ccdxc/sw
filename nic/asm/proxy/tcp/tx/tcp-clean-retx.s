@@ -256,10 +256,35 @@ tcp_retx_partial_ack:
     CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r2, TCP_PROXY_STATS_RETX_PARTIAL_ACK, 1)
     b               tcp_retx_remove_barrier_and_end_program
 
+/*
+ * We reach here for trying to clean up more than current snd_una or if
+ * snd_wnd has changed (window advertised from peer)
+ */
 tcp_retx_cleaningup_more_error:
     addui           r2, r0, hiword(TCP_PROXY_STATS)
     addi            r2, r2, loword(TCP_PROXY_STATS)
     CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r2, TCP_PROXY_STATS_RETX_NOP_SCHEDULE, 1)
+
+    // We can reach here for window change from peer without advancing snd_una
+    // in which case, check if window is restricted and we can send more
+    // packets
+
+    // if window is not restricted currently, quit
+    // else if current window is greater than old window,
+    // we need to schedule ourselves to transmit packets
+    // that are held in sesq
+    seq             c1, k.to_s3_window_not_restricted, 1
+    sle             c2, k.t0_s2s_snd_wnd, d.last_snd_wnd
+    bcf             [c1 | c2], tcp_retx_remove_barrier_and_end_program
+
+tcp_retx_handle_window_change:
+    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET,
+                        DB_SCHED_UPD_EVAL, 0, LIF_TCP)
+    tbladd          d.tx_ring_pi, 1
+    /* data will be in r3 */
+    CAPRI_RING_DOORBELL_DATA(0, k.common_phv_fid,
+                        TCP_SCHED_RING_PENDING_TX, d.tx_ring_pi)
+    memwr.dx        r4, r3
 
 tcp_retx_remove_barrier_and_end_program:
     phvwri          p.p4_intr_global_drop, 1

@@ -102,7 +102,7 @@ tcp_cwnd_reduction:
      /*
       * r3 = delta = snd_ssthresh - tcp_packets_in_flight
       */
-      sub           r3, k.t0_s2s_clean_retx_snd_ssthresh, r6
+      sub           r3, k.to_s4_snd_ssthresh, r6
 
     /*
      * tp->prr_delivered += newly_acked_sacked
@@ -137,7 +137,7 @@ tcp_cwnd_reduction:
     //      u64 dividend = (u64)tp->snd_ssthresh * tp->prr_delivered +
     //                     tp->prior_cwnd - 1;
     //      sndcnt = div_u64(dividend, tp->prior_cwnd) - tp->prr_out;
-    mul             r5, k.t0_s2s_clean_retx_snd_ssthresh, d.prr_delivered
+    mul             r5, k.to_s4_snd_ssthresh, d.prr_delivered
     add             r5, r5, d.prior_cwnd
     sub             r5, r5, 1
 

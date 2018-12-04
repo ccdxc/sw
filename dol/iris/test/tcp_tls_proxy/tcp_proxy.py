@@ -61,6 +61,7 @@ def SetupProxyArgs(tc):
     num_pkts = 1
     num_rx_pkts = 0
     num_tx_pkts = 0
+    num_retx_pkts = 0
     num_ack_pkts = 0
     test_retx = None
     sem_full = None
@@ -147,9 +148,16 @@ def SetupProxyArgs(tc):
     if hasattr(tc.module.args, 'num_rx_pkts'):
         num_rx_pkts = tc.module.args.num_rx_pkts
         logger.info("- num_rx_pkts %s" % tc.module.args.num_rx_pkts)
+    else:
+        num_rx_pkts = num_pkts
+    if hasattr(tc.module.args, 'num_retx_pkts'):
+        num_retx_pkts = tc.module.args.num_retx_pkts
+        logger.info("- num_retx_pkts %s" % tc.module.args.num_retx_pkts)
     if hasattr(tc.module.args, 'num_tx_pkts'):
         num_tx_pkts = tc.module.args.num_tx_pkts
         logger.info("- num_tx_pkts %s" % tc.module.args.num_tx_pkts)
+    else:
+        num_tx_pkts = num_rx_pkts + num_retx_pkts
 
     logger.info("Testcase Iterators:")
     iterelem = tc.module.iterator.Get()
@@ -203,6 +211,7 @@ def SetupProxyArgs(tc):
     tc.pvtdata.num_ack_pkts = num_ack_pkts
     tc.pvtdata.num_rx_pkts = num_rx_pkts
     tc.pvtdata.num_tx_pkts = num_tx_pkts
+    tc.pvtdata.num_retx_pkts = num_retx_pkts
     tc.pvtdata.test_retx = test_retx
     tc.pvtdata.sem_full = sem_full
     tc.pvtdata.test_cong_avoid = test_cong_avoid

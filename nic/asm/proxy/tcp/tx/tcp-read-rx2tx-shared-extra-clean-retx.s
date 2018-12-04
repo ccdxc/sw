@@ -26,8 +26,9 @@ tcp_tx_read_rx2tx_shared_extra_clean_retx_stage1_start:
      * stage, so skip launching the next stage here. Also if we are dropping
      * the PHV, then set global_drop bit
      */
-    phvwrpair       p.t0_s2s_state, d.state, \
-                        p.t0_s2s_clean_retx_snd_ssthresh, d.snd_ssthresh
+    phvwrpair       p.t0_s2s_snd_wnd, d.snd_wnd, \
+                        p.t0_s2s_state, d.state
+    phvwr           p.to_s4_snd_ssthresh, d.snd_ssthresh
     phvwr.e         p.common_phv_snd_una, d.snd_una
     phvwr           p.t0_s2s_rcv_nxt, d.rcv_nxt
     nop

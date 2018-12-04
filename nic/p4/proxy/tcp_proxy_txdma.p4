@@ -281,6 +281,7 @@ header_type to_stage_4_phv_t {
         sacked_out              : 16;
         lost_out                : 16;
         retrans_out             : 16;
+        snd_ssthresh            : 16;
         is_cwnd_limited         : 8;
     }
 }
@@ -289,7 +290,6 @@ header_type to_stage_5_phv_t {
     fields {
         snd_cwnd                : 16;
         rto                     : 16;
-        snd_wnd                 : 16;
         sesq_tx_ci              : 16;
         rcv_mss_shft            : 4;
         quick                   : 4;
@@ -329,6 +329,7 @@ header_type to_stage_7_phv_t {
 // 160 bytes
 header_type common_t0_s2s_phv_t {
     fields {
+        snd_wnd                 : 16;
         state                   : 8;
         packets_out_decr        : 4;
         addr                    : HBM_FULL_ADDRESS_WIDTH;
@@ -341,11 +342,11 @@ header_type common_t0_s2s_phv_t {
 
 header_type common_t0_s2s_clean_retx_phv_t {
     fields {
+        snd_wnd                 : 16;
         state                   : 8;
         packets_out_decr        : 4;
         num_retx_pkts           : 8;
         pkts_acked              : 8;
-        snd_ssthresh            : 16;
         len1                    : 14;
         len2                    : 14;
         len3                    : 14;
@@ -569,20 +570,21 @@ pending_dup_ack_send\
     modify_field(rx2tx_d.pending_dup_ack_send, pending_dup_ack_send);
 
 #define GENERATE_T0_S2S                                                                 \
-    modify_field(t0_s2s_scratch.addr, t0_s2s.addr);                                     \
+    modify_field(t0_s2s_scratch.snd_wnd, t0_s2s.snd_wnd);                               \
+    modify_field(t0_s2s_scratch.state, t0_s2s.state);                                   \
     modify_field(t0_s2s_scratch.packets_out_decr, t0_s2s.packets_out_decr);             \
+    modify_field(t0_s2s_scratch.addr, t0_s2s.addr);                                     \
     modify_field(t0_s2s_scratch.len, t0_s2s.len);                                       \
     modify_field(t0_s2s_scratch.snd_nxt, t0_s2s.snd_nxt);                               \
     modify_field(t0_s2s_scratch.rcv_nxt, t0_s2s.rcv_nxt);                               \
-    modify_field(t0_s2s_scratch.rto_pi, t0_s2s.rto_pi);                                 \
-    modify_field(t0_s2s_scratch.state, t0_s2s.state);
+    modify_field(t0_s2s_scratch.rto_pi, t0_s2s.rto_pi);
 
 #define GENERATE_T0_S2S_CLEAN_RETX                                                      \
+    modify_field(t0_s2s_clean_retx_scratch.snd_wnd, t0_s2s_clean_retx.snd_wnd); \
     modify_field(t0_s2s_clean_retx_scratch.state, t0_s2s_clean_retx.state); \
     modify_field(t0_s2s_clean_retx_scratch.packets_out_decr, t0_s2s_clean_retx.packets_out_decr); \
     modify_field(t0_s2s_clean_retx_scratch.num_retx_pkts, t0_s2s_clean_retx.num_retx_pkts); \
     modify_field(t0_s2s_clean_retx_scratch.pkts_acked, t0_s2s_clean_retx.pkts_acked); \
-    modify_field(t0_s2s_clean_retx.snd_ssthresh, t0_s2s_clean_retx.snd_ssthresh); \
     modify_field(t0_s2s_clean_retx_scratch.len1, t0_s2s_clean_retx.len1); \
     modify_field(t0_s2s_clean_retx_scratch.len2, t0_s2s_clean_retx.len2); \
     modify_field(t0_s2s_clean_retx_scratch.len3, t0_s2s_clean_retx.len3); \
@@ -829,6 +831,7 @@ action cc_and_fra(CC_AND_FRA_SHARED_PARAMS) {
     modify_field(to_s4_scratch.sacked_out, to_s4.sacked_out);
     modify_field(to_s4_scratch.lost_out, to_s4.lost_out);
     modify_field(to_s4_scratch.retrans_out, to_s4.retrans_out);
+    modify_field(to_s4_scratch.snd_ssthresh, to_s4.snd_ssthresh);
     modify_field(to_s4_scratch.is_cwnd_limited, to_s4.is_cwnd_limited);
 
     // from stage to stage
@@ -867,7 +870,6 @@ action xmit(XMIT_SHARED_PARAMS) {
     // from to_stage 5
     modify_field(to_s5_scratch.snd_cwnd, to_s5.snd_cwnd);
     modify_field(to_s5_scratch.rto, to_s5.rto);
-    modify_field(to_s5_scratch.snd_wnd, to_s5.snd_wnd);
     modify_field(to_s5_scratch.sesq_tx_ci, to_s5.sesq_tx_ci);
     modify_field(to_s5_scratch.rcv_mss_shft, to_s5.rcv_mss_shft);
     modify_field(to_s5_scratch.quick, to_s5.quick);

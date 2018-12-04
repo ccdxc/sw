@@ -78,8 +78,9 @@ bytes_acked_stats_update_end:
      * Launch next stage
      */
 tcp_ack_done:
-    phvwr           p.rx2tx_extra_snd_una, d.snd_una
-    phvwr           p.rx2tx_extra_snd_wnd, k.s1_s2s_window
+    tblwr           d.snd_wnd, k.s1_s2s_window
+    phvwrpair       p.rx2tx_extra_snd_wnd, k.s1_s2s_window, \
+                        p.rx2tx_extra_snd_una, d.snd_una
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
                         tcp_rx_rtt_start,
                         k.common_phv_qstate_addr,
@@ -93,11 +94,14 @@ tcp_dup_ack:
     nop
     tbladd          d.num_dup_acks, 1
     seq             c1, d.num_dup_acks, TCP_FASTRETRANS_THRESH
+    sne             c2, d.snd_wnd, k.s1_s2s_window
 
     /*
      * tell txdma we have work to do
      */
     phvwrmi.c1      p.common_phv_pending_txdma, TCP_PENDING_TXDMA_FAST_RETRANS, \
                         TCP_PENDING_TXDMA_FAST_RETRANS
+    phvwrmi.c2      p.common_phv_pending_txdma, TCP_PENDING_TXDMA_SND_UNA_UPDATE, \
+                        TCP_PENDING_TXDMA_SND_UNA_UPDATE
     b               tcp_ack_done
     nop

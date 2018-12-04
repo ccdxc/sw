@@ -138,7 +138,7 @@ tcp_tx_sesq_no_window:
     addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
     CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid)
     memwr.dx.e      r4, r3
-    nop
+    phvwri          p.p4_intr_global_drop, 1
 
 
 /******************************************************************************
