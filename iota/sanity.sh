@@ -16,7 +16,7 @@ function ErrorCheckNExit() {
 make
 ErrorCheckNExit $? "make"
 
-cd $DIR_GO_IOTA && mkdir -p /var/iota && go  test -v -p=1 ./svcs/agent/...
+cd $DIR_GO_IOTA && mkdir -p /pensando/iota && go  test -v -p=1 ./svcs/agent/...
 ErrorCheckNExit $? "Agent unit tests failed"
 
 infra_sanity="./iota.py  --testbed testbeds/sample.json --testsuite hw_naples_config  --debug --skip-firmware-upgrade --dryrun"

@@ -31,7 +31,7 @@ const (
 	SSHPort = 22
 
 	// DstIotaAgentDir captures the top level dir where all the agent copies happen
-	DstIotaAgentDir = "/var/iota"
+	DstIotaAgentDir = "/pensando/iota"
 
 	// DstIotaEntitiesDir has all workload related data for each workload
 	DstIotaEntitiesDir = DstIotaAgentDir + "/entities"
@@ -61,7 +61,7 @@ const (
 	RunCommandBackground
 )
 
-// global derived vars from the constants
+// global derived vars  from the constants
 var (
 	// IotaAgentBinaryPathLinux captures the location of the build IOTA Agent Binary for Linux
 	IotaAgentBinaryPathLinux = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/bin/agent/%s", os.Getenv("GOPATH"), IotaAgentBinaryNameLinux)
@@ -74,16 +74,16 @@ var (
 
 	// CleanupCommands lists the clean up commands required to clean up an IOTA node.
 	CleanupCommands = []string{
-		`sudo /var/iota/INSTALL.sh --clean-only`,
+		`sudo /pensando/iota/INSTALL.sh --clean-only`,
 		`sudo systemctl stop pen-cmd`,
 		`sudo docker rm -fv $(docker ps -aq)`,
 		`sudo docker system prune -f`,
 		`sudo rm /etc/hosts`,
 		`sudo pkill iota*`,
-		`sudo rm -rf /var/iota*`,
+		`sudo rm -rf /pensando/iota*`,
 		`sudo docker ps`,
 		`sudo docker rmi -f \$(docker images -aq)`,
-		`sudo rm -rf /var/run/naples`,
+		`sudo rm -rf /pensando/run/naples`,
 		`sudo iptables -F`,
 		`sudo systemctl restart docker`,
 	}

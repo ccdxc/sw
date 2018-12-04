@@ -1,18 +1,18 @@
 #! /bin/bash
 
-sudo rm -rf /home/vm/images
-sudo mkdir -p /home/vm/images
-sudo mv /var/iota/*.tgz /home/vm/images/
-sudo /var/iota/INSTALL.sh --clean-only
+sudo rm -rf /pensando/images
+sudo mkdir -p /pensando/images
+sudo mv /pensando/iota/*.tgz /home/vm/images/
+sudo /pensando/iota/INSTALL.sh --clean-only
 sudo systemctl stop pen-cmd
 sudo docker rm -fv $(docker ps -aq)
 sudo docker system prune -f
 sudo rm /etc/hosts
 sudo pkill iota*
-sudo rm -rf /var/iota*
+sudo rm -rf /pensando/iota*
 sudo docker ps
 sudo docker rmi -f $(docker images -aq)
-sudo rm -rf /var/run/naples
+sudo rm -rf /pensando/run/naples
 sudo iptables -F
 sudo systemctl restart docker
 
@@ -21,7 +21,7 @@ do
     ip link delete $i; echo $i; 
 done
 
-sudo mkdir -p /var/iota
-sudo mv /home/vm/images/* /var/iota/
-sudo chown -R vm /var/iota
-sudo chgrp -R vm /var/iota
+sudo mkdir -p /pensando/iota
+sudo mv /pensando/images/* /home/vm/iota/
+sudo chown -R vm /pensando/iota
+sudo chgrp -R vm /pensando/iota

@@ -18,7 +18,7 @@ GlobalOptions = cmdargs.parse_args()
 SSHCMD = "sshpass -p docker scp -r -o StrictHostKeyChecking=no root@"
 
 logdirs = [
-    "/var/iota/*",
+    "/pensando/iota/*",
     "/naples/memtun.log",
 ]
 

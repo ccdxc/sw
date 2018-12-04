@@ -284,6 +284,9 @@ class HostManagement:
         self.hdl.expect_exact(ROOT_EXP_PROMPT)
         self.run("ping -c 5 1.0.0.2")
         self.run("rm -f /root/.ssh/known_hosts")
+        self.run("rm -rf /pensando")
+        self.run("mkdir /pensando")
+        self.run("chown vm:vm /pensando")
         return
 
     def install_drivers(self):
