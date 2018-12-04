@@ -82,7 +82,7 @@ export BULLSEYE_HTML_OUTPUT_DIR=$COVERAGE_OUTPUT/bullseye_model_coverage
 
 export BULLSEYE_HAL_COVERAGE_FILE=$NIC_DIR/coverage/bullseye_hal.cov
 export BULLSEYE_HAL_HTML_OUTPUT_DIR=$COVERAGE_OUTPUT/bullseye_hal_coverage
-export BULLSEYE_HAL_FILTER_COVERAGE_FILE=$COVERAGE_CONFIG_PATH/bullseye/hal_filter.txt
+export BULLSEYE_HAL_FILTER_COVERAGE_FILE=$COVERAGE_CONFIG_PATH/bullseye/exclude_list.txt
 
 
 if [ $keep_data -eq 0 ];then
