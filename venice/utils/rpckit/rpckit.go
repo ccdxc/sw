@@ -230,6 +230,12 @@ func NewRPCServer(mysvcName, listenURL string, opts ...Option) (*RPCServer, erro
 		grpc.KeepaliveEnforcementPolicy(keepalive.EnforcementPolicy{MinTime: clientKeepaliveTime}),
 	}
 
+	if rpcServer.maxMsgSize != 0 {
+		grpcOpts = append(grpcOpts, grpc.MaxRecvMsgSize(rpcServer.maxMsgSize), grpc.MaxSendMsgSize(rpcServer.maxMsgSize))
+	} else {
+		grpcOpts = append(grpcOpts, grpc.MaxRecvMsgSize(defaultMaxMsgSize), grpc.MaxSendMsgSize(defaultMaxMsgSize))
+	}
+
 	// Use default TLS provider unless user has passed in one
 	if rpcServer.options.customTLSProvider == false {
 		tlsProvider, err := GetDefaultTLSProvider(mysvcName)
@@ -410,9 +416,9 @@ func (factory *RPCClientFactory) NewRPCClient(mysvcName, remoteURL string, opts 
 	}
 
 	if rpcClient.maxMsgSize != 0 {
-		grpcOpts = append(grpcOpts, grpc.WithMaxMsgSize(rpcClient.maxMsgSize))
+		grpcOpts = append(grpcOpts, grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(rpcClient.maxMsgSize), grpc.MaxCallSendMsgSize(rpcClient.maxMsgSize)))
 	} else {
-		grpcOpts = append(grpcOpts, grpc.WithMaxMsgSize(defaultMaxMsgSize))
+		grpcOpts = append(grpcOpts, grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(defaultMaxMsgSize), grpc.MaxCallSendMsgSize(defaultMaxMsgSize)))
 	}
 
 	grpcOpts = append(grpcOpts, grpc.WithBlock(), grpc.WithTimeout(time.Second*3),
