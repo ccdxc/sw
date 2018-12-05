@@ -2308,6 +2308,8 @@ static struct ib_mr *ionic_alloc_mr(struct ib_pd *ibpd,
 	if (rc)
 		goto err_pgtbl;
 
+	mr->buf.tbl_pages = 0;
+
 	rc = ionic_create_mr_cmd(dev, pd, mr, 0, 0);
 	if (rc)
 		goto err_cmd;
@@ -7266,8 +7268,6 @@ static void ionic_netdev_work(struct work_struct *ws)
 
 	dev_put(ndev);
 	kfree(work);
-
-	module_put(THIS_MODULE);
 }
 
 static int ionic_netdev_event(struct notifier_block *notifier,
@@ -7289,9 +7289,6 @@ static int ionic_netdev_event(struct notifier_block *notifier,
 	pr_devel("ionic netdev: %s\n", netdev_name(ndev));
 	netdev_dbg(ndev, "event %lu\n", event);
 
-	if (!try_module_get(THIS_MODULE))
-		goto out;
-
 	work = kmalloc(sizeof(*work), GFP_ATOMIC);
 	if (WARN_ON_ONCE(!work)) {
 		rc = -ENOMEM;
@@ -7311,7 +7308,6 @@ out:
 	return NOTIFY_DONE;
 
 err_work:
-	module_put(THIS_MODULE);
 	return notifier_from_errno(rc);
 }
 

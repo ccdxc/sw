@@ -13,9 +13,6 @@ rm -f "$FP" "$FP.rej"
 FP_SRC=(
 # changes in rdma driver should be ported automacically if possible
 "$FP_PATH/rdma"
-
-# changes in eth driver besides ionic_if need to be ported manually
-"$FP_PATH/eth/ionic/ionic_if.h"
 )
 
 FP_SED=(
