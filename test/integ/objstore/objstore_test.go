@@ -14,8 +14,8 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
+	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/cmd/credentials"
-	certsrv "github.com/pensando/sw/venice/cmd/grpc/server/certificates/mock"
 	"github.com/pensando/sw/venice/cmd/grpc/service"
 	"github.com/pensando/sw/venice/cmd/services/mock"
 	"github.com/pensando/sw/venice/cmd/types/protos"
@@ -25,8 +25,6 @@ import (
 	"github.com/pensando/sw/venice/utils/objstore/client"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
-	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
-	"github.com/pensando/sw/venice/utils/testenv"
 
 	"testing"
 
@@ -51,7 +49,6 @@ const (
 
 // objstoreIntegSuite is the state of integ test
 type objstoreIntegSuite struct {
-	certSrv        *certsrv.CertSrv
 	restClient     apiclient.Services
 	resolverSrv    *rpckit.RPCServer
 	resolverClient resolver.Interface
@@ -67,22 +64,10 @@ func TestObjStoreInteg(t *testing.T) {
 }
 
 func (it *objstoreIntegSuite) SetUpSuite(c *C) {
-	// start certificate server
-	certSrv, err := certsrv.NewCertSrv("localhost:0", certPath, keyPath, rootsPath)
-	c.Assert(err, IsNil)
-	it.certSrv = certSrv
-	log.Infof("Created cert endpoint at %s", globals.CMDCertAPIPort)
-
-	// instantiate a CKM-based TLS provider and make it default for all rpckit clients and servers
-	tlsProvider := func(svcName string) (rpckit.TLSProvider, error) {
-		p, err := tlsproviders.NewDefaultCMDBasedProvider(certSrv.GetListenURL(), svcName)
-		if err != nil {
-			return nil, err
-		}
-		return p, nil
+	err := testutils.SetupIntegTLSProvider()
+	if err != nil {
+		log.Fatalf("Error setting up TLS provider: %v", err)
 	}
-	testenv.EnableRpckitTestMode()
-	rpckit.SetTestModeDefaultTLSProvider(tlsProvider)
 
 	// Now create a mock resolver
 	m := mock.NewResolverService()
@@ -181,10 +166,11 @@ func (it *objstoreIntegSuite) TearDownTest(c *C) {
 func (it *objstoreIntegSuite) TearDownSuite(c *C) {
 	// stop server and client
 	log.Infof("Stop all Test Controllers")
-	it.certSrv.Stop()
 
 	it.resolverClient.Stop()
 	it.resolverSrv.Stop()
+
+	testutils.CleanupIntegTLSProvider()
 
 	cmd := []string{
 		"rm", "-f", "objstore",

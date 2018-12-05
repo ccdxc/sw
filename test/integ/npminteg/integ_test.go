@@ -18,15 +18,13 @@ import (
 	. "gopkg.in/check.v1"
 
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
-	certsrv "github.com/pensando/sw/venice/cmd/grpc/server/certificates/mock"
+	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/cmd/grpc/service"
 	"github.com/pensando/sw/venice/cmd/services/mock"
 	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
-	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
-	"github.com/pensando/sw/venice/utils/testenv"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -36,17 +34,12 @@ const (
 	integTestRPCURL    = "localhost:9595"
 	integTestRESTURL   = "localhost:9596"
 	agentDatapathKind  = "mock"
-	// TLS keys and certificates used by mock CKM endpoint to generate control-plane certs
-	certPath  = "../../../venice/utils/certmgr/testdata/ca.cert.pem"
-	keyPath   = "../../../venice/utils/certmgr/testdata/ca.key.pem"
-	rootsPath = "../../../venice/utils/certmgr/testdata/roots.pem"
 )
 
 // integTestSuite is the state of integ test
 type integTestSuite struct {
 	ctrler       *npm.Netctrler
 	agents       []*Dpagent
-	certSrv      *certsrv.CertSrv
 	datapathKind datapath.Kind
 	numAgents    int
 	resolverSrv  *rpckit.RPCServer
@@ -71,18 +64,10 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 	it.numAgents = *numAgents
 	it.datapathKind = datapath.Kind(*datapathKind)
 
-	// start certificate server
-	certSrv, err := certsrv.NewCertSrv("localhost:0", certPath, keyPath, rootsPath)
-	c.Assert(err, IsNil)
-	it.certSrv = certSrv
-	log.Infof("Created cert endpoint at %s", certSrv.GetListenURL())
-
-	// instantiate a CKM-based TLS provider and make it default for all rpckit clients and servers
-	testenv.EnableRpckitTestMode()
-	tlsProvider := func(svcName string) (rpckit.TLSProvider, error) {
-		return tlsproviders.NewDefaultCMDBasedProvider(certSrv.GetListenURL(), svcName)
+	err := testutils.SetupIntegTLSProvider()
+	if err != nil {
+		log.Fatalf("Error setting up TLS provider: %v", err)
 	}
-	rpckit.SetTestModeDefaultTLSProvider(tlsProvider)
 
 	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
 
@@ -146,12 +131,11 @@ func (it *integTestSuite) TearDownSuite(c *C) {
 	// stop server and client
 	it.ctrler.RPCServer.Stop()
 	it.ctrler = nil
-	it.certSrv.Stop()
-	it.certSrv = nil
 	it.resolverSrv.Stop()
 	it.resolverSrv = nil
 	it.resolverCli.Stop()
 	it.resolverCli = nil
+	testutils.CleanupIntegTLSProvider()
 
 	time.Sleep(time.Millisecond * 100) // allow goroutines to cleanup and terminate gracefully
 

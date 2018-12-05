@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
@@ -13,7 +12,6 @@ import (
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apiserver"
-	certsrv "github.com/pensando/sw/venice/cmd/grpc/server/certificates/mock"
 	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/spyglass/finder"
@@ -22,18 +20,11 @@ import (
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	mockresolver "github.com/pensando/sw/venice/utils/resolver/mock"
-	"github.com/pensando/sw/venice/utils/rpckit"
-	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
-	"github.com/pensando/sw/venice/utils/testenv"
 	"github.com/pensando/sw/venice/utils/testutils/serviceutils"
 	"github.com/pensando/sw/venice/utils/trace"
 )
 
 const (
-	// TLS keys and certificates used by mock CKM endpoint to generate control-plane certs
-	certPath  = "../../../../venice/utils/certmgr/testdata/ca.cert.pem"
-	keyPath   = "../../../../venice/utils/certmgr/testdata/ca.key.pem"
-	rootsPath = "../../../../venice/utils/certmgr/testdata/roots.pem"
 	// users
 	testUser     = "test"
 	testPassword = "pensandoo0"
@@ -55,7 +46,6 @@ type tInfo struct {
 	apiServerAddr string
 	apiGw         apigw.APIGateway
 	apiGwAddr     string
-	certSrv       *certsrv.CertSrv
 	esServer      *esmock.ElasticServer
 	mockResolver  *mockresolver.ResolverClient
 	fdr           finder.Interface
@@ -71,23 +61,10 @@ var tinfo tInfo
 func (tInfo *tInfo) setup() error {
 	var err error
 
-	// start certificate server
-	certSrv, err := certsrv.NewCertSrv("localhost:0", certPath, keyPath, rootsPath)
+	err = testutils.SetupIntegTLSProvider()
 	if err != nil {
-		return fmt.Errorf("error starting certificates server: %v", err)
+		log.Fatalf("Error setting up TLS provider: %v", err)
 	}
-	tInfo.certSrv = certSrv
-
-	// instantiate a CKM-based TLS provider and make it default for all rpckit clients and servers
-	tlsProvider := func(svcName string) (rpckit.TLSProvider, error) {
-		p, err := tlsproviders.NewDefaultCMDBasedProvider(certSrv.GetListenURL(), svcName)
-		if err != nil {
-			return nil, err
-		}
-		return p, nil
-	}
-	testenv.EnableRpckitTestMode()
-	rpckit.SetTestModeDefaultTLSProvider(tlsProvider)
 
 	// start mock elastic server
 	tinfo.esServer = esmock.NewElasticServer()
@@ -153,7 +130,7 @@ func (tInfo *tInfo) teardown() {
 	tInfo.fdr.Stop()
 	tInfo.apiServer.Stop()
 	tInfo.apiGw.Stop()
-	tInfo.certSrv.Stop()
+	testutils.CleanupIntegTLSProvider()
 }
 
 func TestMain(m *testing.M) {

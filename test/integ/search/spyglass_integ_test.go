@@ -33,7 +33,6 @@ import (
 	"github.com/pensando/sw/venice/apigw"
 	_ "github.com/pensando/sw/venice/apigw/svc"
 	"github.com/pensando/sw/venice/apiserver"
-	certsrv "github.com/pensando/sw/venice/cmd/grpc/server/certificates/mock"
 	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr"
 	"github.com/pensando/sw/venice/evtsproxy"
@@ -48,10 +47,7 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 	mockresolver "github.com/pensando/sw/venice/utils/resolver/mock"
-	"github.com/pensando/sw/venice/utils/rpckit"
-	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
 	"github.com/pensando/sw/venice/utils/runtime"
-	"github.com/pensando/sw/venice/utils/testenv"
 	. "github.com/pensando/sw/venice/utils/testutils"
 	"github.com/pensando/sw/venice/utils/testutils/serviceutils"
 )
@@ -101,7 +97,6 @@ type testInfo struct {
 	fdr               finder.Interface
 	fdrAddr           string
 	idr               indexer.Interface
-	certSrv           *certsrv.CertSrv
 	authzHeader       string
 	mockResolver      *mockresolver.ResolverClient
 	evtsMgr           *evtsmgr.EventsManager
@@ -117,6 +112,12 @@ var tInfo testInfo
 
 func (tInfo *testInfo) setup(t *testing.T) error {
 	var err error
+
+	// start certificate server
+	err = testutils.SetupIntegTLSProvider()
+	if err != nil {
+		log.Fatalf("Error setting up TLS provider: %v", err)
+	}
 
 	tInfo.signer, _, tInfo.trustRoots, err = testutils.GetCAKit()
 	if err != nil {
@@ -231,7 +232,7 @@ func (tInfo *testInfo) teardown() {
 	tInfo.apiServer.Stop()
 
 	// stop certificate server
-	tInfo.certSrv.Stop()
+	testutils.CleanupIntegTLSProvider()
 
 	// stop evtsmgr
 	tInfo.evtsMgr.RPCServer.Stop()
@@ -2868,23 +2869,6 @@ func TestMain(m *testing.M) {
 
 	// Initialize logger config
 	tInfo.l = log.SetConfig(logConfig)
-
-	// start certificate server
-	// need to do this before Chdir() so that it finds the certificates on disk
-	certSrv, err := certsrv.NewCertSrv("localhost:0", certPath, keyPath, rootsPath)
-	if err != nil {
-		log.Errorf("Failed to create certificate server: %v", err)
-		os.Exit(-1)
-	}
-	tInfo.certSrv = certSrv
-	log.Infof("Created cert endpoint at %s", globals.CMDCertAPIPort)
-
-	// instantiate a CKM-based TLS provider and make it default for all rpckit clients and servers
-	testenv.EnableRpckitTestMode()
-	tlsProvider := func(svcName string) (rpckit.TLSProvider, error) {
-		return tlsproviders.NewDefaultCMDBasedProvider(certSrv.GetListenURL(), svcName)
-	}
-	rpckit.SetTestModeDefaultTLSProvider(tlsProvider)
 
 	// Run tests
 	rcode := m.Run()

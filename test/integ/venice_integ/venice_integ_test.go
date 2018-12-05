@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	. "gopkg.in/check.v1"
 
@@ -39,7 +38,6 @@ import (
 	"github.com/pensando/sw/venice/cmd/cache"
 	cmdenv "github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
-	certsrv "github.com/pensando/sw/venice/cmd/grpc/server/certificates/mock"
 	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
 	"github.com/pensando/sw/venice/cmd/grpc/service"
 	"github.com/pensando/sw/venice/cmd/services/mock"
@@ -58,8 +56,6 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
-	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
-	"github.com/pensando/sw/venice/utils/testenv"
 	. "github.com/pensando/sw/venice/utils/testutils"
 	"github.com/pensando/sw/venice/utils/testutils/serviceutils"
 	"github.com/pensando/sw/venice/utils/tsdb"
@@ -103,7 +99,6 @@ type veniceIntegSuite struct {
 	apiSrv         apiserver.Server
 	apiSrvAddr     string
 	apiGw          apigw.APIGateway
-	certSrv        *certsrv.CertSrv
 	ctrler         *npm.Netctrler
 	tpm            *tpm.PolicyManager
 	tsCtrler       *tsm.TsCtrler
@@ -120,7 +115,6 @@ type veniceIntegSuite struct {
 	resolverClient resolver.Interface
 	userCred       *auth.PasswordCredential
 	tmpFiles       []string
-	tlsProviders   []*tlsproviders.CMDBasedProvider
 	eps            *evtsproxy.EventsProxy
 	epsDir         string
 	rpcServer      *rpckit.RPCServer
@@ -291,23 +285,10 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 
 	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
 
-	// start certificate server
-	certSrv, err := certsrv.NewCertSrv("localhost:0", certPath, keyPath, rootsPath)
-	c.Assert(err, IsNil)
-	it.certSrv = certSrv
-	log.Infof("Created cert endpoint at %s", globals.CMDCertAPIPort)
-
-	// instantiate a CKM-based TLS provider and make it default for all rpckit clients and servers
-	tlsProvider := func(svcName string) (rpckit.TLSProvider, error) {
-		p, err := tlsproviders.NewDefaultCMDBasedProvider(certSrv.GetListenURL(), svcName)
-		if err != nil {
-			return nil, err
-		}
-		it.tlsProviders = append(it.tlsProviders, p)
-		return p, nil
+	err := testutils.SetupIntegTLSProvider()
+	if err != nil {
+		c.Fatalf("Error setting up TLS provider: %v", err)
 	}
-	testenv.EnableRpckitTestMode()
-	rpckit.SetTestModeDefaultTLSProvider(tlsProvider)
 
 	// Now create a mock resolver
 	m := mock.NewResolverService()
@@ -547,10 +528,6 @@ func (it *veniceIntegSuite) TearDownSuite(c *C) {
 	for _, ag := range it.tsAgents {
 		ag.Stop()
 	}
-	for _, t := range it.tlsProviders {
-		t.Close()
-	}
-	it.tlsProviders = nil
 	if it.epsDir != "" {
 		os.RemoveAll(it.epsDir)
 	}
@@ -570,7 +547,6 @@ func (it *veniceIntegSuite) TearDownSuite(c *C) {
 	it.apiSrv = nil
 	it.apiGw.Stop()
 	it.apiGw = nil
-	it.certSrv.Stop()
 	it.vcHub.TearDown()
 	it.resolverClient.Stop()
 	it.resolverSrv.Stop()
@@ -584,10 +560,8 @@ func (it *veniceIntegSuite) TearDownSuite(c *C) {
 	it.apisrvClient.Close()
 	it.eps.RPCServer.Stop()
 
-	tlsProvider := func(svcName string) (rpckit.TLSProvider, error) {
-		return nil, errors.New("Suite is being shutdown")
-	}
-	rpckit.SetTestModeDefaultTLSProvider(tlsProvider)
+	testutils.CleanupIntegTLSProvider()
+
 	if cmdenv.CertMgr != nil {
 		cmdenv.CertMgr.Close()
 		cmdenv.CertMgr = nil

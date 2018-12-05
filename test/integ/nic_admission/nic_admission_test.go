@@ -30,12 +30,12 @@ import (
 	proto "github.com/pensando/sw/nic/agent/nmd/protos"
 	nmdstate "github.com/pensando/sw/nic/agent/nmd/state"
 	"github.com/pensando/sw/nic/agent/nmd/upg"
+	testutils "github.com/pensando/sw/test/utils"
 	apiserver "github.com/pensando/sw/venice/apiserver"
 	apiserverpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/cmd/cache"
 	cmdenv "github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
-	certsrv "github.com/pensando/sw/venice/cmd/grpc/server/certificates/mock"
 	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
 	"github.com/pensando/sw/venice/cmd/grpc/service"
 	"github.com/pensando/sw/venice/cmd/services/mock"
@@ -50,9 +50,7 @@ import (
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
-	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
 	"github.com/pensando/sw/venice/utils/runtime"
-	"github.com/pensando/sw/venice/utils/testenv"
 	. "github.com/pensando/sw/venice/utils/testutils"
 	ventrace "github.com/pensando/sw/venice/utils/trace"
 	"github.com/pensando/sw/venice/utils/tsdb"
@@ -63,10 +61,6 @@ const (
 	resolverURLs      = ":" + globals.CMDResolverPort
 	minAgents         = 1
 	maxAgents         = 5000
-	// TLS keys and certificates used by mock CKM endpoint to generate control-plane certs
-	certPath  = "../../../venice/utils/certmgr/testdata/ca.cert.pem"
-	keyPath   = "../../../venice/utils/certmgr/testdata/ca.key.pem"
-	rootsPath = "../../../venice/utils/certmgr/testdata/roots.pem"
 )
 
 var (
@@ -89,7 +83,6 @@ type testInfo struct {
 	apiServerPort  string
 	apiServer      apiserver.Server
 	apiClient      apiclient.Services
-	certSrv        *certsrv.CertSrv
 	rpcServer      *rpckit.RPCServer
 	smartNICServer *smartnic.RPCServer
 	resolverServer *rpckit.RPCServer
@@ -108,7 +101,7 @@ func (t testInfo) APIClient() pencluster.ClusterV1Interface {
 }
 
 func getSmartNICMAC(index int) string {
-	return fmt.Sprintf("44.44.44.44.%02x.%02x", index/256, index%256)
+	return fmt.Sprintf("44:44:44:44:%02x:%02x", index/256, index%256)
 }
 
 func getHost(index int) *pencluster.Host {
@@ -442,22 +435,12 @@ func Setup(m *testing.M) {
 	// Init etcd cluster
 	var t testing.T
 
-	// start certificate server
+	// start certificate server and set up TLS provider
 	// need to do this before Chdir() so that it finds the certificates on disk
-	certSrv, err := certsrv.NewCertSrv("localhost:0", certPath, keyPath, rootsPath)
+	err := testutils.SetupIntegTLSProvider()
 	if err != nil {
-		log.Errorf("Failed to create certificate server: %v", err)
-		os.Exit(-1)
+		log.Fatalf("Error setting up TLS provider: %v", err)
 	}
-	tInfo.certSrv = certSrv
-	log.Infof("Created cert endpoint at %s", globals.CMDCertAPIPort)
-
-	// instantiate a CKM-based TLS provider and make it default for all rpckit clients and servers
-	testenv.EnableRpckitTestMode()
-	tlsProvider := func(svcName string) (rpckit.TLSProvider, error) {
-		return tlsproviders.NewDefaultCMDBasedProvider(certSrv.GetListenURL(), svcName)
-	}
-	rpckit.SetTestModeDefaultTLSProvider(tlsProvider)
 
 	// cluster bind mounts in local directory. certain filesystems (like vboxsf, nfs) dont support unix binds.
 	os.Chdir("/tmp")
@@ -567,7 +550,7 @@ func Teardown(m *testing.M) {
 	tInfo.apiServer.Stop()
 
 	// stop certificate server
-	tInfo.certSrv.Stop()
+	testutils.CleanupIntegTLSProvider()
 
 	// stop resolver server
 	tInfo.resolverServer.Stop()
