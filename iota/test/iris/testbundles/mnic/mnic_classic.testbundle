@@ -27,21 +27,3 @@ testcases:
         verifs:
             #-   step    : verif.operstate.verify_stats_agent
             #-   step    : verif.operstate.verify_stats_hw
-
-    -   name    : ping_inb_mnic0_intf 
-        testcase: testcases.mnic.ping_inb0
-        ignore: False
-        args    :
-            mtu: 1500
-        verifs:
-            #-   step    : verif.operstate.verify_stats_agent
-            #-   step    : verif.operstate.verify_stats_hw
-
-    -   name    : ping_inb_mnic1_intf 
-        testcase: testcases.mnic.ping_inb1
-        ignore: False
-        args    :
-            mtu: 1500
-        verifs:
-            #-   step    : verif.operstate.verify_stats_agent
-            #-   step    : verif.operstate.verify_stats_hw

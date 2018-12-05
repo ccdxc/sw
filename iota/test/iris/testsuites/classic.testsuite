@@ -35,7 +35,6 @@ testbundles:
     - linktest/linktest.testbundle
     - classic/internal_mgmt.testbundle
     - classic/driver-features-int_mgmt-sanity.testbundle
-    - classic/driver-features-inb-100g-sanity.testbundle
     - linktest/linktest.testbundle
     - classic/driver-features-oob-1g-sanity.testbundle
     - linktest/linktest.testbundle
