@@ -4,7 +4,7 @@
 #include "boost/optional.hpp"
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/json_parser.hpp"
-#include "nic/hal/pd/p4pd/p4pd_api.hpp"
+#include "nic/sdk/lib/p4/p4_api.hpp"
 
 #define P4PD_CALLOC  calloc
 #define P4PD_FREE    free

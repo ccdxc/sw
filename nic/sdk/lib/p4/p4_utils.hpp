@@ -1,5 +1,7 @@
-#ifndef __P4PD_UTILS_H__
-#define __P4PD_UTILS_H__
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
+#ifndef __P4PD_UTILS_HPP__
+#define __P4PD_UTILS_HPP__
 
 #include <stdint.h>
 
@@ -104,5 +106,6 @@ p4pd_utils_p4table_entry_prepare(uint8_t *hwentry,
                                  uint16_t keylen,
                                  uint8_t *packed_actiondata,
                                  uint16_t actiondata_len);
-#endif
+
+#endif    // __P4PD_UTILS_HPP__
 

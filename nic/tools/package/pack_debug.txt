@@ -1,5 +1,5 @@
 #CLI
-nic/debug_cli/cli/debug_cli_$PIPELINE.py                                                         /cli/
+nic/debug_cli/cli/debug_cli_$PIPELINE.py                                                        /cli/
 nic/build/$ARCH/$PIPELINE/gen/p4genclicommon/cli_frontend.py                                    /cli/
 nic/build/$ARCH/$PIPELINE/gen/p4genclicommon/cli.py                                             /cli/
 nic/build/$ARCH/$PIPELINE/gen/p4gen/p4/cli/p4_frontend.py                                       /cli/
@@ -11,8 +11,9 @@ nic/build/$ARCH/$PIPELINE/gen/p4gen/common_txdma_actions/cli/common_txdma_action
 nic/build/$ARCH/$PIPELINE/gen/p4gen/common_rxdma_actions/cli/common_rxdma_actions_frontend.py   /cli/
 nic/build/$ARCH/$PIPELINE/gen/p4gen/common_rxdma_actions/cli/common_rxdma_actions_backend.py    /cli/
 nic/build/$ARCH/$PIPELINE/gen/p4gen/common_rxdma_actions/cli/libcommon_rxdma_actions_p4pdcli.py /cli/
-nic/build/$ARCH/$PIPELINE/lib/_libcommon_txdma_actions_p4pdcli.so                              /cli/
-nic/build/$ARCH/$PIPELINE/lib/_libcommon_rxdma_actions_p4pdcli.so                              /cli/
-nic/build/$ARCH/$PIPELINE/lib/libp4pd_utils.so                                                  /cli/
+nic/build/$ARCH/$PIPELINE/lib/_libcommon_txdma_actions_p4pdcli.so                               /cli/
+nic/build/$ARCH/$PIPELINE/lib/_libcommon_rxdma_actions_p4pdcli.so                               /cli/
+nic/build/$ARCH/$PIPELINE/lib/libsdkp4utils.so                                                  /cli/
+nic/build/$ARCH/$PIPELINE/lib/libsdkp4.so                                                       /cli/
 nic/build/$ARCH/$PIPELINE/lib/_libp4_p4pdcli.so                                                 /cli/
 nic/build/$ARCH/$PIPELINE/lib/_cli.so                                                           /cli/

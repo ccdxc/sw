@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <stdio.h>
 #include "nic/hal/pd/utils/acl_tcam/acl_tcam.hpp"
-#include "nic/hal/pd/p4pd/p4pd_api.hpp"
+#include "nic/sdk/lib/p4/p4_api.hpp"
 #include "gen/p4gen/p4/include/p4pd.h"
 
 #define NUM_ENTRIES 512

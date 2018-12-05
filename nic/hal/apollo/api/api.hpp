@@ -45,9 +45,10 @@ class oci_base {
 public:
     oci_base(){};
     ~oci_base(){};
+
 protected:
     /**
-     * @brief    process a create/delete/update/get operation on a vcn
+     * @brief    process a create/delete/update/get operation on an object
      * @param[in] api_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
@@ -78,7 +79,6 @@ protected:
      * @return   SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t abort(api_ctxt_t *api_ctxt) { return sdk::SDK_RET_OK; }
-
 };
 
 }    // namespace api

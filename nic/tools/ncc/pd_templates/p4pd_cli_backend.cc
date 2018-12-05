@@ -32,7 +32,7 @@
 #include "gen/proto/debug.grpc.pb.h"
 #include <grpc++/grpc++.h>
 #include "gen/p4gen/${hdrdir}/include/${p4prog}p4pd.h"
-#include "nic/include/p4pd_utils.hpp"
+#include "nic/sdk/lib/p4/p4_utils.hpp"
 #include "nic/include/hal_pd_error.hpp"
 
 using grpc::Channel;

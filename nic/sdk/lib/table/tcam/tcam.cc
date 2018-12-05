@@ -5,7 +5,7 @@
 #include <cstring>
 #include "lib/table/tcam/tcam.hpp"
 #include "lib/table/tcam/tcam_entry.hpp"
-#include "lib/p4pd/p4pd_api.hpp"
+#include "lib/p4/p4_api.hpp"
 #include "tcam.hpp"
 
 using sdk::table::tcam_entry_t;

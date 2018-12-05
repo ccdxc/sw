@@ -1,4 +1,5 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = gft_test.gtest
 MODULE_PIPELINE = gft
@@ -9,7 +10,8 @@ MODULE_SOLIBS   = ${NIC_${PIPELINE}_P4PD_SOLIBS} \
                   ${NIC_SDK_SOLIBS} \
                   pdcommon core fte_mock agent_api \
                   bm_allocator bitmap trace mtrack \
-                  pdcapri sdkcapri p4pd_utils p4pd \
+                  pdcapri sdkcapri p4pd \
+                  sdkp4 sdkp4utils \
                   asicpd hal_mock hal_lib haltrace \
                   ${NIC_LINKMGR_SOLIBS}
 MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \

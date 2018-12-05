@@ -47,7 +47,7 @@ class subnet_entry : public oci_base {
      * @param[in] api_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t process_api(api_ctxt_t *api_ctxt);
+    virtual sdk_ret_t process_api(api_ctxt_t *api_ctxt) override;
 
     /**
      * @brief    commit() is invokved during commit phase of the API processing
@@ -61,7 +61,7 @@ class subnet_entry : public oci_base {
      *
      * NOTE:     commit() is not expected to fail
      */
-    sdk_ret_t commit(api_ctxt_t *api_ctxt);
+    virtual sdk_ret_t commit(api_ctxt_t *api_ctxt) override;
 
     /**
      * @brief     abort() is invoked during abort phase of the API processing
@@ -73,7 +73,7 @@ class subnet_entry : public oci_base {
      * @param[in] api_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t abort(api_ctxt_t *api_ctxt);
+    virtual sdk_ret_t abort(api_ctxt_t *api_ctxt) override;
 
     /**
      * @brief     helper function to get key given subnet entry
@@ -171,17 +171,17 @@ private:
  private:
     oci_subnet_key_t    key_;               /**< subnet Key */
     mac_addr_t          vr_mac_;            /**< virtual router MAC */
-    ht_ctxt_t           ht_ctxt_;           /**< Hash table context */
+    ht_ctxt_t           ht_ctxt_;           /**< hash table context */
 
     /**< P4 datapath specific state */
-    uint16_t            hw_id_;             /**< Internal ID */
+    uint16_t            hw_id_;             /**< hardware id */
     mem_addr_t          lpm_base_addr_;     /**< LPM base address for current
                                                  epoch */
     mem_addr_t          policy_base_addr_;  /**< security policy rules base
                                                  address for current epoch */
 } __PACK__;
 
-/** @} */ // end of OCI_SUBNET_ENTRY
+/** @} */    // end of OCI_SUBNET_ENTRY
 
 /**
  * @defgroup OCI_SUBNET_STATE - subnet state functionality

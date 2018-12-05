@@ -13,7 +13,7 @@
 #include "nic/include/hal.hpp"
 #include "nic/hal/svc/hal_ext.hpp"
 #include "nic/include/asic_pd.hpp"
-#include "nic/hal/pd/p4pd/p4pd_api.hpp"
+#include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/hal/pd/capri/capri_pxb_pcie.hpp"
 #include "nic/hal/pd/capri/capri_state.hpp"
 #include "nic/hal/pd/capri/capri_sw_phv.hpp"

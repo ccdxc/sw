@@ -10,7 +10,7 @@
 #include "nic/sdk/include/sdk/directmap.hpp"
 #include "nic/hal/pd/gft/gft_state.hpp"
 #include "nic/hal/pd/gft/eth_pd.hpp"
-#include "nic/hal/pd/p4pd/p4pd_api.hpp"
+#include "nic/sdk/lib/p4/p4_api.hpp"
 #include "gen/p4gen/gft/include/p4pd.h"
 #include "gen/p4gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 

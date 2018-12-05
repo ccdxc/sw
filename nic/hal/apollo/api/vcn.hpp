@@ -37,7 +37,7 @@ public:
      *           and free the memory
      * @param[in] vcn     vcn to be freed
      * NOTE: h/w entries should have been cleaned up (by calling cleanup_hw()
-     * before calling this
+     *       before calling this
      */
     static void destroy(vcn_entry *vcn);
 
@@ -46,7 +46,7 @@ public:
      * @param[in] api_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t process_api(api_ctxt_t *api_ctxt);
+    virtual sdk_ret_t process_api(api_ctxt_t *api_ctxt) override;
 
     /**
      * @brief    commit() is invokved during commit phase of the API processing
@@ -60,7 +60,7 @@ public:
      *
      * NOTE:     commit() is not expected to fail
      */
-    sdk_ret_t commit(api_ctxt_t *api_ctxt);
+    virtual sdk_ret_t commit(api_ctxt_t *api_ctxt) override;
 
     /**
      * @brief     abort() is invoked during abort phase of the API processing
@@ -72,7 +72,7 @@ public:
      * @param[in] api_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t abort(api_ctxt_t *api_ctxt);
+    virtual sdk_ret_t abort(api_ctxt_t *api_ctxt) override;
 
     /**
      * @brief     helper function to get key given vcn entry
@@ -102,9 +102,9 @@ public:
      */
     static bool vcn_key_func_compare(void *key1, void *key2) {
         SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-        if (!memcmp(key1, key2, sizeof(oci_vcn_key_t)))
+        if (!memcmp(key1, key2, sizeof(oci_vcn_key_t))) {
             return true;
-
+        }
         return false;
     }
 
@@ -124,8 +124,9 @@ private:
      * @param[in] oci_vcn    vcn information
      * @return    SDK_RET_OK on success, failure status code on error
      *
-     * NOTE:     allocate all h/w resources (i.e., table indices as well here, we
-     *           can always release them in abort phase if something goes wrong
+     * NOTE:     allocate all h/w resources (i.e., table indices as well here,
+     *           we can always release them in abort phase if something goes
+     *           wrong
      */
     sdk_ret_t init(oci_vcn_t *oci_vcn);
 
@@ -174,14 +175,14 @@ private:
     sdk_ret_t del_from_db(void);
 
 private:
-    oci_vcn_key_t    key_;        /**< vcn Key */
-    ht_ctxt_t        ht_ctxt_;    /**< Hash table context */
+    oci_vcn_key_t    key_;        /**< vcn key */
+    ht_ctxt_t        ht_ctxt_;    /**< hash table context */
 
     /**< P4 datapath specific state */
-    uint16_t         hw_id_;      /**< hardware ID */
+    uint16_t         hw_id_;      /**< hardware id */
 } __PACK__;
 
-/** @} */ // end of OCI_VCN_ENTRY
+/** @} */    // end of OCI_VCN_ENTRY
 
 /**
  * @defgroup OCI_VCN_STATE - vcn state functionality

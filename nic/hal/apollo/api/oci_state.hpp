@@ -26,11 +26,11 @@ public:
     ~oci_state();
     vcn_state *vcn_db(void) { return &vcn_db_; }
     subnet_state *subnet_db(void) { return &subnet_db_; }
-    //vnic_state *vnic_db(void) { return &vnic_db_ ; }
+    vnic_state *vnic_db(void) { return &vnic_db_ ; }
 private:
     vcn_state       vcn_db_;
     subnet_state    subnet_db_;
-    //vnic_state      vnic_db_;
+    vnic_state      vnic_db_;
 };
 extern oci_state g_oci_state;
 
@@ -46,15 +46,13 @@ subnet_db (void)
     return g_oci_state.subnet_db();
 }
 
-#if 0
 static inline vnic_state *
 vnic_db (void)
 {
     return g_oci_state.vnic_db();
 }
-#endif
 
-/** * @} */ // end of OCI_STATE
+/** * @} */    // end of OCI_STATE
 
 }    // namespace api
 

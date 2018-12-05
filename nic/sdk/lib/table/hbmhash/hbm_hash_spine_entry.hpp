@@ -6,7 +6,7 @@
 
 #include <list>
 #include "include/sdk/base.hpp"
-#include "include/sdk/p4pd_api.hpp"
+#include "lib/p4/p4_api.hpp"
 #include "include/sdk/mem.hpp"
 
 #include "hbm_hash_mem_types.hpp"

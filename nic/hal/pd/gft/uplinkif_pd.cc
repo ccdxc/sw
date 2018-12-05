@@ -4,7 +4,7 @@
 #include "nic/hal/plugins/cfg/nw/interface_api.hpp"
 #include "nic/hal/pd/gft/uplinkif_pd.hpp"
 #include "nic/hal/pd/capri/capri_tm_rw.hpp"
-#include "nic/hal/pd/p4pd/p4pd_api.hpp"
+#include "nic/sdk/lib/p4/p4_api.hpp"
 
 namespace hal {
 namespace pd {

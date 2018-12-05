@@ -11,7 +11,7 @@
 #include "nic/sdk/include/sdk/platform/utils/mpartition.hpp"
 #include "nic/sdk/include/sdk/directmap.hpp"
 #include "nic/sdk/include/sdk/table_monitor.hpp"
-#include "nic/include/p4pd_api.hpp"
+#include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/include/capri_common.h"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"

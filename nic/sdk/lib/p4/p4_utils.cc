@@ -1,11 +1,13 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #include <stdio.h>
 #include <string>
 #include <errno.h>
 #include <stdlib.h>
 #include <assert.h>
 
-#include "nic/hal/pd/p4pd/p4pd_utils.hpp"
+#include "nic/sdk/lib/p4/p4_utils.hpp"
+
 /* This function copies a byte at time or a single bit that goes
  * into table memory
  */
@@ -519,4 +521,3 @@ p4pd_utils_p4table_entry_prepare(uint8_t *hwentry,
         return (dest_start_bit);
     }
 }
-

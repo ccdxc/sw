@@ -5,7 +5,7 @@
 
 #include "nic/include/base.hpp"
 #include "nic/include/hal.hpp"
-#include "nic/hal/pd/p4pd/p4pd_api.hpp"
+#include "nic/sdk/lib/p4/p4_api.hpp"
 #include "gen/proto/debug.pb.h"
 
 #define HAL_LOG_TBL_UPDATES 1

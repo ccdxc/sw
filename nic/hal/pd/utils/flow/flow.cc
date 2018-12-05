@@ -1,5 +1,5 @@
 #include <cmath>
-#include "nic/hal/pd/p4pd/p4pd_api.hpp"
+#include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/hal/pd/utils/flow/flow.hpp"
 #include "nic/hal/pd/utils/flow/flow_entry.hpp"
 #include "nic/hal/pd/utils/flow/flow_table_entry.hpp"

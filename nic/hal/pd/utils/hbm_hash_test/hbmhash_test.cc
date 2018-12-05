@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "nic/sdk/lib/table/hbmhash/hbm_hash.hpp"
 #include "nic/sdk/lib/table/hbmhash/hbm_hash_entry.hpp"
-#include "nic/hal/pd/p4pd/p4pd_api.hpp"
+#include "nic/sdk/lib/p4/p4_api.hpp"
 #include "gen/p4gen/p4/include/p4pd.h"
 #include <boost/multiprecision/cpp_int.hpp>
 #include <chrono>

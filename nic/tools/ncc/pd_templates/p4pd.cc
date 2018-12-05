@@ -66,7 +66,7 @@
 #include <stdbool.h>
 #include <assert.h>
 #include "gen/p4gen/${hdrdir}/include/${p4prog}p4pd.h"
-#include "nic/include/p4pd_utils.hpp"
+#include "nic/sdk/lib/p4/p4_utils.hpp"
 
 char ${prefix}_tbl_names[__P4${caps_p4prog}TBL_ID_TBLMAX][P4${caps_p4prog}TBL_NAME_MAX_LEN];
 uint16_t ${prefix}_tbl_swkey_size[__P4${caps_p4prog}TBL_ID_TBLMAX];

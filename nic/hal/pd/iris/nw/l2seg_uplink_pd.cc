@@ -11,7 +11,7 @@
 #include "nic/hal/pd/iris/nw/l2seg_uplink_pd.hpp"
 #include "nic/hal/pd/iris/nw/if_pd_utils.hpp"
 #include "gen/p4gen/p4/include/p4pd.h"
-#include "nic/hal/pd/p4pd/p4pd_api.hpp"
+#include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/hal/pd/iris/p4pd_defaults.hpp"
 

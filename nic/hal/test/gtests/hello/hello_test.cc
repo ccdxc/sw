@@ -12,7 +12,7 @@
 #include "nic/sdk/include/sdk/platform/utils/lif_manager_base.hpp"
 #include "nic/sdk/include/sdk/platform/capri/capri_qstate.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
-#include "nic/hal/pd/p4pd/p4pd_api.hpp"
+#include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 #include "nic/hal/pd/asic_pd.hpp"
 #include "nic/utils/pack_bytes/pack_bytes.hpp"

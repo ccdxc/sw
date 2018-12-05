@@ -11,8 +11,8 @@
 #include "boost/optional.hpp"
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/json_parser.hpp"
-#include "nic/hal/pd/p4pd/p4pd_api.hpp"
-#include "nic/hal/pd/p4pd/p4pd_utils.hpp"
+#include "p4_api.hpp"
+#include "p4_utils.hpp"
 
 #define P4PD_CALLOC  calloc
 #define P4PD_FREE    free
@@ -446,5 +446,3 @@ p4pd_table_properties_get (uint32_t tableid, p4pd_table_properties_t *tbl_ctx)
     memcpy(tbl_ctx, _p4tbls + tableid, sizeof(p4pd_table_properties_t));
     return P4PD_SUCCESS;
 }
-
-

@@ -9,7 +9,7 @@
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
-#include "nic/hal/pd/p4pd/p4pd_api.hpp"
+#include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 #include "gen/p4gen/tcp_proxy_txdma/include/ingress_phv.h"
 #undef __INGRESS_PHV__

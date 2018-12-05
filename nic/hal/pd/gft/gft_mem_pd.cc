@@ -2,7 +2,7 @@
 
 #include "nic/include/base.hpp"
 #include "nic/hal/pd/gft/gft_state.hpp"
-#include "nic/hal/pd/p4pd/p4pd_api.hpp"
+#include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 #include "nic/hal/pd/gft/lif_pd.hpp"
 #include "nic/hal/pd/gft/uplinkif_pd.hpp"

@@ -113,7 +113,7 @@ export NIC_HAL_UTILS_SOLIBS := bitmap block_list nat eventmgr \
 export NIC_HAL_PD_SOLIBS_x86_64 := model_client
 export NIC_HAL_PD_SOLIBS_aarch64 :=
 export NIC_HAL_PD_SOLIBS := capri_csrint \
-       capri_csr_cpu_hal pdcapri pdcommon p4pd \
+       capri_csr_cpu_hal pdcapri pdcommon p4pd sdkp4 \
        pd_${PIPELINE} asicpd pd_acl_tcam pd_met \
        ${NIC_HAL_PD_SOLIBS_${ARCH}}
 export NIC_CAPSIM_LDLIBS := mpuobj capisa isa sknobs
@@ -149,8 +149,7 @@ export CLI_P4PD_INCS := ${NIC_DIR}/hal/third-party/google/include \
                         /usr/include/python3.4m
 export CLI_P4PD_FLAGS := -Wl,--allow-multiple-definition -Wno-sign-compare
 export CLI_P4PD_LDLIBS := :libprotobuf.so.14 grpc++_reflection grpc++ grpc_unsecure grpc++_unsecure rt ev
-export CLI_P4PD_SOLIBS := halproto p4pd_utils delphisdk
-
+export CLI_P4PD_SOLIBS := halproto sdkp4utils delphisdk
 
 # ==========================================================================
 #                           Third-party Libs

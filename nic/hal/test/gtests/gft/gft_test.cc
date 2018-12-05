@@ -9,7 +9,7 @@
 #include "nic/sdk/include/sdk/utils.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
-#include "nic/hal/pd/p4pd/p4pd_api.hpp"
+#include "nic/sdk/lib/p4/p4_api.hpp"
 #include "gen/p4gen/gft/include/p4pd.h"
 #include "nic/p4/gft/include/defines.h"
 #include "nic/hal/pd/capri/capri_tm_rw.hpp"

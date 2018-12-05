@@ -11,33 +11,235 @@
 #include "nic/sdk/include/sdk/timestamp.hpp"
 #include "nic/hal/apollo/core/mem.hpp"
 #include "nic/hal/apollo/api/vnic.hpp"
+#include "nic/hal/apollo/api/oci_state.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
+#include "nic/sdk/lib/p4/p4_api.hpp"
+
+// TODO: HACK !!!, remove
+void table_health_monitor_cb(uint32_t table_id,
+                             char *name,
+                             table_health_state_t curr_state,
+                             uint32_t capacity,
+                             uint32_t usage,
+                             table_health_state_t *new_state) {
+}
 
 namespace api {
 
 /**
- * @defgroup OCI_VNIC_DB - VNIC database functionality
+ * @defgroup OCI_VNIC_ENTRY - vnic entry functionality
  * @ingroup OCI_VNIC
  * @{
  */
 
-// TODO: these can't be global variables -- have to move to some global class
-vnic_state g_vnic_state;
+/**
+ * @brief    release all the s/w state associate with the given vnic, if any,
+ *           and free the memory
+ * @param[in] vnic     vnic to be freed
+ * NOTE: h/w entries should have been cleaned up (by calling cleanup_hw()
+ * before calling this
+ */
+void
+vnic_entry::destroy(vnic_entry *vnic) {
+    vnic->~vnic_entry();
+    vnic_db()->vnic_free(vnic);
+}
 
 /**
- * constructor
+ * @brief     initialize vnic entry with the given config
+ * @param[in] oci_vnic    vnic information
+ * @return    SDK_RET_OK on success, failure status code on error
+ *
+ * NOTE:     allocate all h/w resources (i.e., table indices as well here, we
+ *           can always release them in abort phase if something goes wrong
+ */
+sdk_ret_t
+vnic_entry::init(oci_vnic_t *oci_vnic) {
+    //SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_SHARED);
+    memcpy(&this->key_, &oci_vnic->key, sizeof(oci_vnic_key_t));
+    this->ht_ctxt_.reset();
+    // allocate hw id for this vnic, vnic specific index tables in the p4
+    // datapath are indexed by this
+    if (vnic_db()->vnic_idxr()->alloc((uint32_t *)&this->hw_id_) !=
+            sdk::lib::indexer::SUCCESS) {
+        return sdk::SDK_RET_NO_RESOURCE;
+    }
+    return sdk::SDK_RET_OK;
+}
+
+/**
+ * @brief    factory method to allocate and initialize a vnic entry
+ * @param[in] oci_vnic    vnic information
+ * @return    new instance of vnic or NULL, in case of error
+ */
+vnic_entry *
+vnic_entry::factory(oci_vnic_t *oci_vnic) {
+    vnic_entry *vnic;
+
+    vnic = vnic_db()->vnic_alloc();
+    if (vnic) {
+        new (vnic) vnic_entry();
+        if (vnic->init(oci_vnic) == sdk::SDK_RET_OK) {
+            return vnic;
+        } else {
+            vnic_entry::destroy(vnic);
+            return NULL;
+        }
+    }
+    return NULL;
+}
+
+/**
+ * @brief    process a create/delete/update/get operation on a vnic
+ * @param[in] api_ctxt    transient state associated with this API
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+vnic_entry::process_api(api_ctxt_t *api_ctxt) {
+    switch (api_ctxt->op) {
+    case API_OP_CREATE:
+        return process_create(api_ctxt);
+        break;
+    case API_OP_UPDATE:
+        return process_delete(api_ctxt);
+        break;
+    case API_OP_DELETE:
+        return process_delete(api_ctxt);
+        break;
+    case API_OP_GET:
+        return process_get(api_ctxt);
+        break;
+    default:
+        return sdk::SDK_RET_INVALID_OP;
+    }
+}
+
+/**
+ * @brief     handle a vnic create by allocating all required resources
+ *            and keeping them ready for commit phase
+ * @param[in] api_ctxt    transient state associated with this API
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+vnic_entry::process_create(api_ctxt_t *api_ctxt)
+{
+    return sdk::SDK_RET_OK;
+}
+
+/**
+ * @brief     handle a vnic update by allocating all required resources
+ *            and keeping them ready for commit phase
+ * @param[in] api_ctxt    transient state associated with this API
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+vnic_entry::process_update(api_ctxt_t *api_ctxt)
+{
+    return sdk::SDK_RET_OK;
+}
+
+/**
+ * @brief     handle a vnic delete by allocating all required resources
+ *            and keeping them ready for commit phase
+ * @param[in] api_ctxt    transient state associated with this API
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+vnic_entry::process_delete(api_ctxt_t *api_ctxt)
+{
+    return sdk::SDK_RET_OK;
+}
+
+/**
+ * @brief     handle a vnic get by allocating all required resources
+ *            and keeping them ready for commit phase
+ * @param[in] api_ctxt    transient state associated with this API
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+vnic_entry::process_get(api_ctxt_t *api_ctxt)
+{
+    return sdk::SDK_RET_OK;
+}
+
+/**
+ * @brief    commit() is invokved during commit phase of the API processing and
+ *           is not expected to fail as all required resources are already
+ *           allocated by now. Based on the API operation, this API is expected
+ *           to process either create/retrieve/update/delete. If any temporary
+ *           state was stashed in the api_ctxt while processing this API, it
+ *           should be freed here
+ * @param[in] api_ctxt    transient state associated with this API
+ * @return   SDK_RET_OK on success, failure status code on error
+ *
+ * NOTE:     commit() is not expected to fail
+ */
+sdk_ret_t
+vnic_entry::commit(api_ctxt_t *api_ctxt) {
+    return sdk::SDK_RET_OK;
+}
+
+/**
+ * @brief     abort() is invoked during abort phase of the API processing and is
+ *            not expected to fail. During this phase, all associated resources
+ *            must be freed and global DBs need to be restored back to their
+ *            original state and any transient state stashed in api_ctxt while
+ *            processing this API should also be freed here
+ * @param[in] api_ctxt    transient state associated with this API
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+vnic_entry::abort(api_ctxt_t *api_ctxt) {
+    return sdk::SDK_RET_OK;
+}
+
+/**
+ * @brief add vnic to database
+ *
+ * @param[in] vnic vnic
+ */
+sdk_ret_t
+vnic_entry::add_to_db(void) {
+    return vnic_db()->vnic_ht()->insert_with_key(&key_, this,
+                                                 &ht_ctxt_);
+}
+
+/**
+ * @brief delete vnic from database
+ *
+ * @param[in] vnic_key vnic key
+ */
+sdk_ret_t
+vnic_entry::del_from_db(void) {
+    vnic_db()->vnic_ht()->remove(&key_);
+    return sdk::SDK_RET_OK;
+}
+
+/** @} */    // end of OCI_VNIC_ENTRY
+
+/**
+ * @defgroup OCI_VNIC_STATE - vnic database functionality
+ * @ingroup OCI_VNIC
+ * @{
+ */
+
+/**
+ * @brief    constructor
  */
 vnic_state::vnic_state() {
     p4pd_table_properties_t    tinfo, oflow_tinfo;
 
     // TODO: need to tune multi-threading related params later
-    ht_ = ht::factory(OCI_MAX_VNIC >> 2,
-                      vnic_key_func_get,
-                      vnic_hash_func_compute,
-                      vnic_key_func_compare);
-    idxr_ = indexer::factory(OCI_MAX_VNIC);
-    slab_ = slab::factory("vnic", OCI_SLAB_VNIC, sizeof(vnic_t), 16,
-                          true, true, true, NULL);
+    vnic_ht_ = ht::factory(OCI_MAX_VNIC >> 2,
+                           vnic_entry::vnic_key_func_get,
+                           vnic_entry::vnic_hash_func_compute,
+                           vnic_entry::vnic_key_func_compare);
+    SDK_ASSERT(vnic_ht_ != NULL);
+    vnic_idxr_ = indexer::factory(OCI_MAX_VNIC);
+    SDK_ASSERT(vnic_idxr_ != NULL);
+    vnic_slab_ = slab::factory("vnic", OCI_SLAB_VNIC, sizeof(vnic_entry),
+                               16, true, true, true, NULL);
+    SDK_ASSERT(vnic_slab_ != NULL);
 
     /**< instantiate P4 tables for bookkeeping */
     p4pd_table_properties_get(P4TBL_ID_LOCAL_VNIC_BY_VLAN_TX, &tinfo);
@@ -70,128 +272,53 @@ vnic_state::vnic_state() {
 }
 
 /**
- * destructor
+ * @brief    destructor
  */
 vnic_state::~vnic_state() {
-    ht::destroy(ht_);
-    slab::destroy(slab_);
+    ht::destroy(vnic_ht_);
+    indexer::destroy(vnic_idxr_);
+    slab::destroy(vnic_slab_);
+    directmap::destroy(local_vnic_by_vlan_tx_);
+    sdk_hash::destroy(local_vnic_by_slot_rx_);
+    directmap::destroy(egress_local_vnic_info_rx_);
 }
 
 /**
- * @brief Handle VNIC create message
- *
- * @param[in] vnic VNIC information
- * @return #SDK_RET_OK on success, failure status code on error
+ * @brief     allocate vnic instance
+ * @return    pointer to the allocated vnic , NULL if no memory
  */
-sdk_ret_t
-vnic_state::vnic_create(_In_ oci_vnic_t *oci_vnic) {
-    vnic_t       *vnic;
-    sdk_ret_t    rv;
-
-    if ((vnic = vnic_alloc_init(oci_vnic)) == NULL) {
-        return sdk::SDK_RET_OOM;
-    }
-
-    // TODO: program_datapath() must be called during batch_commit(), not here
-    rv = program_datapath(oci_vnic, vnic);
-    return rv;
-}
-
-/**
- * @brief Handle VNIC delete API
- *
- * @param[in] vnic_key VNIC key information
- * @return #SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t
-vnic_state::vnic_delete(_In_ oci_vnic_key_t *vnic_key) {
-    vnic_t *vnic;
-
-    if ((vnic = vnic_del_from_db(vnic_key)) == NULL) {
-        return sdk::SDK_RET_ENTRY_NOT_FOUND;
-    }
-    // TODO: clear all mappings and delete all p4pd table entires etc.
-    vnic_delete(vnic);
-
-    return sdk::SDK_RET_OK;
-}
-
-/**
- * @brief Add VNIC to database
- *
- * @param[in] vnic VNIC
- */
-sdk_ret_t
-vnic_state::vnic_add_to_db(vnic_t *vnic) {
-    return ht_->insert_with_key(&vnic->key, vnic,
-                                &vnic->ht_ctxt);
-}
-
-/**
- * @brief Delete VNIC from database
- *
- * @param[in] vnic_key VNIC key
- */
-vnic_t *
-vnic_state::vnic_del_from_db(oci_vnic_key_t *vnic_key) {
-    return (vnic_t *)(ht_->remove(vnic_key));
-}
-
-/**
- * @brief Lookup VNIC in database
- *
- * @param[in] vnic_key VNIC key
- */
-vnic_t *
-vnic_state::vnic_find(oci_vnic_key_t *vnic_key) const {
-    return (vnic_t *)(ht_->lookup(vnic_key));
-}
-
-/**
- * @brief Allocate VNIC structure
- *
- * @return Pointer to the allocated internal VNIC, NULL if no memory
- */
-vnic_t *
+vnic_entry *
 vnic_state::vnic_alloc(void) {
-    return ((vnic_t *)slab_->alloc());
+    return ((vnic_entry *)vnic_slab_->alloc());
 }
 
 /**
- * @brief Initialize internal VNIC structure
- *
- * @param[in] vnic VNIC structure to store the state
- * @param[in] oci_vnic VNIC specific information
+ * @brief        lookup vnic in database with given key
+ * @param[in]    vnic_key vnic key
+ * @return       pointer to the vnic instance found or NULL
  */
-sdk_ret_t
-vnic_state::vnic_init(vnic_t *vnic, oci_vnic_t *oci_vnic) {
-    //SDK_SPINLOCK_INIT(&vnic->slock, PTHREAD_PROCESS_SHARED);
-    memcpy(&vnic->key, &oci_vnic->key, sizeof(oci_vnic_key_t));
-    vnic->ht_ctxt.reset();
-    // allocate hw id for this vnic, vnic specific index tables in the p4
-    // datapath are indexed by this
-    if (idxr_->alloc((uint32_t *)&vnic->hw_id) != sdk::lib::indexer::SUCCESS) {
-        return sdk::SDK_RET_NO_RESOURCE;
-    }
-    return sdk::SDK_RET_OK;
+vnic_entry *
+vnic_state::vnic_find(oci_vnic_key_t *vnic_key) const {
+    return (vnic_entry *)(vnic_ht_->lookup(vnic_key));
 }
 
 /**
- * @brief Allocate and initialize internal VNIC structure
- *
- * @return Pointer to the allocated and initialized internal VNIC,
- *         NULL if no memory
+ * @brief free vnic instance
+ * @param[in] vnic vnic instance
  */
-vnic_t *
-vnic_state::vnic_alloc_init(oci_vnic_t *oci_vnic) {
-    vnic_t *vnic;
-
-    if ((vnic = vnic_alloc()) == NULL) {
-        return NULL;
-    }
-    vnic_init(vnic, oci_vnic);
-    return vnic;
+void
+vnic_state::vnic_free(vnic_entry *vnic) {
+    api::delay_delete_to_slab(OCI_SLAB_VNIC, vnic);
 }
+
+/** @} */    // end of OCI_VNIC_STATE
+
+#if 0
+/**
+ * @defgroup OCI_VNIC_DB - VNIC database functionality
+ * @ingroup OCI_VNIC
+ * @{
+ */
 
 /**
  * @brief Cleanup state maintained for given VNIC
@@ -378,5 +505,6 @@ oci_vnic_delete (_In_ oci_vnic_key_t *vnic_key)
 }
 
 /** @} */ // end of OCI_VNIC_API
+#endif
 
 }    // namespace api

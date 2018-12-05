@@ -20,7 +20,7 @@
 #include "nic/hal/pd/iris/internal/copp_pd.hpp"
 #include "nic/hal/pd/iris/aclqos/acl_pd.hpp"
 #include "nic/include/pd.hpp"
-#include "nic/hal/pd/p4pd/p4pd_api.hpp"
+#include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/hal/svc/hal_ext.hpp"
 #include "gen/p4gen/p4/include/p4pd.h"
 #include "nic/include/hal_pd.hpp"

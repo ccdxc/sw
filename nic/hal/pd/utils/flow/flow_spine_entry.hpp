@@ -3,9 +3,8 @@
 
 #include <list>
 #include "nic/include/base.hpp"
-#include "nic/hal/pd/p4pd/p4pd_api.hpp"
+#include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/include/hal_mem.hpp"
-//#include "gen/p4gen/p4/include/p4pd.h"
 
 namespace hal {
 namespace pd {

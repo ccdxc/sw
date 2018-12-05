@@ -189,7 +189,7 @@ subnet_entry::abort(api_ctxt_t *api_ctxt) {
 sdk_ret_t
 subnet_entry::add_to_db(void) {
     return subnet_db()->subnet_ht()->insert_with_key(&key_, this,
-                                               &ht_ctxt_);
+                                                     &ht_ctxt_);
 }
 
 /**

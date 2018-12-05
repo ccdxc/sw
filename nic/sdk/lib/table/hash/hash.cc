@@ -4,7 +4,7 @@
 
 #include <cstring>
 #include "include/sdk/tcam.hpp"
-#include "lib/p4pd/p4pd_api.hpp"
+#include "lib/p4/p4_api.hpp"
 #include "hash.hpp"
 
 namespace sdk {
