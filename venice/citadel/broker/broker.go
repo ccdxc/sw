@@ -5,18 +5,43 @@ package broker
 // this file contains the broker code that distributes data and query to data nodes
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sync"
 	"time"
 
+	"github.com/influxdata/influxdb/models"
+	"github.com/influxdata/influxdb/query"
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/venice/citadel/meta"
+	"github.com/pensando/sw/venice/citadel/tproto"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
+
+// Inf defines the broker interface for generating mocks
+type Inf interface {
+	GetCluster(clusterType string) *meta.TscaleCluster
+	IsStopped() bool
+	Stop() error
+
+	// Methods defined in broker_ts
+	CreateDatabase(ctx context.Context, database string) error
+	DeleteDatabase(ctx context.Context, database string) error
+	WritePoints(ctx context.Context, database string, points []models.Point) error
+	ExecuteQuery(ctx context.Context, database string, qry string) ([]*query.Result, error)
+	WriteLines(ctx context.Context, database string, lines []string) error
+
+	// Methods defined in broker_kv
+	ClusterCheck() error
+	WriteKvs(ctx context.Context, table string, kvs []*tproto.KeyValue) error
+	ReadKvs(ctx context.Context, table string, keys []*tproto.Key) ([]*tproto.KeyValue, error)
+	ListKvs(ctx context.Context, table string) ([]*tproto.KeyValue, error)
+	DeleteKvs(ctx context.Context, table string, keys []*tproto.Key) error
+}
 
 // Broker is the api broker that distributes writes and queries to data nodes
 type Broker struct {

@@ -25,7 +25,7 @@ nic/agent/nmd/protos nic/agent/netagent/protos \
 venice/utils/authn/radius                      \
 venice/ctrler/rollout/rpcserver/protos \
 venice/utils/objstore/client/mock \
-venice/citadel/query/mocks
+venice/citadel/broker/mock
 
 # Lists all the vendored packages that need to be installed prior to the build.
 TO_INSTALL := ./vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway \

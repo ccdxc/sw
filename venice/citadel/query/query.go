@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/influxdata/influxdb/query"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -14,26 +13,21 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/metrics_query"
+	"github.com/pensando/sw/venice/citadel/broker"
 	"github.com/pensando/sw/venice/globals"
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
-// BrokerInf defines the broker interface required by query.go
-type BrokerInf interface {
-	ClusterCheck() error
-	ExecuteQuery(ctx context.Context, database string, qry string) ([]*query.Result, error)
-}
-
 // Server defines a metrics query server
 type Server struct {
 	grpcSrv *rpckit.RPCServer
-	broker  BrokerInf
+	broker  broker.Inf
 }
 
 // NewQueryService creates an RPC server to handle queries from APIGW/gRPC
-func NewQueryService(listenURL string, br BrokerInf) (*Server, error) {
+func NewQueryService(listenURL string, br broker.Inf) (*Server, error) {
 	s, err := rpckit.NewRPCServer(globals.Citadel, listenURL, rpckit.WithLoggerEnabled(false))
 	if err != nil {
 		log.Errorf("failed to start query grpc server: %v", err)

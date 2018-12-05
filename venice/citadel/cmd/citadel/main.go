@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	_ "github.com/influxdata/influxdb/tsdb/engine"
 	_ "github.com/influxdata/influxdb/tsdb/index"
@@ -23,9 +24,11 @@ import (
 	"github.com/pensando/sw/venice/citadel/http"
 	"github.com/pensando/sw/venice/citadel/meta"
 	"github.com/pensando/sw/venice/citadel/query"
+	"github.com/pensando/sw/venice/citadel/watcher"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/resolver"
 )
 
 const maxRetry = 120
@@ -42,6 +45,11 @@ func main() {
 		collectorURL    = flag.String("collector-url", fmt.Sprintf(":%s", globals.CollectorRPCPort), "listen URL where citadel metrics collector's gRPC server runs")
 		logFile         = flag.String("logfile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.Citadel)), "redirect logs to file")
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
+		resolverURLs    = flag.String(
+			"resolver-urls",
+			":"+globals.CMDResolverPort,
+			"comma separated list of resolver URLs of the form 'ip:port'",
+		)
 	)
 	flag.Parse()
 
@@ -107,11 +115,6 @@ func main() {
 		log.Fatalf("%s", err)
 	}
 
-	// create default db
-	if err := br.CreateDatabase(context.Background(), "default"); err != nil {
-		log.Fatalf("failed to create default db %s", err)
-	}
-
 	log.Infof("Datanode %+v and broker %+v are running", dn, br)
 
 	// start the http server
@@ -136,10 +139,18 @@ func main() {
 
 	log.Infof("query server is listening on %+v", qsrv)
 
-	// create a dummy channel to wait forver
-	waitCh := make(chan bool)
-	// wait forever
-	<-waitCh
+	resolverClient := resolver.New(&resolver.Config{
+		Name:    globals.Citadel,
+		Servers: strings.Split(*resolverURLs, ",")})
+
+	watcher := watcher.NewWatcher(globals.APIServer, br, resolverClient)
+
+	// We should be waiting forever in tenantWatch
+	// In case the watch is closed, we wrap in a for loop in order
+	// to restart the watch
+	for {
+		watcher.WatchTenant(context.Background())
+	}
 }
 
 func checkClusterHealth(br *broker.Broker) error {

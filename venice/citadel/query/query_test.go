@@ -18,7 +18,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/metrics_query"
 	"github.com/pensando/sw/api/labels"
-	"github.com/pensando/sw/venice/citadel/query/mocks"
+	"github.com/pensando/sw/venice/citadel/broker/mock"
 	"github.com/pensando/sw/venice/utils/testutils"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -552,7 +552,7 @@ func TestValidateQuerySpec(t *testing.T) {
 func TestQuery(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
-	mockBroker := mocks.NewMockBrokerInf(mockCtrl)
+	mockBroker := mock.NewMockInf(mockCtrl)
 	srv, err := NewQueryService(testServerURL, mockBroker)
 	if err != nil {
 		t.Errorf("Recieved unexpected error from NewQueryService: %v", err)
