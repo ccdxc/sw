@@ -261,6 +261,12 @@ jobd/gtests: ${JOBD_PREREQS}
 	${NICDIR}/tools/trace_valid.py
 	${NICDIR}/tools/trace_valid.py ${NICDIR}/../platform
 
+.PHONY: jobd/gtests-valgrind
+jobd/gtests-valgrind: ${JOBD_PREREQS}
+	${NICDIR}/tools/run_gtests_valgrind.sh ${COVERAGE_OPTS}
+	${NICDIR}/tools/trace_valid.py
+	${NICDIR}/tools/trace_valid.py ${NICDIR}/../platform
+
 .PHONY: jobd/upgrade_manager/gtests
 jobd/upgrade_manager/gtests: ${JOBD_PREREQS}
 	${NICDIR}/upgrade_manager/tools/run_upgrade_manager_gtests.sh

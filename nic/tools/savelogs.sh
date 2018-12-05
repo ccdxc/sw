@@ -12,4 +12,5 @@ tar cvzf /sw/nic/nic_sanity_logs.tar.gz -P --ignore-failed-read \
     /sw/dol/*log* \
     /root/naples/data/logs/* \
     *.log.* \
-    /tmp/hal_techsupport/*
+    /tmp/hal_techsupport/* \
+    /sw/nic/build/x86_64/iris/valgrind/*
