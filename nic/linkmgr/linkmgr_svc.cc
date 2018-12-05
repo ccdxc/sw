@@ -389,6 +389,8 @@ populate_port_get_response_spec (port_args_t *port_args,
 
     if (hal_ret == HAL_RET_OK) {
         spec = response->mutable_spec();
+        auto status = response->mutable_status();
+        auto xcvr_status = status->mutable_xcvr_status();
 
         spec->mutable_key_or_handle()->set_port_id(port_args->port_num);
 
@@ -403,9 +405,6 @@ populate_port_get_response_spec (port_args_t *port_args,
         spec->set_fec_type
                 (linkmgr::sdk_port_fec_type_to_port_fec_type_spec
                                         (port_args->fec_type));
-        response->mutable_status()->set_oper_status(
-                (linkmgr::sdk_port_oper_st_to_port_oper_st_spec
-                                        (port_args->oper_status)));
 
         spec->set_mac_id    (port_args->mac_id);
         spec->set_mac_ch    (port_args->mac_ch);
@@ -414,6 +413,14 @@ populate_port_get_response_spec (port_args_t *port_args,
         spec->set_auto_neg_enable (port_args->auto_neg_enable);
         spec->set_debounce_time   (port_args->debounce_time);
 
+        status->set_oper_status(
+                (linkmgr::sdk_port_oper_st_to_port_oper_st_spec
+                                        (port_args->oper_status)));
+
+        xcvr_status->set_port(port_args->xcvr_port_num);
+        xcvr_status->set_state(port::PortXcvrState(port_args->xcvr_state));
+        xcvr_status->set_pid(port::PortXcvrPid(port_args->xcvr_pid));
+        
         // MAC stats
         stats = response->mutable_stats();
         for (int i = 0; i < MAX_MAC_STATS; ++i) {

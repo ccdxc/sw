@@ -64,6 +64,9 @@ typedef struct port_args_s {
     uint32_t              debounce_time;              // Debounce time in ms
     uint32_t              mtu;                        // mtu
     uint64_t              *stats_data;                // MAC stats info
+    int                   xcvr_port_num;              // Xcvr port num
+    xcvr_state_t          xcvr_state;                 // Xcvr state
+    xcvr_pid_t            xcvr_pid;                   // Xcvr pid
     uint32_t              sbus_addr[MAX_PORT_LANES];  // set the sbus addr for each lane
 } __PACK__ port_args_t;
 

@@ -157,6 +157,8 @@ func handlePortStatusShowCmd(cmd *cobra.Command, ofile *os.File) {
 		return
 	}
 
+	portStatusPrintHeader()
+
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
@@ -176,11 +178,39 @@ func handlePortStatusShowCmd(cmd *cobra.Command, ofile *os.File) {
 			operStatusStr = "UP"
 		}
 
-		fmt.Printf("Port: %d, Admin State: %s, Link: %s\n",
+		xcvrStatus := resp.GetStatus().GetXcvrStatus()
+		xcvrPortNum := xcvrStatus.GetPort()
+		xcvrState := xcvrStatus.GetState()
+		xcvrPid := xcvrStatus.GetPid()
+		xcvrStateStr := "-"
+		xcvrPidStr := "-"
+		xcvrStr := ""
+		if xcvrPortNum > 0 {
+			// Strip XCVR_STATE_ from the state
+			xcvrStateStr = strings.Replace(strings.Replace(xcvrState.String(), "XCVR_STATE_", "", -1), "_", "-", -1)
+			// Strip XCVR_PID_ from the pid
+			xcvrPidStr = strings.Replace(strings.Replace(xcvrPid.String(), "XCVR_PID_", "", -1), "_", "-", -1)
+		}
+
+		if strings.Compare(xcvrStateStr, "SPROM-READ") == 0 {
+			xcvrStr = xcvrPidStr
+		} else {
+			xcvrStr = xcvrStateStr
+		}
+
+		fmt.Printf("%-10d%-12s%-10s%-14s\n",
 			resp.GetSpec().GetKeyOrHandle().GetPortId(),
-			adminStateStr,
-			operStatusStr)
+			adminStateStr, operStatusStr,
+			xcvrStr)
 	}
+}
+
+func portStatusPrintHeader() {
+	hdrLine := strings.Repeat("-", 46)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-10s%-12s%-10s%-14s\n",
+		"PortNum", "AdminState", "OperState", "Transceiver")
+	fmt.Println(hdrLine)
 }
 
 func portStatusShowCmdHandler(cmd *cobra.Command, args []string) {

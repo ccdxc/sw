@@ -11,9 +11,17 @@ namespace sdk {
 namespace platform {
 
 using sdk::types::xcvr_pid_t;
+using sdk::linkmgr::port_args_t;
 
 xcvr_t g_xcvr[XCVR_MAX_PORTS];
 xcvr_event_notify_t g_xcvr_notify_cb;
+
+sdk_ret_t
+xcvr_get (int port, port_args_t *port_arg) {
+    port_arg->xcvr_state = xcvr_state(port);
+    port_arg->xcvr_pid = xcvr_pid(port);
+    return SDK_RET_OK;
+}
 
 xcvr_type_t
 xcvr_get_type (uint8_t first_byte) {
@@ -192,6 +200,8 @@ xcvr_sprom_parse (int port, uint8_t *data) {
     if (data[XCVR_OFFSET_LENGTH_CU] == 0) {
         g_xcvr[port].cable_type = sdk::types::cable_type_t::CABLE_TYPE_FIBER;
     }
+
+    xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_CR4);
 
     return SDK_RET_OK;
 }

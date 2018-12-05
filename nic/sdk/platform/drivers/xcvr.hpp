@@ -17,7 +17,9 @@ namespace platform {
 #define XCVR_OFFSET_LENGTH_CU   146 // 0x92
 
 using sdk::linkmgr::xcvr_event_notify_t;
+using sdk::linkmgr::port_args_t;
 using sdk::types::xcvr_type_t;
+using sdk::types::xcvr_pid_t;
 using sdk::types::cable_type_t;
 using sdk::types::xcvr_state_t;
 
@@ -25,6 +27,7 @@ typedef struct xcvr_s {
     xcvr_type_t   type;
     cable_type_t  cable_type;
     xcvr_state_t  state;
+    xcvr_pid_t    pid;
     uint8_t       sprom_read_count;
     uint8_t       cache[XCVR_SPROM_CACHE_SIZE];
 } __PACK__ xcvr_t;
@@ -56,6 +59,16 @@ xcvr_set_cache (int port, uint8_t *data, int len) {
     memcpy(g_xcvr[port].cache, data, len);
 }
 
+inline void
+xcvr_set_pid (int port, xcvr_pid_t pid) {
+    g_xcvr[port].pid = pid;
+}
+
+inline xcvr_pid_t
+xcvr_pid (int port) {
+    return g_xcvr[port].pid;
+}
+
 inline xcvr_type_t
 xcvr_type (int port) {
     return g_xcvr[port].type;
@@ -85,6 +98,7 @@ sdk_ret_t xcvr_poll_init(void);
 void xcvr_poll_timer(void);
 void xcvr_init(xcvr_event_notify_t xcvr_notify_cb);
 bool xcvr_valid(int port);
+sdk_ret_t xcvr_get(int port, port_args_t *port_arg);
 
 } // namespace platform
 } // namespace sdk

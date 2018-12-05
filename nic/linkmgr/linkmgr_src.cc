@@ -9,6 +9,7 @@
 #include "linkmgr_src.hpp"
 #include "nic/linkmgr/utils.hpp"
 #include "nic/linkmgr/linkmgr_utils.hpp"
+#include "nic/sdk/platform/drivers/xcvr.hpp"
 #include "nic/sdk/include/sdk/asic/capri/cap_mx_api.h"
 #include "lib/pal/pal.hpp"
 #include "platform/src/lib/pal/include/pal_types.h"
@@ -960,8 +961,8 @@ port_get_ht_cb (void *ht_entry, void *ctxt)
     sdk_ret_t   sdk_ret   = SDK_RET_OK;
     port_t      *port     = NULL;
     port_args_t port_args = { 0 };
-
     uint64_t    stats_data[MAX_MAC_STATS];
+    int         xcvr_port;
 
     hal_handle_id_ht_entry_t *entry = (hal_handle_id_ht_entry_t *)ht_entry;
 
@@ -976,6 +977,16 @@ port_get_ht_cb (void *ht_entry, void *ctxt)
     if (sdk_ret != SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to get pd for port: {}, err: {}",
                       port->port_num, sdk_ret);
+    }
+
+    xcvr_port = sdk::lib::catalog::port_num_to_qsfp_port(port_args.port_num);
+    port_args.xcvr_port_num = xcvr_port;
+    if (xcvr_port != -1) {
+        sdk_ret = sdk::platform::xcvr_get(xcvr_port - 1, &port_args);
+        if (sdk_ret != SDK_RET_OK) {
+            HAL_TRACE_ERR("Failed to get xcvr for port: {}, err: {}",
+                          xcvr_port, sdk_ret);
+        }
     }
 
     hal_ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -1010,9 +1021,10 @@ port_get_all (port_get_cb_t port_get_cb, void *ctxt)
 hal_ret_t
 port_get (port_args_t *port_args)
 {
-    hal_ret_t hal_ret = HAL_RET_OK;
-    sdk_ret_t sdk_ret = SDK_RET_OK;
-    port_t    *pi_p   = NULL;
+    hal_ret_t hal_ret   = HAL_RET_OK;
+    sdk_ret_t sdk_ret   = SDK_RET_OK;
+    port_t    *pi_p     = NULL;
+    int       xcvr_port;
 
     pi_p = find_port_by_id(port_args->port_num);
     if (!pi_p) {
@@ -1023,6 +1035,16 @@ port_get (port_args_t *port_args)
     if (sdk_ret != SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to get pd for port: {}, err: {}",
                       pi_p->port_num, sdk_ret);
+    }
+
+    xcvr_port = sdk::lib::catalog::port_num_to_qsfp_port(port_args->port_num);
+    port_args->xcvr_port_num = xcvr_port;
+    if (xcvr_port != -1) {
+        sdk_ret = sdk::platform::xcvr_get(xcvr_port - 1, port_args);
+        if (sdk_ret != SDK_RET_OK) {
+            HAL_TRACE_ERR("Failed to get xcvr for port: {}, err: {}",
+                          xcvr_port, sdk_ret);
+        }
     }
 
     hal_ret = hal_sdk_ret_to_hal_ret(sdk_ret);

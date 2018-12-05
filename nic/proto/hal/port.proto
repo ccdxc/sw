@@ -87,8 +87,9 @@ enum PortXcvrPid {
 }
 
 message PortXcvrStatus {
-  PortXcvrState state = 1;
-  PortXcvrPid   pid   = 2;
+  int32         port  = 1;
+  PortXcvrState state = 2;
+  PortXcvrPid   pid   = 3;
 }
 
 enum PortPauseType {
