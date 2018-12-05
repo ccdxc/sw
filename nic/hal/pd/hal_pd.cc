@@ -282,6 +282,7 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_COLLECTOR_GET, pd_collector_get);
 
     // mc entry
+    PD_FUNC_LOAD(PD_FUNC_ID_MC_ENTRY_GET,    pd_mc_entry_get);
     PD_FUNC_LOAD(PD_FUNC_ID_MC_ENTRY_CREATE, pd_mc_entry_create);
     PD_FUNC_LOAD(PD_FUNC_ID_MC_ENTRY_DELETE, pd_mc_entry_delete);
     PD_FUNC_LOAD(PD_FUNC_ID_MC_ENTRY_UPDATE, pd_mc_entry_update);
@@ -339,6 +340,7 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_TABLE_STATS_GET, pd_table_stats_get);
 
     // oifl
+    PD_FUNC_LOAD(PD_FUNC_ID_OIFL_GET, pd_oif_list_get);
     PD_FUNC_LOAD(PD_FUNC_ID_OIFL_CREATE, pd_oif_list_create);
     PD_FUNC_LOAD(PD_FUNC_ID_OIFL_CREATE_BLOCK, pd_oif_list_create_block);
     PD_FUNC_LOAD(PD_FUNC_ID_OIFL_DELETE, pd_oif_list_delete);
@@ -350,7 +352,6 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_OIFL_REM_OIF, pd_oif_list_remove_oif);
     PD_FUNC_LOAD(PD_FUNC_ID_OIFL_IS_MEMBER, pd_oif_list_is_member);
     PD_FUNC_LOAD(PD_FUNC_ID_GET_NUM_OIFS, pd_oif_list_get_num_oifs);
-    PD_FUNC_LOAD(PD_FUNC_ID_GET_OIF_ARRAY, pd_oif_list_get_oif_array);
     PD_FUNC_LOAD(PD_FUNC_ID_SET_HONOR_ING, pd_oif_list_set_honor_ingress);
     PD_FUNC_LOAD(PD_FUNC_ID_CLR_HONOR_ING, pd_oif_list_clr_honor_ingress);
 

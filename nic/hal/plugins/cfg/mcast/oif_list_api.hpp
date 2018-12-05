@@ -8,6 +8,10 @@
 #include "nic/include/base.hpp"
 #include "nic/hal/plugins/cfg/nw/interface_api.hpp"
 #include "nic/hal/plugins/cfg/nw/l2segment_api.hpp"
+#include "gen/proto/multicast.pb.h"
+
+using multicast::Oif;
+using multicast::OifList;
 
 namespace hal {
 
@@ -15,15 +19,32 @@ namespace hal {
 
 #define OIF_LIST_ID_INVALID (0)
 
+typedef struct oif_db_s {
+    hal_handle_t      if_hndl;
+    hal_handle_t      l2seg_hndl;
+    uint32_t          qid;
+    intf::LifQPurpose purpose;
+    dllist_ctxt_t     dllist_ctxt;
+} __PACK__ oif_db_t;
+
+typedef struct oif_list_s {
+    oif_list_id_t id;
+    dllist_ctxt_t oifs;
+    oif_list_id_t attached_to;
+    ht_ctxt_t     ht_ctxt;
+    bool          honor_ingress;
+} __PACK__ oif_list_t;
+
 typedef struct oif_s {
-    // if_id_t  if_id;
-    // l2seg_id_t  l2_seg_id;
     if_t     *intf;
     l2seg_t  *l2seg;
     uint32_t qid;  // RDMA QID - only set by RDMA when adding QPs to repl list
     intf::LifQPurpose purpose; // Same as above, set by RDMA
-} oif_t;
+    oif_s():intf(NULL),l2seg(NULL),qid(0),purpose(intf::LIF_QUEUE_PURPOSE_NONE){}
+} __PACK__ oif_t;
 
+// Retrieves the OIF List entry from OIF List ID
+hal_ret_t oif_list_get(oif_list_id_t list_id, OifList *rsp);
 // Creates a new oif_list and returns handle
 hal_ret_t oif_list_create(oif_list_id_t *list);
 // Creates a contiguous block of oif_lists and returns handle to the first one
@@ -50,6 +71,10 @@ hal_ret_t oif_list_get_oif_array(oif_list_id_t list, uint32_t &num_oifs, oif_t *
 hal_ret_t oif_list_set_honor_ingress(oif_list_id_t list);
 // Deletes the special node for ingress driven copy
 hal_ret_t oif_list_clr_honor_ingress(oif_list_id_t list);
+
+void *oif_list_get_key_func(void *entry);
+uint32_t oif_list_compute_hash_func(void *key, uint32_t ht_size);
+bool oif_list_compare_key_func(void *key1, void *key2);
 }    // namespace hal
 
 #endif /* __OIF_LIST_API_HPP__ */

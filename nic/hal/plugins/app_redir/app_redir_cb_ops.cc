@@ -455,7 +455,7 @@ app_redir_ing_replication_create(oif_list_id_t &ret_id)
 {
     if_id_t     app_redir_if_id = get_app_redir_if_id();
     l2seg_t     l2seg = {0};
-    oif_t       oif = {0};
+    oif_t       oif = {};
     hal_ret_t   ret;
 
     ret = oif_list_create(&ret_id);

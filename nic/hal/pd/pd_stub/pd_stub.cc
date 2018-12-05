@@ -250,6 +250,7 @@ PD_FUNC_STUB(pd_collector_delete);
 PD_FUNC_STUB(pd_collector_get);
 
 // mc entry
+PD_FUNC_STUB(pd_mc_entry_get);
 PD_FUNC_STUB(pd_mc_entry_create);
 PD_FUNC_STUB(pd_mc_entry_delete);
 PD_FUNC_STUB(pd_mc_entry_update);
@@ -306,6 +307,7 @@ PD_FUNC_STUB(pd_egress_drop_stats_clear);
 PD_FUNC_STUB(pd_table_stats_get);
 
 // oifl
+PD_FUNC_STUB(pd_oif_list_get);
 PD_FUNC_STUB(pd_oif_list_create);
 PD_FUNC_STUB(pd_oif_list_create_block);
 PD_FUNC_STUB(pd_oif_list_delete);
@@ -317,7 +319,6 @@ PD_FUNC_STUB(pd_oif_list_add_qp_oif);
 PD_FUNC_STUB(pd_oif_list_remove_oif);
 PD_FUNC_STUB(pd_oif_list_is_member);
 PD_FUNC_STUB(pd_oif_list_get_num_oifs);
-PD_FUNC_STUB(pd_oif_list_get_oif_array);
 PD_FUNC_STUB(pd_oif_list_set_honor_ingress);
 PD_FUNC_STUB(pd_oif_list_clr_honor_ingress);
 

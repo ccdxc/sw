@@ -750,9 +750,15 @@ It has these top-level messages:
 	L4LbServiceGetResponse
 	L4LbServiceGetResponseMsg
 	MacMetrics
+	Oif
+	OifListEpd
+	OifListCpd
+	OifList
+	MulticastEntryStatusEpd
+	MulticastEntryStatusCpd
+	MulticastEntryStatus
 	MulticastEntrySpec
 	MulticastEntryRequestMsg
-	MulticastEntryStatus
 	MulticastEntryResponse
 	MulticastEntryResponseMsg
 	MulticastEntryDeleteRequest

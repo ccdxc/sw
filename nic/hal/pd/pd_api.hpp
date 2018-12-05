@@ -2001,6 +2001,19 @@ pd_mc_entry_update_args_init (pd_mc_entry_update_args_t *args)
     return;
 }
 
+typedef struct pd_mc_entry_get_args_s {
+    mc_entry_t      *mc_entry;
+    MulticastEntryGetResponse *rsp;
+} __PACK__ pd_mc_entry_get_args_t;
+
+static inline void
+pd_mc_entry_get_args_init (pd_mc_entry_get_args_t *args)
+{
+    args->mc_entry = NULL;
+    args->rsp = NULL;
+    return;
+}
+
 // flow get
 typedef struct pd_flow_get_args_s {
     pd_session_t *pd_session;
@@ -2333,11 +2346,10 @@ typedef struct pd_oif_list_get_num_oifs_args_s {
     uint32_t *num_oifs;
 } __PACK__ pd_oif_list_get_num_oifs_args_t;
 
-typedef struct pd_oif_list_get_oif_array_args_s {
+typedef struct pd_oif_list_get_args_s {
     oif_list_id_t list;
-    uint32_t *num_oifs;
-    oif_t *oifs;
-} __PACK__ pd_oif_list_get_oif_array_args_t;
+    OifList       *rsp;
+} __PACK__ pd_oif_list_get_args_t;
 
 typedef struct pd_oif_list_set_honor_ingress_args_s {
     oif_list_id_t list;
@@ -3043,7 +3055,7 @@ typedef struct pd_fte_span_make_clone_args_s {
     ENTRY(PD_FUNC_ID_OIFL_REM_OIF,          142, "PD_FUNC_ID_OIFL_REM_OIF")\
     ENTRY(PD_FUNC_ID_OIFL_IS_MEMBER,        143, "PD_FUNC_ID_OIFL_IS_MEMBER")\
     ENTRY(PD_FUNC_ID_GET_NUM_OIFS,          144, "PD_FUNC_ID_GET_NUM_OIFS")\
-    ENTRY(PD_FUNC_ID_GET_OIF_ARRAY,         145, "PD_FUNC_ID_GET_OIF_ARRAY")\
+    ENTRY(PD_FUNC_ID_OIFL_GET,              145, "PD_FUNC_ID_OIFL_GET")\
     ENTRY(PD_FUNC_ID_SET_HONOR_ING,         146, "PD_FUNC_ID_SET_HONOR_ING")\
     ENTRY(PD_FUNC_ID_TNNL_IF_GET_RW_IDX,    147, "PD_FUNC_ID_TNNL_IF_GET_RW_IDX")\
     ENTRY(PD_FUNC_ID_CPU_ALLOC_INIT,        148, "PD_FUNC_ID_CPU_ALLOC_INIT")\
@@ -3184,7 +3196,8 @@ typedef struct pd_fte_span_make_clone_args_s {
     ENTRY(PD_FUNC_ID_PB_STATS_CLEAR,           283, "PD_FUNC_ID_PB_STATS_CLEAR")\
     ENTRY(PD_FUNC_ID_DROP_STATS_CLEAR,         284, "PD_FUNC_ID_DROP_STATS_CLEAR")\
     ENTRY(PD_FUNC_ID_EGRESS_DROP_STATS_CLEAR,  285, "PD_FUNC_ID_EGRESS_DROP_STATS_CLEAR")\
-    ENTRY(PD_FUNC_ID_MAX,                      286, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_MC_ENTRY_GET,             286, "PD_FUNC_ID_MC_ENTRY_GET")\
+    ENTRY(PD_FUNC_ID_MAX,                      287, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3404,6 +3417,7 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_collector_get);
 
         // mc entry
+        PD_UNION_ARGS_FIELD(pd_mc_entry_get);
         PD_UNION_ARGS_FIELD(pd_mc_entry_create);
         PD_UNION_ARGS_FIELD(pd_mc_entry_delete);
         PD_UNION_ARGS_FIELD(pd_mc_entry_update);
@@ -3459,6 +3473,7 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_table_stats_get);
 
         // oifl
+        PD_UNION_ARGS_FIELD(pd_oif_list_get);
         PD_UNION_ARGS_FIELD(pd_oif_list_create);
         PD_UNION_ARGS_FIELD(pd_oif_list_create_block);
         PD_UNION_ARGS_FIELD(pd_oif_list_delete);
@@ -3470,7 +3485,6 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_oif_list_remove_oif);
         PD_UNION_ARGS_FIELD(pd_oif_list_is_member);
         PD_UNION_ARGS_FIELD(pd_oif_list_get_num_oifs);
-        PD_UNION_ARGS_FIELD(pd_oif_list_get_oif_array);
         PD_UNION_ARGS_FIELD(pd_oif_list_set_honor_ingress);
         PD_UNION_ARGS_FIELD(pd_oif_list_clr_honor_ingress);
 
@@ -3819,6 +3833,7 @@ PD_FUNCP_TYPEDEF(pd_collector_delete);
 PD_FUNCP_TYPEDEF(pd_collector_get);
 
 // mc entry
+PD_FUNCP_TYPEDEF(pd_mc_entry_get);
 PD_FUNCP_TYPEDEF(pd_mc_entry_create);
 PD_FUNCP_TYPEDEF(pd_mc_entry_delete);
 PD_FUNCP_TYPEDEF(pd_mc_entry_update);
@@ -3876,6 +3891,7 @@ PD_FUNCP_TYPEDEF(pd_egress_drop_stats_clear);
 PD_FUNCP_TYPEDEF(pd_table_stats_get);
 
 // oifl
+PD_FUNCP_TYPEDEF(pd_oif_list_get);
 PD_FUNCP_TYPEDEF(pd_oif_list_create);
 PD_FUNCP_TYPEDEF(pd_oif_list_create_block);
 PD_FUNCP_TYPEDEF(pd_oif_list_delete);
@@ -3887,7 +3903,6 @@ PD_FUNCP_TYPEDEF(pd_oif_list_add_qp_oif);
 PD_FUNCP_TYPEDEF(pd_oif_list_remove_oif);
 PD_FUNCP_TYPEDEF(pd_oif_list_is_member);
 PD_FUNCP_TYPEDEF(pd_oif_list_get_num_oifs);
-PD_FUNCP_TYPEDEF(pd_oif_list_get_oif_array);
 PD_FUNCP_TYPEDEF(pd_oif_list_set_honor_ingress);
 PD_FUNCP_TYPEDEF(pd_oif_list_clr_honor_ingress);
 

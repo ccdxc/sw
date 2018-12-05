@@ -21,6 +21,392 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+type Oif struct {
+	IfHandle    uint64 `protobuf:"fixed64,1,opt,name=if_handle,json=ifHandle,proto3" json:"if_handle,omitempty"`
+	L2SegHandle uint64 `protobuf:"fixed64,2,opt,name=l2seg_handle,json=l2segHandle,proto3" json:"l2seg_handle,omitempty"`
+	Qid         uint32 `protobuf:"fixed32,3,opt,name=qid,proto3" json:"qid,omitempty"`
+	QPurpose    uint32 `protobuf:"fixed32,4,opt,name=q_purpose,json=qPurpose,proto3" json:"q_purpose,omitempty"`
+}
+
+func (m *Oif) Reset()                    { *m = Oif{} }
+func (m *Oif) String() string            { return proto.CompactTextString(m) }
+func (*Oif) ProtoMessage()               {}
+func (*Oif) Descriptor() ([]byte, []int) { return fileDescriptorMulticast, []int{0} }
+
+func (m *Oif) GetIfHandle() uint64 {
+	if m != nil {
+		return m.IfHandle
+	}
+	return 0
+}
+
+func (m *Oif) GetL2SegHandle() uint64 {
+	if m != nil {
+		return m.L2SegHandle
+	}
+	return 0
+}
+
+func (m *Oif) GetQid() uint32 {
+	if m != nil {
+		return m.Qid
+	}
+	return 0
+}
+
+func (m *Oif) GetQPurpose() uint32 {
+	if m != nil {
+		return m.QPurpose
+	}
+	return 0
+}
+
+// OIF List oper state for enterprise pipeline
+type OifListEpd struct {
+	RepIndex uint32 `protobuf:"fixed32,1,opt,name=rep_index,json=repIndex,proto3" json:"rep_index,omitempty"`
+}
+
+func (m *OifListEpd) Reset()                    { *m = OifListEpd{} }
+func (m *OifListEpd) String() string            { return proto.CompactTextString(m) }
+func (*OifListEpd) ProtoMessage()               {}
+func (*OifListEpd) Descriptor() ([]byte, []int) { return fileDescriptorMulticast, []int{1} }
+
+func (m *OifListEpd) GetRepIndex() uint32 {
+	if m != nil {
+		return m.RepIndex
+	}
+	return 0
+}
+
+// OIF List oper state for cloud pipeline
+type OifListCpd struct {
+}
+
+func (m *OifListCpd) Reset()                    { *m = OifListCpd{} }
+func (m *OifListCpd) String() string            { return proto.CompactTextString(m) }
+func (*OifListCpd) ProtoMessage()               {}
+func (*OifListCpd) Descriptor() ([]byte, []int) { return fileDescriptorMulticast, []int{2} }
+
+type OifList struct {
+	Id             uint32 `protobuf:"fixed32,1,opt,name=id,proto3" json:"id,omitempty"`
+	Oifs           []*Oif `protobuf:"bytes,2,rep,name=oifs" json:"oifs,omitempty"`
+	AttachedListId uint32 `protobuf:"fixed32,3,opt,name=attached_list_id,json=attachedListId,proto3" json:"attached_list_id,omitempty"`
+	IsHonorIngress bool   `protobuf:"varint,4,opt,name=is_honor_ingress,json=isHonorIngress,proto3" json:"is_honor_ingress,omitempty"`
+	// Types that are valid to be assigned to PdInfo:
+	//	*OifList_EpdInfo
+	//	*OifList_CpdInfo
+	PdInfo isOifList_PdInfo `protobuf_oneof:"pd_info"`
+}
+
+func (m *OifList) Reset()                    { *m = OifList{} }
+func (m *OifList) String() string            { return proto.CompactTextString(m) }
+func (*OifList) ProtoMessage()               {}
+func (*OifList) Descriptor() ([]byte, []int) { return fileDescriptorMulticast, []int{3} }
+
+type isOifList_PdInfo interface {
+	isOifList_PdInfo()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type OifList_EpdInfo struct {
+	EpdInfo *OifListEpd `protobuf:"bytes,5,opt,name=epd_info,json=epdInfo,oneof"`
+}
+type OifList_CpdInfo struct {
+	CpdInfo *OifListCpd `protobuf:"bytes,6,opt,name=cpd_info,json=cpdInfo,oneof"`
+}
+
+func (*OifList_EpdInfo) isOifList_PdInfo() {}
+func (*OifList_CpdInfo) isOifList_PdInfo() {}
+
+func (m *OifList) GetPdInfo() isOifList_PdInfo {
+	if m != nil {
+		return m.PdInfo
+	}
+	return nil
+}
+
+func (m *OifList) GetId() uint32 {
+	if m != nil {
+		return m.Id
+	}
+	return 0
+}
+
+func (m *OifList) GetOifs() []*Oif {
+	if m != nil {
+		return m.Oifs
+	}
+	return nil
+}
+
+func (m *OifList) GetAttachedListId() uint32 {
+	if m != nil {
+		return m.AttachedListId
+	}
+	return 0
+}
+
+func (m *OifList) GetIsHonorIngress() bool {
+	if m != nil {
+		return m.IsHonorIngress
+	}
+	return false
+}
+
+func (m *OifList) GetEpdInfo() *OifListEpd {
+	if x, ok := m.GetPdInfo().(*OifList_EpdInfo); ok {
+		return x.EpdInfo
+	}
+	return nil
+}
+
+func (m *OifList) GetCpdInfo() *OifListCpd {
+	if x, ok := m.GetPdInfo().(*OifList_CpdInfo); ok {
+		return x.CpdInfo
+	}
+	return nil
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*OifList) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _OifList_OneofMarshaler, _OifList_OneofUnmarshaler, _OifList_OneofSizer, []interface{}{
+		(*OifList_EpdInfo)(nil),
+		(*OifList_CpdInfo)(nil),
+	}
+}
+
+func _OifList_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*OifList)
+	// pd_info
+	switch x := m.PdInfo.(type) {
+	case *OifList_EpdInfo:
+		_ = b.EncodeVarint(5<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.EpdInfo); err != nil {
+			return err
+		}
+	case *OifList_CpdInfo:
+		_ = b.EncodeVarint(6<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.CpdInfo); err != nil {
+			return err
+		}
+	case nil:
+	default:
+		return fmt.Errorf("OifList.PdInfo has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _OifList_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*OifList)
+	switch tag {
+	case 5: // pd_info.epd_info
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(OifListEpd)
+		err := b.DecodeMessage(msg)
+		m.PdInfo = &OifList_EpdInfo{msg}
+		return true, err
+	case 6: // pd_info.cpd_info
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(OifListCpd)
+		err := b.DecodeMessage(msg)
+		m.PdInfo = &OifList_CpdInfo{msg}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _OifList_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*OifList)
+	// pd_info
+	switch x := m.PdInfo.(type) {
+	case *OifList_EpdInfo:
+		s := proto.Size(x.EpdInfo)
+		n += proto.SizeVarint(5<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *OifList_CpdInfo:
+		s := proto.Size(x.CpdInfo)
+		n += proto.SizeVarint(6<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+// Multicast entry oper state for enterprise pipeline
+type MulticastEntryStatusEpd struct {
+	RegMacTblIdx uint32 `protobuf:"fixed32,1,opt,name=reg_mac_tbl_idx,json=regMacTblIdx,proto3" json:"reg_mac_tbl_idx,omitempty"`
+}
+
+func (m *MulticastEntryStatusEpd) Reset()                    { *m = MulticastEntryStatusEpd{} }
+func (m *MulticastEntryStatusEpd) String() string            { return proto.CompactTextString(m) }
+func (*MulticastEntryStatusEpd) ProtoMessage()               {}
+func (*MulticastEntryStatusEpd) Descriptor() ([]byte, []int) { return fileDescriptorMulticast, []int{4} }
+
+func (m *MulticastEntryStatusEpd) GetRegMacTblIdx() uint32 {
+	if m != nil {
+		return m.RegMacTblIdx
+	}
+	return 0
+}
+
+// Multicast entry oper state for cloud pipeline
+type MulticastEntryStatusCpd struct {
+}
+
+func (m *MulticastEntryStatusCpd) Reset()                    { *m = MulticastEntryStatusCpd{} }
+func (m *MulticastEntryStatusCpd) String() string            { return proto.CompactTextString(m) }
+func (*MulticastEntryStatusCpd) ProtoMessage()               {}
+func (*MulticastEntryStatusCpd) Descriptor() ([]byte, []int) { return fileDescriptorMulticast, []int{5} }
+
+type MulticastEntryStatus struct {
+	Handle  uint64   `protobuf:"fixed64,1,opt,name=handle,proto3" json:"handle,omitempty"`
+	OifList *OifList `protobuf:"bytes,2,opt,name=oif_list,json=oifList" json:"oif_list,omitempty"`
+	// Types that are valid to be assigned to PdInfo:
+	//	*MulticastEntryStatus_EpdInfo
+	//	*MulticastEntryStatus_CpdInfo
+	PdInfo isMulticastEntryStatus_PdInfo `protobuf_oneof:"pd_info"`
+}
+
+func (m *MulticastEntryStatus) Reset()                    { *m = MulticastEntryStatus{} }
+func (m *MulticastEntryStatus) String() string            { return proto.CompactTextString(m) }
+func (*MulticastEntryStatus) ProtoMessage()               {}
+func (*MulticastEntryStatus) Descriptor() ([]byte, []int) { return fileDescriptorMulticast, []int{6} }
+
+type isMulticastEntryStatus_PdInfo interface {
+	isMulticastEntryStatus_PdInfo()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type MulticastEntryStatus_EpdInfo struct {
+	EpdInfo *MulticastEntryStatusEpd `protobuf:"bytes,3,opt,name=epd_info,json=epdInfo,oneof"`
+}
+type MulticastEntryStatus_CpdInfo struct {
+	CpdInfo *MulticastEntryStatusCpd `protobuf:"bytes,4,opt,name=cpd_info,json=cpdInfo,oneof"`
+}
+
+func (*MulticastEntryStatus_EpdInfo) isMulticastEntryStatus_PdInfo() {}
+func (*MulticastEntryStatus_CpdInfo) isMulticastEntryStatus_PdInfo() {}
+
+func (m *MulticastEntryStatus) GetPdInfo() isMulticastEntryStatus_PdInfo {
+	if m != nil {
+		return m.PdInfo
+	}
+	return nil
+}
+
+func (m *MulticastEntryStatus) GetHandle() uint64 {
+	if m != nil {
+		return m.Handle
+	}
+	return 0
+}
+
+func (m *MulticastEntryStatus) GetOifList() *OifList {
+	if m != nil {
+		return m.OifList
+	}
+	return nil
+}
+
+func (m *MulticastEntryStatus) GetEpdInfo() *MulticastEntryStatusEpd {
+	if x, ok := m.GetPdInfo().(*MulticastEntryStatus_EpdInfo); ok {
+		return x.EpdInfo
+	}
+	return nil
+}
+
+func (m *MulticastEntryStatus) GetCpdInfo() *MulticastEntryStatusCpd {
+	if x, ok := m.GetPdInfo().(*MulticastEntryStatus_CpdInfo); ok {
+		return x.CpdInfo
+	}
+	return nil
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*MulticastEntryStatus) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _MulticastEntryStatus_OneofMarshaler, _MulticastEntryStatus_OneofUnmarshaler, _MulticastEntryStatus_OneofSizer, []interface{}{
+		(*MulticastEntryStatus_EpdInfo)(nil),
+		(*MulticastEntryStatus_CpdInfo)(nil),
+	}
+}
+
+func _MulticastEntryStatus_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*MulticastEntryStatus)
+	// pd_info
+	switch x := m.PdInfo.(type) {
+	case *MulticastEntryStatus_EpdInfo:
+		_ = b.EncodeVarint(3<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.EpdInfo); err != nil {
+			return err
+		}
+	case *MulticastEntryStatus_CpdInfo:
+		_ = b.EncodeVarint(4<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.CpdInfo); err != nil {
+			return err
+		}
+	case nil:
+	default:
+		return fmt.Errorf("MulticastEntryStatus.PdInfo has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _MulticastEntryStatus_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*MulticastEntryStatus)
+	switch tag {
+	case 3: // pd_info.epd_info
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(MulticastEntryStatusEpd)
+		err := b.DecodeMessage(msg)
+		m.PdInfo = &MulticastEntryStatus_EpdInfo{msg}
+		return true, err
+	case 4: // pd_info.cpd_info
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(MulticastEntryStatusCpd)
+		err := b.DecodeMessage(msg)
+		m.PdInfo = &MulticastEntryStatus_CpdInfo{msg}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _MulticastEntryStatus_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*MulticastEntryStatus)
+	// pd_info
+	switch x := m.PdInfo.(type) {
+	case *MulticastEntryStatus_EpdInfo:
+		s := proto.Size(x.EpdInfo)
+		n += proto.SizeVarint(3<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *MulticastEntryStatus_CpdInfo:
+		s := proto.Size(x.CpdInfo)
+		n += proto.SizeVarint(4<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
 type MulticastEntrySpec struct {
 	KeyOrHandle   *MulticastEntryKeyHandle `protobuf:"bytes,1,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:key`
 	OifKeyHandles []*InterfaceKeyHandle    `protobuf:"bytes,2,rep,name=oif_key_handles,json=oifKeyHandles" json:"oif_key_handles,omitempty" venice:ref, venice:constraints={intf.InterfaceSpec.type=interface_pb2.IF_TYPE_ENIC}`
@@ -29,7 +415,7 @@ type MulticastEntrySpec struct {
 func (m *MulticastEntrySpec) Reset()                    { *m = MulticastEntrySpec{} }
 func (m *MulticastEntrySpec) String() string            { return proto.CompactTextString(m) }
 func (*MulticastEntrySpec) ProtoMessage()               {}
-func (*MulticastEntrySpec) Descriptor() ([]byte, []int) { return fileDescriptorMulticast, []int{0} }
+func (*MulticastEntrySpec) Descriptor() ([]byte, []int) { return fileDescriptorMulticast, []int{7} }
 
 func (m *MulticastEntrySpec) GetKeyOrHandle() *MulticastEntryKeyHandle {
 	if m != nil {
@@ -53,7 +439,7 @@ func (m *MulticastEntryRequestMsg) Reset()         { *m = MulticastEntryRequestM
 func (m *MulticastEntryRequestMsg) String() string { return proto.CompactTextString(m) }
 func (*MulticastEntryRequestMsg) ProtoMessage()    {}
 func (*MulticastEntryRequestMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptorMulticast, []int{1}
+	return fileDescriptorMulticast, []int{8}
 }
 
 func (m *MulticastEntryRequestMsg) GetRequest() []*MulticastEntrySpec {
@@ -61,22 +447,6 @@ func (m *MulticastEntryRequestMsg) GetRequest() []*MulticastEntrySpec {
 		return m.Request
 	}
 	return nil
-}
-
-type MulticastEntryStatus struct {
-	MulticastHandle uint64 `protobuf:"fixed64,1,opt,name=multicast_handle,json=multicastHandle,proto3" json:"multicast_handle,omitempty"`
-}
-
-func (m *MulticastEntryStatus) Reset()                    { *m = MulticastEntryStatus{} }
-func (m *MulticastEntryStatus) String() string            { return proto.CompactTextString(m) }
-func (*MulticastEntryStatus) ProtoMessage()               {}
-func (*MulticastEntryStatus) Descriptor() ([]byte, []int) { return fileDescriptorMulticast, []int{2} }
-
-func (m *MulticastEntryStatus) GetMulticastHandle() uint64 {
-	if m != nil {
-		return m.MulticastHandle
-	}
-	return 0
 }
 
 type MulticastEntryResponse struct {
@@ -87,7 +457,7 @@ type MulticastEntryResponse struct {
 func (m *MulticastEntryResponse) Reset()                    { *m = MulticastEntryResponse{} }
 func (m *MulticastEntryResponse) String() string            { return proto.CompactTextString(m) }
 func (*MulticastEntryResponse) ProtoMessage()               {}
-func (*MulticastEntryResponse) Descriptor() ([]byte, []int) { return fileDescriptorMulticast, []int{3} }
+func (*MulticastEntryResponse) Descriptor() ([]byte, []int) { return fileDescriptorMulticast, []int{9} }
 
 func (m *MulticastEntryResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -111,7 +481,7 @@ func (m *MulticastEntryResponseMsg) Reset()         { *m = MulticastEntryRespons
 func (m *MulticastEntryResponseMsg) String() string { return proto.CompactTextString(m) }
 func (*MulticastEntryResponseMsg) ProtoMessage()    {}
 func (*MulticastEntryResponseMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptorMulticast, []int{4}
+	return fileDescriptorMulticast, []int{10}
 }
 
 func (m *MulticastEntryResponseMsg) GetResponse() []*MulticastEntryResponse {
@@ -129,7 +499,7 @@ func (m *MulticastEntryDeleteRequest) Reset()         { *m = MulticastEntryDelet
 func (m *MulticastEntryDeleteRequest) String() string { return proto.CompactTextString(m) }
 func (*MulticastEntryDeleteRequest) ProtoMessage()    {}
 func (*MulticastEntryDeleteRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptorMulticast, []int{5}
+	return fileDescriptorMulticast, []int{11}
 }
 
 func (m *MulticastEntryDeleteRequest) GetKeyOrHandle() *MulticastEntryKeyHandle {
@@ -147,7 +517,7 @@ func (m *MulticastEntryDeleteRequestMsg) Reset()         { *m = MulticastEntryDe
 func (m *MulticastEntryDeleteRequestMsg) String() string { return proto.CompactTextString(m) }
 func (*MulticastEntryDeleteRequestMsg) ProtoMessage()    {}
 func (*MulticastEntryDeleteRequestMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptorMulticast, []int{6}
+	return fileDescriptorMulticast, []int{12}
 }
 
 func (m *MulticastEntryDeleteRequestMsg) GetRequest() []*MulticastEntryDeleteRequest {
@@ -165,7 +535,7 @@ func (m *MulticastEntryDeleteResponse) Reset()         { *m = MulticastEntryDele
 func (m *MulticastEntryDeleteResponse) String() string { return proto.CompactTextString(m) }
 func (*MulticastEntryDeleteResponse) ProtoMessage()    {}
 func (*MulticastEntryDeleteResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptorMulticast, []int{7}
+	return fileDescriptorMulticast, []int{13}
 }
 
 func (m *MulticastEntryDeleteResponse) GetApiStatus() ApiStatus {
@@ -183,7 +553,7 @@ func (m *MulticastEntryDeleteResponseMsg) Reset()         { *m = MulticastEntryD
 func (m *MulticastEntryDeleteResponseMsg) String() string { return proto.CompactTextString(m) }
 func (*MulticastEntryDeleteResponseMsg) ProtoMessage()    {}
 func (*MulticastEntryDeleteResponseMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptorMulticast, []int{8}
+	return fileDescriptorMulticast, []int{14}
 }
 
 func (m *MulticastEntryDeleteResponseMsg) GetResponse() []*MulticastEntryDeleteResponse {
@@ -201,7 +571,7 @@ func (m *MulticastEntryGetRequest) Reset()         { *m = MulticastEntryGetReque
 func (m *MulticastEntryGetRequest) String() string { return proto.CompactTextString(m) }
 func (*MulticastEntryGetRequest) ProtoMessage()    {}
 func (*MulticastEntryGetRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptorMulticast, []int{9}
+	return fileDescriptorMulticast, []int{15}
 }
 
 func (m *MulticastEntryGetRequest) GetKeyOrHandle() *MulticastEntryKeyHandle {
@@ -219,7 +589,7 @@ func (m *MulticastEntryGetRequestMsg) Reset()         { *m = MulticastEntryGetRe
 func (m *MulticastEntryGetRequestMsg) String() string { return proto.CompactTextString(m) }
 func (*MulticastEntryGetRequestMsg) ProtoMessage()    {}
 func (*MulticastEntryGetRequestMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptorMulticast, []int{10}
+	return fileDescriptorMulticast, []int{16}
 }
 
 func (m *MulticastEntryGetRequestMsg) GetRequest() []*MulticastEntryGetRequest {
@@ -237,7 +607,7 @@ type MulticastEntryStats struct {
 func (m *MulticastEntryStats) Reset()                    { *m = MulticastEntryStats{} }
 func (m *MulticastEntryStats) String() string            { return proto.CompactTextString(m) }
 func (*MulticastEntryStats) ProtoMessage()               {}
-func (*MulticastEntryStats) Descriptor() ([]byte, []int) { return fileDescriptorMulticast, []int{11} }
+func (*MulticastEntryStats) Descriptor() ([]byte, []int) { return fileDescriptorMulticast, []int{17} }
 
 func (m *MulticastEntryStats) GetNumOifs() uint32 {
 	if m != nil {
@@ -257,7 +627,7 @@ func (m *MulticastEntryGetResponse) Reset()         { *m = MulticastEntryGetResp
 func (m *MulticastEntryGetResponse) String() string { return proto.CompactTextString(m) }
 func (*MulticastEntryGetResponse) ProtoMessage()    {}
 func (*MulticastEntryGetResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptorMulticast, []int{12}
+	return fileDescriptorMulticast, []int{18}
 }
 
 func (m *MulticastEntryGetResponse) GetApiStatus() ApiStatus {
@@ -296,7 +666,7 @@ func (m *MulticastEntryGetResponseMsg) Reset()         { *m = MulticastEntryGetR
 func (m *MulticastEntryGetResponseMsg) String() string { return proto.CompactTextString(m) }
 func (*MulticastEntryGetResponseMsg) ProtoMessage()    {}
 func (*MulticastEntryGetResponseMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptorMulticast, []int{13}
+	return fileDescriptorMulticast, []int{19}
 }
 
 func (m *MulticastEntryGetResponseMsg) GetResponse() []*MulticastEntryGetResponse {
@@ -307,9 +677,15 @@ func (m *MulticastEntryGetResponseMsg) GetResponse() []*MulticastEntryGetRespons
 }
 
 func init() {
+	proto.RegisterType((*Oif)(nil), "multicast.Oif")
+	proto.RegisterType((*OifListEpd)(nil), "multicast.OifListEpd")
+	proto.RegisterType((*OifListCpd)(nil), "multicast.OifListCpd")
+	proto.RegisterType((*OifList)(nil), "multicast.OifList")
+	proto.RegisterType((*MulticastEntryStatusEpd)(nil), "multicast.MulticastEntryStatusEpd")
+	proto.RegisterType((*MulticastEntryStatusCpd)(nil), "multicast.MulticastEntryStatusCpd")
+	proto.RegisterType((*MulticastEntryStatus)(nil), "multicast.MulticastEntryStatus")
 	proto.RegisterType((*MulticastEntrySpec)(nil), "multicast.MulticastEntrySpec")
 	proto.RegisterType((*MulticastEntryRequestMsg)(nil), "multicast.MulticastEntryRequestMsg")
-	proto.RegisterType((*MulticastEntryStatus)(nil), "multicast.MulticastEntryStatus")
 	proto.RegisterType((*MulticastEntryResponse)(nil), "multicast.MulticastEntryResponse")
 	proto.RegisterType((*MulticastEntryResponseMsg)(nil), "multicast.MulticastEntryResponseMsg")
 	proto.RegisterType((*MulticastEntryDeleteRequest)(nil), "multicast.MulticastEntryDeleteRequest")
@@ -494,6 +870,288 @@ var _Multicast_serviceDesc = grpc.ServiceDesc{
 	Metadata: "multicast.proto",
 }
 
+func (m *Oif) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Oif) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.IfHandle != 0 {
+		dAtA[i] = 0x9
+		i++
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.IfHandle))
+		i += 8
+	}
+	if m.L2SegHandle != 0 {
+		dAtA[i] = 0x11
+		i++
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.L2SegHandle))
+		i += 8
+	}
+	if m.Qid != 0 {
+		dAtA[i] = 0x1d
+		i++
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.Qid))
+		i += 4
+	}
+	if m.QPurpose != 0 {
+		dAtA[i] = 0x25
+		i++
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.QPurpose))
+		i += 4
+	}
+	return i, nil
+}
+
+func (m *OifListEpd) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *OifListEpd) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.RepIndex != 0 {
+		dAtA[i] = 0xd
+		i++
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.RepIndex))
+		i += 4
+	}
+	return i, nil
+}
+
+func (m *OifListCpd) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *OifListCpd) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	return i, nil
+}
+
+func (m *OifList) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *OifList) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Id != 0 {
+		dAtA[i] = 0xd
+		i++
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.Id))
+		i += 4
+	}
+	if len(m.Oifs) > 0 {
+		for _, msg := range m.Oifs {
+			dAtA[i] = 0x12
+			i++
+			i = encodeVarintMulticast(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	if m.AttachedListId != 0 {
+		dAtA[i] = 0x1d
+		i++
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.AttachedListId))
+		i += 4
+	}
+	if m.IsHonorIngress {
+		dAtA[i] = 0x20
+		i++
+		if m.IsHonorIngress {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.PdInfo != nil {
+		nn1, err := m.PdInfo.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += nn1
+	}
+	return i, nil
+}
+
+func (m *OifList_EpdInfo) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.EpdInfo != nil {
+		dAtA[i] = 0x2a
+		i++
+		i = encodeVarintMulticast(dAtA, i, uint64(m.EpdInfo.Size()))
+		n2, err := m.EpdInfo.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n2
+	}
+	return i, nil
+}
+func (m *OifList_CpdInfo) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.CpdInfo != nil {
+		dAtA[i] = 0x32
+		i++
+		i = encodeVarintMulticast(dAtA, i, uint64(m.CpdInfo.Size()))
+		n3, err := m.CpdInfo.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n3
+	}
+	return i, nil
+}
+func (m *MulticastEntryStatusEpd) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MulticastEntryStatusEpd) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.RegMacTblIdx != 0 {
+		dAtA[i] = 0xd
+		i++
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.RegMacTblIdx))
+		i += 4
+	}
+	return i, nil
+}
+
+func (m *MulticastEntryStatusCpd) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MulticastEntryStatusCpd) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	return i, nil
+}
+
+func (m *MulticastEntryStatus) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MulticastEntryStatus) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Handle != 0 {
+		dAtA[i] = 0x9
+		i++
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Handle))
+		i += 8
+	}
+	if m.OifList != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintMulticast(dAtA, i, uint64(m.OifList.Size()))
+		n4, err := m.OifList.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n4
+	}
+	if m.PdInfo != nil {
+		nn5, err := m.PdInfo.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += nn5
+	}
+	return i, nil
+}
+
+func (m *MulticastEntryStatus_EpdInfo) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.EpdInfo != nil {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintMulticast(dAtA, i, uint64(m.EpdInfo.Size()))
+		n6, err := m.EpdInfo.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n6
+	}
+	return i, nil
+}
+func (m *MulticastEntryStatus_CpdInfo) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.CpdInfo != nil {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintMulticast(dAtA, i, uint64(m.CpdInfo.Size()))
+		n7, err := m.CpdInfo.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n7
+	}
+	return i, nil
+}
 func (m *MulticastEntrySpec) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -513,11 +1171,11 @@ func (m *MulticastEntrySpec) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintMulticast(dAtA, i, uint64(m.KeyOrHandle.Size()))
-		n1, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		n8, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n1
+		i += n8
 	}
 	if len(m.OifKeyHandles) > 0 {
 		for _, msg := range m.OifKeyHandles {
@@ -564,30 +1222,6 @@ func (m *MulticastEntryRequestMsg) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *MulticastEntryStatus) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MulticastEntryStatus) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.MulticastHandle != 0 {
-		dAtA[i] = 0x9
-		i++
-		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.MulticastHandle))
-		i += 8
-	}
-	return i, nil
-}
-
 func (m *MulticastEntryResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -612,11 +1246,11 @@ func (m *MulticastEntryResponse) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintMulticast(dAtA, i, uint64(m.EntryStatus.Size()))
-		n2, err := m.EntryStatus.MarshalTo(dAtA[i:])
+		n9, err := m.EntryStatus.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n2
+		i += n9
 	}
 	return i, nil
 }
@@ -670,11 +1304,11 @@ func (m *MulticastEntryDeleteRequest) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintMulticast(dAtA, i, uint64(m.KeyOrHandle.Size()))
-		n3, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		n10, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n3
+		i += n10
 	}
 	return i, nil
 }
@@ -781,11 +1415,11 @@ func (m *MulticastEntryGetRequest) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintMulticast(dAtA, i, uint64(m.KeyOrHandle.Size()))
-		n4, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		n11, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n4
+		i += n11
 	}
 	return i, nil
 }
@@ -867,31 +1501,31 @@ func (m *MulticastEntryGetResponse) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintMulticast(dAtA, i, uint64(m.Spec.Size()))
-		n5, err := m.Spec.MarshalTo(dAtA[i:])
+		n12, err := m.Spec.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n5
+		i += n12
 	}
 	if m.Status != nil {
 		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintMulticast(dAtA, i, uint64(m.Status.Size()))
-		n6, err := m.Status.MarshalTo(dAtA[i:])
+		n13, err := m.Status.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n6
+		i += n13
 	}
 	if m.Stats != nil {
 		dAtA[i] = 0x22
 		i++
 		i = encodeVarintMulticast(dAtA, i, uint64(m.Stats.Size()))
-		n7, err := m.Stats.MarshalTo(dAtA[i:])
+		n14, err := m.Stats.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n7
+		i += n14
 	}
 	return i, nil
 }
@@ -935,6 +1569,130 @@ func encodeVarintMulticast(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
+func (m *Oif) Size() (n int) {
+	var l int
+	_ = l
+	if m.IfHandle != 0 {
+		n += 9
+	}
+	if m.L2SegHandle != 0 {
+		n += 9
+	}
+	if m.Qid != 0 {
+		n += 5
+	}
+	if m.QPurpose != 0 {
+		n += 5
+	}
+	return n
+}
+
+func (m *OifListEpd) Size() (n int) {
+	var l int
+	_ = l
+	if m.RepIndex != 0 {
+		n += 5
+	}
+	return n
+}
+
+func (m *OifListCpd) Size() (n int) {
+	var l int
+	_ = l
+	return n
+}
+
+func (m *OifList) Size() (n int) {
+	var l int
+	_ = l
+	if m.Id != 0 {
+		n += 5
+	}
+	if len(m.Oifs) > 0 {
+		for _, e := range m.Oifs {
+			l = e.Size()
+			n += 1 + l + sovMulticast(uint64(l))
+		}
+	}
+	if m.AttachedListId != 0 {
+		n += 5
+	}
+	if m.IsHonorIngress {
+		n += 2
+	}
+	if m.PdInfo != nil {
+		n += m.PdInfo.Size()
+	}
+	return n
+}
+
+func (m *OifList_EpdInfo) Size() (n int) {
+	var l int
+	_ = l
+	if m.EpdInfo != nil {
+		l = m.EpdInfo.Size()
+		n += 1 + l + sovMulticast(uint64(l))
+	}
+	return n
+}
+func (m *OifList_CpdInfo) Size() (n int) {
+	var l int
+	_ = l
+	if m.CpdInfo != nil {
+		l = m.CpdInfo.Size()
+		n += 1 + l + sovMulticast(uint64(l))
+	}
+	return n
+}
+func (m *MulticastEntryStatusEpd) Size() (n int) {
+	var l int
+	_ = l
+	if m.RegMacTblIdx != 0 {
+		n += 5
+	}
+	return n
+}
+
+func (m *MulticastEntryStatusCpd) Size() (n int) {
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MulticastEntryStatus) Size() (n int) {
+	var l int
+	_ = l
+	if m.Handle != 0 {
+		n += 9
+	}
+	if m.OifList != nil {
+		l = m.OifList.Size()
+		n += 1 + l + sovMulticast(uint64(l))
+	}
+	if m.PdInfo != nil {
+		n += m.PdInfo.Size()
+	}
+	return n
+}
+
+func (m *MulticastEntryStatus_EpdInfo) Size() (n int) {
+	var l int
+	_ = l
+	if m.EpdInfo != nil {
+		l = m.EpdInfo.Size()
+		n += 1 + l + sovMulticast(uint64(l))
+	}
+	return n
+}
+func (m *MulticastEntryStatus_CpdInfo) Size() (n int) {
+	var l int
+	_ = l
+	if m.CpdInfo != nil {
+		l = m.CpdInfo.Size()
+		n += 1 + l + sovMulticast(uint64(l))
+	}
+	return n
+}
 func (m *MulticastEntrySpec) Size() (n int) {
 	var l int
 	_ = l
@@ -959,15 +1717,6 @@ func (m *MulticastEntryRequestMsg) Size() (n int) {
 			l = e.Size()
 			n += 1 + l + sovMulticast(uint64(l))
 		}
-	}
-	return n
-}
-
-func (m *MulticastEntryStatus) Size() (n int) {
-	var l int
-	_ = l
-	if m.MulticastHandle != 0 {
-		n += 9
 	}
 	return n
 }
@@ -1116,6 +1865,658 @@ func sovMulticast(x uint64) (n int) {
 }
 func sozMulticast(x uint64) (n int) {
 	return sovMulticast(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *Oif) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMulticast
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Oif: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Oif: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IfHandle", wireType)
+			}
+			m.IfHandle = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.IfHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+		case 2:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field L2SegHandle", wireType)
+			}
+			m.L2SegHandle = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.L2SegHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+		case 3:
+			if wireType != 5 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Qid", wireType)
+			}
+			m.Qid = 0
+			if (iNdEx + 4) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Qid = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
+			iNdEx += 4
+		case 4:
+			if wireType != 5 {
+				return fmt.Errorf("proto: wrong wireType = %d for field QPurpose", wireType)
+			}
+			m.QPurpose = 0
+			if (iNdEx + 4) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.QPurpose = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
+			iNdEx += 4
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMulticast(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthMulticast
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *OifListEpd) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMulticast
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: OifListEpd: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: OifListEpd: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 5 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RepIndex", wireType)
+			}
+			m.RepIndex = 0
+			if (iNdEx + 4) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RepIndex = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
+			iNdEx += 4
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMulticast(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthMulticast
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *OifListCpd) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMulticast
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: OifListCpd: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: OifListCpd: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMulticast(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthMulticast
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *OifList) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMulticast
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: OifList: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: OifList: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 5 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+			}
+			m.Id = 0
+			if (iNdEx + 4) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Id = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
+			iNdEx += 4
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Oifs", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMulticast
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthMulticast
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Oifs = append(m.Oifs, &Oif{})
+			if err := m.Oifs[len(m.Oifs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 5 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AttachedListId", wireType)
+			}
+			m.AttachedListId = 0
+			if (iNdEx + 4) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AttachedListId = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
+			iNdEx += 4
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IsHonorIngress", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMulticast
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.IsHonorIngress = bool(v != 0)
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EpdInfo", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMulticast
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthMulticast
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &OifListEpd{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.PdInfo = &OifList_EpdInfo{v}
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CpdInfo", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMulticast
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthMulticast
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &OifListCpd{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.PdInfo = &OifList_CpdInfo{v}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMulticast(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthMulticast
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MulticastEntryStatusEpd) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMulticast
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MulticastEntryStatusEpd: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MulticastEntryStatusEpd: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 5 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RegMacTblIdx", wireType)
+			}
+			m.RegMacTblIdx = 0
+			if (iNdEx + 4) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RegMacTblIdx = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
+			iNdEx += 4
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMulticast(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthMulticast
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MulticastEntryStatusCpd) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMulticast
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MulticastEntryStatusCpd: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MulticastEntryStatusCpd: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMulticast(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthMulticast
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MulticastEntryStatus) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMulticast
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MulticastEntryStatus: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MulticastEntryStatus: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Handle", wireType)
+			}
+			m.Handle = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Handle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OifList", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMulticast
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthMulticast
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.OifList == nil {
+				m.OifList = &OifList{}
+			}
+			if err := m.OifList.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EpdInfo", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMulticast
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthMulticast
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &MulticastEntryStatusEpd{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.PdInfo = &MulticastEntryStatus_EpdInfo{v}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CpdInfo", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMulticast
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthMulticast
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &MulticastEntryStatusCpd{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.PdInfo = &MulticastEntryStatus_CpdInfo{v}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMulticast(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthMulticast
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
 }
 func (m *MulticastEntrySpec) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -1291,66 +2692,6 @@ func (m *MulticastEntryRequestMsg) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipMulticast(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthMulticast
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MulticastEntryStatus) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowMulticast
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MulticastEntryStatus: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MulticastEntryStatus: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MulticastHandle", wireType)
-			}
-			m.MulticastHandle = 0
-			if (iNdEx + 8) > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.MulticastHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-			iNdEx += 8
 		default:
 			iNdEx = preIndex
 			skippy, err := skipMulticast(dAtA[iNdEx:])
@@ -2459,48 +3800,67 @@ var (
 func init() { proto.RegisterFile("multicast.proto", fileDescriptorMulticast) }
 
 var fileDescriptorMulticast = []byte{
-	// 687 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x56, 0xdd, 0x6e, 0xd3, 0x4c,
-	0x10, 0xfd, 0xdc, 0xf6, 0x6b, 0xd3, 0x09, 0xfd, 0x5b, 0xa0, 0x4a, 0x5b, 0x48, 0x8a, 0x5b, 0xf5,
-	0x07, 0x21, 0x0b, 0x02, 0x52, 0x25, 0xa4, 0x4a, 0x34, 0xa5, 0x85, 0x0a, 0x95, 0x22, 0x17, 0x84,
-	0xa8, 0x90, 0x8c, 0xeb, 0x8e, 0x1b, 0xcb, 0xa9, 0x6d, 0xbc, 0x1b, 0x24, 0x0b, 0x71, 0xc9, 0x33,
-	0xf0, 0x02, 0x5c, 0xf3, 0x1c, 0x5c, 0xf2, 0x04, 0x11, 0xca, 0x23, 0xe4, 0x05, 0x40, 0xf6, 0xda,
-	0x71, 0xb3, 0x6e, 0x7e, 0x2e, 0xc2, 0x55, 0x76, 0xd7, 0x67, 0xce, 0xd9, 0x99, 0x33, 0xb3, 0x0a,
-	0xcc, 0x5c, 0xd4, 0x6b, 0xcc, 0x32, 0x74, 0xca, 0x14, 0xcf, 0x77, 0x99, 0x4b, 0x26, 0xdb, 0x07,
-	0x8b, 0x79, 0x16, 0x78, 0x48, 0xf9, 0xf9, 0x62, 0xce, 0xae, 0xf2, 0x95, 0xfc, 0x47, 0x02, 0x72,
-	0x98, 0x80, 0xf6, 0x1c, 0xe6, 0x07, 0xc7, 0x1e, 0x1a, 0xe4, 0x08, 0xa6, 0x6c, 0x0c, 0x34, 0xd7,
-	0xd7, 0xaa, 0xba, 0x73, 0x56, 0xc3, 0x82, 0xb4, 0x2c, 0x6d, 0xe4, 0xcb, 0x4b, 0x8a, 0x5d, 0x55,
-	0x3a, 0xe1, 0x2f, 0x30, 0x78, 0x1e, 0x41, 0x2a, 0xd3, 0xad, 0x46, 0x09, 0x3e, 0xa1, 0x63, 0x19,
-	0xf8, 0xd8, 0xc6, 0x40, 0xcd, 0xdb, 0x18, 0x1c, 0xf9, 0xfc, 0x23, 0xf9, 0x26, 0xc1, 0x8c, 0x6b,
-	0x99, 0x5a, 0xc8, 0xca, 0x29, 0x69, 0x61, 0x64, 0x79, 0x74, 0x23, 0x5f, 0x9e, 0x0f, 0x39, 0x0f,
-	0x1c, 0x86, 0xbe, 0xa9, 0x1b, 0x98, 0xd2, 0xbd, 0x6d, 0x35, 0x4a, 0xc7, 0x31, 0x9d, 0x8f, 0xe6,
-	0xbd, 0xe5, 0x78, 0x6d, 0xb8, 0x0e, 0x65, 0xbe, 0x6e, 0x39, 0x8c, 0x6e, 0x7f, 0xb6, 0x1c, 0x66,
-	0xa6, 0xc1, 0xe1, 0xd5, 0x95, 0x30, 0xcf, 0x6d, 0x2b, 0x39, 0xd2, 0xbc, 0xd3, 0xb2, 0x72, 0xb0,
-	0xaf, 0xbd, 0x7e, 0xf7, 0x6a, 0x4f, 0xdb, 0x7b, 0x79, 0xb0, 0xfb, 0x45, 0x9d, 0x72, 0x2d, 0xb3,
-	0x2d, 0x43, 0xe5, 0x63, 0x28, 0x74, 0x66, 0xa4, 0xe2, 0xc7, 0x3a, 0x52, 0x76, 0x48, 0xcf, 0xc9,
-	0x16, 0x4c, 0xf8, 0x7c, 0x57, 0x90, 0xa2, 0xcb, 0xde, 0x56, 0xd2, 0x12, 0x67, 0xcb, 0xa6, 0x26,
-	0x68, 0x79, 0x07, 0x6e, 0x08, 0x9f, 0x99, 0xce, 0xea, 0x94, 0x6c, 0xc2, 0x6c, 0x9b, 0xe0, 0x72,
-	0x69, 0xc7, 0xd5, 0xd4, 0x3b, 0x7e, 0x31, 0xf9, 0xbb, 0x04, 0xf3, 0xe2, 0xc5, 0xa8, 0xe7, 0x3a,
-	0x14, 0xc9, 0x3e, 0x80, 0xee, 0x59, 0x1a, 0x8d, 0x38, 0xa3, 0xf8, 0xe9, 0xf2, 0xac, 0xc2, 0x0d,
-	0xde, 0xf1, 0x2c, 0xae, 0x55, 0xb9, 0xd9, 0x6a, 0x94, 0xe6, 0xe2, 0xa2, 0xa5, 0x70, 0x75, 0x52,
-	0x4f, 0x10, 0xa4, 0x02, 0xd7, 0x30, 0x24, 0x4e, 0x98, 0x46, 0x22, 0x93, 0x4b, 0xdd, 0x73, 0xe4,
-	0x0c, 0x79, 0x4c, 0x37, 0xf2, 0x09, 0x2c, 0x5c, 0x7d, 0xcb, 0xb0, 0x7e, 0xdb, 0x90, 0xf3, 0xe3,
-	0x6d, 0x5c, 0xc0, 0x3b, 0x5d, 0xc9, 0x93, 0x38, 0xb5, 0x1d, 0x22, 0x3b, 0xb0, 0xd4, 0x89, 0x79,
-	0x8a, 0x35, 0x64, 0x18, 0x1b, 0x34, 0xf4, 0x26, 0x95, 0x4f, 0xa1, 0xd8, 0x43, 0x2f, 0x4c, 0xe8,
-	0x89, 0xd8, 0x10, 0x6b, 0x5d, 0xf3, 0xe9, 0x88, 0x4d, 0x3b, 0xc3, 0x84, 0x5b, 0x57, 0xe3, 0x86,
-	0xeb, 0xad, 0x6c, 0x42, 0xa9, 0x97, 0x4e, 0x98, 0xcc, 0x6e, 0xc6, 0x9d, 0xf5, 0xbe, 0xd9, 0x64,
-	0x3c, 0xb2, 0xc5, 0xf1, 0x79, 0x86, 0xec, 0x9f, 0x19, 0xf4, 0x5e, 0x6c, 0x88, 0x54, 0x8c, 0xb7,
-	0x9b, 0xe0, 0xce, 0x4a, 0xd7, 0x7c, 0xd2, 0xc0, 0xd4, 0x9a, 0xfb, 0x70, 0x3d, 0xdb, 0xef, 0x94,
-	0x2c, 0x40, 0xce, 0xa9, 0x5f, 0x68, 0xae, 0x65, 0x72, 0x3f, 0xa6, 0xd4, 0x09, 0xa7, 0x7e, 0x71,
-	0x64, 0x99, 0x54, 0xfe, 0x3a, 0x22, 0x76, 0x7f, 0xc4, 0x3b, 0xe4, 0x31, 0x7d, 0x00, 0x63, 0xd4,
-	0x43, 0x23, 0x1e, 0xcf, 0x3e, 0x4f, 0x50, 0x04, 0x25, 0x5b, 0x30, 0x1e, 0xcb, 0x8e, 0x0e, 0x36,
-	0xd3, 0x31, 0x9c, 0x3c, 0x82, 0xff, 0xc3, 0x15, 0x2d, 0x8c, 0x45, 0x71, 0xc5, 0x9e, 0x71, 0x54,
-	0xe5, 0x60, 0xf9, 0x83, 0xd8, 0xd4, 0x97, 0xca, 0xc0, 0xc7, 0x46, 0xec, 0xb4, 0xd5, 0xde, 0xce,
-	0x88, 0x6d, 0x56, 0xfe, 0x31, 0x0a, 0x93, 0x6d, 0x1c, 0x31, 0xc4, 0xe7, 0x75, 0xd7, 0x47, 0x9d,
-	0x21, 0x59, 0xe9, 0xf1, 0xba, 0x24, 0x5d, 0xb2, 0xb8, 0xda, 0xf7, 0x09, 0x3a, 0xa4, 0xe7, 0xf2,
-	0x7f, 0x59, 0x91, 0x37, 0xde, 0xd9, 0xd0, 0x45, 0x5c, 0x51, 0x84, 0x0f, 0x1a, 0xd9, 0x1c, 0xec,
-	0x5d, 0x09, 0xa5, 0xee, 0x0e, 0x38, 0xb4, 0x5c, 0xd0, 0x84, 0xb9, 0x4c, 0xbd, 0xc9, 0xda, 0x00,
-	0x73, 0x12, 0x4a, 0xad, 0x0f, 0xe2, 0x5a, 0xa4, 0x53, 0x99, 0xff, 0xd9, 0x2c, 0x4a, 0xbf, 0x9a,
-	0x45, 0xe9, 0x77, 0xb3, 0x28, 0x9d, 0xe4, 0xaa, 0x7a, 0x2d, 0xfa, 0xc3, 0x71, 0x3a, 0x1e, 0xfd,
-	0x3c, 0xfc, 0x1b, 0x00, 0x00, 0xff, 0xff, 0xc5, 0x2c, 0x6a, 0xd2, 0xac, 0x08, 0x00, 0x00,
+	// 983 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x56, 0x51, 0x6f, 0xdb, 0x54,
+	0x14, 0x9e, 0x93, 0xae, 0x71, 0x4e, 0xda, 0xb4, 0xbb, 0xb0, 0x92, 0xb6, 0x90, 0x64, 0xde, 0xd8,
+	0x32, 0x04, 0x11, 0x04, 0xa4, 0x49, 0x48, 0xd5, 0x46, 0x42, 0x47, 0x23, 0x28, 0x99, 0xdc, 0x21,
+	0xc4, 0x84, 0x64, 0x1c, 0xfb, 0x38, 0xb9, 0x4a, 0x6a, 0xbb, 0xbe, 0x37, 0x68, 0x11, 0xe2, 0x0d,
+	0x7e, 0x03, 0x7f, 0x80, 0x67, 0x7e, 0x07, 0x8f, 0xfc, 0x82, 0x0a, 0xf5, 0x91, 0xc7, 0xfe, 0x01,
+	0xd0, 0xbd, 0xb6, 0xe3, 0xc4, 0x69, 0xd2, 0x3c, 0x94, 0xa7, 0xf8, 0x1c, 0x7f, 0xe7, 0x9c, 0x7b,
+	0xbe, 0xf3, 0x9d, 0xeb, 0xc0, 0xd6, 0xe9, 0x68, 0xc8, 0xa9, 0x65, 0x32, 0x5e, 0xf7, 0x03, 0x8f,
+	0x7b, 0x24, 0x3f, 0x71, 0xec, 0x15, 0xf8, 0xd8, 0x47, 0x16, 0xfa, 0xf7, 0xd4, 0x41, 0x3f, 0x7c,
+	0xd2, 0x38, 0x64, 0x3b, 0xd4, 0x21, 0xfb, 0x90, 0xa7, 0x8e, 0xd1, 0x37, 0x5d, 0x7b, 0x88, 0x25,
+	0xa5, 0xaa, 0xd4, 0xd6, 0x75, 0x95, 0x3a, 0x47, 0xd2, 0x26, 0xf7, 0x60, 0x63, 0xd8, 0x60, 0xd8,
+	0x8b, 0xdf, 0x67, 0xe4, 0xfb, 0x82, 0xf4, 0x45, 0x90, 0x6d, 0xc8, 0x9e, 0x51, 0xbb, 0x94, 0xad,
+	0x2a, 0xb5, 0x9c, 0x2e, 0x1e, 0x45, 0xc6, 0x33, 0xc3, 0x1f, 0x05, 0xbe, 0xc7, 0xb0, 0xb4, 0x26,
+	0xfd, 0xea, 0xd9, 0x8b, 0xd0, 0xd6, 0x1e, 0x03, 0x74, 0xa8, 0xf3, 0x15, 0x65, 0xfc, 0xd0, 0x97,
+	0xd0, 0x00, 0x7d, 0x83, 0xba, 0x36, 0xbe, 0x96, 0xc5, 0x73, 0xba, 0x1a, 0xa0, 0xdf, 0x16, 0xb6,
+	0xb6, 0x31, 0x81, 0xb6, 0x7c, 0x5b, 0xfb, 0x25, 0x03, 0xb9, 0xc8, 0x24, 0x45, 0xc8, 0x50, 0x3b,
+	0xc2, 0x67, 0xa8, 0x4d, 0x34, 0x58, 0xf3, 0xa8, 0xc3, 0x4a, 0x99, 0x6a, 0xb6, 0x56, 0x68, 0x14,
+	0xeb, 0x09, 0x19, 0x1d, 0xea, 0xe8, 0xf2, 0x1d, 0xa9, 0xc1, 0xb6, 0xc9, 0xb9, 0x69, 0xf5, 0xd1,
+	0x36, 0x86, 0x94, 0x71, 0x63, 0x72, 0xe8, 0x62, 0xec, 0x17, 0xb9, 0xdb, 0xb6, 0x40, 0x52, 0x66,
+	0xf4, 0x3d, 0xd7, 0x0b, 0x0c, 0xea, 0xf6, 0x02, 0x64, 0x4c, 0xb6, 0xa1, 0xea, 0x45, 0xca, 0x8e,
+	0x84, 0xbb, 0x1d, 0x7a, 0x49, 0x03, 0x54, 0xf4, 0x6d, 0x83, 0xba, 0x8e, 0x57, 0xba, 0x5d, 0x55,
+	0x6a, 0x85, 0xc6, 0xdd, 0xd9, 0xda, 0x51, 0x9f, 0x47, 0xb7, 0xf4, 0x1c, 0xfa, 0x76, 0xdb, 0x75,
+	0x3c, 0x11, 0x63, 0xc5, 0x31, 0xeb, 0x8b, 0x62, 0x5a, 0x61, 0x8c, 0x15, 0xc6, 0x34, 0xf3, 0x90,
+	0x8b, 0x42, 0xb4, 0x67, 0xf0, 0xd6, 0x71, 0x8c, 0x3e, 0x74, 0x79, 0x30, 0x3e, 0xe1, 0x26, 0x1f,
+	0x31, 0x41, 0xe6, 0xbb, 0xb0, 0x15, 0x60, 0xcf, 0x38, 0x35, 0x2d, 0x83, 0x77, 0x87, 0x06, 0xb5,
+	0x63, 0x4a, 0x37, 0x02, 0xec, 0x1d, 0x9b, 0xd6, 0xcb, 0xee, 0xb0, 0x6d, 0xbf, 0xd6, 0x76, 0xaf,
+	0xce, 0x20, 0x38, 0xfe, 0x47, 0x81, 0x37, 0xaf, 0x7a, 0x47, 0x76, 0x60, 0x7d, 0x46, 0x21, 0x91,
+	0x45, 0x3e, 0x00, 0xd5, 0xa3, 0x8e, 0xe4, 0x53, 0x6a, 0xa3, 0xd0, 0x20, 0xf3, 0xcd, 0xe8, 0x39,
+	0x2f, 0x9a, 0xdb, 0xd3, 0x29, 0xbe, 0xb2, 0x12, 0xae, 0x4d, 0xc1, 0x17, 0xf4, 0x35, 0x4d, 0xde,
+	0xd3, 0x29, 0xf2, 0xd6, 0x56, 0x4a, 0xb0, 0x98, 0xc9, 0x7f, 0x15, 0x20, 0xa9, 0x08, 0x1f, 0x2d,
+	0xd2, 0x81, 0xcd, 0x01, 0x8e, 0x0d, 0x2f, 0x98, 0xde, 0x89, 0x42, 0x63, 0xbf, 0x3e, 0xe8, 0xa7,
+	0x0a, 0x7c, 0x89, 0xe3, 0x70, 0x07, 0x9a, 0xc5, 0xcb, 0xf3, 0x0a, 0xfc, 0x88, 0x2e, 0xb5, 0xf0,
+	0xd3, 0x01, 0x8e, 0xf5, 0xc2, 0x00, 0xc7, 0x9d, 0x20, 0x5a, 0x90, 0xdf, 0x14, 0xd8, 0x12, 0x24,
+	0x89, 0xac, 0x61, 0xca, 0x58, 0xa8, 0x3b, 0x22, 0x67, 0xdb, 0xe5, 0x18, 0x38, 0xa6, 0x85, 0x49,
+	0xba, 0x6f, 0x2f, 0xcf, 0x2b, 0x27, 0x51, 0xba, 0x00, 0x9d, 0xf7, 0xab, 0xd1, 0xb3, 0xe5, 0xb9,
+	0x8c, 0x07, 0x26, 0x75, 0x39, 0x3b, 0xf8, 0x89, 0xba, 0xdc, 0x49, 0x82, 0xc5, 0xd1, 0xeb, 0x62,
+	0xcf, 0x0f, 0x68, 0xec, 0x32, 0xfc, 0x6e, 0xa3, 0xde, 0x7e, 0x6e, 0xbc, 0xfc, 0xee, 0xc5, 0xa1,
+	0x71, 0xf8, 0x75, 0xbb, 0xf5, 0xb3, 0xbe, 0xe9, 0x51, 0x67, 0x52, 0x86, 0x69, 0x27, 0x50, 0x9a,
+	0xed, 0x48, 0xc7, 0xb3, 0x11, 0x32, 0x7e, 0xcc, 0x7a, 0xe4, 0x09, 0xe4, 0x82, 0xd0, 0x2a, 0x29,
+	0xf2, 0xb0, 0xef, 0x2c, 0x26, 0xda, 0x47, 0x4b, 0x8f, 0xd1, 0xda, 0xef, 0x0a, 0xec, 0xa4, 0xb3,
+	0x32, 0xdf, 0x73, 0x19, 0x92, 0xe7, 0x00, 0xa6, 0x4f, 0x0d, 0x26, 0x07, 0x23, 0x79, 0x2d, 0x36,
+	0xb6, 0xeb, 0xe1, 0xed, 0xf4, 0x99, 0x4f, 0xc3, 0x81, 0x35, 0xef, 0x5e, 0x9e, 0x57, 0xee, 0x44,
+	0x1d, 0x27, 0x70, 0x3d, 0x6f, 0xc6, 0x08, 0xd2, 0x84, 0x0d, 0x14, 0x89, 0xe3, 0x4c, 0xa1, 0xf2,
+	0x2a, 0xd7, 0x28, 0x41, 0x2f, 0x60, 0x62, 0x68, 0xaf, 0x60, 0xf7, 0xea, 0x53, 0x8a, 0xe6, 0x0f,
+	0x40, 0x0d, 0x22, 0x33, 0xea, 0xfe, 0xde, 0xc2, 0xe4, 0x71, 0x9c, 0x3e, 0x09, 0xd1, 0x5c, 0xd8,
+	0x9f, 0xc5, 0x7c, 0x8e, 0x43, 0xe4, 0x18, 0xb1, 0x7b, 0xe3, 0x0a, 0xd3, 0xba, 0x50, 0x5e, 0x52,
+	0x4f, 0x34, 0xf4, 0x2c, 0x3d, 0xcd, 0x87, 0x0b, 0xfb, 0x99, 0x89, 0x4d, 0xc6, 0xea, 0xc0, 0xdb,
+	0x57, 0xe3, 0x6e, 0x76, 0xb6, 0x9a, 0x03, 0x95, 0x65, 0x75, 0x44, 0x33, 0xad, 0xb9, 0xe9, 0x3c,
+	0xba, 0xb6, 0x9b, 0xb9, 0x19, 0x0d, 0xd2, 0xda, 0xff, 0x02, 0xf9, 0xff, 0x36, 0xa0, 0xef, 0xd3,
+	0x82, 0x48, 0x8a, 0x85, 0x72, 0x4b, 0x4d, 0xe7, 0xfe, 0xc2, 0x7e, 0x92, 0xc0, 0x64, 0x34, 0x1f,
+	0xc2, 0x1b, 0xf3, 0x7a, 0x67, 0x64, 0x17, 0x54, 0x77, 0x74, 0x6a, 0xc8, 0x0f, 0xa3, 0x68, 0x60,
+	0x53, 0xcf, 0xb9, 0xa3, 0xd3, 0x0e, 0x75, 0x98, 0xf6, 0x6b, 0x26, 0xad, 0x7e, 0x99, 0xf7, 0x86,
+	0xd7, 0xf4, 0x23, 0x58, 0x63, 0x3e, 0x5a, 0xd1, 0x7a, 0x5e, 0x73, 0x7f, 0x48, 0x28, 0x79, 0x02,
+	0xeb, 0x51, 0xd9, 0xec, 0x6a, 0x3b, 0x1d, 0xc1, 0xc9, 0x27, 0x70, 0x5b, 0x3c, 0xb1, 0xe8, 0xab,
+	0x50, 0x5e, 0x1a, 0xc7, 0xf4, 0x10, 0xac, 0xfd, 0x90, 0x16, 0xf5, 0x14, 0x0d, 0xe1, 0xda, 0xa4,
+	0x95, 0xf6, 0x60, 0xf9, 0x64, 0xd2, 0x32, 0x6b, 0xfc, 0x91, 0x85, 0xfc, 0x04, 0x47, 0xac, 0xf4,
+	0xe7, 0xb5, 0x15, 0xa0, 0xc9, 0x91, 0xdc, 0x5f, 0x72, 0xbb, 0xc4, 0x2a, 0xd9, 0x7b, 0x70, 0xed,
+	0x15, 0x74, 0xcc, 0x7a, 0xda, 0xad, 0xf9, 0x22, 0xdf, 0xf8, 0xf6, 0x8d, 0x17, 0xf1, 0xd2, 0x45,
+	0xc2, 0x45, 0x23, 0x8f, 0x57, 0xbb, 0x57, 0x44, 0xa9, 0xf7, 0x56, 0x5c, 0xda, 0xb0, 0xa0, 0x03,
+	0x77, 0xe6, 0xf8, 0x26, 0x0f, 0x57, 0xd8, 0x13, 0x51, 0xea, 0xd1, 0x2a, 0x53, 0x93, 0x75, 0x9a,
+	0x3b, 0x7f, 0x5e, 0x94, 0x95, 0xbf, 0x2e, 0xca, 0xca, 0xdf, 0x17, 0x65, 0xe5, 0x95, 0xda, 0x37,
+	0x87, 0xf2, 0xdf, 0x72, 0x77, 0x5d, 0xfe, 0x7c, 0xfc, 0x5f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xdf,
+	0x96, 0xbc, 0x89, 0x69, 0x0b, 0x00, 0x00,
 }

@@ -728,12 +728,12 @@ hal_ret_t
 l2seg_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    pd::pd_l2seg_create_args_t  pd_l2seg_args = { 0 };
+    pd::pd_l2seg_create_args_t  pd_l2seg_args = {};
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     l2seg_t                     *l2seg = NULL;
     l2seg_create_app_ctxt_t     *app_ctxt = NULL;
-    pd::pd_func_args_t          pd_func_args = {0};
+    pd::pd_func_args_t          pd_func_args = {};
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("invalid cfg_ctxt");
@@ -973,8 +973,8 @@ static hal_ret_t
 l2seg_create_abort_cleanup (l2seg_t *l2seg, hal_handle_t hal_handle)
 {
     hal_ret_t                   ret;
-    pd::pd_l2seg_delete_args_t  pd_l2seg_args = { 0 };
-    pd::pd_func_args_t          pd_func_args = {0};
+    pd::pd_l2seg_delete_args_t  pd_l2seg_args = {};
+    pd::pd_func_args_t          pd_func_args = {};
 
     // delete call to PD
     if (l2seg->pd) {
@@ -986,6 +986,11 @@ l2seg_create_abort_cleanup (l2seg_t *l2seg, hal_handle_t hal_handle)
             HAL_TRACE_ERR("Failed to delete l2seg pd, err : {}",
                           ret);
         }
+    }
+
+    // Cleanup OifLists if any
+    if (l2seg->base_oif_list_id != OIF_LIST_ID_INVALID) {
+        l2seg_cleanup_oiflists(l2seg);
     }
 
     // remove object from hal_handle id based hash table in infra
@@ -1054,7 +1059,7 @@ hal_ret_t
 l2seg_prepare_rsp (L2SegmentResponse *rsp, hal_ret_t ret, l2seg_t *l2seg)
 {
     pd::pd_l2seg_get_flow_lkupid_args_t args;
-    pd::pd_func_args_t                  pd_func_args = {0};
+    pd::pd_func_args_t                  pd_func_args = {};
 
     if (ret == HAL_RET_OK) {
         // No error, hance l2seg is valid
@@ -1350,9 +1355,9 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
 {
     hal_ret_t                   ret;
     l2seg_t                     *l2seg    = NULL;
-    l2seg_create_app_ctxt_t     app_ctxt  = { 0 };
-    dhl_entry_t                 dhl_entry = { 0 };
-    cfg_op_ctxt_t               cfg_ctxt  = { 0 };
+    l2seg_create_app_ctxt_t     app_ctxt  = {};
+    dhl_entry_t                 dhl_entry = {};
+    cfg_op_ctxt_t               cfg_ctxt  = {};
     l2seg_t                     *existing_l2seg = NULL;
     bool                        is_same   = false;
 
@@ -1502,12 +1507,12 @@ hal_ret_t
 l2seg_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    pd::pd_l2seg_update_args_t  pd_l2seg_args = { 0 };
+    pd::pd_l2seg_update_args_t  pd_l2seg_args = {};
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     l2seg_t                    *l2seg = NULL, *l2seg_clone = NULL;
     l2seg_update_app_ctxt_t    *app_ctxt = NULL;
-    pd::pd_func_args_t          pd_func_args = {0};
+    pd::pd_func_args_t          pd_func_args = {};
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("invalid cfg_ctxt");
@@ -1558,7 +1563,7 @@ hal_ret_t
 l2seg_make_clone (l2seg_t *l2seg, l2seg_t **l2seg_clone)
 {
     pd::pd_l2seg_make_clone_args_t  args;
-    pd::pd_func_args_t              pd_func_args = {0};
+    pd::pd_func_args_t              pd_func_args = {};
 
     *l2seg_clone = l2seg_alloc_init();
     memcpy(*l2seg_clone, l2seg, sizeof(l2seg_t));
@@ -1632,12 +1637,12 @@ hal_ret_t
 l2seg_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                       ret = HAL_RET_OK;
-    pd::pd_l2seg_mem_free_args_t    pd_l2seg_args = { 0 };
+    pd::pd_l2seg_mem_free_args_t    pd_l2seg_args = {};
     dllist_ctxt_t                   *lnode = NULL;
     dhl_entry_t                     *dhl_entry = NULL;
     l2seg_update_app_ctxt_t         *app_ctxt = NULL;
     l2seg_t                         *l2seg = NULL, *l2seg_clone = NULL;
-    pd::pd_func_args_t              pd_func_args = {0};
+    pd::pd_func_args_t              pd_func_args = {};
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("invalid cfg_ctxt");
@@ -1716,12 +1721,12 @@ hal_ret_t
 l2seg_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                       ret = HAL_RET_OK;
-    pd::pd_l2seg_mem_free_args_t    pd_l2seg_args = { 0 };
+    pd::pd_l2seg_mem_free_args_t    pd_l2seg_args = {};
     dllist_ctxt_t                   *lnode = NULL;
     dhl_entry_t                     *dhl_entry = NULL;
     l2seg_update_app_ctxt_t         *app_ctxt = NULL;
     l2seg_t                         *l2seg = NULL;
-    pd::pd_func_args_t              pd_func_args = {0};
+    pd::pd_func_args_t              pd_func_args = {};
 
 
     if (cfg_ctxt == NULL) {
@@ -2000,10 +2005,10 @@ l2segment_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     l2seg_t                     *l2seg = NULL, *l2seg_clone = NULL;
-    cfg_op_ctxt_t               cfg_ctxt = { 0 };
-    dhl_entry_t                 dhl_entry = { 0 };
+    cfg_op_ctxt_t               cfg_ctxt = {};
+    dhl_entry_t                 dhl_entry = {};
     const L2SegmentKeyHandle    &kh = spec.key_or_handle();
-    l2seg_update_app_ctxt_t     app_ctxt = { 0 };
+    l2seg_update_app_ctxt_t     app_ctxt = {};
 
     hal_api_trace(" API Begin: L2seg update ");
     proto_msg_dump(spec);
@@ -2157,11 +2162,11 @@ hal_ret_t
 l2seg_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                   ret           = HAL_RET_OK;
-    pd::pd_l2seg_delete_args_t  pd_l2seg_args = { 0 };
+    pd::pd_l2seg_delete_args_t  pd_l2seg_args = {};
     dllist_ctxt_t               *lnode        = NULL;
     dhl_entry_t                 *dhl_entry    = NULL;
     l2seg_t                     *l2seg        = NULL;
-    pd::pd_func_args_t          pd_func_args = {0};
+    pd::pd_func_args_t          pd_func_args = {};
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("invalid cfg_ctxt");
@@ -2342,8 +2347,8 @@ l2segment_delete (L2SegmentDeleteRequest& req, L2SegmentDeleteResponse* rsp)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     l2seg_t                     *l2seg = NULL;
-    cfg_op_ctxt_t               cfg_ctxt = { 0 };
-    dhl_entry_t                 dhl_entry = { 0 };
+    cfg_op_ctxt_t               cfg_ctxt = {};
+    dhl_entry_t                 dhl_entry = {};
     const L2SegmentKeyHandle    &kh = req.key_or_handle();
 
     hal_api_trace(" API Begin: L2seg delete ");
@@ -2404,9 +2409,9 @@ l2segment_process_get (l2seg_t *l2seg, L2SegmentGetResponse *rsp)
 {
     hal_handle_t                *p_hdl_id   = NULL;
     NetworkKeyHandle            *nkh        = NULL;
-    pd::pd_l2seg_get_args_t     args        = {0};
+    pd::pd_l2seg_get_args_t     args        = {};
     hal_ret_t                   ret         = HAL_RET_OK;
-    pd::pd_func_args_t          pd_func_args = {0};
+    pd::pd_func_args_t          pd_func_args = {};
 
     // fill config spec of this L2 segment
     rsp->mutable_spec()->mutable_vrf_key_handle()->set_vrf_id(vrf_lookup_by_handle(l2seg->vrf_handle)->vrf_id);
@@ -2827,8 +2832,8 @@ static hal_ret_t
 l2seg_restore_add (l2seg_t *l2seg, const L2SegmentGetResponse& l2seg_info)
 {
     hal_ret_t                       ret;
-    pd::pd_l2seg_restore_args_t     pd_l2seg_args = { 0 };
-    pd::pd_func_args_t              pd_func_args = {0};
+    pd::pd_l2seg_restore_args_t     pd_l2seg_args = {};
+    pd::pd_func_args_t              pd_func_args = {};
 
     // restore pd state
     pd::pd_l2seg_restore_args_init(&pd_l2seg_args);

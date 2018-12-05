@@ -12,6 +12,122 @@ import (
 	grpc "google.golang.org/grpc"
 )
 
+// MockisOifList_PdInfo is a mock of isOifList_PdInfo interface
+type MockisOifList_PdInfo struct {
+	ctrl     *gomock.Controller
+	recorder *MockisOifList_PdInfoMockRecorder
+}
+
+// MockisOifList_PdInfoMockRecorder is the mock recorder for MockisOifList_PdInfo
+type MockisOifList_PdInfoMockRecorder struct {
+	mock *MockisOifList_PdInfo
+}
+
+// NewMockisOifList_PdInfo creates a new mock instance
+func NewMockisOifList_PdInfo(ctrl *gomock.Controller) *MockisOifList_PdInfo {
+	mock := &MockisOifList_PdInfo{ctrl: ctrl}
+	mock.recorder = &MockisOifList_PdInfoMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockisOifList_PdInfo) EXPECT() *MockisOifList_PdInfoMockRecorder {
+	return m.recorder
+}
+
+// isOifList_PdInfo mocks base method
+func (m *MockisOifList_PdInfo) isOifList_PdInfo() {
+	m.ctrl.Call(m, "isOifList_PdInfo")
+}
+
+// isOifList_PdInfo indicates an expected call of isOifList_PdInfo
+func (mr *MockisOifList_PdInfoMockRecorder) isOifList_PdInfo() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isOifList_PdInfo", reflect.TypeOf((*MockisOifList_PdInfo)(nil).isOifList_PdInfo))
+}
+
+// MarshalTo mocks base method
+func (m *MockisOifList_PdInfo) MarshalTo(arg0 []byte) (int, error) {
+	ret := m.ctrl.Call(m, "MarshalTo", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarshalTo indicates an expected call of MarshalTo
+func (mr *MockisOifList_PdInfoMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarshalTo", reflect.TypeOf((*MockisOifList_PdInfo)(nil).MarshalTo), arg0)
+}
+
+// Size mocks base method
+func (m *MockisOifList_PdInfo) Size() int {
+	ret := m.ctrl.Call(m, "Size")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Size indicates an expected call of Size
+func (mr *MockisOifList_PdInfoMockRecorder) Size() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisOifList_PdInfo)(nil).Size))
+}
+
+// MockisMulticastEntryStatus_PdInfo is a mock of isMulticastEntryStatus_PdInfo interface
+type MockisMulticastEntryStatus_PdInfo struct {
+	ctrl     *gomock.Controller
+	recorder *MockisMulticastEntryStatus_PdInfoMockRecorder
+}
+
+// MockisMulticastEntryStatus_PdInfoMockRecorder is the mock recorder for MockisMulticastEntryStatus_PdInfo
+type MockisMulticastEntryStatus_PdInfoMockRecorder struct {
+	mock *MockisMulticastEntryStatus_PdInfo
+}
+
+// NewMockisMulticastEntryStatus_PdInfo creates a new mock instance
+func NewMockisMulticastEntryStatus_PdInfo(ctrl *gomock.Controller) *MockisMulticastEntryStatus_PdInfo {
+	mock := &MockisMulticastEntryStatus_PdInfo{ctrl: ctrl}
+	mock.recorder = &MockisMulticastEntryStatus_PdInfoMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockisMulticastEntryStatus_PdInfo) EXPECT() *MockisMulticastEntryStatus_PdInfoMockRecorder {
+	return m.recorder
+}
+
+// isMulticastEntryStatus_PdInfo mocks base method
+func (m *MockisMulticastEntryStatus_PdInfo) isMulticastEntryStatus_PdInfo() {
+	m.ctrl.Call(m, "isMulticastEntryStatus_PdInfo")
+}
+
+// isMulticastEntryStatus_PdInfo indicates an expected call of isMulticastEntryStatus_PdInfo
+func (mr *MockisMulticastEntryStatus_PdInfoMockRecorder) isMulticastEntryStatus_PdInfo() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isMulticastEntryStatus_PdInfo", reflect.TypeOf((*MockisMulticastEntryStatus_PdInfo)(nil).isMulticastEntryStatus_PdInfo))
+}
+
+// MarshalTo mocks base method
+func (m *MockisMulticastEntryStatus_PdInfo) MarshalTo(arg0 []byte) (int, error) {
+	ret := m.ctrl.Call(m, "MarshalTo", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarshalTo indicates an expected call of MarshalTo
+func (mr *MockisMulticastEntryStatus_PdInfoMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarshalTo", reflect.TypeOf((*MockisMulticastEntryStatus_PdInfo)(nil).MarshalTo), arg0)
+}
+
+// Size mocks base method
+func (m *MockisMulticastEntryStatus_PdInfo) Size() int {
+	ret := m.ctrl.Call(m, "Size")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Size indicates an expected call of Size
+func (mr *MockisMulticastEntryStatus_PdInfoMockRecorder) Size() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisMulticastEntryStatus_PdInfo)(nil).Size))
+}
+
 // MockMulticastClient is a mock of MulticastClient interface
 type MockMulticastClient struct {
 	ctrl     *gomock.Controller

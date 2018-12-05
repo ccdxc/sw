@@ -147,7 +147,7 @@ class MulticastGroupObject(base.ConfigObjectBase):
         logger.info("- MulticastGroup: %s Status = %s" %\
                        (self.GID(),
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
-        self.hal_handle = resp_spec.entry_status.multicast_handle
+        self.hal_handle = resp_spec.entry_status.handle
         return
 
     def IsEnabled(self):

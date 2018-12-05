@@ -16,6 +16,7 @@
 #include "nic/hal/plugins/cfg/nw/l2segment.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/hal/plugins/cfg/mcast/multicast.hpp"
+#include "nic/hal/plugins/cfg/mcast/oif_list_api.hpp"
 #include "nic/hal/plugins/cfg/nw/endpoint.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
 #include "nic/hal/plugins/cfg/dos/dos.hpp"
@@ -228,6 +229,16 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                       sizeof(hal::mc_entry_t), 16,
                       false, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_MC_ENTRY] != NULL), false);
+    slabs_[HAL_SLAB_OIF_LIST] =
+            slab::factory("oif_list", HAL_SLAB_OIF_LIST,
+                          sizeof(hal::oif_list_t), 16,
+                          false, true, true, mmgr);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_OIF_LIST] != NULL), false);
+    slabs_[HAL_SLAB_OIF] =
+            slab::factory("oif", HAL_SLAB_OIF,
+                          sizeof(hal::oif_db_t), 16,
+                          false, true, true, mmgr);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_OIF] != NULL), false);
 
     // initialize LIF related data structures
     slabs_[HAL_SLAB_LIF] =
@@ -872,6 +883,13 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   hal::mc_entry_compare_key_func,
                   true, mmgr);
     HAL_ASSERT_RETURN((mc_key_ht_ != NULL), false);
+    HAL_HT_CREATE("OIF List", oif_list_id_ht_,
+                  HAL_MAX_OIF_LISTS >> 1,
+                  hal::oif_list_get_key_func,
+                  hal::oif_list_compute_hash_func,
+                  hal::oif_list_compare_key_func,
+                  true, mmgr);
+    HAL_ASSERT_RETURN((oif_list_id_ht_ != NULL), false);
 
     // initialize LIF related data structures
     HAL_HT_CREATE("lif", lif_id_ht_,
@@ -1230,6 +1248,7 @@ hal_oper_db::hal_oper_db()
     ep_l2_ht_ = NULL;
     ep_l3_entry_ht_ = NULL;
     mc_key_ht_ = NULL;
+    oif_list_id_ht_ = NULL;
     lif_id_ht_ = NULL;
     if_id_ht_ = NULL;
     session_hal_handle_ht_= NULL;
@@ -1290,6 +1309,7 @@ hal_oper_db::~hal_oper_db()
     ep_l2_ht_ ? ht::destroy(ep_l2_ht_, mmgr_) : HAL_NOP;
     ep_l3_entry_ht_ ? ht::destroy(ep_l3_entry_ht_, mmgr_) : HAL_NOP;
     mc_key_ht_ ? ht::destroy(mc_key_ht_, mmgr_) : HAL_NOP;
+    oif_list_id_ht_ ? ht::destroy(oif_list_id_ht_, mmgr_) : HAL_NOP;
     lif_id_ht_ ? ht::destroy(lif_id_ht_, mmgr_) : HAL_NOP;
     if_id_ht_ ? ht::destroy(if_id_ht_, mmgr_) : HAL_NOP;
     session_hal_handle_ht_ ? ht::destroy(session_hal_handle_ht_) : HAL_NOP;
@@ -1776,6 +1796,14 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_MC_ENTRY:
         g_hal_state->mc_entry_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_OIF:
+        g_hal_state->oif_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_OIF_LIST:
+        g_hal_state->oif_list_slab()->free(elem);
         break;
 
     case HAL_SLAB_LIF:

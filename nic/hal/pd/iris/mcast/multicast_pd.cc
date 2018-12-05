@@ -185,6 +185,30 @@ end:
 }
 
 //------------------------------------------------------------------------------
+// pd mc_entry get
+//------------------------------------------------------------------------------
+hal_ret_t
+pd_mc_entry_get (pd_func_args_t *pd_func_args)
+{
+    pd_mc_entry_get_args_t *args = pd_func_args->pd_mc_entry_get;
+    pd_mc_entry_t           *mc_entry_pd = NULL;
+
+    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    HAL_ASSERT_RETURN((args->rsp != NULL), HAL_RET_INVALID_ARG);
+    HAL_ASSERT_RETURN((args->mc_entry != NULL), HAL_RET_INVALID_ARG);
+    HAL_ASSERT_RETURN((args->mc_entry->pd != NULL), HAL_RET_INVALID_ARG);
+
+    HAL_TRACE_DEBUG("Getting pd state for mc_entry {}",
+                    mc_key_to_string(&args->mc_entry->key));
+
+    mc_entry_pd = (pd_mc_entry_t *)args->mc_entry->pd;
+    args->rsp->mutable_status()->mutable_epd_info()->set_reg_mac_tbl_idx(
+            mc_entry_pd->reg_mac_tbl_idx);
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
 // pd mc_entry create
 //------------------------------------------------------------------------------
 hal_ret_t

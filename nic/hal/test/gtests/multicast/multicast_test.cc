@@ -219,7 +219,7 @@ TEST_F(multicast_test, test1)
         ret = hal::multicastentry_create(mc_spec, &mc_rsp);
         hal::hal_cfg_db_close();
         ASSERT_TRUE(ret == HAL_RET_OK);
-        handles[i] = mc_rsp.entry_status().multicast_handle();
+        handles[i] = mc_rsp.entry_status().handle();
     }
 
     // Specific Query
@@ -305,7 +305,7 @@ TEST_F(multicast_test, test2)
         ret = hal::multicastentry_create(mc_spec, &mc_rsp);
         hal::hal_cfg_db_close();
         ASSERT_TRUE(ret == HAL_RET_OK);
-        mc_rsp.entry_status().multicast_handle();
+        mc_rsp.entry_status().handle();
     }
 
     // Specific Query

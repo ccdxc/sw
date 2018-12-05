@@ -15,10 +15,12 @@
 #include "nic/include/pd.hpp"
 #include "nic/hal/src/utils/utils.hpp"
 
+using multicast::Oif;
+using multicast::OifList;
+using kh::MulticastEntryKeyHandle;
 using multicast::MulticastEntrySpec;
 using multicast::MulticastEntryStatus;
 using multicast::MulticastEntryResponse;
-using kh::MulticastEntryKeyHandle;
 using multicast::MulticastEntryRequestMsg;
 using multicast::MulticastEntryResponseMsg;
 using multicast::MulticastEntryDeleteRequest;
@@ -30,6 +32,7 @@ using multicast::MulticastEntryGetResponseMsg;
 
 namespace hal {
 
+#define HAL_MAX_OIF_LISTS            65536
 #define HAL_MAX_MC_ENTRIES            2048
 #define HAL_MAX_OIF_PER_MC_ENTRY       256
 

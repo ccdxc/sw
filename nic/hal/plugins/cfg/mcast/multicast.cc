@@ -117,7 +117,7 @@ mc_entry_lookup_key_or_handle (const MulticastEntryKeyHandle& kh)
     mc_entry_t *mc_entry = NULL;
 
     if (kh.key_or_handle_case() == MulticastEntryKeyHandle::kKey) {
-        mc_key_t mc_key = { };
+        mc_key_t mc_key = {};
         auto l2seg = l2seg_lookup_key_or_handle(kh.key().l2segment_key_handle());
         if (!l2seg) {
             return NULL;
@@ -192,9 +192,9 @@ hal_ret_t
 mc_entry_prepare_rsp (MulticastEntryResponse *rsp, hal_ret_t ret, mc_entry_t *mc_entry)
 {
     if (ret == HAL_RET_OK) {
-        rsp->mutable_entry_status()->set_multicast_handle(mc_entry ?
-                                                          mc_entry->hal_handle :
-                                                          HAL_HANDLE_INVALID);
+        rsp->mutable_entry_status()->set_handle(mc_entry ?
+                                                mc_entry->hal_handle :
+                                                HAL_HANDLE_INVALID);
     }
 
     rsp->set_api_status(hal_prepare_rsp(ret));
@@ -213,7 +213,7 @@ mc_entry_create_and_program_oifs (mc_entry_t *mc_entry)
     dllist_ctxt_t                 *lnode = NULL;
     l2seg_t                       *l2seg = NULL;
     if_t                          *pi_if = NULL;
-    oif_t                         oif = { };
+    oif_t                         oif = {};
 
     l2seg = l2seg_lookup_by_handle(mc_entry->key.l2seg_handle);
     HAL_ASSERT(l2seg != NULL);
@@ -255,7 +255,7 @@ mc_entry_deprogram_and_delete_oifs(mc_entry_t *mc_entry)
     dllist_ctxt_t                 *lnode = NULL;
     l2seg_t                       *l2seg = NULL;
     if_t                          *pi_if = NULL;
-    oif_t                         oif = { };
+    oif_t                         oif = {};
 
     l2seg = l2seg_lookup_by_handle(mc_entry->key.l2seg_handle);
     if (!l2seg) {
@@ -425,7 +425,7 @@ validate_mc_entry_create(MulticastEntrySpec& spec,
 
     // must provide valid IP if providing IP based key
     if (spec.key_or_handle().key().has_ip()) {
-        ip_addr_t ip_addr = {0};
+        ip_addr_t ip_addr = {};
         ip_addr_spec_to_ip_addr(&ip_addr, spec.key_or_handle().key().ip().group());
         if (!ip_addr_is_multicast(&ip_addr)){
             HAL_TRACE_ERR("mc_entry ip not valid in request");
@@ -436,7 +436,7 @@ validate_mc_entry_create(MulticastEntrySpec& spec,
 
     // must provide valid mac if providing mac based key
     if (spec.key_or_handle().key().has_mac()) {
-        mac_addr_t mac_addr = {0};
+        mac_addr_t mac_addr = {};
         MAC_UINT64_TO_ADDR(mac_addr, spec.key_or_handle().key().mac().group());
         if (!IS_MCAST_MAC_ADDR(mac_addr)){
             HAL_TRACE_ERR("mc_entry mac not valid in request");
@@ -465,8 +465,8 @@ mc_entry_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t                   *dhl_entry = NULL;
     mc_entry_t                    *mc_entry = NULL;
     dllist_ctxt_t                 *lnode = NULL;
-    pd::pd_mc_entry_create_args_t pd_mc_entry_args = { };
-    pd::pd_func_args_t          pd_func_args = {0};
+    pd::pd_mc_entry_create_args_t pd_mc_entry_args = {};
+    pd::pd_func_args_t            pd_func_args = {};
 
     HAL_ASSERT(cfg_ctxt);
 
@@ -559,8 +559,8 @@ mc_entry_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t                 *lnode = NULL;
     mc_entry_t                    *mc_entry = NULL;
     dhl_entry_t                   *dhl_entry = NULL;
-    pd::pd_mc_entry_delete_args_t pd_mc_entry_args = { };
-    pd::pd_func_args_t          pd_func_args = {0};
+    pd::pd_mc_entry_delete_args_t pd_mc_entry_args = {};
+    pd::pd_func_args_t          pd_func_args = {};
 
     HAL_ASSERT(cfg_ctxt);
 
@@ -609,9 +609,9 @@ hal_ret_t multicastentry_create(MulticastEntrySpec& spec,
 {
     hal_ret_t                   ret;
     mc_entry_t                  *mc_entry = NULL;
-    dhl_entry_t                 dhl_entry = { };
-    cfg_op_ctxt_t               cfg_ctxt  = { };
-    mc_entry_create_app_ctxt_t  app_ctxt  = { };
+    dhl_entry_t                 dhl_entry = {};
+    cfg_op_ctxt_t               cfg_ctxt  = {};
+    mc_entry_create_app_ctxt_t  app_ctxt  = {};
     L2SegmentKeyHandle          kh;
     l2seg_t                     *l2seg = NULL;
 
@@ -736,7 +736,7 @@ validate_mc_entry_delete(MulticastEntryDeleteRequest& req,
     if (req.key_or_handle().has_key()) {
         if (req.key_or_handle().key().has_ip()) {
             // must provide valid Multicast IP if providing IP based key
-            ip_addr_t ip_addr = {0};
+            ip_addr_t ip_addr = {};
             ip_addr_spec_to_ip_addr(&ip_addr, req.key_or_handle().key().ip().\
                                     group());
             if (!ip_addr_is_multicast(&ip_addr)){
@@ -746,7 +746,7 @@ validate_mc_entry_delete(MulticastEntryDeleteRequest& req,
             }
         } else if (req.key_or_handle().key().has_mac()) {
             // must provide valid mac if providing mac based key
-            mac_addr_t mac_addr = {0};
+            mac_addr_t mac_addr = {};
             MAC_UINT64_TO_ADDR(mac_addr, req.key_or_handle().key().mac().group());
             if (!IS_MCAST_MAC_ADDR(mac_addr)){
                 HAL_TRACE_ERR("MAC not valid in request");
@@ -779,8 +779,8 @@ mc_entry_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t                   *dhl_entry = NULL;
     mc_entry_t                    *mc_entry = NULL;
     dllist_ctxt_t                 *lnode = NULL;
-    pd::pd_mc_entry_delete_args_s pd_mc_entry_args = { };
-    pd::pd_func_args_t          pd_func_args = {0};
+    pd::pd_mc_entry_delete_args_s pd_mc_entry_args = {};
+    pd::pd_func_args_t          pd_func_args = {};
 
     HAL_ASSERT(cfg_ctxt);
 
@@ -886,12 +886,12 @@ hal_ret_t multicastentry_delete(MulticastEntryDeleteRequest& req,
 {
     hal_ret_t                   ret;
     mc_entry_t                  *mc_entry;
-    dhl_entry_t                 dhl_entry = { };
-    cfg_op_ctxt_t               cfg_ctxt  = { };
-    mc_entry_create_app_ctxt_t  app_ctxt  = { };
+    dhl_entry_t                 dhl_entry = {};
+    cfg_op_ctxt_t               cfg_ctxt  = {};
+    mc_entry_create_app_ctxt_t  app_ctxt  = {};
     L2SegmentKeyHandle          l2segkh;
     MulticastEntryKeyHandle     mcastkh;
-    mc_key_t                    mc_key = { };
+    mc_key_t                    mc_key = {};
 
     hal_api_trace(" API Begin: mc entry delete ");
 
@@ -960,7 +960,7 @@ validate_mc_entry_update(MulticastEntrySpec& req,
     if (req.key_or_handle().has_key()) {
         if (req.key_or_handle().key().has_ip()) {
             // must provide valid Multicast IP if providing IP based key
-            ip_addr_t ip_addr = {0};
+            ip_addr_t ip_addr = {};
             ip_addr_spec_to_ip_addr(&ip_addr, req.key_or_handle().key().ip().\
                                 group());
             if (!ip_addr_is_multicast(&ip_addr)){
@@ -970,7 +970,7 @@ validate_mc_entry_update(MulticastEntrySpec& req,
             }
         } else if (req.key_or_handle().key().has_mac()) {
             // must provide valid mac if providing mac based key
-            mac_addr_t mac_addr = {0};
+            mac_addr_t mac_addr = {};
             MAC_UINT64_TO_ADDR(mac_addr, req.key_or_handle().key().mac().group());
             if (!IS_MCAST_MAC_ADDR(mac_addr)){
                 HAL_TRACE_ERR("MAC not valid in request");
@@ -1003,8 +1003,8 @@ mc_entry_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t                   *dhl_entry = NULL;
     mc_entry_t                    *mc_entry, *upd_entry;
     dllist_ctxt_t                 *lnode = NULL;
-    pd::pd_mc_entry_update_args_t pd_mc_entry_args = { };
-    pd::pd_func_args_t          pd_func_args = {0};
+    pd::pd_mc_entry_update_args_t pd_mc_entry_args = {};
+    pd::pd_func_args_t          pd_func_args = {};
 
     HAL_ASSERT(cfg_ctxt);
 
@@ -1139,9 +1139,9 @@ hal_ret_t multicastentry_update(MulticastEntrySpec& req,
     hal_ret_t                   ret;
     mc_entry_t                  *mc_entry  = NULL;
     mc_entry_t                  *upd_entry = NULL;
-    dhl_entry_t                 dhl_entry  = { };
-    cfg_op_ctxt_t               cfg_ctxt   = { };
-    mc_entry_create_app_ctxt_t  app_ctxt   = { };
+    dhl_entry_t                 dhl_entry  = {};
+    cfg_op_ctxt_t               cfg_ctxt   = {};
+    mc_entry_create_app_ctxt_t  app_ctxt   = {};
     L2SegmentKeyHandle          l2segkh;
     MulticastEntryKeyHandle     mcastkh;
 
@@ -1221,10 +1221,13 @@ static void
 mc_entry_get_fill_rsp(MulticastEntryGetResponse *rsp,
                       mc_entry_t *mc_entry)
 {
+    hal_ret_t                       ret;
     uint32_t                        numoif = 0;
     l2seg_t                         *l2seg = NULL;
     dllist_ctxt_t                   *lnode = NULL;
     hal_handle_id_list_entry_t      *entry = NULL;
+    pd::pd_func_args_t              pd_func_args = {};
+    pd::pd_mc_entry_get_args_t      pd_mc_entry_get_args = {};
 
     HAL_ASSERT(mc_entry);
 
@@ -1269,8 +1272,34 @@ mc_entry_get_fill_rsp(MulticastEntryGetResponse *rsp,
         numoif ++;
     }
 
+    // Stats
     rsp->mutable_stats()->set_num_oifs(numoif);
-    rsp->mutable_status()->set_multicast_handle(mc_entry->hal_handle);
+
+    //Status
+    rsp->mutable_status()->set_handle(mc_entry->hal_handle);
+
+    // PD Status
+    pd::pd_mc_entry_get_args_init(&pd_mc_entry_get_args);
+    pd_mc_entry_get_args.mc_entry = mc_entry;
+    pd_mc_entry_get_args.rsp = rsp;
+    pd_func_args.pd_mc_entry_get = &pd_mc_entry_get_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_MC_ENTRY_GET, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to get mc_entry pd, err : {}", ret);
+        rsp->set_api_status(types::API_STATUS_ERR);
+        goto end;
+    }
+
+    // OIF Status
+    ret = oif_list_get(mc_entry->oif_list,
+            rsp->mutable_status()->mutable_oif_list());
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to get oif list, err : {}", ret);
+        rsp->set_api_status(types::API_STATUS_ERR);
+        goto end;
+    }
+
+    // Status OK
     rsp->set_api_status(types::API_STATUS_OK);
 
 end:

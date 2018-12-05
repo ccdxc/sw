@@ -19,6 +19,51 @@ service Multicast {
   rpc MulticastEntryGet (MulticastEntryGetRequestMsg) returns (MulticastEntryGetResponseMsg) {}
 }
 
+message Oif {
+  fixed64 if_handle        = 1;
+  fixed64 l2seg_handle     = 2;
+  fixed32 qid              = 3;
+  fixed32 q_purpose        = 4;
+}
+
+// OIF List oper state for enterprise pipeline
+message OifListEpd {
+  fixed32 rep_index = 1;
+}
+
+// OIF List oper state for cloud pipeline
+message OifListCpd {
+}
+
+message OifList {
+  fixed32       id                 = 1;
+  repeated Oif  oifs               = 2;
+  fixed32       attached_list_id   = 3;
+  bool          is_honor_ingress   = 4;
+  oneof         pd_info {
+    OifListEpd epd_info            = 5;  // OIF List oper state for enterprise pipeline
+    OifListCpd cpd_info            = 6;  // OIF List oper state for cloud pipeline
+  }
+}
+
+// Multicast entry oper state for enterprise pipeline
+message MulticastEntryStatusEpd {
+  fixed32 reg_mac_tbl_idx  = 1;
+}
+
+// Multicast entry oper state for cloud pipeline
+message MulticastEntryStatusCpd {
+}
+
+message MulticastEntryStatus {
+  fixed64 handle   = 1;
+  OifList oif_list = 2;
+  oneof pd_info {
+    MulticastEntryStatusEpd epd_info = 3;  // Multicast entry oper state for enterprise pipeline
+    MulticastEntryStatusCpd cpd_info = 4;  // Multicast entry oper state for cloud pipeline
+  }
+}
+
 message MulticastEntrySpec {
   kh.MulticastEntryKeyHandle     key_or_handle   = 1 [(gogoproto.moretags) = "venice:key"];
   repeated kh.InterfaceKeyHandle oif_key_handles = 2 [(gogoproto.moretags) = "venice:ref, venice:constraints={intf.InterfaceSpec.type=interface_pb2.IF_TYPE_ENIC}"]; // output interface handles
@@ -26,10 +71,6 @@ message MulticastEntrySpec {
 
 message MulticastEntryRequestMsg {
   repeated MulticastEntrySpec request = 1;          // batched request
-}
-
-message MulticastEntryStatus {
-  fixed64 multicast_handle = 1;
 }
 
 message MulticastEntryResponse {

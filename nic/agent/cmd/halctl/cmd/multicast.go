@@ -201,7 +201,7 @@ func multicastShowOneResp(resp *halproto.MulticastEntryGetResponse) {
 		grpStr = utils.MactoStr(grp)
 	}
 
-	handle := resp.GetStatus().GetMulticastHandle()
+	handle := resp.GetStatus().GetHandle()
 	l2SegStr := resp.GetSpec().GetKeyOrHandle().GetKey().GetL2SegmentKeyHandle()
 
 	oifList := resp.GetSpec().GetOifKeyHandles()

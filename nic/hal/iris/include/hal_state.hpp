@@ -121,6 +121,8 @@ public:
     slab *l2seg_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_L2SEG]); }
     slab *l2seg_uplink_oif_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_L2SEG_UPLINK_OIF_LIST]); }
     slab *mc_entry_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_MC_ENTRY]); }
+    slab *oif_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_OIF]); }
+    slab *oif_list_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_OIF_LIST]); }
     slab *lif_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_LIF]); }
     slab *if_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_IF]); }
     slab *enic_l2seg_entry_slab(void) { return TO_SLAB_PTR(slabs_[HAL_SLAB_ENIC_L2SEG_ENTRY]); }
@@ -216,6 +218,7 @@ public:
     ht *ep_l2_ht(void) const { return ep_l2_ht_; }
     ht *ep_l3_entry_ht(void) const { return ep_l3_entry_ht_; }
     ht *mc_key_ht(void) const { return mc_key_ht_; }
+    ht *oif_list_id_ht(void) const { return oif_list_id_ht_; }
     ht *lif_id_ht(void) const { return lif_id_ht_; }
     ht *if_id_ht(void) const { return if_id_ht_; }
     ht *l4lb_ht(void) const { return l4lb_ht_; }
@@ -331,6 +334,7 @@ private:
     ht    *ep_l2_ht_;
     ht    *ep_l3_entry_ht_;
     ht    *mc_key_ht_;
+    ht    *oif_list_id_ht_;
     ht    *lif_id_ht_;
     ht    *if_id_ht_;
     ht    *session_hal_handle_ht_;
@@ -480,6 +484,11 @@ public:
     // get APIs for multicast entry state
     slab *mc_entry_slab(void) const { return cfg_db_->mc_entry_slab(); }
     ht *mc_key_ht(void) const { return oper_db_->mc_key_ht(); }
+
+    // get APIs for OIF List state
+    slab *oif_slab(void) const { return cfg_db_->oif_slab(); }
+    slab *oif_list_slab(void) const { return cfg_db_->oif_list_slab(); }
+    ht *oif_list_id_ht(void) const { return oper_db_->oif_list_id_ht(); }
 
     // get APIs for LIF state
     slab *lif_slab(void) const { return cfg_db_->lif_slab(); }
