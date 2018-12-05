@@ -10,10 +10,13 @@
 #if !defined (__API_HPP__)
 #define __API_HPP__
 
+#include <vector>
+
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/include/sdk/slab.hpp"
 #include "nic/sdk/include/sdk/indexer.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"
+#include "nic/hal/apollo/include/api/oci.hpp"
 
 using sdk::lib::ht;
 using sdk::lib::ht_ctxt_t;
@@ -34,17 +37,22 @@ typedef enum api_op_e {
     API_OP_GET,
 } api_op_t;
 
+/**
+ * @brief    per API context maintained by the framework while processing
+ *           the API
+ */
 typedef struct api_ctxt_s {
-    api_op_t    op;
+    api_op_t    op;           /**< api operation */
+    void        *api_info;    /**< API parameters passed by the caller */
 } api_ctxt_t;
 
 /**
  * @brief    base class for all objects
  */
-class oci_base {
+class api_base {
 public:
-    oci_base(){};
-    ~oci_base(){};
+    api_base(){};
+    ~api_base(){};
 
 protected:
     /**
@@ -80,6 +88,25 @@ protected:
      */
     virtual sdk_ret_t abort(api_ctxt_t *api_ctxt) { return sdk::SDK_RET_OK; }
 };
+
+/**
+ * @brief   processing stage of the APIs in a given batch
+ */
+typedef enum api_batch_stage_e {
+    API_BATCH_STAGE_NONE,
+    API_BATCH_STAGE_RSC_ALLOC,    /**< s/w & h/w resource allocation stage */
+    API_BATCH_STAGE_COMMIT,       /**< commit stage */
+    API_BATCH_STAGE_ABORT,        /**< abort stage */
+} api_batch_stage_t;
+
+/**
+ * @brief    per batch context which is a list of all API contexts
+ */
+typedef struct api_batch_ctxt_s {
+    oci_epoch_t                epoch;    /**< epoch in progress, passed in oci_batch_begin() */
+    api_batch_stage_t          stage;    /**< phase of the batch processing */
+    std::vector<api_ctxt_t>    apis;     /**< list of API objects being processed */
+} api_batch_ctxt_t;
 
 }    // namespace api
 

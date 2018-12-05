@@ -9,7 +9,7 @@
 #if !defined (__VNIC_HPP__)
 #define __VNIC_HPP__
 
-#include "nic/hal/apollo/api/api.hpp"
+#include "nic/hal/apollo/framework/api.hpp"
 #include "nic/hal/apollo/include/api/oci_vnic.hpp"
 #include "nic/sdk/lib/table/directmap/directmap.hpp"
 #include "nic/sdk/lib/table/hash/hash.hpp"
@@ -28,7 +28,7 @@ namespace api {
 /**
  * @brief    vnic entry
  */
-class vnic_entry : public oci_base {
+class vnic_entry : public api_base {
 public:
     /**
      * @brief    factory method to allocate and initialize a vnic entry

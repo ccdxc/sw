@@ -108,8 +108,7 @@ vcn_entry::process_api(api_ctxt_t *api_ctxt) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-vcn_entry::process_create(api_ctxt_t *api_ctxt)
-{
+vcn_entry::process_create(api_ctxt_t *api_ctxt) {
     return sdk::SDK_RET_OK;
 }
 
@@ -120,8 +119,7 @@ vcn_entry::process_create(api_ctxt_t *api_ctxt)
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-vcn_entry::process_update(api_ctxt_t *api_ctxt)
-{
+vcn_entry::process_update(api_ctxt_t *api_ctxt) {
     return sdk::SDK_RET_OK;
 }
 
@@ -132,8 +130,7 @@ vcn_entry::process_update(api_ctxt_t *api_ctxt)
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-vcn_entry::process_delete(api_ctxt_t *api_ctxt)
-{
+vcn_entry::process_delete(api_ctxt_t *api_ctxt) {
     return sdk::SDK_RET_OK;
 }
 
@@ -144,8 +141,7 @@ vcn_entry::process_delete(api_ctxt_t *api_ctxt)
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-vcn_entry::process_get(api_ctxt_t *api_ctxt)
-{
+vcn_entry::process_get(api_ctxt_t *api_ctxt) {
     return sdk::SDK_RET_OK;
 }
 

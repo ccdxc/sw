@@ -9,7 +9,7 @@
 #if !defined (__VCN_HPP__)
 #define __VCN_HPP__
 
-#include "nic/hal/apollo/api/api.hpp"
+#include "nic/hal/apollo/framework/api.hpp"
 #include "nic/hal/apollo/include/api/oci_vcn.hpp"
 
 namespace api {
@@ -23,7 +23,7 @@ namespace api {
 /**
  * @brief    vcn entry
  */
-class vcn_entry : public oci_base {
+class vcn_entry : public api_base {
 public:
     /**
      * @brief    factory method to allocate and initialize a vcn entry

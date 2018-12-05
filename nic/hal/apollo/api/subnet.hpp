@@ -10,7 +10,7 @@
 #if !defined (__SUBNET_HPP__)
 #define __SUBNET_HPP__
 
-#include "nic/hal/apollo/api/api.hpp"
+#include "nic/hal/apollo/framework/api.hpp"
 #include "nic/hal/apollo/include/api/oci_subnet.hpp"
 
 namespace api {
@@ -24,7 +24,7 @@ namespace api {
 /**
  * @brief    subnet entry
  */
-class subnet_entry : public oci_base {
+class subnet_entry : public api_base {
  public:
     /**
      * @brief    factory method to allocate and initialize a subnet entry
