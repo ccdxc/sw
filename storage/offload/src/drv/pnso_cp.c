@@ -107,14 +107,14 @@ compress_setup(struct service_info *svc_info,
 		err = ENOMEM;
 		OSAL_LOG_ERROR("cannot obtain cp status desc from pool! err: %d",
 				err);
-		goto out;
+		goto out_cp_desc;
 	}
 
 	err = cpdc_update_service_info_sgls(svc_info);
 	if (err) {
 		OSAL_LOG_ERROR("cannot obtain cp src/dst sgl from pool! err: %d",
 				err);
-		goto out;
+		goto out_status_desc;
 	}
 
 	fill_cp_desc(cp_desc, svc_info->si_src_sgl.sgl,
@@ -128,7 +128,7 @@ compress_setup(struct service_info *svc_info,
 		if (err) {
 			OSAL_LOG_ERROR("failed to setup cp/pad params! err: %d",
 					err);
-                        goto out;
+			goto out_status_desc;
 		}
 	}
 #endif
@@ -140,7 +140,7 @@ compress_setup(struct service_info *svc_info,
 	err = cpdc_setup_seq_desc(svc_info, cp_desc, 0);
 	if (err) {
 		OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d", err);
-		goto out;
+		goto out_status_desc;
 	}
 
 	CPDC_PPRINT_DESC(cp_desc);
@@ -152,6 +152,10 @@ compress_setup(struct service_info *svc_info,
 	OSAL_LOG_DEBUG("exit! service initialized!");
 	return err;
 
+out_status_desc:
+	cpdc_put_status_desc(pcr, false, status_desc);
+out_cp_desc:
+	cpdc_put_desc(svc_info, false, cp_desc);
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
@@ -434,7 +438,6 @@ compress_teardown(struct service_info *svc_info)
 	cpdc_put_desc(svc_info, false, cp_desc);
 
 	seq_cleanup_cpdc_chain(svc_info);
-	seq_cleanup_desc(svc_info);
 
 	OSAL_LOG_DEBUG("exit!");
 }

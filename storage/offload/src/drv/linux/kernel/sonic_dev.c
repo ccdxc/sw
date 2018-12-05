@@ -345,7 +345,6 @@ int sonic_q_init(struct lif *lif, struct sonic_dev *idev, struct queue *q,
 	q->desc_size = desc_size;
 	q->head = q->tail = q->info;
 	q->pid = pid;
-	osal_atomic_init(&q->descs_inuse, 0);
 
 	OSAL_LOG_INFO("sonic_q_init q: " PRIx64 " q->head " PRIx64 " index %d",
 			(u64) q, (u64) q->head, index);
@@ -428,29 +427,6 @@ void sonic_q_service(struct queue *q, struct cq_info *cq_info,
 {
 	struct desc_info *desc_info;
 
-	if (q->qtype == STORAGE_SEQ_QTYPE_SQ) {
-		switch (q->qgroup) {
-
-		case STORAGE_SEQ_QGROUP_CPDC:
-		case STORAGE_SEQ_QGROUP_CRYPTO:
-			/* stop_index actually contains a count here */
-			if (unlikely(sonic_accounting_atomic_give_safe(&q->descs_inuse,
-								       stop_index)))
-				OSAL_LOG_DEBUG("seq queue %u potential underflow",
-					       q->qid);
-			break;
-
-		default:
-			/*
-			 * Not necessary to account for statusQ descs as the
-			 * queues themselves are managed with "get/put" and
-			 * each queue only posts 1 descriptor at a time.
-			 */
-			break;
-		}
-		return;
-	}
-
 	do {
 		desc_info = q->tail;
 		if (desc_info->cb)
@@ -462,32 +438,8 @@ void sonic_q_service(struct queue *q, struct cq_info *cq_info,
 
 void *sonic_q_consume_entry(struct queue *q, uint32_t *index)
 {
-	void *ptr;
+	void *ptr = q->head->desc;
 
-	if (q->qtype == STORAGE_SEQ_QTYPE_SQ) {
-		switch (q->qgroup) {
-
-		case STORAGE_SEQ_QGROUP_CPDC:
-		case STORAGE_SEQ_QGROUP_CRYPTO:
-			if (unlikely(sonic_accounting_atomic_take(&q->descs_inuse, 1,
-								  q->num_descs))) {
-				OSAL_LOG_DEBUG("seq queue %u potential overflow",
-					       q->qid);
-				return NULL;
-			}
-			break;
-
-		default:
-			/*
-			 * Not necessary to account for statusQ descs as the
-			 * queues themselves are managed with "get/put" and
-			 * each queue only posts 1 descriptor at a time.
-			 */
-			break;
-		}
-	}
-
-	ptr = q->head->desc;
 	q->head = q->head->next;
 	*index = q->head->index;
 	return ptr;

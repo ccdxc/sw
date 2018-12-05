@@ -218,12 +218,6 @@ static inline void sonic_struct_size_checks(void)
 	BUILD_BUG_ON(sizeof(union adminq_cpl) != 16);
 }
 
-struct sonic_accel_ring {
-	accel_ring_t accel_ring;
-	const char *name;
-	osal_atomic_int_t descs_inuse;
-};
-
 struct sonic_dev {
 	struct dev_cmd_regs __iomem *dev_cmd;
 	struct dev_cmd_db __iomem *dev_cmd_db;
@@ -240,7 +234,6 @@ struct sonic_dev {
 #ifdef HAPS
 	union identity __iomem *ident;
 #endif
-	struct sonic_accel_ring ring_tbl[ACCEL_RING_ID_MAX];
 };
 
 struct cq_info {
@@ -288,12 +281,6 @@ struct queue {
 	unsigned int qpos;
 	unsigned int qtype;
 	storage_seq_qgroup_t qgroup;
-
-	/*
-	 * Sequencer queue completions are unordered so desc usages
-	 * are tracked differently.
-	 */
-	osal_atomic_int_t descs_inuse;
 };
 
 #if 0

@@ -21,12 +21,6 @@ seq_setup_desc(struct service_info *svc_info, const void *src_desc,
 }
 
 void
-seq_cleanup_desc(struct service_info *svc_info)
-{
-	return g_sequencer_ops->cleanup_desc(svc_info);
-}
-
-void
 seq_ring_db(const struct service_info *svc_info)
 {
 	g_sequencer_ops->ring_db(svc_info);
@@ -69,7 +63,7 @@ seq_setup_cpdc_chain_desc(struct service_info *svc_info,
 }
 
 void
-seq_cleanup_cpdc_chain(struct service_info *svc_info)
+seq_cleanup_cpdc_chain(const struct service_info *svc_info)
 {
 	g_sequencer_ops->cleanup_cpdc_chain(svc_info);
 }
@@ -82,7 +76,7 @@ seq_setup_crypto_chain(struct service_info *svc_info,
 }
 
 void
-seq_cleanup_crypto_chain(struct service_info *svc_info)
+seq_cleanup_crypto_chain(const struct service_info *svc_info)
 {
 	g_sequencer_ops->cleanup_crypto_chain(svc_info);
 }

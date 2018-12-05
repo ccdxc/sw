@@ -573,11 +573,19 @@ static int get_seq_q_desc_count(uint32_t status_q_count,
 	OSAL_LOG_DEBUG("get_seq_q_desc_count: hw ring %u: size=%u, desc_size=%u.\n",
 		ring_id, ring->ring_size, ring->ring_desc_size);
 
+	*desc_count = rounddown_pow_of_two(ring->ring_size /
+			res->lif->sonic->num_per_core_resources);
+#if 0
 	/*
-	 * Reserve a fixed number of descriptors per sequencer queue and rely
-	 * on separate queue accounting to prevent overflow.
+	 * Temporarily commented out for alpha-1, will soon be handled with ring accounting.
 	 */
-	*desc_count = min(ring->ring_size, (uint32_t)MAX_PER_QUEUE_SQ_ENTRIES);
+	if (*desc_count > status_q_count)
+		*desc_count = rounddown_pow_of_two(status_q_count);
+#endif
+	if (*desc_count > MAX_PER_QUEUE_SQ_ENTRIES)
+		*desc_count = MAX_PER_QUEUE_SQ_ENTRIES;
+
+	*desc_count = rounddown_pow_of_two(*desc_count);
 	if (*desc_count == 0) {
 		OSAL_LOG_ERROR("No descs available for hw ring %d, ring_size=%u.\n",
 			ring_id, ring->ring_size);
@@ -1169,8 +1177,7 @@ struct lif *sonic_get_lif(void)
 
 struct sonic_dev *sonic_get_idev(void)
 {
-	return sonic_glif && sonic_glif->sonic ?
-	       &sonic_glif->sonic->idev : NULL;
+	return &sonic_glif->sonic->idev;
 }
 
 static int sonic_lif_seq_q_init(struct queue *q)

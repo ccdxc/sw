@@ -4,7 +4,7 @@
  *
  */
 
-#include <linux/atomic.h>
+#include <asm/atomic.h>
 #include "osal_atomic.h"
 
 void osal_atomic_set(osal_atomic_int_t* addr, int val) 
@@ -36,12 +36,6 @@ int osal_atomic_fetch_sub(osal_atomic_int_t* addr, int val)
 	return atomic_sub_return(val, addr) + val;
 }
 
-int osal_atomic_fetch_sub_post(osal_atomic_int_t* addr, int val) 
-{
-	// return the value post subtraction
-	return atomic_sub_return(val, addr);
-}
-
 int osal_atomic_fetch_and(osal_atomic_int_t* addr, int val) 
 {
 	return atomic_fetch_and(val, addr);
@@ -60,36 +54,6 @@ int osal_atomic_fetch_xor(osal_atomic_int_t* addr, int val)
 int osal_atomic_exchange(osal_atomic_int_t *addr, int new_val)
 {
 	return atomic_xchg(addr, new_val);
-}
-
-int osal_atomic_add_unless(osal_atomic_int_t* addr, int a, int u)
-{
-	return atomic_add_unless(addr, a, u);
-}
-
-int osal_atomic_dec_if_positive(osal_atomic_int_t* addr)
-{
-#ifdef atomic_dec_if_positive
-	return atomic_dec_if_positive(addr);
-#else
-	/*
-	 * atomic_dec_if_positive() is missing in some server hosts'
-	 * build environment. Code fragment below is temporarily taken
-	 * from linux/include/linux/atomic.h to prevent compilation issues.
-	 */
-	int c, old, dec;
-	c = atomic_read(addr);
-	for (;;) {
-		dec = c - 1;
-		if (unlikely(dec < 0))
-			break;
-		old = atomic_cmpxchg(addr, c, dec);
-		if (likely(old == c))
-			break;
-		c = old;
-	}
-	return dec;
-#endif
 }
 
 void osal_atomic_lock(osal_atomic_int_t *addr)

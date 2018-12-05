@@ -80,7 +80,7 @@ chksum_setup(struct service_info *svc_info,
 		err = ENOMEM;
 		OSAL_LOG_ERROR("cannot obtain chksum sgl from pool! err: %d",
 					err);
-		goto out;
+		goto out_chksum_desc;
 	}
 
 	status_desc = cpdc_get_status_desc(pcr, per_block);
@@ -88,7 +88,7 @@ chksum_setup(struct service_info *svc_info,
 		err = ENOMEM;
 		OSAL_LOG_ERROR("cannot obtain chksum status desc from pool! err: %d",
 				err);
-		goto out;
+		goto out_sgl_desc;
 	}
 
 	if (per_block) {
@@ -104,7 +104,7 @@ chksum_setup(struct service_info *svc_info,
 		if (err) {
 			OSAL_LOG_ERROR("cannot obtain chksum src sgl from pool! err: %d",
 					err);
-			goto out;
+			goto out_status_desc;
 		}
 
 		fill_chksum_desc(pnso_chksum_desc->algo_type,
@@ -113,8 +113,6 @@ chksum_setup(struct service_info *svc_info,
 				chksum_desc, status_desc);
 		num_tags = 1;
 	}
-
-	chn_service_hw_ring_take_set(svc_info, num_tags);
 
 	svc_info->si_type = PNSO_SVC_TYPE_CHKSUM;
 	svc_info->si_desc_flags = flags;
@@ -126,7 +124,7 @@ chksum_setup(struct service_info *svc_info,
 	err = cpdc_setup_seq_desc(svc_info, chksum_desc, num_tags);
 	if (err) {
 		OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d", err);
-		goto out;
+		goto out_status_desc;
 	}
 	PAS_INC_NUM_CHKSUM_REQUESTS(pcr);
 
@@ -134,6 +132,12 @@ chksum_setup(struct service_info *svc_info,
 	OSAL_LOG_DEBUG("exit! service initialized!");
 	return err;
 
+out_status_desc:
+	cpdc_put_status_desc(pcr, per_block, status_desc);
+out_sgl_desc:
+	cpdc_put_sgl(pcr, per_block, sgl);
+out_chksum_desc:
+	cpdc_put_desc(svc_info, per_block, chksum_desc);
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
@@ -496,7 +500,6 @@ chksum_teardown(struct service_info *svc_info)
 
 	chksum_desc = (struct cpdc_desc *) svc_info->si_desc;
 	cpdc_put_desc(svc_info, per_block, chksum_desc);
-	seq_cleanup_desc(svc_info);
 
 	OSAL_LOG_DEBUG("exit!");
 }

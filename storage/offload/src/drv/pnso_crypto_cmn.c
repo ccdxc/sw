@@ -454,6 +454,7 @@ pnso_error_t
 crypto_setup_seq_desc(struct service_info *svc_info, struct crypto_desc *desc)
 {
 	pnso_error_t err = PNSO_OK;
+	uint8_t	flags;
 
 	if (putil_is_service_in_batch(svc_info->si_flags)) {
 		err = crypto_setup_batch_desc(svc_info, desc);
@@ -463,13 +464,15 @@ crypto_setup_seq_desc(struct service_info *svc_info, struct crypto_desc *desc)
 		goto out;
 	}
 
-	if (chn_service_is_starter(svc_info)) {
+	flags = svc_info->si_flags;
+	if ((flags & CHAIN_SFLAG_LONE_SERVICE) ||
+			(flags & CHAIN_SFLAG_FIRST_SERVICE)) {
 		svc_info->si_seq_info.sqi_desc = seq_setup_desc(svc_info,
 				desc, sizeof(struct crypto_desc));
 		if (!svc_info->si_seq_info.sqi_desc) {
 			err = EINVAL;
-			OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d",
-						err);
+			OSAL_LOG_ERROR("failed to setup sequencer desc! flags: %d err: %d",
+						flags, err);
 			goto out;
 		}
 	}

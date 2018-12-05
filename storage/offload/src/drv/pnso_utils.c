@@ -13,21 +13,27 @@
 #include "pnso_chain.h"
 
 pnso_error_t
-ring_spec_info_fill(struct sonic_accel_ring *ring,
+ring_spec_info_fill(uint32_t ring_id,
 		    struct ring_spec *spec,
 		    void *desc,
 		    uint32_t num_descs)
 {
-	spec->rs_ring_addr = ring->accel_ring.ring_base_pa;
-	spec->rs_pndx_addr = ring->accel_ring.ring_pndx_pa;
-	spec->rs_pndx_shadow_addr = ring->accel_ring.ring_shadow_pndx_pa;
-	spec->rs_desc_size = (uint8_t) ilog2(ring->accel_ring.ring_desc_size);
-	spec->rs_pndx_size = (uint8_t) ilog2(ring->accel_ring.ring_pndx_size);
-	spec->rs_ring_size = (uint8_t) ilog2(ring->accel_ring.ring_size);
-	spec->rs_desc_addr = sonic_virt_to_phy(desc);
-	spec->rs_num_descs = num_descs;
+	struct accel_ring *ring;
 
-	return PNSO_OK;
+	ring = sonic_get_accel_ring(ring_id);
+	if (ring) {
+		spec->rs_ring_addr = ring->ring_base_pa;
+		spec->rs_pndx_addr = ring->ring_pndx_pa;
+		spec->rs_pndx_shadow_addr = ring->ring_shadow_pndx_pa;
+		spec->rs_desc_size = (uint8_t) ilog2(ring->ring_desc_size);
+		spec->rs_pndx_size = (uint8_t) ilog2(ring->ring_pndx_size);
+		spec->rs_ring_size = (uint8_t) ilog2(ring->ring_size);
+		spec->rs_desc_addr = sonic_virt_to_phy(desc);
+		spec->rs_num_descs = num_descs;
+		return PNSO_OK;
+	}
+
+	return EINVAL;
 }
 
 pnso_error_t
