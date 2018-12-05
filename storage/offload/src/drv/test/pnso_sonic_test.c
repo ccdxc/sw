@@ -58,6 +58,8 @@ static uint64_t iv_buf_pa;
 #define PNSO_TEST_SVC_COUNT 3
 #define PNSO_TEST_BUF_COUNT (PNSO_TEST_BATCH_DEPTH * PNSO_TEST_SVC_COUNT)
 
+#define POLL_LOOP_TIMEOUT (500 * OSAL_NSEC_PER_USEC)
+
 /* Structs to avoid extra allocs */
 struct pnso_multi_buflist {
 	struct pnso_buffer_list *buflist;
@@ -252,13 +254,14 @@ init_svc_desc(struct pnso_service *svc, uint16_t svc_type)
 static pnso_error_t
 submit_requests(struct thread_state *tstate)
 {
-	int err;
+	int err = PNSO_OK;
 	size_t batch_id;
 	struct req_state *rstate = NULL;
 	struct pnso_service_request *svc_req = NULL;
 	struct pnso_service_result *svc_res = NULL;
 	pnso_poll_fn_t poll_fn;
 	void *poll_ctx;
+	uint64_t start_ts;
 
 	for (batch_id = 0; batch_id < PNSO_TEST_BATCH_DEPTH; batch_id++) {
 		rstate = &tstate->reqs[batch_id];
@@ -269,22 +272,26 @@ submit_requests(struct thread_state *tstate)
 		poll_ctx = NULL;
 		err = pnso_submit_request(svc_req, svc_res, comp_cb, rstate,
 					 &poll_fn, &poll_ctx);
-		if (err != 0) {
+		if (err != PNSO_OK) {
 			OSAL_LOG_ERROR("pnso_submit_request(svc %u) failed with %d",
 				 svc_req->svc[0].svc_type, err);
 			return err;
 		}
-		if (poll_fn) {
+		start_ts = osal_get_clock_nsec();
+		while ((osal_get_clock_nsec() - start_ts) <= POLL_LOOP_TIMEOUT) {
 			err = (*poll_fn)(poll_ctx);
-			if (err != 0) {
-				OSAL_LOG_ERROR("poll_fn(svc %u) failed with %d",
-                                         svc_req->svc[0].svc_type, err);
-				return err;
-			}
+			if (err == PNSO_OK)
+				break;
+		}
+
+		if (err != PNSO_OK) {
+			OSAL_LOG_ERROR("poll_fn(svc %u) failed with %d",
+				       svc_req->svc[0].svc_type, err);
+			return err;
 		}
 	}
 
-	return 0;
+	return err;
 }
 
 static int
