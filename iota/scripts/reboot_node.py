@@ -91,6 +91,13 @@ class HostManagement:
         self.hdl.expect_exact(ROOT_EXP_PROMPT)
         self.hdl.sendline("uptime")
         self.hdl.expect_exact(ROOT_EXP_PROMPT)
+        self.hdl.sendline("rm -rf /pensando")
+        self.hdl.expect_exact(ROOT_EXP_PROMPT)
+        self.hdl.sendline("mkdir /pensando")
+        self.hdl.expect_exact(ROOT_EXP_PROMPT)
+        self.hdl.sendline("chown vm:vm /pensando")
+        self.hdl.expect_exact(ROOT_EXP_PROMPT)
+
         self.hdl.sendline("reboot && sleep 30")
         match = self.hdl.expect_exact([ROOT_EXP_PROMPT, pexpect.TIMEOUT, pexpect.EOF], timeout=10)
         self.hdl.close()
