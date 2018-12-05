@@ -11,3 +11,6 @@ testcases:
     
     -   name    : PolicyLocalToLocal
         testcase: testcases.security.policy_rules_tcp
+
+    -   name    : PolicyLocalToRemote
+        testcase: testcases.security.policy_rules_auto

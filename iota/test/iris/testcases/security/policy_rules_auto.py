@@ -15,19 +15,17 @@ def Setup(tc):
     return api.types.status.SUCCESS
 
 def Trigger(tc):
-
     api.Logger.info("BARUN TRIGGER PROTO = {} PAIRS {}".format(tc.iterators.proto, tc.workload_pairs))
     policies = utils.GetTargetJsons(tc.iterators.proto)
     sg_json_obj = None
 
     for policy_json in policies:
         sg_json_obj = utils.ReadJson(policy_json)
-        verif_json = utils.GetVerifJsonFromPolicyJson(policy_json)
         agent_api.ConfigureSecurityGroupPolicies(sg_json_obj.sgpolicies, oper = agent_api.CfgOper.ADD)
         for pair in tc.workload_pairs:
             w1 = pair[0]
             w2 = pair[1]
-            result = utils.RunAll(w1, w2, verif_json)
+            result = utils.RunAll(w1, w2)
             if result != api.types.status.SUCCESS:
                 return api.types.status.FAILURE
         agent_api.ConfigureSecurityGroupPolicies(sg_json_obj.sgpolicies, oper = agent_api.CfgOper.DELETE)
