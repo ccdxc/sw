@@ -14,6 +14,9 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
+// ErrNetworkNotFound is returned when network is not found
+var ErrNetworkNotFound = errors.New("network not found")
+
 // CreateNetwork creates a network
 func (na *Nagent) CreateNetwork(nt *netproto.Network) error {
 	err := na.validateMeta(nt.Kind, nt.ObjectMeta)
@@ -165,7 +168,7 @@ func (na *Nagent) DeleteNetwork(tn, namespace, name string) error {
 	nw, err := na.FindNetwork(nt.ObjectMeta)
 	if err != nil {
 		log.Errorf("Network %+v not found", nt.ObjectMeta)
-		return errors.New("network not found")
+		return ErrNetworkNotFound
 	}
 
 	// get all the uplinks

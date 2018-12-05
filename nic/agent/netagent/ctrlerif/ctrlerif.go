@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/globals"
@@ -21,7 +22,7 @@ import (
 	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
-const netEvChanLength = 2000
+const evChanLength = 2000
 const maxOpretry = 10
 
 // NpmClient is the network policy mgr client
@@ -75,12 +76,21 @@ func NewNpmClient(agent types.CtrlerIntf, srvURL string, resolverClient resolver
 		return nil, err
 	}
 
-	// start watching objects
-	go client.runNetworkWatcher(client.watchCtx)
-	go client.runEndpointWatcher(client.watchCtx)
-	go client.runSecurityGroupWatcher(client.watchCtx)
-	go client.runSecurityPolicyWatcher(client.watchCtx)
+	netCh := make(chan netproto.NetworkEvent, evChanLength)
+	epCh := make(chan netproto.EndpointEvent, evChanLength)
+	sgCh := make(chan netproto.SecurityGroupEvent, evChanLength)
+	sgPolicyCh := make(chan netproto.SGPolicyEvent, evChanLength)
 
+	// start watching objects
+	go client.runNetworkWatcher(client.watchCtx, netCh)
+	go client.runEndpointWatcher(client.watchCtx, epCh)
+	go client.runSecurityGroupWatcher(client.watchCtx, sgCh)
+	go client.runSecurityPolicyWatcher(client.watchCtx, sgPolicyCh)
+
+	go client.runNetworkWorker(client.watchCtx, netCh)
+	go client.runEndpointWorker(client.watchCtx, epCh)
+	go client.runSecurityGroupWorker(client.watchCtx, sgCh)
+	go client.runSecurityPolicyWorker(client.watchCtx, sgPolicyCh)
 	return &client, nil
 }
 
@@ -112,6 +122,10 @@ func (client *NpmClient) processNetworkEvent(evt netproto.NetworkEvent) {
 			// delete the network
 			client.debugStats.AddFloat("net_delete", 1.0)
 			err = client.agent.DeleteNetwork(evt.Network.Tenant, evt.Network.Namespace, evt.Network.Name)
+			if err == state.ErrNetworkNotFound { // give idempotency to caller
+				log.Debugf("network {%+v} not found", evt)
+				err = nil
+			}
 			if err != nil {
 				log.Errorf("Error deleting the network {%+v}. Err: %v", evt, err)
 			}
@@ -159,6 +173,10 @@ func (client *NpmClient) processEndpointEvent(epevt netproto.EndpointEvent) {
 			if !ok {
 				// delete the endpoint
 				err = client.agent.DeleteEndpoint(epevt.Endpoint.Tenant, epevt.Endpoint.Namespace, epevt.Endpoint.Name)
+				if err == state.ErrEndpointNotFound { // give idempotency to caller
+					log.Debugf("endpoint {%+v} not found", epevt)
+					err = nil
+				}
 				if err != nil {
 					log.Errorf("Error deleting the endpoint {%+v}. Err: %v", epevt, err)
 				}
@@ -195,6 +213,10 @@ func (client *NpmClient) processSecurityGroupEvent(evt netproto.SecurityGroupEve
 		case api.EventType_DeleteEvent:
 			// delete the sg
 			err = client.agent.DeleteSecurityGroup(evt.SecurityGroup.Tenant, evt.SecurityGroup.Namespace, evt.SecurityGroup.Name)
+			if err == state.ErrSecurityGroupNotFound { // give idempotency to caller
+				log.Debugf("security group {%+v} not found", evt.SecurityGroup.ObjectMeta)
+				err = nil
+			}
 			if err != nil {
 				log.Errorf("Error deleting the sg {%+v}. Err: %v", evt.SecurityGroup.ObjectMeta, err)
 			}
@@ -232,6 +254,10 @@ func (client *NpmClient) processSecurityPolicyEvent(evt netproto.SGPolicyEvent) 
 		case api.EventType_DeleteEvent:
 			// delete the sg
 			err = client.agent.DeleteSGPolicy(evt.SGPolicy.Tenant, evt.SGPolicy.Namespace, evt.SGPolicy.Name)
+			if err == state.ErrSGPolicyNotFound { // give idempotency to caller
+				log.Debugf("sg policy {%+v} not found", evt.SGPolicy.ObjectMeta)
+				err = nil
+			}
 			if err != nil {
 				log.Errorf("Error deleting the sg policy {%+v}. Err: %v", evt.SGPolicy.ObjectMeta, err)
 			}
@@ -252,8 +278,19 @@ func (client *NpmClient) processSecurityPolicyEvent(evt netproto.SGPolicyEvent) 
 	}
 }
 
+func (client *NpmClient) runNetworkWorker(ctx context.Context, ch <-chan netproto.NetworkEvent) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case evt := <-ch:
+			client.processNetworkEvent(evt)
+		}
+	}
+}
+
 // runNetworkWatcher runs network watcher loop
-func (client *NpmClient) runNetworkWatcher(ctx context.Context) {
+func (client *NpmClient) runNetworkWatcher(ctx context.Context, ch chan<- netproto.NetworkEvent) {
 	// setup wait group
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
@@ -314,7 +351,7 @@ func (client *NpmClient) runNetworkWatcher(ctx context.Context) {
 
 			// process the event
 			for _, evt := range evtList.NetworkEvents {
-				go client.processNetworkEvent(*evt)
+				ch <- *evt
 			}
 		}
 
@@ -322,8 +359,19 @@ func (client *NpmClient) runNetworkWatcher(ctx context.Context) {
 	}
 }
 
+func (client *NpmClient) runEndpointWorker(ctx context.Context, ch <-chan netproto.EndpointEvent) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case evt := <-ch:
+			client.processEndpointEvent(evt)
+		}
+	}
+}
+
 // runEndpointWatcher runs endpoint watcher loop
-func (client *NpmClient) runEndpointWatcher(ctx context.Context) {
+func (client *NpmClient) runEndpointWatcher(ctx context.Context, ch chan<- netproto.EndpointEvent) {
 	// setup wait group
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
@@ -375,14 +423,25 @@ func (client *NpmClient) runEndpointWatcher(ctx context.Context) {
 			log.Infof("Ctrlerif: agent %s got Endpoint watch event: {%+v}", client.getAgentName(), evt)
 
 			// process the endpoint event
-			go client.processEndpointEvent(*evt)
+			ch <- *evt
 		}
 		rpcClient.Close()
 	}
 }
 
+func (client *NpmClient) runSecurityGroupWorker(ctx context.Context, ch <-chan netproto.SecurityGroupEvent) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case evt := <-ch:
+			client.processSecurityGroupEvent(evt)
+		}
+	}
+}
+
 // runSecurityGroupWatcher runs sg watcher loop
-func (client *NpmClient) runSecurityGroupWatcher(ctx context.Context) {
+func (client *NpmClient) runSecurityGroupWatcher(ctx context.Context, ch chan<- netproto.SecurityGroupEvent) {
 	// setup wait group
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
@@ -434,15 +493,24 @@ func (client *NpmClient) runSecurityGroupWatcher(ctx context.Context) {
 			}
 
 			log.Infof("Ctrlerif: agent %s got Security group watch event: Type: {%+v} sg:{%+v}", client.getAgentName(), evt.EventType, evt.SecurityGroup.ObjectMeta)
-
-			go client.processSecurityGroupEvent(*evt)
+			ch <- *evt
 		}
 		rpcClient.Close()
 	}
 }
+func (client *NpmClient) runSecurityPolicyWorker(ctx context.Context, ch <-chan netproto.SGPolicyEvent) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case evt := <-ch:
+			client.processSecurityPolicyEvent(evt)
+		}
+	}
+}
 
 // runSecurityPolicyWatcher runs sg policy watcher loop
-func (client *NpmClient) runSecurityPolicyWatcher(ctx context.Context) {
+func (client *NpmClient) runSecurityPolicyWatcher(ctx context.Context, ch chan<- netproto.SGPolicyEvent) {
 	// setup wait group
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
@@ -495,7 +563,7 @@ func (client *NpmClient) runSecurityPolicyWatcher(ctx context.Context) {
 
 			log.Infof("Ctrlerif: agent %s got Security policy watch event: Type: {%+v} sg:{%+v}", client.getAgentName(), evt.EventType, evt.SGPolicy.ObjectMeta)
 
-			go client.processSecurityPolicyEvent(*evt)
+			ch <- *evt
 		}
 		rpcClient.Close()
 	}

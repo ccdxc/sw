@@ -15,6 +15,9 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
+// ErrSGPolicyNotFound is returned when sgpolicy is not found
+var ErrSGPolicyNotFound = errors.New("sgpolicy not found")
+
 // CreateSGPolicy creates a security group policy
 func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
 	var securityGroups []*netproto.SecurityGroup
@@ -199,7 +202,7 @@ func (na *Nagent) DeleteSGPolicy(tn, namespace, name string) error {
 	existingSGPolicy, err := na.FindSGPolicy(sgp.ObjectMeta)
 	if err != nil {
 		log.Errorf("SGPolicy %+v not found", sgp.ObjectMeta)
-		return errors.New("security group policy not found")
+		return ErrSGPolicyNotFound
 	}
 
 	// check if the current sg policy has any objects referring to it

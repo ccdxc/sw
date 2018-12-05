@@ -13,6 +13,9 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
+// ErrSecurityGroupNotFound is returned when security group is not found
+var ErrSecurityGroupNotFound = errors.New("Security group not found")
+
 // CreateSecurityGroup creates a security group. ToDo Handle creates in datapath
 func (na *Nagent) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
 	err := na.validateMeta(sg.Kind, sg.ObjectMeta)
@@ -109,7 +112,7 @@ func (na *Nagent) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
 	esg, err := na.FindSecurityGroup(sg.ObjectMeta)
 	if err != nil {
 		log.Errorf("Security group %+v not found", sg.ObjectMeta)
-		return errors.New("Security group not found")
+		return ErrSecurityGroupNotFound
 	}
 
 	// carry over sg id
@@ -156,7 +159,7 @@ func (na *Nagent) DeleteSecurityGroup(tn, namespace, name string) error {
 	existingSecurityGrp, err := na.FindSecurityGroup(sg.ObjectMeta)
 	if err != nil {
 		log.Errorf("Security group %+v not found", sg.ObjectMeta)
-		return errors.New("Security group not found")
+		return ErrSecurityGroupNotFound
 	}
 
 	// check if the current security groups has any objects referring to it
