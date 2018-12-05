@@ -45,6 +45,7 @@ dma_cmd_write_rx2tx_extra_shared:
     add         r5, TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, k.common_phv_qstate_addr
     CAPRI_DMA_CMD_PHV2MEM_SETUP(rx2tx_extra_dma_dma_cmd, r5, rx2tx_extra_rcv_nxt, rx2tx_extra__padding)
 
+#ifndef HW
     smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_PKT_TO_SERQ, TCP_DDOL_PKT_TO_SERQ
     smeqb       c2, k.common_phv_debug_dol, TCP_DDOL_DONT_QUEUE_TO_SERQ, TCP_DDOL_DONT_QUEUE_TO_SERQ
     bcf         [!c1 & !c2], dma_cmd_write_rx2tx_extra_shared_end
@@ -55,16 +56,10 @@ dma_cmd_write_rx2tx_extra_shared:
      */
     smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_DEL_ACK_TIMER, TCP_DDOL_DEL_ACK_TIMER
     smeqb       c2, k.common_phv_debug_dol, TCP_DDOL_DONT_SEND_ACK, TCP_DDOL_DONT_SEND_ACK
-#ifdef L7_PROXY_SUPPORT
-    seq         c4, k.common_phv_l7_proxy_en, 1
-
-    // dont start timer, dont send ack and no proxy
-    setcf       c3, [!c1 & c2 & !c4]
-#else
-    // dont start timer, dont send ack and no proxy
+    // dont start timer and dont send ack
     setcf       c3, [!c1 & c2]
-#endif
     phvwri.c3   p.rx2tx_extra_dma_dma_cmd_eop, 1
+#endif
 
 dma_cmd_write_rx2tx_extra_shared_end:
     /*
@@ -77,7 +72,23 @@ dma_cmd_write_rx2tx_extra_shared_end:
     bcf         [c1], dma_cmd_start_del_ack_timer
     nop
 
+/*
+ * Fast retrans can be done without requiring explicit ordering, so
+ * use memwr instead of DMA to save a dma cmd in PHV
+ */
+rx2tx_fast_retrans_ring:
+    bbeq        k.common_phv_pending_txdma[TCP_PENDING_TXDMA_FAST_RETRANS_BIT], 0, rx2tx_fast_retrans_done
+    addi        r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET,
+                        DB_SCHED_UPD_EVAL, 0, LIF_TCP)
+    tbladd      d.rx2tx_fast_retx_pi, 1
+    /* data will be in r3 */
+    CAPRI_RING_DOORBELL_DATA(0, k.common_phv_fid,
+                        TCP_SCHED_RING_FAST_RETRANS, d.rx2tx_fast_retx_pi)
+    memwr.dx        r4, r3
+rx2tx_fast_retrans_done:
+
 dma_cmd_ring_tcp_tx_doorbell:
+#ifndef HW
     /*
      * Check if we have pending_txdma work, exit if not
      */
@@ -85,6 +96,7 @@ dma_cmd_ring_tcp_tx_doorbell:
     smeqb       c2, k.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, TCP_PENDING_TXDMA_ACK_SEND
     bcf         [c1 & c2], tcp_write_serq2_done
     nop
+#endif
 
     smeqb       c1, k.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, TCP_PENDING_TXDMA_ACK_SEND
     smeqb       c2, k.common_phv_pending_txdma, TCP_PENDING_TXDMA_SND_UNA_UPDATE, TCP_PENDING_TXDMA_SND_UNA_UPDATE
@@ -92,13 +104,6 @@ dma_cmd_ring_tcp_tx_doorbell:
     nop
     b.c1        rx2tx_send_ack_ring
     b.c2        rx2tx_clean_retx_ring
-    nop
-rx2tx_fast_retrans_ring:
-    tbladd.f    d.rx2tx_fast_retx_pi, 1
-    CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(tx_doorbell_or_timer_dma_cmd, LIF_TCP, 0, k.common_phv_fid,
-                                TCP_SCHED_RING_FAST_RETRANS, d.rx2tx_fast_retx_pi,
-                                db_data2_pid, db_data2_index)
-    b           rx2tx_ring_done
     nop
 rx2tx_send_ack_ring:
     tbladd.f    d.rx2tx_send_ack_pi, 1

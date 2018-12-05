@@ -1157,5 +1157,14 @@ modules:
             bypass_barco : 1
             maxflows : 1
             num_retx_pkts : 1
+            snd_wnd : 1000
 
-
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_NO_FAST_RETX_DUP_ACK_WINDOW_CHANGE
+        spec    : uplink_to_uplink_no_fast_retx_dup_ack_window_change.testspec
+        module  : pkt_to_p4
+        rtl     : True
+        args    :
+            bypass_barco : 1
+            maxflows : 1
+            snd_wnd : 1000

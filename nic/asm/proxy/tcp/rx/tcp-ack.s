@@ -1,5 +1,11 @@
 /*
  *  TCP ACK processing (ack received from peer)
+ *  
+ *  Update snd_una, and inform tx pipeline
+ *  
+ *  Handle dup_acks and fast retransmissions
+ *  
+ *  Handle window change, and inform tx pipeline
  */
 
 
@@ -92,9 +98,15 @@ tcp_dup_ack:
     seq             c1, d.num_dup_acks, TCP_FASTRETRANS_THRESH
     b.c1            tcp_ack_done
     nop
-    tbladd          d.num_dup_acks, 1
-    seq             c1, d.num_dup_acks, TCP_FASTRETRANS_THRESH
+
     sne             c2, d.snd_wnd, k.s1_s2s_window
+    /*
+     * RFC 5681: consider it as a dup_ack only if window
+     * has not changed
+     */
+    tbladd.!c2      d.num_dup_acks, 1
+
+    seq             c1, d.num_dup_acks, TCP_FASTRETRANS_THRESH
 
     /*
      * tell txdma we have work to do
