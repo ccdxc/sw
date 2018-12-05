@@ -1,6 +1,7 @@
 meta:
-    name        : storage::regression
-    os          : [ linux, freebsd ]
+    name    : storage::regression
+    os      : [ linux, freebsd ]
+    nics    : [ pensando, intel, mellanox, broadcom ]
 
 aliases:
     - &STORAGE_TEST_DIR storage/offload/src/test

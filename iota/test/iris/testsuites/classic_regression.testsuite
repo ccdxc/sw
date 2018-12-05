@@ -4,7 +4,7 @@ meta:
     mode        : hardware
     cfgmode     : netagent
     nicmode     : classic
-    regression  : True
+    type        : regression
     os          : [ linux, freebsd ]
 
 packages:
