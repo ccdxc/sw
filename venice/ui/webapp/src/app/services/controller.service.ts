@@ -68,7 +68,10 @@ export class ControllerService {
     dashboardPinned: []
   };
   public useRealData = false;
-  public _enableIdle = false;
+  private _enableIdle = true;
+  // time to idle before warning user of logout (in seconds)
+  // default of 2 hours
+  private _idleTime = 60 * 60 * 2
 
   constructor(
     private _router: Router,
@@ -327,6 +330,23 @@ export class ControllerService {
     if (enableIdle !== this._enableIdle) {
       this._enableIdle = enableIdle;
       this.publish(Eventtypes.IDLE_CHANGE, { active: enableIdle });
+    }
+  }
+
+  /**
+   * Getter LoginPatientInfo
+   */
+  get idleTime(): number {
+    return this._idleTime;
+  }
+
+  /**
+   * Setter LoginPatientInfo
+   */
+  set idleTime(seconds: number) {
+    if (seconds !== this._idleTime) {
+      this._idleTime = seconds;
+      this.publish(Eventtypes.IDLE_CHANGE, { time: seconds });
     }
   }
 

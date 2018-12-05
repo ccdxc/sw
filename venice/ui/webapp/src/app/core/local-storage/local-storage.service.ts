@@ -86,10 +86,10 @@ export class LocalStorageService {
       this.isStorageAvailable = false;
       return;
     }
-     // Ask other tabs for session storage (this is ONLY to trigger event)
+    // Ask other tabs for session storage (this is ONLY to trigger event)
     if (!sessionStorage.length) {
-      localStorage.setItem(LocalStorageEvents.GET_LOGIN_DATA, 'newtab');
-      localStorage.removeItem(LocalStorageEvents.GET_LOGIN_DATA);
+      this.setItem(LocalStorageEvents.GET_LOGIN_DATA, 'newtab');
+      this.removeItem(LocalStorageEvents.GET_LOGIN_DATA);
     }
     // listen for changes to localStorage
     window.addEventListener('storage', (event) => {
@@ -102,11 +102,11 @@ export class LocalStorageService {
 
   sessionStorageTransfer(event) {
     if (!event) { event = window.event; } // for ie
-    if (!event.key.startsWith(APP_PREFIX)) { return; } // Event isn't related to our app.
+    if (event.key == null || !event.key.startsWith(APP_PREFIX)) { return; } // Event isn't related to our app.
     const eventKey = event.key.slice(APP_PREFIX.length);
     if (eventKey === LocalStorageEvents.GET_LOGIN_DATA) {
       // another tab asked for the sessionStorage -> send it
-      this.setItem(LocalStorageEvents.SENDING_LOGIN_DATA, JSON.stringify(sessionStorage));
+      this.setItem(LocalStorageEvents.SENDING_LOGIN_DATA, sessionStorage);
       // Session storage calls are synchronous so the
       // other tab should now have it, so we're done with it.
       this.removeItem(LocalStorageEvents.SENDING_LOGIN_DATA);
@@ -143,25 +143,25 @@ export class LocalStorageService {
     const type = 'localStorage';
     const storage = window[type];
     try {
-        const x = '__storage_test__';
-        storage.setItem(x, x);
-        storage.removeItem(x);
-        return true;
+      const x = '__storage_test__';
+      storage.setItem(x, x);
+      storage.removeItem(x);
+      return true;
     } catch (e) {
-        return e instanceof DOMException && (
-            // everything except Firefox
-            e.code === 22 ||
-            // Firefox
-            e.code === 1014 ||
-            // test name field too, because code might not be present
-            // everything except Firefox
-            e.name === 'QuotaExceededError' ||
-            // Firefox
-            e.name === 'NS_ERROR_DOM_QUOTA_REACHED') &&
-            // acknowledge QuotaExceededError only if there's something already stored
-            storage.length !== 0;
+      return e instanceof DOMException && (
+        // everything except Firefox
+        e.code === 22 ||
+        // Firefox
+        e.code === 1014 ||
+        // test name field too, because code might not be present
+        // everything except Firefox
+        e.name === 'QuotaExceededError' ||
+        // Firefox
+        e.name === 'NS_ERROR_DOM_QUOTA_REACHED') &&
+        // acknowledge QuotaExceededError only if there's something already stored
+        storage.length !== 0;
     }
-}
+  }
 
   tabRemoval() {
     if (this.preventSessionRestore) {

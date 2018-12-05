@@ -288,7 +288,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
   }
 
   _setupIdle() {
-    this.idle.setIdle(5);
+    this.idle.setIdle(this._controllerService.idleTime);
     this.idle.setTimeout(10);
     this.idle.setInterrupts(DEFAULT_INTERRUPTSOURCES);
     this.idle.onIdleEnd.subscribe(() => { this.showIdleWarning = false; });
@@ -308,13 +308,21 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
         this.idleDialogRef.componentInstance.updateCountdown(countdown);
       }
     });
+    if (this._controllerService.enableIdle) {
+      this.idle.watch();
+    }
   }
 
   handleIdleChange(payload: any) {
-    if (payload.active) {
-      this.idle.watch();
-    } else {
-      this.idle.stop();
+    if (payload.active != null) {
+      if (payload.active) {
+        this.idle.watch();
+      } else {
+        this.idle.stop();
+      }
+    }
+    if (payload.time != null) {
+      this.idle.setIdle(payload.time)
     }
   }
 

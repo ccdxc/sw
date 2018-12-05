@@ -69,6 +69,7 @@ import { EventsService } from '@app/services/events.service';
 import { MessageService } from 'primeng/primeng';
 import { ToasterComponent, ToasterItemComponent } from './widgets/toaster/toaster.component';
 import { MissingpageComponent } from './widgets/missingpage/missingpage.component';
+import { StagingService } from './services/generated/staging.service';
 
 
 /**
@@ -147,6 +148,7 @@ import { MissingpageComponent } from './widgets/missingpage/missingpage.componen
     AuthServiceGen,
     MetricsqueryServiceGen,
     MetricsqueryService,
+    StagingService,
 
     // Route Guards
     AuthGuard,
