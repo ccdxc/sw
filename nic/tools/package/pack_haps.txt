@@ -30,6 +30,9 @@ nic/build/aarch64/iris/bin/halctl                                   /nic/bin/
 nic/build/aarch64/iris/bin/hal_test                                 /nic/bin/
 nic/build/aarch64/iris/bin/hal_access                               /nic/bin/
 
+#diag binaries
+nic/build/aarch64/iris/bin/diag_test                                /nic/bin/
+
 nic/build/aarch64/iris/lib/libproto.so                              /nic/lib/
 nic/build/aarch64/iris/lib/libcommonproto.so                        /nic/lib/
 nic/build/aarch64/iris/lib/libnicmgrproto.so                        /nic/lib/
@@ -91,6 +94,7 @@ nic/build/aarch64/iris/lib/libplugin_sfw*.so                        /nic/lib/
 nic/build/aarch64/iris/lib/libplugin_telemetry.so                   /nic/lib/
 nic/build/aarch64/iris/lib/libprotobuf.so.14                        /nic/lib/
 nic/build/aarch64/iris/lib/libsdkpal.so                             /nic/lib/
+nic/build/aarch64/iris/lib/libdiag.so                               /nic/lib/
 nic/build/aarch64/iris/lib/libsdkcapri.so                           /nic/lib/
 nic/build/aarch64/iris/lib/libsdkfru.so                             /nic/lib/
 nic/build/aarch64/iris/lib/libsdkplatformutils.so                   /nic/lib/

@@ -14,6 +14,13 @@ ulimit -c unlimited
 mkdir -p /data/core
 echo '|/nic/bin/coremgr -P /data/core -p %p -e %e' > /proc/sys/kernel/core_pattern
 
+if [[ -f /sysconfig/config0/post_disable ]]; then
+    echo "Skipping Power On Self Test (POST)"
+else
+    echo "Running Power On Self Test (POST) ..."
+    /nic/bin/diag_test post 2>&1 | tee /var/log/post_report_`date +"%Y%m%d-%T"`.txt
+fi
+
 cd /
 ifconfig lo up
 
