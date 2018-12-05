@@ -323,6 +323,7 @@ DeviceManager::DeviceManager(std::string config_file, enum ForwardingMode fwd_mo
     memset(&hal_lif_info_, 0, sizeof(hal_lif_info_));
     hw_lif_id = pd->lm_->LIFRangeAlloc(-1, 1);
     hal_lif_info_.id = hw_lif_id;
+    hal_lif_info_.name = "admin";
     if (dol_integ) {
         struct lif_info info;
 

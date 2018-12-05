@@ -217,7 +217,7 @@ Eth::Eth(HalClient *hal_client,
         NIC_LOG_ERR("Failed to get stats address lif {}", spec->lif_id);
         return;
     }
-    stats_mem_addr += hal_lif_info_.hw_lif_id << LIF_STATS_SIZE_LOG;
+    stats_mem_addr += hal_lif_info_.hw_lif_id << LIF_STATS_SIZE_SHIFT;
 
     NIC_LOG_INFO("lif created: name: {}, id:{}, type: {}, hw_lif_id: {}, mac:{}, stats_mem_addr {:#x}, rdma sqs: {}"
                  " rqs: {} HAL: sqs: {} rqs: {}", hal_lif_info_.name, hal_lif_info_.id,

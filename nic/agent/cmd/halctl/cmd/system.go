@@ -5,6 +5,7 @@
 package cmd
 
 import (
+	"container/list"
 	"context"
 	"fmt"
 	// "math/rand"
@@ -1351,11 +1352,14 @@ func threadDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 
 func intfStatsHeader() {
 	fmt.Printf("\n")
-	hdrLine := strings.Repeat("-", 90)
+	hdrLine := strings.Repeat("-", 150)
+	fmt.Printf("Note: In/Out from reference of PB\n")
 	fmt.Println(hdrLine)
-	fmt.Printf("%30s%23s%17s\n", "Rx", "|", "Tx")
-	fmt.Printf("%-11s%-10s%-10s%-10s%-10s | %-10s%-10s%-10s%-10s\n",
-		"Intf", "Ucast", "Mcast", "Bcast", "All", "Ucast", "Mcast", "Bcast", "All")
+	fmt.Printf("%-15s%-29s%-31s%s%-29s%-31s\n", "", "", "In", " | ", "", "Out")
+	fmt.Printf("%-15s%-5s%-15s%-5s%-15s%-5s%-15s | %-5s%-15s%-5s%-15s%-5s%-15s\n",
+		"", "", "UC", "", "MC", "", "BC", "", "UC", "", "MC", "", "BC")
+	fmt.Printf("%-15s%-10s%-10s%-10s%-10s%-10s%-10s | %-10s%-10s%-10s%-10s%-10s%-10s\n",
+		"IF", "UC", "Drops", "MC", "Drops", "BC", "Drops", "UC", "Drops", "MC", "Drops", "BC", "Drops")
 	fmt.Println(hdrLine)
 }
 
@@ -1372,11 +1376,9 @@ func intfUplinkShowOneResp(resp *halproto.PortGetResponse) {
 	var rxUc uint64
 	var rxMc uint64
 	var rxBc uint64
-	var rxAll uint64
 	var txUc uint64
 	var txMc uint64
 	var txBc uint64
-	var txAll uint64
 
 	macStats := resp.GetStats().GetMacStats()
 	for _, s := range macStats {
@@ -1387,24 +1389,24 @@ func intfUplinkShowOneResp(resp *halproto.PortGetResponse) {
 			rxMc = s.GetCount()
 		case halproto.MacStatsType_FRAMES_RX_BROADCAST:
 			rxBc = s.GetCount()
-		case halproto.MacStatsType_FRAMES_RX_ALL:
-			rxAll = s.GetCount()
+		//case halproto.MacStatsType_FRAMES_RX_ALL:
+		//	rxAll = s.GetCount()
 		case halproto.MacStatsType_FRAMES_TX_UNICAST:
 			txUc = s.GetCount()
 		case halproto.MacStatsType_FRAMES_TX_MULTICAST:
 			txMc = s.GetCount()
 		case halproto.MacStatsType_FRAMES_TX_BROADCAST:
 			txBc = s.GetCount()
-		case halproto.MacStatsType_FRAMES_TX_ALL:
-			txAll = s.GetCount()
+		//case halproto.MacStatsType_FRAMES_TX_ALL:
+		//	txAll = s.GetCount()
 		default:
 			continue
 		}
 	}
-	fmt.Printf("%-11s%-10d%-10d%-10d%-10d   %-10d%-10d%-10d%-10d\n",
+	fmt.Printf("%-15s%-10d%-10s%-10d%-10s%-10d%-10s   %-10d%-10s%-10d%-10s%-10d%-10s\n",
 		intfStr,
-		rxUc, rxMc, rxBc, rxAll,
-		txUc, txMc, txBc, txAll)
+		rxUc, "---", rxMc, "---", rxBc, "---",
+		txUc, "---", txMc, "---", txBc, "---")
 
 }
 
@@ -1432,26 +1434,79 @@ func uplinkStatsShow(c *rpckit.RPCClient) {
 	}
 }
 
-func intfLifShowOneResp(resp *halproto.LifGetResponse) {
-	status := resp.GetStatus()
-	hwLifID := status.GetHwLifId()
+func intfMnicLifShowOneResp(resp *halproto.LifGetResponse) {
+	// status := resp.GetStatus()
+	// hwLifID := status.GetHwLifId()
 	lifName := resp.GetSpec().GetName()
 	stats := resp.GetStats()
 	rxStats := stats.GetDataLifStats().GetRxStats()
 	txStats := stats.GetDataLifStats().GetTxStats()
-	if lifName == "" {
-		lifName += "lif-" + fmt.Sprint(hwLifID)
+	if strings.Contains(lifName, "mnic") || strings.Contains(lifName, "accel") || strings.Contains(lifName, "admin") {
+		fmt.Printf("%-15s%-10d%-10d%-10d%-10d%-10d%-10d   %-10d%-10d%-10d%-10d%-10d%-10d\n",
+			lifName,
+			txStats.GetUnicastFramesOk(),
+			txStats.GetUnicastFramesDrop(),
+			txStats.GetMulticastFramesOk(),
+			txStats.GetMulticastFramesDrop(),
+			txStats.GetBroadcastFramesOk(),
+			txStats.GetBroadcastFramesDrop(),
+			rxStats.GetUnicastFramesOk(),
+			rxStats.GetUnicastFramesDrop(),
+			rxStats.GetMulticastFramesOk(),
+			rxStats.GetMulticastFramesDrop(),
+			rxStats.GetBroadcastFramesOk(),
+			rxStats.GetBroadcastFramesDrop())
 	}
-	fmt.Printf("%-11s%-10d%-10d%-10d%-10d   %-10d%-10d%-10d%-10d\n",
-		lifName,
-		rxStats.GetUnicastFramesOk(),
-		rxStats.GetMulticastFramesOk(),
-		rxStats.GetBroadcastFramesOk(),
-		rxStats.GetFramesOk(),
-		txStats.GetUnicastFramesOk(),
-		txStats.GetMulticastFramesOk(),
-		txStats.GetBroadcastFramesOk(),
-		txStats.GetFramesOk())
+}
+
+func intfProxyLifShowOneResp(resp *halproto.LifGetResponse) {
+	// status := resp.GetStatus()
+	// hwLifID := status.GetHwLifId()
+	lifName := resp.GetSpec().GetName()
+	stats := resp.GetStats()
+	rxStats := stats.GetDataLifStats().GetRxStats()
+	txStats := stats.GetDataLifStats().GetTxStats()
+	if strings.Contains(lifName, "proxy") {
+		fmt.Printf("%-15s%-10d%-10d%-10d%-10d%-10d%-10d   %-10d%-10d%-10d%-10d%-10d%-10d\n",
+			lifName,
+			txStats.GetUnicastFramesOk(),
+			txStats.GetUnicastFramesDrop(),
+			txStats.GetMulticastFramesOk(),
+			txStats.GetMulticastFramesDrop(),
+			txStats.GetBroadcastFramesOk(),
+			txStats.GetBroadcastFramesDrop(),
+			rxStats.GetUnicastFramesOk(),
+			rxStats.GetUnicastFramesDrop(),
+			rxStats.GetMulticastFramesOk(),
+			rxStats.GetMulticastFramesDrop(),
+			rxStats.GetBroadcastFramesOk(),
+			rxStats.GetBroadcastFramesDrop())
+	}
+}
+
+func intfHostLifShowOneResp(resp *halproto.LifGetResponse) {
+	// status := resp.GetStatus()
+	// hwLifID := status.GetHwLifId()
+	lifName := resp.GetSpec().GetName()
+	stats := resp.GetStats()
+	rxStats := stats.GetDataLifStats().GetRxStats()
+	txStats := stats.GetDataLifStats().GetTxStats()
+	if !strings.Contains(lifName, "mnic") && !strings.Contains(lifName, "proxy") {
+		fmt.Printf("%-15s%-10d%-10d%-10d%-10d%-10d%-10d   %-10d%-10d%-10d%-10d%-10d%-10d\n",
+			lifName,
+			txStats.GetUnicastFramesOk(),
+			txStats.GetUnicastFramesDrop(),
+			txStats.GetMulticastFramesOk(),
+			txStats.GetMulticastFramesDrop(),
+			txStats.GetBroadcastFramesOk(),
+			txStats.GetBroadcastFramesDrop(),
+			rxStats.GetUnicastFramesOk(),
+			rxStats.GetUnicastFramesDrop(),
+			rxStats.GetMulticastFramesOk(),
+			rxStats.GetMulticastFramesDrop(),
+			rxStats.GetBroadcastFramesOk(),
+			rxStats.GetBroadcastFramesDrop())
+	}
 }
 
 func lifStatsShow(c *rpckit.RPCClient) {
@@ -1461,6 +1516,11 @@ func lifStatsShow(c *rpckit.RPCClient) {
 	lifGetReqMsg := &halproto.LifGetRequestMsg{
 		Request: []*halproto.LifGetRequest{req},
 	}
+
+	mnicList := list.New()
+	proxyList := list.New()
+	hostList := list.New()
+
 	// HAL call
 	respMsg, err := client.LifGet(context.Background(), lifGetReqMsg)
 	if err != nil {
@@ -1472,7 +1532,24 @@ func lifStatsShow(c *rpckit.RPCClient) {
 			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
-		intfLifShowOneResp(resp)
+		lifName := resp.GetSpec().GetName()
+		if strings.Contains(lifName, "mnic") || strings.Contains(lifName, "accel") || strings.Contains(lifName, "admin") {
+			mnicList.PushBack(resp)
+		} else if strings.Contains(lifName, "proxy") {
+			proxyList.PushBack(resp)
+		} else {
+			hostList.PushBack(resp)
+		}
+	}
+
+	for e := mnicList.Front(); e != nil; e = e.Next() {
+		intfMnicLifShowOneResp(e.Value.(*halproto.LifGetResponse))
+	}
+	for e := proxyList.Front(); e != nil; e = e.Next() {
+		intfProxyLifShowOneResp(e.Value.(*halproto.LifGetResponse))
+	}
+	for e := hostList.Front(); e != nil; e = e.Next() {
+		intfHostLifShowOneResp(e.Value.(*halproto.LifGetResponse))
 	}
 }
 

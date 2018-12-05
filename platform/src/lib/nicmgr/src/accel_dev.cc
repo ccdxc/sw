@@ -287,6 +287,7 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     info.pushed_to_hal = false;
     info.id = spec->lif_id;
     info.hw_lif_id = spec->hw_lif_id;
+    info.name = "accel";
     if (dol_integ) {
 #if 0
         if (hal->lif_map.find(spec->lif_id) != hal->lif_map.end()) {

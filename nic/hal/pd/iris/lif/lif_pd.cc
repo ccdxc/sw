@@ -836,6 +836,9 @@ lif_pd_stats_read (intf::LifRxStats *rx_stats,
     rx_stats->set_unicast_frames_ok(lif_metrics.rx_unicast_packets);
     rx_stats->set_multicast_frames_ok(lif_metrics.rx_multicast_packets);
     rx_stats->set_broadcast_frames_ok(lif_metrics.rx_broadcast_packets);
+    rx_stats->set_unicast_frames_drop(lif_metrics.rx_drop_unicast_packets);
+    rx_stats->set_multicast_frames_drop(lif_metrics.rx_drop_multicast_packets);
+    rx_stats->set_broadcast_frames_drop(lif_metrics.rx_drop_broadcast_packets);
     rx_stats->set_unicast_bytes_ok(lif_metrics.rx_unicast_bytes);
     rx_stats->set_multicast_bytes_ok(lif_metrics.rx_multicast_bytes);
     rx_stats->set_broadcast_bytes_ok(lif_metrics.rx_broadcast_bytes);
@@ -859,6 +862,9 @@ lif_pd_stats_read (intf::LifRxStats *rx_stats,
     tx_stats->set_unicast_frames_ok(lif_metrics.tx_unicast_packets);
     tx_stats->set_multicast_frames_ok(lif_metrics.tx_multicast_packets);
     tx_stats->set_broadcast_frames_ok(lif_metrics.tx_broadcast_packets);
+    tx_stats->set_unicast_frames_drop(lif_metrics.tx_drop_unicast_packets);
+    tx_stats->set_multicast_frames_drop(lif_metrics.tx_drop_multicast_packets);
+    tx_stats->set_broadcast_frames_drop(lif_metrics.tx_drop_broadcast_packets);
     tx_stats->set_unicast_bytes_ok(lif_metrics.tx_unicast_bytes);
     tx_stats->set_multicast_bytes_ok(lif_metrics.tx_multicast_bytes);
     tx_stats->set_broadcast_bytes_ok(lif_metrics.tx_broadcast_bytes);

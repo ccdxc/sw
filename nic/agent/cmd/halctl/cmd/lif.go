@@ -225,7 +225,7 @@ func lifDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 
 func lifShowSpecHeader() {
 	fmt.Printf("\n")
-	fmt.Printf("Id:          Lif Id                   PktFilter:   Packet Filters (ALL-MC, BC, Prom)\n")
+	fmt.Printf("Id:          Lif Id                   PktFilter:   Packet Filters (AM, BC, PR)\n")
 	fmt.Printf("VStrip:      Vlan Strip Enable        VIns:        Vlan Insert Enable\n")
 	fmt.Printf("PUplink:     Pinned Uplink IF Id      RdmaEn:      RDMA Enable\n")
 	fmt.Printf("\n")
@@ -285,11 +285,11 @@ func pktfltrToStr(fltrType *halproto.PktFilter) string {
 	}
 
 	if fltrType.GetReceiveAllMulticast() {
-		str += "All-MC,"
+		str += "AM,"
 	}
 
 	if fltrType.GetReceivePromiscuous() {
-		str += "Prom"
+		str += "PR"
 	}
 
 	sz := len(str)

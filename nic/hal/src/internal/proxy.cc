@@ -281,10 +281,30 @@ add_proxy_flow_info_to_db(proxy_flow_info_t* pfi)
     pfi->proxy->flow_ht_->insert(pfi, &pfi->flow_ht_ctxt);
     return HAL_RET_OK;
 }
+
+static const char* proxy_type_to_str(types::ProxyType type)
+{
+    switch(type) {
+        case types::PROXY_TYPE_NONE: return "none";
+        case types::PROXY_TYPE_TCP:  return "tcp_proxy";
+        case types::PROXY_TYPE_TLS:  return "tls_proxy";
+        case types::PROXY_TYPE_IPSEC: return "ipsec_proxy";
+        case types::PROXY_TYPE_GC: return "gc_proxy";
+        case types::PROXY_TYPE_CPU: return "cpu_proxy";
+        case types::PROXY_TYPE_IPFIX: return "ipf_proxy";
+        case types::PROXY_TYPE_APP_REDIR: return "AR_proxy";
+        case types::PROXY_TYPE_P4PT: return "p4pt_proxy";
+        case types::PROXY_TYPE_APP_REDIR_PROXY_TCP: return "AR_tcp_proxy";
+        case types::PROXY_TYPE_APP_REDIR_SPAN: return "AR_span_proxy";
+        case types::PROXY_TYPE_APP_REDIR_PROXY_TCP_SPAN: return "AR_tcp_span_proxy";
+        default: return "error";
+    }
+}
+
+
 //-----------------------------------------------------------------------------
 // API to program LIF
 //-----------------------------------------------------------------------------
-
 hal_ret_t
 proxy_program_lif(proxy_t* proxy)
 {
@@ -305,6 +325,7 @@ proxy_program_lif(proxy_t* proxy)
         // Create LIF
         lif_spec.mutable_key_or_handle()->set_lif_id(meta_lif_info->lif_id);
         lif_spec.set_admin_status(intf::IF_STATUS_UP);
+        lif_spec.set_name(proxy_type_to_str(proxy->type));
         lif_hal_info.with_hw_lif_id = true;
         lif_hal_info.hw_lif_id = meta_lif_info->lif_id;
         lif_hal_info.dont_zero_qstate_mem = true;

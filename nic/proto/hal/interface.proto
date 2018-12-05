@@ -281,40 +281,46 @@ message LifDeleteResponseMsg {
 
 // check which stats will be done by p4 and which will be done by p4+
 message LifTxStats {
-  uint64           frames_ok           = 1;
-  uint64           unicast_frames_ok   = 2;
-  uint64           multicast_frames_ok = 3;
-  uint64           broadcast_frames_ok = 4;
-  uint64           bytes_ok            = 5;
-  uint64           unicast_bytes_ok    = 6;
-  uint64           multicast_bytes_ok  = 7;
-  uint64           broadcast_bytes_ok  = 8;
-  uint64           tso                 = 9;
+  uint64           frames_ok                = 1;
+  uint64           unicast_frames_ok        = 2;
+  uint64           unicast_frames_drop      = 3;
+  uint64           multicast_frames_ok      = 4;
+  uint64           multicast_frames_drop    = 5;
+  uint64           broadcast_frames_ok      = 6;
+  uint64           broadcast_frames_drop    = 7;
+  uint64           bytes_ok                 = 8;
+  uint64           unicast_bytes_ok         = 9;
+  uint64           multicast_bytes_ok       = 10;
+  uint64           broadcast_bytes_ok       = 11;
+  uint64           tso                      = 12;
 }
 
 message LifRxStats {
-  uint64           frames_total        = 1;
-  uint64           frames_ok           = 2;
-  uint64           unicast_frames_ok   = 3;
-  uint64           multicast_frames_ok = 4;
-  uint64           broadcast_frames_ok = 5;
-  uint64           bytes_ok            = 6;
-  uint64           unicast_bytes_ok    = 7;
-  uint64           multicast_bytes_ok  = 8;
-  uint64           broadcast_bytes_ok  = 9;
-  uint64           drops               = 10;
-  uint64           no_bufs             = 11;
-  uint64           errors              = 12;
-  uint64           rss                 = 13;
-  uint64           crc_errors          = 14;
-  uint64           frames_64           = 15;
-  uint64           frames_127          = 16;
-  uint64           frames_255          = 17;
-  uint64           frames_511          = 18;
-  uint64           frames_1024         = 19;
-  uint64           frames_1518         = 20;
-  uint64           frames_to_max       = 21;
-  qos.PolicerStats policer_stats       = 22;    // Policer stats
+  uint64           frames_total             = 1;
+  uint64           frames_ok                = 2;
+  uint64           unicast_frames_ok        = 3;
+  uint64           unicast_frames_drop      = 4;
+  uint64           multicast_frames_ok      = 5;
+  uint64           multicast_frames_drop    = 6;
+  uint64           broadcast_frames_ok      = 7;
+  uint64           broadcast_frames_drop    = 8;
+  uint64           bytes_ok                 = 9;
+  uint64           unicast_bytes_ok         = 10;
+  uint64           multicast_bytes_ok       = 11;
+  uint64           broadcast_bytes_ok       = 12;
+  uint64           drops                    = 13;
+  uint64           no_bufs                  = 14;
+  uint64           errors                   = 15;
+  uint64           rss                      = 16;
+  uint64           crc_errors               = 17;
+  uint64           frames_64                = 18;
+  uint64           frames_127               = 19;
+  uint64           frames_255               = 20;
+  uint64           frames_511               = 21;
+  uint64           frames_1024              = 22;
+  uint64           frames_1518              = 23;
+  uint64           frames_to_max            = 24;
+  qos.PolicerStats policer_stats            = 25;    // Policer stats
 }
 
 message DataLifStats {
