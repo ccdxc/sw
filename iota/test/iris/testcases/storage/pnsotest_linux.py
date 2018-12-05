@@ -27,7 +27,7 @@ parser = argparse.ArgumentParser(description='Pensando Storage Offload Test')
 parser.add_argument('--cfg', nargs='+', dest='cfg', 
                     help='Config YML Files (1 or more - space separated)')
 parser.add_argument('--test', dest='test', help='Test YML File')
-parser.add_argument('--wait', dest='wait', type=int, help='Test Wait Time')
+parser.add_argument('--wait', dest='wait', default=2, type=int, help='Test Wait Time')
 parser.add_argument('--failure-test', dest='failure_test',
                     action='store_true', help='Failure Test')
 GlobalOptions = parser.parse_args()

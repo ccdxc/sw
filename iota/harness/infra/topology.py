@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import os
 import pdb
+import sys
 
 from iota.harness.infra.utils.logger import Logger as Logger
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
@@ -15,6 +16,20 @@ import iota.harness.infra.testcase as testcase
 
 import iota.protos.pygen.topo_svc_pb2 as topo_pb2
 import iota.protos.pygen.types_pb2 as types_pb2
+
+def GetNodePersonalityByNicType(nic_type):
+    if nic_type == 'pensando':
+        return topo_pb2.PERSONALITY_NAPLES
+    elif nic_type == 'mellanox':
+        return topo_pb2.PERSONALITY_MELLANOX
+    elif nic_type == 'broadcom':
+        return topo_pb2.PERSONALITY_BROADCOM
+    elif nic_type == 'intel':
+        return topo_pb2.PERSONALITY_INTEL
+    else:
+        return None
+
+
 
 class Node(object):
     def __init__(self, spec):
@@ -46,21 +61,14 @@ class Node(object):
             return topo_pb2.PersonalityType.Value(role)
 
         nic_type = self.__inst.Resource.NICType
-        if nic_type == 'pensando':
-            return topo_pb2.PERSONALITY_NAPLES
-        elif nic_type == 'mellanox':
-            return topo_pb2.PERSONALITY_MELLANOX
-        elif nic_type == 'broadcom':
-            return topo_pb2.PERSONALITY_BROADCOM
-        elif nic_type == 'intel':
-            return topo_pb2.PERSONALITY_INTEL
-        else:
+        role = GetNodePersonalityByNicType(nic_type)
+        if role == None:
             Logger.error("Unknown NIC Type : %s" % nic_type)
             sys.exit(1)
+        return role
 
     def GetNicType(self):
         return self.__inst.Resource.NICType
-
 
     def Name(self):
         return self.__name
@@ -159,13 +167,13 @@ class Node(object):
 
     def ProcessResponse(self, resp):
         self.__uuid = resp.node_uuid
-        Logger.info("Node: %s UUID: %s" % (self.__name, self.__uuid))
         if self.IsMellanox():
             self.__host_intfs = resp.mellanox_config.host_intfs
         elif self.IsBroadcom():
             self.__host_intfs = resp.broadcom_config.host_intfs
         elif self.IsNaples():
             self.__host_intfs = resp.naples_config.host_intfs
+            Logger.info("Node: %s UUID: %s" % (self.__name, self.__uuid))
         elif self.IsIntel():
             self.__host_intfs = resp.intel_config.host_intfs
         Logger.info("Node: %s Host Interfaces: %s" % (self.__name, self.__host_intfs))
@@ -245,6 +253,19 @@ class Topology(object):
             node.ProcessResponse(node_resp)
 
         return types.status.SUCCESS
+
+    def __convert_to_roles(self, nics):
+        roles = []
+        for nic_type in nics:
+            roles.append(GetNodePersonalityByNicType(nic_type))
+        return roles
+
+    def ValidateNics(self, nics):
+        roles = self.__convert_to_roles(nics)
+        for n in self.__nodes.values():
+            if n.Role() not in roles:
+                return False
+        return True
 
     def GetVeniceMgmtIpAddresses(self):
         ips = []

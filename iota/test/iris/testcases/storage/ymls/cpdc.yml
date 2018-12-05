@@ -27,6 +27,7 @@ tests:
       svc_chains    : 1
       repeat        : 'param::repeat'
       batch_depth   : 'param::batch_depth'
+      mode          : 'param::mode'
       validations:
         - retcode_compare:
             idx: 1
@@ -49,6 +50,7 @@ tests:
       svc_chains    : 2
       repeat        : 'param::repeat'
       batch_depth   : 'param::batch_depth'
+      mode          : 'param::mode'
       validations:
         - size_compare:
             idx: 1

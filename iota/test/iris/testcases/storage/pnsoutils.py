@@ -43,19 +43,12 @@ def __prepare_ymls(tc):
 
     return
 
-def __get_blocksize(tc):
-    if getattr(tc.args, 'blocksize', None) is not None:
-        return getattr(tc.args, 'blocksize')
-    if getattr(tc.iterators, 'blocksize', None) is not None:
-        return getattr(tc.iterators, 'blocksize')
-    return pnsodefs.PNSO_TEST_DEFAULT_BLOCKSIZE
-
-def __get_batch_depth(tc):
-    if getattr(tc.args, 'batch_depth', None) is not None:
-        return getattr(tc.args, 'batch_depth')
-    if getattr(tc.iterators, 'batch_depth', None) is not None:
-        return getattr(tc.iterators, 'batch_depth')
-    return pnsodefs.PNSO_TEST_DEFAULT_BATCH_DEPTH
+def __get_param(tc, name, default):
+    if getattr(tc.args, name, None) is not None:
+        return getattr(tc.args, name)
+    if getattr(tc.iterators, name, None) is not None:
+        return getattr(tc.iterators, name)
+    return default
 
 def __setup_default_params(tc):
     def __set(tc, key, value):
@@ -63,12 +56,21 @@ def __setup_default_params(tc):
            getattr(tc.iterators, key, None) is None:
             setattr(tc.args, key, value)
         return
-    __set(tc, 'repeat', pnsodefs.PNSO_TEST_DEFAULT_REPEAT*__get_batch_depth(tc)) 
+
+    batch_depth = __get_param(tc, 'batch_depth', pnsodefs.PNSO_TEST_DEFAULT_BATCH_DEPTH)
+    __set(tc, 'repeat', pnsodefs.PNSO_TEST_DEFAULT_REPEAT* batch_depth)
+
     __set(tc, 'key1', pnsodefs.PNSO_TEST_DEFAULT_KEY1)
     __set(tc, 'key2', pnsodefs.PNSO_TEST_DEFAULT_KEY2)
     __set(tc, 'wait', pnsodefs.PNSO_TEST_DEFAULT_WAIT)
     __set(tc, 'pcqdepth', pnsodefs.PNSO_TEST_DEFAULT_PCQDEPTH)
     __set(tc, 'batch_depth', pnsodefs.PNSO_TEST_DEFAULT_BATCH_DEPTH)
+    __set(tc, 'mode', pnsodefs.PNSO_TEST_DEFAULT_MODE)
+
+    num_cpus = __get_param(tc, 'cpus', pnsodefs.PNSO_TEST_DEFAULT_NUM_CPUS)
+    max_cpus = api.GetTestsuiteAttr(pnsodefs.PNSO_TEST_MAXCPUS_ATTR)
+    num_cpus = min(num_cpus, max_cpus)
+    __set(tc, 'cpumask', (1 << num_cpus) - 1)
     return
 
 
@@ -80,7 +82,7 @@ def Setup(tc):
     tc.tmpdir = "%s/%s" % (api.GetTopDir(), pnsodefs.TMPDIR)
     tc.ymldir = "%s/%s" % (api.GetTopDir(), pnsodefs.YMLDIR)
 
-    blocksize = __get_blocksize(tc)
+    blocksize = __get_param(tc, 'blocksize', pnsodefs.PNSO_TEST_DEFAULT_BLOCKSIZE)
     tc.args.x2blocksize = blocksize * 2
     tc.args.x4blocksize = blocksize * 4
     tc.args.x8blocksize = blocksize * 8

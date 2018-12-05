@@ -1,6 +1,7 @@
 meta:
     name    : inband100g
     os      : [ linux ]
+    nics    : [ pensando, intel, mellanox, broadcom ]    
 
 testcases:
     -   name    : Inband100G_TX_CHECKSUM

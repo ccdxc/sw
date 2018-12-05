@@ -1,8 +1,9 @@
 meta:
     name    : rdma
+    os      : [ linux ]
+    nics    : [ pensando, mellanox ]
 
 testcases:
-
     #=======================================
     # Init
     #=======================================

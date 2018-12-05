@@ -1,5 +1,6 @@
 meta:
     name    : networking
+    nics    : [ pensando, mellanox, intel, broadcom ]
 
 testcases:
     -   name    : Port_Flap

@@ -326,7 +326,9 @@ func GetIntfsMatchingDevicePrefix(devicePrefix string) ([]string, error) {
 			pci := strings.Split(line, " ")[0]
 			for pciAddr, intf := range pciIntfMap {
 				if strings.Contains(pciAddr, pci) {
-					hostIntfs = append(hostIntfs, intf)
+                    if intf != "eno1" && intf != "eno2" {
+    					hostIntfs = append(hostIntfs, intf)
+                    }
 				}
 			}
 

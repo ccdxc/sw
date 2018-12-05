@@ -7,17 +7,14 @@ import yaml
 import subprocess
 import pdb
 
-def __sysctl(attr):
-    result = subprocess.run(["sysctl", attr], stdout=subprocess.PIPE)
-    output = result.stdout.decode('utf-8')
-    count = output.split(' ')[1]
-    return int(count)
+def __sysctl(attr_fail, attr_success):
+    result = subprocess.check_output(["sysctl", attr_fail, attr_success])
+    obj = yaml.load(result)
+    return (int(obj[attr_fail]), int(obj[attr_success]))
 
-def GetFailureCount():
-    return __sysctl('compat.linuxkpi.pencake_fail_cnt')
-
-def GetSuccessCount():
-    return __sysctl('compat.linuxkpi.pencake_success_cnt')
+def GetCounts():
+    return __sysctl('compat.linuxkpi.pencake_fail_cnt',
+                    'compat.linuxkpi.pencake_success_cnt')
 
 def GetTestCount():
     with open(GlobalOptions.test) as f:
@@ -29,13 +26,12 @@ parser = argparse.ArgumentParser(description='Pensando Storage Offload Test')
 parser.add_argument('--cfg', nargs='+', dest='cfg', 
                     help='Config YML Files (1 or more - space separated)')
 parser.add_argument('--test', dest='test', help='Test YML File')
-parser.add_argument('--wait', dest='wait', type=int, help='Test Wait Time')
+parser.add_argument('--wait', dest='wait', default=2, type=int, help='Test Wait Time')
 parser.add_argument('--failure-test', dest='failure_test',
                     action='store_true', help='Failure Test')
 GlobalOptions = parser.parse_args()
 
-old_success_count = GetSuccessCount()
-old_failure_count = GetFailureCount()
+old_failure_count, old_success_count = GetCounts()
 
 ymlstring = ""
 for cfgfile in GlobalOptions.cfg:
@@ -44,8 +40,7 @@ ymlstring += "%s " % GlobalOptions.test
 os.system("cat %s > /dev/pencake" % ymlstring)
 
 time.sleep(GlobalOptions.wait)
-new_success_count = GetSuccessCount()
-new_failure_count = GetFailureCount()
+new_failure_count, new_success_count = GetCounts()
 
 num_tests = GetTestCount()
 
@@ -65,8 +60,8 @@ if new_failure_count - old_failure_count != 0:
     else:
         print("PenCAKE test PASSED with expected Failures.")
         exitcode = 0
-elif new_success_count - old_success_count != num_tests:
-    print("ERROR: NumSuccess != NumTests.") 
+elif new_success_count - old_success_count < num_tests:
+    print("ERROR: NumSuccess < NumTests.") 
     exitcode = 1
 elif GlobalOptions.failure_test:
     print("ERROR: Failure test passed. Unexpected.")

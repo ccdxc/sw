@@ -1,6 +1,7 @@
 meta:
     name    : penctl
     os      : [ linux, freebsd ]
+    nics    : [ pensando ]
 
 testcases:
     -   name: ACCEL_METRICS

@@ -1,6 +1,7 @@
 meta:
     name    : internalmgmt
     os      : [ linux ]
+    nics    : [ pensando, intel, mellanox, broadcom ]
 
 testcases:
     -   name    : InternalMgmt_TX_CHECKSUM

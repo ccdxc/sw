@@ -1,5 +1,7 @@
 meta:
-    name        : networking
+    name    : networking
+    nics    : [ pensando, mellanox, intel, broadcom ]
+    os      : [ linux ]
 
 testcases:
     -   name    : Ping_Mirror_Remote_Workloads

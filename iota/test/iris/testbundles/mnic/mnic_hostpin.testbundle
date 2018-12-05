@@ -1,5 +1,6 @@
 meta:
     name    : mnichostpin
+    nics    : [ pensando, intel, mellanox, broadcom ]
 
 testcases:
     -   name    : MnicInterfaceUp

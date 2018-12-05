@@ -1,7 +1,6 @@
 meta:
-    name    : storage
-    os      : [ linux, freebsd ]
-    nics    : [ pensando, intel, mellanox, broadcom ]
+    name        : storage::regression
+    os          : [ linux, freebsd ]
 
 aliases:
     - &STORAGE_TEST_DIR storage/offload/src/test
@@ -10,11 +9,10 @@ aliases:
     - &BLOCK_SIZE_8K 8192
     - &BLOCK_SIZE_16K 16384
     - &BLOCK_SIZE_32K 32768
-    - &CPUS_ITER_LIST [ 1, 2, 4 ]
+    - &CPUS_ITER_LIST [ 1, 2, 4, 6, 8 ]
     - &BATCH_DEPTH_ITER_LIST_TO256 [ 1, 16, 31, 32, 33, 64, 128, 256 ]
-    - &BATCH_DEPTH_ITER_LIST_TO16 [ 1, 16 ]
     - &BATCH_DEPTH_ITER_LIST_TO32 [ 1, 16, 31, 32 ]
-    - &BATCH_DEPTH_ITER_LIST_TO64 [ 1, 16, 31, 32, 64 ]
+    - &BATCH_DEPTH_ITER_LIST_TO16 [ 1, 16 ]
     - &MODE_ITER_LIST [ sync, poll, async ]
     - &CPDC_TEST_YML cpdc.yml
 
@@ -23,15 +21,15 @@ testcases:
         testcase: testcases.storage.compile_install_drivers
         args    :
             package: storage/gen/storage-offload.tar.xz
-            maxcpus: 4
+            maxcpus: 8
 
     -   name: CompressDecompress4K
         testcase    : testcases.storage.ymltest2
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST
-            batch_depth : *BATCH_DEPTH_ITER_LIST_TO64
             mode        : *MODE_ITER_LIST
+            batch_depth : *BATCH_DEPTH_ITER_LIST_TO256
         args    :
             blocksize   : *BLOCK_SIZE_4K
             test        : *CPDC_TEST_YML
@@ -47,7 +45,7 @@ testcases:
             blocksize   : *BLOCK_SIZE_8K
             test        : *CPDC_TEST_YML
 
-    -   name        : CompressDecompress16K
+    -   name: CompressDecompress16K
         testcase    : testcases.storage.ymltest2
         iterators   :
             type        : nested
@@ -58,9 +56,8 @@ testcases:
             blocksize   : *BLOCK_SIZE_16K
             test        : *CPDC_TEST_YML
 
-    -   name        : CompressDecompress32K
+    -   name: CompressDecompress32K
         testcase    : testcases.storage.ymltest2
-        ignore      : True
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST
@@ -131,3 +128,6 @@ testcases:
 #            wait: 5 # Wait in seconds.
 #            cfg : [ 4k.yml, globals.yml ]
 #            test: test3.yml
+
+teardown:
+    #- step      : verif.utils.collect_logs_and_cores

@@ -4,6 +4,7 @@ meta:
     mode        : hardware
     cfgmode     : netagent
     nicmode     : classic
+    regression  : True
     os          : [ linux, freebsd ]
 
 packages:
@@ -30,8 +31,7 @@ testbundles:
     - networking/networking.testbundle
     - classic/rdma.testbundle
     - linktest/linktest.testbundle
-    - storage/storage.testbundle
-    - linktest/linktest.testbundle
+    - storage/regression.testbundle
     - penctl/penctl.testbundle
     - mnic/mnic_classic.testbundle
     - classic/internal_mgmt.testbundle

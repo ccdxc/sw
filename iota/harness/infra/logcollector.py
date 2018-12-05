@@ -5,6 +5,7 @@ import sys
 import iota.harness.infra.store as store
 import iota.harness.api as api
 
+from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 from multiprocessing.dummy import Pool as ThreadPool 
 
 logdirs = [
@@ -24,6 +25,7 @@ def __collect_onenode(node):
     return
 
 def CollectLogs():
+    if GlobalOptions.dryrun: return
     nodes = store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNodes()
     pool = ThreadPool(len(nodes))
     results = pool.map(__collect_onenode, nodes)

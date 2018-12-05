@@ -206,7 +206,6 @@ class _Testbed:
         self.prev_ts = self.curr_ts
         self.curr_ts = ts
 
-
         if GlobalOptions.dryrun:
             status = types.status.SUCCESS
         else:

@@ -1,6 +1,7 @@
 meta:
     name    : ionicdrv
     os      : [ linux ]
+    nics    : [ pensando, intel, mellanox, broadcom ]
 
 testcases:
     -   name    : UplinkIntf_TX_RING_SIZE

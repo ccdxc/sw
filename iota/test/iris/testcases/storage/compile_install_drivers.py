@@ -31,6 +31,8 @@ def Setup(tc):
     ret = __copy_sonic_to_all_naples(tc)
     if ret != api.types.status.SUCCESS:
         return ret
+
+    api.SetTestsuiteAttr(pnsodefs.PNSO_TEST_MAXCPUS_ATTR, tc.args.maxcpus)
     return api.types.status.SUCCESS
 
 def Trigger(tc):
@@ -50,17 +52,17 @@ def Trigger(tc):
             api.Trigger_AddHostCommand(req, n, "rmmod pencake || true", rundir = pnsodefs.PNSO_DRIVER_DIR)
             api.Trigger_AddHostCommand(req, n, "rmmod sonic || true", rundir = pnsodefs.PNSO_DRIVER_DIR)
             api.Trigger_AddHostCommand(req, n, 
-                        "insmod sonic.ko core_count=%d" % pnsodefs.PNSO_DRIVER_MAX_CORE_COUNT,
-                        rundir = pnsodefs.PNSO_DRIVER_DIR, timeout = 300)
+                        "insmod sonic.ko core_count=%d" % tc.args.maxcpus,
+                        rundir = pnsodefs.PNSO_DRIVER_DIR, timeout = int(tc.args.maxcpus) * 100)
             api.Trigger_AddHostCommand(req, n, "insmod pencake.ko repeat=1",
                                        rundir = pnsodefs.PNSO_DRIVER_DIR)
         else:
             api.Trigger_AddHostCommand(req, n, "kldunload pencake || true", rundir = pnsodefs.PNSO_DRIVER_DIR)
             api.Trigger_AddHostCommand(req, n, "kldunload sonic || true", rundir = pnsodefs.PNSO_DRIVER_DIR)
             api.Trigger_AddHostCommand(req, n, 
-                        "kenv compat.linuxkpi.sonic_core_count=%d" % pnsodefs.PNSO_DRIVER_MAX_CORE_COUNT,
+                        "kenv compat.linuxkpi.sonic_core_count=%d" % tc.args.maxcpus,
                         rundir = pnsodefs.PNSO_DRIVER_DIR)
-            api.Trigger_AddHostCommand(req, n, "kldload ./sonic.ko", rundir = pnsodefs.PNSO_DRIVER_DIR, timeout = 300)
+            api.Trigger_AddHostCommand(req, n, "kldload ./sonic.ko", rundir = pnsodefs.PNSO_DRIVER_DIR, timeout = int(tc.args.maxcpus) * 100)
             api.Trigger_AddHostCommand(req, n, "kldload ./pencake.ko", rundir = pnsodefs.PNSO_DRIVER_DIR)
 
         api.Trigger_AddHostCommand(req, n, "sleep 10")
@@ -78,6 +80,9 @@ def Trigger(tc):
     return api.types.status.SUCCESS
 
 def Verify(tc):
+    if api.GlobalOptions.dryrun:
+        return api.types.status.SUCCESS
+
     if tc.resp is None:
         return api.types.status.FAILURE
 

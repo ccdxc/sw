@@ -1,5 +1,6 @@
 meta:
     name    : internalmgmt
+    nics    : [ pensando, intel, mellanox, broadcom ]
 
 testcases:
     -   name    : PingInternalMgmt

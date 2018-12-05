@@ -217,7 +217,7 @@ class HostManagement:
 
     def __wait_for_ssh(self):
         print("Waiting for host to be up.")
-        for retry in range(60):
+        for retry in range(150):
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             ret = sock.connect_ex(('%s' % GlobalOptions.host_ip, 22))
             sock.settimeout(1)

@@ -1,5 +1,6 @@
 meta:
-    name        : conntrack
+    name    : conntrack
+    nics    : [ pensando, intel, mellanox, broadcom ]
 
 testcases:
     -   name    : TDL_NZ_LOW

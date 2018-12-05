@@ -24,7 +24,7 @@ def __discover_testsuites():
     expr = GlobalOptions.topdir + '/iota/test/%s/**/*.testsuite' %\
                                   (GlobalOptions.pipeline)
     for filename in glob.iglob(expr, recursive = True):
-        Logger.info("Reading testsuite: %s" % filename)
+        Logger.debug("Reading testsuite: %s" % filename)
         data = parser.YmlParse(filename)
         suites.append(data)
     return suites

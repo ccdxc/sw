@@ -79,6 +79,7 @@ class TestSuite:
 
         for imp in self.__spec.testbundles:
             filename = "%s/iota/test/iris/testbundles/%s" % (api.GetTopDir(), imp)
+            Logger.debug("Importing Testbundle %s" % filename)
             tcb = parser.YmlParse(filename)
             tcb.meta.os = getattr(tcb.meta, 'os', [ 'linux' ])
             if store.GetTestbed().GetOs() not in tcb.meta.os:
@@ -86,6 +87,10 @@ class TestSuite:
                 continue
             if GlobalOptions.testbundles and tcb.meta.name not in  GlobalOptions.testbundles:
                 Logger.info("Skipping Testbundle: %s due to cmdline filter." % tcb.meta.name)
+                continue
+            tcb.meta.nics = getattr(tcb.meta, 'nics', [])
+            if self.__topology.ValidateNics(tcb.meta.nics) != True:
+                Logger.debug("Skipping Testbundle: %s due to Incompatible NICs." % tcb.meta.name)
                 continue
             self.__spec.testcases.extend(tcb.testcases)
             for tc in tcb.testcases:
@@ -197,6 +202,9 @@ class TestSuite:
     def __get_oss(self):
         return getattr(self.__spec.meta, 'os', ['linux'])
 
+    def __is_regression(self):
+        return getattr(self.__spec.meta, 'type', None) == 'regression'
+
     def Main(self):
         if not self.__enabled:
            return types.status.SUCCESS
@@ -206,6 +214,16 @@ class TestSuite:
            Logger.info("Skipping Testsuite: %s due to testbed type mismatch." % self.Name())
            self.__enabled = False
            return types.status.SUCCESS
+
+        if GlobalOptions.regression and not self.__is_regression():
+            Logger.info("Skipping non regression testsuite : %s" % self.Name())
+            self.__enabled = False
+            return types.status.SUCCESS
+
+        if not GlobalOptions.regression and self.__is_regression():
+            Logger.info("Skipping regression testsuite : %s" % self.Name())
+            self.__enabled = False
+            return types.status.SUCCESS
 
         if store.GetTestbed().GetOs() not in self.__get_oss():
             Logger.info("Skipping Testsuite: %s due to OS mismatch." % self.Name())
@@ -224,16 +242,16 @@ class TestSuite:
         if status != types.status.SUCCESS:
             self.__timer.Stop()
             return status
-        
-        self.__import_testbundles()
-        self.__resolve_testcases()
-        self.__resolve_teardown()
-        self.__expand_iterators()
-
+ 
         status = self.__parse_setup()
         if status != types.status.SUCCESS:
             self.__timer.Stop()
             return status
+       
+        self.__import_testbundles()
+        self.__resolve_testcases()
+        self.__resolve_teardown()
+        self.__expand_iterators()
 
         status = self.__setup()
         if status != types.status.SUCCESS:

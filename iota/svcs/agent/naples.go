@@ -30,10 +30,10 @@ const (
 	naplesSimHostIntfPrefix = "lif"
 	naplesBsdHosIntfPrefix  = "ionic"
 	naplesPciDevicePrefix   = "Device"
-	mellanoxPciDevicePrefix = "Mellanox Technologies"
-	broadcomPciDevicePrefix = "Broadcom Limited"
+	mellanoxPciDevicePrefix = "Ethernet"
+	broadcomPciDevicePrefix = "Ethernet"
 	bareMetalWorkloadName   = "bareMetalWorkload"
-	intelPciDevicePrefix    = "Intel Corporation Ethernet Controller X710"
+	intelPciDevicePrefix    = "Ethernet"
 )
 
 var (

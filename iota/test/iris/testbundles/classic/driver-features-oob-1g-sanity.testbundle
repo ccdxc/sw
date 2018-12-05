@@ -1,6 +1,7 @@
 meta:
     name    : oob1g
     os      : [ linux ]
+    nics    : [ pensando, intel, mellanox, broadcom ]
 
 testcases:
     -   name    : Oob1G_TX_CHECKSUM
