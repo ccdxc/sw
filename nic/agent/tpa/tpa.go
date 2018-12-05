@@ -4,6 +4,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/pensando/sw/venice/globals"
+
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	protos "github.com/pensando/sw/nic/agent/netagent/protos"
 	netagent "github.com/pensando/sw/nic/agent/netagent/state"
@@ -69,7 +71,7 @@ func NewPolicyAgent(nodeUUID string, ctrlerURL string, resolverClient resolver.I
 
 	// start grpc client to venice
 	if mode == protos.AgentMode_MANAGED {
-		ctrler, err := ctrlerif.NewTpClient(tpAgent, ctrlerURL, resolverClient)
+		ctrler, err := ctrlerif.NewTpClient(nodeUUID, tpAgent, globals.Tpm, resolverClient)
 		if err != nil {
 			log.Errorf("Error creating telemetry policy controller client. Err: %v", err)
 			return nil, err

@@ -52,7 +52,6 @@ var apiEventTypeMap = map[memdb.EventType]api.EventType{
 func (p *statsPolicyRPCServer) WatchStatsPolicy(in *api.ObjectMeta, out tpmProtos.StatsPolicyApi_WatchStatsPolicyServer) error {
 	ctx := out.Context()
 
-	rpcLog.Infof("watch statspolicy from [%v]", in.Name)
 	watchChan := make(chan memdb.Event, memdb.WatchLen)
 	defer close(watchChan)
 
@@ -62,6 +61,7 @@ func (p *statsPolicyRPCServer) WatchStatsPolicy(in *api.ObjectMeta, out tpmProto
 	peer := ctxutils.GetPeerAddress(ctx)
 	p.clients.Store(peer, true)
 	defer p.clients.Delete(peer)
+	rpcLog.Infof("watch stats policy from [%v]", peer)
 
 	// send existing policy
 	for _, obj := range p.policyDb.ListObjects("StatsPolicy") {
@@ -76,7 +76,7 @@ func (p *statsPolicyRPCServer) WatchStatsPolicy(in *api.ObjectMeta, out tpmProto
 
 			if err := out.Send(&tpmProtos.StatsPolicyEvent{EventType: api.EventType_CreateEvent,
 				Policy: statsPolicy}); err != nil {
-				rpcLog.Errorf("failed to send stats policy to %s, error %s", in.GetName(), err)
+				rpcLog.Errorf("failed to send stats policy to %s, error %s", peer, err)
 				return err
 			}
 		} else {
@@ -90,7 +90,7 @@ func (p *statsPolicyRPCServer) WatchStatsPolicy(in *api.ObjectMeta, out tpmProto
 		select {
 		case event, ok := <-watchChan:
 			if !ok {
-				rpcLog.Errorf("[%s] error received from", in.GetName())
+				rpcLog.Errorf("error from %v in stats channel", peer)
 				return fmt.Errorf("invalid event from watch channel")
 			}
 
@@ -105,7 +105,7 @@ func (p *statsPolicyRPCServer) WatchStatsPolicy(in *api.ObjectMeta, out tpmProto
 
 				if err := out.Send(&tpmProtos.StatsPolicyEvent{EventType: apiEventTypeMap[event.EventType],
 					Policy: statsPolicy}); err != nil {
-					rpcLog.Errorf("failed to send stats policy to %s, error %s", in.GetName(), err)
+					rpcLog.Errorf("failed to send stats policy to %s, error %s", peer, err)
 					return err
 				}
 			} else {
@@ -114,15 +114,13 @@ func (p *statsPolicyRPCServer) WatchStatsPolicy(in *api.ObjectMeta, out tpmProto
 			}
 
 		case <-ctx.Done():
-			rpcLog.Errorf("[%v] statspolicy client context canceled, error:%s", in.GetName(), ctx.Err())
+			rpcLog.Errorf("stats policy client(%s) context canceled, error:%s", peer, ctx.Err())
 			return fmt.Errorf("client context canceled")
 		}
 	}
 }
 
 func (p *fwlogPolicyRPCServer) WatchFwlogPolicy(in *api.ObjectMeta, out tpmProtos.FwlogPolicyApi_WatchFwlogPolicyServer) error {
-	rpcLog.Infof("watch fwlogpolicy from [%v]", in.Name)
-
 	watchChan := make(chan memdb.Event, memdb.WatchLen)
 	defer close(watchChan)
 
@@ -134,6 +132,7 @@ func (p *fwlogPolicyRPCServer) WatchFwlogPolicy(in *api.ObjectMeta, out tpmProto
 	peer := ctxutils.GetPeerAddress(ctx)
 	p.clients.Store(peer, true)
 	defer p.clients.Delete(peer)
+	rpcLog.Infof("watch fwlog policy from [%v]", peer)
 
 	// send existing policy
 	for _, obj := range p.policyDb.ListObjects("FwlogPolicy") {
@@ -149,7 +148,7 @@ func (p *fwlogPolicyRPCServer) WatchFwlogPolicy(in *api.ObjectMeta, out tpmProto
 
 			if err := out.Send(&tpmProtos.FwlogPolicyEvent{EventType: api.EventType_CreateEvent,
 				Policy: fwlogPolicy}); err != nil {
-				rpcLog.Errorf("failed to send fwlog policy to %s, error %s", in.GetName(), err)
+				rpcLog.Errorf("failed to send fwlog policy to %s, error %s", peer, err)
 				return err
 			}
 		} else {
@@ -164,13 +163,13 @@ func (p *fwlogPolicyRPCServer) WatchFwlogPolicy(in *api.ObjectMeta, out tpmProto
 		case event, ok := <-watchChan:
 
 			if !ok {
-				rpcLog.Errorf("[%s] error received from", in.GetName())
+				rpcLog.Errorf("error from %v in fwlog channel ", peer)
 				return fmt.Errorf("invalid event from watch channel")
 			}
 
 			policy, ok := event.Obj.(*apiProtos.FwlogPolicy)
 			if !ok {
-				rpcLog.Errorf("fwlog watch error received from [%s]", in.GetName())
+				rpcLog.Errorf("fwlog watch error received from [%s]", peer)
 				return fmt.Errorf("watch error")
 			}
 
@@ -185,20 +184,18 @@ func (p *fwlogPolicyRPCServer) WatchFwlogPolicy(in *api.ObjectMeta, out tpmProto
 
 			if err := out.Send(&tpmProtos.FwlogPolicyEvent{EventType: apiEventTypeMap[event.EventType],
 				Policy: fwlogPolicy}); err != nil {
-				rpcLog.Errorf("failed to send fwlog policy to %s, error %s", in.GetName(), err)
+				rpcLog.Errorf("failed to send fwlog policy to %s, error %s", peer, err)
 				return err
 			}
 
 		case <-ctx.Done():
-			rpcLog.Errorf("context canceled from %v, error:%s", in.GetName(), ctx.Err())
+			rpcLog.Errorf("context canceled from %v, error:%s", peer, ctx.Err())
 			return fmt.Errorf("context cancelled")
 		}
 	}
 }
 
 func (p *flowExportPolicyRPCServer) WatchFlowExportPolicy(in *api.ObjectMeta, out tpmProtos.FlowExportPolicyApi_WatchFlowExportPolicyServer) error {
-	rpcLog.Infof("watch flowexport policy from [%v]", in.Name)
-
 	watchChan := make(chan memdb.Event, memdb.WatchLen)
 	defer close(watchChan)
 
@@ -209,6 +206,8 @@ func (p *flowExportPolicyRPCServer) WatchFlowExportPolicy(in *api.ObjectMeta, ou
 	peer := ctxutils.GetPeerAddress(ctx)
 	p.clients.Store(peer, true)
 	defer p.clients.Delete(peer)
+
+	rpcLog.Infof("watch flowexport policy from [%v]", peer)
 
 	// send existing policy
 	for _, obj := range p.policyDb.ListObjects("FlowExportPolicy") {
@@ -228,7 +227,7 @@ func (p *flowExportPolicyRPCServer) WatchFlowExportPolicy(in *api.ObjectMeta, ou
 
 		if err := out.Send(&tpmProtos.FlowExportPolicyEvent{EventType: api.EventType_CreateEvent,
 			Policy: flowExportPolicy}); err != nil {
-			rpcLog.Errorf("failed to send flowexport policy to %s, error %s", in.GetName(), err)
+			rpcLog.Errorf("failed to send flowexport policy to %s, error %s", peer, err)
 			return err
 		}
 	}
@@ -238,7 +237,7 @@ func (p *flowExportPolicyRPCServer) WatchFlowExportPolicy(in *api.ObjectMeta, ou
 		select {
 		case event, ok := <-watchChan:
 			if !ok {
-				rpcLog.Errorf("[%s] error received from", in.GetName())
+				rpcLog.Errorf("error from %v in flowexport channel", peer)
 				return fmt.Errorf("invalid event from watch channel")
 			}
 
@@ -253,12 +252,12 @@ func (p *flowExportPolicyRPCServer) WatchFlowExportPolicy(in *api.ObjectMeta, ou
 
 			if err := out.Send(&tpmProtos.FlowExportPolicyEvent{EventType: apiEventTypeMap[event.EventType],
 				Policy: flowExportPolicy}); err != nil {
-				rpcLog.Errorf("failed to send flowexport policy to %s, error %s", in.GetName(), err)
+				rpcLog.Errorf("failed to send flowexport policy to %s, error %s", peer, err)
 				return err
 			}
 
 		case <-ctx.Done():
-			rpcLog.Errorf("context canceled from %v, error:%s", in.GetName(), ctx.Err())
+			rpcLog.Errorf("context canceled from %v, error:%s", peer, ctx.Err())
 			return fmt.Errorf("context canceled")
 		}
 	}
@@ -273,6 +272,11 @@ func (s *PolicyRPCServer) Stop() error {
 func (s *PolicyRPCServer) SetCollectionInterval(interval string) error {
 	s.statsPolicyRPCServer.collectionInterval.Store(interval)
 	return nil
+}
+
+// GetListenURL is to get grpc listen address
+func (s *PolicyRPCServer) GetListenURL() string {
+	return s.server.GetListenURL()
 }
 
 // NewRPCServer starts a new instance of rpc server

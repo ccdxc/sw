@@ -31,7 +31,7 @@ func TestProcessStatsPolicy(t *testing.T) {
 	pa, err := NewPolicyManager(listenURL, r)
 	tu.AssertOk(t, err, "failed to create policy manager")
 	pol := &telemetry.StatsPolicy{
-		TypeMeta:   api.TypeMeta{Kind: "stats"},
+		TypeMeta:   api.TypeMeta{Kind: "StatsPolicy"},
 		ObjectMeta: api.ObjectMeta{Name: "test1", Tenant: "ten1"},
 	}
 

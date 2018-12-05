@@ -158,7 +158,7 @@ func main() {
 
 	if *mode == "network" {
 
-		tmAgent.tpClient, err = ctrlerif.NewTpClient(tmAgent.tpCtrler, "", rc)
+		tmAgent.tpClient, err = ctrlerif.NewTpClient(tmAgent.nodeUUID, tmAgent.tpCtrler, globals.Tpm, rc)
 		if err != nil {
 			log.Fatalf("failed to init tmagent controller, err: %v", err)
 		}
