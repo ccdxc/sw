@@ -194,24 +194,92 @@ static int ionic_adminq_napi(struct napi_struct *napi, int budget)
 }
 
 static void ionic_get_stats64(struct net_device *netdev,
-			      struct rtnl_link_stats64 *net_stats)
+			      struct rtnl_link_stats64 *ns)
 {
 	struct lif *lif = netdev_priv(netdev);
-	struct rx_stats *rx_stats;
-	struct tx_stats *tx_stats;
+	struct stats_dump *sd = lif->stats_dump;
 	unsigned int i;
+	u64 cnt;
 
 	for (i = 0; i < lif->ntxqcqs; i++) {
-		tx_stats = &lif->txqcqs[i]->stats.tx;
-		net_stats->tx_packets += tx_stats->pkts;
-		net_stats->tx_bytes += tx_stats->bytes;
+		struct tx_stats *tx_stats = &lif->txqcqs[i]->stats.tx;
+
+		ns->tx_packets += tx_stats->pkts;
+		ns->tx_bytes += tx_stats->bytes;
 	}
 
 	for (i = 0; i < lif->nrxqcqs; i++) {
-		rx_stats = &lif->rxqcqs[i]->stats.rx;
-		net_stats->rx_packets += rx_stats->pkts;
-		net_stats->rx_bytes += rx_stats->bytes;
+		struct rx_stats *rx_stats = &lif->rxqcqs[i]->stats.rx;
+
+		ns->rx_packets += rx_stats->pkts;
+		ns->rx_bytes += rx_stats->bytes;
 	}
+
+	// double checking stats counters
+	cnt = sd->rx_ucast_packets + sd->rx_mcast_packets + sd->rx_bcast_packets;
+	if (ns->rx_packets != cnt)
+		netdev_warn(netdev, "rx_packets mismatch: %llu %llu\n",
+			    ns->rx_packets, cnt);
+
+	cnt = sd->tx_ucast_packets + sd->tx_mcast_packets + sd->tx_bcast_packets;
+	if (ns->tx_packets != cnt)
+		netdev_warn(netdev, "tx_packets mismatch: %llu %llu\n",
+			    ns->tx_packets, cnt);
+
+	cnt = sd->rx_ucast_bytes + sd->rx_mcast_bytes + sd->rx_bcast_bytes;
+	if (ns->rx_bytes != cnt)
+		netdev_warn(netdev, "rx_bytes mismatch: %llu %llu\n",
+			    ns->rx_bytes, cnt);
+
+	cnt = sd->tx_ucast_bytes + sd->tx_mcast_bytes + sd->tx_bcast_bytes;
+	if (ns->tx_bytes != cnt)
+		netdev_warn(netdev, "tx_bytes mismatch: %llu %llu\n",
+			    ns->tx_bytes, cnt);
+
+	ns->rx_dropped = sd->rx_ucast_drop_packets +
+			 sd->rx_mcast_drop_packets +
+			 sd->rx_bcast_drop_packets;
+	ns->tx_dropped = sd->tx_ucast_drop_packets +
+			 sd->tx_mcast_drop_packets +
+			 sd->tx_bcast_drop_packets;
+	ns->multicast = sd->rx_mcast_packets;
+	//ns->collisions;
+
+	//ns->rx_length_errors;
+	ns->rx_over_errors = sd->rx_queue_empty_drop;
+	//ns->rx_crc_errors;
+	//ns->rx_frame_errors;
+	//ns->rx_fifo_errors;
+	ns->rx_missed_errors = sd->rx_dma_error +
+			       sd->rx_queue_disabled_drop +
+			       sd->rx_queue_scheduled +
+			       sd->rx_desc_fetch_error +
+			       sd->rx_desc_data_error;
+	ns->tx_aborted_errors = sd->tx_dma_error +
+				sd->tx_queue_disabled +
+				sd->tx_queue_scheduled +
+				sd->tx_desc_fetch_error +
+				sd->tx_desc_data_error;
+	//ns->tx_carrier_errors;
+	//ns->tx_fifo_errors;
+	//ns->tx_heartbeat_errors;
+	//ns->tx_window_errors;
+	//ns->rx_compressed;
+	//ns->tx_compressed;
+
+	ns->rx_errors = ns->rx_length_errors +
+			ns->rx_over_errors +
+			ns->rx_crc_errors +
+			ns->rx_frame_errors +
+			ns->rx_fifo_errors +
+			ns->rx_missed_errors;
+	ns->tx_errors = ns->tx_aborted_errors +
+			ns->tx_carrier_errors +
+			ns->tx_fifo_errors +
+			ns->tx_heartbeat_errors +
+			ns->tx_window_errors +
+			ns->rx_compressed +
+			ns->tx_compressed;
 }
 
 static int ionic_lif_addr_add(struct lif *lif, const u8 *addr)
