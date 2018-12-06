@@ -13,12 +13,6 @@ targets:
     area:
     sub-area:
     feature:
-  gtests-valgrind:
-    commands: ["make", "jobd/gtests-valgrind"]
-    owners: ["email:saratk@pensando.io"]
-    area:
-    sub-area:
-    feature:
   halctl:
     commands: ["make", "jobd/halctl"]
     owners: ["email:statikon@pensando.io"]
