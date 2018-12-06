@@ -14,6 +14,8 @@
 #include "nic/hal/apollo/api/oci_state.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
+#include "nic/hal/apollo/framework/api_ctxt.hpp"
+#include "nic/hal/apollo/framework/api_engine.hpp"
 
 // TODO: HACK !!!, remove
 void table_health_monitor_cb(uint32_t table_id,
@@ -467,8 +469,9 @@ error:
     cleanup_datapath(vcn);
     return rv;
 }
-
 /** @} */ // end of OCI_VNIC_DB
+
+#endif
 
 /**
  * @brief Create VNIC
@@ -479,9 +482,14 @@ error:
 sdk_ret_t
 oci_vnic_create (_In_ oci_vnic_t *vnic)
 {
-    sdk_ret_t rv;
+    api_ctxt_t    api_ctxt;   // TODO: get this from slab
+    sdk_ret_t     rv;
 
-    rv = g_vnic_state.vnic_create(vnic);
+    memset(&api_ctxt, 0, sizeof(api_ctxt));
+    api_ctxt.op = API_OP_CREATE;
+    api_ctxt.id = API_ID_VNIC_CREATE;
+    api_ctxt.api_info = vnic;    // TODO: this may not be acceptable usage if caller passed this from stack
+    rv = g_api_engine.process_api(&api_ctxt);
     return rv;
 }
 
@@ -494,13 +502,17 @@ oci_vnic_create (_In_ oci_vnic_t *vnic)
 sdk_ret_t
 oci_vnic_delete (_In_ oci_vnic_key_t *vnic_key)
 {
-    sdk_ret_t rv;
+    api_ctxt_t    api_ctxt;   // TODO: get this from slab ??
+    sdk_ret_t     rv;
 
-    rv = g_vnic_state.vnic_delete(vnic_key);
+    memset(&api_ctxt, 0, sizeof(api_ctxt));
+    api_ctxt.op = API_OP_DELETE;
+    api_ctxt.id = API_ID_VNIC_DELETE;
+    api_ctxt.api_info = vnic_key;    // TODO: this may not be acceptable usage if caller passed this from stack
+    rv = g_api_engine.process_api(&api_ctxt);
     return rv;
 }
 
 /** @} */ // end of OCI_VNIC_API
-#endif
 
 }    // namespace api

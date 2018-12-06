@@ -10,6 +10,10 @@
 #if !defined (__SUBNET_HPP__)
 #define __SUBNET_HPP__
 
+#include "nic/sdk/include/sdk/types.hpp"
+#include "nic/sdk/include/sdk/slab.hpp"
+#include "nic/sdk/include/sdk/indexer.hpp"
+#include "nic/sdk/include/sdk/ht.hpp"
 #include "nic/hal/apollo/framework/api.hpp"
 #include "nic/hal/apollo/include/api/oci_subnet.hpp"
 

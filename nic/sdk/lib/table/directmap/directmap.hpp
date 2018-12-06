@@ -92,7 +92,6 @@ public:
     uint32_t num_delete_errors(void) const;
 
 private:
-
     enum api {
         INSERT,
         INSERT_WITHID,

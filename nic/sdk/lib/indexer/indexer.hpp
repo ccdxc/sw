@@ -78,5 +78,7 @@ public:
 }    // namespace lib
 }    // namespace sdk
 
-#endif // __SDK_INDEXER_HPP__
+using sdk::lib::indexer;
+
+#endif    // __SDK_INDEXER_HPP__
 

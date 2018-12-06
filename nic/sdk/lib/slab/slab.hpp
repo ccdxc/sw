@@ -103,5 +103,7 @@ private:
 }    // namespace lib
 }    // namespace sdk
 
-#endif  // __SDK_SLAB_HPP__
+using sdk::lib::slab;
+
+#endif    // __SDK_SLAB_HPP__
 

@@ -12,6 +12,8 @@
 #include "nic/hal/apollo/core/mem.hpp"
 #include "nic/hal/apollo/api/vcn.hpp"
 #include "nic/hal/apollo/api/oci_state.hpp"
+#include "nic/hal/apollo/framework/api_ctxt.hpp"
+#include "nic/hal/apollo/framework/api_engine.hpp"
 
 namespace api {
 
@@ -321,6 +323,7 @@ vcn_db::vcn_delete(_In_ vcn_t *vcn) {
         vcn_free(vcn);
     }
 }
+#endif
 
 /**
  * @defgroup OCI_VCN_API - first level of vcn API handling
@@ -337,13 +340,15 @@ vcn_db::vcn_delete(_In_ vcn_t *vcn) {
 sdk_ret_t
 oci_vcn_create (_In_ oci_vcn_t *vcn)
 {
-    sdk_ret_t rv;
+    api_ctxt_t    api_ctxt;   // TODO: get this from slab
+    sdk_ret_t     rv;
 
-    if ((rv = g_vcn_db.vcn_create(vcn)) != sdk::SDK_RET_OK) {
-        return rv;
-    }
-
-    return sdk::SDK_RET_OK;
+    memset(&api_ctxt, 0, sizeof(api_ctxt));
+    api_ctxt.op = API_OP_CREATE;
+    api_ctxt.id = API_ID_VCN_CREATE;
+    api_ctxt.api_info = vcn;    // TODO: this may not be acceptable usage if caller passed this from stack
+    rv = g_api_engine.process_api(&api_ctxt);
+    return rv;
 }
 
 /**
@@ -355,16 +360,17 @@ oci_vcn_create (_In_ oci_vcn_t *vcn)
 sdk_ret_t
 oci_vcn_delete (_In_ oci_vcn_key_t *vcn_key)
 {
-    sdk_ret_t rv;
+    api_ctxt_t    api_ctxt;   // TODO: get this from slab ??
+    sdk_ret_t     rv;
 
-    if ((rv = g_vcn_db.vcn_delete(vcn_key)) != sdk::SDK_RET_OK) {
-        return rv;
-    }
-
-    return sdk::SDK_RET_OK;
+    memset(&api_ctxt, 0, sizeof(api_ctxt));
+    api_ctxt.op = API_OP_DELETE;
+    api_ctxt.id = API_ID_VCN_DELETE;
+    api_ctxt.api_info = vcn_key;    // TODO: this may not be acceptable usage if caller passed this from stack
+    rv = g_api_engine.process_api(&api_ctxt);
+    return rv;
 }
 
 /** @} */    // end of OCI_VCN_API
-#endif
 
 }    // namespace api

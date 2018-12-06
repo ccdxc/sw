@@ -165,6 +165,10 @@ private:
 }    // namespace lib
 }    // namespace sdk
 
+using sdk::lib::ht;
+using sdk::lib::ht_ctxt_t;
+using sdk::lib::hash_algo;
+
 #if 0
 #define SDK_HT_CREATE(name, htable, table_sz, ...)                             \
 do {                                                                           \

@@ -11,6 +11,8 @@
 #include "nic/hal/apollo/core/mem.hpp"
 #include "nic/hal/apollo/api/subnet.hpp"
 #include "nic/hal/apollo/api/oci_state.hpp"
+#include "nic/hal/apollo/framework/api_ctxt.hpp"
+#include "nic/hal/apollo/framework/api_engine.hpp"
 
 using namespace sdk;
 
@@ -324,6 +326,7 @@ subnet_db::subnet_delete(_In_ subnet_t *subnet) {
         subnet_free(subnet);
     }
 }
+#endif
 
 /**
  * @defgroup OCI_SUBNET_API - First level of subnet API handling
@@ -340,13 +343,15 @@ subnet_db::subnet_delete(_In_ subnet_t *subnet) {
 sdk_ret_t
 oci_subnet_create (_In_ oci_subnet_t *subnet)
 {
-    sdk_ret_t rv;
+    api_ctxt_t    api_ctxt;
+    sdk_ret_t     rv;
 
-    if ((rv = g_subnet_db.subnet_create(subnet)) != sdk::SDK_RET_OK) {
-        return rv;
-    }
-
-    return sdk::SDK_RET_OK;
+    memset(&api_ctxt, 0, sizeof(api_ctxt));
+    api_ctxt.op = API_OP_CREATE;
+    api_ctxt.id = API_ID_SUBNET_CREATE;
+    api_ctxt.api_info = subnet;    // TODO: this may not be acceptable usage if caller passed this from stack
+    rv = g_api_engine.process_api(&api_ctxt);
+    return rv;
 }
 
 /**
@@ -358,16 +363,17 @@ oci_subnet_create (_In_ oci_subnet_t *subnet)
 sdk_ret_t
 oci_subnet_delete (_In_ oci_subnet_key_t *subnet_key)
 {
-    sdk_ret_t rv;
+    api_ctxt_t    api_ctxt;   // TODO: get this from slab ??
+    sdk_ret_t     rv;
 
-    if ((rv = g_subnet_db.subnet_delete(subnet_key)) != sdk::SDK_RET_OK) {
-        return rv;
-    }
-
-    return sdk::SDK_RET_OK;
+    memset(&api_ctxt, 0, sizeof(api_ctxt));
+    api_ctxt.op = API_OP_DELETE;
+    api_ctxt.id = API_ID_SUBNET_DELETE;
+    api_ctxt.api_info = subnet_key;    // TODO: this may not be acceptable usage if caller passed this from stack
+    rv = g_api_engine.process_api(&api_ctxt);
+    return rv;
 }
 
 /** @} */    // end of OCI_SUBNET_API
-#endif
 
 }    // namespace api
