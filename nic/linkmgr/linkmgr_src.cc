@@ -13,6 +13,7 @@
 #include "nic/sdk/include/sdk/asic/capri/cap_mx_api.h"
 #include "lib/pal/pal.hpp"
 #include "platform/src/lib/pal/include/pal_types.h"
+#include "platform/drivers/xcvr.hpp"
 
 using hal::cfg_op_ctxt_t;
 using hal::dhl_entry_t;
@@ -146,20 +147,20 @@ void linkmgr_log(std::string log_type,
 static void
 port_set_leds (uint32_t port_num, port_event_t event)
 {
-    int qsfp_port = sdk::lib::catalog::port_num_to_qsfp_port(port_num);
+    int xcvr_port = sdk::lib::catalog::port_num_to_qsfp_port(port_num);
 
-    if (qsfp_port == -1) {
+    if (xcvr_port == -1) {
         return;
     }
 
     switch (event) {
     case port_event_t::PORT_EVENT_LINK_UP:
-        sdk::lib::pal_qsfp_set_led(qsfp_port,
+        sdk::lib::pal_qsfp_set_led(xcvr_port,
                                    pal_qsfp_led_color_t::QSFP_LED_COLOR_GREEN);
         break;
 
     case port_event_t::PORT_EVENT_LINK_DOWN:
-        sdk::lib::pal_qsfp_set_led(qsfp_port,
+        sdk::lib::pal_qsfp_set_led(xcvr_port,
                                    pal_qsfp_led_color_t::QSFP_LED_COLOR_NONE);
         break;
 
@@ -175,9 +176,8 @@ xcvr_event_port_get_ht_cb (void *ht_entry, void *ctxt)
     port_t            *port       = NULL;
     port_args_t       port_args   = { 0 };
 
-    port_ht_cb_ctxt_t      *ht_cb_ctxt = (port_ht_cb_ctxt_t*) ctxt;
-    xcvr_event_port_ctxt_t *xcvr_event_port_ctxt =
-                            (xcvr_event_port_ctxt_t*) ht_cb_ctxt->ctxt;
+    port_ht_cb_ctxt_t *ht_cb_ctxt      = (port_ht_cb_ctxt_t*) ctxt;
+    xcvr_event_info_t *xcvr_event_info = (xcvr_event_info_t*) ht_cb_ctxt->ctxt;
 
     hal_handle_id_ht_entry_t *entry = (hal_handle_id_ht_entry_t *)ht_entry;
 
@@ -193,33 +193,36 @@ xcvr_event_port_get_ht_cb (void *ht_entry, void *ctxt)
         return false;
     }
 
-    int qsfp_port =
+    int xcvr_port =
         sdk::lib::catalog::port_num_to_qsfp_port(port_args.port_num);
 
-    HAL_TRACE_DEBUG("port: {}, qsfp_port: {}, xcvr_event_port: {}, "
+    HAL_TRACE_DEBUG("port: {}, xcvr_port: {}, xcvr_event_port: {}, "
                     "xcvr_state: {}, user_admin: {}, admin: {}",
-                    port_args.port_num, qsfp_port, xcvr_event_port_ctxt->port_num,
-                    static_cast<uint32_t>(xcvr_event_port_ctxt->state),
+                    port_args.port_num, xcvr_port, xcvr_event_info->port_num,
+                    static_cast<uint32_t>(xcvr_event_info->state),
                     static_cast<uint32_t>(port_args.user_admin_state),
                     static_cast<uint32_t>(port_args.admin_state));
 
-    if (qsfp_port == -1 || qsfp_port != (int)xcvr_event_port_ctxt->port_num) {
+    if (xcvr_port == -1 || xcvr_port != (int)xcvr_event_info->port_num) {
         return false;
     }
 
-    if (xcvr_event_port_ctxt->state == xcvr_state_t::XCVR_SPROM_READ) {
+    if (xcvr_event_info->state == xcvr_state_t::XCVR_SPROM_READ) {
+        // update cable type
+        port_args.cable_type  = xcvr_event_info->cable_type;
+
         if (port_args.user_admin_state ==
                 port_admin_state_t::PORT_ADMIN_STATE_UP) {
             port_args.admin_state = port_admin_state_t::PORT_ADMIN_STATE_UP;
-
-            sdk_ret = sdk::linkmgr::port_update(port->pd_p, &port_args);
-
-            if (sdk_ret != SDK_RET_OK) {
-                HAL_TRACE_ERR("Failed to update for port: {}, err: {}",
-                              port->port_num, sdk_ret);
-            }
         }
-    } else if (xcvr_event_port_ctxt->state == xcvr_state_t::XCVR_REMOVED) {
+
+        sdk_ret = sdk::linkmgr::port_update(port->pd_p, &port_args);
+
+        if (sdk_ret != SDK_RET_OK) {
+            HAL_TRACE_ERR("Failed to update for port: {}, err: {}",
+                          port->port_num, sdk_ret);
+        }
+    } else if (xcvr_event_info->state == xcvr_state_t::XCVR_REMOVED) {
         if (port_args.user_admin_state ==
                 port_admin_state_t::PORT_ADMIN_STATE_UP) {
             port_args.admin_state = port_admin_state_t::PORT_ADMIN_STATE_DOWN;
@@ -237,24 +240,20 @@ xcvr_event_port_get_ht_cb (void *ht_entry, void *ctxt)
 }
 
 static void
-xcvr_event_port_enable (uint32_t port_num, xcvr_state_t state)
+xcvr_event_port_enable (xcvr_event_info_t *xcvr_event_info)
 {
     // If xcvr is removed, bring link down
     // If xcvr sprom read is successful, bring linkup if user admin enabled.
     // Ignore all other xcvr states.
 
-    if (state != xcvr_state_t::XCVR_REMOVED &&
-        state != xcvr_state_t::XCVR_SPROM_READ) {
+    if (xcvr_event_info->state != xcvr_state_t::XCVR_REMOVED &&
+        xcvr_event_info->state != xcvr_state_t::XCVR_SPROM_READ) {
         return;
     }
 
-    xcvr_event_port_ctxt_t xcvr_event_port_ctxt;
-    port_ht_cb_ctxt_t      ht_cb_ctxt;
+    port_ht_cb_ctxt_t ht_cb_ctxt;
 
-    xcvr_event_port_ctxt.port_num = port_num;
-    xcvr_event_port_ctxt.state    = state;
-
-    ht_cb_ctxt.ctxt = &xcvr_event_port_ctxt;
+    ht_cb_ctxt.ctxt = xcvr_event_info;
 
     // Walk the objects and invoke ht cb
     g_linkmgr_state->port_id_ht()->walk(xcvr_event_port_get_ht_cb, &ht_cb_ctxt);
@@ -268,10 +267,10 @@ port_event_cb (uint32_t port_num, port_event_t event, port_speed_t port_speed)
 }
 
 static void
-xcvr_event_cb (uint32_t port_num, xcvr_state_t state, xcvr_pid_t pid)
+xcvr_event_cb (xcvr_event_info_t *xcvr_event_info)
 {
-    xcvr_event_port_enable(port_num, state);
-    xcvr_event_notify(port_num, state, pid);
+    xcvr_event_port_enable(xcvr_event_info);
+    xcvr_event_notify(xcvr_event_info);
 }
 
 hal_ret_t
@@ -526,6 +525,53 @@ port_prepare_rsp (PortResponse *rsp, hal_ret_t ret, hal_handle_t hal_handle_id)
     return HAL_RET_OK;
 }
 
+
+//------------------------------------------------------------------------------
+// set port_args based on xcvr state
+//------------------------------------------------------------------------------
+static hal_ret_t
+port_args_xcvr_set (port_args_t *port_args)
+{
+    // If xcvr is inserted:
+    //      set the cable type
+    //      set AN? TODO
+    // Else:
+    //      set admin_state as ADMIN_DOWN
+    //      (only admin_state is down. user_admin_state as per request msg)
+
+    int xcvr_port =
+        sdk::lib::catalog::port_num_to_qsfp_port(port_args->port_num);
+
+    // default cable type is CU
+    port_args->cable_type = cable_type_t::CABLE_TYPE_CU;
+
+    if (xcvr_port != -1) {
+        if (sdk::platform::xcvr_valid(xcvr_port-1) == true) {
+            port_args->cable_type = sdk::platform::cable_type(xcvr_port-1);
+
+            // For older boards, cable type returned is NONE.
+            // Set it to CU
+            if (port_args->cable_type == cable_type_t::CABLE_TYPE_NONE) {
+                port_args->cable_type = cable_type_t::CABLE_TYPE_CU;
+            }
+
+            switch (port_args->cable_type) {
+                case cable_type_t::CABLE_TYPE_FIBER:
+                    // port_args->auto_neg_enable = false;
+                    break;
+
+                default:
+                    // port_args->auto_neg_enable = true;
+                    break;
+            }
+        } else {
+            port_args->admin_state = port_admin_state_t::PORT_ADMIN_STATE_DOWN;
+        }
+    }
+
+    return HAL_RET_OK;
+}
+
 //------------------------------------------------------------------------------
 // process a port create request
 //------------------------------------------------------------------------------
@@ -569,6 +615,8 @@ port_create (port_args_t *port_args, hal_handle_t *hal_handle)
 
     // For config push, user_admin_state = admin_state
     port_args->user_admin_state = port_args->admin_state;
+
+    port_args_xcvr_set (port_args);
 
     dhl_entry.handle  = pi_p->hal_handle_id;
     dhl_entry.obj     = pi_p;
@@ -781,6 +829,8 @@ port_update (port_args_t *port_args)
 
     // For config push, user_admin_state = admin_state
     port_args->user_admin_state = port_args->admin_state;
+
+    port_args_xcvr_set (port_args);
 
     // form ctxt and call infra update object
     dhl_entry.handle     = pi_p->hal_handle_id;

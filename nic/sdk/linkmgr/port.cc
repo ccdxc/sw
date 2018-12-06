@@ -246,7 +246,7 @@ port::port_serdes_cfg(void)
         serdes_info = serdes_info_get(
                                     sbus_addr,
                                     static_cast<uint32_t>(serdes_speed),
-                                    this->cable_type_);
+                                    cable_type());
 
         serdes_fns()->serdes_basic_cfg(sbus_addr, serdes_info);
         serdes_fns()->serdes_cfg(sbus_addr, serdes_info);
@@ -270,13 +270,29 @@ port::port_serdes_tx_rx_enable(bool enable)
 sdk_ret_t
 port::port_serdes_output_enable(bool enable)
 {
-    uint32_t lane = 0;
+    uint32_t lane         = 0;
+    uint8_t  xcvr_en_mask = 0x0;
+    sdk_ret_t sdk_ret = SDK_RET_OK;
+
     for (lane = 0; lane < num_lanes_; ++lane) {
         serdes_fns()->serdes_output_enable(port_sbus_addr(lane),
-                                             enable);
+                                           enable);
+        xcvr_en_mask |= (1 << lane);
     }
 
-    return SDK_RET_OK;
+    int xcvr_port = sdk::lib::catalog::port_num_to_qsfp_port(port_num());
+
+    if (xcvr_port != -1 &&
+        cable_type() == sdk::types::cable_type_t::CABLE_TYPE_FIBER) {
+        sdk_ret = sdk::platform::xcvr_enable(xcvr_port-1, enable, xcvr_en_mask);
+        if (sdk_ret != SDK_RET_OK) {
+            SDK_LINKMGR_TRACE_ERR ("Failed to %s xcvr_port: %d",
+                                   enable == true? "enable" : "disable",
+                                   xcvr_port);
+        }
+    }
+
+    return sdk_ret;
 }
 
 sdk_ret_t
@@ -548,7 +564,7 @@ port::port_serdes_an_hcd_cfg (void)
             serdes_info = serdes_info_get(
                                     sbus_addr,
                                     static_cast<uint32_t>(serdes_speed),
-                                    this->cable_type_);
+                                    cable_type());
 
             // configure Tx/Rx slip, Rx termination, Tx EQ
             serdes_fns()->serdes_cfg(sbus_addr, serdes_info);
@@ -1079,14 +1095,6 @@ port::port_enable(void)
 {
     // check if already enabled
     if (this->admin_state_ == port_admin_state_t::PORT_ADMIN_STATE_UP) {
-        return SDK_RET_OK;
-    }
-
-    int qsfp_port = sdk::lib::catalog::port_num_to_qsfp_port(port_num());
-
-    // dont try link up if no xcvr is present
-    if (qsfp_port != -1
-        && (sdk::platform::xcvr_valid(qsfp_port-1) == false)) {
         return SDK_RET_OK;
     }
 

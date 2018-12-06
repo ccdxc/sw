@@ -24,8 +24,8 @@ using sdk::types::cable_type_t;
 using sdk::types::xcvr_state_t;
 
 typedef struct xcvr_s {
-    xcvr_type_t   type;
-    cable_type_t  cable_type;
+    xcvr_type_t   type;         // QSFP28, QSFP, SFP
+    cable_type_t  cable_type;   // CU, Fiber
     xcvr_state_t  state;
     xcvr_pid_t    pid;
     uint8_t       sprom_read_count;
@@ -99,6 +99,7 @@ void xcvr_poll_timer(void);
 void xcvr_init(xcvr_event_notify_t xcvr_notify_cb);
 bool xcvr_valid(int port);
 sdk_ret_t xcvr_get(int port, port_args_t *port_arg);
+sdk_ret_t xcvr_enable(int port, bool enable, uint8_t mask);
 
 } // namespace platform
 } // namespace sdk

@@ -260,8 +260,12 @@ error port_svc::update_xcvr_status(google::protobuf::uint32 port_num,
 }
 
 void
-xcvr_event_notify (uint32_t port_num, xcvr_state_t state, xcvr_pid_t pid)
+xcvr_event_notify (xcvr_event_info_t *xcvr_event_info)
 {
+    uint32_t     port_num = xcvr_event_info->port_num;
+    xcvr_state_t state    = xcvr_event_info->state;
+    xcvr_pid_t   pid      = xcvr_event_info->pid;
+
     switch (state) {
     case xcvr_state_t::XCVR_REMOVED:
         HAL_TRACE_DEBUG("Xcvr removed; port: {}", port_num);

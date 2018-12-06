@@ -21,9 +21,7 @@ typedef void (*port_log_fn_t)(std::string log_type,
                               const char *buf,
                               int len);
 
-typedef void (*xcvr_event_notify_t)(uint32_t port_num,
-                                    xcvr_state_t state,
-                                    xcvr_pid_t pid);
+typedef void (*xcvr_event_notify_t)(xcvr_event_info_t *xcvr_event_info);
 
 typedef enum linkmgr_thread_id_e {
     LINKMGR_THREAD_ID_MIN         = 0,
@@ -56,6 +54,7 @@ typedef struct port_args_s {
     port_oper_status_t    oper_status;                // oper status of the port
     port_fec_type_t       fec_type;                   // FEC type
     port_pause_type_t     pause;                      // mac pause
+    cable_type_t          cable_type;                 // CU/Fiber cable type
     bool                  auto_neg_enable;            // Enable AutoNeg
     bool                  mac_stats_reset;            // mac stats reset
     uint32_t              mac_id;                     // mac id associated with the port

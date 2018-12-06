@@ -46,12 +46,12 @@ xcvr_state_change (int port) {
 
     // TODO For testing
 #if 0
-    int qsfp_port = 0;
+    int xcvr_port = 0;
     int qsfp_present = 0;
     FILE *d_fp = fopen("/qsfp_presence", "r");
     if (d_fp) {
-        fscanf(d_fp, "%d %d", &qsfp_port, &qsfp_present);
-        if (qsfp_port == port + 1) {
+        fscanf(d_fp, "%d %d", &xcvr_port, &qsfp_present);
+        if (xcvr_port == port + 1) {
             present = qsfp_present == 1? true : false;
         }
         fclose(d_fp);
@@ -84,35 +84,28 @@ xcvr_state_change (int port) {
 // Send notification for xcvr_state
 static sdk_ret_t
 xcvr_send_notification (int port) {
+    xcvr_event_info_t xcvr_event_info;
+
+    memset(&xcvr_event_info, 0, sizeof(xcvr_event_info_t));
+
     // Front panel ports are 1 based
-    int qsfp_port = port + 1;
+    xcvr_event_info.port_num   = port + 1;
+    xcvr_event_info.state      = xcvr_state(port);
+    xcvr_event_info.cable_type = cable_type(port);
 
     if (g_xcvr_notify_cb) {
         switch (xcvr_state(port)) {
-        case xcvr_state_t::XCVR_REMOVED:
-            g_xcvr_notify_cb(qsfp_port,
-                             xcvr_state(port),
-                             xcvr_pid_t::XCVR_PID_UNKNOWN);
-            break;
-        case xcvr_state_t::XCVR_INSERTED:
-            g_xcvr_notify_cb(qsfp_port,
-                             xcvr_state(port),
-                            xcvr_pid_t::XCVR_PID_UNKNOWN);
-            break;
         case xcvr_state_t::XCVR_SPROM_READ:
-            g_xcvr_notify_cb(qsfp_port,
-                             xcvr_state(port),
-                             xcvr_pid_t::XCVR_PID_QSFP_100G_CR4);
+            xcvr_event_info.pid = xcvr_pid_t::XCVR_PID_QSFP_100G_CR4;
             break;
-        case xcvr_state_t::XCVR_SPROM_READ_ERR:
-            g_xcvr_notify_cb(qsfp_port,
-                             xcvr_state(port),
-                             xcvr_pid_t::XCVR_PID_UNKNOWN);
-            break;
+
         default:
+            xcvr_event_info.pid = xcvr_pid_t::XCVR_PID_UNKNOWN;
             break;
         }
     }
+
+    g_xcvr_notify_cb(&xcvr_event_info);
 
     return SDK_RET_OK;
 }
@@ -288,6 +281,21 @@ xcvr_valid (int port)
     }
 
     return xcvr_state(port) == xcvr_state_t::XCVR_SPROM_READ? true : false;
+}
+
+sdk_ret_t
+xcvr_enable(int port, bool enable, uint8_t mask)
+{
+    switch(xcvr_type(port)) {
+    case xcvr_type_t::XCVR_TYPE_QSFP28:
+    case xcvr_type_t::XCVR_TYPE_QSFP:
+        return qsfp_enable(port, enable, mask);
+
+    default:
+        break;
+    }
+
+    return SDK_RET_OK;
 }
 
 } // namespace platform

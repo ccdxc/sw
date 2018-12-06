@@ -20,7 +20,7 @@ using boost::property_tree::ptree;
 #define MAX_PORT_LANES     4
 #define MAX_SERDES         9
 #define SERDES_SBUS_START  34
-#define MAX_PORT_SPEEDS    7
+#define MAX_PORT_SPEEDS    8
 #define MAX_BO_MODES       4
 
 typedef enum mac_mode_e {

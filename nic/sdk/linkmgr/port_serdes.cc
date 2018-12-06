@@ -245,6 +245,11 @@ serdes_an_rsfec_enable_read_default (uint32_t sbus_addr)
     return 0x0;
 }
 
+int serdes_an_core_status_default (uint32_t sbus_addr)
+{
+    return 0x34;
+}
+
 //---------------------------------------------------------------------------
 // HW methods
 //---------------------------------------------------------------------------
@@ -414,6 +419,9 @@ serdes_global_init_hw(uint32_t     jtag_id,
     aapl->debug                = 0;
     aapl->verbose              = 0;
     aapl->serdes_int_timeout   = 3000;
+
+    // disable logging to default stderr since we will log to file
+    aapl->enable_stream_err_logging = 0;
 
     // TODO workaround
     FILE *d_fp = fopen("/aapl_avago.cfg", "r");
@@ -1260,6 +1268,8 @@ port_serdes_fn_init(platform_type_t platform_type,
     serdes_fn->serdes_an_wait_hcd   = &serdes_an_wait_hcd_default;
     serdes_fn->serdes_an_hcd_read   = &serdes_an_hcd_read_default;
     serdes_fn->serdes_an_hcd_cfg    = &serdes_an_hcd_cfg_default;
+
+    serdes_fn->serdes_an_core_status = &serdes_an_core_status_default;
 
     serdes_fn->serdes_an_fec_enable_read   =
                                       &serdes_an_fec_enable_read_default;

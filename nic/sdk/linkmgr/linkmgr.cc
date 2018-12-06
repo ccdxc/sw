@@ -688,6 +688,7 @@ port_create (port_args_t *args)
     port_p->set_auto_neg_enable(args->auto_neg_enable);
     port_p->set_mtu(args->mtu);
     port_p->set_pause(args->pause);
+    port_p->set_cable_type(args->cable_type);
 
     // store the user configured admin state
     port_p->set_user_admin_state(args->user_admin_state);
@@ -707,17 +708,6 @@ port_create (port_args_t *args)
     ret = port::port_disable(port_p);
     if (ret != SDK_RET_OK) {
         SDK_TRACE_ERR("port disable failed");
-    }
-
-    int qsfp_port = sdk::lib::catalog::port_num_to_qsfp_port(args->port_num);
-
-    if (qsfp_port != -1) {
-        // TODO enable AN always until agent is aware of cables?
-        // port_p->set_auto_neg_enable(true);
-        if (sdk::platform::cable_type(qsfp_port-1) ==
-                  sdk::types::cable_type_t::CABLE_TYPE_FIBER) {
-            port_p->set_auto_neg_enable(false);
-        }
     }
 
     // if admin up is set, enable the port
@@ -795,6 +785,14 @@ port_update (void *pd_p, port_args_t *args)
         port_p->set_user_admin_state(args->user_admin_state);
     }
 
+    if (args->cable_type != cable_type_t::CABLE_TYPE_NONE &&
+        args->cable_type != port_p->cable_type()) {
+        SDK_TRACE_DEBUG("cable_type updated. new: %d, old: %d",
+                        args->cable_type, port_p->cable_type());
+        port_p->set_cable_type(args->cable_type);
+        configured = true;
+    }
+
     // FEC_TYPE_NONE is valid
     if (args->fec_type != port_p->fec_type()) {
         SDK_TRACE_DEBUG("fec updated. new: %d, old: %d",
@@ -843,16 +841,6 @@ port_update (void *pd_p, port_args_t *args)
     // Disable the port if any config has changed
     if (configured == true) {
         ret = port::port_disable(port_p);
-    }
-
-    int qsfp_port = sdk::lib::catalog::port_num_to_qsfp_port(args->port_num);
-
-    if (qsfp_port != -1) {
-        // dont enable the port if no xcvr is present
-        if (sdk::platform::xcvr_state(qsfp_port-1) !=
-                        sdk::types::xcvr_state_t::XCVR_SPROM_READ) {
-            return ret;
-        }
     }
 
     // Enable the port if -

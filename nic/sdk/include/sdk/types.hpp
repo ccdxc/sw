@@ -22,6 +22,7 @@ enum class port_event_t {
 };
 
 typedef enum cable_type_e {
+    CABLE_TYPE_NONE,
     CABLE_TYPE_CU,
     CABLE_TYPE_FIBER,
     CABLE_TYPE_MAX
@@ -111,6 +112,13 @@ typedef enum xcvr_pid_s {
     XCVR_PID_QSFP_100G_CR4,
 } xcvr_pid_t;
 
+typedef struct xcvr_event_info_s {
+    uint32_t     port_num;
+    xcvr_state_t state;
+    xcvr_pid_t   pid;
+    cable_type_t cable_type;
+} xcvr_event_info_t;
+
 }    // namespace types
 }    // namespace sdk
 
@@ -126,6 +134,8 @@ using sdk::types::port_breakout_mode_t;
 using sdk::types::mem_addr_t;
 using sdk::types::hbm_addr_t;
 using sdk::types::q_notify_mode_t;
+using sdk::types::cable_type_t;
+using sdk::types::xcvr_event_info_t;
 
 #endif    // __SDK_TYPES_HPP__
 

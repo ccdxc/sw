@@ -45,6 +45,11 @@ public:
         this->port_type_ = port_type;
     }
 
+    uint32_t cable_type(void) { return this->cable_type_; }
+    void set_cable_type(cable_type_t cable_type) {
+        this->cable_type_ = cable_type;
+    }
+
     uint32_t port_num(void) { return this->port_num_; }
     void set_port_num(uint32_t port_num) {
         this->port_num_ = port_num;
