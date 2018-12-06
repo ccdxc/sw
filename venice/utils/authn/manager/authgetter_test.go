@@ -12,7 +12,7 @@ import (
 )
 
 func TestGetUser(t *testing.T) {
-	authGetter := GetAuthGetter("AuthGetterTest", apiSrvAddr, nil, 600)
+	authGetter := GetAuthGetter("AuthGetterTest", apiSrvAddr, nil)
 	AssertEventually(t, func() (bool, interface{}) {
 		user, ok := authGetter.GetUser(testUser, tenant)
 		return ok && user.Name == testUser && user.Tenant == tenant, nil
@@ -20,7 +20,7 @@ func TestGetUser(t *testing.T) {
 }
 
 func TestStopStart(t *testing.T) {
-	authGetter := GetAuthGetter("AuthGetterTest", apiSrvAddr, nil, 600)
+	authGetter := GetAuthGetter("AuthGetterTest", apiSrvAddr, nil)
 	MustCreateTestUser(apicl, "test1", testPassword, tenant)
 	defer DeleteUser(apicl, "test1", tenant)
 	AssertEventually(t, func() (bool, interface{}) {
@@ -48,11 +48,9 @@ func TestStopStart(t *testing.T) {
 func TestGetAuthenticators(t *testing.T) {
 	var authenticators []authn.Authenticator
 	var err error
-	authGetter := GetAuthGetter("AuthGetterTest", apiSrvAddr, nil, 600)
-	AssertConsistently(t, func() (bool, interface{}) {
-		authenticators, err = authGetter.GetAuthenticators()
-		return err != nil && authenticators == nil, nil
-	}, "authenticators created with no authentication policy defined")
+	authGetter := GetAuthGetter("AuthGetterTest", apiSrvAddr, nil)
+	authenticators, err = authGetter.GetAuthenticators()
+	Assert(t, err != nil && authenticators == nil, "authenticators created with no authentication policy defined")
 
 	policy := &auth.AuthenticationPolicy{
 		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
@@ -69,7 +67,7 @@ func TestGetAuthenticators(t *testing.T) {
 				},
 				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 			},
-			Secret: secret,
+			TokenExpiry: expiration.String(),
 		},
 	}
 	createAuthenticationPolicy(t, policy)
@@ -83,11 +81,9 @@ func TestGetAuthenticators(t *testing.T) {
 func TestGetTokenManager(t *testing.T) {
 	var tokenMgr TokenManager
 	var err error
-	authGetter := GetAuthGetter("AuthGetterTest", apiSrvAddr, nil, 600)
-	AssertConsistently(t, func() (bool, interface{}) {
-		tokenMgr, err = authGetter.GetTokenManager()
-		return err != nil && tokenMgr == nil, nil
-	}, "TokenManager created with no authentication policy defined")
+	authGetter := GetAuthGetter("AuthGetterTest", apiSrvAddr, nil)
+	tokenMgr, err = authGetter.GetTokenManager()
+	Assert(t, err != nil && tokenMgr == nil, "TokenManager created with no authentication policy defined")
 	policy := &auth.AuthenticationPolicy{
 		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
 		ObjectMeta: api.ObjectMeta{
@@ -103,7 +99,7 @@ func TestGetTokenManager(t *testing.T) {
 				},
 				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 			},
-			Secret: secret,
+			TokenExpiry: expiration.String(),
 		},
 	}
 	createAuthenticationPolicy(t, policy)
@@ -116,7 +112,7 @@ func TestGetTokenManager(t *testing.T) {
 }
 
 func TestIsAuthBootstrapped(t *testing.T) {
-	authGetter := GetAuthGetter("AuthGetterTest", apiSrvAddr, nil, 600)
+	authGetter := GetAuthGetter("AuthGetterTest", apiSrvAddr, nil)
 	AssertEventually(t, func() (bool, interface{}) {
 		ok, err := authGetter.IsAuthBootstrapped()
 		return err == nil && !ok, err

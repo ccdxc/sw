@@ -51,7 +51,9 @@ func TestLogin(t *testing.T) {
 	Assert(t, cookies[0].Name == "sid", "cookie not present")
 	Assert(t, cookies[0].HttpOnly, "cookie is not http only")
 	//Assert(t, cookies[0].Secure, "cookie is not secure") TODO:// Enable it once APIGW is TLS enabled
-	Assert(t, cookies[0].MaxAge == apigw.TokenExpInDays*24*60*60, fmt.Sprintf("cookie max age is not 6 days, [%d]", cookies[0].MaxAge))
+	maxAge := time.Duration(cookies[0].MaxAge) * time.Second
+	tokExp, _ := time.ParseDuration(ExpiryDuration)
+	Assert(t, maxAge.Round(time.Hour) == tokExp, fmt.Sprintf("cookie max age [%s] is not [%s]", maxAge.Round(time.Hour).String(), tokExp.String()))
 	Assert(t, cookies[0].Value != "", "session id value is not set")
 	// verify user from response
 	var user auth.User
@@ -244,23 +246,20 @@ func TestAuthPolicy(t *testing.T) {
 	}, "unable to fetch auth policy")
 	Assert(t, policy.Spec.Secret == nil, fmt.Sprintf("Secret [%#v] should be removed from AuthenticationPolicy object", policy.Spec.Secret))
 	// test CREATE AuthenticationPolicy
-	AssertConsistently(t, func() (bool, interface{}) {
-		policy, err = restcl.AuthV1().AuthenticationPolicy().Create(ctx, &auth.AuthenticationPolicy{
-			TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
-			ObjectMeta: api.ObjectMeta{
-				Name: "AuthenticationPolicy2",
+	policy, err = restcl.AuthV1().AuthenticationPolicy().Create(ctx, &auth.AuthenticationPolicy{
+		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "AuthenticationPolicy2",
+		},
+		Spec: auth.AuthenticationPolicySpec{
+			Authenticators: auth.Authenticators{
+				Ldap:               &auth.Ldap{Enabled: false},
+				Local:              &auth.Local{Enabled: true},
+				AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_LDAP.String()},
 			},
-			Spec: auth.AuthenticationPolicySpec{
-				Authenticators: auth.Authenticators{
-					Ldap:               &auth.Ldap{Enabled: false},
-					Local:              &auth.Local{Enabled: true},
-					AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_LDAP.String()},
-				},
-			},
-		})
-		return err != nil, nil
-
-	}, "cannot create more than one auth policy", "100ms", "1s")
+		},
+	})
+	Assert(t, err != nil, "cannot create more than one auth policy", "100ms", "1s")
 	// test UPDATE AuthenticationPolicy
 	AssertEventually(t, func() (bool, interface{}) {
 		policy, err = restcl.AuthV1().AuthenticationPolicy().Update(ctx, &auth.AuthenticationPolicy{
@@ -274,12 +273,14 @@ func TestAuthPolicy(t *testing.T) {
 					Local:              &auth.Local{Enabled: true},
 					AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_LDAP.String()},
 				},
+				TokenExpiry: "24h",
 			},
 		})
 		return err == nil, nil
 	}, "unable to update auth policy")
 	Assert(t, policy.Name == "AuthenticationPolicy3", fmt.Sprintf("invalid auth policy name, [%s]", policy.Name))
 	Assert(t, policy.Spec.Secret == nil, fmt.Sprintf("Secret [%#v] should be removed from AuthenticationPolicy object", policy.Spec.Secret))
+	Assert(t, policy.Spec.TokenExpiry == "24h", fmt.Sprintf("expected token expiry to be [%s], got [%s]", "24h", policy.Spec.TokenExpiry))
 	AssertEventually(t, func() (bool, interface{}) {
 		policy, err = restcl.AuthV1().AuthenticationPolicy().Get(ctx, &api.ObjectMeta{})
 		return err != nil, nil
@@ -294,10 +295,39 @@ func TestAuthPolicy(t *testing.T) {
 	Assert(t, policy.Name == "AuthenticationPolicy3", "invalid auth policy name")
 	Assert(t, policy.Spec.Secret == nil, fmt.Sprintf("Secret [%#v] should be removed from AuthenticationPolicy object", policy.Spec.Secret))
 	// test DELETE AuthenticationPolicy
-	AssertConsistently(t, func() (bool, interface{}) {
-		policy, err = restcl.AuthV1().AuthenticationPolicy().Delete(ctx, &api.ObjectMeta{Name: "AuthenticationPolicy3"})
-		return err != nil, nil
-	}, "AuthenticationPolicy can't be deleted", "100ms", "1s")
+	policy, err = restcl.AuthV1().AuthenticationPolicy().Delete(ctx, &api.ObjectMeta{Name: "AuthenticationPolicy3"})
+	Assert(t, err != nil, "AuthenticationPolicy can't be deleted", "100ms", "1s")
+	// set token expiry to be less than 2m
+	policy, err = restcl.AuthV1().AuthenticationPolicy().Update(ctx, &auth.AuthenticationPolicy{
+		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "AuthenticationPolicy3",
+		},
+		Spec: auth.AuthenticationPolicySpec{
+			Authenticators: auth.Authenticators{
+				Ldap:               &auth.Ldap{Enabled: false},
+				Local:              &auth.Local{Enabled: true},
+				AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_LDAP.String()},
+			},
+			TokenExpiry: "1m",
+		},
+	})
+	Assert(t, err != nil, "token expiry should be at least 2 minutes")
+	// missing ldap authenticator and token expiry less than 2m
+	policy, err = restcl.AuthV1().AuthenticationPolicy().Update(ctx, &auth.AuthenticationPolicy{
+		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "AuthenticationPolicy3",
+		},
+		Spec: auth.AuthenticationPolicySpec{
+			Authenticators: auth.Authenticators{
+				Local:              &auth.Local{Enabled: true},
+				AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_LDAP.String()},
+			},
+			TokenExpiry: "1m",
+		},
+	})
+	Assert(t, err != nil, "cannot mis-configure auth policy")
 }
 
 func TestUserStatus(t *testing.T) {

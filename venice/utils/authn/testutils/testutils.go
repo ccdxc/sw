@@ -19,6 +19,11 @@ import (
 	"github.com/pensando/sw/venice/utils/testutils"
 )
 
+const (
+	// ExpiryDuration is default duration for token expiry in authentication policy
+	ExpiryDuration = "144h"
+)
+
 // RadiusConfig to define test config for ACS or OpenRadius
 type RadiusConfig struct {
 	// URL is the host:port of the radius server
@@ -155,12 +160,12 @@ func MustDeleteUser(apicl apiclient.Services, username, tenant string) {
 
 // CreateAuthenticationPolicy creates an authentication policy with local and ldap auth config. secret and radius config is set to nil in the policy
 func CreateAuthenticationPolicy(apicl apiclient.Services, local *auth.Local, ldap *auth.Ldap) (*auth.AuthenticationPolicy, error) {
-	return CreateAuthenticationPolicyWithOrder(apicl, local, ldap, nil, []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()})
+	return CreateAuthenticationPolicyWithOrder(apicl, local, ldap, nil, []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()}, ExpiryDuration)
 }
 
 // MustCreateAuthenticationPolicy creates an authentication policy with local, ldap and radius auth config
 func MustCreateAuthenticationPolicy(apicl apiclient.Services, local *auth.Local, ldap *auth.Ldap, radius *auth.Radius) *auth.AuthenticationPolicy {
-	pol, err := CreateAuthenticationPolicyWithOrder(apicl, local, ldap, radius, []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String(), auth.Authenticators_RADIUS.String()})
+	pol, err := CreateAuthenticationPolicyWithOrder(apicl, local, ldap, radius, []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String(), auth.Authenticators_RADIUS.String()}, ExpiryDuration)
 	if err != nil {
 		panic(fmt.Sprintf("CreateAuthenticationPolicy failed with err %s", err))
 	}
@@ -168,7 +173,7 @@ func MustCreateAuthenticationPolicy(apicl apiclient.Services, local *auth.Local,
 }
 
 // CreateAuthenticationPolicyWithOrder creates an authentication policy
-func CreateAuthenticationPolicyWithOrder(apicl apiclient.Services, local *auth.Local, ldap *auth.Ldap, radius *auth.Radius, order []string) (*auth.AuthenticationPolicy, error) {
+func CreateAuthenticationPolicyWithOrder(apicl apiclient.Services, local *auth.Local, ldap *auth.Ldap, radius *auth.Radius, order []string, tokenExpiry string) (*auth.AuthenticationPolicy, error) {
 	// authn policy object
 	policy := &auth.AuthenticationPolicy{
 		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
@@ -182,6 +187,7 @@ func CreateAuthenticationPolicyWithOrder(apicl apiclient.Services, local *auth.L
 				Radius:             radius,
 				AuthenticatorOrder: order,
 			},
+			TokenExpiry: tokenExpiry,
 		},
 	}
 

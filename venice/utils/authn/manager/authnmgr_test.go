@@ -28,8 +28,9 @@ const (
 	testUser     = "test"
 	testPassword = "pensandoo0"
 	tenant       = "default"
-	expiration   = 600
 )
+
+var expiration = 600 * time.Second
 
 var (
 	logger = log.WithContext("Pkg", "authnmgr_test")
@@ -82,10 +83,10 @@ func setup() {
 	if err != nil {
 		panic(fmt.Sprintf("Error generating secret: Err: %v", err))
 	}
-	testHS512JWTToken = createHeadlessToken(signatureAlgorithm, secret, time.Duration(expiration)*time.Second, issuerClaimValue)
+	testHS512JWTToken = createHeadlessToken(signatureAlgorithm, secret, expiration, issuerClaimValue)
 
 	// create authentication manager
-	authnmgr, err = NewAuthenticationManager("authnmgr_test", apiSrvAddr, nil, time.Duration(expiration))
+	authnmgr, err = NewAuthenticationManager("authnmgr_test", apiSrvAddr, nil)
 	if err != nil {
 		panic("Error creating authentication manager")
 	}
@@ -117,6 +118,7 @@ func authenticationPoliciesData() map[string]*auth.AuthenticationPolicy {
 				},
 				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 			},
+			TokenExpiry: expiration.String(),
 		},
 	}
 	policydata["LDAP disabled, Local enabled"] = &auth.AuthenticationPolicy{
@@ -134,6 +136,7 @@ func authenticationPoliciesData() map[string]*auth.AuthenticationPolicy {
 				},
 				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 			},
+			TokenExpiry: expiration.String(),
 		},
 	}
 	policydata["Local enabled, LDAP enabled"] = &auth.AuthenticationPolicy{
@@ -151,6 +154,7 @@ func authenticationPoliciesData() map[string]*auth.AuthenticationPolicy {
 				},
 				AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_LDAP.String()},
 			},
+			TokenExpiry: expiration.String(),
 		},
 	}
 	policydata["Local enabled, LDAP disabled"] = &auth.AuthenticationPolicy{
@@ -168,6 +172,7 @@ func authenticationPoliciesData() map[string]*auth.AuthenticationPolicy {
 				},
 				AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_LDAP.String()},
 			},
+			TokenExpiry: expiration.String(),
 		},
 	}
 
@@ -175,7 +180,7 @@ func authenticationPoliciesData() map[string]*auth.AuthenticationPolicy {
 }
 
 func createAuthenticationPolicy(t *testing.T, policy *auth.AuthenticationPolicy) *auth.AuthenticationPolicy {
-	authGetter := GetAuthGetter("AuthGetterTest", apiSrvAddr, nil, 600)
+	authGetter := GetAuthGetter("AuthGetterTest", apiSrvAddr, nil)
 	AssertEventually(t, func() (bool, interface{}) {
 		_, err := authGetter.GetAuthenticationPolicy()
 		return err != nil, nil
@@ -185,7 +190,8 @@ func createAuthenticationPolicy(t *testing.T, policy *auth.AuthenticationPolicy)
 		policy.Spec.Authenticators.Local,
 		policy.Spec.Authenticators.Ldap,
 		policy.Spec.Authenticators.Radius,
-		policy.Spec.Authenticators.AuthenticatorOrder)
+		policy.Spec.Authenticators.AuthenticatorOrder,
+		policy.Spec.TokenExpiry)
 	if err != nil {
 		panic(fmt.Sprintf("CreateAuthenticationPolicyWithOrder failed with err %s", err))
 	}
@@ -198,7 +204,7 @@ func createAuthenticationPolicy(t *testing.T, policy *auth.AuthenticationPolicy)
 }
 
 func deleteAuthenticationPolicy(t *testing.T) {
-	authGetter := GetAuthGetter("AuthGetterTest", apiSrvAddr, nil, 600)
+	authGetter := GetAuthGetter("AuthGetterTest", apiSrvAddr, nil)
 	AssertEventually(t, func() (bool, interface{}) {
 		_, err := authGetter.GetAuthenticationPolicy()
 		return err == nil, nil
@@ -274,6 +280,7 @@ func disabledLocalAuthenticatorPolicyData() map[string](*auth.AuthenticationPoli
 				},
 				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 			},
+			TokenExpiry: expiration.String(),
 		},
 	}
 	policydata["LDAP implicitly disabled, Local implicitly disabled"] = &auth.AuthenticationPolicy{
@@ -287,6 +294,7 @@ func disabledLocalAuthenticatorPolicyData() map[string](*auth.AuthenticationPoli
 				Local:              &auth.Local{},
 				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 			},
+			TokenExpiry: expiration.String(),
 		},
 	}
 
@@ -302,7 +310,7 @@ func TestAuthenticateWithDisabledAuthenticators(t *testing.T) {
 		var autheduser *auth.User
 		var ok bool
 		var err error
-		AssertConsistently(t, func() (bool, interface{}) {
+		AssertEventually(t, func() (bool, interface{}) {
 			autheduser, ok, err = authnmgr.Authenticate(&auth.PasswordCredential{Username: testUser, Password: testPassword})
 			return !ok, nil
 		}, fmt.Sprintf("[%v] local user authentication should fail", testtype))
@@ -329,13 +337,14 @@ func TestAuthnMgrValidateToken(t *testing.T) {
 				},
 				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 			},
+			TokenExpiry: expiration.String(),
 		},
 	}
 	createdPolicy := createAuthenticationPolicy(t, policy)
 	defer deleteAuthenticationPolicy(t)
 
 	// create JWT token
-	jwtTok := createHeadlessToken(signatureAlgorithm, createdPolicy.Spec.Secret, time.Duration(expiration)*time.Second, issuerClaimValue)
+	jwtTok := createHeadlessToken(signatureAlgorithm, createdPolicy.Spec.Secret, expiration, issuerClaimValue)
 
 	var user *auth.User
 	var ok bool

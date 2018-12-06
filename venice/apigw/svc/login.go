@@ -57,7 +57,6 @@ type loginV1GwService struct {
 	logger          log.Logger
 	apiserver       string
 	rslvr           resolver.Interface
-	tokenExpiration time.Duration
 	csrfTokenLength int
 	authnMgr        *manager.AuthenticationManager
 	permGetter      rbac.PermissionGetter
@@ -102,7 +101,7 @@ func (s *loginV1GwService) CompleteRegistration(ctx context.Context,
 	grpcaddr = apiGateway.GetAPIServerAddr(grpcaddr)
 	s.apiserver = grpcaddr
 	// create AuthenticationManager
-	authnMgr, err := manager.NewAuthenticationManager(globals.APIGw, grpcaddr, s.rslvr, s.tokenExpiration)
+	authnMgr, err := manager.NewAuthenticationManager(globals.APIGw, grpcaddr, s.rslvr)
 	if err != nil {
 		s.logger.Errorf("failed to create authentication manager: %v", err)
 		return ErrInternal
@@ -146,7 +145,7 @@ func (s *loginV1GwService) CompleteRegistration(ctx context.Context,
 		}
 
 		// update user, create CSRF and session token
-		user, sessionToken, csrfToken, err := s.postLogin(ctx, user, cred.Password)
+		user, sessionToken, csrfToken, exp, err := s.postLogin(ctx, user, cred.Password)
 		switch err {
 		case ErrUsernameConflict:
 			w.WriteHeader(http.StatusConflict)
@@ -162,7 +161,7 @@ func (s *loginV1GwService) CompleteRegistration(ctx context.Context,
 
 		w.Header().Set(apigw.GrpcMDCsrfHeader, csrfToken)
 		// set cookie
-		http.SetCookie(w, createCookie(sessionToken, s.tokenExpiration))
+		http.SetCookie(w, createCookie(sessionToken, exp))
 		w.WriteHeader(http.StatusOK)
 		// remove user password
 		user.Spec.Password = ""
@@ -179,7 +178,6 @@ func (s *loginV1GwService) CompleteRegistration(ctx context.Context,
 func init() {
 	apiGateway := apigwpkg.MustGetAPIGateway()
 	svcLoginV1 := loginV1GwService{
-		tokenExpiration: time.Duration(apigw.TokenExpInDays * 24 * 60 * 60), //expiration in seconds
 		csrfTokenLength: CsrfTokenLen,
 	}
 	apiGateway.Register(LoginSvc, LoginSvcPath, &svcLoginV1)
@@ -198,28 +196,29 @@ func (s *loginV1GwService) login(ctx context.Context, in *auth.PasswordCredentia
 	return user, nil
 }
 
-func (s *loginV1GwService) postLogin(ctx context.Context, in *auth.User, password string) (*auth.User, string, string, error) {
+func (s *loginV1GwService) postLogin(ctx context.Context, in *auth.User, password string) (*auth.User, string, string, time.Time, error) {
+	var exp time.Time
 	// updates user status with role info. Needs to be called before creating jwt
 	user, err := s.updateUserStatus(in, password)
 	if err != nil {
 		s.logger.Errorf("Error updating status for user [%s|%s], Err: %v", in.Tenant, in.Name, err)
-		return in, "", "", err
+		return in, "", "", exp, err
 	}
 	// create CSRF token
 	csrfToken, err := createCSRFToken(s.csrfTokenLength)
 	if err != nil {
 		s.logger.Errorf("failed to generate CSRF token: %v", err)
-		return user, "", "", ErrInternal
+		return user, "", "", exp, ErrInternal
 	}
 	claims := make(map[string]interface{})
 	claims[manager.CsrfClaim] = csrfToken
 	// create session token
-	token, err := s.authnMgr.CreateToken(in, claims)
+	token, exp, err := s.authnMgr.CreateToken(in, claims)
 	if err != nil {
 		s.logger.Errorf("failed to create session token: %v", err)
-		return user, "", "", ErrInternal
+		return user, "", "", exp, ErrInternal
 	}
-	return user, token, csrfToken, nil
+	return user, token, csrfToken, exp, nil
 }
 
 // updateUserStatus updates user object with status(user groups, last successful login, authenticators used) in API server.
@@ -293,12 +292,12 @@ func (s *loginV1GwService) updateUserStatus(user *auth.User, password string) (*
 	return user, nil
 }
 
-func createCookie(token string, expiration time.Duration) *http.Cookie {
+func createCookie(token string, expiration time.Time) *http.Cookie {
 	cookie := &http.Cookie{
 		Name:     login.SessionID,
 		Value:    token,
-		Expires:  time.Now().Add(expiration * time.Second), //expiration in seconds
-		MaxAge:   int((expiration * time.Second).Seconds()),
+		Expires:  expiration,
+		MaxAge:   int(expiration.Sub(time.Now()).Seconds()),
 		Secure:   false,
 		HttpOnly: true,
 		Path:     "/",

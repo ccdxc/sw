@@ -25,7 +25,7 @@ func getACSConfig() *RadiusConfig {
 }
 
 func createAuthenticationPolicy(radiusConf *auth.Radius) (*auth.AuthenticationPolicy, error) {
-	return CreateAuthenticationPolicyWithOrder(tinfo.apicl, nil, nil, radiusConf, []string{auth.Authenticators_RADIUS.String()})
+	return CreateAuthenticationPolicyWithOrder(tinfo.apicl, nil, nil, radiusConf, []string{auth.Authenticators_RADIUS.String()}, ExpiryDuration)
 }
 
 func testAuthenticator(t *testing.T, config *RadiusConfig) {

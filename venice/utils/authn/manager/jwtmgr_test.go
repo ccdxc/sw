@@ -97,9 +97,12 @@ func createJwtMgr() *jwtMgr {
 
 func TestCreateToken(t *testing.T) {
 	jwtMgr := createJwtMgr()
-	tokStr, err := jwtMgr.createJWTToken(&testUserObj, nil)
+	currTime := time.Now()
+	tokStr, exp, err := jwtMgr.createJWTToken(&testUserObj, nil)
 
 	AssertOk(t, err, "Error creating JWT token")
+	Assert(t, exp.Sub(currTime).Round(time.Second) == jwtMgr.expiration,
+		fmt.Sprintf("expiration time duration (%v) should be (%v) seconds", exp.Sub(currTime).Round(time.Second).Seconds(), jwtMgr.expiration.Seconds()))
 
 	token, err := jwt.ParseSigned(tokStr)
 	AssertOk(t, err, fmt.Sprintf("Error parsing JWT token: %s", tokStr))
@@ -117,11 +120,14 @@ func TestCreateToken(t *testing.T) {
 
 func TestCreateTokenWithCsrf(t *testing.T) {
 	jwtMgr := createJwtMgr()
+	currTime := time.Now()
 	privateClaims := make(map[string]interface{})
 	privateClaims[CsrfClaim] = testCsrfToken
-	tokStr, err := jwtMgr.createJWTToken(&testUserObj, privateClaims)
+	tokStr, exp, err := jwtMgr.createJWTToken(&testUserObj, privateClaims)
 
 	AssertOk(t, err, "Error creating JWT token")
+	Assert(t, exp.Sub(currTime).Round(time.Second) == jwtMgr.expiration,
+		fmt.Sprintf("expiration time duration (%v) should be (%v) seconds", exp.Sub(currTime).Round(time.Second).Seconds(), jwtMgr.expiration.Seconds()))
 
 	token, err := jwt.ParseSigned(tokStr)
 	AssertOk(t, err, fmt.Sprintf("Error parsing JWT token: %s", tokStr))
@@ -140,7 +146,7 @@ func TestCreateTokenWithCsrf(t *testing.T) {
 
 func TestCreateTokenWithMissingUserInfo(t *testing.T) {
 	jwtMgr := createJwtMgr()
-	tokStr, err := jwtMgr.createJWTToken(nil, nil)
+	tokStr, _, err := jwtMgr.createJWTToken(nil, nil)
 	Assert(t, tokStr == "", fmt.Sprintf("Token returned for missing user: %s", tokStr))
 	Assert(t, err != nil, "No error returned for missing user")
 	Assert(t, err == ErrMissingUserInfo, "Incorrect error returned for missing user info")
@@ -211,7 +217,7 @@ func modifySubjectClaimInToken(token string) string {
 }
 
 func TestValidateTokenWithModifiedClaims(t *testing.T) {
-	correctToken := createHeadlessToken(signatureAlgorithm, secret, time.Duration(expiration)*time.Second, issuerClaimValue)
+	correctToken := createHeadlessToken(signatureAlgorithm, secret, expiration, issuerClaimValue)
 	modifiedToken := modifySubjectClaimInToken(correctToken)
 	jwtMgr := createJwtMgr()
 	_, ok, err := jwtMgr.ValidateToken(correctToken)
@@ -253,9 +259,12 @@ func BenchmarkValidateToken(b *testing.B) {
 func TestCreateHeadlessJWTToken(t *testing.T) {
 	jwtMgr, err := NewJWTManager(secret, time.Duration(expiration))
 	AssertOk(t, err, "Error creating JWT token manager")
-	headlessToken, err := jwtMgr.CreateToken(&testUserObj, nil)
+	currTime := time.Now()
+	headlessToken, exp, err := jwtMgr.CreateToken(&testUserObj, nil)
 	AssertOk(t, err, "Error creating headless JWT token")
 	Assert(t, len(strings.Split(headlessToken, ".")) == 2, "Headless token should contain only two parts")
+	Assert(t, exp.Sub(currTime).Round(time.Second) == expiration,
+		fmt.Sprintf("expiration time duration (%v) should be (%v) seconds", exp.Sub(currTime).Round(time.Second).Seconds(), expiration.Seconds()))
 	headerStr, err := createJWTHeader()
 	AssertOk(t, err, "Error creating JWT header")
 
@@ -316,7 +325,7 @@ func TestErroneousTokens(t *testing.T) {
 }
 
 func TestRemoveJWTHeader(t *testing.T) {
-	token := createToken(signatureAlgorithm, secret, time.Duration(expiration)*time.Second, issuerClaimValue)
+	token := createToken(signatureAlgorithm, secret, expiration, issuerClaimValue)
 	headless := removeJWTHeader(token)
 	parts := strings.Split(token, ".")
 	Assert(t, headless == fmt.Sprintf("%s.%s", parts[1], parts[2]), "Invalid headless token")

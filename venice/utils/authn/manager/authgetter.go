@@ -21,6 +21,10 @@ import (
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
+const (
+	defaultTokenExpiry = "144h" // default to 6 days
+)
+
 var (
 	// ErrInvalidObjectType is returned when object type in cache is not known
 	ErrInvalidObjectType = errors.New("invalid object type in auth cache")
@@ -31,14 +35,13 @@ var gAuthGetter *defaultAuthGetter
 var once sync.Once
 
 type defaultAuthGetter struct {
-	name            string // module name using the watcher
-	apiServer       string // api server address
-	resolver        resolver.Interface
-	tokenExpiration time.Duration
-	cache           *memdb.Memdb
-	watcher         *watcher
-	logger          log.Logger
-	stopped         bool
+	name      string // module name using the watcher
+	apiServer string // api server address
+	resolver  resolver.Interface
+	cache     *memdb.Memdb
+	watcher   *watcher
+	logger    log.Logger
+	stopped   bool
 }
 
 func (ug *defaultAuthGetter) GetUser(name, tenant string) (*auth.User, bool) {
@@ -91,8 +94,16 @@ func (ug *defaultAuthGetter) GetTokenManager() (TokenManager, error) {
 		ug.logger.Errorf("Error fetching authentication policy: %v", err)
 		return nil, err
 	}
+	if policy.Spec.TokenExpiry == "" {
+		policy.Spec.TokenExpiry = defaultTokenExpiry // default to 6 days
+	}
+	exp, err := time.ParseDuration(policy.Spec.TokenExpiry)
+	if err != nil {
+		ug.logger.Errorf("invalid token expiration value: %v", err)
+		return nil, err
+	}
 	// instantiate token manager
-	tokenManager, err := NewJWTManager(policy.Spec.GetSecret(), ug.tokenExpiration)
+	tokenManager, err := NewJWTManager(policy.Spec.GetSecret(), exp)
 	if err != nil {
 		ug.logger.Errorf("Error creating TokenManager: %v", err)
 		return nil, err
@@ -194,7 +205,7 @@ func (ug *defaultAuthGetter) addObj(kind auth.ObjKind, objMeta *api.ObjectMeta) 
 }
 
 // GetAuthGetter returns a singleton implementation of AuthGetter
-func GetAuthGetter(name, apiServer string, rslver resolver.Interface, tokenExpiration time.Duration) AuthGetter {
+func GetAuthGetter(name, apiServer string, rslver resolver.Interface) AuthGetter {
 	if gAuthGetter != nil && gAuthGetter.stopped {
 		gAuthGetter.resolver = rslver
 		gAuthGetter.watcher.resolver = rslver
@@ -211,14 +222,13 @@ func GetAuthGetter(name, apiServer string, rslver resolver.Interface, tokenExpir
 		// start the watcher on api server
 		watcher := newWatcher(cache, module, apiServer, rslver)
 		gAuthGetter = &defaultAuthGetter{
-			name:            module,
-			apiServer:       apiServer,
-			resolver:        rslver,
-			tokenExpiration: tokenExpiration,
-			cache:           cache,
-			watcher:         watcher,
-			logger:          l,
-			stopped:         false,
+			name:      module,
+			apiServer: apiServer,
+			resolver:  rslver,
+			cache:     cache,
+			watcher:   watcher,
+			logger:    l,
+			stopped:   false,
 		}
 	})
 

@@ -2,6 +2,7 @@ package manager
 
 import (
 	"errors"
+	"time"
 
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/venice/utils/authn"
@@ -46,7 +47,8 @@ type TokenManager interface {
 	// value is assumed to be JSON serializable.
 	// Returns
 	//   JWT token or unique session id
-	CreateToken(*auth.User, map[string]interface{}) (string, error)
+	//   time when the token expires
+	CreateToken(*auth.User, map[string]interface{}) (string, time.Time, error)
 
 	// ValidateToken validates token.
 	// Returns

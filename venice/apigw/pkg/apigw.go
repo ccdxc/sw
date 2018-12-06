@@ -429,7 +429,7 @@ Loop:
 	// create authentication manager
 	grpcaddr := globals.APIServer
 	grpcaddr = a.GetAPIServerAddr(grpcaddr)
-	a.authnMgr, err = authnmgr.NewAuthenticationManager(globals.APIGw, grpcaddr, a.rslver, apigw.TokenExpInDays*24*60*60) // expiration in seconds
+	a.authnMgr, err = authnmgr.NewAuthenticationManager(globals.APIGw, grpcaddr, a.rslver)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create authentication manager (%v)", err))
 	}

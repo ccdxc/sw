@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"sort"
 	"testing"
 
 	"github.com/pkg/errors"
@@ -210,117 +211,163 @@ func TestHashPassword(t *testing.T) {
 	}
 }
 
-// erraneousAuthenticatorsConfig returns test data for testing incorrect Authenticators configuration given to validateAuthenticationPolicy hook
-func erraneousAuthenticatorsConfig() map[string]*auth.AuthenticationPolicy {
-	policydata := make(map[string]*auth.AuthenticationPolicy)
-
-	policydata["Missing LDAP config"] = &auth.AuthenticationPolicy{
-		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
-		ObjectMeta: api.ObjectMeta{
-			Name: "MissingLDAPAuthenticationPolicy",
-		},
-		Spec: auth.AuthenticationPolicySpec{
-			Authenticators: auth.Authenticators{
-				Local: &auth.Local{
-					Enabled: true,
-				},
-				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
-			},
-		},
-	}
-	policydata["Missing Local config"] = &auth.AuthenticationPolicy{
-		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
-		ObjectMeta: api.ObjectMeta{
-			Name: "MissingLocalAuthenticationPolicy",
-		},
-		Spec: auth.AuthenticationPolicySpec{
-			Authenticators: auth.Authenticators{
-				Ldap: &auth.Ldap{
-					Enabled: true,
-				},
-				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
-			},
-		},
-	}
-	policydata["Missing Radius config"] = &auth.AuthenticationPolicy{
-		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
-		ObjectMeta: api.ObjectMeta{
-			Name: "MissingRadiusAuthenticationPolicy",
-		},
-		Spec: auth.AuthenticationPolicySpec{
-			Authenticators: auth.Authenticators{
-				Ldap: &auth.Ldap{
-					Enabled: true,
-				},
-				Local: &auth.Local{
-					Enabled: true,
-				},
-				AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_LDAP.String(), auth.Authenticators_RADIUS.String()},
-			},
-		},
-	}
-	policydata["Missing AuthenticatorOrder"] = &auth.AuthenticationPolicy{
-		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
-		ObjectMeta: api.ObjectMeta{
-			Name: "MissingAuthenticatorOrderAuthenticationPolicy",
-		},
-		Spec: auth.AuthenticationPolicySpec{
-			Authenticators: auth.Authenticators{
-				Ldap: &auth.Ldap{
-					Enabled: true,
-				},
-				Local: &auth.Local{
-					Enabled: true,
-				},
-			},
-		},
-	}
-	policydata["Missing Authenticators config"] = &auth.AuthenticationPolicy{
-		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
-		ObjectMeta: api.ObjectMeta{
-			Name: "MissingAuthenticatorsAuthenticationPolicy",
-		},
-		Spec: auth.AuthenticationPolicySpec{},
-	}
-
-	return policydata
-}
-
-func validAuthenticationPolicyData() *auth.AuthenticationPolicy {
-	return &auth.AuthenticationPolicy{
-		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
-		ObjectMeta: api.ObjectMeta{
-			Name: "AuthenticationPolicy",
-		},
-		Spec: auth.AuthenticationPolicySpec{
-			Authenticators: auth.Authenticators{
-				Ldap: &auth.Ldap{
-					Enabled: false,
-				},
-				Local: &auth.Local{
-					Enabled: true,
-				},
-				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
-			},
-		},
-	}
-}
-
 func TestValidateAuthenticatorConfigHook(t *testing.T) {
+	tests := []struct {
+		name string
+		in   interface{}
+		errs []error
+	}{
+		{
+			name: "Missing LDAP config",
+			in: auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "MissingLDAPAuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Local: &auth.Local{
+							Enabled: true,
+						},
+						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
+					},
+					TokenExpiry: "24h",
+				},
+			},
+			errs: []error{errors.New("ldap authenticator config not defined")},
+		},
+		{
+			name: "Missing Local config",
+			in: auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "MissingLocalAuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							Enabled: true,
+						},
+						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
+					},
+					TokenExpiry: "24h",
+				},
+			},
+			errs: []error{errors.New("local authenticator config not defined")},
+		},
+		{
+			name: "Missing Radius config",
+			in: auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "MissingRadiusAuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							Enabled: true,
+						},
+						Local: &auth.Local{
+							Enabled: true,
+						},
+						AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_LDAP.String(), auth.Authenticators_RADIUS.String()},
+					},
+					TokenExpiry: "24h",
+				},
+			},
+			errs: []error{errors.New("radius authenticator config not defined")},
+		},
+		{
+			name: "Missing AuthenticatorOrder",
+			in: auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "MissingAuthenticatorOrderAuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							Enabled: true,
+						},
+						Local: &auth.Local{
+							Enabled: true,
+						},
+					},
+					TokenExpiry: "24h",
+				},
+			},
+			errs: []error{errors.New("authenticator order config not defined")},
+		},
+		{
+			name: "no authenticator configs",
+			in: auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "MissingAuthenticatorsAuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						AuthenticatorOrder: []string{},
+					},
+					TokenExpiry: "24h",
+				},
+			},
+			errs: []error{errors.New("authenticator order config not defined")},
+		},
+		{
+			name: "token expiry less than 2m",
+			in: auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "TokenExpiry1mAuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Local: &auth.Local{
+							Enabled: true,
+						},
+						AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String()},
+					},
+					TokenExpiry: "1m",
+				},
+			},
+			errs: []error{fmt.Errorf("token expiry (%s) should be atleast 2 minutes", "1m")},
+		},
+		{
+			name: "valid auth policy",
+			in: auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "AuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							Enabled: false,
+						},
+						Local: &auth.Local{
+							Enabled: true,
+						},
+						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
+					},
+					TokenExpiry: "24h",
+				},
+			},
+			errs: []error{},
+		},
+	}
 	r := authHooks{}
 	logConfig := log.GetDefaultConfig("TestAuthHooks")
 	r.logger = log.GetNewLogger(logConfig)
-	// test for missing authenticator config
-	for testtype, policy := range erraneousAuthenticatorsConfig() {
-		err := r.validateAuthenticatorConfig(*policy, "", false)
-		Assert(t, err != nil, fmt.Sprintf("[%v] No error returned for mis-configured Authenticators", testtype))
-		Assert(t, err[0] == errAuthenticatorConfig, fmt.Sprintf("[%v] Unexpected error returned for mis-configured Authenticators: Err: %v", testtype, err))
+	for _, test := range tests {
+		errs := r.validateAuthenticatorConfig(test.in, "", false)
+		sortErrors(errs)
+		sortErrors(test.errs)
+		Assert(t, len(errs) == len(test.errs), fmt.Sprintf("[%s] test failed, expected errors [%#v], got [%#v]", test.name, test.errs, errs))
+		for i, err := range errs {
+			Assert(t, err.Error() == test.errs[i].Error(), fmt.Sprintf("[%s] test failed, expected errors [%#v], got [%#v]", test.name, test.errs[i], errs[i]))
+		}
 	}
-
-	// test for correctly configured  authentication policy
-	policy := validAuthenticationPolicyData()
-	errs := r.validateAuthenticatorConfig(*policy, "", false)
-	Assert(t, len(errs) == 0, "Validation hook failed for correctly configured authenticators")
 }
 
 func TestGenerateSecret(t *testing.T) {
@@ -849,4 +896,10 @@ func TestResetPassword(t *testing.T) {
 		}
 		kvs.Delete(ctx, userKey, nil)
 	}
+}
+
+func sortErrors(errs []error) {
+	sort.Slice(errs, func(i, j int) bool {
+		return errs[i].Error() < errs[j].Error()
+	})
 }

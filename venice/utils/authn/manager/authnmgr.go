@@ -23,10 +23,10 @@ type AuthenticationManager struct {
 }
 
 // NewAuthenticationManager returns an instance of AuthenticationManager
-func NewAuthenticationManager(name, apiServer string, rslver resolver.Interface, tokenExpiration time.Duration) (*AuthenticationManager, error) {
+func NewAuthenticationManager(name, apiServer string, rslver resolver.Interface) (*AuthenticationManager, error) {
 
 	return &AuthenticationManager{
-		AuthGetter: GetAuthGetter(name, apiServer, rslver, tokenExpiration), // get singleton user cache
+		AuthGetter: GetAuthGetter(name, apiServer, rslver), // get singleton user cache
 	}, nil
 }
 
@@ -51,10 +51,10 @@ func (authnmgr *AuthenticationManager) Authenticate(credential authn.Credential)
 
 // CreateToken creates session token. It should be called only after successful authentication. It saves passed in objects in the session.
 // Objects should support JSON serialization.
-func (authnmgr *AuthenticationManager) CreateToken(user *auth.User, objects map[string]interface{}) (string, error) {
+func (authnmgr *AuthenticationManager) CreateToken(user *auth.User, objects map[string]interface{}) (string, time.Time, error) {
 	tokenManager, err := authnmgr.AuthGetter.GetTokenManager()
 	if err != nil {
-		return "", err
+		return "", time.Time{}, err
 	}
 	return tokenManager.CreateToken(user, objects)
 }

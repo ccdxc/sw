@@ -2,6 +2,7 @@ package manager
 
 import (
 	"errors"
+	"time"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
@@ -35,8 +36,8 @@ func (tm *mockTokenManager) ValidateToken(token string) (map[string]interface{},
 	return claims, true, nil
 }
 
-func (tm *mockTokenManager) CreateToken(*auth.User, map[string]interface{}) (string, error) {
-	return "", nil
+func (tm *mockTokenManager) CreateToken(*auth.User, map[string]interface{}) (string, time.Time, error) {
+	return "", time.Time{}, nil
 }
 
 func (tm *mockTokenManager) Get(token, key string) (interface{}, bool, error) {

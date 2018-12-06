@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/pkg/errors"
 
@@ -20,11 +21,13 @@ import (
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
+const (
+	minTokenExpiry = 2 * time.Minute // token expiry cannot be less than 2 minutes
+)
+
 var (
 	// errInvalidInputType is returned when incorrect object type is passed to the hook
 	errInvalidInputType = errors.New("invalid input type")
-	// errAuthenticatorConfig is returned when authenticator config is incorrect in AuthenticationPolicy.
-	errAuthenticatorConfig = errors.New("mis-configured authentication policy, error in authenticator config")
 	// errInvalidRolePermissions is returned when tenant in permission's resource does not match tenant of the Role
 	errInvalidRolePermissions = errors.New("invalid tenant in role permission")
 	// errExtUserPasswordChange is returned when change or reset password hook is called for external user
@@ -227,41 +230,42 @@ func (s *authHooks) resetPassword(ctx context.Context, kv kvstore.Interface, txn
 // validateAuthenticatorConfig hook is to validate that authenticators specified in AuthenticatorOrder are defined
 func (s *authHooks) validateAuthenticatorConfig(i interface{}, ver string, ignStatus bool) []error {
 	s.logger.DebugLog("msg", "AuthHook called to validate authenticator config")
-	var ret = []error{errAuthenticatorConfig}
+	var ret []error
 	r, ok := i.(auth.AuthenticationPolicy)
 	if !ok {
 		return []error{errInvalidInputType}
 	}
-
+	// TokenExpiry has already been validated by Duration() validator
+	exp, _ := time.ParseDuration(r.Spec.TokenExpiry)
+	// token expiry cannot be less than 2 minutes
+	if exp < minTokenExpiry {
+		ret = append(ret, fmt.Errorf("token expiry (%s) should be atleast 2 minutes", r.Spec.TokenExpiry))
+	}
 	// check if authenticators specified in AuthenticatorOrder are defined
 	authenticatorOrder := r.Spec.Authenticators.GetAuthenticatorOrder()
-	if authenticatorOrder == nil {
-		s.logger.ErrorLog("msg", "Authenticator order config not defined")
+	if authenticatorOrder == nil || len(authenticatorOrder) == 0 {
+		ret = append(ret, errors.New("authenticator order config not defined"))
 		return ret
 	}
 	for _, authenticatorType := range authenticatorOrder {
 		switch authenticatorType {
 		case auth.Authenticators_LOCAL.String():
 			if r.Spec.Authenticators.GetLocal() == nil {
-				s.logger.ErrorLog("msg", "Local authenticator config not defined")
-				return ret
+				ret = append(ret, errors.New("local authenticator config not defined"))
 			}
 		case auth.Authenticators_LDAP.String():
 			if r.Spec.Authenticators.GetLdap() == nil {
-				s.logger.ErrorLog("msg", "Ldap authenticator config not defined")
-				return ret
+				ret = append(ret, errors.New("ldap authenticator config not defined"))
 			}
 		case auth.Authenticators_RADIUS.String():
 			if r.Spec.Authenticators.GetRadius() == nil {
-				s.logger.ErrorLog("msg", "Radius authenticator config not defined")
-				return ret
+				ret = append(ret, errors.New("radius authenticator config not defined"))
 			}
 		default:
-			s.logger.ErrorLog("msg", "Unknown authenticator type", "authenticator", authenticatorType)
-			return ret
+			ret = append(ret, fmt.Errorf("unknown authenticator type: %v", authenticatorType))
 		}
 	}
-	return nil
+	return ret
 }
 
 // generateSecret is a pre-commmit hook to generate secret when authentication policy is created or updated

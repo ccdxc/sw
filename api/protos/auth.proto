@@ -61,6 +61,9 @@ message AuthenticationPolicySpec {
     Authenticators Authenticators = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "authenticators,omitempty"];
     // Secret used to sign JWT token
     bytes Secret                  = 2 [(venice.storageTransformer) = "Secret()", (gogoproto.jsontag) = "secret,omitempty"];
+    // TokenExpiry is time duration after which JWT token expires. Default is 6 days. A duration string is a sequence of decimal number and a unit suffix, such as "300ms" or "2h45m".
+    // Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
+    string TokenExpiry            = 3 [(venice.default) = "144h", (venice.check)="Duration()", (gogoproto.jsontag) = "token-expiry,omitempty"];
 }
 
 message Authenticators {

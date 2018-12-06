@@ -50,7 +50,7 @@ type jwtHeader struct {
 // NewJWTManager creates new instance of JWT TokenManager
 //  secret: secret used to sign JWT. It should be at least 64 bytes(512 bits) for HS512. We will use 128 bytes generated
 //          using a secure random number generator.
-//  expiration: expiration time in seconds for which token is valid
+//  expiration: expiration time duration (nanoseconds) for which token is valid
 func NewJWTManager(secret []byte, expiration time.Duration) (TokenManager, error) {
 	// pre-create JWT header
 	header, err := createJWTHeader()
@@ -72,26 +72,28 @@ func NewJWTManager(secret []byte, expiration time.Duration) (TokenManager, error
 }
 
 // CreateToken creates headless JWT token without header
-func (t *jwtMgr) CreateToken(user *auth.User, privateClaims map[string]interface{}) (string, error) {
-	token, err := t.createJWTToken(user, privateClaims)
+func (t *jwtMgr) CreateToken(user *auth.User, privateClaims map[string]interface{}) (string, time.Time, error) {
+	token, exp, err := t.createJWTToken(user, privateClaims)
 	if err != nil {
-		return "", err
+		return "", exp, err
 	}
-	return removeJWTHeader(token), nil
+	return removeJWTHeader(token), exp, nil
 }
 
 // createJWTToken creates JWT token with header
-func (t *jwtMgr) createJWTToken(user *auth.User, privateClaims map[string]interface{}) (string, error) {
+func (t *jwtMgr) createJWTToken(user *auth.User, privateClaims map[string]interface{}) (string, time.Time, error) {
+	currTime := time.Now()
+	exp := currTime.Add(t.expiration)
 	if user == nil || user.Name == "" {
 		log.Errorf("User information is required to create a JWT token")
-		return "", ErrMissingUserInfo
+		return "", exp, ErrMissingUserInfo
 	}
 	// standard jwt claims like sub, iss, exp
 	claims := jwt.Claims{
 		Subject:  user.Name,
 		Issuer:   issuerClaimValue,
-		Expiry:   jwt.NewNumericDate(time.Now().Add(t.expiration * time.Second)),
-		IssuedAt: jwt.NewNumericDate(time.Now()),
+		Expiry:   jwt.NewNumericDate(exp),
+		IssuedAt: jwt.NewNumericDate(currTime),
 	}
 	// venice custom claims
 	if privateClaims == nil {
@@ -103,9 +105,9 @@ func (t *jwtMgr) createJWTToken(user *auth.User, privateClaims map[string]interf
 	token, err := jwt.Signed(t.signer).Claims(claims).Claims(privateClaims).CompactSerialize()
 	if err != nil {
 		log.Errorf("Unable to create JWT token: Err: %v", err)
-		return "", err
+		return "", exp, err
 	}
-	return token, err
+	return token, exp, err
 }
 
 // Get returns object stored in session for the given key
