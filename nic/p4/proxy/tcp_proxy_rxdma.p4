@@ -43,7 +43,8 @@
 
 #define rx_table_s2_t0_action tcp_rx
 
-#define rx_table_s3_t0_action tcp_ack
+#define rx_table_s3_t0_action1 tcp_ack
+#define rx_table_s3_t0_action2 tcp_ooo_book_keeping
 
 #define rx_table_s3_t1_action read_rnmdr
 
@@ -51,16 +52,20 @@
 
 #define rx_table_s3_t3_action l7_read_rnmdr
 
+
 #define rx_table_s4_t0_action tcp_rtt
 #define rx_table_s4_t1_action rdesc_alloc
 #define rx_table_s4_t2_action rpage_alloc
-#define rx_table_s4_t3_action l7_rdesc_alloc
+#define rx_table_s4_t3_action0 l7_rdesc_alloc
+#define rx_table_s4_t3_action1 tcp_ooo_qbase_sem_alloc
 
 #define rx_table_s5_t0_action tcp_fc
+#define rx_table_s5_t1_action tcp_ooo_qbase_addr_get
 
 #define rx_table_s6_t0_action write_serq
 #define rx_table_s6_t1_action write_arq
 #define rx_table_s6_t2_action write_l7q
+#define rx_table_s6_t3_action tcp_ooo_qbase_cb_load
 
 #define rx_table_s7_t0_action stats
 
@@ -174,6 +179,30 @@ header_type tcp_rx_d_t {
     }
 }
 
+// d for stage 3 table 0 - ooo book keeping
+header_type ooo_book_keeping_t {
+    fields {
+        start_seq0      : 32;
+        end_seq0        : 32;
+        tail_index0     : 16;
+        start_seq1      : 32;
+        end_seq1        : 32;
+        tail_index1     : 16;
+        start_seq2      : 32;
+        end_seq2        : 32;
+        tail_index2     : 16;
+        start_seq3      : 32;
+        end_seq3        : 32;
+        tail_index3     : 16;
+        ooo_alloc_fail  : 32;
+        ooo_queue0_full : 16;
+        ooo_queue1_full : 16;
+        ooo_queue2_full : 16;
+        ooo_queue3_full : 16;
+        ooo_pad         : 96;
+    }
+}
+
 // d for stage 3 table 1
 header_type read_rnmdr_d_t {
     fields {
@@ -197,6 +226,7 @@ header_type read_serq_d_t {
     }
 }
 
+       
 // d for stage 4 table 0
 header_type tcp_rtt_d_t {
     fields {
@@ -253,6 +283,21 @@ header_type rpage_alloc_d_t {
     }
 }
 
+// for stage 4 table 3
+header_type read_ooo_qbase_index_t {
+    fields {
+        ooo_qbase_pindex      : 32;
+        ooo_qbase_pindex_full : 8;
+    }
+}
+
+// d for stage5 table 0
+header_type read_ooo_base_addr_t {
+    fields {
+        ooo_qbase_addr : 64;
+    }
+}
+
 // d for stage 5 table 0
 header_type tcp_fc_d_t {
     fields {
@@ -296,6 +341,17 @@ header_type write_l7q_d_t {
         l7q_pidx                : 16;    
     }   
 } 
+
+// d for stage 6 table 3 - ooo qbase addr
+header_type ooo_qbase_addr_t {
+    fields {
+        ooo_qbase_addr0    : 64;
+        ooo_qbase_addr1    : 64;
+        ooo_qbase_addr2    : 64;
+        ooo_qbase_addr3    : 64;
+        ooo_qbase_pad      : 256;
+    }
+} 
 /******************************************************************************
  * Global PHV definitions
  *****************************************************************************/
@@ -314,6 +370,8 @@ header_type to_stage_3_phv_t {
     // tcp-ack
     fields {
         flag                    : 8;
+        seq                     : 32;
+        payload_len             : 16;
     }
 }
 
@@ -344,6 +402,8 @@ header_type to_stage_6_phv_t {
         payload_len             : 16;
         ooo_offset              : 16;
         serq_pidx               : 12;
+        ooo_queue_id            : 4;
+        ooo_tail_index          : 8;
     }
 }
 
@@ -472,6 +532,8 @@ metadata read_rnmpr_d_t read_rnmpr_d;
 @pragma scratch_metadata
 metadata read_rnmdr_d_t l7_read_rnmdr_d;
 @pragma scratch_metadata
+metadata read_ooo_qbase_index_t read_ooo_qbase_index;
+@pragma scratch_metadata
 metadata read_serq_d_t read_serq_d;
 //@pragma scratch_metadata
 //metadata tcp_fra_d_t tcp_fra_d;
@@ -491,6 +553,13 @@ metadata rdesc_alloc_d_t l7_rdesc_alloc_d;
 metadata arq_pi_d_t arq_rx_pi_d;
 @pragma scratch_metadata
 metadata write_l7q_d_t write_l7q_d;
+
+@pragma scratch_metadata
+metadata ooo_book_keeping_t ooo_book_keeping;
+@pragma scratch_metadata
+metadata ooo_qbase_addr_t ooo_qbase_addr;
+@pragma scratch_metadata
+metadata read_ooo_base_addr_t read_ooo_base_addr;
 
 /******************************************************************************
  * Header unions for PHV layout
@@ -827,7 +896,40 @@ action tcp_rx(TCP_RX_CB_PARAMS) {
 }
 
 /*
- * Stage 3 table 0 action
+ * Stage 3 table 0 action2
+ */
+action tcp_ooo_book_keeping (start_seq0, end_seq0, tail_index0,
+                             start_seq1, end_seq1, tail_index1,
+                             start_seq2, end_seq2, tail_index2,
+                             start_seq3, end_seq3, tail_index3, 
+                             ooo_alloc_fail, ooo_queue0_full, 
+                             ooo_queue1_full, ooo_queue2_full, 
+                             ooo_queue3_full, ooo_pad)
+{
+    GENERATE_GLOBAL_K
+    modify_field(ooo_book_keeping.start_seq0, start_seq0);
+    modify_field(ooo_book_keeping.end_seq0, end_seq0);
+    modify_field(ooo_book_keeping.tail_index0, tail_index0);
+    modify_field(ooo_book_keeping.start_seq1, start_seq1);
+    modify_field(ooo_book_keeping.end_seq1, end_seq1);
+    modify_field(ooo_book_keeping.tail_index1, tail_index1);
+    modify_field(ooo_book_keeping.start_seq2, start_seq2);
+    modify_field(ooo_book_keeping.end_seq2, end_seq2);
+    modify_field(ooo_book_keeping.tail_index2, tail_index2);
+    modify_field(ooo_book_keeping.start_seq3, start_seq3);
+    modify_field(ooo_book_keeping.end_seq3, end_seq3);
+    modify_field(ooo_book_keeping.tail_index3, tail_index3);
+    modify_field(ooo_book_keeping.ooo_queue0_full, ooo_queue0_full);
+    modify_field(ooo_book_keeping.ooo_queue1_full, ooo_queue1_full);
+    modify_field(ooo_book_keeping.ooo_queue2_full, ooo_queue2_full);
+    modify_field(ooo_book_keeping.ooo_queue3_full, ooo_queue3_full);
+    modify_field(ooo_book_keeping.ooo_alloc_fail, ooo_alloc_fail);
+    modify_field(ooo_book_keeping.ooo_pad, ooo_pad);
+}
+
+                             
+/*
+ * Stage 3 table 0 action1
  */
 action tcp_ack(TCP_RX_CB_PARAMS) {
     // k + i for stage 3
@@ -941,7 +1043,7 @@ action rpage_alloc(page, pad) {
 }
 
 /*
- * Stage 4 table 3 action
+ * Stage 4 table 3 action1
  */
 action l7_rdesc_alloc(desc, pad) {
     // k + i for stage 3 table 1
@@ -959,8 +1061,18 @@ action l7_rdesc_alloc(desc, pad) {
     modify_field(l7_rdesc_alloc_d.pad, pad);
 }
 
+
 /*
- * Stage 5 table 0 action
+ * Stage 4 table 3 action2
+ */
+action tcp_ooo_qbase_sem_alloc(ooo_qbase_pindex, ooo_qbase_pindex_full)
+{
+    modify_field(read_ooo_qbase_index.ooo_qbase_pindex, ooo_qbase_pindex);
+    modify_field(read_ooo_qbase_index.ooo_qbase_pindex_full, ooo_qbase_pindex_full);
+}
+
+/*
+ * Stage 5 table 0 action1
  */
 action tcp_fc(page, descr, page_cnt, l7_descr, rcv_wnd, rcv_wscale, cpu_id) {
     // k + i for stage 5
@@ -983,6 +1095,14 @@ action tcp_fc(page, descr, page_cnt, l7_descr, rcv_wnd, rcv_wscale, cpu_id) {
     modify_field(tcp_fc_d.rcv_wnd, rcv_wnd);
     modify_field(tcp_fc_d.rcv_wscale, rcv_wscale);
     modify_field(tcp_fc_d.cpu_id, cpu_id);
+}
+
+/*
+ * Stage 5 table 1 action
+ */
+action tcp_ooo_qbase_addr_get(ooo_qbase_addr)
+{
+    modify_field(read_ooo_base_addr.ooo_qbase_addr, ooo_qbase_addr);
 }
 
 
@@ -1074,6 +1194,31 @@ action write_l7q(l7q_base, l7q_pidx) {
     modify_field(write_l7q_d.l7q_pidx, l7q_pidx);
 }
 
+
+/*
+ * Stage 6 table 3 action
+ */
+action tcp_ooo_qbase_cb_load(ooo_qbase_addr0, ooo_qbase_addr1, 
+                           ooo_qbase_addr2, ooo_qbase_addr3, ooo_qbase_pad)
+{
+    GENERATE_GLOBAL_K
+
+    // from to_stage 6
+    modify_field(to_s6_scratch.page, to_s6.page);
+    modify_field(to_s6_scratch.descr, to_s6.descr);
+    modify_field(to_s6_scratch.payload_len, to_s6.payload_len);
+    modify_field(to_s6_scratch.serq_pidx, to_s6.serq_pidx);
+    modify_field(to_s6_scratch.ooo_offset, to_s6.ooo_offset);
+    modify_field(to_s6_scratch.ooo_queue_id, to_s6.ooo_queue_id);
+    modify_field(to_s6_scratch.ooo_tail_index, to_s6.ooo_tail_index);
+
+    modify_field(ooo_qbase_addr.ooo_qbase_addr0, ooo_qbase_addr0);
+    modify_field(ooo_qbase_addr.ooo_qbase_addr1, ooo_qbase_addr1);
+    modify_field(ooo_qbase_addr.ooo_qbase_addr2, ooo_qbase_addr2);
+    modify_field(ooo_qbase_addr.ooo_qbase_addr3, ooo_qbase_addr3);
+    modify_field(ooo_qbase_addr.ooo_qbase_pad, ooo_qbase_pad);
+
+}
 
 /*
  * Stage 7 table 0 action

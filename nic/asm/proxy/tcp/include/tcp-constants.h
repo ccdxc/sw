@@ -20,6 +20,8 @@
 #define TCP_OOO_CELL_SIZE_MASK              0x7f
 #define TCP_OOO_CELL_SIZE_SHIFT             7
 
+#define TCP_OOO_QUEUE_SIZE   256
+
 #define MAX_ENTRIES_PER_DESC 16
 #define MAX_ENTRIES_PER_DESC_MASK 0xF
 

@@ -37,6 +37,6 @@ tcp_rx_read_shared_stage0_start_ext:
                         p.s1_s2s_snd_nxt, d.snd_nxt
     phvwrpair       p.s1_s2s_payload_len, k.tcp_app_header_payload_len, \
                         p.s1_s2s_window, k.tcp_app_header_window
-
+    phvwrpair       p.to_s3_seq, k.tcp_app_header_seqNo, p.to_s3_payload_len, k.tcp_app_header_payload_len
     nop.e
     nop
