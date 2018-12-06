@@ -124,8 +124,8 @@ class _Testbed:
 
     def __get_instance_nic_type(self, instance):
         resource = getattr(instance, "Resource", None)
-        if resource is None: return None
-        return getattr(resource, "NICType", None)
+        if resource is None: return "pensando-sim"
+        return getattr(resource, "NICType", "pensando-sim")
 
     def __recover_testbed(self):
         if GlobalOptions.skip_firmware_upgrade or GlobalOptions.dryrun:

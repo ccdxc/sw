@@ -26,6 +26,8 @@ def GetNodePersonalityByNicType(nic_type):
         return topo_pb2.PERSONALITY_BROADCOM
     elif nic_type == 'intel':
         return topo_pb2.PERSONALITY_INTEL
+    elif nic_type == 'pensando-sim':
+        return topo_pb2.PERSONALITY_NAPLES_SIM
     else:
         return None
 
@@ -263,7 +265,7 @@ class Topology(object):
     def ValidateNics(self, nics):
         roles = self.__convert_to_roles(nics)
         for n in self.__nodes.values():
-            if n.Role() not in roles:
+            if not n.IsVenice() and n.Role() not in roles:
                 return False
         return True
 

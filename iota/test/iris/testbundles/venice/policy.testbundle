@@ -1,5 +1,6 @@
 meta:                                               
     name    : venicepolicy                                    
+    nics    : [ pensando-sim ]
                                                              
 testcases:                                                
     -   name    : Ping_Local_Workloads
