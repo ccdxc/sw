@@ -17,7 +17,7 @@ struct s3_t0_tcp_rx_d d;
 
 %%
     .align
-tcp_book_keeping:
+tcp_ooq_book_keeping:
     seq c1, d.u.tcp_ooo_book_keeping_d.tail_index0, r0
     bcf [c1], tcp_ooo_book_keeping_begin_use_first_ooo_queue
     add r1, d.u.tcp_ooo_book_keeping_d.end_seq0, 1

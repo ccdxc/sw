@@ -402,7 +402,7 @@ header_type to_stage_6_phv_t {
         payload_len             : 16;
         ooo_offset              : 16;
         serq_pidx               : 12;
-        ooo_queue_id            : 4;
+        ooo_queue_id            : 2;
         ooo_tail_index          : 8;
     }
 }
@@ -514,6 +514,14 @@ header_type s6_t2_s2s_phv_t {
         l7_descr                : 32;
     }    
 }
+
+header_type s6_t3_s2s_phv_t {
+    fields {
+        ooo_qbase_addr : 64;
+        ooo_pkt_descr_addr : 64;
+    }
+}
+
 /******************************************************************************
  * Header unions for d-vector
  *****************************************************************************/
@@ -626,6 +634,8 @@ metadata s6_t1_s2s_phv_t s6_t1_s2s_scratch;
 @pragma scratch_metadata
 metadata s6_t2_s2s_phv_t s6_t2_s2s_scratch;
 @pragma scratch_metadata
+metadata s6_t3_s2s_phv_t s6_t3_s2s_scratch;
+@pragma scratch_metadata
 metadata common_global_phv_t common_global_scratch;
 
 @pragma pa_header_union ingress common_t0_s2s s6_s2s
@@ -640,6 +650,9 @@ metadata s6_t1_s2s_phv_t s6_t1_s2s;
 @pragma pa_header_union ingress common_t2_s2s s6_t2_s2s
 metadata s4_t2_s2s_phv_t s4_t2_s2s;
 metadata s6_t2_s2s_phv_t s6_t2_s2s;
+
+@pragma pa_header_union ingress common_t3_s2s s6_t3_s2s
+metadata s6_t3_s2s_phv_t s6_t3_s2s;
 
 /******************************************************************************
  * PHV following k (for app DMA etc.)
@@ -673,6 +686,17 @@ metadata pkt_descr_aol_t aol;
 
 @pragma dont_trim
 metadata doorbell_data_t l7_db_data;
+
+header_type ooq_slot_addr_t {
+    fields {
+        ooq_slot_addr : 64;
+    }
+}
+
+@pragma dont_trim
+metadata ooq_slot_addr_t ooq_slot_addr;
+ 
+
 
 @pragma pa_align 128
 @pragma dont_trim
@@ -1211,6 +1235,8 @@ action tcp_ooo_qbase_cb_load(ooo_qbase_addr0, ooo_qbase_addr1,
     modify_field(to_s6_scratch.ooo_offset, to_s6.ooo_offset);
     modify_field(to_s6_scratch.ooo_queue_id, to_s6.ooo_queue_id);
     modify_field(to_s6_scratch.ooo_tail_index, to_s6.ooo_tail_index);
+
+    modify_field(s6_t3_s2s_scratch.ooo_qbase_addr, s6_t3_s2s.ooo_qbase_addr);
 
     modify_field(ooo_qbase_addr.ooo_qbase_addr0, ooo_qbase_addr0);
     modify_field(ooo_qbase_addr.ooo_qbase_addr1, ooo_qbase_addr1);
