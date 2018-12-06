@@ -320,23 +320,19 @@ int sonic_accounting_atomic_take(osal_atomic_int_t *atomic_c,
 				 uint32_t count,
 				 uint32_t high_water)
 {
-	/* Optimize for the most common case */
-	if (likely(count == 1)) {
-		if (likely(osal_atomic_add_unless(atomic_c, 1, high_water)))
-			return PNSO_OK;
-
+	if (unlikely((count > high_water) || (high_water == 0))) {
+		OSAL_LOG_ERROR("Accounting take error: count %u, high_water %u",
+			       count, high_water);
 		return -EPERM;
 	}
 
-	/*
-	 * Elsewhere in callers, code has been written such that the callers
-	 * are expected to almost never enter here with count > 1.
-	 */
-	while (count--) {
-		if (unlikely(!osal_atomic_add_unless(atomic_c, 1, high_water)))
-			return -EPERM;
-	}
-	return PNSO_OK;
+	if (unlikely(count == 0))
+		return PNSO_OK;
+
+	if (likely(osal_atomic_add_unless(atomic_c, count, high_water - count + 1)))
+			return PNSO_OK;
+
+	return -EPERM;
 }
 
 int sonic_accounting_atomic_give(osal_atomic_int_t *atomic_c,
