@@ -149,7 +149,6 @@ AccelRGroupServiceImpl::AccelRGroupIndicesGet(ServerContext *context,
     uint32_t    nreqs = request->request_size();
     uint32_t    i;
 
-    HAL_TRACE_DEBUG("{}: {} requests", __FUNCTION__, nreqs);
     for (i = 0; i < nreqs; i++) {
         auto rsp = response->add_response();
         auto req = request->request(i);
@@ -166,7 +165,6 @@ AccelRGroupServiceImpl::AccelRGroupMetricsGet(ServerContext *context,
     uint32_t    nreqs = request->request_size();
     uint32_t    i;
 
-    HAL_TRACE_DEBUG("{}: {} requests", __FUNCTION__, nreqs);
     for (i = 0; i < nreqs; i++) {
         auto rsp = response->add_response();
         auto req = request->request(i);
