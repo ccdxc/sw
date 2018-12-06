@@ -349,7 +349,7 @@ oci_subnet_create (_In_ oci_subnet_t *subnet)
     memset(&api_ctxt, 0, sizeof(api_ctxt));
     api_ctxt.op = API_OP_CREATE;
     api_ctxt.id = API_ID_SUBNET_CREATE;
-    api_ctxt.api_info = subnet;    // TODO: this may not be acceptable usage if caller passed this from stack
+    api_ctxt.params.subnet_create = *subnet;
     rv = g_api_engine.process_api(&api_ctxt);
     return rv;
 }
@@ -369,7 +369,7 @@ oci_subnet_delete (_In_ oci_subnet_key_t *subnet_key)
     memset(&api_ctxt, 0, sizeof(api_ctxt));
     api_ctxt.op = API_OP_DELETE;
     api_ctxt.id = API_ID_SUBNET_DELETE;
-    api_ctxt.api_info = subnet_key;    // TODO: this may not be acceptable usage if caller passed this from stack
+    api_ctxt.params.subnet_delete = *subnet_key;
     rv = g_api_engine.process_api(&api_ctxt);
     return rv;
 }

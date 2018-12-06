@@ -488,7 +488,7 @@ oci_vnic_create (_In_ oci_vnic_t *vnic)
     memset(&api_ctxt, 0, sizeof(api_ctxt));
     api_ctxt.op = API_OP_CREATE;
     api_ctxt.id = API_ID_VNIC_CREATE;
-    api_ctxt.api_info = vnic;    // TODO: this may not be acceptable usage if caller passed this from stack
+    api_ctxt.params.vnic_create = *vnic;
     rv = g_api_engine.process_api(&api_ctxt);
     return rv;
 }
@@ -508,7 +508,7 @@ oci_vnic_delete (_In_ oci_vnic_key_t *vnic_key)
     memset(&api_ctxt, 0, sizeof(api_ctxt));
     api_ctxt.op = API_OP_DELETE;
     api_ctxt.id = API_ID_VNIC_DELETE;
-    api_ctxt.api_info = vnic_key;    // TODO: this may not be acceptable usage if caller passed this from stack
+    api_ctxt.params.vnic_delete = *vnic_key;
     rv = g_api_engine.process_api(&api_ctxt);
     return rv;
 }

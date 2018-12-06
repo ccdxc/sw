@@ -11,13 +11,6 @@ namespace hal {
 namespace pd {
 
 hal_ret_t
-#if 0
-pd_debug_cli_read(uint32_t tableid,
-                  uint32_t index,
-                  void     *swkey,
-                  void     *swkey_mask,
-                  void     *actiondata)
-#endif
 pd_debug_cli_read(pd_func_args_t *pd_func_args)
 {
     hal_ret_t    ret    = HAL_RET_OK;
@@ -43,15 +36,7 @@ pd_debug_cli_read(pd_func_args_t *pd_func_args)
     return ret;
 }
 
-
 hal_ret_t
-#if 0
-pd_debug_cli_write(uint32_t tableid,
-                   uint32_t index,
-                   void     *swkey,
-                   void     *swkey_mask,
-                   void     *actiondata)
-#endif
 pd_debug_cli_write(pd_func_args_t *pd_func_args)
 {
     hal_ret_t    ret              = HAL_RET_OK;
@@ -128,10 +113,6 @@ pd_table_properties_get (pd_func_args_t *pd_func_args)
     args->tabledepth = tbl_ctx.tabledepth;
     return HAL_RET_OK;
 }
-
-
-// --------------------------------- FTE Span ---------------------------------
-
 
 //----------------------------------------------------------------------------
 // linking PI <-> PD

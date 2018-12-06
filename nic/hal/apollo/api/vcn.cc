@@ -346,7 +346,7 @@ oci_vcn_create (_In_ oci_vcn_t *vcn)
     memset(&api_ctxt, 0, sizeof(api_ctxt));
     api_ctxt.op = API_OP_CREATE;
     api_ctxt.id = API_ID_VCN_CREATE;
-    api_ctxt.api_info = vcn;    // TODO: this may not be acceptable usage if caller passed this from stack
+    api_ctxt.params.vcn_create = *vcn;
     rv = g_api_engine.process_api(&api_ctxt);
     return rv;
 }
@@ -366,7 +366,7 @@ oci_vcn_delete (_In_ oci_vcn_key_t *vcn_key)
     memset(&api_ctxt, 0, sizeof(api_ctxt));
     api_ctxt.op = API_OP_DELETE;
     api_ctxt.id = API_ID_VCN_DELETE;
-    api_ctxt.api_info = vcn_key;    // TODO: this may not be acceptable usage if caller passed this from stack
+    api_ctxt.params.vcn_delete = *vcn_key;
     rv = g_api_engine.process_api(&api_ctxt);
     return rv;
 }

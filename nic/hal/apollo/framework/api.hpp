@@ -10,8 +10,6 @@
 #if !defined (__API_HPP__)
 #define __API_HPP__
 
-//#include "nic/hal/apollo/framework/api_ctxt.hpp"
-
 namespace api {
 
 /**< forward declaration */
@@ -63,3 +61,4 @@ protected:
 }    // namespace api
 
 #endif    /** __API_HPP__ */
+

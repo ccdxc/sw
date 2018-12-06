@@ -9,6 +9,10 @@
 #if !defined (__API_CTXT_HPP__)
 #define __API_CTXT_HPP__
 
+#include "nic/hal/apollo/api/vcn.hpp"
+#include "nic/hal/apollo/api/subnet.hpp"
+#include "nic/hal/apollo/api/vnic.hpp"
+
 namespace api {
 
 /**
@@ -53,12 +57,15 @@ typedef enum api_id_e {
 typedef struct api_ctxt_s {
     api_op_t    op;           /**< api operation */
     api_id_t    id;           /**< api identifier */
-#if 0
-    // TODO: this could be a union of stuff thats specific to each API
+    /**< API specific parameters */
     union {
-    } api_info_u;
-#endif
-    void    *api_info;    /**< API parameters passed by the caller */
+        oci_vcn_t           vcn_create;
+        oci_vcn_key_t       vcn_delete;
+        oci_subnet_t        subnet_create;
+        oci_subnet_key_t    subnet_delete;
+        oci_vnic_t          vnic_create;
+        oci_vnic_key_t      vnic_delete;
+    } params;
 } api_ctxt_t;
 
 }    // namespace api
