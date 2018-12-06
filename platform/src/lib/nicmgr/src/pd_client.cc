@@ -521,17 +521,17 @@ PdClient::p4pd_common_p4plus_rxdma_rss_params_table_entry_add(
         uint32_t hw_lif_id, uint8_t rss_type, uint8_t *rss_key)
 {
     p4pd_error_t        pd_err;
-    eth_rx_rss_params_actiondata data = { 0 };
+    eth_rx_rss_params_actiondata_t data = { 0 };
 
     assert(hw_lif_id < MAX_LIFS);
     assert(rss_key != NULL);
 
-    data.eth_rx_rss_params_action_u.eth_rx_rss_params_eth_rx_rss_params.rss_type = rss_type;
-    memcpy(&data.eth_rx_rss_params_action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key,
+    data.action_u.eth_rx_rss_params_eth_rx_rss_params.rss_type = rss_type;
+    memcpy(&data.action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key,
            rss_key,
-           sizeof(data.eth_rx_rss_params_action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key));
-    memrev((uint8_t *)&data.eth_rx_rss_params_action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key,
-           sizeof(data.eth_rx_rss_params_action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key));
+           sizeof(data.action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key));
+    memrev((uint8_t *)&data.action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key,
+           sizeof(data.action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key));
 
     pd_err = p4pd_global_entry_write(P4_COMMON_RXDMA_ACTIONS_TBL_ID_ETH_RX_RSS_PARAMS,
                                      hw_lif_id, NULL, NULL, &data);
@@ -544,7 +544,7 @@ PdClient::p4pd_common_p4plus_rxdma_rss_params_table_entry_add(
 
 int
 PdClient::p4pd_common_p4plus_rxdma_rss_params_table_entry_get(
-        uint32_t hw_lif_id, eth_rx_rss_params_actiondata *data)
+        uint32_t hw_lif_id, eth_rx_rss_params_actiondata_t *data)
 {
     p4pd_error_t        pd_err;
 
@@ -557,8 +557,8 @@ PdClient::p4pd_common_p4plus_rxdma_rss_params_table_entry_get(
         assert(0);
     }
 
-    memrev((uint8_t *)&data->eth_rx_rss_params_action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key,
-           sizeof(data->eth_rx_rss_params_action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key));
+    memrev((uint8_t *)&data->action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key,
+           sizeof(data->action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key));
 
     return 0;
 }
@@ -570,7 +570,7 @@ PdClient::p4pd_common_p4plus_rxdma_rss_indir_table_entry_add(
     uint64_t tbl_base;
     uint64_t tbl_index;
     uint64_t addr;
-    eth_rx_rss_indir_actiondata data = { 0 };
+    eth_rx_rss_indir_actiondata_t data = { 0 };
 
     if (hw_lif_id >= MAX_LIFS ||
         index >= ETH_RSS_LIF_INDIR_TBL_SZ ||
@@ -580,8 +580,8 @@ PdClient::p4pd_common_p4plus_rxdma_rss_indir_table_entry_add(
         return -1;
     };
 
-    data.eth_rx_rss_indir_action_u.eth_rx_rss_indir_eth_rx_rss_indir.enable = enable;
-    data.eth_rx_rss_indir_action_u.eth_rx_rss_indir_eth_rx_rss_indir.qid = qid;
+    data.action_u.eth_rx_rss_indir_eth_rx_rss_indir.enable = enable;
+    data.action_u.eth_rx_rss_indir_eth_rx_rss_indir.qid = qid;
 
     tbl_index = (hw_lif_id * ETH_RSS_LIF_INDIR_TBL_SZ) +
                 (index * ETH_RSS_LIF_INDIR_TBL_ENTRY_SZ);
@@ -592,9 +592,9 @@ PdClient::p4pd_common_p4plus_rxdma_rss_indir_table_entry_add(
     NIC_LOG_DEBUG("{}: hw_lif_id : {}, index : {}, addr : {:x}, enable : {}, qid : {}",
                   __FUNCTION__, hw_lif_id, index, addr, enable, qid);
     capri_hbm_write_mem(addr,
-                        (uint8_t *)&data.eth_rx_rss_indir_action_u,
-                        sizeof(data.eth_rx_rss_indir_action_u));
-    p4plus_invalidate_cache(addr, sizeof(data.eth_rx_rss_indir_action_u),
+                        (uint8_t *)&data.action_u,
+                        sizeof(data.action_u));
+    p4plus_invalidate_cache(addr, sizeof(data.action_u),
                             P4PLUS_CACHE_INVALIDATE_RXDMA);
 
     return 0;
@@ -602,7 +602,7 @@ PdClient::p4pd_common_p4plus_rxdma_rss_indir_table_entry_add(
 
 int
 PdClient::p4pd_common_p4plus_rxdma_rss_indir_table_entry_get(
-        uint32_t hw_lif_id, uint8_t index, eth_rx_rss_indir_actiondata *data)
+        uint32_t hw_lif_id, uint8_t index, eth_rx_rss_indir_actiondata_t *data)
 {
     uint64_t tbl_base;
     uint64_t tbl_index;
@@ -622,8 +622,8 @@ PdClient::p4pd_common_p4plus_rxdma_rss_indir_table_entry_get(
     addr = tbl_base + tbl_index;
 
     capri_hbm_read_mem(addr,
-                       (uint8_t *)&data->eth_rx_rss_indir_action_u,
-                       sizeof(data->eth_rx_rss_indir_action_u));
+                       (uint8_t *)&data->action_u,
+                       sizeof(data->action_u));
 
     return 0;
 }
@@ -670,23 +670,23 @@ PdClient::p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_add (
 {
     p4pd_error_t        pd_err;
     //directmap                    *dm;
-    rx_stage0_load_rdma_params_actiondata data = { 0 };
+    rx_stage0_load_rdma_params_actiondata_t data = { 0 };
 
     assert(idx < MAX_LIFS);
 
-    data.actionid = RX_STAGE0_LOAD_RDMA_PARAMS_RX_STAGE0_LOAD_RDMA_PARAMS_ID;
-    data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.rdma_en_qtype_mask = rdma_en_qtype_mask;
-    data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.pt_base_addr_page_id = pt_base_addr_page_id;
-    data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.log_num_pt_entries = log_num_pt_entries;
-    data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.cqcb_base_addr_hi = cqcb_base_addr_hi;
-    data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.sqcb_base_addr_hi = sqcb_base_addr_hi;
-    data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.rqcb_base_addr_hi = rqcb_base_addr_hi;
-    data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.log_num_cq_entries = log_num_cq_entries;
-    data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.prefetch_pool_base_addr_page_id = prefetch_pool_base_addr_page_id;
-    data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.log_num_prefetch_pool_entries = log_num_prefetch_pool_entries;
-    data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.sq_qtype = sq_qtype;
-    data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.rq_qtype = rq_qtype;
-    data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.aq_qtype = aq_qtype;
+    data.action_id = RX_STAGE0_LOAD_RDMA_PARAMS_RX_STAGE0_LOAD_RDMA_PARAMS_ID;
+    data.action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.rdma_en_qtype_mask = rdma_en_qtype_mask;
+    data.action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.pt_base_addr_page_id = pt_base_addr_page_id;
+    data.action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.log_num_pt_entries = log_num_pt_entries;
+    data.action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.cqcb_base_addr_hi = cqcb_base_addr_hi;
+    data.action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.sqcb_base_addr_hi = sqcb_base_addr_hi;
+    data.action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.rqcb_base_addr_hi = rqcb_base_addr_hi;
+    data.action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.log_num_cq_entries = log_num_cq_entries;
+    data.action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.prefetch_pool_base_addr_page_id = prefetch_pool_base_addr_page_id;
+    data.action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.log_num_prefetch_pool_entries = log_num_prefetch_pool_entries;
+    data.action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.sq_qtype = sq_qtype;
+    data.action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.rq_qtype = rq_qtype;
+    data.action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.aq_qtype = aq_qtype;
 
     /* TODO: Do we need memrev */
     pd_err = p4pd_global_entry_write(P4_COMMON_RXDMA_ACTIONS_TBL_ID_RX_STAGE0_LOAD_RDMA_PARAMS,
@@ -705,7 +705,7 @@ PdClient::p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_add (
 
 
 int
-PdClient::p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_get (uint32_t idx, rx_stage0_load_rdma_params_actiondata *data)
+PdClient::p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_get (uint32_t idx, rx_stage0_load_rdma_params_actiondata_t *data)
 {
     p4pd_error_t        pd_err;
 
@@ -748,26 +748,26 @@ PdClient::p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add (
     uint32_t barmap_size)
 {
     p4pd_error_t                  pd_err;
-    tx_stage0_lif_params_table_actiondata data = { 0 };
+    tx_stage0_lif_params_table_actiondata_t data = { 0 };
 
     assert(idx < MAX_LIFS);
 
-    data.actionid = TX_STAGE0_LIF_PARAMS_TABLE_TX_STAGE0_LIF_RDMA_PARAMS_ID;
-    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.rdma_en_qtype_mask = rdma_en_qtype_mask;
-    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.pt_base_addr_page_id = pt_base_addr_page_id;
-    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.ah_base_addr_page_id = ah_base_addr_page_id;
-    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.log_num_pt_entries = log_num_pt_entries;
-    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.cqcb_base_addr_hi = cqcb_base_addr_hi;
-    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.sqcb_base_addr_hi = sqcb_base_addr_hi;
-    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.rqcb_base_addr_hi = rqcb_base_addr_hi;
-    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.log_num_cq_entries = log_num_cq_entries;
-    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.prefetch_pool_base_addr_page_id = prefetch_pool_base_addr_page_id;
-    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.log_num_prefetch_pool_entries = log_num_prefetch_pool_entries;
-    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.sq_qtype = sq_qtype;
-    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.rq_qtype = rq_qtype;
-    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.aq_qtype = aq_qtype;
-    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.barmap_base_addr = barmap_base_addr;
-    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.barmap_size = barmap_size;
+    data.action_id = TX_STAGE0_LIF_PARAMS_TABLE_TX_STAGE0_LIF_RDMA_PARAMS_ID;
+    data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.rdma_en_qtype_mask = rdma_en_qtype_mask;
+    data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.pt_base_addr_page_id = pt_base_addr_page_id;
+    data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.ah_base_addr_page_id = ah_base_addr_page_id;
+    data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.log_num_pt_entries = log_num_pt_entries;
+    data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.cqcb_base_addr_hi = cqcb_base_addr_hi;
+    data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.sqcb_base_addr_hi = sqcb_base_addr_hi;
+    data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.rqcb_base_addr_hi = rqcb_base_addr_hi;
+    data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.log_num_cq_entries = log_num_cq_entries;
+    data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.prefetch_pool_base_addr_page_id = prefetch_pool_base_addr_page_id;
+    data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.log_num_prefetch_pool_entries = log_num_prefetch_pool_entries;
+    data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.sq_qtype = sq_qtype;
+    data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.rq_qtype = rq_qtype;
+    data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.aq_qtype = aq_qtype;
+    data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.barmap_base_addr = barmap_base_addr;
+    data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.barmap_size = barmap_size;
 
     /* TODO: Do we need memrev */
     pd_err = p4pd_global_entry_write(
@@ -787,7 +787,7 @@ PdClient::p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add (
 int
 PdClient::p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_get (
     uint32_t idx,
-    tx_stage0_lif_params_table_actiondata *data)
+    tx_stage0_lif_params_table_actiondata_t *data)
 {
     p4pd_error_t                  pd_err;
 
@@ -812,7 +812,7 @@ PdClient::rdma_get_pt_base_addr (uint32_t lif)
 {
     uint64_t            pt_table_base_addr;
     int                 rc;
-    rx_stage0_load_rdma_params_actiondata data = {0};
+    rx_stage0_load_rdma_params_actiondata_t data = {0};
 
     rc = p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_get(lif, &data);
     if (rc) {
@@ -822,7 +822,7 @@ PdClient::rdma_get_pt_base_addr (uint32_t lif)
         return rc;
     }
 
-    pt_table_base_addr = data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.pt_base_addr_page_id;
+    pt_table_base_addr = data.action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.pt_base_addr_page_id;
 
     NIC_LOG_DEBUG("({},{}): Lif: {}: Rx LIF params - pt_base_addr_page_id {}",
                  __FUNCTION__, __LINE__, lif,
@@ -839,7 +839,7 @@ PdClient::rdma_get_kt_base_addr (uint32_t lif)
     uint64_t            key_table_base_addr;
     uint32_t            log_num_pt_entries;
     int                 rc;
-    rx_stage0_load_rdma_params_actiondata data = {0};
+    rx_stage0_load_rdma_params_actiondata_t data = {0};
 
     rc = p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_get(lif, &data);
     if (rc) {
@@ -849,8 +849,8 @@ PdClient::rdma_get_kt_base_addr (uint32_t lif)
         return rc;
     }
 
-    pt_table_base_addr = data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.pt_base_addr_page_id;
-    log_num_pt_entries = data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.log_num_pt_entries;
+    pt_table_base_addr = data.action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.pt_base_addr_page_id;
+    log_num_pt_entries = data.action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.log_num_pt_entries;
 
     key_table_base_addr = (pt_table_base_addr << HBM_PAGE_SIZE_SHIFT) +
         (sizeof(uint64_t) << log_num_pt_entries);
@@ -869,7 +869,7 @@ PdClient::rdma_get_ah_base_addr (uint32_t lif)
 {
     uint64_t            ah_table_base_addr;
     int                 rc;
-    tx_stage0_lif_params_table_actiondata data = { 0 };
+    tx_stage0_lif_params_table_actiondata_t data = { 0 };
 
     rc = p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_get(lif, &data);
     if (rc) {
@@ -879,7 +879,7 @@ PdClient::rdma_get_ah_base_addr (uint32_t lif)
         return rc;
     }
 
-    ah_table_base_addr = data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.ah_base_addr_page_id;
+    ah_table_base_addr = data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.ah_base_addr_page_id;
 
     NIC_LOG_DEBUG("({},{}): Lif: {}: Rx LIF params - ah_base_addr_page_id {}",
                  __FUNCTION__, __LINE__, lif,

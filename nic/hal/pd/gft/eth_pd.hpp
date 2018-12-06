@@ -26,12 +26,12 @@ namespace pd {
 extern hal_ret_t p4pd_common_p4plus_rxdma_rss_params_table_entry_add(
     uint32_t hw_lif_id, uint8_t rss_type, uint8_t *rss_key);
 extern hal_ret_t p4pd_common_p4plus_rxdma_rdma_params_table_entry_get(
-    uint32_t hw_lif_id, eth_rx_rss_params_actiondata *data);
+    uint32_t hw_lif_id, eth_rx_rss_params_actiondata_t *data);
 
 extern hal_ret_t p4pd_common_p4plus_rxdma_rss_indir_table_entry_add(
     uint32_t hw_lif_id, uint8_t index, uint8_t enable, uint8_t qid);
 extern hal_ret_t p4pd_common_p4plus_rxdma_rss_indir_table_entry_get(
-    uint32_t hw_lif_id, uint8_t index, eth_rx_rss_indir_actiondata *data);
+    uint32_t hw_lif_id, uint8_t index, eth_rx_rss_indir_actiondata_t *data);
 
 }   // namespace pd
 }   // namespace hal

@@ -261,7 +261,7 @@ hash_${table}_key_len(uint32_t tableid,
 
 static uint32_t
 ${table}_pack_action_data(uint32_t tableid,
-                          ${table}_actiondata *actiondata,
+                          ${table}_actiondata_t *actiondata,
                           uint8_t *packed_actiondata_before_key,
                           uint16_t *actiondata_len_before_key,
                           uint8_t *packed_actiondata_after_key,
@@ -309,7 +309,7 @@ ${table}_pack_action_data(uint32_t tableid,
 //::                add_action_pc = False
 //::            #endif
 
-    switch(actiondata->actionid) {
+    switch(actiondata->action_id) {
 //::            for action in pddict['tables'][table]['actions']:
 //::                (actionname, actionfldlist) = action
 //::                actname = actionname.upper()
@@ -347,10 +347,10 @@ ${table}_pack_action_data(uint32_t tableid,
                     p4pd_utils_copy_le_src_to_be_dest(packed_action_data,
                                    dest_start_bit,
 //::                    if actionfldwidth <= 32:
-                                   (uint8_t*)&(actiondata->${table}_action_u.\
+                                   (uint8_t*)&(actiondata->action_u.\
                                    ${table}_${actionname}.${actionfldname}),
 //::                    else:
-                                   (uint8_t*)(actiondata->${table}_action_u.\
+                                   (uint8_t*)(actiondata->action_u.\
                                    ${table}_${actionname}.${actionfldname}),
 //::                    #endif
                                    ${actionfldwidth} - bits_before_mat_key,
@@ -379,10 +379,10 @@ ${table}_pack_action_data(uint32_t tableid,
                     p4pd_utils_copy_le_src_to_be_dest(packed_action_data,
                                    dest_start_bit,
 //::                        if actionfldwidth <= 32:
-                                   (uint8_t*)&(actiondata->${table}_action_u.\
+                                   (uint8_t*)&(actiondata->action_u.\
                                    ${table}_${actionname}.${actionfldname}),
 //::                        else:
-                                   (uint8_t*)(actiondata->${table}_action_u.\
+                                   (uint8_t*)(actiondata->action_u.\
                                    ${table}_${actionname}.${actionfldname}),
 //::                        #endif
                                    ${actionfldwidth} - bits_before_mat_key,
@@ -406,10 +406,10 @@ ${table}_pack_action_data(uint32_t tableid,
             p4pd_utils_copy_le_src_to_be_dest(packed_action_data,
                            dest_start_bit,
 //::                    if actionfldwidth <= 32:
-                           (uint8_t*)&(actiondata->${table}_action_u.\
+                           (uint8_t*)&(actiondata->action_u.\
                                 ${table}_${actionname}.${actionfldname}),
 //::                    else:
-                           (uint8_t*)(actiondata->${table}_action_u.\
+                           (uint8_t*)(actiondata->action_u.\
                                 ${table}_${actionname}.${actionfldname}),
 //::                    #endif
                            source_start_bit,
@@ -436,7 +436,7 @@ ${table}_pack_action_data(uint32_t tableid,
 //::        else:
 static uint32_t
 ${table}_pack_action_data(uint32_t tableid,
-                          ${table}_actiondata *actiondata,
+                          ${table}_actiondata_t *actiondata,
                           uint8_t *packed_actiondata)
 
 {
@@ -445,7 +445,7 @@ ${table}_pack_action_data(uint32_t tableid,
     dest_start_bit = 0;
     (void)dest_start_bit;
 
-    switch(actiondata->actionid) {
+    switch(actiondata->action_id) {
 //::            for action in pddict['tables'][table]['actions']:
 //::                (actionname, actionfldlist) = action
 //::                actname = actionname.upper()
@@ -462,10 +462,10 @@ ${table}_pack_action_data(uint32_t tableid,
             p4pd_utils_copy_le_src_to_be_dest(packed_actiondata,
                            dest_start_bit,
 //::                    if actionfldwidth <= 32:
-                           (uint8_t*)&(actiondata->${table}_action_u.\
+                           (uint8_t*)&(actiondata->action_u.\
                                 ${table}_${actionname}.${actionfldname}),
 //::                    else:
-                           (uint8_t*)(actiondata->${table}_action_u.\
+                           (uint8_t*)(actiondata->action_u.\
                                 ${table}_${actionname}.${actionfldname}),
 //::                    #endif
                            0, /* Start bit in source */
@@ -1461,8 +1461,8 @@ ${table}_entry_write(uint32_t tableid,
                      uint32_t index,
                      uint8_t *hwkey,
                      uint8_t *hwkey_y,
-                     ${table}_actiondata *actiondata,
-                     ${table}_actiondata *actiondata_mask)
+                     ${table}_actiondata_t *actiondata,
+                     ${table}_actiondata_t *actiondata_mask)
 {
     uint32_t hwkey_len, hwkeymask_len;
     uint8_t  action_pc;
@@ -1489,7 +1489,7 @@ ${table}_entry_write(uint32_t tableid,
 //::                add_action_pc = False
 //::            #endif
 //::            if add_action_pc:
-    action_pc = hal::pd::asicpd_get_action_pc(tableid, actiondata->actionid);
+    action_pc = hal::pd::asicpd_get_action_pc(tableid, actiondata->action_id);
 //::            else:
     action_pc = 0xff;
 //::            #endif
@@ -1546,8 +1546,8 @@ ${table}_entry_write(uint32_t tableid,
                      uint32_t index,
                      uint8_t *hwkey,
                      uint8_t *hwkey_y,
-                     ${table}_actiondata *actiondata,
-                     ${table}_actiondata *actiondata_mask)
+                     ${table}_actiondata_t *actiondata,
+                     ${table}_actiondata_t *actiondata_mask)
 {
     uint8_t  packed_actiondata[P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint8_t  sram_hwentry[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
@@ -1564,7 +1564,7 @@ ${table}_entry_write(uint32_t tableid,
 //::                add_action_pc = False
 //::            #endif
 //::            if add_action_pc:
-    action_pc = hal::pd::asicpd_get_action_pc(tableid, actiondata->actionid);
+    action_pc = hal::pd::asicpd_get_action_pc(tableid, actiondata->action_id);
 //::            else:
     action_pc = 0xff;
 //::            #endif
@@ -1595,8 +1595,8 @@ ${table}_entry_write(uint32_t tableid,
 static p4pd_error_t
 ${table}_entry_write(uint32_t tableid,
                      uint32_t index,
-                     ${table}_actiondata *actiondata,
-                     ${table}_actiondata *actiondata_mask)
+                     ${table}_actiondata_t *actiondata,
+                     ${table}_actiondata_t *actiondata_mask)
 {
     uint8_t  action_pc;
     uint8_t  packed_actiondata[P4PD_MAX_ACTION_DATA_LEN] = {0};
@@ -1613,7 +1613,7 @@ ${table}_entry_write(uint32_t tableid,
 //::                add_action_pc = False
 //::            #endif
 //::            if add_action_pc:
-    action_pc = hal::pd::asicpd_get_action_pc(tableid, actiondata->actionid);
+    action_pc = hal::pd::asicpd_get_action_pc(tableid, actiondata->action_id);
 //::            else:
     action_pc = 0xff;
 //::            #endif
@@ -1652,8 +1652,8 @@ static p4pd_error_t
 ${table}_entry_write(uint32_t tableid,
                      uint32_t hashindex,
                      uint8_t *hwkey,
-                     ${table}_actiondata *actiondata,
-                     ${table}_actiondata *actiondata_mask)
+                     ${table}_actiondata_t *actiondata,
+                     ${table}_actiondata_t *actiondata_mask)
 {
     uint32_t hwactiondata_len, hwkey_len;
     uint8_t  action_pc;
@@ -1686,7 +1686,7 @@ ${table}_entry_write(uint32_t tableid,
 //::                add_action_pc = False
 //::            #endif
 //::            if add_action_pc:
-    action_pc = hal::pd::asicpd_get_action_pc(tableid, actiondata->actionid);
+    action_pc = hal::pd::asicpd_get_action_pc(tableid, actiondata->action_id);
 //::            else:
     action_pc = 0xff;
 //::            #endif
@@ -1758,7 +1758,7 @@ hash_${table}_unpack_action_data(uint32_t tableid,
                                  uint16_t actiondata_len_before_key,
                                  uint8_t *packed_actiondata_after_key,
                                  uint16_t actiondata_len_after_key,
-                                 ${table}_actiondata *actiondata)
+                                 ${table}_actiondata_t *actiondata)
 {
     uint16_t src_start_bit;
     uint16_t actiondatalen, bits_from_adata_before_key;
@@ -1778,9 +1778,9 @@ hash_${table}_unpack_action_data(uint32_t tableid,
     actiondatalen = 0;
     src_start_bit = 0; /* TODO: When mat-key start bit is in middle of byte ?? */
 
-    memset(actiondata, 0, sizeof(${table}_actiondata));
+    memset(actiondata, 0, sizeof(${table}_actiondata_t));
 
-    actiondata->actionid = actionid;
+    actiondata->action_id = actionid;
 
 //::            mat_key_start_byte = pddict['tables'][table]['match_key_start_byte']
 //::            mat_key_start_bit = pddict['tables'][table]['match_key_start_bit']
@@ -1789,7 +1789,7 @@ hash_${table}_unpack_action_data(uint32_t tableid,
 //::                mat_key_bit_length = pddict['tables'][table]['wide_key_len']
 //::            #endif
 
-    switch(actiondata->actionid) {
+    switch(actiondata->action_id) {
 //::            for action in pddict['tables'][table]['actions']:
 //::                (actionname, actionfldlist) = action
 //::                actname = actionname.upper()
@@ -1818,10 +1818,10 @@ hash_${table}_unpack_action_data(uint32_t tableid,
                     bits_from_adata_before_key = actiondata_len_before_key - src_start_bit;
                     p4pd_utils_copy_be_adata_to_le_dest(
 //::                    if actionfldwidth <= 32:
-                                   (uint8_t*)&(actiondata->${table}_action_u.\
+                                   (uint8_t*)&(actiondata->action_u.\
                                    ${table}_${actionname}.${actionfldname}),
 //::                    else:
-                                   (uint8_t*)(actiondata->${table}_action_u.\
+                                   (uint8_t*)(actiondata->action_u.\
                                    ${table}_${actionname}.${actionfldname}),
 //::                    #endif
                                    ${actionfldwidth} - bits_from_adata_before_key,
@@ -1842,10 +1842,10 @@ hash_${table}_unpack_action_data(uint32_t tableid,
             }
             p4pd_utils_copy_be_adata_to_le_dest(
 //::                    if actionfldwidth <= 32:
-                           (uint8_t*)&(actiondata->${table}_action_u.\
+                           (uint8_t*)&(actiondata->action_u.\
                                 ${table}_${actionname}.${actionfldname}),
 //::                    else:
-                           (uint8_t*)(actiondata->${table}_action_u.\
+                           (uint8_t*)(actiondata->action_u.\
                                 ${table}_${actionname}.${actionfldname}),
 //::                    #endif
                            dest_start_bit,
@@ -1867,7 +1867,7 @@ static uint32_t
 ${table}_unpack_action_data(uint32_t tableid,
                             uint8_t actionid,
                             uint8_t *packed_actiondata,
-                            ${table}_actiondata *actiondata)
+                            ${table}_actiondata_t *actiondata)
 {
     uint16_t src_start_bit;
     uint16_t actiondatalen;
@@ -1877,10 +1877,10 @@ ${table}_unpack_action_data(uint32_t tableid,
     actiondatalen = 0;
     src_start_bit = 0;
 
-    memset(actiondata, 0, sizeof(${table}_actiondata));
-    actiondata->actionid = actionid;
+    memset(actiondata, 0, sizeof(${table}_actiondata_t));
+    actiondata->action_id = actionid;
 
-    switch(actiondata->actionid) {
+    switch(actiondata->action_id) {
 //::            for action in pddict['tables'][table]['actions']:
 //::                (actionname, actionfldlist) = action
 //::                actname = actionname.upper()
@@ -1896,10 +1896,10 @@ ${table}_unpack_action_data(uint32_t tableid,
             }
             p4pd_utils_copy_be_adata_to_le_dest(
 //::                    if actionfldwidth <= 32:
-                           (uint8_t*)&(actiondata->${table}_action_u.\
+                           (uint8_t*)&(actiondata->action_u.\
                                 ${table}_${actionname}.${actionfldname}),
 //::                    else:
-                           (uint8_t*)(actiondata->${table}_action_u.\
+                           (uint8_t*)(actiondata->action_u.\
                                 ${table}_${actionname}.${actionfldname}),
 //::                    #endif
                            0, /* start bit in action-data destination field */
@@ -2601,7 +2601,7 @@ ${table}_entry_read(uint32_t tableid,
                     uint32_t index,
                     ${table}_swkey_t *swkey,
                     ${table}_swkey_mask_t *swkey_mask,
-                    ${table}_actiondata *actiondata)
+                    ${table}_actiondata_t *actiondata)
 {
     uint8_t  hwentry_x[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint8_t  hwentry_y[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
@@ -2631,13 +2631,13 @@ ${table}_entry_read(uint32_t tableid,
 //::            #endif
 //::            if action_pc_added:
     uint8_t actionpc = hwentry[0]; // First byte is always action-pc
-    actiondata->actionid = hal::pd::asicpd_get_action_id(tableid, actionpc);
+    actiondata->action_id = hal::pd::asicpd_get_action_id(tableid, actionpc);
     int adatabyte = 1;
 //::            else:
-    actiondata->actionid = 0;
+    actiondata->action_id = 0;
     int adatabyte = 0;
 //::            #endif
-    ${table}_unpack_action_data(tableid, actiondata->actionid,
+    ${table}_unpack_action_data(tableid, actiondata->action_id,
                                 hwentry + adatabyte, actiondata);
     return (P4PD_SUCCESS);
 }
@@ -2647,7 +2647,7 @@ ${table}_entry_read(uint32_t tableid,
                     uint32_t index,
                     ${table}_swkey_t *swkey,
                     ${table}_swkey_mask_t *swkey_mask,
-                    ${table}_actiondata *actiondata)
+                    ${table}_actiondata_t *actiondata)
 {
     uint8_t  hwentry_x[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint8_t  hwentry_y[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
@@ -2677,13 +2677,13 @@ ${table}_entry_read(uint32_t tableid,
 //::            #endif
 //::            if action_pc_added:
     uint8_t actionpc = hwentry[0]; // First byte is always action-pc
-    actiondata->actionid = hal::pd::asicpd_get_action_id(tableid, actionpc);
+    actiondata->action_id = hal::pd::asicpd_get_action_id(tableid, actionpc);
     int adatabyte = 1;
 //::            else:
-    actiondata->actionid = 0;
+    actiondata->action_id = 0;
     int adatabyte = 0;
 //::            #endif
-    ${table}_unpack_action_data(tableid, actiondata->actionid,
+    ${table}_unpack_action_data(tableid, actiondata->action_id,
                                 hwentry + adatabyte, actiondata);
     return (P4PD_SUCCESS);
 }
@@ -2691,7 +2691,7 @@ ${table}_entry_read(uint32_t tableid,
 static p4pd_error_t
 ${table}_entry_read(uint32_t tableid,
                     uint32_t index,
-                    ${table}_actiondata* actiondata)
+                    ${table}_actiondata_t* actiondata)
 {
     uint8_t  hwentry[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint16_t hwentry_bit_len;
@@ -2720,13 +2720,13 @@ ${table}_entry_read(uint32_t tableid,
 //::            #endif
 //::            if action_pc_added:
     uint8_t actionpc = hwentry[0]; // First byte is always action-pc
-    actiondata->actionid = hal::pd::asicpd_get_action_id(tableid, actionpc);
+    actiondata->action_id = hal::pd::asicpd_get_action_id(tableid, actionpc);
     int adatabyte = 1;
 //::            else:
-    actiondata->actionid = 0;
+    actiondata->action_id = 0;
     int adatabyte = 0;
 //::            #endif
-    ${table}_unpack_action_data(tableid, actiondata->actionid,
+    ${table}_unpack_action_data(tableid, actiondata->action_id,
                                 hwentry + adatabyte, actiondata);
 
     return (P4PD_SUCCESS);
@@ -2736,7 +2736,7 @@ static p4pd_error_t
 ${table}_entry_read(uint32_t tableid,
                     uint32_t hashindex,
                     ${table}_swkey_t *swkey,
-                    ${table}_actiondata *actiondata)
+                    ${table}_actiondata_t *actiondata)
 {
 //::            if pddict['tables'][table]['is_wide_key']:
     uint8_t  hwentry[P4PD_MAX_PHV_LEN] = {0};
@@ -2783,11 +2783,11 @@ ${table}_entry_read(uint32_t tableid,
 //::            if action_pc_added:
 //::                delta_bits = mat_key_start_bit - (max_actionfld_len - spilled_adata_bits) - 8 if max_actionfld_len < mat_key_start_bit else 0
     uint8_t actionpc = hwentry[0]; // First byte is always action-pc
-    actiondata->actionid = hal::pd::asicpd_get_action_id(tableid, actionpc);
+    actiondata->action_id = hal::pd::asicpd_get_action_id(tableid, actionpc);
     int adatabyte = 1;
 //::            else:
 //::                delta_bits = mat_key_start_bit - (max_actionfld_len - spilled_adata_bits) if max_actionfld_len < mat_key_start_bit else 0
-    actiondata->actionid = 0;
+    actiondata->action_id = 0;
     int adatabyte = 0;
 //::            #endif
 //::            max_adata_bits_before_key -= delta_bits
@@ -2802,7 +2802,7 @@ ${table}_entry_read(uint32_t tableid,
     actiondata_len_before_key = ${max_adata_bits_before_key};
     actiondata_len_after_key = ${max_actionfld_len} - ${max_adata_bits_before_key};
     hash_${table}_unpack_action_data(tableid,
-                                    actiondata->actionid,
+                                    actiondata->action_id,
                                     packed_actiondata_before_key,
                                     actiondata_len_before_key,
                                     packed_actiondata_after_key,
@@ -2850,7 +2850,7 @@ static p4pd_error_t
 ${table}_entry_decode(uint32_t tableid,
                       uint8_t *hwentry,
                       uint16_t hwentry_len,
-                      ${table}_actiondata* actiondata)
+                      ${table}_actiondata_t* actiondata)
 {
 //::            if len(pddict['tables'][table]['actions']) > 1:
 //::                action_pc_added = True
@@ -2859,14 +2859,14 @@ ${table}_entry_decode(uint32_t tableid,
 //::            #endif
 //::            if action_pc_added:
     uint8_t actionpc = hwentry[0]; // First byte is always action-pc
-    actiondata->actionid = hal::pd::asicpd_get_action_id(tableid, actionpc);
+    actiondata->action_id = hal::pd::asicpd_get_action_id(tableid, actionpc);
     int adatabyte = 1;
 //::            else:
-    actiondata->actionid = 0;
+    actiondata->action_id = 0;
     int adatabyte = 0;
 //::            #endif
 
-    ${table}_unpack_action_data(tableid, actiondata->actionid,
+    ${table}_unpack_action_data(tableid, actiondata->action_id,
                                 hwentry + adatabyte, actiondata);
 
     return (P4PD_SUCCESS);
@@ -2877,7 +2877,7 @@ ${table}_entry_decode(uint32_t tableid,
                       uint8_t *hwentry,
                       uint16_t hwentry_len,
                       ${table}_swkey_t *swkey,
-                      ${table}_actiondata *actiondata)
+                      ${table}_actiondata_t *actiondata)
 {
 //::            mat_key_start_byte = pddict['tables'][table]['match_key_start_byte']
 //::            mat_key_start_bit = pddict['tables'][table]['match_key_start_bit']
@@ -2902,11 +2902,11 @@ ${table}_entry_decode(uint32_t tableid,
 //::            if action_pc_added:
 //::                delta_bits = mat_key_start_bit - (max_actionfld_len - spilled_adata_bits) - 8 if max_actionfld_len < mat_key_start_bit else 0
     uint8_t actionpc = hwentry[0]; // First byte is always action-pc
-    actiondata->actionid = hal::pd::asicpd_get_action_id(tableid, actionpc);
+    actiondata->action_id = hal::pd::asicpd_get_action_id(tableid, actionpc);
     int adatabyte = 1;
 //::            else:
 //::                delta_bits = mat_key_start_bit - (max_actionfld_len - spilled_adata_bits) if max_actionfld_len < mat_key_start_bit else 0
-    actiondata->actionid = 0;
+    actiondata->action_id = 0;
     int adatabyte = 0;
 //::            #endif
 //::            max_adata_bits_before_key -= delta_bits
@@ -2923,7 +2923,7 @@ ${table}_entry_decode(uint32_t tableid,
     actiondata_len_before_key = ${max_adata_bits_before_key}; // bit len without actionpc
     actiondata_len_after_key = ${max_actionfld_len} - ${max_adata_bits_before_key};
     hash_${table}_unpack_action_data(tableid,
-                                    actiondata->actionid,
+                                    actiondata->action_id,
                                     packed_actiondata_before_key,
                                     actiondata_len_before_key,
                                     packed_actiondata_after_key,
@@ -3196,9 +3196,9 @@ ${api_prefix}_entry_write_with_datamask(uint32_t tableid,
      *  | Action-PC[8] | Match-Key  | Action-Data |
      *  +-----------------------------------------+
      *
-     *  Action-PC   : is dervied from actiondata.actionid
+     *  Action-PC   : is dervied from actiondata.action_id
      *  Match-Key   : is byte stream built using ${table}_hwkey_build()
-     *  Action-Data : ${table}_actiondata* actiondata is
+     *  Action-Data : ${table}_actiondata_t* actiondata is
      *                bit packed and installed in HW memory.
      *                Action Field order in Action-data should match
      *                with ASM output that MPU uses to fetch action-data
@@ -3226,9 +3226,9 @@ ${api_prefix}_entry_write_with_datamask(uint32_t tableid,
      *     +------------------------------------------------------------------+
      *  Note: Match-key start in both KM and HBM memory are aligned.
      *
-     *  Action-PC   : is dervied from actiondata.actionid
+     *  Action-PC   : is dervied from actiondata.action_id
      *  Match-Key   : is byte stream built using ${table}_hwkey_build()
-     *  Action-Data : ${table}_actiondata* actiondata is
+     *  Action-Data : ${table}_actiondata_t* actiondata is
      *                bit packed and installed in HW memory. This Action-Data
      *                can be overlayed in byte positions where I1 / I2 bytes
      *                occupy in KM. HBM memory doesn't (cannot) store I1/I2
@@ -3243,8 +3243,8 @@ ${api_prefix}_entry_write_with_datamask(uint32_t tableid,
      * | Action-PC[8] | Action-Data |
      * +----------------------------+
      *
-     * Action-PC   : is dervied from actiondata.actionid
-     * Action-Data : ${table}_actiondata* actiondata is
+     * Action-PC   : is dervied from actiondata.action_id
+     * Action-Data : ${table}_actiondata_t* actiondata is
      *               bit packed and installed in HW memory.
      *               Action Field order in Action-data should match
      *               with ASM output that MPU uses to fetch action-data
@@ -3267,19 +3267,19 @@ ${api_prefix}_entry_write_with_datamask(uint32_t tableid,
 //::            #endif
 //::            if pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
             return (${table}_entry_write(tableid, index,
-                                         (${table}_actiondata*)actiondata,
-                                         (${table}_actiondata*)actiondata_mask));
+                                         (${table}_actiondata_t*)actiondata,
+                                         (${table}_actiondata_t*)actiondata_mask));
 //::            #endif
 //::            if pddict['tables'][table]['type'] == 'Hash' or pddict['tables'][table]['type'] == 'Hash_OTcam':
             return (${table}_entry_write(tableid, index, hwkey,
-                                         (${table}_actiondata*)actiondata,
-                                         (${table}_actiondata*)actiondata_mask));
+                                         (${table}_actiondata_t*)actiondata,
+                                         (${table}_actiondata_t*)actiondata_mask));
 //::            #endif
 //::            if pddict['tables'][table]['type'] == 'Ternary':
             return (${table}_entry_write(tableid, index,
                                          hwkey, hwkey_y,
-                                         (${table}_actiondata*)actiondata,
-                                         (${table}_actiondata*)actiondata_mask));
+                                         (${table}_actiondata_t*)actiondata,
+                                         (${table}_actiondata_t*)actiondata_mask));
 //::            #endif
         break;
 
@@ -3399,18 +3399,18 @@ ${api_prefix}_entry_read(uint32_t   tableid,
 //::            #endif
 //::            if pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
             return (${table}_entry_read(tableid, index,
-                            (${table}_actiondata*) actiondata));
+                            (${table}_actiondata_t*) actiondata));
 //::            #endif
 //::            if pddict['tables'][table]['type'] == 'Hash' or pddict['tables'][table]['type'] == 'Hash_OTcam':
             return (${table}_entry_read(tableid, index,
                             (${table}_swkey_t *)swkey,
-                            (${table}_actiondata*)actiondata));
+                            (${table}_actiondata_t*)actiondata));
 //::            #endif
 //::            if pddict['tables'][table]['type'] == 'Ternary':
             return (${table}_entry_read(tableid, index,
                             (${table}_swkey_t*)swkey,
                             (${table}_swkey_mask_t*)swkey_mask,
-                            (${table}_actiondata*) actiondata));
+                            (${table}_actiondata_t*) actiondata));
 //::            #endif
         break;
 
@@ -3511,10 +3511,10 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
                 return (P4PD_SUCCESS);
             }
 //::            if pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
-            ${table}_actiondata actiondata;
+            ${table}_actiondata_t actiondata;
             ${table}_entry_decode(tableid, _hwentry,  hwentry_len,
                                   &actiondata);
-            switch(actiondata.actionid) {
+            switch(actiondata.action_id) {
 //::                for action in pddict['tables'][table]['actions']:
 //::                    (actionname, actionfldlist) = action
 //::                    actname = actionname.upper()
@@ -3530,7 +3530,7 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
 //::                        actionfldname, actionfldwidth = actionfld
 //::                        if actionfldwidth <= 32:
                     b = snprintf(buf, blen, "%s: 0x%x\n", "${actionfldname}",
-                             actiondata.${table}_action_u.\
+                             actiondata.action_u.\
                              ${table}_${actionname}.${actionfldname});
                     buf += b;
                     blen -= b;
@@ -3547,7 +3547,7 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
                     }
                     for (int j = 0; j < ${p4fldwidth_byte}; j++) {
                         b = snprintf(buf, blen, "  0x%x : ",
-                                 actiondata.${table}_action_u.\
+                                 actiondata.action_u.\
                                  ${table}_${actionname}.${actionfldname}[j]);
                         buf += b;
                         blen -= b;
@@ -3570,7 +3570,7 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
 //::            #endif
 //::            if pddict['tables'][table]['type'] == 'Hash' or pddict['tables'][table]['type'] == 'Hash_OTcam':
             ${table}_swkey_t swkey;
-            ${table}_actiondata actiondata;
+            ${table}_actiondata_t actiondata;
             ${table}_entry_decode(tableid, _hwentry, hwentry_len,
                                   &swkey,
                                   &actiondata);
@@ -3697,7 +3697,7 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
 //::                    #endfor
 //::                    i += 1
 //::                #endfor
-            switch(actiondata.actionid) {
+            switch(actiondata.action_id) {
 //::                for action in pddict['tables'][table]['actions']:
 //::                    (actionname, actionfldlist) = action
 //::                    actname = actionname.upper()
@@ -3713,7 +3713,7 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
 //::                        actionfldname, actionfldwidth = actionfld
 //::                        if actionfldwidth <= 32:
                     b = snprintf(buf, blen, "%s: 0x%x\n", "${actionfldname}",
-                             actiondata.${table}_action_u.\
+                             actiondata.action_u.\
                              ${table}_${actionname}.${actionfldname});
                     buf += b;
                     blen -= b;
@@ -3730,7 +3730,7 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
                     }
                     for (int j = 0; j < ${p4fldwidth_byte}; j++) {
                         b = snprintf(buf, blen, "  0x%x : ",
-                                 actiondata.${table}_action_u.\
+                                 actiondata.action_u.\
                                  ${table}_${actionname}.${actionfldname}[j]);
                         buf += b;
                         blen -= b;
@@ -3969,11 +3969,11 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
                 if (blen <= 0) {
                     return (P4PD_SUCCESS);
                 }
-                ${table}_actiondata actiondata;
-                actiondata.actionid = hal::pd::asicpd_get_action_id(tableid, _hwentry[0]);
-                ${table}_unpack_action_data(tableid, actiondata.actionid, _hwentry+1,
+                ${table}_actiondata_t actiondata;
+                actiondata.action_id = hal::pd::asicpd_get_action_id(tableid, _hwentry[0]);
+                ${table}_unpack_action_data(tableid, actiondata.action_id, _hwentry+1,
                                             &actiondata);
-                switch(actiondata.actionid) {
+                switch(actiondata.action_id) {
 //::                for action in pddict['tables'][table]['actions']:
 //::                    (actionname, actionfldlist) = action
 //::                    actname = actionname.upper()
@@ -3989,7 +3989,7 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
 //::                        actionfldname, actionfldwidth = actionfld
 //::                        if actionfldwidth <= 32:
                         b = snprintf(buf, blen, "%s: 0x%x\n", "${actionfldname}",
-                             actiondata.${table}_action_u.\
+                             actiondata.action_u.\
                              ${table}_${actionname}.${actionfldname});
                         buf += b;
                         blen -= b;
@@ -4006,7 +4006,7 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
                         }
                         for (int j = 0; j < ${p4fldwidth_byte}; j++) {
                             b = snprintf(buf, blen, "  0x%x : ",
-                                     actiondata.${table}_action_u.\
+                                     actiondata.action_u.\
                                      ${table}_${actionname}.${actionfldname}[j]);
                             buf += b;
                             blen -= b;
@@ -4117,11 +4117,11 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
                 return (P4PD_SUCCESS);
             }
 //::            if pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
-            ${table}_actiondata *actiondata = (${table}_actiondata *)action_data;
+            ${table}_actiondata_t *actiondata = (${table}_actiondata_t *)action_data;
             if (!actiondata) {
                 break;
             }
-            switch(actiondata->actionid) {
+            switch(actiondata->action_id) {
 //::                for action in pddict['tables'][table]['actions']:
 //::                    (actionname, actionfldlist) = action
 //::                    actname = actionname.upper()
@@ -4137,7 +4137,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
 //::                        actionfldname, actionfldwidth = actionfld
 //::                        if actionfldwidth <= 32:
                     b = snprintf(buf, blen, "%s: 0x%x\n", "${actionfldname}",
-                             actiondata->${table}_action_u.\
+                             actiondata->action_u.\
                              ${table}_${actionname}.${actionfldname});
                     buf += b;
                     blen -= b;
@@ -4154,7 +4154,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
                     }
                     for (int j = 0; j < ${p4fldwidth_byte}; j++) {
                         b = snprintf(buf, blen, "%02x",
-                                 actiondata->${table}_action_u.\
+                                 actiondata->action_u.\
                                  ${table}_${actionname}.${actionfldname}[j]);
                         buf += b;
                         blen -= b;
@@ -4177,7 +4177,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
 //::            #endif
 //::            if pddict['tables'][table]['type'] == 'Hash' or pddict['tables'][table]['type'] == 'Hash_OTcam':
             ${table}_swkey_t *swkey = (${table}_swkey_t *)sw_key;
-            ${table}_actiondata *actiondata = (${table}_actiondata *)action_data;
+            ${table}_actiondata_t *actiondata = (${table}_actiondata_t *)action_data;
             if (!swkey) {
                 break;
             }
@@ -4323,7 +4323,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
             if (!actiondata) {
                 break;
             }
-            switch(actiondata->actionid) {
+            switch(actiondata->action_id) {
 //::                for action in pddict['tables'][table]['actions']:
 //::                    (actionname, actionfldlist) = action
 //::                    actname = actionname.upper()
@@ -4339,7 +4339,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
 //::                        actionfldname, actionfldwidth = actionfld
 //::                        if actionfldwidth <= 32:
                     b = snprintf(buf, blen, "%s: 0x%x\n", "${actionfldname}",
-                             actiondata->${table}_action_u.\
+                             actiondata->action_u.\
                              ${table}_${actionname}.${actionfldname});
                     buf += b;
                     blen -= b;
@@ -4356,7 +4356,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
                     }
                     for (int j = 0; j < ${p4fldwidth_byte}; j++) {
                         b = snprintf(buf, blen, "%02x",
-                                 actiondata->${table}_action_u.\
+                                 actiondata->action_u.\
                                  ${table}_${actionname}.${actionfldname}[j]);
                         buf += b;
                         blen -= b;
@@ -4591,11 +4591,11 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
 //::                    i += 1
 //::                #endfor
             }
-            ${table}_actiondata *actiondata = (${table}_actiondata *)action_data;
+            ${table}_actiondata_t *actiondata = (${table}_actiondata_t *)action_data;
             if (!actiondata) {
                 break;
             }
-            switch(actiondata->actionid) {
+            switch(actiondata->action_id) {
 //::                for action in pddict['tables'][table]['actions']:
 //::                    (actionname, actionfldlist) = action
 //::                    actname = actionname.upper()
@@ -4611,7 +4611,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
 //::                        actionfldname, actionfldwidth = actionfld
 //::                        if actionfldwidth <= 32:
                     b = snprintf(buf, blen, "%s: 0x%x\n", "${actionfldname}",
-                             actiondata->${table}_action_u.\
+                             actiondata->action_u.\
                              ${table}_${actionname}.${actionfldname});
                     buf += b;
                     blen -= b;
@@ -4628,7 +4628,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
                     }
                     for (int j = 0; j < ${p4fldwidth_byte}; j++) {
                         b = snprintf(buf, blen, "%02x",
-                                 actiondata->${table}_action_u.\
+                                 actiondata->action_u.\
                                  ${table}_${actionname}.${actionfldname}[j]);
                         buf += b;
                         blen -= b;
@@ -4680,7 +4680,7 @@ void ${api_prefix}_prep_p4tbl_sw_struct_sizes()
 //::        if pddict['tables'][tblname]['type'] != 'Index':
     ${prefix}_tbl_swkey_size[P4${caps_p4prog}TBL_ID_${caps_tblname}] = sizeof(${tblname}_swkey);
 //::        #endif
-    ${prefix}_tbl_sw_action_data_size[P4${caps_p4prog}TBL_ID_${caps_tblname}]= sizeof(${tblname}_actiondata);
+    ${prefix}_tbl_sw_action_data_size[P4${caps_p4prog}TBL_ID_${caps_tblname}]= sizeof(${tblname}_actiondata_t);
 //::        #endfor
 }
 

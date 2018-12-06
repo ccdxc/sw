@@ -258,77 +258,77 @@ nwsec_pd_pgm_l4_profile_table (pd_nwsec_profile_t *pd_nw, bool create,
     hal_ret_t                ret;
     sdk_ret_t                sdk_ret;
     directmap                *dm;
-    l4_profile_actiondata    data = { 0 };
+    l4_profile_actiondata_t    data = { 0 };
 
     nwsec_profile_t *profile = (hal::nwsec_profile_t*)pd_nw->nwsec_profile;
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_L4_PROFILE);
     HAL_ASSERT(dm != NULL);
 
-    data.l4_profile_action_u.l4_profile_l4_profile.ip_normalization_en =
+    data.action_u.l4_profile_l4_profile.ip_normalization_en =
         profile->ip_normalization_en;
-    data.l4_profile_action_u.l4_profile_l4_profile.tcp_normalization_en =
+    data.action_u.l4_profile_l4_profile.tcp_normalization_en =
         profile->tcp_normalization_en;
-    data.l4_profile_action_u.l4_profile_l4_profile.icmp_normalization_en =
+    data.action_u.l4_profile_l4_profile.icmp_normalization_en =
         profile->icmp_normalization_en;
 
-    data.l4_profile_action_u.l4_profile_l4_profile.tcp_split_handshake_drop =
+    data.action_u.l4_profile_l4_profile.tcp_split_handshake_drop =
         profile->tcp_split_handshake_drop;
-    data.l4_profile_action_u.l4_profile_l4_profile.ip_ttl_change_detect_en =
+    data.action_u.l4_profile_l4_profile.ip_ttl_change_detect_en =
         profile->ip_ttl_change_detect_en;
-    data.l4_profile_action_u.l4_profile_l4_profile.tcp_non_syn_first_pkt_drop =
+    data.action_u.l4_profile_l4_profile.tcp_non_syn_first_pkt_drop =
         profile->tcp_non_syn_first_pkt_drop;
-    data.l4_profile_action_u.l4_profile_l4_profile.ip_fragment_drop =
+    data.action_u.l4_profile_l4_profile.ip_fragment_drop =
         TRUE;
-    data.l4_profile_action_u.l4_profile_l4_profile.ip_rsvd_flags_action =
+    data.action_u.l4_profile_l4_profile.ip_rsvd_flags_action =
         profile->ip_rsvd_flags_action;
-    data.l4_profile_action_u.l4_profile_l4_profile.ip_df_action =
+    data.action_u.l4_profile_l4_profile.ip_df_action =
         profile->ip_df_action;
-    data.l4_profile_action_u.l4_profile_l4_profile.ip_options_action =
+    data.action_u.l4_profile_l4_profile.ip_options_action =
         profile->ip_options_action;
-    data.l4_profile_action_u.l4_profile_l4_profile.ip_invalid_len_action =
+    data.action_u.l4_profile_l4_profile.ip_invalid_len_action =
         profile->ip_invalid_len_action;
-    data.l4_profile_action_u.l4_profile_l4_profile.ip_normalize_ttl =
+    data.action_u.l4_profile_l4_profile.ip_normalize_ttl =
         profile->ip_normalize_ttl;
-    data.l4_profile_action_u.l4_profile_l4_profile.icmp_deprecated_msgs_drop =
+    data.action_u.l4_profile_l4_profile.icmp_deprecated_msgs_drop =
         profile->icmp_deprecated_msgs_drop;
-    data.l4_profile_action_u.l4_profile_l4_profile.icmp_redirect_msg_drop =
+    data.action_u.l4_profile_l4_profile.icmp_redirect_msg_drop =
         profile->icmp_redirect_msg_drop;
-    data.l4_profile_action_u.l4_profile_l4_profile.icmp_invalid_code_action =
+    data.action_u.l4_profile_l4_profile.icmp_invalid_code_action =
         profile->icmp_invalid_code_action;
-    data.l4_profile_action_u.l4_profile_l4_profile.tcp_rsvd_flags_action =
+    data.action_u.l4_profile_l4_profile.tcp_rsvd_flags_action =
         profile->tcp_rsvd_flags_action;
-    data.l4_profile_action_u.l4_profile_l4_profile.tcp_unexpected_mss_action =
+    data.action_u.l4_profile_l4_profile.tcp_unexpected_mss_action =
         profile->tcp_unexpected_mss_action;
-    data.l4_profile_action_u.l4_profile_l4_profile.tcp_unexpected_win_scale_action =
+    data.action_u.l4_profile_l4_profile.tcp_unexpected_win_scale_action =
         profile->tcp_unexpected_win_scale_action;
-    data.l4_profile_action_u.l4_profile_l4_profile.tcp_unexpected_sack_perm_action =
+    data.action_u.l4_profile_l4_profile.tcp_unexpected_sack_perm_action =
         profile->tcp_unexpected_sack_perm_action;
-    data.l4_profile_action_u.l4_profile_l4_profile.tcp_urg_ptr_not_set_action =
+    data.action_u.l4_profile_l4_profile.tcp_urg_ptr_not_set_action =
         profile->tcp_urg_ptr_not_set_action;
-    data.l4_profile_action_u.l4_profile_l4_profile.tcp_urg_flag_not_set_action =
+    data.action_u.l4_profile_l4_profile.tcp_urg_flag_not_set_action =
         profile->tcp_urg_flag_not_set_action;
-    data.l4_profile_action_u.l4_profile_l4_profile.tcp_urg_payload_missing_action =
+    data.action_u.l4_profile_l4_profile.tcp_urg_payload_missing_action =
         profile->tcp_urg_payload_missing_action;
-    data.l4_profile_action_u.l4_profile_l4_profile.tcp_unexpected_echo_ts_action =
+    data.action_u.l4_profile_l4_profile.tcp_unexpected_echo_ts_action =
         profile->tcp_unexpected_echo_ts_action;
-    data.l4_profile_action_u.l4_profile_l4_profile.tcp_rst_with_data_action =
+    data.action_u.l4_profile_l4_profile.tcp_rst_with_data_action =
         profile->tcp_rst_with_data_action;
-    data.l4_profile_action_u.l4_profile_l4_profile.tcp_data_len_gt_mss_action =
+    data.action_u.l4_profile_l4_profile.tcp_data_len_gt_mss_action =
         profile->tcp_data_len_gt_mss_action;
-    data.l4_profile_action_u.l4_profile_l4_profile.tcp_data_len_gt_win_size_action =
+    data.action_u.l4_profile_l4_profile.tcp_data_len_gt_win_size_action =
         profile->tcp_data_len_gt_win_size_action;
-    data.l4_profile_action_u.l4_profile_l4_profile.tcp_unexpected_ts_option_action =
+    data.action_u.l4_profile_l4_profile.tcp_unexpected_ts_option_action =
         profile->tcp_unexpected_ts_option_action;
-    data.l4_profile_action_u.l4_profile_l4_profile.tcp_unexpected_sack_option_action =
+    data.action_u.l4_profile_l4_profile.tcp_unexpected_sack_option_action =
         profile->tcp_unexpected_sack_option_action;
-    data.l4_profile_action_u.l4_profile_l4_profile.tcp_ts_not_present_drop =
+    data.action_u.l4_profile_l4_profile.tcp_ts_not_present_drop =
         profile->tcp_ts_not_present_drop;
-    data.l4_profile_action_u.l4_profile_l4_profile.tcp_invalid_flags_drop =
+    data.action_u.l4_profile_l4_profile.tcp_invalid_flags_drop =
         profile->tcp_invalid_flags_drop;
-    data.l4_profile_action_u.l4_profile_l4_profile.tcp_flags_nonsyn_noack_drop =
+    data.action_u.l4_profile_l4_profile.tcp_flags_nonsyn_noack_drop =
         profile->tcp_nonsyn_noack_drop;
-    data.l4_profile_action_u.l4_profile_l4_profile.tcp_normalize_mss =
+    data.action_u.l4_profile_l4_profile.tcp_normalize_mss =
         profile->tcp_normalize_mss;
 
     if (create) {

@@ -102,22 +102,22 @@ populate_ip_common (nacl_swkey_t *key, nacl_swkey_mask_t *mask,
 }
 
 static void
-populate_permit_actions (nacl_actiondata *data, acl_action_spec_t *as)
+populate_permit_actions (nacl_actiondata_t *data, acl_action_spec_t *as)
 {
     // TODO Get the index from mirror session
     // handles
-    data->nacl_action_u.nacl_nacl_permit.ingress_mirror_en =
+    data->action_u.nacl_nacl_permit.ingress_mirror_en =
         as->ing_mirror_en;
-    data->nacl_action_u.nacl_nacl_permit.egress_mirror_en =
+    data->action_u.nacl_nacl_permit.egress_mirror_en =
         as->egr_mirror_en;
-    data->nacl_action_u.nacl_nacl_permit.ingress_mirror_session_id =
+    data->action_u.nacl_nacl_permit.ingress_mirror_session_id =
         as->ing_mirror_session_handle;
-    data->nacl_action_u.nacl_nacl_permit.egress_mirror_session_id =
+    data->action_u.nacl_nacl_permit.egress_mirror_session_id =
         as->egr_mirror_session_handle;
 
-    data->nacl_action_u.nacl_nacl_permit.ingress_mirror_session_id =
+    data->action_u.nacl_nacl_permit.ingress_mirror_session_id =
         as->ing_mirror_session;
-    data->nacl_action_u.nacl_nacl_permit.egress_mirror_session_id =
+    data->action_u.nacl_nacl_permit.egress_mirror_session_id =
         as->egr_mirror_session;
 }
 
@@ -166,7 +166,7 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update,
     acl_tcam                               *acl_tbl = NULL;
     nacl_swkey_t                           key;
     nacl_swkey_mask_t                      mask;
-    nacl_actiondata                        data;
+    nacl_actiondata_t                        data;
     acl_match_spec_t                       *ms = NULL;
     acl_action_spec_t                      *as = NULL;
     acl_eth_match_spec_t                   *eth_key;
@@ -209,27 +209,27 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update,
                 return HAL_RET_INVALID_ARG;
             }
 
-            data.actionid = NACL_NACL_PERMIT_ID;
-            data.nacl_action_u.nacl_nacl_permit.log_en = 1;
+            data.action_id = NACL_NACL_PERMIT_ID;
+            data.action_u.nacl_nacl_permit.log_en = 1;
             qid = types::CPUCB_ID_NACL_LOG;
 #ifdef ACL_DOL_TEST_ONLY
             if (as->int_as.qid_en) {
-                data.nacl_action_u.nacl_nacl_permit.qid = as->int_as.qid;
+                data.action_u.nacl_nacl_permit.qid = as->int_as.qid;
             }
 #endif
-            data.nacl_action_u.nacl_nacl_permit.qid_en = 1;
-            data.nacl_action_u.nacl_nacl_permit.qid = qid;
+            data.action_u.nacl_nacl_permit.qid_en = 1;
+            data.action_u.nacl_nacl_permit.qid = qid;
 
-            data.nacl_action_u.nacl_nacl_permit.policer_index = copp_index;
+            data.action_u.nacl_nacl_permit.policer_index = copp_index;
 
             populate_permit_actions(&data, as);
             break;
         case acl::ACL_ACTION_REDIRECT:
-            data.actionid = NACL_NACL_PERMIT_ID;
+            data.action_id = NACL_NACL_PERMIT_ID;
 
             redirect_if = find_if_by_handle(as->redirect_if_handle);
-            data.nacl_action_u.nacl_nacl_permit.dst_lport_en = 1;
-            data.nacl_action_u.nacl_nacl_permit.dst_lport = if_get_lport_id(redirect_if);
+            data.action_u.nacl_nacl_permit.dst_lport_en = 1;
+            data.action_u.nacl_nacl_permit.dst_lport = if_get_lport_id(redirect_if);
 
             if (if_is_cpu_if(redirect_if)) {
                 // If going to CPU, do not do any rewrites on packet. So set
@@ -246,53 +246,53 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update,
                     qid = as->int_as.qid;
                 }
 #endif
-                data.nacl_action_u.nacl_nacl_permit.qid_en = 1;
-                data.nacl_action_u.nacl_nacl_permit.qid = qid;
-                data.nacl_action_u.nacl_nacl_permit.force_flow_hit = 1;
-                data.nacl_action_u.nacl_nacl_permit.discard_drop = 1;
-                data.nacl_action_u.nacl_nacl_permit.rewrite_en = 1;
-                data.nacl_action_u.nacl_nacl_permit.rewrite_index = 0;
-                data.nacl_action_u.nacl_nacl_permit.rewrite_flags = 0;
-                data.nacl_action_u.nacl_nacl_permit.tunnel_rewrite_en = 1;
-                data.nacl_action_u.nacl_nacl_permit.tunnel_rewrite_index = 0;
-                data.nacl_action_u.nacl_nacl_permit.tunnel_vnid = 0;
-                data.nacl_action_u.nacl_nacl_permit.tunnel_originate = 0;
+                data.action_u.nacl_nacl_permit.qid_en = 1;
+                data.action_u.nacl_nacl_permit.qid = qid;
+                data.action_u.nacl_nacl_permit.force_flow_hit = 1;
+                data.action_u.nacl_nacl_permit.discard_drop = 1;
+                data.action_u.nacl_nacl_permit.rewrite_en = 1;
+                data.action_u.nacl_nacl_permit.rewrite_index = 0;
+                data.action_u.nacl_nacl_permit.rewrite_flags = 0;
+                data.action_u.nacl_nacl_permit.tunnel_rewrite_en = 1;
+                data.action_u.nacl_nacl_permit.tunnel_rewrite_index = 0;
+                data.action_u.nacl_nacl_permit.tunnel_vnid = 0;
+                data.action_u.nacl_nacl_permit.tunnel_originate = 0;
 
-                data.nacl_action_u.nacl_nacl_permit.policer_index = copp_index;
+                data.action_u.nacl_nacl_permit.policer_index = copp_index;
             } else {
                 // TODO: Figure out how to get these values
-                data.nacl_action_u.nacl_nacl_permit.force_flow_hit = 0;
-                data.nacl_action_u.nacl_nacl_permit.discard_drop = 0;
-                data.nacl_action_u.nacl_nacl_permit.rewrite_en = 0;
-                data.nacl_action_u.nacl_nacl_permit.rewrite_index = 0;
-                data.nacl_action_u.nacl_nacl_permit.rewrite_flags = 0;
-                data.nacl_action_u.nacl_nacl_permit.tunnel_rewrite_en = 0;
-                data.nacl_action_u.nacl_nacl_permit.tunnel_rewrite_index = 0;
-                data.nacl_action_u.nacl_nacl_permit.tunnel_vnid = 0;
-                data.nacl_action_u.nacl_nacl_permit.tunnel_originate = 0;
+                data.action_u.nacl_nacl_permit.force_flow_hit = 0;
+                data.action_u.nacl_nacl_permit.discard_drop = 0;
+                data.action_u.nacl_nacl_permit.rewrite_en = 0;
+                data.action_u.nacl_nacl_permit.rewrite_index = 0;
+                data.action_u.nacl_nacl_permit.rewrite_flags = 0;
+                data.action_u.nacl_nacl_permit.tunnel_rewrite_en = 0;
+                data.action_u.nacl_nacl_permit.tunnel_rewrite_index = 0;
+                data.action_u.nacl_nacl_permit.tunnel_vnid = 0;
+                data.action_u.nacl_nacl_permit.tunnel_originate = 0;
 #ifdef ACL_DOL_TEST_ONLY
-                data.nacl_action_u.nacl_nacl_permit.force_flow_hit = 1;
-                data.nacl_action_u.nacl_nacl_permit.discard_drop = 1;
-                data.nacl_action_u.nacl_nacl_permit.rewrite_en = 1;
-                data.nacl_action_u.nacl_nacl_permit.rewrite_index =
+                data.action_u.nacl_nacl_permit.force_flow_hit = 1;
+                data.action_u.nacl_nacl_permit.discard_drop = 1;
+                data.action_u.nacl_nacl_permit.rewrite_en = 1;
+                data.action_u.nacl_nacl_permit.rewrite_index =
                     as->int_as.rw_idx;
-                data.nacl_action_u.nacl_nacl_permit.rewrite_flags =
+                data.action_u.nacl_nacl_permit.rewrite_flags =
                     (as->int_as.mac_sa_rewrite ? REWRITE_FLAGS_MAC_SA : 0) |
                     (as->int_as.mac_da_rewrite ? REWRITE_FLAGS_MAC_DA : 0) |
                     (as->int_as.ttl_dec ? REWRITE_FLAGS_TTL_DEC : 0);
 
-                data.nacl_action_u.nacl_nacl_permit.tunnel_rewrite_en = 1;
+                data.action_u.nacl_nacl_permit.tunnel_rewrite_en = 1;
                 if (if_is_tunnel_if(redirect_if)) {
-                    data.nacl_action_u.nacl_nacl_permit.tunnel_rewrite_index =
+                    data.action_u.nacl_nacl_permit.tunnel_rewrite_index =
                         (tunnelif_get_rw_idx((pd_tunnelif_t *)redirect_if->pd_if));
-                    data.nacl_action_u.nacl_nacl_permit.tunnel_vnid =
+                    data.action_u.nacl_nacl_permit.tunnel_vnid =
                         as->int_as.tnnl_vnid;
-                    data.nacl_action_u.nacl_nacl_permit.tunnel_originate = 1;
+                    data.action_u.nacl_nacl_permit.tunnel_originate = 1;
                 } else {
                     // support only non-native segments for DOL testing
-                    data.nacl_action_u.nacl_nacl_permit.tunnel_vnid =
+                    data.action_u.nacl_nacl_permit.tunnel_vnid =
                         as->int_as.tnnl_vnid;
-                    data.nacl_action_u.nacl_nacl_permit.tunnel_rewrite_index =
+                    data.action_u.nacl_nacl_permit.tunnel_rewrite_index =
                         g_hal_state_pd->tnnl_rwr_tbl_encap_vlan_idx();
                 }
 #endif
@@ -301,14 +301,14 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update,
             populate_permit_actions(&data, as);
             break;
         case acl::ACL_ACTION_PERMIT:
-            data.actionid = NACL_NACL_PERMIT_ID;
+            data.action_id = NACL_NACL_PERMIT_ID;
             populate_permit_actions(&data, as);
             break;
         case acl::ACL_ACTION_DENY:
-            data.actionid = NACL_NACL_DENY_ID;
+            data.action_id = NACL_NACL_DENY_ID;
             break;
         default:
-            data.actionid = NACL_NOP_ID;
+            data.action_id = NACL_NOP_ID;
             break;
     }
 

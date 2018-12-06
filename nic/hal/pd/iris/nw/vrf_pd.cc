@@ -10,7 +10,7 @@
 namespace hal {
 namespace pd {
 
-#define inp_prop data.input_properties_action_u.input_properties_input_properties
+#define inp_prop data.action_u.input_properties_input_properties
 
 // prototypes
 hal_ret_t vrf_pd_alloc_res(pd_vrf_t *pd_ten);
@@ -400,7 +400,7 @@ vrf_pd_pgm_inp_prop_tbl (pd_vrf_t *vrf_pd, bool is_upgrade)
     sdk_ret_t                   sdk_ret;
     sdk_hash                    *inp_prop_tbl = NULL;
     input_properties_swkey_t    key           = { 0 };
-    input_properties_actiondata data          = { 0 };
+    input_properties_actiondata_t data          = { 0 };
 
     inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
     HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
@@ -454,7 +454,7 @@ pd_vrf_program_input_mapping_table(ip_prefix_t *ip_prefix,
     sdk_ret_t                           sdk_ret;
     input_mapping_native_swkey_t        key      = {0};
     input_mapping_native_swkey_mask_t   mask     = {0};
-    input_mapping_native_actiondata     data     = {0};
+    input_mapping_native_actiondata_t     data     = {0};
     tcam                                *tcam;
 
     tcam = g_hal_state_pd->tcam_table(tbl_id);
@@ -487,7 +487,7 @@ pd_vrf_program_input_mapping_table(ip_prefix_t *ip_prefix,
                 ip_prefix->len);
         memrev(mask.input_mapping_native_mask_u1.ipv6_dstAddr_mask, IP6_ADDR8_LEN);
     }
-    data.actionid = actionid;
+    data.action_id = actionid;
     if (is_upgrade) {
         sdk_ret       = tcam->insert_withid(&key, &mask, &data, *idx);
     } else {

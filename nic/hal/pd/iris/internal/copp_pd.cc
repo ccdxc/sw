@@ -80,12 +80,12 @@ copp_pd_reset_copp_action_tbl (pd_copp_t *pd_copp, bool insert)
     sdk_ret_t       sdk_ret;
     copp_t          *pi_copp = pd_copp->pi_copp;
     directmap       *copp_action_tbl = NULL;
-    copp_action_actiondata d = {0};
+    copp_action_actiondata_t d = {0};
 
     copp_action_tbl = g_hal_state_pd->dm_table(P4TBL_ID_COPP_ACTION);
     HAL_ASSERT_RETURN((copp_action_tbl != NULL), HAL_RET_ERR);
 
-    d.actionid = COPP_EXECUTE_COPP_ID;
+    d.action_id = COPP_EXECUTE_COPP_ID;
 
     if (insert) {
         sdk_ret = copp_action_tbl->insert_withid(&d, pd_copp->hw_policer_id);
@@ -122,7 +122,7 @@ copp_pd_deprogram_hw (pd_copp_t *pd_copp)
     return ret;
 }
 
-#define COPP_ACTION(_d, _arg) _d.copp_action_u.copp_execute_copp._arg
+#define COPP_ACTION(_d, _arg) _d.action_u.copp_execute_copp._arg
 static hal_ret_t
 copp_pd_program_copp_tbl (pd_copp_t *pd_copp, bool update, bool is_restore)
 {
@@ -130,8 +130,8 @@ copp_pd_program_copp_tbl (pd_copp_t *pd_copp, bool update, bool is_restore)
     sdk_ret_t       sdk_ret;
     copp_t          *pi_copp = pd_copp->pi_copp;
     directmap       *copp_tbl = NULL;
-    copp_actiondata d = {0};
-    copp_actiondata d_mask = {0};
+    copp_actiondata_t d = {0};
+    copp_actiondata_t d_mask = {0};
     uint64_t        refresh_interval_us = HAL_DEFAULT_POLICER_REFRESH_INTERVAL;
     uint64_t        rate_tokens = 0;
     uint64_t        burst_tokens = 0;
@@ -143,7 +143,7 @@ copp_pd_program_copp_tbl (pd_copp_t *pd_copp, bool update, bool is_restore)
     copp_tbl = g_hal_state_pd->dm_table(P4TBL_ID_COPP);
     HAL_ASSERT_RETURN((copp_tbl != NULL), HAL_RET_ERR);
 
-    d.actionid = COPP_EXECUTE_COPP_ID;
+    d.action_id = COPP_EXECUTE_COPP_ID;
 
     rate = pi_copp->policer.rate;
 
@@ -174,7 +174,7 @@ copp_pd_program_copp_tbl (pd_copp_t *pd_copp, bool update, bool is_restore)
                         sizeof(burst_tokens)));
     }
 
-    memset(&d_mask.copp_action_u.copp_execute_copp, 0xff,
+    memset(&d_mask.action_u.copp_execute_copp, 0xff,
            sizeof(copp_execute_copp_t));
     COPP_ACTION(d_mask, rsvd) = 0;
     COPP_ACTION(d_mask, axi_wr_pend) = 0;
@@ -423,7 +423,7 @@ typedef struct copp_pd_policer_stats_s {
     uint64_t denied_packets;
 } __PACK__ copp_pd_policer_stats_t;
 
-#define COPP_STATS(_d, _arg) _d.copp_action_action_u.copp_action_copp_action._arg
+#define COPP_STATS(_d, _arg) _d.action_u.copp_action_copp_action._arg
 static hal_ret_t
 copp_pd_populate_policer_stats (qos::PolicerStats *stats_rsp, pd_copp_t *pd_copp)
 {
@@ -434,7 +434,7 @@ copp_pd_populate_policer_stats (qos::PolicerStats *stats_rsp, pd_copp_t *pd_copp
     sdk_ret_t               sdk_ret;
     copp_t                  *pi_copp = pd_copp->pi_copp;
     directmap               *copp_action_tbl = NULL;
-    copp_action_actiondata  d;
+    copp_action_actiondata_t  d;
 
     copp_action_tbl = g_hal_state_pd->dm_table(P4TBL_ID_COPP_ACTION);
     HAL_ASSERT_RETURN((copp_action_tbl != NULL), HAL_RET_ERR);

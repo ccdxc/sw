@@ -24,7 +24,7 @@ class input_mapping_native_tcam_entry {
 
 public:
     input_mapping_native_tcam_entry(input_mapping_native_swkey_t swkey, input_mapping_native_swkey_mask_t swkey_mask,
-                          input_mapping_native_actiondata act_data) {
+                          input_mapping_native_actiondata_t act_data) {
         memcpy(&key, &swkey, sizeof(key));
         memcpy(&key_mask, &swkey_mask, sizeof(key_mask));
         memcpy(&data, &act_data, sizeof(data));
@@ -43,7 +43,7 @@ public:
     bool operator== (const input_mapping_native_tcam_entry &right) const {
         if (!memcmp(&(key), &(right.key), sizeof(input_mapping_native_swkey_t)) &&
             !memcmp(&(key_mask), &(right.key_mask), sizeof(input_mapping_native_swkey_mask_t)) &&
-            !memcmp(&data, &(right.data), sizeof(input_mapping_native_actiondata))) {
+            !memcmp(&data, &(right.data), sizeof(input_mapping_native_actiondata_t))) {
             return TRUE;
         } else {
             return FALSE;
@@ -54,7 +54,7 @@ public:
 private:
     input_mapping_native_swkey_t key;
     input_mapping_native_swkey_mask_t key_mask;
-    input_mapping_native_actiondata data;
+    input_mapping_native_actiondata_t data;
 
 };
 
@@ -94,7 +94,7 @@ acl_tcam_test::SetUp()
     table_name_ = "Input_Mapping_Native";
     test_tcam_ = acl_tcam::factory(table_name_, (uint32_t)P4TBL_ID_INPUT_MAPPING_NATIVE, NUM_ENTRIES,
                                    (uint32_t)sizeof(input_mapping_native_swkey_t),
-                                   (uint32_t)sizeof(input_mapping_native_actiondata));
+                                   (uint32_t)sizeof(input_mapping_native_actiondata_t));
     seed_ = rand();
     seed_ = 1234;
     std::cout << "Random seed used " << seed_ << std::endl;
@@ -173,7 +173,7 @@ acl_tcam_test::add_entry(priority_t priority, acl_tcam_entry_handle_t *handle_p)
     hal_ret_t ret = HAL_RET_OK;
     input_mapping_native_swkey_t key;
     input_mapping_native_swkey_mask_t key_mask;
-    input_mapping_native_actiondata data;
+    input_mapping_native_actiondata_t data;
     acl_tcam_entry_handle_t handle;
 
     memset(&key, 0, sizeof(key));
@@ -181,7 +181,7 @@ acl_tcam_test::add_entry(priority_t priority, acl_tcam_entry_handle_t *handle_p)
     memset(&data, 0, sizeof(data));
 
     key.tunnel_metadata_tunnel_type = 1;
-    data.actionid = 1;
+    data.action_id = 1;
     memset(&key_mask, ~0, sizeof(tcam_key_t));
 
     ret = test_tcam_->insert((void *)&key, (void *)&key_mask,
@@ -208,7 +208,7 @@ acl_tcam_test::update_entry(priority_t priority, acl_tcam_entry_handle_t handle)
     hal_ret_t ret = HAL_RET_OK;
     input_mapping_native_swkey_t key;
     input_mapping_native_swkey_mask_t key_mask;
-    input_mapping_native_actiondata data;
+    input_mapping_native_actiondata_t data;
     priority_t old_priority;
     auto hitr = valid_handles.find(handle);
 
@@ -219,7 +219,7 @@ acl_tcam_test::update_entry(priority_t priority, acl_tcam_entry_handle_t handle)
     memset(&data, 0, sizeof(data));
 
     key.tunnel_metadata_tunnel_type = 1;
-    data.actionid = 1;
+    data.action_id = 1;
     memset(&key_mask, ~0, sizeof(tcam_key_t));
 
     std::cout << old_priority <<  " --> " << priority << std::endl;

@@ -37,12 +37,12 @@ p4pd_ddos_policers_init (void)
     sdk_ret_t                                   sdk_ret;
     directmap                                   *dm;
     directmap                                   *dm_act;
-    ddos_src_vf_policer_actiondata              d_svf = { 0 };
-    ddos_service_policer_actiondata             d_service = { 0 };
-    ddos_src_dst_policer_actiondata             d_srcdst = { 0 };
-    ddos_src_vf_policer_action_actiondata       dact_svf = { 0 };
-    ddos_service_policer_action_actiondata      dact_service = { 0 };
-    ddos_src_dst_policer_action_actiondata      dact_srcdst = { 0 };
+    ddos_src_vf_policer_actiondata_t              d_svf = { 0 };
+    ddos_service_policer_actiondata_t             d_service = { 0 };
+    ddos_src_dst_policer_actiondata_t             d_srcdst = { 0 };
+    ddos_src_vf_policer_action_actiondata_t       dact_svf = { 0 };
+    ddos_service_policer_action_actiondata_t      dact_service = { 0 };
+    ddos_src_dst_policer_action_actiondata_t      dact_srcdst = { 0 };
 
     /*
      * Invalidate the first four policers. Entry valid bit is set to
@@ -112,7 +112,7 @@ p4pd_input_mapping_native_init (p4pd_def_cfg_t *p4pd_def_cfg)
     uint32_t                             idx;
     input_mapping_native_swkey_t         key;
     input_mapping_native_swkey_mask_t    mask;
-    input_mapping_native_actiondata      data;
+    input_mapping_native_actiondata_t      data;
     hal_ret_t                            ret;
     sdk_ret_t                            sdk_ret;
     tcam                                 *tcam;
@@ -138,7 +138,7 @@ p4pd_input_mapping_native_init (p4pd_def_cfg_t *p4pd_def_cfg)
     mask.tunnel_metadata_tunnel_type_mask = 0x0;
 
     // set the action
-    data.actionid = INPUT_MAPPING_NATIVE_NATIVE_IPV4_PACKET_ID;
+    data.action_id = INPUT_MAPPING_NATIVE_NATIVE_IPV4_PACKET_ID;
 
     // insert into the tcam now - default entries are inserted bottom-up
     sdk_ret = tcam->insert(&key, &mask, &data, &idx, false);
@@ -169,7 +169,7 @@ p4pd_input_mapping_native_init (p4pd_def_cfg_t *p4pd_def_cfg)
     mask.tunnel_metadata_tunnel_type_mask = 0x0;
 
     // set the action
-    data.actionid = INPUT_MAPPING_NATIVE_NATIVE_IPV6_PACKET_ID;
+    data.action_id = INPUT_MAPPING_NATIVE_NATIVE_IPV6_PACKET_ID;
 
     // insert into the tcam now - default entries are inserted bottom-up
     sdk_ret = tcam->insert(&key, &mask, &data, &idx, false);
@@ -200,7 +200,7 @@ p4pd_input_mapping_native_init (p4pd_def_cfg_t *p4pd_def_cfg)
     mask.tunnel_metadata_tunnel_type_mask = 0x0;
 
     // set the action
-    data.actionid = INPUT_MAPPING_NATIVE_NATIVE_NON_IP_PACKET_ID;
+    data.action_id = INPUT_MAPPING_NATIVE_NATIVE_NON_IP_PACKET_ID;
 
     // insert into the tcam now
     sdk_ret = tcam->insert(&key, &mask, &data, &idx, false);
@@ -221,7 +221,7 @@ p4pd_input_mapping_tunneled_init (p4pd_def_cfg_t *p4pd_def_cfg)
     uint32_t                             idx;
     input_mapping_tunneled_swkey_t       key;
     input_mapping_tunneled_swkey_mask_t  mask;
-    input_mapping_tunneled_actiondata    data;
+    input_mapping_tunneled_actiondata_t    data;
     hal_ret_t                            ret;
     sdk_ret_t                            sdk_ret;
     tcam                                 *tcam;
@@ -247,7 +247,7 @@ p4pd_input_mapping_tunneled_init (p4pd_def_cfg_t *p4pd_def_cfg)
     mask.tunnel_metadata_tunnel_type_mask = 0x0;
 
     // set the action
-    data.actionid = INPUT_MAPPING_TUNNELED_NOP_ID;
+    data.action_id = INPUT_MAPPING_TUNNELED_NOP_ID;
     // insert into the tcam now
     sdk_ret = tcam->insert(&key, &mask, &data, &idx, false);
     if (sdk_ret != sdk::SDK_RET_OK) {
@@ -276,7 +276,7 @@ p4pd_input_mapping_tunneled_init (p4pd_def_cfg_t *p4pd_def_cfg)
     mask.tunnel_metadata_tunnel_type_mask = 0x0;
 
     // set the action
-    data.actionid = INPUT_MAPPING_TUNNELED_NOP_ID;
+    data.action_id = INPUT_MAPPING_TUNNELED_NOP_ID;
 
     // insert into the tcam now
     sdk_ret = tcam->insert(&key, &mask, &data, &idx, false);
@@ -307,7 +307,7 @@ p4pd_input_mapping_tunneled_init (p4pd_def_cfg_t *p4pd_def_cfg)
     mask.tunnel_metadata_tunnel_type_mask = 0x0;
 
     // set the action
-    data.actionid = INPUT_MAPPING_TUNNELED_NOP_ID;
+    data.action_id = INPUT_MAPPING_TUNNELED_NOP_ID;
 
     // insert into the tcam now
     sdk_ret = tcam->insert(&key, &mask, &data, &idx, false);
@@ -329,7 +329,7 @@ p4pd_l4_profile_init (void)
     hal_ret_t                ret;
     sdk_ret_t                sdk_ret;
     directmap                *dm;
-    l4_profile_actiondata    data = { 0 };
+    l4_profile_actiondata_t    data = { 0 };
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_L4_PROFILE);
     HAL_ASSERT(dm != NULL);
@@ -350,13 +350,13 @@ p4pd_flow_info_init (void)
     hal_ret_t               ret;
     sdk_ret_t               sdk_ret;
     directmap               *dm;
-    flow_info_actiondata    data = { 0 };
+    flow_info_actiondata_t    data = { 0 };
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_INFO);
     HAL_ASSERT(dm != NULL);
 
     // "catch-all" flow miss entry
-    data.actionid = FLOW_INFO_FLOW_MISS_ID;
+    data.action_id = FLOW_INFO_FLOW_MISS_ID;
     sdk_ret = dm->insert_withid(&data, FLOW_INFO_MISS_ENTRY);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
@@ -367,8 +367,8 @@ p4pd_flow_info_init (void)
     }
 
     // common flow hit & drop entry
-    data.actionid = FLOW_INFO_FLOW_HIT_DROP_ID;
-    data.flow_info_action_u.flow_info_flow_hit_drop.start_timestamp = 0;
+    data.action_id = FLOW_INFO_FLOW_HIT_DROP_ID;
+    data.action_u.flow_info_flow_hit_drop.start_timestamp = 0;
     sdk_ret = dm->insert_withid(&data, FLOW_INFO_DROP_ENTRY);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -391,13 +391,13 @@ p4pd_session_state_init (void)
     hal_ret_t                   ret;
     sdk_ret_t                   sdk_ret;
     directmap                   *dm;
-    session_state_actiondata    data = { 0 };
+    session_state_actiondata_t    data = { 0 };
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_SESSION_STATE);
     HAL_ASSERT(dm != NULL);
 
     // "catch-all" nop entry
-    data.actionid = SESSION_STATE_NOP_ID;
+    data.action_id = SESSION_STATE_NOP_ID;
     sdk_ret = dm->insert_withid(&data, idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -420,13 +420,13 @@ p4pd_flow_stats_init (void)
     hal_ret_t               ret;
     sdk_ret_t               sdk_ret;
     directmap               *dm;
-    flow_stats_actiondata   data = { 0 };
+    flow_stats_actiondata_t   data = { 0 };
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_STATS);
     HAL_ASSERT(dm != NULL);
 
     // "catch-all" nop entry
-    data.actionid = FLOW_STATS_FLOW_STATS_ID;
+    data.action_id = FLOW_STATS_FLOW_STATS_ID;
     sdk_ret = dm->insert_withid(&data, FLOW_STATS_NOP_ENTRY);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -458,7 +458,7 @@ p4pd_drop_stats_init (void)
     tcam                     *tcam;
     drop_stats_swkey         key      = { 0 };
     drop_stats_swkey_mask    key_mask = { 0 };
-    drop_stats_actiondata    data     = { 0 };
+    drop_stats_actiondata_t    data     = { 0 };
 
     tcam = g_hal_state_pd->tcam_table(P4TBL_ID_DROP_STATS);
     HAL_ASSERT(tcam != NULL);
@@ -472,7 +472,7 @@ p4pd_drop_stats_init (void)
         memcpy(key_mask.control_metadata_drop_reason_mask, &drop_reason,
                sizeof(key_mask.control_metadata_drop_reason_mask));
 
-        data.actionid = DROP_STATS_DROP_STATS_ID;
+        data.action_id = DROP_STATS_DROP_STATS_ID;
         sdk_ret = tcam->insert_withid(&key, &key_mask, &data, i);
         if (sdk_ret != sdk::SDK_RET_OK) {
             ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -488,7 +488,7 @@ p4pd_drop_stats_init (void)
     memset(&data, 0, sizeof(data));
     key.entry_inactive_drop_stats = 0;
     key_mask.entry_inactive_drop_stats_mask = 0xFF;
-    data.actionid = DROP_STATS_DROP_STATS_ID;
+    data.action_id = DROP_STATS_DROP_STATS_ID;
     sdk_ret = tcam->insert_withid(&key, &key_mask, &data, DROP_MAX + 1);
     if (sdk_ret != sdk::SDK_RET_OK) {
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -508,7 +508,7 @@ p4pd_egress_drop_stats_init (void)
     tcam                            *tcam;
     egress_drop_stats_swkey         key      = { 0 };
     egress_drop_stats_swkey_mask    key_mask = { 0 };
-    egress_drop_stats_actiondata    data     = { 0 };
+    egress_drop_stats_actiondata_t    data     = { 0 };
 
     tcam = g_hal_state_pd->tcam_table(P4TBL_ID_EGRESS_DROP_STATS);
     HAL_ASSERT(tcam != NULL);
@@ -522,7 +522,7 @@ p4pd_egress_drop_stats_init (void)
         memcpy(key_mask.control_metadata_egress_drop_reason_mask, &drop_reason,
                sizeof(key_mask.control_metadata_egress_drop_reason_mask));
 
-        data.actionid = EGRESS_DROP_STATS_EGRESS_DROP_STATS_ID;
+        data.action_id = EGRESS_DROP_STATS_EGRESS_DROP_STATS_ID;
         sdk_ret = tcam->insert_withid(&key, &key_mask, &data, i);
         if (sdk_ret != sdk::SDK_RET_OK) {
             ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -538,7 +538,7 @@ p4pd_egress_drop_stats_init (void)
     memset(&data, 0, sizeof(data));
     key.entry_inactive_egress_drop_stats = 0;
     key_mask.entry_inactive_egress_drop_stats_mask = 0xFF;
-    data.actionid = EGRESS_DROP_STATS_EGRESS_DROP_STATS_ID;
+    data.action_id = EGRESS_DROP_STATS_EGRESS_DROP_STATS_ID;
     sdk_ret = tcam->insert_withid(&key, &key_mask, &data, EGRESS_DROP_MAX + 1);
     if (sdk_ret != sdk::SDK_RET_OK) {
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -556,7 +556,7 @@ p4pd_qos_init (uint32_t admin_cos)
     hal_ret_t      ret = HAL_RET_OK;
     sdk_ret_t      sdk_ret;
     directmap      *qos_tbl = NULL;
-    qos_actiondata d = {0};
+    qos_actiondata_t d = {0};
 
     qos_tbl = g_hal_state_pd->dm_table(P4TBL_ID_QOS);
     HAL_ASSERT_RETURN(qos_tbl != NULL, HAL_RET_ERR);
@@ -588,7 +588,7 @@ p4pd_p4plus_app_init (void)
     hal_ret_t                ret = HAL_RET_OK;
     sdk_ret_t                sdk_ret;
     directmap                *dm;
-    p4plus_app_actiondata data = { 0 };
+    p4plus_app_actiondata_t data = { 0 };
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_P4PLUS_APP);
     HAL_ASSERT(dm != NULL);
@@ -596,32 +596,32 @@ p4pd_p4plus_app_init (void)
     for (int i = P4PLUS_APPTYPE_MIN; i <= P4PLUS_APPTYPE_MAX; i++) {
         switch(i) {
             case P4PLUS_APPTYPE_DEFAULT:
-                data.actionid = P4PLUS_APP_P4PLUS_APP_DEFAULT_ID;
+                data.action_id = P4PLUS_APP_P4PLUS_APP_DEFAULT_ID;
                 break;
             case P4PLUS_APPTYPE_CLASSIC_NIC:
-                data.actionid = P4PLUS_APP_P4PLUS_APP_CLASSIC_NIC_ID;
+                data.action_id = P4PLUS_APP_P4PLUS_APP_CLASSIC_NIC_ID;
                 break;
             case P4PLUS_APPTYPE_RDMA:
-                data.actionid = P4PLUS_APP_P4PLUS_APP_RDMA_ID;
+                data.action_id = P4PLUS_APP_P4PLUS_APP_RDMA_ID;
                 break;
             case P4PLUS_APPTYPE_TCPTLS:
-                data.actionid = P4PLUS_APP_P4PLUS_APP_TCP_PROXY_ID;
+                data.action_id = P4PLUS_APP_P4PLUS_APP_TCP_PROXY_ID;
                 break;
             case P4PLUS_APPTYPE_IPSEC:
-                data.actionid = P4PLUS_APP_P4PLUS_APP_IPSEC_ID;
+                data.action_id = P4PLUS_APP_P4PLUS_APP_IPSEC_ID;
                 break;
             case P4PLUS_APPTYPE_STORAGE:
                 break;
             case P4PLUS_APPTYPE_TELEMETRY:
                 break;
             case P4PLUS_APPTYPE_CPU:
-                data.actionid = P4PLUS_APP_P4PLUS_APP_CPU_ID;
+                data.action_id = P4PLUS_APP_P4PLUS_APP_CPU_ID;
                 break;
             case P4PLUS_APPTYPE_RAW_REDIR:
-                data.actionid = P4PLUS_APP_P4PLUS_APP_RAW_REDIR_ID;
+                data.action_id = P4PLUS_APP_P4PLUS_APP_RAW_REDIR_ID;
                 break;
             case P4PLUS_APPTYPE_P4PT:
-                data.actionid = P4PLUS_APP_P4PLUS_APP_P4PT_ID;
+                data.action_id = P4PLUS_APP_P4PLUS_APP_P4PT_ID;
                 break;
             default:
                 HAL_TRACE_ERR("Unknown app_type: {}", i);
@@ -682,13 +682,13 @@ p4pd_tunnel_decap_copy_inner_init (void)
     hal_ret_t                             ret;
     sdk_ret_t                             sdk_ret;
     directmap                             *dm;
-    tunnel_decap_copy_inner_actiondata    data = { 0 };
+    tunnel_decap_copy_inner_actiondata_t    data = { 0 };
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_TUNNEL_DECAP_COPY_INNER);
     HAL_ASSERT(dm != NULL);
 
     idx = p4pd_get_tunnel_decap_copy_inner_tbl_idx(true, true, false, false);
-    data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_IPV4_UDP_ID;
+    data.action_id = TUNNEL_DECAP_COPY_INNER_COPY_INNER_IPV4_UDP_ID;
     sdk_ret = dm->insert_withid(&data, idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -698,7 +698,7 @@ p4pd_tunnel_decap_copy_inner_init (void)
     }
 
     idx = p4pd_get_tunnel_decap_copy_inner_tbl_idx(false, true, false, false);
-    data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_IPV4_OTHER_ID;
+    data.action_id = TUNNEL_DECAP_COPY_INNER_COPY_INNER_IPV4_OTHER_ID;
     sdk_ret = dm->insert_withid(&data, idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -708,7 +708,7 @@ p4pd_tunnel_decap_copy_inner_init (void)
     }
 
     idx = p4pd_get_tunnel_decap_copy_inner_tbl_idx(true, false, true, false);
-    data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_IPV6_UDP_ID;
+    data.action_id = TUNNEL_DECAP_COPY_INNER_COPY_INNER_IPV6_UDP_ID;
     sdk_ret = dm->insert_withid(&data, idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -718,7 +718,7 @@ p4pd_tunnel_decap_copy_inner_init (void)
     }
 
     idx = p4pd_get_tunnel_decap_copy_inner_tbl_idx(false, false, true, false);
-    data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_IPV6_OTHER_ID;
+    data.action_id = TUNNEL_DECAP_COPY_INNER_COPY_INNER_IPV6_OTHER_ID;
     sdk_ret = dm->insert_withid(&data, idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -728,7 +728,7 @@ p4pd_tunnel_decap_copy_inner_init (void)
     }
 
     idx = p4pd_get_tunnel_decap_copy_inner_tbl_idx(true, true, false, true);
-    data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_ETH_IPV4_UDP_ID;
+    data.action_id = TUNNEL_DECAP_COPY_INNER_COPY_INNER_ETH_IPV4_UDP_ID;
     sdk_ret = dm->insert_withid(&data, idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -738,7 +738,7 @@ p4pd_tunnel_decap_copy_inner_init (void)
     }
 
     idx = p4pd_get_tunnel_decap_copy_inner_tbl_idx(false, true, false, true);
-    data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_ETH_IPV4_OTHER_ID;
+    data.action_id = TUNNEL_DECAP_COPY_INNER_COPY_INNER_ETH_IPV4_OTHER_ID;
     sdk_ret = dm->insert_withid(&data, idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -748,7 +748,7 @@ p4pd_tunnel_decap_copy_inner_init (void)
     }
 
     idx = p4pd_get_tunnel_decap_copy_inner_tbl_idx(true, false, true, true);
-    data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_ETH_IPV6_UDP_ID;
+    data.action_id = TUNNEL_DECAP_COPY_INNER_COPY_INNER_ETH_IPV6_UDP_ID;
     sdk_ret = dm->insert_withid(&data, idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -758,7 +758,7 @@ p4pd_tunnel_decap_copy_inner_init (void)
     }
 
     idx = p4pd_get_tunnel_decap_copy_inner_tbl_idx(false, false, true, true);
-    data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_ETH_IPV6_OTHER_ID;
+    data.action_id = TUNNEL_DECAP_COPY_INNER_COPY_INNER_ETH_IPV6_OTHER_ID;
     sdk_ret = dm->insert_withid(&data, idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -768,7 +768,7 @@ p4pd_tunnel_decap_copy_inner_init (void)
     }
 
     idx = p4pd_get_tunnel_decap_copy_inner_tbl_idx(false, false, false, true);
-    data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_ETH_NON_IP_ID;
+    data.action_id = TUNNEL_DECAP_COPY_INNER_COPY_INNER_ETH_NON_IP_ID;
     sdk_ret = dm->insert_withid(&data, idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -790,13 +790,13 @@ p4pd_twice_nat_init (void)
     hal_ret_t               ret;
     sdk_ret_t               sdk_ret;
     directmap               *dm;
-    twice_nat_actiondata    data = { 0 };
+    twice_nat_actiondata_t    data = { 0 };
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_TWICE_NAT);
     HAL_ASSERT(dm != NULL);
 
     // "catch-all" nop entry
-    data.actionid = TWICE_NAT_NOP_ID;
+    data.action_id = TWICE_NAT_NOP_ID;
     sdk_ret = dm->insert_withid(&data, TWICE_NAT_NOP_ENTRY);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -897,13 +897,13 @@ p4pd_tunnel_encap_update_inner (void)
     hal_ret_t                             ret;
     sdk_ret_t                             sdk_ret;
     directmap                             *dm;
-    tunnel_encap_update_inner_actiondata  data = { 0 };
+    tunnel_encap_update_inner_actiondata_t  data = { 0 };
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_TUNNEL_ENCAP_UPDATE_INNER);
     HAL_ASSERT(dm != NULL);
 
     idx = p4pd_get_tunnel_encap_update_inner_tbl_idx(false, true, true, false, false);
-    data.actionid = TUNNEL_ENCAP_UPDATE_INNER_ENCAP_INNER_IPV4_UDP_REWRITE_ID;
+    data.action_id = TUNNEL_ENCAP_UPDATE_INNER_ENCAP_INNER_IPV4_UDP_REWRITE_ID;
     sdk_ret = dm->insert_withid(&data, idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -913,7 +913,7 @@ p4pd_tunnel_encap_update_inner (void)
     }
 
     idx = p4pd_get_tunnel_encap_update_inner_tbl_idx(false, true, false, true, false);
-    data.actionid = TUNNEL_ENCAP_UPDATE_INNER_ENCAP_INNER_IPV4_TCP_REWRITE_ID;
+    data.action_id = TUNNEL_ENCAP_UPDATE_INNER_ENCAP_INNER_IPV4_TCP_REWRITE_ID;
     sdk_ret = dm->insert_withid(&data, idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -923,7 +923,7 @@ p4pd_tunnel_encap_update_inner (void)
     }
 
     idx = p4pd_get_tunnel_encap_update_inner_tbl_idx(false, true, false, false, true);
-    data.actionid = TUNNEL_ENCAP_UPDATE_INNER_ENCAP_INNER_IPV4_ICMP_REWRITE_ID;
+    data.action_id = TUNNEL_ENCAP_UPDATE_INNER_ENCAP_INNER_IPV4_ICMP_REWRITE_ID;
     sdk_ret = dm->insert_withid(&data, idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -933,7 +933,7 @@ p4pd_tunnel_encap_update_inner (void)
     }
 
     idx = p4pd_get_tunnel_encap_update_inner_tbl_idx(false, true, false, false, false);
-    data.actionid = TUNNEL_ENCAP_UPDATE_INNER_ENCAP_INNER_IPV4_UNKNOWN_REWRITE_ID;
+    data.action_id = TUNNEL_ENCAP_UPDATE_INNER_ENCAP_INNER_IPV4_UNKNOWN_REWRITE_ID;
     sdk_ret = dm->insert_withid(&data, idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -943,7 +943,7 @@ p4pd_tunnel_encap_update_inner (void)
     }
 
     idx = p4pd_get_tunnel_encap_update_inner_tbl_idx(true, false, true, false, false);
-    data.actionid = TUNNEL_ENCAP_UPDATE_INNER_ENCAP_INNER_IPV6_UDP_REWRITE_ID;
+    data.action_id = TUNNEL_ENCAP_UPDATE_INNER_ENCAP_INNER_IPV6_UDP_REWRITE_ID;
     sdk_ret = dm->insert_withid(&data, idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -953,7 +953,7 @@ p4pd_tunnel_encap_update_inner (void)
     }
 
     idx = p4pd_get_tunnel_encap_update_inner_tbl_idx(true, false, false, true, false);
-    data.actionid = TUNNEL_ENCAP_UPDATE_INNER_ENCAP_INNER_IPV6_TCP_REWRITE_ID;
+    data.action_id = TUNNEL_ENCAP_UPDATE_INNER_ENCAP_INNER_IPV6_TCP_REWRITE_ID;
     sdk_ret = dm->insert_withid(&data, idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -963,7 +963,7 @@ p4pd_tunnel_encap_update_inner (void)
     }
 
     idx = p4pd_get_tunnel_encap_update_inner_tbl_idx(true, false, false, false, true);
-    data.actionid = TUNNEL_ENCAP_UPDATE_INNER_ENCAP_INNER_IPV6_ICMP_REWRITE_ID;
+    data.action_id = TUNNEL_ENCAP_UPDATE_INNER_ENCAP_INNER_IPV6_ICMP_REWRITE_ID;
     sdk_ret = dm->insert_withid(&data, idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -973,7 +973,7 @@ p4pd_tunnel_encap_update_inner (void)
     }
 
     idx = p4pd_get_tunnel_encap_update_inner_tbl_idx(true, false, false, false, false);
-    data.actionid = TUNNEL_ENCAP_UPDATE_INNER_ENCAP_INNER_IPV6_UNKNOWN_REWRITE_ID;
+    data.action_id = TUNNEL_ENCAP_UPDATE_INNER_ENCAP_INNER_IPV6_UNKNOWN_REWRITE_ID;
     sdk_ret = dm->insert_withid(&data, idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -1064,13 +1064,13 @@ p4pd_mirror_table_init (void)
     hal_ret_t                    ret;
     sdk_ret_t                    sdk_ret;
     directmap                    *dm;
-    mirror_actiondata            data = { 0 };
+    mirror_actiondata_t            data = { 0 };
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_MIRROR);
     HAL_ASSERT(dm != NULL);
 
     // Initialize for usable span session.
-    data.actionid = MIRROR_DROP_MIRROR_ID;
+    data.action_id = MIRROR_DROP_MIRROR_ID;
     for (idx = 0; idx < 7; idx++) {
         sdk_ret = dm->insert_withid(&data, idx);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -1082,10 +1082,10 @@ p4pd_mirror_table_init (void)
     }
 
     // Entry for FTE Span
-    data.actionid = MIRROR_LOCAL_SPAN_ID;
-    data.mirror_action_u.mirror_local_span.dst_lport = CPU_LPORT;
-    data.mirror_action_u.mirror_local_span.qid_en = 1;
-    data.mirror_action_u.mirror_local_span.qid = types::CPUCB_ID_FTE_SPAN;
+    data.action_id = MIRROR_LOCAL_SPAN_ID;
+    data.action_u.mirror_local_span.dst_lport = CPU_LPORT;
+    data.action_u.mirror_local_span.qid_en = 1;
+    data.action_u.mirror_local_span.qid = types::CPUCB_ID_FTE_SPAN;
     sdk_ret = dm->insert_withid(&data, 7);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -1162,7 +1162,7 @@ p4pd_decode_roce_opcode_init (void)
     hal_ret_t                    ret;
     sdk_ret_t                    sdk_ret;
     directmap                    *dm;
-    decode_roce_opcode_actiondata data = { 0 };
+    decode_roce_opcode_actiondata_t data = { 0 };
 
     // C++ compiler did not allow sparse initialization. compiler must be old.
     // So lets initialize the for UD entries here.
@@ -1193,22 +1193,22 @@ p4pd_decode_roce_opcode_init (void)
         if (opc_to_info[idx].valid == 1) {
 
             // valid entry
-            data.actionid = DECODE_ROCE_OPCODE_DECODE_ROCE_OPCODE_ID;
-            data.decode_roce_opcode_action_u.decode_roce_opcode_decode_roce_opcode.qtype =
+            data.action_id = DECODE_ROCE_OPCODE_DECODE_ROCE_OPCODE_ID;
+            data.action_u.decode_roce_opcode_decode_roce_opcode.qtype =
                 opc_to_info[idx].type;
-            data.decode_roce_opcode_action_u.decode_roce_opcode_decode_roce_opcode.len =
+            data.action_u.decode_roce_opcode_decode_roce_opcode.len =
                 opc_to_info[idx].roce_hdr_length;
-            data.decode_roce_opcode_action_u.decode_roce_opcode_decode_roce_opcode.raw_flags =
+            data.action_u.decode_roce_opcode_decode_roce_opcode.raw_flags =
                 opc_to_info[idx].raw_flags;
         } else {
             //Except for invalid opcode 32(error test case), skip all others for now, to save HAL bootup time
             if (idx != 32) {
                 continue;
             }
-            data.actionid = DECODE_ROCE_OPCODE_DECODE_ROCE_OPCODE_ID;
-            data.decode_roce_opcode_action_u.decode_roce_opcode_decode_roce_opcode.qtype = Q_TYPE_RDMA_RQ;
-            data.decode_roce_opcode_action_u.decode_roce_opcode_decode_roce_opcode.len = sizeof(rdma_bth_t);
-            data.decode_roce_opcode_action_u.decode_roce_opcode_decode_roce_opcode.raw_flags = 0;
+            data.action_id = DECODE_ROCE_OPCODE_DECODE_ROCE_OPCODE_ID;
+            data.action_u.decode_roce_opcode_decode_roce_opcode.qtype = Q_TYPE_RDMA_RQ;
+            data.action_u.decode_roce_opcode_decode_roce_opcode.len = sizeof(rdma_bth_t);
+            data.action_u.decode_roce_opcode_decode_roce_opcode.raw_flags = 0;
         }
 
         sdk_ret = dm->insert_withid(&data, idx);
@@ -1287,7 +1287,7 @@ p4pd_compute_checksum_init(void)
     uint32_t                        idx;
     compute_checksum_swkey_t        key;
     compute_checksum_swkey_mask_t   mask;
-    compute_checksum_actiondata     data;
+    compute_checksum_actiondata_t     data;
     hal_ret_t                       ret;
     sdk_ret_t                       sdk_ret;
     tcam                            *tcam;
@@ -1304,7 +1304,7 @@ p4pd_compute_checksum_init(void)
     key.control_metadata_p4plus_app_id = P4PLUS_APPTYPE_RDMA;
     mask.entry_inactive_compute_checksum_mask = 0xFF;
     mask.control_metadata_p4plus_app_id_mask = 0xFF;
-    data.actionid = COMPUTE_CHECKSUM_NOP_ID;
+    data.action_id = COMPUTE_CHECKSUM_NOP_ID;
     sdk_ret = tcam->insert_withid(&key, &mask, &data, idx);
     HAL_ASSERT(sdk_ret == sdk::SDK_RET_OK);
     idx++;
@@ -1317,7 +1317,7 @@ p4pd_compute_checksum_init(void)
     key.control_metadata_p4plus_app_id = P4PLUS_APPTYPE_TCPTLS;
     mask.entry_inactive_compute_checksum_mask = 0xFF;
     mask.control_metadata_p4plus_app_id_mask = 0xFF;
-    data.actionid = COMPUTE_CHECKSUM_NOP_ID;
+    data.action_id = COMPUTE_CHECKSUM_NOP_ID;
     sdk_ret = tcam->insert_withid(&key, &mask, &data, idx);
     HAL_ASSERT(sdk_ret == sdk::SDK_RET_OK);
     idx++;
@@ -1330,7 +1330,7 @@ p4pd_compute_checksum_init(void)
     key.control_metadata_p4plus_app_id = P4PLUS_APPTYPE_P4PT;
     mask.entry_inactive_compute_checksum_mask = 0xFF;
     mask.control_metadata_p4plus_app_id_mask = 0xFF;
-    data.actionid = COMPUTE_CHECKSUM_NOP_ID;
+    data.action_id = COMPUTE_CHECKSUM_NOP_ID;
     sdk_ret = tcam->insert_withid(&key, &mask, &data, idx);
     HAL_ASSERT(sdk_ret == sdk::SDK_RET_OK);
     idx++;
@@ -1355,7 +1355,7 @@ p4pd_compute_checksum_init(void)
         key.icmp_valid = compute_checksum_table[idx].icmp_valid;
 
         // action
-        data.actionid = compute_checksum_table[idx].actionid;
+        data.action_id = compute_checksum_table[idx].actionid;
 
         // insert into TCAM at idx
         sdk_ret = tcam->insert_withid(&key, &mask, &data, idx);

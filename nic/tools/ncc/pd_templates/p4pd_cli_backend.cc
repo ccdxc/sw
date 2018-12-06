@@ -129,8 +129,8 @@ ${api_prefix}_entry_write(uint32_t tableid,
         //::            #endif
         //::            if pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
             req->set_actiondata(
-                        std::string ((char*)(${table}_actiondata*)actiondata,
-                                     sizeof(${table}_actiondata)));
+                        std::string ((char*)(${table}_actiondata_t*)actiondata,
+                                     sizeof(${table}_actiondata_t)));
             break;
 
         //::            #endif
@@ -140,8 +140,8 @@ ${api_prefix}_entry_write(uint32_t tableid,
                                      sizeof(${table}_swkey_t)));
 
             req->set_actiondata(
-                        std::string ((char*)(${table}_actiondata*)actiondata,
-                                     sizeof(${table}_actiondata)));
+                        std::string ((char*)(${table}_actiondata_t*)actiondata,
+                                     sizeof(${table}_actiondata_t)));
             break;
 
         //::            #endif
@@ -155,8 +155,8 @@ ${api_prefix}_entry_write(uint32_t tableid,
                                      sizeof(${table}_swkey_mask_t)));
 
             req->set_actiondata(
-                        std::string ((char*)(${table}_actiondata*)actiondata,
-                                     sizeof(${table}_actiondata)));
+                        std::string ((char*)(${table}_actiondata_t*)actiondata,
+                                     sizeof(${table}_actiondata_t)));
             break;
 
         //::            #endif
@@ -222,8 +222,8 @@ ${api_prefix}_entry_read(uint32_t  tableid,
             //::            #endif
             //::            if pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
             req->set_actiondata(
-                        std::string ((char*)(${table}_actiondata*)actiondata,
-                                     sizeof(${table}_actiondata)));
+                        std::string ((char*)(${table}_actiondata_t*)actiondata,
+                                     sizeof(${table}_actiondata_t)));
             break;
 
             //::            #endif
@@ -233,8 +233,8 @@ ${api_prefix}_entry_read(uint32_t  tableid,
                                      sizeof(${table}_swkey_t)));
 
             req->set_actiondata(
-                        std::string ((char*)(${table}_actiondata*)actiondata,
-                                     sizeof(${table}_actiondata)));
+                        std::string ((char*)(${table}_actiondata_t*)actiondata,
+                                     sizeof(${table}_actiondata_t)));
             break;
 
             //::            #endif
@@ -248,8 +248,8 @@ ${api_prefix}_entry_read(uint32_t  tableid,
                                      sizeof(${table}_swkey_mask_t)));
 
             req->set_actiondata(
-                        std::string ((char*)(${table}_actiondata*)actiondata,
-                                     sizeof(${table}_actiondata)));
+                        std::string ((char*)(${table}_actiondata_t*)actiondata,
+                                     sizeof(${table}_actiondata_t)));
             break;
             //::            #endif
             //::        #endfor
@@ -295,7 +295,7 @@ ${api_prefix}_entry_populate(uint32_t  tableid,
             //::            #endif
             //::            if pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
             memcpy(actiondata, (void*)rsp_msg->response(response_index).actiondata().c_str(),
-                   sizeof(${table}_actiondata));
+                   sizeof(${table}_actiondata_t));
             break;
 
             //::            #endif
@@ -304,7 +304,7 @@ ${api_prefix}_entry_populate(uint32_t  tableid,
                    sizeof(${table}_swkey_t));
 
             memcpy(actiondata, (void*)rsp_msg->response(response_index).actiondata().c_str(),
-                   sizeof(${table}_actiondata));
+                   sizeof(${table}_actiondata_t));
             break;
 
             //::            #endif
@@ -316,7 +316,7 @@ ${api_prefix}_entry_populate(uint32_t  tableid,
                    sizeof(${table}_swkey_mask_t));
 
             memcpy(actiondata, (void*)rsp_msg->response(response_index).actiondata().c_str(),
-                   sizeof(${table}_actiondata));
+                   sizeof(${table}_actiondata_t));
             break;
             //
             //::            #endif

@@ -75,7 +75,7 @@ ipfix_test_init(uint32_t sindex, uint32_t eindex, uint16_t export_id) {
     hwkey = new uint8_t[hwkey_len];
 
     flow_hash_swkey_t key;
-    flow_hash_actiondata hash_data;
+    flow_hash_actiondata_t hash_data;
     for(uint32_t i = sindex; i < eindex; i++) {
         memset(&key, 0, sizeof(key));
         memset(&hash_data, 0, sizeof(hash_data));
@@ -90,10 +90,10 @@ ipfix_test_init(uint32_t sindex, uint32_t eindex, uint16_t export_id) {
         key.flow_lkp_metadata_lkp_sport = sport;
         key.flow_lkp_metadata_lkp_dport = dport;
 
-        hash_data.actionid = FLOW_HASH_FLOW_HASH_INFO_ID;
-        hash_data.flow_hash_action_u.flow_hash_flow_hash_info.entry_valid = true;
-        hash_data.flow_hash_action_u.flow_hash_flow_hash_info.export_en = 0x1;
-        hash_data.flow_hash_action_u.flow_hash_flow_hash_info.flow_index =
+        hash_data.action_id = FLOW_HASH_FLOW_HASH_INFO_ID;
+        hash_data.action_u.flow_hash_flow_hash_info.entry_valid = true;
+        hash_data.action_u.flow_hash_flow_hash_info.export_en = 0x1;
+        hash_data.action_u.flow_hash_flow_hash_info.flow_index =
             flow_index + i;
 
         memset(hwkey, 0, hwkey_len);
@@ -103,24 +103,24 @@ ipfix_test_init(uint32_t sindex, uint32_t eindex, uint16_t export_id) {
         sip++; dip++; sport++; dport++;
 
         // flow info
-        flow_info_actiondata flow_data;
+        flow_info_actiondata_t flow_data;
         memset(&flow_data, 0, sizeof(flow_data));
-        flow_data.actionid = FLOW_INFO_FLOW_INFO_ID;
-        flow_data.flow_info_action_u.flow_info_flow_info.dst_lport = dst_lport;
-        flow_data.flow_info_action_u.flow_info_flow_info.session_state_index =
+        flow_data.action_id = FLOW_INFO_FLOW_INFO_ID;
+        flow_data.action_u.flow_info_flow_info.dst_lport = dst_lport;
+        flow_data.action_u.flow_info_flow_info.session_state_index =
             session_index;
-        flow_data.flow_info_action_u.flow_info_flow_info.export_id1 = export_id;
+        flow_data.action_u.flow_info_flow_info.export_id1 = export_id;
         p4pd_entry_write(P4TBL_ID_FLOW_INFO, flow_index+i, NULL, NULL,
                          &flow_data);
 
         // session state
-        session_state_actiondata session_data;
+        session_state_actiondata_t session_data;
         memset(&session_data, 0, sizeof(session_data));
         p4pd_entry_write(P4TBL_ID_SESSION_STATE, session_index, NULL, NULL,
                          &session_data);
 
         // flow stats
-        flow_stats_actiondata stats_data;
+        flow_stats_actiondata_t stats_data;
         memset(&stats_data, 0, sizeof(stats_data));
         p4pd_entry_write(P4TBL_ID_FLOW_STATS, flow_index+i, NULL, NULL,
                          &stats_data);

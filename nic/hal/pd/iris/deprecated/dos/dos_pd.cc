@@ -138,7 +138,7 @@ dos_pd_program_ddos_src_vf_tcam (uint16_t slport, int actionid,
     sdk_ret_t                   sdk_ret;
     ddos_src_vf_swkey_t         key;
     ddos_src_vf_swkey_mask_t    mask;
-    ddos_src_vf_actiondata      data;
+    ddos_src_vf_actiondata_t      data;
     tcam                        *tcam = NULL;
     uint32_t                    ret_idx;
 
@@ -153,8 +153,8 @@ dos_pd_program_ddos_src_vf_tcam (uint16_t slport, int actionid,
     mask.entry_inactive_ddos_src_vf_mask = 0xFF;
     mask.control_metadata_src_lport_mask = 0xFFFF;
 
-    data.actionid = actionid;
-    data.ddos_src_vf_action_u.ddos_src_vf_ddos_src_vf_hit.ddos_src_vf_base_policer_idx = policer_idx;
+    data.action_id = actionid;
+    data.action_u.ddos_src_vf_ddos_src_vf_hit.ddos_src_vf_base_policer_idx = policer_idx;
     HAL_TRACE_DEBUG("{}: act_id: {} pol_index: {} slport: {}",
                      __FUNCTION__, actionid, policer_idx, slport);
     sdk_ret = tcam->insert(&key, &mask, &data, &ret_idx);
@@ -186,7 +186,7 @@ dos_pd_program_ddos_service_tcam (ip_addr_t *ip_addr, bool is_icmp,
     sdk_ret_t                   sdk_ret;
     ddos_service_swkey_t        key;
     ddos_service_swkey_mask_t   mask;
-    ddos_service_actiondata     data;
+    ddos_service_actiondata_t     data;
     tcam                        *tcam = NULL;
     uint32_t                    ret_idx;
 
@@ -222,8 +222,8 @@ dos_pd_program_ddos_service_tcam (ip_addr_t *ip_addr, bool is_icmp,
     key.entry_inactive_ddos_service = 0;
     mask.entry_inactive_ddos_service_mask = 0xFF;
 
-    data.actionid = actionid;
-    data.ddos_service_action_u.ddos_service_ddos_service_hit.ddos_service_base_policer_idx = policer_idx;
+    data.action_id = actionid;
+    data.action_u.ddos_service_ddos_service_hit.ddos_service_base_policer_idx = policer_idx;
     HAL_TRACE_DEBUG("{} ip-addr: {} dport: {} proto: {}"
                     "vrf: {} act_id: {} pol_idx: {}", __FUNCTION__,
                     *ip_addr, dport, proto, vrf, actionid, policer_idx);
@@ -260,7 +260,7 @@ dos_pd_program_ddos_src_dst_tcam (ip_addr_t *src_ip_addr,
     sdk_ret_t                   sdk_ret;
     ddos_src_dst_swkey_t        key;
     ddos_src_dst_swkey_mask_t   mask;
-    ddos_src_dst_actiondata     data;
+    ddos_src_dst_actiondata_t     data;
     tcam                        *tcam = NULL;
     uint32_t                    ret_idx;
     ipv4_addr_t                 v4_mask = {0};
@@ -329,8 +329,8 @@ dos_pd_program_ddos_src_dst_tcam (ip_addr_t *src_ip_addr,
     key.entry_inactive_ddos_src_dst = 0;
     mask.entry_inactive_ddos_src_dst_mask = 0xFF;
 
-    data.actionid = actionid;
-    data.ddos_src_dst_action_u.ddos_src_dst_ddos_src_dst_hit.ddos_src_dst_base_policer_idx = policer_idx;
+    data.action_id = actionid;
+    data.action_u.ddos_src_dst_ddos_src_dst_hit.ddos_src_dst_base_policer_idx = policer_idx;
 
     HAL_TRACE_DEBUG("{} src-ip: {} src-pfxlen: {} dst-ip: {} dst-pfxlen: {} "
                     "dport: {} proto: {} vrf: {} act_id: {} pol_idx: {}",
@@ -355,7 +355,7 @@ dos_pd_program_ddos_src_dst_tcam (ip_addr_t *src_ip_addr,
     return ret;
 }
 
-#define DDOS_POLICER_ACTION(_arg) d.ddos_service_policer_action_action_u.ddos_service_policer_action_ddos_service_policer_action._arg
+#define DDOS_POLICER_ACTION(_arg) d.action_u.ddos_service_policer_action_ddos_service_policer_action._arg
 hal_ret_t
 dos_pd_program_ddos_policer_action (uint8_t actionid, uint8_t saved_color,
                                     uint32_t dropped_pkts, p4pd_table_id tbl_id,
@@ -364,12 +364,12 @@ dos_pd_program_ddos_policer_action (uint8_t actionid, uint8_t saved_color,
     hal_ret_t                           ret = HAL_RET_OK;
     sdk_ret_t                           sdk_ret;
     directmap                           *dm;
-    ddos_service_policer_action_actiondata d = { 0 };
+    ddos_service_policer_action_actiondata_t d = { 0 };
 
     dm = g_hal_state_pd->dm_table(tbl_id);
     HAL_ASSERT(dm != NULL);
 
-    d.actionid = actionid;
+    d.action_id = actionid;
     DDOS_POLICER_ACTION(ddos_service_policer_saved_color) = saved_color;
     DDOS_POLICER_ACTION(ddos_service_policer_dropped_packets) = dropped_pkts;
     sdk_ret = dm->insert(&d, idx);
@@ -384,7 +384,7 @@ dos_pd_program_ddos_policer_action (uint8_t actionid, uint8_t saved_color,
     return ret;
 }
 
-#define DDOS_POLICER(_arg) d.ddos_service_policer_action_u.ddos_service_policer_execute_ddos_service_policer._arg
+#define DDOS_POLICER(_arg) d.action_u.ddos_service_policer_execute_ddos_service_policer._arg
 hal_ret_t
 dos_pd_program_ddos_policer (uint8_t actionid, bool pps,
                              bool color_aware, uint32_t cir, uint32_t cbr,
@@ -394,7 +394,7 @@ dos_pd_program_ddos_policer (uint8_t actionid, bool pps,
     hal_ret_t                           ret = HAL_RET_OK;
     sdk_ret_t                           sdk_ret;
     directmap                           *dm;
-    ddos_service_policer_actiondata     d = { 0 };
+    ddos_service_policer_actiondata_t     d = { 0 };
     uint32_t                            tbkt;
 
     dm = g_hal_state_pd->dm_table(tbl_id);
@@ -409,7 +409,7 @@ dos_pd_program_ddos_policer (uint8_t actionid, bool pps,
     /* For color aware policers the commit token bucket update is color blind
      * and the peak token bucket update is color aware
      * */
-    d.actionid = actionid;
+    d.action_id = actionid;
     DDOS_POLICER(entry_valid) = 1;
     DDOS_POLICER(pkt_rate) = (pps) ? 1 : 0;
     DDOS_POLICER(color_aware) = 0;

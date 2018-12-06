@@ -685,7 +685,7 @@ ep_pd_depgm_ipsg_tble_per_ip(pd_ep_ip_entry_t *pd_ip_entry)
     sdk_ret_t           sdk_ret;
     ipsg_swkey_t        key;
     ipsg_swkey_mask     key_mask;
-    ipsg_actiondata     data;
+    ipsg_actiondata_t     data;
     tcam                *ipsg_tbl = NULL;
     ep_ip_entry_t       *pi_ep_ip_entry = (ep_ip_entry_t *)pd_ip_entry->pi_ep_ip_entry;
 
@@ -747,7 +747,7 @@ ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep,
     sdk_ret_t           sdk_ret;
     ipsg_swkey_t        key;
     ipsg_swkey_mask     key_mask;
-    ipsg_actiondata     data;
+    ipsg_actiondata_t     data;
     ep_t                *pi_ep = (ep_t *)pd_ep->pi_ep;
     ep_ip_entry_t       *pi_ip_entry =
                           (ep_ip_entry_t *)pd_ip_entry->pi_ep_ip_entry;
@@ -792,28 +792,28 @@ ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep,
             sizeof(key_mask.flow_lkp_metadata_lkp_src_mask));
 
     HAL_ASSERT_RETURN(l2seg != NULL, HAL_RET_IF_NOT_FOUND);
-    data.actionid = IPSG_IPSG_HIT_ID;
-    // data.ipsg_action_u.ipsg_ipsg_hit.src_lport = if_get_lport_id(pi_if);
+    data.action_id = IPSG_IPSG_HIT_ID;
+    // data.action_u.ipsg_ipsg_hit.src_lport = if_get_lport_id(pi_if);
     if (if_args && if_args->lif_change) {
         if (if_args->new_lif) {
             uint32_t src_lif = 0;
             ret = pd_lif_get_hw_lif_id(if_args->new_lif, &src_lif);
-            data.ipsg_action_u.ipsg_ipsg_hit.src_lif = src_lif;
+            data.action_u.ipsg_ipsg_hit.src_lif = src_lif;
             HAL_TRACE_DEBUG("Lif change on Enic. IPSG src_lif: {}",
-                            data.ipsg_action_u.ipsg_ipsg_hit.src_lif);
+                            data.action_u.ipsg_ipsg_hit.src_lif);
         } else {
             HAL_TRACE_DEBUG("Lif removal on Enic. IPSG src_lif: {}",
-                            data.ipsg_action_u.ipsg_ipsg_hit.src_lif);
+                            data.action_u.ipsg_ipsg_hit.src_lif);
         }
     } else {
-        data.ipsg_action_u.ipsg_ipsg_hit.src_lif = if_get_hw_lif_id(pi_if);
+        data.action_u.ipsg_ipsg_hit.src_lif = if_get_hw_lif_id(pi_if);
     }
     mac = ep_get_mac_addr(pi_ep);
     // mac_int = MAC_TO_UINT64(*mac); // TODO: Cleanup May be you dont need this ?
-    memcpy(data.ipsg_action_u.ipsg_ipsg_hit.mac, *mac, 6);
-    memrev(data.ipsg_action_u.ipsg_ipsg_hit.mac, 6);
-    if_l2seg_get_encap(pi_if, l2seg, &data.ipsg_action_u.ipsg_ipsg_hit.vlan_valid,
-            &data.ipsg_action_u.ipsg_ipsg_hit.vlan_id);
+    memcpy(data.action_u.ipsg_ipsg_hit.mac, *mac, 6);
+    memrev(data.action_u.ipsg_ipsg_hit.mac, 6);
+    if_l2seg_get_encap(pi_if, l2seg, &data.action_u.ipsg_ipsg_hit.vlan_valid,
+            &data.action_u.ipsg_ipsg_hit.vlan_id);
 
     if (oper == TABLE_OPER_INSERT) {
         if (is_upgrade) {
@@ -835,10 +835,10 @@ ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep,
                             pd_ip_entry->ipsg_tbl_idx,
                             key.flow_lkp_metadata_lkp_vrf,
                             ipaddr2str(&(pi_ip_entry->ip_addr)),
-                            data.actionid,
-                            data.ipsg_action_u.ipsg_ipsg_hit.src_lif,
-                            data.ipsg_action_u.ipsg_ipsg_hit.vlan_valid,
-                            data.ipsg_action_u.ipsg_ipsg_hit.vlan_id,
+                            data.action_id,
+                            data.action_u.ipsg_ipsg_hit.src_lif,
+                            data.action_u.ipsg_ipsg_hit.vlan_valid,
+                            data.action_u.ipsg_ipsg_hit.vlan_id,
                             macaddr2str(*mac));
         }
     } else {
@@ -882,7 +882,7 @@ pd_ep_pgm_registered_mac(pd_ep_t *pd_ep, table_oper_t oper)
     hal_ret_t                       ret = HAL_RET_OK;
     sdk_ret_t                       sdk_ret;
     registered_macs_swkey_t         key;
-    registered_macs_actiondata      data;
+    registered_macs_actiondata_t      data;
     sdk_hash                        *reg_mac_tbl = NULL;
     ep_t                            *pi_ep = (ep_t *)pd_ep->pi_ep;
     l2seg_t                         *l2seg = NULL;
@@ -908,8 +908,8 @@ pd_ep_pgm_registered_mac(pd_ep_t *pd_ep, table_oper_t oper)
 
     // dst_lport
     pi_if = find_if_by_handle(pi_ep->if_handle);
-    data.actionid = REGISTERED_MACS_REGISTERED_MACS_ID;
-    data.registered_macs_action_u.registered_macs_registered_macs.dst_lport =
+    data.action_id = REGISTERED_MACS_REGISTERED_MACS_ID;
+    data.action_u.registered_macs_registered_macs.dst_lport =
         if_get_lport_id(pi_if);
 
     if (oper == TABLE_OPER_INSERT) {
@@ -953,7 +953,7 @@ ep_pd_depgm_registered_mac(pd_ep_t *pd_ep)
     hal_ret_t                   ret = HAL_RET_OK;
     sdk_ret_t                   sdk_ret;
     registered_macs_swkey_t     key;
-    registered_macs_actiondata  data;
+    registered_macs_actiondata_t  data;
     sdk_hash                    *reg_mac_tbl = NULL;
 
     if (pd_ep->reg_mac_tbl_idx == INVALID_INDEXER_INDEX) {

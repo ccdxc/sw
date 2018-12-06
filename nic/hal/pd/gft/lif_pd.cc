@@ -396,7 +396,7 @@ lif_pd_tx_policer_deprogram_hw (pd_lif_t *pd_lif)
     return ret;
 }
 
-#define RX_POLICER_ACTION(_arg) d.rx_policer_action_u.rx_policer_execute_rx_policer._arg
+#define RX_POLICER_ACTION(_arg) d.action_u.rx_policer_execute_rx_policer._arg
 hal_ret_t
 lif_pd_rx_policer_program_hw (pd_lif_t *pd_lif, bool update)
 {
@@ -405,7 +405,7 @@ lif_pd_rx_policer_program_hw (pd_lif_t *pd_lif, bool update)
     sdk_ret_t             sdk_ret;
     lif_t                 *pi_lif = (lif_t *)pd_lif->pi_lif;
     directmap             *rx_policer_tbl = NULL;
-    rx_policer_actiondata d = {0};
+    rx_policer_actiondata_t d = {0};
 
     rx_policer_tbl = g_hal_state_pd->dm_table(P4TBL_ID_RX_POLICER);
     HAL_ASSERT_RETURN((rx_policer_tbl != NULL), HAL_RET_ERR);

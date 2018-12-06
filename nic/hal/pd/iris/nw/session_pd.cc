@@ -34,18 +34,18 @@ p4pd_add_flow_stats_table_entry (uint32_t *flow_stats_idx, uint64_t clock)
     hal_ret_t                ret;
     sdk_ret_t                sdk_ret;
     directmap                *dm;
-    flow_stats_actiondata    d = { 0 };
+    flow_stats_actiondata_t    d = { 0 };
 
     HAL_ASSERT(flow_stats_idx != NULL);
     dm = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_STATS);
     HAL_ASSERT(dm != NULL);
 
 
-    d.actionid = FLOW_STATS_FLOW_STATS_ID;
+    d.action_id = FLOW_STATS_FLOW_STATS_ID;
     // P4 has 32 bits so we have to use top 32 bits. We lose the precision by 2^16 ns
-    d.flow_stats_action_u.flow_stats_flow_stats.last_seen_timestamp = clock >> 16;
+    d.action_u.flow_stats_flow_stats.last_seen_timestamp = clock >> 16;
     HAL_TRACE_DEBUG("Setting the last seen timestamp: {} clock {}", 
-                     d.flow_stats_action_u.flow_stats_flow_stats.last_seen_timestamp,
+                     d.action_u.flow_stats_flow_stats.last_seen_timestamp,
                      clock);
 
     // insert the entry
@@ -159,7 +159,7 @@ p4pd_add_session_state_table_entry (pd_session_t *session_pd,
     sdk_ret_t                sdk_ret;
     directmap                *dm;
     flow_t                   *iflow, *rflow;
-    session_state_actiondata d = { 0 };
+    session_state_actiondata_t d = { 0 };
     session_t                *session = (session_t *)session_pd->session;
 
     HAL_ASSERT(session_pd != NULL);
@@ -171,59 +171,59 @@ p4pd_add_session_state_table_entry (pd_session_t *session_pd,
     HAL_ASSERT(dm != NULL);
 
     // populate the action information
-    d.actionid = SESSION_STATE_TCP_SESSION_STATE_INFO_ID;
+    d.action_id = SESSION_STATE_TCP_SESSION_STATE_INFO_ID;
 
     if (session_state) {
         // session specific information
-        d.session_state_action_u.session_state_tcp_session_state_info.tcp_ts_option_negotiated =
+        d.action_u.session_state_tcp_session_state_info.tcp_ts_option_negotiated =
             session_state->tcp_ts_option;
-        d.session_state_action_u.session_state_tcp_session_state_info.tcp_sack_perm_option_negotiated =
+        d.action_u.session_state_tcp_session_state_info.tcp_sack_perm_option_negotiated =
             session_state->tcp_sack_perm_option;
 
         // initiator flow specific information
-        d.session_state_action_u.session_state_tcp_session_state_info.iflow_tcp_state =
+        d.action_u.session_state_tcp_session_state_info.iflow_tcp_state =
             session_state->iflow_state.state;
-        d.session_state_action_u.session_state_tcp_session_state_info.iflow_tcp_seq_num =
+        d.action_u.session_state_tcp_session_state_info.iflow_tcp_seq_num =
             session_state->iflow_state.tcp_seq_num;
-        d.session_state_action_u.session_state_tcp_session_state_info.iflow_tcp_ack_num =
+        d.action_u.session_state_tcp_session_state_info.iflow_tcp_ack_num =
             session_state->iflow_state.tcp_ack_num;
-        d.session_state_action_u.session_state_tcp_session_state_info.iflow_tcp_win_sz =
+        d.action_u.session_state_tcp_session_state_info.iflow_tcp_win_sz =
             session_state->iflow_state.tcp_win_sz;
-        d.session_state_action_u.session_state_tcp_session_state_info.iflow_tcp_win_scale =
+        d.action_u.session_state_tcp_session_state_info.iflow_tcp_win_scale =
             session_state->iflow_state.tcp_win_scale;
-        d.session_state_action_u.session_state_tcp_session_state_info.iflow_tcp_mss =
+        d.action_u.session_state_tcp_session_state_info.iflow_tcp_mss =
             session_state->iflow_state.tcp_mss;
-        d.session_state_action_u.session_state_tcp_session_state_info.iflow_tcp_ws_option_sent =
+        d.action_u.session_state_tcp_session_state_info.iflow_tcp_ws_option_sent =
             session_state->iflow_state.tcp_ws_option_sent;
-        d.session_state_action_u.session_state_tcp_session_state_info.iflow_tcp_ts_option_sent =
+        d.action_u.session_state_tcp_session_state_info.iflow_tcp_ts_option_sent =
             session_state->iflow_state.tcp_ts_option_sent;
-        d.session_state_action_u.session_state_tcp_session_state_info.iflow_tcp_sack_perm_option_sent =
+        d.action_u.session_state_tcp_session_state_info.iflow_tcp_sack_perm_option_sent =
             session_state->iflow_state.tcp_sack_perm_option_sent;
-        d.session_state_action_u.session_state_tcp_session_state_info.iflow_exceptions_seen =
+        d.action_u.session_state_tcp_session_state_info.iflow_exceptions_seen =
             session_state->iflow_state.exception_bmap;
 
         // responder flow specific information
-        d.session_state_action_u.session_state_tcp_session_state_info.rflow_tcp_state =
+        d.action_u.session_state_tcp_session_state_info.rflow_tcp_state =
             session_state->rflow_state.state;
-        d.session_state_action_u.session_state_tcp_session_state_info.rflow_tcp_seq_num =
+        d.action_u.session_state_tcp_session_state_info.rflow_tcp_seq_num =
             session_state->rflow_state.tcp_seq_num;
-        d.session_state_action_u.session_state_tcp_session_state_info.rflow_tcp_ack_num =
+        d.action_u.session_state_tcp_session_state_info.rflow_tcp_ack_num =
             session_state->rflow_state.tcp_ack_num;
-        d.session_state_action_u.session_state_tcp_session_state_info.rflow_tcp_win_sz =
+        d.action_u.session_state_tcp_session_state_info.rflow_tcp_win_sz =
             session_state->rflow_state.tcp_win_sz;
-        d.session_state_action_u.session_state_tcp_session_state_info.rflow_tcp_win_scale =
+        d.action_u.session_state_tcp_session_state_info.rflow_tcp_win_scale =
             session_state->rflow_state.tcp_win_scale;
-        d.session_state_action_u.session_state_tcp_session_state_info.rflow_tcp_mss =
+        d.action_u.session_state_tcp_session_state_info.rflow_tcp_mss =
             session_state->rflow_state.tcp_mss;
-        d.session_state_action_u.session_state_tcp_session_state_info.rflow_exceptions_seen =
+        d.action_u.session_state_tcp_session_state_info.rflow_exceptions_seen =
             session_state->rflow_state.exception_bmap;
 
 
-        d.session_state_action_u.session_state_tcp_session_state_info.syn_cookie_delta =
+        d.action_u.session_state_tcp_session_state_info.syn_cookie_delta =
             session_state->iflow_state.syn_ack_delta;
     }
 
-    d.session_state_action_u.session_state_tcp_session_state_info.flow_rtt_seq_check_enabled =
+    d.action_u.session_state_tcp_session_state_info.flow_rtt_seq_check_enabled =
         nwsec_profile ?  nwsec_profile->tcp_rtt_estimate_en : FALSE;
 
     // insert the entry
@@ -270,7 +270,7 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd,
     hal_ret_t                               ret;
     sdk_ret_t                               sdk_ret;
     directmap                              *dm;
-    flow_info_actiondata                    d = { 0};
+    flow_info_actiondata_t                    d = { 0};
     flow_pgm_attrs_t                       *flow_attrs = NULL;
     flow_cfg_t                             *flow_cfg = NULL;
     pd_session_t                           *sess_pd = NULL;
@@ -292,14 +292,14 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd,
             &session->iflow->pgm_attrs;
         flow_cfg = &session->iflow->config;
         if (aug) {
-            d.flow_info_action_u.flow_info_flow_info.ingress_mirror_session_id =
+            d.action_u.flow_info_flow_info.ingress_mirror_session_id =
                                  session->iflow->assoc_flow->config.ing_mirror_session;
-            d.flow_info_action_u.flow_info_flow_info.egress_mirror_session_id =
+            d.action_u.flow_info_flow_info.egress_mirror_session_id =
                                  session->iflow->assoc_flow->config.eg_mirror_session;
         } else {
-            d.flow_info_action_u.flow_info_flow_info.ingress_mirror_session_id =
+            d.action_u.flow_info_flow_info.ingress_mirror_session_id =
                                  flow_cfg->ing_mirror_session;
-            d.flow_info_action_u.flow_info_flow_info.egress_mirror_session_id =
+            d.action_u.flow_info_flow_info.egress_mirror_session_id =
                                  flow_cfg->eg_mirror_session;
         }
     } else {
@@ -307,105 +307,105 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd,
             &session->rflow->pgm_attrs;
         flow_cfg = &session->rflow->config;
         if (aug) {
-            d.flow_info_action_u.flow_info_flow_info.ingress_mirror_session_id =
+            d.action_u.flow_info_flow_info.ingress_mirror_session_id =
                                  session->rflow->assoc_flow->config.ing_mirror_session;
-            d.flow_info_action_u.flow_info_flow_info.egress_mirror_session_id =
+            d.action_u.flow_info_flow_info.egress_mirror_session_id =
                                  session->rflow->assoc_flow->config.eg_mirror_session;
         } else {
-            d.flow_info_action_u.flow_info_flow_info.ingress_mirror_session_id =
+            d.action_u.flow_info_flow_info.ingress_mirror_session_id =
                                  flow_cfg->ing_mirror_session;
-            d.flow_info_action_u.flow_info_flow_info.egress_mirror_session_id =
+            d.action_u.flow_info_flow_info.egress_mirror_session_id =
                                  flow_cfg->eg_mirror_session;
         }
     }
 
     // populate the action information
     if (flow_attrs->drop) {
-        d.actionid = FLOW_INFO_FLOW_HIT_DROP_ID;
+        d.action_id = FLOW_INFO_FLOW_HIT_DROP_ID;
         HAL_TRACE_DEBUG("Action being set to drop");
     } else {
-        d.actionid = FLOW_INFO_FLOW_INFO_ID;
+        d.action_id = FLOW_INFO_FLOW_INFO_ID;
     }
 
     if (flow_attrs->export_en) {
-        d.flow_info_action_u.flow_info_flow_info.export_id1 =
+        d.action_u.flow_info_flow_info.export_id1 =
                                              flow_attrs->export_id1;
-        d.flow_info_action_u.flow_info_flow_info.export_id2 =
+        d.action_u.flow_info_flow_info.export_id2 =
                                              flow_attrs->export_id2;
-        d.flow_info_action_u.flow_info_flow_info.export_id3 =
+        d.action_u.flow_info_flow_info.export_id3 =
                                              flow_attrs->export_id3;
-        d.flow_info_action_u.flow_info_flow_info.export_id4 =
+        d.action_u.flow_info_flow_info.export_id4 =
                                              flow_attrs->export_id4;
     }
 
-    d.flow_info_action_u.flow_info_flow_info.expected_src_lif_check_en =
+    d.action_u.flow_info_flow_info.expected_src_lif_check_en =
         flow_attrs->expected_src_lif_en;
-    d.flow_info_action_u.flow_info_flow_info.expected_src_lif =
+    d.action_u.flow_info_flow_info.expected_src_lif =
         flow_attrs->expected_src_lif;
-    d.flow_info_action_u.flow_info_flow_info.dst_lport = flow_attrs->lport;
-    d.flow_info_action_u.flow_info_flow_info.multicast_en = flow_attrs->mcast_en;
-    d.flow_info_action_u.flow_info_flow_info.multicast_ptr = flow_attrs->mcast_ptr;
+    d.action_u.flow_info_flow_info.dst_lport = flow_attrs->lport;
+    d.action_u.flow_info_flow_info.multicast_en = flow_attrs->mcast_en;
+    d.action_u.flow_info_flow_info.multicast_ptr = flow_attrs->mcast_ptr;
 
     // Set the tunnel originate flag
-    d.flow_info_action_u.flow_info_flow_info.tunnel_originate =
+    d.action_u.flow_info_flow_info.tunnel_originate =
                                                     flow_attrs->tunnel_orig;
     // L4 LB (NAT) Info
-    d.flow_info_action_u.flow_info_flow_info.nat_l4_port = flow_attrs->nat_l4_port;
-    memcpy(d.flow_info_action_u.flow_info_flow_info.nat_ip, &flow_attrs->nat_ip.addr,
+    d.action_u.flow_info_flow_info.nat_l4_port = flow_attrs->nat_l4_port;
+    memcpy(d.action_u.flow_info_flow_info.nat_ip, &flow_attrs->nat_ip.addr,
            sizeof(ipvx_addr_t));
     if (flow_cfg->key.flow_type == FLOW_TYPE_V6) {
-        memrev(d.flow_info_action_u.flow_info_flow_info.nat_ip,
-               sizeof(d.flow_info_action_u.flow_info_flow_info.nat_ip));
+        memrev(d.action_u.flow_info_flow_info.nat_ip,
+               sizeof(d.action_u.flow_info_flow_info.nat_ip));
     }
-    d.flow_info_action_u.flow_info_flow_info.twice_nat_idx = flow_attrs->twice_nat_idx;
+    d.action_u.flow_info_flow_info.twice_nat_idx = flow_attrs->twice_nat_idx;
 
     // QOS Info
-    d.flow_info_action_u.flow_info_flow_info.qos_class_en = flow_attrs->qos_class_en;
-    d.flow_info_action_u.flow_info_flow_info.qos_class_id = flow_attrs->qos_class_id;
+    d.action_u.flow_info_flow_info.qos_class_en = flow_attrs->qos_class_en;
+    d.action_u.flow_info_flow_info.qos_class_id = flow_attrs->qos_class_id;
 
     // TBD: check class NIC mode and set this
-    d.flow_info_action_u.flow_info_flow_info.qid_en = flow_attrs->qid_en;
+    d.action_u.flow_info_flow_info.qid_en = flow_attrs->qid_en;
     if (flow_attrs->qid_en) {
-        d.flow_info_action_u.flow_info_flow_info.qtype = flow_attrs->qtype;
-        d.flow_info_action_u.flow_info_flow_info.tunnel_vnid = flow_attrs->qid;
+        d.action_u.flow_info_flow_info.qtype = flow_attrs->qtype;
+        d.action_u.flow_info_flow_info.tunnel_vnid = flow_attrs->qid;
     } else {
-        d.flow_info_action_u.flow_info_flow_info.tunnel_vnid = flow_attrs->tnnl_vnid;
+        d.action_u.flow_info_flow_info.tunnel_vnid = flow_attrs->tnnl_vnid;
     }
 
     /*
      * For packets to host, the vlan id will be derived from output_mapping, but
      * the decision to do vlan encap or not is coming from here.
      */
-    d.flow_info_action_u.flow_info_flow_info.tunnel_rewrite_index = flow_attrs->tnnl_rw_idx;
+    d.action_u.flow_info_flow_info.tunnel_rewrite_index = flow_attrs->tnnl_rw_idx;
 
     // TBD: check analytics policy and set this
-    d.flow_info_action_u.flow_info_flow_info.log_en = FALSE;
+    d.action_u.flow_info_flow_info.log_en = FALSE;
 
-    d.flow_info_action_u.flow_info_flow_info.rewrite_flags =
+    d.action_u.flow_info_flow_info.rewrite_flags =
         (flow_attrs->mac_sa_rewrite ? REWRITE_FLAGS_MAC_SA : 0) |
         (flow_attrs->mac_da_rewrite ? REWRITE_FLAGS_MAC_DA : 0) |
         (flow_attrs->ttl_dec ? REWRITE_FLAGS_TTL_DEC : 0);
 
     if (flow_attrs->rw_act != REWRITE_NOP_ID) {
-        d.flow_info_action_u.flow_info_flow_info.rewrite_index = flow_attrs->rw_idx;
+        d.action_u.flow_info_flow_info.rewrite_index = flow_attrs->rw_idx;
     }
 #if 0
     // TODO: if we are doing routing, then set ttl_dec to TRUE
     if ((role == FLOW_ROLE_INITIATOR && !aug) ||
         (role == FLOW_ROLE_RESPONDER && aug)) {
         // Assuming aug flows are either send to uplink or receive from uplink
-        d.flow_info_action_u.flow_info_flow_info.flow_conn_track = true;
+        d.action_u.flow_info_flow_info.flow_conn_track = true;
     } else {
-        d.flow_info_action_u.flow_info_flow_info.flow_conn_track = session->config.conn_track_en;
+        d.action_u.flow_info_flow_info.flow_conn_track = session->config.conn_track_en;
     }
 #endif
-    d.flow_info_action_u.flow_info_flow_info.flow_conn_track = session->conn_track_en;
-    d.flow_info_action_u.flow_info_flow_info.flow_ttl = 64;
-    d.flow_info_action_u.flow_info_flow_info.flow_role = flow_attrs->role;
-    d.flow_info_action_u.flow_info_flow_info.session_state_index =
-    d.flow_info_action_u.flow_info_flow_info.flow_conn_track ?
+    d.action_u.flow_info_flow_info.flow_conn_track = session->conn_track_en;
+    d.action_u.flow_info_flow_info.flow_ttl = 64;
+    d.action_u.flow_info_flow_info.flow_role = flow_attrs->role;
+    d.action_u.flow_info_flow_info.session_state_index =
+    d.action_u.flow_info_flow_info.flow_conn_track ?
              sess_pd->session_state_idx : 0;
-    d.flow_info_action_u.flow_info_flow_info.start_timestamp = (clock>>16);
+    d.action_u.flow_info_flow_info.start_timestamp = (clock>>16);
 
     if (entry_exists) {
        // Update the entry
@@ -1028,7 +1028,7 @@ pd_session_get (pd_func_args_t *pd_func_args)
     pd_session_get_args_t                  *args = pd_func_args->pd_session_get;
     pd_func_args_t                          pd_func_args1 = {0};
     sdk_ret_t                               sdk_ret;
-    session_state_actiondata                d = {0};
+    session_state_actiondata_t                d = {0};
     directmap                              *dm = NULL;
     session_state_t                        *ss = args->session_state;
     pd_flow_get_args_t                      flow_get_args;
@@ -1047,7 +1047,7 @@ pd_session_get (pd_func_args_t *pd_func_args)
         sdk_ret = dm->retrieve(pd_session->session_state_idx, &d);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret == HAL_RET_OK) {
-            info = d.session_state_action_u.session_state_tcp_session_state_info;
+            info = d.action_u.session_state_tcp_session_state_info;
             ss->tcp_ts_option = info.tcp_ts_option_negotiated;
             ss->tcp_sack_perm_option = info.tcp_sack_perm_option_negotiated;
 
@@ -1142,8 +1142,8 @@ pd_flow_get (pd_func_args_t *pd_func_args)
     pd_conv_hw_clock_to_sw_clock_args_t     clock_args = {0};
     pd_flow_get_args_t                      *args = pd_func_args->pd_flow_get;
     sdk_ret_t                               sdk_ret;
-    flow_stats_actiondata                   d = {0};
-    flow_info_actiondata                    f = {0};
+    flow_stats_actiondata_t                   d = {0};
+    flow_info_actiondata_t                    f = {0};
     directmap                               *dm = NULL;
     pd_flow_t                               pd_flow;
 
@@ -1170,12 +1170,12 @@ pd_flow_get (pd_func_args_t *pd_func_args)
     sdk_ret = dm->retrieve(pd_flow.flow_stats_hw_id, &d);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret == HAL_RET_OK) {
-        args->flow_state->packets = d.flow_stats_action_u.flow_stats_flow_stats.permit_packets;
-        args->flow_state->bytes = d.flow_stats_action_u.flow_stats_flow_stats.permit_bytes;
-        args->flow_state->drop_packets = d.flow_stats_action_u.flow_stats_flow_stats.drop_packets;
-        args->flow_state->drop_bytes = d.flow_stats_action_u.flow_stats_flow_stats.drop_bytes;
+        args->flow_state->packets = d.action_u.flow_stats_flow_stats.permit_packets;
+        args->flow_state->bytes = d.action_u.flow_stats_flow_stats.permit_bytes;
+        args->flow_state->drop_packets = d.action_u.flow_stats_flow_stats.drop_packets;
+        args->flow_state->drop_bytes = d.action_u.flow_stats_flow_stats.drop_bytes;
 
-        clock_args.hw_tick = d.flow_stats_action_u.flow_stats_flow_stats.last_seen_timestamp;
+        clock_args.hw_tick = d.action_u.flow_stats_flow_stats.last_seen_timestamp;
         clock_args.hw_tick = (clock_args.hw_tick << 16);
         clock_args.sw_ns = &args->flow_state->last_pkt_ts;
         pd_func_args->pd_conv_hw_clock_to_sw_clock = &clock_args;
@@ -1188,7 +1188,7 @@ pd_flow_get (pd_func_args_t *pd_func_args)
     sdk_ret = dm->retrieve(pd_flow.flow_stats_hw_id, &f);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret == HAL_RET_OK) {
-        clock_args.hw_tick = f.flow_info_action_u.flow_info_flow_info.start_timestamp;
+        clock_args.hw_tick = f.action_u.flow_info_flow_info.start_timestamp;
         clock_args.hw_tick = (clock_args.hw_tick << 16);
         clock_args.sw_ns = &args->flow_state->create_ts;
         pd_func_args->pd_conv_hw_clock_to_sw_clock = &clock_args;
@@ -1207,7 +1207,7 @@ pd_add_cpu_bypass_flow_info (uint32_t *flow_info_hwid)
     timespec_t                           ts;
     pd_conv_sw_clock_to_hw_clock_args_t  clock_args;
     pd_func_args_t                       pd_clock_fn_args = {0};
-    flow_info_actiondata                 d = { 0};
+    flow_info_actiondata_t                 d = { 0};
     hal_ret_t                            ret = HAL_RET_OK;
     sdk_ret_t                            sdk_ret;
     directmap                           *dm;
@@ -1229,7 +1229,7 @@ pd_add_cpu_bypass_flow_info (uint32_t *flow_info_hwid)
     dm = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_INFO);
     HAL_ASSERT(dm != NULL);
 
-    d.actionid = FLOW_INFO_FLOW_INFO_FROM_CPU_ID;
+    d.action_id = FLOW_INFO_FLOW_INFO_FROM_CPU_ID;
 
     // insert the entry
     sdk_ret = dm->insert_withid(&d, *flow_info_hwid);

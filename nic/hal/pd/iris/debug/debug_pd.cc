@@ -178,7 +178,7 @@ fte_span_pd_program_hw (pd_fte_span_t *fte_span_pd, table_oper_t oper)
     hal_ret_t           ret = HAL_RET_OK;
     nacl_swkey_t        key;
     nacl_swkey_mask_t   mask;
-    nacl_actiondata     data;
+    nacl_actiondata_t     data;
     fte_span_t          *fte_span = fte_span_pd->fte_span;
     acl_tcam            *acl_tbl = NULL;
     uint64_t            drop_reason_mask = ~0;
@@ -200,9 +200,9 @@ fte_span_pd_program_hw (pd_fte_span_t *fte_span_pd, table_oper_t oper)
         key.entry_inactive_nacl = 0;
         mask.entry_inactive_nacl_mask = 0x1;
 
-        data.actionid = NACL_NACL_PERMIT_ID;
-        data.nacl_action_u.nacl_nacl_permit.ingress_mirror_en = 1;
-        data.nacl_action_u.nacl_nacl_permit.ingress_mirror_session_id = 0x1 << 7;
+        data.action_id = NACL_NACL_PERMIT_ID;
+        data.action_u.nacl_nacl_permit.ingress_mirror_en = 1;
+        data.action_u.nacl_nacl_permit.ingress_mirror_session_id = 0x1 << 7;
 #endif
     } else {
         key.entry_inactive_nacl = 0;
@@ -290,13 +290,13 @@ fte_span_pd_program_hw (pd_fte_span_t *fte_span_pd, table_oper_t oper)
                 ~(mask.control_metadata_from_cpu_mask & 0);
         }
 
-        data.actionid = NACL_NACL_PERMIT_ID;
+        data.action_id = NACL_NACL_PERMIT_ID;
         if (fte_span->is_egress) {
-            data.nacl_action_u.nacl_nacl_permit.egress_mirror_en = 1;
-            data.nacl_action_u.nacl_nacl_permit.egress_mirror_session_id = 0x1 << 7;
+            data.action_u.nacl_nacl_permit.egress_mirror_en = 1;
+            data.action_u.nacl_nacl_permit.egress_mirror_session_id = 0x1 << 7;
         } else {
-            data.nacl_action_u.nacl_nacl_permit.ingress_mirror_en = 1;
-            data.nacl_action_u.nacl_nacl_permit.ingress_mirror_session_id = 0x1 << 7;
+            data.action_u.nacl_nacl_permit.ingress_mirror_en = 1;
+            data.action_u.nacl_nacl_permit.ingress_mirror_session_id = 0x1 << 7;
         }
     }
 

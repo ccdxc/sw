@@ -21,7 +21,7 @@ telemetry_export_dest_t export_destinations[TELEMETRY_NUM_EXPORT_DEST];
 char _deb_buf[TELEMETRY_EXPORT_BUFF_SIZE + 1];
 
 hal_ret_t
-pd_mirror_update_hw(uint32_t id, mirror_actiondata *action_data)
+pd_mirror_update_hw(uint32_t id, mirror_actiondata_t *action_data)
 {
     hal_ret_t       ret = HAL_RET_OK;
     sdk_ret_t       sdk_ret;
@@ -53,7 +53,7 @@ pd_mirror_session_create(pd_func_args_t *pd_func_args)
 {
     uint32_t dst_lport;
     pd_mirror_session_create_args_t *args = pd_func_args->pd_mirror_session_create;
-    mirror_actiondata action_data;
+    mirror_actiondata_t action_data;
     hal::pd::pd_tunnelif_get_rw_idx_args_t    tif_args = { 0 };
     pd_func_args_t pd_func_args1 = {0};
 
@@ -66,7 +66,7 @@ pd_mirror_session_create(pd_func_args_t *pd_func_args)
             __FUNCTION__, args->session->id);
 
     // Add to a PD datastructure instead of stack.
-    memset(&action_data, 0, sizeof(mirror_actiondata));
+    memset(&action_data, 0, sizeof(mirror_actiondata_t));
     HAL_ASSERT((args->session->id >= 0) && (args->session->id <= 7));
 
     switch (args->session->dest_if->if_type) {
@@ -83,27 +83,27 @@ pd_mirror_session_create(pd_func_args_t *pd_func_args)
 
     switch (args->session->type) {
     case MIRROR_DEST_LOCAL: {
-        action_data.actionid = MIRROR_LOCAL_SPAN_ID;
-        action_data.mirror_action_u.mirror_local_span.truncate_len = args->session->truncate_len;
-        action_data.mirror_action_u.mirror_local_span.dst_lport = dst_lport;
+        action_data.action_id = MIRROR_LOCAL_SPAN_ID;
+        action_data.action_u.mirror_local_span.truncate_len = args->session->truncate_len;
+        action_data.action_u.mirror_local_span.dst_lport = dst_lport;
         break;
     }
     case MIRROR_DEST_RSPAN: {
-        action_data.actionid = MIRROR_REMOTE_SPAN_ID;
-        action_data.mirror_action_u.mirror_remote_span.truncate_len = args->session->truncate_len;
-        action_data.mirror_action_u.mirror_remote_span.dst_lport = dst_lport;
-        action_data.mirror_action_u.mirror_remote_span.vlan = args->session->mirror_destination_u.r_span_dest.vlan;
-        action_data.mirror_action_u.mirror_remote_span.tunnel_rewrite_index = g_hal_state_pd->tnnl_rwr_tbl_encap_vlan_idx();
+        action_data.action_id = MIRROR_REMOTE_SPAN_ID;
+        action_data.action_u.mirror_remote_span.truncate_len = args->session->truncate_len;
+        action_data.action_u.mirror_remote_span.dst_lport = dst_lport;
+        action_data.action_u.mirror_remote_span.vlan = args->session->mirror_destination_u.r_span_dest.vlan;
+        action_data.action_u.mirror_remote_span.tunnel_rewrite_index = g_hal_state_pd->tnnl_rwr_tbl_encap_vlan_idx();
         break;
     }
     case MIRROR_DEST_ERSPAN: {
-        action_data.actionid = MIRROR_ERSPAN_MIRROR_ID;
-        action_data.mirror_action_u.mirror_erspan_mirror.truncate_len = args->session->truncate_len;
-        action_data.mirror_action_u.mirror_erspan_mirror.dst_lport = dst_lport;
+        action_data.action_id = MIRROR_ERSPAN_MIRROR_ID;
+        action_data.action_u.mirror_erspan_mirror.truncate_len = args->session->truncate_len;
+        action_data.action_u.mirror_erspan_mirror.dst_lport = dst_lport;
         tif_args.hal_if = args->session->mirror_destination_u.er_span_dest.tunnel_if;
         pd_func_args1.pd_tunnelif_get_rw_idx = &tif_args;
         hal::pd::pd_tunnelif_get_rw_idx(&pd_func_args1);
-        action_data.mirror_action_u.mirror_erspan_mirror.tunnel_rewrite_index =
+        action_data.action_u.mirror_erspan_mirror.tunnel_rewrite_index =
             tif_args.tnnl_rw_idx;
         break;
     }
@@ -118,15 +118,15 @@ pd_mirror_session_create(pd_func_args_t *pd_func_args)
 hal_ret_t
 pd_mirror_session_delete(pd_func_args_t *pd_func_args)
 {
-    mirror_actiondata action_data;
+    mirror_actiondata_t action_data;
     pd_mirror_session_delete_args_t *args = pd_func_args->pd_mirror_session_delete;
     if ((args == NULL) || (args->session == NULL)) {
         HAL_TRACE_ERR("NULL argument");
         return HAL_RET_INVALID_ARG;
     }
-    memset(&action_data, 0, sizeof(mirror_actiondata));
+    memset(&action_data, 0, sizeof(mirror_actiondata_t));
     HAL_ASSERT((args->session->id >= 0) && (args->session->id <= 7));
-    action_data.actionid = MIRROR_DROP_MIRROR_ID;
+    action_data.action_id = MIRROR_DROP_MIRROR_ID;
 
     return pd_mirror_update_hw(args->session->id, &action_data);
 }
@@ -134,30 +134,30 @@ pd_mirror_session_delete(pd_func_args_t *pd_func_args)
 hal_ret_t
 pd_mirror_session_get(pd_func_args_t *pd_func_args)
 {
-    mirror_actiondata action_data;
+    mirror_actiondata_t action_data;
     pd_mirror_session_get_args_t *args = pd_func_args->pd_mirror_session_get;
     if ((args == NULL) || (args->session == NULL)) {
         HAL_TRACE_ERR("NULL argument");
         return HAL_RET_INVALID_ARG;
     }
-    memset(&action_data, 0, sizeof(mirror_actiondata));
+    memset(&action_data, 0, sizeof(mirror_actiondata_t));
     HAL_ASSERT((args->session->id >= 0) && (args->session->id <= 7));
 
     p4pd_error_t pdret;
     pdret = p4pd_entry_read(P4TBL_ID_MIRROR, args->session->id, NULL, NULL, (void *)&action_data);
     if (pdret == P4PD_SUCCESS) {
-        switch (action_data.actionid) {
+        switch (action_data.action_id) {
         case MIRROR_LOCAL_SPAN_ID:
             args->session->type = MIRROR_DEST_LOCAL;
-            args->session->truncate_len = action_data.mirror_action_u.mirror_local_span.truncate_len;
+            args->session->truncate_len = action_data.action_u.mirror_local_span.truncate_len;
             // args-> dst_if // TBD
         case MIRROR_REMOTE_SPAN_ID:
             args->session->type = MIRROR_DEST_RSPAN;
-            args->session->truncate_len = action_data.mirror_action_u.mirror_remote_span.truncate_len;
-            args->session->mirror_destination_u.r_span_dest.vlan = action_data.mirror_action_u.mirror_remote_span.vlan;
+            args->session->truncate_len = action_data.action_u.mirror_remote_span.truncate_len;
+            args->session->mirror_destination_u.r_span_dest.vlan = action_data.action_u.mirror_remote_span.vlan;
         case MIRROR_ERSPAN_MIRROR_ID:
             args->session->type = MIRROR_DEST_ERSPAN;
-            args->session->truncate_len = action_data.mirror_action_u.mirror_erspan_mirror.truncate_len;
+            args->session->truncate_len = action_data.action_u.mirror_erspan_mirror.truncate_len;
             // Get tunnel if ID - TBD
             //args->session->mirror_destination_u.r_span_dest.tunnel_if_id =
         case MIRROR_NOP_ID:
@@ -425,7 +425,7 @@ pd_collector_get(pd_func_args_t *pd_func_args)
 }
 
 static hal_ret_t
-program_drop_stats_actiondata_table (drop_stats_actiondata *data,
+program_drop_stats_actiondata_table (drop_stats_actiondata_t *data,
                                      uint8_t sessid_bitmap, bool reason, int code)
 {
     hal_ret_t   ret = HAL_RET_OK;
@@ -435,9 +435,9 @@ program_drop_stats_actiondata_table (drop_stats_actiondata *data,
     tcam = g_hal_state_pd->tcam_table(P4TBL_ID_DROP_STATS);
     HAL_ASSERT(tcam != NULL);
 
-    data->drop_stats_action_u.drop_stats_drop_stats.mirror_en = reason;
-    data->drop_stats_action_u.drop_stats_drop_stats.mirror_session_id = sessid_bitmap;
-    data->actionid = DROP_STATS_DROP_STATS_ID;
+    data->action_u.drop_stats_drop_stats.mirror_en = reason;
+    data->action_u.drop_stats_drop_stats.mirror_session_id = sessid_bitmap;
+    data->action_id = DROP_STATS_DROP_STATS_ID;
     sdk_ret = tcam->update(code, data);
     if (sdk_ret != sdk::SDK_RET_OK) {
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -462,7 +462,7 @@ pd_drop_monitor_rule_create(pd_func_args_t *pd_func_args)
     hal_ret_t               ret = HAL_RET_OK;
     pd_drop_monitor_rule_create_args_t *args = pd_func_args->pd_drop_monitor_rule_create;
     uint8_t                 sessid_bitmap = 0;
-    drop_stats_actiondata   data = { 0 };
+    drop_stats_actiondata_t   data = { 0 };
 
     for (int i = 0; i < MAX_MIRROR_SESSION_DEST; i++) {
         sessid_bitmap |= args->rule->mirror_destinations[i] ? (1 << i) : 0;

@@ -35,7 +35,7 @@ public:
                         uint32_t mtrack_id = HAL_MEM_ALLOC_FLOW_SPINE_ENTRY);
 
     void form_action_data(void *action_data);
-    // void form_oflow_action_data(flow_hash_overflow_actiondata *action_data);
+    // void form_oflow_action_data(flow_hash_overflow_actiondata_t *action_data);
     hal_ret_t program_table();
     hal_ret_t deprogram_table();
     uint32_t get_num_hgs();

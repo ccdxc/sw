@@ -49,15 +49,15 @@
  * Comp status descriptor0 action
  */
 #define STORAGE_SEQ_CS_DESC0_DEFINE(cs_desc0)                                   \
-    s1_tbl_actiondata       cs_desc0
+    s1_tbl_actiondata_t       cs_desc0
     
 #define STORAGE_SEQ_CS_DESC0_SCALAR_SET(cs_desc0, f, src)                       \
     STORAGE_SEQ_ACTION_SCALAR_SET(cs_desc0,                                     \
-            s1_tbl_action_u.s1_tbl_seq_comp_status_desc0_handler, f, src)
+            action_u.s1_tbl_seq_comp_status_desc0_handler, f, src)
             
 #define STORAGE_SEQ_CS_DESC0_ARRAY_SET(cs_desc0, f, src)                        \
     STORAGE_SEQ_ACTION_ARRAY_SET(cs_desc0,                                      \
-            s1_tbl_action_u.s1_tbl_seq_comp_status_desc0_handler, f, src)
+            action_u.s1_tbl_seq_comp_status_desc0_handler, f, src)
             
 #define STORAGE_SEQ_CS_DESC0_PACK(dst_p, cs_desc0)                              \
     STORAGE_SEQ_ACTION_PACK(dst_p, cs_desc0, P4_STORAGE_SEQ_TBL_ID_S1_TBL,      \
@@ -67,15 +67,15 @@
  * Comp status descriptor1 action
  */
 #define STORAGE_SEQ_CS_DESC1_DEFINE(cs_desc1)                                   \
-    s1_tbl1_actiondata       cs_desc1
+    s1_tbl1_actiondata_t       cs_desc1
     
 #define STORAGE_SEQ_CS_DESC1_SCALAR_SET(cs_desc1, f, src)                       \
     STORAGE_SEQ_ACTION_SCALAR_SET(cs_desc1,                                     \
-            s1_tbl1_action_u.s1_tbl1_seq_comp_status_desc1_handler, f, src)
+            action_u.s1_tbl1_seq_comp_status_desc1_handler, f, src)
             
 #define STORAGE_SEQ_CS_DESC1_ARRAY_SET(cs_desc1, f, src)                        \
     STORAGE_SEQ_ACTION_ARRAY_SET(cs_desc1,                                      \
-            s1_tbl1_action_u.s1_tbl1_seq_comp_status_desc1_handler, f, src)
+            action_u.s1_tbl1_seq_comp_status_desc1_handler, f, src)
             
 #define STORAGE_SEQ_CS_DESC1_PACK(dst_p, cs_desc1)                              \
     STORAGE_SEQ_ACTION_PACK(dst_p, cs_desc1, P4_STORAGE_SEQ_TBL_ID_S1_TBL1,     \
@@ -86,15 +86,15 @@
  * XTS status descriptor0 action
  */
 #define STORAGE_SEQ_XS_DESC0_DEFINE(xs_desc0)                                   \
-    s1_tbl_actiondata       xs_desc0
+    s1_tbl_actiondata_t       xs_desc0
     
 #define STORAGE_SEQ_XS_DESC0_SCALAR_SET(xs_desc0, f, src)                       \
     STORAGE_SEQ_ACTION_SCALAR_SET(xs_desc0,                                     \
-            s1_tbl_action_u.s1_tbl_seq_xts_status_desc0_handler, f, src)
+            action_u.s1_tbl_seq_xts_status_desc0_handler, f, src)
             
 #define STORAGE_SEQ_XS_DESC0_ARRAY_SET(xs_desc0, f, src)                        \
     STORAGE_SEQ_ACTION_ARRAY_SET(xs_desc0,                                      \
-            s1_tbl_action_u.s1_tbl_seq_xts_status_desc0_handler, f, src)
+            action_u.s1_tbl_seq_xts_status_desc0_handler, f, src)
             
 #define STORAGE_SEQ_XS_DESC0_PACK(dst_p, xs_desc0)                              \
     STORAGE_SEQ_ACTION_PACK(dst_p, xs_desc0, P4_STORAGE_SEQ_TBL_ID_S1_TBL,      \
@@ -104,15 +104,15 @@
  * XTS status descriptor1 action
  */
 #define STORAGE_SEQ_XS_DESC1_DEFINE(xs_desc1)                                   \
-    s1_tbl1_actiondata       xs_desc1
+    s1_tbl1_actiondata_t       xs_desc1
     
 #define STORAGE_SEQ_XS_DESC1_SCALAR_SET(xs_desc1, f, src)                       \
     STORAGE_SEQ_ACTION_SCALAR_SET(xs_desc1,                                     \
-            s1_tbl1_action_u.s1_tbl1_seq_xts_status_desc1_handler, f, src)
+            action_u.s1_tbl1_seq_xts_status_desc1_handler, f, src)
             
 #define STORAGE_SEQ_XS_DESC1_ARRAY_SET(xs_desc1, f, src)                        \
     STORAGE_SEQ_ACTION_ARRAY_SET(xs_desc1,                                      \
-            s1_tbl1_action_u.s1_tbl1_seq_xts_status_desc1_handler, f, src)
+            action_u.s1_tbl1_seq_xts_status_desc1_handler, f, src)
             
 #define STORAGE_SEQ_XS_DESC1_PACK(dst_p, xs_desc1)                              \
     STORAGE_SEQ_ACTION_PACK(dst_p, xs_desc1, P4_STORAGE_SEQ_TBL_ID_S1_TBL1,     \

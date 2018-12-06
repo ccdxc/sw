@@ -67,15 +67,15 @@ public:
     int p4pd_common_p4plus_rxdma_rss_params_table_entry_add(
             uint32_t hw_lif_id, uint8_t rss_type, uint8_t *rss_key);
     int p4pd_common_p4plus_rxdma_rdma_params_table_entry_get(
-            uint32_t hw_lif_id, eth_rx_rss_params_actiondata *data);
+            uint32_t hw_lif_id, eth_rx_rss_params_actiondata_t *data);
 
     int p4pd_common_p4plus_rxdma_rss_indir_table_entry_add(
             uint32_t hw_lif_id, uint8_t index, uint8_t enable, uint8_t qid);
     int p4pd_common_p4plus_rxdma_rss_indir_table_entry_get(
-            uint32_t hw_lif_id, uint8_t index, eth_rx_rss_indir_actiondata *data);
+            uint32_t hw_lif_id, uint8_t index, eth_rx_rss_indir_actiondata_t *data);
 
     int p4pd_common_p4plus_rxdma_rss_params_table_entry_get(
-            uint32_t hw_lif_id, eth_rx_rss_params_actiondata *data);
+            uint32_t hw_lif_id, eth_rx_rss_params_actiondata_t *data);
 
     int eth_program_rss(uint32_t hw_lif_id, uint16_t rss_type,
                         uint8_t *rss_key, uint8_t *rss_indir,
@@ -140,9 +140,9 @@ private:
     std::map<uint64_t, uint64_t> rdma_bar_allocation_sizes_;
 
     int p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_get(
-        uint32_t idx, rx_stage0_load_rdma_params_actiondata *data);
+        uint32_t idx, rx_stage0_load_rdma_params_actiondata_t *data);
     int p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_get(
-        uint32_t idx, tx_stage0_lif_params_table_actiondata *data);
+        uint32_t idx, tx_stage0_lif_params_table_actiondata_t *data);
 
 };
 
