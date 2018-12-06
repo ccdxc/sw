@@ -57,6 +57,34 @@ func TestLoggerToFile(t *testing.T) {
 	}
 }
 
+func TestJsonLogger(t *testing.T) {
+	t.Parallel()
+	buf := &bytes.Buffer{}
+
+	config := GetDefaultConfig("TestLogger")
+	config.Filter = AllowAllFilter
+	config.Format = JSONFmt
+	l := GetNewLogger(config).SetOutput(buf)
+
+	// Print
+	l.Printf("%s", "testmsg")
+	if !strings.Contains(buf.String(), `"msg":"testmsg"`) || !strings.Contains(buf.String(), `"level":"debug"`) {
+		t.Errorf("Expecting [%s] got:[%s]", `"msg":"testmsg" and "level":"debug"`, buf.String())
+	}
+
+	buf.Reset()
+	l.Print("testmsg1")
+	if !strings.Contains(buf.String(), `"msg":"testmsg1"`) || !strings.Contains(buf.String(), `"level":"debug"`) {
+		t.Errorf("Expecting [%s] got:[%s]", `"msg":"testmsg1" and "level":"debug"`, buf.String())
+	}
+
+	buf.Reset()
+	l.Print("test\nmsg1")
+	if !strings.Contains(buf.String(), `"msg":"test\nmsg1"`) || !strings.Contains(buf.String(), `"level":"debug"`) {
+		t.Errorf("Expecting [%s] got:[%s]", `"msg":"test\nmsg1" and "level":"debug"`, buf.String())
+	}
+}
+
 func TestLevels(t *testing.T) {
 	t.Parallel()
 	buf := &bytes.Buffer{}
@@ -75,6 +103,12 @@ func TestLevels(t *testing.T) {
 	l.Print("testmsg1")
 	if !strings.Contains(buf.String(), "msg=testmsg1") || !strings.Contains(buf.String(), "level=debug") {
 		t.Errorf("Expecting [%s] got:[%s]", "[msg=testmsg] and [level=debug]", buf.String())
+	}
+
+	buf.Reset()
+	l.Print("test\nmsg1")
+	if !strings.Contains(buf.String(), "msg=\"test\\nmsg1\"") || !strings.Contains(buf.String(), "level=debug") {
+		t.Errorf("Expecting [%s] got:[%s]", "[msg=test\\nmsg] and [level=debug]", buf.String())
 	}
 
 	buf.Reset()

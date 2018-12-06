@@ -11,6 +11,8 @@ import (
 
 	kitlog "github.com/go-kit/kit/log"
 	kitlevel "github.com/go-kit/kit/log/level"
+
+	"github.com/pensando/sw/venice/utils/log/jsonlogger"
 )
 
 // GetNewLogger returns a new Logger object
@@ -35,7 +37,16 @@ func (l *kitLogger) WithContext(pairs ...string) Logger {
 // SetOutput configures the io.Writer
 func (l *kitLogger) SetOutput(w io.Writer) Logger {
 	wr := kitlog.NewSyncWriter(w)
-	l.logger = kitlog.NewLogfmtLogger(wr)
+
+	switch l.config.Format {
+	case LogFmt:
+		l.logger = kitlog.NewLogfmtLogger(wr)
+	case JSONFmt:
+		l.logger = jsonlogger.NewJSONLogger(wr)
+	default:
+		// By default, choose log-fmt
+		l.logger = kitlog.NewLogfmtLogger(wr)
+	}
 
 	if l.config.Debug {
 		l.logger = kitlog.With(l.logger, "ts", kitlog.DefaultTimestampUTC, "caller", stackTrace())

@@ -30,7 +30,15 @@ func (om orderedMap) MarshalJSON() ([]byte, error) {
 		if om[k] == "" {
 			continue
 		}
-		fmt.Fprintf(buf, " \"%s\": \"%v\"", k, om[k])
+		ks, err := json.Marshal(k)
+		if err != nil {
+			continue
+		}
+		vs, err := json.Marshal(om[k])
+		if err != nil {
+			continue
+		}
+		fmt.Fprintf(buf, " %s: %s", string(ks), string(vs))
 		delete(om, k)
 		if len(om) > 0 {
 			buf.WriteByte(',')
@@ -41,7 +49,15 @@ func (om orderedMap) MarshalJSON() ([]byte, error) {
 	len := len(om)
 	index := 0
 	for k, v := range om {
-		fmt.Fprintf(buf, " \"%s\": \"%v\"", k, v)
+		ks, err := json.Marshal(k)
+		if err != nil {
+			continue
+		}
+		vs, err := json.Marshal(v)
+		if err != nil {
+			continue
+		}
+		fmt.Fprintf(buf, " %s: %s", string(ks), string(vs))
 		index++
 		if index < len {
 			buf.WriteByte(',')

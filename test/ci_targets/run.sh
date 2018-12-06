@@ -6,11 +6,13 @@ make $1
 if [ $? -ne 0 ]; then
   mkdir -p /tmp/ClusterLogs
   for node in $(docker ps -f label=pens-dind --format '{{.Names}}'); do
+    mkdir -p /tmp/ClusterLogs/$node
     docker cp  $node:/var/log/pensando /tmp/ClusterLogs/$node/logs
     docker cp  $node:/var/lib/pensando/events /tmp/ClusterLogs/$node/events
     docker exec  $node journalctl -x --no-pager > /tmp/ClusterLogs/$node/logs/journalctl
   done
   for node in $(docker ps -f label=pens-naples --format '{{.Names}}'); do
+    mkdir -p /tmp/ClusterLogs/$node
     docker cp  $node:/var/log/pensando /tmp/ClusterLogs/$node/logs
     docker cp  $node:/var/lib/pensando/events /tmp/ClusterLogs/$node/events
   done
