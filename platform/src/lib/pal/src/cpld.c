@@ -73,7 +73,7 @@ cpld_reg_rd(int reg) {
         return CPLD_FAIL;
     }
 
-    cpld_rd_data = cpld_read(0x02);
+    cpld_rd_data = cpld_read(reg);
 
     if (!pal_rd_unlock(CPLDLOCK)) {
         printf("Failed to unlock.\n");
