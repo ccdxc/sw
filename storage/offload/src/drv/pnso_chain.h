@@ -154,7 +154,8 @@ struct service_ops {
 };
 
 struct sequencer_info {
-	uint32_t sqi_ring_id;	/* CPDC hot/cold, XTS, etc.  */
+	struct queue *sqi_seq_q;
+	struct sonic_accel_ring *sqi_ring;	/* CPDC hot/cold, XTS, etc.  */
 	uint16_t sqi_qtype;
 	uint16_t sqi_status_qtype;
 	uint16_t sqi_index;
@@ -162,6 +163,10 @@ struct sequencer_info {
 	uint16_t sqi_batch_size;
 	void *sqi_desc;      /* sequencer descriptor */
 	uint8_t *sqi_status_desc;
+	uint32_t sqi_hw_dflt_takes;
+	uint32_t sqi_hw_total_takes;
+	uint32_t sqi_seq_total_takes;
+	uint32_t sqi_status_total_takes;
 };
 
 struct service_batch_info {
@@ -309,6 +314,10 @@ pnso_error_t chn_poller(void *poll_ctx);
 
 void chn_pprint_chain(const struct service_chain *chain);
 
+pnso_error_t chn_service_hw_ring_take(struct service_info *svc_info);
+
+pnso_error_t chn_service_hw_ring_give(struct service_info *svc_info);
+
 static inline bool
 chn_service_is_in_chain(const struct service_info *svc_info)
 {
@@ -328,6 +337,13 @@ chn_service_is_last(const struct service_info *svc_info)
 }
 
 static inline bool
+chn_service_is_starter(const struct service_info *svc_info)
+{
+	return !!(svc_info->si_flags & (CHAIN_SFLAG_LONE_SERVICE |
+				        CHAIN_SFLAG_FIRST_SERVICE));
+}
+
+static inline bool
 chn_service_has_sub_chain(const struct service_info *svc_info)
 {
 	return chn_service_is_in_chain(svc_info) &&
@@ -338,6 +354,13 @@ static inline bool
 chn_service_has_interm_blist(const struct service_info *svc_info)
 {
 	return !!svc_info->si_iblist.blist.count;
+}
+
+static inline void
+chn_service_hw_ring_take_set(struct service_info *svc_info,
+			     uint32_t count)
+{
+	svc_info->si_seq_info.sqi_hw_dflt_takes = count;
 }
 
 #ifdef __cplusplus

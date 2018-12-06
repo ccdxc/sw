@@ -13,6 +13,17 @@
 #include "osal_logger.h"
 #include "osal_assert.h"
 
+const char *accel_ring_name_tbl[] = {
+	[ACCEL_RING_CP]		= "cp",
+	[ACCEL_RING_CP_HOT]	= "cp_hot",
+	[ACCEL_RING_DC]		= "dc",
+	[ACCEL_RING_DC_HOT]	= "dc_hot",
+	[ACCEL_RING_XTS0]	= "xts0",
+	[ACCEL_RING_XTS1]	= "xts1",
+	[ACCEL_RING_GCM0]	= "gcm0",
+	[ACCEL_RING_GCM1]	= "gcm1",
+};
+
 static identity_t *sonic_get_identity(void);
 
 static uint32_t
@@ -277,17 +288,17 @@ dbg_check_ring_id(uint32_t accel_ring_id)
 	return (accel_ring_id >= ACCEL_RING_ID_MAX) ? -EINVAL : PNSO_OK;
 }
 
-accel_ring_t *sonic_get_accel_ring(uint32_t accel_ring_id)
+struct sonic_accel_ring *sonic_get_accel_ring(uint32_t accel_ring_id)
 {
 	int err;
-	identity_t *ident;
+	struct sonic_dev *idev;
 
 	err = DBG_CHK_RING_ID(accel_ring_id);
 	if (err)
 		return NULL;
 
-	ident = sonic_get_identity();
-	if (!ident)
+	idev = sonic_get_idev();
+	if (!idev)
 		return NULL;
 
 	return &idev->ring_tbl[accel_ring_id];
