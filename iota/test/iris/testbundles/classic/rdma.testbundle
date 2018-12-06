@@ -206,3 +206,13 @@ testcases:
     #    testcase: testcases.rdma.rc_atomic_bw
     #    args    :
     #        type: remote_only
+
+
+    #=======================================
+    # Teardown
+    #=======================================
+    -   name    : Rmmod_Rdma
+        testcase: testcases.rdma.rmmod_rdma
+        args    :
+            type: remote_only
+
