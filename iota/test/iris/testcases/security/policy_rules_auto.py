@@ -15,7 +15,6 @@ def Setup(tc):
     return api.types.status.SUCCESS
 
 def Trigger(tc):
-    api.Logger.info("BARUN TRIGGER PROTO = {} PAIRS {}".format(tc.iterators.proto, tc.workload_pairs))
     policies = utils.GetTargetJsons(tc.iterators.proto)
     sg_json_obj = None
 
