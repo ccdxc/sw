@@ -243,7 +243,7 @@ static inline void ionic_struct_size_checks(void)
 	BUILD_BUG_ON(sizeof(rx_filter_del_comp) != 16);
 	BUILD_BUG_ON(sizeof(struct stats_dump_cmd) != 64);
 	BUILD_BUG_ON(sizeof(struct stats_dump_comp) != 16);
-	BUILD_BUG_ON(sizeof(union stats_dump) != 4096);
+	BUILD_BUG_ON(sizeof(struct stats_dump) != 4096);
 	BUILD_BUG_ON(sizeof(struct rss_hash_set_cmd) != 64);
 	BUILD_BUG_ON(sizeof(rss_hash_set_comp) != 16);
 	BUILD_BUG_ON(sizeof(struct rss_indir_set_cmd) != 64);

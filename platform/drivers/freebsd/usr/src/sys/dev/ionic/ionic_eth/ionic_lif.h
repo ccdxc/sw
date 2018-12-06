@@ -236,7 +236,7 @@ struct lif {
 
 	u32 hw_features;			/* Features enabled in hardware, e.g. checksum, TSO etc. */
 
-	union stats_dump *stats_dump;
+	struct stats_dump *stats_dump;
 	dma_addr_t stats_dump_pa;
 
 	u8 rss_hash_key[RSS_HASH_KEY_SIZE];
