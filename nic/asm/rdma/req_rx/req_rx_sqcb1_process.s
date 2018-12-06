@@ -218,7 +218,7 @@ check_duplicate_read_resp_mid:
     ARE_ALL_FLAGS_SET(c2, r1, REQ_RX_FLAG_ACK) // Branch Delay Slot
 
     // skip ack sanity checks if there is no aeth hdr
-    bcf            [!c6], post_rexmit_psn
+    bcf            [!c6], post_rexmit_psn_to_ack_timestamp
  
 check_msn:
     // if (msn >= sqcb1_p->ssn) invalid_pkt_msn
@@ -242,11 +242,12 @@ check_duplicate_resp:
 process_aeth:
     sne.c6         c6, CAPRI_APP_DATA_AETH_SYNDROME[4:0], 0x1F // Branch Delay Slot
     // Skip LSN update if not ACK syndrome or ACK syndrome but invalid credits
-    bcf            [!c6], post_rexmit_psn
+    bcf            [!c6], post_rexmit_psn_to_ack_timestamp
 
     DECODE_ACK_SYNDROME_CREDITS(r2, CAPRI_APP_DATA_AETH_SYNDROME, c1)
     mincr          r2, 24, CAPRI_APP_DATA_AETH_MSN
-post_msn_credits:
+
+post_lsn_to_ack_timestamp:
     // get DMA cmd entry based on dma_cmd_index
     DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_LSN_OR_REXMIT_PSN)
     // dma_cmd - msn and credits
@@ -254,39 +255,23 @@ post_msn_credits:
     DMA_HBM_PHV2MEM_SETUP(r6, lsn, lsn, r4)
     phvwr          p.lsn, r2
 
-    
-    // dma_cmd - fc_ring db data
-    // TODO No need to enable scheduler on receiving every response. This would be
-    // a problem for dol run as upon depletion of credits TxDMA disables
-    // SQ scheduler bit. It has be enabled back on receiving response. Currently
-    // there is no test case for depleted credits case. Need to address this when
-    // the test case is added
-    //DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_SQ_DB)
-    //PREPARE_DOORBELL_NO_UPDATE_ENABLE_SCHEDULER(CAPRI_RXDMA_INTRINSIC_LIF,
-    //                                            CAPRI_RXDMA_INTRINSIC_QTYPE,
-    //                                            CAPRI_RXDMA_INTRINSIC_QID,
-    //                                            SQ_RING_ID, r3, r2)
-    //phvwr          p.db_data1, r2.dx
-    //DMA_HBM_PHV2MEM_SETUP(r6, db_data1, db_data1, r3)
-    //DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, r6)
-
-post_rexmit_psn:
-    phvwr          p.err_retry_ctr, d.err_retry_count
-    phvwr          p.rnr_retry_ctr, d.rnr_retry_count
-    bcf            [c3], set_arg
-    // if its unsolicted ack, just post credits, msn and exit, CQ posting not needed
+    // if its unsolicited ack with valid credits, just post credits and exit
+    // As CQ posting is not needed, set cmdeop in credits DMA cmd
     DMA_SET_END_OF_CMDS_C(DMA_CMD_PHV2MEM_T, r6, c3)
 
-    bcf            [c6], set_arg
-    DMA_HBM_PHV2MEM_PHV_END_SETUP_C(r6, ack_timestamp, c6) // Branch Delay Slot
+    b              set_arg
+    // If its valid ack with credits, post credits, ack_timestamp
+    DMA_HBM_PHV2MEM_PHV_END_SETUP_C(r6, ack_timestamp, !c3) // Branch Delay Slot
 
+post_rexmit_psn_to_ack_timestamp:
     DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_LSN_OR_REXMIT_PSN)
     add            r4, r7, SQCB2_REXMIT_PSN_OFFSET
-    // if valid ack, update rexmit_psn as well as ack timestamp, err_retry_ctr
-    // and rnr_retry_ctr in sqcb2
+    // if its rnr/nak/read_resp mid, update rexmit_psn and ack_timestamp
     DMA_HBM_PHV2MEM_SETUP(r6, rexmit_psn, ack_timestamp, r4)
 
 set_arg:
+    phvwr          p.err_retry_ctr, d.err_retry_count
+    phvwr          p.rnr_retry_ctr, d.rnr_retry_count
 
     phvwrpair      CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, cur_sge_offset), d.rrqwqe_cur_sge_offset, \
                    CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, tx_psn), d.tx_psn
@@ -307,7 +292,7 @@ set_rrqwqe_pc:
     IS_ANY_FLAG_SET(c2, r1, REQ_RX_FLAG_ONLY| REQ_RX_FLAG_LAST| REQ_RX_FLAG_ATOMIC_AETH)
     tblmincri.c2   d.rrq_spec_cindex, d.log_rrq_size, 1
 
-    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_rrqwqe_process, r5)
+    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, req_rx_rrqwqe_process, r5)
 
 recirc_work_done:
     // Load dummy-write-back in stage1 which eventually loads sqcb1-write-back.
