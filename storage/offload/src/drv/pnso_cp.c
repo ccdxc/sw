@@ -161,7 +161,8 @@ compress_chain(struct chain_entry *centry)
 	cp_desc = (struct cpdc_desc *) svc_info->si_desc;
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 
-	if (!chn_service_has_sub_chain(svc_info)) {
+	if ((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
+		(svc_info->si_flags & CHAIN_SFLAG_LAST_SERVICE)) {
 		if (is_dflag_zero_pad_enabled(svc_info->si_desc_flags)) {
 			err = seq_setup_cp_pad_chain_params(svc_info, cp_desc,
 					status_desc);
@@ -288,11 +289,21 @@ compress_poll(const struct service_info *svc_info)
 	 * and if cp/pad is not requested
 	 *
 	 */
-	if (!(chn_service_has_sub_chain(svc_info) &&
-			(is_dflag_zero_pad_enabled(svc_info->si_desc_flags))))
-		goto out;
+	if (((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
+		(svc_info->si_flags & CHAIN_SFLAG_LAST_SERVICE)) &&
+		!is_dflag_zero_pad_enabled(svc_info->si_desc_flags))
+			goto out;
+
+	OSAL_LOG_DEBUG("cp/pad lone or last service in chain");
 
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
+	if ((svc_info->si_flags & CHAIN_SFLAG_MODE_POLL) ||
+		(svc_info->si_flags & CHAIN_SFLAG_MODE_ASYNC)) {
+		err = (status_desc->csd_integrity_data ==
+				CPDC_PAD_STATUS_DATA) ? PNSO_OK : EBUSY;
+		OSAL_LOG_DEBUG("cp/pad async/poll mode.  err: %d", err);
+		goto out;
+	}
 
 	start_ts = osal_get_clock_nsec();
 	while (1) {
@@ -310,6 +321,8 @@ compress_poll(const struct service_info *svc_info)
 					(uint64_t) status_desc, err);
 			break;
 		}
+
+		osal_yield();
 	}
 
 out:
@@ -461,12 +474,6 @@ compress_teardown(struct service_info *svc_info)
 
 	OSAL_ASSERT(svc_info);
 	CPDC_PPRINT_DESC(svc_info->si_desc);
-
-	if ((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) &&
-		(is_dflag_zero_pad_enabled(svc_info->si_desc_flags))) {
-		cp_desc = (struct cpdc_desc *) svc_info->si_desc;
-		// CPDC_PPRINT_DESC(cp_desc);
-	}
 
 	pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_dst_sgl);
 	pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_src_sgl);
