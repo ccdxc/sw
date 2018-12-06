@@ -14,3 +14,6 @@ testcases:
 
     -   name    : PolicyLocalToRemote
         testcase: testcases.security.policy_rules_auto
+        iterators :
+            type    : simple
+            proto : ["udp","tcp","icmp"]
