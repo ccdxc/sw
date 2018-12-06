@@ -218,13 +218,25 @@ report_cqfull_error:
     tblwr.f     d.cq_full, 1
 
 report_async:
+    // Note that async eqcb_process is fired in table 0. 
+    // When cq is full, along with async eqcb_process, we also would like to call
+    // recirc_mpu_only_process in table 2. Hence table 2 valid bit shouldn't be cleared in that
+    // special case. Also recirc_mpu_only_process tries to set table0 valid to 1 so that upon
+    // recirc rqcb1 gets loaded. This table0 valid shouldn't get cleared by async eqcb_process.
+    // that is passed as a field "donot_reset_tbl_vld". This field shouldn't get reset 
+    // accidentally by RESET_TABLE_0_ARG. Hence created a second label report_async2 for this 
+    // purpose. It is pretty convluted, but having this logic so that in future if we have to
+    // fire both regular eqcb_process as well as async eqcb_process, we should have both table 0
+    // and table 1 path be going. Please be careful touching this area.
+
     //PHV->eq_info is filled with appropriate error type and code by this time
 
     CAPRI_RESET_TABLE_0_ARG()
-    phvwr          CAPRI_PHV_FIELD(CQ_ASYNC_EQ_INFO_P, async_eq), 1
-    
-    RESP_RX_EQCB_ADDR_GET(r5, r2, RDMA_EQ_ID_ASYNC)
     CAPRI_SET_TABLE_2_VALID_C(!c6, 0)
+
+report_async2:
+    phvwr          CAPRI_PHV_FIELD(CQ_ASYNC_EQ_INFO_P, async_eq), 1
+    RESP_RX_EQCB_ADDR_GET(r5, r2, RDMA_EQ_ID_ASYNC)
     CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_eqcb_process, r5)  //Exit Slot
 
 exit:
@@ -233,12 +245,17 @@ exit:
 
 error_disable_qp_using_recirc:
 
+    CAPRI_RESET_TABLE_0_ARG()
+
     //If QP->state is already in ERR, ignore recircing to Error Disable
     seq         c1, K_QP_STATE, QP_STATE_ERR
     bcf         [c1], skip_recirc_error_disable
+    // if we are not going to recirc the phv, we should make sure table 2 valid bit gets to 0
+    // so that cqcb_process doesn't get called again in next stage
+    CAPRI_SET_TABLE_2_VALID_C(c1, 0)    //BD Slot
 
     //clear the completion flag in GLOBAL_FLAGS, so it won't invoke cqcb_process again on recirc
-    phvwr.!c1   CAPRI_PHV_FIELD(phv_global_common, _completion), 0 //BD Slot
+    phvwr       CAPRI_PHV_FIELD(phv_global_common, _completion), 0
     phvwr       p.common.p4_intr_recirc, 1
     phvwr       p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_ERROR_DISABLE_QP
 
@@ -246,6 +263,9 @@ error_disable_qp_using_recirc:
     CAPRI_SET_TABLE_3_VALID(0)
 
     // fire an mpu only program which will eventually set table 0 valid bit to 1 prior to recirc
+    // because of this, if at all we are going to fire async eqcb_process later in table 0, inform 
+    // that program not to reset table 0 valid bit to 0.
+    phvwr       CAPRI_PHV_FIELD(CQ_ASYNC_EQ_INFO_P, donot_reset_tbl_vld), 1
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_recirc_mpu_only_process, r0)
 
 skip_recirc_error_disable:
@@ -259,5 +279,5 @@ skip_recirc_error_disable:
     //fill the eqwqe
     phvwrpair   p.s1.eqwqe.code, EQE_CODE_QP_ERR, p.s1.eqwqe.type, EQE_TYPE_QP
     //post ASYCN EQ error on QP
-    b           report_async
+    b           report_async2
     phvwr       p.s1.eqwqe.qid, K_GLOBAL_QID

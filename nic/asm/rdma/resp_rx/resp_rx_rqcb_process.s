@@ -62,13 +62,14 @@ resp_rx_rqcb_process:
     bbeq    CAPRI_APP_DATA_RAW_FLAG_ERR_DIS_QP, 1, process_feedback
     add     r7, r0, CAPRI_APP_DATA_RAW_FLAGS  //BD Slot
 
-    // is this a fresh packet ?
-    seq     c1, CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT, 0
-    bcf     [!c1], recirc_pkt
-    cmov    TOKEN_ID, c1, d.token_id, CAPRI_APP_DATA_RECIRC_TOKEN_ID // BD Slot
-
     // are we in a state to process received packets ?
     slt     c1, d.state, QP_STATE_RTR
+    bcf     [c1], phv_drop
+
+    // is this a fresh packet ?
+    seq     c1, CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT, 0   //BD Slot
+    bcf     [!c1], recirc_pkt
+    cmov    TOKEN_ID, c1, d.token_id, CAPRI_APP_DATA_RECIRC_TOKEN_ID // BD Slot
 
     //fresh packet
     // populate global fields
@@ -80,7 +81,7 @@ resp_rx_rqcb_process:
     // see if received P_KEY is DEFAULT_PKEY
     seq     c3, CAPRI_APP_DATA_BTH_P_KEY, DEFAULT_PKEY
 
-    bcf     [c1 | !c2 | !c3], phv_drop
+    bcf     [!c2 | !c3], phv_drop
 
 skip_roce_opt_parsing:
 
