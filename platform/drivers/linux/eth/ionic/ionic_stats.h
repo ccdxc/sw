@@ -14,6 +14,9 @@
 #define IONIC_TX_STAT_DESC(stat_name) \
 	IONIC_STAT_DESC(struct tx_stats, stat_name)
 
+#define IONIC_RX_STAT_DESC(stat_name) \
+	IONIC_STAT_DESC(struct rx_stats, stat_name)
+
 #define IONIC_TX_Q_STAT_DESC(stat_name) \
 	IONIC_STAT_DESC(struct queue, stat_name)
 

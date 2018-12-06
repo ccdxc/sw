@@ -16,9 +16,16 @@ static const struct ionic_stat_desc ionic_lif_stats_desc[] = {
 };
 
 static const struct ionic_stat_desc ionic_tx_stats_desc[] = {
+	IONIC_TX_STAT_DESC(pkts),
+	IONIC_TX_STAT_DESC(bytes),
 	IONIC_TX_STAT_DESC(stop),
 	IONIC_TX_STAT_DESC(wake),
 	IONIC_TX_STAT_DESC(drop),
+};
+
+static const struct ionic_stat_desc ionic_rx_stats_desc[] = {
+	IONIC_RX_STAT_DESC(pkts),
+	IONIC_RX_STAT_DESC(bytes),
 };
 
 static const struct ionic_stat_desc ionic_txq_stats_desc[] = {
@@ -39,15 +46,12 @@ static const struct ionic_stat_desc ionic_dbg_napi_stats_desc[] = {
 
 #define IONIC_NUM_LIF_STATS ARRAY_SIZE(ionic_lif_stats_desc)
 #define IONIC_NUM_TX_STATS ARRAY_SIZE(ionic_tx_stats_desc)
+#define IONIC_NUM_RX_STATS ARRAY_SIZE(ionic_rx_stats_desc)
 #define IONIC_NUM_TX_Q_STATS ARRAY_SIZE(ionic_txq_stats_desc)
 #ifdef IONIC_DEBUG_STATS
 #define IONIC_NUM_DBG_CQ_STATS ARRAY_SIZE(ionic_dbg_cq_stats_desc)
 #define IONIC_NUM_DBG_INTR_STATS ARRAY_SIZE(ionic_dbg_intr_stats_desc)
 #define IONIC_NUM_DBG_NAPI_STATS ARRAY_SIZE(ionic_dbg_napi_stats_desc)
-#else
-#define IONIC_NUM_DBG_CQ_STATS		0
-#define IONIC_NUM_DBG_INTR_STATS	0
-#define IONIC_NUM_DBG_NAPI_STATS	0
 #endif
 
 static void ionic_get_lif_stats(struct lif *lif, struct lif_stats *stats)
@@ -80,14 +84,34 @@ static void ionic_get_lif_stats(struct lif *lif, struct lif_stats *stats)
 
 static u64 ionic_sw_stats_get_count(struct lif *lif)
 {
-	return IONIC_NUM_LIF_STATS +
-		   (lif->ntxqcqs * (IONIC_NUM_TX_STATS +
-		   IONIC_NUM_TX_Q_STATS + IONIC_NUM_DBG_CQ_STATS +
-		   IONIC_NUM_DBG_INTR_STATS + IONIC_NUM_DBG_NAPI_STATS +
-		   MAX_NUM_NAPI_CNTR + MAX_NUM_SG_CNTR)) +
-		   (lif->nrxqcqs * (IONIC_NUM_DBG_CQ_STATS +
-		   IONIC_NUM_DBG_INTR_STATS + IONIC_NUM_DBG_NAPI_STATS +
-		   MAX_NUM_NAPI_CNTR));
+	u64 total = 0;
+
+	/* lif stats */
+	total += IONIC_NUM_LIF_STATS;
+
+	/* tx stats */
+	total += lif->ntxqcqs * (IONIC_NUM_TX_STATS + IONIC_NUM_TX_Q_STATS);
+
+	/* rx stats */
+	total += lif->nrxqcqs * IONIC_NUM_RX_STATS;
+
+#ifdef IONIC_DEBUG_STATS
+	if (lif->flags & LIF_F_SW_DBG_STATS) {
+		/* tx debug stats */
+		total += lif->ntxqcqs * (IONIC_NUM_DBG_CQ_STATS +
+					 IONIC_NUM_DBG_INTR_STATS +
+					 IONIC_NUM_DBG_NAPI_STATS +
+					 MAX_NUM_NAPI_CNTR +
+					 MAX_NUM_SG_CNTR);
+
+		/* rx debug stats */
+		total += lif->nrxqcqs * (IONIC_NUM_DBG_CQ_STATS +
+					 IONIC_NUM_DBG_INTR_STATS +
+					 IONIC_NUM_DBG_NAPI_STATS +
+					 MAX_NUM_NAPI_CNTR);
+	}
+#endif
+	return total;
 }
 
 static void ionic_sw_stats_get_strings(struct lif *lif, u8 **buf)
@@ -111,67 +135,77 @@ static void ionic_sw_stats_get_strings(struct lif *lif, u8 **buf)
 				   ionic_txq_stats_desc[i].name);
 			*buf += ETH_GSTRING_LEN;
 		}
-		for (i = 0; i < IONIC_NUM_DBG_CQ_STATS; i++) {
-			snprintf(*buf, ETH_GSTRING_LEN, "txq_%d_cq_%s",
-				   q_num,
-				   ionic_dbg_cq_stats_desc[i].name);
-			*buf += ETH_GSTRING_LEN;
-		}
-		for (i = 0; i < IONIC_NUM_DBG_INTR_STATS; i++) {
-			snprintf(*buf, ETH_GSTRING_LEN, "txq_%d_intr_%s",
-				   q_num,
-				   ionic_dbg_intr_stats_desc[i].name);
-			*buf += ETH_GSTRING_LEN;
-		}
-		for (i = 0; i < IONIC_NUM_DBG_NAPI_STATS; i++) {
-			snprintf(*buf, ETH_GSTRING_LEN, "txq_%d_napi_%s",
-				   q_num,
-				   ionic_dbg_napi_stats_desc[i].name);
-			*buf += ETH_GSTRING_LEN;
-		}
 #ifdef IONIC_DEBUG_STATS
-		for (i = 0; i < MAX_NUM_NAPI_CNTR; i++) {
-			snprintf(*buf, ETH_GSTRING_LEN,
-				   "txq_%d_napi_work_done_%d",
-				   q_num,
-				   i);
-			*buf += ETH_GSTRING_LEN;
-		}
-		for (i = 0; i < MAX_NUM_SG_CNTR; i++) {
-			snprintf(*buf, ETH_GSTRING_LEN,
-				   "txq_%d_sg_cntr_%d",
-				   q_num,
-				   i);
-			*buf += ETH_GSTRING_LEN;
+		if (lif->flags & LIF_F_SW_DBG_STATS) {
+			for (i = 0; i < IONIC_NUM_DBG_CQ_STATS; i++) {
+				snprintf(*buf, ETH_GSTRING_LEN, "txq_%d_cq_%s",
+					   q_num,
+					   ionic_dbg_cq_stats_desc[i].name);
+				*buf += ETH_GSTRING_LEN;
+			}
+			for (i = 0; i < IONIC_NUM_DBG_INTR_STATS; i++) {
+				snprintf(*buf, ETH_GSTRING_LEN, "txq_%d_intr_%s",
+					   q_num,
+					   ionic_dbg_intr_stats_desc[i].name);
+				*buf += ETH_GSTRING_LEN;
+			}
+			for (i = 0; i < IONIC_NUM_DBG_NAPI_STATS; i++) {
+				snprintf(*buf, ETH_GSTRING_LEN, "txq_%d_napi_%s",
+					   q_num,
+					   ionic_dbg_napi_stats_desc[i].name);
+				*buf += ETH_GSTRING_LEN;
+			}
+			for (i = 0; i < MAX_NUM_NAPI_CNTR; i++) {
+				snprintf(*buf, ETH_GSTRING_LEN,
+					   "txq_%d_napi_work_done_%d",
+					   q_num,
+					   i);
+				*buf += ETH_GSTRING_LEN;
+			}
+			for (i = 0; i < MAX_NUM_SG_CNTR; i++) {
+				snprintf(*buf, ETH_GSTRING_LEN,
+					   "txq_%d_sg_cntr_%d",
+					   q_num,
+					   i);
+				*buf += ETH_GSTRING_LEN;
+			}
 		}
 #endif
 	}
 	for (q_num = 0; q_num < lif->nrxqcqs; q_num++) {
-		for (i = 0; i < IONIC_NUM_DBG_CQ_STATS; i++) {
-			snprintf(*buf, ETH_GSTRING_LEN, "rxq_%d_cq_%s",
+		for (i = 0; i < IONIC_NUM_RX_STATS; i++) {
+			snprintf(*buf, ETH_GSTRING_LEN, "rx_%d_%s",
 				   q_num,
-				   ionic_dbg_cq_stats_desc[i].name);
-			*buf += ETH_GSTRING_LEN;
-		}
-		for (i = 0; i < IONIC_NUM_DBG_INTR_STATS; i++) {
-			snprintf(*buf, ETH_GSTRING_LEN, "rxq_%d_intr_%s",
-				   q_num,
-				   ionic_dbg_intr_stats_desc[i].name);
-			*buf += ETH_GSTRING_LEN;
-		}
-		for (i = 0; i < IONIC_NUM_DBG_NAPI_STATS; i++) {
-			snprintf(*buf, ETH_GSTRING_LEN, "rxq_%d_napi_%s",
-				   q_num,
-				   ionic_dbg_napi_stats_desc[i].name);
+				   ionic_rx_stats_desc[i].name);
 			*buf += ETH_GSTRING_LEN;
 		}
 #ifdef IONIC_DEBUG_STATS
-		for (i = 0; i < MAX_NUM_NAPI_CNTR; i++) {
-			snprintf(*buf, ETH_GSTRING_LEN,
-				   "rxq_%d_napi_work_done_%d",
-				   q_num,
-				   i);
-			*buf += ETH_GSTRING_LEN;
+		if (lif->flags & LIF_F_SW_DBG_STATS) {
+			for (i = 0; i < IONIC_NUM_DBG_CQ_STATS; i++) {
+				snprintf(*buf, ETH_GSTRING_LEN, "rxq_%d_cq_%s",
+					   q_num,
+					   ionic_dbg_cq_stats_desc[i].name);
+				*buf += ETH_GSTRING_LEN;
+			}
+			for (i = 0; i < IONIC_NUM_DBG_INTR_STATS; i++) {
+				snprintf(*buf, ETH_GSTRING_LEN, "rxq_%d_intr_%s",
+					   q_num,
+					   ionic_dbg_intr_stats_desc[i].name);
+				*buf += ETH_GSTRING_LEN;
+			}
+			for (i = 0; i < IONIC_NUM_DBG_NAPI_STATS; i++) {
+				snprintf(*buf, ETH_GSTRING_LEN, "rxq_%d_napi_%s",
+					   q_num,
+					   ionic_dbg_napi_stats_desc[i].name);
+				*buf += ETH_GSTRING_LEN;
+			}
+			for (i = 0; i < MAX_NUM_NAPI_CNTR; i++) {
+				snprintf(*buf, ETH_GSTRING_LEN,
+					   "rxq_%d_napi_work_done_%d",
+					   q_num,
+					   i);
+				*buf += ETH_GSTRING_LEN;
+			}
 		}
 #endif
 	}
@@ -203,54 +237,63 @@ static void ionic_sw_stats_get_values(struct lif *lif, u64 **buf)
 				   &ionic_txq_stats_desc[i]);
 			(*buf)++;
 		}
-		for (i = 0; i < IONIC_NUM_DBG_CQ_STATS; i++) {
-			**buf = IONIC_READ_STAT64(&txqcq->cq,
-				   &ionic_dbg_cq_stats_desc[i]);
-			(*buf)++;
-		}
-		for (i = 0; i < IONIC_NUM_DBG_INTR_STATS; i++) {
-			**buf = IONIC_READ_STAT64(&txqcq->intr,
-				   &ionic_dbg_intr_stats_desc[i]);
-			(*buf)++;
-		}
-		for (i = 0; i < IONIC_NUM_DBG_NAPI_STATS; i++) {
-			**buf = IONIC_READ_STAT64(&txqcq->napi_stats,
-				   &ionic_dbg_napi_stats_desc[i]);
-			(*buf)++;
-		}
 #ifdef IONIC_DEBUG_STATS
-		for (i = 0; i < MAX_NUM_NAPI_CNTR; i++) {
-			**buf = txqcq->napi_stats.work_done_cntr[i];
-			(*buf)++;
-		}
-		for (i = 0; i < MAX_NUM_SG_CNTR; i++) {
-			**buf = txqcq->stats.tx.sg_cntr[i];
-			(*buf)++;
+		if (lif->flags & LIF_F_SW_DBG_STATS) {
+			for (i = 0; i < IONIC_NUM_DBG_CQ_STATS; i++) {
+				**buf = IONIC_READ_STAT64(&txqcq->cq,
+					   &ionic_dbg_cq_stats_desc[i]);
+				(*buf)++;
+			}
+			for (i = 0; i < IONIC_NUM_DBG_INTR_STATS; i++) {
+				**buf = IONIC_READ_STAT64(&txqcq->intr,
+					   &ionic_dbg_intr_stats_desc[i]);
+				(*buf)++;
+			}
+			for (i = 0; i < IONIC_NUM_DBG_NAPI_STATS; i++) {
+				**buf = IONIC_READ_STAT64(&txqcq->napi_stats,
+					   &ionic_dbg_napi_stats_desc[i]);
+				(*buf)++;
+			}
+			for (i = 0; i < MAX_NUM_NAPI_CNTR; i++) {
+				**buf = txqcq->napi_stats.work_done_cntr[i];
+				(*buf)++;
+			}
+			for (i = 0; i < MAX_NUM_SG_CNTR; i++) {
+				**buf = txqcq->stats.tx.sg_cntr[i];
+				(*buf)++;
+			}
 		}
 #endif
 	}
 
 	for (q_num = 0; q_num < lif->nrxqcqs; q_num++) {
 		rxqcq = lif_to_txqcq(lif, q_num);
-		for (i = 0; i < IONIC_NUM_DBG_CQ_STATS; i++) {
-			**buf = IONIC_READ_STAT64(&rxqcq->cq,
-				   &ionic_dbg_cq_stats_desc[i]);
-			(*buf)++;
-		}
-		for (i = 0; i < IONIC_NUM_DBG_INTR_STATS; i++) {
-			**buf = IONIC_READ_STAT64(&rxqcq->intr,
-				   &ionic_dbg_intr_stats_desc[i]);
-			(*buf)++;
-		}
-		for (i = 0; i < IONIC_NUM_DBG_NAPI_STATS; i++) {
-			**buf = IONIC_READ_STAT64(&rxqcq->napi_stats,
-				   &ionic_dbg_napi_stats_desc[i]);
+		for (i = 0; i < IONIC_NUM_RX_STATS; i++) {
+			**buf = IONIC_READ_STAT64(&rxqcq->stats.rx,
+				   &ionic_rx_stats_desc[i]);
 			(*buf)++;
 		}
 #ifdef IONIC_DEBUG_STATS
-		for (i = 0; i < MAX_NUM_NAPI_CNTR; i++) {
-			**buf = rxqcq->napi_stats.work_done_cntr[i];
-			(*buf)++;
+		if (lif->flags & LIF_F_SW_DBG_STATS) {
+			for (i = 0; i < IONIC_NUM_DBG_CQ_STATS; i++) {
+				**buf = IONIC_READ_STAT64(&rxqcq->cq,
+					   &ionic_dbg_cq_stats_desc[i]);
+				(*buf)++;
+			}
+			for (i = 0; i < IONIC_NUM_DBG_INTR_STATS; i++) {
+				**buf = IONIC_READ_STAT64(&rxqcq->intr,
+					   &ionic_dbg_intr_stats_desc[i]);
+				(*buf)++;
+			}
+			for (i = 0; i < IONIC_NUM_DBG_NAPI_STATS; i++) {
+				**buf = IONIC_READ_STAT64(&rxqcq->napi_stats,
+					   &ionic_dbg_napi_stats_desc[i]);
+				(*buf)++;
+			}
+			for (i = 0; i < MAX_NUM_NAPI_CNTR; i++) {
+				**buf = rxqcq->napi_stats.work_done_cntr[i];
+				(*buf)++;
+			}
 		}
 #endif
 	}

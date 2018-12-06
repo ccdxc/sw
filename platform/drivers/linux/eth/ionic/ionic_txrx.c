@@ -27,9 +27,7 @@
 static inline void ionic_txq_post(struct queue *q, bool ring_dbell,
 	   desc_cb cb_func, void *cb_arg)
 {
-	struct qcq *qcq = q_to_qcq(q);
-
-	DEBUG_STATS_TXQ_POST(qcq, q->head->desc, ring_dbell);
+	DEBUG_STATS_TXQ_POST(q_to_qcq(q), q->head->desc, ring_dbell);
 
 	ionic_q_post(q, ring_dbell, cb_func, cb_arg);
 }
@@ -37,10 +35,9 @@ static inline void ionic_txq_post(struct queue *q, bool ring_dbell,
 static inline void ionic_rxq_post(struct queue *q, bool ring_dbell,
 	   desc_cb cb_func, void *cb_arg)
 {
-	struct qcq *qcq = q_to_qcq(q);
 	ionic_q_post(q, ring_dbell, cb_func, cb_arg);
 
-	DEBUG_STATS_RX_BUFF_CNT(qcq);
+	DEBUG_STATS_RX_BUFF_CNT(q_to_qcq(q));
 }
 
 static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,

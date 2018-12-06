@@ -125,6 +125,7 @@ struct lif_stats {
 };
 
 #define LIF_F_INITED		BIT(0)
+#define LIF_F_SW_DBG_STATS	BIT(1)
 
 #define LIF_NAME_MAX_SZ		(32)
 struct lif {

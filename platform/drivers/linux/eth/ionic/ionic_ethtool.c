@@ -26,35 +26,38 @@
 #include "ionic_ethtool.h"
 #include "ionic_stats.h"
 
+static const char ionic_priv_flags_strings[][ETH_GSTRING_LEN] = {
+#define PRIV_F_SW_DBG_STATS		BIT(0)
+	"sw-dbg-stats",
+};
+#define PRIV_FLAGS_COUNT ARRAY_SIZE(ionic_priv_flags_strings)
+
 static void ionic_get_stats_strings(struct lif *lif, u8 *buf)
 {
 	u32 i;
 
-	for (i = 0; i < ionic_num_stats_grps; i++) {
+	for (i = 0; i < ionic_num_stats_grps; i++)
 		ionic_stats_groups[i].get_strings(lif, &buf);
-	}
 }
 
 static void ionic_get_stats(struct net_device *netdev,
-				  struct ethtool_stats *stats, u64 *buf)
+			    struct ethtool_stats *stats, u64 *buf)
 {
 	struct lif *lif;
 	u32 i;
 
 	lif = netdev_priv(netdev);
 
-	for (i = 0; i < ionic_num_stats_grps; i++) {
+	for (i = 0; i < ionic_num_stats_grps; i++)
 		ionic_stats_groups[i].get_values(lif, &buf);
-	}
 }
 
 static int ionic_get_stats_count(struct lif *lif)
 {
 	int i, num_stats = 0;
 
-	for (i = 0; i < ionic_num_stats_grps; i++) {
+	for (i = 0; i < ionic_num_stats_grps; i++)
 		num_stats += ionic_stats_groups[i].get_count(lif);
-	}
 
 	return num_stats;
 }
@@ -71,6 +74,7 @@ static int ionic_get_sset_count(struct net_device *netdev, int sset)
 	case ETH_SS_TEST:
 		break;
 	case ETH_SS_PRIV_FLAGS:
+		count = PRIV_FLAGS_COUNT;
 		break;
 	default:
 		return -EOPNOTSUPP;
@@ -79,7 +83,7 @@ static int ionic_get_sset_count(struct net_device *netdev, int sset)
 }
 
 static void ionic_get_strings(struct net_device *netdev,
-	   u32 sset, u8 *buf)
+			      u32 sset, u8 *buf)
 {
 	struct lif *lif = netdev_priv(netdev);
 
@@ -88,7 +92,9 @@ static void ionic_get_strings(struct net_device *netdev,
 		ionic_get_stats_strings(lif, buf);
 		break;
 	case ETH_SS_PRIV_FLAGS:
-		// IONIC_TODO
+		memcpy(buf, ionic_priv_flags_strings,
+		       PRIV_FLAGS_COUNT * ETH_GSTRING_LEN);
+		break;
 	case ETH_SS_TEST:
 		// IONIC_TODO
 	default:
@@ -314,6 +320,36 @@ static int ionic_set_rxfh(struct net_device *netdev, const u32 *indir,
 	return 0;
 }
 
+static u32 ionic_get_priv_flags(struct net_device *netdev)
+{
+	u32 priv_flags = 0;
+#ifdef IONIC_DEBUG_STATS
+	struct lif *lif = netdev_priv(netdev);
+
+	if (lif->flags & LIF_F_SW_DBG_STATS)
+		priv_flags |= PRIV_F_SW_DBG_STATS;
+#endif
+
+	return priv_flags;
+}
+
+static int ionic_set_priv_flags(struct net_device *netdev, u32 priv_flags)
+{
+	struct lif *lif = netdev_priv(netdev);
+	u32 flags = lif->flags;
+
+#ifdef IONIC_DEBUG_STATS
+	flags &= ~LIF_F_SW_DBG_STATS;
+	if (priv_flags & PRIV_F_SW_DBG_STATS)
+		flags |= LIF_F_SW_DBG_STATS;
+#endif
+
+	if (flags != lif->flags)
+		lif->flags = flags;
+
+	return 0;
+}
+
 static const struct ethtool_ops ionic_ethtool_ops = {
 	.get_drvinfo		= ionic_get_drvinfo,
 	.get_link		= ethtool_op_get_link,
@@ -328,6 +364,8 @@ static const struct ethtool_ops ionic_ethtool_ops = {
 	.get_rxfh_key_size	= ionic_get_rxfh_key_size,
 	.get_rxfh		= ionic_get_rxfh,
 	.set_rxfh		= ionic_set_rxfh,
+	.get_priv_flags		= ionic_get_priv_flags,
+	.set_priv_flags		= ionic_set_priv_flags,
 };
 
 void ionic_ethtool_set_ops(struct net_device *netdev)
