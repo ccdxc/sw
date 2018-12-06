@@ -892,52 +892,105 @@ Eth::_CmdIdentify(void *req, void *req_data, void *resp, void *resp_data)
     sprintf((char *)&rsp->dev.fw_version, "v0.0.1");
     rsp->dev.nlifs = 1;
     // At least one ndbpgs_per_lif
-    rsp->dev.ndbpgs_per_lif = MAX(spec->rdma_pid_count, 1);
-    rsp->dev.ntxqs_per_lif = spec->txq_count;
-    rsp->dev.nrxqs_per_lif = spec->rxq_count;
     rsp->dev.nintrs = spec->intr_count;
-    rsp->dev.intr_coal_mult = 1;
-    rsp->dev.intr_coal_div = 10;
+    rsp->dev.ndbpgs_per_lif = MAX(spec->rdma_pid_count, 1);
     rsp->dev.nucasts_per_lif = 32;
     rsp->dev.nmcasts_per_lif = 32;
-
-    // TODO: Split these into ethernet & rdma
-    rsp->dev.nadminqs_per_lif = spec->adminq_count + spec->rdma_adminq_count;
-    rsp->dev.neqs_per_lif = spec->eq_count + spec->rdma_eq_count;
-
-    rsp->dev.nrdmasqs_per_lif = spec->rdma_sq_count;
-    rsp->dev.nrdmarqs_per_lif = spec->rdma_rq_count;
-    rsp->dev.nrdma_mrs_per_lif = spec->key_count;
-    rsp->dev.nrdma_pts_per_lif = spec->pte_count;
-    rsp->dev.nrdma_ahs_per_lif = spec->ah_count;
-    rsp->dev.ncqs_per_lif = spec->rdma_cq_count;
+    rsp->dev.intr_coal_mult = 1;
+    rsp->dev.intr_coal_div = 10;
 
     rsp->dev.rdma_version = 1;
-    rsp->dev.rdma_qp_opcodes[0] = 27;
-    rsp->dev.rdma_admin_opcodes[0] = 50;
+    rsp->dev.rdma_qp_opcodes = 27;
+    rsp->dev.rdma_admin_opcodes = 50;
+    rsp->dev.nrdma_pts_per_lif = spec->pte_count;
+    rsp->dev.nrdma_mrs_per_lif = spec->key_count;
+    rsp->dev.nrdma_ahs_per_lif = spec->ah_count;
+    rsp->dev.rdma_max_stride = 11;
+    rsp->dev.rdma_cl_stride = 6;
+    rsp->dev.rdma_pte_stride = 3;
+    rsp->dev.rdma_rrq_stride = 5;
+    rsp->dev.rdma_rsq_stride = 5;
+
+    rsp->dev.tx_qtype.qtype = 0;
+    rsp->dev.tx_qtype.qid_count = spec->txq_count;
+    rsp->dev.tx_qtype.qid_base = 0;
+
+    rsp->dev.rx_qtype.qtype = 0;
+    rsp->dev.rx_qtype.qid_count = spec->rxq_count;
+    rsp->dev.rx_qtype.qid_base = 0;
+
+    rsp->dev.admin_qtype.qtype = 2;
+    rsp->dev.admin_qtype.qid_count = spec->adminq_count;
+    rsp->dev.admin_qtype.qid_base = 0;
+
+    rsp->dev.notify_qtype.qtype = 6;
+    rsp->dev.notify_qtype.qid_count = spec->eq_count;
+    rsp->dev.notify_qtype.qid_base = 0;
+
+    rsp->dev.rdma_aq_qtype.qtype = 2;
+    rsp->dev.rdma_aq_qtype.qid_count = spec->rdma_adminq_count;
+    rsp->dev.rdma_aq_qtype.qid_base = spec->adminq_count;
+
+    rsp->dev.rdma_sq_qtype.qtype = 3;
+    rsp->dev.rdma_sq_qtype.qid_count = spec->rdma_sq_count;
+    rsp->dev.rdma_sq_qtype.qid_base = 0;
+
+    rsp->dev.rdma_rq_qtype.qtype = 4;
+    rsp->dev.rdma_rq_qtype.qid_count = spec->rdma_rq_count;
+    rsp->dev.rdma_rq_qtype.qid_base = 0;
+
+    rsp->dev.rdma_cq_qtype.qtype = 5;
+    rsp->dev.rdma_cq_qtype.qid_count = spec->rdma_rq_count;
+    rsp->dev.rdma_cq_qtype.qid_base = 0;
+
+    rsp->dev.rdma_eq_qtype.qtype = 6;
+    rsp->dev.rdma_eq_qtype.qid_count = spec->rdma_eq_count;
+    rsp->dev.rdma_eq_qtype.qid_base = spec->eq_count;
+
+    // XXX RDMA data path requires that RDMA AdminQ is QID 1 for now.
+    rsp->dev.admin_qtype.qid_base = 0;
+    rsp->dev.admin_qtype.qid_count = 1;
+    rsp->dev.rdma_aq_qtype.qid_base = 1;
+    rsp->dev.rdma_aq_qtype.qid_count = 1;
+    // XXX Remove hardcode when flexibility is added.
 
     comp->ver = IDENTITY_VERSION_1;
 
     NIC_LOG_DEBUG("lif-{} asic_type {} asic_rev {} serial_num {} fw_version {} "
-                 "ndbpgs_per_lif {} ntxqs_per_lif {} nrxqs_per_lif {} "
-                 "nintrs {} intr_coal_mult {} intr_coal_div {} "
-                 "nucasts_per_lif {} nmcasts_per_lif {} nadminqs_per_lif {} "
-                 "neqs_per_lif {} nrdmasqs_per_lif {} nrdmarqs_per_lif {} "
-                 "nrdma_mrs_per_lif {} nrdma_pts_per_lif {} "
-                 "nrdma_ahs_per_lif {} ncqs_per_lif {} rdma_version {} "
-                 "rdma_admin_opcodes {}",
+                 "ndbpgs_per_lif {} nintrs {} nucasts_per_lif {} nmcasts_per_lif {} "
+                 "intr_coal_mult {} intr_coal_div {} "
+                 "rdma_version {} rdma_qp_opcodes {} rdma_admin_opcodes {} "
+                 "nrdma_pts_per_lif {} nrdma_mrs_per_lif {} "
+                 "nrdma_ahs_per_lif {} rdma_max_stride {} "
+                 "rdma_cl_stride {} rdma_pte_stride {} "
+                 "rdma_rrq_stride {} rdma_rsq_stride {} "
+                 "tx_qtype {} tx_qid_count {} tx_qid_base {} "
+                 "rx_qtype {} rx_qid_count {} rx_qid_base {} "
+                 "admin_qtype {} admin_qid_count {} admin_qid_base {} "
+                 "notify_qtype {} notify_qid_count {} notify_qid_base {} "
+                 "rdma_aq_qtype {} rdma_aq_qid_count {} rdma_aq_qid_base {} "
+                 "rdma_sq_qtype {} rdma_sq_qid_count {} rdma_sq_qid_base {} "
+                 "rdma_rq_qtype {} rdma_rq_qid_count {} rdma_rq_qid_base {} "
+                 "rdma_cq_qtype {} rdma_cq_qid_count {} rdma_cq_qid_base {} "
+                 "rdma_eq_qtype {} rdma_eq_qid_count {} rdma_eq_qid_base {}",
                  hal_lif_info_.hw_lif_id,
                  rsp->dev.asic_type, rsp->dev.asic_rev, rsp->dev.serial_num,
-                 rsp->dev.fw_version, rsp->dev.ndbpgs_per_lif,
-                 rsp->dev.ntxqs_per_lif, rsp->dev.nrxqs_per_lif,
-                 rsp->dev.nintrs, rsp->dev.intr_coal_mult,
-                 rsp->dev.intr_coal_div, rsp->dev.nucasts_per_lif,
-                 rsp->dev.nmcasts_per_lif, rsp->dev.nadminqs_per_lif,
-                 rsp->dev.neqs_per_lif, rsp->dev.nrdmasqs_per_lif,
-                 rsp->dev.nrdmarqs_per_lif, rsp->dev.nrdma_mrs_per_lif,
-                 rsp->dev.nrdma_pts_per_lif, rsp->dev.nrdma_ahs_per_lif,
-                 rsp->dev.ncqs_per_lif, rsp->dev.rdma_version,
-                 rsp->dev.rdma_admin_opcodes[0]);
+                 rsp->dev.fw_version, rsp->dev.ndbpgs_per_lif, rsp->dev.nintrs,
+                 rsp->dev.nucasts_per_lif, rsp->dev.nmcasts_per_lif,
+                 rsp->dev.intr_coal_mult, rsp->dev.intr_coal_div,
+                 rsp->dev.rdma_version, rsp->dev.rdma_qp_opcodes, rsp->dev.rdma_admin_opcodes,
+                 rsp->dev.nrdma_pts_per_lif, rsp->dev.nrdma_mrs_per_lif, rsp->dev.nrdma_ahs_per_lif,
+                 rsp->dev.rdma_max_stride, rsp->dev.rdma_cl_stride, rsp->dev.rdma_pte_stride,
+                 rsp->dev.rdma_rrq_stride, rsp->dev.rdma_rsq_stride,
+                 rsp->dev.tx_qtype.qtype, rsp->dev.tx_qtype.qid_count, rsp->dev.tx_qtype.qid_base,
+                 rsp->dev.rx_qtype.qtype, rsp->dev.rx_qtype.qid_count, rsp->dev.rx_qtype.qid_base,
+                 rsp->dev.admin_qtype.qtype, rsp->dev.admin_qtype.qid_count, rsp->dev.admin_qtype.qid_base,
+                 rsp->dev.notify_qtype.qtype, rsp->dev.notify_qtype.qid_count, rsp->dev.notify_qtype.qid_base,
+                 rsp->dev.rdma_aq_qtype.qtype, rsp->dev.rdma_aq_qtype.qid_count, rsp->dev.rdma_aq_qtype.qid_base,
+                 rsp->dev.rdma_sq_qtype.qtype, rsp->dev.rdma_sq_qtype.qid_count, rsp->dev.rdma_sq_qtype.qid_base,
+                 rsp->dev.rdma_rq_qtype.qtype, rsp->dev.rdma_rq_qtype.qid_count, rsp->dev.rdma_rq_qtype.qid_base,
+                 rsp->dev.rdma_cq_qtype.qtype, rsp->dev.rdma_cq_qtype.qid_count, rsp->dev.rdma_cq_qtype.qid_base,
+                 rsp->dev.rdma_eq_qtype.qtype, rsp->dev.rdma_eq_qtype.qid_count, rsp->dev.rdma_eq_qtype.qid_base);
 
     return (DEVCMD_SUCCESS);
 }

@@ -130,7 +130,11 @@ static int ionic_dev_info_show(struct seq_file *s, void *v)
 	seq_printf(s, "qp_opcodes:\t%u\n", dev->qp_opcodes);
 	seq_printf(s, "admin_opcodes:\t%u\n", dev->admin_opcodes);
 
-	seq_printf(s, "admin_qtype:\t%u\n", dev->admin_qtype);
+	seq_printf(s, "aq_base:\t%u\n", dev->aq_base);
+	seq_printf(s, "cq_base:\t%u\n", dev->cq_base);
+	seq_printf(s, "eq_base:\t%u\n", dev->eq_base);
+
+	seq_printf(s, "aq_qtype:\t%u\n", dev->aq_qtype);
 	seq_printf(s, "sq_qtype:\t%u\n", dev->sq_qtype);
 	seq_printf(s, "rq_qtype:\t%u\n", dev->rq_qtype);
 	seq_printf(s, "cq_qtype:\t%u\n", dev->cq_qtype);
@@ -142,11 +146,8 @@ static int ionic_dev_info_show(struct seq_file *s, void *v)
 	seq_printf(s, "rrq_stride:\t%u\n", dev->rrq_stride);
 	seq_printf(s, "rsq_stride:\t%u\n", dev->rsq_stride);
 
-	/* XXX remove if for relase */
-	if (dev->adminq)
-		seq_printf(s, "adminq:\t%u\n", dev->adminq->aqid);
-	if (dev->admincq)
-		seq_printf(s, "admincq:\t%u\n", dev->admincq->cqid);
+	seq_printf(s, "adminq:\t%u\n", dev->adminq->aqid);
+	seq_printf(s, "admincq:\t%u\n", dev->admincq->cqid);
 	seq_printf(s, "admin_armed:\t%u\n", dev->admin_armed);
 	seq_printf(s, "admin_state:\t%u\n", dev->admin_state);
 

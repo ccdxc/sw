@@ -139,6 +139,14 @@ static int ionic_rqcmb_order = 0; /* XXX needs tuning */
 module_param_named(rqcmb_order, ionic_rqcmb_order, int, 0644);
 MODULE_PARM_DESC(rqcmb_order, "Only alloc rq cmb less than order.");
 
+static int ionic_max_pd = 1024;
+module_param_named(max_pd, ionic_max_pd, int, 0444);
+MODULE_PARM_DESC(max_pd, "Max number of PDs.");
+
+static int ionic_max_gid = 1024;
+module_param_named(max_gid, ionic_max_gid, int, 0444);
+MODULE_PARM_DESC(max_gid, "Max number of GIDs.");
+
 /* work queue for handling network events, managing ib devices */
 static struct workqueue_struct *ionic_dev_workq;
 
@@ -262,7 +270,7 @@ static int ionic_get_cqid(struct ionic_ibdev *dev, u32 *cqid)
 	mutex_unlock(&dev->inuse_lock);
 
 	if (rc >= 0) {
-		*cqid = rc;
+		*cqid = rc + dev->cq_base;
 		rc = 0;
 	}
 
@@ -348,7 +356,7 @@ static void ionic_put_mrid(struct ionic_ibdev *dev, u32 mrid)
 
 static void ionic_put_cqid(struct ionic_ibdev *dev, u32 cqid)
 {
-	resid_put(&dev->inuse_cqid, cqid);
+	resid_put(&dev->inuse_cqid, cqid - dev->cq_base);
 }
 
 static void ionic_put_qpid(struct ionic_ibdev *dev, u32 qpid)
@@ -741,7 +749,7 @@ cq_next:
 	}
 
 	if (old_prod != aq->q.prod && ionic_xxx_aq_dbell)
-		ionic_dbell_ring(&dev->dbpage[dev->admin_qtype],
+		ionic_dbell_ring(&dev->dbpage[dev->aq_qtype],
 				 ionic_queue_dbell_val(&aq->q));
 
 	/* XXX work around event queue */
@@ -1269,9 +1277,8 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 	struct ionic_ctx *ctx;
 	struct ionic_ctx_req req;
 	struct ionic_ctx_resp resp = {};
-	const union identity *ident;
 	phys_addr_t db_phys = 0;
-	int i, rc;
+	int rc;
 
 	rc = ionic_validate_udata(udata, sizeof(req), sizeof(resp));
 	if (!rc)
@@ -1326,18 +1333,14 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 
 	resp.dbell_offset = 0;
 
-	ident = ionic_api_get_identity(dev->lif, &i);
-
-	resp.version = le16_to_cpu(ident->dev.rdma_version);
-	for (i = 0; i < 7; ++i)
-		resp.qp_opcodes[i] = ident->dev.rdma_qp_opcodes[i];
-	for (i = 0; i < 7; ++i)
-		resp.admin_opcodes[i] = ident->dev.rdma_qp_opcodes[i];
+	resp.version = dev->rdma_version;
+	resp.qp_opcodes = dev->qp_opcodes;
+	resp.admin_opcodes = dev->admin_opcodes;
 
 	resp.sq_qtype = dev->sq_qtype;
 	resp.rq_qtype = dev->rq_qtype;
 	resp.cq_qtype = dev->cq_qtype;
-	resp.admin_qtype = dev->admin_qtype;
+	resp.admin_qtype = dev->aq_qtype;
 	resp.max_stride = dev->max_stride;
 
 	rc = ib_copy_to_udata(udata, &resp, sizeof(resp));
@@ -2481,13 +2484,12 @@ err_cmd:
 static int ionic_v1_create_cq_cmd(struct ionic_ibdev *dev, struct ionic_cq *cq,
 				  struct ionic_tbl_buf *buf)
 {
-	const u32 ver = (u32)cq->compat << 24;
 	struct ionic_admin_wr wr = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(wr.work),
 		.wqe = {
 			.op = IONIC_V1_ADMIN_CREATE_CQ,
 			.dbid_flags = cpu_to_le16(ionic_dbid(dev, cq->ibcq.uobject)),
-			.id_ver = cpu_to_le32(cq->cqid | ver),
+			.id_ver = cpu_to_le32(cq->cqid),
 			.cq = {
 				.eq_id = cpu_to_le32(cq->eqid),
 				.depth_log2 = cq->q.depth_log2,
@@ -2638,8 +2640,6 @@ static struct ionic_cq *__ionic_create_cq(struct ionic_ibdev *dev,
 	INIT_DELAYED_WORK(&cq->notify_work, ionic_cq_fake_notify);
 
 	if (!ctx) {
-		cq->compat = dev->rdma_compat;
-
 		rc = ionic_queue_init(&cq->q, dev->hwdev,
 				      attr->cqe + IONIC_CQ_GRACE,
 				      sizeof(struct ionic_v1_cqe));
@@ -2666,8 +2666,6 @@ static struct ionic_cq *__ionic_create_cq(struct ionic_ibdev *dev,
 		cq->q.mask = req.cq.mask;
 		cq->q.depth_log2 = req.cq.depth_log2;
 		cq->q.stride_log2 = req.cq.stride_log2;
-
-		cq->compat = req.compat;
 
 		resp.cqid = cq->cqid;
 
@@ -3537,7 +3535,6 @@ static int ionic_v1_create_qp_cmd(struct ionic_ibdev *dev,
 				  struct ionic_tbl_buf *rq_buf,
 				  struct ib_qp_init_attr *attr)
 {
-	const u32 ver = (u32)qp->compat << 24;
 	const u32 flags = to_ionic_qp_flags(0, 0, qp->sq_is_cmb, qp->rq_is_cmb,
 					    !pd->ibpd.uobject);
 	struct ionic_admin_wr wr = {
@@ -3546,7 +3543,7 @@ static int ionic_v1_create_qp_cmd(struct ionic_ibdev *dev,
 			.op = IONIC_V1_ADMIN_CREATE_QP,
 			.type_state = to_ionic_qp_type(attr->qp_type),
 			.dbid_flags = cpu_to_le16(ionic_dbid(dev, pd->ibpd.uobject)),
-			.id_ver = cpu_to_le32(qp->qpid | ver),
+			.id_ver = cpu_to_le32(qp->qpid),
 			.qp = {
 				.pd_id = cpu_to_le32(pd->pdid),
 				.priv_flags = cpu_to_be32(flags),
@@ -4408,11 +4405,6 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 			      attr->cap.max_recv_wr, attr->cap.max_recv_sge);
 	if (rc)
 		goto err_rq;
-
-	if (ctx)
-		qp->compat = req.compat;
-	else
-		qp->compat = dev->rdma_compat;
 
 	rc = ionic_create_qp_cmd(dev, pd,
 				 to_ionic_cq(attr->send_cq),
@@ -6339,13 +6331,12 @@ static int ionic_rdma_queue_devcmd(struct ionic_ibdev *dev,
 				   u32 qid, u32 cid, u16 opcode,
 				   int xxx_table_index)
 {
-	const u32 ver = (u32)dev->rdma_compat << 24;
 	struct ionic_admin_ctx admin = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(admin.work),
 		.cmd.rdma_queue = {
 			.opcode = cpu_to_le16(opcode),
 			.lif_id = cpu_to_le16(dev->lif_id),
-			.qid_ver = cpu_to_le32(qid | ver),
+			.qid_ver = cpu_to_le32(qid),
 			.cid = cpu_to_le32(cid),
 			.dbid = cpu_to_le16(dev->dbid),
 			.depth_log2 = q->depth_log2,
@@ -6518,7 +6509,7 @@ static struct ionic_aq *__ionic_create_rdma_adminq(struct ionic_ibdev *dev,
 
 	aq->dev = dev;
 
-	aq->aqid = IONIC_ADMINQ_RDMA;
+	aq->aqid = dev->aq_base;
 
 	aq->cqid = cqid;
 
@@ -6653,7 +6644,7 @@ static void ionic_reset_work(struct work_struct *ws)
 	ionic_kill_rdma_admin(dev);
 }
 
-static int ionic_create_rdma_admin(struct ionic_ibdev *dev, int eq_count)
+static int ionic_create_rdma_admin(struct ionic_ibdev *dev)
 {
 	struct ionic_eq *eq;
 	int eq_i = 0;
@@ -6669,25 +6660,34 @@ static int ionic_create_rdma_admin(struct ionic_ibdev *dev, int eq_count)
 	dev->admin_armed = false;
 	dev->admin_state = IONIC_ADMIN_ACTIVE;
 
-	dev->eq_vec = kmalloc_array(eq_count, sizeof(*dev->eq_vec), GFP_KERNEL);
+	/* need at least one eq */
+	if (!dev->eq_count) {
+		rc = -EINVAL;
+		goto out;
+	}
+
+	dev->eq_vec = kmalloc_array(dev->eq_count, sizeof(*dev->eq_vec), GFP_KERNEL);
 	if (!dev->eq_vec) {
 		rc = -ENOMEM;
 		goto out;
 	}
 
-	for (eq_i = 0; eq_i < eq_count; ++eq_i) {
-		eq = ionic_create_eq(dev, eq_i);
+	for (eq_i = 0; eq_i < dev->eq_count; ++eq_i) {
+		eq = ionic_create_eq(dev, eq_i + dev->eq_base);
 		if (IS_ERR(eq)) {
+			rc = PTR_ERR(eq);
+
 			/* need at least one eq */
 			if (!eq_i) {
-				rc = PTR_ERR(eq);
+				dev_err(dev->hwdev, "fail create eq %d\n", rc);
 				goto out;
 			}
 
 			/* ok, just fewer eq than device supports */
-			dev_dbg(dev->hwdev,
-				"fewer than eq than count %d want %d rc %d\n",
-				eq_i, eq_count, rc);
+			dev_dbg(dev->hwdev, "eq count %d want %d rc %d\n",
+				eq_i, dev->eq_count, rc);
+
+			rc = 0;
 			break;
 		}
 
@@ -6773,7 +6773,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	struct ionic_ibdev *dev;
 	const union identity *ident;
 	struct dentry *lif_dbgfs;
-	int rc, lif_id, version, compat;
+	int rc, val, lif_id, version;
 
 	dev_hold(ndev);
 
@@ -6781,39 +6781,18 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 
 	version = le16_to_cpu(ident->dev.rdma_version);
 
-	/* XXX workaround, this check is disabled because identify is saying zero adminqs per lif */
-	if (0 && le16_to_cpu(ident->dev.nadminqs_per_lif) <= IONIC_ADMINQ_RDMA) {
-		netdev_dbg(ndev, "ionic_rdma: No RDMA Admin Queue\n");
-		rc = -ENODEV;
-		goto err_dev;
-	}
-
-	if (version <= IONIC_MAX_RDMA_VERSION) {
-		compat = 0;
-	} else {
-		compat = version - IONIC_MAX_RDMA_VERSION;
-		version = IONIC_MAX_RDMA_VERSION;
-	}
-
-	while (version > 0 && compat < 7) {
-		if (ident->dev.rdma_admin_opcodes[compat])
-			break;
-		--version;
-		++compat;
-	}
-
 	if (version < IONIC_MIN_RDMA_VERSION) {
 		netdev_err(ndev, FW_INFO "ionic_rdma: Firmware RDMA Version %u\n",
-			   le16_to_cpu(ident->dev.rdma_version));
+			   version);
 		netdev_err(ndev, FW_INFO "ionic_rdma: Driver Min RDMA Version %u\n",
 			   IONIC_MIN_RDMA_VERSION);
 		rc = -EINVAL;
 		goto err_dev;
 	}
 
-	if (compat >= 7) {
+	if (version > IONIC_MAX_RDMA_VERSION) {
 		netdev_err(ndev, FW_INFO "ionic_rdma: Firmware RDMA Version %u\n",
-			   le16_to_cpu(ident->dev.rdma_version));
+			   version);
 		netdev_err(ndev, FW_INFO "ionic_rdma: Driver Max RDMA Version %u\n",
 			   IONIC_MAX_RDMA_VERSION);
 		rc = -EINVAL;
@@ -6837,33 +6816,119 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 				&dev->xxx_dbpage_phys);
 
 	dev->rdma_version = version;
-	dev->rdma_compat = compat;
-	dev->qp_opcodes = ident->dev.rdma_qp_opcodes[compat];
-	dev->admin_opcodes = ident->dev.rdma_admin_opcodes[compat];
+	dev->qp_opcodes = ident->dev.rdma_qp_opcodes;
+	dev->admin_opcodes = ident->dev.rdma_admin_opcodes;
 
-	/* XXX hardcode values, should come from identify */
-	dev->admin_qtype = 2;
-	dev->sq_qtype = 3;
-	dev->rq_qtype = 4;
-	dev->cq_qtype = 5;
-	dev->eq_qtype = 6;
+	/* need at least one rdma admin queue (driver creates one) */
+	val = le32_to_cpu(ident->dev.rdma_aq_qtype.qid_count);
+	if (!val) {
+		netdev_dbg(ndev, "ionic_rdma: No RDMA Admin Queue\n");
+		rc = -ENODEV;
+		goto err_dev;
+	}
 
-	dev->max_stride = 11; /* XXX get from device (11 for 30 send sges) */
-	dev->cl_stride = 6; /* XXX cache line stride from device (64B) */
-	dev->pte_stride = 3; /* XXX page table entry size (8B dma addr) */
-	dev->rrq_stride = 5; /* XXX rrq wqe stride from device (32B) */
-	dev->rsq_stride = 5; /* XXX rrq wqe stride from device (32B) */
+	/* qp ids start at zero, and sq id == qp id */
+	val = le32_to_cpu(ident->dev.rdma_sq_qtype.qid_base);
+	if (val) {
+		netdev_dbg(ndev, "ionic_rdma: Nonzero sq qid base %u\n", val);
+		rc = -EINVAL;
+		goto err_dev;
+	}
 
-	/* XXX hardcode values, intentionally low, should come from identify */
+	/* qp ids start at zero, and rq id == qp id */
+	val = le32_to_cpu(ident->dev.rdma_rq_qtype.qid_base);
+	if (val) {
+		netdev_dbg(ndev, "ionic_rdma: Nonzero rq qid base %u\n", val);
+		rc = -EINVAL;
+		goto err_dev;
+	}
+
+	/* driver supports these qtypes starting at nonzero base */
+	dev->aq_base = le32_to_cpu(ident->dev.rdma_aq_qtype.qid_base);
+	dev->cq_base = le32_to_cpu(ident->dev.rdma_cq_qtype.qid_base);
+	dev->eq_base = le32_to_cpu(ident->dev.rdma_eq_qtype.qid_base);
+
+	/* eq count may be reduced by ionic_create_rdma_admin */
+	dev->eq_count = le32_to_cpu(ident->dev.rdma_eq_qtype.qid_count);
+
+	dev->aq_qtype = ident->dev.rdma_aq_qtype.qtype;
+	dev->sq_qtype = ident->dev.rdma_sq_qtype.qtype;
+	dev->rq_qtype = ident->dev.rdma_rq_qtype.qtype;
+	dev->cq_qtype = ident->dev.rdma_cq_qtype.qtype;
+	dev->eq_qtype = ident->dev.rdma_eq_qtype.qtype;
+
+	dev->max_stride = ident->dev.rdma_max_stride;
+	dev->cl_stride = ident->dev.rdma_cl_stride;
+	dev->pte_stride = ident->dev.rdma_pte_stride;
+	dev->rrq_stride = ident->dev.rdma_rrq_stride;
+	dev->rsq_stride = ident->dev.rdma_rsq_stride;
+
+	mutex_init(&dev->tbl_lock);
+
+	tbl_init(&dev->qp_tbl);
+	tbl_init(&dev->cq_tbl);
+
+	mutex_init(&dev->inuse_lock);
+	spin_lock_init(&dev->inuse_splock);
+
+	if (ionic_xxx_pgidx)
+		rc = buddy_init(&dev->inuse_restbl,
+				le32_to_cpu(ident->dev.nrdma_pts_per_lif) >>
+				(dev->cl_stride - dev->pte_stride));
+	else
+		rc = buddy_init(&dev->inuse_restbl,
+				le32_to_cpu(ident->dev.nrdma_pts_per_lif));
+	if (rc)
+		goto err_restbl;
+
+	rc = resid_init(&dev->inuse_pdid, ionic_max_pd);
+	if (rc)
+		goto err_pdid;
+
+	rc = resid_init(&dev->inuse_ahid,
+			le32_to_cpu(ident->dev.nrdma_ahs_per_lif));
+	if (rc)
+		goto err_ahid;
+
+	rc = resid_init(&dev->inuse_mrid,
+			le32_to_cpu(ident->dev.nrdma_mrs_per_lif));
+	if (rc)
+		goto err_mrid;
+
+	/* skip reserved lkey */
+	dev->inuse_mrid.next_id = 1;
+	dev->next_mrkey = 1;
+
+	rc = resid_init(&dev->inuse_cqid,
+			le32_to_cpu(ident->dev.rdma_cq_qtype.qid_count));
+	if (rc)
+		goto err_cqid;
+
+	/* prefer srqids after qpids */
+	dev->size_qpid = le32_to_cpu(ident->dev.rdma_sq_qtype.qid_count);
+	dev->size_srqid = le32_to_cpu(ident->dev.rdma_rq_qtype.qid_count);
+	dev->next_srqid = dev->size_qpid;
+
+	rc = resid_init(&dev->inuse_qpid, max(dev->size_qpid,
+					      dev->size_srqid));
+	if (rc)
+		goto err_qpid;
+
+	/* skip reserved SMI and GSI qpids */
+	dev->inuse_qpid.next_id = 2;
+
+	/* initialize dev_attr (TODO: remove from struct to save space) */
 	dev->dev_attr.fw_ver = 0;
 	dev->dev_attr.sys_image_guid = 0;
-	dev->dev_attr.max_mr_size = ident->dev.nrdma_pts_per_lif * PAGE_SIZE;
-	dev->dev_attr.page_size_cap = 0x1000;
+	dev->dev_attr.max_mr_size =
+		(dev->inuse_restbl.inuse_size * PAGE_SIZE / 2) <<
+		(dev->cl_stride - dev->pte_stride);
+	dev->dev_attr.page_size_cap = ~0;
 	dev->dev_attr.vendor_id = 0;
 	dev->dev_attr.vendor_part_id = 0;
 	dev->dev_attr.hw_ver = 0;
-	dev->dev_attr.max_qp = ident->dev.nrdmasqs_per_lif;
-	dev->dev_attr.max_qp_wr = 0xffff;
+	dev->dev_attr.max_qp = dev->size_qpid;
+	dev->dev_attr.max_qp_wr = IONIC_MAX_DEPTH;
 	dev->dev_attr.device_cap_flags =
 		IB_DEVICE_LOCAL_DMA_LKEY |
 		IB_DEVICE_MEM_WINDOW |
@@ -6871,16 +6936,18 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 		IB_DEVICE_MEM_WINDOW_TYPE_2B |
 		0;
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(4,19,0))
-	dev->dev_attr.max_sge = 6;
+	dev->dev_attr.max_sge =
+		min(ionic_v1_send_wqe_max_sge(dev->max_stride),
+		    ionic_v1_recv_wqe_max_sge(dev->max_stride));
 #else
 	dev->dev_attr.max_send_sge = ionic_v1_send_wqe_max_sge(dev->max_stride);
 	dev->dev_attr.max_recv_sge = ionic_v1_recv_wqe_max_sge(dev->max_stride);
 #endif
 	dev->dev_attr.max_sge_rd = 0;
-	dev->dev_attr.max_cq = ident->dev.ncqs_per_lif;
-	dev->dev_attr.max_cqe = 0xffff;
-	dev->dev_attr.max_mr = ident->dev.nrdma_mrs_per_lif; /* XXX need from identify */
-	dev->dev_attr.max_pd = 0x10000; /* XXX only limited by the size of bitset we can alloc */
+	dev->dev_attr.max_cq = dev->inuse_cqid.inuse_size;
+	dev->dev_attr.max_cqe = IONIC_MAX_CQ_DEPTH;
+	dev->dev_attr.max_mr = dev->inuse_mrid.inuse_size;
+	dev->dev_attr.max_pd = ionic_max_pd;
 	dev->dev_attr.max_qp_rd_atom = 16;
 	dev->dev_attr.max_ee_rd_atom = 0;
 	dev->dev_attr.max_res_rd_atom = 16;
@@ -6888,14 +6955,16 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->dev_attr.max_ee_init_rd_atom = 0;
 	dev->dev_attr.atomic_cap = IB_ATOMIC_HCA; /* XXX or global? */
 	dev->dev_attr.masked_atomic_cap = IB_ATOMIC_HCA; /* XXX or global? */
-	dev->dev_attr.max_mw = 0; /* XXX same as max_mr */
+	dev->dev_attr.max_mw = dev->inuse_mrid.inuse_size;
 	dev->dev_attr.max_mcast_grp = 0;
 	dev->dev_attr.max_mcast_qp_attach = 0;
-	dev->dev_attr.max_ah = ident->dev.nrdma_ahs_per_lif; /* XXX need from identify */
-	dev->dev_attr.max_srq = ident->dev.nrdmarqs_per_lif;
-	dev->dev_attr.max_srq_wr = 0xffff;
-	dev->dev_attr.max_srq_sge = 7;
-	dev->dev_attr.max_fast_reg_page_list_len = ident->dev.nrdma_pts_per_lif;
+	dev->dev_attr.max_ah = dev->inuse_ahid.inuse_size;
+	dev->dev_attr.max_srq = dev->size_srqid;
+	dev->dev_attr.max_srq_wr = IONIC_MAX_DEPTH;
+	dev->dev_attr.max_srq_sge = ionic_v1_recv_wqe_max_sge(dev->max_stride);
+	dev->dev_attr.max_fast_reg_page_list_len =
+		(dev->inuse_restbl.inuse_size / 2) <<
+		(dev->cl_stride - dev->pte_stride);
 	dev->dev_attr.max_pkeys = 1;
 
 	/* XXX hardcode values, intentionally low, should come from identify */
@@ -6908,7 +6977,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	}
 	dev->port_attr.max_mtu = ib_mtu_int_to_enum(ndev->max_mtu);
 	dev->port_attr.active_mtu = ib_mtu_int_to_enum(ndev->mtu);
-	dev->port_attr.gid_tbl_len = 4096; /* XXX same as max_ah, or unlimited? */
+	dev->port_attr.gid_tbl_len = ionic_max_gid;
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(4,19,0))
 	dev->port_attr.port_cap_flags = IB_PORT_IP_BASED_GIDS;
 #else
@@ -6918,73 +6987,6 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->port_attr.pkey_tbl_len = 1;
 	dev->port_attr.max_vl_num = 1;
 	dev->port_attr.subnet_prefix = 0xfe80000000000000ull;
-
-	/* XXX workarounds and overrides, remove for release */
-	if (ident->dev.ndbpgs_per_lif < 2)
-		ionic_xxx_kdbid = true;
-	if (ionic_xxx_limits) {
-		dev->dev_attr.max_qp = 20;
-		dev->dev_attr.max_cq = 40;
-		dev->dev_attr.max_srq = 40;
-	} else {
-		if (!dev->dev_attr.max_qp)
-			dev->dev_attr.max_qp = 40;
-		if (!dev->dev_attr.max_cq)
-			dev->dev_attr.max_cq = dev->dev_attr.max_qp;
-		if (!dev->dev_attr.max_srq)
-			dev->dev_attr.max_srq = dev->dev_attr.max_qp;
-	}
-
-	mutex_init(&dev->tbl_lock);
-
-	tbl_init(&dev->qp_tbl);
-	tbl_init(&dev->cq_tbl);
-
-	mutex_init(&dev->inuse_lock);
-	spin_lock_init(&dev->inuse_splock);
-
-	if (ionic_xxx_pgidx)
-		rc = buddy_init(&dev->inuse_restbl,
-				ident->dev.nrdma_pts_per_lif >>
-				(dev->cl_stride - dev->pte_stride));
-	else
-		rc = buddy_init(&dev->inuse_restbl,
-				ident->dev.nrdma_pts_per_lif);
-	if (rc)
-		goto err_restbl;
-
-	rc = resid_init(&dev->inuse_pdid, dev->dev_attr.max_pd);
-	if (rc)
-		goto err_pdid;
-
-	rc = resid_init(&dev->inuse_ahid, dev->dev_attr.max_ah);
-	if (rc)
-		goto err_ahid;
-
-	rc = resid_init(&dev->inuse_mrid, dev->dev_attr.max_mr);
-	if (rc)
-		goto err_mrid;
-
-	/* skip reserved lkey */
-	dev->inuse_mrid.next_id = 1;
-	dev->next_mrkey = 1;
-
-	rc = resid_init(&dev->inuse_cqid, dev->dev_attr.max_cq);
-	if (rc)
-		goto err_cqid;
-
-	rc = resid_init(&dev->inuse_qpid, max(dev->dev_attr.max_qp,
-					      dev->dev_attr.max_srq));
-	if (rc)
-		goto err_qpid;
-
-	/* prefer srqids after qpids */
-	dev->size_qpid = dev->dev_attr.max_qp;
-	dev->size_srqid = dev->dev_attr.max_srq;
-	dev->next_srqid = dev->dev_attr.max_qp,
-
-	/* skip reserved SMI and GSI qpids */
-	dev->inuse_qpid.next_id = 2;
 
 	if (ionic_dbgfs_enable)
 		lif_dbgfs = ionic_api_get_debugfs(lif);
@@ -6997,7 +6999,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	if (rc)
 		goto err_reset;
 
-	rc = ionic_create_rdma_admin(dev, le32_to_cpu(ident->dev.neqs_per_lif));
+	rc = ionic_create_rdma_admin(dev);
 	if (rc)
 		goto err_register;
 

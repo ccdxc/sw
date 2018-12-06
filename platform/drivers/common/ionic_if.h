@@ -21,9 +21,6 @@
 
 #define DEV_CMD_SIGNATURE               0x44455643      /* 'DEVC' */
 
-#define IONIC_ADMINQ_ETH		0
-#define IONIC_ADMINQ_RDMA		1
-
 enum cmd_opcode {
 	CMD_OPCODE_NOP				= 0,
 	CMD_OPCODE_RESET			= 1,
@@ -221,6 +218,19 @@ enum os_type {
 };
 
 /**
+ * struct lif_logical_qtype - Descriptor of logical to numeric queue type.
+ * @ qtype:		Numeric Queue Type.
+ * @ qid_base:		Minimum Queue ID of the logical type.
+ * @ qid_count:		Number of Queue IDs of the logical type.
+ */
+struct lif_logical_qtype {
+	u8 qtype;
+	u8 rsvd[3];
+	u32 qid_count;
+	u32 qid_base;
+};
+
+/**
  * union identity - 4096 bytes of driver/device identity information
  *
  * Supplied by driver (IN):
@@ -242,24 +252,10 @@ enum os_type {
  *     @fw_version:       NULL-terminated string representing the
  *                        firmware version
  *     @nlifs:            Number of LIFs provisioned
- *     @ndbpgs_per_lif:   Number of doorbell pages per LIF
- *     @nadminqs_per_lif: Number of admin queues per LIF provisioned
- *     @ntxqs_per_lif:    Number of Ethernet transmit queues per LIF
- *                        provisioned
- *     @nrxqs_per_lif:    Number of Ethernet receive queues per LIF
- *                        provisioned
- *     @ncps_per_lif:     Number of completion queues per LIF
- *                        provisioned
- *     @nrdmasqs_per_lif: Number of RMDA send queues per LIF
- *                        provisioned
- *     @nrdmarqs_per_lif: Number of RDMA receive queues per LIF
- *                        provisioned
- *     @neqs_per_lif:     Number of event queues per LIF provisioned
  *     @nintrs:           Number of interrupts provisioned
- *     @nucasts_per_lif:  Number of perfect unicast addresses
- *                        supported
- *     @nmcasts_per_lif:  Number of perfect multicast addresses
- *                        supported.
+ *     @ndbpgs_per_lif:   Number of doorbell pages per LIF
+ *     @nucasts_per_lif:  Number of perfect unicast addresses supported
+ *     @nmcasts_per_lif:  Number of perfect multicast addresses supported.
  *     @intr_coal_mult:   Interrupt coalescing multiplication factor.
  *                        Scale user-supplied interrupt coalescing
  *                        value in usecs to device units using:
@@ -269,10 +265,22 @@ enum os_type {
  *                        value in usecs to device units using:
  *                           device units = usecs * mult / div
  *     @rdma_version:     RDMA version of opcodes and queue descriptors.
- *     @rdma_qp_opcodes:  Number of rdma queue pair opcodes supported for the
- *                        current version and six prior versions.
- *     @rdma_admin_opcodes: Number of rdma admin opcodes supported for the
- *                        current version and six prior versions.
+ *     @rdma_qp_opcodes:  Number of rdma queue pair opcodes supported.
+ *     @rdma_admin_opcodes: Number of rdma admin opcodes supported.
+ *     @rdma_max_stride:  Max work request stride.
+ *     @rdma_cl_stride:	  Cache line stride.
+ *     @rdma_pte_stride:  Page table entry stride.
+ *     @rdma_rrq_stride:  Remote RQ work request stride.
+ *     @rdma_rsq_stride:  Remote SQ work request stride.
+ *     @admin_qtype:      Admin Qtype.
+ *     @tx_qtype:         Transmit Qtype.
+ *     @rx_qtype:         Receive Qtype.
+ *     @notify_qtype:     Notify Qtype.
+ *     @rdma_aq_qtype:    RDMA Admin Qtype.
+ *     @rdma_sq_qtype:    RDMA Send Qtype.
+ *     @rdma_rq_qtype:    RDMA Receive Qtype.
+ *     @rdma_cq_qtype:    RDMA Completion Qtype.
+ *     @rdma_eq_qtype:    RDMA Event Qtype.
  */
 union identity {
 	struct {
@@ -286,29 +294,38 @@ union identity {
 	struct {
 		u8 asic_type;
 		u8 asic_rev;
-		u8 rsvd[2];
+		u8 rsvd_asicid[2];
 		char serial_num[20];
 		char fw_version[20];
 		u32 nlifs;
-		u32 ndbpgs_per_lif;
-		u32 nadminqs_per_lif;
-		u32 ntxqs_per_lif;
-		u32 nrxqs_per_lif;
-		u32 ncqs_per_lif;
-		u32 nrdmasqs_per_lif;
-		u32 nrdmarqs_per_lif;
-		u32 nrdma_pts_per_lif;
-		u32 nrdma_mrs_per_lif;
-		u32 nrdma_ahs_per_lif;
-		u32 neqs_per_lif;
 		u32 nintrs;
+		u32 ndbpgs_per_lif;
 		u32 nucasts_per_lif;
 		u32 nmcasts_per_lif;
 		u32 intr_coal_mult;
 		u32 intr_coal_div;
 		u16 rdma_version;
-		u8 rdma_qp_opcodes[7];
-		u8 rdma_admin_opcodes[7];
+		u8 rdma_qp_opcodes;
+		u8 rdma_admin_opcodes;
+		u32 nrdma_pts_per_lif;
+		u32 nrdma_mrs_per_lif;
+		u32 nrdma_ahs_per_lif;
+		u8 rdma_max_stride;
+		u8 rdma_cl_stride;
+		u8 rdma_pte_stride;
+		u8 rdma_rrq_stride;
+		u8 rdma_rsq_stride;
+		u8 rsvd_dimensions[11];
+		struct lif_logical_qtype tx_qtype;
+		struct lif_logical_qtype rx_qtype;
+		struct lif_logical_qtype admin_qtype;
+		struct lif_logical_qtype notify_qtype;
+		struct lif_logical_qtype rdma_aq_qtype;
+		struct lif_logical_qtype rdma_sq_qtype;
+		struct lif_logical_qtype rdma_rq_qtype;
+		struct lif_logical_qtype rdma_cq_qtype;
+		struct lif_logical_qtype rdma_eq_qtype;
+		struct lif_logical_qtype rsvd_qtype[7];
 	} dev;
 	u32 words[1024];
 };

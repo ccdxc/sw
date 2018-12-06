@@ -275,11 +275,18 @@ int ionic_debugfs_add_dev_cmd(struct ionic *ionic)
 	return 0;
 }
 
+static void identity_show_qtype(struct seq_file *seq, const char *name,
+			       struct lif_logical_qtype *qtype)
+{
+	seq_printf(seq, "%s_qtype:\t%d\n", name, qtype->qtype);
+	seq_printf(seq, "%s_count:\t%d\n", name, qtype->qid_count);
+	seq_printf(seq, "%s_base:\t%d\n", name, qtype->qid_base);
+}
+
 static int identity_show(struct seq_file *seq, void *v)
 {
 	struct ionic *ionic = seq->private;
 	union identity *ident = ionic->ident;
-	int i;
 
 	seq_printf(seq, "asic_type:        %s\n",
 		   ionic_dev_asic_name(ident->dev.asic_type));
@@ -287,27 +294,32 @@ static int identity_show(struct seq_file *seq, void *v)
 	seq_printf(seq, "serial_num:       %s\n", ident->dev.serial_num);
 	seq_printf(seq, "fw_version:       %s\n", ident->dev.fw_version);
 	seq_printf(seq, "nlifs:            %d\n", ident->dev.nlifs);
-	seq_printf(seq, "ndbpgs_per_lif:   %d\n", ident->dev.ndbpgs_per_lif);
-	seq_printf(seq, "nadminqs_per_lif: %d\n", ident->dev.nadminqs_per_lif);
-	seq_printf(seq, "ntxqs_per_lif:    %d\n", ident->dev.ntxqs_per_lif);
-	seq_printf(seq, "nrxqs_per_lif:    %d\n", ident->dev.nrxqs_per_lif);
-	seq_printf(seq, "ncqs_per_lif:     %d\n", ident->dev.ncqs_per_lif);
-	seq_printf(seq, "nrdmasqs_per_lif: %d\n", ident->dev.nrdmasqs_per_lif);
-	seq_printf(seq, "nrdmarqs_per_lif: %d\n", ident->dev.nrdmarqs_per_lif);
-	seq_printf(seq, "neqs_per_lif:     %d\n", ident->dev.neqs_per_lif);
 	seq_printf(seq, "nintrs:           %d\n", ident->dev.nintrs);
+	seq_printf(seq, "ndbpgs_per_lif:   %d\n", ident->dev.ndbpgs_per_lif);
 	seq_printf(seq, "nucasts_per_lif:  %d\n", ident->dev.nucasts_per_lif);
 	seq_printf(seq, "nmcasts_per_lif:  %d\n", ident->dev.nmcasts_per_lif);
 	seq_printf(seq, "intr_coal_mult:   %d\n", ident->dev.intr_coal_mult);
 	seq_printf(seq, "intr_coal_div:    %d\n", ident->dev.intr_coal_div);
 
 	seq_printf(seq, "rdma_version:     %d\n", ident->dev.rdma_version);
-	for (i = 0; i < 7; ++i)
-		seq_printf(seq, "rdma_qp_opcodes[%d]: %d\n",
-			   i, ident->dev.rdma_qp_opcodes[i]);
-	for (i = 0; i < 7; ++i)
-		seq_printf(seq, "rdma_admin_opcodes[%d]: %d\n",
-			   i, ident->dev.rdma_admin_opcodes[i]);
+	seq_printf(seq, "rdma_qp_opcodes:  %d\n", ident->dev.rdma_qp_opcodes);
+	seq_printf(seq, "rdma_admin_opcodes: %d\n", ident->dev.rdma_admin_opcodes);
+	seq_printf(seq, "rdma_max_stride:    %d\n", ident->dev.rdma_max_stride);
+	seq_printf(seq, "rdma_cl_stride:    %d\n", ident->dev.rdma_cl_stride);
+	seq_printf(seq, "rdma_pte_stride:    %d\n", ident->dev.rdma_pte_stride);
+	seq_printf(seq, "rdma_rrq_stride:    %d\n", ident->dev.rdma_rrq_stride);
+	seq_printf(seq, "rdma_rsq_stride:    %d\n", ident->dev.rdma_rsq_stride);
+
+	identity_show_qtype(seq, "admin", &ident->dev.admin_qtype);
+	identity_show_qtype(seq, "tx", &ident->dev.tx_qtype);
+	identity_show_qtype(seq, "rx", &ident->dev.rx_qtype);
+	identity_show_qtype(seq, "notify", &ident->dev.notify_qtype);
+
+	identity_show_qtype(seq, "rdma_aq", &ident->dev.rdma_aq_qtype);
+	identity_show_qtype(seq, "rdma_sq", &ident->dev.rdma_sq_qtype);
+	identity_show_qtype(seq, "rdma_rq", &ident->dev.rdma_rq_qtype);
+	identity_show_qtype(seq, "rdma_cq", &ident->dev.rdma_cq_qtype);
+	identity_show_qtype(seq, "rdma_eq", &ident->dev.rdma_eq_qtype);
 
 	return 0;
 }

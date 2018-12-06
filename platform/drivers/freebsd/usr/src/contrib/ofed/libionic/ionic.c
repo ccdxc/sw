@@ -130,7 +130,7 @@ static int ionic_init_context(struct verbs_device *vdev,
 	struct ionic_ctx *ctx = to_ionic_ctx(ibctx);
 	struct uionic_ctx req = {};
 	struct uionic_ctx_resp resp = {};
-	int rc, version, compat, level;
+	int rc, version, level;
 
 	ionic_debug_file_init();
 
@@ -151,32 +151,18 @@ static int ionic_init_context(struct verbs_device *vdev,
 	if (!ctx->fallback) {
 		version = resp.version;
 
-		if (version <= IONIC_MAX_RDMA_VERSION) {
-			compat = 0;
-		} else {
-			compat = version - IONIC_MAX_RDMA_VERSION;
-			version = IONIC_MAX_RDMA_VERSION;
-		}
-
-		while (version > 0 && compat < 7) {
-			if (resp.qp_opcodes[compat])
-				break;
-			--version;
-			++compat;
-		}
-
 		if (version < IONIC_MIN_RDMA_VERSION) {
 			fprintf(stderr, "ionic: Firmware RDMA Version %u\n",
-				resp.version);
+				version);
 			fprintf(stderr, "ionic: Driver Min RDMA Version %u\n",
 				IONIC_MIN_RDMA_VERSION);
 			rc = EINVAL;
 			goto out;
 		}
 
-		if (compat >= 7) {
+		if (version > IONIC_MAX_RDMA_VERSION) {
 			fprintf(stderr, "ionic: Firmware RDMA Version %u\n",
-				resp.version);
+				version);
 			fprintf(stderr, "ionic: Driver Max RDMA Version %u\n",
 				IONIC_MAX_RDMA_VERSION);
 			rc = EINVAL;
@@ -184,8 +170,7 @@ static int ionic_init_context(struct verbs_device *vdev,
 		}
 
 		ctx->version = version;
-		ctx->compat = compat;
-		ctx->opcodes = resp.qp_opcodes[compat];
+		ctx->opcodes = resp.qp_opcodes;
 
 		ctx->sq_qtype = resp.sq_qtype;
 		ctx->rq_qtype = resp.rq_qtype;

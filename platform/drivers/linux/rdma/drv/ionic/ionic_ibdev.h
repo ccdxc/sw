@@ -98,11 +98,14 @@ struct ionic_ibdev {
 	u32		__iomem *intr_ctrl;
 
 	u16			rdma_version;
-	u8			rdma_compat;
 	u8			qp_opcodes;
 	u8			admin_opcodes;
 
-	u8			admin_qtype;
+	u32			aq_base;
+	u32			cq_base;
+	u32			eq_base;
+
+	u8			aq_qtype;
 	u8			sq_qtype;
 	u8			rq_qtype;
 	u8			cq_qtype;
@@ -260,8 +263,6 @@ struct ionic_cq {
 	struct ib_umem		*umem;
 	struct ionic_tbl_res	res;
 
-	u8			compat;
-
 	struct dentry		*debug;
 
 	/* XXX xxx_notify */
@@ -348,8 +349,6 @@ struct ionic_qp {
 
 	struct ionic_tbl_res	rsq_res;
 	struct ionic_tbl_res	rrq_res;
-
-	u8			compat;
 
 	struct dentry		*debug;
 };

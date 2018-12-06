@@ -1657,9 +1657,10 @@ int ionic_lifs_size(struct ionic *ionic)
 {
 	union identity *ident = ionic->ident;
 	unsigned int nlifs = ident->dev.nlifs;
-	unsigned int neqs_per_lif = ident->dev.neqs_per_lif;
-	unsigned int ntxqs_per_lif = ident->dev.ntxqs_per_lif;
-	unsigned int nrxqs_per_lif = ident->dev.nrxqs_per_lif;
+	unsigned int neqs_per_lif = ident->dev.rdma_eq_qtype.qid_count;
+	unsigned int nnqs_per_lif = ident->dev.notify_qtype.qid_count;
+	unsigned int ntxqs_per_lif = ident->dev.tx_qtype.qid_count;
+	unsigned int nrxqs_per_lif = ident->dev.rx_qtype.qid_count;
 	unsigned int nintrs, dev_nintrs = ident->dev.nintrs;
 	int err;
 
@@ -1669,7 +1670,8 @@ int ionic_lifs_size(struct ionic *ionic)
 		nrxqs_per_lif = min(nrxqs_per_lif, nrxqs);
 
 try_again:
-	nintrs = nlifs * (neqs_per_lif +
+	nintrs = nlifs * (nnqs_per_lif +
+			  neqs_per_lif +
 			  ntxqs_per_lif +
 			  nrxqs_per_lif +
 			  1 /* adminq */);
@@ -1695,6 +1697,10 @@ try_again:
 	return ionic_debugfs_add_sizes(ionic);
 
 try_fewer:
+	if (nnqs_per_lif > 1) {
+		--nnqs_per_lif;
+		goto try_again;
+	}
 	if (neqs_per_lif > 1) {
 		--neqs_per_lif;
 		goto try_again;

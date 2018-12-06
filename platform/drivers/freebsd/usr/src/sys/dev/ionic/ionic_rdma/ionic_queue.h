@@ -35,6 +35,8 @@
 
 #include <linux/io.h>
 
+#define IONIC_MAX_DEPTH		0xffff
+#define IONIC_MAX_CQ_DEPTH	0xffff
 #define IONIC_QID_MASK		((1ull << 24) - 1)
 #define IONIC_DBELL_QID_SHIFT	24
 #define IONIC_DBELL_RING_ARM	(1ull << 16)

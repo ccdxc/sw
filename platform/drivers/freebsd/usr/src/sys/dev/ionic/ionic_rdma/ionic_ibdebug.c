@@ -387,7 +387,11 @@ void ionic_dbgfs_add_dev_info(struct ionic_ibdev *dev)
 	ionic_u8(ctx, parent, &dev->qp_opcodes, "qp_opcodes", "QP Opcodes");
 	ionic_u8(ctx, parent, &dev->admin_opcodes, "admin_opcodes", "Admin Opcodes");
 
-	ionic_u8(ctx, parent, &dev->admin_qtype, "admin_qtype", "Admin QType");
+	ionic_u32(ctx, parent, &dev->aq_base, "aq_base", "Admin QID Base");
+	ionic_u32(ctx, parent, &dev->cq_base, "cq_base", "Completion QID Base");
+	ionic_u32(ctx, parent, &dev->eq_base, "eq_base", "Event QID Base");
+
+	ionic_u8(ctx, parent, &dev->aq_qtype, "aq_qtype", "Admin QType");
 	ionic_u8(ctx, parent, &dev->sq_qtype, "sq_qtype", "Send QType");
 	ionic_u8(ctx, parent, &dev->rq_qtype, "rq_qtype", "Recv QType");
 	ionic_u8(ctx, parent, &dev->cq_qtype, "cq_qtype", "Completion QType");

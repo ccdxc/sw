@@ -2400,16 +2400,23 @@ int ionic_lifs_size(struct ionic *ionic)
 {
 	union identity *ident = ionic->ident;
 	unsigned int nlifs = ident->dev.nlifs;
-	unsigned int neqs = ident->dev.neqs_per_lif;
+	unsigned int neqs = ident->dev.rdma_eq_qtype.qid_count;
+	unsigned int nnqs = ident->dev.notify_qtype.qid_count;
 	/* Tx and Rx Qs are in pair. */
-	int nqs = min(ident->dev.ntxqs_per_lif, ident->dev.nrxqs_per_lif);
+	int nqs = min(ident->dev.tx_qtype.qid_count,
+		      ident->dev.rx_qtype.qid_count);
 	unsigned int nintrs, dev_nintrs = ident->dev.nintrs;
 	int err;
 
-	IONIC_DEV_INFO(ionic->dev, "Lifs: %u, Intrs: %u, TxQs: %u,RxQs: %u EQs: %u,"
-		" ucasts: %u,mcasts: %u,Intr coal: %u,div:%u\n",
-		ident->dev.nlifs, dev_nintrs, ident->dev.ntxqs_per_lif, ident->dev.nrxqs_per_lif,
-		ident->dev.ntxqs_per_lif, ident->dev.nucasts_per_lif, ident->dev.nmcasts_per_lif,
+	IONIC_DEV_INFO(ionic->dev, "Lifs: %u, Intrs: %u, NotifyQs: %u, "
+		       "TxQs: %u,RxQs: %u EQs: %u, "
+		       "ucasts: %u,mcasts: %u,Intr coal: %u,div:%u\n",
+		ident->dev.nlifs, dev_nintrs,
+		ident->dev.notify_qtype.qid_count,
+		ident->dev.tx_qtype.qid_count,
+		ident->dev.rx_qtype.qid_count,
+		ident->dev.rdma_eq_qtype.qid_count,
+		ident->dev.nucasts_per_lif, ident->dev.nmcasts_per_lif,
 		ident->dev.intr_coal_mult, ident->dev.intr_coal_div);
 
 	/* Limit the number of queues as specified by user. */
@@ -2433,10 +2440,10 @@ try_again:
 
 #ifndef IONIC_SEPERATE_TX_INTR
 	/* Seperate interrupts for transmit and receive. */
-	nintrs = nlifs * (neqs + 2 * nqs + 1 /* adminq */);
+	nintrs = nlifs * (nnqs + neqs + 2 * nqs + 1 /* adminq */);
 #else
 	/* Interrupt is shared by transmit and receive. */
-	nintrs = nlifs * (neqs + nqs + 1 /* adminq */);
+	nintrs = nlifs * (nnqs + neqs + nqs + 1 /* adminq */);
 #endif
 	if (nintrs > dev_nintrs) {
 		goto try_fewer;
@@ -2467,6 +2474,10 @@ try_again:
 
 	return 0;
 try_fewer:
+	if (nnqs > 1) {
+		nnqs /= 2;
+		goto try_again;
+	}
 	if (neqs > 1) {
 		neqs /= 2;
 		goto try_again;

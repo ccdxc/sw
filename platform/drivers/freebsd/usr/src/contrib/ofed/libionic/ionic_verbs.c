@@ -104,8 +104,6 @@ static struct ibv_cq *ionic_create_cq(struct ibv_context *ibctx, int ncqe,
 	req.cq.depth_log2 = cq->q.depth_log2;
 	req.cq.stride_log2 = cq->q.stride_log2;
 
-	req.compat = ctx->compat;
-
 	rc = ibv_cmd_create_cq(ibctx, ncqe, channel, vec, &cq->ibcq,
 			       &req.ibv_cmd, sizeof(req),
 			       &resp.ibv_resp, sizeof(resp));
@@ -1033,8 +1031,6 @@ static struct ibv_qp *ionic_create_qp_ex(struct ibv_context *ibctx,
 	req.rq.mask = qp->rq.mask;
 	req.rq.depth_log2 = qp->rq.depth_log2;
 	req.rq.stride_log2 = qp->rq.stride_log2;
-
-	req.compat = ctx->compat;
 
 	rc = ibv_cmd_create_qp_ex2(ibctx, &qp->vqp, sizeof(qp->vqp), ex,
 				   &req.ibv_cmd, sizeof(req.ibv_cmd), sizeof(req),
@@ -2407,8 +2403,6 @@ static struct ibv_srq *ionic_create_srq_ex(struct ibv_context *ibctx,
 	req.rq.mask = qp->rq.mask;
 	req.rq.depth_log2 = qp->rq.depth_log2;
 	req.rq.stride_log2 = qp->rq.stride_log2;
-
-	req.compat = ctx->compat;
 
 	rc = ibv_cmd_create_srq_ex(ibctx, &qp->vsrq, sizeof(qp->vsrq), ex,
 				   &req.ibv_cmd, sizeof(req),
