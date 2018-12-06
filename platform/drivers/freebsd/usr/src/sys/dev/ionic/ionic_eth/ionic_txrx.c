@@ -240,8 +240,17 @@ void ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *rxbuf,
 	int error;
 	bool is_tcp;
 
-	KASSERT(m, ("mbuf is NULL"));
 	KASSERT(IONIC_RX_LOCK_OWNED(rxq), ("%s is not locked", rxq->name));
+
+	/*
+	 * No-op case.
+	 */
+	if (m == NULL) {
+		stats->mem_err++;
+		return;
+	}
+//	KASSERT(m, ("mbuf is NULL"));
+
 
 	IONIC_RX_TRACE(rxq, "input called for @%d\n", comp->comp_index);
 	if (comp->status) {
@@ -332,6 +341,7 @@ int ionic_rx_mbuf_alloc(struct rxque *rxq, int index, int len)
 	rxbuf = &rxq->rxbuf[index];
 	m = m_getjcl(M_NOWAIT, MT_DATA, M_PKTHDR, len);
 	if (m == NULL) {
+		rxbuf->m = NULL;
 		stats->alloc_err++;
 		return (ENOMEM);
 	}
@@ -1389,6 +1399,8 @@ ionic_lif_add_rxtstat(struct rxque *rxq, struct sysctl_ctx_list *ctx,
 					 &rxstat->alloc_err, "Buffer allocation error");
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "comp_err", CTLFLAG_RD,
 					 &rxstat->comp_err, "Completion with error");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "mem_err", CTLFLAG_RD,
+					 &rxstat->mem_err, "Completion without mbufs");
 
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "pkts", CTLFLAG_RD,
 					 &rxstat->pkts, "Rx Packets");

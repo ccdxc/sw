@@ -523,12 +523,13 @@ void ionic_set_multi(struct lif* lif)
 	max_maddrs = lif->ionic->ident->dev.nmcasts_per_lif;
 	mc_addr = lif->mc_addrs;
 
+	if (mc_addr == NULL)
+		return;
+
 	/* Remove the old list and program the new ones. */
-	if (mc_addr != NULL) {
-		for (i = 0 ; i < lif->num_mc_addrs ; i++) {
-			IONIC_NETDEV_INFO(lif->netdev, "Deleting MC[%d]\n", i);
-			ionic_addr_del(ifp, mc_addr[i].addr);
-		}
+	for (i = 0 ; i < lif->num_mc_addrs ; i++) {
+		IONIC_NETDEV_INFO(lif->netdev, "Deleting MC[%d]\n", i);
+		ionic_addr_del(ifp, mc_addr[i].addr);
 	}
 
 	if_maddr_rlock(ifp);
@@ -545,27 +546,24 @@ void ionic_set_multi(struct lif* lif)
 
 	if_maddr_runlock(ifp);
 
-	if ((mcnt == max_maddrs) &  ((ifp->if_flags & IFF_ALLMULTI) == 0)) {
+	if ((mcnt == max_maddrs) && ((ifp->if_flags & IFF_ALLMULTI) == 0)) {
 		ifp->if_flags |= IFF_ALLMULTI;
 		IONIC_NETDEV_INFO(lif->netdev, "Enabling IFF_ALLMULTI\n");
 		ionic_set_rx_mode(ifp);
 	} 
 
-	if ((mcnt < max_maddrs) & (ifp->if_flags & IFF_ALLMULTI)) {
+	if ((mcnt < max_maddrs) && (ifp->if_flags & IFF_ALLMULTI)) {
 		ifp->if_flags ^= IFF_ALLMULTI;
 		IONIC_NETDEV_INFO(lif->netdev, "Disabling IFF_ALLMULTI\n");
 		ionic_set_rx_mode(ifp);
 	} 
 
-	if (mc_addr == NULL)
-		mc_addr = malloc(sizeof(struct ionic_mc_addr) * mcnt, M_IONIC, M_NOWAIT | M_ZERO);
-
-	for (i = 0 ; i < mcnt ; i++) {
+	for (i = 0 ; i < min(mcnt, max_maddrs) ; i++) {
 		IONIC_NETDEV_INFO(lif->netdev, "Adding MC[%d]\n", i);
 		ionic_addr_add(ifp, mc_addr[i].addr);
 	}
 
-	lif->num_mc_addrs = mcnt;
+	lif->num_mc_addrs = min(mcnt, max_maddrs);
 }
 
 int ionic_change_mtu(struct net_device *netdev, int new_mtu)

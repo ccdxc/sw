@@ -64,6 +64,8 @@ struct rx_stats {
 	u64 isr_count; 	// Not required.
 	u64 task;		/* Number of time task was invoked. */
 	u64 comp_err;
+	u64 mem_err;	/* Completions w/o associated mbuf. */
+
 	u64 rss_ip4;
 	u64 rss_tcp_ip4;
 	u64 rss_udp_ip4;
