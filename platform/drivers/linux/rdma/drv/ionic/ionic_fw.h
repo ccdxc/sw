@@ -474,7 +474,7 @@ struct ionic_v1_reg_mr_bdy {
 	__be64				va;
 	__be64				length;
 	__be64				offset;
-	__be64				dma_addr;
+	__le64				dma_addr;
 	__be32				map_count;
 	__be16				flags;
 	__u8				dir_size_log2;

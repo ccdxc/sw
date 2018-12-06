@@ -2939,7 +2939,7 @@ static int ionic_poll_recv(struct ionic_ibdev *dev, struct ionic_cq *cq,
 		wc->ex.invalidate_rkey = be32_to_cpu(cqe->recv.imm_data_rkey);
 	}
 
-	wc->byte_len = be32_to_cpu(st_len);
+	wc->byte_len = st_len;
 	wc->src_qp = src_qpn & IONIC_V1_CQE_RECV_QPN_MASK;
 	wc->pkey_index = be16_to_cpu(cqe->recv.pkey_index);
 
@@ -5398,9 +5398,9 @@ static int ionic_v1_prep_reg(struct ionic_qp *qp,
 	wqe->base.num_sge_key = wr->key;
 	wqe->base.imm_data_key = cpu_to_be32(mr->ibmr.lkey);
 	wqe->reg_mr.va = cpu_to_be64(mr->ibmr.iova);
-	wqe->reg_mr.length = cpu_to_be32(mr->ibmr.length);
+	wqe->reg_mr.length = cpu_to_be64(mr->ibmr.length);
 	wqe->reg_mr.offset =
-		cpu_to_be32(mr->ibmr.iova & (mr->ibmr.page_size - 1));
+		cpu_to_be64(mr->ibmr.iova & (mr->ibmr.page_size - 1));
 
 	if (mr->buf.tbl_pages == 1 && mr->buf.tbl_buf)
 		wqe->reg_mr.dma_addr = mr->buf.tbl_buf[0];
