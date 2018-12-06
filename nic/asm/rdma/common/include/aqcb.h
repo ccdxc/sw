@@ -38,7 +38,7 @@ struct aqcb0_t {
     busy: 8;
 
     cq_id: 24;
-    rsvd3:8;
+    error: 8;
 
     cqcb_addr: 64;
     pad: 192;

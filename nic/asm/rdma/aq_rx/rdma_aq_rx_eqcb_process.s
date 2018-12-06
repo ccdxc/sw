@@ -11,17 +11,19 @@ struct eqcb_t d;
 #define EQWQE_P r1
 #define DMA_CMD_BASE r4
 
+#define IN_P t1_s2s_cqcb_to_eq_info
+
+#define K_ASYNC_EQ CAPRI_KEY_FIELD(IN_P, async_eq)
+
 #define PHV_EQWQE_START eqwqe.qid 
 #define PHV_EQWQE_END   eqwqe.color
+#define PHV_ASYNC_EQWQE_START async_eqwqe.qid
+#define PHV_ASYNC_EQWQE_END   async_eqwqe.color
 
 #define PHV_EQ_INT_ASSERT_DATA_BEGIN int_assert_data
 #define PHV_EQ_INT_ASSERT_DATA_END int_assert_data
-
-#define IN_P t1_s2s_cqcb_to_eq_info
-
-//#define   K_CQ_ID CAPRI_KEY_RANGE(IN_P, qid_sbit0_ebit15, qid_sbit16_ebit23)
-#define K_CQ_ID CAPRI_KEY_FIELD(IN_P, qid)    
-#define K_EQCB_ADDR CAPRI_KEY_RANGE(IN_P, eqcb_addr_sbit0_ebit23, eqcb_addr_sbit40_ebit63)
+#define PHV_ASYNC_EQ_INT_ASSERT_DATA_BEGIN int_assert_data
+#define PHV_ASYNC_EQ_INT_ASSERT_DATA_END   int_assert_data
 
 %%
 
@@ -34,12 +36,15 @@ rdma_aq_rx_eqcb_process:
     // flip the color if cq is wrap around
     tblmincri.c1    EQ_COLOR, 1, 1     
 
-    phvwrpair       p.eqwqe.qid, K_CQ_ID, p.eqwqe.color, EQ_COLOR
-    phvwrpair       p.eqwqe.code, EQE_CODE_CQ_NOTIFY, p.eqwqe.type, EQE_TYPE_CQ
-
-    sllv            r1, EQ_P_INDEX, d.log_wqe_size
+    sll             r1, EQ_P_INDEX, d.log_wqe_size
     add             EQWQE_P, d.eqe_base_addr, r1
 
+    bbeq            K_ASYNC_EQ, 1, async_eq
+    // increment p_index
+    tblmincri       EQ_P_INDEX, d.log_num_wqes, 1 // Branch Delay Slot
+
+completion_eq:
+    phvwr           p.eqwqe.color, EQ_COLOR
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, AQ_RX_DMA_CMD_START_FLIT_ID, AQ_RX_DMA_CMD_EQ)
     DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, PHV_EQWQE_START, PHV_EQWQE_END, EQWQE_P)
 
@@ -49,11 +54,19 @@ rdma_aq_rx_eqcb_process:
     DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, PHV_EQ_INT_ASSERT_DATA_BEGIN, PHV_EQ_INT_ASSERT_DATA_END, d.int_assert_addr)
 
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
-    
-    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
+    DMA_SET_END_OF_CMDS_E(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
+    CAPRI_SET_TABLE_1_VALID(0)
 
-    // increment p_index
-    tblmincri.e     EQ_P_INDEX, d.log_num_wqes, 1
-    CAPRI_SET_TABLE_2_VALID(0) //Exit Slot
+async_eq:
+    phvwr           p.async_eqwqe.color, EQ_COLOR
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, AQ_RX_DMA_CMD_START_FLIT_ID, AQ_RX_DMA_CMD_ASYNC_EQ)
+    DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, PHV_ASYNC_EQWQE_START, PHV_ASYNC_EQWQE_END, EQWQE_P)
 
-
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, AQ_RX_DMA_CMD_START_FLIT_ID, AQ_RX_DMA_CMD_ASYNC_EQ_INT)
+    //Writing Interrupt unconditionally... if needed, add a flag for this purpose
+    phvwri          p.async_int_assert_data, CAPRI_INT_ASSERT_DATA
+    DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, PHV_ASYNC_EQ_INT_ASSERT_DATA_BEGIN, PHV_ASYNC_EQ_INT_ASSERT_DATA_END, d.int_assert_addr)
+ 
+    DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
+    DMA_SET_END_OF_CMDS_E(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
+    CAPRI_SET_TABLE_0_VALID(0)

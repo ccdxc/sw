@@ -11,20 +11,22 @@
 #define AQ_RX_DMA_CMD_START_FLIT_CMD_ID 0
 #define TOTAL_DMA_CMD_BITS 16 * 16 * 8 // (cmds * dma_cmd_size * bits_per_byte) 
 
-#define AQ_RX_MAX_DMA_CMDS        8
+#define AQ_RX_MAX_DMA_CMDS                  8
 
-#define AQ_RX_DMA_CMD_PYLD_BASE   2
-#define AQ_RX_DMA_CMD_START       0
-#define AQ_RX_DMA_CMD_CQ          (AQ_RX_MAX_DMA_CMDS - 4)
-#define AQ_RX_DMA_CMD_EQ          (AQ_RX_MAX_DMA_CMDS - 3)
-#define AQ_RX_DMA_CMD_AQ_BUSY     (AQ_RX_MAX_DMA_CMDS - 2)
+#define AQ_RX_DMA_CMD_PYLD_BASE             2
+#define AQ_RX_DMA_CMD_START                 0
+#define AQ_RX_DMA_CMD_CQ                    (AQ_RX_MAX_DMA_CMDS - 4)
+#define AQ_RX_DMA_CMD_AQ_ERR_DIS            (AQ_RX_MAX_DMA_CMDS - 4)
+#define AQ_RX_DMA_CMD_EQ                    (AQ_RX_MAX_DMA_CMDS - 3)
+#define AQ_RX_DMA_CMD_ASYNC_EQ              AQ_RX_DMA_CMD_EQ
 //wakeup dpath and EQ are mutually exclusive
-#define AQ_RX_DMA_CMD_WAKEUP_DPATH  AQ_RX_DMA_CMD_EQ
-#define AQ_RX_DMA_CMD_EQ_INT      (AQ_RX_MAX_DMA_CMDS - 1)
+#define AQ_RX_DMA_CMD_WAKEUP_DPATH          AQ_RX_DMA_CMD_EQ
+#define AQ_RX_DMA_CMD_EQ_INT                (AQ_RX_MAX_DMA_CMDS - 1)
+#define AQ_RX_DMA_CMD_ASYNC_EQ_INT          AQ_RX_DMA_CMD_EQ_INT
 
-#define AQ_RX_DMA_CMD_CREATE_QP_CB    (AQ_RX_MAX_DMA_CMDS - 5)
-#define AQ_RX_DMA_CMD_CREATE_QP_RQPT_DST  (AQ_RX_MAX_DMA_CMDS - 6)
-#define AQ_RX_DMA_CMD_CREATE_QP_RQPT_SRC  (AQ_RX_MAX_DMA_CMDS - 7)
+#define AQ_RX_DMA_CMD_CREATE_QP_CB          (AQ_RX_MAX_DMA_CMDS - 5)
+#define AQ_RX_DMA_CMD_CREATE_QP_RQPT_DST    (AQ_RX_MAX_DMA_CMDS - 6)
+#define AQ_RX_DMA_CMD_CREATE_QP_RQPT_SRC    (AQ_RX_MAX_DMA_CMDS - 7)
 
 #define AQ_RX_CQCB_ADDR_GET(_r, _cqid, _cqcb_base_addr_hi) \
     CQCB_ADDR_GET(_r, _cqid, _cqcb_base_addr_hi);
@@ -70,15 +72,20 @@ struct aq_rx_phv_t {
     /* flit 6 */
     union {
         struct {
-        int_assert_data : 32;
+            async_int_assert_data : 32;
+            struct eqwqe_t async_eqwqe;
+        };
+        struct {
+            int_assert_data : 32;
             struct eqwqe_t eqwqe;
         };
         wakeup_dpath_data   : 64;
     };
     struct cqe_t cqe;
     busy     : 8;
-    pad6     : 184;
-    
+    error    : 8;
+    pad6     : 176;
+
     /* flit 0-5 */
     union {
         struct {

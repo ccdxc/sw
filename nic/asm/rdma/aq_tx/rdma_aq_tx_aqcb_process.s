@@ -20,13 +20,6 @@ struct aq_tx_s0_t0_k k;
 .align
 rdma_aq_tx_aqcb_process:
 
-    /*
-     * Initially the plan is to implement only one admin command with busy flag
-     * and later will be optimized further.
-     * Not setting ci = pi so there will be many spurious phvs generated and get
-     * dropped if busy flag set.
-     */
-
     .brbegin
     br          r7[MAX_AQ_DOORBELL_RINGS-1: 0]
     nop
@@ -42,6 +35,9 @@ rdma_aq_tx_aqcb_process:
         nop         
 
     .brcase     1
+        seq         c1, d.error, 1
+        bcf         [c1], error
+
         // copy intrinsic to global
         add            r1, r0, offsetof(struct phv_, common_global_global_data) 
 
@@ -73,6 +69,9 @@ rdma_aq_tx_aqcb_process:
     
     .brend
     
+error:
+        DOORBELL_NO_UPDATE(CAPRI_TXDMA_INTRINSIC_LIF, CAPRI_TXDMA_INTRINSIC_QTYPE, CAPRI_TXDMA_INTRINSIC_QID, r2, r3)
+
 exit: 
     CAPRI_SET_TABLE_0_VALID(0)
 

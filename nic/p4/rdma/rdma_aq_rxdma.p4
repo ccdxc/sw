@@ -67,10 +67,8 @@
 
 #define rx_table_s6_t2_action rdma_aq_rx_cqcb_process
 
-//dummy
-#define rx_table_s7_t2_action rdma_aq_rx_cqpt_process
-
-#define rx_table_s7_t1_action rdma_aq_rx_eqcb_process
+#define rx_table_s7_t0_action rdma_aq_rx_eqcb_process_t0
+#define rx_table_s7_t1_action rdma_aq_rx_eqcb_process_t1
 
 #include "../common-p4+/common_rxdma.p4"
 #include "./rdma_rxdma_headers.p4"
@@ -123,30 +121,10 @@ header_type aq_rx_aqcb_to_wqe_info_t {
     }
 }
 
-header_type aq_rx_cqcb_to_pt_info_t {
-    fields {
-        page_offset                      :   16;
-        page_seg_offset                  :    8;
-        cq_id                            :   24;
-        fire_eqcb                        :    1;
-        no_translate                     :    1;
-        no_dma                           :    1;
-        cqcb_addr                        :   34;
-        pt_next_pg_index                 :   16;
-        eqcb_addr                        :   34;
-        report_error                     :    1;
-        eqe_type                         :    3;
-        eqe_code                         :    4;
-        pad                              :   17;
-    }
-}
-
 header_type aq_rx_cqcb_to_eq_info_t {
     fields {
-        qid                              :  24;
-        eqe_type                         :   3;
-        eqe_code                         :   4;
-        pad                              :  129;
+        async_eq                         :    1;
+        pad                              :  159;
     }
 }
 
@@ -201,6 +179,10 @@ metadata aq_rx_to_stage_t to_s6_info_scr;
 /**** stage to stage header unions ****/
 
 //Table-0
+@pragma pa_header_union ingress common_t0_s2s t0_s2s_cqcb_to_eq_info
+metadata aq_rx_cqcb_to_eq_info_t t0_s2s_cqcb_to_eq_info;
+@pragma scratch_metadata
+metadata aq_rx_cqcb_to_eq_info_t t0_s2s_cqcb_to_eq_info_scr;
 
 //Table-1
 @pragma pa_header_union ingress common_t1_s2s t1_s2s_cqcb_to_eq_info
@@ -210,15 +192,11 @@ metadata aq_rx_cqcb_to_eq_info_t t1_s2s_cqcb_to_eq_info_scr;
 
 //Table-2
 
-@pragma pa_header_union ingress common_t2_s2s t2_s2s_aqcb_to_cq_info t2_s2s_cqcb_to_pt_info 
+@pragma pa_header_union ingress common_t2_s2s t2_s2s_aqcb_to_cq_info
 
 metadata aq_rx_aqcb_to_cq_info_t t2_s2s_aqcb_to_cq_info;
 @pragma scratch_metadata
 metadata aq_rx_aqcb_to_cq_info_t t2_s2s_aqcb_to_cq_info_scr;
-
-metadata aq_rx_cqcb_to_pt_info_t t2_s2s_cqcb_to_pt_info;
-@pragma scratch_metadata
-metadata aq_rx_cqcb_to_pt_info_t t2_s2s_cqcb_to_pt_info_scr;
 
 //Table-3
 @pragma pa_header_union ingress common_t3_s2s t3_s2s_aqcb_to_wqe_info
@@ -411,35 +389,26 @@ action rdma_aq_rx_cqcb_process () {
 
 }
 
-action rdma_aq_rx_eqcb_process () {
+action rdma_aq_rx_eqcb_process_t0 () {
     // from ki global
     GENERATE_GLOBAL_K
 
     // to stage
 
     // stage to stage
-    modify_field(t1_s2s_cqcb_to_eq_info_scr.qid, t1_s2s_cqcb_to_eq_info.qid);
-    modify_field(t1_s2s_cqcb_to_eq_info_scr.pad, t1_s2s_cqcb_to_eq_info.pad);
+    modify_field(t0_s2s_cqcb_to_eq_info_scr.async_eq, t0_s2s_cqcb_to_eq_info.async_eq);
+    modify_field(t0_s2s_cqcb_to_eq_info_scr.pad, t0_s2s_cqcb_to_eq_info.pad);
 
 }
 
-action rdma_aq_rx_cqpt_process () {
+action rdma_aq_rx_eqcb_process_t1 () {
     // from ki global
     GENERATE_GLOBAL_K
 
+    // to stage
+
     // stage to stage
-    modify_field(t2_s2s_cqcb_to_pt_info_scr.page_offset, t2_s2s_cqcb_to_pt_info.page_offset);
-    modify_field(t2_s2s_cqcb_to_pt_info_scr.page_seg_offset, t2_s2s_cqcb_to_pt_info.page_seg_offset);
-    modify_field(t2_s2s_cqcb_to_pt_info_scr.cq_id, t2_s2s_cqcb_to_pt_info.cq_id);
-    modify_field(t2_s2s_cqcb_to_pt_info_scr.fire_eqcb, t2_s2s_cqcb_to_pt_info.fire_eqcb);
-    modify_field(t2_s2s_cqcb_to_pt_info_scr.no_translate, t2_s2s_cqcb_to_pt_info.no_translate);
-    modify_field(t2_s2s_cqcb_to_pt_info_scr.no_dma, t2_s2s_cqcb_to_pt_info.no_dma);
-    modify_field(t2_s2s_cqcb_to_pt_info_scr.cqcb_addr, t2_s2s_cqcb_to_pt_info.cqcb_addr);
-    modify_field(t2_s2s_cqcb_to_pt_info_scr.pt_next_pg_index, t2_s2s_cqcb_to_pt_info.pt_next_pg_index);
-    modify_field(t2_s2s_cqcb_to_pt_info_scr.eqcb_addr, t2_s2s_cqcb_to_pt_info.eqcb_addr);
-    modify_field(t2_s2s_cqcb_to_pt_info_scr.report_error, t2_s2s_cqcb_to_pt_info.report_error);
-    modify_field(t2_s2s_cqcb_to_pt_info_scr.eqe_type, t2_s2s_cqcb_to_pt_info.eqe_type);
-    modify_field(t2_s2s_cqcb_to_pt_info_scr.eqe_code, t2_s2s_cqcb_to_pt_info.eqe_code);
-    modify_field(t2_s2s_cqcb_to_pt_info_scr.pad, t2_s2s_cqcb_to_pt_info.pad);
+    modify_field(t1_s2s_cqcb_to_eq_info_scr.async_eq, t1_s2s_cqcb_to_eq_info.async_eq);
+    modify_field(t1_s2s_cqcb_to_eq_info_scr.pad, t1_s2s_cqcb_to_eq_info.pad);
 
 }
