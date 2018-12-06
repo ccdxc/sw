@@ -486,6 +486,10 @@
         },
         {
             "name": "tcp_ooo_descr_global_pool",
+            "size_kb": 32 
+        },
+        {
+            "name": "tcp_ooo_descr_queue",
             "size_kb": 8192
         }
     ]

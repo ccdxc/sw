@@ -215,8 +215,8 @@ wring_pd_meta_init() {
                            NULL, NULL, false};
     
     g_meta[types::WRING_TYPE_TCP_OOO_DESCR] =
-        (pd_wring_meta_t) {true, CAPRI_HBM_REG_TCP_OOO_DESCR, (1024*1024),
-                           DEFAULT_WRING_SLOT_SIZE, "", 0, 0, NULL, NULL, false, 1, 0};
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_TCP_OOO_DESCR, 1024,
+                           DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_TCP_OOO_QUEUE, 2048, 0, NULL, NULL, false};
  
 
     return HAL_RET_OK;
