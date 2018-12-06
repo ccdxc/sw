@@ -53,12 +53,12 @@ action set_tm_oport_enforce_src_lport(vlan_strip, nports, egress_mirror_en,
     if (mnic_enforce_src_lport != 0 and control_metadata.src_lport != mnic_enforce_src_lport) {
             drop_packet ();
     }
-   
+
     set_tm_oport(vlan_strip, nports, egress_mirror_en,
                     p4plus_app_id, rdma_enabled, dst_lif,
                     encap_vlan_id, encap_vlan_id_valid, access_vlan_id,
                     egress_port1, egress_port2, egress_port3, egress_port4,
-                    egress_port5, egress_port6, egress_port7, egress_port8, 
+                    egress_port5, egress_port6, egress_port7, egress_port8,
                     mnic_enforce_src_lport);
 
     // dummy ops to keep compiler happy

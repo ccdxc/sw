@@ -217,7 +217,7 @@ action flow_info(dst_lport, multicast_ptr, multicast_en, qtype,
     modify_field(scratch_metadata.qos_class_en, qos_class_en);
     modify_field(scratch_metadata.log_en, log_en);
     modify_field(scratch_metadata.flag, expected_src_lif_check_en);
-    modify_field(scratch_metadata.src_lif, expected_src_lif);
+    modify_field(scratch_metadata.lif, expected_src_lif);
     modify_field(scratch_metadata.ttl, flow_ttl);
     modify_field(scratch_metadata.export_id, export_id1);
     modify_field(scratch_metadata.export_id, export_id2);

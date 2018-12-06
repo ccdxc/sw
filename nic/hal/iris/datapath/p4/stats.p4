@@ -32,8 +32,24 @@ action ingress_tx_stats() {
         modify_field(control_metadata.dst_lport, 0);
     }
 
+    modify_field(scratch_metadata.lif, control_metadata.src_lif);
     if (capri_intrinsic.drop == TRUE) {
-        modify_field(scratch_metadata.src_lif, control_metadata.src_lif);
+        if (flow_lkp_metadata.pkt_type == PACKET_TYPE_UNICAST) {
+            add_to_field(scratch_metadata.stats_packets, 1);
+            modify_field(scratch_metadata.stats_bytes,
+                         capri_p4_intrinsic.packet_len);
+        }
+        if (flow_lkp_metadata.pkt_type == PACKET_TYPE_MULTICAST) {
+            add_to_field(scratch_metadata.stats_packets, 1);
+            modify_field(scratch_metadata.stats_bytes,
+                         capri_p4_intrinsic.packet_len);
+        }
+        if (flow_lkp_metadata.pkt_type == PACKET_TYPE_BROADCAST) {
+            add_to_field(scratch_metadata.stats_packets, 1);
+            modify_field(scratch_metadata.stats_bytes,
+                         capri_p4_intrinsic.packet_len);
+        }
+    } else {
         if (flow_lkp_metadata.pkt_type == PACKET_TYPE_UNICAST) {
             add_to_field(scratch_metadata.stats_packets, 1);
             modify_field(scratch_metadata.stats_bytes,
@@ -308,39 +324,21 @@ control process_stats {
 /* Stats per LIF - accounted in the egress pipeline                          */
 /*****************************************************************************/
 action tx_stats() {
-    modify_field(scratch_metadata.src_lif, control_metadata.src_lif);
-    if (capri_intrinsic.drop == TRUE) {
-        if (flow_lkp_metadata.pkt_type == PACKET_TYPE_UNICAST) {
-            add_to_field(scratch_metadata.stats_packets, 1);
-            modify_field(scratch_metadata.stats_bytes,
-                         capri_p4_intrinsic.packet_len);
-        }
-        if (flow_lkp_metadata.pkt_type == PACKET_TYPE_MULTICAST) {
-            add_to_field(scratch_metadata.stats_packets, 1);
-            modify_field(scratch_metadata.stats_bytes,
-                         capri_p4_intrinsic.packet_len);
-        }
-        if (flow_lkp_metadata.pkt_type == PACKET_TYPE_BROADCAST) {
-            add_to_field(scratch_metadata.stats_packets, 1);
-            modify_field(scratch_metadata.stats_bytes,
-                         capri_p4_intrinsic.packet_len);
-        }
-    } else {
-        if (flow_lkp_metadata.pkt_type == PACKET_TYPE_UNICAST) {
-            add_to_field(scratch_metadata.stats_packets, 1);
-            modify_field(scratch_metadata.stats_bytes,
-                         capri_p4_intrinsic.packet_len);
-        }
-        if (flow_lkp_metadata.pkt_type == PACKET_TYPE_MULTICAST) {
-            add_to_field(scratch_metadata.stats_packets, 1);
-            modify_field(scratch_metadata.stats_bytes,
-                         capri_p4_intrinsic.packet_len);
-        }
-        if (flow_lkp_metadata.pkt_type == PACKET_TYPE_BROADCAST) {
-            add_to_field(scratch_metadata.stats_packets, 1);
-            modify_field(scratch_metadata.stats_bytes,
-                         capri_p4_intrinsic.packet_len);
-        }
+    modify_field(scratch_metadata.lif, capri_intrinsic.lif);
+    if (flow_lkp_metadata.pkt_type == PACKET_TYPE_UNICAST) {
+        add_to_field(scratch_metadata.stats_packets, 1);
+        modify_field(scratch_metadata.stats_bytes,
+                     capri_p4_intrinsic.packet_len);
+    }
+    if (flow_lkp_metadata.pkt_type == PACKET_TYPE_MULTICAST) {
+        add_to_field(scratch_metadata.stats_packets, 1);
+        modify_field(scratch_metadata.stats_bytes,
+                     capri_p4_intrinsic.packet_len);
+    }
+    if (flow_lkp_metadata.pkt_type == PACKET_TYPE_BROADCAST) {
+        add_to_field(scratch_metadata.stats_packets, 1);
+        modify_field(scratch_metadata.stats_bytes,
+                     capri_p4_intrinsic.packet_len);
     }
 }
 
@@ -355,8 +353,6 @@ table tx_stats {
 control process_tx_stats {
     if (capri_intrinsic.drop == TRUE) {
         apply(egress_drop_stats);
-    }
-    if (control_metadata.uplink_e == FALSE) {
         apply(tx_stats);
     }
 }
