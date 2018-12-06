@@ -5,7 +5,7 @@ import "delphi.proto";
 
 message AccelPfInfo {
     delphi.ObjectMeta   Meta                 = 1;
-    uint64              Key                  = 2;
+    string              Key                  = 2;
     uint64              HwLifId              = 3;
     uint32              NumSeqQueues         = 4;
     uint32              CryptoKeyIdxBase     = 5;
@@ -15,8 +15,8 @@ message AccelPfInfo {
 }
     
 message AccelSeqQueueKey {
-    fixed64             LifId                = 1;     // Lif id
-    uint32              QId                  = 2;     // Queue id
+    string              LifId                = 1;     // Lif id
+    string              QId                  = 2;     // Queue id
 }
 
 enum AccelSeqQGroup {
@@ -57,23 +57,9 @@ message AccelSeqQueueMetrics {
     delphi.Counter LenUpdateReqs             = 18;    // CP/DC length updates after decrypt
 }
 
-//enum temporarily commented out since the new goproto tool does not
-//have support for enum in Key.
-//enum AccelHwRingId {
-//    HwRingCp                                 = 0;     // Compression ring
-//    HwRingCpHot                              = 1;     // Hot compression ring
-//    HwRingDc                                 = 2;     // Decompression ring
-//    HwRingDcHot                              = 3;     // Hot decompression ring
-//    HwRingXtsEncr                            = 4;     // XTS encryption ring
-//    HwRingXtsDecr                            = 5;     // XTS decryption ring
-//    HwRingGcmEncr                            = 6;     // GCM encryption ring
-//    HwRingGcmDecr                            = 7;     // GCM decryption ring
-//}
-
 message AccelHwRingKey {
-//    AccelHwRingId       RId                  = 1;     // Ring id
-    uint32              RId                  = 1;     // Ring id
-    uint32              SubRId               = 2;     // Sub-ring id
+    string              RId                  = 1;     // Ring id
+    string              SubRId               = 2;     // Sub-ring id
 }
 
 message AccelHwRingInfo {

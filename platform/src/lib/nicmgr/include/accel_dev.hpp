@@ -248,6 +248,13 @@ private:
 
     const hal_lif_info_t        *nicmgr_lif_info;
     bool                        lif_init_done;
+    bool                        rgroup_indices_chg;
+    bool                        rgroup_metrics_chg;
+
+    friend void accel_rgroup_rindices_rsp_cb(void *user_ctx,
+                             const accel_rgroup_rindices_rsp_t& indices);
+    friend void accel_rgroup_rmetrics_rsp_cb(void *user_ctx,
+                             const accel_rgroup_rmetrics_rsp_t& metrics);
 
     /* Methods */
     void _PostDevcmdDone(enum DevcmdStatus status);

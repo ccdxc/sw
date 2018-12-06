@@ -382,9 +382,9 @@
 /*
  * Debug flags
  */
-#define SEQ_COMP_SGL_PDMA_XFER_DEBUG            1
-#define SEQ_COMP_SGL_PDMA_PAD_ONLY_DEBUG        1
-#define DMA_CMD_MEM2MEM_SIZE_DEBUG              1
+#define SEQ_COMP_SGL_PDMA_XFER_DEBUG            0
+#define SEQ_COMP_SGL_PDMA_PAD_ONLY_DEBUG        0
+#define DMA_CMD_MEM2MEM_SIZE_DEBUG              0
 
 /*
  * Qstate size definitions
