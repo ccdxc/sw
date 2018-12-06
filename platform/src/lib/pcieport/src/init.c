@@ -155,11 +155,14 @@ pcieport_onetime_portinit(pcieport_t *p)
         return 0;
     }
 
-    p->sris       = pcieport_param_ull("PCIE_SRIS", p->sris);
-    p->crs        = pcieport_param_ull("PCIE_STRICT_CRS", p->crs);
-    p->compliance = pcieport_param_ull("PCIE_COMPLIANCE", p->compliance);
-    p->req_gen    = pcieport_param_ull("PCIE_REQ_GEN", 0);
-    p->req_width  = pcieport_param_ull("PCIE_REQ_WIDTH", 0);
+    p->sris           = pcieport_param_ull("PCIE_SRIS", p->sris);
+    p->crs            = pcieport_param_ull("PCIE_STRICT_CRS", p->crs);
+    p->compliance     = pcieport_param_ull("PCIE_COMPLIANCE", p->compliance);
+    p->aer_common     = pcieport_param_ull("PCIE_AER_COMMON", 0);
+    p->vga_support    = pcieport_param_ull("PCIE_VGA_SUPPORT", 0);
+    p->req_gen        = pcieport_param_ull("PCIE_REQ_GEN", 0);
+    p->req_width      = pcieport_param_ull("PCIE_REQ_WIDTH", 0);
+    p->reduce_rx_cred = pcieport_param_ull("PCIE_REDUCE_RX_CRED", 0);
 
     /*
      * We have inherited a system already initialized by

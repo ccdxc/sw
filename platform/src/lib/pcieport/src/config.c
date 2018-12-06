@@ -105,7 +105,6 @@ pcieport_mac_k_pciconf(pcieport_t *p)
 {
     const int pn = p->port;
     u_int32_t val;
-    extern int vga_support;
 
     /* class code */
     val = 0x06040000;
@@ -114,7 +113,7 @@ pcieport_mac_k_pciconf(pcieport_t *p)
     val = pal_reg_rd32(PXC_(CFG_C_MAC_K_PCICONF, pn) + 0xc);
     /* vga supported */
     val &= ~(1 << 4);
-    val |= (vga_support << 4);
+    val |= (p->vga_support << 4);
     /* legacy power management disabled */
     val &= ~(0x7ff << 21);
     pal_reg_wr32(PXC_(CFG_C_MAC_K_PCICONF, pn) + 0xc, val);
@@ -126,6 +125,22 @@ pcieport_mac_k_rx_cred(pcieport_t *p)
     if (!pal_is_asic()) {
         u_int32_t val = 0x00200080;
         pal_reg_wr32(PXC_(CFG_C_MAC_K_RX_CRED, p->port), val);
+    }
+    if (p->reduce_rx_cred) {
+        u_int32_t reg[3], r;
+        const u_int64_t axi_rsp_order =
+            (CAP_ADDR_BASE_PXB_PXB_OFFSET +
+             CAP_PXB_CSR_CFG_ITR_AXI_RESP_ORDER_BYTE_ADDRESS);
+
+        pal_reg_rd32w(PXC_(CFG_C_MAC_K_RX_CRED, p->port), reg, 3);
+        reg[0] = 0x00200080;
+        reg[1] = 0x00100010;
+        pal_reg_wr32w(PXC_(CFG_C_MAC_K_RX_CRED, p->port), reg, 3);
+
+        r = pal_reg_rd32(axi_rsp_order);
+        r &= 0x3;       /* preserve rd/wr_strict */
+        r |= 0x20 << 2; /* reduce rd_id_limit */
+        pal_reg_wr32(axi_rsp_order, r);
     }
 }
 
@@ -312,7 +327,7 @@ pcieport_config_host(pcieport_t *p)
      * and power off the host.  Safer to disable this, although
      * some might want to see all our errors reported on AER.
      */
-    pcieport_set_aer_common_en(p, 0);
+    pcieport_set_aer_common_en(p, p->aer_common);
 
     if (!pal_is_asic()) {
         /* reduce clock frequency for fpga */

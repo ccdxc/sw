@@ -266,18 +266,6 @@ cmd_fsm(int argc, char *argv[])
     pcieport_fsm_dbg(argc, argv);
 }
 
-int vga_support;
-
-static void
-cmd_vga_support(int argc, char *argv[])
-{
-    if (argc < 2) {
-        pciesys_loginfo("vga_support %d\n", vga_support);
-        return;
-    }
-    vga_support = strtoul(argv[1], NULL, 0);
-}
-
 static void
 cmd_port(int argc, char *argv[])
 {
@@ -338,7 +326,6 @@ static cmd_t cmdtab[] = {
     { #name, cmd_##name, desc, helpstr }
     CMDENT(fsm, "fsm", ""),
     CMDENT(port, "port", ""),
-    CMDENT(vga_support, "vga_support", ""),
     { NULL, NULL }
 };
 

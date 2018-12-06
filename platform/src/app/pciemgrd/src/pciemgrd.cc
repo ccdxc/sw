@@ -28,8 +28,9 @@ static void
 usage(void)
 {
     fprintf(stderr,
-"Usage: pciemgrd [-Fnv][-e <enabled_ports>[-b <first_bus_num>]"
-            "[-P gen<G>x<W>][-V subvendorid][-D subdeviceid]\n"
+"Usage: pciemgrd [-dFinv][-e <enabled_ports>[-b <first_bus_num>]\n"
+"                [-I <inherit-mode>][-P gen<G>x<W>][-R 0|1]\n"
+"                [-V subvendorid][-D subdeviceid]\n"
 "    -b <first_bus_num> set first bus used to <first_bus_num>\n"
 "    -d                 daemon mode\n"
 "    -e <enabled_ports> mask of enabled pcie ports\n"

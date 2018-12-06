@@ -43,8 +43,6 @@ struct pcieport_s {
     u_int8_t pribus;
     u_int8_t secbus;
     u_int8_t subbus;
-    u_int32_t compliance:1;
-    u_int32_t sris:1;
     u_int16_t lanemask;
     u_int16_t subvendorid;
     u_int16_t subdeviceid;
@@ -53,6 +51,11 @@ struct pcieport_s {
     u_int32_t host:1;
     u_int32_t config:1;
     u_int32_t crs:1;
+    u_int32_t compliance:1;
+    u_int32_t aer_common:1;
+    u_int32_t sris:1;
+    u_int32_t vga_support:1;
+    u_int32_t reduce_rx_cred:1;
     pcieportst_t state;
     pcieportev_t event;
     char fault_reason[80];
