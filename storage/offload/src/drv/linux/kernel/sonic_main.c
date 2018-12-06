@@ -351,6 +351,7 @@ int sonic_identify(struct sonic *sonic)
 	struct device *dev = sonic->dev;
 	struct sonic_dev *idev = &sonic->idev;
 	union identity *ident;
+	struct sonic_accel_ring *ring;
 	dma_addr_t ident_pa;
 	int err;
 #ifdef HAPS
@@ -413,6 +414,15 @@ int sonic_identify(struct sonic *sonic)
 	sonic->ident = ident;
 	sonic->ident_pa = ident_pa;
 
+	for (i = 0, ring = idev->ring_tbl;
+	     i < ACCEL_RING_ID_MAX;
+	     i++, ring++) {
+		ring->accel_ring = ident->dev.accel_ring_tbl[i];
+		ring->accel_ring.ring_id = i;
+		ring->name = sonic_accel_ring_name_get(i);
+		osal_atomic_init(&ring->descs_inuse, 0);
+	}
+
 	err = sonic_debugfs_add_ident(sonic);
 	if (err)
 		goto err_out_unmap;
@@ -465,6 +475,7 @@ static int __init sonic_init_module(void)
 
 static void __exit sonic_cleanup_module(void)
 {
+	sonic_accel_rings_sanity_check();
 	sonic_bus_unregister_driver();
 	sonic_debugfs_destroy();
 }
@@ -474,9 +485,6 @@ static void sonic_api_adminq_cb(struct queue *q, struct desc_info *desc_info,
 {
 	struct sonic_admin_ctx *ctx = cb_arg;
 	struct admin_cpl *comp = (struct admin_cpl *) cq_info->cq_desc;
-#ifndef __FreeBSD__
-	struct device *dev = q->lif->sonic->dev;
-#endif
 
 	if (WARN_ON(comp->cpl_index != desc_info->index)) {
 		OSAL_LOG_ERROR("cpl_index  %u comp 0x" PRIx64 " desc_info_index %u desc_info 0x" PRIx64, 

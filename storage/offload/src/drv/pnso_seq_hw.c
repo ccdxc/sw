@@ -35,6 +35,7 @@
 #ifdef NDEBUG
 #define PPRINT_SEQUENCER_DESC(d)
 #define PPRINT_SEQUENCER_INFO(sqi)
+#define PPRINT_SEQUENCER_ACCOUNTING(sqi)
 #define PPRINT_CPDC_CHAIN_PARAMS(cp)
 #define PPRINT_CRYPTO_CHAIN_PARAMS(cp)
 #else
@@ -43,6 +44,11 @@
 	do {								\
 		OSAL_LOG_DEBUG("%.*s", 30, "=========================================");\
 		pprint_seq_info(sqi);					\
+	} while (0)
+#define PPRINT_SEQUENCER_ACCOUNTING(sqi)				\
+	do {								\
+		OSAL_LOG_DEBUG("%.*s", 30, "=========================================");\
+		pprint_seq_accounting(sqi);				\
 	} while (0)
 #define PPRINT_CPDC_CHAIN_PARAMS(cp)					\
 	do {								\
@@ -85,7 +91,7 @@ pprint_seq_info(const struct sequencer_info *seq_info)
 	if (!seq_info)
 		return;
 
-	OSAL_LOG_DEBUG("%30s: %d", "sqi_ring_id", seq_info->sqi_ring_id);
+	OSAL_LOG_DEBUG("%30s: %s", "sqi_ring", seq_info->sqi_ring->name);
 	OSAL_LOG_DEBUG("%30s: %d", "sqi_qtype", seq_info->sqi_qtype);
 	OSAL_LOG_DEBUG("%30s: %d", "sqi_status_qtype",
 			seq_info->sqi_status_qtype);
@@ -96,6 +102,25 @@ pprint_seq_info(const struct sequencer_info *seq_info)
 			(uint64_t) seq_info->sqi_desc);
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "sqi_status_desc",
 			(uint64_t) seq_info->sqi_status_desc);
+}
+
+static void __attribute__((unused))
+pprint_seq_accounting(const struct sequencer_info *seq_info)
+{
+	struct queue *q;
+
+	if (!seq_info || !seq_info->sqi_seq_q)
+		return;
+
+	q = seq_info->sqi_seq_q;
+	OSAL_LOG_DEBUG("%30s: %d", "seq qid", q->qid);
+	OSAL_LOG_DEBUG("%30s: %d", "seq qgroup", q->qgroup);
+	OSAL_LOG_DEBUG("%30s: %d", "seq descs_inuse",
+			osal_atomic_read(&q->descs_inuse));
+	OSAL_LOG_DEBUG("%30s: %d", "seq total_takes",
+			seq_info->sqi_seq_total_takes);
+	OSAL_LOG_DEBUG("%30s: %d", "seq status_total_takes",
+			seq_info->sqi_status_total_takes);
 }
 
 static void __attribute__((unused))
@@ -570,24 +595,17 @@ hw_setup_desc(struct service_info *svc_info, const void *src_desc,
 		size_t desc_size)
 {
 	pnso_error_t err = EINVAL;
-	struct accel_ring *ring;
+	struct sonic_accel_ring *ring;
 	struct lif *lif;
-	struct queue *q;
 	struct sequencer_desc *seq_desc;
-	uint32_t ring_id, index;
+	uint32_t index;
 	uint16_t qtype;
 
 	OSAL_LOG_DEBUG("enter ...");
 
-	ring_id = svc_info->si_seq_info.sqi_ring_id;
+	ring = svc_info->si_seq_info.sqi_ring;
 	qtype = svc_info->si_seq_info.sqi_qtype;
 	svc_info->si_seq_info.sqi_index = 0;
-
-	ring = sonic_get_accel_ring(ring_id);
-	if (!ring) {
-		OSAL_ASSERT(ring);
-		goto out;
-	}
 
 	lif = sonic_get_lif();
 	if (!lif) {
@@ -595,40 +613,41 @@ hw_setup_desc(struct service_info *svc_info, const void *src_desc,
 		goto out;
 	}
 
-	err = sonic_get_seq_sq(lif, qtype, &q);
+	err = sonic_get_seq_sq(lif, qtype, &svc_info->si_seq_info.sqi_seq_q);
 	if (err) {
 		OSAL_ASSERT(!err);
 		goto out;
 	}
 
-	seq_desc = (struct sequencer_desc *) sonic_q_consume_entry(q, &index);
+	seq_desc = sonic_q_consume_entry(svc_info->si_seq_info.sqi_seq_q, &index);
 	if (!seq_desc) {
 		err = EINVAL;
 		OSAL_LOG_ERROR("failed to obtain sequencer desc! err: %d", err);
-		OSAL_ASSERT(seq_desc);
 		goto out;
 	}
 	svc_info->si_seq_info.sqi_index = index;
+	svc_info->si_seq_info.sqi_seq_total_takes++;
 
 	memset(seq_desc, 0, sizeof(*seq_desc));
 	seq_desc->sd_desc_addr =
 		cpu_to_be64(sonic_virt_to_phy((void *) src_desc));
-	seq_desc->sd_pndx_addr = cpu_to_be64(ring->ring_pndx_pa);
-	seq_desc->sd_pndx_shadow_addr = cpu_to_be64(ring->ring_shadow_pndx_pa);
-	seq_desc->sd_ring_addr = cpu_to_be64(ring->ring_base_pa);
-	seq_desc->sd_desc_size = (uint8_t) ilog2(ring->ring_desc_size);
-	seq_desc->sd_pndx_size = (uint8_t) ilog2(ring->ring_pndx_size);
-	seq_desc->sd_ring_size = (uint8_t) ilog2(ring->ring_size);
+	seq_desc->sd_pndx_addr = cpu_to_be64(ring->accel_ring.ring_pndx_pa);
+	seq_desc->sd_pndx_shadow_addr = cpu_to_be64(ring->accel_ring.ring_shadow_pndx_pa);
+	seq_desc->sd_ring_addr = cpu_to_be64(ring->accel_ring.ring_base_pa);
+	seq_desc->sd_desc_size = (uint8_t) ilog2(ring->accel_ring.ring_desc_size);
+	seq_desc->sd_pndx_size = (uint8_t) ilog2(ring->accel_ring.ring_pndx_size);
+	seq_desc->sd_ring_size = (uint8_t) ilog2(ring->accel_ring.ring_size);
 	if (svc_info->si_seq_info.sqi_batch_mode) {
 		seq_desc->sd_batch_mode = true;
 		seq_desc->sd_batch_size =
 			cpu_to_be16(svc_info->si_seq_info.sqi_batch_size);
 	}
 
-	OSAL_LOG_INFO("ring_id: %u index: %u src_desc: 0x" PRIx64 "  desc_size: %lu batch_mode: %d batch_size: %d",
-			ring_id, index, (uint64_t) src_desc, desc_size,
+	OSAL_LOG_INFO("ring: %s index: %u src_desc: 0x" PRIx64 "  desc_size: %lu batch_mode: %d batch_size: %d",
+			ring->name, index, (uint64_t) src_desc, desc_size,
 			svc_info->si_seq_info.sqi_batch_mode,
 			svc_info->si_seq_info.sqi_batch_size);
+	PPRINT_SEQUENCER_ACCOUNTING(&svc_info->si_seq_info);
 	PPRINT_SEQUENCER_DESC(seq_desc);
 
 	OSAL_LOG_DEBUG("exit!");
@@ -637,6 +656,16 @@ hw_setup_desc(struct service_info *svc_info, const void *src_desc,
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
 	return NULL;
+}
+
+static void
+hw_cleanup_desc(struct service_info *svc_info)
+{
+	if (svc_info->si_seq_info.sqi_seq_q) {
+		sonic_q_service(svc_info->si_seq_info.sqi_seq_q, NULL,
+				svc_info->si_seq_info.sqi_seq_total_takes);
+		svc_info->si_seq_info.sqi_seq_total_takes = 0;
+	}
 }
 
 static void
@@ -670,9 +699,10 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 	struct cpdc_chain_params *chain_params;
 	struct sequencer_info *seq_info;
 	struct sequencer_spec *seq_spec;
-	uint32_t ring_id, index;
+	uint32_t index;
 	uint16_t qtype;
 	uint8_t *seq_status_desc;
+	struct sonic_accel_ring *ring = svc_info->si_seq_info.sqi_ring;
 
 	struct lif *lif;
 	struct queue *q, *status_q;
@@ -683,7 +713,6 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 	seq_spec = &chain_params->ccp_seq_spec;
 
 	seq_info = &svc_info->si_seq_info;
-	ring_id = seq_info->sqi_ring_id;
 	qtype = seq_info->sqi_qtype;
 	seq_info->sqi_index = 0;
 
@@ -710,10 +739,10 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 		err = EINVAL;
 		OSAL_LOG_ERROR("failed to obtain sequencer statusq desc! err: %d",
 				err);
-		OSAL_ASSERT(seq_status_desc);
 		goto out;
 	}
 	seq_info->sqi_index = index;
+	svc_info->si_seq_info.sqi_status_total_takes++;
 	seq_info->sqi_status_desc = seq_status_desc;
 
 	seq_spec->sqs_seq_q = q;
@@ -738,8 +767,8 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 	chain_params->ccp_cmd.ccpc_sgl_pdma_pad_only = 1;
 	chain_params->ccp_sgl_vec_addr = cp_desc->cd_dst;
 
-	OSAL_LOG_INFO("ring_id: %u index: %u src_desc: 0x" PRIx64 " status_desc: 0x" PRIx64 "",
-			ring_id, index, (uint64_t) cp_desc,
+	OSAL_LOG_INFO("ring: %s index: %u src_desc: 0x" PRIx64 " status_desc: 0x" PRIx64 "",
+			ring->name, index, (uint64_t) cp_desc,
 			(uint64_t) status_desc);
 
 	PPRINT_SEQUENCER_INFO(seq_info);
@@ -762,9 +791,10 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 	struct cpdc_chain_params *chain_params;
 	struct sequencer_info *seq_info;
 	struct sequencer_spec *seq_spec;
-	uint32_t ring_id, index;
+	uint32_t index;
 	uint16_t qtype;
 	uint8_t *seq_status_desc;
+	struct sonic_accel_ring *ring = svc_info->si_seq_info.sqi_ring;
 
 	struct lif *lif;
 	struct queue *q, *status_q;
@@ -775,7 +805,6 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 	seq_spec = &chain_params->ccp_seq_spec;
 
 	seq_info = &svc_info->si_seq_info;
-	ring_id = seq_info->sqi_ring_id;
 	qtype = seq_info->sqi_qtype;
 	seq_info->sqi_index = 0;
 
@@ -802,10 +831,10 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 		err = EINVAL;
 		OSAL_LOG_ERROR("failed to obtain sequencer statusq desc! err: %d",
 				err);
-		OSAL_ASSERT(seq_status_desc);
 		goto out;
 	}
 	seq_info->sqi_index = index;
+	svc_info->si_seq_info.sqi_status_total_takes++;
 	seq_info->sqi_status_desc = seq_status_desc;
 
 	seq_spec->sqs_seq_q = q;
@@ -834,8 +863,8 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 	fill_cpdc_seq_status_desc(chain_params, seq_info->sqi_status_desc);
 	PPRINT_CPDC_CHAIN_PARAMS(chain_params);
 
-	OSAL_LOG_INFO("ring_id: %u index: %u src_desc: 0x" PRIx64 " status_desc: 0x" PRIx64 "",
-			ring_id, index, (uint64_t) cp_desc,
+	OSAL_LOG_INFO("ring: %s index: %u src_desc: 0x" PRIx64 " status_desc: 0x" PRIx64 "",
+			ring->name, index, (uint64_t) cp_desc,
 			(uint64_t) status_desc);
 
 	PPRINT_SEQUENCER_INFO(seq_info);
@@ -856,8 +885,7 @@ hw_setup_hash_chain_params(struct cpdc_chain_params *chain_params,
 		uint32_t num_hash_blks)
 {
 	pnso_error_t err = EINVAL;
-	struct accel_ring *ring;
-	uint32_t ring_id;
+	struct sonic_accel_ring *ring = svc_info->si_seq_info.sqi_ring;
 
 	struct sequencer_info *seq_info;
 	struct ring_spec *ring_spec;
@@ -867,22 +895,15 @@ hw_setup_hash_chain_params(struct cpdc_chain_params *chain_params,
 	ring_spec = &chain_params->ccp_ring_spec;
 
 	seq_info = &svc_info->si_seq_info;
-	ring_id = seq_info->sqi_ring_id;
 	PPRINT_SEQUENCER_INFO(seq_info);
 
-	ring = sonic_get_accel_ring(ring_id);
-	if (!ring) {
-		OSAL_ASSERT(0);
-		goto out;
-	}
-
-	ring_spec->rs_ring_addr = ring->ring_base_pa;
-	ring_spec->rs_pndx_addr = ring->ring_pndx_pa;
-	ring_spec->rs_pndx_shadow_addr = ring->ring_shadow_pndx_pa;
+	ring_spec->rs_ring_addr = ring->accel_ring.ring_base_pa;
+	ring_spec->rs_pndx_addr = ring->accel_ring.ring_pndx_pa;
+	ring_spec->rs_pndx_shadow_addr = ring->accel_ring.ring_shadow_pndx_pa;
 	ring_spec->rs_desc_addr = sonic_virt_to_phy((void *) hash_desc);
-	ring_spec->rs_desc_size = (uint8_t) ilog2(ring->ring_desc_size);
-	ring_spec->rs_pndx_size = (uint8_t) ilog2(ring->ring_pndx_size);
-	ring_spec->rs_ring_size = (uint8_t) ilog2(ring->ring_size);
+	ring_spec->rs_desc_size = (uint8_t) ilog2(ring->accel_ring.ring_desc_size);
+	ring_spec->rs_pndx_size = (uint8_t) ilog2(ring->accel_ring.ring_pndx_size);
+	ring_spec->rs_ring_size = (uint8_t) ilog2(ring->accel_ring.ring_size);
 	ring_spec->rs_num_descs = num_hash_blks;
 
 	chain_params->ccp_sgl_vec_addr = sonic_virt_to_phy((void *) sgl);
@@ -898,9 +919,6 @@ hw_setup_hash_chain_params(struct cpdc_chain_params *chain_params,
 
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit!");
-	return err;
-out:
-	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
 }
 
@@ -940,13 +958,17 @@ out:
 }
 
 static void
-hw_cleanup_cpdc_chain(const struct service_info *svc_info)
+hw_cleanup_cpdc_chain(struct service_info *svc_info)
 {
 	const struct cpdc_chain_params *cpdc_chain = &svc_info->si_cpdc_chain;
 
-	if (cpdc_chain->ccp_seq_spec.sqs_seq_status_q)
+	if (cpdc_chain->ccp_seq_spec.sqs_seq_status_q) {
+		sonic_q_service(cpdc_chain->ccp_seq_spec.sqs_seq_status_q, NULL,
+				svc_info->si_seq_info.sqi_status_total_takes);
+		svc_info->si_seq_info.sqi_status_total_takes = 0;
 		sonic_put_seq_statusq(
 				cpdc_chain->ccp_seq_spec.sqs_seq_status_q);
+	}
 }
 
 static pnso_error_t
@@ -979,12 +1001,13 @@ hw_setup_crypto_chain(struct service_info *svc_info,
 		OSAL_LOG_ERROR("failed to obtain crypto sequencer statusq desc");
 		return EPERM;
 	}
+	svc_info->si_seq_info.sqi_status_total_takes++;
 	desc->cd_db_addr = sonic_get_lif_local_dbaddr();
 	desc->cd_db_data =
 		sonic_q_ringdb_data(seq_spec->sqs_seq_status_q, statusq_index);
 
-	OSAL_LOG_DEBUG("ring_id: %u index: %u desc: 0x"PRIx64,
-		       seq_info->sqi_ring_id, statusq_index, (uint64_t)desc);
+	OSAL_LOG_DEBUG("ring: %s index: %u desc: 0x"PRIx64,
+		       seq_info->sqi_ring->name, statusq_index, (uint64_t)desc);
 	fill_crypto_seq_status_desc(&svc_info->si_crypto_chain,
 				    seq_info->sqi_status_desc);
 	PPRINT_SEQUENCER_INFO(seq_info);
@@ -994,18 +1017,23 @@ hw_setup_crypto_chain(struct service_info *svc_info,
 }
 
 static void
-hw_cleanup_crypto_chain(const struct service_info *svc_info)
+hw_cleanup_crypto_chain(struct service_info *svc_info)
 {
 	const struct crypto_chain_params *crypto_chain =
 		&svc_info->si_crypto_chain;
 
-	if (crypto_chain->ccp_seq_spec.sqs_seq_status_q)
+	if (crypto_chain->ccp_seq_spec.sqs_seq_status_q) {
+		sonic_q_service(crypto_chain->ccp_seq_spec.sqs_seq_status_q, NULL,
+				svc_info->si_seq_info.sqi_status_total_takes);
+		svc_info->si_seq_info.sqi_status_total_takes = 0;
 		sonic_put_seq_statusq(
 				crypto_chain->ccp_seq_spec.sqs_seq_status_q);
+	}
 }
 
 const struct sequencer_ops hw_seq_ops = {
 	.setup_desc = hw_setup_desc,
+	.cleanup_desc = hw_cleanup_desc,
 	.ring_db = hw_ring_db,
 	.setup_cp_chain_params = hw_setup_cp_chain_params,
 	.setup_cp_pad_chain_params = hw_setup_cp_pad_chain_params,

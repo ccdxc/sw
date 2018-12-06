@@ -83,14 +83,14 @@ decompress_setup(struct service_info *svc_info,
 		err = ENOMEM;
 		OSAL_LOG_ERROR("cannot obtain dc status desc from pool! err: %d",
 				err);
-		goto out_dc_desc;
+		goto out;
 	}
 
 	err = cpdc_update_service_info_sgls(svc_info);
 	if (err) {
 		OSAL_LOG_ERROR("cannot obtain dc src/dst sgl from pool! err: %d",
 				err);
-		goto out_status_desc;
+		goto out;
 	}
 
 	src_buf_len = pbuf_get_buffer_list_len(svc_params->sp_src_blist);
@@ -109,7 +109,7 @@ decompress_setup(struct service_info *svc_info,
 	err = cpdc_setup_seq_desc(svc_info, dc_desc, 0);
 	if (err) {
 		OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d", err);
-		goto out_status_desc;
+		goto out;
 	}
 
 	PAS_INC_NUM_DC_REQUESTS(pcr);
@@ -119,10 +119,6 @@ decompress_setup(struct service_info *svc_info,
 	OSAL_LOG_DEBUG("exit! service initialized!");
 	return err;
 
-out_status_desc:
-	cpdc_put_status_desc(pcr, false, status_desc);
-out_dc_desc:
-	cpdc_put_desc(svc_info, false, dc_desc);
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
@@ -172,7 +168,7 @@ decompress_sub_chain_from_crypto(struct service_info *svc_info,
 	}
 	crypto_chain->ccp_cmd.ccpc_next_doorbell_en = true;
 	crypto_chain->ccp_cmd.ccpc_next_db_action_ring_push = true;
-	return ring_spec_info_fill(svc_info->si_seq_info.sqi_ring_id,
+	return ring_spec_info_fill(svc_info->si_seq_info.sqi_ring,
 				   &crypto_chain->ccp_ring_spec,
 				   svc_info->si_desc, 1);
 }
@@ -317,6 +313,7 @@ decompress_teardown(struct service_info *svc_info)
 
 	dc_desc = (struct cpdc_desc *) svc_info->si_desc;
 	cpdc_put_desc(svc_info, false, dc_desc);
+	seq_cleanup_desc(svc_info);
 
 	OSAL_LOG_DEBUG("exit!");
 }
