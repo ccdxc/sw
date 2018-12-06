@@ -10,7 +10,7 @@ OS_TYPE_LINUX = "linux"
 OS_TYPE_BSD   = "freebsd"
 
 __ionic_modules = [
-    "ionic_rdma",
+#    "ionic_rdma",
     "ionic"
 ]
 
@@ -41,6 +41,6 @@ def InsertIonicDriverCommands(os_type = OS_TYPE_LINUX, **kwargs):
           cmds.append("kenv %s" %  arg)
         cmds.append("kenv xxx_haps=1")
         cmds.append("cd %s/%s/ &&  kldload sys/modules/ionic/ionic.ko"  % (HOST_NAPLES_DRIVERS_DIR, __freebsd_directory))
-        #cmds.append("cd %s/%s/ &&  kldload drivers/eth/ionic/ionic_rdma.ko"  % (HOST_NAPLES_DRIVERS_DIR, __freebsd_directory))
+#        cmds.append("cd %s/%s/ &&  kldload sys/modules/ionic_rdma/ionic_rdma.ko"  % (HOST_NAPLES_DRIVERS_DIR, __freebsd_directory))
 
     return cmds

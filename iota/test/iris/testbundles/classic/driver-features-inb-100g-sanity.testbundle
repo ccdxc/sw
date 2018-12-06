@@ -1,6 +1,6 @@
 meta:
     name    : inband100g
-    os      : [ linux ]
+    os      : [ linux, freebsd ]
     nics    : [ pensando ]    
 
 testcases:

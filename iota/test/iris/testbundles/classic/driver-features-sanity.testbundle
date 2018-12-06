@@ -1,6 +1,6 @@
 meta:
     name    : ionicdrv
-    os      : [ linux ]
+    os      : [ linux, freebsd ]
     nics    : [ pensando, intel, mellanox, broadcom ]
 
 testcases:

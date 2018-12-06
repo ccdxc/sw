@@ -1,6 +1,6 @@
 meta:
     name    : ionicdrv_regr
-    os      : [ linux ]
+    os      : [ linux, freebsd ]
     nics    : [ pensando, intel, mellanox, broadcom ]
 
 testcases:
