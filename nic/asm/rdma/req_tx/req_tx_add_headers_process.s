@@ -71,7 +71,10 @@ req_tx_add_headers_process:
     seq            c2, CAPRI_KEY_FIELD(IN_P, first), 1 // Branch Delay Slot
 
     bbeq           K_GLOBAL_FLAG(_error_disable_qp), 1, error_disable_exit
-    nop
+    seq            c3, d.rnr_timeout, 0 //BD-Slot
+
+    bcf            [!c3], rate_enforce_fail
+    nop // BD-Slot
 
     bbeq           CAPRI_KEY_FIELD(IN_TO_S_P, fence), 1, fence
     // get DMA cmd entry based on dma_cmd_index
@@ -511,7 +514,7 @@ local_ack_timer:
     tblwr          d.exp_rsp_psn, r7 // Branch Delay Slot
     tblwr          d.last_ack_or_req_ts, r4
     bbeq           d.timer_on, 1, load_hdr_template
-    CAPRI_START_FAST_TIMER(r1, r2, K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, TIMER_RING_ID, 10)
+    CAPRI_START_FAST_TIMER(r1, r2, K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, TIMER_RING_ID, 100)
     tblwr          d.timer_on, 1
 
 load_hdr_template:
@@ -567,6 +570,7 @@ rrq_full:
     DOORBELL_NO_UPDATE_DISABLE_SCHEDULER(K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, SQ_RING_ID, r1, r2)
 #endif
 rate_enforce_fail:
+    phvwr    CAPRI_PHV_FIELD(SQCB_WRITE_BACK_T, rate_enforce_failed), 1 
 poll_fail:
 exit:
     nop.e

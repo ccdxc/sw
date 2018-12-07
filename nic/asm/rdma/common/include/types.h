@@ -1123,7 +1123,19 @@ union header_template_t {
     struct header_template_v4_t v4;
     struct header_template_v6_t v6;
 };
-    
+
+
+// if rnr syndrome value is represented as TTTTT, first 4bits
+// is say "n" and last bit is "m" then  timeout value is
+// (2^n + m*2^(n-1))/100 msec. As per the spec, 0 is 655.36 msec
+// and so, if syndrome is 0, 0x20 is stored in sqcb2 by RXDMA
+#define DECODE_RNR_SYNDROME_TIMEOUT(_timeout_r, _rnr, _tmp_r, _cf)      \
+    sll            _timeout_r, 1, _rnr[5:1];                            \
+    sne            _cf, _rnr[0], 0;                                     \
+    srl._cf        _tmp_r, _timeout_r, 1;                               \
+    add._cf        _timeout_r, _timeout_r, _tmp_r;
+
+   
 #define HDR_TEMPLATE_T struct header_template_t
 #define HDR_TEMPLATE_T_SIZE_BYTES (sizeof(struct header_template_t)/8)
 #define AH_ENTRY_T_SIZE_BYTES (HDR_TEMPLATE_T_SIZE_BYTES + 1)

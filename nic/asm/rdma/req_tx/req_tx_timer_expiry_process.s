@@ -39,7 +39,9 @@ check_rnr_timeout:
     bcf            [c1], check_local_ack_timeout
 
 rnr_timeout:
-    sll            r2, 1, d.rnr_timeout // Branch Delay Slot
+    DECODE_RNR_SYNDROME_TIMEOUT(r2, d.rnr_timeout, r3, c2) // Branch Delay Slot
+    mul            r2, r2, 10
+    mul            r2, r2, rdma_num_clock_ticks_per_us
     // Ignore expiry event if retransmit time has not reached
     // TODO comment out this check for now as in model cur_timestamp
     // is not populated in r4
@@ -58,7 +60,7 @@ rnr_timeout:
                    CAPRI_PHV_FIELD(TO_S7_STATS_P, timeout_rnr), 1 //BD Slot
 
     b              process_expiry
-    tblwr          d.rnr_timeout, 0 // Branch Delay Slot
+    nop
  
 check_local_ack_timeout:
     seq            c1, d.local_ack_timeout, 0
@@ -133,7 +135,7 @@ process_expiry:
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_stats_process, r0)
 
 restart_timer:
-    CAPRI_START_FAST_TIMER(r1, r2, K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, TIMER_RING_ID, 10)
+    CAPRI_START_FAST_TIMER(r1, r2, K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, TIMER_RING_ID, 100)
     //phvwr.e   p.common.p4_intr_global_drop, 1
     nop.e
     nop

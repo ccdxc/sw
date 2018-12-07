@@ -49,7 +49,10 @@ req_tx_sqcb2_write_back_process:
     seq            c2, CAPRI_KEY_FIELD(IN_P, first), 1 // Branch Delay Slot
 
     bbeq           K_GLOBAL_FLAG(_error_disable_qp), 1, error_exit
-    nop  // BD-slot
+    seq            c3, d.rnr_timeout, 0 //BD-Slot
+
+    bcf            [!c3], rate_enforce_fail
+    nop // BD-Slot
 
     bbeq           CAPRI_KEY_FIELD(IN_P, set_li_fence), 1, li_fence
     nop
@@ -108,6 +111,7 @@ spec_fail:
 exit:
     CAPRI_SET_TABLE_2_VALID(0)
 rate_enforce_fail:
+    phvwr    CAPRI_PHV_FIELD(IN_P, rate_enforce_failed), 1
 poll_fail:
 end:
     nop.e

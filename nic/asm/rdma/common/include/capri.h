@@ -1115,6 +1115,9 @@ addi.e   _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PE
 #define DMA_SET_WR_FENCE_END_OF_CMDS_E(_cmd_t, _base_r) \
     phvwrp.e   _base_r, offsetof(_cmd_t, cmdeop), CAPRI_SIZEOF_RANGE(_cmd_t, wr_fence, cmdeop),  (1 << (offsetof(_cmd_t, wr_fence) - offsetof(_cmd_t, cmdeop)) | (1 << 0))
 
+#define DMA_UNSET_END_OF_CMDS(_cmd_t, _base_r)                                  \
+    phvwrp     _base_r, offsetof(_cmd_t, cmdeop), sizeof(_cmd_t.cmdeop), 0
+
 
 #define DB_ADDR_BASE           0x8800000
 

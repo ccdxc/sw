@@ -146,10 +146,26 @@ nak_completion:
 rnr:
     IS_MASKED_VAL_EQUAL_B(c3, r1, SYNDROME_MASK, RNR_SYNDROME)
     bcf            [!c3], invalid_syndrome
-    nop            // Branch Delay Slot
 
-    // TODO compute timeout from rnr syndrome
-    phvwr          p.rnr_timeout, r1[4:0]
+    // RNR timeout is stored as 0x20 if rnr syndrome value is 0. This is because
+    // TxDMA rnr_timeout value should be non-zero for expiry logic to use
+    // rnr timeout rather than local ack timeout.
+    // RNR timeout is decoded using the below formula which will provide
+    // right value if 0 is stored as 0x20
+
+    // if rnr syndrome value is represented as TTTTT, first 4bits
+    // is say "n" and last bit is "m" then  timeout value is
+    // (2^n + m*2^(n-1))/100 msec. As per the spec, 0 is 655.36 msec
+    seq            c6, r1[4:0], 0 // BD-Slot
+    cmov           r3, c6, 0x20, r1[4:0]
+    phvwr          p.rnr_timeout, r3
+
+    // DMA rnr_timeout to sqcb2 and set end-of-cmds. If post_cq happens end-of-cmds will be unset in sqcb1-wb.
+    SQCB2_ADDR_GET(r1)
+    DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_RNR_TIMEOUT)
+    add            r3, r1, SQCB2_RNR_TIMEOUT_OFFSET
+    DMA_HBM_PHV2MEM_SETUP(r6, rnr_timeout, rnr_timeout, r3)
+    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, r6)
 
     phvwrpair.e    CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rexmit_psn), K_BTH_PSN, \
                    CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, msn), r2

@@ -85,10 +85,9 @@ post_cq:
     DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_LSN_OR_REXMIT_PSN) // Branch Delay Slot
     DMA_HBM_PHV2MEM_PHV_END_SETUP(r6, rnr_timeout)
 
-    //SQCB2_ADDR_GET(r1)
-    //DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_RNR_TIMEOUT)
-    //add            r2, r1, SQCB2_RNR_TIMEOUT_OFFSET
-    //DMA_HBM_PHV2MEM_SETUP(r6, rnr_timeout, rnr_timeout, r2)
+    // In case of RNR, end-of-cmd will always be set for  REQ_RX_DMA_CMD_RNR_TIMEOUT. Unset it here since CQE DMA will have it.
+    DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_RNR_TIMEOUT) 
+    DMA_UNSET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, r6)
 
     // Hardcode table id 2 for CQCB process
     CAPRI_RESET_TABLE_2_ARG()

@@ -46,6 +46,10 @@ req_tx_bktrack_sqcb2_process:
     bcf            [c1], err_completion
 
     tblwr          d.busy, 1
+    // Clear rnr_timeout. 
+    // SQ ring will drop all speculations and not make progress when RNR timer is running. Clearing it here after
+    // RNR timer expires and triggers bktrack.
+    tblwr          d.rnr_timeout, 0 
 
     phvwrpair CAPRI_PHV_FIELD(TO_S2_BT_P, rexmit_psn), d.rexmit_psn, \
               CAPRI_PHV_FIELD(TO_S3_BT_P, rexmit_psn), d.rexmit_psn

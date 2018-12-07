@@ -20,8 +20,8 @@
 #define REQ_RX_DMA_CMD_LSN_OR_REXMIT_PSN   1
 //#define REQ_RX_DMA_CMD_SQ_DB               2
 #define REQ_RX_DMA_CMD_RQ_FLUSH_DB         2
+#define REQ_RX_DMA_CMD_RNR_TIMEOUT         2
 #define REQ_RX_DMA_CMD_BKTRACK_DB          3
-//#define REQ_RX_DMA_CMD_RNR_TIMEOUT         4
 #define REQ_RX_RDMA_PAYLOAD_DMA_CMDS_START 2
 #define REQ_RX_RDMA_PAYLOAD_DMA_CMDS_END   14
 #define REQ_RX_DMA_CMD_SKIP_TO_EOP         (REQ_RX_MAX_DMA_CMDS - 6)
