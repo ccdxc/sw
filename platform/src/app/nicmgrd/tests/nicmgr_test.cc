@@ -5,6 +5,18 @@
 #include "platform/src/lib/nicmgr/include/dev.hpp"
 #include "platform/src/lib/nicmgr/include/eth_dev.hpp"
 #include "platform/src/app/nicmgrd/src/delphic.hpp"
+#include <grpc++/grpc++.h>
+#include "gen/proto/interface.grpc.pb.h"
+// #include "logger.hpp"
+
+using grpc::Channel;
+using grpc::ClientContext;
+using grpc::Status;
+using intf::Interface;
+using intf::InterfaceSpec;
+using intf::InterfaceRequestMsg;
+using intf::InterfaceResponse;
+using intf::InterfaceResponseMsg;
 
 using namespace std;
 
@@ -14,6 +26,101 @@ enum ForwardingMode g_fwd_mode = FWD_MODE_CLASSIC_NIC;
 
 namespace nicmgr {
 shared_ptr<nicmgr::NicMgrService> g_nicmgr_svc;
+}
+
+void
+create_uplinks()
+{
+    InterfaceSpec           *spec;
+    InterfaceRequestMsg     req_msg;
+    InterfaceResponseMsg    rsp_msg;
+    ClientContext           context;
+    Status                  status;
+    uint64_t                port_num[3] = {1, 5, 9};
+    int                     num_uplinks = 3;
+    int                     if_id_start = 128;
+
+    std::string  svc_endpoint;
+
+     if (getenv("HAL_SOCK_PATH")) {
+         svc_endpoint = std::string("unix:") + std::getenv("HAL_SOCK_PATH") + "halsock";
+     } else if (getenv("HAL_GRPC_PORT")) {
+         svc_endpoint = std::string("localhost:") + getenv("HAL_GRPC_PORT");
+     } else {
+         svc_endpoint = std::string("localhost:50054");
+     }
+    std::shared_ptr<Channel> channel = grpc::CreateChannel(svc_endpoint,
+                                                           grpc::InsecureChannelCredentials());
+
+    NIC_LOG_DEBUG("Waiting for HAL to be ready at: {}", svc_endpoint);
+     auto state = channel->GetState(true);
+     while (state != GRPC_CHANNEL_READY) {
+         // Wait for State change or deadline
+         channel->WaitForStateChange(state, gpr_time_from_seconds(1, GPR_TIMESPAN));
+         state = channel->GetState(true);
+         cout << "[INFO] Connecting to HAL, channel status = " << channel->GetState(true) << endl;
+     }
+
+    std::unique_ptr<Interface::Stub> intf_stub_ = Interface::NewStub(channel);
+
+    for (uint32_t i = 0; i < num_uplinks; i++) {
+        spec = req_msg.add_request();
+        spec->mutable_key_or_handle()->set_interface_id(if_id_start++);
+        spec->set_type(::intf::IfType::IF_TYPE_UPLINK);
+        spec->set_admin_status(::intf::IfStatus::IF_STATUS_UP);
+        spec->mutable_if_uplink_info()->set_port_num(port_num[i]);
+    }
+    status = intf_stub_->InterfaceCreate(&context, req_msg, &rsp_msg);
+#if 0
+    if (status.ok()) {
+        for (uint32_t i = 0; i < num_uplinks; i++) {
+            assert(rsp_msg.response(i).api_status() == types::API_STATUS_OK);
+            std::cout << "Uplink interface create succeeded, handle = "
+                << rsp_msg.response(i).status().if_handle()
+                << std::endl;
+        }
+    } else {
+        for (uint32_t i = 0; i < num_uplinks; i++) {
+            std::cout << "Uplink interface create failed, error = "
+                << rsp_msg.response(i).api_status()
+                << std::endl;
+        }
+    }
+#endif
+}
+
+static int
+sdk_error_logger (const char *format, ...)
+{
+    char       logbuf[1024];
+    va_list    args;
+
+    va_start(args, format);
+    vsnprintf(logbuf, sizeof(logbuf), format, args);
+    NIC_LOG_DEBUG("{}", logbuf);
+    va_end(args);
+
+    return 0;
+}
+
+static int
+sdk_debug_logger (const char *format, ...)
+{
+    char       logbuf[1024];
+    va_list    args;
+
+    va_start(args, format);
+    vsnprintf(logbuf, sizeof(logbuf), format, args);
+    NIC_LOG_DEBUG("{}", logbuf);
+    va_end(args);
+
+    return 0;
+}
+
+static void
+sdk_init (void)
+{
+    sdk::lib::logger::init(sdk_error_logger, sdk_debug_logger);
 }
 
 class nicmgr_test : public ::testing::Test {
@@ -34,6 +141,8 @@ protected:
 
   // Will be called at the beginning of all test cases in this class
   static void SetUpTestCase() {
+      std::cout << "Creating Uplinks ........." << endl;
+      create_uplinks();
   }
 
 };
@@ -56,36 +165,46 @@ TEST_F(nicmgr_test, test1)
 
     if (g_fwd_mode == FWD_MODE_CLASSIC_NIC) {
         devmgr =
-            new DeviceManager("../platform/src/app/nicmgrd/etc/eth.json",
-                              g_fwd_mode, PLATFORM_NONE, false);
+            new DeviceManager("../platform/src/app/nicmgrd/etc/device.json",
+                              g_fwd_mode, PLATFORM_HW, false);
     } else {
         devmgr =
             new DeviceManager("../platform/src/app/nicmgrd/etc/eth-smart.json",
-                              g_fwd_mode, PLATFORM_NONE, false);
+                              g_fwd_mode, PLATFORM_HW, false);
     }
     EXPECT_TRUE(devmgr != NULL);
 
-    pciemgr = new class pciemgr("nicmgr_test");
     // load config
     if (g_fwd_mode == FWD_MODE_CLASSIC_NIC) {
-        devmgr->LoadConfig("../platform/src/app/nicmgrd/etc/eth.json");
+        devmgr->LoadConfig("../platform/src/app/nicmgrd/etc/device.json");
     } else {
         devmgr->LoadConfig("../platform/src/app/nicmgrd/etc/eth-smart.json");
     }
 
+    // nicmgr::handle_hal_up();
+    devicemanager_init();
+
     // Get eth device
-    Eth *eth_dev = (Eth *)devmgr->GetDevice(1); // for hw_lif_id of 1
+    Eth *eth_dev = (Eth *)devmgr->GetDevice(66); // for hw_lif_id of 1
 
     union dev_cmd d_cmd;
     union dev_cmd_comp d_comp;
 
+    // RESET
+    d_cmd.cmd.opcode = CMD_OPCODE_RESET;
+    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+
+    // LIF_INIT
+    struct lif_init_cmd init_cmd;
+    init_cmd.opcode = CMD_OPCODE_LIF_INIT;
+    memcpy(&d_cmd, &init_cmd, sizeof(init_cmd));
+    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+
     struct rx_filter_add_cmd rx_cmd;
     // struct rx_filter_add_comp rx_comp;
-
     rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
     rx_cmd.match = RX_FILTER_MATCH_VLAN;
     rx_cmd.vlan.vlan = 10;
-
     // printf("opcode: %d rx_cmd_size: %d\n", d_cmd.cmd.opcode, sizeof(rx_cmd));
     memcpy(&d_cmd, &rx_cmd, sizeof(rx_cmd));
     // memcpy(&d_comp, &rx_comp, sizeof(rx_comp));
@@ -114,13 +233,16 @@ TEST_F(nicmgr_test, test1)
 }
 
 int main(int argc, char **argv) {
-  for (int i = 1; i < argc; i++) {
-      if (strcmp(argv[i], "--classic") == 0) {
-          g_fwd_mode = FWD_MODE_CLASSIC_NIC;
-      }
-  }
-  printf("Execting tests in mode: %s\n",
-         (g_fwd_mode == FWD_MODE_CLASSIC_NIC) ? "CLASSIC" : "SMART");
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+    utils::logger::init(false);
+    sdk_init();
+    // sdk::lib::logger::init(sdk_error_logger, sdk_debug_logger);
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--classic") == 0) {
+            g_fwd_mode = FWD_MODE_CLASSIC_NIC;
+        }
+    }
+    printf("\n------------------ Execting tests in mode: %s ---------------------\n",
+           (g_fwd_mode == FWD_MODE_CLASSIC_NIC) ? "CLASSIC" : "SMART");
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }

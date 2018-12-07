@@ -11,7 +11,7 @@ import atexit
 import pdb
 import glob
 import shlex
-from pwd import getpwnam  
+from pwd import getpwnam
 
 
 from subprocess import Popen, PIPE, call
@@ -225,7 +225,7 @@ def run_model(args):
     model_env = os.environ.copy()
     model_env["COVFILE"] = bullseye_model_cov_file
     p = Popen(model_cmd, preexec_fn=demote, env=model_env, stdout=log, stderr=log)
-   
+
     #p = Popen(model_cmd, stdout=log, stderr=log, env=model_env)
     print "* Starting ASIC model pid (" + str(p.pid) + ")"
     print "- Log file: " + model_log + "\n"
@@ -369,16 +369,16 @@ def run_platform_model_server(args, standalone=False):
 
 # Run nicmgr gtest
 def run_nicmgr_gtest(args, standalone=False):
-    #wait_for_hal()
-    bin_dir = os.path.join(nic_dir, "build/x86_64/iris/bin")
+    wait_for_hal()
+    bin_dir = os.path.join(nic_dir, "build/x86_64/iris/out/nicmgr_gtest")
     lib_dir = os.path.join(nic_dir, "build/x86_64/iris/lib")
     os.environ["LD_LIBRARY_PATH"] += ":" + lib_dir
     print "LD_LIBRARY_PATH: " + os.environ["LD_LIBRARY_PATH"]
     os.chdir(nic_dir)
     if args.classic:
-        cmd = [os.path.join(bin_dir, 'nicmgr_test'), "--classic"]
+        cmd = [os.path.join(bin_dir, 'nicmgr.gtest'), "--classic"]
     else:
-        cmd = [os.path.join(bin_dir, 'nicmgr_test')]
+        cmd = [os.path.join(bin_dir, 'nicmgr.gtest')]
 
     p = Popen(cmd)
     return check_for_completion(p, None, model_process, hal_process, args)

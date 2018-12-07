@@ -350,7 +350,7 @@ PdClient* PdClient::factory(platform_t platform)
 
     assert(pdc);
     pdc->platform_ = platform;
-    pdc->hal_cfg_path_ = string(std::getenv("HAL_CONFIG_PATH"));
+    pdc->hal_cfg_path_ = string(std::getenv("HAL_CONFIG_PATH")) + "/";
     ret = pdc->create_dirs();
     assert(ret == 0);
     pdc->init();

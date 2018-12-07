@@ -402,18 +402,18 @@ targets:
     feature:
 
   # ====================== Nic Mgr Tests ===========================
-  #nicmgr/gtest:
-  # commands: ["make", "jobd/nicmgr/gtest"]
-  # owners: ["email:neel@pensando.io"]
-  # area:
-  # sub-area:
-  # feature:
-  #nicmgr/gtest_classic:
-  # commands: ["make", "jobd/nicmgr/gtest_classic"]
-  # owners: ["email:neel@pensando.io"]
-  # area:
-  # sub-area:
-  # feature:
+  nicmgr/gtest:
+   commands: ["make", "jobd/nicmgr/gtest"]
+   owners: ["email:bharat@pensando.io"]
+   area:
+   sub-area:
+   feature:
+  nicmgr/gtest_classic:
+   commands: ["make", "jobd/nicmgr/gtest_classic"]
+   owners: ["email:bharat@pensando.io"]
+   area:
+   sub-area:
+   feature:
 
   #coremgr:
   # commands: ["sh", "-c", "cd /sw && make pull-assets && cd nic && bazel build //nic/sysmgr/coremgr/... && cd /sw/nic/sysmgr/coremgr/test && ./test.sh; ret=$? ; exit $ret" ]

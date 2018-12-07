@@ -39,6 +39,8 @@ using nicmgr::QstateAddr;
 using nicmgr_status_msgs::EthDeviceHostDownStatusMsg;
 using nicmgr_status_msgs::EthDeviceHostUpStatusMsg;
 
+extern class pciemgr *pciemgr;
+
 static uint8_t *
 memrev (uint8_t *block, size_t elnum)
 {
@@ -298,13 +300,14 @@ Eth::Eth(HalClient *hal_client,
         }
         pciehdev_set_priv(pdev, (void *)this);
 
-        // Add device to PCI topology
-        extern class pciemgr *pciemgr;
-        int ret = pciemgr->add_device(pdev);
-        if (ret != 0) {
-            NIC_LOG_ERR("lif-{}: Failed to add Host mgmt PCI device to topology",
-                hal_lif_info_.hw_lif_id);
-            return;
+        if (pciemgr) {
+            // Add device to PCI topology
+            int ret = pciemgr->add_device(pdev);
+            if (ret != 0) {
+                NIC_LOG_ERR("lif-{}: Failed to add Host mgmt PCI device to topology",
+                            hal_lif_info_.hw_lif_id);
+                return;
+            }
         }
     // } else if (spec->host_dev) {
     } else if (isHost()) {
@@ -318,7 +321,6 @@ Eth::Eth(HalClient *hal_client,
         pciehdev_set_priv(pdev, (void *)this);
 
         // Add device to PCI topology
-        extern class pciemgr *pciemgr;
         if (pciemgr) {
             int ret = pciemgr->add_device(pdev);
             if (ret != 0) {
@@ -1506,7 +1508,7 @@ Eth::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
         memcpy((uint8_t *)&mac_addr, (uint8_t *)&cmd->mac.addr, sizeof(cmd->mac.addr));
         mac_addr = be64toh(mac_addr) >> (8 * sizeof(mac_addr) - 8 * sizeof(cmd->mac.addr));
 
-        NIC_LOG_DEBUG("lif-{}: CMD_OPCODE_RX_FILTER_ADD: type RX_FILTER_MATCH_MAC mac:{}",
+        NIC_LOG_DEBUG("lif-{}: Add RX_FILTER_MATCH_MAC mac:{}",
                 hal_lif_info_.id, macaddr2str(mac_addr));
 
         eth_lif->AddMac(mac_addr);
@@ -1520,8 +1522,8 @@ Eth::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
     } else if (cmd->match == RX_FILTER_MATCH_VLAN) {
         vlan = cmd->vlan.vlan;
 
-        NIC_LOG_DEBUG("lif-{}: CMD_OPCODE_RX_FILTER_ADD: type RX_FILTER_MATCH_VLAN vlan {}",
-                hal_lif_info_.id, vlan);
+        NIC_LOG_DEBUG("lif-{}: Add RX_FILTER_MATCH_VLAN vlan {}",
+                      hal_lif_info_.id, vlan);
         eth_lif->AddVlan(vlan);
 
         // Store filter
@@ -1530,6 +1532,22 @@ Eth::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
             return (DEVCMD_ERROR);
         }
         vlans[filter_id] = vlan;
+    } else {
+        memcpy((uint8_t *)&mac_addr, (uint8_t *)&cmd->mac_vlan.addr, sizeof(cmd->mac_vlan.addr));
+        mac_addr = be64toh(mac_addr) >> (8 * sizeof(mac_addr) - 8 * sizeof(cmd->mac_vlan.addr));
+        vlan = cmd->mac_vlan.vlan;
+
+        NIC_LOG_DEBUG("lif-{}: Add RX_FILTER_MATCH_MAC_VLAN mac: {}, vlan: {}",
+                      hal_lif_info_.id, macaddr2str(mac_addr), vlan);
+
+        eth_lif->AddMacVlan(mac_addr, vlan);
+
+        // Store filter
+        if (fltr_allocator->alloc(&filter_id) != sdk::lib::indexer::SUCCESS) {
+            NIC_LOG_ERR("Failed to allocate VLAN filter");
+            return (DEVCMD_ERROR);
+        }
+        mac_vlans[filter_id] = std::make_tuple(mac_addr, vlan);
     }
 
     comp->filter_id = filter_id;
@@ -1544,7 +1562,6 @@ Eth::_CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data)
     //int status;
     uint64_t mac_addr;
     uint16_t vlan;
-    int match;
     struct rx_filter_del_cmd *cmd = (struct rx_filter_del_cmd *)req;
     //struct rx_filter_del_comp *comp = (struct rx_filter_del_comp *)resp;
     EthLif *eth_lif = NULL;
@@ -1555,34 +1572,30 @@ Eth::_CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data)
         return DEVCMD_ERROR;
     }
 
-    if (mac_addrs.find(cmd->filter_id) == mac_addrs.end()) {
-        if (vlans.find(cmd->filter_id) == vlans.end()) {
-            NIC_LOG_ERR("Invalid filter id {}", cmd->filter_id);
-            return (DEVCMD_ERROR);
-        } else {
-            match = RX_FILTER_MATCH_VLAN;
-            vlan = vlans[cmd->filter_id];
-        }
-    } else {
-        match = RX_FILTER_MATCH_MAC;
+    if (mac_addrs.find(cmd->filter_id) != mac_addrs.end()) {
         mac_addr = mac_addrs[cmd->filter_id];
-    }
-
-    if (match == RX_FILTER_MATCH_MAC) {
-
-        NIC_LOG_DEBUG("lif-{}: CMD_OPCODE_RX_FILTER_DEL: type RX_FILTER_MATCH_MAC mac:{}",
-                     hal_lif_info_.hw_lif_id,
-                     macaddr2str(mac_addr));
-
+        NIC_LOG_DEBUG("lif-{}: Del RX_FILTER_MATCH_MAC mac:{}",
+                      hal_lif_info_.hw_lif_id,
+                      macaddr2str(mac_addr));
         eth_lif->DelMac(mac_addr);
         mac_addrs.erase(cmd->filter_id);
-    } else if (match == RX_FILTER_MATCH_VLAN) {
-
-        NIC_LOG_DEBUG("lif-{}: CMD_OPCODE_RX_FILTER_DEL: type RX_FILTER_MATCH_VLAN vlan {}",
+    } else if (vlans.find(cmd->filter_id) != vlans.end()) {
+        vlan = vlans[cmd->filter_id];
+        NIC_LOG_DEBUG("lif-{}: Del RX_FILTER_MATCH_VLAN vlan {}",
                      hal_lif_info_.hw_lif_id, vlan);
-
         eth_lif->DelVlan(vlan);
         vlans.erase(cmd->filter_id);
+    } else if (mac_vlans.find(cmd->filter_id) != mac_vlans.end()) {
+        auto mac_vlan = mac_vlans[cmd->filter_id];
+        mac_addr = std::get<0>(mac_vlan);
+        vlan = std::get<1>(mac_vlan);
+        NIC_LOG_DEBUG("lif-{}: Del RX_FILTER_MATCH_MAC_VLAN mac: {}, vlan: {}",
+                     hal_lif_info_.hw_lif_id, macaddr2str(mac_addr), vlan);
+        eth_lif->DelMacVlan(mac_addr, vlan);
+        mac_vlans.erase(cmd->filter_id);
+    } else {
+        NIC_LOG_ERR("Invalid filter id {}", cmd->filter_id);
+        return (DEVCMD_ERROR);
     }
 
     return (DEVCMD_SUCCESS);

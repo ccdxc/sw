@@ -36,7 +36,7 @@ private:
 public:
     delphi::SdkPtr sdk(void) const { return sdk_; }
     NicMgrService(delphi::SdkPtr sk);
-    void OnMountComplete(void); 
+    void OnMountComplete(void);
 };
 
 // port_status_handler is the reactor for the Port object
@@ -86,6 +86,8 @@ Status init_accel_objects(delphi::SdkPtr sdk);
 extern shared_ptr<NicMgrService> g_nicmgr_svc;
 
 void delphi_init(void);
+
+void handle_hal_up (void);
 
 }    // namespace nicmgr
 

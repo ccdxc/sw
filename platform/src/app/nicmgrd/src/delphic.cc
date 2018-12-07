@@ -135,7 +135,7 @@ Status init_hal_status_handler (delphi::SdkPtr sdk) {
 }
 
 // helper function to handle HalStatus update event
-static void
+void
 handle_hal_up (void)
 {
     NIC_LOG_DEBUG("Rcvd HAL_STATUS_UP notification");

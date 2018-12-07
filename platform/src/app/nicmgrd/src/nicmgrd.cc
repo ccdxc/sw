@@ -37,7 +37,7 @@ sigusr1_handler(int sig)
 {
     fflush(stdout);
     fflush(stderr);
-    utils::logger::logger();
+    utils::logger::logger()->flush();
 }
 
 static int
