@@ -69,7 +69,7 @@ GlobalOptions = parser.parse_args()
 GlobalOptions.endpoint_file = GlobalOptions.topology_dir + "/endpoints.json"
 GlobalOptions.protocols = ["udp", "tcp", "icmp"]
 GlobalOptions.directories = ["udp", "tcp", "icmp", "mixed", "scale"]
-GlobalOptions.ports = ["10", "22", "24", "30", "50-100", "101-200", "201-250, 251-290""10000-20000", "65535"]
+GlobalOptions.ports = ["10", "22", "24", "30", "50-100", "101-200", "201-250, 251-290","10000-20000", "65535"]
 GlobalOptions.actions = ["PERMIT", "DENY", "REJECT"]
 
 def StripIpMask(ip_address):
@@ -177,8 +177,7 @@ def Main():
         json.dump(verif, open(GlobalOptions.topology_dir + "/mixed/{}_mixed_verif.json".format(count), "w"), indent=4)
 
     # Scale Config
-    #for count in [10000, 20000, 30000, 40000, 50000, 55000, 56000, 57000, 58000, 59000, 60000, 70000, 75000, 80000, 90000, 100000]:
-    for count in [10000, 20000]:
+    for count in [10000, 20000, 30000, 40000, 50000, 55000, 56000, 57000, 58000, 59000, 60000, 70000, 75000, 80000, 90000, 100000]:
         sgpolicy = sgpolicy_template
         policy_rules = sgpolicy_template['sgpolicies'][0]['spec']['policy-rules']
         del policy_rules[:]
