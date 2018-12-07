@@ -23,7 +23,6 @@ typedef uint32_t slab_id_t;
 enum {
     SDK_SLAB_ID_TWHEEL,
     SDK_SLAB_ID_PORT_PD,
-    SDK_SLAB_ID_RSVD,
 
     // hbm hash slabs
     SDK_SLAB_ID_HBM_HASH_ENTRY,
@@ -33,6 +32,8 @@ enum {
     SDK_SLAB_ID_HBM_HASH_HINT_GROUP,
     SDK_SLAB_ID_HBM_HASH_TABLE_ENTRY,
     SDK_SLAB_ID_HBM_HASH_SPINE_ENTRY
+
+    SDK_SLAB_ID_RSVD,   // Note: Add slabs above this.
 };
 
 #define SLAB_NAME_MAX_LEN 24
