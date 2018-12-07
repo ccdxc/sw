@@ -1,9 +1,8 @@
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 #include <iostream>
 #include <grpc++/grpc++.h>
-
 #include "gen/proto/types.grpc.pb.h"
-
 #include "uplink.hpp"
 #include "vrf.hpp"
 #include "l2seg.hpp"
@@ -25,7 +24,6 @@ Uplink::Factory(uplink_id_t id, bool is_oob)
     }
 
     NIC_LOG_DEBUG("Id: {}, is_oob: {}", id, is_oob);
-
 
     Uplink *uplink = new Uplink(id, is_oob);
 
@@ -61,18 +59,12 @@ Uplink::Destroy(Uplink *uplink)
     }
 }
 
-
 Uplink::Uplink(uplink_id_t id, bool is_oob)
 {
     NIC_LOG_DEBUG("Uplink Create: {}", id);
-    this->id = id;
-    this->is_oob = is_oob;
-    this->num_lifs = 0;
-}
-
-Uplink::~Uplink()
-{
-
+    id_       = id;
+    is_oob_   = is_oob;
+    num_lifs_ = 0;
 }
 
 void
@@ -83,8 +75,8 @@ Uplink::CreateVrf()
     }
 
     // In both Classic and hostpin modes, every uplink will get a VRF.
-    vrf = HalVrf::Factory(IsOOB() ? types::VRF_TYPE_OOB_MANAGEMENT : types::VRF_TYPE_INBAND_MANAGEMENT,
-                          this);
+    vrf_ = HalVrf::Factory(IsOOB() ? types::VRF_TYPE_OOB_MANAGEMENT : types::VRF_TYPE_INBAND_MANAGEMENT,
+                           this);
 
 #if 0
     if (hal->GetMode() == FWD_MODE_CLASSIC || IsOOB()) {
@@ -98,7 +90,6 @@ Uplink::CreateVrf()
 int
 Uplink::UpdateHalWithNativeL2seg(uint32_t native_l2seg_id)
 {
-    // grpc::ClientContext             context;
     grpc::Status                    status;
     InterfaceGetRequest             *req __attribute__((unused));
     InterfaceGetResponse            rsp;
@@ -110,10 +101,10 @@ Uplink::UpdateHalWithNativeL2seg(uint32_t native_l2seg_id)
     InterfaceResponseMsg            if_rsp_msg;
 
     req = req_msg.add_request();
-    req->mutable_key_or_handle()->set_interface_id(id);
+    req->mutable_key_or_handle()->set_interface_id(id_);
     status = hal->interface_get(req_msg, rsp_msg);
     if (status.ok()) {
-        NIC_LOG_DEBUG("Updated Uplink:{} with native l2seg:{}", id, native_l2seg_id);
+        NIC_LOG_DEBUG("Updated Uplink:{} with native l2seg:{}", id_, native_l2seg_id);
         for (int i = 0; i < rsp_msg.response().size(); i++) {
             rsp = rsp_msg.response(i);
             if (rsp.api_status() == types::API_STATUS_OK) {
@@ -123,26 +114,26 @@ Uplink::UpdateHalWithNativeL2seg(uint32_t native_l2seg_id)
                     if_spec->CopyFrom(rsp.spec());
                     if_spec->mutable_if_uplink_info()->
                         set_native_l2segment_id(native_l2seg_id);
-                    if_spec->mutable_if_uplink_info()->set_is_oob_management(is_oob);
+                    if_spec->mutable_if_uplink_info()->set_is_oob_management(is_oob_);
 
                     status = hal->interface_update(if_req_msg, if_rsp_msg);
                     if (status.ok()) {
                         rsp = rsp_msg.response(0);
                         if (rsp.api_status() == types::API_STATUS_OK) {
                             NIC_LOG_DEBUG("Uplink {} updated with "
-                                            "native_l2seg_id: {} succeeded",
-                                            id, native_l2seg_id);
+                                          "native_l2seg_id: {} succeeded",
+                                          id_, native_l2seg_id);
                         } else {
                             NIC_LOG_ERR("Failed to update uplink's:{} "
-                                          "native_l2seg_id:{}: err: {}",
-                                          id, native_l2seg_id,
-                                          rsp.api_status());
+                                        "native_l2seg_id:{}: err: {}",
+                                        id_, native_l2seg_id,
+                                        rsp.api_status());
                         }
                     } else {
-                            NIC_LOG_ERR("Failed to update uplink's:{} "
-                                          "native_l2seg_id:{}: err: {}, err_msg: {}",
-                                          status.error_code(),
-                                          status.error_message());
+                        NIC_LOG_ERR("Failed to update uplink's:{} "
+                                    "native_l2seg_id:{}: err: {}, err_msg: {}",
+                                    status.error_code(),
+                                    status.error_message());
                     }
                 }
             }
@@ -155,67 +146,61 @@ Uplink::UpdateHalWithNativeL2seg(uint32_t native_l2seg_id)
 uint32_t
 Uplink::GetId()
 {
-    return id;
-}
-
-uint64_t
-Uplink::GetHandle()
-{
-    return handle;
+    return id_;
 }
 
 uint32_t
 Uplink::GetPortNum()
 {
-    return port_num;
+    return port_num_;
 }
 
 uint32_t
 Uplink::GetNumLifs()
 {
-    return num_lifs;
+    return num_lifs_;
 }
 
 void
 Uplink::IncNumLifs()
 {
-    num_lifs++;
+    num_lifs_++;
 }
 
 void
 Uplink::DecNumLifs()
 {
-    num_lifs--;
+    num_lifs_--;
 }
 
 HalVrf *
 Uplink::GetVrf()
 {
-    return vrf;
+    return vrf_;
 }
 
 HalL2Segment *
 Uplink::GetNativeL2Seg()
 {
-    return native_l2seg;
+    return native_l2seg_;
 }
 
 bool
 Uplink::IsOOB()
 {
-    return is_oob;
+    return is_oob_;
 }
 
 void
 Uplink::SetNativeL2Seg(HalL2Segment *l2seg)
 {
-    native_l2seg = l2seg;
+    native_l2seg_ = l2seg;
 }
 
 void
-Uplink::SetPortNum()
+Uplink::SetPortNum(uint32_t port_num)
 {
-    this->port_num = port_num;
+    port_num_ = port_num;
 }
 
 

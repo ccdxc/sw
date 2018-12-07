@@ -18,7 +18,7 @@ capri_load_config (char *config_dir)
     hal_ret_t          ret = HAL_RET_OK;
     DIR                *dirp;
     struct dirent      *file;
-    int                fd;
+    int                fd, rs;
     addr_data_t        buff[512];
     uint16_t           readsz, nelems;
     std::string        cfg_fname;
@@ -47,6 +47,12 @@ capri_load_config (char *config_dir)
                                hal::pd::ASIC_WRITE_MODE_BLOCKING);
             }
         }
+        rs = close(fd);
+        if (rs) {
+            HAL_TRACE_ERR("Unable to close file: {}, err: {}",
+                          file->d_name, rs);
+            continue;
+        }
     }
 
     closedir(dirp);
@@ -60,7 +66,7 @@ capri_verify_config (char *config_dir)
     hal_ret_t          ret = HAL_RET_OK;
     DIR                *dirp;
     struct dirent      *file;
-    int                fd;
+    int                fd, rs;
     addr_data_t        buff[512];
     uint16_t           readsz, nelems;
     std::string        cfg_fname;
@@ -93,6 +99,12 @@ capri_verify_config (char *config_dir)
                                     buff[i].addr, data, buff[i].data);
                 }
             }
+        }
+        rs = close(fd);
+        if (rs) {
+            HAL_TRACE_ERR("Unable to close file: {}, err: {}",
+                          file->d_name, rs);
+            continue;
         }
     }
 

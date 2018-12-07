@@ -26,7 +26,7 @@ enum {
     SDK_SLAB_ID_RSVD,
 };
 
-#define SLAB_NAME_MAX_LEN                                 16
+#define SLAB_NAME_MAX_LEN 24
 
 typedef struct slab_block_s slab_block_t;
 struct slab_block_s {

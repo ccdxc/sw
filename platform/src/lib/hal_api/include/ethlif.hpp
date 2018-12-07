@@ -1,6 +1,7 @@
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
-#ifndef __NIC_HPP__
-#define __NIC_HPP__
+#ifndef __ETH_LIF_HPP__
+#define __ETH_LIF_HPP__
 
 #include "hal_types.hpp"
 
@@ -40,19 +41,23 @@ public:
     hal_irisc_ret_t remove_vlan_filters();
     hal_irisc_ret_t remove_mac_vlan_filters();
 
+    // Get APIs
     Lif *GetLif();
     Uplink *GetUplink();
     Enic *GetEnic();
-    void SetEnic(Enic *enic);
-    void SetVrf(HalVrf *vrf) { vrf_ = vrf; }
     HalVrf *GetVrf();
-    void SetNativeL2Seg(HalL2Segment *l2seg) { native_l2seg_ = l2seg; }
     HalL2Segment *GetNativeL2Seg();
     uint32_t GetHwLifId();
     bool GetIsPromiscuous();
     hal_lif_info_t *GetLifInfo();
-    static void SetInternalMgmtEthLif(EthLif *eth_lif) { EthLif::internal_mgmt_ethlif = eth_lif; }
     static EthLif *GetInternalMgmtEthLif() { return EthLif::internal_mgmt_ethlif; }
+
+    // Set APIs
+    void SetEnic(Enic *enic);
+    void SetVrf(HalVrf *vrf) { vrf_ = vrf; }
+    void SetNativeL2Seg(HalL2Segment *l2seg) { native_l2seg_ = l2seg; }
+    static void SetInternalMgmtEthLif(EthLif *eth_lif) { EthLif::internal_mgmt_ethlif = eth_lif; }
+
     bool IsMnic();
     bool IsOOBMnic();
     bool IsInternalManagementMnic();
@@ -98,9 +103,8 @@ private:
     void CreateVlanFilter(vlan_t vlan);
     void DeleteVlanFilter(vlan_t vlan);
 
-
     // For upgrade. hw_lif_id -> EthLif
     static EthLifMap ethlif_db;
 };
 
-#endif
+#endif // __ETH_LIF_HPP__

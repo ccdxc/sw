@@ -143,7 +143,7 @@ func slabShowCmdHandler(cmd *cobra.Command, args []string) {
 func slabShowHeader() {
 	hdrLine := strings.Repeat("-", 175)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-22s%-4s%-9s%-12s%-12s%-14s%-12s%-14s%-8s%-8s%-8s%-12s%-10s%-10s\n",
+	fmt.Printf("%-22s%-5s%-9s%-12s%-12s%-14s%-12s%-14s%-8s%-8s%-8s%-12s%-10s%-10s\n",
 		"Name", "Id", "ElemSize", "#Elem/Block", "ThreadSafe",
 		"GrowDemand", "DelayDel", "ZeroAlloc", "#Elems", "#Alloc",
 		"#Frees", "#AllocErr", "#Blocks", "RawBlockSz")
@@ -154,8 +154,9 @@ func slabShowResp(resp *halproto.SlabGetResponse) {
 	spec := resp.GetSpec()
 	stats := resp.GetStats()
 
-	fmt.Printf("%-22s%-4d%-9d%-12d%-12t%-14t%-12t%-14t%-8d%-8d%-8d%-12d%-10d%-10d\n",
-		strings.Replace(strings.ToLower(spec.GetName()), "_", " ", -1),
+	fmt.Printf("%-22s%-5d%-9d%-12d%-12t%-14t%-12t%-14t%-8d%-8d%-8d%-12d%-10d%-10d\n",
+		spec.GetName(),
+		// strings.Replace(strings.ToLower(spec.GetName()), "_", " ", -1),
 		spec.GetId(), spec.GetElementSize(),
 		spec.GetElementsPerBlock(), spec.GetThreadSafe(),
 		spec.GetGrowOnDemand(), spec.GetDelayDelete(),
