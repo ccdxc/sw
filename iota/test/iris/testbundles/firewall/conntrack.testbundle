@@ -52,7 +52,6 @@ testcases:
         testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw_overlap_fin
         ignore:   False
 
-
     -   name    : TDL_NZ_LOW_RESP
         testcase: testcases.security.conntrack.tcp_conntrack_left_of_wndw
         args    :
@@ -119,3 +118,59 @@ testcases:
         ignore:   False
         args    :
             resp_flow: True
+
+    -   name    : TDL_DATA_RESP
+        testcase: testcases.security.conntrack.tcp_conntrack_data
+        ignore:   False
+        args    :
+            resp_flow: True
+
+    -   name    : TDL_DATA_CLOSE_RESP
+        testcase: testcases.security.conntrack.tcp_conntrack_data_close
+        ignore:   False
+        args    :
+            resp_flow: True
+
+    -   name    : TDL_SYN_FLAG_RESP
+        testcase: testcases.security.conntrack.tcp_conntrack_synflag
+        ignore:   False
+        args    :
+            resp_flow: True
+
+    -   name    : TDL_SYN_CLOSE_RESP
+        testcase: testcases.security.conntrack.tcp_conntrack_syn_close
+        ignore:   False
+        args    :
+            resp_flow: True
+
+    -   name    : TDL_TERM_RESP
+        testcase: testcases.security.conntrack.tcp_conntrack_term
+        ignore:   False
+        args    :
+            resp_flow: True
+
+    # done / done resp
+    -   name    : TDL_DATA
+        testcase: testcases.security.conntrack.tcp_conntrack_data
+        ignore:   True
+    
+    # tcpunexpectedpkt = True
+    -   name    : TDL_DATA_CLOSE
+        testcase: testcases.security.conntrack.tcp_conntrack_data_close
+        ignore:   False
+
+    # 
+    -   name    : TDL_SYN_FLAG
+        testcase: testcases.security.conntrack.tcp_conntrack_synflag
+        ignore:   False
+
+    # tcpunexpectedpkt = True
+    -   name    : TDL_SYN_CLOSE
+        testcase: testcases.security.conntrack.tcp_conntrack_syn_close
+        ignore:   False
+
+    -   name    : TDL_TERM
+        testcase: testcases.security.conntrack.tcp_conntrack_term
+        ignore:   False
+
+

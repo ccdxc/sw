@@ -1,6 +1,17 @@
 #! /usr/bin/python3
 import yaml
 
+from enum import IntEnum
+class TcpState(IntEnum):
+    INIT = 0,
+    SYN_RCVD = 1,
+    ACK_RCVD = 2,
+    SYN_ACK_RCVD = 3,
+    ESTABLISHED  = 4,
+    FIN_RCVD = 5,
+    BIDIR_FIN_RCVD = 6,
+    RESET = 7
+
 def get_conntrackinfo(cmd):
     yaml_out = yaml.load_all(cmd.stdout)
     print(type(yaml_out))
@@ -70,3 +81,8 @@ def get_initflowstats(data):
 
 def get_respflowstats(data):
     return get_flowstats(data['stats'])
+
+def get_tcpstate(flow):
+    print ("state is {}".format(flow['flowdata']['flowinfo']['tcpstate']))
+
+    return flow['flowdata']['flowinfo']['tcpstate']
