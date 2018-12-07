@@ -33,14 +33,11 @@ def InsertIonicDriverCommands(os_type = OS_TYPE_LINUX, **kwargs):
     cmds = []
     if os_type == OS_TYPE_LINUX:
         cmds = ["cd %s/%s/ && insmod drivers/eth/ionic/ionic.ko %s" % (HOST_NAPLES_DRIVERS_DIR, __linux_directory, driver_args),
-                "modprobe ib_uverbs",
-	            "cd %s/%s/ && insmod drivers/rdma/drv/ionic/ionic_rdma.ko xxx_haps=1" % (HOST_NAPLES_DRIVERS_DIR, __linux_directory)
 	       ]
     elif os_type == OS_TYPE_BSD:
         for arg  in driver_args.split(" "):
           cmds.append("kenv %s" %  arg)
         cmds.append("kenv xxx_haps=1")
         cmds.append("cd %s/%s/ &&  kldload sys/modules/ionic/ionic.ko"  % (HOST_NAPLES_DRIVERS_DIR, __freebsd_directory))
-#        cmds.append("cd %s/%s/ &&  kldload sys/modules/ionic_rdma/ionic_rdma.ko"  % (HOST_NAPLES_DRIVERS_DIR, __freebsd_directory))
 
     return cmds
