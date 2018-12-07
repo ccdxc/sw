@@ -36,7 +36,7 @@ proxy_meta_init() {
 
     // CB size 1024, num_entries 32K
     g_meta[types::PROXY_TYPE_TCP] =
-        (proxy_meta_t) {false, 1, {SERVICE_LIF_TCP_PROXY, 1, {0, 5, 15}}, types::PROXY_TYPE_NONE, false};
+        (proxy_meta_t) {false, 1, {SERVICE_LIF_TCP_PROXY, 2, {{0, 5, 15}, {1, 1, 15}}},types::PROXY_TYPE_NONE, false};
 
     // CB size 1024, num_entries 32K
     g_meta[types::PROXY_TYPE_TLS] =

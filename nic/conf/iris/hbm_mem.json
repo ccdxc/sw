@@ -485,6 +485,10 @@
             "reset": true
         },
         {
+            "name": "tcp_ooo_rx2tx_queue",
+            "size_kb": 16384 
+        },
+        {
             "name": "tcp_ooo_descr_global_pool",
             "size_kb": 32 
         },

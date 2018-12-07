@@ -218,6 +218,9 @@ wring_pd_meta_init() {
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_TCP_OOO_DESCR, 1024,
                            DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_TCP_OOO_QUEUE, 2048, 0, NULL, NULL, false};
  
+    g_meta[types::WRING_TYPE_TCP_OOO_RX2TX] =
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_TCP_OOO_RX2TX_QUEUE, 32786, 256,
+                                  "", 0, 0, NULL, NULL, false, 1, 0};
 
     return HAL_RET_OK;
 }
