@@ -423,17 +423,6 @@ serdes_global_init_hw(uint32_t     jtag_id,
     // disable logging to default stderr since we will log to file
     aapl->enable_stream_err_logging = 0;
 
-    // TODO workaround
-    FILE *d_fp = fopen("/aapl_avago.cfg", "r");
-    if (d_fp) {
-        fscanf(d_fp, "%d %d %d",
-               &aapl->debug, &aapl->verbose, &aapl->serdes_int_timeout);
-        fclose(d_fp);
-    }
-
-    SDK_LINKMGR_TRACE_DEBUG("debug: %d, verbose: %d, int_timeout: %d\n",
-                    aapl->debug, aapl->verbose, aapl->serdes_int_timeout);
-
     if (aacs_connect == true) {
         aapl->aacs  = aacs_connect;
     } else {

@@ -8,8 +8,8 @@
 #include "timer_cb.hpp"
 #include "include/sdk/periodic.hpp"
 #include "include/sdk/asic/capri/cap_mx_api.h"
-#include "spidev.h"
 #include "platform/drivers/xcvr.hpp"
+#include "lib/pal/pal.hpp"
 
 namespace sdk {
 namespace linkmgr {
@@ -1270,7 +1270,7 @@ port::port_init(linkmgr_cfg_t *cfg)
                         sdk::linkmgr::serdes_fns.serdes_spico_crc(sbus_addr));
     }
 
-    spidev_init();
+    sdk::lib::pal_program_marvell(0, 0x8140);
 
     return rc;
 }

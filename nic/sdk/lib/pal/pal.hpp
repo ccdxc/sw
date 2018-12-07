@@ -215,7 +215,7 @@ pal_qsfp_set_led(int port, pal_qsfp_led_color_t led)
     return gl_pal_info.rwvecs.qsfp_set_led(port, led);
 }
 
-static inline pal_ret_t
+inline pal_ret_t
 pal_program_marvell(uint8_t addr, uint32_t data)
 {
     return gl_pal_info.rwvecs.program_marvell(addr, data);
