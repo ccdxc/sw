@@ -297,7 +297,19 @@ func initializer(reg *descriptor.Registry) ([]*descriptor.Message, []*descriptor
 	if err != nil {
 		panic(fmt.Errorf("could not find ObjectRef object(%s)", err))
 	}
-	return []*descriptor.Message{m, m1, m2}, nil
+	ret := []*descriptor.Message{m, m1, m2}
+	// Find any messages that are annotated
+	for _, n := range reg.GetAllFQMNs() {
+		msg, err := reg.LookupMsg("", n)
+		if err != nil {
+			glog.Fatalf("message not found [%v]", n)
+		}
+		i, err := gwplugins.GetExtension("venice.forceDoc", msg)
+		if err == nil && i.(bool) {
+			ret = append(ret, msg)
+		}
+	}
+	return ret, nil
 }
 
 func methFinalizer(obj *genswagger.SwaggerPathItemObject, path *string, method *descriptor.Method, reg *descriptor.Registry) error {

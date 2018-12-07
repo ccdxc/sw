@@ -771,6 +771,12 @@ var typesMapExample = map[string]*api.Struct{
 			"CurrentOutages": api.Field{Name: "CurrentOutages", CLITag: api.CLIInfo{ID: "CurrentOutages", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
+	"bookstore.UnusedMessage": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(UnusedMessage{}) },
+		Fields: map[string]api.Field{
+			"Unused": api.Field{Name: "Unused", CLITag: api.CLIInfo{ID: "Unused", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+		},
+	},
 }
 
 func init() {

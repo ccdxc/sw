@@ -114,6 +114,8 @@ extend google.protobuf.MessageOptions {
   ObjectPrefix objectPrefix = 51290;
   // objectAutoGen is for internal use only
   string objectAutoGen = 51291;
+  // forceDoc forces the message to be documented even if not used by a service
+  bool forceDoc = 51292;
 };
 
 extend google.protobuf.FieldOptions {

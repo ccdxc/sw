@@ -49,6 +49,7 @@ The following Messages are defined.
   StoreList
   StoreSpec
   StoreStatus
+  UnusedMessage
 
 The following Services and Methods are defined.
 

@@ -1968,3 +1968,37 @@ func EncodeGrpcRespStoreStatus(ctx context.Context, response interface{}) (inter
 func DecodeGrpcRespStoreStatus(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
+
+func encodeHTTPUnusedMessage(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPUnusedMessage(_ context.Context, r *http.Request) (interface{}, error) {
+	var req UnusedMessage
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqUnusedMessage encodes GRPC request
+func EncodeGrpcReqUnusedMessage(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*UnusedMessage)
+	return req, nil
+}
+
+// DecodeGrpcReqUnusedMessage decodes GRPC request
+func DecodeGrpcReqUnusedMessage(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*UnusedMessage)
+	return req, nil
+}
+
+// EncodeGrpcRespUnusedMessage encodes GRC response
+func EncodeGrpcRespUnusedMessage(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespUnusedMessage decodes GRPC response
+func DecodeGrpcRespUnusedMessage(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}

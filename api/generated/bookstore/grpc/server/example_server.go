@@ -1964,8 +1964,9 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r := i.(bookstore.StoreList)
 			return &r
 		}),
-		"bookstore.StoreSpec":   apisrvpkg.NewMessage("bookstore.StoreSpec"),
-		"bookstore.StoreStatus": apisrvpkg.NewMessage("bookstore.StoreStatus"),
+		"bookstore.StoreSpec":     apisrvpkg.NewMessage("bookstore.StoreSpec"),
+		"bookstore.StoreStatus":   apisrvpkg.NewMessage("bookstore.StoreStatus"),
+		"bookstore.UnusedMessage": apisrvpkg.NewMessage("bookstore.UnusedMessage"),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}

@@ -2971,6 +2971,15 @@
         }
       }
     },
+    "bookstoreUnusedMessage": {
+      "type": "object",
+      "properties": {
+        "Unused": {
+          "type": "string"
+        }
+      },
+      "title": "This is an unused messaged not used by any service but is force documented in the swagger spec"
+    },
     "googleprotobufAny": {
       "type": "object",
       "properties": {

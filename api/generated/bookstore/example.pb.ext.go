@@ -1232,6 +1232,27 @@ func (m *StoreStatus) Defaults(ver string) bool {
 	return false
 }
 
+// Clone clones the object into into or creates one of into is nil
+func (m *UnusedMessage) Clone(into interface{}) (interface{}, error) {
+	var out *UnusedMessage
+	var ok bool
+	if into == nil {
+		out = &UnusedMessage{}
+	} else {
+		out, ok = into.(*UnusedMessage)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *UnusedMessage) Defaults(ver string) bool {
+	return false
+}
+
 // Validators
 
 func (m *ApplyDiscountReq) Validate(ver, path string, ignoreStatus bool) []error {
@@ -1765,6 +1786,11 @@ func (m *StoreSpec) Validate(ver, path string, ignoreStatus bool) []error {
 }
 
 func (m *StoreStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *UnusedMessage) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }

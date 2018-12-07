@@ -987,7 +987,6 @@ func (c *overlay) Commit(ctx context.Context, action []apiintf.OverlayKey) error
 		case operCreate:
 			ctxn.Create(k, v.val)
 		case operUpdate:
-			ctxn.Update(k, v.val)
 			if v.updateFn != nil {
 				newObj, err := runtime.NewEmpty(v.val)
 				if err != nil {

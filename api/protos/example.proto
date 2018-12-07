@@ -196,6 +196,13 @@ message RestockResponse {
   int32 Count = 4;
 }
 
+// This is an unused messaged not used by any service but is force documented in the swagger spec
+message UnusedMessage {
+  option (venice.forceDoc) = true;
+
+  string Unused = 1;
+}
+
 service BookstoreV1 {
   // ---- Service level parameters ----//
   // Prefix for all resources served by this service.
