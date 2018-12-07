@@ -73,6 +73,11 @@ rsync -r --delete --delete-excluded --copy-links \
   --exclude=".tmp_versions/" \
   "$SONIC_DRIVERS_SRC/" "$SONIC_GEN_DIR/"
 
+# Copy other useful scripts from elsewhere
+rsync -r --delete --delete-excluded \
+  "$TOP/nic/tools/rdmactl.py" \
+  "$GEN_DIR/"
+
 # Copy perftest sources to gen dir
 rsync -r --delete --delete-excluded \
   --exclude=".git/" \

@@ -1,4 +1,4 @@
-#!/usr/bin/python2.7
+#!/usr/bin/env python2.7
 import sys
 import os
 import argparse
@@ -7,8 +7,17 @@ from subprocess import call
 import binascii
 import time
 
-PATH_PREFIX='/sys/kernel/debug/ionic/'
-PATH_SUFFIX='/rdma/aq/1'
+CMD_FMT='tbl {tbl} idx {idx} post'
+CTRL_FMT=None
+DATA_FMT=None
+
+if sys.platform.startswith('freebsd'):
+    CTRL_FMT='sysctl dev.ionic.{lif}.rdma_dbg.aq.1.dbg_wr_ctrl=\'' + CMD_FMT + '\' > /dev/null'
+    DATA_FMT='sysctl -bn dev.ionic.{lif}.rdma_dbg.aq.1.dbg_wr_data > {out}'
+else:
+    CTRL_FMT='echo -n \'' + CMD_FMT + '\' > /sys/kernel/debug/ionic/{pci}/lif{lif}/rdma/aq/1/dbg_wr_ctrl'
+    DATA_FMT='xxd -r /sys/kernel/debug/ionic/{pci}/lif{lif}/rdma/aq/1/dbg_wr_data > {out}'
+
 DUMP_TYPE_QP=0
 DUMP_TYPE_CQ=1
 DUMP_TYPE_EQ=2
@@ -646,11 +655,19 @@ class RdmaPageTableEntry(Packet):
     ]
 
 def exec_dump_cmd(tbl_type, tbl_index, start_offset, num_bytes):
-    cmd_str = "echo -n 'tbl " + str(tbl_type) + " idx " + str(tbl_index) + " post' > " + DBG_WR_CTRL
+    cmd_str = CTRL_FMT.format(
+            lif = args.lif, pci = args.pcie_id,
+            tbl = tbl_type, idx = tbl_index)
+
     #print cmd_str
     os.system(cmd_str)
-    time.sleep(1)
-    cmd2_str = "xxd -r " + DBG_WR_DATA + " > " + DUMP_DATA
+
+    #time.sleep(1)
+
+    cmd2_str = DATA_FMT.format(
+            lif = args.lif, pci = args.pcie_id,
+            out = DUMP_DATA)
+
     #print cmd2_str
     os.system(cmd2_str)
     
@@ -701,12 +718,12 @@ args = parser.parse_args()
 
 #print args
 
-if args.lif is None or args.pcie_id is None:
-    print 'lif and/or pcie_id is not specified'
-
-path = PATH_PREFIX+args.pcie_id+'/lif'+str(args.lif)+PATH_SUFFIX
-#print path
-os.chdir(path)
+if sys.platform.startswith('freebsd'):
+    if args.lif is None:
+        print 'lif not specified'
+else:
+    if args.lif is None or args.pcie_id is None:
+        print 'lif and/or pcie_id is not specified'
 
 if args.cqcb is not None:
     bin_str = exec_dump_cmd(DUMP_TYPE_CQ, args.cqcb, 0, 64)
