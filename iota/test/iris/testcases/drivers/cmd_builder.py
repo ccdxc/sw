@@ -241,13 +241,13 @@ def bsd_ethtool_rssflow(node, intf,op):
     return "echo > /dev/null"
 
 def bsd_ip_link_filter_mcast(node, intf,op):
-    return ip_link_pkt_filter_cmd(node, intf,"multicast", op)
+    return "echo > /dev/null"
 
 def bsd_ip_link_filter_all_mcast(node, intf,op):
-    return ip_link_pkt_filter_cmd(node, intf,"allmulticast", op)
+    return "echo > /dev/null"
 
 def bsd_ip_link_filter_broadcast(node, intf,op):
-    return ip_link_pkt_filter_cmd(node, intf,"broadcast", op)
+    return "echo > /dev/null"
 
 def bsd_ip_link_filter_promiscuous(node, intf,op):
-    return ip_link_pkt_filter_cmd(node, intf,"promisc", op)
+    return " ".join(["ifconfig", intf,"promisc" if op == "on" else "-promisc"])
