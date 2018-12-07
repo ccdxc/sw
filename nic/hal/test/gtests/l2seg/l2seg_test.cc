@@ -1039,6 +1039,7 @@ TEST_F(l2seg_test, test5)
     hal_test_utils_check_slab_leak(pre, post, &is_leak);
     ASSERT_TRUE(is_leak == false);
 }
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

@@ -22,8 +22,8 @@ namespace api {
 
 class oci_state {
 public:
-    oci_state();
-    ~oci_state();
+    oci_state() { }
+    ~oci_state() { }
     vcn_state *vcn_db(void) { return &vcn_db_; }
     subnet_state *subnet_db(void) { return &subnet_db_; }
     vnic_state *vnic_db(void) { return &vnic_db_ ; }

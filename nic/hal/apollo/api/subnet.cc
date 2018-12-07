@@ -86,7 +86,7 @@ subnet_entry::factory(oci_subnet_t *oci_subnet) {
  */
 sdk_ret_t
 subnet_entry::process_api(api_ctxt_t *api_ctxt) {
-    switch (api_ctxt->op) {
+    switch (api_ctxt->api_op) {
     case API_OP_CREATE:
         return process_create(api_ctxt);
         break;
@@ -255,6 +255,15 @@ subnet_state::subnet_find(oci_subnet_key_t *subnet_key) const {
     return (subnet_entry *)(subnet_ht_->lookup(subnet_key));
 }
 
+/**
+ * @brief        free subnet instance
+ * @param[in] subnet subnet instance
+ */
+void
+subnet_state::subnet_free(subnet_entry *subnet) {
+    api::delay_delete_to_slab(OCI_SLAB_SUBNET, subnet);
+}
+
 /** @} */    // end of OCI_SUBNET_STATE
 
 #if 0
@@ -305,16 +314,6 @@ subnet_db::subnet_cleanup(subnet_t *subnet) {
 }
 
 /**
- * @brief Free subnet structure
- *
- * @param[in] subnet subnet
- */
-void
-subnet_db::subnet_free(subnet_t *subnet) {
-    api::delay_delete_to_slab(OCI_SLAB_SUBNET, subnet);
-}
-
-/**
  * @brief Uninitialize and free internal subnet structure
  *
  * @param[in] subnet subnet
@@ -347,9 +346,9 @@ oci_subnet_create (_In_ oci_subnet_t *subnet)
     sdk_ret_t     rv;
 
     memset(&api_ctxt, 0, sizeof(api_ctxt));
-    api_ctxt.op = API_OP_CREATE;
-    api_ctxt.id = API_ID_SUBNET_CREATE;
-    api_ctxt.params.subnet_create = *subnet;
+    api_ctxt.api_op = API_OP_CREATE;
+    api_ctxt.obj_id = OBJ_ID_SUBNET;
+    api_ctxt.subnet_create = *subnet;
     rv = g_api_engine.process_api(&api_ctxt);
     return rv;
 }
@@ -367,9 +366,9 @@ oci_subnet_delete (_In_ oci_subnet_key_t *subnet_key)
     sdk_ret_t     rv;
 
     memset(&api_ctxt, 0, sizeof(api_ctxt));
-    api_ctxt.op = API_OP_DELETE;
-    api_ctxt.id = API_ID_SUBNET_DELETE;
-    api_ctxt.params.subnet_delete = *subnet_key;
+    api_ctxt.api_op = API_OP_DELETE;
+    api_ctxt.obj_id = OBJ_ID_SUBNET;
+    api_ctxt.subnet_delete = *subnet_key;
     rv = g_api_engine.process_api(&api_ctxt);
     return rv;
 }

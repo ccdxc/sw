@@ -14,7 +14,7 @@
 #include "nic/sdk/include/sdk/ht.hpp"
 #include "nic/sdk/lib/table/directmap/directmap.hpp"
 #include "nic/sdk/lib/table/hash/hash.hpp"
-#include "nic/hal/apollo/framework/api.hpp"
+#include "nic/hal/apollo/framework/api_base.hpp"
 #include "nic/hal/apollo/include/api/oci_vnic.hpp"
 
 namespace api {

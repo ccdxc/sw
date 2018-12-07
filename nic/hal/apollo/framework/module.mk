@@ -1,6 +1,7 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = libasicpd_common.so
-#MODULE_PIPELINE = iris gft
-MODULE_SRCS    = ${MODULE_SRC_DIR}/asic_pd.cc
+MODULE_TARGET   = libociframework.so
+MODULE_PIPELINE = apollo
+MODULE_SRCS     = ${MODULE_SRC_DIR}/*.cc
 include ${MKDEFS}/post.mk

@@ -65,26 +65,6 @@ typedef enum oci_trace_level_e {
  */
 #define OCI_EPOCH_INVALID        0x0
 
-/**
- * @brief    OCI library initialization modes
- */
-typedef enum oci_init_mode_e {
-    OCI_INIT_MODE_NONE,                 /**< invalid mode */
-    OCI_INIT_MODE_FRESH_START,          /**< initialize from scratch, ignore
-                                          any state if preserved previously */
-    OCI_INIT_MODE_POST_UPGRADE,         /**< initialize using state preserved,
-                                              if any */
-} oci_init_mode_t;
-
-/**
- * @brief    OCI library initialization time parameters
- */
-typedef struct oci_init_params_s {
-    oci_init_mode_t      init_mode;
-    oci_trace_level_t    log_level;
-} oci_init_params_t;
-oci_status_t oci_init(oci_init_params_t *params);
-
 typedef uint32_t  oci_vcn_id_t;
 typedef uint32_t  oci_subnet_id_t;
 typedef uint16_t  oci_vnic_id_t;

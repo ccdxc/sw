@@ -6,8 +6,8 @@
  * @brief   This module defines OCI VCN interface
  */
 
-#if !defined (__OCI_VCN_H_)
-#define __OCI_VCN_H_
+#if !defined (__OCI_VCN_HPP__)
+#define __OCI_VCN_HPP__
 
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/hal/apollo/include/api/oci.hpp"
@@ -36,9 +36,9 @@ typedef enum oci_vcn_type_e {
  * @brief VCN
  */
 typedef struct oci_vcn_s {
-    oci_vcn_type_t type;    /**< VCN type */
-    oci_vcn_key_t key;      /**< VCN Key */
-    ip_prefix_t pfx;        /**< VCN CIDR block */
+    oci_vcn_type_t    type;    /**< VCN type */
+    oci_vcn_key_t     key;     /**< VCN Key */
+    ip_prefix_t       pfx;     /**< VCN CIDR block */
 } __PACK__ oci_vcn_t;
 
 /**
@@ -63,4 +63,4 @@ sdk_ret_t oci_vcn_delete(_In_ oci_vcn_key_t *vcn_key);
  * @}
  */
 
-#endif /** __OCI_VCN_H_ */
+#endif    /** __OCI_VCN_HPP__ */

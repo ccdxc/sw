@@ -12,7 +12,7 @@
 #include "nic/sdk/include/sdk/slab.hpp"
 #include "nic/sdk/include/sdk/indexer.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"
-#include "nic/hal/apollo/framework/api.hpp"
+#include "nic/hal/apollo/framework/api_base.hpp"
 #include "nic/hal/apollo/include/api/oci_vcn.hpp"
 
 namespace api {
@@ -169,13 +169,13 @@ private:
      * @brief     add given vcn to the database
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t add_to_db(void);
+    virtual sdk_ret_t add_to_db(void) override;
 
     /**
      * @brief     delete given vcn from the database
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t del_from_db(void);
+    virtual sdk_ret_t del_from_db(void) override;
 
 private:
     oci_vcn_key_t    key_;        /**< vcn key */

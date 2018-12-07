@@ -6,6 +6,9 @@
  * @brief   This module defines batching APIs
  */
 
+#include "nic/sdk/include/sdk/base.hpp"
+#include "nic/hal/apollo/include/api/oci.hpp"
+
 #if !defined (__OCI_BATCH_HPP__)
 #define __OCI_BATCH_HPP__
 
@@ -25,7 +28,7 @@ typedef struct oci_batch_params_s {
 } __PACK__ oci_batch_params_t;
 
 /**
- * @brief batch start API
+ * @brief    batch start API
  *
  * @param[in] batch_params    batch specific information
  *
@@ -34,15 +37,15 @@ typedef struct oci_batch_params_s {
 sdk_ret_t oci_batch_start(_In_ oci_batch_params_t *batch_params);
 
 /**
- * @brief commit the config corresponding to epoch provided in oci_batch_start()
- *        and activate the datapath to use this epoch
+ * @brief    commit the config corresponding to epoch provided in
+ *           oci_batch_start() and activate the datapath to use this epoch
  *
  * @return #SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t oci_batch_commit(void);
 
 /**
- * @brief abort the current batch processing and ignore the epoch
+ * @brief    abort the current batch processing and ignore the epoch
  *
  * @return #SDK_RET_OK on success, failure status code on error
  */

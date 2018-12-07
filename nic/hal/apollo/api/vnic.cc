@@ -98,7 +98,7 @@ vnic_entry::factory(oci_vnic_t *oci_vnic) {
  */
 sdk_ret_t
 vnic_entry::process_api(api_ctxt_t *api_ctxt) {
-    switch (api_ctxt->op) {
+    switch (api_ctxt->api_op) {
     case API_OP_CREATE:
         return process_create(api_ctxt);
         break;
@@ -486,9 +486,9 @@ oci_vnic_create (_In_ oci_vnic_t *vnic)
     sdk_ret_t     rv;
 
     memset(&api_ctxt, 0, sizeof(api_ctxt));
-    api_ctxt.op = API_OP_CREATE;
-    api_ctxt.id = API_ID_VNIC_CREATE;
-    api_ctxt.params.vnic_create = *vnic;
+    api_ctxt.api_op = API_OP_CREATE;
+    api_ctxt.obj_id = OBJ_ID_VNIC;
+    api_ctxt.vnic_create = *vnic;
     rv = g_api_engine.process_api(&api_ctxt);
     return rv;
 }
@@ -506,9 +506,9 @@ oci_vnic_delete (_In_ oci_vnic_key_t *vnic_key)
     sdk_ret_t     rv;
 
     memset(&api_ctxt, 0, sizeof(api_ctxt));
-    api_ctxt.op = API_OP_DELETE;
-    api_ctxt.id = API_ID_VNIC_DELETE;
-    api_ctxt.params.vnic_delete = *vnic_key;
+    api_ctxt.api_op = API_OP_DELETE;
+    api_ctxt.obj_id = OBJ_ID_VNIC;
+    api_ctxt.vnic_delete = *vnic_key;
     rv = g_api_engine.process_api(&api_ctxt);
     return rv;
 }

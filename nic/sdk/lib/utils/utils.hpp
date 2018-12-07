@@ -11,8 +11,8 @@ namespace lib {
 uint16_t set_bits_count(uint64_t mask);
 int ffs_msb(uint64_t mask);
 
-}
-}
+}    // namespace lib
+}    // namespace sdk
 
 #endif // __SDK_UTILS_HPP__
 

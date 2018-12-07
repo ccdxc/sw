@@ -6,7 +6,6 @@
  * @brief   This file deals with OCI vcn API handling
  */
 
-#include <stdio.h>
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/include/sdk/timestamp.hpp"
 #include "nic/hal/apollo/core/mem.hpp"
@@ -85,7 +84,7 @@ vcn_entry::factory(oci_vcn_t *oci_vcn) {
  */
 sdk_ret_t
 vcn_entry::process_api(api_ctxt_t *api_ctxt) {
-    switch (api_ctxt->op) {
+    switch (api_ctxt->api_op) {
     case API_OP_CREATE:
         return process_create(api_ctxt);
         break;
@@ -325,6 +324,8 @@ vcn_db::vcn_delete(_In_ vcn_t *vcn) {
 }
 #endif
 
+}    // namespace api
+
 /**
  * @defgroup OCI_VCN_API - first level of vcn API handling
  * @ingroup OCI_VCN
@@ -344,9 +345,9 @@ oci_vcn_create (_In_ oci_vcn_t *vcn)
     sdk_ret_t     rv;
 
     memset(&api_ctxt, 0, sizeof(api_ctxt));
-    api_ctxt.op = API_OP_CREATE;
-    api_ctxt.id = API_ID_VCN_CREATE;
-    api_ctxt.params.vcn_create = *vcn;
+    api_ctxt.api_op = api::API_OP_CREATE;
+    api_ctxt.obj_id = api::OBJ_ID_VCN;
+    api_ctxt.vcn_create = *vcn;
     rv = g_api_engine.process_api(&api_ctxt);
     return rv;
 }
@@ -364,13 +365,11 @@ oci_vcn_delete (_In_ oci_vcn_key_t *vcn_key)
     sdk_ret_t     rv;
 
     memset(&api_ctxt, 0, sizeof(api_ctxt));
-    api_ctxt.op = API_OP_DELETE;
-    api_ctxt.id = API_ID_VCN_DELETE;
-    api_ctxt.params.vcn_delete = *vcn_key;
+    api_ctxt.api_op = api::API_OP_DELETE;
+    api_ctxt.obj_id = api::OBJ_ID_VCN;
+    api_ctxt.vcn_delete = *vcn_key;
     rv = g_api_engine.process_api(&api_ctxt);
     return rv;
 }
 
 /** @} */    // end of OCI_VCN_API
-
-}    // namespace api

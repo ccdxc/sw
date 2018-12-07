@@ -11,8 +11,10 @@
 
 #include <vector>
 
+#include "nic/sdk/include/sdk/base.hpp"
 #include "nic/hal/apollo/include/api/oci.hpp"
 #include "nic/hal/apollo/framework/api_ctxt.hpp"
+#include "nic/hal/apollo/include/api/oci_batch.hpp"
 #include "nic/hal/apollo/api/vcn.hpp"
 #include "nic/hal/apollo/api/subnet.hpp"
 #include "nic/hal/apollo/api/vnic.hpp"
@@ -24,6 +26,7 @@ namespace api {
  */
 typedef enum api_batch_stage_e {
     API_BATCH_STAGE_NONE,
+    API_BATCH_STAGE_INIT,
     API_BATCH_STAGE_RSC_ALLOC,    /**< s/w & h/w resource allocation stage */
     API_BATCH_STAGE_COMMIT,       /**< commit stage */
     API_BATCH_STAGE_ABORT,        /**< abort stage */
@@ -58,7 +61,7 @@ public:
     /**
      * @brief    handle batch begin by setting up per API batch context
      */
-    sdk_ret_t batch_begin(oci_epoch_t epoch);
+    sdk_ret_t batch_begin(oci_batch_params_t *batch_params);
 
     /**
      * @brief    commit all the APIs in this batch, release any temporary
@@ -85,5 +88,7 @@ private:
 extern api_engine    g_api_engine;
 
 }    // namespace api
+
+using api::g_api_engine;
 
 #endif    /** __API_ENGINE_HPP__ */
