@@ -239,6 +239,8 @@ proxy_tcp_cb_init_def_params(TcpCbSpec& spec)
     spec.set_snd_cwnd(8000);
     spec.set_snd_wnd(8000);
     spec.set_rcv_mss(9216);
+    spec.set_ato(TCP_ATO_USEC);
+    spec.set_delay_ack(true);
     // pred_flags
     //   header len = 8 (32 bytes with timestamp)
     //   flags = ACK
@@ -397,6 +399,8 @@ tcp_update_cb(void *tcpcb, uint32_t qid, uint16_t src_lif)
     spec->set_pred_flags(get_rsp.mutable_spec()->pred_flags());
     spec->set_other_qid(get_rsp.mutable_spec()->other_qid());
     spec->set_cpu_id(get_rsp.mutable_spec()->cpu_id());
+    spec->set_delay_ack(get_rsp.mutable_spec()->delay_ack());
+    spec->set_ato(get_rsp.mutable_spec()->ato());
 
     memcpy(data,
            get_rsp.mutable_spec()->header_template().c_str(),
@@ -413,7 +417,6 @@ tcp_update_cb(void *tcpcb, uint32_t qid, uint16_t src_lif)
     spec->set_asesq_pi(get_rsp.mutable_spec()->asesq_pi());
     spec->set_asesq_ci(get_rsp.mutable_spec()->asesq_ci());
     spec->set_debug_dol_tx(get_rsp.mutable_spec()->debug_dol_tx());
-    spec->set_pending_ack_send(true);
 
     HAL_TRACE_DEBUG("Calling TCPCB Update with id: {}", qid);
     ret = tcpcb_update(*spec, &rsp);
@@ -482,8 +485,6 @@ tcp_trigger_ack_send(uint32_t qid, tcp_header_t *tcp)
     spec->set_asesq_pi(get_rsp.mutable_spec()->asesq_pi());
     spec->set_asesq_ci(get_rsp.mutable_spec()->asesq_ci());
     spec->set_debug_dol_tx(get_rsp.mutable_spec()->debug_dol_tx());
-    spec->set_pending_ack_send(true);
-
 
     ret = tcpcb_update(*spec, &rsp);
 

@@ -90,7 +90,6 @@
     modify_field(common_global_scratch.flags, common_phv.flags); \
     modify_field(common_global_scratch.is_dupack, common_phv.is_dupack); \
     modify_field(common_global_scratch.ooo_rcv, common_phv.ooo_rcv); \
-    modify_field(common_global_scratch.ooo_in_rx_q, common_phv.ooo_in_rx_q); \
     modify_field(common_global_scratch.write_serq, common_phv.write_serq); \
     modify_field(common_global_scratch.pending_del_ack_send, common_phv.pending_del_ack_send); \
     modify_field(common_global_scratch.pending_txdma, common_phv.pending_txdma); \
@@ -147,8 +146,9 @@ header_type tcp_rx_d_t {
         slow_path_cnt           : 16;
         serq_full_cnt           : 16;
         ooo_cnt                 : 16;
+        ato                     : 16;
+        cfg_flags               : 8;
         rcv_nxt                 : 32;
-        ooo_rcv_bitmap          : TCP_OOO_NUM_CELLS;
         rcv_tstamp              : 32;
         ts_recent               : 32;
         lrcv_time               : 32;
@@ -158,15 +158,14 @@ header_type tcp_rx_d_t {
         max_window              : 16;   // tcp_ack_stage
         bytes_rcvd              : 16;
         snd_wnd                 : 16;   // tcp_ack stage
-        ato                     : 16;
         serq_pidx               : 16; 
         rcv_mss                 : 16;
+        quick                   : 8;
         flag                    : 8;    // used with .l not written back
         rto                     : 8;
         ecn_flags               : 8;
         state                   : 8;
         parsed_state            : 8;
-        quick                   : 4;
         snd_wscale              : 4;
         pending                 : 3;
         ca_flags                : 2;
@@ -174,7 +173,6 @@ header_type tcp_rx_d_t {
         write_serq              : 1;
         fastopen_rsk            : 1;
         pingpong                : 1;
-        ooo_in_rx_q             : 1;
         alloc_descr             : 1;    // used with .l not written back
     }
 }
@@ -320,7 +318,6 @@ header_type write_serq_d_t {
         nde_offset              : 16;
         nde_len                 : 16;
         curr_ts                 : 32;
-        ft_pi                   : 16;
         rx2tx_send_ack_pi       : 16;
         rx2tx_clean_retx_pi     : 16;
         rx2tx_fast_retx_pi      : 16;
@@ -437,7 +434,6 @@ header_type common_global_phv_t {
         process_ack_flag        : 1;
         is_dupack               : 1;
         ooo_rcv                 : 1;
-        ooo_in_rx_q             : 1;
         write_serq              : 1;
         pending_del_ack_send    : 1;
         pending_txdma           : 4;
@@ -472,7 +468,6 @@ header_type s1_s2s_phv_t {
 header_type s4_t1_s2s_phv_t {
     fields {
         rnmdr_pidx              : 16;
-        ato                     : 16;
     }
 }
 
@@ -481,19 +476,6 @@ header_type s4_t2_s2s_phv_t {
         rnmpr_pidx              : 16;
     }
 }
-
-#if 0
-header_type s4_s2s_phv_t {
-    fields {
-        payload_len             : 16;
-        ato                     : 16;
-        ooo_offset              : 16;
-        packets_out             : 32;
-        sacked_out              : 16;
-        lost_out                : 8;
-    }
-}
-#endif
 
 header_type s6_s2s_phv_t {
     fields {
@@ -504,7 +486,6 @@ header_type s6_s2s_phv_t {
 header_type s6_t1_s2s_phv_t {
     fields {
         rnmdr_pidx              : 16;
-        ato                     : 16;
         cpu_id                  : 8;
     }
 }
@@ -658,8 +639,6 @@ metadata s6_t3_s2s_phv_t s6_t3_s2s;
  * PHV following k (for app DMA etc.)
  *****************************************************************************/
 @pragma dont_trim
-metadata rx2tx_t rx2tx;
-@pragma dont_trim
 metadata rx2tx_extra_t rx2tx_extra;
 @pragma dont_trim
 metadata ring_entry_t l7_ring_entry; 
@@ -722,7 +701,7 @@ metadata dma_cmd_phv2mem_t rx2tx_extra_dma;         // dma cmd 6
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t tx_doorbell1;            // dma cmd 7
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t tx_doorbell_or_timer;    // dma cmd 8
+metadata dma_cmd_phv2mem_t tx_doorbell;             // dma cmd 8
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t tls_doorbell;            // dma cmd 9
 @pragma dont_trim
@@ -833,20 +812,22 @@ action tcp_stage1_dummy() {
 
 #define TCP_RX_CB_PARAMS \
         bytes_acked, slow_path_cnt, serq_full_cnt, ooo_cnt, \
-        rcv_nxt, ooo_rcv_bitmap, rcv_tstamp, ts_recent, lrcv_time, \
+        ato, cfg_flags, \
+        rcv_nxt, rcv_tstamp, ts_recent, lrcv_time, \
         snd_una, snd_wl1, pred_flags, max_window, bytes_rcvd, \
         snd_wnd, rcv_mss, rto, ecn_flags, state, \
-        parsed_state, flag, ato, serq_pidx, quick, snd_wscale, pending, ca_flags, \
+        parsed_state, flag, serq_pidx, quick, snd_wscale, pending, ca_flags, \
         num_dup_acks, write_serq, fastopen_rsk, pingpong, \
-        ooo_in_rx_q, alloc_descr
+        alloc_descr
 
 #define TCP_RX_CB_D \
     modify_field(tcp_rx_d.bytes_acked, bytes_acked); \
     modify_field(tcp_rx_d.slow_path_cnt, slow_path_cnt); \
     modify_field(tcp_rx_d.serq_full_cnt, serq_full_cnt); \
     modify_field(tcp_rx_d.ooo_cnt, ooo_cnt); \
+    modify_field(tcp_rx_d.ato, ato); \
+    modify_field(tcp_rx_d.cfg_flags, cfg_flags); \
     modify_field(tcp_rx_d.rcv_nxt, rcv_nxt); \
-    modify_field(tcp_rx_d.ooo_rcv_bitmap, ooo_rcv_bitmap); \
     modify_field(tcp_rx_d.rcv_tstamp, rcv_tstamp); \
     modify_field(tcp_rx_d.ts_recent, ts_recent); \
     modify_field(tcp_rx_d.lrcv_time, lrcv_time); \
@@ -862,7 +843,6 @@ action tcp_stage1_dummy() {
     modify_field(tcp_rx_d.state, state); \
     modify_field(tcp_rx_d.parsed_state, parsed_state); \
     modify_field(tcp_rx_d.flag, flag); \
-    modify_field(tcp_rx_d.ato, ato); \
     modify_field(tcp_rx_d.serq_pidx, serq_pidx); \
     modify_field(tcp_rx_d.quick, quick); \
     modify_field(tcp_rx_d.snd_wscale, snd_wscale); \
@@ -872,7 +852,6 @@ action tcp_stage1_dummy() {
     modify_field(tcp_rx_d.write_serq, write_serq); \
     modify_field(tcp_rx_d.fastopen_rsk, fastopen_rsk); \
     modify_field(tcp_rx_d.pingpong, pingpong); \
-    modify_field(tcp_rx_d.ooo_in_rx_q, ooo_in_rx_q); \
     modify_field(tcp_rx_d.alloc_descr, alloc_descr);
 
 /*
@@ -1040,7 +1019,6 @@ action rdesc_alloc(desc, pad) {
 
     // from stage to stage
     modify_field(s4_t1_s2s_scratch.rnmdr_pidx, s4_t1_s2s.rnmdr_pidx);
-    modify_field(s4_t1_s2s_scratch.ato, s4_t1_s2s.ato);
 
     // d for stage 4 table 1
     modify_field(rdesc_alloc_d.desc, desc);
@@ -1134,9 +1112,9 @@ action tcp_ooo_qbase_addr_get(ooo_qbase_addr)
  * Stage 6 table 0 action
  */
 action write_serq(serq_base, nde_addr, nde_offset, nde_len, curr_ts,
-        ato, ooo_offset,
+        ooo_offset,
         pkts_rcvd, pages_alloced, desc_alloced, debug_num_pkt_to_mem,
-        debug_num_phv_to_mem, ft_pi, rx2tx_send_ack_pi,
+        debug_num_phv_to_mem, rx2tx_send_ack_pi,
         rx2tx_clean_retx_pi, rx2tx_fast_retx_pi) {
     // k + i for stage 6
 
@@ -1164,7 +1142,6 @@ action write_serq(serq_base, nde_addr, nde_offset, nde_len, curr_ts,
     modify_field(write_serq_d.desc_alloced, desc_alloced);
     modify_field(write_serq_d.debug_num_pkt_to_mem, debug_num_pkt_to_mem);
     modify_field(write_serq_d.debug_num_phv_to_mem, debug_num_phv_to_mem);
-    modify_field(write_serq_d.ft_pi, ft_pi);
     modify_field(write_serq_d.rx2tx_send_ack_pi, rx2tx_send_ack_pi);
     modify_field(write_serq_d.rx2tx_clean_retx_pi, rx2tx_clean_retx_pi);
     modify_field(write_serq_d.rx2tx_fast_retx_pi, rx2tx_fast_retx_pi);
@@ -1185,7 +1162,6 @@ action write_arq(ARQ_PI_PARAMS) {
 
     // from stage to stage
     modify_field(s6_t1_s2s_scratch.rnmdr_pidx, s6_t1_s2s.rnmdr_pidx);
-    modify_field(s6_t1_s2s_scratch.ato, s6_t1_s2s.ato);
     modify_field(s6_t1_s2s_scratch.cpu_id, s6_t1_s2s.cpu_id);
 
     // from ki global

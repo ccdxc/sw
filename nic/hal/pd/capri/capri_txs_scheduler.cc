@@ -90,10 +90,11 @@ capri_txs_timer_init_pre (uint32_t key_lines, capri_cfg_t *capri_cfg)
 
 // This is called after hbm and sram init
 static void
-capri_txs_timer_init_post (uint32_t key_lines)
+capri_txs_timer_init_post (uint32_t key_lines, capri_cfg_t *capri_cfg)
 {
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_txs_csr_t *txs_csr = &cap0.txs.txs;
+    uint32_t capri_coreclk_freq;
 
     // 0 the last element of sram
     // Per Cino this is needed for an ASIC bug workaround
@@ -110,13 +111,15 @@ capri_txs_timer_init_post (uint32_t key_lines)
     // Per Cino this is needed for an ASIC bug workaround
     capri_txs_timer_init_hsh_depth(key_lines);
 
+    capri_coreclk_freq = (uint32_t)(capri_get_coreclk_freq(capri_cfg->platform) / 1000000);
+
     // Set the tick resolution
     txs_csr->cfg_fast_timer.read();
-    txs_csr->cfg_fast_timer.tick(10 * 1000);
+    txs_csr->cfg_fast_timer.tick(capri_coreclk_freq);
     txs_csr->cfg_fast_timer.write();
 
     txs_csr->cfg_slow_timer.read();
-    txs_csr->cfg_slow_timer.tick(10 * 1000 * 1000);
+    txs_csr->cfg_slow_timer.tick(capri_coreclk_freq * 1000);
     txs_csr->cfg_slow_timer.write();
 
     // Timer doorbell config
@@ -276,7 +279,7 @@ capri_txs_scheduler_init (uint32_t admin_cos, capri_cfg_t *capri_cfg)
     }
 
     // init timer post init done
-    capri_txs_timer_init_post(CAPRI_TIMER_NUM_KEY_CACHE_LINES);
+    capri_txs_timer_init_post(CAPRI_TIMER_NUM_KEY_CACHE_LINES, capri_cfg);
     hal::svc::set_hal_status(hal::HAL_STATUS_SCHEDULER_INIT_DONE);
 
     HAL_TRACE_DEBUG("Set hbm base addr for TXS sched to {:#x}, dtdm_lo_map {:#x}, dtdm_hi_map {:#x}",

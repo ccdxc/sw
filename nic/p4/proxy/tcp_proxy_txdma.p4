@@ -113,22 +113,21 @@ header_type rx2tx_d_t {
         CAPRI_QSTATE_HEADER_RING(7) // offset 36, total 40 bytes
 
         // **Need to match offsets in tcp-table.h**
-        sesq_tx_ci : 16;        // offset 40
+        sesq_tx_ci : 16;        // offset 40 (TCP_TCB_RX2TX_TX_CI_OFFSET)
 
-        sesq_retx_ci : 16;      // offset 42
+        sesq_retx_ci : 16;      // offset 42 (TCP_TCB_RX2TX_RETX_CI_OFFSET)
         asesq_retx_ci: 16;      // offset 44
-        clean_retx_pending : 8; // offset 46
+        clean_retx_pending : 8; // offset 46 (TCP_TCB_RX2TX_RETX_PENDING_OFFSET)
 
-        debug_dol_tx : 16;      // offset 47, Total 49 bytes
+        debug_dol_tblsetaddr : 8;
 
-        sesq_base : HBM_ADDRESS_WIDTH; // 4 bytes
+        ato : 16;               // offset 48 (TCP_TCB_RX2TX_ATO_OFFSET)
 
-        debug_dol_tblsetaddr : 8; // 1 byte
+        debug_dol_tx : 16;
 
-        unused : 56;            // offset 54
+        sesq_base : HBM_ADDRESS_WIDTH;
 
-        // When this offset changes, modify TCP_TCB_RX2TX_SHARED_WRITE_OFFSET
-        RX2TX_SHARED_STATE      // 8 bytes @ Offset 61
+        perpetual_timer_started : 1;
     }
 }
 
@@ -527,10 +526,7 @@ metadata dma_cmd_phv2mem_t tx2rx_dma;        // dma cmd 8
 rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0,ci_0, pi_1, ci_1,\
 pi_2, ci_2, pi_3, ci_3, pi_4, ci_4, pi_5, ci_5, pi_6, ci_6,\
 pi_7, ci_7, sesq_tx_ci, sesq_retx_ci, asesq_retx_ci, clean_retx_pending,\
-debug_dol_tx, debug_dol_tblsetaddr, unused, sesq_base,\
-ft_pi, rx_flag, pending_ack_send,\
-pending_dup_ack_send\
-
+debug_dol_tblsetaddr, ato, debug_dol_tx, sesq_base, perpetual_timer_started
 
 #define GENERATE_RX2TX_D                                                                               \
     modify_field(rx2tx_d.rsvd, rsvd);                                                                  \
@@ -561,13 +557,11 @@ pending_dup_ack_send\
     modify_field(rx2tx_d.sesq_retx_ci, sesq_retx_ci);                                                  \
     modify_field(rx2tx_d.asesq_retx_ci, asesq_retx_ci);                                                \
     modify_field(rx2tx_d.clean_retx_pending, clean_retx_pending);                                      \
-    modify_field(rx2tx_d.debug_dol_tx, debug_dol_tx);                                                  \
     modify_field(rx2tx_d.debug_dol_tblsetaddr, debug_dol_tblsetaddr);                                  \
-    modify_field(rx2tx_d.unused, unused);                                                              \
+    modify_field(rx2tx_d.ato, ato);                                                                    \
+    modify_field(rx2tx_d.debug_dol_tx, debug_dol_tx);                                                  \
     modify_field(rx2tx_d.sesq_base, sesq_base);                                                        \
-    modify_field(rx2tx_d.ft_pi, ft_pi);                                                                \
-    modify_field(rx2tx_d.pending_ack_send, pending_ack_send);                                          \
-    modify_field(rx2tx_d.pending_dup_ack_send, pending_dup_ack_send);
+    modify_field(rx2tx_d.perpetual_timer_started, perpetual_timer_started);                            \
 
 #define GENERATE_T0_S2S                                                                 \
     modify_field(t0_s2s_scratch.snd_wnd, t0_s2s.snd_wnd);                               \
@@ -615,7 +609,7 @@ action read_rx2tx_extra(
        prior_ssthresh, high_seq, ooo_datalen,
        reordering, undo_retrans, snd_ssthresh, loss_cwnd,
        write_seq, rcv_mss, state, ca_state, ecn_flags, num_sacks,
-       pending_challenge_ack_send,
+       pending_dup_ack_send, pending_challenge_ack_send,
        pending_sync_mss, pending_tso_keepalive, pending_tso_pmtu_probe,
        pending_tso_data, pending_tso_probe_data, pending_tso_probe,
        pending_ooo_se_recv, pending_tso_retx, pending_rexmit, pending,
@@ -654,9 +648,9 @@ action read_rx2tx_extra(
     modify_field(rx2tx_extra_d.ca_state, ca_state);
     modify_field(rx2tx_extra_d.ecn_flags, ecn_flags);
     modify_field(rx2tx_extra_d.num_sacks, num_sacks);
+    modify_field(rx2tx_extra_d.pending_dup_ack_send, pending_dup_ack_send);
     modify_field(rx2tx_extra_d.pending_challenge_ack_send, pending_challenge_ack_send);
     modify_field(rx2tx_extra_d.pending_sync_mss, pending_sync_mss);
-    modify_field(rx2tx_extra_d.pending_tso_keepalive, pending_tso_keepalive);
     modify_field(rx2tx_extra_d.pending_tso_pmtu_probe, pending_tso_pmtu_probe);
     modify_field(rx2tx_extra_d.pending_tso_data, pending_tso_data);
     modify_field(rx2tx_extra_d.pending_tso_probe_data, pending_tso_probe_data);

@@ -75,9 +75,7 @@ tcp_rx_process_start:
     and             r1, k.common_phv_flags, TCPHDR_HP_FLAG_BITS
     sne             c5, r1, d.u.tcp_rx_d.pred_flags[23:16]
 
-    sne             c6, d.u.tcp_rx_d.ooo_in_rx_q, r0
-
-    bcf             [c1 | c2 | c3 | c4 | c5 | c6], tcp_rx_slow_path
+    bcf             [c1 | c2 | c3 | c4 | c5], tcp_rx_slow_path
 
 tcp_rx_fast_path:
 
@@ -110,115 +108,40 @@ bytes_rcvd_stats_update_start:
     CAPRI_STATS_INC(bytes_rcvd, k.s1_s2s_payload_len, d.u.tcp_rx_d.bytes_rcvd, p.to_s7_bytes_rcvd)
 bytes_rcvd_stats_update_end:
 
-    /* SCHEDULE_ACK(tp) */
-    /* Set the pending txdma in phv for subsequent stage to issue dma
-     * commands to update rx2tx shared state and ring the doorbell
-     * to schedule the txdma processing for TCP
-     */
-    phvwrmi         p.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, \
-                        TCP_PENDING_TXDMA_ACK_SEND
-    /* The bit for actual specific pending processing needed in txdma
-     * is set in the rx2tx shared state. In this case we need an
-     * ack to be sent
-     */
-    phvwr           p.rx2tx_pending_ack_send, 1
-
 tcp_event_data_recv:
-    /* Initialize the delayed ack engine if first ack
-     *
-     * if (!tp->fto.ato) {
-     *   tcp_incr_quickack(tp) ;
-     *   tp->fto.ato = TCP_ATO_MIN ;
-     * }
-     */
-    seq             c1, d.u.tcp_rx_d.ato, r0
-    bal.c1          r7, tcp_incr_quickack
-    nop
-
-delack_engine_init_done:
-    /*
-     * else /* if (!tp->fto.ato) * {
-     *   int m = tcp_time_stamp - tp->rx.lrcv_time;
-     *
-     *   if (m <= TCP_ATO_MIN / 2) {
-     *       /* The fastest case is the first. *
-     *       tp->fto.ato = (tp->fto.ato >> 1) + TCP_ATO_MIN / 2;
-     *   } else if (m < tp->fto.ato) {
-     *       tp->fto.ato = (tp->fto.ato >> 1) + m;
-     *       if (tp->fto.ato > tp->fto.rto)
-     *           tp->fto.ato = tp->fto.rto;
-     *   } else if (m > tp->fto.rto) {
-     *       /* Too long gap. Apparently sender failed to
-     *        * restart window, so that we send ACKs quickly.
-     *        *
-     *       tcp_incr_quickack(tp);
-     *   }
-     * }
-     */
-    /* r1 = m */
-    sub             r1, r4, d.u.tcp_rx_d.lrcv_time
-
-    /*
-     * if (m <= TCP_ATO_MIN / 2) {
-     *   tp->fto.ato = (tp->fto.ato >>> 1) + TCP_ATO_MIN/2
-     * }
-     */
-    slt             c1, TCP_ATO_MIN / 2, r1
-    srl             r5, d.u.tcp_rx_d.ato, 1
-    add             r5, r5, TCP_ATO_MIN / 2
-    tblwr.!c1       d.u.tcp_rx_d.ato, r5
-    bcf             [!c1], tcp_event_data_rcv_done
-
-    // TODO optimize this
-    /* clear c2 */
-    setcf           c2, [!c0]
-    /*  if (m < tp->fto.ato) */
-    slt.c1          c2, r1, d.u.tcp_rx_d.ato
-    /* tp->fto.ato = (tp->fto.ato >> 1) + m */
-    tbladd.c2       d.u.tcp_rx_d.ato, r1
-    /* if (tp->fto.ato > tp->fto.rto) */
-    slt.c2          c3, d.u.tcp_rx_d.rto, d.u.tcp_rx_d.ato
-    /*     tp->fto.ato = tp->fto.rto */
-    tblwr.c3        d.u.tcp_rx_d.ato, d.u.tcp_rx_d.rto
-    phvwr.c3        p.s6_t1_s2s_ato, d.u.tcp_rx_d.rto
-    /* if (m > tp->fto.rto */
-    slt.c2          c4, d.u.tcp_rx_d.rto, r1
-    bal.c2          r7, tcp_incr_quickack
-    nop
-    /* tp->rx.lrcv_time = tcp_time_stamp */
-
 tcp_event_data_rcv_done:
     /*
      * if (tp->rx.ecn_flags & TCP_ECN_OK)
      */
     smeqb           c1, d.u.tcp_rx_d.ecn_flags, TCP_ECN_OK, TCP_ECN_OK
-    bcf             [c1], tcp_ecn_check_ce
+    //bcf             [c1], tcp_ecn_check_ce TODO
     nop
 
     tblwr           d.u.tcp_rx_d.lrcv_time, r4
 
 tcp_ack_snd_check:
-    /* r1 = rcv_nxt - rcv_wup */
-    sub             r1, d.u.tcp_rx_d.rcv_nxt , k.to_s2_rcv_wup
-    /* r2 = rcv_mss */
-    /* c1 = ((rcv_nxt - rcv_wup) > rcv_mss) */
-    /* c1 = more than one full frame received */
-    slt             c1, d.u.tcp_rx_d.rcv_mss, r1
+    CAPRI_OPERAND_DEBUG(d.u.tcp_rx_d.ato)
+    bbeq            d.u.tcp_rx_d.cfg_flags[TCP_CFG_FLAG_DELACK_BIT], 0, tcp_schedule_ack
+    tblssub         d.u.tcp_rx_d.quick, 1
+    // c1 = 1 ==> Start delayed ack timer
+    seq             c1, d.u.tcp_rx_d.quick, 0
+    b.!c1           tcp_schedule_ack
+    tblwr.c1        d.u.tcp_rx_d.quick, TCP_QUICKACKS
 
-    /* xxx: c2 = (new rcv window >= rcv_wnd) */
-    sne             c2, r0, r0 // TODO
-    /* c3 = in quick ack mode */
-    /* quick && !pingpong */
-    sne             c4, d.u.tcp_rx_d.quick, r0
-    sne             c5, d.u.tcp_rx_d.pingpong, r0
-    setcf           c3, [c4 & !c5]
-    /* c4 = we have out of order data */
-    //sne             c4, k.to_s3_ooo_datalen, r0 TODO
-    sne             c4, r0, r0 // TODO
-    setcf           c1, [c1 | c2 | c3 | c4]
-    smneb.c1        c1, k.common_phv_debug_dol, TCP_DDOL_DEL_ACK_TIMER, TCP_DDOL_DEL_ACK_TIMER
+tcp_schedule_del_ack:
+    add             r1, k.common_phv_qstate_addr, TCP_TCB_RX2TX_ATO_OFFSET
+    memwr.h         r1, d.u.tcp_rx_d.ato
+    b               tcp_ack_snd_check_end
+    phvwrmi         p.common_phv_pending_txdma, TCP_PENDING_TXDMA_DEL_ACK, \
+                        TCP_PENDING_TXDMA_DEL_ACK
 
-    phvwr.!c1        p.common_phv_pending_del_ack_send, 1
+tcp_schedule_ack:
+    // cancel del_ack timer and schedule immediate ack
+    add             r1, k.common_phv_qstate_addr, TCP_TCB_RX2TX_ATO_OFFSET
+    memwr.h         r1, 0
+    phvwrmi         p.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, \
+                        TCP_PENDING_TXDMA_ACK_SEND
+tcp_ack_snd_check_end:
 
 slow_path:
 flow_rx_process_done:
@@ -357,9 +280,8 @@ tcp_incr_quickack:
     tblwr.c3        d.u.tcp_rx_d.quick, TCP_MAX_QUICKACKS
     tblwr.!c3       d.u.tcp_rx_d.quick, r1
 
-    tblwr           d.u.tcp_rx_d.ato, TCP_ATO_MIN
     jr              r7
-    phvwr           p.s6_t1_s2s_ato, TCP_ATO_MIN
+    tblwr           d.u.tcp_rx_d.ato, TCP_ATO_MIN
 
 #if 0
     // TODO : this needs to move to tx pipeline
@@ -421,7 +343,6 @@ tcp_enter_quickack_mode:
     tblwr           d.u.tcp_rx_d.pingpong, r0
     phvwr           p.common_phv_pingpong, d.u.tcp_rx_d.pingpong
     tblwr           d.u.tcp_rx_d.ato, TCP_ATO_MIN
-    phvwr           p.s6_t1_s2s_ato, TCP_ATO_MIN
     sne             c4, r7, r0
     jr.c4           r7
     add             r7, r0, r0
@@ -470,8 +391,7 @@ tcp_rx_slow_path:
     sne             c1, k.to_s2_seq, d.u.tcp_rx_d.rcv_nxt
     phvwrmi.c1      p.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, \
                         TCP_PENDING_TXDMA_ACK_SEND
-    phvwr.c1        p.rx2tx_pending_ack_send, 1
-    phvwr.c1        p.rx2tx_pending_dup_ack_send, 1
+    phvwr.c1        p.rx2tx_extra_pending_dup_ack_send, 1
     tbladd.c1       d.{u.tcp_rx_d.ooo_cnt}.hx, 1
     sne             c2, k.s1_s2s_payload_len, 0
     setcf           c3, [c1 & c2]
@@ -542,8 +462,7 @@ tcp_rx_slow_path:
     phvwri.c1       p.common_phv_write_serq, 1
     phvwr.c1        p.to_s6_serq_pidx, d.u.tcp_rx_d.serq_pidx
     tblmincri.c1    d.u.tcp_rx_d.serq_pidx, CAPRI_SERQ_RING_SLOTS_SHIFT, 1
-    phvwr.c1        p.rx2tx_pending_ack_send, 1
-    phvwr.c1        p.rx2tx_pending_dup_ack_send, 1
+    phvwr.c1        p.rx2tx_extra_pending_dup_ack_send, 1
     phvwrmi.c1      p.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, \
                         TCP_PENDING_TXDMA_ACK_SEND
 
@@ -570,131 +489,10 @@ tcp_rx_slow_path_post_fin_handling:
     b.c1            flow_rx_process_done
     nop
 
-tcp_queue_rcv:
-    /*
-     * c6 is global conditional variable indicating OOO pkt in Rx Q
-     */
-    bcf             [!c6], tcp_rcv_nxt_update
-
-    /*
-     * We have prior OOO packets, see if we have more data we can send
-     *
-     * r1 = end_seq - rcv_nxt
-     *
-     * r0 (0) is the rightmost (lowest) bit set
-     * r2 is the leftmost (highest) bit set
-     */
-    add             r1, k.to_s2_seq, k.s1_s2s_payload_len
-    sub             r1, r1, d.u.tcp_rx_d.rcv_nxt
-    srl             r2, r1, TCP_OOO_CELL_SIZE_SHIFT
-    and             r3, r1, TCP_OOO_CELL_SIZE_MASK
-    seq             c3, r3, r0
-    sub             r2, r2, 1
-    sub.!c3         r2, r2, 1
-
-    fsetv           r4, d.u.tcp_rx_d.ooo_rcv_bitmap, r2, r0
-    tblwr           d.u.tcp_rx_d.ooo_rcv_bitmap, r4
-    /*
-     * Get number of consecutive 1s in ooo_rcv_bitmap
-     * Multiply that by TCP_OOO_CELL_SIZE to get DMA len
-     * Add it to rcv_nxt to get new rcv_nxt
-     *
-     * r1 = end_seq - rcv_nxt
-     * r3 = len based on consecutive 1s
-     * Set r1 (bytes_rcvd) based on max(r1, r3)
-     */
-    ffcv            r3, d.u.tcp_rx_d.ooo_rcv_bitmap, r0
-    sll             r3, r3, TCP_OOO_CELL_SIZE_SHIFT
-    slt             c1, r1, r3
-    add.c1          r1, r3, r0
-    phvwr           p.to_s6_payload_len, r1
-    tbladd          d.u.tcp_rx_d.rcv_nxt, r1
-    phvwri          p.common_phv_write_serq, 1
-    phvwr           p.common_phv_ooo_in_rx_q, 1
-
-    /*
-     * Test instructions just to test 2 remaining sack instructions.
-     * Remove later. TODO
-     */
-     // START OF TEST
-     ffsv           r3, d.u.tcp_rx_d.ooo_rcv_bitmap, r0
-     seq            c1, r3, r0
-     b.!c1          flow_rx_drop
-
-     fclrv          r3, d.u.tcp_rx_d.ooo_rcv_bitmap, r2, r0
-     tblwr          d.u.tcp_rx_d.ooo_rcv_bitmap, r3
-
-     ffsv           r3, d.u.tcp_rx_d.ooo_rcv_bitmap, r0
-     tblwr          d.u.tcp_rx_d.ooo_rcv_bitmap, r0
-     sub            r3, r3, 1
-     seq            c1, r3, r2
-     b.!c1          flow_rx_drop
-
-     ffsv           r3, d.u.tcp_rx_d.ooo_rcv_bitmap, r0
-     seq            c1, r3, -1
-     b.!c1          flow_rx_drop
-     // END OF TEST
-
-ooo_bytes_rcvd_stats_update_start:
-    CAPRI_STATS_INC(ooo_bytes_rcvd, r1, d.u.tcp_rx_d.bytes_rcvd, p.to_s7_bytes_rcvd)
-ooo_bytes_rcvd_stats_update_end:
-    b               bytes_rcvd_stats_update_end
-    setcf           c6, [c0]
-
 flow_rx_drop:
     CAPRI_CLEAR_TABLE0_VALID
     nop.e
     nop
-
-ooo_received:
-    /*
-     * We need to send immediate ack (dupack)
-     */
-    phvwrmi         p.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, \
-                        TCP_PENDING_TXDMA_ACK_SEND
-    phvwr           p.rx2tx_pending_ack_send, 1
-    phvwr.c1        p.rx2tx_pending_dup_ack_send, 1
-    /*
-     * We can receive upto window of rcv_nxt to rcv_nxt + CELL_SIZE *
-     * NUM_CELLS into the future.  If we receive an end sequence number beyond
-     * that, drop the packet Else set the ooo_rcv_bitmap accordingly
-     * r1 = seq - rcv_nxt
-     * r2 = end_seq - rcv_nxt
-     * r3 = max end_seq
-     *
-     * c7 = drop packet
-     */
-    sub             r1, k.to_s2_seq, d.u.tcp_rx_d.rcv_nxt
-    add             r2, r1, k.s1_s2s_payload_len
-    add             r3, d.u.tcp_rx_d.rcv_nxt, TCP_OOO_NUM_CELLS * TCP_OOO_CELL_SIZE
-    add             r4, k.to_s2_seq, k.s1_s2s_payload_len
-    slt             c7, r3, r4
-    phvwri.c7       p.p4_intr_global_drop, 1
-    bcf             [c7], flow_rx_process_done
-
-    /*
-     * r3 is the rightmost (lowest) bit set
-     */
-    srl             r3, r1, TCP_OOO_CELL_SIZE_SHIFT
-    and             r5, r1, TCP_OOO_CELL_SIZE_MASK
-    seq             c3, r5, r0
-    add.!c3         r3, r3, 1
-
-    /*
-     * r4 is the leftmost (highest) bit set
-     */
-    srl             r4, r2, TCP_OOO_CELL_SIZE_SHIFT
-    and             r5, r2, TCP_OOO_CELL_SIZE_MASK
-    seq             c3, r5, r0
-    sub.!c3         r4, r4, 1
-
-    fsetv           r5, d.u.tcp_rx_d.ooo_rcv_bitmap, r4, r3
-    tblwr           d.u.tcp_rx_d.ooo_rcv_bitmap, r5
-    phvwr           p.to_s6_ooo_offset, r1
-    tblwr           d.u.tcp_rx_d.ooo_in_rx_q, 1
-    tblwr.l         d.u.tcp_rx_d.alloc_descr, 1
-    b               flow_rx_process_done
-    phvwr           p.common_phv_ooo_rcv, 1
 
 tcp_rx_rst_handling:
     /*

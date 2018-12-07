@@ -46,8 +46,7 @@ tcp_rx_fc_stage_start:
      * page and descr
      */
     sne         c1, k.common_phv_ooo_rcv, r0
-    sne         c2, k.common_phv_ooo_in_rx_q, r0
-    bcf         [!c1 & !c2], flow_fc_process_done
+    bcf         [!c1], flow_fc_process_done
 
     tblwr.c1    d.page, k.to_s5_page
     tblwr.c1    d.descr, k.to_s5_descr

@@ -70,9 +70,9 @@ packets:
                 dport   : ref://testcase/config/flow/dport
                 seq     : callback://tcpcb/tcpcb/GetPktOutSeqNum
                 ack     : callback://tcpcb/tcpcb/GetPktOutAckNum
-                options : callback://tcpcb/tcpcb/GetPktOutTcpOptions
                 window  : 1000
                 flags   : ack
+                options : callback://tcpcb/tcpcb/GetPktOutTcpOptions
             payload:
                 data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
 
@@ -189,91 +189,6 @@ packets:
                 flags   : ack
                 options : callback://tcpcb/tcpcb/GetPktAckOutTcpOptions
 
-    - packet:
-        id          : PKT3
-        template    : callback://networking/packets/GetPacketTemplateByFlow
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        encaps      : callback://networking/packets/GetPacketEncaps
-        headers     :
-            eth:
-                src     : ref://testcase/config/src/endpoint/macaddr
-                dst     : ref://testcase/config/dst/endpoint/macaddr
-            qtag:
-                vlan    : ref://testcase/config/src/segment/vlan_id
-            ipv4:
-                src     : ref://testcase/config/flow/sip
-                dst     : ref://testcase/config/flow/dip
-                ttl     : 64
-            ipv6:
-                src     : ref://testcase/config/flow/sip
-                dst     : ref://testcase/config/flow/dip
-                hlim    : 64
-            tcp:
-                sport   : ref://testcase/config/flow/sport
-                dport   : ref://testcase/config/flow/dport
-                seq     : callback://tcpcb/tcpcb/GetNxtPktSeqNum
-                ack     : callback://tcpcb/tcpcb/GetNxtPktAckNum
-            payload:
-                data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
-
-    - packet:
-        id          : PKT3_OUT
-        template    : callback://networking/packets/GetPacketTemplateByFlow
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        encaps      : callback://networking/packets/GetPacketEncaps
-        headers     :
-            eth:
-                src     : ref://testcase/config/src/endpoint/macaddr
-                dst     : ref://testcase/config/dst/endpoint/macaddr
-            qtag:
-                vlan    : ref://testcase/config/src/segment/vlan_id
-            ipv4:
-                src     : ref://testcase/config/flow/sip
-                dst     : ref://testcase/config/flow/dip
-                ttl     : 64
-            ipv6:
-                src     : ref://testcase/config/flow/sip
-                dst     : ref://testcase/config/flow/dip
-                hlim    : 64
-            tcp:
-                sport   : ref://testcase/config/flow/sport
-                dport   : ref://testcase/config/flow/dport
-                seq     : callback://tcpcb/tcpcb/GetNxtPktOutSeqNum
-                ack     : callback://tcpcb/tcpcb/GetNxtPktOutAckNum
-                options : callback://tcpcb/tcpcb/GetPktOutTcpOptions
-                window  : 1000
-                flags   : ack
-            payload:
-                data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
-
-    - packet:
-        id          : PKT3_ACK_OUT
-        template    : callback://networking/packets/GetPacketTemplateByFlow
-        payloadsize : 0
-        encaps      : callback://networking/packets/GetPacketEncaps
-        headers     :
-            eth:
-                src     : ref://testcase/config/dst/endpoint/macaddr
-                dst     : ref://testcase/config/src/endpoint/macaddr
-            qtag:
-                vlan    : ref://testcase/config/dst/segment/vlan_id
-            ipv4:
-                src     : ref://testcase/config/flow/dip
-                dst     : ref://testcase/config/flow/sip
-                ttl     : 64
-            ipv6:
-                src     : ref://testcase/config/flow/dip
-                dst     : ref://testcase/config/flow/sip
-                hlim    : 64
-            tcp:
-                sport   : ref://testcase/config/flow/dport
-                dport   : ref://testcase/config/flow/sport
-                seq     : callback://tcpcb/tcpcb/GetAckPktSeqNum
-                ack     : callback://tcpcb/tcpcb/GetAckPktAckNum
-                window  : 1000
-                flags   : ack
-                options : callback://tcpcb/tcpcb/GetPktAckOutTcpOptions
-
 trigger:
     packets:
         - packet:
@@ -281,9 +196,6 @@ trigger:
             port    : ref://testcase/config/src/endpoint/intf/ports
         - packet:
             object  : ref://testcase/packets/id=PKT2
-            port    : ref://testcase/config/src/endpoint/intf/ports
-        - packet:
-            object  : ref://testcase/packets/id=PKT3
             port    : ref://testcase/config/src/endpoint/intf/ports
 
 expect:
@@ -295,11 +207,8 @@ expect:
             object  : ref://testcase/packets/id=PKT2_OUT
             port    : ref://testcase/config/dst/endpoint/intf/ports
         - packet:
-            object  : ref://testcase/packets/id=PKT3_OUT
-            port    : ref://testcase/config/dst/endpoint/intf/ports
-        - packet:
             object  : ref://testcase/packets/id=PKT1_ACK_OUT
             port    : ref://testcase/config/src/endpoint/intf/ports
         - packet:
-            object  : ref://testcase/packets/id=PKT3_ACK_OUT
+            object  : ref://testcase/packets/id=PKT2_ACK_OUT
             port    : ref://testcase/config/src/endpoint/intf/ports

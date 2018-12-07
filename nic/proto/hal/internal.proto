@@ -411,6 +411,8 @@ message TcpCbSpec {
   uint32                snd_wscale                 = 43;
   uint32                rcv_wscale                 = 44;
   uint32                sesq_tx_ci                 = 45;
+  bool                  delay_ack                  = 46;
+  uint32                ato                        = 47;
 }
 
 // TcpCbRequestMsg is batched add or modify tcpcb request

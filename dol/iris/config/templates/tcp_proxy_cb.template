@@ -47,6 +47,8 @@ debug_dol_tblsetaddr : 0
 serq_pi      : 0
 serq_ci      : 0
 rto_backoff  : 0
+delay_ack  : 0
+ato  : 0
 # pred_flags
 #   header len = 8 (32 bytes, assuming timestamp)
 #   flags = ACK

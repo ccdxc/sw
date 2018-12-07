@@ -34,17 +34,6 @@ modules:
             - flow: filter://type=IPV4
 
     - module:
-        name    : IN_ORDER_PKT_NOT_TO_SERQ_V4_DEL_ACK_TIMER
-        spec    : one_pkt_ack.testspec
-        module  : in_order
-        args    :
-            maxflows : 1
-            send_ack_flow1 : 1
-            test_timer : 1
-        iterate :
-            - flow: filter://type=IPV4
-
-    - module:
         name    : IN_ORDER_FLOWS_NOT_TO_SERQ_V4
         spec    : one_pkt.testspec
         module  : in_order
@@ -573,9 +562,11 @@ modules:
 
     - module:
         name    : UL_TO_UL_BYPASS_BARCO_DEL_ACK_TIMER
-        spec    : uplink_to_uplink_ack.testspec
+        spec    : uplink_to_uplink_del_ack.testspec
         module  : pkt_to_p4
         args    :
+            num_rx_pkts : 2
+            num_tx_pkts : 2
             bypass_barco : 1
             send_ack_flow1 : 1
             test_timer : 1
@@ -585,6 +576,8 @@ modules:
         spec    : uplink_to_uplink_cancel_ack.testspec
         module  : pkt_to_p4
         args    :
+            num_rx_pkts : 3
+            num_tx_pkts : 3
             bypass_barco : 1
             send_ack_flow1 : 1
             test_timer : 1

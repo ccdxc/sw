@@ -82,12 +82,9 @@ tcp_tx_launch_sesq:
     bbeq            d.sesq_tx_ci[15], 0, tcp_tx_sesq_no_window
     add             r5, d.{sesq_base}.wx, d.{ci_0}.hx, NIC_SESQ_ENTRY_SIZE_SHIFT
 
-    /* Check if we have pending del ack timer (fast timer)
-     * and cancel if running. The cancel is done by setting ci = pi
-     */
-    sne             c1, d.{pi_2}.hx, d.ft_pi
-    tblwr.c1        d.{ci_2}, d.{ft_pi}.hx
-
+    // start perpetual timer if necessary for the flow
+    seq             c1, d.perpetual_timer_started, 0
+    bal.c1          r7, tcp_tx_start_perpetual_timer
     // store current ci in r6
     add             r6, r0, d.{ci_0}.hx
 
@@ -145,6 +142,10 @@ tcp_tx_sesq_no_window:
  * tcp_tx_launch_asesq
  *****************************************************************************/
 tcp_tx_launch_asesq:
+    // start perpetual timer if necessary for the flow
+    seq             c1, d.perpetual_timer_started, 0
+    bal.c1          r7, tcp_tx_start_perpetual_timer
+
     phvwri          p.common_phv_pending_asesq, 1
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_TX, TCP_TX_DDOL_DONT_TX
     phvwri.c1       p.common_phv_debug_dol_dont_tx, 1
@@ -206,20 +207,11 @@ tcp_tx_launch_pending_tx:
  * tcp_tx_send_ack
  *****************************************************************************/
 tcp_tx_send_ack:
-#if 0
-    /*
-     * c1 = send ack
-     *
-     * if dup_ack_send, c1 = 1
-     * else if old_ack_no != rcv_nxt, c1 = d.pending_ack_send
-     */
-    seq             c1, d.pending_dup_ack_send, 1
-    sne.!c1         c1, d.old_ack_no, d.rcv_nxt
-    tblwr.c1        d.old_ack_no, d.rcv_nxt
-#endif
-    tblwr.f         d.{ci_1}.hx, d.{pi_1}.hx
-    phvwr           p.common_phv_pending_dup_ack_send, d.pending_dup_ack_send
+    // start perpetual timer if necessary for the flow
+    seq             c1, d.perpetual_timer_started, 0
+    bal.c1          r7, tcp_tx_start_perpetual_timer
     phvwr           p.common_phv_debug_dol_bypass_barco, d.debug_dol_tx[TCP_TX_DDOL_BYPASS_BARCO_BIT]
+    tblwr.f         d.{ci_1}.hx, d.{pi_1}.hx
 send_ack_doorbell:
 
     /*
@@ -465,32 +457,27 @@ tcp_tx_fast_retrans:
  * tcp_tx_ft_expired
  *****************************************************************************/
 tcp_tx_ft_expired:
-    phvwri          p.common_phv_pending_rx2tx, 1
-    phvwr           p.common_phv_pending_ack_send, d.pending_ack_send
-    /* Check if SW PI (ft_pi) == timer pi
-     * If TRUE, we want to process this timer, else its an old timer expiry and we can
-     * ignore it
+#ifdef HW
+    // Don't restart perpetual timer in simulation
+    bal             r7, tcp_tx_start_perpetual_timer
+#endif
+
+    /* Check if ato-- == 1
+     * If TRUE, we want to do delack handling
      */
-    seq             c1, d.{pi_2}.hx, d.ft_pi
+    seq             c1, d.ato, 1
+    tblssub         d.ato, 1
+    tbladd.f        d.{ci_2}.hx, 1
 
-    /* For old timer expiry, no more processing, invalidate table bits */
-    phvwri.!c1      p.app_header_table0_valid, 0
-
-tcp_tx_cancel_fast_timer:
-    /* Store new CI in r5; new ci = sw pi */
-    add             r5, r0, d.ft_pi
-    /* For old timer expiry, set new ci == sw pi - 1 */
-    sub.!c1         r5, r5, 1
-
-    /* Ring FT doorbell to update CI
-     * store address in r4
-     */
-    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
-
+    // Ring doorbell to clear scheduler if necessary
+    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
     // data will be in r3
-    CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, TCP_SCHED_RING_DELACK_TIMER, r5)
+    CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid)
+    b.!c1           tcp_tx_rx2tx_end
     memwr.dx        r4, r3
-    tbladd          d.{ci_2}.hx, 1
+
+    phvwri          p.common_phv_pending_rx2tx, 1
+    phvwr           p.common_phv_pending_ack_send, 1
 
     // This table need not be locked since it is read-only.
     // Moreover it should not be locked to prevent the bypass
@@ -515,3 +502,18 @@ tcp_tx_rx2tx_end:
     nop.e
     CAPRI_CLEAR_TABLE_VALID(0)
 
+/******************************************************************************
+ * tcp_tx_start_perpetual_timer
+ *****************************************************************************/
+tcp_tx_start_perpetual_timer:
+#ifndef HW
+    // in simulation don't start timers unless testing them
+    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DEL_ACK_TIMER, TCP_TX_DDOL_DEL_ACK_TIMER
+    jr.!c1          r7
+#endif
+    tblwr           d.perpetual_timer_started, 1
+    addi            r4, r0, CAPRI_FAST_TIMER_ADDR(LIF_TCP)
+    // result will be in r3
+    CAPRI_TIMER_DATA(0, k.p4_txdma_intr_qid, TCP_SCHED_RING_FAST_TIMER, TCP_ATO_TICKS)
+    jr              r7
+    memwr.dx        r4, r3

@@ -31,13 +31,6 @@ tcp_rx_write_serq_stage_start2:
     bcf         [c1], tcp_write_serq2_done
     nop
 
-dma_cmd_write_rx2tx_shared:
-    /*
-     * DMA rx2tx shared
-     */
-    add         r5, TCP_TCB_RX2TX_SHARED_WRITE_OFFSET, k.common_phv_qstate_addr
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(rx2tx_or_cpu_hdr_dma_dma_cmd, r5, rx2tx_ft_pi, rx2tx_pad1_rx2tx)
-
 dma_cmd_write_rx2tx_extra_shared:
     /*
      * DMA rx2tx shared extra
@@ -46,30 +39,20 @@ dma_cmd_write_rx2tx_extra_shared:
     CAPRI_DMA_CMD_PHV2MEM_SETUP(rx2tx_extra_dma_dma_cmd, r5, rx2tx_extra_rcv_nxt, rx2tx_extra__padding)
 
 #ifndef HW
-    smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_PKT_TO_SERQ, TCP_DDOL_PKT_TO_SERQ
-    smeqb       c2, k.common_phv_debug_dol, TCP_DDOL_DONT_QUEUE_TO_SERQ, TCP_DDOL_DONT_QUEUE_TO_SERQ
-    bcf         [!c1 & !c2], dma_cmd_write_rx2tx_extra_shared_end
-
     /*
-     * Reached here on debug dol (SERQ) cases
-     * DEBUG only
+     * debug dol (SERQ) cases only
+     * If not informing TLS or sending ack, set EOP earlier
      */
-    smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_DEL_ACK_TIMER, TCP_DDOL_DEL_ACK_TIMER
-    smeqb       c2, k.common_phv_debug_dol, TCP_DDOL_DONT_SEND_ACK, TCP_DDOL_DONT_SEND_ACK
-    // dont start timer and dont send ack
-    setcf       c3, [!c1 & c2]
-    phvwri.c3   p.rx2tx_extra_dma_dma_cmd_eop, 1
+    smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_PKT_TO_SERQ, TCP_DDOL_PKT_TO_SERQ
+    smeqb.!c1   c1, k.common_phv_debug_dol, TCP_DDOL_DONT_QUEUE_TO_SERQ, TCP_DDOL_DONT_QUEUE_TO_SERQ
+    smeqb.c1    c1, k.common_phv_debug_dol, TCP_DDOL_DONT_SEND_ACK, TCP_DDOL_DONT_SEND_ACK
+    phvwri.c1   p.rx2tx_extra_dma_dma_cmd_eop, 1
 #endif
 
 dma_cmd_write_rx2tx_extra_shared_end:
-    /*
-     * Currently we seem to be handling either delayed ack or ringing tx
-     * doorbell to send the ack, but in the case where we want to send
-     * delayed ack and also clean up retx queue (snd_una update) we need
-     * to do both
-     */
-    seq         c1, k.common_phv_pending_del_ack_send, 1
-    bcf         [c1], dma_cmd_start_del_ack_timer
+    // If delayed ack is the only pending work, there are no doorbells
+    seq         c1, k.common_phv_pending_txdma, TCP_PENDING_TXDMA_DEL_ACK
+    b.c1        tcp_write_serq2_done
     nop
 
 /*
@@ -107,13 +90,13 @@ dma_cmd_ring_tcp_tx_doorbell:
     nop
 rx2tx_send_ack_ring:
     tbladd.f    d.rx2tx_send_ack_pi, 1
-    CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(tx_doorbell_or_timer_dma_cmd, LIF_TCP, 0, k.common_phv_fid,
+    CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(tx_doorbell_dma_cmd, LIF_TCP, 0, k.common_phv_fid,
                                 TCP_SCHED_RING_SEND_ACK, d.rx2tx_send_ack_pi, db_data2_pid, db_data2_index)
     b           rx2tx_ring_done
     nop
 rx2tx_clean_retx_ring:
     tbladd.f    d.rx2tx_clean_retx_pi, 1
-    CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(tx_doorbell_or_timer_dma_cmd, LIF_TCP, 0, k.common_phv_fid,
+    CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(tx_doorbell_dma_cmd, LIF_TCP, 0, k.common_phv_fid,
                                 TCP_SCHED_RING_CLEAN_RETX, d.rx2tx_clean_retx_pi, db_data2_pid, db_data2_index)
     b           rx2tx_ring_done
     nop
@@ -123,18 +106,13 @@ rx2tx_send_ack_and_clean_retx_ring:
     CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(tx_doorbell1_dma_cmd, LIF_TCP, 0, k.common_phv_fid,
                                 TCP_SCHED_RING_SEND_ACK, d.rx2tx_send_ack_pi, db_data2_pid, db_data2_index)
     phvwr       p.tx_doorbell1_dma_cmd_wr_fence, 1
-    CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(tx_doorbell_or_timer_dma_cmd, LIF_TCP, 0, k.common_phv_fid,
+    CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(tx_doorbell_dma_cmd, LIF_TCP, 0, k.common_phv_fid,
                                 TCP_SCHED_RING_CLEAN_RETX, d.rx2tx_clean_retx_pi, db_data3_pid, db_data3_index)
 rx2tx_ring_done:
-    phvwr       p.tx_doorbell_or_timer_dma_cmd_wr_fence, 1
+    phvwr       p.tx_doorbell_dma_cmd_wr_fence, 1
 
     seq         c1, k.common_phv_skip_pkt_dma, 1
     bcf         [c1], tx_doorbell_set_eop
-
-#ifdef L7_PROXY_SUPPORT
-    seq         c1, k.common_phv_l7_proxy_en, 1
-    bcf         [c1], tcp_write_serq2_done
-#endif
 
     /*
      * c7 is drop case, we want to set EOP on tx doorbell and exit after that
@@ -153,27 +131,8 @@ rx2tx_ring_done:
     nop
 
 tx_doorbell_set_eop:
-    phvwri     p.tx_doorbell_or_timer_dma_cmd_eop, 1
-    phvwri     p.tx_doorbell_or_timer_dma_cmd_wr_fence, 1
-    b           tcp_write_serq2_done
-    nop
-
-dma_cmd_start_del_ack_timer:
-    tbladd.f    d.ft_pi, 1
-    phvwri      p.tx_doorbell_or_timer_dma_cmd_addr, CAPRI_FAST_TIMER_ADDR(LIF_TCP)
-    // result will be in r3
-    CAPRI_OPERAND_DEBUG(k.s6_t1_s2s_ato)
-    CAPRI_TIMER_DATA(0, k.common_phv_fid, TCP_SCHED_RING_DELACK_TIMER, k.s6_t1_s2s_ato)
-    phvwr       p.{db_data2_pid...db_data2_index}, r3.dx
-    phvwri      p.{tx_doorbell_or_timer_dma_cmd_phv_end_addr...tx_doorbell_or_timer_dma_cmd_type}, \
-                    ((CAPRI_PHV_END_OFFSET(db_data2_index) << 18) | \
-                     (CAPRI_PHV_START_OFFSET(db_data2_pid) << 8) | \
-                     CAPRI_DMA_COMMAND_PHV_TO_MEM)
-
-    smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_DONT_QUEUE_TO_SERQ, TCP_DDOL_DONT_QUEUE_TO_SERQ
-    phvwri.c1   p.tx_doorbell_or_timer_dma_cmd_eop, 1
-
-    phvwr.f     p.rx2tx_ft_pi, d.ft_pi
+    phvwri     p.tx_doorbell_dma_cmd_eop, 1
+    phvwri     p.tx_doorbell_dma_cmd_wr_fence, 1
 
 tcp_write_serq2_done:
     nop.e

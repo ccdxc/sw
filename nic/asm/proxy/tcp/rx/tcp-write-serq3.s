@@ -69,8 +69,6 @@ pkts_rcvd_stats_update_start:
     CAPRI_STATS_INC(pkts_rcvd, 1, d.pkts_rcvd, p.to_s7_pkts_rcvd)
 pkts_rcvd_stats_update_end:
 
-    seq         c1, k.common_phv_ooo_in_rx_q, 1
-    bcf         [c1], tcp_write_serq_stats_end
 pages_alloced_stats_update_start:
     CAPRI_STATS_INC(pages_alloced, 1, d.pages_alloced, p.to_s7_pages_alloced)
 pages_alloced_stats_update_end:

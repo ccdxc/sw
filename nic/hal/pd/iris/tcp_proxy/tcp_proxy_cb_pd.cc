@@ -671,7 +671,7 @@ tcp_proxy_cb_p4pd_add_or_del_tcp_tx_read_rx2tx_entry(pd_tcp_proxy_cb_t* tcp_prox
         HAL_TRACE_DEBUG("Received pc address {:#x}", pc_offset);
         data.action_id = pc_offset;
         data.u.read_rx2tx_d.total = TCP_PROXY_TX_TOTAL_RINGS;
-        data.u.read_rx2tx_d.eval_last = 1 << TCP_SCHED_RING_DELACK_TIMER;
+        data.u.read_rx2tx_d.eval_last = 1 << TCP_SCHED_RING_FAST_TIMER;
         data.u.read_rx2tx_d.eval_last |= 1 << TCP_SCHED_RING_RTO;
         data.u.read_rx2tx_d.debug_dol_tx = htons(tcp_proxy_cb_pd->tcp_proxy_cb->debug_dol_tx);
         if (!debug_dol_timer_full_hw_id &&
@@ -683,10 +683,7 @@ tcp_proxy_cb_p4pd_add_or_del_tcp_tx_read_rx2tx_entry(pd_tcp_proxy_cb_t* tcp_prox
             debug_dol_test_timer_full(DEBUG_DOL_TEST_TIMER_FULL_RESET);
             debug_dol_timer_full_hw_id = 0;
         }
-        data.u.read_rx2tx_d.pending_ack_send = tcp_proxy_cb_pd->tcp_proxy_cb->pending_ack_send;
         HAL_TRACE_DEBUG("TCPCB rx2tx debug_dol_tx: {:#x}", data.u.read_rx2tx_d.debug_dol_tx);
-        HAL_TRACE_DEBUG("TCPCB rx2tx shared pending_ack_send: {:#x}",
-                    data.u.read_rx2tx_d.pending_ack_send);
 
         // get sesq address
         wring_hw_id_t   sesq_base;
@@ -964,8 +961,6 @@ tcp_proxy_cb_p4pd_get_tcp_tx_read_rx2tx_entry(pd_tcp_proxy_cb_t* tcp_proxy_cb_pd
     tcp_proxy_cb_pd->tcp_proxy_cb->asesq_pi = data.u.read_rx2tx_d.pi_4;
     tcp_proxy_cb_pd->tcp_proxy_cb->asesq_ci = data.u.read_rx2tx_d.ci_4;
 
-    tcp_proxy_cb_pd->tcp_proxy_cb->pending_ack_send = data.u.read_rx2tx_d.pending_ack_send;
-
     tcp_proxy_cb_pd->tcp_proxy_cb->debug_dol_tblsetaddr = data.u.read_rx2tx_d.debug_dol_tblsetaddr;
 
     tcp_proxy_cb_pd->tcp_proxy_cb->debug_dol_tblsetaddr = data.u.read_rx2tx_d.debug_dol_tblsetaddr;
@@ -976,8 +971,6 @@ tcp_proxy_cb_p4pd_get_tcp_tx_read_rx2tx_entry(pd_tcp_proxy_cb_t* tcp_proxy_cb_pd
     HAL_TRACE_DEBUG("Received sesq_ci: {:#x}", tcp_proxy_cb_pd->tcp_proxy_cb->sesq_ci);
     HAL_TRACE_DEBUG("Received asesq_pi: {:#x}", tcp_proxy_cb_pd->tcp_proxy_cb->asesq_pi);
     HAL_TRACE_DEBUG("Received asesq_ci: {:#x}", tcp_proxy_cb_pd->tcp_proxy_cb->asesq_ci);
-    HAL_TRACE_DEBUG("TCPCB rx2tx shared pending_ack_send: {:#x}",
-                    tcp_proxy_cb_pd->tcp_proxy_cb->pending_ack_send);
     HAL_TRACE_DEBUG("Received tblsetaddr: {:#x}",
                     tcp_proxy_cb_pd->tcp_proxy_cb->debug_dol_tblsetaddr);
 

@@ -142,7 +142,6 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->header_len = spec.header_len();
     memcpy(tcpcb->header_template, spec.header_template().c_str(),
             std::min(sizeof(tcpcb->header_template), spec.header_template().size()));
-    tcpcb->pending_ack_send = spec.pending_ack_send();
     tcpcb->state = spec.state();
     tcpcb->source_lif = spec.source_lif();
     tcpcb->l7_proxy_type = spec.l7_proxy_type();
@@ -155,6 +154,8 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->rcv_wnd = spec.rcv_wnd();
     tcpcb->snd_wscale = spec.snd_wscale();
     tcpcb->rcv_wscale = spec.rcv_wscale();
+    tcpcb->delay_ack = spec.delay_ack();
+    tcpcb->ato = spec.ato();
 
     tcpcb->hal_handle = hal_alloc_handle();
 
@@ -230,7 +231,6 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->dest_port = spec.dest_port();
     tcpcb->state = spec.state();
     tcpcb->source_lif = spec.source_lif();
-    tcpcb->pending_ack_send = spec.pending_ack_send();
     tcpcb->header_len = spec.header_len();
     tcpcb->l7_proxy_type = spec.l7_proxy_type();
     tcpcb->serq_pi = spec.serq_pi();
@@ -242,6 +242,8 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->rcv_wnd = spec.rcv_wnd();
     tcpcb->snd_wscale = spec.snd_wscale();
     tcpcb->rcv_wscale = spec.rcv_wscale();
+    tcpcb->delay_ack = spec.delay_ack();
+    tcpcb->ato = spec.ato();
     memcpy(tcpcb->header_template, spec.header_template().c_str(),
             std::max(sizeof(tcpcb->header_template), spec.header_template().size()));
     pd_tcpcb_args.tcpcb = tcpcb;
@@ -451,7 +453,6 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_spec()->set_state(rtcpcb.state);
     rsp->mutable_spec()->set_source_lif(rtcpcb.source_lif);
     rsp->mutable_spec()->set_debug_dol_tx(rtcpcb.debug_dol_tx);
-    rsp->mutable_spec()->set_pending_ack_send(rtcpcb.pending_ack_send);
     rsp->mutable_spec()->set_l7_proxy_type(rtcpcb.l7_proxy_type);
     rsp->mutable_spec()->set_serq_pi(rtcpcb.serq_pi);
     rsp->mutable_spec()->set_serq_ci(rtcpcb.serq_ci);
@@ -465,6 +466,8 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_spec()->set_rcv_wnd(rtcpcb.rcv_wnd);
     rsp->mutable_spec()->set_snd_wscale(rtcpcb.snd_wscale);
     rsp->mutable_spec()->set_rcv_wscale(rtcpcb.rcv_wscale);
+    rsp->mutable_spec()->set_delay_ack(rtcpcb.delay_ack);
+    rsp->mutable_spec()->set_ato(rtcpcb.ato);
 
     // fill operational state of this TCP CB
     rsp->mutable_status()->set_tcpcb_handle(tcpcb->hal_handle);

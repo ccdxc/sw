@@ -44,13 +44,6 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         pad1_tx2rx                      : 2                     ;\
 
 
-#define RX2TX_SHARED_STATE \
-        ft_pi                           : 16                    ;\
-        pending_ack_send                : 1                     ;\
-        pending_dup_ack_send            : 1                     ;\
-        pad1_rx2tx                      : 6                     ;
-
-
 #define RX2TX_SHARED_EXTRA_STATE \
         rcv_nxt                         : SEQ_NUMBER_WIDTH      ;\
         snd_wnd                         : 16                    ;\
@@ -73,9 +66,9 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         ca_state                        : 8                     ;\
         ecn_flags                       : 8                     ;\
         num_sacks                       : 8                     ;\
+        pending_dup_ack_send            : 1                     ;\
         pending_challenge_ack_send      : 1                     ;\
         pending_sync_mss                : 1                     ;\
-        pending_tso_keepalive           : 1                     ;\
         pending_tso_pmtu_probe          : 1                     ;\
         pending_tso_data                : 1                     ;\
         pending_tso_probe_data          : 1                     ;\
@@ -236,19 +229,6 @@ quick_acks_decr
     modify_field(tso_d.debug_num_phv_to_pkt, debug_num_phv_to_pkt);\
     modify_field(tso_d.debug_num_mem_to_pkt, debug_num_mem_to_pkt);\
     modify_field(tso_d.quick_acks_decr, quick_acks_decr);\
-
-
-header_type rx2tx_t {
-    fields {
-        RX2TX_SHARED_STATE
-    }
-}
-
-header_type rx2tx_pad_t {
-    fields {
-        rx2tx_pad : 128;
-    }
-}
 
 
 header_type rx2tx_extra_t {

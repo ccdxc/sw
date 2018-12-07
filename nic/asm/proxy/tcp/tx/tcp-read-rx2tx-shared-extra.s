@@ -41,6 +41,7 @@ tcp_tx_read_rx2tx_shared_extra_stage1_start:
     phvwr           p.tcp_ts_opt_len, TCPOLEN_TIMESTAMP
     phvwr           p.tcp_ts_opt_ts_ecr, d.rcv_tsval
     phvwr           p.tcp_ts_opt_ts_val, r4
+    phvwr           p.common_phv_pending_dup_ack_send, d.pending_dup_ack_send
 
     seq             c1, k.common_phv_pending_rx2tx, 1
     bcf             [c1], tcp_tx_start_pending

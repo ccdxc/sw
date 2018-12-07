@@ -22,6 +22,7 @@ tcp_tx_debug_dol_dont_start_retx_timer = 0x8
 tcp_tx_debug_dol_force_timer_full = 0x10
 tcp_tx_debug_dol_force_tbl_setaddr = 0x20
 tcp_tx_debug_dol_tsopt_support = 0x40
+tcp_tx_debug_dol_del_ack_timer = 0x80
 
 tcp_state_ESTABLISHED = 1
 tcp_state_SYN_SENT = 2
@@ -318,7 +319,12 @@ def init_tcb_inorder(tc, tcb):
         tcb.debug_dol = tcp_debug_dol_dont_send_ack
         tcb.debug_dol_tx = tcp_tx_debug_dol_dont_send_ack
     if tc.pvtdata.test_timer:
+        tcb.delay_ack = 1
+        tcb.ato = 10
         tcb.debug_dol |= tcp_debug_dol_del_ack_timer
+        tcb.debug_dol_tx |= tcp_tx_debug_dol_del_ack_timer
+    else:
+        tcb.delay_ack = 0
     if not tc.pvtdata.test_retx_timer and not tc.pvtdata.test_retx_timer_full:
         tcb.debug_dol_tx |= tcp_tx_debug_dol_dont_start_retx_timer
     if tc.pvtdata.test_retx_timer_full:
@@ -476,7 +482,12 @@ def init_tcb_inorder2(tc, tcb):
         tcb.debug_dol = tcp_debug_dol_dont_send_ack
         tcb.debug_dol_tx = tcp_tx_debug_dol_dont_send_ack
     if tc.pvtdata.test_timer:
+        tcb.delay_ack = 1
+        tcb.ato = 10
         tcb.debug_dol |= tcp_debug_dol_del_ack_timer
+        tcb.debug_dol_tx |= tcp_tx_debug_dol_del_ack_timer
+    else:
+        tcb.delay_ack = 0
     if not tc.pvtdata.test_retx_timer and not tc.pvtdata.test_retx_timer_full:
         tcb.debug_dol_tx |= tcp_tx_debug_dol_dont_start_retx_timer
     if tc.pvtdata.test_retx_timer_full:

@@ -18,8 +18,8 @@
                     (TCP_TCB_RX2TX_SHARED_OFFSET + 42)
 #define TCP_TCB_RX2TX_RETX_PENDING_OFFSET \
                     (TCP_TCB_RX2TX_SHARED_OFFSET + 46)
-#define TCP_TCB_RX2TX_SHARED_WRITE_OFFSET \
-                    (TCP_TCB_RX2TX_SHARED_OFFSET + 61)  // skip intrinsic part etc
+#define TCP_TCB_RX2TX_ATO_OFFSET \
+                    (TCP_TCB_RX2TX_SHARED_OFFSET + 48)
 #define TCP_TCB_TX2RX_SHARED_OFFSET     64
 #define TCP_TCB_TX2RX_SHARED_WRITE_OFFSET \
                     (TCP_TCB_TX2RX_SHARED_OFFSET + 32)  // skip intrinsic part etc
