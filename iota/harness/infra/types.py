@@ -44,7 +44,8 @@ HEADER_SUMMARY = "-" * 136
 FORMAT_TESTCASE_SUMMARY = "%-15s %-70s %-32s %-7s %-8s"
 HEADER_SHORT_SUMMARY = "-" * 100
 
-FORMAT_ALL_TESTSUITE_SUMMARY = "%-32s %-8s %-8s %-8s %-8s %-8s %-8s %-8s"
+FORMAT_ALL_TESTSUITE_SUMMARY = "%-32s %-5s %-5s %-6s %-5s %-5s %-6s %-8s %-8s"
+FORMAT_ALL_TESTBUNDLE_SUMMARY = "%-32s %-5s %-5s %-6s %-5s %-5s %-6s %-8s %-8s"
 
 
 HOST_TOOLS_DIR = "/pensando/iota/tools"

@@ -42,6 +42,8 @@ parser.add_argument('--only-reboot', dest='only_reboot',
                     action='store_true', help='Only reboot the nodes and start tests.')
 parser.add_argument('--regression', dest='regression',
                     action='store_true', help='Only run regression Testsuites.')
+parser.add_argument('--logdir', dest='logdir', default=None,
+                    help='Save logs in a specific directory. (Relative to IOTA directory)')
 GlobalOptions = parser.parse_args()
 
 GlobalOptions.default_username = "vm"

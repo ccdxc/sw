@@ -18,6 +18,8 @@ for p in paths:
 # This import will parse all the command line options.
 import iota.harness.infra.glopts as glopts
 glopts.GlobalOptions.topdir = topdir
+if glopts.GlobalOptions.logdir is None:
+    glopts.GlobalOptions.logdir = "%s/iota" % topdir
 
 import iota.harness.infra.types as types
 import iota.harness.infra.utils.timeprofiler as timeprofiler
@@ -29,7 +31,7 @@ from iota.harness.infra.utils.logger import Logger as Logger
 overall_timer = timeprofiler.TimeProfiler()
 overall_timer.Start()
 
-gl_server_process = None
+gl_srv_process = None
 
 def InitLogger():
     if glopts.GlobalOptions.debug:
@@ -41,20 +43,20 @@ def InitLogger():
     return
 
 def __start_server():
-    global gl_server_process
+    global gl_srv_process
+    srv_binary = "%s/iota/bin/server/iota_server" % topdir
+    srv_logfile = "%s/server.log" % glopts.GlobalOptions.logdir
+    srv_args = "--port %d" % int(glopts.GlobalOptions.svcport)
     if glopts.GlobalOptions.dryrun:
-        gl_server_process = procs.IotaProcess("%s/iota/bin/server/iota_server --stubmode" % topdir,
-                                              "%s/iota/server.log" % topdir)
-    else:
-        gl_server_process = procs.IotaProcess("%s/iota/bin/server/iota_server" % topdir,
-                                              "%s/iota/server.log" % topdir)
-    gl_server_process.Start()
+        srv_args += " --stubmode"
+    gl_srv_process = procs.IotaProcess("%s %s" % (srv_binary, srv_args), srv_logfile)
+    gl_srv_process.Start()
     return
 
 def __exit_cleanup():
-    global gl_server_process
+    global gl_srv_process
     Logger.debug("ATEXIT: Stopping IOTA Server")
-    gl_server_process.Stop()
+    gl_srv_process.Stop()
     Logger.debug("ATEXIT: Saving logs to iota_sanity_logs.tar.gz")
     if not glopts.GlobalOptions.dryrun:
         os.system("%s/iota/scripts/savelogs.sh %s" % (topdir, topdir))

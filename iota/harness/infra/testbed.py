@@ -112,7 +112,7 @@ class _Testbed:
         return types.status.SUCCESS
 
     def __cleanup_testbed_script(self):
-        logfile = "%s_cleanup.log" % self.curr_ts.Name()
+        logfile = "%s/%s_cleanup.log" % (GlobalOptions.logdir, self.curr_ts.Name())
         Logger.info("Cleaning up Testbed, Logfile = %s" % logfile)
         cmd = "timeout 60 ./scripts/cleanup_testbed.py --testbed %s" % GlobalOptions.testbed_json
         if GlobalOptions.rerun:
@@ -146,18 +146,18 @@ class _Testbed:
                 cmd.extend(["--uuid", "%s" % instance.Resource.NICUuid])
                 cmd.extend(["--os", "%s" % instance.NodeOs])
                 if self.__fw_upgrade_done or GlobalOptions.only_reboot:
-                    logfile = "%s-%s-reboot.log" % (self.curr_ts.Name(), instance.Name)
+                    logfile = "%s/%s-%s-reboot.log" % (GlobalOptions.logdir, self.curr_ts.Name(), instance.Name)
                     Logger.info("Rebooting Node %s (logfile = %s)" % (instance.Name, logfile))
                     cmd.extend(["--mode-change"])
                 else:
-                    logfile = "%s-firmware-upgrade.log" % instance.Name
+                    logfile = "%s/%s-firmware-upgrade.log" % (GlobalOptions.logdir, instance.Name)
                     Logger.info("Updating Firmware on %s (logfile = %s)" % (instance.Name, logfile))
             else:
                 cmd.extend([ "%s/iota/scripts/reboot_node.py" % GlobalOptions.topdir ])
                 cmd.extend(["--host-ip", instance.NodeMgmtIP])
                 cmd.extend(["--cimc-ip", instance.NodeCimcIP])
                 cmd.extend(["--os", "%s" % instance.NodeOs])
-                logfile = "%s-%s-reboot.log" % (self.curr_ts.Name(), instance.Name)
+                logfile = "%s/%s-%s-reboot.log" % (GlobalOptions.logdir, self.curr_ts.Name(), instance.Name)
                 Logger.info("Rebooting Node %s (logfile = %s)" % (instance.Name, logfile))
 
             logfiles.append(logfile)

@@ -5,6 +5,7 @@ import copy
 import iota.harness.infra.types as types
 
 __gl_testbed = None
+__gl_topology = None
 __gl_workloads = {}
 
 def SetTestbed(tb):
@@ -17,6 +18,17 @@ def GetTestbed():
     global __gl_testbed
     assert(__gl_testbed)
     return __gl_testbed
+
+def SetTopology(topo):
+    global __gl_topology
+    assert(topo)
+    __gl_topology = topo
+    return
+
+def GetTopology():
+    global __gl_topology
+    assert(__gl_topology)
+    return __gl_topology
 
 class Workload:
     def __init__(self, msg):

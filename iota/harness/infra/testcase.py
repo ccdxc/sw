@@ -118,8 +118,9 @@ class TestcaseData:
         return self.__instid
 
 class Testcase:
-    def __init__(self, spec):
+    def __init__(self, spec, parent):
         self.__spec = spec
+        self.__parent = parent
         self.__spec.name = self.__spec.name.replace(' ', '_')
         self.__tc = None
         self.__verifs = []
@@ -336,7 +337,7 @@ class Testcase:
         for iter_data in self.__iters:
             iters_str = iter_data.iterators.Summary()
             print(types.FORMAT_TESTCASE_SUMMARY %\
-                  (self.Bundle(), iter_data.Name(), self.__get_owner(),
+                  (self.__parent.Name(), iter_data.Name(), self.__get_owner(),
                    types.status.str(iter_data.GetStatus()).title(), 
                    iter_data.TotalTime()))
             if iters_str: print("- Iterators: %s" % iters_str)
@@ -346,9 +347,6 @@ class Testcase:
 
     def Name(self):
         return self.__spec.name
-
-    def Bundle(self):
-        return self.__spec.bundle
 
     def Abort(self):
         self.__aborted = True

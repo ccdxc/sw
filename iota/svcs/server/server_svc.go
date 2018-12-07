@@ -12,10 +12,11 @@ import (
 )
 
 // IOTAListenURL is the default URL for IOTA Service
-var IOTAListenURL = fmt.Sprintf("localhost:%d", common.IotaSvcPort)
 
 // StartIOTAService starts IOTA Service
-func StartIOTAService(stub bool) {
+func StartIOTAService(stub bool, grpcPort int) {
+    var IOTAListenURL = fmt.Sprintf("localhost:%d", grpcPort)
+
 	serverSvc, err := common.CreateNewGRPCServer("IOTA Server", IOTAListenURL)
 	if err != nil {
 		log.Errorf("Could not start IOTA Service. Err: %v", err)

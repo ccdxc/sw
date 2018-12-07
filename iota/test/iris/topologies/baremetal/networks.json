@@ -9,7 +9,9 @@
         },
         "spec": {
           "ipv4-subnet": "10.255.0.0/24",
+          "ipv6-subnet": "2000::/64",
           "ipv4-gateway": "10.255.0.1",
+          "ipv6-gateway": "2000::1/64",
           "vlan-id": -1
         }
       }

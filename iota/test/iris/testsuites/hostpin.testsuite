@@ -27,7 +27,7 @@ common:
 testbundles:
     # Relative paths from iota/test/iris/testbundles/
     - networking/networking.testbundle
-    - networking/networking_hostpin.testbundle
+    - networking/telemetry.testbundle
     - linktest/linktest.testbundle
     - aging/aging.testbundle
     - alg/alg.testbundle

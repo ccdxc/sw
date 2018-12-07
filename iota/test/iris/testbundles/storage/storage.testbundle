@@ -1,7 +1,8 @@
 meta:
-    name    : storage
-    os      : [ linux, freebsd ]
-    nics    : [ pensando, intel, mellanox, broadcom ]
+    name        : storage
+    os          : [ linux, freebsd ]
+    nics        : [ pensando, intel, mellanox, broadcom ]
+    targetcount : 1768
 
 aliases:
     - &STORAGE_TEST_DIR storage/offload/src/test

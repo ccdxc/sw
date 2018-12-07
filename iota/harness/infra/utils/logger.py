@@ -76,6 +76,7 @@ class _Logger:
         self.logfile        = logfile
         self.tsname         = None
         self.tcname         = None
+        self.tbname         = None
 
         if stdout:
             global StdoutLoggerSink
@@ -98,8 +99,10 @@ class _Logger:
         prefix = self.__get_timestamp()
         if self.tsname:
             prefix += "[TS:%s]" % self.tsname
+        if self.tbname:
+            prefix += "[TB:%s]" % self.tbname
         if self.tcname:
-            prefix += "[TC:%s]" % (self.tcname)
+            prefix += "[TC:%s]" % self.tcname
         if level:
             prefix += "[%s]" % prefixes[level]
         else:
@@ -163,7 +166,12 @@ class _Logger:
     def SetTestsuite(self, tsname):
         self.tsname = tsname
         # Reset the tcname everytime tsname changes.
+        self.tbname = None
         self.tcname = None
+        return
+
+    def SetTestbundle(self, tbname):
+        self.tbname = tbname
         return
 
     def SetTestcase(self, tcname):

@@ -1,5 +1,6 @@
 meta:
     name    : networking
+    os      : [ linux, freebsd ]
     nics    : [ pensando, mellanox, intel, broadcom ]
 
 testcases:
