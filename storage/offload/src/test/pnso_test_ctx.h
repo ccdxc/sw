@@ -270,6 +270,7 @@ struct worker_context {
 
 	struct worker_queue *submit_q;
 	struct worker_queue *complete_q;
+	struct worker_queue *poll_q;
 };
 
 struct testcase_context {
@@ -289,9 +290,6 @@ struct testcase_context {
 	 * but they are distributed evenly between the worker_contexts
 	 */
 	struct worker_queue *batch_ctx_freelist;
-
-	/* queue for polling batch_ctx, local to ctl thread */
-	struct worker_queue *poll_q;
 
 	uint32_t vars[TEST_VAR_MAX];
 };

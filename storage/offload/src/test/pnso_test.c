@@ -887,37 +887,41 @@ static struct worker_context *batch_get_worker_ctx(struct batch_context *batch_c
 	return batch_ctx->test_ctx->worker_ctxs[batch_ctx->worker_id];
 }
 
+static void batch_completion_common(struct batch_context *batch_ctx)
+{
+	if (batch_ctx->req_rc == PNSO_OK)
+		batch_ctx->stats.agg_stats.total_latency =
+			osal_get_clock_nsec() - batch_ctx->start_time;
+
+	osal_atomic_fetch_add(&batch_ctx->cb_count, 1);
+}
+
+static void batch_completion_safe_cb(void *cb_ctx, struct pnso_service_result *svc_res)
+{
+	struct batch_context *batch_ctx = (struct batch_context *) cb_ctx;
+	struct worker_context *worker_ctx = batch_get_worker_ctx(batch_ctx);
+
+	PNSO_LOG_DEBUG("batch_completion_safe_cb cb_ctx=0x%llx\n",
+		       (unsigned long long) cb_ctx);
+
+	batch_completion_common(batch_ctx);
+
+	if (!worker_ctx || !worker_queue_enqueue_safe(worker_ctx->complete_q, batch_ctx))
+		PNSO_LOG_ERROR("Failed to enqueue batch_ctx to complete_q!\n");	
+}
+
 static void batch_completion_cb(void *cb_ctx, struct pnso_service_result *svc_res)
 {
 	struct batch_context *batch_ctx = (struct batch_context *) cb_ctx;
-	struct worker_context *worker_ctx;
+	struct worker_context *worker_ctx = batch_get_worker_ctx(batch_ctx);
 
 	PNSO_LOG_DEBUG("batch_completion_cb cb_ctx=0x%llx\n",
 		       (unsigned long long) cb_ctx);
 
-	if (batch_ctx->req_rc == PNSO_OK)
-		batch_ctx->stats.agg_stats.total_latency =
-			osal_get_clock_nsec() - batch_ctx->start_time;
+	batch_completion_common(batch_ctx);
 
-	osal_atomic_fetch_add(&batch_ctx->cb_count, 1);
-
-	worker_ctx = batch_ctx->test_ctx->worker_ctxs[batch_ctx->worker_id];
-	if (!worker_queue_enqueue_safe(worker_ctx->complete_q, batch_ctx))
+	if (!worker_ctx || !worker_queue_enqueue(worker_ctx->complete_q, batch_ctx))
 		PNSO_LOG_ERROR("Failed to enqueue batch_ctx to complete_q!\n");	
-}
-
-static void batch_completion_poll_cb(void *cb_ctx, struct pnso_service_result *svc_res)
-{
-	struct batch_context *batch_ctx = (struct batch_context *) cb_ctx;
-
-	PNSO_LOG_DEBUG("batch_completion_poll_cb cb_ctx=0x%llx\n",
-		       (unsigned long long) cb_ctx);
-
-	if (batch_ctx->req_rc == PNSO_OK)
-		batch_ctx->stats.agg_stats.total_latency =
-			osal_get_clock_nsec() - batch_ctx->start_time;
-
-	osal_atomic_fetch_add(&batch_ctx->cb_count, 1);
 }
 
 static pnso_error_t test_submit_request(struct request_context *req_ctx,
@@ -946,14 +950,14 @@ static pnso_error_t test_submit_request(struct request_context *req_ctx,
 		poll_ctx = NULL;
 		break;
 	case SYNC_MODE_POLL:
-		cb = batch_completion_poll_cb;
+		cb = batch_completion_cb;
 		cb_ctx = batch_ctx;
 		poll_fn = &batch_ctx->poll_fn;
 		poll_ctx = &batch_ctx->poll_ctx;
 		break;
 	case SYNC_MODE_ASYNC:
 	default:
-		cb = batch_completion_cb;
+		cb = batch_completion_safe_cb;
 		cb_ctx = batch_ctx;
 		poll_fn = NULL;
 		poll_ctx = NULL;
@@ -1710,9 +1714,12 @@ static pnso_error_t run_testcase_batch(struct batch_context *batch_ctx)
 		batch_completion_cb(batch_ctx,
 				    req_ctx ? &req_ctx->svc_res : NULL);
 	} else if (testcase->sync_mode == SYNC_MODE_POLL) {
-		/* Place on completion queue */
-		if (!worker_queue_enqueue_safe(worker_ctx->complete_q, batch_ctx))
-			PNSO_LOG_ERROR("Failed to enqueue polling batch_ctx to complete_q!\n");
+		/* Place on poll queue */
+		if (!worker_queue_enqueue(worker_ctx->poll_q, batch_ctx)) {
+			PNSO_LOG_ERROR("Failed to enqueue batch_ctx to poll_q!\n");
+			err = ENOENT;
+			goto error;
+		}
 	}
 
 	PNSO_LOG_DEBUG("... exit run_testcase_batch\n");
@@ -1724,8 +1731,13 @@ error:
 	batch_ctx->stats.io_stats[0].failures++;
 	batch_ctx->poll_fn = NULL; /* prevent polling on error */
 	/* Manually call completion callback */
-	batch_completion_cb(batch_ctx,
-			    req_ctx ? &req_ctx->svc_res : NULL);
+	if (testcase->sync_mode == SYNC_MODE_ASYNC) {
+		batch_completion_safe_cb(batch_ctx,
+			req_ctx ? &req_ctx->svc_res : NULL);
+	} else {
+		batch_completion_cb(batch_ctx,
+			req_ctx ? &req_ctx->svc_res : NULL);
+	}
 
 	PNSO_LOG_DEBUG("... exit run_testcase_batch with err %d\n", err);
 
@@ -1840,8 +1852,26 @@ static int worker_loop(void *param)
 {
 	struct worker_context *ctx = (struct worker_context *) param;
 	struct batch_context *batch_ctx;
+	bool is_busy;
 
 	while (!osal_thread_should_stop(&ctx->worker_thread)) {
+		is_busy = false;
+
+		/* Poll for finished work item */
+		batch_ctx = worker_queue_dequeue(ctx->poll_q);
+		if (batch_ctx) {
+			if (batch_ctx->poll_fn(batch_ctx->poll_ctx) != PNSO_OK) {
+				/* Not ready yet, re-enqueue */
+				_worker_queue_enqueue(ctx->poll_q, batch_ctx);
+					batch_ctx = NULL;
+			} else {
+				/* completion handler called by poll_fn */
+				PNSO_LOG_DEBUG("DEBUG: polled batch completion\n");
+				is_busy = true;
+			}
+		}
+
+		/* Process next work item */
 		batch_ctx = worker_queue_dequeue(ctx->submit_q);
 		if (batch_ctx) {
 #ifdef __KERNEL__
@@ -1855,10 +1885,14 @@ static int worker_loop(void *param)
 #endif
 			ctx->last_active_ts = osal_get_clock_nsec();
 			run_testcase_batch(batch_ctx);
-			osal_yield();
-		} else {
-			osal_sched_yield();
+			is_busy = true;
 		}
+
+		/* Be a good citizen */
+		if (is_busy)
+			osal_yield();
+		else
+			osal_sched_yield();
 	}
 
 	return 0;
@@ -1901,6 +1935,7 @@ static void free_worker_context(struct worker_context *ctx)
 	}
 	free_worker_queue(ctx->submit_q);
 	free_worker_queue(ctx->complete_q);
+	free_worker_queue(ctx->poll_q);
 
 	TEST_FREE(ctx);
 }
@@ -1921,7 +1956,8 @@ static struct worker_context *alloc_worker_context(const struct test_desc *desc,
 	ctx->test_ctx = test_ctx;
 	ctx->submit_q = alloc_worker_queue(TEST_MAX_BATCH_COUNT_PER_CORE);
 	ctx->complete_q = alloc_worker_queue(TEST_MAX_BATCH_COUNT_PER_CORE);
-	if (!ctx->submit_q || !ctx->complete_q) {
+	ctx->poll_q = alloc_worker_queue(TEST_MAX_BATCH_COUNT_PER_CORE);
+	if (!ctx->submit_q || !ctx->complete_q || !ctx->poll_q) {
 		goto error;
 	}
 
@@ -1950,7 +1986,6 @@ static void free_testcase_context(struct testcase_context *ctx)
 		free_worker_context(ctx->worker_ctxs[i]);
 	}
 
-	free_worker_queue(ctx->poll_q);
 	free_worker_queue(ctx->batch_ctx_freelist);
 	TEST_FREE(ctx);
 }
@@ -2013,10 +2048,6 @@ static struct testcase_context *alloc_testcase_context(const struct test_desc *d
 	/* Allocate freelist and fill it with batch_ctx entries */
 	test_ctx->batch_ctx_freelist = alloc_worker_queue(max_core_count*TEST_MAX_BATCH_COUNT_PER_CORE);
 	if (!test_ctx->batch_ctx_freelist) {
-		goto error;
-	}
-	test_ctx->poll_q = alloc_worker_queue(max_core_count*TEST_MAX_BATCH_COUNT_PER_CORE);
-	if (!test_ctx->poll_q) {
 		goto error;
 	}
 	for (core_id = 0;
@@ -2089,6 +2120,7 @@ static void print_worker_ctx(struct worker_context *work_ctx, uint64_t cur_ts)
 		       (unsigned long long) (cur_ts - work_ctx->last_active_ts)/OSAL_NSEC_PER_MSEC);
 	print_worker_queue(work_ctx->submit_q, "submit_q");
 	print_worker_queue(work_ctx->complete_q, "complete_q");
+	print_worker_queue(work_ctx->poll_q, "poll_q");
 }
 
 static void print_testcase_ctx(struct testcase_context *ctx)
@@ -2098,7 +2130,6 @@ static void print_testcase_ctx(struct testcase_context *ctx)
 
 	OSAL_LOG_ERROR("Testcase %u\n", ctx->testcase->node.idx);
 	print_worker_queue(ctx->batch_ctx_freelist, "batch_ctx_freelist");
-	print_worker_queue(ctx->poll_q, "poll_q");
 
 	for (i = 0; i < ctx->worker_count; i++) {
 		print_worker_ctx(ctx->worker_ctxs[i], cur_ts);
@@ -2176,28 +2207,6 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 		worker_ctx = ctx->worker_ctxs[worker_id];
 
 		batch_ctx = worker_queue_dequeue(worker_ctx->complete_q);
-
-		/* Polling mode */
-		if (testcase->sync_mode == SYNC_MODE_POLL) {
-			if (batch_ctx) {
-				_worker_queue_enqueue(ctx->poll_q, batch_ctx);
-				batch_ctx = _worker_queue_dequeue(ctx->poll_q);
-			} else {
-				batch_ctx = worker_queue_dequeue(ctx->poll_q);
-			}
-			if (batch_ctx && batch_ctx->poll_fn) {
-				if (batch_ctx->poll_fn(batch_ctx->poll_ctx)
-						!= PNSO_OK) {
-					/* Not ready yet, re-enqueue */
-					_worker_queue_enqueue(ctx->poll_q, batch_ctx);
-					batch_ctx = NULL;
-				} else {
-					/* completion handler called by poll_fn */
-					PNSO_LOG_DEBUG("DEBUG: polled batch completion\n");
-				}
-			}
-		}
-
 		if (batch_ctx) {
 			PNSO_LOG_DEBUG("DEBUG: batch completed, batch_count %llu\n",
 				(unsigned long long) batch_completion_count+1);
