@@ -28,6 +28,9 @@ const static uint32_t kRdmaAllocUnit = 4096;
 const static char *kRdmaHBMBarLabel = "rdma-hbm-bar";
 const static uint32_t kRdmaBarAllocUnit = 8 * 1024 * 1024;
 
+const static char *kNicmgrHBMLabel = "nicmgr";
+const static uint32_t kNicmgrAllocUnit = 64;
+
 static uint8_t *memrev(uint8_t *block, size_t elnum)
 {
     uint8_t *s, *t, tmp;
@@ -256,6 +259,47 @@ uint64_t PdClient::RdmaHbmBarAlloc (uint32_t size)
     return rdma_hbm_bar_base_ + alloc_offset;
 }
 
+void PdClient::nicmgr_mem_init (void)
+{
+    uint64_t hbm_addr = mp_->start_addr(kNicmgrHBMLabel);
+    assert(hbm_addr > 0);
+
+    uint32_t size = mp_->size_kb(kNicmgrHBMLabel);
+    assert(size != 0);
+
+    uint32_t num_units = (size * 1024) / kNicmgrAllocUnit;
+    if (hbm_addr & 0xFFF) {
+        // Not 4K aligned.
+        hbm_addr = (hbm_addr + 0xFFF) & ~0xFFFULL;
+        num_units--;
+    }
+
+    nicmgr_hbm_base_ = hbm_addr;
+    nicmgr_hbm_allocator_.reset(new sdk::lib::BMAllocator(num_units));
+
+    NIC_LOG_DEBUG("{}: nicmgr_hbm_base_ : {}\n", __FUNCTION__, nicmgr_hbm_base_);
+}
+
+uint64_t PdClient::nicmgr_mem_alloc(uint32_t size)
+{
+    uint32_t alloc_units;
+
+    alloc_units = (size + kNicmgrAllocUnit - 1) & ~(kNicmgrAllocUnit-1);
+    alloc_units /= kNicmgrAllocUnit;
+    uint64_t alloc_offset = nicmgr_hbm_allocator_->Alloc(alloc_units);
+
+    if (alloc_offset < 0) {
+        NIC_LOG_DEBUG("{}: Invalid alloc_offset {}", __FUNCTION__, alloc_offset);
+        return -ENOMEM;
+    }
+
+    nicmgr_allocation_sizes_[alloc_offset] = alloc_units;
+    alloc_offset *= kNicmgrAllocUnit;
+    NIC_LOG_DEBUG("{}: size: {} alloc_offset: {} hbm_addr: {}",
+                    __FUNCTION__, size, alloc_offset, nicmgr_hbm_base_ + alloc_offset);
+    return nicmgr_hbm_base_ + alloc_offset;
+}
+
 int
 PdClient::create_dirs() {
     struct stat  st = { 0 };
@@ -334,6 +378,7 @@ void PdClient::init(void)
     assert(ret == 0);
 
     rdma_manager_init();
+    nicmgr_mem_init();
 }
 
 // called after HAL is UP and running

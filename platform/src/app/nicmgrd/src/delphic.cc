@@ -97,20 +97,42 @@ error port_status_handler::OnPortStatusDelete(PortStatusPtr portStatus) {
 // update_port_status_handler updates port status in delphi
 error port_status_handler::update_port_status(PortStatusPtr port) {
     // create port status object
-    uint32_t port_id = port->mutable_key_or_handle()->port_id();
-    port::PortOperStatus oper_status = port->oper_status();
-    NIC_LOG_DEBUG("Updating port {} status to {}",
-                  port_id, oper_status);
-
     if (!devmgr) {
         NIC_LOG_ERR("devmgr ptr is null");
         return error::OK();    // TODO: rameshp, pleaes fix this ???
     }
-    if (oper_status == port::PortOperStatus::PORT_OPER_STATUS_UP) {
-        devmgr->DevLinkUpHandler(port_id);
-    } else if (oper_status == port::PortOperStatus::PORT_OPER_STATUS_DOWN) {
-        devmgr->DevLinkDownHandler(port_id);
+
+    link_eventdata_t *evd = new link_eventdata_t;
+    evd->port_id = port->mutable_key_or_handle()->port_id();
+    evd->oper_status = (port->oper_status() == port::PortOperStatus::PORT_OPER_STATUS_UP);
+
+    switch (port->port_speed()) {
+        case port::PortSpeed::PORT_SPEED_1G:
+            evd->port_speed = 1000;
+            break;
+        case port::PortSpeed::PORT_SPEED_10G:
+            evd->port_speed = 10000;
+            break;
+        case port::PortSpeed::PORT_SPEED_25G:
+            evd->port_speed = 25000;
+            break;
+        case port::PortSpeed::PORT_SPEED_40G:
+            evd->port_speed = 40000;
+            break;
+        case port::PortSpeed::PORT_SPEED_50G:
+            evd->port_speed = 50000;
+            break;
+        case port::PortSpeed::PORT_SPEED_100G:
+            evd->port_speed = 100000;
+            break;
+        default:
+            evd->port_speed = 0;
+            NIC_LOG_ERR("PortStatus: port {} speed unknown!", evd->port_id);
     }
+
+    NIC_LOG_DEBUG("PortStatus: port {} status {} speed {}",
+        evd->port_id, evd->oper_status, evd->port_speed);
+    devmgr->LinkEventHandler(evd);
 
     return error::OK();
 }

@@ -1,7 +1,5 @@
 
-#include "capri-macros.h"
-#include "../asm/eth/defines.h"
-#include "../p4/common/defines.h"
+#include "nic/asm/eth/defines.h"
 
 
 #define LG2_EDMA_CMD_DESC_SIZE          5   // 32 B

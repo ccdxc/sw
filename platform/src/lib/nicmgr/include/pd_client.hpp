@@ -11,6 +11,7 @@
 #include "nic/sdk/include/sdk/platform/utils/mpartition.hpp"
 #include "nic/sdk/include/sdk/directmap.hpp"
 #include "nic/sdk/include/sdk/table_monitor.hpp"
+#include "nic/sdk/include/sdk/bm_allocator.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/include/capri_common.h"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
@@ -123,6 +124,9 @@ public:
     uint64_t RdmaHbmAlloc(uint32_t size);
     uint64_t RdmaHbmBarAlloc(uint32_t size);
 
+    void nicmgr_mem_init(void);
+    uint64_t nicmgr_mem_alloc(uint32_t size);
+
     uint64_t rdma_get_pt_base_addr(uint32_t lif);
     uint64_t rdma_get_kt_base_addr(uint32_t lif);
     uint64_t rdma_get_ah_base_addr(uint32_t lif);
@@ -138,6 +142,10 @@ private:
     uint64_t rdma_hbm_bar_base_;
     std::map<uint64_t, uint64_t> rdma_allocation_sizes_;
     std::map<uint64_t, uint64_t> rdma_bar_allocation_sizes_;
+
+    std::unique_ptr<sdk::lib::BMAllocator> nicmgr_hbm_allocator_;
+    uint64_t nicmgr_hbm_base_;
+    std::map<uint64_t, uint64_t> nicmgr_allocation_sizes_;
 
     int p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_get(
         uint32_t idx, rx_stage0_load_rdma_params_actiondata_t *data);

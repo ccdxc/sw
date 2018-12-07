@@ -7,8 +7,10 @@
 #include <cstring>
 
 #include "nic/include/adminq.h"
-#include "nic/include/eth_common.h"
 #include "nic/include/capri_common.h"
+#include "nic/include/edma.hpp"
+#include "nic/include/eth_common.h"
+#include "nic/include/notify.hpp"
 #include "nic/sdk/include/sdk/pal.hpp"
 #include "nic/sdk/include/sdk/platform/utils/mpartition.hpp"
 
@@ -84,6 +86,9 @@ eth_qpoll(uint16_t lif, uint8_t qtype)
     struct eth_rx_qstate qstate_ethrx = {0};
     struct eth_tx_qstate qstate_ethtx = {0};
     struct admin_qstate qstate_ethaq = {0};
+    struct notify_qstate qstate_notifyq = {0};
+    struct edma_qstate qstate_edmaq = {0};
+
     queue_info_t qinfo[8] = {0};
 
     assert(get_lif_qstate(lif, qinfo));
@@ -121,6 +126,24 @@ eth_qpoll(uint16_t lif, uint8_t qtype)
                    qstate_ethaq.p_index0, qstate_ethaq.c_index0, posted, qstate_ethaq.comp_index,
                    qstate_ethaq.sta.color);
             break;
+        case 7:
+            if (qid == 0) {
+                sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_notifyq, sizeof(qstate_notifyq));
+                posted = NUM_POSTED(1 << qstate_notifyq.ring_size, qstate_notifyq.p_index0,
+                                    qstate_notifyq.c_index0);
+                printf("nq%3d: head %6u tail %6u posted %6d host_pindex %6u\n", qid,
+                       qstate_notifyq.p_index0, qstate_notifyq.c_index0, posted,
+                       qstate_notifyq.host_pindex);
+            }
+            if (qid == 1) {
+                sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_edmaq, sizeof(qstate_edmaq));
+                posted = NUM_POSTED(1 << qstate_edmaq.ring_size, qstate_edmaq.p_index0,
+                                    qstate_edmaq.c_index0);
+                printf("nq%3d: head %6u tail %6u posted %6d comp_index %6u color %d\n", qid,
+                       qstate_edmaq.p_index0, qstate_edmaq.c_index0, posted,
+                       qstate_edmaq.comp_index, qstate_edmaq.sta.color);
+            }
+            break;
         default:
             assert(0);
         }
@@ -133,6 +156,8 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
     struct eth_rx_qstate qstate_ethrx = {0};
     struct eth_tx_qstate qstate_ethtx = {0};
     struct admin_qstate qstate_ethaq = {0};
+    struct notify_qstate qstate_notifyq = {0};
+    struct edma_qstate qstate_edmaq = {0};
     queue_info_t qinfo[8] = {0};
 
     assert(get_lif_qstate(lif, qinfo));
@@ -219,6 +244,50 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
                qstate_ethaq.ring_base, qstate_ethaq.ring_size, qstate_ethaq.cq_ring_base,
                qstate_ethaq.intr_assert_index, qstate_ethaq.nicmgr_qstate_addr);
         break;
+    case 7:
+        if (qid == 0) {
+            sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_notifyq, sizeof(qstate_notifyq));
+            printf("pc_offset=0x%0x\n"
+                   "rsvd0=0x%0x\n"
+                   "cosA=0x%0x\ncosB=0x%0x\ncos_sel=0x%0x\n"
+                   "eval_last=0x%0x\n"
+                   "host=0x%0x\ntotal=0x%0x\n"
+                   "pid=0x%0x\n"
+                   "p_index0=0x%0x\nc_index0=0x%0x\nhost_pindex=0x%0x\n"
+                   "enable=0x%0x\nhost_queue=0x%0x\nintr_enable=0x%0x\n"
+                   "ring_base=0x%0lx\nring_size=0x%0x\n"
+                   "host_ring_base=0x%0lx\nhost_ring_size=0x%0x\nhost_intr_assert_index=0x%0x\n",
+                   qstate_notifyq.pc_offset, qstate_notifyq.rsvd0, qstate_notifyq.cosA,
+                   qstate_notifyq.cosB, qstate_notifyq.cos_sel, qstate_notifyq.eval_last,
+                   qstate_notifyq.host, qstate_notifyq.total, qstate_notifyq.pid,
+                   qstate_notifyq.p_index0, qstate_notifyq.c_index0, qstate_notifyq.host_pindex,
+                   qstate_notifyq.cfg.enable, qstate_notifyq.cfg.host_queue,
+                   qstate_notifyq.cfg.intr_enable, qstate_notifyq.ring_base,
+                   qstate_notifyq.ring_size, qstate_notifyq.host_ring_base,
+                   qstate_notifyq.host_ring_size, qstate_notifyq.host_intr_assert_index);
+        }
+        if (qid == 1) {
+            sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_edmaq, sizeof(qstate_edmaq));
+            printf("pc_offset=0x%0x\n"
+                   "rsvd0=0x%0x\n"
+                   "cosA=0x%0x\ncosB=0x%0x\ncos_sel=0x%0x\n"
+                   "eval_last=0x%0x\n"
+                   "host=0x%0x\ntotal=0x%0x\n"
+                   "pid=0x%0x\n"
+                   "p_index0=0x%0x\nc_index0=0x%0x\ncomp_index=0x%0x\n"
+                   "color=0x%0x\n"
+                   "enable=0x%0x\nintr_enable=0x%0x\n"
+                   "ring_base=0x%0lx\nring_size=0x%0x\ncq_ring_base=0x%0lx\n"
+                   "intr_assert_index=0x%0x\n",
+                   qstate_edmaq.pc_offset, qstate_edmaq.rsvd0, qstate_edmaq.cosA,
+                   qstate_edmaq.cosB, qstate_edmaq.cos_sel, qstate_edmaq.eval_last,
+                   qstate_edmaq.host, qstate_edmaq.total, qstate_edmaq.pid, qstate_edmaq.p_index0,
+                   qstate_edmaq.c_index0, qstate_edmaq.comp_index, qstate_edmaq.sta.color,
+                   qstate_edmaq.cfg.enable, qstate_edmaq.cfg.intr_enable, qstate_edmaq.ring_base,
+                   qstate_edmaq.ring_size, qstate_edmaq.cq_ring_base,
+                   qstate_edmaq.intr_assert_index);
+        }
+        break;
     default:
         assert(0);
     }
@@ -227,8 +296,8 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
 void
 eth_stats(uint16_t lif)
 {
-    sdk::platform::utils::mpartition *mp_ = sdk::platform::utils::mpartition::factory(
-        "/nic/conf/iris/hbm_mem.json", CAPRI_HBM_BASE);
+    sdk::platform::utils::mpartition *mp_ =
+        sdk::platform::utils::mpartition::factory("/nic/conf/iris/hbm_mem.json", CAPRI_HBM_BASE);
     assert(mp_);
 
     uint64_t addr = mp_->start_addr("lif_stats") + (lif << 10);
@@ -492,7 +561,10 @@ usage()
 }
 
 int
-debug_logger(const char *format, ...) { return 0; }
+debug_logger(const char *format, ...)
+{
+    return 0;
+}
 
 int
 main(int argc, char **argv)

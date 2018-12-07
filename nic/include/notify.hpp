@@ -8,8 +8,7 @@
 #pragma pack(push, 1)
 
 struct notify_sta_qstate {
-    uint8_t     rsvd1:7;
-    uint8_t     host_color:1;
+    uint8_t     rsvd1;
 };
 
 struct notify_cfg_qstate {
@@ -50,14 +49,6 @@ typedef struct notify_qstate {
 } notify_qstate_t;
 
 static_assert (sizeof(struct notify_qstate) == 64, "");
-
-struct notify_event_desc {
-    uint8_t data[63];
-    uint8_t color : 1;
-    uint8_t rsvd0 : 7;
-};
-
-static_assert(sizeof(struct notify_event_desc) == 64, "");
 
 #pragma pack(pop)
 

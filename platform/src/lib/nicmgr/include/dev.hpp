@@ -12,6 +12,7 @@
 #include "nic/sdk/include/sdk/pal.hpp"
 #include "nic/include/globals.hpp"
 #include "nic/include/adminq.h"
+#include "nic/include/notify.hpp"
 #include "platform/src/lib/hal_api/include/hal_common_client.hpp"
 #include "platform/src/lib/hal_api/include/hal_grpc_client.hpp"
 
@@ -82,7 +83,6 @@ static inline uint64_t READ_REG64(uint64_t addr)
  * Memory Regions
  */
 #define DEVCMD_BASE             roundup(MEMREGION_DEVCMD_PA, 4096)
-#define NICMGR_BASE             roundup(MEMREGION_NICMGR_PA, 4096)
 
 /**
  * ADMINQ
@@ -192,6 +192,15 @@ enum DevcmdStatus
 };
 
 /**
+ * 
+ */
+typedef struct {
+    uint32_t    port_id;
+    uint32_t    port_speed;
+    bool        oper_status;
+} link_eventdata_t;
+
+/**
  * Utils
  */
 void invalidate_rxdma_cacheline(uint64_t addr);
@@ -213,7 +222,6 @@ public:
     void SetType(enum DeviceType type) { this->type = type;}
 private:
     enum DeviceType type;
-
 };
 
 /**
@@ -233,10 +241,11 @@ public:
 #endif
     void Update();
     void CreateMnets();
+
     void DevcmdPoll();
     void AdminQPoll();
-    void DevLinkDownHandler(uint32_t port_num);
-    void DevLinkUpHandler(uint32_t port_num);
+    void LinkEventHandler(link_eventdata_t *evd);
+
     Device *GetDevice(uint64_t id);
     void CreateUplinkVRFs();
     void SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client);
@@ -259,8 +268,6 @@ private:
     HalClient *hal;
     HalCommonClient *hal_common_client;
     uint32_t lif_id;
-    // Bharat TODO: Not needed anymore as its being used for non-eth lif
-    uint64_t lif_handle;
     bool dol_integ;
     bool init_done;
     std::string config_file;

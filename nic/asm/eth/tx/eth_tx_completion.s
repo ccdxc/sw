@@ -74,4 +74,4 @@ eth_tx_completion_skip:
     DMA_CMD_PREV(_r_index)
     DMA_CMD_PTR(_r_ptr, _r_index, r7)
     b               eth_tx_completion_done
-    phvwrp          _r_ptr, offsetof(struct phv2pkt, cmd_eop), sizeof(struct phv2pkt.cmd_eop), CAPRI_DMA_COMMAND_PHV_TO_PKT
+    phvwrp          _r_ptr, offsetof(struct phv2pkt, cmd_eop), sizeof(struct phv2pkt.cmd_eop), 1

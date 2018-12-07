@@ -44,7 +44,7 @@ edma_completion:
     bcf             [!c1], edma_completion_done
     nop
 
-edma_interrupt:
+edma_completion_interrupt:
 
     addi            _r_intr_addr, r0, INTR_ASSERT_BASE
     add             _r_intr_addr, _r_intr_addr, k.edma_t0_s2s_intr_assert_index, LG2_INTR_ASSERT_STRIDE
@@ -55,6 +55,7 @@ edma_interrupt:
     DMA_CMD_NEXT(_r_index)
 
 edma_completion_done:
+
     // End of pipeline - Make sure no more tables will be launched
     phvwri.e.f      p.{app_header_table0_valid...app_header_table3_valid}, 0
     nop

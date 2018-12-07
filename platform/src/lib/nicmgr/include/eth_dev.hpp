@@ -9,7 +9,13 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
+#include "cap_top_csr_defines.h"
+#include "cap_pics_c_hdr.h"
+#include "cap_wa_c_hdr.h"
+
 #include "dev.hpp"
+#include "nic/include/notify.hpp"
+#include "nic/include/edma.hpp"
 #include "nic/include/eth_common.h"
 #include "nic/sdk/include/sdk/indexer.hpp"
 #include "platform/src/lib/hal_api/include/hal_types.hpp"
@@ -48,6 +54,7 @@ enum EthQtype {
     ETH_QTYPE_RQ = 4,
     ETH_QTYPE_CQ = 5,
     ETH_QTYPE_EQ = 6,
+    ETH_QTYPE_SVC = 7,
 };
 
 #pragma pack(push, 1)
@@ -66,6 +73,7 @@ union dev_cmd {
     struct adminq_init_cmd adminq_init;
     struct txq_init_cmd txq_init;
     struct rxq_init_cmd rxq_init;
+    struct notifyq_init_cmd notifyq_init;
     struct features_cmd features;
     struct q_enable_cmd q_enable;
     struct q_disable_cmd q_disable;
@@ -93,6 +101,7 @@ union dev_cmd_comp {
     struct adminq_init_comp adminq_init;
     struct txq_init_comp txq_init;
     struct rxq_init_comp rxq_init;
+    struct notifyq_init_comp notifyq_init;
     struct features_comp features;
     q_enable_comp q_enable;
     q_disable_comp q_disable;
@@ -126,8 +135,26 @@ static_assert((offsetof(struct dev_cmd_regs, comp) % 4) == 0);
 static_assert(sizeof(((struct dev_cmd_regs*)0)->comp) == 16);
 static_assert((offsetof(struct dev_cmd_regs, data) % 4) == 0);
 
-#define LIF_STATS_SIZE_LOG  9
-#define LIF_STATS_SIZE      (1<<(LIF_STATS_SIZE_LOG)) // Each lif stats occupies 512 bytes
+#define LG2_LIF_STATS_SIZE              10
+#define LIF_STATS_SIZE                  (1 << LG2_LIF_STATS_SIZE)
+
+#define ETH_NOTIFYQ_ID                  0
+#define LG2_ETH_NOTIFYQ_RING_SIZE       4
+#define ETH_NOTIFYQ_RING_SIZE           (1 << LG2_ETH_NOTIFYQ_RING_SIZE)
+
+#define ETH_EDMAQ_ID                    1
+#define LG2_ETH_EDMAQ_RING_SIZE         4
+#define ETH_EDMAQ_RING_SIZE             (1 << LG2_ETH_EDMAQ_RING_SIZE)
+
+enum lif_state {
+    LIF_STATE_RESET,
+    LIF_STATE_CREATING,
+    LIF_STATE_CREATED,
+    LIF_STATE_INITING,
+    LIF_STATE_INITED,
+    LIF_STATE_UP,
+    LIF_STATE_DOWN,
+};
 
 /**
  * ETH PF Device
@@ -140,15 +167,13 @@ public:
         hal_lif_info_t *nicmgr_lif_info,
         PdClient *pd_client);
 
-    struct lif_info info;
-    hal_lif_info_t lif_info;
-    uint32_t uplink_id;
     struct dev_cmd_regs *devcmd;
+    struct notify_block *notify_block;
+
     void DevcmdPoll();
     void DevcmdHandler();
     void DevObjSave();
-    void DevLinkDownHandler(uint32_t port_num);
-    void DevLinkUpHandler(uint32_t port_num);
+    void LinkEventHandler(link_eventdata_t *evd);
     enum DevcmdStatus CmdHandler(void *req, void *req_data,
         void *resp, void *resp_data);
     int GenerateQstateInfoJson(pt::ptree &lifs);
@@ -177,11 +202,21 @@ private:
     HalClient *hal;
     HalCommonClient *hal_common_client;
     hal_lif_info_t *nicmgr_lif_info;
-    uint64_t lif_handle;    // TODO: Support multiple LIFs per ETH device
+    enum lif_state lif_state;
     // Coses
     uint8_t  coses; // {uint8_t CosA:4; uint8_t CosB:4;}
-    // Mnic Info
-    static uint32_t intr_base;
+    // Resources
+    uint64_t eid;
+    uint16_t link_flap_count;
+    // NotifyQ
+    uint16_t notify_ring_head;
+    uint64_t notify_ring_base;
+    uint64_t local_notify_block_addr;
+    uint64_t host_notify_block_addr;
+    // EdmaQ
+    uint16_t edma_ring_head;
+    uint64_t edma_ring_base;
+    uint64_t edma_comp_base;
     // Rss config
     uint16_t rss_type;
     uint8_t  rss_key[RSS_HASH_KEY_SIZE]; // 40B
@@ -194,8 +229,6 @@ private:
     map<uint64_t, uint16_t> vlans;
     map<uint64_t, tuple<uint64_t, uint16_t>> mac_vlans;
 
-    map<tuple<uint64_t, uint16_t>, uint64_t> endpoints;  /* (mac, vlan) > endpoint_handle */
-
     /* Command Handlers */
     enum DevcmdStatus _CmdReset(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdHangNotify(void *req, void *req_data, void *resp, void *resp_data);
@@ -204,6 +237,7 @@ private:
     enum DevcmdStatus _CmdAdminQInit(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdTxQInit(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdRxQInit(void *req, void *req_data, void *resp, void *resp_data);
+    enum DevcmdStatus _CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdFeatures(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdQEnable(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdQDisable(void *req, void *req_data, void *resp, void *resp_data);
@@ -227,8 +261,12 @@ private:
 
 
     uint64_t GetQstateAddr(uint8_t qtype, uint32_t qid);
+
     friend ostream &operator<<(ostream&, const Eth&);
-    const char*opcode_to_str(enum cmd_opcode opcode);
+
+    const char *opcode_to_str(enum cmd_opcode opcode);
+    const char *lif_state_to_str(enum lif_state state);
+
     types::LifType ConvertDevTypeToLifType(EthDevType dev_type);
 
 };

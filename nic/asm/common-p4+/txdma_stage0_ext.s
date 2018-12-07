@@ -129,6 +129,16 @@ adminq_stage0:
     nop
 
 .align
+notify_stage0:
+    nop.e
+    nop
+
+.align
+edma_stage0:
+    nop.e
+    nop
+
+.align
 nicmgr_req_stage0:
     nop.e
     nop

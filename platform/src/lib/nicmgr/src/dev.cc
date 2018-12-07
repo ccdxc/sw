@@ -224,12 +224,14 @@ void DeviceManager::Update()
     pd->program_qstate(qinfo, &hal_lif_info_, coses);
 
     // Init QState
-    uint64_t hbm_base = NICMGR_BASE;
+    // uint64_t hbm_base = NICMGR_BASE;
     uint8_t tmp[sizeof(struct nicmgr_req_desc)] = { 0 };
 
     ring_size = 4096;
-    req_ring_base = hbm_base;
-    resp_ring_base = hbm_base + (sizeof(struct nicmgr_req_desc) * ring_size);
+    req_ring_base = pd->nicmgr_mem_alloc(sizeof(struct nicmgr_req_desc) * ring_size);
+    resp_ring_base = pd->nicmgr_mem_alloc(sizeof(struct nicmgr_resp_desc) * ring_size);
+    // req_ring_base = hbm_base;
+    // resp_ring_base = hbm_base + (sizeof(struct nicmgr_req_desc) * ring_size);
 
     NIC_LOG_DEBUG("nicmgr req qstate address {:#x}", hal_lif_info_.qstate_addr[NICMGR_QTYPE_REQ]);
     NIC_LOG_DEBUG("nicmgr resp qstate address {:#x}", hal_lif_info_.qstate_addr[NICMGR_QTYPE_RESP]);
@@ -635,7 +637,7 @@ DeviceManager::DevcmdPoll()
 }
 
 void
-DeviceManager::DevLinkDownHandler(uint32_t port_num)
+DeviceManager::LinkEventHandler(link_eventdata_t *evd)
 {
     Device *dev;
     Eth *eth_dev;
@@ -643,25 +645,7 @@ DeviceManager::DevLinkDownHandler(uint32_t port_num)
     for (auto it = devices.cbegin(); it != devices.cend(); it++) {
         dev = it->second;
         eth_dev = (Eth*) dev;
-        if (eth_dev && eth_dev->uplink_id == port_num) {
-            eth_dev->DevLinkDownHandler(port_num);
-        }
-    }
-}
-
-
-void
-DeviceManager::DevLinkUpHandler(uint32_t port_num)
-{
-    Device *dev;
-    Eth *eth_dev;
-
-    for (auto it = devices.cbegin(); it != devices.cend(); it++) {
-        dev = it->second;
-        eth_dev = (Eth*) dev;
-        if (eth_dev && eth_dev->uplink_id == port_num) {
-            eth_dev->DevLinkUpHandler(port_num);
-        }
+        eth_dev->LinkEventHandler(evd);
     }
 }
 
@@ -682,7 +666,7 @@ DeviceManager::AdminQPoll()
                 CAP_ADDR_BASE_DB_WA_OFFSET +
 #endif
                 CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS +
-                (0x8 /* PI_UPD + UPD_NOP */ << 17) +
+                (0b1000 /* PI_UPD + NO_SCHED */ << 17) +
                 (hal_lif_info_.hw_lif_id << 6) +
                 (NICMGR_QTYPE_REQ << 3);
     uint64_t req_db_data = 0x0;
@@ -693,7 +677,7 @@ DeviceManager::AdminQPoll()
                 CAP_ADDR_BASE_DB_WA_OFFSET +
 #endif
                 CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS +
-                (0x9 /* PI_UPD + UPD_EVAL */ << 17) +
+                (0b1001 /* PI_UPD + SCHED_EVAL */ << 17) +
                 (hal_lif_info_.hw_lif_id << 6) +
                 (NICMGR_QTYPE_RESP << 3);
     uint64_t resp_db_data = 0x0;

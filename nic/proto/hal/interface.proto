@@ -79,6 +79,7 @@ enum LifQPurpose {
   LIF_QUEUE_PURPOSE_STORAGE   = 9;    // All the PVM queues.
   LIF_QUEUE_PURPOSE_VIRTIO_TX = 10;
   LIF_QUEUE_PURPOSE_VIRTIO_RX = 11;
+  LIF_QUEUE_PURPOSE_SVC       = 12;
 
   // Add more purposes as needed.
 }

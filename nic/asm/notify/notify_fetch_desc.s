@@ -11,6 +11,8 @@ struct tx_table_s0_t0_notify_fetch_desc_d d;
 
 #define  _r_desc_addr         r1    // Descriptor address
 #define  _r_host_desc_addr    r2    // Host descriptor address
+#define  _r_dbval             r3    // Doorbell value
+#define  _r_dbaddr            r4    // Doorbell address
 
 %%
 
@@ -34,11 +36,6 @@ notify_fetch_desc:
   tblmincri       d.{c_index0}.hx, d.{ring_size}.hx, 1
   tblmincri       d.{host_pindex}.hx, d.{host_ring_size}.hx, 1
 
-  // Update host color
-  phvwr           p.notify_host_event_desc_color, d.host_color
-  seq             c1, d.host_pindex, 0
-  tblmincri.c1    d.host_color, 1, 1
-
   // Setup Descriptor read for next stage
   phvwri          p.{app_header_table0_valid...app_header_table3_valid}, (1 << 3)
   phvwri          p.common_te0_phv_table_lock_en, 0
@@ -46,9 +43,24 @@ notify_fetch_desc:
   phvwri          p.common_te0_phv_table_pc, notify_process_desc[38:6]
 
   // Save data for next stages
+  phvwr           p.notify_global_host_queue, d.host_queue
+  phvwr           p.notify_global_intr_enable, d.intr_enable
   phvwr           p.notify_t0_s2s_host_desc_addr, _r_host_desc_addr
-  phvwr.e         p.notify_t0_s2s_intr_assert_index, d.{host_intr_assert_index}.hx
-  phvwri.f        p.notify_t0_s2s_intr_assert_data, 0x01000000
+  phvwr           p.notify_t0_s2s_intr_assert_index, d.{host_intr_assert_index}.hx
+  phvwri          p.notify_t0_s2s_intr_assert_data, 0x01000000
+
+notify_fetch_desc_done:
+  // Eval doorbell when pi == ci
+  seq             c3, d.{p_index0}.hx, d.{c_index0}.hx
+  bcf             [c3], notify_fetch_desc_eval_db
+  nop.!c3.e
+  nop
+
+notify_fetch_desc_eval_db:
+  CAPRI_RING_DOORBELL_ADDR_HOST(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, k.p4_txdma_intr_qtype, k.p4_intr_global_lif)   // R4 = ADDR
+  CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, 0, 0)   // R3 = DATA
+  memwr.dx.e      _r_dbaddr, _r_dbval
+  nop
 
 notify_spurious_db:
   phvwri.e        p.p4_intr_global_drop, 1
@@ -57,7 +69,7 @@ notify_spurious_db:
 notify_queue_disabled:
   CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_CLEAR, k.p4_txdma_intr_qtype, k.p4_intr_global_lif)   // R4 = ADDR
   CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, 0, 0)   // R3 = DATA
-  memwr.dx        r4, r3
+  memwr.dx        _r_dbaddr, _r_dbval
 
 notify_fetch_drop:
   phvwri.e        p.{app_header_table0_valid...app_header_table3_valid}, 0

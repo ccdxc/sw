@@ -3,7 +3,7 @@
 #include "ingress.h"
 #include "INGRESS_tx_table_s1_t0_k.h"
 
-#include "../../asm/edma/defines.h"
+#include "defines.h"
 
 struct phv_ p;
 struct tx_table_s1_t0_k_ k;
@@ -25,11 +25,9 @@ edma_process_desc:
   bcf             [c2 | c3 | c7], edma_process_desc_error
   nop
 
-  phvwrpair       p.p4_intr_global_tm_iport, TM_PORT_DMA, p.p4_intr_global_tm_oport, TM_PORT_EGRESS
-
   // Setup DMA CMD PTR
   phvwr           p.p4_txdma_intr_dma_cmd_ptr, EDMA_DMA_CMD_START_OFFSET
-  phvwr           p.edma_global_dma_cur_index, (EDMA_DMA_CMD_START_FLIT << LOG_NUM_DMA_CMDS_PER_FLIT) | EDMA_DMA_CMD_START_INDEX
+  addi            _r_index, r0, (EDMA_DMA_CMD_START_FLIT << LOG_NUM_DMA_CMDS_PER_FLIT) | EDMA_DMA_CMD_START_INDEX
 
   add             r7, r0, d.opcode
 
@@ -57,49 +55,52 @@ edma_process_desc:
 
 edma_process_desc_host_to_local:
     DMA_CMD_PTR(_r_ptr, _r_index, r7)
-    DMA_MEM2MEM_SRC_LIF(_r_ptr, !CMDEOP, HOST, d.src_addr, d.len, d.src_lif)
+    DMA_MEM2MEM_SRC_LIF(_r_ptr, !CMDEOP, HOST, d.{src_addr}.dx, d.{len}.hx, d.{src_lif}.hx)
     DMA_CMD_NEXT(_r_index)
     DMA_CMD_PTR(_r_ptr, _r_index, r7)
-    DMA_MEM2MEM_DST(_r_ptr, !CMDEOP, !HOST, d.dst_addr, d.len)
+    DMA_MEM2MEM_DST(_r_ptr, !CMDEOP, !HOST, d.{dst_addr}.dx, d.{len}.hx)
     DMA_CMD_NEXT(_r_index)
     b           edma_process_desc_done
     nop
 
 edma_process_desc_local_to_host:
     DMA_CMD_PTR(_r_ptr, _r_index, r7)
-    DMA_MEM2MEM_SRC(_r_ptr, !CMDEOP, !HOST, d.src_addr, d.len)
+    DMA_MEM2MEM_SRC(_r_ptr, !CMDEOP, !HOST, d.{src_addr}.dx, d.{len}.hx)
     DMA_CMD_NEXT(_r_index)
     DMA_CMD_PTR(_r_ptr, _r_index, r7)
-    DMA_MEM2MEM_DST_LIF(_r_ptr, !CMDEOP, HOST, d.dst_addr, d.len, d.dst_lif)
+    DMA_MEM2MEM_DST_LIF(_r_ptr, !CMDEOP, HOST, d.{dst_addr}.dx, d.{len}.hx, d.{dst_lif}.hx)
     DMA_CMD_NEXT(_r_index)
     b           edma_process_desc_done
     nop
 
 edma_process_desc_local_to_local:
     DMA_CMD_PTR(_r_ptr, _r_index, r7)
-    DMA_MEM2MEM_SRC(_r_ptr, !CMDEOP, !HOST, d.src_addr, d.len)
+    DMA_MEM2MEM_SRC(_r_ptr, !CMDEOP, !HOST, d.{src_addr}.dx, d.{len}.hx)
     DMA_CMD_NEXT(_r_index)
     DMA_CMD_PTR(_r_ptr, _r_index, r7)
-    DMA_MEM2MEM_DST(_r_ptr, !CMDEOP, !HOST, d.dst_addr, d.len)
+    DMA_MEM2MEM_DST(_r_ptr, !CMDEOP, !HOST, d.{dst_addr}.dx, d.{len}.hx)
     DMA_CMD_NEXT(_r_index)
     b           edma_process_desc_done
     nop
 
 edma_process_desc_host_to_host:
     DMA_CMD_PTR(_r_ptr, _r_index, r7)
-    DMA_MEM2MEM_SRC_LIF(_r_ptr, !CMDEOP, HOST, d.src_addr, d.len, d.src_lif)
+    DMA_MEM2MEM_SRC_LIF(_r_ptr, !CMDEOP, HOST, d.{src_addr}.dx, d.{len}.hx, d.{src_lif}.hx)
     DMA_CMD_NEXT(_r_index)
     DMA_CMD_PTR(_r_ptr, _r_index, r7)
-    DMA_MEM2MEM_DST_LIF(_r_ptr, !CMDEOP, HOST, d.dst_addr, d.len, d.dst_lif)
+    DMA_MEM2MEM_DST_LIF(_r_ptr, !CMDEOP, HOST, d.{dst_addr}.dx, d.{len}.hx, d.{dst_lif}.hx)
     DMA_CMD_NEXT(_r_index)
     b           edma_process_desc_done
     nop
 
 edma_process_desc_done:
+  // Save DMA command pointer
+  phvwr           p.edma_global_dma_cur_index, _r_index
+  
   // Generate completion in next stage
   phvwri          p.{app_header_table0_valid...app_header_table3_valid}, (1 << 3)
   phvwri          p.common_te0_phv_table_lock_en, 0
-  phvwr.e         p.common_te0_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
+  phvwri.e        p.common_te0_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
   phvwri.f        p.common_te0_phv_table_pc, edma_completion[38:6]
 
 edma_process_desc_error:

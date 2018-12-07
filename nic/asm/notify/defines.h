@@ -1,7 +1,5 @@
 
-#include "capri-macros.h"
-#include "../asm/eth/defines.h"
-#include "../p4/common/defines.h"
+#include "nic/asm/eth/defines.h"
 
 
 #define LG2_NOTIFY_EVENT_DESC_SIZE        6   // 64 B

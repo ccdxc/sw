@@ -1,5 +1,5 @@
 
-#include "../defines.h"
+#include "nic/asm/eth/defines.h"
 
 #define LG2_TX_DESC_SIZE            (4)
 #define LG2_TX_CMPL_DESC_SIZE       (4)

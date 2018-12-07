@@ -38,6 +38,8 @@ enum cmd_opcode {
 	CMD_OPCODE_Q_ENABLE			= 9,
 	CMD_OPCODE_Q_DISABLE			= 10,
 
+	CMD_OPCODE_NOTIFYQ_INIT			= 11,
+
 	CMD_OPCODE_STATION_MAC_ADDR_GET		= 15,
 	CMD_OPCODE_MTU_SET			= 16,
 	CMD_OPCODE_RX_MODE_SET			= 17,
@@ -73,6 +75,13 @@ enum cmd_opcode {
 	CMD_OPCODE_RDMA_LAST_CMD		= 65, //Keep this as last rdma cmd
 
 	CMD_OPCODE_DEBUG_Q_DUMP			= 0xf0,
+};
+
+enum notifyq_opcode {
+	EVENT_OPCODE_LINK_CHANGE		= 1,
+	EVENT_OPCODE_RESET			= 2,
+	EVENT_OPCODE_HEARTBEAT			= 3,
+	EVENT_OPCODE_LOG			= 4,
 };
 
 #pragma pack(push, 1)
@@ -879,6 +888,87 @@ struct q_disable_cmd {
 typedef struct admin_comp q_disable_comp;
 
 /**
+ * struct notifyq_init_cmd - Event queue init command
+ * @opcode:       opcode = 11
+ * @pid:          Process ID
+ * @index:        LIF-relative queue index
+ * @intr_index:   Interrupt control register index
+ * @lif_index:    LIF index (should be 0)
+ * @ring_size:    NotifyQ queue ring size, encoded as a log2(size),
+ *                in number of descs.  The actual ring size is
+ *                (1 << ring_size).  For example, to
+ *                select a ring size of 64 descriptors write
+ *                ring_size = 6.  The minimum ring_size value is 2
+ *                for a ring size of 4 descriptors.  The maximum
+ *                ring_size value is 16 for a ring size of 64k
+ *                descriptors.  Values of ring_size <2 and >16 are
+ *                reserved.
+ * @notify_size:  Notify block size, encoded as a log2(size), in
+ *                number of bytes.  If the size is smaller that the
+ *                data available, the data will be truncated.
+ * @ring_base:    Notify queue ring base address. Should be aligned
+ *                on PAGE_SIZE. If not aligned properly can cause
+ *                CQ Errors
+ * @notify_base:  Base address for a block of memory reserved for
+ *                link status data, to be updated by the NIC and
+ *                read by the driver.  When link status changes,
+ *                the NIC should update this before signaling an
+ *                interrupt on the NotifyQ.
+ */
+struct notifyq_init_cmd {
+	u16 opcode;
+	u16 pid;
+	u16 index;
+	u16 intr_index;
+	u32 lif_index;
+	u8 ring_size;
+	u8 notify_size;
+	u16 rsvd;
+	dma_addr_t ring_base;
+	dma_addr_t notify_base;
+	u32 rsvd2[8];
+};
+
+/**
+ * struct notifyq_init_comp - Event queue init command completion
+ * @status:     The status of the command.  Values for status are:
+ *                 0 = Successful completion
+ * @comp_index: The index in the descriptor ring for which this
+ *              is the completion.
+ * @qid:        Queue ID
+ * @qtype:      Queue type
+ * @color:      Color bit.
+ */
+struct notifyq_init_comp {
+	u8 status;
+	u8 rsvd;
+	u16 comp_index;
+	u32 qid;
+	u8 qtype;
+	u8 rsvd3[6];
+	u8 color;
+};
+
+/**
+ * Struct notify_block - Memory block for notifications, updated by the NIC
+ * @eid:             most recent NotifyQ event id
+ * @link_status      link up/down
+ * @link_error_bits: error bits if needed
+ * @link_speed:	     speed of link in Gbps
+ * @phy_type:        type of physical connection
+ * @autoneg_status:  autonegotiation status
+ */
+struct notify_block {
+	u64 eid;
+	u16 link_status;
+	u16 link_error_bits;
+	u32 link_speed;		/* units of 1Mbps: e.g. 10000 = 10Gbps */
+	u16 phy_type;
+	u16 autoneg_status;
+	u16 link_flap_count;
+};
+
+/**
  * struct station_mac_addr_get_cmd - Get LIF's station MAC address
  *                                   command
  * @opcode:     opcode = 15
@@ -1546,10 +1636,98 @@ struct modify_qp_comp {
 	u32 rsvd2[3];
 };
 
+/******************************************************************
+ ******************* Notify Events ********************************
+ ******************************************************************/
+
+/**
+ * struct notifyq_event
+ * @eid:   event number
+ * @ecode: event code
+ * @data:  unspecified data about the event
+ *
+ * This is the generic event report struct from which the other
+ * actual events will be formed.
+ */
+struct notifyq_event {
+	u64 eid;
+	u16 ecode;
+	u8 data[54];
+};
+
+/**
+ * struct link_change_event
+ * @eid:		event number
+ * @ecode:		event code = EVENT_OPCODE_LINK_CHANGE
+ * @link_status:	link up or down, with error bits
+ * @phy_type:		specifies the type of PHY connected
+ * @link_speed:		speed of the network link
+ * @autoneg_status:	autonegotiation data
+ *
+ * Sent when the network link state changes between UP and DOWN
+ */
+struct link_change_event {
+	u64 eid;
+	u16 ecode;
+	u16 link_status;	/* 0 = down, 1 = up */
+	u16 link_error_bits;	/* TBD */
+	u16 phy_type;
+	u32 link_speed;		/* units of 1Mbps: e.g. 10000 = 10Gbps */
+	u16 autoneg_status;
+	u8 rsvd[42];
+};
+
+/**
+ * struct reset_event
+ * @eid:		event number
+ * @ecode:		event code = EVENT_OPCODE_RESET
+ * @reset_code:		reset type
+ * @state:		0=pending, 1=complete, 2=error
+ *
+ * Sent when the NIC or some subsystem is going to be or
+ * has been reset.
+ */
+struct reset_event {
+	u64 eid;
+	u16 ecode;
+	u8 reset_code;
+	u8 state;
+	u8 rsvd[52];
+};
+
+/**
+ * struct heartbeat_event
+ * @eid:	event number
+ * @ecode:	event code = EVENT_OPCODE_HEARTBEAT
+ *
+ * Sent periodically by the NIC to indicate continued health
+ */
+struct heartbeat_event {
+	u64 eid;
+	u16 ecode;
+	u8 rsvd[54];
+};
+
+/**
+ * struct log_event
+ * @eid:	event number
+ * @ecode:	event code = EVENT_OPCODE_LOG
+ * @data:	log data
+ *
+ * Sent to notify the driver of an internal error.
+ */
+struct log_event {
+	u64 eid;
+	u16 ecode;
+	u8 data[54];
+};
+
+
 #pragma pack(pop)
 
 union adminq_cmd {
 	struct admin_cmd cmd;
+	struct notifyq_init_cmd notifyq_init;
 	struct nop_cmd nop;
 	struct txq_init_cmd txq_init;
 	struct rxq_init_cmd rxq_init;
@@ -1576,6 +1754,7 @@ union adminq_cmd {
 
 union adminq_comp {
 	struct admin_comp comp;
+	struct notifyq_init_comp notifyq_init;
 	struct nop_comp nop;
 	struct txq_init_comp txq_init;
 	struct rxq_init_comp rxq_init;
@@ -1590,4 +1769,17 @@ union adminq_comp {
 	struct create_qp_comp create_qp;
 	struct modify_qp_comp modify_qp;
 };
+
+struct notifyq_cmd {
+	u32 data;	/* Not used but needed for qcq structure */
+};
+
+union notifyq_comp {
+	struct notifyq_event event;
+	struct link_change_event link_change;
+	struct reset_event reset;
+	struct heartbeat_event heartbeat;
+	struct log_event log;
+};
+
 #endif /* _IONIC_IF_H_ */

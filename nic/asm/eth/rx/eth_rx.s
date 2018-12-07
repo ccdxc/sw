@@ -30,15 +30,13 @@ eth_rx:
 
     // Setup DMA CMD PTR
     phvwr           p.p4_rxdma_intr_dma_cmd_ptr, ETH_DMA_CMD_START_OFFSET
-    phvwr           p.eth_rx_global_dma_cur_index, (ETH_DMA_CMD_START_FLIT << LOG_NUM_DMA_CMDS_PER_FLIT) | ETH_DMA_CMD_START_INDEX
+    addi            _r_index, r0, (ETH_DMA_CMD_START_FLIT << LOG_NUM_DMA_CMDS_PER_FLIT) | ETH_DMA_CMD_START_INDEX
 
     // Packet length check
     add             _r_pktlen, r0, k.eth_rx_global_pkt_len
     add             _r_len, r0, d.{len}.hx
     blt             _r_len, _r_pktlen, eth_rx_desc_data_error
-
-    // Load DMA command pointer
-    addi            _r_index, r0, (ETH_DMA_CMD_START_FLIT << LOG_NUM_DMA_CMDS_PER_FLIT) | ETH_DMA_CMD_START_INDEX
+    nop
 
     // DMA packet
     DMA_CMD_PTR(_r_ptr, _r_index, r7)
@@ -46,8 +44,7 @@ eth_rx:
     DMA_CMD_NEXT(_r_index)
 
     b               eth_rx_done
-    // Save DMA command pointer
-    phvwr           p.eth_rx_global_dma_cur_index, _r_index
+    nop
 
 eth_rx_desc_addr_error:
     SET_STAT(_r_stats, _C_TRUE, desc_fetch_error)
@@ -63,6 +60,9 @@ eth_rx_desc_data_error:
 
 eth_rx_done:
     SAVE_STATS(_r_stats)
+
+    // Save DMA command pointer
+    phvwr           p.eth_rx_global_dma_cur_index, _r_index
 
     phvwri          p.{app_header_table0_valid...app_header_table3_valid}, ((1 << 3) | 1)
 

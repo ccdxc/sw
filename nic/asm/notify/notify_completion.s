@@ -38,7 +38,7 @@ notify_completion:
 
     // DMA event descriptor
     DMA_CMD_PTR(_r_ptr, _r_index, r7)
-    DMA_PHV2MEM(_r_ptr, !c1, r0, k.notify_t0_s2s_host_desc_addr, CAPRI_PHV_START_OFFSET(notify_host_event_desc_data), CAPRI_PHV_END_OFFSET(notify_host_event_desc_color), r7)
+    DMA_PHV2MEM(_r_ptr, !c1, k.notify_global_host_queue, k.notify_t0_s2s_host_desc_addr, CAPRI_PHV_START_OFFSET(notify_host_event_desc_data), CAPRI_PHV_END_OFFSET(notify_host_event_desc_data), r7)
     DMA_CMD_NEXT(_r_index)
 
     bcf             [!c1], notify_completion_done

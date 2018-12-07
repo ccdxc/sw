@@ -48,6 +48,13 @@ typedef struct edma_qstate {
 
 static_assert (sizeof(struct edma_qstate) == 64, "");
 
+enum edma_opcode {
+    EDMA_OPCODE_HOST_TO_LOCAL,
+    EDMA_OPCODE_LOCAL_TO_HOST,
+    EDMA_OPCODE_LOCAL_TO_LOCAL,
+    EDMA_OPCODE_HOST_TO_HOST
+};
+
 struct edma_cmd_desc {
     uint8_t opcode;
     uint16_t len;

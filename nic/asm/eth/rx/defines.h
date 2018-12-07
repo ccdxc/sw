@@ -1,5 +1,5 @@
 
-#include "../defines.h"
+#include "nic/asm/eth/defines.h"
 
 #define BIT(n)                  (1 << n)
 

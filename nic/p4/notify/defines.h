@@ -15,7 +15,7 @@
 #define PARAMS_NOTIFY_QSTATE \
     pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, \
     p_index0, c_index0, host_pindex, \
-    host_color, rsvd1, \
+    rsvd1, \
     enable, host_queue, intr_enable, rsvd2, \
     ring_base, ring_size, \
     host_ring_base, host_ring_size, host_intr_assert_index
@@ -23,7 +23,6 @@
 #define MODIFY_NOTIFY_QSTATE \
     MODIFY_QSTATE_INTRINSIC(notify_qstate) \
     modify_field(notify_qstate.host_pindex, host_pindex); \
-    modify_field(notify_qstate.host_color, host_color); \
     modify_field(notify_qstate.rsvd1, rsvd1); \
     modify_field(notify_qstate.enable, enable); \
     modify_field(notify_qstate.host_queue, host_queue); \
@@ -37,6 +36,7 @@
 
 #define MODIFY_NOTIFY_GLOBAL \
     modify_field(notify_global_scratch.dma_cur_index, notify_global.dma_cur_index); \
+    modify_field(notify_global_scratch.host_queue, notify_global.host_queue); \
     modify_field(notify_global_scratch.intr_enable, notify_global.intr_enable);
 
 #define MODIFY_NOTIFY_T0_S2S \

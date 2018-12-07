@@ -33,7 +33,7 @@ action notify_fetch_desc(PARAMS_NOTIFY_QSTATE)
     MODIFY_NOTIFY_QSTATE
 }
 
-action notify_process_desc(data, color, rsvd0)
+action notify_process_desc(data)
 {
     // K + I
     MODIFY_NOTIFY_GLOBAL
@@ -41,8 +41,6 @@ action notify_process_desc(data, color, rsvd0)
 
     // D
     modify_field(notify_event_desc.data, data);
-    modify_field(notify_event_desc.color, color);
-    modify_field(notify_event_desc.rsvd0, rsvd0);
 }
 
 action notify_completion()

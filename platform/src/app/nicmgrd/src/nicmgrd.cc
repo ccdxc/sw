@@ -37,7 +37,9 @@ sigusr1_handler(int sig)
 {
     fflush(stdout);
     fflush(stderr);
-    utils::logger::logger()->flush();
+    if (utils::logger::logger()) {
+        utils::logger::logger()->flush();
+    }
 }
 
 static int
@@ -85,13 +87,14 @@ atexit_handler (void)
 static void
 nicmgrd_poll(void *arg)
 {
-    devmgr->DevcmdPoll();
     if (g_hal_up) {
+        devmgr->DevcmdPoll();
         devmgr->AdminQPoll();
     }
 
-    fflush(stdout);
-    fflush(stderr);
+    if (utils::logger::logger()) {
+        utils::logger::logger()->flush();
+    }
 }
 
 void *nicmgrd_create_mnets(void *ctxt)

@@ -21,8 +21,7 @@ header_type notify_qstate {
         host_pindex : 16;
 
         // sta
-        host_color : 1;
-        rsvd1 : 7;
+        rsvd1 : 8;
 
         // cfg
         enable : 1;
@@ -42,15 +41,14 @@ header_type notify_qstate {
 // 64 B
 header_type notify_event_desc {
     fields {
-        data : 504;
-        color : 1;
-        rsvd0 : 7;
+        data : 512;
     }
 }
 
 header_type notify_global_k {
     fields {
         dma_cur_index : 6;
+        host_queue : 1;
         intr_enable : 1;    // generate an interrupt
     }
 }
