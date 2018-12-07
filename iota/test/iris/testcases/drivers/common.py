@@ -98,6 +98,11 @@ feature_cmd_map = {
             "linux"    : { "cmd" : cmd_builder.ethtool_rssflow },
             "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_rssflow }
         },
+    "intr-coal"     :
+        {
+            "linux"    : { "cmd" : cmd_builder.ethtool_intr_coal },
+            "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_intr_coal }
+        },
 }
 
 def setup_features(tc):

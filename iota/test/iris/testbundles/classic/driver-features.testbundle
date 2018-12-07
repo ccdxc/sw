@@ -4,6 +4,19 @@ meta:
     nics    : [ pensando, intel, mellanox, broadcom ]
 
 testcases:
+    -   name    : UplinkIntf_INTR_COAL
+        testcase: testcases.drivers.features
+        disable : False
+        iterators :
+            type               : nested
+            pktsize            : [ 128, 8192]
+            intr-coal          : [ 0, 512]
+            proto              : [ 'tcp']
+            ipproto            : [ 'v4']
+        args    :
+            type         : remote_only
+            #capture_pcap : True
+
     -   name    : UplinkIntf_TX_RING_SIZE
         testcase: testcases.drivers.features
         disable : False

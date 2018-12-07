@@ -96,6 +96,9 @@ def ethtool_indirection_table(node, intf,op):
     else :
         return " ".join(["ethtool", "-X",  intf, op])
 
+def ethtool_intr_coal(node, intf, size):
+    return "echo Not implemented"
+
 def ethtool_rssflow(node, intf,op):
     return " ".join(["ethtool", "-N", intf, "rx-flow-hash",  op,  "sdfn"])
 
@@ -210,6 +213,9 @@ def bsd_ethtool_rx_checksum(node, intf,op):
 
 def bsd_ethtool_tso_offload(node, intf,op):
     return " ".join(["ifconfig", intf,"tso" if op == "on" else "-tso"])
+
+def bsd_ethtool_intr_coal(node, intf, size):
+    return "".join(["sysctl dev.ionic.0.coal_usecs=", str(size)])
 
 def bsd_ethtool_gro_offload(node, intf,op):
     return ethtool_feature_cmd(node, intf,"gro", op)
