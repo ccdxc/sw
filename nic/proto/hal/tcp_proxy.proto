@@ -23,7 +23,44 @@ service TcpProxy {
   rpc TcpProxyCbUpdate (TcpProxyCbRequestMsg) returns (TcpProxyCbResponseMsg) {}
   rpc TcpProxyCbDelete (TcpProxyCbDeleteRequestMsg) returns (TcpProxyCbDeleteResponseMsg) {}
   rpc TcpProxyCbGet (TcpProxyCbGetRequestMsg) returns (TcpProxyCbGetResponseMsg) {}
+  rpc TcpProxySessionGet (TcpProxySessionGetRequestMsg) returns (TcpProxySessionGetResponseMsg) {}
+}
 
+message TcpProxySessionFilter {
+  types.IPAddress src_ip = 1;
+  types.IPAddress dst_ip = 2;
+  uint32 src_port = 3;
+  uint32 dst_port = 4;
+  bool match_all = 5;
+}
+
+message TcpProxySessionGetRequest {
+  TcpProxySessionFilter session_filter = 1;
+}
+
+message tcpproxy_flow {
+  uint64 qid1 = 1;
+  uint64 qid2 = 2;
+  types.IPAddress src_ip = 3;
+  types.IPAddress dst_ip = 4;
+  uint32 sport = 5;
+  uint32 dport = 6;
+  uint32 flow_type = 7;
+}
+
+// TcpProxySessionGetRequestMsg is batched get request
+message TcpProxySessionGetRequestMsg {
+  repeated TcpProxySessionGetRequest request = 1; // batched get request
+}
+
+message TcpProxySessionGetResponse {
+  types.ApiStatus api_status = 1; // API status code
+  tcpproxy_flow tcpproxy_flow = 2;
+}
+
+message TcpProxySessionGetResponseMsg {
+  types.ApiStatus api_status = 1; // API status code
+  repeated TcpProxySessionGetResponse response = 2; // batched response
 }
 
 enum TcpProxyActionType {

@@ -17,7 +17,11 @@ import (
 )
 
 var (
-	qid uint32
+	tcpProxyQid            uint32
+	tcpProxySessionSrcIP   string
+	tcpProxySessionDstIP   string
+	tcpProxySessionSrcPort uint32
+	tcpProxySessionDstPort uint32
 )
 
 var tcpProxyShowCmd = &cobra.Command{
@@ -27,11 +31,11 @@ var tcpProxyShowCmd = &cobra.Command{
 	Run:   tcpProxyShowCmdHandler,
 }
 
-var tcpProxySessionsShowCmd = &cobra.Command{
-	Use:   "sessions",
+var tcpProxySessionShowCmd = &cobra.Command{
+	Use:   "session",
 	Short: "show tcp-proxy sessions",
 	Long:  "show tcp-proxy sessions",
-	Run:   tcpProxySessionsShowCmdHandler,
+	Run:   tcpProxySessionShowCmdHandler,
 }
 
 var tcpProxyStatisticsShowCmd = &cobra.Command{
@@ -50,12 +54,20 @@ var tcpProxyCbShowCmd = &cobra.Command{
 
 func init() {
 	showCmd.AddCommand(tcpProxyShowCmd)
-	tcpProxyShowCmd.AddCommand(tcpProxySessionsShowCmd)
+	tcpProxyShowCmd.AddCommand(tcpProxySessionShowCmd)
 	tcpProxyShowCmd.AddCommand(tcpProxyStatisticsShowCmd)
 	tcpProxyShowCmd.AddCommand(tcpProxyCbShowCmd)
-	tcpProxyShowCmd.Flags().Uint32Var(&qid, "qid", 1, "Specify qid")
-	tcpProxyCbShowCmd.Flags().Uint32Var(&qid, "qid", 1, "Specify qid")
-	tcpProxyStatisticsShowCmd.Flags().Uint32Var(&qid, "qid", 1, "Specify qid")
+	tcpProxyShowCmd.Flags().Uint32Var(&tcpProxyQid, "qid", 1, "Specify qid")
+	tcpProxyCbShowCmd.Flags().Uint32Var(&tcpProxyQid, "qid", 1, "Specify qid")
+	tcpProxyStatisticsShowCmd.Flags().Uint32Var(&tcpProxyQid, "qid", 1, "Specify qid")
+	tcpProxySessionShowCmd.Flags().StringVar(&tcpProxySessionSrcIP, "srcip",
+		"0.0.0.0", "Specify session src ip")
+	tcpProxySessionShowCmd.Flags().StringVar(&tcpProxySessionDstIP, "dstip",
+		"0.0.0.0", "Specify session dst ip")
+	tcpProxySessionShowCmd.Flags().Uint32Var(&tcpProxySessionSrcPort, "srcport",
+		0, "Specify session src port")
+	tcpProxySessionShowCmd.Flags().Uint32Var(&tcpProxySessionDstPort, "dstport",
+		0, "Specify session dst port")
 }
 
 func tcpProxyShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -64,14 +76,101 @@ func tcpProxyShowCmdHandler(cmd *cobra.Command, args []string) {
 	doTCPProxyCbShowCmd(cmd, args, showCbs, showStats)
 }
 
-func tcpProxySessionsShowCmdHandler(cmd *cobra.Command, args []string) {
+func tcpProxyCbShowCmdHandler(cmd *cobra.Command, args []string) {
+	showCbs := true
+	showStats := false
+	doTCPProxyCbShowCmd(cmd, args, showCbs, showStats)
+}
+
+func tcpProxyStatisticsShowCmdHandler(cmd *cobra.Command, args []string) {
+	showCbs := false
+	showStats := true
+	doTCPProxyCbShowCmd(cmd, args, showCbs, showStats)
+}
+
+func tcpProxySessionShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	defer c.Close()
+
+	client := halproto.NewTcpProxyClient(c.ClientConn)
+
+	var sessionGetReqMsg *halproto.TcpProxySessionGetRequestMsg
+	var req *halproto.TcpProxySessionGetRequest
+	if cmd.Flags().Changed("srcip") || cmd.Flags().Changed("dstip") ||
+		cmd.Flags().Changed("srcport") || cmd.Flags().Changed("dstport") {
+		req = &halproto.TcpProxySessionGetRequest{
+			SessionFilter: &halproto.TcpProxySessionFilter{
+				SrcIp: &halproto.IPAddress{
+					IpAf: halproto.IPAddressFamily_IP_AF_INET,
+					V4OrV6: &halproto.IPAddress_V4Addr{
+						V4Addr: IPAddrStrtoUint32(tcpProxySessionSrcIP),
+					},
+				},
+				DstIp: &halproto.IPAddress{
+					IpAf: halproto.IPAddressFamily_IP_AF_INET,
+					V4OrV6: &halproto.IPAddress_V4Addr{
+						V4Addr: IPAddrStrtoUint32(tcpProxySessionDstIP),
+					},
+				},
+				SrcPort:  tcpProxySessionSrcPort,
+				DstPort:  tcpProxySessionDstPort,
+				MatchAll: false,
+			},
+		}
+	} else {
+		req = &halproto.TcpProxySessionGetRequest{
+			SessionFilter: &halproto.TcpProxySessionFilter{
+				MatchAll: true,
+			},
+		}
+	}
+	sessionGetReqMsg = &halproto.TcpProxySessionGetRequestMsg{
+		Request: []*halproto.TcpProxySessionGetRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.TcpProxySessionGet(context.Background(), sessionGetReqMsg)
+	if err != nil {
+		fmt.Printf("Getting Session failed. %v\n", err)
+		return
+	}
+
+	// Print Sessions
+	fmt.Printf("Active TCP sessions:\n\n")
+
+	flowIndx := 1
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			continue
+		}
+
+		fmt.Printf("%-12s = %d\n", "Flow", flowIndx)
+		fmt.Printf("%-12s = %s\n", "Source IP", utils.IPAddrToStr(resp.TcpproxyFlow.SrcIp))
+		fmt.Printf("%-12s = %s\n", "Dest IP", utils.IPAddrToStr(resp.TcpproxyFlow.DstIp))
+		fmt.Printf("%-12s = %d\n", "Source Port", resp.TcpproxyFlow.Sport)
+		fmt.Printf("%-12s = %d\n", "Dest Port", resp.TcpproxyFlow.Dport)
+		fmt.Printf("%-12s = %d\n", "Queue Id1", resp.TcpproxyFlow.Qid1)
+		fmt.Printf("%-12s = %d\n", "Queue Id2", resp.TcpproxyFlow.Qid2)
+		fmt.Printf("%-12s = %d\n\n", "Flow Type", resp.TcpproxyFlow.FlowType)
+		flowIndx++
+	}
+
+	if flowIndx > 1 {
+		fmt.Printf("Found %d flows.\n\n", flowIndx-1)
+	}
 }
 
 func doTCPProxyCbShowCmd(cmd *cobra.Command, args []string, showCbs bool,
 	showStats bool) {
 
 	if !cmd.Flags().Changed("qid") {
-		fmt.Printf("Need a qid\n")
+		fmt.Printf("Please specify a queue id(qid)...\n")
 		return
 	}
 
@@ -88,7 +187,7 @@ func doTCPProxyCbShowCmd(cmd *cobra.Command, args []string, showCbs bool,
 	req := &halproto.TcpCbGetRequest{
 		KeyOrHandle: &halproto.TcpCbKeyHandle{
 			KeyOrHandle: &halproto.TcpCbKeyHandle_TcpcbId{
-				TcpcbId: qid,
+				TcpcbId: tcpProxyQid,
 			},
 		},
 	}
@@ -125,18 +224,6 @@ func doTCPProxyCbShowCmd(cmd *cobra.Command, args []string, showCbs bool,
 			fmt.Printf("%s\n\n", strings.Repeat("-", 80))
 		}
 	}
-}
-
-func tcpProxyCbShowCmdHandler(cmd *cobra.Command, args []string) {
-	showCbs := true
-	showStats := false
-	doTCPProxyCbShowCmd(cmd, args, showCbs, showStats)
-}
-
-func tcpProxyStatisticsShowCmdHandler(cmd *cobra.Command, args []string) {
-	showCbs := false
-	showStats := true
-	doTCPProxyCbShowCmd(cmd, args, showCbs, showStats)
 }
 
 func showTCPCb(resp *halproto.TcpCbGetResponse) {

@@ -353,6 +353,24 @@ func (mr *MockTcpProxyClientMockRecorder) TcpProxyCbGet(ctx, in interface{}, opt
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TcpProxyCbGet", reflect.TypeOf((*MockTcpProxyClient)(nil).TcpProxyCbGet), varargs...)
 }
 
+// TcpProxySessionGet mocks base method
+func (m *MockTcpProxyClient) TcpProxySessionGet(ctx context.Context, in *TcpProxySessionGetRequestMsg, opts ...grpc.CallOption) (*TcpProxySessionGetResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "TcpProxySessionGet", varargs...)
+	ret0, _ := ret[0].(*TcpProxySessionGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TcpProxySessionGet indicates an expected call of TcpProxySessionGet
+func (mr *MockTcpProxyClientMockRecorder) TcpProxySessionGet(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TcpProxySessionGet", reflect.TypeOf((*MockTcpProxyClient)(nil).TcpProxySessionGet), varargs...)
+}
+
 // MockTcpProxyServer is a mock of TcpProxyServer interface
 type MockTcpProxyServer struct {
 	ctrl     *gomock.Controller
@@ -478,4 +496,17 @@ func (m *MockTcpProxyServer) TcpProxyCbGet(arg0 context.Context, arg1 *TcpProxyC
 // TcpProxyCbGet indicates an expected call of TcpProxyCbGet
 func (mr *MockTcpProxyServerMockRecorder) TcpProxyCbGet(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TcpProxyCbGet", reflect.TypeOf((*MockTcpProxyServer)(nil).TcpProxyCbGet), arg0, arg1)
+}
+
+// TcpProxySessionGet mocks base method
+func (m *MockTcpProxyServer) TcpProxySessionGet(arg0 context.Context, arg1 *TcpProxySessionGetRequestMsg) (*TcpProxySessionGetResponseMsg, error) {
+	ret := m.ctrl.Call(m, "TcpProxySessionGet", arg0, arg1)
+	ret0, _ := ret[0].(*TcpProxySessionGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TcpProxySessionGet indicates an expected call of TcpProxySessionGet
+func (mr *MockTcpProxyServerMockRecorder) TcpProxySessionGet(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TcpProxySessionGet", reflect.TypeOf((*MockTcpProxyServer)(nil).TcpProxySessionGet), arg0, arg1)
 }

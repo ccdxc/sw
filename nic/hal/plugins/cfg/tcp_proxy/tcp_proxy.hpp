@@ -920,6 +920,9 @@ hal_ret_t tcp_proxy_cb_delete(tcp_proxy::TcpProxyCbDeleteRequest& req,
 hal_ret_t tcp_proxy_cb_get(tcp_proxy::TcpProxyCbGetRequest& req,
                     tcp_proxy::TcpProxyCbGetResponseMsg *rsp);
 
+hal_ret_t tcp_proxy_session_get(tcp_proxy::TcpProxySessionGetRequest& req,
+                    tcp_proxy::TcpProxySessionGetResponseMsg *rsp);
+
 }    // namespace hal
 
 #endif    // __TCP_PROXY_HPP__

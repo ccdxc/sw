@@ -259,6 +259,128 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     return HAL_RET_OK;
 }
 
+hal_ret_t
+tcp_proxy_session_fill_rsp(hal::proxy_flow_info_t *proxy_flow_info,
+                           tcp_proxy::TcpProxySessionGetResponse *rsp)
+{
+    rsp->mutable_tcpproxy_flow()->set_sport(proxy_flow_info->flow_key.sport);
+    rsp->mutable_tcpproxy_flow()->set_dport(proxy_flow_info->flow_key.dport);
+
+    rsp->mutable_tcpproxy_flow()->set_flow_type(proxy_flow_info->flow_key.flow_type);
+
+    if(proxy_flow_info->flow_key.flow_type == FLOW_TYPE_V4) {
+        rsp->mutable_tcpproxy_flow()->mutable_src_ip()->set_ip_af(types::IP_AF_INET);
+        rsp->mutable_tcpproxy_flow()->mutable_src_ip()->set_v4_addr(
+                proxy_flow_info->flow_key.sip.v4_addr);
+        rsp->mutable_tcpproxy_flow()->mutable_dst_ip()->set_ip_af(types::IP_AF_INET);
+        rsp->mutable_tcpproxy_flow()->mutable_dst_ip()->set_v4_addr(
+                proxy_flow_info->flow_key.dip.v4_addr);
+    } else {
+        rsp->mutable_tcpproxy_flow()->mutable_src_ip()->set_ip_af(types::IP_AF_INET6);
+        rsp->mutable_tcpproxy_flow()->mutable_src_ip()->set_v6_addr(
+                &proxy_flow_info->flow_key.sip.v6_addr, IP6_ADDR8_LEN);
+        rsp->mutable_tcpproxy_flow()->mutable_dst_ip()->set_ip_af(types::IP_AF_INET6);
+        rsp->mutable_tcpproxy_flow()->mutable_dst_ip()->set_v6_addr(
+                &proxy_flow_info->flow_key.dip.v6_addr, IP6_ADDR8_LEN);
+    }
+
+    rsp->mutable_tcpproxy_flow()->set_qid1(proxy_flow_info->qid1);
+    rsp->mutable_tcpproxy_flow()->set_qid2(proxy_flow_info->qid2);
+
+    return HAL_RET_OK;
+}
+
+static bool
+session_matches_filter(hal::proxy_flow_info_t *proxy_flow_info,
+                       tcp_proxy::TcpProxySessionFilter *filter)
+{
+    hal_ret_t ret;
+
+    if(filter->match_all()) {
+        return true;
+    } else {
+        flow_key_t *flow_key = &proxy_flow_info->flow_key;
+
+        if((filter->src_port()) && (filter->src_port() != flow_key->sport)) {
+            return false;
+        }
+
+        if((filter->dst_port()) && (filter->dst_port() != flow_key->dport)) {
+            return false;
+        }
+
+        if(filter->has_src_ip()) {
+            ip_addr_t ip_addr;
+            ip_addr_t check_addr;
+
+            ret = ip_addr_spec_to_ip_addr(&ip_addr, filter->src_ip());
+            if(ret != HAL_RET_OK) {
+                return false;
+            }
+            check_addr.af = IP_AF_IPV4;
+            memcpy(&check_addr.addr, &flow_key->sip, sizeof(check_addr.addr));
+ 
+            if (filter->src_ip().v4_addr() && (!ip_addr_check_equal(&check_addr, &ip_addr))) {
+                return false;
+            }
+        }
+
+        if(filter->has_dst_ip()) {
+            ip_addr_t ip_addr;
+            ip_addr_t check_addr;
+
+            ret = ip_addr_spec_to_ip_addr(&ip_addr, filter->dst_ip());
+            if(ret != HAL_RET_OK) {
+                return false;
+            }
+            check_addr.af = IP_AF_IPV4;
+            memcpy(&check_addr.addr, &flow_key->dip, sizeof(check_addr.addr));
+ 
+            if (filter->dst_ip().v4_addr() && (!ip_addr_check_equal(&check_addr, &ip_addr))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+}
+
+hal_ret_t
+tcp_proxy_session_get (tcp_proxy::TcpProxySessionGetRequest& req,
+                       tcp_proxy::TcpProxySessionGetResponseMsg *rsp)
+{
+    struct session_filter_t {
+        tcp_proxy::TcpProxySessionFilter *filter;
+        tcp_proxy::TcpProxySessionGetResponseMsg *response;
+    } ctx = {0};
+
+    auto walk_func = [](void *entry, void *ctx) {
+        hal::proxy_flow_info_t  *proxy_flow_info = (proxy_flow_info_t *)entry;
+        tcp_proxy::TcpProxySessionFilter *filter =
+                      ((session_filter_t *)ctx)->filter;
+        tcp_proxy::TcpProxySessionGetResponseMsg *response =
+                      ((session_filter_t *)ctx)->response;
+
+        if (session_matches_filter(proxy_flow_info, filter)) {
+            tcp_proxy_session_fill_rsp(proxy_flow_info, response->add_response());
+        }
+
+        return false;
+    };
+
+    types::ProxyType proxy_type = types::PROXY_TYPE_TCP;
+    proxy_t *proxy = (proxy_t *)g_hal_state->proxy_type_ht()->lookup(&proxy_type);
+    if(!proxy) {
+        HAL_TRACE_ERR("No TCP sessions found!");
+        return HAL_RET_HW_FAIL;
+    }
+
+    ctx.filter = req.mutable_session_filter();
+    ctx.response = rsp;
+    sdk::sdk_ret_t ret = proxy->flow_ht_->walk_safe(walk_func, &ctx);
+    return hal_sdk_ret_to_hal_ret(ret);
+}
+
 //------------------------------------------------------------------------------
 // process a TCP CB get request
 //------------------------------------------------------------------------------

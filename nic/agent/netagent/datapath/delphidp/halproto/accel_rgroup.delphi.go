@@ -1148,6 +1148,12 @@ It has these top-level messages:
 	TableMetMsg
 	TableResponse
 	TableResponseMsg
+	TcpProxySessionFilter
+	TcpProxySessionGetRequest
+	TcpproxyFlow
+	TcpProxySessionGetRequestMsg
+	TcpProxySessionGetResponse
+	TcpProxySessionGetResponseMsg
 	TlsProxyECDSAKey
 	TlsProxyRSAKey
 	TlsProxyAction
