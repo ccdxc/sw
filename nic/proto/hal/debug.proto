@@ -120,13 +120,14 @@ message GenericOpnResponseMsg {
 }
 
 message RegisterRequest {
-  oneof id_or_name {
+  oneof id_name_or_addr {
     fixed32    reg_id     = 1;    // register ID being accessed
     string     reg_name   = 2;    // register name being accessed
+    uint64     addr       = 3;    // address to be read/write
   }
-  string       block_name = 3;    // block name being accessed
-  uint64       addr       = 4;    // address to be read/write
-  uint32       reg_data   = 5;    // data to write
+  string       block_name = 4;    // block name being accessed
+  uint32       instance   = 5;
+  uint32       reg_data   = 6;    // data to write
 }
 
 message RegisterRequestMsg {

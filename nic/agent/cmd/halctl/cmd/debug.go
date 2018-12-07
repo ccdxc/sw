@@ -26,12 +26,30 @@ var (
 	idleTimeout         uint32
 	tcpCxnsetupTimeout  uint32
 	tcpHalfcloseTimeout uint32
+	regID               uint32
+	regAddr             uint64
+	regData             uint32
+	regInstance         uint32
 )
 
 var debugCmd = &cobra.Command{
 	Use:   "debug",
 	Short: "set debug options",
 	Long:  "set debug options",
+}
+
+var regDebugCmd = &cobra.Command{
+	Use:   "register",
+	Short: "set register data",
+	Long:  "set register data",
+	Run:   regDebugCmdHandler,
+}
+
+var regShowCmd = &cobra.Command{
+	Use:   "register",
+	Short: "show register data",
+	Long:  "show register data",
+	Run:   regShowCmdHandler,
 }
 
 var traceDebugCmd = &cobra.Command{
@@ -112,11 +130,13 @@ func init() {
 	debugCmd.AddCommand(traceDebugCmd)
 	debugCmd.AddCommand(fwDebugCmd)
 	debugCmd.AddCommand(platDebugCmd)
+	debugCmd.AddCommand(regDebugCmd)
 	platDebugCmd.AddCommand(platHbmDebugCmd)
 	platHbmDebugCmd.AddCommand(platLlcDebugCmd)
 	traceDebugCmd.AddCommand(flushLogsDebugCmd)
 	fwDebugCmd.AddCommand(secProfDebugCmd)
 	showCmd.AddCommand(traceShowCmd)
+	showCmd.AddCommand(regShowCmd)
 	platDebugCmd.AddCommand(platHbmCacheDebugCmd)
 	platHbmCacheDebugCmd.AddCommand(platHbmCacheSramDebugCmd)
 	platHbmCacheDebugCmd.AddCommand(platHbmCacheLlcDebugCmd)
@@ -131,6 +151,121 @@ func init() {
 	secProfDebugCmd.Flags().Uint32Var(&tcpCxnsetupTimeout, "tcp-cxnsetup-timeout", 30, "TCP Connection setup timeout for 3-way handshake in range 0-60 (0 means no timeout)")
 	secProfDebugCmd.Flags().Uint32Var(&tcpHalfcloseTimeout, "tcp-halfclose-timeout", 120, "TCP Half close timeout when FIN is received on one direction in range 0-172800 (0 means no timeout)")
 	secProfDebugCmd.MarkFlagRequired("id")
+
+	regDebugCmd.Flags().Uint32Var(&regID, "reg-id", 0, "Specify register ID")
+	regDebugCmd.Flags().Uint64Var(&regAddr, "reg-addr", 0, "Specify register address")
+	regDebugCmd.Flags().Uint32Var(&regData, "data", 0, "Specify data to be written")
+	regDebugCmd.Flags().Uint32Var(&regInstance, "instance", 0, "Specify register instance")
+	regShowCmd.Flags().Uint32Var(&regID, "reg-id", 0, "Specify register ID")
+	regShowCmd.Flags().Uint64Var(&regAddr, "reg-addr", 0, "Specify register address")
+	regShowCmd.Flags().Uint32Var(&regInstance, "instance", 0, "Specify register instance")
+}
+
+func regShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	defer c.Close()
+
+	client := halproto.NewDebugClient(c.ClientConn)
+
+	var req *halproto.RegisterRequest
+
+	if cmd.Flags().Changed("reg-id") {
+		fmt.Printf("Not yet supported\n")
+		return
+	} else if cmd.Flags().Changed("reg-addr") {
+		req = &halproto.RegisterRequest{
+			IdNameOrAddr: &halproto.RegisterRequest_Addr{
+				Addr: regAddr,
+			},
+			Instance: regInstance,
+		}
+	}
+
+	reqMsg := &halproto.RegisterRequestMsg{
+		Request: []*halproto.RegisterRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.RegisterGet(context.Background(), reqMsg)
+	if err != nil {
+		fmt.Printf("Register get failed. %v\n", err)
+		return
+	}
+
+	regPrintHeader()
+
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+		} else {
+			fmt.Printf("%-12s%-12s\n",
+				resp.GetData().GetAddress(), resp.GetData().GetValue())
+		}
+	}
+}
+
+func regPrintHeader() {
+	hdrLine := strings.Repeat("-", 24)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-12s%-12s\n",
+		"RegAddr", "Value")
+	fmt.Println(hdrLine)
+}
+
+func regDebugCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	defer c.Close()
+
+	client := halproto.NewDebugClient(c.ClientConn)
+
+	var req *halproto.RegisterRequest
+
+	if cmd.Flags().Changed("data") == false {
+		fmt.Printf("Data to be written needs to be specified using --data flag\n")
+		return
+	}
+
+	if cmd.Flags().Changed("reg-id") {
+		fmt.Printf("Not yet supported\n")
+		return
+	} else if cmd.Flags().Changed("reg-addr") {
+		req = &halproto.RegisterRequest{
+			IdNameOrAddr: &halproto.RegisterRequest_Addr{
+				Addr: regAddr,
+			},
+			Instance: regInstance,
+			RegData:  regData,
+		}
+	}
+
+	reqMsg := &halproto.RegisterRequestMsg{
+		Request: []*halproto.RegisterRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.RegisterUpdate(context.Background(), reqMsg)
+	if err != nil {
+		fmt.Printf("Register update failed. %v\n", err)
+		return
+	}
+
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+		} else {
+			fmt.Printf("Register write success\n")
+		}
+	}
 }
 
 func sramDebugCmdHandler(cmd *cobra.Command, args []string) {

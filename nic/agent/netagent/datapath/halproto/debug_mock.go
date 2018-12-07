@@ -12,41 +12,41 @@ import (
 	grpc "google.golang.org/grpc"
 )
 
-// MockisRegisterRequest_IdOrName is a mock of isRegisterRequest_IdOrName interface
-type MockisRegisterRequest_IdOrName struct {
+// MockisRegisterRequest_IdNameOrAddr is a mock of isRegisterRequest_IdNameOrAddr interface
+type MockisRegisterRequest_IdNameOrAddr struct {
 	ctrl     *gomock.Controller
-	recorder *MockisRegisterRequest_IdOrNameMockRecorder
+	recorder *MockisRegisterRequest_IdNameOrAddrMockRecorder
 }
 
-// MockisRegisterRequest_IdOrNameMockRecorder is the mock recorder for MockisRegisterRequest_IdOrName
-type MockisRegisterRequest_IdOrNameMockRecorder struct {
-	mock *MockisRegisterRequest_IdOrName
+// MockisRegisterRequest_IdNameOrAddrMockRecorder is the mock recorder for MockisRegisterRequest_IdNameOrAddr
+type MockisRegisterRequest_IdNameOrAddrMockRecorder struct {
+	mock *MockisRegisterRequest_IdNameOrAddr
 }
 
-// NewMockisRegisterRequest_IdOrName creates a new mock instance
-func NewMockisRegisterRequest_IdOrName(ctrl *gomock.Controller) *MockisRegisterRequest_IdOrName {
-	mock := &MockisRegisterRequest_IdOrName{ctrl: ctrl}
-	mock.recorder = &MockisRegisterRequest_IdOrNameMockRecorder{mock}
+// NewMockisRegisterRequest_IdNameOrAddr creates a new mock instance
+func NewMockisRegisterRequest_IdNameOrAddr(ctrl *gomock.Controller) *MockisRegisterRequest_IdNameOrAddr {
+	mock := &MockisRegisterRequest_IdNameOrAddr{ctrl: ctrl}
+	mock.recorder = &MockisRegisterRequest_IdNameOrAddrMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use
-func (m *MockisRegisterRequest_IdOrName) EXPECT() *MockisRegisterRequest_IdOrNameMockRecorder {
+func (m *MockisRegisterRequest_IdNameOrAddr) EXPECT() *MockisRegisterRequest_IdNameOrAddrMockRecorder {
 	return m.recorder
 }
 
-// isRegisterRequest_IdOrName mocks base method
-func (m *MockisRegisterRequest_IdOrName) isRegisterRequest_IdOrName() {
-	m.ctrl.Call(m, "isRegisterRequest_IdOrName")
+// isRegisterRequest_IdNameOrAddr mocks base method
+func (m *MockisRegisterRequest_IdNameOrAddr) isRegisterRequest_IdNameOrAddr() {
+	m.ctrl.Call(m, "isRegisterRequest_IdNameOrAddr")
 }
 
-// isRegisterRequest_IdOrName indicates an expected call of isRegisterRequest_IdOrName
-func (mr *MockisRegisterRequest_IdOrNameMockRecorder) isRegisterRequest_IdOrName() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isRegisterRequest_IdOrName", reflect.TypeOf((*MockisRegisterRequest_IdOrName)(nil).isRegisterRequest_IdOrName))
+// isRegisterRequest_IdNameOrAddr indicates an expected call of isRegisterRequest_IdNameOrAddr
+func (mr *MockisRegisterRequest_IdNameOrAddrMockRecorder) isRegisterRequest_IdNameOrAddr() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isRegisterRequest_IdNameOrAddr", reflect.TypeOf((*MockisRegisterRequest_IdNameOrAddr)(nil).isRegisterRequest_IdNameOrAddr))
 }
 
 // MarshalTo mocks base method
-func (m *MockisRegisterRequest_IdOrName) MarshalTo(arg0 []byte) (int, error) {
+func (m *MockisRegisterRequest_IdNameOrAddr) MarshalTo(arg0 []byte) (int, error) {
 	ret := m.ctrl.Call(m, "MarshalTo", arg0)
 	ret0, _ := ret[0].(int)
 	ret1, _ := ret[1].(error)
@@ -54,20 +54,20 @@ func (m *MockisRegisterRequest_IdOrName) MarshalTo(arg0 []byte) (int, error) {
 }
 
 // MarshalTo indicates an expected call of MarshalTo
-func (mr *MockisRegisterRequest_IdOrNameMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarshalTo", reflect.TypeOf((*MockisRegisterRequest_IdOrName)(nil).MarshalTo), arg0)
+func (mr *MockisRegisterRequest_IdNameOrAddrMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarshalTo", reflect.TypeOf((*MockisRegisterRequest_IdNameOrAddr)(nil).MarshalTo), arg0)
 }
 
 // Size mocks base method
-func (m *MockisRegisterRequest_IdOrName) Size() int {
+func (m *MockisRegisterRequest_IdNameOrAddr) Size() int {
 	ret := m.ctrl.Call(m, "Size")
 	ret0, _ := ret[0].(int)
 	return ret0
 }
 
 // Size indicates an expected call of Size
-func (mr *MockisRegisterRequest_IdOrNameMockRecorder) Size() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisRegisterRequest_IdOrName)(nil).Size))
+func (mr *MockisRegisterRequest_IdNameOrAddrMockRecorder) Size() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisRegisterRequest_IdNameOrAddr)(nil).Size))
 }
 
 // MockisMemoryRequest_IdOrName is a mock of isMemoryRequest_IdOrName interface

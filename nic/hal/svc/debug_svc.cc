@@ -40,9 +40,13 @@ DebugServiceImpl::RegisterGet(ServerContext *context,
 
         debug::RegisterResponse *rsp = rsp_msg->add_response();
         debug::RegisterData     *reg_data = rsp->mutable_data();
-        hal::pd::asic_reg_read(req.addr(), &val, 1, true);
-        reg_data->set_value(std::to_string(val));
-        rsp->set_api_status(types::API_STATUS_OK);
+        if (req.id_name_or_addr_case() == debug::RegisterRequest::kAddr) {
+            hal::pd::asic_reg_read(req.addr(), &val, 1, true);
+            reg_data->set_value(std::to_string(val));
+            rsp->set_api_status(types::API_STATUS_OK);
+        } else {
+            rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+        }
     }
     return Status::OK;
 }
@@ -61,9 +65,12 @@ DebugServiceImpl::RegisterUpdate(ServerContext *context,
 
         debug::RegisterResponse *rsp = rsp_msg->add_response();
 
-        hal::pd::asic_reg_write(req.addr(), &data);
-
-        rsp->set_api_status(types::API_STATUS_OK);
+        if (req.id_name_or_addr_case() == debug::RegisterRequest::kAddr) {
+            hal::pd::asic_reg_write(req.addr(), &data);
+            rsp->set_api_status(types::API_STATUS_OK);
+        } else {
+            rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+        }
     }
 
     return Status::OK;
