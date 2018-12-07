@@ -100,15 +100,13 @@ HbmHash::initialize_slabs()
         return SDK_RET_OOM;
     }
 
-#if 0
-    hbm_hash_entry_data_slab_ = slab::factory("hbm_hash_entry_data",
-                                              sdk::lib::SDK_SLAB_ID_HBM_HASH_ENTRY_DATA,
-                                              entire_data_len_,
-                                              256, true, true, false);
-    if (!hbm_hash_entry_data_slab_) {
+    hbm_sw_data_slab_ = slab::factory("hbm_hash_sw_data",
+                                     sdk::lib::SDK_SLAB_ID_HBM_HASH_SW_DATA,
+                                     data_len_,
+                                     256, true, true, false);
+    if (!hbm_sw_data_slab_) {
         return SDK_RET_OOM;
     }
-#endif
 
     hbm_hash_hint_group_slab_ = slab::factory("hbm_hash_hint_group",
                                               sdk::lib::SDK_SLAB_ID_HBM_HASH_HINT_GROUP,
@@ -126,6 +124,14 @@ HbmHash::initialize_slabs()
         return SDK_RET_OOM;
     }
 
+    hbm_hash_spine_entry_slab_ = slab::factory("hbm_hash_spine_entry",
+                                               sdk::lib::SDK_SLAB_ID_HBM_HASH_SPINE_ENTRY,
+                                               sizeof(HbmHashSpineEntry),
+                                               256, true, true, false);
+    if (!hbm_hash_spine_entry_slab_) {
+        return SDK_RET_OOM;
+    }
+
     return SDK_RET_OK;
 }
 
@@ -135,9 +141,10 @@ HbmHash::destroy_slabs()
     if (hbm_hash_entry_slab_) slab::destroy(hbm_hash_entry_slab_);
     if (hbm_sw_key_slab_) slab::destroy(hbm_sw_key_slab_);
     if (hbm_hw_key_slab_) slab::destroy(hbm_hw_key_slab_);
-    // if (hbm_hash_entry_data_slab_) slab::destroy(hbm_hash_entry_data_slab_);
+    if (hbm_sw_data_slab_) slab::destroy(hbm_sw_data_slab_);
     if (hbm_hash_hint_group_slab_) slab::destroy(hbm_hash_hint_group_slab_);
     if (hbm_hash_table_entry_slab_) slab::destroy(hbm_hash_table_entry_slab_);
+    if (hbm_hash_spine_entry_slab_) slab::destroy(hbm_hash_spine_entry_slab_);
 
     return SDK_RET_OK;
 }
