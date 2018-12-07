@@ -43,7 +43,7 @@ testcases:
     -   name    : ShowClearTcpUdpSessions
         testcase: testcases.aging.clear_show
         iterators:
-            type      : nested
+            type      : simple 
             proto     : [ udp, tcp ]
         args    :
             type: local_only
@@ -54,5 +54,13 @@ testcases:
         #iterators:
         #    type   : simple
         #    values : [0, 100, 330]
+        args    :
+            type: local_only
+
+    -   name    : AgingDropFlows
+        testcase: testcases.aging.drop_flow_aging
+        iterators:
+            type      : simple
+            proto     : [ udp, tcp ]
         args    :
             type: local_only

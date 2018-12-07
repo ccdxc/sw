@@ -16,7 +16,7 @@
           "tcp-half-close": "60s",
           "tcp-close": "30s",
           "drop": "30s",
-          "udp": "30s",
+          "udp": "100s",
           "udp-drop": "30s",
           "icmp": "6s",
           "icmp-drop": "30s"

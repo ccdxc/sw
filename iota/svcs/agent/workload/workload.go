@@ -29,6 +29,11 @@ const (
 	bgCmdHandlePrefix  = "bg-cmd"
 )
 
+var (
+	//ContainerPrivileged run container in privileged mode
+	ContainerPrivileged = true
+)
+
 //Workload interface
 type Workload interface {
 	Name() string
@@ -139,10 +144,10 @@ func (app *containerWorkload) BringUp(args ...string) error {
 	image := args[1]
 	name := args[0]
 	if image != "" {
-		app.containerHandle, err = Utils.NewContainer(name, image, "", app.baseDir)
+		app.containerHandle, err = Utils.NewContainer(name, image, "", app.baseDir, ContainerPrivileged)
 	} else {
 		/* Workload already spun up */
-		app.containerHandle, err = Utils.NewContainer(name, "", name, app.baseDir)
+		app.containerHandle, err = Utils.NewContainer(name, "", name, app.baseDir, ContainerPrivileged)
 	}
 
 	if err != nil || app.containerHandle == nil {

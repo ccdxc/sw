@@ -89,6 +89,44 @@
                }
          },
          {
+               "action": "DENY",
+               "source": {
+                  "addresses": [
+                     "192.168.100.102"
+                  ]
+               },
+               "destination": {
+                  "addresses": [
+                     "192.168.100.101"
+                  ],
+                  "app-configs": [
+                     {
+                        "protocol": "udp",
+                        "port": "33456"
+                     }
+                  ]
+               }
+         },
+         {
+               "action": "DENY",
+               "source": {
+                  "addresses": [
+                     "192.168.100.102"
+                  ]
+               },
+               "destination": {
+                  "addresses": [
+                     "192.168.100.101"
+                  ],
+                  "app-configs": [
+                     {
+                        "protocol": "tcp",
+                        "port": "33456"
+                     }
+                  ]
+               }
+         },
+         {
             "action": "PERMIT"
          }
         ]

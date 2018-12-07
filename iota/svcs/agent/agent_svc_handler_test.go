@@ -32,9 +32,9 @@ func stubRunCmd(cmdArgs []string, timeout int, background bool, shell bool,
 }
 
 func stubGetContainer(name string,
-	registry string, containerID string, mountDir string) (*Utils.Container, error) {
+	registry string, containerID string, mountDir string, privileged bool) (*Utils.Container, error) {
 	var err error
-	stubNaplesContainer, err = Utils.NewContainer(naplesSimName, "alpine", "", "")
+	stubNaplesContainer, err = Utils.NewContainer(naplesSimName, "alpine", "", "", privileged)
 	if err != nil {
 		log.Fatal("container create failed")
 	}
@@ -1105,4 +1105,5 @@ func init() {
 
 	controlIntf = Utils.GetIntfsMatchingPrefix("e")[0]
 	naplesHwUUIDFile = "/mnt/sysuuid"
+	Workload.ContainerPrivileged = false
 }

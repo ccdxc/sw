@@ -159,7 +159,7 @@ func (naples *naplesSimNode) bringUpNaples(name string, image string, ctrlIntf s
 	naples.name = name
 
 	var err error
-	if naples.container, err = Utils.GetContainer(name, "", name, ""); err != nil {
+	if naples.container, err = Utils.GetContainer(name, "", name, "", Workload.ContainerPrivileged); err != nil {
 		return errors.Wrap(err, "Naples sim not running!")
 	}
 

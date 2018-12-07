@@ -47,13 +47,13 @@ PACKAGES = %w[
   tftp-server
   xinetd
   vsftpd
-  bind-utils
   nfs-utils
   nfs-utils-lib
 ]
 
 run "yum install -y #{PACKAGES.join(" ")}"
 run "yum install -y https://mirror.umd.edu/fedora/epel/7/x86_64/Packages/h/hping3-0.0.20051105-24.el7.x86_64.rpm"
+run "yum install -y bind bind-utils"
 
 run "pip install --upgrade #{PIP2_PACKAGES.join(" ")}"
 run "pip3 install --upgrade #{PIP3_PACKAGES.join(" ")}"

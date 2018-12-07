@@ -4,14 +4,29 @@ meta:
 
 testcases:
     -   name    : tftp_Local_Workloads
-        testcase: testcases.alg.tftp
+        testcase: testcases.alg.tftp.tftp
         args    :
             type: local_only
 
-    -   name    : ftp_Local_Workloads
-        testcase: testcases.alg.ftp
+    -   name     : ftp_Local_Workloads
+        testcase : testcases.alg.ftp.ftp
         iterators:
-            type      : simple
-            mode      : [ active, passive ]
+            type : simple
+            mode : [ active, passive ]
+        args     :
+            type : local_only
+
+    -   name    : rtsp_Local_Workloads
+        testcase: testcases.alg.rtsp.rtsp
         args    :
             type: local_only
+
+    -   name    : sunrpc_Local_Workloads
+        testcase: testcases.alg.sunrpc.sunrpc
+        args    :
+            type: local_only
+
+    -   name    : dns_Local_Workloads
+        testcase: testcases.alg.dns.dns
+        args    :
+            type: local_only 

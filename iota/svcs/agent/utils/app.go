@@ -24,7 +24,8 @@ var _DockerClient *client.Client
 var _StopTimeout = (20)
 
 const (
-	baseDir = "/home/"
+	baseDir        = "/home/"
+	sysFsCgroupDir = "/sys/fs/cgroup"
 )
 
 //Interface structure
@@ -508,7 +509,8 @@ func (ctr *Container) RunCommand(cmdHandle CommandHandle, timeout uint32) (Comma
 	return CommandResp{}, nil
 }
 
-func bringUpAppContainer(name string, registry string, mountTarget string) (*string, error) {
+func bringUpAppContainer(name string, registry string, mountTarget string, privileged bool) (*string, error) {
+	var entryPoint []string
 	opts := types.ImagePullOptions{}
 	out, err := _DockerClient.ImagePull(_DockerCtx,
 		registry, opts)
@@ -525,6 +527,24 @@ func bringUpAppContainer(name string, registry string, mountTarget string) (*str
 	}
 	os.Mkdir(mountDir, 0777)
 
+	mounts := []mount.Mount{
+		{
+			Type:   mount.TypeBind,
+			Source: mountDir,
+			Target: baseDir,
+		},
+	}
+
+	if privileged {
+		mount := mount.Mount{
+			Type:   mount.TypeBind,
+			Source: sysFsCgroupDir,
+			Target: sysFsCgroupDir,
+		}
+		mounts = append(mounts, mount)
+		entryPoint = append(entryPoint, "/usr/sbin/init")
+	}
+
 	resp, err := _DockerClient.ContainerCreate(_DockerCtx, &container.Config{
 		Image:           registry,
 		NetworkDisabled: true,
@@ -532,15 +552,10 @@ func bringUpAppContainer(name string, registry string, mountTarget string) (*str
 		AttachStdout:    true,
 		Tty:             true,
 		StopSignal:      "SIGKILL",
+		Entrypoint:      entryPoint,
 	}, &container.HostConfig{AutoRemove: true,
-		Mounts: []mount.Mount{
-			{
-				Type:   mount.TypeBind,
-				Source: mountDir,
-				Target: baseDir,
-			},
-		},
-		Privileged: true},
+		Mounts:     mounts,
+		Privileged: privileged},
 		nil, name)
 	if err != nil {
 		fmt.Println(err.Error(), mountDir)
@@ -559,7 +574,7 @@ func bringUpAppContainer(name string, registry string, mountTarget string) (*str
 
 //NewContainer Create a new instance
 func NewContainer(name string,
-	registry string, containerID string, mount string) (*Container, error) {
+	registry string, containerID string, mount string, privileged bool) (*Container, error) {
 	_container := new(Container)
 	_container.client = _DockerClient
 	_container.ctx = _DockerCtx
@@ -570,7 +585,7 @@ func NewContainer(name string,
 		_container.ctrID = containerID
 		_container.NS.Init(false)
 	} else {
-		id, cErr := bringUpAppContainer(name, registry, mount)
+		id, cErr := bringUpAppContainer(name, registry, mount, privileged)
 		if cErr != nil {
 			return nil, cErr
 		}

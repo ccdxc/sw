@@ -366,12 +366,13 @@ func sessionShowHeader(cmd *cobra.Command, args []string) {
 	fmt.Printf("SMAC|SIP[:sport]: Source MAC Address | Source IP Address and Port Number\n")
 	fmt.Printf("DMAC|DIP[:dport]: Destination MAC Address | Destination IP Address and Port Number\n")
 	fmt.Printf("P|E: L4 Protocol | Ethernet Type\n")
+	fmt.Printf("Flow Action: A (Allowed flow) D (drop flow)\n")
 	fmt.Printf("TCP State: State for TCP flows\tAge: Age in mins and secs\n")
 	fmt.Printf("Time To Age: Inactivity time remaining for flow to age in seconds (IDF- No aging indefinite time)\n")
 	fmt.Println(hdrLine)
-	fmt.Printf("%-8s%-6s%-8s%-8s%-10s%-24s%-24s%-6s%-16s%-6s%-10s\n",
+	fmt.Printf("%-8s%-6s%-8s%-8s%-10s%-24s%-24s%-6s%-10s%-16s%-10s%-10s\n",
 		"Handle", "Role", "KeyType", "L2SegID", "VrfID",
-		"SMAC|SIP[:sport]", "DMAC|DIP[:dport]", "P|E", "TCP State",
+		"SMAC|SIP[:sport]", "DMAC|DIP[:dport]", "P|E", "Flow State", "TCP State",
 		"Age", "Time To Age")
 	fmt.Println(hdrLine)
 }
@@ -425,6 +426,7 @@ func flowShow(spec *halproto.SessionSpec, status *halproto.SessionStatus,
 	flowStr = flowStr[0:3]
 
 	tcpState := "-"
+	flowAction := "-"
 	switch flowKey.GetFlowKey().(type) {
 	case *halproto.FlowKey_L2Key:
 		keyType = "L2"
@@ -542,6 +544,7 @@ func flowShow(spec *halproto.SessionSpec, status *halproto.SessionStatus,
 		dstID = 0
 	}
 
+	flowAction = flowActionStringCompact(flowInfo.GetFlowAction().String())
 	age := flowInfo.GetFlowAge()
 	ageStr := ""
 	if age > 59 {
@@ -559,18 +562,18 @@ func flowShow(spec *halproto.SessionSpec, status *halproto.SessionStatus,
 	timeToAgeStr += strconv.Itoa(int(timeToAge%60)) + "s"
 
 	if timeToAge == 0xFFFFFFFF {
-		fmt.Printf("%-8d%-6s%-8s%-8d%-10s%-24s%-24s%-6s%-16s%-6s%-15s\n",
+		fmt.Printf("%-8d%-6s%-8s%-8d%-10s%-24s%-24s%-6s%-10s%-16s%-6s%-15s\n",
 			status.GetSessionHandle(),
 			flowStr, keyType, id,
 			vrfStr,
-			src, dst, ipproto,
+			src, dst, ipproto, flowAction,
 			tcpState, ageStr, "IDF")
 	} else {
-		fmt.Printf("%-8d%-6s%-8s%-8d%-10s%-24s%-24s%-6s%-16s%-6s%-15s\n",
+		fmt.Printf("%-8d%-6s%-8s%-8d%-10s%-24s%-24s%-6s%-10s%-16s%-6s%-15s\n",
 			status.GetSessionHandle(),
 			flowStr, keyType, id,
 			vrfStr,
-			src, dst, ipproto,
+			src, dst, ipproto, flowAction,
 			tcpState, ageStr, timeToAgeStr)
 	}
 
@@ -607,6 +610,15 @@ func tcpStateStringCompact(state string) string {
 	var compactString string
 	fmt.Sscanf(state, "FLOW_TCP_STATE_%s", &compactString)
 	return compactString
+}
+
+func flowActionStringCompact(state string) string {
+	var compactString string
+	fmt.Sscanf(state, "FLOW_ACTION_%s", &compactString)
+	if compactString == "ALLOW" {
+		return "A"
+	}
+	return "D"
 }
 
 // Uint32IPAddrToStr converts uint32 IP address to string
