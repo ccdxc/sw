@@ -344,7 +344,7 @@ error DelphiServer::HandleMountReq(int sockCtx, MountReqMsgPtr req, MountRespMsg
             return err;
         }
 
-        LogInfo("Mounting {} from service {} mode {}", kind, req->servicename(), mnt.mode());
+        LogInfo("Mounting {}/{} from service {} mode {}", kind, key, req->servicename(), mnt.mode());
 
 
         // get the subtree for the kind
@@ -353,11 +353,13 @@ error DelphiServer::HandleMountReq(int sockCtx, MountReqMsgPtr req, MountRespMsg
         // walk all objects for this kind and send them
         for (map<string, ObjectDataPtr>::iterator iter=subtree->objects.begin(); iter!=subtree->objects.end(); ++iter) {
             ObjectDataPtr obj = iter->second;
-            ObjectData *od = resp->add_objects();
-            ObjectMeta *ometa = od->mutable_meta();
-            ometa->CopyFrom(obj->meta());
-            od->set_op(SetOp);
-            od->set_data(obj->data());
+            if (svc->HasMounted(obj->meta().kind(), obj->meta().key())) {
+                ObjectData *od = resp->add_objects();
+                ObjectMeta *ometa = od->mutable_meta();
+                ometa->CopyFrom(obj->meta());
+                od->set_op(SetOp);
+                od->set_data(obj->data());
+            }
         }
     }
 

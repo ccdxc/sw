@@ -29,3 +29,9 @@ test-only:
 	@echo "============= Running go test ========================"; \
 	LD_LIBRARY_PATH=$$GOPATH/src/github.com/pensando/sw/nic/build/x86_64/iris/lib/ go test -v github.com/pensando/sw/nic/delphi/...  -count 1
 	@echo "============= All tests passed ========================"; \
+
+test-memleak:
+	for tgt in $(MODULE_TEST_TARGETS); do \
+		echo "============= valgrind $$tgt  ========================"; \
+		valgrind --tool=memcheck --leak-check=yes ../build/x86_64/iris/bin/$$tgt 2>&1| grep "definitely lost:"; \
+	done

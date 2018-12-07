@@ -11,7 +11,6 @@ Logger g_delphi_logger = spdlog::stdout_color_mt("delphi");
 Logger GetLogger() {
     static bool init_done = 0;
     if (!init_done) {
-        g_delphi_logger->set_pattern("%L [%Y-%m-%d %H:%M:%S.%f] %P/%n: %v");
 #ifdef DEBUG_ENABLE
         spdlog::set_level(spdlog::level::debug);
 #endif
