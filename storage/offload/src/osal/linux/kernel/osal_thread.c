@@ -7,6 +7,7 @@
 #include "osal_thread.h"
 #include "osal_sys.h"
 #include "osal_errno.h"
+#include "osal_logger.h"
 
 #ifdef _KERNEL
 #include <sys/mutex.h>
@@ -115,4 +116,43 @@ bool osal_thread_should_stop(osal_thread_t* osal_thread)
 {
 	/* TODO: should not ignore input param */
 	return (bool) kthread_should_stop();
+}
+
+struct workqueue_struct *osal_create_workqueue_fast(char *name, int max_active)
+{
+#ifdef _KERNEL
+	int err;
+	struct workqueue_struct *wq;
+
+	/*
+	 * If zero CPUs are specified use the default number of CPUs:
+	 */
+	if (max_active == 0)
+		max_active = 4; /* linux_default_wq_cpus */
+
+	wq = kmalloc(sizeof(*wq), M_WAITOK | M_ZERO);
+	if (!wq)
+		return NULL;
+	wq->taskqueue = taskqueue_create_fast(name, M_NOWAIT, /*M_WAITOK,*/
+				taskqueue_thread_enqueue,
+				&wq->taskqueue);
+	if (!wq->taskqueue) {
+		kfree(wq);
+		return NULL;
+	}
+	atomic_set(&wq->draining, 0);
+	err = taskqueue_start_threads(&wq->taskqueue, 1 /*max_active*/, PI_NET, "%s cq", name);
+	if (err) {
+		OSAL_LOG_ERROR("Failed to start taskqueue threads\n");
+		taskqueue_free(wq->taskqueue);
+		kfree(wq);
+		return NULL;
+	}
+	TAILQ_INIT(&wq->exec_head);
+	mtx_init(&wq->exec_mtx, "linux_wq_exec", NULL, MTX_DEF);
+
+	return (wq);
+#else
+	return alloc_workqueue(name, WQ_HIGHPRI | WQ_MEM_RECLAIM, 1 /*max_active*/);
+#endif
 }

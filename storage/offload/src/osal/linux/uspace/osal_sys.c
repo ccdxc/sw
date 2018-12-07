@@ -48,3 +48,8 @@ int osal_yield(void)
 {
 	return sched_yield();
 }
+
+int osal_sched_yield(void)
+{
+	return sched_yield();
+}

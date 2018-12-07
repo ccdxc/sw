@@ -23,3 +23,13 @@ int osal_yield(void)
 	yield();
 	return 0;
 }
+
+int osal_sched_yield(void)
+{
+#ifdef _KERNEL
+	maybe_yield();
+#else
+	cond_resched();
+#endif
+	return 0;
+}

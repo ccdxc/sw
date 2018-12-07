@@ -48,11 +48,17 @@ enum sonic_intr_bits {
 
 struct sonic_event_list;
 
+struct sonic_event_data {
+	int evid;
+	uint64_t data;
+};
+
 struct sonic_work_data {
 	struct work_struct work;
 	struct sonic_event_list *evl;
-	uint64_t data;
-	uint32_t loop_count;
+	struct sonic_event_data ev_data[SONIC_ASYNC_BUDGET];
+	uint64_t timestamp;
+	uint32_t ev_count;
 };
 
 struct sonic_event_list {
@@ -64,7 +70,7 @@ struct sonic_event_list {
 	char			name[32];
 
 	struct workqueue_struct *wq;
-	struct sonic_work_data *work_data;
+	struct sonic_work_data work_data;
 
 	spinlock_t inuse_lock;
 	int next_evid;

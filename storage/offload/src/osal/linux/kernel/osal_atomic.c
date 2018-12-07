@@ -108,3 +108,18 @@ void osal_atomic_unlock(osal_atomic_int_t *addr)
 {
 	osal_atomic_set(addr, 0);
 }
+
+void osal_spin_lock_init(osal_spinlock_t *lock)
+{
+	spin_lock_init(lock);
+}
+
+void osal_spin_lock(osal_spinlock_t *lock)
+{
+	spin_lock(lock);
+}
+
+void osal_spin_unlock(osal_spinlock_t *lock)
+{
+	spin_unlock(lock);
+}

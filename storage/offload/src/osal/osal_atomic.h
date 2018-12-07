@@ -11,10 +11,13 @@
 
 #include <stdatomic.h>
 #define osal_atomic_int_t atomic_int
+#define osal_spinlock_t atomic_int
 
 #else
 #include <linux/kernel.h>
+#include <linux/spinlock.h>
 #define osal_atomic_int_t atomic_t
+#define osal_spinlock_t spinlock_t
 
 #endif
 
@@ -37,6 +40,10 @@ int osal_atomic_dec_if_positive(osal_atomic_int_t *addr);
 
 void osal_atomic_lock(osal_atomic_int_t *addr);
 void osal_atomic_unlock(osal_atomic_int_t *addr);
+
+void osal_spin_lock_init(osal_spinlock_t *lock);
+void osal_spin_lock(osal_spinlock_t *lock);
+void osal_spin_unlock(osal_spinlock_t *lock);
 
 #ifdef __cplusplus
 }

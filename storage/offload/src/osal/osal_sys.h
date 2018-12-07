@@ -23,6 +23,7 @@ extern "C" {
 int osal_get_coreid(void);
 int osal_get_core_count(void);
 int osal_yield(void);
+int osal_sched_yield(void);
 
 #ifdef __cplusplus
 }

@@ -180,9 +180,9 @@ struct batch_context {
 	struct request_context *req_ctxs[TEST_MAX_BATCH_DEPTH];
 };
 
-/* Assumes one producer, one consumer */
+/* No locking required iff one producer and one consumer */
 struct worker_queue {
-	//osal_atomic_int_t lock;
+	osal_spinlock_t lock;
 	//uint32_t count;
 	osal_atomic_int_t atomic_count;
 	uint32_t head;
@@ -219,6 +219,17 @@ static inline struct batch_context *worker_queue_dequeue(struct worker_queue *q)
 	return _worker_queue_dequeue(q);
 }
 
+static inline struct batch_context *worker_queue_dequeue_safe(struct worker_queue *q)
+{
+	struct batch_context *ret;
+
+	osal_spin_lock(&q->lock);
+	ret = worker_queue_dequeue(q);
+	osal_spin_unlock(&q->lock);
+
+	return ret;
+}
+
 static inline void _worker_queue_enqueue(struct worker_queue *q,
 					 struct batch_context *batch)
 {
@@ -237,11 +248,24 @@ static inline bool worker_queue_enqueue(struct worker_queue *q,
 	return true;
 }
 
+static inline bool worker_queue_enqueue_safe(struct worker_queue *q,
+					     struct batch_context *batch)
+{
+	bool ret;
+
+	osal_spin_lock(&q->lock);
+	ret = worker_queue_enqueue(q, batch);
+	osal_spin_unlock(&q->lock);
+
+	return ret;
+}
+
 struct worker_context {
 	const struct test_desc *desc;
 	const struct testcase_context *test_ctx;
 	osal_thread_t worker_thread;
 	uint32_t worker_id;
+	uint32_t pending_batch_count;
 	uint64_t last_active_ts;
 
 	struct worker_queue *submit_q;

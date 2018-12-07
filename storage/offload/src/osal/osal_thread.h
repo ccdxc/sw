@@ -13,8 +13,10 @@
 #ifndef __KERNEL__
 #include <pthread.h>
 typedef pthread_t thread_t;
+struct workqueue_struct;
 #else
 #include <linux/kthread.h>
+#include <linux/workqueue.h>
 typedef struct task_struct *thread_t;
 #endif
 
@@ -41,6 +43,9 @@ int osal_thread_stop(osal_thread_t *osal_thread);
 
 bool osal_thread_is_running(osal_thread_t* osal_thread);
 bool osal_thread_should_stop(osal_thread_t* osal_thread);
+
+struct workqueue_struct *osal_create_workqueue_fast(char *name, int max_active);
+#define osal_destroy_workqueue destroy_workqueue
 
 #ifdef __cplusplus
 }

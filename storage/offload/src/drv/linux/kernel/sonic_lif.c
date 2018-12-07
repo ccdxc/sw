@@ -852,6 +852,7 @@ sonic_lif_per_core_resources_init(struct lif *lif)
 
 	for (i = 0; i < lif->sonic->num_per_core_resources; i++) {
 		if (lif->res.pc_res[i]) {
+			lif->res.pc_res[i]->idx = i;
 			err = sonic_lif_per_core_resource_init(lif,
 				lif->res.pc_res[i],
 				q_count / lif->sonic->num_per_core_resources);
