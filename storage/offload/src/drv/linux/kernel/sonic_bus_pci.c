@@ -60,14 +60,14 @@ int sonic_bus_alloc_irq_vectors(struct sonic *sonic, unsigned int nintrs)
 	int avail, ret;
 
 	avail = pci_msix_count(sonic->pdev->dev.bsddev);
-	OSAL_LOG_INFO("count nintrs %u avail %u\n", nintrs, avail);
+	OSAL_LOG_INFO("count nintrs %u avail %u", nintrs, avail);
 	if (avail < nintrs)
 		return -EINVAL;
 
 	avail = nintrs;
 
 	ret = -pci_alloc_msix(sonic->pdev->dev.bsddev, &avail);
-	OSAL_LOG_INFO("try alloc nintrs %u avail %u ret %u\n", nintrs, avail, ret);
+	OSAL_LOG_INFO("try alloc nintrs %u avail %u ret %u", nintrs, avail, ret);
 	if (ret)
 		return ret;
 
@@ -101,7 +101,7 @@ static int sonic_map_bars(struct sonic *sonic)
 		bars[j].vaddr = ioremap(bars[j].bus_addr, bars[j].len);
 #endif
 		if (!bars[j].vaddr) {
-			OSAL_LOG_ERROR("Cannot memory-map BAR %d, aborting\n",
+			OSAL_LOG_ERROR("Cannot memory-map BAR %d, aborting",
 					j);
 			return -ENODEV;
 		}
@@ -138,13 +138,13 @@ static int sonic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 
 	err = sonic_set_dma_mask(sonic);
 	if (err) {
-		OSAL_LOG_ERROR("Cannot set DMA mask, aborting\n");
+		OSAL_LOG_ERROR("Cannot set DMA mask, aborting");
 		return err;
 	}
 
 	err = sonic_debugfs_add_dev(sonic);
 	if (err) {
-		OSAL_LOG_ERROR("Cannot add device debugfs, aborting\n");
+		OSAL_LOG_ERROR("Cannot add device debugfs, aborting");
 		return err;
 	}
 
@@ -154,13 +154,13 @@ static int sonic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 	err = pci_enable_device_mem(pdev);
 #endif
 	if (err) {
-		OSAL_LOG_ERROR("Cannot enable PCI device, aborting\n");
+		OSAL_LOG_ERROR("Cannot enable PCI device, aborting");
 		goto err_out_debugfs_del_dev;
 	}
 
 	err = pci_request_regions(pdev, DRV_NAME);
 	if (err) {
-		OSAL_LOG_ERROR("Cannot request PCI regions, aborting\n");
+		OSAL_LOG_ERROR("Cannot request PCI regions, aborting");
 		goto err_out_disable_device;
 	}
 
@@ -175,23 +175,23 @@ static int sonic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 
 	err = sonic_setup(sonic);
 	if (err) {
-		OSAL_LOG_ERROR("Cannot setup device, aborting\n");
+		OSAL_LOG_ERROR("Cannot setup device, aborting");
 		goto err_out_unmap_bars;
 	}
 
 	err = sonic_reset(sonic);
 	if (err) {
-		OSAL_LOG_ERROR("Cannot reset device, aborting\n");
+		OSAL_LOG_ERROR("Cannot reset device, aborting");
 		goto err_out_unmap_bars;
 	}
 
 	err = sonic_identify(sonic);
 	if (err) {
-		OSAL_LOG_ERROR("Cannot identify device, aborting\n");
+		OSAL_LOG_ERROR("Cannot identify device, aborting");
 		goto err_out_unmap_bars;
 	}
 
-	OSAL_LOG_INFO("ASIC %s rev 0x%X serial num %s fw version %s\n",
+	OSAL_LOG_INFO("ASIC %s rev 0x%X serial num %s fw version %s",
 		 sonic_dev_asic_name(sonic->ident->dev.asic_type),
 		 sonic->ident->dev.asic_rev, sonic->ident->dev.serial_num,
 		 sonic->ident->dev.fw_version);
@@ -201,25 +201,25 @@ static int sonic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 
 	err = sonic_lifs_size(sonic);
 	if (err) {
-		OSAL_LOG_ERROR("Cannot size LIFs, aborting, err=%d\n", err);
+		OSAL_LOG_ERROR("Cannot size LIFs, aborting, err=%d", err);
 		goto err_out_forget_identity;
 	}
 
 	err = sonic_lifs_alloc(sonic);
 	if (err) {
-		OSAL_LOG_ERROR("Cannot allocate LIFs, aborting, err=%d\n", err);
+		OSAL_LOG_ERROR("Cannot allocate LIFs, aborting, err=%d", err);
 		goto err_out_free_lifs;
 	}
 
 	err = sonic_lifs_init(sonic);
 	if (err) {
-		OSAL_LOG_ERROR("Cannot init LIFs, aborting, err=%d\n", err);
+		OSAL_LOG_ERROR("Cannot init LIFs, aborting, err=%d", err);
 		goto err_out_deinit_lifs;
 	}
 
 	err = sonic_lifs_register(sonic);
 	if (err) {
-		OSAL_LOG_ERROR("Cannot register LIFs, aborting, err=%d\n", err);
+		OSAL_LOG_ERROR("Cannot register LIFs, aborting, err=%d", err);
 		goto err_out_deinit_lifs;
 	}
 
@@ -276,7 +276,7 @@ static int sonic_sriov_configure(struct pci_dev *pdev, int numvfs)
 	if (numvfs > 0) {
 		err = pci_enable_sriov(pdev, numvfs);
 		if (err) {
-			OSAL_LOG_ERROR("Cannot enable SRIOV, err=%d\n",
+			OSAL_LOG_ERROR("Cannot enable SRIOV, err=%d",
 				err);
 			return err;
 		}

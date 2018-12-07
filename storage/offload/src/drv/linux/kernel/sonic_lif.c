@@ -562,7 +562,7 @@ static int get_seq_q_desc_count(uint32_t status_q_count,
 
 	ring = &res->lif->sonic->ident->dev.accel_ring_tbl[ring_id];
 
-	OSAL_LOG_DEBUG("get_seq_q_desc_count: hw ring %u: size=%u, desc_size=%u.\n",
+	OSAL_LOG_DEBUG("get_seq_q_desc_count: hw ring %u: size=%u, desc_size=%u.",
 		ring_id, ring->ring_size, ring->ring_desc_size);
 
 	/*
@@ -571,12 +571,12 @@ static int get_seq_q_desc_count(uint32_t status_q_count,
 	 */
 	*desc_count = min(ring->ring_size, (uint32_t)MAX_PER_QUEUE_SQ_ENTRIES);
 	if (*desc_count == 0) {
-		OSAL_LOG_ERROR("No descs available for hw ring %d, ring_size=%u.\n",
+		OSAL_LOG_ERROR("No descs available for hw ring %d, ring_size=%u.",
 			ring_id, ring->ring_size);
 		goto done;
 	}
 
-	OSAL_LOG_INFO("get_seq_q_desc_count: hw ring %u: q_entries_per_core=%u.\n",
+	OSAL_LOG_INFO("get_seq_q_desc_count: hw ring %u: q_entries_per_core=%u.",
 		 ring_id, *desc_count);
 
 	err = 0;
@@ -610,7 +610,7 @@ static int sonic_cpdc_qs_init(struct per_core_resource *res,
 	err = sonic_cpdc_q_init(res, &res->cp_seq_q, 0, STORAGE_SEQ_QGROUP_CPDC,
 				desc_count, SONIC_SEQ_Q_DESC_SIZE);
 	if (err) {
-		OSAL_LOG_ERROR("sonic_cpdc_q_init failed for CP, err=%d\n", err);
+		OSAL_LOG_ERROR("sonic_cpdc_q_init failed for CP, err=%d", err);
 		goto done;
 	}
 
@@ -622,7 +622,7 @@ static int sonic_cpdc_qs_init(struct per_core_resource *res,
 	err = sonic_cpdc_q_init(res, &res->dc_seq_q, 0, STORAGE_SEQ_QGROUP_CPDC,
 				desc_count, SONIC_SEQ_Q_DESC_SIZE);
 	if (err) {
-		OSAL_LOG_ERROR("sonic_cpdc_q_init failed for DC, err=%d\n", err);
+		OSAL_LOG_ERROR("sonic_cpdc_q_init failed for DC, err=%d", err);
 		goto done;
 	}
 
@@ -633,7 +633,7 @@ static int sonic_cpdc_qs_init(struct per_core_resource *res,
 					MAX_PER_QUEUE_STATUS_ENTRIES,
 					SONIC_SEQ_STATUS_Q_DESC_SIZE);
 		if (err) {
-			OSAL_LOG_ERROR("sonic_cpdc_q_init failed for CPDC status queue %d, err=%d\n",
+			OSAL_LOG_ERROR("sonic_cpdc_q_init failed for CPDC status queue %d, err=%d",
 				i, err);
 			goto done;
 		}
@@ -838,7 +838,7 @@ sonic_lif_per_core_resources_init(struct lif *lif)
 	int i;
 	int q_count = lif->sonic->ident->dev.seq_queues_per_lif;
 
-	OSAL_LOG_INFO("Init per-core-resources, %u seq_queues_per_lif, %u num_per_core_resources.\n",
+	OSAL_LOG_INFO("Init per-core-resources, %u seq_queues_per_lif, %u num_per_core_resources.",
 		 lif->sonic->ident->dev.seq_queues_per_lif,
 		 lif->sonic->num_per_core_resources);
 
@@ -886,7 +886,7 @@ static int sonic_lif_init(struct lif *lif)
 	lif->api_private = NULL;
 
 	lif->flags |= LIF_F_INITED;
-	OSAL_LOG_WARN("sonic lif init successful\n");
+	OSAL_LOG_WARN("sonic lif init successful");
 
 	return 0;
 
@@ -980,7 +980,7 @@ static int assign_per_core_res_id(struct lif *lif, int core_id)
 	if (lif->res.core_to_res_map[core_id] >= 0) {
 		/* another thread already did this */
 		spin_unlock(&lif->res.lock);
-		OSAL_LOG_INFO("already assigned per core res_id %d for core_id %d\n",
+		OSAL_LOG_INFO("already assigned per core res_id %d for core_id %d",
 			      lif->res.core_to_res_map[core_id], core_id);
 		return 0;
 	}
@@ -988,7 +988,7 @@ static int assign_per_core_res_id(struct lif *lif, int core_id)
 			lif->sonic->num_per_core_resources);
 	if (free_res_id >= lif->sonic->num_per_core_resources) {
 		spin_unlock(&lif->res.lock);
-		OSAL_LOG_ERROR("Per core resource exhausted for core_id %d\n",
+		OSAL_LOG_ERROR("Per core resource exhausted for core_id %d",
 				core_id);
 		return err;
 	}
@@ -997,7 +997,7 @@ static int assign_per_core_res_id(struct lif *lif, int core_id)
 	lif->res.pc_res[free_res_id]->core_id = core_id;
 	lif->res.core_to_res_map[core_id] = free_res_id;
 	spin_unlock(&lif->res.lock);
-	OSAL_LOG_DEBUG("assign per core res_id %lu for core_id %d\n",
+	OSAL_LOG_DEBUG("assign per core res_id %lu for core_id %d",
 		       free_res_id, core_id);
 	return 0;
 }
@@ -1015,7 +1015,7 @@ sonic_get_per_core_res(struct lif *lif)
 	if (pc_res_idx < 0) {
 		err = assign_per_core_res_id(lif, core_id);
 		if (err != 0) {
-			OSAL_LOG_ERROR("assign_per_core_res_id failed with error %d\n",
+			OSAL_LOG_ERROR("assign_per_core_res_id failed with error %d",
 					err);
 			return NULL;
 		}
@@ -1095,7 +1095,7 @@ sonic_pprint_bmp(struct per_core_resource *pcr, unsigned long *bmp, int max, con
 	}
 	spin_unlock(&pcr->seq_statusq_lock);
 
-	OSAL_LOG_NOTICE("SONIC bmp %s has %d non-zero entries\n",
+	OSAL_LOG_NOTICE("SONIC bmp %s has %d non-zero entries",
 			name, count);
 }
 
@@ -1225,11 +1225,11 @@ static int sonic_lif_seq_q_init(struct queue *q)
 	};
 	int err;
 
-	OSAL_LOG_INFO("seq_q_init.pid %d\n", ctx.cmd.seq_queue_init.pid);
-	OSAL_LOG_INFO("seq_q_init.index %d\n", ctx.cmd.seq_queue_init.index);
-	OSAL_LOG_INFO("seq_q_init.wring_base 0x" PRIx64 "\n",
+	OSAL_LOG_INFO("seq_q_init.pid %d", ctx.cmd.seq_queue_init.pid);
+	OSAL_LOG_INFO("seq_q_init.index %d", ctx.cmd.seq_queue_init.index);
+	OSAL_LOG_INFO("seq_q_init.wring_base 0x" PRIx64,
 		   ctx.cmd.seq_queue_init.wring_base);
-	OSAL_LOG_INFO("seq_q_init.wring_size %d\n",
+	OSAL_LOG_INFO("seq_q_init.wring_size %d",
 		   ctx.cmd.seq_queue_init.wring_size);
 
 	err = sonic_adminq_post_wait(lif, &ctx);
@@ -1245,9 +1245,9 @@ static int sonic_lif_seq_q_init(struct queue *q)
 
 	//q->flags |= QCQ_F_INITED;
 
-	OSAL_LOG_INFO("seq_q->qid %d\n", q->qid);
-	OSAL_LOG_INFO("seq_q->qtype %d\n", q->qtype);
-	OSAL_LOG_INFO("seq_q->db " PRIx64 "\n", (u64) q->db);
+	OSAL_LOG_INFO("seq_q->qid %d", q->qid);
+	OSAL_LOG_INFO("seq_q->qtype %d", q->qtype);
+	OSAL_LOG_INFO("seq_q->db " PRIx64, (u64) q->db);
 	// err = sonic_debugfs_add_q(lif, q);
 	return err;
 }
@@ -1335,18 +1335,18 @@ sonic_lif_seq_q_control(struct queue *q, uint16_t opcode)
 	BUG_ON(opcode != CMD_OPCODE_SEQ_QUEUE_ENABLE &&
 	       opcode != CMD_OPCODE_SEQ_QUEUE_DISABLE);
 
-	OSAL_LOG_INFO("seq_q_control.qid %d\n",
+	OSAL_LOG_INFO("seq_q_control.qid %d",
 			ctx.cmd.seq_queue_control.qid);
-	OSAL_LOG_INFO("seq_q_control.opcode %d\n",
+	OSAL_LOG_INFO("seq_q_control.opcode %d",
 			ctx.cmd.seq_queue_control.opcode);
 
 	err = sonic_adminq_post_wait(lif, &ctx);
 	if (err) {
-		OSAL_LOG_ERROR("seq_q_control failed\n");
+		OSAL_LOG_ERROR("seq_q_control failed");
 		return err;
 	}
 
-	OSAL_LOG_INFO("seq_q_control successful\n");
+	OSAL_LOG_INFO("seq_q_control successful");
 
 	return err;
 }
@@ -1410,15 +1410,15 @@ sonic_lif_hang_notify(struct lif *lif)
 	};
 	int err;
 
-	OSAL_LOG_INFO("hang_notify query\n");
+	OSAL_LOG_INFO("hang_notify query");
 
 	err = sonic_adminq_post_wait(lif, &ctx);
 	if (err) {
-		OSAL_LOG_INFO("hang_notify query failed\n");
+		OSAL_LOG_INFO("hang_notify query failed");
 		return err;
 	}
 
-	OSAL_LOG_INFO("hang_notify query successful, status %u\n",
+	OSAL_LOG_INFO("hang_notify query successful, status %u",
 		 ctx.comp.hang_notify.status);
 	err = ctx.comp.hang_notify.status ? -EFAULT : 0; /* TODO */
 

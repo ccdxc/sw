@@ -64,9 +64,17 @@ extern char g_osal_log_prefix[PREFIX_STR_LEN];
 	USPACE_LOG(stdout, OSAL_LOG_LEVEL_DEBUG, fmt, ##__VA_ARGS__)
 #define OSAL_LOG printf
 #else
-#define KSPACE_LOG(level, ...)					\
+#ifndef __FreeBSD__
+#define KSPACE_LOG(level, ...)						\
 	if ((enum osal_log_level) level <= g_osal_log_level)		\
 		printk(__VA_ARGS__)
+#else
+#define KSPACE_LOG(level, ...)						\
+	if ((enum osal_log_level) level <= g_osal_log_level) {		\
+		printk(__VA_ARGS__);					\
+		printk("\n");						\
+	}
+#endif
 
 #define OSAL_LOG_EMERG(fmt, ...)					\
 	KSPACE_LOG(OSAL_LOG_LEVEL_EMERGENCY, KERN_EMERG "%s:%30s:%d:> " fmt, \

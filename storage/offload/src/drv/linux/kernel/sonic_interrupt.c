@@ -135,7 +135,7 @@ sonic_poll_ev_list(struct sonic_event_list *evl, int budget,
 		db_data = sonic_intr_db_primed_usr_data_get(evl, id, &usr_data);
 		if (usr_data && sonic_intr_db_fired_chk(evl, id, &fired)) {
 
-			//OSAL_LOG_DEBUG("found ev id %d with data 0x%llx\n",
+			//OSAL_LOG_DEBUG("found ev id %d with data 0x%llx",
 			//		id, (unsigned long long) *data);
 			work->ev_data[found].evid = id;
 			work->ev_data[found].data = usr_data;
@@ -155,11 +155,11 @@ sonic_poll_ev_list(struct sonic_event_list *evl, int budget,
 		evl->idle_count = 0;
 	} else {
 		if (evl->idle_count++ == SONIC_ISR_MAX_IDLE_COUNT)
-			OSAL_LOG_CRITICAL("sonic_async_ev_isr stuck in idle loop!\n");
+			OSAL_LOG_CRITICAL("sonic_async_ev_isr stuck in idle loop!");
 	}
 
 	//if (!found || found > 2 || (found + found_zero_data) >= budget || loop_count > budget) {
-	//	OSAL_LOG_WARN("TODO interesting: found %d, found_zero_data %d, loop_count %u\n",
+	//	OSAL_LOG_WARN("TODO interesting: found %d, found_zero_data %d, loop_count %u",
 	//		      found, found_zero_data, loop_count);
 	//}
 
@@ -180,7 +180,7 @@ static void sonic_ev_work_handler(struct work_struct *work)
 	int used_count = 0;
 	int npolled = 0;
 
-	OSAL_LOG_DEBUG("sonic_ev_work_handler enter (workid %u)...\n", work_id);
+	OSAL_LOG_DEBUG("sonic_ev_work_handler enter (workid %u)...", work_id);
 
 	for (i = 0; i < swd->ev_count; i++) {
 		evd = &swd->ev_data[i];
@@ -200,7 +200,7 @@ static void sonic_ev_work_handler(struct work_struct *work)
 
 	//if (complete_count == 0 || incomplete_count > 0 ||
 	//    (complete_count + incomplete_count) == 0) {
-	//	OSAL_LOG_WARN("TODO: interesting: sonic_ev_work_handler workid %u, %u complete, %u incomplete\n",
+	//	OSAL_LOG_WARN("TODO: interesting: sonic_ev_work_handler workid %u, %u complete, %u incomplete",
 	//		      work_id, complete_count, incomplete_count);
 	//}
 
@@ -209,7 +209,7 @@ static void sonic_ev_work_handler(struct work_struct *work)
 
 	if (incomplete_count) {
 		if ((cur_ts - swd->timestamp) > SONIC_EV_WORK_TIMEOUT) {
-			OSAL_LOG_WARN("timed out work item %u with %u events\n",
+			OSAL_LOG_WARN("timed out work item %u with %u events",
 				      work_id, incomplete_count);
 			for (i = 0; i < swd->ev_count; i++) {
 				evd = &swd->ev_data[i];
@@ -224,7 +224,7 @@ static void sonic_ev_work_handler(struct work_struct *work)
 			incomplete_count = 0;
 		} else {
 			/* reenqueue */
-			OSAL_LOG_DEBUG("work item %u reenqueued with %u events\n",
+			OSAL_LOG_DEBUG("work item %u reenqueued with %u events",
 				       work_id, incomplete_count);
 			if (!complete_count)
 				osal_sched_yield();
@@ -243,7 +243,7 @@ static void sonic_ev_work_handler(struct work_struct *work)
 				osal_sched_yield();
 			queue_work(evl->wq, &swd->work);
 		} else {
-			OSAL_LOG_DEBUG("no work available, ev list empty\n");
+			OSAL_LOG_DEBUG("no work available, ev list empty");
 
 			/* Just unmask in hopes our isr kicks in */
 			xchg(&evl->armed, true);
@@ -267,7 +267,7 @@ static void sonic_ev_work_handler(struct work_struct *work)
 	}
 
 done:
-	OSAL_LOG_DEBUG("... exit sonic_ev_work_handler workid %u, %u complete, %u incomplete, %u npolled\n",
+	OSAL_LOG_DEBUG("... exit sonic_ev_work_handler workid %u, %u complete, %u incomplete, %u npolled",
 		       work_id, complete_count, incomplete_count, npolled);
 }
 
@@ -280,10 +280,10 @@ irqreturn_t sonic_async_ev_isr(int irq, void *evlptr)
 
 	was_armed = xchg(&evl->armed, false);
 
-	//OSAL_LOG_DEBUG("sonic_async_ev_isr enter ...\n");
+	//OSAL_LOG_DEBUG("sonic_async_ev_isr enter ...");
 
 	if (unlikely(!evl->enable) || !was_armed) {
-		//OSAL_LOG_DEBUG("... exit sonic_async_ev_isr, not armed\n");
+		//OSAL_LOG_DEBUG("... exit sonic_async_ev_isr, not armed");
 		//sonic_intr_mask(&evl->pc_res->intr, false);
 		return IRQ_HANDLED;
 	}
@@ -293,7 +293,7 @@ irqreturn_t sonic_async_ev_isr(int irq, void *evlptr)
 			&used_count);
 	queue_work(evl->wq, &evl->work_data.work);
 
-	//OSAL_LOG_DEBUG("... exit sonic_async_ev_isr, enqueued %d work items\n", npolled);
+	//OSAL_LOG_DEBUG("... exit sonic_async_ev_isr, enqueued %d work items", npolled);
 
 	return IRQ_HANDLED;
 }
@@ -306,16 +306,16 @@ uint64_t sonic_intr_get_db_addr(struct per_core_resource *pc_res,
 	uint32_t evid;
 
 	if (!evl || !evl->db_base) {
-		OSAL_LOG_WARN("Invalid evl\n");
+		OSAL_LOG_WARN("Invalid evl");
 		return 0;
 	}
 
 	if (sonic_get_evid(evl, &evid) != 0) {
-		OSAL_LOG_WARN("Cannot find free evid\n");
+		OSAL_LOG_WARN("Cannot find free evid");
 		return 0;
 	}
 
-	OSAL_LOG_DEBUG("Successfully allocated evid %u\n", evid);
+	OSAL_LOG_DEBUG("Successfully allocated evid %u", evid);
 
 	db_data = evid_to_db_va(evl, evid);
 	db_data->usr_data = usr_data;
@@ -373,14 +373,14 @@ int sonic_create_ev_list(struct per_core_resource *pc_res, uint32_t ev_count)
 	int rc = 0;
 
 	if (ev_count > MAX_PER_CORE_EVENTS) {
-		OSAL_LOG_INFO("Truncating event count from %u to %u\n",
+		OSAL_LOG_INFO("Truncating event count from %u to %u",
 			      ev_count, (uint32_t) MAX_PER_CORE_EVENTS);
 		ev_count = MAX_PER_CORE_EVENTS;
 	}
 
 	evl = devm_kzalloc(dev, sizeof(*evl), GFP_KERNEL);
 	if (!evl) {
-		OSAL_LOG_ERROR("Failed to alloc %u bytes for evl\n",
+		OSAL_LOG_ERROR("Failed to alloc %u bytes for evl",
 			       (uint32_t) sizeof(*evl));
 		rc = -ENOMEM;
 		goto err_evl;
@@ -398,7 +398,7 @@ int sonic_create_ev_list(struct per_core_resource *pc_res, uint32_t ev_count)
 					  evl->db_total_size,
 					  &evl->db_base_pa, GFP_KERNEL);
 	if (!evl->db_base) {
-		OSAL_LOG_ERROR("Failed to dma_alloc %u bytes for db\n",
+		OSAL_LOG_ERROR("Failed to dma_alloc %u bytes for db",
 			       evl->db_total_size);
 		rc = -ENOMEM;
 		goto err_evl;
@@ -415,17 +415,17 @@ int sonic_create_ev_list(struct per_core_resource *pc_res, uint32_t ev_count)
 	//evl->wq = create_singlethread_workqueue(evl->name);
 	evl->wq = osal_create_workqueue_fast(evl->name, SONIC_ASYNC_BUDGET);
 	if (!evl->wq) {
-		OSAL_LOG_ERROR("Failed to create_workqueue\n");
+		OSAL_LOG_ERROR("Failed to create_workqueue");
 		rc = -ENOMEM;
 		goto err_evl;
 	}
 
-	OSAL_LOG_NOTICE("Successfully created event list\n");
+	OSAL_LOG_NOTICE("Successfully created event list");
 	evl->enable = true;
 	return 0;
 
 err_evl:
-	OSAL_LOG_ERROR("Failed to create event list\n");
+	OSAL_LOG_ERROR("Failed to create event list");
 	sonic_destroy_ev_list(pc_res);
 	return rc;
 }
