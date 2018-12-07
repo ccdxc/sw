@@ -1364,6 +1364,11 @@ func (tsa *Tagent) createFlowMonitorRuleIDMatchingHALProtoObj(mirrorSession *tsp
 							FlowmonitorruleId: ruleID,
 						},
 					},
+					VrfKeyHandle: &halproto.VrfKeyHandle{
+						KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+							VrfId: vrfID,
+						},
+					},
 					Match: &halproto.RuleMatch{
 						SrcAddress: []*halproto.IPAddressObj{srcAddrObj},
 						DstAddress: []*halproto.IPAddressObj{destAddrObj},
@@ -1381,6 +1386,11 @@ func (tsa *Tagent) createFlowMonitorRuleIDMatchingHALProtoObj(mirrorSession *tsp
 					KeyOrHandle: &halproto.FlowMonitorRuleKeyHandle{
 						KeyOrHandle: &halproto.FlowMonitorRuleKeyHandle_FlowmonitorruleId{
 							FlowmonitorruleId: ruleID,
+						},
+					},
+					VrfKeyHandle: &halproto.VrfKeyHandle{
+						KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+							VrfId: vrfID,
 						},
 					},
 				}
@@ -1443,6 +1453,11 @@ func (tsa *Tagent) createFlowMonitorRuleIDMatchingHALProtoObj(mirrorSession *tsp
 							FlowmonitorruleId: ruleID,
 						},
 					},
+					VrfKeyHandle: &halproto.VrfKeyHandle{
+						KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+							VrfId: vrfID,
+						},
+					},
 					Match: &halproto.RuleMatch{
 						SrcMacAddress: []uint64{macRule.SrcMAC},
 						DstMacAddress: []uint64{macRule.DestMAC},
@@ -1460,6 +1475,11 @@ func (tsa *Tagent) createFlowMonitorRuleIDMatchingHALProtoObj(mirrorSession *tsp
 					KeyOrHandle: &halproto.FlowMonitorRuleKeyHandle{
 						KeyOrHandle: &halproto.FlowMonitorRuleKeyHandle_FlowmonitorruleId{
 							FlowmonitorruleId: ruleID,
+						},
+					},
+					VrfKeyHandle: &halproto.VrfKeyHandle{
+						KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+							VrfId: vrfID,
 						},
 					},
 				}

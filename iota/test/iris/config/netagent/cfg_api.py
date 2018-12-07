@@ -58,7 +58,7 @@ def PushConfig():
         agent_api.ConfigureSecurityGroupPolicies(gl_sg_json_obj.sgpolicies)
         agent_api.ConfigureSecurityProfiles(gl_secprof_json_obj.securityprofiles)
         agent_api.ConfigureTunnels(gl_tunnel_json_obj.tunnels)
-        agent_api.ConfigureMirror(gl_mirror_json_obj.mirrors)
+        #agent_api.ConfigureMirror(gl_mirror_json_obj.mirrors)
         #agent_api.ConfigureFlowExport(gl_flow_export_policies_obj.flowexports)
     return api.types.status.SUCCESS
 
@@ -69,6 +69,16 @@ def AddTenants():
 
 def DeleteTenants():
     pass
+
+
+def AddMirrors():
+    agent_api.ConfigureMirror(gl_mirror_json_obj.mirrors, oper = agent_api.CfgOper.ADD)
+    return api.types.status.SUCCESS
+
+
+def DeleteMirrors():
+    agent_api.ConfigureMirror(gl_mirror_json_obj.mirrors, oper = agent_api.CfgOper.DELETE)
+    return api.types.status.SUCCESS
 
 
 def AddNetworks():

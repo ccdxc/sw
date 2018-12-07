@@ -355,6 +355,8 @@ func (hd *Datapath) createUpdateMirrorSession(mirrorSessionKey string, vrfID uin
 			halConsumedFlowRules, halConsumedDropRules)
 	}
 
+	db.MirrorSessionIDToObj[mirrorSessID] = mirrorSessObj
+
 	return purgedFlowRuleIDs, purgedDropRuleIDs, err
 }
 

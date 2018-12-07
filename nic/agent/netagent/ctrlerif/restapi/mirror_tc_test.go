@@ -2173,7 +2173,8 @@ func prepareMirrorSessionTestCases() []mirrorSessionCreateUpdateDeleteProto {
 
 	// DropReason Tests
 	// Case 1: Various mirror session using drop rules
-	testCases = append(testCases, prepareMirrorSessionDropTestCases()...)
+	// TODO: Commented out temporarily. Revisit @rchirakk
+	// testCases = append(testCases, prepareMirrorSessionDropTestCases()...)
 
 	// Match Rule using IPaddress/subnet/Range Tests
 	// Case 2: srcIP, destIP, ipProto, L4port

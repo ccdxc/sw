@@ -1,0 +1,440 @@
+{
+    "mirrors": [
+        {
+            "status": {}, 
+            "kind": "MirrorSession", 
+            "meta": {
+                "creation-time": "1970-01-01T00:00:00Z", 
+                "mod-time": "1970-01-01T00:00:00Z", 
+                "namespace": "default", 
+                "name": "mirror-0", 
+                "tenant": "default"
+            }, 
+            "spec": {
+                "packet-size": 128, 
+                "match-rules": [
+                    {
+                        "source": {
+                            "ip-addresses": [
+                                "192.168.100.101"
+                            ]
+                        }, 
+                        "destination": {
+                            "ip-addresses": [
+                                "192.168.100.0/24"
+                            ]
+                        }, 
+                        "app-protocol-selectors": {
+                            "ports": [
+                                "ICMP/0/0"
+                            ]
+                        }
+                    }, 
+                    {
+                        "source": {
+                            "ip-addresses": [
+                                "192.168.100.0/24"
+                            ]
+                        }, 
+                        "destination": {
+                            "ip-addresses": [
+                                "192.168.100.101"
+                            ]
+                        }, 
+                        "app-protocol-selectors": {
+                            "ports": [
+                                "ICMP/0/0"
+                            ]
+                        }
+                    }, 
+                    {
+                        "source": {
+                            "ip-addresses": [
+                                "192.168.100.101"
+                            ]
+                        }, 
+                        "destination": {
+                            "ip-addresses": [
+                                "192.168.100.0/24"
+                            ]
+                        }, 
+                        "app-protocol-selectors": {
+                            "ports": [
+                                "ICMP/0/0"
+                            ]
+                        }
+                    }, 
+                    {
+                        "source": {
+                            "ip-addresses": [
+                                "192.168.100.0/24"
+                            ]
+                        }, 
+                        "destination": {
+                            "ip-addresses": [
+                                "192.168.100.101"
+                            ]
+                        }, 
+                        "app-protocol-selectors": {
+                            "ports": [
+                                "ICMP/0/0"
+                            ]
+                        }
+                    }, 
+                    {
+                        "source": {
+                            "ip-addresses": [
+                                "192.168.100.101"
+                            ]
+                        }, 
+                        "destination": {
+                            "ip-addresses": [
+                                "192.168.100.0/24"
+                            ]
+                        }, 
+                        "app-protocol-selectors": {
+                            "ports": [
+                                "ICMP/0/0"
+                            ]
+                        }
+                    }, 
+                    {
+                        "source": {
+                            "ip-addresses": [
+                                "192.168.100.0/24"
+                            ]
+                        }, 
+                        "destination": {
+                            "ip-addresses": [
+                                "192.168.100.101"
+                            ]
+                        }, 
+                        "app-protocol-selectors": {
+                            "ports": [
+                                "ICMP/0/0"
+                            ]
+                        }
+                    }, 
+                    {
+                        "source": {
+                            "ip-addresses": [
+                                "192.168.100.102"
+                            ]
+                        }, 
+                        "destination": {
+                            "ip-addresses": [
+                                "192.168.100.0/24"
+                            ]
+                        }, 
+                        "app-protocol-selectors": {
+                            "ports": [
+                                "ICMP/0/0"
+                            ]
+                        }
+                    }, 
+                    {
+                        "source": {
+                            "ip-addresses": [
+                                "192.168.100.0/24"
+                            ]
+                        }, 
+                        "destination": {
+                            "ip-addresses": [
+                                "192.168.100.102"
+                            ]
+                        }, 
+                        "app-protocol-selectors": {
+                            "ports": [
+                                "ICMP/0/0"
+                            ]
+                        }
+                    }, 
+                    {
+                        "source": {
+                            "ip-addresses": [
+                                "192.168.100.102"
+                            ]
+                        }, 
+                        "destination": {
+                            "ip-addresses": [
+                                "192.168.100.0/24"
+                            ]
+                        }, 
+                        "app-protocol-selectors": {
+                            "ports": [
+                                "ICMP/0/0"
+                            ]
+                        }
+                    }, 
+                    {
+                        "source": {
+                            "ip-addresses": [
+                                "192.168.100.0/24"
+                            ]
+                        }, 
+                        "destination": {
+                            "ip-addresses": [
+                                "192.168.100.102"
+                            ]
+                        }, 
+                        "app-protocol-selectors": {
+                            "ports": [
+                                "ICMP/0/0"
+                            ]
+                        }
+                    }, 
+                    {
+                        "source": {
+                            "ip-addresses": [
+                                "192.168.100.102"
+                            ]
+                        }, 
+                        "destination": {
+                            "ip-addresses": [
+                                "192.168.100.0/24"
+                            ]
+                        }, 
+                        "app-protocol-selectors": {
+                            "ports": [
+                                "ICMP/0/0"
+                            ]
+                        }
+                    }, 
+                    {
+                        "source": {
+                            "ip-addresses": [
+                                "192.168.100.0/24"
+                            ]
+                        }, 
+                        "destination": {
+                            "ip-addresses": [
+                                "192.168.100.102"
+                            ]
+                        }, 
+                        "app-protocol-selectors": {
+                            "ports": [
+                                "ICMP/0/0"
+                            ]
+                        }
+                    }, 
+                    {
+                        "source": {
+                            "ip-addresses": [
+                                "192.168.100.103"
+                            ]
+                        }, 
+                        "destination": {
+                            "ip-addresses": [
+                                "192.168.100.0/24"
+                            ]
+                        }, 
+                        "app-protocol-selectors": {
+                            "ports": [
+                                "ICMP/0/0"
+                            ]
+                        }
+                    }, 
+                    {
+                        "source": {
+                            "ip-addresses": [
+                                "192.168.100.0/24"
+                            ]
+                        }, 
+                        "destination": {
+                            "ip-addresses": [
+                                "192.168.100.103"
+                            ]
+                        }, 
+                        "app-protocol-selectors": {
+                            "ports": [
+                                "ICMP/0/0"
+                            ]
+                        }
+                    }, 
+                    {
+                        "source": {
+                            "ip-addresses": [
+                                "192.168.100.103"
+                            ]
+                        }, 
+                        "destination": {
+                            "ip-addresses": [
+                                "192.168.100.0/24"
+                            ]
+                        }, 
+                        "app-protocol-selectors": {
+                            "ports": [
+                                "ICMP/0/0"
+                            ]
+                        }
+                    }, 
+                    {
+                        "source": {
+                            "ip-addresses": [
+                                "192.168.100.0/24"
+                            ]
+                        }, 
+                        "destination": {
+                            "ip-addresses": [
+                                "192.168.100.103"
+                            ]
+                        }, 
+                        "app-protocol-selectors": {
+                            "ports": [
+                                "ICMP/0/0"
+                            ]
+                        }
+                    }, 
+                    {
+                        "source": {
+                            "ip-addresses": [
+                                "192.168.100.103"
+                            ]
+                        }, 
+                        "destination": {
+                            "ip-addresses": [
+                                "192.168.100.0/24"
+                            ]
+                        }, 
+                        "app-protocol-selectors": {
+                            "ports": [
+                                "ICMP/0/0"
+                            ]
+                        }
+                    }, 
+                    {
+                        "source": {
+                            "ip-addresses": [
+                                "192.168.100.0/24"
+                            ]
+                        }, 
+                        "destination": {
+                            "ip-addresses": [
+                                "192.168.100.103"
+                            ]
+                        }, 
+                        "app-protocol-selectors": {
+                            "ports": [
+                                "ICMP/0/0"
+                            ]
+                        }
+                    }, 
+                    {
+                        "source": {
+                            "ip-addresses": [
+                                "192.168.100.104"
+                            ]
+                        }, 
+                        "destination": {
+                            "ip-addresses": [
+                                "192.168.100.0/24"
+                            ]
+                        }, 
+                        "app-protocol-selectors": {
+                            "ports": [
+                                "ICMP/0/0"
+                            ]
+                        }
+                    }, 
+                    {
+                        "source": {
+                            "ip-addresses": [
+                                "192.168.100.0/24"
+                            ]
+                        }, 
+                        "destination": {
+                            "ip-addresses": [
+                                "192.168.100.104"
+                            ]
+                        }, 
+                        "app-protocol-selectors": {
+                            "ports": [
+                                "ICMP/0/0"
+                            ]
+                        }
+                    }, 
+                    {
+                        "source": {
+                            "ip-addresses": [
+                                "192.168.100.104"
+                            ]
+                        }, 
+                        "destination": {
+                            "ip-addresses": [
+                                "192.168.100.0/24"
+                            ]
+                        }, 
+                        "app-protocol-selectors": {
+                            "ports": [
+                                "ICMP/0/0"
+                            ]
+                        }
+                    }, 
+                    {
+                        "source": {
+                            "ip-addresses": [
+                                "192.168.100.0/24"
+                            ]
+                        }, 
+                        "destination": {
+                            "ip-addresses": [
+                                "192.168.100.104"
+                            ]
+                        }, 
+                        "app-protocol-selectors": {
+                            "ports": [
+                                "ICMP/0/0"
+                            ]
+                        }
+                    }, 
+                    {
+                        "source": {
+                            "ip-addresses": [
+                                "192.168.100.104"
+                            ]
+                        }, 
+                        "destination": {
+                            "ip-addresses": [
+                                "192.168.100.0/24"
+                            ]
+                        }, 
+                        "app-protocol-selectors": {
+                            "ports": [
+                                "ICMP/0/0"
+                            ]
+                        }
+                    }, 
+                    {
+                        "source": {
+                            "ip-addresses": [
+                                "192.168.100.0/24"
+                            ]
+                        }, 
+                        "destination": {
+                            "ip-addresses": [
+                                "192.168.100.104"
+                            ]
+                        }, 
+                        "app-protocol-selectors": {
+                            "ports": [
+                                "ICMP/0/0"
+                            ]
+                        }
+                    }
+                ], 
+                "enable": true, 
+                "collectors": [
+                    {
+                        "export-config": {
+                            "destination": "192.168.100.101", 
+                            "transport": "TCP/8000"
+                        }, 
+                        "pcap-dir-name": "", 
+                        "type": "ERSPAN"
+                    }
+                ], 
+                "stop-condition": {}
+            }
+        }
+    ]
+}
