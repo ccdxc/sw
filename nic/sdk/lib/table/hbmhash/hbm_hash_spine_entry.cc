@@ -18,12 +18,13 @@ using sdk::table::HbmHashEntry;
 // Factory method to instantiate the class
 //---------------------------------------------------------------------------
 HbmHashSpineEntry *
-HbmHashSpineEntry::factory(HbmHashTableEntry *ht_entry, uint32_t mtrack_id)
+HbmHashSpineEntry::factory(HbmHashTableEntry *ht_entry)
 {
     void            *mem = NULL;
     HbmHashSpineEntry  *hse = NULL;
 
-    mem = SDK_CALLOC(mtrack_id, sizeof(HbmHashSpineEntry));
+    // mem = SDK_CALLOC(mtrack_id, sizeof(HbmHashSpineEntry));
+    mem = ht_entry->get_hbm_hash()->hbm_hash_spine_entry_alloc();
     if (!mem) {
         return NULL;
     }
@@ -36,11 +37,13 @@ HbmHashSpineEntry::factory(HbmHashTableEntry *ht_entry, uint32_t mtrack_id)
 // Method to free & delete the object
 //---------------------------------------------------------------------------
 void
-HbmHashSpineEntry::destroy(HbmHashSpineEntry *hse, uint32_t mtrack_id)
+HbmHashSpineEntry::destroy(HbmHashSpineEntry *hse)
 {
+    HbmHash *hbm_hash = hse->get_ht_entry()->get_hbm_hash();
     if (hse) {
         hse->~HbmHashSpineEntry();
-        SDK_FREE(mtrack_id, hse);
+        // SDK_FREE(mtrack_id, hse);
+        hbm_hash->hbm_hash_spine_entry_free(hse);
     }
 }
 
@@ -485,4 +488,6 @@ HbmHashSpineEntry::entry_to_str(char *buff, uint32_t buff_size)
         }
     }
     SDK_ASSERT(p4_err == P4PD_SUCCESS);
+    SDK_FREE(SDK_MEM_ALLOC_ENTIRE_HBM_HASH_ENTRY_DATA, action_data);
+    SDK_FREE(SDK_MEM_ALLOC_HBM_HASH_SPINE_ENTRY_SW_KEY, sw_key);
 }

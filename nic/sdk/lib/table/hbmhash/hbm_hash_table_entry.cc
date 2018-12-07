@@ -21,12 +21,13 @@ using sdk::table::HbmHash;
 // Factory method to instantiate the class
 //---------------------------------------------------------------------------
 HbmHashTableEntry *
-HbmHashTableEntry::factory(uint32_t bucket_index, HbmHash *hbm_hash, uint32_t mtrack_id)
+HbmHashTableEntry::factory(uint32_t bucket_index, HbmHash *hbm_hash)
 {
     void            *mem = NULL;
     HbmHashTableEntry  *fte = NULL;
 
-    mem = SDK_CALLOC(mtrack_id, sizeof(HbmHashTableEntry));
+    // mem = SDK_CALLOC(mtrack_id, sizeof(HbmHashTableEntry));
+    mem = hbm_hash->hbm_hash_table_entry_alloc();
     if (!mem) {
         return NULL;
     }
@@ -39,11 +40,13 @@ HbmHashTableEntry::factory(uint32_t bucket_index, HbmHash *hbm_hash, uint32_t mt
 // Method to free & delete the object
 //---------------------------------------------------------------------------
 void
-HbmHashTableEntry::destroy(HbmHashTableEntry *fte, uint32_t mtrack_id)
+HbmHashTableEntry::destroy(HbmHashTableEntry *fte)
 {
+    HbmHash *hbm_hash = fte->get_hbm_hash();
     if (fte) {
         fte->~HbmHashTableEntry();
-        SDK_FREE(mtrack_id, fte);
+        // SDK_FREE(mtrack_id, fte);
+        hbm_hash->hbm_hash_table_entry_free(fte);
     }
 }
 

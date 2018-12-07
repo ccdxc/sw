@@ -44,10 +44,8 @@ private:
     ~HbmHashTableEntry();
 public:
     static HbmHashTableEntry *factory(uint32_t bucket_index,
-                                      HbmHash *hbm_hash,
-                                      uint32_t mtrack_id = SDK_MEM_ALLOC_HBM_HASH_TABLE_ENTRY);
-    static void destroy(HbmHashTableEntry *fte,
-                        uint32_t mtrack_id = SDK_MEM_ALLOC_HBM_HASH_TABLE_ENTRY);
+                                      HbmHash *hbm_hash);
+    static void destroy(HbmHashTableEntry *fte);
 
     sdk_ret_t insert(HbmHashEntry *h_entry);
     sdk_ret_t remove(HbmHashEntry *h_entry);

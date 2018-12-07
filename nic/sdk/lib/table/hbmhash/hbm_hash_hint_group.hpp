@@ -34,10 +34,8 @@ private:
     ~HbmHashHintGroup();
 public:
     static HbmHashHintGroup *factory(uint32_t hint_bits,
-                                  HbmHashSpineEntry *fs_entry,
-                                  uint32_t mtrack_id = SDK_MEM_ALLOC_HBM_HASH_HINT_GROUP);
-    static void destroy(HbmHashHintGroup *hg,
-                        uint32_t mtrack_id = SDK_MEM_ALLOC_HBM_HASH_HINT_GROUP);
+                                  HbmHashSpineEntry *fs_entry);
+    static void destroy(HbmHashHintGroup *hg);
 
     void add_hbm_hash_entry(HbmHashEntry *h_entry);
     void del_hbm_hash_entry(HbmHashEntry *h_entry);

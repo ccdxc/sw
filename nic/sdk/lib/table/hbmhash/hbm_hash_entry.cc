@@ -2,9 +2,6 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 #include <cstring>
-// #include <ctime>
-// #include <cstdlib>
-
 #include "include/sdk/base.hpp"
 #include "hbm_hash.hpp"
 #include "hbm_hash_entry.hpp"
@@ -13,6 +10,7 @@
 #include "hbm_hash_hint_group.hpp"
 #include "hbm_hash_mem_types.hpp"
 
+using sdk::table::HbmHash;
 using sdk::table::HbmHashEntry;
 using sdk::table::HbmHashTableEntry;
 using sdk::table::HbmHashSpineEntry;
@@ -22,17 +20,19 @@ using sdk::table::HbmHashSpineEntry;
 //---------------------------------------------------------------------------
 HbmHashEntry *
 HbmHashEntry::factory(void *key, uint32_t key_len, void *data, uint32_t data_len,
-                   uint32_t hwkey_len, bool log, uint32_t mtrack_id)
+                      uint32_t hwkey_len, bool log, HbmHash *hbm_hash)
 {
     void        *mem = NULL;
     HbmHashEntry   *fe = NULL;
 
-    mem = SDK_CALLOC(mtrack_id, sizeof(HbmHashEntry));
+    mem = hbm_hash->hbm_hash_entry_alloc();
+    // mem = SDK_CALLOC(mtrack_id, sizeof(HbmHashEntry));
     if (!mem) {
         return NULL;
     }
 
-    fe = new (mem) HbmHashEntry(key, key_len, data, data_len, hwkey_len, log);
+    fe = new (mem) HbmHashEntry(key, key_len, data, data_len,
+                                hwkey_len, log, hbm_hash);
     return fe;
 }
 
@@ -40,11 +40,12 @@ HbmHashEntry::factory(void *key, uint32_t key_len, void *data, uint32_t data_len
 // Method to free & delete the object
 //---------------------------------------------------------------------------
 void
-HbmHashEntry::destroy(HbmHashEntry *re, uint32_t mtrack_id)
+HbmHashEntry::destroy(HbmHashEntry *re, HbmHash *hbm_hash)
 {
     if (re) {
         re->~HbmHashEntry();
-        SDK_FREE(mtrack_id, re);
+        // SDK_FREE(mtrack_id, re);
+        hbm_hash->hbm_hash_entry_free(re);
     }
 }
 
@@ -53,16 +54,20 @@ HbmHashEntry::destroy(HbmHashEntry *re, uint32_t mtrack_id)
 // ---------------------------------------------------------------------------
 HbmHashEntry::HbmHashEntry(void *key, uint32_t key_len,
                      void *data, uint32_t data_len,
-                     uint32_t hwkey_len, bool log)
+                     uint32_t hwkey_len, bool log,
+                     HbmHash *hbm_hash)
 {
     key_len_ = key_len;
     data_len_ = data_len;
     hwkey_len_ = hwkey_len;
 
-    key_ = SDK_MALLOC(SDK_MEM_ALLOC_HBM_HASH_ENTRY_KEY, key_len);
-    data_ = SDK_MALLOC(SDK_MEM_ALLOC_HBM_HASH_ENTRY_DATA, data_len);
-    // hwkey has to be always initialized
-    hwkey_ = SDK_CALLOC(SDK_MEM_ALLOC_HBM_HASH_HW_KEY, hwkey_len_);
+    key_ = hbm_hash->hbm_sw_key_alloc();
+    data_ = hbm_hash->hbm_sw_data_alloc();
+    hwkey_ = hbm_hash->hbm_hw_key_alloc();
+
+    // key_ = SDK_MALLOC(SDK_MEM_ALLOC_HBM_HASH_ENTRY_KEY, key_len);
+    // data_ = SDK_MALLOC(SDK_MEM_ALLOC_HBM_HASH_ENTRY_DATA, data_len);
+    // hwkey_ = SDK_CALLOC(SDK_MEM_ALLOC_HBM_HASH_HW_KEY, hwkey_len_);
 
     std::memcpy(key_, key, key_len);
     std::memcpy(data_, data, data_len);
@@ -86,9 +91,13 @@ HbmHashEntry::HbmHashEntry(void *key, uint32_t key_len,
 // ---------------------------------------------------------------------------
 HbmHashEntry::~HbmHashEntry()
 {
-    SDK_FREE(SDK_MEM_ALLOC_HBM_HASH_ENTRY_KEY, key_);
-    SDK_FREE(SDK_MEM_ALLOC_HBM_HASH_ENTRY_DATA, data_);
-    SDK_FREE(SDK_MEM_ALLOC_HBM_HASH_HW_KEY, hwkey_);
+    get_bucket()->get_hbm_hash()->hbm_sw_key_free(key_);
+    get_bucket()->get_hbm_hash()->hbm_sw_data_free(data_);
+    get_bucket()->get_hbm_hash()->hbm_hw_key_free(hwkey_);
+
+    // SDK_FREE(SDK_MEM_ALLOC_HBM_HASH_ENTRY_KEY, key_);
+    // SDK_FREE(SDK_MEM_ALLOC_HBM_HASH_ENTRY_DATA, data_);
+    // SDK_FREE(SDK_MEM_ALLOC_HBM_HASH_HW_KEY, hwkey_);
 }
 
 // ---------------------------------------------------------------------------
@@ -593,7 +602,8 @@ HbmHashEntry::create_new_hbm_hash_entry(HbmHashEntry *fe)
     //                                   hwkey_len_, true);
     HbmHashEntry *new_fe = HbmHashEntry::factory(fe->get_key(), fe->get_key_len(),
                                            fe->get_data(), fe->get_data_len(),
-                                           hwkey_len_, true);
+                                           hwkey_len_, true,
+                                           get_bucket()->get_hbm_hash());
     *new_fe = *fe;
 
     // Take location information from "this"

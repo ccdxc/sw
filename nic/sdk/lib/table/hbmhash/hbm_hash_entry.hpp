@@ -49,15 +49,14 @@ private:
     uint32_t            hct_index_;         // non-anchor's coll. tbl idx
 
     HbmHashEntry (void *key, uint32_t key_len, void *data, uint32_t data_len,
-               uint32_t hwkey_len, bool log);
+               uint32_t hwkey_len, bool log, HbmHash *hbm_hash);
     ~HbmHashEntry ();
 
 public:
     static HbmHashEntry *factory(void *key, uint32_t key_len, void *data,
                                  uint32_t data_len, uint32_t hwkey_len, bool log,
-                                 uint32_t mtrack_id = SDK_MEM_ALLOC_HBM_HASH_ENTRY);
-    static void destroy(HbmHashEntry *fe,
-                        uint32_t mtrack_id = SDK_MEM_ALLOC_HBM_HASH_ENTRY);
+                                 HbmHash *hbm_hash);
+    static void destroy(HbmHashEntry *fe, HbmHash *hbm_hash);
 
     sdk_ret_t insert(HbmHashHintGroup *hg, HbmHashSpineEntry *fse);
     sdk_ret_t update(void *data);

@@ -55,6 +55,7 @@
 #include "include/sdk/crc_fast.hpp"
 #include "include/sdk/table_monitor.hpp"
 #include "hbm_hash_mem_types.hpp"
+#include "include/sdk/slab.hpp"
 
 using namespace std;
 using sdk::lib::indexer;
@@ -102,33 +103,40 @@ public:
 private:
 
     // Private Data
-    std::string         table_name_;                // table name
-    uint32_t            table_id_;                  // table id
-    uint32_t            collision_table_id_;        // collision table id
-    uint32_t            hash_capacity_;             // size of collision table
-    uint32_t            coll_capacity_;             // size of coll. table
-    uint32_t            key_len_;                   // key len
-    uint32_t            data_len_;                  // data len
-    uint32_t            entire_data_len_;           // entire data len
-    uint32_t            max_recircs_;                // max. recircs
-    HashPoly            hash_poly_;                 // hash polynomial
-    crcFast             *crc_;                      // crc Table for fast comput.
+    std::string         table_name_;                    // table name
+    uint32_t            table_id_;                      // table id
+    uint32_t            collision_table_id_;            // collision table id
+    uint32_t            hash_capacity_;                 // size of collision table
+    uint32_t            coll_capacity_;                 // size of coll. table
+    uint32_t            key_len_;                       // key len
+    uint32_t            data_len_;                      // data len
+    uint32_t            entire_data_len_;               // entire data len
+    uint32_t            max_recircs_;                   // max. recircs
+    HashPoly            hash_poly_;                     // hash polynomial
+    crcFast             *crc_;                          // crc Table for fast comput.
+
+    slab                *hbm_hash_entry_slab_;          // hbm_hash_entry slab
+    slab                *hbm_sw_key_slab_;              // sw key slab
+    slab                *hbm_hw_key_slab_;              // hw key slab
+    slab                *hbm_sw_data_slab_;             // data slab
+    slab                *hbm_hash_hint_group_slab_;     // hint group slab
+    slab                *hbm_hash_table_entry_slab_;    // table entry slab
+    slab                *hbm_hash_spine_entry_slab_;    // table entry slab
+
+    uint32_t            hash_tbl_key_len_;              // hash table key len (21)
+    uint32_t            hash_coll_tbl_key_len_;         // coll table key len (14)
+    uint32_t            hint_len_;                      // hint len (11)
+    uint32_t            hint_mem_len_B_;                // sw index into coll table
+    uint32_t            num_hints_per_entry_;           // HGs per HBM Hash Entry (6)
+
+    uint32_t            hwkey_len_;                     // Key len for HBM Hash Table
+    uint32_t            hwdata_len_;                    // Data Len for HBM Hash Table
+
+    bool                enable_delayed_del_;            // enable delayed del
+    bool                entry_trace_en_;                // enable entry tracing
 
 
-    uint32_t            hash_tbl_key_len_;          // hash table key len (21)
-    uint32_t            hash_coll_tbl_key_len_;     // coll table key len (14)
-    uint32_t            hint_len_;                  // hint len (11)
-    uint32_t            hint_mem_len_B_;            // sw index into coll table
-    uint32_t            num_hints_per_entry_;       // HGs per HBM Hash Entry (6)
-
-    uint32_t            hwkey_len_;                 // Key len for HBM Hash Table
-    uint32_t            hwdata_len_;                // Data Len for HBM Hash Table
-
-    bool                enable_delayed_del_;        // enable delayed del
-    bool                entry_trace_en_;            // enable entry tracing
-
-
-    table_health_state_t        health_state_;      // health state of collision table
+    table_health_state_t        health_state_;          // health state of collision table
     table_health_monitor_func_t health_monitor_func_;   // health mon. cb
 
     // Flat array with (21 bit key) => HBM Hash Table Entry
@@ -179,6 +187,8 @@ private:
             table_health_monitor_func_t health_monitor_func = NULL);
     ~HbmHash();
     sdk_ret_t init();
+    sdk_ret_t initialize_slabs();
+    sdk_ret_t destroy_slabs();
 
     void insert_bucket(uint32_t index, HbmHashTableEntry* bucket);
     HbmHashTableEntry *remove_bucket(uint32_t index);
@@ -203,6 +213,23 @@ public:
     static void destroy(HbmHash *hbmhash,
                         uint32_t mtrack_id = SDK_MEM_ALLOC_FLOW);
 
+    // Slab APIs
+    void *hbm_hash_entry_alloc();
+    void hbm_hash_entry_free(void *entry);
+    void *hbm_sw_key_alloc();
+    void hbm_sw_key_free(void *entry);
+    void *hbm_hw_key_alloc();
+    void hbm_hw_key_free(void *entry);
+    void *hbm_sw_data_alloc();
+    void hbm_sw_data_free(void *entry);
+    void *hbm_hash_hint_group_alloc();
+    void hbm_hash_hint_group_free(void *entry);
+    void *hbm_hash_table_entry_alloc();
+    void hbm_hash_table_entry_free(void *entry);
+    void *hbm_hash_spine_entry_alloc();
+    void hbm_hash_spine_entry_free(void *entry);
+
+
     // Debug Info
     uint32_t table_id(void) { return table_id_; }
     const char *table_name(void) { return table_name_.c_str(); }
@@ -225,6 +252,10 @@ public:
     sdk_ret_t update(uint32_t index, void *data);
     sdk_ret_t remove(uint32_t index);
 
+
+    void hbm_hash_entry_free_to_slab_(void *entry) {
+        hbm_hash_entry_slab_->free(entry);
+    }
 
     /*
     Hash::ReturnStatus retrieve(uint32_t index, void **key, uint32_t *key_len,

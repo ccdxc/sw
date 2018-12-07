@@ -74,11 +74,81 @@ HbmHash::factory(std::string table_name, uint32_t table_id,
 }
 
 sdk_ret_t
+HbmHash::initialize_slabs()
+{
+    hbm_hash_entry_slab_ = slab::factory("hbm_hash_entry",
+                                         sdk::lib::SDK_SLAB_ID_HBM_HASH_ENTRY,
+                                         sizeof(HbmHashEntry),
+                                         256, true, true, false);
+    if (!hbm_hash_entry_slab_) {
+        return SDK_RET_OOM;
+    }
+
+    hbm_sw_key_slab_ = slab::factory("hbm_hash_sw_key",
+                                     sdk::lib::SDK_SLAB_ID_HBM_HASH_SW_KEY,
+                                     key_len_,
+                                     256, true, true, false);
+    if (!hbm_sw_key_slab_) {
+        return SDK_RET_OOM;
+    }
+
+    hbm_hw_key_slab_ = slab::factory("hbm_hash_hw_key",
+                                     sdk::lib::SDK_SLAB_ID_HBM_HASH_HW_KEY,
+                                     hwkey_len_,
+                                     256, true, true, false);
+    if (!hbm_hw_key_slab_) {
+        return SDK_RET_OOM;
+    }
+
+#if 0
+    hbm_hash_entry_data_slab_ = slab::factory("hbm_hash_entry_data",
+                                              sdk::lib::SDK_SLAB_ID_HBM_HASH_ENTRY_DATA,
+                                              entire_data_len_,
+                                              256, true, true, false);
+    if (!hbm_hash_entry_data_slab_) {
+        return SDK_RET_OOM;
+    }
+#endif
+
+    hbm_hash_hint_group_slab_ = slab::factory("hbm_hash_hint_group",
+                                              sdk::lib::SDK_SLAB_ID_HBM_HASH_HINT_GROUP,
+                                              sizeof(HbmHashHintGroup),
+                                              256, true, true, false);
+    if (!hbm_hash_hint_group_slab_) {
+        return SDK_RET_OOM;
+    }
+
+    hbm_hash_table_entry_slab_ = slab::factory("hbm_hash_table_entry",
+                                               sdk::lib::SDK_SLAB_ID_HBM_HASH_TABLE_ENTRY,
+                                               sizeof(HbmHashTableEntry),
+                                               256, true, true, false);
+    if (!hbm_hash_table_entry_slab_) {
+        return SDK_RET_OOM;
+    }
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+HbmHash::destroy_slabs()
+{
+    if (hbm_hash_entry_slab_) slab::destroy(hbm_hash_entry_slab_);
+    if (hbm_sw_key_slab_) slab::destroy(hbm_sw_key_slab_);
+    if (hbm_hw_key_slab_) slab::destroy(hbm_hw_key_slab_);
+    // if (hbm_hash_entry_data_slab_) slab::destroy(hbm_hash_entry_data_slab_);
+    if (hbm_hash_hint_group_slab_) slab::destroy(hbm_hash_hint_group_slab_);
+    if (hbm_hash_table_entry_slab_) slab::destroy(hbm_hash_table_entry_slab_);
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 HbmHash::init()
 {
+    initialize_slabs();
+
     // Initialize CRC Fast
     crc_ = crcFast::factory(HASH_POLY_MAX + 1);
-
     if (crc_ == NULL) {
         return SDK_RET_OOM;
     }
@@ -97,6 +167,7 @@ void
 HbmHash::destroy(HbmHash *re, uint32_t mtrack_id)
 {
     if (re) {
+        re->destroy_slabs();
         re->~HbmHash();
         SDK_FREE(mtrack_id, re);
     }
@@ -263,23 +334,21 @@ HbmHash::calc_hash_(void *key, void *data)
 
     // create entry
     entry = HbmHashEntry::factory(key, key_len_, data, data_len_,
-                               hwkey_len_, false);
+                                  hwkey_len_, false, this);
 
-    // call P4 API to get hw key
-    // hwkey = ::operator new(hwkey_len_);
-    // memset(hwkey, 0, hwkey_len_);
-    hwkey = SDK_CALLOC(SDK_MEM_ALLOC_HBM_HASH_HW_KEY, hwkey_len_);
+    // hwkey = SDK_CALLOC(SDK_MEM_ALLOC_HBM_HASH_HW_KEY, hwkey_len_);
+    hwkey = hbm_hw_key_alloc();
 
     rs = entry->form_hw_key(table_id_, hwkey);
     if (rs != SDK_RET_OK) SDK_ASSERT(0);
 
     // cal. hash
     hash_val = generate_hash_(hwkey, hwkey_len_, false);
-    // ::operator delete(hwkey);
-    SDK_FREE(SDK_MEM_ALLOC_HBM_HASH_HW_KEY, hwkey);
+    // SDK_FREE(SDK_MEM_ALLOC_HBM_HASH_HW_KEY, hwkey);
+    hbm_hw_key_free(hwkey);
 
     // delete entry;
-    HbmHashEntry::destroy(entry);
+    HbmHashEntry::destroy(entry, this);
 
     return hash_val;
 }
@@ -325,7 +394,7 @@ HbmHash::insert (void *key, void *data, uint32_t *index)
 
     // create a entry
     entry = HbmHashEntry::factory(key, key_len_, data, data_len_,
-                               hwkey_len_, true);
+                               hwkey_len_, true, this);
 
     hwkey = entry->get_hwkey();
 
@@ -384,7 +453,7 @@ HbmHash::insert (void *key, void *data, uint32_t *index)
         SDK_TRACE_DEBUG("Insert FAIL ...rs: %d", rs);
 
         // delete entry
-        HbmHashEntry::destroy(entry);
+        HbmHashEntry::destroy(entry, this);
 
         // free index alloced
         rs1 = free_hbm_hash_entry_index_(fe_idx);
@@ -426,7 +495,7 @@ HbmHash::insert_with_hash(void *key, void *data, uint32_t *index, uint32_t hash_
 
     // create a flow entry
     entry = HbmHashEntry::factory(key, key_len_, data, data_len_,
-                                  hwkey_len_, true);
+                                  hwkey_len_, true, this);
 
     hwkey = entry->get_hwkey();
 
@@ -477,7 +546,7 @@ HbmHash::insert_with_hash(void *key, void *data, uint32_t *index, uint32_t hash_
 
         // delete flow entry
         // delete entry;
-        HbmHashEntry::destroy(entry);
+        HbmHashEntry::destroy(entry, this);
 
         // free index alloced
         rs1 = free_hbm_hash_entry_index_(fe_idx);
@@ -485,7 +554,6 @@ HbmHash::insert_with_hash(void *key, void *data, uint32_t *index, uint32_t hash_
     }
 
 end:
-
     // Uncomment for debugging
     // print_flow();
     //SDK_TRACE_DEBUG("ret:%d", rs);
@@ -543,7 +611,7 @@ HbmHash::remove(uint32_t index)
         // Call remove
         rs = bucket->remove(entry);
         if (rs == SDK_RET_OK) {
-            HbmHashEntry::destroy(entry);
+            HbmHashEntry::destroy(entry, this);
             // Remove it from entry map.
             assert(entry == remove_entry(index));
             // Free the index in indexer
@@ -959,6 +1027,90 @@ HbmHash::remove_entry(uint32_t index)
     entry_map_[index] = NULL;
     entry_count_--;
     return data;
+}
+
+void *
+HbmHash::hbm_hash_entry_alloc()
+{
+    return hbm_hash_entry_slab_->alloc();
+}
+
+void
+HbmHash::hbm_hash_entry_free(void *entry)
+{
+    hbm_hash_entry_slab_->free(entry);
+}
+
+void *
+HbmHash::hbm_hw_key_alloc()
+{
+    return hbm_hw_key_slab_->alloc();
+}
+
+void
+HbmHash::hbm_hw_key_free(void *entry)
+{
+    return hbm_hw_key_slab_->free(entry);
+}
+
+void *
+HbmHash::hbm_sw_key_alloc()
+{
+    return hbm_sw_key_slab_->alloc();
+}
+
+void
+HbmHash::hbm_sw_key_free(void *entry)
+{
+    return hbm_sw_key_slab_->free(entry);
+}
+
+void *
+HbmHash::hbm_sw_data_alloc()
+{
+    return hbm_sw_data_slab_->alloc();
+}
+
+void
+HbmHash::hbm_sw_data_free(void *entry)
+{
+    return hbm_sw_data_slab_->free(entry);
+}
+
+void *
+HbmHash::hbm_hash_hint_group_alloc()
+{
+    return hbm_hash_hint_group_slab_->alloc();
+}
+
+void
+HbmHash::hbm_hash_hint_group_free(void *entry)
+{
+    return hbm_hash_hint_group_slab_->free(entry);
+}
+
+void *
+HbmHash::hbm_hash_table_entry_alloc()
+{
+    return hbm_hash_table_entry_slab_->alloc();
+}
+
+void
+HbmHash::hbm_hash_table_entry_free(void *entry)
+{
+    return hbm_hash_table_entry_slab_->free(entry);
+}
+
+void *
+HbmHash::hbm_hash_spine_entry_alloc()
+{
+    return hbm_hash_spine_entry_slab_->alloc();
+}
+
+void
+HbmHash::hbm_hash_spine_entry_free(void *entry)
+{
+    return hbm_hash_spine_entry_slab_->free(entry);
 }
 
 // ---------------------------------------------------------------------------
