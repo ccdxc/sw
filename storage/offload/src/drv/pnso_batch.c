@@ -284,8 +284,8 @@ destroy_batch_chain(struct batch_info *batch_info)
 				num_entries, idx, (uint64_t) page_entry,
 				(uint64_t) page_entry->bpe_chain);
 
-		OSAL_ASSERT(page_entry->bpe_chain);
-		chn_destroy_chain(page_entry->bpe_chain);
+		if(page_entry->bpe_chain)
+			chn_destroy_chain(page_entry->bpe_chain);
 	}
 
 	OSAL_LOG_DEBUG("exit!");
@@ -329,7 +329,7 @@ bat_destroy_batch(void)
 
 	batch_info = pcr->batch_info;
 	if (!batch_info) {
-		OSAL_LOG_DEBUG("batch not found! pcr: 0x" PRIx64,
+		OSAL_LOG_ERROR("batch not found! pcr: 0x" PRIx64,
 				(uint64_t) pcr);
 		goto out;
 	}
@@ -491,6 +491,8 @@ build_batch(struct batch_info *batch_info, struct request_params *req_params)
 			OSAL_LOG_DEBUG("failed to build batch of chains! idx: %d err: %d",
 					idx, err);
 			PAS_INC_NUM_CHAIN_FAILURES(batch_info->bi_pcr);
+			if(idx) 
+				batch_info->bi_flags |= BATCH_BFLAG_CHAIN_PRESENT;
 			goto out;
 		}
 		page_entry->bpe_chain = chain;

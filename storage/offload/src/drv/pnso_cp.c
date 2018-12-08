@@ -100,6 +100,7 @@ compress_setup(struct service_info *svc_info,
 		OSAL_LOG_ERROR("cannot obtain cp desc from pool! err: %d", err);
 		goto out;
 	}
+	svc_info->si_desc = cp_desc;
 
 	pcr = svc_info->si_pcr;
 	status_desc = cpdc_get_status_desc(pcr, false);
@@ -109,6 +110,7 @@ compress_setup(struct service_info *svc_info,
 				err);
 		goto out;
 	}
+	svc_info->si_status_desc = status_desc;
 
 	err = cpdc_update_service_info_sgls(svc_info);
 	if (err) {
@@ -134,8 +136,6 @@ compress_setup(struct service_info *svc_info,
 #endif
 	svc_info->si_type = PNSO_SVC_TYPE_COMPRESS;
 	svc_info->si_desc_flags = flags;
-	svc_info->si_desc = cp_desc;
-	svc_info->si_status_desc = status_desc;
 
 	err = cpdc_setup_seq_desc(svc_info, cp_desc, 0);
 	if (err) {
