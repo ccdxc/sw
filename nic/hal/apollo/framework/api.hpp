@@ -30,13 +30,13 @@ typedef enum api_op_e {
  */
 typedef enum obj_id_e {
     OBJ_ID_NONE,
+    OBJ_ID_SWITCHPORT,
     OBJ_ID_VCN,
     OBJ_ID_SUBNET,
+    OBJ_ID_TEP,
     OBJ_ID_VNIC,
     OBJ_ID_ROUTE,
-    API_ID_SECURITY_RULES,
-    OBJ_ID_TEP,
-    OBJ_ID_SWITCHPORT,
+    OBJ_ID_SECURITY_RULES,
     OBJ_ID_MAX,
 } obj_id_t;
 

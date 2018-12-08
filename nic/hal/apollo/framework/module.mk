@@ -3,5 +3,5 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libociframework.so
 MODULE_PIPELINE = apollo
-MODULE_SRCS     = ${MODULE_SRC_DIR}/*.cc
+#MODULE_SRCS     = ${MODULE_SRC_DIR}/*.cc
 include ${MKDEFS}/post.mk

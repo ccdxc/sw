@@ -89,6 +89,4 @@ extern api_engine    g_api_engine;
 
 }    // namespace api
 
-using api::g_api_engine;
-
 #endif    /** __API_ENGINE_HPP__ */

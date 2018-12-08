@@ -473,6 +473,8 @@ error:
 
 #endif
 
+}    // namespace api
+
 /**
  * @brief Create VNIC
  *
@@ -486,10 +488,10 @@ oci_vnic_create (_In_ oci_vnic_t *vnic)
     sdk_ret_t     rv;
 
     memset(&api_ctxt, 0, sizeof(api_ctxt));
-    api_ctxt.api_op = API_OP_CREATE;
-    api_ctxt.obj_id = OBJ_ID_VNIC;
-    api_ctxt.vnic_create = *vnic;
-    rv = g_api_engine.process_api(&api_ctxt);
+    api_ctxt.api_op = api::API_OP_CREATE;
+    api_ctxt.obj_id = api::OBJ_ID_VNIC;
+    api_ctxt.vnic_info = *vnic;
+    rv = api::g_api_engine.process_api(&api_ctxt);
     return rv;
 }
 
@@ -506,13 +508,11 @@ oci_vnic_delete (_In_ oci_vnic_key_t *vnic_key)
     sdk_ret_t     rv;
 
     memset(&api_ctxt, 0, sizeof(api_ctxt));
-    api_ctxt.api_op = API_OP_DELETE;
-    api_ctxt.obj_id = OBJ_ID_VNIC;
-    api_ctxt.vnic_delete = *vnic_key;
-    rv = g_api_engine.process_api(&api_ctxt);
+    api_ctxt.api_op = api::API_OP_DELETE;
+    api_ctxt.obj_id = api::OBJ_ID_VNIC;
+    api_ctxt.vnic_key = *vnic_key;
+    rv = api::g_api_engine.process_api(&api_ctxt);
     return rv;
 }
 
 /** @} */ // end of OCI_VNIC_API
-
-}    // namespace api

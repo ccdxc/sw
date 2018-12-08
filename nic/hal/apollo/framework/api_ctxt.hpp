@@ -27,12 +27,12 @@ typedef struct api_ctxt_s {
     api_base    *new_obj;         /**< modified or next version of the object */
     /**< API specific parameters */
     union {
-        oci_vcn_t           vcn_create;
-        oci_vcn_key_t       vcn_delete;
-        oci_subnet_t        subnet_create;
-        oci_subnet_key_t    subnet_delete;
-        oci_vnic_t          vnic_create;
-        oci_vnic_key_t      vnic_delete;
+        oci_vcn_key_t       vcn_key;
+        oci_vcn_t           vcn_info;
+        oci_subnet_key_t    subnet_key;
+        oci_subnet_t        subnet_info;
+        oci_vnic_key_t      vnic_key;
+        oci_vnic_t          vnic_info;
     };
 } api_ctxt_t;
 

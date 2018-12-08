@@ -70,7 +70,7 @@ typedef struct oci_vnic_s {
  *
  * @return #SDK_RET_OK on success, failure status code on error
  */
-oci_status_t oci_vnic_create(_In_ oci_vnic_t *vnic);
+sdk_ret_t oci_vnic_create(_In_ oci_vnic_t *vnic);
 
 /**
  * @brief Delete VNIC
@@ -79,7 +79,7 @@ oci_status_t oci_vnic_create(_In_ oci_vnic_t *vnic);
  *
  * @return #SDK_RET_OK on success, failure status code on error
  */
-oci_status_t oci_vnic_delete(_In_ oci_vnic_key_t *vnic_key);
+sdk_ret_t oci_vnic_delete(_In_ oci_vnic_key_t *vnic_key);
 
 /**
  * @}

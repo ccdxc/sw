@@ -4,7 +4,7 @@ include ${MKDEFS}/pre.mk
 MODULE_TARGET   = vcn_test.gtest
 MODULE_PIPELINE = apollo
 MODULE_ARCH     = x86_64
-MODULE_SOLIBS   = ociapi ocicore ociframework ocitestutils \
+MODULE_SOLIBS   = ociframework ocicore ociapi ocitestutils \
 				  ${NIC_${PIPELINE}_P4PD_SOLIBS} \
 				  ${NIC_SDK_SOLIBS} \
 				  ${NIC_${PIPELINE}_P4PD_SOLIBS} \

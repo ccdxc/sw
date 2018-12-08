@@ -248,7 +248,7 @@ vcn_state::vcn_alloc(void) {
  * @return       pointer to the vcn instance found or NULL
  */
 vcn_entry *
-vcn_state::vcn_find(oci_vcn_key_t *vcn_key) const {
+vcn_state::vcn_find(oci_vcn_key_t *vcn_key) {
     return (vcn_entry *)(vcn_ht_->lookup(vcn_key));
 }
 
@@ -347,8 +347,8 @@ oci_vcn_create (_In_ oci_vcn_t *vcn)
     memset(&api_ctxt, 0, sizeof(api_ctxt));
     api_ctxt.api_op = api::API_OP_CREATE;
     api_ctxt.obj_id = api::OBJ_ID_VCN;
-    api_ctxt.vcn_create = *vcn;
-    rv = g_api_engine.process_api(&api_ctxt);
+    api_ctxt.vcn_info = *vcn;
+    rv = api::g_api_engine.process_api(&api_ctxt);
     return rv;
 }
 
@@ -367,8 +367,8 @@ oci_vcn_delete (_In_ oci_vcn_key_t *vcn_key)
     memset(&api_ctxt, 0, sizeof(api_ctxt));
     api_ctxt.api_op = api::API_OP_DELETE;
     api_ctxt.obj_id = api::OBJ_ID_VCN;
-    api_ctxt.vcn_delete = *vcn_key;
-    rv = g_api_engine.process_api(&api_ctxt);
+    api_ctxt.vcn_key = *vcn_key;
+    rv = api::g_api_engine.process_api(&api_ctxt);
     return rv;
 }
 

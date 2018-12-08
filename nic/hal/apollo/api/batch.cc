@@ -25,10 +25,7 @@
 sdk_ret_t
 oci_batch_start (_In_ oci_batch_params_t *batch_params)
 {
-    sdk_ret_t     rv;
-
-    rv = g_api_engine.batch_begin(batch_params);
-    return rv;
+    return api::g_api_engine.batch_begin(batch_params);
 }
 
 /**
@@ -40,7 +37,7 @@ oci_batch_start (_In_ oci_batch_params_t *batch_params)
 sdk_ret_t
 oci_batch_commit (void)
 {
-    return g_api_engine.batch_commit();
+    return api::g_api_engine.batch_commit();
 }
 
 /**
@@ -50,7 +47,7 @@ oci_batch_commit (void)
  */
 sdk_ret_t oci_batch_abort (void)
 {
-    return g_api_engine.batch_abort();
+    return api::g_api_engine.batch_abort();
 }
 
 /** @} */    // end of OCI_VCN_API

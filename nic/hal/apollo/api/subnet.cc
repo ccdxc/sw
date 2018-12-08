@@ -327,6 +327,8 @@ subnet_db::subnet_delete(_In_ subnet_t *subnet) {
 }
 #endif
 
+}    // namespace api
+
 /**
  * @defgroup OCI_SUBNET_API - First level of subnet API handling
  * @ingroup OCI_SUBNET
@@ -346,10 +348,10 @@ oci_subnet_create (_In_ oci_subnet_t *subnet)
     sdk_ret_t     rv;
 
     memset(&api_ctxt, 0, sizeof(api_ctxt));
-    api_ctxt.api_op = API_OP_CREATE;
-    api_ctxt.obj_id = OBJ_ID_SUBNET;
-    api_ctxt.subnet_create = *subnet;
-    rv = g_api_engine.process_api(&api_ctxt);
+    api_ctxt.api_op = api::API_OP_CREATE;
+    api_ctxt.obj_id = api::OBJ_ID_SUBNET;
+    api_ctxt.subnet_info = *subnet;
+    rv = api::g_api_engine.process_api(&api_ctxt);
     return rv;
 }
 
@@ -366,13 +368,11 @@ oci_subnet_delete (_In_ oci_subnet_key_t *subnet_key)
     sdk_ret_t     rv;
 
     memset(&api_ctxt, 0, sizeof(api_ctxt));
-    api_ctxt.api_op = API_OP_DELETE;
-    api_ctxt.obj_id = OBJ_ID_SUBNET;
-    api_ctxt.subnet_delete = *subnet_key;
-    rv = g_api_engine.process_api(&api_ctxt);
+    api_ctxt.api_op = api::API_OP_DELETE;
+    api_ctxt.obj_id = api::OBJ_ID_SUBNET;
+    api_ctxt.subnet_key = *subnet_key;
+    rv = api::g_api_engine.process_api(&api_ctxt);
     return rv;
 }
 
 /** @} */    // end of OCI_SUBNET_API
-
-}    // namespace api

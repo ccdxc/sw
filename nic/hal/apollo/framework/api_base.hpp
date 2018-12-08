@@ -9,6 +9,7 @@
 #if !defined (__API_OBJ_HPP__)
 #define __API_OBJ_HPP__
 
+#include "nic/sdk/include/sdk/base.hpp"
 #include "nic/hal/apollo/framework/api.hpp"
 
 namespace api {
@@ -18,17 +19,40 @@ namespace api {
  */
 class api_base {
 public:
+    /**
+     * @brief    constructor
+     */
     api_base(){};
+
+    /**
+     * @brief    destructor
+     */
     ~api_base(){};
-    static api_base *factory(obj_id_t obj_id) { return NULL; } // TODO: fill this in later
-    static void destroy(api_base *obj) { } // TODO: fill this in later
-    sdk_ret_t init(api_ctxt_t *api_ctxt) { return sdk::SDK_RET_OK; } // TODO: fill this in later
+
+    /** @brief        factory method to instantiate an object
+     *  @param[in]    api_ctxt API context carrying object related configuration
+     */
+    static api_base *factory(api_ctxt_t *api_ctxt);
+
+    /**< @brief        mark the object as dirty */
     void set_dirty(void) { dirty_ = true; }
+
+    /**< @brief        return true if the object is dirty */
     bool dirty(void) const { return dirty_; }
-    virtual sdk_ret_t add_to_db(void) { return sdk::SDK_RET_OK; } // TODO: fill this in later
-    virtual sdk_ret_t del_from_db(void) { return sdk::SDK_RET_OK; } // TODO: fill this in later
-    // TODO: ignore_dirty is on shaky ground, will try to get rid of it later
-    static api_base *find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) { return NULL; } // TODO: fill this in later
+
+    /** @brief        add the object to corresponding internal db(s)
+     */
+    virtual sdk_ret_t add_to_db(void) { return sdk::SDK_RET_INVALID_OP; }
+
+    /** @brief        delete the object from corresponding internal db(s)
+     */
+    virtual sdk_ret_t del_from_db(void) { return sdk::SDK_RET_INVALID_OP; }
+
+    /** @brief        find an object based on the object id & key information
+     *  @param[in]    api_ctxt API context carrying object related information
+     * TODO: ignore_dirty is on shaky ground, will try to get rid of it later
+     */
+    static api_base *find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty);
 
 protected:
     /**

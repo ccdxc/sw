@@ -24,6 +24,9 @@ api_engine    g_api_engine;
  */
 sdk_ret_t
 api_engine::batch_begin(oci_batch_params_t *params) {
+    SDK_ASSERT_RETURN((params != NULL), sdk::SDK_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((params->epoch != OCI_EPOCH_INVALID),
+                      sdk::SDK_RET_INVALID_ARG);
     batch_ctxt_.epoch = params->epoch;
     batch_ctxt_.stage = API_BATCH_STAGE_INIT;
     batch_ctxt_.apis.reserve(16);
@@ -36,6 +39,8 @@ api_engine::batch_begin(oci_batch_params_t *params) {
  */
 sdk_ret_t
 api_engine::batch_commit(void) {
+    SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_INIT),
+                      sdk::SDK_RET_INVALID_ARG);
     batch_ctxt_.stage = API_BATCH_STAGE_COMMIT;
 
     // clear all batch related info
@@ -51,6 +56,9 @@ api_engine::batch_commit(void) {
  */
 sdk_ret_t
 api_engine::batch_abort(void) {
+    SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_INIT),
+                      sdk::SDK_RET_INVALID_ARG);
+    batch_ctxt_.stage = API_BATCH_STAGE_ABORT;
 
     // clear all batch related info
     batch_ctxt_.epoch = OCI_EPOCH_INVALID;
@@ -64,28 +72,22 @@ api_engine::batch_abort(void) {
  */
 sdk_ret_t
 api_engine::process_api(api_ctxt_t *api_ctxt) {
-    sdk_ret_t    rv;
-
-    SDK_ASSERT(batch_ctxt_.stage == API_BATCH_STAGE_INIT);
+    SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_INIT),
+                      sdk::SDK_RET_INVALID_OP);
     switch (api_ctxt->api_op) {
     case API_OP_CREATE:
-        /**< instantiate new object */
-        api_ctxt->new_obj = api_base::factory(api_ctxt->obj_id);
+        /** instantiate, initialize a new object and allocate s/w & h/w
+         * resources needed for it
+         */
+        api_ctxt->curr_obj = NULL;
+        api_ctxt->new_obj = api_base::factory(api_ctxt);
         if (unlikely(api_ctxt->new_obj == NULL)) {
+            batch_ctxt_.stage = API_BATCH_STAGE_ABORT;
             return sdk::SDK_RET_ERR;
         }
 
-        /**< initialize and allocate s/w & h/w resources */
-        rv = api_ctxt->new_obj->init(api_ctxt);
-        if (unlikely(rv != sdk::SDK_RET_OK)) {
-            api_base::destroy(api_ctxt->new_obj);
-            batch_ctxt_.stage = API_BATCH_STAGE_ABORT;
-            return rv;
-        }
-        api_ctxt->curr_obj = NULL;
-
         /**< mark the object as dirty (to indicate that add/modify is in
-         * progress and add the dirty obj to the db
+         *   progress and add the dirty obj to the db
          */
         api_ctxt->new_obj->set_dirty();
         api_ctxt->new_obj->add_to_db();
