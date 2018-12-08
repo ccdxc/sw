@@ -102,6 +102,7 @@ typedef struct rule_ctr_s {
     uint64_t    icmp_hits;
     uint64_t    other_hits;
     ht_ctxt_t   ht_ctxt;
+    rule_cfg_t *rule_cfg;
     acl::ref_t  ref_count;
 } rule_ctr_t;
 

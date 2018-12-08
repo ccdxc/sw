@@ -373,14 +373,18 @@ end:
 //
 
 hal_ret_t
-init_rule_ctr(rule_ctr_t *ctr)
+init_rule_ctr(rule_cfg_t *cfg, rule_ctr_t *ctr)
 {
     memset(ctr, 0, sizeof(rule_ctr_t));
     ctr->ht_ctxt.reset();
+    
+    ctr->rule_cfg = cfg;
     ref_init(&ctr->ref_count, [] (const ref_t *ref) {
         rule_ctr_t *ctr = container_of(ref, rule_ctr_t, ref_count);
 
         HAL_TRACE_DEBUG("Free rule ctr with pointer {:#x} key: {}", (uint64_t)ctr, ctr->rule_key);
+        rule_cfg_t *cfg = ctr->rule_cfg;
+        cfg->rule_ctr_ht->remove(&ctr->rule_key);
         g_hal_state->rule_ctr_slab()->free(ctr);
     });
     return HAL_RET_OK;
@@ -402,7 +406,7 @@ alloc_init_rule_ctr(rule_cfg_t *cfg, rule_key_t rule_key)
     if (ctr == NULL) {
         return NULL;
     }
-    init_rule_ctr(ctr);
+    init_rule_ctr(cfg, ctr);
     ctr->rule_key = rule_key;
     cfg->rule_ctr_ht->insert(ctr, &ctr->ht_ctxt);
     return ctr;
