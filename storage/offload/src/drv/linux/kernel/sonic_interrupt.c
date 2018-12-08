@@ -155,7 +155,9 @@ static void sonic_ev_work_handler(struct work_struct *work)
 	uint64_t cur_ts = osal_get_clock_nsec();
 	uint32_t complete_count = 0;
 	uint32_t incomplete_count = 0;
+	uint32_t prev_ev_count;
 	uint32_t i;
+	int npolled = 0;
 
 	OSAL_LOG_DEBUG("sonic_ev_work_handler enter (workid %u)...\n", work_id);
 
@@ -173,11 +175,11 @@ static void sonic_ev_work_handler(struct work_struct *work)
 		}
 	}
 
-	if (complete_count == 0 || incomplete_count > 0 ||
-	    (complete_count + incomplete_count) == 0) {
-		OSAL_LOG_WARN("TODO: interesting: sonic_ev_work_handler workid %u, %u complete, %u incomplete\n",
-			      work_id, complete_count, incomplete_count);
-	}
+	//if (complete_count == 0 || incomplete_count > 0 ||
+	//    (complete_count + incomplete_count) == 0) {
+	//	OSAL_LOG_WARN("TODO: interesting: sonic_ev_work_handler workid %u, %u complete, %u incomplete\n",
+	//		      work_id, complete_count, incomplete_count);
+	//}
 
 	if (complete_count || !swd->timestamp)
 		swd->timestamp = cur_ts;
@@ -198,16 +200,27 @@ static void sonic_ev_work_handler(struct work_struct *work)
 			OSAL_LOG_DEBUG("work item %u reenqueued with %u events\n",
 				       work_id, incomplete_count);
 			queue_work(evl->wq, &swd->work);
+			goto done;
 		}
 	}
 
-	if (!incomplete_count) {
-		sonic_intr_return_credits(&evl->pc_res->intr, swd->ev_count,
+	/* Try to get more work */
+	prev_ev_count = swd->ev_count;
+	npolled = sonic_poll_ev_list(evl, SONIC_ASYNC_BUDGET, &evl->work_data);
+	if (npolled) {
+		/* Return credits, but don't unmask */
+		sonic_intr_return_credits(&evl->pc_res->intr, prev_ev_count,
+					  false, false);
+	} else {
+		/* Return credits and unmask */
+		xchg(&evl->armed, true);
+		sonic_intr_return_credits(&evl->pc_res->intr, prev_ev_count,
 					  true, false);
 	}
 
-	OSAL_LOG_DEBUG("... exit sonic_ev_work_handler workid %u, %u complete, %u incomplete\n",
-		       work_id, complete_count, incomplete_count);
+done:
+	OSAL_LOG_DEBUG("... exit sonic_ev_work_handler workid %u, %u complete, %u incomplete, %u npolled\n",
+		       work_id, complete_count, incomplete_count, npolled);
 }
 
 irqreturn_t sonic_async_ev_isr(int irq, void *evlptr)
@@ -228,7 +241,8 @@ irqreturn_t sonic_async_ev_isr(int irq, void *evlptr)
 
 	npolled = sonic_poll_ev_list(evl, SONIC_ASYNC_BUDGET, &evl->work_data);
 
-	xchg(&evl->armed, true);
+	if (!npolled)
+		xchg(&evl->armed, true);
 
 	//OSAL_LOG_DEBUG("... exit sonic_async_ev_isr, enqueued %d work items\n", npolled);
 
