@@ -207,6 +207,16 @@ testcases:
     #    args    :
     #        type: remote_only
 
+    #=======================================
+    # RPing
+    #=======================================
+    -   name    : Rping
+        testcase: testcases.rdma.rping
+        args    :
+            type: remote_only
+        iterators :
+            type    : simple
+            pktsize : [23, 32, 64, 65, 128, 256, 512, 1024, 1025, 2048, 4096, 8191, 8192, 9131, 16384, 65535]
 
     #=======================================
     # Teardown

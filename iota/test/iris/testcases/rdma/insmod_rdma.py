@@ -56,6 +56,10 @@ def Trigger(tc):
                                    rundir = 'rdma-drivers',
                                    timeout = 60)
             api.Trigger_AddHostCommand(req, n, "modprobe ib_uverbs")
+            api.Trigger_AddHostCommand(req, n, "modprobe ib_cm")
+            api.Trigger_AddHostCommand(req, n, "modprobe rdma_cm")
+            api.Trigger_AddHostCommand(req, n, "modprobe ib_ucm")
+            api.Trigger_AddHostCommand(req, n, "modprobe rdma_ucm")
             api.Trigger_AddHostCommand(req, n, "cd drivers-linux && insmod drivers/rdma/drv/ionic/ionic_rdma.ko",
                                        rundir = 'rdma-drivers')
             api.Trigger_AddHostCommand(req, n, "cp -r drivers-linux %s" % api.GetHostToolsDir(),
