@@ -14,7 +14,6 @@ namespace platform {
 #define XCVR_MAX_PORTS          2
 #define XCVR_SPROM_READ_MAX     10
 #define XCVR_SPROM_READ_SIZE    128
-#define XCVR_OFFSET_LENGTH_CU   146 // 0x92
 
 using sdk::linkmgr::xcvr_event_notify_t;
 using sdk::linkmgr::port_args_t;
@@ -74,8 +73,15 @@ xcvr_type (int port) {
     return g_xcvr[port].type;
 }
 
+inline void
+set_cable_type (int port, cable_type_t cable_type)
+{
+    g_xcvr[port].cable_type = cable_type;
+}
+
 inline cable_type_t
-cable_type (int port) {
+cable_type (int port)
+{
     return g_xcvr[port].cable_type;
 }
 

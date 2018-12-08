@@ -5,6 +5,7 @@
 #include "include/sdk/linkmgr.hpp"
 #include "platform/drivers/xcvr.hpp"
 #include "platform/drivers/xcvr_qsfp.hpp"
+#include "platform/drivers/xcvr_sfp.hpp"
 #include "lib/pal/pal.hpp"
 
 namespace sdk {
@@ -188,13 +189,19 @@ xcvr_sprom_read (int port, bool cached) {
 
 static sdk_ret_t
 xcvr_sprom_parse (int port, uint8_t *data) {
-    g_xcvr[port].cable_type = sdk::types::cable_type_t::CABLE_TYPE_CU;
+    switch (xcvr_type(port)) {
+    case xcvr_type_t::XCVR_TYPE_QSFP:
+    case xcvr_type_t::XCVR_TYPE_QSFP28:
+        qsfp_sprom_parse(port, data);
+        break;
 
-    if (data[XCVR_OFFSET_LENGTH_CU] == 0) {
-        g_xcvr[port].cable_type = sdk::types::cable_type_t::CABLE_TYPE_FIBER;
+    case xcvr_type_t::XCVR_TYPE_SFP:
+        sfp_sprom_parse(port, data);
+        break;
+
+    default:
+        break;
     }
-
-    xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_CR4);
 
     return SDK_RET_OK;
 }

@@ -2,6 +2,7 @@
 
 #include "include/sdk/thread.hpp"
 #include "include/sdk/periodic.hpp"
+#include "platform/drivers/xcvr.hpp"
 #include "platform/drivers/xcvr_qsfp.hpp"
 #include "lib/pal/pal.hpp"
 
@@ -44,10 +45,10 @@ qsfp_enable (int port, bool enable, uint8_t mask)
     sdk_ret_t sdk_ret = SDK_RET_OK;
 
     sdk_ret = qsfp_read_page(port, qsfp_page_t::QSFP_PAGE_LOW,
-                             QSFP_TX_DISABLE_OFFSET, 1, &data);
+                             QSFP_OFFSET_TX_DISABLE, 1, &data);
     if (sdk_ret != SDK_RET_OK) {
         SDK_TRACE_ERR ("qsfp_port: %d, failed to read offset: 0x%x, page: %d",
-                       port+1, QSFP_TX_DISABLE_OFFSET,
+                       port+1, QSFP_OFFSET_TX_DISABLE,
                        qsfp_page_t::QSFP_PAGE_LOW);
         return sdk_ret;
     }
@@ -61,14 +62,78 @@ qsfp_enable (int port, bool enable, uint8_t mask)
     }
 
     qsfp_write_page(port, qsfp_page_t::QSFP_PAGE_LOW,
-                    QSFP_TX_DISABLE_OFFSET, 1, &data);
+                    QSFP_OFFSET_TX_DISABLE, 1, &data);
     if (sdk_ret != SDK_RET_OK) {
         SDK_TRACE_ERR ("qsfp_port: %d, failed to write offset: 0x%x, page: %d",
-                       port+1, QSFP_TX_DISABLE_OFFSET,
+                       port+1, QSFP_OFFSET_TX_DISABLE,
                        qsfp_page_t::QSFP_PAGE_LOW);
     }
 
     return sdk_ret;
+}
+
+sdk_ret_t
+qsfp_sprom_parse (int port, uint8_t *data)
+{
+    // SFF 8024
+
+    if (data[QSFP_OFFSET_LENGTH_CU] != 0) {
+        set_cable_type(port, cable_type_t::CABLE_TYPE_CU);
+    } else {
+        set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
+    }
+
+    switch (data[QSFP_OFFSET_EXT_SPEC_COMPLIANCE_CODES]) {
+    case 0x1:
+        // 100G AOC
+        break;
+
+    case 0x2:
+        // 100GBASE-SR4
+        break;
+
+    case 0x3:
+        // 100GBASE-LR4
+        break;
+
+    case 0x4:
+        // 100GBASE-ER4
+        break;
+
+    case 0x8:
+        // 100G ACC
+        break;
+
+    case 0xb:
+        // 100GBASE-CR4
+        xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_CR4);
+        break;
+
+    case 0x10:
+        // 40GBASE-ER4
+        break;
+
+    case 0x17:
+        // 100G CLR4
+        break;
+
+    case 0x18:
+        // 100G AOC
+        break;
+
+    case 0x19:
+        // 100G ACC
+        break;
+
+    case 0x1A:
+        // 100G DWDM2
+        break;
+
+    default:
+        break;
+    }
+
+    return SDK_RET_OK;
 }
 
 } // namespace platform

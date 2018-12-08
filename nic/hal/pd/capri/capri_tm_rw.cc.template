@@ -1892,6 +1892,13 @@ capri_tm_program_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
 
     hbm_csr.hbm_port_${p}.cfg_hbm_context.read();
     hbm_csr.hbm_port_${p}.cfg_hbm_context.enable((1ull<<num_contexts)-1);
+
+    // enable no_drop by default in PB
+    hbm_csr.hbm_port_${p}.cfg_hbm_context.no_drop((1ull << num_contexts) - 1);
+
+    // TODO use tm_sw_init_enabled below
+    hbm_csr.hbm_port_${p}.cfg_hbm_context.write();
+
     hbm_csr.hbm_port_${p}.cfg_hbm_context.base(base_offset);
     if (tm_sw_init_enabled()) {
 
