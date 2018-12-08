@@ -101,6 +101,38 @@ static void ionic_get_drvinfo(struct net_device *netdev,
 		sizeof(drvinfo->bus_info));
 }
 
+static int ionic_get_link_ksettings(struct net_device *netdev,
+				    struct ethtool_link_ksettings *ks)
+{
+	struct lif *lif = netdev_priv(netdev);
+
+	ethtool_link_ksettings_zero_link_mode(ks, supported);
+	ethtool_link_ksettings_zero_link_mode(ks, advertising);
+
+	/* supported and advertised speeds */
+	ethtool_link_ksettings_add_link_mode(ks, supported, 10000baseT_Full);
+	ethtool_link_ksettings_add_link_mode(ks, advertising, 10000baseT_Full);
+
+	/* supported and advertised ports */
+	ethtool_link_ksettings_add_link_mode(ks, supported, FIBRE);
+	ethtool_link_ksettings_add_link_mode(ks, advertising, FIBRE);
+
+	ethtool_link_ksettings_add_link_mode(ks, supported, Autoneg);
+	ethtool_link_ksettings_add_link_mode(ks, advertising, Autoneg);
+
+
+	ks->base.speed = lif->notifyblock->link_speed;
+	ks->base.port = PORT_FIBRE;
+	ks->base.autoneg = AUTONEG_ENABLE;
+
+	if (lif->notifyblock->link_status)
+		ks->base.duplex = DUPLEX_FULL;
+	else
+		ks->base.duplex = DUPLEX_UNKNOWN;
+
+	return 0;
+}
+
 static int ionic_get_coalesce(struct net_device *netdev,
 			      struct ethtool_coalesce *coalesce)
 {
@@ -177,6 +209,20 @@ static void ionic_get_ringparam(struct net_device *netdev,
 	ring->tx_pending = ntxq_descs;
 	ring->rx_max_pending = 1 << 16;
 	ring->rx_pending = nrxq_descs;
+}
+
+static void ionic_get_channels(struct net_device *netdev,
+			       struct ethtool_channels *ch)
+{
+	struct lif *lif = netdev_priv(netdev);
+
+	/* report maximum channels */
+	ch->max_tx = lif->ionic->ntxqs_per_lif;
+	ch->max_rx = lif->ionic->nrxqs_per_lif;
+
+	/* report current channels */
+	ch->tx_count = lif->ntxqcqs;
+	ch->rx_count = lif->nrxqcqs;
 }
 
 static int ionic_get_rxnfc(struct net_device *netdev,
@@ -328,9 +374,11 @@ static int ionic_set_priv_flags(struct net_device *netdev, u32 priv_flags)
 static const struct ethtool_ops ionic_ethtool_ops = {
 	.get_drvinfo		= ionic_get_drvinfo,
 	.get_link		= ethtool_op_get_link,
+	.get_link_ksettings     = ionic_get_link_ksettings,
 	.get_coalesce		= ionic_get_coalesce,
 	.set_coalesce		= ionic_set_coalesce,
 	.get_ringparam		= ionic_get_ringparam,
+	.get_channels		= ionic_get_channels,
 	.get_strings		= ionic_get_strings,
 	.get_ethtool_stats	= ionic_get_stats,
 	.get_sset_count		= ionic_get_sset_count,
