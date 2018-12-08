@@ -635,6 +635,14 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_TX_UD_SQ_DRAIN
+        enable  : True
+        package : test.rdma
+        module  : req_tx_ud_sq_drain
+        spec    : req_tx_ud_sq_drain.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_RX_SEND_ONLY_EQ
         enable  : True
         package : test.rdma

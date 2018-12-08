@@ -577,12 +577,13 @@ exit:
     nop
 
 error_disable_exit:
+#if    !(defined(HAPS) || defined(HW))
     /*
-     *  TODO: Incrementing sq_cindex copy to satisfy model. Ideally, on error disabling we should just exit and be
+     *  Incrementing sq_cindex copy to satisfy model. Ideally, on error disabling we should just exit and be
      *  in the same state which caused the error.
      */
-    tblmincri.c1    d.sq_cindex, d.log_sq_size, 1
-
+    tblmincri       d.sq_cindex, d.log_sq_size, 1
+#endif
     // DMA commands for generating error-completion to RxDMA
     phvwr          p.rdma_feedback.feedback_type, RDMA_COMPLETION_FEEDBACK
     add            r1, r0, offsetof(struct req_tx_phv_t, p4_to_p4plus)

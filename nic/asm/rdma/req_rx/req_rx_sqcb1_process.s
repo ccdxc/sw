@@ -332,8 +332,7 @@ sq_drain_feedback:
     tblwr.c1       d.max_ssn, r1
 
     scwlt24        c1, d.max_tx_psn, CAPRI_SQ_DRAIN_FEEDBACK_TX_PSN
-    bbeq           d.sq_drained, 1, drop_feedback
-    tblwr.c1       d.max_tx_psn, CAPRI_SQ_DRAIN_FEEDBACK_TX_PSN // Branch Delay Slot
+    tblwr.c1       d.max_tx_psn, CAPRI_SQ_DRAIN_FEEDBACK_TX_PSN
 
     CAPRI_SET_TABLE_0_VALID(0)
     CAPRI_RESET_TABLE_2_ARG()

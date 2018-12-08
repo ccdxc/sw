@@ -41,7 +41,10 @@ req_rx_completion_feedback_process:
     seq            c1, K_STATUS, CQ_STATUS_WQE_FLUSHED_ERR
     bcf            [c1], flush_completion
 
-err_completion:
+    seq             c1, d.service, RDMA_SERV_TYPE_UD // Branch Delay Slot
+    bcf             [c1], ud_err_completion
+
+rc_err_completion:
     // if TXDMA encounters error then there can be outstanding requests
     // for which acks are expected. So move SQ to QP_STATE_SQD_ON_ERR and drain
     // all outstanding requests. On receiving all the acks, move QP to
@@ -94,6 +97,18 @@ flush_completion:
     phvwr          CAPRI_PHV_FIELD(TO_S6_P, state), QP_STATE_ERR
     tblwr.e        d.state, QP_STATE_ERR
     phvwrpair      p.service, d.service, p.{flush_rq...state}, QP_STATE_ERR
+
+ud_err_completion:
+    // On error move UD Qstate to SQ_ERR and post error completion. Driver will
+    // flush all the outstanding wqes. No need to send flush feedback to RQ, so
+    // no logic to trigger TXDMA. DMA to change TXDMA Qstate's state to
+    //SQ_ERR
+    DMA_CMD_STATIC_BASE_GET(r7, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_START)
+    SQCB0_ADDR_GET(r1)
+    add            r1, FIELD_OFFSET(sqcb0_t, state), r1
+    DMA_HBM_PHV2MEM_SETUP(r7, service, state, r1)
+    phvwrpair.e    p.service, d.service, p.state, QP_STATE_SQ_ERR
+    tblwr          d.state, QP_STATE_SQ_ERR
 
 bubble_to_next_stage:
     seq           c1, r1[4:2], STAGE_3

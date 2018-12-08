@@ -6,6 +6,7 @@ struct req_rx_s4_t2_k k;
 struct sqcb1_t d;
 
 #define IN_P t2_s2s_sqcb1_to_sq_drain_feedback_info
+#define RRQWQE_TO_CQ_P t2_s2s_rrqwqe_to_cq_info
 
 #define K_SSN CAPRI_KEY_RANGE(IN_P, ssn_sbit0_ebit7, ssn_sbit8_ebit23)
 #define TO_S6_P to_s6_cq_info
@@ -22,7 +23,7 @@ req_rx_sq_drain_feedback_process:
     // If state is anything other than QP_STATE_SQD or QP_STATE_SQD_ON_ERR
     // ignore this feedback phv
     slt            c1, d.state, QP_STATE_SQD // Branch Delay Slot
-    bcf            [c1], exit
+    bcf            [c1], drop_phv
     CAPRI_SET_TABLE_2_VALID(0) // Branch Delay Slot
 
     // If sq_drain feedback was already received (sq_drained == 1), then
@@ -37,26 +38,36 @@ req_rx_sq_drain_feedback_process:
     sub            r1, K_SSN, 1 // Branch Delay Slot
     mincr          r1, 24, r0
     seq            c2, d.msn, r1
-    bcf            [!c2], exit
+    seq            c1, d.service, RDMA_SERV_TYPE_RC
+    bcf            [c1 & !c2], drop_phv
     tblwr          d.sq_drained, 1 // Branch Delay Slot
 
-    seq           c1, d.state, QP_STATE_SQD_ON_ERR
-    seq           c2, d.sqd_async_notify_enable, 1
-    bcf           [c1 | !c2], exit
+    seq            c1, d.state, QP_STATE_SQD_ON_ERR
+    seq            c2, d.sqd_async_notify_enable, 1
+    bcf            [c1 | !c2], drop_phv
 
     // if QP_STATE_SQD, post async event and notify driver about drain completion
-    phvwr       p.async_eqwqe.qid, K_GLOBAL_QID // Branch Delay Slot
-    phvwrpair   p.async_eqwqe.code, EQE_CODE_QP_SQ_DRAIN, p.async_eqwqe.type, EQE_TYPE_QP
-    phvwr       CAPRI_PHV_FIELD(TO_S6_P, async_event), 1
+    phvwr          p.async_eqwqe.qid, K_GLOBAL_QID // Branch Delay Slot
+    phvwrpair      p.async_eqwqe.code, EQE_CODE_QP_SQ_DRAIN, p.async_eqwqe.type, EQE_TYPE_QP
+    // TODO Need to rename async_error_event to eq_only_event
+    phvwr          CAPRI_PHV_FIELD(TO_S6_P, async_error_event), 1
+
+    CAPRI_RESET_TABLE_2_ARG()
+    phvwr          CAPRI_PHV_FIELD(RRQWQE_TO_CQ_P, cq_id), d.cq_id
+
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_cqcb_process, r0)
 
 bubble_to_next_stage:
-    seq           c1, r1[4:2], STAGE_3
-    bcf           [!c1], exit
+    seq            c1, r1[4:2], STAGE_3
+    bcf            [!c1], exit
     SQCB1_ADDR_GET(r1)
     CAPRI_GET_TABLE_2_K(req_rx_phv_t, r7)
-    CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r1)
+    CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR_E(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r1)
 
 exit:
-    phvwr.e       p.common.p4_intr_global_drop, 1
+    nop.e
+    nop
+
+drop_phv:
+    phvwr.e        p.common.p4_intr_global_drop, 1
     nop

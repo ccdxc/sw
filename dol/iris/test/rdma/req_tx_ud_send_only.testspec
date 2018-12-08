@@ -53,7 +53,7 @@ packets:
                 sport   : ref://testcase/config/rdmasession/session/iflow/sport
                 dport   : ref://testcase/config/rdmasession/session/iflow/dport
             bth:
-                opcode  : 100 # RDMA SEND Only with IMM
+                opcode  : 100 # RDMA SEND Only
                 destqp  : ref://testcase/config/rdmasession/rqp/id
                 psn     : ref://testcase/pvtdata/sq_pre_qstate/tx_psn
             deth:

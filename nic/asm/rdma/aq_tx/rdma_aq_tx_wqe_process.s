@@ -346,6 +346,7 @@ create_qp:
     phvwr.c3    p.sqcb0.local_ack_timeout, 0xE
     phvwr       p.sqcb0.priv_oper_enable, d.qp.privileged
     phvwr.!c3   p.sqcb0.log_pmtu, 12
+    phvwri      p.sqcb0.sqd_cindex, 0xFFFFFF
 
     // SQCB1:
 

@@ -423,11 +423,11 @@ frpmr_second_pass:
     b              load_frpmr_sqlkey             
     phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, sge_index), 1, CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, lkey_state_update), 1 //BD-slot
 
-exit:
 ud_error:
-    //For UD we can silently drop
-    phvwr.e   p.common.p4_intr_global_drop, 1
-    CAPRI_SET_TABLE_0_VALID(0)    
+    // Any error should move Qstate to SQ_ERR and halt SQ processing
+    phvwr          p.{rdma_feedback.completion.status, rdma_feedback.completion.error}, (CQ_STATUS_LOCAL_QP_OPER_ERR << 1 | 1)
+    phvwr.e        CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp), 1
+    CAPRI_SET_TABLE_0_1_VALID(0, 0)
 
 clear_poll_in_progress:
     CAPRI_RESET_TABLE_2_ARG()

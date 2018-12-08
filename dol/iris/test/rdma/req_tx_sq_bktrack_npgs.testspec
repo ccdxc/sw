@@ -30,7 +30,7 @@ packets:
 
     - packet:
         id          : SEND_ONLY # Base packet
-        payloadsize : 64
+        payloadsize : ref://testcase/packets/id=SEND_ONLY_PAYLOAD/payloadsize
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         icrc        : True
         encaps      :
