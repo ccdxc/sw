@@ -23,7 +23,7 @@
  * @return #SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-oci_batch_start(_In_ oci_batch_params_t *batch_params)
+oci_batch_start (_In_ oci_batch_params_t *batch_params)
 {
     sdk_ret_t     rv;
 
@@ -38,7 +38,7 @@ oci_batch_start(_In_ oci_batch_params_t *batch_params)
  * @return #SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-oci_batch_commit(void)
+oci_batch_commit (void)
 {
     return g_api_engine.batch_commit();
 }
@@ -48,7 +48,7 @@ oci_batch_commit(void)
  *
  * @return #SDK_RET_OK on success, failure status code on error
  */
-sdk_ret_t oci_batch_abort(void)
+sdk_ret_t oci_batch_abort (void)
 {
     return g_api_engine.batch_abort();
 }

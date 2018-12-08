@@ -6,7 +6,7 @@
 namespace hal {
 namespace utils {
 
-/* DEFINES BELOW ARE FOR 64 BIT WORD SIZE */
+// NOTE: defines below are for 64 bit word size
 #define WORD_SIZE               64
 #define WORD_SIZE_SHIFT         6
 #define WORD_SIZE_MASK          0x3F

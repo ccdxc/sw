@@ -1,9 +1,8 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#ifndef __IP_H__
-#define __IP_H__
+#ifndef __IP_HPP__
+#define __IP_HPP__
 
-#include "nic/include/base.hpp"
 #include "nic/include/bitmap.hpp"
 
 //------------------------------------------------------------------------------
@@ -307,5 +306,5 @@ ip_addr_is_multicast (ip_addr_t *ip_addr)
     }
 }
 
-#endif    // __IP_H__
+#endif    // __IP_HPP__
 

@@ -27,7 +27,6 @@ private:
     static logger_cb_t    log_debug_cb_;
 };
 
-
 }    // namespace lib
 }    // namespace sdk
 
@@ -39,5 +38,5 @@ private:
 
 #define SDK_TRACE_PRINT(fmt, ...)  sdk::lib::logger::debug_log()(fmt, ##__VA_ARGS__)
 
-#endif  // __SDK_LOGGER_HPP__
+#endif    // __SDK_LOGGER_HPP__
 

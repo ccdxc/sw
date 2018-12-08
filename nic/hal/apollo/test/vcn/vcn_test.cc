@@ -22,8 +22,8 @@ protected:
 };
 
 TEST_F(vcn_test, vcn_create_delete) {
-    sdk_ret_t    rv;
-    oci_vcn_t    oci_vcn;
+    sdk_ret_t             rv;
+    oci_vcn_t             oci_vcn;
     oci_batch_params_t    batch_params = { 0 };
 
     batch_params.epoch = 1;

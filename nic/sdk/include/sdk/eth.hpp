@@ -4,7 +4,6 @@
 #define __ETH_H__
 
 #include <stdio.h>
-#include "nic/include/base.hpp"
 
 #define L2_MIN_HDR_LEN                                 14
 #define L2_ETH_HDR_LEN                                 14
@@ -15,7 +14,7 @@
 #define ARPOP_REVREQUEST                               3
 #define ARPOP_REVREPLY                                 4
 
-#define ARP_HARDWARE_TYPE                              1 //Ethernet
+#define ARP_HARDWARE_TYPE                              1    // Ethernet
 
 #define ETH_TYPE_IPV4                                  0x0800
 #define ETH_TYPE_ARP                                   0x0806
