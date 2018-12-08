@@ -4,7 +4,7 @@ import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
 import iota.test.iris.verif.utils.rdma_utils as rdma
 
 def Setup(tc):
-    tc.nodes = api.GetWorkloadNodeHostnames() 
+    tc.nodes = api.GetNaplesHostnames()
     tc.os = api.GetNodeOs(tc.nodes[0])
     return api.types.status.SUCCESS
 
