@@ -82,8 +82,8 @@ class RdmaSqDescriptorFrpmr(Packet):
          BitField("rsvd_inv_en", 0, 1),
          BitField("rsvd_flags", 0, 7),
          ByteField("access_ctrl", 0),
-         ByteField("log_page_size", 0),
          ByteField("log_dir_size", 0),
+         ByteField("log_page_size", 0),
          BitField("pad", 0, 64),
      ]
 

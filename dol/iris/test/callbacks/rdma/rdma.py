@@ -519,9 +519,6 @@ def GetHostPTEntriesDMAData(testcase, descriptor, args):
                  pt_start_page_id, pt_end_page_id, slab.address))
 
     data = []
-    # Fill zeroes till 'pt_start_page_id'
-    for i in range(pt_start_page_id):
-        data += (0).to_bytes(8, 'little')
 
     for i in range(num_pages):
         data += slab.phy_address[i].to_bytes(8, 'little')

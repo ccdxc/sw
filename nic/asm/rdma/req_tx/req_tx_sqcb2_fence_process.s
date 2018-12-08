@@ -44,6 +44,9 @@ req_tx_sqcb2_fence_process:
     nop
 
 fence_exit:
+
+#if !(defined (HAPS) || defined (HW))
+
     /*
      * DOL only code for model testing. 
      * Model enters in to a loop without below code. Break after 5 interations to simulate fence-done.
@@ -58,6 +61,7 @@ fence_exit:
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqwqe_process, K_WQE_ADDR)
     nop.e
     nop
+#endif
 
 exit:
     phvwr       p.common.p4_intr_global_drop, 1

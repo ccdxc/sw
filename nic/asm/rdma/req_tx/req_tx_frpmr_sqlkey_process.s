@@ -64,7 +64,7 @@ req_tx_frpmr_sqlkey_process:
     bbeq         d.mr_flags.ukey_en, 0, error_completion
     srl          r4, K_VA, K_LOG_PAGE_SIZE //BD Slot
     andi         r4, r4, 0x7
-    add          r3, K_NUM_PT_ENTRIES, r4
+    add          r4, r4, d.pt_base
     
 
 frpmr:
@@ -79,8 +79,8 @@ frpmr:
 //    tblwr          d.qp, K_GLOBAL_QID
     tblwr          d.mr_cookie, MR_COOKIE_RANDOM_NUM
 
-    phvwrpair CAPRI_PHV_FIELD(FRPMR_WRITE_BACK_P, pt_base), d.pt_base, \
-              CAPRI_PHV_FIELD(FRPMR_WRITE_BACK_P, dma_size), r3
+    phvwrpair CAPRI_PHV_FIELD(FRPMR_WRITE_BACK_P, pt_base), r4, \
+              CAPRI_PHV_FIELD(FRPMR_WRITE_BACK_P, dma_size), K_NUM_PT_ENTRIES
     phvwr     CAPRI_PHV_FIELD(FRPMR_WRITE_BACK_P, spec_cindex), K_SPEC_CINDEX
 
 load_frpmr_wb:

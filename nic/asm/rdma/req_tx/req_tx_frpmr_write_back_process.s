@@ -41,20 +41,23 @@ req_tx_frpmr_write_back_process:
     /*
      * Prepare FRPMR DMA commands.
      */
-
     // 1 DMA MR PT-entries from host to HBM.
 
     // 1.1 PT-Table host-dma-src-addr
     sll          r7, K_DMA_SIZE, CAPRI_LOG_SIZEOF_U64 //BD-Slot
+
+    seq          c1, r7, 1 << CAPRI_LOG_SIZEOF_U64
+    add          r5, K_WQE_ADDR, FRPMR_DMA_ADDR_OFFSET
+
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_FRPMR_PT_TABLE_SRC_ADDR)
-    DMA_HOST_MEM2MEM_SRC_SETUP(DMA_CMD_BASE, r7, K_DMA_SRC_ADDR)
+    DMA_HOST_MEM2MEM_SRC_SETUP_C(DMA_CMD_BASE, r7, r5, K_DMA_SRC_ADDR, c1)
 
     // 1.2 PT-Table hbm-dst-addr
-    PT_BASE_ADDR_GET2(r4) 
-    add          r3, r4, K_PT_BASE, CAPRI_LOG_SIZEOF_U64
+    PT_BASE_ADDR_GET2(r4)
+    add          r3, r4, K_PT_BASE, CAPRI_LOG_SIZEOF_U64 
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_FRPMR_PT_TABLE_DST_ADDR)
     DMA_HBM_MEM2MEM_DST_SETUP(DMA_CMD_BASE, r7, r3)
-
+    
     // 2. Set frpmr_in_progress flag in sqcb0_t and set write-fence
     // TODO: Update needs_credits flag in cb1_byte. All other flags can be reset to zero.
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_SET_FRPMR_IN_PROGRESS)

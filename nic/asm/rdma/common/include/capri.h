@@ -1063,6 +1063,13 @@ addi.e   _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PE
     phvwrp      _base_r, offsetof(DMA_CMD_MEM2MEM_T, addr), sizeof(DMA_CMD_MEM2MEM_T.addr), _addr; \
     phvwrp       _base_r, offsetof(DMA_CMD_MEM2MEM_T, cmdtype), CAPRI_SIZEOF_RANGE(DMA_CMD_MEM2MEM_T, host_addr, cmdtype), (1 << MEM2MEM_HOST_ADDR_OFFSET) | (DMA_CMD_MEM2MEM_TYPE_SRC << MEM2MEM_TYPE_OFFSET) | (DMA_CMD_TYPE_MEM2MEM << MEM2MEM_CMDTYPE_OFFSET);
 
+#define DMA_HOST_MEM2MEM_SRC_SETUP_C(_base_r, _size, _addr1, _addr2, _cf) \
+    phvwrp      _base_r, offsetof(DMA_CMD_MEM2MEM_T, size), sizeof(DMA_CMD_MEM2MEM_T.size), _size; \
+    phvwrp._cf  _base_r, offsetof(DMA_CMD_MEM2MEM_T, addr), sizeof(DMA_CMD_MEM2MEM_T.addr), _addr1; \
+    phvwrp.!_cf _base_r, offsetof(DMA_CMD_MEM2MEM_T, addr), sizeof(DMA_CMD_MEM2MEM_T.addr), _addr2; \
+    phvwrp       _base_r, offsetof(DMA_CMD_MEM2MEM_T, cmdtype), CAPRI_SIZEOF_RANGE(DMA_CMD_MEM2MEM_T, host_addr, cmdtype), (1 << MEM2MEM_HOST_ADDR_OFFSET) | (DMA_CMD_MEM2MEM_TYPE_SRC << MEM2MEM_TYPE_OFFSET) | (DMA_CMD_TYPE_MEM2MEM << MEM2MEM_CMDTYPE_OFFSET);
+
+
 #define DMA_HBM_MEM2MEM_DST_SETUP(_base_r, _size, _addr) \
     phvwrp      _base_r, offsetof(DMA_CMD_MEM2MEM_T, size), sizeof(DMA_CMD_MEM2MEM_T.size), _size; \
     phvwrp      _base_r, offsetof(DMA_CMD_MEM2MEM_T, addr), sizeof(DMA_CMD_MEM2MEM_T.addr), _addr; \

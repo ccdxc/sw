@@ -305,22 +305,32 @@ end1:
         tblwr.c1       SPEC_SQ_C_INDEX, SQ_C_INDEX
         tblwr.c1       d.dcqcn_rl_failure, 0
 
-        // start backtrack process only if there is no outstanding
-        // phvs being speculated. If sqcb0's c_index is same as spec_cindex
-        // then there is no phvs in the pipeline. In case of in_progress
-        // processing, spec_sq_cindex is always sq_c_index+1 and speculation
-        // is disabled. So backracking can start in the middle of in_progress
-        // processing, when busy flags are not set
-        sne            c1, SQ_C_INDEX, SPEC_SQ_C_INDEX
-        sne            c2, d.in_progress, 1
-        bcf            [c1 & c2] , exit
-        sslt           c1, r0, d.in_progress, d.bktrack_in_progress // Branch Delay Slot
+        /*
+         * start backtrack process only if there is no outstanding
+         * phvs being speculated. If sqcb0's c_index is same as spec_cindex
+         * then there is no phvs in the pipeline. In case of in_progress
+         * processing, spec_sq_cindex is always sq_c_index+1 and speculation
+         * is disabled. So backracking can start in the middle of in_progress
+         * processing, when busy flags are not set
+         * Also there is no way to recover from fence if fence is set and bktrack 
+         * is triggered at the same time since req-rx will be freezed during bktrack. 
+         * Hence skip spec-cindex  and cindex check and clear fence bit.
+         */
+        seq            c2, d.fence, 1
+        bcf            [c2], skip_cindex_check
+        sne            c1, SQ_C_INDEX, SPEC_SQ_C_INDEX //BD-slot
+        sne            c3, d.in_progress, 1 
+        bcf            [c1 & c3], exit
+
+skip_cindex_check:
+        tblwr          d.fence, 0  // BD-Slot
+        sslt           c4, r0, d.in_progress, d.bktrack_in_progress 
 
         // take the busy flag
         tblwr          d.busy, 1
         tblwr          d.bktrack_in_progress, 1
         
-        bcf            [c1], sq_bktrack1
+        bcf            [c4], sq_bktrack1
         add            r1, r0, SQ_C_INDEX // Branch Delay Slot
         mincr          r1, d.log_num_wqes, -1
         seq            c2, r1, SQ_P_INDEX

@@ -580,6 +580,8 @@ struct sge_t {
 #define TXWQE_SGE_OFFSET  32 //
 #define TXWQE_SGE_OFFSET_BITS   256 // 32 * 8
 
+#define FRPMR_DMA_ADDR_OFFSET ((sizeof(struct sqwqe_base_t) / 8) + FIELD_OFFSET(sqwqe_frpmr_t, dma_src_address))
+
 union access_ctrl_flags_t {
     struct {
         rsvd_acc_flags: 1;
@@ -696,8 +698,8 @@ struct sqwqe_frpmr_t {
     //8 bit access_ctrl flags
     union access_ctrl_flags_t access_ctrl; //8 bits
 
-    log_page_size      : 8;
-    log_dir_size       : 8;
+    log_dir_size      : 8;
+    log_page_size     : 8;
 
     //8B
     pad                : 64;
