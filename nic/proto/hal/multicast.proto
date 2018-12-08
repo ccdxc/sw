@@ -20,15 +20,15 @@ service Multicast {
 }
 
 message Oif {
-  fixed64 if_handle        = 1;
-  fixed64 l2seg_handle     = 2;
-  fixed32 qid              = 3;
-  fixed32 q_purpose        = 4;
+  kh.InterfaceKeyHandle interface = 1;  // The Interface for this OIF
+  kh.L2SegmentKeyHandle l2segment = 2;  // The L2 Segment for this OIF
+  fixed32               q_id      = 3;  // The Lif Queue ID for RDMA
+  fixed32               q_purpose = 4;  // The Lif Queue Purpose for RDMA
 }
 
 // OIF List oper state for enterprise pipeline
 message OifListEpd {
-  fixed32 rep_index = 1;
+  fixed32 rep_index = 1;                 // The starting replication table index
 }
 
 // OIF List oper state for cloud pipeline
@@ -36,19 +36,19 @@ message OifListCpd {
 }
 
 message OifList {
-  fixed32       id                 = 1;
-  repeated Oif  oifs               = 2;
-  fixed32       attached_list_id   = 3;
-  bool          is_honor_ingress   = 4;
+  fixed32       id                = 1;  // The id of this list.
+  repeated Oif  oifs              = 2;  // List of OIFs in this OIF List
+  fixed32       attached_list_id  = 3;  // The id of the next OIF list if chained.
+  bool          is_honor_ingress  = 4;  // Should a copy be generated for the ingress if lookup result?
   oneof         pd_info {
-    OifListEpd epd_info            = 5;  // OIF List oper state for enterprise pipeline
-    OifListCpd cpd_info            = 6;  // OIF List oper state for cloud pipeline
+    OifListEpd epd_info           = 5;  // OIF List oper state for enterprise pipeline
+    OifListCpd cpd_info           = 6;  // OIF List oper state for cloud pipeline
   }
 }
 
 // Multicast entry oper state for enterprise pipeline
 message MulticastEntryStatusEpd {
-  fixed32 reg_mac_tbl_idx  = 1;
+  fixed32 reg_mac_tbl_idx         = 1;  // Index of the registered mac table where the entry is programmed
 }
 
 // Multicast entry oper state for cloud pipeline
@@ -56,8 +56,8 @@ message MulticastEntryStatusCpd {
 }
 
 message MulticastEntryStatus {
-  fixed64 handle   = 1;
-  OifList oif_list = 2;
+  fixed64 handle                     = 1;  // Multicast entry HAL Handle
+  OifList oif_list                   = 2;  // Multicast entry OIF List
   oneof pd_info {
     MulticastEntryStatusEpd epd_info = 3;  // Multicast entry oper state for enterprise pipeline
     MulticastEntryStatusCpd cpd_info = 4;  // Multicast entry oper state for cloud pipeline
@@ -70,20 +70,20 @@ message MulticastEntrySpec {
 }
 
 message MulticastEntryRequestMsg {
-  repeated MulticastEntrySpec request = 1;          // batched request
+  repeated MulticastEntrySpec request = 1;  // batched request
 }
 
 message MulticastEntryResponse {
-  types.ApiStatus      api_status   = 1 [(gogoproto.moretags) = "venice:api_status"];    // status
-  MulticastEntryStatus entry_status = 2;
+  types.ApiStatus      api_status     = 1 [(gogoproto.moretags) = "venice:api_status"]; // status
+  MulticastEntryStatus entry_status   = 2;
 }
 
 message MulticastEntryResponseMsg {
-  repeated MulticastEntryResponse response = 1;         // batched reponse
+  repeated MulticastEntryResponse response     = 1; // batched reponse
 }
 
 message MulticastEntryDeleteRequest {
-  kh.MulticastEntryKeyHandle key_or_handle = 1 [(gogoproto.moretags) = "venice:key"];
+  kh.MulticastEntryKeyHandle key_or_handle     = 1 [(gogoproto.moretags) = "venice:key"];
 }
 
 message MulticastEntryDeleteRequestMsg {
@@ -95,29 +95,29 @@ message MulticastEntryDeleteResponse {
 }
 
 message MulticastEntryDeleteResponseMsg {
-  repeated MulticastEntryDeleteResponse response = 1;          // batched response
+  repeated MulticastEntryDeleteResponse response = 1; // batched response
 }
 
 message MulticastEntryGetRequest {
-  kh.MulticastEntryKeyHandle key_or_handle = 1 [(gogoproto.moretags) = "venice:key"];
+  kh.MulticastEntryKeyHandle key_or_handle  = 1 [(gogoproto.moretags) = "venice:key"];
 }
 
 message MulticastEntryGetRequestMsg {
-  repeated MulticastEntryGetRequest request = 1;    // batched request
+  repeated MulticastEntryGetRequest request = 1; // batched request
 }
 
 // MulticastEntryStats is the statistics object of multicast entry type
 message MulticastEntryStats {
-  uint32                num_oifs      = 1;    // number of OIFs in this multicast entry
+  uint32                num_oifs      = 1;  // number of OIFs in this multicast entry
 }
 
 message MulticastEntryGetResponse {
   types.ApiStatus       api_status    = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
-  MulticastEntrySpec    spec          = 2;    // Multicast Entry Configuration
-  MulticastEntryStatus  status        = 3;    // operational state of the multicast entry
-  MulticastEntryStats   stats         = 4;    // stats of the multicast entry
+  MulticastEntrySpec    spec          = 2;  // Multicast Entry Configuration
+  MulticastEntryStatus  status        = 3;  // operational state of the multicast entry
+  MulticastEntryStats   stats         = 4;  // stats of the multicast entry
 }
 
 message MulticastEntryGetResponseMsg {
-  repeated MulticastEntryGetResponse response = 1;      // batched reponse
+  repeated MulticastEntryGetResponse response = 1;  // batched reponse
 }

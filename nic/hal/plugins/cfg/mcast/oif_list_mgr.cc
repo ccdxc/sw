@@ -564,11 +564,14 @@ hal_ret_t oif_list_get(oif_list_id_t list_id, OifList *rsp)
 
     dllist_for_each(curr_node, &oif_list->oifs) {
         oif_db_t *db_oif = dllist_entry(curr_node, oif_db_t, dllist_ctxt);
+        if_t *hal_if = (if_t *)hal_handle_get_obj(db_oif->if_hndl);
+        l2seg_t *l2seg = (l2seg_t *)hal_handle_get_obj(db_oif->l2seg_hndl);
         Oif   *oif_rsp = rsp->add_oifs();
-        oif_rsp->set_qid(db_oif->qid);
+        HAL_ASSERT(db_oif && hal_if && l2seg && oif_rsp);
+        oif_rsp->set_q_id(db_oif->qid);
         oif_rsp->set_q_purpose(db_oif->purpose);
-        oif_rsp->set_if_handle(db_oif->if_hndl);
-        oif_rsp->set_l2seg_handle(db_oif->l2seg_hndl);
+        oif_rsp->mutable_interface()->set_interface_id(hal_if->if_id);
+        oif_rsp->mutable_l2segment()->set_segment_id(l2seg->seg_id);
     }
 
     // OIF PD Status

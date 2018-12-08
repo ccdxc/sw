@@ -67,6 +67,8 @@ func tsShowCmdHandler(cmd *cobra.Command, args []string) {
 	handleVrfDetailShowCmd(nil, ofile)
 	ofile.WriteString("L2 segment information\n\n")
 	handlel2segDetailShowCmd(nil, ofile)
+	ofile.WriteString("Multicast Information\n\n")
+	handleMulticastDetailShowCmd(nil, ofile)
 	ofile.WriteString("Network information\n\n")
 	handleNwDetailShowCmd(nil, ofile)
 	ofile.WriteString("Security policy information\n\n")

@@ -19,8 +19,8 @@ import (
 )
 
 var (
-	multicastID   uint64
-	multicastBr   bool
+	mcastHndl     uint64
+	multicastOif  bool
 	pdMulticastID uint64
 	pdMulticastBr bool
 )
@@ -44,10 +44,10 @@ func init() {
 	multicastShowCmd.AddCommand(multicastSpecShowCmd)
 
 	multicastShowCmd.Flags().Bool("yaml", false, "Output in yaml")
-	multicastShowCmd.Flags().Uint64Var(&multicastID, "id", 1, "Specify multicast id")
-	multicastShowCmd.Flags().BoolVar(&multicastBr, "brief", false, "Display briefly")
-	multicastSpecShowCmd.Flags().Uint64Var(&multicastID, "id", 1, "Specify multicast id")
-	multicastSpecShowCmd.Flags().BoolVar(&multicastBr, "brief", false, "Display briefly")
+	multicastShowCmd.Flags().Uint64Var(&mcastHndl, "handle", 1, "Specify multicast handle")
+	multicastShowCmd.Flags().BoolVar(&multicastOif, "oif-list", false, "Display oif list")
+	multicastSpecShowCmd.Flags().Uint64Var(&mcastHndl, "handle", 1, "Specify multicast handle")
+	multicastSpecShowCmd.Flags().BoolVar(&multicastOif, "oif-list", false, "Display oif list")
 }
 
 func multicastShowSpecCmdHandler(cmd *cobra.Command, args []string) {
@@ -74,11 +74,11 @@ func multicastShowSpecCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	var req *halproto.MulticastEntryGetRequest
-	if cmd.Flags().Changed("id") {
+	if cmd.Flags().Changed("handle") {
 		req = &halproto.MulticastEntryGetRequest{
 			KeyOrHandle: &halproto.MulticastEntryKeyHandle{
 				KeyOrHandle: &halproto.MulticastEntryKeyHandle_MulticastHandle{
-					MulticastHandle: multicastID,
+					MulticastHandle: mcastHndl,
 				},
 			},
 		}
@@ -97,16 +97,30 @@ func multicastShowSpecCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	// Print Header
-	multicastShowHeader(cmd, args)
+	if cmd.Flags().Changed("oif-list") {
+		// Print Header
+		multicastShowOifListHeader(cmd, args)
 
-	// Print VRFs
-	for _, resp := range respMsg.Response {
-		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
-			continue
+		// Print Entries
+		for _, resp := range respMsg.Response {
+			if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+				fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+				continue
+			}
+			multicastShowOifList(resp)
 		}
-		multicastShowOneResp(resp)
+	} else {
+		// Print Header
+		multicastShowHeader(cmd, args)
+
+		// Print Entries
+		for _, resp := range respMsg.Response {
+			if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+				fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+				continue
+			}
+			multicastShowOneResp(resp)
+		}
 	}
 }
 
@@ -122,11 +136,11 @@ func handleMulticastDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	defer c.Close()
 
 	var req *halproto.MulticastEntryGetRequest
-	if cmd != nil && cmd.Flags().Changed("id") {
+	if cmd != nil && cmd.Flags().Changed("handle") {
 		req = &halproto.MulticastEntryGetRequest{
 			KeyOrHandle: &halproto.MulticastEntryKeyHandle{
 				KeyOrHandle: &halproto.MulticastEntryKeyHandle_MulticastHandle{
-					MulticastHandle: multicastID,
+					MulticastHandle: mcastHndl,
 				},
 			},
 		}
@@ -175,13 +189,13 @@ func multicastDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 
 func multicastShowHeader(cmd *cobra.Command, args []string) {
 	fmt.Printf("\n")
-	fmt.Printf("Source:        Sender of the multicast traffic    Group:         Destination Group\n")
-	fmt.Printf("Handle:        multicast Handle                   L2SegId:       L2 Segment Id\n")
-	fmt.Printf("NumOIFs:       Number of Outgoing Interfaces      OIFs:          Outgoing Interfaces\n")
-	hdrLine := strings.Repeat("-", 135)
+	fmt.Printf("Source:        Sender of the multicast traffic    Group:        Destination group\n")
+	fmt.Printf("Handle:        HAL Handle                         L2SegId:      L2 segment id\n")
+	fmt.Printf("NumOIFs:       Number of outgoing interfaces      OifListId:    Oif list id\n")
+	hdrLine := strings.Repeat("-", 85)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-18s%-18s%-10s%-10s%-10s%-20s\n",
-		"Source", "Group", "Handle", "L2SegId", "NumOIFs", "OIFs")
+	fmt.Printf("%-18s%-18s%-10s%-10s%-10s%-10s\n",
+		"Source", "Group", "Handle", "L2SegId", "NumOIFs", "OifListId")
 	fmt.Println(hdrLine)
 }
 
@@ -202,24 +216,61 @@ func multicastShowOneResp(resp *halproto.MulticastEntryGetResponse) {
 	}
 
 	handle := resp.GetStatus().GetHandle()
-	l2SegStr := resp.GetSpec().GetKeyOrHandle().GetKey().GetL2SegmentKeyHandle()
+	l2SegID := resp.GetSpec().GetKeyOrHandle().GetKey().
+		GetL2SegmentKeyHandle().GetSegmentId()
 
 	oifList := resp.GetSpec().GetOifKeyHandles()
 	oifStr := ""
 
 	if len(oifList) > 0 {
 		for i := 0; i < len(oifList); i++ {
-			oifStr += fmt.Sprintf("%d ", oifList[i].GetIfHandle())
+			oifStr += fmt.Sprintf("%d ", oifList[i].GetInterfaceId())
 		}
 	} else {
 		oifStr += "None"
 	}
 
-	fmt.Printf("%-18s%-18s%-10d%-10s%-10d%-20s\n",
+	fmt.Printf("%-18s%-18s%-10d%-10d%-10d%-10d\n",
 		srcStr,
 		grpStr,
 		handle,
-		l2SegStr,
+		l2SegID,
 		len(oifList),
-		oifStr)
+		resp.GetStatus().GetOifList().GetId())
+}
+
+func multicastShowOifListHeader(cmd *cobra.Command, args []string) {
+	fmt.Printf("\n")
+	fmt.Printf("Id:            Oif list id\n")
+	fmt.Printf("HonrIng:       Whether a copy will be generated as per the ingress lookup decision\n")
+	fmt.Printf("NextList:      The id of the next list, if any, that this list is spliced to\n")
+	fmt.Printf("L2SegId:       L2 segment id    IntfId:        Interface id\n")
+	fmt.Printf("QueueId:       Lif queue id     QueuePurpose:  Lif queue purpose\n")
+	hdrLine := strings.Repeat("-", 85)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-10s%-10s%-10s%-20s%-5s%-20s\n", "Id", "HonrIng", "NextList", "", "Oifs", "")
+	fmt.Printf("%-30s%-10s%-10s%-10s%-20s\n", "", "L2SegId", "IntfId", "QueueId", "QueuePurpose")
+	fmt.Println(hdrLine)
+}
+
+func multicastShowOifList(resp *halproto.MulticastEntryGetResponse) {
+
+	honorStr := ""
+	oifList := resp.GetStatus().GetOifList()
+
+	if oifList.GetIsHonorIngress() {
+		honorStr = "Yes"
+	} else {
+		honorStr = "No"
+	}
+
+	fmt.Printf("%-10d%-10s%-10d\n", oifList.GetId(), honorStr, oifList.GetAttachedListId())
+	for i := 0; i < len(oifList.GetOifs()); i++ {
+		fmt.Printf("%-30s%-10d%-10d%-10d%-20d\n",
+			"",
+			oifList.GetOifs()[i].GetL2Segment().GetSegmentId(),
+			oifList.GetOifs()[i].GetInterface().GetInterfaceId(),
+			oifList.GetOifs()[i].GetQId(),
+			oifList.GetOifs()[i].GetQPurpose())
+	}
 }

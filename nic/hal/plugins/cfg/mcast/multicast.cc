@@ -1223,6 +1223,7 @@ mc_entry_get_fill_rsp(MulticastEntryGetResponse *rsp,
 {
     hal_ret_t                       ret;
     uint32_t                        numoif = 0;
+    if_t                            *intf  = NULL;
     l2seg_t                         *l2seg = NULL;
     dllist_ctxt_t                   *lnode = NULL;
     hal_handle_id_list_entry_t      *entry = NULL;
@@ -1267,8 +1268,9 @@ mc_entry_get_fill_rsp(MulticastEntryGetResponse *rsp,
 
     dllist_for_each(lnode, &mc_entry->if_list_head) {
         entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
-        rsp->mutable_spec()->add_oif_key_handles()->
-            set_if_handle(entry->handle_id);
+        intf  = (if_t *)hal_handle_get_obj(entry->handle_id);
+        HAL_ASSERT(intf);
+        rsp->mutable_spec()->add_oif_key_handles()->set_interface_id(intf->if_id);
         numoif ++;
     }
 
