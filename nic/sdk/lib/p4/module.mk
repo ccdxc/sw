@@ -3,5 +3,7 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libsdkp4.so
 MODULE_SRCS     = ${MODULE_SRC_DIR}/p4_utils.cc \
-                  ${MODULE_SRC_DIR}/p4_api.cc
+                  ${MODULE_SRC_DIR}/p4_api.cc \
+                  ${MODULE_SRC_DIR}/p4pluspd_rxdma_api.cc \
+                  ${MODULE_SRC_DIR}/p4pluspd_txdma_api.cc
 include ${MKDEFS}/post.mk

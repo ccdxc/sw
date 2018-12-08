@@ -47,7 +47,6 @@ nic/build/x86_64/gft/lib/libtrace.so                            /nic/lib/
 nic/build/x86_64/gft/lib/libmtrack.so                           /nic/lib/
 nic/build/x86_64/gft/lib/libpdcapri.so                          /nic/lib/
 nic/build/x86_64/gft/lib/libsdkp4utils.so                       /nic/lib/
-nic/build/x86_64/gft/lib/libp4pd.so                             /nic/lib/
 nic/build/x86_64/apollo/lib/libsdkp4.so                         /nic/lib/
 nic/build/x86_64/gft/lib/libasicpd.so                           /nic/lib/
 nic/build/x86_64/gft/lib/libhal_lib.so                          /nic/lib/

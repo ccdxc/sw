@@ -47,7 +47,6 @@ nic/build/x86_64/apollo/lib/libbitmap.so                        /nic/lib/
 nic/build/x86_64/apollo/lib/libtrace.so                         /nic/lib/
 nic/build/x86_64/apollo/lib/libmtrack.so                        /nic/lib/
 nic/build/x86_64/apollo/lib/libpdcapri.so                       /nic/lib/
-nic/build/x86_64/apollo/lib/libp4pd.so                          /nic/lib/
 nic/build/x86_64/apollo/lib/libsdkp4.so                         /nic/lib/
 nic/build/x86_64/apollo/lib/libsdkp4utils.so                    /nic/lib/
 nic/build/x86_64/apollo/lib/libasicpd.so                        /nic/lib/

@@ -1,4 +1,5 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+
 include ${MKDEFS}/pre.mk
 MODULE_ARCH     := x86_64
 MODULE_TARGET   := nicmgr.gtest
@@ -10,7 +11,7 @@ MODULE_SOLIBS   := nicmgr nicmgr_sysmgr nicmgr_upgrade hal_api mnet \
                     delphisdk upgrade upgrade_app upgradeutils sysmgr \
                     capri_csrint capri_csr_cpu_hal \
                     pdcapri pdcommon hal_mock \
-                    p4pd sdkp4 sdkp4utils p4pd_common_p4plus_rxdma \
+                    sdkp4 sdkp4utils p4pd_common_p4plus_rxdma \
                     p4pd_common_p4plus_txdma p4pd_${PIPELINE} \
                     asicpd ${NIC_HAL_PD_SOLIBS_${ARCH}}
 MODULE_LDLIBS   := crypto ${NIC_COMMON_LDLIBS} \
