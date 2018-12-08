@@ -192,8 +192,9 @@ class _Testbed:
 
     def __init_testbed(self):
         self.__tbid = getattr(self.__tbspec, 'TestbedID', 1)
+        self.__vlan_base = getattr(self.__tbspec, 'TestbedVlanBase', 1)
         self.__instpool = iter(self.__tbspec.Instances)
-        self.__vlan_allocator = resmgr.TestbedVlanAllocator(self.__tbid, api.GetNicMode())
+        self.__vlan_allocator = resmgr.TestbedVlanAllocator(self.__vlan_base, api.GetNicMode())
         self.__recover_testbed()
         msg = self.__prepare_TestBedMsg(self.curr_ts)
         resp = api.InitTestbed(msg)

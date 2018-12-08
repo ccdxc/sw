@@ -33,8 +33,16 @@ def __prepare_ip_address_str_for_endpoint(ep):
     assert(nw_obj)
     ep_spec_ip = getattr(ep.spec, 'ipv4-address')
     nw_spec_subnet = getattr(nw_obj.spec, 'ipv4-subnet')
-    ip_str = str(ipaddress.ip_network(ep_spec_ip).network_address) + '/' + \
-             str(ipaddress.ip_network(nw_spec_subnet).prefixlen)
+    ip_str = ep_spec_ip.split('/')[0] + '/' + nw_spec_subnet.split('/')[1]
+    return ip_str
+
+def __prepare_ipv6_address_str_for_endpoint(ep):
+    nw_name = getattr(ep.spec, 'network-name')
+    nw_obj = __find_network(nw_name)
+    assert(nw_obj)
+    ep_spec_ip = getattr(ep.spec, 'ipv6-address')
+    nw_spec_subnet = getattr(nw_obj.spec, 'ipv6-subnet')
+    ip_str = ep_spec_ip.split('/')[0] + '/' + nw_spec_subnet.split('/')[1]
     return ip_str
 
 def __get_l2segment_vlan_for_endpoint(ep):
@@ -44,14 +52,23 @@ def __get_l2segment_vlan_for_endpoint(ep):
     return getattr(nw_obj.spec, 'vlan-id')
 
 def __add_workloads():
+    third_party_workload_count = 0
+
     ep_objs = netagent_cfg_api.gl_ep_json_obj
     for ep in ep_objs.endpoints:
+        node_name = getattr(ep.spec, "node-uuid", None)
+        if not api.IsNaplesNode(node_name):
+            if third_party_workload_count > 0:
+                continue
+            else:
+                third_party_workload_count += 1
         req = topo_svc.WorkloadMsg()
         req.workload_op = topo_svc.ADD
         wl_msg = req.workloads.add()
         wl_msg.workload_name = ep.meta.name
-        wl_msg.node_name = getattr(ep.spec, "node-uuid", None)
+        wl_msg.node_name = node_name
         wl_msg.ip_prefix = __prepare_ip_address_str_for_endpoint(ep)
+        wl_msg.ipv6_prefix = __prepare_ipv6_address_str_for_endpoint(ep)
         wl_msg.mac_address = getattr(ep.spec, 'mac-address')
         host_if = api.AllocateHostInterfaceForNode(wl_msg.node_name)
         wl_msg.interface = host_if
@@ -69,11 +86,12 @@ def __add_workloads():
         wl_msg.workload_image = api.GetWorkloadImageForNode(wl_msg.node_name)
 
         resp = api.AddWorkloads(req)
+        if resp is None:
+            sys.exit(1)
 
 #This function is hack for now as we need add workloads again if driver reloaded
 def AddWorkloads():
     __add_workloads()
-
 
 def Main(step):
     #time.sleep(120)

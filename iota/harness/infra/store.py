@@ -37,6 +37,8 @@ class Workload:
         self.encap_vlan = msg.encap_vlan
         self.ip_prefix = msg.ip_prefix
         self.ip_address = msg.ip_prefix.split('/')[0]
+        self.ipv6_prefix = msg.ipv6_prefix
+        self.ipv6_address = msg.ipv6_prefix.split('/')[0]
         self.mac_address = msg.mac_address
         self.interface = msg.interface
         self.interface_type = msg.interface_type

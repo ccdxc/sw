@@ -1,4 +1,4 @@
-from "registry.test.pensando.io:5000/pensando/nic:1.27"
+from "registry.test.pensando.io:5000/pensando/nic:1.30"
 
 user = getenv("USER")
 group = getenv("GROUP_NAME")
@@ -20,6 +20,11 @@ if user != ""
   run "echo 'export GOPATH=/usr' >> /home/#{user}/.bash_profile"
   run "echo 'export PATH=/usr/local/go/bin:$PATH' >> /home/#{user}/.bash_profile"
   run "echo 'cd /sw/nic' >> /home/#{user}/.bash_profile"
+  run "echo 'sudo chown -R #{user} /sw/' >> /home/#{user}/.bash_profile"
+  run "echo 'sudo chgrp -R #{user} /sw/' >> /home/#{user}/.bash_profile"
+  run "echo 'Defaults secure_path = /usr/local/go/bin:$PATH:/bin:/usr/sbin/' >> /etc/sudoers"
+
+  run "echo '#{user} ALL=(root) NOPASSWD:ALL' > /etc/sudoers.d/#{user} && chmod 0440 /etc/sudoers.d/#{user}"
 
   run "localedef -i en_US -f UTF-8 en_US.UTF-8"
 end

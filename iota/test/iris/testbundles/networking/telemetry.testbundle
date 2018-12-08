@@ -1,5 +1,5 @@
 meta:
-    name    : networking
+    name    : telemetry
     nics    : [ pensando, mellanox, intel, broadcom ]
     os      : [ linux ]
 

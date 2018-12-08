@@ -177,7 +177,7 @@ class Node(object):
             self.__host_intfs = resp.naples_config.host_intfs
             Logger.info("Node: %s UUID: %s" % (self.__name, self.__uuid))
         elif self.IsIntel():
-            self.__host_intfs = resp.intel_config.host_intfs
+            self.__host_intfs.append(resp.intel_config.host_intfs[0])
         Logger.info("Node: %s Host Interfaces: %s" % (self.__name, self.__host_intfs))
 
         if len(self.__host_intfs) == 0 and  not self.IsVenice():

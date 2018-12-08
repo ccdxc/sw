@@ -242,7 +242,7 @@ func (ns *NS) SetMacAddress(intfName string, macAddress string, vlan int) error 
 }
 
 //SetIPAddress set ip address of the interface
-func (ns *NS) SetIPAddress(intfName string, ipAddress string, vlan int) error {
+func (ns *NS) SetIPAddress(intfName string, ipAddress string, vlan int, ipv6 bool) error {
 	intf := ns._Interfaces[intfName]
 	if intf == nil {
 		return errors.New("Primary Interface not found")
@@ -253,7 +253,16 @@ func (ns *NS) SetIPAddress(intfName string, ipAddress string, vlan int) error {
 			return errors.New("Vlan interface not found")
 		}
 	}
-	cmd := []string{"ifconfig", intf.Name, ipAddress}
+
+    var cmd []string
+    if ipv6 {
+        cmdlist := []string {"ifconfig", intf.Name, "inet6", "add", ipAddress}
+        cmd = append(cmd, cmdlist...)
+    } else {
+        cmdlist := []string {"ifconfig", intf.Name, ipAddress}
+        cmd = append(cmd, cmdlist...)
+    }
+
 	if stdout, err := ns.RunCommand(cmd, 0, false); err != nil {
 		return errors.Wrap(err, stdout)
 	}

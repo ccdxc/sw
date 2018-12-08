@@ -41,7 +41,7 @@ type Workload interface {
 	SetBaseDir(dir string) error
 	RunCommand(cmd []string, dir string, timeout uint32, background bool, shell bool) (*Cmd.CommandCtx, string, error)
 	StopCommand(commandHandle string) (*Cmd.CommandCtx, error)
-	AddInterface(name string, macAddress string, ipaddress string, vlan int) (string, error)
+	AddInterface(name string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error)
 	MoveInterface(name string) error
 	IsHealthy() bool
 	SendArpProbe(ip string, intf string, vlan int) error
@@ -119,7 +119,7 @@ func (app *workloadBase) SendArpProbe(ip string, intf string, vlan int) error {
 	return nil
 }
 
-func (app *workloadBase) AddInterface(name string, macAddress string, ipaddress string, vlan int) (string, error) {
+func (app *workloadBase) AddInterface(name string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error) {
 	return "", nil
 }
 
@@ -203,7 +203,7 @@ func (app *containerWorkload) SendArpProbe(ip string, intf string, vlan int) err
 
 }
 
-func (app *containerWorkload) AddInterface(name string, macAddress string, ipaddress string, vlan int) (string, error) {
+func (app *containerWorkload) AddInterface(name string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error) {
 
 	ifconfigCmd := []string{"ifconfig", name, "up"}
 	if retCode, stdout, _ := Utils.Run(ifconfigCmd, 0, false, false, nil); retCode != 0 {
@@ -231,8 +231,14 @@ func (app *containerWorkload) AddInterface(name string, macAddress string, ipadd
 	}
 
 	if ipaddress != "" {
-		if err := app.containerHandle.SetIPAddress(intfToAttach, ipaddress, 0); err != nil {
+		if err := app.containerHandle.SetIPAddress(intfToAttach, ipaddress, 0, false); err != nil {
 			return "", errors.Wrapf(err, "Set IP Address failed")
+		}
+	}
+
+	if ipv6address != "" {
+		if err := app.containerHandle.SetIPAddress(intfToAttach, ipv6address, 0, true); err != nil {
+			return "", errors.Wrapf(err, "Set IPv6 Address failed")
 		}
 	}
 
@@ -320,7 +326,7 @@ func (app *bareMetalWorkload) SendArpProbe(ip string, intf string, vlan int) err
 
 }
 
-func (app *bareMetalWorkload) AddInterface(name string, macAddress string, ipaddress string, vlan int) (string, error) {
+func (app *bareMetalWorkload) AddInterface(name string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error) {
 
 	ifconfigCmd := []string{"ifconfig", name, "up"}
 	if retCode, stdout, _ := Utils.Run(ifconfigCmd, 0, false, false, nil); retCode != 0 {
@@ -350,6 +356,13 @@ func (app *bareMetalWorkload) AddInterface(name string, macAddress string, ipadd
 
 	if ipaddress != "" {
 		cmd := []string{"ifconfig", intfToAttach, ipaddress}
+		if retCode, stdout, err := Utils.Run(cmd, 0, false, false, nil); retCode != 0 {
+			return "", errors.Wrap(err, stdout)
+		}
+	}
+
+	if ipv6address != "" {
+		cmd := []string{"ifconfig", intfToAttach, "inet6", "add", ipv6address}
 		if retCode, stdout, err := Utils.Run(cmd, 0, false, false, nil); retCode != 0 {
 			return "", errors.Wrap(err, stdout)
 		}

@@ -13,6 +13,8 @@
         "spec": {
           "ipv4-subnet": "192.168.100.0/24",
           "ipv4-gateway": "192.168.100.1",
+          "ipv6-subnet": "2000::/64",
+          "ipv6-gateway": "2000::1/64",
           "vlan-id": -1
         },
         "status": {}

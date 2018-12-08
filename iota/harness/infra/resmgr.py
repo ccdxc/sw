@@ -32,8 +32,8 @@ TESTBED_NUM_VLANS         = 100
 TESTBED_NUM_VLANS_HOSTPIN = 50
 TESTBED_NUM_VLANS_CLASSIC = 50
 class TestbedVlanAllocator(object):
-    def __init__(self, tbid, mode):
-        self.__start = int(tbid) * TESTBED_NUM_VLANS
+    def __init__(self, vlan_base, mode):
+        self.__start = vlan_base
         self.__count = TESTBED_NUM_VLANS_CLASSIC
 
         if mode == 'hostpin':

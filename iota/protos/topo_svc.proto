@@ -254,22 +254,24 @@ message Workload {
     // interpreted as 10.0.0.1 is the IP of the workload container and it belongs to a /16 subnet.
     string ip_prefix                        = 6;
 
+    string ipv6_prefix                      = 7;
+
     // MAC Address of the workload
-    string mac_address                      = 7;
+    string mac_address                      = 8;
 
     // Interface to which workload needs to be attached.
-    string interface                        = 8;
+    string interface                        = 9;
 
-    InterfaceType interface_type            = 9;
+    InterfaceType interface_type            = 10;
 
     // Interface to which workload needs to be attached.
-    uint32 pinned_port                      = 10;
+    uint32 pinned_port                      = 11;
 
     // uplink vlan for the traffic going outside node.
-    uint32 uplink_vlan                      = 11;
+    uint32 uplink_vlan                      = 12;
 
     // Workload Status
-    IotaAPIResponse workload_status         = 12;
+    IotaAPIResponse workload_status         = 13;
 }
 
 enum TriggerOp {

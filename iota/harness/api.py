@@ -87,7 +87,8 @@ def AddWorkloads(req):
     global gl_topo_svc_stub
     Logger.debug("Add Workloads:")
     resp = __rpc(req, gl_topo_svc_stub.AddWorkloads)
-    store.AddWorkloads(resp)
+    if IsApiResponseOk(resp):
+        store.AddWorkloads(resp)
     return resp
 
 def DeleteWorkloads(req):

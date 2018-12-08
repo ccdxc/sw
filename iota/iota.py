@@ -57,7 +57,7 @@ def __exit_cleanup():
     global gl_srv_process
     Logger.debug("ATEXIT: Stopping IOTA Server")
     gl_srv_process.Stop()
-    Logger.debug("ATEXIT: Saving logs to iota_sanity_logs.tar.gz")
+    Logger.info("Saving logs to iota_sanity_logs.tar.gz")
     if not glopts.GlobalOptions.dryrun:
         os.system("%s/iota/scripts/savelogs.sh %s" % (topdir, topdir))
     return
