@@ -6,6 +6,7 @@ export FWD_MODE="$1"
 export PLATFORM="$2"
 
 export LD_LIBRARY_PATH=$NIC_DIR/lib:$PLATFORM_DIR/lib
+export COVFILE=$NIC_DIR/conf/bullseye_hal.cov
 
 ulimit -c unlimited
 

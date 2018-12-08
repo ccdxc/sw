@@ -1,6 +1,7 @@
 # common arm libs
 nic/conf                                                            /nic/conf/
-nic/build/aarch64/iris/bin/hal                                       /nic/bin/
+nic/coverage/bullseye_hal.cov                                       /nic/conf/
+nic/build/aarch64/iris/bin/hal                                      /nic/bin/
 
 nic/build/aarch64/iris/lib/libhal_mock.so                            /nic/lib/
 nic/build/aarch64/iris/lib/libpacket_parser.so                       /nic/lib/

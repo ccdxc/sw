@@ -24,8 +24,16 @@ ARCH_LINKER_FLAGS   := -Wl,--dynamic-linker=/lib/ld-linux-aarch64.so.1 \
                        --sysroot=${TOOLCHAIN_DIR}/aarch64-linux-gnu/libc  \
                        -B${TOOLCHAIN_DIR}/aarch64-linux-gnu/bin
 
-CMD_GCC             := ${TOOLCHAIN_PREFIX}-gcc
-CMD_GXX             := ${TOOLCHAIN_PREFIX}-g++
+CMD_GCC_NO_COV  := ${TOOLCHAIN_PREFIX}-gcc
+CMD_GXX_NO_COV  := ${TOOLCHAIN_PREFIX}-g++
+ifeq ($(COVERAGE),1)
+    CMD_GCC    := /home/asic/tools/eda/bullseye/bin/aarch64-linux-gnu-gcc
+    CMD_GXX    := /home/asic/tools/eda/bullseye/bin/aarch64-linux-gnu-g++
+else
+    CMD_GCC    := ${TOOLCHAIN_PREFIX}-gcc
+    CMD_GXX    := ${TOOLCHAIN_PREFIX}-g++
+endif
+
 CMD_GXX_FLAGS       := ${COMMON_GXX_FLAGS} ${RELEASE_GXX_FLAGS} ${ARCH_GXX_FLAGS}
 CMD_GPP_FLAGS       := ${COMMON_GPP_FLAGS} ${RELEASE_GXX_FLAGS} ${ARCH_GXX_FLAGS}
 
@@ -59,5 +67,4 @@ CONFIG_GTEST_FLAGS              := ${COMMON_GTEST_FLAGS}
 # For gtest, we cant use the following GCC flags.
 CONFIG_GTEST_EXCLUDE_FLAGS      := ${COMMON_GTEST_EXCLUDE_FLAGS}
 
-
-CMD_GOBIN := CGO_LDFLAGS=-L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/usr/include CC=/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build 
+CMD_GOBIN := CGO_LDFLAGS=-L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/usr/include CC=/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build

@@ -123,6 +123,14 @@ define INCLUDE_MODULEMK
 
     $${TGID}_EXCLUDE_FLAGS       := $${MODULE_EXCLUDE_FLAGS}
 
+	ifeq "$${MODULE_SKIP_COVERAGE}" "1"
+		$${TGID}_CMD_GCC := ${CMD_GCC_NO_COV}
+		$${TGID}_CMD_GXX := ${CMD_GXX_NO_COV}
+	else
+		$${TGID}_CMD_GCC := ${CMD_GCC}
+		$${TGID}_CMD_GXX := ${CMD_GXX}
+	endif
+
     # Set the common flags based on the target type
     $${TGID}_FLAGS := $${MODULE_FLAGS}
     ifeq "$$(suffix $${MODULE_TARGET})" ".a"
@@ -201,6 +209,7 @@ define INCLUDE_MODULEMK
     endif
 
     CLEAN_DIRS += $${MODULE_CLEAN_DIRS}
+	MODULE_SKIP_COVERAGE := 0
 endef
 
 define PROCESS_MODULEMK_TARGETS

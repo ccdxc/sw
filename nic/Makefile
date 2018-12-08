@@ -16,6 +16,8 @@ export COVFILE      := ${COVDIR}/${COVFILE_NAME}
 ifeq ($(COVERAGE),1)
     export COVERAGE_OPTS := --coveragerun
     export SUDO_OPT := sudo
+    # Coverage needs to know path of arm
+	export PATH := ${PATH}:/tool/toolchain/aarch64-1.1/bin
 .ONESHELL:
 endif
 

@@ -10,12 +10,12 @@ define ADD_SRC_CXX_OBJECT_RULE
 $${${1}_BLD_OUT_DIR}/${2}/%.o: ${2}/%${3} $${${1}_DEPS}
 	${AT}mkdir -p $$(dir $$@)
 	${NAT}${AT}echo ${NAME_GXX} $$<
-	${AT}$(strip ${CMD_GXX} -c -o $$@ ${${1}_FLAGS} ${${1}_GPP_FLAGS} ${${1}_INCS} ${${1}_DEFS} $$<)
+	${AT}$(strip $${${1}_CMD_GXX} -c -o $$@ ${${1}_FLAGS} ${${1}_GPP_FLAGS} ${${1}_INCS} ${${1}_DEFS} $$<)
 
 $${${1}_BLD_OUT_DIR}/${2}/%.o: ${2}/%.c $${${1}_DEPS}
 	${AT}mkdir -p $$(dir $$@)
 	${NAT}${AT}echo ${NAME_GCC} $$<
-	${AT}$(strip ${CMD_GCC} -c -o $$@ ${${1}_FLAGS} ${${1}_GXX_FLAGS} ${${1}_INCS} ${${1}_DEFS} $$<)
+	${AT}$(strip $${${1}_CMD_GCC} -c -o $$@ ${${1}_FLAGS} ${${1}_GXX_FLAGS} ${${1}_INCS} ${${1}_DEFS} $$<)
 endef
 
 define ADD_SRC_P4_OBJECT_RULE
