@@ -53,7 +53,8 @@ init_mpools(struct pc_res_init_params *pc_init, struct per_core_resource *pcr)
 		goto out;
 
 	mpool_type = MPOOL_TYPE_CPDC_SGL;
-	err = mpool_create(mpool_type, num_objects, MPOOL_VEC_ELEM_SINGLE,
+	err = mpool_create(mpool_type, num_objects * MAX_CPDC_SGLS_PER_REQ, 
+			MPOOL_VEC_ELEM_SINGLE,
 			sizeof(struct cpdc_sgl), PNSO_MEM_ALIGN_DESC,
 			&pcr->mpools[mpool_type]);
 	if (err)
@@ -107,7 +108,8 @@ init_mpools(struct pc_res_init_params *pc_init, struct per_core_resource *pcr)
 	 *
 	 */
 	mpool_type = MPOOL_TYPE_CPDC_DESC_VECTOR;
-	err = mpool_create(mpool_type, num_objects, PNSO_NUM_OBJECTS_IN_OBJECT,
+	err = mpool_create(mpool_type, num_objects * MAX_CPDC_DESC_VEC_PER_REQ, 
+			PNSO_NUM_OBJECTS_IN_OBJECT,
 			sizeof(struct cpdc_desc), PNSO_MEM_ALIGN_DESC,
 			&pcr->mpools[mpool_type]);
 	if (err)
@@ -121,7 +123,8 @@ init_mpools(struct pc_res_init_params *pc_init, struct per_core_resource *pcr)
 		goto out;
 
 	mpool_type = MPOOL_TYPE_CPDC_SGL_VECTOR;
-	err = mpool_create(mpool_type, num_objects, PNSO_NUM_OBJECTS_IN_OBJECT,
+	err = mpool_create(mpool_type, num_objects * MAX_CPDC_SGL_VEC_PER_REQ, 
+			PNSO_NUM_OBJECTS_IN_OBJECT,
 			sizeof(struct cpdc_sgl), PNSO_MEM_ALIGN_DESC,
 			&pcr->mpools[mpool_type]);
 	if (err)

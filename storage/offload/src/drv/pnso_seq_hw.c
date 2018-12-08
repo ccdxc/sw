@@ -730,7 +730,6 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 
 	err = sonic_get_seq_statusq(lif, SONIC_QTYPE_CPDC_STATUS, &status_q);
 	if (err) {
-		OSAL_ASSERT(!err);
 		goto out;
 	}
 
@@ -815,7 +814,8 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 
 	err = sonic_get_seq_statusq(lif, SONIC_QTYPE_CPDC_STATUS, &status_q);
 	if (err) {
-		OSAL_ASSERT(!err);
+		OSAL_LOG_ERROR("failed to obtain sequencer statusq err: %d",
+				err);
 		goto out;
 	}
 

@@ -311,7 +311,7 @@ crypto_chain(struct chain_entry *centry)
 			err = pc_res_sgl_vec_packed_get(svc_info->si_pcr,
 				    &svc_info->si_dst_blist,
 				    svc_info->si_block_size,
-				    MPOOL_TYPE_CRYPTO_SGL_VECTOR,
+				    MPOOL_TYPE_CPDC_SGL_VECTOR,
 				    &svc_info->si_src_sgl);
 			if (err) {
 				OSAL_LOG_ERROR("failed to setup chain decrypt SGL");

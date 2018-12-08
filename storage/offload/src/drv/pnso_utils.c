@@ -89,7 +89,7 @@ pc_res_sgl_packed_get(const struct per_core_resource *pcr,
 
 		if (!svc_sgl->sgl)
 			svc_sgl->sgl = sgl;
-                else {
+		else {
 			sgl_prev->cs_next = sonic_virt_to_phy(sgl);
 			CPDC_SGL_SWLINK_SET(sgl_prev, sgl);
 		}
@@ -464,7 +464,7 @@ pc_res_mpool_object_get(const struct per_core_resource *pcr,
 	if (mpool) {
 		obj = mpool_get_object(mpool);
 		if (!obj)
-			OSAL_LOG_ERROR("cannot obtain pcr object from pool %s",
+			OSAL_LOG_ERROR("cannot obtain object from pool %s",
 					mpool_get_type_str(type));
 	}
 

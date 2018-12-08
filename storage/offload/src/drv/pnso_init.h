@@ -28,6 +28,24 @@
 #define INTERM_BUF_MAX_NUM_BUFS						\
 	(INTERM_BUF_MAX_BUF_SIZE / INTERM_BUF_NOMINAL_PAGE_SIZE)
 
+/*
+ * (3 for 32k buffers * 2 for src+dst buffers)
+ */
+#define MAX_SGLS_PER_REQ 6
+#define MAX_CPDC_SGLS_PER_REQ MAX_SGLS_PER_REQ
+#define MAX_CRYPTO_SGLS_PER_REQ MAX_SGLS_PER_REQ
+/*
+ * 2 (hash + chksum) 
+ */
+#define MAX_CPDC_VEC_PER_REQ 2
+#define MAX_CPDC_SGL_VEC_PER_REQ MAX_CPDC_VEC_PER_REQ
+#define MAX_CPDC_DESC_VEC_PER_REQ MAX_CPDC_VEC_PER_REQ
+
+#define MAX_CRYPTO_VEC_PER_REQ 1
+#define MAX_CRYPTO_SGL_VEC_PER_REQ MAX_CRYPTO_VEC_PER_REQ
+#define MAX_CRYPTO_DESC_VEC_PER_REQ MAX_CRYPTO_VEC_PER_REQ
+
+
 /**
  * struct pc_res_init_params - used to initialize per core resources.
  *

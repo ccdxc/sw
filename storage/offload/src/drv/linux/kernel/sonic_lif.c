@@ -384,7 +384,7 @@ static void sonic_cpdc_qs_deinit(struct per_core_resource *res)
 	int i;
 
 	/* Free status queues */
-	for (i = 0; i < MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES; i++)
+	for (i = 0; i < res->num_cpdc_status_qs; i++)
 		sonic_q_free(res->lif, &res->cpdc_seq_status_qs[i]);
 
 	/* Free submission queues */
@@ -397,7 +397,7 @@ static void sonic_crypto_qs_deinit(struct per_core_resource *res)
 	int i;
 
 	/* Free status queues */
-	for (i = 0; i < MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES; i++)
+	for (i = 0; i < res->num_crypto_status_qs; i++)
 		sonic_q_free(res->lif, &res->crypto_seq_status_qs[i]);
 
 	/* Free submission queues */
@@ -1105,11 +1105,11 @@ sonic_get_seq_statusq(struct lif *lif, enum sonic_queue_type sonic_qtype,
 	switch (sonic_qtype) {
 	case SONIC_QTYPE_CPDC_STATUS:
 		bmp = pc_res->cpdc_seq_status_qs_bmp;
-		max = MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES;
+		max = pc_res->num_cpdc_status_qs;
 		break;
 	case SONIC_QTYPE_CRYPTO_STATUS:
 		bmp = pc_res->crypto_seq_status_qs_bmp;
-		max = MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES;
+		max = pc_res->num_crypto_status_qs;
 		break;
 	default:
 		return err;
@@ -1153,11 +1153,11 @@ sonic_put_seq_statusq(struct queue *q)
 		switch (q->qgroup) {
 		case STORAGE_SEQ_QGROUP_CPDC_STATUS:
 			bmp = pc_res->cpdc_seq_status_qs_bmp;
-			max = MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES;
+			max = pc_res->num_cpdc_status_qs;
 			break;
 		case STORAGE_SEQ_QGROUP_CRYPTO_STATUS:
 			bmp = pc_res->crypto_seq_status_qs_bmp;
-			max = MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES;
+			max = pc_res->num_crypto_status_qs;
 			break;
 		default:
 			return;

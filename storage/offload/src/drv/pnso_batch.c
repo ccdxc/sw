@@ -394,7 +394,7 @@ bat_poller(void *poll_ctx)
 	err = poll_all_chains(batch_info);
 	if (err) {
 		/* TODO-poll: retry then give-up after a limit to clean-up */
-		OSAL_LOG_INFO("poll failed! batch_info: 0x" PRIx64 "err: %d",
+		OSAL_LOG_DEBUG("poll failed! batch_info: 0x" PRIx64 "err: %d",
 				(uint64_t) batch_info, err);
 		goto out;
 	}
