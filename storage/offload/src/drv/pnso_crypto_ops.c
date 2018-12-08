@@ -438,7 +438,7 @@ crypto_poll(const struct service_info *svc_info)
 		elapsed_ts = osal_get_clock_nsec() - start_ts;
 		if (elapsed_ts >= CRYPTO_POLL_LOOP_TIMEOUT) {
 			err = ETIMEDOUT;
-			OSAL_LOG_DEBUG("poll-time limit reached! service: %s status_desc: 0x" PRIx64 "err: %d",
+			OSAL_LOG_ERROR("poll-time limit reached! service: %s status_desc: 0x" PRIx64 "err: %d",
 					svc_get_type_str(svc_info->si_type),
 					(uint64_t) status_desc, err);
 			break;
