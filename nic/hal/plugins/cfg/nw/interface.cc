@@ -19,7 +19,7 @@
 #include "nic/hal/src/utils/if_utils.hpp"
 #include "nic/hal/src/internal/rdma.hpp"
 #include "nic/hal/plugins/cfg/mcast/oif_list_api.hpp"
-#include "nic/hal/plugins/cfg/dos/dos.hpp"
+//#include "nic/hal/plugins/cfg/dos/dos.hpp"
 
 #define TNNL_ENC_TYPE intf::IfTunnelEncapType
 

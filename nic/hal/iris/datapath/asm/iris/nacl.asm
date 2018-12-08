@@ -46,9 +46,9 @@ nacl_permit:
   phvwr.c2      p.rewrite_metadata_flags, d.u.nacl_permit_d.rewrite_flags
 
   seq           c2, d.u.nacl_permit_d.tunnel_rewrite_en, 1
-  phvwrpair.c2  p.rewrite_metadata_tunnel_rewrite_index[9:0], \
-                    d.u.nacl_permit_d.tunnel_rewrite_index, \
-                    p.rewrite_metadata_tunnel_vnid, \
+  phvwr.c2      p.rewrite_metadata_tunnel_rewrite_index[9:0], \
+                    d.u.nacl_permit_d.tunnel_rewrite_index
+  phvwr.c2      p.rewrite_metadata_tunnel_vnid, \
                     d.u.nacl_permit_d.tunnel_vnid
   phvwr.c2      p.tunnel_metadata_tunnel_originate[0], \
                     d.u.nacl_permit_d.tunnel_originate

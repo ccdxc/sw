@@ -31,13 +31,13 @@ flow_info:
   /* rewrite and info */
   phvwr         p.tunnel_metadata_tunnel_originate[0], \
                     d.u.flow_info_d.tunnel_originate
-  phvwr         p.rewrite_metadata_rewrite_index[11:0], \
-                    d.u.flow_info_d.rewrite_index
-  phvwr         p.{rewrite_metadata_tunnel_rewrite_index[9:0], \
-                    rewrite_metadata_tunnel_vnid}, \
-                    d.{u.flow_info_d.tunnel_rewrite_index, \
-                    u.flow_info_d.tunnel_vnid}
-  phvwr.e       p.rewrite_metadata_flags, d.u.flow_info_d.rewrite_flags
+  phvwr         p.rewrite_metadata_tunnel_vnid, d.u.flow_info_d.tunnel_vnid
+  or            r1, d.u.flow_info_d.rewrite_flags, \
+                    d.u.flow_info_d.tunnel_rewrite_index, 8
+  or            r1, r1, d.u.flow_info_d.rewrite_index, 24
+  phvwr.e       p.{rewrite_metadata_rewrite_index, \
+                    rewrite_metadata_tunnel_rewrite_index, \
+                    rewrite_metadata_flags}, r1
 
   // rewrite info
   phvwr.f       p.{nat_metadata_nat_ip...nat_metadata_twice_nat_idx}, \

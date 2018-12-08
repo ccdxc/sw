@@ -42,7 +42,7 @@
 #include "nic/hal/pd/iris/internal/rawccb_pd.hpp"
 #include "nic/hal/pd/iris/internal/proxyrcb_pd.hpp"
 #include "nic/hal/pd/iris/internal/proxyccb_pd.hpp"
-#include "nic/hal/pd/iris/dos/dos_pd.hpp"
+//#include "nic/hal/pd/iris/dos/dos_pd.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
@@ -218,6 +218,7 @@ hal_state_pd::init(void)
     HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_EP_IP_ENTRY_PD)] != NULL),
                       false);
 
+#if 0
     // initialize dos-policy PD related data structures
     slabs_[HAL_PD_SLAB_ID(HAL_SLAB_DOS_POLICY_PD)] =
         slab::factory("dos_pol_pd", HAL_SLAB_DOS_POLICY_PD,
@@ -225,6 +226,7 @@ hal_state_pd::init(void)
                       false, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_DOS_POLICY_PD)] != NULL),
                       false);
+#endif
 
     // initialize nwsec PD related data structures
     slabs_[HAL_PD_SLAB_ID(HAL_SLAB_SECURITY_PROFILE_PD)] =
@@ -871,6 +873,7 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
                                                tinfo.actiondata_struct_size,
                                                false, false);
                 HAL_ASSERT(acl_table_ != NULL);
+#if 0
             } else if ((tid == P4TBL_ID_DDOS_SRC_VF) ||
                        (tid == P4TBL_ID_DDOS_SRC_DST) ||
                        (tid == P4TBL_ID_DDOS_SERVICE)) {
@@ -882,6 +885,7 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
                                       ENTRY_TRACE_EN, table_health_monitor);
                     HAL_ASSERT(tcam_tables_[tid - P4TBL_ID_TCAM_MIN] != NULL);
                 }
+#endif
             } else {
                 if (!tinfo.is_oflow_table) {
                     tcam_tables_[tid - P4TBL_ID_TCAM_MIN] =

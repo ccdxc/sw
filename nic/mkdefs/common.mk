@@ -1,4 +1,5 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+
 export GRPC_CPP_PLUGIN  := ${TOPDIR}/nic/hal/third-party/grpc/x86_64/bin/grpc_cpp_plugin
 export GRPC_PY_PLUGIN   := ${TOPDIR}/nic/hal/third-party/grpc/x86_64/bin/grpc_python_plugin
 
@@ -80,7 +81,6 @@ export NIC_HAL_DLOPEN_SOLIBS := cfg_plugin_nw \
                                 cfg_plugin_ipsec \
                                 cfg_plugin_mcast \
                                 cfg_plugin_telemetry \
-                                cfg_plugin_dos \
                                 cfg_plugin_l4lb \
                                 cfg_plugin_lif \
                                 plugin_network \

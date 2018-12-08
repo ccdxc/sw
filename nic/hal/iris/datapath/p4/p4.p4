@@ -9,7 +9,6 @@
 #include "nat.p4"
 #include "apps.p4"
 #include "copp.p4"
-#include "ddos.p4"
 #include "flow.p4"
 #include "ipsg.p4"
 #include "nacl.p4"
@@ -95,8 +94,6 @@ header_type control_metadata_t {
         clear_promiscuous_repl         : 1;
         i2e_flags                      : 8;
         flow_miss_ingress              : 1;  // workaround for predication
-        flow_miss_egress               : 1;  // workaround for predication
-        uplink_e                       : 1;  // workaround for predication
         nic_mode_e                     : 1;  // workaround for predication
         lkp_flags_egress               : 8;
         vlan_strip                     : 1;
@@ -115,11 +112,9 @@ header_type control_metadata_t {
         mirror_on_drop_en              : 1;
         mirror_on_drop_session_id      : 8;
         rdma_ud                        : 1;
-
-        egress_ddos_src_vf_policer_drop   : 1;
-        egress_ddos_service_policer_drop  : 1;
-        egress_ddos_src_only_policer_drop : 1;
-        egress_ddos_src_dst_policer_drop  : 1;
+        i2e_pad0                       : 16;
+        i2e_pad1                       : 16;
+        i2e_pad2                       : 8;
     }
 }
 
@@ -133,9 +128,6 @@ header_type entry_inactive_t {
         nacl                : 1;
         drop_stats          : 1;
         egress_drop_stats   : 1;
-        ddos_src_vf         : 1;
-        ddos_src_dst        : 1;
-        ddos_service        : 1;
         compute_checksum    : 1;
     }
 }
@@ -216,18 +208,6 @@ header_type scratch_metadata_t {
         tcp_seq_num_hi             : 32;   // seq# of last byte of the window
         adjusted_ack_num           : 32;   // delta adjusted ack# of this flow.
         b2b_expected_seq_num       : 32;   // when back2back traffic is coming in one direction.
-
-        // DDoS specific fields.
-        ddos_src_vf_base_policer_idx :8;
-        ddos_service_base_policer_idx :8;
-        ddos_src_dst_base_policer_idx :9;
-
-        ddos_src_vf_policer_saved_color : 2;
-        ddos_src_vf_policer_dropped_packets : 22;
-        ddos_service_policer_saved_color : 2;
-        ddos_service_policer_dropped_packets : 22;
-        ddos_src_dst_policer_saved_color : 2;
-        ddos_src_dst_policer_dropped_packets : 22;
 
         // RTT
         flow_rtt_seq_check_enabled    : 1;
@@ -353,7 +333,6 @@ control ingress {
         process_qos();
         process_session_state();
         process_stats();
-        process_ddos_ingress();
     }
 }
 
@@ -365,7 +344,6 @@ control egress {
     process_roce();
     process_rewrites();
     process_policer();
-    process_ddos_egress();
     process_tx_stats();
     process_checksum_computation();
 }

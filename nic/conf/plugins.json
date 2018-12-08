@@ -256,15 +256,6 @@
             "deps"      : ["pensando.io/nw"]
         },
         {
-            "name"      : "doscfg",
-            "provider"  : "pensando.io",
-            "lib"       : "libcfg_plugin_dos.so",
-            "init_func" : "doscfg_init",
-            "exit_func" : "doscfg_exit",
-            "auto_load" : "true",
-            "deps"      : ["pensando.io/nw"]
-        },
-        {
             "name"      : "l4lbcfg",
             "provider"  : "pensando.io",
             "lib"       : "libcfg_plugin_l4lb.so",

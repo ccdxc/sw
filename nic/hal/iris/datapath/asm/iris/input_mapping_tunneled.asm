@@ -34,9 +34,11 @@ tunneled_ipv4_packet_common:
   phvwrpair     p.flow_lkp_metadata_lkp_dst[31:0], k.inner_ipv4_dstAddr, \
                     p.flow_lkp_metadata_lkp_src[31:0], k.inner_ipv4_srcAddr
 
-  phvwr         p.flow_lkp_metadata_ipv4_flags, k.inner_ipv4_flags
-  phvwrpair     p.flow_lkp_metadata_lkp_dstMacAddr, k.inner_ethernet_dstAddr, \
-                    p.flow_lkp_metadata_ip_ttl, k.inner_ipv4_ttl
+  or            r1, k.inner_ipv4_ttl, k.inner_ipv4_flags, 9
+  phvwrm        p.{flow_lkp_metadata_ipv4_flags, \
+                    flow_miss_metadata_tunnel_originate, \
+                    flow_lkp_metadata_ip_ttl}, r1, 0xEFF
+  phvwr         p.flow_lkp_metadata_lkp_dstMacAddr, k.inner_ethernet_dstAddr
   phvwr         p.flow_lkp_metadata_ipv4_hlen, k.inner_ipv4_ihl
   phvwrpair     p.l3_metadata_ip_frag, k.l3_metadata_inner_ip_frag, \
                      p.l3_metadata_ip_option_seen, k.l3_metadata_inner_ip_option_seen
@@ -69,8 +71,8 @@ tunneled_ipv6_packet_common:
   phvwr.c1      p.flow_lkp_metadata_lkp_sport, r0
   phvwr         p.flow_lkp_metadata_lkp_proto, k.l3_metadata_inner_ipv6_ulp
   phvwr         p.flow_lkp_metadata_lkp_srcMacAddr, k.inner_ethernet_srcAddr
-  phvwrpair.e   p.flow_lkp_metadata_lkp_dstMacAddr, k.inner_ethernet_dstAddr, \
-                    p.flow_lkp_metadata_ip_ttl, k.inner_ipv6_hopLimit
+  phvwr         p.flow_lkp_metadata_lkp_dstMacAddr, k.inner_ethernet_dstAddr
+  phvwr.e       p.flow_lkp_metadata_ip_ttl, k.inner_ipv6_hopLimit
   phvwr.f       p.tunnel_metadata_tunnel_terminate, 1
 
 .align

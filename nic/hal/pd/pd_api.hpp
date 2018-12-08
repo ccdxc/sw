@@ -3,7 +3,7 @@
 
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/hal/plugins/cfg/nw/l2segment.hpp"
-#include "nic/hal/plugins/cfg/dos/dos.hpp"
+//#include "nic/hal/plugins/cfg/dos/dos.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec_group_api.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/hal/plugins/cfg/nw/nw.hpp"
@@ -326,6 +326,7 @@ pd_nwsec_profile_make_clone_args_init (pd_nwsec_profile_make_clone_args_t *args)
     return;
 }
 
+#if 0
 // dos_policy apis
 typedef struct pd_dos_policy_create_args_s {
     dos_policy_t    *dos_policy;
@@ -386,6 +387,7 @@ pd_dos_policy_make_clone_args_init (pd_dos_policy_make_clone_args_t *args)
     args->dos_policy = NULL;
     return;
 }
+#endif
 
 // lif updates
 typedef struct pd_lif_create_args_s {
@@ -3245,12 +3247,14 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_nwsec_profile_restore);
         PD_UNION_ARGS_FIELD(pd_nwsec_profile_get);
 
+#if 0
         // dos_policy pd calls
         PD_UNION_ARGS_FIELD(pd_dos_policy_create);
         PD_UNION_ARGS_FIELD(pd_dos_policy_delete);
         PD_UNION_ARGS_FIELD(pd_dos_policy_update);
         PD_UNION_ARGS_FIELD(pd_dos_policy_mem_free);
         PD_UNION_ARGS_FIELD(pd_dos_policy_make_clone);
+#endif
 
         // lif pd calls
         PD_UNION_ARGS_FIELD(pd_lif_create);

@@ -54,11 +54,10 @@ input_properties_mac_vlan:
   phvwr         p.{flow_miss_metadata_rewrite_index, \
                     control_metadata_ipsg_enable, \
                     control_metadata_mdest_flow_miss_action}, r1
-  or            r1, d.input_properties_mac_vlan_d.allow_flood, \
-                    d.input_properties_mac_vlan_d.flow_miss_qos_class_id, 2
-  phvwrm        p.{control_metadata_flow_miss_qos_class_id, \
-                    l3_metadata_inner_ip_frag, \
-                    control_metadata_allow_flood}, r1, 0x7D
+  phvwr         p.control_metadata_flow_miss_qos_class_id, \
+                    d.input_properties_mac_vlan_d.flow_miss_qos_class_id
+  phvwr         p.control_metadata_allow_flood, \
+                    d.input_properties_mac_vlan_d.allow_flood
   phvwr         p.{control_metadata_mirror_on_drop_en, \
                     control_metadata_mirror_on_drop_session_id}, \
                     d.{input_properties_mac_vlan_d.mirror_on_drop_en, \

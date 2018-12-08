@@ -196,12 +196,12 @@ targets:
     area:
     sub-area:
     feature:
-  dol/dos:
-    commands: ["make", "jobd/dol/dos"]
-    owners: ["email:statikon@pensando.io"]
-    area:
-    sub-area:
-    feature:
+  #dol/dos:
+    #commands: ["make", "jobd/dol/dos"]
+    #owners: ["email:statikon@pensando.io"]
+    #area:
+    #sub-area:
+    #feature:
   dol/recirc:
     commands: ["make", "jobd/dol/recirc"]
     owners: ["email:statikon@pensando.io"]

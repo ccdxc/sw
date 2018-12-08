@@ -19,7 +19,7 @@
 #include "nic/hal/plugins/cfg/mcast/oif_list_api.hpp"
 #include "nic/hal/plugins/cfg/nw/endpoint.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
-#include "nic/hal/plugins/cfg/dos/dos.hpp"
+//#include "nic/hal/plugins/cfg/dos/dos.hpp"
 #include "nic/hal/plugins/cfg/telemetry/telemetry.hpp"
 #include "nic/hal/src/internal/event.hpp"
 #include "nic/hal/src/internal/tls_proxy_cb.hpp"
@@ -193,6 +193,7 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                       false, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_SECURITY_PROFILE] != NULL), false);
 
+#if 0
     // initialize dos policy related data structures
     slabs_[HAL_SLAB_DOS_POLICY] =
         slab::factory("dos_policy",
@@ -208,6 +209,7 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                       sizeof(hal::dos_policy_sg_list_entry_t), 8,
                       false, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_DOS_POLICY_SG_LIST] != NULL), false);
+#endif
 
     // initialize L2 segment related data structures
     slabs_[HAL_SLAB_L2SEG] =

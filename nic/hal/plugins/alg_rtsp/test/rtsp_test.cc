@@ -195,7 +195,7 @@ TEST_F(rtsp_test, rtsp_session_interleaved)
 {
     hal_ret_t              ret;
     SessionGetResponseMsg  resp;
-    uint8_t                alg_sessions = 0, ctrl_alg_sessions = 0;
+    //uint8_t                alg_sessions = 0, ctrl_alg_sessions = 0;
     
     // Create TCP control session
     // TCP SYN

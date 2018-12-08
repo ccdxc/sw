@@ -34,8 +34,8 @@ native_ipv4_packet_common:
   phvwrpair     p.flow_lkp_metadata_lkp_dst[31:0], k.ipv4_dstAddr, \
                     p.flow_lkp_metadata_lkp_src[31:0], k.ipv4_srcAddr
 
-  or            r1, k.ipv4_ttl, k.ethernet_dstAddr, 8
-  phvwr         p.{flow_lkp_metadata_lkp_dstMacAddr,flow_lkp_metadata_ip_ttl}, r1
+  phvwr         p.flow_lkp_metadata_lkp_dstMacAddr, k.ethernet_dstAddr
+  phvwr         p.flow_lkp_metadata_ip_ttl, k.ipv4_ttl
 
   or            r1, k.ipv4_flags, k.ethernet_srcAddr, 3
   or            r1, r1, k.ipv4_ihl, 51
@@ -83,8 +83,8 @@ native_ipv6_packet_common:
 
   phvwr         p.flow_lkp_metadata_lkp_proto, k.l3_metadata_ipv6_ulp
   phvwr         p.flow_lkp_metadata_lkp_srcMacAddr, k.ethernet_srcAddr
-  phvwrpair.e   p.flow_lkp_metadata_lkp_dstMacAddr, k.ethernet_dstAddr, \
-                    p.flow_lkp_metadata_ip_ttl, k.ipv6_hopLimit
+  phvwr         p.flow_lkp_metadata_lkp_dstMacAddr, k.ethernet_dstAddr
+  phvwr.e       p.flow_lkp_metadata_ip_ttl, k.ipv6_hopLimit
   phvwr.f       p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV6
 
 .align

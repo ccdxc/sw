@@ -29,6 +29,7 @@ using hal::pd::utils::priority_t;
 namespace hal {
 namespace pd {
 
+#if 0
 static hal_ret_t
 p4pd_ddos_policers_init (void)
 {
@@ -103,6 +104,7 @@ p4pd_ddos_policers_init (void)
 
     return (ret);
 }
+#endif
 
 static hal_ret_t
 p4pd_input_mapping_native_init (p4pd_def_cfg_t *p4pd_def_cfg)
@@ -1523,7 +1525,7 @@ p4pd_table_defaults_init (p4pd_def_cfg_t *p4pd_def_cfg)
     HAL_ASSERT(p4pd_session_state_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_flow_stats_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_drop_stats_init() == HAL_RET_OK);
-    HAL_ASSERT(p4pd_ddos_policers_init() == HAL_RET_OK);
+    //HAL_ASSERT(p4pd_ddos_policers_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_qos_init(p4pd_def_cfg->admin_cos) == HAL_RET_OK);
 
     // initialize all P4 egress tables with default entries, if any

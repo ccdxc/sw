@@ -103,7 +103,7 @@ public:
     slab *hal_handle_id_ht_entry_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_HANDLE_ID_HT_ENTRY]); }
     slab *hal_handle_id_list_entry_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_HANDLE_ID_LIST_ENTRY]); }
 
-    slab *dos_policy_sg_list_entry_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_DOS_POLICY_SG_LIST]); }
+    //slab *dos_policy_sg_list_entry_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_DOS_POLICY_SG_LIST]); }
     slab *vrf_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_VRF]); }
     slab *network_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NETWORK]); }
     slab *nwsec_profile_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_SECURITY_PROFILE]); }
@@ -117,7 +117,7 @@ public:
     slab *rule_ctr_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_RULE_CTR]); }
     slab *nwsec_policy_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NWSEC_POLICY]); }
     slab *nwsec_policy_appid_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NWSEC_POLICY_APPID]); }
-    slab *dos_policy_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_DOS_POLICY]); }
+    //slab *dos_policy_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_DOS_POLICY]); }
     slab *l2seg_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_L2SEG]); }
     slab *l2seg_uplink_oif_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_L2SEG_UPLINK_OIF_LIST]); }
     slab *mc_entry_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_MC_ENTRY]); }
@@ -434,7 +434,7 @@ public:
     slab *hal_handle_list_entry_slab(void) const { return cfg_db_->hal_handle_list_entry_slab(); }
     slab *hal_handle_id_ht_entry_slab(void) const { return cfg_db_->hal_handle_id_ht_entry_slab(); }
     slab *hal_handle_id_list_entry_slab(void) const { return cfg_db_->hal_handle_id_list_entry_slab(); }
-    slab *dos_policy_sg_list_entry_slab(void) const { return cfg_db_->dos_policy_sg_list_entry_slab(); }
+    //slab *dos_policy_sg_list_entry_slab(void) const { return cfg_db_->dos_policy_sg_list_entry_slab(); }
     ht *hal_handle_id_ht(void) const { return oper_db_->hal_handle_id_ht(); }
 
      hal_ret_t register_cfg_object(hal_obj_id_t obj_id, uint32_t obj_sz) {
@@ -473,7 +473,7 @@ public:
     ht   *tcp_proxy_policy_ht(void) const { return oper_db_->tcp_proxy_policy_ht(); }
 
     // get APIs for dos policy related state
-    slab *dos_policy_slab(void) const { return cfg_db_->dos_policy_slab(); }
+    //slab *dos_policy_slab(void) const { return cfg_db_->dos_policy_slab(); }
 
     // get APIs for L2 segment state
     slab *l2seg_slab(void) const { return cfg_db_->l2seg_slab(); }

@@ -173,6 +173,10 @@ action drop_stats(mirror_en, mirror_session_id, pad, drop_pkts) {
     modify_field(scratch_metadata.flag, capri_i2e_metadata.valid);
     modify_field(scratch_metadata.flag, capri_p4_intrinsic.valid);
     modify_field(scratch_metadata.flag, capri_intrinsic.valid);
+
+    modify_field(control_metadata.i2e_pad0, 0);
+    modify_field(control_metadata.i2e_pad1, 0);
+    modify_field(control_metadata.i2e_pad2, 0);
 }
 
 @pragma stage 5
@@ -210,6 +214,10 @@ action egress_drop_stats(mirror_en, mirror_session_id, pad, drop_pkts) {
     modify_field(scratch_metadata.drop_stats_packets, drop_pkts);
     modify_field(scratch_metadata.drop_stats_pad, pad);
     modify_field(scratch_metadata.ingress_mirror_en, mirror_en);
+
+    modify_field(control_metadata.i2e_pad0, 0);
+    modify_field(control_metadata.i2e_pad1, 0);
+    modify_field(control_metadata.i2e_pad2, 0);
 }
 
 @pragma stage 5

@@ -41,7 +41,7 @@
 #include "gen/hal/svc/endpoint_svc_gen.hpp"
 #include "gen/hal/svc/l4lb_svc_gen.hpp"
 #include "gen/hal/svc/nwsec_svc_gen.hpp"
-#include "gen/hal/svc/dos_svc_gen.hpp"
+//#include "gen/hal/svc/dos_svc_gen.hpp"
 #include "gen/hal/svc/qos_svc_gen.hpp"
 #include "gen/hal/svc/acl_svc_gen.hpp"
 #include "gen/hal/svc/cpucb_svc_gen.hpp"
@@ -95,7 +95,7 @@ svc_reg (const std::string& server_addr,
     EndpointServiceImpl      endpoint_svc;
     L4LbServiceImpl          l4lb_svc;
     NwSecurityServiceImpl    nwsec_svc;
-    DosServiceImpl           dos_svc;
+    //DosServiceImpl           dos_svc;
     QOSServiceImpl           qos_svc;
     AclServiceImpl           acl_svc;
     TelemetryServiceImpl     telemetry_svc;
@@ -129,7 +129,7 @@ svc_reg (const std::string& server_addr,
         server_builder.RegisterService(&endpoint_svc);
         server_builder.RegisterService(&l4lb_svc);
         server_builder.RegisterService(&nwsec_svc);
-        server_builder.RegisterService(&dos_svc);
+        //server_builder.RegisterService(&dos_svc);
         server_builder.RegisterService(&qos_svc);
         server_builder.RegisterService(&proxy_svc);
         server_builder.RegisterService(&acl_svc);
@@ -150,7 +150,7 @@ svc_reg (const std::string& server_addr,
         server_builder.RegisterService(&qos_svc);
         // Revisit. DOL was not able to create Tenant with security profile.
         server_builder.RegisterService(&nwsec_svc);
-        server_builder.RegisterService(&dos_svc);
+        //server_builder.RegisterService(&dos_svc);
         server_builder.RegisterService(&endpoint_svc);
     }
 

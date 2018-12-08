@@ -283,6 +283,7 @@ api_stats_fill_entry (ApiStatsEntry *entry, ApiCounter type)
         entry->set_num_api_success(g_hal_state->api_stats(HAL_API_SECURITYGROUP_GET_SUCCESS));
         entry->set_num_api_fail(g_hal_state->api_stats(HAL_API_SECURITYGROUP_GET_FAIL));
         break;
+#if 0
     case sys::API_COUNTER_DOSPOLICY_CREATE:
         entry->set_num_api_call(g_hal_state->api_stats(HAL_API_DOSPOLICY_CREATE));
         entry->set_num_api_success(g_hal_state->api_stats(HAL_API_DOSPOLICY_CREATE_SUCCESS));
@@ -303,6 +304,7 @@ api_stats_fill_entry (ApiStatsEntry *entry, ApiCounter type)
         entry->set_num_api_success(g_hal_state->api_stats(HAL_API_DOSPOLICY_GET_SUCCESS));
         entry->set_num_api_fail(g_hal_state->api_stats(HAL_API_DOSPOLICY_GET_FAIL));
         break;
+#endif
     case sys::API_COUNTER_PROXYCCB_CREATE:
         entry->set_num_api_call(g_hal_state->api_stats(HAL_API_PROXYCCB_CREATE));
         entry->set_num_api_success(g_hal_state->api_stats(HAL_API_PROXYCCB_CREATE_SUCCESS));

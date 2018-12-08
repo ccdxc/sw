@@ -51,14 +51,14 @@ from tenjin import *
 from tenjin_wrapper import *
 
 def file_skip(name):
-    
+
     if name == "tcp_proxy_pb2.py":
         return False
 
     if name == "tls_proxy_cb2_pb2.py":
         return False
 
-    skip_list = ['nic', 'port', 'quiesce', 'debug', 'barco_rings', 'accel_rgroup', 'event', 'interface_pb2.py', 'proxy_pb2.py', 'wring', 'rdma', 'system', 'rawrcb', 'swphv', 'table' ]
+    skip_list = ['nic', 'dos', 'port', 'quiesce', 'debug', 'barco_rings', 'accel_rgroup', 'event', 'interface_pb2.py', 'proxy_pb2.py', 'wring', 'rdma', 'system', 'rawrcb', 'swphv', 'table' ]
     if not name.endswith(".py") or "grpc" in name:
         return True
 
