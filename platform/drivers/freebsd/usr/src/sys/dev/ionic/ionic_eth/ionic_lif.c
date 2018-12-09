@@ -2130,6 +2130,12 @@ static int ionic_lif_init(struct lif *lif)
 	if (err)
 		return err;
 
+	err = ionic_rx_filters_init(lif);
+	if (err) {
+		IONIC_NETDEV_ERROR(lif->netdev, "filter init failed, error = %d\n", err);
+		return err;
+	}
+
 	err = ionic_lif_adminq_init(lif);
 	if (err)
 		return err;
