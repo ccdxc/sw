@@ -26,7 +26,7 @@ def __process_file(tc, filename):
 
 def __prepare_ymls(tc):
     os.system("rm -rf %s" % tc.tmpdir)
-    os.system("mkdir %s" % tc.tmpdir)
+    os.system("mkdir -p %s" % tc.tmpdir)
     
     os.system("cp %s/blocksize.yml %s/" % (tc.ymldir, tc.tmpdir))
     os.system("cp %s/globals.yml %s/" % (tc.ymldir, tc.tmpdir))
@@ -79,7 +79,7 @@ def Setup(tc):
 
     tc.files = []
     tc.tcdir = "%s/%s" % (api.GetTopDir(), pnsodefs.PNSO_TCDIR)
-    tc.tmpdir = "%s/%s" % (api.GetTopDir(), pnsodefs.TMPDIR)
+    tc.tmpdir = "%s/%s/%s" % (api.GetTopDir(), pnsodefs.TMPDIR, api.GetNodeOs(tc.nodes[0]))
     tc.ymldir = "%s/%s" % (api.GetTopDir(), pnsodefs.YMLDIR)
 
     blocksize = __get_param(tc, 'blocksize', pnsodefs.PNSO_TEST_DEFAULT_BLOCKSIZE)

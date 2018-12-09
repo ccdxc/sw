@@ -8,9 +8,8 @@ import iota.test.iris.testcases.storage.pnsodefs as pnsodefs
 import iota.test.iris.testcases.storage.pnsoutils as pnsoutils
 
 def Setup(tc):
-    pnsoutils.Setup(tc)
-
     tc.nodes = api.GetNaplesHostnames()
+    pnsoutils.Setup(tc)
     for n in tc.nodes:
         tc.files.append("%s/pnsotest_%s.py" % (tc.tcdir, api.GetNodeOs(n)))
         api.Logger.info("Copying testyml files to Node:%s" % n)
