@@ -1772,7 +1772,9 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 
 	case SIOCADDMULTI:
 	case SIOCDELMULTI:
+		IONIC_CORE_LOCK(lif);
 		ionic_set_multi(lif);
+		IONIC_CORE_UNLOCK(lif);
 		break;
 
 	default:
