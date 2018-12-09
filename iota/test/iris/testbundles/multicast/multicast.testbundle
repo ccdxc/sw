@@ -1,0 +1,23 @@
+meta:
+    name    : multicast
+    os      : [ linux, freebsd ]
+    nics    : [ pensando, mellanox, intel, broadcom ]
+
+testcases:
+    -   name    : Iperf_inbound
+        testcase: testcases.multicast.iperf_inbound
+        iterators:
+            type      : nested
+            proto     : [ udp ]
+            bandwidth : [ 10Gbps, 25Gbps, 50Gbps, 100Gbps ]
+        args    :
+            type: remote_only
+
+    -   name    : Iperf_outbound
+        testcase: testcases.multicast.iperf_outbound
+        iterators:
+            type      : nested
+            proto     : [ udp ]
+            bandwidth : [ 10Gbps, 25Gbps, 50Gbps, 100Gbps ]
+        args    :
+            type: remote_only
