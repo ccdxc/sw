@@ -257,7 +257,7 @@ class TestSuite:
         print("\nTestBundle Summary for TestSuite: %s" % self.__spec.meta.name)
         print(types.HEADER_SHORT_SUMMARY)
         print(types.FORMAT_ALL_TESTSUITE_SUMMARY %\
-              ("Testbundle", "Pass", "Fail", "Ignore", "Error", "Total", "Target", "Result", "Duration"))
+              ("Testbundle", "Pass", "Fail", "Ignore", "Error", "Total", "Target", "%Done", "Result", "Duration"))
         print(types.HEADER_SHORT_SUMMARY)
         for tbun in self.__testbundles:
             tbun.PrintSummary()
@@ -267,9 +267,13 @@ class TestSuite:
     def PrintSummary(self):
         if self.__skip:
            return types.status.SUCCESS
+        if self.__stats_target:
+            pc_complete = "%02.02f" % (float(self.__stats_total)/float(self.__stats_target)*100)
+        else:
+            pc_complete = 'NA'
         print(types.FORMAT_ALL_TESTSUITE_SUMMARY %\
               (self.__spec.meta.name, self.__stats_pass, self.__stats_fail, self.__stats_ignored,
-               self.__stats_error, self.__stats_total, self.__stats_target, 
+               self.__stats_error, self.__stats_total, self.__stats_target, pc_complete,
                types.status.str(self.result).title(), self.__timer.TotalTime()))
         return types.status.SUCCESS
 

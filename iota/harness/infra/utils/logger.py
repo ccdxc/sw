@@ -6,6 +6,7 @@ import inspect
 import threading
 
 import iota.harness.infra.types   as types
+from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 
 prefixes = {
     0: 'NONE',
@@ -73,7 +74,7 @@ class _Logger:
         self.sinks          = []
         self.indent_enable  = False
         self.level          = level
-        self.logfile        = logfile
+        self.logfile        = "%s/%s" % (GlobalOptions.logdir, logfile)
         self.tsname         = None
         self.tcname         = None
         self.tbname         = None

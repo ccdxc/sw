@@ -55,7 +55,7 @@ def Main():
     print("\n\nOverall Run Summary")
     print(types.HEADER_SHORT_SUMMARY)
     print(types.FORMAT_ALL_TESTSUITE_SUMMARY %\
-          ("Testsuite", "Pass", "Fail", "Ignore", "Error", "Total", "Target", "Result", "Duration"))
+          ("Testsuite", "Pass", "Fail", "Ignore", "Error", "Total", "Target", "%Done", "Result", "Duration"))
     print(types.HEADER_SHORT_SUMMARY)
     for ts in testsuites:
         ts.PrintSummary()

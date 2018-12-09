@@ -84,9 +84,13 @@ class TestBundle:
     def PrintSummary(self):
         if self.__skip:
            return types.status.SUCCESS
+        if self.__stats_target:
+            pc_complete = "%02.02f" % (float(self.__stats_total)/float(self.__stats_target)*100)
+        else:
+            pc_complete = 'NA'
         print(types.FORMAT_ALL_TESTBUNDLE_SUMMARY %\
               (self.__spec.meta.name, self.__stats_pass, self.__stats_fail, self.__stats_ignored,
-               self.__stats_error, self.__stats_total, self.__stats_target, 
+               self.__stats_error, self.__stats_total, self.__stats_target, pc_complete,
                types.status.str(self.result).title(), self.__timer.TotalTime()))
         return types.status.SUCCESS
 
