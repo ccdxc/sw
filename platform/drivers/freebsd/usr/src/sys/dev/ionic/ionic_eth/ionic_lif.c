@@ -1567,12 +1567,12 @@ static void ionic_lif_txqs_deinit(struct lif *lif)
 			free_irq(txq->intr.vector, txq);
 		}
 #endif
+		IONIC_TX_UNLOCK(txq);
+
 		if (txq->taskq) {
 			taskqueue_drain(txq->taskq, &txq->task);
 			taskqueue_free(txq->taskq);
 		}
-
-		IONIC_TX_UNLOCK(txq);
 	}
 }
 
@@ -1593,12 +1593,12 @@ static void ionic_lif_rxqs_deinit(struct lif *lif)
 			free_irq(rxq->intr.vector, rxq);
 		}
 
+		IONIC_RX_UNLOCK(rxq);
+
 		if (rxq->taskq) {
 			taskqueue_drain(rxq->taskq, &rxq->task);
 			taskqueue_free(rxq->taskq);
 		}
-
-		IONIC_RX_UNLOCK(rxq);
 	}
 }
 
