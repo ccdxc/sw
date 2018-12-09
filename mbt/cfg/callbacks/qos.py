@@ -34,12 +34,10 @@ def PreCreateCb(data, req_spec, resp_spec):
     ip_dscp_choice = random.choice(ip_dscp)
     ip_dscp.remove(ip_dscp_choice)
 
-    req_spec.request[0].pfc.cos = random.randint(1,7)
-
     mtu = random.randint(1500, 9216)
     req_spec.request[0].key_or_handle.qos_group = key_choice
-    req_spec.request[0].uplink_class_map.dot1q_pcp = dot1q_pcp_choice
-    req_spec.request[0].uplink_class_map.ip_dscp[0] = ip_dscp_choice
+    req_spec.request[0].class_map.dot1q_pcp = dot1q_pcp_choice
+    req_spec.request[0].class_map.ip_dscp[0] = ip_dscp_choice
     req_spec.request[0].mtu = mtu
 
     # Create a dict with the key and pcp/dscp values, so that they can be reclaimed
@@ -80,9 +78,9 @@ def PostCreateCb(data, req_spec, resp_spec):
 
     key_choice = req_spec.request[0].key_or_handle.qos_group
 
-    dot1q_pcp_val = req_spec.request[0].uplink_class_map.dot1q_pcp
-    if req_spec.request[0].uplink_class_map.ip_dscp:
-        ip_dscp_val = req_spec.request[0].uplink_class_map.ip_dscp[0]
+    dot1q_pcp_val = req_spec.request[0].class_map.dot1q_pcp
+    if req_spec.request[0].class_map.ip_dscp:
+        ip_dscp_val = req_spec.request[0].class_map.ip_dscp[0]
     else:
         ip_dscp_val = 0
 
@@ -134,15 +132,14 @@ def PreUpdateCb(data, req_spec, resp_spec):
 
     mtu = random.randint(1500, 9216)
 
-    if (cache_create_msg.request[0].pfc.cos == 0):
+    if (cache_create_msg.request[0].pfc.xon_threshold == 0):
         req_spec.request[0].ClearField("pfc")
     else:
-        req_spec.request[0].pfc.cos = random.randint(1,7)
         req_spec.request[0].pfc.xon_threshold = int(random.uniform(2,4) * mtu)
         req_spec.request[0].pfc.xoff_threshold = int(random.uniform(2,8) * mtu)
 
-    req_spec.request[0].uplink_class_map.dot1q_pcp = dot1q_pcp_choice
-    req_spec.request[0].uplink_class_map.ip_dscp[0] = ip_dscp_choice
+    req_spec.request[0].class_map.dot1q_pcp = dot1q_pcp_choice
+    req_spec.request[0].class_map.ip_dscp[0] = ip_dscp_choice
     req_spec.request[0].mtu = mtu
 
     # Add back the pcp/dscp stored earlier to the pool of choices.

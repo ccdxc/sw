@@ -8,6 +8,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// createCmd represents the base sub-command verb
+var createCmd = &cobra.Command{
+	Use:   "create",
+	Short: "Create Object",
+	Long:  "\n---------------\n Create Object \n---------------\n",
+}
+
 // updateCmd represents the base sub-command verb
 var updateCmd = &cobra.Command{
 	Use:   "update",
@@ -44,6 +51,7 @@ var listCmd = &cobra.Command{
 }
 
 func init() {
+	rootCmd.AddCommand(createCmd)
 	rootCmd.AddCommand(updateCmd)
 	rootCmd.AddCommand(deleteCmd)
 	rootCmd.AddCommand(showCmd)

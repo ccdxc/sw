@@ -378,15 +378,15 @@ qos_class_pd_program_uplink_iq_map (pd_qos_class_t *pd_qos_class)
         return HAL_RET_OK;
     }
 
-    HAL_ASSERT(sizeof(qos_class->uplink_cmap.ip_dscp) ==
+    HAL_ASSERT(sizeof(qos_class->cmap.ip_dscp) ==
                sizeof(dscp_map.ip_dscp));
-    memcpy(dscp_map.ip_dscp, qos_class->uplink_cmap.ip_dscp,
-           sizeof(qos_class->uplink_cmap.ip_dscp));
-    dscp_map.dot1q_pcp = qos_class->uplink_cmap.dot1q_pcp;
+    memcpy(dscp_map.ip_dscp, qos_class->cmap.ip_dscp,
+           sizeof(qos_class->cmap.ip_dscp));
+    dscp_map.dot1q_pcp = qos_class->cmap.dot1q_pcp;
 
     for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
         ret = capri_tm_uplink_input_map_update(port,
-                                               qos_class->uplink_cmap.dot1q_pcp,
+                                               qos_class->cmap.dot1q_pcp,
                                                iq);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Error programming the uplink map for "
@@ -421,7 +421,7 @@ qos_class_pd_update_uplink_iq_map_remove (bool dot1q_remove, uint32_t dot1q_pcp,
     if (!default_qos_class) {
         HAL_TRACE_ERR("Default qos class is not created");
     } else {
-        default_qos_class_dot1q_pcp = default_qos_class->uplink_cmap.dot1q_pcp;
+        default_qos_class_dot1q_pcp = default_qos_class->cmap.dot1q_pcp;
         default_qos_class_iq = default_qos_class->pd->uplink.iq;
     }
 
@@ -467,7 +467,7 @@ qos_class_pd_program_uplink_xoff (pd_qos_class_t *pd_qos_class)
 
     for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
         ret = capri_tm_uplink_oq_update(port, pd_qos_class->dest_oq,
-                                        qos_class->no_drop, qos_class->pfc.cos);
+                                        qos_class->no_drop, qos_class->cmap.dot1q_pcp);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Error programming the xoff params for "
                           "Qos-class {} on port {} ret {}",

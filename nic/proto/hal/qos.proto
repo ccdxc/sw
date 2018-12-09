@@ -52,9 +52,8 @@ message PolicerStats {
 
 // QosPFC specifies the pfc cos to respond to
 message QosPFC {
-  uint32 cos            = 1 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:0-7}"];           // PFC cos value for no-drop classes
-  uint32 xon_threshold  = 2 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:3000-36864}"];    // Threshold at which to send xon (2-4 MTUs)
-  uint32 xoff_threshold = 3 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:3000-73728}"];    // Free buffer threshold at which to send xoff (2-8MTUs)
+  uint32 xon_threshold  = 1 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:3000-36864}"];    // Threshold at which to send xon (2-4 MTUs)
+  uint32 xoff_threshold = 2 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:3000-73728}"];    // Free buffer threshold at which to send xoff (2-8MTUs)
 }
 
 // QosSched specifies the QosClass scheduling configuration
@@ -75,9 +74,9 @@ message QosSched {
   }
 }
 
-// QosUplinkClassMap specifies the policy with which traffic from network
+// QosClassMap specifies the policy with which traffic from network
 // is classified
-message QosUplinkClassMap {
+message QosClassMap {
   uint32          dot1q_pcp = 1 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:0-7}"];    // Classify based on this outer qtag pcp value
   repeated uint32 ip_dscp   = 2 [(gogoproto.moretags) = "venice:constraints={range:0-63}"];    // Classify based on these ipv4/v6 dscp values
 }
@@ -97,7 +96,7 @@ message QosClassSpec {
   uint32               mtu              = 2 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:1500-9216}"];    // MTU
   QosPFC               pfc              = 3;    // PFC configuration
   QosSched             sched            = 4 [(gogoproto.moretags) = "venice:mandatory"];    // Scheduling configuration
-  QosUplinkClassMap    uplink_class_map = 5;    // Class map for class derivation on uplinks
+  QosClassMap          class_map        = 5;    // Class map for class derivation on uplinks
   QosMarking           marking          = 6;    // Marking policy for host-to-network traffic
 }
 

@@ -985,7 +985,7 @@ It has these top-level messages:
 	PolicerStats
 	QosPFC
 	QosSched
-	QosUplinkClassMap
+	QosClassMap
 	QosMarking
 	QosClassSpec
 	QosClassRequestMsg
