@@ -5,7 +5,6 @@ PNSO_NUM_PENCAKE_TESTS = 6
 
 PNSO_TCDIR  = "iota/test/iris/testcases/storage"
 YMLDIR      = "%s/ymls" % PNSO_TCDIR
-TMPDIR      = "%s/tmp" % PNSO_TCDIR
 
 PNSO_TEST_DEFAULT_KEY1          = 'abcd1234ABCD1234abcd1234ABCD1234'
 PNSO_TEST_DEFAULT_KEY2          = 'abcd1234ABCD1234abcd1234ABCD1234'

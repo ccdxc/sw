@@ -2,6 +2,7 @@
 import os
 import pdb
 import fileinput
+import tempfile
 
 import iota.harness.api as api
 import iota.test.iris.testcases.storage.pnsodefs as pnsodefs
@@ -79,7 +80,7 @@ def Setup(tc):
 
     tc.files = []
     tc.tcdir = "%s/%s" % (api.GetTopDir(), pnsodefs.PNSO_TCDIR)
-    tc.tmpdir = "%s/%s/%s" % (api.GetTopDir(), pnsodefs.TMPDIR, api.GetNodeOs(tc.nodes[0]))
+    tc.tmpdir = tempfile.mkdtemp()
     tc.ymldir = "%s/%s" % (api.GetTopDir(), pnsodefs.YMLDIR)
 
     blocksize = __get_param(tc, 'blocksize', pnsodefs.PNSO_TEST_DEFAULT_BLOCKSIZE)
