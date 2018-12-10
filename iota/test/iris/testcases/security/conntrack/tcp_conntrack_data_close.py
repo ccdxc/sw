@@ -65,7 +65,6 @@ def Trigger(tc):
 
     trig_resp = api.Trigger(req)
     term_resp1 = api.Trigger_TerminateAllCommands(trig_resp1)
-    #term_resp1 = 0
     tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp1)
     return api.types.status.SUCCESS    
         

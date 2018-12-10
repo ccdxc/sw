@@ -12,6 +12,7 @@ def Trigger(tc):
     api.Logger.info("Trigger.")
     pairs = api.GetLocalWorkloadPairs()
     resp_flow = getattr(tc.args, "resp_flow", 0)
+    tc.resp_flow = resp_flow
     tc.cmd_cookies = {}
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
@@ -64,8 +65,11 @@ def Verify(tc):
                 return api.types.status.SUCCESS 
             print(cmd.stdout)
             yaml_out = get_yaml(cmd)
-            init_flow = get_initflow(yaml_out)
-            conn_info = get_conntrack_info(init_flow)
+            if tc.resp_flow:
+                flow = get_respflow(yaml_out)
+            else:
+                flow = get_initflow(yaml_out)
+            conn_info = get_conntrack_info(flow)
             excep =  get_exceptions(conn_info)
             if (excep['tcppartialoverlap'] == 'false'):
                 return api.types.status.FAILURE 

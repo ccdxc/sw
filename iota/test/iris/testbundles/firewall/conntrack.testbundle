@@ -15,36 +15,37 @@ testcases:
 
     -   name    : TDL_NZ_LOW_INSIDE_NOT_ALIGN
         testcase: testcases.security.conntrack.tcp_conntrack_in_window_not_left_aligned
-        ignore:   True
+        ignore:   False
 
     -   name    : TDL_NZ_LOW_ON_BORDER
         testcase: testcases.security.conntrack.tcp_conntrack_left_of_wndw_border
-        ignore:   True
+        ignore:   False
 
     -   name    : TDL_NZ_LOW_OVLP
         testcase: testcases.security.conntrack.tcp_conntrack_left_of_wndw_ovlp
-        ignore:   True
+        ignore:   False
     
     #ignoring below testcases as we need to reduce tcp close timeout
     -   name    : TDL_NZ_ROW_OVLP
         testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw_overlap
-        ignore:   True
+        ignore:   False
 
     -   name    : TDL_NZ_ROW
         testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw
-        ignore:   True
-    #Data is trimmed and passed packet goes through need to debug 
-    -   name    : TDL_NZ_ROW_OVLP_RST
+        ignore:   False
+    #Data is trimmed and passed packet goes through need to debug if no data becomes aligned. 
+    -   name    : TDL_Z_ROW_OVLP_RST
         testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw_overlap_rst
-        ignore:   True
+        ignore:   False
 
+    #out of window exception set without data
     -   name    : TDL_NZ_ROW_RST
         testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw_rst
-        ignore:   True
+        ignore:   False
     
     -   name    : TDL_NZ_LOW_INSIDE_NOT_ALIGN_RST
         testcase: testcases.security.conntrack.tcp_conntrack_in_window_not_left_aligned_rst
-        ignore:   True
+        ignore:   False
 
     -   name    : TDL_NZ_ROW_FIN
         testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw_fin
@@ -61,51 +62,51 @@ testcases:
 
     -   name    : TDL_NZ_LOW_INSIDE_NOT_ALIGN_RESP
         testcase: testcases.security.conntrack.tcp_conntrack_in_window_not_left_aligned
-        ignore:   True
+        ignore:   False
         args    :
             resp_flow: True
 
     -   name    : TDL_NZ_LOW_ON_BORDER_RESP
         testcase: testcases.security.conntrack.tcp_conntrack_left_of_wndw_border
-        ignore:   True
+        ignore:   False
         args    :
             resp_flow: True
 
     -   name    : TDL_NZ_LOW_OVLP_RESP
         testcase: testcases.security.conntrack.tcp_conntrack_left_of_wndw_ovlp
-        ignore:   True
+        ignore:   False
         args    :
             resp_flow: True
     
     #ignoring below testcases as we need to reduce tcp close timeout
     -   name    : TDL_NZ_ROW_OVLP_RESP
         testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw_overlap
-        ignore:   True
+        ignore:   False
         args    :
             resp_flow: True
         
     -   name    : TDL_NZ_ROW_RESP
         testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw
-        ignore:   True
+        ignore:   False
         args    :
             resp_flow: True
 
     #Data is trimmed and passed packet goes through need to debug 
-    -   name    : TDL_NZ_ROW_OVLP_RST_RESP
+    -   name    : TDL_Z_ROW_OVLP_RST_RESP
         testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw_overlap_rst
-        ignore:   True
+        ignore:   False
         args    :
             resp_flow: True
-
+    #out of window exception
     -   name    : TDL_NZ_ROW_RST_RESP
         testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw_rst
-        ignore:   True
+        ignore:   False
         args    :
             resp_flow: True
 
     -   name    : TDL_NZ_LOW_INSIDE_NOT_ALIGN_RST_RESP
         testcase: testcases.security.conntrack.tcp_conntrack_in_window_not_left_aligned_rst
-        ignore:   True
+        ignore:   False
         args    :
             resp_flow: True
 
@@ -154,7 +155,7 @@ testcases:
     # done / done resp
     -   name    : TDL_DATA
         testcase: testcases.security.conntrack.tcp_conntrack_data
-        ignore:   True
+        ignore:   False
     
     # tcpunexpectedpkt = True
     -   name    : TDL_DATA_CLOSE
@@ -174,5 +175,27 @@ testcases:
     -   name    : TDL_TERM
         testcase: testcases.security.conntrack.tcp_conntrack_term
         ignore:   False
+
+    -   name    : CONN_3WAY
+        testcase: testcases.security.conntrack.tcp_conntrack_connection_est
+        ignore:   False
+    # trim the mss - default behaviour
+    -   name    : CONN_MSS
+        testcase: testcases.security.conntrack.tcp_conntrack_connection_mss
+        ignore:   False
+        args: 
+            resp_flow: True
+
+    - name      : CONN_TS_RESP
+      testcase: testcases.security.conntrack.tcp_conntrack_connection_ts
+      ignore:   False
+      args: 
+            resp_flow: True
+
+    - name      : CONN_TS
+      testcase: testcases.security.conntrack.tcp_conntrack_connection_ts
+      ignore:   False
+        
+        
 
 

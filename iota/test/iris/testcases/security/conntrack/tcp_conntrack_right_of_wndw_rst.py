@@ -58,10 +58,8 @@ def Trigger(tc):
 def Verify(tc):
     api.Logger.info("Verify.")
     for cmd in tc.resp.commands:
-        #api.PrintCommandResults(cmd)
+        api.PrintCommandResults(cmd)
         if tc.cmd_cookies['show after'] == cmd.command:     
-            if not cmd.stdout:
-                return api.types.status.SUCCESS
             print(cmd.stdout)
             yaml_out = get_yaml(cmd)
             init_flow = get_initflow(yaml_out)

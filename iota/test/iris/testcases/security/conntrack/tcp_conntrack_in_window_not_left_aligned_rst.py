@@ -13,6 +13,7 @@ def Trigger(tc):
     api.Logger.info("Trigger.")
     pairs = api.GetLocalWorkloadPairs()
     resp_flow = getattr(tc.args, "resp_flow", 0)
+    tc.resp_flow = resp_flow
     tc.cmd_cookies = {}
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     server, client = pairs[0]
@@ -65,13 +66,16 @@ def Verify(tc):
             print(cmd.stdout)
             
             yaml_out = get_yaml(cmd)
-            init_flow = get_initflow(yaml_out)
-            conn_info = get_conntrack_info(init_flow)
-            excep =  get_exceptions(conn_info)
-            if (excep['tcppacketreorder'] == 'false'):
-                return api.types.status.FAILURE 
+            if tc.resp_flow:
+                flow = get_respflow(yaml_out)
+            else:
+                flow = get_initflow(yaml_out)
+            state = get_tcpstate(flow)
+            if int(state) == TcpState.ESTABLISHED:
+                return api.types.status.SUCCESS
+            else:
+                return api.types.status.FAILURE
         
-    #print(tc.resp)
     return api.types.status.SUCCESS
 
 def Teardown(tc):
