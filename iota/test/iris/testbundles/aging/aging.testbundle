@@ -1,6 +1,7 @@
 meta:
     name    : aging
     nics    : [ pensando, intel, mellanox, broadcom ]
+    targetcount : 20 
 
 testcases:
     -   name    : AgingICMPSessions

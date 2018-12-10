@@ -1,6 +1,7 @@
 meta:
     name    : policy
     nics    : [ pensando, intel, mellanox, broadcom ]
+    targetcount : 7
 
 testcases:
     -   name    : PolicyLocalToLocal
