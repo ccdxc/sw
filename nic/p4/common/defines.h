@@ -275,26 +275,49 @@
 #define LIF_STATS_TX_DESC_FETCH_ERROR_OFFSET        336
 #define LIF_STATS_TX_DESC_DATA_ERROR_OFFSET         344
 
+//RDMA counters - Tx (384-447)
+#define LIF_STATS_TX_RDMA_UCAST_BYTES_OFFSET        384
+#define LIF_STATS_TX_RDMA_UCAST_PACKETS_OFFSET      392
+#define LIF_STATS_TX_RDMA_MCAST_BYTES_OFFSET        400
+#define LIF_STATS_TX_RDMA_MCAST_PACKETS_OFFSET      408
+#define LIF_STATS_TX_RDMA_CNP_PACKETS_OFFSET        416
+
+//RDMA counters - Rx (448-511)
+#define LIF_STATS_RX_RDMA_UCAST_BYTES_OFFSET        448
+#define LIF_STATS_RX_RDMA_UCAST_PACKETS_OFFSET      456
+#define LIF_STATS_RX_RDMA_MCAST_BYTES_OFFSET        464
+#define LIF_STATS_RX_RDMA_MCAST_PACKETS_OFFSET      472
+#define LIF_STATS_RX_RDMA_CNP_PACKETS_OFFSET        480
+#define LIF_STATS_RX_RDMA_ECN_PACKETS_OFFSET        488
+
 // Debug counters
-#define LIF_STATS_RX_RSS_OFFSET                     384
-#define LIF_STATS_RX_CSUM_COMPLETE_OFFSET           392
-#define LIF_STATS_RX_CSUM_IP_BAD_OFFSET             400
-#define LIF_STATS_RX_CSUM_TCP_BAD_OFFSET            408
-#define LIF_STATS_RX_CSUM_UDP_BAD_OFFSET            416
-#define LIF_STATS_RX_VLAN_STRIP_OFFSET              424
+#define LIF_STATS_RX_RSS_OFFSET                     512
+#define LIF_STATS_RX_CSUM_COMPLETE_OFFSET           520
+#define LIF_STATS_RX_CSUM_IP_BAD_OFFSET             528
+#define LIF_STATS_RX_CSUM_TCP_BAD_OFFSET            536
+#define LIF_STATS_RX_CSUM_UDP_BAD_OFFSET            542
+#define LIF_STATS_RX_VLAN_STRIP_OFFSET              550
 
-#define LIF_STATS_TX_CSUM_HW_OFFSET                 448
-#define LIF_STATS_TX_CSUM_HW_INNER_OFFSET           456
-#define LIF_STATS_TX_VLAN_INSERT_OFFSET             464
-#define LIF_STATS_TX_SG_OFFSET                      472
-#define LIF_STATS_TX_TSO_SG_OFFSET                  480
-#define LIF_STATS_TX_TSO_SOP_OFFSET                 488
-#define LIF_STATS_TX_TSO_EOP_OFFSET                 496
+#define LIF_STATS_TX_CSUM_HW_OFFSET                 576
+#define LIF_STATS_TX_CSUM_HW_INNER_OFFSET           584
+#define LIF_STATS_TX_VLAN_INSERT_OFFSET             592
+#define LIF_STATS_TX_SG_OFFSET                      600
+#define LIF_STATS_TX_TSO_SG_OFFSET                  608
+#define LIF_STATS_TX_TSO_SOP_OFFSET                 616
+#define LIF_STATS_TX_TSO_EOP_OFFSET                 624
 
-#define LIF_STATS_TX_OPCODE_INVALID_OFFSET          560
-#define LIF_STATS_TX_OPCODE_CSUM_NONE_OFFSET        568
-#define LIF_STATS_TX_OPCODE_CSUM_PARTIAL_OFFSET     576
-#define LIF_STATS_TX_OPCODE_CSUM_HW_OFFSET          584
-#define LIF_STATS_TX_OPCODE_CSUM_TSO_OFFSET         592
+#define LIF_STATS_TX_OPCODE_INVALID_OFFSET          640
+#define LIF_STATS_TX_OPCODE_CSUM_NONE_OFFSET        648
+#define LIF_STATS_TX_OPCODE_CSUM_PARTIAL_OFFSET     656
+#define LIF_STATS_TX_OPCODE_CSUM_HW_OFFSET          664
+#define LIF_STATS_TX_OPCODE_CSUM_TSO_OFFSET         672
+
+//RDMA Requester-Tx error/debug counters(768-831)
+
+//RDMA Responder-Tx error/debug counters(832-895)
+
+//RDMA Responder-Rx error/debug counters(896-959)
+
+//RDMA Requester-Rx error/debug counters(960-1023)
 
 #endif //__P4_COMMON_DEFINES_H__

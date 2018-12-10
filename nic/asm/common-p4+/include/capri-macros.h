@@ -717,4 +717,78 @@
         or              r3, r3, _ring, TIMER_RING_SHFT;\
         or              r3, r3, _delta_time, TIMER_DELTA_TIME_SHFT;
 
+
+/**
+ * Atomic Counters
+ */
+
+#define ATOMIC_INC_VAL_1(_r_b, _r_o, _r_a, _r_v, _v0)   \
+    add         _r_a, _r_b, _r_o[26:0]; \
+    or          _r_v, r0, _v0; \
+    or          _r_v, _r_v, _r_o[31:27], 58; \
+    memwr.dx    _r_a, _r_v
+
+#define ATOMIC_INC_VAL_2(_r_b, _r_o, _r_a, _r_v, _v0, _v1)   \
+    add         _r_a, _r_b, _r_o[26:0]; \
+    or          _r_v, r0, _v0; \
+    or          _r_v, _r_v, _v1, 32; \
+    or          _r_v, _r_v, 1, 56; \
+    or          _r_v, _r_v, _r_o[31:27], 58; \
+    memwr.dx    _r_a, _r_v
+
+#define ATOMIC_INC_VAL_3(_r_b, _r_o, _r_a, _r_v, _v0, _v1, _v2)   \
+    add         _r_a, _r_b, _r_o[26:0]; \
+    or          _r_v, r0, _v0; \
+    or          _r_v, _r_v, _v1, 16; \
+    or          _r_v, _r_v, _v2, 32; \
+    or          _r_v, _r_v, 2, 56; \
+    or          _r_v, _r_v, _r_o[31:27], 58; \
+    memwr.dx    _r_a, _r_v
+
+#define ATOMIC_INC_VAL_4(_r_b, _r_o, _r_a, _r_v, _v0, _v1, _v2, _v3)   \
+    add         _r_a, _r_b, _r_o[26:0]; \
+    or          _r_v, r0, _v0; \
+    or          _r_v, _r_v, _v1, 16; \
+    or          _r_v, _r_v, _v2, 32; \
+    or          _r_v, _r_v, _v3, 48; \
+    or          _r_v, _r_v, 2, 56; \
+    or          _r_v, _r_v, _r_o[31:27], 58; \
+    memwr.dx    _r_a, _r_v
+
+#define ATOMIC_INC_VAL_5(_r_b, _r_o, _r_a, _r_v, _v0, _v1, _v2, _v3, _v4)   \
+    add         _r_a, _r_b, _r_o[26:0]; \
+    or          _r_v, r0, _v0; \
+    or          _r_v, _r_v, _v1, 8; \
+    or          _r_v, _r_v, _v2, 16; \
+    or          _r_v, _r_v, _v3, 24; \
+    or          _r_v, _r_v, _v4, 32; \
+    or          _r_v, _r_v, 3, 56; \
+    or          _r_v, _r_v, _r_o[31:27], 58; \
+    memwr.dx    _r_a, _r_v
+
+#define ATOMIC_INC_VAL_6(_r_b, _r_o, _r_a, _r_v, _v0, _v1, _v2, _v3, _v4, _v5)   \
+    add         _r_a, _r_b, _r_o[26:0]; \
+    or          _r_v, r0, _v0; \
+    or          _r_v, _r_v, _v1, 8; \
+    or          _r_v, _r_v, _v2, 16; \
+    or          _r_v, _r_v, _v3, 24; \
+    or          _r_v, _r_v, _v4, 32; \
+    or          _r_v, _r_v, _v5, 40; \
+    or          _r_v, _r_v, 3, 56; \
+    or          _r_v, _r_v, _r_o[31:27], 58; \
+    memwr.dx    _r_a, _r_v
+
+#define ATOMIC_INC_VAL_7(_r_b, _r_o, _r_a, _r_v, _v0, _v1, _v2, _v3, _v4, _v5, _v6)   \
+    add         _r_a, _r_b, _r_o[26:0]; \
+    or          _r_v, r0, _v0; \
+    or          _r_v, _r_v, _v1, 8; \
+    or          _r_v, _r_v, _v2, 16; \
+    or          _r_v, _r_v, _v3, 24; \
+    or          _r_v, _r_v, _v4, 32; \
+    or          _r_v, _r_v, _v5, 40; \
+    or          _r_v, _r_v, _v6, 48; \
+    or          _r_v, _r_v, 3, 56; \
+    or          _r_v, _r_v, _r_o[31:27], 58; \
+    memwr.dx    _r_a, _r_v
+
 #endif /* #ifndef __CAPRI_MACROS_H__ */

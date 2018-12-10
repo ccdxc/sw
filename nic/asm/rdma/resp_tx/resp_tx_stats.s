@@ -2,6 +2,9 @@
 #include "resp_tx.h"
 #include "rqcb.h"
 #include "common_phv.h"
+#include "defines.h"
+#include "capri-macros.h"
+
 
 struct resp_tx_phv_t p;
 struct resp_tx_s7_t3_k k;
@@ -20,6 +23,8 @@ struct rqcb4_t d;
 #define MASK_32 32
 
 %%
+
+.param  lif_stats_base
 
 .align
 resp_tx_stats_process:
@@ -58,7 +63,7 @@ resp_tx_stats_process:
 
     // is there an aeth hdr ?
     IS_ANY_FLAG_SET(c1, GLOBAL_FLAGS, RESP_TX_FLAG_ONLY | RESP_TX_FLAG_FIRST | RESP_TX_FLAG_LAST | RESP_TX_FLAG_ATOMIC_RESP | RESP_TX_FLAG_ACK)
-    bcf             [!c1], exit
+    bcf             [!c1], handle_lif_stats
     add             r2, r0, K_LAST_SYNDROME //BD Slot
  
     //aeth stats
@@ -66,15 +71,33 @@ resp_tx_stats_process:
     tblwr           d.last_psn, K_LAST_PSN
     tblwr           d.last_msn, K_LAST_MSN
 
-    bcf             [!c5], exit
+    bcf             [!c5], handle_lif_stats
     seq             c1, r2[7:5], AETH_CODE_ACK
 
     // ack stats
     tblmincri.c1    d.num_acks, MASK_32, 1     //count only positive standalone acks
     seq             c1, r2[7:5], AETH_CODE_RNR
     tblmincri.c1    d.num_rnrs, MASK_32, 1
-    seq.e           c1, r2, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_SEQ_ERR)
-    tblmincri.c1    d.num_seq_errs, MASK_32, 1  //Exit Slot
+    seq             c1, r2, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_SEQ_ERR)
+    tblmincri.c1    d.num_seq_errs, MASK_32, 1
+
+handle_lif_stats:
+
+#ifndef GFT
+
+    addi            r1, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
+    addi            r2, r0, lif_stats_base[30:0] // substract 0x80000000 because hw adds it
+    add             r2, r2, K_GLOBAL_LIF, LIF_STATS_SIZE_SHIFT
+
+    #uc bytes and packets
+    addi            r3, r2, LIF_STATS_TX_RDMA_UCAST_BYTES_OFFSET
+
+    ATOMIC_INC_VAL_2(r1, r3, r4, r5, CAPRI_KEY_FIELD(to_s7_stats_info, pyld_bytes), 1)
+
+#endif
+
+    nop.e
+    nop
 
 bubble_to_next_stage:
     seq           c1, r1[4:2], STAGE_6
@@ -87,8 +110,10 @@ bubble_to_next_stage:
     CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RQCB4_ADDR)
 
 exit:
+
     nop.e
     nop
+
 
 err_dis_qp_stats:
     tblwr           d.last_syndrome, K_LAST_SYNDROME

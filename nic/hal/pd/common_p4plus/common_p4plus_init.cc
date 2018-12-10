@@ -831,6 +831,44 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_LIF_STATS);
     i++;
 
+    symbols[i].name = "req_tx_stats.bin";
+    symbols[i].num_params = 1;
+    symbols[i].params[0].name = LIF_STATS_BASE;
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_LIF_STATS);
+    i++;
+
+    symbols[i].name = "req_rx_stats.bin";
+    symbols[i].num_params = 1;
+    symbols[i].params[0].name = LIF_STATS_BASE;
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_LIF_STATS);
+    i++;
+
+    symbols[i].name = "resp_tx_stats.bin";
+    symbols[i].num_params = 1;
+    symbols[i].params[0].name = LIF_STATS_BASE;
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_LIF_STATS);
+    i++;
+
+    symbols[i].name = "resp_rx_stats.bin";
+    symbols[i].num_params = 1;
+    symbols[i].params[0].name = LIF_STATS_BASE;
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_LIF_STATS);
+    i++;
+
+    symbols[i].name = "resp_rx_dcqcn_cnp_process.bin";
+    symbols[i].num_params = 1;
+    symbols[i].params[0].name = LIF_STATS_BASE;
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_LIF_STATS);
+    i++;
+
+    symbols[i].name = "req_tx_sqcb2_cnp_process.bin";
+    symbols[i].num_params = 1;
+    symbols[i].params[0].name = LIF_STATS_BASE;
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_LIF_STATS);
+    i++;
+
+    // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
+    // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
     // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
     HAL_ASSERT(i <= P4PLUS_SYMBOLS_MAX);
 

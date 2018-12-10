@@ -271,6 +271,47 @@ eth_stats(uint16_t lif)
         uint64_t tx_bcast_drop_packets;
         uint64_t __rsvd4;
         uint64_t __rsvd5;
+
+        //Rx Queue/Ring drops
+        uint64_t rx_q_disable_drop;
+        uint64_t rx_q_empty_drop;
+        uint64_t rx_q_empty_scheduled;
+        uint64_t rx_desc_fetch_error;
+        uint64_t rx_desc_data_error;
+        uint64_t rsvd6;
+        uint64_t rsvd7;
+        uint64_t rsvd8;
+        
+        //Tx Queue/Ring drops
+        uint64_t tx_q_disable_drop;
+        uint64_t tx_q_empty_drop;
+        uint64_t tx_desc_fetch_error;
+        uint64_t tx_desc_data_error;
+        uint64_t rsvd9;
+        uint64_t rsvd10;
+        uint64_t rsvd11;
+        uint64_t rsvd12;
+        
+        // RDMA/ROCE TX
+        uint64_t roce_tx_ucast_bytes;
+        uint64_t roce_tx_ucast_packets;
+        uint64_t roce_tx_mcast_bytes;
+        uint64_t roce_tx_mcast_packets;
+        uint64_t roce_tx_cnp_packets;
+        uint64_t __rsvd13;
+        uint64_t __rsvd14;
+        uint64_t __rsvd15;
+
+        // RDMA/ROCE RX
+        uint64_t roce_rx_ucast_bytes;
+        uint64_t roce_rx_ucast_packets;
+        uint64_t roce_rx_mcast_bytes;
+        uint64_t roce_rx_mcast_packets;
+        uint64_t roce_rx_cnp_packets;
+        uint64_t roce_rx_ecn_packets;
+        uint64_t __rsvd16;
+        uint64_t __rsvd17;
+
     } __attribute__((packed)) eth_stats_t;
 
     eth_stats_t stats;
@@ -305,6 +346,20 @@ eth_stats(uint16_t lif)
     printf("tx_bcast_drop_bytes         : %lu\n", stats.tx_bcast_drop_bytes);
     printf("tx_bcast_drop_packets       : %lu\n", stats.tx_bcast_drop_packets);
     printf("tx_dma_error                : %lu\n", stats.tx_dma_error);
+
+    printf("roce_tx_ucast_bytes         : %lu\n", stats.roce_tx_ucast_bytes);
+    printf("roce_tx_ucast_packets       : %lu\n", stats.roce_tx_ucast_packets);
+    printf("roce_tx_mcast_bytes         : %lu\n", stats.roce_tx_mcast_bytes);
+    printf("roce_tx_mcast_packets       : %lu\n", stats.roce_tx_mcast_packets);
+    printf("roce_tx_cnp_packets         : %lu\n", stats.roce_tx_cnp_packets);
+
+    printf("roce_rx_ucast_bytes         : %lu\n", stats.roce_rx_ucast_bytes);
+    printf("roce_rx_ucast_packets       : %lu\n", stats.roce_rx_ucast_packets);
+    printf("roce_rx_mcast_bytes         : %lu\n", stats.roce_rx_mcast_bytes);
+    printf("roce_rx_mcast_packets       : %lu\n", stats.roce_rx_mcast_packets);
+    printf("roce_rx_cnp_packets         : %lu\n", stats.roce_rx_cnp_packets);
+    printf("roce_rx_ecn_packets         : %lu\n", stats.roce_rx_ecn_packets);
+
 }
 
 void

@@ -8,6 +8,7 @@ MODULE_INCS     = ${BLD_P4GEN_DIR}/rdma_resp_rxdma/asm_out \
                   ${MODULE_DIR}//include \
                   ${TOPDIR}/nic/asm/common-p4+/include \
                   ${TOPDIR}/nic/p4/include \
+                  ${TOPDIR}/nic/p4/common \
                   ${TOPDIR}/nic/include
 MODULE_DEPS     = $(shell find ${MODULE_DIR} -name '*.h')
 MODULE_BIN_DIR  = ${BLD_BIN_DIR}/p4pasm

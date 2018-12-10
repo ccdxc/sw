@@ -2,6 +2,9 @@
 #include "req_rx.h"
 #include "sqcb.h"
 #include "common_phv.h"
+#include "defines.h"
+#include "capri-macros.h"
+
 
 struct req_rx_phv_t p;
 struct req_rx_s7_t3_k k;
@@ -18,6 +21,8 @@ struct sqcb5_t d;
 
 %%
 
+.param  lif_stats_base
+
 .align
 req_rx_stats_process:
 
@@ -30,7 +35,7 @@ req_rx_stats_process:
 
     crestore         [c6, c5, c4, c3, c2, c1], GLOBAL_FLAGS, (REQ_RX_FLAG_RDMA_FEEDBACK | REQ_RX_FLAG_ATOMIC_AETH | REQ_RX_FLAG_ACK | REQ_RX_FLAG_READ_RESP | REQ_RX_FLAG_FIRST | REQ_RX_FLAG_ONLY)
 
-    bcf              [c6], done
+    bcf              [c6], handle_lif_stats
     tblmincri.c6     d.num_feedback, MASK_16, 1 //BD Slot
 
     tbladd           d.num_bytes, CAPRI_KEY_FIELD(to_s7_stats_info, pyld_bytes)
@@ -39,7 +44,7 @@ req_rx_stats_process:
     tblmincri.c5     d.num_atomic_ack, MASK_16, 1
     tblmincri.c4     d.num_ack, MASK_16, 1
 
-    bcf              [c5 | c4], done
+    bcf              [c5 | c4], handle_lif_stats
     setcf.c3         c3, [c2 | c1] //BD Slot
 
     tblmincri        d.num_read_resp_pkts, MASK_32, 1
@@ -55,10 +60,26 @@ req_rx_stats_process:
     sslt             c6, r4, d.num_pkts_in_cur_msg, r0
     tblwr.c6         d.max_pkts_in_any_msg, d.num_pkts_in_cur_msg
 
+handle_lif_stats:
+
+#ifndef GFT
+
+    addi            r1, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
+    addi            r2, r0, lif_stats_base[30:0] // substract 0x80000000 because hw adds it
+    add             r2, r2, K_GLOBAL_LIF, LIF_STATS_SIZE_SHIFT
+
+    #uc bytes and packets
+    addi            r3, r2, LIF_STATS_RX_RDMA_UCAST_BYTES_OFFSET
+
+    ATOMIC_INC_VAL_2(r1, r3, r4, r5, CAPRI_KEY_FIELD(to_s7_stats_info, pyld_bytes), 1)
+
+#endif
+
 done:
 
     nop.e
     nop
+
 
 bubble_to_next_stage:
     seq           c1, r1[4:2], STAGE_6

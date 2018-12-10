@@ -2,6 +2,8 @@
 #include "resp_rx.h"
 #include "rqcb.h"
 #include "common_phv.h"
+#include "defines.h"
+#include "capri-macros.h"
 
 struct resp_rx_phv_t p;
 struct resp_rx_s7_t3_k k;
@@ -19,6 +21,8 @@ struct rqcb5_t d;
 #define K_FLAGS CAPRI_KEY_RANGE(IN_P, incr_recirc_drop, dup_rd_atomic_drop)
 
 %%
+
+.param  lif_stats_base
 
 .align
 resp_rx_stats_process:
@@ -55,7 +59,7 @@ resp_rx_stats_process:
     // via send with invalidate
     seq              c7, CAPRI_KEY_FIELD(to_s7_stats_info, incr_mem_window_inv), 1
     tblmincri.c7     d.num_mem_window_inv, MASK_16, 1
-    bcf              [c4 | c3 | c2 | c1], done
+    bcf              [c4 | c3 | c2 | c1], handle_lif_stats
 
     ARE_ALL_FLAGS_SET(c6, GLOBAL_FLAGS, RESP_RX_FLAG_IMMDT|RESP_RX_FLAG_SEND) //BD Slot
     tblmincri.c6     d.num_send_msgs_imm_data, MASK_16, 1
@@ -81,6 +85,21 @@ resp_rx_stats_process:
     add              r4, r0, d.max_pkts_in_any_msg
     sslt             c6, r4, d.num_pkts_in_cur_msg, r0
     tblwr.c6         d.max_pkts_in_any_msg, d.num_pkts_in_cur_msg
+
+handle_lif_stats:
+
+#ifndef GFT
+
+    addi            r1, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
+    addi            r2, r0, lif_stats_base[30:0] // substract 0x80000000 because hw adds it
+    add             r2, r2, K_GLOBAL_LIF, LIF_STATS_SIZE_SHIFT
+
+    #uc bytes and packets
+    addi            r3, r2, LIF_STATS_RX_RDMA_UCAST_BYTES_OFFSET
+
+    ATOMIC_INC_VAL_2(r1, r3, r4, r5, CAPRI_KEY_FIELD(to_s7_stats_info, pyld_bytes), 1)
+
+#endif
 
 done:
 

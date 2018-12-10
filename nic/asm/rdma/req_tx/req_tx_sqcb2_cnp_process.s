@@ -1,18 +1,21 @@
 #include "capri.h"
 #include "req_tx.h"
 #include "sqcb.h"
-#include "types.h"
 #include "common_phv.h"
-#include "nic/p4/common/defines.h"
+#include "defines.h"
+#include "capri-macros.h"
+
 
 struct req_tx_phv_t p;
 struct sqcb2_t d;
+struct req_tx_s1_t0_k k;
 
 #define DMA_CMD_BASE        r1
 
 %%
 
     .param      req_tx_dcqcn_cnp_process
+    .param      lif_stats_base
 
 // Prepare CNP packet
 req_tx_sqcb2_cnp_process:
@@ -73,7 +76,23 @@ add_headers:
     DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, DMA_CMD_BASE)
     DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, DMA_CMD_BASE)
 
-exit:
     CAPRI_SET_TABLE_0_VALID(0)
+
+handle_lif_stats:
+
+#ifndef GFT
+
+    addi            r1, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
+    addi            r2, r0, lif_stats_base[30:0] // substract 0x80000000 because hw adds it
+    add             r2, r2, K_GLOBAL_LIF, LIF_STATS_SIZE_SHIFT
+
+    #uc bytes and packets
+    addi            r3, r2, LIF_STATS_TX_RDMA_CNP_PACKETS_OFFSET
+
+    ATOMIC_INC_VAL_1(r1, r3, r4, r5, 1)
+
+#endif
+
+exit:
     nop.e
     nop
