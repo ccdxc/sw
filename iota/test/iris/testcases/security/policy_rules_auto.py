@@ -44,4 +44,7 @@ def Verify(tc):
 
 def Teardown(tc):
     api.Logger.info("Tearing down ...")
+    policy_json = "{}/sgpolicy.json".format(api.GetTopologyDirectory())
+    sg_json_obj = utils.ReadJson(policy_json)
+    agent_api.ConfigureSecurityGroupPolicies(sg_json_obj.sgpolicies, oper = agent_api.CfgOper.ADD)
     return api.types.status.SUCCESS
