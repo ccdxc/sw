@@ -10,6 +10,7 @@ namespace platform {
 
 #define QSFP_OFFSET_TX_DISABLE                0x56
 #define QSFP_OFFSET_LENGTH_CU                 146 // 0x92
+#define QSFP_OFFSET_ETH_COMPLIANCE_CODES      131
 #define QSFP_OFFSET_EXT_SPEC_COMPLIANCE_CODES 192
 
 using sdk::lib::qsfp_page_t;

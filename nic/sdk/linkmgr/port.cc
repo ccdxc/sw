@@ -1204,6 +1204,12 @@ port::port_deinit (void)
     return SDK_RET_OK;
 }
 
+sdk_ret_t
+port::port_mac_set_pause_src_addr(uint8_t *mac_addr) {
+    mac_fns()->mac_pause_src_addr(mac_id(), mac_ch(), mac_addr);
+    return SDK_RET_OK;
+}
+
 // ----------------------------------------------------
 // static methods
 // ----------------------------------------------------

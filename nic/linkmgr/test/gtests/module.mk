@@ -4,7 +4,7 @@ include ${MKDEFS}/pre.mk
 MODULE_TARGET = port_test.gtest
 MODULE_PIPELINE = iris gft
 MODULE_SRCS   = ${MODULE_SRC_DIR}/port_test.cc
-MODULE_SOLIBS = linkmgr_test_utils bm_allocator \
+MODULE_SOLIBS = pal sdkfru linkmgr_test_utils bm_allocator \
                 hal_lib agent_api linkmgr_src block_list \
                 list shmmgr slab ht timerfd periodic halproto \
                 linkmgr_src sdklinkmgr haltrace \

@@ -215,7 +215,10 @@ public:
     bool port_mac_sync_get(void);
 
     // mac stats
-    sdk_ret_t port_mac_stats_get (uint64_t *stats_data);
+    sdk_ret_t port_mac_stats_get(uint64_t *stats_data);
+
+    // mac pause src addr
+    sdk_ret_t port_mac_set_pause_src_addr(uint8_t *mac_addr);
 
     // ----------------------------------------------------
     // serdes methods

@@ -656,6 +656,13 @@ mac_stats_get_hw (uint32_t mac_inst, uint32_t mac_ch,
     return 0;
 }
 
+static int
+mac_pause_src_addr_hw (uint32_t mac_inst, uint32_t mac_ch, uint8_t *mac_addr)
+{
+    cap_mx_set_pause_src_addr(0, mac_inst, mac_ch, mac_addr);
+    return 0;
+}
+
 // clear channel bit
 static int
 mac_deinit_hw (uint32_t mac_inst, uint32_t mac_ch)
@@ -942,6 +949,13 @@ mac_stats_get_default (uint32_t mac_inst, uint32_t mac_ch,
 }
 
 static int
+mac_pause_src_addr_default (uint32_t mac_inst, uint32_t mac_ch,
+                            uint8_t *mac_addr)
+{
+    return 0;
+}
+
+static int
 mac_deinit_default (uint32_t mac_inst, uint32_t mac_ch)
 {
     return 0;
@@ -954,29 +968,31 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
     mac_fn_t        *mac_mgmt_fn  = &mac_mgmt_fns;
     platform_type_t platform_type = cfg->platform_type;
 
-    mac_fn->mac_cfg         = &mac_cfg_default;
-    mac_fn->mac_enable      = &mac_enable_default;
-    mac_fn->mac_soft_reset  = &mac_soft_reset_default;
-    mac_fn->mac_stats_reset = &mac_stats_reset_default;
-    mac_fn->mac_intr_clear  = &mac_intr_clear_default;
-    mac_fn->mac_intr_enable = &mac_intr_enable_default;
-    mac_fn->mac_faults_get  = &mac_faults_get_default;
-    mac_fn->mac_sync_get    = &mac_sync_get_default;
-    mac_fn->mac_flush_set   = &mac_flush_set_default;
-    mac_fn->mac_stats_get   = &mac_stats_get_default;
-    mac_fn->mac_deinit      = &mac_deinit_default;
+    mac_fn->mac_cfg            = &mac_cfg_default;
+    mac_fn->mac_enable         = &mac_enable_default;
+    mac_fn->mac_soft_reset     = &mac_soft_reset_default;
+    mac_fn->mac_stats_reset    = &mac_stats_reset_default;
+    mac_fn->mac_intr_clear     = &mac_intr_clear_default;
+    mac_fn->mac_intr_enable    = &mac_intr_enable_default;
+    mac_fn->mac_faults_get     = &mac_faults_get_default;
+    mac_fn->mac_sync_get       = &mac_sync_get_default;
+    mac_fn->mac_flush_set      = &mac_flush_set_default;
+    mac_fn->mac_stats_get      = &mac_stats_get_default;
+    mac_fn->mac_pause_src_addr = &mac_pause_src_addr_default;
+    mac_fn->mac_deinit         = &mac_deinit_default;
 
-    mac_mgmt_fn->mac_cfg         = &mac_cfg_default;
-    mac_mgmt_fn->mac_enable      = &mac_enable_default;
-    mac_mgmt_fn->mac_soft_reset  = &mac_soft_reset_default;
-    mac_mgmt_fn->mac_stats_reset = &mac_stats_reset_default;
-    mac_mgmt_fn->mac_intr_clear  = &mac_intr_clear_default;
-    mac_mgmt_fn->mac_intr_enable = &mac_intr_enable_default;
-    mac_mgmt_fn->mac_faults_get  = &mac_faults_get_default;
-    mac_mgmt_fn->mac_sync_get    = &mac_sync_get_default;
-    mac_mgmt_fn->mac_flush_set   = &mac_flush_set_default;
-    mac_mgmt_fn->mac_stats_get   = &mac_stats_get_default;
-    mac_mgmt_fn->mac_deinit      = &mac_deinit_default;
+    mac_mgmt_fn->mac_cfg            = &mac_cfg_default;
+    mac_mgmt_fn->mac_enable         = &mac_enable_default;
+    mac_mgmt_fn->mac_soft_reset     = &mac_soft_reset_default;
+    mac_mgmt_fn->mac_stats_reset    = &mac_stats_reset_default;
+    mac_mgmt_fn->mac_intr_clear     = &mac_intr_clear_default;
+    mac_mgmt_fn->mac_intr_enable    = &mac_intr_enable_default;
+    mac_mgmt_fn->mac_faults_get     = &mac_faults_get_default;
+    mac_mgmt_fn->mac_sync_get       = &mac_sync_get_default;
+    mac_mgmt_fn->mac_flush_set      = &mac_flush_set_default;
+    mac_mgmt_fn->mac_stats_get      = &mac_stats_get_default;
+    mac_mgmt_fn->mac_pause_src_addr = &mac_pause_src_addr_default;
+    mac_mgmt_fn->mac_deinit         = &mac_deinit_default;
 
     switch (platform_type) {
     case platform_type_t::PLATFORM_TYPE_HAPS:
@@ -987,16 +1003,17 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
     case platform_type_t::PLATFORM_TYPE_SIM:
     case platform_type_t::PLATFORM_TYPE_MOCK:
         // Faults and Sync is mocked
-        mac_fn->mac_cfg         = &mac_cfg_hw;
-        mac_fn->mac_enable      = &mac_enable_hw;
-        mac_fn->mac_soft_reset  = &mac_soft_reset_hw;
-        mac_fn->mac_stats_reset = &mac_stats_reset_hw;
-        mac_fn->mac_intr_clear  = &mac_intr_clear_hw;
-        mac_fn->mac_intr_enable = &mac_intr_enable_hw;
-        mac_fn->mac_sync_get    = &mac_sync_get_mock;
-        mac_fn->mac_flush_set   = &mac_flush_set_hw;
-        mac_fn->mac_stats_get   = &mac_stats_get_hw;
-        mac_fn->mac_deinit      = &mac_deinit_hw;
+        mac_fn->mac_cfg            = &mac_cfg_hw;
+        mac_fn->mac_enable         = &mac_enable_hw;
+        mac_fn->mac_soft_reset     = &mac_soft_reset_hw;
+        mac_fn->mac_stats_reset    = &mac_stats_reset_hw;
+        mac_fn->mac_intr_clear     = &mac_intr_clear_hw;
+        mac_fn->mac_intr_enable    = &mac_intr_enable_hw;
+        mac_fn->mac_sync_get       = &mac_sync_get_mock;
+        mac_fn->mac_flush_set      = &mac_flush_set_hw;
+        mac_fn->mac_stats_get      = &mac_stats_get_hw;
+        mac_fn->mac_pause_src_addr = &mac_pause_src_addr_hw;
+        mac_fn->mac_deinit         = &mac_deinit_hw;
 
         mac_mgmt_fn->mac_cfg         = &mac_mgmt_cfg_hw;
         mac_mgmt_fn->mac_enable      = &mac_mgmt_enable_hw;
@@ -1010,17 +1027,18 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
 
     case platform_type_t::PLATFORM_TYPE_ZEBU:
     case platform_type_t::PLATFORM_TYPE_HW:
-        mac_fn->mac_cfg         = &mac_cfg_hw;
-        mac_fn->mac_enable      = &mac_enable_hw;
-        mac_fn->mac_soft_reset  = &mac_soft_reset_hw;
-        mac_fn->mac_stats_reset = &mac_stats_reset_hw;
-        mac_fn->mac_intr_clear  = &mac_intr_clear_hw;
-        mac_fn->mac_intr_enable = &mac_intr_enable_hw;
-        mac_fn->mac_faults_get  = &mac_faults_get_hw;
-        mac_fn->mac_sync_get    = &mac_sync_get_hw;
-        mac_fn->mac_flush_set   = &mac_flush_set_hw;
-        mac_fn->mac_stats_get   = &mac_stats_get_hw;
-        mac_fn->mac_deinit      = &mac_deinit_hw;
+        mac_fn->mac_cfg            = &mac_cfg_hw;
+        mac_fn->mac_enable         = &mac_enable_hw;
+        mac_fn->mac_soft_reset     = &mac_soft_reset_hw;
+        mac_fn->mac_stats_reset    = &mac_stats_reset_hw;
+        mac_fn->mac_intr_clear     = &mac_intr_clear_hw;
+        mac_fn->mac_intr_enable    = &mac_intr_enable_hw;
+        mac_fn->mac_faults_get     = &mac_faults_get_hw;
+        mac_fn->mac_sync_get       = &mac_sync_get_hw;
+        mac_fn->mac_flush_set      = &mac_flush_set_hw;
+        mac_fn->mac_stats_get      = &mac_stats_get_hw;
+        mac_fn->mac_pause_src_addr = &mac_pause_src_addr_hw;
+        mac_fn->mac_deinit         = &mac_deinit_hw;
 
         mac_mgmt_fn->mac_cfg         = &mac_mgmt_cfg_hw;
         mac_mgmt_fn->mac_enable      = &mac_mgmt_enable_hw;

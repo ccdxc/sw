@@ -40,6 +40,8 @@ typedef struct mac_fn_s_ {
     int  (*mac_flush_set)  (uint32_t port_num, bool enable);
     int  (*mac_stats_get)  (uint32_t mac_inst, uint32_t mac_ch,
                             uint64_t *stats_data);
+    int  (*mac_pause_src_addr)(uint32_t mac_inst, uint32_t mac_ch,
+                               uint8_t *mac_addr);
     int  (*mac_deinit)     (uint32_t mac_inst, uint32_t mac_ch);
 } mac_fn_t;
 
