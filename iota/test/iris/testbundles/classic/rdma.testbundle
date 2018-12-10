@@ -1,6 +1,6 @@
 meta:
     name    : rdma
-    os      : [ linux ]
+    os      : [ linux, freebsd ]
     nics    : [ pensando, mellanox ]
 
 testcases:

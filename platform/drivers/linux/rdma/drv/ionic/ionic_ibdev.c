@@ -343,7 +343,7 @@ static void ionic_put_ahid(struct ionic_ibdev *dev, u32 ahid)
 
 static void ionic_put_mrid(struct ionic_ibdev *dev, u32 mrid)
 {
-	resid_put(&dev->inuse_mrid, mrid);
+	resid_put(&dev->inuse_mrid, ionic_mrid_index(mrid));
 }
 
 static void ionic_put_cqid(struct ionic_ibdev *dev, u32 cqid)
