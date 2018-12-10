@@ -302,6 +302,7 @@ DeviceManager::DeviceManager(std::string config_file, enum ForwardingMode fwd_mo
     uint64_t    hw_lif_id;
 
     NIC_HEADER_TRACE("Initializing DeviceManager");
+    init_done = false;
     instance = this;
 #ifdef __x86_64__
     assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM) ==
