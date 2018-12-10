@@ -300,13 +300,13 @@ pd_cpuif_program_hw(pd_cpuif_t *pd_cpuif)
 // ----------------------------------------------------------------------------
 // Program Output Mapping Table
 // ----------------------------------------------------------------------------
-#define om_cpu data.output_mapping_action_u.output_mapping_redirect_to_cpu
+#define om_cpu data.action_u.output_mapping_redirect_to_cpu
 hal_ret_t
 pd_cpuif_pd_pgm_output_mapping_tbl(pd_cpuif_t *pd_cpuif)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     sdk_ret_t                   sdk_ret;
-    output_mapping_actiondata   data;
+    output_mapping_actiondata_t   data;
     directmap                   *dm_omap = NULL;
     pd_lif_t                    *pd_lif = NULL;
 
@@ -314,7 +314,7 @@ pd_cpuif_pd_pgm_output_mapping_tbl(pd_cpuif_t *pd_cpuif)
 
     pd_lif = pd_cpuif_get_pd_lif(pd_cpuif);
 
-    data.actionid = OUTPUT_MAPPING_REDIRECT_TO_CPU_ID;
+    data.action_id = OUTPUT_MAPPING_REDIRECT_TO_CPU_ID;
     om_cpu.dst_lif = pd_lif->hw_lif_id; // 1023
     // TODO: Fix this
     om_cpu.egress_mirror_en = 0;

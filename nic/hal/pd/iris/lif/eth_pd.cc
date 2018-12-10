@@ -40,17 +40,17 @@ p4pd_common_p4plus_rxdma_rss_params_table_entry_add(
 {
     hal_ret_t           ret = HAL_RET_OK;
     p4pd_error_t        pd_err;
-    eth_rx_rss_params_actiondata data = { 0 };
+    eth_rx_rss_params_actiondata_t data = { 0 };
 
     HAL_ASSERT(hw_lif_id < MAX_LIFS);
     HAL_ASSERT(rss_key != NULL);
 
-    data.eth_rx_rss_params_action_u.eth_rx_rss_params_eth_rx_rss_params.rss_type = rss_type;
-    memcpy(&data.eth_rx_rss_params_action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key,
+    data.action_u.eth_rx_rss_params_eth_rx_rss_params.rss_type = rss_type;
+    memcpy(&data.action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key,
            rss_key,
-           sizeof(data.eth_rx_rss_params_action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key));
-    memrev((uint8_t *)&data.eth_rx_rss_params_action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key,
-           sizeof(data.eth_rx_rss_params_action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key));
+           sizeof(data.action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key));
+    memrev((uint8_t *)&data.action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key,
+           sizeof(data.action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key));
 
     pd_err = p4pd_global_entry_write(P4_COMMON_RXDMA_ACTIONS_TBL_ID_ETH_RX_RSS_PARAMS,
                                      hw_lif_id, NULL, NULL, &data);
@@ -64,7 +64,7 @@ p4pd_common_p4plus_rxdma_rss_params_table_entry_add(
 
 hal_ret_t
 p4pd_common_p4plus_rxdma_rss_params_table_entry_get(
-    uint32_t hw_lif_id, eth_rx_rss_params_actiondata *data)
+    uint32_t hw_lif_id, eth_rx_rss_params_actiondata_t *data)
 {
     hal_ret_t           ret = HAL_RET_OK;
     p4pd_error_t        pd_err;
@@ -79,8 +79,8 @@ p4pd_common_p4plus_rxdma_rss_params_table_entry_get(
         HAL_ASSERT(0);
     }
 
-    memrev((uint8_t *)&data->eth_rx_rss_params_action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key,
-           sizeof(data->eth_rx_rss_params_action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key));
+    memrev((uint8_t *)&data->action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key,
+           sizeof(data->action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key));
 
     return ret;
 }
@@ -103,7 +103,7 @@ p4pd_common_p4plus_rxdma_rss_indir_table_entry_add(
     uint64_t tbl_base;
     uint64_t tbl_index;
     uint64_t addr;
-    eth_rx_rss_indir_actiondata data = { 0 };
+    eth_rx_rss_indir_actiondata_t data = { 0 };
 
     if (hw_lif_id >= MAX_LIFS ||
         index >= ETH_RSS_LIF_INDIR_TBL_SZ ||
@@ -113,8 +113,8 @@ p4pd_common_p4plus_rxdma_rss_indir_table_entry_add(
         return HAL_RET_ERR;
     };
 
-    data.eth_rx_rss_indir_action_u.eth_rx_rss_indir_eth_rx_rss_indir.enable = enable;
-    data.eth_rx_rss_indir_action_u.eth_rx_rss_indir_eth_rx_rss_indir.qid = qid;
+    data.action_u.eth_rx_rss_indir_eth_rx_rss_indir.enable = enable;
+    data.action_u.eth_rx_rss_indir_eth_rx_rss_indir.qid = qid;
 
     tbl_index = (hw_lif_id * ETH_RSS_LIF_INDIR_TBL_SZ) +
                 (index * ETH_RSS_LIF_INDIR_TBL_ENTRY_SZ);
@@ -126,9 +126,9 @@ p4pd_common_p4plus_rxdma_rss_indir_table_entry_add(
                     __FUNCTION__, hw_lif_id, index, addr, enable, qid);
 
     capri_hbm_write_mem(addr,
-            (uint8_t *)&data.eth_rx_rss_indir_action_u,
-            sizeof(data.eth_rx_rss_indir_action_u));
-    p4plus_invalidate_cache(addr, sizeof(data.eth_rx_rss_indir_action_u),
+            (uint8_t *)&data.action_u,
+            sizeof(data.action_u));
+    p4plus_invalidate_cache(addr, sizeof(data.action_u),
         P4PLUS_CACHE_INVALIDATE_RXDMA);
 
     return HAL_RET_OK;
@@ -136,7 +136,7 @@ p4pd_common_p4plus_rxdma_rss_indir_table_entry_add(
 
 hal_ret_t
 p4pd_common_p4plus_rxdma_rss_indir_table_entry_get(
-    uint32_t hw_lif_id, uint8_t index, eth_rx_rss_indir_actiondata *data)
+    uint32_t hw_lif_id, uint8_t index, eth_rx_rss_indir_actiondata_t *data)
 {
     uint64_t tbl_base;
     uint64_t tbl_index;
@@ -156,8 +156,8 @@ p4pd_common_p4plus_rxdma_rss_indir_table_entry_get(
     addr = tbl_base + tbl_index;
 
     capri_hbm_read_mem(addr,
-            (uint8_t *)&data->eth_rx_rss_indir_action_u,
-             sizeof(data->eth_rx_rss_indir_action_u));
+            (uint8_t *)&data->action_u,
+             sizeof(data->action_u));
 
     return HAL_RET_OK;
 }

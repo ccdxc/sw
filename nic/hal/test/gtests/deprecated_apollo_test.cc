@@ -224,8 +224,8 @@ entry_write(uint32_t tbl_id, uint32_t index, void *key, void *mask, void *data)
 static void
 vnic_init (void)
 {
-    vnic_actiondata data;
-    vnic_vnic_mapping_t *vnic_mapping = &data.vnic_action_u.vnic_vnic_mapping;
+    vnic_actiondata_t data;
+    vnic_vnic_mapping_t *vnic_mapping = &data.action_u.vnic_vnic_mapping;
     uint64_t slacl_hbm_addr;
     uint64_t lpm_hbm_addr;
     uint32_t vid = VLAN_ID;
@@ -234,7 +234,7 @@ vnic_init (void)
 
     memset(&data, 0, sizeof(data));
     index = vid;
-    data.actionid = VNIC_VNIC_MAPPING_ID;
+    data.action_id = VNIC_VNIC_MAPPING_ID;
     vnic_mapping->vnic = VNIC_ID;
     slacl_hbm_addr = get_start_offset("slacl");
     memcpy(vnic_mapping->slacl_addr_1, &slacl_hbm_addr, sizeof(vnic_mapping->slacl_addr_1));
@@ -257,7 +257,7 @@ key_native_init (void)
 {
     key_native_swkey_t key;
     key_native_swkey_mask_t mask;
-    key_native_actiondata data;
+    key_native_actiondata_t data;
     uint32_t tbl_id = P4TBL_ID_KEY_NATIVE;
     uint32_t index;
 
@@ -266,7 +266,7 @@ key_native_init (void)
     memset(&data, 0, sizeof(data));
 
     index = 0;
-    data.actionid = KEY_NATIVE_NATIVE_IPV4_PACKET_ID;
+    data.action_id = KEY_NATIVE_NATIVE_IPV4_PACKET_ID;
     key.tunnel_metadata_tunnel_type = INGRESS_TUNNEL_TYPE_NONE;
     mask.tunnel_metadata_tunnel_type_mask = 0xff;
     key.ipv4_1_valid = 1;
@@ -280,7 +280,7 @@ key_tunneled_init (void)
 {
     key_tunneled_swkey_t key;
     key_tunneled_swkey_mask_t mask;
-    key_tunneled_actiondata data;
+    key_tunneled_actiondata_t data;
     uint32_t tbl_id = P4TBL_ID_KEY_TUNNELED;
     uint32_t index;
 
@@ -289,7 +289,7 @@ key_tunneled_init (void)
     memset(&data, 0, sizeof(data));
 
     index = 0;
-    data.actionid = KEY_TUNNELED_TUNNELED_IPV4_PACKET_ID;
+    data.action_id = KEY_TUNNELED_TUNNELED_IPV4_PACKET_ID;
     key.tunnel_metadata_tunnel_type = INGRESS_TUNNEL_TYPE_VXLAN;
     mask.tunnel_metadata_tunnel_type_mask = 0xff;
     key.ipv4_2_valid = 1;

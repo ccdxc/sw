@@ -24,7 +24,7 @@ p4pd_rx_vport_init (void)
     uint32_t                idx;
     rx_vport_swkey_t        key;
     rx_vport_swkey_mask_t   mask;
-    rx_vport_actiondata     data;
+    rx_vport_actiondata_t     data;
     tcam                    *rx_vport;
 
     rx_vport = g_hal_state_pd->tcam_table(P4TBL_ID_RX_VPORT);
@@ -34,7 +34,7 @@ p4pd_rx_vport_init (void)
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
 
-    data.rx_vport_action_u.rx_vport_rx_vport.tm_oport = TM_PORT_DMA;
+    data.action_u.rx_vport_rx_vport.tm_oport = TM_PORT_DMA;
 
     sdk_ret = rx_vport->insert(&key, &mask, &data, &idx, false);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -72,10 +72,10 @@ p4pd_tx_transp_init (void)
 {
     hal_ret_t                               ret;
     sdk_ret_t                               sdk_ret;
-    tx_hdr_transpositions0_actiondata       xpo0_data = { 0 }; 
-    tx_hdr_transpositions1_actiondata       xpo1_data = { 0 }; 
-    tx_hdr_transpositions2_actiondata       xpo2_data = { 0 }; 
-    tx_hdr_transpositions3_actiondata       xpo3_data = { 0 }; 
+    tx_hdr_transpositions0_actiondata_t       xpo0_data = { 0 }; 
+    tx_hdr_transpositions1_actiondata_t       xpo1_data = { 0 }; 
+    tx_hdr_transpositions2_actiondata_t       xpo2_data = { 0 }; 
+    tx_hdr_transpositions3_actiondata_t       xpo3_data = { 0 }; 
     directmap                               *tx_xpos_tbl = NULL;
     uint32_t                                idx = TX_TRANSPOSITION_NOP_ENTRY;
 
@@ -110,10 +110,10 @@ p4pd_rx_transp_init (void)
 {
     hal_ret_t                               ret;
     sdk_ret_t                               sdk_ret;
-    rx_hdr_transpositions0_actiondata       xpo0_data = { 0 }; 
-    rx_hdr_transpositions1_actiondata       xpo1_data = { 0 }; 
-    rx_hdr_transpositions2_actiondata       xpo2_data = { 0 }; 
-    rx_hdr_transpositions3_actiondata       xpo3_data = { 0 }; 
+    rx_hdr_transpositions0_actiondata_t       xpo0_data = { 0 }; 
+    rx_hdr_transpositions1_actiondata_t       xpo1_data = { 0 }; 
+    rx_hdr_transpositions2_actiondata_t       xpo2_data = { 0 }; 
+    rx_hdr_transpositions3_actiondata_t       xpo3_data = { 0 }; 
     directmap                               *rx_xpos_tbl = NULL;
     uint32_t                                idx = RX_TRANSPOSITION_NOP_ENTRY;
 
@@ -197,7 +197,7 @@ p4pd_decode_roce_opcode_init (void)
     hal_ret_t                    ret;
     sdk_ret_t                    sdk_ret;
     directmap                    *dm;
-    rx_roce_actiondata data = { 0 };
+    rx_roce_actiondata_t data = { 0 };
 
     // C++ compiler did not allow sparse initialization. compiler must be old.
     // So lets initialize the for UD entries here.
@@ -231,24 +231,24 @@ p4pd_decode_roce_opcode_init (void)
 
         if (opc_to_info[idx].valid == 1) {
             // valid entry
-            data.actionid = RX_ROCE_RX_ROCE_ID;
-            data.rx_roce_action_u.rx_roce_rx_roce.qtype =
+            data.action_id = RX_ROCE_RX_ROCE_ID;
+            data.action_u.rx_roce_rx_roce.qtype =
                 opc_to_info[idx].type;
-            data.rx_roce_action_u.rx_roce_rx_roce.len =
+            data.action_u.rx_roce_rx_roce.len =
                 opc_to_info[idx].roce_hdr_length;
-            data.rx_roce_action_u.rx_roce_rx_roce.raw_flags = opc_to_info[idx].raw_flags;
-            data.rx_roce_action_u.rx_roce_rx_roce.parsed_hdrs_len =
+            data.action_u.rx_roce_rx_roce.raw_flags = opc_to_info[idx].raw_flags;
+            data.action_u.rx_roce_rx_roce.parsed_hdrs_len =
                 opc_to_info[idx].parsed_hdrs_len;
         } else {
             //Except for invalid opcode 32(error test case), skip all others for now, to save HAL bootup time
             if (idx != 32) {
                 continue;
             }
-            data.actionid = RX_ROCE_RX_ROCE_ID;
-            data.rx_roce_action_u.rx_roce_rx_roce.qtype = Q_TYPE_RDMA_RQ;
-            data.rx_roce_action_u.rx_roce_rx_roce.len = sizeof(rdma_bth_t);
-            data.rx_roce_action_u.rx_roce_rx_roce.raw_flags = 0;
-            data.rx_roce_action_u.rx_roce_rx_roce.parsed_hdrs_len =
+            data.action_id = RX_ROCE_RX_ROCE_ID;
+            data.action_u.rx_roce_rx_roce.qtype = Q_TYPE_RDMA_RQ;
+            data.action_u.rx_roce_rx_roce.len = sizeof(rdma_bth_t);
+            data.action_u.rx_roce_rx_roce.raw_flags = 0;
+            data.action_u.rx_roce_rx_roce.parsed_hdrs_len =
                 PARSED_HDRS_LEN_BTH;
         }
         HAL_TRACE_DEBUG("Inserting opcode id {}, type {}, raw_flags {}, len {}",

@@ -437,10 +437,10 @@ typedef union __${table}_action_union {
 
 typedef struct __attribute__((__packed__)) __${table}_actiondata {
 //::            if not (pddict['tables'][table]['is_raw']):
-    uint8_t actionid;
+    uint8_t action_id;
 //::            #endif
-    ${table}_action_union_t ${table}_action_u;
-} ${table}_actiondata;
+    ${table}_action_union_t action_u;
+} ${table}_actiondata_t;
 //::        #endif
 
 //::     #endfor

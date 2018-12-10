@@ -239,113 +239,113 @@ end:
     if (gft_hgmp->headers & GFT_HEADER_ETHERNET) {                          \
         rx_key1.ethernet_ ## LAYER ## _valid = 1;                           \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_DST_MAC_ADDR) {       \
-            rx_key ## LAYER ## _action.rx_key ## LAYER ##                   \
-            _action_u.rx_key ## LAYER ## _rx_key ## LAYER.match_fields |=   \
+            rx_key ## LAYER ## _action.                 \
+            action_u.rx_key ## LAYER ## _rx_key ## LAYER.match_fields |=   \
                 MATCH_ETHERNET_DST;                                         \
         }                                                                   \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_SRC_MAC_ADDR) {       \
-            rx_key ## LAYER ## _action.rx_key ## LAYER ##                   \
-            _action_u.rx_key ## LAYER ## _rx_key ## LAYER.match_fields |=   \
+            rx_key ## LAYER ## _action.                  \
+            action_u.rx_key ## LAYER ## _rx_key ## LAYER.match_fields |=   \
                 MATCH_ETHERNET_SRC;                                         \
         }                                                                   \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_ETH_TYPE) {           \
-            rx_key ## LAYER ## _action.rx_key ## LAYER ##                   \
-            _action_u.rx_key ## LAYER ## _rx_key ## LAYER.match_fields |=   \
+            rx_key ## LAYER ## _action.                 \
+            action_u.rx_key ## LAYER ## _rx_key ## LAYER.match_fields |=   \
                 MATCH_ETHERNET_TYPE;                                        \
         }                                                                   \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_CUSTOMER_VLAN_ID) {   \
-            rx_key ## LAYER ## _action.rx_key ## LAYER ##                   \
-            _action_u.rx_key ## LAYER ## _rx_key ## LAYER.match_fields |=   \
+            rx_key ## LAYER ## _action.                   \
+            action_u.rx_key ## LAYER ## _rx_key ## LAYER.match_fields |=   \
                 MATCH_CUSTOMER_VLAN_ID;                                     \
         }                                                                   \
     }                                                                       \
     if (gft_hgmp->headers & GFT_HEADER_IPV4) {                              \
         rx_key1.ipv4_ ## LAYER ## _valid = 1;                               \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_SRC_IP_ADDR) {        \
-            rx_key ## LAYER ## _action.rx_key ## LAYER ##                   \
-            _action_u.rx_key ## LAYER ## _rx_key ## LAYER.match_fields |=   \
+            rx_key ## LAYER ## _action.                   \
+            action_u.rx_key ## LAYER ## _rx_key ## LAYER.match_fields |=   \
                 MATCH_IP_SRC;                                               \
         }                                                                   \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_DST_IP_ADDR) {        \
-            rx_key ## LAYER ## _action.rx_key ## LAYER ##                   \
-            _action_u.rx_key ## LAYER ## _rx_key ## LAYER.match_fields |=   \
+            rx_key ## LAYER ## _action.                   \
+            action_u.rx_key ## LAYER ## _rx_key ## LAYER.match_fields |=   \
                 MATCH_IP_DST;                                               \
         }                                                                   \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_IP_DSCP) {            \
-            rx_key ## LAYER ## _action.rx_key ## LAYER ##                   \
-            _action_u.rx_key ## LAYER ## _rx_key ## LAYER.match_fields |=   \
+            rx_key ## LAYER ## _action.                   \
+            action_u.rx_key ## LAYER ## _rx_key ## LAYER.match_fields |=   \
                 MATCH_IP_DSCP;                                              \
         }                                                                   \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_IP_PROTOCOL) {        \
-            rx_key ## LAYER ## _action.rx_key ## LAYER ##                   \
-            _action_u.rx_key ## LAYER ## _rx_key ## LAYER.match_fields |=   \
+            rx_key ## LAYER ## _action.                   \
+            action_u.rx_key ## LAYER ## _rx_key ## LAYER.match_fields |=   \
                 MATCH_IP_PROTO;                                             \
         }                                                                   \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_TTL) {                \
-            rx_key ## LAYER ## _action.rx_key ## LAYER ##                   \
-            _action_u.rx_key ## LAYER ## _rx_key ## LAYER.match_fields |=   \
+            rx_key ## LAYER ## _action.                   \
+            action_u.rx_key ## LAYER ## _rx_key ## LAYER.match_fields |=   \
                 MATCH_IP_TTL;                                               \
         }                                                                   \
     } else if (gft_hgmp->headers & GFT_HEADER_IPV6) {                       \
         rx_key1.ipv6_ ## LAYER ## _valid = 1;                               \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_SRC_IP_ADDR) {        \
-            rx_key ## LAYER ## _action.rx_key ## LAYER ##                   \
-            _action_u.rx_key ## LAYER ## _rx_key ## LAYER.match_fields |=   \
+            rx_key ## LAYER ## _action.                   \
+            action_u.rx_key ## LAYER ## _rx_key ## LAYER.match_fields |=   \
                 MATCH_IP_SRC;                                               \
         }                                                                   \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_DST_IP_ADDR) {        \
-            rx_key ## LAYER ## _action.rx_key ## LAYER ##                   \
-            _action_u.rx_key ## LAYER ## _rx_key ## LAYER.match_fields |=   \
+            rx_key ## LAYER ## _action.                   \
+            action_u.rx_key ## LAYER ## _rx_key ## LAYER.match_fields |=   \
                 MATCH_IP_DST;                                               \
         }                                                                   \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_IP_DSCP) {            \
-            rx_key ## LAYER ## _action.rx_key ## LAYER ##                   \
-            _action_u.rx_key ## LAYER ## _rx_key ## LAYER.match_fields |=   \
+            rx_key ## LAYER ## _action.                   \
+            action_u.rx_key ## LAYER ## _rx_key ## LAYER.match_fields |=   \
                 MATCH_IP_DSCP;                                              \
         }                                                                   \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_IP_PROTOCOL) {        \
-            rx_key ## LAYER ## _action.rx_key ## LAYER ##                   \
-            _action_u.rx_key ## LAYER ## _rx_key ## LAYER.match_fields |=   \
+            rx_key ## LAYER ## _action.                   \
+            action_u.rx_key ## LAYER ## _rx_key ## LAYER.match_fields |=   \
                 MATCH_IP_PROTO;                                             \
         }                                                                   \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_TTL) {                \
-            rx_key ## LAYER ## _action.rx_key ## LAYER ##                   \
-            _action_u.rx_key ## LAYER ## _rx_key ## LAYER.match_fields |=   \
+            rx_key ## LAYER ## _action.                   \
+            action_u.rx_key ## LAYER ## _rx_key ## LAYER.match_fields |=   \
                 MATCH_IP_TTL;                                               \
         }                                                                   \
     }                                                                       \
     if (gft_hgmp->headers & GFT_HEADER_ICMP) {                              \
         rx_key1.icmp_ ## LAYER ## _valid = 1;                               \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_ICMP_TYPE) {          \
-            rx_key4_action.rx_key4_action_u.rx_key4_rx_key4.match_fields |= \
+            rx_key4_action.action_u.rx_key4_rx_key4.match_fields |= \
             MATCH_ICMP_TYPE_ ## LAYER ;                                     \
         }                                                                   \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_ICMP_CODE) {          \
-            rx_key4_action.rx_key4_action_u.rx_key4_rx_key4.match_fields |= \
+            rx_key4_action.action_u.rx_key4_rx_key4.match_fields |= \
             MATCH_ICMP_CODE_ ## LAYER ;                                     \
         }                                                                   \
     } else if (gft_hgmp->headers & GFT_HEADER_TCP) {                        \
         rx_key1.tcp_ ## LAYER ## _valid = 1;                                \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_TRANSPORT_SRC_PORT) { \
-            rx_key4_action.rx_key4_action_u.rx_key4_rx_key4.match_fields |= \
+            rx_key4_action.action_u.rx_key4_rx_key4.match_fields |= \
             MATCH_TRANSPORT_SRC_PORT_ ## LAYER ;                            \
         }                                                                   \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_TRANSPORT_DST_PORT) { \
-            rx_key4_action.rx_key4_action_u.rx_key4_rx_key4.match_fields |= \
+            rx_key4_action.action_u.rx_key4_rx_key4.match_fields |= \
             MATCH_TRANSPORT_DST_PORT_ ## LAYER ;                            \
         }                                                                   \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_TCP_FLAGS) {          \
-            rx_key4_action.rx_key4_action_u.rx_key4_rx_key4.match_fields |= \
+            rx_key4_action.action_u.rx_key4_rx_key4.match_fields |= \
             MATCH_TCP_FLAGS_ ## LAYER ;                                     \
         }                                                                   \
     } else if (gft_hgmp->headers & GFT_HEADER_UDP) {                        \
         rx_key1.udp_ ## LAYER ## _valid = 1;                                \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_TRANSPORT_SRC_PORT) { \
-            rx_key4_action.rx_key4_action_u.rx_key4_rx_key4.match_fields |= \
+            rx_key4_action.action_u.rx_key4_rx_key4.match_fields |= \
             MATCH_TRANSPORT_SRC_PORT_ ## LAYER ;                            \
         }                                                                   \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_TRANSPORT_DST_PORT) { \
-            rx_key4_action.rx_key4_action_u.rx_key4_rx_key4.match_fields |= \
+            rx_key4_action.action_u.rx_key4_rx_key4.match_fields |= \
             MATCH_TRANSPORT_DST_PORT_ ## LAYER ;                            \
         }                                                                   \
     }
@@ -357,7 +357,7 @@ end:
     if (gft_hgmp->headers & GFT_HEADER_IP_IN_GRE_ENCAP) {                   \
         rx_key1.tunnel_metadata_tunnel_type_ ## LAYER = INGRESS_TUNNEL_TYPE_GRE; \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_GRE_PROTOCOL) {       \
-            rx_key4_action.rx_key4_action_u.rx_key4_rx_key4.match_fields |= \
+            rx_key4_action.action_u.rx_key4_rx_key4.match_fields |= \
             MATCH_GRE_PROTO_ ## LAYER ;                                     \
         }                                                                   \
     }                                                                       \
@@ -367,7 +367,7 @@ end:
     if (gft_hgmp->headers & GFT_HEADER_VXLAN_ENCAP) {                       \
         rx_key1.tunnel_metadata_tunnel_type_ ## LAYER = INGRESS_TUNNEL_TYPE_VXLAN; \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_TENANT_ID) {          \
-            rx_key4_action.rx_key4_action_u.rx_key4_rx_key4.match_fields |= \
+            rx_key4_action.action_u.rx_key4_rx_key4.match_fields |= \
             MATCH_TENANT_ID_ ## LAYER ;                                     \
         }                                                                   \
     }
@@ -375,13 +375,13 @@ end:
 #define RX_KEY_LAYER_FORM_L3_TUNNEL_KEY_DATA(LAYER)                         \
     if (gft_hgmp->headers & GFT_HEADER_IP_IN_GRE_ENCAP) {                   \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_GRE_PROTOCOL) {       \
-            rx_key4_action.rx_key4_action_u.rx_key4_rx_key4.match_fields |= \
+            rx_key4_action.action_u.rx_key4_rx_key4.match_fields |= \
             MATCH_GRE_PROTO_ ## LAYER ;                                     \
         }                                                                   \
     }                                                                       \
     if (gft_hgmp->headers & GFT_HEADER_VXLAN_ENCAP) {                       \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_TENANT_ID) {          \
-            rx_key4_action.rx_key4_action_u.rx_key4_rx_key4.match_fields |= \
+            rx_key4_action.action_u.rx_key4_rx_key4.match_fields |= \
             MATCH_TENANT_ID_ ## LAYER ;                                     \
         }                                                                   \
     }
@@ -391,7 +391,7 @@ end:
     memcpy(&rx_key ## DST, &rx_key ## SRC, sizeof(rx_key1));
 
 #define RX_KEY_ACTIONID(ACT)                                                \
-    rx_key ## ACT ## _action.actionid = RX_KEY ## ACT ## _RX_KEY ## ACT ## _ID;
+    rx_key ## ACT ## _action.action_id = RX_KEY ## ACT ## _RX_KEY ## ACT ## _ID;
 
 #define RX_KEY_PGM(TBL_ID)                                                  \
     key_tbl = g_hal_state_pd->tcam_table(P4TBL_ID_RX_KEY ## TBL_ID);        \
@@ -423,16 +423,16 @@ emp_pd_rx_keys_program_hw (pd_gft_emp_t *pd_gft_emp)
     uint32_t                               tcam_idx = 0;
     rx_key1_swkey_t                        rx_key1 = { 0 };
     rx_key1_swkey_mask_t                   rx_key1_mask = { 0 };
-    rx_key1_actiondata                     rx_key1_action = { 0 };
+    rx_key1_actiondata_t                     rx_key1_action = { 0 };
     rx_key2_swkey_t                        rx_key2 = { 0 };
     rx_key2_swkey_mask_t                   rx_key2_mask = { 0 };
-    rx_key2_actiondata                     rx_key2_action = { 0 };
+    rx_key2_actiondata_t                     rx_key2_action = { 0 };
     rx_key3_swkey_t                        rx_key3 = { 0 };
     rx_key3_swkey_mask_t                   rx_key3_mask = { 0 };
-    rx_key3_actiondata                     rx_key3_action = { 0 };
+    rx_key3_actiondata_t                     rx_key3_action = { 0 };
     rx_key4_swkey_t                        rx_key4 = { 0 };
     rx_key4_swkey_mask_t                   rx_key4_mask = { 0 };
-    rx_key4_actiondata                     rx_key4_action = { 0 };
+    rx_key4_actiondata_t                     rx_key4_action = { 0 };
     tcam                                   *key_tbl;
 
     gft_emp = (gft_exact_match_profile_t *)pd_gft_emp->pi_emp;
@@ -496,22 +496,22 @@ end:
     if (gft_hgmp->headers & GFT_HEADER_ETHERNET) {                          \
         tx_key1.ethernet_ ## LAYER ## _valid = 1;                           \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_DST_MAC_ADDR) {       \
-            tx_key ## LAYER ## _action.tx_key_action_u.tx_key_tx_key.       \
+            tx_key ## LAYER ## _action.action_u.tx_key_tx_key.       \
             match_fields |=                                                 \
                 MATCH_ETHERNET_DST;                                         \
         }                                                                   \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_SRC_MAC_ADDR) {       \
-            tx_key ## LAYER ## _action.tx_key_action_u.tx_key_tx_key.       \
+            tx_key ## LAYER ## _action.action_u.tx_key_tx_key.       \
             match_fields |=                                                 \
                 MATCH_ETHERNET_SRC;                                         \
         }                                                                   \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_ETH_TYPE) {           \
-            tx_key ## LAYER ## _action.tx_key_action_u.tx_key_tx_key.       \
+            tx_key ## LAYER ## _action.action_u.tx_key_tx_key.       \
             match_fields |=                                                 \
                 MATCH_ETHERNET_TYPE;                                        \
         }                                                                   \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_CUSTOMER_VLAN_ID) {   \
-            tx_key## LAYER ## _action.tx_key_action_u.tx_key_tx_key.        \
+            tx_key## LAYER ## _action.action_u.tx_key_tx_key.        \
             match_fields |=                                                 \
                 MATCH_CUSTOMER_VLAN_ID;                                     \
         }                                                                   \
@@ -519,54 +519,54 @@ end:
     if (gft_hgmp->headers & GFT_HEADER_IPV4) {                              \
         tx_key1.ipv4_ ## LAYER ## _valid = 1;                               \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_SRC_IP_ADDR) {        \
-            tx_key ## LAYER ## _action.tx_key_action_u.tx_key_tx_key.       \
+            tx_key ## LAYER ## _action.action_u.tx_key_tx_key.       \
             match_fields |=                                                 \
                 MATCH_IP_SRC;                                               \
         }                                                                   \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_DST_IP_ADDR) {        \
-            tx_key ## LAYER ## _action.tx_key_action_u.tx_key_tx_key.       \
+            tx_key ## LAYER ## _action.action_u.tx_key_tx_key.       \
             match_fields |=                                                 \
                 MATCH_IP_DST;                                               \
         }                                                                   \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_IP_DSCP) {            \
-            tx_key ## LAYER ## _action.tx_key_action_u.tx_key_tx_key.       \
+            tx_key ## LAYER ## _action.action_u.tx_key_tx_key.       \
             match_fields |=                                                 \
                 MATCH_IP_DSCP;                                              \
         }                                                                   \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_IP_PROTOCOL) {        \
-            tx_key ## LAYER ## _action.tx_key_action_u.tx_key_tx_key.       \
+            tx_key ## LAYER ## _action.action_u.tx_key_tx_key.       \
             match_fields |=                                                 \
                 MATCH_IP_PROTO;                                             \
         }                                                                   \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_TTL) {                \
-            tx_key ## LAYER ## _action.tx_key_action_u.tx_key_tx_key.       \
+            tx_key ## LAYER ## _action.action_u.tx_key_tx_key.       \
             match_fields |=                                                 \
                 MATCH_IP_TTL;                                               \
         }                                                                   \
     } else if (gft_hgmp->headers & GFT_HEADER_IPV6) {                       \
         tx_key1.ipv6_ ## LAYER ## _valid = 1;                               \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_SRC_IP_ADDR) {        \
-            tx_key ## LAYER ## _action.tx_key_action_u.tx_key_tx_key.       \
+            tx_key ## LAYER ## _action.action_u.tx_key_tx_key.       \
             match_fields |=                                                 \
                 MATCH_IP_SRC;                                               \
         }                                                                   \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_DST_IP_ADDR) {        \
-            tx_key ## LAYER ## _action.tx_key_action_u.tx_key_tx_key.       \
+            tx_key ## LAYER ## _action.action_u.tx_key_tx_key.       \
             match_fields |=                                                 \
                 MATCH_IP_DST;                                               \
         }                                                                   \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_IP_DSCP) {            \
-            tx_key ## LAYER ## _action.tx_key_action_u.tx_key_tx_key.       \
+            tx_key ## LAYER ## _action.action_u.tx_key_tx_key.       \
             match_fields |=                                                 \
                 MATCH_IP_DSCP;                                              \
         }                                                                   \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_IP_PROTOCOL) {        \
-            tx_key ## LAYER ## _action.tx_key_action_u.tx_key_tx_key.       \
+            tx_key ## LAYER ## _action.action_u.tx_key_tx_key.       \
             match_fields |=                                                 \
                 MATCH_IP_PROTO;                                             \
         }                                                                   \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_TTL) {                \
-            tx_key ## LAYER ## _action.tx_key_action_u.tx_key_tx_key.       \
+            tx_key ## LAYER ## _action.action_u.tx_key_tx_key.       \
             match_fields |=                                                 \
                 MATCH_IP_TTL;                                               \
         }                                                                   \
@@ -574,35 +574,35 @@ end:
     if (gft_hgmp->headers & GFT_HEADER_ICMP) {                              \
         tx_key1.icmp_ ## LAYER ## _valid = 1;                               \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_ICMP_TYPE) {          \
-            tx_key1_action.tx_key_action_u.tx_key_tx_key.match_fields |=    \
+            tx_key1_action.action_u.tx_key_tx_key.match_fields |=    \
             MATCH_ICMP_TYPE_1 << 16;                                        \
         }                                                                   \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_ICMP_CODE) {          \
-            tx_key1_action.tx_key_action_u.tx_key_tx_key.match_fields |=    \
+            tx_key1_action.action_u.tx_key_tx_key.match_fields |=    \
             MATCH_ICMP_CODE_1 << 16;                                        \
         }                                                                   \
     } else if (gft_hgmp->headers & GFT_HEADER_TCP) {                        \
         tx_key1.tcp_ ## LAYER ## _valid = 1;                                \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_TRANSPORT_SRC_PORT) { \
-            tx_key1_action.tx_key_action_u.tx_key_tx_key.match_fields |=    \
+            tx_key1_action.action_u.tx_key_tx_key.match_fields |=    \
             MATCH_TRANSPORT_SRC_PORT_1 << 16;                               \
         }                                                                   \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_TRANSPORT_DST_PORT) { \
-            tx_key1_action.tx_key_action_u.tx_key_tx_key.match_fields |=    \
+            tx_key1_action.action_u.tx_key_tx_key.match_fields |=    \
             MATCH_TRANSPORT_DST_PORT_1 << 16;                               \
         }                                                                   \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_TCP_FLAGS) {          \
-            tx_key1_action.tx_key_action_u.tx_key_tx_key.match_fields |=    \
+            tx_key1_action.action_u.tx_key_tx_key.match_fields |=    \
             MATCH_TCP_FLAGS_1 << 16;                                        \
         }                                                                   \
     } else if (gft_hgmp->headers & GFT_HEADER_UDP) {                        \
         tx_key1.udp_ ## LAYER ## _valid = 1;                                \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_TRANSPORT_SRC_PORT) { \
-            tx_key1_action.tx_key_action_u.tx_key_tx_key.match_fields |=    \
+            tx_key1_action.action_u.tx_key_tx_key.match_fields |=    \
             MATCH_TRANSPORT_SRC_PORT_1 << 16;                               \
         }                                                                   \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_TRANSPORT_DST_PORT) { \
-            tx_key1_action.tx_key_action_u.tx_key_tx_key.match_fields |=    \
+            tx_key1_action.action_u.tx_key_tx_key.match_fields |=    \
             MATCH_TRANSPORT_DST_PORT_1 << 16;                               \
         }                                                                   \
     }
@@ -637,7 +637,7 @@ emp_pd_tx_keys_program_hw (pd_gft_emp_t *pd_gft_emp)
     uint32_t                               tcam_idx = 0;
     tx_key_swkey_t                         tx_key1 = { 0 };
     tx_key_swkey_mask_t                    tx_key1_mask = { 0 };
-    tx_key_actiondata                      tx_key1_action = { 0 };
+    tx_key_actiondata_t                      tx_key1_action = { 0 };
     tcam                                   *key_tbl;
 
     gft_emp = (gft_exact_match_profile_t *)pd_gft_emp->pi_emp;
@@ -661,7 +661,7 @@ emp_pd_tx_keys_program_hw (pd_gft_emp_t *pd_gft_emp)
     // Forming Key1 for layer 1
     TX_KEY_LAYER_FORM_KEY_DATA(1);
     // Assign action id
-    tx_key1_action.actionid = TX_KEY_TX_KEY_ID;
+    tx_key1_action.action_id = TX_KEY_TX_KEY_ID;
 
     // Program Tx Keys
     TX_KEY_PGM(1);

@@ -64,7 +64,7 @@ TEST_F(hbm_hash_test, test1) {
     uint32_t hbm_hash_idx = 0;
 
     flow_hash_swkey key;
-    flow_hash_actiondata data;
+    flow_hash_actiondata_t data;
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
@@ -75,7 +75,7 @@ TEST_F(hbm_hash_test, test1) {
                                    sizeof(key), sizeof(data));
 
     key.flow_lkp_metadata_lkp_sport = 10;
-    data.actionid = 1;
+    data.action_id = 1;
 
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx);
     ASSERT_TRUE(rs == SDK_RET_OK);
@@ -104,7 +104,7 @@ TEST_F(hbm_hash_test, test2) {
 
     sdk_ret_t rs;
     flow_hash_swkey key;
-    flow_hash_actiondata data;
+    flow_hash_actiondata_t data;
     uint32_t hbm_hash_idx = 0;
 
     memset(&key, 0, sizeof(key));
@@ -115,13 +115,13 @@ TEST_F(hbm_hash_test, test2) {
                                    sizeof(key), sizeof(data));
 
     key.flow_lkp_metadata_lkp_sport = 10;
-    data.actionid = 1;
+    data.action_id = 1;
 
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx);
     ASSERT_TRUE(rs == SDK_RET_OK);
     printf("flow idx: %d\n", hbm_hash_idx);
 
-    data.actionid = 2;
+    data.action_id = 2;
     rs = fl->update(hbm_hash_idx, (void *)&data);
     ASSERT_TRUE(rs == SDK_RET_OK);
     printf("flow idx: %d\n", hbm_hash_idx);
@@ -136,7 +136,7 @@ TEST_F(hbm_hash_test, test3) {
 
     sdk_ret_t rs;
     flow_hash_swkey key;
-    flow_hash_actiondata data;
+    flow_hash_actiondata_t data;
     uint32_t hbm_hash_idx = 0;
 
     memset(&key, 0, sizeof(key));
@@ -147,11 +147,11 @@ TEST_F(hbm_hash_test, test3) {
                                    sizeof(key), sizeof(data));
 
     key.flow_lkp_metadata_lkp_sport = 10;
-    data.actionid = 1;
+    data.action_id = 1;
 
     for (int i = 10; i < 20; i++) {
         key.flow_lkp_metadata_lkp_sport++;
-        data.actionid = 1;
+        data.action_id = 1;
         rs = fl->insert((void *)&key, (void *)&data,  &hbm_hash_idx);
         ASSERT_TRUE(rs == SDK_RET_OK);
         printf("flow idx: %d\n", hbm_hash_idx);
@@ -169,7 +169,7 @@ TEST_F(hbm_hash_test, test4) {
 
     sdk_ret_t rs;
     flow_hash_swkey key;
-    flow_hash_actiondata data;
+    flow_hash_actiondata_t data;
     uint32_t hbm_hash_idx = 0;
 
     memset(&key, 0, sizeof(key));
@@ -180,7 +180,7 @@ TEST_F(hbm_hash_test, test4) {
                                    sizeof(key), sizeof(data));
 
     key.flow_lkp_metadata_lkp_sport = 10;
-    data.actionid = 1;
+    data.action_id = 1;
 
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx);
     ASSERT_TRUE(rs == SDK_RET_OK);
@@ -200,7 +200,7 @@ TEST_F(hbm_hash_test, test5) {
 
     sdk_ret_t rs;
     flow_hash_swkey key;
-    flow_hash_actiondata data;
+    flow_hash_actiondata_t data;
     uint32_t hbm_hash_idx = 0;
 
     memset(&key, 0, sizeof(key));
@@ -211,11 +211,11 @@ TEST_F(hbm_hash_test, test5) {
                                    sizeof(key), sizeof(data));
 
     key.flow_lkp_metadata_lkp_sport = 10;
-    data.actionid = 1;
+    data.action_id = 1;
 
     for (int i = 0; i < 100; i++) {
         key.flow_lkp_metadata_lkp_sport = key.flow_lkp_metadata_lkp_sport + 10;
-        data.actionid = 2;
+        data.action_id = 2;
         rs = fl->insert((void *)&key, (void *)&data,  &hbm_hash_idx);
         printf("rs: %d \n", rs);
         ASSERT_TRUE(rs == SDK_RET_OK);
@@ -233,7 +233,7 @@ TEST_F(hbm_hash_test, test6) {
 
     sdk_ret_t rs;
     flow_hash_swkey key;
-    flow_hash_actiondata data;
+    flow_hash_actiondata_t data;
     uint32_t hbm_hash_idx[3] = { 0 };
 
     memset(&key, 0, sizeof(key));
@@ -244,7 +244,7 @@ TEST_F(hbm_hash_test, test6) {
                                    sizeof(key), sizeof(data));
 
     key.flow_lkp_metadata_lkp_sport = 10;
-    data.actionid = 1;
+    data.action_id = 1;
 
     for (int i = 0; i < 3; i++) {
         key.flow_lkp_metadata_lkp_sport = key.flow_lkp_metadata_lkp_sport + 10;
@@ -252,7 +252,7 @@ TEST_F(hbm_hash_test, test6) {
         ASSERT_TRUE(rs == SDK_RET_OK);
     }
 
-    data.actionid = 2;
+    data.action_id = 2;
     rs = fl->update(hbm_hash_idx[2] + 1, (void *)&data);
     ASSERT_TRUE(rs == SDK_RET_ENTRY_NOT_FOUND);
 
@@ -271,7 +271,7 @@ TEST_F(hbm_hash_test, DISABLED_test7) {
 
     // sdk_ret_t rs;
     flow_hash_swkey key = {0};
-    flow_hash_actiondata data = {0};
+    flow_hash_actiondata_t data = {0};
     unsigned seed = std::time(0);
     std::srand (seed);
     // uint32_t hbm_hash_idx[1000000] = { 0 };
@@ -315,7 +315,7 @@ TEST_F(hbm_hash_test, DISABLED_test7) {
 
 
 #if 0
-    data.actionid = 0;
+    data.action_id = 0;
 
     uint32_t base = 0;
     for (int i = 0; i < 1000000; i++) {
@@ -330,7 +330,7 @@ TEST_F(hbm_hash_test, DISABLED_test7) {
 #endif
 
 #if 0
-    data.actionid = 2;
+    data.action_id = 2;
     rs = fl.update(hbm_hash_idx[2] + 1, (void *)&data);
     ASSERT_TRUE(rs == SDK_RET_ENTRY_NOT_FOUND);
 
@@ -349,7 +349,7 @@ TEST_F(hbm_hash_test, test8) {
 
     sdk_ret_t rs;
     flow_hash_swkey key = {0};
-    flow_hash_actiondata data = {0};
+    flow_hash_actiondata_t data = {0};
     uint32_t hbm_hash_idx[9] = { 0 };
 
     memset(&key, 0, sizeof(key));
@@ -375,7 +375,7 @@ TEST_F(hbm_hash_test, test8) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xa277;
     key.flow_lkp_metadata_lkp_dport = 0x2;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[0]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -383,7 +383,7 @@ TEST_F(hbm_hash_test, test8) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0x3b01;
     key.flow_lkp_metadata_lkp_dport = 0x3;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[1]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -404,7 +404,7 @@ TEST_F(hbm_hash_test, test9) {
 
     sdk_ret_t rs;
     flow_hash_swkey key = {0};
-    flow_hash_actiondata data = {0};
+    flow_hash_actiondata_t data = {0};
     uint32_t hbm_hash_idx[9] = { 0 };
 
     memset(&key, 0, sizeof(key));
@@ -430,7 +430,7 @@ TEST_F(hbm_hash_test, test9) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xa277;
     key.flow_lkp_metadata_lkp_dport = 0x2;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[0]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -438,7 +438,7 @@ TEST_F(hbm_hash_test, test9) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0x3b01;
     key.flow_lkp_metadata_lkp_dport = 0x3;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[1]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -465,7 +465,7 @@ TEST_F(hbm_hash_test, test10) {
 
     sdk_ret_t rs;
     flow_hash_swkey key = {0};
-    flow_hash_actiondata data = {0};
+    flow_hash_actiondata_t data = {0};
     uint32_t hbm_hash_idx[9] = { 0 };
 
     memset(&key, 0, sizeof(key));
@@ -491,7 +491,7 @@ TEST_F(hbm_hash_test, test10) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xa277;
     key.flow_lkp_metadata_lkp_dport = 0x2;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[0]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -499,7 +499,7 @@ TEST_F(hbm_hash_test, test10) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0x3b01;
     key.flow_lkp_metadata_lkp_dport = 0x3;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[1]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -507,7 +507,7 @@ TEST_F(hbm_hash_test, test10) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xd238;
     key.flow_lkp_metadata_lkp_dport = 0x4;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[2]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -538,7 +538,7 @@ TEST_F(hbm_hash_test, test11) {
 
     sdk_ret_t rs;
     flow_hash_swkey key = {0};
-    flow_hash_actiondata data = {0};
+    flow_hash_actiondata_t data = {0};
     uint32_t hbm_hash_idx[9] = { 0 };
 
     memset(&key, 0, sizeof(key));
@@ -564,7 +564,7 @@ TEST_F(hbm_hash_test, test11) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xa277;
     key.flow_lkp_metadata_lkp_dport = 0x2;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[0]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -572,7 +572,7 @@ TEST_F(hbm_hash_test, test11) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0x3b01;
     key.flow_lkp_metadata_lkp_dport = 0x3;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[1]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -580,7 +580,7 @@ TEST_F(hbm_hash_test, test11) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xd238;
     key.flow_lkp_metadata_lkp_dport = 0x4;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[2]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -612,7 +612,7 @@ TEST_F(hbm_hash_test, test12) {
 
     sdk_ret_t rs;
     flow_hash_swkey key = {0};
-    flow_hash_actiondata data = {0};
+    flow_hash_actiondata_t data = {0};
     uint32_t hbm_hash_idx[9] = { 0 };
 
     memset(&key, 0, sizeof(key));
@@ -638,7 +638,7 @@ TEST_F(hbm_hash_test, test12) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xa277;
     key.flow_lkp_metadata_lkp_dport = 0x2;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[0]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -646,7 +646,7 @@ TEST_F(hbm_hash_test, test12) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0x3b01;
     key.flow_lkp_metadata_lkp_dport = 0x3;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[1]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -654,7 +654,7 @@ TEST_F(hbm_hash_test, test12) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xd238;
     key.flow_lkp_metadata_lkp_dport = 0x4;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[2]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -662,7 +662,7 @@ TEST_F(hbm_hash_test, test12) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0x4b4e;
     key.flow_lkp_metadata_lkp_dport = 0x5;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[3]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -698,7 +698,7 @@ TEST_F(hbm_hash_test, test13) {
 
     sdk_ret_t rs;
     flow_hash_swkey key = {0};
-    flow_hash_actiondata data = {0};
+    flow_hash_actiondata_t data = {0};
     uint32_t hbm_hash_idx[9] = { 0 };
 
     memset(&key, 0, sizeof(key));
@@ -724,7 +724,7 @@ TEST_F(hbm_hash_test, test13) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xa277;
     key.flow_lkp_metadata_lkp_dport = 0x2;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[0]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -732,7 +732,7 @@ TEST_F(hbm_hash_test, test13) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0x3b01;
     key.flow_lkp_metadata_lkp_dport = 0x3;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[1]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -740,7 +740,7 @@ TEST_F(hbm_hash_test, test13) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xd238;
     key.flow_lkp_metadata_lkp_dport = 0x4;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[2]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -748,7 +748,7 @@ TEST_F(hbm_hash_test, test13) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0x4b4e;
     key.flow_lkp_metadata_lkp_dport = 0x5;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[3]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -782,7 +782,7 @@ TEST_F(hbm_hash_test, test14) {
 
     sdk_ret_t rs;
     flow_hash_swkey key = {0};
-    flow_hash_actiondata data = {0};
+    flow_hash_actiondata_t data = {0};
     uint32_t hbm_hash_idx[9] = { 0 };
     std::srand ( unsigned ( std::time(0) ) );
     std::vector<int> myvector;
@@ -820,7 +820,7 @@ TEST_F(hbm_hash_test, test14) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xa277;
     key.flow_lkp_metadata_lkp_dport = 0x2;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[0]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -828,7 +828,7 @@ TEST_F(hbm_hash_test, test14) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0x3b01;
     key.flow_lkp_metadata_lkp_dport = 0x3;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[1]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -836,7 +836,7 @@ TEST_F(hbm_hash_test, test14) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xd238;
     key.flow_lkp_metadata_lkp_dport = 0x4;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[2]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -844,7 +844,7 @@ TEST_F(hbm_hash_test, test14) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0x4b4e;
     key.flow_lkp_metadata_lkp_dport = 0x5;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[3]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -869,7 +869,7 @@ TEST_F(hbm_hash_test, test15) {
 
     sdk_ret_t rs;
     flow_hash_swkey key = {0};
-    flow_hash_actiondata data = {0};
+    flow_hash_actiondata_t data = {0};
     uint32_t hbm_hash_idx[9] = { 0 };
     std::srand ( unsigned ( std::time(0) ) );
     std::vector<int> myvector;
@@ -907,7 +907,7 @@ TEST_F(hbm_hash_test, test15) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xa277;
     key.flow_lkp_metadata_lkp_dport = 0x2;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[0]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -915,7 +915,7 @@ TEST_F(hbm_hash_test, test15) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0x3b01;
     key.flow_lkp_metadata_lkp_dport = 0x3;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[1]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -923,7 +923,7 @@ TEST_F(hbm_hash_test, test15) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xd238;
     key.flow_lkp_metadata_lkp_dport = 0x4;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[2]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -931,7 +931,7 @@ TEST_F(hbm_hash_test, test15) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0x4b4e;
     key.flow_lkp_metadata_lkp_dport = 0x5;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[3]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -939,7 +939,7 @@ TEST_F(hbm_hash_test, test15) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0;
     key.flow_lkp_metadata_lkp_dport = 0x36ad;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[4]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -966,7 +966,7 @@ TEST_F(hbm_hash_test, test16) {
 
     sdk_ret_t rs;
     flow_hash_swkey key = {0};
-    flow_hash_actiondata data = {0};
+    flow_hash_actiondata_t data = {0};
     uint32_t hbm_hash_idx[9] = { 0 };
     unsigned seed = std::time(0);
     // unsigned seed = 1504501660;
@@ -1008,7 +1008,7 @@ TEST_F(hbm_hash_test, test16) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xa277;
     key.flow_lkp_metadata_lkp_dport = 0x2;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[0]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -1016,7 +1016,7 @@ TEST_F(hbm_hash_test, test16) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0x3b01;
     key.flow_lkp_metadata_lkp_dport = 0x3;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[1]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -1024,7 +1024,7 @@ TEST_F(hbm_hash_test, test16) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xd238;
     key.flow_lkp_metadata_lkp_dport = 0x4;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[2]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -1032,7 +1032,7 @@ TEST_F(hbm_hash_test, test16) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0x4b4e;
     key.flow_lkp_metadata_lkp_dport = 0x5;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[3]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -1040,7 +1040,7 @@ TEST_F(hbm_hash_test, test16) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0;
     key.flow_lkp_metadata_lkp_dport = 0x36ad;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[4]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -1048,7 +1048,7 @@ TEST_F(hbm_hash_test, test16) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 3;
     key.flow_lkp_metadata_lkp_dport = 0xd125;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[5]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -1056,7 +1056,7 @@ TEST_F(hbm_hash_test, test16) {
     key.flow_lkp_metadata_lkp_vrf = 0;
     key.flow_lkp_metadata_lkp_sport = 0;
     key.flow_lkp_metadata_lkp_dport = 0xc430;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[6]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -1064,7 +1064,7 @@ TEST_F(hbm_hash_test, test16) {
     key.flow_lkp_metadata_lkp_vrf = 1;
     key.flow_lkp_metadata_lkp_sport = 1;
     key.flow_lkp_metadata_lkp_dport = 0xc8c3;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[7]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -1084,7 +1084,7 @@ TEST_F(hbm_hash_test, test17) {
 
     sdk_ret_t rs;
     flow_hash_swkey key = {0};
-    flow_hash_actiondata data = {0};
+    flow_hash_actiondata_t data = {0};
     uint32_t max = 11;
     uint32_t hbm_hash_idx[max] = { 0 };
     unsigned seed = std::time(0);
@@ -1127,7 +1127,7 @@ TEST_F(hbm_hash_test, test17) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xa277;
     key.flow_lkp_metadata_lkp_dport = 0x2;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[0]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -1135,7 +1135,7 @@ TEST_F(hbm_hash_test, test17) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0x3b01;
     key.flow_lkp_metadata_lkp_dport = 0x3;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[1]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -1143,7 +1143,7 @@ TEST_F(hbm_hash_test, test17) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xd238;
     key.flow_lkp_metadata_lkp_dport = 0x4;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[2]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -1151,7 +1151,7 @@ TEST_F(hbm_hash_test, test17) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0x4b4e;
     key.flow_lkp_metadata_lkp_dport = 0x5;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[3]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -1159,7 +1159,7 @@ TEST_F(hbm_hash_test, test17) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0;
     key.flow_lkp_metadata_lkp_dport = 0x36ad;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[4]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -1167,7 +1167,7 @@ TEST_F(hbm_hash_test, test17) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 3;
     key.flow_lkp_metadata_lkp_dport = 0xd125;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[5]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -1175,7 +1175,7 @@ TEST_F(hbm_hash_test, test17) {
     key.flow_lkp_metadata_lkp_vrf = 0;
     key.flow_lkp_metadata_lkp_sport = 0;
     key.flow_lkp_metadata_lkp_dport = 0xc430;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[6]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -1183,7 +1183,7 @@ TEST_F(hbm_hash_test, test17) {
     key.flow_lkp_metadata_lkp_vrf = 1;
     key.flow_lkp_metadata_lkp_sport = 1;
     key.flow_lkp_metadata_lkp_dport = 0xc8c3;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[7]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -1191,7 +1191,7 @@ TEST_F(hbm_hash_test, test17) {
     key.flow_lkp_metadata_lkp_vrf = 1;
     key.flow_lkp_metadata_lkp_sport = 2;
     key.flow_lkp_metadata_lkp_dport = 0x2f4b;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &hbm_hash_idx[8]);
     ASSERT_TRUE(rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL);
 
@@ -1253,7 +1253,7 @@ TEST_F(hbm_hash_test, DISABLED_test18) {
 
     sdk_ret_t rs;
     flow_hash_swkey key = {0};
-    flow_hash_actiondata data = {0};
+    flow_hash_actiondata_t data = {0};
     uint32_t max = 10, count = 0;
     uint32_t hbm_hash_idx[max] = { 0 };
     unsigned seed = std::time(0);
@@ -1339,7 +1339,7 @@ TEST_F(hbm_hash_test, test19) {
 
     sdk_ret_t rs;
     flow_hash_swkey key = {0};
-    flow_hash_actiondata data = {0};
+    flow_hash_actiondata_t data = {0};
     uint32_t max = 64000, count = 0;
     uint32_t hbm_hash_idx[max] = { 0 };
     uint32_t total_time = 0;

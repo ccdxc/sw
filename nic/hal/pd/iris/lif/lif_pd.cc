@@ -519,7 +519,7 @@ pd_lif_handle_promiscous_filter_change (lif_t *lif,
 
 
 
-#define TX_POLICER_ACTION(_d, _arg) _d.tx_table_s5_t4_lif_rate_limiter_table_action_u.tx_table_s5_t4_lif_rate_limiter_table_tx_stage5_lif_egress_rl_params._arg
+#define TX_POLICER_ACTION(_d, _arg) _d.action_u.tx_table_s5_t4_lif_rate_limiter_table_tx_stage5_lif_egress_rl_params._arg
 hal_ret_t
 lif_pd_tx_policer_program_hw (pd_lif_t *pd_lif, bool update)
 {
@@ -527,8 +527,8 @@ lif_pd_tx_policer_program_hw (pd_lif_t *pd_lif, bool update)
     sdk_ret_t             sdk_ret;
     lif_t                 *pi_lif = (lif_t *)pd_lif->pi_lif;
     directmap             *tx_policer_tbl = NULL;
-    tx_table_s5_t4_lif_rate_limiter_table_actiondata d = {0};
-    tx_table_s5_t4_lif_rate_limiter_table_actiondata d_mask = {0};
+    tx_table_s5_t4_lif_rate_limiter_table_actiondata_t d = {0};
+    tx_table_s5_t4_lif_rate_limiter_table_actiondata_t d_mask = {0};
     uint64_t refresh_interval_us = HAL_DEFAULT_POLICER_REFRESH_INTERVAL;
     uint64_t rate_tokens = 0;
     uint64_t burst_tokens = 0;
@@ -537,7 +537,7 @@ lif_pd_tx_policer_program_hw (pd_lif_t *pd_lif, bool update)
     tx_policer_tbl = g_hal_state_pd->p4plus_txdma_dm_table(P4_COMMON_TXDMA_ACTIONS_TBL_ID_TX_TABLE_S5_T4_LIF_RATE_LIMITER_TABLE);
     HAL_ASSERT_RETURN((tx_policer_tbl != NULL), HAL_RET_ERR);
 
-    d.actionid = TX_TABLE_S5_T4_LIF_RATE_LIMITER_TABLE_TX_STAGE5_LIF_EGRESS_RL_PARAMS_ID;
+    d.action_id = TX_TABLE_S5_T4_LIF_RATE_LIMITER_TABLE_TX_STAGE5_LIF_EGRESS_RL_PARAMS_ID;
 
     rate = pi_lif->qos_info.tx_policer.rate;
 
@@ -563,7 +563,7 @@ lif_pd_tx_policer_program_hw (pd_lif_t *pd_lif, bool update)
                std::min(sizeof(TX_POLICER_ACTION(d, rate)), sizeof(rate_tokens)));
     }
 
-    memset(&d_mask.tx_table_s5_t4_lif_rate_limiter_table_action_u.tx_table_s5_t4_lif_rate_limiter_table_tx_stage5_lif_egress_rl_params,
+    memset(&d_mask.action_u.tx_table_s5_t4_lif_rate_limiter_table_tx_stage5_lif_egress_rl_params,
            0xff,
            sizeof(tx_table_s5_t4_lif_rate_limiter_table_tx_stage5_lif_egress_rl_params_t));
     TX_POLICER_ACTION(d_mask, rsvd) = 0;
@@ -626,7 +626,7 @@ lif_pd_tx_policer_deprogram_hw (pd_lif_t *pd_lif)
     return ret;
 }
 
-#define RX_POLICER_ACTION(_d, _arg) _d.rx_policer_action_u.rx_policer_execute_rx_policer._arg
+#define RX_POLICER_ACTION(_d, _arg) _d.action_u.rx_policer_execute_rx_policer._arg
 static hal_ret_t
 lif_pd_rx_policer_tbl_program_hw (pd_lif_t *pd_lif, bool update)
 {
@@ -634,8 +634,8 @@ lif_pd_rx_policer_tbl_program_hw (pd_lif_t *pd_lif, bool update)
     sdk_ret_t             sdk_ret;
     lif_t                 *pi_lif = (lif_t *)pd_lif->pi_lif;
     directmap             *rx_policer_tbl = NULL;
-    rx_policer_actiondata d = {0};
-    rx_policer_actiondata d_mask = {0};
+    rx_policer_actiondata_t d = {0};
+    rx_policer_actiondata_t d_mask = {0};
     uint64_t              refresh_interval_us =
                                         HAL_DEFAULT_POLICER_REFRESH_INTERVAL;
     uint64_t              rate_tokens = 0;
@@ -645,7 +645,7 @@ lif_pd_rx_policer_tbl_program_hw (pd_lif_t *pd_lif, bool update)
     rx_policer_tbl = g_hal_state_pd->dm_table(P4TBL_ID_RX_POLICER);
     HAL_ASSERT_RETURN((rx_policer_tbl != NULL), HAL_RET_ERR);
 
-    d.actionid = RX_POLICER_EXECUTE_RX_POLICER_ID;
+    d.action_id = RX_POLICER_EXECUTE_RX_POLICER_ID;
 
     rate = pi_lif->qos_info.rx_policer.rate;
 
@@ -676,7 +676,7 @@ lif_pd_rx_policer_tbl_program_hw (pd_lif_t *pd_lif, bool update)
                         sizeof(burst_tokens)));
     }
 
-    memset(&d_mask.rx_policer_action_u.rx_policer_execute_rx_policer, 0xff,
+    memset(&d_mask.action_u.rx_policer_execute_rx_policer, 0xff,
            sizeof(rx_policer_execute_rx_policer_t));
     RX_POLICER_ACTION(d_mask, rsvd) = 0;
     RX_POLICER_ACTION(d_mask, axi_wr_pend) = 0;
@@ -714,12 +714,12 @@ lif_pd_rx_policer_action_tbl_reset_hw (pd_lif_t *pd_lif, bool insert)
     sdk_ret_t                    sdk_ret;
     lif_t                        *pi_lif = (lif_t *)pd_lif->pi_lif;
     directmap                    *rx_policer_action_tbl = NULL;
-    rx_policer_action_actiondata d = {0};
+    rx_policer_action_actiondata_t d = {0};
 
     rx_policer_action_tbl = g_hal_state_pd->dm_table(P4TBL_ID_RX_POLICER_ACTION);
     HAL_ASSERT_RETURN((rx_policer_action_tbl != NULL), HAL_RET_ERR);
 
-    d.actionid = RX_POLICER_ACTION_RX_POLICER_ACTION_ID;
+    d.action_id = RX_POLICER_ACTION_RX_POLICER_ACTION_ID;
 
     if (insert) {
         sdk_ret = rx_policer_action_tbl->insert_withid(&d, pd_lif->hw_lif_id);
@@ -914,7 +914,7 @@ typedef struct lif_pd_rx_policer_stats_s {
     uint64_t denied_packets;
 } __PACK__ lif_pd_rx_policer_stats_t;
 
-#define RX_POLICER_STATS(_d, _arg) _d.rx_policer_action_action_u.rx_policer_action_rx_policer_action._arg
+#define RX_POLICER_STATS(_d, _arg) _d.action_u.rx_policer_action_rx_policer_action._arg
 static hal_ret_t
 lif_pd_populate_rx_policer_stats (qos::PolicerStats *stats_rsp, pd_lif_t *pd_lif)
 {
@@ -925,7 +925,7 @@ lif_pd_populate_rx_policer_stats (qos::PolicerStats *stats_rsp, pd_lif_t *pd_lif
     sdk_ret_t                    sdk_ret;
     lif_t                        *pi_lif = (lif_t *)pd_lif->pi_lif;
     directmap                    *rx_policer_action_tbl= NULL;
-    rx_policer_action_actiondata d;
+    rx_policer_action_actiondata_t d;
 
     rx_policer_action_tbl = g_hal_state_pd->dm_table(P4TBL_ID_RX_POLICER_ACTION);
     HAL_ASSERT_RETURN((rx_policer_action_tbl != NULL), HAL_RET_ERR);
@@ -1007,8 +1007,8 @@ lif_pd_populate_rx_policer_stats (qos::PolicerStats *stats_rsp, pd_lif_t *pd_lif
 //-----------------------------------------------------------------------------
 // Program Output Mapping Table
 //-----------------------------------------------------------------------------
-#define om_tmoport data.output_mapping_action_u.output_mapping_set_tm_oport
-#define om_cpu data.output_mapping_action_u.output_mapping_redirect_to_cpu
+#define om_tmoport data.action_u.output_mapping_set_tm_oport
+#define om_cpu data.action_u.output_mapping_redirect_to_cpu
 hal_ret_t
 lif_pd_pgm_output_mapping_tbl(pd_lif_t *pd_lif, pd_lif_update_args_t *args,
                               table_oper_t oper)
@@ -1016,7 +1016,7 @@ lif_pd_pgm_output_mapping_tbl(pd_lif_t *pd_lif, pd_lif_update_args_t *args,
     hal_ret_t                   ret = HAL_RET_OK;
     sdk_ret_t                   sdk_ret;
     uint8_t                     p4plus_app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
-    output_mapping_actiondata   data;
+    output_mapping_actiondata_t   data;
     directmap                   *dm_omap = NULL;
 
     memset(&data, 0, sizeof(data));
@@ -1048,7 +1048,7 @@ lif_pd_pgm_output_mapping_tbl(pd_lif_t *pd_lif, pd_lif_update_args_t *args,
     }
 
 
-    data.actionid = OUTPUT_MAPPING_SET_TM_OPORT_ID;
+    data.action_id = OUTPUT_MAPPING_SET_TM_OPORT_ID;
     om_tmoport.nports = 1;
     om_tmoport.egress_mirror_en = 1;
     om_tmoport.egress_port1 = TM_PORT_DMA;

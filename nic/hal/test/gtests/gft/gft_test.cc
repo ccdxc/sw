@@ -326,13 +326,13 @@ generate_hash_(void *key, uint32_t key_len, uint32_t crc_init_val) {
 
 static void
 rx_roce_init() {
-    rx_roce_actiondata data;
+    rx_roce_actiondata_t data;
 
     memset(&data, 0, sizeof(data));
-    data.actionid = RX_ROCE_RX_ROCE_ID;
-    data.rx_roce_action_u.rx_roce_rx_roce.len = 12;
-    data.rx_roce_action_u.rx_roce_rx_roce.qtype = 1;
-    data.rx_roce_action_u.rx_roce_rx_roce.parsed_hdrs_len = 12  + 12;
+    data.action_id = RX_ROCE_RX_ROCE_ID;
+    data.action_u.rx_roce_rx_roce.len = 12;
+    data.action_u.rx_roce_rx_roce.qtype = 1;
+    data.action_u.rx_roce_rx_roce.parsed_hdrs_len = 12  + 12;
 
     p4pd_entry_write(P4TBL_ID_RX_ROCE, 4, NULL, NULL, &data);
 }
@@ -341,7 +341,7 @@ static void
 rx_key1_init(int index) {
     rx_key1_swkey_t      key;
     rx_key1_swkey_mask_t mask;
-    rx_key1_actiondata   data;
+    rx_key1_actiondata_t   data;
 
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
@@ -362,7 +362,7 @@ rx_key1_init(int index) {
     memset(&mask, 0xFF, sizeof(mask));
 
     // data
-    data.rx_key1_action_u.rx_key1_rx_key1.match_fields =
+    data.action_u.rx_key1_rx_key1.match_fields =
         (MATCH_ETHERNET_SRC | MATCH_ETHERNET_DST |
          MATCH_IP_SRC | MATCH_IP_DST | MATCH_IP_PROTO);
 
@@ -392,7 +392,7 @@ static void
 rx_key2_init(int index) {
     rx_key2_swkey_t      key;
     rx_key2_swkey_mask_t mask;
-    rx_key2_actiondata   data;
+    rx_key2_actiondata_t   data;
 
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
@@ -413,7 +413,7 @@ rx_key2_init(int index) {
     memset(&mask, 0xFF, sizeof(mask));
 
     // data
-    data.rx_key2_action_u.rx_key2_rx_key2.match_fields =
+    data.action_u.rx_key2_rx_key2.match_fields =
         (MATCH_ETHERNET_SRC | MATCH_ETHERNET_DST |
          MATCH_IP_SRC | MATCH_IP_DST | MATCH_IP_PROTO);
 
@@ -443,7 +443,7 @@ static void
 rx_key3_init(int index) {
     rx_key3_swkey_t      key;
     rx_key3_swkey_mask_t mask;
-    rx_key3_actiondata   data;
+    rx_key3_actiondata_t   data;
 
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
@@ -464,7 +464,7 @@ rx_key3_init(int index) {
     memset(&mask, 0xFF, sizeof(mask));
 
     // data
-    data.rx_key3_action_u.rx_key3_rx_key3.match_fields =
+    data.action_u.rx_key3_rx_key3.match_fields =
         (MATCH_ETHERNET_SRC | MATCH_ETHERNET_DST |
          MATCH_IP_SRC | MATCH_IP_DST | MATCH_IP_PROTO);
 
@@ -494,7 +494,7 @@ static void
 rx_key4_init(int index) {
     rx_key4_swkey_t      key;
     rx_key4_swkey_mask_t mask;
-    rx_key4_actiondata   data;
+    rx_key4_actiondata_t   data;
 
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
@@ -515,7 +515,7 @@ rx_key4_init(int index) {
     memset(&mask, 0xFF, sizeof(mask));
 
     // data
-    data.rx_key4_action_u.rx_key4_rx_key4.match_fields =
+    data.action_u.rx_key4_rx_key4.match_fields =
         (MATCH_TRANSPORT_SRC_PORT_3 | MATCH_TRANSPORT_DST_PORT_3);
 
     // prepare entry and write hardware
@@ -544,7 +544,7 @@ static void
 native_udp_rx_key1_init(int index) {
     rx_key1_swkey_t      key;
     rx_key1_swkey_mask_t mask;
-    rx_key1_actiondata   data;
+    rx_key1_actiondata_t   data;
 
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
@@ -557,7 +557,7 @@ native_udp_rx_key1_init(int index) {
     memset(&mask, 0xFF, sizeof(mask));
 
     // data
-    data.rx_key1_action_u.rx_key1_rx_key1.match_fields =
+    data.action_u.rx_key1_rx_key1.match_fields =
         (MATCH_ETHERNET_SRC | MATCH_ETHERNET_DST |
          MATCH_IP_SRC | MATCH_IP_DST | MATCH_IP_PROTO);
 
@@ -587,7 +587,7 @@ static void
 native_udp_rx_key4_init(int index) {
     rx_key4_swkey_t      key;
     rx_key4_swkey_mask_t mask;
-    rx_key4_actiondata   data;
+    rx_key4_actiondata_t   data;
 
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
@@ -600,7 +600,7 @@ native_udp_rx_key4_init(int index) {
     memset(&mask, 0xFF, sizeof(mask));
 
     // data
-    data.rx_key4_action_u.rx_key4_rx_key4.match_fields =
+    data.action_u.rx_key4_rx_key4.match_fields =
         (MATCH_TRANSPORT_SRC_PORT_1 | MATCH_TRANSPORT_DST_PORT_1);
 
     // prepare entry and write hardware
@@ -629,7 +629,7 @@ static void
 tunneled_udp_rx_key1_init(int index) {
     rx_key1_swkey_t      key;
     rx_key1_swkey_mask_t mask;
-    rx_key1_actiondata   data;
+    rx_key1_actiondata_t   data;
 
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
@@ -646,7 +646,7 @@ tunneled_udp_rx_key1_init(int index) {
     memset(&mask, 0xFF, sizeof(mask));
 
     // data
-    data.rx_key1_action_u.rx_key1_rx_key1.match_fields =
+    data.action_u.rx_key1_rx_key1.match_fields =
         (MATCH_ETHERNET_SRC | MATCH_ETHERNET_DST |
          MATCH_IP_SRC | MATCH_IP_DST | MATCH_IP_PROTO);
 
@@ -676,7 +676,7 @@ static void
 tunneled_udp_rx_key2_init(int index) {
     rx_key2_swkey_t      key;
     rx_key2_swkey_mask_t mask;
-    rx_key2_actiondata   data;
+    rx_key2_actiondata_t   data;
 
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
@@ -693,7 +693,7 @@ tunneled_udp_rx_key2_init(int index) {
     memset(&mask, 0xFF, sizeof(mask));
 
     // data
-    data.rx_key2_action_u.rx_key2_rx_key2.match_fields =
+    data.action_u.rx_key2_rx_key2.match_fields =
         (MATCH_ETHERNET_SRC | MATCH_ETHERNET_DST |
          MATCH_IP_SRC | MATCH_IP_DST | MATCH_IP_PROTO);
 
@@ -723,7 +723,7 @@ static void
 tunneled_udp_rx_key4_init(int index) {
     rx_key4_swkey_t      key;
     rx_key4_swkey_mask_t mask;
-    rx_key4_actiondata   data;
+    rx_key4_actiondata_t   data;
 
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
@@ -740,7 +740,7 @@ tunneled_udp_rx_key4_init(int index) {
     memset(&mask, 0xFF, sizeof(mask));
 
     // data
-    data.rx_key4_action_u.rx_key4_rx_key4.match_fields =
+    data.action_u.rx_key4_rx_key4.match_fields =
         (MATCH_TRANSPORT_SRC_PORT_2 | MATCH_TRANSPORT_DST_PORT_2);
 
     // prepare entry and write hardware
@@ -784,7 +784,7 @@ static void
 rx_create_vport_entry() {
     rx_vport_swkey_t      key;
     rx_vport_swkey_mask_t mask;
-    rx_vport_actiondata   data;
+    rx_vport_actiondata_t   data;
 
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
@@ -799,9 +799,9 @@ rx_create_vport_entry() {
     memset(mask.ethernet_1_dstAddr_mask, 0xFF, 6);
 
     // data
-    data.rx_vport_action_u.rx_vport_rx_vport.vport = 0x55;
-    data.rx_vport_action_u.rx_vport_rx_vport.tm_oport = TM_PORT_UPLINK_0;
-    data.rx_vport_action_u.rx_vport_rx_vport.rdma_enabled = 1;
+    data.action_u.rx_vport_rx_vport.vport = 0x55;
+    data.action_u.rx_vport_rx_vport.tm_oport = TM_PORT_UPLINK_0;
+    data.action_u.rx_vport_rx_vport.rdma_enabled = 1;
 
     // prepare entry and write hardware
     uint32_t hwkey_len = 0;
@@ -827,20 +827,20 @@ rx_create_vport_entry() {
 
 static void
 rx_create_transposition() {
-    rx_hdr_transpositions0_actiondata data0;
-    rx_hdr_transpositions1_actiondata data1;
-    rx_hdr_transpositions2_actiondata data2;
-    rx_hdr_transpositions3_actiondata data3;
+    rx_hdr_transpositions0_actiondata_t data0;
+    rx_hdr_transpositions1_actiondata_t data1;
+    rx_hdr_transpositions2_actiondata_t data2;
+    rx_hdr_transpositions3_actiondata_t data3;
 
     memset(&data0, 0, sizeof(data0));
     memset(&data1, 0, sizeof(data1));
     memset(&data2, 0, sizeof(data2));
     memset(&data3, 0, sizeof(data3));
 
-#define DATA0 data0.rx_hdr_transpositions0_action_u.rx_hdr_transpositions0_rx_hdr_transpositions
-#define DATA1 data1.rx_hdr_transpositions1_action_u.rx_hdr_transpositions1_rx_hdr_transpositions
-#define DATA2 data2.rx_hdr_transpositions2_action_u.rx_hdr_transpositions2_rx_hdr_transpositions
-#define DATA3 data3.rx_hdr_transpositions3_action_u.rx_hdr_transpositions3_rx_l4_hdr_transpositions
+#define DATA0 data0.action_u.rx_hdr_transpositions0_rx_hdr_transpositions
+#define DATA1 data1.action_u.rx_hdr_transpositions1_rx_hdr_transpositions
+#define DATA2 data2.action_u.rx_hdr_transpositions2_rx_hdr_transpositions
+#define DATA3 data3.action_u.rx_hdr_transpositions3_rx_l4_hdr_transpositions
 
     DATA0.hdr1_bits =
         TRANSPOSITIONS_POP_ETHERNET |
@@ -881,7 +881,7 @@ rx_create_transposition() {
 }
 
 static void
-rx_gft_entry_write(rx_gft_hash_swkey_t *key, rx_gft_hash_actiondata *data) {
+rx_gft_entry_write(rx_gft_hash_swkey_t *key, rx_gft_hash_actiondata_t *data) {
     uint32_t hwkey_len = 0;
     uint32_t hwdata_len = 0;
     uint32_t hash = 0;
@@ -920,7 +920,7 @@ rx_gft_entry_write(rx_gft_hash_swkey_t *key, rx_gft_hash_actiondata *data) {
 static void
 rx_create_gft_entry1() {
     rx_gft_hash_swkey_t     key;
-    rx_gft_hash_actiondata  data;
+    rx_gft_hash_actiondata_t  data;
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
@@ -945,8 +945,8 @@ rx_create_gft_entry1() {
     key.flow_lkp_metadata_l4_dport_3 = g_layer31_dport;
 
     // data
-    data.rx_gft_hash_action_u.rx_gft_hash_rx_gft_hash_info.entry_valid = 1;
-    data.rx_gft_hash_action_u.rx_gft_hash_rx_gft_hash_info.flow_index = g_flow_idx1;
+    data.action_u.rx_gft_hash_rx_gft_hash_info.entry_valid = 1;
+    data.action_u.rx_gft_hash_rx_gft_hash_info.flow_index = g_flow_idx1;
 
     rx_gft_entry_write(&key, &data);
 }
@@ -954,7 +954,7 @@ rx_create_gft_entry1() {
 static void
 rx_create_gft_entry2() {
     rx_gft_hash_swkey_t     key;
-    rx_gft_hash_actiondata  data;
+    rx_gft_hash_actiondata_t  data;
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
@@ -979,9 +979,9 @@ rx_create_gft_entry2() {
     key.flow_lkp_metadata_l4_dport_3 = g_layer32_dport;
 
     // data
-    data.rx_gft_hash_action_u.rx_gft_hash_rx_gft_hash_info.entry_valid = 1;
-    data.rx_gft_hash_action_u.rx_gft_hash_rx_gft_hash_info.flow_index = 0;
-    data.rx_gft_hash_action_u.rx_gft_hash_rx_gft_hash_info.hint9 = g_ohash_idx;
+    data.action_u.rx_gft_hash_rx_gft_hash_info.entry_valid = 1;
+    data.action_u.rx_gft_hash_rx_gft_hash_info.flow_index = 0;
+    data.action_u.rx_gft_hash_rx_gft_hash_info.hint9 = g_ohash_idx;
 
     rx_gft_entry_write(&key, &data);
 }
@@ -989,7 +989,7 @@ rx_create_gft_entry2() {
 static void
 rx_create_gft_entry3() {
     rx_gft_hash_swkey_t     key;
-    rx_gft_hash_actiondata  data;
+    rx_gft_hash_actiondata_t  data;
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
@@ -1004,8 +1004,8 @@ rx_create_gft_entry3() {
     key.flow_lkp_metadata_l4_dport_1 = g_rdma_dport;
 
     // data
-    data.rx_gft_hash_action_u.rx_gft_hash_rx_gft_hash_info.entry_valid = 1;
-    data.rx_gft_hash_action_u.rx_gft_hash_rx_gft_hash_info.flow_index = g_flow_idx3;
+    data.action_u.rx_gft_hash_rx_gft_hash_info.entry_valid = 1;
+    data.action_u.rx_gft_hash_rx_gft_hash_info.flow_index = g_flow_idx3;
 
     rx_gft_entry_write(&key, &data);
 }
@@ -1013,7 +1013,7 @@ rx_create_gft_entry3() {
 static void
 rx_create_gft_entry4() {
     rx_gft_hash_swkey_t     key;
-    rx_gft_hash_actiondata  data;
+    rx_gft_hash_actiondata_t  data;
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
@@ -1033,8 +1033,8 @@ rx_create_gft_entry4() {
     key.flow_lkp_metadata_l4_dport_2 = g_rdma_dport;
 
     // data
-    data.rx_gft_hash_action_u.rx_gft_hash_rx_gft_hash_info.entry_valid = 1;
-    data.rx_gft_hash_action_u.rx_gft_hash_rx_gft_hash_info.flow_index = g_flow_idx4;
+    data.action_u.rx_gft_hash_rx_gft_hash_info.entry_valid = 1;
+    data.action_u.rx_gft_hash_rx_gft_hash_info.flow_index = g_flow_idx4;
 
     rx_gft_entry_write(&key, &data);
 }
@@ -1042,7 +1042,7 @@ rx_create_gft_entry4() {
 static void
 rx_create_gft_overflow_entry() {
     rx_gft_hash_swkey_t     key;
-    rx_gft_hash_actiondata  data;
+    rx_gft_hash_actiondata_t  data;
     uint32_t                hwkey_len = 0;
     uint32_t                hwdata_len = 0;
     uint8_t                 *hwkey = NULL;
@@ -1070,8 +1070,8 @@ rx_create_gft_overflow_entry() {
     key.flow_lkp_metadata_l4_dport_3 = g_layer32_dport;
 
     // data
-    data.rx_gft_hash_action_u.rx_gft_hash_rx_gft_hash_info.entry_valid = 1;
-    data.rx_gft_hash_action_u.rx_gft_hash_rx_gft_hash_info.flow_index = g_flow_idx2;
+    data.action_u.rx_gft_hash_rx_gft_hash_info.entry_valid = 1;
+    data.action_u.rx_gft_hash_rx_gft_hash_info.flow_index = g_flow_idx2;
 
     // build hardware entry
     p4pd_hwentry_query(P4TBL_ID_RX_GFT_HASH_OVERFLOW, &hwkey_len, NULL,
@@ -1092,7 +1092,7 @@ static void
 tx_tcp_key_init(int index) {
     tx_key_swkey_t      key;
     tx_key_swkey_mask_t mask;
-    tx_key_actiondata   data;
+    tx_key_actiondata_t   data;
 
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
@@ -1105,7 +1105,7 @@ tx_tcp_key_init(int index) {
     memset(&mask, 0xFF, sizeof(mask));
 
     // data
-    data.tx_key_action_u.tx_key_tx_key.match_fields =
+    data.action_u.tx_key_tx_key.match_fields =
         ((MATCH_ETHERNET_SRC | MATCH_ETHERNET_DST |
           MATCH_IP_SRC | MATCH_IP_DST | MATCH_IP_PROTO) |
          ((MATCH_TRANSPORT_SRC_PORT_1 | MATCH_TRANSPORT_DST_PORT_1) << 16));
@@ -1134,7 +1134,7 @@ static void
 tx_udp_key_init(int index) {
     tx_key_swkey_t      key;
     tx_key_swkey_mask_t mask;
-    tx_key_actiondata   data;
+    tx_key_actiondata_t   data;
 
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
@@ -1147,7 +1147,7 @@ tx_udp_key_init(int index) {
     memset(&mask, 0xFF, sizeof(mask));
 
     // data
-    data.tx_key_action_u.tx_key_tx_key.match_fields =
+    data.action_u.tx_key_tx_key.match_fields =
         ((MATCH_ETHERNET_SRC | MATCH_ETHERNET_DST |
           MATCH_IP_SRC | MATCH_IP_DST | MATCH_IP_PROTO) |
          ((MATCH_TRANSPORT_SRC_PORT_1 | MATCH_TRANSPORT_DST_PORT_1) << 16));
@@ -1180,20 +1180,20 @@ tx_key_init() {
 
 static void
 tx_create_transposition2() {
-    tx_hdr_transpositions0_actiondata data0;
-    tx_hdr_transpositions1_actiondata data1;
-    tx_hdr_transpositions2_actiondata data2;
-    tx_hdr_transpositions3_actiondata data3;
+    tx_hdr_transpositions0_actiondata_t data0;
+    tx_hdr_transpositions1_actiondata_t data1;
+    tx_hdr_transpositions2_actiondata_t data2;
+    tx_hdr_transpositions3_actiondata_t data3;
 
     memset(&data0, 0, sizeof(data0));
     memset(&data1, 0, sizeof(data1));
     memset(&data2, 0, sizeof(data2));
     memset(&data3, 0, sizeof(data3));
 
-#define DATA0 data0.tx_hdr_transpositions0_action_u.tx_hdr_transpositions0_tx_hdr_transpositions
-#define DATA1 data1.tx_hdr_transpositions1_action_u.tx_hdr_transpositions1_tx_hdr_transpositions
-#define DATA2 data2.tx_hdr_transpositions2_action_u.tx_hdr_transpositions2_tx_hdr_transpositions
-#define DATA3 data3.tx_hdr_transpositions3_action_u.tx_hdr_transpositions3_tx_l4_hdr_transpositions
+#define DATA0 data0.action_u.tx_hdr_transpositions0_tx_hdr_transpositions
+#define DATA1 data1.action_u.tx_hdr_transpositions1_tx_hdr_transpositions
+#define DATA2 data2.action_u.tx_hdr_transpositions2_tx_hdr_transpositions
+#define DATA3 data3.action_u.tx_hdr_transpositions3_tx_l4_hdr_transpositions
 
     // encap len = 36B
     DATA0.hdr0_bits =
@@ -1225,20 +1225,20 @@ tx_create_transposition2() {
 
 static void
 tx_create_transposition3() {
-    tx_hdr_transpositions0_actiondata data0;
-    tx_hdr_transpositions1_actiondata data1;
-    tx_hdr_transpositions2_actiondata data2;
-    tx_hdr_transpositions3_actiondata data3;
+    tx_hdr_transpositions0_actiondata_t data0;
+    tx_hdr_transpositions1_actiondata_t data1;
+    tx_hdr_transpositions2_actiondata_t data2;
+    tx_hdr_transpositions3_actiondata_t data3;
 
     memset(&data0, 0, sizeof(data0));
     memset(&data1, 0, sizeof(data1));
     memset(&data2, 0, sizeof(data2));
     memset(&data3, 0, sizeof(data3));
 
-#define DATA0 data0.tx_hdr_transpositions0_action_u.tx_hdr_transpositions0_tx_hdr_transpositions
-#define DATA1 data1.tx_hdr_transpositions1_action_u.tx_hdr_transpositions1_tx_hdr_transpositions
-#define DATA2 data2.tx_hdr_transpositions2_action_u.tx_hdr_transpositions2_tx_hdr_transpositions
-#define DATA3 data3.tx_hdr_transpositions3_action_u.tx_hdr_transpositions3_tx_l4_hdr_transpositions
+#define DATA0 data0.action_u.tx_hdr_transpositions0_tx_hdr_transpositions
+#define DATA1 data1.action_u.tx_hdr_transpositions1_tx_hdr_transpositions
+#define DATA2 data2.action_u.tx_hdr_transpositions2_tx_hdr_transpositions
+#define DATA3 data3.action_u.tx_hdr_transpositions3_tx_l4_hdr_transpositions
 
     // encap len = 86B
     DATA0.hdr0_bits =
@@ -1289,7 +1289,7 @@ tx_create_transposition3() {
 }
 
 static void
-tx_gft_entry_write(tx_gft_hash_swkey_t *key, tx_gft_hash_actiondata *data) {
+tx_gft_entry_write(tx_gft_hash_swkey_t *key, tx_gft_hash_actiondata_t *data) {
     uint32_t hwkey_len = 0;
     uint32_t hwdata_len = 0;
     uint32_t hash = 0;
@@ -1327,7 +1327,7 @@ tx_gft_entry_write(tx_gft_hash_swkey_t *key, tx_gft_hash_actiondata *data) {
 static void
 tx_create_gft_entry1() {
     tx_gft_hash_swkey_t     key;
-    tx_gft_hash_actiondata  data;
+    tx_gft_hash_actiondata_t  data;
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
@@ -1342,8 +1342,8 @@ tx_create_gft_entry1() {
     key.flow_lkp_metadata_l4_dport_1 = g_tx_layer1_dport;
 
     // data
-    data.tx_gft_hash_action_u.tx_gft_hash_tx_gft_hash_info.entry_valid = 1;
-    data.tx_gft_hash_action_u.tx_gft_hash_tx_gft_hash_info.flow_index = g_tx_flow_idx1;
+    data.action_u.tx_gft_hash_tx_gft_hash_info.entry_valid = 1;
+    data.action_u.tx_gft_hash_tx_gft_hash_info.flow_index = g_tx_flow_idx1;
 
     tx_gft_entry_write(&key, &data);
 }
@@ -1351,7 +1351,7 @@ tx_create_gft_entry1() {
 static void
 tx_create_gft_entry2() {
     tx_gft_hash_swkey_t     key;
-    tx_gft_hash_actiondata  data;
+    tx_gft_hash_actiondata_t  data;
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
@@ -1366,8 +1366,8 @@ tx_create_gft_entry2() {
     key.flow_lkp_metadata_l4_dport_1 = g_rdma_dport;
 
     // data
-    data.tx_gft_hash_action_u.tx_gft_hash_tx_gft_hash_info.entry_valid = 1;
-    data.tx_gft_hash_action_u.tx_gft_hash_tx_gft_hash_info.flow_index = g_tx_flow_idx2;
+    data.action_u.tx_gft_hash_tx_gft_hash_info.entry_valid = 1;
+    data.action_u.tx_gft_hash_tx_gft_hash_info.flow_index = g_tx_flow_idx2;
 
     tx_gft_entry_write(&key, &data);
 }
@@ -1383,7 +1383,7 @@ class gft_test : public ::testing::Test {
 static void
 tx_create_gft_entry3() {
     tx_gft_hash_swkey_t     key;
-    tx_gft_hash_actiondata  data;
+    tx_gft_hash_actiondata_t  data;
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
@@ -1398,8 +1398,8 @@ tx_create_gft_entry3() {
     key.flow_lkp_metadata_l4_dport_1 = g_rdma_dport;
 
     // data
-    data.tx_gft_hash_action_u.tx_gft_hash_tx_gft_hash_info.entry_valid = 1;
-    data.tx_gft_hash_action_u.tx_gft_hash_tx_gft_hash_info.flow_index = g_tx_flow_idx3;
+    data.action_u.tx_gft_hash_tx_gft_hash_info.entry_valid = 1;
+    data.action_u.tx_gft_hash_tx_gft_hash_info.flow_index = g_tx_flow_idx3;
 
     tx_gft_entry_write(&key, &data);
 }

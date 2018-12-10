@@ -309,7 +309,7 @@ rw_pd_pgm_rw_tbl (pd_rw_entry_t *rwe)
 {
     hal_ret_t            ret = HAL_RET_OK;
     sdk_ret_t            sdk_ret;
-    rewrite_actiondata   data;
+    rewrite_actiondata_t   data;
     directmap            *rw_tbl = NULL;
     fmt::MemoryWriter    buf;
 
@@ -319,11 +319,11 @@ rw_pd_pgm_rw_tbl (pd_rw_entry_t *rwe)
     rw_tbl = g_hal_state_pd->dm_table(P4TBL_ID_REWRITE);
     HAL_ASSERT_RETURN((rw_tbl != NULL), HAL_RET_ERR);
 
-    memcpy(data.rewrite_action_u.rewrite_rewrite.mac_sa, rwe->rw_key.mac_sa, 6);
-    memrev(data.rewrite_action_u.rewrite_rewrite.mac_sa, 6);
-    memcpy(data.rewrite_action_u.rewrite_rewrite.mac_da, rwe->rw_key.mac_da, 6);
-    memrev(data.rewrite_action_u.rewrite_rewrite.mac_da, 6);
-    data.actionid = rwe->rw_key.rw_act;
+    memcpy(data.action_u.rewrite_rewrite.mac_sa, rwe->rw_key.mac_sa, 6);
+    memrev(data.action_u.rewrite_rewrite.mac_sa, 6);
+    memcpy(data.action_u.rewrite_rewrite.mac_da, rwe->rw_key.mac_da, 6);
+    memrev(data.action_u.rewrite_rewrite.mac_da, 6);
+    data.action_id = rwe->rw_key.rw_act;
     sdk_ret = rw_tbl->insert_withid(&data, rwe->rw_idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {

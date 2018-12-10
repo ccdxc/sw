@@ -313,7 +313,7 @@ static void
 key_native_init(void) {
     key_native_swkey_t key;
     key_native_swkey_mask_t mask;
-    key_native_actiondata data;
+    key_native_actiondata_t data;
     uint32_t tbl_id = P4TBL_ID_KEY_NATIVE;
     uint32_t index;
 
@@ -322,7 +322,7 @@ key_native_init(void) {
     memset(&data, 0, sizeof(data));
 
     index = 0;
-    data.actionid = KEY_NATIVE_NATIVE_IPV4_PACKET_ID;
+    data.action_id = KEY_NATIVE_NATIVE_IPV4_PACKET_ID;
     key.ipv4_1_valid = 1;
     key.ipv6_1_valid = 0;
     key.ethernet_2_valid = 0;
@@ -341,7 +341,7 @@ static void
 key_tunneled_init(void) {
     key_tunneled_swkey_t key;
     key_tunneled_swkey_mask_t mask;
-    key_tunneled_actiondata data;
+    key_tunneled_actiondata_t data;
     uint32_t tbl_id = P4TBL_ID_KEY_TUNNELED;
     uint32_t index;
 
@@ -350,7 +350,7 @@ key_tunneled_init(void) {
     memset(&data, 0, sizeof(data));
 
     index = 0;
-    data.actionid = KEY_TUNNELED_TUNNELED_IPV4_PACKET_ID;
+    data.action_id = KEY_TUNNELED_TUNNELED_IPV4_PACKET_ID;
     key.ipv4_1_valid = 0;
     key.ipv6_1_valid = 0;
     key.ethernet_2_valid = 0;
@@ -367,9 +367,9 @@ key_tunneled_init(void) {
 
 static void
 vnic_tx_init() {
-    local_vnic_by_vlan_tx_actiondata data;
+    local_vnic_by_vlan_tx_actiondata_t data;
     local_vnic_by_vlan_tx_local_vnic_info_tx_t *local_vnic_info =
-        &data.local_vnic_by_vlan_tx_action_u.local_vnic_by_vlan_tx_local_vnic_info_tx;
+        &data.action_u.local_vnic_by_vlan_tx_local_vnic_info_tx;
     uint64_t slacl_hbm_addr;
     uint64_t lpm_hbm_addr;
     uint32_t tbl_id = P4TBL_ID_LOCAL_VNIC_BY_VLAN_TX;
@@ -377,7 +377,7 @@ vnic_tx_init() {
 
     memset(&data, 0, sizeof(data));
     index = g_ctag1_vid;
-    data.actionid = LOCAL_VNIC_BY_VLAN_TX_LOCAL_VNIC_INFO_TX_ID;
+    data.action_id = LOCAL_VNIC_BY_VLAN_TX_LOCAL_VNIC_INFO_TX_ID;
     local_vnic_info->local_vnic_tag = g_local_vnic_tag;
     local_vnic_info->skip_src_dst_check = true;
     memcpy(local_vnic_info->overlay_mac, &g_layer1_smac, 6);
@@ -398,16 +398,16 @@ vnic_tx_init() {
 static void
 vnic_rx_init() {
     local_vnic_by_slot_rx_swkey_t key;
-    local_vnic_by_slot_rx_actiondata data;
+    local_vnic_by_slot_rx_actiondata_t data;
     local_vnic_by_slot_rx_local_vnic_info_rx_t *local_vnic_info =
-        &data.local_vnic_by_slot_rx_action_u.local_vnic_by_slot_rx_local_vnic_info_rx;
+        &data.action_u.local_vnic_by_slot_rx_local_vnic_info_rx;
     uint64_t slacl_hbm_addr;
     uint32_t tbl_id = P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX;
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
     key.mpls_dst_label = g_local_slot_id;
-    data.actionid = LOCAL_VNIC_BY_SLOT_RX_LOCAL_VNIC_INFO_RX_ID;
+    data.action_id = LOCAL_VNIC_BY_SLOT_RX_LOCAL_VNIC_INFO_RX_ID;
     local_vnic_info->local_vnic_tag = g_local_vnic_tag;
     local_vnic_info->skip_src_dst_check = true;
     slacl_hbm_addr = get_start_offset(JSLACLBASE);
@@ -422,15 +422,15 @@ vnic_rx_init() {
 
 static void
 egress_vnic_info_init() {
-    egress_local_vnic_info_rx_actiondata data;
+    egress_local_vnic_info_rx_actiondata_t data;
     egress_local_vnic_info_rx_egress_local_vnic_info_rx_t *local_vnic_info =
-        &data.egress_local_vnic_info_rx_action_u.egress_local_vnic_info_rx_egress_local_vnic_info_rx;
+        &data.action_u.egress_local_vnic_info_rx_egress_local_vnic_info_rx;
     uint32_t tbl_id = P4TBL_ID_EGRESS_LOCAL_VNIC_INFO_RX;
     uint32_t index;
 
     memset(&data, 0, sizeof(data));
     index = g_local_vnic_tag;
-    data.actionid = EGRESS_LOCAL_VNIC_INFO_RX_EGRESS_LOCAL_VNIC_INFO_RX_ID;
+    data.action_id = EGRESS_LOCAL_VNIC_INFO_RX_EGRESS_LOCAL_VNIC_INFO_RX_ID;
     local_vnic_info->overlay_vlan_id = g_ctag1_vid;
     memcpy(local_vnic_info->vr_mac, &g_layer1_dmac, 6);
     memcpy(local_vnic_info->overlay_mac, &g_layer1_smac, 6);
@@ -448,16 +448,16 @@ vnic_init(void) {
 static void
 mappings_init(void) {
     local_ip_mapping_swkey_t key;
-    local_ip_mapping_actiondata data;
+    local_ip_mapping_actiondata_t data;
     local_ip_mapping_local_ip_mapping_info_t *mapping_info =
-        &data.local_ip_mapping_action_u.local_ip_mapping_local_ip_mapping_info;
+        &data.action_u.local_ip_mapping_local_ip_mapping_info;
     uint32_t tbl_id = P4TBL_ID_LOCAL_IP_MAPPING;
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
     key.vnic_metadata_local_vnic_tag = g_local_vnic_tag;
     memcpy(key.control_metadata_mapping_lkp_addr, &g_layer1_sip, 4);
-    data.actionid = LOCAL_IP_MAPPING_LOCAL_IP_MAPPING_INFO_ID;
+    data.action_id = LOCAL_IP_MAPPING_LOCAL_IP_MAPPING_INFO_ID;
     mapping_info->entry_valid = true;
 
     entry_write(tbl_id, 0, &key, NULL, &data, true, VNIC_IP_MAPPING_TABLE_SIZE);
@@ -466,8 +466,8 @@ mappings_init(void) {
 static void
 flow_tx_hash_init() {
     flow_swkey_t key;
-    flow_actiondata data;
-    flow_flow_hash_t *flow_hash_info = &data.flow_action_u.flow_flow_hash;
+    flow_actiondata_t data;
+    flow_flow_hash_t *flow_hash_info = &data.action_u.flow_flow_hash;
     uint32_t tbl_id = P4TBL_ID_FLOW;
 
     memset(&key, 0, sizeof(key));
@@ -479,7 +479,7 @@ flow_tx_hash_init() {
     key.key_metadata_proto = g_layer1_proto;
     key.key_metadata_sport = g_layer1_sport;
     key.key_metadata_dport = g_layer1_dport;
-    data.actionid = FLOW_FLOW_HASH_ID;
+    data.action_id = FLOW_FLOW_HASH_ID;
     flow_hash_info->entry_valid = true;
     flow_hash_info->flow_index = g_flow_index;
 
@@ -488,14 +488,14 @@ flow_tx_hash_init() {
 
 static void
 flow_tx_info_init() {
-    flow_info_actiondata data;
+    flow_info_actiondata_t data;
     flow_info_flow_info_t *flow_info =
-        &data.flow_info_action_u.flow_info_flow_info;
+        &data.action_u.flow_info_flow_info;
     uint32_t tbl_id = P4TBL_ID_FLOW_INFO;
     uint64_t flow_stats_addr;
 
     memset(&data, 0, sizeof(data));
-    data.actionid = FLOW_INFO_FLOW_INFO_ID;
+    data.action_id = FLOW_INFO_FLOW_INFO_ID;
     flow_stats_addr = get_start_offset(JFLOWSTATSBASE) + g_flow_index * 64;
     flow_stats_addr -= ((uint64_t)1 << 31);
     memcpy(flow_info->flow_stats_addr, &flow_stats_addr,
@@ -507,8 +507,8 @@ flow_tx_info_init() {
 static void
 flow_rx_hash_init() {
     flow_swkey_t key;
-    flow_actiondata data;
-    flow_flow_hash_t *flow_hash_info = &data.flow_action_u.flow_flow_hash;
+    flow_actiondata_t data;
+    flow_flow_hash_t *flow_hash_info = &data.action_u.flow_flow_hash;
     uint32_t tbl_id = P4TBL_ID_FLOW;
 
     memset(&key, 0, sizeof(key));
@@ -520,7 +520,7 @@ flow_rx_hash_init() {
     key.key_metadata_proto = g_layer1_proto;
     key.key_metadata_sport = g_layer1_dport;
     key.key_metadata_dport = g_layer1_sport;
-    data.actionid = FLOW_FLOW_HASH_ID;
+    data.action_id = FLOW_FLOW_HASH_ID;
     flow_hash_info->entry_valid = true;
     flow_hash_info->flow_index = g_flow_index + 1;
 
@@ -529,14 +529,14 @@ flow_rx_hash_init() {
 
 static void
 flow_rx_info_init() {
-    flow_info_actiondata data;
+    flow_info_actiondata_t data;
     flow_info_flow_info_t *flow_info =
-        &data.flow_info_action_u.flow_info_flow_info;
+        &data.action_u.flow_info_flow_info;
     uint32_t tbl_id = P4TBL_ID_FLOW_INFO;
     uint64_t flow_stats_addr;
 
     memset(&data, 0, sizeof(data));
-    data.actionid = FLOW_INFO_FLOW_INFO_ID;
+    data.action_id = FLOW_INFO_FLOW_INFO_ID;
     flow_stats_addr = get_start_offset(JFLOWSTATSBASE) + (g_flow_index+1) * 64;
     flow_stats_addr -= ((uint64_t)1 << 31);
     memcpy(flow_info->flow_stats_addr, &flow_stats_addr,
@@ -555,16 +555,16 @@ flow_init(void) {
 
 static void
 nexthop_tx_init(void) {
-    nexthop_tx_actiondata data;
+    nexthop_tx_actiondata_t data;
     nexthop_tx_nexthop_info_t *nexthop_info =
-        &data.nexthop_tx_action_u.nexthop_tx_nexthop_info;
+        &data.action_u.nexthop_tx_nexthop_info;
     uint32_t tbl_id = P4TBL_ID_NEXTHOP_TX;
     uint32_t index;
 
     memset(&data, 0, sizeof(data));
 
     index = g_nexthop_index;
-    data.actionid = NEXTHOP_TX_NEXTHOP_INFO_ID;
+    data.action_id = NEXTHOP_TX_NEXTHOP_INFO_ID;
     nexthop_info->tep_index = g_tep_index;
     nexthop_info->encap_type = GW_ENCAP;
     nexthop_info->dst_slot_id = g_gw_slot_id;
@@ -574,23 +574,23 @@ nexthop_tx_init(void) {
 
 static void
 tep_tx_init(bool is_udp_tunnel) {
-    tep_tx_actiondata data;
+    tep_tx_actiondata_t data;
     tep_tx_gre_tep_tx_t *tep_info =
-        &data.tep_tx_action_u.tep_tx_gre_tep_tx;
+        &data.action_u.tep_tx_gre_tep_tx;
     uint32_t tbl_id = P4TBL_ID_TEP_TX;
     uint32_t index;
 
     if (is_udp_tunnel) {
         memset(&data, 0, sizeof(data));
         index = g_tep_index;
-        data.actionid = TEP_TX_UDP_TEP_TX_ID;
+        data.action_id = TEP_TX_UDP_TEP_TX_ID;
         tep_info->dipo = g_gw_dip;
         memcpy(tep_info->dmac, &g_gw_dmac, 6);
         entry_write(tbl_id, index, NULL, NULL, &data, false, 0);
     } else {
         memset(&data, 0, sizeof(data));
         index = g_tep_index;
-        data.actionid = TEP_TX_GRE_TEP_TX_ID;
+        data.action_id = TEP_TX_GRE_TEP_TX_ID;
         tep_info->dipo = g_gw_dip;
         memcpy(tep_info->dmac, &g_gw_dmac, 6);
         entry_write(tbl_id, index, NULL, NULL, &data, false, 0);

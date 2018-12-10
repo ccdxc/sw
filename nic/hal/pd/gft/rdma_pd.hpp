@@ -29,7 +29,7 @@ extern hal_ret_t p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_add (ui
                                                       uint8_t rq_qtype,
                                                       uint8_t aq_qtype);
 extern hal_ret_t p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_get(
-       uint32_t idx, rx_stage0_load_rdma_params_actiondata *data);
+       uint32_t idx, rx_stage0_load_rdma_params_actiondata_t *data);
 
 extern hal_ret_t p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add (uint32_t idx,
                                                       uint8_t rdma_en_qtype_mask,
@@ -48,7 +48,7 @@ extern hal_ret_t p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add (ui
                                                       uint32_t barmap_base_addr,
                                                       uint8_t barmap_size);
 extern hal_ret_t p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_get(
-       uint32_t idx, tx_stage0_lif_params_table_actiondata *data);
+       uint32_t idx, tx_stage0_lif_params_table_actiondata_t *data);
 
 
 }   // namespace pd

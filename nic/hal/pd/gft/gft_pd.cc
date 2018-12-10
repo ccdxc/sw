@@ -42,16 +42,16 @@ pd_gft_exact_match_profile_create (pd_gft_exact_match_profile_args_t *gft_args)
     uint32_t                               num_profiles, tcam_idx = 0;
     rx_key1_swkey_t                        rx_key1 = { 0 };
     rx_key1_swkey_mask_t                   rx_key1_mask = { 0 };
-    rx_key1_actiondata                     rx_key1_action = { 0 };
+    rx_key1_actiondata_t                     rx_key1_action = { 0 };
     rx_key2_swkey_t                        rx_key2 = { 0 };
     rx_key2_swkey_mask_t                   rx_key2_mask = { 0 };
-    rx_key2_actiondata                     rx_key2_action = { 0 };
+    rx_key2_actiondata_t                     rx_key2_action = { 0 };
     rx_key3_swkey_t                        rx_key3 = { 0 };
     rx_key3_swkey_mask_t                   rx_key3_mask = { 0 };
-    rx_key3_actiondata                     rx_key3_action = { 0 };
+    rx_key3_actiondata_t                     rx_key3_action = { 0 };
     rx_key4_swkey_t                        rx_key4 = { 0 };
     rx_key4_swkey_mask_t                   rx_key4_mask = { 0 };
-    rx_key4_actiondata                     rx_key4_action = { 0 };
+    rx_key4_actiondata_t                     rx_key4_action = { 0 };
     tcam                                   *key_tbl;
 
     if (!gft_args || !gft_args->exact_match_profile) {
@@ -467,10 +467,10 @@ pd_gft_exact_match_profile_create (pd_gft_exact_match_profile_args_t *gft_args)
     memcpy(&rx_key4, &rx_key1, sizeof(rx_key1));
 
     // set all action ids
-    rx_key1_action.actionid = RX_KEY1_RX_KEY1_ID;
-    rx_key2_action.actionid = RX_KEY2_RX_KEY2_ID;
-    rx_key3_action.actionid = RX_KEY3_RX_KEY3_ID;
-    rx_key4_action.actionid = RX_KEY4_RX_KEY4_ID;
+    rx_key1_action.action_id = RX_KEY1_RX_KEY1_ID;
+    rx_key2_action.action_id = RX_KEY2_RX_KEY2_ID;
+    rx_key3_action.action_id = RX_KEY3_RX_KEY3_ID;
+    rx_key4_action.action_id = RX_KEY4_RX_KEY4_ID;
 
     key_tbl = g_hal_state_pd->tcam_table(P4TBL_ID_RX_KEY1);
     sdk_ret = key_tbl->insert(&rx_key1, &rx_key1_mask,
@@ -587,13 +587,13 @@ gft_program_rx_xpositions (gft_hdr_group_xposition_t *xpositions,
 {
 #if 0
     rx_hdr_transpositions0_swkey_t       rx0_key = { 0 };
-    rx_hdr_transpositions0_actiondata    rx0_action = { 0 };
+    rx_hdr_transpositions0_actiondata_t    rx0_action = { 0 };
     rx_hdr_transpositions1_swkey_t       rx1_key = { 0 };
-    rx_hdr_transpositions1_actiondata    rx1_action = { 0 };
+    rx_hdr_transpositions1_actiondata_t    rx1_action = { 0 };
     rx_hdr_transpositions2_swkey_t       rx2_key = { 0 };
-    rx_hdr_transpositions2_actiondata    rx2_action = { 0 };
+    rx_hdr_transpositions2_actiondata_t    rx2_action = { 0 };
     rx_hdr_transpositions3_swkey_t       rx3_key = { 0 };
-    rx_hdr_transpositions3_actiondata    rx3_action = { 0 };
+    rx_hdr_transpositions3_actiondata_t    rx3_action = { 0 };
 #endif
 
     return HAL_RET_OK;

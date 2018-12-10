@@ -15,7 +15,7 @@ pd_twice_nat_add(pd_func_args_t *pd_func_args)
     pd_twice_nat_add_args_t *t_args = pd_func_args->pd_twice_nat_add;
     sdk_ret_t               sdk_ret;
     directmap               *dm;
-    twice_nat_actiondata    data = { 0 };
+    twice_nat_actiondata_t    data = { 0 };
     pd_twice_nat_entry_args_t *args = t_args->args;
     uint32_t *twice_nat_idx = t_args->twice_nat_idx;
 
@@ -23,15 +23,15 @@ pd_twice_nat_add(pd_func_args_t *pd_func_args)
     dm = g_hal_state_pd->dm_table(P4TBL_ID_TWICE_NAT);
     HAL_ASSERT(dm != NULL);
 
-    data.actionid = args->twice_nat_act;
-    data.twice_nat_action_u.twice_nat_twice_nat_rewrite_info.l4_port = args->nat_l4_port;
+    data.action_id = args->twice_nat_act;
+    data.action_u.twice_nat_twice_nat_rewrite_info.l4_port = args->nat_l4_port;
 
-    memcpy(data.twice_nat_action_u.twice_nat_twice_nat_rewrite_info.ip,
+    memcpy(data.action_u.twice_nat_twice_nat_rewrite_info.ip,
            args->nat_ip.addr.v6_addr.addr8, IP6_ADDR8_LEN);
 
     if (args->nat_ip.af == IP_AF_IPV6) {
-        memrev(data.twice_nat_action_u.twice_nat_twice_nat_rewrite_info.ip,
-               sizeof(data.twice_nat_action_u.twice_nat_twice_nat_rewrite_info.ip));
+        memrev(data.action_u.twice_nat_twice_nat_rewrite_info.ip,
+               sizeof(data.action_u.twice_nat_twice_nat_rewrite_info.ip));
     }
 
     sdk_ret = dm->insert(&data, twice_nat_idx);
@@ -57,21 +57,21 @@ pd_twice_nat_del(pd_func_args_t *pd_func_args)
     pd_twice_nat_del_args_t *t_args = pd_func_args->pd_twice_nat_del;
     sdk_ret_t               sdk_ret;
     directmap               *dm;
-    twice_nat_actiondata    data = { 0 };
+    twice_nat_actiondata_t    data = { 0 };
     pd_twice_nat_entry_args_t *args = t_args->args;
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_TWICE_NAT);
     HAL_ASSERT(dm != NULL);
 
-    data.actionid = args->twice_nat_act;
-    data.twice_nat_action_u.twice_nat_twice_nat_rewrite_info.l4_port = args->nat_l4_port;
+    data.action_id = args->twice_nat_act;
+    data.action_u.twice_nat_twice_nat_rewrite_info.l4_port = args->nat_l4_port;
 
-    memcpy(data.twice_nat_action_u.twice_nat_twice_nat_rewrite_info.ip,
+    memcpy(data.action_u.twice_nat_twice_nat_rewrite_info.ip,
            args->nat_ip.addr.v6_addr.addr8, IP6_ADDR8_LEN);
 
     if (args->nat_ip.af == IP_AF_IPV6) {
-        memrev(data.twice_nat_action_u.twice_nat_twice_nat_rewrite_info.ip,
-               sizeof(data.twice_nat_action_u.twice_nat_twice_nat_rewrite_info.ip));
+        memrev(data.action_u.twice_nat_twice_nat_rewrite_info.ip,
+               sizeof(data.action_u.twice_nat_twice_nat_rewrite_info.ip));
     }
 
     sdk_ret = dm->remove(0, &data);

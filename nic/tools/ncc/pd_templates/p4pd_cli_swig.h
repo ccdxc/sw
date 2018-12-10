@@ -383,10 +383,10 @@ typedef union __${table}_action_union {
 
 typedef struct __attribute__((__packed__)) __${table}_actiondata {
 //::            if not (pddict['tables'][table]['is_raw']):
-    uint8_t actionid;
+    uint8_t action_id;
 //::            #endif
-    ${table}_action_union_t ${table}_action_u;
-} ${table}_actiondata;
+    ${table}_action_union_t action_u;
+} ${table}_actiondata_t;
 //::        #endif
 
 //::     #endfor
@@ -443,7 +443,7 @@ inline void ${prefix}_prep_p4tbl_sw_struct_sizes()
 //::        if pddict['tables'][tblname]['type'] != 'Index':
     ${prefix}_tbl_swkey_size[P4${caps_p4prog}TBL_ID_${caps_tblname}] = sizeof(${tblname}_swkey);
 //::        #endif
-    ${prefix}_tbl_sw_action_data_size[P4${caps_p4prog}TBL_ID_${caps_tblname}]= sizeof(${tblname}_actiondata);
+    ${prefix}_tbl_sw_action_data_size[P4${caps_p4prog}TBL_ID_${caps_tblname}]= sizeof(${tblname}_actiondata_t);
 //::        #endfor
 }
 

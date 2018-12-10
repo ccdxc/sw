@@ -214,14 +214,14 @@ uint32_t g_layer0_slot_id = 200;
 
 static void
 add_dst_mac_entries() {
-    dst_mac_lkp_actiondata data;
+    dst_mac_lkp_actiondata_t data;
     dst_mac_lkp_swkey_t key;
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
     memcpy(key.ethernet_1_dstAddr, &g_layer1_dmac, 6);
-    data.actionid = DST_MAC_LKP_UPDATE_PORT_AND_MODIFY_VLAN_ID;
-    data.dst_mac_lkp_action_u.dst_mac_lkp_update_port_and_modify_vlan.vid
+    data.action_id = DST_MAC_LKP_UPDATE_PORT_AND_MODIFY_VLAN_ID;
+    data.action_u.dst_mac_lkp_update_port_and_modify_vlan.vid
         = 0xDD;
     entry_write(P4TBL_ID_DST_MAC_LKP, 0, &key, NULL, &data, true, 1024);
 }
@@ -229,7 +229,7 @@ add_dst_mac_entries() {
 static void
 add_flow_entries() {
     flow_lkp_swkey_t key;
-    flow_lkp_actiondata data;
+    flow_lkp_actiondata_t data;
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
@@ -238,37 +238,37 @@ add_flow_entries() {
     key.ipv4_1_protocol = g_layer1_proto;
     key.tcp_srcPort = g_layer1_sport;
     key.tcp_dstPort = g_layer1_dport;
-    data.actionid = FLOW_LKP_FLOW_INFO_ID;
-    data.flow_lkp_action_u.flow_lkp_flow_info.entry_valid = 1;
-    data.flow_lkp_action_u.flow_lkp_flow_info.snat_valid = 1;
-    data.flow_lkp_action_u.flow_lkp_flow_info.tunnel_valid = 1;
-    data.flow_lkp_action_u.flow_lkp_flow_info.snat_index = g_snat_index;
-    data.flow_lkp_action_u.flow_lkp_flow_info.tunnel_index = g_tunnel_index;
+    data.action_id = FLOW_LKP_FLOW_INFO_ID;
+    data.action_u.flow_lkp_flow_info.entry_valid = 1;
+    data.action_u.flow_lkp_flow_info.snat_valid = 1;
+    data.action_u.flow_lkp_flow_info.tunnel_valid = 1;
+    data.action_u.flow_lkp_flow_info.snat_index = g_snat_index;
+    data.action_u.flow_lkp_flow_info.tunnel_index = g_tunnel_index;
     entry_write(P4TBL_ID_FLOW_LKP, 0, &key, NULL, &data, true, 65536);
 }
 
 static void
 add_snat_entries() {
-    snat_actiondata data;
+    snat_actiondata_t data;
 
     memset(&data, 0, sizeof(data));
-    data.actionid = SNAT_SNAT_REWRITE_ID;
-    data.snat_action_u.snat_snat_rewrite.sip = g_layer1_snat_sip;
-    data.snat_action_u.snat_snat_rewrite.sport = g_layer1_snat_sport;
+    data.action_id = SNAT_SNAT_REWRITE_ID;
+    data.action_u.snat_snat_rewrite.sip = g_layer1_snat_sip;
+    data.action_u.snat_snat_rewrite.sport = g_layer1_snat_sport;
     entry_write(P4TBL_ID_SNAT, g_snat_index, NULL, NULL, &data, false, 0);
 }
 
 static void
 add_tunnel_entries() {
-    tunnel_actiondata data;
+    tunnel_actiondata_t data;
 
     memset(&data, 0, sizeof(data));
-    data.actionid = TUNNEL_TUNNEL_REWRITE_ID;
-    memcpy(data.tunnel_action_u.tunnel_tunnel_rewrite.smac, &g_layer0_smac, 6);
-    memcpy(data.tunnel_action_u.tunnel_tunnel_rewrite.dmac, &g_layer0_dmac, 6);
-    data.tunnel_action_u.tunnel_tunnel_rewrite.sip = g_layer0_sip;
-    data.tunnel_action_u.tunnel_tunnel_rewrite.dip = g_layer0_dip;
-    data.tunnel_action_u.tunnel_tunnel_rewrite.slot_id = g_layer0_slot_id;
+    data.action_id = TUNNEL_TUNNEL_REWRITE_ID;
+    memcpy(data.action_u.tunnel_tunnel_rewrite.smac, &g_layer0_smac, 6);
+    memcpy(data.action_u.tunnel_tunnel_rewrite.dmac, &g_layer0_dmac, 6);
+    data.action_u.tunnel_tunnel_rewrite.sip = g_layer0_sip;
+    data.action_u.tunnel_tunnel_rewrite.dip = g_layer0_dip;
+    data.action_u.tunnel_tunnel_rewrite.slot_id = g_layer0_slot_id;
     entry_write(P4TBL_ID_TUNNEL, g_tunnel_index, NULL, NULL, &data, false, 0);
 }
 

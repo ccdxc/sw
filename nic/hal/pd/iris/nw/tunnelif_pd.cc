@@ -349,7 +349,7 @@ pd_tunnelif_program_tcam(ip_addr_t *ip_addr,
     sdk_ret_t                           sdk_ret;
     input_mapping_native_swkey_t        key;
     input_mapping_native_swkey_mask_t   mask;
-    input_mapping_native_actiondata     data;
+    input_mapping_native_actiondata_t     data;
     tcam                                *tcam;
 
     tcam = g_hal_state_pd->tcam_table(tbl_id);
@@ -378,7 +378,7 @@ pd_tunnelif_program_tcam(ip_addr_t *ip_addr,
         mask.ipv6_valid_mask = 0xFF;
         memset(mask.input_mapping_native_mask_u1.ipv6_dstAddr_mask, 0xFF, IP6_ADDR8_LEN);
     }
-    data.actionid = actionid;
+    data.action_id = actionid;
     if (is_upgrade) {
         sdk_ret = tcam->insert_withid(&key, &mask, &data, *idx);
     } else {
@@ -507,15 +507,15 @@ pd_tunnelif_add_tunnel_rw_table_entry (pd_tunnelif_t *pd_tif, uint8_t actionid,
     hal_ret_t                   ret;
     sdk_ret_t                   sdk_ret;
     directmap                   *dm;
-    tunnel_rewrite_actiondata   d = { 0 };
+    tunnel_rewrite_actiondata_t   d = { 0 };
     uint32_t                    idx;
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_TUNNEL_REWRITE);
     HAL_ASSERT(dm != NULL);
     HAL_ASSERT(pd_tif != NULL);
 
-    d.actionid = actionid;
-    d.tunnel_rewrite_action_u = *act;
+    d.action_id = actionid;
+    d.action_u = *act;
 
     // insert the entry
     sdk_ret = dm->insert(&d, &idx);

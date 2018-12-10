@@ -110,7 +110,7 @@ TEST_F(flow_test, test1) {
     uint32_t flow_idx = 0;
 
     flow_hash_swkey key;
-    flow_hash_actiondata data;
+    flow_hash_actiondata_t data;
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
@@ -119,7 +119,7 @@ TEST_F(flow_test, test1) {
                    2097152, 16384, sizeof(key), sizeof(data));
 
     key.flow_lkp_metadata_lkp_sport = 10;
-    data.actionid = 1;
+    data.action_id = 1;
 
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
@@ -148,7 +148,7 @@ TEST_F(flow_test, test2) {
 
     hal_ret_t rs;
     flow_hash_swkey key;
-    flow_hash_actiondata data;
+    flow_hash_actiondata_t data;
     uint32_t flow_idx = 0;
 
     memset(&key, 0, sizeof(key));
@@ -157,13 +157,13 @@ TEST_F(flow_test, test2) {
             2097152, 16384, sizeof(key), sizeof(data));
 
     key.flow_lkp_metadata_lkp_sport = 10;
-    data.actionid = 1;
+    data.action_id = 1;
 
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
     printf("flow idx: %d\n", flow_idx);
 
-    data.actionid = 2;
+    data.action_id = 2;
     rs = fl->update(flow_idx, (void *)&data);
     ASSERT_TRUE(rs == HAL_RET_OK);
     printf("flow idx: %d\n", flow_idx);
@@ -178,7 +178,7 @@ TEST_F(flow_test, test3) {
 
     hal_ret_t rs;
     flow_hash_swkey key;
-    flow_hash_actiondata data;
+    flow_hash_actiondata_t data;
     uint32_t flow_idx = 0;
 
     memset(&key, 0, sizeof(key));
@@ -187,11 +187,11 @@ TEST_F(flow_test, test3) {
             2097152, 16384, sizeof(key), sizeof(data));
 
     key.flow_lkp_metadata_lkp_sport = 10;
-    data.actionid = 1;
+    data.action_id = 1;
 
     for (int i = 10; i < 20; i++) {
         key.flow_lkp_metadata_lkp_sport++;
-        data.actionid = 1;
+        data.action_id = 1;
         rs = fl->insert((void *)&key, (void *)&data,  &flow_idx);
         ASSERT_TRUE(rs == HAL_RET_OK);
         printf("flow idx: %d\n", flow_idx);
@@ -209,7 +209,7 @@ TEST_F(flow_test, test4) {
 
     hal_ret_t rs;
     flow_hash_swkey key;
-    flow_hash_actiondata data;
+    flow_hash_actiondata_t data;
     uint32_t flow_idx = 0;
 
     memset(&key, 0, sizeof(key));
@@ -218,7 +218,7 @@ TEST_F(flow_test, test4) {
             2097152, 16384, sizeof(key), sizeof(data));
 
     key.flow_lkp_metadata_lkp_sport = 10;
-    data.actionid = 1;
+    data.action_id = 1;
 
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
@@ -238,7 +238,7 @@ TEST_F(flow_test, test5) {
 
     hal_ret_t rs;
     flow_hash_swkey key;
-    flow_hash_actiondata data;
+    flow_hash_actiondata_t data;
     uint32_t flow_idx = 0;
 
     memset(&key, 0, sizeof(key));
@@ -247,11 +247,11 @@ TEST_F(flow_test, test5) {
             2097152, 16384, sizeof(key), sizeof(data));
 
     key.flow_lkp_metadata_lkp_sport = 10;
-    data.actionid = 1;
+    data.action_id = 1;
 
     for (int i = 0; i < 100; i++) {
         key.flow_lkp_metadata_lkp_sport = key.flow_lkp_metadata_lkp_sport + 10;
-        data.actionid = 2;
+        data.action_id = 2;
         rs = fl->insert((void *)&key, (void *)&data,  &flow_idx);
         printf("rs: %d \n", rs);
         ASSERT_TRUE(rs == HAL_RET_OK);
@@ -269,7 +269,7 @@ TEST_F(flow_test, test6) {
 
     hal_ret_t rs;
     flow_hash_swkey key;
-    flow_hash_actiondata data;
+    flow_hash_actiondata_t data;
     uint32_t flow_idx[3] = { 0 };
 
     memset(&key, 0, sizeof(key));
@@ -278,7 +278,7 @@ TEST_F(flow_test, test6) {
             2097152, 16384, sizeof(key), sizeof(data));
 
     key.flow_lkp_metadata_lkp_sport = 10;
-    data.actionid = 1;
+    data.action_id = 1;
 
     for (int i = 0; i < 3; i++) {
         key.flow_lkp_metadata_lkp_sport = key.flow_lkp_metadata_lkp_sport + 10;
@@ -286,7 +286,7 @@ TEST_F(flow_test, test6) {
         ASSERT_TRUE(rs == HAL_RET_OK);
     }
 
-    data.actionid = 2;
+    data.action_id = 2;
     rs = fl->update(flow_idx[2] + 1, (void *)&data);
     ASSERT_TRUE(rs == HAL_RET_ENTRY_NOT_FOUND);
 
@@ -305,7 +305,7 @@ TEST_F(flow_test, DISABLED_test7) {
 
     // hal_ret_t rs;
     flow_hash_swkey key = {0};
-    flow_hash_actiondata data = {0};
+    flow_hash_actiondata_t data = {0};
     unsigned seed = std::time(0);
     std::srand (seed);
     // uint32_t flow_idx[1000000] = { 0 };
@@ -347,7 +347,7 @@ TEST_F(flow_test, DISABLED_test7) {
 
 
 #if 0
-    data.actionid = 0;
+    data.action_id = 0;
 
     uint32_t base = 0;
     for (int i = 0; i < 1000000; i++) {
@@ -362,7 +362,7 @@ TEST_F(flow_test, DISABLED_test7) {
 #endif
 
 #if 0
-    data.actionid = 2;
+    data.action_id = 2;
     rs = fl.update(flow_idx[2] + 1, (void *)&data);
     ASSERT_TRUE(rs == HAL_RET_ENTRY_NOT_FOUND);
 
@@ -381,7 +381,7 @@ TEST_F(flow_test, test8) {
 
     hal_ret_t rs;
     flow_hash_swkey key = {0};
-    flow_hash_actiondata data = {0};
+    flow_hash_actiondata_t data = {0};
     uint32_t flow_idx[9] = { 0 };
 
     memset(&key, 0, sizeof(key));
@@ -405,7 +405,7 @@ TEST_F(flow_test, test8) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xa277;
     key.flow_lkp_metadata_lkp_dport = 0x2;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[0]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -413,7 +413,7 @@ TEST_F(flow_test, test8) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0x3b01;
     key.flow_lkp_metadata_lkp_dport = 0x3;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[1]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -434,7 +434,7 @@ TEST_F(flow_test, test9) {
 
     hal_ret_t rs;
     flow_hash_swkey key = {0};
-    flow_hash_actiondata data = {0};
+    flow_hash_actiondata_t data = {0};
     uint32_t flow_idx[9] = { 0 };
 
     memset(&key, 0, sizeof(key));
@@ -458,7 +458,7 @@ TEST_F(flow_test, test9) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xa277;
     key.flow_lkp_metadata_lkp_dport = 0x2;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[0]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -466,7 +466,7 @@ TEST_F(flow_test, test9) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0x3b01;
     key.flow_lkp_metadata_lkp_dport = 0x3;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[1]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -493,7 +493,7 @@ TEST_F(flow_test, test10) {
 
     hal_ret_t rs;
     flow_hash_swkey key = {0};
-    flow_hash_actiondata data = {0};
+    flow_hash_actiondata_t data = {0};
     uint32_t flow_idx[9] = { 0 };
 
     memset(&key, 0, sizeof(key));
@@ -517,7 +517,7 @@ TEST_F(flow_test, test10) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xa277;
     key.flow_lkp_metadata_lkp_dport = 0x2;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[0]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -525,7 +525,7 @@ TEST_F(flow_test, test10) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0x3b01;
     key.flow_lkp_metadata_lkp_dport = 0x3;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[1]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -533,7 +533,7 @@ TEST_F(flow_test, test10) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xd238;
     key.flow_lkp_metadata_lkp_dport = 0x4;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[2]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -564,7 +564,7 @@ TEST_F(flow_test, test11) {
 
     hal_ret_t rs;
     flow_hash_swkey key = {0};
-    flow_hash_actiondata data = {0};
+    flow_hash_actiondata_t data = {0};
     uint32_t flow_idx[9] = { 0 };
 
     memset(&key, 0, sizeof(key));
@@ -588,7 +588,7 @@ TEST_F(flow_test, test11) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xa277;
     key.flow_lkp_metadata_lkp_dport = 0x2;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[0]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -596,7 +596,7 @@ TEST_F(flow_test, test11) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0x3b01;
     key.flow_lkp_metadata_lkp_dport = 0x3;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[1]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -604,7 +604,7 @@ TEST_F(flow_test, test11) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xd238;
     key.flow_lkp_metadata_lkp_dport = 0x4;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[2]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -636,7 +636,7 @@ TEST_F(flow_test, test12) {
 
     hal_ret_t rs;
     flow_hash_swkey key = {0};
-    flow_hash_actiondata data = {0};
+    flow_hash_actiondata_t data = {0};
     uint32_t flow_idx[9] = { 0 };
 
     memset(&key, 0, sizeof(key));
@@ -660,7 +660,7 @@ TEST_F(flow_test, test12) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xa277;
     key.flow_lkp_metadata_lkp_dport = 0x2;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[0]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -668,7 +668,7 @@ TEST_F(flow_test, test12) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0x3b01;
     key.flow_lkp_metadata_lkp_dport = 0x3;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[1]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -676,7 +676,7 @@ TEST_F(flow_test, test12) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xd238;
     key.flow_lkp_metadata_lkp_dport = 0x4;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[2]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -684,7 +684,7 @@ TEST_F(flow_test, test12) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0x4b4e;
     key.flow_lkp_metadata_lkp_dport = 0x5;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[3]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -720,7 +720,7 @@ TEST_F(flow_test, test13) {
 
     hal_ret_t rs;
     flow_hash_swkey key = {0};
-    flow_hash_actiondata data = {0};
+    flow_hash_actiondata_t data = {0};
     uint32_t flow_idx[9] = { 0 };
 
     memset(&key, 0, sizeof(key));
@@ -744,7 +744,7 @@ TEST_F(flow_test, test13) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xa277;
     key.flow_lkp_metadata_lkp_dport = 0x2;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[0]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -752,7 +752,7 @@ TEST_F(flow_test, test13) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0x3b01;
     key.flow_lkp_metadata_lkp_dport = 0x3;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[1]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -760,7 +760,7 @@ TEST_F(flow_test, test13) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xd238;
     key.flow_lkp_metadata_lkp_dport = 0x4;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[2]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -768,7 +768,7 @@ TEST_F(flow_test, test13) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0x4b4e;
     key.flow_lkp_metadata_lkp_dport = 0x5;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[3]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -802,7 +802,7 @@ TEST_F(flow_test, test14) {
 
     hal_ret_t rs;
     flow_hash_swkey key = {0};
-    flow_hash_actiondata data = {0};
+    flow_hash_actiondata_t data = {0};
     uint32_t flow_idx[9] = { 0 };
     std::srand ( unsigned ( std::time(0) ) );
     std::vector<int> myvector;
@@ -838,7 +838,7 @@ TEST_F(flow_test, test14) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xa277;
     key.flow_lkp_metadata_lkp_dport = 0x2;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[0]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -846,7 +846,7 @@ TEST_F(flow_test, test14) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0x3b01;
     key.flow_lkp_metadata_lkp_dport = 0x3;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[1]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -854,7 +854,7 @@ TEST_F(flow_test, test14) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xd238;
     key.flow_lkp_metadata_lkp_dport = 0x4;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[2]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -862,7 +862,7 @@ TEST_F(flow_test, test14) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0x4b4e;
     key.flow_lkp_metadata_lkp_dport = 0x5;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[3]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -887,7 +887,7 @@ TEST_F(flow_test, test15) {
 
     hal_ret_t rs;
     flow_hash_swkey key = {0};
-    flow_hash_actiondata data = {0};
+    flow_hash_actiondata_t data = {0};
     uint32_t flow_idx[9] = { 0 };
     std::srand ( unsigned ( std::time(0) ) );
     std::vector<int> myvector;
@@ -923,7 +923,7 @@ TEST_F(flow_test, test15) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xa277;
     key.flow_lkp_metadata_lkp_dport = 0x2;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[0]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -931,7 +931,7 @@ TEST_F(flow_test, test15) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0x3b01;
     key.flow_lkp_metadata_lkp_dport = 0x3;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[1]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -939,7 +939,7 @@ TEST_F(flow_test, test15) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xd238;
     key.flow_lkp_metadata_lkp_dport = 0x4;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[2]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -947,7 +947,7 @@ TEST_F(flow_test, test15) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0x4b4e;
     key.flow_lkp_metadata_lkp_dport = 0x5;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[3]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -955,7 +955,7 @@ TEST_F(flow_test, test15) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0;
     key.flow_lkp_metadata_lkp_dport = 0x36ad;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[4]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -982,7 +982,7 @@ TEST_F(flow_test, test16) {
 
     hal_ret_t rs;
     flow_hash_swkey key = {0};
-    flow_hash_actiondata data = {0};
+    flow_hash_actiondata_t data = {0};
     uint32_t flow_idx[9] = { 0 };
     unsigned seed = std::time(0);
     // unsigned seed = 1504501660;
@@ -1022,7 +1022,7 @@ TEST_F(flow_test, test16) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xa277;
     key.flow_lkp_metadata_lkp_dport = 0x2;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[0]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -1030,7 +1030,7 @@ TEST_F(flow_test, test16) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0x3b01;
     key.flow_lkp_metadata_lkp_dport = 0x3;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[1]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -1038,7 +1038,7 @@ TEST_F(flow_test, test16) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xd238;
     key.flow_lkp_metadata_lkp_dport = 0x4;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[2]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -1046,7 +1046,7 @@ TEST_F(flow_test, test16) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0x4b4e;
     key.flow_lkp_metadata_lkp_dport = 0x5;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[3]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -1054,7 +1054,7 @@ TEST_F(flow_test, test16) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0;
     key.flow_lkp_metadata_lkp_dport = 0x36ad;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[4]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -1062,7 +1062,7 @@ TEST_F(flow_test, test16) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 3;
     key.flow_lkp_metadata_lkp_dport = 0xd125;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[5]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -1070,7 +1070,7 @@ TEST_F(flow_test, test16) {
     key.flow_lkp_metadata_lkp_vrf = 0;
     key.flow_lkp_metadata_lkp_sport = 0;
     key.flow_lkp_metadata_lkp_dport = 0xc430;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[6]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -1078,7 +1078,7 @@ TEST_F(flow_test, test16) {
     key.flow_lkp_metadata_lkp_vrf = 1;
     key.flow_lkp_metadata_lkp_sport = 1;
     key.flow_lkp_metadata_lkp_dport = 0xc8c3;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[7]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -1098,7 +1098,7 @@ TEST_F(flow_test, test17) {
 
     hal_ret_t rs;
     flow_hash_swkey key = {0};
-    flow_hash_actiondata data = {0};
+    flow_hash_actiondata_t data = {0};
     uint32_t max = 11;
     uint32_t flow_idx[max] = { 0 };
     unsigned seed = std::time(0);
@@ -1139,7 +1139,7 @@ TEST_F(flow_test, test17) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xa277;
     key.flow_lkp_metadata_lkp_dport = 0x2;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[0]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -1147,7 +1147,7 @@ TEST_F(flow_test, test17) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0x3b01;
     key.flow_lkp_metadata_lkp_dport = 0x3;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[1]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -1155,7 +1155,7 @@ TEST_F(flow_test, test17) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0xd238;
     key.flow_lkp_metadata_lkp_dport = 0x4;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[2]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -1163,7 +1163,7 @@ TEST_F(flow_test, test17) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0x4b4e;
     key.flow_lkp_metadata_lkp_dport = 0x5;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[3]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -1171,7 +1171,7 @@ TEST_F(flow_test, test17) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 0;
     key.flow_lkp_metadata_lkp_dport = 0x36ad;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[4]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -1179,7 +1179,7 @@ TEST_F(flow_test, test17) {
     key.flow_lkp_metadata_lkp_vrf = 3;
     key.flow_lkp_metadata_lkp_sport = 3;
     key.flow_lkp_metadata_lkp_dport = 0xd125;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[5]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -1187,7 +1187,7 @@ TEST_F(flow_test, test17) {
     key.flow_lkp_metadata_lkp_vrf = 0;
     key.flow_lkp_metadata_lkp_sport = 0;
     key.flow_lkp_metadata_lkp_dport = 0xc430;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[6]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -1195,7 +1195,7 @@ TEST_F(flow_test, test17) {
     key.flow_lkp_metadata_lkp_vrf = 1;
     key.flow_lkp_metadata_lkp_sport = 1;
     key.flow_lkp_metadata_lkp_dport = 0xc8c3;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[7]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -1203,7 +1203,7 @@ TEST_F(flow_test, test17) {
     key.flow_lkp_metadata_lkp_vrf = 1;
     key.flow_lkp_metadata_lkp_sport = 2;
     key.flow_lkp_metadata_lkp_dport = 0x2f4b;
-    data.actionid = 0;
+    data.action_id = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[8]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
@@ -1265,7 +1265,7 @@ TEST_F(flow_test, DISABLED_test18) {
 
     hal_ret_t rs;
     flow_hash_swkey key = {0};
-    flow_hash_actiondata data = {0};
+    flow_hash_actiondata_t data = {0};
     uint32_t max = 10, count = 0;
     uint32_t flow_idx[max] = { 0 };
     unsigned seed = std::time(0);
@@ -1349,7 +1349,7 @@ TEST_F(flow_test, test19) {
 
     hal_ret_t rs;
     flow_hash_swkey key = {0};
-    flow_hash_actiondata data = {0};
+    flow_hash_actiondata_t data = {0};
     uint32_t max = 64000, count = 0;
     uint32_t flow_idx[max] = { 0 };
     uint32_t total_time = 0;
@@ -1446,7 +1446,7 @@ TEST_F(flow_test, test19) {
 TEST_F(flow_test, test20) {
 
     flow_hash_swkey key = {0};
-    flow_hash_actiondata data = {0};
+    flow_hash_actiondata_t data = {0};
     unsigned seed;
     // unsigned seed = std::time(0);
     // unsigned seed = 1531851844;

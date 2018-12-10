@@ -637,7 +637,7 @@ end:
 hal_ret_t
 pd_enicif_pgm_inp_prop_mac_vlan_entry(input_properties_mac_vlan_swkey_t *key,
                                       input_properties_mac_vlan_swkey_mask_t *mask,
-                                      input_properties_mac_vlan_actiondata *data,
+                                      input_properties_mac_vlan_actiondata_t *data,
                                       uint32_t *idx,
                                       table_oper_t oper)
 {
@@ -979,7 +979,7 @@ pd_enicif_get_pinned_uplink_for_inp_props(if_t *hal_if,
 // ----------------------------------------------------------------------------
 // Programming input properties table for classic nic
 // ----------------------------------------------------------------------------
-#define inp_prop data.input_properties_action_u.input_properties_input_properties
+#define inp_prop data.action_u.input_properties_input_properties
 hal_ret_t
 pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
                                 uint32_t upd_flags,
@@ -994,7 +994,7 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
     sdk_ret_t                               sdk_ret;
     input_properties_swkey_t                key;
     input_properties_otcam_swkey_mask_t     *key_mask = NULL;
-    input_properties_actiondata             data;
+    input_properties_actiondata_t             data;
     if_t                                    *hal_if = (if_t *)pd_enicif->pi_if;
     if_t                                    *uplink = NULL;
     lif_t                                   *lif = NULL;
@@ -1226,7 +1226,7 @@ pd_enicif_pd_repgm_inp_prop_l2seg(pd_if_args_t *args,
 {
     hal_ret_t                   ret = HAL_RET_OK;
     input_properties_swkey_t    key;
-    input_properties_actiondata data;
+    input_properties_actiondata_t data;
     if_t                        *hal_if = args->intf;
     if_t                        *uplink = NULL;
     pd_enicif_t                 *pd_enicif = (pd_enicif_t *)hal_if->pd_if;
@@ -1296,7 +1296,7 @@ pd_enicif_pd_depgm_inp_prop_l2seg(uint32_t inp_prop_idx)
     hal_ret_t                   ret = HAL_RET_OK;
     sdk_ret_t                   sdk_ret;
     input_properties_swkey_t    key;
-    input_properties_actiondata data;
+    input_properties_actiondata_t data;
     sdk_hash                    *inp_prop_tbl = NULL;
 
     memset(&key, 0, sizeof(key));
@@ -1392,8 +1392,8 @@ pd_enicif_lif_update(pd_if_lif_update_args_t *args)
 // ----------------------------------------------------------------------------
 // Program Output Mapping Table
 // ----------------------------------------------------------------------------
-#define om_tmoport data.output_mapping_action_u.output_mapping_set_tm_oport
-#define om_tmoport_enforce data.output_mapping_action_u.output_mapping_set_tm_oport_enforce_src_lport
+#define om_tmoport data.action_u.output_mapping_set_tm_oport
+#define om_tmoport_enforce data.action_u.output_mapping_set_tm_oport_enforce_src_lport
 hal_ret_t
 pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
                                     pd_if_update_args_t *args,
@@ -1404,7 +1404,7 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
     sdk_ret_t                   sdk_ret;
     uint8_t                     tm_oport            = 0;
     uint8_t                     p4plus_app_id       = 0;
-    output_mapping_actiondata   data;
+    output_mapping_actiondata_t   data;
     directmap                   *dm_omap            = NULL;
     pd_lif_t                    *pd_lif             = NULL;
     lif_t                       *lif                = NULL;
@@ -1458,12 +1458,12 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
         //    - EP create will result in creation of entry in Reg. MAC.
         //    - When filter itself is not there, EP will  not be created,
         //      packets to that EP will be sent only to promiscous lifs.
-        data.actionid = OUTPUT_MAPPING_OUTPUT_MAPPING_DROP_ID;
+        data.action_id = OUTPUT_MAPPING_OUTPUT_MAPPING_DROP_ID;
     } else {
 
         if (hal_if->enic_type == intf::IF_ENIC_TYPE_CLASSIC &&
             (lif && lif->type == types::LIF_TYPE_HOST_MANAGEMENT)) {
-            data.actionid = OUTPUT_MAPPING_SET_TM_OPORT_ENFORCE_SRC_LPORT_ID;
+            data.action_id = OUTPUT_MAPPING_SET_TM_OPORT_ENFORCE_SRC_LPORT_ID;
             om_tmoport_enforce.mnic_enforce_src_lport =
                 pd_lif_get_enic_lport(g_hal_state->mnic_internal_mgmt_lif_id());
             om_tmoport_enforce.nports              = 1;
@@ -1481,7 +1481,7 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
                                                                                lif_upd) : false;
             om_tmoport_enforce.access_vlan_id      = access_vlan_classic;
         } else {
-            data.actionid = OUTPUT_MAPPING_SET_TM_OPORT_ID;
+            data.action_id = OUTPUT_MAPPING_SET_TM_OPORT_ID;
             om_tmoport.nports              = 1;
             om_tmoport.egress_mirror_en    = 1;
             om_tmoport.egress_port1        = tm_oport;
@@ -1499,7 +1499,7 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
         }
     }
 
-    HAL_TRACE_DEBUG("Action: {}", data.actionid);
+    HAL_TRACE_DEBUG("Action: {}", data.action_id);
 
     dm_omap = g_hal_state_pd->dm_table(P4TBL_ID_OUTPUT_MAPPING);
     HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
@@ -1535,7 +1535,7 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
     return ret;
 }
 
-#define inp_prop_mac_vlan_data data.input_properties_mac_vlan_action_u.input_properties_mac_vlan_input_properties_mac_vlan
+#define inp_prop_mac_vlan_data data.action_u.input_properties_mac_vlan_input_properties_mac_vlan
 hal_ret_t
 pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif,
                                     pd_if_update_args_t *args,
@@ -1545,7 +1545,7 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif,
     hal_ret_t                                   ret = HAL_RET_OK;
     input_properties_mac_vlan_swkey_t           key;
     input_properties_mac_vlan_swkey_mask_t      mask;
-    input_properties_mac_vlan_actiondata        data;
+    input_properties_mac_vlan_actiondata_t        data;
     mac_addr_t                                  *mac = NULL;
     void                                        *pi_l2seg = NULL;
     types::encapType                            enc_type;
@@ -1689,7 +1689,7 @@ pd_enicif_inp_prop_form_data (pd_enicif_t *pd_enicif,
                               nwsec_profile_t *nwsec_prof,
                               pd_if_update_args_t *args,
                               pd_if_lif_update_args_t *lif_args,
-                              input_properties_mac_vlan_actiondata &data,
+                              input_properties_mac_vlan_actiondata_t &data,
                               bool host_entry)
 {
     pd_l2seg_t      *pd_l2seg = NULL;
@@ -1740,7 +1740,7 @@ pd_enicif_inp_prop_form_data (pd_enicif_t *pd_enicif,
             ipsg_en = nwsec_prof ? nwsec_prof->ipsg_en : 0;
         }
 
-        data.actionid = INPUT_PROPERTIES_MAC_VLAN_INPUT_PROPERTIES_MAC_VLAN_ID;
+        data.action_id = INPUT_PROPERTIES_MAC_VLAN_INPUT_PROPERTIES_MAC_VLAN_ID;
         inp_prop_mac_vlan_data.vrf = pd_l2seg->l2seg_fl_lkup_id;
         inp_prop_mac_vlan_data.dir = FLOW_DIR_FROM_DMA;
         // inp_prop_mac_vlan_data.ipsg_enable = if_enicif_get_ipsg_en((if_t *)pd_enicif->pi_if);
@@ -1781,7 +1781,7 @@ pd_enicif_upd_inp_prop_mac_vlan_tbl (pd_enicif_t *pd_enicif,
     lif_t                                       *lif = NULL;
     if_t                                        *hal_if =
                                                 (if_t *)pd_enicif->pi_if;
-    input_properties_mac_vlan_actiondata        data;
+    input_properties_mac_vlan_actiondata_t        data;
     tcam                                        *inp_prop_mac_vlan_tbl = NULL;
 
     lif = if_get_lif(hal_if);

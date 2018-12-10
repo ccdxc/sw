@@ -132,7 +132,7 @@ pd_enicif_inp_prop_form_data (pd_enicif_t *pd_enicif,
                               nwsec_profile_t *nwsec_prof,
                               pd_if_update_args_t *args,
                               pd_if_lif_update_args_t *lif_args,
-                              input_properties_mac_vlan_actiondata &data,
+                              input_properties_mac_vlan_actiondata_t &data,
                               bool host_entry);
 hal_ret_t pd_enicif_lif_update(pd_if_lif_update_args_t *args);
 hal_ret_t

@@ -536,7 +536,7 @@ qos_class_pd_program_scheduler (pd_qos_class_t *pd_qos_class)
     return HAL_RET_OK;
 }
 
-#define QOS_ACTION(_arg) d.qos_action_u.qos_qos._arg
+#define QOS_ACTION(_arg) d.action_u.qos_qos._arg
 static hal_ret_t
 qos_class_pd_program_qos_table (pd_qos_class_t *pd_qos_class)
 {
@@ -544,7 +544,7 @@ qos_class_pd_program_qos_table (pd_qos_class_t *pd_qos_class)
     sdk_ret_t      sdk_ret;
     qos_class_t    *qos_class = pd_qos_class->pi_qos_class;
     directmap      *qos_tbl = NULL;
-    qos_actiondata d;
+    qos_actiondata_t d;
     uint32_t       qos_class_id;
 
     qos_tbl = g_hal_state_pd->dm_table(P4TBL_ID_QOS);

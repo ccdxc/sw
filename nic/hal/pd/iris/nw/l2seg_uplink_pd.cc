@@ -84,7 +84,7 @@ l2seg_uplink_deprogram_hw(pd_del_l2seg_uplink_args_t *args)
 // ----------------------------------------------------------------------------
 // Program input properties table
 // ----------------------------------------------------------------------------
-#define inp_prop data.input_properties_action_u.input_properties_input_properties
+#define inp_prop data.action_u.input_properties_input_properties
 hal_ret_t
 l2seg_uplink_pgm_input_properties_tbl(pd_add_l2seg_uplink_args_t *args)
 {
@@ -99,7 +99,7 @@ l2seg_uplink_pgm_input_properties_tbl(pd_add_l2seg_uplink_args_t *args)
     l2seg_t                                 *infra_pi_l2seg = NULL;
     input_properties_swkey_t                key;
     input_properties_otcam_swkey_mask_t     *key_mask = NULL;
-    input_properties_actiondata             data;
+    input_properties_actiondata_t             data;
     bool                                    direct_to_otcam = false;
 
     memset(&key, 0, sizeof(key));
@@ -296,7 +296,7 @@ l2seg_uplink_inp_prop_form_data (pd_add_l2seg_uplink_args_t *args,
                                  nwsec_profile_t *nwsec_prof,
                                  uint32_t num_prom_lifs,
                                  if_t *prom_enic_if,
-                                 input_properties_actiondata &data)
+                                 input_properties_actiondata_t &data)
 {
     hal_ret_t           ret = HAL_RET_OK;
     pd_l2seg_t          *l2seg_pd;
@@ -394,7 +394,7 @@ l2seg_uplink_upd_input_properties_tbl (pd_add_l2seg_uplink_args_t *args,
     bool                        is_native = FALSE;
     uint32_t                    uplink_ifpc_id = 0;
     sdk_hash                    *inp_prop_tbl = NULL;
-    input_properties_actiondata data;
+    input_properties_actiondata_t data;
 
     l2seg_uplink_inp_prop_form_data(args, upd_flags, nwsec_prof,
                                     num_prom_lifs, prom_enic_if, data);

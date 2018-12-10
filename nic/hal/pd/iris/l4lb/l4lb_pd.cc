@@ -145,7 +145,7 @@ l4lb_pd_pgm_rw_tbl(pd_l4lb_t *pd_l4lb)
     hal_ret_t            ret = HAL_RET_OK;
     sdk_ret_t            sdk_ret;
     mac_addr_t           mac_sa, mac_da;
-    rewrite_actiondata   data;
+    rewrite_actiondata_t   data;
     directmap            *rw_tbl = NULL;
     mac_addr_t           *mac;
     l4lb_service_entry_t *pi_l4lb = (l4lb_service_entry_t *)pd_l4lb->pi_l4lb;
@@ -183,13 +183,13 @@ l4lb_pd_pgm_rw_tbl(pd_l4lb_t *pd_l4lb)
             case REWRITE_IPV6_TWICE_NAT_REWRITE_ID:
             case REWRITE_IPV6_TWICE_NAT_UDP_REWRITE_ID:
             case REWRITE_IPV6_TWICE_NAT_TCP_REWRITE_ID:
-                memcpy(data.rewrite_action_u.rewrite_rewrite.mac_sa, *mac, 6);
-                memrev(data.rewrite_action_u.rewrite_rewrite.mac_sa, 6);
+                memcpy(data.action_u.rewrite_rewrite.mac_sa, *mac, 6);
+                memrev(data.action_u.rewrite_rewrite.mac_sa, 6);
                 break;
             default:
                 HAL_ASSERT(0);
         }
-        data.actionid = i;
+        data.action_id = i;
         sdk_ret = rw_tbl->insert(&data, &(pd_l4lb->rw_tbl_idx[i]));
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {

@@ -81,7 +81,7 @@ pd_enicif_pgm_tx_vport(pd_enicif_t *pd_enicif, table_oper_t oper)
     sdk_ret_t               sdk_ret;
     tx_vport_swkey_t        key;
     tx_vport_swkey_mask_t   mask;
-    tx_vport_actiondata     data;
+    tx_vport_actiondata_t     data;
     mac_addr_t              *mac = NULL;
     tcam                    *tx_vport_tbl = NULL;
 
@@ -103,7 +103,7 @@ pd_enicif_pgm_tx_vport(pd_enicif_t *pd_enicif, table_oper_t oper)
 
 
     // data
-    data.tx_vport_action_u.tx_vport_tx_vport.port = TM_PORT_INGRESS;
+    data.action_u.tx_vport_tx_vport.port = TM_PORT_INGRESS;
 
     if (oper == TABLE_OPER_INSERT) {
         sdk_ret = tx_vport_tbl->insert(&key, &mask, &data,
@@ -145,7 +145,7 @@ pd_enicif_pgm_rx_vport (pd_enicif_t *pd_enicif, table_oper_t oper)
     sdk_ret_t               sdk_ret;
     rx_vport_swkey_t        key;
     rx_vport_swkey_mask_t   mask;
-    rx_vport_actiondata     data;
+    rx_vport_actiondata_t     data;
     mac_addr_t              *mac = NULL;
     tcam                    *rx_vport_tbl = NULL;
     pd_lif_t                *pd_lif             = NULL;
@@ -176,9 +176,9 @@ pd_enicif_pgm_rx_vport (pd_enicif_t *pd_enicif, table_oper_t oper)
         HAL_TRACE_ERR("unable to get hw_lif_id ret: {}", ret);
         goto end;
     }
-    data.rx_vport_action_u.rx_vport_rx_vport.vport = hw_lif_id;
-    data.rx_vport_action_u.rx_vport_rx_vport.tm_oport = TM_PORT_DMA;
-    data.rx_vport_action_u.rx_vport_rx_vport.rdma_enabled =
+    data.action_u.rx_vport_rx_vport.vport = hw_lif_id;
+    data.action_u.rx_vport_rx_vport.tm_oport = TM_PORT_DMA;
+    data.action_u.rx_vport_rx_vport.rdma_enabled =
          pd_lif ? lif_get_enable_rdma((lif_t *)pd_lif->pi_lif) : false;
 
     if (oper == TABLE_OPER_INSERT) {

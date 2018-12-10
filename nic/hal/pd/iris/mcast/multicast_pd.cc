@@ -36,7 +36,7 @@ mc_entry_delink_pi_pd(pd_mc_entry_t *pd_mc_entry, mc_entry_t *pi_mc_entry)
     }
 }
 
-#define registered_mac_data data.registered_macs_action_u.registered_macs_registered_macs
+#define registered_mac_data data.action_u.registered_macs_registered_macs
 
 hal_ret_t
 pd_mc_entry_pgm_registered_mac(pd_mc_entry_t *pd_mc_entry, table_oper_t oper)
@@ -44,7 +44,7 @@ pd_mc_entry_pgm_registered_mac(pd_mc_entry_t *pd_mc_entry, table_oper_t oper)
     hal_ret_t                       ret  = HAL_RET_OK;
     sdk_ret_t                       sdk_ret;
     registered_macs_swkey_t         key  = { 0 };
-    registered_macs_actiondata      data = { 0 };
+    registered_macs_actiondata_t      data = { 0 };
     sdk_hash                        *reg_mac_tbl = NULL;
     mc_entry_t                      *pi_mc_entry = (mc_entry_t *)pd_mc_entry->mc_entry;
     l2seg_t                         *l2seg = NULL;
@@ -66,7 +66,7 @@ pd_mc_entry_pgm_registered_mac(pd_mc_entry_t *pd_mc_entry, table_oper_t oper)
     memrev(key.flow_lkp_metadata_lkp_dstMacAddr, 6);
 
     // dst_lport
-    data.actionid = REGISTERED_MACS_REGISTERED_MACS_ID;
+    data.action_id = REGISTERED_MACS_REGISTERED_MACS_ID;
     registered_mac_data.multicast_en = (uint8_t)TRUE;
     registered_mac_data.dst_lport = (uint16_t) pi_mc_entry->oif_list;
 

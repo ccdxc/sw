@@ -520,21 +520,21 @@ uplinkif_pd_pgm_tm_register(pd_uplinkif_t *pd_upif)
 // ----------------------------------------------------------------------------
 // Program Output Mapping Table
 // ----------------------------------------------------------------------------
-#define om_tmoport data.output_mapping_action_u.output_mapping_set_tm_oport
+#define om_tmoport data.action_u.output_mapping_set_tm_oport
 hal_ret_t
 uplinkif_pd_pgm_output_mapping_tbl(pd_uplinkif_t *pd_upif)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     sdk_ret_t                   sdk_ret;
     uint8_t                     tm_oport = 0;
-    output_mapping_actiondata   data;
+    output_mapping_actiondata_t   data;
     directmap                   *dm_omap = NULL;
 
     memset(&data, 0, sizeof(data));
 
     tm_oport = uplinkif_get_port_num((if_t *)(pd_upif->pi_if));
 
-    data.actionid = OUTPUT_MAPPING_SET_TM_OPORT_ID;
+    data.action_id = OUTPUT_MAPPING_SET_TM_OPORT_ID;
     om_tmoport.nports = 1;
     om_tmoport.egress_mirror_en = 1;
     om_tmoport.egress_port1 = tm_oport;

@@ -586,14 +586,14 @@ uplinkpc_pd_pgm_tm_register_per_upif(pd_uplinkpc_t *pd_uppc,
     return ret;
 }
 
-#define om_tmoport data.output_mapping_action_u.output_mapping_set_tm_oport
+#define om_tmoport data.action_u.output_mapping_set_tm_oport
 
 // ----------------------------------------------------------------------------
 // Form info for Output Mapping Table
 // ----------------------------------------------------------------------------
 hal_ret_t
 uplinkpc_pd_form_mbr_info_omap_table (block_list *mbr_list,
-                                      output_mapping_actiondata &data)
+                                      output_mapping_actiondata_t &data)
 {
     uint8_t                     *tm_oport = NULL;
     if_t                        *pi_up_if = NULL;
@@ -624,7 +624,7 @@ uplinkpc_pd_pgm_output_mapping_tbl(pd_uplinkpc_t *pd_uppcif,
     sdk_ret_t                   sdk_ret;
     // uint8_t                     *tm_oport = NULL;
     // if_t                        *pi_if = NULL, *pi_up_if = NULL;
-    output_mapping_actiondata   data;
+    output_mapping_actiondata_t   data;
     directmap                   *dm_omap = NULL;
     // dllist_ctxt_t               *curr, *next;
     // hal_handle_id_list_entry_t  *entry = NULL;
@@ -634,7 +634,7 @@ uplinkpc_pd_pgm_output_mapping_tbl(pd_uplinkpc_t *pd_uppcif,
 
     // pi_if = (if_t *)(pd_uppcif->pi_if);
 
-    data.actionid = OUTPUT_MAPPING_SET_TM_OPORT_ID;
+    data.action_id = OUTPUT_MAPPING_SET_TM_OPORT_ID;
     om_tmoport.nports = 0;
     om_tmoport.egress_mirror_en = 1;
 

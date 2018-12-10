@@ -219,7 +219,7 @@ ep_pd_pgm_tx_vport (pd_ep_t *pd_ep, table_oper_t oper)
     sdk_ret_t               sdk_ret;
     tx_vport_swkey_t        key;
     tx_vport_swkey_mask_t   mask;
-    tx_vport_actiondata     data;
+    tx_vport_actiondata_t     data;
     mac_addr_t              *mac = NULL;
     tcam                    *tx_vport_tbl = NULL;
     ep_t                    *pi_ep = (ep_t *)pd_ep->pi_ep;
@@ -246,10 +246,10 @@ ep_pd_pgm_tx_vport (pd_ep_t *pd_ep, table_oper_t oper)
     memset(mask.flow_action_metadata_tx_ethernet_dst_mask, 0xFF, 6);
 
     if_get_hw_lif_id(pi_if, &hw_lif_id);
-    // data.tx_vport_action_u.tx_vport_tx_vport.port = hw_lif_id;
-    data.tx_vport_action_u.tx_vport_tx_vport.port = uplinkif_get_port_num(pi_if);
+    // data.action_u.tx_vport_tx_vport.port = hw_lif_id;
+    data.action_u.tx_vport_tx_vport.port = uplinkif_get_port_num(pi_if);
     // TODO: Take it from config
-    // data.rx_vport_action_u.rx_vport_rx_vport.rdma_enabled = 1;
+    // data.action_u.rx_vport_rx_vport.rdma_enabled = 1;
 
     if (oper == TABLE_OPER_INSERT) {
         sdk_ret = tx_vport_tbl->insert(&key, &mask, &data,
@@ -292,7 +292,7 @@ ep_pd_pgm_rx_vport (pd_ep_t *pd_ep, table_oper_t oper)
     sdk_ret_t               sdk_ret;
     rx_vport_swkey_t        key;
     rx_vport_swkey_mask_t   mask;
-    rx_vport_actiondata     data;
+    rx_vport_actiondata_t     data;
     mac_addr_t              *mac = NULL;
     tcam                    *rx_vport_tbl = NULL;
     if_t                    *pi_if = NULL;
@@ -324,10 +324,10 @@ ep_pd_pgm_rx_vport (pd_ep_t *pd_ep, table_oper_t oper)
         HAL_TRACE_ERR("unable to get hw_lif_id ret: {}", ret);
         goto end;
     }
-    data.rx_vport_action_u.rx_vport_rx_vport.vport = hw_lif_id;
-    data.rx_vport_action_u.rx_vport_rx_vport.tm_oport =
+    data.action_u.rx_vport_rx_vport.vport = hw_lif_id;
+    data.action_u.rx_vport_rx_vport.tm_oport =
         uplinkif_get_port_num(pi_if);
-    data.rx_vport_action_u.rx_vport_rx_vport.rdma_enabled = 0;
+    data.action_u.rx_vport_rx_vport.rdma_enabled = 0;
 
     if (oper == TABLE_OPER_INSERT) {
         sdk_ret = rx_vport_tbl->insert(&key, &mask, &data,

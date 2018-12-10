@@ -18,7 +18,7 @@
 namespace hal {
 namespace pd {
 
-#define inp_prop data.input_properties_action_u.input_properties_input_properties
+#define inp_prop data.action_u.input_properties_input_properties
 
 hal_ret_t l2seg_pd_alloc_res(pd_l2seg_t *pd_l2seg);
 hal_ret_t l2seg_pd_alloc_cpuid(pd_l2seg_t *pd_l2seg);
@@ -560,7 +560,7 @@ l2seg_uplink_inp_prop_form_data (l2seg_t *l2seg, if_t *hal_if,
                                  nwsec_profile_t *nwsec_prof,
                                  uint32_t num_prom_lifs,
                                  if_t *prom_enic_if,
-                                 input_properties_actiondata &data)
+                                 input_properties_actiondata_t &data)
 {
     hal_ret_t           ret = HAL_RET_OK;
     pd_l2seg_t          *l2seg_pd;
@@ -652,7 +652,7 @@ l2seg_uplink_inp_prop_form_data (l2seg_t *l2seg, if_t *hal_if,
 // ----------------------------------------------------------------------------
 // Program input properties table
 // ----------------------------------------------------------------------------
-#define inp_prop data.input_properties_action_u.input_properties_input_properties
+#define inp_prop data.action_u.input_properties_input_properties
 hal_ret_t
 l2seg_uplink_pgm_input_properties_tbl(l2seg_t *l2seg, if_t *hal_if,
                                       bool is_upgrade)
@@ -668,7 +668,7 @@ l2seg_uplink_pgm_input_properties_tbl(l2seg_t *l2seg, if_t *hal_if,
     l2seg_t                                 *infra_pi_l2seg = NULL;
     input_properties_swkey_t                key;
     input_properties_otcam_swkey_mask_t     *key_mask = NULL;
-    input_properties_actiondata             data;
+    input_properties_actiondata_t             data;
     bool                                    direct_to_otcam = false;
 
     memset(&key, 0, sizeof(key));
@@ -900,7 +900,7 @@ l2seg_pd_pgm_inp_prop_tbl (pd_l2seg_t *l2seg_pd, bool is_upgrade)
     hal_ret_t                   ret           = HAL_RET_OK;
     sdk_hash                    *inp_prop_tbl = NULL;
     input_properties_swkey_t    key           = { 0 };
-    input_properties_actiondata data          = { 0 };
+    input_properties_actiondata_t data          = { 0 };
     l2seg_t                     *l2seg        = (l2seg_t *)l2seg_pd->l2seg;
     nwsec_profile_t             *nwsec_prof   = NULL;
 

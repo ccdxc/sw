@@ -24,7 +24,7 @@ l2seg_uplink_inp_prop_form_data (pd_add_l2seg_uplink_args_t *args,
                                  nwsec_profile_t *nwsec_prof,
                                  uint32_t num_prom_lifs,
                                  if_t *prom_enic_if,
-                                 input_properties_actiondata &data);
+                                 input_properties_actiondata_t &data);
 
 hal_ret_t l2seg_uplink_deprogram_hw(pd_del_l2seg_uplink_args_t *args);
 hal_ret_t

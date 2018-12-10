@@ -24,7 +24,7 @@ thread_local void *t_clock_rollover_timer = NULL;
 #define NS_TO_HW_CLOCK_TICK(x)         (x / 1.200)
 
 static hal_ret_t
-pd_system_drop_stats_set (int id, drop_stats_actiondata *data)
+pd_system_drop_stats_set (int id, drop_stats_actiondata_t *data)
 {
     hal_ret_t                ret;
     sdk_ret_t                sdk_ret;
@@ -33,7 +33,7 @@ pd_system_drop_stats_set (int id, drop_stats_actiondata *data)
     tcam = g_hal_state_pd->tcam_table(P4TBL_ID_DROP_STATS);
     HAL_ASSERT(tcam != NULL);
 
-    data->actionid = DROP_STATS_DROP_STATS_ID;
+    data->action_id = DROP_STATS_DROP_STATS_ID;
     sdk_ret = tcam->update(id, data);
     if (sdk_ret != sdk::SDK_RET_OK) {
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -52,7 +52,7 @@ pd_system_clear_drop_stats (uint8_t idx)
     tcam                    *tcam;
     drop_stats_swkey         key = { 0 };
     drop_stats_swkey_mask    key_mask = { 0 };
-    drop_stats_actiondata    data = { 0 };
+    drop_stats_actiondata_t    data = { 0 };
 
     tcam = g_hal_state_pd->tcam_table(P4TBL_ID_DROP_STATS);
     HAL_ASSERT(tcam != NULL);
@@ -68,8 +68,8 @@ pd_system_clear_drop_stats (uint8_t idx)
 
     // Reset drop_pkts field in data
     if (!key.entry_inactive_drop_stats) {
-        memset(data.drop_stats_action_u.drop_stats_drop_stats.drop_pkts,
-               0, sizeof(data.drop_stats_action_u.drop_stats_drop_stats.drop_pkts));
+        memset(data.action_u.drop_stats_drop_stats.drop_pkts,
+               0, sizeof(data.action_u.drop_stats_drop_stats.drop_pkts));
         
         ret = pd_system_drop_stats_set(idx, &data);
         if (ret != HAL_RET_OK) {
@@ -91,7 +91,7 @@ pd_system_populate_drop_stats (DropStatsEntry *stats_entry, uint8_t idx)
     tcam                    *tcam;
     drop_stats_swkey         key = { 0 };
     drop_stats_swkey_mask    key_mask = { 0 };
-    drop_stats_actiondata    data = { 0 };
+    drop_stats_actiondata_t    data = { 0 };
 
     tcam = g_hal_state_pd->tcam_table(P4TBL_ID_DROP_STATS);
     HAL_ASSERT(tcam != NULL);
@@ -158,7 +158,7 @@ pd_drop_stats_get (pd_func_args_t *pd_func_args)
 
 hal_ret_t
 pd_system_egress_drop_decode (egress_drop_stats_swkey *key, egress_drop_stats_swkey_mask *key_mask,
-                              egress_drop_stats_actiondata *data, EgressDropStatsEntry *stats_entry)
+                              egress_drop_stats_actiondata_t *data, EgressDropStatsEntry *stats_entry)
 {
     hal_ret_t   ret = HAL_RET_OK;
     uint64_t drop_reason, drop_reason_mask;
@@ -186,8 +186,8 @@ pd_system_egress_drop_decode (egress_drop_stats_swkey *key, egress_drop_stats_sw
 
     uint64_t drop_stats_pkts = 0;
     memcpy(&drop_stats_pkts,
-           data->egress_drop_stats_action_u.egress_drop_stats_egress_drop_stats.drop_pkts,
-           sizeof(data->egress_drop_stats_action_u.egress_drop_stats_egress_drop_stats.drop_pkts));
+           data->action_u.egress_drop_stats_egress_drop_stats.drop_pkts,
+           sizeof(data->action_u.egress_drop_stats_egress_drop_stats.drop_pkts));
     stats_entry->set_drop_count(drop_stats_pkts);
 
     return ret;
@@ -201,7 +201,7 @@ pd_system_populate_egress_drop_stats (EgressDropStatsEntry *stats_entry, uint8_t
     tcam                            *tcam;
     egress_drop_stats_swkey         key = { 0 };
     egress_drop_stats_swkey_mask    key_mask = { 0 };
-    egress_drop_stats_actiondata    data = { 0 };
+    egress_drop_stats_actiondata_t    data = { 0 };
 
     tcam = g_hal_state_pd->tcam_table(P4TBL_ID_EGRESS_DROP_STATS);
     HAL_ASSERT(tcam != NULL);
@@ -251,7 +251,7 @@ pd_egress_drop_stats_get (pd_func_args_t *pd_func_args)
 }
 
 static hal_ret_t
-pd_system_egress_drop_stats_set (int id, egress_drop_stats_actiondata *data)
+pd_system_egress_drop_stats_set (int id, egress_drop_stats_actiondata_t *data)
 {
     hal_ret_t                ret;
     sdk_ret_t                sdk_ret;
@@ -260,7 +260,7 @@ pd_system_egress_drop_stats_set (int id, egress_drop_stats_actiondata *data)
     tcam = g_hal_state_pd->tcam_table(P4TBL_ID_EGRESS_DROP_STATS);
     HAL_ASSERT(tcam != NULL);
 
-    data->actionid = EGRESS_DROP_STATS_EGRESS_DROP_STATS_ID;
+    data->action_id = EGRESS_DROP_STATS_EGRESS_DROP_STATS_ID;
     sdk_ret = tcam->update(id, data);
     if (sdk_ret != sdk::SDK_RET_OK) {
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -279,7 +279,7 @@ pd_system_clear_egress_drop_stats (uint8_t idx)
     tcam                            *tcam;
     egress_drop_stats_swkey         key = { 0 };
     egress_drop_stats_swkey_mask    key_mask = { 0 };
-    egress_drop_stats_actiondata    data = { 0 };
+    egress_drop_stats_actiondata_t    data = { 0 };
 
     tcam = g_hal_state_pd->tcam_table(P4TBL_ID_EGRESS_DROP_STATS);
     HAL_ASSERT(tcam != NULL);
@@ -294,8 +294,8 @@ pd_system_clear_egress_drop_stats (uint8_t idx)
     }
 
     // Reset drop_pkts field in data
-    memset(data.egress_drop_stats_action_u.egress_drop_stats_egress_drop_stats.drop_pkts,
-           0, sizeof(data.egress_drop_stats_action_u.egress_drop_stats_egress_drop_stats.drop_pkts));
+    memset(data.action_u.egress_drop_stats_egress_drop_stats.drop_pkts,
+           0, sizeof(data.action_u.egress_drop_stats_egress_drop_stats.drop_pkts));
         
     ret = pd_system_egress_drop_stats_set(idx, &data);
     if (ret != HAL_RET_OK) {
@@ -372,7 +372,7 @@ hbm_get_addr_for_stat_index (p4pd_table_id table_id,
 
 hal_ret_t
 pd_system_decode (drop_stats_swkey *key, drop_stats_swkey_mask *key_mask,
-                  drop_stats_actiondata *data, DropStatsEntry *stats_entry)
+                  drop_stats_actiondata_t *data, DropStatsEntry *stats_entry)
 {
     hal_ret_t   ret = HAL_RET_OK;
     uint64_t drop_reason, drop_reason_mask;
@@ -436,8 +436,8 @@ pd_system_decode (drop_stats_swkey *key, drop_stats_swkey_mask *key_mask,
 
     uint64_t drop_stats_pkts = 0;
     memcpy(&drop_stats_pkts,
-           data->drop_stats_action_u.drop_stats_drop_stats.drop_pkts,
-           sizeof(data->drop_stats_action_u.drop_stats_drop_stats.drop_pkts));
+           data->action_u.drop_stats_drop_stats.drop_pkts,
+           sizeof(data->action_u.drop_stats_drop_stats.drop_pkts));
     stats_entry->set_drop_count(drop_stats_pkts);
 
     return ret;
