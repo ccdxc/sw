@@ -56,51 +56,64 @@ pprint_service_info(const struct service_info *svc_info)
 			(uint64_t) svc_info->si_status_desc);
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_istatus_desc",
 			(uint64_t) svc_info->si_istatus_desc);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_bof_desc",
+			(uint64_t) svc_info->si_bof_desc);
 
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_src_sgl",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_src_sgl",
 			(uint64_t) svc_info->si_src_sgl.sgl);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_dst_sgl",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_dst_sgl",
 			(uint64_t) svc_info->si_dst_sgl.sgl);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_src_aol",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_bof_sgl",
+			(uint64_t) svc_info->si_bof_sgl.sgl);
+
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_src_aol",
 			(uint64_t) svc_info->si_src_aol.aol);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_dst_aol",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_dst_aol",
 			(uint64_t) svc_info->si_dst_aol.aol);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_p4_sgl",
+
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_p4_sgl",
 			(uint64_t) svc_info->si_p4_sgl);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_p4_bof_sgl",
+			(uint64_t) svc_info->si_p4_bof_sgl);
 
-	OSAL_LOG_DEBUG("%30s: %u", "=== si_iblist count",
-			svc_info->si_iblist.blist.count);
-
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_src_blist.type",
-			(uint64_t) svc_info->si_src_blist.type);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_src_blist.len",
-			(uint64_t) svc_info->si_src_blist.len);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_src_blist",
-			(uint64_t) svc_info->si_src_blist.blist);
-
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_dst_blist.type",
-			(uint64_t) svc_info->si_dst_blist.type);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_dst_blist.len",
-			(uint64_t) svc_info->si_dst_blist.len);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_dst_blist",
-			(uint64_t) svc_info->si_dst_blist.blist);
-
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_sgl_pdma",
-			(uint64_t) svc_info->si_sgl_pdma);
-
-	OSAL_LOG_DEBUG("%30s: %d", "sbi_num_entries",
+	OSAL_LOG_DEBUG("%30s: %d", "=== sbi_num_entries",
 			svc_info->si_batch_info.sbi_num_entries);
 	OSAL_LOG_DEBUG("%30s: %d", "sbi_bulk_desc_idx",
 			svc_info->si_batch_info.sbi_bulk_desc_idx);
 	OSAL_LOG_DEBUG("%30s: %d", "sbi_desc_idx",
 			svc_info->si_batch_info.sbi_desc_idx);
 
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_pcr",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_pcr",
 			(uint64_t) svc_info->si_pcr);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_centry",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_centry",
 			(uint64_t) svc_info->si_centry);
 
-	/* TODO-chain: include service status and other members */
+	OSAL_LOG_DEBUG("%30s: %u", "si_iblist count",
+			svc_info->si_iblist.blist.count);
+
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_src_blist.type",
+			(uint64_t) svc_info->si_src_blist.type);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_src_blist.len",
+			(uint64_t) svc_info->si_src_blist.len);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_src_blist",
+			(uint64_t) svc_info->si_src_blist.blist);
+
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_dst_blist.type",
+			(uint64_t) svc_info->si_dst_blist.type);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_dst_blist.len",
+			(uint64_t) svc_info->si_dst_blist.len);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_dst_blist",
+			(uint64_t) svc_info->si_dst_blist.blist);
+
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_bof_blist.type",
+			(uint64_t) svc_info->si_bof_blist.type);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_bof_blist.len",
+			(uint64_t) svc_info->si_bof_blist.len);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_bof_blist",
+			(uint64_t) svc_info->si_bof_blist.blist);
+
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_sgl_pdma",
+			(uint64_t) svc_info->si_sgl_pdma);
 }
 
 static void __attribute__((unused))
@@ -414,6 +427,9 @@ init_service_params(const struct pnso_service_request *svc_req,
 		break;
 	case PNSO_SVC_TYPE_COMPRESS:
 		svc_params->u.sp_cp_desc = &pnso_svc->u.cp_desc;
+		if (svc_params->u.sp_cp_desc->flags &
+				PNSO_CP_DFLAG_BYPASS_ONFAIL)
+			svc_params->sp_bof_blist = svc_req->sgl;
 		break;
 	case PNSO_SVC_TYPE_DECOMPRESS:
 		svc_params->u.sp_dc_desc = &pnso_svc->u.dc_desc;
@@ -521,6 +537,13 @@ init_service_info(enum pnso_service_type svc_type,
 	svc_info->si_dst_blist.len =
 		pbuf_get_buffer_list_len(svc_params->sp_dst_blist);
 
+	if (svc_params->sp_bof_blist) {
+		svc_info->si_bof_blist.type = SERVICE_BUF_LIST_TYPE_DFLT;
+		svc_info->si_bof_blist.blist = svc_params->sp_src_blist;
+		svc_info->si_bof_blist.len =
+			pbuf_get_buffer_list_len(svc_params->sp_src_blist);
+	}
+
 	return PNSO_OK;
 }
 
@@ -594,7 +617,7 @@ set_chain_mode(uint16_t mode_flags, uint16_t *flags)
 }
 
 static inline void
-set_service_mode(uint16_t mode_flags, uint8_t *flags)
+set_service_mode(uint16_t mode_flags, uint16_t *flags)
 {
 	if (mode_flags & REQUEST_RFLAG_MODE_SYNC)
 		*flags |= CHAIN_SFLAG_MODE_SYNC;

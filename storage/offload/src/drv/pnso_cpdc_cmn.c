@@ -29,7 +29,6 @@
 /*
  * TODO:
  *	- add additional UTs for read/write status/result, as needed
- *	- handle PNSO_CP_DFLAG_BYPASS_ONFAIL fully
  *	- reuse/common code (write_result, read_status, cpdc_setup_batch_desc)
  *
  */
@@ -338,6 +337,17 @@ get_desc(struct per_core_resource *pcr, bool per_block)
 }
 
 static struct cpdc_desc *
+get_bo_desc(struct per_core_resource *pcr, bool per_block)
+{
+	struct mem_pool *mpool;
+
+	mpool = per_block ? pcr->mpools[MPOOL_TYPE_CPDC_DESC_BO_PB_VECTOR] :
+		pcr->mpools[MPOOL_TYPE_CPDC_DESC_BO_VECTOR];
+
+	return (struct cpdc_desc *) mpool_get_object(mpool);
+}
+
+static struct cpdc_desc *
 get_batch_desc(struct service_info *svc_info)
 {
 	struct service_batch_info *svc_batch_info;
@@ -384,16 +394,12 @@ get_batch_desc(struct service_info *svc_info)
 struct cpdc_desc *
 cpdc_get_desc(struct service_info *svc_info, bool per_block)
 {
-	struct cpdc_desc *desc;
-	bool in_batch = false;
-
 	if (is_bulk_desc_in_use(svc_info->si_flags))
-		in_batch = true;
+		return get_batch_desc(svc_info);
 
-	desc = in_batch ? get_batch_desc(svc_info) :
+	return (svc_info->si_flags & CHAIN_SFLAG_BYPASS_ONFAIL) ?
+		get_bo_desc(svc_info->si_pcr, per_block) :
 		get_desc(svc_info->si_pcr, per_block);
-
-	return desc;
 }
 
 /* 'batch' is the caller, not the services ... */
@@ -423,6 +429,18 @@ put_desc(struct per_core_resource *pcr, bool per_block, struct cpdc_desc *desc)
 }
 
 static void
+put_bo_desc(struct per_core_resource *pcr, bool per_block,
+		struct cpdc_desc *desc)
+{
+	struct mem_pool *mpool;
+
+	mpool = per_block ? pcr->mpools[MPOOL_TYPE_CPDC_DESC_BO_PB_VECTOR] :
+		pcr->mpools[MPOOL_TYPE_CPDC_DESC_BO_VECTOR];
+
+	mpool_put_object(mpool, desc);
+}
+
+static void
 put_batch_desc(const struct service_info *svc_info, struct cpdc_desc *desc)
 {
 	struct service_batch_info *svc_batch_info;
@@ -442,13 +460,13 @@ void
 cpdc_put_desc(const struct service_info *svc_info, bool per_block,
 		struct cpdc_desc *desc)
 {
-	bool in_batch = false;
-
-	if (is_bulk_desc_in_use(svc_info->si_flags))
-		in_batch = true;
-
-	if (in_batch)
+	if (is_bulk_desc_in_use(svc_info->si_flags)) {
 		put_batch_desc(svc_info, desc);
+		return;
+	}
+
+	if (svc_info->si_flags & CHAIN_SFLAG_BYPASS_ONFAIL)
+		put_bo_desc(svc_info->si_pcr, per_block, desc);
 	else
 		put_desc(svc_info->si_pcr, per_block, desc);
 }
@@ -584,6 +602,20 @@ cpdc_update_service_info_sgl(struct service_info *svc_info)
 	return err;
 }
 
+pnso_error_t
+cpdc_update_service_info_bof_sgl(struct service_info *svc_info)
+{
+	pnso_error_t err;
+
+	err = pc_res_sgl_packed_get(svc_info->si_pcr, &svc_info->si_bof_blist,
+			CPDC_SGL_TUPLE_LEN_MAX, MPOOL_TYPE_CPDC_SGL,
+			&svc_info->si_bof_sgl);
+	if (err)
+		OSAL_LOG_ERROR("cannot obtain bof sgl from pool! err: %d", err);
+
+	return err;
+}
+
 uint32_t
 cpdc_fill_per_block_desc(uint32_t algo_type, uint32_t block_size,
 		uint32_t src_buf_len, struct service_buf_list *svc_blist,
@@ -627,7 +659,7 @@ cpdc_fill_per_block_desc(uint32_t algo_type, uint32_t block_size,
 		       BUFFER_ADDR_LEN_SET(pb_sgl->cs_addr_1, pb_sgl->cs_len_1,
 				       addr_len);
 		       pb_len += pb_sgl->cs_len_1;
-		}
+	       }
 
 	       if (iter && (pb_len < block_size)) {
 		       iter = buffer_list_iter_addr_len_get(iter,
@@ -1100,8 +1132,10 @@ cpdc_update_tags(struct service_info *svc_info)
 {
 	uint32_t orig_num_tags;
 
-	if (chn_service_deps_data_len_set_from_parent(svc_info)) {
+	if (svc_info->si_flags & CHAIN_SFLAG_BYPASS_ONFAIL)
+		goto out;
 
+	if (chn_service_deps_data_len_set_from_parent(svc_info)) {
 		/*
 		 * In debug mode, verify the padding adjustment in the dst SGL.
 		 *
@@ -1119,6 +1153,7 @@ cpdc_update_tags(struct service_info *svc_info)
 		(svc_info->si_type == PNSO_SVC_TYPE_CHKSUM &&
 		 svc_info->si_desc_flags & PNSO_CHKSUM_DFLAG_PER_BLOCK)) {
 		svc_info->si_num_tags = chn_service_deps_num_blks_get(svc_info);
+
 		OSAL_ASSERT(svc_info->si_num_tags >= 1);
 	} else
 		OSAL_ASSERT(svc_info->si_num_tags == 1);
@@ -1126,5 +1161,7 @@ cpdc_update_tags(struct service_info *svc_info)
 	OSAL_LOG_INFO("block_size: %d new num_tags: %d old num_tags: %d",
 			svc_info->si_block_size,
 			svc_info->si_num_tags, orig_num_tags);
+
+out:
 	svc_info->tags_updated = true;
 }

@@ -75,6 +75,7 @@ extern "C" {
 #define CHAIN_SFLAG_MODE_SYNC		(1 << 4)
 #define CHAIN_SFLAG_MODE_POLL		(1 << 5)
 #define CHAIN_SFLAG_MODE_ASYNC		(1 << 6)
+#define CHAIN_SFLAG_BYPASS_ONFAIL	(1 << 7)
 
 /* chain flags */
 #define CHAIN_CFLAG_MODE_SYNC		(1 << 0)
@@ -110,6 +111,7 @@ struct chain_entry;
 struct service_params {
 	struct pnso_buffer_list *sp_src_blist;
 	struct pnso_buffer_list *sp_dst_blist;
+	struct pnso_buffer_list *sp_bof_blist;	/* src for bypass onfail */
 	union {
 		struct pnso_crypto_desc *sp_crypto_desc;
 		struct pnso_compression_desc *sp_cp_desc;
@@ -224,7 +226,7 @@ struct service_crypto_aol {
 
 struct service_info {
 	uint8_t si_type;
-	uint8_t	si_flags;		/* service flags (SFLAGS) */
+	uint16_t si_flags;		/* service flags (SFLAGS) */
 
 	uint16_t si_block_size;
 	uint16_t si_desc_flags;		/* caller supplied desc flags */
@@ -234,9 +236,12 @@ struct service_info {
 	void *si_desc;			/* desc of cp/dc/encrypt/etc. */
 	void *si_status_desc;		/* status desc of cp/dc/encrypt/etc. */
 	void *si_istatus_desc;		/* intermediate status desc */
+	void *si_bof_desc;		/* bypass onfail desc for hash/chksum */
 
 	struct service_cpdc_sgl	si_src_sgl;	/* src input buffer converted to sgl */
 	struct service_cpdc_sgl	si_dst_sgl;	/* dst input buffer converted to sgl */
+	struct service_cpdc_sgl	si_bof_sgl;
+
 	struct service_crypto_aol si_src_aol;	/* src input buffer converted to aol */
 	struct service_crypto_aol si_dst_aol;	/* dst input buffer converted to aol */
 
@@ -246,6 +251,7 @@ struct service_info {
 	};
 
 	struct cpdc_sgl	*si_p4_sgl;	/* for per-block hash/checksum */
+	struct cpdc_sgl	*si_p4_bof_sgl;	/* for bypass onfail hash/chksum */
 
 	struct sequencer_info si_seq_info;
 	struct service_batch_info si_batch_info;
@@ -255,9 +261,12 @@ struct service_info {
 
 	struct service_ops si_ops;
 	struct pnso_service_status *si_svc_status;
+
 	struct service_buf_list si_src_blist;
 	struct service_buf_list si_dst_blist;
-	struct interm_buf_list si_iblist;
+	struct service_buf_list si_bof_blist;	/* bypass onfail */
+	struct interm_buf_list si_iblist;	/* rmem/hbm buffer */
+
 	struct chain_sgl_pdma *si_sgl_pdma;
 	struct service_deps si_svc_deps;	/* to share dependent params */
 };
@@ -277,6 +286,8 @@ struct service_chain {
 
 	struct chain_entry *sc_entry;	/* list of services */
 	struct chain_entry *sc_last_entry;	/* last service in chain */
+
+	struct pnso_service_request *sc_req;	/* caller supplied request */
 	struct pnso_service_result *sc_res;	/* caller supplied result */
 
 	struct per_core_resource *sc_pcr;	/* to access pool/etc. */

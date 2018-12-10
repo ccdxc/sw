@@ -58,9 +58,9 @@ hash_setup(struct service_info *svc_info,
 {
 	pnso_error_t err;
 	struct pnso_hash_desc *pnso_hash_desc;
-	struct cpdc_desc *hash_desc;
+	struct cpdc_desc *hash_desc, *bypass_hash_desc;
 	struct cpdc_status_desc *status_desc;
-	struct cpdc_sgl *sgl = NULL;
+	struct cpdc_sgl *sgl, *bypass_sgl;
 	bool per_block;
 	uint32_t num_tags;
 
@@ -68,6 +68,9 @@ hash_setup(struct service_info *svc_info,
 
 	pnso_hash_desc = (struct pnso_hash_desc *) svc_params->u.sp_hash_desc;
 	per_block = is_dflag_pblock_enabled(pnso_hash_desc->flags);
+
+	if (svc_params->sp_bof_blist)
+		svc_info->si_flags |= CHAIN_SFLAG_BYPASS_ONFAIL;
 
 	hash_desc = cpdc_get_desc(svc_info, per_block);
 	if (!hash_desc) {
@@ -78,14 +81,32 @@ hash_setup(struct service_info *svc_info,
 	}
 	svc_info->si_desc = hash_desc;
 
+	bypass_hash_desc = cpdc_get_desc(svc_info, per_block);
+	if (!bypass_hash_desc) {
+		err = ENOMEM;
+		OSAL_LOG_ERROR("cannot obtain bypass-hash desc from pool err: %d!",
+				err);
+		goto out;
+	}
+	svc_info->si_bof_desc = bypass_hash_desc;
+
 	sgl = cpdc_get_sgl(svc_info->si_pcr, per_block);
 	if (!sgl) {
 		err = ENOMEM;
 		OSAL_LOG_ERROR("cannot obtain hash sgl from pool! err: %d",
-					err);
+				err);
 		goto out;
 	}
 	svc_info->si_p4_sgl = sgl;
+
+	bypass_sgl = cpdc_get_sgl(svc_info->si_pcr, per_block);
+	if (!bypass_sgl) {
+		err = ENOMEM;
+		OSAL_LOG_ERROR("cannot obtain bypass-hash sgl from pool! err: %d",
+				err);
+		goto out;
+	}
+	svc_info->si_bof_sgl = sgl;
 
 	status_desc = cpdc_get_status_desc(svc_info->si_pcr, per_block);
 	if (!status_desc) {
@@ -120,6 +141,16 @@ hash_setup(struct service_info *svc_info,
 				svc_info->si_src_blist.len,
 				svc_info->si_src_sgl.sgl,
 				hash_desc, status_desc);
+
+		if (svc_info->si_flags & CHAIN_SFLAG_BYPASS_ONFAIL) {
+			/* TODO: fixup source buffer i.e. comp buf */
+
+			fill_hash_desc(pnso_hash_desc->algo_type,
+					svc_info->si_src_blist.len,
+					svc_info->si_src_sgl.sgl,
+					bypass_hash_desc, status_desc);
+		}
+
 		num_tags = 1;
 	}
 	svc_info->si_num_tags = num_tags;
@@ -430,7 +461,13 @@ hash_teardown(struct service_info *svc_info)
 	sgl = (struct cpdc_sgl *) svc_info->si_p4_sgl;
 	cpdc_put_sgl(svc_info->si_pcr, per_block, sgl);
 
+	sgl = (struct cpdc_sgl *) svc_info->si_bof_sgl;
+	cpdc_put_sgl(svc_info->si_pcr, per_block, sgl);
+
 	hash_desc = (struct cpdc_desc *) svc_info->si_desc;
+	cpdc_put_desc(svc_info, per_block, hash_desc);
+
+	hash_desc = (struct cpdc_desc *) svc_info->si_bof_desc;
 	cpdc_put_desc(svc_info, per_block, hash_desc);
 
 	OSAL_LOG_DEBUG("exit!");

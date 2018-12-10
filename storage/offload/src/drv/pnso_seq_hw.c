@@ -761,6 +761,11 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 	} else
 		chain_params->ccp_cmd.ccpc_sgl_pdma_pad_only = 1;
 
+	if (svc_info->si_desc_flags & PNSO_CP_DFLAG_BYPASS_ONFAIL) {
+		chain_params->ccp_cmd.ccpc_chain_alt_desc_on_error = 1;
+		chain_params->ccp_cmd.ccpc_stop_chain_on_error = 0;
+	}
+
 	OSAL_LOG_INFO("ring: %s index: %u src_desc: 0x" PRIx64 " status_desc: 0x" PRIx64 "",
 			ring->name, index, (uint64_t) cp_desc,
 			(uint64_t) status_desc);
@@ -852,7 +857,6 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 	chain_params->ccp_cmd.ccpc_sgl_pdma_en = 1;
 	chain_params->ccp_cmd.ccpc_sgl_pad_en = 1;
 	chain_params->ccp_cmd.ccpc_sgl_pdma_pad_only = 1;
-	chain_params->ccp_cmd.ccpc_stop_chain_on_error = 1;
 
 	chain_params->ccp_status_addr_0 =
 		sonic_virt_to_phy((void *) status_desc);
@@ -920,7 +924,12 @@ hw_setup_hashorchksum_chain_params(struct cpdc_chain_params *chain_params,
 	ring_spec->rs_ring_size = (uint8_t) ilog2(ring->accel_ring.ring_size);
 	ring_spec->rs_num_descs = num_blks;
 
-	chain_params->ccp_sgl_vec_addr = sonic_virt_to_phy((void *) sgl);
+	chain_params->ccp_sgl_vec_addr =
+		(chain_params->ccp_cmd.ccpc_chain_alt_desc_on_error &&
+		 !chain_params->ccp_cmd.ccpc_stop_chain_on_error) ?
+		sonic_virt_to_phy((void *) svc_info->si_p4_bof_sgl) :
+		sonic_virt_to_phy((void *) sgl);
+
 	chain_params->ccp_cmd.ccpc_sgl_pad_en = 1;
 	chain_params->ccp_cmd.ccpc_sgl_sparse_format_en = 1;
 	/*

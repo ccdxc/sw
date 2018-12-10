@@ -376,8 +376,6 @@ compress_read_status(struct service_info *svc_info)
 	if (err)
 		goto out;
 
-	/* TODO-cp: handle bypass on fail flag */
-
 	if (cp_desc->u.cd_bits.cc_enabled &&
 			cp_desc->u.cd_bits.cc_insert_header) {
 		dst_sgl = svc_info->si_dst_sgl.sgl;
