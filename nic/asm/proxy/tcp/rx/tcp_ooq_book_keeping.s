@@ -17,6 +17,7 @@ struct s3_t0_tcp_rx_d d;
 
 %%
     .align
+    .param tcp_ooo_processing_launch_dummy1
 tcp_ooq_book_keeping:
     seq c1, d.u.tcp_ooo_book_keeping_d.tail_index0, r0
     bcf [c1], tcp_ooo_book_keeping_begin_use_first_ooo_queue
@@ -95,6 +96,11 @@ tcp_ooo_book_keeping_enqueue_tail_of_first_queue:
     phvwr  p.to_s6_ooo_tail_index, d.u.tcp_ooo_book_keeping_d.tail_index0
     tbladd d.u.tcp_ooo_book_keeping_d.tail_index0, 1
     phvwr p.to_s6_ooo_queue_id, 0
+    //Check if start of next is same as end of the current 
+    // if they are same - trigger rx2tx
+    seq c1, d.u.tcp_ooo_book_keeping_d.start_seq1, r1 
+    phvwr.c1 p.to_s6_ooo_rx2tx_ready_qid, 1
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(1, tcp_ooo_processing_launch_dummy1)
     nop.e
     nop
 
@@ -113,6 +119,11 @@ tcp_ooo_book_keeping_enqueue_tail_of_second_queue:
     phvwr  p.to_s6_ooo_tail_index, d.u.tcp_ooo_book_keeping_d.tail_index1
     tbladd d.u.tcp_ooo_book_keeping_d.tail_index1, 1
     phvwr p.to_s6_ooo_queue_id, 1
+    //Check if start of next is same as end of the current 
+    // if they are same - trigger rx2tx
+    seq c1, d.u.tcp_ooo_book_keeping_d.start_seq2, r1 
+    phvwr.c1 p.to_s6_ooo_rx2tx_ready_qid, 2
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(1, tcp_ooo_processing_launch_dummy1)
     nop.e
     nop
 
@@ -131,6 +142,11 @@ tcp_ooo_book_keeping_enqueue_tail_of_third_queue:
     phvwr  p.to_s6_ooo_tail_index, d.u.tcp_ooo_book_keeping_d.tail_index2
     tbladd d.u.tcp_ooo_book_keeping_d.tail_index2, 1
     phvwr p.to_s6_ooo_queue_id, 2
+    //Check if start of next is same as end of the current 
+    // if they are same - trigger rx2tx
+    seq c1, d.u.tcp_ooo_book_keeping_d.start_seq3, r1 
+    phvwr.c1 p.to_s6_ooo_rx2tx_ready_qid, 3
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(1, tcp_ooo_processing_launch_dummy1)
     nop.e
     nop
 
@@ -149,6 +165,7 @@ tcp_ooo_book_keeping_enqueue_tail_of_fourth_queue:
     phvwr  p.to_s6_ooo_tail_index, d.u.tcp_ooo_book_keeping_d.tail_index3
     tbladd d.u.tcp_ooo_book_keeping_d.tail_index3, 1
     phvwr p.to_s6_ooo_queue_id, 3
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(1, tcp_ooo_processing_launch_dummy1)
     nop.e
     nop
 
@@ -158,4 +175,5 @@ tcp_ooo_book_keeping_queue3_full:
     // disable all tables
     nop.e
     nop
- 
+
+

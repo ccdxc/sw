@@ -36,7 +36,7 @@
 #define TCP_TCB_RX_STATS_OFFSET               768
 #define TCP_TCB_TX_STATS_OFFSET               832
 #define TCP_TCB_BOOK_KEEPING_OFFSET0          896
-#define TCP_TCB_BOOK_KEEPING_OFFSET1          960
+#define TCP_TCB_OOO_QADDR_OFFSET              960
 #define TCP_TCB_WRITE_L7Q_OFFSET              960
 #define TCP_TCB_SACK_OFFSET                   96
 

@@ -26,6 +26,7 @@
 #define rx_table_s4_t3 s4_t3_tcp_rx
 
 #define rx_table_s5_t0 s5_t0_tcp_rx
+#define rx_table_s5_t1 s5_t1_tcp_rx
 
 #define rx_table_s6_t0 s6_t0_tcp_rx
 #define rx_table_s6_t1 s6_t1_tcp_rx
@@ -58,9 +59,11 @@
 #define rx_table_s4_t2_action rpage_alloc
 #define rx_table_s4_t3_action0 l7_rdesc_alloc
 #define rx_table_s4_t3_action1 tcp_ooo_qbase_sem_alloc
+#define rx_table_s4_t3_action2 tcp_ooo_dummy_launch_s4
 
 #define rx_table_s5_t0_action tcp_fc
-#define rx_table_s5_t1_action tcp_ooo_qbase_addr_get
+#define rx_table_s5_t1_action1 tcp_ooo_qbase_addr_get
+#define rx_table_s5_t1_action2 tcp_ooo_dummy_launch_qbase_cb_load
 
 #define rx_table_s6_t0_action write_serq
 #define rx_table_s6_t1_action write_arq
@@ -399,7 +402,8 @@ header_type to_stage_6_phv_t {
         payload_len             : 16;
         ooo_offset              : 16;
         serq_pidx               : 12;
-        ooo_queue_id            : 2;
+        ooo_queue_id            : 4;
+        ooo_rx2tx_ready_qid     : 4;
         ooo_tail_index          : 8;
     }
 }
@@ -658,8 +662,20 @@ header_type ring_entry_pad_t {
 metadata ring_entry_pad_t  ring_entry_pad;
 
 /* ring_entry and aol needs to be contiguous in PHV */
+header_type ooq_rx2tx_queue_entry_t {
+    fields {
+        ooq_rx2tx_qentry_addr : 40;
+        ooq_rx2tx_num_entries : 16;
+        ooq_rx2tx_pad_entry   : 8;
+    }
+}
+
 @pragma dont_trim
 metadata ring_entry_t ring_entry; 
+@pragma dont_trim
+@pragma pa_header_union ingress ring_entry
+metadata ooq_rx2tx_queue_entry_t ooq_rx2tx_queue_entry;
+ 
 @pragma dont_trim
 metadata pkt_descr_aol_t aol;
 
@@ -675,7 +691,6 @@ header_type ooq_slot_addr_t {
 @pragma dont_trim
 metadata ooq_slot_addr_t ooq_slot_addr;
  
-
 
 @pragma pa_align 128
 @pragma dont_trim
@@ -697,13 +712,20 @@ metadata dma_cmd_phv2mem_t rx2tx_or_cpu_hdr_dma;    // dma cmd 4
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t ring_slot;               // dma cmd 5
 @pragma dont_trim
+@pragma pa_header_union ingress ring_slot 
+metadata dma_cmd_pkt2mem_t ooo_rx2tx_ring_slot;
+@pragma dont_trim
 metadata dma_cmd_phv2mem_t rx2tx_extra_dma;         // dma cmd 6
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t tx_doorbell1;            // dma cmd 7
+
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t tx_doorbell;             // dma cmd 8
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t tls_doorbell;            // dma cmd 9
+@pragma dont_trim
+@pragma pa_header_union ingress tls_doorbell 
+metadata dma_cmd_phv2mem_t ooq_rx2tx_doorbell;      // dma cmd 7
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t l7_descr;                // dma cmd 10
 
@@ -1065,12 +1087,21 @@ action l7_rdesc_alloc(desc, pad) {
 
 
 /*
- * Stage 4 table 3 action2
+ * Stage 4 table 3 action1
  */
 action tcp_ooo_qbase_sem_alloc(ooo_qbase_pindex, ooo_qbase_pindex_full)
 {
     modify_field(read_ooo_qbase_index.ooo_qbase_pindex, ooo_qbase_pindex);
     modify_field(read_ooo_qbase_index.ooo_qbase_pindex_full, ooo_qbase_pindex_full);
+}
+
+/*
+ * Stage 4 table 3 action2
+ */
+action tcp_ooo_dummy_launch_s4()
+{
+    // from ki global
+    GENERATE_GLOBAL_K
 }
 
 /*
@@ -1105,6 +1136,15 @@ action tcp_fc(page, descr, page_cnt, l7_descr, rcv_wnd, rcv_wscale, cpu_id) {
 action tcp_ooo_qbase_addr_get(ooo_qbase_addr)
 {
     modify_field(read_ooo_base_addr.ooo_qbase_addr, ooo_qbase_addr);
+}
+
+/*
+ * Stage 5 table 1 action
+ */
+action tcp_ooo_dummy_launch_qbase_cb_load()
+{
+    // from ki global
+    GENERATE_GLOBAL_K
 }
 
 
@@ -1193,6 +1233,7 @@ action write_l7q(l7q_base, l7q_pidx) {
     modify_field(write_l7q_d.l7q_base, l7q_base);
     modify_field(write_l7q_d.l7q_pidx, l7q_pidx);
 }
+
 
 
 /*
