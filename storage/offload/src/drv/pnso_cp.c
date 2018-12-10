@@ -83,14 +83,18 @@ compress_setup(struct service_info *svc_info,
 	struct cpdc_desc *cp_desc;
 	struct cpdc_status_desc *status_desc;
 	struct per_core_resource *pcr;
-	uint16_t flags, threshold_len;
+	uint16_t threshold_len;
 
 	OSAL_LOG_DEBUG("enter ...");
 
 	pnso_cp_desc = (struct pnso_compression_desc *)
 		svc_params->u.sp_cp_desc;
-	flags = pnso_cp_desc->flags;
+
+	svc_info->si_type = PNSO_SVC_TYPE_COMPRESS;
+	svc_info->si_desc_flags = pnso_cp_desc->flags;
 	threshold_len = pnso_cp_desc->threshold_len;
+
+	pcr = svc_info->si_pcr;
 
 	cp_desc = cpdc_get_desc(svc_info, false);
 	if (!cp_desc) {
@@ -100,7 +104,6 @@ compress_setup(struct service_info *svc_info,
 	}
 	svc_info->si_desc = cp_desc;
 
-	pcr = svc_info->si_pcr;
 	status_desc = cpdc_get_status_desc(pcr, false);
 	if (!status_desc) {
 		err = ENOMEM;
@@ -120,10 +123,7 @@ compress_setup(struct service_info *svc_info,
 	fill_cp_desc(cp_desc, svc_info->si_src_sgl.sgl,
 			svc_info->si_dst_sgl.sgl, status_desc,
 			svc_info->si_src_blist.len, threshold_len);
-	clear_insert_header(flags, cp_desc);
-
-	svc_info->si_type = PNSO_SVC_TYPE_COMPRESS;
-	svc_info->si_desc_flags = flags;
+	clear_insert_header(svc_info->si_desc_flags, cp_desc);
 
 	err = cpdc_setup_seq_desc(svc_info, cp_desc, 0);
 	if (err) {

@@ -62,14 +62,17 @@ hash_setup(struct service_info *svc_info,
 	struct cpdc_sgl *sgl = NULL;
 	struct per_core_resource *pcr;
 	bool per_block;
-	uint16_t flags;
 	uint32_t num_tags;
 
 	OSAL_LOG_DEBUG("enter ...");
 
 	pnso_hash_desc = (struct pnso_hash_desc *) svc_params->u.sp_hash_desc;
-	flags = pnso_hash_desc->flags;
-	per_block = svc_is_dflag_pblock_enabled(flags);
+
+	svc_info->si_type = PNSO_SVC_TYPE_HASH;
+	svc_info->si_desc_flags = pnso_hash_desc->flags;
+	per_block = svc_is_dflag_pblock_enabled(pnso_hash_desc->flags);
+
+	pcr = svc_info->si_pcr;
 
 	hash_desc = cpdc_get_desc(svc_info, per_block);
 	if (!hash_desc) {
@@ -78,9 +81,8 @@ hash_setup(struct service_info *svc_info,
 				err);
 		goto out;
 	}
+	svc_info->si_desc = hash_desc;
 
-	/* TODO: needed for p4+ sequencer, avoid using for entire block  */
-	pcr = svc_info->si_pcr;
 	sgl = cpdc_get_sgl(pcr, per_block);
 	if (!sgl) {
 		err = ENOMEM;
@@ -88,6 +90,7 @@ hash_setup(struct service_info *svc_info,
 					err);
 		goto out;
 	}
+	svc_info->si_p4_sgl = sgl;
 
 	status_desc = cpdc_get_status_desc(pcr, per_block);
 	if (!status_desc) {
@@ -96,6 +99,7 @@ hash_setup(struct service_info *svc_info,
 				err);
 		goto out;
 	}
+	svc_info->si_status_desc = status_desc;
 
 	if (per_block) {
 		num_tags = cpdc_fill_per_block_desc(pnso_hash_desc->algo_type,
@@ -117,15 +121,9 @@ hash_setup(struct service_info *svc_info,
 				hash_desc, status_desc);
 		num_tags = 1;
 	}
+	svc_info->si_num_tags = num_tags;
 
 	chn_service_hw_ring_take_set(svc_info, num_tags);
-
-	svc_info->si_type = PNSO_SVC_TYPE_HASH;
-	svc_info->si_desc_flags = flags;
-	svc_info->si_desc = hash_desc;
-	svc_info->si_status_desc = status_desc;
-	svc_info->si_num_tags = num_tags;
-	svc_info->si_p4_sgl = sgl;
 
 	err = cpdc_setup_seq_desc(svc_info, hash_desc, num_tags);
 	if (err) {

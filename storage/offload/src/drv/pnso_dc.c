@@ -62,13 +62,16 @@ decompress_setup(struct service_info *svc_info,
 	struct cpdc_status_desc *status_desc;
 	struct per_core_resource *pcr;
 	size_t src_buf_len, dst_buf_len;
-	uint16_t flags;
 
 	OSAL_LOG_DEBUG("enter ...");
 
 	pnso_dc_desc = (struct pnso_decompression_desc *)
 		svc_params->u.sp_dc_desc;
-	flags = pnso_dc_desc->flags;
+
+	svc_info->si_type = PNSO_SVC_TYPE_DECOMPRESS;
+	svc_info->si_desc_flags = pnso_dc_desc->flags;
+
+	pcr = svc_info->si_pcr;
 
 	dc_desc = cpdc_get_desc(svc_info, false);
 	if (!dc_desc) {
@@ -76,8 +79,8 @@ decompress_setup(struct service_info *svc_info,
 		OSAL_LOG_ERROR("cannot obtain dc desc from pool! err: %d", err);
 		goto out;
 	}
+	svc_info->si_desc = dc_desc;
 
-	pcr = svc_info->si_pcr;
 	status_desc = cpdc_get_status_desc(pcr, false);
 	if (!status_desc) {
 		err = ENOMEM;
@@ -85,6 +88,7 @@ decompress_setup(struct service_info *svc_info,
 				err);
 		goto out;
 	}
+	svc_info->si_status_desc = status_desc;
 
 	err = cpdc_update_service_info_sgls(svc_info);
 	if (err) {
@@ -99,12 +103,7 @@ decompress_setup(struct service_info *svc_info,
 	fill_dc_desc(dc_desc, svc_info->si_src_sgl.sgl,
 			svc_info->si_dst_sgl.sgl, status_desc,
 			src_buf_len, dst_buf_len);
-	clear_dc_header_present(flags, dc_desc);
-
-	svc_info->si_type = PNSO_SVC_TYPE_DECOMPRESS;
-	svc_info->si_desc_flags = flags;
-	svc_info->si_desc = dc_desc;
-	svc_info->si_status_desc = status_desc;
+	clear_dc_header_present(svc_info->si_desc_flags, dc_desc);
 
 	err = cpdc_setup_seq_desc(svc_info, dc_desc, 0);
 	if (err) {
