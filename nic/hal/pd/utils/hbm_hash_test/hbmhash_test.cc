@@ -48,7 +48,7 @@ calc_jenkins_hash_(void *key, void *data, HbmHash *fl, bool spooky)
 
     // create a flow entry
     entry = HbmHashEntry::factory(key, fl->get_key_len(), data, fl->get_data_len(),
-                               fl->get_hwkey_len(), false);
+                               fl->get_hwkey_len(), false, fl);
 
     // call P4 API to get hw key
     // hwkey = HAL_CALLOC(HAL_MEM_ALLOC_FLOW_HW_KEY, fl->get_hwkey_len());
@@ -66,7 +66,7 @@ calc_jenkins_hash_(void *key, void *data, HbmHash *fl, bool spooky)
     HAL_FREE(0, hwkey);
 
     // delete entry;
-    HbmHashEntry::destroy(entry);
+    HbmHashEntry::destroy(entry, fl);
 
     return hash_val;
 }
