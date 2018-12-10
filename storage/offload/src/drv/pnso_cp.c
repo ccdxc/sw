@@ -289,9 +289,8 @@ compress_poll(const struct service_info *svc_info)
 	 * and if cp/pad is not requested
 	 *
 	 */
-	if (((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
-		(svc_info->si_flags & CHAIN_SFLAG_LAST_SERVICE)) &&
-		!is_dflag_zero_pad_enabled(svc_info->si_desc_flags))
+	if (!is_dflag_zero_pad_enabled(svc_info->si_desc_flags) ||
+		chn_service_has_sub_chain(svc_info))
 			goto out;
 
 	OSAL_LOG_DEBUG("cp/pad lone or last service in chain");
