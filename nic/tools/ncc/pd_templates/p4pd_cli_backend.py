@@ -105,7 +105,7 @@ class ${table}():
         self.swkey_mask   = ${table}_swkey_mask_t()
         self.swkey_mask_p = self.swkey_mask.this
 //::        #endif
-        self.actiondata   = ${table}_actiondata()
+        self.actiondata   = ${table}_actiondata_t()
         self.actiondata_p = self.actiondata.this
 
 //::        if len(pddict['tables'][table]['actions']):
@@ -460,7 +460,7 @@ class ${table}():
 //::            action_name_upper = actionname.upper()
 //::            table_upper = table.upper()
         if ctx['action_name'] == '${actionname}':
-            self.actiondata.actionid = self.${table_upper}_${action_name_upper}_ID
+            self.actiondata.action_id = self.${table_upper}_${action_name_upper}_ID
 
 //::            if len(actionfldlist):
                     # for each action field
@@ -475,7 +475,7 @@ class ${table}():
                 if len(values) != 1:
                     return
 
-                self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname} = int(values[0],0)
+                self.actiondata.action_u.${table}_${actionname}.${actionfldname} = int(values[0],0)
 //::                    else:
             if '${actionfldname}' in ctx['actionfld']:
                 values = ctx['actionfld']['${actionfldname}'].split()
@@ -483,7 +483,7 @@ class ${table}():
                     return
 
                 for i in range(len(values)):
-                    ${pddict['cli-name']}.uint8_array_t_setitem(self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}, i, int(values[i], 0))
+                    ${pddict['cli-name']}.uint8_array_t_setitem(self.actiondata.action_u.${table}_${actionname}.${actionfldname}, i, int(values[i], 0))
 //::                    #endif
 //::                #endfor
                     # endfor action fields
@@ -957,11 +957,11 @@ class ${table}():
 //::        #endif
 
         #print('${table}_actiondata:')
-        #if self.actiondata.actionid < len(${table}.actiondata.${table}_actions_en):
-        #    print('  actionid: %s (%d)' % (${table}.actiondata.${table}_actions_en[self.actiondata.actionid], self.actiondata.actionid))
+        #if self.actiondata.action_id < len(${table}.actiondata.${table}_actions_en):
+        #    print('  actionid: %s (%d)' % (${table}.actiondata.${table}_actions_en[self.actiondata.action_id], self.actiondata.action_id))
         #else:
-        #    print('  actionid: UNKNOWN (%d)' % (self.actiondata.actionid))
-        print('  ${table}_action_u:')
+        #    print('  actionid: UNKNOWN (%d)' % (self.actiondata.action_id))
+        print('  action_u:')
 //::        table_upper = table.upper()
 //::        for action in pddict['tables'][table]['actions']:
 //::            (actionname, actionfldlist) = action
@@ -969,7 +969,7 @@ class ${table}():
 //::            if actionname.startswith("__"):
 //::                continue
 //::            #endif
-        if self.actiondata.actionid == self.${table_upper}_${actionname_upper}_ID:
+        if self.actiondata.action_id == self.${table_upper}_${actionname_upper}_ID:
 //::            if len(actionfldlist):
             print('    ${table}_${actionname}_t:')
 //::                for actionfld in actionfldlist:
@@ -978,13 +978,13 @@ class ${table}():
 //::                        continue
 //::                    #endif
 //::                    if (actionfldwidth <= 8):
-            print('      ${actionfldname}: %d (0x%02x)' % (self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}, self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}))
+            print('      ${actionfldname}: %d (0x%02x)' % (self.actiondata.action_u.${table}_${actionname}.${actionfldname}, self.actiondata.action_u.${table}_${actionname}.${actionfldname}))
 //::                    elif (actionfldwidth <= 16):
-            print('      ${actionfldname}: %d (0x%04x)' % (self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}, self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}))
+            print('      ${actionfldname}: %d (0x%04x)' % (self.actiondata.action_u.${table}_${actionname}.${actionfldname}, self.actiondata.action_u.${table}_${actionname}.${actionfldname}))
 //::                    elif (actionfldwidth <= 32):
-            print('      ${actionfldname}: %d (0x%08x)' % (self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}, self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}))
+            print('      ${actionfldname}: %d (0x%08x)' % (self.actiondata.action_u.${table}_${actionname}.${actionfldname}, self.actiondata.action_u.${table}_${actionname}.${actionfldname}))
 //::                    elif (actionfldwidth <= 64):
-            print('      ${actionfldname}: %d (0x%016x)' % (self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}, self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}))
+            print('      ${actionfldname}: %d (0x%016x)' % (self.actiondata.action_u.${table}_${actionname}.${actionfldname}, self.actiondata.action_u.${table}_${actionname}.${actionfldname}))
 //::                    else:
             valstr =   '      ${actionfldname}[]: '
             lenstr = len(valstr)
