@@ -164,13 +164,6 @@ compress_chain(struct chain_entry *centry)
 	if ((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
 		(svc_info->si_flags & CHAIN_SFLAG_LAST_SERVICE)) {
 		if (is_dflag_zero_pad_enabled(svc_info->si_desc_flags)) {
-			if (svc_info->si_flags & CHAIN_SFLAG_MODE_ASYNC) {
-				/* TODO-cp_pad: skip handling async until known fix arrives */
-				err = EINVAL;
-				OSAL_LOG_DEBUG("cp/pad SKIP async/poll mode. err: %d", err);
-				goto done;
-			}
-
 			err = seq_setup_cp_pad_chain_params(svc_info, cp_desc,
 					status_desc);
 			if (err) {
@@ -305,19 +298,8 @@ compress_poll(const struct service_info *svc_info)
 
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 
-	if (svc_info->si_flags & CHAIN_SFLAG_MODE_ASYNC) {
-		/* TODO-cp_pad: skip handling async until known fix arrives */
-		OSAL_LOG_DEBUG("cp/pad SKIP async/poll mode. err: %d", err);
-		goto out;
-	}
-
-#if 0
-	/* TODO-cp_pad: skip handling async until known fix arrives */
 	if ((svc_info->si_flags & CHAIN_SFLAG_MODE_POLL) ||
 		(svc_info->si_flags & CHAIN_SFLAG_MODE_ASYNC)) {
-#else
-	if (svc_info->si_flags & CHAIN_SFLAG_MODE_POLL) {
-#endif	
 		err = (status_desc->csd_integrity_data ==
 				CPDC_PAD_STATUS_DATA) ? PNSO_OK : EBUSY;
 		OSAL_LOG_DEBUG("cp/pad async/poll mode.  err: %d", err);
