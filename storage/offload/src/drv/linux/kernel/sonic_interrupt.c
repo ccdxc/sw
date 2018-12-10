@@ -43,10 +43,11 @@
 #include "sonic_interrupt.h"
 #include "sonic_api_int.h"
 
-#define evid_to_db_pa(evl, id) (evl->db_base_pa + (sizeof(uint64_t) * (id)))
-#define db_pa_to_evid(evl, addr) (((dma_addr_t)(addr) - evl->db_base_pa) / sizeof(uint64_t))
-#define evid_to_db_va(evl, id) (evl->db_base + (sizeof(uint64_t) * (id)))
-#define db_va_to_evid(evl, addr) (((void*)(addr) - evl->db_base) / sizeof(uint64_t))
+#define evid_to_db_pa(evl, id) (evl->db_base_pa + (sizeof(struct sonic_db_data) * (id)))
+#define db_pa_to_evid(evl, addr) (((dma_addr_t)(addr) - evl->db_base_pa) / sizeof(struct sonic_db_data))
+#define evid_to_db_va(evl, id) (struct sonic_db_data *)(evl->db_base + (sizeof(struct sonic_db_data) * (id)))
+#define db_va_to_evid(evl, addr) (((void*)(addr) - evl->db_base) / sizeof(struct sonic_db_data))
+
 
 static int sonic_get_evid(struct sonic_event_list *evl, u32 *evid)
 {
@@ -95,7 +96,7 @@ static int sonic_poll_ev_list(struct sonic_event_list *evl, int budget, struct s
 {
 	uint32_t id, first_id, next_id;
 	uint32_t loop_count = 0;
-	uint64_t *data;
+	struct sonic_db_data *db_data;
 	int found = 0;
 	int found_zero_data = 0;
 
@@ -110,15 +111,18 @@ static int sonic_poll_ev_list(struct sonic_event_list *evl, int budget, struct s
 				break;
 		}
 		next_id = id + 1;
-		data = (uint64_t *) evid_to_db_va(evl, id);
-		if (*data) {
+		db_data = evid_to_db_va(evl, id);
+		if ((db_data->primed == sonic_intr_get_fire_data32()) &&
+		    db_data->usr_data) {
+
 			//OSAL_LOG_DEBUG("found ev id %d with data 0x%llx\n",
 			//		id, (unsigned long long) *data);
 			if (!found_zero_data)
 				evl->next_used_evid = next_id;
 			work->ev_data[found].evid = id;
-			work->ev_data[found].data = *data;
-			*data = 0;
+			work->ev_data[found].data = db_data->usr_data;
+			db_data->primed = 0;
+			db_data->usr_data = 0;
 			found++;
 		} else {
 			/* Expect this event to trigger soon */
@@ -261,9 +265,10 @@ irqreturn_t sonic_async_ev_isr(int irq, void *evlptr)
 	return IRQ_HANDLED;
 }
 
-uint64_t sonic_intr_get_db_addr(struct per_core_resource *pc_res)
+uint64_t sonic_intr_get_db_addr(struct per_core_resource *pc_res, uint64_t usr_data)
 {
 	struct sonic_event_list *evl = pc_res->evl;
+	struct sonic_db_data *db_data;
 	uint32_t evid;
 
 	if (!evl || !evl->db_base) {
@@ -278,7 +283,11 @@ uint64_t sonic_intr_get_db_addr(struct per_core_resource *pc_res)
 
 	OSAL_LOG_DEBUG("Successfully allocated evid %u\n", evid);
 
-	return sonic_hostpa_to_devpa((uint64_t) evid_to_db_pa(evl, evid));
+	db_data = evid_to_db_va(evl, evid);
+	db_data->usr_data = usr_data;
+	db_data->primed = sonic_intr_get_fire_data32();
+	return sonic_hostpa_to_devpa((uint64_t) evid_to_db_pa(evl, evid) +
+				     offsetof(struct sonic_db_data, fired));
 }
 
 void sonic_intr_put_db_addr(struct per_core_resource *pc_res, uint64_t addr)
@@ -289,6 +298,7 @@ void sonic_intr_put_db_addr(struct per_core_resource *pc_res, uint64_t addr)
 	if (!evl || !evl->db_base)
 		return;
 
+	addr -= offsetof(struct sonic_db_data, fired);
 	evid = db_pa_to_evid(evl, sonic_devpa_to_hostpa(addr));
 	if (evid < evl->size_ev_bmp)
 		sonic_put_evid(evl, evid);
@@ -347,7 +357,7 @@ int sonic_create_ev_list(struct per_core_resource *pc_res, uint32_t ev_count)
 	evl->armed = true;
 	evl->enable = false;
 
-	evl->db_total_size = sizeof(uint64_t) * ev_count;
+	evl->db_total_size = sizeof(struct sonic_db_data) * ev_count;
 	evl->db_base = dma_zalloc_coherent(dev,
 					  evl->db_total_size,
 					  &evl->db_base_pa, GFP_KERNEL);

@@ -845,6 +845,10 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 	chain_params->ccp_cmd.ccpc_next_doorbell_en = 1;
 	chain_params->ccp_cmd.ccpc_next_db_action_ring_push = 0;
 
+	chain_params->ccp_cmd.ccpc_intr_en = 1;
+	chain_params->ccp_intr_addr = sonic_get_per_core_intr_assert_addr(svc_info->si_pcr);
+	chain_params->ccp_intr_data = sonic_get_intr_assert_data();
+
 	chain_params->ccp_cmd.ccpc_stop_chain_on_error = 1;
 	chain_params->ccp_cmd.ccpc_sgl_pdma_en = 1;
 	chain_params->ccp_cmd.ccpc_sgl_pad_en = 1;

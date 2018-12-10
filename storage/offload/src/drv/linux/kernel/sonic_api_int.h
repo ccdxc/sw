@@ -7,6 +7,7 @@
 
 struct per_core_resource;
 
+#define SONIC_INTR_FIRE_DATA32		0xdcba
 #define SONIC_RMEM_ADDR_INVALID		0
 
 static inline uint64_t
@@ -51,9 +52,22 @@ int sonic_accel_ring_give(struct sonic_accel_ring *ring, uint32_t count);
 int sonic_accel_rings_sanity_check(void);
 
 bool sonic_pnso_async_poll(uint64_t data);
-uint64_t sonic_intr_get_db_addr(struct per_core_resource *pc_res);
+uint64_t sonic_intr_get_db_addr(struct per_core_resource *pc_res, uint64_t usr_data);
 void sonic_intr_put_db_addr(struct per_core_resource *pc_res, uint64_t addr);
 uint64_t sonic_get_per_core_intr_assert_addr(struct per_core_resource *pc_res);
+
+static inline uint32_t
+sonic_intr_get_fire_data32(void)
+{
+	return SONIC_INTR_FIRE_DATA32;
+}
+
+static inline uint64_t
+sonic_intr_get_fire_data64(void)
+{
+	/* 64-bit data must be the same 32-bit data replicated twice */
+	return ((uint64_t)SONIC_INTR_FIRE_DATA32 << 32) | SONIC_INTR_FIRE_DATA32;
+}
 
 uint64_t sonic_hostpa_to_devpa(uint64_t hostpa);
 uint64_t sonic_devpa_to_hostpa(uint64_t devpa);

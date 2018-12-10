@@ -725,11 +725,15 @@ cpdc_setup_interrupt_params(const struct service_info *svc_info, void *poll_ctx)
 	cp_desc->u.cd_bits.cc_db_on = 1;
 	cp_desc->u.cd_bits.cc_otag_on = 1;
 
-	cp_desc->cd_db_addr = (uint64_t) sonic_intr_get_db_addr(pcr);
-	cp_desc->cd_db_data = (uint64_t) poll_ctx;
+#if NO_PAD
+	cp_desc->cd_db_addr = (uint64_t) sonic_intr_get_db_addr(pcr, (uint64_t)poll_ctx);
+	cp_desc->cd_db_data = sonic_intr_get_fire_data64();
 
 	cp_desc->cd_otag_addr = sonic_get_per_core_intr_assert_addr(pcr);
 	cp_desc->cd_otag_data = sonic_get_intr_assert_data();
-
+#else
+	cp_desc->cd_otag_addr = sonic_intr_get_db_addr(pcr, (uint64_t)poll_ctx);
+	cp_desc->cd_otag_data = sonic_intr_get_fire_data32();
+#endif
 	return  PNSO_OK;
 }

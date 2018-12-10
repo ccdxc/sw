@@ -53,6 +53,13 @@ struct sonic_event_data {
 	uint64_t data;
 };
 
+
+struct sonic_db_data {
+	uint64_t usr_data;
+	uint32_t fired;		/* 'fired' must immediately */
+	uint32_t primed;	/* precede 'primed' */
+};
+
 struct sonic_work_data {
 	struct work_struct work;
 	struct sonic_event_list *evl;
