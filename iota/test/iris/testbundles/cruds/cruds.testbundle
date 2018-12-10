@@ -1,6 +1,7 @@
 meta:
     name    : cruds
     nics    : [ pensando, intel, mellanox, broadcom ]
+    targetcount : 1
 
 testcases:
     -   name    : DeleteConfig

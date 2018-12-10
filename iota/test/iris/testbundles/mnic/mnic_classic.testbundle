@@ -2,6 +2,7 @@ meta:
     name    : mnicclassic
     os      : [ linux, freebsd ]
     nics    : [ pensando ]
+    targetcount : 1418
 
 testcases:
     -   name    : mnic_if_up_intfs

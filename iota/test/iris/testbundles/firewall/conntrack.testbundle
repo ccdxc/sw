@@ -1,6 +1,7 @@
 meta:
     name    : conntrack
     nics    : [ pensando, intel, mellanox, broadcom ]
+    targetcount : 96 
 
 testcases:
     -   name    : TDL_NZ_LOW

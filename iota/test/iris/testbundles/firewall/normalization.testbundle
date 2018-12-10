@@ -1,6 +1,7 @@
 meta:
     name    : normalization
     nics    : [ pensando, intel, mellanox, broadcom ]
+    targetcount : 1
 
 testcases:
     -   name    : IP normalization tests

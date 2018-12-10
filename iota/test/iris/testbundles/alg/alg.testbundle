@@ -1,6 +1,7 @@
 meta:
     name    : alg 
     nics    : [ pensando, intel, mellanox, broadcom ]
+    targetcount : 80 
 
 testcases:
     -   name    : tftp_Local_Workloads

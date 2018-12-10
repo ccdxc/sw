@@ -1,6 +1,7 @@
 meta:
     name    : policyscale
     nics    : [ pensando, intel, mellanox, broadcom ]
+    targetcount : 20 
 
 testcases:
     -   name    : PolicyScaleAddDelLoop
