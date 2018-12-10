@@ -7,6 +7,7 @@ Input file: networkencryption.proto
 package cli
 
 import (
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/venice/cli/gen"
 )
@@ -61,6 +62,8 @@ func removeTrafficEncryptionPolicyOper(obj interface{}) error {
 	if v, ok := obj.(*security.TrafficEncryptionPolicy); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
 		v.Status = security.TrafficEncryptionPolicyStatus{}
 	}
 	return nil

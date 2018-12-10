@@ -7,6 +7,7 @@ Input file: troubleshooting.proto
 package cli
 
 import (
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/cli/gen"
 )
@@ -33,6 +34,8 @@ func removeTroubleshootingSessionOper(obj interface{}) error {
 	if v, ok := obj.(*monitoring.TroubleshootingSession); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
 		v.Status = monitoring.TroubleshootingSessionStatus{}
 	}
 	return nil

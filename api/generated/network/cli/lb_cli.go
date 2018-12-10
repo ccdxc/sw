@@ -7,6 +7,7 @@ Input file: lb.proto
 package cli
 
 import (
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/venice/cli/gen"
 )
@@ -68,6 +69,8 @@ func removeLbPolicyOper(obj interface{}) error {
 	if v, ok := obj.(*network.LbPolicy); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
 		v.Status = network.LbPolicyStatus{}
 	}
 	return nil

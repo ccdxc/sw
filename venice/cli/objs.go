@@ -90,7 +90,7 @@ func createObjFromBytes(ctx *context, inp string) error {
 	obj := getNewObj(ctx)
 
 	if err := json.Unmarshal([]byte(inp), obj); err != nil {
-		return fmt.Errorf("unmarshaling error: %s\nRec: %s", err, inp)
+		return fmt.Errorf("unmarshaling error: %s", err)
 	}
 
 	objm, err := runtime.GetObjectMeta(obj)

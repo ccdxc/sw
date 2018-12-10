@@ -7,6 +7,7 @@ Input file: network.proto
 package cli
 
 import (
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/venice/cli/gen"
 )
@@ -68,6 +69,8 @@ func removeNetworkOper(obj interface{}) error {
 	if v, ok := obj.(*network.Network); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
 		v.Status = network.NetworkStatus{}
 	}
 	return nil

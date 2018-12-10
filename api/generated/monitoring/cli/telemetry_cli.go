@@ -7,6 +7,7 @@ Input file: telemetry.proto
 package cli
 
 import (
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/cli/gen"
 )
@@ -33,6 +34,8 @@ func removeFlowExportPolicyOper(obj interface{}) error {
 	if v, ok := obj.(*monitoring.FlowExportPolicy); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
 		v.Status = monitoring.FlowExportPolicyStatus{}
 	}
 	return nil
@@ -74,6 +77,8 @@ func removeFwlogPolicyOper(obj interface{}) error {
 	if v, ok := obj.(*monitoring.FwlogPolicy); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
 		v.Status = monitoring.FwlogPolicyStatus{}
 	}
 	return nil
@@ -101,6 +106,8 @@ func removeStatsPolicyOper(obj interface{}) error {
 	if v, ok := obj.(*monitoring.StatsPolicy); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
 		v.Status = monitoring.StatsPolicyStatus{}
 	}
 	return nil

@@ -7,6 +7,7 @@ Input file: alerts.proto
 package cli
 
 import (
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/cli/gen"
 )
@@ -26,6 +27,8 @@ func removeAlertOper(obj interface{}) error {
 	if v, ok := obj.(*monitoring.Alert); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
 		v.Status = monitoring.AlertStatus{}
 	}
 	return nil
@@ -95,6 +98,8 @@ func removeAlertDestinationOper(obj interface{}) error {
 	if v, ok := obj.(*monitoring.AlertDestination); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
 		v.Status = monitoring.AlertDestinationStatus{}
 	}
 	return nil
@@ -164,6 +169,8 @@ func removeAlertPolicyOper(obj interface{}) error {
 	if v, ok := obj.(*monitoring.AlertPolicy); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
 		v.Status = monitoring.AlertPolicyStatus{}
 	}
 	return nil

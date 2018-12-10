@@ -7,6 +7,7 @@ Input file: techsupport.proto
 package cli
 
 import (
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/cli/gen"
 )
@@ -33,6 +34,8 @@ func removeTechSupportRequestOper(obj interface{}) error {
 	if v, ok := obj.(*monitoring.TechSupportRequest); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
 		v.Status = monitoring.TechSupportRequestStatus{}
 	}
 	return nil

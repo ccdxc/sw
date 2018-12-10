@@ -251,8 +251,17 @@ func editCmd(c *cli.Context) {
 	}
 	defer os.Remove(tf.Name())
 
+	if err := removeObjOper(ctx, obj); err != nil {
+		log.Fatalf("Error removing oper info from object %+v\n", obj)
+	}
+
 	dumpBytes := dumpStruct(ctx.dumpYml, obj)
 	tf.Write(dumpBytes)
+	// flush the file contents because editFromFile would read from the filename
+	if err := tf.Sync(); err != nil {
+		fmt.Printf("file sync error - %s", err)
+		return
+	}
 	filename = tf.Name()
 
 	if err := editFromFile(ctx, filename); err != nil {

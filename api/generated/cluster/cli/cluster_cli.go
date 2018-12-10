@@ -7,6 +7,7 @@ Input file: cluster.proto
 package cli
 
 import (
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/cli/gen"
 )
@@ -47,6 +48,8 @@ func removeClusterOper(obj interface{}) error {
 	if v, ok := obj.(*cluster.Cluster); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
 		v.Status = cluster.ClusterStatus{}
 	}
 	return nil
@@ -67,6 +70,8 @@ func removeHostOper(obj interface{}) error {
 	if v, ok := obj.(*cluster.Host); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
 		v.Status = cluster.HostStatus{}
 	}
 	return nil

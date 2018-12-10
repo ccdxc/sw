@@ -7,6 +7,7 @@ Input file: x509.proto
 package cli
 
 import (
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/venice/cli/gen"
 )
@@ -47,6 +48,8 @@ func removeCertificateOper(obj interface{}) error {
 	if v, ok := obj.(*security.Certificate); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
 		v.Status = security.CertificateStatus{}
 	}
 	return nil

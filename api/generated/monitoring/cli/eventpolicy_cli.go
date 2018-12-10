@@ -7,6 +7,7 @@ Input file: eventpolicy.proto
 package cli
 
 import (
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/cli/gen"
 )
@@ -26,6 +27,8 @@ func removeEventPolicyOper(obj interface{}) error {
 	if v, ok := obj.(*monitoring.EventPolicy); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
 		v.Status = monitoring.EventPolicyStatus{}
 	}
 	return nil

@@ -7,6 +7,7 @@ Input file: sgpolicy.proto
 package cli
 
 import (
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/venice/cli/gen"
 )
@@ -75,6 +76,8 @@ func removeSGPolicyOper(obj interface{}) error {
 	if v, ok := obj.(*security.SGPolicy); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
 		v.Status = security.SGPolicyStatus{}
 	}
 	return nil

@@ -81,6 +81,8 @@ func removeBookOper(obj interface{}) error {
 	if v, ok := obj.(*bookstore.Book); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
 		v.Status = bookstore.BookStatus{}
 	}
 	return nil
@@ -129,6 +131,8 @@ func removeCustomerOper(obj interface{}) error {
 	if v, ok := obj.(*bookstore.Customer); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
 		v.Status = bookstore.CustomerStatus{}
 	}
 	return nil
@@ -163,6 +167,8 @@ func removePublisherOper(obj interface{}) error {
 	if v, ok := obj.(*bookstore.Publisher); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
 		v.Status = bookstore.PublisherStatus{}
 	}
 	return nil
@@ -183,6 +189,8 @@ func removeStoreOper(obj interface{}) error {
 	if v, ok := obj.(*bookstore.Store); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
 		v.Status = bookstore.StoreStatus{}
 	}
 	return nil

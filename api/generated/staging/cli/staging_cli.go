@@ -7,6 +7,7 @@ Input file: staging.proto
 package cli
 
 import (
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/staging"
 	"github.com/pensando/sw/venice/cli/gen"
 )
@@ -26,6 +27,8 @@ func removeBufferOper(obj interface{}) error {
 	if v, ok := obj.(*staging.Buffer); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
 		v.Status = staging.BufferStatus{}
 	}
 	return nil
@@ -53,6 +56,8 @@ func removeClearActionOper(obj interface{}) error {
 	if v, ok := obj.(*staging.ClearAction); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
 		v.Status = staging.ClearActionStatus{}
 	}
 	return nil

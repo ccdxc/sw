@@ -7,6 +7,7 @@ Input file: tenant.proto
 package cli
 
 import (
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/cli/gen"
 )
@@ -26,6 +27,8 @@ func removeTenantOper(obj interface{}) error {
 	if v, ok := obj.(*cluster.Tenant); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
 		v.Status = cluster.TenantStatus{}
 	}
 	return nil

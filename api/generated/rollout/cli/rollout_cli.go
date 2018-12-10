@@ -7,6 +7,7 @@ Input file: rollout.proto
 package cli
 
 import (
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/rollout"
 	"github.com/pensando/sw/venice/cli/gen"
 )
@@ -82,6 +83,8 @@ func removeRolloutOper(obj interface{}) error {
 	if v, ok := obj.(*rollout.Rollout); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
 		v.Status = rollout.RolloutStatus{}
 	}
 	return nil

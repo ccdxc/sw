@@ -7,6 +7,7 @@ Input file: workload.proto
 package cli
 
 import (
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/venice/cli/gen"
 )
@@ -47,6 +48,8 @@ func removeWorkloadOper(obj interface{}) error {
 	if v, ok := obj.(*workload.Workload); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
 		v.Status = workload.WorkloadStatus{}
 	}
 	return nil

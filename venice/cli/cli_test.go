@@ -199,6 +199,7 @@ func TestEdit(t *testing.T) {
 	oldEditor := os.Getenv("VENICE_EDITOR")
 	os.Setenv("VENICE_EDITOR", "sed -i s/55/77/g")
 	out := veniceCLI("edit workload TestEditVm")
+	fmt.Printf("edit workload:---\n%s\n---", out)
 
 	obj := &workload.Workload{}
 	out = veniceCLI("read workload -j TestEditVm")

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"context"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	loginctx "github.com/pensando/sw/api/login/context"
   	"github.com/pensando/sw/venice/cli/gen"
@@ -32,6 +33,8 @@ func remove{{$svcObj.ObjName}}Oper(obj interface{}) error {
 	if v, ok := obj.(*{{$svcAndObjName}}); ok {
                 v.UUID = ""
                 v.ResourceVersion = ""
+                v.CreationTime = api.Timestamp{}
+                v.ModTime = api.Timestamp{}
 		v.Status = {{$svcAndObjName}}Status{}
         }
 	return nil

@@ -7,6 +7,7 @@ Input file: auth.proto
 package cli
 
 import (
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/venice/cli/gen"
 )
@@ -103,6 +104,8 @@ func removeAuthenticationPolicyOper(obj interface{}) error {
 	if v, ok := obj.(*auth.AuthenticationPolicy); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
 		v.Status = auth.AuthenticationPolicyStatus{}
 	}
 	return nil
@@ -158,6 +161,8 @@ func removeRoleOper(obj interface{}) error {
 	if v, ok := obj.(*auth.Role); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
 		v.Status = auth.RoleStatus{}
 	}
 	return nil
@@ -192,6 +197,8 @@ func removeRoleBindingOper(obj interface{}) error {
 	if v, ok := obj.(*auth.RoleBinding); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
 		v.Status = auth.RoleBindingStatus{}
 	}
 	return nil
@@ -233,6 +240,8 @@ func removeUserOper(obj interface{}) error {
 	if v, ok := obj.(*auth.User); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
 		v.Status = auth.UserStatus{}
 	}
 	return nil

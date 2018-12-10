@@ -7,6 +7,7 @@ Input file: mirror.proto
 package cli
 
 import (
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/cli/gen"
 )
@@ -89,6 +90,8 @@ func removeMirrorSessionOper(obj interface{}) error {
 	if v, ok := obj.(*monitoring.MirrorSession); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
 		v.Status = monitoring.MirrorSessionStatus{}
 	}
 	return nil
