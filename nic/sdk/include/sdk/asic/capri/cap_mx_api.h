@@ -63,9 +63,10 @@ int cap_bx_check_sync(int chip_id, int inst_id);
 void cap_bx_mac_stat(int chip_id, int inst_id, int ch, int short_report,
                      uint64_t *stats_data);
 
-void cap_pp_sbus_write(int chip_id, int rcvr_addr, int data_addr, int data);
-int  cap_pp_sbus_read (int chip_id, int rcvr_addr, int data_addr);
-int  cap_pp_sbus_reset(int chip_id, int rcvr_addr);
+void cap_pp_sbus_write(int chip_id, int rcvr_addr,
+                       int data_addr, uint32_t data);
+uint32_t  cap_pp_sbus_read (int chip_id, int rcvr_addr, int data_addr);
+void  cap_pp_sbus_reset(int chip_id, int rcvr_addr);
 int  cap_mx_serdes_lpbk_get (int chip_id, int inst_id, int ch);
 void cap_mx_serdes_lpbk_set (int chip_id, int inst_id, int ch, int value);
 void cap_mx_stats_reset(int chip_id, int inst_id, int ch, int value);

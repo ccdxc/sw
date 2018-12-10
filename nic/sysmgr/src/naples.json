@@ -43,4 +43,9 @@
     "command": "/nic/bin/nevtsproxy",
     "dependencies": ["delphi",  "hal"],
     "flags": ["no_watchdog", "non_critical"]
+}, {
+    "name": "sysmond",
+    "command": "/platform/bin/sysmond",
+    "dependencies": ["delphi", "hal"],
+    "flags": ["no_watchdog", "non_critical"]
 }]

@@ -53,7 +53,7 @@ TEST_F(qsfp_test, pal_hw_qsfp_write) {
     printf("\nreading done\n");
 
     printf("Enter a value to write:");
-    scanf("%x",&qsfp_wbuffer);
+    scanf("%c",&qsfp_wbuffer);
     ASSERT_EQ(sdk::lib::pal_qsfp_write(&qsfp_wbuffer, 1, 0x56, lowpage, MAX_QSFP_RETRIES, 2), 0);
     printf("writing done\n");
 

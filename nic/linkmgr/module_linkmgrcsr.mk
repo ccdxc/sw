@@ -4,8 +4,7 @@ MODULE_TARGET   = liblinkmgrcsr.so
 MODULE_PIPELINE = iris gft
 MODULE_SRCS     = ${MODULE_SRC_DIR}/pknobs.cc \
                   ${MODULE_SRC_DIR}/cap_mx_api.cc \
-                  ${MODULE_SRC_DIR}/cap_bx_api.cc \
-                  ${MODULE_SRC_DIR}/cap_sbus_api.cc
+                  ${MODULE_SRC_DIR}/cap_bx_api.cc
 MODULE_INCS     = ${TOPDIR}/nic/asic/capri/model/cap_top \
                   ${TOPDIR}/nic/asic/capri/model/cap_top/csr_defines \
                   ${TOPDIR}/nic/asic/capri/model/utils \

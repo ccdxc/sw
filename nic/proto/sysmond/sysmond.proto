@@ -1,0 +1,22 @@
+syntax = "proto3";
+package sysmond;
+
+import "delphi.proto";
+
+message AsicTemperatureMetrics {
+    fixed64 Key = 1;
+
+    delphi.Counter local_temperature           = 2;
+    delphi.Counter die_temperature             = 3;
+    delphi.Counter hbm_temperature             = 4;
+
+}
+
+message AsicPowerMetrics {
+    fixed64 Key = 1;
+
+    delphi.Counter pin           = 2;
+    delphi.Counter pout1         = 3;
+    delphi.Counter pout2         = 4;
+
+}

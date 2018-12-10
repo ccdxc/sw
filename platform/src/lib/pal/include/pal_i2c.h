@@ -33,5 +33,4 @@ int pal_qsfp_read(const uint8_t *buffer, uint32_t size, uint32_t offset,
 int pal_qsfp_write(const uint8_t *buffer, uint32_t size, uint32_t addr,
                    uint32_t nretry, uint32_t port);
 
-
 #endif /* __PAL_FRU_IMPL_H__ */

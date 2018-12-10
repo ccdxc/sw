@@ -42,6 +42,19 @@ cap_nx_block_read(uint32_t chip, uint64_t addr, int size,
     return data;
 }
 
+unsigned int
+cap_nx_read_pb_axi_cnt(int rd) { // 1=>rd , 0=> wr
+    uint32_t rd_data1[2];
+    uint32_t rd_data0[2];
+    if (rd == 1) {
+        rd_data0[0] = cap_nx_block_read(0, RBM_BRIDGE_(PB_M_3_150_AM_CNTR0), 1, false, 1);
+        return (unsigned int)rd_data0[0];
+    } else {
+        rd_data1[0] = cap_nx_block_read(0, RBM_BRIDGE_(PB_M_3_150_AM_CNTR1), 1, false, 1);
+        return (unsigned int)rd_data1[0];
+    }
+}
+
 hal_ret_t
 capri_hbm_parse (std::string cfg_path, std::string pgm_name)
 {
@@ -156,10 +169,10 @@ capri_hbm_llc_cache_init (capri_cfg_t *cfg)
 {
     if (cfg == NULL || cfg->llc_cache == true) {
         HAL_TRACE_DEBUG("Enabling HBM LLC cache.");
-        cap_nx_cache_enable();
+        //cap_nx_cache_enable();
     } else {
         HAL_TRACE_DEBUG("Disabling HBM LLC cache.");
-        cap_nx_cache_disable();
+        //cap_nx_cache_disable();
     }
 
     return HAL_RET_OK;

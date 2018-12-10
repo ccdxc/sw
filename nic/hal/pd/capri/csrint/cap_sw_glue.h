@@ -15,10 +15,6 @@
 #include <sys/types.h>
 #include "nic/sdk/include/sdk/pal.hpp"
 
-#define SW_PRINT printf
-#define PLOG_API_MSG(f, ...) do {} while (0)
-#define PLOG_MSG(f, ...) do {} while (0)
-#define PLOG_ERR(f, ...) do {} while (0)
 #define SLEEP(t) usleep(t)
 #define sleep(t) usleep(t)
 
@@ -32,6 +28,26 @@ static inline uint32_t cap_sw_readreg(uint64_t addr)
     uint32_t data = 0x0;
     sdk::lib::pal_reg_read(addr, &data, 1);
     return data;
+}
+
+void cap_pp_sbus_write(int chip_id, int rcvr_addr, int data_addr, unsigned int data);
+
+static inline void
+*romfile_open(void *rom_info)
+{
+    return NULL;
+}
+
+static inline int
+romfile_read(void *f, unsigned int *datap)
+{
+    return 0;
+}
+
+static inline void
+romfile_close(void *f)
+{
+    return;
 }
 
 #endif /* __CAP_SW_GLUE_H__ */

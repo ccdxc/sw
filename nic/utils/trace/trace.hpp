@@ -134,5 +134,68 @@ void trace_init(const char *name, uint64_t cpu_mask, bool sync_mode,
 
 void trace_deinit(void);
 
+#define TRACE_ERR(logobj, fmt, ...)                          \
+    if (logobj) {                                            \
+        logobj->error("[{}:{}] " fmt, __func__, __LINE__,    \
+                                        ##__VA_ARGS__);      \
+    }                                                        \
+
+#define TRACE_ERR_NO_META(logobj, fmt, ...)                  \
+    if (logobj) {                                            \
+        logobj->error(fmt);                                  \
+    }                                                        \
+
+#define TRACE_WARN(logobj, fmt, ...)                         \
+    if (logobj) {                                            \
+        logobj->warn("[{}:{}] " fmt, __func__, __LINE__,     \
+                                       ##__VA_ARGS__);       \
+    }                                                        \
+
+#define TRACE_INFO(logobj, fmt, ...)                         \
+    if (logobj) {                                            \
+        logobj->info("[{}:{}] " fmt, __func__, __LINE__,     \
+                                       ##__VA_ARGS__);       \
+    }                                                        \
+
+#define TRACE_DEBUG(logobj, fmt, ...)                        \
+    if (logobj) {                                            \
+        logobj->debug("[{}:{}] " fmt, __func__, __LINE__,    \
+                                        ##__VA_ARGS__);      \
+    }                                                        \
+
+#define TRACE_DEBUG_NO_META(logobj, fmt, ...)                \
+    if (logobj) {                                            \
+        logobj->->debug(fmt);                                \
+    }                                                        \
+
+#define ERR_IF(logobj, cond, fmt, ...)                       \
+    if (logobj && (cond))) {                                 \
+        logobj->error("[{}:{}] "  fmt,  __func__, __LINE__,  \
+                                        ##__VA_ARGS__);      \
+    }                                                        \
+
+#define WARN_IF(logobj, cond, fmt, ...)                      \
+    if (logobj && (cond))) {                                 \
+        logobj->warn("[{}:{}] "  fmt, __func__, __LINE__,    \
+                                       ##__VA_ARGS__);       \
+    }                                                        \
+
+#define INFO_IF(logobj, cond, fmt, ...)                      \
+    if (logobj && (cond))) {                                 \
+        logobj->info("[{}:{}] "  fmt, __func__, __LINE__,    \
+                                       ##__VA_ARGS__);       \
+    }                                                        \
+
+#define DEBUG_IF(logobj, cond, fmt, ...)                     \
+    if (logobj && (cond))) {                                 \
+        logobj->debug("[{}:{}] "  fmt, __func__, __LINE__,   \
+                                        ##__VA_ARGS__);      \
+    }                                                        \
+
+#define TRACE_FLUSH(logobj)                                  \
+    if (logobj) {                                            \
+        logobj->flush();                                     \
+    }
+
 }    // namespace utils
 
