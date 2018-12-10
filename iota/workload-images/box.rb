@@ -49,6 +49,7 @@ PACKAGES = %w[
   vsftpd
   nfs-utils
   nfs-utils-lib
+  lftp 
 ]
 
 run "yum install -y #{PACKAGES.join(" ")}"
