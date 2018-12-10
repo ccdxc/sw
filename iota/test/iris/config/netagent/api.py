@@ -11,8 +11,6 @@ from enum import Enum
 import iota.harness.api as api
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 
-
-
 class CfgOper(Enum):
     ADD    = 1
     DELETE = 2
@@ -73,7 +71,9 @@ def __hw_rest_api_handler(rest_api_path, obj, cfgOper = CfgOper.ADD):
     outfile.close()
     for agent_ip in AGENT_IPS:
         api.Logger.info("Pushing config to Node: %s" % agent_ip)
-        os.system("cat temp_config.json")
+        if GlobalOptions.debug:
+            os.system("cat temp_config.json")
+
         os.system("sshpass -p vm scp temp_config.json vm@%s:~" % agent_ip)
         url = None
         oper = None

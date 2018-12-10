@@ -27,6 +27,30 @@ sgpolicy_template = { "sgpolicies" : [
     ]
 }
 
+def get_ip_addr(a, b, c):
+    return str(a) + "." + str(b) + "." + str(c) + ".0/24"
+
+def generate_ip_list(count):
+    gen_count = 0
+    ip_list = [] 
+    a = 1
+    b = 0
+    c = 0
+
+    while(gen_count < count):
+        ip_list.append(get_ip_addr(a, b, c))
+        c = c + 1
+        if (c == 128):
+            c = 0
+            b = b + 1
+            if ( b == 128):
+                b = 0
+                a = a + 1
+
+        gen_count = gen_count + 1
+
+    return ip_list
+
 def get_verif(protocol, port, result):
     verif = {}
     verif['protocol'] = protocol
@@ -42,16 +66,24 @@ def get_appconfig(protocol, port):
 
 def get_destination(dst_ip, protocol, port):
     dst = {}
-    dst['addresses'] = []
-    dst['addresses'].append(dst_ip)
-    dst['app_configs'] = []
-    dst['app_configs'].append(get_appconfig(protocol, port))
+
+    if(type(dst_ip) is list):
+        dst['addresses'] = dst_ip
+    else:
+        dst['addresses'] = []
+        dst['addresses'].append(dst_ip)
+
+    dst['app-configs'] = []
+    dst['app-configs'].append(get_appconfig(protocol, port))
     return dst
 
 def get_source(src_ip):
     src = {}
-    src['addresses'] = []
-    src['addresses'].append(src_ip)
+    if(type(src_ip) is list):
+        src['addresses'] = src_ip
+    else:
+        src['addresses'] = []
+        src['addresses'].append(src_ip)
     return src
 
 def get_rule(dst_ip, src_ip, protocol, port, action):
@@ -65,11 +97,14 @@ parser = argparse.ArgumentParser(description='Naples Security Policy Generator')
 parser.add_argument('--topology', dest='topology_dir', required = dir,
                     default=None, help='Path to the JSON file having IOTA endpoint information.')
 
+parser.add_argument('--expansion', dest='generate_expansion', action='store_true', default=False,
+                     help='Generate expansion cases.')
+
 GlobalOptions = parser.parse_args()
 GlobalOptions.endpoint_file = GlobalOptions.topology_dir + "/endpoints.json"
 GlobalOptions.protocols = ["udp", "tcp", "icmp"]
-GlobalOptions.directories = ["udp", "tcp", "icmp", "mixed", "scale"]
-GlobalOptions.ports = ["10", "22", "24", "30", "50-100", "101-200", "201-250, 251-290""10000-20000", "65535"]
+GlobalOptions.directories = ["udp", "tcp", "icmp", "mixed", "scale", "expansion"]
+GlobalOptions.ports = ["10", "22", "24", "30", "50-100", "101-200", "201-250","10000-20000", "65535"]
 GlobalOptions.actions = ["PERMIT", "DENY", "REJECT"]
 
 def StripIpMask(ip_address):
@@ -177,35 +212,70 @@ def Main():
         json.dump(verif, open(GlobalOptions.topology_dir + "/mixed/{}_mixed_verif.json".format(count), "w"), indent=4)
 
     # Scale Config
-    for count in range(1, 4):
-        for protocol in GlobalOptions.protocols:
+    for count in [10000, 20000, 30000, 40000, 50000, 55000, 56000, 57000, 58000, 59000, 60000, 70000, 75000]:
+    #for count in [10000]:
+        sgpolicy = sgpolicy_template
+        policy_rules = sgpolicy_template['sgpolicies'][0]['spec']['policy-rules']
+        del policy_rules[:]
+        verif =[]
+        rule_count = 0
+        i = 0
+        j = 1
+        k = 1
+        proto_i = 0
+        protocol = GlobalOptions.protocols[proto_i]
+
+        while(rule_count < count):
+            action = GlobalOptions.actions[random.randint(0, len(GlobalOptions.actions) - 1)]
+            rule = get_rule(EP[i], EP[j], protocol, str(k), action)
+            policy_rules.append(rule)
+            rule = get_rule(EP[j], EP[i], protocol, str(k), action)
+            policy_rules.append(rule)
+            verif.append(get_verif(protocol, str(k), action))
+            rule_count += 2
+            k = k + 1
+            if (k >= 65536):
+                k = 1
+                proto_i = proto_i + 1              
+                protocol = GlobalOptions.protocols[proto_i]
+           
+                j = j + 1
+                if (j == len(EP)):
+                    i = i + 1 
+                    j = i + 1
+ 
+                if (i == len(EP) - 1):
+                    print("Breaking from here I = {} J = {} RULE_CNT = {}".format(i, j, rule_count))
+                    break
+   
+        print("Writing rule for scale {}".format(count))     
+        json.dump(sgpolicy, open(GlobalOptions.topology_dir + "/scale/{}_scale_policy.json".format(count), "w"), indent=4)
+        json.dump(verif, open(GlobalOptions.topology_dir + "/scale/{}_scale_verif.json".format(count), "w"), indent=4)
+
+    #Expansion Config
+    if GlobalOptions.generate_expansion : 
+        pow_2 = [4 ** x for x in range(5)]
+        ip_list = generate_ip_list(1024) 
+
+        for count in [5000, 10000, 20000, 30000, 40000, 50000]:
             sgpolicy = sgpolicy_template
             policy_rules = sgpolicy_template['sgpolicies'][0]['spec']['policy-rules']
             del policy_rules[:]
             verif =[]
-
-            for i in range(0, len(EP) - 4):
-                for j in range(i + 1, len(EP)):
-                     for k in range(1, 40000):
+            for n in pow_2:
+                for m in pow_2:
+                    rule_count = 1 
+                    src_ip = ip_list[0 : n]
+                    dst_ip = ip_list[512 : 512 + m]
+                     
+                    while(rule_count <= count):
                         action = GlobalOptions.actions[random.randint(0, len(GlobalOptions.actions) - 1)]
-                        rule = get_rule(EP[i], EP[j], protocol, str(k), action)
+                        rule = get_rule(src_ip, dst_ip, protocol, str(rule_count), action)
                         policy_rules.append(rule)
-                        rule = get_rule(EP[j], EP[i], protocol, str(k), action)
-                        policy_rules.append(rule)
-                        verif.append(get_verif(protocol, str(k), action))
+                        rule_count = rule_count + 1
 
-            for i in range(0, len(EP) - 4):
-                for j in range(i + 1, len(EP)):
-                    for port in ["100-200", "1000-20000", "25000-26000, 27000-28000"]: 
-                        action = GlobalOptions.actions[random.randint(0, len(GlobalOptions.actions) - 1)]
-                        rule = get_rule(EP[i], EP[j], protocol, port, action)
-                        policy_rules.append(rule)
-                        rule = get_rule(EP[j], EP[i], protocol, port, action)
-                        policy_rules.append(rule)
-                        verif.append(get_verif(protocol, port, action))
-
-        json.dump(sgpolicy, open(GlobalOptions.topology_dir + "/scale/{}_scale_policy.json".format(count), "w"), indent=4)
-        json.dump(verif, open(GlobalOptions.topology_dir + "/scale/{}_scale_verif.json".format(count), "w"), indent=4)
+                    print("Writing rule for scale {}_{}_{}".format(count, n, m))
+                    json.dump(sgpolicy, open(GlobalOptions.topology_dir + "/expansion/{}_{}_{}_expansion_policy.json".format(count, n, m), "w"), indent=4)
 
 if __name__ == '__main__':
     Main()

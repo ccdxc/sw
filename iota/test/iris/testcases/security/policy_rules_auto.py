@@ -7,6 +7,8 @@ import iota.test.iris.config.netagent.cfg_api as netagent_cfg_api
 import iota.test.iris.config.netagent.api as agent_api
 import iota.test.iris.testcases.security.utils as utils
 import pdb
+import time
+
 
 def Setup(tc):
     tc.workload_pairs = api.GetRemoteWorkloadPairs()
@@ -15,29 +17,34 @@ def Setup(tc):
     return api.types.status.SUCCESS
 
 def Trigger(tc):
-
-    api.Logger.info("BARUN TRIGGER PROTO = {} PAIRS {}".format(tc.iterators.proto, tc.workload_pairs))
     policies = utils.GetTargetJsons(tc.iterators.proto)
     sg_json_obj = None
+    tc.time_matrix = []
 
     for policy_json in policies:
+        api.Logger.info("Running test for {}".format(policy_json))
         sg_json_obj = utils.ReadJson(policy_json)
-        verif_json = utils.GetVerifJsonFromPolicyJson(policy_json)
+        start = time.time()
         agent_api.ConfigureSecurityGroupPolicies(sg_json_obj.sgpolicies, oper = agent_api.CfgOper.ADD)
-        for pair in tc.workload_pairs:
-            w1 = pair[0]
-            w2 = pair[1]
-            result = utils.RunAll(w1, w2, verif_json)
-            if result != api.types.status.SUCCESS:
-                return api.types.status.FAILURE
+        end = time.time()
         agent_api.ConfigureSecurityGroupPolicies(sg_json_obj.sgpolicies, oper = agent_api.CfgOper.DELETE)
+        res_time = {}
+        res_time["policy"] = policy_json
+        res_time["time"] = end - start
+        tc.time_matrix.append(res_time)
 
-    return api.types.status.FAILURE
+        api.Logger.info("For policy {} the time taken is {}".format(policy_json, end - start))
+
+    return api.types.status.SUCCESS
 
 def Verify(tc):
     result = api.types.status.SUCCESS
+    api.Logger.info("Result is {}".format(tc.time_matrix))
     return result
 
 def Teardown(tc):
     api.Logger.info("Tearing down ...")
+    policy_json = "{}/sgpolicy.json".format(api.GetTopologyDirectory())
+    sg_json_obj = utils.ReadJson(policy_json)
+    agent_api.ConfigureSecurityGroupPolicies(sg_json_obj.sgpolicies, oper = agent_api.CfgOper.ADD)
     return api.types.status.SUCCESS
