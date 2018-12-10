@@ -21,6 +21,11 @@ parser.add_argument('--testcase', dest='testcase', default=None,
                     help='Run single Testcase.')
 parser.add_argument('--coverage', dest='coverage',
                     action='store_true', help='Collect code coverage data.')
+parser.add_argument('--coverage-file', dest='coverage_file',
+                    help='Naples Coverage file.')
+parser.add_argument('--coverage-dir', dest='coverage_dir',
+                    help='Directory to copy coverage file')
+
 parser.add_argument('--svcport', dest='svcport', default=60000,
                     help='IOTA Service Port.')
 parser.add_argument('--testbed', dest='testbed_json', default="/warmd.json",

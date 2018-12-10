@@ -1,0 +1,29 @@
+{
+    "type": "HW",
+    "modules": {
+        "hal": {
+            "dirs": [
+            ],
+            "exclude_dirs" : [
+            ],
+            "file_patterns": [
+                ".c",
+                ".cc"
+            ],
+            "remove_files": [
+            ],
+            "obj_dir" : "build/aarch64/iris/gen",
+            "obj_dir_type" : "hierarchical",
+            "cov_type" : "lcov"
+        }
+    },
+    "run": [{
+        "iota": {
+            "cmd": "coverage/iota_script.sh",
+            "modules": [
+                "hal"
+            ]
+        }
+    }
+    ]
+}

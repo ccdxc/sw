@@ -412,10 +412,33 @@ def CopyFromHost(node_name, files, dest_dir):
     return __CopyCommon(topo_svc.DIR_OUT, node_name, "%s_host" % node_name, files, dest_dir)
 
 def CopyFromNaples(node_name, files, dest_dir):
-    return __CopyCommon(topo_svc.DIR_OUT, node_name, "%s_naples" % node_name, files, dest_dir)
+    req = Trigger_CreateExecuteCommandsRequest()
+    for f in files:
+        copy_cmd = "sshpass -p %s scp -o StrictHostKeyChecking=no  %s@%s:%s ." % ("pen123", 'root', "1.0.0.2", f)
+        Trigger_AddHostCommand(req, node_name, copy_cmd)
+    tresp = Trigger(req)
+    for cmd in tresp.commands:
+        if cmd.exit_code != 0:
+            Logger.error("Copy from failed %s" % cmd.command)
+
+    files = [os.path.basename(f) for f in files]
+    return __CopyCommon(topo_svc.DIR_OUT, node_name, "%s_host" % node_name, files, dest_dir)
 
 def CopyFromWorkload(node_name, workload_name, files, dest_dir):
     return __CopyCommon(topo_svc.DIR_OUT, node_name, workload_name, files, dest_dir)
 
 def RestartNodes(nodes):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().RestartNodes(nodes)
+
+def GetCoverageFiles(src_cov_file, dst_dir):
+    for node in GetNaplesHostnames():
+        resp = CopyFromNaples(node, [src_cov_file], dst_dir)
+        if resp == None or resp.api_response.api_status != types_pb2.API_STATUS_OK:
+            Logger.error("Failed to copy coverage files")
+            return types.status.FAILURE
+        #Rename files as coverage files have same name
+        cmd = "mv " + dst_dir + "/" + os.path.basename(src_cov_file) + " " + dst_dir + "/" +  node + "_" + os.path.basename(src_cov_file)
+        os.system(cmd)
+
+    Logger.error("Copied coverage files")
+    return types.status.SUCCESS

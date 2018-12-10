@@ -1,6 +1,6 @@
 nic/conf/*.json                                                     /nic/conf/
 nic/conf/*.ini                                                      /nic/conf/
-nic/coverage/bullseye_hal.cov                                       /nic/conf/
+nic/coverage/hw_bullseye_hal.cov                                    /nic/conf/
 nic/conf/init_bins/                                                 /nic/conf/init_bins/
 nic/conf/openssl/                                                   /nic/conf/openssl/
 nic/conf/bullseye/                                                  /nic/conf/bullseye/

@@ -3,6 +3,7 @@
 TOOLS_DIR=`dirname $0`
 ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
 export NIC_DIR=`dirname $ABS_TOOLS_DIR`
+export IOTA_DIR=$NIC_DIR/../iota/
 
 #Parse Command line options first.
 getopt --test > /dev/null
@@ -24,12 +25,12 @@ fi
 eval set -- "$PARSED"
 
 # now enjoy the options in order and nicely split until we see --
-config_file="coverage.json"
 max_job_run_time=60 #60 minutes to monitor a job.
 keep_data=0
 ignore_errors=0
 enable_model_logs=0
 skip_targets=()
+config_files=()
 while true; do
     case "$1" in
         -k |--keep-data)
@@ -41,7 +42,7 @@ while true; do
             shift 2
             ;;
         -c|--config-file)
-            config_file=$2
+            config_files+=($2)
             shift 2
             ;;
         -r|--run-only)
@@ -80,9 +81,16 @@ export COVERAGE_OUTPUT=$NIC_DIR/coverage
 export BULLSEYE_MODEL_COVERAGE_FILE=$COVERAGE_OUTPUT/bullseye_model.cov
 export BULLSEYE_HTML_OUTPUT_DIR=$COVERAGE_OUTPUT/bullseye_model_coverage
 
-export BULLSEYE_HAL_COVERAGE_FILE=$NIC_DIR/coverage/bullseye_hal.cov
-export BULLSEYE_HAL_HTML_OUTPUT_DIR=$COVERAGE_OUTPUT/bullseye_hal_coverage
+export HW_BULLSEYE_HAL_COVERAGE_FILE_PATH=/nic/conf/hw_bullseye_hal.cov
+
+export HW_BULLSEYE_HAL_COVERAGE_FILE=$NIC_DIR/coverage/hw_bullseye_hal.cov
+export HW_BULLSEYE_HAL_HTML_OUTPUT_DIR=$COVERAGE_OUTPUT/hw_bullseye_hal_coverage
+export SIM_BULLSEYE_HAL_COVERAGE_FILE=$NIC_DIR/coverage/sim_bullseye_hal.cov
+export SIM_BULLSEYE_HAL_HTML_OUTPUT_DIR=$COVERAGE_OUTPUT/sim_bullseye_hal_coverage
+export ALL_BULLSEYE_HAL_HTML_OUTPUT_DIR=$COVERAGE_OUTPUT/all_bullseye_hal_coverage
+export ALL_BULLSEYE_HAL_COVERAGE_FILE=$COVERAGE_OUTPUT/all_bullseye_hal.cov
 export BULLSEYE_HAL_FILTER_COVERAGE_FILE=$COVERAGE_CONFIG_PATH/bullseye/exclude_list.txt
+export HW_RUN_BULLSEYE_HAL_DIR=$COVERAGE_OUTPUT/hw_run_bullseye_hal_coverage
 
 
 if [ $keep_data -eq 0 ];then
@@ -90,9 +98,18 @@ if [ $keep_data -eq 0 ];then
     rm -f $MPU_COV_DUMP_FILE
 fi
 mkdir -p $COVERAGE_OUTPUT
+mkdir -p $HW_RUN_BULLSEYE_HAL_DIR
 
 if [ $ignore_errors -eq 1 ];then
     export IGNORE_ERRORS=--ignore-errors
+fi
+
+if [[ -z "${HARDWARE_TESTBED}" ]];then
+    echo "Hardware Test bed not set...."
+else
+    script="time cd $IOTA_DIR && make && ./iota.py --coverage-file ${HW_BULLSEYE_HAL_COVERAGE_FILE_PATH} --coverage-dir ${HW_RUN_BULLSEYE_HAL_DIR} --testbed ${HARDWARE_TESTBED} ${EXTRA_ARGS} 2>&1 | tee run.log"
+    echo $script > $COVERAGE_OUTPUT/iota_script.sh
+    chmod +x $COVERAGE_OUTPUT/iota_script.sh
 fi
 
 if [ $enable_model_logs -eq 1 ];then
@@ -114,6 +131,7 @@ export CAPRI_LOADER_CONF=$NIC_DIR/capri_loader.conf
 export GCOVR=$NIC_DIR/third-party/gcovr-3.3/scripts/gcovr
 export BULLSEYE_COVHTML=/home/asic/tools/eda/bullseye/bin/covhtml
 export BULLSEYE_COVSELECT=/home/asic/tools/eda/bullseye/bin/covselect
+export BULLSEYE_COVMERGE=/home/asic/tools/eda/bullseye/bin/covmerge
 export GEN_DIR=$NIC_DIR/gen
 
 if [ ${#skip_targets[@]} -eq 0 ]; then
@@ -121,7 +139,6 @@ if [ ${#skip_targets[@]} -eq 0 ]; then
 else
     $NIC_DIR/tools/gen_dol_cov_run.py --skip-targets ${skip_targets[@]}
 fi
-
 
 OUT=$?
 if [ $OUT -ne 0 ];then
@@ -133,19 +150,13 @@ set -o pipefail
 #Set up locale encoding for pipenv
 localedef -v -c -i en_US -f UTF-8 en_US.UTF-8
 export LANG=en_US.UTF-8
-#Install Virtual Env if not installed before.
-pip3 install --user pipenv
-#Setup path for Pipenv
-export PATH=$PATH:~/.local/bin/
-#Install Pandas 
-pip3 freeze > /tmp/requirements.txt                             
-pipenv install --skip-lock -r /tmp/requirements.txt      
-pipenv install --skip-lock pandas
+sudo pip3 install pandas
 
 set -o pipefail
 set -ex
+
 /home/asic/tools/eda/bullseye/bin/cov01 -1 
-pipenv run python3 $NIC_DIR/tools/gcov/run.py $SKIP_ASM_INS_STATS $IGNORE_ERRORS --config $config_file --max-job-run-time  $max_job_run_time $RUN_ONLY 2>&1 | tee $NIC_DIR/coverage.log
+python3 $NIC_DIR/tools/gcov/run.py $SKIP_ASM_INS_STATS $IGNORE_ERRORS --config ${config_files[@]}  --max-job-run-time  $max_job_run_time $RUN_ONLY 2>&1 | tee $NIC_DIR/coverage.log
 OUT=$?
 if [ $OUT -ne 0 ];then
    echo "Coverage run failed."

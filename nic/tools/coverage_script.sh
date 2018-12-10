@@ -11,5 +11,6 @@ if [ $run_status -ne 0 ];then
     echo "Coverage run failed...."
     exit run_status
 fi
+echo "HARDWARE $HARDWARE_TESTBED ${HARDWARE_TESTBED}"
 sudo chmod 777 coverage/ -R
 exit $?

@@ -61,4 +61,7 @@ def Main():
         ts.PrintSummary()
     print(types.HEADER_SHORT_SUMMARY)
 
+    if GlobalOptions.coverage_file and GlobalOptions.coverage_dir:
+       api.GetCoverageFiles(GlobalOptions.coverage_file, GlobalOptions.coverage_dir)
+
     return result

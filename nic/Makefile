@@ -10,14 +10,18 @@ export BLDTOP       := ${realpath .}
 export MKINFRA      := ${SDKDIR}/mkinfra
 export MKDEFS       := ${NICDIR}/mkdefs
 export COVDIR       := ${NICDIR}/coverage
-export COVFILE_NAME := bullseye_hal.cov
-export COVFILE      := ${COVDIR}/${COVFILE_NAME}
 
 ifeq ($(COVERAGE),1)
     export COVERAGE_OPTS := --coveragerun
     export SUDO_OPT := sudo
     # Coverage needs to know path of arm
 	export PATH := ${PATH}:/tool/toolchain/aarch64-1.1/bin
+	ifeq ($(ARCH),aarch64)
+	    export COVFILE_NAME := hw_bullseye_hal.cov
+	else
+	    export COVFILE_NAME := sim_bullseye_hal.cov
+	endif
+    export COVFILE := ${COVDIR}/${COVFILE_NAME}
 .ONESHELL:
 endif
 

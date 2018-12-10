@@ -46,7 +46,7 @@ mbt_log = nic_dir + "/mbt.log"
 storage_dol_log = nic_dir + "/storage_dol.log"
 sample_client_log = nic_dir + "/sample_client.log"
 bullseye_model_cov_file = nic_dir + "/coverage/bullseye_model.cov"
-bullseye_hal_cov_file = nic_dir + "/coverage/bullseye_hal.cov"
+bullseye_hal_cov_file = nic_dir + "/coverage/sim_bullseye_hal.cov"
 halctl_dir = nic_dir + "/agent/cmd/halctl"
 
 naples_container_image_dir = nic_dir + "/obj/images"

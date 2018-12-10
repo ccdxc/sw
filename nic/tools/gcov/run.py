@@ -12,10 +12,12 @@ import asm_data_process
 import env
 import utils
 import time
+import glob
 
 parser = argparse.ArgumentParser(description='Coverage generator')
-parser.add_argument('--config', dest='conf_file',
-                    default='coverage.json', help='Coverage config file')
+parser.add_argument('--config', dest='conf_files',
+                    nargs='*', type=str,
+                    default=[], help='Coverage config files')
 parser.add_argument('--run-only', dest='run_only',
                     default=None, help='Run only job')
 parser.add_argument('--ignore-errors', dest='ignore_errors', action='store_true', help='Ignore Dol errors and continue coverage.)')
@@ -55,12 +57,12 @@ def register_connector(target_class):
     coverage_registry[target_class.__name__] = target_class
 
 class CoverageBase:
-    
+
     _cov_types_ = {}
-    
+
     def __init__(self):
         pass
-    
+
     @classmethod
     def factory(cls, cov_type):
         try:
@@ -74,11 +76,11 @@ class CoverageBase:
             cls._cov_types_[cov_type] = subclass
             return subclass
         return decorator
-    
+
     @staticmethod
     def is_valid_coverage_info_file(file):
         pass
-    
+
     @staticmethod
     def gen_html(info_file=None, info_dir=None, cov_output_dir=None, ignore_errors=True):
         pass
@@ -90,7 +92,7 @@ class CoverageBase:
     @staticmethod
     def merge_coverage_files(self, test_name, lcov_info_files, output_file):
         pass
-    
+
     @staticmethod
     def create_coverage_file(self, directory, output_file):
         pass
@@ -99,13 +101,13 @@ class CoverageBase:
     def remove_files(self, lcov_out_file, remove_files):
         pass
 
-        
+
 @CoverageBase.register('lcov')
 class LcovCoverage(CoverageBase):
-    
+
     def __init__(self):
         pass
-    
+
     @staticmethod
     def gcov_create(file,  obj_dir_path, dest_dir):
         subprocess.call(["gcov", file, "-o", obj_dir_path],
@@ -113,19 +115,19 @@ class LcovCoverage(CoverageBase):
         gcov_out_file = file + ".gcov"
         if dest_dir and os.path.isfile(gcov_out_file):
             subprocess.call(["mv", gcov_out_file, dest_dir])
-        
+
     @staticmethod
     def create_coverage_file(directory, output_file):
         subprocess.call(["lcov", "-t", "result", "-o",
                          output_file, "-c", "-d", directory, "--ignore-errors", "gcov"])
-    
+
     @staticmethod
     def is_valid_coverage_info_file(file):
         for line in open(file):
             if "SF:" in line:
                 return True
         return False
-    
+
     @staticmethod
     def gen_html(info_file=None, info_dir=None, cov_output_dir=None, ignore_errors=True):
         cmd = ["genhtml", "-o", cov_output_dir, info_file]
@@ -141,7 +143,7 @@ class LcovCoverage(CoverageBase):
         lcov_info_files = []
         os.chdir(env.nic_dir)
         exclude_dirs = [env.nic_dir + "/" + d for d in data.get("exclude_dirs", [])]
-        
+
         #This is hack for now, move all the *.gcda and *.gcno files to same level.
         if data.get("obj_dir_type") == "bazel":
             #Move all the GCDA files to same location.
@@ -149,7 +151,7 @@ class LcovCoverage(CoverageBase):
             mv_cmd = "find . -name '*.gcda'  -type f |  xargs -i mv {} " + bazel_tmp_dir + "/" + name
             subprocess.call([mv_cmd], shell=True)
             os.chdir(env.nic_dir)
-        
+
         for dir in data.get("dirs", []):
             for root, dirs, files in os.walk(dir, topdown=True):
                 dirs[:] = [d for d in dirs if env.nic_dir  + "/" + root + "/" + d not in exclude_dirs]
@@ -171,7 +173,7 @@ class LcovCoverage(CoverageBase):
                     gcda_ext = ".pic.gcda"
                 else:
                     assert 0
-                    
+
                 obj_dir_paths = get_obj_dirs(data.get("obj_dir_type"), data["obj_dir"], root)
                 for file in files:
                     if file.endswith(tuple(data.get("file_patterns", [".c", ".cc"]))):
@@ -234,25 +236,25 @@ class LcovCoverage(CoverageBase):
             cmd = ["lcov", "-r", lcov_out_file]
             cmd.extend(remove_files)
             cmd.extend(["-o", lcov_out_file,  "--ignore-errors", "source"])
-            subprocess.call(cmd)     
+            subprocess.call(cmd)
 
 
 @CoverageBase.register('capcov')
 class CapcovCoverage(CoverageBase):
-    
+
     def __init__(self):
         pass
-    
+
     @staticmethod
     def create_coverage_file(directory, output_file):
         subprocess.call(["lcov", "-t", "result", "-o",
                          output_file, "-c", "-d", directory, "--ignore-errors", "gcov"])
-    
+
     @staticmethod
     def is_valid_coverage_info_file(file):
         return True
 
-    
+
     @staticmethod
     def gen_html_local(info_file=None, info_dir=None, cov_output_dir=None, ignore_errors=True):
         cwd = os.getcwd()
@@ -262,7 +264,7 @@ class CapcovCoverage(CoverageBase):
         subprocess.call(cmd)
         os.chdir(cwd)
 
-        
+
     @staticmethod
     def generate_coverage(data, name, cov_output_dir):
         entry_dir = os.getcwd()
@@ -284,7 +286,7 @@ class CapcovCoverage(CoverageBase):
         cap_loader_info = {}
         for row in reader:
             cap_loader_info[row[0]] = {"start_addr" : "0x" + row[1], "end_addr" : "0x" + row[2]}
-        
+
         for dir in data.get("dirs", []):
             for root, dirs, files in os.walk(dir):
                 obj_dir_path = data["obj_dir"] + "/"
@@ -334,17 +336,17 @@ class CapcovCoverage(CoverageBase):
         open(gcda_file, 'w').close()
         return cov_output_dir +  "/" + name + ".html"
 
-    
+
     @staticmethod
     def merge_coverage_files(test_name, info_files, output_file):
-        
+
         def get_cacov_file_map(dir_name):
             find_cmd = ["find", dir_name, "-name",  "*.cacov"]
             p = subprocess.Popen(find_cmd,  stdout=subprocess.PIPE)
             output, _ = p.communicate()
             files = output.decode().split("\n")
-            return { os.path.basename(file) : file for file in files if file} 
-   
+            return { os.path.basename(file) : file for file in files if file}
+
         def merge_cacov_files(src_file_name, dst_file_name):
             tmp_file_name = "/tmp/temp_cacov_file.cacov"
             src_file = open(src_file_name, "r")
@@ -355,14 +357,14 @@ class CapcovCoverage(CoverageBase):
                     dst_tmp_file.write(src_file_line)
                 else:
                     dst_tmp_file.write(dst_file_line)
-                
+
             dst_tmp_file.close()
             dst_file.close()
             src_file.close()
             subprocess.call(["mv", tmp_file_name, dst_file_name])
-        
+
         if not info_files:
-            return 
+            return
 
         dst_dir_name = os.path.dirname(output_file)
         capcov_dst_dir_name = dst_dir_name + "/capov_out"
@@ -389,7 +391,7 @@ class CapcovCoverage(CoverageBase):
                 copy_cmd = "cp  --parents " + files + " " + capcov_dst_dir_name
                 subprocess.call([copy_cmd], shell=True)
                 os.chdir(cur_dir)
-            
+
         os.chdir(capcov_dst_dir_name)
         for root, _, _ in os.walk("."):
             #Generate Directory level (Feature) coverage information.
@@ -397,7 +399,7 @@ class CapcovCoverage(CoverageBase):
                 root_output_dir = capcov_dst_dir_name + "/" + "/".join(root.split("/")[1:])
                 CapcovCoverage.gen_html_local(root.split("/")[1], root_output_dir, dst_dir_name)
         os.chdir(env.nic_dir)
-                
+
         #Generate top level HTML information.
         CapcovCoverage.gen_html_local(test_name, dst_dir_name, dst_dir_name)
 
@@ -405,7 +407,7 @@ class CapcovCoverage(CoverageBase):
     def remove_files(self, lcov_out_file, remove_files):
         pass
 
-def gen_model_bulls_eye_coverage():
+def gen_model_bulls_eye_coverage(type):
     #ignore error if model coverage file not found.
     try:
         cmd = [env.bullseye_covhtml_cmd,
@@ -418,23 +420,59 @@ def gen_model_bulls_eye_coverage():
     except:
         print ("Bulls eye model coverage was not generated.")
 
-def gen_hal_bulls_eye_coverage():
+
+def merge_bulls_eye_coverage(cov_files, final_cov_file, final_out_dir):
+    if cov_files:
+        cmd = [env.bullseye_covmerge_cmd, "-c", "-f", final_cov_file]
+        for cov_file in cov_files:
+            cmd.append(cov_file)
+        subprocess.call(cmd)
+        cmd = [env.bullseye_covhtml_cmd,
+                   "-v", "-f", os.path.realpath(final_cov_file), final_out_dir]
+        subprocess.call(cmd)
+        cmd = ["cp", os.path.realpath(final_cov_file), final_out_dir]
+        subprocess.call(cmd)
+
+def gen_hal_bulls_eye_coverage(type):
+    cov_file = None
+    cov_html = None
+    if type == "SIM":
+        cov_file = env.sim_bullseye_hal_cov_file
+        cov_html = env.sim_bullseye_hal_html_output_dir
+    else:
+        cov_file = env.hw_bullseye_hal_cov_file
+        cov_html = env.hw_bullseye_hal_html_output_dir
+        #First merge coverage files retrieved from HW
+        cov_files = glob.glob(env.hw_run_bullseye_hal_dir + "/*.cov")
+        print ("HW Coverage files ", cov_files)
+        merge_bulls_eye_coverage(cov_files, cov_file, cov_html)
+
     cmd = [env.bullseye_covselect_cmd,
-            "-f", os.path.realpath(env.bullseye_hal_cov_file),
+            "-f", os.path.realpath(cov_file),
             "--import", env.bullseye_hal_filter_cov_file]
     subprocess.call(cmd)
     cmd = [env.bullseye_covhtml_cmd,
-           "-v", "-f", os.path.realpath(env.bullseye_hal_cov_file),
-            env.bullseye_hal_html_output_dir]
+           "-v", "-f", os.path.realpath(cov_file), cov_html]
     subprocess.call(cmd)
-    cmd = ["cp", os.path.realpath(env.bullseye_hal_cov_file),
-		env.bullseye_hal_html_output_dir]
+    cmd = ["cp", os.path.realpath(cov_file), cov_html]
     subprocess.call(cmd)
 
-def gen_bulls_eye_coverage():
-    gen_model_bulls_eye_coverage()
-    gen_hal_bulls_eye_coverage()
- 
+def merge_all_bulls_eye_coverage():
+    final_cov_file = env.all_bullseye_hal_cov_file
+    final_cov_html = env.all_bullseye_hal_html_output_dir
+
+    cov_files = []
+    if os.path.isfile(env.sim_bullseye_hal_cov_file):
+        cov_files.append(env.sim_bullseye_hal_cov_file)
+    if os.path.isfile(env.hw_bullseye_hal_cov_file):
+        cov_files.append(env.hw_bullseye_hal_cov_file)
+
+    merge_bulls_eye_coverage(cov_files, final_cov_file, final_cov_html)
+
+def gen_bulls_eye_coverage(type):
+    gen_model_bulls_eye_coverage(type)
+    gen_hal_bulls_eye_coverage(type)
+
 def run_cmd(cmd, timeout=None):
     try:
         ret = subprocess.call(cmd, shell=True, timeout=timeout)
@@ -469,7 +507,7 @@ def build_modules(data):
             cp_cmd = "find . -name '*.gcno'  -type f |  xargs -i cp {} " + gcno_dir
             subprocess.call([cp_cmd], shell=True)
             os.chdir(env.nic_dir)
- 
+
 def run_and_generate_coverage(data):
 
     def generate_run_coverage(run_name, run, sub_run_name=None):
@@ -491,7 +529,7 @@ def run_and_generate_coverage(data):
             subprocess.call(["find . -type f -name '*.gcda' -delete"], shell=True)
             os.chdir(env.nic_dir)
 
-    
+
     module_infos = defaultdict(lambda: [])
     for run in data["run"]:
         for run_name in run:
@@ -517,7 +555,7 @@ def run_and_generate_coverage(data):
         subprocess.call(["mkdir", "-p", cov_output_dir])
         output_file = cov_output_dir + "/total.info"
         cov_instance = CoverageBase.factory(module["cov_type"])
-        cov_instance.merge_coverage_files("Total_" + module_name, 
+        cov_instance.merge_coverage_files("Total_" + module_name,
                                           module_infos[module_name],
                                           output_file)
         cov_instance.gen_html(output_file, cov_output_dir=cov_output_dir)
@@ -540,12 +578,16 @@ def generate_coverage_summary_page(cov_output_dir, page_name="coverage_summary.h
     <strong>Total Coverage</strong>
     <p class="indent": 5em>
     <br><a href="total_cov/hal/index.html">HAL Total Coverage</a></br>
-    <br><a href="%s">BullsEye HAL Total Coverage</a></br>
+    <br><a href="%s">SIM BullsEye HAL Total Coverage</a></br>
+    <br><a href="%s">HW BullsEye HAL Total Coverage</a></br>
+    <br><a href="%s">ALL BullsEye HAL Total Coverage</a></br>
     <br><a href="total_cov/model/index.html">Model Total Coverage</a></br>
     <br><a href="%s">BullsEye Model Total Coverage</a></br>
     <br><a href="total_cov/asm/Total_asm.html">ASM Total Coverage</a></br>
     </p>
-    """ %((os.path.relpath(env.bullseye_hal_html_output_dir) + "/index.html"),
+    """ %((os.path.relpath(env.sim_bullseye_hal_html_output_dir) + "/index.html"),
+    (os.path.relpath(env.hw_bullseye_hal_html_output_dir) + "/index.html"),
+    (os.path.relpath(env.all_bullseye_hal_html_output_dir) + "/index.html"),
 	(os.path.relpath(env.bullseye_model_html_output_dir) + "/index.html"))
 
     op_file.write(total_cov_info)
@@ -565,7 +607,7 @@ def generate_coverage_summary_page(cov_output_dir, page_name="coverage_summary.h
     line = "<a href=%s>%s</a>" % (os.path.relpath(feature_summary_page, os.getcwd()),
                                                 "ASM Feature Instructions Statistics")
     op_file.write(line)
-    
+
     trailer= """</body>
 
 </html>"""
@@ -575,26 +617,27 @@ def generate_coverage_summary_page(cov_output_dir, page_name="coverage_summary.h
 
 
 if __name__ == '__main__':
-    config_file = env.coverage_path + args.conf_file
-    if not os.path.isfile(config_file):
-        print ("Config file %s found" % (config_file))
-        sys.exit(1)
+    for conf_file in args.conf_files:
+        config_file = env.coverage_path + conf_file
+        if not os.path.isfile(config_file):
+            print ("Config file %s found" % (config_file))
+            sys.exit(1)
 
-    with open(config_file) as data_file:
-        data = json.load(data_file)
+        with open(config_file) as data_file:
+            data = json.load(data_file)
 
-    os.chdir(env.nic_dir)
-    build_modules(data)
-    run_and_generate_coverage(data)
-    subprocess.call(["mkdir", "-p", env.p4_data_output_path])
-    for module_name in data["modules"]:
-        if not args.skip_asm_ins_stats and data["modules"][module_name]["cov_type"] == "capcov":
-            asm_data_process.generate_pipeline_data(data["modules"][module_name], 
-                                    env.asm_out_final, env.p4_data_output_path)
-            asm_data_process.generate_pipeline_summary_page(env.p4_data_output_path,
-                                                             instruction_summary_page_name)
-            asm_data_process.generate_feature_sub_stats(env.p4_data_output_path,
-                                                        feature_summary_page_name)
-    gen_bulls_eye_coverage()
+        os.chdir(env.nic_dir)
+        build_modules(data)
+        run_and_generate_coverage(data)
+        subprocess.call(["mkdir", "-p", env.p4_data_output_path])
+        for module_name in data["modules"]:
+            if not args.skip_asm_ins_stats and data["modules"][module_name]["cov_type"] == "capcov":
+                asm_data_process.generate_pipeline_data(data["modules"][module_name],
+                                        env.asm_out_final, env.p4_data_output_path)
+                asm_data_process.generate_pipeline_summary_page(env.p4_data_output_path,
+                                                                 instruction_summary_page_name)
+                asm_data_process.generate_feature_sub_stats(env.p4_data_output_path,
+                                                            feature_summary_page_name)
+        gen_bulls_eye_coverage(data["type"])
+    merge_all_bulls_eye_coverage()
     generate_coverage_summary_page(env.coverage_output_path)
-
