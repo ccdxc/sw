@@ -2,7 +2,8 @@ meta:
     name    : ionicdrv
     os      : [ linux, freebsd ]
     nics    : [ pensando, intel, mellanox, broadcom ]
-
+    targetcount : 1418
+    
 testcases:
     -   name    : UplinkIntf_TX_RING_SIZE
         testcase: testcases.drivers.features
