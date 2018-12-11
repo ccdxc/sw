@@ -2,6 +2,7 @@ meta:
     name    : rdma
     os      : [ linux, freebsd ]
     nics    : [ pensando, mellanox ]
+    targetcount : 150
 
 testcases:
     #=======================================
