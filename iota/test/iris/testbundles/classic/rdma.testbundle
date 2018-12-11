@@ -152,7 +152,7 @@ testcases:
         testcase: testcases.rdma.rc_write_bw_fml
         iterators :
             type    : nested
-            num_qp: [1, 8]
+            num_qp: [1, 2]
             rdma_cm: ['no']
         args    :
             type: remote_only
