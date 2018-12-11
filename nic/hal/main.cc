@@ -252,7 +252,7 @@ main (int argc, char **argv)
     // initialize HAL
     if (hal::hal_init(&hal::g_hal_cfg) != HAL_RET_OK) {
         fprintf(stderr, "HAL initialization failed, quitting ...\n");
-        exit(1);
+        return 1;
     }
 
     if ((hal::g_hal_cfg.features == hal::HAL_FEATURE_SET_IRIS) &&
@@ -261,7 +261,7 @@ main (int argc, char **argv)
         HAL_TRACE_DEBUG("lkl init");
         if (hal::pd::lkl_init() != HAL_RET_OK) {
             fprintf(stderr, "LKL initialization failed, quitting ...\n");
-            exit(1);
+            return 1;
         }
     }
 

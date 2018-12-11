@@ -110,6 +110,21 @@ do {                                                       \
     }                                                      \
 } while (FALSE)
 
+#define HAL_EXIT(cond)                                     \
+do {                                                       \
+    if (unlikely(!(cond))) {                               \
+        exit(1);                                           \
+    }                                                      \
+} while (FALSE)
+
+#define HAL_EXIT_TRACE(cond, args...)                      \
+do {                                                       \
+    if (unlikely(!(cond))) {                               \
+        HAL_TRACE_ERR(args);                               \
+        std::terminate();                                  \
+    }                                                      \
+} while (FALSE)
+
 #define HAL_ASSERT_RETURN(cond, rv)                        \
 do {                                                       \
     if (unlikely(!(cond))) {                               \
@@ -123,7 +138,24 @@ do {                                                       \
 do {                                                       \
     if (unlikely(!(cond))) {                               \
         HAL_TRACE_ERR("ASSERT FAILURE(" #cond ")");        \
-        __HAL_ASSERT__(FALSE);                             \
+        return;                                            \
+    }                                                      \
+} while (FALSE)
+
+#define HAL_ASSERT_TRACE_RETURN(cond, rv, args...)         \
+do {                                                       \
+    if (unlikely(!(cond))) {                               \
+        HAL_TRACE_ERR("ASSERT FAILURE(" #cond ")");        \
+        HAL_TRACE_ERR(args);                               \
+        return rv;                                         \
+    }                                                      \
+} while (FALSE)
+
+#define HAL_ASSERT_TRACE_RETURN_VOID(cond, args...)        \
+do {                                                       \
+    if (unlikely(!(cond))) {                               \
+        HAL_TRACE_ERR("ASSERT FAILURE(" #cond ")");        \
+        HAL_TRACE_ERR(args);                               \
         return;                                            \
     }                                                      \
 } while (FALSE)

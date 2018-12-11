@@ -547,26 +547,14 @@ hal_pd_module_init (hal_cfg_t *hal_cfg)
 hal_ret_t
 hal_pd_clock_delta_comp_init (hal_cfg_t *hal_cfg)
 {
-    pd_clock_delta_comp_args_t          clock_args;
-    pd_func_args_t                      pd_func_args = { 0 };
+    hal_ret_t                     ret;
+    pd_clock_delta_comp_args_t    clock_args;
+    pd_func_args_t                pd_func_args = { 0 };
 
     pd_func_args.pd_clock_delta_comp = &clock_args;
-    HAL_ABORT(hal_pd_call(PD_FUNC_ID_CLOCK_DELTA_COMP, &pd_func_args) == HAL_RET_OK);
+    ret = hal_pd_call(PD_FUNC_ID_CLOCK_DELTA_COMP, &pd_func_args);
 
-    return HAL_RET_OK;
-}
-
-hal_ret_t
-hal_pd_clock_detail_get_init (hal_cfg_t *hal_cfg)
-{
-    pd_clock_detail_get_args_t     clock_detail_args;
-    pd_func_args_t                 pd_func_args = { 0 };
-
-    pd_func_args.pd_clock_detail_get = &clock_detail_args;
-    HAL_ABORT(hal_pd_call(PD_FUNC_ID_CLOCK_DETAIL_GET, &pd_func_args) == HAL_RET_OK);
-
-    return HAL_RET_OK;
-
+    return ret;
 }
 
 //------------------------------------------------------------------------------
@@ -608,7 +596,8 @@ hal_pd_init (hal_cfg_t *hal_cfg)
                           hal_thread_priority(sdk::lib::THREAD_ROLE_CONTROL),
                           hal_thread_sched_policy(sdk::lib::THREAD_ROLE_CONTROL),
                           hal_cfg);
-    HAL_ABORT(hal_thread != NULL);
+    HAL_ASSERT_TRACE_RETURN((hal_thread != NULL), HAL_RET_ERR,
+                            "asicrw thread creation failure");
     hal_thread->start(hal_thread);
 
     HAL_TRACE_DEBUG("Waiting for asic-rw thread to be ready ...");

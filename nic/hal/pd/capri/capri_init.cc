@@ -64,10 +64,9 @@ capri_default_config_init (capri_cfg_t *cfg)
         }
 
         ret = capri_load_config((char *)full_path.c_str());
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Error loading init phase {} binaries ret {}", i, ret);
-            HAL_ASSERT_RETURN(0, HAL_RET_ERR);
-        }
+        HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+                                "Error loading init phase {} binaries ret {}",
+                                i, ret);
 
         // Now do any polling for init complete for this phase
         capri_tm_hw_config_load_poll(i);
@@ -111,7 +110,7 @@ capri_pgm_init (capri_cfg_t *cfg)
         if (access(full_path.c_str(), R_OK) < 0) {
             HAL_TRACE_ERR("{} not present/no read permissions",
                           full_path.c_str());
-            HAL_ASSERT_RETURN(0, HAL_RET_ERR);
+            return HAL_RET_ERR;
         }
         ret = capri_load_config((char *)full_path.c_str());
         if (ret != HAL_RET_OK) {
@@ -142,7 +141,7 @@ capri_asm_init (capri_cfg_t *cfg)
 	if (access(full_path.c_str(), R_OK) < 0) {
             HAL_TRACE_ERR("{} not_present/no_read_permissions",
                 full_path.c_str());
-            HAL_ASSERT_RETURN(0, HAL_RET_ERR);
+            return HAL_RET_ERR;
         }
 
         symbols = NULL;
@@ -424,55 +423,66 @@ capri_init (capri_cfg_t *cfg)
 {
     hal_ret_t    ret;
 
-    HAL_ASSERT(cfg);
+    HAL_ASSERT_TRACE_RETURN((cfg != NULL), HAL_RET_INVALID_ARG, "Invalid cfg");
     HAL_TRACE_DEBUG("Initializing Capri");
 
     g_capri_state_pd = capri_state_pd::factory();
-    HAL_ASSERT_RETURN((g_capri_state_pd != NULL), HAL_RET_ERR);
+    HAL_ASSERT_TRACE_RETURN((g_capri_state_pd != NULL), HAL_RET_INVALID_ARG,
+                            "Failed to instantiate Capri PD");
 
     g_capri_state_pd->set_cfg_path(cfg->cfg_path);
-
     if (capri_table_rw_init(cfg) != CAPRI_OK) {
         return HAL_RET_ERR;
     }
 
     ret = capri_hbm_regions_init(cfg);
-    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+                            "Capri HBM region init failure, err : {}", ret);
 
     ret = capri_block_init(cfg);
-    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+                            "Capri block region init failure, err : {}", ret);
 
     ret = capri_cache_init(cfg);
-    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+                            "Capri cache init failure, err : {}", ret);
 
     // do asic init before overwriting with the default configs
     ret = capri_tm_asic_init();
-    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+                            "Capri TM ASIC init failure, err : {}", ret);
 
     if (!cfg->catalog->qos_sw_init_enabled()) {
         ret = capri_default_config_init(cfg);
-        HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+        HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+                                "Capri default config init failure, err : {}",
+                                ret);
     }
 
     ret = capri_txs_scheduler_init(cfg->admin_cos, cfg);
-    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+                            "Capri scheduler init failure, err : {}", ret);
 
     // Call PXB/PCIE init only in MODEL and RTL simulation
     // This will be done by PCIe manager for the actual chip
     if (cfg->platform == platform_type_t::PLATFORM_TYPE_SIM ||
         cfg->platform == platform_type_t::PLATFORM_TYPE_RTL) {
         ret = capri_pxb_pcie_init();
-        HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+        HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+                                "PXB/PCIE init failure, err : {}", ret);
     }
 
     ret = capri_tm_init(cfg->catalog);
-    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+                            "Capri TM init failure, err : {}", ret);
 
     ret = capri_repl_init(cfg);
-    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+                            "Capri replication init failure, err : {}", ret);
 
     ret = hal::pd::capri_sw_phv_init();
-    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+                            "Capri s/w phv init failure, err : {}", ret);
 
     if (!cfg->loader_info_file.empty()) {
         capri_list_program_addr(cfg->loader_info_file.c_str());
@@ -480,16 +490,18 @@ capri_init (capri_cfg_t *cfg)
 
     ret = hal::pd::capri_barco_crypto_init(cfg);
     if (ret != HAL_RET_OK) {
-        // GFT: Always fails here.
+        // GFT always fails here !!!
         HAL_TRACE_ERR("Failed to inic barco_crypto. err: {}", ret);
         return ret;
     }
 
     ret = hal::pd::capri_quiesce_init();
-    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+                            "Capri quiesce init failure, err : {}", ret);
 
     ret = capri_prd_init();
-    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+                            "Capri PRD init failure, err : {}", ret);
     hal::svc::set_hal_status(hal::HAL_STATUS_ASIC_INIT_DONE);
 
     return ret;

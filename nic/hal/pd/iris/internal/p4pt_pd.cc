@@ -19,11 +19,12 @@ p4pt_pd_init(pd_func_args_t *pd_func_args) {
     uint8_t pgm_offset = 0;
     int ret = lif_manager()->GetPCOffset("p4plus", "rxdma_stage0.bin",
                                          "p4pt_rx_stage0", &pgm_offset);
-    HAL_ABORT(ret == 0);
-
-    lif_manager()->WriteQState(lif_id, 0, qid,
-                               (uint8_t *)&pgm_offset, 1);
-    return HAL_RET_OK;
+    if (ret == 0) {
+        lif_manager()->WriteQState(lif_id, 0, qid,
+                                   (uint8_t *)&pgm_offset, 1);
+        return HAL_RET_OK;
+    }
+    return HAL_RET_ERR;
 }
 
 } // namespace pd
