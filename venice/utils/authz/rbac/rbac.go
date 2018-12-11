@@ -11,14 +11,17 @@ import (
 
 // authorizer is RBAC authorizer that implements authz.Authorizer interface
 type authorizer struct {
+	authz.AbstractAuthorizer
 	permissionChecker permissionChecker
 }
 
 // NewRBACAuthorizer returns an instance of RBAC based Authorizer
 func NewRBACAuthorizer(name, apiServer string, rslver resolver.Interface) authz.Authorizer {
-	return &authorizer{
+	rbacAuthorizer := &authorizer{
 		permissionChecker: newDefaultPermissionChecker(name, apiServer, rslver),
 	}
+	rbacAuthorizer.AbstractAuthorizer.Authorizer = rbacAuthorizer
+	return rbacAuthorizer
 }
 
 func (a *authorizer) IsAuthorized(user *auth.User, operations ...authz.Operation) (bool, error) {

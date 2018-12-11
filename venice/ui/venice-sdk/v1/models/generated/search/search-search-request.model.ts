@@ -17,6 +17,7 @@ export interface ISearchSearchRequest {
     'sort-by'?: string;
     'mode'?: SearchSearchRequest_mode;
     'query'?: ISearchSearchQuery;
+    'tenants'?: Array<string>;
 }
 
 
@@ -42,6 +43,7 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
     for specific categories, kinds, fields and labels.
     This cannot be specified as URI parameter. */
     'query': SearchSearchQuery = null;
+    'tenants': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'query-string': {
             description:  'length of string should be between 0 and 256 ',
@@ -69,6 +71,9 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
             description:  'Search query contains the search requirements This is intended for advanced query use cases involving boolean query, structured term query and supports various combinations of text, phrase strings and search modifiers for specific categories, kinds, fields and labels. This cannot be specified as URI parameter.',
             type: 'object'
         },
+        'tenants': {
+            type: 'Array<string>'
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
@@ -91,6 +96,7 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
     constructor(values?: any) {
         super();
         this['query'] = new SearchSearchQuery();
+        this['tenants'] = new Array<string>();
         this.setValues(values);
     }
 
@@ -127,6 +133,9 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
         if (values) {
             this['query'].setValues(values['query']);
         }
+        if (values && values['tenants'] != null) {
+            this['tenants'] = values['tenants'];
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -140,6 +149,7 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
                 'sort-by': new FormControl(this['sort-by'], [Validators.maxLength(256), ]),
                 'mode': new FormControl(this['mode'], [enumValidator(SearchSearchRequest_mode), ]),
                 'query': this['query'].$formGroup,
+                'tenants': new FormControl(this['tenants']),
             });
         }
         return this._formGroup;
@@ -157,6 +167,7 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
             this._formGroup.controls['sort-by'].setValue(this['sort-by']);
             this._formGroup.controls['mode'].setValue(this['mode']);
             this['query'].setFormGroupValuesToBeModelValues();
+            this._formGroup.controls['tenants'].setValue(this['tenants']);
         }
     }
 }

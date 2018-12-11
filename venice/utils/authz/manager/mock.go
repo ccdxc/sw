@@ -6,7 +6,9 @@ import (
 )
 
 // alwaysAllowAuthorizer implements Authorizer interface. It always allows an operation.
-type alwaysAllowAuthorizer struct{}
+type alwaysAllowAuthorizer struct {
+	authz.AbstractAuthorizer
+}
 
 func (a *alwaysAllowAuthorizer) IsAuthorized(user *auth.User, operations ...authz.Operation) (bool, error) {
 	return true, nil
@@ -14,11 +16,15 @@ func (a *alwaysAllowAuthorizer) IsAuthorized(user *auth.User, operations ...auth
 
 // NewAlwaysAllowAuthorizer returns an Authorizer that always allows an operation
 func NewAlwaysAllowAuthorizer() authz.Authorizer {
-	return &alwaysAllowAuthorizer{}
+	authorizer := &alwaysAllowAuthorizer{}
+	authorizer.AbstractAuthorizer.Authorizer = authorizer
+	return authorizer
 }
 
 // alwaysDenyAuthorizer implements Authorizer interface. It always denies an operation.
-type alwaysDenyAuthorizer struct{}
+type alwaysDenyAuthorizer struct {
+	authz.AbstractAuthorizer
+}
 
 func (a *alwaysDenyAuthorizer) IsAuthorized(user *auth.User, operations ...authz.Operation) (bool, error) {
 	return false, nil
@@ -26,5 +32,7 @@ func (a *alwaysDenyAuthorizer) IsAuthorized(user *auth.User, operations ...authz
 
 // NewAlwaysDenyAuthorizer returns an Authorizer that always denies an operation
 func NewAlwaysDenyAuthorizer() authz.Authorizer {
-	return &alwaysDenyAuthorizer{}
+	authorizer := &alwaysDenyAuthorizer{}
+	authorizer.AbstractAuthorizer.Authorizer = authorizer
+	return authorizer
 }

@@ -2,8 +2,6 @@ package rbac
 
 import (
 	"fmt"
-	"reflect"
-	"sort"
 	"strings"
 	"testing"
 
@@ -15,26 +13,6 @@ import (
 	. "github.com/pensando/sw/venice/utils/authz"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
-
-func printPerms(name string, perms []auth.Permission) (message string) {
-	message = fmt.Sprintln("-----------" + name + "------------")
-	for _, perm := range perms {
-		message = message + fmt.Sprintln(perm)
-	}
-	return
-}
-
-func sortPerms(perms []auth.Permission) {
-	sort.Slice(perms, func(i, j int) bool {
-		return perms[i].String() < perms[j].String()
-	})
-}
-
-func arePermsEqual(expected []auth.Permission, returned []auth.Permission) bool {
-	sortPerms(expected)
-	sortPerms(returned)
-	return reflect.DeepEqual(expected, returned)
-}
 
 func getUserPermissionTestData() (roleBindings []*auth.RoleBinding, roles []*auth.Role, clusterRoleBindings []*auth.RoleBinding, clusterRoles []*auth.Role) {
 	roleBindings = []*auth.RoleBinding{
@@ -125,8 +103,8 @@ func TestGetPermissions(t *testing.T) {
 	for _, test := range tests {
 		perms := cache.getPermissions(test.user)
 		Assert(t, len(perms) == len(test.expectedPerms), fmt.Sprintf("length unequal [%d] expected [%d] [%v] test failed", len(perms), len(test.expectedPerms), test.name))
-		Assert(t, arePermsEqual(test.expectedPerms, perms),
-			fmt.Sprintf("[%v] test failed\n%s\n%s", test.name, printPerms("Returned Perms", perms), printPerms("Expected Perms", test.expectedPerms)))
+		Assert(t, ArePermsEqual(test.expectedPerms, perms),
+			fmt.Sprintf("[%v] test failed\n%s\n%s", test.name, PrintPerms("Returned Perms", perms), PrintPerms("Expected Perms", test.expectedPerms)))
 	}
 
 }
@@ -148,8 +126,8 @@ func TestGetClusterPermissions(t *testing.T) {
 	cache := initializeCache()
 	for _, test := range tests {
 		perms := cache.getPermissions(test.user)
-		Assert(t, arePermsEqual(test.expectedPerms, perms),
-			fmt.Sprintf("[%v] test failed\n%s\n%s", test.name, printPerms("Returned Perms", perms), printPerms("Expected Perms", test.expectedPerms)))
+		Assert(t, ArePermsEqual(test.expectedPerms, perms),
+			fmt.Sprintf("[%v] test failed\n%s\n%s", test.name, PrintPerms("Returned Perms", perms), PrintPerms("Expected Perms", test.expectedPerms)))
 	}
 }
 

@@ -19,6 +19,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/fields"
+	"github.com/pensando/sw/api/generated/auth"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	monapi "github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/generated/search"
@@ -27,6 +28,10 @@ import (
 	"github.com/pensando/sw/venice/spyglass/cache"
 	"github.com/pensando/sw/venice/utils"
 	venutils "github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/authz"
+	authzgrpc "github.com/pensando/sw/venice/utils/authz/grpc"
+	authzgrpcctx "github.com/pensando/sw/venice/utils/authz/grpc/context"
+	"github.com/pensando/sw/venice/utils/ctxutils"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -324,7 +329,24 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 	// }
 
 	// Build Elastic query
-	query, err := fdr.QueryBuilder(in)
+	query := es.NewBoolQuery().QueryName("CompleteQueryWithAuthorizedKinds")
+
+	rQuery, err := fdr.QueryBuilder(in)
+	if err != nil {
+		fdr.logger.Errorf("error building query from *search.SearchRequest")
+		return &sr, err
+	}
+	query = query.Must(rQuery)
+	// returns authz query only if request is coming from API Gw
+	aQuery, err := fdr.authzQuery(ctx, in.Tenants)
+	if err != nil {
+		fdr.logger.Errorf("error adding authorization to search query :%v", err)
+		return &sr, err
+	}
+	if aQuery != nil {
+		// aQuery could be nil if the search request is not coming from API Gw and authz is not required
+		query = query.Must(aQuery)
+	}
 
 	// Top-hits Aggregation #4
 	topAgg := es.NewTopHitsAggregation().From(int(in.From)).Size(int(in.MaxResults))
@@ -809,6 +831,80 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 
 	fdr.logger.Infof("Search response: {%+v}", resp)
 	return &resp, nil
+}
+
+// authzQuery returns query to limit search by authorized kinds for tenants specified in search request. It returns nil query
+// if request is not coming from API Gw.
+func (fdr *Finder) authzQuery(ctx context.Context, tenants []string) (es.Query, error) {
+	// add authorization only if request is coming from API GW
+	if ctxutils.GetPeerID(ctx) != globals.APIGw {
+		fdr.logger.Infof("not constraining search query with authz info")
+		return nil, nil
+	}
+	userMeta, ok := authzgrpcctx.UserMetaFromIncomingContext(ctx)
+	if !ok {
+		fdr.logger.Errorf("no user in grpc metadata")
+		return nil, errors.New("no user in context")
+	}
+	user := &auth.User{ObjectMeta: *userMeta}
+	// constrain search by authorized kinds
+	authorizer, err := authzgrpc.NewAuthorizer(ctx)
+	if err != nil {
+		fdr.logger.Errorf("error creating grpc authorizer for search: %v", err)
+		return nil, err
+	}
+	var authorizedTenantsFound, authorizedClusterKindsFound bool
+	query := es.NewBoolQuery().QueryName("AllowedKindsForTenants")
+	for _, tenant := range tenants {
+		// check if user has search permission on tenant
+		resource := authz.NewResource(
+			tenant,
+			"",
+			auth.Permission_Search.String(),
+			"",
+			"")
+
+		ok, _ := authorizer.IsAuthorized(user, authz.NewOperation(resource, auth.Permission_Read.String()))
+		if !ok {
+			continue
+		}
+		allowedTenantScopedKinds, err := authorizer.AllowedTenantKinds(user, tenant, authz.ResourceNamespaceAll, auth.Permission_Read)
+		if err != nil {
+			fdr.logger.Errorf("error determining allowed kinds for user [%s|%s] in tenant [%s] in search: %v", user.Tenant, user.Name, tenant, err)
+			return nil, err
+		}
+		if len(allowedTenantScopedKinds) > 0 {
+			kquery := es.NewBoolQuery().QueryName("AllowedKindsForTenant")
+			kquery = kquery.Must(es.NewMatchPhraseQuery("meta.tenant", tenant))
+			kindReq := es.NewBoolQuery().QueryName("AllowedKinds")
+			for _, kind := range allowedTenantScopedKinds {
+				kindReq = kindReq.Should(es.NewTermQuery("kind.keyword", kind)).MinimumNumberShouldMatch(1)
+			}
+			kquery = kquery.Must(kindReq)
+			query = query.Should(kquery).MinimumNumberShouldMatch(1)
+			authorizedTenantsFound = true
+			fdr.logger.Infof("user [%s|%s] allowed to search kinds [%#v] in tenant [%s]", user.Tenant, user.Name, allowedTenantScopedKinds, tenant)
+		}
+	}
+	allowedClusterScopedKinds, err := authorizer.AllowedClusterKinds(user, auth.Permission_Read)
+	if err != nil {
+		fdr.logger.Errorf("error determining allowed cluster kinds for user [%s|%s] in search: %v", user.Tenant, user.Name, err)
+		return nil, err
+	}
+	kindReq := es.NewBoolQuery().QueryName("AllowedClusterKinds")
+	for _, kind := range allowedClusterScopedKinds {
+		kindReq = kindReq.Should(es.NewTermQuery("kind.keyword", kind)).MinimumNumberShouldMatch(1)
+		authorizedClusterKindsFound = true
+	}
+	if authorizedClusterKindsFound {
+		query = query.Should(kindReq).MinimumNumberShouldMatch(1)
+		fdr.logger.Infof("user [%s|%s] allowed to search cluster kinds [%#v]", user.Tenant, user.Name, allowedClusterScopedKinds)
+	}
+	if !authorizedTenantsFound && !authorizedClusterKindsFound {
+		fdr.logger.Errorf("user [%s|%s] unauthorized to search any kind", user.Tenant, user.Name)
+		return nil, errors.New("unauthorized to search any objects")
+	}
+	return query, nil
 }
 
 // Start the RPC-server for the Query backend handling

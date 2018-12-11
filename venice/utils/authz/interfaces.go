@@ -2,7 +2,6 @@ package authz
 
 import (
 	"github.com/pensando/sw/api/generated/auth"
-	"github.com/pensando/sw/venice/apiserver"
 )
 
 // Authorizer represents an authorization module that makes authorization decision for a user to perform certain operations
@@ -11,6 +10,13 @@ type Authorizer interface {
 	// IsAuthorized checks if a user is authorized for the specified operations
 	// Returns true if user is authorized
 	IsAuthorized(user *auth.User, operations ...Operation) (bool, error)
+
+	// AllowedTenantKinds returns kinds in a tenant and namespace for which user has authorization for give action type.
+	// If tenant is empty it assumes user tenant. If namespace is empty it assumes "default"
+	AllowedTenantKinds(user *auth.User, tenant, namespace string, actionType auth.Permission_ActionType) ([]auth.ObjKind, error)
+
+	// AllowedClusterKinds returns kinds in cluster scope for which user has authorization for give action type.
+	AllowedClusterKinds(user *auth.User, actionType auth.Permission_ActionType) ([]auth.ObjKind, error)
 }
 
 // Operation represents an user operation on a resource about which an authorization decision has to be made
@@ -39,98 +45,3 @@ type Resource interface {
 	// GetName returns name of a specific resource to which access is desired
 	GetName() string
 }
-
-// operation implements authz.Operation interface
-type operation struct {
-	resource Resource
-	action   string
-}
-
-func (op *operation) GetResource() Resource {
-	return op.resource
-}
-
-func (op *operation) GetAction() string {
-	return op.action
-}
-
-// NewOperation returns an instance of Operation
-func NewOperation(resource Resource, action string) Operation {
-	return &operation{
-		resource: resource,
-		action:   action,
-	}
-}
-
-func getActionFromOper(in apiserver.APIOperType) string {
-	switch in {
-	case apiserver.CreateOper:
-		return auth.Permission_Create.String()
-	case apiserver.UpdateOper:
-		return auth.Permission_Update.String()
-	case apiserver.GetOper, apiserver.ListOper, apiserver.WatchOper:
-		return auth.Permission_Read.String()
-	case apiserver.DeleteOper:
-		return auth.Permission_Delete.String()
-	}
-	return auth.Permission_AllActions.String()
-}
-
-// NewAPIServerOperation returns an instance of Operation given the APIServer Oper type
-func NewAPIServerOperation(resource Resource, action apiserver.APIOperType) Operation {
-	return &operation{
-		resource: resource,
-		action:   getActionFromOper(action),
-	}
-}
-
-// resource implements Resource interface
-type resource struct {
-	tenant       string
-	group        string
-	resourceKind string
-	namespace    string
-	name         string
-}
-
-func (r *resource) GetTenant() string {
-	return r.tenant
-}
-
-func (r *resource) GetGroup() string {
-	return r.group
-}
-
-func (r *resource) GetKind() string {
-	return r.resourceKind
-}
-
-func (r *resource) GetNamespace() string {
-	return r.namespace
-}
-
-func (r *resource) GetName() string {
-	return r.name
-}
-
-// NewResource returns an instance of Resource
-func NewResource(tenant, group, resourceKind, namespace, name string) Resource {
-	return &resource{
-		tenant:       tenant,
-		group:        group,
-		resourceKind: resourceKind,
-		namespace:    namespace,
-		name:         name,
-	}
-}
-
-const (
-	// ResourceNamespaceAll is a keyword to match all namespaces
-	ResourceNamespaceAll = "_All_"
-	// ResourceGroupAll is a keyword to match all resource groups
-	ResourceGroupAll = "_All_"
-	// ResourceTenantAll is a keyword to match all tenants
-	ResourceTenantAll = "_All_"
-	// ResourceKindAll is a keyword to match all resource kinds
-	ResourceKindAll = "_All_"
-)

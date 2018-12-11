@@ -9,6 +9,7 @@ import (
 
 // AuthorizationManager authorizes user and returns authorization information
 type authorizationManager struct {
+	authz.AbstractAuthorizer
 	authorizers []authz.Authorizer
 }
 
@@ -16,9 +17,11 @@ type authorizationManager struct {
 func NewAuthorizationManager(name, apiServer string, rslver resolver.Interface) authz.Authorizer {
 	authorizers := make([]authz.Authorizer, 1)
 	authorizers[0] = rbac.NewRBACAuthorizer(name, apiServer, rslver)
-	return &authorizationManager{
+	authzMgr := &authorizationManager{
 		authorizers: authorizers,
 	}
+	authzMgr.AbstractAuthorizer.Authorizer = authzMgr
+	return authzMgr
 }
 
 // IsAuthorized checks if user is authorized for the given operations. If multiple authorizers are configured and enabled, it will execute them in the order specified.

@@ -198,6 +198,8 @@ var typesMapSearch = map[string]*api.Struct{
 			"Mode": api.Field{Name: "Mode", CLITag: api.CLIInfo{ID: "mode", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mode", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Query": api.Field{Name: "Query", CLITag: api.CLIInfo{ID: "query", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "query", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "search.SearchQuery"},
+
+			"Tenants": api.Field{Name: "Tenants", CLITag: api.CLIInfo{ID: "tenants", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tenants", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"search.SearchResponse": &api.Struct{

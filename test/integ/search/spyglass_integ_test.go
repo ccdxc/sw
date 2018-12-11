@@ -25,10 +25,12 @@ import (
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	_ "github.com/pensando/sw/api/generated/exports/apigw"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
+	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/search"
 	"github.com/pensando/sw/api/generated/security"
 	_ "github.com/pensando/sw/api/hooks/apiserver"
 	"github.com/pensando/sw/api/labels"
+	"github.com/pensando/sw/api/login"
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apigw"
 	_ "github.com/pensando/sw/venice/apigw/svc"
@@ -41,6 +43,8 @@ import (
 	"github.com/pensando/sw/venice/spyglass/finder"
 	"github.com/pensando/sw/venice/spyglass/indexer"
 	"github.com/pensando/sw/venice/utils"
+	. "github.com/pensando/sw/venice/utils/authn/testutils"
+	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/events/recorder"
@@ -258,7 +262,7 @@ func (tInfo *testInfo) updateResolver(serviceName, url string) {
 	})
 }
 
-func getSearchURLWithParams(t *testing.T, query string, from, maxResults int32, mode, sortBy string) string {
+func getSearchURLWithParams(t *testing.T, query string, from, maxResults int32, mode, sortBy string, tenants []string) string {
 
 	// convert to query-string to url-encoded string
 	// to escape special characters like space, comma, braces.
@@ -273,6 +277,9 @@ func getSearchURLWithParams(t *testing.T, query string, from, maxResults int32, 
 	}
 	if sortBy != "" {
 		str += fmt.Sprintf("&SortBy=%s", sortBy)
+	}
+	for _, tenant := range tenants {
+		str += fmt.Sprintf("&Tenants=%s", tenant)
 	}
 	fmt.Printf("\n+++ QUERY URL: %s\n", str)
 	return str
@@ -335,10 +342,10 @@ func TestSpyglass(t *testing.T) {
 
 			restcl := netutils.NewHTTPClient()
 			restcl.SetHeader("Authorization", tInfo.authzHeader)
-			_, err = restcl.Req("GET", getSearchURLWithParams(t, "tesla", 0, 10, search.SearchRequest_Full.String(), ""), nil, &resp)
+			_, err = restcl.Req("GET", getSearchURLWithParams(t, "tesla", 0, 10, search.SearchRequest_Full.String(), "", []string{"tesla"}), nil, &resp)
 			if err != nil {
 				t.Logf("GET on search REST endpoint: %s failed, err:%+v",
-					getSearchURLWithParams(t, "tesla", 0, 10, search.SearchRequest_Full.String(), ""), err)
+					getSearchURLWithParams(t, "tesla", 0, 10, search.SearchRequest_Full.String(), "", []string{"tesla"}), err)
 				return false, nil
 			}
 			return true, nil
@@ -350,6 +357,7 @@ func TestSpyglass(t *testing.T) {
 	performSearchTests(t, PostWithBody)
 	performPolicySearchTests(t, GetWithBody)
 	performPolicySearchTests(t, PostWithBody)
+	testAuthzInSearch(t, GetWithURI)
 
 	// Stop Indexer
 	t.Logf("Stopping indexer ...")
@@ -391,6 +399,7 @@ func TestSpyglass(t *testing.T) {
 	performSearchTests(t, PostWithBody)
 	performPolicySearchTests(t, GetWithBody)
 	performPolicySearchTests(t, PostWithBody)
+	testAuthzInSearch(t, GetWithURI)
 	tInfo.idr.Stop()
 	t.Logf("Done with Tests ....")
 }
@@ -520,6 +529,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				QueryString: "kind:Network",
 				From:        from,
 				MaxResults:  maxResults,
+				Tenants:     []string{"audi", "tesla"},
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -551,6 +561,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				QueryString: "kind:SecurityGroup",
 				From:        from,
 				MaxResults:  maxResults,
+				Tenants:     []string{"audi", "tesla"},
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -583,6 +594,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				QueryString: "kind:(Network OR SecurityGroup)",
 				From:        from,
 				MaxResults:  maxResults,
+				Tenants:     []string{"audi", "tesla"},
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -628,6 +640,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				QueryString: "kind:Network AND meta.labels.Application:MS-Exchange",
 				From:        from,
 				MaxResults:  maxResults,
+				Tenants:     []string{"audi", "tesla"},
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -716,6 +729,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				QueryString: "us-west",
 				From:        from,
 				MaxResults:  256,
+				Tenants:     []string{"audi", "tesla"},
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -798,6 +812,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				QueryString: "12.0.1.254",
 				From:        from,
 				MaxResults:  maxResults,
+				Tenants:     []string{"audi", "tesla"},
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -889,6 +904,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				QueryString: "OzzyOzbuorne",
 				From:        from,
 				MaxResults:  maxResults,
+				Tenants:     []string{"audi", "tesla"},
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -917,6 +933,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				QueryString: "Network",
 				From:        -1,
 				MaxResults:  maxResults,
+				Tenants:     []string{"audi", "tesla"},
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -931,6 +948,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				QueryString: "Network",
 				From:        1200,
 				MaxResults:  maxResults,
+				Tenants:     []string{"audi", "tesla"},
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -945,6 +963,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				QueryString: "Network",
 				From:        from,
 				MaxResults:  -1,
+				Tenants:     []string{"audi", "tesla"},
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -959,6 +978,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				QueryString: "Network",
 				From:        from,
 				MaxResults:  9000,
+				Tenants:     []string{"audi", "tesla"},
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -975,6 +995,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				QueryString: "kind:(Network OR SecurityGroup)",
 				From:        from,
 				MaxResults:  maxResults,
+				Tenants:     []string{"audi", "tesla"},
 			},
 			search.SearchRequest_Preview.String(),
 			"",
@@ -1025,6 +1046,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				QueryString: "OzzyOzbuorne",
 				From:        from,
 				MaxResults:  maxResults,
+				Tenants:     []string{"audi", "tesla"},
 			},
 			search.SearchRequest_Preview.String(),
 			"",
@@ -1150,6 +1172,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				},
 				From:       from,
 				MaxResults: maxResults,
+				Tenants:    []string{"audi", "tesla"},
 			},
 			"",
 			"",
@@ -1183,6 +1206,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				},
 				From:       from,
 				MaxResults: maxResults,
+				Tenants:    []string{"audi", "tesla"},
 			},
 			"",
 			"",
@@ -1217,6 +1241,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				},
 				From:       from,
 				MaxResults: maxResults,
+				Tenants:    []string{"audi", "tesla"},
 			},
 			"",
 			"",
@@ -1273,6 +1298,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				},
 				From:       from,
 				MaxResults: maxResults,
+				Tenants:    []string{"audi", "tesla"},
 			},
 			"",
 			"",
@@ -1444,6 +1470,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				},
 				From:       from,
 				MaxResults: maxResults,
+				Tenants:    []string{"audi", "tesla"},
 			},
 			"",
 			"",
@@ -1677,6 +1704,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				},
 				From:       from,
 				MaxResults: maxResults,
+				Tenants:    []string{"audi", "tesla"},
 			},
 			"",
 			"",
@@ -1880,6 +1908,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				},
 				From:       -1,
 				MaxResults: maxResults,
+				Tenants:    []string{"audi", "tesla"},
 			},
 			"",
 			"",
@@ -1896,6 +1925,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				},
 				From:       1200,
 				MaxResults: maxResults,
+				Tenants:    []string{"audi", "tesla"},
 			},
 			"",
 			"",
@@ -1912,6 +1942,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				},
 				From:       from,
 				MaxResults: -1,
+				Tenants:    []string{"audi", "tesla"},
 			},
 			"",
 			"",
@@ -1928,6 +1959,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				},
 				From:       from,
 				MaxResults: 9000,
+				Tenants:    []string{"audi", "tesla"},
 			},
 			"",
 			"",
@@ -1951,6 +1983,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				From:       from,
 				MaxResults: maxResults,
 				Mode:       search.SearchRequest_Preview.String(),
+				Tenants:    []string{"audi", "tesla"},
 			},
 			"",
 			"",
@@ -2019,7 +2052,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 					if searchMethod == GetWithURI && len(tc.query.QueryString) != 0 {
 						// Query using URI params - via GET method
 						t.Logf("@@@ GET QueryString query: %s\n", tc.query.QueryString)
-						searchURL = getSearchURLWithParams(t, tc.query.QueryString, tc.query.From, tc.query.MaxResults, tc.mode, tc.sortBy)
+						searchURL = getSearchURLWithParams(t, tc.query.QueryString, tc.query.From, tc.query.MaxResults, tc.mode, tc.sortBy, tc.query.Tenants)
 						resp = search.SearchResponse{}
 						restcl := netutils.NewHTTPClient()
 						restcl.SetHeader("Authorization", tInfo.authzHeader)
@@ -2055,169 +2088,8 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 							tc.err, err)
 						return false, nil
 					}
-
-					// Match on expected hits
-					if resp.ActualHits != tc.expectedHits {
-						t.Logf("Result mismatch expected: %d received: %d resp: {%+v}",
-							tc.expectedHits, resp.ActualHits, resp)
-						return false, nil
-					}
-
-					// For cases with expectedHits to 0, return here
-					if tc.expectedHits == 0 {
-						return true, nil
-					}
-
 					log.Debugf("Query: %s, result : %+v", searchURL, resp)
-
-					// Verification for "Complete" request mode
-					if tc.query.Mode == search.SearchRequest_Full.String() {
-
-						if len(tc.aggResults) != len(resp.AggregatedEntries.Tenants) {
-							log.Errorf("Tenant entries count didn't match, expected %d actual:%d",
-								len(tc.aggResults), len(resp.AggregatedEntries.Tenants))
-							return false, nil
-						}
-
-						// Tenant verification
-						for tenantKey, tenantVal := range tc.aggResults {
-							log.Debugf("Verifying tenant Key: %s entries: %d", tenantKey, len(tenantVal))
-							if _, ok := resp.AggregatedEntries.Tenants[tenantKey]; !ok {
-								log.Errorf("Tenant %s not found", tenantKey)
-								return false, nil
-							}
-
-							// Verify count of category entries match for each tenant
-							if len(tenantVal) != len(resp.AggregatedEntries.Tenants[tenantKey].Categories) {
-								log.Errorf("Category entries count didn't match for tenant: %s, expected %d actual:%d",
-									tenantKey, len(tenantVal), len(resp.AggregatedEntries.Tenants[tenantKey].Categories))
-								return false, nil
-							}
-
-							// Category verification
-							for categoryKey, categoryVal := range tenantVal {
-								log.Debugf("Verifying Category Key: %s entries: %d", categoryKey, len(categoryVal))
-								if _, ok := resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey]; !ok {
-									log.Errorf("Category %s not found", categoryKey)
-									return false, nil
-								}
-
-								// Verify count of kind entries match for each (tenant,category)
-								if len(categoryVal) != len(resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey].Kinds) {
-									log.Errorf("Kind entries count didn't match for tenant: %s category: %s, expected %d actual:%d",
-										tenantKey, categoryKey, len(categoryVal), len(resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey].Kinds))
-									return false, nil
-								}
-
-								// Kind verification
-								for kindKey, kindVal := range categoryVal {
-									log.Debugf("Verifying Kind Key: %s entries: %d", kindKey, len(kindVal))
-									if _, ok := resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey].Kinds[kindKey]; !ok {
-										log.Errorf("Kind %s not found", kindKey)
-										return false, nil
-									}
-
-									// make an interim object map from the entries slice
-									log.Debugf("Kinds: %+v", resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey].Kinds[kindKey])
-									entries := resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey].Kinds[kindKey].Entries
-									omap := make(map[string]interface{}, len(entries))
-									for _, val := range entries {
-
-										var robj runtime.Object
-										obj := &ptypes.DynamicAny{}
-										err := ptypes.UnmarshalAny(&val.Object.Any, obj)
-										if err != nil {
-											log.Errorf("Failed to get unmarshalAny object: %+v, err: %+v",
-												val, err)
-											continue
-										}
-										var ok bool
-										if robj, ok = obj.Message.(runtime.Object); ok {
-											log.Errorf("Failed to get unmarshalAny object: %+v, err: %+v",
-												val, err)
-											continue
-										}
-										ometa, err := runtime.GetObjectMeta(robj)
-										if err != nil {
-											log.Errorf("Failed to get obj-meta for object: %+v, err: %+v",
-												obj, err)
-											continue
-										}
-										omap[ometa.GetName()] = nil
-									}
-
-									// object verification
-									for objKey := range kindVal {
-										log.Debugf("Verifying Object Key: %s", objKey)
-										if _, ok := omap[objKey]; !ok {
-											log.Errorf("Object %s not found", objKey)
-											return false, nil
-										}
-									}
-								}
-							}
-						}
-					}
-
-					// Verification for "Preview" request mode
-					if tc.query.Mode == search.SearchRequest_Preview.String() {
-
-						if len(tc.previewResults) != len(resp.PreviewEntries.Tenants) {
-							log.Errorf("Tenant entries count didn't match, expected %d actual:%d",
-								len(tc.previewResults), len(resp.PreviewEntries.Tenants))
-							return false, nil
-						}
-
-						// Tenant verification
-						for tenantKey, tenantVal := range tc.previewResults {
-							log.Debugf("Verifying tenant Key: %s entries: %d", tenantKey, len(tenantVal))
-							if _, ok := resp.PreviewEntries.Tenants[tenantKey]; !ok {
-								log.Errorf("Tenant %s not found", tenantKey)
-								return false, nil
-							}
-
-							// Verify count of category entries match for each tenant
-							if len(tenantVal) != len(resp.PreviewEntries.Tenants[tenantKey].Categories) {
-								log.Errorf("Category entries count didn't match for tenant: %s, expected %d actual:%d",
-									tenantKey, len(tenantVal), len(resp.PreviewEntries.Tenants[tenantKey].Categories))
-								return false, nil
-							}
-
-							// Category verification
-							for categoryKey, categoryVal := range tenantVal {
-								log.Debugf("Verifying Category Key: %s entries: %d", categoryKey, len(categoryVal))
-								if _, ok := resp.PreviewEntries.Tenants[tenantKey].Categories[categoryKey]; !ok {
-									log.Errorf("Category %s not found", categoryKey)
-									return false, nil
-								}
-
-								// Verify count of kind entries match for each (tenant,category)
-								if len(categoryVal) != len(resp.PreviewEntries.Tenants[tenantKey].Categories[categoryKey].Kinds) {
-									log.Errorf("Kind entries count didn't match for tenant: %s category: %s, expected %d actual:%d",
-										tenantKey, categoryKey, len(categoryVal), len(resp.PreviewEntries.Tenants[tenantKey].Categories[categoryKey].Kinds))
-									return false, nil
-								}
-
-								// Kind verification
-								for kindKey, expNum := range categoryVal {
-									var actualNum int64
-									var ok bool
-									log.Debugf("Verifying Kind Key: %s entries: %d", kindKey, expNum)
-									if actualNum, ok = resp.PreviewEntries.Tenants[tenantKey].Categories[categoryKey].Kinds[kindKey]; !ok {
-										log.Errorf("Kind %s not found", kindKey)
-										return false, nil
-									}
-
-									if expNum != actualNum {
-										log.Errorf("Entries mismatch for Kind: %s expected: %d obtained: %d", kindKey, expNum, actualNum)
-										return false, nil
-									}
-								}
-							}
-						}
-					}
-
-					return true, nil
+					return checkSearchQueryResponse(t, &tc.query, &resp, tc.expectedHits, tc.previewResults, tc.aggResults), nil
 				}, fmt.Sprintf("Query failed for: %s", tc.query.QueryString), "100ms", "1m")
 		})
 	}
@@ -2848,6 +2720,400 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 					}
 					return true, nil
 				}, fmt.Sprintf("Query failed for: %s", tc.desc), "100ms", "1m")
+		})
+	}
+}
+
+func checkSearchQueryResponse(t *testing.T, query *search.SearchRequest, resp *search.SearchResponse, expectedHits int64, previewResults map[string]map[string]map[string]int64,
+	aggResults map[string]map[string]map[string]map[string]interface{}) bool {
+
+	// Match on expected hits
+	if resp.ActualHits != expectedHits {
+		t.Logf("Result mismatch expected: %d received: %d resp: {%+v}",
+			expectedHits, resp.ActualHits, resp)
+		return false
+	}
+
+	// For cases with expectedHits to 0, return here
+	if expectedHits == 0 {
+		return true
+	}
+
+	// Verification for "Complete" request mode
+	if query.Mode == search.SearchRequest_Full.String() {
+
+		if len(aggResults) != len(resp.AggregatedEntries.Tenants) {
+			log.Errorf("Tenant entries count didn't match, expected %d actual:%d",
+				len(aggResults), len(resp.AggregatedEntries.Tenants))
+			return false
+		}
+
+		// Tenant verification
+		for tenantKey, tenantVal := range aggResults {
+			log.Debugf("Verifying tenant Key: %s entries: %d", tenantKey, len(tenantVal))
+			if _, ok := resp.AggregatedEntries.Tenants[tenantKey]; !ok {
+				log.Errorf("Tenant %s not found", tenantKey)
+				return false
+			}
+
+			// Verify count of category entries match for each tenant
+			if len(tenantVal) != len(resp.AggregatedEntries.Tenants[tenantKey].Categories) {
+				log.Errorf("Category entries count didn't match for tenant: %s, expected %d actual:%d",
+					tenantKey, len(tenantVal), len(resp.AggregatedEntries.Tenants[tenantKey].Categories))
+				return false
+			}
+
+			// Category verification
+			for categoryKey, categoryVal := range tenantVal {
+				log.Debugf("Verifying Category Key: %s entries: %d", categoryKey, len(categoryVal))
+				if _, ok := resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey]; !ok {
+					log.Errorf("Category %s not found", categoryKey)
+					return false
+				}
+
+				// Verify count of kind entries match for each (tenant,category)
+				if len(categoryVal) != len(resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey].Kinds) {
+					log.Errorf("Kind entries count didn't match for tenant: %s category: %s, expected %d actual:%d",
+						tenantKey, categoryKey, len(categoryVal), len(resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey].Kinds))
+					return false
+				}
+
+				// Kind verification
+				for kindKey, kindVal := range categoryVal {
+					log.Debugf("Verifying Kind Key: %s entries: %d", kindKey, len(kindVal))
+					if _, ok := resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey].Kinds[kindKey]; !ok {
+						log.Errorf("Kind %s not found", kindKey)
+						return false
+					}
+
+					// make an interim object map from the entries slice
+					log.Debugf("Kinds: %+v", resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey].Kinds[kindKey])
+					entries := resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey].Kinds[kindKey].Entries
+					omap := make(map[string]interface{}, len(entries))
+					for _, val := range entries {
+
+						var robj runtime.Object
+						obj := &ptypes.DynamicAny{}
+						err := ptypes.UnmarshalAny(&val.Object.Any, obj)
+						if err != nil {
+							log.Errorf("Failed to get unmarshalAny object: %+v, err: %+v",
+								val, err)
+							continue
+						}
+						var ok bool
+						if robj, ok = obj.Message.(runtime.Object); ok {
+							log.Errorf("Failed to get unmarshalAny object: %+v, err: %+v",
+								val, err)
+							continue
+						}
+						ometa, err := runtime.GetObjectMeta(robj)
+						if err != nil {
+							log.Errorf("Failed to get obj-meta for object: %+v, err: %+v",
+								obj, err)
+							continue
+						}
+						omap[ometa.GetName()] = nil
+					}
+
+					// object verification
+					for objKey := range kindVal {
+						log.Debugf("Verifying Object Key: %s", objKey)
+						if _, ok := omap[objKey]; !ok {
+							log.Errorf("Object %s not found", objKey)
+							return false
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Verification for "Preview" request mode
+	if query.Mode == search.SearchRequest_Preview.String() {
+
+		if len(previewResults) != len(resp.PreviewEntries.Tenants) {
+			log.Errorf("Tenant entries count didn't match, expected %d actual:%d",
+				len(previewResults), len(resp.PreviewEntries.Tenants))
+			return false
+		}
+
+		// Tenant verification
+		for tenantKey, tenantVal := range previewResults {
+			log.Debugf("Verifying tenant Key: %s entries: %d", tenantKey, len(tenantVal))
+			if _, ok := resp.PreviewEntries.Tenants[tenantKey]; !ok {
+				log.Errorf("Tenant %s not found", tenantKey)
+				return false
+			}
+
+			// Verify count of category entries match for each tenant
+			if len(tenantVal) != len(resp.PreviewEntries.Tenants[tenantKey].Categories) {
+				log.Errorf("Category entries count didn't match for tenant: %s, expected %d actual:%d",
+					tenantKey, len(tenantVal), len(resp.PreviewEntries.Tenants[tenantKey].Categories))
+				return false
+			}
+
+			// Category verification
+			for categoryKey, categoryVal := range tenantVal {
+				log.Debugf("Verifying Category Key: %s entries: %d", categoryKey, len(categoryVal))
+				if _, ok := resp.PreviewEntries.Tenants[tenantKey].Categories[categoryKey]; !ok {
+					log.Errorf("Category %s not found", categoryKey)
+					return false
+				}
+
+				// Verify count of kind entries match for each (tenant,category)
+				if len(categoryVal) != len(resp.PreviewEntries.Tenants[tenantKey].Categories[categoryKey].Kinds) {
+					log.Errorf("Kind entries count didn't match for tenant: %s category: %s, expected %d actual:%d",
+						tenantKey, categoryKey, len(categoryVal), len(resp.PreviewEntries.Tenants[tenantKey].Categories[categoryKey].Kinds))
+					return false
+				}
+
+				// Kind verification
+				for kindKey, expNum := range categoryVal {
+					var actualNum int64
+					var ok bool
+					log.Debugf("Verifying Kind Key: %s entries: %d", kindKey, expNum)
+					if actualNum, ok = resp.PreviewEntries.Tenants[tenantKey].Categories[categoryKey].Kinds[kindKey]; !ok {
+						log.Errorf("Kind %s not found", kindKey)
+						return false
+					}
+
+					if expNum != actualNum {
+						log.Errorf("Entries mismatch for Kind: %s expected: %d obtained: %d", kindKey, expNum, actualNum)
+						return false
+					}
+				}
+			}
+		}
+	}
+	return true
+}
+
+func testAuthzInSearch(t *testing.T, searchMethod SearchMethod) {
+	// create audi admin
+	MustCreateTestUser(tInfo.apiClient, testutils.TestLocalUser, testutils.TestLocalPassword, "audi")
+	defer MustDeleteUser(tInfo.apiClient, testutils.TestLocalUser, "audi")
+	MustCreateRoleBinding(tInfo.apiClient, "AdminRoleBinding", "audi", globals.AdminRole, []string{testutils.TestLocalUser}, nil)
+	defer MustDeleteRoleBinding(tInfo.apiClient, "AdminRoleBinding", "audi")
+	// create tesla admin
+	MustCreateTestUser(tInfo.apiClient, testutils.TestLocalUser, testutils.TestLocalPassword, "tesla")
+	defer MustDeleteUser(tInfo.apiClient, testutils.TestLocalUser, "tesla")
+	MustCreateRoleBinding(tInfo.apiClient, "AdminRoleBinding", "tesla", globals.AdminRole, []string{testutils.TestLocalUser}, nil)
+	defer MustDeleteRoleBinding(tInfo.apiClient, "AdminRoleBinding", "tesla")
+	// create user with no role
+	MustCreateTestUser(tInfo.apiClient, "noRoleUser", testutils.TestLocalPassword, "tesla")
+	defer MustDeleteUser(tInfo.apiClient, "noRoleUser", "tesla")
+	// create network search role
+	MustCreateRole(tInfo.apiClient, "NetworkSearchRole", "tesla",
+		login.NewPermission("tesla", "", auth.Permission_Search.String(), "", "", auth.Permission_Read.String()),
+		login.NewPermission("tesla", string(apiclient.GroupNetwork), string(network.KindNetwork), authz.ResourceNamespaceAll, "", auth.Permission_Read.String()))
+	defer MustDeleteRole(tInfo.apiClient, "NetworkSearchRole", "tesla")
+	// create user with network search role
+	MustCreateTestUser(tInfo.apiClient, "networkSearchUser", testutils.TestLocalPassword, "tesla")
+	defer MustDeleteUser(tInfo.apiClient, "networkSearchUser", "tesla")
+	MustCreateRoleBinding(tInfo.apiClient, "NetworkSearchRoleBinding", "tesla", "NetworkSearchRole", []string{"networkSearchUser"}, nil)
+	defer MustDeleteRoleBinding(tInfo.apiClient, "NetworkSearchRoleBinding", "tesla")
+	// authenticate users
+	audiAdminHdr, err := testutils.GetAuthorizationHeader(tInfo.apiGwAddr, &auth.PasswordCredential{
+		Username: testutils.TestLocalUser,
+		Password: testutils.TestLocalPassword,
+		Tenant:   "audi",
+	})
+	if err != nil {
+		t.Fatalf("audi admin login failed, err: {%+v}", err)
+	}
+	teslaAdminHdr, err := testutils.GetAuthorizationHeader(tInfo.apiGwAddr, &auth.PasswordCredential{
+		Username: testutils.TestLocalUser,
+		Password: testutils.TestLocalPassword,
+		Tenant:   "tesla",
+	})
+	if err != nil {
+		t.Fatalf("tesla admin login failed, err: {%+v}", err)
+	}
+	noRoleUserHdr, err := testutils.GetAuthorizationHeader(tInfo.apiGwAddr, &auth.PasswordCredential{
+		Username: "noRoleUser",
+		Password: testutils.TestLocalPassword,
+		Tenant:   "tesla",
+	})
+	if err != nil {
+		t.Fatalf("tesla no role user login failed, err: {%+v}", err)
+	}
+	networkSearchUserHdr, err := testutils.GetAuthorizationHeader(tInfo.apiGwAddr, &auth.PasswordCredential{
+		Username: "networkSearchUser",
+		Password: testutils.TestLocalPassword,
+		Tenant:   "tesla",
+	})
+	if err != nil {
+		t.Fatalf("tesla network search user login failed, err: {%+v}", err)
+	}
+	// Http error for no search authorization
+	httpUnauthorizedErrCode := grpcruntime.HTTPStatusFromCode(grpccodes.PermissionDenied)
+	httpUnauthorizedErr := fmt.Errorf("Server responded with %d", httpUnauthorizedErrCode)
+	// Testcases for various queries on config objects
+	queryTestcases := []struct {
+		authzHeader    string
+		query          *search.SearchRequest
+		mode           string
+		sortBy         string
+		expectedHits   int64
+		previewResults map[string]map[string]map[string]int64
+		aggResults     map[string]map[string]map[string]map[string]interface{}
+		err            error
+	}{
+		//
+		// Search Test cases with URI params, to test QueryString query
+		// Uses GET method
+		// tenant admin searching cluster scoped objects
+		{
+			audiAdminHdr,
+			&search.SearchRequest{
+				QueryString: "kind:Tenant",
+				From:        from,
+				MaxResults:  maxResults,
+			},
+			search.SearchRequest_Full.String(),
+			"",
+			0,
+			nil,
+			nil,
+			nil,
+		},
+		// tesla tenant admin searching networks in audi and tesla tenant
+		{
+			teslaAdminHdr,
+			&search.SearchRequest{
+				QueryString: "kind:Network",
+				From:        from,
+				MaxResults:  maxResults,
+				Tenants:     []string{"audi", "tesla"},
+			},
+			search.SearchRequest_Full.String(),
+			"",
+			objectCount - 2,
+			nil,
+			map[string]map[string]map[string]map[string]interface{}{
+				"tesla": {
+					"Network": {
+						"Network": {
+							"net00": nil,
+							"net02": nil,
+							"net04": nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
+		// tesla no role user searching networks in tesla tenant
+		{
+			noRoleUserHdr,
+			&search.SearchRequest{
+				QueryString: "kind:Network",
+				From:        from,
+				MaxResults:  maxResults,
+				Tenants:     []string{"tesla"},
+			},
+			search.SearchRequest_Full.String(),
+			"",
+			0,
+			nil,
+			nil,
+			httpUnauthorizedErr,
+		},
+		// tesla network search user searching security groups in tesla tenant
+		{
+			networkSearchUserHdr,
+			&search.SearchRequest{
+				QueryString: "kind:SecurityGroup",
+				From:        from,
+				MaxResults:  maxResults,
+				Tenants:     []string{"tesla"},
+			},
+			search.SearchRequest_Full.String(),
+			"",
+			0,
+			nil,
+			nil,
+			nil,
+		},
+		// tesla network search user searching networks in tesla tenant
+		{
+			networkSearchUserHdr,
+			&search.SearchRequest{
+				QueryString: "kind:Network",
+				From:        from,
+				MaxResults:  maxResults,
+				Tenants:     []string{"tesla"},
+			},
+			search.SearchRequest_Full.String(),
+			"",
+			objectCount - 2,
+			nil,
+			map[string]map[string]map[string]map[string]interface{}{
+				"tesla": {
+					"Network": {
+						"Network": {
+							"net00": nil,
+							"net02": nil,
+							"net04": nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
+	}
+	// Execute the Query Testcases
+	for _, tc := range queryTestcases {
+		t.Run(tc.query.QueryString, func(t *testing.T) {
+			AssertEventually(t,
+				func() (bool, interface{}) {
+
+					// execute search
+					var err error
+					var resp search.SearchResponse
+					var searchURL string
+					if searchMethod == GetWithURI && len(tc.query.QueryString) != 0 {
+						// Query using URI params - via GET method
+						t.Logf("@@@ GET QueryString query: %s\n", tc.query.QueryString)
+						searchURL = getSearchURLWithParams(t, tc.query.QueryString, tc.query.From, tc.query.MaxResults, tc.mode, tc.sortBy, tc.query.Tenants)
+						resp = search.SearchResponse{}
+						restcl := netutils.NewHTTPClient()
+						restcl.SetHeader("Authorization", tc.authzHeader)
+						start := time.Now().UTC()
+						_, err = restcl.Req("GET", searchURL, nil, &resp)
+						t.Logf("@@@ Search response time: %+v\n", time.Since(start))
+					} else {
+						// Query using Body - via POST, GET
+						var httpMethod string
+						switch searchMethod {
+						case GetWithBody:
+							httpMethod = "GET"
+						case PostWithBody:
+							httpMethod = "POST"
+						default:
+							httpMethod = "GET"
+						}
+
+						t.Logf("@@@ Search request [%s] Body: %+v\n", httpMethod, tc.query)
+						searchURL = getSearchURL()
+						resp = search.SearchResponse{}
+						restcl := netutils.NewHTTPClient()
+						restcl.SetHeader("Authorization", tInfo.authzHeader)
+						start := time.Now().UTC()
+						_, err = restcl.Req(httpMethod, searchURL, &tc.query, &resp)
+						t.Logf("@@@ Search response time: %+v\n", time.Since(start))
+					}
+
+					if (err != nil && tc.err == nil) ||
+						(err == nil && tc.err != nil) ||
+						(err != nil && tc.err != nil && err.Error() != tc.err.Error()) {
+						t.Logf("@@@ Search response didn't match expected error, expected:%+v actual:%+v",
+							tc.err, err)
+						return false, nil
+					}
+					log.Debugf("Query: %s, result : %+v", searchURL, resp)
+					return checkSearchQueryResponse(t, tc.query, &resp, tc.expectedHits, tc.previewResults, tc.aggResults), nil
+				}, fmt.Sprintf("Query failed for: %s", tc.query.QueryString), "100ms", "1m")
 		})
 	}
 }
