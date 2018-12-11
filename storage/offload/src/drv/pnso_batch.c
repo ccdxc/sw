@@ -432,7 +432,7 @@ set_batch_mode(uint16_t mode_flags, uint16_t *flags)
 		*flags |= BATCH_BFLAG_MODE_ASYNC;
 }
 
-static void
+static pnso_error_t
 set_interrupt_params(struct batch_info *batch_info, struct service_chain *chain)
 {
 	struct service_chain *last_chain;
@@ -443,7 +443,7 @@ set_interrupt_params(struct batch_info *batch_info, struct service_chain *chain)
 	last_ce = chn_get_last_centry(last_chain);
 	svc_info = &last_ce->ce_svc_info;
 
-	svc_info->si_ops.enable_interrupt(svc_info, batch_info);
+	return svc_info->si_ops.enable_interrupt(svc_info, batch_info);
 }
 
 static pnso_error_t
@@ -502,8 +502,11 @@ build_batch(struct batch_info *batch_info, struct request_params *req_params)
 	batch_info->bi_flags |= BATCH_BFLAG_CHAIN_PRESENT;
 
 	/* setup interrupt params in last chain's last service */
-	if ((req_params->rp_flags & REQUEST_RFLAG_MODE_ASYNC) && chain)
-		set_interrupt_params(batch_info, chain);
+	if ((req_params->rp_flags & REQUEST_RFLAG_MODE_ASYNC) && chain) {
+		err = set_interrupt_params(batch_info, chain);
+		if (err)
+			goto out;
+	}
 
 	OSAL_LOG_DEBUG("added all entries batch! num_entries: %d", num_entries);
 	PPRINT_BATCH_INFO(batch_info);

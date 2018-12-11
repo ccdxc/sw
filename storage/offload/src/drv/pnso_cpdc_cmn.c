@@ -712,6 +712,7 @@ out:
 pnso_error_t
 cpdc_setup_interrupt_params(const struct service_info *svc_info, void *poll_ctx)
 {
+	pnso_error_t err;
 	struct cpdc_desc *cp_desc;
 	struct per_core_resource *pcr;
 
@@ -728,10 +729,23 @@ cpdc_setup_interrupt_params(const struct service_info *svc_info, void *poll_ctx)
 	if (svc_info->si_desc_flags & PNSO_CP_DFLAG_ZERO_PAD) {
 		cp_desc->cd_otag_addr =
 			sonic_intr_get_db_addr(pcr, (uint64_t) poll_ctx);
+		if (!cp_desc->cd_otag_addr) {
+			err = EINVAL;
+			OSAL_LOG_DEBUG("cp/pad failed to get db addr err: %d",
+					err);
+			goto out;
+		}
+
 		cp_desc->cd_otag_data = sonic_intr_get_fire_data32();
 	} else {
 		cp_desc->cd_db_addr = (uint64_t) sonic_intr_get_db_addr(pcr,
 				(uint64_t) poll_ctx);
+		if (!cp_desc->cd_db_addr) {
+			err = EINVAL;
+			OSAL_LOG_DEBUG("failed to get db addr err: %d", err);
+			goto out;
+		}
+
 		cp_desc->cd_db_data = sonic_intr_get_fire_data64();
 
 		cp_desc->cd_otag_addr =
@@ -739,5 +753,7 @@ cpdc_setup_interrupt_params(const struct service_info *svc_info, void *poll_ctx)
 		cp_desc->cd_otag_data = sonic_get_intr_assert_data();
 	}
 
-	return  PNSO_OK;
+	err = PNSO_OK;
+out:
+	return  err;
 }
