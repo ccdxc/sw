@@ -19,6 +19,7 @@
 #include <linux/netdevice.h>
 #include <linux/etherdevice.h>
 #include <linux/interrupt.h>
+#include <linux/pci.h>
 
 #include "ionic.h"
 #include "ionic_bus.h"
@@ -1082,8 +1083,8 @@ static int ionic_request_irq(struct lif *lif, struct qcq *qcq)
 	struct napi_struct *napi = &qcq->napi;
 
 	snprintf(intr->name, sizeof(intr->name),
-		 "%s-%s-%s", DRV_NAME, lif->name, q->name);
-	
+		 "%s-%s-%s", DRV_NAME, dev_name(dev), q->name);
+
 	return devm_request_irq(dev, intr->vector, ionic_isr,
 				0, intr->name, napi);
 }
