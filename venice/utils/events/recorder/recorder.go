@@ -205,9 +205,16 @@ func (r *recorderImpl) Event(eventType string, severity evtsapi.SeverityLevel, m
 	}
 
 	if objRefMeta != nil {
-		// update namespace and tenant
-		event.ObjectMeta.Namespace = objRefMeta.GetNamespace()
-		event.ObjectMeta.Tenant = objRefMeta.GetTenant()
+		// update tenant and namespace for tenant scoped object events; all the other events go to default tenant.
+		tenantScoped, err := runtime.GetDefaultScheme().IsTenantScoped(objRefKind)
+		if err != nil {
+			log.Errorf("failed to get scope for kind: %s, err: %v", objRefKind, err)
+		}
+
+		if tenantScoped {
+			event.ObjectMeta.Tenant = objRefMeta.GetTenant()
+			event.ObjectMeta.Namespace = objRefMeta.GetNamespace()
+		}
 
 		// update object ref
 		event.ObjectRef = &api.ObjectRef{
