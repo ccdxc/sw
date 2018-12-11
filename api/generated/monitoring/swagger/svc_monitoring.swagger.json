@@ -3857,6 +3857,67 @@
         "tags": [
           "monitoring/v1"
         ]
+      },
+      "post": {
+        "summary": "Create FwlogPolicy object",
+        "operationId": "AddFwlogPolicy_1",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringFwlogPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/monitoringFwlogPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "monitoring/v1"
+        ]
       }
     },
     "/configs/monitoring/v1/fwlogPolicy/{O.Name}": {
@@ -3987,21 +4048,94 @@
             "type": "string"
           },
           {
-            "name": "spec.retention-time",
-            "description": "RetentionTime defines for how long to keep the fwlog before it is deleted. Default is 48h.",
+            "name": "spec.format",
+            "description": "fwlog format, SYSLOG_BSD default.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "spec.filter",
-            "description": "filter firewall logs for venice, FWLOG_ALL default.",
+            "description": "filter firewall logs, FWLOG_ALL default.",
             "in": "query",
             "required": false,
             "type": "array",
             "items": {
               "type": "string"
             }
+          },
+          {
+            "name": "config.facility-override",
+            "description": "override default facility with this in exported logs.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "config.prefix",
+            "description": "add prefix in exported logs.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "monitoring/v1"
+        ]
+      },
+      "delete": {
+        "summary": "Delete FwlogPolicy object",
+        "operationId": "DeleteFwlogPolicy_1",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringFwlogPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
           }
         ],
         "tags": [
@@ -8893,6 +9027,73 @@
         "tags": [
           "monitoring/v1"
         ]
+      },
+      "post": {
+        "summary": "Create FwlogPolicy object",
+        "operationId": "AddFwlogPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringFwlogPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/monitoringFwlogPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "monitoring/v1"
+        ]
       }
     },
     "/configs/monitoring/v1/tenant/{O.Tenant}/fwlogPolicy/{O.Name}": {
@@ -9022,21 +9223,100 @@
             "type": "string"
           },
           {
-            "name": "spec.retention-time",
-            "description": "RetentionTime defines for how long to keep the fwlog before it is deleted. Default is 48h.",
+            "name": "spec.format",
+            "description": "fwlog format, SYSLOG_BSD default.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "spec.filter",
-            "description": "filter firewall logs for venice, FWLOG_ALL default.",
+            "description": "filter firewall logs, FWLOG_ALL default.",
             "in": "query",
             "required": false,
             "type": "array",
             "items": {
               "type": "string"
             }
+          },
+          {
+            "name": "config.facility-override",
+            "description": "override default facility with this in exported logs.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "config.prefix",
+            "description": "add prefix in exported logs.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "monitoring/v1"
+        ]
+      },
+      "delete": {
+        "summary": "Delete FwlogPolicy object",
+        "operationId": "DeleteFwlogPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringFwlogPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
           }
         ],
         "tags": [
@@ -13278,6 +13558,7 @@
         }
       }
     },
+<<<<<<< HEAD
     "monitoringFlowExportPolicyStatus": {
       "type": "object",
       "title": "========================================================================================\n flow export policy\n========================================================================================"
@@ -13334,6 +13615,8 @@
       },
       "title": "firewall log export config"
     },
+=======
+>>>>>>> generated changes
     "monitoringFwlogPolicy": {
       "type": "object",
       "properties": {
@@ -13380,11 +13663,25 @@
     "monitoringFwlogPolicySpec": {
       "type": "object",
       "properties": {
-        "retention-time": {
+        "targets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringExportConfig"
+          },
+          "title": "Target contains ip/port/protocol"
+        },
+        "format": {
           "type": "string",
-          "default": "48h",
-          "example": "2h",
-          "description": "RetentionTime defines for how long to keep the fwlog before it is deleted. Default is 48h."
+          "enum": [
+            "SYSLOG_BSD",
+            "SYSLOG_RFC5424"
+          ],
+          "default": "SYSLOG_BSD",
+          "x-ui-hints": {
+            "SYSLOG_BSD": "BSD",
+            "SYSLOG_RFC5424": "RFC5424"
+          },
+          "title": "fwlog format, SYSLOG_BSD default"
         },
         "filter": {
           "type": "array",
@@ -13406,14 +13703,11 @@
             "FIREWALL_ACTION_NONE": "No Logs",
             "FIREWALL_ACTION_REJECT": "Reject Logs"
           },
-          "title": "filter firewall logs for venice, FWLOG_ALL default"
+          "title": "filter firewall logs, FWLOG_ALL default"
         },
-        "exports": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/monitoringFwlogExport"
-          },
-          "title": "Export contains the export config"
+        "config": {
+          "$ref": "#/definitions/monitoringSyslogExportConfig",
+          "title": "configuration to use for syslog format\ndefault facility is set to \"local4\", can be overridden with FacilityOverride\nfwlog severity is set to \"Informational\""
         }
       },
       "title": "Venice collects fwlog irrespective of the export config"

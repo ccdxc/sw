@@ -78,7 +78,11 @@
 		FlowExportPolicy
 		FlowExportPolicySpec
 		FlowExportPolicyStatus
+<<<<<<< HEAD
 		FwlogExport
+=======
+		FlowExportTarget
+>>>>>>> generated changes
 		FwlogPolicy
 		FwlogPolicySpec
 		FwlogPolicyStatus

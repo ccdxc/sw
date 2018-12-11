@@ -437,7 +437,11 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 
 		s.endpointsMonitoringV1.fnAutoAddFwlogPolicy = srv.AddMethod("AutoAddFwlogPolicy",
 			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.FwlogPolicy"], pkgMessages["monitoring.FwlogPolicy"], "monitoring", "AutoAddFwlogPolicy")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			in, ok := i.(monitoring.FwlogPolicy)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/fwlogPolicy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoAddMirrorSession = srv.AddMethod("AutoAddMirrorSession",
@@ -515,7 +519,11 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 
 		s.endpointsMonitoringV1.fnAutoDeleteFwlogPolicy = srv.AddMethod("AutoDeleteFwlogPolicy",
 			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.FwlogPolicy"], pkgMessages["monitoring.FwlogPolicy"], "monitoring", "AutoDeleteFwlogPolicy")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			in, ok := i.(monitoring.FwlogPolicy)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/fwlogPolicy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoDeleteMirrorSession = srv.AddMethod("AutoDeleteMirrorSession",

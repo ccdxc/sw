@@ -132,6 +132,7 @@ func (m *FlowExportPolicyStatus) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+<<<<<<< HEAD
 func (m *FwlogExport) Clone(into interface{}) (interface{}, error) {
 	var out *FwlogExport
 	var ok bool
@@ -139,6 +140,15 @@ func (m *FwlogExport) Clone(into interface{}) (interface{}, error) {
 		out = &FwlogExport{}
 	} else {
 		out, ok = into.(*FwlogExport)
+=======
+func (m *FlowExportTarget) Clone(into interface{}) (interface{}, error) {
+	var out *FlowExportTarget
+	var ok bool
+	if into == nil {
+		out = &FlowExportTarget{}
+	} else {
+		out, ok = into.(*FlowExportTarget)
+>>>>>>> generated changes
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -148,15 +158,23 @@ func (m *FwlogExport) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
+<<<<<<< HEAD
 func (m *FwlogExport) Defaults(ver string) bool {
+=======
+func (m *FlowExportTarget) Defaults(ver string) bool {
+>>>>>>> generated changes
 	var ret bool
 	ret = true
 	switch ver {
 	default:
+<<<<<<< HEAD
 		for k := range m.Filter {
 			m.Filter[k] = "FIREWALL_ACTION_NONE"
 		}
 		m.Format = "SYSLOG_BSD"
+=======
+		m.Format = "Ipfix"
+>>>>>>> generated changes
 	}
 	return ret
 }
@@ -205,19 +223,13 @@ func (m *FwlogPolicySpec) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *FwlogPolicySpec) Defaults(ver string) bool {
 	var ret bool
-	for k := range m.Exports {
-		if m.Exports[k] != nil {
-			i := m.Exports[k]
-			ret = i.Defaults(ver) || ret
-		}
-	}
 	ret = true
 	switch ver {
 	default:
 		for k := range m.Filter {
 			m.Filter[k] = "FIREWALL_ACTION_NONE"
 		}
-		m.RetentionTime = "48h"
+		m.Format = "SYSLOG_BSD"
 	}
 	return ret
 }
@@ -378,6 +390,7 @@ func (m *FlowExportPolicySpec) Validate(ver, path string, ignoreStatus bool) []e
 	return ret
 }
 
+<<<<<<< HEAD
 func (m *FlowExportPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
@@ -421,6 +434,8 @@ func (m *FwlogExport) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+=======
+>>>>>>> generated changes
 func (m *FwlogPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	{
@@ -444,12 +459,22 @@ func (m *FwlogPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *FwlogPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
-	for k, v := range m.Exports {
+	if m.Config != nil {
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sExports[%v]", path, dlmtr, k)
+		npath := path + dlmtr + "Config"
+		if errs := m.Config.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	for k, v := range m.Targets {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sTargets[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -549,27 +574,6 @@ func init() {
 		return nil
 	})
 
-	validatorMapTelemetry["FwlogExport"] = make(map[string][]func(string, interface{}) error)
-	validatorMapTelemetry["FwlogExport"]["all"] = append(validatorMapTelemetry["FwlogExport"]["all"], func(path string, i interface{}) error {
-		m := i.(*FwlogExport)
-
-		for k, v := range m.Filter {
-			if _, ok := FwlogFilter_value[v]; !ok {
-				return fmt.Errorf("%v[%v] did not match allowed strings", path+"."+"Filter", k)
-			}
-		}
-		return nil
-	})
-
-	validatorMapTelemetry["FwlogExport"]["all"] = append(validatorMapTelemetry["FwlogExport"]["all"], func(path string, i interface{}) error {
-		m := i.(*FwlogExport)
-
-		if _, ok := MonitoringExportFormat_value[m.Format]; !ok {
-			return errors.New("FwlogExport.Format did not match allowed strings")
-		}
-		return nil
-	})
-
 	validatorMapTelemetry["FwlogPolicySpec"] = make(map[string][]func(string, interface{}) error)
 	validatorMapTelemetry["FwlogPolicySpec"]["all"] = append(validatorMapTelemetry["FwlogPolicySpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*FwlogPolicySpec)
@@ -584,8 +588,9 @@ func init() {
 
 	validatorMapTelemetry["FwlogPolicySpec"]["all"] = append(validatorMapTelemetry["FwlogPolicySpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*FwlogPolicySpec)
-		if !validators.Duration(m.RetentionTime) {
-			return fmt.Errorf("%v validation failed", path+"."+"RetentionTime")
+
+		if _, ok := MonitoringExportFormat_value[m.Format]; !ok {
+			return errors.New("FwlogPolicySpec.Format did not match allowed strings")
 		}
 		return nil
 	})

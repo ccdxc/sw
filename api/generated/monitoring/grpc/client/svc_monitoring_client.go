@@ -1310,13 +1310,13 @@ func (a *restObjMonitoringV1FwlogPolicy) Watch(ctx context.Context, options *api
 func (a *restObjMonitoringV1FwlogPolicy) Allowed(oper apiserver.APIOperType) bool {
 	switch oper {
 	case apiserver.CreateOper:
-		return false
+		return true
 	case apiserver.UpdateOper:
 		return true
 	case apiserver.GetOper:
 		return true
 	case apiserver.DeleteOper:
-		return false
+		return true
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:

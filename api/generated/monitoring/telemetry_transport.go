@@ -119,18 +119,28 @@ func DecodeGrpcRespFlowExportPolicyStatus(ctx context.Context, response interfac
 	return response, nil
 }
 
+<<<<<<< HEAD
 func encodeHTTPFwlogExport(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
 func decodeHTTPFwlogExport(_ context.Context, r *http.Request) (interface{}, error) {
 	var req FwlogExport
+=======
+func encodeHTTPFlowExportTarget(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPFlowExportTarget(_ context.Context, r *http.Request) (interface{}, error) {
+	var req FlowExportTarget
+>>>>>>> generated changes
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
+<<<<<<< HEAD
 // EncodeGrpcReqFwlogExport encodes GRPC request
 func EncodeGrpcReqFwlogExport(ctx context.Context, request interface{}) (interface{}, error) {
 	req := request.(*FwlogExport)
@@ -150,6 +160,27 @@ func EncodeGrpcRespFwlogExport(ctx context.Context, response interface{}) (inter
 
 // DecodeGrpcRespFwlogExport decodes GRPC response
 func DecodeGrpcRespFwlogExport(ctx context.Context, response interface{}) (interface{}, error) {
+=======
+// EncodeGrpcReqFlowExportTarget encodes GRPC request
+func EncodeGrpcReqFlowExportTarget(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FlowExportTarget)
+	return req, nil
+}
+
+// DecodeGrpcReqFlowExportTarget decodes GRPC request
+func DecodeGrpcReqFlowExportTarget(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FlowExportTarget)
+	return req, nil
+}
+
+// EncodeGrpcRespFlowExportTarget encodes GRC response
+func EncodeGrpcRespFlowExportTarget(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespFlowExportTarget decodes GRPC response
+func DecodeGrpcRespFlowExportTarget(ctx context.Context, response interface{}) (interface{}, error) {
+>>>>>>> generated changes
 	return response, nil
 }
 

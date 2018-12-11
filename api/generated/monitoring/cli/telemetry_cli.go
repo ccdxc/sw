@@ -44,13 +44,6 @@ func removeFlowExportPolicyOper(obj interface{}) error {
 // CreateFwlogPolicyFlags specifies flags for FwlogPolicy create operation
 var CreateFwlogPolicyFlags = []gen.CliFlag{
 	{
-		ID:     "export-filter",
-		Type:   "StringSlice",
-		Help:   "",
-		Skip:   false,
-		Insert: "",
-	},
-	{
 		ID:     "filter",
 		Type:   "StringSlice",
 		Help:   "",
@@ -59,13 +52,6 @@ var CreateFwlogPolicyFlags = []gen.CliFlag{
 	},
 	{
 		ID:     "format",
-		Type:   "StringSlice",
-		Help:   "",
-		Skip:   false,
-		Insert: "",
-	},
-	{
-		ID:     "retention-time",
 		Type:   "String",
 		Help:   "",
 		Skip:   false,

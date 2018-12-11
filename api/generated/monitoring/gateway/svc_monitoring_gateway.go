@@ -1675,6 +1675,8 @@ func (e *sMonitoringV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoAddFlowExportPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "FlowExportPolicy", "monitoring", apiserver.CreateOper)
 
+	e.svcProf["AutoAddFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "FwlogPolicy", "monitoring", apiserver.CreateOper)
+
 	e.svcProf["AutoAddMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "MirrorSession", "monitoring", apiserver.CreateOper)
 
 	e.svcProf["AutoAddTechSupportRequest"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TechSupportRequest", "monitoring", apiserver.CreateOper)
@@ -1688,6 +1690,8 @@ func (e *sMonitoringV1GwService) setupSvcProfile() {
 	e.svcProf["AutoDeleteEventPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "EventPolicy", "monitoring", apiserver.DeleteOper)
 
 	e.svcProf["AutoDeleteFlowExportPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "FlowExportPolicy", "monitoring", apiserver.DeleteOper)
+
+	e.svcProf["AutoDeleteFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "FwlogPolicy", "monitoring", apiserver.DeleteOper)
 
 	e.svcProf["AutoDeleteMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "MirrorSession", "monitoring", apiserver.DeleteOper)
 

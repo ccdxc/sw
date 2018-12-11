@@ -186,11 +186,41 @@ func restGetFwlogPolicy(hostname, tenant, token string, obj interface{}) error {
 }
 
 func restDeleteFwlogPolicy(hostname, token string, obj interface{}) error {
-	return fmt.Errorf("delete operation not supported for FwlogPolicy object")
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*monitoring.FwlogPolicy); ok {
+		nv, err := restcl.MonitoringV1().FwlogPolicy().Delete(loginCtx, &v.ObjectMeta)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+	return nil
+
 }
 
 func restPostFwlogPolicy(hostname, token string, obj interface{}) error {
-	return fmt.Errorf("create operation not supported for FwlogPolicy object")
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*monitoring.FwlogPolicy); ok {
+		nv, err := restcl.MonitoringV1().FwlogPolicy().Create(loginCtx, v)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+	return nil
+
 }
 
 func restPutFwlogPolicy(hostname, token string, obj interface{}) error {
@@ -791,6 +821,8 @@ func init() {
 	cl.AddRestPutFunc("monitoring.StatsPolicy", "v1", restPutStatsPolicy)
 	cl.AddRestGetFunc("monitoring.StatsPolicy", "v1", restGetStatsPolicy)
 
+	cl.AddRestPostFunc("monitoring.FwlogPolicy", "v1", restPostFwlogPolicy)
+	cl.AddRestDeleteFunc("monitoring.FwlogPolicy", "v1", restDeleteFwlogPolicy)
 	cl.AddRestPutFunc("monitoring.FwlogPolicy", "v1", restPutFwlogPolicy)
 	cl.AddRestGetFunc("monitoring.FwlogPolicy", "v1", restGetFwlogPolicy)
 

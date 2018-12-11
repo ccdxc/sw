@@ -78,6 +78,7 @@ var typesMapTelemetry = map[string]*api.Struct{
 			"Exports": api.Field{Name: "Exports", CLITag: api.CLIInfo{ID: "exports", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "exports", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.ExportConfig"},
 		},
 	},
+<<<<<<< HEAD
 	"monitoring.FlowExportPolicyStatus": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(FlowExportPolicyStatus{}) },
 		Fields: map[string]api.Field{},
@@ -94,6 +95,8 @@ var typesMapTelemetry = map[string]*api.Struct{
 			"SyslogConfig": api.Field{Name: "SyslogConfig", CLITag: api.CLIInfo{ID: "syslog-config", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "syslog-config", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.SyslogExportConfig"},
 		},
 	},
+=======
+>>>>>>> generated changes
 	"monitoring.FwlogPolicy": &api.Struct{
 		Kind: "FwlogPolicy", APIGroup: "monitoring", Scopes: []string{"Tenant"}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(FwlogPolicy{}) },
 		Fields: map[string]api.Field{
@@ -132,16 +135,14 @@ var typesMapTelemetry = map[string]*api.Struct{
 
 		CLITags: map[string]api.CLIInfo{
 			"api-version":      api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
-			"export-filter":    api.CLIInfo{Path: "Spec.Exports[].Filter", Skip: false, Insert: "", Help: ""},
 			"filter":           api.CLIInfo{Path: "Spec.Filter", Skip: false, Insert: "", Help: ""},
-			"format":           api.CLIInfo{Path: "Spec.Exports[].Format", Skip: false, Insert: "", Help: ""},
+			"format":           api.CLIInfo{Path: "Spec.Format", Skip: false, Insert: "", Help: ""},
 			"generation-id":    api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"kind":             api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"labels":           api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
 			"name":             api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
 			"namespace":        api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
 			"resource-version": api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
-			"retention-time":   api.CLIInfo{Path: "Spec.RetentionTime", Skip: false, Insert: "", Help: ""},
 			"self-link":        api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
 			"tenant":           api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
 			"uuid":             api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
@@ -150,11 +151,13 @@ var typesMapTelemetry = map[string]*api.Struct{
 	"monitoring.FwlogPolicySpec": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(FwlogPolicySpec{}) },
 		Fields: map[string]api.Field{
-			"RetentionTime": api.Field{Name: "RetentionTime", CLITag: api.CLIInfo{ID: "retention-time", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "retention-time", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"Targets": api.Field{Name: "Targets", CLITag: api.CLIInfo{ID: "targets", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "targets", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.ExportConfig"},
+
+			"Format": api.Field{Name: "Format", CLITag: api.CLIInfo{ID: "format", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "format", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Filter": api.Field{Name: "Filter", CLITag: api.CLIInfo{ID: "filter", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "filter", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Exports": api.Field{Name: "Exports", CLITag: api.CLIInfo{ID: "exports", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "exports", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.FwlogExport"},
+			"Config": api.Field{Name: "Config", CLITag: api.CLIInfo{ID: "config", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "config", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.SyslogExportConfig"},
 		},
 	},
 	"monitoring.FwlogPolicyStatus": &api.Struct{

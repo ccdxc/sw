@@ -3971,8 +3971,7 @@ func makeURIMonitoringV1AutoAddFlowExportPolicyCreateOper(in *FlowExportPolicy) 
 
 //
 func makeURIMonitoringV1AutoAddFwlogPolicyCreateOper(in *FwlogPolicy) string {
-	return ""
-
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/fwlogPolicy")
 }
 
 //
@@ -4024,8 +4023,7 @@ func makeURIMonitoringV1AutoDeleteFlowExportPolicyDeleteOper(in *FlowExportPolic
 
 //
 func makeURIMonitoringV1AutoDeleteFwlogPolicyDeleteOper(in *FwlogPolicy) string {
-	return ""
-
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/fwlogPolicy/", in.Name)
 }
 
 //
@@ -4519,7 +4517,23 @@ func (r *EndpointsMonitoringV1RestClient) AutoWatchStatsPolicy(ctx context.Conte
 
 // AutoAddFwlogPolicy CRUD method for FwlogPolicy
 func (r *EndpointsMonitoringV1RestClient) AutoAddFwlogPolicy(ctx context.Context, in *FwlogPolicy) (*FwlogPolicy, error) {
-	return nil, errors.New("not allowed")
+	path := makeURIMonitoringV1AutoAddFwlogPolicyCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	httpresp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespMonitoringV1AutoAddFwlogPolicy(ctx, httpresp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*FwlogPolicy), nil
 }
 
 // AutoUpdateFwlogPolicy CRUD method for FwlogPolicy
@@ -4566,7 +4580,23 @@ func (r *EndpointsMonitoringV1RestClient) AutoGetFwlogPolicy(ctx context.Context
 
 // AutoDeleteFwlogPolicy CRUD method for FwlogPolicy
 func (r *EndpointsMonitoringV1RestClient) AutoDeleteFwlogPolicy(ctx context.Context, in *FwlogPolicy) (*FwlogPolicy, error) {
-	return nil, errors.New("not allowed")
+	path := makeURIMonitoringV1AutoDeleteFwlogPolicyDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespMonitoringV1AutoDeleteFwlogPolicy(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*FwlogPolicy), err
 }
 
 // AutoListFwlogPolicy CRUD method for FwlogPolicy
