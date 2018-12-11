@@ -723,7 +723,6 @@ cpdc_setup_interrupt_params(const struct service_info *svc_info, void *poll_ctx)
 			(uint64_t) cp_desc, (uint64_t) pcr,
 			(uint64_t) poll_ctx);
 
-	cp_desc->u.cd_bits.cc_db_on = 1;
 	cp_desc->u.cd_bits.cc_otag_on = 1;
 
 	if (svc_info->si_desc_flags & PNSO_CP_DFLAG_ZERO_PAD) {
@@ -746,6 +745,7 @@ cpdc_setup_interrupt_params(const struct service_info *svc_info, void *poll_ctx)
 			goto out;
 		}
 
+		cp_desc->u.cd_bits.cc_db_on = 1;
 		cp_desc->cd_db_data = sonic_intr_get_fire_data64();
 
 		cp_desc->cd_otag_addr =

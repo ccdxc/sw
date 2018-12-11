@@ -269,7 +269,6 @@ chn_poller(void *poll_ctx)
 
 	err = chn_poll_all_services(chain);
 	if (err) {
-		/* TODO-poll: retry then give-up after a limit to clean-up */
 		OSAL_LOG_DEBUG("poll failed! chain: 0x" PRIx64 " err: %d",
 				(uint64_t) chain, err);
 		goto out;
