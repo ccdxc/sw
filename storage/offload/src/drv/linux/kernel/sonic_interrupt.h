@@ -65,6 +65,7 @@ struct sonic_event_list {
 	struct per_core_resource *pc_res;
 	bool			enable;
 	bool			armed;
+	int			idle_count;
 
 	int			irq;
 	char			name[32];

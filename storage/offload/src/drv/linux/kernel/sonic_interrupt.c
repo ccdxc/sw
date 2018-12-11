@@ -223,6 +223,8 @@ done:
 		       work_id, complete_count, incomplete_count, npolled);
 }
 
+#define SONIC_ISR_MAX_IDLE_COUNT 1000
+
 irqreturn_t sonic_async_ev_isr(int irq, void *evlptr)
 {
 	struct sonic_event_list *evl = (struct sonic_event_list *) evlptr;
@@ -241,8 +243,16 @@ irqreturn_t sonic_async_ev_isr(int irq, void *evlptr)
 
 	npolled = sonic_poll_ev_list(evl, SONIC_ASYNC_BUDGET, &evl->work_data);
 
-	if (!npolled)
+	if (!npolled) {
+		if (evl->idle_count++ == SONIC_ISR_MAX_IDLE_COUNT)
+			OSAL_LOG_CRITICAL("sonic_async_ev_isr stuck in idle loop!\n");
 		xchg(&evl->armed, true);
+		sonic_intr_mask(&evl->pc_res->intr, false);
+	} else {
+		//if (evl->idle_count)
+		//	OSAL_LOG_WARN("isr idle count was %d\n", evl->idle_count);
+		evl->idle_count = 0;
+	}
 
 	//OSAL_LOG_DEBUG("... exit sonic_async_ev_isr, enqueued %d work items\n", npolled);
 
