@@ -169,8 +169,9 @@ sge_bktrack:
     mfspr        r7, spr_mpuid
     seq          c1, r7[4:2], CAPRI_STAGE_LAST-1
     bcf          [c1], sqcb_writeback
+    add          r5, CAPRI_KEY_FIELD(IN_TO_S_P, wqe_addr), r0 // Branch Delay Slot
     
-    CAPRI_RESET_TABLE_0_ARG() // Branch Delay Slot
+    CAPRI_RESET_TABLE_0_ARG()
 
     // sge_addr = wqe_addr + TXWQE_SGE_OFFSET + (sizeof(sge_t) * current_sge_id)
     add          r3,  CAPRI_KEY_FIELD(IN_TO_S_P, wqe_addr), K_CURRENT_SGE_ID, LOG_SIZEOF_SGE_T
@@ -236,12 +237,15 @@ sqcb_writeback:
     CAPRI_RESET_TABLE_0_ARG()
     phvwr.c6 CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, bktrack_in_progress), 1
     phvwr.c5 CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, current_sge_offset), r2
-    phvwr    CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, sq_c_index), r4
+    phvwrpair  CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, num_sges), d.base.num_sges, CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, sq_c_index), r4
     phvwr.c7 CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, empty_rrq_bktrack), 1
 
     SQCB0_ADDR_GET(r5)
-    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_write_back_process, r5)
+    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_write_back_process, r5)
 
 invalid_rexmit_psn:
-    nop.e
-    nop
+    phvwr        p.{rdma_feedback.completion.status, rdma_feedback.completion.error}, (CQ_STATUS_LOCAL_QP_OPER_ERR << 1 | 1)
+    phvwr          CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp),  1
+
+    SQCB0_ADDR_GET(r5)
+    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_write_back_process, r5)

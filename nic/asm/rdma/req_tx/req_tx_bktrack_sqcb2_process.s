@@ -30,6 +30,7 @@ struct sqcb2_t d;
 #define K_WQE_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, wqe_addr_sbit0_ebit31, wqe_addr_sbit48_ebit63)
 %%
     .param req_tx_bktrack_sqwqe_process
+    .param req_tx_bktrack_sqsge_process
     .param req_tx_bktrack_sqpt_process
     .param req_tx_bktrack_write_back_process
 
@@ -84,8 +85,6 @@ wqe_bktrack:
     seq           c1, CAPRI_KEY_FIELD(IN_P, in_progress), 1
     phvwr.c1 CAPRI_PHV_FIELD(SQ_BKTRACK_P, tx_psn), d.wqe_start_psn
     
-    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqwqe_process, r2)
- 
     //for now, use to_stage_args to pass the wqe_addr
     //until we organize better, copy to all stages
     phvwrpair CAPRI_PHV_FIELD(TO_S2_BT_P, wqe_addr), r2, \
@@ -94,8 +93,14 @@ wqe_bktrack:
     phvwrpair CAPRI_PHV_FIELD(TO_S4_BT_P, wqe_addr), r2, \
               CAPRI_PHV_FIELD(TO_S5_BT_P, wqe_addr), r2
 
-    phvwr.e CAPRI_PHV_FIELD(TO_S6_BT_P, wqe_addr), r2
+    phvwr    CAPRI_PHV_FIELD(TO_S6_BT_P, wqe_addr), r2
     phvwr CAPRI_PHV_FIELD(TO_S7_BT_P, wqe_addr), r2
+
+    slt           c2, d.tx_psn, d.rexmit_psn
+    // sge_addr = wqe_addr + TXWQE_SGE_OFFSET + (sizeof(sge_t) * current_sge_id)
+    add.c2        r2,  K_WQE_ADDR, K_CURRENT_SGE_ID, LOG_SIZEOF_SGE_T
+    add.c2        r2, r2, TXWQE_SGE_OFFSET
+    CAPRI_NEXT_TABLE0_READ_PC_CE(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqsge_process, req_tx_bktrack_sqwqe_process, r2, c2)
 
 bktrack_sqpt:
     // log_num_wqe_per_page = (ssqcb0_to_sqcb1_info_p->log_sq_page_size - sqcb0_to_sqcb1_info_p->log_wqe_size) 
