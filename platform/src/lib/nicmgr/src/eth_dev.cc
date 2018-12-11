@@ -902,13 +902,22 @@ Eth::_CmdIdentify(void *req, void *req_data, void *resp, void *resp_data)
 enum DevcmdStatus
 Eth::_CmdReset(void *req, void *req_data, void *resp, void *resp_data)
 {
-    NIC_LOG_DEBUG("lif-{}: CMD_OPCODE_RESET", hal_lif_info_.hw_lif_id);
+    EthLif *eth_lif = NULL;
 
     for (uint32_t intr = 0; intr < spec->intr_count; intr++) {
         intr_pba_clear(pci_resources.intrb + intr);
         intr_drvcfg(pci_resources.intrb + intr);
     }
 
+    if (hal_lif_info_.pushed_to_hal) {
+        // Clean up filters, Reset rx-modes
+        eth_lif = hal->eth_lif_map[hal_lif_info_.id];
+        if (!eth_lif) {
+            NIC_LOG_ERR("lif-{}: Unable to find eth_lif", hal_lif_info_.hw_lif_id);
+            return (DEVCMD_ERROR);
+        }
+        eth_lif->Reset();
+    }
     lif_state = LIF_STATE_RESET;
 
     return (DEVCMD_SUCCESS);
@@ -996,8 +1005,6 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
 
     eid = 0;
     link_flap_count = 0;
-
-    // TODO: Clean up filters, Reset rx-modes
 
     // Trigger Hal for Lif create if this is the first time
     if (!hal_lif_info_.pushed_to_hal) {

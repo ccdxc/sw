@@ -106,7 +106,7 @@ EthLif::Factory(hal_lif_info_t *info)
             eth_lif->GetUplink()->UpdateHalWithNativeL2seg(native_l2seg->GetId());
 
             // Update l2seg's mbrifs on uplink
-            native_l2seg->AddUplink(eth_lif->GetUplink());
+            // native_l2seg->AddUplink(eth_lif->GetUplink());
         }
     }
 
@@ -116,7 +116,7 @@ EthLif::Factory(hal_lif_info_t *info)
     // Add Vlan filter on ethlif
     eth_lif->AddVlan(NATIVE_VLAN_ID);
 
-    if (hal->GetMode() == FWD_MODE_SMART) {
+    if (!eth_lif->IsClassicForwarding()) {
         // If its promiscuos. send (Lif, *, *) filter to HAL
         if (info->receive_promiscuous) {
             eth_lif->CreateMacVlanFilter(0, 0);
@@ -179,6 +179,28 @@ end:
 }
 
 void
+EthLif::Reset()
+{
+    api_trace("Resetting Lif");
+
+    // Remove Filters
+    RemoveMacFilters();
+    RemoveVlanFilters(true /* skip_native_vlan */);
+    RemoveMacVlanFilters();
+
+    // Reset Vlan Strip
+    UpdateVlanStripEn(false);
+
+    // Reset Vlan Insert
+    UpdateVlanInsertEn(false);
+
+    // Reset Rx Modes
+    UpdateReceiveBroadcast(false);
+    UpdateReceiveAllMulticast(false);
+    UpdateReceivePromiscuous(false);
+}
+
+void
 EthLif::Destroy(EthLif *eth_lif)
 {
     api_trace("EthLif Delete");
@@ -188,9 +210,9 @@ EthLif::Destroy(EthLif *eth_lif)
 
     if (eth_lif) {
 
-        eth_lif->remove_mac_filters();
-        eth_lif->remove_vlan_filters();
-        eth_lif->remove_mac_vlan_filters();
+        eth_lif->RemoveMacFilters();
+        eth_lif->RemoveVlanFilters();
+        eth_lif->RemoveMacVlanFilters();
 
         if (eth_lif->GetUplink()) {
             eth_lif->GetUplink()->DecNumLifs();
@@ -261,6 +283,7 @@ EthLif::~EthLif()
     Lif::Destroy(lif_);
 }
 
+#if 0
 hal_irisc_ret_t
 EthLif::remove_mac_filters()
 {
@@ -302,6 +325,7 @@ EthLif::remove_mac_vlan_filters()
     }
     return HAL_IRISC_RET_SUCCESS;
 }
+#endif
 
 /**
  * @re_add: Mac is already added without any registration. So re-adding.
@@ -474,7 +498,7 @@ EthLif::AddVlan(vlan_t vlan)
 }
 
 hal_irisc_ret_t
-EthLif::DelVlan(vlan_t vlan)
+EthLif::DelVlan(vlan_t vlan, bool update_db)
 {
     mac_vlan_t mac_vlan_key;
 
@@ -509,8 +533,10 @@ EthLif::DelVlan(vlan_t vlan)
             DeleteVlanFilter(vlan);
         }
 
-        // Erase mac filter
-        vlan_table_.erase(vlan);
+        if (update_db) {
+            // Erase vlan filter
+            vlan_table_.erase(vlan);
+        }
     } else {
         NIC_LOG_ERR("Vlan not registered: {}", vlan);
     }
@@ -555,7 +581,7 @@ EthLif::AddMacVlan(mac_t mac, vlan_t vlan)
 }
 
 hal_irisc_ret_t
-EthLif::DelMacVlan(mac_t mac, vlan_t vlan)
+EthLif::DelMacVlan(mac_t mac, vlan_t vlan, bool update_db)
 {
     mac_vlan_t mac_vlan_key;
 
@@ -578,8 +604,10 @@ EthLif::DelMacVlan(mac_t mac, vlan_t vlan)
         } else {
             DeleteMacVlanFilter(mac, vlan);
         }
-        // Erase mac-vlan filter
-        mac_vlan_table_.erase(mac_vlan_key);
+        if (update_db) {
+            // Erase mac-vlan filter
+            mac_vlan_table_.erase(mac_vlan_key);
+        }
     } else {
         NIC_LOG_ERR("(Mac,Vlan) already not registered: mac: {}, vlan: {}",
                       mac, vlan);
@@ -623,7 +651,7 @@ EthLif::UpdateReceiveBroadcast(bool receive_broadcast)
 {
     api_trace("Broadcast change");
     if (receive_broadcast == info_.receive_broadcast) {
-        NIC_LOG_WARN("Prom flag: {}. No change in broadcast flag. Nop",
+        NIC_LOG_WARN("Bcast flag: {}. No change in broadcast flag. Nop",
                        receive_broadcast);
         goto end;
     }
@@ -656,19 +684,19 @@ EthLif::UpdateReceiveAllMulticast(bool receive_all_multicast)
 
     /*
      * False -> True
-     * - False: Call RemoveMCFilters
+     * - False: Call DeProgramMCFilters
      * True -> False
-     * - False: Call AddMCFilters
+     * - False: Call ProgramMCFilters
      */
 
     if (receive_all_multicast) {
         // Enable ALL_MC: Remove all MC filters on this lif
-        RemoveMCFilters();
+        DeProgramMCFilters();
         info_.receive_all_multicast = receive_all_multicast;
     } else {
         // Disable ALL_MC: Add all MC filters on this lif
         info_.receive_all_multicast = receive_all_multicast;
-        AddMCFilters();
+        ProgramMCFilters();
     }
 
 
@@ -806,7 +834,7 @@ EthLif::DeleteVlanFilter(vlan_t vlan)
 }
 
 void
-EthLif::AddMCFilters()
+EthLif::ProgramMCFilters()
 {
     mac_t mac;
     for (auto it = mac_table_.begin(); it != mac_table_.end();it++) {
@@ -819,9 +847,10 @@ EthLif::AddMCFilters()
 }
 
 void
-EthLif::RemoveMCFilters()
+EthLif::DeProgramMCFilters()
 {
     mac_t mac;
+
     for (auto it = mac_table_.begin(); it != mac_table_.end();it++) {
         mac = *it;
         if (is_multicast(mac)) {
@@ -829,6 +858,55 @@ EthLif::RemoveMCFilters()
             DelMac(mac, false);
         }
     }
+}
+
+void
+EthLif::RemoveMacFilters()
+{
+    mac_t mac;
+
+    NIC_LOG_DEBUG("lif-{}: Removing Mac Filters", GetHwLifId());
+    for (auto it = mac_table_.begin(); it != mac_table_.end();) {
+        mac = *it;
+        DelMac(mac, false);
+        it = mac_table_.erase(it);
+    }
+    NIC_LOG_DEBUG("# of Mac Filters: {}", mac_table_.size());
+}
+
+void
+EthLif::RemoveVlanFilters(bool skip_native_vlan)
+{
+    vlan_t vlan;
+
+    NIC_LOG_DEBUG("lif-{}: Removing Vlan Filters", GetHwLifId());
+
+    for (auto it = vlan_table_.begin(); it != vlan_table_.end();) {
+        vlan = *it;
+        if (skip_native_vlan && vlan == NATIVE_VLAN_ID) {
+            it++;
+            continue;
+        }
+        DelVlan(vlan, false);
+        it = vlan_table_.erase(it);
+    }
+    NIC_LOG_DEBUG("# of Vlan Filters: {}", vlan_table_.size());
+}
+
+void
+EthLif::RemoveMacVlanFilters()
+{
+    mac_t mac;
+    vlan_t vlan;
+
+    NIC_LOG_DEBUG("lif-{}: Removing Mac-Vlan Filters", GetHwLifId());
+    for (auto it = mac_vlan_table_.begin(); it != mac_vlan_table_.end();) {
+        mac = std::get<0>(*it);
+        vlan = std::get<1>(*it);
+        DelMacVlan(mac, vlan, false);
+        it = mac_vlan_table_.erase(it);
+    }
+    NIC_LOG_DEBUG("# of Mac-Vlan Filters: {}", mac_vlan_table_.size());
 }
 
 
