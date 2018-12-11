@@ -28,6 +28,10 @@ static long batch = -1;
 module_param(batch, long, 0444);
 MODULE_PARM_DESC(batch, "default batch count");
 
+static int turbo = -1;
+module_param(turbo, int, 0444);
+MODULE_PARM_DESC(turbo, "default turbo mode 0 or 1 (default 1)");
+
 static int status_interval = -1;
 module_param(status_interval, int, 0444);
 MODULE_PARM_DESC(status_interval, "status polling interval in seconds (default none)");
@@ -310,7 +314,13 @@ static const unsigned char *default_feature_yaml_list[PNSO_SVC_TYPE_MAX] = {
 "        - retcode_compare:\n"
 "            idx: 1\n"
 "            retcode: 0\n"
-"            svc_retcodes: 0\n",
+"            svc_retcodes: 0\n"
+"        - data_compare:\n"
+"            idx: 2\n"
+"            file1: 'compressed_1.bin'\n"
+"            pattern: 0x00\n"
+"            offset: eof\n"
+"            len: eob\n",
 
 	[PNSO_SVC_TYPE_DECOMPRESS] =
 "tests:\n"
@@ -394,7 +404,7 @@ static const unsigned char default_cp_hash_yaml[] =
 "            svc_retcodes: 0,0\n"
 "        - data_compare:\n"
 "            idx: 2\n"
-"            file1: 'compressed1.bin'\n"
+"            file1: 'compressed_1.bin'\n"
 "            file2: 'compressed_chain1.bin'\n";
 
 #define MAX_ALIAS_STR_LEN 128
@@ -450,7 +460,7 @@ body(void *not_used)
 		}
 	}
 	if (repeat >= 0 || batch >= 0 || cpu_mask >= 0 || rate >= 0 ||
-	    status_interval >= 0 || strlen(mode) > 0) {
+	    status_interval >= 0 || strlen(mode) > 0 || turbo >= 0) {
 		uint32_t len = 0;
 		char alias_str[MAX_ALIAS_STR_LEN+1] = "";
 
@@ -472,6 +482,17 @@ body(void *not_used)
 			err = pnso_test_parse_buf(alias_str, len, cfg);
 			if (err) {
 				PNSO_LOG_ERROR("Failed to parse default batch string '%s'\n",
+					       alias_str);
+				goto done;
+			}
+		}
+		if (turbo >= 0) {
+			len = generate_alias_yaml(alias_str, "default_turbo",
+						  turbo ? 1 : 0, NULL);
+			PNSO_LOG_INFO("module param turbo: %s\n", alias_str);
+			err = pnso_test_parse_buf(alias_str, len, cfg);
+			if (err) {
+				PNSO_LOG_ERROR("Failed to parse default turbo string '%s'\n",
 					       alias_str);
 				goto done;
 			}

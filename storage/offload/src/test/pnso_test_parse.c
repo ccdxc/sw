@@ -514,7 +514,7 @@ struct svc_param_desc {
 	const char *name;
 	uint32_t name_len;
 	uint16_t svc_type_mask;
-	uint16_t value;
+	uint32_t value;
 };
 
 #define CP_DFLAG_DESC(name) \
@@ -620,6 +620,15 @@ static struct svc_param_desc g_cmp_type_map[] = {
 	{ NULL, 0, 0, 0 }
 };
 
+/* Keep alphabetized */
+static struct svc_param_desc g_dyn_offset_map[] = {
+	{ "eob", 3, 0, DYN_OFFSET_EOB },
+	{ "eof", 3, 0, DYN_OFFSET_EOF },
+
+	/* Must be last */
+	{ NULL, 0, 0, 0 }
+};
+
 static void dump_param_map_names(struct svc_param_desc *param_map, uint16_t svc_type)
 {
 	struct svc_param_desc *entry;
@@ -710,12 +719,13 @@ not_found:
 static pnso_error_t lookup_svc_param_value(struct svc_param_desc *param_map,
 					   const char *str,
 					   uint16_t svc_type,
-					   uint16_t *ret)
+					   uint32_t *ret)
 {
 	struct svc_param_desc *svc_param;
 
 	if (isdigit(*str)) {
-		return (uint16_t) safe_strtoll(str);
+		*ret = (uint32_t) safe_strtoll(str);
+		return PNSO_OK;
 	}
 
 	svc_param = lookup_svc_param(param_map, str, strlen(str), svc_type);
@@ -728,12 +738,12 @@ static pnso_error_t lookup_svc_param_value(struct svc_param_desc *param_map,
 }
 
 static pnso_error_t lookup_svc_param_csv_flags(struct svc_param_desc *param_map,
-			const char *str, uint16_t svc_type, uint16_t *flags)
+			const char *str, uint16_t svc_type, uint32_t *flags)
 {
 	const char *search_str;
 	size_t len;
 	struct svc_param_desc *svc_param;
-	uint16_t ret = 0;
+	uint32_t ret = 0;
 
 	if (isdigit(*str)) {
 		*flags = (uint32_t) safe_strtoll(str);
@@ -814,7 +824,7 @@ static pnso_error_t fname(struct test_desc *root, struct test_node *parent, \
 			  const char *val) \
 { \
 	pnso_error_t rc; \
-	uint16_t flags; \
+	uint32_t flags; \
 	if (!val) { \
 		return PNSO_OK; \
 	} \
@@ -831,7 +841,7 @@ static pnso_error_t fname(struct test_desc *root, struct test_node *parent, \
 			  const char *val) \
 { \
 	pnso_error_t rc; \
-	uint16_t tmp; \
+	uint32_t tmp; \
  \
 	if (!val) { \
 		return PNSO_OK; \
@@ -839,6 +849,7 @@ static pnso_error_t fname(struct test_desc *root, struct test_node *parent, \
 	ALIAS_SWAP(root, val); \
 	rc = lookup_svc_param_value(param_map, val, svc_type, &tmp); \
 	if (rc != PNSO_OK) { \
+		PNSO_LOG_ERROR("Invalid parameter '%s' for %s\n", val, #fname); \
 		return rc; \
 	} \
 	if (tmp < (min) || tmp > (max)) { \
@@ -892,8 +903,10 @@ FUNC_SET_STRING(test_set_validation_pattern, ((struct test_validation *)parent)-
 FUNC_SET_PARAM(test_set_compare_type, ((struct test_validation *)parent)->cmp_type,
 	       g_cmp_type_map, 0, 0, COMPARE_TYPE_MAX-1)
 
-FUNC_SET_INT(test_set_validation_data_offset, ((struct test_validation *)parent)->offset, 0, UINT_MAX)
-FUNC_SET_INT(test_set_validation_data_len, ((struct test_validation *)parent)->len, 0, UINT_MAX)
+FUNC_SET_PARAM(test_set_validation_data_offset, ((struct test_validation *)parent)->offset,
+	       g_dyn_offset_map, 0, 0, UINT_MAX)
+FUNC_SET_PARAM(test_set_validation_data_len, ((struct test_validation *)parent)->len,
+	       g_dyn_offset_map, 0, 0, UINT_MAX)
 FUNC_SET_INT(test_set_validation_svc_chain, ((struct test_validation *)parent)->svc_chain_idx, 0, UINT_MAX)
 FUNC_SET_INT(test_set_validation_retcode, ((struct test_validation *)parent)->retcode, 0, UINT_MAX)
 
@@ -1166,7 +1179,7 @@ static pnso_error_t test_set_op_flags(struct test_desc *root,
 			       struct test_node *parent, const char *val)
 {
 	pnso_error_t err;
-	uint16_t flags = 0;
+	uint32_t flags = 0;
 	struct pnso_service *svc = get_cur_svc(parent);
 
 	ALIAS_SWAP(root, val);
@@ -1273,7 +1286,7 @@ static pnso_error_t test_set_output_flags(struct test_desc *root,
 				   struct test_node *parent, const char *val)
 {
 	pnso_error_t err;
-	uint16_t flags = 0;
+	uint32_t flags = 0;
 	struct test_svc *svc_node = (struct test_svc *) parent;
 
 	ALIAS_SWAP(root, val);
@@ -1298,7 +1311,7 @@ static pnso_error_t test_set_cp_hdr_type(struct test_desc *root,
 				   struct test_node *parent, const char *val)
 {
 	pnso_error_t err;
-	uint16_t field_type = 0;
+	uint32_t field_type = 0;
 	struct test_cp_header *cp_hdr = (struct test_cp_header *) parent;
 
 	ALIAS_SWAP(root, val);

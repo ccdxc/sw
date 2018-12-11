@@ -196,6 +196,13 @@ enum {
 	COMPARE_TYPE_MAX
 };
 
+enum {
+	DYN_OFFSET_EOF = 0xffffffff,
+	DYN_OFFSET_EOB = 0xfffffffe,
+
+	DYN_OFFSET_START = DYN_OFFSET_EOB,
+};
+
 struct test_validation {
 	struct test_node node;
 	char name[TEST_MAX_NAME_LEN];

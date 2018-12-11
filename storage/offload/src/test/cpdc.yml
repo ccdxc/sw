@@ -40,8 +40,8 @@ tests:
             idx: 3
             file1: '1_compressed.bin'
             pattern: 0x00
-            offset: 2048
-            len: 2048
+            offset: eof
+            len: eob
   - test:
       idx: 2
       svc_chains: 2

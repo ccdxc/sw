@@ -806,7 +806,7 @@ static void output_results(struct request_context *req_ctx,
 	FOR_EACH_NODE(svc_chain->svcs) {
 		struct test_svc *svc = (struct test_svc *) node;
 		struct pnso_service_status *svc_status = &req_ctx->svc_res.svc[i];
-		if (svc->output_path[0]) {
+		if (svc->output_path[0] && svc_status->err == PNSO_OK) {
 			err = construct_filename(batch_ctx->desc, req_ctx->vars,
 						 output_path, svc->output_path);
 			if (err != PNSO_OK) {
@@ -1410,6 +1410,8 @@ static pnso_error_t run_data_validation(struct batch_context *ctx,
 	char path1[TEST_MAX_FULL_PATH_LEN] = "";
 	char path2[TEST_MAX_FULL_PATH_LEN] = "";
 	int cmp = 0;
+	uint32_t offset = validation->offset;
+	uint32_t len = validation->len;
 
 	if (ctx->req_rc != PNSO_OK) {
 		err = ctx->req_rc;
@@ -1433,6 +1435,28 @@ static pnso_error_t run_data_validation(struct batch_context *ctx,
 		goto done;
 	}
 
+	/* calculate dynamic offset/len */
+	if (validation->offset >= DYN_OFFSET_START ||
+	    validation->len >= DYN_OFFSET_START) {
+		uint32_t file_len = lookup_file_node_size(
+					test_ctx->output_file_tbl, path1);
+
+		if (offset == DYN_OFFSET_EOF)
+			offset = file_len;
+		else if (offset == DYN_OFFSET_EOB)
+			offset = roundup_len(file_len,
+					ctx->desc->init_params.block_size);
+
+		if (len == DYN_OFFSET_EOF)
+			len = file_len - offset;
+		else if (len == DYN_OFFSET_EOB)
+			len = roundup_len(file_len,
+				ctx->desc->init_params.block_size) - offset;
+		OSAL_LOG_DEBUG("data_compare using dynamic offset %u, len %u, file_len %u\n",
+				offset, len, file_len);
+	}
+
+	/* Validate */
 	switch (validation->type) {
 	case VALIDATION_DATA_COMPARE:
 		if (path1[0] && path2[0]) {
@@ -1440,14 +1464,12 @@ static pnso_error_t run_data_validation(struct batch_context *ctx,
 			fnode1 = lookup_file_node(test_ctx->output_file_tbl, path1, false);
 			fnode2 = lookup_file_node(test_ctx->output_file_tbl, path2, false);
 			cmp = cmp_file_node_data(fnode1, fnode2,
-						 validation->offset,
-						 validation->len);
+						 offset, len);
 #if 0 //#ifndef __KERNEL__
 			/* Metadata not available or inconclusive, do full file compare */
 			if (cmp != 0) {
 				cmp = test_compare_files(path1, path2,
-							 validation->offset,
-							 validation->len);
+							 offset, len);
 			}
 #endif
 		} else if (validation->pattern[0] && (path1[0] || path2[0])) {
@@ -1461,8 +1483,7 @@ static pnso_error_t run_data_validation(struct batch_context *ctx,
 			if (fnode1) {
 				osal_atomic_lock(&fnode1->lock);
 				cmp = test_cmp_pattern(fnode1->buflist,
-						       validation->offset,
-						       validation->len,
+						       offset, len,
 						       pat, pat_len);
 				osal_atomic_unlock(&fnode1->lock);
 			} else {
@@ -1479,8 +1500,7 @@ static pnso_error_t run_data_validation(struct batch_context *ctx,
 				pat = (const char *) get_normalized_pattern(pat,
 							hex_pat, &pat_len);
 				cmp = test_compare_file_data(path,
-						     validation->offset,
-						     validation->len,
+						     offset, len,
 						     (const uint8_t *) pat,
 						     pat_len);
 			}
@@ -1490,17 +1510,17 @@ static pnso_error_t run_data_validation(struct batch_context *ctx,
 		}
 		break;
 	case VALIDATION_SIZE_COMPARE:
-		if (validation->len) {
-			/* Test static length */
-			cmp = (int) lookup_file_node_size(
-					test_ctx->output_file_tbl, path1) -
-				(int) validation->len;
-		} else {
+		if (path1[0] && path2[0]) {
 			/* Compare size of 2 files */
 			cmp = (int) lookup_file_node_size(
 					test_ctx->output_file_tbl, path1) -
 				(int) lookup_file_node_size(
 					test_ctx->output_file_tbl, path2);
+		} else {
+			/* Test static length */
+			cmp = (int) lookup_file_node_size(
+					test_ctx->output_file_tbl, path1) -
+				(int) len;
 		}
 		break;
 	default:
@@ -1591,6 +1611,7 @@ static pnso_error_t run_req_validation(struct request_context *req_ctx)
 
 	/* Output at least the first result of each worker */
 	if (req_ctx->batch_ctx->req_rc == PNSO_OK &&
+	    req_ctx->svc_res.err == PNSO_OK &&
 	    (!testcase->turbo ||
 	     req_ctx->batch_ctx->batch_id <
 	     req_ctx->batch_ctx->test_ctx->worker_count)) {
