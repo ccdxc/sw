@@ -23,9 +23,10 @@ struct aq_tx_s1_t0_k k;
 #define K_CB_ADDR CAPRI_KEY_RANGE(IN_S2S_P, cb_addr_sbit0_ebit31, cb_addr_sbit32_ebit33)
 #define K_AH_BASE_ADDR_PAGE_ID CAPRI_KEY_RANGE(IN_TO_S_P, ah_base_addr_page_id_sbit0_ebit3, ah_base_addr_page_id_sbit20_ebit21)
 
-#define TO_SQCB_INFO_P      to_s3_info
-#define TO_RQCB_INFO_P      to_s4_info
-#define TO_S7_STATS_P       to_s7_stats_info
+#define TO_SQCB2_INFO_P      to_s5_info
+#define TO_RQCB0_INFO_P      to_s5_info
+#define TO_SQCB0_INFO_P      to_s6_info    
+#define TO_S7_STATS_P       to_s7_fb_stats_info
 
 %%
 
@@ -656,10 +657,13 @@ q_key:
 
     add         r4, d.{mod_qp.qkey_dest_qpn}.wx, r0
 
-    phvwr       CAPRI_PHV_FIELD(TO_SQCB_INFO_P, q_key), r4
-    phvwr       CAPRI_PHV_FIELD(TO_SQCB_INFO_P, q_key_valid), 1
-    phvwr       CAPRI_PHV_FIELD(TO_RQCB_INFO_P, q_key), r4
-    phvwr       CAPRI_PHV_FIELD(TO_RQCB_INFO_P, q_key_valid), 1
+    phvwr       CAPRI_PHV_FIELD(TO_SQCB0_INFO_P, q_key), r4
+    phvwr       CAPRI_PHV_FIELD(TO_SQCB0_INFO_P, q_key_valid), 1
+    phvwr       CAPRI_PHV_FIELD(TO_RQCB0_INFO_P, q_key), r4
+    phvwr       CAPRI_PHV_FIELD(TO_RQCB0_INFO_P, q_key_valid), 1
+
+    //For RQCB1 in Rx side
+    phvwrpair p.p4_to_p4plus.modify_qp_ext.q_key, r4, p.p4_to_p4plus.modify_qp_ext.q_key_valid, 1
 
 mod_qp_done:
     

@@ -7,7 +7,7 @@ struct aq_tx_phv_t p;
 struct aq_tx_s7_t3_k k;
 struct aqcb1_t d;
 
-#define IN_P    to_s7_stats_info
+#define IN_P    to_s7_fb_stats_info
 
 #define MASK_16 16
 

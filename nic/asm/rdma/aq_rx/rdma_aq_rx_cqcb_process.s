@@ -23,10 +23,12 @@ struct aq_rx_s6_t2_k k;
 #define CQ_EQ_INFO_P          t1_s2s_cqcb_to_eq_info
 #define CQ_ASYNC_EQ_INFO_P    t0_s2s_cqcb_to_eq_info
 
+#define IN_TO_S_P  to_s6_info
+    
 #define K_CQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, cqcb_base_addr_hi)
 #define K_LOG_NUM_CQ_ENTRIES CAPRI_KEY_FIELD(IN_TO_S_P, log_num_cq_entries)
 #define K_AQCB_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, aqcb_addr_sbit0_ebit2, aqcb_addr_sbit27_ebit27)
-#define K_CQ_ID CAPRI_KEY_FIELD(IN_P, cq_id)
+#define K_CQ_ID CAPRI_KEY_FIELD(IN_TO_S_P, cq_id)
     
 %%
     .param  rdma_aq_rx_eqcb_process
@@ -34,10 +36,6 @@ struct aq_rx_s6_t2_k k;
 .align
 rdma_aq_rx_cqcb_process:
 
-    // Pin cqcb process to stage 6 as it runs in stage 6 in resp_rx path
-    mfspr            r1, spr_mpuid
-    seq              c1, r1[4:2], STAGE_6
-    bcf              [!c1], bubble_to_next_stage
     seq              c1, CQ_PROXY_PINDEX, 0 //BD Slot
 
     bbeq             d.cq_full, 1, error_disable_aq
@@ -99,15 +97,6 @@ skip_eqcb:
 
     DMA_SET_END_OF_CMDS_E(struct capri_dma_cmd_phv2mem_t, DMA_CMD_BASE)
     nop // Exit Slot
-
-bubble_to_next_stage:
-    seq         c1, r1[4:2], STAGE_5
-    bcf         [!c1], exit
-
-    //invoke the same routine, but with valid d[]
-    CAPRI_GET_TABLE_2_K(aq_rx_phv_t, r7)
-    AQ_RX_CQCB_ADDR_GET(r1, K_CQ_ID, K_CQCB_BASE_ADDR_HI)
-    CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR_E(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r1) //Exit Slot
 
 report_cqfull_error:
  

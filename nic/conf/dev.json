@@ -78,5 +78,16 @@
         "if1_peer_ip":   "171.0.0.1",
         "if1_peer_mac":  "00:ae:cd:00:07:84",
         "board":         "6"        
+    },
+    {
+        "host":          "lab-bm6-30",
+        "console":       "chamber-ts2",
+        "port":          "25",
+        "if0":           "enp181s0",
+        "if0_ip":        "40.0.0.3",
+        "if0_mask":      "255.255.255.0",
+        "if0_peer_ip":   "40.0.0.1",
+        "if0_peer_mac":  "00:ae:cd:00:07:83",
+        "board":         "20"
     }
 ]

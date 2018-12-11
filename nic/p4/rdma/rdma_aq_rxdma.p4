@@ -8,6 +8,7 @@
 #define common_p4plus_stage0_app_header_table_action_dummy1 rdma_stage0_aq_feedback_action
 #define common_p4plus_stage0_app_header_table_action_dummy2 rdma_stage0_dummy_action
 #define common_p4plus_stage0_app_header_table_action_dummy3 rdma_stage0_aq_feedback_action2
+#define common_p4plus_stage0_app_header_table_action_dummy4 rdma_stage0_aq_feedback_action3
 
 /**** table declarations ****/
 
@@ -54,16 +55,21 @@
 
 #define rx_table_s0_t0_action rdma_aq_rx_aqcb_process
 
-#define rx_table_s1_t2_action rdma_aq_rx_aqcb_process_dummy
+#define rx_table_s1_t0_action rdma_aq_rx_cqcb_process_dummy
+#define rx_table_s1_t2_action rdma_aq_rx_sqcb_process_dummy
 #define rx_table_s1_t3_action rdma_aq_rx_aqwqe_process
 
-#define rx_table_s2_t2_action rdma_aq_rx_aqcb_process_dummy
+#define rx_table_s2_t0_action rdma_aq_rx_cqcb_process_dummy
+#define rx_table_s2_t2_action rdma_aq_rx_sqcb_process_dummy
 
-#define rx_table_s3_t2_action rdma_aq_rx_aqcb_process_dummy
+#define rx_table_s3_t0_action rdma_aq_rx_cqcb_process_dummy
+#define rx_table_s3_t2_action rdma_aq_rx_sqcb_process_dummy
 
-#define rx_table_s4_t2_action rdma_aq_rx_aqcb_process_dummy
+#define rx_table_s4_t0_action rdma_aq_rx_cqcb_process_dummy
+#define rx_table_s4_t2_action rdma_aq_rx_sqcb1_process
 
-#define rx_table_s5_t2_action rdma_aq_rx_aqcb_process_dummy
+#define rx_table_s5_t0_action rdma_aq_rx_cqcb_process_dummy
+#define rx_table_s5_t2_action rdma_aq_rx_rqcb1_process
 
 #define rx_table_s6_t2_action rdma_aq_rx_cqcb_process
 
@@ -100,20 +106,24 @@ header_type phv_global_common_t {
     }
 }
 
-header_type aq_rx_aqcb_to_cq_info_t {
+header_type aq_rx_aqcb_to_sqcb1_info_t {
     fields {
-        aq_id                            :  24;
-        cq_id                            :  24;
-        status                           :   8;
-        error                            :   1;
-        pad                              : 103;
+        ah_len                   :   8;
+        ah_addr                  :  32;
+        av_valid                 :   1;
+        state                    :   3;
+        state_valid              :   1;
+        pmtu_log2                :   5;
+        pmtu_valid               :   1;            
+        rq_id                    :  24;
+        pad                      :  85;
     }
 }
 
 header_type aq_rx_aqcb_to_wqe_info_t {
     fields {
         rq_id                            :  24;
-		rq_tbl_index                     :  32;
+        rq_tbl_index                     :  32;
 		rq_map_count                     :  32;
 		rq_dma_addr                      :  64;
         rq_cmb                           :   1;
@@ -128,19 +138,56 @@ header_type aq_rx_cqcb_to_eq_info_t {
     }
 }
 
-header_type aq_rx_to_stage_t {
+header_type aq_rx_to_stage_wqe_t {
     fields {
-        cqcb_base_addr_hi                :   24;
-        log_num_cq_entries               :    4;
-        bth_se                           :    1;
-        sqcb_base_addr_hi                :   24;
         rqcb_base_addr_hi                :   24;
-        aqcb_addr                        :   28;
-        pad                              :   23;
+        pad                              :  104;
     }
 }
 
-@pragma pa_header_union ingress app_header rdma_aq_feedback rdma_bth rdma_aq_feedback_qp 
+header_type aq_rx_to_stage_sqcb1_t {
+    fields {
+        sqcb_base_addr_hi        :  24;
+        rqcb_base_addr_hi        :  24;
+        rrq_base_addr            :  32;
+        rrq_depth_log2           :   5;
+        rrq_valid                :   1;
+        err_retry_count          :   3;
+        err_retry_count_valid    :   1;
+        tx_psn_valid             :   1;
+        tx_psn                   :  24;
+        pad                      :  13;
+    }
+}
+
+header_type aq_rx_to_stage_rqcb1_t {
+    fields {
+        cqcb_base_addr_hi        :    24;
+        cq_id                    :    24;
+        rsq_base_addr            :    32;
+        rsq_depth_log2           :     5;
+        rsq_valid                :     1;
+        q_key                    :    32;
+        q_key_valid              :     1;
+        pad                      :     9;
+    }
+}
+
+header_type aq_rx_to_stage_cqcb_t {
+    fields {
+        cqcb_base_addr_hi                :   24;
+        cq_id                            :   24;
+        log_num_cq_entries               :    4;
+        bth_se                           :    1;
+        aqcb_addr                        :   28;
+        aq_id                            :   24;
+        status                           :    8;
+        error                            :    1;
+        pad                              :   14;
+    }
+}
+
+@pragma pa_header_union ingress app_header rdma_aq_feedback rdma_bth rdma_aq_feedback_cqp rdma_aq_feedback_mqp
 
 metadata p4_to_p4plus_roce_bth_header_t rdma_bth;
 @pragma scratch_metadata
@@ -150,9 +197,13 @@ metadata rdma_aq_completion_feedback_header_t rdma_aq_feedback;
 @pragma scratch_metadata
 metadata rdma_aq_completion_feedback_header_t rdma_aq_feedback_scr;
 
-metadata rdma_aq_completion_feedback_header_create_qp_t rdma_aq_feedback_qp;
+metadata rdma_aq_completion_feedback_header_create_qp_t rdma_aq_feedback_cqp;
 @pragma scratch_metadata
-metadata rdma_aq_completion_feedback_header_create_qp_t rdma_aq_feedback_qp_scr;
+metadata rdma_aq_completion_feedback_header_create_qp_t rdma_aq_feedback_cqp_scr;
+
+metadata rdma_aq_completion_feedback_header_modify_qp_t rdma_aq_feedback_mqp;
+@pragma scratch_metadata
+metadata rdma_aq_completion_feedback_header_modify_qp_t rdma_aq_feedback_mqp_scr;
 
 /**** header unions and scratch ****/
 
@@ -166,14 +217,24 @@ metadata phv_global_common_t phv_global_common_scr;
 /**** to stage header unions ****/
 
 @pragma pa_header_union ingress to_stage_1
-metadata aq_rx_to_stage_t to_s1_info;
+metadata aq_rx_to_stage_wqe_t to_s1_info;
 @pragma scratch_metadata
-metadata aq_rx_to_stage_t to_s1_info_scr;
+metadata aq_rx_to_stage_wqe_t to_s1_info_scr;
+
+@pragma pa_header_union ingress to_stage_4
+metadata aq_rx_to_stage_sqcb1_t to_s4_info;
+@pragma scratch_metadata
+metadata aq_rx_to_stage_sqcb1_t to_s4_info_scr;
+
+@pragma pa_header_union ingress to_stage_5
+metadata aq_rx_to_stage_rqcb1_t to_s5_info;
+@pragma scratch_metadata
+metadata aq_rx_to_stage_rqcb1_t to_s5_info_scr;
 
 @pragma pa_header_union ingress to_stage_6
-metadata aq_rx_to_stage_t to_s6_info;
+metadata aq_rx_to_stage_cqcb_t to_s6_info;
 @pragma scratch_metadata
-metadata aq_rx_to_stage_t to_s6_info_scr;
+metadata aq_rx_to_stage_cqcb_t to_s6_info_scr;
 
 
 /**** stage to stage header unions ****/
@@ -192,11 +253,15 @@ metadata aq_rx_cqcb_to_eq_info_t t1_s2s_cqcb_to_eq_info_scr;
 
 //Table-2
 
-@pragma pa_header_union ingress common_t2_s2s t2_s2s_aqcb_to_cq_info
+@pragma pa_header_union ingress common_t2_s2s t2_s2s_aqcb_to_sqcb1_info t2_s2s_sqcb1_to_rqcb1_info
 
-metadata aq_rx_aqcb_to_cq_info_t t2_s2s_aqcb_to_cq_info;
+metadata aq_rx_aqcb_to_sqcb1_info_t t2_s2s_aqcb_to_sqcb1_info;
 @pragma scratch_metadata
-metadata aq_rx_aqcb_to_cq_info_t t2_s2s_aqcb_to_cq_info_scr;
+metadata aq_rx_aqcb_to_sqcb1_info_t t2_s2s_aqcb_to_sqcb1_info_scr;
+
+metadata aq_rx_aqcb_to_sqcb1_info_t t2_s2s_sqcb1_to_rqcb1_info;
+@pragma scratch_metadata
+metadata aq_rx_aqcb_to_sqcb1_info_t t2_s2s_sqcb1_to_rqcb1_info_scr;
 
 //Table-3
 @pragma pa_header_union ingress common_t3_s2s t3_s2s_aqcb_to_wqe_info
@@ -279,24 +344,84 @@ action rdma_stage0_aq_feedback_action2 () {
 
 
     // from app header
-    modify_field(rdma_aq_feedback_qp_scr.common_roce_bits, rdma_aq_feedback_qp.common_roce_bits);
+    modify_field(rdma_aq_feedback_cqp_scr.common_roce_bits, rdma_aq_feedback_cqp.common_roce_bits);
 
     // aq_feedback_header bits
-    modify_field(rdma_aq_feedback_qp_scr.aq_comp_common_bits, rdma_aq_feedback_qp.aq_comp_common_bits);
+    modify_field(rdma_aq_feedback_cqp_scr.aq_comp_common_bits, rdma_aq_feedback_cqp.aq_comp_common_bits);
 
-    modify_field(rdma_aq_feedback_qp_scr.rq_cq_id, rdma_aq_feedback_qp.rq_cq_id);
-    modify_field(rdma_aq_feedback_qp_scr.rq_depth_log2, rdma_aq_feedback_qp.rq_depth_log2);
-    modify_field(rdma_aq_feedback_qp_scr.rq_stride_log2, rdma_aq_feedback_qp.rq_stride_log2);
-    modify_field(rdma_aq_feedback_qp_scr.rq_page_size_log2, rdma_aq_feedback_qp.rq_page_size_log2);
-    modify_field(rdma_aq_feedback_qp_scr.rq_id, rdma_aq_feedback_qp.rq_id);
-    modify_field(rdma_aq_feedback_qp_scr.rq_tbl_index, rdma_aq_feedback_qp.rq_tbl_index);
-    modify_field(rdma_aq_feedback_qp_scr.rq_map_count, rdma_aq_feedback_qp.rq_map_count);
-    modify_field(rdma_aq_feedback_qp_scr.rq_type_state, rdma_aq_feedback_qp.rq_type_state);
-    modify_field(rdma_aq_feedback_qp_scr.pd, rdma_aq_feedback_qp.pd);
-    modify_field(rdma_aq_feedback_qp_scr.rq_dma_addr, rdma_aq_feedback_qp.rq_dma_addr);
-    modify_field(rdma_aq_feedback_qp_scr.rq_cmb, rdma_aq_feedback_qp.rq_cmb);
-    modify_field(rdma_aq_feedback_qp_scr.qp_privileged, rdma_aq_feedback_qp.qp_privileged);
-    modify_field(rdma_aq_feedback_qp_scr.log_pmtu, rdma_aq_feedback_qp.log_pmtu);
+    modify_field(rdma_aq_feedback_cqp_scr.rq_cq_id, rdma_aq_feedback_cqp.rq_cq_id);
+    modify_field(rdma_aq_feedback_cqp_scr.rq_depth_log2, rdma_aq_feedback_cqp.rq_depth_log2);
+    modify_field(rdma_aq_feedback_cqp_scr.rq_stride_log2, rdma_aq_feedback_cqp.rq_stride_log2);
+    modify_field(rdma_aq_feedback_cqp_scr.rq_page_size_log2, rdma_aq_feedback_cqp.rq_page_size_log2);
+    modify_field(rdma_aq_feedback_cqp_scr.rq_id, rdma_aq_feedback_cqp.rq_id);
+    modify_field(rdma_aq_feedback_cqp_scr.rq_tbl_index, rdma_aq_feedback_cqp.rq_tbl_index);
+    modify_field(rdma_aq_feedback_cqp_scr.rq_map_count, rdma_aq_feedback_cqp.rq_map_count);
+    modify_field(rdma_aq_feedback_cqp_scr.rq_type_state, rdma_aq_feedback_cqp.rq_type_state);
+    modify_field(rdma_aq_feedback_cqp_scr.pd, rdma_aq_feedback_cqp.pd);
+    modify_field(rdma_aq_feedback_cqp_scr.rq_dma_addr, rdma_aq_feedback_cqp.rq_dma_addr);
+    modify_field(rdma_aq_feedback_cqp_scr.rq_cmb, rdma_aq_feedback_cqp.rq_cmb);
+    modify_field(rdma_aq_feedback_cqp_scr.qp_privileged, rdma_aq_feedback_cqp.qp_privileged);
+    modify_field(rdma_aq_feedback_cqp_scr.log_pmtu, rdma_aq_feedback_cqp.log_pmtu);
+}
+
+
+action rdma_stage0_aq_feedback_action3 () {
+    // k + i for stage 0
+
+    // from intrinsic
+    modify_field(p4_intr_global_scratch.lif, p4_intr_global.lif);
+    modify_field(p4_intr_global_scratch.tm_iq, p4_intr_global.tm_iq);
+    modify_field(p4_rxdma_intr_scratch.qid, p4_rxdma_intr.qid);
+    modify_field(p4_rxdma_intr_scratch.qtype, p4_rxdma_intr.qtype);
+    modify_field(p4_rxdma_intr_scratch.qstate_addr, p4_rxdma_intr.qstate_addr);
+
+    // We only need raw-flags in this piece. Can be pruned further
+    // from p4-to-p4plus-rdma-hdr
+    modify_field(rdma_bth_scr.p4plus_app_id, rdma_bth.p4plus_app_id);
+    modify_field(rdma_bth_scr.table0_valid, rdma_bth.table0_valid);
+    modify_field(rdma_bth_scr.table1_valid, rdma_bth.table1_valid);
+    modify_field(rdma_bth_scr.table2_valid, rdma_bth.table2_valid);
+    modify_field(rdma_bth_scr.table3_valid, rdma_bth.table3_valid);
+    modify_field(rdma_bth_scr.roce_opt_ts_valid, rdma_bth.roce_opt_ts_valid);
+    modify_field(rdma_bth_scr.roce_opt_mss_valid, rdma_bth.roce_opt_mss_valid);
+    modify_field(rdma_bth_scr.rdma_hdr_len, rdma_bth.rdma_hdr_len);
+    modify_field(rdma_bth_scr.raw_flags, rdma_bth.raw_flags);
+    modify_field(rdma_bth_scr.ecn, rdma_bth.ecn);
+    modify_field(rdma_bth_scr.payload_len, rdma_bth.payload_len);
+    modify_field(rdma_bth_scr.roce_opt_ts_value, rdma_bth.roce_opt_ts_value);
+    modify_field(rdma_bth_scr.roce_opt_ts_echo, rdma_bth.roce_opt_ts_echo);
+    modify_field(rdma_bth_scr.roce_opt_mss, rdma_bth.roce_opt_mss);
+    modify_field(rdma_bth_scr.roce_int_recirc_hdr, rdma_bth.roce_int_recirc_hdr);
+
+
+    // from app header
+    modify_field(rdma_aq_feedback_mqp_scr.common_roce_bits, rdma_aq_feedback_mqp.common_roce_bits);
+
+    // aq_feedback_header bits
+    modify_field(rdma_aq_feedback_mqp_scr.aq_comp_common_bits, rdma_aq_feedback_mqp.aq_comp_common_bits);
+
+    modify_field(rdma_aq_feedback_mqp_scr.q_key, rdma_aq_feedback_mqp.q_key);
+    modify_field(rdma_aq_feedback_mqp_scr.q_key_valid, rdma_aq_feedback_mqp.q_key_valid);
+
+    modify_field(rdma_aq_feedback_mqp_scr.rq_id, rdma_aq_feedback_mqp.rq_id);
+    modify_field(rdma_aq_feedback_mqp_scr.ah_len, rdma_aq_feedback_mqp.ah_len);
+    modify_field(rdma_aq_feedback_mqp_scr.ah_addr, rdma_aq_feedback_mqp.ah_addr);
+    modify_field(rdma_aq_feedback_mqp_scr.rrq_base_addr, rdma_aq_feedback_mqp.rrq_base_addr);
+    modify_field(rdma_aq_feedback_mqp_scr.rrq_depth_log2, rdma_aq_feedback_mqp.rrq_depth_log2);
+    modify_field(rdma_aq_feedback_mqp_scr.rsq_base_addr, rdma_aq_feedback_mqp.rsq_base_addr);
+    modify_field(rdma_aq_feedback_mqp_scr.rsq_depth_log2, rdma_aq_feedback_mqp.rsq_depth_log2);
+    modify_field(rdma_aq_feedback_mqp_scr.av_valid, rdma_aq_feedback_mqp.av_valid);
+    modify_field(rdma_aq_feedback_mqp_scr.rsq_valid, rdma_aq_feedback_mqp.rsq_valid);
+    modify_field(rdma_aq_feedback_mqp_scr.rrq_valid, rdma_aq_feedback_mqp.rrq_valid);
+    modify_field(rdma_aq_feedback_mqp_scr.state, rdma_aq_feedback_mqp.state);
+    modify_field(rdma_aq_feedback_mqp_scr.state_valid, rdma_aq_feedback_mqp.state_valid);
+    modify_field(rdma_aq_feedback_mqp_scr.err_retry_count, rdma_aq_feedback_mqp.err_retry_count);
+
+    modify_field(rdma_aq_feedback_mqp_scr.err_retry_count_valid, rdma_aq_feedback_mqp.err_retry_count_valid);
+    modify_field(rdma_aq_feedback_mqp_scr.tx_psn_valid, rdma_aq_feedback_mqp.tx_psn_valid);
+    modify_field(rdma_aq_feedback_mqp_scr.tx_psn, rdma_aq_feedback_mqp.tx_psn);
+    modify_field(rdma_aq_feedback_mqp_scr.pmtu_log2, rdma_aq_feedback_mqp.pmtu_log2);
+    modify_field(rdma_aq_feedback_mqp_scr.pmtu_valid, rdma_aq_feedback_mqp.pmtu_valid);
 }
 
 /*
@@ -335,18 +460,17 @@ action rdma_aq_rx_aqcb_process () {
 }
 
 
-action rdma_aq_rx_aqcb_process_dummy () {
+action rdma_aq_rx_cqcb_process_dummy () {
     // from ki global
     GENERATE_GLOBAL_K
 
     // to stage
 
     // stage to stage
-    modify_field(t2_s2s_aqcb_to_cq_info_scr.aq_id, t2_s2s_aqcb_to_cq_info.aq_id);
-    modify_field(t2_s2s_aqcb_to_cq_info_scr.cq_id, t2_s2s_aqcb_to_cq_info.cq_id);
-    modify_field(t2_s2s_aqcb_to_cq_info_scr.status, t2_s2s_aqcb_to_cq_info.status);
-    modify_field(t2_s2s_aqcb_to_cq_info_scr.error, t2_s2s_aqcb_to_cq_info.error);
-    modify_field(t2_s2s_aqcb_to_cq_info_scr.pad, t2_s2s_aqcb_to_cq_info.pad);
+}
+
+action rdma_aq_rx_sqcb_process_dummy () {
+    GENERATE_GLOBAL_K
 
 }
 
@@ -355,7 +479,6 @@ action rdma_aq_rx_aqwqe_process () {
     GENERATE_GLOBAL_K
 
     // to stage
-    modify_field(to_s1_info_scr.sqcb_base_addr_hi, to_s1_info.sqcb_base_addr_hi);
     modify_field(to_s1_info_scr.rqcb_base_addr_hi, to_s1_info.rqcb_base_addr_hi);
     modify_field(to_s1_info_scr.pad, to_s1_info.pad);
 
@@ -369,23 +492,72 @@ action rdma_aq_rx_aqwqe_process () {
 
 }
 
+action rdma_aq_rx_sqcb1_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s4_info_scr.rqcb_base_addr_hi, to_s4_info.rqcb_base_addr_hi);
+    modify_field(to_s4_info_scr.sqcb_base_addr_hi, to_s4_info.sqcb_base_addr_hi);
+    modify_field(to_s4_info_scr.rrq_base_addr, to_s4_info.rrq_base_addr);
+    modify_field(to_s4_info_scr.rrq_depth_log2, to_s4_info.rrq_depth_log2);
+    modify_field(to_s4_info_scr.rrq_valid, to_s4_info.rrq_valid);
+    modify_field(to_s4_info_scr.err_retry_count, to_s4_info.err_retry_count);
+    modify_field(to_s4_info_scr.err_retry_count_valid, to_s4_info.err_retry_count_valid);
+    modify_field(to_s4_info_scr.tx_psn_valid, to_s4_info.tx_psn_valid);
+    modify_field(to_s4_info_scr.tx_psn, to_s4_info.tx_psn);
+    modify_field(to_s4_info_scr.pad, to_s4_info.pad);
+
+    //stage to stage
+    modify_field(t2_s2s_aqcb_to_sqcb1_info_scr.ah_len, t2_s2s_aqcb_to_sqcb1_info.ah_len);    
+    modify_field(t2_s2s_aqcb_to_sqcb1_info_scr.ah_addr, t2_s2s_aqcb_to_sqcb1_info.ah_addr);    
+    modify_field(t2_s2s_aqcb_to_sqcb1_info_scr.av_valid, t2_s2s_aqcb_to_sqcb1_info.av_valid);    
+    modify_field(t2_s2s_aqcb_to_sqcb1_info_scr.state, t2_s2s_aqcb_to_sqcb1_info.state);    
+    modify_field(t2_s2s_aqcb_to_sqcb1_info_scr.state_valid, t2_s2s_aqcb_to_sqcb1_info.state_valid);    
+    modify_field(t2_s2s_aqcb_to_sqcb1_info_scr.pmtu_log2, t2_s2s_aqcb_to_sqcb1_info.pmtu_log2);    
+    modify_field(t2_s2s_aqcb_to_sqcb1_info_scr.pmtu_valid, t2_s2s_aqcb_to_sqcb1_info.pmtu_valid);    
+    modify_field(t2_s2s_aqcb_to_sqcb1_info_scr.rq_id, t2_s2s_aqcb_to_sqcb1_info.rq_id);
+    modify_field(t2_s2s_aqcb_to_sqcb1_info_scr.pad, t2_s2s_aqcb_to_sqcb1_info.pad);    
+}
+
+action rdma_aq_rx_rqcb1_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    //to stage
+    modify_field(to_s5_info_scr.rsq_base_addr, to_s5_info.rsq_base_addr);
+    modify_field(to_s5_info_scr.rsq_depth_log2, to_s5_info.rsq_depth_log2);
+    modify_field(to_s5_info_scr.rsq_valid, to_s5_info.rsq_valid);
+    modify_field(to_s5_info_scr.q_key, to_s5_info.q_key);
+    modify_field(to_s5_info_scr.q_key_valid, to_s5_info.q_key_valid);
+    modify_field(to_s5_info_scr.pad, to_s5_info.pad);    
+
+    //stage to stage
+    modify_field(t2_s2s_sqcb1_to_rqcb1_info_scr.ah_len, t2_s2s_sqcb1_to_rqcb1_info.ah_len);    
+    modify_field(t2_s2s_sqcb1_to_rqcb1_info_scr.ah_addr, t2_s2s_sqcb1_to_rqcb1_info.ah_addr);    
+    modify_field(t2_s2s_sqcb1_to_rqcb1_info_scr.av_valid, t2_s2s_sqcb1_to_rqcb1_info.av_valid);    
+    modify_field(t2_s2s_sqcb1_to_rqcb1_info_scr.state, t2_s2s_sqcb1_to_rqcb1_info.state);    
+    modify_field(t2_s2s_sqcb1_to_rqcb1_info_scr.state_valid, t2_s2s_sqcb1_to_rqcb1_info.state_valid);    
+    modify_field(t2_s2s_sqcb1_to_rqcb1_info_scr.pmtu_log2, t2_s2s_sqcb1_to_rqcb1_info.pmtu_log2);    
+    modify_field(t2_s2s_sqcb1_to_rqcb1_info_scr.pmtu_valid, t2_s2s_sqcb1_to_rqcb1_info.pmtu_valid);    
+    modify_field(t2_s2s_sqcb1_to_rqcb1_info_scr.pad, t2_s2s_sqcb1_to_rqcb1_info.pad);    
+}
+
 action rdma_aq_rx_cqcb_process () {
     // from ki global
     GENERATE_GLOBAL_K
 
     // to stage
     modify_field(to_s6_info_scr.cqcb_base_addr_hi, to_s6_info.cqcb_base_addr_hi);
+    modify_field(to_s6_info_scr.cq_id, to_s6_info.cq_id);
     modify_field(to_s6_info_scr.log_num_cq_entries, to_s6_info.log_num_cq_entries);
     modify_field(to_s6_info_scr.bth_se, to_s6_info.bth_se);
     modify_field(to_s6_info_scr.aqcb_addr, to_s6_info.aqcb_addr);    
-    modify_field(to_s6_info_scr.pad, to_s6_info.pad);
 
-    // stage to stage
-    modify_field(t2_s2s_aqcb_to_cq_info_scr.aq_id, t2_s2s_aqcb_to_cq_info.aq_id);
-    modify_field(t2_s2s_aqcb_to_cq_info_scr.cq_id, t2_s2s_aqcb_to_cq_info.cq_id);
-    modify_field(t2_s2s_aqcb_to_cq_info_scr.status, t2_s2s_aqcb_to_cq_info.status);
-    modify_field(t2_s2s_aqcb_to_cq_info_scr.error, t2_s2s_aqcb_to_cq_info.error);
-    modify_field(t2_s2s_aqcb_to_cq_info_scr.pad, t2_s2s_aqcb_to_cq_info.pad);
+    modify_field(to_s6_info_scr.aq_id, to_s6_info.aq_id);
+    modify_field(to_s6_info_scr.status, to_s6_info.status);
+    modify_field(to_s6_info_scr.error, to_s6_info.error);
+    modify_field(to_s6_info_scr.pad, to_s6_info.pad);
 
 }
 

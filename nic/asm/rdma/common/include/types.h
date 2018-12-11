@@ -44,7 +44,7 @@
 #define LOG_CB_UNIT_SIZE_BYTES 6
 #define CB_UNIT_SIZE_BYTES  64
 #define CB3_OFFSET_BYTES    (3 * 64)
-#define TOTAL_CB_BYTES      (16 * 64)
+#define TOTAL_CB_BYTES      (8 * 64)
 #define PAGE_SIZE_4K        4096
 
 #define TOTAL_AQCB_BYTES    (2 * 64)
@@ -1229,7 +1229,14 @@ struct rdma_aq_feedback_create_qp_ext_t {
     log_pmtu     :  5;
     rsvd         : 17;
 };
-        
+
+struct rdma_aq_feedback_modify_qp_ext_t {
+    q_key                            :   32;
+    q_key_valid                      :    1;
+    rq_id                            :   24;
+    rsvd                             :   55;
+};
+
 struct aq_p4_to_p4plus_roce_header_t {
     p4plus_app_id : 4;
     table0_valid : 1;
@@ -1248,6 +1255,7 @@ struct aq_p4_to_p4plus_roce_header_t {
 
     union {
         struct rdma_aq_feedback_create_qp_ext_t create_qp_ext;
+        struct rdma_aq_feedback_modify_qp_ext_t modify_qp_ext;
     };
 };
 
@@ -1346,7 +1354,7 @@ struct rdma_aq_feedback_t {
         pad:     7;
     }aq_completion;
     union {
-        struct {
+        struct { 
             rq_cq_id: 24;
             rq_depth_log2: 8;
             rq_stride_log2: 8;
@@ -1357,6 +1365,26 @@ struct rdma_aq_feedback_t {
             rq_type_state: 8;
             rsvd:          24;
         } create_qp;
+        struct {
+            ah_len                   :  8;
+            ah_addr                  : 32;
+            av_valid                 :  1;            
+            state                    :  3;
+            state_valid              :  1;
+            pmtu_log2                :  5;
+            pmtu_valid               :  1;            
+            rrq_base_addr            : 32;
+            rrq_depth_log2           :  5;
+            rrq_valid                :  1;
+            err_retry_count          :  3;
+            err_retry_count_valid    :  1;
+            tx_psn_valid             :  1;
+            tx_psn                   : 24;
+            rsq_base_addr            : 32;
+            rsq_depth_log2           :  5;
+            rsq_valid                :  1;
+            rsvd                     : 20;
+        } modify_qp;
         pad: 176;
     };
 };

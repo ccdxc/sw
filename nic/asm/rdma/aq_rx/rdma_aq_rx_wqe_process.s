@@ -10,8 +10,7 @@ struct aq_rx_s1_t3_k k;
 #define IN_P t3_s2s_aqcb_to_wqe_info
 #define IN_TO_S_P to_s1_info
 
-#define K_CQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, cqcb_base_addr_hi)
-#define K_RQCB_BASE_ADDR_HI CAPRI_KEY_RANGE(IN_TO_S_P, rqcb_base_addr_hi_sbit0_ebit2, rqcb_base_addr_hi_sbit19_ebit23)
+#define K_RQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, rqcb_base_addr_hi)
 
 #define K_RQ_MAP_COUNT CAPRI_KEY_FIELD(IN_P, rq_map_count)
 #define K_RQ_CMB CAPRI_KEY_FIELD(IN_P, rq_cmb)

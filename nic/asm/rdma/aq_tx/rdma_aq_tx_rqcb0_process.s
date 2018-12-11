@@ -8,17 +8,21 @@
 
 struct aq_tx_phv_t p;
 struct rqcb0_t d;
-struct aq_tx_s4_t1_k k;
+struct aq_tx_s5_t1_k k;
 
-#define IN_P t1_s2s_sqcb0_to_rqcb0_info
-#define IN_TO_S_P to_s4_info
+#define IN_P t1_s2s_wqe2_to_rqcb0_info
+#define IN_TO_S_P to_s5_info
 
+#define K_Q_KEY CAPRI_KEY_RANGE(IN_TO_S_P, q_key_sbit0_ebit2, q_key_sbit27_ebit31)
 %%
 
 .align
 rdma_aq_tx_rqcb0_process:
 
-//TODO: Remove  redundant labels later
+    mfspr         r1, spr_mpuid
+    seq           c1, r1[4:2], STAGE_5
+    bcf           [!c1], bubble_to_next_stage
+    nop
     
 hdr_update:
     bbne        CAPRI_KEY_FIELD(IN_P, av_valid), 1, rsq_base
@@ -50,10 +54,15 @@ q_key:
     bbne        CAPRI_KEY_FIELD(IN_TO_S_P , q_key_valid), 1, done
     nop
 
-    tblwr       d.q_key, CAPRI_KEY_FIELD(IN_TO_S_P, q_key)
+    tblwr       d.q_key, K_Q_KEY
 
 done:
-    CAPRI_SET_TABLE_1_VALID(0)              
+    CAPRI_SET_TABLE_1_VALID(0)
+    
+bubble_to_next_stage:
+exit: 
     nop.e
     nop
+    
+    
     

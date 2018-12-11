@@ -11,13 +11,13 @@ struct aq_tx_s2_t1_k k;
 
 #define IN_TO_S_P to_s2_info
 
-#define TO_SQCB_INFO_P to_s3_info
+#define TO_SQCB2_RQCB0_INFO_P to_s5_info
+#define TO_SQCB0_INFO_P to_s6_info    
 
 #define DMA_CMD_BASE r6
     
-#define WQE2_TO_SQCB0_P t1_s2s_wqe2_to_sqcb0_info
-#define WQE2_TO_SQCB1_P t2_s2s_wqe2_to_sqcb1_info
-#define WQE2_TO_SQCB2_P t3_s2s_wqe2_to_sqcb2_info
+#define WQE2_TO_RQCB0_P t1_s2s_wqe2_to_rqcb0_info
+#define WQE2_TO_SQCB2_P t2_s2s_wqe2_to_sqcb2_info
 
 #define K_COMMON_GLOBAL_QID CAPRI_KEY_RANGE(phv_global_common, qid_sbit0_ebit4, qid_sbit21_ebit23)
 #define K_COMMON_GLOBAL_QTYPE CAPRI_KEY_FIELD(phv_global_common, qtype)
@@ -27,9 +27,7 @@ struct aq_tx_s2_t1_k k;
 
 %%
 
-    .param      dummy
-    .param      rdma_aq_tx_sqcb0_process
-    .param      rdma_aq_tx_sqcb1_process
+    .param      rdma_aq_tx_rqcb0_process
     .param      rdma_aq_tx_sqcb2_process
 .align
 rdma_aq_tx_modify_qp_2_process:
@@ -40,7 +38,6 @@ rdma_aq_tx_modify_qp_2_process:
 
     CAPRI_RESET_TABLE_1_ARG()
     CAPRI_RESET_TABLE_2_ARG()
-    CAPRI_RESET_TABLE_3_ARG()
     
 hdr_update:
     bbne        d.mod_qp.attr_mask[RDMA_UPDATE_QP_OPER_SET_AV], 1, rrq_base
@@ -57,14 +54,15 @@ hdr_update:
     add         r4, d.{mod_qp.ah_id_len}.wx, r0 
     srl         r4, r4, 24
 
-    phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB0_P, av_valid), 1
-    phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB0_P, ah_len), r4
-    phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB0_P, ah_addr), r7
+    phvwr       CAPRI_PHV_FIELD(WQE2_TO_RQCB0_P, av_valid), 1
+    phvwr       CAPRI_PHV_FIELD(WQE2_TO_RQCB0_P, ah_len), r4
+    phvwr       CAPRI_PHV_FIELD(WQE2_TO_RQCB0_P, ah_addr), r7
 
-    phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB1_P, av_valid), 1
-    phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB1_P, ah_len), r4
-    phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB1_P, ah_addr), r7
-
+    //Send to Rx pipeline for setting SQCB1 and RQCB1
+    phvwr       p.rdma_feedback.modify_qp.av_valid, 1
+    phvwr       p.rdma_feedback.modify_qp.ah_len, r4
+    phvwr       p.rdma_feedback.modify_qp.ah_addr, r7
+    
     phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB2_P, av_valid), 1
     phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB2_P, ah_len), r4
     phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB2_P, ah_addr), r7
@@ -82,10 +80,11 @@ rrq_base:
     add         r5, r4, d.{mod_qp.rrq_index}.wx, CAPRI_LOG_SIZEOF_U64
     srl         r5, r5, RRQ_BASE_ADDR_SHIFT
 
-    phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB1_P, rrq_valid), 1
-    phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB1_P, rrq_depth_log2), d.mod_qp.rrq_depth[4: 0]
-    phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB1_P, rrq_base_addr), r5[31:0]
-
+    //Send to Rx pipeline for setting SQCB1 and RQCB1
+    phvwr       p.rdma_feedback.modify_qp.rrq_valid, 1
+    phvwr       p.rdma_feedback.modify_qp.rrq_depth_log2, d.mod_qp.rrq_depth[4: 0]
+    phvwr       p.rdma_feedback.modify_qp.rrq_base_addr, r5[31:0]
+    
     phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB2_P, rrq_valid), 1
     phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB2_P, rrq_depth_log2), d.mod_qp.rrq_depth[4: 0]
     phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB2_P, rrq_base_addr), r5[31:0]
@@ -97,13 +96,14 @@ rsq_base:
     add         r5, r4, d.{mod_qp.rsq_index}.wx, CAPRI_LOG_SIZEOF_U64   // BD Slot
     srl         r5, r5, RSQ_BASE_ADDR_SHIFT
 
-    phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB0_P, rsq_valid), 1
-    phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB0_P, rsq_depth_log2), d.mod_qp.rsq_depth[4: 0]
-    phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB0_P, rsq_base_addr), r5[31:0]
+    phvwr       CAPRI_PHV_FIELD(WQE2_TO_RQCB0_P, rsq_valid), 1
+    phvwr       CAPRI_PHV_FIELD(WQE2_TO_RQCB0_P, rsq_depth_log2), d.mod_qp.rsq_depth[4: 0]
+    phvwr       CAPRI_PHV_FIELD(WQE2_TO_RQCB0_P, rsq_base_addr), r5[31:0]
 
-    phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB1_P, rsq_valid), 1
-    phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB1_P, rsq_depth_log2), d.mod_qp.rsq_depth[4: 0]
-    phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB1_P, rsq_base_addr), r5[31:0]
+    //Send to Rx pipeline for setting SQCB1 and RQCB1
+    phvwr       p.rdma_feedback.modify_qp.rsq_valid, 1
+    phvwr       p.rdma_feedback.modify_qp.rsq_depth_log2, d.mod_qp.rsq_depth[4: 0]
+    phvwr       p.rdma_feedback.modify_qp.rsq_base_addr, r5[31:0]
     
 state:
 
@@ -152,53 +152,63 @@ state:
 state_next:
     
     //State is only in SQCB0 and SQCB1
-    phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB0_P, state), r2[2:0]
-    phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB0_P, state_valid), 1
-    phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB1_P, state), r2[2:0]
-    phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB1_P, state_valid), 1
+    phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB2_P, state), r2[2:0]
+    phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB2_P, state_valid), 1
+
+    phvwr       CAPRI_PHV_FIELD(WQE2_TO_RQCB0_P, state), r2[2:0]
+    phvwr       CAPRI_PHV_FIELD(WQE2_TO_RQCB0_P, state_valid), 1
+
+    phvwr       p.rdma_feedback.modify_qp.state, r2[2:0]
+    phvwr       p.rdma_feedback.modify_qp.state_valid, 1
 
 tx_psn:
     bbne        d.mod_qp.attr_mask[RDMA_UPDATE_QP_OPER_SET_SQ_PSN], 1, timeout
     nop
 
     add         r4, d.{mod_qp.sq_psn}.wx, r0
-    phvwr       CAPRI_PHV_FIELD(TO_SQCB_INFO_P, tx_psn), r4[23:0] 
-    phvwr       CAPRI_PHV_FIELD(TO_SQCB_INFO_P, tx_psn_valid), 1
+    phvwr       CAPRI_PHV_FIELD(TO_SQCB2_RQCB0_INFO_P, tx_psn), r4[23:0] 
+    phvwr       CAPRI_PHV_FIELD(TO_SQCB2_RQCB0_INFO_P, tx_psn_valid), 1
+
+    phvwr       p.rdma_feedback.modify_qp.tx_psn, r4[23:0]
+    phvwr       p.rdma_feedback.modify_qp.tx_psn_valid, 1
 
 timeout:
     bbne        d.mod_qp.attr_mask[RDMA_UPDATE_QP_OPER_SET_TIMEOUT], 1, retry_cnt
 
     add         r4, d.mod_qp.retry_timeout, r0
-    phvwr       CAPRI_PHV_FIELD(TO_SQCB_INFO_P, local_ack_timeout), r4[4:0]
-    phvwr       CAPRI_PHV_FIELD(TO_SQCB_INFO_P, local_ack_timeout_valid), 1
+    phvwr       CAPRI_PHV_FIELD(TO_SQCB2_RQCB0_INFO_P, local_ack_timeout), r4[4:0]
+    phvwr       CAPRI_PHV_FIELD(TO_SQCB2_RQCB0_INFO_P, local_ack_timeout_valid), 1
+    phvwr       CAPRI_PHV_FIELD(TO_SQCB0_INFO_P, local_ack_timeout), r4[4:0]
+    phvwr       CAPRI_PHV_FIELD(TO_SQCB0_INFO_P, local_ack_timeout_valid), 1
 
 retry_cnt:
     bbne        d.mod_qp.attr_mask[RDMA_UPDATE_QP_OPER_SET_RETRY_CNT], 1, pmtu
 
     add         r4, d.mod_qp.retry, r0
-    phvwr       CAPRI_PHV_FIELD(TO_SQCB_INFO_P, err_retry_count), r4[2:0]
-    phvwr       CAPRI_PHV_FIELD(TO_SQCB_INFO_P, err_retry_count_valid), 1
+    phvwr       CAPRI_PHV_FIELD(TO_SQCB2_RQCB0_INFO_P, err_retry_count), r4[2:0]
+    phvwr       CAPRI_PHV_FIELD(TO_SQCB2_RQCB0_INFO_P, err_retry_count_valid), 1
 
+    phvwr       p.rdma_feedback.modify_qp.err_retry_count, r4[2:0]
+    phvwr       p.rdma_feedback.modify_qp.err_retry_count_valid, 1
+    
 pmtu:
 
     bbne        d.mod_qp.attr_mask[RDMA_UPDATE_QP_OPER_SET_PATH_MTU], 1, setup_sqcb_stages
     nop
     
-    phvwrpair       CAPRI_PHV_FIELD(WQE2_TO_SQCB0_P, pmtu_log2), d.mod_qp.pmtu[4:0], CAPRI_PHV_FIELD(WQE2_TO_SQCB0_P, pmtu_valid), 1
-    phvwrpair       CAPRI_PHV_FIELD(WQE2_TO_SQCB1_P, pmtu_log2), d.mod_qp.pmtu[4:0], CAPRI_PHV_FIELD(WQE2_TO_SQCB1_P, pmtu_valid), 1
+    phvwrpair       CAPRI_PHV_FIELD(WQE2_TO_RQCB0_P, pmtu_log2), d.mod_qp.pmtu[4:0], CAPRI_PHV_FIELD(WQE2_TO_RQCB0_P, pmtu_valid), 1
+    phvwrpair       CAPRI_PHV_FIELD(WQE2_TO_SQCB2_P, pmtu_log2), d.mod_qp.pmtu[4:0], CAPRI_PHV_FIELD(WQE2_TO_SQCB2_P, pmtu_valid), 1
 
+    phvwrpair   p.rdma_feedback.modify_qp.pmtu_log2, d.mod_qp.pmtu[4:0], p.rdma_feedback.modify_qp.pmtu_valid, 1
     
 setup_sqcb_stages:
 
-    phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB0_P, qid), r3[23:0]
-    phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB1_P, qid), r3[23:0]
-    phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB2_P, qid), r3[23:0]
-    
-    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, rdma_aq_tx_sqcb0_process, r1)
-    add         r1, r1, CB_UNIT_SIZE_BYTES
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, rdma_aq_tx_sqcb1_process, r1)
-    add         r1, r1, CB_UNIT_SIZE_BYTES
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, rdma_aq_tx_sqcb2_process, r1)
+    phvwr       p.rdma_feedback.aq_completion.op, AQ_OP_TYPE_MODIFY_QP
+    phvwr       p.p4_to_p4plus.modify_qp_ext.rq_id, r3[23:0]
+    add         r1, r1, (2*CB_UNIT_SIZE_BYTES)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, rdma_aq_tx_sqcb2_process, r1)
+    RQCB_ADDR_GET(r2, r3[23:0], K_RQCB_BASE_ADDR_HI)
+    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, rdma_aq_tx_rqcb0_process, r2)
 
 done:
     nop.e
@@ -206,8 +216,7 @@ done:
 
 error_disable_qp:
 
-    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, AQ_TX_DMA_CMD_START_FLIT_ID,
-                            AQ_TX_DMA_CMD_REQ_ERR_FEEDBACK)
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_REQ_ERR_FEEDBACK)     
     DMA_PHV2PKT_SETUP(DMA_CMD_BASE, req_feedback.p4_intr_global, req_feedback.rdma_feedback)
     phvwrpair      p.req_feedback.p4_intr_global.tm_iport, TM_PORT_INGRESS, p.req_feedback.p4_intr_global.tm_oport, TM_PORT_DMA
     phvwrpair      p.req_feedback.p4_intr_global.tm_iq, 0, p.req_feedback.p4_intr_global.lif, K_GLOBAL_LIF

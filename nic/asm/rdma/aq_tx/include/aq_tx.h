@@ -12,49 +12,51 @@
 
 #define AQ_TX_DMA_CMD_PHV_INTRINSIC 2
 
-#define AQ_TX_MAX_DMA_CMDS        12
+#define AQ_TX_MAX_DMA_CMDS        11
 
 #define AQ_TX_DMA_CMD_START_FLIT_ID 9
-#define AQ_TX_DMA_CMD_START_FLIT_CMD_ID 0
+#define AQ_TX_DMA_CMD_START_FLIT_CMD_ID 1
 #define TOTAL_DMA_CMD_BITS 16 * 16 * 8 // (cmds * dma_cmd_size * bits_per_byte) 
 
 #define AQ_TX_DMA_CMD_RDMA_FEEDBACK (AQ_TX_MAX_DMA_CMDS -1)  // This should be at the end
+#define AQ_TX_DMA_CMD_RDMA_BUSY     (AQ_TX_MAX_DMA_CMDS -2)  // This should be at the end
 
 /* DMA Cmds for Create CQ */
-#define AQ_TX_DMA_CMD_CREATE_CQCB_PT_DST  (AQ_TX_MAX_DMA_CMDS - 2)
-#define AQ_TX_DMA_CMD_CREATE_CQCB_PT_SRC  (AQ_TX_MAX_DMA_CMDS - 3 )
-#define AQ_TX_DMA_CMD_CREATE_CQ_PT_DST  (AQ_TX_MAX_DMA_CMDS - 4)
-#define AQ_TX_DMA_CMD_CREATE_CQ_PT_SRC  (AQ_TX_MAX_DMA_CMDS - 5)
-#define AQ_TX_DMA_CMD_CREATE_CQ_CB  (AQ_TX_MAX_DMA_CMDS - 6)
+#define AQ_TX_DMA_CMD_CREATE_CQCB_PT_DST  (AQ_TX_MAX_DMA_CMDS - 3)
+#define AQ_TX_DMA_CMD_CREATE_CQCB_PT_SRC  (AQ_TX_MAX_DMA_CMDS - 4 )
+#define AQ_TX_DMA_CMD_CREATE_CQ_PT_DST  (AQ_TX_MAX_DMA_CMDS - 5)
+#define AQ_TX_DMA_CMD_CREATE_CQ_PT_SRC  (AQ_TX_MAX_DMA_CMDS - 6)
+#define AQ_TX_DMA_CMD_CREATE_CQ_CB  (AQ_TX_MAX_DMA_CMDS - 7)
 
 /* DMA Cmds for Create QP */
-#define AQ_TX_DMA_CMD_CREATE_QP_CB    (AQ_TX_MAX_DMA_CMDS -2)
-#define AQ_TX_DMA_CMD_CREATE_QP_SQPT_DST  (AQ_TX_MAX_DMA_CMDS -3)
-#define AQ_TX_DMA_CMD_CREATE_QP_SQPT_SRC  (AQ_TX_MAX_DMA_CMDS -4)
+#define AQ_TX_DMA_CMD_CREATE_QP_CB    (AQ_TX_MAX_DMA_CMDS -3)
+#define AQ_TX_DMA_CMD_CREATE_QP_SQPT_DST  (AQ_TX_MAX_DMA_CMDS -4)
+#define AQ_TX_DMA_CMD_CREATE_QP_SQPT_SRC  (AQ_TX_MAX_DMA_CMDS -5)
 
 /* DMA Cmds for Modify QP */
 // Modify QP to ERR
-#define AQ_TX_DMA_CMD_REQ_ERR_FEEDBACK  (AQ_TX_MAX_DMA_CMDS - 2)
-#define AQ_TX_DMA_CMD_RESP_ERR_FEEDBACK (AQ_TX_MAX_DMA_CMDS - 3)
+#define AQ_TX_DMA_CMD_REQ_ERR_FEEDBACK  (AQ_TX_MAX_DMA_CMDS - 3)
+#define AQ_TX_DMA_CMD_RESP_ERR_FEEDBACK (AQ_TX_MAX_DMA_CMDS - 4)
+
 // Modify QP Set Header Template
-#define AQ_TX_DMA_CMD_MOD_QP_AH_DST    (AQ_TX_MAX_DMA_CMDS - 2)
-#define AQ_TX_DMA_CMD_MOD_QP_AH_SRC    (AQ_TX_MAX_DMA_CMDS - 3)
+#define AQ_TX_DMA_CMD_MOD_QP_AH_DST    (AQ_TX_MAX_DMA_CMDS - 3)
+#define AQ_TX_DMA_CMD_MOD_QP_AH_SRC    (AQ_TX_MAX_DMA_CMDS - 4)
 
 /* DMA Cmds for Create AH */
-#define AQ_TX_DMA_CMD_CREATE_AH_DST    (AQ_TX_MAX_DMA_CMDS - 2)
-#define AQ_TX_DMA_CMD_CREATE_AH_SRC    (AQ_TX_MAX_DMA_CMDS - 3)
-#define AQ_TX_DMA_CMD_CREATE_AH_SIZE   (AQ_TX_MAX_DMA_CMDS - 4)
+#define AQ_TX_DMA_CMD_CREATE_AH_DST    (AQ_TX_MAX_DMA_CMDS - 3)
+#define AQ_TX_DMA_CMD_CREATE_AH_SRC    (AQ_TX_MAX_DMA_CMDS - 4)
+#define AQ_TX_DMA_CMD_CREATE_AH_SIZE   (AQ_TX_MAX_DMA_CMDS - 5)
 
 /* DMA Cmds for AQ Stats Dump */
-#define AQ_TX_DMA_CMD_STATS_DUMP_4 (AQ_TX_MAX_DMA_CMDS - 2)
-#define AQ_TX_DMA_CMD_STATS_DUMP_3 (AQ_TX_MAX_DMA_CMDS - 3)
-#define AQ_TX_DMA_CMD_STATS_DUMP_2 (AQ_TX_MAX_DMA_CMDS - 4)
-#define AQ_TX_DMA_CMD_STATS_DUMP_1 (AQ_TX_MAX_DMA_CMDS - 5)
+#define AQ_TX_DMA_CMD_STATS_DUMP_4 (AQ_TX_MAX_DMA_CMDS - 3)
+#define AQ_TX_DMA_CMD_STATS_DUMP_3 (AQ_TX_MAX_DMA_CMDS - 4)
+#define AQ_TX_DMA_CMD_STATS_DUMP_2 (AQ_TX_MAX_DMA_CMDS - 5)
+#define AQ_TX_DMA_CMD_STATS_DUMP_1 (AQ_TX_MAX_DMA_CMDS - 6)
 
 /* DMA Cmds for Reg MR */
-#define AQ_TX_DMA_CMD_MR_PT_DST (AQ_TX_MAX_DMA_CMDS - 2)
-#define AQ_TX_DMA_CMD_MR_PT_SRC (AQ_TX_MAX_DMA_CMDS - 3)
-#define AQ_TX_DMA_CMD_MR_KT_UPDATE (AQ_TX_MAX_DMA_CMDS - 4)
+#define AQ_TX_DMA_CMD_MR_PT_DST (AQ_TX_MAX_DMA_CMDS - 3)
+#define AQ_TX_DMA_CMD_MR_PT_SRC (AQ_TX_MAX_DMA_CMDS - 4)
+#define AQ_TX_DMA_CMD_MR_KT_UPDATE (AQ_TX_MAX_DMA_CMDS - 5)
 
 #define AQ_TX_CQCB_ADDR_GET(_r, _cqid, _cqcb_base_addr_hi)  \
     CQCB_ADDR_GET(_r, _cqid, _cqcb_base_addr_hi);
@@ -112,8 +114,17 @@ struct aq_tx_phv_t {
     struct aq_tx_dma_cmds_flit_t flit_10;
     
         /* flit 9 */
-    struct aq_tx_dma_cmds_flit_t flit_9;
-
+    union {
+        struct aq_tx_dma_cmds_flit_t flit_9;
+        struct {
+            busy: 8;
+            mr_create_pending: 8;
+            map_count_completed: 32;
+            pad: 80;
+            dma_cmds_1_2_3: 384;
+        };
+    };
+    
         /* flit 8 */
     union {
         struct aq_tx_dma_cmds_flit_t flit_8;
