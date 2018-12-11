@@ -49,10 +49,11 @@ pprint_service_info(const struct service_info *svc_info)
 	OSAL_LOG_DEBUG("%30s: %d", "si_desc_flags", svc_info->si_desc_flags);
 	OSAL_LOG_DEBUG("%30s: %d", "si_num_tags", svc_info->si_num_tags);
 
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_desc",  (uint64_t) svc_info->si_desc);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_desc",
+			(uint64_t) svc_info->si_desc);
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_status_desc",
 			(uint64_t) svc_info->si_status_desc);
-	OSAL_LOG_INFO("%30s: 0x" PRIx64, "si_istatus_desc",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_istatus_desc",
 			(uint64_t) svc_info->si_istatus_desc);
 
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_src_sgl",
@@ -65,17 +66,17 @@ pprint_service_info(const struct service_info *svc_info)
 			(uint64_t) svc_info->si_dst_aol.aol);
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_p4_sgl",
 			(uint64_t) svc_info->si_p4_sgl);
-	OSAL_LOG_INFO("%30s: %u", "=== si_iblist count",
+	OSAL_LOG_DEBUG("%30s: %u", "=== si_iblist count",
 			svc_info->si_iblist.blist.count);
-	OSAL_LOG_INFO("%30s: 0x" PRIx64, "=== si_src_blist",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_src_blist",
 			(uint64_t) svc_info->si_src_blist.blist);
-	OSAL_LOG_INFO("%30s: 0x" PRIx64, "=== si_src_blist.len",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_src_blist.len",
 			(uint64_t) svc_info->si_src_blist.len);
-	OSAL_LOG_INFO("%30s: 0x" PRIx64, "=== si_dst_blist",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_dst_blist",
 			(uint64_t) svc_info->si_dst_blist.blist);
-	OSAL_LOG_INFO("%30s: 0x" PRIx64, "=== si_dst_blist.len",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_dst_blist.len",
 			(uint64_t) svc_info->si_dst_blist.len);
-	OSAL_LOG_INFO("%30s: 0x" PRIx64, "=== si_sgl_pdma",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_sgl_pdma",
 			(uint64_t) svc_info->si_sgl_pdma);
 
 	OSAL_LOG_DEBUG("%30s: %d", "sbi_num_entries",
@@ -85,9 +86,9 @@ pprint_service_info(const struct service_info *svc_info)
 	OSAL_LOG_DEBUG("%30s: %d", "sbi_desc_idx",
 			svc_info->si_batch_info.sbi_desc_idx);
 
-	OSAL_LOG_INFO("%30s: 0x" PRIx64, "=== si_pcr",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_pcr",
 			(uint64_t) svc_info->si_pcr);
-	OSAL_LOG_INFO("%30s: 0x" PRIx64, "=== si_centry",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_centry",
 			(uint64_t) svc_info->si_centry);
 
 	/* TODO-chain: include service status and other members */

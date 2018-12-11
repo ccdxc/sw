@@ -21,9 +21,9 @@
 #else
 #define PPRINT_BATCH_INFO(bi)						\
 	do {								\
-		OSAL_LOG_INFO("%.*s", 30, "=========================================");\
+		OSAL_LOG_DEBUG("%.*s", 30, "=========================================");\
 		pprint_batch_info(bi);					\
-		OSAL_LOG_INFO("%.*s", 30, "=========================================");\
+		OSAL_LOG_DEBUG("%.*s", 30, "=========================================");\
 	} while (0)
 #endif
 
@@ -37,16 +37,17 @@ pprint_batch_info(struct batch_info *batch_info)
 	if (!batch_info)
 		return;
 
-	OSAL_LOG_INFO("%30s: 0x" PRIx64, "=== batch_info",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== batch_info",
 			(uint64_t) batch_info);
-	OSAL_LOG_INFO("%30s: %d", "bi_flags", batch_info->bi_flags);
-	OSAL_LOG_INFO("%30s: %d", "bi_svc_type", batch_info->bi_svc_type);
-	OSAL_LOG_INFO("%30s: %d", "bi_mpool_type", batch_info->bi_mpool_type);
-	OSAL_LOG_INFO("%30s: 0x" PRIx64, "bi_pcr",
+	OSAL_LOG_DEBUG("%30s: %d", "bi_flags", batch_info->bi_flags);
+	OSAL_LOG_DEBUG("%30s: %d", "bi_svc_type", batch_info->bi_svc_type);
+	OSAL_LOG_DEBUG("%30s: %d", "bi_mpool_type", batch_info->bi_mpool_type);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "bi_pcr",
 			(uint64_t) batch_info->bi_pcr);
 
-	OSAL_LOG_INFO("%30s: %d", "bi_polled_idx", batch_info->bi_polled_idx);
-	OSAL_LOG_INFO("%30s: %d", "bi_num_entries", batch_info->bi_num_entries);
+	OSAL_LOG_DEBUG("%30s: %d", "bi_polled_idx", batch_info->bi_polled_idx);
+	OSAL_LOG_DEBUG("%30s: %d", "bi_num_entries",
+			batch_info->bi_num_entries);
 
 	for (i = 0; i < batch_info->bi_num_entries;  i++) {
 		batch_page = GET_PAGE(batch_info, i);
@@ -62,9 +63,9 @@ pprint_batch_info(struct batch_info *batch_info)
 				(uint64_t) page_entry->bpe_chain);
 	}
 
-	OSAL_LOG_INFO("%30s: 0x" PRIx64, "bi_req_cb",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "bi_req_cb",
 			(uint64_t) batch_info->bi_req_cb);
-	OSAL_LOG_INFO("%30s: 0x" PRIx64, "bi_req_cb_ctx",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "bi_req_cb_ctx",
 			(uint64_t) batch_info->bi_req_cb_ctx);
 }
 
