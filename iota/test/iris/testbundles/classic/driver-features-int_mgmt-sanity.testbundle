@@ -2,6 +2,7 @@ meta:
     name    : internalmgmt
     os      : [ linux, freebsd ]
     nics    : [ pensando, intel, mellanox, broadcom ]
+    targetcount : 1418
 
 testcases:
     -   name    : InternalMgmt_TX_CHECKSUM
@@ -50,3 +51,12 @@ testcases:
         args    :
             test-type    : int-mgmt
             #capture_pcap : true
+
+    -   name    : PingInternalMgmt
+        testcase: testcases.networking.ping
+        iterators :
+            type    : simple
+            pktsize : [64, 128, 256, 512, 1024, 2048, 4096, 8192]
+        args    :
+            type: local_only
+

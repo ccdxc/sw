@@ -1,7 +1,8 @@
 meta:
     name    : inband100g
     os      : [ linux, freebsd ]
-    nics    : [ pensando ]    
+    nics    : [ pensando ]
+    targetcount : 1418
 
 testcases:
     -   name    : Inband100G_TX_CHECKSUM

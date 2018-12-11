@@ -2,6 +2,7 @@ meta:
     name    : ionicdrv_regr
     os      : [ linux, freebsd ]
     nics    : [ pensando, intel, mellanox, broadcom ]
+    targetcount : 1418
 
 testcases:
     -   name    : UplinkIntf_INTR_COAL
