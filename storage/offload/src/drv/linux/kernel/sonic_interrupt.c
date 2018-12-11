@@ -180,7 +180,7 @@ static int sonic_poll_ev_list(struct sonic_event_list *evl, int budget, struct s
 	return found;
 }
 
-#define SONIC_EV_WORK_TIMEOUT (100 * OSAL_NSEC_PER_MSEC)
+#define SONIC_EV_WORK_TIMEOUT (5000 * OSAL_NSEC_PER_MSEC)
 
 static void sonic_ev_work_handler(struct work_struct *work)
 {
