@@ -68,7 +68,9 @@ enum log_mode_e {
 enum trace_level_e {
     trace_none     = 0,        // traces disabled completely
     trace_err      = 1,
-    trace_debug    = 2,
+    trace_warn     = 2,
+    trace_info     = 3,
+    trace_debug    = 4,
 };
 
 enum syslog_level_e {

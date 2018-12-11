@@ -12,34 +12,6 @@ namespace utils {
 ::utils::log *g_syslog_logger;
 uint64_t g_cpu_mask;
 
-// wrapper APIs to get logger and syslogger
-std::shared_ptr<logger>
-hal_logger (void)
-{
-    if (g_trace_logger) {
-        return g_trace_logger->logger();
-    }
-    return NULL;
-}
-
-std::shared_ptr<logger>
-hal_syslogger (void)
-{
-    if (g_syslog_logger) {
-        return g_syslog_logger->logger();
-    }
-    return NULL;
-}
-
-::utils::trace_level_e
-hal_trace_level (void)
-{
-    if (g_trace_logger) {
-        return g_trace_logger->trace_level();
-    }
-    return ::utils::trace_none;
-}
-
 // wrapper for HAL trace init function
 void
 trace_init (const char *name, uint64_t cores_mask, bool sync_mode,

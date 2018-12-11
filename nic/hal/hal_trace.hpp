@@ -1,13 +1,13 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
+#ifndef __HAL_TRACE_HPP__
+#define __HAL_TRACE_HPP__
+
 #include "nic/include/trace.hpp"
 
 namespace hal {
 namespace utils {
 
-std::shared_ptr<logger> hal_logger(void);
-std::shared_ptr<logger> hal_syslogger(void);
-::utils::trace_level_e hal_trace_level(void);
 extern ::utils::log *g_trace_logger;
 extern ::utils::log *g_syslog_logger;
 void trace_init(const char *name, uint64_t cpu_mask, bool sync_mode,
@@ -15,8 +15,40 @@ void trace_init(const char *name, uint64_t cpu_mask, bool sync_mode,
                 ::utils::trace_level_e trace_level);
 void trace_deinit(void);
 
+// wrapper APIs to get logger and syslogger
+static inline std::shared_ptr<logger>
+hal_logger (void)
+{
+    if (g_trace_logger) {
+        return g_trace_logger->logger();
+    }
+    return NULL;
+}
+
+static inline std::shared_ptr<logger>
+hal_syslogger (void)
+{
+    if (g_syslog_logger) {
+        return g_syslog_logger->logger();
+    }
+    return NULL;
+}
+
+static inline ::utils::trace_level_e
+hal_trace_level (void)
+{
+    if (g_trace_logger) {
+        return g_trace_logger->trace_level();
+    }
+    return ::utils::trace_none;
+}
+
 }    // utils
 }    // hal
+
+using hal::utils::hal_logger;
+using hal::utils::hal_syslogger;
+using hal::utils::hal_trace_level;
 
 //------------------------------------------------------------------------------
 // HAL syslog macros
@@ -42,24 +74,28 @@ void trace_deinit(void);
 // won't understand spdlog friendly formatters
 //------------------------------------------------------------------------------
 #define HAL_TRACE_ERR(fmt, ...)                                                \
-    if (likely(hal::utils::hal_logger())) {                                    \
+    if (likely(hal::utils::hal_logger()) &&                                    \
+        (hal_trace_level() >= ::utils::trace_err)) {                           \
         hal::utils::hal_logger()->error("[{}:{}] " fmt, __func__, __LINE__,    \
                                         ##__VA_ARGS__);                        \
     }                                                                          \
 
 #define HAL_TRACE_ERR_NO_META(fmt...)                                          \
-    if (likely(hal::utils::hal_logger())) {                                    \
+    if (likely(hal::utils::hal_logger()) &&                                    \
+        (hal_trace_level() >= ::utils::trace_err)) {                           \
         hal::utils::hal_logger()->error(fmt);                                  \
     }                                                                          \
 
 #define HAL_TRACE_WARN(fmt, ...)                                               \
-    if (likely(hal::utils::hal_logger())) {                                    \
+    if (likely(hal::utils::hal_logger()) &&                                    \
+        (hal_trace_level() >= ::utils::trace_warn)) {                          \
         hal::utils::hal_logger()->warn("[{}:{}] " fmt, __func__, __LINE__,     \
                                        ##__VA_ARGS__);                         \
     }                                                                          \
 
 #define HAL_TRACE_INFO(fmt, ...)                                               \
-    if (likely(hal::utils::hal_logger())) {                                    \
+    if (likely(hal::utils::hal_logger()) &&                                    \
+        (hal_trace_level() >= ::utils::trace_info)) {                          \
         hal::utils::hal_logger()->info("[{}:{}] " fmt, __func__, __LINE__,     \
                                        ##__VA_ARGS__);                         \
     }                                                                          \
@@ -76,25 +112,29 @@ void trace_deinit(void);
     }                                                                          \
 
 #define HAL_ERR_IF(cond, fmt, ...)                                             \
-    if (likely(hal::utils::hal_logger() && (cond))) {                          \
+    if (likely(hal::utils::hal_logger() &&                                     \
+               (hal_trace_level() >= ::utils::trace_err) && (cond))) {         \
         hal::utils::hal_logger()->error("[{}:{}] "  fmt,  __func__, __LINE__,  \
                                         ##__VA_ARGS__);                        \
     }                                                                          \
 
 #define HAL_WARN_IF(cond, fmt, ...)                                            \
-    if (likely(hal::utils::hal_logger() && (cond))) {                          \
+    if (likely(hal::utils::hal_logger() &&                                     \
+               (hal_trace_level() >= ::utils::trace_warn) && (cond))) {        \
         hal::utils::hal_logger()->warn("[{}:{}] "  fmt, __func__, __LINE__,    \
                                        ##__VA_ARGS__);                         \
     }                                                                          \
 
 #define HAL_INFO_IF(cond, fmt, ...)                                            \
-    if (likely(hal::utils::hal_logger() && (cond))) {                          \
+    if (likely(hal::utils::hal_logger() &&                                     \
+               (hal_trace_level() >= ::utils::trace_info) && (cond))) {        \
         hal::utils::hal_logger()->info("[{}:{}] "  fmt, __func__, __LINE__,    \
                                        ##__VA_ARGS__);                         \
     }                                                                          \
 
 #define HAL_DEBUG_IF(cond, fmt, ...)                                           \
-    if (likely(hal::utils::hal_logger() && (cond))) {                          \
+    if (likely(hal::utils::hal_logger() &&                                     \
+               (hal_trace_level() >= ::utils::trace_debug) && (cond))) {       \
         hal::utils::hal_logger()->debug("[{}:{}] "  fmt, __func__, __LINE__,   \
                                         ##__VA_ARGS__);                        \
     }                                                                          \
@@ -103,3 +143,6 @@ void trace_deinit(void);
     if (likely(hal::utils::hal_logger())) {                                    \
         hal::utils::hal_logger()->flush();                                     \
     }
+
+#endif    // __HAL_TRACE_HPP__
+
