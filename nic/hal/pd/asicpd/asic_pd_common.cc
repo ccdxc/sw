@@ -8,7 +8,6 @@
 #include "gen/p4gen/common_txdma_actions/include/common_txdma_actions_p4pd.h"
 #include "gen/p4gen/common_rxdma_actions/include/common_rxdma_actions_p4pd_table.h"
 #include "gen/p4gen/common_txdma_actions/include/common_txdma_actions_p4pd_table.h"
-#include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
@@ -427,7 +426,7 @@ asicpd_p4plus_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
          i < p4pd_rxdma_tableid_max_get(); i++) {
         snprintf(progname, P4ACTION_NAME_MAX_LEN, "%s%s",
                  p4pd_rxdma_tbl_names[i], ".bin");
-        ret = capri_program_to_base_addr(p4pd_cfg->p4pd_rxdma_pgm_name,
+        ret = sdk::platform::p4_program_to_base_addr(p4pd_cfg->p4pd_rxdma_pgm_name,
                                          progname,
                                          &capri_table_rxdma_asm_base);
         if (ret != 0) {
@@ -437,7 +436,7 @@ asicpd_p4plus_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
         for (int j = 0; j < p4pd_rxdma_get_max_action_id(i); j++) {
             p4pd_rxdma_get_action_name(i, j, action_name);
             capri_action_rxdma_asm_base = 0;
-            capri_program_label_to_offset(p4pd_cfg->p4pd_rxdma_pgm_name,
+            sdk::platform::p4_program_label_to_offset(p4pd_cfg->p4pd_rxdma_pgm_name,
                                           progname, action_name,
                                           &capri_action_rxdma_asm_base);
             /* Action base is in byte and 64B aligned... */
@@ -452,7 +451,7 @@ asicpd_p4plus_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
          i < p4pd_txdma_tableid_max_get(); i++) {
         snprintf(progname, P4ACTION_NAME_MAX_LEN, "%s%s",
                  p4pd_txdma_tbl_names[i], ".bin");
-        ret = capri_program_to_base_addr(p4pd_cfg->p4pd_txdma_pgm_name,
+        ret = sdk::platform::p4_program_to_base_addr(p4pd_cfg->p4pd_txdma_pgm_name,
                                          progname,
                                          &capri_table_txdma_asm_base);
         if (ret != 0) {
@@ -462,7 +461,7 @@ asicpd_p4plus_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
         for (int j = 0; j < p4pd_txdma_get_max_action_id(i); j++) {
             p4pd_txdma_get_action_name(i, j, action_name);
             capri_action_txdma_asm_base = 0;
-            capri_program_label_to_offset(p4pd_cfg->p4pd_txdma_pgm_name,
+            sdk::platform::p4_program_label_to_offset(p4pd_cfg->p4pd_txdma_pgm_name,
                                           progname, action_name,
                                           &capri_action_txdma_asm_base);
             /* Action base is in byte and 64B aligned... */
@@ -502,12 +501,12 @@ asicpd_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
     HAL_TRACE_DEBUG("In asicpd_table_mpu_base_init\n");
     for (uint32_t i = p4pd_tableid_min_get(); i < p4pd_tableid_max_get(); i++) {
         snprintf(progname, P4ACTION_NAME_MAX_LEN, "%s%s", p4pd_tbl_names[i], ".bin");
-        capri_program_to_base_addr(p4pd_cfg->p4pd_pgm_name, progname,
+        sdk::platform::p4_program_to_base_addr(p4pd_cfg->p4pd_pgm_name, progname,
                                    &capri_table_asm_base[i]);
         for (int j = 0; j < p4pd_get_max_action_id(i); j++) {
             p4pd_get_action_name(i, j, action_name);
             capri_action_asm_base = 0;
-            capri_program_label_to_offset(p4pd_cfg->p4pd_pgm_name, progname,
+            sdk::platform::p4_program_label_to_offset(p4pd_cfg->p4pd_pgm_name, progname,
                                           action_name, &capri_action_asm_base);
             // Action base is in byte and 64B aligned...
             HAL_ASSERT((capri_action_asm_base & 0x3f) == 0);
@@ -520,7 +519,7 @@ asicpd_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
         // compute error program offset for each table
         snprintf(action_name, P4ACTION_NAME_MAX_LEN, "%s_error",
                  p4pd_tbl_names[i]);
-        capri_program_label_to_offset(p4pd_cfg->p4pd_pgm_name, progname,
+        sdk::platform::p4_program_label_to_offset(p4pd_cfg->p4pd_pgm_name, progname,
                                       action_name,
                                       &capri_table_asm_err_offset[i]);
         HAL_ASSERT((capri_table_asm_err_offset[i] & 0x3f) == 0);

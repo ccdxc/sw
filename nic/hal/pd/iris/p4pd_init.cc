@@ -17,7 +17,6 @@
 #include "nic/hal/pd/iris/p4pd_defaults.hpp"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
-#include "nic/hal/pd/capri/capri_loader.h"
 #include "gen/proto/types.pb.h"
 #include "nic/hal/pd/iris/aclqos/acl_pd.hpp"
 #include "nic/hal/pd/hal_pd.hpp"

@@ -14,7 +14,6 @@
 #include "gen/p4gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 
 #ifndef P4PD_CLI
-#include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/model_sim/include/lib_model_client.h"
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"

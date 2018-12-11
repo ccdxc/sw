@@ -3,7 +3,6 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
-#include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/include/capri_common.h"
 #include "nic/include/capri_barco.h"

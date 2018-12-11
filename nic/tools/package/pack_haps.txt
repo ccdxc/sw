@@ -126,6 +126,7 @@ nic/build/aarch64/iris/lib/libdelphi*.so                            /nic/lib/
 nic/build/aarch64/iris/lib/libsysmgr.so                             /nic/lib/
 nic/build/aarch64/iris/lib/libpenlog.so                             /nic/lib/
 nic/build/aarch64/iris/lib/*upgrade*                                /nic/lib/
+nic/build/aarch64/iris/lib/libsdkp4loader.so                        /nic/lib/
 
 # linkmgr
 nic/build/aarch64/iris/bin/port_client                              /nic/bin

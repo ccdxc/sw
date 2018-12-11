@@ -36,7 +36,6 @@ SOURCES = \
 		  capri_init.cc \
 		  capri_asic_rw.cc \
 		  capri_config.cc \
-		  capri_loader.cc \
 		  capri_tbl_rw.cc \
 		  capri_hbm.cc \
 		  capri_tm_rw.cc \

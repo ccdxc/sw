@@ -5,7 +5,7 @@
 
 #include "nic/sdk/include/sdk/catalog.hpp"
 #include "include/sdk/bm_allocator.hpp"
-#include "nic/hal/pd/capri/capri_loader.h"
+#include "include/sdk/platform/p4loader/loader.hpp"
 
 #define CAPRI_REPL_ENTRY_WIDTH          (64)
 #define CAPRI_REPL_TABLE_DEPTH          (64*1024)
@@ -13,7 +13,6 @@
 #define CAPRI_ASM_CFG_MAX               3
 
 
-typedef uint32_t (*mpu_pgm_symbols_t)(void **, platform_type_t);
 typedef struct capri_pgm_cfg_s {
     std::string                 path;
 } capri_pgm_cfg_t;
@@ -22,8 +21,8 @@ typedef struct capri_asm_cfg_s {
     std::string                 name;
     std::string                 path;
     std::string                 base_addr;
-    mpu_pgm_sort_t              sort_func;
-    mpu_pgm_symbols_t           symbols_func;
+    sdk::platform::mpu_pgm_sort_t              sort_func;
+    sdk::platform::mpu_pgm_symbols_t           symbols_func;
 } capri_asm_cfg_t;
 
 typedef struct capri_cfg_s {

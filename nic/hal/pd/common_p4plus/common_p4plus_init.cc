@@ -3,7 +3,6 @@
 #include "nic/include/hal.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_barco_crypto.hpp"
 #include "nic/hal/pd/capri/capri_pxb_pcie.hpp"
@@ -26,11 +25,11 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     HAL_TRACE_DEBUG("Capri core clock freq is {} Mhz", capri_coreclk_freq);
 
 
-    *p4plus_symbols = (capri_prog_param_info_t *)
+    *p4plus_symbols = (sdk::platform::p4_prog_param_info_t *)
         HAL_CALLOC(hal::HAL_MEM_ALLOC_PD,
-                   P4PLUS_SYMBOLS_MAX * sizeof(capri_prog_param_info_t));
-    capri_prog_param_info_t *symbols =
-        (capri_prog_param_info_t *)(*p4plus_symbols);
+                   P4PLUS_SYMBOLS_MAX * sizeof(sdk::platform::p4_prog_param_info_t));
+    sdk::platform::p4_prog_param_info_t *symbols =
+        (sdk::platform::p4_prog_param_info_t *)(*p4plus_symbols);
 
     symbols[i].name = "tcp-read-rnmdr-alloc-idx.bin";
     symbols[i].num_params = 2;

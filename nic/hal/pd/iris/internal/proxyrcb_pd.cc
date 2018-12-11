@@ -4,7 +4,6 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/include/capri_common.h"
 #include "nic/hal/pd/iris/internal/proxyrcb_pd.hpp"
-#include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
@@ -61,11 +60,11 @@ p4pd_get_proxyr_tx_stage0_prog_addr(uint64_t* offset)
     char progname[] = "txdma_stage0.bin";
     char labelname[]= "proxyr_tx_stage0";
 
-    int ret = capri_program_label_to_offset("p4plus",
+    int ret = sdk::platform::p4_program_label_to_offset("p4plus",
                                             progname,
                                             labelname,
                                             offset);
-    if(ret < 0) {
+    if(ret != 0) {
         return HAL_RET_HW_FAIL;
     }
     HAL_TRACE_DEBUG("Received offset for stage0 program: {:#x}", *offset);

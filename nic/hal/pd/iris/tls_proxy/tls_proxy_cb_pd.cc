@@ -5,7 +5,6 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/internal/tls_proxy_cb_pd.hpp"
 #include "nic/hal/pd/iris/internal/tcpcb_pd.hpp"
-#include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/hal.hpp"
@@ -205,11 +204,11 @@ p4pd_get_tls_tx_stage0_prog_addr(uint64_t* offset)
     char progname[] = "txdma_stage0.bin";
     char labelname[]= "tls_tx_stage0";
 
-    int ret = capri_program_label_to_offset("p4plus",
+    int ret = sdk::platform::p4_program_label_to_offset("p4plus",
                                             progname,
                                             labelname,
                                             offset);
-    if(ret < 0) {
+    if(ret != 0) {
         return HAL_RET_HW_FAIL;
     }
     *offset >>= MPU_PC_ADDR_SHIFT;

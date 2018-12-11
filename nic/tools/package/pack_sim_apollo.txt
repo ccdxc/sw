@@ -62,6 +62,7 @@ nic/build/x86_64/apollo/lib/libisa.so                           /nic/lib/
 nic/build/x86_64/apollo/lib/libsknobs.so                        /nic/lib/
 nic/build/x86_64/apollo/lib/libdelphisdk.so                     /nic/lib/
 nic/build/x86_64/apollo/lib/libev.so.4                          /nic/lib
+nic/build/x86_64/apollo/lib/libsdkp4loader.so                   /nic/lib
 
 /lib/libzmq.so.3                                                /nic/lib/
 /lib64/libJudy.so.1                                             /nic/lib64/
