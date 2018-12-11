@@ -50,6 +50,8 @@ pcieport_intr(pcieport_t *p)
     sta_rst = pcieport_get_sta_rst(p);
 #ifdef __aarch64__
     pal_reg_wr32(PXC_(INT_C_MAC_INTREG, pn), int_mac);
+    pciesys_loginfo("pcieport_intr: int_mac 0x%x sta_rst 0x%x\n",
+                    int_mac, sta_rst);
 #endif
 
     if (int_mac & MAC_INTREGF_(LINK_UP2DN)) {
@@ -93,11 +95,12 @@ pcieport_intr_init(pcieport_t *p)
         secbus = 0;
     }
 
-    pciesys_logdebug("int_mac 0x%x sta_rst 0x%x secbus 0x%02x\n",
-                     int_mac, sta_rst, secbus);
+    pciesys_loginfo("pcieport_intr_init: "
+                    "int_mac 0x%x sta_rst 0x%x secbus 0x%02x\n",
+                    int_mac, sta_rst, secbus);
 
     if (sta_rst & STA_RSTF_(PERSTN)) {
-        if (ltssm_st != 0) {
+        if (sta_rst & STA_RSTF_(MAC_DL_UP)) {
             initst = secbus ? PCIEPORTST_UP : PCIEPORTST_LINKUP;
         } else {
             initst = PCIEPORTST_MACUP;

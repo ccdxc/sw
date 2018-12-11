@@ -218,6 +218,23 @@ fsm_macdn(pcieport_t *p)
 }
 
 static void
+fsm_lup_macdn(pcieport_t *p)
+{
+    p->state = PCIEPORTST_DOWN;
+    pcieport_linkdn(p);
+    pcieport_macdn(p);
+}
+
+static void
+fsm_up_macdn(pcieport_t *p)
+{
+    p->state = PCIEPORTST_DOWN;
+    pcieport_hostdn(p);
+    pcieport_linkdn(p);
+    pcieport_macdn(p);
+}
+
+static void
 fsm_linkup(pcieport_t *p)
 {
     p->state = PCIEPORTST_LINKUP;
@@ -257,6 +274,8 @@ fsm_buschg(pcieport_t *p)
 #define INV fsm_inv
 #define MCU fsm_macup
 #define MCD fsm_macdn
+#define LMD fsm_lup_macdn
+#define UMD fsm_up_macdn
 #define LKU fsm_linkup
 #define LKD fsm_linkdn
 #define ULD fsm_up_linkdn
@@ -277,8 +296,8 @@ fsm_table[PCIEPORTST_MAX][PCIEPORTEV_MAX] = {
     [PCIEPORTST_OFF]    = { NOP, MCU, NOP, INV, NOP },
     [PCIEPORTST_DOWN]   = { NOP, MCU, NOP, INV, NOP },
     [PCIEPORTST_MACUP]  = { MCD, INV, NOP, LKU, NOP },
-    [PCIEPORTST_LINKUP] = { INV, INV, LKD, LKU, UP_ },
-    [PCIEPORTST_UP]     = { INV, INV, ULD, INV, BUS },
+    [PCIEPORTST_LINKUP] = { LMD, INV, LKD, NOP, UP_ },
+    [PCIEPORTST_UP]     = { UMD, INV, ULD, INV, BUS },
     [PCIEPORTST_FAULT]  = { MCD, NOP, NOP, NOP, NOP },
 
     /*
@@ -294,6 +313,12 @@ fsm_table[PCIEPORTST_MAX][PCIEPORTEV_MAX] = {
      *                  started coming back up before we started.
      *                  Then we see LINKDN, MACDN, MACUP, LINKUP pending,
      *                  *then* a LINKUP arrives.
+     * LINKUP + MACDN   LINK and MAC go down together but we might find
+     *                  MACDN *then* LINKDN arrives.
+     * UP + MACDN       LINK and MAC go down together but we might find
+     *                  MACDN *then* LINKDN arrives.
+     * DOWN + LINKDN    LINK and MAC go down together but we found MACDN first,
+     *                  went to DOWN, *then* LINKDN arrives while DOWN.
      */
 };
 
@@ -311,7 +336,7 @@ pcieport_fsm(pcieport_t *p, pcieportev_t ev)
         struct timeval tv;
 
         gettimeofday(&tv, NULL);
-        pciesys_loginfo("[%ld.%.3ld] port%d: %s + %s => %s\n",
+        pciesys_loginfo("[%ld.%.3ld] fsm port%d: %s + %s => %s\n",
                         tv.tv_sec, tv.tv_usec / 1000,
                         p->port, stname(st), evname(ev), stname(p->state));
     }
@@ -344,7 +369,7 @@ pcieport_fsm_init(pcieport_t *p, pcieportst_t st)
         struct timeval tv;
 
         gettimeofday(&tv, NULL);
-        pciesys_loginfo("[%ld.%.3ld] port%d: init %s\n",
+        pciesys_loginfo("[%ld.%.3ld] fsm port%d: init %s\n",
                         tv.tv_sec, tv.tv_usec / 1000,
                         p->port, stname(p->state));
     }
