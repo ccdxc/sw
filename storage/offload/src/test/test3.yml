@@ -41,6 +41,8 @@ svc_chains:
             output_file: '%test_id%_%chain_id%_crc32c.bin'
         - encrypt:
             algo_type: xts
+            iv_data: 000102030405060708090a0b0c0d0e0f
+            key_idx: 1
             output_file: '%test_id%_%chain_id%_cp_enc.bin'
   - svc_chain:
       idx: 3
@@ -49,6 +51,8 @@ svc_chains:
       ops:
         - decrypt:
             algo_type: xts
+            iv_data: 000102030405060708090a0b0c0d0e0f
+            key_idx: 1
             output_file: '%test_id%_%chain_id%_cp.bin'
         - chksum:
             algo_type: crc32c

@@ -8,6 +8,7 @@ svc_chains:
       ops:
         - encrypt:
             key_idx: 1
+            iv_data: 000102030405060708090a0b0c0d0e0f
             output_file: '%test_id%_encrypted.bin'
 svc_chains:
   - svc_chain:
@@ -19,6 +20,7 @@ svc_chains:
       ops:
         - encrypt:
             key_idx: 99
+            iv_data: 000102030405060708090a0b0c0d0e0f
             output_file: '%test_id%_enc_bad_key.bin'
 svc_chains:
   - svc_chain:
@@ -30,6 +32,7 @@ svc_chains:
       ops:
         - encrypt:
             key_idx: 1
+            iv_data: 000102030405060708090a0b0c0d0e0f
             algo_type: 99
             output_file: '%test_id%_enc_bad_algo.bin'
 svc_chains:
@@ -41,6 +44,7 @@ svc_chains:
       ops:
         - decrypt:
             key_idx: 99
+            iv_data: 000102030405060708090a0b0c0d0e0f
             output_file: '%test_id%_dec_bad_key.bin'
 svc_chains:
   - svc_chain:
@@ -51,6 +55,7 @@ svc_chains:
       ops:
         - decrypt:
             key_idx: 1
+            iv_data: 000102030405060708090a0b0c0d0e0f
             algo_type: 99
             output_file: '%test_id%_dec_bad_algo.bin'
 
