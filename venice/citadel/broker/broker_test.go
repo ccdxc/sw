@@ -183,7 +183,7 @@ func TestBrokerKstoreBasic(t *testing.T) {
 	validateError := func(err error, msg string) {
 		if err == nil {
 			err := brokers[0].ClusterCheck()
-			Assert(t, (err == nil), msg)
+			Assert(t, err == nil, msg, err)
 		}
 	}
 	err = brokers[0].WriteKvs(context.Background(), "table0", []*tproto.KeyValue{})
