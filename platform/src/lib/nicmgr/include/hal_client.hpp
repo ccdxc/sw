@@ -265,35 +265,6 @@ public:
 
   /* RDMA APIs */
 
-  int CreateMR(uint64_t lif_id, uint32_t pd, uint64_t va, uint64_t length,
-               uint16_t access_flags, uint32_t l_key, uint32_t r_key,
-               uint32_t page_size, uint64_t *pt_table, uint32_t pt_size);
-
-  int CreateCQ(uint32_t lif_id,
-               uint32_t cq_num, uint16_t cq_wqe_size, uint16_t num_cq_wqes,
-               uint32_t host_page_size,
-               uint64_t *pt_table, uint32_t pt_size);
-
-  int CreateQP(uint64_t lif_id, uint32_t qp_num, uint16_t sq_wqe_size,
-               uint16_t rq_wqe_size, uint16_t num_sq_wqes,
-               uint16_t num_rq_wqes, uint16_t num_rsq_wqes,
-               uint16_t num_rrq_wqes, uint32_t pd_num,
-               uint32_t sq_cq_num, uint32_t rq_cq_num, uint32_t page_size,
-               uint32_t pmtu,
-               int service, int flags,
-               uint32_t sq_pt_size,
-               uint32_t pt_size, uint64_t *pt_table,
-               uint64_t cmb_bar_base, uint64_t cmb_bar_size);
-
-  int ModifyQP(uint64_t lif_id, uint32_t qp_num, uint32_t attr_mask,
-               uint32_t dest_qp_num, uint32_t q_key,
-               uint32_t e_psn, uint32_t sq_psn,
-               uint32_t header_template_ah_id, uint32_t header_template_size,
-               unsigned char *header, uint32_t pmtu, uint8_t qstate);
-
-  int CreateAh(uint64_t lif_id, uint32_t ah_id, uint32_t pd_id,
-               uint32_t header_template_size, unsigned char *header);
-
   int RDMACreateEQ(uint64_t lif_id, uint32_t eq_num,
                    uint32_t num_eq_wqes, uint32_t eq_wqe_size,
                    uint32_t eqe_base_addr_pa, uint32_t int_num);

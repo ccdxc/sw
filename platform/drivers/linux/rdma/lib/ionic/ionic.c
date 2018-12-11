@@ -83,11 +83,6 @@ static int ionic_env_val(const char *name)
 	return atoi(env);
 }
 
-static int ionic_env_xxx_v0(void)
-{
-	return ionic_env_val("IONIC_XXX_V0");
-}
-
 static int ionic_env_fallback(void)
 {
 	return ionic_env_val("IONIC_FALLBACK");
@@ -175,6 +170,13 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 		ctx->version = version;
 		ctx->opcodes = resp.qp_opcodes;
 
+		if (ctx->opcodes <= IONIC_V1_OP_BIND_MW) {
+			fprintf(stderr, "ionic: qp opcodes %d want min %d\n",
+				ctx->opcodes, IONIC_V1_OP_BIND_MW + 1);
+			rc = EINVAL;
+			goto err_cmd;
+		}
+
 		ctx->sq_qtype = resp.sq_qtype;
 		ctx->rq_qtype = resp.rq_qtype;
 		ctx->cq_qtype = resp.cq_qtype;
@@ -194,7 +196,6 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 		verbs_set_ops(&ctx->vctx, &ionic_ctx_ops);
 	}
 
-	ctx->xxx_try_v1 = !ionic_env_xxx_v0();
 	ctx->lockfree = ionic_env_lockfree();
 
 	if (ionic_env_debug())

@@ -294,8 +294,7 @@ struct ionic_v1_wqe {
 
 /* queue pair v1 send opcodes */
 enum ionic_v1_op {
-	/* XXX during development, v0 and v1 ops can coexist, let v1 ops begin with opcode 16 */
-	IONIC_V1_OP_SEND = 16,
+	IONIC_V1_OP_SEND,
 	IONIC_V1_OP_SEND_INV,
 	IONIC_V1_OP_SEND_IMM,
 	IONIC_V1_OP_RDMA_READ,
@@ -373,83 +372,5 @@ static inline int ionic_v1_recv_wqe_max_sge(uint8_t stride_log2)
 #define OP_TYPE_RDMA_OPER_WITH_IMM	16
 #define OP_TYPE_SEND_RCVD		17
 #define OP_TYPE_INVALID			18
-
-enum ionic_wr_opcode {
-	IONIC_WR_OPCD_SEND		    = 0x00,
-	IONIC_WR_OPCD_SEND_INVAL	    = 0x01,
-	IONIC_WR_OPCD_SEND_IMM	    = 0x02,
-	IONIC_WR_OPCD_RDMA_READ	    = 0x03,
-	IONIC_WR_OPCD_RDMA_WRITE	    = 0x04,
-	IONIC_WR_OPCD_RDMA_WRITE_IMM	= 0x05,
-	IONIC_WR_OPCD_ATOMIC_CS	    = 0x06,
-	IONIC_WR_OPCD_ATOMIC_FA	    = 0x07,
-	IONIC_WR_OPCD_FRPNR    	    = 0x08,    
-	IONIC_WR_OPCD_LOC_INVAL	    = 0x09,
-	IONIC_WR_OPCD_BIND		    = 0x0a,
-	IONIC_WR_OPCD_SEND_INV_IMM    = 0x0b,
-    
-	IONIC_WR_OPCD_INVAL		    = 0x0F
-};
-
-struct sqwqe_base_t {
-    __u64 wrid;
-    __u8  inline_data_vld    : 1;
-    __u8  solicited_event    : 1;
-    __u8  fence              : 1;
-    __u8  complete_notify    : 1;
-    __u8  op_type:4;
-    __u8  num_sges;
-    __u16 rsvd2;
-}__attribute__ ((__packed__));
-
-struct sqwqe_rc_send_t {
-    __u32 imm_data;
-    __u32 inv_key;
-    __u32 rsvd1;
-    __u32 length;
-    __u32 rsvd2;
-}__attribute__ ((__packed__));
-
-struct sqwqe_ud_send_t {
-    __u32 imm_data;
-    __u32 q_key;
-    __u32 length;
-    __u32 dst_qp:24;
-    __u32 ah_size:8;
-    __u32 ah_handle;
-}__attribute__ ((__packed__));
-
-struct sqwqe_rdma_t {
-    __u32 imm_data;
-    __u64 va;
-    __u32 length;
-    __u32 r_key;
-}__attribute__ ((__packed__));
-
-struct sqwqe_atomic_t {
-    __u32 r_key;
-    __u64 va;
-    __u64 swap_or_add_data;
-    __u64 cmp_data;
-    __u64 pad;
-    struct ionic_sge sge;
-}__attribute__ ((__packed__));
-
-struct sqwqe_non_atomic_t {
-    union {
-        struct sqwqe_rc_send_t send;
-        struct sqwqe_ud_send_t ud_send;
-        struct sqwqe_rdma_t rdma;
-    }wqe;
-    struct ionic_sge sg_arr[2];
-}__attribute__ ((__packed__));
-
-struct sqwqe_t {
-    struct sqwqe_base_t base;
-    union {
-        struct sqwqe_atomic_t atomic;
-        struct sqwqe_non_atomic_t non_atomic;
-    }u;
-}__attribute__ ((__packed__));
 
 #endif

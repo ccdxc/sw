@@ -695,11 +695,6 @@ Eth::opcode_to_str(enum cmd_opcode opcode)
         CASE(CMD_OPCODE_RDMA_CREATE_EQ);
         CASE(CMD_OPCODE_RDMA_CREATE_CQ);
         CASE(CMD_OPCODE_RDMA_CREATE_ADMINQ);
-        CASE(CMD_OPCODE_V0_RDMA_CREATE_MR);
-        CASE(CMD_OPCODE_V0_RDMA_CREATE_CQ);
-        CASE(CMD_OPCODE_V0_RDMA_CREATE_QP);
-        CASE(CMD_OPCODE_V0_RDMA_MODIFY_QP);
-        CASE(CMD_OPCODE_V0_RDMA_CREATE_AH);
         default: return "DEVCMD_UNKNOWN";
     }
 }
@@ -838,26 +833,6 @@ Eth::CmdHandler(void *req, void *req_data,
     case CMD_OPCODE_RDMA_CREATE_ADMINQ:
         status = this->_CmdRDMACreateAdminQ(req, req_data, resp, resp_data);
         status = DEVCMD_SUCCESS;
-        break;
-
-    case CMD_OPCODE_V0_RDMA_CREATE_MR:
-        status = this->_CmdCreateMR(req, req_data, resp, resp_data);
-        break;
-
-    case CMD_OPCODE_V0_RDMA_CREATE_CQ:
-        status = this->_CmdCreateCQ(req, req_data, resp, resp_data);
-        break;
-
-    case CMD_OPCODE_V0_RDMA_CREATE_QP:
-        status = this->_CmdCreateQP(req, req_data, resp, resp_data);
-        break;
-
-    case CMD_OPCODE_V0_RDMA_MODIFY_QP:
-        status = this->_CmdModifyQP(req, req_data, resp, resp_data);
-        break;
-
-    case CMD_OPCODE_V0_RDMA_CREATE_AH:
-        status = this->_CmdCreateAH(req, req_data, resp, resp_data);
         break;
 
     default:
@@ -1955,130 +1930,6 @@ Eth::_CmdRssIndirSet(void *req, void *req_data, void *resp, void *resp_data)
         NIC_LOG_ERR("_CmdRssIndirSet:{}: Unable to program hw for RSS INDIR", ret);
         return (DEVCMD_ERROR);
     }
-
-    return (DEVCMD_SUCCESS);
-}
-
-/**
- * CMD_OPCODE_V0_RDMA_* ops
- */
-
-enum DevcmdStatus
-Eth::_CmdCreateMR(void *req, void *req_data, void *resp, void *resp_data)
-{
-    struct create_mr_cmd  *cmd = (struct create_mr_cmd *) req;
-
-    NIC_LOG_DEBUG("lif-{}: CMD_OPCODE_V0_CREATE_MR:"
-            " pd_num {} start {:#x} len {} access_flags {:#x}"
-            " lkey {} rkey {} "
-            " page_size {} pt_size {}",
-            hal_lif_info_.hw_lif_id + cmd->lif,
-            cmd->pd_num, cmd->start, cmd->length, cmd->access_flags,
-            cmd->lkey, cmd->rkey,
-            cmd->page_size, cmd->nchunks);
-
-    hal->CreateMR(hal_lif_info_.hw_lif_id + cmd->lif,
-            cmd->pd_num, cmd->start, cmd->length, cmd->access_flags,
-            cmd->lkey, cmd->rkey, cmd->page_size,
-            (uint64_t *)devcmd->data, cmd->nchunks);
-
-    return (DEVCMD_SUCCESS);
-}
-
-enum DevcmdStatus
-Eth::_CmdCreateCQ(void *req, void *req_data, void *resp, void *resp_data)
-{
-    struct create_cq_cmd  *cmd = (struct create_cq_cmd  *) req;
-
-    NIC_LOG_DEBUG("lif-{}: CMD_OPCODE_V0_CREATE_CQ "
-                 "cq_num {} wqe_size {} num_wqes {} host_pg_size {}",
-                 hal_lif_info_.hw_lif_id + cmd->lif_id, cmd->cq_num,
-                 cmd->cq_wqe_size, cmd->num_cq_wqes,
-                 cmd->host_pg_size);
-
-    hal->CreateCQ(hal_lif_info_.hw_lif_id + cmd->lif_id,
-            cmd->cq_num, cmd->cq_wqe_size, cmd->num_cq_wqes,
-            cmd->host_pg_size,
-            (uint64_t *)devcmd->data, cmd->pt_size);
-
-    return (DEVCMD_SUCCESS);
-}
-
-enum DevcmdStatus
-Eth::_CmdCreateQP(void *req, void *req_data, void *resp, void *resp_data)
-{
-    struct create_qp_cmd  *cmd = (struct create_qp_cmd  *) req;
-    uint64_t *pt_table = (uint64_t *)&devcmd->data;
-
-    NIC_LOG_DEBUG("lif-{}: CMD_OPCODE_V0_CREATE_QP:"
-            " qp_num {} sq_wqe_size {}"
-            " rq_wqe_size {} num_sq_wqes {}"
-            " num_rq_wqes {} pd {}"
-            " sq_cq_num {} rq_cq_num {} page_size {}"
-            " pmtu {} service {} sq_pt_size {} pt_size {}",
-            hal_lif_info_.hw_lif_id + cmd->lif_id,
-            cmd->qp_num, cmd->sq_wqe_size,
-            cmd->rq_wqe_size, cmd->num_sq_wqes,
-            cmd->num_rq_wqes, cmd->pd,
-            cmd->sq_cq_num, cmd->rq_cq_num, cmd->host_pg_size,
-            cmd->pmtu, cmd->service, cmd->sq_pt_size, cmd->pt_size);
-
-    hal->CreateQP(hal_lif_info_.hw_lif_id + cmd->lif_id,
-                  cmd->qp_num, cmd->sq_wqe_size,
-                  cmd->rq_wqe_size, cmd->num_sq_wqes,
-                  cmd->num_rq_wqes, 256, 256, cmd->pd,
-                  cmd->sq_cq_num, cmd->rq_cq_num, cmd->host_pg_size,
-                  cmd->pmtu, cmd->service, cmd->flags,
-                  cmd->sq_pt_size, cmd->pt_size, pt_table,
-                  pci_resources.cmbpa, pci_resources.cmbsz);
-
-    return (DEVCMD_SUCCESS);
-}
-
-enum DevcmdStatus
-Eth::_CmdModifyQP(void *req, void *req_data, void *resp, void *resp_data)
-{
-    struct modify_qp_cmd  *cmd = (struct modify_qp_cmd  *) req;
-    unsigned char *header = (unsigned char *)&devcmd->data;
-
-    NIC_LOG_DEBUG("lif-{}: qp_num {} attr_mask {:#x}"
-          " dest_qp_num {} q_key {}"
-          " e_psn {} sq_psn {}"
-          " header_template_ah_id {} header_template_size {}"
-          " path_mtu {}. state: {}",
-          hal_lif_info_.hw_lif_id,
-          cmd->qp_num, cmd->attr_mask,
-          cmd->dest_qp_num, cmd->q_key,
-          cmd->e_psn, cmd->sq_psn,
-          cmd->header_template_ah_id, cmd->header_template_size,
-          cmd->path_mtu, cmd->state);
-
-    hal->ModifyQP(hal_lif_info_.hw_lif_id + cmd->lif_id,
-                  cmd->qp_num, cmd->attr_mask,
-                  cmd->dest_qp_num, cmd->q_key,
-                  cmd->e_psn, cmd->sq_psn,
-                  cmd->header_template_ah_id, cmd->header_template_size,
-                  header, cmd->path_mtu, cmd->state & 7);
-
-    return (DEVCMD_SUCCESS);
-}
-
-enum DevcmdStatus
-Eth::_CmdCreateAH(void *req, void *req_data, void *resp, void *resp_data)
-{
-    struct create_ah_cmd  *cmd = (struct create_ah_cmd  *) req;
-    unsigned char *header = (unsigned char *)&devcmd->data;
-
-    NIC_LOG_DEBUG("lif-{}: CMD_OPCODE_V0_CREATE_AH:"
-            " ah_id {} pd_id {}"
-            " header_template_size {}",
-            hal_lif_info_.hw_lif_id,
-            cmd->ah_id, cmd->pd_id,
-            cmd->header_template_size);
-
-    hal->CreateAh(hal_lif_info_.hw_lif_id,
-                  cmd->ah_id, cmd->pd_id,
-                  cmd->header_template_size, header);
 
     return (DEVCMD_SUCCESS);
 }

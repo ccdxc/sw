@@ -85,10 +85,6 @@ union dev_cmd {
     struct rx_filter_del_cmd rx_filter_del;
     struct rss_hash_set_cmd rss_hash_set;
     struct rss_indir_set_cmd rss_indir_set;
-    struct create_mr_cmd create_mr;
-    struct create_cq_cmd create_cq;
-    struct create_qp_cmd create_qp;
-    struct modify_qp_cmd modify_qp;
 };
 
 union dev_cmd_comp {
@@ -113,10 +109,6 @@ union dev_cmd_comp {
     rx_filter_del_comp rx_filter_del;
     rss_hash_set_comp rss_hash_set;
     rss_indir_set_comp rss_indir_set;
-    struct create_mr_comp create_mr;
-    struct create_cq_comp create_cq;
-    struct create_qp_comp create_qp;
-    struct modify_qp_comp modify_qp;
 };
 
 #pragma pack(pop)
@@ -259,16 +251,9 @@ private:
     enum DevcmdStatus _CmdRssIndirSet(void *req, void *req_data, void *resp, void *resp_data);
 
     /* RDMA Command handlers */
-    enum DevcmdStatus _CmdCreateMR(void *req, void *req_data, void *resp, void *resp_data);
-    enum DevcmdStatus _CmdCreateCQ(void *req, void *req_data, void *resp, void *resp_data);
-    enum DevcmdStatus _CmdCreateQP(void *req, void *req_data, void *resp, void *resp_data);
-    enum DevcmdStatus _CmdModifyQP(void *req, void *req_data, void *resp, void *resp_data);
-
-    enum DevcmdStatus _CmdCreateAH(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdRDMACreateEQ(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdRDMACreateCQ(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_data);
-
 
     uint64_t GetQstateAddr(uint8_t qtype, uint32_t qid);
 

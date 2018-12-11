@@ -1294,51 +1294,6 @@ static int64_t ionic_prep_sgl(struct ionic_sge *sgl, uint32_t max_sge,
 	return len;
 }
 
-static void ionic_v0_prep_base(struct ionic_qp *qp,
-			       struct ibv_send_wr *wr,
-			       struct ionic_sq_meta *meta,
-			       struct sqwqe_t *wqe)
-{
-	struct ionic_ctx *ctx = to_ionic_ctx(qp->vqp.qp.context);
-
-	meta->wrid = wr->wr_id;
-	meta->ibsts = IBV_WC_SUCCESS;
-	meta->signal = false;
-
-	wqe->base.wrid = qp->sq.prod;
-
-	if (wr->send_flags & IBV_SEND_FENCE)
-		wqe->base.fence = 1;
-
-	if (wr->send_flags & IBV_SEND_SOLICITED)
-		wqe->base.solicited_event = 1;
-
-	if (qp->sig_all || wr->send_flags & IBV_SEND_SIGNALED) {
-		wqe->base.complete_notify = 1;
-		meta->signal = true;
-	}
-
-	meta->seq = qp->sq_msn_prod;
-	meta->remote = qp->vqp.qp.qp_type != IBV_QPT_UD &&
-		!ionic_ibop_is_local(wr->opcode);
-
-	if (meta->remote) {
-		qp->sq_msn_idx[meta->seq] = qp->sq.prod;
-		qp->sq_msn_prod = ionic_queue_next(&qp->sq, qp->sq_msn_prod);
-	}
-
-	ionic_dbg(ctx, "post send %u prod %u", qp->qpid, qp->sq.prod);
-	ionic_dbg_xdump(ctx, "wqe", wqe, 1u << qp->sq.stride_log2);
-
-	ionic_stat_incr_idx(ctx->stats, post_send_op, wqe->base.op_type);
-	ionic_stat_add(ctx->stats, post_send_sig,
-		       !!(wqe->base.complete_notify));
-	ionic_stat_add(ctx->stats, post_send_inl,
-		       !!(wqe->base.inline_data_vld));
-
-	ionic_queue_produce(&qp->sq);
-}
-
 static void ionic_v1_prep_base(struct ionic_qp *qp,
 			       struct ibv_send_wr *wr,
 			       struct ionic_sq_meta *meta,
@@ -1384,40 +1339,6 @@ static void ionic_v1_prep_base(struct ionic_qp *qp,
 	ionic_queue_produce(&qp->sq);
 }
 
-static int ionic_v0_prep_common(struct ionic_qp *qp,
-				struct ibv_send_wr *wr,
-				struct ionic_sq_meta *meta,
-				struct sqwqe_t *wqe,
-				/* XXX length field offset differs per opcode */
-				__u32 *wqe_length_field)
-{
-	int64_t signed_len;
-	uint32_t mval;
-
-	if (wr->send_flags & IBV_SEND_INLINE) {
-		wqe->base.num_sges = 0;
-		wqe->base.inline_data_vld = 1;
-		mval = ionic_v1_send_wqe_max_data(qp->sq.stride_log2);
-		signed_len = ionic_prep_inline(wqe->u.non_atomic.sg_arr, mval,
-					       wr->sg_list, wr->num_sge);
-	} else {
-		wqe->base.num_sges = wr->num_sge;
-		mval = ionic_v1_send_wqe_max_sge(qp->sq.stride_log2);
-		signed_len = ionic_prep_sgl(wqe->u.non_atomic.sg_arr, mval,
-					    wr->sg_list, wr->num_sge);
-	}
-
-	if (unlikely(signed_len < 0))
-		return (int)-signed_len;
-
-	meta->len = (uint32_t)signed_len;
-	*wqe_length_field = htobe32((uint32_t)signed_len);
-
-	ionic_v0_prep_base(qp, wr, meta, wqe);
-
-	return 0;
-}
-
 static int ionic_v1_prep_common(struct ionic_qp *qp,
 				struct ibv_send_wr *wr,
 				struct ionic_sq_meta *meta,
@@ -1450,45 +1371,6 @@ static int ionic_v1_prep_common(struct ionic_qp *qp,
 	return 0;
 }
 
-static int ionic_v0_prep_send(struct ionic_qp *qp,
-			      struct ibv_send_wr *wr)
-{
-	struct ionic_sq_meta *meta;
-	struct sqwqe_t *wqe;
-
-	meta = &qp->sq_meta[qp->sq.prod];
-	wqe = ionic_queue_at_prod(&qp->sq);
-
-	memset(wqe, 0, 1u << qp->sq.stride_log2);
-
-	meta->ibop = IBV_WC_SEND;
-
-	switch (wr->opcode) {
-	case IBV_WR_SEND:
-		wqe->base.op_type = IONIC_WR_OPCD_SEND;
-		break;
-	case IBV_WR_SEND_WITH_IMM:
-		wqe->base.op_type = IONIC_WR_OPCD_SEND_IMM;
-		wqe->u.non_atomic.wqe.send.imm_data = wr->imm_data;
-		break;
-	case IBV_WR_SEND_WITH_INV:
-		wqe->base.op_type = IONIC_WR_OPCD_SEND_INVAL;
-		wqe->u.non_atomic.wqe.send.imm_data =
-			htobe32(wr->imm_data);
-
-		/* XXX just use imm_data field */
-		wqe->u.non_atomic.wqe.send.inv_key =
-			htobe32(wr->imm_data);
-		break;
-	default:
-		return EINVAL;
-	}
-
-	/* XXX warning: taking address of packed member */
-	return ionic_v0_prep_common(qp, wr, meta, wqe,
-				 &wqe->u.non_atomic.wqe.send.length);
-}
-
 static int ionic_v1_prep_send(struct ionic_qp *qp,
 			      struct ibv_send_wr *wr)
 {
@@ -1519,47 +1401,6 @@ static int ionic_v1_prep_send(struct ionic_qp *qp,
 	}
 
 	return ionic_v1_prep_common(qp, wr, meta, wqe);
-}
-
-static int ionic_v0_prep_send_ud(struct ionic_qp *qp, struct ibv_send_wr *wr)
-{
-	struct ionic_sq_meta *meta;
-	struct sqwqe_t *wqe;
-	struct ionic_ah *ah;
-
-	if (unlikely(!wr->wr.ud.ah))
-		return EINVAL;
-
-	ah = to_ionic_ah(wr->wr.ud.ah);
-
-	meta = &qp->sq_meta[qp->sq.prod];
-	wqe = ionic_queue_at_prod(&qp->sq);
-
-	memset(wqe, 0, 1u << qp->sq.stride_log2);
-
-	/* XXX endian? */
-	wqe->u.non_atomic.wqe.ud_send.q_key = htobe32(wr->wr.ud.remote_qkey);
-	wqe->u.non_atomic.wqe.ud_send.ah_size = 0;
-	wqe->u.non_atomic.wqe.ud_send.dst_qp = htobe32(wr->wr.ud.remote_qpn) >> 8; /* XXX not portable, get rid of bit fields in wqe! */
-	wqe->u.non_atomic.wqe.ud_send.ah_handle = htobe32(ah->ahid);
-
-	meta->ibop = IBV_WC_SEND;
-
-	switch (wr->opcode) {
-	case IBV_WR_SEND:
-		wqe->base.op_type = IONIC_WR_OPCD_SEND;
-		break;
-	case IBV_WR_SEND_WITH_IMM:
-		wqe->base.op_type = IONIC_WR_OPCD_SEND_IMM;
-		wqe->u.non_atomic.wqe.ud_send.imm_data = wr->imm_data;
-		break;
-	default:
-		return EINVAL;
-	}
-
-	/* XXX warning: taking address of packed member */
-	return ionic_v0_prep_common(qp, wr, meta, wqe,
-				    &wqe->u.non_atomic.wqe.ud_send.length);
 }
 
 static int ionic_v1_prep_send_ud(struct ionic_qp *qp, struct ibv_send_wr *wr)
@@ -1597,47 +1438,6 @@ static int ionic_v1_prep_send_ud(struct ionic_qp *qp, struct ibv_send_wr *wr)
 	}
 
 	return ionic_v1_prep_common(qp, wr, meta, wqe);
-}
-
-static int ionic_v0_prep_rdma(struct ionic_qp *qp,
-			      struct ibv_send_wr *wr)
-{
-	struct ionic_sq_meta *meta;
-	struct sqwqe_t *wqe;
-
-	meta = &qp->sq_meta[qp->sq.prod];
-	wqe = ionic_queue_at_prod(&qp->sq);
-
-	memset(wqe, 0, 1u << qp->sq.stride_log2);
-
-	meta->ibop = IBV_WC_RDMA_WRITE;
-
-	switch (wr->opcode) {
-	case IBV_WR_RDMA_READ:
-		if (wr->send_flags & (IBV_SEND_SOLICITED | IBV_SEND_INLINE))
-			return EINVAL;
-		meta->ibop = IBV_WC_RDMA_READ;
-		wqe->base.op_type = IONIC_WR_OPCD_RDMA_READ;
-		break;
-	case IBV_WR_RDMA_WRITE:
-		if (wr->send_flags & IBV_SEND_SOLICITED)
-			return EINVAL;
-		wqe->base.op_type = IONIC_WR_OPCD_RDMA_WRITE;
-		break;
-	case IBV_WR_RDMA_WRITE_WITH_IMM:
-		wqe->base.op_type = IONIC_WR_OPCD_RDMA_WRITE_IMM;
-		wqe->u.non_atomic.wqe.ud_send.imm_data = wr->imm_data;
-		break;
-	default:
-		return EINVAL;
-	}
-
-	wqe->u.non_atomic.wqe.rdma.va = htobe64(wr->wr.rdma.remote_addr);
-	wqe->u.non_atomic.wqe.rdma.r_key = htobe32(wr->wr.rdma.rkey);
-
-	/* XXX warning: taking address of packed member */
-	return ionic_v0_prep_common(qp, wr, meta, wqe,
-				    &wqe->u.non_atomic.wqe.rdma.length);
 }
 
 static int ionic_v1_prep_rdma(struct ionic_qp *qp,
@@ -1678,55 +1478,6 @@ static int ionic_v1_prep_rdma(struct ionic_qp *qp,
 	wqe->common.rdma.remote_rkey = htobe32(wr->wr.rdma.rkey);
 
 	return ionic_v1_prep_common(qp, wr, meta, wqe);
-}
-
-static int ionic_v0_prep_atomic(struct ionic_qp *qp,
-				struct ibv_send_wr *wr)
-{
-	struct ionic_sq_meta *meta;
-	struct sqwqe_t *wqe;
-
-	if (wr->num_sge != 1 || wr->sg_list[0].length != 8)
-		return EINVAL;
-
-	if (wr->send_flags & (IBV_SEND_SOLICITED | IBV_SEND_INLINE))
-		return EINVAL;
-
-	meta = &qp->sq_meta[qp->sq.prod];
-	wqe = ionic_queue_at_prod(&qp->sq);
-
-	memset(wqe, 0, 1u << qp->sq.stride_log2);
-
-	switch (wr->opcode) {
-	case IBV_WR_ATOMIC_CMP_AND_SWP:
-		meta->ibop = IBV_WC_COMP_SWAP;
-		wqe->base.op_type = IONIC_WR_OPCD_ATOMIC_CS;
-		wqe->u.atomic.swap_or_add_data =
-			htobe64(wr->wr.atomic.swap);
-		wqe->u.atomic.cmp_data =
-			htobe64(wr->wr.atomic.compare_add);
-		break;
-	case IBV_WR_ATOMIC_FETCH_AND_ADD:
-		meta->ibop = IBV_WC_FETCH_ADD;
-		wqe->base.op_type = IONIC_WR_OPCD_ATOMIC_FA;
-		wqe->u.atomic.swap_or_add_data =
-			htobe64(wr->wr.atomic.compare_add);
-		break;
-	default:
-		return EINVAL;
-	}
-
-	wqe->u.atomic.r_key = htobe32(wr->wr.atomic.rkey);
-	wqe->u.atomic.va = htobe64(wr->wr.atomic.remote_addr);
-
-	wqe->base.num_sges = 1;
-	wqe->u.atomic.sge.va = htobe64(wr->sg_list[0].addr);
-	wqe->u.atomic.sge.lkey = htobe32(wr->sg_list[0].lkey);
-	wqe->u.atomic.sge.len = htobe32(8);
-
-	ionic_v0_prep_base(qp, wr, meta, wqe);
-
-	return 0;
 }
 
 static int ionic_v1_prep_atomic(struct ionic_qp *qp,
@@ -1850,35 +1601,6 @@ static int ionic_v1_prep_bind(struct ionic_qp *qp, struct ibv_send_wr *wr)
 	return 0;
 }
 
-static int ionic_v0_prep_one_rc(struct ionic_qp *qp,
-				struct ibv_send_wr *wr)
-{
-	struct ionic_ctx *ctx = to_ionic_ctx(qp->vqp.qp.context);
-	int rc = 0;
-
-	switch (wr->opcode) {
-	case IBV_WR_SEND:
-	case IBV_WR_SEND_WITH_IMM:
-	case IBV_WR_SEND_WITH_INV:
-		rc = ionic_v0_prep_send(qp, wr);
-		break;
-	case IBV_WR_RDMA_READ:
-	case IBV_WR_RDMA_WRITE:
-	case IBV_WR_RDMA_WRITE_WITH_IMM:
-		rc = ionic_v0_prep_rdma(qp, wr);
-		break;
-	case IBV_WR_ATOMIC_CMP_AND_SWP:
-	case IBV_WR_ATOMIC_FETCH_AND_ADD:
-		rc = ionic_v0_prep_atomic(qp, wr);
-		break;
-	default:
-		ionic_dbg(ctx, "invalid opcode %d", wr->opcode);
-		rc = EINVAL;
-	}
-
-	return rc;
-}
-
 static int ionic_v1_prep_one_rc(struct ionic_qp *qp,
 				struct ibv_send_wr *wr)
 {
@@ -1917,52 +1639,6 @@ static int ionic_v1_prep_one_rc(struct ionic_qp *qp,
 	return rc;
 }
 
-static int ionic_prep_one_rc(struct ionic_qp *qp,
-			     struct ibv_send_wr *wr)
-{
-	struct ionic_ctx *ctx = to_ionic_ctx(qp->vqp.qp.context);
-	struct ionic_v1_wqe *wqe;
-	struct ionic_queue saved_sq;
-	uint16_t saved_msn;
-	int rc;
-
-	/* XXX makeshift */
-	if (ctx->xxx_try_v1) {
-		saved_sq = qp->sq;
-		saved_msn = qp->sq_msn_prod;
-		wqe = ionic_queue_at_prod(&qp->sq);
-
-		rc = ionic_v1_prep_one_rc(qp, wr);
-
-		if (ctx->version == 1 && wqe->base.op < ctx->opcodes)
-			return rc;
-
-		qp->sq = saved_sq;
-		qp->sq_msn_prod = saved_msn;
-	}
-
-	return ionic_v0_prep_one_rc(qp, wr);
-}
-
-static int ionic_v0_prep_one_ud(struct ionic_qp *qp,
-				struct ibv_send_wr *wr)
-{
-	struct ionic_ctx *ctx = to_ionic_ctx(qp->vqp.qp.context);
-	int rc = 0;
-
-	switch (wr->opcode) {
-	case IBV_WR_SEND:
-	case IBV_WR_SEND_WITH_IMM:
-		rc = ionic_v0_prep_send_ud(qp, wr);
-		break;
-	default:
-		ionic_dbg(ctx, "invalid opcode %d", wr->opcode);
-		rc = EINVAL;
-	}
-
-	return rc;
-}
-
 static int ionic_v1_prep_one_ud(struct ionic_qp *qp,
 				struct ibv_send_wr *wr)
 {
@@ -1980,33 +1656,6 @@ static int ionic_v1_prep_one_ud(struct ionic_qp *qp,
 	}
 
 	return rc;
-}
-
-static int ionic_prep_one_ud(struct ionic_qp *qp,
-			     struct ibv_send_wr *wr)
-{
-	struct ionic_ctx *ctx = to_ionic_ctx(qp->vqp.qp.context);
-	struct ionic_v1_wqe *wqe;
-	struct ionic_queue saved_sq;
-	uint16_t saved_msn;
-	int rc;
-
-	/* XXX makeshift */
-	if (ctx->xxx_try_v1) {
-		saved_sq = qp->sq;
-		saved_msn = qp->sq_msn_prod;
-		wqe = ionic_queue_at_prod(&qp->sq);
-
-		rc = ionic_v1_prep_one_ud(qp, wr);
-
-		if (ctx->version == 1 && wqe->base.op < ctx->opcodes)
-			return rc;
-
-		qp->sq = saved_sq;
-		qp->sq_msn_prod = saved_msn;
-	}
-
-	return ionic_v0_prep_one_ud(qp, wr);
 }
 
 static void ionic_post_send_cmb(struct ionic_ctx *ctx, struct ionic_qp *qp)
@@ -2138,7 +1787,7 @@ static int ionic_post_send_common(struct ionic_ctx *ctx,
 				goto out;
 			}
 
-			rc = ionic_prep_one_ud(qp, wr);
+			rc = ionic_v1_prep_one_ud(qp, wr);
 			if (rc)
 				goto out;
 
@@ -2152,7 +1801,7 @@ static int ionic_post_send_common(struct ionic_ctx *ctx,
 				goto out;
 			}
 
-			rc = ionic_prep_one_rc(qp, wr);
+			rc = ionic_v1_prep_one_rc(qp, wr);
 			if (rc)
 				goto out;
 

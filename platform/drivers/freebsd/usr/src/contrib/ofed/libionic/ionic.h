@@ -63,7 +63,6 @@
 struct ionic_ctx {
 	struct ibv_context	ibctx;
 
-	bool			xxx_try_v1;
 	bool			fallback;
 	bool			lockfree;
 	uint32_t		pg_shift;
