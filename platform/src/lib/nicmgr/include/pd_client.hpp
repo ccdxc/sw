@@ -132,8 +132,8 @@ private:
     ~PdClient(){}
     void init(void);
 
-    std::unique_ptr<hal::BMAllocator> rdma_hbm_allocator_;
-    std::unique_ptr<hal::BMAllocator> rdma_hbm_bar_allocator_;
+    std::unique_ptr<sdk::lib::BMAllocator> rdma_hbm_allocator_;
+    std::unique_ptr<sdk::lib::BMAllocator> rdma_hbm_bar_allocator_;
     uint64_t rdma_hbm_base_;
     uint64_t rdma_hbm_bar_base_;
     std::map<uint64_t, uint64_t> rdma_allocation_sizes_;

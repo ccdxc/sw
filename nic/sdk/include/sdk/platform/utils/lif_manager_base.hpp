@@ -5,7 +5,7 @@
 #ifndef _LIF_MANAGER_BASE_HPP_
 #define _LIF_MANAGER_BASE_HPP_
 
-#include "nic/utils/bm_allocator/bm_allocator.hpp"
+#include "include/sdk/bm_allocator.hpp"
 
 #include <set>
 #include <map>
@@ -126,7 +126,7 @@ class LIFManagerBase {
 
 
   std::mutex lk_;
-  hal::BMAllocator lif_allocator_;
+  sdk::lib::BMAllocator lif_allocator_;
   std::map<uint32_t, LIFQState> alloced_lifs_;
 
   // Test only

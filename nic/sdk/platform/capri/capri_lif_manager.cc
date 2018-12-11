@@ -55,7 +55,7 @@ LIFManager* LIFManager::factory(mpartition *mp,
     }
 
     lm->hbm_base_ = hbm_addr;
-    lm->hbm_allocator_.reset(new hal::BMAllocator(num_units));
+    lm->hbm_allocator_.reset(new sdk::lib::BMAllocator(num_units));
 
     // Allocate 0th hw_lif_id
     uint32_t hw_lif_id = lm->LIFRangeAlloc(-1, 1);

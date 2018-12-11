@@ -53,7 +53,7 @@ RDMAManager::RDMAManager() {
     num_units--;
   }
   hbm_base_ = hbm_addr;
-  hbm_allocator_.reset(new BMAllocator(num_units));
+  hbm_allocator_.reset(new sdk::lib::BMAllocator(num_units));
   HAL_TRACE_DEBUG("{}: hbm_base_ : {}\n", __FUNCTION__, hbm_base_);
 }
 

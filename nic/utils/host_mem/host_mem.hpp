@@ -2,7 +2,7 @@
 #define __HOSTMEM_HPP__
 
 // TODO Need to move bm_allocator to utils.
-#include "nic/utils/bm_allocator/bm_allocator.hpp"
+#include "include/sdk/bm_allocator.hpp"
 
 #include "nic/utils/host_mem/params.hpp"
 
@@ -25,7 +25,7 @@ class HostMem {
   int shmid_ = -1;
   void *shmaddr_ = nullptr;
   void *base_addr_;
-  std::unique_ptr<hal::BMAllocator> allocator_;
+  std::unique_ptr<sdk::lib::BMAllocator> allocator_;
  
   // allocations_ track the sizes of different allocations which
   // are then used to free the allocations.
