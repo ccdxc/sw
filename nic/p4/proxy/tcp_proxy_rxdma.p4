@@ -350,7 +350,8 @@ header_type ooo_qbase_addr_t {
         ooo_qbase_addr1    : 64;
         ooo_qbase_addr2    : 64;
         ooo_qbase_addr3    : 64;
-        ooo_qbase_pad      : 256;
+        ooo_qbase_pi       : 16;
+        ooo_qbase_pad      : 240;
     }
 } 
 /******************************************************************************
@@ -714,7 +715,7 @@ metadata dma_cmd_phv2mem_t rx2tx_or_cpu_hdr_dma;    // dma cmd 4
 metadata dma_cmd_phv2mem_t ring_slot;               // dma cmd 5
 @pragma dont_trim
 @pragma pa_header_union ingress ring_slot 
-metadata dma_cmd_pkt2mem_t ooo_rx2tx_ring_slot;
+metadata dma_cmd_phv2mem_t ooo_rx2tx_ring_slot;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t rx2tx_extra_dma;         // dma cmd 6
 @pragma dont_trim
@@ -1242,7 +1243,8 @@ action write_l7q(l7q_base, l7q_pidx) {
  * Stage 6 table 3 action
  */
 action tcp_ooo_qbase_cb_load(ooo_qbase_addr0, ooo_qbase_addr1, 
-                           ooo_qbase_addr2, ooo_qbase_addr3, ooo_qbase_pad)
+                           ooo_qbase_addr2, ooo_qbase_addr3, 
+                           ooo_qbase_pi, ooo_qbase_pad)
 {
     GENERATE_GLOBAL_K
 
@@ -1261,6 +1263,8 @@ action tcp_ooo_qbase_cb_load(ooo_qbase_addr0, ooo_qbase_addr1,
     modify_field(ooo_qbase_addr.ooo_qbase_addr1, ooo_qbase_addr1);
     modify_field(ooo_qbase_addr.ooo_qbase_addr2, ooo_qbase_addr2);
     modify_field(ooo_qbase_addr.ooo_qbase_addr3, ooo_qbase_addr3);
+   
+    modify_field(ooo_qbase_addr.ooo_qbase_pi, ooo_qbase_pi);
     modify_field(ooo_qbase_addr.ooo_qbase_pad, ooo_qbase_pad);
 
 }

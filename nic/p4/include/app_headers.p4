@@ -60,7 +60,8 @@ header_type p4_to_p4plus_tcp_proxy_base_header_t {
         table1_valid        : 1;
         table2_valid        : 1;
         table3_valid        : 1;
-        num_sack_blocks     : 8;
+        from_ooq_txdma      : 1;
+        num_sack_blocks     : 7;
         payload_len         : 16;
         srcPort             : 16;
         dstPort             : 16;

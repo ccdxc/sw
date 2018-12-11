@@ -100,6 +100,7 @@ tcp_ooo_book_keeping_enqueue_tail_of_first_queue:
     // if they are same - trigger rx2tx
     seq c1, d.u.tcp_ooo_book_keeping_d.start_seq1, r1 
     phvwr.c1 p.to_s6_ooo_rx2tx_ready_qid, 1
+    phvwr.c1 p.ooq_rx2tx_queue_entry_ooq_rx2tx_num_entries, d.u.tcp_ooo_book_keeping_d.tail_index0
     CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(1, tcp_ooo_processing_launch_dummy1)
     nop.e
     nop
@@ -123,6 +124,7 @@ tcp_ooo_book_keeping_enqueue_tail_of_second_queue:
     // if they are same - trigger rx2tx
     seq c1, d.u.tcp_ooo_book_keeping_d.start_seq2, r1 
     phvwr.c1 p.to_s6_ooo_rx2tx_ready_qid, 2
+    phvwr.c1 p.ooq_rx2tx_queue_entry_ooq_rx2tx_num_entries, d.u.tcp_ooo_book_keeping_d.tail_index1
     CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(1, tcp_ooo_processing_launch_dummy1)
     nop.e
     nop
@@ -146,6 +148,7 @@ tcp_ooo_book_keeping_enqueue_tail_of_third_queue:
     // if they are same - trigger rx2tx
     seq c1, d.u.tcp_ooo_book_keeping_d.start_seq3, r1 
     phvwr.c1 p.to_s6_ooo_rx2tx_ready_qid, 3
+    phvwr.c1 p.ooq_rx2tx_queue_entry_ooq_rx2tx_num_entries, d.u.tcp_ooo_book_keeping_d.tail_index2
     CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(1, tcp_ooo_processing_launch_dummy1)
     nop.e
     nop

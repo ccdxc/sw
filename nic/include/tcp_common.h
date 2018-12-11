@@ -12,6 +12,9 @@
 
 #define TCP_PROXY_TX_TOTAL_RINGS      8
 
+#define TCP_OOO_RX2TX_QTYPE 1
+#define TCP_OOO_RX2TX_QTYPE_RING0 0
+
 #define TCP_ESTABLISHED   1
 #define TCP_SYN_SENT      2
 #define TCP_SYN_RECV      3
