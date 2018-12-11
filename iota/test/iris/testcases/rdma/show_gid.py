@@ -60,8 +60,14 @@ def Verify(tc):
     #set the path for testcases in this testsuite to use
     w = [tc.w1, tc.w2]
     for i in range(2):
-        api.SetTestsuiteAttr(w[i].ip_address+"_device", rdma.GetWorkloadDevice(tc.resp.commands[i+1].stdout))
-        api.SetTestsuiteAttr(w[i].ip_address+"_gid", rdma.GetWorkloadGID(tc.resp.commands[i+1].stdout))
+        if api.GlobalOptions.dryrun:
+            api.SetTestsuiteAttr(w[i].ip_address+"_device", '0')
+        else:
+            api.SetTestsuiteAttr(w[i].ip_address+"_device", rdma.GetWorkloadDevice(tc.resp.commands[i+1].stdout))
+        if api.GlobalOptions.dryrun:
+            api.SetTestsuiteAttr(w[i].ip_address+"_gid", '0')
+        else:
+            api.SetTestsuiteAttr(w[i].ip_address+"_gid", rdma.GetWorkloadGID(tc.resp.commands[i+1].stdout))
 
     return api.types.status.SUCCESS
 

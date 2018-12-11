@@ -30,6 +30,7 @@ testbundles:
     - linktest/linktest.testbundle    
     - networking/networking.testbundle
     - classic/rdma.testbundle
+    #- classic/rdma_regr.testbundle
     - linktest/linktest.testbundle
     - storage/regression.testbundle
     - penctl/penctl.testbundle

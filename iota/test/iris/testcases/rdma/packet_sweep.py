@@ -4,11 +4,12 @@ import iota.harness.api as api
 def Setup(tc):
  
     tc.desc = '''
-    Test  :   ib_send_bw
-    Opcode:   Send Only
+    Test  :   packet_sweep
+    Opcode:   Send, Read, Write
     Num QP:   1, 2
-    Pad   :   No
-    Inline:   No
+    Transport: UD, RC
+    MTU: Various sizes
+    RDMA CM: Yes, No
     modes :   workload1 as server, workload2 as client
               workload2 as server, workload1 as client
     '''
@@ -46,6 +47,11 @@ def Trigger(tc):
     else:
         cm_opt = " "
 
+    if tc.iterators.transport == 'UD':
+        transport_opt = " -c UD "
+    else:
+        transport_opt = " "
+
     i = 0
     while (i < 2):
         j = (i + 1) % 2
@@ -58,7 +64,7 @@ def Trigger(tc):
         api.Logger.info("Starting ib_send_bw test from %s" % (tc.cmd_descr))
 
         # cmd for server
-        cmd = "ib_send_bw -d " + tc.devices[i] + " -n 10 -F -x " + tc.gid[i] + " -s 1024 -q " + str(tc.iterators.num_qp) + cm_opt + " --report_gbits"
+        cmd = tc.iterators.command + " -d " + tc.devices[i] + " -n 10 -F -x " + tc.gid[i] + " -a -q " + str(tc.iterators.num_qp) + " -m " + str(tc.iterators.mtu) + cm_opt + transport_opt + " --report_gbits"
         api.Trigger_AddCommand(req, 
                                w1.node_name, 
                                w1.workload_name,
@@ -74,7 +80,7 @@ def Trigger(tc):
                                cmd)
 
         # cmd for client
-        cmd = "ib_send_bw -d " + tc.devices[j] + " -n 10 -F -x " + tc.gid[j] + " -s 1024 -q " + str(tc.iterators.num_qp) + cm_opt + " --report_gbits " + w1.ip_address
+        cmd = tc.iterators.command + " -d " + tc.devices[i] + " -n 10 -F -x " + tc.gid[i] + " -a -q " + str(tc.iterators.num_qp) + " -m " + str(tc.iterators.mtu) + cm_opt + transport_opt + " --report_gbits " + w1.ip_address
         api.Trigger_AddCommand(req, 
                                w2.node_name, 
                                w2.workload_name,
@@ -96,7 +102,7 @@ def Verify(tc):
 
     result = api.types.status.SUCCESS
 
-    api.Logger.info("ib_send_bw results for %s" % (tc.cmd_descr))
+    api.Logger.info("packet_sweep results for %s" % (tc.cmd_descr))
     for cmd in tc.resp.commands:
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):

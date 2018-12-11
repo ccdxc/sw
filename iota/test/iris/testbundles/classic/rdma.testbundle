@@ -39,11 +39,21 @@ testcases:
     #=======================================
     # Send
     #=======================================
-    -   name    : Rc_SendBw_Only
+    -   name    : Rc_SendBw_Only_TcpCm
         testcase: testcases.rdma.rc_send_bw
         iterators :
-            type    : simple
-            num_qp: [1, 2]
+            type    : nested
+            num_qp: [1, 8]
+            rdma_cm: ['no']
+        args    :
+            type: remote_only
+
+    -   name    : Rc_SendBw_Only_RdmaCm
+        testcase: testcases.rdma.rc_send_bw
+        iterators :
+            type    : nested
+            num_qp: [1]
+            rdma_cm: ['yes']
         args    :
             type: remote_only
 
@@ -72,19 +82,39 @@ testcases:
     #    args    :
     #        type: remote_only
 
-    -   name    : Rc_SendBw_Only_Inline
+    -   name    : Rc_SendBw_Only_Inline_TcpCm
         testcase: testcases.rdma.rc_send_bw_inline
         iterators :
-            type    : simple
-            num_qp: [1, 2]
+            type    : nested
+            num_qp: [1, 8]
+            rdma_cm: ['no']
         args    :
             type: remote_only
 
-    -   name    : Rc_SendBw_Only_Bidir
+    -   name    : Rc_SendBw_Only_Inline_RdmaCm
+        testcase: testcases.rdma.rc_send_bw_inline
+        iterators :
+            type    : nested
+            num_qp: [1]
+            rdma_cm: ['yes']
+        args    :
+            type: remote_only
+
+    -   name    : Rc_SendBw_Only_Bidir_TcpCm
         testcase: testcases.rdma.rc_send_bw_bidir
         iterators :
-            type    : simple
-            num_qp: [1, 2]
+            type    : nested
+            num_qp: [1, 8]
+            rdma_cm: ['no']
+        args    :
+            type: remote_only
+
+    -   name    : Rc_SendBw_Only_Bidir_RdmaCm
+        testcase: testcases.rdma.rc_send_bw_bidir
+        iterators :
+            type    : nested
+            num_qp: [1]
+            rdma_cm: ['yes']
         args    :
             type: remote_only
 
@@ -118,11 +148,21 @@ testcases:
         args    :
             type: remote_only
 
-    -   name    : Rc_WriteBw_Fml
+    -   name    : Rc_WriteBw_Fml_TcpCm
         testcase: testcases.rdma.rc_write_bw_fml
         iterators :
-            type    : simple
-            num_qp: [1, 2]
+            type    : nested
+            num_qp: [1, 8]
+            rdma_cm: ['no']
+        args    :
+            type: remote_only
+
+    -   name    : Rc_WriteBw_Fml_RdmaCm
+        testcase: testcases.rdma.rc_write_bw_fml
+        iterators :
+            type    : nested
+            num_qp: [1]
+            rdma_cm: ['yes']
         args    :
             type: remote_only
 
@@ -142,11 +182,21 @@ testcases:
         args    :
             type: remote_only
 
-    -   name    : Rc_WriteBw_Only_Bidir
+    -   name    : Rc_WriteBw_Only_Bidir_TcpCm
         testcase: testcases.rdma.rc_write_bw_bidir
         iterators :
-            type    : simple
-            num_qp: [1, 2]
+            type    : nested
+            num_qp: [1, 8]
+            rdma_cm: ['no']
+        args    :
+            type: remote_only
+
+    -   name    : Rc_WriteBw_Only_Bidir_RdmaCm
+        testcase: testcases.rdma.rc_write_bw_bidir
+        iterators :
+            type    : nested
+            num_qp: [1]
+            rdma_cm: ['yes']
         args    :
             type: remote_only
 
@@ -158,11 +208,21 @@ testcases:
     #=======================================
     # Read
     #=======================================
-    -   name    : Rc_ReadBw_Only
+    -   name    : Rc_ReadBw_Only_TcpCm
         testcase: testcases.rdma.rc_read_bw
         iterators :
-            type    : simple
+            type    : nested
+            num_qp: [1,8]
+            rdma_cm: ['no']
+        args    :
+            type: remote_only
+
+    -   name    : Rc_ReadBw_Only_RdmaCm
+        testcase: testcases.rdma.rc_read_bw
+        iterators :
+            type    : nested
             num_qp: [1]
+            rdma_cm: ['yes']
         args    :
             type: remote_only
 
@@ -182,11 +242,21 @@ testcases:
         args    :
             type: remote_only
 
-    -   name    : Rc_ReadBw_Only_Bidir
+    -   name    : Rc_ReadBw_Only_Bidir_TcpCm
         testcase: testcases.rdma.rc_read_bw_bidir
         iterators :
-            type    : simple
+            type    : nested
+            num_qp: [1,8]
+            rdma_cm: ['no']
+        args    :
+            type: remote_only
+
+    -   name    : Rc_ReadBw_Only_Bidir_RdmaCm
+        testcase: testcases.rdma.rc_read_bw_bidir
+        iterators :
+            type    : nested
             num_qp: [1]
+            rdma_cm: ['yes']
         args    :
             type: remote_only
 

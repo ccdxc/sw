@@ -1,0 +1,93 @@
+meta:
+    name    : rdma_regr
+    os      : [ linux, freebsd ]
+    nics    : [ pensando, mellanox ]
+    targetcount : 300
+
+testcases:
+    #=======================================
+    # Init
+    #=======================================
+    -   name    : Insmod_Rdma
+        testcase: testcases.rdma.insmod_rdma
+        args    :
+            type: remote_only
+
+    -   name    : Show_Gid
+        testcase: testcases.rdma.show_gid
+        args    :
+            type: remote_only
+
+    -   name    : Intf_Mtu
+        testcase: testcases.rdma.intf_mtu
+        args    :
+            type: remote_only
+
+    #=======================================
+    # Ping Pong
+    #=======================================
+    -   name    : Rc_PingPong
+        testcase: testcases.rdma.rc_pingpong
+        args    :
+            type: remote_only
+
+    -   name    : Ud_PingPong
+        testcase: testcases.rdma.ud_pingpong
+        args    :
+            type: remote_only
+
+    #=======================================
+    # Packet Sweep
+    #=======================================
+    #=======================================
+    # Packet Sweep
+    #=======================================
+    -   name    : RC_TCPCM_Packet_Sweep
+        testcase: testcases.rdma.packet_sweep
+        iterators :
+            type     : nested
+            num_qp   : [1, 8]
+            rdma_cm  : [ 'no']
+            mtu      : [512, 1024, 2048, 4096]
+            transport: ['RC']
+            command  : ['ib_send_bw', 'ib_read_bw', 'ib_write_bw']
+
+    -   name    : RC_RDMACM_Packet_Sweep
+        testcase: testcases.rdma.packet_sweep
+        iterators :
+            type     : nested
+            num_qp   : [1]
+            rdma_cm  : [ 'yes']
+            mtu      : [512, 1024, 2048, 4096]
+            transport: ['RC']
+            command  : ['ib_send_bw', 'ib_read_bw', 'ib_write_bw']
+
+    -   name    : UD_TCPCM_Packet_Sweep
+        testcase: testcases.rdma.packet_sweep
+        iterators :
+            type     : nested
+            num_qp   : [1, 8]
+            rdma_cm  : [ 'no']
+            mtu      : [512, 1024, 2048, 4096]
+            transport: ['UD']
+            command  : ['ib_send_bw']
+
+    -   name    : UD_RDMACM_Packet_Sweep
+        testcase: testcases.rdma.packet_sweep
+        iterators :
+            type     : nested
+            num_qp   : [1]
+            rdma_cm  : [ 'yes']
+            mtu      : [512, 1024, 2048, 4096]
+            transport: ['UD']
+            command  : ['ib_send_bw']
+
+
+    #=======================================
+    # Teardown
+    #=======================================
+    -   name    : Rmmod_Rdma
+        testcase: testcases.rdma.rmmod_rdma
+        args    :
+            type: remote_only
+
