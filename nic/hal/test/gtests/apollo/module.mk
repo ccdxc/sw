@@ -4,7 +4,7 @@ include ${MKDEFS}/pre.mk
 MODULE_TARGET   = apollo_test.gtest
 MODULE_PIPELINE = apollo
 MODULE_SOLIBS   = ${NIC_${PIPELINE}_P4PD_SOLIBS} \
-                  hal_mock model_client halproto \
+                  pal hal_mock model_client halproto \
                   capri_csrint capri_csr_cpu_hal \
                   ${NIC_SDK_SOLIBS} \
                   pdcommon core fte_mock agent_api \

@@ -5,7 +5,7 @@ MODULE_TARGET   = gft_test.gtest
 MODULE_PIPELINE = gft
 MODULE_ARCH     = x86_64
 MODULE_SOLIBS   = ${NIC_${PIPELINE}_P4PD_SOLIBS} \
-                  hal_mock model_client halproto \
+                  pal hal_mock model_client halproto \
                   capri_csrint capri_csr_cpu_hal \
                   ${NIC_SDK_SOLIBS} \
                   pdcommon core fte_mock agent_api \
