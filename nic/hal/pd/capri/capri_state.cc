@@ -48,7 +48,7 @@ capri_state_pd::init(void)
 {
     // BMAllocator based bmp range allocator to manage txs scheduler mapping
     txs_scheduler_map_idxr_ = 
-                    new hal::BMAllocator(CAPRI_TXS_SCHEDULER_MAP_MAX_ENTRIES);
+                    new sdk::lib::BMAllocator(CAPRI_TXS_SCHEDULER_MAP_MAX_ENTRIES);
     HAL_ASSERT_RETURN((txs_scheduler_map_idxr_ != NULL), false);
 
     return true;

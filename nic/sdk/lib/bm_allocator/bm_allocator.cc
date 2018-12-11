@@ -1,9 +1,10 @@
-#include "nic/utils/bm_allocator/bm_allocator.hpp"
+#include "lib/bm_allocator/bm_allocator.hpp"
 
 #include <assert.h>
 #include <strings.h>
 
-namespace hal {
+namespace sdk {
+namespace lib {
 
 Bitmap::Bitmap(uint32_t size) {
   assert(size);
@@ -318,4 +319,5 @@ BMAllocator::BMAllocator(uint32_t total_bits) : bitmap_(total_bits) {
   current_ptr_ = 0;
 }
 
-}  // namespace hal
+}  // namespace lib
+}  // namespace sdk

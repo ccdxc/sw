@@ -1,11 +1,11 @@
-#include "nic/utils/bm_allocator/bm_allocator.hpp"
+#include "include/sdk/bm_allocator.hpp"
 #include <gtest/gtest.h>
 #include "nic/hal/test/utils/hal_base_test.hpp"
 #include <stdio.h>
 
 TEST(BitmapTest, TestALL)
 {
-  hal::Bitmap bm(22);
+  sdk::lib::Bitmap bm(22);
 
   ASSERT_FALSE(bm.IsBitSet(21));
   ASSERT_TRUE(bm.IsBitClear(21));
@@ -32,7 +32,7 @@ TEST(BitmapTest, TestALL)
 
 TEST(BMAllocatorTest, TestALL)
 {
-  hal::BMAllocator bma(4096);
+  sdk::lib::BMAllocator bma(4096);
 
   ASSERT_TRUE(bma.Alloc(20) == 0);
   ASSERT_TRUE(bma.Alloc(20) == 20);
@@ -53,7 +53,7 @@ TEST(BMAllocatorTest, TestALL)
 
 TEST(BMAllocatorTest, TestAlign)
 {
-  hal::BMAllocator bma(4096);
+  sdk::lib::BMAllocator bma(4096);
 
   ASSERT_EQ(0, bma.Alloc(3, 3));
   ASSERT_EQ(4, bma.Alloc(3, 4));

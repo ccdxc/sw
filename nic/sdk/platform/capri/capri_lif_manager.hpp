@@ -43,7 +43,7 @@ private:
 
     class program_info *pinfo_;
     class mpartition *mp_;
-    std::unique_ptr<hal::BMAllocator> hbm_allocator_;
+    std::unique_ptr<sdk::lib::BMAllocator> hbm_allocator_;
     uint64_t hbm_base_;
 
     // Track allocation size which are needed when we

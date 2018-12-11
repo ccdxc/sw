@@ -29,7 +29,7 @@ HostMem *HostMem::New(bool use_bottom_region){
   } else {
     mem->base_addr_ = mem->shmaddr_;
   }
-  mem->allocator_.reset(new hal::BMAllocator(num_units));
+  mem->allocator_.reset(new sdk::lib::BMAllocator(num_units));
 
   return mem.release();
 }

@@ -4,7 +4,7 @@
 #define __CAPRI_HPP__
 
 #include "nic/sdk/include/sdk/catalog.hpp"
-#include "nic/utils/bm_allocator/bm_allocator.hpp"
+#include "include/sdk/bm_allocator.hpp"
 #include "nic/hal/pd/capri/capri_loader.h"
 
 #define CAPRI_REPL_ENTRY_WIDTH          (64)

@@ -11,7 +11,7 @@
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "gen/proto/rdma.pb.h"
 // #include "rdma_svc.hpp"
-#include "nic/utils/bm_allocator/bm_allocator.hpp"
+#include "include/sdk/bm_allocator.hpp"
 
 using rdma::RdmaServiceType;
 using rdma::RdmaQpSpec;
@@ -81,7 +81,7 @@ class RDMAManager {
 
  private:
   uint64_t hbm_base_;
-  std::unique_ptr<BMAllocator> hbm_allocator_;
+  std::unique_ptr<sdk::lib::BMAllocator> hbm_allocator_;
 
   // Track allocation size which are needed when we
   // free memory.

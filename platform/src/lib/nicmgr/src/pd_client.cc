@@ -192,7 +192,7 @@ void PdClient::rdma_manager_init (void)
     }
 
     rdma_hbm_base_ = hbm_addr;
-    rdma_hbm_allocator_.reset(new hal::BMAllocator(num_units));
+    rdma_hbm_allocator_.reset(new sdk::lib::BMAllocator(num_units));
 
     NIC_LOG_DEBUG("{}: rdma_hbm_base_ : {}", __FUNCTION__, rdma_hbm_base_);
 
@@ -210,7 +210,7 @@ void PdClient::rdma_manager_init (void)
     }
 
     rdma_hbm_bar_base_ = hbm_addr;
-    rdma_hbm_bar_allocator_.reset(new hal::BMAllocator(num_units));
+    rdma_hbm_bar_allocator_.reset(new sdk::lib::BMAllocator(num_units));
 
     NIC_LOG_DEBUG("{}: rdma_hbm_bar_base_ : {}", __FUNCTION__, rdma_hbm_bar_base_);
 

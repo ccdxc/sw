@@ -5,7 +5,8 @@
 #include <map>
 #include <mutex>
 
-namespace hal {
+namespace sdk {
+namespace lib {
 
 // A class similar to bitset but optimized for multi-bit operations.
 class Bitmap {
@@ -65,6 +66,7 @@ class BMAllocator {
   uint32_t current_ptr_;
 };
 
-}  // namespace hal
+}  // namespace lib
+}  // namespace sdk
 
 #endif  // _BM_ALLOCATOR_HPP_
