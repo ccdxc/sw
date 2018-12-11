@@ -24,25 +24,17 @@ func TestWatchFwlogPolicy(t *testing.T) {
 			TypeMeta:   api.TypeMeta{Kind: "FwlogPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: "fwlog-1"},
 			Spec: monitoring.FwlogPolicySpec{
-				Filter: []string{
-					monitoring.FwlogFilter_FIREWALL_ACTION_ALLOW.String(),
-					monitoring.FwlogFilter_FIREWALL_ACTION_DENY.String(),
-				},
-				Exports: []*monitoring.FwlogExport{
+				Targets: []monitoring.ExportConfig{
 					{
-						Targets: []monitoring.ExportConfig{
-							{
-								Destination: "collector1.test.com",
-								Transport:   "UDP/514",
-							},
-						},
-						Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
-						Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
-						SyslogConfig: &monitoring.SyslogExportConfig{
-							Prefix:           "prefix1",
-							FacilityOverride: "test-override1",
-						},
+						Destination: "collector1.test.com",
+						Transport:   "UDP/514",
 					},
+				},
+				Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+				Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+				Config: &monitoring.SyslogExportConfig{
+					Prefix:           "prefix1",
+					FacilityOverride: "test-override1",
 				},
 			},
 		},
@@ -50,25 +42,17 @@ func TestWatchFwlogPolicy(t *testing.T) {
 			TypeMeta:   api.TypeMeta{Kind: "FwlogPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: "fwlog-2"},
 			Spec: monitoring.FwlogPolicySpec{
-				Filter: []string{
-					monitoring.FwlogFilter_FIREWALL_ACTION_ALLOW.String(),
-					monitoring.FwlogFilter_FIREWALL_ACTION_DENY.String(),
-				},
-				Exports: []*monitoring.FwlogExport{
+				Targets: []monitoring.ExportConfig{
 					{
-						Targets: []monitoring.ExportConfig{
-							{
-								Destination: "collector2.test.com",
-								Transport:   "TCP/514",
-							},
-						},
-						Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
-						Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
-						SyslogConfig: &monitoring.SyslogExportConfig{
-							Prefix:           "prefix2",
-							FacilityOverride: "test-override2",
-						},
+						Destination: "collector2.test.com",
+						Transport:   "TCP/514",
 					},
+				},
+				Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+				Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+				Config: &monitoring.SyslogExportConfig{
+					Prefix:           "prefix2",
+					FacilityOverride: "test-override2",
 				},
 			},
 		},
