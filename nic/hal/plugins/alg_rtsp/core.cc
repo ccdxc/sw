@@ -103,14 +103,12 @@ fte::pipeline_action_t alg_rtsp_session_delete_cb(fte::ctx_t &ctx) {
      * Cleanup the data session that is getting timed out
      */
     g_rtsp_state->cleanup_l4_sess(l4_sess);
-    if (lib::dllist_empty(&app_sess->exp_flow_lhead) &&
-        lib::dllist_count(&app_sess->l4_sess_lhead) == 1 &&
-        ((alg_utils::l4_alg_status_t *)dllist_entry(app_sess->l4_sess_lhead.next,\
-           alg_utils::l4_alg_status_t, l4_sess_lentry))->sess_hdl == HAL_HANDLE_INVALID) {
+    if (ctx.force_delete() && lib::dllist_empty(&app_sess->exp_flow_lhead) &&
+        lib::dllist_empty(&app_sess->exp_flow_lhead)) {
         /*
-         * If this was the last session hanging and there is no
-         * HAL session for control session. This is the right time
-         * to clean it
+         * If this was the last session hanging and there are no
+         * expected flows or L4 sessions go ahead and clean up the
+         * app session
          */
         g_rtsp_state->cleanup_app_session(l4_sess->app_session);
     }

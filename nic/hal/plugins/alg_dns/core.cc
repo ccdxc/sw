@@ -49,7 +49,7 @@ fte::pipeline_action_t alg_dns_session_delete_cb(fte::ctx_t &ctx) {
     fte::feature_session_state_t  *alg_state = NULL;
     l4_alg_status_t               *l4_sess = NULL;
 
-    if (!ctx.sess_get_resp() || ctx.role() != hal::FLOW_ROLE_INITIATOR)
+    if (ctx.role() != hal::FLOW_ROLE_INITIATOR)
         return fte::PIPELINE_CONTINUE;
 
     alg_state = ctx.feature_session_state();
@@ -110,10 +110,14 @@ fte::pipeline_action_t alg_dns_session_get_cb(fte::ctx_t &ctx) {
  * resources pertaining to it.
  */
 void dns_rflow_timeout_cb (void *timer, uint32_t timer_id, void *ctxt) {
-    hal_handle_t sess_hdl = (hal_handle_t)ctxt;
+    hal_handle_t  sess_hdl = (hal_handle_t)ctxt;
+    session_t    *session = NULL;
 
-    /* Post a force delete on timer expiry */
-    session_delete_in_fte(sess_hdl, true);
+    session = hal::find_session_by_handle(sess_hdl);
+    if (session == NULL) {
+        /* Post a force delete on timer expiry */
+        session_delete_async(session, true);
+    }
 }
 
 /*
@@ -414,6 +418,7 @@ fte::pipeline_action_t alg_dns_exec (fte::ctx_t &ctx)
         HAL_ASSERT_RETURN((dns_info != NULL), fte::PIPELINE_CONTINUE);
         /* Store the head node in L4 session info */
         l4_sess->info = (void *)dns_info;
+        l4_sess->isCtrl = true;
 
         /* Parse DNS packet and get dns id */
         ret = parse_dns_packet(ctx, &dnsid);

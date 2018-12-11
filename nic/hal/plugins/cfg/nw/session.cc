@@ -30,7 +30,7 @@ using session::ConnTrackInfo;
 using session::FlowStats;
 using session::ConnTrackExceptions;
 using session::FlowInstance;
-using session::FlowDirection;
+using types::FlowDirection;
 using sys::FTEStats;
 using sys::FTEFeatureStats;
 using sys::FTEError;
@@ -602,7 +602,7 @@ static void
 flow_to_flow_resp(flow_t *flow, FlowSpec *spec, FlowStatus *status)
 {
     status->set_flow_direction((flow->config.key.dir == FLOW_DIR_FROM_UPLINK) ?
-                               session::FLOW_DIRECTION_FROM_UPLINK : session::FLOW_DIRECTION_FROM_HOST);
+                               types::FLOW_DIRECTION_FROM_UPLINK : types::FLOW_DIRECTION_FROM_HOST);
     status->set_flow_instance((flow->pgm_attrs.lkp_inst == 0) ?
                                session::FLOW_INSTANCE_PRIMARY : session::FLOW_INSTANCE_SECONDARY);
 
@@ -830,6 +830,28 @@ system_get_fill_rsp (session_t *session, SessionGetResponse *response)
 }
 
 static inline bool
+session_is_alg_enabled(hal::session_t *session, nwsec::ALGName alg)
+{
+    std::string feature;
+    switch (alg) {
+        case nwsec::APP_SVC_TFTP:
+             feature = "alg_tftp"; break;
+        case nwsec::APP_SVC_FTP:
+             feature = "alg_ftp"; break;
+        case nwsec::APP_SVC_DNS:
+             feature = "alg_dns"; break;
+        case nwsec::APP_SVC_SUN_RPC:
+        case nwsec::APP_SVC_MSFT_RPC:
+             feature = "alg_rpc"; break;
+        case nwsec::APP_SVC_RTSP:
+             feature = "alg_rtsp"; break;
+        default:
+             return false;
+    }
+    return fte::session_is_feature_enabled(session, feature.c_str());
+}
+
+static inline bool
 session_matches_filter (hal::session_t *session, SessionFilter *filter)
 {
     ip_addr_t ip_addr, check_addr;
@@ -923,6 +945,12 @@ session_matches_filter (hal::session_t *session, SessionFilter *filter)
 
     if (filter->ip_proto()) {
         if (session->iflow->config.key.proto != filter->ip_proto()) {
+            return false;
+        }
+    }
+
+    if (filter->alg()) {
+        if (!session_is_alg_enabled(session, filter->alg())) {
             return false;
         }
     }

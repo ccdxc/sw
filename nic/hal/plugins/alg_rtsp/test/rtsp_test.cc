@@ -34,7 +34,7 @@ protected:
         server_eph = add_endpoint(l2segh, intfh2, 0x0A000002 , 0xAABB0A000002, 0);
         client_eph1 = add_endpoint(l2segh, intfh1, 0x0A000101 , 0xAABB0A000003, 0);
         server_eph1 = add_endpoint(l2segh, intfh2, 0x0A000102 , 0xAABB0A000004, 0);
-        sleep(30);
+        sleep(100);
 
         // firewall rules
         std::vector<v4_rule_t> rules = {
@@ -154,16 +154,16 @@ TEST_F(rtsp_test, rtsp_session)
 
 TEST_F(rtsp_test, app_sess_force_delete) {
     SessionDeleteResponseMsg delresp;
-    SessionGetResponseMsg    resp;
+    SessionGetResponseMsg    resp1, resp2;
     hal::session_t          *session = NULL;
     hal_ret_t                ret;
     hal_handle_t             sess_hdl = 0;
-    //uint8_t                alg_sessions = 0;
+    uint8_t                alg_sessions = 0;
 
-    ret = hal::session_get_all(&resp);
+    ret = hal::session_get_all(&resp1);
     EXPECT_EQ(ret, HAL_RET_OK);
-    for (int idx=0; idx<resp.response_size(); idx++) {
-        SessionGetResponse rsp = resp.response(idx);
+    for (int idx=0; idx<resp1.response_size(); idx++) {
+        SessionGetResponse rsp = resp1.response(idx);
         if (rsp.status().has_rtsp_info() &&
             rsp.status().rtsp_info().iscontrol()) {
             sess_hdl = rsp.status().session_handle();
@@ -176,26 +176,21 @@ TEST_F(rtsp_test, app_sess_force_delete) {
     ret = session_delete(session, true);
     ASSERT_EQ(ret, HAL_RET_OK);
 
-#if 0
-    ret = hal::session_get_all(&resp);
+    ret = hal::session_get_all(&resp2);
     EXPECT_EQ(ret, HAL_RET_OK);
-    for (int idx=0; idx<resp.response_size(); idx++) {
-        SessionGetResponse rsp = resp.response(idx);
-        if (rsp.status().has_rtsp_info())
+    for (int idx=0; idx<resp2.response_size(); idx++) {
+        SessionGetResponse rsp = resp2.response(idx);
+        if (rsp.status().alg() == nwsec::APP_SVC_RTSP)
             alg_sessions++;
     }
     EXPECT_EQ(alg_sessions, 0);
-
-    ret = hal::session_delete_all(&delresp);
-    ASSERT_EQ(ret, HAL_RET_OK);
-#endif
 }
 
 TEST_F(rtsp_test, rtsp_session_interleaved)
 {
     hal_ret_t              ret;
     SessionGetResponseMsg  resp;
-    //uint8_t                alg_sessions = 0, ctrl_alg_sessions = 0;
+    uint8_t                alg_sessions = 0, ctrl_alg_sessions = 0;
     
     // Create TCP control session
     // TCP SYN
@@ -250,7 +245,6 @@ TEST_F(rtsp_test, rtsp_session_interleaved)
     EXPECT_EQ(ret, HAL_RET_OK);
     EXPECT_FALSE(ctx_.drop());
 
-#if 0
     ret = hal::session_get_all(&resp);
     EXPECT_EQ(ret, HAL_RET_OK);
     for (int idx=0; idx<resp.response_size(); idx++) {
@@ -263,5 +257,4 @@ TEST_F(rtsp_test, rtsp_session_interleaved)
     }
     EXPECT_EQ(alg_sessions, 1);
     EXPECT_EQ(ctrl_alg_sessions, 1);
-#endif
 }

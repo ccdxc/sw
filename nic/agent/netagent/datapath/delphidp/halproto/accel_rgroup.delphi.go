@@ -930,6 +930,15 @@ It has these top-level messages:
 	SecurityPolicyStats
 	SecurityPolicyGetResponse
 	SecurityPolicyGetResponseMsg
+	SecurityFlowGateFilter
+	SecurityFlowGateGetRequest
+	SecurityFlowGateGetRequestMsg
+	FlowGateKey
+	SecurityFlowGateGetResponse
+	SecurityFlowGateGetResponseMsg
+	SecurityFlowGateDeleteRequest
+	SecurityFlowGateDeleteRequestMsg
+	SecurityFlowGateDeleteResponseMsg
 	PortXcvrStatus
 	PortSpec
 	PortStatus
@@ -940,6 +949,7 @@ It has these top-level messages:
 	PortDeleteRequestMsg
 	PortDeleteResponse
 	PortDeleteResponseMsg
+	MgmtMacStats
 	MacStats
 	PortStats
 	PortGetRequest

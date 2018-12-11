@@ -57,18 +57,34 @@ TEST_F(dns_test, dns_session)
     EXPECT_NE(ret, HAL_RET_OK);
 }
 
-#if 0
 TEST_F(dns_test, app_sess_force_delete) {
-    SessionGetResponseMsg  resp;
+    SessionGetResponseMsg  resp1, resp2;
     hal::session_t        *session = NULL;
     hal_ret_t              ret;
     hal_handle_t           sess_hdl = 0;
+    uint32_t               alg_sessions = 0;
+    uint8_t                dns_query[] = {0x10, 0x32, 0x01, 0x00, 0x00, 0x01, 0x00, 0x00,
+                                      0x00, 0x00, 0x00, 0x00, 0x06, 0x67, 0x6f, 0x6f,
+                                      0x67, 0x6c, 0x65, 0x03, 0x63, 0x6f, 0x6d, 0x00,
+                                      0x00, 0x10, 0x00, 0x01};
 
-    ret = hal::session_get_all(&resp);
+    // Create session
+    // Send traffic on DNS_PORT as dport
+    Tins::UDP udp = Tins::UDP(DNS_PORT, 1000) /
+                    Tins::RawPDU(dns_query, sizeof(dns_query));
+    ret = inject_ipv4_pkt(fte::FLOW_MISS_LIFQ, server_eph, client_eph, udp);
     EXPECT_EQ(ret, HAL_RET_OK);
-    for (int idx=0; idx<resp.response_size(); idx++) {
-        SessionGetResponse rsp = resp.response(idx);
-        if rsp.status().has_dns_info() 
+    EXPECT_FALSE(ctx_.drop());
+    EXPECT_FALSE(ctx_.drop_flow());
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->sfw_action, nwsec::SECURITY_RULE_ACTION_ALLOW);
+    EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->alg, nwsec::APP_SVC_DNS);
+    session = ctx_.session();
+
+    ret = hal::session_get_all(&resp1);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    for (int idx=0; idx<resp1.response_size(); idx++) {
+        SessionGetResponse rsp = resp1.response(idx);
+        if (rsp.status().alg() == nwsec::APP_SVC_DNS)
             sess_hdl = rsp.status().session_handle();
     }
     
@@ -77,5 +93,14 @@ TEST_F(dns_test, app_sess_force_delete) {
     ASSERT_TRUE(session != NULL);
     ret = session_delete(session, true);
     ASSERT_EQ(ret, HAL_RET_OK);
+
+    ret = hal::session_get_all(&resp2);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    for (int idx=0; idx<resp2.response_size(); idx++) {
+        SessionGetResponse rsp = resp2.response(idx);
+        if (rsp.status().alg() == nwsec::APP_SVC_DNS) 
+            alg_sessions++;
+    }
+
+    EXPECT_EQ(alg_sessions, 0);
 }
-#endif

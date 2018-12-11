@@ -28,6 +28,7 @@ var (
 	sessionDstPort uint32
 	sessionIPProto uint32
 	sessionL2SegID uint32
+	sessionAlg     string
 )
 
 var sessionShowCmd = &cobra.Command{
@@ -56,6 +57,7 @@ func init() {
 	sessionShowCmd.Flags().Uint32Var(&sessionDstPort, "dstport", 0, "Specify session dst port")
 	sessionShowCmd.Flags().Uint32Var(&sessionIPProto, "ipproto", 0, "Specify session IP proto")
 	sessionShowCmd.Flags().Uint32Var(&sessionL2SegID, "l2segid", 0, "Specify session L2 Segment ID")
+	sessionShowCmd.Flags().StringVar(&sessionAlg, "alg", "none", "Specify ALG (tftp/ftp/rtsp/msft_rpc/sun_rpc/dns/sip)")
 
 	clearCmd.AddCommand(sessionClearCmd)
 	sessionClearCmd.Flags().Uint64Var(&sessionVrfID, "vrfid", 0, "Specify vrf-id (default is 0)")
@@ -66,9 +68,11 @@ func init() {
 	sessionClearCmd.Flags().Uint32Var(&sessionDstPort, "dstport", 0, "Specify session dst port")
 	sessionClearCmd.Flags().Uint32Var(&sessionIPProto, "ipproto", 0, "Specify session IP proto")
 	sessionClearCmd.Flags().Uint32Var(&sessionL2SegID, "l2segid", 0, "Specify session L2 Segment ID")
+	sessionClearCmd.Flags().StringVar(&sessionAlg, "alg", "none", "Specify ALG (tftp/ftp/rtsp/msft_rpc/sun_rpc/dns/sip)")
 }
 
 func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
+	supportedAlgs := []string{"none", "tftp", "ftp", "sun_rpc", "msft_rpc", "rtsp", "dns", "sip"}
 	if cmd.Flags().Changed("yaml") {
 		sessionDetailShowCmdHandler(cmd, args)
 		return
@@ -91,6 +95,20 @@ func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	var sessionGetReqMsg *halproto.SessionGetRequestMsg
 
+	found := false
+	if cmd.Flags().Changed("alg") {
+		for _, v := range supportedAlgs {
+			if v == sessionAlg {
+				found = true
+				break
+			}
+		}
+		if found != true {
+			fmt.Printf("Unsupported ALG please try - tftp/ftp/rtsp/msft_rpc/sun_rpc/dns/sip\n")
+			return
+		}
+	}
+
 	if cmd.Flags().Changed("handle") {
 		var req *halproto.SessionGetRequest
 		req = &halproto.SessionGetRequest{
@@ -104,7 +122,7 @@ func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
 	} else if cmd.Flags().Changed("vrfid") || cmd.Flags().Changed("srcip") ||
 		cmd.Flags().Changed("dstip") || cmd.Flags().Changed("srcport") ||
 		cmd.Flags().Changed("dstport") || cmd.Flags().Changed("ipproto") ||
-		cmd.Flags().Changed("l2segid") {
+		cmd.Flags().Changed("l2segid") || cmd.Flags().Changed("alg") {
 		var req *halproto.SessionGetRequest
 		if cmd.Flags().Changed("srcip") && cmd.Flags().Changed("dstip") {
 			req = &halproto.SessionGetRequest{
@@ -127,6 +145,7 @@ func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
 						IpProto:     halproto.IPProtocol(sessionIPProto),
 						VrfId:       sessionVrfID,
 						L2SegmentId: sessionL2SegID,
+						Alg:         algNameToEnum(sessionAlg),
 					},
 				},
 			}
@@ -145,6 +164,7 @@ func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
 						IpProto:     halproto.IPProtocol(sessionIPProto),
 						VrfId:       sessionVrfID,
 						L2SegmentId: sessionL2SegID,
+						Alg:         algNameToEnum(sessionAlg),
 					},
 				},
 			}
@@ -163,6 +183,7 @@ func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
 						IpProto:     halproto.IPProtocol(sessionIPProto),
 						VrfId:       sessionVrfID,
 						L2SegmentId: sessionL2SegID,
+						Alg:         algNameToEnum(sessionAlg),
 					},
 				},
 			}
@@ -175,6 +196,7 @@ func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
 						IpProto:     halproto.IPProtocol(sessionIPProto),
 						VrfId:       sessionVrfID,
 						L2SegmentId: sessionL2SegID,
+						Alg:         algNameToEnum(sessionAlg),
 					},
 				},
 			}
@@ -235,7 +257,7 @@ func handleSessionDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	} else if cmd != nil && (cmd.Flags().Changed("vrfid") || cmd.Flags().Changed("srcip") ||
 		cmd.Flags().Changed("dstip") || cmd.Flags().Changed("srcport") ||
 		cmd.Flags().Changed("dstport") || cmd.Flags().Changed("ipproto") ||
-		cmd.Flags().Changed("l2segid")) {
+		cmd.Flags().Changed("l2segid") || cmd.Flags().Changed("alg")) {
 		var req *halproto.SessionGetRequest
 		if cmd.Flags().Changed("srcip") && cmd.Flags().Changed("dstip") {
 			req = &halproto.SessionGetRequest{
@@ -258,6 +280,7 @@ func handleSessionDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 						IpProto:     halproto.IPProtocol(sessionIPProto),
 						VrfId:       sessionVrfID,
 						L2SegmentId: sessionL2SegID,
+						Alg:         algNameToEnum(sessionAlg),
 					},
 				},
 			}
@@ -276,6 +299,7 @@ func handleSessionDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 						IpProto:     halproto.IPProtocol(sessionIPProto),
 						VrfId:       sessionVrfID,
 						L2SegmentId: sessionL2SegID,
+						Alg:         algNameToEnum(sessionAlg),
 					},
 				},
 			}
@@ -294,6 +318,7 @@ func handleSessionDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 						IpProto:     halproto.IPProtocol(sessionIPProto),
 						VrfId:       sessionVrfID,
 						L2SegmentId: sessionL2SegID,
+						Alg:         algNameToEnum(sessionAlg),
 					},
 				},
 			}
@@ -306,6 +331,7 @@ func handleSessionDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 						IpProto:     halproto.IPProtocol(sessionIPProto),
 						VrfId:       sessionVrfID,
 						L2SegmentId: sessionL2SegID,
+						Alg:         algNameToEnum(sessionAlg),
 					},
 				},
 			}
@@ -621,6 +647,11 @@ func flowActionStringCompact(state string) string {
 	return "D"
 }
 
+func algNameToEnum(algName string) halproto.ALGName {
+	algStr := "APP_SVC_" + strings.ToUpper(algName)
+	return halproto.ALGName(halproto.ALGName_value[algStr])
+}
+
 // Uint32IPAddrToStr converts uint32 IP address to string
 func Uint32IPAddrToStr(ip uint32) string {
 	return fmt.Sprintf("%d.%d.%d.%d", (ip>>24)&0xff, (ip>>16)&0xff, (ip>>8)&0xff, ip&0xff)
@@ -664,7 +695,7 @@ func sessionClearCmdHandler(cmd *cobra.Command, args []string) {
 	} else if cmd.Flags().Changed("vrfid") || cmd.Flags().Changed("srcip") ||
 		cmd.Flags().Changed("dstip") || cmd.Flags().Changed("srcport") ||
 		cmd.Flags().Changed("dstport") || cmd.Flags().Changed("ipproto") ||
-		cmd.Flags().Changed("l2segid") {
+		cmd.Flags().Changed("l2segid") || cmd.Flags().Changed("alg") {
 		var req *halproto.SessionDeleteRequest
 		if cmd.Flags().Changed("srcip") && cmd.Flags().Changed("dstip") {
 			req = &halproto.SessionDeleteRequest{
@@ -687,6 +718,7 @@ func sessionClearCmdHandler(cmd *cobra.Command, args []string) {
 						IpProto:     halproto.IPProtocol(sessionIPProto),
 						VrfId:       sessionVrfID,
 						L2SegmentId: sessionL2SegID,
+						Alg:         algNameToEnum(sessionAlg),
 					},
 				},
 			}
@@ -705,6 +737,7 @@ func sessionClearCmdHandler(cmd *cobra.Command, args []string) {
 						IpProto:     halproto.IPProtocol(sessionIPProto),
 						VrfId:       sessionVrfID,
 						L2SegmentId: sessionL2SegID,
+						Alg:         algNameToEnum(sessionAlg),
 					},
 				},
 			}
@@ -723,6 +756,7 @@ func sessionClearCmdHandler(cmd *cobra.Command, args []string) {
 						IpProto:     halproto.IPProtocol(sessionIPProto),
 						VrfId:       sessionVrfID,
 						L2SegmentId: sessionL2SegID,
+						Alg:         algNameToEnum(sessionAlg),
 					},
 				},
 			}
@@ -735,6 +769,7 @@ func sessionClearCmdHandler(cmd *cobra.Command, args []string) {
 						IpProto:     halproto.IPProtocol(sessionIPProto),
 						VrfId:       sessionVrfID,
 						L2SegmentId: sessionL2SegID,
+						Alg:         algNameToEnum(sessionAlg),
 					},
 				},
 			}

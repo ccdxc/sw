@@ -62,6 +62,9 @@ hal_ret_t session_delete_in_fte(hal_handle_t session_handle, bool force_delete=f
 hal_ret_t session_delete(hal::session_t *session, bool force_delete=false);
 hal_ret_t session_delete_async(hal::session_t *session, bool force_delete=false);
 
+// Find if a feature is enabled on a session or not
+bool session_is_feature_enabled(hal::session_t *session, const char *feature);
+
 // Get logger instance for the current thread
 ipc_logger *get_current_ipc_logger_inst(void);
 

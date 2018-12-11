@@ -391,7 +391,6 @@ install_flow:
 
 }
 
-
 std::ostream& operator<<(std::ostream& os, const sfw_info_t& val) {
     os << "{alg_proto="<< val.alg_proto;
     os << " ,skip_sfw=" << val.skip_sfw;

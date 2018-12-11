@@ -422,3 +422,10 @@ enum FTESpanMatchSelector {
   ETH_DMAC              = 11;
   FROM_CPU              = 12;
 }
+
+// flow direction
+enum FlowDirection {
+  FLOW_DIRECTION_NONE        = 0;
+  FLOW_DIRECTION_FROM_HOST   = 1;
+  FLOW_DIRECTION_FROM_UPLINK = 2;
+}

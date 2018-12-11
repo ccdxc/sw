@@ -90,7 +90,7 @@ fte::pipeline_action_t alg_ftp_session_delete_cb(fte::ctx_t &ctx) {
         return fte::PIPELINE_CONTINUE;
 
     app_sess = l4_sess->app_session;
-    if (l4_sess->isCtrl == TRUE) {
+    if (l4_sess->isCtrl == true) {
         if (ctx.force_delete() == true|| (dllist_empty(&app_sess->exp_flow_lhead) &&
              dllist_count(&app_sess->l4_sess_lhead) == 1 &&
             ((l4_alg_status_t *)dllist_entry(app_sess->l4_sess_lhead.next,\
@@ -128,10 +128,8 @@ fte::pipeline_action_t alg_ftp_session_delete_cb(fte::ctx_t &ctx) {
      * Cleanup the data session that is getting timed out
      */
     g_ftp_state->cleanup_l4_sess(l4_sess);
-    if (dllist_empty(&app_sess->exp_flow_lhead) &&
-        dllist_count(&app_sess->l4_sess_lhead) == 1 &&
-        ((l4_alg_status_t *)dllist_entry(app_sess->l4_sess_lhead.next,\
-                 l4_alg_status_t, l4_sess_lentry))->sess_hdl == HAL_HANDLE_INVALID) {
+    if (ctx.force_delete() && dllist_empty(&app_sess->exp_flow_lhead) &&
+        dllist_empty(&app_sess->exp_flow_lhead)) {
         /*
          * If this was the last session hanging and there is no
          * HAL session for control session. This is the right time
