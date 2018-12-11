@@ -2,6 +2,7 @@ meta:
     name    : multicast
     os      : [ linux, freebsd ]
     nics    : [ pensando, mellanox, intel, broadcom ]
+    targetcount : 27
 
 testcases:
     -   name    : Iperf_inbound
