@@ -124,7 +124,6 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         xmit_len                        : 16                    ;\
         packets_out                     : 16                    ;\
         sacked_out                      : 16                    ;\
-        rto_pi                          : 16                    ;\
         retrans_out                     : 16                    ;\
         lost_out                        : 16                    ;\
         is_cwnd_limited                 : 8                     ;\
@@ -165,7 +164,7 @@ max_packets_out, ca_state, delayed_ack
 snd_nxt,snd_wscale,\
 xmit_cursor_addr, sesq_tx_ci,\
 xmit_offset, xmit_len,\
-packets_out, sacked_out, rto_pi, retrans_out, lost_out,\
+packets_out, sacked_out, retrans_out, lost_out,\
 is_cwnd_limited, rto_backoff, no_window
 
 #define TSO_PARAMS                                                        \
@@ -211,7 +210,6 @@ quick_acks_decr
     modify_field(xmit_d.xmit_len, xmit_len); \
     modify_field(xmit_d.packets_out, packets_out); \
     modify_field(xmit_d.sacked_out, sacked_out); \
-    modify_field(xmit_d.rto_pi, rto_pi); \
     modify_field(xmit_d.retrans_out, retrans_out); \
     modify_field(xmit_d.lost_out, lost_out); \
     modify_field(xmit_d.is_cwnd_limited, is_cwnd_limited); \

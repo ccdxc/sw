@@ -134,8 +134,6 @@ class TcpCbObject(base.ConfigObjectBase):
             self.serq_ci = resp_spec.spec.serq_ci
             self.pred_flags = resp_spec.spec.pred_flags
             self.packets_out = resp_spec.spec.packets_out
-            self.rto_pi = resp_spec.spec.rto_pi
-            self.retx_timer_ci = resp_spec.spec.retx_timer_ci
             self.rto_backoff = resp_spec.spec.rto_backoff
             self.rcv_wnd = resp_spec.spec.rcv_wnd
             self.snd_wscale = resp_spec.spec.snd_wscale

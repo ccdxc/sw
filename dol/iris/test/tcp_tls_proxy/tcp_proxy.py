@@ -18,11 +18,11 @@ tcp_debug_dol_tsopt_support = 0x0100
 tcp_tx_debug_dol_dont_send_ack = 0x1
 tcp_tx_debug_dol_dont_tx = 0x2
 tcp_tx_debug_dol_bypass_barco = 0x4
-tcp_tx_debug_dol_dont_start_retx_timer = 0x8
+tcp_tx_debug_dol_start_del_ack_timer = 0x8
 tcp_tx_debug_dol_force_timer_full = 0x10
 tcp_tx_debug_dol_force_tbl_setaddr = 0x20
 tcp_tx_debug_dol_tsopt_support = 0x40
-tcp_tx_debug_dol_del_ack_timer = 0x80
+tcp_tx_debug_dol_start_retx_timer = 0x80
 
 tcp_state_ESTABLISHED = 1
 tcp_state_SYN_SENT = 2
@@ -54,7 +54,7 @@ def SetupProxyArgs(tc):
     bypass_barco = 0
     send_ack_flow1 = 0
     send_ack_flow2 = 0
-    test_timer = 0
+    test_del_ack_timer = 0
     test_retx_timer = 0
     test_retx_timer_full = 0
     test_mpu_tblsetaddr = 0
@@ -90,9 +90,9 @@ def SetupProxyArgs(tc):
     if hasattr(tc.module.args, 'send_ack_flow2'):
         send_ack_flow2 = tc.module.args.send_ack_flow2
         logger.info("- send_ack_flow2 %s" % tc.module.args.send_ack_flow2)
-    if hasattr(tc.module.args, 'test_timer'):
-        test_timer = tc.module.args.test_timer
-        logger.info("- test_timer %s" % tc.module.args.test_timer)
+    if hasattr(tc.module.args, 'test_del_ack_timer'):
+        test_del_ack_timer = tc.module.args.test_del_ack_timer
+        logger.info("- test_del_ack_timer %s" % tc.module.args.test_del_ack_timer)
     if hasattr(tc.module.args, 'test_retx_timer'):
         test_retx_timer = tc.module.args.test_retx_timer
         logger.info("- test_retx_timer %s" % tc.module.args.test_retx_timer)
@@ -175,9 +175,9 @@ def SetupProxyArgs(tc):
         if 'send_ack_flow2' in iterelem.__dict__:
             send_ack_flow2 = iterelem.send_ack_flow2
             logger.info("- send_ack_flow2 %s" % iterelem.send_ack_flow2)
-        if 'test_timer' in iterelem.__dict__:
-            test_timer = iterelem.test_timer
-            logger.info("- test_timer %s" % iterelem.test_timer)
+        if 'test_del_ack_timer' in iterelem.__dict__:
+            test_del_ack_timer = iterelem.test_del_ack_timer
+            logger.info("- test_del_ack_timer %s" % iterelem.test_del_ack_timer)
         if 'test_retx_timer' in iterelem.__dict__:
             test_retx_timer = iterelem.test_retx_timer
             logger.info("- test_retx_timer %s" % iterelem.test_retx_timer)
@@ -203,7 +203,7 @@ def SetupProxyArgs(tc):
     tc.pvtdata.bypass_barco = bypass_barco
     tc.pvtdata.send_ack_flow1 = send_ack_flow1
     tc.pvtdata.send_ack_flow2 = send_ack_flow2
-    tc.pvtdata.test_timer = test_timer
+    tc.pvtdata.test_del_ack_timer = test_del_ack_timer
     tc.pvtdata.test_retx_timer = test_retx_timer
     tc.pvtdata.test_retx_timer_full = test_retx_timer_full
     tc.pvtdata.test_mpu_tblsetaddr = test_mpu_tblsetaddr
@@ -318,15 +318,15 @@ def init_tcb_inorder(tc, tcb):
     else:
         tcb.debug_dol = tcp_debug_dol_dont_send_ack
         tcb.debug_dol_tx = tcp_tx_debug_dol_dont_send_ack
-    if tc.pvtdata.test_timer:
+    if tc.pvtdata.test_del_ack_timer:
         tcb.delay_ack = 1
         tcb.ato = 10
         tcb.debug_dol |= tcp_debug_dol_del_ack_timer
-        tcb.debug_dol_tx |= tcp_tx_debug_dol_del_ack_timer
+        tcb.debug_dol_tx |= tcp_tx_debug_dol_start_del_ack_timer
     else:
         tcb.delay_ack = 0
-    if not tc.pvtdata.test_retx_timer and not tc.pvtdata.test_retx_timer_full:
-        tcb.debug_dol_tx |= tcp_tx_debug_dol_dont_start_retx_timer
+    if tc.pvtdata.test_retx_timer or tc.pvtdata.test_retx_timer_full:
+        tcb.debug_dol_tx |= tcp_tx_debug_dol_start_retx_timer
     if tc.pvtdata.test_retx_timer_full:
         tcb.debug_dol_tx |= tcp_tx_debug_dol_force_timer_full
     if tc.pvtdata.test_mpu_tblsetaddr:
@@ -481,15 +481,15 @@ def init_tcb_inorder2(tc, tcb):
     else:
         tcb.debug_dol = tcp_debug_dol_dont_send_ack
         tcb.debug_dol_tx = tcp_tx_debug_dol_dont_send_ack
-    if tc.pvtdata.test_timer:
+    if tc.pvtdata.test_del_ack_timer:
         tcb.delay_ack = 1
         tcb.ato = 10
         tcb.debug_dol |= tcp_debug_dol_del_ack_timer
-        tcb.debug_dol_tx |= tcp_tx_debug_dol_del_ack_timer
+        tcb.debug_dol_tx |= tcp_tx_debug_dol_start_del_ack_timer
     else:
         tcb.delay_ack = 0
-    if not tc.pvtdata.test_retx_timer and not tc.pvtdata.test_retx_timer_full:
-        tcb.debug_dol_tx |= tcp_tx_debug_dol_dont_start_retx_timer
+    if tc.pvtdata.test_retx_timer or tc.pvtdata.test_retx_timer_full:
+        tcb.debug_dol_tx |= tcp_tx_debug_dol_start_retx_timer
     if tc.pvtdata.test_retx_timer_full:
         tcb.debug_dol_tx |= tcp_tx_debug_dol_force_timer_full
     if tc.pvtdata.test_mpu_tblsetaddr:

@@ -4,7 +4,7 @@
 #define TCP_SCHED_RING_SESQ           0x0
 #define TCP_SCHED_RING_SEND_ACK       0x1
 #define TCP_SCHED_RING_FAST_TIMER     0x2
-#define TCP_SCHED_RING_RTO            0x3
+#define TCP_SCHED_RING_DEL_ACK        0x3
 #define TCP_SCHED_RING_ASESQ          0x4
 #define TCP_SCHED_RING_PENDING_TX     0x5
 #define TCP_SCHED_RING_FAST_RETRANS   0x6
@@ -62,21 +62,21 @@
 #define TCP_TX_DDOL_DONT_SEND_ACK           0x1
 #define TCP_TX_DDOL_DONT_TX                 0x2
 #define TCP_TX_DDOL_BYPASS_BARCO            0x4
-#define TCP_TX_DDOL_DONT_START_RETX_TIMER   0x8
+#define TCP_TX_DDOL_START_DEL_ACK_TIMER     0x8
 #define TCP_TX_DDOL_FORCE_TIMER_FULL        0x10
 #define TCP_TX_DDOL_FORCE_TBL_SETADDR       0x20
 #define TCP_TX_DDOL_TSOPT_SUPPORT           0x40
-#define TCP_TX_DDOL_DEL_ACK_TIMER           0x80
+#define TCP_TX_DDOL_START_RETX_TIMER        0x80
 
 // Tx endcoding bit position
 #define TCP_TX_DDOL_DONT_SEND_ACK_BIT           0
 #define TCP_TX_DDOL_DONT_TX_BIT                 1
 #define TCP_TX_DDOL_BYPASS_BARCO_BIT            2
-#define TCP_TX_DDOL_DONT_START_RETX_TIMER_BIT   3
+#define TCP_TX_DDOL_START_DEL_ACK_TIMER_BIT     3
 #define TCP_TX_DDOL_FORCE_TIMER_FULL_BIT        4
 #define TCP_TX_DDOL_FORCE_TBL_SETADDR_BIT       5
 #define TCP_TX_DDOL_TSOPT_SUPPORT_BIT           6
-#define TCP_TX_DDOL_DONT_START_FAST_TIMER_BIT   7
+#define TCP_TX_DDOL_START_RETX_TIMER_BIT        7
 
 #define TCP_DDOL_TBLADDR_SHIFT_OFFSET   (64 * 15)
 #define TCP_DDOL_TBLADDR_VALUE          0x59
@@ -96,7 +96,13 @@
 #define TCP_TIMER_TICK                      10 // 10 us
 
 #define TCP_ATO_USEC                        100 // 100 us
+#define TCP_ATO_MIN                         100 // 100 us
 #define TCP_ATO_TICKS                       (TCP_ATO_USEC / TCP_TIMER_TICK)
+
+#define TCP_RTO_MAX                         4000
+#define TCP_RTO_MIN                         1000
+#define TCP_RTO_MAX_TICK                    (TCP_RTO_MAX / TCP_TIMER_TICK)
+#define TCP_RTO_MIN_TICK                    (TCP_RTO_MIN / TCP_TIMER_TICK)
 
 // Global stats
 #define TCP_PROXY_STATS_RNMDR_FULL              (0 << 3)

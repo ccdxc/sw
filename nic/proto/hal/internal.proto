@@ -402,8 +402,6 @@ message TcpCbSpec {
   uint32                pred_flags                 = 34;
   uint32                other_qid                  = 35;
   uint32                packets_out                = 36;
-  uint32                rto_pi                     = 37;
-  uint32                retx_timer_ci              = 38;
   uint32                rto_backoff                = 39;
   uint32                cpu_id                     = 40;
   uint32                serq_ci                    = 41;
@@ -490,10 +488,10 @@ message TcpCbStats {
   uint32                sesq_ci                    = 10006;
   uint32                send_ack_pi                = 10007;
   uint32                send_ack_ci                = 10008;
-  uint32                del_ack_pi                 = 10009;
-  uint32                del_ack_ci                 = 10010;
-  uint32                retx_timer_pi              = 10011;
-  uint32                retx_timer_ci              = 10012;
+  uint32                fast_timer_pi              = 10009;
+  uint32                fast_timer_ci              = 10010;
+  uint32                del_ack_pi                 = 10011;
+  uint32                del_ack_ci                 = 10012;
   uint32                asesq_pi                   = 10013;
   uint32                asesq_ci                   = 10014;
   uint32                pending_tx_pi              = 10015;
@@ -503,12 +501,11 @@ message TcpCbStats {
   uint32                clean_retx_pi              = 10019;
   uint32                clean_retx_ci              = 10020;
   uint32                packets_out                = 10021;
-  uint32                rto_pi                     = 10022;
+  uint32                sesq_tx_ci                 = 10022;
   uint32                sesq_retx_ci               = 10023;
   uint32                asesq_retx_ci              = 10024;
   uint32                tx_ring_pi                 = 10025;
   uint32                partial_ack_cnt            = 10026;
-  uint32                sesq_tx_ci                 = 10027;
 }
 
 // TcpCbGetResponse captures all the information about a tcpcb

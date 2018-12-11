@@ -33,11 +33,6 @@ tcp_retx_snd_una_update:
     bcf             [c1 | c2], tcp_retx_rst_handling
 
     /*
-     * We need to free sesq[sesq_retx_ci]
-     */
-    phvwr           p.t0_s2s_packets_out_decr, 1
-
-    /*
      * retx_snd_una should never go beyond snd_una
      */
     add             r1, d.retx_snd_una, k.t0_s2s_clean_retx_len1
@@ -116,6 +111,7 @@ tcp_retx_calc_num_pkts_freed_done:
     tbladd          d.retx_snd_una, r4
     tbladd.c1       d.retx_snd_una, 1
     phvwr           p.t1_s2s_num_pkts_freed, r5
+    phvwr           p.t0_s2s_packets_out_decr, r5
 
     seq             c1, k.common_phv_pending_asesq, 1
     b.!c1           tcp_retx_cleanup_sesq

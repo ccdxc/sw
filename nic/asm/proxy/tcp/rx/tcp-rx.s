@@ -129,8 +129,21 @@ tcp_ack_snd_check:
     tblwr.c1        d.u.tcp_rx_d.quick, TCP_QUICKACKS
 
 tcp_schedule_del_ack:
+    // Set delayed ack timeout
     add             r1, k.common_phv_qstate_addr, TCP_TCB_RX2TX_ATO_OFFSET
     memwr.h         r1, d.u.tcp_rx_d.ato
+
+    // Ring delay ack rx2tx doorbell to start perpetual timer
+    // if needed. This can be a memwr since there are no ordering
+    // issues
+    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET,
+                        DB_SCHED_UPD_EVAL, 0, LIF_TCP)
+    tbladd          d.u.tcp_rx_d.del_ack_pi, 1
+    /* data will be in r3 */
+    CAPRI_RING_DOORBELL_DATA(0, k.common_phv_fid,
+                        TCP_SCHED_RING_DEL_ACK, d.u.tcp_rx_d.del_ack_pi)
+    memwr.dx        r4, r3
+
     b               tcp_ack_snd_check_end
     phvwrmi         p.common_phv_pending_txdma, TCP_PENDING_TXDMA_DEL_ACK, \
                         TCP_PENDING_TXDMA_DEL_ACK
@@ -282,60 +295,6 @@ tcp_incr_quickack:
 
     jr              r7
     tblwr           d.u.tcp_rx_d.ato, TCP_ATO_MIN
-
-#if 0
-    // TODO : this needs to move to tx pipeline
-/* Restart timer after forward progress on connection.
- * RFC2988 recommends to restart timer to now+rto.
- */
-tcp_rearm_rto:
-
-    CAPRI_CLEAR_TABLE0_VALID
-
-    sne             c4, r7, r0
-    /* If the retrans timer is currently being used by Fast Open
-     * for SYN-ACK retrans purpose, stay put.
-     *
-      if (tp->rx_opt.fastopen_rsk)
-        return;
-     */
-    sne             c1, d.u.tcp_rx_d.fastopen_rsk, r0
-    bcf             [c1 & c4], tcp_rearm_rto_done
-    nop
-    seq             c1, k.s1_s2s_packets_out, r0
-    phvwr.c1        p.rx2tx_pending_ft_clear,1
-    phvwr.c1        p.common_phv_pending_txdma, 1
-    bcf             [c1], tcp_rearm_rto_done
-    tbladd.c1       d.u.tcp_rx_d.rto,  -1
-    /* r3 = rto */
-    add             r3, d.u.tcp_rx_d.rto, r0
-    seq             c2, d.u.tcp_rx_d.pending, ICSK_TIME_EARLY_RETRANS
-    seq             c3, d.u.tcp_rx_d.pending, ICSK_TIME_LOSS_PROBE
-    bcf             [!c2 & !c3], early_retx_or_tlp
-    nop
-    /* rto_time_stamp = tp->rx.retx_head_ts + rto */
-    add             r1, d.u.tcp_rx_d.retx_head_ts, r3
-    /* delta = (s32) (rto_time_stamp - tcp_time_stamp) */
-    sub             r2, r1, r6
-    /* if (delta > 0) */
-    slt             c2, r0, r2
-    /*  rto = delta */
-    add.c2          r3, r2, r0
-early_retx_or_tlp:
-    /* tp->fto.rto_deadline = tcp_time_stamp + min(rto, TCP_RTO_MAX) */
-    addi            r4, r0, TCP_RTO_MAX
-    slt             c1, r3, r4
-    add.c1          r5, r3, r6
-    tblwr.c1        d.u.tcp_rx_d.rto_deadline, r5
-    add.!c1         r5, r4, r6
-    tblwr.!c1       d.u.tcp_rx_d.rto_deadline, r5
-    phvwr           p.rx2tx_pending_ft_reset,1
-    phvwr.c1        p.common_phv_pending_txdma, 1
-tcp_rearm_rto_done:
-    jr.c4           r7
-    add             r7, r0, r0
-#endif
-
 
 tcp_enter_quickack_mode:
     bal             r7, tcp_incr_quickack

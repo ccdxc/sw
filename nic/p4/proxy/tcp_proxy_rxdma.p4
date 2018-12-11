@@ -150,6 +150,7 @@ header_type tcp_rx_d_t {
         serq_full_cnt           : 16;
         ooo_cnt                 : 16;
         ato                     : 16;
+        del_ack_pi              : 16;
         cfg_flags               : 8;
         rcv_nxt                 : 32;
         rcv_tstamp              : 32;
@@ -834,7 +835,7 @@ action tcp_stage1_dummy() {
 
 #define TCP_RX_CB_PARAMS \
         bytes_acked, slow_path_cnt, serq_full_cnt, ooo_cnt, \
-        ato, cfg_flags, \
+        ato, del_ack_pi, cfg_flags, \
         rcv_nxt, rcv_tstamp, ts_recent, lrcv_time, \
         snd_una, snd_wl1, pred_flags, max_window, bytes_rcvd, \
         snd_wnd, rcv_mss, rto, ecn_flags, state, \
@@ -848,6 +849,7 @@ action tcp_stage1_dummy() {
     modify_field(tcp_rx_d.serq_full_cnt, serq_full_cnt); \
     modify_field(tcp_rx_d.ooo_cnt, ooo_cnt); \
     modify_field(tcp_rx_d.ato, ato); \
+    modify_field(tcp_rx_d.del_ack_pi, del_ack_pi); \
     modify_field(tcp_rx_d.cfg_flags, cfg_flags); \
     modify_field(tcp_rx_d.rcv_nxt, rcv_nxt); \
     modify_field(tcp_rx_d.rcv_tstamp, rcv_tstamp); \

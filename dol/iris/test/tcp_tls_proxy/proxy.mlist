@@ -569,7 +569,7 @@ modules:
             num_tx_pkts : 2
             bypass_barco : 1
             send_ack_flow1 : 1
-            test_timer : 1
+            test_del_ack_timer : 1
 
     - module:
         name    : UL_TO_UL_BYPASS_BARCO_CANCEL_DEL_ACK_TIMER
@@ -580,7 +580,7 @@ modules:
             num_tx_pkts : 3
             bypass_barco : 1
             send_ack_flow1 : 1
-            test_timer : 1
+            test_del_ack_timer : 1
 
     - module:
         name    : UL_TO_UL_BYPASS_BARCO_CLEAN_RETX_COMPLETE

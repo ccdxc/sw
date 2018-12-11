@@ -48,7 +48,7 @@ tcp_tx_read_rx2tx_shared_process:
                 b tcp_tx_ft_expired             // prio 6
                 nop
             .brcase 3
-                b tcp_tx_retx_timer_expired     // prio 7
+                b tcp_tx_del_ack                // prio 7
                 nop
             .brcase 4
                 b tcp_tx_launch_asesq           // prio 5
@@ -74,8 +74,8 @@ tcp_tx_launch_sesq:
 #ifndef HW
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_TX, TCP_TX_DDOL_DONT_TX
     phvwri.c1       p.common_phv_debug_dol_dont_tx, 1
-    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_START_RETX_TIMER, TCP_TX_DDOL_DONT_START_RETX_TIMER
-    phvwri.c1       p.common_phv_debug_dol_dont_start_retx_timer, 1
+    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_START_RETX_TIMER, TCP_TX_DDOL_START_RETX_TIMER
+    phvwri.!c1      p.common_phv_debug_dol_dont_start_retx_timer, 1
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_FORCE_TBL_SETADDR, TCP_TX_DDOL_FORCE_TBL_SETADDR
     phvwri.c1       p.common_phv_debug_dol_force_tbl_setaddr, 1
 #endif
@@ -147,10 +147,12 @@ tcp_tx_launch_asesq:
     bal.c1          r7, tcp_tx_start_perpetual_timer
 
     phvwri          p.common_phv_pending_asesq, 1
+#ifndef HW
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_TX, TCP_TX_DDOL_DONT_TX
     phvwri.c1       p.common_phv_debug_dol_dont_tx, 1
-    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_START_RETX_TIMER, TCP_TX_DDOL_DONT_START_RETX_TIMER
-    phvwri.c1       p.common_phv_debug_dol_dont_start_retx_timer, 1
+    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_START_RETX_TIMER, TCP_TX_DDOL_START_RETX_TIMER
+    phvwri.!c1      p.common_phv_debug_dol_dont_start_retx_timer, 1
+#endif
 
     // asesq_base = sesq_base - number of sesq slots
     sub             r3, d.{sesq_base}.wx, CAPRI_SESQ_RING_SLOTS, NIC_SESQ_ENTRY_SIZE_SHIFT
@@ -274,8 +276,8 @@ tcp_tx_clean_retx:
                         p.common_phv_pending_rx2tx, 1
     phvwr           p.to_s3_clean_retx_pi, d.{pi_7}.hx
 #ifndef HW
-    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_START_RETX_TIMER, TCP_TX_DDOL_DONT_START_RETX_TIMER
-    phvwri.c1       p.common_phv_debug_dol_dont_start_retx_timer, 1
+    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_START_RETX_TIMER, TCP_TX_DDOL_START_RETX_TIMER
+    phvwri.!c1      p.common_phv_debug_dol_dont_start_retx_timer, 1
 #endif
 
 pending_rx2tx_snd_una_update:
@@ -358,66 +360,12 @@ clean_retx_drop:
 
 
 /******************************************************************************
- * tcp_tx_retx_timer_expired
- *****************************************************************************/
-tcp_tx_retx_timer_expired:
-    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_START_RETX_TIMER, TCP_TX_DDOL_DONT_START_RETX_TIMER
-    phvwri.c1       p.common_phv_debug_dol_dont_start_retx_timer, 1
-
-    phvwr           p.common_phv_pending_rto, 1
-    phvwr           p.t0_s2s_rto_pi, d.{pi_3}.hx
-    seq             c1, d.{ci_3}.hx, d.{pi_3}.hx
-    tblwr.f         d.{ci_3}.hx, d.{pi_3}.hx
-    /*
-     * Ring doorbell to set CI
-     */
-
-    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
-    // data will be in r3
-    CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid)
-    memwr.dx        r4, r3
-
-    b.c1            tcp_tx_rx2tx_end
-    seq             c1, d.sesq_retx_ci, d.{ci_0}.hx
-    seq             c2, d.asesq_retx_ci, d.{ci_4}.hx
-    bcf             [c1 & c2], tcp_tx_rx2tx_end
-
-    // This table need not be locked since it is read-only.
-    // Moreover it should not be locked to prevent the bypass
-    // cache from being used (bypass cache cannot be used,
-    // since the contents are written from rx pipeline)
-    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS,
-                        tcp_tx_read_rx2tx_shared_extra_stage1_start,
-                        k.p4_txdma_intr_qstate_addr,
-                        TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, TABLE_SIZE_512_BITS)
-    phvwrpair       p.common_phv_fid, k.p4_txdma_intr_qid, \
-                        p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
-    /*
-     * Launch sesq entry ready with RETX CI as index
-     */
-    add             r3, d.{sesq_base}.wx, d.sesq_retx_ci, NIC_SESQ_ENTRY_SIZE_SHIFT
-    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_tx_sesq_read_ci_stage1_start,
-                     r3, TABLE_SIZE_64_BITS)
-
-tcp_tx_st_expired_end:
-    // DEBUG code
-    // If we are testing timer full case, don't start the timer again to
-    // prevent an endless loop. We do need to process one timer to test
-    // the timer full case (in the timer full case, the timer expires
-    // immediately)
-    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_FORCE_TIMER_FULL, TCP_TX_DDOL_FORCE_TIMER_FULL
-    phvwri.c1       p.common_phv_debug_dol_dont_start_retx_timer, 1
-
-    nop.e
-    nop
-
-/******************************************************************************
  * tcp_tx_fast_retrans
  *****************************************************************************/
 tcp_tx_fast_retrans:
 #ifndef HW
-    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_START_RETX_TIMER, TCP_TX_DDOL_DONT_START_RETX_TIMER
-    phvwri.c1       p.common_phv_debug_dol_dont_start_retx_timer, 1
+    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_START_RETX_TIMER, TCP_TX_DDOL_START_RETX_TIMER
+    phvwri.!c1      p.common_phv_debug_dol_dont_start_retx_timer, 1
 #endif
     phvwr           p.common_phv_pending_fast_retx, 1
     tblwr.f         d.{ci_6}.hx, d.{pi_6}.hx
@@ -457,25 +405,55 @@ tcp_tx_fast_retrans:
  * tcp_tx_ft_expired
  *****************************************************************************/
 tcp_tx_ft_expired:
+    seq             c1, d.rto, 0
+    seq             c2, d.ato, 0
+    bcf             [c1 & c2], tcp_tx_stop_perpetual_timer_and_exit
+    nop
 #ifdef HW
-    // Don't restart perpetual timer in simulation
     bal             r7, tcp_tx_start_perpetual_timer
+#else
+    // Don't restart perpetual timer in simulation unless testing retx timer
+    // and rto is non-zero
+    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_START_RETX_TIMER, TCP_TX_DDOL_START_RETX_TIMER
+    sne.c1          c1, d.rto, 0
+    bal.c1          r7, tcp_tx_start_perpetual_timer
 #endif
+    /*
+     * c3 ==> both ato and rto are going to expire
+     * Decrement both ato and rto, if not both are going to expire (!c3)
+     *
+     * decrement rto, and check for retransmission timer expired (c1)
+     *
+     * decrement rto, and check for retransmission timer expired (c2)
+     */
 
-    /* Check if ato-- == 1
+    /*
+     * Check if rto-- == 1
+     * If TRUE, we want to do timeout handling
+     */
+    seq             c1, d.rto, 1
+    tblssub         d.rto, 1
+
+    /*
+     * Check if ato-- == 1
      * If TRUE, we want to do delack handling
      */
-    seq             c1, d.ato, 1
-    tblssub         d.ato, 1
+    seq             c2, d.ato, 1
+    setcf           c3, [c1 & c2]
+    tblssub.!c3     d.ato, 1
     tbladd.f        d.{ci_2}.hx, 1
 
     // Ring doorbell to clear scheduler if necessary
     addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
     // data will be in r3
     CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid)
-    b.!c1           tcp_tx_rx2tx_end
+    bcf             [!c1 & !c2], tcp_tx_rx2tx_end
     memwr.dx        r4, r3
 
+    b.c1            tcp_tx_retx_timer_expired
+    nop
+
+tcp_tx_del_ack_timer_expired:
     phvwri          p.common_phv_pending_rx2tx, 1
     phvwr           p.common_phv_pending_ack_send, 1
 
@@ -487,10 +465,78 @@ tcp_tx_ft_expired:
                         tcp_tx_read_rx2tx_shared_extra_stage1_start,
                         k.p4_txdma_intr_qstate_addr,
                         TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, TABLE_SIZE_512_BITS)
+    phvwrpair.e     p.common_phv_fid, k.p4_txdma_intr_qid, \
+                        p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
+    nop
+
+tcp_tx_stop_perpetual_timer_and_exit:
+    tbladd          d.{ci_2}.hx, 1
+    tblwr.f         d.perpetual_timer_started, 0
+    // Ring doorbell to clear scheduler if necessary
+    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
+    // data will be in r3
+    CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid)
+    memwr.dx.e      r4, r3
+    phvwri          p.p4_intr_global_drop, 1
+
+tcp_tx_retx_timer_expired:
+#ifndef HW
+    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_START_RETX_TIMER, TCP_TX_DDOL_START_RETX_TIMER
+    phvwr.!c1       p.common_phv_debug_dol_dont_start_retx_timer, 1
+#endif
+
+    phvwr           p.common_phv_pending_rto, 1
+    seq             c1, d.sesq_retx_ci, d.{ci_0}.hx
+    seq             c2, d.asesq_retx_ci, d.{ci_4}.hx
+    bcf             [c1 & c2], tcp_tx_rx2tx_end
+
+    // This table need not be locked since it is read-only.
+    // Moreover it should not be locked to prevent the bypass
+    // cache from being used (bypass cache cannot be used,
+    // since the contents are written from rx pipeline)
+    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS,
+                        tcp_tx_read_rx2tx_shared_extra_stage1_start,
+                        k.p4_txdma_intr_qstate_addr,
+                        TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, TABLE_SIZE_512_BITS)
     phvwrpair       p.common_phv_fid, k.p4_txdma_intr_qid, \
                         p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
+    /*
+     * Launch sesq entry ready with RETX CI as index
+     */
+    add             r3, d.{sesq_base}.wx, d.sesq_retx_ci, NIC_SESQ_ENTRY_SIZE_SHIFT
+    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_tx_sesq_read_ci_stage1_start,
+                     r3, TABLE_SIZE_64_BITS)
+
+#ifndef HW
+    // DEBUG code
+    // If we are testing timer full case, don't start the timer again to
+    // prevent an endless loop. We do need to process one timer to test
+    // the timer full case (in the timer full case, the timer expires
+    // immediately)
+    phvwr           p.common_phv_debug_dol_dont_start_retx_timer, d.debug_dol_tx[TCP_TX_DDOL_FORCE_TIMER_FULL_BIT]
+#endif
+
     nop.e
     nop
+
+/******************************************************************************
+ * tcp_tx_del_ack
+ *****************************************************************************/
+tcp_tx_del_ack:
+    // start perpetual timer if necessary for the flow
+    seq             c1, d.perpetual_timer_started, 0
+    bal.c1          r7, tcp_tx_start_perpetual_timer
+    tblwr.f         d.{ci_3}.hx, d.{pi_3}.hx
+del_ack_doorbell:
+
+    /*
+     * Ring doorbell to clear scheduler
+     */
+    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
+    /* data will be in r3 */
+    CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid)
+    memwr.dx.e      r4, r3
+    phvwri          p.p4_intr_global_drop, 1
 
 
 /******************************************************************************
@@ -498,8 +544,7 @@ tcp_tx_ft_expired:
  *****************************************************************************/
 tcp_tx_abort:
 tcp_tx_rx2tx_end:
-    phvwri          p.p4_intr_global_drop, 1
-    nop.e
+    phvwri.e        p.p4_intr_global_drop, 1
     CAPRI_CLEAR_TABLE_VALID(0)
 
 /******************************************************************************
@@ -508,12 +553,13 @@ tcp_tx_rx2tx_end:
 tcp_tx_start_perpetual_timer:
 #ifndef HW
     // in simulation don't start timers unless testing them
-    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DEL_ACK_TIMER, TCP_TX_DDOL_DEL_ACK_TIMER
+    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_START_DEL_ACK_TIMER, TCP_TX_DDOL_START_DEL_ACK_TIMER
+    smeqb.!c1       c1, d.debug_dol_tx, TCP_TX_DDOL_START_RETX_TIMER, TCP_TX_DDOL_START_RETX_TIMER
     jr.!c1          r7
 #endif
     tblwr           d.perpetual_timer_started, 1
     addi            r4, r0, CAPRI_FAST_TIMER_ADDR(LIF_TCP)
     // result will be in r3
-    CAPRI_TIMER_DATA(0, k.p4_txdma_intr_qid, TCP_SCHED_RING_FAST_TIMER, TCP_ATO_TICKS)
+    CAPRI_TIMER_DATA(0, k.p4_txdma_intr_qid, TCP_SCHED_RING_FAST_TIMER, TCP_TIMER_TICK)
     jr              r7
     memwr.dx        r4, r3

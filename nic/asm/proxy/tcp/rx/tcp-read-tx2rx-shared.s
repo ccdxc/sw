@@ -86,7 +86,8 @@ table_read_RX:
     phvwr           p.s1_s2s_packets_out, d.packets_out
     phvwr           p.to_s2_serq_cidx, d.serq_cidx
 
-    phvwr.f         p.to_s6_payload_len, k.tcp_app_header_payload_len
+    phvwr.f.e       p.to_s6_payload_len, k.tcp_app_header_payload_len
+    nop
 
 flow_terminate:
     CAPRI_CLEAR_TABLE_VALID(0)

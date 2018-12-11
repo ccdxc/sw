@@ -115,8 +115,8 @@ typedef struct tcpcb_s {
     uint32_t              send_ack_ci;
     uint32_t              del_ack_pi;
     uint32_t              del_ack_ci;
-    uint32_t              retx_timer_pi;
-    uint32_t              retx_timer_ci;
+    uint32_t              fast_timer_pi;
+    uint32_t              fast_timer_ci;
     uint32_t              asesq_pi;
     uint32_t              asesq_ci;
     uint32_t              pending_tx_pi;

@@ -145,7 +145,7 @@ p4pd_add_or_del_tcp_rx_tcp_rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.u.tcp_rx_d.pred_flags = htonl(tcpcb_pd->tcpcb->pred_flags);
         if (tcpcb_pd->tcpcb->delay_ack) {
             data.u.tcp_rx_d.cfg_flags |= TCP_CFG_FLAG_DELACK;
-            data.u.tcp_rx_d.ato = htons((uint16_t)(tcpcb_pd->tcpcb->ato / TCP_TIMER_TICK));
+            data.u.tcp_rx_d.ato = htons(tcpcb_pd->tcpcb->ato / TCP_TIMER_TICK);
             data.u.tcp_rx_d.quick = TCP_QUICKACKS;
             HAL_TRACE_DEBUG("TCPCB ato: {} us", tcpcb_pd->tcpcb->ato);
         }
@@ -604,10 +604,10 @@ p4pd_get_tcpcb_txdma_stats(pd_tcpcb_t* tcpcb_pd)
                                     stats.debug_num_mem_to_pkt;
     tcpcb_pd->tcpcb->send_ack_pi = rx2tx_d.u.read_rx2tx_d.pi_1;
     tcpcb_pd->tcpcb->send_ack_ci = rx2tx_d.u.read_rx2tx_d.ci_1;
-    tcpcb_pd->tcpcb->del_ack_pi = rx2tx_d.u.read_rx2tx_d.pi_2;
-    tcpcb_pd->tcpcb->del_ack_ci = rx2tx_d.u.read_rx2tx_d.ci_2;
-    tcpcb_pd->tcpcb->retx_timer_pi = rx2tx_d.u.read_rx2tx_d.pi_3;
-    tcpcb_pd->tcpcb->retx_timer_ci = rx2tx_d.u.read_rx2tx_d.ci_3;
+    tcpcb_pd->tcpcb->fast_timer_pi = rx2tx_d.u.read_rx2tx_d.pi_2;
+    tcpcb_pd->tcpcb->fast_timer_ci = rx2tx_d.u.read_rx2tx_d.ci_2;
+    tcpcb_pd->tcpcb->del_ack_pi = rx2tx_d.u.read_rx2tx_d.pi_3;
+    tcpcb_pd->tcpcb->del_ack_ci = rx2tx_d.u.read_rx2tx_d.ci_3;
     tcpcb_pd->tcpcb->asesq_pi = rx2tx_d.u.read_rx2tx_d.pi_4;
     tcpcb_pd->tcpcb->asesq_ci = rx2tx_d.u.read_rx2tx_d.ci_4;
     tcpcb_pd->tcpcb->pending_tx_pi = rx2tx_d.u.read_rx2tx_d.pi_5;
@@ -711,7 +711,6 @@ p4pd_add_or_del_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.action_id = pc_offset;
         data.u.read_rx2tx_d.total = TCP_PROXY_TX_TOTAL_RINGS;
         data.u.read_rx2tx_d.eval_last = 1 << TCP_SCHED_RING_FAST_TIMER;
-        data.u.read_rx2tx_d.eval_last |= 1 << TCP_SCHED_RING_RTO;
         data.u.read_rx2tx_d.debug_dol_tx = htons(tcpcb_pd->tcpcb->debug_dol_tx);
         if (!debug_dol_timer_full_hw_id &&
                 tcpcb_pd->tcpcb->debug_dol_tx & TCP_TX_DDOL_FORCE_TIMER_FULL) {
@@ -1027,7 +1026,7 @@ p4pd_get_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd)
     tcpcb_pd->tcpcb->debug_dol_tblsetaddr = data.u.read_rx2tx_d.debug_dol_tblsetaddr;
 
     tcpcb_pd->tcpcb->debug_dol_tblsetaddr = data.u.read_rx2tx_d.debug_dol_tblsetaddr;
-    tcpcb_pd->tcpcb->retx_timer_ci = data.u.read_rx2tx_d.ci_3;
+    tcpcb_pd->tcpcb->fast_timer_ci = data.u.read_rx2tx_d.ci_2;
 
     HAL_TRACE_DEBUG("Received sesq_base: {:#x}", tcpcb_pd->tcpcb->sesq_base);
     HAL_TRACE_DEBUG("Received sesq_pi: {:#x}", tcpcb_pd->tcpcb->sesq_pi);
@@ -1120,12 +1119,10 @@ p4pd_get_tcp_tx_xmit_entry(pd_tcpcb_t* tcpcb_pd)
     }
 
     tcpcb_pd->tcpcb->packets_out = ntohs(data.packets_out);
-    tcpcb_pd->tcpcb->rto_pi = ntohs(data.rto_pi);
     tcpcb_pd->tcpcb->rto_backoff = data.rto_backoff;
     tcpcb_pd->tcpcb->snd_wscale = ntohs(data.snd_wscale);
 
     HAL_TRACE_DEBUG("TCPCB packets_out: {}", tcpcb_pd->tcpcb->packets_out);
-    HAL_TRACE_DEBUG("TCPCB rto_pi: {}", tcpcb_pd->tcpcb->rto_pi);
 
     return HAL_RET_OK;
 

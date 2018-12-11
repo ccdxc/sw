@@ -249,29 +249,7 @@
 
 #define HZ (1)
 
-#if 0
-#define TCP_DELACK_MAX  ((HZ/5))      /* maximal time to delay before sending an ACK */
-#if HZ >= 100
-#define TCP_DELACK_MIN  ((HZ/25))     /* minimal time to delay before sending an ACK */
-#define TCP_ATO_MIN     ((HZ/25))
-#else
-#define TCP_DELACK_MIN  4
-#define TCP_ATO_MIN     4
-#define TCP_RTO_MAX     ((120*HZ)) /* 120s */
-#define TCP_RTO_MIN     ((HZ/5))   /* 200ms */
 
-#endif
-#else
-#define TCP_DELACK_MAX  (200) /* 200ms */
-#define TCP_DELACK_MIN  (40)  /* 40ms */
-#define TCP_ATO_MIN     (40)  /* 40ms */
-
-#define TCP_RTO_MAX     (4000) /* in us, FIXME: very low in comparison to Linux ? */
-#define TCP_RTO_MIN     (100) /* in us, FIXME: very low in comparison to Linux ?  */
-
-#endif
-
-#define TCP_KTO_MIN     ((75*HZ)) /* 75s */
 
 #define TCP_RESOURCE_PROBE_INTERVAL ((HZ/2U)) /* Maximal interval between probes
                                                          * for local resources.

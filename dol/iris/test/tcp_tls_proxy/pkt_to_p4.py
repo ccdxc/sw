@@ -148,11 +148,11 @@ def TestCaseSetup(tc):
 def TestCaseTrigger(tc):
     if GlobalOptions.dryrun:
         return True
-    if tc.pvtdata.test_timer:
+    if tc.pvtdata.test_del_ack_timer:
         timer = tc.infra_data.ConfigStore.objects.db['FAST_TIMER']
         timer.Step(41)
     if tc.pvtdata.test_retx_timer:
-        timer = tc.infra_data.ConfigStore.objects.db['SLOW_TIMER']
+        timer = tc.infra_data.ConfigStore.objects.db['FAST_TIMER']
         timer.Step(101)
 
         num_retx_pkts = 0
@@ -463,16 +463,6 @@ def TestCaseVerify(tc):
                 print("packets_out (%d) not as expected (0)" %
                         other_tcpcb_cur.packets_out)
                 return False
-            if other_tcpcb_cur.rto_pi != 1:
-                print("rto_pi (%d) not as expected (%d)" %
-                        (other_tcpcb_cur.rto_pi, 1))
-                return False
-            # retx_timer_ci is incremented when the timer is cancelled when all
-            # acks are received
-            if other_tcpcb_cur.retx_timer_ci != 1:
-                print("retx_timer_ci (%d) not as expected (%d)" %
-                        (other_tcpcb_cur.retx_timer_ci, 1))
-                return False
         else:
             #
             # retransmit case - no acks or partial acks received
@@ -480,17 +470,6 @@ def TestCaseVerify(tc):
             if other_tcpcb_cur.packets_out != num_pkts - num_ack_pkts:
                 print("packets_out (%d) not as expected (%d)" %
                         (other_tcpcb_cur.packets_out, num_pkts - num_ack_pkts))
-                return False
-            if other_tcpcb_cur.rto_pi != num_retx_pkts + 1 + num_ack_pkts:
-                print("rto_pi (%d) not as expected (%d)" %
-                        (other_tcpcb_cur.rto_pi, num_retx_pkts + 1 + num_ack_pkts))
-                return False
-            # retx_timer_ci is incremented when a timeout occurs or when an ack is
-            # received
-            retx_ci = num_retx_pkts + num_ack_pkts
-            if other_tcpcb_cur.retx_timer_ci != retx_ci:
-                print("retx_timer_ci (%d) not as expected (%d)" %
-                        (other_tcpcb_cur.retx_timer_ci, retx_ci))
                 return False
 
         if tc.pvtdata.rto_backoff:
@@ -517,16 +496,16 @@ def TestCaseTeardown(tc):
 
     if GlobalOptions.dryrun:
         return True
-    if tc.pvtdata.test_timer:
+    if tc.pvtdata.test_del_ack_timer:
         timer = tc.infra_data.ConfigStore.objects.db['FAST_TIMER']
         timer.Step(0)
     if tc.pvtdata.test_retx_timer:
-        tcpcb.debug_dol_tx |= tcp_proxy.tcp_tx_debug_dol_dont_start_retx_timer
+        tcpcb.debug_dol_tx &= ~tcp_proxy.tcp_tx_debug_dol_start_retx_timer
         tcpcb.SetObjValPd()
-        other_tcpcb.debug_dol_tx |= tcp_proxy.tcp_tx_debug_dol_dont_start_retx_timer
+        other_tcpcb.debug_dol_tx &= ~tcp_proxy.tcp_tx_debug_dol_start_retx_timer
         other_tcpcb.SetObjValPd()
 
-        timer = tc.infra_data.ConfigStore.objects.db['SLOW_TIMER']
+        timer = tc.infra_data.ConfigStore.objects.db['FAST_TIMER']
         timer.Step(0)
     if tc.pvtdata.sem_full and tc.pvtdata.sem_full == 'nmdr':
         rnmdpr_big = tc.pvtdata.db["RNMDPR_BIG"]

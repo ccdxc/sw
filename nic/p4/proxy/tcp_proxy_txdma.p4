@@ -121,7 +121,11 @@ header_type rx2tx_d_t {
 
         debug_dol_tblsetaddr : 8;
 
+        // delayed ack timeout decremented on every timer tick
         ato : 16;               // offset 48 (TCP_TCB_RX2TX_ATO_OFFSET)
+
+        // retransmission timeout decremented on every timer tick
+        rto : 16;               // offset 50 (TCP_TCB_RX2TX_RTO_OFFSET)
 
         debug_dol_tx : 16;
 
@@ -335,7 +339,6 @@ header_type common_t0_s2s_phv_t {
         len                     : 16;
         snd_nxt                 : SEQ_NUMBER_WIDTH;
         rcv_nxt                 : 32;
-        rto_pi                  : 16;
     }
 }
 
@@ -526,7 +529,7 @@ metadata dma_cmd_phv2mem_t tx2rx_dma;        // dma cmd 8
 rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0,ci_0, pi_1, ci_1,\
 pi_2, ci_2, pi_3, ci_3, pi_4, ci_4, pi_5, ci_5, pi_6, ci_6,\
 pi_7, ci_7, sesq_tx_ci, sesq_retx_ci, asesq_retx_ci, clean_retx_pending,\
-debug_dol_tblsetaddr, ato, debug_dol_tx, sesq_base, perpetual_timer_started
+debug_dol_tblsetaddr, ato, rto, debug_dol_tx, sesq_base, perpetual_timer_started
 
 #define GENERATE_RX2TX_D                                                                               \
     modify_field(rx2tx_d.rsvd, rsvd);                                                                  \
@@ -559,6 +562,7 @@ debug_dol_tblsetaddr, ato, debug_dol_tx, sesq_base, perpetual_timer_started
     modify_field(rx2tx_d.clean_retx_pending, clean_retx_pending);                                      \
     modify_field(rx2tx_d.debug_dol_tblsetaddr, debug_dol_tblsetaddr);                                  \
     modify_field(rx2tx_d.ato, ato);                                                                    \
+    modify_field(rx2tx_d.rto, rto);                                                                    \
     modify_field(rx2tx_d.debug_dol_tx, debug_dol_tx);                                                  \
     modify_field(rx2tx_d.sesq_base, sesq_base);                                                        \
     modify_field(rx2tx_d.perpetual_timer_started, perpetual_timer_started);                            \
@@ -570,8 +574,7 @@ debug_dol_tblsetaddr, ato, debug_dol_tx, sesq_base, perpetual_timer_started
     modify_field(t0_s2s_scratch.addr, t0_s2s.addr);                                     \
     modify_field(t0_s2s_scratch.len, t0_s2s.len);                                       \
     modify_field(t0_s2s_scratch.snd_nxt, t0_s2s.snd_nxt);                               \
-    modify_field(t0_s2s_scratch.rcv_nxt, t0_s2s.rcv_nxt);                               \
-    modify_field(t0_s2s_scratch.rto_pi, t0_s2s.rto_pi);
+    modify_field(t0_s2s_scratch.rcv_nxt, t0_s2s.rcv_nxt);
 
 #define GENERATE_T0_S2S_CLEAN_RETX                                                      \
     modify_field(t0_s2s_clean_retx_scratch.snd_wnd, t0_s2s_clean_retx.snd_wnd); \

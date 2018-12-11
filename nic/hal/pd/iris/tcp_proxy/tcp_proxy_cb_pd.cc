@@ -672,7 +672,6 @@ tcp_proxy_cb_p4pd_add_or_del_tcp_tx_read_rx2tx_entry(pd_tcp_proxy_cb_t* tcp_prox
         data.action_id = pc_offset;
         data.u.read_rx2tx_d.total = TCP_PROXY_TX_TOTAL_RINGS;
         data.u.read_rx2tx_d.eval_last = 1 << TCP_SCHED_RING_FAST_TIMER;
-        data.u.read_rx2tx_d.eval_last |= 1 << TCP_SCHED_RING_RTO;
         data.u.read_rx2tx_d.debug_dol_tx = htons(tcp_proxy_cb_pd->tcp_proxy_cb->debug_dol_tx);
         if (!debug_dol_timer_full_hw_id &&
                 tcp_proxy_cb_pd->tcp_proxy_cb->debug_dol_tx & TCP_TX_DDOL_FORCE_TIMER_FULL) {
@@ -1055,11 +1054,9 @@ tcp_proxy_cb_p4pd_get_tcp_tx_xmit_entry(pd_tcp_proxy_cb_t* tcp_proxy_cb_pd)
     }
 
     tcp_proxy_cb_pd->tcp_proxy_cb->packets_out = ntohs(data.packets_out);
-    tcp_proxy_cb_pd->tcp_proxy_cb->rto_pi = ntohs(data.rto_pi);
     tcp_proxy_cb_pd->tcp_proxy_cb->rto_backoff = data.rto_backoff;
 
     HAL_TRACE_DEBUG("TCPCB packets_out: {}", tcp_proxy_cb_pd->tcp_proxy_cb->packets_out);
-    HAL_TRACE_DEBUG("TCPCB rto_pi: {}", tcp_proxy_cb_pd->tcp_proxy_cb->rto_pi);
 
     return HAL_RET_OK;
 

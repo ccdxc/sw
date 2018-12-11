@@ -1954,8 +1954,8 @@ public:
                 std::cout << "send_ack_ci: " << stats.send_ack_ci() << std::endl;
                 std::cout << "del_ack_pi: " << stats.del_ack_pi() << std::endl;
                 std::cout << "del_ack_ci: " << stats.del_ack_ci() << std::endl;
-                std::cout << "retx_timer_pi: " << stats.retx_timer_pi() << std::endl;
-                std::cout << "retx_timer_ci: " << stats.retx_timer_ci() << std::endl;
+                std::cout << "fast_timer_pi: " << stats.fast_timer_pi() << std::endl;
+                std::cout << "fast_timer_ci: " << stats.fast_timer_ci() << std::endl;
                 std::cout << "asesq_pi: " << stats.asesq_pi() << std::endl;
                 std::cout << "asesq_ci: " << stats.asesq_ci() << std::endl;
                 std::cout << "pending_tx_pi: " << stats.pending_tx_pi() << std::endl;
@@ -1965,7 +1965,7 @@ public:
                 std::cout << "clean_retx_pi: " << stats.clean_retx_pi() << std::endl;
                 std::cout << "clean_retx_ci: " << stats.clean_retx_ci() << std::endl;
                 std::cout << "packets_out: " << stats.packets_out() << std::endl;
-                std::cout << "rto_pi: " << stats.rto_pi() << std::endl;
+                std::cout << "sesq_tx_ci: " << stats.sesq_tx_ci() << std::endl;
                 std::cout << "tx_ring_pi: " << stats.tx_ring_pi() << std::endl;
                 std::cout << "partial_ack_cnt: " << stats.partial_ack_cnt() << std::endl;
                 std::cout << std::endl;

@@ -459,8 +459,6 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_spec()->set_pred_flags(rtcpcb.pred_flags);
     rsp->mutable_spec()->set_debug_dol_tblsetaddr(rtcpcb.debug_dol_tblsetaddr);
     rsp->mutable_spec()->set_packets_out(rtcpcb.packets_out);
-    rsp->mutable_spec()->set_rto_pi(rtcpcb.rto_pi);
-    rsp->mutable_spec()->set_retx_timer_ci(rtcpcb.retx_timer_ci);
     rsp->mutable_spec()->set_rto_backoff(rtcpcb.rto_backoff);
     rsp->mutable_spec()->set_cpu_id(rtcpcb.cpu_id);
     rsp->mutable_spec()->set_rcv_wnd(rtcpcb.rcv_wnd);
@@ -503,10 +501,10 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_stats()->set_asesq_retx_ci(rtcpcb.asesq_retx_ci);
     rsp->mutable_stats()->set_send_ack_pi(rtcpcb.send_ack_pi);
     rsp->mutable_stats()->set_send_ack_ci(rtcpcb.send_ack_ci);
+    rsp->mutable_stats()->set_fast_timer_pi(rtcpcb.fast_timer_pi);
+    rsp->mutable_stats()->set_fast_timer_ci(rtcpcb.fast_timer_ci);
     rsp->mutable_stats()->set_del_ack_pi(rtcpcb.del_ack_pi);
     rsp->mutable_stats()->set_del_ack_ci(rtcpcb.del_ack_ci);
-    rsp->mutable_stats()->set_retx_timer_pi(rtcpcb.retx_timer_pi);
-    rsp->mutable_stats()->set_retx_timer_ci(rtcpcb.retx_timer_ci);
     rsp->mutable_stats()->set_asesq_pi(rtcpcb.asesq_pi);
     rsp->mutable_stats()->set_asesq_ci(rtcpcb.asesq_ci);
     rsp->mutable_stats()->set_pending_tx_pi(rtcpcb.pending_tx_pi);
@@ -516,10 +514,9 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_stats()->set_clean_retx_pi(rtcpcb.clean_retx_pi);
     rsp->mutable_stats()->set_clean_retx_ci(rtcpcb.clean_retx_ci);
     rsp->mutable_stats()->set_packets_out(rtcpcb.packets_out);
-    rsp->mutable_stats()->set_rto_pi(rtcpcb.rto_pi);
+    rsp->mutable_stats()->set_sesq_tx_ci(rtcpcb.sesq_tx_ci);
     rsp->mutable_stats()->set_tx_ring_pi(rtcpcb.tx_ring_pi);
     rsp->mutable_stats()->set_partial_ack_cnt(rtcpcb.partial_ack_cnt);
-    rsp->mutable_stats()->set_sesq_tx_ci(rtcpcb.sesq_tx_ci);
 
     rsp->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;

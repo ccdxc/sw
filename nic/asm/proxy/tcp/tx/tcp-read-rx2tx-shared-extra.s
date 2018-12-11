@@ -32,7 +32,13 @@ tcp_tx_read_rx2tx_shared_extra_stage1_start:
     phvwrpair       p.t0_s2s_snd_wnd, d.snd_wnd, \
                         p.t0_s2s_state, d.state
     // HACK: Force a timer of 100 ticks
-    phvwr           p.to_s5_rto, 100
+#ifdef HW
+    phvwr           p.to_s5_rto, TCP_RTO_MIN_TICK
+#else
+    // Set it to 1 tick in simulation so timer immediately expires
+    // on stepping it
+    phvwr           p.to_s5_rto, 1
+#endif
     phvwrpair       p.to_s6_rcv_mss, d.rcv_mss, \
                         p.to_s6_rcv_wnd, d.rcv_wnd
     phvwr           p.t0_s2s_rcv_nxt, d.rcv_nxt

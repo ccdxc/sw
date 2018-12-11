@@ -9,9 +9,6 @@
 // tcp_proxy_api.h **
 #define TCP_TCB_RX2TX_SHARED_OFFSET     0
 
-// offset of ci_3 in TCP Tx stage 0
-#define TCP_TCB_RETX_TIMER_CI_OFFSET    (TCP_TCB_RX2TX_SHARED_OFFSET + 22)
-
 #define TCP_TCB_RX2TX_TX_CI_OFFSET \
                     (TCP_TCB_RX2TX_SHARED_OFFSET + 40)
 #define TCP_TCB_RX2TX_RETX_CI_OFFSET \
@@ -20,6 +17,8 @@
                     (TCP_TCB_RX2TX_SHARED_OFFSET + 46)
 #define TCP_TCB_RX2TX_ATO_OFFSET \
                     (TCP_TCB_RX2TX_SHARED_OFFSET + 48)
+#define TCP_TCB_RX2TX_RTO_OFFSET \
+                    (TCP_TCB_RX2TX_SHARED_OFFSET + 50)
 #define TCP_TCB_TX2RX_SHARED_OFFSET     64
 #define TCP_TCB_TX2RX_SHARED_WRITE_OFFSET \
                     (TCP_TCB_TX2RX_SHARED_OFFSET + 32)  // skip intrinsic part etc

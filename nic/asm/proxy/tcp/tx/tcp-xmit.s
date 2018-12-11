@@ -53,11 +53,8 @@ tcp_tx_enqueue:
     bcf             [c1 & !c2], tcp_tx_end_program_and_drop
     nop
     tblwr           d.no_window, 0
-    /*
-     * For RTO case, snd_nxt is snd_una, initialize snd_nxt for other cases
-     */
-    seq             c1, k.t0_s2s_snd_nxt, r0
-    phvwr.c1        p.t0_s2s_snd_nxt, d.snd_nxt
+
+    phvwr           p.t0_s2s_snd_nxt, d.snd_nxt
 
     seq             c1, k.common_phv_fin, 1
     bal.c1          r_linkaddr, tcp_tx_handle_fin
@@ -95,59 +92,33 @@ flow_read_xmit_cursor_start:
 
     tbladd          d.snd_nxt, r1
 
-    seq             c1, d.packets_out, 0
-    b.!c1           rearm_rto_done
 rearm_rto:
-    seq             c1, k.common_phv_debug_dol_dont_start_retx_timer, 1
-    b.c1            rearm_rto_done
+#ifndef HW
+    bbeq            k.common_phv_debug_dol_dont_start_retx_timer, 1, rearm_rto_done
+#endif
 
     CAPRI_OPERAND_DEBUG(k.to_s5_rto)
 
     /*
-     * r1 = rto
+     * r2 = rto
      *    = min(rto << backoff, TCP_RTO_MAX)
-     *
-     * TODO: rto_backoff needs to be reset upon indication from rx
-     * pipeline (rx2tx_extra_pending_reset_backoff)
      */
-    add             r1, r0, k.to_s5_rto
-    sll             r1, r1, d.rto_backoff
-    slt             c1, r1, TCP_RTO_MAX
-    add.!c1         r1, r0, TCP_RTO_MAX
+    sll             r2, k.to_s5_rto, d.rto_backoff
+    slt             c1, r2, TCP_RTO_MAX_TICK
+    add.!c1         r2, r0, TCP_RTO_MAX_TICK
 
-    // result will be in r3
-    CAPRI_TIMER_DATA(0, k.common_phv_fid, TCP_SCHED_RING_RTO, r1)
+    add             r1, k.common_phv_qstate_addr, TCP_TCB_RX2TX_RTO_OFFSET
+    memwr.h         r1, r2
 
-    add             r1, k.common_phv_qstate_addr, TCP_TCB_RETX_TIMER_CI_OFFSET
-#ifndef HW
-    memwr.hx        r1, d.rto_pi
-#endif
-    tbladd          d.rto_pi, 1
-
-    // TODO : using slow timer just for testing
-    addi            r5, r0, CAPRI_SLOW_TIMER_ADDR(LIF_TCP)
-#ifndef HW
-    memwr.dx        r5, r3
-#endif
 rearm_rto_done:
-    b.c_snd_una     tcp_tx_end_program
-    nop
 
-    // TODO : this needs to account for TSO, for now assume one packet
     tbladd.c_sesq   d.packets_out, 1
 
     /*
      * TODO: init is_cwnd_limited and call tcp_cwnd_validate
      */
-     tblwr          d.is_cwnd_limited, 1
+    tblwr           d.is_cwnd_limited, 1
 
-    // TODO : Lot of stuff to do here:
-    //      if window size is smaller, move xmit_cursor_addr by appropriate amount
-    //      if we have more data than one descriptor, adjust next pointer and
-    //      schedule ourselves again to send more data
-    // TODO : right now code assumes we always send
-    //        whatever is posted to sesq, so set cursor_addr back to 0
-    tblwr           d.xmit_cursor_addr, r0
     phvwr           p.tx2rx_snd_nxt, d.snd_nxt
 
 table_read_TSO:
@@ -235,18 +206,11 @@ tcp_tx_xmit_snd_una_update:
      */
     tblwr           d.rto_backoff, 0
 
-    tblsub          d.packets_out, k.t0_s2s_packets_out_decr
-    sne             c1, d.packets_out, 0
-    seq             c2, k.common_phv_partial_retx_cleanup, 1
-    // rearm_timer if packets are outstanding, and this is not
-    // a partial cleanup
-    bcf             [c1 & !c2], rearm_rto
-
+    tblssub         d.packets_out, k.t0_s2s_packets_out_decr
+    seq             c1, d.packets_out, 0
     // cancel retx timer if packets_out == 0
-    add.!c1         r1, k.common_phv_qstate_addr, TCP_TCB_RETX_TIMER_CI_OFFSET
-#ifndef HW
-    memwr.hx.!c1    r1, d.rto_pi
-#endif
+    add.c1          r1, k.common_phv_qstate_addr, TCP_TCB_RX2TX_RTO_OFFSET
+    memwr.h.c1      r1, 0
 
 tcp_tx_end_program:
     // We have no window, wait till window opens up
@@ -263,9 +227,6 @@ tcp_tx_end_program_and_drop:
     nop
 
 tcp_tx_retransmit:
-    seq             c1, d.rto_pi, k.t0_s2s_rto_pi
-    b.!c1           tcp_tx_end_program_and_drop // old timer, ignore it
-    nop
     b               rearm_rto
     tbladd          d.rto_backoff, 1
 
