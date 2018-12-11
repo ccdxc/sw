@@ -31,7 +31,6 @@
  *	- add additional UTs for read/write status/result, as needed
  *	- handle PNSO_CP_DFLAG_BYPASS_ONFAIL fully
  *	- reuse/common code (write_result, read_status, cpdc_setup_batch_desc)
- *	- address cpdc_fill_per_block_desc_ex()
  *
  */
 pnso_error_t
@@ -477,6 +476,31 @@ cpdc_put_status_desc(struct per_core_resource *pcr, bool per_block,
 
 	mpool = per_block ? pcr->mpools[MPOOL_TYPE_CPDC_STATUS_DESC_VECTOR] :
 		pcr->mpools[MPOOL_TYPE_CPDC_STATUS_DESC];
+
+	mpool_put_object(mpool, desc);
+}
+
+struct cpdc_status_desc *
+cpdc_get_rmem_status_desc(struct per_core_resource *pcr, bool per_block)
+{
+	struct mem_pool *mpool;
+
+	mpool = per_block ?
+		pcr->mpools[MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS_DESC_VECTOR] :
+		pcr->mpools[MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS_DESC];
+
+	return (struct cpdc_status_desc *) mpool_get_object(mpool);
+}
+
+void
+cpdc_put_rmem_status_desc(struct per_core_resource *pcr, bool per_block,
+		struct cpdc_status_desc *desc)
+{
+	struct mem_pool *mpool;
+
+	mpool = per_block ?
+		pcr->mpools[MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS_DESC_VECTOR] :
+		pcr->mpools[MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS_DESC];
 
 	mpool_put_object(mpool, desc);
 }
