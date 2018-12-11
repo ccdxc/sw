@@ -3,7 +3,7 @@ package manager
 import (
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/venice/utils/authz"
-	"github.com/pensando/sw/venice/utils/authz/rbac"
+	"github.com/pensando/sw/venice/utils/authz/orb"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
 
@@ -16,7 +16,7 @@ type authorizationManager struct {
 // NewAuthorizationManager returns an instance of AuthorizationManager
 func NewAuthorizationManager(name, apiServer string, rslver resolver.Interface) authz.Authorizer {
 	authorizers := make([]authz.Authorizer, 1)
-	authorizers[0] = rbac.NewRBACAuthorizer(name, apiServer, rslver)
+	authorizers[0] = orb.NewORBAuthorizer(name, apiServer, rslver)
 	authzMgr := &authorizationManager{
 		authorizers: authorizers,
 	}

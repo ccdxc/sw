@@ -315,3 +315,25 @@ message PasswordCredential {
     string Password = 2 [(gogoproto.jsontag) = "password,omitempty"];
     string Tenant   = 3 [(gogoproto.jsontag) = "tenant,omitempty"];
 }
+
+// PasswordChangeRequest is for user to change his password
+message PasswordChangeRequest {
+    api.TypeMeta T     = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+
+    api.ObjectMeta O   = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+    string OldPassword = 3 [(gogoproto.jsontag) = "old-password,omitempty"];
+
+    string NewPassword = 4 [(gogoproto.jsontag) = "new-password,omitempty"];
+
+    option (venice.objectPrefix) = {Collection: "users", Path: "/{O.Tenant}"};
+}
+
+// PasswordResetRequest is for user to reset password
+message PasswordResetRequest {
+    api.TypeMeta T   = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+
+    api.ObjectMeta O = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+    option (venice.objectPrefix) = {Collection: "users", Path: "/{O.Tenant}"};
+}

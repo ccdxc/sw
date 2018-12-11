@@ -1,8 +1,6 @@
 package rbac
 
 import (
-	"reflect"
-
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -19,7 +17,7 @@ func permissionsAllow(permissions []auth.Permission, operation authz.Operation) 
 }
 
 func permissionAllows(permission auth.Permission, operation authz.Operation) bool {
-	if !isValidOperationValue(operation) {
+	if !authz.IsValidOperationValue(operation) {
 		return false
 	}
 	return resourceMatches(permission, operation.GetResource()) &&
@@ -106,17 +104,4 @@ func resourceNameMatches(permission auth.Permission, requestedResourceName strin
 	}
 
 	return false
-}
-
-// isValidOperationValue validates operation interface value as it is an input coming from RBAC hooks in API Gateway
-func isValidOperationValue(operation authz.Operation) bool {
-	// make sure interface type and value are not nil
-	if operation == nil || reflect.ValueOf(operation).IsNil() {
-		return false
-	}
-	resource := operation.GetResource()
-	if resource == nil || reflect.ValueOf(resource).IsNil() {
-		return false
-	}
-	return true
 }

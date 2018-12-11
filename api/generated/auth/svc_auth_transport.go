@@ -47,6 +47,8 @@ type grpcServerAuthV1 struct {
 	AutoUpdateUserHdlr                 grpctransport.Handler
 	LdapBindCheckHdlr                  grpctransport.Handler
 	LdapConnectionCheckHdlr            grpctransport.Handler
+	PasswordChangeHdlr                 grpctransport.Handler
+	PasswordResetHdlr                  grpctransport.Handler
 }
 
 // MakeGRPCServerAuthV1 creates a GRPC server for AuthV1 service
@@ -209,6 +211,20 @@ func MakeGRPCServerAuthV1(ctx context.Context, endpoints EndpointsAuthV1Server, 
 			DecodeGrpcReqAuthenticationPolicy,
 			EncodeGrpcRespAuthenticationPolicy,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("LdapConnectionCheck", logger)))...,
+		),
+
+		PasswordChangeHdlr: grpctransport.NewServer(
+			endpoints.PasswordChangeEndpoint,
+			DecodeGrpcReqPasswordChangeRequest,
+			EncodeGrpcRespUser,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("PasswordChange", logger)))...,
+		),
+
+		PasswordResetHdlr: grpctransport.NewServer(
+			endpoints.PasswordResetEndpoint,
+			DecodeGrpcReqPasswordResetRequest,
+			EncodeGrpcRespUser,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("PasswordReset", logger)))...,
 		),
 	}
 }
@@ -605,6 +621,42 @@ func decodeHTTPrespAuthV1LdapConnectionCheck(_ context.Context, r *http.Response
 		return nil, errorDecoder(r)
 	}
 	var resp AuthenticationPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerAuthV1) PasswordChange(ctx oldcontext.Context, req *PasswordChangeRequest) (*User, error) {
+	_, resp, err := s.PasswordChangeHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respAuthV1PasswordChange).V
+	return &r, resp.(respAuthV1PasswordChange).Err
+}
+
+func decodeHTTPrespAuthV1PasswordChange(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp User
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerAuthV1) PasswordReset(ctx oldcontext.Context, req *PasswordResetRequest) (*User, error) {
+	_, resp, err := s.PasswordResetHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respAuthV1PasswordReset).V
+	return &r, resp.(respAuthV1PasswordReset).Err
+}
+
+func decodeHTTPrespAuthV1PasswordReset(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp User
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }

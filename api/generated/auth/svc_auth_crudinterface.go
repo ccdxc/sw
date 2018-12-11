@@ -24,6 +24,8 @@ type AuthV1UserInterface interface {
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*User, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 	Allowed(oper apiserver.APIOperType) bool
+	PasswordChange(ctx context.Context, in *PasswordChangeRequest) (*User, error)
+	PasswordReset(ctx context.Context, in *PasswordResetRequest) (*User, error)
 }
 
 // AuthV1AuthenticationPolicyInterface exposes the CRUD methods for AuthenticationPolicy

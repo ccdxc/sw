@@ -26,6 +26,20 @@ service AuthV1 {
         Object: "User"
         Method: [ "get", "put", "delete", "post", "list", "watch" ]
     };
+    // Action to change user password
+    option (venice.apiAction) = {
+        Object: "User"
+        Action: "PasswordChange"
+        Request: "PasswordChangeRequest"
+        Response: "User"
+    };
+    // Action to reset user password
+    option (venice.apiAction) = {
+        Object: "User"
+        Action: "PasswordReset"
+        Request: "PasswordResetRequest"
+        Response: "User"
+    };
     option (venice.apiRestService) = {
         Object: "AuthenticationPolicy"
         Method: [ "get", "put", "post", "watch" ]

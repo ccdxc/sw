@@ -245,11 +245,301 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 		"auth.LdapServer":                 apisrvpkg.NewMessage("auth.LdapServer"),
 		"auth.LdapServerStatus":           apisrvpkg.NewMessage("auth.LdapServerStatus"),
 		"auth.Local":                      apisrvpkg.NewMessage("auth.Local"),
-		"auth.PasswordCredential":         apisrvpkg.NewMessage("auth.PasswordCredential"),
-		"auth.Permission":                 apisrvpkg.NewMessage("auth.Permission"),
-		"auth.Radius":                     apisrvpkg.NewMessage("auth.Radius"),
-		"auth.RadiusServer":               apisrvpkg.NewMessage("auth.RadiusServer"),
-		"auth.RadiusServerStatus":         apisrvpkg.NewMessage("auth.RadiusServerStatus"),
+		"auth.PasswordChangeRequest": apisrvpkg.NewMessage("auth.PasswordChangeRequest").WithKeyGenerator(func(i interface{}, prefix string) string {
+			if i == nil {
+				r := auth.PasswordChangeRequest{}
+				return r.MakeKey(prefix)
+			}
+			r := i.(auth.PasswordChangeRequest)
+			return r.MakeKey(prefix)
+		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
+			r := i.(auth.PasswordChangeRequest)
+			r.Kind = "PasswordChangeRequest"
+			r.APIVersion = version
+			return r
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool, updateFn kvstore.UpdateFunc) (interface{}, error) {
+			r := i.(auth.PasswordChangeRequest)
+			key := r.MakeKey(prefix)
+			r.Kind = "PasswordChangeRequest"
+			var err error
+			if create {
+				r.GenerationID = "1"
+				err = kvs.Create(ctx, key, &r)
+				if err != nil {
+					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+				}
+			} else {
+				var cur auth.PasswordChangeRequest
+				err = kvs.Get(ctx, key, &cur)
+				if err != nil {
+					l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+					return nil, err
+				}
+				r.UUID = cur.UUID
+				r.CreationTime = cur.CreationTime
+				if r.ResourceVersion != "" {
+					l.Infof("resource version is specified %s\n", r.ResourceVersion)
+					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				} else {
+					err = kvs.Update(ctx, key, &r)
+				}
+				if err != nil {
+					l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+				}
+
+			}
+			return r, err
+		}).WithKvTxnUpdater(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, i interface{}, prefix string, create bool, updatefn kvstore.UpdateFunc) error {
+			r := i.(auth.PasswordChangeRequest)
+			key := r.MakeKey(prefix)
+			var err error
+			if create {
+				r.GenerationID = "1"
+				err = txn.Create(key, &r)
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+				}
+			} else {
+				if updatefn != nil {
+					var cur auth.PasswordChangeRequest
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return err
+					}
+					robj, err := updatefn(&cur)
+					if err != nil {
+						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						return err
+					}
+					r = *robj.(*auth.PasswordChangeRequest)
+					txn.AddComparator(kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				} else {
+					var cur auth.PasswordChangeRequest
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return err
+					}
+					r.UUID = cur.UUID
+					r.CreationTime = cur.CreationTime
+					if _, err := strconv.ParseUint(r.GenerationID, 10, 64); err != nil {
+						r.GenerationID = cur.GenerationID
+						_, err := strconv.ParseUint(cur.GenerationID, 10, 64)
+						if err != nil {
+							// Cant recover ID!!, reset ID
+							r.GenerationID = "2"
+						}
+					}
+				}
+				err = txn.Update(key, &r)
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+				}
+			}
+			return err
+		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
+			r := i.(auth.PasswordChangeRequest)
+			r.UUID = uuid.NewV4().String()
+			return r, nil
+		}).WithCreationTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(auth.PasswordChangeRequest)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.CreationTime.Timestamp = *ts
+			}
+			return r, err
+		}).WithModTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(auth.PasswordChangeRequest)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.ModTime.Timestamp = *ts
+			}
+			return r, err
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
+			r := i.(auth.PasswordChangeRequest)
+			r.SelfLink = path
+			return r, nil
+		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
+			r := auth.PasswordChangeRequest{}
+			err := kvs.Get(ctx, key, &r)
+			if err != nil {
+				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+			}
+			return r, err
+		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
+			r := auth.PasswordChangeRequest{}
+			err := kvs.Delete(ctx, key, &r)
+			if err != nil {
+				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+			}
+			return r, err
+		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
+			err := txn.Delete(key)
+			if err != nil {
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
+			}
+			return err
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(auth.PasswordChangeRequest)
+			return &r
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+			r := i.(auth.PasswordChangeRequest)
+			return r.Validate(ver, "", ignoreStatus)
+		}),
+
+		"auth.PasswordCredential": apisrvpkg.NewMessage("auth.PasswordCredential"),
+		"auth.PasswordResetRequest": apisrvpkg.NewMessage("auth.PasswordResetRequest").WithKeyGenerator(func(i interface{}, prefix string) string {
+			if i == nil {
+				r := auth.PasswordResetRequest{}
+				return r.MakeKey(prefix)
+			}
+			r := i.(auth.PasswordResetRequest)
+			return r.MakeKey(prefix)
+		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
+			r := i.(auth.PasswordResetRequest)
+			r.Kind = "PasswordResetRequest"
+			r.APIVersion = version
+			return r
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool, updateFn kvstore.UpdateFunc) (interface{}, error) {
+			r := i.(auth.PasswordResetRequest)
+			key := r.MakeKey(prefix)
+			r.Kind = "PasswordResetRequest"
+			var err error
+			if create {
+				r.GenerationID = "1"
+				err = kvs.Create(ctx, key, &r)
+				if err != nil {
+					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+				}
+			} else {
+				var cur auth.PasswordResetRequest
+				err = kvs.Get(ctx, key, &cur)
+				if err != nil {
+					l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+					return nil, err
+				}
+				r.UUID = cur.UUID
+				r.CreationTime = cur.CreationTime
+				if r.ResourceVersion != "" {
+					l.Infof("resource version is specified %s\n", r.ResourceVersion)
+					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				} else {
+					err = kvs.Update(ctx, key, &r)
+				}
+				if err != nil {
+					l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+				}
+
+			}
+			return r, err
+		}).WithKvTxnUpdater(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, i interface{}, prefix string, create bool, updatefn kvstore.UpdateFunc) error {
+			r := i.(auth.PasswordResetRequest)
+			key := r.MakeKey(prefix)
+			var err error
+			if create {
+				r.GenerationID = "1"
+				err = txn.Create(key, &r)
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+				}
+			} else {
+				if updatefn != nil {
+					var cur auth.PasswordResetRequest
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return err
+					}
+					robj, err := updatefn(&cur)
+					if err != nil {
+						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						return err
+					}
+					r = *robj.(*auth.PasswordResetRequest)
+					txn.AddComparator(kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				} else {
+					var cur auth.PasswordResetRequest
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return err
+					}
+					r.UUID = cur.UUID
+					r.CreationTime = cur.CreationTime
+					if _, err := strconv.ParseUint(r.GenerationID, 10, 64); err != nil {
+						r.GenerationID = cur.GenerationID
+						_, err := strconv.ParseUint(cur.GenerationID, 10, 64)
+						if err != nil {
+							// Cant recover ID!!, reset ID
+							r.GenerationID = "2"
+						}
+					}
+				}
+				err = txn.Update(key, &r)
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+				}
+			}
+			return err
+		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
+			r := i.(auth.PasswordResetRequest)
+			r.UUID = uuid.NewV4().String()
+			return r, nil
+		}).WithCreationTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(auth.PasswordResetRequest)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.CreationTime.Timestamp = *ts
+			}
+			return r, err
+		}).WithModTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(auth.PasswordResetRequest)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.ModTime.Timestamp = *ts
+			}
+			return r, err
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
+			r := i.(auth.PasswordResetRequest)
+			r.SelfLink = path
+			return r, nil
+		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
+			r := auth.PasswordResetRequest{}
+			err := kvs.Get(ctx, key, &r)
+			if err != nil {
+				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+			}
+			return r, err
+		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
+			r := auth.PasswordResetRequest{}
+			err := kvs.Delete(ctx, key, &r)
+			if err != nil {
+				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+			}
+			return r, err
+		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
+			err := txn.Delete(key)
+			if err != nil {
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
+			}
+			return err
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(auth.PasswordResetRequest)
+			return &r
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+			r := i.(auth.PasswordResetRequest)
+			return r.Validate(ver, "", ignoreStatus)
+		}),
+
+		"auth.Permission":         apisrvpkg.NewMessage("auth.Permission"),
+		"auth.Radius":             apisrvpkg.NewMessage("auth.Radius"),
+		"auth.RadiusServer":       apisrvpkg.NewMessage("auth.RadiusServer"),
+		"auth.RadiusServerStatus": apisrvpkg.NewMessage("auth.RadiusServerStatus"),
 		"auth.Role": apisrvpkg.NewMessage("auth.Role").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := auth.Role{}

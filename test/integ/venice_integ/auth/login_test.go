@@ -180,12 +180,14 @@ func TestUserPasswordRemoval(t *testing.T) {
 				Fullname: "Test User Update",
 				Email:    "testuser@pensandio.io",
 				Type:     auth.UserSpec_Local.String(),
-				Password: testPassword,
 			},
 		})
 		return err == nil, nil
 	}, "unable to update user")
 	Assert(t, user.Spec.Password == "", fmt.Sprintf("Password should be removed from User object, %s", user.Spec.Password))
+	Assert(t, user.Spec.Fullname == "Test User Update", fmt.Sprintf("Expected user full name [%s], got [%s]", "Test User Update", user.Spec.Fullname))
+	ctx, err = NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, userCred)
+	AssertOk(t, err, "user login should succeed with previous credentials after update to user")
 	// test CREATE user
 	AssertEventually(t, func() (bool, interface{}) {
 		user, err = restcl.AuthV1().User().Create(ctx, &auth.User{
@@ -654,4 +656,145 @@ func TestRadiusLogin(t *testing.T) {
 	Assert(t, logintime.Sub(currtime) < 30*time.Second, fmt.Sprintf("login time [%v] not within 30 seconds of current time [%v]", logintime, currtime))
 	Assert(t, user.Status.Authenticators[0] == auth.Authenticators_RADIUS.String(),
 		fmt.Sprintf("expected authenticator [%s], got [%s]", auth.Authenticators_RADIUS.String(), user.Status.Authenticators[0]))
+}
+
+func TestPasswordChange(t *testing.T) {
+	userCred := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   testTenant,
+	}
+	// create tenant and admin user
+	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCred, tinfo.l); err != nil {
+		t.Fatalf("auth setup failed")
+	}
+	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
+	ctx, err := NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, userCred)
+	AssertOk(t, err, "unable to get logged in context")
+	// test change password
+	var user *auth.User
+	AssertEventually(t, func() (bool, interface{}) {
+		user, err = tinfo.restcl.AuthV1().User().PasswordChange(ctx, &auth.PasswordChangeRequest{
+			TypeMeta: api.TypeMeta{
+				Kind: string(auth.KindUser),
+			},
+			ObjectMeta: api.ObjectMeta{
+				Name:   testUser,
+				Tenant: testTenant,
+			},
+			OldPassword: testPassword,
+			NewPassword: "newpassword",
+		})
+		return err == nil, nil
+	}, "unable to change password")
+	Assert(t, user.Spec.Password == "", "password should be emptied out for password change request, got password [%s]", user.Spec.Password)
+	userCred.Password = "newpassword"
+	ctx, err = NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, userCred)
+	AssertOk(t, err, "unable to get logged in context with new password")
+	// test with incorrect old password
+	user, err = tinfo.restcl.AuthV1().User().PasswordChange(ctx, &auth.PasswordChangeRequest{
+		TypeMeta: api.TypeMeta{
+			Kind: string(auth.KindUser),
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:   testUser,
+			Tenant: testTenant,
+		},
+		OldPassword: testPassword,
+		NewPassword: "newpassword",
+	})
+	Assert(t, err != nil, "should not be able to change password with incorrect old password")
+	// test with non existent user
+	user, err = tinfo.restcl.AuthV1().User().PasswordChange(ctx, &auth.PasswordChangeRequest{
+		TypeMeta: api.TypeMeta{
+			Kind: string(auth.KindUser),
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:   "nonexistent",
+			Tenant: testTenant,
+		},
+		OldPassword: "newpassword",
+		NewPassword: testPassword,
+	})
+	Assert(t, err != nil, "should not be able to change password for non existent user")
+	// test with empty new password
+	user, err = tinfo.restcl.AuthV1().User().PasswordChange(ctx, &auth.PasswordChangeRequest{
+		TypeMeta: api.TypeMeta{
+			Kind: string(auth.KindUser),
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:   testUser,
+			Tenant: testTenant,
+		},
+		OldPassword: "newpassword",
+		NewPassword: "",
+	})
+	Assert(t, err != nil, "should not be able to change password with empty new password")
+	// test with empty old password
+	user, err = tinfo.restcl.AuthV1().User().PasswordChange(ctx, &auth.PasswordChangeRequest{
+		TypeMeta: api.TypeMeta{
+			Kind: string(auth.KindUser),
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:   testUser,
+			Tenant: testTenant,
+		},
+		OldPassword: "",
+		NewPassword: "newpassword",
+	})
+	Assert(t, err != nil, "should not be able to change password with empty old password")
+	// test with empty password change request
+	user, err = tinfo.restcl.AuthV1().User().PasswordChange(ctx, &auth.PasswordChangeRequest{})
+	Assert(t, err != nil, "should not be able to change password with empty password change request")
+	ctx, err = NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, userCred)
+	AssertOk(t, err, "unable to get logged in context with new password")
+}
+
+func TestPasswordReset(t *testing.T) {
+	userCred := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   testTenant,
+	}
+	// create tenant and admin user
+	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCred, tinfo.l); err != nil {
+		t.Fatalf("auth setup failed")
+	}
+	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
+	ctx, err := NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, userCred)
+	AssertOk(t, err, "unable to get logged in context")
+	// test reset password
+	var user *auth.User
+	AssertEventually(t, func() (bool, interface{}) {
+		user, err = tinfo.restcl.AuthV1().User().PasswordReset(ctx, &auth.PasswordResetRequest{
+			TypeMeta: api.TypeMeta{
+				Kind: string(auth.KindUser),
+			},
+			ObjectMeta: api.ObjectMeta{
+				Name:   testUser,
+				Tenant: testTenant,
+			},
+		})
+		return err == nil, nil
+	}, "unable to reset password")
+	userCred.Password = user.Spec.Password
+	ctx, err = NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, userCred)
+	AssertOk(t, err, "unable to get logged in context with new reset password")
+	// test with non existent user
+	user, err = tinfo.restcl.AuthV1().User().PasswordReset(ctx, &auth.PasswordResetRequest{
+		TypeMeta: api.TypeMeta{
+			Kind: string(auth.KindUser),
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:   "nonexistent",
+			Tenant: testTenant,
+		},
+	})
+	Assert(t, err != nil, "should not be able to reset password for non existent user")
+	// test with empty password reset request
+	user, err = tinfo.restcl.AuthV1().User().PasswordReset(ctx, &auth.PasswordResetRequest{})
+	Assert(t, err != nil, "should not be able to reset password with empty password reset request")
+	userCred.Password = testPassword
+	_, _, err = login.UserLogin(tinfo.apiGwAddr, userCred)
+	Assert(t, err != nil, "shouldn't be able to get login with old password")
 }

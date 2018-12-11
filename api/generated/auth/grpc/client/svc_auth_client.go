@@ -337,6 +337,34 @@ func NewAuthV1(conn *grpc.ClientConn, logger log.Logger) auth.ServiceAuthV1Clien
 		).Endpoint()
 		lLdapConnectionCheckEndpoint = trace.ClientEndPoint("AuthV1:LdapConnectionCheck")(lLdapConnectionCheckEndpoint)
 	}
+	var lPasswordChangeEndpoint endpoint.Endpoint
+	{
+		lPasswordChangeEndpoint = grpctransport.NewClient(
+			conn,
+			"auth.AuthV1",
+			"PasswordChange",
+			auth.EncodeGrpcReqPasswordChangeRequest,
+			auth.DecodeGrpcRespUser,
+			&auth.User{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lPasswordChangeEndpoint = trace.ClientEndPoint("AuthV1:PasswordChange")(lPasswordChangeEndpoint)
+	}
+	var lPasswordResetEndpoint endpoint.Endpoint
+	{
+		lPasswordResetEndpoint = grpctransport.NewClient(
+			conn,
+			"auth.AuthV1",
+			"PasswordReset",
+			auth.EncodeGrpcReqPasswordResetRequest,
+			auth.DecodeGrpcRespUser,
+			&auth.User{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lPasswordResetEndpoint = trace.ClientEndPoint("AuthV1:PasswordReset")(lPasswordResetEndpoint)
+	}
 	return auth.EndpointsAuthV1Client{
 		Client: auth.NewAuthV1Client(conn),
 
@@ -362,6 +390,8 @@ func NewAuthV1(conn *grpc.ClientConn, logger log.Logger) auth.ServiceAuthV1Clien
 		AutoUpdateUserEndpoint:                 lAutoUpdateUserEndpoint,
 		LdapBindCheckEndpoint:                  lLdapBindCheckEndpoint,
 		LdapConnectionCheckEndpoint:            lLdapConnectionCheckEndpoint,
+		PasswordChangeEndpoint:                 lPasswordChangeEndpoint,
+		PasswordResetEndpoint:                  lPasswordResetEndpoint,
 	}
 }
 
@@ -468,6 +498,24 @@ func (a *grpcObjAuthV1User) Watch(ctx context.Context, options *api.ListWatchOpt
 	return lw, nil
 }
 
+func (a *grpcObjAuthV1User) PasswordChange(ctx context.Context, in *auth.PasswordChangeRequest) (*auth.User, error) {
+	a.logger.DebugLog("msg", "received call", "object", "{PasswordChange PasswordChangeRequest User}", "oper", "PasswordChange")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.PasswordChange(nctx, in)
+}
+
+func (a *grpcObjAuthV1User) PasswordReset(ctx context.Context, in *auth.PasswordResetRequest) (*auth.User, error) {
+	a.logger.DebugLog("msg", "received call", "object", "{PasswordReset PasswordResetRequest User}", "oper", "PasswordReset")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.PasswordReset(nctx, in)
+}
+
 func (a *grpcObjAuthV1User) Allowed(oper apiserver.APIOperType) bool {
 	return true
 }
@@ -548,6 +596,19 @@ func (a *restObjAuthV1User) Allowed(oper apiserver.APIOperType) bool {
 	default:
 		return false
 	}
+}
+
+func (a *restObjAuthV1User) PasswordChange(ctx context.Context, in *auth.PasswordChangeRequest) (*auth.User, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.PasswordChangeUser(ctx, in)
+}
+func (a *restObjAuthV1User) PasswordReset(ctx context.Context, in *auth.PasswordResetRequest) (*auth.User, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.PasswordResetUser(ctx, in)
 }
 
 type grpcObjAuthV1AuthenticationPolicy struct {

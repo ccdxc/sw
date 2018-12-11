@@ -1,6 +1,8 @@
 package authz
 
 import (
+	"reflect"
+
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
@@ -62,6 +64,19 @@ func NewAPIServerOperation(resource Resource, action apiserver.APIOperType) Oper
 	}
 }
 
+// IsValidOperationValue validates operation interface value as it is an input coming from authz hooks in API Gateway
+func IsValidOperationValue(operation Operation) bool {
+	// make sure interface type and value are not nil
+	if operation == nil || reflect.ValueOf(operation).IsNil() {
+		return false
+	}
+	resource := operation.GetResource()
+	if resource == nil || reflect.ValueOf(resource).IsNil() {
+		return false
+	}
+	return true
+}
+
 // resource implements Resource interface
 type resource struct {
 	tenant       string
@@ -69,6 +84,7 @@ type resource struct {
 	resourceKind string
 	namespace    string
 	name         string
+	owner        *auth.User
 }
 
 func (r *resource) GetTenant() string {
@@ -91,14 +107,28 @@ func (r *resource) GetName() string {
 	return r.name
 }
 
+func (r *resource) GetOwner() *auth.User {
+	return r.owner
+}
+
+func (r *resource) SetOwner(user *auth.User) {
+	r.owner = user
+}
+
 // NewResource returns an instance of Resource
 func NewResource(tenant, group, resourceKind, namespace, name string) Resource {
+	return NewResourceWithOwner(tenant, group, resourceKind, namespace, name, nil)
+}
+
+// NewResourceWithOwner returns an instance of Resource
+func NewResourceWithOwner(tenant, group, resourceKind, namespace, name string, owner *auth.User) Resource {
 	return &resource{
 		tenant:       tenant,
 		group:        group,
 		resourceKind: resourceKind,
 		namespace:    namespace,
 		name:         name,
+		owner:        owner,
 	}
 }
 

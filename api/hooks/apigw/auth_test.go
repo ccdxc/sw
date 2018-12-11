@@ -47,6 +47,12 @@ var (
 
 func sortOperations(operations []authz.Operation) {
 	sort.Slice(operations, func(i, j int) bool {
+		if operations[i] == nil {
+			return true
+		}
+		if operations[j] == nil {
+			return false
+		}
 		return fmt.Sprintf("%s%s", operations[i].GetResource().GetName(), operations[i].GetAction()) < fmt.Sprintf("%s%s", operations[j].GetResource().GetName(), operations[j].GetAction())
 	})
 }
@@ -774,4 +780,168 @@ func TestLdapBindCheck(t *testing.T) {
 				fmt.Sprintf("[%s] test failed, expected result [%s], got [%s]", test.name, test.status.Result, policy.Status.LdapServers[0].Result))
 		}
 	}
+}
+
+func TestAddOwner(t *testing.T) {
+	tests := []struct {
+		name               string
+		in                 interface{}
+		operations         []authz.Operation
+		expectedOperations []authz.Operation
+		out                interface{}
+		err                bool
+	}{
+		{
+			name: "password change",
+			in:   &auth.PasswordChangeRequest{},
+			operations: []authz.Operation{
+				authz.NewOperation(authz.NewResource(globals.DefaultTenant,
+					string(apiclient.GroupAuth), string(auth.KindUser),
+					"", "test"),
+					auth.Permission_Create.String()),
+			},
+			expectedOperations: []authz.Operation{
+				authz.NewOperation(authz.NewResourceWithOwner(globals.DefaultTenant,
+					string(apiclient.GroupAuth), string(auth.KindUser),
+					"", "test",
+					&auth.User{
+						ObjectMeta: api.ObjectMeta{Name: "test", Tenant: globals.DefaultTenant},
+					}),
+					auth.Permission_Create.String()),
+			},
+			out: &auth.PasswordChangeRequest{},
+			err: false,
+		},
+		{
+			name: "password reset",
+			in:   &auth.PasswordResetRequest{},
+			operations: []authz.Operation{
+				authz.NewOperation(authz.NewResource(globals.DefaultTenant,
+					string(apiclient.GroupAuth), string(auth.KindUser),
+					"", "test"),
+					auth.Permission_Create.String()),
+			},
+			expectedOperations: []authz.Operation{
+				authz.NewOperation(authz.NewResourceWithOwner(globals.DefaultTenant,
+					string(apiclient.GroupAuth), string(auth.KindUser),
+					"", "test",
+					&auth.User{
+						ObjectMeta: api.ObjectMeta{Name: "test", Tenant: globals.DefaultTenant},
+					}),
+					auth.Permission_Create.String()),
+			},
+			out: &auth.PasswordResetRequest{},
+			err: false,
+		},
+		{
+			name: "user update",
+			in:   &auth.User{},
+			operations: []authz.Operation{
+				authz.NewOperation(authz.NewResource(globals.DefaultTenant,
+					string(apiclient.GroupAuth), string(auth.KindUser),
+					"", "test"),
+					auth.Permission_Update.String()),
+			},
+			expectedOperations: []authz.Operation{
+				authz.NewOperation(authz.NewResourceWithOwner(globals.DefaultTenant,
+					string(apiclient.GroupAuth), string(auth.KindUser),
+					"", "test",
+					&auth.User{
+						ObjectMeta: api.ObjectMeta{Name: "test", Tenant: globals.DefaultTenant},
+					}),
+					auth.Permission_Update.String()),
+			},
+			out: &auth.User{},
+			err: false,
+		},
+		{
+			name: "invalid object",
+			in:   &struct{ name string }{name: "invalid object type"},
+			operations: []authz.Operation{
+				authz.NewOperation(authz.NewResource(globals.DefaultTenant,
+					string(apiclient.GroupAuth), string(auth.KindUser),
+					"", "test"),
+					auth.Permission_Update.String()),
+			},
+			expectedOperations: []authz.Operation{
+				authz.NewOperation(authz.NewResource(globals.DefaultTenant,
+					string(apiclient.GroupAuth), string(auth.KindUser),
+					"", "test"),
+					auth.Permission_Update.String()),
+			},
+			out: &struct{ name string }{name: "invalid object type"},
+			err: true,
+		},
+		{
+			name:               "nil operations slice",
+			in:                 &auth.User{},
+			operations:         nil,
+			expectedOperations: nil,
+			out:                &auth.User{},
+			err:                true,
+		},
+		{
+			name:               "nil operation",
+			in:                 &auth.User{},
+			operations:         []authz.Operation{nil, nil},
+			expectedOperations: []authz.Operation{nil, nil},
+			out:                &auth.User{},
+			err:                true,
+		},
+		{
+			name: "nil resource",
+			in:   &auth.PasswordResetRequest{},
+			operations: []authz.Operation{
+				authz.NewOperation(nil,
+					auth.Permission_Create.String()),
+			},
+			expectedOperations: []authz.Operation{
+				authz.NewOperation(nil,
+					auth.Permission_Create.String()),
+			},
+			out: &auth.PasswordResetRequest{},
+			err: true,
+		},
+	}
+	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
+	l := log.GetNewLogger(logConfig)
+	r := &authHooks{}
+	r.logger = l
+	for _, test := range tests {
+		ctx := apigwpkg.NewContextWithOperations(context.TODO(), test.operations...)
+		nctx, out, err := r.addOwner(ctx, test.in)
+		Assert(t, test.err == (err != nil), fmt.Sprintf("got error [%v], [%s] test failed", err, test.name))
+		operations, _ := apigwpkg.OperationsFromContext(nctx)
+		Assert(t, areOperationsEqual(test.expectedOperations, operations),
+			fmt.Sprintf("unexpected operations, [%s] test failed", test.name))
+		Assert(t, reflect.DeepEqual(test.out, out),
+			fmt.Sprintf("expected returned object [%v], got [%v], [%s] test failed", test.out, out, test.name))
+	}
+}
+
+func TestAddOwnerHookRegistration(t *testing.T) {
+	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
+	l := log.GetNewLogger(logConfig)
+	svc := mocks.NewFakeAPIGwService(l, false)
+	r := &authHooks{}
+	r.logger = l
+	err := r.registerAddOwnerHook(svc)
+	AssertOk(t, err, "addOwner hook registration failed")
+
+	opers := []apiserver.APIOperType{apiserver.UpdateOper, apiserver.GetOper}
+	for _, oper := range opers {
+		prof, err := svc.GetCrudServiceProfile("User", oper)
+		AssertOk(t, err, fmt.Sprintf("error getting service profile for oper :%v", oper))
+		Assert(t, len(prof.PreAuthZHooks()) == 1, fmt.Sprintf("unexpected number of pre authz hooks [%d] for User operation [%v]", len(prof.PreAuthZHooks()), oper))
+	}
+	methods := []string{"PasswordChange", "PasswordReset"}
+	for _, method := range methods {
+		prof, err := svc.GetServiceProfile(method)
+		AssertOk(t, err, fmt.Sprintf("error getting service profile for method [%s]", method))
+		Assert(t, len(prof.PreAuthZHooks()) == 1, fmt.Sprintf("unexpected number of pre authz hooks [%d] for method [%s]", len(prof.PreAuthZHooks()), method))
+	}
+	// test err
+	svc = mocks.NewFakeAPIGwService(l, true)
+	err = r.registerAddOwnerHook(svc)
+	Assert(t, err != nil, "expected error in addOwner hook registration")
 }

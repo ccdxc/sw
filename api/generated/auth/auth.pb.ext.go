@@ -41,6 +41,26 @@ func (m *AuthenticationPolicy) MakeURI(cat, ver, prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
+func (m *PasswordChangeRequest) MakeKey(prefix string) string {
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "users/", m.Tenant, "/", m.Name)
+}
+
+func (m *PasswordChangeRequest) MakeURI(cat, ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/tenant/", in.Tenant, "/users/", in.Name)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *PasswordResetRequest) MakeKey(prefix string) string {
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "users/", m.Tenant, "/", m.Name)
+}
+
+func (m *PasswordResetRequest) MakeURI(cat, ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/tenant/", in.Tenant, "/users/", in.Name)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *Role) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "roles/", m.Tenant, "/", m.Name)
 }
@@ -297,6 +317,27 @@ func (m *Local) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *PasswordChangeRequest) Clone(into interface{}) (interface{}, error) {
+	var out *PasswordChangeRequest
+	var ok bool
+	if into == nil {
+		out = &PasswordChangeRequest{}
+	} else {
+		out, ok = into.(*PasswordChangeRequest)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *PasswordChangeRequest) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *PasswordCredential) Clone(into interface{}) (interface{}, error) {
 	var out *PasswordCredential
 	var ok bool
@@ -314,6 +355,27 @@ func (m *PasswordCredential) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *PasswordCredential) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *PasswordResetRequest) Clone(into interface{}) (interface{}, error) {
+	var out *PasswordResetRequest
+	var ok bool
+	if into == nil {
+		out = &PasswordResetRequest{}
+	} else {
+		out, ok = into.(*PasswordResetRequest)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *PasswordResetRequest) Defaults(ver string) bool {
 	return false
 }
 
@@ -815,7 +877,17 @@ func (m *Local) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *PasswordChangeRequest) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
+
 func (m *PasswordCredential) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *PasswordResetRequest) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
@@ -1121,6 +1193,8 @@ func init() {
 	scheme := runtime.GetDefaultScheme()
 	scheme.AddKnownTypes(
 		&AuthenticationPolicy{},
+		&PasswordChangeRequest{},
+		&PasswordResetRequest{},
 		&Role{},
 		&RoleBinding{},
 		&User{},

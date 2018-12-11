@@ -3062,6 +3062,154 @@
         ]
       }
     },
+    "/configs/auth/v1/tenant/{O.Tenant}/users/{O.Name}/PasswordChange": {
+      "post": {
+        "operationId": "PasswordChange",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/authUser"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/authPasswordChangeRequest"
+            }
+          }
+        ],
+        "tags": [
+          "auth/v1"
+        ]
+      }
+    },
+    "/configs/auth/v1/tenant/{O.Tenant}/users/{O.Name}/PasswordReset": {
+      "post": {
+        "operationId": "PasswordReset",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/authUser"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/authPasswordResetRequest"
+            }
+          }
+        ],
+        "tags": [
+          "auth/v1"
+        ]
+      }
+    },
     "/configs/auth/v1/users": {
       "get": {
         "summary": "List User objects",
@@ -3596,6 +3744,142 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/authUser"
+            }
+          }
+        ],
+        "tags": [
+          "auth/v1"
+        ]
+      }
+    },
+    "/configs/auth/v1/users/{O.Name}/PasswordChange": {
+      "post": {
+        "operationId": "PasswordChange_1",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/authUser"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/authPasswordChangeRequest"
+            }
+          }
+        ],
+        "tags": [
+          "auth/v1"
+        ]
+      }
+    },
+    "/configs/auth/v1/users/{O.Name}/PasswordReset": {
+      "post": {
+        "operationId": "PasswordReset_1",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/authUser"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/authPasswordResetRequest"
             }
           }
         ],
@@ -5263,6 +5547,42 @@
           "format": "boolean"
         }
       }
+    },
+    "authPasswordChangeRequest": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "old-password": {
+          "type": "string"
+        },
+        "new-password": {
+          "type": "string"
+        }
+      },
+      "title": "PasswordChangeRequest is for user to change his password"
+    },
+    "authPasswordResetRequest": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        }
+      },
+      "title": "PasswordResetRequest is for user to reset password"
     },
     "authPermission": {
       "type": "object",

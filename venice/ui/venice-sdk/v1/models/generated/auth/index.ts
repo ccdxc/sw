@@ -34,6 +34,8 @@ export * from './auth-ldap-attribute-mapping.model';
 export * from './auth-ldap-server.model';
 export * from './auth-ldap-server-status.model';
 export * from './auth-local.model';
+export * from './auth-password-change-request.model';
+export * from './auth-password-reset-request.model';
 export * from './auth-permission.model';
 export * from './auth-radius.model';
 export * from './auth-radius-server.model';

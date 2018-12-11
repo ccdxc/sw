@@ -69,6 +69,8 @@ type eAuthV1Endpoints struct {
 	fnAutoUpdateUser                 func(ctx context.Context, t interface{}) (interface{}, error)
 	fnLdapBindCheck                  func(ctx context.Context, t interface{}) (interface{}, error)
 	fnLdapConnectionCheck            func(ctx context.Context, t interface{}) (interface{}, error)
+	fnPasswordChange                 func(ctx context.Context, t interface{}) (interface{}, error)
+	fnPasswordReset                  func(ctx context.Context, t interface{}) (interface{}, error)
 
 	fnAutoWatchUser                 func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 	fnAutoWatchAuthenticationPolicy func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
@@ -380,6 +382,24 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 		s.endpointsAuthV1.fnLdapConnectionCheck = srv.AddMethod("LdapConnectionCheck",
 			apisrvpkg.NewMethod(srv, pkgMessages["auth.AuthenticationPolicy"], pkgMessages["auth.AuthenticationPolicy"], "auth", "LdapConnectionCheck")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/authn-policy"), nil
+		}).HandleInvocation
+
+		s.endpointsAuthV1.fnPasswordChange = srv.AddMethod("PasswordChange",
+			apisrvpkg.NewMethod(srv, pkgMessages["auth.PasswordChangeRequest"], pkgMessages["auth.User"], "auth", "PasswordChange")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(auth.PasswordChangeRequest)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/tenant/", in.Tenant, "/users/", in.Name), nil
+		}).HandleInvocation
+
+		s.endpointsAuthV1.fnPasswordReset = srv.AddMethod("PasswordReset",
+			apisrvpkg.NewMethod(srv, pkgMessages["auth.PasswordResetRequest"], pkgMessages["auth.User"], "auth", "PasswordReset")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(auth.PasswordResetRequest)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/tenant/", in.Tenant, "/users/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoWatchUser = pkgMessages["auth.User"].WatchFromKv
@@ -997,6 +1017,22 @@ func (e *eAuthV1Endpoints) LdapConnectionCheck(ctx context.Context, t auth.Authe
 		return r.(auth.AuthenticationPolicy), err
 	}
 	return auth.AuthenticationPolicy{}, err
+
+}
+func (e *eAuthV1Endpoints) PasswordChange(ctx context.Context, t auth.PasswordChangeRequest) (auth.User, error) {
+	r, err := e.fnPasswordChange(ctx, t)
+	if err == nil {
+		return r.(auth.User), err
+	}
+	return auth.User{}, err
+
+}
+func (e *eAuthV1Endpoints) PasswordReset(ctx context.Context, t auth.PasswordResetRequest) (auth.User, error) {
+	r, err := e.fnPasswordReset(ctx, t)
+	if err == nil {
+		return r.(auth.User), err
+	}
+	return auth.User{}, err
 
 }
 

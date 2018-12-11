@@ -16,7 +16,9 @@ The following Messages are defined.
   LdapServer
   LdapServerStatus
   Local
+  PasswordChangeRequest
   PasswordCredential
+  PasswordResetRequest
   Permission
   Radius
   RadiusServer

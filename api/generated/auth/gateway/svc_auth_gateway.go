@@ -570,6 +570,52 @@ func (a adapterAuthV1) LdapConnectionCheck(oldctx oldcontext.Context, t *auth.Au
 	return ret.(*auth.AuthenticationPolicy), err
 }
 
+func (a adapterAuthV1) PasswordChange(oldctx oldcontext.Context, t *auth.PasswordChangeRequest, options ...grpc.CallOption) (*auth.User, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("PasswordChange")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "User", t.Tenant, t.Namespace, "auth", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*auth.PasswordChangeRequest)
+		return a.service.PasswordChange(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*auth.User), err
+}
+
+func (a adapterAuthV1) PasswordReset(oldctx oldcontext.Context, t *auth.PasswordResetRequest, options ...grpc.CallOption) (*auth.User, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("PasswordReset")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "User", t.Tenant, t.Namespace, "auth", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*auth.PasswordResetRequest)
+		return a.service.PasswordReset(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*auth.User), err
+}
+
 func (a adapterAuthV1) AutoWatchSvcAuthV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (auth.AuthV1_AutoWatchSvcAuthV1Client, error) {
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoWatchSvcAuthV1")
@@ -818,6 +864,10 @@ func (e *sAuthV1GwService) setupSvcProfile() {
 	e.svcProf["LdapBindCheck"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AuthenticationPolicy", "auth", apiserver.CreateOper)
 
 	e.svcProf["LdapConnectionCheck"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AuthenticationPolicy", "auth", apiserver.CreateOper)
+
+	e.svcProf["PasswordChange"] = apigwpkg.NewServiceProfile(e.defSvcProf, "User", "auth", apiserver.CreateOper)
+
+	e.svcProf["PasswordReset"] = apigwpkg.NewServiceProfile(e.defSvcProf, "User", "auth", apiserver.CreateOper)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service

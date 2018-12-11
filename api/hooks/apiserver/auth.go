@@ -2,6 +2,9 @@ package impl
 
 import (
 	"context"
+	"encoding/base64"
+	"fmt"
+	"strconv"
 
 	"github.com/pkg/errors"
 
@@ -14,6 +17,7 @@ import (
 	"github.com/pensando/sw/venice/utils/authn/password"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 var (
@@ -23,13 +27,21 @@ var (
 	errAuthenticatorConfig = errors.New("mis-configured authentication policy, error in authenticator config")
 	// errInvalidRolePermissions is returned when tenant in permission's resource does not match tenant of the Role
 	errInvalidRolePermissions = errors.New("invalid tenant in role permission")
+	// errExtUserPasswordChange is returned when change or reset password hook is called for external user
+	errExtUserPasswordChange = errors.New("cannot change or reset password of external user")
+	// errInvalidOldPassword is returned when invalid old password is provided for changing password
+	errInvalidOldPassword = errors.New("invalid old password")
+	// errEmptyPassword is returned when password is specifying as empty while creating user or changing password for user
+	errEmptyPassword = errors.New("password is empty")
+	// errCreatingPasswordHash is returned when there is error generating password hash
+	errCreatingPasswordHash = errors.New("error creating password hash")
 )
 
 type authHooks struct {
 	logger log.Logger
 }
 
-// hashPassword is pre-commit hook to hash password in User object when object is created or updated
+// hashPassword is pre-commit hook to save hashed password in User object when object is created or updated
 func (s *authHooks) hashPassword(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	s.logger.DebugLog("msg", "AuthHook called to hash password")
 	r, ok := i.(auth.User)
@@ -47,26 +59,169 @@ func (s *authHooks) hashPassword(ctx context.Context, kv kvstore.Interface, txn 
 	r.Spec.Type = auth.UserSpec_Local.String()
 
 	switch oper {
-	case apiserver.CreateOper, apiserver.UpdateOper:
+	case apiserver.CreateOper:
 		// password is a required field when local user is created
 		if r.Spec.GetPassword() == "" {
-			return r, false, errors.New("password is empty")
+			return r, false, errEmptyPassword
 		}
+		// get password hasher
+		hasher := password.GetPasswordHasher()
+		// generate hash
+		passwdhash, err := hasher.GetPasswordHash(r.Spec.GetPassword())
+		if err != nil {
+			s.logger.Errorf("error creating password hash: %v", err)
+			return r, false, errCreatingPasswordHash
+		}
+		r.Spec.Password = passwdhash
+		s.logger.InfoLog("msg", "Created password hash", "user", r.GetName())
+	case apiserver.UpdateOper:
+		cur := &auth.User{}
+		if err := kv.Get(ctx, key, cur); err != nil {
+			s.logger.Errorf("error getting user with key [%s] in API server hashPassword pre-commit hook for update cluster", key)
+			return r, false, err
+		}
+		// decrypt password as it is stored as secret. Cannot use passed in context because peer id in it is APIGw and transform returns empty password in that case
+		if err := cur.ApplyStorageTransformer(context.Background(), false); err != nil {
+			s.logger.Errorf("error decrypting password field: %v", err)
+			return r, false, err
+		}
+		r.Spec.Password = cur.Spec.Password
+		// add a comparator for CAS
+		s.logger.Infof("set the comparator version for [%s] as [%s]", key, cur.ResourceVersion)
+		txn.AddComparator(kvstore.Compare(kvstore.WithVersion(key), "=", cur.ResourceVersion))
 	default:
-		return r, true, nil
-
 	}
-
-	// get password hasher
-	hasher := password.GetPasswordHasher()
-	// generate hash
-	passwdhash, err := hasher.GetPasswordHash(r.Spec.GetPassword())
-	if err != nil {
-		return r, false, errors.New("error creating password hash")
-	}
-	r.Spec.Password = passwdhash
-	s.logger.InfoLog("msg", "Created password hash", "user", r.GetName())
 	return r, true, nil
+}
+
+// changePassword is pre-commit hook registered with PasswordChange method for User service to change password for local user
+func (s *authHooks) changePassword(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	s.logger.DebugLog("msg", "AuthHook called to change password")
+	r, ok := i.(auth.PasswordChangeRequest)
+	if !ok {
+		return nil, false, errInvalidInputType
+	}
+	if r.NewPassword == "" || r.OldPassword == "" {
+		return nil, false, errEmptyPassword
+	}
+	cur := &auth.User{}
+	if err := kv.ConsistentUpdate(ctx, key, cur, func(oldObj runtime.Object) (runtime.Object, error) {
+		userObj, ok := oldObj.(*auth.User)
+		if !ok {
+			return oldObj, errors.New("invalid input type")
+		}
+		// error if external user
+		if userObj.Spec.GetType() == auth.UserSpec_External.String() {
+			return userObj, errExtUserPasswordChange
+		}
+		// decrypt password as it is stored as secret. Cannot use passed in context because peer id in it is APIGw and transform returns empty password in that case
+		if err := userObj.ApplyStorageTransformer(context.Background(), false); err != nil {
+			s.logger.Errorf("error decrypting password field: %v", err)
+			return userObj, err
+		}
+		hasher := password.GetPasswordHasher()
+		ok, err := hasher.CompareHashAndPassword(userObj.Spec.Password, r.OldPassword)
+		if err != nil {
+			s.logger.Errorf("error comparing password hash: %v", err)
+			return userObj, errInvalidOldPassword
+		}
+		if !ok {
+			return userObj, errInvalidOldPassword
+		}
+		passwdhash, err := hasher.GetPasswordHash(r.NewPassword)
+		if err != nil {
+			s.logger.Errorf("error creating password hash: %v", err)
+			return userObj, errCreatingPasswordHash
+		}
+		userObj.Spec.Password = passwdhash
+		// encrypt password as it is stored as secret
+		if err := userObj.ApplyStorageTransformer(ctx, true); err != nil {
+			s.logger.Errorf("error encrypting password field: %v", err)
+			return userObj, err
+		}
+		genID, err := strconv.ParseInt(userObj.GenerationID, 10, 64)
+		if err != nil {
+			s.logger.Errorf("error parsing generation ID: %v", err)
+			return userObj, err
+		}
+		userObj.GenerationID = fmt.Sprintf("%d", genID+1)
+		return userObj, nil
+	}); err != nil {
+		s.logger.Errorf("error changing password for user key [%s]: %v", key, err)
+		return nil, false, err
+	}
+	// empty out password before returning. Create a copy as cur is pointing to an object in API server cache. Without copy causes intermittent failures in password change integ test
+	// where password is empty in user object returned from API server on subsequent GET
+	ret, err := cur.Clone(nil)
+	if err != nil {
+		s.logger.Errorf("error creating a copy of user obj: %v", err)
+		return ret, false, err
+	}
+	user := ret.(*auth.User)
+	user.Spec.Password = ""
+	s.logger.Debugf("password successfully changed for user key [%s]", key)
+	return *user, false, nil
+}
+
+// resetPassword is pre-commit hook registered with PasswordReset method for User service to reset password for local user
+func (s *authHooks) resetPassword(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	s.logger.DebugLog("msg", "AuthHook called to reset password")
+	_, ok := i.(auth.PasswordResetRequest)
+	if !ok {
+		return nil, false, errInvalidInputType
+	}
+	b, err := authn.CreateSecret(12)
+	if err != nil {
+		s.logger.Errorf("Error generating password for user key [%s]: %v", err)
+		return nil, false, err
+	}
+	genPasswd := base64.RawStdEncoding.EncodeToString(b)
+	cur := &auth.User{}
+	if err := kv.ConsistentUpdate(ctx, key, cur, func(oldObj runtime.Object) (runtime.Object, error) {
+		userObj, ok := oldObj.(*auth.User)
+		if !ok {
+			return oldObj, errors.New("invalid input type")
+		}
+		// error if external user
+		if userObj.Spec.GetType() == auth.UserSpec_External.String() {
+			return userObj, errExtUserPasswordChange
+		}
+		hasher := password.GetPasswordHasher()
+
+		passwdhash, err := hasher.GetPasswordHash(genPasswd)
+		if err != nil {
+			s.logger.Errorf("error creating password hash: %v", err)
+			return userObj, errCreatingPasswordHash
+		}
+		userObj.Spec.Password = passwdhash
+		// encrypt password as it is stored as secret
+		if err := userObj.ApplyStorageTransformer(ctx, true); err != nil {
+			s.logger.Errorf("error encrypting password field: %v", err)
+			return userObj, err
+		}
+		genID, err := strconv.ParseInt(userObj.GenerationID, 10, 64)
+		if err != nil {
+			s.logger.Errorf("error parsing generation ID: %v", err)
+			return userObj, err
+		}
+		userObj.GenerationID = fmt.Sprintf("%d", genID+1)
+		return userObj, nil
+	}); err != nil {
+		s.logger.Errorf("error resetting password for user key [%s]: %v", key, err)
+		return nil, false, err
+	}
+	// Create a copy as cur is pointing to an object in API server cache. Without copy causes intermittent failures in password reset integ test
+	// where password is corrupted in user object returned from API server on subsequent GET
+	ret, err := cur.Clone(nil)
+	if err != nil {
+		s.logger.Errorf("error creating a copy of user obj: %v", err)
+		return ret, false, err
+	}
+	user := ret.(*auth.User)
+	// return non-hashed password to user
+	user.Spec.Password = genPasswd
+	s.logger.Debugf("password successfully reset for user key [%s]", key)
+	return *user, false, nil
 }
 
 // validateAuthenticatorConfig hook is to validate that authenticators specified in AuthenticatorOrder are defined
@@ -161,6 +316,10 @@ func registerAuthHooks(svc apiserver.Service, logger log.Logger) {
 	svc.GetCrudService("AuthenticationPolicy", apiserver.UpdateOper).WithPreCommitHook(r.generateSecret).GetRequestType().WithValidate(r.validateAuthenticatorConfig)
 	svc.GetCrudService("Role", apiserver.CreateOper).GetRequestType().WithValidate(r.validateRolePerms)
 	svc.GetCrudService("Role", apiserver.UpdateOper).GetRequestType().WithValidate(r.validateRolePerms)
+	// hook to change password
+	svc.GetMethod("PasswordChange").WithPreCommitHook(r.changePassword)
+	// hook to reset password
+	svc.GetMethod("PasswordReset").WithPreCommitHook(r.resetPassword)
 }
 
 func init() {

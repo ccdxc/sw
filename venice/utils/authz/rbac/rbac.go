@@ -25,11 +25,10 @@ func NewRBACAuthorizer(name, apiServer string, rslver resolver.Interface) authz.
 }
 
 func (a *authorizer) IsAuthorized(user *auth.User, operations ...authz.Operation) (bool, error) {
-	ok, err := a.permissionChecker.checkPermissions(user, operations)
-	if ok {
-		return true, nil
+	if user == nil || operations == nil {
+		return false, nil
 	}
-	return false, err
+	return a.permissionChecker.checkPermissions(user, operations)
 }
 
 // defaultPermissionChecker implements permissionChecker interface

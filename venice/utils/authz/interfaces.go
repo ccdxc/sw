@@ -44,4 +44,10 @@ type Resource interface {
 
 	// GetName returns name of a specific resource to which access is desired
 	GetName() string
+
+	// GetOwner returns the owner of the resource
+	GetOwner() *auth.User
+
+	// SetOwner sets the owner of the resource
+	SetOwner(*auth.User)
 }

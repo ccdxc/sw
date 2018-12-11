@@ -303,3 +303,79 @@ func TestAPIGroupAuthorization(t *testing.T) {
 		return err != nil, nil
 	}, "authorization error expected while retrieving tenant", "100ms", "1s")
 }
+
+func TestUserSelfOperations(t *testing.T) {
+	userCred := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   testTenant,
+	}
+	// create tenant and admin user
+	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCred, tinfo.l); err != nil {
+		t.Fatalf("auth setup failed")
+	}
+	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
+
+	MustCreateTestUser(tinfo.apicl, "testUser2", testPassword, testTenant)
+	defer MustDeleteUser(tinfo.apicl, "testUser2", testTenant)
+	// login as testUser2 who has no roles assigned
+	ctx, err := NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, &auth.PasswordCredential{Username: "testUser2", Password: testPassword, Tenant: testTenant})
+	AssertOk(t, err, "error creating logged in context")
+
+	// test get user
+	var user *auth.User
+	AssertEventually(t, func() (bool, interface{}) {
+		user, err = tinfo.restcl.AuthV1().User().Get(ctx, &api.ObjectMeta{Name: "testUser2", Tenant: testTenant})
+		return err == nil, err
+	}, "unable to get user")
+	Assert(t, user.Name == "testUser2" && user.Tenant == testTenant, fmt.Sprintf("user get failed: %#v", *user))
+	// test update user
+	AssertEventually(t, func() (bool, interface{}) {
+		user, err = tinfo.restcl.AuthV1().User().Update(ctx, &auth.User{
+			TypeMeta: api.TypeMeta{Kind: string(auth.KindUser)},
+			ObjectMeta: api.ObjectMeta{
+				Tenant: testTenant,
+				Name:   "testUser2",
+			},
+			Spec: auth.UserSpec{
+				Fullname: "Test User2",
+				Email:    "testuser@pensandio.io",
+				Type:     auth.UserSpec_Local.String(),
+			},
+		})
+		return err == nil, err
+	}, "unable to update user")
+	Assert(t, user.Spec.Fullname == "Test User2", fmt.Sprintf("user update failed: %#v", *user))
+	// test change password
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := tinfo.restcl.AuthV1().User().PasswordChange(ctx, &auth.PasswordChangeRequest{
+			TypeMeta: api.TypeMeta{
+				Kind: string(auth.KindUser),
+			},
+			ObjectMeta: api.ObjectMeta{
+				Name:   "testUser2",
+				Tenant: testTenant,
+			},
+			OldPassword: testPassword,
+			NewPassword: "newpassword",
+		})
+		return err == nil, err
+	}, "unable to change password")
+	ctx, err = NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, &auth.PasswordCredential{Username: "testUser2", Password: "newpassword", Tenant: testTenant})
+	AssertOk(t, err, "unable to get logged in context with new password")
+	// test reset password
+	AssertEventually(t, func() (bool, interface{}) {
+		user, err = tinfo.restcl.AuthV1().User().PasswordReset(ctx, &auth.PasswordResetRequest{
+			TypeMeta: api.TypeMeta{
+				Kind: string(auth.KindUser),
+			},
+			ObjectMeta: api.ObjectMeta{
+				Name:   "testUser2",
+				Tenant: testTenant,
+			},
+		})
+		return err == nil, err
+	}, "unable to reset password")
+	ctx, err = NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, &auth.PasswordCredential{Username: "testUser2", Password: user.Spec.Password, Tenant: testTenant})
+	AssertOk(t, err, "unable to get logged in context with new reset password")
+}

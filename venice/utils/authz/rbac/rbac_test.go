@@ -55,9 +55,9 @@ func newClusterUser(name, groups string) *auth.User {
 }
 
 type userOps struct {
-	name      string
-	user      *auth.User
-	operation Operation
+	name       string
+	user       *auth.User
+	operations []Operation
 }
 
 func TestAuthorizer(t *testing.T) {
@@ -86,23 +86,23 @@ func TestAuthorizer(t *testing.T) {
 			shouldPass: []userOps{
 				{
 					user: newClusterUser("Dorota", "SuperAdmin"),
-					operation: NewOperation(
+					operations: []Operation{NewOperation(
 						NewResource(globals.DefaultTenant, string(apiclient.GroupNetwork), string(network.KindNetwork), "prod", ""),
-						auth.Permission_Create.String()),
+						auth.Permission_Create.String())},
 				},
 				{
 					user: newClusterUser("Grace", ""),
-					operation: NewOperation(
+					operations: []Operation{NewOperation(
 						NewResource(globals.DefaultTenant, string(apiclient.GroupNetwork), string(network.KindNetwork), "prod", ""),
-						auth.Permission_Create.String()),
+						auth.Permission_Create.String())},
 				},
 			},
 			shouldFail: []userOps{
 				{
 					user: newUser("Shelly", globals.DefaultTenant, "NetworkAdmin"),
-					operation: NewOperation(
+					operations: []Operation{NewOperation(
 						NewResource(globals.DefaultTenant, string(apiclient.GroupNetwork), string(network.KindNetwork), "prod", ""),
-						auth.Permission_Create.String()),
+						auth.Permission_Create.String())},
 				},
 			},
 		},
@@ -134,36 +134,40 @@ func TestAuthorizer(t *testing.T) {
 			shouldPass: []userOps{
 				{
 					user: newUser("Shelly", testTenant, ""),
-					operation: NewOperation(
-						NewResource(testTenant, string(apiclient.GroupNetwork), string(network.KindNetwork), "prod", ""), auth.Permission_Create.String()),
+					operations: []Operation{NewOperation(
+						NewResource(testTenant, string(apiclient.GroupNetwork), string(network.KindNetwork), "prod", ""), auth.Permission_Create.String())},
 				},
 			},
 			shouldFail: []userOps{
 				{
 					user: newUser("Shelly", "accounting", ""),
-					operation: NewOperation(
+					operations: []Operation{NewOperation(
 						NewResource(globals.DefaultTenant, string(apiclient.GroupNetwork), string(network.KindNetwork), "prod", ""),
-						auth.Permission_Create.String()),
+						auth.Permission_Create.String())},
 				},
 				{
 					user: newUser("Shelly", "accounting", ""),
-					operation: NewOperation(
+					operations: []Operation{NewOperation(
 						NewResource("accounting", string(apiclient.GroupNetwork), string(network.KindNetwork), "prod", ""),
-						auth.Permission_Create.String()),
+						auth.Permission_Create.String())},
 				},
 				{
 					user: nil,
-					operation: NewOperation(
+					operations: []Operation{NewOperation(
 						NewResource(testTenant, string(apiclient.GroupNetwork), string(network.KindNetwork), "prod", ""),
-						auth.Permission_Create.String()),
+						auth.Permission_Create.String())},
 				},
 				{
-					user:      newUser("Shelly", testTenant, ""),
-					operation: nil,
+					user:       newUser("Shelly", testTenant, ""),
+					operations: nil,
 				},
 				{
-					user:      newUser("Shelly", testTenant, ""),
-					operation: Operation(nil),
+					user:       newUser("Shelly", testTenant, ""),
+					operations: []Operation{Operation(nil)},
+				},
+				{
+					user:       newUser("Shelly", testTenant, ""),
+					operations: []Operation{nil},
 				},
 			},
 		},
@@ -174,12 +178,12 @@ func TestAuthorizer(t *testing.T) {
 			permissionChecker: &defaultPermissionChecker{permissionGetter: permGetter},
 		}
 		for _, pass := range test.shouldPass {
-			ok, _ := authorizer.IsAuthorized(pass.user, pass.operation)
-			Assert(t, ok, fmt.Sprintf("case %d: incorrectly restricted %s for user %s", i, pass.operation, pass.user.GetObjectMeta().GetName()))
+			ok, _ := authorizer.IsAuthorized(pass.user, pass.operations...)
+			Assert(t, ok, fmt.Sprintf("case %d: incorrectly restricted %s for user %s", i, pass.operations, pass.user.GetObjectMeta().GetName()))
 		}
 		for _, fail := range test.shouldFail {
-			ok, _ := authorizer.IsAuthorized(fail.user, fail.operation)
-			Assert(t, !ok, fmt.Sprintf("case %d: incorrectly allowed %s for user %s", i, fail.operation, func() string {
+			ok, _ := authorizer.IsAuthorized(fail.user, fail.operations...)
+			Assert(t, !ok, fmt.Sprintf("case %d: incorrectly allowed %s for user %s", i, fail.operations, func() string {
 				if fail.user != nil {
 					return fail.user.GetObjectMeta().GetName()
 				}
@@ -248,27 +252,27 @@ func BenchmarkAuthorizer(b *testing.B) {
 		{
 			name: "allow create security group",
 			user: newUser("John0", "tenant0", ""),
-			operation: NewOperation(
-				NewResource("tenant0", string(apiclient.GroupSecurity), string(security.KindSecurityGroup), "prod", "sggrp1"), auth.Permission_Create.String()),
+			operations: []Operation{NewOperation(
+				NewResource("tenant0", string(apiclient.GroupSecurity), string(security.KindSecurityGroup), "prod", "sggrp1"), auth.Permission_Create.String())},
 		},
 		{
 			name: "allow read security group",
 			user: newUser("John0", "tenant0", ""),
-			operation: NewOperation(
-				NewResource("tenant0", string(apiclient.GroupSecurity), string(security.KindSecurityGroup), "prod", "sggrp1"), auth.Permission_Read.String()),
+			operations: []Operation{NewOperation(
+				NewResource("tenant0", string(apiclient.GroupSecurity), string(security.KindSecurityGroup), "prod", "sggrp1"), auth.Permission_Read.String())},
 		},
 		{
 			name: "deny read network",
 			user: newUser("John0", "tenant0", ""),
-			operation: NewOperation(
-				NewResource("tenant0", string(apiclient.GroupNetwork), string(network.KindNetwork), "prod", "sggrp1"), auth.Permission_Read.String()),
+			operations: []Operation{NewOperation(
+				NewResource("tenant0", string(apiclient.GroupNetwork), string(network.KindNetwork), "prod", "sggrp1"), auth.Permission_Read.String())},
 		},
 	}
 	b.ResetTimer()
 	for _, request := range requests {
 		b.Run(request.name, func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
-				authorizer.IsAuthorized(request.user, request.operation)
+				authorizer.IsAuthorized(request.user, request.operations...)
 			}
 		})
 	}

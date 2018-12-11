@@ -63,6 +63,8 @@ type EndpointsAuthV1Client struct {
 	AutoUpdateUserEndpoint                 endpoint.Endpoint
 	LdapBindCheckEndpoint                  endpoint.Endpoint
 	LdapConnectionCheckEndpoint            endpoint.Endpoint
+	PasswordChangeEndpoint                 endpoint.Endpoint
+	PasswordResetEndpoint                  endpoint.Endpoint
 }
 
 // EndpointsAuthV1RestClient is the REST client
@@ -99,6 +101,8 @@ type EndpointsAuthV1RestClient struct {
 	AutoWatchUserEndpoint                  endpoint.Endpoint
 	LdapBindCheckEndpoint                  endpoint.Endpoint
 	LdapConnectionCheckEndpoint            endpoint.Endpoint
+	PasswordChangeEndpoint                 endpoint.Endpoint
+	PasswordResetEndpoint                  endpoint.Endpoint
 }
 
 // MiddlewareAuthV1Server adds middle ware to the server
@@ -130,6 +134,8 @@ type EndpointsAuthV1Server struct {
 	AutoUpdateUserEndpoint                 endpoint.Endpoint
 	LdapBindCheckEndpoint                  endpoint.Endpoint
 	LdapConnectionCheckEndpoint            endpoint.Endpoint
+	PasswordChangeEndpoint                 endpoint.Endpoint
+	PasswordResetEndpoint                  endpoint.Endpoint
 
 	watchHandlerUser                 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerAuthenticationPolicy func(options *api.ListWatchOptions, stream grpc.ServerStream) error
@@ -442,6 +448,34 @@ func (e EndpointsAuthV1Client) LdapConnectionCheck(ctx context.Context, in *Auth
 
 type respAuthV1LdapConnectionCheck struct {
 	V   AuthenticationPolicy
+	Err error
+}
+
+// PasswordChange is endpoint for PasswordChange
+func (e EndpointsAuthV1Client) PasswordChange(ctx context.Context, in *PasswordChangeRequest) (*User, error) {
+	resp, err := e.PasswordChangeEndpoint(ctx, in)
+	if err != nil {
+		return &User{}, err
+	}
+	return resp.(*User), nil
+}
+
+type respAuthV1PasswordChange struct {
+	V   User
+	Err error
+}
+
+// PasswordReset is endpoint for PasswordReset
+func (e EndpointsAuthV1Client) PasswordReset(ctx context.Context, in *PasswordResetRequest) (*User, error) {
+	resp, err := e.PasswordResetEndpoint(ctx, in)
+	if err != nil {
+		return &User{}, err
+	}
+	return resp.(*User), nil
+}
+
+type respAuthV1PasswordReset struct {
+	V   User
 	Err error
 }
 
@@ -953,6 +987,50 @@ func MakeAuthV1LdapConnectionCheckEndpoint(s ServiceAuthV1Server, logger log.Log
 	return trace.ServerEndpoint("AuthV1:LdapConnectionCheck")(f)
 }
 
+// PasswordChange implementation on server Endpoint
+func (e EndpointsAuthV1Server) PasswordChange(ctx context.Context, in PasswordChangeRequest) (User, error) {
+	resp, err := e.PasswordChangeEndpoint(ctx, in)
+	if err != nil {
+		return User{}, err
+	}
+	return *resp.(*User), nil
+}
+
+// MakeAuthV1PasswordChangeEndpoint creates  PasswordChange endpoints for the service
+func MakeAuthV1PasswordChangeEndpoint(s ServiceAuthV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*PasswordChangeRequest)
+		v, err := s.PasswordChange(ctx, *req)
+		return respAuthV1PasswordChange{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("AuthV1:PasswordChange")(f)
+}
+
+// PasswordReset implementation on server Endpoint
+func (e EndpointsAuthV1Server) PasswordReset(ctx context.Context, in PasswordResetRequest) (User, error) {
+	resp, err := e.PasswordResetEndpoint(ctx, in)
+	if err != nil {
+		return User{}, err
+	}
+	return *resp.(*User), nil
+}
+
+// MakeAuthV1PasswordResetEndpoint creates  PasswordReset endpoints for the service
+func MakeAuthV1PasswordResetEndpoint(s ServiceAuthV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*PasswordResetRequest)
+		v, err := s.PasswordReset(ctx, *req)
+		return respAuthV1PasswordReset{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("AuthV1:PasswordReset")(f)
+}
+
 func (e EndpointsAuthV1Server) AutoWatchSvcAuthV1(in *api.ListWatchOptions, stream AuthV1_AutoWatchSvcAuthV1Server) error {
 	return e.svcWatchHandlerAuthV1(in, stream)
 }
@@ -1044,6 +1122,8 @@ func MakeAuthV1ServerEndpoints(s ServiceAuthV1Server, logger log.Logger) Endpoin
 		AutoUpdateUserEndpoint:                 MakeAuthV1AutoUpdateUserEndpoint(s, logger),
 		LdapBindCheckEndpoint:                  MakeAuthV1LdapBindCheckEndpoint(s, logger),
 		LdapConnectionCheckEndpoint:            MakeAuthV1LdapConnectionCheckEndpoint(s, logger),
+		PasswordChangeEndpoint:                 MakeAuthV1PasswordChangeEndpoint(s, logger),
+		PasswordResetEndpoint:                  MakeAuthV1PasswordResetEndpoint(s, logger),
 
 		watchHandlerUser:                 MakeAutoWatchUserEndpoint(s, logger),
 		watchHandlerAuthenticationPolicy: MakeAutoWatchAuthenticationPolicyEndpoint(s, logger),
@@ -1366,6 +1446,32 @@ func (m loggingAuthV1MiddlewareClient) LdapConnectionCheck(ctx context.Context, 
 		m.logger.Audit(ctx, "service", "AuthV1", "method", "LdapConnectionCheck", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.LdapConnectionCheck(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareClient) PasswordChange(ctx context.Context, in *PasswordChangeRequest) (resp *User, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "PasswordChange", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.PasswordChange(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareClient) PasswordReset(ctx context.Context, in *PasswordResetRequest) (resp *User, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "PasswordReset", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.PasswordReset(ctx, in)
 	return
 }
 
@@ -1722,6 +1828,32 @@ func (m loggingAuthV1MiddlewareServer) LdapConnectionCheck(ctx context.Context, 
 	resp, err = m.next.LdapConnectionCheck(ctx, in)
 	return
 }
+func (m loggingAuthV1MiddlewareServer) PasswordChange(ctx context.Context, in PasswordChangeRequest) (resp User, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "PasswordChange", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.PasswordChange(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareServer) PasswordReset(ctx context.Context, in PasswordResetRequest) (resp User, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "PasswordReset", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.PasswordReset(ctx, in)
+	return
+}
 
 func (m loggingAuthV1MiddlewareServer) AutoWatchSvcAuthV1(in *api.ListWatchOptions, stream AuthV1_AutoWatchSvcAuthV1Server) (err error) {
 	defer func(begin time.Time) {
@@ -1951,6 +2083,16 @@ func makeURIAuthV1LdapConnectionCheckCreateOper(in *AuthenticationPolicy) string
 	return fmt.Sprint("/configs/auth/v1", "/authn-policy/LdapConnectionCheck")
 }
 
+//
+func makeURIAuthV1PasswordChangeCreateOper(in *PasswordChangeRequest) string {
+	return fmt.Sprint("/configs/auth/v1", "/tenant/", in.Tenant, "/users/", in.Name, "/PasswordChange")
+}
+
+//
+func makeURIAuthV1PasswordResetCreateOper(in *PasswordResetRequest) string {
+	return fmt.Sprint("/configs/auth/v1", "/tenant/", in.Tenant, "/users/", in.Name, "/PasswordReset")
+}
+
 // AutoAddUser CRUD method for User
 func (r *EndpointsAuthV1RestClient) AutoAddUser(ctx context.Context, in *User) (*User, error) {
 	path := makeURIAuthV1AutoAddUserCreateOper(in)
@@ -2095,6 +2237,46 @@ func (r *EndpointsAuthV1RestClient) AutoWatchUser(ctx context.Context, options *
 	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
 	lw.Run()
 	return lw, nil
+}
+
+func (r *EndpointsAuthV1RestClient) PasswordChangeUser(ctx context.Context, in *PasswordChangeRequest) (*User, error) {
+	if r.bufferId != "" {
+		return nil, errors.New("staging not allowed")
+	}
+	path := makeURIAuthV1PasswordChangeCreateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespAuthV1PasswordChange(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*User), err
+}
+
+func (r *EndpointsAuthV1RestClient) PasswordResetUser(ctx context.Context, in *PasswordResetRequest) (*User, error) {
+	if r.bufferId != "" {
+		return nil, errors.New("staging not allowed")
+	}
+	path := makeURIAuthV1PasswordResetCreateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespAuthV1PasswordReset(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*User), err
 }
 
 // AutoAddAuthenticationPolicy CRUD method for AuthenticationPolicy

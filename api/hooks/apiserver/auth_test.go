@@ -3,6 +3,7 @@ package impl
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/pkg/errors"
@@ -13,9 +14,12 @@ import (
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authn/password"
 	"github.com/pensando/sw/venice/utils/authz"
+	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/runtime"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -24,123 +28,186 @@ const (
 	testPassword = "pensandoo0"
 )
 
-func runPasswordHook(oper apiserver.APIOperType, userType auth.UserSpec_UserType, password string) (interface{}, bool, error) {
-	r := authHooks{}
-	logConfig := log.GetDefaultConfig("TestAuthHooks")
-	r.logger = log.GetNewLogger(logConfig)
-	// user object
-	user := auth.User{
-		TypeMeta: api.TypeMeta{Kind: "User"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   testUser,
+func TestHashPassword(t *testing.T) {
+	hasher := password.GetPasswordHasher()
+	passwdhash, err := hasher.GetPasswordHash(testPassword)
+	if err != nil {
+		t.Fatalf("unable to hash password: %v", err)
+	}
+	tests := []struct {
+		name     string
+		oper     apiserver.APIOperType
+		in       interface{}
+		existing *auth.User
+		result   bool
+		err      error
+	}{
+		{
+			name: "invalid input object",
+			oper: apiserver.CreateOper,
+			in: struct {
+				Test string
+			}{"testing"},
+			result: false,
+			err:    errInvalidInputType,
 		},
-		Spec: auth.UserSpec{
-			Fullname: "Test User",
-			Password: password,
-			Email:    "testuser@pensandio.io",
-			Type:     userType.String(),
+		{
+			name: "hash password for create user",
+			oper: apiserver.CreateOper,
+			in: auth.User{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindUser)},
+				ObjectMeta: api.ObjectMeta{
+					Name:   testUser,
+					Tenant: globals.DefaultTenant,
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: testPassword,
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			existing: nil,
+			result:   true,
+			err:      nil,
+		},
+		{
+			name: "hash password for update user",
+			oper: apiserver.UpdateOper,
+			in: auth.User{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindUser)},
+				ObjectMeta: api.ObjectMeta{
+					Name:   testUser,
+					Tenant: globals.DefaultTenant,
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			existing: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindUser)},
+				ObjectMeta: api.ObjectMeta{
+					Name:   testUser,
+					Tenant: globals.DefaultTenant,
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: passwdhash,
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			result: true,
+			err:    nil,
+		},
+		{
+			name: "empty password for create user",
+			oper: apiserver.CreateOper,
+			in: auth.User{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindUser)},
+				ObjectMeta: api.ObjectMeta{
+					Name:   testUser,
+					Tenant: globals.DefaultTenant,
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			existing: nil,
+			result:   false,
+			err:      errEmptyPassword,
+		},
+		{
+			name: "external user",
+			oper: apiserver.CreateOper,
+			in: auth.User{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindUser)},
+				ObjectMeta: api.ObjectMeta{
+					Name:   testUser,
+					Tenant: globals.DefaultTenant,
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: testPassword,
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_External.String(),
+				},
+			},
+			existing: nil,
+			result:   true,
+			err:      nil,
+		},
+		{
+			name: "user type not specified",
+			oper: apiserver.CreateOper,
+			in: auth.User{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindUser)},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "default",
+					Name:   testUser,
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: testPassword,
+					Email:    "testuser@pensandio.io",
+				},
+			},
+			existing: nil,
+			result:   true,
+			err:      nil,
 		},
 	}
 
-	return r.hashPassword(context.Background(), nil, nil, "", oper, false, user)
-}
-
-func TestWithCreateOperation(t *testing.T) {
-	i, ok, err := runPasswordHook(apiserver.CreateOper, auth.UserSpec_Local, testPassword)
-
-	Assert(t, ok, "hook to hash password failed for create")
-	AssertOk(t, err, "Error hashing password in create pre-commit hook")
-
-	// get password hasher
-	hasher := password.GetPasswordHasher()
-	// compare hash
-	ok, err = hasher.CompareHashAndPassword(i.(auth.User).Spec.Password, testPassword)
-	AssertOk(t, err, "Error comparing password hash")
-	Assert(t, ok, "Password didn't match")
-
-}
-
-func TestWithUpdateOperation(t *testing.T) {
-	i, ok, err := runPasswordHook(apiserver.UpdateOper, auth.UserSpec_Local, testPassword)
-
-	Assert(t, ok, "hook to hash password failed for create")
-	AssertOk(t, err, "Error hashing password in create pre-commit hook")
-
-	// get password hasher
-	hasher := password.GetPasswordHasher()
-	// compare hash
-	ok, err = hasher.CompareHashAndPassword(i.(auth.User).Spec.Password, testPassword)
-	AssertOk(t, err, "Error comparing password hash")
-	Assert(t, ok, "Password didn't match")
-}
-
-func TestForExternalUser(t *testing.T) {
-	i, ok, err := runPasswordHook(apiserver.CreateOper, auth.UserSpec_External, "")
-
-	Assert(t, ok, "hook to hash password failed for external user")
-	AssertOk(t, err, "Error hashing password in create pre-commit hook for external user")
-	Assert(t, i.(auth.User).Spec.Password == "", "Password shouldn't be hashed for external user")
-}
-
-func TestWithDeleteOperation(t *testing.T) {
-	i, ok, err := runPasswordHook(apiserver.DeleteOper, auth.UserSpec_Local, testPassword)
-
-	Assert(t, ok, "hook to hash password failed for delete")
-	AssertOk(t, err, "Error returned for delete operation")
-	Assert(t, i.(auth.User).Spec.Password == testPassword, "hook to hash password should be no-op for delete operation")
-}
-
-func TestWithEmptyPasswordForUpdateOperation(t *testing.T) {
-	i, ok, err := runPasswordHook(apiserver.UpdateOper, auth.UserSpec_Local, "")
-
-	Assert(t, !ok, "hook to hash password succeeded for empty password in update operation")
-	Assert(t, err != nil, "No error returned for empty password in update operation")
-	Assert(t, i.(auth.User).Spec.Password == "", "Empty password shouldn't be hashed in update operation")
-}
-
-func TestWithEmptyPasswordForCreateOperation(t *testing.T) {
-	i, ok, err := runPasswordHook(apiserver.CreateOper, auth.UserSpec_Local, "")
-
-	Assert(t, !ok, "hook to hash password succeeded for empty password in create operation")
-	Assert(t, err != nil, "No error returned for empty password in create operation")
-	Assert(t, i.(auth.User).Spec.Password == "", "Empty password shouldn't be hashed in create operation")
-}
-
-func TestWithInvalidInputObject(t *testing.T) {
-	r := authHooks{}
 	logConfig := log.GetDefaultConfig("TestAuthHooks")
-	r.logger = log.GetNewLogger(logConfig)
-
-	_, ok, err := r.hashPassword(context.Background(), nil, nil, "", apiserver.CreateOper, false, r)
-	Assert(t, !ok, "hook to hash password succeeded for invalid input")
-	Assert(t, err != nil, "No error returned for invalid input")
-}
-
-func TestWithUserTypeNotSpecified(t *testing.T) {
-	r := authHooks{}
-	logConfig := log.GetDefaultConfig("TestAuthHooks")
-	r.logger = log.GetNewLogger(logConfig)
-
-	// user object
-	user := auth.User{
-		TypeMeta: api.TypeMeta{Kind: "User"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   testUser,
-		},
-		Spec: auth.UserSpec{
-			Fullname: "Test User",
-			Password: testPassword,
-			Email:    "testuser@pensandio.io",
-		},
+	l := log.GetNewLogger(logConfig)
+	storecfg := store.Config{
+		Type:    store.KVStoreTypeMemkv,
+		Codec:   runtime.NewJSONCodec(runtime.NewScheme()),
+		Servers: []string{t.Name()},
+	}
+	kvs, err := store.New(storecfg)
+	if err != nil {
+		t.Fatalf("unable to create kvstore %s", err)
 	}
 
-	i, ok, err := r.hashPassword(context.Background(), nil, nil, "", apiserver.CreateOper, false, user)
-	user = i.(auth.User)
-	Assert(t, ok, "hook to hash password failed when user type not specified")
-	Assert(t, user.Spec.Type == auth.UserSpec_Local.String(), "user type should default to local")
-	AssertOk(t, err, "Error returned when user type not specified")
+	authHooks := &authHooks{
+		logger: l,
+	}
+	for _, test := range tests {
+		ctx := context.TODO()
+		txn := kvs.NewTxn()
+		var userKey string
+		if test.existing != nil {
+			// encrypt password as it is stored as secret
+			if err := test.existing.ApplyStorageTransformer(ctx, true); err != nil {
+				t.Fatalf("[%s] test failed, error encrypting password, Err: %v", test.name, err)
+			}
+			userKey = test.existing.MakeKey("auth")
+			if err := kvs.Create(ctx, userKey, test.existing); err != nil {
+				t.Fatalf("[%s] test failed, unable to populate kvstore with user, Err: %v", test.name, err)
+			}
+		}
+		out, ok, err := authHooks.hashPassword(ctx, kvs, txn, userKey, test.oper, false, test.in)
+		Assert(t, test.result == ok, fmt.Sprintf("[%v] test failed", test.name))
+		Assert(t, reflect.DeepEqual(test.err, err), fmt.Sprintf("[%v] test failed, expected err [%v]. got [%v]", test.name, test.err, err))
+		if err == nil {
+			user, _ := out.(auth.User)
+			if user.Spec.Type != auth.UserSpec_External.String() {
+				ok, err := hasher.CompareHashAndPassword(user.Spec.Password, testPassword)
+				AssertOk(t, err, fmt.Sprintf("[%v] test failed", test.name))
+				Assert(t, ok, fmt.Sprintf("[%v] test failed", test.name))
+			} else {
+				Assert(t, user.Spec.Password == "", fmt.Sprintf("[%v] test failed, password should be empty for external user", test.name))
+			}
+		}
+		kvs.Delete(ctx, userKey, nil)
+	}
 }
 
 // erraneousAuthenticatorsConfig returns test data for testing incorrect Authenticators configuration given to validateAuthenticationPolicy hook
@@ -506,5 +573,280 @@ func TestValidateRolePerms(t *testing.T) {
 			}
 			return err[0].Error() == test.err[0].Error()
 		}(), fmt.Sprintf("[%s] test failed", test.name))
+	}
+}
+
+func TestChangePassword(t *testing.T) {
+	hasher := password.GetPasswordHasher()
+	passwdhash, err := hasher.GetPasswordHash(testPassword)
+	if err != nil {
+		t.Fatalf("unable to hash old password: %v", err)
+	}
+	const newPasswd = "pensando"
+	tests := []struct {
+		name     string
+		in       interface{}
+		existing *auth.User
+		result   bool
+		err      error
+	}{
+		{
+			name: "invalid input object",
+			in: struct {
+				Test string
+			}{"testing"},
+			result: false,
+			err:    errInvalidInputType,
+		},
+		{
+			name: "change password",
+			in:   auth.PasswordChangeRequest{OldPassword: testPassword, NewPassword: newPasswd},
+			existing: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindUser)},
+				ObjectMeta: api.ObjectMeta{
+					Name:         testUser,
+					Tenant:       globals.DefaultTenant,
+					GenerationID: "1",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: passwdhash,
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			result: false,
+			err:    nil,
+		},
+		{
+			name: "empty new password",
+			in:   auth.PasswordChangeRequest{OldPassword: testPassword, NewPassword: ""},
+			existing: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindUser)},
+				ObjectMeta: api.ObjectMeta{
+					Name:         testUser,
+					Tenant:       globals.DefaultTenant,
+					GenerationID: "1",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: passwdhash,
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			result: false,
+			err:    errEmptyPassword,
+		},
+		{
+			name: "empty old password",
+			in:   auth.PasswordChangeRequest{OldPassword: "", NewPassword: newPasswd},
+			existing: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindUser)},
+				ObjectMeta: api.ObjectMeta{
+					Name:         testUser,
+					Tenant:       globals.DefaultTenant,
+					GenerationID: "1",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: passwdhash,
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			result: false,
+			err:    errEmptyPassword,
+		},
+		{
+			name: "invalid old password",
+			in:   auth.PasswordChangeRequest{OldPassword: "incorrectpasswd", NewPassword: newPasswd},
+			existing: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindUser)},
+				ObjectMeta: api.ObjectMeta{
+					Name:         testUser,
+					Tenant:       globals.DefaultTenant,
+					GenerationID: "1",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: passwdhash,
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			result: false,
+			err:    errInvalidOldPassword,
+		},
+		{
+			name: "external user",
+			in:   auth.PasswordChangeRequest{OldPassword: testPassword, NewPassword: newPasswd},
+			existing: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindUser)},
+				ObjectMeta: api.ObjectMeta{
+					Name:         testUser,
+					Tenant:       globals.DefaultTenant,
+					GenerationID: "1",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: passwdhash,
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_External.String(),
+				},
+			},
+			result: false,
+			err:    errExtUserPasswordChange,
+		},
+	}
+
+	logConfig := log.GetDefaultConfig("TestAuthHooks")
+	l := log.GetNewLogger(logConfig)
+	storecfg := store.Config{
+		Type:    store.KVStoreTypeMemkv,
+		Codec:   runtime.NewJSONCodec(runtime.NewScheme()),
+		Servers: []string{t.Name()},
+	}
+	kvs, err := store.New(storecfg)
+	if err != nil {
+		t.Fatalf("unable to create kvstore %s", err)
+	}
+
+	authHooks := &authHooks{
+		logger: l,
+	}
+	for _, test := range tests {
+		ctx := context.TODO()
+		txn := kvs.NewTxn()
+		var userKey string
+		if test.existing != nil {
+			// encrypt password as it is stored as secret
+			if err := test.existing.ApplyStorageTransformer(ctx, true); err != nil {
+				t.Fatalf("[%s] test failed, error encrypting password, Err: %v", test.name, err)
+			}
+			userKey = test.existing.MakeKey("auth")
+			if err := kvs.Create(ctx, userKey, test.existing); err != nil {
+				t.Fatalf("[%s] test failed, unable to populate kvstore with user, Err: %v", test.name, err)
+			}
+		}
+		_, ok, err := authHooks.changePassword(ctx, kvs, txn, userKey, "PasswordChange", false, test.in)
+		Assert(t, test.result == ok, fmt.Sprintf("[%v] test failed", test.name))
+		Assert(t, reflect.DeepEqual(test.err, err), fmt.Sprintf("[%v] test failed, expected err [%v]. got [%v]", test.name, test.err, err))
+		if err == nil {
+			req, _ := test.in.(auth.PasswordChangeRequest)
+			user := &auth.User{}
+			err = kvs.Get(ctx, userKey, user)
+			AssertOk(t, err, fmt.Sprintf("[%v] test failed", test.name))
+			err := user.ApplyStorageTransformer(context.Background(), false)
+			AssertOk(t, err, fmt.Sprintf("[%v] test failed", test.name))
+			ok, err := hasher.CompareHashAndPassword(user.Spec.Password, req.NewPassword)
+			AssertOk(t, err, fmt.Sprintf("[%v] test failed", test.name))
+			Assert(t, ok, fmt.Sprintf("[%v] test failed", test.name))
+		}
+		kvs.Delete(ctx, userKey, nil)
+	}
+}
+
+func TestResetPassword(t *testing.T) {
+	hasher := password.GetPasswordHasher()
+	passwdhash, err := hasher.GetPasswordHash(testPassword)
+	if err != nil {
+		t.Fatalf("unable to hash old password: %v", err)
+	}
+	tests := []struct {
+		name     string
+		in       interface{}
+		existing *auth.User
+		result   bool
+		err      error
+	}{
+		{
+			name: "invalid input object",
+			in: struct {
+				Test string
+			}{"testing"},
+			result: false,
+			err:    errInvalidInputType,
+		},
+		{
+			name: "reset password",
+			in:   auth.PasswordResetRequest{},
+			existing: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindUser)},
+				ObjectMeta: api.ObjectMeta{
+					Name:         testUser,
+					Tenant:       globals.DefaultTenant,
+					GenerationID: "1",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: passwdhash,
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			result: false,
+			err:    nil,
+		},
+		{
+			name: "external user",
+			in:   auth.PasswordResetRequest{},
+			existing: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindUser)},
+				ObjectMeta: api.ObjectMeta{
+					Name:         testUser,
+					Tenant:       globals.DefaultTenant,
+					GenerationID: "1",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: passwdhash,
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_External.String(),
+				},
+			},
+			result: false,
+			err:    errExtUserPasswordChange,
+		},
+	}
+
+	logConfig := log.GetDefaultConfig("TestAuthHooks")
+	l := log.GetNewLogger(logConfig)
+	storecfg := store.Config{
+		Type:    store.KVStoreTypeMemkv,
+		Codec:   runtime.NewJSONCodec(runtime.NewScheme()),
+		Servers: []string{t.Name()},
+	}
+	kvs, err := store.New(storecfg)
+	if err != nil {
+		t.Fatalf("unable to create kvstore %s", err)
+	}
+
+	authHooks := &authHooks{
+		logger: l,
+	}
+	for _, test := range tests {
+		ctx := context.TODO()
+		txn := kvs.NewTxn()
+		var userKey string
+		if test.existing != nil {
+			// encrypt password as it is stored as secret
+			if err := test.existing.ApplyStorageTransformer(ctx, true); err != nil {
+				t.Fatalf("[%s] test failed, error encrypting password, Err: %v", test.name, err)
+			}
+			userKey = test.existing.MakeKey("auth")
+			if err := kvs.Create(ctx, userKey, test.existing); err != nil {
+				t.Fatalf("[%s] test failed, unable to populate kvstore with user, Err: %v", test.name, err)
+			}
+		}
+		out, ok, err := authHooks.resetPassword(ctx, kvs, txn, userKey, "PasswordReset", false, test.in)
+		Assert(t, test.result == ok, fmt.Sprintf("[%v] test failed", test.name))
+		Assert(t, reflect.DeepEqual(test.err, err), fmt.Sprintf("[%v] test failed, expected err [%v]. got [%v]", test.name, test.err, err))
+		if err == nil {
+			user, _ := out.(auth.User)
+			Assert(t, user.Spec.Password != test.existing.Spec.Password,
+				fmt.Sprintf("[%v] test failed, reset password [%s] is not different than old password [%s]", test.name, user.Spec.Password, test.existing.Spec.Password))
+		}
+		kvs.Delete(ctx, userKey, nil)
 	}
 }

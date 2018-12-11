@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apigw"
@@ -13,6 +14,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authn/ldap"
 	"github.com/pensando/sw/venice/utils/authn/manager"
+	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/authz/rbac"
 	"github.com/pensando/sw/venice/utils/bootstrapper"
 	"github.com/pensando/sw/venice/utils/log"
@@ -49,6 +51,39 @@ func (a *authHooks) authBootstrap(ctx context.Context, i interface{}) (context.C
 	}
 	ok, err := a.bootstrapper.IsFlagSet(globals.DefaultTenant, bootstrapper.Auth)
 	return ctx, i, !ok, err
+}
+
+// addOwner is a pre authz hook registered with PasswordChange and PasswordReset action and user get/update to add owner to user resource in authz.Operation
+func (a *authHooks) addOwner(ctx context.Context, in interface{}) (context.Context, interface{}, error) {
+	a.logger.DebugLog("msg", "APIGw addOwner pre-authz hook called")
+	switch in.(type) {
+	case *auth.User, *auth.PasswordResetRequest, *auth.PasswordChangeRequest:
+	default:
+		return ctx, in, errors.New("invalid input type")
+	}
+	// get existing operations from context
+	operations, ok := apigwpkg.OperationsFromContext(ctx)
+	if !ok || operations == nil {
+		a.logger.Errorf("addOwner pre-authz hook failed, operation not present in context")
+		return ctx, in, errors.New("internal error")
+	}
+	for _, operation := range operations {
+		if !authz.IsValidOperationValue(operation) {
+			a.logger.Errorf("addOwner pre-authz hook failed, invalid operation: %v", operation)
+			return ctx, in, errors.New("internal error")
+		}
+		resource := operation.GetResource()
+		// for user resource, owner is the resource itself
+		owner := &auth.User{
+			ObjectMeta: api.ObjectMeta{
+				Name:   resource.GetName(),
+				Tenant: resource.GetTenant(),
+			},
+		}
+		resource.SetOwner(owner)
+	}
+	nctx := apigwpkg.NewContextWithOperations(ctx, operations...)
+	return nctx, in, nil
 }
 
 // addRoles is a post-call hook to populate roles in user status
@@ -297,6 +332,28 @@ func (a *authHooks) registerLdapBindCheckHook(svc apigw.APIGatewayService) error
 	return nil
 }
 
+func (a *authHooks) registerAddOwnerHook(svc apigw.APIGatewayService) error {
+	// user should be able to change or reset his own password
+	methods := []string{"PasswordChange", "PasswordReset"}
+	for _, method := range methods {
+		prof, err := svc.GetServiceProfile(method)
+		if err != nil {
+			return err
+		}
+		prof.AddPreAuthZHook(a.addOwner)
+	}
+	// user should be able to get/update his info
+	opers := []apiserver.APIOperType{apiserver.UpdateOper, apiserver.GetOper}
+	for _, oper := range opers {
+		prof, err := svc.GetCrudServiceProfile("User", oper)
+		if err != nil {
+			return err
+		}
+		prof.AddPreAuthZHook(a.addOwner)
+	}
+	return nil
+}
+
 func registerAuthHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	gw := apigwpkg.MustGetAPIGateway()
 	grpcaddr := globals.APIServer
@@ -340,7 +397,12 @@ func registerAuthHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	}
 
 	// register pre-call hook for ldap bind check
-	return r.registerLdapBindCheckHook(svc)
+	if err := r.registerLdapBindCheckHook(svc); err != nil {
+		return err
+	}
+
+	// register pre-authz hook to set owner so that user can change/reset his own password or update user info
+	return r.registerAddOwnerHook(svc)
 }
 
 func init() {

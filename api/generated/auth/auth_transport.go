@@ -323,6 +323,40 @@ func DecodeGrpcRespLocal(ctx context.Context, response interface{}) (interface{}
 	return response, nil
 }
 
+func encodeHTTPPasswordChangeRequest(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPPasswordChangeRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req PasswordChangeRequest
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqPasswordChangeRequest encodes GRPC request
+func EncodeGrpcReqPasswordChangeRequest(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*PasswordChangeRequest)
+	return req, nil
+}
+
+// DecodeGrpcReqPasswordChangeRequest decodes GRPC request
+func DecodeGrpcReqPasswordChangeRequest(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*PasswordChangeRequest)
+	return req, nil
+}
+
+// EncodeGrpcRespPasswordChangeRequest encodes GRC response
+func EncodeGrpcRespPasswordChangeRequest(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespPasswordChangeRequest decodes GRPC response
+func DecodeGrpcRespPasswordChangeRequest(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPPasswordCredential(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -354,6 +388,40 @@ func EncodeGrpcRespPasswordCredential(ctx context.Context, response interface{})
 
 // DecodeGrpcRespPasswordCredential decodes GRPC response
 func DecodeGrpcRespPasswordCredential(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPPasswordResetRequest(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPPasswordResetRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req PasswordResetRequest
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqPasswordResetRequest encodes GRPC request
+func EncodeGrpcReqPasswordResetRequest(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*PasswordResetRequest)
+	return req, nil
+}
+
+// DecodeGrpcReqPasswordResetRequest decodes GRPC request
+func DecodeGrpcReqPasswordResetRequest(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*PasswordResetRequest)
+	return req, nil
+}
+
+// EncodeGrpcRespPasswordResetRequest encodes GRC response
+func EncodeGrpcRespPasswordResetRequest(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespPasswordResetRequest decodes GRPC response
+func DecodeGrpcRespPasswordResetRequest(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
