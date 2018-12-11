@@ -2,6 +2,7 @@ meta:
     name    : mnichostpin
     os      : [ linux ]
     nics    : [ pensando ]
+    targetcount : 5
 
 testcases:
     -   name    : MnicInterfaceUp
