@@ -1,7 +1,7 @@
 meta:
     name    : penctl
     os      : [ linux, freebsd ]
-    nics    : [ pensando ]
+    nics    : [ pensando, mellanox ]
     targetcount : 120 
 
 testcases:
