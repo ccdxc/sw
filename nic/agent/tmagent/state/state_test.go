@@ -216,6 +216,35 @@ func TestValidateFwLogPolicy(t *testing.T) {
 		policy *tpmprotos.FwlogPolicy
 	}{
 		{
+			name: "no name",
+			fail: true,
+			policy: &tpmprotos.FwlogPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "fwLogPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+				},
+				Spec: monitoring.FwlogPolicySpec{
+					Targets: []monitoring.ExportConfig{
+						{
+							Destination: "192.168.100.11",
+							Transport:   "tcp/10001",
+						},
+						{
+							Destination: "test.pensando.iox",
+							Transport:   "tcp/15001",
+						},
+					},
+					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+					Config: &monitoring.SyslogExportConfig{
+						FacilityOverride: "FWLOG-RFC3164",
+					},
+				},
+			},
+		},
+		{
 			name: "invalid dns",
 			fail: true,
 			policy: &tpmprotos.FwlogPolicy{
@@ -226,25 +255,21 @@ func TestValidateFwLogPolicy(t *testing.T) {
 					Namespace: globals.DefaultNamespace,
 					Name:      globals.DefaultTenant,
 				},
-				Spec: tpmprotos.FwlogPolicySpec{
-					Exports: []*monitoring.FwlogExport{
+				Spec: monitoring.FwlogPolicySpec{
+					Targets: []monitoring.ExportConfig{
 						{
-							Targets: []monitoring.ExportConfig{
-								{
-									Destination: "192.168.100.11",
-									Transport:   "tcp/10001",
-								},
-								{
-									Destination: "test.pensando.iox",
-									Transport:   "tcp/15001",
-								},
-							},
-							Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
-							Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
-							SyslogConfig: &monitoring.SyslogExportConfig{
-								FacilityOverride: "FWLOG-RFC3164",
-							},
+							Destination: "192.168.100.11",
+							Transport:   "tcp/10001",
 						},
+						{
+							Destination: "test.pensando.iox",
+							Transport:   "tcp/15001",
+						},
+					},
+					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+					Config: &monitoring.SyslogExportConfig{
+						FacilityOverride: "FWLOG-RFC3164",
 					},
 				},
 			},
@@ -260,46 +285,33 @@ func TestValidateFwLogPolicy(t *testing.T) {
 					Namespace: globals.DefaultNamespace,
 					Name:      globals.DefaultTenant,
 				},
-				Spec: tpmprotos.FwlogPolicySpec{
-					Exports: []*monitoring.FwlogExport{
+				Spec: monitoring.FwlogPolicySpec{
+					Targets: []monitoring.ExportConfig{
 						{
-							Targets: []monitoring.ExportConfig{
-								{
-									Destination: "192.168.100.11",
-									Transport:   "tcp/10001",
-								},
-								{
-									Destination: "registry.test.pensando.io",
-									Transport:   "tcp/15001",
-								},
-							},
-							Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
-							Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
-							SyslogConfig: &monitoring.SyslogExportConfig{
-								FacilityOverride: "FWLOG-RFC3164",
-							},
+							Destination: "192.168.100.11",
+							Transport:   "tcp/10001",
 						},
 						{
-							Targets: []monitoring.ExportConfig{
-								{
-									Destination: "192.168.100.1",
-									Transport:   "udp/10001",
-								},
-								{
-									Destination: "192.168.100.2",
-									Transport:   "udp/10002",
-								},
-								{
-									Destination: "192.168.100.1",
-									Transport:   "tcp/10001",
-								},
-							},
-							Format: monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String(),
-							Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
-							SyslogConfig: &monitoring.SyslogExportConfig{
-								FacilityOverride: "FWLOG-RFC5424",
-							},
+							Destination: "registry.test.pensando.io",
+							Transport:   "tcp/15001",
 						},
+						{
+							Destination: "192.168.100.1",
+							Transport:   "udp/10001",
+						},
+						{
+							Destination: "192.168.100.2",
+							Transport:   "udp/10002",
+						},
+						{
+							Destination: "192.168.100.1",
+							Transport:   "tcp/10001",
+						},
+					},
+					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+					Config: &monitoring.SyslogExportConfig{
+						FacilityOverride: "FWLOG-RFC3164",
 					},
 				},
 			},
@@ -316,78 +328,29 @@ func TestValidateFwLogPolicy(t *testing.T) {
 					Namespace: globals.DefaultNamespace,
 					Name:      globals.DefaultTenant,
 				},
-				Spec: tpmprotos.FwlogPolicySpec{
-					Exports: []*monitoring.FwlogExport{
+				Spec: monitoring.FwlogPolicySpec{
+					Targets: []monitoring.ExportConfig{
 						{
-							Targets: []monitoring.ExportConfig{
-								{
-									Destination: "192.168.100.11",
-									Transport:   "tcp/10001",
-								},
-								{
-									Destination: "registry.test.pensando.io",
-									Transport:   "tcp/15001",
-								},
-							},
-							Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
-							Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
-							SyslogConfig: &monitoring.SyslogExportConfig{
-								FacilityOverride: "FWLOG-RFC3164",
-							},
+							Destination: "192.168.100.11",
+							Transport:   "tcp/10001",
 						},
 						{
-							Targets: []monitoring.ExportConfig{
-								{
-									Destination: "192.168.100.11",
-									Transport:   "tcp/10001",
-								},
-							},
-							Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
-							Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
-							SyslogConfig: &monitoring.SyslogExportConfig{
-								FacilityOverride: "FWLOG-RFC3164",
-							},
+							Destination: "registry.test.pensando.io",
+							Transport:   "tcp/15001",
 						},
+						{
+							Destination: "192.168.100.11",
+							Transport:   "tcp/10001",
+						},
+					},
+					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+					Config: &monitoring.SyslogExportConfig{
+						FacilityOverride: "FWLOG-RFC3164",
 					},
 				},
 			},
 		},
-
-		{
-			name: "duplicate collectors",
-			fail: true,
-			policy: &tpmprotos.FwlogPolicy{
-				TypeMeta: api.TypeMeta{
-					Kind: "fwLogPolicy",
-				},
-				ObjectMeta: api.ObjectMeta{
-					Namespace: globals.DefaultNamespace,
-					Name:      globals.DefaultTenant,
-				},
-				Spec: tpmprotos.FwlogPolicySpec{
-					Exports: []*monitoring.FwlogExport{
-						{
-							Targets: []monitoring.ExportConfig{
-								{
-									Destination: "192.168.100.11",
-									Transport:   "tcp/10001",
-								},
-								{
-									Destination: "192.168.100.11",
-									Transport:   "tcp/10001",
-								},
-							},
-							Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
-							Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
-							SyslogConfig: &monitoring.SyslogExportConfig{
-								FacilityOverride: "FWLOG-RFC3164",
-							},
-						},
-					},
-				},
-			},
-		},
-
 		{
 			name: "invalid destination",
 			fail: true,
@@ -396,30 +359,25 @@ func TestValidateFwLogPolicy(t *testing.T) {
 					Kind: "fwLogPolicy",
 				},
 				ObjectMeta: api.ObjectMeta{},
-				Spec: tpmprotos.FwlogPolicySpec{
-					Exports: []*monitoring.FwlogExport{
+				Spec: monitoring.FwlogPolicySpec{
+					Targets: []monitoring.ExportConfig{
 						{
-							Targets: []monitoring.ExportConfig{
-								{
-									Destination: "192.168.100.11",
-									Transport:   "tcp/10001",
-								},
-								{
-									Destination: "",
-									Transport:   "tcp/10001",
-								},
-							},
-							Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
-							Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
-							SyslogConfig: &monitoring.SyslogExportConfig{
-								FacilityOverride: "FWLOG-RFC3164",
-							},
+							Destination: "192.168.100.11",
+							Transport:   "tcp/10001",
 						},
+						{
+							Destination: "",
+							Transport:   "tcp/10001",
+						},
+					},
+					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+					Config: &monitoring.SyslogExportConfig{
+						FacilityOverride: "FWLOG-RFC3164",
 					},
 				},
 			},
 		},
-
 		{
 			name: "invalid target",
 			fail: true,
@@ -430,15 +388,11 @@ func TestValidateFwLogPolicy(t *testing.T) {
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
 				},
-				Spec: tpmprotos.FwlogPolicySpec{
-					Exports: []*monitoring.FwlogExport{
-						{
-							Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
-							Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
-							SyslogConfig: &monitoring.SyslogExportConfig{
-								FacilityOverride: "FWLOG-RFC3164",
-							},
-						},
+				Spec: monitoring.FwlogPolicySpec{
+					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+					Config: &monitoring.SyslogExportConfig{
+						FacilityOverride: "FWLOG-RFC3164",
 					},
 				},
 			},
@@ -455,25 +409,21 @@ func TestValidateFwLogPolicy(t *testing.T) {
 					Namespace: globals.DefaultNamespace,
 					Name:      globals.DefaultTenant,
 				},
-				Spec: tpmprotos.FwlogPolicySpec{
-					Exports: []*monitoring.FwlogExport{
+				Spec: monitoring.FwlogPolicySpec{
+					Targets: []monitoring.ExportConfig{
 						{
-							Targets: []monitoring.ExportConfig{
-								{
-									Destination: "192.168.100.11",
-									Transport:   "tcp/10001",
-								},
-								{
-									Destination: "192.168.100.11",
-									Transport:   "tcp",
-								},
-							},
-							Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
-							Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
-							SyslogConfig: &monitoring.SyslogExportConfig{
-								FacilityOverride: "FWLOG-RFC3164",
-							},
+							Destination: "192.168.100.11",
+							Transport:   "tcp/10001",
 						},
+						{
+							Destination: "192.168.100.11",
+							Transport:   "tcp",
+						},
+					},
+					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+					Config: &monitoring.SyslogExportConfig{
+						FacilityOverride: "FWLOG-RFC3164",
 					},
 				},
 			},
@@ -490,25 +440,21 @@ func TestValidateFwLogPolicy(t *testing.T) {
 					Namespace: globals.DefaultNamespace,
 					Name:      globals.DefaultTenant,
 				},
-				Spec: tpmprotos.FwlogPolicySpec{
-					Exports: []*monitoring.FwlogExport{
+				Spec: monitoring.FwlogPolicySpec{
+					Targets: []monitoring.ExportConfig{
 						{
-							Targets: []monitoring.ExportConfig{
-								{
-									Destination: "192.168.100.11",
-									Transport:   "ip/10001",
-								},
-								{
-									Destination: "192.168.100.11",
-									Transport:   "tcp/10001",
-								},
-							},
-							Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
-							Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
-							SyslogConfig: &monitoring.SyslogExportConfig{
-								FacilityOverride: "FWLOG-RFC3164",
-							},
+							Destination: "192.168.100.11",
+							Transport:   "ip/10001",
 						},
+						{
+							Destination: "192.168.100.11",
+							Transport:   "tcp/10001",
+						},
+					},
+					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+					Config: &monitoring.SyslogExportConfig{
+						FacilityOverride: "FWLOG-RFC3164",
 					},
 				},
 			},
@@ -525,25 +471,21 @@ func TestValidateFwLogPolicy(t *testing.T) {
 					Namespace: globals.DefaultNamespace,
 					Name:      globals.DefaultTenant,
 				},
-				Spec: tpmprotos.FwlogPolicySpec{
-					Exports: []*monitoring.FwlogExport{
+				Spec: monitoring.FwlogPolicySpec{
+					Targets: []monitoring.ExportConfig{
 						{
-							Targets: []monitoring.ExportConfig{
-								{
-									Destination: "192.168.100.11",
-									Transport:   "tcp/10001",
-								},
-								{
-									Destination: "192.168.100.11",
-									Transport:   "tcp/abcd",
-								},
-							},
-							Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
-							Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
-							SyslogConfig: &monitoring.SyslogExportConfig{
-								FacilityOverride: "FWLOG-RFC3164",
-							},
+							Destination: "192.168.100.11",
+							Transport:   "tcp/10001",
 						},
+						{
+							Destination: "192.168.100.11",
+							Transport:   "tcp/abcd",
+						},
+					},
+					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+					Config: &monitoring.SyslogExportConfig{
+						FacilityOverride: "FWLOG-RFC3164",
 					},
 				},
 			},
@@ -560,25 +502,21 @@ func TestValidateFwLogPolicy(t *testing.T) {
 					Namespace: globals.DefaultNamespace,
 					Name:      globals.DefaultTenant,
 				},
-				Spec: tpmprotos.FwlogPolicySpec{
-					Exports: []*monitoring.FwlogExport{
+				Spec: monitoring.FwlogPolicySpec{
+					Targets: []monitoring.ExportConfig{
 						{
-							Targets: []monitoring.ExportConfig{
-								{
-									Destination: "192.168.100.11",
-									Transport:   "tcp/10001",
-								},
-								{
-									Destination: "192.168.100.11",
-									Transport:   "tcp/65536",
-								},
-							},
-							Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
-							Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
-							SyslogConfig: &monitoring.SyslogExportConfig{
-								FacilityOverride: "FWLOG-RFC3164",
-							},
+							Destination: "192.168.100.11",
+							Transport:   "tcp/10001",
 						},
+						{
+							Destination: "192.168.100.11",
+							Transport:   "tcp/65536",
+						},
+					},
+					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+					Config: &monitoring.SyslogExportConfig{
+						FacilityOverride: "FWLOG-RFC3164",
 					},
 				},
 			},
@@ -594,42 +532,21 @@ func TestValidateFwLogPolicy(t *testing.T) {
 					Namespace: globals.DefaultNamespace,
 					Name:      globals.DefaultTenant,
 				},
-				Spec: tpmprotos.FwlogPolicySpec{
-					Exports: []*monitoring.FwlogExport{
+				Spec: monitoring.FwlogPolicySpec{
+					Targets: []monitoring.ExportConfig{
 						{
-							Targets: []monitoring.ExportConfig{
-								{
-									Destination: "192.168.100.11",
-									Transport:   "tcp/10001",
-								},
-								{
-									Destination: "registry.test.pensando.io",
-									Transport:   "tcp/15001",
-								},
-							},
-							Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
-							Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
-							SyslogConfig: &monitoring.SyslogExportConfig{
-								FacilityOverride: "FWLOG-RFC3164",
-							},
+							Destination: "192.168.100.11",
+							Transport:   "tcp/10001",
 						},
 						{
-							Targets: []monitoring.ExportConfig{
-								{
-									Destination: "192.168.150.1",
-									Transport:   "udp/10001",
-								},
-								{
-									Destination: "192.168.150.2",
-									Transport:   "udp/10002",
-								},
-							},
-							Format: monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String(),
-							Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALLOW.String(), monitoring.FwlogFilter_FIREWALL_ACTION_DENY.String()},
-							SyslogConfig: &monitoring.SyslogExportConfig{
-								FacilityOverride: "FWLOG-RFC5424",
-							},
+							Destination: "registry.test.pensando.io",
+							Transport:   "tcp/15001",
 						},
+					},
+					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+					Config: &monitoring.SyslogExportConfig{
+						FacilityOverride: "FWLOG-RFC3164",
 					},
 				},
 			},
@@ -681,21 +598,17 @@ func TestFwPolicyOps(t *testing.T) {
 				Name:      tenant,
 				Tenant:    tenant,
 			},
-			Spec: tpmprotos.FwlogPolicySpec{
-				Exports: []*monitoring.FwlogExport{
+			Spec: monitoring.FwlogPolicySpec{
+				Targets: []monitoring.ExportConfig{
 					{
-						Targets: []monitoring.ExportConfig{
-							{
-								Destination: fmt.Sprintf("192.168.100.%d", i+10),
-								Transport:   fmt.Sprintf("tcp/%d", 10000+i),
-							},
-						},
-						Format: monitoring.MonitoringExportFormat_name[int32(i%2)],
-						Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_REJECT.String()},
-						SyslogConfig: &monitoring.SyslogExportConfig{
-							FacilityOverride: "FWLOG-RFC3164",
-						},
+						Destination: fmt.Sprintf("192.168.100.%d", i+10),
+						Transport:   fmt.Sprintf("tcp/%d", 10000+i),
 					},
+				},
+				Format: monitoring.MonitoringExportFormat_name[int32(i%2)],
+				Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_REJECT.String()},
+				Config: &monitoring.SyslogExportConfig{
+					FacilityOverride: "FWLOG-RFC3164",
 				},
 			},
 		}
@@ -733,11 +646,9 @@ func TestFwPolicyOps(t *testing.T) {
 		AssertOk(t, err, "failed to get vrf %+v", i)
 
 		// get all collectors
-		for _, exp := range i.Spec.Exports {
-			for _, c := range exp.Targets {
-				key := ps.getCollectorKey(vrf, exp, c)
-				cmap[key] = true
-			}
+		for _, c := range i.Spec.Targets {
+			key := ps.getCollectorKey(vrf, i, c)
+			cmap[key] = true
 		}
 
 		//match collectors
@@ -816,55 +727,62 @@ func TestProcessFWEvent(t *testing.T) {
 	AssertOk(t, err, "failed to create udp syslog server")
 	defer udpl2()
 
-	fwPolicy := &tpmprotos.FwlogPolicy{
+	fwPolicy1 := &tpmprotos.FwlogPolicy{
 		TypeMeta: api.TypeMeta{
 			Kind: "fwLogPolicy",
 		},
 		ObjectMeta: api.ObjectMeta{
 			Namespace: globals.DefaultNamespace,
-			Name:      globals.DefaultTenant,
+			Name:      "policy1",
 		},
-		Spec: tpmprotos.FwlogPolicySpec{
-			Exports: []*monitoring.FwlogExport{
+		Spec: monitoring.FwlogPolicySpec{
+			Targets: []monitoring.ExportConfig{
 				{
-					Targets: []monitoring.ExportConfig{
-						{
-							Destination: strings.Split(tcpAddr1, ":")[0],
-							Transport:   fmt.Sprintf("tcp/%s", strings.Split(tcpAddr1, ":")[1]),
-						},
-						{
-							Destination: strings.Split(udpAddr1, ":")[0],
-							Transport:   fmt.Sprintf("udp/%s", strings.Split(udpAddr1, ":")[1]),
-						},
-					},
-					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
-					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
-					SyslogConfig: &monitoring.SyslogExportConfig{
-						FacilityOverride: "FWLOG-RFC3164",
-					},
+					Destination: strings.Split(tcpAddr1, ":")[0],
+					Transport:   fmt.Sprintf("tcp/%s", strings.Split(tcpAddr1, ":")[1]),
 				},
 				{
-					Targets: []monitoring.ExportConfig{
-						{
-							Destination: strings.Split(tcpAddr2, ":")[0],
-							Transport:   fmt.Sprintf("tcp/%s", strings.Split(tcpAddr2, ":")[1]),
-						},
-						{
-							Destination: strings.Split(udpAddr2, ":")[0],
-							Transport:   fmt.Sprintf("udp/%s", strings.Split(udpAddr2, ":")[1]),
-						},
-					},
-					Format: monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String(),
-					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
-					SyslogConfig: &monitoring.SyslogExportConfig{
-						FacilityOverride: "FWLOG-RFC5424",
-					},
+					Destination: strings.Split(udpAddr1, ":")[0],
+					Transport:   fmt.Sprintf("udp/%s", strings.Split(udpAddr1, ":")[1]),
 				},
+			},
+			Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+			Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+			Config: &monitoring.SyslogExportConfig{
+				FacilityOverride: "FWLOG-RFC3164",
+			},
+		},
+	}
+	fwPolicy2 := &tpmprotos.FwlogPolicy{
+		TypeMeta: api.TypeMeta{
+			Kind: "fwLogPolicy",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Namespace: globals.DefaultNamespace,
+			Name:      "policy2",
+		},
+		Spec: monitoring.FwlogPolicySpec{
+			Targets: []monitoring.ExportConfig{
+				{
+					Destination: strings.Split(tcpAddr2, ":")[0],
+					Transport:   fmt.Sprintf("tcp/%s", strings.Split(tcpAddr2, ":")[1]),
+				},
+				{
+					Destination: strings.Split(udpAddr2, ":")[0],
+					Transport:   fmt.Sprintf("udp/%s", strings.Split(udpAddr2, ":")[1]),
+				},
+			},
+			Format: monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String(),
+			Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+			Config: &monitoring.SyslogExportConfig{
+				FacilityOverride: "FWLOG-RFC5424",
 			},
 		},
 	}
 
-	err = ps.CreateFwLogPolicy(ctx, fwPolicy)
+	err = ps.CreateFwLogPolicy(ctx, fwPolicy1)
+	AssertOk(t, err, "failed to create fwlog policy")
+	err = ps.CreateFwLogPolicy(ctx, fwPolicy2)
 	AssertOk(t, err, "failed to create fwlog policy")
 
 	srcIPStr := "192.168.10.1"
@@ -983,130 +901,138 @@ func TestPolicyUpdate(t *testing.T) {
 	defer ps.Close()
 	defer cancel()
 
-	collList := [][]*monitoring.FwlogExport{
-		{ // add
-			{
-				Targets: []monitoring.ExportConfig{
-					{
-						Destination: "192.168.99.1",
-						Transport:   "tcp/11001", // tcp to fail connect()
-					},
+	collList := []*tpmprotos.FwlogPolicyEvent{
+		// add
+		&tpmprotos.FwlogPolicyEvent{
+			EventType: api.EventType_CreateEvent,
+			Policy: &tpmprotos.FwlogPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "fwLogPolicy",
 				},
-				Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
-				Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
-				SyslogConfig: &monitoring.SyslogExportConfig{
-					FacilityOverride: "test",
+				ObjectMeta: api.ObjectMeta{
+					Name: "policy1",
+				},
+				Spec: monitoring.FwlogPolicySpec{
+					Targets: []monitoring.ExportConfig{
+						{
+							Destination: "192.168.99.1",
+							Transport:   "tcp/11001", // tcp to fail connect()
+						},
+					},
+					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+					Config: &monitoring.SyslogExportConfig{
+						FacilityOverride: "test",
+					},
 				},
 			},
 		},
 
-		{ // add
-			{
-				Targets: []monitoring.ExportConfig{
-					{
-						Destination: "192.168.99.1",
-						Transport:   "tcp/11001",
-					},
-					{
-						Destination: "192.168.99.2",
-						Transport:   "tcp/11002",
-					},
+		// add
+		&tpmprotos.FwlogPolicyEvent{
+			EventType: api.EventType_CreateEvent,
+			Policy: &tpmprotos.FwlogPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "fwLogPolicy",
 				},
-				Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
-				Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_DENY.String()},
-				SyslogConfig: &monitoring.SyslogExportConfig{
-					FacilityOverride: "test",
+				ObjectMeta: api.ObjectMeta{
+					Name: "policy2",
+				},
+				Spec: monitoring.FwlogPolicySpec{
+					Targets: []monitoring.ExportConfig{
+						{
+							Destination: "192.168.99.1",
+							Transport:   "tcp/11001",
+						},
+						{
+							Destination: "192.168.99.2",
+							Transport:   "tcp/11002",
+						},
+					},
+					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_DENY.String()},
+					Config: &monitoring.SyslogExportConfig{
+						FacilityOverride: "test",
+					},
 				},
 			},
 		},
-		{ // delete
-			{
-				Targets: []monitoring.ExportConfig{
-					{
-						Destination: "192.168.99.2",
-						Transport:   "tcp/11002",
-					},
+		// update
+		&tpmprotos.FwlogPolicyEvent{
+			EventType: api.EventType_UpdateEvent,
+			Policy: &tpmprotos.FwlogPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "fwLogPolicy",
 				},
-				Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
-				Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_REJECT.String()},
-				SyslogConfig: &monitoring.SyslogExportConfig{
-					FacilityOverride: "test",
+				ObjectMeta: api.ObjectMeta{
+					Name: "policy2",
+				},
+				Spec: monitoring.FwlogPolicySpec{
+					Targets: []monitoring.ExportConfig{
+						{
+							Destination: "192.168.99.2",
+							Transport:   "tcp/11002",
+						},
+					},
+					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_REJECT.String()},
+					Config: &monitoring.SyslogExportConfig{
+						FacilityOverride: "test",
+					},
 				},
 			},
 		},
-		{ // delete & add
-			{
-				Targets: []monitoring.ExportConfig{
-					{
-						Destination: "192.168.99.3",
-						Transport:   "tcp/11003",
-					},
-					{
-						Destination: "192.168.99.4",
-						Transport:   "tcp/11004",
-					},
+		// delete
+		&tpmprotos.FwlogPolicyEvent{
+			EventType: api.EventType_DeleteEvent,
+			Policy: &tpmprotos.FwlogPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "fwLogPolicy",
 				},
-				Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
-				Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_DENY.String()},
-				SyslogConfig: &monitoring.SyslogExportConfig{
-					FacilityOverride: "test",
+				ObjectMeta: api.ObjectMeta{
+					Name: "policy1",
 				},
-			},
-		},
-		{ // none
-			{
-				Targets: []monitoring.ExportConfig{
-					{
-						Destination: "192.168.99.3",
-						Transport:   "tcp/11003",
+				Spec: monitoring.FwlogPolicySpec{
+					Targets: []monitoring.ExportConfig{
+						{
+							Destination: "192.168.99.1",
+							Transport:   "tcp/11001", // tcp to fail connect()
+						},
 					},
-					{
-						Destination: "192.168.99.4",
-						Transport:   "tcp/11004",
+					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+					Config: &monitoring.SyslogExportConfig{
+						FacilityOverride: "test",
 					},
-				},
-				Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
-				Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALLOW.String()},
-				SyslogConfig: &monitoring.SyslogExportConfig{
-					FacilityOverride: "test",
 				},
 			},
 		},
-		{ // format change
-			{
-				Targets: []monitoring.ExportConfig{
-					{
-						Destination: "192.168.99.3",
-						Transport:   "tcp/11003",
-					},
-					{
-						Destination: "192.168.11.4",
-						Transport:   "tcp/11004",
-					},
+		// update: format and facility change
+		&tpmprotos.FwlogPolicyEvent{
+			EventType: api.EventType_UpdateEvent,
+			Policy: &tpmprotos.FwlogPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "fwLogPolicy",
 				},
-				Format: monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String(),
-				Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALLOW.String()},
-				SyslogConfig: &monitoring.SyslogExportConfig{
-					FacilityOverride: "test",
+				ObjectMeta: api.ObjectMeta{
+					Name: "policy2",
 				},
-			},
-		},
-		{ // fascility change
-			{
-				Targets: []monitoring.ExportConfig{
-					{
-						Destination: "192.168.99.3",
-						Transport:   "tcp/11003",
+				Spec: monitoring.FwlogPolicySpec{
+					Targets: []monitoring.ExportConfig{
+						{
+							Destination: "192.168.99.1",
+							Transport:   "tcp/11001",
+						},
+						{
+							Destination: "192.168.99.2",
+							Transport:   "tcp/11002",
+						},
 					},
-					{
-						Destination: "192.168.99.4",
-						Transport:   "tcp/11004",
+					Format: monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String(),
+					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALLOW.String()},
+					Config: &monitoring.SyslogExportConfig{
+						FacilityOverride: "test-changed",
 					},
-				},
-				Format: monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String(),
-				Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_DENY.String()},
-				SyslogConfig: &monitoring.SyslogExportConfig{
-					FacilityOverride: "test-changed",
 				},
 			},
 		},
@@ -1115,65 +1041,59 @@ func TestPolicyUpdate(t *testing.T) {
 	vrf, err := ps.getvrf(globals.DefaultTenant, globals.DefaultNamespace)
 	AssertOk(t, err, "failed to get vrf")
 
-	// build collector map
-	for k, el := range collList {
-		newCollector := map[string]*fwlogCollector{}
-		for _, exp := range el {
-			filter := ps.getFilter(exp.Filter)
-			for _, target := range exp.Targets {
-				key := ps.getCollectorKey(vrf, exp, target)
+	for _, fwPolicyEvent := range collList {
+		policySpec := fwPolicyEvent.Policy.Spec
+		filter := ps.getFilter(policySpec.Filter)
+
+		switch fwPolicyEvent.EventType {
+		case api.EventType_CreateEvent:
+			log.Info("Create")
+			err := ps.CreateFwLogPolicy(ctx, fwPolicyEvent.Policy)
+			AssertOk(t, err, "failed to create policy %+v", fwPolicyEvent.Policy)
+		case api.EventType_UpdateEvent:
+			err := ps.UpdateFwLogPolicy(ctx, fwPolicyEvent.Policy)
+			AssertOk(t, err, "failed to update policy %+v", fwPolicyEvent.Policy)
+		case api.EventType_DeleteEvent:
+			err := ps.DeleteFwLogPolicy(ctx, fwPolicyEvent.Policy)
+			AssertOk(t, err, "failed to delete policy %+v", fwPolicyEvent.Policy)
+		}
+
+		// check collector
+		switch fwPolicyEvent.EventType {
+		case api.EventType_CreateEvent, api.EventType_UpdateEvent:
+			for _, target := range policySpec.Targets {
+				key := ps.getCollectorKey(vrf, fwPolicyEvent.Policy, target)
+				val, ok := ps.fwLogCollectors.Load(key)
+				Assert(t, ok == true, "failed to get key from map")
+				col, ok := val.(*fwlogCollector)
+				Assert(t, ok == true, "failed to get collector from map")
+
 				transport := strings.Split(target.Transport, "/")
-				newCollector[key] = &fwlogCollector{
+				expCol := fwlogCollector{
 					vrf:         vrf,
 					filter:      filter,
-					format:      exp.Format,
-					facility:    syslog.Priority(monitoring.SyslogFacility_value[exp.SyslogConfig.FacilityOverride]),
+					format:      policySpec.Format,
+					facility:    syslog.Priority(monitoring.SyslogFacility_value[policySpec.Config.FacilityOverride]),
 					destination: target.Destination,
 					proto:       transport[0],
 					port:        transport[1],
 				}
+
+				AssertEquals(t, col.vrf, expCol.vrf, "vrf didn't match")
+				AssertEquals(t, col.filter, expCol.filter, "filter didn't match")
+				AssertEquals(t, col.format, expCol.format, "format didn't match")
+				AssertEquals(t, col.facility, expCol.facility, "facility didn't match")
+				AssertEquals(t, col.destination, expCol.destination, "destination didn't match")
+				AssertEquals(t, col.proto, expCol.proto, "proto didn't match")
+				AssertEquals(t, col.port, expCol.port, "port didn't match")
+			}
+		case api.EventType_DeleteEvent:
+			for _, target := range policySpec.Targets {
+				key := ps.getCollectorKey(vrf, fwPolicyEvent.Policy, target)
+				_, ok := ps.fwLogCollectors.Load(key)
+				Assert(t, ok != true, "key was present in map when it should have been deleted")
 			}
 		}
-
-		fwPolicy := &tpmprotos.FwlogPolicy{
-			TypeMeta: api.TypeMeta{
-				Kind: "fwLogPolicy",
-			},
-			ObjectMeta: api.ObjectMeta{
-				Namespace: globals.DefaultNamespace,
-				Name:      globals.DefaultTenant,
-			},
-			Spec: tpmprotos.FwlogPolicySpec{
-				Exports: el,
-			},
-		}
-
-		if k == 0 { //add
-			err := ps.CreateFwLogPolicy(ctx, fwPolicy)
-			AssertOk(t, err, "failed to create policy %+v", el)
-		} else { // append
-			err := ps.UpdateFwLogPolicy(ctx, fwPolicy)
-			AssertOk(t, err, "failed to update policy %+v", el)
-		}
-
-		// verify
-		ps.fwLogCollectors.Range(func(k interface{}, v interface{}) bool {
-			key, ok := k.(string)
-			Assert(t, ok == true, "failed to get key from map")
-
-			col, ok := v.(*fwlogCollector)
-			Assert(t, ok == true, "failed to get collector from map")
-
-			nc, ok := newCollector[key]
-			Assert(t, ok == true, "invalid collector %s exitis, %+v", key, col)
-			delete(newCollector, key)
-
-			Assert(t, reflect.DeepEqual(nc, col), "got %+v, expected %+v", col, nc)
-			return true
-		})
-
-		// map should be empty
-		Assert(t, len(newCollector) == 0, "missed to create colletor %+v from config: %+v", newCollector, el)
 	}
 }
 

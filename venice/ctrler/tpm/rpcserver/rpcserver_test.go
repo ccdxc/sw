@@ -173,25 +173,17 @@ func TestWatchFwlogPolicy(t *testing.T) {
 			TypeMeta:   api.TypeMeta{Kind: "FwlogPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: "fwlog-1"},
 			Spec: monitoring.FwlogPolicySpec{
-				Filter: []string{
-					monitoring.FwlogFilter_FIREWALL_ACTION_ALLOW.String(),
-					monitoring.FwlogFilter_FIREWALL_ACTION_DENY.String(),
-				},
-				Exports: []*monitoring.FwlogExport{
+				Targets: []monitoring.ExportConfig{
 					{
-						Targets: []monitoring.ExportConfig{
-							{
-								Destination: "collector1.test.com",
-								Transport:   "UDP/514",
-							},
-						},
-						Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
-						Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
-						SyslogConfig: &monitoring.SyslogExportConfig{
-							Prefix:           "prefix1",
-							FacilityOverride: "test-override1",
-						},
+						Destination: "collector1.test.com",
+						Transport:   "UDP/514",
 					},
+				},
+				Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+				Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+				Config: &monitoring.SyslogExportConfig{
+					Prefix:           "prefix1",
+					FacilityOverride: "test-override1",
 				},
 			},
 		},
@@ -199,25 +191,17 @@ func TestWatchFwlogPolicy(t *testing.T) {
 			TypeMeta:   api.TypeMeta{Kind: "FwlogPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: "fwlog-2"},
 			Spec: monitoring.FwlogPolicySpec{
-				Filter: []string{
-					monitoring.FwlogFilter_FIREWALL_ACTION_ALLOW.String(),
-					monitoring.FwlogFilter_FIREWALL_ACTION_DENY.String(),
-				},
-				Exports: []*monitoring.FwlogExport{
+				Targets: []monitoring.ExportConfig{
 					{
-						Targets: []monitoring.ExportConfig{
-							{
-								Destination: "collector2.test.com",
-								Transport:   "TCP/514",
-							},
-						},
-						Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
-						Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
-						SyslogConfig: &monitoring.SyslogExportConfig{
-							Prefix:           "prefix2",
-							FacilityOverride: "test-override2",
-						},
+						Destination: "collector2.test.com",
+						Transport:   "TCP/514",
 					},
+				},
+				Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+				Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+				Config: &monitoring.SyslogExportConfig{
+					Prefix:           "prefix2",
+					FacilityOverride: "test-override2",
 				},
 			},
 		},
@@ -254,10 +238,12 @@ func TestWatchFwlogPolicy(t *testing.T) {
 			fmt.Sprintf("obj meta [%v] didn't match in policy, {%+v} ", evPolicy, fp))
 		tu.Assert(t, reflect.DeepEqual(evPolicy.Spec.Filter, cfgPolicy.Spec.Filter),
 			fmt.Sprintf("policy filter [%v] didn't match in policy, {%+v} ", evPolicy, fp))
-		tu.Assert(t, len(evPolicy.Spec.Exports) == len(cfgPolicy.Spec.GetExports()),
-			fmt.Sprintf("policy count didn't match in policy,{%+v}  {%+v} ", evPolicy, fp))
+		tu.Assert(t, reflect.DeepEqual(evPolicy.Spec.Format, cfgPolicy.Spec.Format),
+			fmt.Sprintf("policy format [%v] didn't match in policy, {%+v} ", evPolicy, fp))
+		tu.Assert(t, reflect.DeepEqual(evPolicy.Spec.Config, cfgPolicy.Spec.Config),
+			fmt.Sprintf("policy config [%v] didn't match in policy, {%+v} ", evPolicy, fp))
 
-		tu.Assert(t, reflect.DeepEqual(evPolicy.Spec.Exports, cfgPolicy.Spec.Exports),
+		tu.Assert(t, reflect.DeepEqual(evPolicy.Spec.Targets, cfgPolicy.Spec.Targets),
 			fmt.Sprintf("policy exports [%v] didn't match in policy, {%+v} ", evPolicy, fp))
 	}
 

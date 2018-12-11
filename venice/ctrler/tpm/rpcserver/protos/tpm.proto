@@ -62,23 +62,12 @@ message FwlogPolicyEvent {
     FwlogPolicy Policy = 2 [(gogoproto.jsontag) = "policy,omitempty"];
 }
 
-message FwlogPolicySpec {
-    // filter firewall logs for venice
-    repeated string Filter = 1 [(gogoproto.jsontag) = "filter,omitempty"];
-    // fwlog exports
-    repeated monitoring.FwlogExport Exports = 2[(gogoproto.jsontag) = "exports,omitempty"];
-}
-
-message FwlogPolicyStatus {
-
-}
-
 // FwlogPolicy firewall log Policy object
 message FwlogPolicy {
     api.TypeMeta        TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
     api.ObjectMeta      ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
-    FwlogPolicySpec     Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
-    FwlogPolicyStatus   Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+    monitoring.FwlogPolicySpec     Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    monitoring.FwlogPolicyStatus   Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }
 
 // FwlogPolicyApi REST interface for agent

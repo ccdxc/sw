@@ -143,10 +143,7 @@ func (p *fwlogPolicyRPCServer) WatchFwlogPolicy(in *api.ObjectMeta, out tpmProto
 			fwlogPolicy := &tpmProtos.FwlogPolicy{
 				TypeMeta:   policy.TypeMeta,
 				ObjectMeta: policy.ObjectMeta,
-				Spec: tpmProtos.FwlogPolicySpec{
-					Filter:  policy.Spec.Filter,
-					Exports: policy.Spec.Exports,
-				},
+				Spec:       policy.Spec,
 			}
 
 			if err := out.Send(&tpmProtos.FwlogPolicyEvent{EventType: api.EventType_CreateEvent,
@@ -179,10 +176,7 @@ func (p *fwlogPolicyRPCServer) WatchFwlogPolicy(in *api.ObjectMeta, out tpmProto
 			fwlogPolicy := &tpmProtos.FwlogPolicy{
 				TypeMeta:   policy.TypeMeta,
 				ObjectMeta: policy.ObjectMeta,
-				Spec: tpmProtos.FwlogPolicySpec{
-					Filter:  policy.Spec.Filter,
-					Exports: policy.Spec.Exports,
-				},
+				Spec:       policy.Spec,
 			}
 
 			if err := out.Send(&tpmProtos.FwlogPolicyEvent{EventType: apiEventTypeMap[event.EventType],

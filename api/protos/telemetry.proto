@@ -86,8 +86,8 @@ enum FwlogFilter {
     FIREWALL_ACTION_ALL = 4;
 }
 
-// firewall log export config
-message FwlogExport {
+// Venice collects fwlog irrespective of the export config
+message FwlogPolicySpec {
     // Target contains ip/port/protocol
     repeated ExportConfig Targets = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "targets,omitempty"];
 
@@ -95,24 +95,12 @@ message FwlogExport {
     string Format = 2 [(gogoproto.jsontag) = "format,omitempty", (venice.check) = "StrEnum(MonitoringExportFormat)"];
 
     // filter firewall logs, FWLOG_ALL default
-    repeated string Filter = 3 [(gogoproto.jsontag) = "export-filter,omitempty", (venice.check) = "StrEnum(FwlogFilter)"];
+    repeated string Filter = 3 [(gogoproto.jsontag) = "filter,omitempty", (venice.check) = "StrEnum(FwlogFilter)"];
 
     // configuration to use for syslog format
     // default facility is set to "local4", can be overridden with FacilityOverride
     // fwlog severity is set to "Informational"
-    SyslogExportConfig SyslogConfig = 4 [(gogoproto.jsontag) = "syslog-config,omitempty"];
-}
-
-// Venice collects fwlog irrespective of the export config
-message FwlogPolicySpec {
-    // RetentionTime defines for how long to keep the fwlog before it is deleted. Default is 48h.
-    string RetentionTime = 1 [(gogoproto.jsontag) = "retention-time,omitempty", (venice.check)="Duration()", (venice.default)="48h"];
-
-    // filter firewall logs for venice, FWLOG_ALL default
-    repeated string Filter = 2 [(gogoproto.jsontag) = "filter,omitempty", (venice.check) = "StrEnum(FwlogFilter)"];
-
-    // Export contains the export config
-    repeated FwlogExport Exports = 3 [(gogoproto.jsontag) = "exports,omitempty"];
+    SyslogExportConfig Config = 4 [(gogoproto.jsontag) = "config,omitempty"];
 }
 
 message FwlogPolicy {

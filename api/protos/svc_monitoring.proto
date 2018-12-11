@@ -46,7 +46,7 @@ service MonitoringV1 {
 
     option (venice.apiRestService) = {
         Object: "FwlogPolicy"
-        Method: ["get", "put", "list", "watch"]
+        Method: ["get", "put", "delete", "post", "list", "watch"]
     };
 
     option (venice.apiRestService) = {
