@@ -232,7 +232,7 @@ chn_poll_all_services(struct service_chain *chain)
 		svc_ops = &svc_info->si_ops;
 		err = svc_ops->poll(svc_info);
 		if (err) {
-			OSAL_LOG_ERROR("poll failed! svc_type: %d desc 0x" PRIx64 " status_desc: 0x" PRIx64 " err: %d",
+			OSAL_LOG_INFO("poll failed! svc_type: %d desc 0x" PRIx64 " status_desc: 0x" PRIx64 " err: %d",
 					svc_info->si_type,
 					(uint64_t) svc_info->si_desc,
 					(uint64_t) svc_info->si_status_desc,
@@ -269,7 +269,7 @@ chn_poller(void *poll_ctx)
 	err = chn_poll_all_services(chain);
 	if (err) {
 		/* TODO-poll: retry then give-up after a limit to clean-up */
-		OSAL_LOG_ERROR("poll failed! chain: 0x" PRIx64 " err: %d",
+		OSAL_LOG_INFO("poll failed! chain: 0x" PRIx64 " err: %d",
 				(uint64_t) chain, err);
 		goto out;
 	}

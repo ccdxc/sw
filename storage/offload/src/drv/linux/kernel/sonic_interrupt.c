@@ -144,7 +144,7 @@ static int sonic_poll_ev_list(struct sonic_event_list *evl, int budget, struct s
 	return found;
 }
 
-#define SONIC_EV_WORK_TIMEOUT (10 * OSAL_NSEC_PER_MSEC)
+#define SONIC_EV_WORK_TIMEOUT (100 * OSAL_NSEC_PER_MSEC)
 
 static void sonic_ev_work_handler(struct work_struct *work)
 {
@@ -165,13 +165,13 @@ static void sonic_ev_work_handler(struct work_struct *work)
 		evd = &swd->ev_data[i];
 		if (!evd->data)
 			continue;
-		if (pnso_request_poller((void *) evd->data) == PNSO_OK) {
+		if (pnso_request_poller((void *) evd->data) == EBUSY) {
+			incomplete_count++;
+		} else {
 			/* Done, release evid */
 			evd->data = 0;
 			sonic_put_evid(evl, evd->evid);
 			complete_count++;
-		} else {
-			incomplete_count++;
 		}
 	}
 
@@ -190,8 +190,10 @@ static void sonic_ev_work_handler(struct work_struct *work)
 				      work_id, incomplete_count);
 			for (i = 0; i < swd->ev_count; i++) {
 				evd = &swd->ev_data[i];
-				if (evd->data)
-					clear_bit(evd->evid, evl->inuse_evid_bmp);
+				if (evd->data) {
+					evd->data = 0;
+					sonic_put_evid(evl, evd->evid);
+				}
 			}
 			complete_count += incomplete_count;
 			incomplete_count = 0;

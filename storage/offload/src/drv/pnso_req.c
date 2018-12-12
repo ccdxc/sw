@@ -1044,7 +1044,7 @@ pnso_request_poller(void *poll_ctx)
 	bool is_chain, is_batch;
 
 	if (!poll_ctx) {
-		OSAL_LOG_DEBUG("invalid poll context! poll_ctx: 0x" PRIx64 " err: %d",
+		OSAL_LOG_ERROR("invalid poll context! poll_ctx: 0x" PRIx64 " err: %d",
 				(uint64_t) poll_ctx, err);
 		goto out;
 	}
@@ -1053,15 +1053,14 @@ pnso_request_poller(void *poll_ctx)
 	get_poll_context_type(poll_ctx, &is_chain, &is_batch);
 
 	if ((is_chain && is_batch) || (!is_chain && !is_batch)) {
-		OSAL_LOG_DEBUG("invalid poll context type! poll_ctx: 0x" PRIx64 " err: %d",
+		OSAL_LOG_ERROR("invalid poll context type! poll_ctx: 0x" PRIx64 " err: %d",
 				(uint64_t) poll_ctx, err);
 		goto out;
 	}
 
 	err = is_chain ? chn_poller(poll_ctx) : bat_poller(poll_ctx);
-
 out:
-	OSAL_LOG_ERROR("exit! err: %d", err);
+	OSAL_LOG_DEBUG("exit! err: %d", err);
 	return err;
 }
 OSAL_EXPORT_SYMBOL(pnso_request_poller);
