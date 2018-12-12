@@ -447,3 +447,8 @@ func TestRecorderFailedEventsForwarder(t *testing.T) {
 	Assert(t, totalEventsSent <= totalEventsReceived, "mock writer did not receive all the events recorded, expected: >=%d, got: %d",
 		totalEventsSent, totalEventsReceived)
 }
+
+func TestNewfile(t *testing.T) {
+	_, err := newFile("/xyz/abd", "tmpfile")
+	Assert(t, err != nil, "test didn't fail for invalid dir")
+}
