@@ -58,7 +58,6 @@ do {                                                       \
 do {                                                       \
     if (unlikely(!(cond))) {                               \
         SDK_TRACE_ERR("ASSERT FAILURE(" #cond ")");        \
-        __ASSERT__(FALSE);                                 \
         goto label;                                        \
     }                                                      \
 } while (FALSE)
