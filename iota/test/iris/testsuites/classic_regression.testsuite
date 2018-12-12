@@ -35,7 +35,6 @@ testbundles:
     - storage/regression.testbundle
     - penctl/penctl.testbundle
     - mnic/mnic_classic.testbundle
-    - classic/internal_mgmt.testbundle
     - classic/driver-features.testbundle
     - linktest/linktest.testbundle
  
