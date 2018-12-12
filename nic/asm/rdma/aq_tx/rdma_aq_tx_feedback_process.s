@@ -30,10 +30,6 @@ rdma_aq_tx_feedback_process:
     phvwr       p.rdma_feedback.aq_completion.status, 0
     phvwr       p.rdma_feedback.aq_completion.cq_num, K_CQ_NUM
 
-    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_RDMA_BUSY)
-    add r2, K_CB_ADDR, FIELD_OFFSET(aqcb0_t, busy)
-    DMA_HBM_PHV2MEM_SETUP_F(r6, busy, map_count_completed, r2)    
-
     //get DMA cmd entry based on dma_cmd_index
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_RDMA_FEEDBACK)
 

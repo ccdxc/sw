@@ -57,6 +57,11 @@ rdma_aq_tx_aqcb_process:
         TXDMA_DMA_CMD_PTR_SET(AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_START_FLIT_CMD_ID)     
         /* Setup for the next wqe stage */
 
+        DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_RDMA_BUSY)
+        mfspr       r2, spr_tbladdr
+        add         r2, r2, FIELD_OFFSET(aqcb0_t, busy)
+        DMA_HBM_PHV2MEM_SETUP_F(r6, busy, map_count_completed, r2)    
+    
         CAPRI_RESET_TABLE_0_ARG()
 
         phvwr       CAPRI_PHV_FIELD(TO_S_FB_INFO_P, cq_num), d.cq_id
