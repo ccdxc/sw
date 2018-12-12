@@ -92,6 +92,7 @@ testcases:
 
     -   name    : Hash
         testcase: testcases.storage.ymltest
+        ignore  : True
         args    :
             dir : *STORAGE_TEST_DIR
             wait: 5 # Wait in seconds.
@@ -100,6 +101,7 @@ testcases:
 
     -   name    : Checksum
         testcase: testcases.storage.ymltest
+        ignore  : True
         args    :
             dir : *STORAGE_TEST_DIR
             wait: 5 # Wait in seconds.
