@@ -17,6 +17,34 @@ import (
 	"github.com/pensando/sw/venice/globals"
 )
 
+// CreateEventObj helper function to create event object with the given params.
+func CreateEventObj(tenant, namespace, name, eType, severity, message string) *evtsapi.Event {
+	creationTime, _ := types.TimestampProto(time.Now())
+
+	eventObj := &evtsapi.Event{
+		TypeMeta: api.TypeMeta{Kind: "Event"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      name,
+			UUID:      name,
+			Tenant:    tenant,
+			Namespace: namespace,
+			CreationTime: api.Timestamp{
+				Timestamp: *creationTime,
+			},
+			ModTime: api.Timestamp{
+				Timestamp: *creationTime,
+			},
+		},
+		EventAttributes: evtsapi.EventAttributes{
+			Severity: severity,
+			Type:     eType,
+			Message:  message,
+		},
+	}
+
+	return eventObj
+}
+
 // CreateAlertDestinationObj helper function to create alert destination object with the given params.
 func CreateAlertDestinationObj(tenant, namespace, name string, syslogExport *monitoring.SyslogExport) *monitoring.AlertDestination {
 	creationTime, _ := types.TimestampProto(time.Now())

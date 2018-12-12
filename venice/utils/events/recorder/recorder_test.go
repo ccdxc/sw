@@ -206,8 +206,9 @@ func TestEventRecorderInstantiation(t *testing.T) {
 	Assert(t, err != nil, "expected failure, event recorder instantiation succeeded")
 
 	// skip evts proxy
-	_, err = NewRecorder(&Config{Source: &evtsapi.EventSource{}, EvtTypes: []string{"DUMMY"},
+	r, err := NewRecorder(&Config{Source: &evtsapi.EventSource{}, EvtTypes: []string{"DUMMY"},
 		EvtsProxyURL: testServerURL, BackupDir: "/tmp", SkipEvtsProxy: true})
+	r.StartExport()
 	AssertOk(t, err, "expected success, event recorder instantiation failed")
 }
 
@@ -265,13 +266,17 @@ func TestRecorderWithProxyRestart(t *testing.T) {
 
 	time.Sleep(2 * time.Second)
 	Assert(t, atomic.LoadUint64(&totalEventsSent) > 0, "recorder did not record any event")
+	totalEventsSentBeforeStop := totalEventsSent
 	proxyRPCServer.Stop()
-
-	// reset the counter
-	atomic.StoreUint64(&totalEventsSent, 0)
 
 	// proxy won't be able to accept any events for 2s but the events will be stored in a backup file
 	time.Sleep(2 * time.Second)
+	totalEventsSentAfterStop := totalEventsSent
+
+	// this indicates that the recorder was running fine when the proxy is unavailable
+	Assert(t, totalEventsSentAfterStop > totalEventsSentBeforeStop, "recorder wasn't running when proxy went disconnected")
+	// reset the counter
+	atomic.StoreUint64(&totalEventsSent, 0)
 	os.RemoveAll(eventsStorePath)
 
 	// create events dispatcher

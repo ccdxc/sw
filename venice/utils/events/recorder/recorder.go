@@ -314,11 +314,6 @@ func (r *recorderImpl) createEvtsProxyRPCClient() error {
 	return nil
 }
 
-// getEvtsProxyRPCClient returns the events proxy RPC client associated with this recorder.
-func (r *recorderImpl) getEvtsProxyRPCClient() *rpckit.RPCClient {
-	return r.eventsProxy.rpcClient
-}
-
 // getID the unique ID of this recorder.
 func (r *recorderImpl) getID() string {
 	return r.id

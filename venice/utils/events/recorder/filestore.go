@@ -119,13 +119,13 @@ func (f *fileImpl) GetEvents() ([]*evtsapi.Event, []string, error) {
 		return nil, nil, err
 	}
 
-	// get the filenames from file info
+	// get the file names from file info
 	filenames := []string{}
 	for _, file := range files {
 		filenames = append(filenames, file.Name())
 	}
 
-	// sort filenames to be in chronological (time sorted)
+	// sort file names to be in chronological (time sorted)
 	sort.Strings(filenames)
 
 	evts := []*evtsapi.Event{}
