@@ -44,6 +44,9 @@ struct cpdc_status_desc *cpdc_get_status_desc(struct per_core_resource *pcr,
 void cpdc_put_status_desc(struct per_core_resource *pcr,
 		bool per_block, struct cpdc_status_desc *desc);
 
+pnso_error_t cpdc_setup_status_desc(struct service_info *svc_info,
+		bool per_block);
+
 struct cpdc_status_desc *cpdc_get_rmem_status_desc(
 		struct per_core_resource *pcr, bool per_block);
 

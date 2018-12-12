@@ -505,6 +505,41 @@ cpdc_put_rmem_status_desc(struct per_core_resource *pcr, bool per_block,
 	mpool_put_object(mpool, desc);
 }
 
+void
+cpdc_teardown_rmem_status_desc(struct service_info *svc_info, bool per_block)
+{
+	struct per_core_resource *pcr;
+
+	pcr = svc_info->si_pcr;
+	if (chn_service_has_sub_chain(svc_info))
+		cpdc_put_rmem_status_desc(pcr, per_block,
+				svc_info->si_istatus_desc);
+}
+
+pnso_error_t
+cpdc_setup_rmem_status_desc(struct service_info *svc_info, bool per_block)
+{
+	pnso_error_t err;
+	struct per_core_resource *pcr;
+	struct cpdc_status_desc *status_desc;
+
+	pcr = svc_info->si_pcr;
+	if (chn_service_has_sub_chain(svc_info)) {
+		status_desc = cpdc_get_rmem_status_desc(pcr, per_block);
+		if (!status_desc) {
+			err = ENOMEM;
+			OSAL_LOG_ERROR("cannot obtain rmem status desc! svc_type: %d per_block: %d err: %d",
+					svc_info->si_type, per_block, err);
+			goto out;
+		}
+		svc_info->si_istatus_desc = status_desc;
+	}
+
+	return PNSO_OK;
+out:
+	return err;
+}
+
 struct cpdc_sgl *
 cpdc_get_sgl(struct per_core_resource *pcr, bool per_block)
 {
