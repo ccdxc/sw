@@ -1,0 +1,10 @@
+meta:
+    name    : policyscale_regression
+    nics    : [ pensando, intel, mellanox, broadcom ]
+
+testcases:
+    -   name    : PolicyNetagentExpansion
+        testcase: testcases.security.policy_rules_netagent_expansion
+
+    -   name    : PolicyHalcfgExpansion
+        testcase: testcases.security.policy_rules_halcfg_expansion

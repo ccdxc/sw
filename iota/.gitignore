@@ -8,3 +8,4 @@ images/arm-iperf
 images/*
 *.log
 logs
+EP.json

@@ -7,6 +7,8 @@ import iota.test.iris.config.netagent.cfg_api as netagent_cfg_api
 import iota.test.iris.config.netagent.api as agent_api
 import iota.test.iris.testcases.security.utils as utils
 import pdb
+import time
+
 
 def Setup(tc):
     tc.workload_pairs = api.GetRemoteWorkloadPairs()
@@ -15,25 +17,28 @@ def Setup(tc):
     return api.types.status.SUCCESS
 
 def Trigger(tc):
-    policies = utils.GetTargetJsons(tc.iterators.proto)
     sg_json_obj = None
+    tc.time_matrix = []
+    policy_json = "{}/{}_scale_policy.json".format(utils.GetProtocolDirectory("scale"), tc.iterators.apps)
 
-    for policy_json in policies:
-        sg_json_obj = utils.ReadJson(policy_json)
-        agent_api.ConfigureSecurityGroupPolicies(sg_json_obj.sgpolicies, oper = agent_api.CfgOper.ADD)
-        for pair in tc.workload_pairs:
-            w1 = pair[0]
-            w2 = pair[1]
-            result = utils.RunAll(w1, w2)
-            if result != api.types.status.SUCCESS:
-                # return success for now, it will be updated to reflect the issues.
-                return api.types.status.SUCCESS
-        agent_api.ConfigureSecurityGroupPolicies(sg_json_obj.sgpolicies, oper = agent_api.CfgOper.DELETE)
+    api.Logger.info("Running test for {}".format(policy_json))
+    sg_json_obj = utils.ReadJson(policy_json)
+    start = time.time()
+    agent_api.ConfigureSecurityGroupPolicies(sg_json_obj.sgpolicies, oper = agent_api.CfgOper.ADD)
+    end = time.time()
+    agent_api.ConfigureSecurityGroupPolicies(sg_json_obj.sgpolicies, oper = agent_api.CfgOper.DELETE)
+    res_time = {}
+    res_time["policy"] = policy_json
+    res_time["time"] = end - start
+    tc.time_matrix.append(res_time)
+
+    api.Logger.info("For policy {} the time taken is {}".format(policy_json, end - start))
 
     return api.types.status.SUCCESS
 
 def Verify(tc):
     result = api.types.status.SUCCESS
+    api.Logger.info("Result is {}".format(tc.time_matrix))
     return result
 
 def Teardown(tc):

@@ -5,9 +5,82 @@ import yaml
 import iota.harness.api as api
 import iota.test.iris.config.netagent.cfg_api as netagent_cfg_api
 import iota.test.iris.config.netagent.objects.sgpolicy as sgpolicy_obj
+import subprocess
+import threading
+import os
+
+proto_list  = [ 'tcp']
+action_list  = ['PERMIT', 'DENY']
+
+class Rule:
+    def __init__(self, key, action):
+        self.key = key
+        self.action = action
+
+
+def get_appconfig(protocol, port):
+    app_config = {}
+    app_config['protocol'] = protocol
+    app_config['port'] = port
+    return app_config
+
+def get_destination(dst_ip, protocol, port):
+    dst = {}
+    dst['addresses'] = []
+    dst['addresses'].append(dst_ip)
+    dst['app-configs'] = []
+    dst['app-configs'].append(get_appconfig(protocol, port))
+    return dst
+
+def get_source(src_ip):
+    src = {}
+    src['addresses'] = []
+    src['addresses'].append(src_ip)
+    return src
+
+def get_rule(dst_ip, src_ip, protocol, port, action):
+    rule = {}
+    rule['destination'] = get_destination(dst_ip, protocol, port)
+    rule['source'] = get_source(src_ip)
+    rule['action'] = action
+    return rule
+
+class Command(object):
+    def __init__(self, cmd):
+        api.Logger.info("Running Command : {}".format(cmd))
+        self.cmd = cmd
+        self.process = None
+        self.out = None
+
+    def run_command(self, capture = False):
+        if not capture:
+            self.process = subprocess.Popen(self.cmd,shell=True)
+            self.process.communicate()
+            return
+        # capturing the outputs of shell commands
+        self.process = subprocess.Popen(self.cmd, shell=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+        out,err = self.process.communicate()
+        if len(out) > 0:
+            self.out = out.splitlines()
+        else:
+            self.out = None
+
+    # set default timeout to 2 minutes
+    def run(self, capture = False, timeout = 120):
+        thread = threading.Thread(target=self.run_command, args=(capture,))
+        thread.start()
+        thread.join(timeout)
+        if thread.is_alive():
+            self.process.terminate()
+            thread.join()
+        return self.out
+
+def GetSecurityPolicy(workload):
+    cmd = 'sshpass -p vm ssh vm@{} curl -X GET -H "Content-Type:application/json" http://1.0.0.2:9007/api/security/policies/'.format(workload.workload_name)
+    return Command(cmd).run()
 
 def GetProtocolDirectory(proto):
-    return api.GetTopologyDirectory() + "/{}".format(proto)
+    return api.GetTopologyDirectory() + "/gen/{}".format(proto)
 
 def GetTargetJsons(proto):
     return glob.glob(GetProtocolDirectory(proto) + "/*_policy.json")
@@ -16,6 +89,7 @@ def GetTargetVerifJsons(proto):
     return glob.glob(GetProtocolDirectory(proto) + "/*_verif.json")
 
 def ReadJson(filename):
+    api.Logger.info("Reading JSON file {}".format(filename))
     return api.parser.JsonParse(filename)
 
 def GetHping3Cmd(protocol, destination_ip, destination_port, source_port = 0, ):
@@ -110,6 +184,7 @@ def GetVerif(protocol, src_ip, src_port, dst_ip, dst_port, result, ruleid):
     return verif
 
 def ParseVerifStr(verif_str):
+    api.Logger.info("Parsing Verification json : \n{}".format(verif_str))
     js = json.loads(verif_str)
     verif = []
 
@@ -137,7 +212,7 @@ def GetVerifDict(workload):
     result = api.types.status.SUCCESS
     verif = None
 
-    api.Trigger_AddCommand(req, workload.node_name, workload.workload_name, cmd)
+    api.Trigger_AddHostCommand(req, workload.node_name, cmd)
     api.Logger.info("Running COMMAND {}".format(cmd))
 
     resp = api.Trigger(req)
@@ -146,8 +221,9 @@ def GetVerifDict(workload):
         api.Logger.info("CMD = {}", cmd)
         if cmd.exit_code != 0:
             return verif 
-
-        verif = ParseVerifStr(cmd.stdout)
+    #out = GetSecurityPolicy(workload)
+    verif = ParseVerifStr(cmd.stdout)
+    #verif = ParseVerifStr(out)
          
     return verif
 
@@ -173,3 +249,13 @@ def RunAll(src_w, dest_w):
         #    return res
 
     return res
+
+def DisableHalLogs(workload):
+    cmd = 'halctl debug trace --level none'
+    req = api.Trigger_CreateExecuteCommandsRequest()
+    result = api.types.status.SUCCESS
+
+    api.Trigger_AddNaplesCommand(req, workload.node_name, workload.workload_name, cmd)
+    api.Logger.info("Running COMMAND {}".format(cmd))
+
+    api.Trigger(req)

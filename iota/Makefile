@@ -16,9 +16,6 @@ bin/server/iota_server: ${SRCS}
 	mkdir -p $(IOTA_SERVER_BIN_DIR)
 	go build -ldflags="-s -w" -o $(IOTA_SERVER_BIN_DIR)/iota_server github.com/pensando/sw/iota/svcs/cmd/iota-server
 
-build-policy:
-	python genpolicy.py --topology $(TOPDIR)/test/iris/topologies/container
-
 iota-proto:
 	make  -C $(TOPDIR)/protos
 
@@ -34,7 +31,7 @@ bin/agent/iota_agent.freebsd: ${SRCS}
 	GOOS=freebsd go build -ldflags="-s -w" -o $(IOTA_AGENT_BIN_FREEBSD_DIR)/iota_agent github.com/pensando/sw/iota/svcs/cmd/iota-agent
 	GOOS=freebsd go build -ldflags="-s -w" -o $(IOTA_AGENT_TEST_BIN_FREEBSD_DIR)/iota-agent-test github.com/pensando/sw/iota/svcs/agent/test
 
-iota: iota-proto bin/server/iota_server bin/agent/iota_agent bin/agent/iota_agent.freebsd build-policy
+iota: iota-proto bin/server/iota_server bin/agent/iota_agent bin/agent/iota_agent.freebsd
 
 .PHONY: test
 test:

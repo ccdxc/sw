@@ -1,7 +1,7 @@
 meta:
     name    : policyscale
     nics    : [ pensando, intel, mellanox, broadcom ]
-    targetcount : 20 
+    targetcount : 44 
 
 testcases:
     -   name    : PolicyScaleAddDelLoop
@@ -9,3 +9,24 @@ testcases:
         disable : True
         args    :
             count : 1
+
+    -   name    : PolicyScaleSingleRules
+        testcase: testcases.security.policy_scale
+        disable : True
+        iterators :
+            type  : simple
+            apps : [10000, 20000, 30000, 40000, 50000, 56000, 57000, 60000, 70000, 75000]
+
+    -   name    : PolicyNetagentExpansion
+        testcase: testcases.security.policy_rules_netagent_expansion
+        disable : True
+        iterators :
+            type  : simple
+            apps : [1, 4, 16, 64, 256, 1024]
+
+    -   name    : PolicyHalcfgExpansion
+        testcase: testcases.security.policy_rules_halcfg_expansion
+        iterators :
+            type  : nested
+            sip   : [1, 4, 16, 256, 1024]
+            dip   : [1, 4, 16, 256, 1024]

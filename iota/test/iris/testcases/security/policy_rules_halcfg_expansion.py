@@ -7,6 +7,8 @@ import iota.test.iris.config.netagent.cfg_api as netagent_cfg_api
 import iota.test.iris.config.netagent.api as agent_api
 import iota.test.iris.testcases.security.utils as utils
 import pdb
+import time
+
 
 def Setup(tc):
     tc.workload_pairs = api.GetRemoteWorkloadPairs()
@@ -15,26 +17,39 @@ def Setup(tc):
     return api.types.status.SUCCESS
 
 def Trigger(tc):
-    policies = utils.GetTargetJsons(tc.iterators.proto)
     sg_json_obj = None
+    tc.time_matrix = []
+    sip = getattr(tc.iterators, "sip", 1)
+    dip = getattr(tc.iterators, "dip", 1)
 
-    for policy_json in policies:
+    for i in range(1, 9):
+        policy_json = "{}/{}_{}_{}_expansion_policy.json".format(utils.GetProtocolDirectory("halcfg-expansion"), sip, dip, i)
+        res = {}
+
+        api.Logger.info("Running test for {}".format(policy_json))
         sg_json_obj = utils.ReadJson(policy_json)
+        start = time.time()
         agent_api.ConfigureSecurityGroupPolicies(sg_json_obj.sgpolicies, oper = agent_api.CfgOper.ADD)
-        for pair in tc.workload_pairs:
-            w1 = pair[0]
-            w2 = pair[1]
-            result = utils.RunAll(w1, w2)
-            if result != api.types.status.SUCCESS:
-                # return success for now, it will be updated to reflect the issues.
-                return api.types.status.SUCCESS
+        end = time.time()
         agent_api.ConfigureSecurityGroupPolicies(sg_json_obj.sgpolicies, oper = agent_api.CfgOper.DELETE)
+        res_time = end - start
+
+        res["policy"] = policy_json 
+        res["time"] = res_time
+        tc.time_matrix.append(res)
+
+        if res_time > 300:
+            return api.types.status.FAILURE
 
     return api.types.status.SUCCESS
 
 def Verify(tc):
-    result = api.types.status.SUCCESS
-    return result
+    for res in tc.time_matrix:
+        if res["time"] > 180 :
+            api.Logger.info("Test Failed for config {}. It took {} seconds.".format(res["policy"], res["time"]))
+            return api.types.status.FAILURE
+
+    return api.types.status.SUCCESS 
 
 def Teardown(tc):
     api.Logger.info("Tearing down ...")
