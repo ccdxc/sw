@@ -41,6 +41,7 @@ RDMA="$TOP/platform/src/third-party/rdma"
 : ${DRIVERS_SRC:="$TOP/platform/drivers/linux"}
 : ${COMMON_SRC:="$TOP/platform/drivers/common"}
 : ${RDMACORE_SRC:="$RDMA/rdma-core"}
+: ${KRPING_SRC:="$RDMA/krping"}
 : ${PERFTEST_SRC:="$RDMA/perftest"}
 : ${QPERF_SRC:="$RDMA/qperf"}
 
@@ -119,6 +120,9 @@ ln -s "../../drivers/rdma/lib/ionic" \
     "$GEN_DIR/rdma-core/providers/ionic"
 ln -s "../../../drivers/rdma/drv/ionic/uapi/rdma/ionic-abi.h" \
     "$GEN_DIR/rdma-core/kernel-headers/rdma/ionic-abi.h"
+
+# Copy krping sources to gen dir
+rsync -r "$KRPING_SRC/" "$GEN_DIR/krping"
 
 # Copy perftest sources to gen dir
 report_version "$PERFTEST_SRC" > "$GEN_DIR/version.perftest"

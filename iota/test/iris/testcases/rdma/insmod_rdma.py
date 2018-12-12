@@ -60,10 +60,13 @@ def Trigger(tc):
             api.Trigger_AddHostCommand(req, n, "modprobe rdma_cm")
             api.Trigger_AddHostCommand(req, n, "modprobe ib_ucm")
             api.Trigger_AddHostCommand(req, n, "modprobe rdma_ucm")
+            api.Trigger_AddHostCommand(req, n, "(lsmod | grep rdma_krping >/dev/null) || insmod drivers-linux/krping/rdma_krping.ko",
+                                       rundir = 'rdma-drivers')
             api.Trigger_AddHostCommand(req, n, "cd drivers-linux && insmod drivers/rdma/drv/ionic/ionic_rdma.ko",
                                        rundir = 'rdma-drivers')
             api.Trigger_AddHostCommand(req, n, "cp -r drivers-linux %s" % api.GetHostToolsDir(),
                                        rundir = 'rdma-drivers')
+            api.Trigger_AddHostCommand(req, n, "lsmod")
         else:
             api.Trigger_AddHostCommand(req, n, "tar xJf %s" % tc.pkgname_freebsd,
                                    rundir = 'rdma-drivers')
@@ -79,6 +82,13 @@ def Trigger(tc):
     for n in tc.other_nodes:
         if n in tc.nodes:
             continue
+        # On other nodes, prepare first by installing the krping module:
+        #
+        #   mkdir -p /lib/modules/$(uname -r)/extra
+        #   cp ~allenbh/krping/rdma_krping_mellanox.ko /lib/modules/$(uname -r)/extra/rdma_krping.ko
+        #   depmod -a
+        #   
+        #api.Trigger_AddHostCommand(req, n, "modprobe rdma_krping")
         api.Trigger_AddHostCommand(req, n, "mkdir -p %s" % api.GetHostToolsDir())
         api.Trigger_AddHostCommand(req, n, "cp show_gid %s" % api.GetHostToolsDir(),
                                    rundir = 'rdma-drivers')

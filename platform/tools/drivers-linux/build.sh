@@ -17,7 +17,13 @@ DIR=$(readlink -f "$DIR")
 # build ionic.ko and ionic_rdma.ko
 #
 
-KCPPFLAGS=-DHAPS make -j12 -C drivers
+make -j12 -C drivers || exit
+
+#
+# build krping
+#
+
+make -j12 -C krping || exit
 
 #
 # build rdma-core
