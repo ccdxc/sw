@@ -22,11 +22,13 @@ using namespace std;
 
 class pciemgr *pciemgr;
 
-enum ForwardingMode g_fwd_mode = FWD_MODE_CLASSIC_NIC;
+enum ForwardingMode g_fwd_mode = FWD_MODE_SMART_NIC;
 
 namespace nicmgr {
 shared_ptr<nicmgr::NicMgrService> g_nicmgr_svc;
 }
+
+DeviceManager *devmgr = NULL;
 
 void
 create_uplinks()
@@ -89,6 +91,34 @@ create_uplinks()
 #endif
 }
 
+void
+nicmgr_init()
+{
+    // DeviceManager *devmgr;
+
+    if (g_fwd_mode == FWD_MODE_CLASSIC_NIC) {
+        devmgr =
+            new DeviceManager("../platform/src/app/nicmgrd/etc/device.json",
+                              g_fwd_mode, PLATFORM_HW, false);
+    } else {
+        devmgr =
+            new DeviceManager("../platform/src/app/nicmgrd/etc/eth-smart.json",
+                              g_fwd_mode, PLATFORM_HW, false);
+    }
+    EXPECT_TRUE(devmgr != NULL);
+
+    // load config
+    if (g_fwd_mode == FWD_MODE_CLASSIC_NIC) {
+        devmgr->LoadConfig("../platform/src/app/nicmgrd/etc/device.json");
+    } else {
+        devmgr->LoadConfig("../platform/src/app/nicmgrd/etc/eth-smart.json");
+    }
+
+    // nicmgr::handle_hal_up();
+    devicemanager_init();
+
+}
+
 static int
 sdk_error_logger (const char *format, ...)
 {
@@ -143,6 +173,7 @@ protected:
   static void SetUpTestCase() {
       std::cout << "Creating Uplinks ........." << endl;
       create_uplinks();
+      nicmgr_init();
   }
 
 };
@@ -161,6 +192,7 @@ uint8_t *memrev(uint8_t *block, size_t elnum)
 
 TEST_F(nicmgr_test, test1)
 {
+#if 0
     DeviceManager *devmgr;
 
     if (g_fwd_mode == FWD_MODE_CLASSIC_NIC) {
@@ -183,8 +215,10 @@ TEST_F(nicmgr_test, test1)
 
     // nicmgr::handle_hal_up();
     devicemanager_init();
+#endif
 
     // Get eth device
+    // 66: OOB Lif
     Eth *eth_dev = (Eth *)devmgr->GetDevice(66); // for hw_lif_id of 1
 
     union dev_cmd d_cmd;
@@ -230,6 +264,148 @@ TEST_F(nicmgr_test, test1)
      rx_mode_cmd.rx_mode = RX_MODE_F_PROMISC;
      memcpy(&d_cmd, &rx_mode_cmd, sizeof(rx_mode_cmd));
      eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+
+    // RESET
+    d_cmd.cmd.opcode = CMD_OPCODE_RESET;
+    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+
+    // LIF_INIT
+    init_cmd.opcode = CMD_OPCODE_LIF_INIT;
+    memcpy(&d_cmd, &init_cmd, sizeof(init_cmd));
+    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+
+    // Vlan Filter
+    // struct rx_filter_add_comp rx_comp;
+    rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
+    rx_cmd.match = RX_FILTER_MATCH_VLAN;
+    rx_cmd.vlan.vlan = 10;
+    // printf("opcode: %d rx_cmd_size: %d\n", d_cmd.cmd.opcode, sizeof(rx_cmd));
+    memcpy(&d_cmd, &rx_cmd, sizeof(rx_cmd));
+    // memcpy(&d_comp, &rx_comp, sizeof(rx_comp));
+    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+
+    // Mac Filter
+    rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
+    rx_cmd.match = RX_FILTER_MATCH_MAC;
+    mac1 = 0x12345678ABCD;
+    memcpy(rx_cmd.mac.addr, &mac1, 6);
+    memrev(rx_cmd.mac.addr, 6);
+    memcpy(&d_cmd, &rx_cmd, sizeof(rx_cmd));
+    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+
+     // Set modes
+     rx_mode_cmd.opcode = CMD_OPCODE_RX_MODE_SET;
+     rx_mode_cmd.rx_mode = RX_MODE_F_BROADCAST;
+     memcpy(&d_cmd, &rx_mode_cmd, sizeof(rx_mode_cmd));
+     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+
+     // Set Promiscuous mode
+     rx_mode_cmd.opcode = CMD_OPCODE_RX_MODE_SET;
+     rx_mode_cmd.rx_mode = RX_MODE_F_PROMISC;
+     memcpy(&d_cmd, &rx_mode_cmd, sizeof(rx_mode_cmd));
+     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+
+    // RESET
+    d_cmd.cmd.opcode = CMD_OPCODE_RESET;
+    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+}
+
+TEST_F(nicmgr_test, test2)
+{
+    // Get eth device
+    // 68: Host Lif
+    Eth *eth_dev = (Eth *)devmgr->GetDevice(68); // for hw_lif_id of 1
+
+    hal_lif_info_t *lif_info = eth_dev->GetHalLifInfo();
+    lif_info->enable_rdma = false;
+
+    union dev_cmd d_cmd;
+    union dev_cmd_comp d_comp;
+
+    // RESET
+    d_cmd.cmd.opcode = CMD_OPCODE_RESET;
+    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+
+    // LIF_INIT
+    struct lif_init_cmd init_cmd;
+    init_cmd.opcode = CMD_OPCODE_LIF_INIT;
+    memcpy(&d_cmd, &init_cmd, sizeof(init_cmd));
+    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+
+    struct rx_filter_add_cmd rx_cmd;
+    // struct rx_filter_add_comp rx_comp;
+    rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
+    rx_cmd.match = RX_FILTER_MATCH_VLAN;
+    rx_cmd.vlan.vlan = 10;
+    // printf("opcode: %d rx_cmd_size: %d\n", d_cmd.cmd.opcode, sizeof(rx_cmd));
+    memcpy(&d_cmd, &rx_cmd, sizeof(rx_cmd));
+    // memcpy(&d_comp, &rx_comp, sizeof(rx_comp));
+    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+
+    rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
+    rx_cmd.match = RX_FILTER_MATCH_MAC;
+    uint64_t mac1 = 0x12345678ABCD;
+    memcpy(rx_cmd.mac.addr, &mac1, 6);
+    memrev(rx_cmd.mac.addr, 6);
+    memcpy(&d_cmd, &rx_cmd, sizeof(rx_cmd));
+    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+
+     // Set modes
+     struct rx_mode_set_cmd rx_mode_cmd;
+     rx_mode_cmd.opcode = CMD_OPCODE_RX_MODE_SET;
+     rx_mode_cmd.rx_mode = RX_MODE_F_BROADCAST;
+     memcpy(&d_cmd, &rx_mode_cmd, sizeof(rx_mode_cmd));
+     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+
+     // Set Promiscuous mode
+     rx_mode_cmd.opcode = CMD_OPCODE_RX_MODE_SET;
+     rx_mode_cmd.rx_mode = RX_MODE_F_PROMISC;
+     memcpy(&d_cmd, &rx_mode_cmd, sizeof(rx_mode_cmd));
+     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+
+    // RESET
+    d_cmd.cmd.opcode = CMD_OPCODE_RESET;
+    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+
+    // LIF_INIT
+    init_cmd.opcode = CMD_OPCODE_LIF_INIT;
+    memcpy(&d_cmd, &init_cmd, sizeof(init_cmd));
+    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+
+    // Vlan Filter
+    // struct rx_filter_add_comp rx_comp;
+    rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
+    rx_cmd.match = RX_FILTER_MATCH_VLAN;
+    rx_cmd.vlan.vlan = 10;
+    // printf("opcode: %d rx_cmd_size: %d\n", d_cmd.cmd.opcode, sizeof(rx_cmd));
+    memcpy(&d_cmd, &rx_cmd, sizeof(rx_cmd));
+    // memcpy(&d_comp, &rx_comp, sizeof(rx_comp));
+    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+
+    // Mac Filter
+    rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
+    rx_cmd.match = RX_FILTER_MATCH_MAC;
+    mac1 = 0x12345678ABCD;
+    memcpy(rx_cmd.mac.addr, &mac1, 6);
+    memrev(rx_cmd.mac.addr, 6);
+    memcpy(&d_cmd, &rx_cmd, sizeof(rx_cmd));
+    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+
+     // Set modes
+     rx_mode_cmd.opcode = CMD_OPCODE_RX_MODE_SET;
+     rx_mode_cmd.rx_mode = RX_MODE_F_BROADCAST;
+     memcpy(&d_cmd, &rx_mode_cmd, sizeof(rx_mode_cmd));
+     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+
+     // Set Promiscuous mode
+     rx_mode_cmd.opcode = CMD_OPCODE_RX_MODE_SET;
+     rx_mode_cmd.rx_mode = RX_MODE_F_PROMISC;
+     memcpy(&d_cmd, &rx_mode_cmd, sizeof(rx_mode_cmd));
+     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+
+    // RESET
+    d_cmd.cmd.opcode = CMD_OPCODE_RESET;
+    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 }
 
 int main(int argc, char **argv) {

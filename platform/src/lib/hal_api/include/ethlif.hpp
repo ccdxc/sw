@@ -26,10 +26,10 @@ public:
     hal_irisc_ret_t DelMac(mac_t mac, bool update_db = true);
 
     hal_irisc_ret_t AddVlan(vlan_t vlan);
-    hal_irisc_ret_t DelVlan(vlan_t vlan);
+    hal_irisc_ret_t DelVlan(vlan_t vlan, bool update_db = true);
 
     hal_irisc_ret_t AddMacVlan(mac_t mac, vlan_t vlan);
-    hal_irisc_ret_t DelMacVlan(mac_t mac, vlan_t vlan);
+    hal_irisc_ret_t DelMacVlan(mac_t mac, vlan_t vlan, bool update_db = true);
 
     hal_irisc_ret_t UpdateVlanStripEn(bool vlan_stip_en);
     hal_irisc_ret_t UpdateVlanInsertEn(bool vlan_insert_en);
@@ -37,9 +37,11 @@ public:
     hal_irisc_ret_t UpdateReceiveAllMulticast(bool receive_all_multicast);
     hal_irisc_ret_t UpdateReceivePromiscuous(bool receive_promiscuous);
 
-    hal_irisc_ret_t remove_mac_filters();
-    hal_irisc_ret_t remove_vlan_filters();
-    hal_irisc_ret_t remove_mac_vlan_filters();
+    void Reset();
+
+    void RemoveMacFilters();
+    void RemoveVlanFilters(bool skip_native_vlan = false);
+    void RemoveMacVlanFilters();
 
     // Get APIs
     Lif *GetLif();
@@ -66,8 +68,8 @@ public:
     bool IsInternalManagement();
     bool IsClassicForwarding();
     bool IsReceiveAllMulticast();
-    void AddMCFilters();
-    void RemoveMCFilters();
+    void ProgramMCFilters();
+    void DeProgramMCFilters();
 
 private:
     EthLif(hal_lif_info_t *info);
