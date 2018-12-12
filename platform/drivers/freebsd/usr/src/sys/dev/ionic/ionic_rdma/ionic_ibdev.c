@@ -2556,7 +2556,7 @@ static struct ionic_cq *__ionic_create_cq(struct ionic_ibdev *dev,
 	struct ionic_cq *cq;
 	struct ionic_cq_req req;
 	struct ionic_cq_resp resp;
-	int rc;
+	int rc, eq_idx;
 
 	if (!ctx) {
 		rc = ionic_validate_udata(udata, 0, 0);
@@ -2584,9 +2584,11 @@ static struct ionic_cq *__ionic_create_cq(struct ionic_ibdev *dev,
 	if (rc)
 		goto err_cqid;
 
-	cq->eqid = attr->comp_vector;
-	if (cq->eqid >= dev->eq_count)
-		cq->eqid = 0;
+	eq_idx = attr->comp_vector;
+	if (eq_idx >= dev->eq_count)
+		eq_idx = 0;
+
+	cq->eqid = dev->eq_vec[eq_idx]->eqid;
 
 	spin_lock_init(&cq->lock);
 	INIT_LIST_HEAD(&cq->poll_sq);
