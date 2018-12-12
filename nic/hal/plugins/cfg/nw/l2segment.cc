@@ -2453,11 +2453,11 @@ l2segment_process_get (l2seg_t *l2seg, L2SegmentGetResponse *rsp)
     // fill operational state of this L2 segment
     rsp->mutable_status()->mutable_key_or_handle()->set_l2segment_handle(l2seg->hal_handle);
     if (is_forwarding_mode_classic_nic() || l2seg_is_classic(l2seg)) {
-        rsp->mutable_status()->set_bcast_idx(l2seg_get_bcast_oif_list(l2seg));
-        rsp->mutable_status()->set_mcast_idx(l2seg_get_mcast_oif_list(l2seg));
-        rsp->mutable_status()->set_prom_idx(l2seg_get_prmsc_oif_list(l2seg));
+        oif_list_get(l2seg_get_bcast_oif_list(l2seg), rsp->mutable_status()->mutable_bcast_lst());
+        oif_list_get(l2seg_get_mcast_oif_list(l2seg), rsp->mutable_status()->mutable_mcast_lst());
+        oif_list_get(l2seg_get_prmsc_oif_list(l2seg), rsp->mutable_status()->mutable_prom_lst());
     } else {
-        rsp->mutable_status()->set_bcast_idx(l2seg_get_bcast_oif_list(l2seg));
+        oif_list_get(l2seg_get_bcast_oif_list(l2seg), rsp->mutable_status()->mutable_bcast_lst());
     }
 
     // fill stats of this L2 segment

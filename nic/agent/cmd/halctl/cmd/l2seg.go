@@ -21,6 +21,7 @@ import (
 var (
 	l2segID   uint64
 	l2segBr   bool
+	l2segOif  bool
 	pdL2segID uint64
 	pdL2segBr bool
 )
@@ -58,6 +59,7 @@ func init() {
 	l2segSpecShowCmd.Flags().BoolVar(&l2segBr, "brief", false, "Display briefly")
 	l2segStatusShowCmd.Flags().Uint64Var(&pdL2segID, "id", 1, "Specify l2seg id")
 	l2segStatusShowCmd.Flags().BoolVar(&pdL2segBr, "brief", false, "Display briefly")
+	l2segStatusShowCmd.Flags().BoolVar(&l2segOif, "oif-lists", false, "Display oif lists")
 }
 
 func l2segShowSpecCmdHandler(cmd *cobra.Command, args []string) {
@@ -162,16 +164,32 @@ func l2segShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	// Print Header
-	l2segPdShowHeader(cmd, args)
+	if cmd.Flags().Changed("oif-lists") {
+		// Print Header
+		multicastShowOifListHeader(cmd, args)
 
-	// Print VRFs
-	for _, resp := range respMsg.Response {
-		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
-			continue
+		// Print Entries
+		for _, resp := range respMsg.Response {
+			if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+				fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+				continue
+			}
+			multicastShowOifList(resp.GetStatus().GetBcastLst())
+			multicastShowOifList(resp.GetStatus().GetMcastLst())
+			multicastShowOifList(resp.GetStatus().GetPromLst())
 		}
-		l2segPdShowOneResp(resp)
+	} else {
+		// Print Header
+		l2segPdShowHeader(cmd, args)
+
+		// Print VRFs
+		for _, resp := range respMsg.Response {
+			if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+				fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+				continue
+			}
+			l2segPdShowOneResp(resp)
+		}
 	}
 }
 
@@ -288,9 +306,9 @@ func l2segShowOneResp(resp *halproto.L2SegmentGetResponse) {
 	}
 
 	replIndices = fmt.Sprintf("%d-%d-%d",
-		resp.GetStatus().GetBcastIdx(),
-		resp.GetStatus().GetMcastIdx(),
-		resp.GetStatus().GetPromIdx())
+		resp.GetStatus().GetBcastLst().GetId(),
+		resp.GetStatus().GetMcastLst().GetId(),
+		resp.GetStatus().GetPromLst().GetId())
 
 	ifIDStr := "-"
 	if resp.GetSpec().GetPinnedUplinkIfKeyHandle().GetInterfaceId() != 0 {
@@ -427,7 +445,7 @@ func l2segEPdShowOneResp(resp *halproto.L2SegmentGetResponse) {
 				epdStatus.GetL2SegLookupId(),
 				epdStatus.GetL2SegVlanIdCpu(),
 				epdStatus.GetInpPropCpuIdx(),
-				status.GetBcastIdx(),
+				status.GetBcastLst().GetId(),
 				inpPropStr)
 		} else {
 			fmt.Printf("%-62s%-90s\n", "", inpPropStr)

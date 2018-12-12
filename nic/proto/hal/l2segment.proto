@@ -12,6 +12,7 @@ import "types.proto";
 import "kh.proto";
 import "eplearn.proto";
 import "delphi.proto";
+import "multicast.proto";
 
 package l2segment;
 option go_package="halproto";
@@ -92,9 +93,10 @@ message L2SegmentStatus {
 
   kh.L2SegmentKeyHandle     key_or_handle       = 2 [(gogoproto.moretags) = "venice:key"];
   uint32                    vrf_id              = 3;    // TODO REMOVE DOL ONLY - hw vrf id
-  uint32                    bcast_idx           = 4;    // Bcast replication list
-  uint32                    mcast_idx           = 5;    // Mcast replication list
-  uint32                    prom_idx            = 6;    // Prom replication list
+  multicast.OifList         bcast_lst           = 4;  // Bcast replication list
+  multicast.OifList         mcast_lst           = 5;  // Mcast replication list
+  multicast.OifList         prom_lst            = 6;  // Prom replication list
+
   // TODO - add vNICs/uplinks this vlan is up on
   oneof l2seg_status {
       L2segmentStatusEpd    epd_info            = 7;    // L2seg oper state for enterprise pipeline
