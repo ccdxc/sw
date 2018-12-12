@@ -299,13 +299,27 @@ func portShowStatsHeader() {
 
 func portShowStatsOneResp(resp *halproto.PortGetResponse) {
 	hdrLine := strings.Repeat("-", 30)
-	macStats := resp.GetStats().GetMacStats()
+
 	fmt.Printf("\nstats for port: %d\n\n", resp.GetSpec().GetKeyOrHandle().GetPortId())
-	for _, s := range macStats {
-		fmt.Printf("%-25s%-5d\n",
-			strings.Replace(s.GetType().String(), "_", " ", -1),
-			s.GetCount())
-	}
+
+    if resp.GetSpec().GetPortType() == halproto.PortType_PORT_TYPE_MGMT {
+        mgmtMacStats := resp.GetStats().GetMgmtMacStats()
+
+        for _, s := range mgmtMacStats {
+            fmt.Printf("%-31s%-5d\n",
+                strings.Replace(s.GetType().String(), "_", " ", -1),
+                s.GetCount())
+        }
+    } else {
+        macStats := resp.GetStats().GetMacStats()
+
+        for _, s := range macStats {
+            fmt.Printf("%-25s%-5d\n",
+                strings.Replace(s.GetType().String(), "_", " ", -1),
+                s.GetCount())
+        }
+    }
+
 	fmt.Println(hdrLine)
 }
 

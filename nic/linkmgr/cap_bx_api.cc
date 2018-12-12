@@ -264,7 +264,7 @@ void cap_bx_mac_stat(int chip_id, int inst_id, int port, int short_report,
       bx_csr.dhs_mac_stats.entry[addr].read();
       cpp_int rdata = bx_csr.dhs_mac_stats.entry[addr].value();
       if (stats_data != NULL) {
-          stats_data[i] = bx_csr.dhs_mac_stats.entry[addr].value().convert_to<int>();
+          stats_data[i] = bx_csr.dhs_mac_stats.entry[addr].value().convert_to<uint64_t>();
       }
       string counter_name = stats[i*2+1];
       PLOG_MSG( "BX: " << counter_name.append(50-counter_name.length(),' ') << " : " << rdata << "\n" );

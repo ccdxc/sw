@@ -420,13 +420,22 @@ populate_port_get_response_spec (port_args_t *port_args,
         xcvr_status->set_port(port_args->xcvr_port_num);
         xcvr_status->set_state(port::PortXcvrState(port_args->xcvr_state));
         xcvr_status->set_pid(port::PortXcvrPid(port_args->xcvr_pid));
-        
+
         // MAC stats
         stats = response->mutable_stats();
-        for (int i = 0; i < MAX_MAC_STATS; ++i) {
-            auto mac_stats = stats->add_mac_stats();
-            mac_stats->set_type(MacStatsType(i));
-            mac_stats->set_count(port_args->stats_data[i]);
+
+        if (port_args->port_type == port_type_t::PORT_TYPE_MGMT) {
+            for (int i = 0; i < MAX_MGMT_MAC_STATS; ++i) {
+                auto mgmt_mac_stats = stats->add_mgmt_mac_stats();
+                mgmt_mac_stats->set_type(MgmtMacStatsType(i));
+                mgmt_mac_stats->set_count(port_args->stats_data[i]);
+            }
+        } else {
+            for (int i = 0; i < MAX_MAC_STATS; ++i) {
+                auto mac_stats = stats->add_mac_stats();
+                mac_stats->set_type(MacStatsType(i));
+                mac_stats->set_count(port_args->stats_data[i]);
+            }
         }
     }
 

@@ -200,6 +200,44 @@ message PortDeleteResponseMsg {
 }
 
 //------------------------------------------------------------------------------
+// MacStats consists of MgmtMacStatsType and count
+//------------------------------------------------------------------------------
+enum MgmtMacStatsType {
+   MGMT_MAC_FRAMES_RX_OK           =  0;
+   MGMT_MAC_FRAMES_RX_ALL          =  1;
+   MGMT_MAC_FRAMES_RX_BAD_FCS      =  2;
+   MGMT_MAC_FRAMES_RX_BAD_ALL      =  3;
+   MGMT_MAC_OCTETS_RX_OK           =  4;
+   MGMT_MAC_OCTETS_RX_ALL          =  5;
+   MGMT_MAC_FRAMES_RX_UNICAST      =  6;
+   MGMT_MAC_FRAMES_RX_MULTICAST    =  7;
+   MGMT_MAC_FRAMES_RX_BROADCAST    =  8;
+   MGMT_MAC_FRAMES_RX_PAUSE        =  9;
+   MGMT_MAC_FRAMES_RX_BAD_LENGTH   = 10;
+   MGMT_MAC_FRAMES_RX_UNDERSIZED   = 11;
+   MGMT_MAC_FRAMES_RX_OVERSIZED    = 12;
+   MGMT_MAC_FRAMES_RX_FRAGMENTS    = 13;
+   MGMT_MAC_FRAMES_RX_JABBER       = 14;
+   MGMT_MAC_FRAMES_RX_64B          = 15;
+   MGMT_MAC_FRAMES_RX_65B_127B     = 16;
+   MGMT_MAC_FRAMES_RX_128B_255B    = 17;
+   MGMT_MAC_FRAMES_RX_256B_511B    = 18;
+   MGMT_MAC_FRAMES_RX_512B_1023B   = 19;
+   MGMT_MAC_FRAMES_RX_1024B_1518B  = 20;
+   MGMT_MAC_FRAMES_RX_GT_1518B     = 21;
+   MGMT_MAC_FRAMES_RX_FIFO_FULL    = 22;
+   MGMT_MAC_FRAMES_TX_OK           = 23;
+   MGMT_MAC_FRAMES_TX_ALL          = 24;
+   MGMT_MAC_FRAMES_TX_BAD          = 25;
+   MGMT_MAC_OCTETS_TX_OK           = 26;
+   MGMT_MAC_OCTETS_TX_TOTAL        = 27;
+   MGMT_MAC_FRAMES_TX_UNICAST      = 28;
+   MGMT_MAC_FRAMES_TX_MULTICAST    = 29;
+   MGMT_MAC_FRAMES_TX_BROADCAST    = 30;
+   MGMT_MAC_FRAMES_TX_PAUSE        = 31;
+}
+
+//------------------------------------------------------------------------------
 // MacStats consists of MacStatsType and count
 //------------------------------------------------------------------------------
 enum MacStatsType {
@@ -294,6 +332,11 @@ enum MacStatsType {
    FRAMES_TX_TRUNCATED     = 88;
 }
 
+message MgmtMacStats {
+  MgmtMacStatsType type  = 1;
+  uint64           count = 2;
+}
+
 message MacStats {
   MacStatsType   type  = 1;
   uint64         count = 2;
@@ -301,7 +344,8 @@ message MacStats {
 
 // PortStats captures all the statistics of given Port
 message PortStats {
-    repeated MacStats mac_stats =  1;  // Port MAC stats
+    repeated MacStats     mac_stats      = 1;  // Port MAC stats
+    repeated MgmtMacStats mgmt_mac_stats = 2;  // Mgmt Port MAC stats
 }
 
 // PortGetRequest is used to get information about a port

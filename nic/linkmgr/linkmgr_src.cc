@@ -1043,6 +1043,8 @@ port_get_ht_cb (void *ht_entry, void *ctxt)
 
     sdk::linkmgr::port_args_init(&port_args);
 
+    memset (stats_data, 0, sizeof(uint64_t) * MAX_MAC_STATS);
+
     port_args.port_num   = port->port_num;
     port_args.stats_data = stats_data;
 
