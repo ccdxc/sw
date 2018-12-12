@@ -704,6 +704,9 @@ port_create (port_args_t *args)
         port_p->sbus_addr_set(i, args->sbus_addr[i]);
     }
 
+    // set the source mac addr for pause frames
+    port_p->port_mac_set_pause_src_addr(args->mac_addr);
+
     // disable a port to invoke soft reset
     ret = port::port_disable(port_p);
     if (ret != SDK_RET_OK) {

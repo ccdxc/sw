@@ -55,11 +55,13 @@ Status port_svc_init(delphi::SdkPtr sdk) {
     HAL_TRACE_DEBUG("Linkmgr: Mounted port objects from delphi...");
 
     // initialize events recorder; size of the shm. mem = 2048 bytes
-    g_linkmgr_svc.recorder = events_recorder::init("linkmgr.events",     // name; this should end with ".events"
-                                                   2048, // size of the shared memory
-                                                   "linkmgr", // component that records the event
-                                                   port::PortOperStatus_descriptor(), // list of event types
-                                                   std::shared_ptr<logger>(hal::utils::hal_logger())); // logger
+    g_linkmgr_svc.recorder = events_recorder::init(
+                           "linkmgr.events",     // name; this should end with ".events"
+                           2048, // size of the shared memory
+                           "linkmgr", // component that records the event
+                           port::PortOperStatus_descriptor(), // list of event types
+                           std::shared_ptr<logger>(hal::utils::hal_logger())); // logger
+
     if (g_linkmgr_svc.recorder == nullptr) {
         HAL_TRACE_ERR("events recorder init failed");
         return Status::CANCELLED;
@@ -259,6 +261,80 @@ error port_svc::update_xcvr_status(google::protobuf::uint32 port_num,
     return error::OK();
 }
 
+static PortXcvrPid
+xcvr_sdk_pid_to_spec_pid (xcvr_pid_t pid)
+{
+    switch (pid) {
+    case xcvr_pid_t::XCVR_PID_QSFP_100G_CR4:
+        return port::XCVR_PID_QSFP_100G_CR4;
+
+    case xcvr_pid_t::XCVR_PID_SFP_25GBASE_CR_S:
+        return port::XCVR_PID_SFP_25GBASE_CR_S;
+
+    case xcvr_pid_t::XCVR_PID_SFP_25GBASE_CR_L:
+        return port::XCVR_PID_SFP_25GBASE_CR_L;
+
+    case xcvr_pid_t::XCVR_PID_SFP_25GBASE_CR_N:
+        return port::XCVR_PID_SFP_25GBASE_CR_N;
+
+    case xcvr_pid_t::XCVR_PID_QSFP_100G_AOC:
+        return port::XCVR_PID_QSFP_100G_AOC;
+
+    case xcvr_pid_t::XCVR_PID_QSFP_100G_ACC:
+        return port::XCVR_PID_QSFP_100G_ACC;
+
+    case xcvr_pid_t::XCVR_PID_QSFP_100G_SR4:
+        return port::XCVR_PID_QSFP_100G_SR4;
+
+    case xcvr_pid_t::XCVR_PID_QSFP_100G_LR4:
+        return port::XCVR_PID_QSFP_100G_LR4;
+
+    case xcvr_pid_t::XCVR_PID_QSFP_100G_ER4:
+        return port::XCVR_PID_QSFP_100G_ER4;
+
+    case xcvr_pid_t::XCVR_PID_QSFP_40GBASE_ER4:
+        return port::XCVR_PID_QSFP_40GBASE_ER4;
+
+    case xcvr_pid_t::XCVR_PID_QSFP_40GBASE_SR4:
+        return port::XCVR_PID_QSFP_40GBASE_SR4;
+
+    case xcvr_pid_t::XCVR_PID_QSFP_40GBASE_LR4:
+        return port::XCVR_PID_QSFP_40GBASE_LR4;
+
+    case xcvr_pid_t::XCVR_PID_QSFP_40GBASE_CR4:
+        return port::XCVR_PID_QSFP_40GBASE_CR4;
+
+    case xcvr_pid_t::XCVR_PID_QSFP_40GBASE_AOC:
+        return port::XCVR_PID_QSFP_40GBASE_AOC;
+
+    case xcvr_pid_t::XCVR_PID_SFP_25GBASE_SR:
+        return port::XCVR_PID_SFP_25GBASE_SR;
+
+    case xcvr_pid_t::XCVR_PID_SFP_25GBASE_LR:
+        return port::XCVR_PID_SFP_25GBASE_LR;
+
+    case xcvr_pid_t::XCVR_PID_SFP_25GBASE_ER:
+        return port::XCVR_PID_SFP_25GBASE_ER;
+
+    case xcvr_pid_t::XCVR_PID_SFP_10GBASE_SR:
+        return port::XCVR_PID_SFP_10GBASE_SR;
+
+    case xcvr_pid_t::XCVR_PID_SFP_10GBASE_LR:
+        return port::XCVR_PID_SFP_10GBASE_LR;
+
+    case xcvr_pid_t::XCVR_PID_SFP_10GBASE_LRM:
+        return port::XCVR_PID_SFP_10GBASE_LRM;
+
+    case xcvr_pid_t::XCVR_PID_SFP_10GBASE_ER:
+        return port::XCVR_PID_SFP_10GBASE_ER;
+
+    default:
+        return port::XCVR_PID_UNKNOWN;
+    }
+
+    return port::XCVR_PID_UNKNOWN;
+}
+
 void
 xcvr_event_notify (xcvr_event_info_t *xcvr_event_info)
 {
@@ -269,24 +345,31 @@ xcvr_event_notify (xcvr_event_info_t *xcvr_event_info)
     switch (state) {
     case xcvr_state_t::XCVR_REMOVED:
         HAL_TRACE_DEBUG("Xcvr removed; port: {}", port_num);
-        port_svc_get()->update_xcvr_status(port_num, port::XCVR_STATE_REMOVED, port::XCVR_PID_UNKNOWN);
+
+        port_svc_get()->update_xcvr_status(port_num, port::XCVR_STATE_REMOVED,
+                                           port::XCVR_PID_UNKNOWN);
         break;
 
     case xcvr_state_t::XCVR_INSERTED:
         HAL_TRACE_DEBUG("Xcvr inserted; port: {}", port_num);
-        port_svc_get()->update_xcvr_status(port_num, port::XCVR_STATE_INSERTED, port::XCVR_PID_UNKNOWN);
+
+        port_svc_get()->update_xcvr_status(port_num, port::XCVR_STATE_INSERTED,
+                                           port::XCVR_PID_UNKNOWN);
         break;
 
     case xcvr_state_t::XCVR_SPROM_READ:
-        HAL_TRACE_DEBUG("Xcvr sprom read; port: {}, pid: {}", port_num,
-                        (pid == 0) ? "Unknown" : (pid == 1) ? "SFP-10G-CR" : "QSFP-100G-CR4");
+        HAL_TRACE_DEBUG("Xcvr sprom read; port: {}, pid: {}", port_num, pid);
+
         port_svc_get()->update_xcvr_status(port_num, port::XCVR_STATE_SPROM_READ,
-                        (pid == 0) ? port::XCVR_PID_UNKNOWN : (pid == 1) ? port::XCVR_PID_SFP_10G_CR : port::XCVR_PID_QSFP_100G_CR4);
+                                           xcvr_sdk_pid_to_spec_pid(pid));
         break;
 
     case xcvr_state_t::XCVR_SPROM_READ_ERR:
         HAL_TRACE_DEBUG("Xcvr sprom read error; port: {}", port_num);
-        port_svc_get()->update_xcvr_status(port_num, port::XCVR_STATE_SPROM_READ_ERR, port::XCVR_PID_UNKNOWN);
+
+        port_svc_get()->update_xcvr_status(port_num,
+                                           port::XCVR_STATE_SPROM_READ_ERR,
+                                           port::XCVR_PID_UNKNOWN);
         break;
 
     default:

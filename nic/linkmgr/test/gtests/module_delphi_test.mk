@@ -5,7 +5,7 @@ MODULE_TARGET = linkmgr_delphi_test.gtest
 MODULE_ARCH     = x86_64
 MODULE_PIPELINE = iris gft
 MODULE_SRCS   = ${MODULE_SRC_DIR}/linkmgr_delphi_test.cc
-MODULE_SOLIBS = linkmgr_test_utils bm_allocator linkmgrdelphi \
+MODULE_SOLIBS = pal sdkfru linkmgr_test_utils bm_allocator linkmgrdelphi \
                 hal_lib agent_api block_list \
                 list shmmgr slab ht timerfd periodic halproto delphisdk \
                 linkmgr_src sdklinkmgr haltrace \

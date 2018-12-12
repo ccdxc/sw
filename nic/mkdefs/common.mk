@@ -70,7 +70,7 @@ export NIC_COMMON_LDLIBS            := pthread z m rt Judy dl ev ${NIC_COMMON_LD
 
 export NIC_COMMON_FLAGS := -pthread -rdynamic
 
-export NIC_SDK_SOLIBS   := print list slab shmmgr mmgr sdkpal \
+export NIC_SDK_SOLIBS   := print list slab shmmgr mmgr sdkpal sdkfru \
     ht indexer logger thread utils periodic twheel directmap \
     hash hbmhash tcam timerfd catalog sdkplatformutils sdkcapri
 
@@ -178,7 +178,7 @@ export NIC_HAL_ALL_SOLIBS   := ${NIC_HAL_CORE_SOLIBS} \
                                ${NIC_HAL_PD_SOLIBS} \
                                ${NIC_LINKMGR_SOLIBS} \
                                ${NIC_SDK_SOLIBS} \
-                               agent_api delphisdk haldelphi halsysmgr \
+                               pal agent_api delphisdk haldelphi halsysmgr \
                                nicmgrproto commonproto
 
 export NIC_HAL_ALL_LDLIBS   := ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \

@@ -30,6 +30,7 @@ xcvr_get_type (uint8_t first_byte) {
     case 0x3:
         return xcvr_type_t::XCVR_TYPE_SFP;
     case 0xc:
+    case 0xd:
         return xcvr_type_t::XCVR_TYPE_QSFP;
     case 0x11:
         return xcvr_type_t::XCVR_TYPE_QSFP28;

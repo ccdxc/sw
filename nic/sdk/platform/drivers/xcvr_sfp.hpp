@@ -12,6 +12,8 @@ namespace platform {
 inline sdk_ret_t
 sfp_sprom_parse (int port, uint8_t *data)
 {
+    sdk_ret_t sdk_ret = SDK_RET_OK;
+
     // SFF 8472
 
     if (data[SFP_OFFSET_LENGTH_CU] != 0) {
@@ -23,13 +25,19 @@ sfp_sprom_parse (int port, uint8_t *data)
     if (data[3] != 0) {
         if (data[3] & (1 << 4)) {
             // 10G Base SR
+            xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_10GBASE_SR);
         } else if (data[3] & ( 1 << 5)) {
             // 10G Base LR
+            xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_10GBASE_LR);
         } else if (data[3] & ( 1 << 6)) {
             // 10G Base LRM
+            xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_10GBASE_LRM);
         } else if (data[3] & ( 1 << 7)) {
             // 10G Base ER
+            xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_10GBASE_ER);
         }
+
+        return sdk_ret;
     }
 
     switch (data[SFP_OFFSET_EXT_SPEC_COMPLIANCE_CODES]) {
@@ -39,14 +47,17 @@ sfp_sprom_parse (int port, uint8_t *data)
 
     case 0x2:
         // 25GBASE-SR
+        xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_25GBASE_SR);
         break;
 
     case 0x3:
         // 25GBASE-LR
+        xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_25GBASE_LR);
         break;
 
     case 0x4:
         // 25GBASE-ER
+        xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_25GBASE_ER);
         break;
 
     case 0x8:
@@ -55,14 +66,17 @@ sfp_sprom_parse (int port, uint8_t *data)
 
     case 0xb:
         // 25GBASE-CR CA-L
+        xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_25GBASE_CR_L);
         break;
 
     case 0xc:
         // 25GBASE-CR CA-S
+        xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_25GBASE_CR_S);
         break;
 
     case 0xd:
         // 25GBASE-CR CA-N
+        xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_25GBASE_CR_N);
         break;
 
     case 0x16:

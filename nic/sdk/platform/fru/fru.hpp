@@ -5,7 +5,7 @@
 
 #include <iostream>
 #include "include/sdk/base.hpp"
-#include "../../platform/src/lib/pal/include/pal.h"
+#include "platform/src/lib/pal/include/pal.h"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 

@@ -14,6 +14,8 @@
 #include "lib/pal/pal.hpp"
 #include "platform/src/lib/pal/include/pal_types.h"
 #include "platform/drivers/xcvr.hpp"
+#include "nic/sdk/platform/fru/fru.hpp"
+#include "nic/sdk/include/sdk/eth.hpp"
 
 using hal::cfg_op_ctxt_t;
 using hal::dhl_entry_t;
@@ -525,6 +527,25 @@ port_prepare_rsp (PortResponse *rsp, hal_ret_t ret, hal_handle_t hal_handle_id)
     return HAL_RET_OK;
 }
 
+static hal_ret_t
+port_args_populate_mac_addr (int xcvr_port, port_args_t *port_args)
+{
+    std::string mac_addr_str;
+
+    if (readKey(MACADDRESS_KEY, mac_addr_str) == -1) {
+        HAL_TRACE_ERR("Failed to read MAC addr for xcvr_port: {}", xcvr_port);
+        return HAL_RET_ERR;
+    }
+
+    mac_str_to_addr((char*)mac_addr_str.c_str(),
+                    (mac_addr_t*)port_args->mac_addr);
+
+    // base mac addr is for first xcvr port.
+    // increment the last byte for subsequent ports.
+    port_args->mac_addr[5] += xcvr_port-1;
+
+    return HAL_RET_OK;
+}
 
 //------------------------------------------------------------------------------
 // set port_args based on xcvr state
@@ -541,6 +562,8 @@ port_args_xcvr_set (port_args_t *port_args)
 
     int xcvr_port =
         sdk::lib::catalog::port_num_to_qsfp_port(port_args->port_num);
+
+    port_args_populate_mac_addr (xcvr_port, port_args);
 
     // default cable type is CU
     port_args->cable_type = cable_type_t::CABLE_TYPE_CU;
@@ -1019,6 +1042,8 @@ port_get_ht_cb (void *ht_entry, void *ctxt)
     port = (port_t *)hal_handle_get_obj(entry->handle_id);
 
     sdk::linkmgr::port_args_init(&port_args);
+
+    memset (stats_data, 0, sizeof(uint64_t) * MAX_MAC_STATS);
 
     port_args.port_num   = port->port_num;
     port_args.stats_data = stats_data;

@@ -83,25 +83,55 @@ qsfp_sprom_parse (int port, uint8_t *data)
         set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
     }
 
+    switch (data[QSFP_OFFSET_ETH_COMPLIANCE_CODES]) {
+    case 0x1:
+        // 40G Active cable
+        xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_40GBASE_AOC);
+        break;
+
+    case 0x2:
+        // 40GBASE-LR4
+        xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_40GBASE_LR4);
+        break;
+
+    case 0x4:
+        // 40GBASE-SR4
+        xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_40GBASE_SR4);
+        break;
+
+    case 0x8:
+        // 40GBASE-CR4
+        xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_40GBASE_CR4);
+        break;
+
+    default:
+        break;
+    }
+
     switch (data[QSFP_OFFSET_EXT_SPEC_COMPLIANCE_CODES]) {
     case 0x1:
         // 100G AOC
+        xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_AOC);
         break;
 
     case 0x2:
         // 100GBASE-SR4
+        xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_SR4);
         break;
 
     case 0x3:
         // 100GBASE-LR4
+        xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_LR4);
         break;
 
     case 0x4:
         // 100GBASE-ER4
+        xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_ER4);
         break;
 
     case 0x8:
         // 100G ACC
+        xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_ACC);
         break;
 
     case 0xb:
@@ -111,6 +141,7 @@ qsfp_sprom_parse (int port, uint8_t *data)
 
     case 0x10:
         // 40GBASE-ER4
+        xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_40GBASE_ER4);
         break;
 
     case 0x17:
@@ -119,10 +150,12 @@ qsfp_sprom_parse (int port, uint8_t *data)
 
     case 0x18:
         // 100G AOC
+        xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_AOC);
         break;
 
     case 0x19:
         // 100G ACC
+        xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_ACC);
         break;
 
     case 0x1A:

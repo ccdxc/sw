@@ -213,6 +213,17 @@ cap_mx_set_bits(int chip_id, int inst_id, uint32_t addr,
     return 0;
 }
 
+int cap_mx_set_pause_src_addr (int chip_id, int inst_id, int ch, uint8_t *mac_addr)
+{
+    int addr = (ch == 1) ? 0x515 : (ch == 2) ? 0x615 : (ch == 3) ? 0x715 : 0x415;
+
+    cap_mx_apb_write(chip_id, inst_id, addr,   mac_addr[0] | (mac_addr[1] << 8));
+    cap_mx_apb_write(chip_id, inst_id, addr+1, mac_addr[2] | (mac_addr[3] << 8));
+    cap_mx_apb_write(chip_id, inst_id, addr+2, mac_addr[4] | (mac_addr[5] << 8));
+
+    return 0;
+}
+
 int
 cap_mx_set_pause(int chip_id, int inst_id, int ch, int pri_vec, int legacy)
 {

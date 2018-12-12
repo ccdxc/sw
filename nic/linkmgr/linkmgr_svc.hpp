@@ -41,6 +41,7 @@ using port::PortAdminState;
 using port::PortFecType;
 
 using port::MacStatsType;
+using port::MgmtMacStatsType;
 
 class PortServiceImpl final : public Port::Service {
 public:

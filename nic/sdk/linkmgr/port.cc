@@ -493,6 +493,7 @@ port::port_serdes_an_link_train_check (void)
                 if (o_core_status != 0x34) {
                     training_fail = true;
                 }
+
                 o_core_status_arr[lane] = o_core_status;
                 training_done = training_done | (1 << lane);
             }
@@ -507,6 +508,7 @@ port::port_serdes_an_link_train_check (void)
 
     for (lane = 0; lane < num_lanes_; ++lane) {
         sbus_addr = port_sbus_addr(lane);
+
         SDK_LINKMGR_TRACE_DEBUG("sbus_addr: %u, o_core_status: 0x%x, "
                                 "training_fail: %d",
                                 sbus_addr,
@@ -674,13 +676,13 @@ port::port_link_sm_an_process(void)
 
         SDK_PORT_SM_TRACE(this, "wait AN HCD");
 
-        // 100 * 1000 usecs = 100 msecs
-        for (int i = 0; i < 100; ++i) {
+        // 1000 * 100 usecs = 100 msecs
+        for (int i = 0; i < 1000; ++i) {
             an_good = port_serdes_an_wait_hcd();
             if (an_good == true) {
                 break;
             }
-            usleep(1000);
+            usleep(100);
         }
 
         // 100 msecs
@@ -705,9 +707,11 @@ port::port_link_sm_an_process(void)
 
         port_serdes_an_hcd_cfg();
 
+        /*
         if (port_serdes_an_link_train_check() == false) {
             an_ret = AN_RESET;
         }
+        */
 
     default:
         break;
@@ -964,6 +968,32 @@ port::port_link_sm_process(void)
                 port_mac_soft_reset(false);
 
                 if (auto_neg_enable() == true) {
+                    // Restart AN if link training failed.
+                    if (port_serdes_an_link_train_check() == false) {
+                        if (++training_fail_count ==
+                                            MAX_LINK_TRAIN_FAIL_COUNT) {
+                            // TODO no need to increment timeout since state
+                            // is reset to ENABLED?
+                            this->bringup_timer_val_ += timeout;
+
+                            this->link_bring_up_timer_ =
+                                sdk::lib::timer_schedule(
+                                0, timeout, this,
+                                (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
+                                false);
+                        } else {
+                            retry_sm = true;
+                        }
+
+                        // reset all SM states
+                        port_link_sm_reset();
+
+                        this->set_port_link_sm(
+                                port_link_sm_t::PORT_LINK_SM_ENABLED);
+
+                        break;
+                    }
+
                     // transition to wait MAC sync for AN
                     this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_WAIT_MAC_SYNC);
                     retry_sm = true;
@@ -1008,10 +1038,10 @@ port::port_link_sm_process(void)
                 }
 
                 // transition to wait for mac sync
-                this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_WAIT_MAC_SYNC);
+                this->set_port_link_sm(
+                                port_link_sm_t::PORT_LINK_SM_WAIT_MAC_SYNC);
 
             case port_link_sm_t::PORT_LINK_SM_WAIT_MAC_SYNC:
-
                 SDK_PORT_SM_DEBUG(this, "Wait MAC SYNC");
 
                 mac_sync = port_mac_sync_get();
@@ -1201,6 +1231,12 @@ sdk_ret_t
 port::port_deinit (void)
 {
     mac_fns()->mac_deinit (this->mac_id_, this->mac_ch_);
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+port::port_mac_set_pause_src_addr(uint8_t *mac_addr) {
+    mac_fns()->mac_pause_src_addr(mac_id(), mac_ch(), mac_addr);
     return SDK_RET_OK;
 }
 
