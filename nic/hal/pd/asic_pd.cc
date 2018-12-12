@@ -579,7 +579,8 @@ asic_rw_init (hal_cfg_t *hal_cfg)
     // initialize PAL
     palrv = sdk::lib::pal_init(
         hal::pd::hal_platform_to_sdk_platform_type(hal_cfg->platform));
-    HAL_ABORT(IS_PAL_API_SUCCESS(palrv));
+    HAL_ASSERT_TRACE_RETURN_VOID(IS_PAL_API_SUCCESS(palrv),
+                                 "PAL init failure, err : {}", palrv);
 
     // do asic initialization
     asic_cfg.loader_info_file = hal_cfg->loader_info_file;
@@ -588,12 +589,13 @@ asic_rw_init (hal_cfg_t *hal_cfg)
     asic_cfg.admin_cos = 1;
     asic_cfg.cfg_path = hal_cfg->cfg_path;
     asic_cfg.catalog = hal_cfg->catalog;
-    asic_cfg.platform = hal::pd::hal_platform_to_sdk_platform_type(hal_cfg->platform);
+    asic_cfg.platform =
+        hal::pd::hal_platform_to_sdk_platform_type(hal_cfg->platform);
     args.cfg = &asic_cfg;
     pd_func_args.pd_asic_init = &args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_ASIC_INIT, &pd_func_args);
-    HAL_ABORT(ret == HAL_RET_OK);
-
+    HAL_ASSERT_TRACE_RETURN_VOID((ret == HAL_RET_OK),
+                                 "ASIC init failure, err : {}", ret);
     return;
 }
 

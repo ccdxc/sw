@@ -74,7 +74,7 @@ hal_sig_handler (int sig, siginfo_t *info, void *ptr)
     case SIGTERM:
     case SIGQUIT:
         if (!getenv("DISABLE_FTE") && 
-            (hal::g_hal_cfg.shm_mode == true)) {
+            (g_hal_cfg.shm_mode == true)) {
             ipc_logger::deinit();
         }
         HAL_GCOV_FLUSH();
@@ -140,9 +140,8 @@ hal_parse_ini (const char *inifile, hal_cfg_t *hal_cfg)
         if (key == "forwarding_mode") {
             hal_cfg->forwarding_mode = hal_get_forwarding_mode(val);
             if (hal_cfg->forwarding_mode == HAL_FORWARDING_MODE_NONE) {
-                HAL_TRACE_ERR("Invalid forwarding mode : {}, aborting ...\n",
-                              val);
-                HAL_ABORT(0);
+                HAL_ASSERT_TRACE_RETURN(FALSE, HAL_RET_INVALID_ARG,
+                                        "Invalid forwarding mode {}", val);
             }
         }
     }
@@ -172,10 +171,11 @@ hal_delphi_thread_init (hal_cfg_t *hal_cfg)
                                    HAL_THREAD_ID_DELPHI_CLIENT,
                                    sdk::lib::THREAD_ROLE_CONTROL,
                                    0x0,    // use all control cores
-                                   hal::svc::delphi_client_start,
+                                   svc::delphi_client_start,
                                    thread_prio, sched_policy,
                                    NULL);
-    HAL_ABORT(hal_thread != NULL);
+    HAL_ASSERT_TRACE_RETURN((hal_thread != NULL), HAL_RET_ERR,
+                            "Failed to spawn delphic thread");
     hal_thread->start(hal_thread);
     return HAL_RET_OK;
 }
@@ -203,13 +203,15 @@ hal_init (hal_cfg_t *hal_cfg)
 
     // parse and initialize the catalog
     catalog = sdk::lib::catalog::factory(hal_cfg->catalog_file);
-    HAL_ASSERT(catalog != NULL);
+    HAL_ASSERT_TRACE_RETURN(catalog != NULL, HAL_RET_ERR, "Catalog file error");
     hal_cfg->catalog = catalog;
 
     // validate control/data cores against catalog
-    HAL_ABORT(hal_cores_validate(catalog->cores_mask(),
-                                 hal_cfg->control_cores_mask,
-                                 hal_cfg->data_cores_mask) == HAL_RET_OK);
+    ret = hal_cores_validate(catalog->cores_mask(),
+                             hal_cfg->control_cores_mask,
+                             hal_cfg->data_cores_mask);
+    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+                            "CPU core validation failure");
 
     // initialize random number generator
     srand(time(NULL));
@@ -224,29 +226,41 @@ hal_init (hal_cfg_t *hal_cfg)
     }
 
     // instantiate delphi thread
-    HAL_ABORT(hal_delphi_thread_init(hal_cfg) == HAL_RET_OK);
+    hal_delphi_thread_init(hal_cfg);
 
     // do HAL state initialization
-    HAL_ABORT(hal_state_init(hal_cfg) == HAL_RET_OK);
-    HAL_ABORT(hal_main_thread_init(hal_cfg) == HAL_RET_OK);
+    ret = hal_state_init(hal_cfg);
+    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+                            "HAL state init failure");
+    ret = hal_main_thread_init(hal_cfg);
+    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+                            "HAL main thread initialization failure");
 
     // do platform dependent init
-    HAL_ABORT(hal::pd::hal_pd_init(hal_cfg) == HAL_RET_OK);
+    ret = pd::hal_pd_init(hal_cfg);
+    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+                            "HAL PD layer initialization failure");
     HAL_TRACE_DEBUG("Platform initialization done");
 
     // init fte and hal plugins
-    hal::init_plugins(hal_cfg);
+    init_plugins(hal_cfg);
 
     // spawn all necessary PI threads
-    HAL_ABORT(hal_thread_init(hal_cfg) == HAL_RET_OK);
+    ret = hal_thread_init(hal_cfg);
+    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+                            "HAL thread initialization failure");
     HAL_TRACE_DEBUG("Spawned all HAL threads");
 
     // do platform dependent clock delta computation initialization
-    HAL_ABORT(hal::pd::hal_pd_clock_delta_comp_init(hal_cfg) == HAL_RET_OK);
+    ret = pd::hal_pd_clock_delta_comp_init(hal_cfg);
+    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+                            "Clock delta computation initialization failure");
     HAL_TRACE_DEBUG("Platform clock delta computation init done");
 
     // do rdma init
-    HAL_ABORT(rdma_hal_init() == HAL_RET_OK);
+    ret = rdma_hal_init();
+    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+                            "RDMA intialization failure");
 
     // unless periodic thread is fully initialized and
     // done calling all plugins' thread init callbacks
@@ -256,7 +270,7 @@ hal_init (hal_cfg_t *hal_cfg)
     }
 
     // notify sysmgr that we are up
-    hal::svc::hal_init_done();
+    svc::hal_init_done();
 
     if (!getenv("DISABLE_FTE") &&
         (hal_cfg->forwarding_mode != HAL_FORWARDING_MODE_CLASSIC) &&
@@ -267,7 +281,7 @@ hal_init (hal_cfg_t *hal_cfg)
         for (uint32_t i = 0; i < hal_cfg->num_data_threads; i++) {
             // init IPC logger infra for FTE
             if (!i && hal_cfg->shm_mode &&
-                ipc_logger::init(std::shared_ptr<logger>(hal::utils::hal_logger())) != HAL_RET_OK) {
+                ipc_logger::init(std::shared_ptr<logger>(utils::hal_logger())) != HAL_RET_OK) {
                 HAL_TRACE_ERR("IPC logger init failed");
             }
             tid = HAL_THREAD_ID_FTE_MIN + i;
@@ -282,7 +296,7 @@ hal_init (hal_cfg_t *hal_cfg)
     hal_linkmgr_init(hal_cfg);
 
     // start monitoring HAL heartbeat
-    hal::hb::heartbeat_init();
+    hb::heartbeat_init();
 
     // initialize stats module
     hal_stats_init(hal_cfg);
