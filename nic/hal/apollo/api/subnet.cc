@@ -66,42 +66,13 @@ subnet_entry *
 subnet_entry::factory(oci_subnet_t *oci_subnet) {
     subnet_entry *subnet;
 
+    /**< create subnet entry with defaults, if any */
     subnet = subnet_db()->subnet_alloc();
     if (subnet) {
         new (subnet) subnet_entry();
-        if (subnet->init(oci_subnet) == sdk::SDK_RET_OK) {
-            return subnet;
-        } else {
-            subnet_entry::destroy(subnet);
-            return NULL;
-        }
     }
-    return NULL;
-}
+    return subnet;
 
-/**
- * @brief    process a create/delete/update/get operation on a subnet
- * @param[in] api_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t
-subnet_entry::process_api(api_ctxt_t *api_ctxt) {
-    switch (api_ctxt->api_op) {
-    case API_OP_CREATE:
-        return process_create(api_ctxt);
-        break;
-    case API_OP_UPDATE:
-        return process_delete(api_ctxt);
-        break;
-    case API_OP_DELETE:
-        return process_delete(api_ctxt);
-        break;
-    case API_OP_GET:
-        return process_get(api_ctxt);
-        break;
-    default:
-        return sdk::SDK_RET_INVALID_OP;
-    }
 }
 
 /**
@@ -112,7 +83,7 @@ subnet_entry::process_api(api_ctxt_t *api_ctxt) {
  */
 sdk_ret_t
 subnet_entry::process_create(api_ctxt_t *api_ctxt) {
-    return sdk::SDK_RET_OK;
+    return init(&api_ctxt->subnet_info);
 }
 
 /**

@@ -39,9 +39,36 @@ api_engine::batch_begin(oci_batch_params_t *params) {
  */
 sdk_ret_t
 api_engine::batch_commit(void) {
+    api_ctxt_t    api_ctxt;
+    sdk_ret_t     ret;
+
     SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_INIT),
                       sdk::SDK_RET_INVALID_ARG);
     batch_ctxt_.stage = API_BATCH_STAGE_COMMIT;
+
+    // walk over all the dirty objects and perform commit operation
+    // NOTE: we don't expect any operation to fail during commit phase but hash
+    // tables are a bit tricky as there is no mechanism to pre-reserve entries
+    // for them yet, so to be generic we do support failure of commit operation
+    for (vector<api_ctxt_t>::iterator it = batch_ctxt_.apis.begin();
+         it != batch_ctxt_.apis.end(); ++it) {
+        api_ctxt = *it;
+        if (api_ctxt.curr_obj) {
+            // DELETE/UPDATE case
+            ret = api_ctxt.curr_obj->commit(&api_ctxt);
+            if (ret != sdk::SDK_RET_OK) {
+                batch_ctxt_.stage = API_BATCH_STAGE_ABORT;
+                return ret;
+            }
+        } else {
+            // CREATE case
+            ret = api_ctxt.new_obj->commit(&api_ctxt);
+            if (ret != sdk::SDK_RET_OK) {
+                batch_ctxt_.stage = API_BATCH_STAGE_ABORT;
+                return ret;
+            }
+        }
+    }
 
     // clear all batch related info
     batch_ctxt_.epoch = OCI_EPOCH_INVALID;
@@ -56,10 +83,31 @@ api_engine::batch_commit(void) {
  */
 sdk_ret_t
 api_engine::batch_abort(void) {
-    SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_INIT),
-                      sdk::SDK_RET_INVALID_ARG);
-    batch_ctxt_.stage = API_BATCH_STAGE_ABORT;
+    api_ctxt_t    api_ctxt;
+    sdk_ret_t     ret;
 
+    SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_ABORT),
+                      sdk::SDK_RET_INVALID_ARG);
+
+    // walk over all the dirty objects and perform abort operation
+    // NOTE: abort is never expected to fail
+    for (vector<api_ctxt_t>::iterator it = batch_ctxt_.apis.begin();
+         it != batch_ctxt_.apis.end(); ++it) {
+        api_ctxt = *it;
+        if (api_ctxt.curr_obj) {
+            // DELETE/UPDATE case
+            ret = api_ctxt.curr_obj->abort(&api_ctxt);
+            if (ret != sdk::SDK_RET_OK) {
+                // TODO: log it, but continue
+            }
+        } else {
+            // CREATE case
+            ret = api_ctxt.new_obj->abort(&api_ctxt);
+            if (ret != sdk::SDK_RET_OK) {
+                // TODO: log it, but continue
+            }
+        }
+    }
     // clear all batch related info
     batch_ctxt_.epoch = OCI_EPOCH_INVALID;
     batch_ctxt_.stage = API_BATCH_STAGE_NONE;
@@ -72,13 +120,13 @@ api_engine::batch_abort(void) {
  */
 sdk_ret_t
 api_engine::process_api(api_ctxt_t *api_ctxt) {
+    sdk_ret_t    ret = sdk::SDK_RET_OK;
+
     SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_INIT),
                       sdk::SDK_RET_INVALID_OP);
     switch (api_ctxt->api_op) {
     case API_OP_CREATE:
-        /** instantiate, initialize a new object and allocate s/w & h/w
-         * resources needed for it
-         */
+        /**< instantiate a new object */
         api_ctxt->curr_obj = NULL;
         api_ctxt->new_obj = api_base::factory(api_ctxt);
         if (unlikely(api_ctxt->new_obj == NULL)) {
@@ -86,16 +134,22 @@ api_engine::process_api(api_ctxt_t *api_ctxt) {
             return sdk::SDK_RET_ERR;
         }
 
-        /**< mark the object as dirty (to indicate that add/modify is in
-         *   progress and add the dirty obj to the db
+        /**< add API context to current batch list so we can access it during
+         * commit/abort phase
+         */
+        batch_ctxt_.apis.push_back(*api_ctxt);
+
+        /**< initialize the object, allocate s/w, h/w resources needed for it */
+        ret = api_ctxt->new_obj->process_create(api_ctxt);
+        if (ret != sdk::SDK_RET_OK) {
+            goto error;
+        }
+
+        /**< mark the object as dirty to indicate that an operation is in
+         * progress and add the dirty obj to the db
          */
         api_ctxt->new_obj->set_dirty();
         api_ctxt->new_obj->add_to_db();
-
-        /**< add the API context to the current batch list so we can access
-         *   it during the commit/abort phase
-         */
-        batch_ctxt_.apis.push_back(*api_ctxt);
         break;
 
     case API_OP_DELETE:
@@ -105,17 +159,34 @@ api_engine::process_api(api_ctxt_t *api_ctxt) {
          *   controller point of view, if its batching periodically
          */
         api_ctxt->curr_obj = api_base::find_obj(api_ctxt, true);
-        SDK_ASSERT(api_ctxt->curr_obj != NULL);
-        batch_ctxt_.apis.push_back(*api_ctxt);
+        if (api_ctxt->curr_obj) {
+            batch_ctxt_.apis.push_back(*api_ctxt);
+            ret = api_ctxt->new_obj->process_delete(api_ctxt);
+            if (ret != sdk::SDK_RET_OK) {
+                goto error;
+            }
+        } else {
+            /**< not expected to happen, but ignore the error by not adding the
+             * api ctxt for later commit/abort processing
+             */
+        }
         break;
 
     case API_OP_UPDATE:
-#if 0
         api_ctxt->curr_obj = api_base::find_obj(api_ctxt, false);
-        SDK_ASSERT(api_ctxt->curr_obj != NULL);
-        api_ctxt->new_obj = api_ctxt->curr_obj->clone();
-        api_ctxt->new_obj->update(api_ctxt);
-#endif
+        if (api_ctxt->curr_obj) {
+            batch_ctxt_.apis.push_back(*api_ctxt);
+            /**< clone current obj and modify the cloned obj, during commit
+             * phase we switch cloned obj with current obj and free the current
+             * obj
+             */
+            api_ctxt->new_obj = api_ctxt->curr_obj->clone();
+            api_ctxt->new_obj->process_update(api_ctxt);
+        } else {
+            /**< not expected to happen, but ignore the error by not adding the
+             * api ctxt for later commit/abort processing
+             */
+        }
         break;
 
     case API_OP_GET:
@@ -124,7 +195,13 @@ api_engine::process_api(api_ctxt_t *api_ctxt) {
     default:
         break;
     }
+
     return sdk::SDK_RET_OK;
+
+error:
+
+    batch_ctxt_.stage = API_BATCH_STAGE_ABORT;
+    return ret;
 }
 
 /** @} */    // end of OCI_API_ENGINE

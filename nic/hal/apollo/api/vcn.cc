@@ -64,42 +64,12 @@ vcn_entry *
 vcn_entry::factory(oci_vcn_t *oci_vcn) {
     vcn_entry *vcn;
 
+    /**< create vcn entry with defaults, if any */
     vcn = vcn_db()->vcn_alloc();
     if (vcn) {
         new (vcn) vcn_entry();
-        if (vcn->init(oci_vcn) == sdk::SDK_RET_OK) {
-            return vcn;
-        } else {
-            vcn_entry::destroy(vcn);
-            return NULL;
-        }
     }
-    return NULL;
-}
-
-/**
- * @brief    process a create/delete/update/get operation on a vcn
- * @param[in] api_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t
-vcn_entry::process_api(api_ctxt_t *api_ctxt) {
-    switch (api_ctxt->api_op) {
-    case API_OP_CREATE:
-        return process_create(api_ctxt);
-        break;
-    case API_OP_UPDATE:
-        return process_delete(api_ctxt);
-        break;
-    case API_OP_DELETE:
-        return process_delete(api_ctxt);
-        break;
-    case API_OP_GET:
-        return process_get(api_ctxt);
-        break;
-    default:
-        return sdk::SDK_RET_INVALID_OP;
-    }
+    return vcn;
 }
 
 /**
@@ -110,7 +80,7 @@ vcn_entry::process_api(api_ctxt_t *api_ctxt) {
  */
 sdk_ret_t
 vcn_entry::process_create(api_ctxt_t *api_ctxt) {
-    return sdk::SDK_RET_OK;
+    return init(&api_ctxt->vcn_info);
 }
 
 /**
@@ -121,7 +91,7 @@ vcn_entry::process_create(api_ctxt_t *api_ctxt) {
  */
 sdk_ret_t
 vcn_entry::process_update(api_ctxt_t *api_ctxt) {
-    return sdk::SDK_RET_OK;
+    return sdk::SDK_RET_ERR;
 }
 
 /**
@@ -132,7 +102,7 @@ vcn_entry::process_update(api_ctxt_t *api_ctxt) {
  */
 sdk_ret_t
 vcn_entry::process_delete(api_ctxt_t *api_ctxt) {
-    return sdk::SDK_RET_OK;
+    return sdk::SDK_RET_ERR;
 }
 
 /**

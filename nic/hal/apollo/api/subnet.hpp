@@ -47,11 +47,36 @@ class subnet_entry : public api_base {
     static void destroy(subnet_entry *subnet);
 
     /**
-     * @brief    process a create/delete/update/get operation on a subnet
+     * @brief     handle a subnet create by allocating all required resources
+     *            and keeping them ready for commit phase
      * @param[in] api_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t process_api(api_ctxt_t *api_ctxt) override;
+    virtual sdk_ret_t process_create(api_ctxt_t *api_ctxt);
+
+    /**
+     * @brief     handle a subnet update by allocating all required resources
+     *            and keeping them ready for commit phase
+     * @param[in] api_ctxt    transient state associated with this API
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t process_update(api_ctxt_t *api_ctxt);
+
+    /**
+     * @brief     handle a subnet delete by allocating all required resources
+     *            and keeping them ready for commit phase
+     * @param[in] api_ctxt    transient state associated with this API
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t process_delete(api_ctxt_t *api_ctxt);
+
+    /**
+     * @brief     handle a subnet get by allocating all required resources
+     *            and keeping them ready for commit phase
+     * @param[in] api_ctxt    transient state associated with this API
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t process_get(api_ctxt_t *api_ctxt);
 
     /**
      * @brief    commit() is invokved during commit phase of the API processing
@@ -131,34 +156,6 @@ private:
      *           can always release them in abort phase if something goes wrong
      */
     sdk_ret_t init(oci_subnet_t *oci_subnet);
-    /**
-     * @brief     handle a subnet create by allocating all required resources
-     *            and keeping them ready for commit phase
-     * @param[in] api_ctxt    transient state associated with this API
-     * @return   SDK_RET_OK on success, failure status code on error
-     */
-    sdk_ret_t process_create(api_ctxt_t *api_ctxt);
-    /**
-     * @brief     handle a subnet update by allocating all required resources
-     *            and keeping them ready for commit phase
-     * @param[in] api_ctxt    transient state associated with this API
-     * @return   SDK_RET_OK on success, failure status code on error
-     */
-    sdk_ret_t process_update(api_ctxt_t *api_ctxt);
-    /**
-     * @brief     handle a subnet delete by allocating all required resources
-     *            and keeping them ready for commit phase
-     * @param[in] api_ctxt    transient state associated with this API
-     * @return   SDK_RET_OK on success, failure status code on error
-     */
-    sdk_ret_t process_delete(api_ctxt_t *api_ctxt);
-    /**
-     * @brief     handle a subnet get by allocating all required resources
-     *            and keeping them ready for commit phase
-     * @param[in] api_ctxt    transient state associated with this API
-     * @return   SDK_RET_OK on success, failure status code on error
-     */
-    sdk_ret_t process_get(api_ctxt_t *api_ctxt);
 
     /**
      * @brief     add given subnet to the database

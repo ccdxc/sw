@@ -78,42 +78,13 @@ vnic_entry *
 vnic_entry::factory(oci_vnic_t *oci_vnic) {
     vnic_entry *vnic;
 
+    /**< create vnic entry with defaults, if any */
     vnic = vnic_db()->vnic_alloc();
     if (vnic) {
         new (vnic) vnic_entry();
-        if (vnic->init(oci_vnic) == sdk::SDK_RET_OK) {
-            return vnic;
-        } else {
-            vnic_entry::destroy(vnic);
-            return NULL;
-        }
     }
-    return NULL;
-}
+    return vnic;
 
-/**
- * @brief    process a create/delete/update/get operation on a vnic
- * @param[in] api_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t
-vnic_entry::process_api(api_ctxt_t *api_ctxt) {
-    switch (api_ctxt->api_op) {
-    case API_OP_CREATE:
-        return process_create(api_ctxt);
-        break;
-    case API_OP_UPDATE:
-        return process_delete(api_ctxt);
-        break;
-    case API_OP_DELETE:
-        return process_delete(api_ctxt);
-        break;
-    case API_OP_GET:
-        return process_get(api_ctxt);
-        break;
-    default:
-        return sdk::SDK_RET_INVALID_OP;
-    }
 }
 
 /**
@@ -124,7 +95,7 @@ vnic_entry::process_api(api_ctxt_t *api_ctxt) {
  */
 sdk_ret_t
 vnic_entry::process_create(api_ctxt_t *api_ctxt) {
-    return sdk::SDK_RET_OK;
+    return init(&api_ctxt->vnic_info);
 }
 
 /**
