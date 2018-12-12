@@ -7,7 +7,7 @@
 
 struct per_core_resource;
 
-#define SONIC_INTR_FIRE_DATA32		0xdcba
+#define SONIC_INTR_FIRE_DATA32		0x95969798
 #define SONIC_RMEM_ADDR_INVALID		0
 
 static inline uint64_t

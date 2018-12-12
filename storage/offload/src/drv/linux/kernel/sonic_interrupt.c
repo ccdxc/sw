@@ -180,7 +180,7 @@ static int sonic_poll_ev_list(struct sonic_event_list *evl, int budget, struct s
 	return found;
 }
 
-#define SONIC_EV_WORK_TIMEOUT (5000 * OSAL_NSEC_PER_MSEC)
+#define SONIC_EV_WORK_TIMEOUT (100 * OSAL_NSEC_PER_MSEC)
 
 static void sonic_ev_work_handler(struct work_struct *work)
 {
@@ -202,13 +202,18 @@ static void sonic_ev_work_handler(struct work_struct *work)
 		if (!evd->data)
 			continue;
 
-		if (pnso_request_poller((void *) evd->data) == EBUSY) {
-			incomplete_count++;
+		/* poll status and release evid only after fired data have been written */
+		if (sonic_intr_db_fired_chk(evl, evd->evid)) {
+			if (pnso_request_poller((void *) evd->data) != EBUSY) {
+				evd->data = 0;
+				sonic_intr_db_fired_clr(evl, evd->evid);
+				sonic_put_evid(evl, evd->evid);
+				complete_count++;
+			} else {
+				incomplete_count++;
+			}
 		} else {
-			/* Done, release evid */
-			evd->data = 0;
-			sonic_put_evid(evl, evd->evid);
-			complete_count++;
+			incomplete_count++;
 		}
 	}
 
@@ -229,6 +234,7 @@ static void sonic_ev_work_handler(struct work_struct *work)
 				evd = &swd->ev_data[i];
 				if (evd->data) {
 					evd->data = 0;
+					sonic_intr_db_fired_clr(evl, evd->evid);
 					sonic_put_evid(evl, evd->evid);
 				}
 			}
@@ -239,6 +245,10 @@ static void sonic_ev_work_handler(struct work_struct *work)
 			OSAL_LOG_DEBUG("work item %u reenqueued with %u events\n",
 				       work_id, incomplete_count);
 			queue_work(evl->wq, &swd->work);
+
+			/* Return credits, but don't unmask */
+			sonic_intr_return_credits(&evl->pc_res->intr, swd->ev_count,
+						  false, false);
 			goto done;
 		}
 	}
@@ -283,13 +293,14 @@ irqreturn_t sonic_async_ev_isr(int irq, void *evlptr)
 	npolled = sonic_poll_ev_list(evl, SONIC_ASYNC_BUDGET, &evl->work_data);
 
 	if (!npolled) {
-		if (evl->idle_count++ == SONIC_ISR_MAX_IDLE_COUNT)
-			OSAL_LOG_CRITICAL("sonic_async_ev_isr stuck in idle loop!\n");
+	       	if (evl->idle_count++ == SONIC_ISR_MAX_IDLE_COUNT)
+	             OSAL_LOG_CRITICAL("sonic_async_ev_isr stuck in idle loop!\n");
+
 		xchg(&evl->armed, true);
 		sonic_intr_mask(&evl->pc_res->intr, false);
 	} else {
 		//if (evl->idle_count)
-		//	OSAL_LOG_WARN("isr idle count was %d\n", evl->idle_count);
+		//        OSAL_LOG_WARN("isr idle count was %d\n", evl->idle_count);
 		evl->idle_count = 0;
 	}
 

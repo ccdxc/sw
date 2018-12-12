@@ -49,8 +49,7 @@ enum sonic_intr_bits {
 struct sonic_event_list;
 
 struct sonic_event_data {
-	uint32_t evid;
-	uint32_t poll_done;
+	int evid;
 	uint64_t data;
 };
 
