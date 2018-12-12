@@ -61,6 +61,12 @@ TUNABLE_INT("hw.ionic.max_queues", &ionic_max_queues);
 SYSCTL_INT(_hw_ionic, OID_AUTO, max_queues, CTLFLAG_RDTUN,
     &ionic_max_queues, 0, "Number of Queues");
 
+/* XXX: 40 seconds for now. */
+int ionic_devcmd_timeout = 40;
+TUNABLE_INT("hw.ionicdevcmd_timeout", &ionic_devcmd_timeout);
+SYSCTL_INT(_hw_ionic, OID_AUTO, devcmd_timeout, CTLFLAG_RDTUN,
+    &ionic_devcmd_timeout, 0, "Timeout in seconds for devcmd");
+
 int ionic_enable_msix = 1;
 TUNABLE_INT("hw.ionic.enable_msix", &ionic_enable_msix);
 SYSCTL_INT(_hw_ionic, OID_AUTO, enable_msix, CTLFLAG_RWTUN,

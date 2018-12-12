@@ -30,7 +30,8 @@ MODULE_AUTHOR("Anish Gupta anish@pensando.io");
 MODULE_LICENSE("GPL");
 MODULE_VERSION(ionic, 1);
 
-int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx)
+int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx,
+	bool timeout)
 {
 	struct net_device *netdev = lif->netdev;
 	static struct cmds {
@@ -48,41 +49,49 @@ int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx)
 		{ CMD_OPCODE_RX_MODE_SET, "CMD_OPCODE_RX_MODE_SET" },
 		{ CMD_OPCODE_RX_FILTER_ADD, "CMD_OPCODE_RX_FILTER_ADD" },
 		{ CMD_OPCODE_RX_FILTER_DEL, "CMD_OPCODE_RX_FILTER_DEL" },
-		{ CMD_OPCODE_RSS_HASH_SET, "CMD_OPCODE_RSS_HASH_SET" },
-		{ CMD_OPCODE_RSS_INDIR_SET, "CMD_OPCODE_RSS_INDIR_SET" },
 		{ CMD_OPCODE_STATS_DUMP_START, "CMD_OPCODE_STATS_DUMP_START" },
 		{ CMD_OPCODE_STATS_DUMP_STOP, "CMD_OPCODE_STATS_DUMP_STOP" },
-		{ 0, 0 }, /* Required at end. */
+		{ CMD_OPCODE_RSS_HASH_SET, "CMD_OPCODE_RSS_HASH_SET" },
+		{ CMD_OPCODE_RSS_INDIR_SET, "CMD_OPCODE_RSS_INDIR_SET" },
 	};
-
+	int list_len = ARRAY_SIZE(cmds);
 	struct cmds *cmd = cmds;
 	char *name = "UNKNOWN";
+	int i;
 
-	if (ctx->comp.comp.status) {
-		while ((++cmd)->cmd)
-			if (cmd->cmd == ctx->cmd.cmd.opcode)
-				name = cmd->name;
+	for (i = 0; i < list_len; i++) {
+		if (cmd[i].cmd == ctx->cmd.cmd.opcode) {
+			name = cmd[i].name;
+			break;
+		}
+	}
 
-			IONIC_NETDEV_ERROR(netdev, "(%d) %s failed: %d\n", ctx->cmd.cmd.opcode,
-				name, ctx->comp.comp.status);
+	if (ctx->comp.comp.status || timeout) {
+		IONIC_NETDEV_ERROR(netdev, "(%d) %s failed: %d %s\n", ctx->cmd.cmd.opcode,
+			name, ctx->comp.comp.status, timeout ? "(timeout)" : "");
 		return EIO;
 	}
+
+	IONIC_NETDEV_INFO(netdev, "(%d) %s done\n", ctx->cmd.cmd.opcode,
+		name);
 
 	return 0;
 }
 
 int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
 {
-	int err;
+	int err, remaining;
 
 	err = ionic_api_adminq_post(lif, ctx);
-	if (err)
+	if (err) {
+		IONIC_NETDEV_ERROR(lif->netdev, "ionic_api_adminq_post failed, error: %d\n",
+			err);
 		return err;
+	}
 
-	wait_for_completion(&ctx->work);
+	remaining = wait_for_completion_timeout(&ctx->work, ionic_devcmd_timeout * HZ);
 
-	err = ionic_adminq_check_err(lif, ctx);
-	IONIC_INFO("ionic_adminq_post_wait, err: %d\n", err);
+	err = ionic_adminq_check_err(lif, ctx, remaining == 0);
 
 	return (err);
 }
@@ -96,8 +105,8 @@ static int ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
 	do {
 
 		done = ionic_dev_cmd_done(idev);
-		IONIC_INFO("DEVCMD wait %ld secs (%ld jiffies)\n",
-			       (jiffies + max_wait - time)/HZ, jiffies + max_wait - time);
+	//	IONIC_INFO("DEVCMD wait %ld secs (%ld jiffies)\n",
+	//		       (jiffies + max_wait - time)/HZ, jiffies + max_wait - time);
 #ifdef HAPS
 		if (done)
 			IONIC_INFO("DEVCMD done took %ld secs (%ld jiffies)\n",
@@ -208,7 +217,7 @@ int ionic_identify(struct ionic *ionic)
 
 	ionic_dev_cmd_identify(idev, IDENTITY_VERSION_1, ident_pa);
 
-	err = ionic_dev_cmd_wait_check(idev, IONIC_DEVCMD_TIMEOUT);
+	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
 	if (err)
 		goto err_out_unmap;
 
@@ -239,7 +248,7 @@ int ionic_reset(struct ionic *ionic)
 	struct ionic_dev *idev = &ionic->idev;
 
 	ionic_dev_cmd_reset(idev);
-	return ionic_dev_cmd_wait_check(idev, IONIC_DEVCMD_TIMEOUT);
+	return ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
 }
 
 static int __init ionic_init_module(void)

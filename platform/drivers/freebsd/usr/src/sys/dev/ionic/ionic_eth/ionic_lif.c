@@ -1206,6 +1206,7 @@ static void ionic_adminq_free(struct lif *lif, struct adminq *adminq)
 	free(adminq, M_IONIC);
 }
 
+#if 0
 static unsigned int ionic_pid_get(struct lif *lif, unsigned int page)
 {
 	unsigned int ndbpgs_per_lif = lif->ionic->ident->dev.ndbpgs_per_lif;
@@ -1214,6 +1215,7 @@ static unsigned int ionic_pid_get(struct lif *lif, unsigned int page)
 
 	return lif->index * ndbpgs_per_lif + page;
 }
+#endif
 
 static int ionic_qcqs_alloc(struct lif *lif)
 {
@@ -1633,7 +1635,8 @@ static void ionic_lif_deinit(struct lif *lif)
 	}
 
 	ifmedia_removeall(&lif->media);
-	if (lif->netdev)
+
+	if (lif->netdev && if_getifaddr(lif->netdev))
 		ether_ifdetach(lif->netdev);
 
 	ionic_lif_adminq_deinit(lif, lif->adminqcq);
@@ -1678,7 +1681,7 @@ static int ionic_lif_adminq_init(struct lif *lif)
 	//       cmd.adminq_init.ring_size);
 	ionic_dev_cmd_go(idev, &cmd);
 
-	err = ionic_dev_cmd_wait_check(idev, IONIC_DEVCMD_TIMEOUT);
+	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
 	if (err)
 		return err;
 
@@ -2139,7 +2142,7 @@ static int ionic_lif_init(struct lif *lif)
 	int err;
 
 	ionic_dev_cmd_lif_init(idev, lif->index);
-	err = ionic_dev_cmd_wait_check(idev, IONIC_DEVCMD_TIMEOUT);
+	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
 	if (err)
 		return err;
 
