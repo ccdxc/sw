@@ -1213,7 +1213,8 @@ struct rdma_queue_cmd {
         u8 depth_log2;
         u8 stride_log2;
         u64 dma_addr;
-        u8 rsvd[40];
+        u8 rsvd[36];
+        u32 xxx_table_index;
 };
 
 
@@ -1284,7 +1285,8 @@ struct create_mr_cmd {
         u32 nchunks;
         u32 lkey;
         u32 rkey;
-        u32 rsvd[4];
+        u32 table_index;
+        u8 rsvd[12];
 };
 
 /**
@@ -1325,7 +1327,8 @@ struct create_cq_cmd {
         u64 cq_va;
         u64 va_len;
         u32 pt_size;
-        u32 rsvd2[3];
+        u32 table_index;
+        u8 rsvd2[8];
 };
 
 /**
@@ -1367,8 +1370,7 @@ struct create_qp_cmd {
         u16 rq_wqe_size;    
         u16 num_sq_wqes;
         u16 num_rq_wqes;    
-        u16 num_rsq_wqes;
-        u16 num_rrq_wqes;    
+        u32 sq_table_index; /* XXX bad alignment */
         u16 pd;
         u16 lif_id;
         u8  service;
@@ -1387,7 +1389,7 @@ struct create_qp_cmd {
         u32 pt_size;
         u32 sq_pt_size;
         u32 flags;
-        u32 rsvd2[1];
+        u32 rq_table_index;
 };
 
 /**
@@ -1432,12 +1434,15 @@ struct modify_qp_cmd {
         u32 header_template_size;
         u32 header_template_ah_id;
         u32 path_mtu;
-        u8 rrq_depth;
-        u8 rsq_depth;
-        u8 state;
-        u8 rsvd[3];
+        u8  rrq_depth;
+        u8  rsq_depth;
+        u8  state;
+        u8  retry_count;
+        u8  retry_timeout;
+        u8  min_rnr_timer;
         u16 flags;
-        u8 rsvd2[8];
+        u32 rrq_index;
+        u32 rsq_index;
 };
 
 /**

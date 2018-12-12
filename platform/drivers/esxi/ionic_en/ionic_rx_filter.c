@@ -135,12 +135,12 @@ ionic_rx_filters_hash_tables_destroy(struct rx_filters *rx_filters)     // IN
         VMK_ReturnStatus status;
 
         vmk_SpinlockLock(rx_filters->lock);
-
         status = vmk_HashDeleteAll(rx_filters->by_id);
         if (status != VMK_OK) {
                 ionic_err("vmk_HashDeleteAll() failed, status: %s",
                           vmk_StatusToString(status));
         }
+        vmk_SpinlockUnlock(rx_filters->lock);
 
         status = vmk_HashRelease(rx_filters->by_id);
         if (status != VMK_OK) {
@@ -148,11 +148,13 @@ ionic_rx_filters_hash_tables_destroy(struct rx_filters *rx_filters)     // IN
                           vmk_StatusToString(status));
         }
 
+        vmk_SpinlockLock(rx_filters->lock);
         status = vmk_HashDeleteAll(rx_filters->by_hash);
         if (status != VMK_OK) {
                 ionic_err("vmk_HashDeleteAll() failed, status: %s",
                           vmk_StatusToString(status));
         }
+        vmk_SpinlockUnlock(rx_filters->lock);
 
         status = vmk_HashRelease(rx_filters->by_hash);;
         if (status != VMK_OK) {
@@ -160,7 +162,6 @@ ionic_rx_filters_hash_tables_destroy(struct rx_filters *rx_filters)     // IN
                           vmk_StatusToString(status));
         }
 
-        vmk_SpinlockUnlock(rx_filters->lock);
 }
 
 
