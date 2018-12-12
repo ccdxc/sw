@@ -238,7 +238,7 @@ compress_sub_chain_from_crypto(struct service_info *svc_info,
 }
 
 static pnso_error_t
-compress_enable_interrupt(const struct service_info *svc_info, void *poll_ctx)
+compress_enable_interrupt(struct service_info *svc_info, void *poll_ctx)
 {
 	return cpdc_setup_interrupt_params(svc_info, poll_ctx);
 }
@@ -274,7 +274,7 @@ compress_poll(const struct service_info *svc_info)
 {
 	pnso_error_t err;
 	volatile struct cpdc_status_desc *status_desc;
-	uint64_t elapsed_ts, start_ts;
+	uint64_t start_ts;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -305,7 +305,7 @@ compress_poll(const struct service_info *svc_info)
 		goto out;
 	}
 
-	start_ts = osal_get_clock_nsec();
+	start_ts = svc_poll_expiry_start(svc_info);
 	while (1) {
 		/* poll on padding opaque tag updated by P4+ */
 		if (status_desc->csd_integrity_data == CPDC_PAD_STATUS_DATA) {
@@ -313,8 +313,8 @@ compress_poll(const struct service_info *svc_info)
 			break;
 		}
 
-		elapsed_ts = osal_get_clock_nsec() - start_ts;
-		if (elapsed_ts >= CPDC_POLL_LOOP_TIMEOUT) {
+		if (svc_poll_expiry_check(svc_info, start_ts,
+					  CPDC_POLL_LOOP_TIMEOUT)) {
 			err = ETIMEDOUT;
 			OSAL_LOG_ERROR("cp/pad poll-time limit reached! service: %s status_desc: 0x" PRIx64 " err: %d",
 					svc_get_type_str(svc_info->si_type),

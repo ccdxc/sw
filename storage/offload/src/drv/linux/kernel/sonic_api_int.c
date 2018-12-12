@@ -105,6 +105,12 @@ sonic_rmem_pgaddr_to_pgid(uint64_t pgaddr)
 	return sonic_rmem_offset_to_pgid(pgaddr - sonic_rmem_base_pa());
 }
 
+static inline uint64_t
+sonic_rmem_pgaddr_to_pgoffset(uint64_t pgaddr)
+{
+	return pgaddr & (PAGE_SIZE - 1);
+}
+
 static inline void __iomem *
 sonic_rmem_pgaddr_to_iomem(uint64_t pgaddr)
 {
@@ -196,19 +202,22 @@ void sonic_rmem_free(uint64_t pgaddr, size_t size)
 void sonic_rmem_set(uint64_t pgaddr, uint8_t val, size_t size)
 {
 	OSAL_ASSERT(sonic_rmem_addr_valid(pgaddr));
-	memset_io(sonic_rmem_pgaddr_to_iomem(pgaddr), val, size);
+	memset_io(sonic_rmem_pgaddr_to_iomem(pgaddr) +
+		  sonic_rmem_pgaddr_to_pgoffset(pgaddr), val, size);
 }
 
 void sonic_rmem_read(void *dst, uint64_t pgaddr, size_t size)
 {
 	OSAL_ASSERT(sonic_rmem_addr_valid(pgaddr));
-	memcpy_fromio(dst, sonic_rmem_pgaddr_to_iomem(pgaddr), size);
+	memcpy_fromio(dst, sonic_rmem_pgaddr_to_iomem(pgaddr) +
+		      sonic_rmem_pgaddr_to_pgoffset(pgaddr), size);
 }
 
 void sonic_rmem_write(uint64_t pgaddr, const void *src, size_t size)
 {
 	OSAL_ASSERT(sonic_rmem_addr_valid(pgaddr));
-	memcpy_toio(sonic_rmem_pgaddr_to_iomem(pgaddr), src, size);
+	memcpy_toio(sonic_rmem_pgaddr_to_iomem(pgaddr) +
+		    sonic_rmem_pgaddr_to_pgoffset(pgaddr), src, size);
 }
 
 static identity_t *sonic_get_identity(void)

@@ -173,7 +173,7 @@ decompress_sub_chain_from_crypto(struct service_info *svc_info,
 }
 
 static pnso_error_t
-decompress_enable_interrupt(const struct service_info *svc_info, void *poll_ctx)
+decompress_enable_interrupt(struct service_info *svc_info, void *poll_ctx)
 {
 	return cpdc_setup_interrupt_params(svc_info, poll_ctx);
 }

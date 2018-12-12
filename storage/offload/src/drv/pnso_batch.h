@@ -54,6 +54,7 @@ struct batch_info {
 	uint32_t bi_num_entries;	/* total # of requests */
 	void *bi_bulk_desc[MAX_NUM_DESCS];	/* cpdc/crypto desc */
 	struct batch_page *bi_pages[MAX_NUM_PAGES];
+	uint64_t bi_submit_ts;		/* submission timestamp */
 };
 
 pnso_error_t bat_add_to_batch(struct pnso_service_request *svc_req,

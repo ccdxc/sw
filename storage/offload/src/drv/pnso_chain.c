@@ -338,6 +338,7 @@ init_service_batch_params(struct batch_info *batch_info,
 	svc_batch_info->sbi_num_entries = batch_info->bi_num_entries;
 	svc_batch_info->sbi_bulk_desc_idx = bulk_desc_idx;
 	svc_batch_info->sbi_desc_idx = desc_idx;
+	svc_batch_info->sbi_batch_info = batch_info;
 
 	switch (batch_info->bi_svc_type) {
 	case PNSO_SVC_TYPE_ENCRYPT:

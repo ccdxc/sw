@@ -77,6 +77,14 @@ buffer_list_iter_addr_len_get(struct buffer_list_iter *iter,
 pnso_error_t svc_interm_buf_list_get(struct service_info *svc_info);
 void svc_interm_buf_list_put(struct service_info *svc_info);
 
+uint64_t
+svc_poll_expiry_start(const struct service_info *svc_info);
+
+bool
+svc_poll_expiry_check(const struct service_info *svc_info,
+		      uint64_t start_ts,
+		      uint64_t per_svc_timeout);
+
 struct mem_pool *
 pc_res_mpool_get(const struct per_core_resource *pcr,
 		 enum mem_pool_type type);

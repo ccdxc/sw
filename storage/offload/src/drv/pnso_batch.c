@@ -636,6 +636,7 @@ execute_batch(struct batch_info *batch_info)
 			break;
 	}
 
+	batch_info->bi_submit_ts = osal_get_clock_nsec();
 	if (!(batch_info->bi_flags & BATCH_BFLAG_MODE_SYNC)) {
 		OSAL_LOG_DEBUG("in non-sync mode ...");
 		goto done;

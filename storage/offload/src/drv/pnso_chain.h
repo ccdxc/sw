@@ -134,7 +134,7 @@ struct service_ops {
 			struct crypto_chain_params *crypto_chain);
 
 	/* configure the service for async/interrupt handling */
-	pnso_error_t (*enable_interrupt)(const struct service_info *svc_info,
+	pnso_error_t (*enable_interrupt)(struct service_info *svc_info,
 			void *poll_ctx);
 
 	/* a NULL-op for all services except the first within the chain */
@@ -173,6 +173,7 @@ struct service_batch_info {
 	uint16_t sbi_num_entries;	/* totol # of requests */
 	uint16_t sbi_bulk_desc_idx;	/* index within batch info descs */
 	uint16_t sbi_desc_idx;	/* index within bulk desc */
+	struct batch_info *sbi_batch_info; /* bac kpointer to batch info if any */
 	union {
 		struct cpdc_desc *sbi_cpdc_desc;
 		struct crypto_desc *sbi_crypto_desc;
@@ -341,6 +342,12 @@ chn_service_is_starter(const struct service_info *svc_info)
 {
 	return !!(svc_info->si_flags & (CHAIN_SFLAG_LONE_SERVICE |
 				        CHAIN_SFLAG_FIRST_SERVICE));
+}
+
+static inline bool
+chn_service_is_mode_async(const struct service_info *svc_info)
+{
+	return !!(svc_info->si_flags & CHAIN_SFLAG_MODE_ASYNC);
 }
 
 static inline bool

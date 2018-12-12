@@ -46,7 +46,7 @@ cpdc_poll(const struct service_info *svc_info)
 	pnso_error_t err;
 
 	volatile struct cpdc_status_desc *status_desc;
-	uint64_t elapsed_ts, start_ts;
+	uint64_t start_ts;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -59,14 +59,14 @@ cpdc_poll(const struct service_info *svc_info)
 	}
 
 	/* sync-mode ... */
-	start_ts = osal_get_clock_nsec();
+	start_ts = svc_poll_expiry_start(svc_info);
 	while (1) {
 		err = status_desc->csd_valid ? PNSO_OK : EBUSY;
 		if (!err)
 			break;
 
-		elapsed_ts = osal_get_clock_nsec() - start_ts;
-		if (elapsed_ts >= CPDC_POLL_LOOP_TIMEOUT) {
+		if (svc_poll_expiry_check(svc_info, start_ts,
+					  CPDC_POLL_LOOP_TIMEOUT)) {
 			err = ETIMEDOUT;
 			OSAL_LOG_ERROR("poll-time limit reached! service: %s status_desc: 0x" PRIx64 " err: %d",
 					svc_get_type_str(svc_info->si_type),
@@ -710,7 +710,7 @@ out:
 }
 
 pnso_error_t
-cpdc_setup_interrupt_params(const struct service_info *svc_info, void *poll_ctx)
+cpdc_setup_interrupt_params(struct service_info *svc_info, void *poll_ctx)
 {
 	pnso_error_t err;
 	struct cpdc_desc *cp_desc;

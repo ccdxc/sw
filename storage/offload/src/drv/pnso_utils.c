@@ -440,6 +440,28 @@ svc_interm_buf_list_put(struct service_info *svc_info)
 	}
 }
 
+uint64_t
+svc_poll_expiry_start(const struct service_info *svc_info)
+{
+	const struct batch_info *batch_info = svc_info->si_batch_info.sbi_batch_info;
+
+	return batch_info ? batch_info->bi_submit_ts : osal_get_clock_nsec();
+}
+
+bool
+svc_poll_expiry_check(const struct service_info *svc_info,
+		      uint64_t start_ts,
+		      uint64_t per_svc_timeout)
+{
+	const struct batch_info *batch_info = svc_info->si_batch_info.sbi_batch_info;
+	uint64_t timeout = per_svc_timeout;
+
+	if (batch_info)
+		timeout *= max(batch_info->bi_num_entries, (uint32_t)1);
+
+	return (osal_get_clock_nsec() - start_ts) >= timeout;
+}
+
 struct mem_pool *
 pc_res_mpool_get(const struct per_core_resource *pcr,
 		 enum mem_pool_type type)

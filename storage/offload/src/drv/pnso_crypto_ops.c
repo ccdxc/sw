@@ -85,16 +85,14 @@ crypto_desc_fill(struct service_info *svc_info,
 	struct crypto_desc *crypto_desc = svc_info->si_desc;
 	struct crypto_status_desc *status_desc = svc_info->si_status_desc;
 
-	/*
-	 * Intermediate status is never directy "polled" so no need to clear it.
-	 */
 	memset(crypto_desc, 0, sizeof(*crypto_desc));
 	memset(status_desc, 0, sizeof(*status_desc));
-	if (svc_info->si_istatus_desc)
+	if (svc_info->si_istatus_desc) {
 		crypto_desc->cd_status_addr = mpool_get_object_phy_addr(
 				MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS,
 				svc_info->si_istatus_desc);
-	else
+                osal_rmem_set(crypto_desc->cd_status_addr, 0, sizeof(*status_desc));
+	} else
 		crypto_desc->cd_status_addr = sonic_virt_to_phy(status_desc);
 
 	crypto_desc->cd_in_aol = sonic_virt_to_phy(svc_info->si_src_aol.aol);
@@ -116,6 +114,10 @@ crypto_desc_fill(struct service_info *svc_info,
 	crypto_desc->cd_iv_addr =
 		sonic_hostpa_to_devpa(pnso_crypto_desc->iv_addr);
 
+	/*
+	 * when chaining or async mode is involved, cd_db_addr/cd_db_data
+	 * may later be modified with other types of context data.
+	 */
 	crypto_desc->cd_db_addr = crypto_desc->cd_status_addr +
 				  sizeof(status_desc->csd_err);
 
@@ -282,17 +284,23 @@ crypto_chain(struct chain_entry *centry)
 	pnso_error_t			err = PNSO_OK;
 
 	if (chn_service_has_sub_chain(svc_info)) {
-		OSAL_ASSERT(chn_service_has_interm_blist(svc_info));
-		iblist = &svc_info->si_iblist;
-		crypto_chain->ccp_crypto_buf_addr = iblist->blist.buffers[0].buf;
-		crypto_chain->ccp_data_len = iblist->blist.buffers[0].len;
-		if (svc_info->si_sgl_pdma) {
-			crypto_chain->ccp_sgl_pdma_dst_addr =
-				sonic_virt_to_phy(svc_info->si_sgl_pdma);
-			crypto_chain->ccp_cmd.ccpc_sgl_pdma_en = true;
-			crypto_chain->ccp_cmd.ccpc_sgl_pdma_len_from_desc =
-				true;
-			SGL_PDMA_PPRINT(crypto_chain->ccp_sgl_pdma_dst_addr);
+
+		/*
+		 * Length must always be indicated to P4+ chainer (for rate
+		 * limiting) even when PDMA is not applicable.
+		 */
+		crypto_chain->ccp_data_len = svc_info->si_dst_blist.len;
+		if (chn_service_has_interm_blist(svc_info)) {
+			iblist = &svc_info->si_iblist;
+			crypto_chain->ccp_crypto_buf_addr = iblist->blist.buffers[0].buf;
+			if (svc_info->si_sgl_pdma) {
+				crypto_chain->ccp_sgl_pdma_dst_addr =
+					sonic_virt_to_phy(svc_info->si_sgl_pdma);
+				crypto_chain->ccp_cmd.ccpc_sgl_pdma_en = true;
+				crypto_chain->ccp_cmd.ccpc_sgl_pdma_len_from_desc =
+					true;
+				SGL_PDMA_PPRINT(crypto_chain->ccp_sgl_pdma_dst_addr);
+			}
 		}
 
 		crypto_chain->ccp_status_addr_0 = mpool_get_object_phy_addr(
@@ -370,7 +378,6 @@ crypto_sub_chain_from_crypto(struct service_info *svc_info,
 			     struct crypto_chain_params *crypto_chain)
 {
 	/*
-	 * This is supportable when there's a valid use case.
 	 * For testing purposes, it is possible to chain encrypt to decrypt.
 	 */
 	crypto_chain->ccp_cmd.ccpc_next_doorbell_en = true;
@@ -382,9 +389,52 @@ crypto_sub_chain_from_crypto(struct service_info *svc_info,
 }
 
 static pnso_error_t
-crypto_enable_interrupt(const struct service_info *svc_info, void *poll_ctx)
+crypto_enable_interrupt(struct service_info *svc_info,
+			void *poll_ctx)
 {
-	return PNSO_OK;	/* TODO-async: add the common routine */
+	struct crypto_chain_params	*crypto_chain;
+	struct per_core_resource	*pcr;
+	pnso_error_t			err = PNSO_OK;
+
+	/*
+	 * HW lacks ability to signal per-descriptor interrupt so P4+ chainer
+	 * will be used for that purpose. Also note that when a chain successor
+	 * is present, that service will take care of setting up the interrupt.
+	 */
+	OSAL_ASSERT(chn_service_is_mode_async(svc_info));
+	if (!chn_service_has_sub_chain(svc_info)) {
+		crypto_chain = &svc_info->si_crypto_chain;
+		pcr = svc_info->si_pcr;
+		OSAL_LOG_DEBUG("pcr: 0x"PRIx64" poll_ctx: 0x"PRIx64,
+			       (uint64_t)pcr, (uint64_t)poll_ctx);
+
+		crypto_chain->ccp_next_db_spec.nds_addr =
+			sonic_intr_get_db_addr(pcr);
+		if (!crypto_chain->ccp_next_db_spec.nds_addr) {
+			err = EINVAL;
+			OSAL_LOG_DEBUG("crypto failed sonic_intr_get_db_addr "
+				       "err: %d", err);
+			goto out;
+		}
+		crypto_chain->ccp_next_db_spec.nds_data =
+				cpu_to_be64((uint64_t)poll_ctx);
+		crypto_chain->ccp_cmd.ccpc_next_doorbell_en = true;
+
+		crypto_chain->ccp_intr_addr = 
+			sonic_get_per_core_intr_assert_addr(pcr);
+		crypto_chain->ccp_intr_data = sonic_get_intr_assert_data();
+		crypto_chain->ccp_cmd.ccpc_intr_en = true;
+
+		/*
+	         * Note that if crypto here is a chain subordinate, then effectively
+		 * we're setting up one more chain level for async handling.
+		 */
+		err = seq_setup_crypto_chain(svc_info, svc_info->si_desc);
+		if (err != PNSO_OK)
+			OSAL_LOG_ERROR("failed seq_setup_crypto_chain: err %d", err);
+	}
+out:
+	return  err;
 }
 
 static pnso_error_t
@@ -401,20 +451,27 @@ crypto_ring_db(const struct service_info *svc_info)
 static pnso_error_t
 crypto_poll(const struct service_info *svc_info)
 {
-	pnso_error_t err = PNSO_OK;
+	const struct crypto_chain_params *crypto_chain;
+	pnso_error_t			err = PNSO_OK;
 
 	volatile struct crypto_status_desc *status_desc;
 	uint64_t cpl_data;
-	uint64_t elapsed_ts, start_ts;
+	uint64_t start_ts;
 
 	OSAL_LOG_DEBUG("enter ...");
 
 	/*
 	 * When chaining is involved, crypto_desc's cd_db_addr would point
 	 * to a seq statusQ's doorbell rather than status_desc. The completion
-	 * of the next service also implies completion of this crypto service.
+	 * of the next service will imply completion of this crypto service.
+	 * 
+	 * Also, if this service had been programmed to generate interrupt
+	 * for async mode, the same thing would have applied. That is,
+	 * cd_db_addr would ring a seq statusQ doorbell which would be
+	 * sufficient to indicate service completion.
 	 */
-	if (chn_service_has_sub_chain(svc_info))
+	crypto_chain = &svc_info->si_crypto_chain;
+	if (chn_service_has_sub_chain(svc_info) || crypto_chain->ccp_cmd.ccpc_intr_en)
 		goto out;
 
 	status_desc = svc_info->si_status_desc;
@@ -429,14 +486,14 @@ crypto_poll(const struct service_info *svc_info)
 	}
 
 	/* sync-mode ... */
-	start_ts = osal_get_clock_nsec();
+	start_ts = svc_poll_expiry_start(svc_info);
 	while (1) {
 		err = (status_desc->csd_cpl_data == cpl_data) ? PNSO_OK : EBUSY;
 		if (!err)
 			break;
 
-		elapsed_ts = osal_get_clock_nsec() - start_ts;
-		if (elapsed_ts >= CRYPTO_POLL_LOOP_TIMEOUT) {
+		if (svc_poll_expiry_check(svc_info, start_ts,
+					  CRYPTO_POLL_LOOP_TIMEOUT)) {
 			err = ETIMEDOUT;
 			OSAL_LOG_ERROR("poll-time limit reached! service: %s status_desc: 0x" PRIx64 "err: %d",
 					svc_get_type_str(svc_info->si_type),

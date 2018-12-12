@@ -36,7 +36,7 @@ decompact_sub_chain_from_crypto(struct service_info *svc_info,
 }
 
 static pnso_error_t
-decompact_enable_interrupt(const struct service_info *svc_info, void *poll_ctx)
+decompact_enable_interrupt(struct service_info *svc_info, void *poll_ctx)
 {
 	return EOPNOTSUPP;
 }
