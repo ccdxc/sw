@@ -12,6 +12,7 @@ import (
 	"strings"
 	"syscall"
 	"time"
+    "runtime"
 
 	log "github.com/sirupsen/logrus"
 
@@ -289,9 +290,8 @@ var GetIntfsMatchingPrefix = func(prefix string) []string {
 	}
 	return ret
 }
-
 // GetIntfsMatchingDevicePrefix get intfs matching device prefix
-func GetIntfsMatchingDevicePrefix(devicePrefix string) ([]string, error) {
+func GetIntfsMatchingDevicePrefixLinux(devicePrefix string) ([]string, error) {
 	hostIntfs := []string{}
 
 	pciIntfMap := make(map[string]string)
@@ -334,8 +334,36 @@ func GetIntfsMatchingDevicePrefix(devicePrefix string) ([]string, error) {
 
 		}
 	}
-
 	return hostIntfs, nil
+}
+
+// GetIntfsMatchingDevicePrefix get intfs matching device prefix
+func GetIntfsMatchingDevicePrefixFreeBSD(devicePrefix string) ([]string, error) {
+    hostIntfs := []string{}
+	cmd := []string{"ifconfig", "-l"}
+
+	_, stdout, err := Run(cmd, 0, false, true, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, stdout)
+	}
+    for _, line := range strings.Split(stdout, "\n") {
+        for _, intf := range strings.Split(line, " ") {
+            if intf != "ix0" && intf != "ix1" && intf != "lo0" && intf != "tun0" && intf != "" {
+                hostIntfs = append(hostIntfs, intf)
+            }
+        }
+    }
+    return hostIntfs, nil
+}
+
+
+// GetIntfsMatchingDevicePrefix get intfs matching device prefix
+func GetIntfsMatchingDevicePrefix(devicePrefix string) ([]string, error) {
+    if runtime.GOOS == "freebsd" {
+        return GetIntfsMatchingDevicePrefixFreeBSD(devicePrefix)
+    } else {
+        return GetIntfsMatchingDevicePrefixLinux(devicePrefix)
+    }
 }
 
 //RestHelper is a wrapper for rest
