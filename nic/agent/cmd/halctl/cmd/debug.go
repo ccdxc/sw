@@ -38,6 +38,24 @@ var debugCmd = &cobra.Command{
 	Long:  "set debug options",
 }
 
+var debugCreateCmd = &cobra.Command{
+	Use:   "create",
+	Short: "create object",
+	Long:  "create object",
+}
+
+var debugDeleteCmd = &cobra.Command{
+	Use:   "delete",
+	Short: "delete object",
+	Long:  "delete object",
+}
+
+var debugUpdateCmd = &cobra.Command{
+	Use:   "update",
+	Short: "update object",
+	Long:  "update object",
+}
+
 var regDebugCmd = &cobra.Command{
 	Use:   "register",
 	Short: "set register data",
@@ -131,6 +149,9 @@ func init() {
 	debugCmd.AddCommand(fwDebugCmd)
 	debugCmd.AddCommand(platDebugCmd)
 	debugCmd.AddCommand(regDebugCmd)
+	debugCmd.AddCommand(debugCreateCmd)
+	debugCmd.AddCommand(debugUpdateCmd)
+	debugCmd.AddCommand(debugDeleteCmd)
 	platDebugCmd.AddCommand(platHbmDebugCmd)
 	platHbmDebugCmd.AddCommand(platLlcDebugCmd)
 	traceDebugCmd.AddCommand(flushLogsDebugCmd)

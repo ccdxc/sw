@@ -86,8 +86,6 @@ inline std::ostream& operator<<(std::ostream& os, const qos_class_key_t& s)
 }
 
 typedef struct qos_pfc_s {
-    uint32_t cos;                 // PFC cos the class
-                                  // participates in
     uint32_t xon_threshold;       // Threshold at which to send xon (2-4 MTUs)
     uint32_t xoff_threshold;      // Free buffer threshold at which to send xoff (2-8MTUs)
 } __PACK__   qos_pfc_t;
@@ -111,10 +109,10 @@ typedef struct qos_sched_s {
     } __PACK__;
 } __PACK__ qos_sched_t;
 
-typedef struct qos_uplink_cmap_s {
+typedef struct qos_cmap_s {
     uint32_t    dot1q_pcp;
     bool        ip_dscp[HAL_MAX_IP_DSCP_VALS];
-} __PACK__ qos_uplink_cmap_t;
+} __PACK__ qos_cmap_t;
 
 typedef struct qos_marking_action_s {
     bool     pcp_rewrite_en;     // Rewrite the 802.1q pcp value
@@ -132,7 +130,7 @@ typedef struct qos_class_s {
     qos_pfc_t            pfc;            // pfc configuration
     bool                 no_drop;        // No drop class
     qos_sched_t          sched;          // scheduler configuration
-    qos_uplink_cmap_t    uplink_cmap;    // Uplink class map
+    qos_cmap_t           cmap;    // Uplink class map
     qos_marking_action_t marking;
 
                                          // operational state of qos-class

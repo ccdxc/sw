@@ -2499,8 +2499,8 @@ public:
         spec = req_msg.add_request();
         spec->mutable_key_or_handle()->set_qos_group(static_cast<kh::QosGroup>(qos_group));
         spec->set_mtu(9216);
-        spec->mutable_uplink_class_map()->set_dot1q_pcp(pcp);
-        spec->mutable_uplink_class_map()->add_ip_dscp(dscp);
+        spec->mutable_class_map()->set_dot1q_pcp(pcp);
+        spec->mutable_class_map()->add_ip_dscp(dscp);
         if (strict) {
             spec->mutable_sched()->mutable_strict()->set_bps(rate_or_dwrr);
         } else {
