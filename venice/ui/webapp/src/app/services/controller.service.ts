@@ -17,7 +17,7 @@ import { Promise } from 'q';
 import { Subject, Subscription } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import { LogService } from '@app/services/logging/log.service';
-import { AUTH_KEY } from '@app/core/auth/auth.reducer';
+import { AUTH_KEY, AUTH_BODY } from '@app/core/auth/auth.reducer';
 
 interface Message {
   type: Eventtypes;
@@ -71,7 +71,7 @@ export class ControllerService {
   private _enableIdle = true;
   // time to idle before warning user of logout (in seconds)
   // default of 2 hours
-  private _idleTime = 60 * 60 * 2
+  private _idleTime = 60 * 60 * 2;
 
   constructor(
     private _router: Router,
@@ -160,14 +160,17 @@ export class ControllerService {
   }
 
   /**
-  * Getter LoginPatientInfo
+  * Getter LoginUser object
   */
   get LoginUserInfo(): {} {
+    if (!this._loginUserInfo) {
+      this._loginUserInfo = JSON.parse(sessionStorage.getItem(AUTH_BODY));
+    }
     return this._loginUserInfo;
   }
 
   /**
-   * Setter LoginPatientInfo
+   * Setter LoginUser
    */
   set LoginUserInfo(loginUserInfo: {}) {
     this._loginUserInfo = loginUserInfo;
