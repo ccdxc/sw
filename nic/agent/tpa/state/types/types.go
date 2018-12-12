@@ -64,6 +64,24 @@ type CollectorData struct {
 	PolicyNames map[string]bool
 }
 
+// CollectorTable is the object saved in db to track hal object
+type CollectorTable struct {
+	api.TypeMeta
+	api.ObjectMeta
+	// Collector table uses CollectorKey.string as key
+	Collector map[string]*CollectorData
+}
+
+// Marshal provides data marshalling before storing in emdb
+func (m *CollectorTable) Marshal() ([]byte, error) {
+	return json.Marshal(m)
+}
+
+// Unmarshal ro retrieve data frpom emdb
+func (m *CollectorTable) Unmarshal(data []byte) error {
+	return json.Unmarshal(data, m)
+}
+
 // FlowMonitorRuleKey is the rule key for hash tables
 type FlowMonitorRuleKey tstype.FlowMonitorRuleSpec
 
@@ -83,24 +101,6 @@ func ParseFlowMonitorRuleKey(buff string) FlowMonitorRuleKey {
 	return c
 }
 
-// CollectorTable is the object saved in db to track hal object
-type CollectorTable struct {
-	api.TypeMeta
-	api.ObjectMeta
-	// Collector table uses CollectorKey.string as key
-	Collector map[string]*CollectorData
-}
-
-// Marshal provides data marshalling before storing in emdb
-func (m *CollectorTable) Marshal() ([]byte, error) {
-	return json.Marshal(m)
-}
-
-// Unmarshal ro retrieve data frpom emdb
-func (m *CollectorTable) Unmarshal(data []byte) error {
-	return json.Unmarshal(data, m)
-}
-
 // FlowMonitorData is stored in flowmonitor hash table
 type FlowMonitorData struct {
 	// RuleID is the hal key
@@ -116,7 +116,7 @@ type FlowMonitorData struct {
 type FlowMonitorTable struct {
 	api.TypeMeta
 	api.ObjectMeta
-	// FlowRules contains list of rules & ID
+	// FlowRules contains all rules, key is FlowMonitorRuleKey.string()
 	FlowRules map[string]*FlowMonitorData
 }
 

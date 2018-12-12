@@ -14,6 +14,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pensando/sw/venice/globals"
+
 	"github.com/gorilla/mux"
 
 	"github.com/pensando/sw/api"
@@ -102,12 +104,16 @@ func (s *PolicyState) Close() {
 }
 
 func (s *PolicyState) validateMeta(p *tpmprotos.FlowExportPolicy) error {
-	if p.Name == "" || p.Kind == "" {
+	if len(strings.TrimSpace(p.Name)) == 0 || len(strings.TrimSpace(p.Kind)) == 0 {
 		return fmt.Errorf("name/kind can't be empty")
 	}
 
+	if p.Tenant == "" {
+		p.Tenant = globals.DefaultTenant
+	}
+
 	if p.Namespace == "" {
-		p.Namespace = "default"
+		p.Namespace = globals.DefaultNamespace
 	}
 	return nil
 }
@@ -308,7 +314,7 @@ func (p *policyDb) createCollectorPolicy(ctx context.Context) (err error) {
 					if len(cdata.PolicyNames) == 0 { // no one is using it
 						log.Infof("removing collector {%+v}", ckey)
 						p.deleteCollectorPolicy(ctx, cdata.CollectorID)
-						p.writecollectorTable()
+						p.writeCollectorTable()
 					}
 				}
 			}
@@ -398,7 +404,7 @@ func (p *policyDb) createCollectorPolicy(ctx context.Context) (err error) {
 				getObjMetaKey(&p.objMeta): true,
 			},
 		}
-		p.writecollectorTable()
+		p.writeCollectorTable()
 	}
 
 	return nil
@@ -408,6 +414,7 @@ func (p *policyDb) createCollectorPolicy(ctx context.Context) (err error) {
 func (p *policyDb) deleteCollectorPolicy(ctx context.Context, key uint64) error {
 	log.Infof("delete collector id: %+v", key)
 
+	// ignore invalid key
 	if key == 0 {
 		return nil
 	}
@@ -441,6 +448,7 @@ func (p *policyDb) deleteCollectorPolicy(ctx context.Context, key uint64) error 
 func (p *policyDb) deleteFlowMonitorRule(ctx context.Context, ruleID uint64) error {
 	log.Infof("delete flow monitor rule: %+v", ruleID)
 
+	// ignore invalid key
 	if ruleID == 0 {
 		return nil
 	}
@@ -594,7 +602,7 @@ func (p *policyDb) createHalFlowMonitorRule(ctx context.Context, ruleKey types.F
 	}
 
 	// save
-	p.writecollectorTable()
+	p.writeCollectorTable()
 	p.writeFlowMonitorTable()
 	return nil
 
@@ -653,7 +661,7 @@ func (p *policyDb) createFlowMonitorRule(ctx context.Context) (err error) {
 	defer func() {
 		if err != nil {
 			p.cleanupTables(ctx, false)
-			p.writecollectorTable()
+			p.writeCollectorTable()
 			p.writeFlowMonitorTable()
 		}
 	}()
@@ -736,7 +744,7 @@ func (p *policyDb) readCollectorTable() (*types.CollectorTable, error) {
 	return dbObj, nil
 }
 
-func (p *policyDb) writecollectorTable() (err error) {
+func (p *policyDb) writeCollectorTable() (err error) {
 	if err := p.state.store.Write(p.collectorTable); err != nil {
 		return fmt.Errorf("failed to write  collector object in db, %s", err)
 	}
@@ -941,7 +949,7 @@ func (s *PolicyState) DeleteFlowExportPolicy(ctx context.Context, p *tpmprotos.F
 	}
 
 	polCtx.cleanupTables(ctx, true)
-	polCtx.writecollectorTable()
+	polCtx.writeCollectorTable()
 	polCtx.writeFlowMonitorTable()
 
 	err = s.store.Delete(&types.FlowExportPolicyTable{
@@ -949,7 +957,7 @@ func (s *PolicyState) DeleteFlowExportPolicy(ctx context.Context, p *tpmprotos.F
 			TypeMeta:   p.TypeMeta,
 			ObjectMeta: p.ObjectMeta,
 		}})
-	return nil
+	return err
 }
 
 type debugPolicy struct {
@@ -1110,7 +1118,6 @@ func (s *PolicyState) GetFlowExportPolicy(tx context.Context, p *tpmprotos.FlowE
 func (s *PolicyState) ListFlowExportPolicy(tx context.Context) ([]*tpmprotos.FlowExportPolicy, error) {
 	log.Infof("LIST:")
 
-	// todo: fix
 	s.Lock()
 	defer s.Unlock()
 
