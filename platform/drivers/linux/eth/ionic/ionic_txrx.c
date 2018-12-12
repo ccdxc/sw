@@ -1,20 +1,5 @@
-/*
- * Copyright 2017-2018 Pensando Systems, Inc.  All rights reserved.
- *
- * This program is free software; you may redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; version 2 of the License.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
- * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
- */
+// SPDX-License-Identifier: GPL-2.0
+/* Copyright(c) 2017 - 2019 Pensando Systems, Inc */
 
 #include <linux/ip.h>
 #include <linux/ipv6.h>
@@ -68,13 +53,15 @@ static bool ionic_rx_copybreak(struct queue *q, struct desc_info *desc_info,
 #define IONIC_RX_COPYBREAK_DEFAULT		256
 
 	if (comp->len > IONIC_RX_COPYBREAK_DEFAULT) {
-		dma_unmap_single(dev, (dma_addr_t)desc->addr, desc->len, DMA_FROM_DEVICE);
+		dma_unmap_single(dev, (dma_addr_t)desc->addr,
+				 desc->len, DMA_FROM_DEVICE);
 		return false;
 	}
 
 	new_skb = netdev_alloc_skb_ip_align(netdev, comp->len);
 	if (!new_skb) {
-		dma_unmap_single(dev, (dma_addr_t)desc->addr, desc->len, DMA_FROM_DEVICE);
+		dma_unmap_single(dev, (dma_addr_t)desc->addr,
+				 desc->len, DMA_FROM_DEVICE);
 		return false;
 	}
 
@@ -110,7 +97,7 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 
 #ifdef CSUM_DEBUG
 	if (comp->len > netdev->mtu + VLAN_ETH_HLEN) {
-		printk(KERN_ERR "RX PKT TOO LARGE!  comp->len %d\n", comp->len);
+		pr_err("RX PKT TOO LARGE!  comp->len %d\n", comp->len);
 		ionic_rx_recycle(q, desc_info, skb);
 		return;
 	}
@@ -154,7 +141,8 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 		stats->csum_complete++;
 #ifdef CSUM_DEBUG
 		if (skb->csum != (u16)~csum)
-			printk(KERN_ERR "Rx CSUM incorrect.  Want 0x%04x got 0x%04x, protocol 0x%04x\n", (u16)~csum, skb->csum, htons(skb->protocol));
+			pr_err("Rx CSUM incorrect.  Want 0x%04x got 0x%04x, protocol 0x%04x\n",
+			       (u16)~csum, skb->csum, htons(skb->protocol));
 #endif
 	} else {
 		stats->csum_none++;
@@ -755,7 +743,6 @@ netdev_tx_t ionic_start_xmit(struct sk_buff *skb, struct net_device *netdev)
 		stats->stop++;
 
 		/* Might race with ionic_tx_clean, check again */
-
 		smp_rmb();
 		if (ionic_q_has_space(q, ndescs)) {
 			netif_wake_subqueue(netdev, queue_index);

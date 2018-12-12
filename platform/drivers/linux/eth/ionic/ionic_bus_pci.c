@@ -1,20 +1,5 @@
-/*
- * Copyright 2017-2018 Pensando Systems, Inc.  All rights reserved.
- *
- * This program is free software; you may redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; version 2 of the License.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
- * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
- */
+// SPDX-License-Identifier: GPL-2.0
+/* Copyright(c) 2017 - 2019 Pensando Systems, Inc */
 
 #include <linux/module.h>
 #include <linux/netdevice.h>
@@ -80,7 +65,9 @@ static int ionic_map_bars(struct ionic *ionic)
 		} else {
 			bars[j].vaddr = pci_iomap(pdev, i, bars[j].len);
 			if (!bars[j].vaddr) {
-				dev_err(dev, "Cannot memory-map BAR %d, aborting\n", j);
+				dev_err(dev,
+					"Cannot memory-map BAR %d, aborting\n",
+					i);
 				return -ENODEV;
 			}
 		}
@@ -136,7 +123,8 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 	pci_set_drvdata(pdev, ionic);
 	ionic->dev = dev;
 
-	ionic->is_mgmt_nic = ent->device == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_MGMT;
+	ionic->is_mgmt_nic =
+		ent->device == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_MGMT;
 
 	err = ionic_set_dma_mask(ionic);
 	if (err) {

@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-2.0
+# Copyright(c) 2017 - 2019 Pensando Systems, Inc
+
 obj-$(CONFIG_IONIC) := ionic.o
 obj-$(CONFIG_IONIC_MNIC) := ionic_mnic.o
 

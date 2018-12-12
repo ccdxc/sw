@@ -1,20 +1,5 @@
-/*
- * Copyright 2017-2018 Pensando Systems, Inc.  All rights reserved.
- *
- * This program is free software; you may redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; version 2 of the License.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
- * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
- */
+// SPDX-License-Identifier: GPL-2.0
+/* Copyright(c) 2017 - 2019 Pensando Systems, Inc */
 
 #include <linux/kernel.h>
 #include <linux/types.h>
@@ -45,8 +30,7 @@ int ionic_dev_setup(struct ionic_dev *idev, struct ionic_dev_bar bars[],
 	struct ionic_dev_bar *bar = &bars[0];
 	u32 sig;
 
-	/* BAR0 resources
-	 */
+	/* BAR0 resources */
 
 	if (num_bars < 1 || bar->len != BAR0_SIZE)
 		return -EFAULT;
@@ -63,8 +47,7 @@ int ionic_dev_setup(struct ionic_dev *idev, struct ionic_dev_bar bars[],
 	if (sig != DEV_CMD_SIGNATURE)
 		return -EFAULT;
 
-	/* BAR1 resources
-	 */
+	/* BAR1 resources */
 
 	bar++;
 	if (num_bars < 2)
@@ -73,8 +56,7 @@ int ionic_dev_setup(struct ionic_dev *idev, struct ionic_dev_bar bars[],
 	idev->db_pages = bar->vaddr;
 	idev->phy_db_pages = bar->bus_addr;
 
-	/* BAR2 resources
-	*/
+	/* BAR2 resources */
 
 	mutex_init(&idev->cmb_inuse_lock);
 

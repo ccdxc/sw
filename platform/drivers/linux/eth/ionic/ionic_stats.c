@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0
+/* Copyright(c) 2017 - 2019 Pensando Systems, Inc */
 
 #include <linux/kernel.h>
 #include <linux/mutex.h>
@@ -117,6 +119,7 @@ static u64 ionic_sw_stats_get_count(struct lif *lif)
 static void ionic_sw_stats_get_strings(struct lif *lif, u8 **buf)
 {
 	int i, q_num;
+
 	for (i = 0; i < IONIC_NUM_LIF_STATS; i++) {
 		snprintf(*buf, ETH_GSTRING_LEN,
 			   ionic_lif_stats_desc[i].name);
@@ -182,28 +185,30 @@ static void ionic_sw_stats_get_strings(struct lif *lif, u8 **buf)
 #ifdef IONIC_DEBUG_STATS
 		if (lif->flags & LIF_F_SW_DBG_STATS) {
 			for (i = 0; i < IONIC_NUM_DBG_CQ_STATS; i++) {
-				snprintf(*buf, ETH_GSTRING_LEN, "rxq_%d_cq_%s",
-					   q_num,
-					   ionic_dbg_cq_stats_desc[i].name);
+				snprintf(*buf, ETH_GSTRING_LEN,
+					 "rxq_%d_cq_%s",
+					 q_num,
+					 ionic_dbg_cq_stats_desc[i].name);
 				*buf += ETH_GSTRING_LEN;
 			}
 			for (i = 0; i < IONIC_NUM_DBG_INTR_STATS; i++) {
-				snprintf(*buf, ETH_GSTRING_LEN, "rxq_%d_intr_%s",
-					   q_num,
-					   ionic_dbg_intr_stats_desc[i].name);
+				snprintf(*buf, ETH_GSTRING_LEN,
+					 "rxq_%d_intr_%s",
+					 q_num,
+					 ionic_dbg_intr_stats_desc[i].name);
 				*buf += ETH_GSTRING_LEN;
 			}
 			for (i = 0; i < IONIC_NUM_DBG_NAPI_STATS; i++) {
-				snprintf(*buf, ETH_GSTRING_LEN, "rxq_%d_napi_%s",
-					   q_num,
-					   ionic_dbg_napi_stats_desc[i].name);
+				snprintf(*buf, ETH_GSTRING_LEN,
+					 "rxq_%d_napi_%s",
+					 q_num,
+					 ionic_dbg_napi_stats_desc[i].name);
 				*buf += ETH_GSTRING_LEN;
 			}
 			for (i = 0; i < MAX_NUM_NAPI_CNTR; i++) {
 				snprintf(*buf, ETH_GSTRING_LEN,
-					   "rxq_%d_napi_work_done_%d",
-					   q_num,
-					   i);
+					 "rxq_%d_napi_work_done_%d",
+					 q_num, i);
 				*buf += ETH_GSTRING_LEN;
 			}
 		}

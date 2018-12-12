@@ -1,20 +1,5 @@
-/*
- * Copyright 2017-2018 Pensando Systems, Inc.  All rights reserved.
- *
- * This program is free software; you may redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; version 2 of the License.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
- * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
- */
+// SPDX-License-Identifier: GPL-2.0
+/* Copyright(c) 2017 - 2019 Pensando Systems, Inc */
 
 #include <linux/netdevice.h>
 #include <linux/etherdevice.h>
@@ -646,7 +631,7 @@ static int ionic_qcq_alloc(struct lif *lif, unsigned int index,
 		err = ionic_intr_alloc(lif, &new->intr);
 		if (err)
 			return err;
-		
+
 		err = ionic_bus_get_irq(lif->ionic, new->intr.index);
 		if (err < 0)
 			goto err_out_free_intr;
@@ -1274,9 +1259,9 @@ static int ionic_lif_txq_init(struct lif *lif, struct qcq *qcq)
 	dev_dbg(dev, "txq_init.pid %d\n", ctx.cmd.txq_init.pid);
 	dev_dbg(dev, "txq_init.index %d\n", ctx.cmd.txq_init.index);
 	dev_dbg(dev, "txq_init.ring_base 0x%llx\n",
-	           ctx.cmd.txq_init.ring_base);
+		ctx.cmd.txq_init.ring_base);
 	dev_dbg(dev, "txq_init.ring_size %d\n",
-		   ctx.cmd.txq_init.ring_size);
+		ctx.cmd.txq_init.ring_size);
 
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
@@ -1570,7 +1555,7 @@ static int ionic_lif_changeupper(struct ionic *ionic, struct lif *lif,
 }
 
 static int ionic_lif_changelowerstate(struct ionic *ionic, struct lif *lif,
-				      struct netdev_notifier_changelowerstate_info *info)
+			    struct netdev_notifier_changelowerstate_info *info)
 {
 	struct netdev_lag_lower_state_info *lower_info;
 

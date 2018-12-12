@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0
+/* Copyright(c) 2017 - 2019 Pensando Systems, Inc */
+
 #include <linux/kernel.h>
 
 #include "ionic.h"
@@ -107,7 +110,8 @@ void ionic_api_put_intr(struct lif *lif, int intr)
 }
 EXPORT_SYMBOL_GPL(ionic_api_put_intr);
 
-int ionic_api_get_cmb(struct lif *lif, u32 *pgid, phys_addr_t *pgaddr, int order)
+int ionic_api_get_cmb(struct lif *lif, u32 *pgid,
+		      phys_addr_t *pgaddr, int order)
 {
 	struct ionic_dev *idev = &lif->ionic->idev;
 	int ret;
