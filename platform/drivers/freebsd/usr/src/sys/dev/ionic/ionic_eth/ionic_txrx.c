@@ -1811,7 +1811,7 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 	case SIOCSIFCAP:
 	{
 		int mask = ifr->ifr_reqcap ^ ifp->if_capenable;
-		bool reinit = true;
+
 		IONIC_NETDEV_INFO(ifp, "Required: 0x%x enabled: 0x%x\n",
 			ifr->ifr_reqcap, ifp->if_capenable);
 		if (!mask) {
@@ -1846,8 +1846,6 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 		}
 
 		if (mask & IFCAP_LRO) {
-			/* For s/w LRO, no need to reinit. */
-			reinit = false;
 			ifp->if_capenable ^= IFCAP_LRO;
 		}
 
@@ -1865,26 +1863,16 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 			/* XXX: hw feature?? */
 		}
 
-		if (reinit == false)
-			break;
-
 		IONIC_CORE_LOCK(lif);
 		error = ionic_set_hw_feature(lif, hw_features);
 
 		if (error) {				
-			IONIC_NETDEV_ERROR(lif->netdev, 
-				"Failed to set capbilities, err: %d\n\n", error);
+			IONIC_NETDEV_ERROR(lif->netdev, "Failed to set capbilities, err: %d\n\n",
+				error);
 			IONIC_CORE_UNLOCK(lif);
 			break;
 		}
 		
-		if (ifp->if_drv_flags & IFF_DRV_RUNNING) {
-			IONIC_NETDEV_INFO(lif->netdev, "Updating features 0x%x -> 0x%x\n",
-				lif->hw_features, hw_features);
-			ionic_stop(ifp);		
-			ionic_reinit(ifp);
-		}
-
 		IONIC_CORE_UNLOCK(lif);
 		VLAN_CAPABILITIES(ifp);
 		break;
@@ -1909,8 +1897,8 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 		break;
 
 	default:
-			error = ether_ioctl(ifp, command, data);
-			break;
+		error = ether_ioctl(ifp, command, data);
+		break;
 	}
 
 	return (error);
