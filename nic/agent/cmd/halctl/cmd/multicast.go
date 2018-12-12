@@ -107,7 +107,7 @@ func multicastShowSpecCmdHandler(cmd *cobra.Command, args []string) {
 				fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 				continue
 			}
-			multicastShowOifList(resp)
+			multicastShowOifList(resp.GetStatus().GetOifList())
 		}
 	} else {
 		// Print Header
@@ -253,10 +253,9 @@ func multicastShowOifListHeader(cmd *cobra.Command, args []string) {
 	fmt.Println(hdrLine)
 }
 
-func multicastShowOifList(resp *halproto.MulticastEntryGetResponse) {
+func multicastShowOifList(oifList *halproto.OifList) {
 
 	honorStr := ""
-	oifList := resp.GetStatus().GetOifList()
 
 	if oifList.GetIsHonorIngress() {
 		honorStr = "Yes"
