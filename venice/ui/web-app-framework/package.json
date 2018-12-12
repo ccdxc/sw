@@ -11,7 +11,8 @@
     "e2e": "ng e2e",
     "packagr": "ng-packagr -p ng-package.json",
     "bundle-styles": "scss-bundle -c scss-bundle.config.json",
-    "pack": "npm run packagr && npm run bundle-styles && cd dist && npm pack . && cd .."
+    "pack": "npm run packagr && npm run bundle-styles && cd dist && npm pack . && cd ..",
+    "replaceShrinkwrap": "sed -i.bak 's/http:/https:/g' npm-shrinkwrap.json && rm npm-shrinkwrap.json.bak"
   },
   "private": true,
   "dependencies": {

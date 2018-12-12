@@ -16,7 +16,8 @@
     "rimraf": "^2.6.2"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "replaceShrinkwrap": "sed -i.bak 's/http:/https:/g' npm-shrinkwrap.json && rm npm-shrinkwrap.json.bak"
   },
   "keywords": [],
   "author": "",

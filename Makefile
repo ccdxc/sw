@@ -417,10 +417,10 @@ e2e-iota: e2e-naples e2e-venice
 
 ui-framework:
 	npm version;
-	cd venice/ui/web-app-framework && npm run pack
+	cd venice/ui/web-app-framework && npm run replaceShrinkwrap && npm run pack
 
 ui-venice-sdk:
-	cd venice/ui/venice-sdk && npm install --prefer-cache pensando-swagger-ts-generator-1.1.29.tgz
+	cd venice/ui/venice-sdk && npm install --prefer-cache pensando-swagger-ts-generator-1.1.29.tgz && npm run replaceShrinkwrap
 	cd venice/ui/venice-sdk && node swaggerGen.js
 
 ui:
