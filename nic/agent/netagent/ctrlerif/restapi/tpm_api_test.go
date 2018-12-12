@@ -75,6 +75,20 @@ func TestFlowExportPolicyDelete(t *testing.T) {
 			Name:      "testDeleteFlowExportPolicy",
 		},
 		Spec: tpmprotos.FlowExportPolicySpec{
+			MatchRules: []tsproto.MatchRule{
+				{
+					Src: &tsproto.MatchSelector{
+						IPAddresses: []string{"1.1.1.1"},
+					},
+					Dst: &tsproto.MatchSelector{
+						IPAddresses: []string{"1.1.1.2"},
+					},
+					AppProtoSel: &tsproto.AppProtoSelector{
+						Ports: []string{"TCP/1000"},
+					},
+				},
+			},
+
 			Interval: "15s",
 			Format:   "IPFIX",
 			Exports: []monitoring.ExportConfig{

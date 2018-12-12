@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/pensando/sw/api/generated/monitoring"
 	tpmProtos "github.com/pensando/sw/venice/ctrler/tpm/rpcserver/protos"
@@ -385,15 +386,15 @@ func TestWatchFlowExportPolicy(t *testing.T) {
 	cancel()
 }
 
-func TestFlowExportError(t *testing.T) {
+func TestRpcError(t *testing.T) {
 	sp := map[string]*monitoring.StatsPolicy{
 		"fwlog-1": {
 			TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: "exp-1"},
 		},
 		"fwlog-2": {
-			TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
-			ObjectMeta: api.ObjectMeta{Name: "exp-2"},
+			TypeMeta:   api.TypeMeta{Kind: "FwlogPolicy"},
+			ObjectMeta: api.ObjectMeta{Name: "fwlog-1"},
 		},
 	}
 	policyDb := memdb.NewMemdb()
@@ -406,6 +407,9 @@ func TestFlowExportError(t *testing.T) {
 	tu.AssertOk(t, err, "failed to create rpc server")
 	defer f.Stop()
 
+	u := f.GetListenURL()
+	tu.Assert(t, len(u) != 0, "invalid server URL", u)
+
 	tu.Assert(t, defaultCollectInterval == f.collectionInterval.Load().(string),
 		fmt.Sprintf("interval [%v] didn't match in policy, {%s} ", f.collectionInterval.Load(),
 			defaultCollectInterval))
@@ -415,9 +419,41 @@ func TestFlowExportError(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	client := tpmProtos.NewFlowExportPolicyApiClient(grpc.ClientConn)
-	evWatch, err := client.WatchFlowExportPolicy(ctx, &api.ObjectMeta{Name: "client-1"})
-	tu.AssertOk(t, err, "failed to watch export policy")
-	_, err = evWatch.Recv()
-	tu.Assert(t, err != nil, "failed to test invalid policy")
+
+	if true {
+		client := tpmProtos.NewFlowExportPolicyApiClient(grpc.ClientConn)
+		evWatch, err := client.WatchFlowExportPolicy(ctx, &api.ObjectMeta{Name: "client-1"})
+		tu.AssertOk(t, err, "failed to watch export policy")
+		_, err = evWatch.Recv()
+		tu.Assert(t, err != nil, "failed to test invalid policy")
+		evWatch.CloseSend()
+	}
+
+	if true {
+		client := tpmProtos.NewFwlogPolicyApiClient(grpc.ClientConn)
+		evWatch, err := client.WatchFwlogPolicy(ctx, &api.ObjectMeta{Name: "client-1"})
+		tu.AssertOk(t, err, "failed to watch fwlog policy")
+		_, err = evWatch.Recv()
+		tu.Assert(t, err != nil, "failed to test invalid policy")
+		evWatch.CloseSend()
+
+		for _, p := range sp {
+			err := policyDb.DeleteObject(p)
+			tu.AssertOk(t, err, "failed to delete policy")
+		}
+
+		go func() {
+			time.Sleep(time.Second)
+			for _, p := range sp {
+				policyDb.AddObject(p)
+			}
+		}()
+
+		client = tpmProtos.NewFwlogPolicyApiClient(grpc.ClientConn)
+		evWatch, err = client.WatchFwlogPolicy(ctx, &api.ObjectMeta{Name: "client-1"})
+		tu.AssertOk(t, err, "failed to watch fwlog policy")
+		_, err = evWatch.Recv()
+		tu.Assert(t, err != nil, "failed to test invalid policy")
+	}
+
 }

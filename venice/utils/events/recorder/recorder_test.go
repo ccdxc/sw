@@ -449,6 +449,10 @@ func TestRecorderFailedEventsForwarder(t *testing.T) {
 }
 
 func TestNewfile(t *testing.T) {
-	_, err := newFile("/xyz/abd", "tmpfile")
+	f, err := ioutil.TempFile("/tmp", "event")
+	AssertOk(t, err, "failed to create file")
+	defer os.Remove(f.Name())
+
+	_, err = newFile(f.Name(), "tmpfile")
 	Assert(t, err != nil, "test didn't fail for invalid dir")
 }

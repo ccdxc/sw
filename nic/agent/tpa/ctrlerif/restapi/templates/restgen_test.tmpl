@@ -81,6 +81,20 @@ import (
                                 Name: "test{{title .}}{{title $crudObject}}",
                             },
                              Spec:   tpmprotos.{{title $crudObject}}Spec{
+				MatchRules: []tsproto.MatchRule{
+                                                          {       
+                                                                Src: &tsproto.MatchSelector{
+                                                                          IPAddresses: []string{"1.1.1.1"},
+                                                                  },
+                                                                  Dst: &tsproto.MatchSelector{
+                                                                          IPAddresses: []string{"1.1.1.2"},
+                                                                  },
+                                                                  AppProtoSel: &tsproto.AppProtoSelector{
+                                                                          Ports: []string{"TCP/1000"},
+                                                                  },
+                                                          },
+                                     },
+
                                     Interval: "15s",
                                     Format:"IPFIX",
                                     Exports: []monitoring.ExportConfig{

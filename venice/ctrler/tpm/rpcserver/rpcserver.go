@@ -57,6 +57,7 @@ func (p *statsPolicyRPCServer) WatchStatsPolicy(in *api.ObjectMeta, out tpmProto
 	defer close(watchChan)
 
 	p.policyDb.WatchObjects("StatsPolicy", watchChan)
+	defer p.policyDb.StopWatchObjects("StatsPolicy", watchChan)
 
 	// track clients
 	peer := ctxutils.GetPeerAddress(ctx)
@@ -126,6 +127,7 @@ func (p *fwlogPolicyRPCServer) WatchFwlogPolicy(in *api.ObjectMeta, out tpmProto
 	defer close(watchChan)
 
 	p.policyDb.WatchObjects("FwlogPolicy", watchChan)
+	defer p.policyDb.StopWatchObjects("FwlogPolicy", watchChan)
 
 	ctx := out.Context()
 
@@ -201,6 +203,8 @@ func (p *flowExportPolicyRPCServer) WatchFlowExportPolicy(in *api.ObjectMeta, ou
 	defer close(watchChan)
 
 	p.policyDb.WatchObjects("FlowExportPolicy", watchChan)
+	defer p.policyDb.StopWatchObjects("FlowExportPolicy", watchChan)
+
 	ctx := out.Context()
 
 	// track clients
@@ -214,6 +218,7 @@ func (p *flowExportPolicyRPCServer) WatchFlowExportPolicy(in *api.ObjectMeta, ou
 	for _, obj := range p.policyDb.ListObjects("FlowExportPolicy") {
 
 		if _, ok := obj.(*apiProtos.FlowExportPolicy); !ok {
+			rpcLog.Errorf("invalid flow export policy from list, %T", obj)
 			return fmt.Errorf("invalid flow export policy from list")
 		}
 
