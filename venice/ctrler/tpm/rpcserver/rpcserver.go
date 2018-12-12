@@ -212,6 +212,11 @@ func (p *flowExportPolicyRPCServer) WatchFlowExportPolicy(in *api.ObjectMeta, ou
 
 	// send existing policy
 	for _, obj := range p.policyDb.ListObjects("FlowExportPolicy") {
+
+		if _, ok := obj.(*apiProtos.FlowExportPolicy); !ok {
+			return fmt.Errorf("invalid flow export policy from list")
+		}
+
 		p, err := json.Marshal(obj)
 		if err != nil {
 			rpcLog.Errorf("invalid flow export policy from list %+v", obj)
