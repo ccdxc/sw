@@ -31,8 +31,8 @@ func TestTableAPI(t *testing.T) {
 	defer table.Delete()
 
 	ts1 := time.Now()
-	table.Counter("rxpkts").Inc()
-	table.Counter("txpkts").Add(33)
+	table.Gauge("cpu_usage").Set(33, ts1)
+	table.Gauge("disk_usage").Set(45.1, ts1)
 
 	// verify metrics in tsdb
 	time.Sleep(50 * testSendInterval)
@@ -41,8 +41,8 @@ func TestTableAPI(t *testing.T) {
 		"name": t.Name(),
 	}
 	fields := map[string]interface{}{
-		"rxpkts": int64(1),
-		"txpkts": int64(33),
+		"cpu_usage":  float64(33),
+		"disk_usage": float64(45.1),
 	}
 	tt.AddRow(collectorinteg.InfluxTS(ts1, time.Millisecond), tags, fields)
 
