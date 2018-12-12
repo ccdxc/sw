@@ -23,7 +23,6 @@ import (
 	"github.com/pensando/sw/venice/ctrler/tpm/rpcserver/protos"
 	"github.com/pensando/sw/venice/ctrler/tsm/rpcserver/tsproto"
 	"github.com/pensando/sw/venice/utils/emstore"
-	"github.com/pensando/sw/venice/utils/log"
 	tu "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -989,13 +988,14 @@ func TestHalIPAddr(t *testing.T) {
 	tu.AssertOk(t, err, fmt.Sprintf("failed to parse ipv6"))
 }
 
-func TestCollectorDebug(t *testing.T) {
+func TestTpaDebug(t *testing.T) {
 	c := gomock.NewController(t)
 	defer c.Finish()
 	halMock := halproto.NewMockTelemetryClient(c)
 
 	ds, err := createDataStore()
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create database"))
+	defer ds.Close()
 
 	na := &agstate.Nagent{
 		TenantDB:    map[string]*netproto.Tenant{},
@@ -1011,15 +1011,16 @@ func TestCollectorDebug(t *testing.T) {
 
 	defer cleanup(t, s)
 
-	pol := &tpmprotos.FlowExportPolicy{
+	pol1 := &tpmprotos.FlowExportPolicy{
 		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
-		ObjectMeta: api.ObjectMeta{Name: "flowexport", Tenant: "default", Namespace: "default"},
+		ObjectMeta: api.ObjectMeta{Name: "flowexport1", Tenant: "default", Namespace: "default"},
 
 		Spec: tpmprotos.FlowExportPolicySpec{
 			MatchRules: []tsproto.MatchRule{
 				{
 					Src: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.1.1"},
+						IPAddresses:  []string{"1.1.1.1"},
+						MACAddresses: []string{"00:a0:f8:02:03:04"},
 					},
 					Dst: &tsproto.MatchSelector{
 						IPAddresses: []string{"1.1.1.2"},
@@ -1030,13 +1031,13 @@ func TestCollectorDebug(t *testing.T) {
 				},
 				{
 					Src: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.2.1"},
+						MACAddresses: []string{"00:a0:f8:02:03:04"},
 					},
 					Dst: &tsproto.MatchSelector{
-						IPAddresses: []string{"1.1.2.2"},
+						MACAddresses: []string{"00:a0:f8:02:03:05"},
 					},
 					AppProtoSel: &tsproto.AppProtoSelector{
-						Ports: []string{"TCP/1010"},
+						Ports: []string{"TCP/1000"},
 					},
 				},
 			},
@@ -1054,7 +1055,6 @@ func TestCollectorDebug(t *testing.T) {
 			},
 		},
 	}
-
 	key := na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "default"}, api.TypeMeta{Kind: "tenant"})
 	na.TenantDB[key] = &netproto.Tenant{
 		ObjectMeta: api.ObjectMeta{Tenant: "default"},
@@ -1126,10 +1126,10 @@ func TestCollectorDebug(t *testing.T) {
 		},
 	}
 
-	halMock.EXPECT().CollectorCreate(gomock.Any(), gomock.Any()).Return(collResp, nil).AnyTimes()
-	halMock.EXPECT().FlowMonitorRuleCreate(gomock.Any(), gomock.Any()).Return(flowResp, nil).AnyTimes()
+	halMock.EXPECT().CollectorCreate(gomock.Any(), gomock.Any()).Return(collResp, nil).Times(2)
+	halMock.EXPECT().FlowMonitorRuleCreate(gomock.Any(), gomock.Any()).Return(flowResp, nil).Times(2)
 
-	err = s.CreateFlowExportPolicy(context.Background(), pol)
+	err = s.CreateFlowExportPolicy(context.Background(), pol1)
 	tu.AssertOk(t, err, "failed to create policy")
 
 	resp := httptest.NewRecorder()
@@ -1141,28 +1141,278 @@ func TestCollectorDebug(t *testing.T) {
 	err = json.Unmarshal(b, dbgInfo)
 	tu.AssertOk(t, err, "failed to unmarshal debug")
 
-	pdebug := dbgInfo.Policy[fmt.Sprintf("%s/%s/%s", pol.Tenant, pol.Namespace, pol.Name)]
+	pdebug := dbgInfo.Policy[fmt.Sprintf("%s/%s/%s", pol1.Tenant, pol1.Namespace, pol1.Name)]
 	tu.Assert(t, pdebug.FlowExportPolicy != nil, "failed to find policy")
 	tu.Assert(t, len(pdebug.Collectors) == 2, "mismatch in collectors", pdebug.Collectors)
 	tu.Assert(t, len(dbgInfo.CollectorTable) == 2, "invalid collectors", dbgInfo.CollectorTable)
+	tu.Assert(t, len(dbgInfo.FlowRuleTable) == 2, "invalid num of flows", dbgInfo.FlowRuleTable)
+}
 
-	// update name
-	pol.Name = "flowexport-1"
+func TestPolicyOps(t *testing.T) {
+	c := gomock.NewController(t)
+	defer c.Finish()
+	halMock := halproto.NewMockTelemetryClient(c)
+
+	ds, err := createDataStore()
+	tu.AssertOk(t, err, fmt.Sprintf("failed to create database"))
+
+	na := &agstate.Nagent{
+		TenantDB:    map[string]*netproto.Tenant{},
+		NetworkDB:   map[string]*netproto.Network{},
+		EndpointDB:  map[string]*netproto.Endpoint{},
+		NamespaceDB: map[string]*netproto.Namespace{},
+		Solver:      dependencies.NewDepSolver(),
+		Store:       ds,
+	}
+
+	key := na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "default"}, api.TypeMeta{Kind: "tenant"})
+	na.TenantDB[key] = &netproto.Tenant{
+		ObjectMeta: api.ObjectMeta{Tenant: "default"},
+		Spec:       netproto.TenantSpec{Meta: &api.ObjectMeta{Tenant: "default"}},
+		Status: netproto.TenantStatus{
+			TenantID: uint64(501),
+		},
+	}
+
+	key = na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Name: "default"}, api.TypeMeta{Kind: "namespace"})
+	na.NamespaceDB[key] = &netproto.Namespace{
+		ObjectMeta: api.ObjectMeta{Tenant: "default"},
+		Spec:       netproto.NamespaceSpec{},
+		Status: netproto.NamespaceStatus{
+			NamespaceID: uint64(501),
+		},
+	}
+
+	key = na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "default"}, api.TypeMeta{Kind: "network"})
+	na.NetworkDB[key] = &netproto.Network{
+		ObjectMeta: api.ObjectMeta{Name: "default", Namespace: "default", Tenant: "default"},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet: "",
+		},
+		Status: netproto.NetworkStatus{
+			NetworkID: uint64(101),
+		},
+	}
+
+	for i := 0; i < maxFlowExportCollectors; i++ {
+		name := fmt.Sprintf("ep%d", i+1)
+		addr := fmt.Sprintf("192.168.3.%d/32", 10+i)
+		key = na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: name}, api.TypeMeta{Kind: "endpoint"})
+		na.EndpointDB[key] = &netproto.Endpoint{
+			ObjectMeta: api.ObjectMeta{Name: "ep1", Namespace: "default", Tenant: "default"},
+			Spec: netproto.EndpointSpec{
+				NetworkName: "default",
+				IPv4Address: addr,
+			},
+			Status: netproto.EndpointStatus{},
+		}
+	}
+
+	s, err := NewTpAgent(na, halMock, dbgSock)
+	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
+
+	defer cleanup(t, s)
+
+	collResp := &halproto.CollectorResponseMsg{
+		Response: []*halproto.CollectorResponse{
+			{
+				ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+				Status: &halproto.CollectorStatus{
+					Handle: uint64(105),
+				},
+			},
+		},
+	}
+
+	flowResp := &halproto.FlowMonitorRuleResponseMsg{
+		Response: []*halproto.FlowMonitorRuleResponse{
+			{
+				ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+				Status: &halproto.FlowMonitorRuleStatus{
+					Handle: uint64(105),
+				},
+			},
+		},
+	}
+
+	pol := &tpmprotos.FlowExportPolicy{
+		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
+		ObjectMeta: api.ObjectMeta{Name: "matchrule-1", Tenant: "default", Namespace: "default"},
+
+		Spec: tpmprotos.FlowExportPolicySpec{
+			Interval: "15s",
+			Format:   "IPFIX",
+			MatchRules: []tsproto.MatchRule{
+				{
+					Src: &tsproto.MatchSelector{
+						IPAddresses: []string{"192.168.100.1", "192.168.100.2", "192.168.100.3"},
+					},
+					Dst: &tsproto.MatchSelector{
+						IPAddresses: []string{"192.168.200.1", "192.168.200.2", "192.168.200.3"},
+					},
+					AppProtoSel: &tsproto.AppProtoSelector{
+						Ports: []string{"tcp/5001"},
+					},
+				},
+			},
+			Exports: []monitoring.ExportConfig{
+				{
+					Destination: fmt.Sprintf("192.168.3.11"),
+					Transport:   "UDP/1234",
+				},
+				{
+					Destination: fmt.Sprintf("192.168.3.12"),
+					Transport:   "UDP/1234",
+				},
+				{
+					Destination: fmt.Sprintf("192.168.3.13"),
+					Transport:   "UDP/1234",
+				},
+				{
+					Destination: fmt.Sprintf("192.168.3.14"),
+					Transport:   "UDP/1234",
+				},
+			},
+		},
+	}
+
+	halMock.EXPECT().CollectorCreate(gomock.Any(), gomock.Any()).Return(collResp, nil).Times(4)
+	halMock.EXPECT().FlowMonitorRuleCreate(gomock.Any(), gomock.Any()).Return(flowResp, nil).Times(9)
+
 	err = s.CreateFlowExportPolicy(context.Background(), pol)
-	tu.AssertOk(t, err, "failed to create policy")
+	tu.AssertOk(t, err, fmt.Sprintf("failed to create export policy %+v", pol))
 
-	s.debug(resp, nil)
-	b, err = ioutil.ReadAll(resp.Body)
-	tu.AssertOk(t, err, "failed to read debug")
-	dbgInfo = &debugInfo{}
-	err = json.Unmarshal(b, dbgInfo)
-	tu.AssertOk(t, err, "failed to unmarshal debug")
+	collDelResp := &halproto.CollectorDeleteResponseMsg{
+		Response: []*halproto.CollectorDeleteResponse{
+			{
+				ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+			},
+		},
+	}
 
-	pdebug = dbgInfo.Policy[fmt.Sprintf("%s/%s/%s", pol.Tenant, pol.Namespace, pol.Name)]
-	tu.Assert(t, pdebug.FlowExportPolicy != nil, "failed to find policy")
-	tu.Assert(t, len(pdebug.Collectors) == 2, "failed to find collectors", pdebug.Collectors)
-	tu.Assert(t, len(dbgInfo.CollectorTable) == 2, "invalid collectors", dbgInfo.CollectorTable)
-	log.Infof("+++%v", dbgInfo.CollectorTable)
-	log.Infof("+++%v", string(b))
+	flowDelResp := &halproto.FlowMonitorRuleDeleteResponseMsg{
+		Response: []*halproto.FlowMonitorRuleDeleteResponse{
+			{
+				ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+			},
+		},
+	}
 
+	halMock.EXPECT().CollectorDelete(gomock.Any(), gomock.Any()).Return(collDelResp, nil).Times(4)
+	halMock.EXPECT().FlowMonitorRuleDelete(gomock.Any(), gomock.Any()).Return(flowDelResp, nil).Times(9)
+
+	err = s.DeleteFlowExportPolicy(context.Background(), pol)
+	tu.AssertOk(t, err, fmt.Sprintf("failed to delete export policy %+v", pol))
+
+	// delete again
+	err = s.DeleteFlowExportPolicy(context.Background(), pol)
+	tu.Assert(t, err != nil, "deleted non-existing policy")
+
+	// rule overlap
+	halMock.EXPECT().CollectorCreate(gomock.Any(), gomock.Any()).Return(collResp, nil).Times(4)
+	halMock.EXPECT().FlowMonitorRuleCreate(gomock.Any(), gomock.Any()).Return(flowResp, nil).Times(9)
+
+	err = s.CreateFlowExportPolicy(context.Background(), pol)
+	tu.AssertOk(t, err, fmt.Sprintf("failed to create export policy %+v", pol))
+
+	dup := &tpmprotos.FlowExportPolicy{
+		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
+		ObjectMeta: api.ObjectMeta{Name: "matchrule-overlap", Tenant: "default", Namespace: "default"},
+
+		Spec: tpmprotos.FlowExportPolicySpec{
+			Interval: "15s",
+			Format:   "IPFIX",
+			MatchRules: []tsproto.MatchRule{
+				{
+					Src: &tsproto.MatchSelector{
+						IPAddresses: []string{"192.168.100.1", "192.168.100.2", "192.168.100.3"},
+					},
+					Dst: &tsproto.MatchSelector{
+						IPAddresses: []string{"192.168.200.1", "192.168.200.2", "192.168.200.3"},
+					},
+					AppProtoSel: &tsproto.AppProtoSelector{
+						Ports: []string{"tcp/5001"},
+					},
+				},
+			},
+			Exports: []monitoring.ExportConfig{
+				{
+					Destination: fmt.Sprintf("192.168.3.11"),
+					Transport:   "UDP/1234",
+				},
+				{
+					Destination: fmt.Sprintf("192.168.3.12"),
+					Transport:   "UDP/1234",
+				},
+				{
+					Destination: fmt.Sprintf("192.168.3.13"),
+					Transport:   "UDP/1234",
+				},
+				{
+					Destination: fmt.Sprintf("192.168.3.14"),
+					Transport:   "UDP/1234",
+				},
+			},
+		},
+	}
+
+	halMock.EXPECT().FlowMonitorRuleDelete(gomock.Any(), gomock.Any()).Return(nil, nil).Times(9)
+	halMock.EXPECT().FlowMonitorRuleCreate(gomock.Any(), gomock.Any()).Return(flowResp, nil).Times(9)
+
+	err = s.CreateFlowExportPolicy(context.Background(), dup)
+	tu.AssertOk(t, err, fmt.Sprintf("failed to create export policy %+v", dup))
+
+	// delete, results in update
+	halMock.EXPECT().FlowMonitorRuleDelete(gomock.Any(), gomock.Any()).Return(nil, nil).Times(9)
+	halMock.EXPECT().FlowMonitorRuleCreate(gomock.Any(), gomock.Any()).Return(flowResp, nil).Times(9)
+
+	err = s.DeleteFlowExportPolicy(context.Background(), dup)
+	tu.AssertOk(t, err, fmt.Sprintf("failed to delete export policy %+v", dup))
+
+	overlap := &tpmprotos.FlowExportPolicy{
+		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
+		ObjectMeta: api.ObjectMeta{Name: "matchrule-overlap", Tenant: "default", Namespace: "default"},
+
+		Spec: tpmprotos.FlowExportPolicySpec{
+			Interval: "15s",
+			Format:   "IPFIX",
+			MatchRules: []tsproto.MatchRule{
+				{
+					Src: &tsproto.MatchSelector{
+						IPAddresses: []string{"192.168.100.1"},
+					},
+					Dst: &tsproto.MatchSelector{
+						IPAddresses: []string{"192.168.200.1"},
+					},
+					AppProtoSel: &tsproto.AppProtoSelector{
+						Ports: []string{"tcp/5001"},
+					},
+				},
+			},
+			Exports: []monitoring.ExportConfig{
+				{
+					Destination: fmt.Sprintf("192.168.3.11"),
+					Transport:   "UDP/1234",
+				},
+				{
+					Destination: fmt.Sprintf("192.168.3.12"),
+					Transport:   "UDP/1234",
+				},
+			},
+		},
+	}
+
+	// create becomes flow rule update
+	halMock.EXPECT().FlowMonitorRuleDelete(gomock.Any(), gomock.Any()).Return(nil, nil).Times(1)
+	halMock.EXPECT().FlowMonitorRuleCreate(gomock.Any(), gomock.Any()).Return(flowResp, nil).Times(1)
+
+	err = s.CreateFlowExportPolicy(context.Background(), overlap)
+	tu.AssertOk(t, err, fmt.Sprintf("failed to create export policy %+v", overlap))
+
+	// deletebecaomes flow update
+	halMock.EXPECT().FlowMonitorRuleDelete(gomock.Any(), gomock.Any()).Return(nil, nil).Times(1)
+	halMock.EXPECT().FlowMonitorRuleCreate(gomock.Any(), gomock.Any()).Return(flowResp, nil).Times(1)
+
+	err = s.DeleteFlowExportPolicy(context.Background(), overlap)
+	tu.AssertOk(t, err, fmt.Sprintf("failed to create export policy %+v", overlap))
 }

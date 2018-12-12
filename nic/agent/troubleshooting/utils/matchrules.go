@@ -276,7 +276,8 @@ func ExpandCompositeMatchRule(objMeta api.ObjectMeta, rule *tsproto.MatchRule, f
 		} else if len(srcSelectors.MACAddresses) > 0 {
 			for _, macAddr := range srcSelectors.MACAddresses {
 				hwMac, _ := net.ParseMAC(macAddr)
-				srcMACs = append(srcMACs, binary.BigEndian.Uint64(hwMac))
+				// move mac address to 8 byte array
+				srcMACs = append(srcMACs, binary.BigEndian.Uint64(append([]byte{0, 0}, hwMac...)))
 			}
 		}
 	} else {
@@ -307,7 +308,8 @@ func ExpandCompositeMatchRule(objMeta api.ObjectMeta, rule *tsproto.MatchRule, f
 		} else if len(destSelectors.MACAddresses) > 0 {
 			for _, macAddr := range destSelectors.MACAddresses {
 				hwMac, _ := net.ParseMAC(macAddr)
-				destMACs = append(destMACs, binary.BigEndian.Uint64(hwMac))
+				// move mac address to 8 byte array
+				destMACs = append(destMACs, binary.BigEndian.Uint64(append([]byte{0, 0}, hwMac...)))
 			}
 		}
 	} else {

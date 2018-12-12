@@ -81,7 +81,7 @@ func (p *statsPolicyRPCServer) WatchStatsPolicy(in *api.ObjectMeta, out tpmProto
 				return err
 			}
 		} else {
-			rpcLog.Errorf("invalid stats policy object from list %+v", obj)
+			rpcLog.Errorf("invalid stats policy object from list %T", obj)
 			return fmt.Errorf("invalid stats policy object from list")
 		}
 	}
@@ -153,7 +153,7 @@ func (p *fwlogPolicyRPCServer) WatchFwlogPolicy(in *api.ObjectMeta, out tpmProto
 				return err
 			}
 		} else {
-			rpcLog.Errorf("invalid fwlog policy from list %+v", obj)
+			rpcLog.Errorf("invalid fwlog policy from list %T", obj)
 			return fmt.Errorf("invalid fwlog policy from list")
 		}
 	}

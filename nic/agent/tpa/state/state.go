@@ -478,9 +478,6 @@ func (p *policyDb) deleteFlowMonitorRule(ctx context.Context, ruleID uint64) err
 }
 
 func (p *policyDb) createHalFlowMonitorRule(ctx context.Context, ruleKey types.FlowMonitorRuleKey) error {
-	// update in cache
-	p.flowRuleKeys[ruleKey] = true
-
 	// create rule id
 	var ruleID uint64
 	var err error
@@ -492,6 +489,7 @@ func (p *policyDb) createHalFlowMonitorRule(ctx context.Context, ruleKey types.F
 		return fmt.Errorf("failed to allocate object id for flow monitor %s", err)
 	}
 
+	//todo: delete only if there is any change in collector config
 	flowRuleData, ok := p.flowMonitorTable.FlowRules[ruleKey.String()]
 	if ok {
 		log.Infof("rule already exists, %+v ", ruleKey)
@@ -505,9 +503,11 @@ func (p *policyDb) createHalFlowMonitorRule(ctx context.Context, ruleKey types.F
 			Collectors:  map[string]map[string]bool{},
 			PolicyNames: map[string]bool{},
 		}
-		flowRuleData.Collectors[getObjMetaKey(&p.objMeta)] = map[string]bool{}
 		p.flowMonitorTable.FlowRules[ruleKey.String()] = flowRuleData
+		flowRuleData.Collectors[getObjMetaKey(&p.objMeta)] = map[string]bool{}
 	}
+	p.flowRuleKeys[ruleKey] = true
+	flowRuleData.PolicyNames[getObjMetaKey(&p.objMeta)] = true
 
 	srcIPObj := utils.BuildIPAddrDetails(ruleKey.SourceIP)
 	destIPObj := utils.BuildIPAddrDetails(ruleKey.DestIP)
@@ -890,37 +890,34 @@ func (p *policyDb) cleanupTables(ctx context.Context, del bool) {
 		}
 	}
 
-	delColl := map[string]uint64{}
-
 	for fkey := range flowRuleKeys {
-		for ckey := range collectorKeys {
-			if fdata, ok := p.flowMonitorTable.FlowRules[fkey]; ok {
-				// todo: update flowmonitor
+		if fdata, ok := p.flowMonitorTable.FlowRules[fkey]; ok {
+			for ckey := range collectorKeys {
 				delete(fdata.Collectors[getObjMetaKey(&p.objMeta)], ckey)
-
-				// update new collectors to hal, delete & add
-				p.deleteFlowMonitorRule(ctx, fdata.RuleID)
-				fdata.RuleID = 0
-
-				delete(fdata.PolicyNames, getObjMetaKey(&p.objMeta))
-				if len(fdata.PolicyNames) != 0 {
-					p.createHalFlowMonitorRule(ctx, fdata.RuleKey)
-				}
 			}
-			if cdata, ok := p.collectorTable.Collector[ckey]; ok {
-				delete(cdata.PolicyNames, getObjMetaKey(&p.objMeta))
-				if len(cdata.PolicyNames) == 0 {
-					delColl[ckey] = cdata.CollectorID
-				}
+			// update new collectors to hal, delete & add
+			delete(fdata.PolicyNames, getObjMetaKey(&p.objMeta))
+			if len(fdata.PolicyNames) != 0 {
+				// this delete/add if the flowrule exists
+				log.Infof("updating rule %+v", fdata.RuleKey)
+				p.createHalFlowMonitorRule(ctx, fdata.RuleKey)
+			} else {
+				log.Infof("rule id %d is not used, delete", fdata.RuleID)
+				p.deleteFlowMonitorRule(ctx, fdata.RuleID)
+				delete(p.flowMonitorTable.FlowRules, fkey)
 			}
 		}
 	}
 
-	for key, collID := range delColl {
-		p.deleteCollectorPolicy(ctx, collID)
-		delete(p.collectorTable.Collector, key)
+	for ckey := range collectorKeys {
+		if cdata, ok := p.collectorTable.Collector[ckey]; ok {
+			delete(cdata.PolicyNames, getObjMetaKey(&p.objMeta))
+			if len(cdata.PolicyNames) == 0 {
+				p.deleteCollectorPolicy(ctx, cdata.CollectorID)
+				delete(p.collectorTable.Collector, ckey)
+			}
+		}
 	}
-
 }
 
 // DeleteFlowExportPolicy is the DELETE entry point
