@@ -251,6 +251,13 @@
             "required": false,
             "type": "string",
             "format": "byte"
+          },
+          {
+            "name": "spec.token-expiry",
+            "description": "TokenExpiry is time duration after which JWT token expires. Default is 6 days. A duration string is a sequence of decimal number and a unit suffix, such as \"300ms\" or \"2h45m\".\nValid time units are \"ns\", \"us\" (or \"µs\"), \"ms\", \"s\", \"m\", \"h\".",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -5304,6 +5311,12 @@
           "type": "string",
           "format": "byte",
           "title": "Secret used to sign JWT token"
+        },
+        "token-expiry": {
+          "type": "string",
+          "default": "144h",
+          "example": "2h",
+          "description": "TokenExpiry is time duration after which JWT token expires. Default is 6 days. A duration string is a sequence of decimal number and a unit suffix, such as \"300ms\" or \"2h45m\".\nValid time units are \"ns\", \"us\" (or \"µs\"), \"ms\", \"s\", \"m\", \"h\"."
         }
       },
       "title": "spec part of authentication policy object"

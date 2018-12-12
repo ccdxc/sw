@@ -136,6 +136,11 @@ func (m *AuthenticationPolicySpec) Clone(into interface{}) (interface{}, error) 
 func (m *AuthenticationPolicySpec) Defaults(ver string) bool {
 	var ret bool
 	ret = m.Authenticators.Defaults(ver) || ret
+	ret = true
+	switch ver {
+	default:
+		m.TokenExpiry = "144h"
+	}
 	return ret
 }
 
@@ -783,6 +788,19 @@ func (m *AuthenticationPolicySpec) Validate(ver, path string, ignoreStatus bool)
 	if errs := m.Authenticators.Validate(ver, npath, ignoreStatus); errs != nil {
 		ret = append(ret, errs...)
 	}
+	if vs, ok := validatorMapAuth["AuthenticationPolicySpec"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapAuth["AuthenticationPolicySpec"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
 	return ret
 }
 
@@ -1201,6 +1219,16 @@ func init() {
 	)
 
 	validatorMapAuth = make(map[string]map[string][]func(string, interface{}) error)
+
+	validatorMapAuth["AuthenticationPolicySpec"] = make(map[string][]func(string, interface{}) error)
+
+	validatorMapAuth["AuthenticationPolicySpec"]["all"] = append(validatorMapAuth["AuthenticationPolicySpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*AuthenticationPolicySpec)
+		if !validators.Duration(m.TokenExpiry) {
+			return fmt.Errorf("%v validation failed", path+"."+"TokenExpiry")
+		}
+		return nil
+	})
 
 	validatorMapAuth["Authenticators"] = make(map[string][]func(string, interface{}) error)
 	validatorMapAuth["Authenticators"]["all"] = append(validatorMapAuth["Authenticators"]["all"], func(path string, i interface{}) error {

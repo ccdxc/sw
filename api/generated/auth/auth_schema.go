@@ -78,6 +78,7 @@ var typesMapAuth = map[string]*api.Struct{
 			"skip-server-cert-verification": api.CLIInfo{Path: "Status.LdapServers[].Server.TLSOptions.SkipServerCertVerification", Skip: false, Insert: "", Help: ""},
 			"start-tls":                     api.CLIInfo{Path: "Status.LdapServers[].Server.TLSOptions.StartTLS", Skip: false, Insert: "", Help: ""},
 			"tenant":                        api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
+			"token-expiry":                  api.CLIInfo{Path: "Spec.TokenExpiry", Skip: false, Insert: "", Help: ""},
 			"trusted-certs":                 api.CLIInfo{Path: "Status.RadiusServers[].Server.TrustedCerts", Skip: false, Insert: "", Help: ""},
 			"url":                           api.CLIInfo{Path: "Status.RadiusServers[].Server.Url", Skip: false, Insert: "", Help: ""},
 			"user":                          api.CLIInfo{Path: "Spec.Authenticators.Ldap.AttributeMapping.User", Skip: false, Insert: "", Help: ""},
@@ -91,6 +92,8 @@ var typesMapAuth = map[string]*api.Struct{
 			"Authenticators": api.Field{Name: "Authenticators", CLITag: api.CLIInfo{ID: "authenticators", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "authenticators", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "auth.Authenticators"},
 
 			"Secret": api.Field{Name: "Secret", CLITag: api.CLIInfo{ID: "secret", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "secret", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BYTES"},
+
+			"TokenExpiry": api.Field{Name: "TokenExpiry", CLITag: api.CLIInfo{ID: "token-expiry", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "token-expiry", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"auth.AuthenticationPolicyStatus": &api.Struct{

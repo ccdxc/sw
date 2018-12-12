@@ -85,6 +85,13 @@ var CreateAuthenticationPolicyFlags = []gen.CliFlag{
 		Insert: "",
 	},
 	{
+		ID:     "token-expiry",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
 		ID:     "user",
 		Type:   "String",
 		Help:   "",
