@@ -99,10 +99,13 @@ port_evhandler(pcieport_event_t *ev, void *arg)
         break;
     }
     case PCIEPORT_EVENT_BUSCHG: {
-        const int port = ev->port;
         const u_int8_t secbus = ev->buschg.secbus;
         pciesys_loginfo("port%d: buschg 0x%02x\n", ev->port, secbus);
-        pciehw_event_buschg(port, secbus);
+        pciehw_event_buschg(ev->port, secbus);
+        break;
+    }
+    case PCIEPORT_EVENT_FAULT: {
+        pciesys_logerror("port%d: fault %s\n", ev->port, ev->fault.reason);
         break;
     }
     default:

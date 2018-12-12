@@ -72,7 +72,8 @@ pcieport_fault(pcieport_t *p, const char *fmt, ...)
         va_end(ap);
 
         p->state = PCIEPORTST_FAULT;
-        pciesys_logerror("port%d fault: %s\n", p->port, p->fault_reason);
+        pcieport_event_fault(p);
+        pciesys_logdebug("port%d: fault %s\n", p->port, p->fault_reason);
     }
 }
 

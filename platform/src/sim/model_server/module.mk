@@ -2,8 +2,8 @@
 include ${MKDEFS}/pre.mk
 MODULE_ARCH     := x86_64
 MODULE_TARGET   := platform_model_server.bin
-MODULE_SOLIBS   := pciemgr_if pciemgr pciemgrutils pciehdevices pcieport pcietlp cfgspace \
-                    intrutils pal misc simlib simdev halproto
+MODULE_SOLIBS   := pciemgr_if pciemgr pciemgrutils pciehdevices pcietlp \
+		   cfgspace intrutils pal misc simlib simdev halproto
 MODULE_LDPATHS  := ${TOPDIR}/nic/model_sim/libs/
 MODULE_LDLIBS   := z model_cc capsim common_cc top_csr_compile sknobs \
                   asmsym mpuobj capisa isa Judy python2.7 zmq \

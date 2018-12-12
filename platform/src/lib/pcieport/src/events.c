@@ -11,6 +11,7 @@
 #include <assert.h>
 #include <inttypes.h>
 
+#include "platform/src/lib/misc/include/misc.h"
 #include "platform/src/lib/pciemgrutils/include/pciesys.h"
 #include "pcieport.h"
 #include "pcieport_impl.h"
@@ -113,6 +114,20 @@ pcieport_event_buschg(pcieport_t *p, const u_int8_t secbus)
     ev.port = p->port;
     buschg = &ev.buschg;
     buschg->secbus = secbus;
+    send_event(&ev);
+}
+
+void
+pcieport_event_fault(pcieport_t *p)
+{
+    pcieport_event_t ev;
+    pcieport_event_fault_t *fault;
+
+    memset(&ev, 0, sizeof(ev));
+    ev.type = PCIEPORT_EVENT_FAULT;
+    ev.port = p->port;
+    fault = &ev.fault;
+    strncpy0(fault->reason, p->fault_reason, sizeof(fault->reason));
     send_event(&ev);
 }
 

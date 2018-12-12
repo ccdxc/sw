@@ -18,6 +18,7 @@ typedef enum pcieport_event_type_e {
     PCIEPORT_EVENT_HOSTUP,
     PCIEPORT_EVENT_HOSTDN,
     PCIEPORT_EVENT_BUSCHG,
+    PCIEPORT_EVENT_FAULT,
 } pcieport_event_type_t;
 
 typedef struct pcieport_event_linkinfo_s {
@@ -35,6 +36,10 @@ typedef struct pcieport_event_buschg_s {
     u_int8_t secbus;            /* new secondary bus number */
 } pcieport_event_buschg_t;
 
+typedef struct pcieport_event_fault_s {
+    char reason[80];
+} pcieport_event_fault_t;
+
 typedef struct pcieport_event_s {
     pcieport_event_type_t type;
     int port;                   /* pcie port number */
@@ -44,6 +49,7 @@ typedef struct pcieport_event_s {
         pcieport_event_hostup_t hostup;
         pcieport_event_hostdn_t hostdn;
         pcieport_event_buschg_t buschg;
+        pcieport_event_fault_t  fault;
     };
 } pcieport_event_t;
 
