@@ -50,6 +50,7 @@ PACKAGES = %w[
   nfs-utils
   nfs-utils-lib
   lftp 
+  git
 ]
 
 run "yum install -y #{PACKAGES.join(" ")}"
@@ -60,6 +61,8 @@ run "pip install --upgrade #{PIP2_PACKAGES.join(" ")}"
 run "pip3 install --upgrade #{PIP3_PACKAGES.join(" ")}"
 
 run "mkdir -p /iota/tools/raw"
+run "git clone https://github.com/secdev/scapy && cd scapy && python3 setup.py install"
+
 
 #copy "raw.tar.gz", "/iota/tools/raw/"
 
