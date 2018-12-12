@@ -69,7 +69,11 @@ def sendTelnetCmd(self, cmd, exp, **kwargs):
 def clearLine(console, port):
     tn = telnetlib.Telnet(console)
     logging.info('Clearing line for {0}'.format(console))
-    tn.expect(["Password: "], timeout=5)
+    
+    # expect either of two prompts
+    res = tn.expect(["Username: ", "Password: "], timeout=5)
+    if (res[0] == 0):
+        sendTelnetCmd(tn, 'admin\n', ['Password: '])
 
     sendTelnetCmd(tn, 'N0isystem$\n', ['#'])
     cmd = 'clear line ' + str(port) + '\n'
@@ -140,22 +144,6 @@ def update(ch):
     sendCmd(ch, 'exit', '#')
 
 def reset(ch, dev):
-    clearLine(dev['console'], dev['port'])
-    time.sleep(3)
-
-    port = int(2000) + int(dev["port"])
-    t_hdl = telnetToConsole(dev["console"], port)
-
-    logging.info("Resetting naples. Please wait...\n")
-    op = sendTelnetCmd(t_hdl, '/nic/tools/sysreset.sh\n', ['login: '], timeout=180)
-    logging.info(op[2])
-    op = sendTelnetCmd(t_hdl, 'root\n', ['Password: '])
-    logging.info(op[2])
-    op = sendTelnetCmd(t_hdl, 'pen123\n', ['#'])
-    logging.info(op[2])
-
-    t_hdl.write('exit\n')
-    t_hdl.close()
     logging.info("Rebooting the host {0}\n".format(dev['host']))
     ch.sendline('reboot')
 
