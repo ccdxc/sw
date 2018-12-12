@@ -91,17 +91,26 @@ var _ = Describe("MirrorSession Tests", func() {
 			By("Checking that MirrorSession has started------")
 			Eventually(func() bool {
 				tms, err := mirrorRestIf.Get(ctx, &ms.ObjectMeta)
-				if err != nil || tms.Status.State != monitoring.MirrorSessionState_RUNNING.String() {
-					By(".")
+				if err != nil {
+					By(fmt.Sprintf("GET err:%s", err))
+					return false
+				}
+				if tms.Status.State != monitoring.MirrorSessionState_RUNNING.String() {
+					By(fmt.Sprintf("mirror state: %v", tms.Status.State))
 					return false
 				}
 				return true
-			}, 2, 1).Should(BeTrue(), fmt.Sprintf("Failed to start %s", ms.Name))
+			}, 5, 1).Should(BeTrue(), fmt.Sprintf("Failed to start %s", ms.Name))
 
 			By("Checking that MirrorSession has stopped using expriy time------")
 			Eventually(func() bool {
 				tms, err := mirrorRestIf.Get(ctx, &ms.ObjectMeta)
-				if err != nil || tms.Status.State != monitoring.MirrorSessionState_STOPPED.String() {
+				if err != nil {
+					By(fmt.Sprintf("GET err:%s", err))
+					return false
+				}
+				if tms.Status.State != monitoring.MirrorSessionState_STOPPED.String() {
+					By(fmt.Sprintf("mirror state: %v", tms.Status.State))
 					return false
 				}
 				return true
