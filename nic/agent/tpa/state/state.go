@@ -891,19 +891,20 @@ func (p *policyDb) cleanupTables(ctx context.Context, del bool) {
 	}
 
 	delColl := map[string]uint64{}
-	delRule := map[string]uint64{}
 
 	for fkey := range flowRuleKeys {
 		for ckey := range collectorKeys {
 			if fdata, ok := p.flowMonitorTable.FlowRules[fkey]; ok {
 				// todo: update flowmonitor
 				delete(fdata.Collectors[getObjMetaKey(&p.objMeta)], ckey)
+
 				// update new collectors to hal, delete & add
 				p.deleteFlowMonitorRule(ctx, fdata.RuleID)
+				fdata.RuleID = 0
 
 				delete(fdata.PolicyNames, getObjMetaKey(&p.objMeta))
-				if len(fdata.PolicyNames) == 0 {
-					delRule[fkey] = fdata.RuleID
+				if len(fdata.PolicyNames) != 0 {
+					p.createHalFlowMonitorRule(ctx, fdata.RuleKey)
 				}
 			}
 			if cdata, ok := p.collectorTable.Collector[ckey]; ok {
@@ -913,11 +914,6 @@ func (p *policyDb) cleanupTables(ctx context.Context, del bool) {
 				}
 			}
 		}
-	}
-
-	for key, ruleID := range delRule {
-		p.deleteFlowMonitorRule(ctx, ruleID)
-		delete(p.flowMonitorTable.FlowRules, key)
 	}
 
 	for key, collID := range delColl {

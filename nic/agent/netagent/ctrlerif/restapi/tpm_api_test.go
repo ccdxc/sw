@@ -12,6 +12,7 @@ import (
 	api "github.com/pensando/sw/api"
 	monitoring "github.com/pensando/sw/api/generated/monitoring"
 	tpmprotos "github.com/pensando/sw/venice/ctrler/tpm/rpcserver/protos"
+	tsproto "github.com/pensando/sw/venice/ctrler/tsm/rpcserver/tsproto"
 	"github.com/pensando/sw/venice/utils/netutils"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -34,6 +35,19 @@ func TestFlowExportPolicyPost(t *testing.T) {
 			Name:      "testPostFlowExportPolicy",
 		},
 		Spec: tpmprotos.FlowExportPolicySpec{
+			MatchRules: []tsproto.MatchRule{
+				{
+					Src: &tsproto.MatchSelector{
+						IPAddresses: []string{"1.1.1.1"},
+					},
+					Dst: &tsproto.MatchSelector{
+						IPAddresses: []string{"1.1.1.2"},
+					},
+					AppProtoSel: &tsproto.AppProtoSelector{
+						Ports: []string{"TCP/1000"},
+					},
+				},
+			},
 			Interval: "15s",
 			Format:   "IPFIX",
 			Exports: []monitoring.ExportConfig{
