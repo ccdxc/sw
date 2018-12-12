@@ -25,15 +25,15 @@ clear_dc_header_present(uint16_t flags, struct cpdc_desc *desc)
 }
 
 static void
-fill_dc_desc(struct cpdc_desc *desc, struct cpdc_sgl *src_sgl,
-		struct cpdc_sgl *dst_sgl, struct cpdc_status_desc *status_desc,
+fill_dc_desc(struct service_info *svc_info, struct cpdc_desc *desc,
 		uint32_t src_buf_len, uint32_t dst_buf_len)
 {
-	memset(desc, 0, sizeof(*desc));
-	memset(status_desc, 0, sizeof(*status_desc));
+	struct cpdc_status_desc *status_desc;
 
-	desc->cd_src = (uint64_t) sonic_virt_to_phy(src_sgl);
-	desc->cd_dst = (uint64_t) sonic_virt_to_phy(dst_sgl);
+	memset(desc, 0, sizeof(*desc));
+
+	desc->cd_src = (uint64_t) sonic_virt_to_phy(svc_info->si_src_sgl.sgl);
+	desc->cd_dst = (uint64_t) sonic_virt_to_phy(svc_info->si_dst_sgl.sgl);
 
 	desc->u.cd_bits.cc_enabled = 1;
 	desc->u.cd_bits.cc_header_present = 1;
@@ -46,7 +46,18 @@ fill_dc_desc(struct cpdc_desc *desc, struct cpdc_sgl *src_sgl,
 	desc->cd_threshold_len =
 		(dst_buf_len == MAX_CPDC_DST_BUF_LEN) ? 0 : dst_buf_len;
 
-	desc->cd_status_addr = (uint64_t) sonic_virt_to_phy(status_desc);
+	/* interm status is never directy "polled", so no need to clear it */
+	if (svc_info->si_istatus_desc) {
+		desc->cd_status_addr = (uint64_t) svc_info->si_istatus_desc;
+		osal_rmem_set(desc->cd_status_addr, 0, sizeof(*status_desc));
+	} else {
+		status_desc = svc_info->si_status_desc;
+		memset(status_desc, 0, sizeof(*status_desc));
+
+		desc->cd_status_addr = (uint64_t)
+			sonic_virt_to_phy(status_desc);
+	}
+	
 	desc->cd_status_data = CPDC_DC_STATUS_DATA;
 
 	CPDC_PPRINT_DESC(desc);
@@ -79,6 +90,13 @@ decompress_setup(struct service_info *svc_info,
 	}
 	svc_info->si_status_desc = status_desc;
 
+	err = cpdc_setup_rmem_status_desc(svc_info, false);
+	if (err) {
+		OSAL_LOG_ERROR("cannot obtain dc rmem status desc from pool! err: %d",
+				err);
+		goto out;
+	}
+
 	err = cpdc_update_service_info_sgls(svc_info);
 	if (err) {
 		OSAL_LOG_ERROR("cannot obtain dc src/dst sgl from pool! err: %d",
@@ -86,9 +104,7 @@ decompress_setup(struct service_info *svc_info,
 		goto out;
 	}
 
-	fill_dc_desc(dc_desc, svc_info->si_src_sgl.sgl,
-			svc_info->si_dst_sgl.sgl, status_desc,
-			svc_info->si_src_blist.len, svc_info->si_dst_blist.len);
+	fill_dc_desc(svc_info, dc_desc, src_buf_len, dst_buf_len);
 	clear_dc_header_present(svc_info->si_desc_flags, dc_desc);
 
 	err = cpdc_setup_seq_desc(svc_info, dc_desc, 0);
@@ -300,11 +316,14 @@ decompress_teardown(struct service_info *svc_info)
 	seq_cleanup_cpdc_chain(svc_info);
 	seq_cleanup_desc(svc_info);
 
+	cpdc_teardown_rmem_status_desc(svc_info, false);
+
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 	cpdc_put_status_desc(svc_info->si_pcr, false, status_desc);
 
 	dc_desc = (struct cpdc_desc *) svc_info->si_desc;
 	cpdc_put_desc(svc_info, false, dc_desc);
+
 
 	OSAL_LOG_DEBUG("exit!");
 }
