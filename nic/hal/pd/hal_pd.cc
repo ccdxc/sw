@@ -468,6 +468,10 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_FTE_SPAN_MEM_FREE, pd_fte_span_mem_free);
     PD_FUNC_LOAD(PD_FUNC_ID_FTE_SPAN_MAKE_CLONE, pd_fte_span_make_clone);
     // PD_FUNC_LOAD(PD_FUNC_ID_FTE_SPAN_GET, pd_fte_span_get);
+
+    // tcp global stats
+    PD_FUNC_LOAD(PD_FUNC_ID_TCP_GLOBAL_STATS_GET, pd_tcp_global_stats_get);
+
     return ret;
 }
 

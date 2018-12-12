@@ -85,7 +85,53 @@ func tcpProxyCbShowCmdHandler(cmd *cobra.Command, args []string) {
 func tcpProxyStatisticsShowCmdHandler(cmd *cobra.Command, args []string) {
 	showCbs := false
 	showStats := true
-	doTCPProxyCbShowCmd(cmd, args, showCbs, showStats)
+	if cmd.Flags().Changed("qid") {
+		doTCPProxyCbShowCmd(cmd, args, showCbs, showStats)
+	} else {
+		doTCPProxyGlobalStatsShowCmd(cmd, args)
+	}
+}
+
+func doTCPProxyGlobalStatsShowCmd(cmd *cobra.Command, args []string) {
+
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+
+	client := halproto.NewTcpProxyClient(c.ClientConn)
+
+	defer c.Close()
+
+	req := &halproto.TcpProxyGlobalStatsGetRequest{}
+
+	globalStatsReqMsg := &halproto.TcpProxyGlobalStatsGetRequestMsg{
+		Request: []*halproto.TcpProxyGlobalStatsGetRequest{req},
+	}
+
+	respMsg, err := client.TcpProxyGlobalStatsGet(context.Background(),
+		globalStatsReqMsg)
+	if err != nil {
+		fmt.Printf("TcpProxyGlobalStatsGet failed. %v\n", err)
+		return
+	}
+
+	if respMsg.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+		fmt.Printf("HAL Returned error status. %v\n", respMsg.ApiStatus)
+		os.Exit(1)
+	}
+
+	fmt.Printf("TCP Global Statistics\n")
+	fmt.Printf("%s\n", strings.Repeat("-", 60))
+	fmt.Printf("%-30s : %-6d\n", "Rnmdr_full", respMsg.GlobalStats.RnmdrFull)
+	fmt.Printf("%-30s : %-6d\n", "InvalidSesqDescr", respMsg.GlobalStats.InvalidSesqDescr)
+	fmt.Printf("%-30s : %-6d\n", "InvalidRetxSesqDescr",
+		respMsg.GlobalStats.InvalidRetxSesqDescr)
+	fmt.Printf("%-30s : %-6d\n", "RetxPartialAck", respMsg.GlobalStats.RetxPartialAck)
+	fmt.Printf("%-30s : %-6d\n", "RetxNopSchedule", respMsg.GlobalStats.RetxNopSchedule)
+	fmt.Printf("%-30s : %-6d\n", "GcFull", respMsg.GlobalStats.GcFull)
+	fmt.Printf("%-30s : %-6d\n", "TlsGcFull", respMsg.GlobalStats.TlsGcFull)
 }
 
 func tcpProxySessionShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -129,6 +175,7 @@ func tcpProxySessionShowCmdHandler(cmd *cobra.Command, args []string) {
 			},
 		}
 	}
+
 	sessionGetReqMsg = &halproto.TcpProxySessionGetRequestMsg{
 		Request: []*halproto.TcpProxySessionGetRequest{req},
 	}
@@ -141,27 +188,36 @@ func tcpProxySessionShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	// Print Sessions
-	fmt.Printf("Active TCP sessions:\n\n")
+	fmt.Printf("Active TCP sessions:\n")
 
 	flowIndx := 1
+	if len(respMsg.Response) != 0 {
+		fmt.Printf("%s\n", strings.Repeat("-", 96))
+		fmt.Printf("%-12s%-12s%-12s%-12s%-12s%-12s%-12s%-12s\n",
+			"Flow", "Source IP", "Dest IP", "Source Port", "Dest Port",
+			"Queue Id1", "Queue Id2", "Flow Type")
+		fmt.Printf("%s\n", strings.Repeat("-", 96))
+	}
+
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 
-		fmt.Printf("%-12s = %d\n", "Flow", flowIndx)
-		fmt.Printf("%-12s = %s\n", "Source IP", utils.IPAddrToStr(resp.TcpproxyFlow.SrcIp))
-		fmt.Printf("%-12s = %s\n", "Dest IP", utils.IPAddrToStr(resp.TcpproxyFlow.DstIp))
-		fmt.Printf("%-12s = %d\n", "Source Port", resp.TcpproxyFlow.Sport)
-		fmt.Printf("%-12s = %d\n", "Dest Port", resp.TcpproxyFlow.Dport)
-		fmt.Printf("%-12s = %d\n", "Queue Id1", resp.TcpproxyFlow.Qid1)
-		fmt.Printf("%-12s = %d\n", "Queue Id2", resp.TcpproxyFlow.Qid2)
-		fmt.Printf("%-12s = %d\n\n", "Flow Type", resp.TcpproxyFlow.FlowType)
+		fmt.Printf("%-12d", flowIndx)
+		fmt.Printf("%-12s", utils.IPAddrToStr(resp.TcpproxyFlow.SrcIp))
+		fmt.Printf("%-12s", utils.IPAddrToStr(resp.TcpproxyFlow.DstIp))
+		fmt.Printf("%-12d", resp.TcpproxyFlow.Sport)
+		fmt.Printf("%-12d", resp.TcpproxyFlow.Dport)
+		fmt.Printf("%-12d", resp.TcpproxyFlow.Qid1)
+		fmt.Printf("%-12d", resp.TcpproxyFlow.Qid2)
+		fmt.Printf("%-12d\n", resp.TcpproxyFlow.FlowType)
 		flowIndx++
 	}
 
 	if flowIndx > 1 {
+		fmt.Printf("%s\n", strings.Repeat("-", 96))
 		fmt.Printf("Found %d flows.\n\n", flowIndx-1)
 	}
 }

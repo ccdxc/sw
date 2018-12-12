@@ -2911,6 +2911,16 @@ typedef struct pd_fte_span_make_clone_args_s {
     fte_span_t               *clone;
 } __PACK__ pd_fte_span_make_clone_args_t;
 
+typedef struct pd_tcp_global_stats_get_args_s {
+    uint64_t rnmdr_full;
+    uint64_t invalid_sesq_descr;
+    uint64_t invalid_retx_sesq_descr;
+    uint64_t retx_partial_ack;
+    uint64_t retx_nop_schedule;
+    uint64_t gc_full;
+    uint64_t tls_gc_full;
+} pd_tcp_global_stats_get_args_t;
+
 // generic pd call macros
 #define PD_FUNC_IDS(ENTRY)                                                              \
     ENTRY(PD_FUNC_ID_MEM_INIT,              0, "pd_func_id_pd_mem_init")                \
@@ -3199,7 +3209,8 @@ typedef struct pd_fte_span_make_clone_args_s {
     ENTRY(PD_FUNC_ID_DROP_STATS_CLEAR,         284, "PD_FUNC_ID_DROP_STATS_CLEAR")\
     ENTRY(PD_FUNC_ID_EGRESS_DROP_STATS_CLEAR,  285, "PD_FUNC_ID_EGRESS_DROP_STATS_CLEAR")\
     ENTRY(PD_FUNC_ID_MC_ENTRY_GET,             286, "PD_FUNC_ID_MC_ENTRY_GET")\
-    ENTRY(PD_FUNC_ID_MAX,                      287, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_TCP_GLOBAL_STATS_GET,     287, "PD_FUNC_ID_TCP_GLOBAL_STATS_GET") \
+    ENTRY(PD_FUNC_ID_MAX,                      288, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3607,8 +3618,12 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_fte_span_mem_free);
         PD_UNION_ARGS_FIELD(pd_fte_span_make_clone);
         PD_UNION_ARGS_FIELD(pd_fte_span_get);
+
+	//TCP global stats
+        PD_UNION_ARGS_FIELD(pd_tcp_global_stats_get);
     };
 } pd_func_args_t;
+
 typedef hal_ret_t (* pd_func_t)(pd_func_args_t *args);
 
 #define PD_FUNCP_TYPEDEF(NAME)                                              \
@@ -4035,6 +4050,9 @@ PD_FUNCP_TYPEDEF(pd_fte_span_update);
 PD_FUNCP_TYPEDEF(pd_fte_span_mem_free);
 PD_FUNCP_TYPEDEF(pd_fte_span_make_clone);
 PD_FUNCP_TYPEDEF(pd_fte_span_get);
+
+// tcp global stats
+PD_FUNCP_TYPEDEF(pd_tcp_global_stats_get);
 
 hal_ret_t hal_pd_call(pd_func_id_t pd_func_id, pd_func_args_t *args);
 

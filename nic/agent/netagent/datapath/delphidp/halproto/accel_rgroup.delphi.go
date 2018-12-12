@@ -1188,6 +1188,10 @@ It has these top-level messages:
 	TcpProxyCbStats
 	TcpProxyCbGetResponse
 	TcpProxyCbGetResponseMsg
+	TcpProxyGlobalStatsGetRequest
+	TcpProxyGlobalStatsGetRequestMsg
+	TcpProxyGlobalStatsGetResponseMsg
+	TcpProxyGlobalStats
 	CollectorSpec
 	CollectorStatus
 	CollectorResponse

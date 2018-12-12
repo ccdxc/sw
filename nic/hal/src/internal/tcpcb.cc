@@ -366,20 +366,20 @@ tcp_proxy_session_get (tcp_proxy::TcpProxySessionGetRequest& req,
         if (session_matches_filter(proxy_flow_info, filter)) {
             tcp_proxy_session_fill_rsp(proxy_flow_info, response->add_response());
         }
-
         return false;
     };
-
+ 
     types::ProxyType proxy_type = types::PROXY_TYPE_TCP;
     proxy_t *proxy = (proxy_t *)g_hal_state->proxy_type_ht()->lookup(&proxy_type);
     if(!proxy) {
         HAL_TRACE_ERR("No TCP sessions found!");
         return HAL_RET_HW_FAIL;
     }
-
+ 
     ctx.filter = req.mutable_session_filter();
     ctx.response = rsp;
     sdk::sdk_ret_t ret = proxy->flow_ht_->walk_safe(walk_func, &ctx);
+
     return hal_sdk_ret_to_hal_ret(ret);
 }
 
@@ -553,6 +553,42 @@ tcpcb_delete (internal::TcpCbDeleteRequest& req, internal::TcpCbDeleteResponseMs
 
     // fill stats of this TCP CB
     rsp->add_api_status(types::API_STATUS_OK);
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+tcp_proxy_global_stats_get(tcp_proxy::TcpProxyGlobalStatsGetRequest& req,
+                           tcp_proxy::TcpProxyGlobalStatsGetResponseMsg* rsp)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    pd::pd_func_args_t pd_func_args = {};
+    pd::pd_tcp_global_stats_get_args_t pd_tcp_global_stats_get_args = {};
+
+    pd_func_args.pd_tcp_global_stats_get = &pd_tcp_global_stats_get_args;
+
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_TCP_GLOBAL_STATS_GET, &pd_func_args);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PD TCP GLOBAL STATS : get Failed, err: {}", ret);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
+        return HAL_RET_HW_FAIL;
+    }
+
+    rsp->mutable_global_stats()->set_rnmdr_full(
+                  pd_tcp_global_stats_get_args.rnmdr_full);
+    rsp->mutable_global_stats()->set_invalid_sesq_descr(
+                  pd_tcp_global_stats_get_args.invalid_sesq_descr);
+    rsp->mutable_global_stats()->set_invalid_retx_sesq_descr(
+                  pd_tcp_global_stats_get_args.invalid_retx_sesq_descr);
+    rsp->mutable_global_stats()->set_retx_partial_ack(
+                  pd_tcp_global_stats_get_args.retx_partial_ack);
+    rsp->mutable_global_stats()->set_retx_nop_schedule(
+                  pd_tcp_global_stats_get_args.retx_nop_schedule);
+    rsp->mutable_global_stats()->set_gc_full(
+                  pd_tcp_global_stats_get_args.gc_full);
+    rsp->mutable_global_stats()->set_tls_gc_full(
+                  pd_tcp_global_stats_get_args.tls_gc_full);
+    rsp->set_api_status(types::API_STATUS_OK);
+
     return HAL_RET_OK;
 }
 
