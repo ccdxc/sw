@@ -312,7 +312,7 @@ pnso_error_t sim_execute_request(struct sim_worker_ctx *worker_ctx,
 		cur_svc->cmd = svc_req->svc[svc_i];
 		if (cur_svc->cmd.svc_type >= PNSO_SVC_TYPE_MAX) {
 			rc = EINVAL;
-			goto error;
+			break;
 		}
 		cur_svc->status = svc_res->svc[svc_i];
 
@@ -362,15 +362,13 @@ pnso_error_t sim_execute_request(struct sim_worker_ctx *worker_ctx,
 		svc_res->svc[svc_i] = cur_svc->status;
 
 		if (rc != PNSO_OK) {
-			/* TODO: what about BYPASS_ONFAIL ? */
-			svc_res->err = rc;
-			goto error;
+			break;
 		}
 
 		prev_svc = cur_svc;
 	}
 
-error:
+	svc_res->err = rc;
 	return rc;
 }
 
