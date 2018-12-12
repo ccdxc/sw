@@ -66,6 +66,7 @@ func NewAlertExporter(memDb *memdb.MemDb, apiClient apiclient.Services, logger l
 }
 
 // Export exports the given to alert to list of destinations.
+// destNames list of named destination object references.
 func (e *AlertExporter) Export(destNames []string, alert *monitoring.Alert) error {
 	var errStrings []string
 	var rErr error
@@ -238,14 +239,16 @@ func (e *AlertExporter) updateAlertDestionation(destName string, numNotification
 // It is responsible for creating exporter for each destination type.
 func (e *AlertExporter) createExporters(destObj *monitoring.AlertDestination) ([]Exporter, error) {
 	var exporters []Exporter
-	if len(destObj.Spec.SyslogServers) > 0 { // create syslog exporter
-		exporter, err := NewSyslogExporter(destObj.Spec.SyslogServers, e.logger.WithContext("submodule", "syslog_alert_exporter"))
+	if destObj.Spec.SyslogExport != nil { // create syslog exporter
+		exporter, err := NewSyslogExporter(destObj.Spec.SyslogExport, e.logger.WithContext("submodule", "syslog_alert_exporter"))
 		if err != nil {
 			e.logger.Errorf("failed to create syslog alert exporter, err: %v", err)
 			return nil, err
 		}
 		exporters = append(exporters, exporter)
 	}
+
+	// TODO: create SNMP and email exporter
 
 	return exporters, nil
 }

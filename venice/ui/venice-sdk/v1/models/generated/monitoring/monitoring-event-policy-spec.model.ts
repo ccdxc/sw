@@ -7,17 +7,37 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
-import { MonitoringEventExport, IMonitoringEventExport } from './monitoring-event-export.model';
+import { MonitoringEventPolicySpec_format,  MonitoringEventPolicySpec_format_uihint  } from './enums';
+import { FieldsSelector, IFieldsSelector } from './fields-selector.model';
+import { MonitoringExportConfig, IMonitoringExportConfig } from './monitoring-export-config.model';
+import { MonitoringSyslogExportConfig, IMonitoringSyslogExportConfig } from './monitoring-syslog-export-config.model';
 
 export interface IMonitoringEventPolicySpec {
-    'exports'?: Array<IMonitoringEventExport>;
+    'format'?: MonitoringEventPolicySpec_format;
+    'selector'?: IFieldsSelector;
+    'targets'?: Array<IMonitoringExportConfig>;
+    'config'?: IMonitoringSyslogExportConfig;
 }
 
 
 export class MonitoringEventPolicySpec extends BaseModel implements IMonitoringEventPolicySpec {
-    'exports': Array<MonitoringEventExport> = null;
+    'format': MonitoringEventPolicySpec_format = null;
+    'selector': FieldsSelector = null;
+    'targets': Array<MonitoringExportConfig> = null;
+    'config': MonitoringSyslogExportConfig = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'exports': {
+        'format': {
+            enum: MonitoringEventPolicySpec_format_uihint,
+            default: 'SYSLOG_BSD',
+            type: 'string'
+        },
+        'selector': {
+            type: 'object'
+        },
+        'targets': {
+            type: 'object'
+        },
+        'config': {
             type: 'object'
         },
     }
@@ -41,7 +61,9 @@ export class MonitoringEventPolicySpec extends BaseModel implements IMonitoringE
     */
     constructor(values?: any) {
         super();
-        this['exports'] = new Array<MonitoringEventExport>();
+        this['selector'] = new FieldsSelector();
+        this['targets'] = new Array<MonitoringExportConfig>();
+        this['config'] = new MonitoringSyslogExportConfig();
         this.setValues(values);
     }
 
@@ -50,8 +72,19 @@ export class MonitoringEventPolicySpec extends BaseModel implements IMonitoringE
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['format'] != null) {
+            this['format'] = values['format'];
+        } else if (fillDefaults && MonitoringEventPolicySpec.hasDefaultValue('format')) {
+            this['format'] = <MonitoringEventPolicySpec_format>  MonitoringEventPolicySpec.propInfo['format'].default;
+        }
         if (values) {
-            this.fillModelArray<MonitoringEventExport>(this, 'exports', values['exports'], MonitoringEventExport);
+            this['selector'].setValues(values['selector']);
+        }
+        if (values) {
+            this.fillModelArray<MonitoringExportConfig>(this, 'targets', values['targets'], MonitoringExportConfig);
+        }
+        if (values) {
+            this['config'].setValues(values['config']);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -60,10 +93,13 @@ export class MonitoringEventPolicySpec extends BaseModel implements IMonitoringE
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'exports': new FormArray([]),
+                'format': new FormControl(this['format'], [enumValidator(MonitoringEventPolicySpec_format), ]),
+                'selector': this['selector'].$formGroup,
+                'targets': new FormArray([]),
+                'config': this['config'].$formGroup,
             });
             // generate FormArray control elements
-            this.fillFormArray<MonitoringEventExport>('exports', this['exports'], MonitoringEventExport);
+            this.fillFormArray<MonitoringExportConfig>('targets', this['targets'], MonitoringExportConfig);
         }
         return this._formGroup;
     }
@@ -74,7 +110,10 @@ export class MonitoringEventPolicySpec extends BaseModel implements IMonitoringE
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<MonitoringEventExport>(this, 'exports', this['exports'], MonitoringEventExport);
+            this._formGroup.controls['format'].setValue(this['format']);
+            this['selector'].setFormGroupValuesToBeModelValues();
+            this.fillModelArray<MonitoringExportConfig>(this, 'targets', this['targets'], MonitoringExportConfig);
+            this['config'].setFormGroupValuesToBeModelValues();
         }
     }
 }

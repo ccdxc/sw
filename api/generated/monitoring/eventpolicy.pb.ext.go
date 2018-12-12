@@ -39,33 +39,6 @@ func (m *EventPolicy) MakeURI(cat, ver, prefix string) string {
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *EventExport) Clone(into interface{}) (interface{}, error) {
-	var out *EventExport
-	var ok bool
-	if into == nil {
-		out = &EventExport{}
-	} else {
-		out, ok = into.(*EventExport)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *EventExport) Defaults(ver string) bool {
-	var ret bool
-	ret = true
-	switch ver {
-	default:
-		m.Format = "SYSLOG_BSD"
-	}
-	return ret
-}
-
-// Clone clones the object into into or creates one of into is nil
 func (m *EventPolicy) Clone(into interface{}) (interface{}, error) {
 	var out *EventPolicy
 	var ok bool
@@ -109,11 +82,10 @@ func (m *EventPolicySpec) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *EventPolicySpec) Defaults(ver string) bool {
 	var ret bool
-	for k := range m.Exports {
-		if m.Exports[k] != nil {
-			i := m.Exports[k]
-			ret = i.Defaults(ver) || ret
-		}
+	ret = true
+	switch ver {
+	default:
+		m.Format = "SYSLOG_BSD"
 	}
 	return ret
 }
@@ -141,54 +113,6 @@ func (m *EventPolicyStatus) Defaults(ver string) bool {
 
 // Validators
 
-func (m *EventExport) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	if m.Selector != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Selector"
-		if errs := m.Selector.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
-		}
-	}
-	if m.SyslogConfig != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "SyslogConfig"
-		if errs := m.SyslogConfig.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
-		}
-	}
-	if m.Target != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Target"
-		if errs := m.Target.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
-		}
-	}
-	if vs, ok := validatorMapEventpolicy["EventExport"][ver]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	} else if vs, ok := validatorMapEventpolicy["EventExport"]["all"]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	}
-	return ret
-}
-
 func (m *EventPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	{
@@ -212,14 +136,47 @@ func (m *EventPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *EventPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
-	for k, v := range m.Exports {
+	if m.Selector != nil {
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sExports[%v]", path, dlmtr, k)
+		npath := path + dlmtr + "Selector"
+		if errs := m.Selector.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	if m.SyslogConfig != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "SyslogConfig"
+		if errs := m.SyslogConfig.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	for k, v := range m.Targets {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sTargets[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
+		}
+	}
+	if vs, ok := validatorMapEventpolicy["EventPolicySpec"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapEventpolicy["EventPolicySpec"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
 		}
 	}
 	return ret
@@ -240,12 +197,12 @@ func init() {
 
 	validatorMapEventpolicy = make(map[string]map[string][]func(string, interface{}) error)
 
-	validatorMapEventpolicy["EventExport"] = make(map[string][]func(string, interface{}) error)
-	validatorMapEventpolicy["EventExport"]["all"] = append(validatorMapEventpolicy["EventExport"]["all"], func(path string, i interface{}) error {
-		m := i.(*EventExport)
+	validatorMapEventpolicy["EventPolicySpec"] = make(map[string][]func(string, interface{}) error)
+	validatorMapEventpolicy["EventPolicySpec"]["all"] = append(validatorMapEventpolicy["EventPolicySpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*EventPolicySpec)
 
 		if _, ok := MonitoringExportFormat_value[m.Format]; !ok {
-			return errors.New("EventExport.Format did not match allowed strings")
+			return errors.New("EventPolicySpec.Format did not match allowed strings")
 		}
 		return nil
 	})

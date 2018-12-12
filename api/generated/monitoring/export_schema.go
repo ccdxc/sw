@@ -15,6 +15,14 @@ import (
 
 var typesMapExport = map[string]*api.Struct{
 
+	"monitoring.AuthConfig": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(AuthConfig{}) },
+		Fields: map[string]api.Field{
+			"Algo": api.Field{Name: "Algo", CLITag: api.CLIInfo{ID: "algo", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "algo", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Password": api.Field{Name: "Password", CLITag: api.CLIInfo{ID: "password", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "password", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+		},
+	},
 	"monitoring.ExportConfig": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(ExportConfig{}) },
 		Fields: map[string]api.Field{
@@ -41,6 +49,30 @@ var typesMapExport = map[string]*api.Struct{
 			"KeyData": api.Field{Name: "KeyData", CLITag: api.CLIInfo{ID: "key-data", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "key-data", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BYTES"},
 
 			"CaData": api.Field{Name: "CaData", CLITag: api.CLIInfo{ID: "ca-data", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ca-data", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BYTES"},
+		},
+	},
+	"monitoring.PrivacyConfig": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(PrivacyConfig{}) },
+		Fields: map[string]api.Field{
+			"Algo": api.Field{Name: "Algo", CLITag: api.CLIInfo{ID: "algo", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "algo", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Password": api.Field{Name: "Password", CLITag: api.CLIInfo{ID: "password", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "password", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+		},
+	},
+	"monitoring.SNMPTrapServer": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(SNMPTrapServer{}) },
+		Fields: map[string]api.Field{
+			"Host": api.Field{Name: "Host", CLITag: api.CLIInfo{ID: "host", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "host", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Port": api.Field{Name: "Port", CLITag: api.CLIInfo{ID: "port", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "port", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Version": api.Field{Name: "Version", CLITag: api.CLIInfo{ID: "version", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "version", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"CommunityOrUser": api.Field{Name: "CommunityOrUser", CLITag: api.CLIInfo{ID: "community-or-user", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "community-or-user", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"AuthConfig": api.Field{Name: "AuthConfig", CLITag: api.CLIInfo{ID: "auth-config", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "auth-config", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.AuthConfig"},
+
+			"PrivacyConfig": api.Field{Name: "PrivacyConfig", CLITag: api.CLIInfo{ID: "privacy-config", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "privacy-config", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.PrivacyConfig"},
 		},
 	},
 	"monitoring.SyslogExportConfig": &api.Struct{

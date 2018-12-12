@@ -4116,8 +4116,7 @@ func makeURIMonitoringV1AutoListAlertPolicyListOper(in *api.ListWatchOptions) st
 
 //
 func makeURIMonitoringV1AutoListEventPolicyListOper(in *api.ListWatchOptions) string {
-	return ""
-
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/event-policy")
 }
 
 //
@@ -4344,7 +4343,23 @@ func (r *EndpointsMonitoringV1RestClient) AutoDeleteEventPolicy(ctx context.Cont
 
 // AutoListEventPolicy CRUD method for EventPolicy
 func (r *EndpointsMonitoringV1RestClient) AutoListEventPolicy(ctx context.Context, options *api.ListWatchOptions) (*EventPolicyList, error) {
-	return nil, errors.New("not allowed")
+	path := makeURIMonitoringV1AutoListEventPolicyListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, options, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespMonitoringV1AutoListEventPolicy(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*EventPolicyList), err
 }
 
 // AutoWatchEventPolicy CRUD method for EventPolicy

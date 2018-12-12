@@ -959,7 +959,6 @@ func TestEventsAlertEngine(t *testing.T) {
 		selector   string
 		expSuccess bool
 	}{
-		// TODO: change selector to use json tags once API server is fixed
 		{
 			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.message=%s,status.severity=%s,status.object-ref.kind=%s",
 				alertPolicy1.GetUUID(), fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.Spec.GetSeverity(), dummyObjRef.GetKind()),
@@ -1082,27 +1081,29 @@ func TestEventsAlertEngineWithTCPSyslogExport(t *testing.T) {
 
 	// alert destination - 1: BSD style syslog export
 	alertDestBSDSyslog := policygen.CreateAlertDestinationObj(globals.DefaultTenant, globals.DefaultNamespace, uuid.NewV1().String(),
-		[]*monitoring.SyslogExport{
-			{
-				Format: monitoring.MonitoringExportFormat_name[int32(monitoring.MonitoringExportFormat_SYSLOG_BSD)],
-				Target: &monitoring.ExportConfig{
+		&monitoring.SyslogExport{
+			Format: monitoring.MonitoringExportFormat_name[int32(monitoring.MonitoringExportFormat_SYSLOG_BSD)],
+			Targets: []*monitoring.ExportConfig{
+				{
 					Destination: "127.0.0.1",
 					Transport:   fmt.Sprintf("tcp/%s", tmp[len(tmp)-1]),
 				},
-			}})
+			},
+		})
 	alertDestBSDSyslog, err = apiClient.MonitoringV1().AlertDestination().Create(context.Background(), alertDestBSDSyslog)
 	AssertOk(t, err, "failed to add alert destination, err: %v", err)
 
 	// alert destination - 2: RFC5424 style syslog export
 	alertDestRFC5424Syslog := policygen.CreateAlertDestinationObj(globals.DefaultTenant, globals.DefaultNamespace, uuid.NewV1().String(),
-		[]*monitoring.SyslogExport{
-			{
-				Format: monitoring.MonitoringExportFormat_name[int32(monitoring.MonitoringExportFormat_SYSLOG_RFC5424)],
-				Target: &monitoring.ExportConfig{
+		&monitoring.SyslogExport{
+			Format: monitoring.MonitoringExportFormat_name[int32(monitoring.MonitoringExportFormat_SYSLOG_RFC5424)],
+			Targets: []*monitoring.ExportConfig{
+				{
 					Destination: "127.0.0.1",
 					Transport:   fmt.Sprintf("tcp/%s", tmp[len(tmp)-1]),
 				},
-			}})
+			},
+		})
 	alertDestRFC5424Syslog, err = apiClient.MonitoringV1().AlertDestination().Create(context.Background(), alertDestRFC5424Syslog)
 	AssertOk(t, err, "failed to add alert destination, err: %v", err)
 
@@ -1122,61 +1123,63 @@ func TestEventsAlertEngineWithTCPSyslogExport(t *testing.T) {
 	alertPolicy2, err = apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy2)
 	AssertOk(t, err, "failed to add alert policy, err: %v", err)
 
-	expectedSyslogMessages := []struct {
+	messages := map[chan string][]struct {
 		Substrs   []string                          // syslog message should contain all these strings
 		MsgFormat monitoring.MonitoringExportFormat // BSD style message contains the JSON formatted alert; RFC contains <msgID, structured data, msg>
 	}{
-		{
-			Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
-			MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
-		},
-		{
-			Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
-			MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
-		},
-		{
-			Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
-			MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
-		},
-		{
-			Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_WARNING), alertPolicy2.GetUUID()},
-			MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
-		},
-		{
-			Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING), alertPolicy2.GetUUID()},
-			MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
-		},
-		{
-			Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING), alertPolicy2.GetUUID()},
-			MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
-		},
-		{
-			Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
-			MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
-		},
-		{
-			Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
-			MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
-		},
-		{
-			Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
-			MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
-		},
-		{
-			Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_WARNING), alertPolicy2.GetUUID()},
-			MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
-		},
-		{
-			Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING), alertPolicy2.GetUUID()},
-			MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
-		},
-		{
-			Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING), alertPolicy2.GetUUID()},
-			MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+		receivedMsgsAtTCPServer: {
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_WARNING), alertPolicy2.GetUUID()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING), alertPolicy2.GetUUID()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING), alertPolicy2.GetUUID()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_WARNING), alertPolicy2.GetUUID()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING), alertPolicy2.GetUUID()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING), alertPolicy2.GetUUID()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
 		},
 	}
 
-	testSyslogMessageDelivery(t, ti, receivedMsgsAtTCPServer, expectedSyslogMessages)
+	testSyslogMessageDelivery(t, ti, messages)
 
 	AssertEventually(t,
 		func() (bool, interface{}) {
@@ -1220,35 +1223,47 @@ func TestEventsAlertEngineWithUDPSyslogExport(t *testing.T) {
 	AssertOk(t, err, "failed to create API server client, err: %v", err)
 	defer apiClient.Close()
 
-	// start UDP server to receive syslog messages
-	pConn, receivedMsgsAtUDPServer, err := serviceutils.StartUDPServer(":0")
+	// start UDP server - 1 to receive syslog messages
+	pConn1, receivedMsgsAtUDPServer1, err := serviceutils.StartUDPServer(":0")
 	AssertOk(t, err, "failed to start UDP server, err: %v", err)
-	defer pConn.Close()
-	tmp := strings.Split(pConn.LocalAddr().String(), ":")
+	defer pConn1.Close()
+	tmp1 := strings.Split(pConn1.LocalAddr().String(), ":")
+
+	// start UDP server - 2 to receive syslog messages
+	pConn2, receivedMsgsAtUDPServer2, err := serviceutils.StartUDPServer(":0")
+	AssertOk(t, err, "failed to start UDP server, err: %v", err)
+	defer pConn2.Close()
+	tmp2 := strings.Split(pConn2.LocalAddr().String(), ":")
 
 	// alert destination - 1: BSD style syslog export
 	alertDestBSDSyslog := policygen.CreateAlertDestinationObj(globals.DefaultTenant, globals.DefaultNamespace, uuid.NewV1().String(),
-		[]*monitoring.SyslogExport{
-			{
-				Format: monitoring.MonitoringExportFormat_name[int32(monitoring.MonitoringExportFormat_SYSLOG_BSD)],
-				Target: &monitoring.ExportConfig{
+		&monitoring.SyslogExport{
+			Format: monitoring.MonitoringExportFormat_name[int32(monitoring.MonitoringExportFormat_SYSLOG_BSD)],
+			Targets: []*monitoring.ExportConfig{
+				{
 					Destination: "127.0.0.1",
-					Transport:   fmt.Sprintf("udp/%s", tmp[len(tmp)-1]),
+					Transport:   fmt.Sprintf("udp/%s", tmp1[len(tmp1)-1]),
 				},
-			}})
+				{
+					Destination: "127.0.0.1",
+					Transport:   fmt.Sprintf("udp/%s", tmp2[len(tmp2)-1]),
+				},
+			},
+		})
 	alertDestBSDSyslog, err = apiClient.MonitoringV1().AlertDestination().Create(context.Background(), alertDestBSDSyslog)
 	AssertOk(t, err, "failed to add alert destination, err: %v", err)
 
 	// alert destination - 2: RFC5424 style syslog export
 	alertDestRFC5424Syslog := policygen.CreateAlertDestinationObj(globals.DefaultTenant, globals.DefaultNamespace, uuid.NewV1().String(),
-		[]*monitoring.SyslogExport{
-			{
-				Format: monitoring.MonitoringExportFormat_name[int32(monitoring.MonitoringExportFormat_SYSLOG_RFC5424)],
-				Target: &monitoring.ExportConfig{
+		&monitoring.SyslogExport{
+			Format: monitoring.MonitoringExportFormat_name[int32(monitoring.MonitoringExportFormat_SYSLOG_RFC5424)],
+			Targets: []*monitoring.ExportConfig{
+				{
 					Destination: "127.0.0.1",
-					Transport:   fmt.Sprintf("udp/%s", tmp[len(tmp)-1]),
+					Transport:   fmt.Sprintf("udp/%s", tmp1[len(tmp1)-1]),
 				},
-			}})
+			},
+		})
 	alertDestRFC5424Syslog, err = apiClient.MonitoringV1().AlertDestination().Create(context.Background(), alertDestRFC5424Syslog)
 	AssertOk(t, err, "failed to add alert destination, err: %v", err)
 
@@ -1260,37 +1275,53 @@ func TestEventsAlertEngineWithUDPSyslogExport(t *testing.T) {
 	alertPolicy1, err = apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy1)
 	AssertOk(t, err, "failed to add alert policy, err: %v", err)
 
-	expectedSyslogMessages := []struct {
+	messages := map[chan string][]struct {
 		Substrs   []string                          // syslog message should contain all these strings
 		MsgFormat monitoring.MonitoringExportFormat // BSD style message contains the JSON formatted alert; RFC contains <msgID, structured data, msg>
 	}{
-		{
-			Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
-			MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+		receivedMsgsAtUDPServer1: {
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
 		},
-		{
-			Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
-			MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
-		},
-		{
-			Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
-			MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
-		},
-		{
-			Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
-			MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
-		},
-		{
-			Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
-			MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
-		},
-		{
-			Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
-			MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+		receivedMsgsAtUDPServer2: {
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
 		},
 	}
 
-	testSyslogMessageDelivery(t, ti, receivedMsgsAtUDPServer, expectedSyslogMessages)
+	testSyslogMessageDelivery(t, ti, messages)
 
 	AssertEventually(t,
 		func() (bool, interface{}) {
@@ -1299,11 +1330,12 @@ func TestEventsAlertEngineWithUDPSyslogExport(t *testing.T) {
 				return false, err
 			}
 
-			if ad.Status.TotalNotificationsSent == 3 {
+			// (3 * 2) for 2 targets
+			if ad.Status.TotalNotificationsSent == 6 {
 				return true, nil
 			}
 
-			return false, fmt.Sprintf("TotalNotificationSent expected:3, got: %v", ad.Status.TotalNotificationsSent)
+			return false, fmt.Sprintf("TotalNotificationSent expected: 6, got: %v", ad.Status.TotalNotificationsSent)
 		}, fmt.Sprintf("alert destionation %v is not updated", alertDestBSDSyslog.GetName()), "20ms", "10s")
 
 	AssertEventually(t,
@@ -1317,12 +1349,12 @@ func TestEventsAlertEngineWithUDPSyslogExport(t *testing.T) {
 				return true, nil
 			}
 
-			return false, fmt.Sprintf("TotalNotificationSent expected:3, got: %v", ad.Status.TotalNotificationsSent)
+			return false, fmt.Sprintf("TotalNotificationSent expected: 3, got: %v", ad.Status.TotalNotificationsSent)
 		}, fmt.Sprintf("alert destionation %v is not updated", alertDestRFC5424Syslog.GetName()), "20ms", "10s")
 }
 
 // ensures the delivery of expected syslog messages
-func testSyslogMessageDelivery(t *testing.T, ti tInfo, receivedMessages chan string, expectedSyslogMessages []struct {
+func testSyslogMessageDelivery(t *testing.T, ti tInfo, messages map[chan string][]struct {
 	Substrs   []string
 	MsgFormat monitoring.MonitoringExportFormat
 }) {
@@ -1398,39 +1430,41 @@ func testSyslogMessageDelivery(t *testing.T, ti tInfo, receivedMessages chan str
 		}
 	}()
 
-	// ensure all the alerts are exported to the given syslog(TCP) server in the respective format.
-	go func() {
-		for {
-			select {
-			case msg, ok := <-receivedMessages:
-				if !ok {
-					return
-				}
+	for messageCh, expectedMessages := range messages {
+		// ensure all the alerts are exported to the given syslog(TCP) server in the respective format.
+		go func() {
+			for {
+				select {
+				case msg, ok := <-messageCh:
+					if !ok {
+						return
+					}
 
-				m.Lock()
-				for i := 0; i < len(expectedSyslogMessages); i++ {
-					if len(expectedSyslogMessages[i].Substrs) > 0 {
-						match := true
-						for _, substr := range expectedSyslogMessages[i].Substrs {
-							match = match && strings.Contains(msg, substr)
-						}
-						if match && syslog.ValidateSyslogMessage(expectedSyslogMessages[i].MsgFormat, msg) {
-							expectedSyslogMessages = append(expectedSyslogMessages[:i], expectedSyslogMessages[i+1:]...)
-							break
+					m.Lock()
+					for i := 0; i < len(expectedMessages); i++ {
+						if len(expectedMessages[i].Substrs) > 0 {
+							match := true
+							for _, substr := range expectedMessages[i].Substrs {
+								match = match && strings.Contains(msg, substr)
+							}
+							if match && syslog.ValidateSyslogMessage(expectedMessages[i].MsgFormat, msg) {
+								expectedMessages = append(expectedMessages[:i], expectedMessages[i+1:]...)
+								break
+							}
 						}
 					}
+					m.Unlock()
 				}
-				m.Unlock()
 			}
-		}
-	}()
+		}()
 
-	AssertEventually(t,
-		func() (bool, interface{}) {
-			m.Lock()
-			defer m.Unlock()
-			return len(expectedSyslogMessages) == 0, nil
-		}, fmt.Sprintf("did not receive all the expected syslog messages, pending: %v", len(expectedSyslogMessages)), "20ms", "10s")
+		AssertEventually(t,
+			func() (bool, interface{}) {
+				m.Lock()
+				defer m.Unlock()
+				return len(expectedMessages) == 0, nil
+			}, fmt.Sprintf("did not receive all the expected syslog messages, pending: %v", len(expectedMessages)), "20ms", "10s")
+	}
 
 	wg.Wait()
 }

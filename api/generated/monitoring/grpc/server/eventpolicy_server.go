@@ -43,7 +43,6 @@ func (s *smonitoringEventpolicyBackend) regMsgsFunc(l log.Logger, scheme *runtim
 	l.Infof("registering message for smonitoringEventpolicyBackend")
 	s.Messages = map[string]apiserver.Message{
 
-		"monitoring.EventExport": apisrvpkg.NewMessage("monitoring.EventExport"),
 		"monitoring.EventPolicy": apisrvpkg.NewMessage("monitoring.EventPolicy").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := monitoring.EventPolicy{}

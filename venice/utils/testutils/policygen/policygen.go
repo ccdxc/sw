@@ -17,8 +17,8 @@ import (
 	"github.com/pensando/sw/venice/globals"
 )
 
-// CreateAlertDestinationObj helper function to create alert destionation object with the given params.
-func CreateAlertDestinationObj(tenant, namespace, name string, syslogServers []*monitoring.SyslogExport) *monitoring.AlertDestination {
+// CreateAlertDestinationObj helper function to create alert destination object with the given params.
+func CreateAlertDestinationObj(tenant, namespace, name string, syslogExport *monitoring.SyslogExport) *monitoring.AlertDestination {
 	creationTime, _ := types.TimestampProto(time.Now())
 
 	alertDest := &monitoring.AlertDestination{
@@ -36,7 +36,7 @@ func CreateAlertDestinationObj(tenant, namespace, name string, syslogServers []*
 			},
 		},
 		Spec: monitoring.AlertDestinationSpec{
-			SyslogServers: syslogServers,
+			SyslogExport: syslogExport,
 		},
 	}
 

@@ -18,7 +18,31 @@ import (
 )
 
 func restGetEventPolicy(hostname, tenant, token string, obj interface{}) error {
-	return fmt.Errorf("get operation not supported for EventPolicy object")
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*monitoring.EventPolicy); ok {
+		nv, err := restcl.MonitoringV1().EventPolicy().Get(loginCtx, &v.ObjectMeta)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+
+	if v, ok := obj.(*monitoring.EventPolicyList); ok {
+		opts := api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: tenant}}
+		nv, err := restcl.MonitoringV1().EventPolicy().List(loginCtx, &opts)
+		if err != nil {
+			return err
+		}
+		v.Items = nv
+	}
+	return nil
+
 }
 
 func restDeleteEventPolicy(hostname, token string, obj interface{}) error {

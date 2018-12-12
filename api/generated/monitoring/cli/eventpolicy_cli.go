@@ -16,7 +16,7 @@ import (
 var CreateEventPolicyFlags = []gen.CliFlag{
 	{
 		ID:     "format",
-		Type:   "StringSlice",
+		Type:   "String",
 		Help:   "",
 		Skip:   false,
 		Insert: "",

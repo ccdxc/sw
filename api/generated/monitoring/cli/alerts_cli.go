@@ -37,20 +37,6 @@ func removeAlertOper(obj interface{}) error {
 // CreateAlertDestinationFlags specifies flags for AlertDestination create operation
 var CreateAlertDestinationFlags = []gen.CliFlag{
 	{
-		ID:     "algo",
-		Type:   "StringSlice",
-		Help:   "",
-		Skip:   false,
-		Insert: "",
-	},
-	{
-		ID:     "community-or-user",
-		Type:   "StringSlice",
-		Help:   "",
-		Skip:   false,
-		Insert: "",
-	},
-	{
 		ID:     "email-list",
 		Type:   "StringSlice",
 		Help:   "",
@@ -59,35 +45,7 @@ var CreateAlertDestinationFlags = []gen.CliFlag{
 	},
 	{
 		ID:     "format",
-		Type:   "StringSlice",
-		Help:   "",
-		Skip:   false,
-		Insert: "",
-	},
-	{
-		ID:     "host",
-		Type:   "StringSlice",
-		Help:   "",
-		Skip:   false,
-		Insert: "",
-	},
-	{
-		ID:     "password",
-		Type:   "StringSlice",
-		Help:   "",
-		Skip:   false,
-		Insert: "",
-	},
-	{
-		ID:     "port",
-		Type:   "StringSlice",
-		Help:   "",
-		Skip:   false,
-		Insert: "",
-	},
-	{
-		ID:     "version",
-		Type:   "StringSlice",
+		Type:   "String",
 		Help:   "",
 		Skip:   false,
 		Insert: "",

@@ -23,9 +23,11 @@ enum MonitoringExportFormat {
 // Event Client module will be consumer of this policy.
 message EventPolicy {
     option (venice.objectPrefix) = {Collection: "event-policy", Path: "/{O.Tenant}"};
+
     api.TypeMeta T              = 1 [(gogoproto.embed) = true,
                                     (gogoproto.nullable) = false,
                                     (gogoproto.jsontag) = ",inline"];
+
     api.ObjectMeta O            = 2 [(gogoproto.embed) = true,
                                     (gogoproto.nullable) = false,
                                     (gogoproto.jsontag) = "meta,omitempty"];
@@ -39,26 +41,21 @@ message EventPolicy {
                                     (gogoproto.jsontag) = "status,omitempty"];
 }
 
-// Event export configurations
-message EventExport {
-    // event export format, SYSLOG_BSD default
-    string Format                   = 1 [(venice.check) = "StrEnum(MonitoringExportFormat)", (gogoproto.jsontag) = "format, omitempty"];
-
-    // export events matched by the selector
-    fields.Selector Selector        = 2 [(gogoproto.jsontag) = "selector,omitempty"];
-
-    // export target ip/port/protocol
-    ExportConfig Target             = 3 [(gogoproto.jsontag) = "target,omitempty"];
-
-    // syslog specific configuration
-    SyslogExportConfig SyslogConfig = 4 [(gogoproto.jsontag) = "syslog-config,omitempty"];
-
-    // each format can have it's own config
-}
-
 // EventPolicySpec is the specification of an Event Policy.
 message EventPolicySpec {
-    repeated EventExport Exports  = 1 [(gogoproto.jsontag) = "exports,omitempty"];
+    // event export format, SYSLOG_BSD default
+    string Format                              = 1 [(venice.check) = "StrEnum(MonitoringExportFormat)",
+                                                    (gogoproto.jsontag) = "format, omitempty"];
+
+    // export events matched by the selector
+    fields.Selector Selector                   = 2 [(gogoproto.jsontag) = "selector,omitempty"];
+
+    // export target ip/port/protocol
+    repeated monitoring.ExportConfig Targets   = 3 [(gogoproto.jsontag) = "targets,omitempty"];
+
+    // once we support other formats, it should be one of the supported configs
+    // syslog specific configuration
+    monitoring.SyslogExportConfig SyslogConfig = 4 [(gogoproto.jsontag) = "config,omitempty"];
 }
 
 // EventPolicyStatus

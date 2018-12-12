@@ -962,7 +962,7 @@ func (a *restObjMonitoringV1EventPolicy) Allowed(oper apiserver.APIOperType) boo
 	case apiserver.DeleteOper:
 		return true
 	case apiserver.ListOper:
-		return false
+		return true
 	case apiserver.WatchOper:
 		return true
 	default:

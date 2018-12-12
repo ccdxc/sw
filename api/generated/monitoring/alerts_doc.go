@@ -19,10 +19,9 @@ The following Messages are defined.
   AlertSpec
   AlertStatus
   AuditInfo
-  AuthConfig
+  EmailExport
   MatchedRequirement
-  PrivacyConfig
-  SNMPTrapServer
+  SNMPExport
   SyslogExport
 
 The following Services and Methods are defined.

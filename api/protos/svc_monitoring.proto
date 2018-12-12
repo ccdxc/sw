@@ -36,7 +36,7 @@ service MonitoringV1 {
 
     option (venice.apiRestService) = {
         Object: "EventPolicy"
-        Method: ["get", "put", "delete", "post", "watch"]
+        Method: ["get", "put", "delete", "post", "list", "watch"]
     };
 
     option (venice.apiRestService) = {

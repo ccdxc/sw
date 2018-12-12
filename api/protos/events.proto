@@ -8,7 +8,6 @@ import "google/api/annotations.proto";
 import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
-import "github.com/pensando/sw/api/fields/selector.proto";
 
 // -------------------------------- Event ---------------------------------
 // Severity Level of an event
@@ -51,7 +50,7 @@ message EventAttributes {
     string Type             = 2 [(gogoproto.jsontag) = "type,omitempty"];
 
     // Message represents the human readable description of an event
-    string Message          = 3  [(gogoproto.jsontag) = "message,omitempty"];
+    string Message          = 3 [(gogoproto.jsontag) = "message,omitempty"];
 
     // ObjectRef is the reference to the object associated with an event
     api.ObjectRef ObjectRef = 4 [(gogoproto.jsontag) = "object-ref,omitempty"];

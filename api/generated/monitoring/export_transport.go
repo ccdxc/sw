@@ -17,6 +17,40 @@ import (
 // Dummy definitions to suppress nonused warnings
 var _ api.ObjectMeta
 
+func encodeHTTPAuthConfig(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPAuthConfig(_ context.Context, r *http.Request) (interface{}, error) {
+	var req AuthConfig
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqAuthConfig encodes GRPC request
+func EncodeGrpcReqAuthConfig(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*AuthConfig)
+	return req, nil
+}
+
+// DecodeGrpcReqAuthConfig decodes GRPC request
+func DecodeGrpcReqAuthConfig(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*AuthConfig)
+	return req, nil
+}
+
+// EncodeGrpcRespAuthConfig encodes GRC response
+func EncodeGrpcRespAuthConfig(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespAuthConfig decodes GRPC response
+func DecodeGrpcRespAuthConfig(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPExportConfig(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -82,6 +116,74 @@ func EncodeGrpcRespExternalCred(ctx context.Context, response interface{}) (inte
 
 // DecodeGrpcRespExternalCred decodes GRPC response
 func DecodeGrpcRespExternalCred(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPPrivacyConfig(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPPrivacyConfig(_ context.Context, r *http.Request) (interface{}, error) {
+	var req PrivacyConfig
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqPrivacyConfig encodes GRPC request
+func EncodeGrpcReqPrivacyConfig(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*PrivacyConfig)
+	return req, nil
+}
+
+// DecodeGrpcReqPrivacyConfig decodes GRPC request
+func DecodeGrpcReqPrivacyConfig(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*PrivacyConfig)
+	return req, nil
+}
+
+// EncodeGrpcRespPrivacyConfig encodes GRC response
+func EncodeGrpcRespPrivacyConfig(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespPrivacyConfig decodes GRPC response
+func DecodeGrpcRespPrivacyConfig(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPSNMPTrapServer(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPSNMPTrapServer(_ context.Context, r *http.Request) (interface{}, error) {
+	var req SNMPTrapServer
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqSNMPTrapServer encodes GRPC request
+func EncodeGrpcReqSNMPTrapServer(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SNMPTrapServer)
+	return req, nil
+}
+
+// DecodeGrpcReqSNMPTrapServer decodes GRPC request
+func DecodeGrpcReqSNMPTrapServer(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SNMPTrapServer)
+	return req, nil
+}
+
+// EncodeGrpcRespSNMPTrapServer encodes GRC response
+func EncodeGrpcRespSNMPTrapServer(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespSNMPTrapServer decodes GRPC response
+func DecodeGrpcRespSNMPTrapServer(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

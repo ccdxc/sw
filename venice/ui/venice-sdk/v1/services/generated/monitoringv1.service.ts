@@ -3,7 +3,7 @@ import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http
 import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 
-import { IMonitoringMirrorSessionList,IApiStatus,IMonitoringMirrorSession,IMonitoringTroubleshootingSessionList,IMonitoringTroubleshootingSession,IMonitoringAlertDestinationList,IMonitoringAlertDestination,IMonitoringAlertPolicyList,IMonitoringAlertPolicy,IMonitoringAlertList,IMonitoringAlert,IMonitoringEventPolicy,IMonitoringFlowExportPolicyList,IMonitoringFlowExportPolicy,IMonitoringFwlogPolicyList,IMonitoringFwlogPolicy,IMonitoringStatsPolicyList,IMonitoringStatsPolicy,IMonitoringTechSupportRequestList,IMonitoringTechSupportRequest,IMonitoringAutoMsgMirrorSessionWatchHelper,IMonitoringAutoMsgAlertDestinationWatchHelper,IMonitoringAutoMsgAlertPolicyWatchHelper,IMonitoringAutoMsgAlertWatchHelper,IMonitoringAutoMsgEventPolicyWatchHelper,IMonitoringAutoMsgFlowExportPolicyWatchHelper,IMonitoringAutoMsgFwlogPolicyWatchHelper,IMonitoringAutoMsgStatsPolicyWatchHelper } from '../../models/generated/monitoring';
+import { IMonitoringMirrorSessionList,IApiStatus,IMonitoringMirrorSession,IMonitoringTroubleshootingSessionList,IMonitoringTroubleshootingSession,IMonitoringAlertDestinationList,IMonitoringAlertDestination,IMonitoringAlertPolicyList,IMonitoringAlertPolicy,IMonitoringAlertList,IMonitoringAlert,IMonitoringEventPolicyList,IMonitoringEventPolicy,IMonitoringFlowExportPolicyList,IMonitoringFlowExportPolicy,IMonitoringFwlogPolicyList,IMonitoringFwlogPolicy,IMonitoringStatsPolicyList,IMonitoringStatsPolicy,IMonitoringTechSupportRequestList,IMonitoringTechSupportRequest,IMonitoringAutoMsgMirrorSessionWatchHelper,IMonitoringAutoMsgAlertDestinationWatchHelper,IMonitoringAutoMsgAlertPolicyWatchHelper,IMonitoringAutoMsgAlertWatchHelper,IMonitoringAutoMsgEventPolicyWatchHelper,IMonitoringAutoMsgFlowExportPolicyWatchHelper,IMonitoringAutoMsgFwlogPolicyWatchHelper,IMonitoringAutoMsgStatsPolicyWatchHelper } from '../../models/generated/monitoring';
 
 @Injectable()
 export class Monitoringv1Service extends AbstractService {
@@ -238,6 +238,15 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
     }
     return this.invokeAJAXPutCall(url, body, 'UpdateAlert_1') as Observable<{body: IMonitoringAlert | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** List EventPolicy objects */
+  public ListEventPolicy_1(queryParam: any = null, stagingID: string = ""):Observable<{body: IMonitoringEventPolicyList | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/event-policy';
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+    }
+    return this.invokeAJAXGetCall(url, queryParam, 'ListEventPolicy_1') as Observable<{body: IMonitoringEventPolicyList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Create EventPolicy object */
@@ -675,6 +684,16 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
     }
     return this.invokeAJAXPutCall(url, body, 'UpdateAlert') as Observable<{body: IMonitoringAlert | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** List EventPolicy objects */
+  public ListEventPolicy(queryParam: any = null, stagingID: string = ""):Observable<{body: IMonitoringEventPolicyList | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/event-policy';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+    }
+    return this.invokeAJAXGetCall(url, queryParam, 'ListEventPolicy') as Observable<{body: IMonitoringEventPolicyList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Create EventPolicy object */

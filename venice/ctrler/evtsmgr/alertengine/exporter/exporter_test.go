@@ -40,21 +40,37 @@ func TestExporter(t *testing.T) {
 	defer exporter.Stop()
 	stop := make(chan struct{})
 
-	pConn, receivedMsgsAtUDPServer, err := serviceutils.StartUDPServer(":0")
+	// UDP server - 1
+	pConn1, receivedMsgsAtUDPServer1, err := serviceutils.StartUDPServer(":0")
 	AssertOk(t, err, "failed to start UDP server, err: %v", err)
-	defer pConn.Close()
-	tmp := strings.Split(pConn.LocalAddr().String(), ":")
+	defer pConn1.Close()
+	tmp1 := strings.Split(pConn1.LocalAddr().String(), ":")
+
+	// UDP server - 2
+	pConn2, receivedMsgsAtUDPServer2, err := serviceutils.StartUDPServer(":0")
+	AssertOk(t, err, "failed to start UDP server, err: %v", err)
+	defer pConn2.Close()
+	tmp2 := strings.Split(pConn2.LocalAddr().String(), ":")
 
 	alertDestUUID := uuid.NewV1().String()
 	alertDestBSDSyslog := policygen.CreateAlertDestinationObj(globals.DefaultTenant, globals.DefaultNamespace, alertDestUUID,
-		[]*monitoring.SyslogExport{
-			{
-				Format: monitoring.MonitoringExportFormat_name[int32(monitoring.MonitoringExportFormat_SYSLOG_BSD)],
-				Target: &monitoring.ExportConfig{
+		&monitoring.SyslogExport{
+			Format: monitoring.MonitoringExportFormat_name[int32(monitoring.MonitoringExportFormat_SYSLOG_BSD)],
+			Targets: []*monitoring.ExportConfig{
+				{
 					Destination: "127.0.0.1",
-					Transport:   fmt.Sprintf("udp/%s", tmp[len(tmp)-1]),
+					Transport:   fmt.Sprintf("udp/%s", tmp1[len(tmp1)-1]),
 				},
-			}})
+				{
+					Destination: "127.0.0.1",
+					Transport:   fmt.Sprintf("udp/%s", tmp2[len(tmp2)-1]),
+				},
+			},
+			Config: &monitoring.SyslogExportConfig{
+				Prefix:           "pen-events-exporter-test",
+				FacilityOverride: monitoring.SyslogFacility_name[int32(monitoring.SyslogFacility_LOG_SYSLOG)],
+			},
+		})
 	alertDestBSDSyslog.ObjectMeta.ModTime = api.Timestamp{}
 	alertDestBSDSyslog.ObjectMeta.CreationTime = api.Timestamp{}
 	memDb.AddObject(alertDestBSDSyslog)
@@ -71,11 +87,14 @@ func TestExporter(t *testing.T) {
 	}{count: map[monitoring.MonitoringExportFormat]int{}}
 
 	go func() { // keep exporting alert every 60ms
+
 		for {
 			select {
 			case <-stop:
 				return
 			case <-time.After(60 * time.Millisecond):
+				ad := memDb.GetAlertDestination(alertDestBSDSyslog.GetObjectMeta().GetName())
+				numTargets := len(ad.Spec.SyslogExport.Targets)
 				go func() {
 					getC := mAlertDestination.EXPECT().Get(context.Background(), alertDestBSDSyslog.GetObjectMeta()).Return(alertDestBSDSyslog, nil).MinTimes(0).MaxTimes(1)
 					mAlertDestination.EXPECT().Update(context.Background(), alertDestBSDSyslog).Return(alertDestBSDSyslog, nil).MinTimes(0).MaxTimes(1).After(getC)
@@ -87,7 +106,7 @@ func TestExporter(t *testing.T) {
 				}
 
 				totalExports.Lock()
-				totalExports.count++
+				totalExports.count += numTargets
 				totalExports.Unlock()
 			}
 		}
@@ -96,7 +115,26 @@ func TestExporter(t *testing.T) {
 	go func() { // check the messages from dummy UDP server
 		for {
 			select {
-			case msg, ok := <-receivedMsgsAtUDPServer:
+			case msg, ok := <-receivedMsgsAtUDPServer1:
+				if !ok {
+					return
+				}
+
+				totalReceived.Lock()
+				if syslog.ValidateSyslogMessage(monitoring.MonitoringExportFormat_SYSLOG_BSD, msg) {
+					totalReceived.count[monitoring.MonitoringExportFormat_SYSLOG_BSD]++
+				} else if syslog.ValidateSyslogMessage(monitoring.MonitoringExportFormat_SYSLOG_RFC5424, msg) {
+					totalReceived.count[monitoring.MonitoringExportFormat_SYSLOG_RFC5424]++
+				}
+				totalReceived.Unlock()
+			}
+		}
+	}()
+
+	go func() { // check the messages from dummy UDP server
+		for {
+			select {
+			case msg, ok := <-receivedMsgsAtUDPServer2:
 				if !ok {
 					return
 				}
@@ -116,14 +154,15 @@ func TestExporter(t *testing.T) {
 
 	// update the export from BSD to RFC
 	alertDestBSDSyslog = policygen.CreateAlertDestinationObj(globals.DefaultTenant, globals.DefaultNamespace, alertDestUUID,
-		[]*monitoring.SyslogExport{
-			{
-				Format: monitoring.MonitoringExportFormat_name[int32(monitoring.MonitoringExportFormat_SYSLOG_RFC5424)],
-				Target: &monitoring.ExportConfig{
+		&monitoring.SyslogExport{
+			Format: monitoring.MonitoringExportFormat_name[int32(monitoring.MonitoringExportFormat_SYSLOG_RFC5424)],
+			Targets: []*monitoring.ExportConfig{
+				{
 					Destination: "127.0.0.1",
-					Transport:   fmt.Sprintf("udp/%s", tmp[len(tmp)-1]),
+					Transport:   fmt.Sprintf("udp/%s", tmp1[len(tmp1)-1]),
 				},
-			}})
+			},
+		})
 	alertDestBSDSyslog.ObjectMeta.ModTime = api.Timestamp{}
 	alertDestBSDSyslog.ObjectMeta.CreationTime = api.Timestamp{}
 	memDb.UpdateObject(alertDestBSDSyslog)

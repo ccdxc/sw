@@ -14,7 +14,9 @@
       <div fxFlex="10px"></div> <!-- Buffer, creating as a div so there are no hiccups in the animation-->
 
       <div fxFlex="noshrink" fxLayout="column">
-        <ng-container *ngTemplateOutlet="syslog"></ng-container>
+        <ng-container *ngIf="false">
+          <ng-container *ngTemplateOutlet="syslog"></ng-container>
+        </ng-container>
         <ng-container *ngIf="enableSnmpTrap">
           <ng-container *ngTemplateOutlet="snmp"></ng-container>
         </ng-container>

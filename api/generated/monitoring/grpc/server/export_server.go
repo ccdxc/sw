@@ -35,8 +35,11 @@ func (s *smonitoringExportBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 	l.Infof("registering message for smonitoringExportBackend")
 	s.Messages = map[string]apiserver.Message{
 
+		"monitoring.AuthConfig":         apisrvpkg.NewMessage("monitoring.AuthConfig"),
 		"monitoring.ExportConfig":       apisrvpkg.NewMessage("monitoring.ExportConfig"),
 		"monitoring.ExternalCred":       apisrvpkg.NewMessage("monitoring.ExternalCred"),
+		"monitoring.PrivacyConfig":      apisrvpkg.NewMessage("monitoring.PrivacyConfig"),
+		"monitoring.SNMPTrapServer":     apisrvpkg.NewMessage("monitoring.SNMPTrapServer"),
 		"monitoring.SyslogExportConfig": apisrvpkg.NewMessage("monitoring.SyslogExportConfig"),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),

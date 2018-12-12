@@ -1721,6 +1721,8 @@ func (e *sMonitoringV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoListAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AlertPolicyList", "monitoring", apiserver.ListOper)
 
+	e.svcProf["AutoListEventPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "EventPolicyList", "monitoring", apiserver.ListOper)
+
 	e.svcProf["AutoListFlowExportPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "FlowExportPolicyList", "monitoring", apiserver.ListOper)
 
 	e.svcProf["AutoListFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "FwlogPolicyList", "monitoring", apiserver.ListOper)

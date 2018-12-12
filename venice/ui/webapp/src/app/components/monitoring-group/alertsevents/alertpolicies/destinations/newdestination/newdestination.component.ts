@@ -74,21 +74,21 @@ export class NewdestinationComponent extends BaseComponent implements OnInit, Af
       // Name field can't be blank
       this.newDestination.$formGroup.get(['meta', 'name']).setValidators(Validators.required);
     }
-    // Check if there is a syslog server config,
-    // if not, we need to add one so that it shows in the form
-    const syslogs = this.newDestination.$formGroup.get(['spec', 'syslog-servers']) as FormArray;
-    if (syslogs.length === 0) {
-      syslogs.insert(0, new MonitoringSyslogExport().$formGroup);
-    }
-
-    // Check if there is a snmp trap server config,
-    // if not, we need to add one so that it shows in the form
-    if (this.enableSnmpTrap) {
-      const snmpArray = this.newDestination.$formGroup.get(['spec', 'snmp-trap-servers']) as FormArray;
-      if (snmpArray.length === 0) {
-        snmpArray.insert(0, new MonitoringSNMPTrapServer().$formGroup);
-      }
-    }
+    // // Check if there is a syslog server config,
+    // // if not, we need to add one so that it shows in the form
+    // const syslogs = this.newDestination.$formGroup.get(['spec', 'syslog-servers']) as FormArray;
+    // if (syslogs.length === 0) {
+    //   syslogs.insert(0, new MonitoringSyslogExport().$formGroup);
+    // }
+    //
+    // // Check if there is a snmp trap server config,
+    // // if not, we need to add one so that it shows in the form
+    // if (this.enableSnmpTrap) {
+    //   const snmpArray = this.newDestination.$formGroup.get(['spec', 'snmp-trap-servers']) as FormArray;
+    //   if (snmpArray.length === 0) {
+    //     snmpArray.insert(0, new MonitoringSNMPTrapServer().$formGroup);
+    //   }
+    // }
   }
 
   ngAfterViewInit() {

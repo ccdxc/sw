@@ -229,6 +229,7 @@ func (a *alertEngineImpl) createAlert(alertPolicy *monitoring.AlertPolicy, evt *
 		return false, err
 	}, 60*time.Millisecond, maxRetry)
 
+	// TODO: run field selector on it (AlertDestination.Spec.Selector)
 	if alertCreated.(bool) { // export alert
 		if err := a.exporter.Export(alertPolicy.Spec.GetDestinations(), alert); err != nil {
 			log.Errorf("failed to export alert %v to destinations %v, err: %v", alert.GetObjectMeta(), alertPolicy.Spec.GetDestinations(), err)

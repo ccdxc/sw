@@ -129,17 +129,8 @@ func (m *AlertDestinationSpec) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *AlertDestinationSpec) Defaults(ver string) bool {
 	var ret bool
-	for k := range m.SNMPTrapServers {
-		if m.SNMPTrapServers[k] != nil {
-			i := m.SNMPTrapServers[k]
-			ret = i.Defaults(ver) || ret
-		}
-	}
-	for k := range m.SyslogServers {
-		if m.SyslogServers[k] != nil {
-			i := m.SyslogServers[k]
-			ret = i.Defaults(ver) || ret
-		}
+	if m.SyslogExport != nil {
+		ret = m.SyslogExport.Defaults(ver) || ret
 	}
 	return ret
 }
@@ -357,13 +348,13 @@ func (m *AuditInfo) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *AuthConfig) Clone(into interface{}) (interface{}, error) {
-	var out *AuthConfig
+func (m *EmailExport) Clone(into interface{}) (interface{}, error) {
+	var out *EmailExport
 	var ok bool
 	if into == nil {
-		out = &AuthConfig{}
+		out = &EmailExport{}
 	} else {
-		out, ok = into.(*AuthConfig)
+		out, ok = into.(*EmailExport)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -373,14 +364,8 @@ func (m *AuthConfig) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *AuthConfig) Defaults(ver string) bool {
-	var ret bool
-	ret = true
-	switch ver {
-	default:
-		m.Algo = "MD5"
-	}
-	return ret
+func (m *EmailExport) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -405,13 +390,13 @@ func (m *MatchedRequirement) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *PrivacyConfig) Clone(into interface{}) (interface{}, error) {
-	var out *PrivacyConfig
+func (m *SNMPExport) Clone(into interface{}) (interface{}, error) {
+	var out *SNMPExport
 	var ok bool
 	if into == nil {
-		out = &PrivacyConfig{}
+		out = &SNMPExport{}
 	} else {
-		out, ok = into.(*PrivacyConfig)
+		out, ok = into.(*SNMPExport)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -421,48 +406,8 @@ func (m *PrivacyConfig) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *PrivacyConfig) Defaults(ver string) bool {
-	var ret bool
-	ret = true
-	switch ver {
-	default:
-		m.Algo = "DES56"
-	}
-	return ret
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *SNMPTrapServer) Clone(into interface{}) (interface{}, error) {
-	var out *SNMPTrapServer
-	var ok bool
-	if into == nil {
-		out = &SNMPTrapServer{}
-	} else {
-		out, ok = into.(*SNMPTrapServer)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *SNMPTrapServer) Defaults(ver string) bool {
-	var ret bool
-	if m.AuthConfig != nil {
-		ret = m.AuthConfig.Defaults(ver) || ret
-	}
-	if m.PrivacyConfig != nil {
-		ret = m.PrivacyConfig.Defaults(ver) || ret
-	}
-	ret = true
-	switch ver {
-	default:
-		m.Port = "162"
-		m.Version = "V2C"
-	}
-	return ret
+func (m *SNMPExport) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -549,23 +494,33 @@ func (m *AlertDestination) Validate(ver, path string, ignoreStatus bool) []error
 
 func (m *AlertDestinationSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
-	for k, v := range m.SNMPTrapServers {
+	if m.SNMPExport != nil {
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sSNMPTrapServers[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		npath := path + dlmtr + "SNMPExport"
+		if errs := m.SNMPExport.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
-	for k, v := range m.SyslogServers {
+	if m.Selector != nil {
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sSyslogServers[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		npath := path + dlmtr + "Selector"
+		if errs := m.Selector.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	if m.SyslogExport != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "SyslogExport"
+		if errs := m.SyslogExport.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -701,21 +656,8 @@ func (m *AuditInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
-func (m *AuthConfig) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *EmailExport) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
-	if vs, ok := validatorMapAlerts["AuthConfig"][ver]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	} else if vs, ok := validatorMapAlerts["AuthConfig"]["all"]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	}
 	return ret
 }
 
@@ -734,57 +676,16 @@ func (m *MatchedRequirement) Validate(ver, path string, ignoreStatus bool) []err
 	return ret
 }
 
-func (m *PrivacyConfig) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *SNMPExport) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
-	if vs, ok := validatorMapAlerts["PrivacyConfig"][ver]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	} else if vs, ok := validatorMapAlerts["PrivacyConfig"]["all"]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	}
-	return ret
-}
-
-func (m *SNMPTrapServer) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	if m.AuthConfig != nil {
+	for k, v := range m.SNMPTrapServers {
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := path + dlmtr + "AuthConfig"
-		if errs := m.AuthConfig.Validate(ver, npath, ignoreStatus); errs != nil {
+		npath := fmt.Sprintf("%s%sSNMPTrapServers[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
-		}
-	}
-	if m.PrivacyConfig != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "PrivacyConfig"
-		if errs := m.PrivacyConfig.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
-		}
-	}
-	if vs, ok := validatorMapAlerts["SNMPTrapServer"][ver]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	} else if vs, ok := validatorMapAlerts["SNMPTrapServer"]["all"]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
 		}
 	}
 	return ret
@@ -802,13 +703,13 @@ func (m *SyslogExport) Validate(ver, path string, ignoreStatus bool) []error {
 			ret = append(ret, errs...)
 		}
 	}
-	if m.Target != nil {
+	for k, v := range m.Targets {
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := path + dlmtr + "Target"
-		if errs := m.Target.Validate(ver, npath, ignoreStatus); errs != nil {
+		npath := fmt.Sprintf("%s%sTargets[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -866,36 +767,6 @@ func init() {
 
 		if _, ok := events.SeverityLevel_value[m.Severity]; !ok {
 			return errors.New("AlertStatus.Severity did not match allowed strings")
-		}
-		return nil
-	})
-
-	validatorMapAlerts["AuthConfig"] = make(map[string][]func(string, interface{}) error)
-	validatorMapAlerts["AuthConfig"]["all"] = append(validatorMapAlerts["AuthConfig"]["all"], func(path string, i interface{}) error {
-		m := i.(*AuthConfig)
-
-		if _, ok := AuthConfig_Algos_value[m.Algo]; !ok {
-			return errors.New("AuthConfig.Algo did not match allowed strings")
-		}
-		return nil
-	})
-
-	validatorMapAlerts["PrivacyConfig"] = make(map[string][]func(string, interface{}) error)
-	validatorMapAlerts["PrivacyConfig"]["all"] = append(validatorMapAlerts["PrivacyConfig"]["all"], func(path string, i interface{}) error {
-		m := i.(*PrivacyConfig)
-
-		if _, ok := PrivacyConfig_Algos_value[m.Algo]; !ok {
-			return errors.New("PrivacyConfig.Algo did not match allowed strings")
-		}
-		return nil
-	})
-
-	validatorMapAlerts["SNMPTrapServer"] = make(map[string][]func(string, interface{}) error)
-	validatorMapAlerts["SNMPTrapServer"]["all"] = append(validatorMapAlerts["SNMPTrapServer"]["all"], func(path string, i interface{}) error {
-		m := i.(*SNMPTrapServer)
-
-		if _, ok := SNMPTrapServer_SNMPVersions_value[m.Version]; !ok {
-			return errors.New("SNMPTrapServer.Version did not match allowed strings")
 		}
 		return nil
 	})

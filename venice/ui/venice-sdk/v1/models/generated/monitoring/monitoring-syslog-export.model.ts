@@ -13,14 +13,14 @@ import { MonitoringSyslogExportConfig, IMonitoringSyslogExportConfig } from './m
 
 export interface IMonitoringSyslogExport {
     'format'?: MonitoringSyslogExport_format;
-    'target'?: IMonitoringExportConfig;
+    'targets'?: Array<IMonitoringExportConfig>;
     'config'?: IMonitoringSyslogExportConfig;
 }
 
 
 export class MonitoringSyslogExport extends BaseModel implements IMonitoringSyslogExport {
     'format': MonitoringSyslogExport_format = null;
-    'target': MonitoringExportConfig = null;
+    'targets': Array<MonitoringExportConfig> = null;
     'config': MonitoringSyslogExportConfig = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'format': {
@@ -28,7 +28,7 @@ export class MonitoringSyslogExport extends BaseModel implements IMonitoringSysl
             default: 'SYSLOG_BSD',
             type: 'string'
         },
-        'target': {
+        'targets': {
             type: 'object'
         },
         'config': {
@@ -55,7 +55,7 @@ export class MonitoringSyslogExport extends BaseModel implements IMonitoringSysl
     */
     constructor(values?: any) {
         super();
-        this['target'] = new MonitoringExportConfig();
+        this['targets'] = new Array<MonitoringExportConfig>();
         this['config'] = new MonitoringSyslogExportConfig();
         this.setValues(values);
     }
@@ -71,7 +71,7 @@ export class MonitoringSyslogExport extends BaseModel implements IMonitoringSysl
             this['format'] = <MonitoringSyslogExport_format>  MonitoringSyslogExport.propInfo['format'].default;
         }
         if (values) {
-            this['target'].setValues(values['target']);
+            this.fillModelArray<MonitoringExportConfig>(this, 'targets', values['targets'], MonitoringExportConfig);
         }
         if (values) {
             this['config'].setValues(values['config']);
@@ -84,9 +84,11 @@ export class MonitoringSyslogExport extends BaseModel implements IMonitoringSysl
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'format': new FormControl(this['format'], [enumValidator(MonitoringSyslogExport_format), ]),
-                'target': this['target'].$formGroup,
+                'targets': new FormArray([]),
                 'config': this['config'].$formGroup,
             });
+            // generate FormArray control elements
+            this.fillFormArray<MonitoringExportConfig>('targets', this['targets'], MonitoringExportConfig);
         }
         return this._formGroup;
     }
@@ -98,7 +100,7 @@ export class MonitoringSyslogExport extends BaseModel implements IMonitoringSysl
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['format'].setValue(this['format']);
-            this['target'].setFormGroupValuesToBeModelValues();
+            this.fillModelArray<MonitoringExportConfig>(this, 'targets', this['targets'], MonitoringExportConfig);
             this['config'].setFormGroupValuesToBeModelValues();
         }
     }

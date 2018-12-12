@@ -47,7 +47,7 @@ export enum MonitoringAuthConfig_algo {
     'SHA1' = "SHA1",
 }
 
-export enum MonitoringEventExport_format {
+export enum MonitoringEventPolicySpec_format {
     'SYSLOG_BSD' = "SYSLOG_BSD",
     'SYSLOG_RFC5424' = "SYSLOG_RFC5424",
 }
@@ -206,7 +206,7 @@ export enum MonitoringAlertStatus_severity_uihint {
     'WARNING' = "Warning",
 }
 
-export enum MonitoringEventExport_format_uihint {
+export enum MonitoringEventPolicySpec_format_uihint {
     'SYSLOG_BSD' = "BSD",
     'SYSLOG_RFC5424' = "RFC5424",
 }
@@ -315,7 +315,7 @@ export class AllEnums {
     MonitoringAlertSpec_state = MonitoringAlertSpec_state;
     MonitoringAlertStatus_severity = MonitoringAlertStatus_severity;
     MonitoringAuthConfig_algo = MonitoringAuthConfig_algo;
-    MonitoringEventExport_format = MonitoringEventExport_format;
+    MonitoringEventPolicySpec_format = MonitoringEventPolicySpec_format;
     MonitoringExternalCred_auth_type = MonitoringExternalCred_auth_type;
     MonitoringFlowExportTarget_format = MonitoringFlowExportTarget_format;
     MonitoringFwlogExport_format = MonitoringFwlogExport_format;
@@ -338,7 +338,7 @@ export class AllEnums {
     MonitoringAlertPolicySpec_severity_uihint = MonitoringAlertPolicySpec_severity_uihint;
     MonitoringAlertSpec_state_uihint = MonitoringAlertSpec_state_uihint;
     MonitoringAlertStatus_severity_uihint = MonitoringAlertStatus_severity_uihint;
-    MonitoringEventExport_format_uihint = MonitoringEventExport_format_uihint;
+    MonitoringEventPolicySpec_format_uihint = MonitoringEventPolicySpec_format_uihint;
     MonitoringExternalCred_auth_type_uihint = MonitoringExternalCred_auth_type_uihint;
     MonitoringFwlogExport_format_uihint = MonitoringFwlogExport_format_uihint;
     MonitoringFwlogExport_export_filter_uihint = MonitoringFwlogExport_export_filter_uihint;

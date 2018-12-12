@@ -23,15 +23,12 @@ type syslogExport struct {
 }
 
 // NewSyslogExporter creates a new syslog exporter using the given syslog server configs.
-func NewSyslogExporter(syslogServer []*monitoring.SyslogExport, logger log.Logger) (Exporter, error) {
+func NewSyslogExporter(syslogExpConfig *monitoring.SyslogExport, logger log.Logger) (Exporter, error) {
 	e := &syslogExport{writers: []syslog.Writer{}, logger: logger}
 
-	for _, syslogServerConfig := range syslogServer { // create syslog writers
-		writer, err := e.createWriter(syslogServerConfig)
-		if err != nil {
-			return nil, err
-		}
-		e.writers = append(e.writers, writer)
+	var err error
+	if e.writers, err = e.createWriters(syslogExpConfig); err != nil {
+		return nil, err
 	}
 
 	return e, nil
@@ -75,41 +72,48 @@ func (s *syslogExport) Close() {
 }
 
 // helper function to create syslog writer by connecting with the given syslog server config.
-func (s *syslogExport) createWriter(serverConfig *monitoring.SyslogExport) (syslog.Writer, error) {
-	if _, ok := monitoring.MonitoringExportFormat_value[serverConfig.GetFormat()]; !ok {
-		return nil, fmt.Errorf("invalid syslog format: %v", serverConfig.GetFormat())
+func (s *syslogExport) createWriters(syslogExpConfig *monitoring.SyslogExport) ([]syslog.Writer, error) {
+	if _, ok := monitoring.MonitoringExportFormat_value[syslogExpConfig.GetFormat()]; !ok {
+		return nil, fmt.Errorf("invalid syslog format: %v", syslogExpConfig.GetFormat())
 	}
 
-	network, remoteAddr := s.getSyslogServerInfo(serverConfig.GetTarget())
 	priority := syslog.LogUser // is a combination of facility and priority
 	tag := "pen-events"        // a.k.a prefix tag
-	if !utils.IsEmpty(serverConfig.GetConfig().GetFacilityOverride()) {
-		// TODO: update priority accordingly
+	if !utils.IsEmpty(syslogExpConfig.GetConfig().GetFacilityOverride()) {
+		priority = syslog.Priority(monitoring.SyslogFacility_value[syslogExpConfig.GetConfig().GetFacilityOverride()])
 	}
-	if !utils.IsEmpty(serverConfig.GetConfig().GetPrefix()) {
-		tag = serverConfig.GetConfig().GetPrefix()
+	if !utils.IsEmpty(syslogExpConfig.GetConfig().GetPrefix()) {
+		tag = syslogExpConfig.GetConfig().GetPrefix()
 	}
 
-	var writer syslog.Writer
+	var writers []syslog.Writer
 	var err error
-	switch monitoring.MonitoringExportFormat(monitoring.MonitoringExportFormat_value[serverConfig.GetFormat()]) {
-	case monitoring.MonitoringExportFormat_SYSLOG_BSD:
-		writer, err = syslog.NewBsd(network, remoteAddr, priority, tag)
-		if err != nil {
-			s.logger.Errorf("failed to create syslog BSD writer, err: %v", err)
-			return nil, err
+
+	for _, target := range syslogExpConfig.GetTargets() {
+		var writer syslog.Writer
+		network, remoteAddr := s.getSyslogServerInfo(target)
+
+		switch monitoring.MonitoringExportFormat(monitoring.MonitoringExportFormat_value[syslogExpConfig.GetFormat()]) {
+		case monitoring.MonitoringExportFormat_SYSLOG_BSD:
+			writer, err = syslog.NewBsd(network, remoteAddr, priority, tag)
+			if err != nil {
+				s.logger.Errorf("failed to create syslog BSD writer, err: %v", err)
+				return nil, err
+			}
+		case monitoring.MonitoringExportFormat_SYSLOG_RFC5424:
+			writer, err = syslog.NewRfc5424(network, remoteAddr, priority, utils.GetHostname(), tag)
+			if err != nil {
+				s.logger.Errorf("failed to create syslog RFC5424 writer, err: %v", err)
+				return nil, err
+			}
+		default:
+			return nil, fmt.Errorf("syslog format not supported: %v", syslogExpConfig.GetFormat())
 		}
-	case monitoring.MonitoringExportFormat_SYSLOG_RFC5424:
-		writer, err = syslog.NewRfc5424(network, remoteAddr, priority, utils.GetHostname(), tag)
-		if err != nil {
-			s.logger.Errorf("failed to create syslog RFC5424 writer, err: %v", err)
-			return nil, err
-		}
-	default:
-		return nil, fmt.Errorf("syslog format not supported: %v", serverConfig.GetFormat())
+
+		writers = append(writers, writer)
 	}
 
-	return writer, nil
+	return writers, nil
 }
 
 // helper function to parse network(tcp) and remote address(127.0.0.1:514) from the export config.
