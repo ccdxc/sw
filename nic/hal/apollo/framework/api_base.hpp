@@ -54,13 +54,36 @@ public:
      */
     static api_base *find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty);
 
-protected:
     /**
-     * @brief    process a create/delete/update/get operation on an object
+     * @brief    clone this object and return cloned object
+     */
+    virtual api_base *clone(void) { return NULL; }
+
+    /**
+     * @brief    process a create operation on an object
      * @param[in] api_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t process_api(api_ctxt_t *api_ctxt) { return sdk::SDK_RET_OK; }
+    virtual sdk_ret_t process_create(api_ctxt_t *api_ctxt) { return sdk::SDK_RET_INVALID_OP; }
+    /**
+     * @brief    process a delete operation on an object
+     * @param[in] api_ctxt    transient state associated with this API
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t process_delete(api_ctxt_t *api_ctxt) { return sdk::SDK_RET_INVALID_OP; }
+    /**
+     * @brief    process a update operation on an object
+     * @param[in] api_ctxt    transient state associated with this API
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t process_update(api_ctxt_t *api_ctxt) { return sdk::SDK_RET_INVALID_OP; }
+
+    /**
+     * @brief    process a get operation on an object
+     * @param[in] api_ctxt    transient state associated with this API
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t process_get(api_ctxt_t *api_ctxt) { return sdk::SDK_RET_INVALID_OP; }
 
     /**
      * @brief    commit() is invokved during commit phase of the API processing
@@ -82,7 +105,11 @@ protected:
      *            resources must be freed and global DBs need to be restored
      *            back to their original state and any transient state stashed
      *            in api_ctxt while processing this API should also be freed
-     *            here
+     *            here. Note that abort() can be called on an object that is not
+     *            fully programmed in h/w, so we should be able to handle cases
+     *            where only partial resources allocated and where partial
+     *            information is programmed in the h/w (even after allocating
+     *            resources fully)
      * @param[in] api_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */

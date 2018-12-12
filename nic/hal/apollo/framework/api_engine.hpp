@@ -19,6 +19,8 @@
 #include "nic/hal/apollo/api/subnet.hpp"
 #include "nic/hal/apollo/api/vnic.hpp"
 
+using std::vector;
+
 namespace api {
 
 /**
@@ -36,11 +38,11 @@ typedef enum api_batch_stage_e {
  * @brief    per batch context which is a list of all API contexts
  */
 typedef struct api_batch_ctxt_s {
-    oci_epoch_t                epoch;    /**< epoch in progress, passed in
-                                              oci_batch_begin() */
-    api_batch_stage_t          stage;    /**< phase of the batch processing */
-    std::vector<api_ctxt_t>    apis;     /**< list of API objects being
-                                              processed */
+    oci_epoch_t           epoch;    /**< epoch in progress, passed in
+                                         oci_batch_begin() */
+    api_batch_stage_t     stage;    /**< phase of the batch processing */
+    vector<api_ctxt_t>    apis;     /**< list of API objects being
+                                         processed */
 } api_batch_ctxt_t;
 
 /**
