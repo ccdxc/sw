@@ -354,7 +354,7 @@ sq_bktrack1:
         
         // if (sqcb0_p->in_progress || sqcb0_p->bktracking)
         //     sqcb0_to_sqcb1_info_p->cur_wqe_addr = sqcb0_p->curr_wqe_ptr
-        cmov           r1, c1, d.curr_wqe_ptr, r0
+        cmov           r1, c4, d.curr_wqe_ptr, r0
         
         //copy backtrack params to TO_STAGE: log_pmtu, log_sq_page_size, log_wqe_size, log_num_wqes
         
