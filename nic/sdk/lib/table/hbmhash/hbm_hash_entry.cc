@@ -44,6 +44,9 @@ HbmHashEntry::destroy(HbmHashEntry *re, HbmHash *hbm_hash)
 {
     if (re) {
         re->~HbmHashEntry();
+        hbm_hash->hbm_sw_key_free(re->get_key());
+        hbm_hash->hbm_sw_data_free(re->get_data());
+        hbm_hash->hbm_hw_key_free(re->get_hwkey());
         // SDK_FREE(mtrack_id, re);
         hbm_hash->hbm_hash_entry_free(re);
     }
@@ -91,9 +94,11 @@ HbmHashEntry::HbmHashEntry(void *key, uint32_t key_len,
 // ---------------------------------------------------------------------------
 HbmHashEntry::~HbmHashEntry()
 {
+#if 0
     get_bucket()->get_hbm_hash()->hbm_sw_key_free(key_);
     get_bucket()->get_hbm_hash()->hbm_sw_data_free(data_);
     get_bucket()->get_hbm_hash()->hbm_hw_key_free(hwkey_);
+#endif
 
     // SDK_FREE(SDK_MEM_ALLOC_HBM_HASH_ENTRY_KEY, key_);
     // SDK_FREE(SDK_MEM_ALLOC_HBM_HASH_ENTRY_DATA, data_);

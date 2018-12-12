@@ -120,7 +120,7 @@ HbmHashTableEntry::insert(HbmHashEntry *h_entry)
         }
         //   - Create Hint Group
         // fh_grp = new HbmHashHintGroup(hint_bits, NULL);
-        fh_grp = HbmHashHintGroup::factory(hint_bits, NULL);
+        fh_grp = HbmHashHintGroup::factory(hint_bits, fse);
         rs = h_entry->insert(fh_grp, fse);
 
         // If insert is SUCCESS, put fh_grp into the map and list

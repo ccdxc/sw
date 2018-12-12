@@ -76,10 +76,11 @@ HbmHash::factory(std::string table_name, uint32_t table_id,
 sdk_ret_t
 HbmHash::initialize_slabs()
 {
+    SDK_TRACE_DEBUG("Initializing slabs");
     hbm_hash_entry_slab_ = slab::factory("hbm_hash_entry",
                                          sdk::lib::SDK_SLAB_ID_HBM_HASH_ENTRY,
                                          sizeof(HbmHashEntry),
-                                         256, true, true, false);
+                                         256, true, true, true);
     if (!hbm_hash_entry_slab_) {
         return SDK_RET_OOM;
     }
@@ -87,7 +88,7 @@ HbmHash::initialize_slabs()
     hbm_sw_key_slab_ = slab::factory("hbm_hash_sw_key",
                                      sdk::lib::SDK_SLAB_ID_HBM_HASH_SW_KEY,
                                      key_len_,
-                                     256, true, true, false);
+                                     256, true, true, true);
     if (!hbm_sw_key_slab_) {
         return SDK_RET_OOM;
     }
@@ -95,15 +96,15 @@ HbmHash::initialize_slabs()
     hbm_hw_key_slab_ = slab::factory("hbm_hash_hw_key",
                                      sdk::lib::SDK_SLAB_ID_HBM_HASH_HW_KEY,
                                      hwkey_len_,
-                                     256, true, true, false);
+                                     256, true, true, true);
     if (!hbm_hw_key_slab_) {
         return SDK_RET_OOM;
     }
 
     hbm_sw_data_slab_ = slab::factory("hbm_hash_sw_data",
                                      sdk::lib::SDK_SLAB_ID_HBM_HASH_SW_DATA,
-                                     data_len_,
-                                     256, true, true, false);
+                                     8, /* data_len_ is 5B */
+                                     256, true, true, true);
     if (!hbm_sw_data_slab_) {
         return SDK_RET_OOM;
     }
@@ -111,7 +112,7 @@ HbmHash::initialize_slabs()
     hbm_hash_hint_group_slab_ = slab::factory("hbm_hash_hint_group",
                                               sdk::lib::SDK_SLAB_ID_HBM_HASH_HINT_GROUP,
                                               sizeof(HbmHashHintGroup),
-                                              256, true, true, false);
+                                              256, true, true, true);
     if (!hbm_hash_hint_group_slab_) {
         return SDK_RET_OOM;
     }
@@ -119,7 +120,7 @@ HbmHash::initialize_slabs()
     hbm_hash_table_entry_slab_ = slab::factory("hbm_hash_table_entry",
                                                sdk::lib::SDK_SLAB_ID_HBM_HASH_TABLE_ENTRY,
                                                sizeof(HbmHashTableEntry),
-                                               256, true, true, false);
+                                               256, true, true, true);
     if (!hbm_hash_table_entry_slab_) {
         return SDK_RET_OOM;
     }
@@ -127,7 +128,7 @@ HbmHash::initialize_slabs()
     hbm_hash_spine_entry_slab_ = slab::factory("hbm_hash_spine_entry",
                                                sdk::lib::SDK_SLAB_ID_HBM_HASH_SPINE_ENTRY,
                                                sizeof(HbmHashSpineEntry),
-                                               256, true, true, false);
+                                               256, true, true, true);
     if (!hbm_hash_spine_entry_slab_) {
         return SDK_RET_OOM;
     }
