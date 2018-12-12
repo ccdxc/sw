@@ -145,14 +145,17 @@ func (a *alertEngineImpl) Stop() {
 func (a *alertEngineImpl) runPolicy(ap *monitoring.AlertPolicy, evt *evtsapi.Event) error {
 	match, reqWithObservedVal := aeutils.Match(ap.Spec.GetRequirements(), evt)
 	if match {
+		a.logger.Debugf("event {%s: %s} matched the alert policy {%s} with requirements:[%+v]", evt.GetName(), evt.GetMessage(), ap.GetName(), ap.Spec.GetRequirements())
 		created, err := a.createAlert(ap, evt, reqWithObservedVal)
 		if err != nil {
 			a.logger.Errorf("failed to create alert for event: %v, err: %v", evt.GetUUID(), err)
 		}
 
 		if created {
+			a.logger.Debugf("alert created from event {%s:%s}", evt.GetName(), evt.GetMessage())
 			err = a.updateAlertPolicy(ap.GetObjectMeta(), 1, 1) // update total hits and open alerts count
 		} else {
+			a.logger.Debugf("existing open alert found for event {%s:%s}", evt.GetName(), evt.GetMessage())
 			err = a.updateAlertPolicy(ap.GetObjectMeta(), 1, 0) //update only hits, alert exists already, (source.nodeName, event.Type, event.Severity)
 		}
 

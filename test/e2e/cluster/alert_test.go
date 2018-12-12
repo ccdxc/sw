@@ -13,7 +13,6 @@ import (
 	"github.com/pensando/sw/api/fields"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/testutils/policygen"
 )
 
@@ -33,32 +32,9 @@ var _ = Describe("alert test", func() {
 		Expect(err).Should(BeNil())
 
 		// stop pen-ntp daemon service
-		Eventually(func() bool {
-			out := ts.tu.LocalCommandOutput("kubectl get pods  -l name=pen-ntp -o json")
-			var kubeOut struct {
-				Items []struct {
-					Metadata struct {
-						Name string
-					}
-					Spec struct {
-						NodeName string
-					}
-					Status struct {
-						Phase string
-					}
-				}
-			}
-			json.Unmarshal([]byte(out), &kubeOut)
-			for _, i := range kubeOut.Items {
-				if i.Status.Phase == "Running" {
-					log.Infof("deleting pod %s", i.Metadata.Name)
-					serviceStoppedOn = i.Spec.NodeName
-					ts.tu.LocalCommandOutput(fmt.Sprintf("kubectl delete pod %s", i.Metadata.Name))
-					return true
-				}
-			}
-			return false
-		}, 95, 1).Should(BeTrue(), "pen-ntp should be running")
+		podName := getRunningPod("pen-ntp")
+		Expect(podName).ShouldNot(BeEmpty())
+		ts.tu.LocalCommandOutput(fmt.Sprintf("kubectl delete pod %s", podName))
 
 		// ensure the respective alert got generated
 		Eventually(func() bool {
@@ -93,3 +69,59 @@ var _ = Describe("alert test", func() {
 		}, 90, 1).Should(BeNil(), "could not find the expected alert policy status")
 	})
 })
+
+// returns the name of the service instance that is running on a READY state node
+func getRunningPod(serviceName string) string {
+	var kubeGetPodsOut struct {
+		Items []struct {
+			Metadata struct {
+				Name string
+			}
+			Spec struct {
+				NodeName string
+			}
+			Status struct {
+				Phase string
+			}
+		}
+	}
+
+	var kubeGetNodesOut struct {
+		Items []struct {
+			Metadata struct {
+				Name string
+			}
+			Status struct {
+				Conditions []struct {
+					Type   string
+					Status string
+				}
+			}
+		}
+	}
+
+	getPodsOut := ts.tu.LocalCommandOutput(fmt.Sprintf("kubectl get pods  -l name=%s -o json", serviceName))
+	json.Unmarshal([]byte(getPodsOut), &kubeGetPodsOut)
+
+	for _, pod := range kubeGetPodsOut.Items {
+		if pod.Status.Phase == "Running" {
+			// check if the node is in READY state
+			getNodesOut := ts.tu.LocalCommandOutput(fmt.Sprintf("kubectl get nodes  -l kubernetes.io/hostname=%s -o json", pod.Spec.NodeName))
+			json.Unmarshal([]byte(getNodesOut), &kubeGetNodesOut)
+			if len(kubeGetNodesOut.Items) == 0 {
+				By(fmt.Sprintf("no matching node found: {%s}", pod.Spec.NodeName))
+				return ""
+			}
+
+			for _, cond := range kubeGetNodesOut.Items[0].Status.Conditions {
+				if cond.Type == "Ready" && cond.Status == "True" {
+					By(fmt.Sprintf("selected pod {%s} running on {%s}", pod.Metadata.Name, pod.Spec.NodeName))
+					return pod.Metadata.Name
+				}
+			}
+		}
+	}
+
+	By(fmt.Sprintf("no pod instance found for service {%s}", serviceName))
+	return ""
+}
