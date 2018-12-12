@@ -424,10 +424,10 @@ func (m *ResolverService) UnRegister(o types.ServiceInstanceObserver) {
 	var i int
 	for i = range m.observers {
 		if m.observers[i] == o {
+			m.observers = append(m.observers[:i], m.observers[i+1:]...)
 			break
 		}
 	}
-	m.observers = append(m.observers[:i], m.observers[i+1:]...)
 }
 
 func (m *ResolverService) notify(e protos.ServiceInstanceEvent) error {

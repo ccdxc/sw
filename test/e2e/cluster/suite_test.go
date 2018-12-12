@@ -68,8 +68,7 @@ var _ = BeforeSuite(func() {
 	ts.restSvc, err = apiclient.NewRestAPIClient(apiGwAddr)
 	Expect(err).ShouldNot(HaveOccurred())
 
-	// create netagent REST clients
-	if ts.tu.FirstNaplesIP != "" {
+	if s := os.Getenv("PENS_SKIP_BOOTSTRAP"); s == "" && ts.tu.FirstNaplesIP != "" { // create netagent REST clients
 		agIP := net.ParseIP(ts.tu.FirstNaplesIP).To4()
 		Expect(len(agIP)).ShouldNot(Equal(0))
 		for idx := 0; idx < ts.tu.NumNaplesHosts; idx++ {

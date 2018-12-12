@@ -286,7 +286,9 @@ func (tu *TestUtils) Init() {
 	// We purposefully create Auth at the start of the test and dont delete these policies at the end.
 	//  deletion is not possible because as soon as we delete the user, we lose privileges to delete authpolicy.
 	//	so - during creation we ignore if the authpolicy/user already exist
-	tu.SetupAuth()
+	if s := os.Getenv("PENS_SKIP_AUTH"); s == "" {
+		tu.SetupAuth()
+	}
 	ginkgo.By("auth setup complete")
 
 	cmdClient := cmdclient.NewRestCrudClientClusterV1(tu.APIGwAddr)

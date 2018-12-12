@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/pprof"
 	"path"
+	"sort"
 
 	"github.com/go-martini/martini"
 
@@ -40,7 +41,7 @@ func NewRESTServer() *martini.ClassicMartini {
 
 	m.Post(uRLPrefix+clusterURL, ClusterCreateHandler)
 	m.Get(uRLPrefix+clusterURL+"/:id", ClusterGetHandler)
-	m.Get(uRLPrefix+servicesURL, ServiceListHandler)
+	m.Get(uRLPrefix+servicesURL, ServiceListHandler)              // TODO: Move to a secure or debug area for production
 	m.Get(uRLPrefix+"/debugSrvUpgrade", DebugUpgradeHandler)      // TODO: Remove after upgrade development is complete
 	m.Get(uRLPrefix+"/debugNodeUpgrade", DebugNodeUpgradeHandler) // TODO: Remove after upgrade development is complete
 	m.Get(debugPrefix+expvarURL, expvar.Handler())
@@ -122,7 +123,18 @@ func ServiceListHandler(w http.ResponseWriter, req *http.Request) {
 
 	encoder := json.NewEncoder(w)
 
-	if err := encoder.Encode(env.ResolverService.List()); err != nil {
+	serviceList := env.ResolverService.List()
+	if serviceList != nil {
+		for s := range serviceList.Items {
+			sort.Slice(serviceList.Items[s].Instances, func(i, j int) bool {
+				return serviceList.Items[s].Instances[i].Name < serviceList.Items[s].Instances[j].Name
+			})
+		}
+		sort.Slice(serviceList.Items, func(i, j int) bool {
+			return serviceList.Items[i].Name < serviceList.Items[j].Name
+		})
+	}
+	if err := encoder.Encode(serviceList); err != nil {
 		log.Errorf("Failed to encode with error: %v", err)
 	}
 }

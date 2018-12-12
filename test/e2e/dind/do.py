@@ -100,11 +100,11 @@ class Node:
         if self.custom_config_file is not None :
             extra_config = extra_config + """ -v {}:/etc/pensando/configs/shared/common/venice-conf.json """.format(self.custom_config_file)
         if self.dev_mode:
-            runCommand("""docker run -v/sys/fs/cgroup:/sys/fs/cgroup:ro {} -l pens -l pens-dind --network pen-dind-net --ip {} -v {}:/dind -v sshSecrets:/root/.ssh -v {}:/import/src/github.com/pensando/sw --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.3""".format(extra_config, self.ipaddress, script_src_dir, src_dir, self.name, self.name))
+            runCommand("""docker run --tmpfs /var/lib/pensando -v/sys/fs/cgroup:/sys/fs/cgroup:ro {} -l pens -l pens-dind --network pen-dind-net --ip {} -v {}:/dind -v sshSecrets:/root/.ssh -v {}:/import/src/github.com/pensando/sw --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.3""".format(extra_config, self.ipaddress, script_src_dir, src_dir, self.name, self.name))
         elif self.venice_image_dir != '':
-            runCommand("""docker run -v/sys/fs/cgroup:/sys/fs/cgroup:ro {} -l pens -l pens-dind --network pen-dind-net --ip {} -v {}:/dind -v sshSecrets:/root/.ssh -v {}:/venice:ro --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.3""".format(extra_config, self.ipaddress, script_src_dir, self.venice_image_dir, self.name, self.name))
+            runCommand("""docker run --tmpfs /var/lib/pensando -v/sys/fs/cgroup:/sys/fs/cgroup:ro {} -l pens -l pens-dind --network pen-dind-net --ip {} -v {}:/dind -v sshSecrets:/root/.ssh -v {}:/venice:ro --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.3""".format(extra_config, self.ipaddress, script_src_dir, self.venice_image_dir, self.name, self.name))
         else:
-            runCommand("""docker run -v/sys/fs/cgroup:/sys/fs/cgroup:ro {} -l pens -l pens-dind --network pen-dind-net --ip {} -v {}:/dind -v sshSecrets:/root/.ssh -v {}:/venice.tgz:ro --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.3""".format(extra_config, self.ipaddress, script_src_dir, self.venice_image, self.name, self.name))
+            runCommand("""docker run --tmpfs /var/lib/pensando -v/sys/fs/cgroup:/sys/fs/cgroup:ro {} -l pens -l pens-dind --network pen-dind-net --ip {} -v {}:/dind -v sshSecrets:/root/.ssh -v {}:/venice.tgz:ro --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.3""".format(extra_config, self.ipaddress, script_src_dir, self.venice_image, self.name, self.name))
         # hitting https://github.com/kubernetes/kubernetes/issues/50770 on docker-ce on mac but not on linux
         while self.runCmd("""docker ps >/dev/null 2>&1""", ignore_error=True) != 0 and not debug:
             time.sleep(2)
@@ -232,7 +232,7 @@ def initCluster(nodeAddr, quorumNodes, clustervip):
 def copyK8sAccessCredentials():
     tmpDir = tempfile.mkdtemp()
     try:
-      runCommand("""docker cp node1:/var/lib/pensando/pki/kubernetes/apiserver-client/. {}""".format(tmpDir))
+      runCommand("""docker exec node1 tar Ccf /var/lib/pensando/pki/kubernetes/apiserver-client  - . | tar Cxf {} -""".format(tmpDir))
       runCommand("""docker cp {}/. node0:/root/.kube/auth""".format(tmpDir))
     finally:
       shutil.rmtree(tmpDir)
@@ -241,7 +241,7 @@ def copyK8sAccessCredentials():
 def copyElasticAccessCredentials():
     tmpDir = tempfile.mkdtemp()
     try:
-      runCommand("""docker cp node1:/var/lib/pensando/pki/shared/elastic-client-auth/. {}""".format(tmpDir))
+      runCommand("""docker exec node1 tar Ccf /var/lib/pensando/pki/shared/elastic-client-auth - . | tar Cxf {} -""".format(tmpDir))
       runCommand("""docker exec node0 mkdir -p /var/lib/pensando/pki/shared/elastic-client-auth""")
       runCommand("""docker cp {}/. node0:/var/lib/pensando/pki/shared/elastic-client-auth""".format(tmpDir))
     finally:
@@ -251,7 +251,7 @@ def copyElasticAccessCredentials():
 def copyEtcdAccessCredentials():
     tmpDir = tempfile.mkdtemp()
     try:
-        runCommand("""docker cp node1:/var/lib/pensando/pki/shared/etcd-client-auth/. {}""".format(tmpDir))
+        runCommand("""docker exec node1 tar Ccf /var/lib/pensando/pki/shared/etcd-client-auth - . | tar Cxf {} -""".format(tmpDir))
         runCommand("""docker exec node0 mkdir -p /var/lib/pensando/pki/shared/etcd-client-auth""")
         runCommand("""docker cp {}/. node0:/var/lib/pensando/pki/shared/etcd-client-auth""".format(tmpDir))
     finally:

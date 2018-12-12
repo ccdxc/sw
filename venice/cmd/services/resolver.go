@@ -263,10 +263,10 @@ func (r *resolverService) UnRegister(o types.ServiceInstanceObserver) {
 	var i int
 	for i = range r.observers {
 		if r.observers[i] == o {
+			r.observers = append(r.observers[:i], r.observers[i+1:]...)
 			break
 		}
 	}
-	r.observers = append(r.observers[:i], r.observers[i+1:]...)
 }
 
 // All the observers are notified of the event even if someone fails,

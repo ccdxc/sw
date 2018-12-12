@@ -364,6 +364,15 @@ func (m *masterService) OnNotifyLeaderEvent(e types.LeaderEvent) error {
 	var err error
 	switch e.Evt {
 	case types.LeaderEventChange:
+		fallthrough
+	case types.LeaderEventLost:
+		m.Lock()
+		defer m.Unlock()
+		m.isLeader = false
+		if m.enabled {
+			m.stopLeaderServices()
+		}
+
 	case types.LeaderEventWon:
 		m.Lock()
 		defer m.Unlock()
@@ -371,13 +380,6 @@ func (m *masterService) OnNotifyLeaderEvent(e types.LeaderEvent) error {
 		if m.enabled {
 			m.updateCh <- true
 			m.startLeaderServices()
-		}
-	case types.LeaderEventLost:
-		m.Lock()
-		defer m.Unlock()
-		m.isLeader = false
-		if m.enabled {
-			m.stopLeaderServices()
 		}
 	}
 	m.k8sSvc.Stop()

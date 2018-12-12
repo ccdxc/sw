@@ -136,7 +136,15 @@ func copyLogsWithSSHClient(sshC *ssh.Client, logs []string, destFolder string) e
 		}
 		src.Close()
 		dest.Close()
-		logrus.Infof("Wrote %s ", log)
+		path := filepath.Join(destFolder, filepath.Base(log))
+
+		statInfo, err := os.Stat(path)
+		var size int64
+		if err != nil {
+			size = statInfo.Size()
+		}
+
+		logrus.Infof("Wrote %s to %s (size %d)", log, path, size)
 	}
 
 	return nil
