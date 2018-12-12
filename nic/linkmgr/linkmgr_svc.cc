@@ -119,14 +119,13 @@ populate_port_create_args (PortSpec& spec, port_args_t *args)
 
     args->pause           =
         linkmgr::port_pause_type_spec_to_sdk_port_pause_type(spec.pause());
-
-    args->port_type   =
+    args->port_type       =
         linkmgr::port_type_spec_to_sdk_port_type (spec.port_type());
-    args->admin_state =
+    args->admin_state     =
         linkmgr::port_admin_st_spec_to_sdk_port_admin_st(spec.admin_state());
-    args->port_speed  =
+    args->port_speed      =
         linkmgr::port_speed_spec_to_sdk_port_speed(spec.port_speed());
-    args->fec_type    =
+    args->fec_type        =
         linkmgr::port_fec_type_spec_to_sdk_port_fec_type(spec.fec_type());
 
     for (uint32_t i = 0; i < spec.num_lanes(); ++i) {
@@ -261,7 +260,7 @@ populate_port_update_args (PortSpec& spec, port_args_t *args)
 
     args->port_type   =
         linkmgr::port_type_spec_to_sdk_port_type (spec.port_type());
-    args->pause           =
+    args->pause       =
         linkmgr::port_pause_type_spec_to_sdk_port_pause_type(spec.pause());
     args->admin_state =
         linkmgr::port_admin_st_spec_to_sdk_port_admin_st(spec.admin_state());
@@ -405,6 +404,9 @@ populate_port_get_response_spec (port_args_t *port_args,
         spec->set_fec_type
                 (linkmgr::sdk_port_fec_type_to_port_fec_type_spec
                                         (port_args->fec_type));
+        spec->set_pause
+                (linkmgr::sdk_port_pause_type_to_port_pause_type_spec
+                                        (port_args->pause));
 
         spec->set_mac_id    (port_args->mac_id);
         spec->set_mac_ch    (port_args->mac_ch);
