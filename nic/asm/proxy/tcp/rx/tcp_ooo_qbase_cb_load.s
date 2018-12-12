@@ -99,7 +99,8 @@ tcp_ooo_qbase_cb_load:
     .brcase 7
         nop 
     .brend
-  
+    add r1, k.s6_t3_s2s_ooo_pkt_descr_addr, r0
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(ooq_tcp_flags_dma_cmd, r1, tcp_app_header_p4plus_app_id, tcp_app_header_prev_echo_ts) 
     nop.e
     nop
            

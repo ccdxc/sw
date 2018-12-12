@@ -738,6 +738,10 @@ metadata dma_cmd_phv2mem_t ooo_slot_addr;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t l7_ring_slot;            // dma cmd 11
 @pragma dont_trim
+@pragma pa_header_union ingress l7_ring_slot
+metadata dma_cmd_phv2mem_t ooq_tcp_flags;          // dma cmd 11
+ 
+@pragma dont_trim
 metadata dma_cmd_phv2mem_t l7_doorbell;             // dma cmd 12
 
 /******************************************************************************
