@@ -141,7 +141,7 @@ static const unsigned char default_alias_yaml[] =
 
 static const unsigned char default_global_yaml[] = 
 "global_params:\n"
-"  per_core_qdepth: 32\n"
+"  per_core_qdepth: 256\n"
 "  block_size: 4096\n"
 "  cpu_mask: '$default_cpu_mask'\n"
 "  limit_rate: '$default_rate'\n"

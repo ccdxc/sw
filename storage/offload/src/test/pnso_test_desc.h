@@ -108,7 +108,7 @@ struct test_crypto_key {
 #define TEST_MAX_FULL_PATH_LEN (TEST_MAX_PATH_LEN+(2*TEST_MAX_FILE_PREFIX_LEN))
 
 #define TEST_MAX_CORE_COUNT 32
-#define TEST_MAX_BATCH_COUNT_PER_CORE 5 /* TODO */
+#define TEST_MAX_BATCH_CONCURRENCY 32
 #define TEST_MAX_BATCH_DEPTH 512
 #define TEST_MAX_RANDOM_LEN 4096
 
@@ -249,6 +249,7 @@ struct test_testcase {
 	bool turbo;
 	uint64_t repeat;
 	uint16_t batch_depth;
+	uint16_t batch_concurrency;
 	uint16_t sync_mode;
 	uint32_t svc_chain_count;
 	uint32_t svc_chains[MAX_SVC_CHAINS_PER_TESTCASE];

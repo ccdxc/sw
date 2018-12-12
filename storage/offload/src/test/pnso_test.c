@@ -1975,9 +1975,9 @@ static struct worker_context *alloc_worker_context(const struct test_desc *desc,
 	memset(ctx, 0, sizeof(*ctx));
 	ctx->desc = desc;
 	ctx->test_ctx = test_ctx;
-	ctx->submit_q = alloc_worker_queue(TEST_MAX_BATCH_COUNT_PER_CORE);
-	ctx->complete_q = alloc_worker_queue(TEST_MAX_BATCH_COUNT_PER_CORE);
-	ctx->poll_q = alloc_worker_queue(TEST_MAX_BATCH_COUNT_PER_CORE);
+	ctx->submit_q = alloc_worker_queue(test_ctx->batch_concurrency);
+	ctx->complete_q = alloc_worker_queue(test_ctx->batch_concurrency);
+	ctx->poll_q = alloc_worker_queue(test_ctx->batch_concurrency);
 	if (!ctx->submit_q || !ctx->complete_q || !ctx->poll_q) {
 		goto error;
 	}
@@ -2066,8 +2066,21 @@ static struct testcase_context *alloc_testcase_context(const struct test_desc *d
 		goto error;
 	}
 
+	test_ctx->batch_concurrency = testcase->batch_concurrency;
+	if (!test_ctx->batch_concurrency) {
+		/* Pick a sane value automatically */
+		test_ctx->batch_concurrency =
+			desc->init_params.per_core_qdepth / testcase->batch_depth;
+		if (!test_ctx->batch_concurrency)
+			test_ctx->batch_concurrency = 1;
+		else if (test_ctx->batch_concurrency > TEST_MAX_BATCH_CONCURRENCY)
+			test_ctx->batch_concurrency = TEST_MAX_BATCH_CONCURRENCY;
+		PNSO_LOG_INFO("Setting batch_concurrency to %u for testcase %u\n",
+			      test_ctx->batch_concurrency, testcase->node.idx);
+	}
+
 	/* Allocate freelist and fill it with batch_ctx entries */
-	test_ctx->batch_ctx_freelist = alloc_worker_queue(max_core_count*TEST_MAX_BATCH_COUNT_PER_CORE);
+	test_ctx->batch_ctx_freelist = alloc_worker_queue(max_core_count*test_ctx->batch_concurrency);
 	if (!test_ctx->batch_ctx_freelist) {
 		goto error;
 	}
@@ -2077,7 +2090,7 @@ static struct testcase_context *alloc_testcase_context(const struct test_desc *d
 		if ((desc->cpu_mask & (1 << core_id)) == 0) {
 			continue;
 		}
-		for (i = 0; i < TEST_MAX_BATCH_COUNT_PER_CORE; i++) {
+		for (i = 0; i < test_ctx->batch_concurrency; i++) {
 			batch_ctx = alloc_batch_context(desc, test_ctx);
 			if (!batch_ctx) {
 				goto error;
@@ -2250,7 +2263,7 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 //			last_active_ts = osal_get_clock_nsec();
 			rate_limit_loop_count++;
 		} else if (!worker_queue_is_full(worker_ctx->submit_q) &&
-			   worker_ctx->pending_batch_count < TEST_MAX_BATCH_COUNT_PER_CORE) {
+			   worker_ctx->pending_batch_count < ctx->batch_concurrency) {
 			/* submit new batch request */
 			batch_ctx = worker_queue_dequeue(ctx->batch_ctx_freelist);
 			if (batch_ctx) {

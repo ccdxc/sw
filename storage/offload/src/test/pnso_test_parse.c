@@ -68,6 +68,7 @@ static struct test_testcase default_testcase = {
 	.node = { NODE_TESTCASE, 0, NULL, { NULL, NULL } },
 	.repeat = 1,
 	.batch_depth = 1,
+	.batch_concurrency = 0,
 	.sync_mode = SYNC_MODE_SYNC,
 	.svc_chain_count = 0,
 	.validations = { NULL, NULL },
@@ -372,6 +373,7 @@ static void dump_testcase(struct test_testcase *testcase)
 	}
 	PNSO_LOG("    Repeat %llu\n", (unsigned long long) testcase->repeat);
 	PNSO_LOG("    Batch depth %u\n", testcase->batch_depth);
+	PNSO_LOG("    Batch concurrency %u\n", testcase->batch_concurrency);
 	PNSO_LOG("    Sync mode %u\n", testcase->sync_mode);
 	for (i = 0; i < testcase->svc_chain_count; i++) {
 		len += safe_itoa(svc_chain_str+len, sizeof(svc_chain_str), testcase->svc_chains[i]);
@@ -890,6 +892,7 @@ FUNC_SET_STRING(test_set_output_file, ((struct test_svc *)parent)->output_path, 
 FUNC_SET_INT(test_set_testcase_repeat, ((struct test_testcase *)parent)->repeat, 0, LLONG_MAX)
 FUNC_SET_INT(test_set_testcase_turbo, ((struct test_testcase *)parent)->turbo, 0, 1)
 FUNC_SET_INT(test_set_testcase_batch_depth, ((struct test_testcase *)parent)->batch_depth, 1, TEST_MAX_BATCH_DEPTH)
+FUNC_SET_INT(test_set_testcase_batch_concurrency, ((struct test_testcase *)parent)->batch_concurrency, 0, TEST_MAX_BATCH_CONCURRENCY)
 FUNC_SET_PARAM(test_set_testcase_sync_mode, ((struct test_testcase *)parent)->sync_mode,
 	       g_sync_mode_map, 0, 0, SYNC_MODE_MAX-1)
 FUNC_SET_STRING(test_set_testcase_name, ((struct test_testcase *)parent)->name,
@@ -1765,6 +1768,7 @@ CHILD_NODE_DESC(tests_test, mode,        NULL, test_set_testcase_sync_mode, NULL
 CHILD_NODE_DESC(tests_test, turbo,       NULL, test_set_testcase_turbo, NULL) \
 CHILD_NODE_DESC(tests_test, repeat,      NULL, test_set_testcase_repeat, NULL) \
 CHILD_NODE_DESC(tests_test, batch_depth, NULL, test_set_testcase_batch_depth, NULL) \
+CHILD_NODE_DESC(tests_test, batch_concurrency, NULL, test_set_testcase_batch_concurrency, NULL) \
 CHILD_NODE_DESC(tests_test, svc_chains,  NULL, test_set_testcase_svc_chains, NULL) \
 CHILD_NODE_DESC(tests_test, validations, NULL, NULL, NULL) \
 \

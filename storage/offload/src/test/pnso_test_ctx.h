@@ -281,6 +281,7 @@ struct testcase_context {
 	uint64_t start_time;
 	osal_atomic_int_t stats_lock;
 	struct testcase_stats stats;
+	uint16_t batch_concurrency;
 
 	uint32_t worker_count;
 	struct worker_context *worker_ctxs[TEST_MAX_CORE_COUNT];
