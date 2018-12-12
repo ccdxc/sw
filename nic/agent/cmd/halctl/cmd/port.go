@@ -50,6 +50,19 @@ var portStatsShowCmd = &cobra.Command{
 	Run:   portStatsShowCmdHandler,
 }
 
+var portDebugCmd = &cobra.Command{
+	Use:   "port",
+	Short: "debug port object",
+	Long:  "debug port object",
+}
+
+var portPauseCmd = &cobra.Command{
+	Use:   "set-pause",
+	Short: "halctl debug port --port <> set-pause [link-level|pfc|none]",
+	Long:  "halctl debug port --port <> set-pause [link-level|pfc|none]",
+	Run:   portPauseCmdHandler,
+}
+
 func init() {
 	showCmd.AddCommand(portShowCmd)
 	portShowCmd.AddCommand(portStatusShowCmd)
@@ -60,6 +73,10 @@ func init() {
 
 	clearCmd.AddCommand(portClearStatsCmd)
 	portClearStatsCmd.Flags().Uint32Var(&portNum, "port", 1, "Speficy port number")
+
+	debugCmd.AddCommand(portDebugCmd)
+	portDebugCmd.PersistentFlags().Uint32Var(&portNum, "port", 1, "Specify port number")
+	portDebugCmd.AddCommand(portPauseCmd)
 }
 
 func handlePortDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
@@ -307,6 +324,135 @@ func portShowStatsOneResp(resp *halproto.PortGetResponse) {
 			s.GetCount())
 	}
 	fmt.Println(hdrLine)
+}
+
+func portPauseCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	defer c.Close()
+
+	success := true
+	if len(args) != 1 {
+		fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance")
+		return
+	}
+
+	if isPauseTypeValid(args[0]) == false {
+		fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance")
+		return
+	}
+	pauseType := inputToPauseType(args[0])
+
+	client := halproto.NewPortClient(c.ClientConn)
+
+	var req *halproto.PortGetRequest
+
+	if cmd != nil && cmd.Flags().Changed("port") {
+		// Get port info for specified port
+		req = &halproto.PortGetRequest{
+			KeyOrHandle: &halproto.PortKeyHandle{
+				KeyOrHandle: &halproto.PortKeyHandle_PortId{
+					PortId: portNum,
+				},
+			},
+		}
+	} else {
+		// Get all Ports
+		req = &halproto.PortGetRequest{}
+	}
+
+	portGetReqMsg := &halproto.PortGetRequestMsg{
+		Request: []*halproto.PortGetRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.PortGet(context.Background(), portGetReqMsg)
+	if err != nil {
+		fmt.Printf("Getting Port failed. %v\n", err)
+		return
+	}
+
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			success = false
+			continue
+		}
+
+		var portSpec *halproto.PortSpec
+		portSpec = &halproto.PortSpec{
+			KeyOrHandle: &halproto.PortKeyHandle{
+				KeyOrHandle: &halproto.PortKeyHandle_PortId{
+					PortId: resp.GetSpec().GetKeyOrHandle().GetPortId(),
+				},
+			},
+
+			PortType:      resp.GetSpec().GetPortType(),
+			AdminState:    resp.GetSpec().GetAdminState(),
+			PortSpeed:     resp.GetSpec().GetPortSpeed(),
+			NumLanes:      resp.GetSpec().GetNumLanes(),
+			FecType:       resp.GetSpec().GetFecType(),
+			AutoNegEnable: resp.GetSpec().GetAutoNegEnable(),
+			DebounceTime:  resp.GetSpec().GetDebounceTime(),
+			Mtu:           resp.GetSpec().GetMtu(),
+			MacStatsReset: false,
+			Pause:         pauseType,
+		}
+
+		portUpdateReqMsg := &halproto.PortRequestMsg{
+			Request: []*halproto.PortSpec{portSpec},
+		}
+
+		// HAL call
+		updateRespMsg, err := client.PortUpdate(context.Background(), portUpdateReqMsg)
+		if err != nil {
+			fmt.Printf("Update Port failed. %v\n", err)
+			success = false
+			continue
+		}
+
+		for _, updateResp := range updateRespMsg.Response {
+			if updateResp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+				fmt.Printf("HAL Returned non OK status. %v\n", updateResp.ApiStatus)
+				success = false
+				continue
+			}
+		}
+	}
+
+	if success == true {
+		fmt.Printf("Update port succeeded\n")
+	}
+}
+
+func isPauseTypeValid(str string) bool {
+	switch str {
+	case "link-level":
+		return true
+	case "pfc":
+		return true
+	case "none":
+		return true
+	default:
+		return false
+	}
+}
+
+func inputToPauseType(str string) halproto.PortPauseType {
+	switch str {
+	case "link-level":
+		return halproto.PortPauseType_PORT_PAUSE_TYPE_LINK
+	case "pfc":
+		return halproto.PortPauseType_PORT_PAUSE_TYPE_PFC
+	case "none":
+		return halproto.PortPauseType_PORT_PAUSE_TYPE_NONE
+	default:
+		return halproto.PortPauseType_PORT_PAUSE_TYPE_NONE
+	}
 }
 
 func handlePortClearStatsCmd(cmd *cobra.Command, ofile *os.File) {
