@@ -66,7 +66,8 @@ MALLOC_DECLARE(M_IONIC);
 		IONIC_DEV_DEBUG(d, "[%s:%d]ERROR:" f, __func__, __LINE__, ## args)
 
 /* Netdev related. */
-#define IONIC_NETDEV_DEBUG(dev, fmt, ...) if_printf(dev, fmt, ##__VA_ARGS__)
+#define IONIC_NETDEV_DEBUG(dev, fmt, ...) 					\
+			if_printf(dev, "[%s:%d]" fmt, __func__, __LINE__, ##__VA_ARGS__)
 
 #ifdef IONIC_DEBUG
 #define IONIC_NETDEV_INFO(dev, fmt, ...) 						\

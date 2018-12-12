@@ -37,7 +37,6 @@
 static void ionic_rx_fill(struct rxque *rxq);
 static void ionic_rx_empty(struct rxque *rxq);
 static void ionic_rx_refill(struct rxque *rxq);
-static void ionic_setup_vlan(struct ifnet *ifp);
 
 static int ionic_addr_add(struct net_device *netdev, const u8 *addr);
 static int ionic_addr_del(struct net_device *netdev, const u8 *addr);
@@ -168,8 +167,6 @@ int ionic_reinit(struct net_device *netdev)
 			bcopy(IF_LLADDR(netdev), lif->dev_addr, ETHER_ADDR_LEN);
 		}
 	}
-
-	ionic_setup_vlan(netdev);
 
 	old_mbuf_size = lif->rx_mbuf_size;
 	ionic_calc_rx_size(lif);
@@ -597,6 +594,10 @@ int ionic_change_mtu(struct net_device *netdev, int new_mtu)
 }
 
 /******************** VLAN related *************************/
+#define IONIC_VLAN_ENTRY_SHIFT		6
+#define IONIC_VLAN_ENTRIES			BIT(IONIC_VLAN_ENTRY_SHIFT)
+#define IONIC_VLAN_ENTRY_BIT_MASK	(IONIC_VLAN_ENTRIES - 1)
+
 static int ionic_vlan_rx_add_vid(struct net_device *netdev,
 				u16 vid)
 {
@@ -610,8 +611,6 @@ static int ionic_vlan_rx_add_vid(struct net_device *netdev,
 			.vlan.vlan = vid,
 		},
 	};
-
-	IONIC_DEV_INFO(lif->ionic->dev, "add VLAN: %d\n", vid);
 
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err) {
@@ -665,52 +664,18 @@ static int ionic_vlan_rx_delete_vid(struct net_device *netdev,
 	return 0;
 }
 
-/* Called at reinit to program the VLAN filter. */
-static void
-ionic_setup_vlan(struct ifnet *ifp)
-{
-	struct lif *lif =  ifp->if_softc;
-	uint64_t *bitmap;
-	int i, j;
-
-	if (lif->num_vlans <= 0)
-		return;
-
-	if ((ifp->if_capenable & IFCAP_VLAN_HWFILTER) == 0)
-		return;
-
-	for (i = 0 ; i < sizeof (lif->vlan_bitmap) ; i++) {
-		bitmap = &lif->vlan_bitmap[i];
-
-		if (*bitmap == 0)
-			continue;
-
-		for ( j = 0; j < 64 ; j++) {
-			if (*bitmap & (1 << j))
-				ionic_vlan_rx_add_vid(ifp, i * 64 + j);
-			else
-				ionic_vlan_rx_delete_vid(ifp, i * 64 + j);
-
-		}
-	}
-}
-
-#define SIZEOF_ARRAY(a) (sizeof((a))/sizeof((a)[0]))
-/* Number of VLAN per entry. */
-#define IONIC_VLAN_ENTRY_SHIFT	(6)
-
 static uint8_t
 ionic_get_vlan_index(struct lif* lif, uint16_t vtag)
 {
-	int max_index = SIZEOF_ARRAY(lif->vlan_bitmap);
+	int max_index = ARRAY_SIZE(lif->vlan_bitmap);
 
-	return (vtag >> IONIC_VLAN_ENTRY_SHIFT) & max_index;
+	return (vtag >> IONIC_VLAN_ENTRY_SHIFT) & (max_index - 1);
 }
 
 static uint8_t
 ionic_get_vlan_bit(uint16_t vtag)
 {
-	return vtag & ((1 << IONIC_VLAN_ENTRY_SHIFT) - 1);
+	return vtag & IONIC_VLAN_ENTRY_BIT_MASK;
 }
 
 static void
@@ -728,9 +693,18 @@ ionic_register_vlan(void *arg, struct ifnet *ifp, u16 vtag)
 	IONIC_CORE_LOCK(lif);
 	index = ionic_get_vlan_index(lif, vtag);
 	bit = ionic_get_vlan_bit(vtag);
-	lif->vlan_bitmap[index] |= (1 << bit);
+
+	if (lif->vlan_bitmap[index] & BIT(bit)) {
+		IONIC_NETDEV_INFO(lif->netdev, "VLAN: %d already exist\n", vtag);
+		IONIC_CORE_UNLOCK(lif);
+		return;
+	}
+
+	lif->vlan_bitmap[index] |= BIT(bit);
 	++lif->num_vlans;
 
+	IONIC_NETDEV_INFO(lif->netdev, "Register VLAN(%d): %d\n",
+		lif->num_vlans, vtag);
 	ionic_vlan_rx_add_vid(ifp, vtag);
 
 	IONIC_CORE_UNLOCK(lif);
@@ -751,13 +725,22 @@ ionic_unregister_vlan(void *arg, struct ifnet *ifp, u16 vtag)
 	IONIC_CORE_LOCK(lif);
 	index = ionic_get_vlan_index(lif, vtag);
 	bit = ionic_get_vlan_bit(vtag);
-	lif->vlan_bitmap[index] &= ~(1 << bit);
+	if ((lif->vlan_bitmap[index] & BIT(bit)) == 0) {
+		IONIC_NETDEV_INFO(lif->netdev, "VLAN: %d doesn exist\n", vtag);
+		IONIC_CORE_UNLOCK(lif);
+		return;
+	}
+
+	lif->vlan_bitmap[index] &= ~BIT(bit);
 	--lif->num_vlans;
 
+	IONIC_NETDEV_INFO(lif->netdev, "Unregister VLAN(%d): %d\n",
+		lif->num_vlans, vtag);
 	ionic_vlan_rx_delete_vid(ifp, vtag);
 
 	IONIC_CORE_UNLOCK(lif);
 }
+
 
 int ionic_dev_intr_reserve(struct lif *lif, struct intr *intr)
 {

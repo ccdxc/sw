@@ -1854,12 +1854,10 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 		}
 		if (mask & IFCAP_VLAN_HWFILTER) {
 			ifp->if_capenable ^= IFCAP_VLAN_HWFILTER;
-			hw_features ^= ETH_HW_VLAN_RX_STRIP;
-			/* XXX: also ETH_HW_VLAN_RX_FILTER??? */
+			hw_features ^= (ETH_HW_VLAN_RX_STRIP | ETH_HW_VLAN_RX_FILTER);
 		}
 		if (mask & IFCAP_VLAN_HWTSO) {
 			ifp->if_capenable ^= IFCAP_VLAN_HWTSO;
-			/* XXX: hw feature?? */
 		}
 
 		IONIC_CORE_LOCK(lif);
