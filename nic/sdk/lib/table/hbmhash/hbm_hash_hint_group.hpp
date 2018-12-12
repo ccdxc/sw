@@ -34,8 +34,9 @@ private:
     ~HbmHashHintGroup();
 public:
     static HbmHashHintGroup *factory(uint32_t hint_bits,
-                                  HbmHashSpineEntry *fs_entry);
-    static void destroy(HbmHashHintGroup *hg);
+                                     HbmHashSpineEntry *fs_entry,
+                                     HbmHash *hbm_hash);
+    static void destroy(HbmHashHintGroup *hg, HbmHash *hbm_hash);
 
     void add_hbm_hash_entry(HbmHashEntry *h_entry);
     void del_hbm_hash_entry(HbmHashEntry *h_entry);

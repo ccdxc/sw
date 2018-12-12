@@ -17,14 +17,14 @@ using sdk::table::HbmHashEntry;
 // Factory method to instantiate the class
 //---------------------------------------------------------------------------
 HbmHashHintGroup *
-HbmHashHintGroup::factory(uint32_t hint_bits, HbmHashSpineEntry *fs_entry)
+HbmHashHintGroup::factory(uint32_t hint_bits, HbmHashSpineEntry *fs_entry,
+                          HbmHash *hbm_hash)
 {
     void            *mem = NULL;
     HbmHashHintGroup   *hg = NULL;
 
     // mem = SDK_CALLOC(mtrack_id, sizeof(HbmHashHintGroup));
-    mem = fs_entry->get_ht_entry()->get_hbm_hash()->
-        hbm_hash_hint_group_alloc();
+    mem = hbm_hash->hbm_hash_hint_group_alloc();
     if (!mem) {
         return NULL;
     }
@@ -37,9 +37,8 @@ HbmHashHintGroup::factory(uint32_t hint_bits, HbmHashSpineEntry *fs_entry)
 // Method to free & delete the object
 //---------------------------------------------------------------------------
 void
-HbmHashHintGroup::destroy(HbmHashHintGroup *hg)
+HbmHashHintGroup::destroy(HbmHashHintGroup *hg, HbmHash *hbm_hash)
 {
-    HbmHash *hbm_hash = hg->get_fs_entry()->get_ht_entry()->get_hbm_hash();
     if (hg) {
         hg->~HbmHashHintGroup();
         // SDK_FREE(mtrack_id, hg);
