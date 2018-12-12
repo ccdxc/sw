@@ -42,23 +42,16 @@ clear_insert_header(uint16_t flags, struct cpdc_desc *desc)
 		desc->u.cd_bits.cc_insert_header = 0;
 }
 
-static inline void __attribute__((unused))
-clear_list_bits_in_desc(struct cpdc_desc *desc)
-{
-	desc->u.cd_bits.cc_src_is_list = 0;
-	desc->u.cd_bits.cc_dst_is_list = 0;
-}
-
 static void
-fill_cp_desc(struct cpdc_desc *desc, struct cpdc_sgl *src_sgl,
-		struct cpdc_sgl *dst_sgl, struct cpdc_status_desc *status_desc,
-		uint32_t src_buf_len, uint16_t threshold_len)
+fill_cp_desc(struct service_info *svc_info, struct cpdc_desc *desc,
+		uint16_t threshold_len)
 {
-	memset(desc, 0, sizeof(*desc));
-	memset(status_desc, 0, sizeof(*status_desc));
+	struct cpdc_status_desc *status_desc;
 
-	desc->cd_src = (uint64_t) sonic_virt_to_phy(src_sgl);
-	desc->cd_dst = (uint64_t) sonic_virt_to_phy(dst_sgl);
+	memset(desc, 0, sizeof(*desc));
+
+	desc->cd_src = (uint64_t) sonic_virt_to_phy(svc_info->si_src_sgl.sgl);
+	desc->cd_dst = (uint64_t) sonic_virt_to_phy(svc_info->si_dst_sgl.sgl);
 
 	desc->u.cd_bits.cc_enabled = 1;
 	desc->u.cd_bits.cc_insert_header = 1;
@@ -67,10 +60,22 @@ fill_cp_desc(struct cpdc_desc *desc, struct cpdc_sgl *src_sgl,
 	desc->u.cd_bits.cc_dst_is_list = 1;
 
 	desc->cd_datain_len =
-		(src_buf_len == MAX_CPDC_SRC_BUF_LEN) ? 0 : src_buf_len;
+		(svc_info->si_src_blist.len == MAX_CPDC_SRC_BUF_LEN) ?
+		0 : svc_info->si_src_blist.len;
+
 	desc->cd_threshold_len = threshold_len;
 
-	desc->cd_status_addr = (uint64_t) sonic_virt_to_phy(status_desc);
+	if (svc_info->si_istatus_desc) {
+		desc->cd_status_addr = (uint64_t) svc_info->si_istatus_desc;
+		osal_rmem_set(desc->cd_status_addr, 0, sizeof(*status_desc));
+	} else {
+		status_desc = svc_info->si_status_desc;
+		memset(status_desc, 0, sizeof(*status_desc));
+
+		desc->cd_status_addr = (uint64_t)
+			sonic_virt_to_phy(status_desc);
+	}
+
 	desc->cd_status_data = CPDC_CP_STATUS_DATA;
 }
 
@@ -108,6 +113,13 @@ compress_setup(struct service_info *svc_info,
 	}
 	svc_info->si_status_desc = status_desc;
 
+	err = cpdc_setup_rmem_status_desc(svc_info, false);
+	if (err) {
+		OSAL_LOG_ERROR("cannot obtain cp rmem status desc from pool! err: %d",
+				err);
+		goto out;
+	}
+
 	err = cpdc_update_service_info_sgls(svc_info);
 	if (err) {
 		OSAL_LOG_ERROR("cannot obtain cp src/dst sgl from pool! err: %d",
@@ -115,9 +127,7 @@ compress_setup(struct service_info *svc_info,
 		goto out;
 	}
 
-	fill_cp_desc(cp_desc, svc_info->si_src_sgl.sgl,
-			svc_info->si_dst_sgl.sgl, status_desc,
-			svc_info->si_src_blist.len, threshold_len);
+	fill_cp_desc(svc_info, cp_desc, threshold_len);
 	clear_insert_header(svc_info->si_desc_flags, cp_desc);
 
 	err = cpdc_setup_seq_desc(svc_info, cp_desc, 0);
@@ -480,6 +490,8 @@ compress_teardown(struct service_info *svc_info)
 
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 	cpdc_put_status_desc(svc_info->si_pcr, false, status_desc);
+
+	cpdc_teardown_rmem_status_desc(svc_info, false);
 
 	cp_desc = (struct cpdc_desc *) svc_info->si_desc;
 	cpdc_put_desc(svc_info, false, cp_desc);
