@@ -223,28 +223,13 @@ Eth::Eth(HalClient *hal_client,
 
     memcpy(hal_lif_info_.queue_info, qinfo, sizeof(hal_lif_info_.queue_info));
 
-    mem_addr_t stats_mem_addr = pd->mem_start_addr(CAPRI_HBM_REG_LIF_STATS);
-    if (stats_mem_addr == INVALID_MEM_ADDRESS) {
-        NIC_LOG_ERR("Failed to get stats address lif {}", spec->lif_id);
-        return;
-    }
-    stats_mem_addr += hal_lif_info_.hw_lif_id << LG2_LIF_STATS_SIZE;
-
     NIC_LOG_INFO("lif created: name: {}, id:{}, type: {},"
-                 " hw_lif_id: {}, mac:{},"
-                 " stats_mem_addr {:#x}",
-                 hal_lif_info_.name, hal_lif_info_.id, eth_dev_type_to_str(spec->eth_type),
+                 " hw_lif_id: {}, mac:{},",
+                 hal_lif_info_.name,
+                 hal_lif_info_.id,
+                 eth_dev_type_to_str(spec->eth_type),
                  hal_lif_info_.hw_lif_id,
-                 macaddr2str(spec->mac_addr),
-                 stats_mem_addr);
-
-    auto lif_stats =
-        delphi::objects::LifMetrics::NewLifMetrics(spec->lif_id, stats_mem_addr);
-    if (lif_stats == NULL) {
-        NIC_LOG_ERR("Failed lif metrics registration with delphi lif {}",
-                    spec->lif_id);
-        return;
-    }
+                 macaddr2str(spec->mac_addr));
 
     // Configure PCI resources
     pci_resources.lif_valid = 1;
@@ -259,6 +244,10 @@ Eth::Eth(HalClient *hal_client,
     MEM_SET(pci_resources.devcmdpa, 0, 4096, 0);
     MEM_SET(pci_resources.devcmddbpa, 0, 4096, 0);
 
+    NIC_LOG_DEBUG("lif-{}: devcmd_addr {:#x} devcmddb_addr {:#x}",
+            hal_lif_info_.hw_lif_id,
+            pci_resources.devcmdpa, pci_resources.devcmddbpa);
+
     // Init Devcmd Region
     // TODO: mmap instead of calloc after porting to real pal
     devcmd = (struct dev_cmd_regs *)calloc(1, sizeof(struct dev_cmd_regs));
@@ -266,9 +255,55 @@ Eth::Eth(HalClient *hal_client,
     devcmd->signature = DEV_CMD_SIGNATURE;
     WRITE_MEM(pci_resources.devcmdpa, (uint8_t *)devcmd, sizeof(*devcmd), 0);
 
-    NIC_LOG_DEBUG("lif-{}: Devcmd PA {:#x} DevcmdDB PA {:#x}", hal_lif_info_.hw_lif_id,
-           pci_resources.devcmdpa, pci_resources.devcmddbpa);
+    // Stats
+    stats_mem_addr = pd->mem_start_addr(CAPRI_HBM_REG_LIF_STATS);
+    if (stats_mem_addr == INVALID_MEM_ADDRESS) {
+        NIC_LOG_ERR("Failed to get stats address lif {}", spec->lif_id);
+        return;
+    }
+    stats_mem_addr += (hal_lif_info_.hw_lif_id << LG2_LIF_STATS_SIZE);
+    host_stats_mem_addr = 0;
 
+    NIC_LOG_INFO("lif-{}: stats_mem_addr: {:#x}",
+        hal_lif_info_.hw_lif_id, stats_mem_addr);
+
+    auto lif_stats =
+        delphi::objects::LifMetrics::NewLifMetrics(spec->lif_id, stats_mem_addr);
+    if (lif_stats == NULL) {
+        NIC_LOG_ERR("Failed lif metrics registration with delphi lif {}",
+                    spec->lif_id);
+        return;
+    }
+
+    // Notify Queue
+    notify_block = (struct notify_block *)calloc(1, sizeof(struct notify_block));
+    assert (notify_block != NULL);
+    notify_block_addr = pd->nicmgr_mem_alloc(sizeof(struct notify_block));
+    host_notify_block_addr = 0;
+    MEM_SET(notify_block_addr, 0, sizeof(struct notify_block), 0);
+
+    NIC_LOG_INFO("lif-{}: notify_block_addr {:#x}",
+        hal_lif_info_.hw_lif_id, notify_block_addr);
+
+    // Notify Block
+    notify_ring_head = 0;
+    notify_ring_base = pd->nicmgr_mem_alloc(4096 + (sizeof(union notifyq_comp) * ETH_NOTIFYQ_RING_SIZE));
+    MEM_SET(notify_ring_base, 0, 4096 + (sizeof(union notifyq_comp) * ETH_NOTIFYQ_RING_SIZE), 0);
+
+    NIC_LOG_INFO("lif-{}: notify_ring_base {:#x}",
+        hal_lif_info_.hw_lif_id, notify_ring_base);
+
+    // Edma Queue
+    edma_ring_head = 0;
+    edma_ring_base = pd->nicmgr_mem_alloc(4096 + (sizeof(struct edma_cmd_desc) * ETH_EDMAQ_RING_SIZE));
+    MEM_SET(edma_ring_base, 0, 4096 + (sizeof(struct edma_cmd_desc) * ETH_EDMAQ_RING_SIZE), 0);
+    edma_comp_base = pd->nicmgr_mem_alloc(4096 + (sizeof(struct edma_comp_desc) * ETH_EDMAQ_RING_SIZE));
+    MEM_SET(edma_comp_base, 0, 4096 + (sizeof(struct edma_comp_desc) * ETH_EDMAQ_RING_SIZE), 0);
+
+    NIC_LOG_INFO("lif-{}: edma_ring_base {:#x} edma_comp_base {:#x}",
+        hal_lif_info_.hw_lif_id, edma_ring_base, edma_comp_base);
+
+    // Create the real device
     if (isMnic()) {
         mnet_req.devcmd_pa = pci_resources.devcmdpa;
         mnet_req.devcmd_db_pa = pci_resources.devcmddbpa;
@@ -338,39 +373,6 @@ Eth::Eth(HalClient *hal_client,
         NIC_LOG_DEBUG("lif-{}: Skipped creating PCI device, pcie_port {}",
                 hal_lif_info_.hw_lif_id, spec->pcie_port);
     }
-
-    // RSS configuration
-    rss_type = LifRssType::RSS_TYPE_NONE;
-    memset(rss_key, 0x00, RSS_HASH_KEY_SIZE);
-    memset(rss_indir, 0x00, RSS_IND_TBL_SIZE);
-
-    // Notify Queue
-    notify_block = (struct notify_block *)calloc(1, sizeof(struct notify_block));
-    assert (notify_block != NULL);
-    local_notify_block_addr = pd->nicmgr_mem_alloc(sizeof(struct notify_block));
-    host_notify_block_addr = 0;
-    MEM_SET(local_notify_block_addr, 0, sizeof(struct notify_block), 0);
-
-    NIC_LOG_INFO("lif-{}: local_notify_block_addr {:#x}",
-        hal_lif_info_.hw_lif_id, local_notify_block_addr);
-
-    // Notify Block
-    notify_ring_head = 0;
-    notify_ring_base = pd->nicmgr_mem_alloc(4096 + (sizeof(union notifyq_comp) * ETH_NOTIFYQ_RING_SIZE));
-    MEM_SET(notify_ring_base, 0, 4096 + (sizeof(union notifyq_comp) * ETH_NOTIFYQ_RING_SIZE), 0);
-
-    NIC_LOG_INFO("lif-{}: notify_ring_base {:#x}",
-        hal_lif_info_.hw_lif_id, notify_ring_base);
-
-    // Edma Queue
-    edma_ring_head = 0;
-    edma_ring_base = pd->nicmgr_mem_alloc(4096 + (sizeof(struct edma_cmd_desc) * ETH_EDMAQ_RING_SIZE));
-    MEM_SET(edma_ring_base, 0, 4096 + (sizeof(struct edma_cmd_desc) * ETH_EDMAQ_RING_SIZE), 0);
-    edma_comp_base = pd->nicmgr_mem_alloc(4096 + (sizeof(struct edma_comp_desc) * ETH_EDMAQ_RING_SIZE));
-    MEM_SET(edma_comp_base, 0, 4096 + (sizeof(struct edma_comp_desc) * ETH_EDMAQ_RING_SIZE), 0);
-
-    NIC_LOG_INFO("lif-{}: edma_ring_base {:#x} edma_comp_base {:#x}", hal_lif_info_.hw_lif_id,
-        edma_ring_base, edma_comp_base);
 
     lif_state = LIF_STATE_CREATED;
 }
@@ -447,6 +449,47 @@ Eth::DevcmdPoll()
 }
 
 void
+Eth::StatsUpdateHandler(void *obj)
+{
+    Eth *eth = (Eth *)obj;
+
+    if (eth->host_stats_mem_addr == 0) {
+        NIC_LOG_WARN("lif-{}: Host stats region is not created!", eth->hal_lif_info_.hw_lif_id);
+        return;
+    }
+
+    uint64_t addr, req_db_addr;
+
+    struct edma_cmd_desc cmd = {
+        .opcode = EDMA_OPCODE_LOCAL_TO_HOST,
+        .len = sizeof(struct ionic_lif_stats),
+        .src_lif = (uint16_t)eth->hal_lif_info_.hw_lif_id,
+        .src_addr = eth->stats_mem_addr,
+        .dst_lif = (uint16_t)eth->hal_lif_info_.hw_lif_id,
+        .dst_addr = eth->host_stats_mem_addr,
+    };
+
+    // Update stats
+    addr = eth->edma_ring_base + eth->edma_ring_head * sizeof(struct edma_cmd_desc);
+    WRITE_MEM(addr, (uint8_t *)&cmd, sizeof(struct edma_cmd_desc), 0);
+    req_db_addr =
+#ifdef __aarch64__
+                CAP_ADDR_BASE_DB_WA_OFFSET +
+#endif
+                CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS +
+                (0b1001 /* PI_UPD + SCHED_EVAL */ << 17) +
+                (eth->hal_lif_info_.hw_lif_id << 6) +
+                (ETH_QTYPE_SVC << 3);
+
+    // NIC_LOG_INFO("lif-{}: Updating stats, edma_idx {} edma_desc_addr {:#x}",
+    //     eth->hal_lif_info_.hw_lif_id, eth->edma_ring_head, addr);
+    eth->edma_ring_head = (eth->edma_ring_head + 1) % ETH_EDMAQ_RING_SIZE;
+    WRITE_DB64(req_db_addr, (ETH_EDMAQ_ID << 24) | eth->edma_ring_head);
+
+    // FIXME: Wait for completion
+}
+
+void
 Eth::LinkEventHandler(link_eventdata_t *evd)
 {
     if (lif_state != LIF_STATE_INITED &&
@@ -460,6 +503,13 @@ Eth::LinkEventHandler(link_eventdata_t *evd)
         return;
     }
 
+    if (host_notify_block_addr == 0) {
+        NIC_LOG_WARN("lif-{}: Host notify block is not created!", hal_lif_info_.hw_lif_id);
+        return;
+    }
+
+    uint64_t addr, req_db_addr;
+
     notify_block->eid = ++eid;
     notify_block->link_status = evd->oper_status;
     notify_block->link_error_bits = 0;
@@ -468,26 +518,19 @@ Eth::LinkEventHandler(link_eventdata_t *evd)
     notify_block->autoneg_status = 0;
     notify_block->link_flap_count = ++link_flap_count;
 
-    WRITE_MEM(local_notify_block_addr, (uint8_t *)notify_block, sizeof(struct notify_block), 0);
-
-    if (host_notify_block_addr == 0) {
-        NIC_LOG_WARN("lif-{}: Notify block is not created!", hal_lif_info_.hw_lif_id);
-        return;
-    }
-
-    uint64_t addr, req_db_addr;
+    WRITE_MEM(notify_block_addr, (uint8_t *)notify_block, sizeof(struct notify_block), 0);
 
     struct edma_cmd_desc cmd = {
         .opcode = EDMA_OPCODE_LOCAL_TO_HOST,
         .len = sizeof(struct notify_block),
         .src_lif = (uint16_t)hal_lif_info_.hw_lif_id,
-        .src_addr = local_notify_block_addr,
+        .src_addr = notify_block_addr,
         .dst_lif = (uint16_t)hal_lif_info_.hw_lif_id,
         .dst_addr = host_notify_block_addr,
     };
 
     NIC_LOG_INFO("lif-{}: notify_block_addr local {:#x} host {:#x}",
-        hal_lif_info_.hw_lif_id, local_notify_block_addr, host_notify_block_addr);
+        hal_lif_info_.hw_lif_id, notify_block_addr, host_notify_block_addr);
 
     // Update the notify block
     addr = edma_ring_base + edma_ring_head * sizeof(struct edma_cmd_desc);
@@ -760,11 +803,11 @@ Eth::CmdHandler(void *req, void *req_data,
         break;
 
     case CMD_OPCODE_STATS_DUMP_START:
-        status = DEVCMD_SUCCESS;
+        status = this->_CmdStatsDumpStart(req, req_data, resp, resp_data);
         break;
 
     case CMD_OPCODE_STATS_DUMP_STOP:
-        status = DEVCMD_SUCCESS;
+        status = this->_CmdStatsDumpStop(req, req_data, resp, resp_data);
         break;
 
     case CMD_OPCODE_DEBUG_Q_DUMP:
@@ -918,6 +961,12 @@ Eth::_CmdReset(void *req, void *req_data, void *resp, void *resp_data)
         }
         eth_lif->Reset();
     }
+
+    // RSS configuration
+    rss_type = LifRssType::RSS_TYPE_NONE;
+    memset(rss_key, 0x00, RSS_HASH_KEY_SIZE);
+    memset(rss_indir, 0x00, RSS_IND_TBL_SIZE);
+
     lif_state = LIF_STATE_RESET;
 
     return (DEVCMD_SUCCESS);
@@ -1759,6 +1808,39 @@ Eth::_CmdMacAddrGet(void *req, void *req_data, void *resp, void *resp_data)
 }
 
 enum DevcmdStatus
+Eth::_CmdStatsDumpStart(void *req, void *req_data, void *resp, void *resp_data)
+{
+    struct stats_dump_cmd *cmd = (struct stats_dump_cmd *)req;
+
+    NIC_LOG_DEBUG("lif-{}: CMD_OPCODE_STATS_DUMP_START: host_stats_mem_addr {:#x}",
+        hal_lif_info_.hw_lif_id, host_stats_mem_addr);
+
+    host_stats_mem_addr = cmd->addr;
+
+    Eth::StatsUpdateHandler(this);
+
+    evutil_timer_start(&stats_timer, &Eth::StatsUpdateHandler, this, 1, 1);
+
+    return (DEVCMD_SUCCESS);
+}
+
+enum DevcmdStatus
+Eth::_CmdStatsDumpStop(void *req, void *req_data, void *resp, void *resp_data)
+{
+    NIC_LOG_DEBUG("lif-{}: CMD_OPCODE_STATS_DUMP_STOP", hal_lif_info_.hw_lif_id);
+
+    if (host_stats_mem_addr == 0) {
+        return (DEVCMD_SUCCESS);
+    }
+
+    evutil_timer_stop(&stats_timer);
+
+    host_stats_mem_addr = 0;
+
+    return (DEVCMD_SUCCESS);
+}
+
+enum DevcmdStatus
 Eth::_CmdRssHashSet(void *req, void *req_data, void *resp, void *resp_data)
 {
     int ret;
@@ -1807,7 +1889,7 @@ Eth::_CmdRssIndirSet(void *req, void *req_data, void *resp, void *resp_data)
         return (DEVCMD_ERROR);
     }
 
-    return DEVCMD_SUCCESS;
+    return (DEVCMD_SUCCESS);
 }
 
 /**

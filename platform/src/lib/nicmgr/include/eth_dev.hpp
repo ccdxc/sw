@@ -20,6 +20,7 @@
 #include "nic/sdk/include/sdk/indexer.hpp"
 #include "platform/src/lib/hal_api/include/hal_types.hpp"
 #include "platform/src/lib/mnet/include/mnet.h"
+#include "platform/src/lib/evutils/include/evutils.h"
 
 /* Supply these for ionic_if.h */
 #define BIT(n)                  (1 << n)
@@ -171,11 +172,13 @@ public:
     struct notify_block *notify_block;
 
     void DevcmdPoll();
+
     void DevcmdHandler();
     void DevObjSave();
+    static void StatsUpdateHandler(void *obj);
     void LinkEventHandler(link_eventdata_t *evd);
-    enum DevcmdStatus CmdHandler(void *req, void *req_data,
-        void *resp, void *resp_data);
+    enum DevcmdStatus CmdHandler(void *req, void *req_data, void *resp, void *resp_data);
+
     int GenerateQstateInfoJson(pt::ptree &lifs);
     bool isMnic();
     bool isHostManagement();
@@ -205,13 +208,16 @@ private:
     enum lif_state lif_state;
     // Coses
     uint8_t  coses; // {uint8_t CosA:4; uint8_t CosB:4;}
-    // Resources
+    // Notify state
     uint64_t eid;
     uint16_t link_flap_count;
+    // Stats
+    uint64_t stats_mem_addr;
+    uint64_t host_stats_mem_addr;
     // NotifyQ
     uint16_t notify_ring_head;
     uint64_t notify_ring_base;
-    uint64_t local_notify_block_addr;
+    uint64_t notify_block_addr;
     uint64_t host_notify_block_addr;
     // EdmaQ
     uint16_t edma_ring_head;
@@ -228,6 +234,8 @@ private:
     map<uint64_t, uint64_t> mac_addrs;
     map<uint64_t, uint16_t> vlans;
     map<uint64_t, tuple<uint64_t, uint16_t>> mac_vlans;
+    // Tasks
+    evutil_timer stats_timer;
 
     /* Command Handlers */
     enum DevcmdStatus _CmdReset(void *req, void *req_data, void *resp, void *resp_data);
@@ -245,6 +253,8 @@ private:
     enum DevcmdStatus _CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdMacAddrGet(void *req, void *req_data, void *resp, void *resp_data);
+    enum DevcmdStatus _CmdStatsDumpStart(void *req, void *req_data, void *resp, void *resp_data);
+    enum DevcmdStatus _CmdStatsDumpStop(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdRssHashSet(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdRssIndirSet(void *req, void *req_data, void *resp, void *resp_data);
 
@@ -268,7 +278,6 @@ private:
     const char *lif_state_to_str(enum lif_state state);
 
     types::LifType ConvertDevTypeToLifType(EthDevType dev_type);
-
 };
 
 #endif

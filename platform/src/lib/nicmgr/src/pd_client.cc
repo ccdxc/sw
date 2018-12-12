@@ -197,7 +197,7 @@ void PdClient::rdma_manager_init (void)
     rdma_hbm_base_ = hbm_addr;
     rdma_hbm_allocator_.reset(new sdk::lib::BMAllocator(num_units));
 
-    NIC_LOG_DEBUG("{}: rdma_hbm_base_ : {}", __FUNCTION__, rdma_hbm_base_);
+    NIC_FUNC_DEBUG("rdma_hbm_base : {}", rdma_hbm_base_);
 
     hbm_addr = mp_->start_addr(kRdmaHBMBarLabel);
     assert(hbm_addr > 0);
@@ -215,11 +215,11 @@ void PdClient::rdma_manager_init (void)
     rdma_hbm_bar_base_ = hbm_addr;
     rdma_hbm_bar_allocator_.reset(new sdk::lib::BMAllocator(num_units));
 
-    NIC_LOG_DEBUG("{}: rdma_hbm_bar_base_ : {}", __FUNCTION__, rdma_hbm_bar_base_);
+    NIC_FUNC_DEBUG("rdma_hbm_bar_base : {}", rdma_hbm_bar_base_);
 
 }
 
-uint64_t PdClient::RdmaHbmAlloc (uint32_t size)
+uint64_t PdClient::rdma_mem_alloc (uint32_t size)
 {
     uint32_t alloc_units;
 
@@ -228,18 +228,18 @@ uint64_t PdClient::RdmaHbmAlloc (uint32_t size)
     uint64_t alloc_offset = rdma_hbm_allocator_->Alloc(alloc_units);
 
     if (alloc_offset < 0) {
-        NIC_LOG_DEBUG("{}: Invalid alloc_offset {}", __FUNCTION__, alloc_offset);
+        NIC_FUNC_ERR("Invalid alloc_offset {}", alloc_offset);
         return -ENOMEM;
     }
 
     rdma_allocation_sizes_[alloc_offset] = alloc_units;
     alloc_offset *= kRdmaAllocUnit;
-    NIC_LOG_DEBUG("{}: size: {} alloc_offset: {} hbm_addr: {}",
-                    __FUNCTION__, size, alloc_offset, rdma_hbm_base_ + alloc_offset);
+    NIC_FUNC_DEBUG("size: {} alloc_offset: {} hbm_addr: {}",
+                    size, alloc_offset, rdma_hbm_base_ + alloc_offset);
     return rdma_hbm_base_ + alloc_offset;
 }
 
-uint64_t PdClient::RdmaHbmBarAlloc (uint32_t size)
+uint64_t PdClient::rdma_mem_bar_alloc (uint32_t size)
 {
     uint32_t alloc_units;
 
@@ -248,14 +248,14 @@ uint64_t PdClient::RdmaHbmBarAlloc (uint32_t size)
     uint64_t alloc_offset = rdma_hbm_bar_allocator_->Alloc(alloc_units);
 
     if (alloc_offset < 0) {
-        NIC_LOG_DEBUG("{}: Invalid alloc_offset {}", __FUNCTION__, alloc_offset);
+        NIC_FUNC_ERR("Invalid alloc_offset {}", alloc_offset);
         return -ENOMEM;
     }
 
     rdma_bar_allocation_sizes_[alloc_offset] = alloc_units;
     alloc_offset *= kRdmaBarAllocUnit;
-    NIC_LOG_DEBUG("{}: size: {} alloc_offset: {} hbm_addr: {}",
-                    __FUNCTION__, size, alloc_offset, rdma_hbm_bar_base_ + alloc_offset);
+    NIC_FUNC_DEBUG("size: {} alloc_offset: {} hbm_addr: {:#x}",
+                    size, alloc_offset, rdma_hbm_bar_base_ + alloc_offset);
     return rdma_hbm_bar_base_ + alloc_offset;
 }
 
@@ -277,7 +277,7 @@ void PdClient::nicmgr_mem_init (void)
     nicmgr_hbm_base_ = hbm_addr;
     nicmgr_hbm_allocator_.reset(new sdk::lib::BMAllocator(num_units));
 
-    NIC_LOG_DEBUG("{}: nicmgr_hbm_base_ : {}\n", __FUNCTION__, nicmgr_hbm_base_);
+    NIC_FUNC_DEBUG("nicmgr_hbm_base : {}\n", nicmgr_hbm_base_);
 }
 
 uint64_t PdClient::nicmgr_mem_alloc(uint32_t size)
@@ -289,14 +289,14 @@ uint64_t PdClient::nicmgr_mem_alloc(uint32_t size)
     uint64_t alloc_offset = nicmgr_hbm_allocator_->Alloc(alloc_units);
 
     if (alloc_offset < 0) {
-        NIC_LOG_DEBUG("{}: Invalid alloc_offset {}", __FUNCTION__, alloc_offset);
+        NIC_FUNC_ERR("Invalid alloc_offset {}", alloc_offset);
         return -ENOMEM;
     }
 
     nicmgr_allocation_sizes_[alloc_offset] = alloc_units;
     alloc_offset *= kNicmgrAllocUnit;
-    NIC_LOG_DEBUG("{}: size: {} alloc_offset: {} hbm_addr: {}",
-                    __FUNCTION__, size, alloc_offset, nicmgr_hbm_base_ + alloc_offset);
+    NIC_FUNC_DEBUG("size: {} alloc_offset: {} hbm_addr: {:#x}",
+                    size, alloc_offset, nicmgr_hbm_base_ + alloc_offset);
     return nicmgr_hbm_base_ + alloc_offset;
 }
 
@@ -620,8 +620,7 @@ PdClient::p4pd_common_p4plus_rxdma_rss_indir_table_entry_add(
     if (hw_lif_id >= MAX_LIFS ||
         index >= ETH_RSS_LIF_INDIR_TBL_SZ ||
         qid >= ETH_RSS_MAX_QUEUES) {
-        NIC_LOG_DEBUG("{}: {}, index : {}, qid : {}",
-                     __FUNCTION__, hw_lif_id, index, qid);
+        NIC_FUNC_ERR("{}, index : {}, qid : {}", hw_lif_id, index, qid);
         return -1;
     };
 
@@ -634,8 +633,8 @@ PdClient::p4pd_common_p4plus_rxdma_rss_indir_table_entry_add(
     tbl_base = (tbl_base + ETH_RSS_INDIR_TBL_SZ) & ~(ETH_RSS_INDIR_TBL_SZ - 1);
     addr = tbl_base + tbl_index;
 
-    NIC_LOG_DEBUG("{}: hw_lif_id : {}, index : {}, addr : {:x}, enable : {}, qid : {}",
-                  __FUNCTION__, hw_lif_id, index, addr, enable, qid);
+    NIC_FUNC_DEBUG("hw_lif_id : {}, index : {}, addr : {:x}, enable : {}, qid : {}",
+                    hw_lif_id, index, addr, enable, qid);
     capri_hbm_write_mem(addr,
                         (uint8_t *)&data.action_u,
                         sizeof(data.action_u));
@@ -655,8 +654,7 @@ PdClient::p4pd_common_p4plus_rxdma_rss_indir_table_entry_get(
 
     if (hw_lif_id >= MAX_LIFS ||
         index >= ETH_RSS_LIF_INDIR_TBL_SZ) {
-        NIC_LOG_DEBUG("{}: hw_lif_id : {} index : {}",
-                     __FUNCTION__, hw_lif_id, index);
+        NIC_FUNC_ERR("hw_lif_id : {} index : {}", hw_lif_id, index);
         return -1;
     };
 
@@ -677,8 +675,6 @@ int
 PdClient::eth_program_rss(uint32_t hw_lif_id, uint16_t rss_type, uint8_t *rss_key, uint8_t *rss_indir,
                 uint16_t num_queues)
 {
-    NIC_LOG_DEBUG("{}: Entered", __FUNCTION__);
-
     assert(hw_lif_id < MAX_LIFS);
     assert(num_queues < ETH_RSS_MAX_QUEUES);
 
@@ -686,14 +682,13 @@ PdClient::eth_program_rss(uint32_t hw_lif_id, uint16_t rss_type, uint8_t *rss_ke
 
     if (num_queues > 0) {
         for (unsigned int index = 0; index < ETH_RSS_LIF_INDIR_TBL_LEN; index++) {
-            NIC_LOG_DEBUG("{}: hw_lif_id {} index {} type {} qid {}",
-                          __FUNCTION__, hw_lif_id, index, rss_type, rss_indir[index]);
+            NIC_FUNC_DEBUG("hw_lif_id {} index {} type {} qid {}",
+                            hw_lif_id, index, rss_type, rss_indir[index]);
             p4pd_common_p4plus_rxdma_rss_indir_table_entry_add(
                     hw_lif_id, index, rss_type, rss_indir[index]);
         }
     }
 
-    NIC_LOG_DEBUG("{}: Leaving", __FUNCTION__);
     return 0;
 }
 
@@ -869,9 +864,8 @@ PdClient::rdma_get_pt_base_addr (uint32_t lif)
 
     pt_table_base_addr = data.action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.pt_base_addr_page_id;
 
-    NIC_LOG_DEBUG("({},{}): Lif: {}: Rx LIF params - pt_base_addr_page_id {}",
-                 __FUNCTION__, __LINE__, lif,
-                 pt_table_base_addr);
+    NIC_FUNC_DEBUG("lif-{}: Rx LIF params - pt_base_addr_page_id {}",
+                    lif, pt_table_base_addr);
 
     pt_table_base_addr <<= HBM_PAGE_SIZE_SHIFT;
     return(pt_table_base_addr);
@@ -900,11 +894,11 @@ PdClient::rdma_get_kt_base_addr (uint32_t lif)
     key_table_base_addr = (pt_table_base_addr << HBM_PAGE_SIZE_SHIFT) +
         (sizeof(uint64_t) << log_num_pt_entries);
 
-    NIC_LOG_DEBUG("({},{}): Lif: {}: Rx LIF params - pt_base_addr_page_id {} "
-                 "log_num_pt_entries {} key_table_base_addr {}",
-                 __FUNCTION__, __LINE__, lif,
-                 pt_table_base_addr, log_num_pt_entries,
-                 key_table_base_addr);
+    NIC_FUNC_DEBUG("lif-{}: Rx LIF params - pt_base_addr_page_id {} "
+                    "log_num_pt_entries {} key_table_base_addr {}",
+                    lif,
+                    pt_table_base_addr, log_num_pt_entries,
+                    key_table_base_addr);
 
     return key_table_base_addr;
 }
@@ -926,9 +920,9 @@ PdClient::rdma_get_ah_base_addr (uint32_t lif)
 
     ah_table_base_addr = data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.ah_base_addr_page_id;
 
-    NIC_LOG_DEBUG("({},{}): Lif: {}: Rx LIF params - ah_base_addr_page_id {}",
-                 __FUNCTION__, __LINE__, lif,
-                 ah_table_base_addr);
+    NIC_FUNC_DEBUG("lif-{}: Rx LIF params - ah_base_addr_page_id {}",
+                    lif,
+                    ah_table_base_addr);
 
     ah_table_base_addr <<= HBM_PAGE_SIZE_SHIFT;
     return(ah_table_base_addr);
@@ -951,12 +945,11 @@ PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
     uint64_t            pad_size;
     int                 rc;
 
-    NIC_LOG_DEBUG("({},{}): LIF: {} ",
-                 __FUNCTION__, __LINE__, lif);
+    NIC_FUNC_DEBUG("lif-{}: RDMA lif init", lif);
 
     LIFQState *qstate = lm_->GetLIFQState(lif);
     if (qstate == nullptr) {
-        NIC_LOG_ERR("({},{}): GetLIFQState failed for LIF: {} ", __FUNCTION__, __LINE__, lif);
+        NIC_FUNC_ERR("lif-{}: GetLIFQState failed", lif);
         return HAL_RET_ERR;
     }
 
@@ -966,25 +959,23 @@ PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
 
     // Fill the CQ info in sram_lif_entry
     cq_base_addr = lm_->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_CQ);
-    NIC_LOG_DEBUG("({},{}): Lif {} cq_base_addr: {:#x}, max_cqs: {} "
-                  "log_num_cq_entries: {}",
-                  __FUNCTION__, __LINE__, lif, cq_base_addr,
-                  max_cqs, log2(roundup_to_pow_2(max_cqs)));
+    NIC_FUNC_DEBUG("lif-{}: cq_base_addr: {:#x}, max_cqs: {} ",
+                  lif, cq_base_addr, roundup_to_pow_2(max_cqs));
     HAL_ASSERT((cq_base_addr & ((1 << SQCB_SIZE_SHIFT) - 1)) == 0);
     sram_lif_entry.cqcb_base_addr_hi = cq_base_addr >> CQCB_ADDR_HI_SHIFT;
     sram_lif_entry.log_num_cq_entries = log2(roundup_to_pow_2(max_cqs));
 
     // Fill the SQ info in sram_lif_entry
     sq_base_addr = lm_->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_SQ);
-    NIC_LOG_DEBUG("({},{}): Lif {} sq_base_addr: {:#x}",
-                    __FUNCTION__, __LINE__, lif, sq_base_addr);
+    NIC_FUNC_DEBUG("lif-{}: sq_base_addr: {:#x}",
+                    lif, sq_base_addr);
     HAL_ASSERT((sq_base_addr & ((1 << SQCB_SIZE_SHIFT) - 1)) == 0);
     sram_lif_entry.sqcb_base_addr_hi = sq_base_addr >> SQCB_ADDR_HI_SHIFT;
 
     // Fill the RQ info in sram_lif_entry
     rq_base_addr = lm_->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_RQ);
-    NIC_LOG_DEBUG("({},{}): Lif {} rq_base_addr: {:#x}",
-                    __FUNCTION__, __LINE__, lif, rq_base_addr);
+    NIC_FUNC_DEBUG("lif-{}: rq_base_addr: {:#x}",
+                    lif, rq_base_addr);
     HAL_ASSERT((rq_base_addr & ((1 << RQCB_SIZE_SHIFT) - 1)) == 0);
     sram_lif_entry.rqcb_base_addr_hi = rq_base_addr >> RQCB_ADDR_HI_SHIFT;
 
@@ -1021,11 +1012,12 @@ PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
 
     total_size = pt_size + key_table_size + ah_table_size + HBM_PAGE_SIZE;
 
-    base_addr = RdmaHbmAlloc(total_size);
+    base_addr = rdma_mem_alloc(total_size);
 
-    NIC_LOG_DEBUG("{}: pt_size: {}, key_table_size: {}, "
+    NIC_FUNC_DEBUG("lif-{}: pt_size: {}, key_table_size: {}, "
                   "ah_table_size: {}, base_addr: {:#x}",
-                  __FUNCTION__, pt_size, key_table_size,
+                  lif,
+                  pt_size, key_table_size,
                   ah_table_size, base_addr);
 
     size = base_addr;
@@ -1043,10 +1035,10 @@ PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
     sram_lif_entry.rq_qtype = Q_TYPE_RDMA_RQ;
     sram_lif_entry.aq_qtype = Q_TYPE_ADMINQ;
 
-    NIC_LOG_DEBUG("({},{}): pt_base_addr_page_id: {}, log_num_pt: {}, "
+    NIC_FUNC_DEBUG("lif-{}: pt_base_addr_page_id: {}, log_num_pt: {}, "
                   "ah_base_addr_page_id: {}, rdma_en_qtype_mask: {} "
                   "sq_qtype: {} rq_qtype: {} aq_qtype: {}",
-                    __FUNCTION__, __LINE__,
+                    lif,
                     sram_lif_entry.pt_base_addr_page_id,
                     sram_lif_entry.log_num_pt_entries,
                     sram_lif_entry.ah_base_addr_page_id,
@@ -1067,10 +1059,10 @@ PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
 
         assert(hbm_size <= (8 * 1024 * 1024));
 
-        hbm_addr = RdmaHbmBarAlloc(hbm_size);
+        hbm_addr = rdma_mem_bar_alloc(hbm_size);
 
-        NIC_LOG_DEBUG("{}: hbm_bar_addr: {:#x}, hbm_size: {}, ",
-                     __FUNCTION__, hbm_addr, hbm_size);
+        NIC_FUNC_DEBUG("lif-{}: hbm_bar_addr: {:#x}, hbm_size: {}, ",
+                        lif, hbm_addr, hbm_size);
 
         if (hbm_addr == 0) {
             *hbm_bar_addr = 0;
@@ -1130,11 +1122,7 @@ PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
                             sram_lif_entry.barmap_size);
     assert(rc == 0);
 
-    NIC_LOG_DEBUG("({},{}): Lif: {}: SRAM LIF INIT successful",
-                  __FUNCTION__, __LINE__, lif);
-
-    NIC_LOG_DEBUG("({},{}): Lif: {}: LIF Init successful",
-                  __FUNCTION__, __LINE__, lif);
+    NIC_FUNC_DEBUG("lif-{}: rdma_params_table init successful", lif);
 
     return HAL_RET_OK;
 }

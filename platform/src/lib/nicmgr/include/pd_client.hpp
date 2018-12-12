@@ -120,9 +120,10 @@ public:
         uint8_t aq_qtype,
         uint64_t barmap_base_addr,
         uint32_t barmap_size);
+
     void rdma_manager_init(void);
-    uint64_t RdmaHbmAlloc(uint32_t size);
-    uint64_t RdmaHbmBarAlloc(uint32_t size);
+    uint64_t rdma_mem_alloc(uint32_t size);
+    uint64_t rdma_mem_bar_alloc(uint32_t size);
 
     void nicmgr_mem_init(void);
     uint64_t nicmgr_mem_alloc(uint32_t size);

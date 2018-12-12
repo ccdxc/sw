@@ -17,6 +17,18 @@
 #include "nic/asic/capri/model/cap_top/cap_top_csr_defines.h"
 #include "nic/asic/capri/model/cap_top/csr_defines/cap_wa_c_hdr.h"
 
+/* Supply these for ionic_if.h */
+#define BIT(n)                  (1 << n)
+#define TEST_BIT(x, n)          ((x) & (1 << n))
+#define u8 uint8_t
+#define u16 uint16_t
+#define u32 uint32_t
+#define u64 uint64_t
+#define dma_addr_t uint64_t
+
+#include "platform/drivers/common/ionic_if.h"
+
+
 typedef struct {
     uint64_t base;
     uint32_t size;
@@ -303,88 +315,8 @@ eth_stats(uint16_t lif)
     uint64_t addr = mp_->start_addr("lif_stats") + (lif << 10);
     printf("\naddr: 0x%lx\n\n", addr);
 
-    typedef struct {
-        // RX
-        uint64_t rx_ucast_bytes;
-        uint64_t rx_ucast_packets;
-        uint64_t rx_mcast_bytes;
-        uint64_t rx_mcast_packets;
-        uint64_t rx_bcast_bytes;
-        uint64_t rx_bcast_packets;
-        uint64_t rx_dma_error;
-        uint64_t __rsvd0;
-        // RX drops
-        uint64_t rx_ucast_drop_bytes;
-        uint64_t rx_ucast_drop_packets;
-        uint64_t rx_mcast_drop_bytes;
-        uint64_t rx_mcast_drop_packets;
-        uint64_t rx_bcast_drop_bytes;
-        uint64_t rx_bcast_drop_packets;
-        uint64_t __rsvd1;
-        uint64_t __rsvd2;
-        // TX
-        uint64_t tx_ucast_bytes;
-        uint64_t tx_ucast_packets;
-        uint64_t tx_mcast_bytes;
-        uint64_t tx_mcast_packets;
-        uint64_t tx_bcast_bytes;
-        uint64_t tx_bcast_packets;
-        uint64_t tx_dma_error;
-        uint64_t __rsvd3;
-        // TX drops
-        uint64_t tx_ucast_drop_bytes;
-        uint64_t tx_ucast_drop_packets;
-        uint64_t tx_mcast_drop_bytes;
-        uint64_t tx_mcast_drop_packets;
-        uint64_t tx_bcast_drop_bytes;
-        uint64_t tx_bcast_drop_packets;
-        uint64_t __rsvd4;
-        uint64_t __rsvd5;
-
-        //Rx Queue/Ring drops
-        uint64_t rx_q_disable_drop;
-        uint64_t rx_q_empty_drop;
-        uint64_t rx_q_empty_scheduled;
-        uint64_t rx_desc_fetch_error;
-        uint64_t rx_desc_data_error;
-        uint64_t rsvd6;
-        uint64_t rsvd7;
-        uint64_t rsvd8;
-        
-        //Tx Queue/Ring drops
-        uint64_t tx_q_disable_drop;
-        uint64_t tx_q_empty_drop;
-        uint64_t tx_desc_fetch_error;
-        uint64_t tx_desc_data_error;
-        uint64_t rsvd9;
-        uint64_t rsvd10;
-        uint64_t rsvd11;
-        uint64_t rsvd12;
-        
-        // RDMA/ROCE TX
-        uint64_t roce_tx_ucast_bytes;
-        uint64_t roce_tx_ucast_packets;
-        uint64_t roce_tx_mcast_bytes;
-        uint64_t roce_tx_mcast_packets;
-        uint64_t roce_tx_cnp_packets;
-        uint64_t __rsvd13;
-        uint64_t __rsvd14;
-        uint64_t __rsvd15;
-
-        // RDMA/ROCE RX
-        uint64_t roce_rx_ucast_bytes;
-        uint64_t roce_rx_ucast_packets;
-        uint64_t roce_rx_mcast_bytes;
-        uint64_t roce_rx_mcast_packets;
-        uint64_t roce_rx_cnp_packets;
-        uint64_t roce_rx_ecn_packets;
-        uint64_t __rsvd16;
-        uint64_t __rsvd17;
-
-    } __attribute__((packed)) eth_stats_t;
-
-    eth_stats_t stats;
-    sdk::lib::pal_mem_read(addr, (uint8_t *)&stats, sizeof(eth_stats_t));
+    struct ionic_lif_stats stats;
+    sdk::lib::pal_mem_read(addr, (uint8_t *)&stats, sizeof(struct ionic_lif_stats));
 
     printf("rx_ucast_bytes              : %lu\n", stats.rx_ucast_bytes);
     printf("rx_ucast_packets            : %lu\n", stats.rx_ucast_packets);

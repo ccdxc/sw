@@ -1745,6 +1745,83 @@ struct log_event {
 	u8 data[54];
 };
 
+/**
+ * struct ionic_lif_stats
+ */
+struct ionic_lif_stats {
+	// RX
+	uint64_t rx_ucast_bytes;
+	uint64_t rx_ucast_packets;
+	uint64_t rx_mcast_bytes;
+	uint64_t rx_mcast_packets;
+	uint64_t rx_bcast_bytes;
+	uint64_t rx_bcast_packets;
+	uint64_t rx_dma_error;
+	uint64_t rsvd0;
+	// RX drops
+	uint64_t rx_ucast_drop_bytes;
+	uint64_t rx_ucast_drop_packets;
+	uint64_t rx_mcast_drop_bytes;
+	uint64_t rx_mcast_drop_packets;
+	uint64_t rx_bcast_drop_bytes;
+	uint64_t rx_bcast_drop_packets;
+	uint64_t rsvd1;
+	uint64_t rsvd2;
+	// TX
+	uint64_t tx_ucast_bytes;
+	uint64_t tx_ucast_packets;
+	uint64_t tx_mcast_bytes;
+	uint64_t tx_mcast_packets;
+	uint64_t tx_bcast_bytes;
+	uint64_t tx_bcast_packets;
+	uint64_t tx_dma_error;
+	uint64_t rsvd3;
+	// TX drops
+	uint64_t tx_ucast_drop_bytes;
+	uint64_t tx_ucast_drop_packets;
+	uint64_t tx_mcast_drop_bytes;
+	uint64_t tx_mcast_drop_packets;
+	uint64_t tx_bcast_drop_bytes;
+	uint64_t tx_bcast_drop_packets;
+	uint64_t rsvd4;
+	uint64_t rsvd5;
+	//Rx Queue/Ring drops
+	uint64_t rx_q_disable_drop;
+	uint64_t rx_q_empty_drop;
+	uint64_t rx_q_empty_scheduled;
+	uint64_t rx_desc_fetch_error;
+	uint64_t rx_desc_data_error;
+	uint64_t rsvd6;
+	uint64_t rsvd7;
+	uint64_t rsvd8;
+	//Tx Queue/Ring drops
+	uint64_t tx_q_disable_drop;
+	uint64_t tx_q_empty_drop;
+	uint64_t tx_desc_fetch_error;
+	uint64_t tx_desc_data_error;
+	uint64_t rsvd9;
+	uint64_t rsvd10;
+	uint64_t rsvd11;
+	uint64_t rsvd12;
+	// RDMA/ROCE TX
+	uint64_t roce_tx_ucast_bytes;
+	uint64_t roce_tx_ucast_packets;
+	uint64_t roce_tx_mcast_bytes;
+	uint64_t roce_tx_mcast_packets;
+	uint64_t roce_tx_cnp_packets;
+	uint64_t rsvd13;
+	uint64_t rsvd14;
+	uint64_t rsvd15;
+	// RDMA/ROCE RX
+	uint64_t roce_rx_ucast_bytes;
+	uint64_t roce_rx_ucast_packets;
+	uint64_t roce_rx_mcast_bytes;
+	uint64_t roce_rx_mcast_packets;
+	uint64_t roce_rx_cnp_packets;
+	uint64_t roce_rx_ecn_packets;
+	uint64_t rsvd16;
+	uint64_t rsvd17;
+};
 
 #pragma pack(pop)
 
