@@ -3,6 +3,7 @@ include ${MKDEFS}/pre.mk
 MODULE_TARGET   = proxy.p4bin
 MODULE_PIPELINE = iris gft
 MODULE_SRCS     = ${MODULE_SRC_DIR}/tcp_proxy_rxdma.p4 \
+                  ${MODULE_SRC_DIR}/tcp_proxy_ooq_txdma.p4 \
                   ${MODULE_SRC_DIR}/tcp_proxy_txdma.p4
 MODULE_NCC_OPTS = --p4-plus --pd-gen --asm-out --no-ohi \
                   --two-byte-profile --fe-flags="-I${TOPDIR}" \
