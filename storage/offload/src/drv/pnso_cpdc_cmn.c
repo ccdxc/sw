@@ -26,6 +26,8 @@
 #include "pnso_utils.h"
 #include "pnso_seq.h"
 
+extern bool poll_debug_sense;
+
 /*
  * TODO:
  *	- add additional UTs for read/write status/result, as needed
@@ -55,6 +57,13 @@ cpdc_poll(const struct service_info *svc_info)
 	if ((svc_info->si_flags & CHAIN_SFLAG_MODE_POLL) ||
 		(svc_info->si_flags & CHAIN_SFLAG_MODE_ASYNC)) {
 		err = status_desc->csd_valid ? PNSO_OK : EBUSY;
+		if (err) {
+			if (poll_debug_sense) {
+				OSAL_LOG_ERROR("csd_valid.  err: %d", err);
+			} else {
+				OSAL_LOG_DEBUG("csd_valid.  err: %d", err);
+			}
+		}
 		goto out;
 	}
 

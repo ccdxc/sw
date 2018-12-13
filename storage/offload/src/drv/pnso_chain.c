@@ -16,6 +16,8 @@
 #include "pnso_stats.h"
 #include "pnso_utils.h"
 
+extern bool poll_debug_sense;
+
 /*
  * TODO-chain:
  *	- pass/emit req_id across
@@ -233,11 +235,19 @@ chn_poll_all_services(struct service_chain *chain)
 		svc_ops = &svc_info->si_ops;
 		err = svc_ops->poll(svc_info);
 		if (err) {
-			OSAL_LOG_DEBUG("poll failed! svc_type: %d desc 0x" PRIx64 " status_desc: 0x" PRIx64 " err: %d",
+                        if (poll_debug_sense) {
+				OSAL_LOG_ERROR("poll failed! svc_type: %d desc 0x" PRIx64 " status_desc: 0x" PRIx64 " err: %d",
 					svc_info->si_type,
 					(uint64_t) svc_info->si_desc,
 					(uint64_t) svc_info->si_status_desc,
 					err);
+			} else {
+				OSAL_LOG_DEBUG("poll failed! svc_type: %d desc 0x" PRIx64 " status_desc: 0x" PRIx64 " err: %d",
+					svc_info->si_type,
+					(uint64_t) svc_info->si_desc,
+					(uint64_t) svc_info->si_status_desc,
+					err);
+			}
 			break;
 		}
 		sc_entry = sc_entry->ce_next;

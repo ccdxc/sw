@@ -17,6 +17,8 @@
 #include "pnso_seq.h"
 #include "pnso_utils.h"
 
+extern bool poll_debug_sense;
+
 static inline bool
 is_dflag_zero_pad_enabled(uint16_t flags)
 {
@@ -301,7 +303,13 @@ compress_poll(const struct service_info *svc_info)
 		(svc_info->si_flags & CHAIN_SFLAG_MODE_ASYNC)) {
 		err = (status_desc->csd_integrity_data ==
 				CPDC_PAD_STATUS_DATA) ? PNSO_OK : EBUSY;
-		OSAL_LOG_DEBUG("cp/pad async/poll mode.  err: %d", err);
+		if (err) {
+			if (poll_debug_sense) {
+				OSAL_LOG_ERROR("cp/pad async/poll mode.  err: %d", err);
+			} else {
+				OSAL_LOG_DEBUG("cp/pad async/poll mode.  err: %d", err);
+			}
+		}
 		goto out;
 	}
 

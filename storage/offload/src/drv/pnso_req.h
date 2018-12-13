@@ -10,6 +10,8 @@
 extern "C" {
 #endif
 
+extern bool poll_debug_sense;
+
 struct request_params {
 	uint16_t rp_flags;	/* mode/type flags (rflags) */
 
@@ -37,6 +39,7 @@ void req_pprint_request(const struct pnso_service_request *req);
 void req_pprint_result(const struct pnso_service_result *res);
 
 pnso_error_t pnso_request_poller(void *poll_ctx);
+void pnso_poll_debug_set(bool debug_sense);
 
 #ifdef __cplusplus
 }

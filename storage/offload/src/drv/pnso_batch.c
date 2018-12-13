@@ -16,6 +16,8 @@
 #include "pnso_crypto_cmn.h"
 #include "pnso_utils.h"
 
+extern bool poll_debug_sense;
+
 #ifdef NDEBUG
 #define PPRINT_BATCH_INFO(bi)
 #else
@@ -394,8 +396,13 @@ bat_poller(void *poll_ctx)
 
 	err = poll_all_chains(batch_info);
 	if (err) {
-		OSAL_LOG_DEBUG("poll failed! batch_info: 0x" PRIx64 "err: %d",
+		if (poll_debug_sense) {
+			OSAL_LOG_ERROR("poll failed! batch_info: 0x" PRIx64 "err: %d",
 				(uint64_t) batch_info, err);
+		} else {
+			OSAL_LOG_DEBUG("poll failed! batch_info: 0x" PRIx64 "err: %d",
+				(uint64_t) batch_info, err);
+		}
 		goto out;
 	}
 

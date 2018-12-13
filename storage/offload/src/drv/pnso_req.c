@@ -1063,4 +1063,13 @@ out:
 	OSAL_LOG_DEBUG("exit! err: %d", err);
 	return err;
 }
+
+bool poll_debug_sense;
+
+void
+pnso_poll_debug_set(bool debug_sense)
+{
+	poll_debug_sense = debug_sense;
+}
+
 OSAL_EXPORT_SYMBOL(pnso_request_poller);
