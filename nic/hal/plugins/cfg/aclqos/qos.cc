@@ -271,7 +271,7 @@ qos_class_process_get (qos_class_t *qos_class, qos::QosClassGetResponse *rsp)
     pd::pd_func_args_t          pd_func_args = {0};
 
     spec = rsp->mutable_spec();
-    spec->mutable_key_or_handle()->set_qos_class_handle(qos_class->hal_handle);
+    spec->mutable_key_or_handle()->set_qos_group(qos_group_to_qos_spec_qos_group(qos_class->key.qos_group));
     spec->set_mtu(qos_class->mtu);
     spec->mutable_pfc()->set_xon_threshold(qos_class->pfc.xon_threshold);
     spec->mutable_pfc()->set_xoff_threshold(qos_class->pfc.xoff_threshold);

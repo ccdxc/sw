@@ -165,6 +165,45 @@ valid_qos_group (qos_group_t qos_group)
     return qos_group < NUM_QOS_GROUPS;
 }
 
+static inline kh::QosGroup
+qos_group_to_qos_spec_qos_group (qos_group_t qos_group)
+{
+    switch(qos_group) {
+    case QOS_GROUP_DEFAULT:
+        return kh::DEFAULT;
+    case QOS_GROUP_USER_DEFINED_1:
+        return kh::USER_DEFINED_1;
+    case QOS_GROUP_USER_DEFINED_2:
+        return kh::USER_DEFINED_2;
+    case QOS_GROUP_USER_DEFINED_3:
+        return kh::USER_DEFINED_3;
+    case QOS_GROUP_USER_DEFINED_4:
+        return kh::USER_DEFINED_4;
+    case QOS_GROUP_USER_DEFINED_5:
+        return kh::USER_DEFINED_5;
+    case QOS_GROUP_USER_DEFINED_6:
+        return kh::USER_DEFINED_6;
+    case QOS_GROUP_CONTROL:
+        return kh::CONTROL;
+    case QOS_GROUP_SPAN:
+        return kh::SPAN;
+    case QOS_GROUP_RX_PROXY_NO_DROP:
+        return kh::INTERNAL_RX_PROXY_NO_DROP;
+    case QOS_GROUP_RX_PROXY_DROP:
+        return kh::INTERNAL_RX_PROXY_DROP;
+    case QOS_GROUP_TX_PROXY_NO_DROP:
+        return kh::INTERNAL_TX_PROXY_NO_DROP;
+    case QOS_GROUP_TX_PROXY_DROP:
+        return kh::INTERNAL_TX_PROXY_DROP;
+    case QOS_GROUP_CPU_COPY:
+        return kh::INTERNAL_CPU_COPY;
+    default:
+        HAL_TRACE_ERR("pi-qos:{}: Invalid qos group {}",
+                      __func__, qos_group);
+        return kh::DEFAULT;
+    }
+}
+
 static inline qos_group_t
 qos_spec_qos_group_to_qos_group (kh::QosGroup qos_group)
 {
