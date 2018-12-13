@@ -1,8 +1,8 @@
-#include "nic/include/bitmap.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>
+#include "include/sdk/bitmap.hpp"
+#include "include/sdk/base.hpp"
 
-using hal::utils::bitmap;
 
 class bitmap_test : public ::testing::Test {
 protected:
@@ -34,11 +34,11 @@ TEST_F(bitmap_test, test1) {
     bitmap *bmp = bitmap::factory(100);
 
     uint32_t i = 10;
-    hal_ret_t rs  = bmp->set(i);
-    ASSERT_EQ(rs, HAL_RET_OK);
+    sdk_ret_t rs  = bmp->set(i);
+    ASSERT_EQ(rs, sdk::SDK_RET_OK);
 
     rs = bmp->clear(i);
-    ASSERT_EQ(rs, HAL_RET_OK);
+    ASSERT_EQ(rs, sdk::SDK_RET_OK);
 
     bitmap::destroy(bmp);
 }
@@ -52,7 +52,7 @@ TEST_F(bitmap_test, test1) {
 //      - Clear bit.
 // ----------------------------------------------------------------------------
 TEST_F(bitmap_test, test2) {
-    hal_ret_t rs = HAL_RET_OK;
+    sdk_ret_t rs = sdk::SDK_RET_OK;
     uint32_t i,j;
     bitmap *bmp1 = bitmap::factory(100);
 
@@ -60,16 +60,16 @@ TEST_F(bitmap_test, test2) {
     j = 20;
 
     rs  = bmp1->set(i);
-    ASSERT_EQ(rs, HAL_RET_OK);
+    ASSERT_EQ(rs, sdk::SDK_RET_OK);
 
     rs  = bmp1->set(j);
-    ASSERT_EQ(rs, HAL_RET_OK);
+    ASSERT_EQ(rs, sdk::SDK_RET_OK);
 
     rs = bmp1->clear(i);
-    ASSERT_EQ(rs, HAL_RET_OK);
+    ASSERT_EQ(rs, sdk::SDK_RET_OK);
 
     rs = bmp1->clear(j);
-    ASSERT_EQ(rs, HAL_RET_OK);
+    ASSERT_EQ(rs, sdk::SDK_RET_OK);
 
     bitmap::destroy(bmp1);
 }
@@ -83,23 +83,23 @@ TEST_F(bitmap_test, test2) {
 //      - Clear bit.
 // ----------------------------------------------------------------------------
 TEST_F(bitmap_test, test3) {
-    hal_ret_t rs = HAL_RET_OK;
+    sdk_ret_t rs = sdk::SDK_RET_OK;
     uint32_t i,j;
     bitmap *bmp1 = bitmap::factory(100);
 
     i = 1;
     j = 2;
     rs  = bmp1->set(i);
-    ASSERT_EQ(rs, HAL_RET_OK);
+    ASSERT_EQ(rs, sdk::SDK_RET_OK);
 
     rs = bmp1->clear(i);
-    ASSERT_EQ(rs, HAL_RET_OK);
+    ASSERT_EQ(rs, sdk::SDK_RET_OK);
 
     rs  = bmp1->set(j);
-    ASSERT_EQ(rs, HAL_RET_OK);
+    ASSERT_EQ(rs, sdk::SDK_RET_OK);
 
     rs = bmp1->clear(j);
-    ASSERT_EQ(rs, HAL_RET_OK);
+    ASSERT_EQ(rs, sdk::SDK_RET_OK);
 
     bitmap::destroy(bmp1);
 }
@@ -112,8 +112,8 @@ TEST_F(bitmap_test, test3) {
 TEST_F(bitmap_test, test4) {
     bitmap *bmp = bitmap::factory(0);
 
-    hal_ret_t rs  = bmp->set(10);
-    ASSERT_EQ(rs, HAL_RET_NO_RESOURCE);
+    sdk_ret_t rs  = bmp->set(10);
+    ASSERT_EQ(rs, sdk::SDK_RET_NO_RESOURCE);
 
     bitmap::destroy(bmp);
 }
@@ -127,11 +127,11 @@ TEST_F(bitmap_test, test4) {
 // ----------------------------------------------------------------------------
 TEST_F(bitmap_test, test5) {
     bitmap *bmp = bitmap::factory(10);
-    hal_ret_t rs;
+    sdk_ret_t rs;
 
     for (int i = 0; i < 10; i++) {
         rs  = bmp->set(i);
-        ASSERT_EQ(rs, HAL_RET_OK);
+        ASSERT_EQ(rs, sdk::SDK_RET_OK);
     }
 
     bitmap::destroy(bmp);
@@ -144,15 +144,15 @@ TEST_F(bitmap_test, test5) {
 // ----------------------------------------------------------------------------
 TEST_F(bitmap_test, test6) {
     bitmap *bmp = bitmap::factory(10);
-    hal_ret_t rs;
+    sdk_ret_t rs;
     uint32_t i;
 
     for (i = 0; i < 10; i++) {
         rs  = bmp->set(i);
-        ASSERT_EQ(rs, HAL_RET_OK);
+        ASSERT_EQ(rs, sdk::SDK_RET_OK);
     }
     rs  = bmp->set(i);
-    ASSERT_EQ(rs, HAL_RET_NO_RESOURCE);
+    ASSERT_EQ(rs, sdk::SDK_RET_NO_RESOURCE);
 
     bitmap::destroy(bmp);
 }
@@ -168,41 +168,41 @@ TEST_F(bitmap_test, test7) {
 
     uint32_t p;
 
-    hal_ret_t rs  = bmp->set(10);
-    ASSERT_EQ(rs, HAL_RET_OK);
+    sdk_ret_t rs  = bmp->set(10);
+    ASSERT_EQ(rs, sdk::SDK_RET_OK);
 
     rs = bmp->first_set(&p);
-    ASSERT_EQ(rs, HAL_RET_OK);
+    ASSERT_EQ(rs, sdk::SDK_RET_OK);
     ASSERT_EQ(p, (unsigned)10);
 
     rs = bmp->next_set(9, &p);
-    ASSERT_EQ(rs, HAL_RET_OK);
+    ASSERT_EQ(rs, sdk::SDK_RET_OK);
     ASSERT_EQ(p, (unsigned)10);
 
     rs = bmp->prev_set(11, &p);
-    ASSERT_EQ(rs, HAL_RET_OK);
+    ASSERT_EQ(rs, sdk::SDK_RET_OK);
     ASSERT_EQ(p, (unsigned)10);
 
     rs = bmp->first_free(&p);
-    ASSERT_EQ(rs, HAL_RET_OK);
+    ASSERT_EQ(rs, sdk::SDK_RET_OK);
     ASSERT_EQ(p, (unsigned)0);
 
     rs = bmp->next_free(9, &p);
-    ASSERT_EQ(rs, HAL_RET_OK);
+    ASSERT_EQ(rs, sdk::SDK_RET_OK);
     ASSERT_EQ(p, (unsigned)11);
 
     rs = bmp->prev_free(11, &p);
-    ASSERT_EQ(rs, HAL_RET_OK);
+    ASSERT_EQ(rs, sdk::SDK_RET_OK);
     ASSERT_EQ(p, (unsigned)9);
 
     rs = bmp->clear(101);
-    ASSERT_EQ(rs, HAL_RET_NO_RESOURCE);
+    ASSERT_EQ(rs, sdk::SDK_RET_NO_RESOURCE);
 
     rs = bmp->set(100);
-    ASSERT_EQ(rs, HAL_RET_NO_RESOURCE);
+    ASSERT_EQ(rs, sdk::SDK_RET_NO_RESOURCE);
 
     rs = bmp->clear(99);
-    ASSERT_EQ(rs, HAL_RET_OK);
+    ASSERT_EQ(rs, sdk::SDK_RET_OK);
 
     bitmap::destroy(bmp);
 }
@@ -210,7 +210,7 @@ TEST_F(bitmap_test, test7) {
 static void 
 test_one(int seed_, int no_bits) 
 {
-    hal_ret_t rs;
+    sdk_ret_t rs;
     int i, j;
     uint32_t p;
     bool is_set;
@@ -281,44 +281,44 @@ test_one(int seed_, int no_bits)
     }
 
     rs = bmp->first_set(&p);
-    ASSERT_EQ(rs, HAL_RET_OK);
+    ASSERT_EQ(rs, sdk::SDK_RET_OK);
     ASSERT_EQ(p, (unsigned)first_set);
 
     rs = bmp->first_free(&p);
-    ASSERT_EQ(rs, HAL_RET_OK);
+    ASSERT_EQ(rs, sdk::SDK_RET_OK);
     ASSERT_EQ(p, (unsigned)first_free);
 
     for (i = 0; i < no_bits; i++) {
         rs = bmp->next_set(i, &p);
         if (next_set[i] != -1) {
-            ASSERT_EQ(rs, HAL_RET_OK);
+            ASSERT_EQ(rs, sdk::SDK_RET_OK);
             ASSERT_EQ(p, (unsigned)next_set[i]);
         } else {
-            ASSERT_EQ(rs, HAL_RET_NO_RESOURCE);
+            ASSERT_EQ(rs, sdk::SDK_RET_NO_RESOURCE);
         }
 
         rs = bmp->prev_set(i, &p);
         if (prev_set[i] != -1) {
-            ASSERT_EQ(rs, HAL_RET_OK);
+            ASSERT_EQ(rs, sdk::SDK_RET_OK);
             ASSERT_EQ(p, (unsigned)prev_set[i]);
         } else {
-            ASSERT_EQ(rs, HAL_RET_NO_RESOURCE);
+            ASSERT_EQ(rs, sdk::SDK_RET_NO_RESOURCE);
         }
 
         rs = bmp->next_free(i, &p);
         if (next_free[i] != -1) {
-            ASSERT_EQ(rs, HAL_RET_OK);
+            ASSERT_EQ(rs, sdk::SDK_RET_OK);
             ASSERT_EQ(p, (unsigned)next_free[i]);
         } else {
-            ASSERT_EQ(rs, HAL_RET_NO_RESOURCE);
+            ASSERT_EQ(rs, sdk::SDK_RET_NO_RESOURCE);
         }
 
         rs = bmp->prev_free(i, &p);
         if (prev_free[i] != -1) {
-            ASSERT_EQ(rs, HAL_RET_OK);
+            ASSERT_EQ(rs, sdk::SDK_RET_OK);
             ASSERT_EQ(p, (unsigned)prev_free[i]);
         } else {
-            ASSERT_EQ(rs, HAL_RET_NO_RESOURCE);
+            ASSERT_EQ(rs, sdk::SDK_RET_NO_RESOURCE);
         }
     }
     std::cout << "Random seed used " << seed_ << std::endl;

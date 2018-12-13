@@ -10,7 +10,7 @@
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/include/sdk/list.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"
-#include "nic/include/bitmap.hpp"
+#include "nic/sdk/include/sdk/bitmap.hpp"
 #include "gen/proto/internal.pb.h"
 #include "nic/hal/src/internal/internal.hpp"
 #include "gen/proto/fwlog.pb.h"

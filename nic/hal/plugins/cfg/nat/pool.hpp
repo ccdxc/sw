@@ -6,13 +6,12 @@
 
 #include "nic/include/base.hpp"
 #include "nic/include/hal_lock.hpp"
-#include "nic/include/bitmap.hpp"
+#include "nic/sdk/include/sdk/bitmap.hpp"
 #include "nic/utils/nat/addr_db.hpp"
 
 #ifndef __NAT_POOL_HPP__
 #define __NAT_POOL_HPP__
 
-using hal::utils::bitmap;
 using hal::utils::nat::addr_entry_key_t;
 using kh::NatPoolKeyHandle;
 

@@ -16,9 +16,7 @@
 #include "nic/include/base.hpp"
 #include <string>
 #include <map>
-#include "nic/utils/bitmap/bitmap.hpp"
-
-using hal::utils::bitmap;
+#include "nic/sdk/include/sdk/bitmap.hpp"
 
 namespace hal {
 namespace pd {

@@ -3,7 +3,9 @@
 #ifndef __IP_HPP__
 #define __IP_HPP__
 
-#include "nic/include/bitmap.hpp"
+#include "include/sdk/bitmap.hpp"
+#include "include/sdk/eth.hpp"
+#include <cstring>
 
 //------------------------------------------------------------------------------
 // IP address family
@@ -186,7 +188,7 @@ ip_addr_is_equal (ip_addr_t *ip_addr1, ip_addr_t *ip_addr2)
         return false;
     }
 
-    return memcmp(ip_addr1, ip_addr2, sizeof(ip_addr_t)) ? false : true;
+    return std::memcmp(ip_addr1, ip_addr2, sizeof(ip_addr_t)) ? false : true;
 }
 
 static inline bool
@@ -203,7 +205,7 @@ ip_prefix_is_equal (ip_prefix_t *ip_prefix1, ip_prefix_t *ip_prefix2)
         return false;
     }
 
-    return memcmp(ip_prefix1, ip_prefix2, sizeof(ip_prefix_t)) ? false : true;
+    return std::memcmp(ip_prefix1, ip_prefix2, sizeof(ip_prefix_t)) ? false : true;
 }
 
 
@@ -230,7 +232,7 @@ ipv4_mask_to_prefix_len (ipv4_addr_t v4_addr)
         return -1;
     }
 
-    return 32 - hal::utils::bitmap::log2_floor(iv4_addr + 1);
+    return 32 - sdk::lib::bitmap::log2_floor(iv4_addr + 1);
 }
 
 static inline void
@@ -259,7 +261,7 @@ ipv6_mask_to_prefix_len (ipv6_addr_t *v6_addr)
     int prefix_len = 0;
     unsigned inv;
     unsigned i;
-    for (i = 0; v6_addr->addr8[i] && (i < HAL_ARRAY_SIZE(v6_addr->addr8)); i++) {
+    for (i = 0; v6_addr->addr8[i] && (i < SDK_ARRAY_SIZE(v6_addr->addr8)); i++) {
         if (v6_addr->addr8[i] == 0xff) {
             prefix_len += 8;
         } else {
@@ -268,13 +270,13 @@ ipv6_mask_to_prefix_len (ipv6_addr_t *v6_addr)
                 // Error
                 prefix_len = -1;
             } else {
-                prefix_len += 8 - hal::utils::bitmap::log2_floor(inv + 1);
+                prefix_len += 8 - sdk::lib::bitmap::log2_floor(inv + 1);
             }
             i++;
             break;
         }
     }
-    for (; i < HAL_ARRAY_SIZE(v6_addr->addr8); i++) {
+    for (; i < SDK_ARRAY_SIZE(v6_addr->addr8); i++) {
         // If any other bits are set, it's not a valid prefix
         if (v6_addr->addr8[i]) {
             prefix_len = -1;

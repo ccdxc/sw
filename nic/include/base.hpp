@@ -22,10 +22,6 @@
 #define __PACK__ __attribute__ ((packed))
 #endif
 
-// MAC address
-#define ETH_ADDR_LEN                                 6
-typedef uint8_t    mac_addr_t[ETH_ADDR_LEN];
-
 #define VRF_BIT_WIDTH                                10
 #define BD_BIT_WIDTH                                 10
 #define FW_NORM_ACTION_BIT_WIDTH                     2

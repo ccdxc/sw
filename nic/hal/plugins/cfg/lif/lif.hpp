@@ -10,7 +10,7 @@
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/include/sdk/list.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"
-#include "nic/include/bitmap.hpp"
+#include "nic/sdk/include/sdk/bitmap.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/hal/plugins/cfg/aclqos/qos.hpp"
 #include "nic/sdk/include/sdk/platform/capri/capri_lif_manager.hpp"
@@ -35,7 +35,6 @@ using intf::LifGetResponseMsg;
 
 using sdk::lib::ht_ctxt_t;
 using sdk::lib::dllist_ctxt_t;
-using hal::utils::bitmap;
 
 namespace hal {
 
