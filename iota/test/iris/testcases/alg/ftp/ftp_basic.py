@@ -1,52 +1,8 @@
 #! /usr/bin/python3
-import os
 import time
-import iota.harness.api as api
+from iota.test.iris.testcases.alg.ftp.ftp_utils import *
 
 def Setup(tc):
-    return api.types.status.SUCCESS
-
-def SetupFTPServer(node, workload):
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    ftpdata = dir_path + '/' + "ftp_server.txt"
-    api.Logger.info("fullpath %s" % (ftpdata))
-    resp = api.CopyToWorkload(node, workload, [ftpdata], 'ftpdir')
-    if resp is None:
-       return None
-
-    vsftpd_conf = dir_path + '/' + "vsftpd.conf"
-    resp = api.CopyToWorkload(node, workload, [vsftpd_conf], 'ftpdir')
-    if resp is None:
-       return None
-    
-    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-    
-    api.Trigger_AddCommand(req, node, workload,
-                           "cp ftpdir/vsftpd.conf /etc/vsftpd/")
-    api.Trigger_AddCommand(req, node, workload,
-                           "useradd -m -c \"admin\" -s /bin/bash admin")
-    api.Trigger_AddCommand(req, node, workload,
-                           "useradd -m -c \"admin1\" -s /bin/bash admin1")
-    api.Trigger_AddCommand(req, node, workload,
-                           "echo \"admin\" | tee -a /etc/vsftpd.userlist")
-    api.Trigger_AddCommand(req, node, workload,
-                           "echo \"admin1\" | tee -a /etc/vsftpd.userlist")
-    api.Trigger_AddCommand(req, node, workload,
-                           "echo \"linuxpassword\" | passwd --stdin admin")
-    api.Trigger_AddCommand(req, node, workload,
-                           "echo \"docker\" | passwd --stdin admin1")
-    api.Trigger_AddCommand(req, node, workload,
-                           "mkdir /home/admin/ftp && mv ftpdir/ftp_server.txt /home/admin/ftp")
-    api.Trigger_AddCommand(req, node, workload,
-                           "touch /home/admin/ftp/ftp_client.txt && chmod 666 /home/admin/ftp/ftp_client.txt")
-    api.Trigger_AddCommand(req, node, workload,
-                           "systemctl start vsftpd")
-    api.Trigger_AddCommand(req, node, workload,
-                           "systemctl enable vsftpd")
-    trig_resp = api.Trigger(req)
-    term_resp = api.Trigger_TerminateAllCommands(trig_resp)
-    for cmd in trig_resp.commands:
-        api.PrintCommandResults(cmd)
     return api.types.status.SUCCESS
 
 def SetupFTPClient(node, workload, server, mode):
@@ -80,9 +36,13 @@ def SetupFTPClient(node, workload, server, mode):
 def Cleanup(server, client):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     api.Trigger_AddCommand(req, server.node_name, server.workload_name,
-                           "rm -rf ftp_*")
+                           "rm -rf ftpdir/ftp_*")
     api.Trigger_AddCommand(req, client.node_name, client.workload_name,
-                           "rm -rf ftp_*")
+                           "rm -rf ftpdir/ftp_*")
+    api.Trigger_AddCommand(req, server.node_name, server.workload_name,
+                           "rm -rf /home/admin/ftp")
+    api.Trigger_AddCommand(req, client.node_name, client.workload_name,
+                           "rm -rf /home/admin/ftp")
     ftpfile = os.path.dirname(os.path.realpath(__file__)) + '/' + "ftp.sh"
     os.remove(ftpfile)
     trig_resp = api.Trigger(req)

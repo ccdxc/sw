@@ -9,13 +9,49 @@ testcases:
         args    :
             type: local_only
 
-    -   name     : ftp_Local_Workloads
-        testcase : testcases.alg.ftp.ftp
+    -   name     : ftp_basic
+        testcase : testcases.alg.ftp.ftp_basic
         iterators:
             type : simple
             mode : [ active, passive ]
         args     :
             type : local_only
+
+    -   name    : ftp_test_memleak
+        testcase: testcases.alg.ftp.ftp_test_memleak
+        args    :
+            type: local_only
+            count: 15
+
+    -   name     : ftp_epsv
+        testcase : testcases.alg.ftp.ftp_epsv
+        args     :
+           type : local_only
+
+    -   name     : ftp_test_control_ageout
+        testcase : testcases.alg.ftp.ftp_test_control_ageout
+        args     :
+            type : local_only
+
+    -   name     : ftp_deny_mismatch_ip
+        testcase : testcases.alg.ftp.ftp_deny_mismatch_ip
+        args     :
+            type : local_only
+
+    -   name     : ftp_allow_mismatch_ip
+        testcase : testcases.alg.ftp.ftp_allow_mismatch_ip
+        args     :
+            type : local_only
+
+    -   name     : ftp_data_conn_fail
+        testcase : testcases.alg.ftp.ftp_data_conn_fail
+        args     :
+            type : local_only
+
+    -   name     : ftp_nonstandard_port
+        testcase : testcases.alg.ftp.ftp_nonstandard_port
+        args     :
+           type : local_only
 
     -   name    : rtsp_Local_Workloads
         testcase: testcases.alg.rtsp.rtsp
