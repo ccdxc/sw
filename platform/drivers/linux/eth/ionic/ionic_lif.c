@@ -911,7 +911,6 @@ static int ionic_lif_stats_dump_start(struct lif *lif, unsigned int ver)
 	pr_debug("stats_dump START ver %d addr 0x%llx\n", ver,
 		 lif->stats_dump_pa);
 
-	return 0;
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
 		goto err_out_free;
