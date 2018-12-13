@@ -22,6 +22,9 @@ sfp_sprom_parse (int port, uint8_t *data)
         set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
     }
 
+    // TODO reset when removed?
+    xcvr_set_an_args(port, 0, false, 0);
+
     if (data[3] != 0) {
         if (data[3] & (1 << 4)) {
             // 10G Base SR
@@ -67,16 +70,28 @@ sfp_sprom_parse (int port, uint8_t *data)
     case 0xb:
         // 25GBASE-CR CA-L
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_25GBASE_CR_L);
+        xcvr_set_an_args(port,
+                         AN_USER_CAP_25GBKRCR_S | AN_USER_CAP_25GBKRCR,
+                         true,
+                         AN_FEC_REQ_25GB_RSFEC | AN_FEC_REQ_25GB_FCFEC);
         break;
 
     case 0xc:
         // 25GBASE-CR CA-S
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_25GBASE_CR_S);
+        xcvr_set_an_args(port,
+                         AN_USER_CAP_25GBKRCR_S | AN_USER_CAP_25GBKRCR,
+                         true,
+                         AN_FEC_REQ_25GB_RSFEC | AN_FEC_REQ_25GB_FCFEC);
         break;
 
     case 0xd:
         // 25GBASE-CR CA-N
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_25GBASE_CR_N);
+        xcvr_set_an_args(port,
+                         AN_USER_CAP_25GBKRCR_S | AN_USER_CAP_25GBKRCR,
+                         true,
+                         AN_FEC_REQ_25GB_RSFEC | AN_FEC_REQ_25GB_FCFEC);
         break;
 
     case 0x16:

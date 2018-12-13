@@ -131,6 +131,15 @@ public:
 
     void set_mtu(uint32_t mtu) { this->mtu_ = mtu; }
 
+    uint32_t user_cap(void) { return this->user_cap_; }
+    void set_user_cap(uint32_t user_cap) { this->user_cap_ = user_cap; }
+
+    bool fec_ability(void) { return this->fec_ability_; }
+    void set_fec_ability(bool fec_ability) { this->fec_ability_ = fec_ability; }
+
+    uint32_t fec_request(void) { return this->fec_request_; }
+    void set_fec_request(uint32_t fec_request) { this->fec_request_ = fec_request; }
+
     void set_mac_fns(mac_fn_t *mac_fns) { this->mac_fns_ = mac_fns; }
 
     void set_serdes_fns(serdes_fn_t *serdes_fns) {
@@ -289,6 +298,9 @@ private:
     uint32_t              mtu_;                       // number of lanes for this port
     uint32_t              debounce_time_;             // Debounce time in ms
     uint32_t              bringup_timer_val_;         // current bringup timer value
+    uint32_t              user_cap_;                  //  AN user_cap
+    bool                  fec_ability_;               //  AN fec_ability
+    uint32_t              fec_request_;               //  AN fec_request
     uint32_t              sbus_addr_[MAX_PORT_LANES]; // sbus addr for each serdes
 
     mac_fn_t              *mac_fns_;                  // mac functions

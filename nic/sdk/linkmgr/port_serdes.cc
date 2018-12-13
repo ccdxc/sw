@@ -210,7 +210,9 @@ serdes_an_init_default (uint32_t sbus_addr, serdes_info_t *serdes_info)
 }
 
 int
-serdes_an_start_default(uint32_t sbus_addr, serdes_info_t *serdes_info)
+serdes_an_start_default (uint32_t sbus_addr, serdes_info_t *serdes_info,
+                         uint32_t user_cap, bool fec_ability,
+                         uint32_t fec_request)
 {
     return 0;
 }
@@ -845,7 +847,8 @@ cleanup:
 // Start AN
 // Assert Link Status
 int
-serdes_an_start_hw(uint32_t sbus_addr, serdes_info_t *serdes_info)
+serdes_an_start_hw(uint32_t sbus_addr, serdes_info_t *serdes_info,
+                   uint32_t user_cap, bool fec_ability, uint32_t fec_request)
 {
     int  ret      = 0;
     bool int_ret  = false;
@@ -874,16 +877,23 @@ serdes_an_start_hw(uint32_t sbus_addr, serdes_info_t *serdes_info)
     }
 
     config->disable_link_inhibit_timer = 0x1;
-    config->user_cap    = 0x4   | // 10G  KR
-                          0x8   | // 40G  KR4
-                          0x10  | // 40G  CR4
-                          0x80  | // 100G KR4
-                          0x100 | // 100G CR4
-                          0x200 | // 25G  KR/CR-S
-                          0x400;  // 25G  KR/CR
 
-    config->fec_ability = 1;
-    config->fec_request = 0x2;   // 25G RS-FEC
+    if (user_cap == 0) {
+        config->user_cap    = 0x4   | // 10G  KR
+                              0x8   | // 40G  KR4
+                              0x10  | // 40G  CR4
+                              0x80  | // 100G KR4
+                              0x100 | // 100G CR4
+                              0x200 | // 25G  KR/CR-S
+                              0x400;  // 25G  KR/CR
+
+        config->fec_ability = 1;
+        config->fec_request = 0x2;   // 25G RS-FEC
+    } else {
+        config->user_cap    = user_cap;
+        config->fec_ability = fec_ability;
+        config->fec_request = fec_request;
+    }
 
     d_fp = fopen("/user_cap", "r");
     if (d_fp) {

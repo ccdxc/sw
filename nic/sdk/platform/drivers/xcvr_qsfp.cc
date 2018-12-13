@@ -83,6 +83,9 @@ qsfp_sprom_parse (int port, uint8_t *data)
         set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
     }
 
+    // TODO reset when removed?
+    xcvr_set_an_args(port, 0, false, 0);
+
     switch (data[QSFP_OFFSET_ETH_COMPLIANCE_CODES]) {
     case 0x1:
         // 40G Active cable
@@ -102,6 +105,10 @@ qsfp_sprom_parse (int port, uint8_t *data)
     case 0x8:
         // 40GBASE-CR4
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_40GBASE_CR4);
+        xcvr_set_an_args(port,
+                         AN_USER_CAP_40GBKR4 | AN_USER_CAP_40GBCR4,
+                         false,
+                         0);
         break;
 
     default:
@@ -137,6 +144,10 @@ qsfp_sprom_parse (int port, uint8_t *data)
     case 0xb:
         // 100GBASE-CR4
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_CR4);
+        xcvr_set_an_args(port,
+                         AN_USER_CAP_100GBKR4 | AN_USER_CAP_100GBCR4,
+                         true,
+                         AN_FEC_REQ_25GB_RSFEC);
         break;
 
     case 0x10:
