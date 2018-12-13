@@ -24,6 +24,13 @@ var (
 	qosBps   uint32
 )
 
+var qosClassShowCmd = &cobra.Command{
+	Use:   "qos-class",
+	Short: "show qos-class object",
+	Long:  "show qos-class object",
+	Run:   qosClassShowCmdHandler,
+}
+
 var qosClassDeleteCmd = &cobra.Command{
 	Use:   "qos-class",
 	Short: "qos-class object",
@@ -84,6 +91,9 @@ var pfcUpdateCmd = &cobra.Command{
 }
 
 func init() {
+	showCmd.AddCommand(qosClassShowCmd)
+	qosClassShowCmd.Flags().StringVar(&qosGroup, "qosgroup", "user-defined-1", "Specify qos group")
+
 	createCmd.AddCommand(qosClassCmd)
 	qosClassCmd.AddCommand(classMapCmd)
 	classMapCmd.AddCommand(schedCmd)
@@ -137,6 +147,32 @@ func init() {
 	deleteCmd.AddCommand(qosClassDeleteCmd)
 	qosClassDeleteCmd.Flags().StringVar(&qosGroup, "qosgroup", "user-defined-1", "Specify qos group")
 	qosClassDeleteCmd.MarkFlagRequired("qosgroup")
+}
+
+func qosClassShowCmdHandler(cmd *cobra.Command, args []string) {
+	halctlStr := "/nic/bin/halctl show qos-class "
+	if cmd.Flags().Changed("qosgroup") {
+		halctlStr += ("--qosgroup " + qosGroup)
+	}
+
+	execCmd := strings.Fields(halctlStr)
+	v := &nmd.NaplesCmdExecute{
+		Executable: execCmd[0],
+		Opts:       strings.Join(execCmd[1:], " "),
+	}
+
+	resp, err := restGetWithBody(v, revProxyPort, "cmd/v1/naples/")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	if len(resp) > 3 {
+		s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
+		fmt.Printf("%s", s)
+	}
+
+	return
 }
 
 func qosClassDeleteCmdHandler(cmd *cobra.Command, args []string) {
