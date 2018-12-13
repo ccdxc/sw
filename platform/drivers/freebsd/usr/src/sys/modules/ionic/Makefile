@@ -20,7 +20,7 @@ CFLAGS+= -DHAPS -DOVERRIDE_KASSERT -DDADMINQ
 # To enable debugging
 #CFLAGS+= -DIONIC_DEBUG -DIONIC_ENABLE_TRACING -DIONIC_DEBUG_PKT
 # To have seperate TX and Rx interrupt.
-#CFLAGS+= -DIONIC_SEPERATE_TX_INTR
+CFLAGS+= -DIONIC_SEPERATE_TX_INTR
 
 CFLAGS+= -I${SRCTOP}/sys/ofed/include
 CFLAGS+= -I${SRCTOP}/sys/compat/linuxkpi/common/include

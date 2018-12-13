@@ -255,8 +255,6 @@ void ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *rxbuf,
 		stats->mem_err++;
 		return;
 	}
-//	KASSERT(m, ("mbuf is NULL"));
-
 
 	IONIC_RX_TRACE(rxq, "input called for @%d\n", comp->comp_index);
 	if (comp->status) {
@@ -408,15 +406,15 @@ static irqreturn_t ionic_rx_isr(int irq, void *data)
 
 	IONIC_RX_LOCK(rxq);
 
-	IONIC_RX_TRACE(rxq, "comp index: %d head: %d tail :%d\n",
-		rxq->comp_index, rxq->head_index, rxq->tail_index);
+	IONIC_RX_TRACE(rxq, "[%ld]comp index: %d head: %d tail: %d\n",
+		rxstats->isr_count, rxq->comp_index, rxq->head_index, rxq->tail_index);
 	
 	ionic_intr_mask(&rxq->intr, true);
 
 	rxstats->isr_count++;
 
 	work_done = ionic_rx_clean(rxq, ionic_rx_process_limit);
-	IONIC_RX_TRACE(rxq, "processed %d packets, h/w credits:%d\n",
+	IONIC_RX_TRACE(rxq, "processed: %d packets, h/w credits: %d\n",
 		work_done, rxq->intr.ctrl->int_credits);
 
 	ionic_intr_return_credits(&rxq->intr, work_done, 0, false);
@@ -427,7 +425,7 @@ static irqreturn_t ionic_rx_isr(int irq, void *data)
 #ifdef IONIC_SEPERATE_TX_INTR
 	IONIC_TX_LOCK(txq);
 	work_done = ionic_tx_clean(txq, ionic_tx_clean_threshold);
-	IONIC_TX_TRACE(txq, "processed %d packets\n", work_done);
+	IONIC_TX_TRACE(txq, "processed: %d packets\n", work_done);
 	IONIC_TX_UNLOCK(txq);
 #endif
 
@@ -441,8 +439,9 @@ ionic_rx_task_handler(void *arg, int pendindg)
 	struct rxque* rxq = arg;
 #ifndef IONIC_SEPERATE_TX_INTR
 	struct txque* txq = rxq->lif->txqs[rxq->index];
+	int err;
 #endif
-	int err, work_done;
+	int work_done;
 
 	KASSERT(rxq, ("task handler called with rxq == NULL"));
 

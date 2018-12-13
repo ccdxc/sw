@@ -106,7 +106,7 @@ MALLOC_DECLARE(M_IONIC);
 #define IONIC_QUE_ERROR(q, fmt, ...)							\
 		IONIC_QUE_DEBUG(q, "ERROR:" fmt, ##__VA_ARGS__)
 
-#if defined(IONIC_ENABLE_TRACEING)
+#if defined(IONIC_ENABLE_TRACING)
 #define IONIC_TX_TRACE(q, fmt, ...)		IONIC_QUE_DEBUG(q, fmt, ##__VA_ARGS__)
 #define IONIC_RX_TRACE(q, fmt, ...)		IONIC_QUE_DEBUG(q, fmt, ##__VA_ARGS__)
 #else

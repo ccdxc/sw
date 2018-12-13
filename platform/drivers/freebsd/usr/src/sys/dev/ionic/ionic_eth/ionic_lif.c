@@ -1715,8 +1715,7 @@ int ionic_tx_clean(struct txque* txq , int tx_limit)
 	struct tx_stats * stats = &txq->stats;
 
 	stats->clean++;
-	
-	/* Sync every time descriptors. */
+
 	bus_dmamap_sync(txq->cmd_dma.dma_tag, txq->cmd_dma.dma_map,
 		BUS_DMASYNC_POSTREAD | BUS_DMASYNC_POSTWRITE);
 	
@@ -1728,10 +1727,11 @@ int ionic_tx_clean(struct txque* txq , int tx_limit)
 
 		if (comp->color != txq->done_color)
 			break;
+
 		batch++;
 
-		//IONIC_TX_TRACE(txq, " comp @ %d for desc @ %d comp->color %d done_color %d\n",
-		//	comp_index, cmd_stop_index, comp->color, txq->done_color);
+		//IONIC_TX_TRACE(txq, "[%ld] comp @ %d for desc @ %d comp->color %d done_color %d\n",
+		//	stats->clean, comp_index, cmd_stop_index, comp->color, txq->done_color);
 
 		txbuf = &txq->txbuf[cmd_stop_index];
 		if (comp->status) {
@@ -1845,14 +1845,13 @@ static void ionic_rx_fill(struct rxque *rxq)
 {
 	struct rxq_desc *desc;
 	struct ionic_rx_buf *rxbuf;
-	int error, i, index;
+	int error, index;
 	bool db_ring = false;
 
 	KASSERT(IONIC_RX_LOCK_OWNED(rxq), ("%s is not locked", rxq->name));
 
-	IONIC_RX_TRACE(rxq, "head: %d tail :%d desc_posted: %d\n",
-		rxq->head_index, rxq->tail_index, rxq->descs);
-	for ( i = 0 ; i < rxq->num_descs && rxq->descs < rxq->num_descs; i++, rxq->descs++) {
+	/* Fill till there is only one slot left empty which is Q full. */
+	for (; rxq->descs < rxq->num_descs - 1; rxq->descs++) {
 		index = rxq->head_index;
 		rxbuf = &rxq->rxbuf[index];
 		desc = &rxq->cmd_ring[index];
@@ -1894,8 +1893,7 @@ static void ionic_rx_refill(struct rxque *rxq)
 	int i, count, error;
 
 	KASSERT(IONIC_RX_LOCK_OWNED(rxq), ("%s is not locked", rxq->name));
-	for (i = rxq->tail_index, count = 0 ; count < rxq->descs ;
-		i = (i + 1) % rxq->num_descs, count++) {
+	for (i = rxq->tail_index, count = 0; count < rxq->descs; i = (i + 1) % rxq->num_descs, count++) {
 		rxbuf = &rxq->rxbuf[i];
 		desc = &rxq->cmd_ring[i];
 
@@ -1923,12 +1921,11 @@ static void ionic_rx_refill(struct rxque *rxq)
 static void ionic_rx_empty(struct rxque *rxq)
 {
 	struct ionic_rx_buf *rxbuf;
-	int i;
 
 	IONIC_RX_TRACE(rxq, "head: %d tail :%d desc_posted: %d\n",
 		rxq->head_index, rxq->tail_index, rxq->descs);
 	IONIC_RX_LOCK(rxq);
-	for ( i = 0 ; i < rxq->num_descs && rxq->descs; i++, rxq->descs--) {
+	for (; rxq->descs; rxq->descs--) {
 		rxbuf = &rxq->rxbuf[rxq->tail_index];
 
 		KASSERT(rxbuf->m, ("%s: ionic_rx_empty rxbuf empty for %d",
@@ -1956,7 +1953,7 @@ int ionic_rx_clean(struct rxque* rxq , int rx_limit)
 	int i, comp_index, cmd_index;
 
 	KASSERT(IONIC_RX_LOCK_OWNED(rxq), ("%s is not locked", rxq->name));
-	IONIC_RX_TRACE(rxq, "comp index: %d head: %d tail :%d desc_posted: %d\n",
+	IONIC_RX_TRACE(rxq, "comp index: %d head: %d tail: %d desc_posted: %d\n",
 		rxq->comp_index, rxq->head_index, rxq->tail_index, rxq->descs);
 	
 	/* Sync descriptors. */
@@ -1964,12 +1961,15 @@ int ionic_rx_clean(struct rxque* rxq , int rx_limit)
 			BUS_DMASYNC_POSTREAD | BUS_DMASYNC_POSTWRITE);
 
 	/* Process Rx descriptors for the given limit or till queue is empty. */
-	for ( i = 0 ; i < rx_limit && rxq->descs; i++, rxq->descs--) {
+	for (i = 0; i < rx_limit && rxq->descs; i++, rxq->descs--) {
 		comp_index = rxq->comp_index;
 		comp = &rxq->comp_ring[comp_index];
 
 		if (comp->color != rxq->done_color)
 			break;
+
+		IONIC_RX_TRACE(rxq, "comp index: %d color: %d done_color: %d desc_posted: %d\n",
+			comp_index, comp->color, rxq->done_color, rxq->descs);
 
 		cmd_index = rxq->tail_index;
 		rxbuf = &rxq->rxbuf[cmd_index];
