@@ -61,7 +61,7 @@ void* lkl_alloc_skbuff(const p4_to_p4plus_cpu_pkt_t* rxhdr, const uint8_t* pkt, 
                            (direction==hal::FLOW_DIR_FROM_DMA)?"from host":"from net", host_dev, net_dev);
     void *dev = NULL;
     bool is_pkt_src_uplink = FALSE;
-    uint32_t pktlen, tpt_offset, nw_offset;
+    uint32_t pktlen = 40, tpt_offset = 20, nw_offset = 0;
     if (direction == hal::FLOW_DIR_FROM_DMA) {
         dev = host_dev;
     } else {
