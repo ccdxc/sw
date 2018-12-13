@@ -329,7 +329,7 @@ int sonic_accounting_atomic_take(osal_atomic_int_t *atomic_c,
 	if (unlikely(count == 0))
 		return PNSO_OK;
 
-	if (likely(osal_atomic_add_unless(atomic_c, count, high_water - count + 1)))
+	if (likely(osal_atomic_add_unless(atomic_c, count, high_water - count)))
 			return PNSO_OK;
 
 	return -EPERM;

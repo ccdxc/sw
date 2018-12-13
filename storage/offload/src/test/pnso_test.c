@@ -889,11 +889,16 @@ static struct worker_context *batch_get_worker_ctx(struct batch_context *batch_c
 
 static void batch_completion_common(struct batch_context *batch_ctx)
 {
+	int count;
+
 	if (batch_ctx->req_rc == PNSO_OK)
 		batch_ctx->stats.agg_stats.total_latency =
 			osal_get_clock_nsec() - batch_ctx->start_time;
 
-	osal_atomic_fetch_add(&batch_ctx->cb_count, 1);
+	count = osal_atomic_fetch_add(&batch_ctx->cb_count, 1);
+	if (count != 0) {
+		PNSO_LOG_ERROR("Unexpected batch cb_count %d\n", count);
+	}
 }
 
 static void batch_completion_safe_cb(void *cb_ctx, struct pnso_service_result *svc_res)

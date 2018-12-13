@@ -735,6 +735,7 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 
 	seq_status_desc = (uint8_t *) sonic_q_consume_entry(status_q, &index);
 	if (!seq_status_desc) {
+		sonic_put_seq_statusq(status_q);
 		err = EINVAL;
 		OSAL_LOG_ERROR("failed to obtain sequencer statusq desc! err: %d",
 				err);
@@ -821,6 +822,7 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 
 	seq_status_desc = (uint8_t *) sonic_q_consume_entry(status_q, &index);
 	if (!seq_status_desc) {
+		sonic_put_seq_statusq(status_q);
 		err = EINVAL;
 		OSAL_LOG_ERROR("failed to obtain sequencer statusq desc! err: %d",
 				err);
