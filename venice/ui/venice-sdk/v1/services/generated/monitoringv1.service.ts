@@ -345,6 +345,15 @@ export class Monitoringv1Service extends AbstractService {
     return this.invokeAJAXGetCall(url, queryParam, 'ListFwlogPolicy_1') as Observable<{body: IMonitoringFwlogPolicyList | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Create FwlogPolicy object */
+  public AddFwlogPolicy_1(body: IMonitoringFwlogPolicy, stagingID: string = ""):Observable<{body: IMonitoringFwlogPolicy | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/fwlogPolicy';
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+    }
+    return this.invokeAJAXPostCall(url, body, 'AddFwlogPolicy_1') as Observable<{body: IMonitoringFwlogPolicy | IApiStatus | Error, statusCode: number}>;
+  }
+  
   /** Get FwlogPolicy object */
   public GetFwlogPolicy_1(O_Name, queryParam: any = null, stagingID: string = ""):Observable<{body: IMonitoringFwlogPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/fwlogPolicy/{O.Name}';
@@ -353,6 +362,16 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
     }
     return this.invokeAJAXGetCall(url, queryParam, 'GetFwlogPolicy_1') as Observable<{body: IMonitoringFwlogPolicy | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Delete FwlogPolicy object */
+  public DeleteFwlogPolicy_1(O_Name, stagingID: string = ""):Observable<{body: IMonitoringFwlogPolicy | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/fwlogPolicy/{O.Name}';
+    url = url.replace('{O.Name}', O_Name);
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+    }
+    return this.invokeAJAXDeleteCall(url, 'DeleteFwlogPolicy_1') as Observable<{body: IMonitoringFwlogPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Update FwlogPolicy object */
@@ -802,6 +821,16 @@ export class Monitoringv1Service extends AbstractService {
     return this.invokeAJAXGetCall(url, queryParam, 'ListFwlogPolicy') as Observable<{body: IMonitoringFwlogPolicyList | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Create FwlogPolicy object */
+  public AddFwlogPolicy(body: IMonitoringFwlogPolicy, stagingID: string = ""):Observable<{body: IMonitoringFwlogPolicy | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/fwlogPolicy';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+    }
+    return this.invokeAJAXPostCall(url, body, 'AddFwlogPolicy') as Observable<{body: IMonitoringFwlogPolicy | IApiStatus | Error, statusCode: number}>;
+  }
+  
   /** Get FwlogPolicy object */
   public GetFwlogPolicy(O_Name, queryParam: any = null, stagingID: string = ""):Observable<{body: IMonitoringFwlogPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/fwlogPolicy/{O.Name}';
@@ -811,6 +840,17 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
     }
     return this.invokeAJAXGetCall(url, queryParam, 'GetFwlogPolicy') as Observable<{body: IMonitoringFwlogPolicy | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Delete FwlogPolicy object */
+  public DeleteFwlogPolicy(O_Name, stagingID: string = ""):Observable<{body: IMonitoringFwlogPolicy | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/fwlogPolicy/{O.Name}';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+    }
+    return this.invokeAJAXDeleteCall(url, 'DeleteFwlogPolicy') as Observable<{body: IMonitoringFwlogPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Update FwlogPolicy object */

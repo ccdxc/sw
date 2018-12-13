@@ -7,26 +7,31 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { MonitoringExportConfig, IMonitoringExportConfig } from './monitoring-export-config.model';
+import { MonitoringFwlogPolicySpec_format,  MonitoringFwlogPolicySpec_format_uihint  } from './enums';
 import { MonitoringFwlogPolicySpec_filter,  MonitoringFwlogPolicySpec_filter_uihint  } from './enums';
-import { MonitoringFwlogExport, IMonitoringFwlogExport } from './monitoring-fwlog-export.model';
+import { MonitoringSyslogExportConfig, IMonitoringSyslogExportConfig } from './monitoring-syslog-export-config.model';
 
 export interface IMonitoringFwlogPolicySpec {
-    'retention-time'?: string;
+    'targets'?: Array<IMonitoringExportConfig>;
+    'format'?: MonitoringFwlogPolicySpec_format;
     'filter'?: Array<MonitoringFwlogPolicySpec_filter>;
-    'exports'?: Array<IMonitoringFwlogExport>;
+    'config'?: IMonitoringSyslogExportConfig;
 }
 
 
 export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringFwlogPolicySpec {
-    /** RetentionTime defines for how long to keep the fwlog before it is deleted. Default is 48h. */
-    'retention-time': string = null;
+    'targets': Array<MonitoringExportConfig> = null;
+    'format': MonitoringFwlogPolicySpec_format = null;
     'filter': Array<MonitoringFwlogPolicySpec_filter> = null;
-    'exports': Array<MonitoringFwlogExport> = null;
+    'config': MonitoringSyslogExportConfig = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'retention-time': {
-            default: '48h',
-            description:  'RetentionTime defines for how long to keep the fwlog before it is deleted. Default is 48h.',
-            hint:  '2h',
+        'targets': {
+            type: 'object'
+        },
+        'format': {
+            enum: MonitoringFwlogPolicySpec_format_uihint,
+            default: 'SYSLOG_BSD',
             type: 'string'
         },
         'filter': {
@@ -34,7 +39,7 @@ export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringF
             default: 'FIREWALL_ACTION_NONE',
             type: 'Array<string>'
         },
-        'exports': {
+        'config': {
             type: 'object'
         },
     }
@@ -58,8 +63,9 @@ export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringF
     */
     constructor(values?: any) {
         super();
+        this['targets'] = new Array<MonitoringExportConfig>();
         this['filter'] = new Array<MonitoringFwlogPolicySpec_filter>();
-        this['exports'] = new Array<MonitoringFwlogExport>();
+        this['config'] = new MonitoringSyslogExportConfig();
         this.setValues(values);
     }
 
@@ -68,16 +74,19 @@ export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringF
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values && values['retention-time'] != null) {
-            this['retention-time'] = values['retention-time'];
-        } else if (fillDefaults && MonitoringFwlogPolicySpec.hasDefaultValue('retention-time')) {
-            this['retention-time'] = MonitoringFwlogPolicySpec.propInfo['retention-time'].default;
+        if (values) {
+            this.fillModelArray<MonitoringExportConfig>(this, 'targets', values['targets'], MonitoringExportConfig);
+        }
+        if (values && values['format'] != null) {
+            this['format'] = values['format'];
+        } else if (fillDefaults && MonitoringFwlogPolicySpec.hasDefaultValue('format')) {
+            this['format'] = <MonitoringFwlogPolicySpec_format>  MonitoringFwlogPolicySpec.propInfo['format'].default;
         }
         if (values && values['filter'] != null) {
             this['filter'] = values['filter'];
         }
         if (values) {
-            this.fillModelArray<MonitoringFwlogExport>(this, 'exports', values['exports'], MonitoringFwlogExport);
+            this['config'].setValues(values['config']);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -86,12 +95,13 @@ export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringF
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'retention-time': new FormControl(this['retention-time']),
+                'targets': new FormArray([]),
+                'format': new FormControl(this['format'], [enumValidator(MonitoringFwlogPolicySpec_format), ]),
                 'filter': new FormControl(this['filter']),
-                'exports': new FormArray([]),
+                'config': this['config'].$formGroup,
             });
             // generate FormArray control elements
-            this.fillFormArray<MonitoringFwlogExport>('exports', this['exports'], MonitoringFwlogExport);
+            this.fillFormArray<MonitoringExportConfig>('targets', this['targets'], MonitoringExportConfig);
         }
         return this._formGroup;
     }
@@ -102,9 +112,10 @@ export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringF
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this._formGroup.controls['retention-time'].setValue(this['retention-time']);
+            this.fillModelArray<MonitoringExportConfig>(this, 'targets', this['targets'], MonitoringExportConfig);
+            this._formGroup.controls['format'].setValue(this['format']);
             this._formGroup.controls['filter'].setValue(this['filter']);
-            this.fillModelArray<MonitoringFwlogExport>(this, 'exports', this['exports'], MonitoringFwlogExport);
+            this['config'].setFormGroupValuesToBeModelValues();
         }
     }
 }

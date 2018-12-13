@@ -63,17 +63,9 @@ export enum MonitoringFlowExportPolicySpec_format {
     'Ipfix' = "Ipfix",
 }
 
-export enum MonitoringFwlogExport_format {
+export enum MonitoringFwlogPolicySpec_format {
     'SYSLOG_BSD' = "SYSLOG_BSD",
     'SYSLOG_RFC5424' = "SYSLOG_RFC5424",
-}
-
-export enum MonitoringFwlogExport_export_filter {
-    'FIREWALL_ACTION_NONE' = "FIREWALL_ACTION_NONE",
-    'FIREWALL_ACTION_ALLOW' = "FIREWALL_ACTION_ALLOW",
-    'FIREWALL_ACTION_DENY' = "FIREWALL_ACTION_DENY",
-    'FIREWALL_ACTION_REJECT' = "FIREWALL_ACTION_REJECT",
-    'FIREWALL_ACTION_ALL' = "FIREWALL_ACTION_ALL",
 }
 
 export enum MonitoringFwlogPolicySpec_filter {
@@ -218,17 +210,9 @@ export enum MonitoringExternalCred_auth_type_uihint {
     'AUTHTYPE_USERNAMEPASSWORD' = "Username/Password",
 }
 
-export enum MonitoringFwlogExport_format_uihint {
+export enum MonitoringFwlogPolicySpec_format_uihint {
     'SYSLOG_BSD' = "BSD",
     'SYSLOG_RFC5424' = "RFC5424",
-}
-
-export enum MonitoringFwlogExport_export_filter_uihint {
-    'FIREWALL_ACTION_ALL' = "All Logs",
-    'FIREWALL_ACTION_ALLOW' = "Allow Logs",
-    'FIREWALL_ACTION_DENY' = "Deny Logs",
-    'FIREWALL_ACTION_NONE' = "No Logs",
-    'FIREWALL_ACTION_REJECT' = "Reject Logs",
 }
 
 export enum MonitoringFwlogPolicySpec_filter_uihint {
@@ -317,9 +301,14 @@ export class AllEnums {
     MonitoringAuthConfig_algo = MonitoringAuthConfig_algo;
     MonitoringEventPolicySpec_format = MonitoringEventPolicySpec_format;
     MonitoringExternalCred_auth_type = MonitoringExternalCred_auth_type;
+<<<<<<< HEAD
     MonitoringFlowExportPolicySpec_format = MonitoringFlowExportPolicySpec_format;
     MonitoringFwlogExport_format = MonitoringFwlogExport_format;
     MonitoringFwlogExport_export_filter = MonitoringFwlogExport_export_filter;
+=======
+    MonitoringFlowExportTarget_format = MonitoringFlowExportTarget_format;
+    MonitoringFwlogPolicySpec_format = MonitoringFwlogPolicySpec_format;
+>>>>>>> generated ui files
     MonitoringFwlogPolicySpec_filter = MonitoringFwlogPolicySpec_filter;
     MonitoringMatchedRequirement_operator = MonitoringMatchedRequirement_operator;
     MonitoringMirrorCollector_type = MonitoringMirrorCollector_type;
@@ -340,8 +329,7 @@ export class AllEnums {
     MonitoringAlertStatus_severity_uihint = MonitoringAlertStatus_severity_uihint;
     MonitoringEventPolicySpec_format_uihint = MonitoringEventPolicySpec_format_uihint;
     MonitoringExternalCred_auth_type_uihint = MonitoringExternalCred_auth_type_uihint;
-    MonitoringFwlogExport_format_uihint = MonitoringFwlogExport_format_uihint;
-    MonitoringFwlogExport_export_filter_uihint = MonitoringFwlogExport_export_filter_uihint;
+    MonitoringFwlogPolicySpec_format_uihint = MonitoringFwlogPolicySpec_format_uihint;
     MonitoringFwlogPolicySpec_filter_uihint = MonitoringFwlogPolicySpec_filter_uihint;
     MonitoringMatchedRequirement_operator_uihint = MonitoringMatchedRequirement_operator_uihint;
     MonitoringMirrorCollector_type_uihint = MonitoringMirrorCollector_type_uihint;
