@@ -18,11 +18,12 @@
 #include "pnso_utils.h"
 
 static void
-fill_chksum_desc(struct service_info *svc_info, uint32_t algo_type,
-		uint32_t buf_len, bool flat_buf, void *src_buf,
+fill_chksum_desc(uint32_t algo_type, uint32_t buf_len,
+		bool flat_buf, void *src_buf,
 		struct cpdc_desc *desc, struct cpdc_status_desc *status_desc)
 {
 	memset(desc, 0, sizeof(*desc));
+	memset(status_desc, 0, sizeof(*status_desc));
 
 	desc->cd_src = (uint64_t) sonic_virt_to_phy(src_buf);
 
@@ -38,16 +39,7 @@ fill_chksum_desc(struct service_info *svc_info, uint32_t algo_type,
 
 	desc->cd_datain_len = buf_len;
 
-	if (svc_info->si_istatus_desc) {
-		desc->cd_status_addr = (uint64_t) status_desc;
-		osal_rmem_set(desc->cd_status_addr, 0, sizeof(*status_desc));
-	} else {
-		memset(status_desc, 0, sizeof(*status_desc));
-
-		desc->cd_status_addr = (uint64_t)
-			sonic_virt_to_phy(status_desc);
-	}
-
+	desc->cd_status_addr = (uint64_t) sonic_virt_to_phy(status_desc);
 	desc->cd_status_data = CPDC_CHKSUM_STATUS_DATA;
 
 	CPDC_PPRINT_DESC(desc);
@@ -98,17 +90,9 @@ chksum_setup(struct service_info *svc_info,
 	}
 	svc_info->si_status_desc = status_desc;
 
-	err = cpdc_setup_rmem_status_desc(svc_info, per_block);
-	if (err) {
-		OSAL_LOG_ERROR("cannot obtain chksum rmem status desc from pool! err: %d",
-				err);
-		goto out;
-	}
-
 	if (per_block) {
 		num_tags =
-			cpdc_fill_per_block_desc(svc_info,
-					pnso_chksum_desc->algo_type,
+			cpdc_fill_per_block_desc(pnso_chksum_desc->algo_type,
 					svc_info->si_block_size,
 					svc_info->si_src_blist.len,
 					svc_info->si_src_blist.blist, sgl,
@@ -122,10 +106,10 @@ chksum_setup(struct service_info *svc_info,
 			goto out;
 		}
 
-		fill_chksum_desc(svc_info, pnso_chksum_desc->algo_type,
+		fill_chksum_desc(pnso_chksum_desc->algo_type,
 				svc_info->si_src_blist.len, false,
 				svc_info->si_src_sgl.sgl,
-				chksum_desc, svc_info->si_status_desc);
+				chksum_desc, status_desc);
 		num_tags = 1;
 	}
 	svc_info->si_num_tags = num_tags;
@@ -382,8 +366,6 @@ chksum_teardown(struct service_info *svc_info)
 
 	OSAL_ASSERT(svc_info);
 
-	pcr = svc_info->si_pcr;
-
 	/*
 	 * Trace the dst/SGL once more to verify any padding applied
 	 * by sequencer.
@@ -391,12 +373,15 @@ chksum_teardown(struct service_info *svc_info)
 	CPDC_PPRINT_DESC(svc_info->si_desc);
 
 	per_block = svc_is_chksum_per_block_enabled(svc_info->si_desc_flags);
+	OSAL_LOG_DEBUG("chksum_desc: %p flags: %d", svc_info->si_desc,
+			svc_info->si_desc_flags);
+
 	if (!per_block) {
-		pc_res_sgl_put(pcr, &svc_info->si_dst_sgl);
-		pc_res_sgl_put(pcr, &svc_info->si_src_sgl);
+		pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_dst_sgl);
+		pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_src_sgl);
 	}
 
-	cpdc_teardown_rmem_status_desc(svc_info, per_block);
+	pcr = svc_info->si_pcr;
 
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 	cpdc_put_status_desc(pcr, per_block, status_desc);
@@ -406,7 +391,6 @@ chksum_teardown(struct service_info *svc_info)
 
 	chksum_desc = (struct cpdc_desc *) svc_info->si_desc;
 	cpdc_put_desc(svc_info, per_block, chksum_desc);
-
 	seq_cleanup_desc(svc_info);
 
 	OSAL_LOG_DEBUG("exit!");

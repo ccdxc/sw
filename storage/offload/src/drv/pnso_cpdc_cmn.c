@@ -578,10 +578,10 @@ cpdc_update_service_info_sgl(struct service_info *svc_info)
 }
 
 uint32_t
-cpdc_fill_per_block_desc(struct service_info *svc_info,
-		uint32_t algo_type, uint32_t block_size,
+cpdc_fill_per_block_desc(uint32_t algo_type, uint32_t block_size,
 		uint32_t src_buf_len, struct pnso_buffer_list *src_blist,
 		struct cpdc_sgl *sgl, struct cpdc_desc *desc,
+		struct cpdc_status_desc *status_desc,
 		fill_desc_fn_t fill_desc_fn)
 {
 	struct cpdc_desc *pb_desc;
@@ -603,12 +603,12 @@ cpdc_fill_per_block_desc(struct service_info *svc_info,
 
 	block_cnt = pbuf_get_flat_buffer_block_count(&flat_buf, block_size);
 	pb_desc = desc;
-	pb_status_desc = svc_info->si_status_desc;
+	pb_status_desc = status_desc;
 	pb_sgl = sgl;
 
 	OSAL_LOG_INFO("block_cnt: %d block_size: %d src_buf_len: %d buf: 0x" PRIx64 " desc: 0x" PRIx64 " status_desc: 0x" PRIx64,
 			block_cnt, block_size, src_buf_len, flat_buf.buf,
-			(uint64_t) desc, (uint64_t) pb_status_desc);
+			(uint64_t) desc, (uint64_t) status_desc);
 
 	desc_object_size = cpdc_get_desc_size();
 	status_object_size = cpdc_get_status_desc_size();
@@ -627,7 +627,7 @@ cpdc_fill_per_block_desc(struct service_info *svc_info,
 			i, (uint64_t) buf, len, (uint64_t) pb_desc,
 			(uint64_t) pb_status_desc, (uint64_t) pb_sgl);
 
-		fill_desc_fn(svc_info, algo_type, len, false,
+		fill_desc_fn(algo_type, len, false,
 				pb_sgl, pb_desc, pb_status_desc);
 		buf_len -= len;
 
