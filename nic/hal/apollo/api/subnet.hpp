@@ -102,6 +102,28 @@ class subnet_entry : public api_base {
      */
     virtual sdk_ret_t update_hw(api_ctxt_t *api_ctxt) override;
 
+    /**
+     * @brief    activate the epoch in the dataplane
+     * @param[in] api_op      api operation
+     * @param[in] api_ctxt    transient state associated with this API
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t activate_epoch(api_op_t api_op, api_ctxt_t *api_ctxt) override;
+
+    /**
+     * @brief    this method is called on new object that needs to replace the
+     *           old version of the object in the DBs
+     * @param[in] old         old version of the object being swapped out
+     * @param[in] api_ctxt    transient state associated with this API
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t update_db(api_base *old_obj, api_ctxt_t *api_ctxt) override;
+
+    /**
+     * @brief    initiate delay deletion of this object
+     */
+    virtual sdk_ret_t delay_delete(void) override;
+
 #if 0
     /**
      * @brief    commit() is invokved during commit phase of the API processing
@@ -168,7 +190,7 @@ private:
     /**
      * @brief    constructor
      */
-    subnet_entry() {}
+    subnet_entry() {}    // TODO: move this to .cc and initialize hw indices to invalid values !!
     /**
      * @brief    destructor
      */
@@ -182,6 +204,11 @@ private:
      *           can always release them in abort phase if something goes wrong
      */
     sdk_ret_t init(oci_subnet_t *oci_subnet);
+
+    /**
+     * @brief     free all h/w resources allocated for this subnet
+     */
+    void cleanup(void);
 
     /**
      * @brief     add given subnet to the database
@@ -219,7 +246,7 @@ private:
 /**
  * @brief    state maintained for subnets
  */
-class subnet_state {
+class subnet_state : public obj_base {
 public:
     /**
      * @brief    constructor
@@ -248,6 +275,7 @@ public:
      * @param[in] subnet_key subnet key
      */
     subnet_entry *subnet_find(oci_subnet_key_t *subnet_key) const;
+    friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 
 private:
     ht *subnet_ht(void) { return subnet_ht_; }

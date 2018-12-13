@@ -35,6 +35,17 @@ namespace api {
  */
 
 /**
+ * @brief    cleanup state maintained for this vnic including any hw entries we
+ *           are holding on to
+ */
+void
+vnic_entry::cleanup(void) {
+    // TODO: fix me
+    //SDK_SPINLOCK_DESTROY(&vnic->slock);
+    vnic_db()->vnic_idxr()->free(hw_id_);    // TODO: more state to free here !!!
+}
+
+/**
  * @brief    release all the s/w state associate with the given vnic, if any,
  *           and free the memory
  * @param[in] vnic     vnic to be freed
@@ -43,8 +54,8 @@ namespace api {
  */
 void
 vnic_entry::destroy(vnic_entry *vnic) {
+    vnic->cleanup();
     vnic->~vnic_entry();
-    vnic_db()->vnic_free(vnic);
 }
 
 /**
@@ -219,6 +230,37 @@ vnic_entry::del_from_db(void) {
     return sdk::SDK_RET_OK;
 }
 
+/**
+ * @brief    initiate delay deletion of this object
+ */
+sdk_ret_t
+vnic_entry::delay_delete(void) {
+    return delay_delete_to_slab(OCI_SLAB_VNIC, this);
+}
+
+/**
+ * @brief    activate the epoch in the dataplane
+ * @param[in] api_op      api operation
+ * @param[in] api_ctxt    transient state associated with this API
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+vnic_entry::activate_epoch(api_op_t api_op, api_ctxt_t *api_ctxt) {
+    return sdk::SDK_RET_INVALID_OP;
+}
+
+/**
+ * @brief    this method is called on new object that needs to replace the
+ *           old version of the object in the DBs
+ * @param[in] old         old version of the object being swapped out
+ * @param[in] api_ctxt    transient state associated with this API
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+vnic_entry::update_db(api_base *old_obj, api_ctxt_t *api_ctxt) {
+    return sdk::SDK_RET_INVALID_OP;
+}
+
 /** @} */    // end of OCI_VNIC_ENTRY
 
 /**
@@ -323,28 +365,6 @@ vnic_state::vnic_free(vnic_entry *vnic) {
  * @ingroup OCI_VNIC
  * @{
  */
-
-/**
- * @brief Cleanup state maintained for given VNIC
- *
- * @param[in] vnic VNIC
- */
-void
-vnic_state::vnic_cleanup(vnic_t *vnic) {
-    // TODO: fix me
-    //SDK_SPINLOCK_DESTROY(&vnic->slock);
-    idxr_->free(vnic->hw_id);
-}
-
-/**
- * @brief Free VNIC structure
- *
- * @param[in] vnic VNIC
- */
-void
-vnic_state::vnic_free(vnic_t *vnic) {
-    api::delay_delete_to_slab(OCI_SLAB_VNIC, vnic);
-}
 
 /**
  * @brief Uninitialize and free internal VNIC structure

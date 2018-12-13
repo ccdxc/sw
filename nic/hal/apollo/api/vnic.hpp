@@ -102,6 +102,28 @@ public:
      */
     virtual sdk_ret_t update_hw(api_ctxt_t *api_ctxt) override;
 
+    /**
+     * @brief    activate the epoch in the dataplane
+     * @param[in] api_op      api operation
+     * @param[in] api_ctxt    transient state associated with this API
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t activate_epoch(api_op_t api_op, api_ctxt_t *api_ctxt) override;
+
+    /**
+     * @brief    this method is called on new object that needs to replace the
+     *           old version of the object in the DBs
+     * @param[in] old         old version of the object being swapped out
+     * @param[in] api_ctxt    transient state associated with this API
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t update_db(api_base *old_obj, api_ctxt_t *api_ctxt) override;
+
+    /**
+     * @brief    initiate delay deletion of this object
+     */
+    virtual sdk_ret_t delay_delete(void) override;
+
 #if 0
     /**
      * @brief    commit() is invokved during commit phase of the API processing
@@ -168,7 +190,7 @@ private:
     /**
      * @brief    constructor
      */
-    vnic_entry() {}
+    vnic_entry() {}    // TODO: move this to .cc and initialize hw indices to invalid values !!
 
     /**
      * @brief    destructor
@@ -185,6 +207,11 @@ private:
      *           wrong
      */
     sdk_ret_t init(oci_vnic_t *oci_vnic);
+
+    /**
+     * @brief     free all h/w resources allocated for this vnic
+     */
+    void cleanup(void);
 
     /**
      * @brief     add given vnic to the database
@@ -218,7 +245,7 @@ private:
 /**
  * @brief    state maintained for VNICs
  */
-class vnic_state {
+class vnic_state : public obj_base {
 public:
     /**
      * @brief    constructor

@@ -10,11 +10,13 @@
 #include "nic/hal/apollo/core/mem.hpp"
 #include "nic/hal/apollo/core/trace.hpp"
 #include "nic/hal/apollo/api/vcn.hpp"
+#include "nic/hal/apollo/api/subnet.hpp"
+#include "nic/hal/apollo/api/vnic.hpp"
 #include "nic/hal/apollo/api/oci_state.hpp"
 
 namespace api {
 
- /**< (singleton) instance of all OCI state in one place */
+/**< (singleton) instance of all OCI state in one place */
 oci_state g_oci_state;
 
 /**
@@ -29,7 +31,18 @@ slab_delay_delete_cb (void *timer, uint32_t slab_id, void *elem)
 {
     switch (slab_id) {
     case OCI_SLAB_VCN:
+        vcn_entry::destroy((vcn_entry *)elem);
         vcn_db()->vcn_slab()->free(elem);
+        break;
+
+    case OCI_SLAB_SUBNET:
+        subnet_entry::destroy((subnet_entry *)elem);
+        subnet_db()->subnet_slab()->free(elem);
+        break;
+
+    case OCI_SLAB_VNIC:
+        vnic_entry::destroy((vnic_entry *)elem);
+        vnic_db()->vnic_slab()->free(elem);
         break;
 
     default:

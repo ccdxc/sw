@@ -89,10 +89,8 @@ api_engine::update_tables(void) {
             break;
 
         case API_OP_GET:
-            break;
-
         default:
-            break;
+            return sdk::SDK_RET_INVALID_OP;
         }
     }
     return sdk::SDK_RET_OK;
@@ -101,10 +99,67 @@ api_engine::update_tables(void) {
 /**
  * @brief    any objects having tables in stage 0 of datapath can act in this
  *           epoch activation stage to switch to new epoch
- *           activating the epoch
+ *           NOTE: no failures must happen in this stage
  */
 sdk_ret_t
 api_engine::activate_epoch(void) {
+    api_ctxt_t    api_ctxt;
+    sdk_ret_t     ret;
+
+    /**
+     * walk over all the dirty objects and call program_hw() on each object
+     */
+    for (vector<api_ctxt_t>::iterator it = batch_ctxt_.apis.begin();
+         it != batch_ctxt_.apis.end(); ++it) {
+        api_ctxt = *it;
+        switch (api_ctxt.api_op) {
+        case API_OP_CREATE:
+            /**
+             * object should be in the database by now, just trigger stage0
+             * programming and clear the dirty flag on the object
+             */
+            ret = api_ctxt.new_obj->activate_epoch(API_OP_CREATE, &api_ctxt);
+            SDK_ASSERT(ret == sdk::SDK_RET_OK);
+            api_ctxt.new_obj->clear_dirty();
+            break;
+
+        case API_OP_DELETE:
+            /**
+             * we should have programmed hw entries with latest epoch and bit
+             * indicating the entry is invalid already by now (except stage 0),
+             * so reflect the object deletion in stage 0 now, remove the object
+             * from all s/w dbs and enqueue for delay deletion (until then table
+             * indices won't be freed, because there could be packets
+             * circulating in the pipeline that picked older epoch still
+             * (note that s/w can't access this obj anymore from this point
+             *  onwards by doing lookups)
+             */
+            ret = api_ctxt.curr_obj->activate_epoch(API_OP_DELETE, &api_ctxt);
+            SDK_ASSERT(ret == sdk::SDK_RET_OK);
+            api_ctxt.curr_obj->del_from_db();
+            api_ctxt.curr_obj->delay_delete();
+            break;
+
+        case API_OP_UPDATE:
+            /**
+             * other than stage 0 of datapath pipeline, all stages are updated
+             * with this epoch, so update stage 0 now; but before doing that we
+             * need to switch the latest epcoh in s/w, otherwise packets can
+             * come to FTEs with new epoch even before s/w swich is done
+             */
+            ret = api_ctxt.new_obj->update_db(api_ctxt.curr_obj, &api_ctxt);
+            SDK_ASSERT(ret == sdk::SDK_RET_OK);
+            ret = api_ctxt.new_obj->activate_epoch(API_OP_UPDATE, &api_ctxt);
+            SDK_ASSERT(ret == sdk::SDK_RET_OK);
+            /**< enqueue the current (i.e., old) object for delay deletion */
+            api_ctxt.curr_obj->delay_delete();
+            break;
+
+        case API_OP_GET:
+        default:
+            return sdk::SDK_RET_INVALID_OP;
+        }
+    }
     return sdk::SDK_RET_OK;
 }
 
@@ -238,6 +293,7 @@ api_engine::process_api(api_ctxt_t *api_ctxt) {
             if (ret != sdk::SDK_RET_OK) {
                 goto error;
             }
+            api_ctxt->curr_obj->set_dirty();
         } else {
             /**< not expected to happen, but ignore the error by not adding the
              * api ctxt for later commit/abort processing
@@ -255,6 +311,7 @@ api_engine::process_api(api_ctxt_t *api_ctxt) {
              */
             api_ctxt->new_obj = api_ctxt->curr_obj->clone();
             api_ctxt->new_obj->process_update(api_ctxt);
+            api_ctxt->curr_obj->set_dirty();
         } else {
             /**< not expected to happen, but ignore the error by not adding the
              * api ctxt for later commit/abort processing
@@ -263,10 +320,9 @@ api_engine::process_api(api_ctxt_t *api_ctxt) {
         break;
 
     case API_OP_GET:
-        break;
-
     default:
-        break;
+        ret = sdk::SDK_RET_INVALID_OP;
+        goto error;
     }
 
     return sdk::SDK_RET_OK;
