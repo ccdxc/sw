@@ -4,11 +4,11 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	Pkg "github.com/pensando/sw/nic/e2etests/go/agent/pkg"
 	Tests "github.com/pensando/sw/nic/e2etests/go/agent/pkg/traffic/tests"
 	TestApi "github.com/pensando/sw/nic/e2etests/go/agent/pkg/traffic/tests/api"
 	Infra "github.com/pensando/sw/nic/e2etests/go/infra"
-	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 )
 
 type FirewallReject struct {

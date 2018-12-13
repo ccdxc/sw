@@ -8,30 +8,25 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, PropInfoItem } from './base-model';
 
 
-export interface ISecurityDNS {
-    'drop-multi-question-packets'?: boolean;
+export interface ISecurityFirewallProfileStatus {
 }
 
 
-export class SecurityDNS extends BaseModel implements ISecurityDNS {
-    'drop-multi-question-packets': boolean = null;
+export class SecurityFirewallProfileStatus extends BaseModel implements ISecurityFirewallProfileStatus {
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'drop-multi-question-packets': {
-            type: 'boolean'
-        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return SecurityDNS.propInfo[propName];
+        return SecurityFirewallProfileStatus.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (SecurityDNS.propInfo[prop] != null &&
-                        SecurityDNS.propInfo[prop].default != null &&
-                        SecurityDNS.propInfo[prop].default != '');
+        return (SecurityFirewallProfileStatus.propInfo[prop] != null &&
+                        SecurityFirewallProfileStatus.propInfo[prop].default != null &&
+                        SecurityFirewallProfileStatus.propInfo[prop].default != '');
     }
 
     /**
@@ -48,11 +43,6 @@ export class SecurityDNS extends BaseModel implements ISecurityDNS {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values && values['drop-multi-question-packets'] != null) {
-            this['drop-multi-question-packets'] = values['drop-multi-question-packets'];
-        } else if (fillDefaults && SecurityDNS.hasDefaultValue('drop-multi-question-packets')) {
-            this['drop-multi-question-packets'] = SecurityDNS.propInfo['drop-multi-question-packets'].default;
-        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -60,7 +50,6 @@ export class SecurityDNS extends BaseModel implements ISecurityDNS {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'drop-multi-question-packets': new FormControl(this['drop-multi-question-packets']),
             });
         }
         return this._formGroup;
@@ -72,7 +61,6 @@ export class SecurityDNS extends BaseModel implements ISecurityDNS {
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this._formGroup.controls['drop-multi-question-packets'].setValue(this['drop-multi-question-packets']);
         }
     }
 }

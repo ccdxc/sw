@@ -1,0 +1,64 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+package security;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+// ----------------------------- FirewallProfile Object -----------------------------
+
+// FirewallProfileSpec - spec part of FirewallProfile object
+message FirewallProfileSpec {
+    // Session idle timeout removes/deletes the session/flow if there is inactivity; this value is superceded by any value specified in App object
+    string SessionIdleTimeout           = 1 [(gogoproto.jsontag) = "session-idle-timeout,omitempty", (venice.check) = "Duration()"];
+    // TCP Connection Setup Timeout is the period TCP session is kept to see the response of a SYN
+    string TCPConnectionSetupTimeout    = 2 [(gogoproto.jsontag) = "tcp-connection-setup-timeout,omitempty", (venice.check) = "Duration()"];
+    // TCP Close Timeout is the time for which TCP session is kept after a FIN is seen
+    string TCPCloseTimeout              = 3 [(gogoproto.jsontag) = "tcp-close-timeout,omitempty", (venice.check) = "Duration()"];
+    // TCP Half Closed Timeout is the time for which tCP session is kept when connection is half closed i.e. FIN sent by FIN_Ack not received
+    string TCPHalfClosedTimeout         = 4 [(gogoproto.jsontag) = "tcp-half-closed-timeout,omitempty", (venice.check) = "Duration()"];
+    // TCP Drop Timeout is the period for which a drop entry is installed for a denied TCP flow
+    string TCPDropTimeout               = 5 [(gogoproto.jsontag) = "tcp-drop-timeout,omitempty", (venice.check) = "Duration()"];
+    // UDP Drop Timeout is the period for which a drop entry is installed for a denied UDP flow
+    string UDPDropTimeout               = 6 [(gogoproto.jsontag) = "udp-drop-timeout,omitempty", (venice.check) = "Duration()"];
+    // ICMP Drop Timeout is the period for which a drop entry is installed for a denied ICMP flow
+    string ICMPDropTimeout              = 7 [(gogoproto.jsontag) = "icmp-drop-timeout,omitempty", (venice.check) = "Duration()"];
+    // Drop Timeout is the period for which a drop entry is installed for a denied non tcp/udp/icmp flow
+    string DropTimeout                  = 8 [(gogoproto.jsontag) = "drop-timeout,omitempty", (venice.check) = "Duration()"];
+    // Tcp Timeout is the period for which a TCP session is kept alive during inactivity
+    string TcpTimeout                   = 9 [(gogoproto.jsontag) = "tcp-timeout,omitempty", (venice.check) = "Duration()"];
+    // Udp Timeout is the period for which a UDP session is kept alive during inactivity
+    string UdpTimeout                   = 10 [(gogoproto.jsontag) = "udp-timeout,omitempty", (venice.check) = "Duration()"];
+    // Icmp Timeout is the period for which a ICMP session is kept alive during inactivity
+    string IcmpTimeout                  = 11 [(gogoproto.jsontag) = "icmp-timeout,omitempty", (venice.check) = "Duration()"];
+    // Disable Connection tracking, default false
+    bool DisableConnTrack             = 12 [(gogoproto.jsontag) = "disable-conn-track,omitempty"];
+    // IP Normalization Enable, when set checks for IP header field correctness; default false
+    bool IPNormalizationEnable        = 13 [(gogoproto.jsontag) = "ip-normalization-enable,omitempty"];
+    // TCP Normalization Enable, when set checks for TCP header field correctness; default false
+    bool TCPNormalizationEnable       = 14 [(gogoproto.jsontag) = "tcp-normalization-enable,omitempty"];
+    // UDP Normalization Enable, when set checks for UDP header field correctness; default false
+    bool UDPNormalizationEnable       = 15 [(gogoproto.jsontag) = "udp-normalization-enable,omitempty"];
+    // ICMP Normalization Enable, when set checks for ICMP header field correctness; default false
+    bool ICMPNormalizationEnable      = 16 [(gogoproto.jsontag) = "icmp-normalization-enable,omitempty"];
+}
+
+
+// FirewallProfileStatus - status part of FirewallProfile object
+message FirewallProfileStatus {
+    // TODO: do we show default values for attributes that can not be set, here?
+}
+
+// FirewallProfile - defined one per tenant
+message FirewallProfile {
+    option (venice.objectPrefix) = {Collection: "firewallprofiles", Path: "/{O.Tenant}"};
+    api.TypeMeta T = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+    FirewallProfileSpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    FirewallProfileStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}

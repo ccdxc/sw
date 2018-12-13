@@ -112,6 +112,7 @@
           "SecurityGroup",
           "SGPolicy",
           "App",
+          "FirewallProfile",
           "Certificate",
           "TrafficEncryptionPolicy"
         ]

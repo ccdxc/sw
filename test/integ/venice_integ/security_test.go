@@ -14,7 +14,7 @@ import (
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
-	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
+	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -29,12 +29,17 @@ func (it *veniceIntegSuite) TestVeniceIntegSecurityPolicy(c *C) {
 		},
 		Spec: security.SGPolicySpec{
 			AttachTenant: true,
-			Rules: []*security.SGRule{
+			Rules: []security.SGRule{
 				{
 					FromIPAddresses: []string{"10.0.0.0/24"},
 					ToIPAddresses:   []string{"11.0.0.0/24"},
-					Apps:            []string{"tcp/80"},
-					Action:          "PERMIT",
+					ProtoPorts: []security.ProtoPort{
+						{
+							Protocol: "tcp",
+							Ports:    "80",
+						},
+					},
+					Action: "PERMIT",
 				},
 			},
 		},

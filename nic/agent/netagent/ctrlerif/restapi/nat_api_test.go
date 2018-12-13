@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	api "github.com/pensando/sw/api"
-	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
+	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/netutils"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )

@@ -27,26 +27,31 @@ type grpcServerSecurityV1 struct {
 
 	AutoAddAppHdlr                        grpctransport.Handler
 	AutoAddCertificateHdlr                grpctransport.Handler
+	AutoAddFirewallProfileHdlr            grpctransport.Handler
 	AutoAddSGPolicyHdlr                   grpctransport.Handler
 	AutoAddSecurityGroupHdlr              grpctransport.Handler
 	AutoAddTrafficEncryptionPolicyHdlr    grpctransport.Handler
 	AutoDeleteAppHdlr                     grpctransport.Handler
 	AutoDeleteCertificateHdlr             grpctransport.Handler
+	AutoDeleteFirewallProfileHdlr         grpctransport.Handler
 	AutoDeleteSGPolicyHdlr                grpctransport.Handler
 	AutoDeleteSecurityGroupHdlr           grpctransport.Handler
 	AutoDeleteTrafficEncryptionPolicyHdlr grpctransport.Handler
 	AutoGetAppHdlr                        grpctransport.Handler
 	AutoGetCertificateHdlr                grpctransport.Handler
+	AutoGetFirewallProfileHdlr            grpctransport.Handler
 	AutoGetSGPolicyHdlr                   grpctransport.Handler
 	AutoGetSecurityGroupHdlr              grpctransport.Handler
 	AutoGetTrafficEncryptionPolicyHdlr    grpctransport.Handler
 	AutoListAppHdlr                       grpctransport.Handler
 	AutoListCertificateHdlr               grpctransport.Handler
+	AutoListFirewallProfileHdlr           grpctransport.Handler
 	AutoListSGPolicyHdlr                  grpctransport.Handler
 	AutoListSecurityGroupHdlr             grpctransport.Handler
 	AutoListTrafficEncryptionPolicyHdlr   grpctransport.Handler
 	AutoUpdateAppHdlr                     grpctransport.Handler
 	AutoUpdateCertificateHdlr             grpctransport.Handler
+	AutoUpdateFirewallProfileHdlr         grpctransport.Handler
 	AutoUpdateSGPolicyHdlr                grpctransport.Handler
 	AutoUpdateSecurityGroupHdlr           grpctransport.Handler
 	AutoUpdateTrafficEncryptionPolicyHdlr grpctransport.Handler
@@ -72,6 +77,13 @@ func MakeGRPCServerSecurityV1(ctx context.Context, endpoints EndpointsSecurityV1
 			DecodeGrpcReqCertificate,
 			EncodeGrpcRespCertificate,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddCertificate", logger)))...,
+		),
+
+		AutoAddFirewallProfileHdlr: grpctransport.NewServer(
+			endpoints.AutoAddFirewallProfileEndpoint,
+			DecodeGrpcReqFirewallProfile,
+			EncodeGrpcRespFirewallProfile,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddFirewallProfile", logger)))...,
 		),
 
 		AutoAddSGPolicyHdlr: grpctransport.NewServer(
@@ -109,6 +121,13 @@ func MakeGRPCServerSecurityV1(ctx context.Context, endpoints EndpointsSecurityV1
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteCertificate", logger)))...,
 		),
 
+		AutoDeleteFirewallProfileHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteFirewallProfileEndpoint,
+			DecodeGrpcReqFirewallProfile,
+			EncodeGrpcRespFirewallProfile,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteFirewallProfile", logger)))...,
+		),
+
 		AutoDeleteSGPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteSGPolicyEndpoint,
 			DecodeGrpcReqSGPolicy,
@@ -142,6 +161,13 @@ func MakeGRPCServerSecurityV1(ctx context.Context, endpoints EndpointsSecurityV1
 			DecodeGrpcReqCertificate,
 			EncodeGrpcRespCertificate,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetCertificate", logger)))...,
+		),
+
+		AutoGetFirewallProfileHdlr: grpctransport.NewServer(
+			endpoints.AutoGetFirewallProfileEndpoint,
+			DecodeGrpcReqFirewallProfile,
+			EncodeGrpcRespFirewallProfile,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetFirewallProfile", logger)))...,
 		),
 
 		AutoGetSGPolicyHdlr: grpctransport.NewServer(
@@ -179,6 +205,13 @@ func MakeGRPCServerSecurityV1(ctx context.Context, endpoints EndpointsSecurityV1
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListCertificate", logger)))...,
 		),
 
+		AutoListFirewallProfileHdlr: grpctransport.NewServer(
+			endpoints.AutoListFirewallProfileEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespFirewallProfileList,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListFirewallProfile", logger)))...,
+		),
+
 		AutoListSGPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoListSGPolicyEndpoint,
 			DecodeGrpcReqListWatchOptions,
@@ -212,6 +245,13 @@ func MakeGRPCServerSecurityV1(ctx context.Context, endpoints EndpointsSecurityV1
 			DecodeGrpcReqCertificate,
 			EncodeGrpcRespCertificate,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateCertificate", logger)))...,
+		),
+
+		AutoUpdateFirewallProfileHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateFirewallProfileEndpoint,
+			DecodeGrpcReqFirewallProfile,
+			EncodeGrpcRespFirewallProfile,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateFirewallProfile", logger)))...,
 		),
 
 		AutoUpdateSGPolicyHdlr: grpctransport.NewServer(
@@ -269,6 +309,24 @@ func decodeHTTPrespSecurityV1AutoAddCertificate(_ context.Context, r *http.Respo
 		return nil, errorDecoder(r)
 	}
 	var resp Certificate
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerSecurityV1) AutoAddFirewallProfile(ctx oldcontext.Context, req *FirewallProfile) (*FirewallProfile, error) {
+	_, resp, err := s.AutoAddFirewallProfileHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respSecurityV1AutoAddFirewallProfile).V
+	return &r, resp.(respSecurityV1AutoAddFirewallProfile).Err
+}
+
+func decodeHTTPrespSecurityV1AutoAddFirewallProfile(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp FirewallProfile
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -363,6 +421,24 @@ func decodeHTTPrespSecurityV1AutoDeleteCertificate(_ context.Context, r *http.Re
 	return &resp, err
 }
 
+func (s *grpcServerSecurityV1) AutoDeleteFirewallProfile(ctx oldcontext.Context, req *FirewallProfile) (*FirewallProfile, error) {
+	_, resp, err := s.AutoDeleteFirewallProfileHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respSecurityV1AutoDeleteFirewallProfile).V
+	return &r, resp.(respSecurityV1AutoDeleteFirewallProfile).Err
+}
+
+func decodeHTTPrespSecurityV1AutoDeleteFirewallProfile(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp FirewallProfile
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerSecurityV1) AutoDeleteSGPolicy(ctx oldcontext.Context, req *SGPolicy) (*SGPolicy, error) {
 	_, resp, err := s.AutoDeleteSGPolicyHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -449,6 +525,24 @@ func decodeHTTPrespSecurityV1AutoGetCertificate(_ context.Context, r *http.Respo
 		return nil, errorDecoder(r)
 	}
 	var resp Certificate
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerSecurityV1) AutoGetFirewallProfile(ctx oldcontext.Context, req *FirewallProfile) (*FirewallProfile, error) {
+	_, resp, err := s.AutoGetFirewallProfileHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respSecurityV1AutoGetFirewallProfile).V
+	return &r, resp.(respSecurityV1AutoGetFirewallProfile).Err
+}
+
+func decodeHTTPrespSecurityV1AutoGetFirewallProfile(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp FirewallProfile
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -543,6 +637,24 @@ func decodeHTTPrespSecurityV1AutoListCertificate(_ context.Context, r *http.Resp
 	return &resp, err
 }
 
+func (s *grpcServerSecurityV1) AutoListFirewallProfile(ctx oldcontext.Context, req *api.ListWatchOptions) (*FirewallProfileList, error) {
+	_, resp, err := s.AutoListFirewallProfileHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respSecurityV1AutoListFirewallProfile).V
+	return &r, resp.(respSecurityV1AutoListFirewallProfile).Err
+}
+
+func decodeHTTPrespSecurityV1AutoListFirewallProfile(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp FirewallProfileList
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerSecurityV1) AutoListSGPolicy(ctx oldcontext.Context, req *api.ListWatchOptions) (*SGPolicyList, error) {
 	_, resp, err := s.AutoListSGPolicyHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -633,6 +745,24 @@ func decodeHTTPrespSecurityV1AutoUpdateCertificate(_ context.Context, r *http.Re
 	return &resp, err
 }
 
+func (s *grpcServerSecurityV1) AutoUpdateFirewallProfile(ctx oldcontext.Context, req *FirewallProfile) (*FirewallProfile, error) {
+	_, resp, err := s.AutoUpdateFirewallProfileHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respSecurityV1AutoUpdateFirewallProfile).V
+	return &r, resp.(respSecurityV1AutoUpdateFirewallProfile).Err
+}
+
+func decodeHTTPrespSecurityV1AutoUpdateFirewallProfile(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp FirewallProfile
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerSecurityV1) AutoUpdateSGPolicy(ctx oldcontext.Context, req *SGPolicy) (*SGPolicy, error) {
 	_, resp, err := s.AutoUpdateSGPolicyHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -701,6 +831,10 @@ func (s *grpcServerSecurityV1) AutoWatchSGPolicy(in *api.ListWatchOptions, strea
 
 func (s *grpcServerSecurityV1) AutoWatchApp(in *api.ListWatchOptions, stream SecurityV1_AutoWatchAppServer) error {
 	return s.Endpoints.AutoWatchApp(in, stream)
+}
+
+func (s *grpcServerSecurityV1) AutoWatchFirewallProfile(in *api.ListWatchOptions, stream SecurityV1_AutoWatchFirewallProfileServer) error {
+	return s.Endpoints.AutoWatchFirewallProfile(in, stream)
 }
 
 func (s *grpcServerSecurityV1) AutoWatchCertificate(in *api.ListWatchOptions, stream SecurityV1_AutoWatchCertificateServer) error {
@@ -776,6 +910,40 @@ func EncodeGrpcRespCertificateList(ctx context.Context, response interface{}) (i
 
 // DecodeGrpcRespCertificateList decodes the GRPC response
 func DecodeGrpcRespCertificateList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPFirewallProfileList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPFirewallProfileList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req FirewallProfileList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqFirewallProfileList encodes GRPC request
+func EncodeGrpcReqFirewallProfileList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FirewallProfileList)
+	return req, nil
+}
+
+// DecodeGrpcReqFirewallProfileList decodes GRPC request
+func DecodeGrpcReqFirewallProfileList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FirewallProfileList)
+	return req, nil
+}
+
+// EncodeGrpcRespFirewallProfileList endodes the GRPC response
+func EncodeGrpcRespFirewallProfileList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespFirewallProfileList decodes the GRPC response
+func DecodeGrpcRespFirewallProfileList(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

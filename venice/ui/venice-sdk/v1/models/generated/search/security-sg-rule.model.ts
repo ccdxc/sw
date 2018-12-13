@@ -7,10 +7,12 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { SecurityProtoPort, ISecurityProtoPort } from './security-proto-port.model';
 import { SecuritySGRule_action,  } from './enums';
 
 export interface ISecuritySGRule {
     'apps'?: Array<string>;
+    'proto-ports'?: Array<ISecurityProtoPort>;
     'action'?: SecuritySGRule_action;
     'from-ip-addresses'?: Array<string>;
     'to-ip-addresses'?: Array<string>;
@@ -21,6 +23,7 @@ export interface ISecuritySGRule {
 
 export class SecuritySGRule extends BaseModel implements ISecuritySGRule {
     'apps': Array<string> = null;
+    'proto-ports': Array<SecurityProtoPort> = null;
     'action': SecuritySGRule_action = null;
     'from-ip-addresses': Array<string> = null;
     'to-ip-addresses': Array<string> = null;
@@ -29,6 +32,9 @@ export class SecuritySGRule extends BaseModel implements ISecuritySGRule {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'apps': {
             type: 'Array<string>'
+        },
+        'proto-ports': {
+            type: 'object'
         },
         'action': {
             enum: SecuritySGRule_action,
@@ -69,6 +75,7 @@ export class SecuritySGRule extends BaseModel implements ISecuritySGRule {
     constructor(values?: any) {
         super();
         this['apps'] = new Array<string>();
+        this['proto-ports'] = new Array<SecurityProtoPort>();
         this['from-ip-addresses'] = new Array<string>();
         this['to-ip-addresses'] = new Array<string>();
         this['from-security-groups'] = new Array<string>();
@@ -83,6 +90,9 @@ export class SecuritySGRule extends BaseModel implements ISecuritySGRule {
     setValues(values: any, fillDefaults = true): void {
         if (values && values['apps'] != null) {
             this['apps'] = values['apps'];
+        }
+        if (values) {
+            this.fillModelArray<SecurityProtoPort>(this, 'proto-ports', values['proto-ports'], SecurityProtoPort);
         }
         if (values && values['action'] != null) {
             this['action'] = values['action'];
@@ -109,12 +119,15 @@ export class SecuritySGRule extends BaseModel implements ISecuritySGRule {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'apps': new FormControl(this['apps']),
+                'proto-ports': new FormArray([]),
                 'action': new FormControl(this['action'], [enumValidator(SecuritySGRule_action), ]),
                 'from-ip-addresses': new FormControl(this['from-ip-addresses']),
                 'to-ip-addresses': new FormControl(this['to-ip-addresses']),
                 'from-security-groups': new FormControl(this['from-security-groups']),
                 'to-security-groups': new FormControl(this['to-security-groups']),
             });
+            // generate FormArray control elements
+            this.fillFormArray<SecurityProtoPort>('proto-ports', this['proto-ports'], SecurityProtoPort);
         }
         return this._formGroup;
     }
@@ -126,6 +139,7 @@ export class SecuritySGRule extends BaseModel implements ISecuritySGRule {
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['apps'].setValue(this['apps']);
+            this.fillModelArray<SecurityProtoPort>(this, 'proto-ports', this['proto-ports'], SecurityProtoPort);
             this._formGroup.controls['action'].setValue(this['action']);
             this._formGroup.controls['from-ip-addresses'].setValue(this['from-ip-addresses']);
             this._formGroup.controls['to-ip-addresses'].setValue(this['to-ip-addresses']);

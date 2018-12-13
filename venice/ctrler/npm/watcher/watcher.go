@@ -29,23 +29,27 @@ type syncFlag struct {
 
 // Watcher watches api server for changes
 type Watcher struct {
-	waitGrp         sync.WaitGroup           // wait group to wait on all go routines to exit
-	statemgr        *statemgr.Statemgr       // reference to state manager
-	netWatcher      chan kvstore.WatchEvent  // network object watcher
-	vmmEpWatcher    chan kvstore.WatchEvent  // vmm endpoint watcher
-	sgWatcher       chan kvstore.WatchEvent  // sg object watcher
-	sgPolicyWatcher chan kvstore.WatchEvent  // sg object watcher
-	tenantWatcher   chan kvstore.WatchEvent  // tenant object watcher
-	hostWatcher     kvstore.Watcher          // host watcher
-	snicWatcher     kvstore.Watcher          // smart nic watcher
-	wrWatcher       kvstore.Watcher          // workload watcher
-	workloadHandler statemgr.WorkloadHandler // workload event handler
-	hostHandler     statemgr.HostHandler     // host event handler
-	snicHandler     statemgr.SmartNICHandler // smart nic event handler
-	watchCtx        context.Context          // ctx for watchers
-	watchCancel     context.CancelFunc       // cancel for watchers
-	stopFlag        syncFlag                 // boolean flag to exit the API watchers
-	debugStats      *debug.Stats             // debug Stats
+	waitGrp          sync.WaitGroup                  // wait group to wait on all go routines to exit
+	statemgr         *statemgr.Statemgr              // reference to state manager
+	netWatcher       chan kvstore.WatchEvent         // network object watcher
+	vmmEpWatcher     chan kvstore.WatchEvent         // vmm endpoint watcher
+	sgWatcher        chan kvstore.WatchEvent         // sg object watcher
+	sgPolicyWatcher  chan kvstore.WatchEvent         // sg object watcher
+	tenantWatcher    chan kvstore.WatchEvent         // tenant object watcher
+	hostWatcher      kvstore.Watcher                 // host watcher
+	snicWatcher      kvstore.Watcher                 // smart nic watcher
+	workloadWatcher  kvstore.Watcher                 // workload watcher
+	appWatcher       kvstore.Watcher                 // app object watcher
+	fwprofileWatcher kvstore.Watcher                 // firewall profile watcher
+	workloadHandler  statemgr.WorkloadHandler        // workload event handler
+	hostHandler      statemgr.HostHandler            // host event handler
+	snicHandler      statemgr.SmartNICHandler        // smart nic event handler
+	appHandler       statemgr.AppHandler             // app event handler
+	fwprofileHandler statemgr.FirewallProfileHandler // firewall profile event handler
+	watchCtx         context.Context                 // ctx for watchers
+	watchCancel      context.CancelFunc              // cancel for watchers
+	stopFlag         syncFlag                        // boolean flag to exit the API watchers
+	debugStats       *debug.Stats                    // debug Stats
 }
 
 // handleNetworkEvent handles network event
@@ -263,6 +267,64 @@ func (w *Watcher) handleSnicEvent(evt *kvstore.WatchEvent) {
 		}
 	default:
 		log.Fatalf("API watcher Found object of invalid type: %v on smart nic watch channel", tp)
+		return
+	}
+}
+
+// handleAppEvent handles app events from watcher
+func (w *Watcher) handleAppEvent(evt *kvstore.WatchEvent) {
+	switch tp := evt.Object.(type) {
+	case *security.App:
+		app := evt.Object.(*security.App)
+
+		// handle based on event type
+		switch evt.Type {
+		case kvstore.Updated:
+			fallthrough
+		case kvstore.Created:
+			// Call the event reactor
+			err := w.appHandler.CreateApp(*app)
+			if err != nil {
+				log.Errorf("Error creating app %+v. Err: %v", app, err)
+			}
+		case kvstore.Deleted:
+			// Call the event reactor
+			err := w.appHandler.DeleteApp(*app)
+			if err != nil {
+				log.Errorf("Error deleting app %+v. Err: %v", app, err)
+			}
+		}
+	default:
+		log.Fatalf("API watcher Found object of invalid type: %v on app watch channel", tp)
+		return
+	}
+}
+
+// handleFwprofileEvent handles workload events from watcher
+func (w *Watcher) handleFwprofileEvent(evt *kvstore.WatchEvent) {
+	switch tp := evt.Object.(type) {
+	case *security.FirewallProfile:
+		fwp := evt.Object.(*security.FirewallProfile)
+
+		// handle based on event type
+		switch evt.Type {
+		case kvstore.Updated:
+			fallthrough
+		case kvstore.Created:
+			// Call the event reactor
+			err := w.fwprofileHandler.CreateFirewallProfile(*fwp)
+			if err != nil {
+				log.Errorf("Error creating firewall profile %+v. Err: %v", fwp, err)
+			}
+		case kvstore.Deleted:
+			// Call the event reactor
+			err := w.fwprofileHandler.DeleteFirewallProfile(*fwp)
+			if err != nil {
+				log.Errorf("Error deleting firewall profile %+v. Err: %v", fwp, err)
+			}
+		}
+	default:
+		log.Fatalf("API watcher Found object of invalid type: %v on workload watch channel", tp)
 		return
 	}
 }
@@ -496,19 +558,22 @@ func NewWatcher(sm *statemgr.Statemgr, apisrvURL, vmmURL string, resolver resolv
 
 	// create a watcher
 	watcher := &Watcher{
-		statemgr:        sm,
-		netWatcher:      make(chan kvstore.WatchEvent, watcherQueueLen),
-		vmmEpWatcher:    make(chan kvstore.WatchEvent, watcherQueueLen),
-		sgWatcher:       make(chan kvstore.WatchEvent, watcherQueueLen),
-		sgPolicyWatcher: make(chan kvstore.WatchEvent, watcherQueueLen),
-		tenantWatcher:   make(chan kvstore.WatchEvent, watcherQueueLen),
-		workloadHandler: sm.WorkloadReactor(),
-		hostHandler:     sm.HostReactor(),
-		snicHandler:     sm.SmartNICReactor(),
-		watchCtx:        watchCtx,
-		watchCancel:     watchCancel,
-		debugStats:      debugStats,
-		stopFlag:        syncFlag{flag: false},
+		statemgr:         sm,
+		netWatcher:       make(chan kvstore.WatchEvent, watcherQueueLen),
+		vmmEpWatcher:     make(chan kvstore.WatchEvent, watcherQueueLen),
+		sgWatcher:        make(chan kvstore.WatchEvent, watcherQueueLen),
+		sgPolicyWatcher:  make(chan kvstore.WatchEvent, watcherQueueLen),
+		tenantWatcher:    make(chan kvstore.WatchEvent, watcherQueueLen),
+		workloadHandler:  sm.WorkloadReactor(),
+		hostHandler:      sm.HostReactor(),
+		snicHandler:      sm.SmartNICReactor(),
+		fwprofileHandler: sm.FirewallProfileReactor(),
+		appHandler:       sm.AppReactor(),
+
+		watchCtx:    watchCtx,
+		watchCancel: watchCancel,
+		debugStats:  debugStats,
+		stopFlag:    syncFlag{flag: false},
 	}
 
 	// start a go routine to handle messages coming on watcher channel
@@ -705,7 +770,7 @@ func (w *Watcher) DeleteSecurityGroup(tenant, sgname string) error {
 }
 
 // CreateSgpolicy injects a create sg policy event on the watcher
-func (w *Watcher) CreateSgpolicy(tenant, namespace, pname string, attachTenant bool, attachGroups []string, rules []*security.SGRule) error {
+func (w *Watcher) CreateSgpolicy(tenant, namespace, pname string, attachTenant bool, attachGroups []string, rules []security.SGRule) error {
 	// build sg object
 	sgp := security.SGPolicy{
 		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},

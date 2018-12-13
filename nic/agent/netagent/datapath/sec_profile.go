@@ -9,7 +9,7 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/datapath/constants"
 
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
+	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -50,7 +50,7 @@ func (hd *Datapath) CreateSecurityProfile(profile *netproto.SecurityProfile, vrf
 	var sessionIdleTimeout, tcpTimeout, tcpDropTimeout, tcpConnectionSetupTimeout, tcpHalfCloseTimeout, tcpCloseTimeout, dropTimeout, udpTimeout, udpDropTimeout, icmpTimeout, icmpDropTimeout uint32
 	timeouts := profile.Spec.Timeouts
 
-	if len(timeouts.SessionIdle) > 0 {
+	if (timeouts != nil) && (len(timeouts.SessionIdle)) > 0 {
 		dur, err := time.ParseDuration(timeouts.SessionIdle)
 		if err != nil {
 			return fmt.Errorf("invalid time duration %s", timeouts.SessionIdle)
@@ -60,7 +60,7 @@ func (hd *Datapath) CreateSecurityProfile(profile *netproto.SecurityProfile, vrf
 		sessionIdleTimeout = constants.DefaultTimeout
 	}
 
-	if len(timeouts.TCP) > 0 {
+	if (timeouts != nil) && len(timeouts.TCP) > 0 {
 		dur, err := time.ParseDuration(timeouts.TCP)
 		if err != nil {
 			return fmt.Errorf("invalid time duration %s", timeouts.TCP)
@@ -70,7 +70,7 @@ func (hd *Datapath) CreateSecurityProfile(profile *netproto.SecurityProfile, vrf
 		tcpTimeout = constants.DefaultTimeout
 	}
 
-	if len(timeouts.TCPDrop) > 0 {
+	if (timeouts != nil) && len(timeouts.TCPDrop) > 0 {
 		dur, err := time.ParseDuration(timeouts.TCPDrop)
 		if err != nil {
 			return fmt.Errorf("invalid time duration %s", timeouts.TCPDrop)
@@ -80,7 +80,7 @@ func (hd *Datapath) CreateSecurityProfile(profile *netproto.SecurityProfile, vrf
 		tcpDropTimeout = constants.DefaultTimeout
 	}
 
-	if len(timeouts.TCPConnectionSetup) > 0 {
+	if (timeouts != nil) && len(timeouts.TCPConnectionSetup) > 0 {
 		dur, err := time.ParseDuration(timeouts.TCPConnectionSetup)
 		if err != nil {
 			return fmt.Errorf("invalid time duration %s", timeouts.TCPConnectionSetup)
@@ -90,7 +90,7 @@ func (hd *Datapath) CreateSecurityProfile(profile *netproto.SecurityProfile, vrf
 		tcpConnectionSetupTimeout = constants.DefaultConnectionSetUpTimeout
 	}
 
-	if len(timeouts.TCPHalfClose) > 0 {
+	if (timeouts != nil) && len(timeouts.TCPHalfClose) > 0 {
 		dur, err := time.ParseDuration(timeouts.TCPHalfClose)
 		if err != nil {
 			return fmt.Errorf("invalid time duration %s", timeouts.TCPHalfClose)
@@ -100,7 +100,7 @@ func (hd *Datapath) CreateSecurityProfile(profile *netproto.SecurityProfile, vrf
 		tcpHalfCloseTimeout = constants.DefaultTimeout
 	}
 
-	if len(timeouts.TCPClose) > 0 {
+	if (timeouts != nil) && len(timeouts.TCPClose) > 0 {
 		dur, err := time.ParseDuration(timeouts.TCPClose)
 		if err != nil {
 			return fmt.Errorf("invalid time duration %s", timeouts.TCPClose)
@@ -110,7 +110,7 @@ func (hd *Datapath) CreateSecurityProfile(profile *netproto.SecurityProfile, vrf
 		tcpCloseTimeout = constants.DefaultTimeout
 	}
 
-	if len(timeouts.Drop) > 0 {
+	if (timeouts != nil) && len(timeouts.Drop) > 0 {
 		dur, err := time.ParseDuration(timeouts.Drop)
 		if err != nil {
 			return fmt.Errorf("invalid time duration %s", timeouts.Drop)
@@ -120,7 +120,7 @@ func (hd *Datapath) CreateSecurityProfile(profile *netproto.SecurityProfile, vrf
 		dropTimeout = constants.DefaultTimeout
 	}
 
-	if len(timeouts.UDP) > 0 {
+	if (timeouts != nil) && len(timeouts.UDP) > 0 {
 		dur, err := time.ParseDuration(timeouts.UDP)
 		if err != nil {
 			return fmt.Errorf("invalid time duration %s", timeouts.UDP)
@@ -130,7 +130,7 @@ func (hd *Datapath) CreateSecurityProfile(profile *netproto.SecurityProfile, vrf
 		udpTimeout = constants.DefaultTimeout
 	}
 
-	if len(timeouts.UDPDrop) > 0 {
+	if (timeouts != nil) && len(timeouts.UDPDrop) > 0 {
 		dur, err := time.ParseDuration(timeouts.UDPDrop)
 		if err != nil {
 			return fmt.Errorf("invalid time duration %s", timeouts.UDP)
@@ -140,7 +140,7 @@ func (hd *Datapath) CreateSecurityProfile(profile *netproto.SecurityProfile, vrf
 		udpDropTimeout = constants.DefaultTimeout
 	}
 
-	if len(timeouts.ICMP) > 0 {
+	if (timeouts != nil) && len(timeouts.ICMP) > 0 {
 		dur, err := time.ParseDuration(timeouts.ICMP)
 		if err != nil {
 			return fmt.Errorf("invalid time duration %s", timeouts.ICMP)
@@ -150,7 +150,7 @@ func (hd *Datapath) CreateSecurityProfile(profile *netproto.SecurityProfile, vrf
 		icmpTimeout = constants.DefaultTimeout
 	}
 
-	if len(timeouts.ICMPDrop) > 0 {
+	if (timeouts != nil) && len(timeouts.ICMPDrop) > 0 {
 		dur, err := time.ParseDuration(timeouts.ICMPDrop)
 		if err != nil {
 			return fmt.Errorf("invalid time duration %s", timeouts.ICMP)

@@ -98,7 +98,6 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 
 	// wait for all goroutines to complete
 	for i := 0; i < it.numAgents; i++ {
-
 		AssertOk(c, <-waitCh, "Endpoint info incorrect in datapath")
 	}
 

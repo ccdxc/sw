@@ -994,20 +994,22 @@ func TestNaplesFileUpload(t *testing.T) {
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 
 	f1 := func() (bool, interface{}) {
-		os.MkdirAll("/upload/", os.ModePerm)
+		path, err := ioutil.TempDir("", "nmd-upload-")
+		AssertOk(t, err, "Error creating tmp dir")
+		defer os.RemoveAll(path)
 
 		d1 := []byte("hello\ngo\n")
-		err := ioutil.WriteFile("/upload/dat1", d1, 0644)
+		err = ioutil.WriteFile(path+"/dat1", d1, 0644)
+		AssertOk(t, err, "Error writing upload file")
 
 		values := map[string]io.Reader{
-			"uploadFile": mustOpen("/upload/dat1"),
-			"uploadPath": strings.NewReader("/upload/"),
+			"uploadFile": mustOpen(path + "/dat1"),
+			"uploadPath": strings.NewReader(path),
 		}
 		var b bytes.Buffer
 		w := multipart.NewWriter(&b)
 		for key, r := range values {
 			var fw io.Writer
-			var err error
 			if x, ok := r.(io.Closer); ok {
 				defer x.Close()
 			}
@@ -1070,19 +1072,21 @@ func TestNaplesFileUploadNoUploadFile(t *testing.T) {
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 
 	f1 := func() (bool, interface{}) {
-		os.MkdirAll("/upload/", os.ModePerm)
+		path, err := ioutil.TempDir("", "nmd-upload-")
+		AssertOk(t, err, "Error creating tmp dir")
+		defer os.RemoveAll(path)
 
 		d1 := []byte("hello\ngo\n")
-		err := ioutil.WriteFile("/upload/dat1", d1, 0644)
+		err = ioutil.WriteFile(path+"/dat1", d1, 0644)
+		AssertOk(t, err, "Error writing upload file")
 
 		values := map[string]io.Reader{
-			"uploadPath": strings.NewReader("/upload/"),
+			"uploadPath": strings.NewReader(path),
 		}
 		var b bytes.Buffer
 		w := multipart.NewWriter(&b)
 		for key, r := range values {
 			var fw io.Writer
-			var err error
 			if x, ok := r.(io.Closer); ok {
 				defer x.Close()
 			}
@@ -1145,19 +1149,21 @@ func TestNaplesFileUploadNoUploadPath(t *testing.T) {
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 
 	f1 := func() (bool, interface{}) {
-		os.MkdirAll("/upload/", os.ModePerm)
+		path, err := ioutil.TempDir("", "nmd-upload-")
+		AssertOk(t, err, "Error creating tmp dir")
+		defer os.RemoveAll(path)
 
 		d1 := []byte("hello\ngo\n")
-		err := ioutil.WriteFile("/upload/dat1", d1, 0644)
+		err = ioutil.WriteFile(path+"/dat1", d1, 0644)
+		AssertOk(t, err, "Error writing upload file")
 
 		values := map[string]io.Reader{
-			"uploadFile": mustOpen("/upload/dat1"),
+			"uploadFile": mustOpen(path + "/dat1"),
 		}
 		var b bytes.Buffer
 		w := multipart.NewWriter(&b)
 		for key, r := range values {
 			var fw io.Writer
-			var err error
 			if x, ok := r.(io.Closer); ok {
 				defer x.Close()
 			}

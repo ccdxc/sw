@@ -9,8 +9,8 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
-	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -172,7 +172,7 @@ func (na *Nagent) DeleteSecurityProfile(tn, namespace, name string) error {
 	err = na.Datapath.DeleteSecurityProfile(existingSecurityProfile, ns)
 	if err != nil {
 		log.Errorf("Error deleting security profile {%+v}. Err: %v", sgp, err)
-		return err
+		// continue cleaning up
 	}
 
 	err = na.Solver.Remove(ns, existingSecurityProfile)

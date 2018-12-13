@@ -11,13 +11,11 @@ The following Messages are defined.
   App
   AppSpec
   AppStatus
-  DNS
-  FTP
-  MSRPC
-  RSTP
-  SIP
-  SunRPC
-  TFTP
+  DnsAlg
+  FtpAlg
+  IcmpAlg
+  MsrpcAlg
+  SunrpcAlg
 
 The following Services and Methods are defined.
 

@@ -24,6 +24,7 @@ import { RolloutRollout } from './rollout';
 import { SecuritySecurityGroup } from './security';
 import { SecuritySGPolicy } from './security';
 import { SecurityApp } from './security';
+import { SecurityFirewallProfile } from './security';
 import { SecurityCertificate } from './security';
 import { SecurityTrafficEncryptionPolicy } from './security';
 import { WorkloadEndpoint } from './workload';
@@ -67,6 +68,7 @@ export const CategoryMapping  = {
     "SecurityGroup" : new SecuritySecurityGroup(),
     "SGPolicy" : new SecuritySGPolicy(),
     "App" : new SecurityApp(),
+    "FirewallProfile" : new SecurityFirewallProfile(),
     "Certificate" : new SecurityCertificate(),
     "TrafficEncryptionPolicy" : new SecurityTrafficEncryptionPolicy(),
   },

@@ -12,12 +12,14 @@ import (
 
 // Statemgr is the object state manager
 type Statemgr struct {
-	memDB                *memdb.Memdb         // database of all objects
-	writer               writer.Writer        // writer to apiserver
-	workloadReactor      *WorkloadReactor     // workload event reactor
-	hostReactor          *HostReactor         // host event reactor
-	smartNicReactor      *SmartNICReactor     // smart nic event reactor
-	periodicUpdaterQueue chan writer.Writable // queue for periodically writing items back to GUI
+	memDB                *memdb.Memdb            // database of all objects
+	writer               writer.Writer           // writer to apiserver
+	workloadReactor      *WorkloadReactor        // workload event reactor
+	hostReactor          *HostReactor            // host event reactor
+	smartNicReactor      *SmartNICReactor        // smart nic event reactor
+	fwProfileReactor     *FirewallProfileReactor // firewall profile reactor
+	appReactor           *AppReactor             // app reactor
+	periodicUpdaterQueue chan writer.Writable    // queue for periodically writing items back to GUI
 }
 
 // ErrIsObjectNotFound returns true if the error is object not found
@@ -69,6 +71,16 @@ func (sm *Statemgr) SmartNICReactor() SmartNICHandler {
 	return sm.smartNicReactor
 }
 
+// FirewallProfileReactor returns the firewall profile event reactor
+func (sm *Statemgr) FirewallProfileReactor() FirewallProfileHandler {
+	return sm.fwProfileReactor
+}
+
+// AppReactor returns the app event reactor
+func (sm *Statemgr) AppReactor() AppHandler {
+	return sm.appReactor
+}
+
 func (sm *Statemgr) smartNICCreated(nic *SmartNICState) {
 	// Update SGPolicies
 	policies, _ := sm.ListSgpolicies()
@@ -105,6 +117,8 @@ func NewStatemgr(wr writer.Writer) (*Statemgr, error) {
 	statemgr.workloadReactor, _ = NewWorkloadReactor(statemgr)
 	statemgr.hostReactor, _ = NewHostReactor(statemgr)
 	statemgr.smartNicReactor, _ = NewSmartNICReactor(statemgr)
+	statemgr.fwProfileReactor, _ = NewFirewallProfileReactor(statemgr)
+	statemgr.appReactor, _ = NewAppReactor(statemgr)
 
 	// newPeriodicUpdater creates a new go subroutines
 	// Given that objects returned by `NewStatemgr` should live for the duration

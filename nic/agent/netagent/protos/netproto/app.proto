@@ -23,7 +23,7 @@ service AppApi {
 
     rpc GetApp (api.ObjectMeta) returns (App) {};
     rpc ListApps (api.ObjectMeta) returns (AppList) {};
-    rpc WatchApps (api.ObjectMeta) returns (stream AppEventList) {};
+    rpc WatchApps (api.ObjectMeta) returns (stream AppEvent) {};
 }
 
 // app object
@@ -39,9 +39,10 @@ message AppSpec {
     // List of proto/port
     repeated string Protocol    = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "protocol,omitempty"];
     // ALG configuration if specified
-    ALG             ALG         = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "alg,omitempty"];
+    string          ALGType     = 2 [(gogoproto.jsontag) = "alg-type,omitempty"];
+    ALG             ALG         = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "alg,omitempty"];
     // AppTimeout is the app specific idle timeout. Specfied in pareable time, Eg: 10s, 1m30s or 1h45m15s and so on
-    string          AppTimeout  = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "app-timeout,omitempty"];
+    string          AppTimeout  = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "app-timeout,omitempty"];
 }
 
 message ALG {
@@ -125,8 +126,10 @@ message RTSP {
 
 // ICMP ALG configuration
 message ICMP {
+    // ICMP Type
+    uint32 Type = 1 [(gogoproto.jsontag) = "type,omitempty"];
     // ICMP Code is sub-command for a given ICMP Type
-    uint32 Code = 1 [(gogoproto.jsontag) = "code,omitempty"];
+    uint32 Code =2 [(gogoproto.jsontag) = "code,omitempty"];
 }
 
 // app status
@@ -143,8 +146,4 @@ message AppList {
 message AppEvent {
     api.EventType   EventType   = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
     App             App         = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "app,omitempty"];
-}
-
-message AppEventList {
-    repeated AppEvent appEvents = 1;
 }

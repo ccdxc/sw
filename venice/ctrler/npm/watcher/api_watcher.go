@@ -65,12 +65,12 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 	defer epWatcher.Stop()
 
 	// workload object watcher
-	w.wrWatcher, err = apicl.WorkloadV1().Workload().Watch(ctx, &opts)
+	w.workloadWatcher, err = apicl.WorkloadV1().Workload().Watch(ctx, &opts)
 	if err != nil {
 		log.Errorf("Failed to start watch (%s)\n", err)
 		return
 	}
-	defer w.wrWatcher.Stop()
+	defer w.workloadWatcher.Stop()
 
 	// host object watcher
 	w.hostWatcher, err = apicl.ClusterV1().Host().Watch(ctx, &opts)
@@ -87,6 +87,22 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 		return
 	}
 	defer w.snicWatcher.Stop()
+
+	// app object watcher
+	w.appWatcher, err = apicl.SecurityV1().App().Watch(ctx, &opts)
+	if err != nil {
+		log.Errorf("Failed to start watch (%s)\n", err)
+		return
+	}
+	defer w.appWatcher.Stop()
+
+	// firewall profile object watcher
+	w.fwprofileWatcher, err = apicl.SecurityV1().FirewallProfile().Watch(ctx, &opts)
+	if err != nil {
+		log.Errorf("Failed to start watch (%s)\n", err)
+		return
+	}
+	defer w.fwprofileWatcher.Stop()
 
 	// get all current tenants
 	tnList, err := apicl.ClusterV1().Tenant().List(ctx, &opts)
@@ -213,6 +229,36 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 		}
 	}
 
+	// get all current app objects
+	appList, err := apicl.SecurityV1().App().List(ctx, &opts)
+	if err != nil {
+		log.Errorf("Failed to list workloads (%s)\n", err)
+		return
+	}
+
+	// trigger create event for all apps
+	for _, ap := range appList {
+		err = w.appHandler.CreateApp(*ap)
+		if err != nil {
+			log.Errorf("Error creating app %+v. Err: %v", ap, err)
+		}
+	}
+
+	// get all current firewall profile objects
+	fwpList, err := apicl.SecurityV1().FirewallProfile().List(ctx, &opts)
+	if err != nil {
+		log.Errorf("Failed to list fw profiles (%s)\n", err)
+		return
+	}
+
+	// trigger create event for all fw profiles
+	for _, fwp := range fwpList {
+		err = w.fwprofileHandler.CreateFirewallProfile(*fwp)
+		if err != nil {
+			log.Errorf("Error creating fw profile %+v. Err: %v", fwp, err)
+		}
+	}
+
 	// wait for events
 	for {
 		select {
@@ -273,7 +319,7 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 			} else {
 				log.Errorf("could not add {%v}", evt)
 			}
-		case evt, ok := <-w.wrWatcher.EventChan():
+		case evt, ok := <-w.workloadWatcher.EventChan():
 			if !ok {
 				log.Error("Error receiving from apisrv watcher")
 				return
@@ -300,6 +346,26 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 			}
 			if !w.stopped() {
 				w.handleSnicEvent(evt)
+			} else {
+				log.Errorf("could not add {%v}", evt)
+			}
+		case evt, ok := <-w.appWatcher.EventChan():
+			if !ok {
+				log.Error("Error receiving from apisrv watcher")
+				return
+			}
+			if !w.stopped() {
+				w.handleAppEvent(evt)
+			} else {
+				log.Errorf("could not add {%v}", evt)
+			}
+		case evt, ok := <-w.fwprofileWatcher.EventChan():
+			if !ok {
+				log.Error("Error receiving from apisrv watcher")
+				return
+			}
+			if !w.stopped() {
+				w.handleFwprofileEvent(evt)
 			} else {
 				log.Errorf("could not add {%v}", evt)
 			}

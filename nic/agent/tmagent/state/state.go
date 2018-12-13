@@ -13,7 +13,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
 	ipcproto "github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
+	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/venice/ctrler/tpm/rpcserver/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/emstore"

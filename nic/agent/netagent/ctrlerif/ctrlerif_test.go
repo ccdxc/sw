@@ -3,12 +3,13 @@
 package ctrlerif
 
 import (
+	"sync"
 	"testing"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
+	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
-	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -35,23 +36,37 @@ type fakeAgent struct {
 	sgpAdded   map[string]*netproto.SGPolicy
 	sgpUpdated map[string]*netproto.SGPolicy
 	sgpDeleted map[string]bool
+
+	secpAdded   map[string]*netproto.SecurityProfile
+	secpUpdated map[string]*netproto.SecurityProfile
+	secpDeleted map[string]bool
+
+	appAdded   map[string]*netproto.App
+	appUpdated map[string]*netproto.App
+	appDeleted map[string]bool
 }
 
 func createFakeAgent(name string) *fakeAgent {
 	return &fakeAgent{
-		name:       name,
-		netAdded:   make(map[string]*netproto.Network),
-		netUpdated: make(map[string]*netproto.Network),
-		netDeleted: make(map[string]bool),
-		epAdded:    make(map[string]*netproto.Endpoint),
-		epUpdated:  make(map[string]*netproto.Endpoint),
-		epDeleted:  make(map[string]bool),
-		sgAdded:    make(map[string]*netproto.SecurityGroup),
-		sgUpdated:  make(map[string]*netproto.SecurityGroup),
-		sgDeleted:  make(map[string]bool),
-		sgpAdded:   make(map[string]*netproto.SGPolicy),
-		sgpUpdated: make(map[string]*netproto.SGPolicy),
-		sgpDeleted: make(map[string]bool),
+		name:        name,
+		netAdded:    make(map[string]*netproto.Network),
+		netUpdated:  make(map[string]*netproto.Network),
+		netDeleted:  make(map[string]bool),
+		epAdded:     make(map[string]*netproto.Endpoint),
+		epUpdated:   make(map[string]*netproto.Endpoint),
+		epDeleted:   make(map[string]bool),
+		sgAdded:     make(map[string]*netproto.SecurityGroup),
+		sgUpdated:   make(map[string]*netproto.SecurityGroup),
+		sgDeleted:   make(map[string]bool),
+		sgpAdded:    make(map[string]*netproto.SGPolicy),
+		sgpUpdated:  make(map[string]*netproto.SGPolicy),
+		sgpDeleted:  make(map[string]bool),
+		secpAdded:   make(map[string]*netproto.SecurityProfile),
+		secpUpdated: make(map[string]*netproto.SecurityProfile),
+		secpDeleted: make(map[string]bool),
+		appAdded:    make(map[string]*netproto.App),
+		appUpdated:  make(map[string]*netproto.App),
+		appDeleted:  make(map[string]bool),
 	}
 }
 func (ag *fakeAgent) RegisterCtrlerIf(ctrlerif types.CtrlerAPI) error {
@@ -531,6 +546,7 @@ func (ag *fakeAgent) DeletePort(tn, ns, name string) error {
 
 // CreateSecurityProfile creates a security profile. Stubbed out to satisfy interface
 func (ag *fakeAgent) CreateSecurityProfile(profile *netproto.SecurityProfile) error {
+	ag.secpAdded[objectKey(profile.ObjectMeta)] = profile
 	return nil
 }
 
@@ -546,16 +562,25 @@ func (ag *fakeAgent) ListSecurityProfile() []*netproto.SecurityProfile {
 
 // UpdateSecurityProfile updates a security profile. Stubbed out to satisfy interface
 func (ag *fakeAgent) UpdateSecurityProfile(profile *netproto.SecurityProfile) error {
+	ag.secpUpdated[objectKey(profile.ObjectMeta)] = profile
+
 	return nil
 }
 
 // DeleteSecurityProfile deletes a security profile. Stubbed out to satisfy interface
 func (ag *fakeAgent) DeleteSecurityProfile(tn, ns, name string) error {
+	meta := api.ObjectMeta{
+		Tenant:    tn,
+		Namespace: ns,
+		Name:      name,
+	}
+	ag.secpDeleted[objectKey(meta)] = true
 	return nil
 }
 
 // CreateApp creates an app. Stubbed out to satisfy interface
-func (ag *fakeAgent) CreateApp(profile *netproto.App) error {
+func (ag *fakeAgent) CreateApp(app *netproto.App) error {
+	ag.appAdded[objectKey(app.ObjectMeta)] = app
 	return nil
 }
 
@@ -570,22 +595,32 @@ func (ag *fakeAgent) ListApp() []*netproto.App {
 }
 
 // UpdateApp updates an app. Stubbed out to satisfy interface
-func (ag *fakeAgent) UpdateApp(profile *netproto.App) error {
+func (ag *fakeAgent) UpdateApp(app *netproto.App) error {
+	ag.appUpdated[objectKey(app.ObjectMeta)] = app
 	return nil
 }
 
 // DeleteApp deletes an app. Stubbed out to satisfy interface
 func (ag *fakeAgent) DeleteApp(tn, ns, name string) error {
+	meta := api.ObjectMeta{
+		Tenant:    tn,
+		Namespace: ns,
+		Name:      name,
+	}
+	ag.appDeleted[objectKey(meta)] = true
 	return nil
 }
 
 type fakeRPCServer struct {
+	sync.Mutex
 	grpcServer  *rpckit.RPCServer
 	netdp       map[string]*netproto.Network
 	epdb        map[string]*netproto.Endpoint
 	sgdb        map[string]*netproto.SecurityGroup
 	sgpdb       map[string]*netproto.SGPolicy
 	sgpUpdatedb map[string]*netproto.SGPolicy
+	secpdb      map[string]*netproto.SecurityProfile
+	appdb       map[string]*netproto.App
 }
 
 func createRPCServer(t *testing.T) *fakeRPCServer {
@@ -603,6 +638,8 @@ func createRPCServer(t *testing.T) *fakeRPCServer {
 		sgdb:        make(map[string]*netproto.SecurityGroup),
 		sgpdb:       make(map[string]*netproto.SGPolicy),
 		sgpUpdatedb: make(map[string]*netproto.SGPolicy),
+		secpdb:      make(map[string]*netproto.SecurityProfile),
+		appdb:       make(map[string]*netproto.App),
 	}
 
 	// register self as rpc handler
@@ -610,6 +647,8 @@ func createRPCServer(t *testing.T) *fakeRPCServer {
 	netproto.RegisterEndpointApiServer(grpcServer.GrpcServer, &srv)
 	netproto.RegisterSecurityApiServer(grpcServer.GrpcServer, &srv)
 	netproto.RegisterSGPolicyApiServer(grpcServer.GrpcServer, &srv)
+	netproto.RegisterSecurityProfileApiServer(grpcServer.GrpcServer, &srv)
+	netproto.RegisterAppApiServer(grpcServer.GrpcServer, &srv)
 	grpcServer.Start()
 
 	return &srv
@@ -767,6 +806,8 @@ func (srv *fakeRPCServer) ListSGPolicys(context.Context, *api.ObjectMeta) (*netp
 }
 
 func (srv *fakeRPCServer) UpdateSGPolicyStatus(ctx context.Context, sgp *netproto.SGPolicy) (*netproto.SGPolicy, error) {
+	srv.Lock()
+	defer srv.Unlock()
 	srv.sgpUpdatedb[objectKey(sgp.ObjectMeta)] = sgp
 	return sgp, nil
 }
@@ -778,6 +819,94 @@ func (srv *fakeRPCServer) WatchSGPolicys(sel *api.ObjectMeta, stream netproto.SG
 		watchEvt := netproto.SGPolicyEvent{
 			EventType: api.EventType_CreateEvent,
 			SGPolicy:  *sgp,
+		}
+
+		// send create event
+		err := stream.Send(&watchEvt)
+		if err != nil {
+			log.Errorf("Error sending stream. Err: %v", err)
+			return err
+		}
+
+		// send update event
+		watchEvt.EventType = api.EventType_UpdateEvent
+		err = stream.Send(&watchEvt)
+		if err != nil {
+			log.Errorf("Error sending stream. Err: %v", err)
+			return err
+		}
+
+		// send delete event
+		watchEvt.EventType = api.EventType_DeleteEvent
+		err = stream.Send(&watchEvt)
+		if err != nil {
+			log.Errorf("Error sending stream. Err: %v", err)
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (srv *fakeRPCServer) GetSecurityProfile(ctx context.Context, ometa *api.ObjectMeta) (*netproto.SecurityProfile, error) {
+	return nil, nil
+}
+
+func (srv *fakeRPCServer) ListSecurityProfiles(context.Context, *api.ObjectMeta) (*netproto.SecurityProfileList, error) {
+	return nil, nil
+}
+
+func (srv *fakeRPCServer) WatchSecurityProfiles(sel *api.ObjectMeta, stream netproto.SecurityProfileApi_WatchSecurityProfilesServer) error {
+	// walk local db and send stream resp
+	for _, sp := range srv.secpdb {
+		// watch event
+		watchEvt := netproto.SecurityProfileEvent{
+			EventType:       api.EventType_CreateEvent,
+			SecurityProfile: *sp,
+		}
+
+		// send create event
+		err := stream.Send(&watchEvt)
+		if err != nil {
+			log.Errorf("Error sending stream. Err: %v", err)
+			return err
+		}
+
+		// send update event
+		watchEvt.EventType = api.EventType_UpdateEvent
+		err = stream.Send(&watchEvt)
+		if err != nil {
+			log.Errorf("Error sending stream. Err: %v", err)
+			return err
+		}
+
+		// send delete event
+		watchEvt.EventType = api.EventType_DeleteEvent
+		err = stream.Send(&watchEvt)
+		if err != nil {
+			log.Errorf("Error sending stream. Err: %v", err)
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (srv *fakeRPCServer) GetApp(ctx context.Context, ometa *api.ObjectMeta) (*netproto.App, error) {
+	return nil, nil
+}
+
+func (srv *fakeRPCServer) ListApps(context.Context, *api.ObjectMeta) (*netproto.AppList, error) {
+	return nil, nil
+}
+
+func (srv *fakeRPCServer) WatchApps(sel *api.ObjectMeta, stream netproto.AppApi_WatchAppsServer) error {
+	// walk local db and send stream resp
+	for _, app := range srv.appdb {
+		// watch event
+		watchEvt := netproto.AppEvent{
+			EventType: api.EventType_CreateEvent,
+			App:       *app,
 		}
 
 		// send create event
@@ -1026,6 +1155,102 @@ func TestSecurityPolicyWatch(t *testing.T) {
 		sgs, ok := srv.sgpUpdatedb[objectKey(sgp.ObjectMeta)]
 		return (ok && sgs.Name == sgp.Name), nil
 	}, "Security group policy update not found in server")
+	AssertEventually(t, func() (bool, interface{}) {
+		ok := ag.sgpDeleted[objectKey(sgp.ObjectMeta)]
+		return ok, nil
+	}, "Security policy delete not found in agent")
+
+	// stop the server and client
+	cl.Stop()
+	srv.grpcServer.Stop()
+}
+
+func TestSecurityProfileWatch(t *testing.T) {
+	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
+	// create a fake rpc server
+	srv := createRPCServer(t)
+	Assert(t, (srv != nil), "Error creating rpc server", srv)
+
+	// create an sg
+	sp := netproto.SecurityProfile{
+		TypeMeta: api.TypeMeta{Kind: "SecurityProfile"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "default",
+			Name:   "testsecp",
+		},
+		Spec: netproto.SecurityProfileSpec{
+			EnableConnectionTracking: true,
+		},
+	}
+	srv.secpdb["testsecp"] = &sp
+
+	// create a fake agent
+	ag := createFakeAgent(t.Name())
+
+	// create npm client
+	cl, err := NewNpmClient(ag, srv.grpcServer.GetListenURL(), nil)
+	AssertOk(t, err, "Error creating npm client")
+	Assert(t, (cl != nil), "Error creating npm client")
+
+	// verify client got the security policy
+	AssertEventually(t, func() (bool, interface{}) {
+		sps, ok := ag.secpAdded[objectKey(sp.ObjectMeta)]
+		return (ok && sps.Name == sp.Name), nil
+	}, "Security profile add not found in agent")
+	AssertEventually(t, func() (bool, interface{}) {
+		sps, ok := ag.secpUpdated[objectKey(sp.ObjectMeta)]
+		return (ok && sps.Name == sp.Name), nil
+	}, "Security profile update not found in agent")
+	AssertEventually(t, func() (bool, interface{}) {
+		ok := ag.secpDeleted[objectKey(sp.ObjectMeta)]
+		return ok, nil
+	}, "Security profile delete not found in agent")
+
+	// stop the server and client
+	cl.Stop()
+	srv.grpcServer.Stop()
+}
+
+func TestAppWatch(t *testing.T) {
+	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
+	// create a fake rpc server
+	srv := createRPCServer(t)
+	Assert(t, (srv != nil), "Error creating rpc server", srv)
+
+	// create an sg
+	app := netproto.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "default",
+			Name:   "testapp",
+		},
+		Spec: netproto.AppSpec{
+			Protocol: []string{"tcp/1000"},
+		},
+	}
+	srv.appdb["testapp"] = &app
+
+	// create a fake agent
+	ag := createFakeAgent(t.Name())
+
+	// create npm client
+	cl, err := NewNpmClient(ag, srv.grpcServer.GetListenURL(), nil)
+	AssertOk(t, err, "Error creating npm client")
+	Assert(t, (cl != nil), "Error creating npm client")
+
+	// verify client got the security policy
+	AssertEventually(t, func() (bool, interface{}) {
+		apps, ok := ag.appAdded[objectKey(app.ObjectMeta)]
+		return (ok && apps.Name == app.Name), nil
+	}, "app add not found in agent")
+	AssertEventually(t, func() (bool, interface{}) {
+		apps, ok := ag.appUpdated[objectKey(app.ObjectMeta)]
+		return (ok && apps.Name == app.Name), nil
+	}, "app update not found in agent")
+	AssertEventually(t, func() (bool, interface{}) {
+		ok := ag.appDeleted[objectKey(app.ObjectMeta)]
+		return ok, nil
+	}, "app delete not found in agent")
 
 	// stop the server and client
 	cl.Stop()

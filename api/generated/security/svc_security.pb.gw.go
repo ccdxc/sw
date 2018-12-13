@@ -58,6 +58,56 @@ func request_SecurityV1_AutoAddApp_0(ctx context.Context, marshaler runtime.Mars
 		protoReq.Defaults(ver)
 	}
 
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	msg, err := client.AutoAddApp(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+func request_SecurityV1_AutoAddApp_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &App{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
 	msg, err := client.AutoAddApp(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
 
@@ -138,6 +188,85 @@ func request_SecurityV1_AutoAddCertificate_1(ctx context.Context, marshaler runt
 	}
 
 	msg, err := client.AutoAddCertificate(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+func request_SecurityV1_AutoAddFirewallProfile_0(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &FirewallProfile{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	msg, err := client.AutoAddFirewallProfile(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+func request_SecurityV1_AutoAddFirewallProfile_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &FirewallProfile{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	msg, err := client.AutoAddFirewallProfile(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
 
 }
@@ -380,10 +509,79 @@ func request_SecurityV1_AutoAddTrafficEncryptionPolicy_1(ctx context.Context, ma
 }
 
 var (
-	filter_SecurityV1_AutoDeleteApp_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+	filter_SecurityV1_AutoDeleteApp_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
 )
 
 func request_SecurityV1_AutoDeleteApp_0(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &App{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoDeleteApp_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoDeleteApp(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
+	filter_SecurityV1_AutoDeleteApp_1 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_SecurityV1_AutoDeleteApp_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &App{}
 	var smetadata runtime.ServerMetadata
 
@@ -428,7 +626,7 @@ func request_SecurityV1_AutoDeleteApp_0(ctx context.Context, marshaler runtime.M
 
 	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
-	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoDeleteApp_0); err != nil {
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoDeleteApp_1); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -560,6 +758,133 @@ func request_SecurityV1_AutoDeleteCertificate_1(ctx context.Context, marshaler r
 	}
 
 	msg, err := client.AutoDeleteCertificate(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
+	filter_SecurityV1_AutoDeleteFirewallProfile_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
+)
+
+func request_SecurityV1_AutoDeleteFirewallProfile_0(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &FirewallProfile{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoDeleteFirewallProfile_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoDeleteFirewallProfile(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
+	filter_SecurityV1_AutoDeleteFirewallProfile_1 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_SecurityV1_AutoDeleteFirewallProfile_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &FirewallProfile{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoDeleteFirewallProfile_1); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoDeleteFirewallProfile(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
 
 }
@@ -946,10 +1271,79 @@ func request_SecurityV1_AutoDeleteTrafficEncryptionPolicy_1(ctx context.Context,
 }
 
 var (
-	filter_SecurityV1_AutoGetApp_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+	filter_SecurityV1_AutoGetApp_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
 )
 
 func request_SecurityV1_AutoGetApp_0(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &App{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoGetApp_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoGetApp(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
+	filter_SecurityV1_AutoGetApp_1 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_SecurityV1_AutoGetApp_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &App{}
 	var smetadata runtime.ServerMetadata
 
@@ -994,7 +1388,7 @@ func request_SecurityV1_AutoGetApp_0(ctx context.Context, marshaler runtime.Mars
 
 	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
-	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoGetApp_0); err != nil {
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoGetApp_1); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -1126,6 +1520,133 @@ func request_SecurityV1_AutoGetCertificate_1(ctx context.Context, marshaler runt
 	}
 
 	msg, err := client.AutoGetCertificate(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
+	filter_SecurityV1_AutoGetFirewallProfile_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
+)
+
+func request_SecurityV1_AutoGetFirewallProfile_0(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &FirewallProfile{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoGetFirewallProfile_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoGetFirewallProfile(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
+	filter_SecurityV1_AutoGetFirewallProfile_1 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_SecurityV1_AutoGetFirewallProfile_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &FirewallProfile{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoGetFirewallProfile_1); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoGetFirewallProfile(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
 
 }
@@ -1512,7 +2033,7 @@ func request_SecurityV1_AutoGetTrafficEncryptionPolicy_1(ctx context.Context, ma
 }
 
 var (
-	filter_SecurityV1_AutoListApp_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+	filter_SecurityV1_AutoListApp_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
 )
 
 func request_SecurityV1_AutoListApp_0(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -1539,7 +2060,65 @@ func request_SecurityV1_AutoListApp_0(ctx context.Context, marshaler runtime.Mar
 		protoReq.Defaults(ver)
 	}
 
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoListApp_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoListApp(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
+	filter_SecurityV1_AutoListApp_1 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_SecurityV1_AutoListApp_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoListApp_1); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -1639,6 +2218,101 @@ func request_SecurityV1_AutoListCertificate_1(ctx context.Context, marshaler run
 	}
 
 	msg, err := client.AutoListCertificate(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
+	filter_SecurityV1_AutoListFirewallProfile_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_SecurityV1_AutoListFirewallProfile_0(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoListFirewallProfile_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoListFirewallProfile(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
+	filter_SecurityV1_AutoListFirewallProfile_1 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_SecurityV1_AutoListFirewallProfile_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoListFirewallProfile_1); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoListFirewallProfile(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
 
 }
@@ -1865,6 +2539,67 @@ func request_SecurityV1_AutoUpdateApp_0(ctx context.Context, marshaler runtime.M
 		kvMap map[string]string = make(map[string]string)
 	)
 
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	msg, err := client.AutoUpdateApp(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+func request_SecurityV1_AutoUpdateApp_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &App{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
 	val, ok = pathParams["O.Name"]
 	if !ok {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
@@ -1990,6 +2725,117 @@ func request_SecurityV1_AutoUpdateCertificate_1(ctx context.Context, marshaler r
 	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoUpdateCertificate(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+func request_SecurityV1_AutoUpdateFirewallProfile_0(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &FirewallProfile{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	msg, err := client.AutoUpdateFirewallProfile(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+func request_SecurityV1_AutoUpdateFirewallProfile_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &FirewallProfile{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	msg, err := client.AutoUpdateFirewallProfile(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
 
 }
@@ -2328,7 +3174,7 @@ func request_SecurityV1_AutoUpdateTrafficEncryptionPolicy_1(ctx context.Context,
 }
 
 var (
-	filter_SecurityV1_AutoWatchApp_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+	filter_SecurityV1_AutoWatchApp_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
 )
 
 func request_SecurityV1_AutoWatchApp_0(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (SecurityV1_AutoWatchAppClient, runtime.ServerMetadata, error) {
@@ -2355,7 +3201,73 @@ func request_SecurityV1_AutoWatchApp_0(ctx context.Context, marshaler runtime.Ma
 		protoReq.Defaults(ver)
 	}
 
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoWatchApp_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	stream, err := client.AutoWatchApp(ctx, protoReq)
+	if err != nil {
+		return nil, smetadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, smetadata, err
+	}
+	smetadata.HeaderMD = header
+	return stream, smetadata, nil
+
+}
+
+var (
+	filter_SecurityV1_AutoWatchApp_1 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_SecurityV1_AutoWatchApp_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (SecurityV1_AutoWatchAppClient, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoWatchApp_1); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -2471,6 +3383,117 @@ func request_SecurityV1_AutoWatchCertificate_1(ctx context.Context, marshaler ru
 	}
 
 	stream, err := client.AutoWatchCertificate(ctx, protoReq)
+	if err != nil {
+		return nil, smetadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, smetadata, err
+	}
+	smetadata.HeaderMD = header
+	return stream, smetadata, nil
+
+}
+
+var (
+	filter_SecurityV1_AutoWatchFirewallProfile_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_SecurityV1_AutoWatchFirewallProfile_0(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (SecurityV1_AutoWatchFirewallProfileClient, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoWatchFirewallProfile_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	stream, err := client.AutoWatchFirewallProfile(ctx, protoReq)
+	if err != nil {
+		return nil, smetadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, smetadata, err
+	}
+	smetadata.HeaderMD = header
+	return stream, smetadata, nil
+
+}
+
+var (
+	filter_SecurityV1_AutoWatchFirewallProfile_1 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_SecurityV1_AutoWatchFirewallProfile_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (SecurityV1_AutoWatchFirewallProfileClient, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoWatchFirewallProfile_1); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	stream, err := client.AutoWatchFirewallProfile(ctx, protoReq)
 	if err != nil {
 		return nil, smetadata, err
 	}
@@ -2880,6 +3903,34 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
+	mux.Handle("POST", pattern_SecurityV1_AutoAddApp_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoAddApp_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoAddApp_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("POST", pattern_SecurityV1_AutoAddCertificate_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -2933,6 +3984,62 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		}
 
 		forward_SecurityV1_AutoAddCertificate_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_SecurityV1_AutoAddFirewallProfile_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoAddFirewallProfile_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoAddFirewallProfile_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_SecurityV1_AutoAddFirewallProfile_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoAddFirewallProfile_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoAddFirewallProfile_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -3132,6 +4239,34 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
+	mux.Handle("DELETE", pattern_SecurityV1_AutoDeleteApp_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoDeleteApp_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoDeleteApp_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("DELETE", pattern_SecurityV1_AutoDeleteCertificate_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -3185,6 +4320,62 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		}
 
 		forward_SecurityV1_AutoDeleteCertificate_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("DELETE", pattern_SecurityV1_AutoDeleteFirewallProfile_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoDeleteFirewallProfile_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoDeleteFirewallProfile_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("DELETE", pattern_SecurityV1_AutoDeleteFirewallProfile_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoDeleteFirewallProfile_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoDeleteFirewallProfile_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -3384,6 +4575,34 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
+	mux.Handle("GET", pattern_SecurityV1_AutoGetApp_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoGetApp_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoGetApp_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_SecurityV1_AutoGetCertificate_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -3437,6 +4656,62 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		}
 
 		forward_SecurityV1_AutoGetCertificate_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_SecurityV1_AutoGetFirewallProfile_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoGetFirewallProfile_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoGetFirewallProfile_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_SecurityV1_AutoGetFirewallProfile_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoGetFirewallProfile_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoGetFirewallProfile_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -3636,6 +4911,34 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
+	mux.Handle("GET", pattern_SecurityV1_AutoListApp_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoListApp_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoListApp_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_SecurityV1_AutoListCertificate_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -3689,6 +4992,62 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		}
 
 		forward_SecurityV1_AutoListCertificate_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_SecurityV1_AutoListFirewallProfile_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoListFirewallProfile_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoListFirewallProfile_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_SecurityV1_AutoListFirewallProfile_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoListFirewallProfile_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoListFirewallProfile_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -3832,6 +5191,34 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
+	mux.Handle("PUT", pattern_SecurityV1_AutoUpdateApp_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoUpdateApp_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoUpdateApp_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("PUT", pattern_SecurityV1_AutoUpdateCertificate_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -3885,6 +5272,62 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		}
 
 		forward_SecurityV1_AutoUpdateCertificate_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("PUT", pattern_SecurityV1_AutoUpdateFirewallProfile_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoUpdateFirewallProfile_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoUpdateFirewallProfile_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("PUT", pattern_SecurityV1_AutoUpdateFirewallProfile_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoUpdateFirewallProfile_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoUpdateFirewallProfile_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -4101,6 +5544,51 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
+	mux.Handle("GET", pattern_SecurityV1_AutoWatchApp_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		ws := false
+		if websocket.IsWebSocketUpgrade(req) {
+			ws = true
+			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
+			apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPWriter, w)
+			apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwWebSocketWatch, true)
+		}
+		resp, md, err := request_SecurityV1_AutoWatchApp_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		if ws {
+			ic, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwWebSocketConn)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering we socket"))
+				return
+			}
+			conn := ic.(*websocket.Conn)
+			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+		} else {
+			forward_SecurityV1_AutoWatchApp_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+		}
+
+	})
+
 	mux.Handle("GET", pattern_SecurityV1_AutoWatchCertificate_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -4187,6 +5675,96 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 		} else {
 			forward_SecurityV1_AutoWatchCertificate_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+		}
+
+	})
+
+	mux.Handle("GET", pattern_SecurityV1_AutoWatchFirewallProfile_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		ws := false
+		if websocket.IsWebSocketUpgrade(req) {
+			ws = true
+			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
+			apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPWriter, w)
+			apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwWebSocketWatch, true)
+		}
+		resp, md, err := request_SecurityV1_AutoWatchFirewallProfile_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		if ws {
+			ic, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwWebSocketConn)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering we socket"))
+				return
+			}
+			conn := ic.(*websocket.Conn)
+			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+		} else {
+			forward_SecurityV1_AutoWatchFirewallProfile_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+		}
+
+	})
+
+	mux.Handle("GET", pattern_SecurityV1_AutoWatchFirewallProfile_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		ws := false
+		if websocket.IsWebSocketUpgrade(req) {
+			ws = true
+			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
+			apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPWriter, w)
+			apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwWebSocketWatch, true)
+		}
+		resp, md, err := request_SecurityV1_AutoWatchFirewallProfile_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		if ws {
+			ic, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwWebSocketConn)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering we socket"))
+				return
+			}
+			conn := ic.(*websocket.Conn)
+			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+		} else {
+			forward_SecurityV1_AutoWatchFirewallProfile_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 		}
 
 	})
@@ -4465,11 +6043,17 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 }
 
 var (
-	pattern_SecurityV1_AutoAddApp_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"apps"}, ""))
+	pattern_SecurityV1_AutoAddApp_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "apps"}, ""))
+
+	pattern_SecurityV1_AutoAddApp_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"apps"}, ""))
 
 	pattern_SecurityV1_AutoAddCertificate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "certificates"}, ""))
 
 	pattern_SecurityV1_AutoAddCertificate_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"certificates"}, ""))
+
+	pattern_SecurityV1_AutoAddFirewallProfile_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "firewallprofiles"}, ""))
+
+	pattern_SecurityV1_AutoAddFirewallProfile_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"firewallprofiles"}, ""))
 
 	pattern_SecurityV1_AutoAddSGPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "sgpolicies"}, ""))
 
@@ -4483,11 +6067,17 @@ var (
 
 	pattern_SecurityV1_AutoAddTrafficEncryptionPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"trafficEncryptionPolicy"}, ""))
 
-	pattern_SecurityV1_AutoDeleteApp_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"apps", "O.Name"}, ""))
+	pattern_SecurityV1_AutoDeleteApp_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "apps", "O.Name"}, ""))
+
+	pattern_SecurityV1_AutoDeleteApp_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"apps", "O.Name"}, ""))
 
 	pattern_SecurityV1_AutoDeleteCertificate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "certificates", "O.Name"}, ""))
 
 	pattern_SecurityV1_AutoDeleteCertificate_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"certificates", "O.Name"}, ""))
+
+	pattern_SecurityV1_AutoDeleteFirewallProfile_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "firewallprofiles", "O.Name"}, ""))
+
+	pattern_SecurityV1_AutoDeleteFirewallProfile_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"firewallprofiles", "O.Name"}, ""))
 
 	pattern_SecurityV1_AutoDeleteSGPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "sgpolicies", "O.Name"}, ""))
 
@@ -4501,11 +6091,17 @@ var (
 
 	pattern_SecurityV1_AutoDeleteTrafficEncryptionPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"trafficEncryptionPolicy", "O.Name"}, ""))
 
-	pattern_SecurityV1_AutoGetApp_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"apps", "O.Name"}, ""))
+	pattern_SecurityV1_AutoGetApp_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "apps", "O.Name"}, ""))
+
+	pattern_SecurityV1_AutoGetApp_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"apps", "O.Name"}, ""))
 
 	pattern_SecurityV1_AutoGetCertificate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "certificates", "O.Name"}, ""))
 
 	pattern_SecurityV1_AutoGetCertificate_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"certificates", "O.Name"}, ""))
+
+	pattern_SecurityV1_AutoGetFirewallProfile_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "firewallprofiles", "O.Name"}, ""))
+
+	pattern_SecurityV1_AutoGetFirewallProfile_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"firewallprofiles", "O.Name"}, ""))
 
 	pattern_SecurityV1_AutoGetSGPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "sgpolicies", "O.Name"}, ""))
 
@@ -4519,11 +6115,17 @@ var (
 
 	pattern_SecurityV1_AutoGetTrafficEncryptionPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"trafficEncryptionPolicy", "O.Name"}, ""))
 
-	pattern_SecurityV1_AutoListApp_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"apps"}, ""))
+	pattern_SecurityV1_AutoListApp_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "apps"}, ""))
+
+	pattern_SecurityV1_AutoListApp_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"apps"}, ""))
 
 	pattern_SecurityV1_AutoListCertificate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "certificates"}, ""))
 
 	pattern_SecurityV1_AutoListCertificate_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"certificates"}, ""))
+
+	pattern_SecurityV1_AutoListFirewallProfile_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "firewallprofiles"}, ""))
+
+	pattern_SecurityV1_AutoListFirewallProfile_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"firewallprofiles"}, ""))
 
 	pattern_SecurityV1_AutoListSGPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "sgpolicies"}, ""))
 
@@ -4533,11 +6135,17 @@ var (
 
 	pattern_SecurityV1_AutoListSecurityGroup_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"security-groups"}, ""))
 
-	pattern_SecurityV1_AutoUpdateApp_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"apps", "O.Name"}, ""))
+	pattern_SecurityV1_AutoUpdateApp_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "apps", "O.Name"}, ""))
+
+	pattern_SecurityV1_AutoUpdateApp_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"apps", "O.Name"}, ""))
 
 	pattern_SecurityV1_AutoUpdateCertificate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "certificates", "O.Name"}, ""))
 
 	pattern_SecurityV1_AutoUpdateCertificate_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"certificates", "O.Name"}, ""))
+
+	pattern_SecurityV1_AutoUpdateFirewallProfile_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "firewallprofiles", "O.Name"}, ""))
+
+	pattern_SecurityV1_AutoUpdateFirewallProfile_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"firewallprofiles", "O.Name"}, ""))
 
 	pattern_SecurityV1_AutoUpdateSGPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "sgpolicies", "O.Name"}, ""))
 
@@ -4551,11 +6159,17 @@ var (
 
 	pattern_SecurityV1_AutoUpdateTrafficEncryptionPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"trafficEncryptionPolicy", "O.Name"}, ""))
 
-	pattern_SecurityV1_AutoWatchApp_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"watch", "apps"}, ""))
+	pattern_SecurityV1_AutoWatchApp_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"watch", "tenant", "O.Tenant", "apps"}, ""))
+
+	pattern_SecurityV1_AutoWatchApp_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"watch", "apps"}, ""))
 
 	pattern_SecurityV1_AutoWatchCertificate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"watch", "tenant", "O.Tenant", "certificates"}, ""))
 
 	pattern_SecurityV1_AutoWatchCertificate_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"watch", "certificates"}, ""))
+
+	pattern_SecurityV1_AutoWatchFirewallProfile_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"watch", "tenant", "O.Tenant", "firewallprofiles"}, ""))
+
+	pattern_SecurityV1_AutoWatchFirewallProfile_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"watch", "firewallprofiles"}, ""))
 
 	pattern_SecurityV1_AutoWatchSGPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"watch", "tenant", "O.Tenant", "sgpolicies"}, ""))
 
@@ -4573,9 +6187,15 @@ var (
 var (
 	forward_SecurityV1_AutoAddApp_0 = runtime.ForwardResponseMessage
 
+	forward_SecurityV1_AutoAddApp_1 = runtime.ForwardResponseMessage
+
 	forward_SecurityV1_AutoAddCertificate_0 = runtime.ForwardResponseMessage
 
 	forward_SecurityV1_AutoAddCertificate_1 = runtime.ForwardResponseMessage
+
+	forward_SecurityV1_AutoAddFirewallProfile_0 = runtime.ForwardResponseMessage
+
+	forward_SecurityV1_AutoAddFirewallProfile_1 = runtime.ForwardResponseMessage
 
 	forward_SecurityV1_AutoAddSGPolicy_0 = runtime.ForwardResponseMessage
 
@@ -4591,9 +6211,15 @@ var (
 
 	forward_SecurityV1_AutoDeleteApp_0 = runtime.ForwardResponseMessage
 
+	forward_SecurityV1_AutoDeleteApp_1 = runtime.ForwardResponseMessage
+
 	forward_SecurityV1_AutoDeleteCertificate_0 = runtime.ForwardResponseMessage
 
 	forward_SecurityV1_AutoDeleteCertificate_1 = runtime.ForwardResponseMessage
+
+	forward_SecurityV1_AutoDeleteFirewallProfile_0 = runtime.ForwardResponseMessage
+
+	forward_SecurityV1_AutoDeleteFirewallProfile_1 = runtime.ForwardResponseMessage
 
 	forward_SecurityV1_AutoDeleteSGPolicy_0 = runtime.ForwardResponseMessage
 
@@ -4609,9 +6235,15 @@ var (
 
 	forward_SecurityV1_AutoGetApp_0 = runtime.ForwardResponseMessage
 
+	forward_SecurityV1_AutoGetApp_1 = runtime.ForwardResponseMessage
+
 	forward_SecurityV1_AutoGetCertificate_0 = runtime.ForwardResponseMessage
 
 	forward_SecurityV1_AutoGetCertificate_1 = runtime.ForwardResponseMessage
+
+	forward_SecurityV1_AutoGetFirewallProfile_0 = runtime.ForwardResponseMessage
+
+	forward_SecurityV1_AutoGetFirewallProfile_1 = runtime.ForwardResponseMessage
 
 	forward_SecurityV1_AutoGetSGPolicy_0 = runtime.ForwardResponseMessage
 
@@ -4627,9 +6259,15 @@ var (
 
 	forward_SecurityV1_AutoListApp_0 = runtime.ForwardResponseMessage
 
+	forward_SecurityV1_AutoListApp_1 = runtime.ForwardResponseMessage
+
 	forward_SecurityV1_AutoListCertificate_0 = runtime.ForwardResponseMessage
 
 	forward_SecurityV1_AutoListCertificate_1 = runtime.ForwardResponseMessage
+
+	forward_SecurityV1_AutoListFirewallProfile_0 = runtime.ForwardResponseMessage
+
+	forward_SecurityV1_AutoListFirewallProfile_1 = runtime.ForwardResponseMessage
 
 	forward_SecurityV1_AutoListSGPolicy_0 = runtime.ForwardResponseMessage
 
@@ -4641,9 +6279,15 @@ var (
 
 	forward_SecurityV1_AutoUpdateApp_0 = runtime.ForwardResponseMessage
 
+	forward_SecurityV1_AutoUpdateApp_1 = runtime.ForwardResponseMessage
+
 	forward_SecurityV1_AutoUpdateCertificate_0 = runtime.ForwardResponseMessage
 
 	forward_SecurityV1_AutoUpdateCertificate_1 = runtime.ForwardResponseMessage
+
+	forward_SecurityV1_AutoUpdateFirewallProfile_0 = runtime.ForwardResponseMessage
+
+	forward_SecurityV1_AutoUpdateFirewallProfile_1 = runtime.ForwardResponseMessage
 
 	forward_SecurityV1_AutoUpdateSGPolicy_0 = runtime.ForwardResponseMessage
 
@@ -4659,9 +6303,15 @@ var (
 
 	forward_SecurityV1_AutoWatchApp_0 = runtime.ForwardResponseStream
 
+	forward_SecurityV1_AutoWatchApp_1 = runtime.ForwardResponseStream
+
 	forward_SecurityV1_AutoWatchCertificate_0 = runtime.ForwardResponseStream
 
 	forward_SecurityV1_AutoWatchCertificate_1 = runtime.ForwardResponseStream
+
+	forward_SecurityV1_AutoWatchFirewallProfile_0 = runtime.ForwardResponseStream
+
+	forward_SecurityV1_AutoWatchFirewallProfile_1 = runtime.ForwardResponseStream
 
 	forward_SecurityV1_AutoWatchSGPolicy_0 = runtime.ForwardResponseStream
 

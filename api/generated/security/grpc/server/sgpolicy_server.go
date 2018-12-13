@@ -43,6 +43,7 @@ func (s *ssecuritySgpolicyBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 	l.Infof("registering message for ssecuritySgpolicyBackend")
 	s.Messages = map[string]apiserver.Message{
 
+		"security.ProtoPort": apisrvpkg.NewMessage("security.ProtoPort"),
 		"security.SGPolicy": apisrvpkg.NewMessage("security.SGPolicy").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := security.SGPolicy{}

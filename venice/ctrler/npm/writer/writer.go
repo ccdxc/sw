@@ -31,6 +31,7 @@ type Writer interface {
 	WriteTenant(tn *cluster.Tenant) error
 	WriteSecurityGroup(sg *security.SecurityGroup) error
 	WriteSGPolicy(sgp *security.SGPolicy) error
+	WriteApp(app *security.App) error
 	Close() error
 }
 
@@ -186,6 +187,27 @@ func (wr *APISrvWriter) WriteSGPolicy(sgp *security.SGPolicy) error {
 
 	// write it
 	_, err = apicl.SecurityV1().SGPolicy().Update(context.Background(), sgp)
+	return err
+}
+
+// WriteApp write app object to api server
+func (wr *APISrvWriter) WriteApp(app *security.App) error {
+	// if we have no URL, we are done
+	if wr.apisrvURL == "" {
+		return nil
+	}
+
+	// get the api client
+	apicl, err := wr.getAPIClient()
+	if err != nil {
+		return err
+	}
+
+	// FIXME: clear the resource version till we figure out CAS semantics
+	app.ObjectMeta.ResourceVersion = ""
+
+	// write it
+	_, err = apicl.SecurityV1().App().Update(context.Background(), app)
 	return err
 }
 

@@ -7,36 +7,37 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { SecurityFirewallProfile, ISecurityFirewallProfile } from './security-firewall-profile.model';
 
-export interface ISecuritySunRPC {
-    'program-id'?: string;
-    'map-entry-timeout'?: string;
+export interface ISecurityAutoMsgFirewallProfileWatchHelperWatchEvent {
+    'type'?: string;
+    'object'?: ISecurityFirewallProfile;
 }
 
 
-export class SecuritySunRPC extends BaseModel implements ISecuritySunRPC {
-    'program-id': string = null;
-    'map-entry-timeout': string = null;
+export class SecurityAutoMsgFirewallProfileWatchHelperWatchEvent extends BaseModel implements ISecurityAutoMsgFirewallProfileWatchHelperWatchEvent {
+    'type': string = null;
+    'object': SecurityFirewallProfile = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'program-id': {
+        'type': {
             type: 'string'
         },
-        'map-entry-timeout': {
-            type: 'string'
+        'object': {
+            type: 'object'
         },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return SecuritySunRPC.propInfo[propName];
+        return SecurityAutoMsgFirewallProfileWatchHelperWatchEvent.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (SecuritySunRPC.propInfo[prop] != null &&
-                        SecuritySunRPC.propInfo[prop].default != null &&
-                        SecuritySunRPC.propInfo[prop].default != '');
+        return (SecurityAutoMsgFirewallProfileWatchHelperWatchEvent.propInfo[prop] != null &&
+                        SecurityAutoMsgFirewallProfileWatchHelperWatchEvent.propInfo[prop].default != null &&
+                        SecurityAutoMsgFirewallProfileWatchHelperWatchEvent.propInfo[prop].default != '');
     }
 
     /**
@@ -45,6 +46,7 @@ export class SecuritySunRPC extends BaseModel implements ISecuritySunRPC {
     */
     constructor(values?: any) {
         super();
+        this['object'] = new SecurityFirewallProfile();
         this.setValues(values);
     }
 
@@ -53,15 +55,13 @@ export class SecuritySunRPC extends BaseModel implements ISecuritySunRPC {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values && values['program-id'] != null) {
-            this['program-id'] = values['program-id'];
-        } else if (fillDefaults && SecuritySunRPC.hasDefaultValue('program-id')) {
-            this['program-id'] = SecuritySunRPC.propInfo['program-id'].default;
+        if (values && values['type'] != null) {
+            this['type'] = values['type'];
+        } else if (fillDefaults && SecurityAutoMsgFirewallProfileWatchHelperWatchEvent.hasDefaultValue('type')) {
+            this['type'] = SecurityAutoMsgFirewallProfileWatchHelperWatchEvent.propInfo['type'].default;
         }
-        if (values && values['map-entry-timeout'] != null) {
-            this['map-entry-timeout'] = values['map-entry-timeout'];
-        } else if (fillDefaults && SecuritySunRPC.hasDefaultValue('map-entry-timeout')) {
-            this['map-entry-timeout'] = SecuritySunRPC.propInfo['map-entry-timeout'].default;
+        if (values) {
+            this['object'].setValues(values['object']);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -70,8 +70,8 @@ export class SecuritySunRPC extends BaseModel implements ISecuritySunRPC {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'program-id': new FormControl(this['program-id']),
-                'map-entry-timeout': new FormControl(this['map-entry-timeout']),
+                'type': new FormControl(this['type']),
+                'object': this['object'].$formGroup,
             });
         }
         return this._formGroup;
@@ -83,8 +83,8 @@ export class SecuritySunRPC extends BaseModel implements ISecuritySunRPC {
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this._formGroup.controls['program-id'].setValue(this['program-id']);
-            this._formGroup.controls['map-entry-timeout'].setValue(this['map-entry-timeout']);
+            this._formGroup.controls['type'].setValue(this['type']);
+            this['object'].setFormGroupValuesToBeModelValues();
         }
     }
 }

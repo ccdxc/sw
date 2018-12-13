@@ -86,6 +86,43 @@ func (sgp *SgpolicyState) updateAttachedSgs() error {
 	return nil
 }
 
+// updateAttachedApps walks all referred apps and links them
+func (sgp *SgpolicyState) updateAttachedApps() error {
+	for _, rule := range sgp.Spec.Rules {
+		if len(rule.Apps) != 0 {
+			for _, appName := range rule.Apps {
+				app, err := sgp.stateMgr.FindApp(sgp.Tenant, appName)
+				if err != nil {
+					log.Errorf("Error finding app %v for policy %v, rule {%v}", appName, sgp.Name, rule)
+					return err
+				}
+
+				app.attachPolicy(sgp.Name)
+			}
+		}
+	}
+
+	return nil
+}
+
+// detachFromApps detaches the poliy from apps
+func (sgp *SgpolicyState) detachFromApps() error {
+	for _, rule := range sgp.Spec.Rules {
+		if len(rule.Apps) != 0 {
+			for _, appName := range rule.Apps {
+				app, err := sgp.stateMgr.FindApp(sgp.Tenant, appName)
+				if err != nil {
+					log.Errorf("Error finding app %v for policy %v, rule {%v}", appName, sgp.Name, rule)
+				} else {
+					app.detachPolicy(sgp.Name)
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
 // SgpolicyStateFromObj converts from memdb object to sgpolicy state
 func SgpolicyStateFromObj(obj memdb.Object) (*SgpolicyState, error) {
 	switch obj.(type) {
@@ -155,6 +192,13 @@ func (sm *Statemgr) CreateSgpolicy(sgp *security.SGPolicy) error {
 		return err
 	}
 
+	// find and update all attached apps
+	err = sgps.updateAttachedApps()
+	if err != nil {
+		log.Errorf("Error updating attached apps. Err: %v", err)
+		return err
+	}
+
 	// store it in local DB
 	err = sm.memDB.AddObject(sgps)
 	if err != nil {
@@ -193,6 +237,12 @@ func (sm *Statemgr) DeleteSgpolicy(tenant, sgname string) error {
 	err = sg.Delete()
 	if err != nil {
 		log.Errorf("Error deleting the sg policy {%+v}. Err: %v", sg.ObjectMeta, err)
+		return err
+	}
+
+	// detach from policies
+	err = sg.detachFromApps()
+	if err != nil {
 		return err
 	}
 

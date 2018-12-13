@@ -11,8 +11,8 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/nic/e2etests/go/agent/pkg/libs"
-	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/ctrler/tsm/rpcserver/tsproto"
 )
 
@@ -404,13 +404,13 @@ func (c *Config) generateEndpoints(o *Object, manifestFile string, sdevices []St
 			nodeUUID = "GWUUID" // This will ensure that the EP is remote
 		}
 		//else {
-			//ifType = "lif"
-			//if len(lifIDs) == 0 {
-			//	ifName = fmt.Sprintf("lif%d", (i%LIF_COUNT)+LIF_START)
-			//} else {
-			//	ifName = fmt.Sprintf("lif%d", lifIDs[curLif])
-			//	curLif = (curLif + 1) % len(lifIDs)
-			//}
+		//ifType = "lif"
+		//if len(lifIDs) == 0 {
+		//	ifName = fmt.Sprintf("lif%d", (i%LIF_COUNT)+LIF_START)
+		//} else {
+		//	ifName = fmt.Sprintf("lif%d", lifIDs[curLif])
+		//	curLif = (curLif + 1) % len(lifIDs)
+		//}
 		//}
 		ep := netproto.Endpoint{
 			TypeMeta: api.TypeMeta{Kind: "Endpoint"},
@@ -497,7 +497,7 @@ func (c *Config) generateMirrorSessions(o *Object, manifestFile string) (*Object
 		// Look up EP's IP Address
 		localEP := endpointCache[local]
 		remoteEP := endpointCache[remote]
-                fmt.Println(localEP, remoteEP)
+		fmt.Println(localEP, remoteEP)
 		ms := tsproto.MirrorSession{
 			TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
 			ObjectMeta: api.ObjectMeta{
@@ -526,9 +526,9 @@ func (c *Config) generateMirrorSessions(o *Object, manifestFile string) (*Object
 						Dst: &tsproto.MatchSelector{
 							IPAddresses: []string{"0.0.0.0/0"},
 						},
-                                                AppProtoSel: &tsproto.AppProtoSelector{
-                                                        Ports: []string{"ICMP/0/0"},
-                                                },
+						AppProtoSel: &tsproto.AppProtoSelector{
+							Ports: []string{"ICMP/0/0"},
+						},
 					},
 					{
 						Src: &tsproto.MatchSelector{
@@ -537,9 +537,9 @@ func (c *Config) generateMirrorSessions(o *Object, manifestFile string) (*Object
 						Dst: &tsproto.MatchSelector{
 							IPAddresses: []string{"0.0.0.0/0"},
 						},
-                                                AppProtoSel: &tsproto.AppProtoSelector{
-                                                        Ports: []string{"TCP/0/0"},
-                                                },
+						AppProtoSel: &tsproto.AppProtoSelector{
+							Ports: []string{"TCP/0/0"},
+						},
 					},
 				},
 			},

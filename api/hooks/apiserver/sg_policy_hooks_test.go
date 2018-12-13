@@ -21,9 +21,18 @@ func TestSGPolicyCreateAtTenant(t *testing.T) {
 		logger: log.GetNewLogger(logConfig),
 	}
 	// create sg policy
-	rules := []*security.SGRule{
+	rules := []security.SGRule{
 		{
-			Apps:            []string{"tcp/80", "udp/53"},
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
 			Action:          "PERMIT",
 			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
 			ToIPAddresses:   []string{"any"},
@@ -54,9 +63,18 @@ func TestSGPolicyCreateAtSGs(t *testing.T) {
 		logger: log.GetNewLogger(logConfig),
 	}
 	// create sg policy
-	rules := []*security.SGRule{
+	rules := []security.SGRule{
 		{
-			Apps:          []string{"tcp/80", "udp/53"},
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
 			Action:        "PERMIT",
 			ToIPAddresses: []string{"192.168.1.1/16"},
 		},
@@ -86,9 +104,18 @@ func TestAttachGroupsWithFromAddresses(t *testing.T) {
 		logger: log.GetNewLogger(logConfig),
 	}
 	// create sg policy
-	rulesWithFrom := []*security.SGRule{
+	rulesWithFrom := []security.SGRule{
 		{
-			Apps:            []string{"tcp/80", "udp/53"},
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
 			Action:          "PERMIT",
 			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
 			ToIPAddresses:   []string{"any"},
@@ -121,9 +148,18 @@ func TestBothAttachmentPoints(t *testing.T) {
 		logger: log.GetNewLogger(logConfig),
 	}
 	// create sg policy
-	rules := []*security.SGRule{
+	rules := []security.SGRule{
 		{
-			Apps:            []string{"tcp/80", "udp/53"},
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
 			Action:          "PERMIT",
 			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
 			ToIPAddresses:   []string{"192.168.1.1/16"},
@@ -155,9 +191,18 @@ func TestMissingAttachmentPoint(t *testing.T) {
 		logger: log.GetNewLogger(logConfig),
 	}
 	// create sg policy
-	rules := []*security.SGRule{
+	rules := []security.SGRule{
 		{
-			Apps:            []string{"tcp/80", "udp/53"},
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
 			Action:          "PERMIT",
 			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
 			ToIPAddresses:   []string{"192.168.1.1/16"},
@@ -187,9 +232,22 @@ func TestInvalidAppProto(t *testing.T) {
 		logger: log.GetNewLogger(logConfig),
 	}
 	// create sg policy
-	rules := []*security.SGRule{
+	rules := []security.SGRule{
 		{
-			Apps:            []string{"tcp/80", "foo/53", "tcp/8080"},
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "foo",
+					Ports:    "53",
+				},
+				{
+					Protocol: "tcp",
+					Ports:    "8000",
+				},
+			},
 			Action:          "PERMIT",
 			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
 			ToIPAddresses:   []string{"192.168.1.1/16"},
@@ -212,7 +270,7 @@ func TestInvalidAppProto(t *testing.T) {
 	Assert(t, err != nil, "sg policy creates with invalid app proto fail")
 }
 
-func TestInvalidAppPortEmpty(t *testing.T) {
+func TestAppPortEmpty(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig("TestSGPolicy")
 	s := &sgPolicyHooks{
@@ -220,9 +278,22 @@ func TestInvalidAppPortEmpty(t *testing.T) {
 		logger: log.GetNewLogger(logConfig),
 	}
 	// create sg policy
-	rules := []*security.SGRule{
+	rules := []security.SGRule{
 		{
-			Apps:            []string{"tcp/", "udp/53", "tcp/8080"},
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+				{
+					Protocol: "tcp",
+					Ports:    "8000",
+				},
+			},
 			Action:          "PERMIT",
 			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
 			ToIPAddresses:   []string{"192.168.1.1/16"},
@@ -242,7 +313,63 @@ func TestInvalidAppPortEmpty(t *testing.T) {
 	}
 
 	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, false, sgp)
-	Assert(t, err != nil, "sg policy creates with empty port must fail")
+	AssertOk(t, err, "sg policy creates with empty port should suceed")
+}
+
+func TestProtocolNumbers(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig("TestSGPolicy")
+	s := &sgPolicyHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	rules := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+				{
+					Protocol: "2", // igmp
+				},
+			},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
+			ToIPAddresses:   []string{"192.168.1.1/16"},
+		},
+	}
+
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+
+	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, false, sgp)
+	AssertOk(t, err, "sg policy creates with protocol number should suceed")
+
+	// invalid protocol number
+	sgp.Spec.Rules[0].ProtoPorts[0].Protocol = "256"
+	_, _, err = s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, false, sgp)
+	Assert(t, err != nil, "app incorrect protocol number must fail")
+
+	// invalid protocol number
+	sgp.Spec.Rules[0].ProtoPorts[0].Protocol = "-1"
+	_, _, err = s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, false, sgp)
+	Assert(t, err != nil, "app incorrect protocol number must fail")
 }
 
 func TestInvalidAppPortNonInteger(t *testing.T) {
@@ -253,9 +380,22 @@ func TestInvalidAppPortNonInteger(t *testing.T) {
 		logger: log.GetNewLogger(logConfig),
 	}
 	// create sg policy
-	rules := []*security.SGRule{
+	rules := []security.SGRule{
 		{
-			Apps:            []string{"tcp/foo", "udp/53", "tcp/8080"},
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "foo",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+				{
+					Protocol: "tcp",
+					Ports:    "8000",
+				},
+			},
 			Action:          "PERMIT",
 			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
 			ToIPAddresses:   []string{"192.168.1.1/16"},
@@ -278,6 +418,145 @@ func TestInvalidAppPortNonInteger(t *testing.T) {
 	Assert(t, err != nil, "sg policy creates with non integer parsable port must fail")
 }
 
+func TestRulePortRanges(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig("TestSGPolicy")
+	s := &sgPolicyHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+	// create sg policy
+	simplePortRange := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "8000-8000",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "5000-6000",
+				},
+				{
+					Protocol: "tcp",
+					Ports:    "5000,5003",
+				},
+				{
+					Protocol: "tcp",
+					Ports:    "5000-5001,5003-5004",
+				},
+				{
+					Protocol: "tcp",
+					Ports:    "5000,5003-5004",
+				},
+			},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
+			ToIPAddresses:   []string{"192.168.1.1/16"},
+		},
+	}
+
+	rulesIncorrectPortFormat := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80-90-100",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "655",
+				},
+			},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
+			ToIPAddresses:   []string{"192.168.1.1/16"},
+		},
+	}
+	rulesIncorrectPortRangeFormat := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80-",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "655",
+				},
+			},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
+			ToIPAddresses:   []string{"192.168.1.1/16"},
+		},
+	}
+	rulesIncorrectPortValFormat := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80,",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "655,foo",
+				},
+			},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
+			ToIPAddresses:   []string{"192.168.1.1/16"},
+		},
+	}
+	rulesInvalidPortRange := []security.SGRule{
+		{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "6000-5000",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "655",
+				},
+			},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
+			ToIPAddresses:   []string{"192.168.1.1/16"},
+		},
+	}
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        simplePortRange,
+		},
+	}
+
+	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, false, sgp)
+	AssertOk(t, err, "app range config failed")
+
+	sgp.Spec.Rules = rulesIncorrectPortFormat
+	_, _, err = s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, false, sgp)
+	Assert(t, err != nil, "app incorrect port range must fail")
+
+	sgp.Spec.Rules = rulesIncorrectPortRangeFormat
+	_, _, err = s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, false, sgp)
+	Assert(t, err != nil, "app incorrect port range format must fail")
+
+	sgp.Spec.Rules = rulesIncorrectPortValFormat
+	_, _, err = s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, false, sgp)
+	Assert(t, err != nil, "app incorrect port value format must fail")
+
+	sgp.Spec.Rules = rulesInvalidPortRange
+	_, _, err = s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, false, sgp)
+	Assert(t, err != nil, "app invalid port range must fail")
+}
+
 func TestInvalidAppPortInvalidPortRange(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig("TestSGPolicy")
@@ -286,18 +565,44 @@ func TestInvalidAppPortInvalidPortRange(t *testing.T) {
 		logger: log.GetNewLogger(logConfig),
 	}
 	// create sg policy
-	rulesBelowRange := []*security.SGRule{
+	rulesBelowRange := []security.SGRule{
 		{
-			Apps:            []string{"tcp/-2", "udp/53", "tcp/8080"},
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "-2",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+				{
+					Protocol: "tcp",
+					Ports:    "8000",
+				},
+			},
 			Action:          "PERMIT",
 			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
 			ToIPAddresses:   []string{"192.168.1.1/16"},
 		},
 	}
 
-	rulesAboveRange := []*security.SGRule{
+	rulesAboveRange := []security.SGRule{
 		{
-			Apps:            []string{"tcp/80", "udp/65536", "tcp/8080"},
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "65536",
+				},
+				{
+					Protocol: "tcp",
+					Ports:    "8000",
+				},
+			},
 			Action:          "PERMIT",
 			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
 			ToIPAddresses:   []string{"192.168.1.1/16"},
@@ -333,23 +638,50 @@ func TestAttachTenantWithMissingToAndFromAddresses(t *testing.T) {
 		logger: log.GetNewLogger(logConfig),
 	}
 	// create sg policy
-	rulesMissingTo := []*security.SGRule{
+	rulesMissingTo := []security.SGRule{
 		{
-			Apps:            []string{"tcp/80", "udp/53"},
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
 			Action:          "PERMIT",
 			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
 		},
 	}
-	rulesMissingFrom := []*security.SGRule{
+	rulesMissingFrom := []security.SGRule{
 		{
-			Apps:          []string{"tcp/80", "udp/53"},
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
 			Action:        "PERMIT",
 			ToIPAddresses: []string{"192.168.1.1/16"},
 		},
 	}
-	rulesMissingBoth := []*security.SGRule{
+	rulesMissingBoth := []security.SGRule{
 		{
-			Apps:   []string{"tcp/80", "udp/53"},
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
 			Action: "PERMIT",
 		},
 	}
@@ -386,9 +718,18 @@ func TestInvalidIPAddressOctet(t *testing.T) {
 		logger: log.GetNewLogger(logConfig),
 	}
 	// create sg policy
-	rules := []*security.SGRule{
+	rules := []security.SGRule{
 		{
-			Apps:            []string{"tcp/80", "udp/53"},
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
 			Action:          "PERMIT",
 			FromIPAddresses: []string{"172.0.0.256", "172.0.0.2/16", "10.0.0.1/30"},
 			ToIPAddresses:   []string{"192.168.1.1/16"},
@@ -420,9 +761,18 @@ func TestInvalidIPAddressCIDR(t *testing.T) {
 		logger: log.GetNewLogger(logConfig),
 	}
 	// create sg policy
-	rules := []*security.SGRule{
+	rules := []security.SGRule{
 		{
-			Apps:            []string{"tcp/80", "udp/53"},
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
 			Action:          "PERMIT",
 			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2/foo/bar", "10.0.0.1/30"},
 			ToIPAddresses:   []string{"192.168.1.1/16"},
@@ -453,17 +803,35 @@ func TestInvalidIPAddressRange(t *testing.T) {
 		logger: log.GetNewLogger(logConfig),
 	}
 	// create sg policy
-	rulesInvalidRange := []*security.SGRule{
+	rulesInvalidRange := []security.SGRule{
 		{
-			Apps:            []string{"tcp/80", "udp/53"},
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
 			Action:          "PERMIT",
 			FromIPAddresses: []string{"172.0.0.1-256.256.256.256", "172.0.0.2/22", "10.0.0.1"},
 			ToIPAddresses:   []string{"192.168.1.1/16"},
 		},
 	}
-	rulesInvalidRangeMultipleSep := []*security.SGRule{
+	rulesInvalidRangeMultipleSep := []security.SGRule{
 		{
-			Apps:            []string{"tcp/80", "udp/53"},
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
 			Action:          "PERMIT",
 			FromIPAddresses: []string{"172.0.0.1-172.0.1.1-172.1.1.1", "172.0.0.2/22", "10.0.0.1"},
 			ToIPAddresses:   []string{"192.168.1.1/16"},
@@ -498,9 +866,18 @@ func TestInvalidKeyword(t *testing.T) {
 		logger: log.GetNewLogger(logConfig),
 	}
 	// create sg policy
-	rules := []*security.SGRule{
+	rules := []security.SGRule{
 		{
-			Apps:            []string{"tcp/80", "udp/53"},
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
 			Action:          "PERMIT",
 			FromIPAddresses: []string{"172.0.0.1", "10.1.0.0/16", "10.0.0.1/30"},
 			ToIPAddresses:   []string{"foo"},
@@ -531,9 +908,18 @@ func TestAttachGroupsWithInvalidIPAddresses(t *testing.T) {
 		logger: log.GetNewLogger(logConfig),
 	}
 	// create sg policy
-	rulesWithFrom := []*security.SGRule{
+	rulesWithFrom := []security.SGRule{
 		{
-			Apps:            []string{"tcp/80", "udp/53"},
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
 			Action:          "PERMIT",
 			FromIPAddresses: []string{"256.256.256.256", "172.0.0.2", "10.0.0.1/30"},
 		},
@@ -564,9 +950,18 @@ func TestAppWithMultipleSeparators(t *testing.T) {
 		logger: log.GetNewLogger(logConfig),
 	}
 	// create sg policy
-	rulesWithFrom := []*security.SGRule{
+	rulesWithFrom := []security.SGRule{
 		{
-			Apps:            []string{"tcp/80/foo", "udp/53"},
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80-90-100",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
 			Action:          "PERMIT",
 			FromIPAddresses: []string{"256.256.256.256", "172.0.0.2", "10.0.0.1/30"},
 		},
@@ -597,9 +992,18 @@ func TestAppWithInvalidProtocol(t *testing.T) {
 		logger: log.GetNewLogger(logConfig),
 	}
 	// create sg policy
-	rulesWithFrom := []*security.SGRule{
+	rulesWithFrom := []security.SGRule{
 		{
-			Apps:            []string{"foo/80", "udp/53"},
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "foo",
+					Ports:    "80",
+				},
+				{
+					Protocol: "udp",
+					Ports:    "53",
+				},
+			},
 			Action:          "PERMIT",
 			FromIPAddresses: []string{"256.256.256.256", "172.0.0.2", "10.0.0.1/30"},
 		},

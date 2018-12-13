@@ -44,12 +44,17 @@ func (stg *securityTestGroup) testSgpolicyCreateDelete() {
 		},
 		Spec: security.SGPolicySpec{
 			AttachTenant: true,
-			Rules: []*security.SGRule{
+			Rules: []security.SGRule{
 				{
 					FromIPAddresses: []string{"10.0.0.0/24"},
 					ToIPAddresses:   []string{"11.0.0.0/24"},
-					Apps:            []string{"tcp/80"},
-					Action:          "PERMIT",
+					ProtoPorts: []security.ProtoPort{
+						{
+							Protocol: "tcp",
+							Ports:    "80",
+						},
+					},
+					Action: "PERMIT",
 				},
 			},
 		},

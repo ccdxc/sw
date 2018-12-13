@@ -43,6 +43,16 @@ func (m *CertificateList) MakeURI(ver, prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
+func (m *FirewallProfileList) MakeKey(prefix string) string {
+	obj := FirewallProfile{}
+	return obj.MakeKey(prefix)
+}
+
+func (m *FirewallProfileList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *SGPolicyList) MakeKey(prefix string) string {
 	obj := SGPolicy{}
 	return obj.MakeKey(prefix)
@@ -81,6 +91,12 @@ func (m *AutoMsgAppWatchHelper) MakeKey(prefix string) string {
 // MakeKey generates a KV store key for the object
 func (m *AutoMsgCertificateWatchHelper) MakeKey(prefix string) string {
 	obj := Certificate{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *AutoMsgFirewallProfileWatchHelper) MakeKey(prefix string) string {
+	obj := FirewallProfile{}
 	return obj.MakeKey(prefix)
 }
 
@@ -204,6 +220,48 @@ func (m *AutoMsgCertificateWatchHelper_WatchEvent) Clone(into interface{}) (inte
 
 // Default sets up the defaults for the object
 func (m *AutoMsgCertificateWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgFirewallProfileWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgFirewallProfileWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgFirewallProfileWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgFirewallProfileWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgFirewallProfileWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgFirewallProfileWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgFirewallProfileWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgFirewallProfileWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgFirewallProfileWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgFirewallProfileWatchHelper_WatchEvent) Defaults(ver string) bool {
 	return false
 }
 
@@ -355,6 +413,27 @@ func (m *CertificateList) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *FirewallProfileList) Clone(into interface{}) (interface{}, error) {
+	var out *FirewallProfileList
+	var ok bool
+	if into == nil {
+		out = &FirewallProfileList{}
+	} else {
+		out, ok = into.(*FirewallProfileList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *FirewallProfileList) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *SGPolicyList) Clone(into interface{}) (interface{}, error) {
 	var out *SGPolicyList
 	var ok bool
@@ -421,16 +500,46 @@ func (m *TrafficEncryptionPolicyList) Defaults(ver string) bool {
 
 func (m *AppList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	for k, v := range m.Items {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	return ret
 }
 
 func (m *AutoMsgAppWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	for k, v := range m.Events {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	return ret
 }
 
 func (m *AutoMsgAppWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	if m.Object != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Object"
+		if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	return ret
 }
 
@@ -450,6 +559,36 @@ func (m *AutoMsgCertificateWatchHelper) Validate(ver, path string, ignoreStatus 
 }
 
 func (m *AutoMsgCertificateWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if m.Object != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Object"
+		if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgFirewallProfileWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Events {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgFirewallProfileWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
 		dlmtr := "."
@@ -535,6 +674,21 @@ func (m *AutoMsgTrafficEncryptionPolicyWatchHelper_WatchEvent) Validate(ver, pat
 }
 
 func (m *CertificateList) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Items {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *FirewallProfileList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	for k, v := range m.Items {
 		dlmtr := "."

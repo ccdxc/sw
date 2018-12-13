@@ -415,12 +415,12 @@
           "$ref": "#/definitions/netprotoSecurityProfile"
         }
       },
-      "title": "sg profile watch event"
+      "title": "security profile watch event"
     },
     "netprotoSecurityProfileList": {
       "type": "object",
       "properties": {
-        "sgpolicies": {
+        "Profiles": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/netprotoSecurityProfile"
@@ -466,7 +466,7 @@
           "format": "uint64"
         }
       },
-      "title": "SecurityProfileStatus captures the sg profile status"
+      "title": "SecurityProfileStatus captures the security profile status"
     },
     "netprotoTimeouts": {
       "type": "object",

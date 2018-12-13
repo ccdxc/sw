@@ -17,7 +17,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/httputils"
-	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
+	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 )
 
 // addPortAPIRoutes adds Port routes

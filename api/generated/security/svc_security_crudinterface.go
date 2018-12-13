@@ -48,6 +48,17 @@ type SecurityV1AppInterface interface {
 	Allowed(oper apiserver.APIOperType) bool
 }
 
+// SecurityV1FirewallProfileInterface exposes the CRUD methods for FirewallProfile
+type SecurityV1FirewallProfileInterface interface {
+	Create(ctx context.Context, in *FirewallProfile) (*FirewallProfile, error)
+	Update(ctx context.Context, in *FirewallProfile) (*FirewallProfile, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*FirewallProfile, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*FirewallProfile, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*FirewallProfile, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiserver.APIOperType) bool
+}
+
 // SecurityV1CertificateInterface exposes the CRUD methods for Certificate
 type SecurityV1CertificateInterface interface {
 	Create(ctx context.Context, in *Certificate) (*Certificate, error)
@@ -75,6 +86,7 @@ type SecurityV1Interface interface {
 	SecurityGroup() SecurityV1SecurityGroupInterface
 	SGPolicy() SecurityV1SGPolicyInterface
 	App() SecurityV1AppInterface
+	FirewallProfile() SecurityV1FirewallProfileInterface
 	Certificate() SecurityV1CertificateInterface
 	TrafficEncryptionPolicy() SecurityV1TrafficEncryptionPolicyInterface
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)

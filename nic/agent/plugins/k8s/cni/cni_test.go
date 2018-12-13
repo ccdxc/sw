@@ -16,8 +16,8 @@ import (
 	"github.com/containernetworking/cni/pkg/types"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	agentTypes "github.com/pensando/sw/nic/agent/netagent/state/types"
-	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )

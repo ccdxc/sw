@@ -17,6 +17,40 @@ import (
 // Dummy definitions to suppress nonused warnings
 var _ api.ObjectMeta
 
+func encodeHTTPProtoPort(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPProtoPort(_ context.Context, r *http.Request) (interface{}, error) {
+	var req ProtoPort
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqProtoPort encodes GRPC request
+func EncodeGrpcReqProtoPort(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*ProtoPort)
+	return req, nil
+}
+
+// DecodeGrpcReqProtoPort decodes GRPC request
+func DecodeGrpcReqProtoPort(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*ProtoPort)
+	return req, nil
+}
+
+// EncodeGrpcRespProtoPort encodes GRC response
+func EncodeGrpcRespProtoPort(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespProtoPort decodes GRPC response
+func DecodeGrpcRespProtoPort(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPSGPolicy(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }

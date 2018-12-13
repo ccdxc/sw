@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
-	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/debug"
@@ -36,6 +36,8 @@ type NpmClient struct {
 	sgGrpcClient    *rpckit.RPCClient             // grpc client for security group
 	epGrpcClient    *rpckit.RPCClient             // grpc client for endpoint
 	sgpGrpcClient   *rpckit.RPCClient             // grpc client for security policy
+	secpGrpcClient  *rpckit.RPCClient             // grpc client for security profile
+	appGrpcClient   *rpckit.RPCClient             // grpc client for app object
 	watchCtx        context.Context               // ctx for network watch
 	watchCancel     context.CancelFunc            // cancel for network watch
 	stopped         bool                          // is the npm client stopped?
@@ -80,17 +82,24 @@ func NewNpmClient(agent types.CtrlerIntf, srvURL string, resolverClient resolver
 	epCh := make(chan netproto.EndpointEvent, evChanLength)
 	sgCh := make(chan netproto.SecurityGroupEvent, evChanLength)
 	sgPolicyCh := make(chan netproto.SGPolicyEvent, evChanLength)
+	secpCh := make(chan netproto.SecurityProfileEvent, evChanLength)
+	appCh := make(chan netproto.AppEvent, evChanLength)
 
 	// start watching objects
 	go client.runNetworkWatcher(client.watchCtx, netCh)
 	go client.runEndpointWatcher(client.watchCtx, epCh)
 	go client.runSecurityGroupWatcher(client.watchCtx, sgCh)
 	go client.runSecurityPolicyWatcher(client.watchCtx, sgPolicyCh)
+	go client.runSecurityProfileWatcher(client.watchCtx, secpCh)
+	go client.runAppWatcher(client.watchCtx, appCh)
 
 	go client.runNetworkWorker(client.watchCtx, netCh)
 	go client.runEndpointWorker(client.watchCtx, epCh)
 	go client.runSecurityGroupWorker(client.watchCtx, sgCh)
 	go client.runSecurityPolicyWorker(client.watchCtx, sgPolicyCh)
+	go client.runSecurityProfileWorker(client.watchCtx, secpCh)
+	go client.runAppWorker(client.watchCtx, appCh)
+
 	return &client, nil
 }
 
@@ -241,7 +250,7 @@ func (client *NpmClient) processSecurityPolicyEvent(evt netproto.SGPolicyEvent) 
 			// create the security policy
 			err = client.agent.CreateSGPolicy(&evt.SGPolicy)
 			if err != nil {
-				log.Errorf("Error creating the sg policy {%+v}. Err: %v", evt.SGPolicy.ObjectMeta, err)
+				log.Errorf("Error creating the sg policy {%+v}. Err: %v", evt.SGPolicy, err)
 			} else {
 
 			}
@@ -249,7 +258,7 @@ func (client *NpmClient) processSecurityPolicyEvent(evt netproto.SGPolicyEvent) 
 			// update the sg policy
 			err = client.agent.UpdateSGPolicy(&evt.SGPolicy)
 			if err != nil {
-				log.Errorf("Error updating the sg policy {%+v}. Err: %v", evt.SGPolicy.ObjectMeta, err)
+				log.Errorf("Error updating the sg policy {%+v}. Err: %v", evt.SGPolicy, err)
 			}
 		case api.EventType_DeleteEvent:
 			// delete the sg
@@ -267,9 +276,83 @@ func (client *NpmClient) processSecurityPolicyEvent(evt netproto.SGPolicyEvent) 
 		if err == nil {
 			if evt.EventType == api.EventType_CreateEvent || evt.EventType == api.EventType_UpdateEvent {
 				sgpRPCClient := netproto.NewSGPolicyApiClient(client.sgpGrpcClient.ClientConn)
-				log.Errorf("Stavros 0: Sending update back {%+v}", &evt.SGPolicy)
+				log.Infof("SGPolicy: Sending update back {%+v}", &evt.SGPolicy)
 				sgpRPCClient.UpdateSGPolicyStatus(context.Background(), &evt.SGPolicy)
 			}
+			return
+		}
+
+		// else, retry after some time, with exponential backoff
+		time.Sleep(time.Second * time.Duration(math.Exp2(float64(iter))))
+	}
+}
+
+// processSecurityProfileEvent handles security policy event
+func (client *NpmClient) processSecurityProfileEvent(evt netproto.SecurityProfileEvent) {
+	var err error
+	for iter := 0; iter < maxOpretry; iter++ {
+		switch evt.EventType {
+		case api.EventType_CreateEvent:
+			// create the sec profile
+			err = client.agent.CreateSecurityProfile(&evt.SecurityProfile)
+			if err != nil {
+				log.Errorf("Error creating the sec profile {%+v}. Err: %v", evt.SecurityProfile.ObjectMeta, err)
+			} else {
+
+			}
+		case api.EventType_UpdateEvent:
+			// update the sec profile
+			err = client.agent.UpdateSecurityProfile(&evt.SecurityProfile)
+			if err != nil {
+				log.Errorf("Error updating the sec profile {%+v}. Err: %v", evt.SecurityProfile.ObjectMeta, err)
+			}
+		case api.EventType_DeleteEvent:
+			// delete the sec profile
+			err = client.agent.DeleteSecurityProfile(evt.SecurityProfile.Tenant, evt.SecurityProfile.Namespace, evt.SecurityProfile.Name)
+			if err != nil {
+				log.Errorf("Error deleting the sec profile {%+v}. Err: %v", evt.SecurityProfile.ObjectMeta, err)
+			}
+		}
+
+		// return if there is no error
+		if err == nil {
+			return
+		}
+
+		// else, retry after some time, with exponential backoff
+		time.Sleep(time.Second * time.Duration(math.Exp2(float64(iter))))
+	}
+}
+
+// processAppEvent handles app event
+func (client *NpmClient) processAppEvent(evt netproto.AppEvent) {
+	var err error
+	for iter := 0; iter < maxOpretry; iter++ {
+		switch evt.EventType {
+		case api.EventType_CreateEvent:
+			// create the security policy
+			err = client.agent.CreateApp(&evt.App)
+			if err != nil {
+				log.Errorf("Error creating the app {%+v}. Err: %v", evt.App.ObjectMeta, err)
+			} else {
+
+			}
+		case api.EventType_UpdateEvent:
+			// update the sg policy
+			err = client.agent.UpdateApp(&evt.App)
+			if err != nil {
+				log.Errorf("Error updating the app {%+v}. Err: %v", evt.App.ObjectMeta, err)
+			}
+		case api.EventType_DeleteEvent:
+			// delete the sg
+			err = client.agent.DeleteApp(evt.App.Tenant, evt.App.Namespace, evt.App.Name)
+			if err != nil {
+				log.Errorf("Error deleting the app {%+v}. Err: %v", evt.App.ObjectMeta, err)
+			}
+		}
+
+		// return if there is no error
+		if err == nil {
 			return
 		}
 
@@ -561,7 +644,149 @@ func (client *NpmClient) runSecurityPolicyWatcher(ctx context.Context, ch chan<-
 				break
 			}
 
-			log.Infof("Ctrlerif: agent %s got Security policy watch event: Type: {%+v} sg:{%+v}", client.getAgentName(), evt.EventType, evt.SGPolicy.ObjectMeta)
+			log.Infof("Ctrlerif: agent %s got Security policy watch event: Type: {%+v} policy:{%+v}", client.getAgentName(), evt.EventType, evt.SGPolicy)
+
+			ch <- *evt
+		}
+		rpcClient.Close()
+	}
+}
+
+func (client *NpmClient) runSecurityProfileWorker(ctx context.Context, ch <-chan netproto.SecurityProfileEvent) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case evt := <-ch:
+			client.processSecurityProfileEvent(evt)
+		}
+	}
+}
+
+// runSecurityProfileWatcher runs security profile watcher loop
+func (client *NpmClient) runSecurityProfileWatcher(ctx context.Context, ch chan<- netproto.SecurityProfileEvent) {
+	// setup wait group
+	client.waitGrp.Add(1)
+	defer client.waitGrp.Done()
+
+	for {
+		// create a grpc client
+		rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL,
+			rpckit.WithBalancer(balancer.New(client.resolverClient)), rpckit.WithRemoteServerName(globals.Npm))
+		if err != nil {
+			log.Errorf("Error connecting to grpc server. Err: %v", err)
+
+			if client.isStopped() {
+				return
+			}
+			time.Sleep(time.Second)
+			continue
+		}
+		client.sgpGrpcClient = rpcClient
+
+		// start the watch
+		secpRPCClient := netproto.NewSecurityProfileApiClient(rpcClient.ClientConn)
+		stream, err := secpRPCClient.WatchSecurityProfiles(ctx, &api.ObjectMeta{})
+		if err != nil {
+			rpcClient.Close()
+			log.Errorf("Error watching security profile. Err: %v", err)
+
+			if client.isStopped() {
+				return
+			}
+
+			time.Sleep(time.Second)
+			continue
+		}
+
+		// loop till the end
+		for {
+			// receive from stream
+			evt, err := stream.Recv()
+			if err != nil {
+				log.Errorf("Error receiving from watch channel. Exiting security profile watch. Err: %v", err)
+
+				if client.isStopped() {
+					rpcClient.Close()
+					return
+				}
+
+				time.Sleep(time.Second)
+				break
+			}
+
+			log.Infof("Ctrlerif: agent %s got Security profile watch event: Type: {%+v} profile:{%+v}", client.getAgentName(), evt.EventType, evt.SecurityProfile)
+
+			ch <- *evt
+		}
+		rpcClient.Close()
+	}
+}
+
+func (client *NpmClient) runAppWorker(ctx context.Context, ch <-chan netproto.AppEvent) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case evt := <-ch:
+			client.processAppEvent(evt)
+		}
+	}
+}
+
+// runAppWatcher runs app watcher loop
+func (client *NpmClient) runAppWatcher(ctx context.Context, ch chan<- netproto.AppEvent) {
+	// setup wait group
+	client.waitGrp.Add(1)
+	defer client.waitGrp.Done()
+
+	for {
+		// create a grpc client
+		rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL,
+			rpckit.WithBalancer(balancer.New(client.resolverClient)), rpckit.WithRemoteServerName(globals.Npm))
+		if err != nil {
+			log.Errorf("Error connecting to grpc server. Err: %v", err)
+
+			if client.isStopped() {
+				return
+			}
+			time.Sleep(time.Second)
+			continue
+		}
+		client.sgpGrpcClient = rpcClient
+
+		// start the watch
+		appRPCClient := netproto.NewAppApiClient(rpcClient.ClientConn)
+		stream, err := appRPCClient.WatchApps(ctx, &api.ObjectMeta{})
+		if err != nil {
+			rpcClient.Close()
+			log.Errorf("Error watching app. Err: %v", err)
+
+			if client.isStopped() {
+				return
+			}
+
+			time.Sleep(time.Second)
+			continue
+		}
+
+		// loop till the end
+		for {
+			// receive from stream
+			evt, err := stream.Recv()
+			if err != nil {
+				log.Errorf("Error receiving from watch channel. Exiting app watch. Err: %v", err)
+
+				if client.isStopped() {
+					rpcClient.Close()
+					return
+				}
+
+				time.Sleep(time.Second)
+				break
+			}
+
+			log.Infof("Ctrlerif: agent %s got App watch event: Type: {%+v} app:{%+v}", client.getAgentName(), evt.EventType, evt.App)
 
 			ch <- *evt
 		}
@@ -587,6 +812,12 @@ func (client *NpmClient) Stop() {
 	}
 	if client.sgpGrpcClient != nil {
 		client.sgpGrpcClient.Close()
+	}
+	if client.secpGrpcClient != nil {
+		client.secpGrpcClient.Close()
+	}
+	if client.appGrpcClient != nil {
+		client.appGrpcClient.Close()
 	}
 }
 

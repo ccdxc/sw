@@ -162,7 +162,7 @@ func TestApiWatcher(t *testing.T) {
 	Assert(t, (ep.Status.MicroSegmentVlan == 22), "Endpoint did not match", ep)
 
 	// create sg policy
-	rules := []*security.SGRule{
+	rules := []security.SGRule{
 		{
 			Apps:            []string{"tcp/80", "udp/53"},
 			Action:          "PERMIT",
@@ -357,7 +357,7 @@ func TestAPIServerRestarts(t *testing.T) {
 	Assert(t, (ep.Status.MicroSegmentVlan == 22), "Endpoint did not match", ep)
 
 	// create sg policy
-	rules := []*security.SGRule{
+	rules := []security.SGRule{
 		{
 			Apps:            []string{"tcp/80"},
 			Action:          "PERMIT",
@@ -478,6 +478,53 @@ func TestAPIServerRestarts(t *testing.T) {
 		_, nerr := stateMgr.FindEndpoint("testTenant", "testWorkload-00:01:02:03:04:05")
 		return (nerr == nil), nil
 	}, "Endpoint not found in statemgr")
+
+	// firewall profile
+	fwp := security.FirewallProfile{
+		TypeMeta: api.TypeMeta{Kind: "FirewallProfile"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "testProfile",
+			Namespace: "",
+			Tenant:    "testTenant",
+		},
+		Spec: security.FirewallProfileSpec{
+			SessionIdleTimeout:    "3m",
+			IPNormalizationEnable: true,
+		},
+	}
+
+	// app
+	app := security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "testApp",
+			Namespace: "",
+			Tenant:    "testTenant",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "21",
+				},
+			},
+			Timeout: "5m",
+			ALG: security.ALG{
+				Type: "FTP",
+				FtpAlg: security.FtpAlg{
+					AllowMismatchIPAddress: true,
+				},
+			},
+		},
+	}
+
+	_, err = apicl.SecurityV1().FirewallProfile().Create(context.Background(), &fwp)
+	AssertOk(t, err, "Error creating firewall profile")
+
+	_, err = apicl.SecurityV1().App().Create(context.Background(), &app)
+	AssertOk(t, err, "Error creating app alg")
+
+	time.Sleep(time.Millisecond * 100)
 
 	// stop api server and watchers
 	apiSrv.Stop()
@@ -755,4 +802,106 @@ func TestWorkloadWatcher(t *testing.T) {
 		_, nerr := stateMgr.FindSmartNIC("", "testSmartNIC")
 		return (nerr != nil), nil
 	}, "SmartNIC still found in statemgr")
+}
+
+func TestFirewallWatcher(t *testing.T) {
+	// create network state manager
+	stateMgr, err := statemgr.NewStatemgr(&dummyWriter{})
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+
+	// create api server
+	apiSrv, apisrvURL, err := serviceutils.StartAPIServer("", t.Name(), logger)
+	AssertOk(t, err, "Error starting api server")
+	defer apiSrv.Stop()
+
+	// create watcher on api server
+	watcher, err := NewWatcher(stateMgr, apisrvURL, "", nil, debug.New(t.Name()).Build())
+	AssertOk(t, err, "Error creating watchr")
+	Assert(t, (watcher != nil), "Error creating watcher", watcher)
+	time.Sleep(time.Millisecond * 10)
+
+	// create an api server client
+	l := log.GetNewLogger(log.GetDefaultConfig("NpmApiWatcher"))
+	apicl, err := apiclient.NewGrpcAPIClient(globals.Npm, apisrvURL, l)
+	AssertOk(t, err, "Error creating api server client")
+
+	// firewall profile
+	fwp := security.FirewallProfile{
+		TypeMeta: api.TypeMeta{Kind: "FirewallProfile"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "testProfile",
+			Namespace: "",
+			Tenant:    "testTenant",
+		},
+		Spec: security.FirewallProfileSpec{
+			SessionIdleTimeout:    "3m",
+			IPNormalizationEnable: true,
+		},
+	}
+
+	// app
+	app := security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "testApp",
+			Namespace: "",
+			Tenant:    "testTenant",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "21",
+				},
+			},
+			Timeout: "5m",
+			ALG: security.ALG{
+				Type: "FTP",
+				FtpAlg: security.FtpAlg{
+					AllowMismatchIPAddress: true,
+				},
+			},
+		},
+	}
+
+	_, err = apicl.SecurityV1().FirewallProfile().Create(context.Background(), &fwp)
+	AssertOk(t, err, "Error creating firewall profile")
+
+	// verify firewall profile got created
+	AssertEventually(t, func() (bool, interface{}) {
+		_, nerr := stateMgr.FindFirewallProfile("testTenant", "testProfile")
+		return (nerr == nil), nil
+	}, "Firewall profile not found in statemgr")
+
+	_, err = apicl.SecurityV1().App().Create(context.Background(), &app)
+	AssertOk(t, err, "Error creating app alg")
+
+	// verify app got created
+	AssertEventually(t, func() (bool, interface{}) {
+		_, nerr := stateMgr.FindApp("testTenant", "testApp")
+		return (nerr == nil), nil
+	}, "App not found in statemgr")
+
+	// delete firewall profile object
+	_, err = apicl.SecurityV1().FirewallProfile().Delete(context.Background(), &fwp.ObjectMeta)
+	AssertOk(t, err, "Error deleting firewall profile")
+
+	// verify firewall profile got deleted
+	AssertEventually(t, func() (bool, interface{}) {
+		_, nerr := stateMgr.FindFirewallProfile("testTenant", "testProfile")
+		return (nerr != nil), nil
+	}, "Firewall profile still found in statemgr")
+
+	// delete app object
+	_, err = apicl.SecurityV1().App().Delete(context.Background(), &app.ObjectMeta)
+	AssertOk(t, err, "Error deleting app")
+
+	// verify app got deleted
+	AssertEventually(t, func() (bool, interface{}) {
+		_, nerr := stateMgr.FindApp("testTenant", "testApp")
+		return (nerr != nil), nil
+	}, "App still found in statemgr")
 }

@@ -42,7 +42,7 @@ func (s *sgPolicyHooks) validateSGPolicy(ctx context.Context, kv kvstore.Interfa
 	if sgp.Spec.AttachTenant == false && len(sgp.Spec.AttachGroups) == 0 {
 		return i, false, fmt.Errorf("must specify atleast one of attach-tenant or attach-groups")
 	}
-	err := s.validateApps(sgp.Spec.Rules)
+	err := s.validateProtoPort(sgp.Spec.Rules)
 	if err != nil {
 		return i, false, fmt.Errorf("app validation failed. Error: %v", err)
 	}
@@ -80,45 +80,54 @@ func (s *sgPolicyHooks) validateSGPolicy(ctx context.Context, kv kvstore.Interfa
 	return i, true, nil
 }
 
-// validateApps will enforce a valid proto/port declaration.
+// validateProtoPort will enforce a valid proto/port declaration.
 // references to the named apps will be handled by the controller.
-func (s *sgPolicyHooks) validateApps(rules []*security.SGRule) error {
+func (s *sgPolicyHooks) validateProtoPort(rules []security.SGRule) error {
 	for _, r := range rules {
-		for _, a := range r.Apps {
-			found := false
-			components := strings.Split(a, "/")
-			// defer named apps validation to the controller
-			if len(components) == 0 {
-				continue
-			}
-			if len(components) != 2 {
-				return fmt.Errorf("must specify app as protocol/port format. Found %v", a)
-			}
-			proto, port := components[0], components[1]
-			for _, p := range supportedProtocols {
-				if p == proto {
-					found = true
-					break
+		for _, pp := range r.ProtoPorts {
+			protoNum, err := strconv.Atoi(pp.Protocol)
+			if err == nil {
+				// protocol number specified, check its between 0-255 range (0 is valid proto)
+				if protoNum < 0 || protoNum >= 255 {
+					return fmt.Errorf("Invalid protocol number %v", pp.Protocol)
+				}
+			} else {
+				found := false
+				for _, p := range supportedProtocols {
+					if p == pp.Protocol {
+						found = true
+						break
+					}
+				}
+
+				if !found {
+					return fmt.Errorf("invalid protocol in SGRule. %v", pp.Protocol)
 				}
 			}
 
-			if !found {
-				return fmt.Errorf("invalid protocol in SGRule. %v", proto)
-			}
-
-			if proto != "tcp" && proto != "udp" && proto != "icmp" {
-				return fmt.Errorf("invalid protocol in SGRule. %v", a)
-			}
-
-			if len(port) == 0 {
-				return fmt.Errorf("empty port field")
-			}
-			i, err := strconv.Atoi(port)
-			if err != nil {
-				return fmt.Errorf("port must be an integer value in the SGRule. %v", port)
-			}
-			if 0 > i || i > 65535 {
-				return fmt.Errorf("port outside range. %v", a)
+			if len(pp.Ports) != 0 {
+				portRanges := strings.Split(pp.Ports, ",")
+				for _, prange := range portRanges {
+					ports := strings.Split(prange, "-")
+					for _, port := range ports {
+						i, err := strconv.Atoi(port)
+						if err != nil {
+							return fmt.Errorf("port must be an integer value in the SGRule. %v", port)
+						}
+						if 0 >= i || i > 65535 {
+							return fmt.Errorf("port outside range. %v", port)
+						}
+					}
+					if len(ports) == 2 {
+						first, _ := strconv.Atoi(ports[0])
+						second, _ := strconv.Atoi(ports[1])
+						if first > second {
+							return fmt.Errorf("Invalid port range %v. first number bigger than second", prange)
+						}
+					} else if len(ports) > 2 {
+						return fmt.Errorf("Invalid port range format: %v", prange)
+					}
+				}
 			}
 		}
 	}

@@ -209,7 +209,7 @@ func TestSgPolicyWriter(t *testing.T) {
 		},
 		Spec: security.SGPolicySpec{
 			AttachTenant: true,
-			Rules: []*security.SGRule{
+			Rules: []security.SGRule{
 				{
 					Action:          "PERMIT",
 					FromIPAddresses: []string{"10.0.0.1/16"},
@@ -277,4 +277,43 @@ func TestTenantWriter(t *testing.T) {
 
 	// stop api server
 	apiSrv.Stop()
+}
+
+func TestAppWriter(t *testing.T) {
+	// api server
+	apiSrv, url, err := serviceutils.StartAPIServer(apisrvURL, t.Name(), logger)
+	AssertOk(t, err, "Error starting api server")
+	defer apiSrv.Stop()
+
+	// create network state manager
+	wr, err := NewAPISrvWriter(url, nil)
+	AssertOk(t, err, "Error creating apisrv writer")
+	defer wr.Close()
+
+	// api server client
+	logger := log.WithContext("Pkg", "writer_test")
+	apicl, err := apiclient.NewGrpcAPIClient(globals.Npm, url, logger)
+	AssertOk(t, err, "Error creating api client")
+
+	// app object
+	app := security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Name:   "testApp",
+			Tenant: "testTenant",
+		},
+		Spec: security.AppSpec{
+			Timeout: "5m",
+			ALG: security.ALG{
+				Type: "FTP",
+			},
+		},
+	}
+
+	_, err = apicl.SecurityV1().App().Create(context.Background(), &app)
+	AssertOk(t, err, "Error creating app")
+
+	// write
+	err = wr.WriteApp(&app)
+	AssertOk(t, err, "Error writing app")
 }

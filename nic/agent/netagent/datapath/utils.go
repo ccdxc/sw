@@ -11,7 +11,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
+	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -51,13 +51,15 @@ func (hd *Datapath) convertMatchCriteria(src, dst *netproto.MatchSelector) ([]*h
 			return nil, err
 		}
 		for _, s := range src.AppConfigs {
-			sPort, err := hd.convertPort(s.Port)
-			if err != nil {
-				log.Errorf("Could not convert port match criteria from: {%v} . Err: %v", s, err)
-				return nil, err
+			if s.Port != "" && s.Protocol != "" {
+				sPort, cerr := hd.convertPort(s.Port)
+				if cerr != nil {
+					log.Errorf("Could not convert port match criteria from: {%v} . Err: %v", s, err)
+					return nil, cerr
+				}
+				srcPortRanges = append(srcPortRanges, sPort)
+				srcProtocols = append(srcProtocols, hd.convertAppProtocol(s.Protocol))
 			}
-			srcPortRanges = append(srcPortRanges, sPort)
-			srcProtocols = append(srcProtocols, hd.convertAppProtocol(s.Protocol))
 		}
 	}
 
@@ -69,13 +71,15 @@ func (hd *Datapath) convertMatchCriteria(src, dst *netproto.MatchSelector) ([]*h
 			return nil, err
 		}
 		for _, d := range dst.AppConfigs {
-			dPort, err := hd.convertPort(d.Port)
-			if err != nil {
-				log.Errorf("Could not convert port match criteria from: {%v} . Err: %v", d, err)
-				return nil, err
+			if d.Port != "" && d.Protocol != "" {
+				dPort, err := hd.convertPort(d.Port)
+				if err != nil {
+					log.Errorf("Could not convert port match criteria from: {%v} . Err: %v", d, err)
+					return nil, err
+				}
+				dstPortRanges = append(dstPortRanges, dPort)
+				dstProtocols = append(dstProtocols, hd.convertAppProtocol(d.Protocol))
 			}
-			dstPortRanges = append(dstPortRanges, dPort)
-			dstProtocols = append(dstProtocols, hd.convertAppProtocol(d.Protocol))
 		}
 	}
 

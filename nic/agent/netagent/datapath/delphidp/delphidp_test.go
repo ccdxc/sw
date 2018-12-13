@@ -6,10 +6,12 @@ import (
 	"testing"
 	"time"
 
+	. "gopkg.in/check.v1"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/delphidp/halproto"
+	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/nic/delphi/gosdk"
-	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -35,20 +37,43 @@ func TestDelphiMount(t *testing.T) {
 	time.Sleep(time.Millisecond)
 }
 
-func TestDelphiInterface(t *testing.T) {
+type delphidpTestSuite struct {
+	hub      gosdk.Hub
+	datapath *DelphiDatapath
+}
+
+// Hook up gocheck into the "go test" runner.
+func TestDelphiDatapath(t *testing.T) {
+	// integ test suite
+	var sts = &delphidpTestSuite{}
+
+	var _ = Suite(sts)
+	TestingT(t)
+}
+
+func (ds *delphidpTestSuite) SetUpSuite(c *C) {
 	// start the fake delphi hub
-	hub := gosdk.NewFakeHub()
-	hub.Start()
+	ds.hub = gosdk.NewFakeHub()
+	ds.hub.Start()
 
 	// create delphi datapath
 	dp, err := NewDelphiDatapath()
-	AssertOk(t, err, "Error creating delphi datapath")
+	AssertOk(c, err, "Error creating delphi datapath")
+	ds.datapath = dp
 
 	// verify we receive mount complete callback
-	AssertEventually(t, func() (bool, interface{}) {
+	AssertEventually(c, func() (bool, interface{}) {
 		return dp.IsMountComplete(), dp
 	}, "Mounting delphi failed")
+}
 
+func (ds *delphidpTestSuite) TearDownSuite(c *C) {
+	ds.datapath.delphiClient.Close()
+	ds.hub.Stop()
+	time.Sleep(time.Millisecond)
+}
+
+func (ds *delphidpTestSuite) TestDelphiInterface(t *C) {
 	// interface
 	intf := &netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
@@ -82,11 +107,11 @@ func TestDelphiInterface(t *testing.T) {
 	}
 
 	// create an interface
-	err = dp.CreateInterface(intf, lif, nil, nil)
+	err := ds.datapath.CreateInterface(intf, lif, nil, nil)
 	AssertOk(t, err, "Error creating interface in delphi")
 
 	AssertEventually(t, func() (bool, interface{}) {
-		iflist := dp.delphiClient.List("InterfaceSpec")
+		iflist := ds.datapath.delphiClient.List("InterfaceSpec")
 		log.Infof("Got if : %+v", iflist[0])
 		return (len(iflist) == 1), iflist
 	}, "invalid number of interfaces")
@@ -97,56 +122,39 @@ func TestDelphiInterface(t *testing.T) {
 			InterfaceId: intf.Status.InterfaceID,
 		},
 	}
-	ifSpec := halproto.GetInterfaceSpec(dp.delphiClient, ifKey)
+	ifSpec := halproto.GetInterfaceSpec(ds.datapath.delphiClient, ifKey)
 	Assert(t, ifSpec != nil, "Error getting interface spec", ifSpec)
 	Assert(t, ifSpec.Type == halproto.IfType_IF_TYPE_ENIC, "invalid interface type")
 
 	// delete the interface
-	err = dp.DeleteInterface(intf, nil)
+	err = ds.datapath.DeleteInterface(intf, nil)
 	AssertOk(t, err, "Error deleting interface")
 
 	// verify interface is acutually gone
 	AssertEventually(t, func() (bool, interface{}) {
-		iflist := dp.delphiClient.List("InterfaceSpec")
+		iflist := ds.datapath.delphiClient.List("InterfaceSpec")
 		return (len(iflist) == 0), iflist
 	}, "interface still found after deleting")
-	ifSpec = halproto.GetInterfaceSpec(dp.delphiClient, ifKey)
+	ifSpec = halproto.GetInterfaceSpec(ds.datapath.delphiClient, ifKey)
 	Assert(t, ifSpec == nil, "Interface still found after deleting")
 
 	// create an interface status and verify we get the callback
 	intfStatus := &halproto.InterfaceStatus{
 		KeyOrHandle: ifKey,
 	}
-	dp.delphiClient.SetObject(intfStatus)
+	ds.datapath.delphiClient.SetObject(intfStatus)
 	AssertEventually(t, func() (bool, interface{}) {
-		return (dp.eventStats["OnInterfaceStatusUpdate"] >= 1), dp.eventStats
+		return (ds.datapath.eventStats["OnInterfaceStatusUpdate"] >= 1), ds.datapath.eventStats
 	}, "interface status reactor wasnt called")
 
 	// delete the status and verify we get delete callback
-	dp.delphiClient.DeleteObject(intfStatus)
+	ds.datapath.delphiClient.DeleteObject(intfStatus)
 	AssertEventually(t, func() (bool, interface{}) {
-		return (dp.eventStats["OnInterfaceStatusDelete"] >= 1), dp.eventStats
+		return (ds.datapath.eventStats["OnInterfaceStatusDelete"] >= 1), ds.datapath.eventStats
 	}, "interface status delete reactor wasnt called")
-
-	dp.delphiClient.Close()
-	hub.Stop()
-	time.Sleep(time.Millisecond)
 }
 
-func TestDelphiUplinkInterface(t *testing.T) {
-	// start the fake delphi hub
-	hub := gosdk.NewFakeHub()
-	hub.Start()
-
-	// create delphi datapath
-	dp, err := NewDelphiDatapath()
-	AssertOk(t, err, "Error creating delphi datapath")
-
-	// verify we receive mount complete callback
-	AssertEventually(t, func() (bool, interface{}) {
-		return dp.IsMountComplete(), dp
-	}, "Mounting delphi failed")
-
+func (ds *delphidpTestSuite) TestDelphiUplinkInterface(t *C) {
 	// interface
 	intf := &netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
@@ -180,11 +188,11 @@ func TestDelphiUplinkInterface(t *testing.T) {
 	}
 
 	// create an interface
-	err = dp.CreateInterface(intf, nil, port, nil)
+	err := ds.datapath.CreateInterface(intf, nil, port, nil)
 	AssertOk(t, err, "Error creating interface in delphi")
 
 	AssertEventually(t, func() (bool, interface{}) {
-		iflist := dp.delphiClient.List("InterfaceSpec")
+		iflist := ds.datapath.delphiClient.List("InterfaceSpec")
 		log.Infof("Got if : %+v", iflist[0])
 		return (len(iflist) == 1), iflist
 	}, "invalid number of interfaces")
@@ -195,92 +203,427 @@ func TestDelphiUplinkInterface(t *testing.T) {
 			InterfaceId: intf.Status.InterfaceID,
 		},
 	}
-	ifSpec := halproto.GetInterfaceSpec(dp.delphiClient, ifKey)
+	ifSpec := halproto.GetInterfaceSpec(ds.datapath.delphiClient, ifKey)
 	Assert(t, ifSpec != nil, "Error getting interface spec", ifSpec)
 	Assert(t, ifSpec.Type == halproto.IfType_IF_TYPE_UPLINK, "invalid interface type")
 
 	// delete the interface
-	err = dp.DeleteInterface(intf, nil)
+	err = ds.datapath.DeleteInterface(intf, nil)
 	AssertOk(t, err, "Error deleting interface")
 
 	// verify interface is acutually gone
 	AssertEventually(t, func() (bool, interface{}) {
-		iflist := dp.delphiClient.List("InterfaceSpec")
+		iflist := ds.datapath.delphiClient.List("InterfaceSpec")
 		return (len(iflist) == 0), iflist
 	}, "interface still found after deleting")
-	ifSpec = halproto.GetInterfaceSpec(dp.delphiClient, ifKey)
+	ifSpec = halproto.GetInterfaceSpec(ds.datapath.delphiClient, ifKey)
 	Assert(t, ifSpec == nil, "Interface still found after deleting")
-
-	dp.delphiClient.Close()
-	hub.Stop()
-	time.Sleep(time.Millisecond)
 }
 
-func TestDelphiDatapath(t *testing.T) {
-	// start the fake delphi hub
-	hub := gosdk.NewFakeHub()
-	hub.Start()
+func (ds *delphidpTestSuite) TestDelphiRemoteEndpoint(t *C) {
+	// namespace
+	ns := netproto.Namespace{
+		TypeMeta: api.TypeMeta{Kind: "Namespace"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "testTenant",
+			Name:   "testTenant",
+		},
+	}
 
-	// create delphi datapath
-	dp, err := NewDelphiDatapath()
-	AssertOk(t, err, "Error creating delphi datapath")
+	// network
+	nt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.1.1.0/24",
+			IPv4Gateway: "10.1.1.254",
+		},
+	}
 
-	// verify we receive mount complete callback
+	// endpoint
+	epinfo := netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "testEndpoint",
+			Namespace: "default",
+		},
+		Spec: netproto.EndpointSpec{
+			EndpointUUID: "testEndpointUUID",
+			WorkloadUUID: "testWorkloadUUID",
+			NetworkName:  "default",
+			MacAddress:   "42:42:42:42:42:42",
+			IPv4Address:  "10.1.1.1/24",
+			IPv4Gateway:  "20.1.1.254",
+		},
+	}
+
+	// create an endpoint
+	err := ds.datapath.CreateRemoteEndpoint(&epinfo, &nt, nil, 0, &ns)
+	AssertOk(t, err, "Error creating endpoint in delphi")
+
 	AssertEventually(t, func() (bool, interface{}) {
-		return dp.IsMountComplete(), dp
-	}, "Mounting delphi failed")
+		eplist := ds.datapath.delphiClient.List("EndpointSpec")
+		log.Infof("Got endpoint : %+v", eplist[0])
+		return (len(eplist) == 1), eplist
+	}, "invalid number of endpoints")
+
+	err = ds.datapath.UpdateRemoteEndpoint(&epinfo, &nt, nil)
+	AssertOk(t, err, "Error updating endpoint in delphi")
+
+	// delete the interface
+	err = ds.datapath.DeleteRemoteEndpoint(&epinfo, &nt)
+	AssertOk(t, err, "Error deleting endpoint")
+
+	// verify interface is acutually gone
+	AssertEventually(t, func() (bool, interface{}) {
+		iflist := ds.datapath.delphiClient.List("EndpointSpec")
+		return (len(iflist) == 0), iflist
+	}, "endpoint still found after deleting")
+}
+
+func (ds *delphidpTestSuite) TestDelphiLocalEndpoint(t *C) {
+	// namespace
+	ns := netproto.Namespace{
+		TypeMeta: api.TypeMeta{Kind: "Namespace"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "testTenant",
+			Name:   "testTenant",
+		},
+	}
+
+	// network
+	nt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.1.1.0/24",
+			IPv4Gateway: "10.1.1.254",
+		},
+	}
+
+	// endpoint
+	epinfo := netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "testEndpoint",
+			Namespace: "default",
+		},
+		Spec: netproto.EndpointSpec{
+			EndpointUUID: "testEndpointUUID",
+			WorkloadUUID: "testWorkloadUUID",
+			NetworkName:  "default",
+			MacAddress:   "42:42:42:42:42:42",
+			IPv4Address:  "10.1.1.1/24",
+			IPv4Gateway:  "20.1.1.254",
+		},
+	}
+
+	// create an endpoint
+	_, err := ds.datapath.CreateLocalEndpoint(&epinfo, &nt, nil, 0, 0, &ns)
+	AssertOk(t, err, "Error creating endpoint in delphi")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		eplist := ds.datapath.delphiClient.List("EndpointSpec")
+		log.Infof("Got endpoint : %+v", eplist[0])
+		return (len(eplist) == 1), eplist
+	}, "invalid number of endpoints")
+
+	err = ds.datapath.UpdateLocalEndpoint(&epinfo, &nt, nil)
+	AssertOk(t, err, "Error updating endpoint in delphi")
+
+	// delete the interface
+	err = ds.datapath.DeleteLocalEndpoint(&epinfo, &nt, 0)
+	AssertOk(t, err, "Error deleting endpoint")
+
+	// verify interface is acutually gone
+	AssertEventually(t, func() (bool, interface{}) {
+		iflist := ds.datapath.delphiClient.List("EndpointSpec")
+		return (len(iflist) == 0), iflist
+	}, "endpoint still found after deleting")
+}
+
+func (ds *delphidpTestSuite) TestDelphiNetwork(t *C) {
+	// namespace
+	ns := netproto.Namespace{
+		TypeMeta: api.TypeMeta{Kind: "Namespace"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "testTenant",
+			Name:   "testTenant",
+		},
+	}
+
+	// uplink
+	intf := netproto.Interface{
+		TypeMeta: api.TypeMeta{Kind: "Interface"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testUplink",
+		},
+		Spec: netproto.InterfaceSpec{
+			Type: "UPLINK_ETH",
+		},
+		Status: netproto.InterfaceStatus{
+			InterfaceID: 100,
+		},
+	}
+
+	// network
+	nt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.1.1.0/24",
+			IPv4Gateway: "10.1.1.254",
+			RouterMAC:   "00:01:02:03:04:05",
+		},
+		Status: netproto.NetworkStatus{
+			NetworkID: 100,
+		},
+	}
+
+	// create a network
+	err := ds.datapath.CreateNetwork(&nt, []*netproto.Interface{&intf}, &ns)
+	AssertOk(t, err, "Error creating network in delphi")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		ntlist := ds.datapath.delphiClient.List("NetworkSpec")
+		log.Infof("Got network : %+v", ntlist[0])
+		return (len(ntlist) == 1), ntlist
+	}, "invalid number of networks")
+
+	err = ds.datapath.UpdateNetwork(&nt, &ns)
+	AssertOk(t, err, "Error updating network in delphi")
+
+	// delete the network
+	err = ds.datapath.DeleteNetwork(&nt, nil, &ns)
+	AssertOk(t, err, "Error deleting network")
+
+	// verify interface is acutually gone
+	AssertEventually(t, func() (bool, interface{}) {
+		ntlist := ds.datapath.delphiClient.List("NetworkSpec")
+		return (len(ntlist) == 0), ntlist
+	}, "network still found after deleting")
+}
+
+func (ds *delphidpTestSuite) TestDelphiSecurityGroup(t *C) {
+	// security group
+	sg := netproto.SecurityGroup{
+		TypeMeta: api.TypeMeta{Kind: "SecurityGroup"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "test-sg",
+		},
+		Spec: netproto.SecurityGroupSpec{
+			SecurityProfile: "unknown",
+		},
+	}
+
+	// create a network
+	err := ds.datapath.CreateSecurityGroup(&sg)
+	AssertOk(t, err, "Error creating sg in delphi")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		sglist := ds.datapath.delphiClient.List("SecurityGroupSpec")
+		log.Infof("Got sg : %+v", sglist[0])
+		return (len(sglist) == 1), sglist
+	}, "invalid number of sgs")
+
+	err = ds.datapath.UpdateSecurityGroup(&sg)
+	AssertOk(t, err, "Error updating sg in delphi")
+
+	// delete the network
+	err = ds.datapath.DeleteSecurityGroup(&sg)
+	AssertOk(t, err, "Error deleting sg")
+
+	// verify interface is acutually gone
+	AssertEventually(t, func() (bool, interface{}) {
+		sglist := ds.datapath.delphiClient.List("SecurityGroupSpec")
+		return (len(sglist) == 0), sglist
+	}, "sg still found after deleting")
+}
+
+func (ds *delphidpTestSuite) TestDelphiSgPolicy(t *C) {
+	// sg policy
+	sgPolicy := netproto.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testSGPolicy",
+		},
+		Spec: netproto.SGPolicySpec{
+			AttachTenant: true,
+			Rules: []netproto.PolicyRule{
+				{
+					Action: "PERMIT",
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
+						AppConfigs: []*netproto.AppConfig{
+							{
+								Port:     "80",
+								Protocol: "tcp",
+							},
+							{
+								Port:     "443",
+								Protocol: "icmp",
+							},
+							{
+								Port:     "53",
+								Protocol: "udp",
+							},
+						},
+					},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
+					},
+				},
+				{
+					Action: "DENY",
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"10.0.0.0/24"},
+						AppConfigs: []*netproto.AppConfig{
+							{
+								Port:     "80-81",
+								Protocol: "tcp",
+							},
+						},
+					},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"192.168.0.1/24"},
+					},
+				},
+				{
+					Action: "REJECT",
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"10.0.0.0"},
+						AppConfigs: []*netproto.AppConfig{
+							{
+								Port:     "80",
+								Protocol: "tcp",
+							},
+						},
+					},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"192.168.0.1"},
+						AppConfigs: []*netproto.AppConfig{
+							{
+								Port:     "80",
+								Protocol: "tcp",
+							},
+						},
+					},
+				},
+				{
+					Action: "LOG",
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"any"},
+						AppConfigs: []*netproto.AppConfig{
+							{
+								Port:     "80",
+								Protocol: "tcp",
+							},
+						},
+					},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"any"},
+					},
+				},
+				{
+					Action: "LOG",
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"192.168.0.1"},
+						AppConfigs: []*netproto.AppConfig{
+							{
+								Port:     "80-90",
+								Protocol: "tcp",
+							},
+						},
+					},
+				},
+				{
+					Action: "PERMIT",
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"192.168.0.1"},
+					},
+				},
+			},
+		},
+	}
+
+	// create a sg policy
+	err := ds.datapath.CreateSGPolicy(&sgPolicy, 100, nil)
+	AssertOk(t, err, "Error creating sgpolicy in delphi")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		sgplist := ds.datapath.delphiClient.List("SecurityPolicySpec")
+		log.Infof("Got sg : %+v", sgplist[0])
+		return (len(sgplist) == 1), sgplist
+	}, "invalid number of sg policies")
+
+	err = ds.datapath.UpdateSGPolicy(&sgPolicy, 100)
+	AssertOk(t, err, "Error updating sg policy in delphi")
+
+	// delete the network
+	err = ds.datapath.DeleteSGPolicy(&sgPolicy, 100)
+	AssertOk(t, err, "Error deleting sg policy")
+
+	// verify interface is acutually gone
+	AssertEventually(t, func() (bool, interface{}) {
+		sgplist := ds.datapath.delphiClient.List("SecurityPolicySpec")
+		return (len(sgplist) == 0), sgplist
+	}, "sg policy still found after deleting")
+}
+
+func (ds *delphidpTestSuite) TestDelphiDatapathStubs(c *C) {
 
 	// call all methods
-	dp.SetAgent(nil)
-	dp.CreateLocalEndpoint(nil, nil, nil, 0, 0, nil)
-	dp.UpdateLocalEndpoint(nil, nil, nil)
-	dp.DeleteLocalEndpoint(nil, nil, 0)
-	dp.CreateRemoteEndpoint(nil, nil, nil, 0, nil)
-	dp.UpdateRemoteEndpoint(nil, nil, nil)
-	dp.DeleteRemoteEndpoint(nil, nil)
-	dp.CreateNetwork(nil, nil, nil)
-	dp.UpdateNetwork(nil, nil)
-	dp.DeleteNetwork(nil, nil, nil)
-	dp.CreateSecurityGroup(nil)
-	dp.UpdateSecurityGroup(nil)
-	dp.DeleteSecurityGroup(nil)
-	dp.CreateVrf(0, "")
-	dp.DeleteVrf(0)
-	dp.UpdateVrf(0)
-	dp.CreateNatPool(nil, nil)
-	dp.UpdateNatPool(nil, nil)
-	dp.DeleteNatPool(nil, nil)
-	dp.CreateNatPolicy(nil, nil, nil)
-	dp.UpdateNatPolicy(nil, nil, nil)
-	dp.DeleteNatPolicy(nil, nil)
-	dp.CreateRoute(nil, nil)
-	dp.UpdateRoute(nil, nil)
-	dp.DeleteRoute(nil, nil)
-	dp.CreateNatBinding(nil, nil, 0, nil)
-	dp.UpdateNatBinding(nil, nil)
-	dp.DeleteNatBinding(nil, nil)
-	dp.CreateIPSecPolicy(nil, nil, nil)
-	dp.UpdateIPSecPolicy(nil, nil)
-	dp.DeleteIPSecPolicy(nil, nil)
-	dp.CreateIPSecSAEncrypt(nil, nil, nil)
-	dp.UpdateIPSecSAEncrypt(nil, nil)
-	dp.DeleteIPSecSAEncrypt(nil, nil)
-	dp.CreateIPSecSADecrypt(nil, nil, nil)
-	dp.UpdateIPSecSADecrypt(nil, nil)
-	dp.DeleteIPSecSADecrypt(nil, nil)
-	dp.CreateSGPolicy(nil, 0, nil)
-	dp.UpdateSGPolicy(nil, 0)
-	dp.DeleteSGPolicy(nil, 0)
-	dp.CreateTunnel(nil, nil)
-	dp.UpdateTunnel(nil, nil)
-	dp.DeleteTunnel(nil, nil)
-	dp.CreateTCPProxyPolicy(nil, nil)
-	dp.UpdateTCPProxyPolicy(nil, nil)
-	dp.DeleteTCPProxyPolicy(nil, nil)
-	dp.CreatePort(nil)
-	dp.ListInterfaces()
-
-	dp.delphiClient.Close()
-	hub.Stop()
-	time.Sleep(time.Millisecond)
+	ds.datapath.SetAgent(nil)
+	ds.datapath.CreateVrf(0, "")
+	ds.datapath.DeleteVrf(0)
+	ds.datapath.UpdateVrf(0)
+	ds.datapath.CreateNatPool(nil, nil)
+	ds.datapath.UpdateNatPool(nil, nil)
+	ds.datapath.DeleteNatPool(nil, nil)
+	ds.datapath.CreateNatPolicy(nil, nil, nil)
+	ds.datapath.UpdateNatPolicy(nil, nil, nil)
+	ds.datapath.DeleteNatPolicy(nil, nil)
+	ds.datapath.CreateRoute(nil, nil)
+	ds.datapath.UpdateRoute(nil, nil)
+	ds.datapath.DeleteRoute(nil, nil)
+	ds.datapath.CreateNatBinding(nil, nil, 0, nil)
+	ds.datapath.UpdateNatBinding(nil, nil)
+	ds.datapath.DeleteNatBinding(nil, nil)
+	ds.datapath.CreateIPSecPolicy(nil, nil, nil)
+	ds.datapath.UpdateIPSecPolicy(nil, nil)
+	ds.datapath.DeleteIPSecPolicy(nil, nil)
+	ds.datapath.CreateIPSecSAEncrypt(nil, nil, nil)
+	ds.datapath.UpdateIPSecSAEncrypt(nil, nil)
+	ds.datapath.DeleteIPSecSAEncrypt(nil, nil)
+	ds.datapath.CreateIPSecSADecrypt(nil, nil, nil)
+	ds.datapath.UpdateIPSecSADecrypt(nil, nil)
+	ds.datapath.DeleteIPSecSADecrypt(nil, nil)
+	ds.datapath.CreateTunnel(nil, nil)
+	ds.datapath.UpdateTunnel(nil, nil)
+	ds.datapath.DeleteTunnel(nil, nil)
+	ds.datapath.CreateTCPProxyPolicy(nil, nil)
+	ds.datapath.UpdateTCPProxyPolicy(nil, nil)
+	ds.datapath.DeleteTCPProxyPolicy(nil, nil)
+	ds.datapath.CreatePort(nil)
+	ds.datapath.ListInterfaces()
 }

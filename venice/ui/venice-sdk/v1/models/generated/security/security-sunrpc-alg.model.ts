@@ -8,25 +8,30 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, PropInfoItem } from './base-model';
 
 
-export interface ISecurityMSRPC {
+export interface ISecuritySunrpcAlg {
+    'program-id'?: string;
 }
 
 
-export class SecurityMSRPC extends BaseModel implements ISecurityMSRPC {
+export class SecuritySunrpcAlg extends BaseModel implements ISecuritySunrpcAlg {
+    'program-id': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
+        'program-id': {
+            type: 'string'
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return SecurityMSRPC.propInfo[propName];
+        return SecuritySunrpcAlg.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (SecurityMSRPC.propInfo[prop] != null &&
-                        SecurityMSRPC.propInfo[prop].default != null &&
-                        SecurityMSRPC.propInfo[prop].default != '');
+        return (SecuritySunrpcAlg.propInfo[prop] != null &&
+                        SecuritySunrpcAlg.propInfo[prop].default != null &&
+                        SecuritySunrpcAlg.propInfo[prop].default != '');
     }
 
     /**
@@ -43,6 +48,11 @@ export class SecurityMSRPC extends BaseModel implements ISecurityMSRPC {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['program-id'] != null) {
+            this['program-id'] = values['program-id'];
+        } else if (fillDefaults && SecuritySunrpcAlg.hasDefaultValue('program-id')) {
+            this['program-id'] = SecuritySunrpcAlg.propInfo['program-id'].default;
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -50,6 +60,7 @@ export class SecurityMSRPC extends BaseModel implements ISecurityMSRPC {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
+                'program-id': new FormControl(this['program-id']),
             });
         }
         return this._formGroup;
@@ -61,6 +72,7 @@ export class SecurityMSRPC extends BaseModel implements ISecurityMSRPC {
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
+            this._formGroup.controls['program-id'].setValue(this['program-id']);
         }
     }
 }

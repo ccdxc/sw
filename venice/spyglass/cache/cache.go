@@ -310,13 +310,13 @@ func (c *Cache) searchSGP(query *search.PolicySearchRequest, sgp *security.SGPol
 	//   ok      github.com/pensando/sw/test/psearch     17.039s
 
 	for i, rule := range sgp.Spec.Rules {
-		if c.matchApp(query, rule) &&
+		if c.matchApp(query, &rule) &&
 			c.matchIP(query.FromIPAddress, rule.FromIPAddresses) &&
 			c.matchIP(query.ToIPAddress, rule.ToIPAddresses) &&
 			c.matchSG(query.FromSecurityGroup, rule.FromSecurityGroups) &&
 			c.matchSG(query.ToSecurityGroup, rule.ToSecurityGroups) {
 			entry = &search.PolicyMatchEntry{
-				Rule:  rule,
+				Rule:  &rule,
 				Index: uint32(i),
 			}
 			return true, sgp.Name, entry, nil

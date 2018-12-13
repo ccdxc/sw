@@ -272,6 +272,91 @@ func restPutApp(hostname, token string, obj interface{}) error {
 
 }
 
+func restGetFirewallProfile(hostname, tenant, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*security.FirewallProfile); ok {
+		nv, err := restcl.SecurityV1().FirewallProfile().Get(loginCtx, &v.ObjectMeta)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+
+	if v, ok := obj.(*security.FirewallProfileList); ok {
+		opts := api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: tenant}}
+		nv, err := restcl.SecurityV1().FirewallProfile().List(loginCtx, &opts)
+		if err != nil {
+			return err
+		}
+		v.Items = nv
+	}
+	return nil
+
+}
+
+func restDeleteFirewallProfile(hostname, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*security.FirewallProfile); ok {
+		nv, err := restcl.SecurityV1().FirewallProfile().Delete(loginCtx, &v.ObjectMeta)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+	return nil
+
+}
+
+func restPostFirewallProfile(hostname, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*security.FirewallProfile); ok {
+		nv, err := restcl.SecurityV1().FirewallProfile().Create(loginCtx, v)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+	return nil
+
+}
+
+func restPutFirewallProfile(hostname, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*security.FirewallProfile); ok {
+		nv, err := restcl.SecurityV1().FirewallProfile().Update(loginCtx, v)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+	return nil
+
+}
+
 func restGetCertificate(hostname, tenant, token string, obj interface{}) error {
 
 	restcl, err := apiclient.NewRestAPIClient(hostname)
@@ -438,6 +523,11 @@ func init() {
 	cl.AddRestDeleteFunc("security.App", "v1", restDeleteApp)
 	cl.AddRestPutFunc("security.App", "v1", restPutApp)
 	cl.AddRestGetFunc("security.App", "v1", restGetApp)
+
+	cl.AddRestPostFunc("security.FirewallProfile", "v1", restPostFirewallProfile)
+	cl.AddRestDeleteFunc("security.FirewallProfile", "v1", restDeleteFirewallProfile)
+	cl.AddRestPutFunc("security.FirewallProfile", "v1", restPutFirewallProfile)
+	cl.AddRestGetFunc("security.FirewallProfile", "v1", restGetFirewallProfile)
 
 	cl.AddRestPostFunc("security.Certificate", "v1", restPostCertificate)
 	cl.AddRestDeleteFunc("security.Certificate", "v1", restDeleteCertificate)

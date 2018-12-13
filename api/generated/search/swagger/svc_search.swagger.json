@@ -952,6 +952,19 @@
       },
       "description": "TextRequirement is AND of text-strings in the list\nIt is comprised of words or phrases for text search support.\nIf a text-string has space separated multi-word, it will be\ninterpreted as a phrase.\n\nIn the example below :\n- \"link down\" will be a phrase query\n- network, production, staging will be a word query\n\nFor eg:\n   network                      (match network)\n   link down                    (match \"link down\" phrase)\n   network,production           (match network AND production)\n   network,link down,staging    (match network AND \"link down\" AND staging)"
     },
+    "securityProtoPort": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "type": "string",
+          "description": "protocol is ip (v4/v6) protocol name/number; names can be: tcp, udp, igmp, icmp, gre, esp, etc."
+        },
+        "ports": {
+          "type": "string",
+          "title": "TCP or UDP port number(s): comma separate port numbers, or dash separate port range"
+        }
+      }
+    },
     "securitySGRule": {
       "type": "object",
       "properties": {
@@ -960,7 +973,14 @@
           "items": {
             "type": "string"
           },
-          "title": "list of apps. proto/port format, or predefined apps and alg config"
+          "title": "list of apps objects to which the rule applies to"
+        },
+        "proto-ports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/securityProtoPort"
+          },
+          "title": "list of (protocol, ports) pairs to which the rule applies to, in addition to apps"
         },
         "action": {
           "type": "string",

@@ -94,16 +94,16 @@ message Timeouts {
 }
 
 
-// SecurityProfileStatus captures the sg profile status
+// SecurityProfileStatus captures the security profile status
 message SecurityProfileStatus {
     uint64 SecurityProfileID              = 1 [(gogoproto.jsontag) = "id,omitempty"];
 }
 
 message SecurityProfileList {
-    repeated SecurityProfile sgpolicies  = 1;
+    repeated SecurityProfile Profiles  = 1;
 }
 
-// sg profile watch event
+// security profile watch event
 message SecurityProfileEvent {
     api.EventType   EventType   = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
     SecurityProfile        SecurityProfile    = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "sg-profile,omitempty"];

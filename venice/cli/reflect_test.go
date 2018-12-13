@@ -61,10 +61,10 @@ func TestWriteObjStructSlice(t *testing.T) {
 	if !reflect.DeepEqual(sObj.Spec.AttachGroups, []string{"sg1", "sg-223"}) {
 		t.Fatalf("unable to find attach groups in sgpolicy: %+v", sObj)
 	}
-	expectedSGRules := []*security.SGRule{
-		&security.SGRule{Apps: []string{apps[0]}, FromSecurityGroups: []string{fromSgs[0]}},
-		&security.SGRule{Apps: []string{apps[1]}, FromSecurityGroups: []string{fromSgs[1]}},
-		&security.SGRule{Apps: []string{apps[2]}, FromSecurityGroups: []string{fromSgs[2]}},
+	expectedSGRules := []security.SGRule{
+		{Apps: []string{apps[0]}, FromSecurityGroups: []string{fromSgs[0]}},
+		{Apps: []string{apps[1]}, FromSecurityGroups: []string{fromSgs[1]}},
+		{Apps: []string{apps[2]}, FromSecurityGroups: []string{fromSgs[2]}},
 	}
 	if len(sObj.Spec.Rules) != 1 && !reflect.DeepEqual(sObj.Spec.Rules, expectedSGRules) {
 		t.Fatalf("unable to find Rules:\nGot %d rules %+v\nExpected %d rules %+v",

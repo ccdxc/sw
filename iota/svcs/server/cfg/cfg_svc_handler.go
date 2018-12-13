@@ -423,7 +423,7 @@ func (c *ConfigService) generateConfigs() ([]*iota.ConfigObject, error) {
 		},
 		Spec: security.SGPolicySpec{
 			AttachTenant: true,
-			Rules: []*security.SGRule{
+			Rules: []security.SGRule{
 				{
 					Action:          "PERMIT",
 					FromIPAddresses: []string{"any"},

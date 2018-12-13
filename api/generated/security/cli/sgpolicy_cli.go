@@ -57,6 +57,20 @@ var CreateSGPolicyFlags = []gen.CliFlag{
 		Insert: "",
 	},
 	{
+		ID:     "ports",
+		Type:   "StringSlice",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "protocol",
+		Type:   "StringSlice",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
 		ID:     "to-ip",
 		Type:   "StringSlice",
 		Help:   "",

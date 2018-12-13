@@ -6,13 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"hash/fnv"
-	"strings"
 
 	"golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/security"
-	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
+	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
@@ -167,7 +166,7 @@ func (s *SGPolicyRPCServer) WatchSGPolicys(sel *api.ObjectMeta, stream netproto.
 }
 
 // convertRules need not handle validation as the rules are already validate by the precommit api server hook
-func convertRules(veniceRules []*security.SGRule) (agentRules []netproto.PolicyRule) {
+func convertRules(veniceRules []security.SGRule) (agentRules []netproto.PolicyRule) {
 	for _, v := range veniceRules {
 		a := netproto.PolicyRule{
 			Action: v.Action,
@@ -178,7 +177,7 @@ func convertRules(veniceRules []*security.SGRule) (agentRules []netproto.PolicyR
 			Dst: &netproto.MatchSelector{
 				SecurityGroups: v.ToSecurityGroups,
 				Addresses:      v.ToIPAddresses,
-				AppConfigs:     convertAppConfig(v.Apps),
+				AppConfigs:     convertAppConfig(v.Apps, v.ProtoPorts),
 			},
 			ID: generateRuleHash(v),
 		}
@@ -188,12 +187,17 @@ func convertRules(veniceRules []*security.SGRule) (agentRules []netproto.PolicyR
 }
 
 // convertAppConfig converts venice app information to port protocol for agent
-func convertAppConfig(apps []string) (agentAppConfigs []*netproto.AppConfig) {
+func convertAppConfig(apps []string, protoPorts []security.ProtoPort) (agentAppConfigs []*netproto.AppConfig) {
 	for _, a := range apps {
-		components := strings.Split(a, "/")
 		c := netproto.AppConfig{
-			Protocol: components[0],
-			Port:     components[1],
+			AppName: a,
+		}
+		agentAppConfigs = append(agentAppConfigs, &c)
+	}
+	for _, pp := range protoPorts {
+		c := netproto.AppConfig{
+			Protocol: pp.Protocol,
+			Port:     pp.Ports,
 		}
 		agentAppConfigs = append(agentAppConfigs, &c)
 	}
@@ -201,7 +205,7 @@ func convertAppConfig(apps []string) (agentAppConfigs []*netproto.AppConfig) {
 }
 
 // generateRuleHash generates the hash of the rule
-func generateRuleHash(r *security.SGRule) uint64 {
+func generateRuleHash(r security.SGRule) uint64 {
 	h := fnv.New64()
 	rule, _ := r.Marshal()
 	h.Write(rule)

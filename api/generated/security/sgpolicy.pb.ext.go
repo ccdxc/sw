@@ -39,6 +39,27 @@ func (m *SGPolicy) MakeURI(cat, ver, prefix string) string {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *ProtoPort) Clone(into interface{}) (interface{}, error) {
+	var out *ProtoPort
+	var ok bool
+	if into == nil {
+		out = &ProtoPort{}
+	} else {
+		out, ok = into.(*ProtoPort)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *ProtoPort) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *SGPolicy) Clone(into interface{}) (interface{}, error) {
 	var out *SGPolicy
 	var ok bool
@@ -104,10 +125,8 @@ func (m *SGPolicySpec) Clone(into interface{}) (interface{}, error) {
 func (m *SGPolicySpec) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Rules {
-		if m.Rules[k] != nil {
-			i := m.Rules[k]
-			ret = i.Defaults(ver) || ret
-		}
+		i := m.Rules[k]
+		ret = i.Defaults(ver) || ret
 	}
 	return ret
 }
@@ -161,6 +180,11 @@ func (m *SGRule) Defaults(ver string) bool {
 }
 
 // Validators
+
+func (m *ProtoPort) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
 
 func (m *SGPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error

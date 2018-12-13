@@ -10,12 +10,12 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
 	protos "github.com/pensando/sw/nic/agent/netagent/protos"
+	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/nic/agent/netagent/state"
 	tpdatapath "github.com/pensando/sw/nic/agent/tpa/datapath"
 	tpstate "github.com/pensando/sw/nic/agent/tpa/state"
 	tsdatapath "github.com/pensando/sw/nic/agent/troubleshooting/datapath/hal"
 	tsstate "github.com/pensando/sw/nic/agent/troubleshooting/state"
-	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
 

@@ -42,6 +42,10 @@ func (d *dummyWriter) WriteTenant(tn *cluster.Tenant) error {
 	return nil
 }
 
+func (d *dummyWriter) WriteApp(ap *security.App) error {
+	return nil
+}
+
 func (d *dummyWriter) Close() error {
 	return nil
 }
@@ -267,9 +271,14 @@ func TestSgPolicyWatcher(t *testing.T) {
 	}, "Sg not found in statemgr")
 
 	// rules
-	rules := []*security.SGRule{
+	rules := []security.SGRule{
 		{
-			Apps:   []string{"tcp/80"},
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+			},
 			Action: "PERMIT",
 		},
 	}
@@ -408,9 +417,14 @@ func TestRestartWatchers(t *testing.T) {
 	}, "Sg not found in statemgr")
 
 	// rules
-	rules := []*security.SGRule{
+	rules := []security.SGRule{
 		{
-			Apps:   []string{"tcp/80"},
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+			},
 			Action: "PERMIT",
 		},
 	}

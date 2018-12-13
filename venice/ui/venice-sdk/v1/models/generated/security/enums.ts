@@ -13,6 +13,16 @@ export enum LabelsRequirement_operator {
     'notIn' = "notIn",
 }
 
+export enum SecurityALG_Type {
+    'ICMP' = "ICMP",
+    'DNS' = "DNS",
+    'FTP' = "FTP",
+    'SunRPC' = "SunRPC",
+    'MSRPC' = "MSRPC",
+    'TFTP' = "TFTP",
+    'RTSP' = "RTSP",
+}
+
 export enum SecurityCertificateSpec_usages {
     'Server' = "Server",
     'Client' = "Client",
@@ -70,6 +80,7 @@ export class AllEnums {
     }
 
     LabelsRequirement_operator = LabelsRequirement_operator;
+    SecurityALG_Type = SecurityALG_Type;
     SecurityCertificateSpec_usages = SecurityCertificateSpec_usages;
     SecurityCertificateStatus_validity = SecurityCertificateStatus_validity;
     SecuritySGRule_action = SecuritySGRule_action;

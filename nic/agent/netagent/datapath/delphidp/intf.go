@@ -6,7 +6,7 @@ import (
 	"errors"
 
 	"github.com/pensando/sw/nic/agent/netagent/datapath/delphidp/halproto"
-	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
+	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 )
 
 // ------------------------- Datapath APIs called from netagent ----------------------

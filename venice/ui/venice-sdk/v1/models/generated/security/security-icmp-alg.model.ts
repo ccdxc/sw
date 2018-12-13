@@ -8,25 +8,35 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, PropInfoItem } from './base-model';
 
 
-export interface ISecurityRSTP {
+export interface ISecurityIcmpAlg {
+    'type'?: number;
+    'code'?: number;
 }
 
 
-export class SecurityRSTP extends BaseModel implements ISecurityRSTP {
+export class SecurityIcmpAlg extends BaseModel implements ISecurityIcmpAlg {
+    'type': number = null;
+    'code': number = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
+        'type': {
+            type: 'number'
+        },
+        'code': {
+            type: 'number'
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return SecurityRSTP.propInfo[propName];
+        return SecurityIcmpAlg.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (SecurityRSTP.propInfo[prop] != null &&
-                        SecurityRSTP.propInfo[prop].default != null &&
-                        SecurityRSTP.propInfo[prop].default != '');
+        return (SecurityIcmpAlg.propInfo[prop] != null &&
+                        SecurityIcmpAlg.propInfo[prop].default != null &&
+                        SecurityIcmpAlg.propInfo[prop].default != '');
     }
 
     /**
@@ -43,6 +53,16 @@ export class SecurityRSTP extends BaseModel implements ISecurityRSTP {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['type'] != null) {
+            this['type'] = values['type'];
+        } else if (fillDefaults && SecurityIcmpAlg.hasDefaultValue('type')) {
+            this['type'] = SecurityIcmpAlg.propInfo['type'].default;
+        }
+        if (values && values['code'] != null) {
+            this['code'] = values['code'];
+        } else if (fillDefaults && SecurityIcmpAlg.hasDefaultValue('code')) {
+            this['code'] = SecurityIcmpAlg.propInfo['code'].default;
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -50,6 +70,8 @@ export class SecurityRSTP extends BaseModel implements ISecurityRSTP {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
+                'type': new FormControl(this['type']),
+                'code': new FormControl(this['code']),
             });
         }
         return this._formGroup;
@@ -61,6 +83,8 @@ export class SecurityRSTP extends BaseModel implements ISecurityRSTP {
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
+            this._formGroup.controls['type'].setValue(this['type']);
+            this._formGroup.controls['code'].setValue(this['code']);
         }
     }
 }

@@ -8,65 +8,82 @@ import "google/api/annotations.proto";
 import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
+import "sgpolicy.proto";
 
 // ----------------------------- App Object -----------------------------
 
 // AppSpec - spec part of App object
 message AppSpec {
-    // List of proto/port
-    repeated string Protocol    = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "protocol,omitempty"];
+    // list of (protocol, ports) pairs
+    repeated ProtoPort ProtoPorts  = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "proto-ports,omitempty"];
+    // Timeout specifies for how long the connection be kept before removing the flow entry, specified in string as '200s', '5m', etc.
+    string Timeout                          = 2 [(gogoproto.jsontag) = "timeout,omitempty", (venice.check) = "Duration()"];
     // ALG configuration if specified
-    ALG             ALG         = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "alg,omitempty"];
+    ALG    ALG                              = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "alg,omitempty"];
 }
 
 // ALG specifies the application specific configuration for the list of applications mentioned below.
-// TODO Investigate configuration for other ALGs
 message ALG {
-    DNS     DNS     = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "dns,omitempty"];
-    SIP     SIP     = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "sip,omitempty"];
-    SunRPC  SunRPC  = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "sunrpc,omitempty"];
-    FTP     FTP     = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ftp,omitempty"];
-    MSRPC   MSRPC   = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "msrpc,omitempty"];
-    TFTP    TFTP    = 6 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "tftp,omitempty"];
-    RSTP    RSTP    = 7 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "rstp,omitempty"];
+    enum ALGType
+    {
+        ICMP    = 0;
+        DNS     = 1;
+        FTP     = 2;
+        SunRPC  = 3;
+        MSRPC   = 4;
+        TFTP    = 5;
+        RTSP    = 6;
+    }
+    string     Type       = 1 [(venice.check) = "StrEnum(ALG.ALGType)"];
+    IcmpAlg    IcmpAlg    = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "icmp,omitempty"];
+    DnsAlg     DnsAlg     = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "dns,omitempty"];
+    FtpAlg     FtpAlg     = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "ftp,omitempty"];
+    SunrpcAlg  SunrpcAlg  = 5 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "sunrpc,omitempty"];
+    MsrpcAlg   MsrpcAlg   = 6 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "msrpc,omitempty"];
+}
+
+// ICMP ALG configuration
+message IcmpAlg {
+    // ICMP Type
+    uint32 Type = 1 [(gogoproto.jsontag) = "type,omitempty"];
+    // ICMP Code is sub-command for a given ICMP Type
+    uint32 Code = 2 [(gogoproto.jsontag) = "code,omitempty"];
 }
 
 // DNS ALG configuration
-message DNS {
-    bool DropMultiQuestionPackets = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "drop-multi-question-packets,omitempty"];
-}
-
-// SIP ALG configuration
-message SIP {
-    uint32 MaxCallDuration = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "max-call-duration,omitemtpy"];
-}
-
-// SunRPC ALG configuration
-message SunRPC {
-    // RPC Program identifier
-    string ProgramID        = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "program-id,omitempty"];
-    // Defines timeout in hours, minutes, eg 24h, 300m
-    string MapEntryTimeout  = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "map-entry-timeout"];
+message DnsAlg {
+    // Drop packet if number of questions is more than one
+    bool DropMultiQuestionPackets   = 1 [(gogoproto.jsontag) = "drop-multi-question-packets,omitempty"];
+    // Drop if domain name size is > 255 bytes
+    bool DropLargeDomainNamePackets = 2 [(gogoproto.jsontag) = "drop-large-domain-name-packets,omitempty"];
+    // Drop if label length is 64 bytes or higher
+    bool DropLongLabelPackets       = 3 [(gogoproto.jsontag) = "drop-long-label-packets,omitempty"];
+    // Drop if number of zones in the request is more tha one
+    bool DropMultiZonePackets       = 4 [(gogoproto.jsontag) = "drop-multi-zone-packets,omitempty"];
+    // Maximum message length, default value is 512, maximum specified user value is 8129
+    uint32 MaxMessageLength         = 5 [(gogoproto.jsontag) = "max-message-length,omitempty"];
+    // Timeout for DHCP Query, default 60s
+    string QueryResponseTimeout     = 6 [(gogoproto.jsontag) = "query-response-timeout,omitempty"];
 }
 
 // FTP ALG configuration
-message FTP {
+message FtpAlg {
+    // Allow Mismatch IP Address in the payload compared to what is present in the IP header
+    bool AllowMismatchIPAddress  = 1 [(gogoproto.jsontag) = "allow-mismatch-ip-address,omitempty"];
+}
 
+// SunRPC ALG configuration
+message SunrpcAlg {
+    // RPC Program identifier
+    string ProgramID        = 1 [(gogoproto.jsontag) = "program-id,omitempty"];
+    // Timeout for this program id is waht session timeout in the app defines
 }
 
 // MSRPC ALG configuration
-message MSRPC {
-
-}
-
-// TFTP ALG configuration
-message TFTP {
-
-}
-
-// RSTP ALG configuration
-message RSTP {
-
+message MsrpcAlg {
+    // MSRPC Program identifier
+    string ProgramUUID      = 1 [(gogoproto.jsontag) = "program-uuid,omitempty"];
+    // Timeout for this program uuid is waht session timeout in the app defines
 }
 
 // AppStatus - status part of App object
@@ -78,7 +95,7 @@ message AppStatus {
 // App - Read-only objects auto-created by Venice
 // One object per App that can be identified by Naples
 message App {
-    option (venice.objectPrefix) = { Collection: "apps" };
+    option (venice.objectPrefix) = {Collection: "apps", Path: "/{O.Tenant}"};
     api.TypeMeta T = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
     api.ObjectMeta O = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
 

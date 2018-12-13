@@ -14,7 +14,7 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
 	"github.com/pensando/sw/nic/agent/netagent/protos"
-	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
+	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
 

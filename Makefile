@@ -13,7 +13,7 @@ EXCLUDE_PATTERNS := "generated|halproto|proto|model_sim|labels|vendor|bazel|e2et
 
 # Lists venice venice protos and all things auto generated.
 TO_GEN := api api/labels api/fields venice/cmd/types/protos venice/cmd/grpc \
-venice/ctrler/ckm/rpcserver/ckmproto venice/ctrler/npm/rpcserver/netproto \
+venice/ctrler/ckm/rpcserver/ckmproto nic/agent/netagent/protos/netproto \
 venice/ctrler/tpm/rpcserver/protos  \
 venice/ctrler/tsm/rpcserver/tsproto \
 venice/citadel/collector/rpcserver/metric venice/utils/runtime/test \

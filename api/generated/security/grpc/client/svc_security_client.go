@@ -57,6 +57,20 @@ func NewSecurityV1(conn *grpc.ClientConn, logger log.Logger) security.ServiceSec
 		).Endpoint()
 		lAutoAddCertificateEndpoint = trace.ClientEndPoint("SecurityV1:AutoAddCertificate")(lAutoAddCertificateEndpoint)
 	}
+	var lAutoAddFirewallProfileEndpoint endpoint.Endpoint
+	{
+		lAutoAddFirewallProfileEndpoint = grpctransport.NewClient(
+			conn,
+			"security.SecurityV1",
+			"AutoAddFirewallProfile",
+			security.EncodeGrpcReqFirewallProfile,
+			security.DecodeGrpcRespFirewallProfile,
+			&security.FirewallProfile{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoAddFirewallProfileEndpoint = trace.ClientEndPoint("SecurityV1:AutoAddFirewallProfile")(lAutoAddFirewallProfileEndpoint)
+	}
 	var lAutoAddSGPolicyEndpoint endpoint.Endpoint
 	{
 		lAutoAddSGPolicyEndpoint = grpctransport.NewClient(
@@ -126,6 +140,20 @@ func NewSecurityV1(conn *grpc.ClientConn, logger log.Logger) security.ServiceSec
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoDeleteCertificateEndpoint = trace.ClientEndPoint("SecurityV1:AutoDeleteCertificate")(lAutoDeleteCertificateEndpoint)
+	}
+	var lAutoDeleteFirewallProfileEndpoint endpoint.Endpoint
+	{
+		lAutoDeleteFirewallProfileEndpoint = grpctransport.NewClient(
+			conn,
+			"security.SecurityV1",
+			"AutoDeleteFirewallProfile",
+			security.EncodeGrpcReqFirewallProfile,
+			security.DecodeGrpcRespFirewallProfile,
+			&security.FirewallProfile{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoDeleteFirewallProfileEndpoint = trace.ClientEndPoint("SecurityV1:AutoDeleteFirewallProfile")(lAutoDeleteFirewallProfileEndpoint)
 	}
 	var lAutoDeleteSGPolicyEndpoint endpoint.Endpoint
 	{
@@ -197,6 +225,20 @@ func NewSecurityV1(conn *grpc.ClientConn, logger log.Logger) security.ServiceSec
 		).Endpoint()
 		lAutoGetCertificateEndpoint = trace.ClientEndPoint("SecurityV1:AutoGetCertificate")(lAutoGetCertificateEndpoint)
 	}
+	var lAutoGetFirewallProfileEndpoint endpoint.Endpoint
+	{
+		lAutoGetFirewallProfileEndpoint = grpctransport.NewClient(
+			conn,
+			"security.SecurityV1",
+			"AutoGetFirewallProfile",
+			security.EncodeGrpcReqFirewallProfile,
+			security.DecodeGrpcRespFirewallProfile,
+			&security.FirewallProfile{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoGetFirewallProfileEndpoint = trace.ClientEndPoint("SecurityV1:AutoGetFirewallProfile")(lAutoGetFirewallProfileEndpoint)
+	}
 	var lAutoGetSGPolicyEndpoint endpoint.Endpoint
 	{
 		lAutoGetSGPolicyEndpoint = grpctransport.NewClient(
@@ -266,6 +308,20 @@ func NewSecurityV1(conn *grpc.ClientConn, logger log.Logger) security.ServiceSec
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoListCertificateEndpoint = trace.ClientEndPoint("SecurityV1:AutoListCertificate")(lAutoListCertificateEndpoint)
+	}
+	var lAutoListFirewallProfileEndpoint endpoint.Endpoint
+	{
+		lAutoListFirewallProfileEndpoint = grpctransport.NewClient(
+			conn,
+			"security.SecurityV1",
+			"AutoListFirewallProfile",
+			security.EncodeGrpcReqListWatchOptions,
+			security.DecodeGrpcRespFirewallProfileList,
+			&security.FirewallProfileList{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoListFirewallProfileEndpoint = trace.ClientEndPoint("SecurityV1:AutoListFirewallProfile")(lAutoListFirewallProfileEndpoint)
 	}
 	var lAutoListSGPolicyEndpoint endpoint.Endpoint
 	{
@@ -337,6 +393,20 @@ func NewSecurityV1(conn *grpc.ClientConn, logger log.Logger) security.ServiceSec
 		).Endpoint()
 		lAutoUpdateCertificateEndpoint = trace.ClientEndPoint("SecurityV1:AutoUpdateCertificate")(lAutoUpdateCertificateEndpoint)
 	}
+	var lAutoUpdateFirewallProfileEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateFirewallProfileEndpoint = grpctransport.NewClient(
+			conn,
+			"security.SecurityV1",
+			"AutoUpdateFirewallProfile",
+			security.EncodeGrpcReqFirewallProfile,
+			security.DecodeGrpcRespFirewallProfile,
+			&security.FirewallProfile{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateFirewallProfileEndpoint = trace.ClientEndPoint("SecurityV1:AutoUpdateFirewallProfile")(lAutoUpdateFirewallProfileEndpoint)
+	}
 	var lAutoUpdateSGPolicyEndpoint endpoint.Endpoint
 	{
 		lAutoUpdateSGPolicyEndpoint = grpctransport.NewClient(
@@ -384,26 +454,31 @@ func NewSecurityV1(conn *grpc.ClientConn, logger log.Logger) security.ServiceSec
 
 		AutoAddAppEndpoint:                        lAutoAddAppEndpoint,
 		AutoAddCertificateEndpoint:                lAutoAddCertificateEndpoint,
+		AutoAddFirewallProfileEndpoint:            lAutoAddFirewallProfileEndpoint,
 		AutoAddSGPolicyEndpoint:                   lAutoAddSGPolicyEndpoint,
 		AutoAddSecurityGroupEndpoint:              lAutoAddSecurityGroupEndpoint,
 		AutoAddTrafficEncryptionPolicyEndpoint:    lAutoAddTrafficEncryptionPolicyEndpoint,
 		AutoDeleteAppEndpoint:                     lAutoDeleteAppEndpoint,
 		AutoDeleteCertificateEndpoint:             lAutoDeleteCertificateEndpoint,
+		AutoDeleteFirewallProfileEndpoint:         lAutoDeleteFirewallProfileEndpoint,
 		AutoDeleteSGPolicyEndpoint:                lAutoDeleteSGPolicyEndpoint,
 		AutoDeleteSecurityGroupEndpoint:           lAutoDeleteSecurityGroupEndpoint,
 		AutoDeleteTrafficEncryptionPolicyEndpoint: lAutoDeleteTrafficEncryptionPolicyEndpoint,
 		AutoGetAppEndpoint:                        lAutoGetAppEndpoint,
 		AutoGetCertificateEndpoint:                lAutoGetCertificateEndpoint,
+		AutoGetFirewallProfileEndpoint:            lAutoGetFirewallProfileEndpoint,
 		AutoGetSGPolicyEndpoint:                   lAutoGetSGPolicyEndpoint,
 		AutoGetSecurityGroupEndpoint:              lAutoGetSecurityGroupEndpoint,
 		AutoGetTrafficEncryptionPolicyEndpoint:    lAutoGetTrafficEncryptionPolicyEndpoint,
 		AutoListAppEndpoint:                       lAutoListAppEndpoint,
 		AutoListCertificateEndpoint:               lAutoListCertificateEndpoint,
+		AutoListFirewallProfileEndpoint:           lAutoListFirewallProfileEndpoint,
 		AutoListSGPolicyEndpoint:                  lAutoListSGPolicyEndpoint,
 		AutoListSecurityGroupEndpoint:             lAutoListSecurityGroupEndpoint,
 		AutoListTrafficEncryptionPolicyEndpoint:   lAutoListTrafficEncryptionPolicyEndpoint,
 		AutoUpdateAppEndpoint:                     lAutoUpdateAppEndpoint,
 		AutoUpdateCertificateEndpoint:             lAutoUpdateCertificateEndpoint,
+		AutoUpdateFirewallProfileEndpoint:         lAutoUpdateFirewallProfileEndpoint,
 		AutoUpdateSGPolicyEndpoint:                lAutoUpdateSGPolicyEndpoint,
 		AutoUpdateSecurityGroupEndpoint:           lAutoUpdateSecurityGroupEndpoint,
 		AutoUpdateTrafficEncryptionPolicyEndpoint: lAutoUpdateTrafficEncryptionPolicyEndpoint,
@@ -915,6 +990,9 @@ func (a *restObjSecurityV1App) List(ctx context.Context, options *api.ListWatchO
 		return nil, errors.New("invalid input")
 	}
 
+	if options.Tenant == "" {
+		options.Tenant = globals.DefaultTenant
+	}
 	r, err := a.endpoints.AutoListApp(ctx, options)
 	if err == nil {
 		return r.Items, nil
@@ -930,6 +1008,184 @@ func (a *restObjSecurityV1App) Watch(ctx context.Context, options *api.ListWatch
 }
 
 func (a *restObjSecurityV1App) Allowed(oper apiserver.APIOperType) bool {
+	switch oper {
+	case apiserver.CreateOper:
+		return true
+	case apiserver.UpdateOper:
+		return true
+	case apiserver.GetOper:
+		return true
+	case apiserver.DeleteOper:
+		return true
+	case apiserver.ListOper:
+		return true
+	case apiserver.WatchOper:
+		return true
+	default:
+		return false
+	}
+}
+
+type grpcObjSecurityV1FirewallProfile struct {
+	logger log.Logger
+	client security.ServiceSecurityV1Client
+}
+
+func (a *grpcObjSecurityV1FirewallProfile) Create(ctx context.Context, in *security.FirewallProfile) (*security.FirewallProfile, error) {
+	a.logger.DebugLog("msg", "received call", "object", "FirewallProfile", "oper", "create")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoAddFirewallProfile(nctx, in)
+}
+
+func (a *grpcObjSecurityV1FirewallProfile) Update(ctx context.Context, in *security.FirewallProfile) (*security.FirewallProfile, error) {
+	a.logger.DebugLog("msg", "received call", "object", "FirewallProfile", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateFirewallProfile(nctx, in)
+}
+
+func (a *grpcObjSecurityV1FirewallProfile) Get(ctx context.Context, objMeta *api.ObjectMeta) (*security.FirewallProfile, error) {
+	a.logger.DebugLog("msg", "received call", "object", "FirewallProfile", "oper", "get")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := security.FirewallProfile{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoGetFirewallProfile(nctx, &in)
+}
+
+func (a *grpcObjSecurityV1FirewallProfile) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*security.FirewallProfile, error) {
+	a.logger.DebugLog("msg", "received call", "object", "FirewallProfile", "oper", "delete")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := security.FirewallProfile{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoDeleteFirewallProfile(nctx, &in)
+}
+
+func (a *grpcObjSecurityV1FirewallProfile) List(ctx context.Context, options *api.ListWatchOptions) ([]*security.FirewallProfile, error) {
+	a.logger.DebugLog("msg", "received call", "object", "FirewallProfile", "oper", "list")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	r, err := a.client.AutoListFirewallProfile(nctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *grpcObjSecurityV1FirewallProfile) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "FirewallProfile", "oper", "WatchOper")
+	nctx := addVersion(ctx, "v1")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	stream, err := a.client.AutoWatchFirewallProfile(nctx, options)
+	if err != nil {
+		return nil, err
+	}
+	wstream := stream.(security.SecurityV1_AutoWatchFirewallProfileClient)
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			r, err := wstream.Recv()
+			if err != nil {
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				close(lw.OutCh)
+				return
+			}
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
+	lw.Run()
+	return lw, nil
+}
+
+func (a *grpcObjSecurityV1FirewallProfile) Allowed(oper apiserver.APIOperType) bool {
+	return true
+}
+
+type restObjSecurityV1FirewallProfile struct {
+	endpoints security.EndpointsSecurityV1RestClient
+	instance  string
+}
+
+func (a *restObjSecurityV1FirewallProfile) Create(ctx context.Context, in *security.FirewallProfile) (*security.FirewallProfile, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoAddFirewallProfile(ctx, in)
+}
+
+func (a *restObjSecurityV1FirewallProfile) Update(ctx context.Context, in *security.FirewallProfile) (*security.FirewallProfile, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoUpdateFirewallProfile(ctx, in)
+}
+
+func (a *restObjSecurityV1FirewallProfile) Get(ctx context.Context, objMeta *api.ObjectMeta) (*security.FirewallProfile, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := security.FirewallProfile{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoGetFirewallProfile(ctx, &in)
+}
+
+func (a *restObjSecurityV1FirewallProfile) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*security.FirewallProfile, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := security.FirewallProfile{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoDeleteFirewallProfile(ctx, &in)
+}
+
+func (a *restObjSecurityV1FirewallProfile) List(ctx context.Context, options *api.ListWatchOptions) ([]*security.FirewallProfile, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+
+	if options.Tenant == "" {
+		options.Tenant = globals.DefaultTenant
+	}
+	r, err := a.endpoints.AutoListFirewallProfile(ctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *restObjSecurityV1FirewallProfile) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoWatchFirewallProfile(ctx, options)
+}
+
+func (a *restObjSecurityV1FirewallProfile) Allowed(oper apiserver.APIOperType) bool {
 	switch oper {
 	case apiserver.CreateOper:
 		return true
@@ -1311,6 +1567,7 @@ type crudClientSecurityV1 struct {
 	grpcSecurityGroup           security.SecurityV1SecurityGroupInterface
 	grpcSGPolicy                security.SecurityV1SGPolicyInterface
 	grpcApp                     security.SecurityV1AppInterface
+	grpcFirewallProfile         security.SecurityV1FirewallProfileInterface
 	grpcCertificate             security.SecurityV1CertificateInterface
 	grpcTrafficEncryptionPolicy security.SecurityV1TrafficEncryptionPolicyInterface
 }
@@ -1325,6 +1582,7 @@ func NewGrpcCrudClientSecurityV1(conn *grpc.ClientConn, logger log.Logger) secur
 		grpcSecurityGroup:           &grpcObjSecurityV1SecurityGroup{client: client, logger: logger},
 		grpcSGPolicy:                &grpcObjSecurityV1SGPolicy{client: client, logger: logger},
 		grpcApp:                     &grpcObjSecurityV1App{client: client, logger: logger},
+		grpcFirewallProfile:         &grpcObjSecurityV1FirewallProfile{client: client, logger: logger},
 		grpcCertificate:             &grpcObjSecurityV1Certificate{client: client, logger: logger},
 		grpcTrafficEncryptionPolicy: &grpcObjSecurityV1TrafficEncryptionPolicy{client: client, logger: logger},
 	}
@@ -1340,6 +1598,10 @@ func (a *crudClientSecurityV1) SGPolicy() security.SecurityV1SGPolicyInterface {
 
 func (a *crudClientSecurityV1) App() security.SecurityV1AppInterface {
 	return a.grpcApp
+}
+
+func (a *crudClientSecurityV1) FirewallProfile() security.SecurityV1FirewallProfileInterface {
+	return a.grpcFirewallProfile
 }
 
 func (a *crudClientSecurityV1) Certificate() security.SecurityV1CertificateInterface {
@@ -1396,6 +1658,7 @@ type crudRestClientSecurityV1 struct {
 	restSecurityGroup           security.SecurityV1SecurityGroupInterface
 	restSGPolicy                security.SecurityV1SGPolicyInterface
 	restApp                     security.SecurityV1AppInterface
+	restFirewallProfile         security.SecurityV1FirewallProfileInterface
 	restCertificate             security.SecurityV1CertificateInterface
 	restTrafficEncryptionPolicy security.SecurityV1TrafficEncryptionPolicyInterface
 }
@@ -1411,6 +1674,7 @@ func NewRestCrudClientSecurityV1(url string) security.SecurityV1Interface {
 		restSecurityGroup:           &restObjSecurityV1SecurityGroup{endpoints: endpoints, instance: url},
 		restSGPolicy:                &restObjSecurityV1SGPolicy{endpoints: endpoints, instance: url},
 		restApp:                     &restObjSecurityV1App{endpoints: endpoints, instance: url},
+		restFirewallProfile:         &restObjSecurityV1FirewallProfile{endpoints: endpoints, instance: url},
 		restCertificate:             &restObjSecurityV1Certificate{endpoints: endpoints, instance: url},
 		restTrafficEncryptionPolicy: &restObjSecurityV1TrafficEncryptionPolicy{endpoints: endpoints, instance: url},
 	}
@@ -1427,6 +1691,7 @@ func NewStagedRestCrudClientSecurityV1(url string, id string) security.SecurityV
 		restSecurityGroup:           &restObjSecurityV1SecurityGroup{endpoints: endpoints, instance: url},
 		restSGPolicy:                &restObjSecurityV1SGPolicy{endpoints: endpoints, instance: url},
 		restApp:                     &restObjSecurityV1App{endpoints: endpoints, instance: url},
+		restFirewallProfile:         &restObjSecurityV1FirewallProfile{endpoints: endpoints, instance: url},
 		restCertificate:             &restObjSecurityV1Certificate{endpoints: endpoints, instance: url},
 		restTrafficEncryptionPolicy: &restObjSecurityV1TrafficEncryptionPolicy{endpoints: endpoints, instance: url},
 	}
@@ -1442,6 +1707,10 @@ func (a *crudRestClientSecurityV1) SGPolicy() security.SecurityV1SGPolicyInterfa
 
 func (a *crudRestClientSecurityV1) App() security.SecurityV1AppInterface {
 	return a.restApp
+}
+
+func (a *crudRestClientSecurityV1) FirewallProfile() security.SecurityV1FirewallProfileInterface {
+	return a.restFirewallProfile
 }
 
 func (a *crudRestClientSecurityV1) Certificate() security.SecurityV1CertificateInterface {

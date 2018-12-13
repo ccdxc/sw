@@ -198,7 +198,7 @@ func recordEvents(proxyURL, eventsDir string, eventCount int64) {
 	}
 }
 
-func createSGPolicy(tenant, namespace, name string, rules []*security.SGRule) *security.SGPolicy {
+func createSGPolicy(tenant, namespace, name string, rules []security.SGRule) *security.SGPolicy {
 	// SGPolicy object
 	sgp := security.SGPolicy{
 		TypeMeta: api.TypeMeta{
@@ -274,9 +274,9 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 	}
 
 	// Create SGPolicy object-1
-	rules1 := []*security.SGRule{
+	rules1 := []security.SGRule{
 		// 0
-		&security.SGRule{
+		{
 			Apps: []string{
 				"tcp/80",
 				"udp/53",
@@ -292,7 +292,7 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 			Action: security.SGRule_PERMIT.String(),
 		},
 		// 1
-		&security.SGRule{
+		{
 			Apps: []string{"tcp/443"},
 			FromIPAddresses: []string{
 				"37.232.218.135/22",
@@ -303,7 +303,7 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 			Action: security.SGRule_PERMIT.String(),
 		},
 		// 2
-		&security.SGRule{
+		{
 			Apps: []string{"tcp/22"},
 			FromIPAddresses: []string{
 				"any",
@@ -314,7 +314,7 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 			Action: security.SGRule_PERMIT.String(),
 		},
 		// 3
-		&security.SGRule{
+		{
 			Apps: []string{"icmp/1000"},
 			FromIPAddresses: []string{
 				"10.1.1.1",
@@ -325,7 +325,7 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 			Action: security.SGRule_PERMIT.String(),
 		},
 		// 4
-		&security.SGRule{
+		{
 			Apps: []string{"udp/53"},
 			FromSecurityGroups: []string{
 				"dns-clients",
@@ -336,7 +336,7 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 			Action: security.SGRule_PERMIT.String(),
 		},
 		// 5
-		&security.SGRule{
+		{
 			Apps: []string{"udp/53"},
 			FromSecurityGroups: []string{
 				"test-servers",
@@ -354,9 +354,9 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 	}
 
 	// Create SGPolicy object-2
-	rules2 := []*security.SGRule{
+	rules2 := []security.SGRule{
 		// 0
-		&security.SGRule{
+		{
 			Apps: []string{
 				"tcp/1024",
 			},
@@ -368,7 +368,7 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 			},
 			Action: security.SGRule_PERMIT.String(),
 		},
-		&security.SGRule{
+		{
 			Apps: []string{"tcp/80"},
 			FromIPAddresses: []string{
 				"30.1.1.1-30.1.1.10",
@@ -388,9 +388,9 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 	// Create SGPolicy object-3 with 70k rules
 	proto := []string{"tcp", "udp"}
 	actions := []string{security.SGRule_PERMIT.String(), security.SGRule_DENY.String()}
-	rules3 := make([]*security.SGRule, 70000)
+	rules3 := make([]security.SGRule, 70000)
 	for i := 0; i < 70000; i++ {
-		rules3[i] = &security.SGRule{
+		rules3[i] = security.SGRule{
 			Apps:            []string{fmt.Sprintf("%s/%d", proto[i%2], (i+1)%65536)},
 			Action:          actions[i%2],
 			FromIPAddresses: []string{fmt.Sprintf("10.%d.%d.%d/32", (i/(256*256))%256, (i/256)%256, i%256)},

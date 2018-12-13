@@ -3,7 +3,6 @@
 package statemgr
 
 import (
-	"errors"
 	"fmt"
 	"sync"
 	"testing"
@@ -140,6 +139,10 @@ func (d *dummyWriter) WriteSGPolicy(sgp *security.SGPolicy) error {
 
 func (d *dummyWriter) WriteTenant(tn *cluster.Tenant) error {
 	d.store(tn)
+	return nil
+}
+func (d *dummyWriter) WriteApp(app *security.App) error {
+	d.store(app)
 	return nil
 }
 
@@ -569,89 +572,6 @@ func TestSgAttachEndpoint(t *testing.T) {
 	Assert(t, (len(sg.Status.Workloads) == 0), "Endpoint is still linked to sg", sg)
 }
 
-func TestSgpolicyCreateDelete(t *testing.T) {
-	// create network state manager
-	stateMgr, err := NewStatemgr(newDummyWriter(nil))
-	if err != nil {
-		t.Fatalf("Could not create network manager. Err: %v", err)
-		return
-	}
-	// create sg
-	_, err = createSg(stateMgr, "default", "procurement", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
-	AssertOk(t, err, "Error creating security group")
-	_, err = createSg(stateMgr, "default", "catalog", labels.SelectorFromSet(labels.Set{"env": "production", "app": "catalog"}))
-	AssertOk(t, err, "Error creating security group")
-
-	// sg policy
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "test-sgpolicy",
-		},
-		Spec: security.SGPolicySpec{
-			AttachGroups: []string{"procurement"},
-			Rules: []*security.SGRule{
-				{
-					Apps:   []string{"tcp/80"},
-					Action: "PERMIT",
-				},
-			},
-		},
-	}
-
-	// create sg policy
-	err = stateMgr.CreateSgpolicy(&sgp)
-	AssertOk(t, err, "Error creating the sg policy")
-
-	// verify we can find the sg policy
-	sgps, err := stateMgr.FindSgpolicy("default", "test-sgpolicy")
-	AssertOk(t, err, "Could not find the sg policy")
-	AssertEquals(t, sgps.Spec.AttachGroups, sgp.Spec.AttachGroups, "Security policy params did not match")
-	Assert(t, (len(sgps.groups) == 1), "Sg was not added to sgpolicy", sgps)
-	Assert(t, sgps.groups["procurement"].Name == "procurement", "Sgpolicy is not linked to sg", sgps)
-
-	// verify sg has the policy info
-	prsg, err := stateMgr.FindSecurityGroup("default", "procurement")
-	AssertOk(t, err, "Could not find security group")
-	Assert(t, (len(prsg.policies) == 1), "sgpolicy was not added to sg", prsg)
-	Assert(t, (prsg.policies[sgps.Name].Name == sgps.Name), "Sg is not linked to sgpolicy", prsg)
-	Assert(t, (len(prsg.Status.Policies) == 1), "Policy not found in sg status", prsg)
-	Assert(t, (prsg.Status.Policies[0] == sgps.Name), "Policy not found in sg status", prsg)
-
-	// verify we can not attach a policy to unknown sg
-	sgp2 := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "Sgpolicy"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "sgpolicy2",
-		},
-		Spec: security.SGPolicySpec{
-			AttachGroups: []string{"unknown"},
-			Rules: []*security.SGRule{
-				{
-					Apps:   []string{"tcp/80"},
-					Action: "PERMIT",
-				},
-			},
-		},
-	}
-	err = stateMgr.CreateSgpolicy(&sgp2)
-	Assert(t, (err != nil), "Policy creation with unknown attachment succeeded")
-
-	// delete the sg policy
-	err = stateMgr.DeleteSgpolicy("default", "test-sgpolicy")
-	AssertOk(t, err, "Error deleting security policy")
-
-	// verify the sg policy is gone
-	_, err = stateMgr.FindSgpolicy("default", "test-sgpolicy")
-	Assert(t, (err != nil), "Security policy still found after deleting")
-
-	// verify sgpolicy is unlinked from sg
-	Assert(t, (len(prsg.policies) == 0), "sgpolicy was not removed sg", prsg)
-	Assert(t, (len(prsg.Status.Policies) == 0), "sgpolicy was not removed sg", prsg)
-}
-
 // test concurrent add/delete/change of endpoints
 func TestEndpointConcurrency(t *testing.T) {
 	var concurrency = 100
@@ -1001,97 +921,4 @@ func TestSmartNicCreateDelete(t *testing.T) {
 	// verify endpoint is gone from the database
 	_, err = stateMgr.FindSmartNIC("default", "testSmartNIC")
 	Assert(t, (err != nil), "Deleted smartNic still found in db")
-}
-
-func createPolicy(s *Statemgr, name, version string) error {
-	sgp := security.SGPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:       "default",
-			Name:         name,
-			GenerationID: version,
-		},
-		Spec: security.SGPolicySpec{
-			AttachGroups: []string{"procurement"},
-			Rules: []*security.SGRule{
-				{
-					Apps:   []string{"tcp/80"},
-					Action: "PERMIT",
-				},
-			},
-		},
-	}
-
-	return s.CreateSgpolicy(&sgp)
-}
-
-func createSmartNic(s *Statemgr, name string) error {
-	snic := cluster.SmartNIC{
-		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
-		ObjectMeta: api.ObjectMeta{
-			Name:      name,
-			Namespace: "",
-			Tenant:    "default",
-		},
-		Spec: cluster.SmartNICSpec{},
-	}
-
-	return s.smartNicReactor.CreateSmartNIC(snic)
-}
-
-func getPolicyVersionForNode(s *Statemgr, policyname, nodename string) (string, error) {
-	// Give the watchers a chance to run
-	time.Sleep(250 * time.Millisecond)
-
-	p, err := s.FindSgpolicy("default", policyname)
-	if err != nil {
-		return "", err
-	}
-
-	version, ok := p.NodeVersions[nodename]
-	if ok != true {
-		return "", errors.New("Smartnic not found in versions")
-	}
-
-	return version, nil
-}
-
-func TestSmartPolicNodeVersions(t *testing.T) {
-	// create network state manager
-	writerObjects := make(map[interface{}]struct{})
-	stateMgr, err := NewStatemgr(newDummyWriter(writerObjects))
-	if err != nil {
-		t.Fatalf("Could not create network manager. Err: %v", err)
-		return
-	}
-
-	createPolicy(stateMgr, "testPolicy1", "1")
-	createSmartNic(stateMgr, "testSmartnic1")
-	version, err := getPolicyVersionForNode(stateMgr, "testPolicy1", "testSmartnic1")
-	AssertOk(t, err, "Couldn't get policy version for node")
-	AssertEquals(t, version, "", "Policy version not correct for node")
-
-	stateMgr.UpdateSgpolicyStatus("testSmartnic1", "default", "testPolicy1", "1")
-
-	version, err = getPolicyVersionForNode(stateMgr, "testPolicy1", "testSmartnic1")
-	AssertOk(t, err, "Couldn't get policy version for node")
-	AssertEquals(t, version, "1", "Policy version not correct for node")
-
-	createSmartNic(stateMgr, "testSmartnic2")
-	version, err = getPolicyVersionForNode(stateMgr, "testPolicy1", "testSmartnic2")
-	AssertOk(t, err, "Couldn't get policy version for node")
-	AssertEquals(t, version, "", "Policy version not correct for node")
-
-	// Wait for the periodic updater to kick in at least once
-	time.Sleep(6 * time.Second)
-	AssertEquals(t, len(writerObjects), 1, "Too many writer objects")
-	for obj := range writerObjects {
-		sgp, ok := obj.(*security.SGPolicy)
-		AssertEquals(t, ok, true, "Incorrect type of object found in writer objects")
-		prop := &sgp.Status.PropagationStatus
-		AssertEquals(t, prop.Updated, (int32)(1), "Incorrect 'updated' propagation status")
-		AssertEquals(t, prop.Pending, (int32)(1), "Incorrect 'pending' propagation status")
-		AssertEquals(t, prop.GenerationID, "1", "Incorrect 'generation id' propagation status")
-		AssertEquals(t, prop.MinVersion, "", "Incorrect 'min version' propagation status")
-	}
 }

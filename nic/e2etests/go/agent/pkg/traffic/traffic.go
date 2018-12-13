@@ -23,7 +23,7 @@ import (
 	Common "github.com/pensando/sw/nic/e2etests/go/common"
 	Infra "github.com/pensando/sw/nic/e2etests/go/infra"
 
-	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
+	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 )
 
 var (
@@ -106,18 +106,18 @@ func setUpRoute(srcEp *Infra.Endpoint, dstEp *Infra.Endpoint) error {
 
 func sendGarp(srcEp *Infra.Endpoint, dstEp *Infra.Endpoint) error {
 
-	cmd := []string {"arping", "-c", "1", "-U", srcEp.GetIP()}
+	cmd := []string{"arping", "-c", "1", "-U", srcEp.GetIP()}
 	if _, err := srcEp.AppEngine.RunCommand(cmd, 0, false); err != nil {
 		return err
 	}
 
 	time.Sleep(1 * time.Second)
-	cmd = []string {"arping", "-c", "1", "-U", dstEp.GetIP()}
+	cmd = []string{"arping", "-c", "1", "-U", dstEp.GetIP()}
 	if _, err := dstEp.AppEngine.RunCommand(cmd, 0, false); err != nil {
 		return err
 	}
 	time.Sleep(2 * time.Second)
-	
+
 	return nil
 }
 

@@ -49,7 +49,7 @@ func NewHalDatapath(kind Kind) (*Datapath, error) {
 		SgDB:             make(map[string]*halproto.SecurityGroupRequestMsg),
 		TenantDB:         make(map[string]*halproto.VrfRequestMsg),
 		TenantDelDB:      make(map[string]*halproto.VrfDeleteRequestMsg),
-		SgPolicyDB:       make(map[string]*halproto.SecurityGroupPolicyRequestMsg),
+		SgPolicyDB:       make(map[string]*halproto.SecurityPolicyRequestMsg),
 		InterfaceDB:      make(map[string]*halproto.InterfaceRequestMsg),
 		LifDB:            make(map[string]*halproto.LifRequestMsg),
 		InterfaceDelDB:   make(map[string]*halproto.InterfaceDeleteRequestMsg),

@@ -6,13 +6,13 @@ import (
 	"sync"
 
 	"github.com/pensando/sw/nic/agent/netagent/datapath/delphidp/halproto"
+	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/nic/delphi/gosdk"
 	"github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/nic/delphi/proto/delphi"
 	genproto "github.com/pensando/sw/nic/delphi/proto/goproto"
 	sysmgr "github.com/pensando/sw/nic/sysmgr/golib"
-	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -101,66 +101,6 @@ func (dp *DelphiDatapath) IsMountComplete() bool {
 // SetAgent sets the agent
 func (dp *DelphiDatapath) SetAgent(ag types.DatapathIntf) error {
 	dp.agent = ag
-	return nil
-}
-
-// CreateLocalEndpoint creates a local endpoint in datapath
-func (dp *DelphiDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup, lifID, enicID uint64, ns *netproto.Namespace) (*types.IntfInfo, error) {
-	return nil, nil
-}
-
-// UpdateLocalEndpoint updates a local endpoint in datapath
-func (dp *DelphiDatapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup) error {
-	return nil
-}
-
-// DeleteLocalEndpoint deletes a local endpoint in datapath
-func (dp *DelphiDatapath) DeleteLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, enicID uint64) error {
-	return nil
-}
-
-// CreateRemoteEndpoint creates a remote endpoint in datapath
-func (dp *DelphiDatapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup, uplinkID uint64, ns *netproto.Namespace) error {
-	return nil
-}
-
-// UpdateRemoteEndpoint updates a remote endpoint in datapath
-func (dp *DelphiDatapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup) error {
-	return nil
-}
-
-// DeleteRemoteEndpoint deletes a remote endpoint in datapath
-func (dp *DelphiDatapath) DeleteRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network) error {
-	return nil
-}
-
-// CreateNetwork creates a network
-func (dp *DelphiDatapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Interface, ns *netproto.Namespace) error {
-	return nil
-}
-
-// UpdateNetwork updates a network in datapath
-func (dp *DelphiDatapath) UpdateNetwork(nw *netproto.Network, ns *netproto.Namespace) error {
-	return nil
-}
-
-// DeleteNetwork deletes a network from datapath
-func (dp *DelphiDatapath) DeleteNetwork(nw *netproto.Network, uplinks []*netproto.Interface, ns *netproto.Namespace) error {
-	return nil
-}
-
-// CreateSecurityGroup creates a security group
-func (dp *DelphiDatapath) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
-	return nil
-}
-
-// UpdateSecurityGroup updates a security group
-func (dp *DelphiDatapath) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
-	return nil
-}
-
-// DeleteSecurityGroup deletes a security group
-func (dp *DelphiDatapath) DeleteSecurityGroup(sg *netproto.SecurityGroup) error {
 	return nil
 }
 
@@ -281,21 +221,6 @@ func (dp *DelphiDatapath) UpdateIPSecSADecrypt(np *netproto.IPSecSADecrypt, ns *
 
 // DeleteIPSecSADecrypt deletes a IPSecSA decrypt rule in the datapath
 func (dp *DelphiDatapath) DeleteIPSecSADecrypt(np *netproto.IPSecSADecrypt, ns *netproto.Namespace) error {
-	return nil
-}
-
-// CreateSGPolicy creates a security group policy in the datapath
-func (dp *DelphiDatapath) CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []*netproto.SecurityGroup) error {
-	return nil
-}
-
-// UpdateSGPolicy updates a security group policy in the datapath
-func (dp *DelphiDatapath) UpdateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64) error {
-	return nil
-}
-
-// DeleteSGPolicy deletes sg policy
-func (dp *DelphiDatapath) DeleteSGPolicy(sgp *netproto.SGPolicy, vrfID uint64) error {
 	return nil
 }
 

@@ -9,6 +9,7 @@ eventpolicy.proto monitoring true
 events.proto events true
 example.proto bookstore true
 export.proto monitoring true
+fwprofile.proto security true
 lb.proto network true
 metrics_query.proto metrics_query true
 mirror.proto monitoring true

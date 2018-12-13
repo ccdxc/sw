@@ -28,10 +28,15 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 	}
 
 	// incoming rule
-	rules := []*security.SGRule{
+	rules := []security.SGRule{
 		{
-			Apps:   []string{"tcp/80"},
 			Action: "PERMIT",
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "80",
+				},
+			},
 		},
 	}
 

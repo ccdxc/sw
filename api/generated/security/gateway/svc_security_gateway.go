@@ -96,6 +96,29 @@ func (a adapterSecurityV1) AutoAddCertificate(oldctx oldcontext.Context, t *secu
 	return ret.(*security.Certificate), err
 }
 
+func (a adapterSecurityV1) AutoAddFirewallProfile(oldctx oldcontext.Context, t *security.FirewallProfile, options ...grpc.CallOption) (*security.FirewallProfile, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddFirewallProfile")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "FirewallProfile", t.Tenant, t.Namespace, "security", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*security.FirewallProfile)
+		return a.service.AutoAddFirewallProfile(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*security.FirewallProfile), err
+}
+
 func (a adapterSecurityV1) AutoAddSGPolicy(oldctx oldcontext.Context, t *security.SGPolicy, options ...grpc.CallOption) (*security.SGPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -209,6 +232,29 @@ func (a adapterSecurityV1) AutoDeleteCertificate(oldctx oldcontext.Context, t *s
 		return nil, err
 	}
 	return ret.(*security.Certificate), err
+}
+
+func (a adapterSecurityV1) AutoDeleteFirewallProfile(oldctx oldcontext.Context, t *security.FirewallProfile, options ...grpc.CallOption) (*security.FirewallProfile, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteFirewallProfile")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "FirewallProfile", t.Tenant, t.Namespace, "security", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*security.FirewallProfile)
+		return a.service.AutoDeleteFirewallProfile(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*security.FirewallProfile), err
 }
 
 func (a adapterSecurityV1) AutoDeleteSGPolicy(oldctx oldcontext.Context, t *security.SGPolicy, options ...grpc.CallOption) (*security.SGPolicy, error) {
@@ -326,6 +372,29 @@ func (a adapterSecurityV1) AutoGetCertificate(oldctx oldcontext.Context, t *secu
 	return ret.(*security.Certificate), err
 }
 
+func (a adapterSecurityV1) AutoGetFirewallProfile(oldctx oldcontext.Context, t *security.FirewallProfile, options ...grpc.CallOption) (*security.FirewallProfile, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetFirewallProfile")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "FirewallProfile", t.Tenant, t.Namespace, "security", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*security.FirewallProfile)
+		return a.service.AutoGetFirewallProfile(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*security.FirewallProfile), err
+}
+
 func (a adapterSecurityV1) AutoGetSGPolicy(oldctx oldcontext.Context, t *security.SGPolicy, options ...grpc.CallOption) (*security.SGPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -403,7 +472,9 @@ func (a adapterSecurityV1) AutoListApp(oldctx oldcontext.Context, t *api.ListWat
 		return nil, errors.New("unknown service profile")
 	}
 
-	t.Tenant, t.Namespace = "", ""
+	if t.Tenant == "" {
+		t.Tenant = globals.DefaultTenant
+	}
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "AppList", t.Tenant, t.Namespace, "security", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
@@ -445,6 +516,33 @@ func (a adapterSecurityV1) AutoListCertificate(oldctx oldcontext.Context, t *api
 		return nil, err
 	}
 	return ret.(*security.CertificateList), err
+}
+
+func (a adapterSecurityV1) AutoListFirewallProfile(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*security.FirewallProfileList, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListFirewallProfile")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+
+	if t.Tenant == "" {
+		t.Tenant = globals.DefaultTenant
+	}
+	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "FirewallProfileList", t.Tenant, t.Namespace, "security", ""
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListFirewallProfile(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*security.FirewallProfileList), err
 }
 
 func (a adapterSecurityV1) AutoListSGPolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*security.SGPolicyList, error) {
@@ -572,6 +670,29 @@ func (a adapterSecurityV1) AutoUpdateCertificate(oldctx oldcontext.Context, t *s
 		return nil, err
 	}
 	return ret.(*security.Certificate), err
+}
+
+func (a adapterSecurityV1) AutoUpdateFirewallProfile(oldctx oldcontext.Context, t *security.FirewallProfile, options ...grpc.CallOption) (*security.FirewallProfile, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateFirewallProfile")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "FirewallProfile", t.Tenant, t.Namespace, "security", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*security.FirewallProfile)
+		return a.service.AutoUpdateFirewallProfile(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*security.FirewallProfile), err
 }
 
 func (a adapterSecurityV1) AutoUpdateSGPolicy(oldctx oldcontext.Context, t *security.SGPolicy, options ...grpc.CallOption) (*security.SGPolicy, error) {
@@ -769,7 +890,6 @@ func (a adapterSecurityV1) AutoWatchApp(oldctx oldcontext.Context, in *api.ListW
 		return nil, errors.New("unknown service profile")
 	}
 
-	in.Tenant, in.Namespace = "", ""
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "App", in.Tenant, in.Namespace, "security"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -799,6 +919,44 @@ func (a adapterSecurityV1) AutoWatchApp(oldctx oldcontext.Context, in *api.ListW
 		return nil, err
 	}
 	return ret.(security.SecurityV1_AutoWatchAppClient), err
+}
+
+func (a adapterSecurityV1) AutoWatchFirewallProfile(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (security.SecurityV1_AutoWatchFirewallProfileClient, error) {
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchFirewallProfile")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+
+	oper, kind, tenant, namespace, group := apiserver.WatchOper, "FirewallProfile", in.Tenant, in.Namespace, "security"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
+		if ok && iws.(bool) {
+			ir, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPReq)
+			if !ok {
+				return nil, errors.New("unable to retrieve request")
+			}
+			iw, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPWriter)
+			if !ok {
+				return nil, errors.New("unable to retrieve writer")
+			}
+			conn, err := wsUpgrader.Upgrade(iw.(http.ResponseWriter), ir.(*http.Request), nil)
+			if err != nil {
+				log.Errorf("WebSocket Upgrade failed (%s)", err)
+				return nil, err
+			}
+			ctx = apiutils.SetVar(ctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+		}
+		return a.service.AutoWatchFirewallProfile(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(security.SecurityV1_AutoWatchFirewallProfileClient), err
 }
 
 func (a adapterSecurityV1) AutoWatchCertificate(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (security.SecurityV1_AutoWatchCertificateClient, error) {
@@ -886,6 +1044,8 @@ func (e *sSecurityV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoAddCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Certificate", "security", apiserver.CreateOper)
 
+	e.svcProf["AutoAddFirewallProfile"] = apigwpkg.NewServiceProfile(e.defSvcProf, "FirewallProfile", "security", apiserver.CreateOper)
+
 	e.svcProf["AutoAddSGPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SGPolicy", "security", apiserver.CreateOper)
 
 	e.svcProf["AutoAddSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SecurityGroup", "security", apiserver.CreateOper)
@@ -895,6 +1055,8 @@ func (e *sSecurityV1GwService) setupSvcProfile() {
 	e.svcProf["AutoDeleteApp"] = apigwpkg.NewServiceProfile(e.defSvcProf, "App", "security", apiserver.DeleteOper)
 
 	e.svcProf["AutoDeleteCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Certificate", "security", apiserver.DeleteOper)
+
+	e.svcProf["AutoDeleteFirewallProfile"] = apigwpkg.NewServiceProfile(e.defSvcProf, "FirewallProfile", "security", apiserver.DeleteOper)
 
 	e.svcProf["AutoDeleteSGPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SGPolicy", "security", apiserver.DeleteOper)
 
@@ -906,6 +1068,8 @@ func (e *sSecurityV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoGetCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Certificate", "security", apiserver.GetOper)
 
+	e.svcProf["AutoGetFirewallProfile"] = apigwpkg.NewServiceProfile(e.defSvcProf, "FirewallProfile", "security", apiserver.GetOper)
+
 	e.svcProf["AutoGetSGPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SGPolicy", "security", apiserver.GetOper)
 
 	e.svcProf["AutoGetSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SecurityGroup", "security", apiserver.GetOper)
@@ -916,6 +1080,8 @@ func (e *sSecurityV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoListCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf, "CertificateList", "security", apiserver.ListOper)
 
+	e.svcProf["AutoListFirewallProfile"] = apigwpkg.NewServiceProfile(e.defSvcProf, "FirewallProfileList", "security", apiserver.ListOper)
+
 	e.svcProf["AutoListSGPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SGPolicyList", "security", apiserver.ListOper)
 
 	e.svcProf["AutoListSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SecurityGroupList", "security", apiserver.ListOper)
@@ -923,6 +1089,8 @@ func (e *sSecurityV1GwService) setupSvcProfile() {
 	e.svcProf["AutoUpdateApp"] = apigwpkg.NewServiceProfile(e.defSvcProf, "App", "security", apiserver.UpdateOper)
 
 	e.svcProf["AutoUpdateCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Certificate", "security", apiserver.UpdateOper)
+
+	e.svcProf["AutoUpdateFirewallProfile"] = apigwpkg.NewServiceProfile(e.defSvcProf, "FirewallProfile", "security", apiserver.UpdateOper)
 
 	e.svcProf["AutoUpdateSGPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SGPolicy", "security", apiserver.UpdateOper)
 
@@ -933,6 +1101,8 @@ func (e *sSecurityV1GwService) setupSvcProfile() {
 	e.svcProf["AutoWatchApp"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgAppWatchHelper", "security", apiserver.WatchOper)
 
 	e.svcProf["AutoWatchCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgCertificateWatchHelper", "security", apiserver.WatchOper)
+
+	e.svcProf["AutoWatchFirewallProfile"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgFirewallProfileWatchHelper", "security", apiserver.WatchOper)
 
 	e.svcProf["AutoWatchSGPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgSGPolicyWatchHelper", "security", apiserver.WatchOper)
 

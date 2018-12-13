@@ -446,17 +446,6 @@
       },
       "title": "app watch event"
     },
-    "netprotoAppEventList": {
-      "type": "object",
-      "properties": {
-        "appEvents": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/netprotoAppEvent"
-          }
-        }
-      }
-    },
     "netprotoAppList": {
       "type": "object",
       "properties": {
@@ -479,9 +468,12 @@
           },
           "title": "List of proto/port"
         },
-        "alg": {
-          "$ref": "#/definitions/netprotoALG",
+        "alg-type": {
+          "type": "string",
           "title": "ALG configuration if specified"
+        },
+        "alg": {
+          "$ref": "#/definitions/netprotoALG"
         },
         "app-timeout": {
           "type": "string",
@@ -549,6 +541,11 @@
     "netprotoICMP": {
       "type": "object",
       "properties": {
+        "type": {
+          "type": "integer",
+          "format": "int64",
+          "title": "ICMP Type"
+        },
         "code": {
           "type": "integer",
           "format": "int64",

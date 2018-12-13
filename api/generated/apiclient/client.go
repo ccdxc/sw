@@ -56,7 +56,7 @@ type Services interface {
 	NetworkV1() network.NetworkV1Interface
 	// Package is rollout and len of messages is 1
 	RolloutV1() rollout.RolloutV1Interface
-	// Package is security and len of messages is 5
+	// Package is security and len of messages is 6
 	SecurityV1() security.SecurityV1Interface
 	// Package is staging and len of messages is 1
 	StagingV1() staging.StagingV1Interface

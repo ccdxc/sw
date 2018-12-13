@@ -18,8 +18,8 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/httputils"
+	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	agentTypes "github.com/pensando/sw/nic/agent/netagent/state/types"
-	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 )
 
 // addTunnelAPIRoutes adds Tunnel routes

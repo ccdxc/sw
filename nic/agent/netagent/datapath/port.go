@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
+	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
 

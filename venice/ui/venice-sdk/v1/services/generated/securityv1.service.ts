@@ -3,7 +3,7 @@ import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http
 import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 
-import { ISecurityAppList,IApiStatus,ISecurityApp,ISecurityCertificateList,ISecurityCertificate,ISecuritySecurityGroupList,ISecuritySecurityGroup,ISecuritySGPolicyList,ISecuritySGPolicy,ISecurityTrafficEncryptionPolicy,ISecurityAutoMsgAppWatchHelper,ISecurityAutoMsgCertificateWatchHelper,ISecurityAutoMsgSecurityGroupWatchHelper,ISecurityAutoMsgSGPolicyWatchHelper,ISecurityAutoMsgTrafficEncryptionPolicyWatchHelper } from '../../models/generated/security';
+import { ISecurityAppList,IApiStatus,ISecurityApp,ISecurityCertificateList,ISecurityCertificate,ISecurityFirewallProfileList,ISecurityFirewallProfile,ISecuritySecurityGroupList,ISecuritySecurityGroup,ISecuritySGPolicyList,ISecuritySGPolicy,ISecurityTrafficEncryptionPolicy,ISecurityAutoMsgAppWatchHelper,ISecurityAutoMsgCertificateWatchHelper,ISecurityAutoMsgFirewallProfileWatchHelper,ISecurityAutoMsgSecurityGroupWatchHelper,ISecurityAutoMsgSGPolicyWatchHelper,ISecurityAutoMsgTrafficEncryptionPolicyWatchHelper } from '../../models/generated/security';
 
 @Injectable()
 export class Securityv1Service extends AbstractService {
@@ -20,51 +20,51 @@ export class Securityv1Service extends AbstractService {
   }
 
   /** List App objects */
-  public ListApp(queryParam: any = null, stagingID: string = ""):Observable<{body: ISecurityAppList | IApiStatus | Error, statusCode: number}> {
+  public ListApp_1(queryParam: any = null, stagingID: string = ""):Observable<{body: ISecurityAppList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/apps';
     if (stagingID != null && stagingID.length != 0) {
       url = url.replace('configs', 'staging/' + stagingID);
     }
-    return this.invokeAJAXGetCall(url, queryParam, 'ListApp') as Observable<{body: ISecurityAppList | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'ListApp_1') as Observable<{body: ISecurityAppList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Create App object */
-  public AddApp(body: ISecurityApp, stagingID: string = ""):Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}> {
+  public AddApp_1(body: ISecurityApp, stagingID: string = ""):Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/apps';
     if (stagingID != null && stagingID.length != 0) {
       url = url.replace('configs', 'staging/' + stagingID);
     }
-    return this.invokeAJAXPostCall(url, body, 'AddApp') as Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'AddApp_1') as Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get App object */
-  public GetApp(O_Name, queryParam: any = null, stagingID: string = ""):Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}> {
+  public GetApp_1(O_Name, queryParam: any = null, stagingID: string = ""):Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/apps/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     if (stagingID != null && stagingID.length != 0) {
       url = url.replace('configs', 'staging/' + stagingID);
     }
-    return this.invokeAJAXGetCall(url, queryParam, 'GetApp') as Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetApp_1') as Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Delete App object */
-  public DeleteApp(O_Name, stagingID: string = ""):Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}> {
+  public DeleteApp_1(O_Name, stagingID: string = ""):Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/apps/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     if (stagingID != null && stagingID.length != 0) {
       url = url.replace('configs', 'staging/' + stagingID);
     }
-    return this.invokeAJAXDeleteCall(url, 'DeleteApp') as Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXDeleteCall(url, 'DeleteApp_1') as Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Update App object */
-  public UpdateApp(O_Name, body: ISecurityApp, stagingID: string = ""):Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}> {
+  public UpdateApp_1(O_Name, body: ISecurityApp, stagingID: string = ""):Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/apps/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     if (stagingID != null && stagingID.length != 0) {
       url = url.replace('configs', 'staging/' + stagingID);
     }
-    return this.invokeAJAXPutCall(url, body, 'UpdateApp') as Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPutCall(url, body, 'UpdateApp_1') as Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List Certificate objects */
@@ -113,6 +113,54 @@ export class Securityv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
     }
     return this.invokeAJAXPutCall(url, body, 'UpdateCertificate_1') as Observable<{body: ISecurityCertificate | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** List FirewallProfile objects */
+  public ListFirewallProfile_1(queryParam: any = null, stagingID: string = ""):Observable<{body: ISecurityFirewallProfileList | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/firewallprofiles';
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+    }
+    return this.invokeAJAXGetCall(url, queryParam, 'ListFirewallProfile_1') as Observable<{body: ISecurityFirewallProfileList | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Create FirewallProfile object */
+  public AddFirewallProfile_1(body: ISecurityFirewallProfile, stagingID: string = ""):Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/firewallprofiles';
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+    }
+    return this.invokeAJAXPostCall(url, body, 'AddFirewallProfile_1') as Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Get FirewallProfile object */
+  public GetFirewallProfile_1(O_Name, queryParam: any = null, stagingID: string = ""):Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/firewallprofiles/{O.Name}';
+    url = url.replace('{O.Name}', O_Name);
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+    }
+    return this.invokeAJAXGetCall(url, queryParam, 'GetFirewallProfile_1') as Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Delete FirewallProfile object */
+  public DeleteFirewallProfile_1(O_Name, stagingID: string = ""):Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/firewallprofiles/{O.Name}';
+    url = url.replace('{O.Name}', O_Name);
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+    }
+    return this.invokeAJAXDeleteCall(url, 'DeleteFirewallProfile_1') as Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Update FirewallProfile object */
+  public UpdateFirewallProfile_1(O_Name, body: ISecurityFirewallProfile, stagingID: string = ""):Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/firewallprofiles/{O.Name}';
+    url = url.replace('{O.Name}', O_Name);
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+    }
+    return this.invokeAJAXPutCall(url, body, 'UpdateFirewallProfile_1') as Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List SecurityGroup objects */
@@ -211,6 +259,59 @@ export class Securityv1Service extends AbstractService {
     return this.invokeAJAXPutCall(url, body, 'UpdateSGPolicy_1') as Observable<{body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** List App objects */
+  public ListApp(queryParam: any = null, stagingID: string = ""):Observable<{body: ISecurityAppList | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/apps';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+    }
+    return this.invokeAJAXGetCall(url, queryParam, 'ListApp') as Observable<{body: ISecurityAppList | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Create App object */
+  public AddApp(body: ISecurityApp, stagingID: string = ""):Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/apps';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+    }
+    return this.invokeAJAXPostCall(url, body, 'AddApp') as Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Get App object */
+  public GetApp(O_Name, queryParam: any = null, stagingID: string = ""):Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/apps/{O.Name}';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+    }
+    return this.invokeAJAXGetCall(url, queryParam, 'GetApp') as Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Delete App object */
+  public DeleteApp(O_Name, stagingID: string = ""):Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/apps/{O.Name}';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+    }
+    return this.invokeAJAXDeleteCall(url, 'DeleteApp') as Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Update App object */
+  public UpdateApp(O_Name, body: ISecurityApp, stagingID: string = ""):Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/apps/{O.Name}';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+    }
+    return this.invokeAJAXPutCall(url, body, 'UpdateApp') as Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}>;
+  }
+  
   /** List Certificate objects */
   public ListCertificate(queryParam: any = null, stagingID: string = ""):Observable<{body: ISecurityCertificateList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/certificates';
@@ -262,6 +363,59 @@ export class Securityv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
     }
     return this.invokeAJAXPutCall(url, body, 'UpdateCertificate') as Observable<{body: ISecurityCertificate | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** List FirewallProfile objects */
+  public ListFirewallProfile(queryParam: any = null, stagingID: string = ""):Observable<{body: ISecurityFirewallProfileList | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/firewallprofiles';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+    }
+    return this.invokeAJAXGetCall(url, queryParam, 'ListFirewallProfile') as Observable<{body: ISecurityFirewallProfileList | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Create FirewallProfile object */
+  public AddFirewallProfile(body: ISecurityFirewallProfile, stagingID: string = ""):Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/firewallprofiles';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+    }
+    return this.invokeAJAXPostCall(url, body, 'AddFirewallProfile') as Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Get FirewallProfile object */
+  public GetFirewallProfile(O_Name, queryParam: any = null, stagingID: string = ""):Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/firewallprofiles/{O.Name}';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+    }
+    return this.invokeAJAXGetCall(url, queryParam, 'GetFirewallProfile') as Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Delete FirewallProfile object */
+  public DeleteFirewallProfile(O_Name, stagingID: string = ""):Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/firewallprofiles/{O.Name}';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+    }
+    return this.invokeAJAXDeleteCall(url, 'DeleteFirewallProfile') as Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Update FirewallProfile object */
+  public UpdateFirewallProfile(O_Name, body: ISecurityFirewallProfile, stagingID: string = ""):Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/firewallprofiles/{O.Name}';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+    }
+    return this.invokeAJAXPutCall(url, body, 'UpdateFirewallProfile') as Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List SecurityGroup objects */
@@ -453,12 +607,12 @@ export class Securityv1Service extends AbstractService {
   }
   
   /** Watch App objects. Supports WebSockets or HTTP long poll */
-  public WatchApp(queryParam: any = null, stagingID: string = ""):Observable<{body: ISecurityAutoMsgAppWatchHelper | IApiStatus | Error, statusCode: number}> {
+  public WatchApp_1(queryParam: any = null, stagingID: string = ""):Observable<{body: ISecurityAutoMsgAppWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/watch/apps';
     if (stagingID != null && stagingID.length != 0) {
       url = url.replace('configs', 'staging/' + stagingID);
     }
-    return this.invokeAJAXGetCall(url, queryParam, 'WatchApp') as Observable<{body: ISecurityAutoMsgAppWatchHelper | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchApp_1') as Observable<{body: ISecurityAutoMsgAppWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch Certificate objects. Supports WebSockets or HTTP long poll */
@@ -468,6 +622,15 @@ export class Securityv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
     }
     return this.invokeAJAXGetCall(url, queryParam, 'WatchCertificate_1') as Observable<{body: ISecurityAutoMsgCertificateWatchHelper | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Watch FirewallProfile objects. Supports WebSockets or HTTP long poll */
+  public WatchFirewallProfile_1(queryParam: any = null, stagingID: string = ""):Observable<{body: ISecurityAutoMsgFirewallProfileWatchHelper | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/watch/firewallprofiles';
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+    }
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchFirewallProfile_1') as Observable<{body: ISecurityAutoMsgFirewallProfileWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch SecurityGroup objects. Supports WebSockets or HTTP long poll */
@@ -488,6 +651,16 @@ export class Securityv1Service extends AbstractService {
     return this.invokeAJAXGetCall(url, queryParam, 'WatchSGPolicy_1') as Observable<{body: ISecurityAutoMsgSGPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Watch App objects. Supports WebSockets or HTTP long poll */
+  public WatchApp(queryParam: any = null, stagingID: string = ""):Observable<{body: ISecurityAutoMsgAppWatchHelper | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/watch/tenant/{O.Tenant}/apps';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+    }
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchApp') as Observable<{body: ISecurityAutoMsgAppWatchHelper | IApiStatus | Error, statusCode: number}>;
+  }
+  
   /** Watch Certificate objects. Supports WebSockets or HTTP long poll */
   public WatchCertificate(queryParam: any = null, stagingID: string = ""):Observable<{body: ISecurityAutoMsgCertificateWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/watch/tenant/{O.Tenant}/certificates';
@@ -496,6 +669,16 @@ export class Securityv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
     }
     return this.invokeAJAXGetCall(url, queryParam, 'WatchCertificate') as Observable<{body: ISecurityAutoMsgCertificateWatchHelper | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Watch FirewallProfile objects. Supports WebSockets or HTTP long poll */
+  public WatchFirewallProfile(queryParam: any = null, stagingID: string = ""):Observable<{body: ISecurityAutoMsgFirewallProfileWatchHelper | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/watch/tenant/{O.Tenant}/firewallprofiles';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+    }
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchFirewallProfile') as Observable<{body: ISecurityAutoMsgFirewallProfileWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch SecurityGroup objects. Supports WebSockets or HTTP long poll */

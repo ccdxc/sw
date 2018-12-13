@@ -2,9 +2,11 @@ package datapath
 
 import (
 	"context"
+	"errors"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
+	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -73,6 +75,9 @@ func (hd *Datapath) CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []*
 			return err
 		}
 	}
+
+	hd.DB.SgPolicyDB[objectKey(&sgp.ObjectMeta)] = sgPolicyReqMsg
+
 	return nil
 }
 
@@ -141,6 +146,9 @@ func (hd *Datapath) UpdateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64) error {
 			return err
 		}
 	}
+
+	hd.DB.SgPolicyDB[objectKey(&sgp.ObjectMeta)] = sgPolicyUpdateReqMsg
+
 	return nil
 }
 
@@ -190,6 +198,9 @@ func (hd *Datapath) DeleteSGPolicy(sgp *netproto.SGPolicy, vrfID uint64) error {
 			return err
 		}
 	}
+
+	delete(hd.DB.SgPolicyDB, objectKey(&sgp.ObjectMeta))
+
 	return nil
 }
 
@@ -210,4 +221,18 @@ func convertRuleAction(action string) *halproto.SecurityRuleAction {
 		log.Errorf("invalid policy action %v specified.", action)
 	}
 	return &ruleAction
+}
+
+// ------------------------ test utility functions -------------
+
+// FindSGPolicy finds sg policy object in datapath
+func (hd *Datapath) FindSGPolicy(meta api.ObjectMeta) (*halproto.SecurityPolicyRequestMsg, error) {
+	hd.Lock()
+	sgp, ok := hd.DB.SgPolicyDB[objectKey(&meta)]
+	hd.Unlock()
+	if !ok {
+		return nil, errors.New("sgpolicy not found")
+	}
+
+	return sgp, nil
 }

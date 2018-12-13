@@ -8,30 +8,30 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, PropInfoItem } from './base-model';
 
 
-export interface ISecuritySIP {
-    'max-call-duration'?: number;
+export interface ISecurityFtpAlg {
+    'allow-mismatch-ip-address'?: boolean;
 }
 
 
-export class SecuritySIP extends BaseModel implements ISecuritySIP {
-    'max-call-duration': number = null;
+export class SecurityFtpAlg extends BaseModel implements ISecurityFtpAlg {
+    'allow-mismatch-ip-address': boolean = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'max-call-duration': {
-            type: 'number'
+        'allow-mismatch-ip-address': {
+            type: 'boolean'
         },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return SecuritySIP.propInfo[propName];
+        return SecurityFtpAlg.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (SecuritySIP.propInfo[prop] != null &&
-                        SecuritySIP.propInfo[prop].default != null &&
-                        SecuritySIP.propInfo[prop].default != '');
+        return (SecurityFtpAlg.propInfo[prop] != null &&
+                        SecurityFtpAlg.propInfo[prop].default != null &&
+                        SecurityFtpAlg.propInfo[prop].default != '');
     }
 
     /**
@@ -48,10 +48,10 @@ export class SecuritySIP extends BaseModel implements ISecuritySIP {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values && values['max-call-duration'] != null) {
-            this['max-call-duration'] = values['max-call-duration'];
-        } else if (fillDefaults && SecuritySIP.hasDefaultValue('max-call-duration')) {
-            this['max-call-duration'] = SecuritySIP.propInfo['max-call-duration'].default;
+        if (values && values['allow-mismatch-ip-address'] != null) {
+            this['allow-mismatch-ip-address'] = values['allow-mismatch-ip-address'];
+        } else if (fillDefaults && SecurityFtpAlg.hasDefaultValue('allow-mismatch-ip-address')) {
+            this['allow-mismatch-ip-address'] = SecurityFtpAlg.propInfo['allow-mismatch-ip-address'].default;
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -60,7 +60,7 @@ export class SecuritySIP extends BaseModel implements ISecuritySIP {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'max-call-duration': new FormControl(this['max-call-duration']),
+                'allow-mismatch-ip-address': new FormControl(this['allow-mismatch-ip-address']),
             });
         }
         return this._formGroup;
@@ -72,7 +72,7 @@ export class SecuritySIP extends BaseModel implements ISecuritySIP {
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this._formGroup.controls['max-call-duration'].setValue(this['max-call-duration']);
+            this._formGroup.controls['allow-mismatch-ip-address'].setValue(this['allow-mismatch-ip-address']);
         }
     }
 }

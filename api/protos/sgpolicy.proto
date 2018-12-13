@@ -15,6 +15,14 @@ import "github.com/pensando/sw/api/protos/tenant.proto";
 
 // ----------------------------- SgPolicy Object -----------------------------
 
+message ProtoPort {
+    // protocol is ip (v4/v6) protocol name/number; names can be: tcp, udp, igmp, icmp, gre, esp, etc.
+    string Protocol = 1 [(gogoproto.jsontag) = "protocol,omitempty"];
+
+    // TCP or UDP port number(s): comma separate port numbers, or dash separate port range
+    string Ports    = 2 [(gogoproto.jsontag) = "ports, omitempty"];
+}
+
 message SGRule {
     enum PolicyAction
     {
@@ -23,38 +31,41 @@ message SGRule {
         REJECT  = 2;  // drop traffic and report unreachable to client
     }
 
-    // list of apps. proto/port format, or predefined apps and alg config
-    repeated string Apps                = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "apps,omitempty"];
+    // list of apps objects to which the rule applies to
+    repeated string Apps                = 1 [ (venice.objRelation) = {Type: "NamedRef", To: "security/App"},
+                                             (gogoproto.nullable) = false, (gogoproto.jsontag) = "apps,omitempty"];
+
+    // list of (protocol, ports) pairs to which the rule applies to, in addition to apps
+    repeated ProtoPort ProtoPorts       = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "proto-ports,omitempty"];
 
     // SGRule action, either PERMIT, DENY or REJECT
-    string Action                       = 2 [(venice.check) = "StrEnum(SGRule.PolicyAction)",
+    string Action                       = 3 [(venice.check) = "StrEnum(SGRule.PolicyAction)",
                                              (gogoproto.nullable) =  true, (gogoproto.jsontag) = "action,omitempty"];
 
     // inbound rule from a given ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses
     // cli-tags: id=from-ip
-    repeated string FromIPAddresses     = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "from-ip-addresses,omitempty"];
+    repeated string FromIPAddresses     = 4 [(gogoproto.jsontag) = "from-ip-addresses,omitempty"];
 
     // outbound rule from a given ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses
     // cli-tags: id=to-ip
-    repeated string ToIPAddresses       = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "to-ip-addresses,omitempty"];
+    repeated string ToIPAddresses       = 5 [(gogoproto.jsontag) = "to-ip-addresses,omitempty"];
 
     // inbound rule from a given security group
-    repeated string FromSecurityGroups  = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "from-security-groups,omitempty"];
+    repeated string FromSecurityGroups  = 6 [(gogoproto.jsontag) = "from-security-groups,omitempty"];
 
     // outbound rule from a given security group
-    repeated string ToSecurityGroups    = 6 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "to-security-groups,omitempty"];
-
+    repeated string ToSecurityGroups    = 7 [(gogoproto.jsontag) = "to-security-groups,omitempty"];
 }
 
 message SGPolicySpec {
     // list of security groups this policy is attached to
-    repeated string AttachGroups = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "attach-groups,omitempty"];
+    repeated string AttachGroups = 1 [(gogoproto.jsontag) = "attach-groups,omitempty"];
 
     // specifies if the set of rules need to be attached globally to a tenant
-    bool AttachTenant           = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "attach-tenant,omitempty"];
+    bool AttachTenant           = 2 [(gogoproto.jsontag) = "attach-tenant,omitempty"];
 
     // list of rules
-    repeated SGRule Rules       = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "rules,omitempty"];
+    repeated SGRule Rules       = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "rules,omitempty"];
 }
 
 message SGPolicyPropagationStatus {
@@ -70,7 +81,7 @@ message SGPolicyPropagationStatus {
 
 message SGPolicyStatus {
     // list of workloads in this group
-    repeated string Workloads = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workloads,omitempty"];
+    repeated string Workloads = 1 [(gogoproto.jsontag) = "workloads,omitempty"];
 
     // The status of the configuration propagation to the Naples
     SGPolicyPropagationStatus PropagationStatus = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "propagation-status"];

@@ -30,6 +30,7 @@ export * from './search-search-query.model';
 export * from './search-search-request.model';
 export * from './search-search-response.model';
 export * from './search-text-requirement.model';
+export * from './security-proto-port.model';
 export * from './security-sg-rule.model';
 export { SearchCategoryAggregationUI as SearchCategoryAggregation, 
          ISearchCategoryAggregationUI as ISearchCategoryAggregation,

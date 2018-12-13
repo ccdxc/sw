@@ -57,7 +57,7 @@ type DB struct {
 	SgDB             map[string]*halproto.SecurityGroupRequestMsg
 	TenantDB         map[string]*halproto.VrfRequestMsg
 	TenantDelDB      map[string]*halproto.VrfDeleteRequestMsg
-	SgPolicyDB       map[string]*halproto.SecurityGroupPolicyRequestMsg
+	SgPolicyDB       map[string]*halproto.SecurityPolicyRequestMsg
 	InterfaceDB      map[string]*halproto.InterfaceRequestMsg
 	LifDB            map[string]*halproto.LifRequestMsg
 	InterfaceDelDB   map[string]*halproto.InterfaceDeleteRequestMsg

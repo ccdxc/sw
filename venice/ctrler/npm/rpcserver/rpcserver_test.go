@@ -14,7 +14,7 @@ import (
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/api/labels"
-	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
+	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
 	"github.com/pensando/sw/venice/utils/debug"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -45,6 +45,10 @@ func (d *dummyWriter) WriteSGPolicy(sgp *security.SGPolicy) error {
 }
 
 func (d *dummyWriter) WriteTenant(tn *cluster.Tenant) error {
+	return nil
+}
+
+func (d *dummyWriter) WriteApp(tn *security.App) error {
 	return nil
 }
 
@@ -365,9 +369,14 @@ func TestSecurityGroupRPC(t *testing.T) {
 		},
 		Spec: security.SGPolicySpec{
 			AttachGroups: []string{"testsg"},
-			Rules: []*security.SGRule{
+			Rules: []security.SGRule{
 				{
-					Apps:   []string{"tcp/80"},
+					ProtoPorts: []security.ProtoPort{
+						{
+							Protocol: "tcp",
+							Ports:    "80",
+						},
+					},
 					Action: "PERMIT",
 				},
 			},
@@ -448,9 +457,14 @@ func TestSGPolicyRPC(t *testing.T) {
 		},
 		Spec: security.SGPolicySpec{
 			AttachTenant: true,
-			Rules: []*security.SGRule{
+			Rules: []security.SGRule{
 				{
-					Apps:            []string{"tcp/80"},
+					ProtoPorts: []security.ProtoPort{
+						{
+							Protocol: "tcp",
+							Ports:    "80",
+						},
+					},
 					Action:          "PERMIT",
 					FromIPAddresses: []string{"10.0.0.1/16"},
 					ToIPAddresses:   []string{"192.168.1.1/16"},
@@ -511,9 +525,14 @@ func TestSGPolicyRPC(t *testing.T) {
 		},
 		Spec: security.SGPolicySpec{
 			AttachGroups: []string{"testsg"},
-			Rules: []*security.SGRule{
+			Rules: []security.SGRule{
 				{
-					Apps:   []string{"tcp/80"},
+					ProtoPorts: []security.ProtoPort{
+						{
+							Protocol: "tcp",
+							Ports:    "80",
+						},
+					},
 					Action: "PERMIT",
 				},
 			},
@@ -541,6 +560,192 @@ func TestSGPolicyRPC(t *testing.T) {
 	evt, err = stream.Recv()
 	AssertOk(t, err, "Error receiving from stream")
 	Assert(t, evt.EventType == api.EventType_DeleteEvent, "Invalid event type", evt)
+
+	// stop the rpc server
+	rpcClient.Close()
+	rpcServer.Stop()
+	time.Sleep(time.Millisecond * 10)
+}
+
+// TestFirewallProfileRPC tests firewall profile rpc calls
+func TestFirewallProfileRPC(t *testing.T) {
+	// create rpc server and client
+	stateMgr, rpcServer, rpcClient := createRPCServerClient(t)
+	Assert(t, ((stateMgr != nil) && (rpcServer != nil) && (rpcClient != nil)), "Err creating rpc server")
+	defer rpcServer.Stop()
+
+	// create API client
+	fwpRPRClient := netproto.NewSecurityProfileApiClient(rpcClient.ClientConn)
+
+	// firewall profile
+	fwp := security.FirewallProfile{
+		TypeMeta: api.TypeMeta{Kind: "FirewallProfile"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "testProfile",
+			Namespace: "",
+			Tenant:    "default",
+		},
+		Spec: security.FirewallProfileSpec{
+			SessionIdleTimeout:    "3m",
+			IPNormalizationEnable: true,
+		},
+	}
+	err := stateMgr.FirewallProfileReactor().CreateFirewallProfile(fwp)
+	AssertOk(t, err, "Error creating firewall profile")
+
+	// verify we can get the firewall profile
+	ometa := api.ObjectMeta{Name: "testProfile", Tenant: "default"}
+	fpo, err := fwpRPRClient.GetSecurityProfile(context.Background(), &ometa)
+	AssertOk(t, err, "Error getting fw profile")
+	Assert(t, reflect.DeepEqual(&fpo.ObjectMeta, &fwp.ObjectMeta), "Got invalid firewall profile params", fpo)
+
+	// verify list fw profile
+	fwps, err := fwpRPRClient.ListSecurityProfiles(context.Background(), &ometa)
+	AssertOk(t, err, "Error listing fw profile")
+	Assert(t, (len(fwps.Profiles) == 1), "Received invalid number of fw profiles", fwps)
+	Assert(t, (fwps.Profiles[0].Name == fwp.Name), "Invalid endpoint params", fwps)
+
+	// verify watch api
+	stream, err := fwpRPRClient.WatchSecurityProfiles(context.Background(), &ometa)
+	AssertOk(t, err, "Error watching fw profile")
+	evt, err := stream.Recv()
+	AssertOk(t, err, "Error receiving from stream")
+	Assert(t, (evt.SecurityProfile.Name == fwp.Name), "Invalid fw profile params", evt)
+
+	// create second fw profile
+	fwp2 := security.FirewallProfile{
+		TypeMeta: api.TypeMeta{Kind: "FirewallProfile"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "testProfile2",
+			Namespace: "",
+			Tenant:    "default",
+		},
+		Spec: security.FirewallProfileSpec{
+			SessionIdleTimeout:    "3m",
+			IPNormalizationEnable: true,
+		},
+	}
+	err = stateMgr.FirewallProfileReactor().CreateFirewallProfile(fwp2)
+	AssertOk(t, err, "Error creating firewall profile")
+
+	// verify we receive a watch event
+	evt, err = stream.Recv()
+	AssertOk(t, err, "Error receiving from stream")
+	Assert(t, (evt.EventType == api.EventType_CreateEvent), "Invalid event type", evt)
+	Assert(t, (evt.SecurityProfile.Name == fwp2.Name), "Invalid fw profile params", evt)
+
+	// delete the fw profile
+	err = stateMgr.FirewallProfileReactor().DeleteFirewallProfile(fwp)
+	AssertOk(t, err, "Error deleting the firewall profile")
+
+	// verify we receive a delete event
+	evt, err = stream.Recv()
+	AssertOk(t, err, "Error receiving from stream")
+	Assert(t, (evt.EventType == api.EventType_DeleteEvent), "Invalid event type", evt)
+
+	// stop the rpc server
+	rpcClient.Close()
+	rpcServer.Stop()
+	time.Sleep(time.Millisecond * 10)
+}
+
+// TestAppRPC tests app rpc calls
+func TestAppRPC(t *testing.T) {
+	// create rpc server and client
+	stateMgr, rpcServer, rpcClient := createRPCServerClient(t)
+	Assert(t, ((stateMgr != nil) && (rpcServer != nil) && (rpcClient != nil)), "Err creating rpc server")
+	defer rpcServer.Stop()
+
+	// create API client
+	appRPRClient := netproto.NewAppApiClient(rpcClient.ClientConn)
+
+	// app
+	app := security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "testApp",
+			Namespace: "",
+			Tenant:    "default",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "21",
+				},
+			},
+			Timeout: "5m",
+			ALG: security.ALG{
+				Type: "FTP",
+				FtpAlg: security.FtpAlg{
+					AllowMismatchIPAddress: true,
+				},
+			},
+		},
+	}
+	err := stateMgr.AppReactor().CreateApp(app)
+	AssertOk(t, err, "Error creating app")
+
+	// verify we can get the firewall profile
+	ometa := api.ObjectMeta{Name: "testApp", Tenant: "default"}
+	apo, err := appRPRClient.GetApp(context.Background(), &ometa)
+	AssertOk(t, err, "Error getting app")
+	Assert(t, reflect.DeepEqual(&apo.ObjectMeta, &app.ObjectMeta), "Got invalid firewall profile params", apo)
+
+	// verify list app
+	apps, err := appRPRClient.ListApps(context.Background(), &ometa)
+	AssertOk(t, err, "Error listing app")
+	Assert(t, (len(apps.Apps) == 1), "Received invalid number of apps", apps)
+	Assert(t, (apps.Apps[0].Name == app.Name), "Invalid app params", apps)
+
+	// verify watch api
+	stream, err := appRPRClient.WatchApps(context.Background(), &ometa)
+	AssertOk(t, err, "Error watching app")
+	evt, err := stream.Recv()
+	AssertOk(t, err, "Error receiving from stream")
+	Assert(t, (evt.App.Name == app.Name), "Invalid app params", evt)
+
+	// create second app
+	app2 := security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "testApp2",
+			Namespace: "",
+			Tenant:    "testTenant",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "21",
+				},
+			},
+			Timeout: "5m",
+			ALG: security.ALG{
+				Type: "FTP",
+				FtpAlg: security.FtpAlg{
+					AllowMismatchIPAddress: true,
+				},
+			},
+		},
+	}
+	err = stateMgr.AppReactor().CreateApp(app2)
+	AssertOk(t, err, "Error creating app")
+
+	// verify we receive a watch event
+	evt, err = stream.Recv()
+	AssertOk(t, err, "Error receiving from stream")
+	Assert(t, (evt.EventType == api.EventType_CreateEvent), "Invalid event type", evt)
+	Assert(t, (evt.App.Name == app2.Name), "Invalid app params", evt)
+
+	// delete the endpoint
+	err = stateMgr.AppReactor().DeleteApp(app)
+	AssertOk(t, err, "Error deleting the app")
+
+	// verify we receive a delete event
+	evt, err = stream.Recv()
+	AssertOk(t, err, "Error receiving from stream")
+	Assert(t, (evt.EventType == api.EventType_DeleteEvent), "Invalid event type", evt)
 
 	// stop the rpc server
 	rpcClient.Close()

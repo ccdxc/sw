@@ -1,9 +1,9 @@
 package TestsApi
 
 import (
+	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	Pkg "github.com/pensando/sw/nic/e2etests/go/agent/pkg"
 	Infra "github.com/pensando/sw/nic/e2etests/go/infra"
-	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 )
 
 const (

@@ -14,6 +14,8 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 
+	validators "github.com/pensando/sw/venice/utils/apigen/validators"
+
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -23,14 +25,17 @@ var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
 
+var _ validators.DummyVar
+var validatorMapApp = make(map[string]map[string][]func(string, interface{}) error)
+
 // MakeKey generates a KV store key for the object
 func (m *App) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "apps/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "apps/", m.Tenant, "/", m.Name)
 }
 
 func (m *App) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/apps/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/tenant/", in.Tenant, "/apps/", in.Name)
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -51,7 +56,13 @@ func (m *ALG) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *ALG) Defaults(ver string) bool {
-	return false
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Type = "ICMP"
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -73,8 +84,10 @@ func (m *App) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *App) Defaults(ver string) bool {
 	m.Kind = "App"
-	m.Tenant, m.Namespace = "", ""
-	return false
+	m.Tenant, m.Namespace = "default", "default"
+	var ret bool
+	ret = m.Spec.Defaults(ver) || ret
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -95,7 +108,9 @@ func (m *AppSpec) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *AppSpec) Defaults(ver string) bool {
-	return false
+	var ret bool
+	ret = m.ALG.Defaults(ver) || ret
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -120,13 +135,13 @@ func (m *AppStatus) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *DNS) Clone(into interface{}) (interface{}, error) {
-	var out *DNS
+func (m *DnsAlg) Clone(into interface{}) (interface{}, error) {
+	var out *DnsAlg
 	var ok bool
 	if into == nil {
-		out = &DNS{}
+		out = &DnsAlg{}
 	} else {
-		out, ok = into.(*DNS)
+		out, ok = into.(*DnsAlg)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -136,18 +151,18 @@ func (m *DNS) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *DNS) Defaults(ver string) bool {
+func (m *DnsAlg) Defaults(ver string) bool {
 	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *FTP) Clone(into interface{}) (interface{}, error) {
-	var out *FTP
+func (m *FtpAlg) Clone(into interface{}) (interface{}, error) {
+	var out *FtpAlg
 	var ok bool
 	if into == nil {
-		out = &FTP{}
+		out = &FtpAlg{}
 	} else {
-		out, ok = into.(*FTP)
+		out, ok = into.(*FtpAlg)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -157,18 +172,18 @@ func (m *FTP) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *FTP) Defaults(ver string) bool {
+func (m *FtpAlg) Defaults(ver string) bool {
 	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *MSRPC) Clone(into interface{}) (interface{}, error) {
-	var out *MSRPC
+func (m *IcmpAlg) Clone(into interface{}) (interface{}, error) {
+	var out *IcmpAlg
 	var ok bool
 	if into == nil {
-		out = &MSRPC{}
+		out = &IcmpAlg{}
 	} else {
-		out, ok = into.(*MSRPC)
+		out, ok = into.(*IcmpAlg)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -178,18 +193,18 @@ func (m *MSRPC) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *MSRPC) Defaults(ver string) bool {
+func (m *IcmpAlg) Defaults(ver string) bool {
 	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *RSTP) Clone(into interface{}) (interface{}, error) {
-	var out *RSTP
+func (m *MsrpcAlg) Clone(into interface{}) (interface{}, error) {
+	var out *MsrpcAlg
 	var ok bool
 	if into == nil {
-		out = &RSTP{}
+		out = &MsrpcAlg{}
 	} else {
-		out, ok = into.(*RSTP)
+		out, ok = into.(*MsrpcAlg)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -199,18 +214,18 @@ func (m *RSTP) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *RSTP) Defaults(ver string) bool {
+func (m *MsrpcAlg) Defaults(ver string) bool {
 	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *SIP) Clone(into interface{}) (interface{}, error) {
-	var out *SIP
+func (m *SunrpcAlg) Clone(into interface{}) (interface{}, error) {
+	var out *SunrpcAlg
 	var ok bool
 	if into == nil {
-		out = &SIP{}
+		out = &SunrpcAlg{}
 	} else {
-		out, ok = into.(*SIP)
+		out, ok = into.(*SunrpcAlg)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -220,49 +235,7 @@ func (m *SIP) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *SIP) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *SunRPC) Clone(into interface{}) (interface{}, error) {
-	var out *SunRPC
-	var ok bool
-	if into == nil {
-		out = &SunRPC{}
-	} else {
-		out, ok = into.(*SunRPC)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *SunRPC) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *TFTP) Clone(into interface{}) (interface{}, error) {
-	var out *TFTP
-	var ok bool
-	if into == nil {
-		out = &TFTP{}
-	} else {
-		out, ok = into.(*TFTP)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *TFTP) Defaults(ver string) bool {
+func (m *SunrpcAlg) Defaults(ver string) bool {
 	return false
 }
 
@@ -270,6 +243,19 @@ func (m *TFTP) Defaults(ver string) bool {
 
 func (m *ALG) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	if vs, ok := validatorMapApp["ALG"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapApp["ALG"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
 	return ret
 }
 
@@ -282,14 +268,42 @@ func (m *App) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
 	}
-	if m.Tenant != "" {
-		ret = append(ret, errors.New("Tenant not allowed for App"))
+
+	dlmtr := "."
+	if path == "" {
+		dlmtr = ""
+	}
+	npath := path + dlmtr + "Spec"
+	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		ret = append(ret, errs...)
 	}
 	return ret
 }
 
 func (m *AppSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+
+	dlmtr := "."
+	if path == "" {
+		dlmtr = ""
+	}
+	npath := path + dlmtr + "ALG"
+	if errs := m.ALG.Validate(ver, npath, ignoreStatus); errs != nil {
+		ret = append(ret, errs...)
+	}
+	if vs, ok := validatorMapApp["AppSpec"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapApp["AppSpec"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
 	return ret
 }
 
@@ -298,37 +312,27 @@ func (m *AppStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
-func (m *DNS) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *DnsAlg) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
-func (m *FTP) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *FtpAlg) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
-func (m *MSRPC) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *IcmpAlg) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
-func (m *RSTP) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *MsrpcAlg) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
-func (m *SIP) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	return ret
-}
-
-func (m *SunRPC) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	return ret
-}
-
-func (m *TFTP) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *SunrpcAlg) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
@@ -340,5 +344,27 @@ func init() {
 	scheme.AddKnownTypes(
 		&App{},
 	)
+
+	validatorMapApp = make(map[string]map[string][]func(string, interface{}) error)
+
+	validatorMapApp["ALG"] = make(map[string][]func(string, interface{}) error)
+	validatorMapApp["ALG"]["all"] = append(validatorMapApp["ALG"]["all"], func(path string, i interface{}) error {
+		m := i.(*ALG)
+
+		if _, ok := ALG_ALGType_value[m.Type]; !ok {
+			return errors.New("ALG.Type did not match allowed strings")
+		}
+		return nil
+	})
+
+	validatorMapApp["AppSpec"] = make(map[string][]func(string, interface{}) error)
+
+	validatorMapApp["AppSpec"]["all"] = append(validatorMapApp["AppSpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*AppSpec)
+		if !validators.Duration(m.Timeout) {
+			return fmt.Errorf("%v validation failed", path+"."+"Timeout")
+		}
+		return nil
+	})
 
 }

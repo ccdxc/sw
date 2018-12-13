@@ -8,25 +8,30 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, PropInfoItem } from './base-model';
 
 
-export interface ISecurityFTP {
+export interface ISecurityMsrpcAlg {
+    'program-uuid'?: string;
 }
 
 
-export class SecurityFTP extends BaseModel implements ISecurityFTP {
+export class SecurityMsrpcAlg extends BaseModel implements ISecurityMsrpcAlg {
+    'program-uuid': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
+        'program-uuid': {
+            type: 'string'
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return SecurityFTP.propInfo[propName];
+        return SecurityMsrpcAlg.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (SecurityFTP.propInfo[prop] != null &&
-                        SecurityFTP.propInfo[prop].default != null &&
-                        SecurityFTP.propInfo[prop].default != '');
+        return (SecurityMsrpcAlg.propInfo[prop] != null &&
+                        SecurityMsrpcAlg.propInfo[prop].default != null &&
+                        SecurityMsrpcAlg.propInfo[prop].default != '');
     }
 
     /**
@@ -43,6 +48,11 @@ export class SecurityFTP extends BaseModel implements ISecurityFTP {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['program-uuid'] != null) {
+            this['program-uuid'] = values['program-uuid'];
+        } else if (fillDefaults && SecurityMsrpcAlg.hasDefaultValue('program-uuid')) {
+            this['program-uuid'] = SecurityMsrpcAlg.propInfo['program-uuid'].default;
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -50,6 +60,7 @@ export class SecurityFTP extends BaseModel implements ISecurityFTP {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
+                'program-uuid': new FormControl(this['program-uuid']),
             });
         }
         return this._formGroup;
@@ -61,6 +72,7 @@ export class SecurityFTP extends BaseModel implements ISecurityFTP {
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
+            this._formGroup.controls['program-uuid'].setValue(this['program-uuid']);
         }
     }
 }

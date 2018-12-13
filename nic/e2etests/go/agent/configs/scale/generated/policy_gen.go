@@ -11,7 +11,7 @@ import (
 	"net"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
+	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 )
 
 var ErrInsufficientIPAddressGenerated = errors.New("could not generate the required number of IP Addresses")
