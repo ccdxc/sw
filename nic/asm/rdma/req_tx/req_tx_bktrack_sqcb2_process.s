@@ -68,6 +68,7 @@ req_tx_bktrack_sqcb2_process:
               CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit5, num_sges_sbit6_ebit7)
     //phvwr CAPRI_PHV_FIELD(SQ_BKTRACK_P, bktrack_in_progress), CAPRI_KEY_FIELD(IN_P, bktrack_in_progress)
     phvwr CAPRI_PHV_FIELD(SQ_BKTRACK_P, ssn), d.ssn
+    phvwr CAPRI_PHV_FIELD(SQ_BKTRACK_P, op_type), d.curr_op_type
 
     seq            c2, CAPRI_KEY_FIELD(IN_P, sq_in_hbm), 1 
     seq            c1, K_WQE_ADDR, r0
@@ -96,10 +97,11 @@ wqe_bktrack:
     phvwr    CAPRI_PHV_FIELD(TO_S6_BT_P, wqe_addr), r2
     phvwr CAPRI_PHV_FIELD(TO_S7_BT_P, wqe_addr), r2
 
-    slt           c2, d.tx_psn, d.rexmit_psn
+    scwlt24       c2, d.tx_psn, d.rexmit_psn
     // sge_addr = wqe_addr + TXWQE_SGE_OFFSET + (sizeof(sge_t) * current_sge_id)
     add.c2        r2,  K_WQE_ADDR, K_CURRENT_SGE_ID, LOG_SIZEOF_SGE_T
     add.c2        r2, r2, TXWQE_SGE_OFFSET
+    phvwr.c2      CAPRI_PHV_FIELD(SQ_BKTRACK_P, tx_psn), d.tx_psn
     CAPRI_NEXT_TABLE0_READ_PC_CE(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqsge_process, req_tx_bktrack_sqwqe_process, r2, c2)
 
 bktrack_sqpt:

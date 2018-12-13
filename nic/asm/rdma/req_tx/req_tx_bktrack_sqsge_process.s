@@ -71,7 +71,7 @@ sge_loop:
     // if (rexmit_psn < (tx_psn + num_pkts))
     add            r7, r3, r6
     mincr          r7, 24, r0
-    slt            c1, K_REXMIT_PSN, r7 
+    scwlt24        c1, K_REXMIT_PSN, r7
     bcf            [!c1], next_sge
 
     // current_sge_offset = ((rexmit_psn  - tx_psn) << log_pmtu) + current_sge_offset
