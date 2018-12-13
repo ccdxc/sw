@@ -13,12 +13,12 @@ struct s0_t0_ooq_tcp_tx_ooq_tcp_txdma_load_stage0_d d;
 
 %%
     .align
-
+    .param tcp_ooq_txdma_load_rx2tx_slot
 tcp_ooq_load_qstate:
      seq c1, d.pi_0, d.ci_0
      bcf [c1], tcp_ooq_load_qstate_do_nothing
-     phvwrpair       p.common_phv_fid, k.p4_txdma_intr_qid, \
-                        p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
+     phvwrpair p.common_phv_fid, k.p4_txdma_intr_qid, \
+               p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
 
      seq c2, d.num_entries, d.curr_index
      sne c3, d.num_entries, r0
@@ -57,14 +57,14 @@ tcp_ooq_load_qstate_process_next_pkt_descr:
     nop
 
 tcp_ooq_load_qstate_process_new_request: 
-     // New request
-     add r1, d.ooq_per_flow_ring_base, r0
-     and r2, d.ci_0, TCP_OOO_RX2TX_ENTRY_RING_SIZE-1
-     sll r2, r2, TCP_OOO_RX2TX_ENTRY_SHIFT
-     add r2, r1, r2 
-     //launch table with this address
-     tblwr d.ooq_proc_in_progress, 1  
-
+    // New request
+    add r1, d.ooq_per_flow_ring_base, r0
+    and r2, d.ci_0, TCP_OOO_RX2TX_ENTRY_RING_SIZE-1
+    sll r2, r2, TCP_OOO_RX2TX_ENTRY_SHIFT
+    add r2, r1, r2 
+    //launch table with this address
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, tcp_ooq_txdma_load_rx2tx_slot, r2, TABLE_SIZE_128_BITS) 
+    tblwr d.ooq_proc_in_progress, 1  
     nop.e
     nop
 

@@ -68,7 +68,26 @@ header_type ooq_tcp_txdma_load_one_descr_d_t {
 
 header_type ooq_tcp_txdma_load_tcp_header_in_descr_d_t {
     fields {
-        pad   : 128;
+        tcp_app_header_p4plus_app_id : 4; 
+        tcp_app_header_table0_valid : 1; 
+        tcp_app_header_table1_valid : 1; 
+        tcp_app_header_table2_valid : 1; 
+        tcp_app_header_table3_valid : 1; 
+        tcp_app_header_from_ooq_txdma : 1; 
+        tcp_app_header_num_sack_blocks : 7; 
+        tcp_app_header_payload_len : 16; 
+        tcp_app_header_srcPort : 16; 
+        tcp_app_header_dstPort : 16; 
+        tcp_app_header_seqNo : 32; 
+        tcp_app_header_ackNo : 32; 
+        tcp_app_header_dataOffset : 4; 
+        tcp_app_header_res : 4; 
+        tcp_app_header_flags : 8; 
+        tcp_app_header_window : 16; 
+        tcp_app_header_urgentPtr : 16; 
+        tcp_app_header_ts : 32; 
+        tcp_app_header_prev_echo_ts : 32;
+        pad : 16; 
     }
 }
 
@@ -101,7 +120,9 @@ header_type to_stage_3_phv_t {
 
 header_type to_stage_4_phv_t {
     fields {
-        pad   : 128;
+        new_qbase_addr : 64;
+        num_entries    : 16;
+        pad            : 48;
     }
 }
 
@@ -126,6 +147,19 @@ metadata ooq_tcp_txdma_load_qbase_addr_d_t ooq_tcp_txdma_load_qbase_addr_d;
 metadata ooq_tcp_txdma_load_one_descr_d_t ooq_tcp_txdma_load_one_descr_d;
 @pragma scratch_metadata
 metadata ooq_tcp_txdma_load_tcp_header_in_descr_d_t ooq_tcp_txdma_load_tcp_header_in_descr_d;
+
+@pragma scratch_metadata
+metadata to_stage_1_phv_t to_s1_scratch;
+@pragma scratch_metadata
+metadata to_stage_2_phv_t to_s2_scratch;
+@pragma scratch_metadata
+metadata to_stage_3_phv_t to_s3_scratch;
+@pragma scratch_metadata
+metadata to_stage_4_phv_t to_s4_scratch;
+@pragma scratch_metadata
+metadata to_stage_5_phv_t to_s5_scratch;
+
+
 
 @pragma pa_header_union ingress to_stage_1
 metadata to_stage_1_phv_t to_s1;
@@ -198,22 +232,52 @@ action ooq_tcp_txdma_load_qbase_addr(ooq_descr_addr)
 }
 
 // Stage-3 Table-0
-action ooq_tcp_txdma_load_one_descr()
+action ooq_tcp_txdma_load_one_descr(rndmr_descr_addr)
 {
     GENERATE_GLOBAL_K
-
 }
 
 // Stage-3 Table-1
-action ooq_tcp_txdma_load_tcp_header_in_descr()
+action ooq_tcp_txdma_load_tcp_header_in_descr(tcp_app_header_p4plus_app_id,
+                                              tcp_app_header_table0_valid, tcp_app_header_table1_valid, 
+                                              tcp_app_header_table2_valid, tcp_app_header_table3_valid, 
+                                              tcp_app_header_from_ooq_txdma, tcp_app_header_num_sack_blocks, 
+                                              tcp_app_header_payload_len, tcp_app_header_srcPort, 
+                                              tcp_app_header_dstPort, tcp_app_header_seqNo, 
+                                              tcp_app_header_ackNo, tcp_app_header_dataOffset, 
+                                              tcp_app_header_res, tcp_app_header_flags, 
+                                              tcp_app_header_window, tcp_app_header_urgentPtr, 
+                                              tcp_app_header_ts, tcp_app_header_prev_echo_ts, pad) 
 {
     GENERATE_GLOBAL_K
-
+    modify_field(ooq_tcp_txdma_load_tcp_header_in_descr_d.tcp_app_header_p4plus_app_id, tcp_app_header_p4plus_app_id);
+    modify_field(ooq_tcp_txdma_load_tcp_header_in_descr_d.tcp_app_header_table0_valid, tcp_app_header_table0_valid);
+    modify_field(ooq_tcp_txdma_load_tcp_header_in_descr_d.tcp_app_header_table1_valid, tcp_app_header_table1_valid);
+    modify_field(ooq_tcp_txdma_load_tcp_header_in_descr_d.tcp_app_header_table2_valid, tcp_app_header_table2_valid);
+    modify_field(ooq_tcp_txdma_load_tcp_header_in_descr_d.tcp_app_header_table3_valid, tcp_app_header_table3_valid);
+    modify_field(ooq_tcp_txdma_load_tcp_header_in_descr_d.tcp_app_header_from_ooq_txdma, tcp_app_header_from_ooq_txdma);
+    modify_field(ooq_tcp_txdma_load_tcp_header_in_descr_d.tcp_app_header_num_sack_blocks, tcp_app_header_num_sack_blocks);
+    modify_field(ooq_tcp_txdma_load_tcp_header_in_descr_d.tcp_app_header_payload_len, tcp_app_header_payload_len);
+    modify_field(ooq_tcp_txdma_load_tcp_header_in_descr_d.tcp_app_header_srcPort, tcp_app_header_srcPort);
+    modify_field(ooq_tcp_txdma_load_tcp_header_in_descr_d.tcp_app_header_dstPort, tcp_app_header_dstPort);
+    modify_field(ooq_tcp_txdma_load_tcp_header_in_descr_d.tcp_app_header_seqNo, tcp_app_header_seqNo);
+    modify_field(ooq_tcp_txdma_load_tcp_header_in_descr_d.tcp_app_header_ackNo, tcp_app_header_ackNo);
+    modify_field(ooq_tcp_txdma_load_tcp_header_in_descr_d.tcp_app_header_dataOffset, tcp_app_header_dataOffset);
+    modify_field(ooq_tcp_txdma_load_tcp_header_in_descr_d.tcp_app_header_res, tcp_app_header_res);
+    modify_field(ooq_tcp_txdma_load_tcp_header_in_descr_d.tcp_app_header_flags, tcp_app_header_flags);
+    modify_field(ooq_tcp_txdma_load_tcp_header_in_descr_d.tcp_app_header_window, tcp_app_header_window);
+    modify_field(ooq_tcp_txdma_load_tcp_header_in_descr_d.tcp_app_header_urgentPtr, tcp_app_header_urgentPtr);
+    modify_field(ooq_tcp_txdma_load_tcp_header_in_descr_d.tcp_app_header_ts, tcp_app_header_ts);
+    modify_field(ooq_tcp_txdma_load_tcp_header_in_descr_d.tcp_app_header_prev_echo_ts, tcp_app_header_prev_echo_ts);
+    modify_field(ooq_tcp_txdma_load_tcp_header_in_descr_d.pad, pad);
 }
 
 // Stage-4 Table-0
 action ooq_tcp_txdma_generate_dummy_pkt()
 {
     GENERATE_GLOBAL_K
+    modify_field(to_s4.new_qbase_addr, to_s4_scratch.new_qbase_addr);
+    modify_field(to_s4.num_entries, to_s4_scratch.num_entries);
+    modify_field(to_s4.pad, to_s4_scratch.pad);
 }
 
