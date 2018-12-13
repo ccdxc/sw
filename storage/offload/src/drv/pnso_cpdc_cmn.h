@@ -100,4 +100,9 @@ pnso_error_t cpdc_convert_desc_error(int error);
 
 void cpdc_pprint_mpools(struct per_core_resource *pcr);
 
+pnso_error_t cpdc_setup_rmem_dst_blist(struct service_info *svc_info,
+		const struct service_params *svc_params);
+
+void cpdc_teardown_rmem_dst_blist(struct service_info *svc_info);
+
 #endif /* __PNSO_CPDC_CMN_H__ */

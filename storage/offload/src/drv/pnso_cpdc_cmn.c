@@ -933,7 +933,6 @@ cpdc_cleanup_interrupt_params(struct service_info *svc_info)
 	}
 }
 
-
 void
 cpdc_pprint_mpools(struct per_core_resource *pcr)
 {
@@ -950,3 +949,70 @@ cpdc_pprint_mpools(struct per_core_resource *pcr)
        MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS]);
 }
 
+/* TODO-cpdc:
+ *	code is repeated due to slight changes between crypto/cpdc,
+ *	collapse/refactor as/if needed.
+ *
+ */
+pnso_error_t
+cpdc_setup_rmem_dst_blist(struct service_info *svc_info,
+		const struct service_params *svc_params)
+{
+	pnso_error_t err;
+	struct service_buf_list orig_dst_blist;
+
+	/*
+	 * Produce output to intermediate buffers if there is a chain
+	 * subordinate
+	 *
+	 */
+	if (chn_service_has_sub_chain(svc_info)) {
+		orig_dst_blist = svc_info->si_dst_blist;
+
+		err = putil_get_interm_buf_list(svc_info);
+		if (err) {
+			OSAL_LOG_ERROR("failed to obtain intermediate buffers! err: %d",
+					err);
+			return err;
+		}
+
+		if (chn_service_has_interm_blist(svc_info) &&
+				orig_dst_blist.len) {
+			svc_info->si_sgl_pdma =
+				pc_res_sgl_pdma_packed_get(svc_info->si_pcr,
+						&orig_dst_blist);
+			if (!svc_info->si_sgl_pdma) {
+				err = ENOMEM;
+				OSAL_LOG_ERROR("failed to obtain chain SGL for PDMA! err: %d",
+						err);
+				return err;
+			}
+		}
+	}
+
+	/*
+	 * Validate a destination buffer list exists (it could come from app or
+	 * intermediate pool as evaluated above and elsewhere).
+	 *
+	 */
+	OSAL_LOG_DEBUG("src_total_len %u dst_total_len %u",
+		       svc_info->si_src_blist.len, svc_info->si_dst_blist.len);
+
+	if ((svc_info->si_src_blist.len == 0) ||
+	    (svc_info->si_dst_blist.len < svc_info->si_src_blist.len)) {
+		err = EINVAL;
+		OSAL_LOG_ERROR("length error: src_len %u dst_len %u err: %d",
+				svc_info->si_src_blist.len,
+				svc_info->si_dst_blist.len, err);
+		return err;
+	}
+
+	return PNSO_OK;
+}
+
+void
+cpdc_teardown_rmem_dst_blist(struct service_info *svc_info)
+{
+	putil_put_interm_buf_list(svc_info);
+	pc_res_sgl_pdma_put(svc_info->si_pcr, svc_info->si_sgl_pdma);
+}
