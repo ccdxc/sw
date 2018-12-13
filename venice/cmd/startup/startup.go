@@ -238,6 +238,16 @@ func StartQuorumServices(c utils.Cluster) {
 	if env.AuthRPCServer == nil {
 		go auth.RunAuthServer(":"+env.Options.GRPCAuthPort, nil)
 	}
+
+	node := &cluster.Node{
+		TypeMeta: api.TypeMeta{
+			Kind: "Node",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: c.NodeID,
+		},
+	}
+	nodewatcher.NewNodeWatcher(context.Background(), node, env.ResolverClient.(resolver.Interface), 30, env.Logger)
 }
 
 // StartNodeServices starts services running on non-quorum node
