@@ -15,6 +15,9 @@
 #define TCP_OOO_RX2TX_QTYPE 1
 #define TCP_OOO_RX2TX_QTYPE_RING0 0
 
+#define TCP_OOO_RX2TX_ENTRY_RING_SIZE 16
+#define TCP_OOO_RX2TX_ENTRY_SHIFT      4
+
 #define TCP_ESTABLISHED   1
 #define TCP_SYN_SENT      2
 #define TCP_SYN_RECV      3

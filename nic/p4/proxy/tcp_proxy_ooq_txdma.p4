@@ -30,6 +30,8 @@ header_type ooq_tcp_txdma_qstate_d_t {
         ooq_per_flow_ring_base     : 64;
         current_descr_qbase_addr   : 64;
         ooq_per_flow_ring_entries  : 8;
+        num_entries                : 8;
+        num_pkts                   : 16;
         curr_index                 : 16;
         ooq_proc_in_progress       : 1;
         ooq_proc_flags             : 7;
@@ -108,6 +110,11 @@ header_type to_stage_5_phv_t {
         pad   : 128;
     }
 }
+
+#define GENERATE_GLOBAL_K \
+    modify_field(common_global_scratch.fid, common_phv.fid); \
+    modify_field(common_global_scratch.qstate_addr, common_phv.qstate_addr); \
+    modify_field(common_global_scratch.pad, common_phv.pad);
   
 @pragma scratch_metadata
 metadata ooq_tcp_txdma_qstate_d_t ooq_tcp_txdma_qstate_d;
@@ -151,7 +158,7 @@ metadata dma_cmd_phv2pkt_t tcp_header_dma;   // dma cmd 3
 
 // Stage-0 Table-0
 action ooq_tcp_txdma_load_stage0(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0,ci_0, 
-                                 current_descr_qbase_addr, curr_index, ooq_proc_in_progress,
+                                 current_descr_qbase_addr, num_entries, num_pkts, curr_index, ooq_proc_in_progress,
                                  ooq_proc_flags, ooq_per_flow_ring_base)
 {
     modify_field(ooq_tcp_txdma_qstate_d.rsvd, rsvd);                                                                  
@@ -165,6 +172,8 @@ action ooq_tcp_txdma_load_stage0(rsvd, cosA, cosB, cos_sel, eval_last, host, tot
     modify_field(ooq_tcp_txdma_qstate_d.pi_0, pi_0);                                                
     modify_field(ooq_tcp_txdma_qstate_d.ci_0, ci_0);     
     modify_field(ooq_tcp_txdma_qstate_d.current_descr_qbase_addr, current_descr_qbase_addr);
+    modify_field(ooq_tcp_txdma_qstate_d.num_entries, num_entries);
+    modify_field(ooq_tcp_txdma_qstate_d.num_pkts, num_pkts);
     modify_field(ooq_tcp_txdma_qstate_d.curr_index, curr_index);
     modify_field(ooq_tcp_txdma_qstate_d.ooq_proc_in_progress, ooq_proc_in_progress);
     modify_field(ooq_tcp_txdma_qstate_d.ooq_proc_flags, ooq_proc_flags);
@@ -175,6 +184,7 @@ action ooq_tcp_txdma_load_stage0(rsvd, cosA, cosB, cos_sel, eval_last, host, tot
 // Stage-1 Table-0
 action ooq_tcp_txdma_load_rx2tx_slot(ooq_qbase_addr, num_entries, pad)
 {
+    GENERATE_GLOBAL_K
     modify_field(ooq_tcp_txdma_load_rx2tx_slot_d.ooq_qbase_addr, ooq_qbase_addr);
     modify_field(ooq_tcp_txdma_load_rx2tx_slot_d.num_entries, num_entries);
     modify_field(ooq_tcp_txdma_load_rx2tx_slot_d.pad, pad);
@@ -183,24 +193,27 @@ action ooq_tcp_txdma_load_rx2tx_slot(ooq_qbase_addr, num_entries, pad)
 // Stage-2 Table-0
 action ooq_tcp_txdma_load_qbase_addr(ooq_descr_addr)
 {
+    GENERATE_GLOBAL_K
     modify_field(ooq_tcp_txdma_load_qbase_addr_d.ooq_descr_addr, ooq_descr_addr);
 }
 
 // Stage-3 Table-0
 action ooq_tcp_txdma_load_one_descr()
 {
+    GENERATE_GLOBAL_K
 
 }
 
 // Stage-3 Table-1
 action ooq_tcp_txdma_load_tcp_header_in_descr()
 {
+    GENERATE_GLOBAL_K
 
 }
 
 // Stage-4 Table-0
 action ooq_tcp_txdma_generate_dummy_pkt()
 {
-
+    GENERATE_GLOBAL_K
 }
 
