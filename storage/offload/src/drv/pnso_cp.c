@@ -120,6 +120,13 @@ compress_setup(struct service_info *svc_info,
 		goto out;
 	}
 
+	err = cpdc_setup_rmem_dst_blist(svc_info, svc_params);
+	if (err) {
+		OSAL_LOG_ERROR("failed to setup cp rmem dst buffer list! err: %d",
+				err);
+		goto out;
+	}
+
 	err = cpdc_update_service_info_sgls(svc_info);
 	if (err) {
 		OSAL_LOG_ERROR("cannot obtain cp src/dst sgl from pool! err: %d",
@@ -488,10 +495,11 @@ compress_teardown(struct service_info *svc_info)
 	seq_cleanup_cpdc_chain(svc_info);
 	seq_cleanup_desc(svc_info);
 
+	cpdc_teardown_rmem_dst_blist(svc_info);
+	cpdc_teardown_rmem_status_desc(svc_info, false);
+
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 	cpdc_put_status_desc(svc_info->si_pcr, false, status_desc);
-
-	cpdc_teardown_rmem_status_desc(svc_info, false);
 
 	cp_desc = (struct cpdc_desc *) svc_info->si_desc;
 	cpdc_put_desc(svc_info, false, cp_desc);
