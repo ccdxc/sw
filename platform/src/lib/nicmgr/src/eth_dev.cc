@@ -1805,6 +1805,7 @@ Eth::_CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data)
     struct rx_filter_del_cmd *cmd = (struct rx_filter_del_cmd *)req;
     //struct rx_filter_del_comp *comp = (struct rx_filter_del_comp *)resp;
     EthLif *eth_lif = NULL;
+    indexer::status rs;
 
     eth_lif = hal->eth_lif_map[hal_lif_info_.id];
     if (eth_lif == NULL) {
@@ -1837,6 +1838,14 @@ Eth::_CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data)
         NIC_LOG_ERR("Invalid filter id {}", cmd->filter_id);
         return (DEVCMD_ERROR);
     }
+
+    rs = fltr_allocator->free(cmd->filter_id);
+    if (rs != indexer::SUCCESS) {
+        HAL_TRACE_ERR("Failed to free filter_id: {}, err: {}",
+                      cmd->filter_id, rs);
+        return (DEVCMD_ERROR);
+    }
+    NIC_LOG_DEBUG("Freed filter_id: {}", cmd->filter_id);
 
     return (DEVCMD_SUCCESS);
 }
