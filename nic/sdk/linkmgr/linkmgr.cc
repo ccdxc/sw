@@ -924,6 +924,13 @@ port_get (void *pd_p, port_args_t *args)
     args->pause       = port_p->pause();
     args->link_sm     = port_p->port_link_sm();
 
+    if (args->link_sm == port_link_sm_t::PORT_LINK_SM_AN_CFG &&
+        port_p->auto_neg_enable() == true) {
+        args->link_sm = port_p->port_link_an_sm();
+    } else if (args->link_sm == port_link_sm_t::PORT_LINK_SM_DFE_TUNING) {
+        args->link_sm = port_p->port_link_dfe_sm();
+    }
+
     // TODO send live link status until poll timer is reduced
     // args->oper_status = port_p->oper_status();
     if (port_p->port_link_status() == true) {
