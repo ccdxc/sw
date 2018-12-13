@@ -345,11 +345,6 @@ func (s *PolicyState) CreateFwLogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 		return fmt.Errorf("failed to get tenant for %s/%s", p.Tenant, p.Namespace)
 	}
 
-	// if _, ok := s.getCollector(vrf); ok {
-	// 	log.Warnf("collector config exists for %s/%s, cleaning up", p.Tenant, p.Namespace)
-	// 	s.deleteCollectors(vrf)
-	// }
-
 	filter := s.getFilter(p.Spec.Filter)
 	for _, target := range p.Spec.Targets {
 		key := s.getCollectorKey(vrf, p, target)
