@@ -35,9 +35,10 @@ class MwObject(base.ConfigObjectBase):
         self.remote_atomic = remote_atomic
         self.mw_type = mw_type
 
-
         self.flags = self.GetAccessFlags()
 
+        # Register MWs with PD
+        self.pd.AddMw(self, mw_type)
         return
 
     def GetAccessFlags(self):
@@ -117,18 +118,24 @@ class MwObjectHelper:
             return
 
         mw_count = spec.type1.count
+        if (GlobalOptions.rtl):
+            mw_count = 128
         logger.info("Creating %d Type1 Mws. for PD:%s" %(mw_count, pd.GID()))
         for i in range(mw_count):
             mw = MwObject(pd, remote_wr=True, remote_rd=True, remote_atomic=True, mw_type=1)
             self.mws.append(mw)
 
         mw_count = spec.type2.count
+        if (GlobalOptions.rtl):
+            mw_count = 128
         logger.info("Creating %d Type2 Mws. for PD:%s" %(mw_count, pd.GID()))
         for i in range(mw_count):
             mw = MwObject(pd, remote_wr=True, remote_rd=True, remote_atomic=True, mw_type=2)
             self.mws.append(mw)
 
         mw_count = spec.type1_2.count
+        if (GlobalOptions.rtl):
+            mw_count = 128
         logger.info("Creating %d Type1_2 Mws. for PD:%s" %(mw_count, pd.GID()))
         for i in range(mw_count):
             mw = MwObject(pd, remote_wr=True, remote_rd=True, remote_atomic=True, mw_type=0)

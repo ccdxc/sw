@@ -146,8 +146,11 @@ class MrObjectHelper:
             return
 
         mr_count = spec.count
+        # RTL run needs unique MRs
+        if (GlobalOptions.rtl):
+            count = 1000
         self.useAdmin = spec.useAdmin
-        slab_count = len(pd.ep.slabs)
+        slab_count = len(pd.ep.mr_slabs)
         logger.info('mr_count: %d slab_count: %d' \
                         %(mr_count, slab_count))
         count = min(mr_count, slab_count)

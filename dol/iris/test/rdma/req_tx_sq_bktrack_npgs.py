@@ -32,18 +32,26 @@ def TestCaseSetup(tc):
     # Get new key object for FRPMR.
     tc.pvtdata.key  = rs.lqp.pd.GetNewKey()
     tc.pvtdata.l_key = tc.pvtdata.key.lkey
+    tc.pvtdata.mr_kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, (tc.pvtdata.l_key))
 
     tc.pvtdata.user_key = 192
-    
+
+    tc.pvtdata.li_slab = rs.lqp.pd.ep.GetNewSlab()
+    tc.pvtdata.li_mr = rs.lqp.pd.mrs.Get('MR-' + tc.pvtdata.li_slab.GID())
+    tc.pvtdata.li_lkey = tc.pvtdata.li_mr.lkey
+    tc.pvtdata.li_kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, (tc.pvtdata.li_lkey))
+
     tc.pvtdata.slab1 = rs.lqp.pd.ep.GetNewSlab()
     tc.pvtdata.mr1 = rs.lqp.pd.mrs.Get('MR-' + tc.pvtdata.slab1.GID())
     tc.pvtdata.mr1_l_key = tc.pvtdata.mr1.lkey
     tc.pvtdata.mw1_r_key = rs.lqp.pd.GetNewType1MW().rkey
+    tc.pvtdata.mw1_kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, (tc.pvtdata.mw1_r_key))
 
     tc.pvtdata.slab2 = rs.lqp.pd.ep.GetNewSlab()
     tc.pvtdata.mr2 = rs.lqp.pd.mrs.Get('MR-' + tc.pvtdata.slab2.GID())
     tc.pvtdata.mr2_l_key = tc.pvtdata.mr2.lkey
     tc.pvtdata.mw2_r_key = rs.lqp.pd.GetNewType1MW().rkey
+    tc.pvtdata.mw2_kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, (tc.pvtdata.mw2_r_key))
 
     if (GlobalOptions.dryrun):
         tc.pvtdata.mw1_va = 0
@@ -202,4 +210,19 @@ def TestCaseStepVerify(tc, step):
 
 def TestCaseTeardown(tc):
     logger.info("RDMA TestCaseTeardown() Implementation.")
+    if (GlobalOptions.dryrun): return
+    rs = tc.config.rdmasession
+    kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, tc.pvtdata.li_lkey)
+    kt_entry.data = tc.pvtdata.li_kt_entry.data
+    kt_entry.WriteWithDelay()
+    kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, tc.pvtdata.l_key)
+    kt_entry.data = tc.pvtdata.mr_kt_entry.data
+    kt_entry.WriteWithDelay()
+
+    kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, (tc.pvtdata.mw1_r_key))
+    kt_entry.data = tc.pvtdata.mw1_kt_entry.data
+    kt_entry.WriteWithDelay()
+    kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, (tc.pvtdata.mw2_r_key))
+    kt_entry.data = tc.pvtdata.mw2_kt_entry.data
+    kt_entry.WriteWithDelay()
     return

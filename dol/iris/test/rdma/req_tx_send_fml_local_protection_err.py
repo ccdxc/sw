@@ -28,6 +28,7 @@ def TestCasePreTrigger(tc):
     rs = tc.config.rdmasession
     slab_id = tc.buffers.Get('BUF3').slab_id
     tc.pvtdata.l_key = tc.config.rdmasession.lqp.pd.mrs.Get('MR-' + slab_id.GID()).lkey
+    tc.pvtdata.mr_kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, tc.pvtdata.l_key)
     kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, tc.pvtdata.l_key)
     logger.info("RDMA TestCaseSetup(): Lkey state/pd for SLAB of hw_lif %d qp %s lkey: %d state: %d pd: %d" %
             (rs.lqp.pd.ep.intf.lif.hw_lif_id, rs.lqp.GID(), tc.pvtdata.l_key, kt_entry.data.state, kt_entry.data.pd))
@@ -104,5 +105,10 @@ def TestCaseStepVerify(tc, step):
 
 def TestCaseTeardown(tc):
     logger.info("RDMA TestCaseTeardown() Implementation.")
+    if (GlobalOptions.dryrun): return
+    rs = tc.config.rdmasession
+    kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, tc.pvtdata.l_key)
+    kt_entry.data = tc.pvtdata.mr_kt_entry.data
+    kt_entry.WriteWithDelay()
     ResetErrQState(tc)
     return

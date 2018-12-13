@@ -334,7 +334,7 @@ typedef struct aqcb0_s {
 
     uint64_t cqcb_addr;
     
-    uint32_t rsvd3: 8;
+    uint32_t error: 8;
     uint32_t cq_id: 24;
     
     uint32_t busy: 8;

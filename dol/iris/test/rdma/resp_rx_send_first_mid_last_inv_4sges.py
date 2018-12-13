@@ -28,12 +28,12 @@ def TestCaseSetup(tc):
 
     # Invalidate Rkey: Invalidate the Lkey of the RQ slab (lkey is in MR)
     tc.pvtdata.inv_r_key = rs.lqp.pd.mrs.Get('MR-SLAB0000').rkey
-    kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, tc.pvtdata.inv_r_key)
+    tc.pvtdata.mw_kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, tc.pvtdata.inv_r_key)
     logger.info("RDMA TestCaseSetup(): Lkey state for SLAB0 of hw_lif %d qp %s rkey: %d state: %d" % 
-            (rs.lqp.pd.ep.intf.lif.hw_lif_id, rs.lqp.GID(), tc.pvtdata.inv_r_key, kt_entry.data.state))
+            (rs.lqp.pd.ep.intf.lif.hw_lif_id, rs.lqp.GID(), tc.pvtdata.inv_r_key, tc.pvtdata.mw_kt_entry.data.state))
     if (GlobalOptions.dryrun): return
     # Make sure that lkey is valid before the test
-    assert (kt_entry.data.state == 2) # KEY_STATE_VALID = 2
+    assert (tc.pvtdata.mw_kt_entry.data.state == 2) # KEY_STATE_VALID = 2
     return
 
 def TestCaseTrigger(tc):
@@ -103,4 +103,9 @@ def TestCaseStepVerify(tc, step):
 
 def TestCaseTeardown(tc):
     logger.info("RDMA TestCaseTeardown() Implementation.")
+    if (GlobalOptions.dryrun): return
+    rs = tc.config.rdmasession
+    kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, tc.pvtdata.inv_r_key)
+    kt_entry.data = tc.pvtdata.mw_kt_entry.data
+    kt_entry.WriteWithDelay()
     return

@@ -12,12 +12,12 @@ rdma:
     hbm_barmap_size: 8388608
     # These values must match the corresponding values defined in the queue_types below
     max_aq: 1
-    max_aqe: 64
+    max_aqe: 1024
 
     max_qp: 256
 
     max_cq: 32
-    max_cqe: 128
+    max_cqe: 2048
 # Idea is to allocate one eq for every 8 CQs + 1 (Async EQ)
     max_eq: 8
     max_eqe: 256

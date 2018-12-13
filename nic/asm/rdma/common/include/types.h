@@ -887,9 +887,8 @@ struct cqe_t {
 #define EQE_CODE_QP_LAST_WQE    3
 
 #define EQE_CODE_QP_ERR         8
-#define EQE_CODE_QP_ERR_NOCQE   9
-#define EQE_CODE_QP_ERR_REQEST 10
-#define EQE_CODE_QP_ERR_ACCESS 11
+#define EQE_CODE_QP_ERR_REQEST  9
+#define EQE_CODE_QP_ERR_ACCESS 10
 
 
 struct eqwqe_t {

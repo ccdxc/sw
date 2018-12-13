@@ -167,17 +167,13 @@ def GetEQEcodeQPErr (tc, desc, args = None):
     #EQE_CODE_QP_ERR
     return 8
 
-def GetEQEcodeQPErrNoCQE (tc, desc, args = None):
-    #EQE_CODE_QP_ERR_NOCQE
-    return 9
-
 def GetEQEcodeQPErrRequest (tc, desc, args = None):
     #EQE_CODE_QP_ERR_REQEST
-    return 10
+    return 9
 
 def GetEQEcodeQPErrAccess (tc, desc, args = None):
     #EQE_CODE_QP_ERR_ACCESS
-    return 11
+    return 10
 
 def GetReqRxCQExpColor (tc, desc, args):
     log_num_cq_wqes = getattr(tc.pvtdata.sq_cq_pre_qstate, 'log_num_wqes')

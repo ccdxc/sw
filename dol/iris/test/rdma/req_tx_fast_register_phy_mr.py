@@ -32,6 +32,7 @@ def TestCaseSetup(tc):
     # Get new key object for FRPMR.
     tc.pvtdata.key  = rs.lqp.pd.GetNewKey()
     tc.pvtdata.l_key = tc.pvtdata.key.lkey
+    tc.pvtdata.mr_kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, (tc.pvtdata.l_key))
 
     tc.pvtdata.user_key = 192
     
@@ -210,4 +211,9 @@ def TestCaseStepVerify(tc, step):
 
 def TestCaseTeardown(tc):
     logger.info("RDMA TestCaseTeardown() Implementation.")
+    if (GlobalOptions.dryrun): return
+    rs = tc.config.rdmasession
+    kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, tc.pvtdata.l_key)
+    kt_entry.data = tc.pvtdata.mr_kt_entry.data
+    kt_entry.WriteWithDelay()
     return

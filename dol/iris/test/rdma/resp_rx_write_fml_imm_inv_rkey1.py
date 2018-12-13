@@ -18,6 +18,7 @@ def TestCaseSetup(tc):
     rs = tc.config.rdmasession
     tc.pvtdata.imm_data = random.randrange(0, 0xffffffff)
     tc.pvtdata.r_key = rs.lqp.pd.mrs.Get('MR-SLAB0000').rkey
+    tc.pvtdata.mw_kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, (tc.pvtdata.r_key))
 
     return
 
@@ -88,7 +89,7 @@ def TestCaseTeardown(tc):
 
     #Restore remote write permissions on the RKEY of MR
     kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, tc.pvtdata.r_key)
-    kt_entry.data.acc_ctrl = tc.pvtdata.r_key_temp_acc_ctrl
+    kt_entry.data = tc.pvtdata.mw_kt_entry.data
     kt_entry.WriteWithDelay()
 
     return

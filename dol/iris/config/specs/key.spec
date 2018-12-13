@@ -1,6 +1,6 @@
 # RDMA KEY Configuration Spec
 meta:
     id: KEY_RDMA
-
-count    : 100
+# This count is initialized to 100 for RTL runs
+count    : 16
 useAdmin : True

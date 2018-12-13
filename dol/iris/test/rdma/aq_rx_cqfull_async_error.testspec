@@ -1,0 +1,59 @@
+# Test Spec
+selectors:
+    root            : ref://store/templates/id=LIF
+    lif             : filter://enable_rdma=True
+
+descriptors:
+    - descriptor:
+        id      : DESC
+        template: ref://factory/templates/id=DESC_RDMA_AQ
+        fields:
+            op          : 0  # ADMIN_NOOP
+            type_state  : 0
+            dbid_flags  : 0
+            id_ver      : 0
+
+            nop         :
+                - pad   : 0
+
+    - descriptor:
+        id      : EXP_EQ_CQ_DESC
+        template: ref://factory/templates/id=DESC_RDMA_EQ
+        fields:
+            qid    : ref://testcase/pvtdata/aq/cq/id
+            type   : callback://rdma/rdma/GetEQEtypeCQ
+            code   : callback://rdma/rdma/GetEQEcodeCQErrFull
+            color  : callback://rdma/rdma/GetAsyncEQExpColor
+
+session:
+    - step:
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC
+                    ring    : ref://testcase/pvtdata/aq/aq/rings/id=AQ
+            
+            doorbell:
+                object: ref://testcase/pvtdata/aq/aq/rings/id=AQ/doorbell
+                fields:
+                    upd : 0x9 # PI from DB data and DB_SCHED_EVAL
+       
+        expect:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_EQ_CQ_DESC
+                    ring    : ref://testcase/pvtdata/aq/lif/async_eq/rings/id=EQ
+
+    - step:
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC
+                    ring    : ref://testcase/pvtdata/aq/aq/rings/id=AQ
+            
+            doorbell:
+                object: ref://testcase/pvtdata/aq/aq/rings/id=AQ/doorbell
+                fields:
+                    upd : 0x9 # PI from DB data and DB_SCHED_EVAL
+       
+        expect:

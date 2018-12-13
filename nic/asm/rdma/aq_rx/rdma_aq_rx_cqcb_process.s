@@ -106,6 +106,7 @@ report_cqfull_error:
     tblwr.f     d.cq_full, 1
 
 report_async:
+    CAPRI_SET_TABLE_2_VALID(0)
     //set aqcb.error = 1
     DMA_CMD_STATIC_BASE_GET(r6, AQ_RX_DMA_CMD_START_FLIT_ID, AQ_RX_DMA_CMD_AQ_ERR_DIS)
     phvwr       p.error, 1
@@ -124,7 +125,7 @@ report_async:
 error_disable_aq:
 
     //fill the eqwqe
-    phvwrpair   p.async_eqwqe.code, EQE_CODE_QP_ERR, p.async_eqwqe.type, EQE_TYPE_CQ    //BD Slot
+    phvwrpair   p.async_eqwqe.code, EQE_CODE_QP_ERR, p.async_eqwqe.type, EQE_TYPE_QP    //BD Slot
 
     //post ASYCN EQ error on QP
     b           report_async

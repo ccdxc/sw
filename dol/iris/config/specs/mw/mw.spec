@@ -4,11 +4,12 @@ meta:
 
 useAdmin : True
 
+# This count is initialized to 128 for RTL runs
 type1_2:
-    count   : 128
+    count   : 16
 
 type1:
-    count   : 128
+    count   : 16
 
 type2:
-    count   : 128
+    count   : 16

@@ -222,7 +222,7 @@ def ValidateAdminCQChecks(tc, desc_name, num_completions = 1):
     log_num_cq_wqes = getattr(tc.pvtdata.aq_cq_post_qstate, 'log_num_wqes')
     ring0_mask = (2 ** log_num_cq_wqes) - 1
 
-    # verify that p_index is incremented by 1, as cqwqe is posted
+    # verify that p_index is incremented by num_completions, as cqwqe is posted
     if not VerifyFieldMaskModify(tc, tc.pvtdata.aq_cq_pre_qstate, tc.pvtdata.aq_cq_post_qstate, 'proxy_pindex', ring0_mask, num_completions):
         return False
 
@@ -371,6 +371,57 @@ def ValidateAsyncEQChecks(tc, num_wqes=1):
     rs = tc.config.rdmasession
     rs.lqp.pd.ep.intf.lif.async_eq.qstate.Read()
     tc.pvtdata.async_eq_post_qstate = rs.lqp.pd.ep.intf.lif.async_eq.qstate.data
+    log_num_eq_wqes = getattr(tc.pvtdata.async_eq_post_qstate, 'log_num_wqes')
+    ring0_mask = (2 ** log_num_eq_wqes) - 1
+
+    # verify that p_index is incremented by num_wqes(default:1), as eqwqe is posted
+    if not VerifyFieldMaskModify(tc, tc.pvtdata.async_eq_pre_qstate, tc.pvtdata.async_eq_post_qstate, 'p_index0', ring0_mask, num_wqes):
+        return False
+
+    # verify that c_index is incremented by num_wqes(default:1), as eqwqe is consumed
+    if not VerifyFieldMaskModify(tc, tc.pvtdata.async_eq_pre_qstate, tc.pvtdata.async_eq_post_qstate, 'c_index0', ring0_mask, num_wqes):
+        return False
+
+    return True
+
+def PopulateAdminPreQStates(tc):
+    lif = tc.config.root
+    tc.pvtdata.aq = lif.aq
+
+    #aq
+    lif.aq.aq.qstate.Read()
+    tc.pvtdata.aq_pre_qstate = copy.deepcopy(lif.aq.aq.qstate.data)
+
+    #aq_cq
+    lif.aq.cq.qstate.Read()
+    tc.pvtdata.aq_cq_pre_qstate = copy.deepcopy(lif.aq.cq.qstate.data)
+
+    #async_eq
+    lif.async_eq.qstate.Read()
+    tc.pvtdata.async_eq_pre_qstate = lif.async_eq.qstate.data
+    return
+
+def PopulateAdminPostQStates(tc):
+    lif = tc.config.root
+    tc.pvtdata.aq = lif.aq
+
+    #aq
+    lif.aq.aq.qstate.Read()
+    tc.pvtdata.aq_post_qstate = copy.deepcopy(lif.aq.aq.qstate.data)
+
+    #aq_cq
+    lif.aq.cq.qstate.Read()
+    tc.pvtdata.aq_cq_post_qstate = copy.deepcopy(lif.aq.cq.qstate.data)
+
+    #async_eq
+    lif.async_eq.qstate.Read()
+    tc.pvtdata.async_eq_post_qstate = lif.async_eq.qstate.data
+    return
+
+def ValidateAdminAsyncEQChecks(tc, num_wqes=1):
+    lif = tc.config.root
+    lif.async_eq.qstate.Read()
+    tc.pvtdata.async_eq_post_qstate = lif.async_eq.qstate.data
     log_num_eq_wqes = getattr(tc.pvtdata.async_eq_post_qstate, 'log_num_wqes')
     ring0_mask = (2 ** log_num_eq_wqes) - 1
 

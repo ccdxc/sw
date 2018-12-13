@@ -48,7 +48,7 @@ class RdmaAQstate(Packet):
         X3BytesField("aq_id", 0),
         ByteField("busy", 0),
         X3BytesField("cq_id", 0),
-        ByteField("rsvd3", 0),
+        ByteField("error", 0),
         XLongField("cqcb_addr", 0),
         BitField("pad", 0, 192),
 

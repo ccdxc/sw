@@ -86,7 +86,8 @@ class EndpointObject(base.ConfigObjectBase):
         self.is_l4lb_backend = backend
         self.is_l4lb_service = False
         self.l4lb_backend = None
-        self.last_slab_id = 1 # Slabs 0 and 1 are already in-use by existing DOL testcases
+        self.last_slab_id = -1
+        self.total_mr_slabs = 0
 
         self.sgs = []
 
@@ -339,9 +340,12 @@ class EndpointObject(base.ConfigObjectBase):
         logger.debug("In CreateSlabs, Endpoint %s" % (self.GID()))
         self.slab_allocator = objects.TemplateFieldObject("range/0/2048")
         self.slabs = objects.ObjectDatabase()
+        self.mr_slabs = objects.ObjectDatabase()
         self.obj_helper_slab = slab.SlabObjectHelper()
         self.obj_helper_slab.Generate(self.intf.lif, spec)
         self.slabs.SetAll(self.obj_helper_slab.slabs)
+        self.mr_slabs.SetAll(self.obj_helper_slab.slabs)
+        self.total_mr_slabs += len(self.mr_slabs)
 
     def AddSlab(self, slab):
         self.obj_helper_slab.AddSlab(slab)
@@ -351,9 +355,9 @@ class EndpointObject(base.ConfigObjectBase):
         self.obj_helper_slab.Configure()
 
     def GetNewSlab(self):
-        self.last_slab_id += 1
+        self.last_slab_id = (self.last_slab_id + 1) % self.total_mr_slabs
         logger.info("- # New slab on EP %s assigned: %s" % (self.GID(), 'SLAB%04d' % self.last_slab_id))
-        return self.slabs.Get('SLAB%04d' % self.last_slab_id);
+        return self.slabs.Get('SLAB%04d' % self.last_slab_id)
 
     def PrepareAgentObject(self):
         return AgentEndpointObject(self)

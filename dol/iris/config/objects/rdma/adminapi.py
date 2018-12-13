@@ -1,5 +1,6 @@
 from infra.factory.store    import FactoryStore
 from infra.common.logging   import logger
+from iris.config.objects.rdma.keytable import *
 
 class RdmaAdminCreateBase:
     def __init__(self):

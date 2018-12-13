@@ -22,6 +22,7 @@ def TestCaseSetup(tc):
     tc.pvtdata.wrid = 0x0504
     
     tc.pvtdata.r_key = rs.lqp.pd.GetNewType2MW().rkey
+    tc.pvtdata.mw_kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, (tc.pvtdata.r_key & 0xFFFFFF))
 
     return
 
@@ -121,5 +122,10 @@ def TestCaseStepVerify(tc, step):
 
 def TestCaseTeardown(tc):
     logger.info("RDMA TestCaseTeardown() Implementation.")
+    if (GlobalOptions.dryrun): return
+    rs = tc.config.rdmasession
+    kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, tc.pvtdata.r_key)
+    kt_entry.data = tc.pvtdata.mw_kt_entry.data
+    kt_entry.WriteWithDelay()
     ResetErrQState(tc)
     return

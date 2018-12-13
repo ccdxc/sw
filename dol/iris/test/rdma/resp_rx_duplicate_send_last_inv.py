@@ -30,6 +30,7 @@ def TestCaseSetup(tc):
     # Invalidate Rkey: Invalidate the Lkey of the RQ slab (lkey is in MR)
     tc.pvtdata.inv_r_key = rs.lqp.pd.mrs.Get('MR-SLAB0000').rkey
     kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, tc.pvtdata.inv_r_key)
+    tc.pvtdata.mw_kt_entry = kt_entry
     logger.info("RDMA TestCaseSetup(): Lkey state for SLAB0 of hw_lif %d qp %s rkey: %d state: %d" %
             (rs.lqp.pd.ep.intf.lif.hw_lif_id, rs.lqp.GID(), tc.pvtdata.inv_r_key, kt_entry.data.state))
     if (GlobalOptions.dryrun): return
@@ -90,6 +91,9 @@ def TestCaseTeardown(tc):
     logger.info("RDMA TestCaseTeardown() Implementation.")
     if (GlobalOptions.dryrun): return
     rs = tc.config.rdmasession
+    kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, tc.pvtdata.inv_r_key)
+    kt_entry.data = tc.pvtdata.mw_kt_entry.data
+    kt_entry.WriteWithDelay()
     logger.info("Setting proxy_cindex/spec_cindex equal to p_index0\n")
     rs.lqp.rq.qstate.data.proxy_cindex = tc.pvtdata.rq_post_qstate.p_index0;
     rs.lqp.rq.qstate.data.spec_cindex = tc.pvtdata.rq_post_qstate.p_index0;

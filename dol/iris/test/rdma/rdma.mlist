@@ -17,7 +17,14 @@ modules:
         module  : aq_tx_nop
         spec    : aq_tx_nop.testspec
         ignore  : False
-        rtl     : True
+
+    - module:
+        name    : RDMA_AQ_RX_CQFULL_ASYNC_ERROR
+        enable  : True
+        package : test.rdma
+        module  : aq_rx_cqfull_async_error
+        spec    : aq_rx_cqfull_async_error.testspec
+        ignore  : False
 
     - module:
         name    : RDMA_TX_SEND_ONLY

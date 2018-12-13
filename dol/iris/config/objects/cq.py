@@ -38,23 +38,25 @@ class CqObject(base.ConfigObjectBase):
         super().__init__()
         self.Clone(Store.templates.Get('QSTATE_RDMA_CQ'))
         self.privileged = privileged
+
+        self.num_cq_wqes = self.__roundup_to_pow_2(num_wqes)
+        self.cqwqe_size = self.__get_cqwqe_size()
+        self.cq_size = self.num_cq_wqes * self.cqwqe_size
+
         if privileged is True:
             self.lif = lif
             self.ep = None
             self.remote = False
+            self.hostmem_pg_size = self.cq_size
         else:
             self.lif = ep.intf.lif
             self.ep = ep
             self.remote = ep.remote
+            self.hostmem_pg_size = pg_sz
         self.id = cq_id
         self.GID("CQ%04d" % self.id)
         # Every 8 CQs share a EQ
         self.eq_id = int((self.id + 7) / 8)
-
-        self.hostmem_pg_size = pg_sz
-        self.num_cq_wqes = self.__roundup_to_pow_2(num_wqes)
-        self.cqwqe_size = self.__get_cqwqe_size()
-        self.cq_size = self.num_cq_wqes * self.cqwqe_size
 
         if not self.remote:
             self.cq = self.lif.GetQ('RDMA_CQ', self.id)

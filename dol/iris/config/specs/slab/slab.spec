@@ -2,5 +2,6 @@
 meta:
     id: SLAB_RDMA
 
-count   : 1000
+# This count is initialized to 1000 for RTL runs
+count   : 16
 size    : 10144

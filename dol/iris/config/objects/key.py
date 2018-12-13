@@ -104,6 +104,9 @@ class KeyObjectHelper:
             return
 
         key_count = spec.count
+        # RTL run needs unique keys
+        if (GlobalOptions.rtl):
+            key_count = 100
         logger.info("Creating %d Keys. for PD:%s, useAdmin: %d" %\
                     (key_count, pd.GID(), self.useAdmin))
         for i in range(key_count):

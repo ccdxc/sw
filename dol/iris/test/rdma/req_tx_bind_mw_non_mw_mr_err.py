@@ -28,9 +28,10 @@ def TestCaseSetup(tc):
     tc.pvtdata.l_key = tc.pvtdata.mr.lkey
     tc.pvtdata.r_key = rs.lqp.pd.GetNewType1MW().rkey
 
-    kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, (tc.pvtdata.r_key & 0xFFFFFF))
-    tc.pvtdata.pre_pt_base = kt_entry.data.pt_base
-    tc.pvtdata.pre_base_va = kt_entry.data.base_va
+    tc.pvtdata.mw_kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, (tc.pvtdata.r_key & 0xFFFFFF))
+    tc.pvtdata.pre_pt_base = tc.pvtdata.mw_kt_entry.data.pt_base
+    tc.pvtdata.pre_base_va = tc.pvtdata.mw_kt_entry.data.base_va
+    tc.pvtdata.mr_kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, (tc.pvtdata.l_key))
 
     if (GlobalOptions.dryrun):
         tc.pvtdata.mw_va = 0
@@ -128,8 +129,11 @@ def TestCaseTeardown(tc):
     logger.info("RDMA TestCaseTeardown() Implementation.")
     rs = tc.config.rdmasession
     kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, tc.pvtdata.l_key)
-    # Restore mw_bind flag at the end of the test
-    kt_entry.data.acc_ctrl |= (0x10) #ACC_CTRL_MW_BIND 
+    kt_entry.data = tc.pvtdata.mr_kt_entry.data
+    kt_entry.WriteWithDelay()
+
+    kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, (tc.pvtdata.r_key & 0xFFFFFF))
+    kt_entry.data = tc.pvtdata.mw_kt_entry.data
     kt_entry.WriteWithDelay()
 
     ResetErrQState(tc)

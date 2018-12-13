@@ -155,16 +155,6 @@ buffers:
                - size    : ref://testcase/packets/id=SEND_ONLY_PAYLOAD/size # Just use the same size as SEND_ONLY
                  data    : ref://testcase/packets/id=SEND_ONLY_PAYLOAD/rawbytes
 
-    - buffer:
-        id      : LOCAL_INV_BUF
-        template: ref://factory/templates/id=RDMA_BUFFER
-        fields:
-           slab    : callback://rdma/rdma/GetNewSlab
-           offset  : 0
-           segments:
-               - size    : ref://testcase/packets/id=SEND_ONLY_PAYLOAD/size # Just use the same size as SEND_ONLY
-                 data    : ref://testcase/packets/id=SEND_ONLY_PAYLOAD/rawbytes
-
 descriptors:
     - descriptor:
         id      : SEND_DESC
@@ -264,7 +254,7 @@ descriptors:
             wrid    : ref://testcase/pvtdata/wrid
 
             local_inv:
-                l_key: callback://rdma/rdma/GetMrSlabLkey/id=LOCAL_INV_BUF
+                l_key: ref://testcase/pvtdata/li_lkey
 
     - descriptor:
         id      : EXP_LOCAL_INV_CQ_DESC

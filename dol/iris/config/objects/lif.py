@@ -126,8 +126,9 @@ class LifObject(base.ConfigObjectBase):
             # Create CQ 0 for adminQ
             logger.info("Creating 1 Cqs. for LIF:%s" % (self.GID()))
             # Hardcode CQ 0 for AQ
+            # Page size is calculated as max_cqe * cqe_size by the CQ for privileged resources
             cq_id = 0
-            self.cq = cqs.CqObject(None, cq_id, spec.rdma.max_cqe, spec.rdma.hostmem_pg_size, True, self)
+            self.cq = cqs.CqObject(None, cq_id, spec.rdma.max_cqe, 0, True, self)
 
             # Create AdminQ
             logger.info("Creating 1 Aqs. for LIF:%s" % (self.GID()))

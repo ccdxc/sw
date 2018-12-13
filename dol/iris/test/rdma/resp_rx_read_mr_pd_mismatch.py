@@ -19,6 +19,7 @@ def TestCaseSetup(tc):
     tc.pvtdata.slab = rs.lqp.pd.ep.GetNewSlab()
     tc.pvtdata.mr = rs.lqp.pd.mrs.Get('MR-' + tc.pvtdata.slab.GID())
     tc.pvtdata.r_key = tc.pvtdata.mr.rkey
+    tc.pvtdata.mw_kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, tc.pvtdata.r_key)
     kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, tc.pvtdata.r_key)
     # change the pd of MR, so that it doesn't match the QP's PD
     kt_entry.data.pd = kt_entry.data.pd + 1
@@ -91,5 +92,10 @@ def TestCaseVerify(tc):
 
 def TestCaseTeardown(tc):
     logger.info("RDMA TestCaseTeardown() Implementation.")
+    if (GlobalOptions.dryrun): return
+    rs = tc.config.rdmasession
+    kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, tc.pvtdata.r_key)
+    kt_entry.data = tc.pvtdata.mw_kt_entry.data
+    kt_entry.WriteWithDelay()
     ResetErrQState(tc)
     return

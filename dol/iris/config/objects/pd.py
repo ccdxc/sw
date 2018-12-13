@@ -31,9 +31,15 @@ class PdObject(base.ConfigObjectBase):
         self.GID("PD%04d" % self.id)
         self.spec = spec
         self.remote = ep.remote
-        self.last_type1_mw_id = 0
-        self.last_type2_mw_id = 0
-        self.last_type1_2_mw_id = 0
+        self.mws_type_1 = []
+        self.mws_type_2 = []
+        self.mws_type_1_2 = []
+        self.total_type_1_mws = 0
+        self.total_type_2_mws = 0
+        self.total_type_1_2_mws = 0
+        self.last_type1_mw_id = -1
+        self.last_type2_mw_id = -1
+        self.last_type1_2_mw_id = -1
         self.last_key_id = 0
 
         if not self.remote:
@@ -88,6 +94,17 @@ class PdObject(base.ConfigObjectBase):
         self.obj_helper_mr.AddMr(mr)
         self.mrs.Add(mr)
 
+    def AddMw(self, mw, type):
+        if type == 1:
+            self.mws_type_1.append(mw)
+            self.total_type_1_mws += 1
+        elif type == 2:
+            self.mws_type_2.append(mw)
+            self.total_type_2_mws += 1
+        else:
+            self.mws_type_1_2.append(mw)
+            self.total_type_1_2_mws += 1
+
     def Configure(self):
 
         if len(self.obj_helper_mr.mrs):
@@ -105,34 +122,22 @@ class PdObject(base.ConfigObjectBase):
         logger.info('UDQps: %d ' % (len(self.obj_helper_qp.udqps)))
 
     def GetNewType1_2MW(self):
-        i = 0
-        for mw in self.obj_helper_mw.mws:
-            if (mw.mw_type == 0):
-                if self.last_type1_2_mw_id == i:
-                    self.last_type1_2_mw_id+=1
-                    return mw
-                i+=1
-        return None
+        self.last_type1_2_mw_id = (self.last_type1_2_mw_id + 1) % self.total_type_1_2_mws
+        mw = self.mws_type_1_2[self.last_type1_2_mw_id]
+        logger.info("- # New MW on PD %s assigned %s" % (self.GID(), mw.GID()))
+        return mw
 
     def GetNewType1MW(self):
-        i = 0
-        for mw in self.obj_helper_mw.mws:
-            if (mw.mw_type == 1):
-                if self.last_type1_mw_id == i:
-                    self.last_type1_mw_id+=1
-                    return mw
-                i+=1
-        return None
+        self.last_type1_mw_id = (self.last_type1_mw_id + 1) % self.total_type_1_mws
+        mw = self.mws_type_1[self.last_type1_mw_id]
+        logger.info("- # New MW on PD %s assigned %s" % (self.GID(), mw.GID()))
+        return mw
 
     def GetNewType2MW(self):
-        i = 0
-        for mw in self.obj_helper_mw.mws:
-            if (mw.mw_type == 2):
-                if self.last_type2_mw_id == i:
-                    self.last_type2_mw_id+=1
-                    return mw
-                i+=1
-        return None
+        self.last_type2_mw_id = (self.last_type2_mw_id + 1) % self.total_type_2_mws
+        mw = self.mws_type_2[self.last_type2_mw_id]
+        logger.info("- # New MW on PD %s assigned %s" % (self.GID(), mw.GID()))
+        return mw
 
     def GetNewKey(self):
         new_key = self.obj_helper_key.keys[self.last_key_id]

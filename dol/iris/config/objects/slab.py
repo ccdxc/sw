@@ -78,6 +78,9 @@ class SlabObjectHelper:
 
     def Generate(self, lif, spec):
         count = spec.count
+        # RTL run needs unique slabs
+        if (GlobalOptions.rtl):
+            count = 1000
         logger.info("Creating %d Slabs. for LIF:%s" %\
                        (count, lif.GID()))
         for slab_id in range(count):
