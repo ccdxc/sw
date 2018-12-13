@@ -17,7 +17,6 @@
 #define tx_table_s1_t0_action ooq_tcp_txdma_load_rx2tx_slot
 #define tx_table_s2_t0_action ooq_tcp_txdma_load_qbase_addr
 #define tx_table_s3_t0_action ooq_tcp_txdma_load_one_descr
-#define tx_table_s3_t1_action ooq_tcp_txdma_load_tcp_header_in_descr
 #define tx_table_s4_t0_action ooq_tcp_txdma_generate_dummy_pkt
 
 #include "../common-p4+/common_txdma.p4"
@@ -48,7 +47,7 @@ header_type ooq_tcp_txdma_load_rx2tx_slot_d_t {
 
 header_type ooq_tcp_txdma_load_qbase_addr_d_t {
     fields {
-        ooq_descr_addr  : 64;
+        ooq_ring_base_addr  : 64;
     }
 }
 
@@ -108,7 +107,8 @@ header_type to_stage_1_phv_t {
 
 header_type to_stage_2_phv_t {
     fields {
-        pad   : 128;
+        one_descr_addr : 64;
+        pad   : 64;
     }
 }
 
@@ -122,7 +122,8 @@ header_type to_stage_4_phv_t {
     fields {
         new_qbase_addr : 64;
         num_entries    : 16;
-        pad            : 48;
+        curr_index     : 16;
+        pad            : 32;
     }
 }
 
@@ -225,20 +226,16 @@ action ooq_tcp_txdma_load_rx2tx_slot(ooq_qbase_addr, num_entries, pad)
 }
 
 // Stage-2 Table-0
-action ooq_tcp_txdma_load_qbase_addr(ooq_descr_addr)
+action ooq_tcp_txdma_load_qbase_addr(ooq_ring_base_addr)
 {
     GENERATE_GLOBAL_K
-    modify_field(ooq_tcp_txdma_load_qbase_addr_d.ooq_descr_addr, ooq_descr_addr);
+    modify_field(ooq_tcp_txdma_load_qbase_addr_d.ooq_ring_base_addr, ooq_ring_base_addr);
+
+    modify_field(to_s2_scratch.one_descr_addr, to_s2.one_descr_addr);
 }
 
 // Stage-3 Table-0
-action ooq_tcp_txdma_load_one_descr(rndmr_descr_addr)
-{
-    GENERATE_GLOBAL_K
-}
-
-// Stage-3 Table-1
-action ooq_tcp_txdma_load_tcp_header_in_descr(tcp_app_header_p4plus_app_id,
+action ooq_tcp_txdma_load_one_descr(tcp_app_header_p4plus_app_id,
                                               tcp_app_header_table0_valid, tcp_app_header_table1_valid, 
                                               tcp_app_header_table2_valid, tcp_app_header_table3_valid, 
                                               tcp_app_header_from_ooq_txdma, tcp_app_header_num_sack_blocks, 
@@ -273,11 +270,29 @@ action ooq_tcp_txdma_load_tcp_header_in_descr(tcp_app_header_p4plus_app_id,
 }
 
 // Stage-4 Table-0
-action ooq_tcp_txdma_generate_dummy_pkt()
+action ooq_tcp_txdma_generate_dummy_pkt(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0,ci_0, 
+                                 current_descr_qbase_addr, num_entries, num_pkts, curr_index, ooq_proc_in_progress,
+                                 ooq_proc_flags, ooq_per_flow_ring_base)
 {
     GENERATE_GLOBAL_K
     modify_field(to_s4.new_qbase_addr, to_s4_scratch.new_qbase_addr);
     modify_field(to_s4.num_entries, to_s4_scratch.num_entries);
     modify_field(to_s4.pad, to_s4_scratch.pad);
+    modify_field(ooq_tcp_txdma_qstate_d.rsvd, rsvd);                                                                  
+    modify_field(ooq_tcp_txdma_qstate_d.cosA, cosA);                                                                 
+    modify_field(ooq_tcp_txdma_qstate_d.cosB, cosB);                                                               
+    modify_field(ooq_tcp_txdma_qstate_d.cos_sel, cos_sel);                                                       
+    modify_field(ooq_tcp_txdma_qstate_d.eval_last, eval_last);                                                 
+    modify_field(ooq_tcp_txdma_qstate_d.host, host);                                                         
+    modify_field(ooq_tcp_txdma_qstate_d.total, total);                                                    
+    modify_field(ooq_tcp_txdma_qstate_d.pid, pid);                                                      
+    modify_field(ooq_tcp_txdma_qstate_d.pi_0, pi_0);                                                
+    modify_field(ooq_tcp_txdma_qstate_d.ci_0, ci_0);     
+    modify_field(ooq_tcp_txdma_qstate_d.current_descr_qbase_addr, current_descr_qbase_addr);
+    modify_field(ooq_tcp_txdma_qstate_d.num_entries, num_entries);
+    modify_field(ooq_tcp_txdma_qstate_d.num_pkts, num_pkts);
+    modify_field(ooq_tcp_txdma_qstate_d.curr_index, curr_index);
+    modify_field(ooq_tcp_txdma_qstate_d.ooq_proc_in_progress, ooq_proc_in_progress);
+    modify_field(ooq_tcp_txdma_qstate_d.ooq_proc_flags, ooq_proc_flags);
 }
 

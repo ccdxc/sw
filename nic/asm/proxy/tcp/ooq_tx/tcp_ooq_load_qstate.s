@@ -29,6 +29,7 @@ tcp_ooq_load_qstate:
      bcf [!c2 & c3 & c4 & c5], tcp_ooq_load_qstate_process_next_pkt_descr
      nop
      bcf [!c5], tcp_ooq_load_qstate_process_new_request
+     nop.e
      nop
 
 tcp_ooq_load_qstate_do_nothing:
@@ -49,9 +50,11 @@ tcp_ooq_load_qstate_completed_work_for_this_request:
 tcp_ooq_load_qstate_process_next_pkt_descr:
     add r1, d.current_descr_qbase_addr, r0
     sll r2, d.curr_index, 3
-    tbladd d.curr_index, 1
+    add r3, d.curr_index, 1
+    phvwr p.to_s4_curr_index, r3
     add r2, r1, r2
-    //Launch table load stage1 with this address in r2 to get the descr-slot
+    phvwr p.to_s2_one_descr_addr, r2
+    //Launch dummy table for stage1
 
     nop.e
     nop
