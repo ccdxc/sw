@@ -56,6 +56,7 @@ PACKAGES = %w[
 run "yum install -y #{PACKAGES.join(" ")}"
 run "yum install -y https://mirror.umd.edu/fedora/epel/7/x86_64/Packages/h/hping3-0.0.20051105-24.el7.x86_64.rpm"
 run "yum install -y bind bind-utils"
+run "yum install -y http://ftp.tu-chemnitz.de/pub/linux/dag/redhat/el7/en/x86_64/rpmforge/RPMS/atftp-0.7-6.el7.rf.x86_64.rpm"
 
 run "pip install --upgrade #{PIP2_PACKAGES.join(" ")}"
 run "pip3 install --upgrade #{PIP3_PACKAGES.join(" ")}"
