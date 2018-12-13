@@ -25,7 +25,7 @@ def __collect_onenode(node):
     return
 
 def CollectLogs():
-    if GlobalOptions.dryrun: return
+    if GlobalOptions.dryrun or GlobalOptions.skip_logs: return
     nodes = store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNodes()
     pool = ThreadPool(len(nodes))
     results = pool.map(__collect_onenode, nodes)

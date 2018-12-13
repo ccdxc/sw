@@ -49,6 +49,8 @@ parser.add_argument('--regression', dest='regression',
                     action='store_true', help='Only run regression Testsuites.')
 parser.add_argument('--logdir', dest='logdir', default=None,
                     help='Save logs in a specific directory. (Relative to IOTA directory)')
+parser.add_argument('--skip-logs', dest='skip_logs', help='Skip log collection.',
+                    action='store_true')
 GlobalOptions = parser.parse_args()
 
 GlobalOptions.default_username = "vm"
