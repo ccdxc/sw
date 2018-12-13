@@ -46,7 +46,6 @@ fill_dc_desc(struct service_info *svc_info, struct cpdc_desc *desc,
 	desc->cd_threshold_len =
 		(dst_buf_len == MAX_CPDC_DST_BUF_LEN) ? 0 : dst_buf_len;
 
-	/* interm status is never directy "polled", so no need to clear it */
 	if (svc_info->si_istatus_desc) {
 		desc->cd_status_addr = (uint64_t) svc_info->si_istatus_desc;
 		osal_rmem_set(desc->cd_status_addr, 0, sizeof(*status_desc));
@@ -93,6 +92,13 @@ decompress_setup(struct service_info *svc_info,
 	err = cpdc_setup_rmem_status_desc(svc_info, false);
 	if (err) {
 		OSAL_LOG_ERROR("cannot obtain dc rmem status desc from pool! err: %d",
+				err);
+		goto out;
+	}
+
+	err = cpdc_setup_rmem_dst_blist(svc_info, svc_params);
+	if (err) {
+		OSAL_LOG_ERROR("failed to setup dc rmem dst buffer list! err: %d",
 				err);
 		goto out;
 	}
@@ -316,6 +322,7 @@ decompress_teardown(struct service_info *svc_info)
 	seq_cleanup_cpdc_chain(svc_info);
 	seq_cleanup_desc(svc_info);
 
+	cpdc_teardown_rmem_dst_blist(svc_info);
 	cpdc_teardown_rmem_status_desc(svc_info, false);
 
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
@@ -323,7 +330,6 @@ decompress_teardown(struct service_info *svc_info)
 
 	dc_desc = (struct cpdc_desc *) svc_info->si_desc;
 	cpdc_put_desc(svc_info, false, dc_desc);
-
 
 	OSAL_LOG_DEBUG("exit!");
 }
