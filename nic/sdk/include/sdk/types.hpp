@@ -15,6 +15,34 @@ namespace types {
 typedef uint64_t    hbm_addr_t;
 typedef uint64_t    mem_addr_t;
 
+enum class port_link_sm_t {
+    PORT_LINK_SM_DISABLED,
+    PORT_LINK_SM_ENABLED,
+
+    PORT_LINK_SM_AN_CFG,
+    PORT_LINK_SM_AN_DISABLED,
+    PORT_LINK_SM_AN_START,
+    PORT_LINK_SM_AN_WAIT_HCD,
+    PORT_LINK_SM_AN_COMPLETE,
+
+    PORT_LINK_SM_SERDES_CFG,
+    PORT_LINK_SM_WAIT_SERDES_RDY,
+    PORT_LINK_SM_MAC_CFG,
+    PORT_LINK_SM_SIGNAL_DETECT,
+
+    PORT_LINK_SM_DFE_TUNING,
+    PORT_LINK_SM_DFE_DISABLED,
+    PORT_LINK_SM_DFE_START_ICAL,
+    PORT_LINK_SM_DFE_WAIT_ICAL,
+    PORT_LINK_SM_DFE_START_PCAL,
+    PORT_LINK_SM_DFE_WAIT_PCAL,
+    PORT_LINK_SM_DFE_PCAL_CONTINUOUS,
+
+    PORT_LINK_SM_WAIT_MAC_SYNC,
+    PORT_LINK_SM_WAIT_MAC_FAULTS_CLEAR,
+    PORT_LINK_SM_UP
+};
+
 enum class port_event_t {
     PORT_EVENT_LINK_NONE = 0,
     PORT_EVENT_LINK_UP   = 1,
@@ -167,6 +195,7 @@ using sdk::types::q_notify_mode_t;
 using sdk::types::cable_type_t;
 using sdk::types::xcvr_event_info_t;
 using sdk::types::port_an_args_t;
+using sdk::types::port_link_sm_t;
 
 #endif    // __SDK_TYPES_HPP__
 

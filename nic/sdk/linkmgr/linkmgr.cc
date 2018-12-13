@@ -922,6 +922,8 @@ port_get (void *pd_p, port_args_t *args)
     args->auto_neg_enable  = port_p->auto_neg_enable();
     args->user_admin_state = port_p->user_admin_state();
     args->pause       = port_p->pause();
+    args->link_sm     = port_p->port_link_sm();
+
     // TODO send live link status until poll timer is reduced
     // args->oper_status = port_p->oper_status();
     if (port_p->port_link_status() == true) {

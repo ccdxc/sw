@@ -103,10 +103,12 @@ public:
         this->link_sm_ = link_sm;
     }
 
+    port_link_sm_t port_link_dfe_sm(void) { return this->link_dfe_sm_; }
     void set_port_link_dfe_sm(port_link_sm_t link_sm) {
         this->link_dfe_sm_ = link_sm;
     }
 
+    port_link_sm_t port_link_an_sm(void) { return this->link_an_sm_; }
     void set_port_link_an_sm(port_link_sm_t link_sm) {
         this->link_an_sm_ = link_sm;
     }

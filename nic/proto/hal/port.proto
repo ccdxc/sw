@@ -121,6 +121,29 @@ enum PortPauseType {
   PORT_PAUSE_TYPE_PFC  = 2;   // PFC
 }
 
+enum PortLinkState {
+  PORT_LINK_SM_DISABLED            =  0;
+  PORT_LINK_SM_ENABLED             =  1;
+  PORT_LINK_SM_AN_CFG              =  2;
+  PORT_LINK_SM_AN_DISABLED         =  3;
+  PORT_LINK_SM_AN_START            =  4;
+  PORT_LINK_SM_AN_WAIT_HCD         =  5;
+  PORT_LINK_SM_AN_COMPLETE         =  6;
+  PORT_LINK_SM_SERDES_CFG          =  7;
+  PORT_LINK_SM_WAIT_SERDES_RDY     =  8;
+  PORT_LINK_SM_MAC_CFG             =  9;
+  PORT_LINK_SM_SIGNAL_DETECT       = 10;
+  PORT_LINK_SM_DFE_TUNING          = 11;
+  PORT_LINK_SM_DFE_DISABLED        = 12;
+  PORT_LINK_SM_DFE_START_ICAL      = 13;
+  PORT_LINK_SM_DFE_WAIT_ICAL       = 14;
+  PORT_LINK_SM_DFE_START_PCAL      = 15;
+  PORT_LINK_SM_DFE_WAIT_PCAL       = 16;
+  PORT_LINK_SM_DFE_PCAL_CONTINUOUS = 17;
+  PORT_LINK_SM_WAIT_MAC_SYNC       = 18;
+  PORT_LINK_SM_UP                  = 19;
+}
+
 // PortSpec message is used to do add/mod properties of a port
 message PortSpec {
   option (delphi.update_event) = true;
@@ -367,7 +390,8 @@ message PortGetResponse {
   types.ApiStatus  api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
   PortSpec         spec       = 2;    // port configuration
   PortStatus       status     = 3;    // status of port
-  PortStats        stats      = 4;    // Port statistics
+  PortLinkState    link_state = 4;    // internal port link state machine
+  PortStats        stats      = 5;    // Port statistics
 }
 
 //------------------------------------------------------------------------------
