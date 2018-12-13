@@ -6,6 +6,7 @@
 #include <vector>
 #include <tuple>
 #include "nic/sdk/include/sdk/catalog.hpp"
+#include "include/sdk/platform/p4loader/loader.hpp"
 #include "nic/include/base.hpp"
 #include "nic/include/hal_cfg.hpp"
 
@@ -18,9 +19,6 @@ namespace pd {
 #define ASIC_PGM_CFG_MAX        3
 #define ASIC_ASM_CFG_MAX        3
 
-typedef void (*mpu_pgm_sort_t)(std::vector <std::string> &);
-typedef uint32_t (*mpu_pgm_symbols_t)(void **, platform_type_t);
-
 typedef struct asic_pgm_cfg_s {
     std::string                 path;
 } asic_pgm_cfg_t;
@@ -29,8 +27,8 @@ typedef struct asic_asm_cfg_s {
     std::string                 name;
     std::string                 path;
     std::string                 base_addr;
-    mpu_pgm_sort_t              sort_func;
-    mpu_pgm_symbols_t           symbols_func;
+    sdk::platform::mpu_pgm_sort_t              sort_func;
+    sdk::platform::mpu_pgm_symbols_t           symbols_func;
 } asic_asm_cfg_t;
 
 typedef struct asic_cfg_s {

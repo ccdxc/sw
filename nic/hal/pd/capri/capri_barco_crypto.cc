@@ -62,7 +62,7 @@ hal_ret_t capri_barco_crypto_init(capri_cfg_t *capri_cfg)
         return ret;
     }
 
-    ret = capri_barco_rings_init();
+    ret = capri_barco_rings_init(capri_cfg->platform);
     if (ret != HAL_RET_OK) {
         return ret;
     }

@@ -72,6 +72,7 @@ nic/build/x86_64/iris/lib/libzmq.so.3                               /nic/lib/
 nic/build/x86_64/iris/lib/libsdkxcvrdriver.so                       /nic/lib/
 nic/build/x86_64/iris/lib/libproto.so                               /nic/lib/
 nic/build/x86_64/iris/lib/libcommonproto.so                         /nic/lib/
+nic/build/x86_64/iris/lib/libsdkp4loader.so                         /nic/lib/
 
 # linkmgr
 nic/build/x86_64/iris/bin/port_client                            /nic/bin

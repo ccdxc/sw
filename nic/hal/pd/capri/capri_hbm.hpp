@@ -3,6 +3,7 @@
 
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 #include "nic/sdk/include/sdk/platform/utils/mpartition.hpp"
+#include "nic/sdk/include/sdk/platform/p4loader/loader.hpp"
 
 using sdk::platform::utils::mpartition_region_t;
 using sdk::platform::utils::mpartition_cache_pipe_t;

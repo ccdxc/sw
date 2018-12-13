@@ -3,25 +3,24 @@
  */
 
 /*
- * capri_loader.cc: Implementation of APIs for MPU program loader
+ * p4_loader.cc: Implementation of APIs for MPU program loader
  */
 
 #include <assert.h>
 #include <boost/unordered_map.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include <vector>
-#include "nic/hal/pd/capri/capri_loader.h"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
-#include "nic/include/asic_pd.hpp"
-#ifndef P4PD_CLI
+#include "include/sdk/platform/p4loader/loader.hpp"
 #include "nic/asic/capri/model/capsim-master/lib/libcapisa/include/libcapisa.h"
 #include "nic/asic/capri/model/capsim-master/lib/libmpuobj/include/libmpuobj.h"
-#endif
+#include "nic/include/asic_pd.hpp"
+
+namespace sdk {
+namespace platform {
 
 namespace pt = boost::property_tree;
 
-/* Capri loader's MPU program information structure */
+/* P4 loader's MPU program information structure */
 typedef struct {
     std::string name;
     uint64_t base_addr;
@@ -31,22 +30,21 @@ typedef struct {
     MpuSymbolTable unresolved_params;
     MpuSymbolTable resolved_params;
     MpuSymbolTable labels;
-} capri_program_info_t;
+} p4_program_info_t;
 
-/* Capri loader's context structure */
+/* P4 loader's context structure */
 typedef struct {
     std::string handle;
     uint64_t prog_hbm_base_addr;
-    capri_program_info_t *program_info = NULL;
+    p4_program_info_t *program_info = NULL;
     int num_programs;
-} capri_loader_ctx_t;
+} p4_loader_ctx_t;
 
-#define LDD_INFO_FILE_NAME    "mpu_prog_info.json"
 
 /* TODO: Declaring these as globals for now. Figure out usage and define
  *       these appropriately.
  */
-boost::unordered_map<std::string, capri_loader_ctx_t *> loader_instances;
+boost::unordered_map<std::string, p4_loader_ctx_t *> loader_instances;
 
 /**
  * read_programs: Read all the programs in a specified directory. For now
@@ -63,13 +61,13 @@ read_programs(const char *handle, char *pathname, mpu_pgm_sort_t sort_func)
     DIR *dir;
     struct dirent *ent;
     int i = 0;
-    capri_loader_ctx_t *ctx;
+    p4_loader_ctx_t *ctx;
     std::vector <std::string> program_names;
 
     /* Load context */
     ctx = loader_instances[handle];
     if (!ctx) {
-        HAL_TRACE_ERR("Invalid handle");
+        SDK_TRACE_ERR("Invalid handle");
         return -1;
     }
 
@@ -81,11 +79,11 @@ read_programs(const char *handle, char *pathname, mpu_pgm_sort_t sort_func)
         }
         closedir (dir);
     } else {
-        HAL_TRACE_ERR("Cannot open dir {} {}", pathname, strerror(errno));
+        SDK_TRACE_ERR("Cannot open dir %s %s", pathname, strerror(errno));
         return -1;
     }
 
-    ctx->program_info = new capri_program_info_t[program_names.size()];
+    ctx->program_info = new p4_program_info_t[program_names.size()];
 
     // sort the mpu program names
     if (sort_func) {
@@ -112,7 +110,7 @@ read_programs(const char *handle, char *pathname, mpu_pgm_sort_t sort_func)
  * Return: Index of program on success, < 0 on failure
  */
 static int
-program_check(capri_prog_param_info_t *prog_param_info, int num_prog_params,
+program_check(p4_prog_param_info_t *prog_param_info, int num_prog_params,
               std::string prog_name)
 {
     int i;
@@ -140,7 +138,7 @@ program_check(capri_prog_param_info_t *prog_param_info, int num_prog_params,
  * Return: Index of parameter on success, < 0 on failure
  */
 static int
-param_check(capri_prog_param_info_t *prog_param_ptr, std::string param, uint64_t *val)
+param_check(p4_prog_param_info_t *prog_param_ptr, std::string param, uint64_t *val)
 {
     int i;
 
@@ -154,7 +152,7 @@ param_check(capri_prog_param_info_t *prog_param_ptr, std::string param, uint64_t
 }
 
 /**
- * capri_load_mpu_programs: Load all MPU programs in a given directory. Resolve
+ * p4_load_mpu_programs: Load all MPU programs in a given directory. Resolve
  *                          the parameters defined in the programs using an
  *                          input list + by checking against labels defined in
  *                          the programs.  Finally write the programs to HBM
@@ -169,17 +167,17 @@ param_check(capri_prog_param_info_t *prog_param_ptr, std::string param, uint64_t
  * @prog_param_info: Hierarchical data on which <program, param> to resolve
  * @num_prog_params: Number of elements in the prog_param_info array
  *
- * Return: Index of program on success, < 0 on failure
+ * Return: sdk_ret_t 
  */
-int
-capri_load_mpu_programs (const char *handle,
+sdk_ret_t
+p4_load_mpu_programs (const char *handle,
                          char *pathname, uint64_t hbm_base_addr,
-                         capri_prog_param_info_t *prog_param_info,
+                         p4_prog_param_info_t *prog_param_info,
                          int num_prog_params, mpu_pgm_sort_t sort_func)
 {
     int i, j, prog_index;
-    capri_loader_ctx_t *ctx;
-    capri_program_info_t *program_info;
+    p4_loader_ctx_t *ctx;
+    p4_program_info_t *program_info;
     MpuSymbol *symbol, *param_u, *param_r;
     uint64_t val;
     hal_ret_t rv;
@@ -187,43 +185,43 @@ capri_load_mpu_programs (const char *handle,
 
     /* ISA library initialization */
     if (libcapisa_init() < 0) {
-	    HAL_TRACE_ERR("Libcapisa initialization failed!");
-        HAL_ASSERT_RETURN(0, HAL_RET_ERR);
+	    SDK_TRACE_ERR("Libcapisa initialization failed!");
+        SDK_ASSERT_RETURN(0, SDK_RET_ERR);
     }
 
     /* Input check */
     if (!handle || !pathname) {
-        HAL_TRACE_ERR("Input error");
-        HAL_ASSERT_RETURN(0, HAL_RET_ERR);
+        SDK_TRACE_ERR("Input error");
+        SDK_ASSERT_RETURN(0, SDK_RET_ERR);
     }
 
     /* Create a loader instance */
     ctx = loader_instances[handle];
     if (ctx) {
-        HAL_TRACE_ERR("Programs already loaded!");
-        HAL_ASSERT_RETURN(0, HAL_RET_ERR);
+        SDK_TRACE_ERR("Programs already loaded!");
+        SDK_ASSERT_RETURN(0, SDK_RET_ERR);
     }
 
     /* Allocate context */
-    ctx = new capri_loader_ctx_t;
+    ctx = new p4_loader_ctx_t;
     ctx->handle = handle;
-    // ctx->program_info = new capri_program_info_t[MAX_PROGRAMS];
+    // ctx->program_info = new p4_program_info_t[MAX_PROGRAMS];
     loader_instances[handle] = ctx;
 
     /* Read all program names */
     if ((ctx->num_programs = read_programs(handle, pathname, sort_func)) < 0) {
-        HAL_TRACE_ERR("Cannot read programs");
-        HAL_ASSERT_RETURN(0, HAL_RET_ERR);
+        SDK_TRACE_ERR("Cannot read programs");
+        SDK_ASSERT_RETURN(0, SDK_RET_ERR);
     }
     program_info = ctx->program_info;
-    HAL_TRACE_DEBUG("Num programs {}", ctx->num_programs);
+    SDK_TRACE_DEBUG("Num programs %u", ctx->num_programs);
 
     /* Other initializations */
     std::string path_str = pathname;
     ctx->prog_hbm_base_addr = (hbm_base_addr + 63) & 0xFFFFFFFFFFFFFFC0L;
     if ((ctx->prog_hbm_base_addr & 63) != 0) {
-        HAL_TRACE_ERR("Invalid HBM base address");
-        HAL_ASSERT_RETURN(0, HAL_RET_ERR);
+        SDK_TRACE_ERR("Invalid HBM base address");
+        SDK_ASSERT_RETURN(0, SDK_RET_ERR);
     }
 
     /* Pass 1: Load all MPU programs into a data structure. Seperate the symbols
@@ -236,19 +234,19 @@ capri_load_mpu_programs (const char *handle,
         /* Load the program from the ELF file and check for errors */
         std::string filename = path_str+ "/" + program_info[i].name;
         if (program_info[i].prog.load_from_elf(filename) < 0) {
-            HAL_TRACE_ERR("Error: {} : {}",
+            SDK_TRACE_ERR("Error: %s : %s",
                program_info[i].prog.errmap[program_info[i].prog.err].c_str(),
                filename.c_str());
-            HAL_ASSERT_RETURN(0, HAL_RET_ERR);
+            SDK_ASSERT_RETURN(0, SDK_RET_ERR);
         }
 
         /* Save the base address and size */
         program_info[i].base_addr = ctx->prog_hbm_base_addr;
         program_info[i].size = program_info[i].prog.text.size()*sizeof(uint64_t);
         /* Dump program specific info and the symbol table */
-        //HAL_TRACE_DEBUG("MPU Program {} loaded, valid {}, "
-                        //"complete {}, number of symbols {}, "
-                        //"base address {:#x}, size {}",
+        //SDK_TRACE_DEBUG("MPU Program %s loaded, valid %d, "
+                        //"complete %d, number of symbols %lu, "
+                        //"base address {%lx}, size %lu",
                         //program_info[i].name.c_str(),
                         //program_info[i].prog.valid,
                         //program_info[i].prog.complete,
@@ -265,8 +263,8 @@ capri_load_mpu_programs (const char *handle,
         for (j = 0; j < (int) program_info[i].prog.symtab.size(); j++) {
             /* Get each symbol by its id */
             if ((symbol = program_info[i].prog.symtab.get_byid(j)) == NULL) {
-                HAL_TRACE_ERR("Id: {}, Cannot get symbol", j);
-                HAL_ASSERT_RETURN(0, HAL_RET_ERR);
+                SDK_TRACE_ERR("Id: %d, Cannot get symbol", j);
+                SDK_ASSERT_RETURN(0, SDK_RET_ERR);
             } else {
                 /* Symbol is a parameter */
                 if (symbol->type == MPUSYM_PARAM) {
@@ -281,12 +279,12 @@ capri_load_mpu_programs (const char *handle,
                         prog_param_info &&
                         param_check(&prog_param_info[prog_index], symbol->name,
                                     &val) >= 0) {
-                        //HAL_TRACE_DEBUG("Resolved param: name {} val {:#x}",
+                        //SDK_TRACE_DEBUG("Resolved param: name %s val {%lx}",
                                           //symbol->name.c_str(), val);
                         program_info[i].resolved_params.add(
                             MpuSymbol(symbol->name.c_str(), MPUSYM_PARAM, val));
                     } else {
-                        //HAL_TRACE_DEBUG("Unresolved param: name {}",
+                        //SDK_TRACE_DEBUG("Unresolved param: name %s",
                                         //symbol->name.c_str());
                         program_info[i].unresolved_params.add(
                             MpuSymbol(symbol->name.c_str(), MPUSYM_PARAM, 0x0));
@@ -296,7 +294,7 @@ capri_load_mpu_programs (const char *handle,
                     /* Add it to the list of program specific and global labels
                      * which will help resolve unknown parameters in pass 2
                      */
-                    //HAL_TRACE_DEBUG("label: name {} addr {:#x}",
+                    //SDK_TRACE_DEBUG("label: name %s addr {%lx}",
                                     //symbol->name.c_str(),
                                     //program_info[i].base_addr + symbol->val);
                     global_labels.add(
@@ -309,8 +307,8 @@ capri_load_mpu_programs (const char *handle,
                 /* Symbol type not known */
                 } else {
                     /* Other symbol types are not supported at the moment*/
-                    HAL_TRACE_ERR("Unknown symbol type {}", symbol->type);
-                    HAL_ASSERT_RETURN(0, HAL_RET_ERR);
+                    SDK_TRACE_ERR("Unknown symbol type %d", symbol->type);
+                    SDK_ASSERT_RETURN(0, SDK_RET_ERR);
                 }
             }
         }
@@ -327,13 +325,13 @@ capri_load_mpu_programs (const char *handle,
             /* Get the unresolved parameter by id */
             if ((param_u = program_info[i].unresolved_params.get_byid(j))
                 == NULL) {
-                HAL_TRACE_ERR("Id: {}, Cannot get unresolved param", j);
-                HAL_ASSERT_RETURN(0, HAL_RET_ERR);
+                SDK_TRACE_ERR("Id: %d, Cannot get unresolved param", j);
+                SDK_ASSERT_RETURN(0, SDK_RET_ERR);
             } else {
                 /* Try to resolve it by looking at the global labels */
                 if ((param_r = global_labels.get_byname(param_u->name.c_str()))
                     != NULL) {
-                    //HAL_TRACE_DEBUG("Resolved param {} to value {:#x}",
+                    //SDK_TRACE_DEBUG("Resolved param %s to value {:%lx}",
                                       //param_r->name.c_str(), param_r->val);
 
                     /* Add it to the list of resolved params for that program */
@@ -341,7 +339,7 @@ capri_load_mpu_programs (const char *handle,
                            MpuSymbol(param_u->name.c_str(), MPUSYM_PARAM,
                                      param_r->val));
                 } else {
-                    HAL_TRACE_ERR("Cannot resolve param {}",
+                    SDK_TRACE_ERR("Cannot resolve param %s",
                                   param_u->name.c_str());
                 }
             }
@@ -359,23 +357,23 @@ capri_load_mpu_programs (const char *handle,
            program_info[i].copy.complete != 1 ||
            program_info[i].copy.text.size()*sizeof(uint64_t) !=
            program_info[i].size) {
-           HAL_TRACE_DEBUG("Failed to resolve program: name {}, "
-                           "base address {:#x}, size {}, valid {}, complete {}",
+           SDK_TRACE_DEBUG("Failed to resolve program: name %s, "
+                           "base address {:%lx}, size %lu, valid %d, complete %d",
                            program_info[i].name.c_str(),
                            program_info[i].base_addr,
                            program_info[i].size,
                            program_info[i].copy.valid,
                            program_info[i].copy.complete);
 
-           HAL_TRACE_DEBUG("MPU symbol table: ");
+           SDK_TRACE_DEBUG("MPU symbol table: ");
            program_info[i].copy.symtab.dump();
-           HAL_TRACE_DEBUG("MPU reloctab: ");
+           SDK_TRACE_DEBUG("MPU reloctab: ");
            program_info[i].copy.reloctab.dump();
 
-           HAL_ASSERT_RETURN(0, HAL_RET_ERR);
+           SDK_ASSERT_RETURN(0, SDK_RET_ERR);
        } else {
-           //HAL_TRACE_DEBUG("Successfully resolved program: name {}, "
-                           //"base address {:#x}, size {}, valid {}, complete {}",
+           //SDK_TRACE_DEBUG("Successfully resolved program: name %s, "
+                           //"base address {:%lx}, size %lu, valid %d, complete %d",
                            //program_info[i].name.c_str(),
                            //program_info[i].base_addr,
                            //program_info[i].size,
@@ -388,46 +386,46 @@ capri_load_mpu_programs (const char *handle,
                                     (uint8_t *) program_info[i].copy.text.data(),
                                     program_info[i].size);
        if (rv != HAL_RET_OK) {
-           HAL_TRACE_ERR("HBM program write failed");
-           HAL_ASSERT_RETURN(0, HAL_RET_ERR);
+           SDK_TRACE_ERR("HBM program write failed");
+           SDK_ASSERT_RETURN(0, SDK_RET_ERR);
        }
     }
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**
- * capri_program_label_to_offset: Resolve a programs, label to its relative
+ * p4_program_label_to_offset: Resolve a programs, label to its relative
  *                                offset
  *
  * @prog_name: Program name
  * @label_name: Label name
  * @offset: Offset to be filled in if the program, label is found
  *
- * Return: 0 on success, < 0 on failure
+ * Return: sdk_ret_t
  */
-int
-capri_program_label_to_offset(const char *handle,
+sdk_ret_t
+p4_program_label_to_offset(const char *handle,
                               char *prog_name, char *label_name,
                               uint64_t *offset)
 {
     std::string prog_name_str = prog_name;
     int i;
     MpuSymbol *label;
-    capri_loader_ctx_t *ctx;
-    capri_program_info_t *program_info;
+    p4_loader_ctx_t *ctx;
+    p4_program_info_t *program_info;
 
     /* Input check */
     if (!prog_name || !label_name || !offset || !handle) {
-        HAL_TRACE_ERR("Input error");
-        return -1;
+        SDK_TRACE_ERR("Input error");
+        return SDK_RET_ERR;
     }
 
     /* Load context */
     ctx = loader_instances[handle];
     if (!ctx) {
-        HAL_TRACE_ERR("Invalid handle");
-        return -1;
+        SDK_TRACE_ERR("Invalid handle");
+        return SDK_RET_ERR;
     }
     program_info = ctx->program_info;
 
@@ -438,52 +436,52 @@ capri_program_label_to_offset(const char *handle,
         if (program_info[i].name == prog_name_str) {
             if ((label = program_info[i].labels.get_byname(label_name))
                  != NULL) {
-                //HAL_TRACE_DEBUG("Resolved program name {} label name {} to "
-                                  //"value {:#x}", program_info[i].name.c_str(),
+                //SDK_TRACE_DEBUG("Resolved program name %s label name %s to "
+                                  //"value {:%lx}", program_info[i].name.c_str(),
                                   //label->name.c_str(), label->val);
                 *offset = label->val;
-                return 0;
+                return SDK_RET_OK;
             }
         }
     }
 
-    //HAL_TRACE_ERR("Could not resolve program name {} label name {}",
+    //SDK_TRACE_ERR("Could not resolve program name %s label name %s",
                     //prog_name, label_name);
-    return -1;
+    return SDK_RET_ERR;
 }
 
 /**
- * capri_program_offset_to_label: Resolve a program, relative offset to a label
+ * p4_program_offset_to_label: Resolve a program, relative offset to a label
  *
  * @prog_name: Program name
  * @offset: Offset value
  * @label_name: Pointer to the location where label name is to be filled
  * @label_size: Size allocated by caller for the label_name pointer
  *
- * Return: 0 on success, < 0 on failure
+ * Return: sdk_ret_t
  */
-int
-capri_program_offset_to_label(const char *handle,
+sdk_ret_t
+p4_program_offset_to_label(const char *handle,
                               char *prog_name, uint64_t offset,
                               char *label_name, size_t label_size)
 {
     std::string prog = prog_name;
     int i, j;
     MpuSymbol *label;
-    capri_loader_ctx_t *ctx;
-    capri_program_info_t *program_info;
+    p4_loader_ctx_t *ctx;
+    p4_program_info_t *program_info;
 
     /* Input check */
     if (!prog_name || !label_name || !handle) {
-        HAL_TRACE_ERR("Input error");
-        return -1;
+        SDK_TRACE_ERR("Input error");
+        return SDK_RET_ERR;
     }
 
     /* Load context */
     ctx = loader_instances[handle];
     if (!ctx) {
-        HAL_TRACE_ERR("Invalid handle");
-        return -1;
+        SDK_TRACE_ERR("Invalid handle");
+        return SDK_RET_ERR;
     }
     program_info = ctx->program_info;
 
@@ -495,50 +493,50 @@ capri_program_offset_to_label(const char *handle,
             for (j = 0; j < (int) program_info[i].labels.size(); j++) {
                 if ((label = program_info[i].labels.get_byid(j)) != NULL) {
                     if (offset == label->val) {
-                        HAL_TRACE_DEBUG("Resolved program name {} offset {} to "
-                                        "label name {}",
+                        SDK_TRACE_DEBUG("Resolved program name %s offset %lu to "
+                                        "label name %s",
                                         program_info[i].name.c_str(),
                                         offset, label->name.c_str());
                         strncpy(label_name, label->name.c_str(), label_size);
-                        return 0;
+                        return SDK_RET_OK;
                     }
                 }
             }
         }
     }
-    HAL_TRACE_ERR("Could not resolve program name {} offset {}",
+    SDK_TRACE_ERR("Could not resolve program name %s offset %lu",
                   prog_name, offset);
-    return -1;
+    return SDK_RET_ERR;
 }
 
 /**
- * capri_program_to_base_addr: Resolve a program to its base address in HBM
+ * p4_program_to_base_addr: Resolve a program to its base address in HBM
  *
  * @prog_name: Program name
  * @base_addr: Pointer to the location where base address is to be filled
  *
- * Return: 0 on success, < 0 on failure
+ * Return: sdk_ret_t
  */
-int
-capri_program_to_base_addr(const char *handle,
+sdk_ret_t
+p4_program_to_base_addr(const char *handle,
                            char *prog_name, uint64_t *base_addr)
 {
     std::string prog = prog_name;
     int i;
-    capri_loader_ctx_t *ctx;
-    capri_program_info_t *program_info;
+    p4_loader_ctx_t *ctx;
+    p4_program_info_t *program_info;
 
     /* Input check */
     if (!prog_name || !base_addr || !handle) {
-        HAL_TRACE_ERR("Input error");
-        return -1;
+        SDK_TRACE_ERR("Input error");
+        return SDK_RET_ERR;
     }
 
     /* Load context */
     ctx = loader_instances[handle];
     if (!ctx) {
-        HAL_TRACE_ERR("Invalid handle");
-        return -1;
+        SDK_TRACE_ERR("Invalid handle");
+        return SDK_RET_ERR;
     }
     program_info = ctx->program_info;
 
@@ -547,48 +545,48 @@ capri_program_to_base_addr(const char *handle,
      */
     for (i = 0; i < ctx->num_programs; i++) {
         if (program_info[i].name == prog) {
-            //HAL_TRACE_DEBUG("Resolved program name {} to base_addr {:#x}",
+            //SDK_TRACE_DEBUG("Resolved program name %s to base_addr {:%lx}",
                             //program_info[i].name.c_str(),
                             //program_info[i].base_addr);
             *base_addr = program_info[i].base_addr;
-            return 0;
+            return SDK_RET_OK;
         }
     }
-    //HAL_TRACE_ERR("Could not resolve program name {}", prog_name);
-    return -1;
+    //SDK_TRACE_ERR("Could not resolve program name %s", prog_name);
+    return SDK_RET_ERR;
 }
 
 static int
-capri_dump_program_info (const char *filename)
+p4_dump_program_info (const char *cfg_path)
 {
     struct stat             st = { 0 };
     std::string             prog_info_file;
-    capri_loader_ctx_t      *ctx;
-    capri_program_info_t    *program_info;
+    p4_loader_ctx_t         *ctx;
+    p4_program_info_t       *program_info;
     pt::ptree               root, programs, program;
     MpuSymbol               *symbol;
     char                    numbuf[32];
-    char                    *cfg_path = std::getenv("HAL_CONFIG_PATH");
 
     if (!cfg_path) {
         // write in the current dir
         prog_info_file = std::string(LDD_INFO_FILE_NAME);
     } else {
-        std::string gen_dir = std::string(cfg_path) + std::string("/gen");
+        std::string gen_dir = std::string(cfg_path) + std::string("/") +
+                    std::string(LDD_INFO_FILE_RPATH);
         // check if the gen dir exists
         if (stat(gen_dir.c_str(), &st) == -1) {
             // doesn't exist, try to create
             if (mkdir(gen_dir.c_str(), 0755) < 0) {
-                HAL_TRACE_ERR("Gen directory {}/ doesn't exist, failed to create one\n",
+                SDK_TRACE_ERR("Gen directory %s/ doesn't exist, failed to create one\n",
                         gen_dir.c_str());
-                return HAL_RET_ERR;
+                return SDK_RET_ERR;
             }
         } else {
             // gen dir exists, check if we have write permissions
             if (access(gen_dir.c_str(), W_OK) < 0) {
                 // don't have permissions to create this directory
-                HAL_TRACE_ERR("No permissions to create log file in {}\n", gen_dir.c_str());
-                return HAL_RET_ERR;
+                SDK_TRACE_ERR("No permissions to create log file in %s\n", gen_dir.c_str());
+                return SDK_RET_ERR;
             }
         }
 
@@ -597,7 +595,7 @@ capri_dump_program_info (const char *filename)
 
     for (auto it = loader_instances.begin(); it != loader_instances.end(); it++) {
         if ((ctx = loader_instances[it->first]) != NULL) {
-            HAL_TRACE_DEBUG("Listing programs for handle name {}", it->first);
+            SDK_TRACE_DEBUG("Listing programs for handle name %s", it->first.c_str());
             program_info = ctx->program_info;
             for (int i = 0; i < ctx->num_programs; i++) {
                 pt::ptree    symbols;
@@ -633,48 +631,49 @@ capri_dump_program_info (const char *filename)
                 symbols.clear();
             }
         } else {
-            HAL_TRACE_DEBUG("Cannot list programs for handle name {}",
-                            it->first);
+            SDK_TRACE_DEBUG("Cannot list programs for handle name %s",
+                            it->first.c_str());
         }
     }
 
     root.add_child("programs", programs);
     pt::write_json(prog_info_file, root);
 
-    return 0;
+    return SDK_RET_OK;
 }
 
 /**
- * capri_list_program_addr: List each program's name, start address and end address
+ * p4_list_program_addr: List each program's name, start address and end address
  *
- * @filename: The filename where the output is to be stored
+ * @cfg_path:Config path 
+ * @filename:The program address filename with full path where the output is to be stored
  *
- * Return: 0 on success, < 0 on failure
+ * Return: sdk_ret_t
  */
-int
-capri_list_program_addr (const char *filename)
+sdk_ret_t
+p4_list_program_addr (const char *cfg_path, const char *filename)
 {
-    capri_loader_ctx_t *ctx;
-    capri_program_info_t *program_info;
+    p4_loader_ctx_t *ctx;
+    p4_program_info_t *program_info;
     FILE *fp = NULL;
     MpuSymbol *symbol;
 
     // dump ldd info in json format
     // TODO: the folowing text format should go away once tools are migrated
     // to consume the json output
-    capri_dump_program_info(NULL);
+    p4_dump_program_info(cfg_path);
 
     /* Input check  */
     if ((!filename) || (!(fp = fopen(filename, "w+")))) {
-        HAL_TRACE_ERR("Cannot open input file for listing program addresses");
-        return -1;
+        SDK_TRACE_ERR("Cannot open input file for listing program addresses");
+        return SDK_RET_ERR;
     }
 
     chmod(filename, 0666);
     /* Iterate through the loader instances, programs and list the valid ones */
     for (auto it = loader_instances.begin(); it != loader_instances.end(); it++) {
         if ((ctx = loader_instances[it->first]) != NULL) {
-            HAL_TRACE_DEBUG("Listing programs for handle name {}", it->first);
+            SDK_TRACE_DEBUG("Listing programs for handle name %s", it->first.c_str());
             program_info = ctx->program_info;
             for (int i = 0; i < ctx->num_programs; i++) {
                 fprintf(fp, "%s,%lx,%lx\n", program_info[i].name.c_str(),
@@ -693,10 +692,12 @@ capri_list_program_addr (const char *filename)
                 fflush(fp);
             }
         } else {
-            HAL_TRACE_DEBUG("Cannot list programs for handle name {}",
-                            it->first);
+            SDK_TRACE_DEBUG("Cannot list programs for handle name %s",
+                            it->first.c_str());
         }
     }
 
-    return 0;
+    return SDK_RET_OK;
 }
+} //namespace platform
+} //namespace sdk

@@ -10,7 +10,6 @@
 #include "sdk/types.hpp"
 #include "nic/hal/pd/capri/capri_config.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
-#include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/gen/apollo/include/p4pd.h"
@@ -506,7 +505,7 @@ TEST_F(apollo_test, test1) {
     std::ifstream json_cfg(hal_conf_file);
     ptree pt;
     read_json(json_cfg, pt);
-    capri_list_program_addr(pt.get<std::string>("asic.loader_info_file").c_str());
+    sdk::platform::p4_list_program_addr(pt.get<std::string>("asic.loader_info_file").c_str());
     ret = p4pd_init(&p4pd_cfg);
     ASSERT_NE(ret, -1);
     ret = capri_table_rw_init(NULL);

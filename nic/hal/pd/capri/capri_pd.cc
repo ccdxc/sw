@@ -6,7 +6,6 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
-#include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_pxb_pcie.hpp"
 #include "nic/hal/pd/capri/capri_barco_rings.hpp"
 #include "nic/hal/pd/capri/capri_accel_rgroup.hpp"
@@ -112,7 +111,7 @@ hal_ret_t
 pd_capri_program_label_to_offset (pd_func_args_t *pd_func_args)
 {
     pd_capri_program_label_to_offset_args_t *args = pd_func_args->pd_capri_program_label_to_offset;
-    capri_program_label_to_offset(args->handle, args->prog_name,
+    sdk::platform::p4_program_label_to_offset(args->handle, args->prog_name,
                                   args->label_name, args->offset);
     return HAL_RET_OK;
 }
@@ -128,8 +127,10 @@ hal_ret_t
 pd_capri_program_to_base_addr (pd_func_args_t *pd_func_args)
 {
     pd_capri_program_to_base_addr_args_t *args = pd_func_args->pd_capri_program_to_base_addr;
-    return (hal_ret_t)capri_program_to_base_addr(args->handle,
-                                      args->prog_name, args->base_addr);
+    if(sdk::platform::p4_program_to_base_addr(args->handle,
+                                      args->prog_name, args->base_addr) != 0)
+        return HAL_RET_ERR;
+    return HAL_RET_OK;
 }
 
 hal_ret_t

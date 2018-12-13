@@ -1751,7 +1751,7 @@ hal_ret_t capri_barco_ring_consume(types::BarcoRings barco_ring_type)
 }
 
 
-hal_ret_t capri_barco_rings_init(void)
+hal_ret_t capri_barco_rings_init(sdk::types::platform_type_t platform)
 {
     uint16_t        idx;
     uint64_t        opa_tag_addr = 0;
@@ -1761,8 +1761,6 @@ hal_ret_t capri_barco_rings_init(void)
     uint64_t        shadow_pndx_total = 0;
     uint32_t        shadow_pndx_size = 0;
     hal_ret_t       ret = HAL_RET_OK;
-    hal_cfg_t       *hal_cfg = (hal::hal_cfg_t *)hal::hal_get_current_thread()->data();
-    HAL_ASSERT(hal_cfg);
 
     shadow_pndx_total = CRYPTO_BARCO_RES_HBM_MEM_512B_SIZE;
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B, NULL, &shadow_pndx_addr);
@@ -1818,8 +1816,8 @@ hal_ret_t capri_barco_rings_init(void)
 
         /* Model does not support sw_reset */
         if (barco_rings[idx].sw_reset_capable) {
-            if ((hal_cfg->platform != hal::HAL_PLATFORM_HAPS) &&
-                (hal_cfg->platform != hal::HAL_PLATFORM_HW)) {
+            if ((platform != platform_type_t::PLATFORM_TYPE_HAPS) &&
+                (platform != platform_type_t::PLATFORM_TYPE_HW)) {
                 barco_rings[idx].sw_reset_capable = false;
             }
         }

@@ -6,7 +6,6 @@
 #include "nic/hal/pd/capri/capri.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_config.hpp"
-#include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/hal/pd/capri/capri_tm_rw.hpp"
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
@@ -130,7 +129,7 @@ capri_asm_init (capri_cfg_t *cfg)
     hal_ret_t       ret = HAL_RET_OK;
     std::string     full_path;
     uint32_t num_symbols = 0;
-    capri_prog_param_info_t *symbols = NULL;
+    sdk::platform::p4_prog_param_info_t *symbols = NULL;
 
     for (uint8_t i = 0; i < cfg->num_asm_cfgs; i++) {
         full_path =  std::string(cfg->cfg_path) + "/" + cfg->pgm_name +
@@ -151,7 +150,7 @@ capri_asm_init (capri_cfg_t *cfg)
 
         base_addr = get_start_offset(cfg->asm_cfg[i].base_addr.c_str());
         HAL_TRACE_DEBUG("base addr {:#x}", base_addr);
-        iret = capri_load_mpu_programs(cfg->asm_cfg[i].name.c_str(),
+        iret = sdk::platform::p4_load_mpu_programs(cfg->asm_cfg[i].name.c_str(),
            (char *)full_path.c_str(),
            base_addr,
            symbols,
@@ -485,7 +484,8 @@ capri_init (capri_cfg_t *cfg)
                             "Capri s/w phv init failure, err : {}", ret);
 
     if (!cfg->loader_info_file.empty()) {
-        capri_list_program_addr(cfg->loader_info_file.c_str());
+        sdk::platform::p4_list_program_addr(
+            cfg->cfg_path.c_str(), cfg->loader_info_file.c_str());
     }
 
     ret = hal::pd::capri_barco_crypto_init(cfg);
@@ -541,10 +541,10 @@ hal::pd::asic_init (asic_cfg_t *cfg)
     for (int i = 0; i < cfg->num_asm_cfgs; i++) {
         capri_cfg.asm_cfg[i].name = cfg->asm_cfg[i].name;
         capri_cfg.asm_cfg[i].path = cfg->asm_cfg[i].path;
-        capri_cfg.asm_cfg[i].symbols_func = (mpu_pgm_symbols_t)cfg->asm_cfg[i].symbols_func;
+        capri_cfg.asm_cfg[i].symbols_func = cfg->asm_cfg[i].symbols_func;
         capri_cfg.asm_cfg[i].base_addr = cfg->asm_cfg[i].base_addr;
         capri_cfg.asm_cfg[i].sort_func =
-            (mpu_pgm_sort_t)cfg->asm_cfg[i].sort_func;
+            cfg->asm_cfg[i].sort_func;
     }
     return capri_init(&capri_cfg);
 }

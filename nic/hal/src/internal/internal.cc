@@ -43,11 +43,6 @@ using intf::GetQStateRequestMsg;
 using intf::GetQStateResponseMsg;
 using intf::SetQStateRequestMsg;
 using intf::SetQStateResponseMsg;
-int capri_program_to_base_addr(const char *handle,
-                               char *prog_name, uint64_t *base_addr);
-int capri_program_label_to_offset(const char *handle,
-                                  char *prog_name, char *label_name,
-                                  uint64_t *offset);
 
 namespace hal {
 

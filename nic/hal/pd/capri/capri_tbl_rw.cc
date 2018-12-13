@@ -30,7 +30,6 @@
 #include "nic/asic/capri/verif/apis/cap_pict_api.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/csr/cpu_hal_if.h"
-#include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 
 /* When ready to use unified memory mgmt library, change CALLOC and FREE then */
@@ -339,9 +338,9 @@ capri_toeplitz_init (int stage, int stage_tableid)
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_te_csr_t *te_csr = NULL;
 
-    if (capri_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
+    if (sdk::platform::p4_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
                                    (char *) ETH_RSS_INDIR_PROGRAM,
-                                   &pc) < 0) {
+                                   &pc) != 0) {
         HAL_TRACE_DEBUG("Could not resolve handle {} program {}",
                         (char *) CAPRI_P4PLUS_HANDLE,
                         (char *) ETH_RSS_INDIR_PROGRAM);
@@ -405,9 +404,9 @@ capri_p4plus_table_init (platform_type_t platform_type,
     uint64_t capri_action_p4plus_asm_base;
 
     // Resolve the p4plus rxdma stage 0 program to its action pc
-    if (capri_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
+    if (sdk::platform::p4_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
                                    (char *) CAPRI_P4PLUS_RXDMA_PROG,
-                                   &capri_action_p4plus_asm_base) < 0) {
+                                   &capri_action_p4plus_asm_base) != 0) {
         HAL_TRACE_DEBUG("Could not resolve handle {} program {}",
                         (char *) CAPRI_P4PLUS_HANDLE,
                         (char *) CAPRI_P4PLUS_RXDMA_PROG);
@@ -433,9 +432,9 @@ capri_p4plus_table_init (platform_type_t platform_type,
 
 
     // Resolve the p4plus rxdma stage 0 "ext" program to its action pc
-    if (capri_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
+    if (sdk::platform::p4_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
                                    (char *) CAPRI_P4PLUS_RXDMA_EXT_PROG,
-                                   &capri_action_p4plus_asm_base) < 0) {
+                                   &capri_action_p4plus_asm_base) != 0) {
         HAL_TRACE_DEBUG("Could not resolve handle {} program {}",
                         (char *) CAPRI_P4PLUS_HANDLE,
                         (char *) CAPRI_P4PLUS_RXDMA_EXT_PROG);
@@ -460,9 +459,9 @@ capri_p4plus_table_init (platform_type_t platform_type,
             CAPRI_P4PLUS_RX_STAGE0_QSTATE_OFFSET_64);
 
     // Resolve the p4plus txdma stage 0 program to its action pc
-    if (capri_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
+    if (sdk::platform::p4_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
                                    (char *) CAPRI_P4PLUS_TXDMA_PROG,
-                                   &capri_action_p4plus_asm_base) < 0) {
+                                   &capri_action_p4plus_asm_base) != 0) {
         HAL_TRACE_DEBUG("Could not resolve handle {} program {}",
                         (char *) CAPRI_P4PLUS_HANDLE,
                         (char *) CAPRI_P4PLUS_TXDMA_PROG);
@@ -487,9 +486,9 @@ capri_p4plus_table_init (platform_type_t platform_type,
     }
 
     // Resolve the p4plus txdma stage 0 "ext" program to its action pc
-    if (capri_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
+    if (sdk::platform::p4_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
                                    (char *) CAPRI_P4PLUS_TXDMA_EXT_PROG,
-                                   &capri_action_p4plus_asm_base) < 0) {
+                                   &capri_action_p4plus_asm_base) != 0) {
         HAL_TRACE_DEBUG("Could not resolve handle {} program {}",
                         (char *) CAPRI_P4PLUS_HANDLE,
                         (char *) CAPRI_P4PLUS_TXDMA_EXT_PROG);

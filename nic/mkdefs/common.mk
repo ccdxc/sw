@@ -72,7 +72,8 @@ export NIC_COMMON_FLAGS := -pthread -rdynamic
 
 export NIC_SDK_SOLIBS   := print list slab shmmgr mmgr sdkpal sdkfru \
     ht indexer logger thread utils periodic twheel directmap \
-    hash hbmhash tcam timerfd catalog sdkplatformutils sdkcapri
+    hash hbmhash tcam timerfd catalog sdkplatformutils sdkcapri \
+    sdkp4loader
 
 export NIC_HAL_DLOPEN_SOLIBS := cfg_plugin_nw \
                                 cfg_plugin_aclqos \
