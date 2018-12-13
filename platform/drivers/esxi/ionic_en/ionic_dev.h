@@ -75,6 +75,7 @@ struct ionic_dev_bar {
         void __iomem *vaddr;
         dma_addr_t bus_addr;
         unsigned long len;
+        int res_index;
 };
 
 /**
@@ -349,8 +350,9 @@ struct cq {
 VMK_ReturnStatus
 ionic_dev_setup(struct ionic_dev *idev, struct ionic_dev_bar bars[],
                 unsigned int num_bars);
+struct ionic;
 inline void
-ionic_dev_clean(struct ionic_dev *idev);
+ionic_dev_clean(struct ionic *ionic);
 
 union dev_cmd; //Need to remove it
 void ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd);

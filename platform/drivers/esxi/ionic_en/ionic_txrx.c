@@ -199,8 +199,6 @@ ionic_rx_pkt_alloc(struct queue *q,
                                        struct ionic_en_priv_data,
                                        ionic);
 
-        ionic_info("%s ionic_rx_pkt_alloc len %d", q->name, len);
-
         status = vmk_PktAlloc(len, &new_pkt);
         if (VMK_UNLIKELY(status != VMK_OK)) {
                 stats->alloc_err++;
@@ -1446,6 +1444,10 @@ ionic_en_rx_rss_ring_init(vmk_uint32 ring_idx,
                                                    netpoll_name,
                                                    VMK_TRUE);
                 VMK_ASSERT(status == VMK_OK);
+                if (status != VMK_OK) {
+                        ionic_err("vmk_NetPollRegisterUplink() failed, status: %s",
+                                  vmk_StatusToString(status));
+                }
         }
 
         rx_rss_ring->is_init               = VMK_TRUE;

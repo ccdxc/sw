@@ -33,7 +33,7 @@ struct ionic_en_priv_data;
 struct ionic_en_uplink_handle;
 
 enum ionic_en_ring_type{
-        IONIC_EN_NONE_RING,
+        IONIC_EN_ADMIN_RING,
         IONIC_EN_TX_RING,
         IONIC_EN_RX_RING,
 };

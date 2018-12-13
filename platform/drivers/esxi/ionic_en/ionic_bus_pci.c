@@ -192,6 +192,7 @@ ionic_bars_map(struct ionic_en_priv_data *priv_data)              // IN
 	priv_data->ionic.bars[0].vaddr = (void *) en_dev->bars[IONIC_BAR0];
 	priv_data->ionic.bars[0].bus_addr = en_dev->sbdf.bus;
 	priv_data->ionic.bars[0].len  = en_dev->pci_resources[IONIC_BAR0].size;
+        priv_data->ionic.bars[0].res_index = 0;
 
         status = vmk_PCIMapIOResource(priv_data->module_id,
                                       en_dev->pci_device,
@@ -207,6 +208,7 @@ ionic_bars_map(struct ionic_en_priv_data *priv_data)              // IN
 	priv_data->ionic.bars[1].vaddr = (void *) en_dev->bars[IONIC_BAR1];
  	priv_data->ionic.bars[1].bus_addr = en_dev->sbdf.bus;
 	priv_data->ionic.bars[1].len  = en_dev->pci_resources[IONIC_BAR1].size;
+        priv_data->ionic.bars[1].res_index = 1;
 
         return status;
 

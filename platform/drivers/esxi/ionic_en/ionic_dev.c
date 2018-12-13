@@ -111,11 +111,14 @@ ionic_dev_setup(struct ionic_dev *idev, struct ionic_dev_bar bars[],
 }
 
 inline void
-ionic_dev_clean(struct ionic_dev *idev)
+ionic_dev_clean(struct ionic *ionic)
 {
-        ionic_heap_free(ionic_driver.heap_id,
-                        idev->cmb_inuse);
-        ionic_mutex_destroy(idev->cmb_inuse_lock);
+        if (ionic->num_bars >= 3) { 
+                ionic_heap_free(ionic_driver.heap_id,
+                                ionic->en_dev.idev.cmb_inuse);
+        }
+
+        ionic_mutex_destroy(ionic->en_dev.idev.cmb_inuse_lock);
 }
 
 u8 ionic_dev_cmd_status(struct ionic_dev *idev)

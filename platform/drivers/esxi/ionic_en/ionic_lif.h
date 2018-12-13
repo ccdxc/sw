@@ -109,6 +109,7 @@ struct lif {
         struct ionic *ionic;
         bool registered;
         unsigned int index;
+        unsigned int kern_pid;
         spinlock_t adminq_lock;
         struct qcq *adminqcq;
         struct qcq **txqcqs;

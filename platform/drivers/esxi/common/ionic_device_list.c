@@ -118,9 +118,9 @@ ionic_device_list_destroy(struct ionic_device_list *device_list)  // IN
 {
         VMK_ReturnStatus status, status1;
 
-        status = ionic_device_list_flush(device_list->list);
+        status = vmk_HashDeleteAll(device_list->list);
         if (status != VMK_OK) {
-                ionic_err("ionic_device_list_flush() failed, status: %s",
+                ionic_err("vmk_HashDeleteAll() failed, status: %s",
                           vmk_StatusToString(status));
         }
 

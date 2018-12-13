@@ -440,7 +440,7 @@ cmd_lock_err:
 #endif
 
 lifs_lock_err:
-        ionic_dev_clean(&ionic->en_dev.idev);
+        ionic_dev_clean(ionic);
 
         return status;
 }
@@ -454,7 +454,7 @@ ionic_clean(struct ionic *ionic)
         ionic_spinlock_destroy(ionic->cmd_lock);
 #endif
         ionic_spinlock_destroy(ionic->lifs_lock);
-        ionic_dev_clean(&ionic->en_dev.idev);
+        ionic_dev_clean(ionic);
 }
 
 

@@ -58,7 +58,7 @@
          VMK_ASSERT((i) < uplink_handle->max_rx_queues);                         \
       }                                                                          \
       if (q_type == VMK_UPLINK_QUEUE_TYPE_TX) {                                  \
-         VMK_ASSERT((uplink_handle->max_rx_queues >= (i)) &&                     \
+         VMK_ASSERT((uplink_handle->max_rx_queues <= (i)) &&                     \
                     ((i) < (uplink_handle->max_rx_queues +                       \
                             uplink_handle->max_tx_queues)));                     \
       }                                                                          \

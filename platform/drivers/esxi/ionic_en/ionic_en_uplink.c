@@ -266,7 +266,7 @@ ionic_en_query_port(struct ionic_en_uplink_handle *uplink_handle)  // IN
         vmk_Bool      is_link_up;
 
         /*For now we use hardcoded link status */
-        speed = VMK_LINK_SPEED_100000_MBPS;
+        speed = VMK_LINK_SPEED_10000_MBPS;
         is_link_up = VMK_TRUE;
 
         vmk_SpinlockLockIgnoreDeathPending(uplink_handle->link_status_lock);
@@ -2114,7 +2114,8 @@ ionic_en_netpoll_create(vmk_NetPoll *netpoll,                           // OUT
                 return status;
         }
 
-        if (ring_type == IONIC_EN_RX_RING) {
+        if (ring_type == IONIC_EN_RX_RING &&
+            qcq->ring_idx < uplink_handle->max_rx_normal_queues) {
                 shared_q_data_idx = qcq->ring_idx;
         } else if (ring_type == IONIC_EN_TX_RING) {
                 shared_q_data_idx = uplink_handle->max_rx_queues +

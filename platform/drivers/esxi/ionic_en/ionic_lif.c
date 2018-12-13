@@ -1005,21 +1005,11 @@ static void ionic_qcq_free(struct lif *lif, struct qcq *qcq)
         ionic_heap_free(ionic_driver.heap_id, qcq);
 }
 
-static unsigned int ionic_pid_get(struct lif *lif, unsigned int page)
-{
-	unsigned int ndbpgs_per_lif = lif->ionic->ident->dev.ndbpgs_per_lif;
-
-	VMK_ASSERT(ndbpgs_per_lif < page + 1);
-
-	return lif->index * ndbpgs_per_lif + page;
-}
-
 static VMK_ReturnStatus
 ionic_qcqs_alloc(struct lif *lif)
 {
         VMK_ReturnStatus status;
 	unsigned int flags;
-	unsigned int pid;
 	unsigned int i, j;
 
         ionic_info("ionic_qcqs_alloc() called");
@@ -1045,26 +1035,24 @@ ionic_qcqs_alloc(struct lif *lif)
                 goto rxqcqs_err;
         }
 
-	pid = ionic_pid_get(lif, 0);
 	flags = QCQ_F_INTR;
 	status = ionic_qcq_alloc(lif, 0, "admin", flags, 1 << 4,
 	                         sizeof(struct admin_cmd),
 			         sizeof(struct admin_comp),
-			         0, pid, &lif->adminqcq);
+			         0, lif->kern_pid, &lif->adminqcq);
 	if (status != VMK_OK) {
                 ionic_err("ionic_qcq_alloc() failed, status: %s",
                           vmk_StatusToString(status));
                 goto adminqcq_err;
         }
 
-	pid = ionic_pid_get(lif, 0);
 	flags = QCQ_F_TX_STATS | QCQ_F_INTR | QCQ_F_SG;
 	for (i = 0; i < lif->ntxqcqs; i++) {
 		status = ionic_qcq_alloc(lif, i, "tx", flags, ntxq_descs,
 				         sizeof(struct txq_desc),
 				         sizeof(struct txq_comp),
 				         sizeof(struct txq_sg_desc),
-				         pid, &lif->txqcqs[i]);
+				         lif->kern_pid, &lif->txqcqs[i]);
 	        if (status != VMK_OK) {
                         ionic_err("ionic_qcq_alloc() failed, status: %s",
                                   vmk_StatusToString(status));
@@ -1072,13 +1060,12 @@ ionic_qcqs_alloc(struct lif *lif)
                 }
 	}
 
-	pid = ionic_pid_get(lif, 0);
 	flags = QCQ_F_RX_STATS | QCQ_F_INTR;
 	for (j = 0; j < lif->nrxqcqs; j++) {
 		status = ionic_qcq_alloc(lif, j, "rx", flags, nrxq_descs,
 		                         sizeof(struct rxq_desc),
 				         sizeof(struct rxq_comp),
-				         0, pid, &lif->rxqcqs[j]);
+				         0, lif->kern_pid, &lif->rxqcqs[j]);
 	        if (status != VMK_OK) {
                         ionic_err("ionic_qcq_alloc() failed, status: %s",
                                   vmk_StatusToString(status));
@@ -1156,6 +1143,7 @@ ionic_lif_alloc(struct ionic *ionic,
                 return VMK_NO_MEMORY;
         } 
 
+        lif->kern_pid = 0;
 	lif->uplink_handle = uplink_handle;
 	lif->ionic = ionic;
 	lif->index = index;
@@ -1746,7 +1734,7 @@ ionic_lif_adminq_init(struct lif *lif)
 //		       NAPI_POLL_WEIGHT);
         status = ionic_en_netpoll_create(&qcq->netpoll,
                                          lif->uplink_handle,
-                                         IONIC_EN_NONE_RING,
+                                         IONIC_EN_ADMIN_RING,
                                          ionic_adminq_netpoll,
                                          qcq);
 
@@ -2418,7 +2406,7 @@ try_again:
         }
                                  
         ionic->neqs_per_lif = neqs_per_lif;
-        ionic_err("wuwuwu, ntxqs_per_lif:%d, nrxqs_per_lif: %d, nints: %d",
+        ionic_info("ntxqs_per_lif:%d, nrxqs_per_lif: %d, nints: %d",
                   ntxqs_per_lif, nrxqs_per_lif, nintrs);
         
         ionic->ntxqs_per_lif = ntxqs_per_lif;
