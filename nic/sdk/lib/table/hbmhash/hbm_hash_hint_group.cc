@@ -6,6 +6,7 @@
 #include "hbm_hash_entry.hpp"
 #include "hbm_hash_hint_group.hpp"
 #include "hbm_hash_table_entry.hpp"
+#include "hbm_hash_spine_entry.hpp"
 #include "hbm_hash_mem_types.hpp"
 
 using sdk::table::HbmHashSpineEntry;
@@ -17,12 +18,13 @@ using sdk::table::HbmHashEntry;
 //---------------------------------------------------------------------------
 HbmHashHintGroup *
 HbmHashHintGroup::factory(uint32_t hint_bits, HbmHashSpineEntry *fs_entry,
-                       uint32_t mtrack_id)
+                          HbmHash *hbm_hash)
 {
     void            *mem = NULL;
     HbmHashHintGroup   *hg = NULL;
 
-    mem = SDK_CALLOC(mtrack_id, sizeof(HbmHashHintGroup));
+    // mem = SDK_CALLOC(mtrack_id, sizeof(HbmHashHintGroup));
+    mem = hbm_hash->hbm_hash_hint_group_alloc();
     if (!mem) {
         return NULL;
     }
@@ -35,11 +37,12 @@ HbmHashHintGroup::factory(uint32_t hint_bits, HbmHashSpineEntry *fs_entry,
 // Method to free & delete the object
 //---------------------------------------------------------------------------
 void
-HbmHashHintGroup::destroy(HbmHashHintGroup *hg, uint32_t mtrack_id)
+HbmHashHintGroup::destroy(HbmHashHintGroup *hg, HbmHash *hbm_hash)
 {
     if (hg) {
         hg->~HbmHashHintGroup();
-        SDK_FREE(mtrack_id, hg);
+        // SDK_FREE(mtrack_id, hg);
+        hbm_hash->hbm_hash_hint_group_free(hg);
     }
 }
 

@@ -21,12 +21,13 @@ using sdk::table::HbmHash;
 // Factory method to instantiate the class
 //---------------------------------------------------------------------------
 HbmHashTableEntry *
-HbmHashTableEntry::factory(uint32_t bucket_index, HbmHash *hbm_hash, uint32_t mtrack_id)
+HbmHashTableEntry::factory(uint32_t bucket_index, HbmHash *hbm_hash)
 {
     void            *mem = NULL;
     HbmHashTableEntry  *fte = NULL;
 
-    mem = SDK_CALLOC(mtrack_id, sizeof(HbmHashTableEntry));
+    // mem = SDK_CALLOC(mtrack_id, sizeof(HbmHashTableEntry));
+    mem = hbm_hash->hbm_hash_table_entry_alloc();
     if (!mem) {
         return NULL;
     }
@@ -39,11 +40,13 @@ HbmHashTableEntry::factory(uint32_t bucket_index, HbmHash *hbm_hash, uint32_t mt
 // Method to free & delete the object
 //---------------------------------------------------------------------------
 void
-HbmHashTableEntry::destroy(HbmHashTableEntry *fte, uint32_t mtrack_id)
+HbmHashTableEntry::destroy(HbmHashTableEntry *fte)
 {
+    HbmHash *hbm_hash = fte->get_hbm_hash();
     if (fte) {
         fte->~HbmHashTableEntry();
-        SDK_FREE(mtrack_id, fte);
+        // SDK_FREE(mtrack_id, fte);
+        hbm_hash->hbm_hash_table_entry_free(fte);
     }
 }
 
@@ -52,7 +55,7 @@ HbmHashTableEntry::destroy(HbmHashTableEntry *fte, uint32_t mtrack_id)
 // ---------------------------------------------------------------------------
 HbmHashTableEntry::HbmHashTableEntry(uint32_t bucket_index, HbmHash *hbm_hash)
 {
-    bucket_index_            = bucket_index;
+    bucket_index_       = bucket_index;
     hbm_hash_           = hbm_hash;
     spine_entry_        = NULL;
     num_spine_entries_  = 0;
@@ -117,7 +120,7 @@ HbmHashTableEntry::insert(HbmHashEntry *h_entry)
         }
         //   - Create Hint Group
         // fh_grp = new HbmHashHintGroup(hint_bits, NULL);
-        fh_grp = HbmHashHintGroup::factory(hint_bits, NULL);
+        fh_grp = HbmHashHintGroup::factory(hint_bits, NULL, get_hbm_hash());
         rs = h_entry->insert(fh_grp, fse);
 
         // If insert is SUCCESS, put fh_grp into the map and list
@@ -125,7 +128,7 @@ HbmHashTableEntry::insert(HbmHashEntry *h_entry)
             hint_groups_map_[hint_bits] = fh_grp;
         } else {
             // delete fh_grp;
-            HbmHashHintGroup::destroy(fh_grp);
+            HbmHashHintGroup::destroy(fh_grp, get_hbm_hash());
             if (is_new_fse) {
                 // delete fse;
                 HbmHashSpineEntry::destroy(fse);
@@ -396,7 +399,7 @@ HbmHashTableEntry::remove_hg(HbmHashHintGroup *hg)
         hint_groups_map_.erase(hg->get_hint_bits());
         // Free Hint Group
         // delete hg;
-        HbmHashHintGroup::destroy(hg);
+        HbmHashHintGroup::destroy(hg, get_hbm_hash());
     } else {
         // Dont call this api if hg still has HBM Hash entries
         SDK_ASSERT(0);

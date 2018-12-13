@@ -33,10 +33,8 @@ private:
     HbmHashSpineEntry(HbmHashTableEntry *ht_entry);
     ~HbmHashSpineEntry() {}
 public:
-    static HbmHashSpineEntry *factory(HbmHashTableEntry *ht_entry,
-                                   uint32_t mtrack_id = SDK_MEM_ALLOC_HBM_HASH_SPINE_ENTRY);
-    static void destroy(HbmHashSpineEntry *fse,
-                        uint32_t mtrack_id = SDK_MEM_ALLOC_HBM_HASH_SPINE_ENTRY);
+    static HbmHashSpineEntry *factory(HbmHashTableEntry *ht_entry);
+    static void destroy(HbmHashSpineEntry *fse);
 
     void form_action_data(void *action_data);
     sdk_ret_t program_table();
