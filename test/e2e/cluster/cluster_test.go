@@ -74,10 +74,14 @@ var _ = Describe("cluster tests", func() {
 		AfterEach(func() {
 			By(fmt.Sprintf("Resuming cmd on %v", oldLeader))
 			ts.tu.CommandOutput(oldLeaderIP, "docker unpause pen-cmd")
-			time.Sleep(2 * time.Second) // so that cmd runs and takes any actions
+			time.Sleep(2 * time.Second)
 
-			serviceListAfter := getServices(oldLeader)
-			Expect(serviceListBefore).To(Equal(serviceListAfter))
+			By(fmt.Sprintf("before: %v", serviceListBefore))
+			Eventually(func() bool {
+				serviceListAfter := getServices(oldLeader)
+				By(fmt.Sprintf("after: %v", serviceListAfter))
+				return serviceListAfter == serviceListBefore
+			}, 20, 2).Should(BeTrue(), "Services should be same after leader change")
 
 			validateCluster()
 		})
