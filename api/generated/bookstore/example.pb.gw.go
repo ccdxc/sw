@@ -11,23 +11,28 @@ package bookstore
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"net/http"
 
 	"github.com/gogo/protobuf/proto"
+	"github.com/gorilla/websocket"
 	"github.com/pensando/grpc-gateway/runtime"
 	"github.com/pensando/grpc-gateway/utilities"
-	"github.com/pensando/sw/api"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
+
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/utils"
 )
 
 var _ codes.Code
 var _ io.Reader
 var _ = runtime.String
 var _ = utilities.NewDoubleArray
+var _ = apiutils.CtxKeyObjKind
 
 func request_BookstoreV1_AddOutage_0(ctx context.Context, marshaler runtime.Marshaler, client BookstoreV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &OutageRequest{}
@@ -1493,6 +1498,13 @@ func RegisterBookstoreV1HandlerWithClient(ctx context.Context, mux *runtime.Serv
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
+		ws := false
+		if websocket.IsWebSocketUpgrade(req) {
+			ws = true
+			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
+			apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPWriter, w)
+			apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwWebSocketWatch, true)
+		}
 		resp, md, err := request_BookstoreV1_AutoWatchOrder_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -1500,7 +1512,17 @@ func RegisterBookstoreV1HandlerWithClient(ctx context.Context, mux *runtime.Serv
 			return
 		}
 
-		forward_BookstoreV1_AutoWatchOrder_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+		if ws {
+			ic, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwWebSocketConn)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering we socket"))
+				return
+			}
+			conn := ic.(*websocket.Conn)
+			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+		} else {
+			forward_BookstoreV1_AutoWatchOrder_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+		}
 
 	})
 

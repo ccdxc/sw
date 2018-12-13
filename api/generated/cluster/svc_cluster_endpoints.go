@@ -2259,22 +2259,22 @@ func makeURIClusterV1AutoUpdateTenantUpdateOper(in *Tenant) string {
 
 //
 func makeURIClusterV1AutoWatchClusterWatchOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/configs/cluster/v1")
+	return fmt.Sprint("/configs/cluster/v1", "/watch/cluster")
 }
 
 //
 func makeURIClusterV1AutoWatchHostWatchOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/configs/cluster/v1")
+	return fmt.Sprint("/configs/cluster/v1", "/watch/hosts")
 }
 
 //
 func makeURIClusterV1AutoWatchNodeWatchOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/configs/cluster/v1")
+	return fmt.Sprint("/configs/cluster/v1", "/watch/nodes")
 }
 
 //
 func makeURIClusterV1AutoWatchSmartNICWatchOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/configs/cluster/v1")
+	return fmt.Sprint("/configs/cluster/v1", "/watch/smartnics")
 }
 
 //
@@ -2285,7 +2285,7 @@ func makeURIClusterV1AutoWatchSvcClusterV1WatchOper(in *api.ListWatchOptions) st
 
 //
 func makeURIClusterV1AutoWatchTenantWatchOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/configs/cluster/v1")
+	return fmt.Sprint("/configs/cluster/v1", "/watch/tenants")
 }
 
 // AutoAddCluster CRUD method for Cluster
