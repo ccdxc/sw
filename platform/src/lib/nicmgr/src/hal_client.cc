@@ -1010,7 +1010,7 @@ HalClient::LifSetFilterMode(uint64_t lif_id, bool bcast, bool all_mc, bool promi
     eth_lif->UpdateReceiveAllMulticast(all_mc);
     eth_lif->UpdateReceivePromiscuous(promisc);
 
-    NIC_FUNC_INFO("Lif Update bcast: {}, all_mc: {}, prom: {}",
+    NIC_FUNC_INFO("lif-{}: Lif Update bcast: {}, all_mc: {}, prom: {}",
                   lif_id, bcast, all_mc, promisc);
     return 0;
 }
