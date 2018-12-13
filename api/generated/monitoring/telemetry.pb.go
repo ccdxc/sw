@@ -109,8 +109,9 @@ func (m *FlowExportPolicy) GetStatus() FlowExportPolicyStatus {
 
 //
 type FlowExportPolicySpec struct {
-	// Interval defines how often to push the records to an external or internal collector
-	// The value is specified as a string format to be '10s', '20m', '20mins', '10secs', '10seconds'
+	// Interval defines how often to push the records to an external collector
+	// The value is specified as a string format, '10s', '20m'
+	// allowed range is '1s' to '24h'
 	Interval string `protobuf:"bytes,1,opt,name=Interval,json=interval,omitempty,proto3" json:"interval,omitempty"`
 	//
 	Format string `protobuf:"bytes,2,opt,name=Format,json=format,omitempty,proto3" json:"format,omitempty"`

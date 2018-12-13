@@ -138,8 +138,9 @@ message FlowExportPolicySpec {
         Ipfix = 0;
     }
 
-    // Interval defines how often to push the records to an external or internal collector
-    // The value is specified as a string format to be '10s', '20m', '20mins', '10secs', '10seconds'
+    // Interval defines how often to push the records to an external collector
+    // The value is specified as a string format, '10s', '20m'
+    // allowed range is '1s' to '24h'
     string Interval = 1 [(gogoproto.jsontag) = "interval,omitempty", (venice.check)="Duration()"];
 
     string Format = 2 [(gogoproto.jsontag) = "format,omitempty", (venice.check) = "StrEnum(FlowExportPolicySpec.Formats)"];

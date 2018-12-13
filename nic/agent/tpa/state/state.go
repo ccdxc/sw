@@ -321,6 +321,27 @@ func (p *policyDb) createCollectorPolicy(ctx context.Context) (err error) {
 		}
 	}()
 
+	// todo: get local ip from mnic
+	var halSrcAddr *halproto.IPAddress
+
+	if ep, err := p.state.netAgent.FindLocalEndpoint(p.objMeta.Tenant, p.objMeta.Namespace); err == nil {
+		epAddr := ep.Spec.GetIPv4Address()
+		if epAddr == "" {
+			// pick ipv6
+			epAddr = ep.Spec.GetIPv6Address()
+		}
+		srcAddr, _, err := net.ParseCIDR(epAddr)
+		if err != nil {
+			log.Errorf("failed to parse local endpoint address {%+v} ", epAddr)
+			return fmt.Errorf("invalid local endpoint address %s, %s", srcAddr, err)
+		}
+
+		halSrcAddr, _, err = convertToHalIPAddr(srcAddr.String())
+		if err != nil {
+			return fmt.Errorf("invalid source address %s, %s", srcAddr, err)
+		}
+	}
+
 	for ckey := range p.collectorKeys {
 		// check if collector already exists
 		if cdata, ok := p.collectorTable.Collector[ckey.String()]; ok {
@@ -371,11 +392,7 @@ func (p *policyDb) createCollectorPolicy(ctx context.Context) (err error) {
 			},
 
 			//todo: set src ip from mnic
-			SrcIp: &halproto.IPAddress{
-				V4OrV6: &halproto.IPAddress_V4Addr{
-					V4Addr: 0,
-				},
-			},
+			SrcIp:          halSrcAddr,
 			DestIp:         halDestAddr,
 			Protocol:       ckey.Protocol,
 			DestPort:       ckey.Port,

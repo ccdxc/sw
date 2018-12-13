@@ -663,6 +663,59 @@ func TestRemoteEndpointPointingToRemoteTunnel(t *testing.T) {
 	AssertOk(t, err, "creating a remote ep pointing to a tunnel failed")
 }
 
+func TestFindLocalEndpoint(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// network message
+	nt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.1.1.0/24",
+			IPv4Gateway: "10.1.1.254",
+		},
+	}
+
+	// make create network call
+	err := ag.CreateNetwork(&nt)
+	AssertOk(t, err, "Error creating network")
+
+	// endpoint message
+	epinfo := &netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
+		},
+		Spec: netproto.EndpointSpec{
+			EndpointUUID: "testEndpointUUID",
+			WorkloadUUID: "testWorkloadUUID",
+			NetworkName:  "default",
+			NodeUUID:     ag.NodeUUID,
+			MacAddress:   "42:42:42:42:42:42",
+		},
+	}
+
+	// create the endpoint
+	_, err = ag.CreateEndpoint(epinfo)
+	AssertOk(t, err, "creating a local endpoint failed")
+	_, err = ag.FindLocalEndpoint("default", "default")
+	AssertOk(t, err, "failed to find local endpoint")
+	err = ag.DeleteEndpoint("default", "default", "default")
+	AssertOk(t, err, "failed to delete endpoint")
+
+	epr, err := ag.FindLocalEndpoint("default", "default")
+	Assert(t, err != nil, "unknown local endpoint", epr)
+}
+
 //--------------------- Corner Case Tests ---------------------//
 
 func TestEndpointCreateOnNonExistentNamespace(t *testing.T) {

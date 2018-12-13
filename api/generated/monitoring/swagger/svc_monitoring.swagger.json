@@ -3556,7 +3556,7 @@
           },
           {
             "name": "spec.interval",
-            "description": "Interval defines how often to push the records to an external or internal collector\nThe value is specified as a string format to be '10s', '20m', '20mins', '10secs', '10seconds'. should be a valid time duration",
+            "description": "Interval defines how often to push the records to an external collector\nThe value is specified as a string format, '10s', '20m'\nallowed range is '1s' to '24h'. should be a valid time duration",
             "in": "query",
             "required": false,
             "type": "string"
@@ -8581,7 +8581,7 @@
           },
           {
             "name": "spec.interval",
-            "description": "Interval defines how often to push the records to an external or internal collector\nThe value is specified as a string format to be '10s', '20m', '20mins', '10secs', '10seconds'. should be a valid time duration",
+            "description": "Interval defines how often to push the records to an external collector\nThe value is specified as a string format, '10s', '20m'\nallowed range is '1s' to '24h'. should be a valid time duration",
             "in": "query",
             "required": false,
             "type": "string"
@@ -13254,7 +13254,7 @@
           "type": "string",
           "example": "2h",
           "description": "should be a valid time duration\n",
-          "title": "Interval defines how often to push the records to an external or internal collector\nThe value is specified as a string format to be '10s', '20m', '20mins', '10secs', '10seconds'"
+          "title": "Interval defines how often to push the records to an external collector\nThe value is specified as a string format, '10s', '20m'\nallowed range is '1s' to '24h'"
         },
         "format": {
           "type": "string",

@@ -353,6 +353,22 @@ func (na *Nagent) ListEndpoint() []*netproto.Endpoint {
 	return epList
 }
 
+// FindLocalEndpoint returns a local endpoint
+func (na *Nagent) FindLocalEndpoint(tn, namespace string) (*netproto.Endpoint, error) {
+	// lock the db
+	na.Lock()
+	defer na.Unlock()
+
+	// check uuid match
+	for _, ep := range na.EndpointDB {
+		if ep.Tenant == tn && ep.Namespace == namespace && ep.Spec.GetNodeUUID() == na.NodeUUID {
+			return ep, nil
+		}
+	}
+
+	return nil, fmt.Errorf("no local endpoints found")
+}
+
 func (na *Nagent) findAvailableInterface(count uint64, epMAC string, intfType string) (string, error) {
 	// convert the ip address to int
 	var ifIdx uint64
