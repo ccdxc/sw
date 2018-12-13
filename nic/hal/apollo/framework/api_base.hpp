@@ -6,18 +6,19 @@
  * @brief   base object definition for all API objects
  */
 
-#if !defined (__API_OBJ_HPP__)
-#define __API_OBJ_HPP__
+#if !defined (__API_BASE_HPP__)
+#define __API_BASE_HPP__
 
 #include "nic/sdk/include/sdk/base.hpp"
+#include "nic/hal/apollo/framework/obj_base.hpp"
 #include "nic/hal/apollo/framework/api.hpp"
 
 namespace api {
 
 /**
- * @brief    base class for all objects
+ * @brief    base class for all api related objects
  */
-class api_base {
+class api_base : public obj_base {
 public:
     /**
      * @brief    constructor
@@ -29,26 +30,101 @@ public:
      */
     ~api_base(){};
 
-    /** @brief        factory method to instantiate an object
+    /**
+     * @brief        factory method to instantiate an object
      *  @param[in]    api_ctxt API context carrying object related configuration
      */
     static api_base *factory(api_ctxt_t *api_ctxt);
 
-    /**< @brief        mark the object as dirty */
-    void set_dirty(void) { dirty_ = true; }
-
-    /**< @brief        return true if the object is dirty */
-    bool dirty(void) const { return dirty_; }
-
-    /** @brief        add the object to corresponding internal db(s)
+    /**
+     * @brief    process a create operation on an object
+     * @param[in] api_ctxt    transient state associated with this API
+     * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t add_to_db(void) { return sdk::SDK_RET_INVALID_OP; }
+    virtual sdk_ret_t process_create(api_ctxt_t *api_ctxt) {
+        return sdk::SDK_RET_INVALID_OP;
+    }
 
-    /** @brief        delete the object from corresponding internal db(s)
+    /**
+     * @brief    process a delete operation on an object
+     * @param[in] api_ctxt    transient state associated with this API
+     * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t del_from_db(void) { return sdk::SDK_RET_INVALID_OP; }
+    virtual sdk_ret_t process_delete(api_ctxt_t *api_ctxt) {
+        return sdk::SDK_RET_INVALID_OP;
+    }
 
-    /** @brief        find an object based on the object id & key information
+    /**
+     * @brief    process a update operation on an object
+     * @param[in] api_ctxt    transient state associated with this API
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t process_update(api_ctxt_t *api_ctxt) {
+        return sdk::SDK_RET_INVALID_OP;
+    }
+
+    /**
+     * @brief    process a get operation on an object
+     * @param[in] api_ctxt    transient state associated with this API
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t process_get(api_ctxt_t *api_ctxt) {
+        return sdk::SDK_RET_INVALID_OP;
+    }
+
+    /**
+     * @brief    program all h/w tables relevant to this object except stage 0
+     *           table(s), if any
+     * @param[in] api_ctxt    transient state associated with this API
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t program_hw(api_ctxt_t *api_ctxt) {
+        return sdk::SDK_RET_INVALID_OP;
+    }
+
+    /**
+     * @brief    cleanup all h/w tables relevant to this object except stage 0
+     *           table(s), if any, by updating packed entries with latest epoch#
+     * @param[in] api_ctxt    transient state associated with this API
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t cleanup_hw(api_ctxt_t *api_ctxt) {
+        return sdk::SDK_RET_INVALID_OP;
+    }
+
+    /**
+     * @brief    update all h/w tables relevant to this object except stage 0
+     *           table(s), if any, by updating packed entries with latest epoch#
+     * @param[in] api_ctxt    transient state associated with this API
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t update_hw(api_ctxt_t *api_ctxt) {
+        return sdk::SDK_RET_INVALID_OP;
+    }
+
+    /**
+     * @brief    activate the epoch in the dataplane
+     * @param[in] api_op      api operation
+     * @param[in] api_ctxt    transient state associated with this API
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t activate_epoch(api_op_t api_op, api_ctxt_t *api_ctxt) {
+        return sdk::SDK_RET_INVALID_OP;
+    }
+
+    /**
+     * @brief    this method is called on new object that needs to replace the
+     *           old version of the object in the DBs
+     * @param[in] old         old version of the object being swapped out
+     * @param[in] api_ctxt    transient state associated with this API
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t update_db(api_base *old_obj, api_ctxt_t *api_ctxt) {
+        return sdk::SDK_RET_INVALID_OP;
+    }
+
+    /**
+     * @brief        find an object based on the object id & key information
      *  @param[in]    api_ctxt API context carrying object related information
      * TODO: ignore_dirty is on shaky ground, will try to get rid of it later
      */
@@ -59,55 +135,26 @@ public:
      */
     virtual api_base *clone(void) { return NULL; }
 
-    /**
-     * @brief    process a create operation on an object
-     * @param[in] api_ctxt    transient state associated with this API
-     * @return   SDK_RET_OK on success, failure status code on error
-     */
-    virtual sdk_ret_t process_create(api_ctxt_t *api_ctxt) { return sdk::SDK_RET_INVALID_OP; }
-    /**
-     * @brief    process a delete operation on an object
-     * @param[in] api_ctxt    transient state associated with this API
-     * @return   SDK_RET_OK on success, failure status code on error
-     */
-    virtual sdk_ret_t process_delete(api_ctxt_t *api_ctxt) { return sdk::SDK_RET_INVALID_OP; }
-    /**
-     * @brief    process a update operation on an object
-     * @param[in] api_ctxt    transient state associated with this API
-     * @return   SDK_RET_OK on success, failure status code on error
-     */
-    virtual sdk_ret_t process_update(api_ctxt_t *api_ctxt) { return sdk::SDK_RET_INVALID_OP; }
+    /**< @brief        mark the object as dirty */
+    void set_dirty(void) { dirty_ = true; }
 
-    /**
-     * @brief    process a get operation on an object
-     * @param[in] api_ctxt    transient state associated with this API
-     * @return   SDK_RET_OK on success, failure status code on error
-     */
-    virtual sdk_ret_t process_get(api_ctxt_t *api_ctxt) { return sdk::SDK_RET_INVALID_OP; }
+    /**< @brief        return true if the object is dirty */
+    bool dirty(void) const { return dirty_; }
 
-    /**
-     * @brief    program all h/w tables relevant to this object except stage 0
-     *           table(s), if any
-     * @param[in] api_ctxt    transient state associated with this API
-     * @return   SDK_RET_OK on success, failure status code on error
-     */
-    virtual sdk_ret_t program_hw(api_ctxt_t *api_ctxt) { return sdk::SDK_RET_INVALID_OP; }
+    /**< @brief        clear the dirty bit on this object */
+    bool clear_dirty(void) const { return dirty_; }
 
-    /**
-     * @brief    cleanup all h/w tables relevant to this object except stage 0
-     *           table(s), if any, by updating packed entries with latest epoch#
-     * @param[in] api_ctxt    transient state associated with this API
-     * @return   SDK_RET_OK on success, failure status code on error
+    /** @brief        add the object to corresponding internal db(s)
      */
-    virtual sdk_ret_t cleanup_hw(api_ctxt_t *api_ctxt) { return sdk::SDK_RET_INVALID_OP; }
+    virtual sdk_ret_t add_to_db(void) { return sdk::SDK_RET_INVALID_OP; }
 
-    /**
-     * @brief    update all h/w tables relevant to this object except stage 0
-     *           table(s), if any, by updating packed entries with latest epoch#
-     * @param[in] api_ctxt    transient state associated with this API
-     * @return   SDK_RET_OK on success, failure status code on error
+    /** @brief        delete the object from corresponding internal db(s)
      */
-    virtual sdk_ret_t update_hw(api_ctxt_t *api_ctxt) { return sdk::SDK_RET_INVALID_OP; }
+    virtual sdk_ret_t del_from_db(void) { return sdk::SDK_RET_INVALID_OP; }
+
+    /** @brief        enqueue the object for delayed destruction
+     */
+    virtual sdk_ret_t delay_delete(void) { return sdk::SDK_RET_INVALID_OP; }
 
 #if 0
     /**
@@ -150,5 +197,5 @@ protected:
 
 }    // namespace api
 
-#endif    /** __API_OBJ_HPP__ */
+#endif    /** __API_BASE_HPP__ */
 

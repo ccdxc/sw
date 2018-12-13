@@ -25,6 +25,18 @@ namespace api {
  */
 
 /**
+ * @brief    cleanup state maintained for this subnet including any hw entries
+ *           we are holding on to
+ */
+void
+subnet_entry::cleanup(void) {
+    // TODO: fix me
+    //SDK_SPINLOCK_DESTROY(&slock_);
+    // TODO: check if indices are valid before calling tbl mgmt. APIs
+    subnet_db()->subnet_idxr()->free(hw_id_);
+}
+
+/**
  * @brief    release all the s/w state associate with the given subnet, if any,
  *           and free the memory
  * @param[in] subnet     subnet to be freed
@@ -33,8 +45,8 @@ namespace api {
  */
 void
 subnet_entry::destroy(subnet_entry *subnet) {
+    subnet->cleanup();
     subnet->~subnet_entry();
-    subnet_db()->subnet_free(subnet);
 }
 
 /**
@@ -152,6 +164,29 @@ subnet_entry::update_hw(api_ctxt_t *api_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
+/**
+ * @brief    activate the epoch in the dataplane
+ * @param[in] api_op      api operation
+ * @param[in] api_ctxt    transient state associated with this API
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+subnet_entry::activate_epoch(api_op_t api_op, api_ctxt_t *api_ctxt) {
+    return sdk::SDK_RET_INVALID_OP;
+}
+
+/**
+ * @brief    this method is called on new object that needs to replace the
+ *           old version of the object in the DBs
+ * @param[in] old         old version of the object being swapped out
+ * @param[in] api_ctxt    transient state associated with this API
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+subnet_entry::update_db(api_base *old_obj, api_ctxt_t *api_ctxt) {
+    return sdk::SDK_RET_INVALID_OP;
+}
+
 #if 0
 /**
  * @brief    commit() is invokved during commit phase of the API processing and
@@ -205,6 +240,14 @@ sdk_ret_t
 subnet_entry::del_from_db(void) {
     subnet_db()->subnet_ht()->remove(&key_);
     return sdk::SDK_RET_OK;
+}
+
+/**
+ * @brief    initiate delay deletion of this object
+ */
+sdk_ret_t
+subnet_entry::delay_delete(void) {
+    return delay_delete_to_slab(OCI_SLAB_SUBNET, this);
 }
 
 /** @} */    // end of OCI_SUBNET_ENTRY
@@ -305,18 +348,6 @@ subnet_db::subnet_delete(_In_ oci_subnet_key_t *subnet_key) {
     subnet_delete(subnet);
 
     return sdk::SDK_RET_OK;
-}
-
-/**
- * @brief cleanup state maintained for given subnet
- *
- * @param[in] subnet subnet
- */
-void
-subnet_db::subnet_cleanup(subnet_t *subnet) {
-    // TODO: fix me
-    //SDK_SPINLOCK_DESTROY(&subnet->slock);
-    subnet_idxr_->free(subnet->hw_id);
 }
 
 /**
