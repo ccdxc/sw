@@ -8,27 +8,32 @@ import iota.test.iris.testcases.storage.pnsodefs as pnsodefs
 import iota.test.iris.testcases.storage.pnsoutils as pnsoutils
 
 def Setup(tc):
-    tc.nodes = api.GetNaplesHostnames()
+    api.Logger.info("Iterators: %s" % tc.iterators.Summary())
     pnsoutils.Setup(tc)
+
+    # Run it only on first Naples
+    node_list = api.GetNaplesHostnames()
+    tc.nodes = [ node_list[0] ]
     for n in tc.nodes:
         tc.files.append("%s/pnsotest_%s.py" % (tc.tcdir, api.GetNodeOs(n)))
-        api.Logger.info("Copying testyml files to Node:%s" % n)
+        api.Logger.debug("Copying testyml files to Node:%s" % n)
         resp = api.CopyToHost(n, tc.files)
         if not api.IsApiResponseOk(resp):
             return api.types.status.FAILURE
     return api.types.status.SUCCESS
 
 def Trigger(tc):
+    req = api.Trigger_CreateExecuteCommandsRequest()
     for n in tc.nodes:
         cmd = "./pnsotest_%s.py --wait %d --cfg blocksize.yml globals.yml --test %s" % (api.GetNodeOs(n), tc.args.wait, tc.args.test)
-    if getattr(tc.args, "failtest", False):
-        cmd += " --failure-test"
+        if getattr(tc.args, "failtest", False):
+            cmd += " --failure-test"
 
-    req = api.Trigger_CreateExecuteCommandsRequest()
-    api.Trigger_AddHostCommand(req, n, "dmesg -c > /dev/null")
-    api.Trigger_AddHostCommand(req, n, cmd)
-    api.Trigger_AddHostCommand(req, n, "dmesg")
-    api.Logger.info("Running PNSO test %s" % cmd)
+        api.Trigger_AddHostCommand(req, n, "dmesg -c > /dev/null")
+        api.Trigger_AddHostCommand(req, n, cmd)
+        api.Trigger_AddHostCommand(req, n, "dmesg")
+        api.Trigger_AddHostCommand(req, n, "dmesg > dmesg.log")
+        api.Logger.info("Running PNSO test %s" % cmd)
 
     tc.resp = api.Trigger(req)
     return api.types.status.SUCCESS
@@ -47,6 +52,7 @@ def Verify(tc):
     return result
 
 def Teardown(tc):
+    os.system("rm -rf %s" % tc.tmpdir)
     return api.types.status.SUCCESS
 
 def RunTest(tc):

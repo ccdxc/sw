@@ -4,7 +4,7 @@ meta:
     mode        : hardware
     cfgmode     : netagent
     nicmode     : classic
-    enable      : False
+    enable      : True
 
 packages:
     - iota.test.iris
@@ -12,7 +12,7 @@ packages:
 images:
 
 setup:
-    topology: test/iris/topologies/1Naples_BM/1Naples.topology
+    topology: test/iris/topologies/container/container.topology
     config  : 
         - step : config.netagent.hw_push_config
 
@@ -20,21 +20,10 @@ common:
     verifs:
 #        - step    : verif.utils.verify_dmesg
 
-testcases:
-    -   name    : SimpleIterators
-        testcase: testcases.sample.iterators
-        iterators:
-            type    : simple
-            mtu     : [ 1500, 2048, 4096, 9000]
-            proto   : [ tcp, udp ]
-            ipaf    : [ ipv4, ipv6 ]
+testbundles:
+    # Relative paths from iota/test/iris/testbundles/
+    - sample/sample.testbundle
 
-    -   name    : NestedIterators
-        testcase: testcases.sample.iterators
-        iterators:
-            type    : nested
-            proto   : [ tcp, udp ]
-            ipaf    : [ ipv4, ipv6 ]
 
 teardown:
     #- step      : verif.utils.collect_logs_and_cores

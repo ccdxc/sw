@@ -4,13 +4,21 @@ import argparse
 import os
 import time
 import yaml
-import subprocess
 import pdb
 
+PASS_FILENAME="pass.count"
+FAIL_FILENAME="fail.count"
+
+def __read_count(filename):
+    f = open(filename, 'r')
+    count = int(f.read().split(':')[1])
+    f.close()
+    return count
+
 def __sysctl(attr_fail, attr_success):
-    result = subprocess.check_output(["sysctl", attr_fail, attr_success])
-    obj = yaml.load(result)
-    return (int(obj[attr_fail]), int(obj[attr_success]))
+    os.system("sysctl %s > %s" % (attr_success, PASS_FILENAME))
+    os.system("sysctl %s > %s" % (attr_fail, FAIL_FILENAME))
+    return (__read_count(FAIL_FILENAME), __read_count(PASS_FILENAME))
 
 def GetCounts():
     return __sysctl('compat.linuxkpi.pencake_fail_cnt',
@@ -26,7 +34,7 @@ parser = argparse.ArgumentParser(description='Pensando Storage Offload Test')
 parser.add_argument('--cfg', nargs='+', dest='cfg', 
                     help='Config YML Files (1 or more - space separated)')
 parser.add_argument('--test', dest='test', help='Test YML File')
-parser.add_argument('--wait', dest='wait', default=2, type=int, help='Test Wait Time')
+parser.add_argument('--wait', dest='wait', default=1, type=int, help='Test Wait Time')
 parser.add_argument('--failure-test', dest='failure_test',
                     action='store_true', help='Failure Test')
 GlobalOptions = parser.parse_args()
@@ -38,7 +46,6 @@ for cfgfile in GlobalOptions.cfg:
     ymlstring += "%s " % cfgfile
 ymlstring += "%s " % GlobalOptions.test
 os.system("cat %s > /dev/pencake" % ymlstring)
-
 time.sleep(GlobalOptions.wait)
 new_failure_count, new_success_count = GetCounts()
 

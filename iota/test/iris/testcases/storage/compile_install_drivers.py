@@ -24,7 +24,12 @@ def __verify_PencakeInsmodDmesg(dmesg_output):
 def Setup(tc):
     tc.dmesg_commands = []
     tc.output_commands = []
-    tc.nodes = api.GetNaplesHostnames()
+    
+    node_list = api.GetNaplesHostnames()
+    # Run it only on first Naples
+    #tc.nodes = [ node_list[0] ]
+    tc.nodes = node_list
+
     tc.os = api.GetNodeOs(tc.nodes[0])
 
     tc.sonicpkg = api.GetTopDir() + '/' + tc.args.package

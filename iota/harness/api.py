@@ -32,7 +32,7 @@ def Init():
     server = 'localhost:' + str(GlobalOptions.svcport)
     Logger.info("Creating GRPC Channel to IOTA Service %s" % server)
     gl_iota_svc_channel = grpc.insecure_channel(server)
-    Logger.debug("Waiting for IOTA Service to be UP")
+    Logger.info("Waiting for IOTA Service to be UP")
     grpc.channel_ready_future(gl_iota_svc_channel).result()
     Logger.info("Connected to IOTA Service")
 

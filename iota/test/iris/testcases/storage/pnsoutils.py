@@ -18,7 +18,7 @@ def __search_replace(filename, key, replace):
     return
 
 def __process_file(tc, filename):
-    api.Logger.info("Processing yml file : %s" % filename)
+    api.Logger.debug("Processing yml file : %s" % filename)
     for k,v in tc.iterators.__dict__.items():
         __search_replace(filename, k, str(v))
     for k,v in tc.args.__dict__.items():
@@ -80,7 +80,7 @@ def Setup(tc):
 
     tc.files = []
     tc.tcdir = "%s/%s" % (api.GetTopDir(), pnsodefs.PNSO_TCDIR)
-    tc.tmpdir = tempfile.mkdtemp()
+    tc.tmpdir = "/tmp/%s_%d" % (os.environ["USER"], os.getpid())
     tc.ymldir = "%s/%s" % (api.GetTopDir(), pnsodefs.YMLDIR)
 
     blocksize = __get_param(tc, 'blocksize', pnsodefs.PNSO_TEST_DEFAULT_BLOCKSIZE)
@@ -89,7 +89,26 @@ def Setup(tc):
     tc.args.x8blocksize = blocksize * 8
     tc.args.x16blocksize = blocksize * 16
     __prepare_ymls(tc)
-    
+   
+    flags = __get_param(tc, 'flags', '0')
+    if tc.args.test == 'hash.yml':
+        if flags == '0':
+            tc.args.hash_compare_val = 64
+            tc.args.hash_compare_val2x = 64
+            tc.args.hash_compare_val16x = 64
+        else:
+            tc.args.hash_compare_val = 64
+            tc.args.hash_compare_val2x = 128
+            tc.args.hash_compare_val16x = 1024
+
+    if tc.args.test == 'chksum.yml':
+        if flags == '0':
+            tc.args.chksum_compare_val = 8
+            tc.args.chksum_compare_val2x = 8
+        else:
+            tc.args.chksum_compare_val = 8
+            tc.args.chksum_compare_val2x = 16
+
     tc.files.append(tc.blocksize_yml)
     tc.files.append(tc.globals_yml)
     tc.files.append(tc.test_yml)

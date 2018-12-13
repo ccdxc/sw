@@ -12,11 +12,20 @@ import iota.harness.infra.utils.utils as utils
 
 from iota.harness.infra.utils.logger import Logger as Logger
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
-def get_owner(file):
-    result = subprocess.run([ "git", "log", "-n", "1", "--format=%an",
-			  "%s" % file], stdout=subprocess.PIPE)
-    owner = result.stdout.decode('utf-8')
-    owner = owner.replace('\n', '').split(' ')[0]
+
+gl_owner_db = {}
+
+def get_owner(filename):
+    global gl_owner_db
+    if filename in gl_owner_db:
+        return gl_owner_db[filename]
+
+    result = subprocess.run([ "git", "log", "--format=%an", "%s" % filename], stdout=subprocess.PIPE)
+    stdout = result.stdout.decode('utf-8')
+    # Use the name of the creator of the file as the owner.
+    owner_full_name = stdout.split('\n')[-2]
+    owner = owner_full_name.split(' ')[0]
+    gl_owner_db[filename] = owner
     return owner
 
 class VerifStep:
@@ -73,12 +82,12 @@ class TestcaseDataIters:
         return self.__summary
 
 class TestcaseData:
-    def __init__(self, instid, args):
+    def __init__(self, args):
         self.__status = types.status.FAILURE
         self.__timer = timeprofiler.TimeProfiler()
         self.args = args
+        self.__instid = ""
         self.iterators = TestcaseDataIters()
-        self.SetInstanceId(instid)
         return
 
     def SetInstanceId(self, instid):
@@ -126,7 +135,10 @@ class Testcase:
         self.__verifs = []
         self.__iterid = 0
         self.__resolve()
-
+        self.__enable = getattr(self.__spec, 'enable', True)
+        self.__ignored = getattr(self.__spec, "ignore", False)
+        
+ 
         self.__timer = timeprofiler.TimeProfiler()
         self.__iters = []
         self.__aborted = False
@@ -138,22 +150,22 @@ class Testcase:
         self.__stats_fail = 0
         self.__stats_ignored = 0
         self.__stats_error = 0
-
-        self.__enable = True
         return
 
     def __get_instance_id(self, iter_id):
         return "%s_%d" % (self.__spec.name, iter_id)
 
     def __new_TestcaseData(self, src = None):
-        self.__iterid += 1
-        if src is None:
-            new = TestcaseData(self.__get_instance_id(self.__iterid), 
-                               getattr(self.__spec, 'args', None))
+        if src:
+            td = copy.deepcopy(src)
         else:
-            new = copy.deepcopy(src)
-            new.SetInstanceId(self.__get_instance_id(self.__iterid))
-        return new
+            td = TestcaseData(getattr(self.__spec, 'args', None))
+        
+        if not self.__enable:
+            td.SetStatus(types.status.DISABLED)
+        elif self.__ignored:
+            td.SetStatus(types.status.IGNORED)
+        return td
 
     def __setup_simple_iters(self, spec):
         Logger.debug("Setting up simple iterators.")
@@ -265,21 +277,22 @@ class Testcase:
 
 
     def __execute(self):
-        ignored = getattr(self.__spec, "ignore", False)
-        
         final_result = types.status.SUCCESS
         for iter_data in self.__iters:
+            self.__iterid += 1
+            Logger.debug("Create new iter TestcaseData. ID:%d" % self.__iterid)
             iter_data.StartTime()
-
             api.ChangeDirectory("")
-            Logger.SetTestcase(iter_data.GetInstanceId())
-            Logger.debug("Testcase Iteration directory = %s" % iter_data.GetInstanceId())
-            ret = self.__mk_testcase_directory(iter_data.GetInstanceId())
+            instance_id = self.__get_instance_id(self.__iterid)
+            iter_data.SetInstanceId(instance_id)
+            Logger.SetTestcase(instance_id)
+            Logger.debug("Testcase Iteration directory = %s" % instance_id)
+            ret = self.__mk_testcase_directory(instance_id)
             if ret != types.status.SUCCESS: 
                 iter_data.SetStatus(ret)
                 return ret
             
-            api.ChangeDirectory(iter_data.GetInstanceId())
+            api.ChangeDirectory(instance_id)
             
             result = types.status.SUCCESS
             setup_result = loader.RunCallback(self.__tc, 'Setup', False, iter_data)
@@ -288,38 +301,43 @@ class Testcase:
                 loader.RunCallback(self.__tc, 'Teardown', False, iter_data)
                 result = setup_result
             else:
-                    trigger_result = loader.RunCallback(self.__tc, 'Trigger', True, iter_data)
-                    if trigger_result != types.status.SUCCESS:
-                        result = trigger_result
+                trigger_result = loader.RunCallback(self.__tc, 'Trigger', True, iter_data)
+                if trigger_result != types.status.SUCCESS:
+                    result = trigger_result
 
-                    verify_result = loader.RunCallback(self.__tc, 'Verify', True, iter_data)
-                    if verify_result != types.status.SUCCESS:
-                        result = verify_result
+                verify_result = loader.RunCallback(self.__tc, 'Verify', True, iter_data)
+                if verify_result != types.status.SUCCESS:
+                    result = verify_result
 
-                    verify_result = self.__run_common_verifs();
-                    if verify_result != types.status.SUCCESS:
-                        Logger.error("Common verifs failed.")
-                        result = verify_result
+                verify_result = self.__run_common_verifs();
+                if verify_result != types.status.SUCCESS:
+                    Logger.error("Common verifs failed.")
+                    result = verify_result
 
-                    teardown_result = loader.RunCallback(self.__tc, 'Teardown', False, iter_data)
-                    if teardown_result != types.status.SUCCESS:
-                        Logger.error("Teardown callback failed.")
-                        result = teardown_result
+                teardown_result = loader.RunCallback(self.__tc, 'Teardown', False, iter_data)
+                if teardown_result != types.status.SUCCESS:
+                    Logger.error("Teardown callback failed.")
+                    result = teardown_result
 
+                iter_data.StopTime()
+
+                if self.__aborted:
+                    Logger.info("Iteration Instance: %s FINAL RESULT = %d" % (instance_id, types.status.ABORTED))
+                    iter_data.SetStatus(types.status.ABORTED)
+                    return types.status.FAILURE
+
+                if result != types.status.SUCCESS and GlobalOptions.no_keep_going:
+                    Logger.info("Iteration Instance: %s FINAL RESULT = %d" % (instance_id, result))
+                    Logger.error("Error: STOPPING ON FIRST FAILURE.")
                     iter_data.SetStatus(result)
-                    iter_data.StopTime()
-
-                    if self.__aborted:
-                        iter_data.SetStatus(types.status.ABORTED)
-                        return types.status.FAILURE
-
-                    if result != types.status.SUCCESS and GlobalOptions.no_keep_going:
-                        Logger.error("Error: STOPPING ON FIRST FAILURE.")
-                        iter_data.SetStatus(result)
-                        return ret
+                    return ret
+                
+                iter_data.SetStatus(result)
+                Logger.info("Iteration Instance: %s FINAL RESULT = %d" % (instance_id, result))
  
-            if result != types.status.SUCCESS:
-                if ignored:
+            if result != types.status.SUCCESS or GlobalOptions.dryrun:
+                if self.__ignored:
+                    Logger.info("Iteration Instance: %s FINAL RESULT = %d" % (instance_id, result))
                     iter_data.SetStatus(types.status.IGNORED)
                 else:
                     final_result = result
@@ -333,7 +351,6 @@ class Testcase:
 
     def PrintResultSummary(self):
         if not self.__enable: return
-
         for iter_data in self.__iters:
             iters_str = iter_data.iterators.Summary()
             print(types.FORMAT_TESTCASE_SUMMARY %\
@@ -358,8 +375,7 @@ class Testcase:
         return
 
     def GetStats(self):
-        if self.__enable:
-            self.__aggregate_stats()
+        self.__aggregate_stats()
         return (self.__stats_pass, self.__stats_fail, self.__stats_ignored, self.__stats_error)
 
     def Main(self):
@@ -368,15 +384,34 @@ class Testcase:
             self.__enable = False
             return types.status.SUCCESS
 
-        Logger.SetTestcase(self.Name())
-        Logger.info("Starting Testcase: %s" % self.Name())
-        self.__timer.Start()
-        try:
-            self.status = self.__execute()
-        except:
-            utils.LogException(Logger)
-            Logger.error("EXCEPTION: Aborting Testcase Execution.")
-            self.status = types.status.ERROR
-        self.__timer.Stop()
-        Logger.info("Testcase %s FINAL RESULT = %d" % (self.Name(), self.status))
+        if GlobalOptions.markers_present:
+            if self.Name() == GlobalOptions.testcase_begin:
+                Logger.debug("Match found for Testcase starting marker %s" % self.Name())
+                GlobalOptions.inb_markers = True
+                
+        if GlobalOptions.markers_present and not GlobalOptions.inb_markers:
+            Logger.info("Skipping Testcase: %s due to cmdline testcase begin/end markers." % self.Name())
+            self.__enable = False
+            return types.status.SUCCESS
+
+        if self.__enable:
+            Logger.SetTestcase(self.Name())
+            Logger.info("Starting Testcase: %s" % self.Name())
+            self.__timer.Start()
+            try:
+                self.status = self.__execute()
+            except:
+                utils.LogException(Logger)
+                Logger.error("EXCEPTION: Aborting Testcase Execution.")
+                self.status = types.status.ERROR
+            self.__timer.Stop()
+            Logger.info("Testcase %s FINAL RESULT = %d" % (self.Name(), self.status))
+        else:
+            self.status = types.status.SUCCESS
+
+        if GlobalOptions.markers_present:
+            if self.Name() == GlobalOptions.testcase_end:
+                Logger.debug("Match found for Testcase ending marker %s" % self.Name())
+                GlobalOptions.inb_markers = False
+
         return self.status

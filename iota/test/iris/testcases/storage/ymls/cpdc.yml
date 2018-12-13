@@ -6,7 +6,7 @@ svc_chains:
             len     : 'param::blocksize'
         ops:
             - compress:
-                flags           : 'zero_pad'
+                flags           : 'param::cpflags'
                 hdr_fmt_idx     : 1
                 threshold_delta : 8
                 output_file     : '%chain_id%_compressed.bin'
@@ -17,7 +17,7 @@ svc_chains:
             file: '1_compressed.bin'
         ops:
             - decompress:
-                flags       : 0
+                flags       : 'param::dcflags'
                 hdr_fmt_idx : 1
                 output_file : '%chain_id%_decompressed.bin'
 

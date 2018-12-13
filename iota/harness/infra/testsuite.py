@@ -141,6 +141,8 @@ class TestSuite:
             
         self.__stats_total = (self.__stats_pass + self.__stats_fail +\
                               self.__stats_ignored + self.__stats_error)
+        if self.__stats_target != 0:
+            self.__stats_target = max(self.__stats_target, self.__stats_total)
         return
 
     def __execute_testbundles(self):
@@ -257,7 +259,7 @@ class TestSuite:
         print("\nTestBundle Summary for TestSuite: %s" % self.__spec.meta.name)
         print(types.HEADER_SHORT_SUMMARY)
         print(types.FORMAT_ALL_TESTSUITE_SUMMARY %\
-              ("Testbundle", "Pass", "Fail", "Ignore", "Error", "Total", "Target", "%Done", "Result", "Duration"))
+              ("Testbundle", "Pass", "Fail", "Ignore", "Dis/Err", "Total", "Target", "%Done", "Result", "Duration"))
         print(types.HEADER_SHORT_SUMMARY)
         for tbun in self.__testbundles:
             tbun.PrintSummary()

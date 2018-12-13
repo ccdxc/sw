@@ -117,6 +117,8 @@ class TestBundle:
         self.__stats_total = (self.__stats_pass + self.__stats_fail +\
                               self.__stats_ignored + self.__stats_error)
         self.__stats_target = getattr(self.__spec.meta, 'targetcount', 0)
+        if self.__stats_target != 0:
+            self.__stats_target = max(self.__stats_target, self.__stats_total)
         return
 
     def Abort(self):

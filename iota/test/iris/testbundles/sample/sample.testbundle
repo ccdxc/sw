@@ -1,0 +1,39 @@
+meta:
+    name    : sample
+    os      : [ linux, freebsd ]
+    nics    : [ pensando, mellanox, intel, broadcom ]
+    targetcount : 10
+
+testcases:
+    -   name    : SimpleIterators
+        testcase: testcases.sample.iterators
+        iterators:
+            type    : simple
+            mtu     : [ 1500, 2048, 4096, 9000]
+            proto   : [ tcp, udp ]
+            ipaf    : [ ipv4, ipv6 ]
+
+    -   name    : NestedIterators
+        testcase: testcases.sample.iterators
+        iterators:
+            type    : nested
+            proto   : [ tcp, udp ]
+            ipaf    : [ ipv4, ipv6 ]
+
+    -   name    : DisabledCases
+        testcase: testcases.sample.iterators
+        enable  : False
+        iterators:
+            type    : nested
+            proto   : [ tcp, udp ]
+            ipaf    : [ ipv4, ipv6 ]
+
+    -   name    : IgnoredCases
+        testcase: testcases.sample.iterators
+        enable  : False
+        ignore  : True
+        iterators:
+            type    : nested
+            proto   : [ tcp, udp ]
+            ipaf    : [ ipv4, ipv6 ]
+

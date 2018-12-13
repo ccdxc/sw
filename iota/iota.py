@@ -33,6 +33,15 @@ overall_timer.Start()
 
 gl_srv_process = None
 
+def MoveOldLogs():
+    for i in range(256):
+        oldlogdir = '%s/iota/oldlogs%d' % (glopts.GlobalOptions.topdir, i)
+        if not os.path.exists(oldlogdir): break
+    os.system("mkdir %s" % oldlogdir)
+    os.system("mv %s/iota/*.log %s/" % (glopts.GlobalOptions.topdir, oldlogdir))
+    os.system("mv %s/iota/logs %s/" % (glopts.GlobalOptions.topdir, oldlogdir))
+    os.system("mv %s/iota/iota_sanity_logs.tar.gz %s/" % (glopts.GlobalOptions.topdir, oldlogdir))
+
 def InitLogger():
     if glopts.GlobalOptions.debug:
         Logger.SetLoggingLevel(types.loglevel.DEBUG)
@@ -70,6 +79,7 @@ def Main():
     return ret
 
 if __name__ == '__main__':
+    #MoveOldLogs()
     status = Main()
     overall_timer.Stop()
     print("Overall Runtime  : " + overall_timer.TotalTime())

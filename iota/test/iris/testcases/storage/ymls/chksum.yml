@@ -1,0 +1,47 @@
+svc_chains:
+    - svc_chain:
+        idx: 1
+        #description: "Checksum full"
+        input:
+            pattern: aaabbbaaabbb
+            len: 'param::blocksize'
+        ops:
+            - chksum:
+                algo_type   : 'param::algo'
+                flags       : 'param::flags'
+                output_file : '%chain_id%_chksum_full.bin'
+svc_chains:
+    - svc_chain:
+        idx     : 2
+        input   :
+            pattern: aaabbbaaabbb
+            len: 'param::x2blocksize'
+        ops:
+            - chksum:
+                algo_type   : 'param::algo'
+                flags       : 'param::flags'
+                output_file : '%chain_id%_chksum_per_block.bin'
+
+tests:
+  - test:
+      idx           : 1
+      svc_chains    : 1
+      repeat        : 'param::repeat'
+      batch_depth   : 'param::batch_depth'
+      mode          : 'param::mode'
+      validations:
+            - size_compare:
+                idx     : 1
+                file1   : '%chain_id%_chksum_full.bin'
+                val     : 'param::chksum_compare_val'
+  - test:
+      idx           : 2
+      svc_chains    : 2
+      repeat        : 'param::repeat'
+      batch_depth   : 'param::batch_depth'
+      mode          : 'param::mode'
+      validations:
+            - size_compare:
+                idx     : 1
+                file1   : '%chain_id%_chksum_per_block.bin'
+                val     : 'param::chksum_compare_val2x'

@@ -62,9 +62,19 @@ GlobalOptions.testbundles = None
 if GlobalOptions.testbundle != None:
     GlobalOptions.testbundles = GlobalOptions.testbundle.split(',')
 
+GlobalOptions.beg_testcase = None
+GlobalOptions.end_testcase = None
 GlobalOptions.testcases = None
+GlobalOptions.markers_present = False
+GlobalOptions.inb_markers = False
 if GlobalOptions.testcase != None:
-    GlobalOptions.testcases = GlobalOptions.testcase.split(',')
+    if "..." in GlobalOptions.testcase:
+        markers = GlobalOptions.testcase.split("...")
+        GlobalOptions.testcase_begin = markers[0]
+        GlobalOptions.testcase_end = markers[1]
+        GlobalOptions.markers_present = True
+    else:
+        GlobalOptions.testcases = GlobalOptions.testcase.split(',')
 
 def __validate():
     if GlobalOptions.debug:
