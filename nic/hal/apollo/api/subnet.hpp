@@ -52,7 +52,7 @@ class subnet_entry : public api_base {
      * @param[in] api_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t process_create(api_ctxt_t *api_ctxt);
+    virtual sdk_ret_t process_create(api_ctxt_t *api_ctxt) override;
 
     /**
      * @brief     handle a subnet update by allocating all required resources
@@ -60,7 +60,7 @@ class subnet_entry : public api_base {
      * @param[in] api_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t process_update(api_ctxt_t *api_ctxt);
+    virtual sdk_ret_t process_update(api_ctxt_t *api_ctxt) override;
 
     /**
      * @brief     handle a subnet delete by allocating all required resources
@@ -68,7 +68,7 @@ class subnet_entry : public api_base {
      * @param[in] api_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t process_delete(api_ctxt_t *api_ctxt);
+    virtual sdk_ret_t process_delete(api_ctxt_t *api_ctxt) override;
 
     /**
      * @brief     handle a subnet get by allocating all required resources
@@ -76,8 +76,33 @@ class subnet_entry : public api_base {
      * @param[in] api_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t process_get(api_ctxt_t *api_ctxt);
+    virtual sdk_ret_t process_get(api_ctxt_t *api_ctxt) override;
 
+    /**
+     * @brief    program all h/w tables relevant to this object except stage 0
+     *           table(s), if any
+     * @param[in] api_ctxt    transient state associated with this API
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t program_hw(api_ctxt_t *api_ctxt) override;
+
+    /**
+     * @brief    cleanup all h/w tables relevant to this object except stage 0
+     *           table(s), if any, by updating packed entries with latest epoch#
+     * @param[in] api_ctxt    transient state associated with this API
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t cleanup_hw(api_ctxt_t *api_ctxt) override;
+
+    /**
+     * @brief    update all h/w tables relevant to this object except stage 0
+     *           table(s), if any, by updating packed entries with latest epoch#
+     * @param[in] api_ctxt    transient state associated with this API
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t update_hw(api_ctxt_t *api_ctxt) override;
+
+#if 0
     /**
      * @brief    commit() is invokved during commit phase of the API processing
      *           and is not expected to fail as all required resources are
@@ -103,6 +128,7 @@ class subnet_entry : public api_base {
      * @return   SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t abort(api_ctxt_t *api_ctxt) override;
+#endif
 
     /**
      * @brief     helper function to get key given subnet entry

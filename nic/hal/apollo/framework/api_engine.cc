@@ -34,47 +34,115 @@ api_engine::batch_begin(oci_batch_params_t *params) {
 };
 
 /**
+ * @brief    add/update h/w entries, based on the configuration without
+ *           activating the epoch
+ */
+sdk_ret_t
+api_engine::update_tables(void) {
+    api_ctxt_t    api_ctxt;
+    sdk_ret_t     ret;
+
+    /**
+     * walk over all the dirty objects and call program_hw() on each object
+     */
+    for (vector<api_ctxt_t>::iterator it = batch_ctxt_.apis.begin();
+         it != batch_ctxt_.apis.end(); ++it) {
+        api_ctxt = *it;
+        switch (api_ctxt.api_op) {
+        case API_OP_CREATE:
+            /**
+             * call program_hw() callback on the new object, note that the
+             * object should have been in the s/w db already by this time but
+             * marked as dirty
+             */
+            ret = api_ctxt.new_obj->program_hw(&api_ctxt);
+            SDK_ASSERT_RETURN((ret == sdk::SDK_RET_OK), ret);
+            break;
+
+        case API_OP_DELETE:
+            /**
+             * call cleanup_hw() callback on existing object and mark it for
+             * deletion
+             * NOTE: delete is same as updating the h/w entries with latest
+             *       epoch, which will be activated later in the commit()
+             *       stage (by programming tables in stage 0, if needed)
+             * TODO: when do we free up this entry from table mgmt. libs ?
+             *       we can do delay delete for these (with the caveat that
+             *       until then the h/w entries can't be used)
+             */
+            ret = api_ctxt.curr_obj->cleanup_hw(&api_ctxt);
+            SDK_ASSERT_RETURN((ret == sdk::SDK_RET_OK), ret);
+            break;
+
+        case API_OP_UPDATE:
+            /**
+             * call update_hw() callback on the cloned object so new config
+             * can be programmed in the h/w everywhere except stage0, which will
+             * be programmed during commit() stage later
+             * NOTE: during commit() stage, for update case, we will swap new
+             *       obj with old/current one in the all the dbs as well before
+             *       activating epoch is activated in h/w stage 0 (and old
+             *       object should be freed back)
+             */
+            ret = api_ctxt.new_obj->update_hw(&api_ctxt);
+            SDK_ASSERT_RETURN((ret == sdk::SDK_RET_OK), ret);
+            break;
+
+        case API_OP_GET:
+            break;
+
+        default:
+            break;
+        }
+    }
+    return sdk::SDK_RET_OK;
+}
+
+/**
+ * @brief    any objects having tables in stage 0 of datapath can act in this
+ *           epoch activation stage to switch to new epoch
+ *           activating the epoch
+ */
+sdk_ret_t
+api_engine::activate_epoch(void) {
+    return sdk::SDK_RET_OK;
+}
+
+/**
  * @brief    commit all the APIs in this batch, release any temporary
  *           state or resources like memory, per API context info etc.
  */
 sdk_ret_t
 api_engine::batch_commit(void) {
-    api_ctxt_t    api_ctxt;
     sdk_ret_t     ret;
 
     SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_INIT),
                       sdk::SDK_RET_INVALID_ARG);
-    batch_ctxt_.stage = API_BATCH_STAGE_COMMIT;
+    batch_ctxt_.stage = API_BATCH_STAGE_TABLE_UPDATE;
+    /**< update all the p4 tables, with the exception of stage 0 */
+    ret = update_tables();
+    SDK_ASSERT_GOTO((ret == sdk::SDK_RET_OK), error);
 
-    // walk over all the dirty objects and perform commit operation
-    // NOTE: we don't expect any operation to fail during commit phase but hash
-    // tables are a bit tricky as there is no mechanism to pre-reserve entries
-    // for them yet, so to be generic we do support failure of commit operation
-    for (vector<api_ctxt_t>::iterator it = batch_ctxt_.apis.begin();
-         it != batch_ctxt_.apis.end(); ++it) {
-        api_ctxt = *it;
-        if (api_ctxt.curr_obj) {
-            // DELETE/UPDATE case
-            ret = api_ctxt.curr_obj->commit(&api_ctxt);
-            if (ret != sdk::SDK_RET_OK) {
-                batch_ctxt_.stage = API_BATCH_STAGE_ABORT;
-                return ret;
-            }
-        } else {
-            // CREATE case
-            ret = api_ctxt.new_obj->commit(&api_ctxt);
-            if (ret != sdk::SDK_RET_OK) {
-                batch_ctxt_.stage = API_BATCH_STAGE_ABORT;
-                return ret;
-            }
-        }
-    }
+    /**
+     * advance to next stage of processing and activate the epoch in h/w & s/w
+     * by programming stage0 tables, if any.
+     * NOTE: this is not expected to fail
+     */
+    batch_ctxt_.stage = API_BATCH_STAGE_ACTIVATE_EPOCH;
+    ret = activate_epoch();
+    SDK_ASSERT(ret == sdk::SDK_RET_OK);
 
-    // clear all batch related info
+    /**< clear all batch related info */
     batch_ctxt_.epoch = OCI_EPOCH_INVALID;
     batch_ctxt_.stage = API_BATCH_STAGE_NONE;
     batch_ctxt_.apis.clear();
+
     return sdk::SDK_RET_OK;
+
+error:
+
+    batch_ctxt_.stage = API_BATCH_STAGE_ABORT;
+    return ret;
 }
 
 /**
@@ -83,14 +151,17 @@ api_engine::batch_commit(void) {
  */
 sdk_ret_t
 api_engine::batch_abort(void) {
-    api_ctxt_t    api_ctxt;
-    sdk_ret_t     ret;
+    //api_ctxt_t    api_ctxt;
+    //sdk_ret_t     ret;
 
     SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_ABORT),
                       sdk::SDK_RET_INVALID_ARG);
 
-    // walk over all the dirty objects and perform abort operation
-    // NOTE: abort is never expected to fail
+#if 0
+    /**
+     * walk over all the dirty objects and perform abort operation
+     * NOTE: abort is never expected to fail
+     */
     for (vector<api_ctxt_t>::iterator it = batch_ctxt_.apis.begin();
          it != batch_ctxt_.apis.end(); ++it) {
         api_ctxt = *it;
@@ -108,6 +179,8 @@ api_engine::batch_abort(void) {
             }
         }
     }
+#endif
+
     // clear all batch related info
     batch_ctxt_.epoch = OCI_EPOCH_INVALID;
     batch_ctxt_.stage = API_BATCH_STAGE_NONE;

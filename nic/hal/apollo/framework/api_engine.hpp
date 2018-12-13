@@ -27,11 +27,11 @@ namespace api {
  * @brief   processing stage of the APIs in a given batch
  */
 typedef enum api_batch_stage_e {
-    API_BATCH_STAGE_NONE,
-    API_BATCH_STAGE_INIT,
-    API_BATCH_STAGE_RSC_ALLOC,    /**< s/w & h/w resource allocation stage */
-    API_BATCH_STAGE_COMMIT,       /**< commit stage */
-    API_BATCH_STAGE_ABORT,        /**< abort stage */
+    API_BATCH_STAGE_NONE,              /**< invalid stage */
+    API_BATCH_STAGE_INIT,              /**< initialization stage */
+    API_BATCH_STAGE_TABLE_UPDATE,      /**< table programming stage */
+    API_BATCH_STAGE_ACTIVATE_EPOCH,    /**< epoch activation stage */
+    API_BATCH_STAGE_ABORT,             /**< abort stage */
 } api_batch_stage_t;
 
 /**
@@ -81,6 +81,17 @@ public:
      * @brief    wrapper function for processing all API calls
      */
     sdk_ret_t process_api(api_ctxt_t *api_ctxt);
+
+private:
+    /**
+     * @brief    datapath table update stage
+     */
+    sdk_ret_t update_tables(void);
+
+    /**
+     * @brief    final epoch activation stage
+     */
+    sdk_ret_t activate_epoch(void);
 
 private:
     api_batch_ctxt_t    batch_ctxt_;
