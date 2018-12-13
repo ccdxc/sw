@@ -408,8 +408,8 @@ frpmr:
     phvwr          CAPRI_PHV_FIELD(TO_S4_FRPMR_LKEY_P, len), d.frpmr.len
 
     // Send DMA info to stage6.
-    phvwrpair      CAPRI_PHV_FIELD(TO_S6_FRPMR_WB_P, wqe_addr), k.common_te0_phv_table_addr, \
-                   CAPRI_PHV_FIELD(TO_S6_FRPMR_WB_P, frpmr_dma_src_addr), d.frpmr.dma_src_address
+    phvwr         CAPRI_PHV_FIELD(TO_S6_FRPMR_WB_P, wqe_addr), k.common_te0_phv_table_addr
+    phvwr         CAPRI_PHV_FIELD(TO_S6_FRPMR_WB_P, frpmr_dma_src_addr), d.{frpmr.dma_src_address}.dx // Not eligible for phvwrpair
 
 load_frpmr_sqlkey:
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_frpmr_sqlkey_process, r6)

@@ -522,7 +522,7 @@ def GetHostPTEntriesDMAData(testcase, descriptor, args):
     logger.info('Host PT entries %s' % (slab.phy_address))
 
     resmgr.HostMemoryAllocator.write(mem_handle,bytes(data))
-    return src_dma_phy_addr
+    return int.from_bytes(src_dma_phy_addr.to_bytes(8,'little'), 'big', signed=False)
 
 def GetPTStartOffset(testcase, descriptor, args):
     if (GlobalOptions.dryrun): return
