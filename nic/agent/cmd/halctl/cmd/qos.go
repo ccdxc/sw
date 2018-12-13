@@ -135,6 +135,7 @@ func init() {
 
 	qosShowCmd.Flags().StringVar(&qosGroup, "qosgroup", "default", "Specify qos group")
 	qosShowCmd.Flags().Uint64Var(&qosClassHandle, "handle", 0, "Specify qos class handle")
+	qosShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	qosStatsCmd.PersistentFlags().StringVar(&qosGroup, "qosgroup", "default", "Specify qos group")
 	qosStatsCmd.PersistentFlags().Uint64Var(&qosClassHandle, "handle", 0, "Specify qos class handle")
 	coppShowCmd.Flags().StringVar(&coppType, "copptype", "flow-miss", "Specify copp type")
@@ -672,7 +673,100 @@ func qosShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	handleQosShowCmd(cmd, nil)
+	if cmd.Flags().Changed("yaml") {
+		handleQosShowCmd(cmd, nil)
+		return
+	}
+
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	defer c.Close()
+
+	client := halproto.NewQOSClient(c.ClientConn)
+
+	var req *halproto.QosClassGetRequest
+	if cmd != nil && cmd.Flags().Changed("qosgroup") {
+		if isQosGroupValid(qosGroup) != true {
+			fmt.Printf("Invalid argument\n")
+			return
+		}
+		// Get specific qos class
+		req = &halproto.QosClassGetRequest{
+			KeyOrHandle: &halproto.QosClassKeyHandle{
+				KeyOrHandle: &halproto.QosClassKeyHandle_QosGroup{
+					QosGroup: inputToQosGroup(qosGroup),
+				},
+			},
+		}
+	} else if cmd != nil && cmd.Flags().Changed("handle") {
+		// Get specific qos class
+		req = &halproto.QosClassGetRequest{
+			KeyOrHandle: &halproto.QosClassKeyHandle{
+				KeyOrHandle: &halproto.QosClassKeyHandle_QosClassHandle{
+					QosClassHandle: qosClassHandle,
+				},
+			},
+		}
+	} else {
+		// Get all qos classes
+		req = &halproto.QosClassGetRequest{}
+	}
+	qosGetReqMsg := &halproto.QosClassGetRequestMsg{
+		Request: []*halproto.QosClassGetRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.QosClassGet(context.Background(), qosGetReqMsg)
+	if err != nil {
+		fmt.Printf("Getting qos class failed. %v\n", err)
+		return
+	}
+
+	qosClassHeaderPrint()
+
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			continue
+		}
+		qosClassPrintOne(resp.GetSpec())
+	}
+}
+
+func qosClassHeaderPrint() {
+	hdrLine := strings.Repeat("-", 80)
+	fmt.Printf("PFC: Xon/Xoff\n")
+	fmt.Println(hdrLine)
+	fmt.Printf("%-30s%-6s%-12s%-10s%-10s%-10s\n",
+		"QoS-Group", "MTU", "PFC", "QoS-Sched", "Dot1q-PCP", "DSCP")
+	fmt.Println(hdrLine)
+}
+
+func qosClassPrintOne(resp *halproto.QosClassSpec) {
+	qosGroup := strings.Replace(resp.GetKeyOrHandle().GetQosGroup().String(), "_", "-", -1)
+	pfcStr := fmt.Sprintf("%d/%d", resp.GetPfc().GetXonThreshold(), resp.GetPfc().GetXoffThreshold())
+	scheduleStr := ""
+	if resp.GetSched().GetDwrr() == nil {
+		scheduleStr = fmt.Sprintf("%dbps", resp.GetSched().GetStrict().GetBps())
+	} else {
+		scheduleStr = fmt.Sprintf("%d%%", resp.GetSched().GetDwrr().GetBwPercentage())
+	}
+	dscpStr := "-"
+	if len(resp.GetClassMap().GetIpDscp()) > 0 {
+		dscpStr = fmt.Sprintf("%v", resp.GetClassMap().GetIpDscp())
+		dscpStr = strings.Replace(dscpStr, "[", "", -1)
+		dscpStr = strings.Replace(dscpStr, "]", "", -1)
+		dscpStr = strings.Replace(dscpStr, " ", ",", -1)
+	}
+
+	fmt.Printf("%-30s%-6d%-12s%-10s%-10d%-10s\n",
+		qosGroup, resp.GetMtu(), pfcStr,
+		scheduleStr, resp.GetClassMap().GetDot1QPcp(),
+		dscpStr)
 }
 
 func isQosGroupValid(qosGroup string) bool {

@@ -33,7 +33,7 @@ var portShowCmd = &cobra.Command{
 	Use:   "port",
 	Short: "show port details",
 	Long:  "show port details information",
-	Run:   portDetailShowCmdHandler,
+	Run:   portShowCmdHandler,
 }
 
 var portStatusShowCmd = &cobra.Command{
@@ -238,16 +238,92 @@ func portStatusShowCmdHandler(cmd *cobra.Command, args []string) {
 	handlePortStatusShowCmd(cmd, nil)
 }
 
-func portDetailShowCmdHandler(cmd *cobra.Command, args []string) {
+func portShowCmdHandler(cmd *cobra.Command, args []string) {
 	if len(args) > 0 {
 		fmt.Printf("Invalid argument\n")
 		return
 	}
+
 	if cmd.Flags().Changed("yaml") {
 		handlePortDetailShowCmd(cmd, nil)
-	} else {
-		fmt.Printf("Only --yaml option supported\n")
 	}
+
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	defer c.Close()
+
+	client := halproto.NewPortClient(c.ClientConn)
+
+	var req *halproto.PortGetRequest
+
+	if cmd != nil && cmd.Flags().Changed("port") {
+		// Get port info for specified port
+		req = &halproto.PortGetRequest{
+			KeyOrHandle: &halproto.PortKeyHandle{
+				KeyOrHandle: &halproto.PortKeyHandle_PortId{
+					PortId: portNum,
+				},
+			},
+		}
+	} else {
+		// Get all Ports
+		req = &halproto.PortGetRequest{}
+	}
+
+	portGetReqMsg := &halproto.PortGetRequestMsg{
+		Request: []*halproto.PortGetRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.PortGet(context.Background(), portGetReqMsg)
+	if err != nil {
+		fmt.Printf("Getting Port failed. %v\n", err)
+		return
+	}
+
+	portShowHeaderPrint()
+
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			continue
+		}
+		portShowOneResp(resp)
+	}
+}
+
+func portShowHeaderPrint() {
+	hdrLine := strings.Repeat("-", 110)
+	fmt.Println("MAC-Info: MAC ID/MAC Channel/Num lanes          Debounce: Debounce time in ms")
+	fmt.Println("FEC-Type: FC - FireCode, RS - ReedSolomon")
+	fmt.Println(hdrLine)
+	fmt.Printf("%-10s%-10s%-15s%-10s%-15s%-6s%-10s%-10s%-12s%-12s\n",
+		"Port", "Speed", "MAC-Info", "FEC-Type", "AutoNegEnable", "MTU", "Pause", "Debounce", "AdminStatus", "OperStatus")
+	fmt.Println(hdrLine)
+}
+
+func portShowOneResp(resp *halproto.PortGetResponse) {
+	spec := resp.GetSpec()
+	macStr := fmt.Sprintf("%d/%d/%d", spec.GetMacId(), spec.GetMacCh(), spec.GetNumLanes())
+	speedStr := strings.Replace(spec.GetPortSpeed().String(), "PORT_SPEED_", "", -1)
+	fecStr := strings.Replace(spec.GetFecType().String(), "PORT_FEC_TYPE_", "", -1)
+	if strings.Compare(fecStr, "NONE") == 0 {
+		fecStr = "None"
+	}
+	portStr := strings.ToLower(strings.Replace(spec.GetPortType().String(), "PORT_TYPE_", "", -1))
+	portStr = fmt.Sprintf("%s%d", portStr, spec.GetKeyOrHandle().GetPortId())
+	pauseStr := strings.ToLower(strings.Replace(spec.GetPause().String(), "PORT_PAUSE_TYPE_", "", -1))
+	adminStateStr := strings.Replace(resp.GetSpec().GetAdminState().String(), "PORT_ADMIN_STATE_", "", -1)
+	operStatusStr := strings.Replace(resp.GetStatus().GetOperStatus().String(), "PORT_OPER_STATUS_", "", -1)
+
+	fmt.Printf("%-10s%-10s%-15s%-10s%-15t%-6d%-10s%-10d%-12s%-12s\n",
+		portStr, speedStr, macStr, fecStr, spec.GetAutoNegEnable(),
+		spec.GetMtu(), pauseStr, spec.GetDebounceTime(),
+		adminStateStr, operStatusStr)
 }
 
 func portStatsShowCmdHandler(cmd *cobra.Command, args []string) {

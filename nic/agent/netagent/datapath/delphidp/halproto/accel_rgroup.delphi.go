@@ -940,6 +940,7 @@ It has these top-level messages:
 	PortDeleteRequestMsg
 	PortDeleteResponse
 	PortDeleteResponseMsg
+	MgmtMacStats
 	MacStats
 	PortStats
 	PortGetRequest
