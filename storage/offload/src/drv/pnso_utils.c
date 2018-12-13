@@ -361,7 +361,7 @@ buffer_list_iter_addr_len_get(struct buffer_list_iter *iter,
 }
 
 pnso_error_t
-svc_interm_buf_list_get(struct service_info *svc_info)
+putil_get_interm_buf_list(struct service_info *svc_info)
 {
 	struct interm_buf_list	*iblist;
 	struct pnso_flat_buffer	*iblist_buf;
@@ -429,12 +429,12 @@ svc_interm_buf_list_get(struct service_info *svc_info)
 
 	return PNSO_OK;
 out:
-	svc_interm_buf_list_put(svc_info);
+	putil_put_interm_buf_list(svc_info);
 	return ENOMEM;
 }
 
 void
-svc_interm_buf_list_put(struct service_info *svc_info)
+putil_put_interm_buf_list(struct service_info *svc_info)
 {
 	struct interm_buf_list	*iblist = &svc_info->si_iblist;
 	struct pnso_flat_buffer	*iblist_buf = &iblist->blist.buffers[0];

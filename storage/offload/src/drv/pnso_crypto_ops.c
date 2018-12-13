@@ -137,7 +137,7 @@ crypto_dst_blist_setup(struct service_info *svc_info,
 	 */
 	if (chn_service_has_sub_chain(svc_info)) {
 		orig_dst_blist = svc_info->si_dst_blist;
-		err = svc_interm_buf_list_get(svc_info);
+		err = putil_get_interm_buf_list(svc_info);
 		if (err) {
 			OSAL_LOG_ERROR("failed to obtain intermediate buffers");
 			return err;
@@ -613,7 +613,8 @@ crypto_teardown(struct service_info *svc_info)
 
 	crypto_put_desc(svc_info, false, svc_info->si_desc);
 
-	svc_interm_buf_list_put(svc_info);
+	putil_put_interm_buf_list(svc_info);
+
 	pc_res_mpool_object_put(pcr, MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS,
 				svc_info->si_istatus_desc);
 	pc_res_sgl_pdma_put(pcr, svc_info->si_sgl_pdma);
