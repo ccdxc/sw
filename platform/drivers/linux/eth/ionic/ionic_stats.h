@@ -12,7 +12,7 @@
 }
 
 #define IONIC_LIF_STAT_DESC(stat_name) \
-	IONIC_STAT_DESC(struct lif_stats, stat_name)
+	IONIC_STAT_DESC(struct lif_sw_stats, stat_name)
 
 #define IONIC_TX_STAT_DESC(stat_name) \
 	IONIC_STAT_DESC(struct tx_stats, stat_name)

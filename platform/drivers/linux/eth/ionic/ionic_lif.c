@@ -182,11 +182,12 @@ static void ionic_get_stats64(struct net_device *netdev,
 			      struct rtnl_link_stats64 *ns)
 {
 	struct lif *lif = netdev_priv(netdev);
-	struct ionic_lif_stats *sd = lif->stats_dump;
+	struct ionic_lif_stats *ls = lif->lif_stats;
 	struct device *dev = lif->ionic->dev;
 	unsigned int i;
 	u64 cnt;
 
+	/* use locally counted numbers for byte and packet counts */
 	for (i = 0; i < lif->ntxqcqs; i++) {
 		struct tx_stats *tx_stats = &lif->txqcqs[i]->stats.tx;
 
@@ -201,72 +202,56 @@ static void ionic_get_stats64(struct net_device *netdev,
 		ns->rx_bytes += rx_stats->bytes;
 	}
 
-	// double checking stats counters
-	// these mismatches on init should go away when reset cleans NIC stats
-	cnt = sd->rx_ucast_packets + sd->rx_mcast_packets + sd->rx_bcast_packets;
+	/* double check stats counters against hw counts */
+	cnt = ls->rx_ucast_packets + ls->rx_mcast_packets + ls->rx_bcast_packets;
 	if (ns->rx_packets != cnt)
 		dev_warn(dev, "rx_packets mismatch: sw=%llu nic=%llu\n",
 			 ns->rx_packets, cnt);
 
-	cnt = sd->tx_ucast_packets + sd->tx_mcast_packets + sd->tx_bcast_packets;
+	cnt = ls->tx_ucast_packets + ls->tx_mcast_packets + ls->tx_bcast_packets;
 	if (ns->tx_packets != cnt)
 		dev_warn(dev, "tx_packets mismatch: sw=%llu nic=%llu\n",
 			 ns->tx_packets, cnt);
 
-	cnt = sd->rx_ucast_bytes + sd->rx_mcast_bytes + sd->rx_bcast_bytes;
+	cnt = ls->rx_ucast_bytes + ls->rx_mcast_bytes + ls->rx_bcast_bytes;
 	if (ns->rx_bytes != cnt)
 		dev_warn(dev, "rx_bytes mismatch: sw=%llu nic=%llu\n",
 			 ns->rx_bytes, cnt);
 
-	cnt = sd->tx_ucast_bytes + sd->tx_mcast_bytes + sd->tx_bcast_bytes;
+	cnt = ls->tx_ucast_bytes + ls->tx_mcast_bytes + ls->tx_bcast_bytes;
 	if (ns->tx_bytes != cnt)
 		dev_warn(dev, "tx_bytes mismatch: sw=%llu nic=%llu\n",
 			 ns->tx_bytes, cnt);
 
-	ns->rx_dropped = sd->rx_ucast_drop_packets +
-			 sd->rx_mcast_drop_packets +
-			 sd->rx_bcast_drop_packets;
-	ns->tx_dropped = sd->tx_ucast_drop_packets +
-			 sd->tx_mcast_drop_packets +
-			 sd->tx_bcast_drop_packets;
-	ns->multicast = sd->rx_mcast_packets;
-	//ns->collisions;
+	/* report hw error counters */
+	ns->rx_dropped = ls->rx_ucast_drop_packets +
+			 ls->rx_mcast_drop_packets +
+			 ls->rx_bcast_drop_packets;
 
-	//ns->rx_length_errors;
-	//ns->rx_over_errors = sd->rx_queue_empty_drop;
-	//ns->rx_crc_errors;
-	//ns->rx_frame_errors;
-	//ns->rx_fifo_errors;
-	// ns->rx_missed_errors = sd->rx_dma_error +
-	// 		       sd->rx_queue_disabled_drop +
-	// 		       sd->rx_queue_scheduled +
-	// 		       sd->rx_desc_fetch_error +
-	// 		       sd->rx_desc_data_error;
-	// ns->tx_aborted_errors = sd->tx_dma_error +
-	// 			sd->tx_queue_disabled +
-	// 			sd->tx_queue_scheduled +
-	// 			sd->tx_desc_fetch_error +
-	// 			sd->tx_desc_data_error;
-	//ns->tx_carrier_errors;
-	//ns->tx_fifo_errors;
-	//ns->tx_heartbeat_errors;
-	//ns->tx_window_errors;
-	//ns->rx_compressed;
-	//ns->tx_compressed;
+	ns->tx_dropped = ls->tx_ucast_drop_packets +
+			 ls->tx_mcast_drop_packets +
+			 ls->tx_bcast_drop_packets;
 
-	// ns->rx_errors = ns->rx_length_errors +
-	// 		ns->rx_over_errors +
-	// 		ns->rx_crc_errors +
-	// 		ns->rx_frame_errors +
-	// 		ns->rx_fifo_errors +
-	// 		ns->rx_missed_errors;
-	// ns->tx_errors = ns->tx_aborted_errors +
-	// 		ns->tx_carrier_errors +
-	// 		ns->tx_fifo_errors +
-	// 		ns->tx_heartbeat_errors +
-	// 		ns->tx_window_errors +
-	// 		ns->rx_compressed +
-	// 		ns->tx_compressed;
+	ns->multicast = ls->rx_mcast_packets;
+
+	ns->rx_over_errors = ls->rx_queue_empty_drop;
+
+	ns->rx_missed_errors = ls->rx_dma_error +
+			       ls->rx_queue_disabled_drop +
+			       ls->rx_queue_scheduled +
+			       ls->rx_desc_fetch_error +
+			       ls->rx_desc_data_error;
+
+	ns->tx_aborted_errors = ls->tx_dma_error +
+				ls->tx_queue_disabled +
+				ls->tx_queue_scheduled +
+				ls->tx_desc_fetch_error +
+				ls->tx_desc_data_error;
+
+	ns->rx_errors = ns->rx_over_errors +
+			ns->rx_missed_errors;
+
+	ns->tx_errors = ns->tx_aborted_errors;
 }
 
 static int ionic_lif_addr_add(struct lif *lif, const u8 *addr)
@@ -929,30 +914,31 @@ void ionic_lifs_free(struct ionic *ionic)
 	}
 }
 
-static int ionic_lif_stats_dump_start(struct lif *lif, unsigned int ver)
+static int ionic_lif_stats_start(struct lif *lif, unsigned int ver)
 {
 	struct net_device *netdev = lif->netdev;
 	struct device *dev = lif->ionic->dev;
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
-		.cmd.stats_dump = {
-			.opcode = CMD_OPCODE_STATS_DUMP_START,
+		.cmd.lif_stats = {
+			.opcode = CMD_OPCODE_LIF_STATS_START,
 			.ver = ver,
 		},
 	};
 	int err;
 
-	lif->stats_dump = dma_alloc_coherent(dev, sizeof(*lif->stats_dump),
-					     &lif->stats_dump_pa, GFP_KERNEL);
-	if (!lif->stats_dump) {
+	lif->lif_stats = dma_alloc_coherent(dev, sizeof(*lif->lif_stats),
+					    &lif->lif_stats_pa, GFP_KERNEL);
+
+	if (!lif->lif_stats) {
 		netdev_err(netdev, "%s OOM\n", __func__);
 		return -ENOMEM;
 	}
 
-	ctx.cmd.stats_dump.addr = lif->stats_dump_pa;
+	ctx.cmd.lif_stats.addr = lif->lif_stats_pa;
 
-	dev_dbg(dev, "stats_dump START ver %d addr 0x%llx\n", ver,
-		lif->stats_dump_pa);
+	dev_dbg(dev, "lif_stats START ver %d addr 0x%llx\n", ver,
+		lif->lif_stats_pa);
 
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
@@ -961,40 +947,41 @@ static int ionic_lif_stats_dump_start(struct lif *lif, unsigned int ver)
 	return 0;
 
 err_out_free:
-	dma_free_coherent(dev, sizeof(*lif->stats_dump), lif->stats_dump,
-			  lif->stats_dump_pa);
-	lif->stats_dump = NULL;
-	lif->stats_dump_pa = 0;
+	dma_free_coherent(dev, sizeof(*lif->lif_stats), lif->lif_stats,
+			  lif->lif_stats_pa);
+	lif->lif_stats = NULL;
+	lif->lif_stats_pa = 0;
+
 	return err;
 }
 
-static void ionic_lif_stats_dump_stop(struct lif *lif)
+static void ionic_lif_stats_stop(struct lif *lif)
 {
 	struct net_device *netdev = lif->netdev;
 	struct device *dev = lif->ionic->dev;
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
-		.cmd.stats_dump = {
-			.opcode = CMD_OPCODE_STATS_DUMP_STOP,
+		.cmd.lif_stats = {
+			.opcode = CMD_OPCODE_LIF_STATS_STOP,
 		},
 	};
 	int err;
 
-	dev_dbg(dev, "stats_dump STOP\n");
+	dev_dbg(dev, "lif_stats STOP\n");
 
-	if (!lif->stats_dump_pa)
+	if (!lif->lif_stats_pa)
 		return;
 
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err) {
-		netdev_err(netdev, "stats_dump cmd failed %d\n", err);
+		netdev_err(netdev, "lif_stats cmd failed %d\n", err);
 		return;
 	}
 
-	dma_free_coherent(dev, sizeof(*lif->stats_dump), lif->stats_dump,
-			  lif->stats_dump_pa);
-	lif->stats_dump = NULL;
-	lif->stats_dump_pa = 0;
+	dma_free_coherent(dev, sizeof(*lif->lif_stats), lif->lif_stats,
+			  lif->lif_stats_pa);
+	lif->lif_stats = NULL;
+	lif->lif_stats_pa = 0;
 }
 
 static void ionic_lif_rss_teardown(struct lif *lif);
@@ -1096,7 +1083,7 @@ static void ionic_lif_deinit(struct lif *lif)
 		return;
 	lif->flags &= ~LIF_F_INITED;
 
-	ionic_lif_stats_dump_stop(lif);
+	ionic_lif_stats_stop(lif);
 	ionic_lif_txqs_deinit(lif);
 	ionic_lif_rxqs_deinit(lif);
 	ionic_rx_filters_deinit(lif);
@@ -1525,7 +1512,7 @@ static int ionic_lif_init(struct lif *lif)
 			goto err_out_rx_filter_deinit;
 	}
 
-	err = ionic_lif_stats_dump_start(lif, STATS_DUMP_VERSION_1);
+	err = ionic_lif_stats_start(lif, STATS_DUMP_VERSION_1);
 	if (err)
 		goto err_out_rss_teardown;
 

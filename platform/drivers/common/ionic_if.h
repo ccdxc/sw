@@ -59,6 +59,8 @@ enum cmd_opcode {
 	CMD_OPCODE_RX_FILTER_DEL		= 19,
 	CMD_OPCODE_STATS_DUMP_START		= 20,
 	CMD_OPCODE_STATS_DUMP_STOP		= 21,
+#define CMD_OPCODE_LIF_STATS_START	CMD_OPCODE_STATS_DUMP_START
+#define CMD_OPCODE_LIF_STATS_STOP	CMD_OPCODE_STATS_DUMP_STOP
 	CMD_OPCODE_RSS_HASH_SET			= 22,
 	CMD_OPCODE_RSS_INDIR_SET		= 23,
 
@@ -1624,6 +1626,7 @@ union adminq_cmd {
 	struct rx_filter_add_cmd rx_filter_add;
 	struct rx_filter_del_cmd rx_filter_del;
 	struct stats_dump_cmd stats_dump;
+	struct stats_dump_cmd lif_stats;
 	struct rss_hash_set_cmd rss_hash_set;
 	struct rss_indir_set_cmd rss_indir_set;
 	struct debug_q_dump_cmd debug_q_dump;
@@ -1641,6 +1644,7 @@ union adminq_comp {
 	struct station_mac_addr_get_comp station_mac_addr_get;
 	struct rx_filter_add_comp rx_filter_add;
 	struct stats_dump_comp stats_dump;
+	struct stats_dump_comp lif_stats;
 	struct debug_q_dump_comp debug_q_dump;
 };
 
