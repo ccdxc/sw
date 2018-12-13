@@ -92,28 +92,30 @@ static void sonic_put_evid(struct sonic_event_list *evl, u32 evid)
 	spin_unlock_irqrestore(&evl->inuse_lock, irqflags);
 }
 
-static inline uint64_t
+static inline struct sonic_db_data *
 sonic_intr_db_primed_usr_data_get(struct sonic_event_list *evl,
-				  uint32_t id)
+				  uint32_t id,
+				  uint64_t *usr_data)
 {
 	struct sonic_db_data *db_data = evid_to_db_va(evl, id);
-	return db_data->primed == sonic_intr_get_fire_data32() ?
-	       db_data->usr_data : 0;
+	*usr_data = db_data->primed == sonic_intr_get_fire_data32() ?
+		    db_data->usr_data : 0;
+	return db_data;
 }
 
 static inline void
-sonic_intr_db_primed_usr_data_put(struct sonic_event_list *evl,
-				  uint32_t id)
+sonic_intr_db_primed_usr_data_put(struct sonic_db_data *db_data)
 {
-	struct sonic_db_data *db_data = evid_to_db_va(evl, id);
 	db_data->usr_data = 0;
 }
 
 static inline bool
 sonic_intr_db_fired_chk(struct sonic_event_list *evl,
-			uint32_t id)
+			uint32_t id,
+			uint32_t *fired_val)
 {
 	struct sonic_db_data *db_data = evid_to_db_va(evl, id);
+	*fired_val = db_data->fired;
 	return db_data->fired == sonic_intr_get_fire_data32();
 }
 
@@ -128,6 +130,7 @@ sonic_intr_db_fired_clr(struct sonic_event_list *evl,
 
 static int sonic_poll_ev_list(struct sonic_event_list *evl, int budget, struct sonic_work_data *work)
 {
+	struct sonic_db_data *db_data;
 	uint32_t id, first_id, next_id;
 	uint32_t loop_count = 0;
 	uint64_t usr_data;
@@ -145,7 +148,7 @@ static int sonic_poll_ev_list(struct sonic_event_list *evl, int budget, struct s
 				break;
 		}
 		next_id = id + 1;
-		usr_data = sonic_intr_db_primed_usr_data_get(evl, id);
+		db_data = sonic_intr_db_primed_usr_data_get(evl, id, &usr_data);
 		if (usr_data) {
 
 			//OSAL_LOG_DEBUG("found ev id %d with data 0x%llx\n",
@@ -154,7 +157,7 @@ static int sonic_poll_ev_list(struct sonic_event_list *evl, int budget, struct s
 				evl->next_used_evid = next_id;
 			work->ev_data[found].evid = id;
 			work->ev_data[found].data = usr_data;
-			sonic_intr_db_primed_usr_data_put(evl, id);
+			sonic_intr_db_primed_usr_data_put(db_data);
 			found++;
 		} else {
 			/* Expect this event to trigger soon */
@@ -192,6 +195,7 @@ static void sonic_ev_work_handler(struct work_struct *work)
 	uint32_t complete_count = 0;
 	uint32_t incomplete_count = 0;
 	uint32_t prev_ev_count;
+	uint32_t fired_val;
 	uint32_t i;
 	int npolled = 0;
 
@@ -203,7 +207,7 @@ static void sonic_ev_work_handler(struct work_struct *work)
 			continue;
 
 		/* poll status and release evid only after fired data have been written */
-		if (sonic_intr_db_fired_chk(evl, evd->evid)) {
+		if (sonic_intr_db_fired_chk(evl, evd->evid, &fired_val)) {
 			if (pnso_request_poller((void *) evd->data) != EBUSY) {
 				evd->data = 0;
 				sonic_intr_db_fired_clr(evl, evd->evid);
@@ -227,15 +231,15 @@ static void sonic_ev_work_handler(struct work_struct *work)
 		swd->timestamp = cur_ts;
 
 	if (incomplete_count) {
-		if ((swd->timestamp - cur_ts) > SONIC_EV_WORK_TIMEOUT) {
+		if ((cur_ts - swd->timestamp) > SONIC_EV_WORK_TIMEOUT) {
 			OSAL_LOG_WARN("timed out work item %u with %u events\n",
 				      work_id, incomplete_count);
 			pnso_poll_debug_set(true);
 			for (i = 0; i < swd->ev_count; i++) {
 				evd = &swd->ev_data[i];
 				if (evd->data) {
-					if (!sonic_intr_db_fired_chk(evl, evd->evid))
-						OSAL_LOG_ERROR("ev %u evid %d never fired\n", i, evd->evid);
+					if (!sonic_intr_db_fired_chk(evl, evd->evid, &fired_val))
+						OSAL_LOG_ERROR("ev %u evid %d never fired: val 0x%x\n", i, evd->evid, fired_val);
 					pnso_request_poller((void *)evd->data);
 
 					evd->data = 0;

@@ -63,6 +63,10 @@ cpdc_poll(const struct service_info *svc_info)
 			} else {
 				OSAL_LOG_DEBUG("csd_valid.  err: %d", err);
 			}
+		} else {
+			if (poll_debug_sense) {
+				OSAL_LOG_ERROR("no error and output_data_len %u partial_data %u", status_desc->csd_output_data_len, status_desc->csd_partial_data);
+			}
 		}
 		goto out;
 	}

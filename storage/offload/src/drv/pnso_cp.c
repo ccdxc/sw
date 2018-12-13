@@ -305,9 +305,9 @@ compress_poll(const struct service_info *svc_info)
 				CPDC_PAD_STATUS_DATA) ? PNSO_OK : EBUSY;
 		if (err) {
 			if (poll_debug_sense) {
-				OSAL_LOG_ERROR("cp/pad async/poll mode.  err: %d", err);
+				OSAL_LOG_ERROR("cp/pad csd_integrity_data 0x"PRIx64".  err: %d", status_desc->csd_integrity_data, err);
 			} else {
-				OSAL_LOG_DEBUG("cp/pad async/poll mode.  err: %d", err);
+				OSAL_LOG_DEBUG("cp/pad csd_integrity_data 0x"PRIx64".  err: %d", status_desc->csd_integrity_data, err);
 			}
 		}
 		goto out;
