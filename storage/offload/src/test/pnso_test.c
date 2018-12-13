@@ -25,6 +25,7 @@
 
 static osal_atomic_int_t g_shutdown;
 static osal_atomic_int_t g_shutdown_complete;
+static osal_atomic_int_t g_testcase_active;
 
 #define TEST_SHUTDOWN_TIMEOUT (5 * OSAL_NSEC_PER_SEC)
 
@@ -904,13 +905,19 @@ static void batch_completion_common(struct batch_context *batch_ctx)
 static void batch_completion_safe_cb(void *cb_ctx, struct pnso_service_result *svc_res)
 {
 	struct batch_context *batch_ctx = (struct batch_context *) cb_ctx;
-	struct worker_context *worker_ctx = batch_get_worker_ctx(batch_ctx);
+	struct worker_context *worker_ctx;
 
 	PNSO_LOG_DEBUG("batch_completion_safe_cb cb_ctx=0x%llx\n",
 		       (unsigned long long) cb_ctx);
 
+	if (0 == osal_atomic_read(&g_testcase_active)) {
+		PNSO_LOG_ERROR("Batch completion callback while test inactive!\n");
+		return;
+	}
+
 	batch_completion_common(batch_ctx);
 
+	worker_ctx = batch_get_worker_ctx(batch_ctx);
 	if (!worker_ctx || !worker_queue_enqueue_safe(worker_ctx->complete_q, batch_ctx))
 		PNSO_LOG_ERROR("Failed to enqueue batch_ctx to complete_q!\n");	
 }
@@ -918,13 +925,19 @@ static void batch_completion_safe_cb(void *cb_ctx, struct pnso_service_result *s
 static void batch_completion_cb(void *cb_ctx, struct pnso_service_result *svc_res)
 {
 	struct batch_context *batch_ctx = (struct batch_context *) cb_ctx;
-	struct worker_context *worker_ctx = batch_get_worker_ctx(batch_ctx);
+	struct worker_context *worker_ctx;
 
 	PNSO_LOG_DEBUG("batch_completion_cb cb_ctx=0x%llx\n",
 		       (unsigned long long) cb_ctx);
 
+	if (0 == osal_atomic_read(&g_testcase_active)) {
+		PNSO_LOG_ERROR("Batch completion callback while test inactive!\n");
+		return;
+	}
+
 	batch_completion_common(batch_ctx);
 
+	worker_ctx = batch_get_worker_ctx(batch_ctx);
 	if (!worker_ctx || !worker_queue_enqueue(worker_ctx->complete_q, batch_ctx))
 		PNSO_LOG_ERROR("Failed to enqueue batch_ctx to complete_q!\n");	
 }
@@ -2241,6 +2254,7 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 	ctx->start_time = last_active_ts;
 	next_status_time = desc->status_interval;
 	PNSO_LOG_DEBUG("DEBUG: entering testcase while loop\n");
+	osal_atomic_set(&g_testcase_active, 1);
 	while (req_completion_count < testcase->repeat) {
 		loop_count++;
 		worker_ctx = ctx->worker_ctxs[worker_id];
@@ -2351,6 +2365,7 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 			worker_id = 0;
 		}
 	}
+	osal_atomic_set(&g_testcase_active, 0);
 	PNSO_LOG_DEBUG("DEBUG: exiting testcase while loop\n");
 
 	/* Final tally for stats */

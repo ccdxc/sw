@@ -705,7 +705,6 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 	struct sonic_accel_ring *ring = svc_info->si_seq_info.sqi_ring;
 
 	struct lif *lif;
-	struct queue *q, *status_q;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -722,20 +721,19 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 		goto out;
 	}
 
-	err = sonic_get_seq_sq(lif, qtype, &q);
+	err = sonic_get_seq_sq(lif, qtype, &seq_spec->sqs_seq_q);
 	if (err) {
 		OSAL_ASSERT(!err);
 		goto out;
 	}
 
-	err = sonic_get_seq_statusq(lif, SONIC_QTYPE_CPDC_STATUS, &status_q);
+	err = sonic_get_seq_statusq(lif, SONIC_QTYPE_CPDC_STATUS, &seq_spec->sqs_seq_status_q);
 	if (err) {
 		goto out;
 	}
 
-	seq_status_desc = (uint8_t *) sonic_q_consume_entry(status_q, &index);
+	seq_status_desc = (uint8_t *) sonic_q_consume_entry(seq_spec->sqs_seq_status_q, &index);
 	if (!seq_status_desc) {
-		sonic_put_seq_statusq(status_q);
 		err = EINVAL;
 		OSAL_LOG_ERROR("failed to obtain sequencer statusq desc! err: %d",
 				err);
@@ -745,12 +743,10 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 	svc_info->si_seq_info.sqi_status_total_takes++;
 	seq_info->sqi_status_desc = seq_status_desc;
 
-	seq_spec->sqs_seq_q = q;
-	seq_spec->sqs_seq_status_q = status_q;
 	/* skip sqs_seq_next_q/sqs_seq_next_status_q not needed for comp+hash */
 
 	cp_desc->cd_db_addr = sonic_get_lif_local_dbaddr();
-	cp_desc->cd_db_data = sonic_q_ringdb_data(status_q, index);
+	cp_desc->cd_db_data = sonic_q_ringdb_data(seq_spec->sqs_seq_status_q, index);
 	cp_desc->u.cd_bits.cc_db_on = 1;
 
 	chain_params->ccp_cmd.ccpc_next_doorbell_en = 1;
@@ -797,7 +793,6 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 	struct sonic_accel_ring *ring = svc_info->si_seq_info.sqi_ring;
 
 	struct lif *lif;
-	struct queue *status_q;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -813,16 +808,15 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 		goto out;
 	}
 
-	err = sonic_get_seq_statusq(lif, SONIC_QTYPE_CPDC_STATUS, &status_q);
+	err = sonic_get_seq_statusq(lif, SONIC_QTYPE_CPDC_STATUS, &seq_spec->sqs_seq_status_q);
 	if (err) {
 		OSAL_LOG_ERROR("failed to obtain sequencer statusq err: %d",
 				err);
 		goto out;
 	}
 
-	seq_status_desc = (uint8_t *) sonic_q_consume_entry(status_q, &index);
+	seq_status_desc = (uint8_t *) sonic_q_consume_entry(seq_spec->sqs_seq_status_q, &index);
 	if (!seq_status_desc) {
-		sonic_put_seq_statusq(status_q);
 		err = EINVAL;
 		OSAL_LOG_ERROR("failed to obtain sequencer statusq desc! err: %d",
 				err);
@@ -832,7 +826,6 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 	svc_info->si_seq_info.sqi_status_total_takes++;
 	seq_info->sqi_status_desc = seq_status_desc;
 
-	seq_spec->sqs_seq_status_q = status_q;
 	/* skip sqs_seq_next_q/sqs_seq_next_status_q not needed for cp+pad */
 
 	chain_params->ccp_next_db_spec.nds_addr =
@@ -841,7 +834,7 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 		cpu_to_be64(CPDC_PAD_STATUS_DATA);
 
 	cp_desc->cd_db_addr = sonic_get_lif_local_dbaddr();
-	cp_desc->cd_db_data = sonic_q_ringdb_data(status_q, index);
+	cp_desc->cd_db_data = sonic_q_ringdb_data(seq_spec->sqs_seq_status_q, index);
 	cp_desc->u.cd_bits.cc_db_on = 1;
 
 	chain_params->ccp_cmd.ccpc_next_doorbell_en = 1;
