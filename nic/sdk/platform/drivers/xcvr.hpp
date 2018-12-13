@@ -15,6 +15,18 @@ namespace platform {
 #define XCVR_SPROM_READ_MAX     10
 #define XCVR_SPROM_READ_SIZE    128
 
+#define AN_USER_CAP_10GBKR     0x4
+#define AN_USER_CAP_40GBKR4    0x8
+#define AN_USER_CAP_40GBCR4    0x10
+#define AN_USER_CAP_100GBKP4   0x40
+#define AN_USER_CAP_100GBKR4   0x80
+#define AN_USER_CAP_100GBCR4   0x100
+#define AN_USER_CAP_25GBKRCR_S 0x200
+#define AN_USER_CAP_25GBKRCR   0x400
+
+#define AN_FEC_REQ_25GB_RSFEC 0x2
+#define AN_FEC_REQ_25GB_FCFEC 0x4
+
 using sdk::linkmgr::xcvr_event_notify_t;
 using sdk::linkmgr::port_args_t;
 using sdk::types::xcvr_type_t;
@@ -23,12 +35,13 @@ using sdk::types::cable_type_t;
 using sdk::types::xcvr_state_t;
 
 typedef struct xcvr_s {
-    xcvr_type_t   type;         // QSFP28, QSFP, SFP
-    cable_type_t  cable_type;   // CU, Fiber
-    xcvr_state_t  state;
-    xcvr_pid_t    pid;
-    uint8_t       sprom_read_count;
-    uint8_t       cache[XCVR_SPROM_CACHE_SIZE];
+    xcvr_type_t    type;         // QSFP28, QSFP, SFP
+    cable_type_t   cable_type;   // CU, Fiber
+    xcvr_state_t   state;
+    xcvr_pid_t     pid;
+    uint8_t        sprom_read_count;
+    port_an_args_t port_an_args;
+    uint8_t        cache[XCVR_SPROM_CACHE_SIZE];
 } __PACK__ xcvr_t;
 
 extern xcvr_t g_xcvr[XCVR_MAX_PORTS];
@@ -83,6 +96,22 @@ inline cable_type_t
 cable_type (int port)
 {
     return g_xcvr[port].cable_type;
+}
+
+inline port_an_args_t*
+xcvr_get_an_args (int port)
+{
+    return &g_xcvr[port].port_an_args;
+}
+
+inline void
+xcvr_set_an_args (int port, uint32_t user_cap,
+                  bool fec_ability, uint32_t fec_request)
+{
+    port_an_args_t *port_an_args = xcvr_get_an_args(port);
+    port_an_args->user_cap    = user_cap;
+    port_an_args->fec_ability = fec_ability;
+    port_an_args->fec_request = fec_request;
 }
 
 inline void

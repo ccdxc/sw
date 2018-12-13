@@ -211,7 +211,16 @@ xcvr_event_port_get_ht_cb (void *ht_entry, void *ctxt)
 
     if (xcvr_event_info->state == xcvr_state_t::XCVR_SPROM_READ) {
         // update cable type
-        port_args.cable_type  = xcvr_event_info->cable_type;
+        port_args.cable_type   = xcvr_event_info->cable_type;
+        port_args.port_an_args = xcvr_event_info->port_an_args;
+
+        HAL_TRACE_DEBUG("port: {}, xcvr_port: {}, "
+                        "user_cap: {}, fec_ability: {}, fec_request: {}",
+                        port_args.port_num,
+                        xcvr_port,
+                        port_args.port_an_args->user_cap,
+                        port_args.port_an_args->fec_ability,
+                        port_args.port_an_args->fec_request);
 
         if (port_args.user_admin_state ==
                 port_admin_state_t::PORT_ADMIN_STATE_UP) {
@@ -577,6 +586,17 @@ port_args_xcvr_set (port_args_t *port_args)
             if (port_args->cable_type == cable_type_t::CABLE_TYPE_NONE) {
                 port_args->cable_type = cable_type_t::CABLE_TYPE_CU;
             }
+
+            port_args->port_an_args =
+                            sdk::platform::xcvr_get_an_args(xcvr_port-1);
+
+            HAL_TRACE_DEBUG("port: {}, xcvr_port: {}, "
+                            "user_cap: {}, fec_ability: {}, fec_request: {}",
+                            port_args->port_num,
+                            xcvr_port,
+                            port_args->port_an_args->user_cap,
+                            port_args->port_an_args->fec_ability,
+                            port_args->port_an_args->fec_request);
 
             switch (port_args->cable_type) {
                 case cable_type_t::CABLE_TYPE_FIBER:

@@ -456,7 +456,9 @@ port::port_serdes_an_start (void)
     }
 
     // start AN
-    return serdes_fns()->serdes_an_start(port_sbus_addr(0), &serdes_info_an);
+    return serdes_fns()->serdes_an_start(port_sbus_addr(0), &serdes_info_an,
+                                         user_cap(), fec_ability(),
+                                         fec_request());
 }
 
 bool

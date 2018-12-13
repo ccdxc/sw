@@ -135,11 +135,18 @@ typedef enum xcvr_pid_s {
     XCVR_PID_SFP_10GBASE_ER,
 } xcvr_pid_t;
 
+typedef struct port_an_args_s {
+    bool         fec_ability;
+    uint32_t     user_cap;
+    uint32_t     fec_request;
+} port_an_args_t;
+
 typedef struct xcvr_event_info_s {
-    uint32_t     port_num;
-    xcvr_state_t state;
-    xcvr_pid_t   pid;
-    cable_type_t cable_type;
+    uint32_t       port_num;
+    xcvr_state_t   state;
+    xcvr_pid_t     pid;
+    cable_type_t   cable_type;
+    port_an_args_t *port_an_args;
 } xcvr_event_info_t;
 
 }    // namespace types
@@ -159,6 +166,7 @@ using sdk::types::hbm_addr_t;
 using sdk::types::q_notify_mode_t;
 using sdk::types::cable_type_t;
 using sdk::types::xcvr_event_info_t;
+using sdk::types::port_an_args_t;
 
 #endif    // __SDK_TYPES_HPP__
 

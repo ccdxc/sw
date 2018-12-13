@@ -707,6 +707,12 @@ port_create (port_args_t *args)
     // set the source mac addr for pause frames
     port_p->port_mac_set_pause_src_addr(args->mac_addr);
 
+    if (args->port_an_args != NULL) {
+        port_p->set_user_cap(args->port_an_args->user_cap);
+        port_p->set_fec_ability(args->port_an_args->fec_ability);
+        port_p->set_fec_request(args->port_an_args->fec_request);
+    }
+
     // disable a port to invoke soft reset
     ret = port::port_disable(port_p);
     if (ret != SDK_RET_OK) {
@@ -839,6 +845,12 @@ port_update (void *pd_p, port_args_t *args)
         SDK_TRACE_DEBUG("Resetting MAC stats");
         port_p->port_mac_stats_reset(args->mac_stats_reset);
         port_p->port_mac_stats_reset(false);
+    }
+
+    if (args->port_an_args != NULL) {
+        port_p->set_user_cap(args->port_an_args->user_cap);
+        port_p->set_fec_ability(args->port_an_args->fec_ability);
+        port_p->set_fec_request(args->port_an_args->fec_request);
     }
 
     // Disable the port if any config has changed

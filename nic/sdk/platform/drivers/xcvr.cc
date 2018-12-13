@@ -91,9 +91,10 @@ xcvr_send_notification (int port) {
     memset(&xcvr_event_info, 0, sizeof(xcvr_event_info_t));
 
     // Front panel ports are 1 based
-    xcvr_event_info.port_num   = port + 1;
-    xcvr_event_info.state      = xcvr_state(port);
-    xcvr_event_info.cable_type = cable_type(port);
+    xcvr_event_info.port_num     = port + 1;
+    xcvr_event_info.state        = xcvr_state(port);
+    xcvr_event_info.cable_type   = cable_type(port);
+    xcvr_event_info.port_an_args = xcvr_get_an_args(port);
 
     if (g_xcvr_notify_cb) {
         switch (xcvr_state(port)) {
