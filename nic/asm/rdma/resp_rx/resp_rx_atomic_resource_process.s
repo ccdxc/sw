@@ -93,7 +93,7 @@ check_uw_uh:
 next:
     // did we reach end ? 
     // since we are comparing r1 before incrementing by 64, check with 448
-    beqi        r1, 448, error_completion
+    beqi        r1, 448, nak_rnr
     add         r1, r1, 64  //BD Slot
     b           loop
     nop         //BD Slot
@@ -146,6 +146,7 @@ loop_exit:
     // atomic_release_byte value is 0 as phv gets initialized to 0.
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_RELEASE_ATOMIC_RESOURCE)
     DMA_HBM_MEM2MEM_PHV2MEM_SETUP(DMA_CMD_BASE, s1.atomic_release_byte, s1.atomic_release_byte, r2)
+    //DMA_SET_WR_FENCE(DMA_CMD_MEM2MEM_T, DMA_CMD_BASE)
 
     CAPRI_RESET_TABLE_1_ARG()
     phvwrpair   CAPRI_PHV_FIELD(RKEY_INFO_P, va), K_ATOMIC_RKEY_INFO_VA, \
@@ -182,7 +183,7 @@ exit:
     nop.e
     nop
 
-#if 0
+//#if 0
 nak_rnr:
     /* When atomic resources are not available,
        fire an mpu only program which will eventually set table 0 valid bit to 1 prior to recirc
@@ -193,7 +194,7 @@ nak_rnr:
 
     phvwr.e     p.common.p4_intr_recirc, 1
     phvwr       p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_ATOMIC_RNR
-#endif
+//#endif
 
 error_completion:
 

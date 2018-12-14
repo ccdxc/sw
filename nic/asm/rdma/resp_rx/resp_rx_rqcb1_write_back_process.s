@@ -87,11 +87,11 @@ resp_rx_rqcb1_write_back_process:
     bcf             [c4], skip_updates_for_only
     tblwr           d.in_progress, CAPRI_KEY_FIELD(IN_TO_S_P, in_progress)   //BD Slot
 
-#if 0
+//#if 0
     // If atomic request, set busy to 0
     # c1: atomic
     tblwr.c1        d.busy, 0
-#endif
+//#endif
 
     seq         c2, CAPRI_KEY_FIELD(IN_TO_S_P, send_sge_opt), 1
     // updates for multi-packet case
