@@ -177,16 +177,14 @@ func StopExecCmd(cmdInfo *CommandInfo) error {
 	if process != nil {
 		pids := getChildPids(cmdInfo.Handle.(*exec.Cmd).Process.Pid)
 		if len(pids) != 0 {
-			pids = append(pids, cmdInfo.Handle.(*exec.Cmd).Process.Pid)
 			for _, pid := range pids {
 				if pid != 0 {
 					killCmd := []string{"sudo", "kill", "-SIGTERM", strconv.Itoa(pid)}
 					Utils.Run(killCmd, 0, false, true, nil)
 				}
 			}
-		} else {
-			cmdInfo.Handle.(*exec.Cmd).Process.Signal(syscall.SIGTERM)
 		}
+		cmdInfo.Handle.(*exec.Cmd).Process.Signal(syscall.SIGTERM)
 
 		time.Sleep(2 * time.Second)
 		//For bg command, exit code set to 0 as we killed it.
