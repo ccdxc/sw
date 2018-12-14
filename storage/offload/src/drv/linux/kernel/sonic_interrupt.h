@@ -66,6 +66,7 @@ struct sonic_work_data {
 	struct sonic_event_data ev_data[SONIC_ASYNC_BUDGET];
 	uint64_t timestamp;
 	uint32_t ev_count;
+	bool found_work;
 };
 
 struct sonic_event_list {
