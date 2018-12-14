@@ -176,14 +176,14 @@ header_type aq_rx_to_stage_rqcb1_t {
 header_type aq_rx_to_stage_cqcb_t {
     fields {
         cqcb_base_addr_hi                :   24;
-        cq_id                            :   24;
+        wqe_id                           :   16;
         log_num_cq_entries               :    4;
-        bth_se                           :    1;
         aqcb_addr                        :   28;
-        aq_id                            :   24;
+        cq_id                            :   24;
         status                           :    8;
+        op                               :    8;
         error                            :    1;
-        pad                              :   14;
+        pad                              :   15;
     }
 }
 
@@ -308,10 +308,10 @@ action rdma_stage0_aq_feedback_action () {
 
     // aq_feedback_header bits
     modify_field(rdma_aq_feedback_scr.feedback_type, rdma_aq_feedback.feedback_type);
-    modify_field(rdma_aq_feedback_scr.cq_num, rdma_aq_feedback.cq_num);
+    modify_field(rdma_aq_feedback_scr.wqe_id, rdma_aq_feedback.wqe_id);
     modify_field(rdma_aq_feedback_scr.status, rdma_aq_feedback.status);
-    modify_field(rdma_aq_feedback_scr.error, rdma_aq_feedback.error);
     modify_field(rdma_aq_feedback_scr.op, rdma_aq_feedback.op);
+    modify_field(rdma_aq_feedback_scr.error, rdma_aq_feedback.error);
 }
 
 action rdma_stage0_aq_feedback_action2 () {
@@ -549,14 +549,14 @@ action rdma_aq_rx_cqcb_process () {
 
     // to stage
     modify_field(to_s6_info_scr.cqcb_base_addr_hi, to_s6_info.cqcb_base_addr_hi);
-    modify_field(to_s6_info_scr.cq_id, to_s6_info.cq_id);
+    modify_field(to_s6_info_scr.wqe_id, to_s6_info.wqe_id);
     modify_field(to_s6_info_scr.log_num_cq_entries, to_s6_info.log_num_cq_entries);
-    modify_field(to_s6_info_scr.bth_se, to_s6_info.bth_se);
     modify_field(to_s6_info_scr.aqcb_addr, to_s6_info.aqcb_addr);    
 
-    modify_field(to_s6_info_scr.aq_id, to_s6_info.aq_id);
+    modify_field(to_s6_info_scr.cq_id, to_s6_info.cq_id);
     modify_field(to_s6_info_scr.status, to_s6_info.status);
     modify_field(to_s6_info_scr.error, to_s6_info.error);
+    modify_field(to_s6_info_scr.op, to_s6_info.op);
     modify_field(to_s6_info_scr.pad, to_s6_info.pad);
 
 }

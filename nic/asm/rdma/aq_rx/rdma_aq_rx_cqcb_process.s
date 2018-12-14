@@ -27,8 +27,11 @@ struct aq_rx_s6_t2_k k;
     
 #define K_CQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, cqcb_base_addr_hi)
 #define K_LOG_NUM_CQ_ENTRIES CAPRI_KEY_FIELD(IN_TO_S_P, log_num_cq_entries)
-#define K_AQCB_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, aqcb_addr_sbit0_ebit2, aqcb_addr_sbit27_ebit27)
+#define K_AQCB_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, aqcb_addr_sbit0_ebit3, aqcb_addr_sbit4_ebit27)
 #define K_CQ_ID CAPRI_KEY_FIELD(IN_TO_S_P, cq_id)
+#define K_ERROR CAPRI_KEY_FIELD(IN_TO_S_P, error)
+#define K_STATUS CAPRI_KEY_FIELD(IN_TO_S_P, status)
+#define K_WQE_ID CAPRI_KEY_RANGE(IN_TO_S_P, wqe_id_sbit0_ebit7, wqe_id_sbit8_ebit15)
     
 %%
     .param  rdma_aq_rx_eqcb_process

@@ -25,8 +25,8 @@ struct aq_tx_to_stage_sqcb_info_t {
 };
 
 struct aq_tx_to_stage_fb_info_t {
-    cq_num                  :  24;
-    pad                     :  104;
+    wqe_id                  :  16;
+    pad                     :  112;
 };
 
 #endif //__AQ_TX_ARGS_H

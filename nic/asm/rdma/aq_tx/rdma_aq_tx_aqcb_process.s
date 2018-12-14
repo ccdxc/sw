@@ -64,7 +64,7 @@ rdma_aq_tx_aqcb_process:
     
         CAPRI_RESET_TABLE_0_ARG()
 
-        phvwr       CAPRI_PHV_FIELD(TO_S_FB_INFO_P, cq_num), d.cq_id
+        phvwr       CAPRI_PHV_FIELD(TO_S_FB_INFO_P, wqe_id), AQ_C_INDEX_HX
 
         // Compute WQE address & encode
         add         r3, d.phy_base_addr, AQ_C_INDEX_HX, AQ_WQE_T_LOG_SIZE_BYTES

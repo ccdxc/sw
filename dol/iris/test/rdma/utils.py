@@ -396,6 +396,10 @@ def PopulateAdminPreQStates(tc):
     lif.aq.cq.qstate.Read()
     tc.pvtdata.aq_cq_pre_qstate = copy.deepcopy(lif.aq.cq.qstate.data)
 
+    #aq_eq
+    lif.aq.eq.qstate.Read()
+    tc.pvtdata.eq_pre_qstate = copy.deepcopy(lif.aq.eq.qstate.data)
+
     #async_eq
     lif.async_eq.qstate.Read()
     tc.pvtdata.async_eq_pre_qstate = lif.async_eq.qstate.data

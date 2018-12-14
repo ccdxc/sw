@@ -12,7 +12,7 @@ struct aq_tx_s7_t0_k k;
     
 #define K_COMMON_GLOBAL_QID CAPRI_KEY_RANGE(phv_global_common, qid_sbit0_ebit4, qid_sbit21_ebit23)
 #define K_COMMON_GLOBAL_QTYPE CAPRI_KEY_FIELD(phv_global_common, qtype)
-#define K_CQ_NUM CAPRI_KEY_RANGE(IN_TO_S_P, cq_num_sbit0_ebit5, cq_num_sbit22_ebit23)
+#define K_WQE_ID  CAPRI_KEY_RANGE(IN_TO_S_P, wqe_id_sbit0_ebit5, wqe_id_sbit14_ebit15)
 #define K_CB_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, cb_addr_sbit0_ebit31, cb_addr_sbit32_ebit33)
     
 %%
@@ -26,9 +26,9 @@ rdma_aq_tx_feedback_process:
     seq           c1, r1[4:2], STAGE_7
     bcf           [!c1], bubble_to_next_stage
 
+    // OP_TYPE, ERROR and STATUS is set in prior stages
     phvwr       p.rdma_feedback.feedback_type, RDMA_AQ_FEEDBACK
-    phvwr       p.rdma_feedback.aq_completion.status, 0
-    phvwr       p.rdma_feedback.aq_completion.cq_num, K_CQ_NUM
+    phvwr       p.rdma_feedback.aq_completion.wqe_id, K_WQE_ID
 
     //get DMA cmd entry based on dma_cmd_index
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_RDMA_FEEDBACK)

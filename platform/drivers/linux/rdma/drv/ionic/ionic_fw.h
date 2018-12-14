@@ -340,7 +340,8 @@ struct ionic_v1_cqe {
 	union {
 		struct {
 			__le16		cmd_idx;
-			__u8		rsvd[18];
+			__u8		cmd_op;
+			__u8		rsvd[17];
 			__le16		old_sq_cindex;
 			__le16		old_rq_cq_cindex;
 		} admin;
@@ -732,6 +733,7 @@ enum ionic_v1_admin_op {
 /* admin queue v1 cqe status */
 enum ionic_v1_admin_status {
 	IONIC_V1_ASTS_OK,
+	IONIC_V1_ASTS_BAD_CMD,
 	IONIC_V1_ASTS_BAD_INDEX,
 	IONIC_V1_ASTS_BAD_STATE,
 	IONIC_V1_ASTS_BAD_TYPE,

@@ -814,11 +814,20 @@ struct rqwqe_base_t {
 #define     CQ_STATUS_RNR_RETRY_EXCEEDED    12
 #define     CQ_STATUS_XRC_VIO_ERR           13
 
+#define     AQ_CQ_STATUS_SUCCESS            0
+#define     AQ_CQ_STATUS_BAD_CMD            1
+#define     AQ_CQ_STATUS_BAD_INDEX          2
+#define     AQ_CQ_STATUS_BAD_STATE          3
+#define     AQ_CQ_STATUS_BAD_TYPE           4
+#define     AQ_CQ_STATUS_BAD_ATTR           5
+
 struct cqe_t {
 
     union {
         struct {
-            rsvd: 160;
+            wqe_id: 16;
+            op_type: 8;
+            rsvd: 136;
             old_sq_cindex: 16;
             old_rq_cq_cindex: 16;
         } admin;
@@ -1327,13 +1336,6 @@ struct rdma_feedback_t {
             tx_psn: 24;
             pad: 8;
         }timer_expiry;
-        /* TYPE: RDMA_AQ_FEEDBACK */
-        struct {
-            cq_num: 24; 
-            status: 8;
-            error:  1;
-            pad: 47;
-        }aq_completion;
         /* TYPE: RDMA_SQ_DRAIN_FEEDBACK */
         struct {
             tx_psn: 24;
@@ -1346,11 +1348,11 @@ struct rdma_feedback_t {
 struct rdma_aq_feedback_t {
     feedback_type: 8;
     struct {
-        cq_num: 24; 
+        wqe_id:  16;
         status:  8;
-        error:   1;
         op:      8;
-        pad:     7;
+        error:   1;
+        pad:     15;
     }aq_completion;
     union {
         struct { 

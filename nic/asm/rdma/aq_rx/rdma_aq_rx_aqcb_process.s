@@ -14,8 +14,9 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define TO_S5_INFO to_s5_info    
 #define TO_S6_INFO to_s6_info
 
-#define K_OP k.{rdma_aq_feedback_op_sbit0_ebit6,rdma_aq_feedback_op_sbit7_ebit7}
-#define K_CQ_ID k.{rdma_aq_feedback_cq_num_sbit0_ebit7...rdma_aq_feedback_cq_num_sbit8_ebit23} 
+#define K_OP k.rdma_aq_feedback_op
+#define K_WQE_ID k.{rdma_aq_feedback_wqe_id_sbit0_ebit7...rdma_aq_feedback_wqe_id_sbit8_ebit15} 
+#define K_ERROR k.rdma_aq_feedback_error
 
 //create_qp params    
 #define K_CQP_PD k.{rdma_aq_feedback_cqp_pd_sbit0_ebit7...rdma_aq_feedback_cqp_pd_sbit16_ebit31}
@@ -68,7 +69,10 @@ process_feedback:
     
     seq         c1, k.rdma_aq_feedback_feedback_type, RDMA_AQ_FEEDBACK
     bcf         [!c1], exit
-    
+
+    seq         c1, K_ERROR, r0
+    bcf         [!c1], aq_feedback
+
     seq         c1, K_OP, AQ_OP_TYPE_CREATE_QP
     bcf         [c1], create_qp
     nop
@@ -78,17 +82,18 @@ process_feedback:
     nop
     
 aq_feedback:
-    
+
     #CQCB is loaded by req_rx and resp_rx flows in stage-5, table-2 for mutual
     #exclusive access. Do the same for aq_rx also
 
+    phvwrpair      p.cqe.admin.wqe_id, K_WQE_ID, p.cqe.admin.op_type, K_OP
     phvwr          p.cqe.qid, CAPRI_RXDMA_INTRINSIC_QID
-    phvwrpair      p.cqe.status[7:0], k.rdma_aq_feedback_status, p.cqe.error, k.rdma_aq_feedback_error
+    phvwrpair      p.cqe.status[7:0], k.rdma_aq_feedback_status, p.cqe.error, K_ERROR
     
     CAPRI_RESET_TABLE_0_ARG() //BD Slot
 
-    phvwr       CAPRI_PHV_RANGE(TO_S6_INFO, cq_id, status), CAPRI_KEY_RANGE(rdma_aq_feedback,cq_num_sbit0_ebit7, status)
-    phvwr       CAPRI_PHV_FIELD(TO_S6_INFO, error), k.rdma_aq_feedback_error
+    phvwr       CAPRI_PHV_RANGE(TO_S6_INFO, wqe_id, status), CAPRI_KEY_RANGE(rdma_aq_feedback,wqe_id_sbit0_ebit7, status)
+    phvwrpair   CAPRI_PHV_FIELD(TO_S6_INFO, cq_id), d.cq_id, CAPRI_PHV_FIELD(TO_S6_INFO, error), k.rdma_aq_feedback_error
 
     add         r2, d.cqcb_addr, r0
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, rdma_aq_rx_cqcb_mpu_only_process, r2)

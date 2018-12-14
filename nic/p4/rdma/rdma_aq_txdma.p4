@@ -146,7 +146,7 @@ header_type aq_tx_to_stage_rqcb_info_t {
 header_type aq_tx_to_stage_fb_stats_info_t {
     fields {
         cb_addr                          :   34;
-        cq_num                           :   24;
+        wqe_id                           :   16;
         nop                              :    1;
         create_cq                        :    1;
         create_qp                        :    1;
@@ -160,7 +160,7 @@ header_type aq_tx_to_stage_fb_stats_info_t {
         query_qp                         :    1;
         destroy_qp                       :    1;
         stats_dump                       :    1;
-        pad                              :   57;
+        pad                              :   65;
     }
 }
 
@@ -483,8 +483,8 @@ action aq_tx_feedback_process () {
     GENERATE_GLOBAL_K
 
     // to stage
-    modify_field(to_s7_fb_stats_info_scr.cq_num, to_s7_fb_stats_info.cq_num);
     modify_field(to_s7_fb_stats_info_scr.cb_addr, to_s7_fb_stats_info.cb_addr);
+    modify_field(to_s7_fb_stats_info_scr.wqe_id, to_s7_fb_stats_info.wqe_id);
     modify_field(to_s7_fb_stats_info_scr.pad, to_s7_fb_stats_info.pad);                                                   
     // stage to stage
     

@@ -32,14 +32,14 @@ struct aq_rx_to_stage_rqcb1_t {
 
 struct aq_rx_to_stage_cqcb_t {
     cqcb_base_addr_hi                :   24;
-    cq_id                            :   24;
+    wqe_id                           :   16;
     log_num_cq_entries               :    4;
-    bth_se                           :    1;
     aqcb_addr                        :   28;
-    aq_id                            :   24;
+    cq_id                            :   24;
     status                           :    8;
+    op                               :    8;
     error                            :    1;
-    pad                              :   14;
+    pad                              :   15;
 };
 
 #endif //__AQ_RX_ARGS_H

@@ -42,7 +42,7 @@ rdma_aq_tx_wqe_process:
 
     .brbegin
     br          r1[3:0]
-    nop         //BD slot
+    phvwr       p.rdma_feedback.aq_completion.op, r1[3:0]  // BD Slot
 
     .brcase     AQ_OP_TYPE_NOP
         b           prepare_feedback
@@ -57,25 +57,25 @@ rdma_aq_tx_wqe_process:
         b           reg_mr
         phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, reg_mr), 1 //BD Slot
     .brcase     AQ_OP_TYPE_STATS_HDRS
-        b           exit
+        b           report_bad_cmd
         phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, stats_hdrs), 1 //BD Slot
     .brcase     AQ_OP_TYPE_STATS_VALS
-        b           exit
+        b           report_bad_cmd
         phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, stats_vals), 1 //BD Slot
     .brcase     AQ_OP_TYPE_DEREG_MR
         b           dereg_mr
         phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, dereg_mr), 1 //BD Slot
     .brcase     AQ_OP_TYPE_RESIZE_CQ
-        b           exit
+        b           report_bad_cmd
         phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, resize_cq), 1 //BD Slot
     .brcase     AQ_OP_TYPE_DESTROY_CQ
-        b           exit
+        b           report_bad_cmd
         phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, destroy_cq), 1 //BD Slot
     .brcase     AQ_OP_TYPE_MODIFY_QP
         b           modify_qp
         phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, modify_qp), 1 //BD Slot
     .brcase     AQ_OP_TYPE_QUERY_QP
-        b           exit
+        b           report_bad_cmd
         phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, query_qp), 1 //BD Slot
     .brcase     AQ_OP_TYPE_DESTROY_QP
         b           destroy_qp
@@ -130,7 +130,7 @@ skip_mw:
     srl         r3, r3, CAPRI_SIZEOF_U64_BYTES
     // r5 = pt_base
     add         r5, d.{mr.tbl_index}.wx, r0
-    blt         r3, r5, report_failure
+    blt         r3, r5, report_bad_idx
     phvwrpair   p.key.pt_base, r5, p.key.host_addr, 1   // BD Slot
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_MR_KT_UPDATE)
     DMA_PHV2MEM_SETUP(r6, c2, key, key, r4)
@@ -428,7 +428,7 @@ qp_skip_dma_pt:
     add        r5, r7, r5
 
     //if barmap_end < tail_of_rq, report failure
-    blt        r2, r5, report_failure
+    blt        r2, r5, report_bad_attr
     nop
 
 qp_skip_rq_cmb:
@@ -440,7 +440,7 @@ qp_skip_rq_cmb:
     add        r5, r4, r5
 
     //if barmap_end < tail_of_sq, report failure
-    blt        r2, r5, report_failure
+    blt        r2, r5, report_bad_attr
     nop
 
     phvwr      p.sqcb0.hbm_sq_base_addr, r4[33:HBM_SQ_BASE_ADDR_SHIFT]
@@ -463,7 +463,7 @@ qp_no_skip_dma_pt:
 
     add         r2, d.{qp.rq_cq_id}.wx, r0
     add         r2, r2[23:0], r0
-    phvwrpair   p.rdma_feedback.aq_completion.op, AQ_OP_TYPE_CREATE_QP, p.rdma_feedback.create_qp.rq_cq_id, r2
+    phvwr       p.rdma_feedback.create_qp.rq_cq_id, r2
     phvwrpair   p.rdma_feedback.create_qp.rq_depth_log2, d.qp.rq_depth_log2, p.rdma_feedback.create_qp.rq_stride_log2, d.qp.rq_stride_log2
     add         r2, d.{qp.pd_id}.wx, r0
     phvwrpair   p.rdma_feedback.create_qp.rq_page_size_log2, d.qp.rq_page_size_log2, p.rdma_feedback.create_qp.pd, r2
@@ -518,7 +518,7 @@ stats_dump:
     .brcase     13
     .brcase     14
     .brcase     15
-        b           exit
+        b           report_bad_type
         nop
     .brend
 
@@ -678,9 +678,26 @@ prepare_feedback:
 
     nop.e
     nop         //Exit Slot
-                                  
-report_failure:
-    //TBD: post completion error using feedback
+
+report_bad_cmd:
+    b           prepare_feedback
+    phvwrpair   p.rdma_feedback.aq_completion.status, AQ_CQ_STATUS_BAD_CMD, p.rdma_feedback.aq_completion.error, 1
+
+report_bad_idx:
+    b           prepare_feedback
+    phvwrpair   p.rdma_feedback.aq_completion.status, AQ_CQ_STATUS_BAD_INDEX, p.rdma_feedback.aq_completion.error, 1
+
+report_bad_state:
+    b           prepare_feedback
+    phvwrpair   p.rdma_feedback.aq_completion.status, AQ_CQ_STATUS_BAD_STATE, p.rdma_feedback.aq_completion.error, 1
+
+report_bad_type:
+    b           prepare_feedback
+    phvwrpair   p.rdma_feedback.aq_completion.status, AQ_CQ_STATUS_BAD_TYPE, p.rdma_feedback.aq_completion.error, 1
+
+report_bad_attr:
+    b           prepare_feedback
+    phvwrpair   p.rdma_feedback.aq_completion.status, AQ_CQ_STATUS_BAD_ATTR, p.rdma_feedback.aq_completion.error, 1
 
 exit: 
     phvwr.e       p.common.p4_intr_global_drop, 1

@@ -209,7 +209,9 @@ class RdmaCqDescriptorSend(Packet):
 
 class RdmaCqDescriptorAdmin(Packet):
     fields_desc = [
-        BitField("rsvd", 0, 160),
+        ShortField("wqe_id", 0),
+        ByteField("op", 0),
+        BitField("rsvd", 0, 136),
         ShortField("old_sq_cindex", 0),
         ShortField("old_rq_cq_cindex", 0),
         IntField("status", 0),
@@ -1205,6 +1207,8 @@ class RdmaCqDescriptorAdminObject(base.FactoryObjectBase):
 
     def Init(self, spec):
         super().Init(spec)
+        self.wqe_id = self.spec.fields.wqe_id if hasattr(self.spec.fields, 'wqe_id') else 0
+        self.op = self.spec.fields.op if hasattr(self.spec.fields, 'op') else 0
         self.old_sq_cindex = self.spec.fields.old_sq_cindex if hasattr(self.spec.fields, 'old_sq_cindex') else 0
         self.old_rq_cq_cindex = self.spec.fields.old_rq_cq_cindex if hasattr(self.spec.fields, 'old_rq_cq_cindex') else 0
         self.status = self.spec.fields.status if hasattr(self.spec.fields, 'status') else 0
@@ -1219,6 +1223,8 @@ class RdmaCqDescriptorAdminObject(base.FactoryObjectBase):
 
     def __create_desc(self):
         self.desc = RdmaCqDescriptorAdmin(
+            wqe_id=self.wqe_id,
+            op=self.op,
             old_sq_cindex=self.old_sq_cindex,
             old_rq_cq_cindex=self.old_rq_cq_cindex,
             qid=self.qid,

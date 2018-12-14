@@ -20,13 +20,32 @@ descriptors:
         id      : EXP_CQ_DESC
         template: ref://factory/templates/id=DESC_RDMA_CQ_ADMIN
         fields:
+            wqe_id : ref://testcase/pvtdata/aq_pre_qstate/c_index0
+            op     : 0  # ADMIN_NOOP
             qid: ref://testcase/pvtdata/aq/id
             status : 0  # CQ_STATUS_SUCCESS
             color  : callback://rdma/rdma/GetAdminCQExpColor/cq_wqe_num=0
             error  : 0
             type   : 0 #CQE_TYPE_ADMIN
 
+    - descriptor:
+        id      : EXP_EQ_DESC
+        template: ref://factory/templates/id=DESC_RDMA_EQ
+        fields:
+            qid    : ref://testcase/pvtdata/aq/cq/id
+            type   : callback://rdma/rdma/GetEQEtypeCQ
+            code   : callback://rdma/rdma/GetEQEcodeCQNotify
+            color  : callback://rdma/rdma/GetEQExpColor
+
 session:
+    - step:
+        trigger:
+            doorbell:
+                object: ref://testcase/pvtdata/aq/cq/rings/id=CQ_ARM/doorbell
+                fields:
+                    upd : 0xD # Increment PI and DB_SCHED_EVAL
+        expect:
+
     - step:
         trigger:
             descriptors:
@@ -44,6 +63,9 @@ session:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=EXP_CQ_DESC
                     ring    : ref://testcase/pvtdata/aq/cq/rings/id=CQ
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_EQ_DESC
+                    ring    : ref://testcase/pvtdata/aq/eq/rings/id=EQ
 
     #set CI for CQ ring to that of proxy CI in DB data
     - step:

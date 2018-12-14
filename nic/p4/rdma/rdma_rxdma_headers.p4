@@ -293,10 +293,10 @@ header_type rdma_aq_completion_feedback_header_t {
     fields {
         common_header_bits  : 160;
         feedback_type       : 8;
-        cq_num              : 24;
+        wqe_id              : 16;
         status              : 8;
-        error               : 1;
         op                  : 8;
+        error               : 1;
     }
 }
 
