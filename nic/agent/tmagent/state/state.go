@@ -138,7 +138,7 @@ func (s *PolicyState) connectSyslog(ctx context.Context) error {
 // create a hash key to flatten collector config
 func (s *PolicyState) getCollectorKey(vrf uint64, policy *tpmprotos.FwlogPolicy, m monitoring.ExportConfig) string {
 	// keys that requires new connection to collector
-	return fmt.Sprintf("%d:%s:%s:%s:%s:%s:%s:%s", vrf, policy.ObjectMeta.Name, policy.Spec.Format, policy.Spec.Filter, policy.Spec.Config.FacilityOverride, policy.Spec.Config.Prefix, m.Destination, m.Transport)
+	return fmt.Sprintf("%d:%s:%s:%s:%s:%s:%s", vrf, policy.ObjectMeta.Name, policy.Spec.Format, policy.Spec.Filter, policy.Spec.Config.FacilityOverride, m.Destination, m.Transport)
 }
 
 // get vrf from netagent
@@ -456,7 +456,7 @@ func (s *PolicyState) DeleteFwLogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 
 	vrf, err := s.getvrf(p.Tenant, p.Namespace)
 	if err != nil {
-		return fmt.Errorf("failed to get tenant for %s/%s", p.Tenant, p.Namespace)
+		return fmt.Errorf("failed to get vrf for %s/%s", p.Tenant, p.Namespace)
 	}
 
 	delList := map[string]bool{}

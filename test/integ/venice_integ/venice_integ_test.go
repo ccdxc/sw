@@ -758,16 +758,6 @@ func (it *veniceIntegSuite) TestTelemetryPolicyMgr(c *C) {
 		return false, err
 	}, "failed to find stats policy")
 
-	AssertEventually(c, func() (bool, interface{}) {
-		fp, err := it.getFwlogPolicy(tenantName)
-		if err == nil {
-			Assert(c, reflect.DeepEqual(fp.GetSpec(), tpm.GetDefaultFwlogSpec()),
-				fmt.Sprintf("fwlog spec didn't match: got %+v, expectd %+v", fp.GetSpec(), tpm.GetDefaultFwlogSpec()))
-			return true, nil
-		}
-		return false, nil
-	}, "failed to find fwlog policy")
-
 	_, err = it.deleteTenant(tenantName)
 	AssertOk(c, err, "Error deleting tenant")
 

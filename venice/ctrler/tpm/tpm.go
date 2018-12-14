@@ -277,16 +277,6 @@ func (pm *PolicyManager) processExportPolicy(eventType kvstore.WatchEventType, p
 	}
 }
 
-// GetDefaultFwlogSpec returns the default fwlog policy spec that is used
-func GetDefaultFwlogSpec() telemetry.FwlogPolicySpec {
-	defaultFwlogSpec := telemetry.FwlogPolicySpec{}
-	// Set filter to be an array of length one
-	// The content will be set to the venice.default
-	defaultFwlogSpec.Filter = []string{"replacedByDefault"}
-	defaultFwlogSpec.Defaults("")
-	return defaultFwlogSpec
-}
-
 // GetDefaultStatsSpec returns the default stats policy spec that is used
 func GetDefaultStatsSpec() telemetry.StatsPolicySpec {
 	defaultStatsSpec := telemetry.StatsPolicySpec{}
@@ -316,21 +306,6 @@ func (pm *PolicyManager) processTenants(ctx context.Context, eventType kvstore.W
 			}
 		}
 
-		// create fwlog policy
-		fwlogPolicy := &telemetry.FwlogPolicy{
-			ObjectMeta: api.ObjectMeta{
-				Name:   tenant.GetName(),
-				Tenant: tenant.GetName(),
-			},
-			Spec: GetDefaultFwlogSpec(),
-		}
-
-		if _, err := pm.client.MonitoringV1().FwlogPolicy().Get(ctx, &fwlogPolicy.ObjectMeta); err != nil {
-			if _, err := pm.client.MonitoringV1().FwlogPolicy().Create(ctx, fwlogPolicy); err != nil {
-				pmLog.Errorf("failed to create fwlog policy for tenant %s, error: %s", tenant.GetName(), err)
-				return err
-			}
-		}
 	case kvstore.Updated: // no-op
 
 	case kvstore.Deleted:
