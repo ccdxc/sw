@@ -5,3 +5,4 @@ platform/src/third-party/app/pciutils/pciutils-3.5.6.tar.gz
 platform/src/sim/qemu/qemu-2.9.0.tar.xz
 platform/src/third-party/rdma/*
 platform/src/app/captrace/libs/*
+platform/drivers/esxi/vib/*
