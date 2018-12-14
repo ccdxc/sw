@@ -94,6 +94,19 @@ func (e *searchHooks) userContext(ctx context.Context, in interface{}) (context.
 	return nctx, in, false, nil
 }
 
+func (e *searchHooks) registerSearchHooks(svc apigw.APIGatewayService) error {
+	methods := []string{"Query", "PolicyQuery"}
+	for _, method := range methods {
+		prof, err := svc.GetServiceProfile(method)
+		if err != nil {
+			return err
+		}
+		prof.AddPreAuthZHook(e.operations)
+		prof.AddPreCallHook(e.userContext)
+	}
+	return nil
+}
+
 func registerSearchHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	gw := apigwpkg.MustGetAPIGateway()
 	grpcaddr := globals.APIServer
@@ -102,16 +115,7 @@ func registerSearchHooks(svc apigw.APIGatewayService, l log.Logger) error {
 		permissionGetter: rbac.GetPermissionGetter(globals.APIGw, grpcaddr, gw.GetResolver()),
 		logger:           l,
 	}
-	methods := []string{"Query", "PolicyQuery"}
-	for _, method := range methods {
-		prof, err := svc.GetServiceProfile(method)
-		if err != nil {
-			return err
-		}
-		prof.AddPreAuthZHook(r.operations)
-		prof.AddPreCallHook(r.userContext)
-	}
-	return nil
+	return r.registerSearchHooks(svc)
 }
 
 func init() {

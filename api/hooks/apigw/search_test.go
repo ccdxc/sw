@@ -395,10 +395,11 @@ func TestUserContextHook(t *testing.T) {
 }
 
 func TestSearchHooksRegistration(t *testing.T) {
+	r := &searchHooks{}
 	logConfig := log.GetDefaultConfig("TestAPIGwSearchHooks")
-	l := log.GetNewLogger(logConfig)
-	svc := mocks.NewFakeAPIGwService(l, false)
-	err := registerSearchHooks(svc, l)
+	r.logger = log.GetNewLogger(logConfig)
+	svc := mocks.NewFakeAPIGwService(r.logger, false)
+	err := r.registerSearchHooks(svc)
 	AssertOk(t, err, "apigw search hook registration failed")
 
 	methods := []string{"Query", "PolicyQuery"}
@@ -410,7 +411,7 @@ func TestSearchHooksRegistration(t *testing.T) {
 	}
 
 	// test error
-	svc = mocks.NewFakeAPIGwService(l, true)
-	err = registerSearchHooks(svc, l)
+	svc = mocks.NewFakeAPIGwService(r.logger, true)
+	err = r.registerSearchHooks(svc)
 	Assert(t, err != nil, "expected error in search hook registration")
 }
