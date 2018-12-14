@@ -19,7 +19,8 @@ import (
 )
 
 var (
-	portNum uint32
+	portNum   uint32
+	portPause string
 )
 
 var portClearStatsCmd = &cobra.Command{
@@ -54,13 +55,7 @@ var portDebugCmd = &cobra.Command{
 	Use:   "port",
 	Short: "debug port object",
 	Long:  "debug port object",
-}
-
-var portPauseCmd = &cobra.Command{
-	Use:   "set-pause",
-	Short: "halctl debug port --port <> set-pause [link-level|pfc|none]",
-	Long:  "halctl debug port --port <> set-pause [link-level|pfc|none]",
-	Run:   portPauseCmdHandler,
+	Run:   portDebugCmdHandler,
 }
 
 func init() {
@@ -75,8 +70,8 @@ func init() {
 	portClearStatsCmd.Flags().Uint32Var(&portNum, "port", 1, "Speficy port number")
 
 	debugCmd.AddCommand(portDebugCmd)
-	portDebugCmd.PersistentFlags().Uint32Var(&portNum, "port", 1, "Specify port number")
-	portDebugCmd.AddCommand(portPauseCmd)
+	portDebugCmd.Flags().Uint32Var(&portNum, "port", 1, "Specify port number")
+	portDebugCmd.Flags().StringVar(&portPause, "pause", "none", "Specify pause - link, pfc, none")
 }
 
 func handlePortDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
@@ -416,7 +411,7 @@ func portShowStatsOneResp(resp *halproto.PortGetResponse) {
 	fmt.Println(hdrLine)
 }
 
-func portPauseCmdHandler(cmd *cobra.Command, args []string) {
+func portDebugCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
@@ -426,16 +421,12 @@ func portPauseCmdHandler(cmd *cobra.Command, args []string) {
 	defer c.Close()
 
 	success := true
-	if len(args) != 1 {
-		fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance")
-		return
-	}
 
-	if isPauseTypeValid(args[0]) == false {
-		fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance")
+	if cmd.Flags().Changed("pause") == false || isPauseTypeValid(portPause) == false {
+		fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
 		return
 	}
-	pauseType := inputToPauseType(args[0])
+	pauseType := inputToPauseType(portPause)
 
 	client := halproto.NewPortClient(c.ClientConn)
 
@@ -523,6 +514,8 @@ func isPauseTypeValid(str string) bool {
 	switch str {
 	case "link-level":
 		return true
+	case "link":
+		return true
 	case "pfc":
 		return true
 	case "none":
@@ -535,6 +528,8 @@ func isPauseTypeValid(str string) bool {
 func inputToPauseType(str string) halproto.PortPauseType {
 	switch str {
 	case "link-level":
+		return halproto.PortPauseType_PORT_PAUSE_TYPE_LINK
+	case "link":
 		return halproto.PortPauseType_PORT_PAUSE_TYPE_LINK
 	case "pfc":
 		return halproto.PortPauseType_PORT_PAUSE_TYPE_PFC

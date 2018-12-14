@@ -14,7 +14,8 @@ import (
 )
 
 var (
-	portNum uint32
+	portNum   uint32
+	portPause string
 )
 
 var portShowCmd = &cobra.Command{
@@ -28,19 +29,13 @@ var portCmd = &cobra.Command{
 	Use:   "port",
 	Short: "update port object",
 	Long:  "update port object",
-}
-
-var portPauseCmd = &cobra.Command{
-	Use:   "set-pause",
-	Short: "penctl update port --port <> set-pause [link-level|pfc|none]",
-	Long:  "penctl update port --port <> set-pause [link-level|pfc|none]",
-	Run:   portPauseCmdHandler,
+	Run:   portUpdateCmdHandler,
 }
 
 func init() {
 	updateCmd.AddCommand(portCmd)
-	portCmd.PersistentFlags().Uint32Var(&portNum, "port", 1, "Specify port number")
-	portCmd.AddCommand(portPauseCmd)
+	portCmd.Flags().Uint32Var(&portNum, "port", 1, "Specify port number")
+	portCmd.Flags().StringVar(&portPause, "pause", "none", "Specify pause - link, pfc, none")
 
 	showCmd.AddCommand(portShowCmd)
 	portShowCmd.Flags().Uint32Var(&portNum, "port", 1, "Specify port number")
@@ -72,14 +67,9 @@ func portShowCmdHandler(cmd *cobra.Command, args []string) {
 	return
 }
 
-func portPauseCmdHandler(cmd *cobra.Command, args []string) {
-	if len(args) != 1 {
-		fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance")
-		return
-	}
-
-	if isPauseTypeValid(args[0]) == false {
-		fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance")
+func portUpdateCmdHandler(cmd *cobra.Command, args []string) {
+	if cmd.Flags().Changed("pause") == false || isPauseTypeValid(portPause) == false {
+		fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
 		return
 	}
 
@@ -87,7 +77,7 @@ func portPauseCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd.Flags().Changed("port") {
 		halctlStr += ("--port " + fmt.Sprint(portNum) + " ")
 	}
-	halctlStr += ("set-pause " + args[0])
+	halctlStr += ("--pause " + portPause)
 
 	execCmd := strings.Fields(halctlStr)
 	v := &nmd.NaplesCmdExecute{
@@ -112,6 +102,8 @@ func portPauseCmdHandler(cmd *cobra.Command, args []string) {
 func isPauseTypeValid(str string) bool {
 	switch str {
 	case "link-level":
+		return true
+	case "link":
 		return true
 	case "pfc":
 		return true

@@ -46,29 +46,10 @@ var qosClassDeleteCmd = &cobra.Command{
 	Run:   qosClassDeleteCmdHandler,
 }
 
-var qosClassCmd = &cobra.Command{
+var qosClassCreateCmd = &cobra.Command{
 	Use:   "qos-class",
 	Short: "qos-class object",
 	Long:  "qos-class object",
-}
-
-var classMapCmd = &cobra.Command{
-	Use:   "class-map",
-	Short: "specify class-map",
-	Long:  "specify class-map",
-}
-
-var schedCmd = &cobra.Command{
-	Use:   "scheduler",
-	Short: "specify scheduler",
-	Long:  "specify scheduler",
-	Run:   qosClassCreateCmdHandler,
-}
-
-var pfcCmd = &cobra.Command{
-	Use:   "pfc",
-	Short: "specify pfc",
-	Long:  "specify class-map",
 	Run:   qosClassCreateCmdHandler,
 }
 
@@ -76,25 +57,6 @@ var qosClassUpdateCmd = &cobra.Command{
 	Use:   "qos-class",
 	Short: "qos-class object",
 	Long:  "qos-class object",
-}
-
-var classMapUpdateCmd = &cobra.Command{
-	Use:   "class-map",
-	Short: "specify class-map",
-	Long:  "specify class-map",
-}
-
-var schedUpdateCmd = &cobra.Command{
-	Use:   "scheduler",
-	Short: "specify scheduler",
-	Long:  "specify scheduler",
-	Run:   qosClassUpdateCmdHandler,
-}
-
-var pfcUpdateCmd = &cobra.Command{
-	Use:   "pfc",
-	Short: "specify pfc",
-	Long:  "specify class-map",
 	Run:   qosClassUpdateCmdHandler,
 }
 
@@ -141,60 +103,37 @@ func init() {
 	coppShowCmd.Flags().StringVar(&coppType, "copptype", "flow-miss", "Specify copp type")
 	coppShowCmd.Flags().Uint64Var(&coppHandle, "handle", 0, "Specify copp handle")
 
-	debugCreateCmd.AddCommand(qosClassCmd)
-	qosClassCmd.AddCommand(classMapCmd)
-	classMapCmd.AddCommand(schedCmd)
-	schedCmd.AddCommand(pfcCmd)
-
-	qosClassCmd.PersistentFlags().StringVar(&qosGroup, "qosgroup", "user-defined-1", "Specify qos group")
-	qosClassCmd.PersistentFlags().Uint32Var(&qosMtu, "mtu", 1500, "Specify MTU")
-	qosClassCmd.MarkFlagRequired("qosgroup")
-	qosClassCmd.MarkFlagRequired("mtu")
-
-	classMapCmd.PersistentFlags().Uint32Var(&qosPcp, "dot1q-pcp", 0, "Specify pcp value 0-7")
-	classMapCmd.PersistentFlags().StringVar(&qosDscp, "dscp", "0", "Specify dscp values 0-63 as --dscp 10,20,30")
-	classMapCmd.MarkFlagRequired("dot1q-pcp")
-	classMapCmd.MarkFlagRequired("dscp")
-
-	schedCmd.PersistentFlags().Uint32Var(&qosBw, "dwrr-bw", 0, "Specify DWRR BW percentage (0-100)")
-	schedCmd.PersistentFlags().Uint32Var(&qosBps, "strict-priority-rate", 0, "Specify strict priority rate in bps")
-	schedCmd.MarkFlagRequired("dwrr-bw")
-	schedCmd.MarkFlagRequired("strict-priority-rate")
-
-	pfcCmd.PersistentFlags().Uint32Var(&qosXon, "xon-threshold", 3000, "Specify xon threshold")
-	pfcCmd.PersistentFlags().Uint32Var(&qosXoff, "xoff-threshold", 3000, "Specify xoff threshold")
-	pfcCmd.MarkFlagRequired("xon-threshold")
-	pfcCmd.MarkFlagRequired("xoff-threshold")
+	debugCreateCmd.AddCommand(qosClassCreateCmd)
+	qosClassCreateCmd.Flags().StringVar(&qosGroup, "qosgroup", "user-defined-1", "Specify qos group")
+	qosClassCreateCmd.Flags().Uint32Var(&qosMtu, "mtu", 1500, "Specify MTU")
+	qosClassCreateCmd.Flags().Uint32Var(&qosPcp, "dot1q-pcp", 0, "Specify pcp value 0-7")
+	qosClassCreateCmd.Flags().StringVar(&qosDscp, "dscp", "0", "Specify dscp values 0-63 as --dscp 10,20,30")
+	qosClassCreateCmd.Flags().Uint32Var(&qosBw, "dwrr-bw", 0, "Specify DWRR BW percentage (0-100)")
+	qosClassCreateCmd.Flags().Uint32Var(&qosBps, "strict-priority-rate", 0, "Specify strict priority rate in bps")
+	qosClassCreateCmd.Flags().Uint32Var(&qosXon, "xon-threshold", 3000, "Specify xon threshold")
+	qosClassCreateCmd.Flags().Uint32Var(&qosXoff, "xoff-threshold", 3000, "Specify xoff threshold")
+	qosClassCreateCmd.MarkFlagRequired("qosgroup")
+	qosClassCreateCmd.MarkFlagRequired("mtu")
+	qosClassCreateCmd.MarkFlagRequired("dot1q-pcp")
+	qosClassCreateCmd.MarkFlagRequired("dscp")
 
 	debugDeleteCmd.AddCommand(qosClassDeleteCmd)
 	qosClassDeleteCmd.Flags().StringVar(&qosGroup, "qosgroup", "user-defined-1", "Specify qos group")
 	qosClassDeleteCmd.MarkFlagRequired("qosgroup")
 
 	debugUpdateCmd.AddCommand(qosClassUpdateCmd)
-	qosClassUpdateCmd.AddCommand(classMapUpdateCmd)
-	classMapUpdateCmd.AddCommand(schedUpdateCmd)
-	schedUpdateCmd.AddCommand(pfcUpdateCmd)
-
-	qosClassUpdateCmd.PersistentFlags().StringVar(&qosGroup, "qosgroup", "user-defined-1", "Specify qos group")
-	qosClassUpdateCmd.PersistentFlags().Uint32Var(&qosMtu, "mtu", 1500, "Specify MTU")
+	qosClassUpdateCmd.Flags().StringVar(&qosGroup, "qosgroup", "user-defined-1", "Specify qos group")
+	qosClassUpdateCmd.Flags().Uint32Var(&qosMtu, "mtu", 1500, "Specify MTU")
+	qosClassUpdateCmd.Flags().Uint32Var(&qosPcp, "dot1q-pcp", 0, "Specify pcp value 0-7")
+	qosClassUpdateCmd.Flags().StringVar(&qosDscp, "dscp", "0", "Specify dscp values 0-63 as --dscp 10,20,30")
+	qosClassUpdateCmd.Flags().Uint32Var(&qosBw, "dwrr-bw", 0, "Specify DWRR BW percentage (0-100)")
+	qosClassUpdateCmd.Flags().Uint32Var(&qosBps, "strict-priority-rate", 0, "Specify strict priority rate in bps")
+	qosClassUpdateCmd.Flags().Uint32Var(&qosXon, "xon-threshold", 3000, "Specify xon threshold")
+	qosClassUpdateCmd.Flags().Uint32Var(&qosXoff, "xoff-threshold", 3000, "Specify xoff threshold")
 	qosClassUpdateCmd.MarkFlagRequired("qosgroup")
 	qosClassUpdateCmd.MarkFlagRequired("mtu")
-
-	classMapUpdateCmd.PersistentFlags().Uint32Var(&qosPcp, "dot1q-pcp", 0, "Specify pcp value 0-7")
-	classMapUpdateCmd.PersistentFlags().StringVar(&qosDscp, "dscp", "0", "Specify dscp values 0-63 as --dscp 10,20,30")
-	classMapUpdateCmd.MarkFlagRequired("dot1q-pcp")
-	classMapUpdateCmd.MarkFlagRequired("dscp")
-
-	schedUpdateCmd.PersistentFlags().Uint32Var(&qosBw, "dwrr-bw", 0, "Specify DWRR BW percentage (0-100)")
-	schedUpdateCmd.PersistentFlags().Uint32Var(&qosBps, "strict-priority-rate", 0, "Specify strict priority rate in bps")
-	schedUpdateCmd.MarkFlagRequired("dwrr-bw")
-	schedUpdateCmd.MarkFlagRequired("strict-priority-rate")
-
-	pfcUpdateCmd.PersistentFlags().Uint32Var(&qosXon, "xon-threshold", 3000, "Specify xon threshold")
-	pfcUpdateCmd.PersistentFlags().Uint32Var(&qosXoff, "xoff-threshold", 3000, "Specify xoff threshold")
-	pfcUpdateCmd.MarkFlagRequired("xon-threshold")
-	pfcUpdateCmd.MarkFlagRequired("xoff-threshold")
-
+	qosClassUpdateCmd.MarkFlagRequired("dot1q-pcp")
+	qosClassUpdateCmd.MarkFlagRequired("dscp")
 }
 
 func qosClassDeleteCmdHandler(cmd *cobra.Command, args []string) {
@@ -260,15 +199,13 @@ func handleQosClassCreateUpdate(cmd *cobra.Command, args []string, update bool) 
 		return
 	}
 
-	if cmd.Flags().Changed("qosgroup") == false || cmd.Flags().Changed("mtu") == false ||
-		cmd.Flags().Changed("dot1q-pcp") == false || cmd.Flags().Changed("dscp") == false ||
-		(cmd.Flags().Changed("dwrr-bw") == false && cmd.Flags().Changed("strict-priority-rate") == false) {
-		fmt.Printf("The following options are mandatory - qosgroup, mtu, dot1q-pcp, dscp and one of dwrr-bw and strict-priority-rate . Refer to help string for more details\n")
+	if cmd.Flags().Changed("dwrr-bw") == false && cmd.Flags().Changed("strict-priority-rate") == false {
+		fmt.Printf("One of dwrr-bw and strict-priority-rate needs to be set. Refer to help string for more details\n")
 		return
 	}
 
 	if cmd.Flags().Changed("xon-threshold") != cmd.Flags().Changed("xoff-threshold") {
-		fmt.Printf("Cannot specify one of xon and xoff thresholds\n")
+		fmt.Printf("Cannot specify only one of xon and xoff thresholds\n")
 		return
 	}
 
