@@ -132,54 +132,6 @@ func (m *FlowExportPolicyStatus) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
-<<<<<<< HEAD
-func (m *FwlogExport) Clone(into interface{}) (interface{}, error) {
-	var out *FwlogExport
-	var ok bool
-	if into == nil {
-		out = &FwlogExport{}
-	} else {
-		out, ok = into.(*FwlogExport)
-=======
-func (m *FlowExportTarget) Clone(into interface{}) (interface{}, error) {
-	var out *FlowExportTarget
-	var ok bool
-	if into == nil {
-		out = &FlowExportTarget{}
-	} else {
-		out, ok = into.(*FlowExportTarget)
->>>>>>> generated changes
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-<<<<<<< HEAD
-func (m *FwlogExport) Defaults(ver string) bool {
-=======
-func (m *FlowExportTarget) Defaults(ver string) bool {
->>>>>>> generated changes
-	var ret bool
-	ret = true
-	switch ver {
-	default:
-<<<<<<< HEAD
-		for k := range m.Filter {
-			m.Filter[k] = "FIREWALL_ACTION_NONE"
-		}
-		m.Format = "SYSLOG_BSD"
-=======
-		m.Format = "Ipfix"
->>>>>>> generated changes
-	}
-	return ret
-}
-
-// Clone clones the object into into or creates one of into is nil
 func (m *FwlogPolicy) Clone(into interface{}) (interface{}, error) {
 	var out *FwlogPolicy
 	var ok bool
@@ -390,52 +342,11 @@ func (m *FlowExportPolicySpec) Validate(ver, path string, ignoreStatus bool) []e
 	return ret
 }
 
-<<<<<<< HEAD
 func (m *FlowExportPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
-func (m *FwlogExport) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	if m.SyslogConfig != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "SyslogConfig"
-		if errs := m.SyslogConfig.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
-		}
-	}
-	for k, v := range m.Targets {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := fmt.Sprintf("%s%sTargets[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
-		}
-	}
-	if vs, ok := validatorMapTelemetry["FwlogExport"][ver]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	} else if vs, ok := validatorMapTelemetry["FwlogExport"]["all"]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	}
-	return ret
-}
-
-=======
->>>>>>> generated changes
 func (m *FwlogPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	{

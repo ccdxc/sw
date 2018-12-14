@@ -78,25 +78,10 @@ var typesMapTelemetry = map[string]*api.Struct{
 			"Exports": api.Field{Name: "Exports", CLITag: api.CLIInfo{ID: "exports", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "exports", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.ExportConfig"},
 		},
 	},
-<<<<<<< HEAD
 	"monitoring.FlowExportPolicyStatus": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(FlowExportPolicyStatus{}) },
 		Fields: map[string]api.Field{},
 	},
-	"monitoring.FwlogExport": &api.Struct{
-		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(FwlogExport{}) },
-		Fields: map[string]api.Field{
-			"Targets": api.Field{Name: "Targets", CLITag: api.CLIInfo{ID: "targets", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "targets", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.ExportConfig"},
-
-			"Format": api.Field{Name: "Format", CLITag: api.CLIInfo{ID: "format", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "format", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"Filter": api.Field{Name: "Filter", CLITag: api.CLIInfo{ID: "export-filter", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "export-filter", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"SyslogConfig": api.Field{Name: "SyslogConfig", CLITag: api.CLIInfo{ID: "syslog-config", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "syslog-config", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.SyslogExportConfig"},
-		},
-	},
-=======
->>>>>>> generated changes
 	"monitoring.FwlogPolicy": &api.Struct{
 		Kind: "FwlogPolicy", APIGroup: "monitoring", Scopes: []string{"Tenant"}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(FwlogPolicy{}) },
 		Fields: map[string]api.Field{

@@ -13558,65 +13558,10 @@
         }
       }
     },
-<<<<<<< HEAD
     "monitoringFlowExportPolicyStatus": {
       "type": "object",
       "title": "========================================================================================\n flow export policy\n========================================================================================"
     },
-    "monitoringFwlogExport": {
-      "type": "object",
-      "properties": {
-        "targets": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/monitoringExportConfig"
-          },
-          "title": "Target contains ip/port/protocol"
-        },
-        "format": {
-          "type": "string",
-          "enum": [
-            "SYSLOG_BSD",
-            "SYSLOG_RFC5424"
-          ],
-          "default": "SYSLOG_BSD",
-          "x-ui-hints": {
-            "SYSLOG_BSD": "BSD",
-            "SYSLOG_RFC5424": "RFC5424"
-          },
-          "title": "fwlog format, SYSLOG_BSD default"
-        },
-        "export-filter": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "enum": [
-            "FIREWALL_ACTION_NONE",
-            "FIREWALL_ACTION_ALLOW",
-            "FIREWALL_ACTION_DENY",
-            "FIREWALL_ACTION_REJECT",
-            "FIREWALL_ACTION_ALL"
-          ],
-          "default": "FIREWALL_ACTION_NONE",
-          "x-ui-hints": {
-            "FIREWALL_ACTION_ALL": "All Logs",
-            "FIREWALL_ACTION_ALLOW": "Allow Logs",
-            "FIREWALL_ACTION_DENY": "Deny Logs",
-            "FIREWALL_ACTION_NONE": "No Logs",
-            "FIREWALL_ACTION_REJECT": "Reject Logs"
-          },
-          "title": "filter firewall logs, FWLOG_ALL default"
-        },
-        "syslog-config": {
-          "$ref": "#/definitions/monitoringSyslogExportConfig",
-          "title": "configuration to use for syslog format\ndefault facility is set to \"local4\", can be overridden with FacilityOverride\nfwlog severity is set to \"Informational\""
-        }
-      },
-      "title": "firewall log export config"
-    },
-=======
->>>>>>> generated changes
     "monitoringFwlogPolicy": {
       "type": "object",
       "properties": {

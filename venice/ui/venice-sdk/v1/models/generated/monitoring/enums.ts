@@ -301,14 +301,8 @@ export class AllEnums {
     MonitoringAuthConfig_algo = MonitoringAuthConfig_algo;
     MonitoringEventPolicySpec_format = MonitoringEventPolicySpec_format;
     MonitoringExternalCred_auth_type = MonitoringExternalCred_auth_type;
-<<<<<<< HEAD
     MonitoringFlowExportPolicySpec_format = MonitoringFlowExportPolicySpec_format;
-    MonitoringFwlogExport_format = MonitoringFwlogExport_format;
-    MonitoringFwlogExport_export_filter = MonitoringFwlogExport_export_filter;
-=======
-    MonitoringFlowExportTarget_format = MonitoringFlowExportTarget_format;
     MonitoringFwlogPolicySpec_format = MonitoringFwlogPolicySpec_format;
->>>>>>> generated ui files
     MonitoringFwlogPolicySpec_filter = MonitoringFwlogPolicySpec_filter;
     MonitoringMatchedRequirement_operator = MonitoringMatchedRequirement_operator;
     MonitoringMirrorCollector_type = MonitoringMirrorCollector_type;
