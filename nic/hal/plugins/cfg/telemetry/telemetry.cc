@@ -535,6 +535,7 @@ flow_monitor_rule_create (FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rs
     rule->rule_id = rule_id;
     flow_mon_rules[rule_id] = rule;
 
+    HAL_TRACE_DEBUG("Ruleid {}", rule_id);
     ret = get_flowmon_action(spec, &action);
     if (ret != HAL_RET_OK) {
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
@@ -617,6 +618,7 @@ flow_monitor_rule_delete (FlowMonitorRuleDeleteRequest &req, FlowMonitorRuleDele
         ret = HAL_RET_OK;
         goto end;
     }
+    HAL_TRACE_DEBUG("Ruleid {}", rule_id);
     mirror_action = (rule->action.num_mirror_dest > 0);
     flowmon_acl_ctx = acl::acl_get(flowmon_acl_ctx_name(vrf_id, mirror_action));
     if (!flowmon_acl_ctx) {

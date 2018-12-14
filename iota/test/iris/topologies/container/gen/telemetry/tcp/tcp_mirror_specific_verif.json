@@ -1,0 +1,254 @@
+[
+    {
+        "src_ip": "192.168.100.102", 
+        "dst_ip": "192.168.100.101", 
+        "protocol": "tcp", 
+        "port": "120", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.101", 
+        "dst_ip": "192.168.100.102", 
+        "protocol": "tcp", 
+        "port": "120", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.102", 
+        "dst_ip": "192.168.100.101", 
+        "protocol": "tcp", 
+        "port": "550", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.101", 
+        "dst_ip": "192.168.100.102", 
+        "protocol": "tcp", 
+        "port": "550", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.102", 
+        "dst_ip": "192.168.100.101", 
+        "protocol": "tcp", 
+        "port": "65535", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.101", 
+        "dst_ip": "192.168.100.102", 
+        "protocol": "tcp", 
+        "port": "65535", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.103", 
+        "dst_ip": "192.168.100.101", 
+        "protocol": "tcp", 
+        "port": "120", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.101", 
+        "dst_ip": "192.168.100.103", 
+        "protocol": "tcp", 
+        "port": "120", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.103", 
+        "dst_ip": "192.168.100.101", 
+        "protocol": "tcp", 
+        "port": "550", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.101", 
+        "dst_ip": "192.168.100.103", 
+        "protocol": "tcp", 
+        "port": "550", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.103", 
+        "dst_ip": "192.168.100.101", 
+        "protocol": "tcp", 
+        "port": "65535", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.101", 
+        "dst_ip": "192.168.100.103", 
+        "protocol": "tcp", 
+        "port": "65535", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.104", 
+        "dst_ip": "192.168.100.101", 
+        "protocol": "tcp", 
+        "port": "120", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.101", 
+        "dst_ip": "192.168.100.104", 
+        "protocol": "tcp", 
+        "port": "120", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.104", 
+        "dst_ip": "192.168.100.101", 
+        "protocol": "tcp", 
+        "port": "550", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.101", 
+        "dst_ip": "192.168.100.104", 
+        "protocol": "tcp", 
+        "port": "550", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.104", 
+        "dst_ip": "192.168.100.101", 
+        "protocol": "tcp", 
+        "port": "65535", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.101", 
+        "dst_ip": "192.168.100.104", 
+        "protocol": "tcp", 
+        "port": "65535", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.103", 
+        "dst_ip": "192.168.100.102", 
+        "protocol": "tcp", 
+        "port": "120", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.102", 
+        "dst_ip": "192.168.100.103", 
+        "protocol": "tcp", 
+        "port": "120", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.103", 
+        "dst_ip": "192.168.100.102", 
+        "protocol": "tcp", 
+        "port": "550", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.102", 
+        "dst_ip": "192.168.100.103", 
+        "protocol": "tcp", 
+        "port": "550", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.103", 
+        "dst_ip": "192.168.100.102", 
+        "protocol": "tcp", 
+        "port": "65535", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.102", 
+        "dst_ip": "192.168.100.103", 
+        "protocol": "tcp", 
+        "port": "65535", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.104", 
+        "dst_ip": "192.168.100.102", 
+        "protocol": "tcp", 
+        "port": "120", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.102", 
+        "dst_ip": "192.168.100.104", 
+        "protocol": "tcp", 
+        "port": "120", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.104", 
+        "dst_ip": "192.168.100.102", 
+        "protocol": "tcp", 
+        "port": "550", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.102", 
+        "dst_ip": "192.168.100.104", 
+        "protocol": "tcp", 
+        "port": "550", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.104", 
+        "dst_ip": "192.168.100.102", 
+        "protocol": "tcp", 
+        "port": "65535", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.102", 
+        "dst_ip": "192.168.100.104", 
+        "protocol": "tcp", 
+        "port": "65535", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.104", 
+        "dst_ip": "192.168.100.103", 
+        "protocol": "tcp", 
+        "port": "120", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.103", 
+        "dst_ip": "192.168.100.104", 
+        "protocol": "tcp", 
+        "port": "120", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.104", 
+        "dst_ip": "192.168.100.103", 
+        "protocol": "tcp", 
+        "port": "550", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.103", 
+        "dst_ip": "192.168.100.104", 
+        "protocol": "tcp", 
+        "port": "550", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.104", 
+        "dst_ip": "192.168.100.103", 
+        "protocol": "tcp", 
+        "port": "65535", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.100.103", 
+        "dst_ip": "192.168.100.104", 
+        "protocol": "tcp", 
+        "port": "65535", 
+        "result": "mirror"
+    }
+]
