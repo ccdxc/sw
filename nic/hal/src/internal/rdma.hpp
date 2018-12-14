@@ -1059,7 +1059,9 @@ typedef struct sqcb2_s {
     uint8_t  fence_done:1;
     uint8_t  li_fence:1;
     uint8_t  fence:1;
-    uint16_t  rsvd1;
+    uint16_t  rsvd2:14;
+    uint16_t  need_credits:1;
+    uint16_t  busy:1;
     uint8_t  rrq_cindex;
     uint8_t  rrq_pindex;
     uint16_t sq_cindex;
@@ -1076,9 +1078,7 @@ typedef struct sqcb2_s {
 
     uint8_t local_ack_timeout:5;
     uint8_t timer_on:1;
-    uint8_t  need_credits:1;
-    uint8_t  in_progress:1;
-
+    uint8_t rsvd1:2;
     uint8_t  rnr_timeout:8;
     uint8_t  rnr_retry_ctr:4;
     uint8_t  err_retry_ctr:4;

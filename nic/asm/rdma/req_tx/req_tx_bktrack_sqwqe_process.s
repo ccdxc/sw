@@ -196,7 +196,7 @@ wqe_match:
     // start psn or somewhere in between, which requires forward sge
     // walk to setup current_sge_id, current_sge_offset in the sqcb
     seq            c2, K_REXMIT_PSN, r1
-    bcf            [c1 | !c2], read_or_sge_bktrack
+    bcf            [!c2], read_or_sge_bktrack
     // first wqe itself matches, no change to c_index
     add            r4, r0, K_SQ_C_INDEX // Branch Delay Slot
 

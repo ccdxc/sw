@@ -200,8 +200,7 @@ struct sqcb2_t {
     err_retry_ctr                  : 4; // RW S1 (WO RXDMA)
     rnr_retry_ctr                  : 4; // RW S1 (WO RXDMA)
     rnr_timeout                    : 8; // RW S1 (WO RXDMA)
-    busy                           : 1; // RW S1, WO S3-7
-    need_credits                   : 1; // RW S5
+    rsvd1                          : 2; // TODO disable_credits
     timer_on                       : 1; // RW S5
     local_ack_timeout              : 5; // RO S5
 
@@ -218,7 +217,9 @@ struct sqcb2_t {
     sq_cindex                      : 16; // RW S5
     rrq_pindex                     : 8;  // RW S5
     rrq_cindex                     : 8;  // RO S1, S5 (WO RXDMA)
-    rsvd1                          : 16;
+    busy                           : 1; // RW S1, WO S3-7
+    need_credits                   : 1; // RW S5, WO S3-4,S6-7
+    rsvd2                          : 14;
     fence                          : 1;  // WO S5, RO S1
     li_fence                       : 1;  // WO S5, RO S1
     fence_done                     : 1;  // RW S1, WO S5
@@ -227,7 +228,7 @@ struct sqcb2_t {
     exp_rsp_psn                    : 24; // RW S5
     //Temporary use for DOL - ROCE UDP options
     timestamp                      : 16;
-    disable_credits                : 1;
+    disable_credits                : 1; // TODO move it up
     timestamp_echo                 : 15;
     mss                            : 16;
 };

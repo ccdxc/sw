@@ -309,9 +309,7 @@ class RdmaSQCB2state(Packet):
         BitField("err_retry_ctr", 0, 4),
         BitField("rnr_retry_ctr", 0, 4),
         ByteField("rnr_timeout", 0),
-
-        BitField("sqcb2_in_progress", 0, 1),
-        BitField("sqcb2_need_credits", 0, 1),
+        BitField("sqcb1_rsvd1", 0, 2),
         BitField("timer_on", 0, 1),
         BitField("local_ack_timeout", 0, 5),
 
@@ -325,7 +323,9 @@ class RdmaSQCB2state(Packet):
         ShortField("sq_cindex", 0),
         ByteField("p_index4", 0),
         ByteField("sqcb2_c_index4", 0),
-        ShortField("sqcb2_rsvd1", 0),
+        BitField("sqcb2_busy", 0, 1),
+        BitField("sqcb2_need_credits", 0, 1),
+        BitField("sqcb2_rsvd2", 0, 14),
         BitField("fence", 0, 1),
         BitField("li_fence", 0, 1),
         BitField("fence_done", 0, 1),

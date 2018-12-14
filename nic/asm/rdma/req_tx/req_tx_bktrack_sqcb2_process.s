@@ -81,11 +81,11 @@ req_tx_bktrack_sqcb2_process:
     sll            r2, K_SQ_C_INDEX, CAPRI_KEY_FIELD(IN_TO_S_P, log_wqe_size)
     //pt_base_addr is overloaded with sq_hbm_base_addr
     add            r2, r2, K_PT_BASE_ADDR, HBM_SQ_BASE_ADDR_SHIFT
-    
+
 wqe_bktrack:
     seq           c1, CAPRI_KEY_FIELD(IN_P, in_progress), 1
     phvwr.c1 CAPRI_PHV_FIELD(SQ_BKTRACK_P, tx_psn), d.wqe_start_psn
-    
+
     //for now, use to_stage_args to pass the wqe_addr
     //until we organize better, copy to all stages
     phvwrpair CAPRI_PHV_FIELD(TO_S2_BT_P, wqe_addr), r2, \
