@@ -1781,12 +1781,12 @@
   revision = "e181e095bae94582363434144c61a9653aff6e50"
 
 [[projects]]
-  digest = "1:5f422c8f31d8af5eb31f479ce6443d2b06ab0fc5b9eb3f0321d4a1092bd6c9dd"
+  digest = "1:b0e0e2abf5c70fd0f7f6c053c6c99c6960149146e40d5c7547cacc176e5d9973"
   name = "github.com/rjeczalik/notify"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "52ae50d8490436622a8941bd70c3dbe0acdd4bbf"
-  version = "v0.9.0"
+  revision = "69d839f37b13a8cb7a78366f7633a4071cb43be7"
+  version = "v0.9.2"
 
 [[projects]]
   digest = "1:810d960260b42c751f5254f6dbff5e6c79c8047b90a9bf4a06bba479b99aff1d"
