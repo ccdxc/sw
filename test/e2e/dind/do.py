@@ -147,7 +147,7 @@ class NaplesNode(Node):
         self.startCluster()
     def startNode(self):
         # expose Naples-REST port (9008) for naples instances on 15000+offset ...
-        ports_exposed = """ -p {}:9008 """.format(exposedPortBase + 5000 + self.containerIndex)
+        ports_exposed = """ -p {}:9008 -p {}:8888""".format(exposedPortBase + 5000 + self.containerIndex, exposedPortBase + 5100 + self.containerIndex)
         if self.testMode == "TELEMETRY":
             self.setupCommon()
             runCommand("""docker exec {}  bash -c "cd /go && go install github.com/pensando/sw/nic/agent/cmd/tmagent" """.format(self.name))

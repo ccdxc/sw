@@ -8,3 +8,4 @@ docker load -i /home/vm/venice/venice/tars/pen-netagent.tar
 echo "Waiting to create auth policy and user......"
 sleep 120
 newman run /home/vm/venice/authbootstrap_postman_collection.json
+/home/vm/venice/naples_admit.py
