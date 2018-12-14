@@ -33,7 +33,6 @@ struct req_tx_s3_t0_k k;
     .param    req_tx_sqlkey_process
     .param    req_tx_sqlkey_rsvd_lkey_process
     .param    req_tx_dcqcn_enforce_process
-    .param    req_tx_sqsge_iterate_process
 
 .align
 req_tx_sqsge_process:
@@ -163,7 +162,7 @@ sge_loop:
     // in_progress = TRUE
     cmov           r4, c1, 0, 1
 
-    bcf            [!c2 & !c1], iterate_sges
+    bcf            [!c2 & !c1], sge_recirc
     // num_sges = k.args.current_sge_id + k.args.num_valid_sges
     add            r6, K_CURRENT_SGE_ID, K_NUM_VALID_SGES // Branch Delay Slot
 
@@ -184,6 +183,7 @@ sge_loop:
               CAPRI_KEY_RANGE(IN_P, imm_data_or_inv_key_sbit0_ebit7, ah_handle_sbit24_ebit31)
     // rest of the fields are initialized to default
 
+trigger_dcqcn:
     mfspr          r1, spr_mpuid
     seq            c1, r1[4:2], STAGE_3
 
@@ -203,7 +203,7 @@ write_back:
     nop.e
     nop
 
-iterate_sges:
+sge_recirc:
     // increment dma_cmd_start index by num of DMA cmds consumed for 2 SGEs per pass
     add            r4, K_DMA_CMD_START_INDEX, (MAX_PYLD_DMA_CMDS_PER_SGE * 2)
     // Error if there are no dma cmd space to compose
@@ -218,21 +218,18 @@ iterate_sges:
               CAPRI_PHV_FIELD(WQE_TO_SGE_P, dma_cmd_start_index), r4
     sub            r6, K_NUM_VALID_SGES, 2 
     phvwr CAPRI_PHV_FIELD(WQE_TO_SGE_P, num_valid_sges), r6
-    // Pass packet_len to stage 0 and stage3 as on recirc sqsge_process
-    // can run in either one of those stages
-    phvwr          CAPRI_PHV_FIELD(TO_S0_SQSGE_P, packet_len), r5
-    phvwr          CAPRI_PHV_FIELD(TO_S3_SQSGE_P, packet_len), r5
-
-    mfspr          r1, spr_tbladdr
-    add            r1, r1, 2, LOG_SIZEOF_SGE_T
-
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_sqsge_iterate_process, r1)
+    // Pass packet_len to stage 3 to accumulate packet_len across sge recirc
+    phvwr           CAPRI_PHV_FIELD(TO_S3_SQSGE_P, packet_len), r5
+    phvwr.e          p.common.rdma_recirc_recirc_reason, REQ_TX_RECIRC_REASON_SGE_WORK_PENDING
+    phvwr            p.common.p4_intr_recirc, 1
 
 end:
     nop.e
     nop
 
 err_no_dma_cmds:
-    nop.e
-    nop
+    phvwr          p.{rdma_feedback.completion.status, rdma_feedback.completion.error}, (CQ_STATUS_LOCAL_QP_OPER_ERR << 1 | 1)
+    phvwr          CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp), 1
+    b              trigger_dcqcn
+    CAPRI_SET_TABLE_0_VALID(0)
 

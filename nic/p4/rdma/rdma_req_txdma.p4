@@ -49,7 +49,6 @@
 
 #define tx_table_s0_t0_action req_tx_sqcb_process
 #define tx_table_s0_t0_action1 req_tx_stage0_recirc_action
-#define tx_table_s0_t2_action req_tx_sqsge_process_recirc
 
 #define tx_table_s1_t0_action req_tx_dummy_sqpt_process
 #define tx_table_s1_t0_action1 req_tx_sqpt_process
@@ -1804,31 +1803,6 @@ action req_tx_load_ah_size_process() {
     // to stage
 
     // stage to stage
-}
-
-action req_tx_sqsge_process_recirc () {
-    // from ki global
-    GENERATE_GLOBAL_K
-
-    // to stage
-    modify_field(to_s0_sqsge_info_scr.header_template_addr, to_s0_sqsge_info.header_template_addr);
-    modify_field(to_s0_sqsge_info_scr.packet_len, to_s0_sqsge_info.packet_len);
-
-    // stage to stage
-    modify_field(t2_s2s_wqe_to_sge_info_scr.in_progress, t2_s2s_wqe_to_sge_info.in_progress);
-    modify_field(t2_s2s_wqe_to_sge_info_scr.op_type, t2_s2s_wqe_to_sge_info.op_type);
-    modify_field(t2_s2s_wqe_to_sge_info_scr.first, t2_s2s_wqe_to_sge_info.first);
-    modify_field(t2_s2s_wqe_to_sge_info_scr.current_sge_id, t2_s2s_wqe_to_sge_info.current_sge_id);
-    modify_field(t2_s2s_wqe_to_sge_info_scr.num_valid_sges, t2_s2s_wqe_to_sge_info.num_valid_sges);
-    modify_field(t2_s2s_wqe_to_sge_info_scr.current_sge_offset, t2_s2s_wqe_to_sge_info.current_sge_offset);
-    modify_field(t2_s2s_wqe_to_sge_info_scr.remaining_payload_bytes, t2_s2s_wqe_to_sge_info.remaining_payload_bytes);
-    modify_field(t2_s2s_wqe_to_sge_info_scr.poll_in_progress, t2_s2s_wqe_to_sge_info.poll_in_progress);
-    modify_field(t2_s2s_wqe_to_sge_info_scr.color, t2_s2s_wqe_to_sge_info.color);
-    modify_field(t2_s2s_wqe_to_sge_info_scr.rsvd, t2_s2s_wqe_to_sge_info.rsvd);
-    modify_field(t2_s2s_wqe_to_sge_info_scr.dma_cmd_start_index, t2_s2s_wqe_to_sge_info.dma_cmd_start_index);
-    modify_field(t2_s2s_wqe_to_sge_info_scr.imm_data_or_inv_key, t2_s2s_wqe_to_sge_info.imm_data_or_inv_key);
-    modify_field(t2_s2s_wqe_to_sge_info_scr.ah_handle, t2_s2s_wqe_to_sge_info.ah_handle);
-
 }
 
 action req_tx_dummy_sqpt_process () {

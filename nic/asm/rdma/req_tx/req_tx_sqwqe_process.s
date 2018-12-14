@@ -20,6 +20,7 @@ struct req_tx_s2_t0_k k;
 #define IN_P t0_s2s_sqcb_to_wqe_info
 #define IN_TO_S_P to_s2_sqwqe_info
 
+#define TO_S2_SQWQE_P           to_s2_sqwqe_info
 #define TO_S4_DCQCN_BIND_MW_P   to_s4_dcqcn_bind_mw_info
 #define TO_S4_FRPMR_LKEY_P      to_s4_frpmr_sqlkey_info
 #define TO_S5_SQCB_WB_ADD_HDR_P to_s5_sqcb_wb_add_hdr_info
@@ -176,6 +177,8 @@ set_sge_arg:
     bcf            [c2], inline_data
     // sge_list_addr = wqe_addr + TX_SGE_OFFSET
     mfspr          r3, spr_tbladdr //Branch Delay Slot
+    // cache wqe_addr in to_stage if in case there is sge recirc
+    phvwr          CAPRI_PHV_FIELD(TO_S2_SQWQE_P, wqe_addr), r3
     bcf            [c3], zero_length
     add            r3, r3, TXWQE_SGE_OFFSET // Branch Delay Slot
 

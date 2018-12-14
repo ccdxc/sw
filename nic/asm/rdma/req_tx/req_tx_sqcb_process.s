@@ -323,8 +323,8 @@ end1:
         bcf            [c1 & c3], exit
 
 skip_cindex_check:
-        tblwr          d.fence, 0  // BD-Slot
-        sslt           c4, r0, d.in_progress, d.bktrack_in_progress 
+        sslt           c4, r0, d.in_progress, d.bktrack_in_progress  // Branch Delay Slot
+        tblwr          d.fence, 0
 
         // take the busy flag
         tblwr          d.busy, 1
@@ -446,10 +446,8 @@ process_recirc:
     nop            // Branch Delay Slot
 
 process_sge_recirc:
-    // nothing to be done here, table 3 is programmed to execute req_tx_sqsge_process
-    phvwr.e        CAPRI_PHV_FIELD(TO_S1_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd
-
-    nop
+    phvwr          CAPRI_PHV_FIELD(TO_S1_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_sqsge_iterate_process, r0)
 
 process_bind_mw_recirc:
     //CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_bind_mw_rkey_process, r0)
