@@ -234,20 +234,14 @@ static void sonic_ev_work_handler(struct work_struct *work)
 		if ((cur_ts - swd->timestamp) > SONIC_EV_WORK_TIMEOUT) {
 			OSAL_LOG_WARN("timed out work item %u with %u events\n",
 				      work_id, incomplete_count);
-			pnso_poll_debug_set(true);
 			for (i = 0; i < swd->ev_count; i++) {
 				evd = &swd->ev_data[i];
 				if (evd->data) {
-					if (!sonic_intr_db_fired_chk(evl, evd->evid, &fired_val))
-						OSAL_LOG_ERROR("ev %u evid %d never fired: val 0x%x\n", i, evd->evid, fired_val);
-					pnso_request_poller((void *)evd->data);
-
 					evd->data = 0;
 					sonic_intr_db_fired_clr(evl, evd->evid);
 					sonic_put_evid(evl, evd->evid);
 				}
 			}
-			pnso_poll_debug_set(false);
 			complete_count += incomplete_count;
 			incomplete_count = 0;
 		} else {
