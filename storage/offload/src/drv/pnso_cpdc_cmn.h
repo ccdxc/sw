@@ -90,6 +90,9 @@ pnso_error_t cpdc_setup_seq_desc(struct service_info *svc_info,
 pnso_error_t cpdc_setup_interrupt_params(struct service_info *svc_info,
 		void *poll_ctx);
 
+void cpdc_update_batch_tags(struct service_info *svc_info,
+		uint32_t num_tags);
+
 pnso_error_t cpdc_convert_desc_error(int error);
 
 void cpdc_pprint_mpools(struct per_core_resource *pcr);

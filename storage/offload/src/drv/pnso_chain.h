@@ -157,13 +157,17 @@ struct service_ops {
 struct sequencer_info {
 	struct queue *sqi_seq_q;
 	struct sonic_accel_ring *sqi_ring;	/* CPDC hot/cold, XTS, etc.  */
+
 	uint16_t sqi_qtype;
 	uint16_t sqi_status_qtype;
 	uint16_t sqi_index;
+
 	uint8_t sqi_batch_mode;
 	uint16_t sqi_batch_size;
-	void *sqi_desc;      /* sequencer descriptor */
+
+	void *sqi_desc;      			/* sequencer descriptor */
 	uint8_t *sqi_status_desc;
+
 	uint32_t sqi_hw_dflt_takes;
 	uint32_t sqi_hw_total_takes;
 	uint32_t sqi_seq_total_takes;
@@ -171,7 +175,7 @@ struct sequencer_info {
 };
 
 struct service_batch_info {
-	uint16_t sbi_num_entries;	/* totol # of requests */
+	uint16_t sbi_num_entries;	/* total # of requests */
 	uint16_t sbi_bulk_desc_idx;	/* index within batch info descs */
 	uint16_t sbi_desc_idx;	/* index within bulk desc */
 	struct batch_info *sbi_batch_info; /* bac kpointer to batch info if any */
@@ -275,6 +279,8 @@ struct service_chain {
 	struct pnso_service_result *sc_res;	/* caller supplied result */
 
 	struct per_core_resource *sc_pcr;	/* to access pool/etc. */
+	struct batch_info *sc_batch_info;	/* backpointer to  batch info */
+
 	struct service_deps sc_svc_deps;	/* to share dependent params */
 
 	completion_cb_t	sc_req_cb;	/* caller supplied call-back */

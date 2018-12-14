@@ -26,7 +26,13 @@ extern "C" {
 #define GET_PAGE_ENTRY(p, idx)	\
 	(&p->bp_entries[idx & ((1 << MAX_PAGE_ENTRIES_SHIFT_BITS) - 1)])
 
+struct batch_page_tags {
+	uint16_t bpt_num_hashes;	/* total # of hashes in a page */
+	uint16_t bpt_num_chksums;	/* total # of chksums in a page */
+};
+
 struct batch_page {
+	struct batch_page_tags bp_tags;
 	struct batch_page_entry {
 		struct pnso_service_request *bpe_req;
 		struct pnso_service_result *bpe_res;

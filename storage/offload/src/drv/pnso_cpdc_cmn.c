@@ -51,6 +51,8 @@ cpdc_poll(const struct service_info *svc_info)
 	OSAL_LOG_DEBUG("enter ...");
 
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
+	OSAL_LOG_ERROR("--- YOYO 0x" PRIx64, (uint64_t) status_desc);
+	CPDC_PPRINT_STATUS_DESC((struct cpdc_status_desc *) status_desc);
 
 	if ((svc_info->si_flags & CHAIN_SFLAG_MODE_POLL) ||
 		(svc_info->si_flags & CHAIN_SFLAG_MODE_ASYNC)) {
@@ -637,6 +639,57 @@ cpdc_is_service_in_batch(uint8_t flags)
 	return ((flags & CHAIN_SFLAG_IN_BATCH) &&
 			((flags & CHAIN_SFLAG_LONE_SERVICE) ||
 			 (flags & CHAIN_SFLAG_FIRST_SERVICE))) ? true : false;
+}
+
+static void
+update_batch_tags(struct service_info *svc_info, uint32_t num_tags)
+{
+	struct batch_info *batch_info;
+	struct batch_page *batch_page;
+	struct service_chain *chain;
+	struct service_batch_info *svc_batch_info;
+
+	chain = svc_info->si_centry->ce_chain_head;
+	svc_batch_info = &svc_info->si_batch_info;
+
+	batch_info = chain->sc_batch_info;
+	batch_page = batch_info->bi_pages[svc_batch_info->sbi_bulk_desc_idx];
+
+	OSAL_LOG_DEBUG("batch_info: 0x" PRIx64 " batch_page: 0x" PRIx64 " desc_idx: %u bulk_desc: %u",
+			(uint64_t) batch_info, (uint64_t) batch_page,
+			svc_batch_info->sbi_desc_idx,
+			svc_batch_info->sbi_bulk_desc_idx);
+
+	if (svc_info->si_type == PNSO_SVC_TYPE_HASH)
+		batch_page->bp_tags.bpt_num_hashes += num_tags;
+	else
+		batch_page->bp_tags.bpt_num_chksums += num_tags;
+	
+	OSAL_LOG_DEBUG("svc_type: %d page_idx: %u bpt_num_hashes: %u bpt_num_chksums: %u num_tags: %u",
+			svc_info->si_type, svc_batch_info->sbi_desc_idx,
+			batch_page->bp_tags.bpt_num_hashes,
+			batch_page->bp_tags.bpt_num_chksums, num_tags);
+}
+
+void
+cpdc_update_batch_tags(struct service_info *svc_info, uint32_t num_tags)
+{
+	if (!cpdc_is_service_in_batch(svc_info->si_flags))
+		return;
+
+	if (svc_info->si_type == PNSO_SVC_TYPE_HASH) {
+		if (svc_info->si_desc_flags & PNSO_HASH_DFLAG_PER_BLOCK)
+			update_batch_tags(svc_info, num_tags);
+		return;
+	}
+
+	if (svc_info->si_type == PNSO_SVC_TYPE_CHKSUM) {
+		if (svc_info->si_desc_flags &  PNSO_CHKSUM_DFLAG_PER_BLOCK)
+			update_batch_tags(svc_info, num_tags);
+		return;
+	}
+
+	OSAL_ASSERT(0);
 }
 
 pnso_error_t

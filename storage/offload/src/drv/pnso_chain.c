@@ -634,6 +634,8 @@ chn_create_chain(struct request_params *req_params)
 	chain->sc_res = res;
 
 	chain->sc_pcr = pcr;
+	if (req_params->rp_flags & REQUEST_RFLAG_TYPE_BATCH)
+		chain->sc_batch_info = req_params->rp_batch_info;
 
 	set_chain_mode(req_params->rp_flags, &chain->sc_flags);
 

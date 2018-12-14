@@ -56,11 +56,14 @@ pprint_batch_info(struct batch_info *batch_info)
 		OSAL_LOG_DEBUG("%30s: 0x" PRIx64 "/0x" PRIx64,
 				"",
 				(uint64_t) batch_page, (uint64_t) page_entry);
-		OSAL_LOG_DEBUG("%30s: 0x" PRIx64 "/0x" PRIx64 "/0x" PRIx64,
+
+		OSAL_LOG_DEBUG("%30s: 0x" PRIx64 "/0x" PRIx64 "/0x" PRIx64 "/%u/%u",
 				"",
 				(uint64_t) page_entry->bpe_req,
 				(uint64_t) page_entry->bpe_res,
-				(uint64_t) page_entry->bpe_chain);
+				(uint64_t) page_entry->bpe_chain,
+				batch_page->bp_tags.bpt_num_hashes,
+				batch_page->bp_tags.bpt_num_chksums);
 	}
 
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "bi_req_cb",
