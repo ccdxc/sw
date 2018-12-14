@@ -18,6 +18,9 @@ struct sqcb4_t d;
 #define MASK_16 16
 #define MASK_32 32
 
+#define K_LIF_ERROR_ID_VLD CAPRI_KEY_FIELD(IN_P, lif_error_id_vld)
+#define K_LIF_ERROR_ID CAPRI_KEY_FIELD(IN_P, lif_error_id)
+
 %%
 
 .param  lif_stats_base
@@ -32,7 +35,9 @@ req_tx_stats_process:
 
     add              GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS //BD Slot
 
-    seq              c1, CAPRI_KEY_FIELD(IN_P, sq_drain), 1
+    bbeq            K_LIF_ERROR_ID_VLD, 1, handle_error_lif_stats
+
+    seq              c1, CAPRI_KEY_FIELD(IN_P, sq_drain), 1 //BD Slot
     tblmincri.c1.e   d.num_sq_drains, MASK_16, 1
 
     bbeq             CAPRI_KEY_FIELD(IN_P, npg), 1, handle_npg_stats
@@ -109,6 +114,28 @@ handle_timeout_stats:
     crestore      [c3, c2, c1], CAPRI_KEY_RANGE(IN_P, timeout, timeout_rnr), 0x7
     tblmincri.c2  d.num_timeout_local_ack, MASK_16, 1
     tblmincri.c1  d.num_timeout_rnr, MASK_16, 1
+
+    nop.e
+    nop   
+
+handle_error_lif_stats:
+
+#ifndef GFT
+    bbeq            K_LIF_ERROR_ID_VLD, 0, error_done
+
+    addi            r1, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START //BD Slot
+    addi            r2, r0, lif_stats_base[30:0] // substract 0x80000000 because hw adds it
+    add             r2, r2, K_GLOBAL_LIF, LIF_STATS_SIZE_SHIFT
+
+    #lif req error-id stats
+    addi            r3, r2, LIF_STATS_REQ_DEBUG_ERR_START_OFFSET
+    add             r3, r3, K_LIF_ERROR_ID, 3
+
+    ATOMIC_INC_VAL_1(r1, r3, r4, r5, 1)
+
+error_done:
+#endif
+
     nop.e
     nop   
 

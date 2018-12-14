@@ -332,7 +332,9 @@ header_type resp_tx_to_stage_stats_info_t {
         last_psn                         :   24;   
         last_syndrome                    :    8;
         last_msn                         :   24;
-        pad                              :   56;
+        lif_error_id_vld                 :    1;
+        lif_error_id                     :    4;
+        pad                              :   51;
     }
 }
 
@@ -786,6 +788,8 @@ action resp_tx_stats_process () {
     modify_field(to_s7_stats_info_scr.last_psn, to_s7_stats_info.last_psn);
     modify_field(to_s7_stats_info_scr.last_syndrome, to_s7_stats_info.last_syndrome);
     modify_field(to_s7_stats_info_scr.last_msn, to_s7_stats_info.last_msn);
+    modify_field(to_s7_stats_info_scr.lif_error_id_vld, to_s7_stats_info.lif_error_id_vld);
+    modify_field(to_s7_stats_info_scr.lif_error_id, to_s7_stats_info.lif_error_id);
     modify_field(to_s7_stats_info_scr.pad, to_s7_stats_info.pad);
 
     // stage to stage

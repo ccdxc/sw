@@ -19,6 +19,9 @@ struct sqcb5_t d;
 #define MASK_16 16
 #define MASK_32 32
 
+#define K_LIF_ERROR_ID_VLD CAPRI_KEY_FIELD(IN_P, lif_error_id_vld)
+#define K_LIF_ERROR_ID CAPRI_KEY_FIELD(IN_P, lif_error_id)
+
 %%
 
 .param  lif_stats_base
@@ -33,7 +36,9 @@ req_rx_stats_process:
 
     add              GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS //BD Slot
 
-    crestore         [c6, c5, c4, c3, c2, c1], GLOBAL_FLAGS, (REQ_RX_FLAG_RDMA_FEEDBACK | REQ_RX_FLAG_ATOMIC_AETH | REQ_RX_FLAG_ACK | REQ_RX_FLAG_READ_RESP | REQ_RX_FLAG_FIRST | REQ_RX_FLAG_ONLY)
+    bbeq             K_LIF_ERROR_ID_VLD, 1, handle_error_lif_stats
+
+    crestore         [c6, c5, c4, c3, c2, c1], GLOBAL_FLAGS, (REQ_RX_FLAG_RDMA_FEEDBACK | REQ_RX_FLAG_ATOMIC_AETH | REQ_RX_FLAG_ACK | REQ_RX_FLAG_READ_RESP | REQ_RX_FLAG_FIRST | REQ_RX_FLAG_ONLY) //BD Slot
 
     bcf              [c6], handle_lif_stats
     tblmincri.c6     d.num_feedback, MASK_16, 1 //BD Slot
@@ -79,6 +84,28 @@ done:
 
     nop.e
     nop
+
+handle_error_lif_stats:
+
+#ifndef GFT
+    bbeq            K_LIF_ERROR_ID_VLD, 0, error_done
+
+    addi            r1, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START //BD Slot
+    addi            r2, r0, lif_stats_base[30:0] // substract 0x80000000 because hw adds it
+    add             r2, r2, K_GLOBAL_LIF, LIF_STATS_SIZE_SHIFT
+
+    #lif req error-id stats
+    addi            r3, r2, LIF_STATS_REQ_DEBUG_ERR_START_OFFSET
+    add             r3, r3, K_LIF_ERROR_ID, 3
+
+    ATOMIC_INC_VAL_1(r1, r3, r4, r5, 1)
+
+error_done:
+#endif
+
+    nop.e
+    nop
+
 
 
 bubble_to_next_stage:

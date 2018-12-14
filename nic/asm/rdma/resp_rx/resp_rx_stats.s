@@ -19,6 +19,8 @@ struct rqcb5_t d;
 #define MASK_32 32
 
 #define K_FLAGS CAPRI_KEY_RANGE(IN_P, incr_recirc_drop, dup_rd_atomic_drop)
+#define K_LIF_ERROR_ID_VLD CAPRI_KEY_FIELD(IN_P, lif_error_id_vld)
+#define K_LIF_ERROR_ID CAPRI_KEY_RANGE(IN_P, lif_error_id_sbit0_ebit1, lif_error_id_sbit2_ebit3)
 
 %%
 
@@ -40,7 +42,7 @@ resp_rx_stats_process:
     tblmincri.c5     d.num_dup_rd_atomic_bt_pkts, MASK_16, 1
     tblmincri.c4     d.num_dup_rd_atomic_drop_pkts, MASK_16, 1
 
-    bcf              [c7 | c6 | c5 | c4], done
+    bcf              [c7 | c6 | c5 | c4], handle_error_lif_stats
     add              GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS //BD Slot
 
     tbladd           d.num_bytes, CAPRI_KEY_FIELD(to_s7_stats_info, pyld_bytes)
@@ -105,6 +107,30 @@ done:
 
     nop.e
     nop
+
+handle_error_lif_stats:
+
+#ifndef GFT
+    bbeq            K_LIF_ERROR_ID_VLD, 0, error_done
+
+    addi            r1, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START //BD Slot
+    addi            r2, r0, lif_stats_base[30:0] // substract 0x80000000 because hw adds it
+    add             r2, r2, K_GLOBAL_LIF, LIF_STATS_SIZE_SHIFT
+
+    #lif resp error-id stats
+    addi            r3, r2, LIF_STATS_RESP_DEBUG_ERR_START_OFFSET
+    add             r3, r3, K_LIF_ERROR_ID, 3
+
+    ATOMIC_INC_VAL_1(r1, r3, r4, r5, 1)
+
+error_done:
+
+#endif
+
+    nop.e
+    nop
+
+
 
 bubble_to_next_stage:
     seq           c1, r1[4:2], STAGE_6

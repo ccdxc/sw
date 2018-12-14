@@ -15,6 +15,9 @@ struct rqcb4_t d;
 #define K_LAST_MSN CAPRI_KEY_FIELD(IN_P, last_msn)
 #define K_LAST_PSN CAPRI_KEY_FIELD(IN_P, last_psn)
 
+#define K_LIF_ERROR_ID_VLD CAPRI_KEY_FIELD(IN_P, lif_error_id_vld)
+#define K_LIF_ERROR_ID CAPRI_KEY_FIELD(IN_P, lif_error_id)
+
 #define GLOBAL_FLAGS r7
 #define RQCB4_ADDR   r3
 #define STATS_PC     r6
@@ -47,6 +50,8 @@ resp_tx_stats_process:
     bcf              [c1], err_dis_qp_stats
     tblmincri.c7     d.num_atomic_resp_msgs, MASK_16, 1 //BD Slot
     tblmincri.c6     d.num_read_resp_pkts, MASK_32, 1
+
+    bbeq             K_LIF_ERROR_ID_VLD, 1, handle_error_lif_stats
 
     setcf            c1, [c4 | c2]  // only | last
     setcf            c1, [c6 & c1]  // read & (only | last)
@@ -118,5 +123,28 @@ exit:
 err_dis_qp_stats:
     tblwr           d.last_syndrome, K_LAST_SYNDROME
     tblwr           d.last_psn, K_LAST_PSN
-    tblwr.e         d.last_msn, K_LAST_MSN
-    tblwr           d.error_disable_qp, 1   //Exit Slot
+    tblwr           d.last_msn, K_LAST_MSN
+    tblwr           d.error_disable_qp, 1
+
+handle_error_lif_stats:
+
+#ifndef GFT
+    bbeq            K_LIF_ERROR_ID_VLD, 0, error_done
+
+    addi            r1, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START //BD Slot
+    addi            r2, r0, lif_stats_base[30:0] // substract 0x80000000 because hw adds it
+    add             r2, r2, K_GLOBAL_LIF, LIF_STATS_SIZE_SHIFT
+
+    #lif req error-id stats
+    addi            r3, r2, LIF_STATS_RESP_DEBUG_ERR_START_OFFSET
+    add             r3, r3, K_LIF_ERROR_ID, 3
+
+    ATOMIC_INC_VAL_1(r1, r3, r4, r5, 1)
+
+error_done:
+#endif
+
+    nop.e
+    nop
+
+

@@ -1820,24 +1820,100 @@ struct ionic_lif_stats {
 	uint64_t rsvd10;
 	uint64_t rsvd11;
 	uint64_t rsvd12;
+
 	// RDMA/ROCE TX
-	uint64_t roce_tx_ucast_bytes;
-	uint64_t roce_tx_ucast_packets;
-	uint64_t roce_tx_mcast_bytes;
-	uint64_t roce_tx_mcast_packets;
-	uint64_t roce_tx_cnp_packets;
+	uint64_t tx_rdma_ucast_bytes;
+	uint64_t tx_rdma_ucast_packets;
+	uint64_t tx_rdma_mcast_bytes;
+	uint64_t tx_rdma_mcast_packets;
+	uint64_t tx_rdma_cnp_packets;
 	uint64_t rsvd13;
 	uint64_t rsvd14;
 	uint64_t rsvd15;
+
 	// RDMA/ROCE RX
-	uint64_t roce_rx_ucast_bytes;
-	uint64_t roce_rx_ucast_packets;
-	uint64_t roce_rx_mcast_bytes;
-	uint64_t roce_rx_mcast_packets;
-	uint64_t roce_rx_cnp_packets;
-	uint64_t roce_rx_ecn_packets;
+	uint64_t rx_rdma_ucast_bytes;
+	uint64_t rx_rdma_ucast_packets;
+	uint64_t rx_rdma_mcast_bytes;
+	uint64_t rx_rdma_mcast_packets;
+	uint64_t rx_rdma_cnp_packets;
+	uint64_t rx_rdma_ecn_packets;
 	uint64_t rsvd16;
 	uint64_t rsvd17;
+
+	uint64_t rsvd18;
+	uint64_t rsvd19;
+	uint64_t rsvd20;
+	uint64_t rsvd21;
+	uint64_t rsvd22;
+	uint64_t rsvd23;
+	uint64_t rsvd24;
+	uint64_t rsvd25;
+
+	uint64_t rsvd26;
+	uint64_t rsvd27;
+	uint64_t rsvd28;
+	uint64_t rsvd29;
+	uint64_t rsvd30;
+	uint64_t rsvd31;
+	uint64_t rsvd32;
+	uint64_t rsvd33;
+
+	uint64_t rsvd34;
+	uint64_t rsvd35;
+	uint64_t rsvd36;
+	uint64_t rsvd37;
+	uint64_t rsvd38;
+	uint64_t rsvd39;
+	uint64_t rsvd40;
+	uint64_t rsvd41;
+
+	uint64_t rsvd42;
+	uint64_t rsvd43;
+	uint64_t rsvd44;
+	uint64_t rsvd45;
+	uint64_t rsvd46;
+	uint64_t rsvd47;
+	uint64_t rsvd48;
+	uint64_t rsvd49;
+
+	// RDMA/ROCE REQ Error/Debugs (768 - 895)
+	uint64_t rdma_req_rx_pkt_seq_err;
+	uint64_t rdma_req_rx_rnr_retry_err;
+	uint64_t rdma_req_rx_remote_access_err;
+	uint64_t rdma_req_rx_remote_inv_req_err;
+	uint64_t rdma_req_rx_remote_oper_err;
+	uint64_t rdma_req_rx_implied_nak_seq_err;
+	uint64_t rdma_req_rx_cqe_err;
+	uint64_t rdma_req_rx_cqe_flush_err;
+
+	uint64_t rdma_req_tx_local_access_err;
+	uint64_t rdma_req_tx_local_oper_err;
+	uint64_t rdma_req_tx_memory_mgmt_err;
+	uint64_t rsvd50;
+	uint64_t rsvd51;
+	uint64_t rsvd52;
+	uint64_t rsvd53;
+	uint64_t rsvd54;
+
+	// RDMA/ROCE RESP Error/Debugs (896 - 1023)
+	uint64_t rdma_resp_rx_dup_requests;
+	uint64_t rdma_resp_rx_out_of_buffer;
+	uint64_t rdma_resp_rx_out_of_seq_pkts;
+	uint64_t rdma_resp_rx_cqe_err;
+	uint64_t rdma_resp_rx_cqe_flush_err;
+	uint64_t rdma_resp_rx_local_len_err;
+	uint64_t rsvd55;
+	uint64_t rsvd56;
+
+	uint64_t rdma_resp_tx_pkt_seq_err;
+	uint64_t rdma_resp_tx_rnr_retry_err;
+	uint64_t rdma_resp_tx_remote_access_err;
+	uint64_t rdma_resp_tx_remote_inv_req_err;
+	uint64_t rdma_resp_tx_remote_oper_err;
+	uint64_t rsvd57;
+	uint64_t rsvd58;
+	uint64_t rsvd59;
 };
 
 #pragma pack(pop)

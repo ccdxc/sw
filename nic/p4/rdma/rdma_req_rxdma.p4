@@ -260,7 +260,9 @@ header_type req_rx_to_stage_sqcb1_wb_info_t {
 header_type req_rx_to_stage_stats_info_t {
     fields {
         pyld_bytes                       :   16;
-        pad                              :  111;
+        lif_error_id_vld                 :    1;
+        lif_error_id                     :    4;
+        pad                              :  106;
     }
 }
 
@@ -1499,6 +1501,8 @@ action req_rx_stats_process () {
 
     // to stage
     modify_field(to_s7_stats_info_scr.pyld_bytes, to_s7_stats_info.pyld_bytes);
+    modify_field(to_s7_stats_info_scr.lif_error_id_vld, to_s7_stats_info.lif_error_id_vld);
+    modify_field(to_s7_stats_info_scr.lif_error_id, to_s7_stats_info.lif_error_id);
     modify_field(to_s7_stats_info_scr.pad, to_s7_stats_info.pad);
 
     // stage to stage

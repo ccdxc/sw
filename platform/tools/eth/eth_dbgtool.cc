@@ -348,18 +348,44 @@ eth_stats(uint16_t lif)
     printf("tx_bcast_drop_packets       : %lu\n", stats.tx_bcast_drop_packets);
     printf("tx_dma_error                : %lu\n", stats.tx_dma_error);
 
-    printf("roce_tx_ucast_bytes         : %lu\n", stats.roce_tx_ucast_bytes);
-    printf("roce_tx_ucast_packets       : %lu\n", stats.roce_tx_ucast_packets);
-    printf("roce_tx_mcast_bytes         : %lu\n", stats.roce_tx_mcast_bytes);
-    printf("roce_tx_mcast_packets       : %lu\n", stats.roce_tx_mcast_packets);
-    printf("roce_tx_cnp_packets         : %lu\n", stats.roce_tx_cnp_packets);
+    printf("tx_rdma_ucast_bytes         : %lu\n", stats.tx_rdma_ucast_bytes);
+    printf("tx_rdma_ucast_packets       : %lu\n", stats.tx_rdma_ucast_packets);
+    printf("tx_rdma_mcast_bytes         : %lu\n", stats.tx_rdma_mcast_bytes);
+    printf("tx_rdma_mcast_packets       : %lu\n", stats.tx_rdma_mcast_packets);
+    printf("tx_rdma_cnp_packets         : %lu\n", stats.tx_rdma_cnp_packets);
 
-    printf("roce_rx_ucast_bytes         : %lu\n", stats.roce_rx_ucast_bytes);
-    printf("roce_rx_ucast_packets       : %lu\n", stats.roce_rx_ucast_packets);
-    printf("roce_rx_mcast_bytes         : %lu\n", stats.roce_rx_mcast_bytes);
-    printf("roce_rx_mcast_packets       : %lu\n", stats.roce_rx_mcast_packets);
-    printf("roce_rx_cnp_packets         : %lu\n", stats.roce_rx_cnp_packets);
-    printf("roce_rx_ecn_packets         : %lu\n", stats.roce_rx_ecn_packets);
+    printf("rx_rdma_ucast_bytes         : %lu\n", stats.rx_rdma_ucast_bytes);
+    printf("rx_rdma_ucast_packets       : %lu\n", stats.rx_rdma_ucast_packets);
+    printf("rx_rdma_mcast_bytes         : %lu\n", stats.rx_rdma_mcast_bytes);
+    printf("rx_rdma_mcast_packets       : %lu\n", stats.rx_rdma_mcast_packets);
+    printf("rx_rdma_cnp_packets         : %lu\n", stats.rx_rdma_cnp_packets);
+    printf("rx_rdma_ecn_packets         : %lu\n", stats.rx_rdma_ecn_packets);
+
+    printf("rdma_packet_seq_err         : %lu\n", stats.rdma_req_rx_pkt_seq_err);
+    printf("rdma_req_rnr_retry_err      : %lu\n", stats.rdma_req_rx_rnr_retry_err);
+    printf("rdma_req_remote_access_err  : %lu\n", stats.rdma_req_rx_remote_access_err);
+    printf("rdma_req_remote_inv_req_err : %lu\n", stats.rdma_req_rx_remote_inv_req_err);
+    printf("rdma_req_remote_oper_err    : %lu\n", stats.rdma_req_rx_remote_oper_err);
+    printf("rdma_implied_nak_seq_err    : %lu\n", stats.rdma_req_rx_implied_nak_seq_err);
+    printf("rdma_req_cqe_err            : %lu\n", stats.rdma_req_rx_cqe_err);
+    printf("rdma_req_cqe_flush_err      : %lu\n", stats.rdma_req_rx_cqe_flush_err);
+
+    printf("rdma_req_local_access_err   : %lu\n", stats.rdma_req_tx_local_access_err);
+    printf("rdma_req_local_oper_err     : %lu\n", stats.rdma_req_tx_local_oper_err);
+    printf("rdma_req_memory_mgmt_err    : %lu\n", stats.rdma_req_tx_memory_mgmt_err);
+
+    printf("rdma_duplicate_request      : %lu\n", stats.rdma_resp_rx_dup_requests);
+    printf("rdma_out_of_buffer          : %lu\n", stats.rdma_resp_rx_out_of_buffer);
+    printf("rdma_out_of_sequence        : %lu\n", stats.rdma_resp_rx_out_of_seq_pkts);
+    printf("rdma_resp_cqe_err           : %lu\n", stats.rdma_resp_rx_cqe_err);
+    printf("rdma_resp_cqe_flush_err     : %lu\n", stats.rdma_resp_rx_cqe_flush_err);
+    printf("rdma_resp_local_len_err     : %lu\n", stats.rdma_resp_rx_local_len_err);
+
+    printf("rdma_resp_pkt_seq_err       : %lu\n", stats.rdma_resp_tx_pkt_seq_err);
+    printf("rdma_resp_rnr_retry_err     : %lu\n", stats.rdma_resp_tx_rnr_retry_err);
+    printf("rdma_resp_remote_access_err : %lu\n", stats.rdma_resp_tx_remote_access_err);
+    printf("rdma_resp_remote_inv_req_err: %lu\n", stats.rdma_resp_tx_remote_inv_req_err);
+    printf("rdma_resp_remote_oper_err   : %lu\n", stats.rdma_resp_tx_remote_oper_err);
 
 }
 

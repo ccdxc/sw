@@ -2,6 +2,7 @@
 #include "resp_rx.h"
 #include "rqcb.h"
 #include "common_phv.h"
+#include "defines.h"
 
 struct resp_rx_phv_t p;
 struct rqcb1_t d;
@@ -646,7 +647,9 @@ duplicate_wr_send:
     */
     sub         r2, d.e_psn, 1 // since d.e_psn is a 24-bit value, sub can be used to decrement
     phvwr       p.s1.ack_info.psn, r2
-    phvwr       CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, dup_wr_send), 1
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, dup_wr_send), 1, \
+                CAPRI_PHV_RANGE(TO_S_STATS_INFO_P, lif_error_id_vld, lif_error_id), \
+                    ((1 << 4) | LIF_STATS_RDMA_RESP_STAT(LIF_STATS_RESP_RX_DUP_REQUEST_OFFSET))
 
 generate_ack:
     // forcefully turn on ACK req bit
@@ -687,7 +690,9 @@ duplicate_rd_atomic:
     bcf             [c1], drop_duplicate_rd_atomic
     tblwr.!c1.f     d.bt_in_progress, 1 //BD Slot
 
-    phvwr       CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, dup_rd_atomic_bt), 1
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, dup_rd_atomic_bt), 1, \
+                CAPRI_PHV_RANGE(TO_S_STATS_INFO_P, lif_error_id_vld, lif_error_id), \
+                    ((1 << 4) | LIF_STATS_RDMA_RESP_STAT(LIF_STATS_RESP_RX_DUP_REQUEST_OFFSET))
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_START)
 
     // copy bt_info to rqcb2
@@ -713,7 +718,9 @@ duplicate_rd_atomic:
     phvwr           p.{s2.bt_info.va...s2.bt_info.r_key}, CAPRI_RXDMA_RETH_VA_R_KEY //Exit Slot
     
 drop_duplicate_rd_atomic:
-    phvwr       CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, dup_rd_atomic_drop), 1
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, dup_rd_atomic_drop), 1, \
+                CAPRI_PHV_RANGE(TO_S_STATS_INFO_P, lif_error_id_vld, lif_error_id), \
+                    ((1 << 4) | LIF_STATS_RDMA_RESP_STAT(LIF_STATS_RESP_RX_DUP_REQUEST_OFFSET))
     //Generate DMA command to skip to payload end
     DMA_CMD_STATIC_BASE_GET_E(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD)
     DMA_SKIP_CMD_SETUP(DMA_CMD_BASE, 1 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/) //Exit Slot

@@ -35,7 +35,7 @@ handle_lif_stats:
     addi            r2, r0, lif_stats_base[30:0] // substract 0x80000000 because hw adds it
     add             r2, r2, K_GLOBAL_LIF, LIF_STATS_SIZE_SHIFT
 
-    #uc bytes and packets
+    #rx cnp packets
     addi            r3, r2, LIF_STATS_RX_RDMA_CNP_PACKETS_OFFSET
 
     ATOMIC_INC_VAL_1(r1, r3, r4, r5, 1)

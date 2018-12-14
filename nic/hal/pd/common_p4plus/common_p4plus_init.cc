@@ -11,7 +11,7 @@
 namespace hal {
 namespace pd {
 
-#define P4PLUS_SYMBOLS_MAX  135
+#define P4PLUS_SYMBOLS_MAX  141
 
 uint32_t
 common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type)
@@ -866,8 +866,6 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_LIF_STATS);
     i++;
 
-    // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
-    // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
     // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
     HAL_ASSERT(i <= P4PLUS_SYMBOLS_MAX);
 
