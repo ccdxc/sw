@@ -715,6 +715,7 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 	uint16_t qtype;
 	uint8_t *seq_status_desc;
 	struct sonic_accel_ring *ring = svc_info->si_seq_info.sqi_ring;
+	struct interm_buf_list *iblist;
 
 	struct lif *lif;
 
@@ -740,9 +741,8 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 	}
 
 	err = sonic_get_seq_statusq(lif, SONIC_QTYPE_CPDC_STATUS, &seq_spec->sqs_seq_status_q);
-	if (err) {
+	if (err)
 		goto out;
-	}
 
 	seq_status_desc = (uint8_t *) sonic_q_consume_entry(seq_spec->sqs_seq_status_q, &index);
 	if (!seq_status_desc) {
@@ -774,6 +774,30 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 
 	chain_params->ccp_cmd.ccpc_sgl_pdma_pad_only = 1;
 	chain_params->ccp_sgl_vec_addr = cp_desc->cd_dst;
+
+	if (chn_service_has_sub_chain(svc_info)) {
+		OSAL_ASSERT(chn_service_has_interm_blist(svc_info));
+	
+		iblist = &svc_info->si_iblist;
+		chain_params->ccp_comp_buf_addr = iblist->blist.buffers[0].buf;
+		chain_params->ccp_data_len = iblist->blist.buffers[0].len;
+
+		if (svc_info->si_sgl_pdma) {
+			chain_params->ccp_cmd.ccpc_sgl_pdma_en = 1;
+			// SGL_PDMA_PPRINT(chain_params->ccp_sgl_pdma_dst_addr);
+		}
+
+		chain_params->ccp_status_addr_0 = mpool_get_object_phy_addr(
+					MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS_DESC,
+					svc_info->si_istatus_desc);
+
+		chain_params->ccp_status_addr_1 =
+			sonic_virt_to_phy(svc_info->si_status_desc);
+		chain_params->ccp_status_len = sizeof(struct cpdc_status_desc);
+
+		chain_params->ccp_cmd.ccpc_status_dma_en = 1;
+		chain_params->ccp_cmd.ccpc_stop_chain_on_error = 1;
+	}
 
 	OSAL_LOG_INFO("ring: %s index: %u src_desc: 0x" PRIx64 " status_desc: 0x" PRIx64 "",
 			ring->name, index, (uint64_t) cp_desc,
