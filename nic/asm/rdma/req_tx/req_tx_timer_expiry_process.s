@@ -21,11 +21,6 @@ req_tx_timer_expiry_process:
     seq            c1, r1[4:2], STAGE_5
     bcf            [!c1], bubble_to_next_stage
 
-    // If no response is expected then drop this spurious timer expiry event
-    // Also unset timer_on and not restart timer. Timer will be restarted
-    // upon transmission of next new request.
-    scwle24        c1, d.rexmit_psn, d.exp_rsp_psn // Branch Delay Slot
-    bcf            [!c1], spurious_expiry
     // Check if at this expiry event retransmit time has reached
     slt            c1, r4, d.last_ack_or_req_ts // Branch Delay Slot
     // Handle rollover by adding max-timer-ticks to cur-timestamp. 
@@ -68,6 +63,12 @@ check_local_ack_timeout:
 
 local_ack_timeout:
 
+    // If no response is expected then drop this spurious timer expiry event
+    // Also unset timer_on and not restart timer. Timer will be restarted
+    // upon transmission of next new request.
+    scwle24        c1, d.rexmit_psn, d.exp_rsp_psn // Branch Delay Slot
+    bcf            [!c1], spurious_expiry
+
     /*
      * 4.096 * (2 ^ local_ack_timeout) usec.
      * Rounded-off to 4 * (2 ^ local_ack_timeout) usec since floating-point is not supported.
@@ -77,7 +78,7 @@ local_ack_timeout:
      * So actual timeout interval will be 8 * (2 ^ local_ack_timeout) usec.
      */
 
-    sll            r2, 8, d.local_ack_timeout
+    sll            r2, 8, d.local_ack_timeout //BD-slot
     mul            r2, r2, rdma_num_clock_ticks_per_us
 
     // Ignore expiry event if retransmit time has not reached
