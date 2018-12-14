@@ -30,6 +30,7 @@ var (
 	qosXoff        uint32
 	qosBw          uint32
 	qosBps         uint32
+	qosPfc         bool
 )
 
 var qosShowCmd = &cobra.Command{
@@ -104,32 +105,34 @@ func init() {
 	coppShowCmd.Flags().Uint64Var(&coppHandle, "handle", 0, "Specify copp handle")
 
 	debugCreateCmd.AddCommand(qosClassCreateCmd)
-	qosClassCreateCmd.Flags().StringVar(&qosGroup, "qosgroup", "user-defined-1", "Specify qos group")
+	qosClassCreateCmd.Flags().StringVar(&qosGroup, "qosgroup", "", "Specify qos group. Valid groups: user-defined-1,user-defined-2,user-defined-3,user-defined-4,user-defined-5,user-defined-6")
 	qosClassCreateCmd.Flags().Uint32Var(&qosMtu, "mtu", 1500, "Specify MTU")
 	qosClassCreateCmd.Flags().Uint32Var(&qosPcp, "dot1q-pcp", 0, "Specify pcp value 0-7")
 	qosClassCreateCmd.Flags().StringVar(&qosDscp, "dscp", "0", "Specify dscp values 0-63 as --dscp 10,20,30")
 	qosClassCreateCmd.Flags().Uint32Var(&qosBw, "dwrr-bw", 0, "Specify DWRR BW percentage (0-100)")
 	qosClassCreateCmd.Flags().Uint32Var(&qosBps, "strict-priority-rate", 0, "Specify strict priority rate in bps")
-	qosClassCreateCmd.Flags().Uint32Var(&qosXon, "xon-threshold", 3000, "Specify xon threshold")
-	qosClassCreateCmd.Flags().Uint32Var(&qosXoff, "xoff-threshold", 3000, "Specify xoff threshold")
+	qosClassCreateCmd.Flags().Uint32Var(&qosXon, "xon-threshold", 0, "Specify xon threshold (2 * mtu to 4 * mtu)")
+	qosClassCreateCmd.Flags().Uint32Var(&qosXoff, "xoff-threshold", 0, "Specify xoff threshold (2 * mtu to 8 * mtu)")
+	qosClassCreateCmd.Flags().BoolVar(&qosPfc, "pfc-enable", false, "Enable PFC with default values")
 	qosClassCreateCmd.MarkFlagRequired("qosgroup")
 	qosClassCreateCmd.MarkFlagRequired("mtu")
 	qosClassCreateCmd.MarkFlagRequired("dot1q-pcp")
 	qosClassCreateCmd.MarkFlagRequired("dscp")
 
 	debugDeleteCmd.AddCommand(qosClassDeleteCmd)
-	qosClassDeleteCmd.Flags().StringVar(&qosGroup, "qosgroup", "user-defined-1", "Specify qos group")
+	qosClassDeleteCmd.Flags().StringVar(&qosGroup, "qosgroup", "user-defined-1", "Specify qos group. Valid groups: user-defined-1,user-defined-2,user-defined-3,user-defined-4,user-defined-5,user-defined-6")
 	qosClassDeleteCmd.MarkFlagRequired("qosgroup")
 
 	debugUpdateCmd.AddCommand(qosClassUpdateCmd)
-	qosClassUpdateCmd.Flags().StringVar(&qosGroup, "qosgroup", "user-defined-1", "Specify qos group")
+	qosClassUpdateCmd.Flags().StringVar(&qosGroup, "qosgroup", "", "Specify qos group. Valid groups: default,user-defined-1,user-defined-2,user-defined-3,user-defined-4,user-defined-5,user-defined-6")
 	qosClassUpdateCmd.Flags().Uint32Var(&qosMtu, "mtu", 1500, "Specify MTU")
 	qosClassUpdateCmd.Flags().Uint32Var(&qosPcp, "dot1q-pcp", 0, "Specify pcp value 0-7")
 	qosClassUpdateCmd.Flags().StringVar(&qosDscp, "dscp", "0", "Specify dscp values 0-63 as --dscp 10,20,30")
 	qosClassUpdateCmd.Flags().Uint32Var(&qosBw, "dwrr-bw", 0, "Specify DWRR BW percentage (0-100)")
 	qosClassUpdateCmd.Flags().Uint32Var(&qosBps, "strict-priority-rate", 0, "Specify strict priority rate in bps")
-	qosClassUpdateCmd.Flags().Uint32Var(&qosXon, "xon-threshold", 3000, "Specify xon threshold")
-	qosClassUpdateCmd.Flags().Uint32Var(&qosXoff, "xoff-threshold", 3000, "Specify xoff threshold")
+	qosClassUpdateCmd.Flags().Uint32Var(&qosXon, "xon-threshold", 0, "Specify xon threshold (2 * mtu to 4 * mtu)")
+	qosClassUpdateCmd.Flags().Uint32Var(&qosXoff, "xoff-threshold", 0, "Specify xoff threshold (2 * mtu to 8 * mtu)")
+	qosClassUpdateCmd.Flags().BoolVar(&qosPfc, "pfc-enable", false, "Enable PFC with default values")
 	qosClassUpdateCmd.MarkFlagRequired("qosgroup")
 	qosClassUpdateCmd.MarkFlagRequired("mtu")
 	qosClassUpdateCmd.MarkFlagRequired("dot1q-pcp")
@@ -194,11 +197,6 @@ func handleQosClassCreateUpdate(cmd *cobra.Command, args []string, update bool) 
 	}
 	defer c.Close()
 
-	if isQosGroupValid(qosGroup) != true {
-		fmt.Printf("Invalid qos-group specified\n")
-		return
-	}
-
 	if cmd.Flags().Changed("dwrr-bw") == false && cmd.Flags().Changed("strict-priority-rate") == false {
 		fmt.Printf("One of dwrr-bw and strict-priority-rate needs to be set. Refer to help string for more details\n")
 		return
@@ -233,7 +231,17 @@ func handleQosClassCreateUpdate(cmd *cobra.Command, args []string, update bool) 
 	}
 
 	dscp = stringToDscpArray(qosDscp)
+	pfc := false
 	if cmd.Flags().Changed("xon-threshold") && cmd.Flags().Changed("xoff-threshold") {
+		pfc = true
+	} else if cmd.Flags().Changed("pfc-enable") {
+		pfc = true
+		qosXon = 2 * qosMtu
+		qosXoff = 8 * qosMtu
+		fmt.Printf("Xon default threshold: %d, Xoff default threshold: %d\n", qosXon, qosXoff)
+	}
+
+	if pfc == true {
 		req = &halproto.QosClassSpec{
 			KeyOrHandle: &halproto.QosClassKeyHandle{
 				KeyOrHandle: &halproto.QosClassKeyHandle_QosGroup{
@@ -302,10 +310,18 @@ func handleQosClassCreateUpdate(cmd *cobra.Command, args []string, update bool) 
 }
 
 func qosClassCreateCmdHandler(cmd *cobra.Command, args []string) {
+	if isQosGroupValid(qosGroup) == false || strings.Contains(qosGroup, "user") == false {
+		fmt.Printf("Invalid qos-group specified. Valid groups: user-defined-1,user-defined-2,user-defined-3,user-defined-4,user-defined-5,user-defined-6\n")
+		return
+	}
 	handleQosClassCreateUpdate(cmd, args, false)
 }
 
 func qosClassUpdateCmdHandler(cmd *cobra.Command, args []string) {
+	if isQosGroupValid(qosGroup) == false || (strings.Contains(qosGroup, "user") == false && strings.Contains(qosGroup, "default") == false) {
+		fmt.Printf("Invalid qos-group specified. Valid groups: default,user-defined-1,user-defined-2,user-defined-3,user-defined-4,user-defined-5,user-defined-6\n")
+		return
+	}
 	handleQosClassCreateUpdate(cmd, args, true)
 }
 
@@ -685,6 +701,9 @@ func qosClassHeaderPrint() {
 
 func qosClassPrintOne(resp *halproto.QosClassSpec) {
 	qosGroup := strings.Replace(resp.GetKeyOrHandle().GetQosGroup().String(), "_", "-", -1)
+	if strings.Contains(qosGroup, "INTERNAL") == true {
+		return
+	}
 	pfcStr := fmt.Sprintf("%d/%d", resp.GetPfc().GetXonThreshold(), resp.GetPfc().GetXoffThreshold())
 	scheduleStr := ""
 	if resp.GetSched().GetDwrr() == nil {
