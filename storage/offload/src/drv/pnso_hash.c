@@ -18,7 +18,7 @@
 #include "pnso_utils.h"
 
 static inline bool
-svc_is_dflag_pblock_enabled(uint16_t flags)
+is_dflag_pblock_enabled(uint16_t flags)
 {
 	return (flags & PNSO_HASH_DFLAG_PER_BLOCK) ? true : false;
 }
@@ -70,7 +70,7 @@ hash_setup(struct service_info *svc_info,
 
 	svc_info->si_type = PNSO_SVC_TYPE_HASH;
 	svc_info->si_desc_flags = pnso_hash_desc->flags;
-	per_block = svc_is_dflag_pblock_enabled(pnso_hash_desc->flags);
+	per_block = is_dflag_pblock_enabled(pnso_hash_desc->flags);
 
 	pcr = svc_info->si_pcr;
 
@@ -378,7 +378,7 @@ hash_read_status(const struct service_info *svc_info)
 
 	OSAL_ASSERT(svc_info);
 
-	per_block = svc_is_dflag_pblock_enabled(svc_info->si_desc_flags);
+	per_block = is_dflag_pblock_enabled(svc_info->si_desc_flags);
 	err = per_block ? hash_read_status_per_block(svc_info) :
 		hash_read_status_buffer(svc_info);
 
@@ -518,7 +518,7 @@ hash_write_result(struct service_info *svc_info)
 
 	OSAL_ASSERT(svc_info);
 
-	per_block = svc_is_dflag_pblock_enabled(svc_info->si_desc_flags);
+	per_block = is_dflag_pblock_enabled(svc_info->si_desc_flags);
 	err = per_block ? hash_write_result_per_block(svc_info) :
 		hash_write_result_buffer(svc_info);
 
@@ -538,7 +538,7 @@ hash_teardown(struct service_info *svc_info)
 
 	OSAL_ASSERT(svc_info);
 
-	per_block = svc_is_dflag_pblock_enabled(svc_info->si_desc_flags);
+	per_block = is_dflag_pblock_enabled(svc_info->si_desc_flags);
 	OSAL_LOG_DEBUG("hash_desc: %p flags: %d", svc_info->si_desc,
 			svc_info->si_desc_flags);
 
