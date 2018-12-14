@@ -479,14 +479,11 @@ func TestProcessTenant(t *testing.T) {
 	tu.Assert(t, err != nil, "failed to handle stats policy create error")
 
 	// create
-	mapi.EXPECT().MonitoringV1().Return(sV1).Times(3)
+	mapi.EXPECT().MonitoringV1().Return(sV1).Times(2)
 	mSp.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil, nil)
 
-	mFp.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("fwlog error"))
-	mFp.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("fwlog error"))
-
 	err = pa.processTenants(parentCtx, kvstore.Created, tenant)
-	tu.Assert(t, err != nil, "failed to handle fwlog policy create error")
+	tu.AssertOk(t, err, "processTenant create failed")
 
 	// update
 	err = pa.processTenants(parentCtx, kvstore.Updated, nil)
@@ -499,14 +496,11 @@ func TestProcessTenant(t *testing.T) {
 	err = pa.processTenants(parentCtx, kvstore.Deleted, tenant)
 	tu.Assert(t, err != nil, "failed to handle stats policy delete error")
 
-	// delete failure
-	mapi.EXPECT().MonitoringV1().Return(sV1).Times(2)
+	// delete
 	mSp.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(nil, nil).Times(1)
 
-	mFp.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("fwlog policy error")).Times(1)
-
 	err = pa.processTenants(parentCtx, kvstore.Deleted, tenant)
-	tu.Assert(t, err != nil, "failed to handle fwlog policy delete error")
+	tu.AssertOk(t, err, "processTenant delete failed")
 
 }
 

@@ -320,11 +320,6 @@ func (pm *PolicyManager) processTenants(ctx context.Context, eventType kvstore.W
 			return err
 		}
 
-		// delete fwlog policy
-		if _, err := pm.client.MonitoringV1().FwlogPolicy().Delete(ctx, objMeta); err != nil {
-			pmLog.Errorf("failed to delete fwlog policy for tenant %s, error: %s", tenant.GetName(), err)
-			return err
-		}
 	default:
 		return fmt.Errorf("invalid tenant event type %s", eventType)
 	}
