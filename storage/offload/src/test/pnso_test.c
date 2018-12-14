@@ -58,6 +58,11 @@ bool pnso_test_is_shutdown(void)
 	return false;
 }
 
+static bool pnso_test_is_active(void)
+{
+	return osal_atomic_read(&g_testcase_active) != 0;
+}
+
 static struct test_file_table g_output_file_tbl;
 
 /* Forward references */
@@ -910,7 +915,7 @@ static void batch_completion_safe_cb(void *cb_ctx, struct pnso_service_result *s
 	PNSO_LOG_DEBUG("batch_completion_safe_cb cb_ctx=0x%llx\n",
 		       (unsigned long long) cb_ctx);
 
-	if (0 == osal_atomic_read(&g_testcase_active)) {
+	if (!pnso_test_is_active()) {
 		PNSO_LOG_ERROR("Batch completion callback while test inactive!\n");
 		return;
 	}
@@ -930,7 +935,7 @@ static void batch_completion_cb(void *cb_ctx, struct pnso_service_result *svc_re
 	PNSO_LOG_DEBUG("batch_completion_cb cb_ctx=0x%llx\n",
 		       (unsigned long long) cb_ctx);
 
-	if (0 == osal_atomic_read(&g_testcase_active)) {
+	if (!pnso_test_is_active()) {
 		PNSO_LOG_ERROR("Batch completion callback while test inactive!\n");
 		return;
 	}
@@ -1891,21 +1896,30 @@ static int worker_loop(void *param)
 {
 	struct worker_context *ctx = (struct worker_context *) param;
 	struct batch_context *batch_ctx;
+	int poll_err;
 	bool is_busy;
 
-	while (!osal_thread_should_stop(&ctx->worker_thread)) {
+	while (pnso_test_is_active() &&
+	       !osal_thread_should_stop(&ctx->worker_thread)) {
 		is_busy = false;
 
 		/* Poll for finished work item */
 		batch_ctx = worker_queue_dequeue(ctx->poll_q);
 		if (batch_ctx) {
-			if (batch_ctx->poll_fn(batch_ctx->poll_ctx) != PNSO_OK) {
+			poll_err = batch_ctx->poll_fn(batch_ctx->poll_ctx);
+			if (poll_err == EBUSY) {
 				/* Not ready yet, re-enqueue */
 				_worker_queue_enqueue(ctx->poll_q, batch_ctx);
 					batch_ctx = NULL;
-			} else {
+			} else if (poll_err == PNSO_OK) {
 				/* completion handler called by poll_fn */
 				PNSO_LOG_DEBUG("DEBUG: polled batch completion\n");
+				is_busy = true;
+			} else {
+				/* error case, call completion handler directly */
+				PNSO_LOG_ERROR("poll_fn returned status %d, call completion_cb directly\n",
+					       poll_err);
+				batch_completion_cb(batch_ctx, NULL);
 				is_busy = true;
 			}
 		}
@@ -1937,13 +1951,15 @@ static int worker_loop(void *param)
 	return 0;
 }
 
-static void free_worker_queue(struct worker_queue *q)
+static void free_worker_queue(struct worker_queue *q, bool free_entries)
 {
 	struct batch_context *batch_ctx;
 
 	if (q) {
-		while ((batch_ctx = worker_queue_dequeue(q))) {
-			free_batch_context(batch_ctx);
+		if (free_entries) {
+			while ((batch_ctx = worker_queue_dequeue(q))) {
+				free_batch_context(batch_ctx);
+			}
 		}
 		TEST_FREE(q);
 	}
@@ -1972,9 +1988,9 @@ static void free_worker_context(struct worker_context *ctx)
 	if (osal_thread_is_running(&ctx->worker_thread)) {
 		osal_thread_stop(&ctx->worker_thread);
 	}
-	free_worker_queue(ctx->submit_q);
-	free_worker_queue(ctx->complete_q);
-	free_worker_queue(ctx->poll_q);
+	free_worker_queue(ctx->submit_q, false);
+	free_worker_queue(ctx->complete_q, false);
+	free_worker_queue(ctx->poll_q, false);
 
 	TEST_FREE(ctx);
 }
@@ -2025,7 +2041,8 @@ static void free_testcase_context(struct testcase_context *ctx)
 		free_worker_context(ctx->worker_ctxs[i]);
 	}
 
-	free_worker_queue(ctx->batch_ctx_freelist);
+	free_worker_queue(ctx->batch_ctx_freelist, false);
+	free_worker_queue(ctx->batch_ctx_alloclist, true);
 	TEST_FREE(ctx);
 }
 
@@ -2097,9 +2114,10 @@ static struct testcase_context *alloc_testcase_context(const struct test_desc *d
 			      test_ctx->batch_concurrency, testcase->node.idx);
 	}
 
-	/* Allocate freelist and fill it with batch_ctx entries */
+	/* Allocate freelist and alloclist and fill with batch_ctx entries */
 	test_ctx->batch_ctx_freelist = alloc_worker_queue(max_core_count*test_ctx->batch_concurrency);
-	if (!test_ctx->batch_ctx_freelist) {
+	test_ctx->batch_ctx_alloclist = alloc_worker_queue(max_core_count*test_ctx->batch_concurrency);
+	if (!test_ctx->batch_ctx_freelist || !test_ctx->batch_ctx_alloclist) {
 		goto error;
 	}
 	for (core_id = 0;
@@ -2114,6 +2132,7 @@ static struct testcase_context *alloc_testcase_context(const struct test_desc *d
 				goto error;
 			}
 			_worker_queue_enqueue(test_ctx->batch_ctx_freelist, batch_ctx);
+			_worker_queue_enqueue(test_ctx->batch_ctx_alloclist, batch_ctx);
 		}
 
 		worker_ctx = alloc_worker_context(desc, test_ctx, core_id);
@@ -2159,20 +2178,25 @@ static pnso_error_t start_worker_threads(struct testcase_context *ctx)
 
 static void print_worker_queue(struct worker_queue *q, const char *name)
 {
-	OSAL_LOG_ERROR("  Queue %s, count %d:\n", name, osal_atomic_read(&q->atomic_count));
-	OSAL_LOG_ERROR("    head %u, tail %u, max_count %u\n",
-		       q->head, q->tail, q->max_count);
+	int count = osal_atomic_read(&q->atomic_count);
+
+	OSAL_LOG_ERROR("  Queue %s, count %d:\n", name, count);
+	if (count) {
+		OSAL_LOG_ERROR("    head %u, tail %u, max_count %u\n",
+			       q->head, q->tail, q->max_count);
+	}
 }
 
 static void print_worker_ctx(struct worker_context *work_ctx, uint64_t cur_ts)
 {
-	OSAL_LOG_ERROR("Worker %u\n", work_ctx->worker_id);
-	OSAL_LOG_ERROR("  pending_batch_count %u, idle_time %llums\n",
-		       work_ctx->pending_batch_count,
+	OSAL_LOG_ERROR("Worker %u, pending_batch_count %u, idle_time %llums\n",
+		       work_ctx->worker_id, work_ctx->pending_batch_count,
 		       (unsigned long long) (cur_ts - work_ctx->last_active_ts)/OSAL_NSEC_PER_MSEC);
-	print_worker_queue(work_ctx->submit_q, "submit_q");
-	print_worker_queue(work_ctx->complete_q, "complete_q");
-	print_worker_queue(work_ctx->poll_q, "poll_q");
+	if (work_ctx->pending_batch_count) {
+		print_worker_queue(work_ctx->submit_q, "submit_q");
+		print_worker_queue(work_ctx->complete_q, "complete_q");
+		print_worker_queue(work_ctx->poll_q, "poll_q");
+	}
 }
 
 static void print_testcase_ctx(struct testcase_context *ctx)
@@ -2240,6 +2264,7 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 	ctx->vars[TEST_VAR_ITER] = 0;
 
 	/* Start worker threads */
+	osal_atomic_set(&g_testcase_active, 1);
 	if (start_worker_threads(ctx) != PNSO_OK) {
 		PNSO_LOG_WARN("Unable to start all worker threads\n");
 		/* continue execution, since some threads may be functional */
@@ -2254,7 +2279,6 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 	ctx->start_time = last_active_ts;
 	next_status_time = desc->status_interval;
 	PNSO_LOG_DEBUG("DEBUG: entering testcase while loop\n");
-	osal_atomic_set(&g_testcase_active, 1);
 	while (req_completion_count < testcase->repeat) {
 		loop_count++;
 		worker_ctx = ctx->worker_ctxs[worker_id];

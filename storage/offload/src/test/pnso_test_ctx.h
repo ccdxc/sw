@@ -281,7 +281,6 @@ struct testcase_context {
 	uint64_t start_time;
 	osal_atomic_int_t stats_lock;
 	struct testcase_stats stats;
-	uint16_t batch_concurrency;
 
 	uint32_t worker_count;
 	struct worker_context *worker_ctxs[TEST_MAX_CORE_COUNT];
@@ -290,6 +289,8 @@ struct testcase_context {
 	 * testcase_context owns these batch contexts,
 	 * but they are distributed evenly between the worker_contexts
 	 */
+	uint32_t batch_concurrency;
+	struct worker_queue *batch_ctx_alloclist;
 	struct worker_queue *batch_ctx_freelist;
 
 	uint32_t vars[TEST_VAR_MAX];
