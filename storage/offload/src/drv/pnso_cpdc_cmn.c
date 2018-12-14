@@ -738,7 +738,8 @@ cpdc_setup_interrupt_params(const struct service_info *svc_info, void *poll_ctx)
 
 	cp_desc->u.cd_bits.cc_otag_on = 1;
 
-	if (svc_info->si_desc_flags & PNSO_CP_DFLAG_ZERO_PAD) {
+	if ((svc_info->si_type == PNSO_SVC_TYPE_COMPRESS) &&
+		(svc_info->si_desc_flags & PNSO_CP_DFLAG_ZERO_PAD)) {
 		cp_desc->cd_otag_addr =
 			sonic_intr_get_db_addr(pcr, (uint64_t) poll_ctx);
 		if (!cp_desc->cd_otag_addr) {
