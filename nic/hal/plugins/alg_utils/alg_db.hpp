@@ -9,8 +9,15 @@
 #include "nic/sdk/include/sdk/twheel.hpp"
 #include "nic/fte/fte_ctx.hpp"
 #include "nic/fte/acl/ref.hpp"
+#include "gen/proto/nwsec.pb.h"
 
 using namespace acl;
+using nwsec::SecurityFlowGateGetRequest;
+using nwsec::SecurityFlowGateGetResponse;
+using nwsec::SecurityFlowGateGetRequestMsg;
+using nwsec::SecurityFlowGateGetResponseMsg;
+using nwsec::FlowGateKey;
+using types::FlowDirection;
 
 namespace hal {
 namespace plugins {
@@ -63,8 +70,11 @@ expected_flow_t *lookup_expected_flow(const hal::flow_key_t &key,
 void start_expected_flow_timer(expected_flow_t *entry, uint32_t timer_id,
                                uint32_t time_intvl, sdk::lib::twheel_cb_t cb,
                                void *timer_ctxt);
-void*delete_expected_flow_timer(expected_flow_t *entry);
+void* delete_expected_flow_timer(expected_flow_t *entry);
 void dec_ref_count(expected_flow_t *entry);
+
+hal_ret_t walk_expected_flow(nwsec::SecurityFlowGateGetRequest&      req,
+                             nwsec::SecurityFlowGateGetResponseMsg   *res);
 
 } // namespace alg_utils
 } // namespace plugins

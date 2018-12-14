@@ -177,6 +177,54 @@ end:
     return entry;
 }
 
+//Temporary data structure to
+//get the ALG name from ALG utils
+//container
+struct alg_utils {
+   expected_flow_t   flow;
+   nwsec::ALGName    alg;
+};
+
+void expected_flow_get_fill_rsp(expected_flow_t *flow,
+                                SecurityFlowGateGetResponse *resp) {
+    FlowGateKey *key = resp->mutable_flow_gate_key();
+
+    key->mutable_dst_ip()->set_v4_addr(flow->key.dip);
+    key->mutable_src_ip()->set_v4_addr(flow->key.sip);
+    key->set_src_vrf_id(flow->key.svrf_id);
+    key->set_dst_vrf_id(flow->key.dvrf_id);
+    key->set_ip_proto((types::IPProtocol)flow->key.proto);
+    key->set_src_port(flow->key.sport);
+    key->set_dst_port(flow->key.dport);
+    key->set_direction((flow->key.dir == FLOW_DIR_FROM_UPLINK) ?
+                        types::FLOW_DIRECTION_FROM_UPLINK :\
+                        types::FLOW_DIRECTION_FROM_HOST);
+
+    resp->set_alg(((struct alg_utils *)flow)->alg);
+    resp->set_delete_marked(flow->deleting);
+    resp->set_ref_count(flow->ref_count.count);
+    if (flow->timer != NULL) 
+        resp->set_time_to_age(sdk::lib::get_timeout_remaining(flow->timer)/TIME_MSECS_PER_SEC);
+    else
+        resp->set_time_to_age(0xFFFFFFFF);
+}
+
+hal_ret_t walk_expected_flow(SecurityFlowGateGetRequest&      req,
+                             SecurityFlowGateGetResponseMsg   *res) {
+
+    auto walk_func = [](void *entry, void *ctxt) {
+        expected_flow_t *flow = (expected_flow_t *)entry;
+        SecurityFlowGateGetResponseMsg *rsp = ((SecurityFlowGateGetResponseMsg *)\
+                           ctxt);
+
+        expected_flow_get_fill_rsp(flow, rsp->add_response());
+        return false;
+    };
+
+    expected_flow_ht()->walk_safe(walk_func, (void *)res);     
+    return HAL_RET_OK;
+}
+
 std::ostream& operator<<(std::ostream& os, const exp_flow_key_t val) {
     os << "{dir=" << val.dir;
     os << " ,svrf_id=" << val.svrf_id;

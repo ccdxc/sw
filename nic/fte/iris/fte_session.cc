@@ -232,4 +232,33 @@ end:
     return ret;
 }
 
+bool
+session_is_feature_enabled(hal::session_t *session, const char *feature) 
+{
+    sdk::lib::dllist_ctxt_t   *entry = NULL;
+    uint16_t                   num_features;
+
+    if (session == NULL || feature == NULL) {
+        HAL_TRACE_ERR("Invalid argumet session: {:p} feature: {:p}",
+                       (void *)session, (void *)feature);
+        goto end;
+    }
+
+    feature_state_size(&num_features);
+    dllist_for_each(entry, &session->feature_list_head) {
+        feature_session_state_t *state =
+            dllist_entry(entry, feature_session_state_t, session_feature_lentry);
+        uint16_t id = feature_id(state->feature_name);
+        // Look for the feature name in session. If it is 
+        // present then the assumtion is feature is enabled
+        // for the session
+        if (id <= num_features && 
+            (strstr(state->feature_name, feature) != NULL)) {
+            return true;
+        }
+    } 
+end:
+    return false;
+}
+
 } // namespace fte

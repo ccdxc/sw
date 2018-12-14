@@ -34,6 +34,10 @@ using nwsec::SecurityProfileGetRequestMsg;
 using nwsec::SecurityProfileStats;
 using nwsec::SecurityProfileGetResponse;
 using nwsec::SecurityProfileGetResponseMsg;
+using nwsec::SecurityFlowGateGetRequest;
+using nwsec::SecurityFlowGateGetResponseMsg;
+using nwsec::SecurityFlowGateDeleteRequest;
+using nwsec::SecurityFlowGateDeleteResponseMsg;
 
 namespace hal {
 
@@ -233,6 +237,12 @@ securitypolicy_delete(nwsec::SecurityPolicyDeleteRequest&   req,
 hal_ret_t
 securitypolicy_get(nwsec::SecurityPolicyGetRequest&      req,
                    nwsec::SecurityPolicyGetResponseMsg   *res);
+hal_ret_t
+security_flow_gate_get(nwsec::SecurityFlowGateGetRequest&      req,
+                       nwsec::SecurityFlowGateGetResponseMsg   *res);
+hal_ret_t
+security_flow_gate_delete(nwsec::SecurityFlowGateDeleteRequest&      req,
+                          nwsec::SecurityFlowGateDeleteResponseMsg   *res);
 
 // upgrade APIs
 hal_ret_t nwsec_prof_store_cb (void *obj, uint8_t *mem, uint32_t len,

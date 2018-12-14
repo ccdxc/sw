@@ -119,13 +119,6 @@ enum FlowType {
   FLOW_TYPE_TELEMETRY    = 7;
 }
 
-// flow direction
-enum FlowDirection {
-  FLOW_DIRECTION_NONE        = 0;
-  FLOW_DIRECTION_FROM_HOST   = 1;
-  FLOW_DIRECTION_FROM_UPLINK = 2;
-}
-
 // flow instance primary vs secondary
 enum FlowInstance {
   FLOW_INSTANCE_NONE      = 0;
@@ -230,7 +223,7 @@ message FlowStatus {
   ConnTrackInfo       conn_track_info = 2;    // connection tracking info
   bool                flow_coll       = 3;    // TODO: flow collision. Only till recirc works  
   uint32              flow_hash       = 4;    // TODO: REMOVE flow hash. Only for DOL testing
-  FlowDirection       flow_direction  = 5;    // flow direction
+  types.FlowDirection flow_direction  = 5;    // flow direction
   FlowInstance        flow_instance   = 6;    // flow instance (for proxy etc.)
 }
 
@@ -338,6 +331,7 @@ message SessionFilter {
   types.IPProtocol          ip_proto        = 5;
   fixed64                   vrf_id          = 6;
   uint32                    l2_segment_id   = 7;
+  nwsec.ALGName             alg             = 8;
 }
 
 // SessionGetRequest  is used to get information about a session

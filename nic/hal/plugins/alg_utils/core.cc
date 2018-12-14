@@ -539,11 +539,12 @@ void alg_state::cleanup_exp_flow(l4_alg_status_t *exp_flow) {
 
 void alg_state::cleanup_app_session(app_session_t *app_sess) {
     dllist_ctxt_t   *lentry, *next;
+    bool             app_cleanup = true;
 
     // Take the lock
     HAL_SPINLOCK_LOCK(&app_sess->slock);
 
-    app_sess_ht()->remove_entry(app_sess, &app_sess->app_sess_ht_ctxt);
+    app_sess_ht()->remove((void *)&app_sess->key);
 
     dllist_for_each_safe(lentry, next, &app_sess->exp_flow_lhead)
     {
@@ -556,7 +557,30 @@ void alg_state::cleanup_app_session(app_session_t *app_sess) {
     {
         l4_alg_status_t *l4_sess = dllist_entry(lentry,
                                    l4_alg_status_t, l4_sess_lentry);
+        if (l4_sess->isCtrl == false) {
+            hal::session_t *session = hal::find_session_by_handle(l4_sess->sess_hdl);
+            if (session != NULL) {
+                if (session->fte_id == fte::fte_id()) {
+                    session_delete_in_fte(session->hal_handle); 
+                } else {
+                    // If we have enqueued this in another FTE
+                    // then we need to wait for the the l4_session
+                    // to be cleaned up later
+                    fte::session_delete_async(session, true);
+                    app_cleanup = false;
+                }
+                continue;
+            }
+        }
+
         cleanup_l4_sess(l4_sess);
+    }
+
+    // We want to hold on to the app session
+    // until the L4 sessions are cleanup
+    if (app_cleanup == false) {
+        HAL_SPINLOCK_UNLOCK(&app_sess->slock);
+        return;
     }
 
     // Callback to remove the app session from

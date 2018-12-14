@@ -33,6 +33,9 @@ service NwSecurity {
   rpc SecurityPolicyUpdate (SecurityPolicyRequestMsg) returns (SecurityPolicyResponseMsg) {}
   rpc SecurityPolicyDelete (SecurityPolicyDeleteRequestMsg) returns (SecurityPolicyDeleteResponseMsg) {}
   rpc SecurityPolicyGet (SecurityPolicyGetRequestMsg) returns (SecurityPolicyGetResponseMsg) {}
+
+  rpc SecurityFlowGateGet (SecurityFlowGateGetRequestMsg) returns (SecurityFlowGateGetResponseMsg) {}
+  rpc SecurityFlowGateDelete (SecurityFlowGateDeleteRequestMsg) returns (SecurityFlowGateDeleteResponseMsg) {}
 }
 
 // normalization feature actions upon detecting malformed packets
@@ -693,4 +696,58 @@ message SecurityPolicyGetResponse {
 // SecurityPolicyGetResponse Msg is batched response to SecurityPolicyGetRequestMsg
 message SecurityPolicyGetResponseMsg {
   repeated SecurityPolicyGetResponse   response   = 1;
+}
+
+message SecurityFlowGateFilter {
+  types.IPAddress           src_ip          = 1;
+  types.IPAddress           dst_ip          = 2;
+  uint32                    src_port        = 3;
+  uint32                    dst_port        = 4;
+  types.IPProtocol          ip_proto        = 5;
+  fixed64                   vrf_id          = 6;
+  nwsec.ALGName             alg             = 7;
+}
+
+message SecurityFlowGateGetRequest {
+  SecurityFlowGateFilter   filter  = 1; 
+}
+
+message SecurityFlowGateGetRequestMsg {
+  repeated SecurityFlowGateGetRequest request = 1; //batched get request 
+}
+
+message FlowGateKey {
+  types.FlowDirection        direction    = 1;
+  fixed64                    src_vrf_id   = 2;
+  fixed64                    dst_vrf_id   = 3;
+  types.IPAddress            src_ip       = 4;
+  types.IPAddress            dst_ip       = 5;
+  types.IPProtocol           ip_proto     = 6;
+  uint32                     src_port     = 7;   
+  uint32                     dst_port     = 8;
+}
+
+message SecurityFlowGateGetResponse {
+  types.ApiStatus             api_status    = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  FlowGateKey                 flow_gate_key = 2; // Flow key of the opened flow gate
+  nwsec.ALGName               alg           = 3; // ALG applied to this app session
+  bool                        delete_marked = 4; // Is flow gate marked for deletion ?
+  uint32                      ref_count     = 5; // Number of references to this flow gate
+  uint32                      time_to_age   = 6; // Time to age the entry
+}
+
+message SecurityFlowGateGetResponseMsg {
+  types.ApiStatus                      api_status = 1; // API status
+  repeated SecurityFlowGateGetResponse response   = 2; //batched response
+}
+
+message SecurityFlowGateDeleteRequest {
+  SecurityFlowGateFilter   filter  = 1;
+}
+
+message SecurityFlowGateDeleteRequestMsg {
+  repeated SecurityFlowGateDeleteRequest request = 1; //batched get request
+}
+
+message SecurityFlowGateDeleteResponseMsg {
 }

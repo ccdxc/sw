@@ -11,6 +11,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/utils/if_utils.hpp"
 #include "nic/hal/plugins/cfg/nw/endpoint.hpp"
+#include "nic/hal/plugins/alg_utils/alg_db.hpp"
 
 namespace hal {
 
@@ -1833,6 +1834,29 @@ nwsec_prof_restore_cb (void *obj, uint32_t len)
     }
     nwsec_prof_restore_commit(nwsec, nwsec_info);
     return 0;    // TODO: fix me
+}
+
+hal_ret_t
+security_flow_gate_get(nwsec::SecurityFlowGateGetRequest&      req,
+                       nwsec::SecurityFlowGateGetResponseMsg   *res)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    ret = hal::plugins::alg_utils::walk_expected_flow(req, res);        
+    if (ret != HAL_RET_OK) {
+        HAL_API_STATS_INC(HAL_API_SECURITY_FLOW_GATE_GET_FAIL);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    HAL_API_STATS_INC(HAL_API_SECURITY_FLOW_GATE_GET_SUCCESS);
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+security_flow_gate_delete(nwsec::SecurityFlowGateDeleteRequest&      req,
+                          nwsec::SecurityFlowGateDeleteResponseMsg   *res)
+{
+    return HAL_RET_OK;
 }
 
 }    // namespace hal

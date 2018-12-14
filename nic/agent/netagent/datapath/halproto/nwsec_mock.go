@@ -497,6 +497,42 @@ func (mr *MockNwSecurityClientMockRecorder) SecurityPolicyGet(ctx, in interface{
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SecurityPolicyGet", reflect.TypeOf((*MockNwSecurityClient)(nil).SecurityPolicyGet), varargs...)
 }
 
+// SecurityFlowGateGet mocks base method
+func (m *MockNwSecurityClient) SecurityFlowGateGet(ctx context.Context, in *SecurityFlowGateGetRequestMsg, opts ...grpc.CallOption) (*SecurityFlowGateGetResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "SecurityFlowGateGet", varargs...)
+	ret0, _ := ret[0].(*SecurityFlowGateGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SecurityFlowGateGet indicates an expected call of SecurityFlowGateGet
+func (mr *MockNwSecurityClientMockRecorder) SecurityFlowGateGet(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SecurityFlowGateGet", reflect.TypeOf((*MockNwSecurityClient)(nil).SecurityFlowGateGet), varargs...)
+}
+
+// SecurityFlowGateDelete mocks base method
+func (m *MockNwSecurityClient) SecurityFlowGateDelete(ctx context.Context, in *SecurityFlowGateDeleteRequestMsg, opts ...grpc.CallOption) (*SecurityFlowGateDeleteResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "SecurityFlowGateDelete", varargs...)
+	ret0, _ := ret[0].(*SecurityFlowGateDeleteResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SecurityFlowGateDelete indicates an expected call of SecurityFlowGateDelete
+func (mr *MockNwSecurityClientMockRecorder) SecurityFlowGateDelete(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SecurityFlowGateDelete", reflect.TypeOf((*MockNwSecurityClient)(nil).SecurityFlowGateDelete), varargs...)
+}
+
 // MockNwSecurityServer is a mock of NwSecurityServer interface
 type MockNwSecurityServer struct {
 	ctrl     *gomock.Controller
@@ -726,4 +762,30 @@ func (m *MockNwSecurityServer) SecurityPolicyGet(arg0 context.Context, arg1 *Sec
 // SecurityPolicyGet indicates an expected call of SecurityPolicyGet
 func (mr *MockNwSecurityServerMockRecorder) SecurityPolicyGet(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SecurityPolicyGet", reflect.TypeOf((*MockNwSecurityServer)(nil).SecurityPolicyGet), arg0, arg1)
+}
+
+// SecurityFlowGateGet mocks base method
+func (m *MockNwSecurityServer) SecurityFlowGateGet(arg0 context.Context, arg1 *SecurityFlowGateGetRequestMsg) (*SecurityFlowGateGetResponseMsg, error) {
+	ret := m.ctrl.Call(m, "SecurityFlowGateGet", arg0, arg1)
+	ret0, _ := ret[0].(*SecurityFlowGateGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SecurityFlowGateGet indicates an expected call of SecurityFlowGateGet
+func (mr *MockNwSecurityServerMockRecorder) SecurityFlowGateGet(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SecurityFlowGateGet", reflect.TypeOf((*MockNwSecurityServer)(nil).SecurityFlowGateGet), arg0, arg1)
+}
+
+// SecurityFlowGateDelete mocks base method
+func (m *MockNwSecurityServer) SecurityFlowGateDelete(arg0 context.Context, arg1 *SecurityFlowGateDeleteRequestMsg) (*SecurityFlowGateDeleteResponseMsg, error) {
+	ret := m.ctrl.Call(m, "SecurityFlowGateDelete", arg0, arg1)
+	ret0, _ := ret[0].(*SecurityFlowGateDeleteResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SecurityFlowGateDelete indicates an expected call of SecurityFlowGateDelete
+func (mr *MockNwSecurityServerMockRecorder) SecurityFlowGateDelete(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SecurityFlowGateDelete", reflect.TypeOf((*MockNwSecurityServer)(nil).SecurityFlowGateDelete), arg0, arg1)
 }
