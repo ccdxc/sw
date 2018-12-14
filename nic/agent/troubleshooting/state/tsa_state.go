@@ -2100,7 +2100,7 @@ func (tsa *Tagent) DeleteMirrorSession(pcSession *tsproto.MirrorSession) error {
 	_, err := tsa.findMirrorSession(pcSession.ObjectMeta)
 	if err != nil {
 		log.Errorf("MirrorSession %v does not exist to delete it", pcSession.Name)
-		return ErrInvalidMirrorSpec
+		return fmt.Errorf("mirror session %v does not exist", pcSession.Name)
 	}
 	return tsa.deletePacketCaptureSession(pcSession)
 }
