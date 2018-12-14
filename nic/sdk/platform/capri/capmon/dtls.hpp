@@ -1,6 +1,12 @@
-/*
- * Copyright (c) 2018, Pensando Systems Inc.
- */
+//
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+//===----------------------------------------------------------------------===//
+///
+/// \file
+/// This file contains the decl. and defn. for capmon
+///
+//===----------------------------------------------------------------------===//
 
 #ifndef __DTLS_HPP__
 #define __DTLS_HPP__
@@ -40,9 +46,12 @@ void te_read_counters(int verbose, uint8_t pipeline, uint8_t stage);
 void te_reset_counters(int verbose, uint8_t pipeline, uint8_t stage);
 void stg_poll(int verbose, uint8_t pipeline, uint8_t stage);
 
-void mpu_read_counters(int verbose, uint8_t pipeline, uint8_t stage, uint8_t mpu);
-void mpu_reset_counters(int verbose, uint8_t pipeline, uint8_t stage, uint8_t mpu);
-void mpu_read_table_addr(int verbose, uint8_t pipeline, uint8_t stage, uint8_t mpu);
+void mpu_read_counters(int verbose, uint8_t pipeline, uint8_t stage,
+                       uint8_t mpu);
+void mpu_reset_counters(int verbose, uint8_t pipeline, uint8_t stage,
+                        uint8_t mpu);
+void mpu_read_table_addr(int verbose, uint8_t pipeline, uint8_t stage,
+                         uint8_t mpu);
 
 // RXDMA
 void psp_read_counters(int verbose);
@@ -61,7 +70,7 @@ void ptd_read_counters(int verbose);
 void ptd_reset_counters(int verbose);
 
 // P4IG/EG
-void parser_read_counters(int verbose, uint32_t base);
+void parser_read_counters(int type, int verbose, uint32_t base);
 void parser_reset_counters(int verbose, uint32_t base);
 
 // PB
