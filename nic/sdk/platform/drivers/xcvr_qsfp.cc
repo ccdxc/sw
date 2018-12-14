@@ -44,6 +44,9 @@ qsfp_enable (int port, bool enable, uint8_t mask)
     uint8_t   data    = 0x0;
     sdk_ret_t sdk_ret = SDK_RET_OK;
 
+    SDK_TRACE_DEBUG("xcvr_port: %d, enable: %d, mask: 0x%x",
+                    port+1, enable, mask);
+
     sdk_ret = qsfp_read_page(port, qsfp_page_t::QSFP_PAGE_LOW,
                              QSFP_OFFSET_TX_DISABLE, 1, &data);
     if (sdk_ret != SDK_RET_OK) {
@@ -90,6 +93,7 @@ qsfp_sprom_parse (int port, uint8_t *data)
     case 0x1:
         // 40G Active cable
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_40GBASE_AOC);
+        set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
         break;
 
     case 0x2:
@@ -119,6 +123,7 @@ qsfp_sprom_parse (int port, uint8_t *data)
     case 0x1:
         // 100G AOC
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_AOC);
+        set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
         break;
 
     case 0x2:
@@ -139,6 +144,7 @@ qsfp_sprom_parse (int port, uint8_t *data)
     case 0x8:
         // 100G ACC
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_ACC);
+        set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
         break;
 
     case 0xb:
@@ -162,11 +168,13 @@ qsfp_sprom_parse (int port, uint8_t *data)
     case 0x18:
         // 100G AOC
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_AOC);
+        set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
         break;
 
     case 0x19:
         // 100G ACC
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_ACC);
+        set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
         break;
 
     case 0x1A:

@@ -591,12 +591,14 @@ port_args_xcvr_set (port_args_t *port_args)
                             sdk::platform::xcvr_get_an_args(xcvr_port-1);
 
             HAL_TRACE_DEBUG("port: {}, xcvr_port: {}, "
-                            "user_cap: {}, fec_ability: {}, fec_request: {}",
+                            "user_cap: {}, fec_ability: {}, fec_request: {}, "
+                            "cable_type: {}",
                             port_args->port_num,
                             xcvr_port,
                             port_args->port_an_args->user_cap,
                             port_args->port_an_args->fec_ability,
-                            port_args->port_an_args->fec_request);
+                            port_args->port_an_args->fec_request,
+                            port_args->cable_type);
 
             switch (port_args->cable_type) {
                 case cable_type_t::CABLE_TYPE_FIBER:
