@@ -86,9 +86,14 @@ static void ionic_unmap_bars(struct ionic *ionic)
 	struct ionic_dev_bar *bars = ionic->bars;
 	unsigned int i;
 
-	for (i = 0; i < IONIC_BARS_MAX; i++)
-		if (bars[i].vaddr)
+	for (i = 0; i < IONIC_BARS_MAX; i++) {
+		if (bars[i].vaddr) {
 			iounmap(bars[i].vaddr);
+			bars[i].bus_addr = 0;
+			bars[i].vaddr = 0;
+			bars[i].len = 0;
+		}
+	}
 }
 
 void __iomem *ionic_bus_map_dbpage(struct ionic *ionic, int page_num)
@@ -245,6 +250,7 @@ static void ionic_remove(struct pci_dev *pdev)
 		ionic_lifs_free(ionic);
 		ionic_bus_free_irq_vectors(ionic);
 		ionic_forget_identity(ionic);
+		ionic_reset(ionic);
 		ionic_unmap_bars(ionic);
 		pci_release_regions(pdev);
 		pci_disable_sriov(pdev);

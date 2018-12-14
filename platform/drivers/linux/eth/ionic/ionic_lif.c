@@ -714,6 +714,11 @@ static void ionic_qcq_free(struct lif *lif, struct qcq *qcq)
 	if (!qcq)
 		return;
 
+	dma_free_coherent(lif->ionic->dev, qcq->total_size, qcq->base,
+			  qcq->base_pa);
+	qcq->base = NULL;
+	qcq->base_pa = 0;
+
 	ionic_intr_free(lif, &qcq->intr);
 	dma_free_coherent(dev, qcq->total_size, qcq->base, qcq->base_pa);
 	devm_kfree(dev, qcq->cq.info);
@@ -879,10 +884,13 @@ static int ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 
 err_out_unmap_dbell:
 	ionic_bus_unmap_dbpage(ionic, lif->kern_dbpage);
+	lif->kern_dbpage = NULL;
 err_out_free_dbid:
 	kfree(lif->dbid_inuse);
+	lif->dbid_inuse = NULL;
 err_out_free_netdev:
 	free_netdev(netdev);
+	lif = NULL;
 
 	return err;
 }
@@ -914,7 +922,9 @@ void ionic_lifs_free(struct ionic *ionic)
 		cancel_work_sync(&lif->deferred.work);
 		ionic_qcqs_free(lif);
 		ionic_bus_unmap_dbpage(lif->ionic, lif->kern_dbpage);
+		lif->kern_dbpage = NULL;
 		kfree(lif->dbid_inuse);
+		lif->dbid_inuse = NULL;
 		free_netdev(lif->netdev);
 	}
 }
@@ -934,7 +944,6 @@ static int ionic_lif_stats_dump_start(struct lif *lif, unsigned int ver)
 
 	lif->stats_dump = dma_alloc_coherent(dev, sizeof(*lif->stats_dump),
 					     &lif->stats_dump_pa, GFP_KERNEL);
-
 	if (!lif->stats_dump) {
 		netdev_err(netdev, "%s OOM\n", __func__);
 		return -ENOMEM;
@@ -954,6 +963,8 @@ static int ionic_lif_stats_dump_start(struct lif *lif, unsigned int ver)
 err_out_free:
 	dma_free_coherent(dev, sizeof(*lif->stats_dump), lif->stats_dump,
 			  lif->stats_dump_pa);
+	lif->stats_dump = NULL;
+	lif->stats_dump_pa = 0;
 	return err;
 }
 
@@ -982,7 +993,11 @@ static void ionic_lif_stats_dump_stop(struct lif *lif)
 
 	dma_free_coherent(dev, sizeof(*lif->stats_dump), lif->stats_dump,
 			  lif->stats_dump_pa);
+	lif->stats_dump = NULL;
+	lif->stats_dump_pa = 0;
 }
+
+static void ionic_lif_rss_teardown(struct lif *lif);
 
 static int ionic_lif_rss_setup(struct lif *lif)
 {
@@ -1023,8 +1038,7 @@ static int ionic_lif_rss_setup(struct lif *lif)
 	return 0;
 
 err_out_free:
-	dma_free_coherent(dev, tbl_size, lif->rss_ind_tbl,
-			  lif->rss_ind_tbl_pa);
+	ionic_lif_rss_teardown(lif);
 	return err;
 }
 
@@ -1032,14 +1046,19 @@ static void ionic_lif_rss_teardown(struct lif *lif)
 {
 	struct device *dev = lif->ionic->dev;
 	size_t tbl_size = sizeof(*lif->rss_ind_tbl) * RSS_IND_TBL_SIZE;
+	dma_addr_t tbl_pa;
 
 	if (!lif->rss_ind_tbl)
 		return;
 
-	dma_free_coherent(dev, tbl_size, lif->rss_ind_tbl,
-			  lif->rss_ind_tbl_pa);
+	/* clear the table from the NIC, then release the DMA space */
+	tbl_pa = lif->rss_ind_tbl_pa;
+	lif->rss_ind_tbl_pa = 0;
+	ionic_rss_ind_tbl_set(lif, NULL);
 
+	dma_free_coherent(dev, tbl_size, lif->rss_ind_tbl, tbl_pa);
 	lif->rss_ind_tbl = NULL;
+	lif->rss_ind_tbl_pa = 0;
 }
 
 static void ionic_lif_qcq_deinit(struct lif *lif, struct qcq *qcq)

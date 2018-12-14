@@ -272,6 +272,8 @@ void ionic_forget_identity(struct ionic *ionic)
 {
 	dma_unmap_single(ionic->dev, ionic->ident_pa,
 			 sizeof(*ionic->ident), DMA_BIDIRECTIONAL);
+	ionic->ident = NULL;
+	ionic->ident_pa = 0;
 }
 
 int ionic_reset(struct ionic *ionic)
