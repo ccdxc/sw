@@ -61,6 +61,7 @@ static int ionic_qcq_enable(struct qcq *qcq)
 {
 	struct queue *q = &qcq->q;
 	struct lif *lif = q->lif;
+	struct device *dev = lif->ionic->dev;
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.q_enable = {
@@ -71,8 +72,8 @@ static int ionic_qcq_enable(struct qcq *qcq)
 	};
 	int err;
 
-	netdev_info(lif->netdev, "q_enable.qid %d\n", ctx.cmd.q_enable.qid);
-	netdev_info(lif->netdev, "q_enable.qtype %d\n", ctx.cmd.q_enable.qtype);
+	dev_dbg(dev, "q_enable.qid %d q_enable.qtype %d\n",
+		ctx.cmd.q_enable.qid, ctx.cmd.q_enable.qtype);
 
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
@@ -114,6 +115,7 @@ static int ionic_qcq_disable(struct qcq *qcq)
 {
 	struct queue *q = &qcq->q;
 	struct lif *lif = q->lif;
+	struct device *dev = lif->ionic->dev;
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.q_disable = {
@@ -123,9 +125,8 @@ static int ionic_qcq_disable(struct qcq *qcq)
 		},
 	};
 
-	netdev_info(lif->netdev, "q_disable.qid %d\n", ctx.cmd.q_disable.qid);
-	netdev_info(lif->netdev, "q_disable.qtype %d\n",
-		   ctx.cmd.q_disable.qtype);
+	dev_dbg(dev, "q_disable.qid %d q_disable.qtype %d\n",
+		ctx.cmd.q_disable.qid, ctx.cmd.q_disable.qtype);
 
 	ionic_intr_mask(&qcq->intr, true);
 	synchronize_irq(qcq->intr.vector);
@@ -144,8 +145,6 @@ static int ionic_stop(struct net_device *netdev)
 	netif_tx_disable(netdev);
 
 	for (i = 0; i < lif->ntxqcqs; i++) {
-		// TODO post NOP Tx desc and wait for its completion
-		// TODO before disabling Tx queue
 		err = ionic_qcq_disable(lif->txqcqs[i]);
 		if (err)
 			return err;
@@ -184,6 +183,7 @@ static void ionic_get_stats64(struct net_device *netdev,
 {
 	struct lif *lif = netdev_priv(netdev);
 	struct ionic_lif_stats *sd = lif->stats_dump;
+	struct device *dev = lif->ionic->dev;
 	unsigned int i;
 	u64 cnt;
 
@@ -202,25 +202,26 @@ static void ionic_get_stats64(struct net_device *netdev,
 	}
 
 	// double checking stats counters
+	// these mismatches on init should go away when reset cleans NIC stats
 	cnt = sd->rx_ucast_packets + sd->rx_mcast_packets + sd->rx_bcast_packets;
 	if (ns->rx_packets != cnt)
-		netdev_warn(netdev, "rx_packets mismatch: %llu %llu\n",
-			    ns->rx_packets, cnt);
+		dev_warn(dev, "rx_packets mismatch: sw=%llu nic=%llu\n",
+			 ns->rx_packets, cnt);
 
 	cnt = sd->tx_ucast_packets + sd->tx_mcast_packets + sd->tx_bcast_packets;
 	if (ns->tx_packets != cnt)
-		netdev_warn(netdev, "tx_packets mismatch: %llu %llu\n",
-			    ns->tx_packets, cnt);
+		dev_warn(dev, "tx_packets mismatch: sw=%llu nic=%llu\n",
+			 ns->tx_packets, cnt);
 
 	cnt = sd->rx_ucast_bytes + sd->rx_mcast_bytes + sd->rx_bcast_bytes;
 	if (ns->rx_bytes != cnt)
-		netdev_warn(netdev, "rx_bytes mismatch: %llu %llu\n",
-			    ns->rx_bytes, cnt);
+		dev_warn(dev, "rx_bytes mismatch: sw=%llu nic=%llu\n",
+			 ns->rx_bytes, cnt);
 
 	cnt = sd->tx_ucast_bytes + sd->tx_mcast_bytes + sd->tx_bcast_bytes;
 	if (ns->tx_bytes != cnt)
-		netdev_warn(netdev, "tx_bytes mismatch: %llu %llu\n",
-			    ns->tx_bytes, cnt);
+		dev_warn(dev, "tx_bytes mismatch: sw=%llu nic=%llu\n",
+			 ns->tx_bytes, cnt);
 
 	ns->rx_dropped = sd->rx_ucast_drop_packets +
 			 sd->rx_mcast_drop_packets +
@@ -368,23 +369,28 @@ static void ionic_lif_rx_mode(struct lif *lif, unsigned int rx_mode)
 			.rx_mode = rx_mode,
 		},
 	};
+	char buf[128];
 	int err;
+	int i;
+#define REMAIN(__x) (sizeof(buf) - (__x))
 
+	i = snprintf(buf, sizeof(buf), "rx_mode:");
 	if (rx_mode & RX_MODE_F_UNICAST)
-		netdev_info(lif->netdev, "rx_mode RX_MODE_F_UNICAST\n");
+		i += snprintf(&buf[i], REMAIN(i), " RX_MODE_F_UNICAST");
 	if (rx_mode & RX_MODE_F_MULTICAST)
-		netdev_info(lif->netdev, "rx_mode RX_MODE_F_MULTICAST\n");
+		i += snprintf(&buf[i], REMAIN(i), " RX_MODE_F_MULTICAST");
 	if (rx_mode & RX_MODE_F_BROADCAST)
-		netdev_info(lif->netdev, "rx_mode RX_MODE_F_BROADCAST\n");
+		i += snprintf(&buf[i], REMAIN(i), " RX_MODE_F_BROADCAST");
 	if (rx_mode & RX_MODE_F_PROMISC)
-		netdev_info(lif->netdev, "rx_mode RX_MODE_F_PROMISC\n");
+		i += snprintf(&buf[i], REMAIN(i), " RX_MODE_F_PROMISC");
 	if (rx_mode & RX_MODE_F_ALLMULTI)
-		netdev_info(lif->netdev, "rx_mode RX_MODE_F_ALLMULTI\n");
+		i += snprintf(&buf[i], REMAIN(i), " RX_MODE_F_ALLMULTI");
+	netdev_info(lif->netdev, "%s\n", buf);
 
 	err = ionic_adminq_post_wait(lif, &ctx);
-	if (err) {
-		// XXX handle err
-	}
+	if (err)
+		netdev_warn(lif->netdev, "set rx_mode 0x%04x failed: %d\n",
+			    rx_mode, err);
 }
 
 static void _ionic_lif_rx_mode(struct lif *lif, unsigned int rx_mode)
@@ -936,8 +942,8 @@ static int ionic_lif_stats_dump_start(struct lif *lif, unsigned int ver)
 
 	ctx.cmd.stats_dump.addr = lif->stats_dump_pa;
 
-	pr_debug("stats_dump START ver %d addr 0x%llx\n", ver,
-		 lif->stats_dump_pa);
+	dev_dbg(dev, "stats_dump START ver %d addr 0x%llx\n", ver,
+		lif->stats_dump_pa);
 
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
@@ -963,7 +969,7 @@ static void ionic_lif_stats_dump_stop(struct lif *lif)
 	};
 	int err;
 
-	pr_debug("stats_dump STOP\n");
+	dev_dbg(dev, "stats_dump STOP\n");
 
 	if (!lif->stats_dump_pa)
 		return;

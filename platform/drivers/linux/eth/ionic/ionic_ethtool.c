@@ -242,8 +242,6 @@ int ionic_rss_ind_tbl_set(struct lif *lif, const u32 *indir)
 		for (i = 0; i < RSS_IND_TBL_SIZE; i++)
 			lif->rss_ind_tbl[i] = indir[i];
 
-	netdev_info(lif->netdev, "rss_ind_tbl_set\n");
-
 	return ionic_adminq_post_wait(lif, &ctx);
 }
 
@@ -269,8 +267,6 @@ int ionic_rss_hash_key_set(struct lif *lif, const u8 *key)
 
 	memcpy(ctx.cmd.rss_hash_set.key, lif->rss_hash_key,
 	       RSS_HASH_KEY_SIZE);
-
-	netdev_info(lif->netdev, "rss_hash_key_set\n");
 
 	return ionic_adminq_post_wait(lif, &ctx);
 }

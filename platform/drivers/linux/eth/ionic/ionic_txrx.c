@@ -97,7 +97,8 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 
 #ifdef CSUM_DEBUG
 	if (comp->len > netdev->mtu + VLAN_ETH_HLEN) {
-		pr_err("RX PKT TOO LARGE!  comp->len %d\n", comp->len);
+		netdev_warn(detdev, "RX PKT TOO LARGE!  comp->len %d\n",
+			    comp->len);
 		ionic_rx_recycle(q, desc_info, skb);
 		return;
 	}
@@ -141,8 +142,8 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 		stats->csum_complete++;
 #ifdef CSUM_DEBUG
 		if (skb->csum != (u16)~csum)
-			pr_err("Rx CSUM incorrect.  Want 0x%04x got 0x%04x, protocol 0x%04x\n",
-			       (u16)~csum, skb->csum, htons(skb->protocol));
+			netdev_warn(netdev, "Rx CSUM incorrect.  Want 0x%04x got 0x%04x, protocol 0x%04x\n",
+				    (u16)~csum, skb->csum, htons(skb->protocol));
 #endif
 	} else {
 		stats->csum_none++;
@@ -179,7 +180,6 @@ static struct sk_buff *ionic_rx_skb_alloc(struct queue *q, unsigned int len,
 	struct rx_stats *stats = q_to_rx_stats(q);
 	struct sk_buff *skb;
 
-	//printk(KERN_ERR "%s ionic_rx_skb_alloc len %d\n", q->name, len);
 	skb = netdev_alloc_skb_ip_align(netdev, len);
 	if (!skb) {
 		net_warn_ratelimited("%s: SKB alloc failed on %s!\n",
@@ -205,7 +205,6 @@ static void ionic_rx_skb_free(struct queue *q, struct sk_buff *skb,
 {
 	struct device *dev = q->lif->ionic->dev;
 
-	//printk(KERN_ERR "%s ionic_rx_skb_free len %d\n", q->name, len);
 	dma_unmap_single(dev, dma_addr, len, DMA_FROM_DEVICE);
 	dev_kfree_skb(skb);
 }

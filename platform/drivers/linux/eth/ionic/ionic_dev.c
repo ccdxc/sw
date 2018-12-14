@@ -389,12 +389,14 @@ void ionic_q_sg_map(struct queue *q, void *base, dma_addr_t base_pa)
 void ionic_q_post(struct queue *q, bool ring_doorbell, desc_cb cb,
 		  void *cb_arg)
 {
+	struct device *dev = q->lif->ionic->dev;
+
 	q->head->cb = cb;
 	q->head->cb_arg = cb_arg;
 	q->head = q->head->next;
 
-	pr_debug("qname=%s qid=%d p_index=%d ringdb=%d q->db=0x%08llx\n",
-		 q->name, q->qid, q->head->index, ring_doorbell, (u64)q->db);
+	dev_dbg(dev, "qname=%s qid=%d p_index=%d ringdb=%d q->db=0x%08llx\n",
+		q->name, q->qid, q->head->index, ring_doorbell, (u64)q->db);
 	if (ring_doorbell) {
 		struct doorbell db = {
 			.qid_lo = q->qid,
