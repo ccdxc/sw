@@ -1417,6 +1417,7 @@ void ionic_lifs_free(struct ionic *ionic)
 	}
 }
 
+#if 0
 static int ionic_lif_stats_dump_start(struct lif *lif, unsigned int ver)
 {
 	struct net_device *netdev = lif->netdev;
@@ -1488,6 +1489,7 @@ static void ionic_lif_stats_dump_stop(struct lif *lif)
 		lif->stats_dump_pa = 0;
 	}
 }
+#endif
 
 int
 ionic_rss_ind_tbl_set(struct lif *lif, const u32 *indir)
@@ -1598,7 +1600,7 @@ static void ionic_lif_rxqs_deinit(struct lif *lif)
 static void ionic_lif_deinit(struct lif *lif)
 {
 
-	ionic_lif_stats_dump_stop(lif);
+//	ionic_lif_stats_dump_stop(lif);
 	ionic_rx_filters_deinit(lif);
 	ionic_lif_rss_teardown(lif);
 
@@ -2177,9 +2179,11 @@ static int ionic_lif_init(struct lif *lif)
 		goto err_out_rxqs_deinit;
 	}
 
+#if 0
 	err = ionic_lif_stats_dump_start(lif, STATS_DUMP_VERSION_1);
 	if (err)
 		goto err_out_rss_teardown;
+#endif
 
 	ionic_set_rx_mode(lif->netdev);
 
@@ -2189,8 +2193,8 @@ static int ionic_lif_init(struct lif *lif)
 
 	return 0;
 
-err_out_rss_teardown:
-	ionic_lif_rss_teardown(lif);
+//err_out_rss_teardown:
+//	ionic_lif_rss_teardown(lif);
 err_out_rxqs_deinit:
 	ionic_lif_rxqs_deinit(lif);
 err_out_txqs_deinit:
