@@ -7,7 +7,7 @@ meta:
 testcases:
     -   name    : UplinkIntf_TX_RING_SIZE
         testcase: testcases.drivers.features
-        disable : False
+        enable  : False
         iterators :
             type               : nested
             tx_ring_size       : [ 1024 ]
@@ -21,7 +21,7 @@ testcases:
 
     -   name    : UplinkIntf_RX_RING_SIZE
         testcase: testcases.drivers.features
-        disable : False
+        enable  : False
         iterators :
             type               : nested
             rx_ring_size       : [ 1024 ]
