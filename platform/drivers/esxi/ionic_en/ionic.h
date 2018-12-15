@@ -111,6 +111,7 @@ struct ionic {
         //TODO: ADD LOCK TO PROTECT LIFS
         vmk_Lock lifs_lock;
         vmk_ListLinks lifs;
+        vmk_Bool is_mgmt_nic;
         unsigned int neqs_per_lif;
         unsigned int ntxqs_per_lif;
         unsigned int nrxqs_per_lif;

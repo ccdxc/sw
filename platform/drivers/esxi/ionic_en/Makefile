@@ -40,7 +40,7 @@ TR = /build/toolchain/lin32/coreutils-8.6/bin/tr
 # Parameters to the scons command
 #-------------------------------------------------------------------------------
 PRODUCT      = nativeddk
-BUILDTYPE    = release
+BUILDTYPE    = beta
 BUILD_NUMBER = 8169922
 
 VMKAPI_DIR   = $(shell /bin/rpm -q --qf '%{INSTPREFIXES}\n' vmware-esx-nativeddk-devtools-6.7.0-0.0.8169922)

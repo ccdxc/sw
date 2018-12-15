@@ -217,8 +217,8 @@ ionic_en_convert_attached_rss_ring_idx(struct ionic_en_priv_data *priv_data,    
               rss_ring_idx * num_attached_rx_rings +
               cur_rx_ring_idx;
 
-
-        VMK_ASSERT(idx < uplink_handle->max_rx_queues);
+        VMK_ASSERT(idx >= uplink_handle->max_rx_normal_queues &&
+                   idx < uplink_handle->max_rx_queues);
 
         return idx;
 }
@@ -623,12 +623,12 @@ ionic_en_queue_alloc(vmk_AddrCookie driver_data,                  // IN
                         status = ionic_en_rxq_alloc(priv_data,
                                                     uplink_qid,
                                                     netpoll);
-                        ionic_err("multi-queue rxxxxxx");
+                        ionic_info("multi-queue rx");
                         break;
                 case VMK_UPLINK_QUEUE_TYPE_TX:
                         status = ionic_en_txq_alloc(priv_data,
                                                     uplink_qid);
-                        ionic_err("multi-queue txxxxxx");
+                        ionic_info("multi-queue tx");
                         break;
                 default:
                         ionic_err("Unknown queue type: %d", q_type);

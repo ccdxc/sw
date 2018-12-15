@@ -311,7 +311,6 @@ ionic_dma_unmap(vmk_DMAEngine dma_engine,                         // IN
         if (VMK_UNLIKELY(status != VMK_OK)) {
                 ionic_err("vmk_DMAUnmapElem() failed, status: %s",
                           vmk_StatusToString(status));
-                VMK_ASSERT(0);
         }
 
         return status;

@@ -38,9 +38,11 @@ vmk_UplinkOps ionic_en_uplink_ops = {
         .uplinkReset           = ionic_en_uplink_reset,
 };
 
-#define IONIC_EN_NUM_SUPPORTED_MODES    9
+#define IONIC_EN_NUM_SUPPORTED_MODES    11
 
 vmk_UplinkSupportedMode ionic_en_uplink_modes[IONIC_EN_NUM_SUPPORTED_MODES] = {
+        {VMK_LINK_SPEED_1000_MBPS, VMK_LINK_DUPLEX_HALF},
+        {VMK_LINK_SPEED_1000_MBPS, VMK_LINK_DUPLEX_FULL},
         {VMK_LINK_SPEED_10000_MBPS, VMK_LINK_DUPLEX_HALF},
         {VMK_LINK_SPEED_10000_MBPS, VMK_LINK_DUPLEX_FULL},
         {VMK_LINK_SPEED_40000_MBPS, VMK_LINK_DUPLEX_HALF},
@@ -91,12 +93,6 @@ static vmk_UplinkMultiQueueOps ionic_en_multi_queue_ops = {
 };
 
 
-/*
-static vmk_UplinkTransceiverTypeOps ionic_en_uplink_transceiver_type_ops = {
-   .getTransceiverType = ionic_en_uplink_transceiver_type_get,
-   .setTransceiverType = ionic_en_uplink_transceiver_type_set,
-};
-*/
 /*
  *****************************************************************************
  *
@@ -266,7 +262,12 @@ ionic_en_query_port(struct ionic_en_uplink_handle *uplink_handle)  // IN
         vmk_Bool      is_link_up;
 
         /*For now we use hardcoded link status */
-        speed = VMK_LINK_SPEED_10000_MBPS;
+        if (!uplink_handle->is_mgmt_nic) {
+                speed = VMK_LINK_SPEED_10000_MBPS;
+        } else {
+                speed = VMK_LINK_SPEED_1000_MBPS;
+        }
+
         is_link_up = VMK_TRUE;
 
         vmk_SpinlockLockIgnoreDeathPending(uplink_handle->link_status_lock);
@@ -398,32 +399,31 @@ inline struct ionic_en_tx_ring *
 ionic_en_get_tx_ring_from_qid(struct ionic_en_uplink_handle *uplink_handle,   // IN 
                               vmk_UplinkQueueID uplink_qid)                   // IN 
 {
-        struct ionic_en_tx_ring *tx_ring;
+        struct ionic_en_tx_ring *tx_ring = NULL;
         vmk_Bool cond1, cond2, cond3, cond4;
         vmk_uint32 shared_q_data_idx   = vmk_UplinkQueueIDQueueDataIndex(uplink_qid);
         vmk_UplinkQueueType q_type     = vmk_UplinkQueueIDType(uplink_qid);
         vmk_uint32 tx_ring_idx         = vmk_UplinkQueueIDUserVal(uplink_qid);
 
-        VMK_ASSERT(q_type == VMK_UPLINK_QUEUE_TYPE_TX);
-
-//        ionic_err("XXXXXXXXXXXXXXXXXXXXXX tx qid mapping, q_type: %d, "
-//                  "shared_q_data_idx: %d, tx_ring_idx: %d, ",
-//                  q_type, shared_q_data_idx, tx_ring_idx);
-
-        /* Verify the mapping of uplink qid */
-        cond1 = tx_ring_idx < uplink_handle->max_tx_queues;
-        cond2 = tx_ring_idx == (shared_q_data_idx -
+        if (VMK_LIKELY(q_type == VMK_UPLINK_QUEUE_TYPE_TX)) {
+                /* Verify the mapping of uplink qid */
+                cond1 = tx_ring_idx < uplink_handle->max_tx_queues;
+                cond2 = tx_ring_idx == (shared_q_data_idx -
                                 uplink_handle->max_rx_queues);
-        cond3 = shared_q_data_idx >= uplink_handle->max_rx_queues;
-        cond4 = shared_q_data_idx < (uplink_handle->max_rx_queues +
-                                     uplink_handle->max_tx_queues);
-        if (cond1 && cond2 && cond3 && cond4) {
-                tx_ring = &(uplink_handle->tx_rings[tx_ring_idx]);
+                cond3 = shared_q_data_idx >= uplink_handle->max_rx_queues;
+                cond4 = shared_q_data_idx < (uplink_handle->max_rx_queues +
+                                uplink_handle->max_tx_queues);
+                if (cond1 && cond2 && cond3 && cond4) {
+                        tx_ring = &(uplink_handle->tx_rings[tx_ring_idx]);
+                } else {
+                        ionic_err("Failed at validating tx qid mapping, q_type: %u, "
+                                        "shared_q_data_idx: %u, tx_ring_idx: %u, ",
+                                        q_type, shared_q_data_idx, tx_ring_idx);
+                }
         } else {
-                ionic_err("Failed at validating tx qid mapping, q_type: %u, "
-                          "shared_q_data_idx: %u, tx_ring_idx: %u, ",
-                           q_type, shared_q_data_idx, tx_ring_idx);
-                tx_ring = NULL;
+                ionic_info("Invalid uplink qid, shared_q_data_idx: %u,"
+                           "q_type: %u, tx_ring_idx: %u", shared_q_data_idx,
+                           q_type, tx_ring_idx);
         }
 
         return tx_ring;
@@ -481,7 +481,7 @@ ionic_en_uplink_tx(vmk_AddrCookie driver_data,                    // IN
         tx_ring = ionic_en_get_tx_ring_from_qid(uplink_handle,
                                                 vmk_qid);
         if (VMK_UNLIKELY(!tx_ring)) {
-                ionic_err("ionic_en_get_tx_ring_from_qid() failed.");
+                ionic_warn("ionic_en_get_tx_ring_from_qid() failed.");
                 goto tx_ring_err;
         }
  
@@ -1177,6 +1177,9 @@ ionic_en_uplink_quiesce_io(vmk_AddrCookie driver_data)            // IN
         //vmk_SpinlockLock(priv_data->ionic.lifs_lock);
         lif = VMK_LIST_ENTRY(vmk_ListFirst(&priv_data->ionic.lifs),
                              struct lif, list);
+
+        ionic_io_rings_deinit(priv_data, lif);
+
         status = ionic_stop(lif);
         //vmk_SpinlockLock(priv_data->ionic.lifs_lock);
         if (status != VMK_OK) {
@@ -1465,6 +1468,7 @@ ionic_en_uplink_init(struct ionic_en_priv_data *priv_data)         // IN
 
         VMK_ASSERT(uplink_handle->is_init == VMK_FALSE);
 
+        uplink_handle->is_mgmt_nic = priv_data->ionic.is_mgmt_nic;
         uplink_handle->is_ready_notify_linkup = VMK_FALSE;
 
         uplink_reg_data->apiRevision    = VMKAPI_REVISION;

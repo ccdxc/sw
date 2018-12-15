@@ -105,6 +105,11 @@ ionic_pci_query(struct ionic_en_priv_data *priv_data)             // IN
                           vmk_StatusToString(status));
         } 
 
+        if (en_dev->pci_device_id.deviceID ==
+            PCI_DEVICE_ID_PENSANDO_IONIC_ETH_MGMT) {
+                priv_data->ionic.is_mgmt_nic = VMK_TRUE;
+        }
+
         return status;
 }
 

@@ -270,8 +270,7 @@ ionic_stop(struct lif *lif)
                         status1 = status;
                 }
                 //ionic_rx_flush(&lif->rxqcqs[i]->cq);
-                vmk_NetPollFlushRx(lif->rxqcqs[i]->netpoll);
-        }
+       }
 
 	return status1;
 }
