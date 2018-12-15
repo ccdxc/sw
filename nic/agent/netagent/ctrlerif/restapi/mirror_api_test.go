@@ -138,7 +138,6 @@ func TestMirrorSessionDelete(t *testing.T) {
 	}
 	err := netutils.HTTPPost("http://"+agentRestURL+"/api/mirror/sessions/", &deleteData, &resp)
 	AssertOk(t, err, "Error posting mirrorsession to REST Server")
-	// TODO: Commented out temporarily. Revisit @rchirakk
-	// delErr := netutils.HTTPDelete("http://"+agentRestURL+"/api/mirror/sessions/default/default/"+"testDeleteMirrorSession", &deleteData, &resp)
-	// AssertOk(t, delErr, "Error deleting mirrorsessions from the REST Server")
+	delErr := netutils.HTTPDelete("http://"+agentRestURL+"/api/mirror/sessions/default/default/"+"testDeleteMirrorSession", &deleteData, &resp)
+	AssertOk(t, delErr, "Error deleting mirrorsessions from the REST Server")
 }

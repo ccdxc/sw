@@ -300,6 +300,7 @@ func (hd *Datapath) createUpdateMirrorSession(mirrorSessionKey string, vrfID uin
 					contains, _ := checkIDContainment(flowRuleObj.MirrorSessionIDs, mirrorSessID)
 					if !contains {
 						flowRuleObj.MirrorSessionIDs = append(flowRuleObj.MirrorSessionIDs, mirrorSessID)
+						db.FlowMonitorRuleIDToObj[ruleID] = flowRuleObj
 					}
 					mirrorSessObj.FlowMonitorRuleIDs = append(mirrorSessObj.FlowMonitorRuleIDs, ruleID)
 				}
@@ -333,6 +334,7 @@ func (hd *Datapath) createUpdateMirrorSession(mirrorSessionKey string, vrfID uin
 					contains, _ := checkIDContainment(dropRuleObj.MirrorSessionIDs, mirrorSessID)
 					if !contains {
 						dropRuleObj.MirrorSessionIDs = append(dropRuleObj.MirrorSessionIDs, mirrorSessID)
+						db.DropRuleIDToObj[ruleID] = dropRuleObj
 					}
 					mirrorSessObj.DropMonitorRuleIDs = append(mirrorSessObj.DropMonitorRuleIDs, ruleID)
 				}

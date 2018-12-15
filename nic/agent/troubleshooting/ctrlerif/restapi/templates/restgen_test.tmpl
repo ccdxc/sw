@@ -143,9 +143,8 @@ var _ Evaluator
                         }
                         err := netutils.HTTPPost("http://"+agentRestURL+"/api/mirror/sessions/", &{{lower .}}Data, &resp)
                         AssertOk(t, err, "Error posting {{lower $crudObject}} to REST Server")
-                        // TODO: Commented out temporarily. Revisit @rchirakk
-                        // delErr := netutils.HTTPDelete("http://"+agentRestURL+"/api/mirror/sessions/default/default/"+"test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
-                        // AssertOk(t, delErr, "Error deleting {{lower $crudObject}}s from the REST Server")
+                        delErr := netutils.HTTPDelete("http://"+agentRestURL+"/api/mirror/sessions/default/default/"+"test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+                        AssertOk(t, delErr, "Error deleting {{lower $crudObject}}s from the REST Server")
                     }
                 {{end}}
            {{end}}
