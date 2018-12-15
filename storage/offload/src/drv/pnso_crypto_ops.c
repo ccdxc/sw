@@ -409,7 +409,7 @@ crypto_enable_interrupt(struct service_info *svc_info,
 			       (uint64_t)pcr, (uint64_t)poll_ctx);
 
 		crypto_chain->ccp_next_db_spec.nds_addr =
-			sonic_intr_get_db_addr(pcr);
+			sonic_intr_get_db_addr(pcr, (uint64_t)poll_ctx);
 		if (!crypto_chain->ccp_next_db_spec.nds_addr) {
 			err = EINVAL;
 			OSAL_LOG_DEBUG("crypto failed sonic_intr_get_db_addr "
@@ -417,7 +417,7 @@ crypto_enable_interrupt(struct service_info *svc_info,
 			goto out;
 		}
 		crypto_chain->ccp_next_db_spec.nds_data =
-				cpu_to_be64((uint64_t)poll_ctx);
+				cpu_to_be64(sonic_intr_get_fire_data64());
 		crypto_chain->ccp_cmd.ccpc_next_doorbell_en = true;
 
 		crypto_chain->ccp_intr_addr = 
