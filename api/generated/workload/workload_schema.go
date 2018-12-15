@@ -57,7 +57,7 @@ var typesMapWorkload = map[string]*api.Struct{
 			"external-vlan":      api.CLIInfo{Path: "Spec.Interfaces[].ExternalVlan", Skip: false, Insert: "", Help: "External vlan associated with the workload"},
 			"generation-id":      api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"host-name":          api.CLIInfo{Path: "Spec.HostName", Skip: false, Insert: "", Help: "Host name where the workload runs"},
-			"ip-addresses":       api.CLIInfo{Path: "Status.Interfaces[].IpAddrs", Skip: false, Insert: "", Help: ""},
+			"ip-addresses":       api.CLIInfo{Path: "Status.Interfaces[].IpAddresses", Skip: false, Insert: "", Help: ""},
 			"kind":               api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"labels":             api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
 			"mac-address":        api.CLIInfo{Path: "Spec.Interfaces[].MACAddress", Skip: false, Insert: "", Help: "MAC address of the interface as seen by the workload"},
@@ -79,6 +79,8 @@ var typesMapWorkload = map[string]*api.Struct{
 			"MicroSegVlan": api.Field{Name: "MicroSegVlan", CLITag: api.CLIInfo{ID: "micro-seg-vlan", Path: "", Skip: false, Insert: "", Help: "Vlan identifying host unique vlan id"}, JSONTag: "micro-seg-vlan", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 
 			"ExternalVlan": api.Field{Name: "ExternalVlan", CLITag: api.CLIInfo{ID: "external-vlan", Path: "", Skip: false, Insert: "", Help: "External vlan associated with the workload"}, JSONTag: "external-vlan", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+
+			"IpAddresses": api.Field{Name: "IpAddresses", CLITag: api.CLIInfo{ID: "ip-addresses", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ip-addresses", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"workload.WorkloadIntfStatus": &api.Struct{
@@ -86,7 +88,7 @@ var typesMapWorkload = map[string]*api.Struct{
 		Fields: map[string]api.Field{
 			"MACAddress": api.Field{Name: "MACAddress", CLITag: api.CLIInfo{ID: "mac-address-status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mac-address", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"IpAddrs": api.Field{Name: "IpAddrs", CLITag: api.CLIInfo{ID: "ip-addresses", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ip-addresses", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"IpAddresses": api.Field{Name: "IpAddresses", CLITag: api.CLIInfo{ID: "ip-addresses", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ip-addresses", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Endpoint": api.Field{Name: "Endpoint", CLITag: api.CLIInfo{ID: "endpoint", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "endpoint", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},

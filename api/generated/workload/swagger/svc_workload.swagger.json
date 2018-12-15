@@ -3155,6 +3155,13 @@
           "maximum": 4095,
           "description": "value should be between 1 and 4095\n",
           "title": "External vlan assigned for this interface\ncli-help: External vlan associated with the workload"
+        },
+        "ip-addresses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "List of all IP addresses configured on a Workload Interface"
         }
       },
       "title": "Spec of a Workload interface"

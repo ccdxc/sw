@@ -6,12 +6,12 @@
 
 	It is generated from these files:
 		app.proto
+		fwprofile.proto
 		networkencryption.proto
 		securitygroup.proto
 		sgpolicy.proto
 		svc_security.proto
 		x509.proto
-		fwprofile.proto
 
 	It has these top-level messages:
 		ALG
@@ -23,6 +23,9 @@
 		IcmpAlg
 		MsrpcAlg
 		SunrpcAlg
+		FirewallProfile
+		FirewallProfileSpec
+		FirewallProfileStatus
 		IPsecProtocolSpec
 		TLSProtocolSpec
 		TrafficEncryptionPolicy
@@ -52,9 +55,6 @@
 		Certificate
 		CertificateSpec
 		CertificateStatus
-		FirewallProfile
-		FirewallProfileSpec
-		FirewallProfileStatus
 */
 package security
 
