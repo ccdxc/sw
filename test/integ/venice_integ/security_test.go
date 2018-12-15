@@ -249,7 +249,7 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 
 	// delete workloads
 	for i := range it.agents {
-		_, err := it.apisrvClient.WorkloadV1().Workload().Delete(context.Background(), &wrloads[i].ObjectMeta)
+		_, err = it.apisrvClient.WorkloadV1().Workload().Delete(context.Background(), &wrloads[i].ObjectMeta)
 		AssertOk(c, err, "Error creating workload")
 	}
 
@@ -273,6 +273,6 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 	}
 
 	// delete the network
-	_, err = it.deleteNetwork("default", "Vlan-1")
+	_, err = it.deleteNetwork("default", "Network-Vlan-1")
 	AssertOk(c, err, "Error deleting network")
 }

@@ -45,9 +45,9 @@ message ALG {
 // ICMP ALG configuration
 message IcmpAlg {
     // ICMP Type
-    uint32 Type = 1 [(gogoproto.jsontag) = "type,omitempty"];
+    string Type = 1 [(gogoproto.jsontag) = "type,omitempty"];
     // ICMP Code is sub-command for a given ICMP Type
-    uint32 Code = 2 [(gogoproto.jsontag) = "code,omitempty"];
+    string Code = 2 [(gogoproto.jsontag) = "code,omitempty"];
 }
 
 // DNS ALG configuration

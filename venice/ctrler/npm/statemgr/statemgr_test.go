@@ -85,8 +85,6 @@ func createEndpoint(stateMgr *Statemgr, tenant, endpoint, net string) (*Endpoint
 		},
 		Spec: workload.EndpointSpec{},
 		Status: workload.EndpointStatus{
-			EndpointUUID:   "testEndpointUUID",
-			WorkloadUUID:   "testContainerUUID",
 			WorkloadName:   "testContainerName",
 			Network:        net,
 			HomingHostAddr: "192.168.1.1",
@@ -258,8 +256,6 @@ func TestEndpointCreateDelete(t *testing.T) {
 		},
 		Spec: workload.EndpointSpec{},
 		Status: workload.EndpointStatus{
-			EndpointUUID:   "testEndpointUUID",
-			WorkloadUUID:   "testContainerUUID",
 			WorkloadName:   "testContainerName",
 			Network:        "default",
 			HomingHostAddr: "192.168.1.1",
@@ -301,8 +297,6 @@ func TestEndpointCreateDelete(t *testing.T) {
 		},
 		Spec: workload.EndpointSpec{},
 		Status: workload.EndpointStatus{
-			EndpointUUID:   "newEndpointUUID",
-			WorkloadUUID:   "newContainerUUID",
 			WorkloadName:   "newContainerName",
 			Network:        "default",
 			HomingHostAddr: "192.168.1.1",
@@ -350,8 +344,6 @@ func TestEndpointCreateFailure(t *testing.T) {
 			Tenant:    "default",
 		},
 		Status: workload.EndpointStatus{
-			EndpointUUID:   "testEndpointUUID",
-			WorkloadUUID:   "testContainerUUID",
 			WorkloadName:   "testContainerName",
 			Network:        "default",
 			HomingHostAddr: "192.168.1.1",
@@ -376,8 +368,6 @@ func TestEndpointCreateFailure(t *testing.T) {
 			Tenant:    "default",
 		},
 		Status: workload.EndpointStatus{
-			EndpointUUID:   "newEndpointUUID",
-			WorkloadUUID:   "newContainerUUID",
 			WorkloadName:   "newContainerName",
 			Network:        "default",
 			HomingHostAddr: "192.168.1.1",
@@ -423,8 +413,6 @@ func TestEndpointListWatch(t *testing.T) {
 		},
 		Spec: workload.EndpointSpec{},
 		Status: workload.EndpointStatus{
-			EndpointUUID:   "testEndpointUUID",
-			WorkloadUUID:   "testContainerUUID",
 			WorkloadName:   "testContainerName",
 			Network:        "default",
 			HomingHostAddr: "192.168.1.1",
@@ -515,8 +503,6 @@ func TestSgAttachEndpoint(t *testing.T) {
 		},
 		Spec: workload.EndpointSpec{},
 		Status: workload.EndpointStatus{
-			EndpointUUID:       "testEndpointUUID",
-			WorkloadUUID:       "testContainerUUID",
 			WorkloadName:       "testContainerName",
 			Network:            "default",
 			HomingHostAddr:     "192.168.1.1",
@@ -604,8 +590,6 @@ func TestEndpointConcurrency(t *testing.T) {
 				},
 				Spec: workload.EndpointSpec{},
 				Status: workload.EndpointStatus{
-					EndpointUUID:       "testEndpointUUID",
-					WorkloadUUID:       "testContainerUUID",
 					WorkloadName:       "testContainerName",
 					Network:            "default",
 					HomingHostAddr:     "192.168.1.1",
@@ -821,7 +805,7 @@ func TestWorkloadCreateDelete(t *testing.T) {
 	AssertOk(t, err, "Could not create the workload")
 
 	// verify we can find the network for the workload
-	nw, err := stateMgr.FindNetwork("default", "Vlan-1")
+	nw, err := stateMgr.FindNetwork("default", "Network-Vlan-1")
 	AssertOk(t, err, "Could not find the network")
 
 	// verify we can find the endpoint associated with the workload

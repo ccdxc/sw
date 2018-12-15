@@ -225,7 +225,9 @@ func TestSgPolicyWriter(t *testing.T) {
 
 	// write the update
 	sgp.Status = security.SGPolicyStatus{
-		Workloads: []string{"test1", "test2"},
+		PropagationStatus: security.SGPolicyPropagationStatus{
+			GenerationID: "100",
+		},
 	}
 	err = wr.WriteSGPolicy(&sgp)
 	AssertOk(t, err, "Error writing to apisrv")
@@ -233,7 +235,7 @@ func TestSgPolicyWriter(t *testing.T) {
 	// get the values back from api server
 	sgps, err := apicl.SecurityV1().SGPolicy().Get(context.Background(), &sgp.ObjectMeta)
 	AssertOk(t, err, "Error getting sg")
-	Assert(t, (len(sgps.Status.Workloads) == len(sgp.Status.Workloads)), "Sgpolicy params did not match", sgps)
+	Assert(t, (sgps.Status.PropagationStatus == sgp.Status.PropagationStatus), "Sgpolicy params did not match", sgps)
 
 	// stop api server
 	apiSrv.Stop()

@@ -24,7 +24,7 @@ type WorkloadHandler interface {
 
 // networkName returns network name for the external vlan
 func (wr *WorkloadReactor) networkName(extVlan uint32) string {
-	return "Vlan-" + fmt.Sprintf("%d", extVlan)
+	return "Network-Vlan-" + fmt.Sprintf("%d", extVlan)
 }
 
 // CreateWorkload handle workload creation
@@ -99,10 +99,8 @@ func (wr *WorkloadReactor) CreateWorkload(w workload.Workload) error {
 				Spec: workload.EndpointSpec{},
 				Status: workload.EndpointStatus{
 					Network:            netName,
-					EndpointUUID:       epName,
 					NodeUUID:           nodeUUID,
 					WorkloadName:       w.Name,
-					WorkloadUUID:       w.Name,
 					WorkloadAttributes: w.Labels,
 					MacAddress:         w.Spec.Interfaces[ii].MACAddress,
 					HomingHostAddr:     "", // TODO: get host address

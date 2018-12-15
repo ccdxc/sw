@@ -20,38 +20,34 @@ message EndpointSpec {
 
 // status part of Endpoint object
 message EndpointStatus {
-    // endpoint UUID
-    string EndpointUUID   = 1  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "endpoint-uuid,omitempty"];
-    // VM or container UUID
-    string WorkloadUUID   = 2  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-uuid,omitempty"];
     // VM or container name
-    string WorkloadName   = 3  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-name,omitempty"];
+    string WorkloadName   = 1  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-name,omitempty"];
     // network this endpoint belogs to
-    string Network        = 4  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "network,omitempty"];
+    string Network        = 2  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "network,omitempty"];
     // host address of the host where this endpoint exists
-    string HomingHostAddr = 5  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "homing-host-addr,omitempty"];
+    string HomingHostAddr = 3  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "homing-host-addr,omitempty"];
     // host name of the host where this endpoint exists
-    string HomingHostName = 6  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "homing-host-name,omitempty"];
+    string HomingHostName = 4  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "homing-host-name,omitempty"];
     // IPv4 address of the endpoint
-    string IPv4Address    = 7  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ipv4-address,omitempty"];
+    string IPv4Address    = 5  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ipv4-address,omitempty"];
     // IPv4 gateway for the endpoint
-    string IPv4Gateway    = 8  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ipv4-gateway,omitempty"];
+    string IPv4Gateway    = 6  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ipv4-gateway,omitempty"];
     // IPv6 address for the endpoint
-    string IPv6Address    = 9  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ipv6-address,omitempty"];
+    string IPv6Address    = 7  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ipv6-address,omitempty"];
     // IPv6 gateway
-    string IPv6Gateway    = 10 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ipv6-gateway,omitempty"];
+    string IPv6Gateway    = 8 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ipv6-gateway,omitempty"];
     // Mac address of the endpoint
-    string MacAddress     = 11 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "mac-address,omitempty"];
+    string MacAddress     = 9 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "mac-address,omitempty"];
     // homing host's UUID
-    string NodeUUID       = 12 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "node-uuid,omitempty"];
+    string NodeUUID       = 10 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "node-uuid,omitempty"];
     // endpoint FSM state
-    string EndpointState  = 13;
+    string EndpointState  = 11;
     // security groups
-    repeated string SecurityGroups = 14;
+    repeated string SecurityGroups = 12;
     // micro-segment VLAN
-    uint32 MicroSegmentVlan = 15 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "micro-segment-vlan,omitempty"];
+    uint32 MicroSegmentVlan = 13 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "micro-segment-vlan,omitempty"];
     // VM or container attribute/labels
-    map<string, string> WorkloadAttributes  = 16 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-attributes,omitempty"];
+    map<string, string> WorkloadAttributes  = 14 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-attributes,omitempty"];
 }
 
 // Endpoint represents a network endpoint

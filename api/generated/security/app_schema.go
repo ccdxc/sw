@@ -135,9 +135,9 @@ var typesMapApp = map[string]*api.Struct{
 	"security.IcmpAlg": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(IcmpAlg{}) },
 		Fields: map[string]api.Field{
-			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{ID: "type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{ID: "type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Code": api.Field{Name: "Code", CLITag: api.CLIInfo{ID: "code", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "code", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+			"Code": api.Field{Name: "Code", CLITag: api.CLIInfo{ID: "code", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "code", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"security.MsrpcAlg": &api.Struct{

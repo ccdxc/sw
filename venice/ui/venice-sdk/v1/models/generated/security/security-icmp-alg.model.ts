@@ -9,20 +9,20 @@ import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface ISecurityIcmpAlg {
-    'type'?: number;
-    'code'?: number;
+    'type'?: string;
+    'code'?: string;
 }
 
 
 export class SecurityIcmpAlg extends BaseModel implements ISecurityIcmpAlg {
-    'type': number = null;
-    'code': number = null;
+    'type': string = null;
+    'code': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'type': {
-            type: 'number'
+            type: 'string'
         },
         'code': {
-            type: 'number'
+            type: 'string'
         },
     }
 

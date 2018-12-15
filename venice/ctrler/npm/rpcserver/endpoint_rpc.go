@@ -37,8 +37,6 @@ func (ep *EndpointRPCHandler) CreateEndpoint(ctx context.Context, epinfo *netpro
 		TypeMeta:   epinfo.TypeMeta,
 		ObjectMeta: epinfo.ObjectMeta,
 		Status: workload.EndpointStatus{
-			EndpointUUID:   epinfo.Spec.EndpointUUID,
-			WorkloadUUID:   epinfo.Spec.WorkloadUUID,
 			WorkloadName:   epinfo.Spec.WorkloadName,
 			Network:        epinfo.Spec.NetworkName,
 			HomingHostAddr: epinfo.Spec.HomingHostAddr,
@@ -57,8 +55,6 @@ func (ep *EndpointRPCHandler) CreateEndpoint(ctx context.Context, epinfo *netpro
 		TypeMeta:   eps.TypeMeta,
 		ObjectMeta: eps.ObjectMeta,
 		Spec: netproto.EndpointSpec{
-			EndpointUUID:   eps.Status.EndpointUUID,
-			WorkloadUUID:   eps.Status.WorkloadUUID,
 			WorkloadName:   eps.Status.WorkloadName,
 			NetworkName:    eps.Status.Network,
 			SecurityGroups: eps.Status.SecurityGroups,
@@ -90,8 +86,6 @@ func (ep *EndpointRPCHandler) GetEndpoint(ctx context.Context, objmeta *api.Obje
 		TypeMeta:   eps.Endpoint.TypeMeta,
 		ObjectMeta: eps.Endpoint.ObjectMeta,
 		Spec: netproto.EndpointSpec{
-			EndpointUUID:       eps.Status.EndpointUUID,
-			WorkloadUUID:       eps.Status.WorkloadUUID,
 			WorkloadName:       eps.Status.WorkloadName,
 			WorkloadAttributes: eps.Status.WorkloadAttributes,
 			NetworkName:        eps.Status.Network,
@@ -131,8 +125,6 @@ func (ep *EndpointRPCHandler) ListEndpoints(ctx context.Context, objsel *api.Obj
 				TypeMeta:   eps.Endpoint.TypeMeta,
 				ObjectMeta: eps.Endpoint.ObjectMeta,
 				Spec: netproto.EndpointSpec{
-					EndpointUUID:       eps.Status.EndpointUUID,
-					WorkloadUUID:       eps.Status.WorkloadUUID,
 					WorkloadName:       eps.Status.WorkloadName,
 					WorkloadAttributes: eps.Status.WorkloadAttributes,
 					NetworkName:        eps.Status.Network,
@@ -218,8 +210,6 @@ func (ep *EndpointRPCHandler) WatchEndpoints(ometa *api.ObjectMeta, stream netpr
 					TypeMeta:   endpoint.TypeMeta,
 					ObjectMeta: endpoint.ObjectMeta,
 					Spec: netproto.EndpointSpec{
-						EndpointUUID:       endpoint.Status.EndpointUUID,
-						WorkloadUUID:       endpoint.Status.WorkloadUUID,
 						WorkloadName:       endpoint.Status.WorkloadName,
 						WorkloadAttributes: endpoint.Status.WorkloadAttributes,
 						NetworkName:        endpoint.Status.Network,
@@ -274,8 +264,6 @@ func (ep *EndpointRPCHandler) DeleteEndpoint(ctx context.Context, epinfo *netpro
 		TypeMeta:   eps.TypeMeta,
 		ObjectMeta: eps.ObjectMeta,
 		Spec: netproto.EndpointSpec{
-			EndpointUUID:   eps.Status.EndpointUUID,
-			WorkloadUUID:   eps.Status.WorkloadUUID,
 			WorkloadName:   eps.Status.WorkloadName,
 			NetworkName:    eps.Status.Network,
 			SecurityGroups: eps.Status.SecurityGroups,

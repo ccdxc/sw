@@ -9,8 +9,6 @@ import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IWorkloadEndpointStatus {
-    'endpoint-uuid'?: string;
-    'workload-uuid'?: string;
     'workload-name'?: string;
     'network'?: string;
     'homing-host-addr'?: string;
@@ -29,8 +27,6 @@ export interface IWorkloadEndpointStatus {
 
 
 export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpointStatus {
-    'endpoint-uuid': string = null;
-    'workload-uuid': string = null;
     'workload-name': string = null;
     'network': string = null;
     'homing-host-addr': string = null;
@@ -46,12 +42,6 @@ export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpoi
     'micro-segment-vlan': number = null;
     'workload-attributes': object = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'endpoint-uuid': {
-            type: 'string'
-        },
-        'workload-uuid': {
-            type: 'string'
-        },
         'workload-name': {
             type: 'string'
         },
@@ -124,16 +114,6 @@ export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpoi
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values && values['endpoint-uuid'] != null) {
-            this['endpoint-uuid'] = values['endpoint-uuid'];
-        } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('endpoint-uuid')) {
-            this['endpoint-uuid'] = WorkloadEndpointStatus.propInfo['endpoint-uuid'].default;
-        }
-        if (values && values['workload-uuid'] != null) {
-            this['workload-uuid'] = values['workload-uuid'];
-        } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('workload-uuid')) {
-            this['workload-uuid'] = WorkloadEndpointStatus.propInfo['workload-uuid'].default;
-        }
         if (values && values['workload-name'] != null) {
             this['workload-name'] = values['workload-name'];
         } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('workload-name')) {
@@ -209,8 +189,6 @@ export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpoi
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'endpoint-uuid': new FormControl(this['endpoint-uuid']),
-                'workload-uuid': new FormControl(this['workload-uuid']),
                 'workload-name': new FormControl(this['workload-name']),
                 'network': new FormControl(this['network']),
                 'homing-host-addr': new FormControl(this['homing-host-addr']),
@@ -236,8 +214,6 @@ export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpoi
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this._formGroup.controls['endpoint-uuid'].setValue(this['endpoint-uuid']);
-            this._formGroup.controls['workload-uuid'].setValue(this['workload-uuid']);
             this._formGroup.controls['workload-name'].setValue(this['workload-name']);
             this._formGroup.controls['network'].setValue(this['network']);
             this._formGroup.controls['homing-host-addr'].setValue(this['homing-host-addr']);

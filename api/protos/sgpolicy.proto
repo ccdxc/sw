@@ -80,11 +80,8 @@ message SGPolicyPropagationStatus {
 }
 
 message SGPolicyStatus {
-    // list of workloads in this group
-    repeated string Workloads = 1 [(gogoproto.jsontag) = "workloads,omitempty"];
-
     // The status of the configuration propagation to the Naples
-    SGPolicyPropagationStatus PropagationStatus = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "propagation-status"];
+    SGPolicyPropagationStatus PropagationStatus = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "propagation-status"];
 }
 
 // Sgpolicy represents a security policy for security groups

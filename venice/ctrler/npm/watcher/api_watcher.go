@@ -449,9 +449,7 @@ func (w *Watcher) handleVmmEvents(stream orch.OrchApi_WatchNwIFsClient) {
 				Spec: workload.EndpointSpec{},
 				Status: workload.EndpointStatus{
 					Network:            nif.Status.Network,
-					EndpointUUID:       nif.ObjectMeta.UUID,
 					WorkloadName:       nif.Status.WlName,
-					WorkloadUUID:       nif.Status.WlUUID,
 					WorkloadAttributes: nif.Attributes,
 					MacAddress:         nif.Status.MacAddress,
 					IPv4Address:        nif.Status.IpAddress,

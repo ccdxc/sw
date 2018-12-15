@@ -365,20 +365,6 @@
             "type": "string"
           },
           {
-            "name": "status.endpoint-uuid",
-            "description": "endpoint UUID.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "status.workload-uuid",
-            "description": "VM or container UUID.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
             "name": "status.workload-name",
             "description": "VM or container name.",
             "in": "query",
@@ -894,20 +880,6 @@
           {
             "name": "meta.self-link",
             "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "status.endpoint-uuid",
-            "description": "endpoint UUID.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "status.workload-uuid",
-            "description": "VM or container UUID.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -3071,14 +3043,6 @@
     "workloadEndpointStatus": {
       "type": "object",
       "properties": {
-        "endpoint-uuid": {
-          "type": "string",
-          "title": "endpoint UUID"
-        },
-        "workload-uuid": {
-          "type": "string",
-          "title": "VM or container UUID"
-        },
         "workload-name": {
           "type": "string",
           "title": "VM or container name"

@@ -10,18 +10,13 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { SecuritySGPolicyPropagationStatus, ISecuritySGPolicyPropagationStatus } from './security-sg-policy-propagation-status.model';
 
 export interface ISecuritySGPolicyStatus {
-    'workloads'?: Array<string>;
     'propagation-status'?: ISecuritySGPolicyPropagationStatus;
 }
 
 
 export class SecuritySGPolicyStatus extends BaseModel implements ISecuritySGPolicyStatus {
-    'workloads': Array<string> = null;
     'propagation-status': SecuritySGPolicyPropagationStatus = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'workloads': {
-            type: 'Array<string>'
-        },
         'propagation-status': {
             type: 'object'
         },
@@ -46,7 +41,6 @@ export class SecuritySGPolicyStatus extends BaseModel implements ISecuritySGPoli
     */
     constructor(values?: any) {
         super();
-        this['workloads'] = new Array<string>();
         this['propagation-status'] = new SecuritySGPolicyPropagationStatus();
         this.setValues(values);
     }
@@ -56,9 +50,6 @@ export class SecuritySGPolicyStatus extends BaseModel implements ISecuritySGPoli
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values && values['workloads'] != null) {
-            this['workloads'] = values['workloads'];
-        }
         if (values) {
             this['propagation-status'].setValues(values['propagation-status']);
         }
@@ -69,7 +60,6 @@ export class SecuritySGPolicyStatus extends BaseModel implements ISecuritySGPoli
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'workloads': new FormControl(this['workloads']),
                 'propagation-status': this['propagation-status'].$formGroup,
             });
         }
@@ -82,7 +72,6 @@ export class SecuritySGPolicyStatus extends BaseModel implements ISecuritySGPoli
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this._formGroup.controls['workloads'].setValue(this['workloads']);
             this['propagation-status'].setFormGroupValuesToBeModelValues();
         }
     }

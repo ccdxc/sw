@@ -16,7 +16,7 @@ import (
 func TestSGPolicyCreateAtTenant(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig("TestSGPolicy")
-	s := &sgPolicyHooks{
+	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
 	}
@@ -58,7 +58,7 @@ func TestSGPolicyCreateAtTenant(t *testing.T) {
 func TestSGPolicyCreateAtSGs(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig("TestSGPolicy")
-	s := &sgPolicyHooks{
+	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
 	}
@@ -99,7 +99,7 @@ func TestSGPolicyCreateAtSGs(t *testing.T) {
 func TestAttachGroupsWithFromAddresses(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig("TestSGPolicy")
-	s := &sgPolicyHooks{
+	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
 	}
@@ -143,7 +143,7 @@ func TestAttachGroupsWithFromAddresses(t *testing.T) {
 func TestBothAttachmentPoints(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig("TestSGPolicy")
-	s := &sgPolicyHooks{
+	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
 	}
@@ -186,7 +186,7 @@ func TestBothAttachmentPoints(t *testing.T) {
 func TestMissingAttachmentPoint(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig("TestSGPolicy")
-	s := &sgPolicyHooks{
+	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
 	}
@@ -227,7 +227,7 @@ func TestMissingAttachmentPoint(t *testing.T) {
 func TestInvalidAppProto(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig("TestSGPolicy")
-	s := &sgPolicyHooks{
+	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
 	}
@@ -273,7 +273,7 @@ func TestInvalidAppProto(t *testing.T) {
 func TestAppPortEmpty(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig("TestSGPolicy")
-	s := &sgPolicyHooks{
+	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
 	}
@@ -319,7 +319,7 @@ func TestAppPortEmpty(t *testing.T) {
 func TestProtocolNumbers(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig("TestSGPolicy")
-	s := &sgPolicyHooks{
+	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
 	}
@@ -375,7 +375,7 @@ func TestProtocolNumbers(t *testing.T) {
 func TestInvalidAppPortNonInteger(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig("TestSGPolicy")
-	s := &sgPolicyHooks{
+	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
 	}
@@ -421,7 +421,7 @@ func TestInvalidAppPortNonInteger(t *testing.T) {
 func TestRulePortRanges(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig("TestSGPolicy")
-	s := &sgPolicyHooks{
+	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
 	}
@@ -448,6 +448,10 @@ func TestRulePortRanges(t *testing.T) {
 				{
 					Protocol: "tcp",
 					Ports:    "5000,5003-5004",
+				},
+				{
+					Protocol: "tcp",
+					Ports:    "0-65535",
 				},
 			},
 			Action:          "PERMIT",
@@ -560,7 +564,7 @@ func TestRulePortRanges(t *testing.T) {
 func TestInvalidAppPortInvalidPortRange(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig("TestSGPolicy")
-	s := &sgPolicyHooks{
+	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
 	}
@@ -633,7 +637,7 @@ func TestInvalidAppPortInvalidPortRange(t *testing.T) {
 func TestAttachTenantWithMissingToAndFromAddresses(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig("TestSGPolicy")
-	s := &sgPolicyHooks{
+	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
 	}
@@ -713,7 +717,7 @@ func TestAttachTenantWithMissingToAndFromAddresses(t *testing.T) {
 func TestInvalidIPAddressOctet(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig("TestSGPolicy")
-	s := &sgPolicyHooks{
+	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
 	}
@@ -756,7 +760,7 @@ func TestInvalidIPAddressOctet(t *testing.T) {
 func TestInvalidIPAddressCIDR(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig("TestSGPolicy")
-	s := &sgPolicyHooks{
+	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
 	}
@@ -798,7 +802,7 @@ func TestInvalidIPAddressCIDR(t *testing.T) {
 func TestInvalidIPAddressRange(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig("TestSGPolicy")
-	s := &sgPolicyHooks{
+	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
 	}
@@ -861,7 +865,7 @@ func TestInvalidIPAddressRange(t *testing.T) {
 func TestInvalidKeyword(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig("TestSGPolicy")
-	s := &sgPolicyHooks{
+	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
 	}
@@ -903,7 +907,7 @@ func TestInvalidKeyword(t *testing.T) {
 func TestAttachGroupsWithInvalidIPAddresses(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig("TestSGPolicy")
-	s := &sgPolicyHooks{
+	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
 	}
@@ -945,7 +949,7 @@ func TestAttachGroupsWithInvalidIPAddresses(t *testing.T) {
 func TestAppWithMultipleSeparators(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig("TestSGPolicy")
-	s := &sgPolicyHooks{
+	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
 	}
@@ -987,7 +991,7 @@ func TestAppWithMultipleSeparators(t *testing.T) {
 func TestAppWithInvalidProtocol(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig("TestSGPolicy")
-	s := &sgPolicyHooks{
+	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
 	}
@@ -1029,7 +1033,7 @@ func TestAppWithInvalidProtocol(t *testing.T) {
 func TestInvalidObjType(t *testing.T) {
 	t.Parallel()
 	logConfig := log.GetDefaultConfig("TestSGPolicy")
-	s := &sgPolicyHooks{
+	s := &securityHooks{
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
 	}
@@ -1046,4 +1050,663 @@ func TestInvalidObjType(t *testing.T) {
 
 	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
 	Assert(t, err != nil, "Invalid object casts must fail.  Error: %v", err)
+}
+
+func TestAppProtoPortConfig(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig("TestApp")
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+
+	// app with protocol port
+	app := security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "20",
+				},
+			},
+		},
+	}
+
+	_, _, err := s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
+	AssertOk(t, err, "failed to create app. Error: %v", err)
+
+	// empty protocol-port
+	app = security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{},
+		},
+	}
+
+	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
+	AssertOk(t, err, "failed to create app with empty protocol. Error: %v", err)
+
+	// protocol number
+	app = security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "6",
+				},
+			},
+		},
+	}
+
+	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
+	AssertOk(t, err, "failed to create app with protocol number. Error: %v", err)
+
+	// invalid protocol string
+	app = security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "foo",
+				},
+			},
+		},
+	}
+
+	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
+	Assert(t, err != nil, "Invalid protocol name must fail.  Error: %v", err)
+
+	// invalid protocol number
+	app = security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "300",
+				},
+			},
+		},
+	}
+
+	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
+	Assert(t, err != nil, "Invalid protocol number must fail.  Error: %v", err)
+
+	// app with port range
+	app = security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "20-30",
+				},
+			},
+		},
+	}
+
+	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
+	AssertOk(t, err, "failed to create app. Error: %v", err)
+
+	// invalid port range
+	app = security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "foo",
+				},
+			},
+		},
+	}
+
+	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
+	Assert(t, err != nil, "Invalid protocol name must fail.  Error: %v", err)
+
+	// invalid port range
+	app = security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "30-20",
+				},
+			},
+		},
+	}
+
+	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
+	Assert(t, err != nil, "Invalid protocol name must fail.  Error: %v", err)
+
+	// invalid port number
+	app = security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "100000",
+				},
+			},
+		},
+	}
+
+	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
+	Assert(t, err != nil, "Invalid protocol name must fail.  Error: %v", err)
+}
+
+func TestAppAlgConfig(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig("TestApp")
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+
+	// app with basic alg
+	app := security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "21",
+				},
+			},
+			ALG: security.ALG{
+				Type: "FTP",
+				FtpAlg: security.FtpAlg{
+					AllowMismatchIPAddress: true,
+				},
+			},
+		},
+	}
+
+	_, _, err := s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
+	AssertOk(t, err, "failed to create app. Error: %v", err)
+
+	// App without any ALG
+	app = security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: security.AppSpec{},
+	}
+
+	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
+	AssertOk(t, err, "failed to create app with empty ALG. Error: %v", err)
+
+	// ICMP ALG
+	app = security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "icmp",
+				},
+			},
+			ALG: security.ALG{
+				Type: "ICMP",
+				IcmpAlg: security.IcmpAlg{
+					Type: "1",
+					Code: "0",
+				},
+			},
+		},
+	}
+
+	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
+	AssertOk(t, err, "failed to create app with ICMP ALG config. Error: %v", err)
+
+	// DNS ALG
+	app = security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "udp",
+				},
+			},
+			ALG: security.ALG{
+				Type: "DNS",
+				DnsAlg: security.DnsAlg{
+					DropMultiQuestionPackets: true,
+				},
+			},
+		},
+	}
+
+	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
+	AssertOk(t, err, "failed to create app with DNS ALG config. Error: %v", err)
+
+	// SunrpcAlg ALG
+	app = security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "udp",
+				},
+			},
+			ALG: security.ALG{
+				Type: "SunRPC",
+				SunrpcAlg: security.SunrpcAlg{
+					ProgramID: "1",
+				},
+			},
+		},
+	}
+
+	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
+	AssertOk(t, err, "failed to create app with SunrpcAlg ALG config. Error: %v", err)
+
+	// MsrpcAlg ALG
+	app = security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "icmp",
+				},
+			},
+			ALG: security.ALG{
+				Type: "MSRPC",
+				MsrpcAlg: security.MsrpcAlg{
+					ProgramUUID: "1",
+				},
+			},
+		},
+	}
+
+	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
+	AssertOk(t, err, "failed to create app with MsrpcAlg ALG config. Error: %v", err)
+
+	// invalid ALG type
+	app = security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: security.AppSpec{
+			ALG: security.ALG{
+				Type: "foo",
+			},
+		},
+	}
+
+	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
+	Assert(t, err != nil, "Invalid protocol name must fail.  Error: %v", err)
+
+	// invalid ICMP type
+	app = security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "icmp",
+				},
+			},
+			ALG: security.ALG{
+				Type: "ICMP",
+				IcmpAlg: security.IcmpAlg{
+					Type: "foo",
+					Code: "0",
+				},
+			},
+		},
+	}
+
+	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
+	Assert(t, err != nil, "Invalid ICMP type must fail.  Error: %v", err)
+
+	// invalid ICMP type
+	app = security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "icmp",
+				},
+			},
+			ALG: security.ALG{
+				Type: "ICMP",
+				IcmpAlg: security.IcmpAlg{
+					Type: "300",
+					Code: "0",
+				},
+			},
+		},
+	}
+
+	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
+	Assert(t, err != nil, "Invalid ICMP type must fail.  Error: %v", err)
+
+	// invalid ICMP code
+	app = security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "icmp",
+				},
+			},
+			ALG: security.ALG{
+				Type: "ICMP",
+				IcmpAlg: security.IcmpAlg{
+					Type: "1",
+					Code: "foo",
+				},
+			},
+		},
+	}
+
+	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
+	Assert(t, err != nil, "Invalid ICMP code must fail.  Error: %v", err)
+
+	// invalid ICMP code
+	app = security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "icmp",
+				},
+			},
+			ALG: security.ALG{
+				Type: "ICMP",
+				IcmpAlg: security.IcmpAlg{
+					Type: "1",
+					Code: "20",
+				},
+			},
+		},
+	}
+
+	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
+	Assert(t, err != nil, "Invalid ICMP code must fail.  Error: %v", err)
+
+	// ICMP LG with Ftp config
+	app = security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "icmp",
+				},
+			},
+			ALG: security.ALG{
+				Type: "ICMP",
+				FtpAlg: security.FtpAlg{
+					AllowMismatchIPAddress: true,
+				},
+			},
+		},
+	}
+
+	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
+	Assert(t, err != nil, "ICMP Alg with FTP config must fail.  Error: %v", err)
+
+	// FTP ALG with Icmp config
+	app = security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "icmp",
+				},
+			},
+			ALG: security.ALG{
+				Type: "FTP",
+				IcmpAlg: security.IcmpAlg{
+					Type: "1",
+					Code: "0",
+				},
+			},
+		},
+	}
+
+	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
+	Assert(t, err != nil, "FTP Alg with ICMP config must fail.  Error: %v", err)
+
+	// DNS ALG with Icmp config
+	app = security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "icmp",
+				},
+			},
+			ALG: security.ALG{
+				Type: "DNS",
+				IcmpAlg: security.IcmpAlg{
+					Type: "1",
+					Code: "0",
+				},
+			},
+		},
+	}
+
+	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
+	Assert(t, err != nil, "FTP Alg with ICMP config must fail.  Error: %v", err)
+
+	// SunRPC LG with Icmp config
+	app = security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "icmp",
+				},
+			},
+			ALG: security.ALG{
+				Type: "SunRPC",
+				IcmpAlg: security.IcmpAlg{
+					Type: "1",
+					Code: "0",
+				},
+			},
+		},
+	}
+
+	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
+	Assert(t, err != nil, "SunRPC Alg with ICMP config must fail.  Error: %v", err)
+
+	// MSRPC LG with Icmp config
+	app = security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "icmp",
+				},
+			},
+			ALG: security.ALG{
+				Type: "MSRPC",
+				IcmpAlg: security.IcmpAlg{
+					Type: "1",
+					Code: "0",
+				},
+			},
+		},
+	}
+
+	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
+	Assert(t, err != nil, "MSRPC Alg with ICMP config must fail.  Error: %v", err)
+
+	// TFTP LG with Icmp config
+	app = security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "icmp",
+				},
+			},
+			ALG: security.ALG{
+				Type: "TFTP",
+				IcmpAlg: security.IcmpAlg{
+					Type: "1",
+					Code: "0",
+				},
+			},
+		},
+	}
+
+	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
+	Assert(t, err != nil, "TFTP Alg with ICMP config must fail.  Error: %v", err)
+
+	// RSTP LG with Icmp config
+	app = security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "icmp",
+				},
+			},
+			ALG: security.ALG{
+				Type: "RTSP",
+				IcmpAlg: security.IcmpAlg{
+					Type: "1",
+					Code: "0",
+				},
+			},
+		},
+	}
+
+	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
+	Assert(t, err != nil, "RSTP Alg with ICMP config must fail.  Error: %v", err)
 }

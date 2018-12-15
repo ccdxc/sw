@@ -382,16 +382,14 @@
             "description": "ICMP Type.",
             "in": "query",
             "required": false,
-            "type": "integer",
-            "format": "int64"
+            "type": "string"
           },
           {
             "name": "icmp.code",
             "description": "ICMP Code is sub-command for a given ICMP Type.",
             "in": "query",
             "required": false,
-            "type": "integer",
-            "format": "int64"
+            "type": "string"
           },
           {
             "name": "dns.drop-multi-question-packets",
@@ -2616,16 +2614,6 @@
             "format": "boolean"
           },
           {
-            "name": "status.workloads",
-            "description": "list of workloads in this group.",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
             "name": "propagation-status.generation-id",
             "description": "The Generation ID this status is for.",
             "in": "query",
@@ -3157,16 +3145,14 @@
             "description": "ICMP Type.",
             "in": "query",
             "required": false,
-            "type": "integer",
-            "format": "int64"
+            "type": "string"
           },
           {
             "name": "icmp.code",
             "description": "ICMP Code is sub-command for a given ICMP Type.",
             "in": "query",
             "required": false,
-            "type": "integer",
-            "format": "int64"
+            "type": "string"
           },
           {
             "name": "dns.drop-multi-question-packets",
@@ -5453,16 +5439,6 @@
             "required": false,
             "type": "boolean",
             "format": "boolean"
-          },
-          {
-            "name": "status.workloads",
-            "description": "list of workloads in this group.",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
           },
           {
             "name": "propagation-status.generation-id",
@@ -9158,13 +9134,11 @@
       "type": "object",
       "properties": {
         "type": {
-          "type": "integer",
-          "format": "int64",
+          "type": "string",
           "title": "ICMP Type"
         },
         "code": {
-          "type": "integer",
-          "format": "int64",
+          "type": "string",
           "title": "ICMP Code is sub-command for a given ICMP Type"
         }
       },
@@ -9288,13 +9262,6 @@
     "securitySGPolicyStatus": {
       "type": "object",
       "properties": {
-        "workloads": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "title": "list of workloads in this group"
-        },
         "propagation-status": {
           "$ref": "#/definitions/securitySGPolicyPropagationStatus",
           "title": "The status of the configuration propagation to the Naples"

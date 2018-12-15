@@ -140,8 +140,8 @@ func (it *veniceIntegSuite) TestIcmpApp(c *C) {
 			ALG: security.ALG{
 				Type: "ICMP",
 				IcmpAlg: security.IcmpAlg{
-					Type: 1,
-					Code: 2,
+					Type: "1",
+					Code: "2",
 				},
 			},
 		},
@@ -168,8 +168,8 @@ func (it *veniceIntegSuite) TestIcmpApp(c *C) {
 		AssertOk(c, cerr, "App not found in agent")
 		AssertEquals(c, napp.Spec.AppTimeout, icmpApp.Spec.Timeout, "invalid alg params")
 		AssertEquals(c, napp.Spec.ALGType, icmpApp.Spec.ALG.Type, "invalid alg params")
-		AssertEquals(c, napp.Spec.ALG.ICMP.Type, icmpApp.Spec.ALG.IcmpAlg.Type, "invalid alg params")
-		AssertEquals(c, napp.Spec.ALG.ICMP.Code, icmpApp.Spec.ALG.IcmpAlg.Code, "invalid alg params")
+		AssertEquals(c, fmt.Sprintf("%d", napp.Spec.ALG.ICMP.Type), icmpApp.Spec.ALG.IcmpAlg.Type, "invalid alg params")
+		AssertEquals(c, fmt.Sprintf("%d", napp.Spec.ALG.ICMP.Code), icmpApp.Spec.ALG.IcmpAlg.Code, "invalid alg params")
 
 	}
 

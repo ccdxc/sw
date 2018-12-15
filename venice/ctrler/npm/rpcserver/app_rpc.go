@@ -44,9 +44,12 @@ func convertApp(aps *statemgr.AppState) *netproto.App {
 
 	switch aps.Spec.ALG.Type {
 	case "ICMP":
+		ictype, _ := strconv.Atoi(aps.Spec.ALG.IcmpAlg.Type)
+		icode, _ := strconv.Atoi(aps.Spec.ALG.IcmpAlg.Code)
+
 		app.Spec.ALG.ICMP = &netproto.ICMP{
-			Type: aps.Spec.ALG.IcmpAlg.Type,
-			Code: aps.Spec.ALG.IcmpAlg.Code,
+			Type: uint32(ictype),
+			Code: uint32(icode),
 		}
 	case "DNS":
 		app.Spec.ALG.DNS = &netproto.DNS{

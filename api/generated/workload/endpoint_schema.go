@@ -55,7 +55,6 @@ var typesMapEndpoint = map[string]*api.Struct{
 			"EndpointState":       api.CLIInfo{Path: "Status.EndpointState", Skip: false, Insert: "", Help: ""},
 			"SecurityGroups":      api.CLIInfo{Path: "Status.SecurityGroups", Skip: false, Insert: "", Help: ""},
 			"api-version":         api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
-			"endpoint-uuid":       api.CLIInfo{Path: "Status.EndpointUUID", Skip: false, Insert: "", Help: ""},
 			"generation-id":       api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"homing-host-addr":    api.CLIInfo{Path: "Status.HomingHostAddr", Skip: false, Insert: "", Help: ""},
 			"homing-host-name":    api.CLIInfo{Path: "Status.HomingHostName", Skip: false, Insert: "", Help: ""},
@@ -77,7 +76,6 @@ var typesMapEndpoint = map[string]*api.Struct{
 			"uuid":                api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
 			"workload-attributes": api.CLIInfo{Path: "Status.WorkloadAttributes", Skip: false, Insert: "", Help: ""},
 			"workload-name":       api.CLIInfo{Path: "Status.WorkloadName", Skip: false, Insert: "", Help: ""},
-			"workload-uuid":       api.CLIInfo{Path: "Status.WorkloadUUID", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"workload.EndpointSpec": &api.Struct{
@@ -87,10 +85,6 @@ var typesMapEndpoint = map[string]*api.Struct{
 	"workload.EndpointStatus": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(EndpointStatus{}) },
 		Fields: map[string]api.Field{
-			"EndpointUUID": api.Field{Name: "EndpointUUID", CLITag: api.CLIInfo{ID: "endpoint-uuid", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "endpoint-uuid", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"WorkloadUUID": api.Field{Name: "WorkloadUUID", CLITag: api.CLIInfo{ID: "workload-uuid", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "workload-uuid", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
 			"WorkloadName": api.Field{Name: "WorkloadName", CLITag: api.CLIInfo{ID: "workload-name", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "workload-name", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Network": api.Field{Name: "Network", CLITag: api.CLIInfo{ID: "network", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "network", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
