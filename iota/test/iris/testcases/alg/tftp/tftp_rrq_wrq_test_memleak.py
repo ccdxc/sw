@@ -1,61 +1,10 @@
 #! /usr/bin/python3
 import os
-import time
-import iota.harness.api as api
-import pdb
+from iota.test.iris.testcases.alg.tftp.tftp_utils import *
 
 def Setup(tc):
     return api.types.status.SUCCESS
 
-def SetupTFTPServer(server, dir_path):
-    node = server.node_name
-    workload = server.workload_name
-    fullpath = dir_path + '/' + "tftp_server.txt"
-    api.Logger.info("fullpath %s" % (fullpath))
-    resp = api.CopyToWorkload(node, workload, [fullpath], 'tftpdir')
-    if resp is None:
-       return None
-
-    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-    api.Trigger_AddCommand(req, node, workload,
-                           "cp tftpdir/tftp_server.txt /var/lib/tftpboot")  
-    api.Trigger_AddCommand(req, node, workload,
-                           "touch /var/lib/tftpboot/tftp_client.txt")
-    api.Trigger_AddCommand(req, node, workload,
-                           "chmod 666 /var/lib/tftpboot/tftp_client.txt")
-    api.Trigger_AddCommand(req, node, workload,
-                           "systemctl start tftp")
-    api.Trigger_AddCommand(req, node, workload,
-                           "systemctl enable tftp")
-
-    trig_resp = api.Trigger(req)
-    term_resp = api.Trigger_TerminateAllCommands(trig_resp)
-    for cmd in trig_resp.commands:
-        api.PrintCommandResults(cmd)
-    return api.types.status.SUCCESS
-
-def SetupTFTPClient(client, dir_path):
-    node = client.node_name
-    workload = client.workload_name
-    fullpath = dir_path + '/' + "tftp_client.txt"
-    api.Logger.info("fullpath %s" % (fullpath))
-    resp = api.CopyToWorkload(node, workload, [fullpath], 'tftpdir')
-    if resp is None:
-       return None
-    return api.types.status.SUCCESS
-
-def Cleanup(server, client):
-    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-    api.Trigger_AddCommand(req, server.node_name, server.workload_name,
-                           "rm -rf /var/lib/tftpboot/*")
-    api.Trigger_AddCommand(req, server.node_name, server.workload_name,
-                           "rm -rf tftpdir")
-    api.Trigger_AddCommand(req, client.node_name, client.workload_name,
-                           "rm -rf tftpdir")
-    trig_resp = api.Trigger(req)
-    term_resp = api.Trigger_TerminateAllCommands(trig_resp)
-    return api.types.status.SUCCESS
-   
 def Trigger(tc):
     tc.workload_pairs = api.GetLocalWorkloadPairs()
     tc.cmd_cookies = []
@@ -63,16 +12,32 @@ def Trigger(tc):
     trig_resp = [None]*len(tc.workload_pairs)
     term_resp = [None]*len(tc.workload_pairs)
 
+    #req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
+    #                       "/nic/bin/halctl show system memory slab | grep ftp")
+    #tc.cmd_cookies.append("Memory stats before")
+    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
+    #                            "/nic/bin/halctl clear session --alg tftp")
+    #tc.cmd_cookies.append("clear session")
+    #trig_resp = api.Trigger(req)
+    #term_resp = api.Trigger_TerminateAllCommands(trig_resp)
+    #tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
+
     resp = 0
     for pair in tc.workload_pairs:
        w1 = pair[0]
        w2 = pair[1]
 
-       dir_path = os.path.dirname(os.path.realpath(__file__))
+       naples = w1
+       if not w1.IsNaples():
+           naples = w2
+           if not w2.IsNaples():
+               continue
+
        req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
-       SetupTFTPServer(w1, dir_path)
-       SetupTFTPClient(w2, dir_path)
+       SetupTFTPServer(w1)
+       SetupTFTPClient(w2)
 
        api.Trigger_AddCommand(req, w2.node_name, w2.workload_name,
                               "cat tftpdir/tftp_server.txt | grep \"I am the server\"")
@@ -92,7 +57,16 @@ def Trigger(tc):
        tc.cmd_cookies.append("TFTP get Server: %s(%s) <--> Client: %s(%s)" %\
                            (w1.workload_name, w1.ip_address, w2.workload_name, w2.ip_address))
 
-       #Add Naples command validation
+       ## Add Naples command validation
+       #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
+       #                            "/nic/bin/halctl show session --alg tftp | grep UDP")
+       #tc.cmd_cookies.append("show session TFTP established")
+       #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
+       #                        "/nic/bin/halctl show nwsec flow-gate | grep TFTP")
+       #tc.cmd_cookies.append("show flow-gate")
+       #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
+       #                            "/nic/bin/halctl clear session --alg tftp")
+       #tc.cmd_cookies.append("clear session")
  
        api.Trigger_AddCommand(req, w2.node_name, w2.workload_name,
                            "cat tftpdir/tftp_server.txt | grep \"I am the server\"")
@@ -106,6 +80,14 @@ def Trigger(tc):
        tc.resp.append(api.Trigger_AggregateCommandsResponse(trig_resp[resp], term_resp[resp]))
        Cleanup(w1, w2)
        resp += 1
+
+    #req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
+    #                       "/nic/bin/halctl show system memory slab | grep ftp")
+    #tc.cmd_cookies.append("Memory stats After")
+    #trig_resp = api.Trigger(req)
+    #term_resp = api.Trigger_TerminateAllCommands(trig_resp)
+    #tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
 
     return api.types.status.SUCCESS
 
@@ -121,6 +103,12 @@ def Verify(tc):
                     result = api.types.status.SUCCESS
                 else:
                     result = api.types.status.FAILURE
+            if (tc.cmd_cookies[cookie_idx].find("show session TFTP") != -1 or \
+                tc.cmd_cookies[cookie_idx].find("show flow-gate") != -1 or \
+                tc.cmd_cookies[cookie_idx].find("clear session") != -1) and \
+                cmd.stdout == '':
+                result = api.types.status.FAILURE
+            #Add memleak validation
             cookie_idx += 1
     return result
 
