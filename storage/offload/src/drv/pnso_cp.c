@@ -46,9 +46,10 @@ static void
 fill_cp_desc(struct service_info *svc_info, struct cpdc_desc *desc,
 		uint16_t threshold_len)
 {
-	struct cpdc_status_desc *status_desc;
+	struct cpdc_status_desc *status_desc = svc_info->si_status_desc;
 
 	memset(desc, 0, sizeof(*desc));
+	memset(status_desc, 0, sizeof(*status_desc));
 
 	desc->cd_src = (uint64_t) sonic_virt_to_phy(svc_info->si_src_sgl.sgl);
 	desc->cd_dst = (uint64_t) sonic_virt_to_phy(svc_info->si_dst_sgl.sgl);
@@ -67,14 +68,11 @@ fill_cp_desc(struct service_info *svc_info, struct cpdc_desc *desc,
 
 	if (svc_info->si_istatus_desc) {
 		desc->cd_status_addr = (uint64_t) svc_info->si_istatus_desc;
-		osal_rmem_set(desc->cd_status_addr, 0, sizeof(*status_desc));
-	} else {
-		status_desc = svc_info->si_status_desc;
-		memset(status_desc, 0, sizeof(*status_desc));
-
+		osal_rmem_set(desc->cd_status_addr, 0,
+				min(sizeof(*status_desc), 8));
+	} else 
 		desc->cd_status_addr = (uint64_t)
 			sonic_virt_to_phy(status_desc);
-	}
 
 	desc->cd_status_data = CPDC_CP_STATUS_DATA;
 }

@@ -775,22 +775,20 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 	chain_params->ccp_cmd.ccpc_sgl_pdma_pad_only = 1;
 	chain_params->ccp_sgl_vec_addr = cp_desc->cd_dst;
 
-	if (chn_service_has_sub_chain(svc_info)) {
-		OSAL_ASSERT(chn_service_has_interm_blist(svc_info));
-	
+	if (chn_service_has_interm_blist(svc_info)) {
 		iblist = &svc_info->si_iblist;
 		chain_params->ccp_comp_buf_addr = iblist->blist.buffers[0].buf;
 		chain_params->ccp_data_len = iblist->blist.buffers[0].len;
 
 		if (svc_info->si_sgl_pdma) {
 			chain_params->ccp_cmd.ccpc_sgl_pdma_en = 1;
-			// SGL_PDMA_PPRINT(chain_params->ccp_sgl_pdma_dst_addr);
+			chain_params->ccp_aol_dst_vec_addr =
+				sonic_virt_to_phy(svc_info->si_sgl_pdma);
+			SGL_PDMA_PPRINT(chain_params->ccp_aol_dst_vec_addr);
 		}
 
-		chain_params->ccp_status_addr_0 = mpool_get_object_phy_addr(
-					MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS_DESC,
-					svc_info->si_istatus_desc);
-
+		chain_params->ccp_status_addr_0 = (uint64_t)
+			svc_info->si_istatus_desc;	/* rmem */
 		chain_params->ccp_status_addr_1 =
 			sonic_virt_to_phy(svc_info->si_status_desc);
 		chain_params->ccp_status_len = sizeof(struct cpdc_status_desc);
