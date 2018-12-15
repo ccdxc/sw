@@ -1,38 +1,3 @@
 {
-    "DisabledModules": [ "pen-vchub", "pen-collector", "pen-tpm", "pen-tsm", "pen-ntp", "pen-influx", "pen-objstore","pen-filebeat", "pen-aggregator", "pen-vos", "pen-citadel" ],
-    "OverriddenModules" : {
-        "pen-apigw": {
-            "kind": "Module",
-            "meta": {
-                "name": "pen-apigw"
-            },
-            "Spec": {
-                "Type": 1,
-                "Submodules": [
-                    {
-                        "Name": "pen-apigw",
-                        "Services": [
-                            {
-                                "Name": "pen-apigw",
-                                "Port": 9000
-                            }
-                        ],
-                        "Args": [
-                            "-resolver-urls",
-                            "$RESOLVER_URLS",
-                            "--skip=monitoring,metrics_query",
-                            "--skipauthz"
-                        ]
-                    }
-                ],
-                "Volumes": [
-                    {
-                        "Name": "logs",
-                        "HostPath": "/var/log/pensando",
-                        "MountPath": "/var/log/pensando"
-                    }
-                ]
-            }
-        }
-    }
+    "DisabledModules": [ "pen-vchub", "pen-collector", "pen-tsm", "pen-ntp", "pen-influx", "pen-objstore","pen-filebeat", "pen-aggregator", "pen-vos"  ]
 }

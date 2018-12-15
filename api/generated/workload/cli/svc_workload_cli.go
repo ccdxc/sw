@@ -46,22 +46,7 @@ func restGetEndpoint(hostname, tenant, token string, obj interface{}) error {
 }
 
 func restDeleteEndpoint(hostname, token string, obj interface{}) error {
-
-	restcl, err := apiclient.NewRestAPIClient(hostname)
-	if err != nil {
-		return fmt.Errorf("cannot create REST client")
-	}
-	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
-
-	if v, ok := obj.(*workload.Endpoint); ok {
-		nv, err := restcl.WorkloadV1().Endpoint().Delete(loginCtx, &v.ObjectMeta)
-		if err != nil {
-			return err
-		}
-		*v = *nv
-	}
-	return nil
-
+	return fmt.Errorf("delete operation not supported for Endpoint object")
 }
 
 func restPostEndpoint(hostname, token string, obj interface{}) error {
@@ -194,7 +179,7 @@ func init() {
 	}
 
 	cl.AddRestPostFunc("workload.Endpoint", "v1", restPostEndpoint)
-	cl.AddRestDeleteFunc("workload.Endpoint", "v1", restDeleteEndpoint)
+
 	cl.AddRestPutFunc("workload.Endpoint", "v1", restPutEndpoint)
 	cl.AddRestGetFunc("workload.Endpoint", "v1", restGetEndpoint)
 

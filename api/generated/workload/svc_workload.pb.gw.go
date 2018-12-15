@@ -193,133 +193,6 @@ func request_WorkloadV1_AutoAddWorkload_1(ctx context.Context, marshaler runtime
 }
 
 var (
-	filter_WorkloadV1_AutoDeleteEndpoint_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
-)
-
-func request_WorkloadV1_AutoDeleteEndpoint_0(ctx context.Context, marshaler runtime.Marshaler, client WorkloadV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	protoReq := &Endpoint{}
-	var smetadata runtime.ServerMetadata
-
-	ver := req.Header.Get("Grpc-Metadata-Req-Version")
-	if ver == "" {
-		ver = "all"
-	}
-	if req.ContentLength != 0 {
-		var buf bytes.Buffer
-		tee := io.TeeReader(req.Body, &buf)
-		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-		}
-		changed := protoReq.Defaults(ver)
-		if changed {
-			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
-				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-			}
-		}
-	} else {
-		protoReq.Defaults(ver)
-	}
-
-	var (
-		val   string
-		ok    bool
-		err   error
-		_                       = err
-		kvMap map[string]string = make(map[string]string)
-	)
-
-	val, ok = pathParams["O.Tenant"]
-	if !ok {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
-	}
-
-	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
-
-	if err != nil {
-		return nil, smetadata, err
-	}
-
-	val, ok = pathParams["O.Name"]
-	if !ok {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
-	}
-
-	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
-
-	if err != nil {
-		return nil, smetadata, err
-	}
-
-	ctx = runtime.PopulateContextKV(ctx, kvMap)
-
-	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_WorkloadV1_AutoDeleteEndpoint_0); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.AutoDeleteEndpoint(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
-	return msg, smetadata, err
-
-}
-
-var (
-	filter_WorkloadV1_AutoDeleteEndpoint_1 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
-)
-
-func request_WorkloadV1_AutoDeleteEndpoint_1(ctx context.Context, marshaler runtime.Marshaler, client WorkloadV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	protoReq := &Endpoint{}
-	var smetadata runtime.ServerMetadata
-
-	ver := req.Header.Get("Grpc-Metadata-Req-Version")
-	if ver == "" {
-		ver = "all"
-	}
-	if req.ContentLength != 0 {
-		var buf bytes.Buffer
-		tee := io.TeeReader(req.Body, &buf)
-		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-		}
-		changed := protoReq.Defaults(ver)
-		if changed {
-			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
-				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-			}
-		}
-	} else {
-		protoReq.Defaults(ver)
-	}
-
-	var (
-		val   string
-		ok    bool
-		err   error
-		_                       = err
-		kvMap map[string]string = make(map[string]string)
-	)
-
-	val, ok = pathParams["O.Name"]
-	if !ok {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
-	}
-
-	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
-
-	if err != nil {
-		return nil, smetadata, err
-	}
-
-	ctx = runtime.PopulateContextKV(ctx, kvMap)
-
-	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_WorkloadV1_AutoDeleteEndpoint_1); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.AutoDeleteEndpoint(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
-	return msg, smetadata, err
-
-}
-
-var (
 	filter_WorkloadV1_AutoDeleteWorkload_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
 )
 
@@ -1482,62 +1355,6 @@ func RegisterWorkloadV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
-	mux.Handle("DELETE", pattern_WorkloadV1_AutoDeleteEndpoint_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, req)
-		if err != nil {
-			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-		}
-		resp, md, err := request_WorkloadV1_AutoDeleteEndpoint_0(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_WorkloadV1_AutoDeleteEndpoint_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
-
-	mux.Handle("DELETE", pattern_WorkloadV1_AutoDeleteEndpoint_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, req)
-		if err != nil {
-			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-		}
-		resp, md, err := request_WorkloadV1_AutoDeleteEndpoint_1(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_WorkloadV1_AutoDeleteEndpoint_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
-
 	mux.Handle("DELETE", pattern_WorkloadV1_AutoDeleteWorkload_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -2122,10 +1939,6 @@ var (
 
 	pattern_WorkloadV1_AutoAddWorkload_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"workloads"}, ""))
 
-	pattern_WorkloadV1_AutoDeleteEndpoint_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "endpoints", "O.Name"}, ""))
-
-	pattern_WorkloadV1_AutoDeleteEndpoint_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"endpoints", "O.Name"}, ""))
-
 	pattern_WorkloadV1_AutoDeleteWorkload_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "workloads", "O.Name"}, ""))
 
 	pattern_WorkloadV1_AutoDeleteWorkload_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"workloads", "O.Name"}, ""))
@@ -2171,10 +1984,6 @@ var (
 	forward_WorkloadV1_AutoAddWorkload_0 = runtime.ForwardResponseMessage
 
 	forward_WorkloadV1_AutoAddWorkload_1 = runtime.ForwardResponseMessage
-
-	forward_WorkloadV1_AutoDeleteEndpoint_0 = runtime.ForwardResponseMessage
-
-	forward_WorkloadV1_AutoDeleteEndpoint_1 = runtime.ForwardResponseMessage
 
 	forward_WorkloadV1_AutoDeleteWorkload_0 = runtime.ForwardResponseMessage
 

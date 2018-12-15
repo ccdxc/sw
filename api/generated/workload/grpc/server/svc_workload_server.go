@@ -158,11 +158,7 @@ func (s *sworkloadSvc_workloadBackend) regSvcsFunc(ctx context.Context, logger l
 
 		s.endpointsWorkloadV1.fnAutoDeleteEndpoint = srv.AddMethod("AutoDeleteEndpoint",
 			apisrvpkg.NewMethod(srv, pkgMessages["workload.Endpoint"], pkgMessages["workload.Endpoint"], "workload", "AutoDeleteEndpoint")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(workload.Endpoint)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "workload/v1/tenant/", in.Tenant, "/endpoints/", in.Name), nil
+			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsWorkloadV1.fnAutoDeleteWorkload = srv.AddMethod("AutoDeleteWorkload",

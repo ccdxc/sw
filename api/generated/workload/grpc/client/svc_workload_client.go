@@ -360,7 +360,7 @@ func (a *restObjWorkloadV1Endpoint) Allowed(oper apiserver.APIOperType) bool {
 	case apiserver.GetOper:
 		return true
 	case apiserver.DeleteOper:
-		return true
+		return false
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:

@@ -478,65 +478,6 @@
           "workload/v1"
         ]
       },
-      "delete": {
-        "summary": "Delete Endpoint object",
-        "operationId": "DeleteEndpoint_1",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/workloadEndpoint"
-            }
-          },
-          "400": {
-            "description": "Bad request parameters",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "401": {
-            "description": "Unauthorized request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "409": {
-            "description": "Conflict while processing request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "412": {
-            "description": "Pre-condition failed",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "501": {
-            "description": "Request not implemented",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "O.Name",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "workload/v1"
-        ]
-      },
       "put": {
         "summary": "Update Endpoint object",
         "operationId": "UpdateEndpoint_1",
@@ -1065,71 +1006,6 @@
             "required": false,
             "type": "integer",
             "format": "int64"
-          }
-        ],
-        "tags": [
-          "workload/v1"
-        ]
-      },
-      "delete": {
-        "summary": "Delete Endpoint object",
-        "operationId": "DeleteEndpoint",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/workloadEndpoint"
-            }
-          },
-          "400": {
-            "description": "Bad request parameters",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "401": {
-            "description": "Unauthorized request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "409": {
-            "description": "Conflict while processing request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "412": {
-            "description": "Pre-condition failed",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "501": {
-            "description": "Request not implemented",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "O.Tenant",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "O.Name",
-            "in": "path",
-            "required": true,
-            "type": "string"
           }
         ],
         "tags": [

@@ -8,6 +8,7 @@ package workload
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -938,7 +939,8 @@ func makeURIWorkloadV1AutoAddWorkloadCreateOper(in *Workload) string {
 
 //
 func makeURIWorkloadV1AutoDeleteEndpointDeleteOper(in *Endpoint) string {
-	return fmt.Sprint("/configs/workload/v1", "/tenant/", in.Tenant, "/endpoints/", in.Name)
+	return ""
+
 }
 
 //
@@ -1057,23 +1059,7 @@ func (r *EndpointsWorkloadV1RestClient) AutoGetEndpoint(ctx context.Context, in 
 
 // AutoDeleteEndpoint CRUD method for Endpoint
 func (r *EndpointsWorkloadV1RestClient) AutoDeleteEndpoint(ctx context.Context, in *Endpoint) (*Endpoint, error) {
-	path := makeURIWorkloadV1AutoDeleteEndpointDeleteOper(in)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	ret, err := decodeHTTPrespWorkloadV1AutoDeleteEndpoint(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*Endpoint), err
+	return nil, errors.New("not allowed")
 }
 
 // AutoListEndpoint CRUD method for Endpoint

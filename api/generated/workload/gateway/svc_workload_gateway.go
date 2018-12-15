@@ -416,8 +416,6 @@ func (e *sWorkloadV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoAddWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Workload", "workload", apiserver.CreateOper)
 
-	e.svcProf["AutoDeleteEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Endpoint", "workload", apiserver.DeleteOper)
-
 	e.svcProf["AutoDeleteWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Workload", "workload", apiserver.DeleteOper)
 
 	e.svcProf["AutoGetEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Endpoint", "workload", apiserver.GetOper)
