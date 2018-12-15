@@ -39,5 +39,12 @@ nic/third-party/odp/OBJS/x86_64-OBJS/lib/*
 nic/third-party/ofp/OBJS/x86_64/include/*
 nic/third-party/ofp/OBJS/x86_64/lib/*
 
+nic/third-party/libconfig/OBJS/aarch64/include/*
+nic/third-party/libconfig/OBJS/aarch64/lib/*
+nic/third-party/odp/OBJS/aarch64-OBJS/include/*
+nic/third-party/odp/OBJS/aarch64-OBJS/lib/*
+nic/third-party/ofp/OBJS/aarch64/include/*
+nic/third-party/ofp/OBJS/aarch64/lib/*
+
 platform/src/third-party/lib/ncurses/include/*
 platform/src/third-party/lib/ncurses/aarch64/*
