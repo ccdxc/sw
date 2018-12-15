@@ -432,12 +432,27 @@ static void ionic_set_rx_mode(struct net_device *netdev)
 	__dev_mc_sync(netdev, ionic_addr_add, ionic_addr_del);
 }
 
-static int ionic_set_mac_address(struct net_device *netdev, void *addr)
+static int ionic_set_mac_address(struct net_device *netdev, void *sa)
 {
-	// TODO implement
-	netdev_err(netdev, "%s SET MAC ADDRESS not implemented\n",
-		   netdev->name);
-	return 0;
+	struct sockaddr *addr = sa;
+	u8 *mac = (u8*)addr->sa_data;
+
+	if (ether_addr_equal(netdev->dev_addr, mac))
+		return 0;
+
+	if (!is_valid_ether_addr(mac))
+		return -EADDRNOTAVAIL;
+
+	if (!is_zero_ether_addr(netdev->dev_addr)) {
+		netdev_info(netdev, "deleting mac addr %pM\n",
+			   netdev->dev_addr);
+		ionic_addr_del(netdev, netdev->dev_addr);
+	}
+
+	memcpy(netdev->dev_addr, mac, netdev->addr_len);
+	netdev_info(netdev, "updating mac addr %pM\n", mac);
+
+	return ionic_addr_add(netdev, mac);
 }
 
 static int ionic_change_mtu(struct net_device *netdev, int new_mtu)
