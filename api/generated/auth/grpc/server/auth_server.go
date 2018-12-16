@@ -61,7 +61,22 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 			r.Kind = "AuthenticationPolicy"
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updateFn != nil {
+					upd := &auth.AuthenticationPolicy{}
+					n, err := updateFn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return nil, err
+					}
+					new := n.(*auth.AuthenticationPolicy)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
@@ -101,7 +116,22 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updatefn != nil {
+					upd := &auth.AuthenticationPolicy{}
+					n, err := updatefn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return err
+					}
+					new := n.(*auth.AuthenticationPolicy)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
@@ -263,7 +293,22 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 			r.Kind = "PasswordChangeRequest"
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updateFn != nil {
+					upd := &auth.PasswordChangeRequest{}
+					n, err := updateFn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return nil, err
+					}
+					new := n.(*auth.PasswordChangeRequest)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
@@ -294,7 +339,22 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updatefn != nil {
+					upd := &auth.PasswordChangeRequest{}
+					n, err := updatefn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return err
+					}
+					new := n.(*auth.PasswordChangeRequest)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
@@ -409,7 +469,22 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 			r.Kind = "PasswordResetRequest"
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updateFn != nil {
+					upd := &auth.PasswordResetRequest{}
+					n, err := updateFn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return nil, err
+					}
+					new := n.(*auth.PasswordResetRequest)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
@@ -440,7 +515,22 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updatefn != nil {
+					upd := &auth.PasswordResetRequest{}
+					n, err := updatefn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return err
+					}
+					new := n.(*auth.PasswordResetRequest)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
@@ -558,7 +648,22 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 			r.Kind = "Role"
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updateFn != nil {
+					upd := &auth.Role{}
+					n, err := updateFn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return nil, err
+					}
+					new := n.(*auth.Role)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
@@ -598,7 +703,22 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updatefn != nil {
+					upd := &auth.Role{}
+					n, err := updatefn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return err
+					}
+					new := n.(*auth.Role)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
@@ -752,7 +872,22 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 			r.Kind = "RoleBinding"
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updateFn != nil {
+					upd := &auth.RoleBinding{}
+					n, err := updateFn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return nil, err
+					}
+					new := n.(*auth.RoleBinding)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
@@ -792,7 +927,22 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updatefn != nil {
+					upd := &auth.RoleBinding{}
+					n, err := updatefn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return err
+					}
+					new := n.(*auth.RoleBinding)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
@@ -951,7 +1101,22 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 			r.Kind = "User"
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updateFn != nil {
+					upd := &auth.User{}
+					n, err := updateFn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return nil, err
+					}
+					new := n.(*auth.User)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
@@ -991,7 +1156,22 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updatefn != nil {
+					upd := &auth.User{}
+					n, err := updatefn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return err
+					}
+					new := n.(*auth.User)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)

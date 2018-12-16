@@ -62,7 +62,22 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 			r.Kind = "Cluster"
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updateFn != nil {
+					upd := &cluster.Cluster{}
+					n, err := updateFn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return nil, err
+					}
+					new := n.(*cluster.Cluster)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
@@ -102,7 +117,22 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updatefn != nil {
+					upd := &cluster.Cluster{}
+					n, err := updatefn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return err
+					}
+					new := n.(*cluster.Cluster)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
@@ -256,7 +286,22 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 			r.Kind = "ClusterAuthBootstrapRequest"
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updateFn != nil {
+					upd := &cluster.ClusterAuthBootstrapRequest{}
+					n, err := updateFn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return nil, err
+					}
+					new := n.(*cluster.ClusterAuthBootstrapRequest)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
@@ -287,7 +332,22 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updatefn != nil {
+					upd := &cluster.ClusterAuthBootstrapRequest{}
+					n, err := updatefn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return err
+					}
+					new := n.(*cluster.ClusterAuthBootstrapRequest)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
@@ -404,7 +464,22 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 			r.Kind = "Host"
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updateFn != nil {
+					upd := &cluster.Host{}
+					n, err := updateFn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return nil, err
+					}
+					new := n.(*cluster.Host)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
@@ -444,7 +519,22 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updatefn != nil {
+					upd := &cluster.Host{}
+					n, err := updatefn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return err
+					}
+					new := n.(*cluster.Host)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
@@ -603,7 +693,22 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 			r.Kind = "Node"
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updateFn != nil {
+					upd := &cluster.Node{}
+					n, err := updateFn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return nil, err
+					}
+					new := n.(*cluster.Node)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
@@ -643,7 +748,22 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updatefn != nil {
+					upd := &cluster.Node{}
+					n, err := updatefn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return err
+					}
+					new := n.(*cluster.Node)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)

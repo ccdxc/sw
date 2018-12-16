@@ -14,6 +14,7 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
+	"github.com/pensando/sw/api/generated/events"
 	{{if $validators.Fmap}}
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"{{end}}
 	{{if $storageTransformers.Fmap}}"github.com/pensando/sw/venice/utils/transformers/storage"{{end}}

@@ -61,7 +61,22 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 			r.Kind = "FlowExportPolicy"
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updateFn != nil {
+					upd := &monitoring.FlowExportPolicy{}
+					n, err := updateFn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return nil, err
+					}
+					new := n.(*monitoring.FlowExportPolicy)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
@@ -101,7 +116,22 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updatefn != nil {
+					upd := &monitoring.FlowExportPolicy{}
+					n, err := updatefn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return err
+					}
+					new := n.(*monitoring.FlowExportPolicy)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
@@ -257,7 +287,22 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 			r.Kind = "FwlogPolicy"
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updateFn != nil {
+					upd := &monitoring.FwlogPolicy{}
+					n, err := updateFn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return nil, err
+					}
+					new := n.(*monitoring.FwlogPolicy)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
@@ -297,7 +342,22 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updatefn != nil {
+					upd := &monitoring.FwlogPolicy{}
+					n, err := updatefn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return err
+					}
+					new := n.(*monitoring.FwlogPolicy)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
@@ -453,7 +513,22 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 			r.Kind = "StatsPolicy"
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updateFn != nil {
+					upd := &monitoring.StatsPolicy{}
+					n, err := updateFn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return nil, err
+					}
+					new := n.(*monitoring.StatsPolicy)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
@@ -493,7 +568,22 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updatefn != nil {
+					upd := &monitoring.StatsPolicy{}
+					n, err := updatefn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return err
+					}
+					new := n.(*monitoring.StatsPolicy)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)

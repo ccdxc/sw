@@ -367,7 +367,13 @@ func TestCrudOps(t *testing.T) {
 		}
 	}
 	{ // ---  POST of the object via REST --- //
-		retorder, err := restcl.BookstoreV1().Order().Create(ctx, &order1)
+		or := order1
+		or.GenerationID = "3"
+		or.UUID = "JUNK"
+		or.SelfLink = "Invalid self link"
+		or.Status.Status = bookstore.OrderStatus_DISCOUNTED.String()
+		or.Status.Message = "override the status"
+		retorder, err := restcl.BookstoreV1().Order().Create(ctx, &or)
 		if err != nil {
 			t.Fatalf("Create of Order failed (%s)", err)
 		}
@@ -376,6 +382,12 @@ func TestCrudOps(t *testing.T) {
 		}
 		if retorder.GenerationID != "1" {
 			t.Fatalf("returned generation id is not 1, got %s", retorder.GenerationID)
+		}
+		if retorder.Status.Status == bookstore.OrderStatus_DISCOUNTED.String() ||
+			retorder.Status.Message == "override the status" ||
+			retorder.UUID == "JUNK" ||
+			retorder.SelfLink == or.SelfLink {
+			t.Fatalf("Status or meta from post was written")
 		}
 		evp := order1
 		oExpectWatchEvents = recordWatchEvent(&oExpectWatchEvents, &evp, kvstore.Created)
@@ -445,7 +457,18 @@ func TestCrudOps(t *testing.T) {
 	}
 
 	{ // ---  PUT objects via REST --- //
-		retorder, err := restcl.BookstoreV1().Order().Update(ctx, &order2mod)
+		curobj, err := restcl.BookstoreV1().Order().Get(ctx, &order2mod.ObjectMeta)
+		if err != nil {
+			t.Fatalf("could not get object before PUT (%s)", err)
+		}
+		or := order2mod
+		or.GenerationID = "3"
+		or.UUID = "JUNK"
+		or.Status.Status = bookstore.OrderStatus_DISCOUNTED.String()
+		or.Status.Message = "override the status"
+		or.ModTime = curobj.ModTime
+		or.SelfLink = "Invalid self link"
+		retorder, err := restcl.BookstoreV1().Order().Update(ctx, &or)
 		if err != nil {
 			t.Fatalf("failed to update object Order via REST (%s)", err)
 		}
@@ -455,6 +478,18 @@ func TestCrudOps(t *testing.T) {
 		if retorder.GenerationID != "2" {
 			t.Fatalf("returned generation id is not 2, got [%s]", retorder.GenerationID)
 		}
+		if retorder.Status.Status == bookstore.OrderStatus_DISCOUNTED.String() ||
+			retorder.Status.Message == "override the status" ||
+			retorder.UUID == "JUNK" {
+			t.Fatalf("Status from post was written")
+		}
+		if retorder.CreationTime != curobj.CreationTime ||
+			retorder.UUID != curobj.UUID ||
+			retorder.ModTime == curobj.ModTime ||
+			retorder.SelfLink == or.SelfLink {
+			t.Fatalf("meta from post was over-written")
+		}
+
 		evp := order2mod
 		oExpectWatchEvents = recordWatchEvent(&oExpectWatchEvents, &evp, kvstore.Updated)
 	}
@@ -552,12 +587,16 @@ func TestCrudOps(t *testing.T) {
 			t.Fatalf("Book create expected to fail due to validation")
 		}
 		book1.Spec.Defaults("v1")
+		book1.Status.Inventory = 22
 		retbook, err := apicl.BookstoreV1().Book().Create(ctx, &book1)
 		if err != nil {
 			t.Fatalf("Book create failed [%s]", err)
 		}
 		if !reflect.DeepEqual(retbook.Spec, book1.Spec) {
 			t.Fatalf("Added Order object does not match \n\t[%+v]\n\t[%+v]", book1.Spec, retbook.Spec)
+		}
+		if !reflect.DeepEqual(retbook.Status, book1.Status) {
+			t.Fatalf("Added Order object Status does not match \n\t[%+v]\n\t[%+v]", book1.Status, retbook.Status)
 		}
 		evp := book1
 		recordWatchEvent(nil, &evp, kvstore.Created)

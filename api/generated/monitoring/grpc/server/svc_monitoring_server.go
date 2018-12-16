@@ -932,6 +932,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "monitoring", "v1")
 
 					strEvent := &monitoring.AutoMsgEventPolicyWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -1024,6 +1025,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "monitoring", "v1")
 
 					strEvent := &monitoring.AutoMsgStatsPolicyWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -1116,6 +1118,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "monitoring", "v1")
 
 					strEvent := &monitoring.AutoMsgFwlogPolicyWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -1208,6 +1211,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "monitoring", "v1")
 
 					strEvent := &monitoring.AutoMsgFlowExportPolicyWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -1300,6 +1304,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "monitoring", "v1")
 
 					strEvent := &monitoring.AutoMsgAlertWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -1392,6 +1397,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "monitoring", "v1")
 
 					strEvent := &monitoring.AutoMsgAlertPolicyWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -1484,6 +1490,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "monitoring", "v1")
 
 					strEvent := &monitoring.AutoMsgAlertDestinationWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -1576,6 +1583,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "monitoring", "v1")
 
 					strEvent := &monitoring.AutoMsgMirrorSessionWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -1668,6 +1676,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "monitoring", "v1")
 
 					strEvent := &monitoring.AutoMsgTroubleshootingSessionWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -1760,6 +1769,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "monitoring", "v1")
 
 					strEvent := &monitoring.AutoMsgTechSupportRequestWatchHelper_WatchEvent{
 						Type:   string(ev.Type),

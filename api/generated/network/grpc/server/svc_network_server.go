@@ -395,6 +395,7 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "network", "v1")
 
 					strEvent := &network.AutoMsgNetworkWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -487,6 +488,7 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "network", "v1")
 
 					strEvent := &network.AutoMsgServiceWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -579,6 +581,7 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "network", "v1")
 
 					strEvent := &network.AutoMsgLbPolicyWatchHelper_WatchEvent{
 						Type:   string(ev.Type),

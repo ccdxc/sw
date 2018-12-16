@@ -115,7 +115,22 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r.Kind = "ApplyDiscountReq"
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updateFn != nil {
+					upd := &bookstore.ApplyDiscountReq{}
+					n, err := updateFn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return nil, err
+					}
+					new := n.(*bookstore.ApplyDiscountReq)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
@@ -146,7 +161,22 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updatefn != nil {
+					upd := &bookstore.ApplyDiscountReq{}
+					n, err := updatefn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return err
+					}
+					new := n.(*bookstore.ApplyDiscountReq)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
@@ -266,7 +296,22 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r.Kind = "Book"
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updateFn != nil {
+					upd := &bookstore.Book{}
+					n, err := updateFn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return nil, err
+					}
+					new := n.(*bookstore.Book)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
@@ -306,7 +351,22 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updatefn != nil {
+					upd := &bookstore.Book{}
+					n, err := updatefn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return err
+					}
+					new := n.(*bookstore.Book)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
@@ -489,7 +549,22 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r.Kind = "Coupon"
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updateFn != nil {
+					upd := &bookstore.Coupon{}
+					n, err := updateFn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return nil, err
+					}
+					new := n.(*bookstore.Coupon)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
@@ -520,7 +595,22 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updatefn != nil {
+					upd := &bookstore.Coupon{}
+					n, err := updatefn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return err
+					}
+					new := n.(*bookstore.Coupon)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
@@ -659,7 +749,22 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r.Kind = "Customer"
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updateFn != nil {
+					upd := &bookstore.Customer{}
+					n, err := updateFn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return nil, err
+					}
+					new := n.(*bookstore.Customer)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
@@ -699,7 +804,22 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updatefn != nil {
+					upd := &bookstore.Customer{}
+					n, err := updatefn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return err
+					}
+					new := n.(*bookstore.Customer)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
@@ -885,7 +1005,22 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r.Kind = "Order"
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updateFn != nil {
+					upd := &bookstore.Order{}
+					n, err := updateFn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return nil, err
+					}
+					new := n.(*bookstore.Order)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
@@ -925,7 +1060,22 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updatefn != nil {
+					upd := &bookstore.Order{}
+					n, err := updatefn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return err
+					}
+					new := n.(*bookstore.Order)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
@@ -1107,7 +1257,22 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r.Kind = "OutageRequest"
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updateFn != nil {
+					upd := &bookstore.OutageRequest{}
+					n, err := updateFn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return nil, err
+					}
+					new := n.(*bookstore.OutageRequest)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
@@ -1138,7 +1303,22 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updatefn != nil {
+					upd := &bookstore.OutageRequest{}
+					n, err := updatefn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return err
+					}
+					new := n.(*bookstore.OutageRequest)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
@@ -1252,7 +1432,22 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r.Kind = "Publisher"
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updateFn != nil {
+					upd := &bookstore.Publisher{}
+					n, err := updateFn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return nil, err
+					}
+					new := n.(*bookstore.Publisher)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
@@ -1292,7 +1487,22 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updatefn != nil {
+					upd := &bookstore.Publisher{}
+					n, err := updatefn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return err
+					}
+					new := n.(*bookstore.Publisher)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
@@ -1473,7 +1683,22 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r.Kind = "RestockRequest"
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updateFn != nil {
+					upd := &bookstore.RestockRequest{}
+					n, err := updateFn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return nil, err
+					}
+					new := n.(*bookstore.RestockRequest)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
@@ -1504,7 +1729,22 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updatefn != nil {
+					upd := &bookstore.RestockRequest{}
+					n, err := updatefn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return err
+					}
+					new := n.(*bookstore.RestockRequest)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
@@ -1618,7 +1858,22 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r.Kind = "RestockResponse"
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updateFn != nil {
+					upd := &bookstore.RestockResponse{}
+					n, err := updateFn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return nil, err
+					}
+					new := n.(*bookstore.RestockResponse)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
@@ -1649,7 +1904,22 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updatefn != nil {
+					upd := &bookstore.RestockResponse{}
+					n, err := updatefn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return err
+					}
+					new := n.(*bookstore.RestockResponse)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
@@ -1763,7 +2033,22 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r.Kind = "Store"
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updateFn != nil {
+					upd := &bookstore.Store{}
+					n, err := updateFn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return nil, err
+					}
+					new := n.(*bookstore.Store)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
@@ -1803,7 +2088,22 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updatefn != nil {
+					upd := &bookstore.Store{}
+					n, err := updatefn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return err
+					}
+					new := n.(*bookstore.Store)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
@@ -2317,6 +2617,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "bookstore", "v1")
 
 					strEvent := &bookstore.AutoMsgOrderWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -2409,6 +2710,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "bookstore", "v1")
 
 					strEvent := &bookstore.AutoMsgBookWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -2501,6 +2803,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "bookstore", "v1")
 
 					strEvent := &bookstore.AutoMsgPublisherWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -2593,6 +2896,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "bookstore", "v1")
 
 					strEvent := &bookstore.AutoMsgStoreWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -2685,6 +2989,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "bookstore", "v1")
 
 					strEvent := &bookstore.AutoMsgCouponWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -2777,6 +3082,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "bookstore", "v1")
 					{
 						txin, err := bookstore.StorageCustomerTransformer.TransformFromStorage(nctx, *in)
 						if err != nil {

@@ -535,6 +535,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "cluster", "v1")
 
 					strEvent := &cluster.AutoMsgClusterWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -627,6 +628,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "cluster", "v1")
 
 					strEvent := &cluster.AutoMsgNodeWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -719,6 +721,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "cluster", "v1")
 
 					strEvent := &cluster.AutoMsgHostWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -811,6 +814,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "cluster", "v1")
 
 					strEvent := &cluster.AutoMsgSmartNICWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -903,6 +907,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "cluster", "v1")
 
 					strEvent := &cluster.AutoMsgTenantWatchHelper_WatchEvent{
 						Type:   string(ev.Type),

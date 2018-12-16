@@ -62,7 +62,22 @@ func (s *smonitoringTechsupportBackend) regMsgsFunc(l log.Logger, scheme *runtim
 			r.Kind = "TechSupportRequest"
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updateFn != nil {
+					upd := &monitoring.TechSupportRequest{}
+					n, err := updateFn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return nil, err
+					}
+					new := n.(*monitoring.TechSupportRequest)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
@@ -102,7 +117,22 @@ func (s *smonitoringTechsupportBackend) regMsgsFunc(l log.Logger, scheme *runtim
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
-				r.GenerationID = "1"
+				if updatefn != nil {
+					upd := &monitoring.TechSupportRequest{}
+					n, err := updatefn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "error", err)
+						return err
+					}
+					new := n.(*monitoring.TechSupportRequest)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)

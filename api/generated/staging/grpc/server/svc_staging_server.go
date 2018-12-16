@@ -253,6 +253,7 @@ func (s *sstagingSvc_stagingBackend) regWatchersFunc(ctx context.Context, logger
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "staging", "v1")
 
 					strEvent := &staging.AutoMsgBufferWatchHelper_WatchEvent{
 						Type:   string(ev.Type),

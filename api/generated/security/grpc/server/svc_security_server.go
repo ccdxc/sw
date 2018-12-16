@@ -628,6 +628,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "security", "v1")
 
 					strEvent := &security.AutoMsgSecurityGroupWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -720,6 +721,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "security", "v1")
 
 					strEvent := &security.AutoMsgSGPolicyWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -812,6 +814,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "security", "v1")
 
 					strEvent := &security.AutoMsgAppWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -904,6 +907,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "security", "v1")
 
 					strEvent := &security.AutoMsgFirewallProfileWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -996,6 +1000,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "security", "v1")
 
 					strEvent := &security.AutoMsgCertificateWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -1088,6 +1093,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "security", "v1")
 
 					strEvent := &security.AutoMsgTrafficEncryptionPolicyWatchHelper_WatchEvent{
 						Type:   string(ev.Type),

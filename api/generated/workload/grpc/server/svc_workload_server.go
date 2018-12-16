@@ -312,6 +312,7 @@ func (s *sworkloadSvc_workloadBackend) regWatchersFunc(ctx context.Context, logg
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "workload", "v1")
 
 					strEvent := &workload.AutoMsgEndpointWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -404,6 +405,7 @@ func (s *sworkloadSvc_workloadBackend) regWatchersFunc(ctx context.Context, logg
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "workload", "v1")
 
 					strEvent := &workload.AutoMsgWorkloadWatchHelper_WatchEvent{
 						Type:   string(ev.Type),

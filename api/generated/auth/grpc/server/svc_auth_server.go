@@ -494,6 +494,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "auth", "v1")
 					{
 						txin, err := auth.StorageUserTransformer.TransformFromStorage(nctx, *in)
 						if err != nil {
@@ -593,6 +594,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "auth", "v1")
 					{
 						txin, err := auth.StorageAuthenticationPolicyTransformer.TransformFromStorage(nctx, *in)
 						if err != nil {
@@ -692,6 +694,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "auth", "v1")
 
 					strEvent := &auth.AutoMsgRoleWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -784,6 +787,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "auth", "v1")
 
 					strEvent := &auth.AutoMsgRoleBindingWatchHelper_WatchEvent{
 						Type:   string(ev.Type),

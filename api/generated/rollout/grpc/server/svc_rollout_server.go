@@ -237,6 +237,7 @@ func (s *srolloutSvc_rolloutBackend) regWatchersFunc(ctx context.Context, logger
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "rollout", "v1")
 
 					strEvent := &rollout.AutoMsgRolloutWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
