@@ -552,8 +552,8 @@ void ionic_set_multi(struct lif* lif)
 
 		/*
 		 * Check if addr is present.
-		 *  Yes: Mark is as visited
-		 *  No: Send ADD. Add it to temporary list.
+		 *  - Yes: Mark is as visited
+		 *  - No:  Add it to temporary list.
 		 */
 		f = ionic_rx_filter_by_addr(lif, mc_addr.addr);
 		if (f) {
@@ -564,7 +564,11 @@ void ionic_set_multi(struct lif* lif)
 		mcnt++;
 	}
 
-	// Delete the MC addrs
+	/*
+	 * Traverse existing MC addresses
+	 *  - Not Visited: Delete the MC addrs which are not visited
+	 *  - Visited: Compress and make visisted false
+	 */
 	j = -1;
 	for (i = 0 ; i < lif->num_mc_addrs; i++) {
 		IONIC_NETDEV_ADDR_INFO(lif->netdev, lif->mc_addrs[i].addr, "Debug: Curr MC: ");
@@ -581,7 +585,11 @@ void ionic_set_multi(struct lif* lif)
 	}
 	lif->num_mc_addrs = j + 1;
 
-	// Walk newly added mc addrs.
+	/*
+	 * Travers newly added mc addrs.
+	 *  - < Max: Copy to lif MC addr list and increment num_mc_addrs
+	 *  - else: STOP
+	 */
 	for (i = 0; i < num_new_mc_addrs; i++) {
 		if (lif->num_mc_addrs < max_maddrs) {
 			IONIC_NETDEV_ADDR_INFO(lif->netdev, new_mc_addrs[i].addr, "Debug: Add MC: ");
