@@ -51,8 +51,6 @@ cpdc_poll(const struct service_info *svc_info)
 	OSAL_LOG_DEBUG("enter ...");
 
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
-	OSAL_LOG_ERROR("--- YOYO 0x" PRIx64, (uint64_t) status_desc);
-	CPDC_PPRINT_STATUS_DESC((struct cpdc_status_desc *) status_desc);
 
 	if ((svc_info->si_flags & CHAIN_SFLAG_MODE_POLL) ||
 		(svc_info->si_flags & CHAIN_SFLAG_MODE_ASYNC)) {
@@ -684,12 +682,65 @@ cpdc_update_batch_tags(struct service_info *svc_info, uint32_t num_tags)
 	}
 
 	if (svc_info->si_type == PNSO_SVC_TYPE_CHKSUM) {
-		if (svc_info->si_desc_flags &  PNSO_CHKSUM_DFLAG_PER_BLOCK)
+		if (svc_info->si_desc_flags & PNSO_CHKSUM_DFLAG_PER_BLOCK)
 			update_batch_tags(svc_info, num_tags);
 		return;
 	}
 
 	OSAL_ASSERT(0);
+}
+
+void
+cpdc_update_seq_batch_size(struct service_info *svc_info)
+{
+	struct batch_info *batch_info;
+	struct batch_page *batch_page;
+	struct service_chain *chain;
+	struct service_batch_info *svc_batch_info;
+
+	struct sequencer_desc *seq_desc;
+	uint16_t prev_batch_size;
+
+	if (!cpdc_is_service_in_batch(svc_info->si_flags))
+		return;
+
+	OSAL_ASSERT((svc_info->si_type == PNSO_SVC_TYPE_HASH) ||
+			(svc_info->si_type == PNSO_SVC_TYPE_CHKSUM));
+	
+	if (!((svc_info->si_desc_flags & PNSO_HASH_DFLAG_PER_BLOCK) ||
+		(svc_info->si_desc_flags & PNSO_CHKSUM_DFLAG_PER_BLOCK)))
+		return;
+
+	seq_desc = svc_info->si_seq_info.sqi_desc;
+	if (seq_desc->sd_batch_mode) {
+		svc_batch_info = &svc_info->si_batch_info;
+		chain = svc_info->si_centry->ce_chain_head;
+		batch_info = chain->sc_batch_info;
+		batch_page =
+			batch_info->bi_pages[svc_batch_info->sbi_bulk_desc_idx];
+
+		prev_batch_size = be16_to_cpu(seq_desc->sd_batch_size);
+
+		if (svc_info->si_type == PNSO_SVC_TYPE_HASH) {
+			seq_desc->sd_batch_size =
+				cpu_to_be16(batch_page->bp_tags.bpt_num_hashes);
+
+			svc_info->si_seq_info.sqi_batch_size =
+				batch_page->bp_tags.bpt_num_hashes;
+		} else {
+			seq_desc->sd_batch_size = cpu_to_be16(
+					batch_page->bp_tags.bpt_num_chksums);
+
+			svc_info->si_seq_info.sqi_batch_size =
+				batch_page->bp_tags.bpt_num_chksums;
+		}
+
+		OSAL_LOG_DEBUG("svc_type: %d bpt_num_hashes: %u bpt_num_chksums: %u prev_batch_size: %u curr_num_tags: %u",
+			svc_info->si_type,
+			batch_page->bp_tags.bpt_num_hashes,
+			batch_page->bp_tags.bpt_num_chksums,
+			prev_batch_size, svc_info->si_seq_info.sqi_batch_size);
+	}
 }
 
 pnso_error_t
