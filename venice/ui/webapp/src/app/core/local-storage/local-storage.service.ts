@@ -35,7 +35,7 @@ export enum LocalStorageEvents {
  *
  * If a user logs out of one tab, all the other tabs will be notified
  * and will also log out.
- * 
+ *
  * The tokens are always kept in session storage, and only briefly
  * put into local storage when sending to another tab.
  *

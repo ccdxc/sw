@@ -3,18 +3,19 @@ import { BaseComponent } from '@app/components/base/base.component';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
-import { HeroCardOptions, StatArrowDirection } from '@app/components/shared/herocard/herocard.component';
+import { HeroCardOptions, StatArrowDirection, CardStates } from '@app/components/shared/herocard/herocard.component';
 import { MetricsUtility } from '@app/common/MetricsUtility';
 import { IMetrics_queryQueryResponse } from '@sdk/v1/models/metrics_query';
 import { ControllerService } from '@app/services/controller.service';
 import { ActivatedRoute } from '@angular/router';
 import { ClusterService } from '@app/services/generated/cluster.service';
-import { MetricsqueryService, MetricsPollingOptions } from '@app/services/metricsquery.service';
+import { MetricsqueryService, MetricsPollingOptions, MetricsPollingQueries, MetricsPollingQuery } from '@app/services/metricsquery.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { MessageService } from 'primeng/primeng';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { Utility } from '@app/common/Utility';
 import { Metrics_queryQuerySpec, IMetrics_queryQuerySpec, Metrics_queryQuerySpec_function } from '@sdk/v1/models/generated/metrics_query';
+import { IMetrics_queryQueryResult } from '@sdk/v1/models/metrics_query';
 import { AlertsEventsSelector } from '@app/components/shared/alertsevents/alertsevents.component';
 
 @Component({
@@ -68,9 +69,12 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     this.diskChartData
   ];
 
-  timeSeriesData: IMetrics_queryQueryResponse;
-  avgData: IMetrics_queryQueryResponse;
-  clusterAvgData: IMetrics_queryQueryResponse;
+  timeSeriesData: IMetrics_queryQueryResult;
+  avgData: IMetrics_queryQueryResult;
+  avgDayData: IMetrics_queryQueryResult;
+  clusterAvgData: IMetrics_queryQueryResult;
+
+  telemetryKind: string = 'SmartNIC';
 
   alertseventsSelector: AlertsEventsSelector;
 
@@ -115,6 +119,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     this.selectedObj = null;
     this.timeSeriesData = null;
     this.avgData = null;
+    this.avgDayData = null;
     this.clusterAvgData = null;
     this.objList = [];
     this.selectedObj = null;
@@ -125,7 +130,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
       card.secondStat.value = null;
       card.thirdStat.value = null;
       card.data = { x: [], y: [] };
-      card.isReady = false;
+      card.cardState = CardStates.LOADING;
     });
   }
 
@@ -143,7 +148,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
         // TODO: Update to be more descriptive based on error message
         this.showMissingScreen = true;
         this.heroCards.forEach(card => {
-          card.isReady = true;
+          card.cardState = CardStates.READY;
         });
       }
     );
@@ -176,7 +181,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
           // Must have received a delete event.
           this.showDeletionScreen = true;
           this.heroCards.forEach(card => {
-            card.isReady = true;
+            card.cardState = CardStates.READY;
           });
           this.selectedObj = null;
         }
@@ -187,47 +192,65 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
   }
 
   startMetricPolls() {
-    this.timeSeriesQuery();
-    this.avgQuery();
-    this.clusterAvgQuery();
+    const queryList: MetricsPollingQueries = {
+      queries: [],
+      tenant: Utility.getInstance().getTenant()
+    };
+    queryList.queries.push(this.timeSeriesQuery());
+    queryList.queries.push(this.avgQuery());
+    queryList.queries.push(this.avgDayQuery());
+    queryList.queries.push(this.clusterAvgQuery());
+    const sub = this.metricsqueryService.pollMetrics('naplesDetailCards', queryList).subscribe(
+      (data: IMetrics_queryQueryResponse) => {
+        if (data && data.results && data.results.length === 4) {
+          this.timeSeriesData = data.results[0];
+          this.avgData = data.results[1];
+          this.avgDayData = data.results[2];
+          this.clusterAvgData = data.results[3];
+          this.tryGenCharts();
+        } else {
+          this.setChartErrorStates();
+        }
+      },
+      (err) => {
+        this.setChartErrorStates();
+      }
+    );
+    this.subscriptions.push(sub);
   }
 
-  timeSeriesQuery() {
-    const timeSeriesQuery: Metrics_queryQuerySpec =
-      MetricsUtility.timeSeriesQuery('SmartNIC', MetricsUtility.createNameSelector(this.selectedId));
+  timeSeriesQuery(): MetricsPollingQuery {
+    const query: Metrics_queryQuerySpec =
+      MetricsUtility.timeSeriesQuery(this.telemetryKind, MetricsUtility.createNameSelector(this.selectedId));
     const pollOptions: MetricsPollingOptions = {
       timeUpdater: MetricsUtility.timeSeriesQueryUpdate,
       mergeFunction: MetricsUtility.timeSeriesQueryMerge
     };
 
-    const sub = this.metricsqueryService.pollMetrics('clusterTimeSeriesData', timeSeriesQuery, pollOptions).subscribe(
-      (data) => {
-        this.timeSeriesData = data;
-        this.tryGenCharts();
-      }
-    );
-    this.subscriptions.push(sub);
+    return { query: query, pollingOptions: pollOptions };
   }
 
-  avgQuery() {
-    const avgQuery: Metrics_queryQuerySpec =
-      MetricsUtility.pastDayAverageQuery('SmartNIC', MetricsUtility.createNameSelector(this.selectedId));
-    const pollOptions = {
+  avgQuery(): MetricsPollingQuery {
+    const query: Metrics_queryQuerySpec = MetricsUtility.pastFiveMinAverageQuery(this.telemetryKind);
+    const pollOptions: MetricsPollingOptions = {
+      timeUpdater: MetricsUtility.pastFiveMinQueryUpdate,
+    };
+
+    return { query: query, pollingOptions: pollOptions };
+  }
+
+  avgDayQuery(): MetricsPollingQuery {
+    const query: Metrics_queryQuerySpec = MetricsUtility.pastDayAverageQuery(this.telemetryKind);
+    const pollOptions: MetricsPollingOptions = {
       timeUpdater: MetricsUtility.pastDayAverageQueryUpdate,
     };
 
-    const sub = this.metricsqueryService.pollMetrics('avgData', avgQuery, pollOptions).subscribe(
-      (data) => {
-        this.avgData = data;
-        this.tryGenCharts();
-      }
-    );
-    this.subscriptions.push(sub);
+    return { query: query, pollingOptions: pollOptions };
   }
 
-  clusterAvgQuery() {
+  clusterAvgQuery(): MetricsPollingQuery {
     const clusterAvgQuery: IMetrics_queryQuerySpec = {
-      'kind': 'SmartNIC',
+      'kind': this.telemetryKind,
       function: Metrics_queryQuerySpec_function.MEAN,
       // We don't specify the fields we need, as specifying more than one field
       // while using the average function isn't supported by the backend.
@@ -249,7 +272,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
       // since we round down to get the last 5 min bucket, there's a chance
       // that we can back null data, since no new metrics have been reported.
       // Data should have been filtered in metricsquery services's processData
-      if (!MetricsUtility.hasData(newData)) {
+      if (!MetricsUtility.resultHasData(newData)) {
         // no new data, keep old value
         return currData;
       }
@@ -261,43 +284,55 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
       mergeFunction: merge
     };
 
-    const sub = this.metricsqueryService.pollMetrics('clusterAvgQuery', clusterAvgQuery, pollOptions).subscribe(
-      (data) => {
-        this.clusterAvgData = data;
-        this.tryGenCharts();
-      }
-    );
-    this.subscriptions.push(sub);
+    return { query: query, pollingOptions: pollOptions };
   }
 
   private tryGenCharts() {
-    if (MetricsUtility.hasData(this.timeSeriesData) &&
-      MetricsUtility.hasData(this.avgData) &&
-      MetricsUtility.hasData(this.clusterAvgData)) {
-      this.genChart('mean_CPUUsedPercent', this.cpuChartData);
-      this.genChart('mean_MemUsedPercent', this.memChartData);
-      this.genChart('mean_DiskUsedPercent', this.diskChartData);
+    // Only require avg 5 min data and avg day data
+    // before we show the cards
+    if (MetricsUtility.resultHasData(this.avgData) &&
+      MetricsUtility.resultHasData(this.avgDayData)) {
+      this.genCharts('mean_CPUUsedPercent', this.cpuChartData);
+      this.genCharts('mean_MemUsedPercent', this.memChartData);
+      this.genCharts('mean_DiskUsedPercent', this.diskChartData);
+    } else {
+      this.setChartErrorStates();
     }
   }
 
-  genChart(fieldName, heroCard: HeroCardOptions) {
-    const timeSeriesData = this.timeSeriesData;
+  private setChartErrorStates() {
+    this.heroCards.forEach((card) => {
+      card.cardState = CardStates.FAILED;
+    });
+  }
 
-    const index = timeSeriesData.results[0].series[0].columns.indexOf(fieldName);
-    const data = Utility.transformToPlotly(timeSeriesData.results[0].series[0].values, 0, index);
-    heroCard.data = data;
+  genCharts(fieldName, heroCard: HeroCardOptions) {
+    // Time series graph
+    if (MetricsUtility.resultHasData(this.timeSeriesData)) {
+      const timeSeriesData = this.timeSeriesData;
+
+      const index = timeSeriesData.series[0].columns.indexOf(fieldName);
+      const data = Utility.transformToPlotly(timeSeriesData.series[0].values, 0, index);
+      heroCard.data = data;
+    }
 
     // Current stat calculation - we take the last point
-    heroCard.firstStat.value = Math.round(data.y[data.y.length - 1]) + '%';
+    if (MetricsUtility.resultHasData(this.avgData)) {
+      const index = this.avgData.series[0].columns.indexOf(fieldName);
+      heroCard.firstStat.value = Math.round(this.avgData.series[0].values[0][index]) + '%';
+    }
 
     // Avg
-    const avgData = this.avgData;
-    if (avgData.results[0].series[0].values.length !== 0) {
-      heroCard.secondStat.value = Math.round(avgData.results[0].series[0].values[0][index]) + '%';
+    const avgDayData = this.avgDayData;
+    if (avgDayData.series[0].values.length !== 0) {
+      const index = this.avgDayData.series[0].columns.indexOf(fieldName);
+      heroCard.secondStat.value = Math.round(avgDayData.series[0].values[0][index]) + '%';
     }
 
     // For determining arrow direction, we compare the current value to the average value
-    if (heroCard.firstStat.value > heroCard.secondStat.value) {
+    if (heroCard.firstStat == null || heroCard.firstStat.value == null || heroCard.secondStat == null || heroCard.secondStat.value == null) {
+      heroCard.arrowDirection = StatArrowDirection.HIDDEN;
+    } else if (heroCard.firstStat.value > heroCard.secondStat.value) {
       heroCard.arrowDirection = StatArrowDirection.UP;
     } else if (heroCard.firstStat.value < heroCard.secondStat.value) {
       heroCard.arrowDirection = StatArrowDirection.DOWN;
@@ -306,15 +341,14 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     }
 
     // Cluster average
-    const clusterAvg = this.clusterAvgData;
-    if (clusterAvg.results[0].series[0].values.length !== 0) {
-      heroCard.thirdStat.value = Math.round(clusterAvg.results[0].series[0].values[0][index]) + '%';
+    if (this.clusterAvgData.series[0].values.length !== 0) {
+      const index = this.clusterAvgData.series[0].columns.indexOf(fieldName);
+      heroCard.thirdStat.value = Math.round(this.clusterAvgData.series[0].values[0][index]) + '%';
     }
 
-    if (!heroCard.isReady) {
-      heroCard.isReady = true;
+    if (heroCard.cardState !== CardStates.READY) {
+      heroCard.cardState = CardStates.READY;
     }
-
   }
 
   /**

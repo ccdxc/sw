@@ -3,14 +3,14 @@ import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { MetricsUtility } from '@app/common/MetricsUtility';
 import { Utility } from '@app/common/Utility';
 import { BaseComponent } from '@app/components/base/base.component';
-import { HeroCardOptions, StatArrowDirection } from '@app/components/shared/herocard/herocard.component';
+import { HeroCardOptions, StatArrowDirection, CardStates } from '@app/components/shared/herocard/herocard.component';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
-import { MetricsPollingOptions, MetricsqueryService } from '@app/services/metricsquery.service';
+import { MetricsPollingOptions, MetricsqueryService, MetricsPollingQueries, MetricsPollingQuery } from '@app/services/metricsquery.service';
 import { ClusterCluster, ClusterNode } from '@sdk/v1/models/generated/cluster';
 import { Metrics_queryQuerySpec } from '@sdk/v1/models/generated/metrics_query';
-import { IMetrics_queryQueryResponse } from '@sdk/v1/models/metrics_query';
+import { IMetrics_queryQueryResponse, IMetrics_queryQueryResult } from '@sdk/v1/models/metrics_query';
 import { MessageService } from 'primeng/primeng';
 import { Subscription } from 'rxjs';
 
@@ -64,9 +64,10 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
 
   subscriptions: Subscription[] = [];
 
-  timeSeriesData: IMetrics_queryQueryResponse;
-  avgData: IMetrics_queryQueryResponse;
-  maxObjData: IMetrics_queryQueryResponse;
+  timeSeriesData: IMetrics_queryQueryResult;
+  avgData: IMetrics_queryQueryResult;
+  avgDayData: IMetrics_queryQueryResult;
+  maxObjData: IMetrics_queryQueryResult;
 
   telemetryKind: string = 'Node';
 
@@ -140,89 +141,119 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
    *  - Node using the most in the last 5 min
    */
   getMetrics() {
-    this.timeSeriesQuery();
-    this.avgQuery();
-    this.maxNodeQuery();
+    const queryList: MetricsPollingQueries = {
+      queries: [],
+      tenant: Utility.getInstance().getTenant()
+    };
+    queryList.queries.push(this.timeSeriesQuery());
+    queryList.queries.push(this.avgQuery());
+    queryList.queries.push(this.avgDayQuery());
+    queryList.queries.push(this.maxNodeQuery());
+    const sub = this.metricsqueryService.pollMetrics('clusterCards', queryList).subscribe(
+      (data: IMetrics_queryQueryResponse) => {
+        if (data && data.results && data.results.length === 4) {
+          this.timeSeriesData = data.results[0];
+          this.avgData = data.results[1];
+          this.avgDayData = data.results[2];
+          this.maxObjData = data.results[3];
+          this.tryGenCharts();
+        } else {
+          this.setChartErrorStates();
+        }
+      },
+      (err) => {
+        this.setChartErrorStates();
+      }
+    );
+    this.subscriptions.push(sub);
   }
 
-  timeSeriesQuery() {
-    const timeSeriesQuery: Metrics_queryQuerySpec = MetricsUtility.timeSeriesQuery(this.telemetryKind);
+  timeSeriesQuery(): MetricsPollingQuery {
+    const query: Metrics_queryQuerySpec = MetricsUtility.timeSeriesQuery(this.telemetryKind);
     const pollOptions: MetricsPollingOptions = {
       timeUpdater: MetricsUtility.timeSeriesQueryUpdate,
       mergeFunction: MetricsUtility.timeSeriesQueryMerge
     };
-
-    const sub = this.metricsqueryService.pollMetrics('clusterTimeSeriesData', timeSeriesQuery, pollOptions).subscribe(
-      (data) => {
-        this.timeSeriesData = data;
-        this.tryGenCharts();
-      }
-    );
-    this.subscriptions.push(sub);
+    return { query: query, pollingOptions: pollOptions };
   }
 
-  avgQuery() {
-    const avgQuery: Metrics_queryQuerySpec = MetricsUtility.pastDayAverageQuery(this.telemetryKind);
+  avgQuery(): MetricsPollingQuery {
+    const query: Metrics_queryQuerySpec = MetricsUtility.pastFiveMinAverageQuery(this.telemetryKind);
+    const pollOptions: MetricsPollingOptions = {
+      timeUpdater: MetricsUtility.pastFiveMinQueryUpdate,
+    };
+
+    return { query: query, pollingOptions: pollOptions };
+  }
+
+  avgDayQuery(): MetricsPollingQuery {
+    const query: Metrics_queryQuerySpec = MetricsUtility.pastDayAverageQuery(this.telemetryKind);
     const pollOptions: MetricsPollingOptions = {
       timeUpdater: MetricsUtility.pastDayAverageQueryUpdate,
     };
 
-    const sub = this.metricsqueryService.pollMetrics('clusterAvgData', avgQuery, pollOptions).subscribe(
-      (data) => {
-        this.avgData = data;
-        this.tryGenCharts();
-      }
-    );
-    this.subscriptions.push(sub);
+    return { query: query, pollingOptions: pollOptions };
   }
 
-  maxNodeQuery() {
+  maxNodeQuery(): MetricsPollingQuery {
     const query: Metrics_queryQuerySpec = MetricsUtility.maxObjQuery(this.telemetryKind);
     const pollOptions: MetricsPollingOptions = {
       timeUpdater: MetricsUtility.maxObjQueryUpdate,
       mergeFunction: MetricsUtility.maxObjQueryMerge
     };
 
-    const sub = this.metricsqueryService.pollMetrics('clusterMaxNodeData', query, pollOptions).subscribe(
-      (data) => {
-        this.maxObjData = data;
-        this.tryGenCharts();
-      }
-    );
-    this.subscriptions.push(sub);
+    return { query: query, pollingOptions: pollOptions };
   }
 
   private tryGenCharts() {
-    if (MetricsUtility.hasData(this.timeSeriesData) &&
-      MetricsUtility.hasData(this.avgData) &&
-      MetricsUtility.hasData(this.maxObjData)) {
-      this.genClusterChart('mean_CPUUsedPercent', this.cpuChartData);
-      this.genClusterChart('mean_MemUsedPercent', this.memChartData);
-      this.genClusterChart('mean_DiskUsedPercent', this.diskChartData);
+    // Only require avg 5 min data and avg day data
+    // before we show the cards
+    if (MetricsUtility.resultHasData(this.avgData) &&
+      MetricsUtility.resultHasData(this.avgDayData)) {
+      this.genCharts('mean_CPUUsedPercent', this.cpuChartData);
+      this.genCharts('mean_MemUsedPercent', this.memChartData);
+      this.genCharts('mean_DiskUsedPercent', this.diskChartData);
+    } else {
+      this.setChartErrorStates();
     }
+  }
+
+  private setChartErrorStates() {
+    this.heroCards.forEach((card) => {
+      card.cardState = CardStates.FAILED;
+    });
   }
 
   /**
    * An example of the format of the returned data is in MetricsUtility.ts
    */
-  private genClusterChart(fieldName: string, heroCard: HeroCardOptions) {
-    const timeSeriesData = this.timeSeriesData;
+  private genCharts(fieldName: string, heroCard: HeroCardOptions) {
+    // Time series graph
+    if (MetricsUtility.resultHasData(this.timeSeriesData)) {
+      const timeSeriesData = this.timeSeriesData;
 
-    const index = timeSeriesData.results[0].series[0].columns.indexOf(fieldName);
-    const data = Utility.transformToPlotly(timeSeriesData.results[0].series[0].values, 0, index);
-    heroCard.data = data;
+      const index = timeSeriesData.series[0].columns.indexOf(fieldName);
+      const data = Utility.transformToPlotly(timeSeriesData.series[0].values, 0, index);
+      heroCard.data = data;
+    }
 
     // Current stat calculation - we take the last point
-    heroCard.firstStat.value = Math.round(data.y[data.y.length - 1]) + '%';
+    if (MetricsUtility.resultHasData(this.avgData)) {
+      const index = this.avgData.series[0].columns.indexOf(fieldName);
+      heroCard.firstStat.value = Math.round(this.avgData.series[0].values[0][index]) + '%';
+    }
 
     // Avg
-    const avgData = this.avgData;
-    if (avgData.results[0].series[0].values.length !== 0) {
-      heroCard.secondStat.value = Math.round(avgData.results[0].series[0].values[0][index]) + '%';
+    const avgDayData = this.avgDayData;
+    if (avgDayData.series[0].values.length !== 0) {
+      const index = this.avgDayData.series[0].columns.indexOf(fieldName);
+      heroCard.secondStat.value = Math.round(avgDayData.series[0].values[0][index]) + '%';
     }
 
     // For determining arrow direction, we compare the current value to the average value
-    if (heroCard.firstStat.value > heroCard.secondStat.value) {
+    if (heroCard.firstStat == null || heroCard.firstStat.value == null || heroCard.secondStat == null || heroCard.secondStat.value == null) {
+      heroCard.arrowDirection = StatArrowDirection.HIDDEN;
+    } else if (heroCard.firstStat.value > heroCard.secondStat.value) {
       heroCard.arrowDirection = StatArrowDirection.UP;
     } else if (heroCard.firstStat.value < heroCard.secondStat.value) {
       heroCard.arrowDirection = StatArrowDirection.DOWN;
@@ -231,23 +262,25 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
     }
 
     // Max Node
-    const maxNode = MetricsUtility.maxObjUtility(this.maxObjData, fieldName);
-    if (maxNode == null || maxNode.max === -1) {
-      heroCard.thirdStat.value = null;
-    } else {
-      // Removing Node- prefix from the name and adding value
-      const thirdStatName = maxNode.name.substring(this.telemetryKind.length + 1);
-      let thirdStat = thirdStatName;
-      if (thirdStat.length > 10) {
-        thirdStat = thirdStat.substring(0, 11) + '...';
+    if (MetricsUtility.resultHasData(this.maxObjData)) {
+      const maxNode = MetricsUtility.maxObjUtility(this.maxObjData, fieldName);
+      if (maxNode == null || maxNode.max === -1) {
+        heroCard.thirdStat.value = null;
+      } else {
+        // Removing Node- prefix from the name and adding value
+        const thirdStatName = maxNode.name.substring(this.telemetryKind.length + 1);
+        let thirdStat = thirdStatName;
+        if (thirdStat.length > 10) {
+          thirdStat = thirdStat.substring(0, 11) + '...';
+        }
+        thirdStat += ' (' + Math.round(maxNode.max) + '%)';
+        heroCard.thirdStat.value = thirdStat;
+        heroCard.thirdStat.url = '/cluster/cluster/' + thirdStatName;
       }
-      thirdStat += ' (' + Math.round(maxNode.max) + '%)';
-      heroCard.thirdStat.value = thirdStat;
-      heroCard.thirdStat.url = '/cluster/cluster/' + thirdStatName;
     }
 
-    if (!heroCard.isReady) {
-      heroCard.isReady = true;
+    if (heroCard.cardState !== CardStates.READY) {
+      heroCard.cardState = CardStates.READY;
     }
   }
 

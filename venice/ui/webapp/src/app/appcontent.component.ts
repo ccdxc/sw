@@ -322,7 +322,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
       }
     }
     if (payload.time != null) {
-      this.idle.setIdle(payload.time)
+      this.idle.setIdle(payload.time);
     }
   }
 

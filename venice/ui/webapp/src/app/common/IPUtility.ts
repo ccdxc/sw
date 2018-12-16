@@ -30,9 +30,10 @@ export class IPUtility {
 
   /**
    * Returns true if the ip is valid
+   * Does not allow submasks
    */
-  public static isValidIP(ip) {
-    if (ip === null || ip.length === 0) {
+  public static isValidIP(ip: string) {
+    if (ip == null || ip.length === 0) {
       return false;
     }
     // Can't end in a dot

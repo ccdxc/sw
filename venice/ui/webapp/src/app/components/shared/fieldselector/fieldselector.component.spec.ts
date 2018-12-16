@@ -2,6 +2,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { FieldselectorComponent } from './fieldselector.component';
 import { WidgetsModule } from 'web-app-framework';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 describe('FieldselectorComponent', () => {
   let component: FieldselectorComponent;
@@ -13,7 +14,8 @@ describe('FieldselectorComponent', () => {
       imports: [
         WidgetsModule,
         FormsModule,
-        ReactiveFormsModule
+        ReactiveFormsModule,
+        NoopAnimationsModule
       ]
     })
       .compileComponents();

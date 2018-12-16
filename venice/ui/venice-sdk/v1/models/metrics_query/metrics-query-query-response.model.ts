@@ -10,13 +10,23 @@ import { BaseModel, PropInfoItem } from '../generated/metrics_query/base-model';
 import { Metrics_queryQueryResult, IMetrics_queryQueryResult } from './metrics-query-query-result.model';
 
 export interface IMetrics_queryQueryResponse {
+    'tenant'?: string;
+    'namespace'?: string;
     'results'?: Array<IMetrics_queryQueryResult>;
 }
 
 
 export class Metrics_queryQueryResponse extends BaseModel implements IMetrics_queryQueryResponse {
+    'tenant': string = null;
+    'namespace': string = null;
     'results': Array<Metrics_queryQueryResult> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
+        'tenant': {
+            type: 'string'
+        },
+        'namespace': {
+            type: 'string'
+        },
         'results': {
             type: 'object'
         },
@@ -50,6 +60,16 @@ export class Metrics_queryQueryResponse extends BaseModel implements IMetrics_qu
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['tenant'] != null) {
+            this['tenant'] = values['tenant'];
+        } else if (fillDefaults && Metrics_queryQueryResponse.hasDefaultValue('tenant')) {
+            this['tenant'] = Metrics_queryQueryResponse.propInfo['tenant'].default;
+        }
+        if (values && values['namespace'] != null) {
+            this['namespace'] = values['namespace'];
+        } else if (fillDefaults && Metrics_queryQueryResponse.hasDefaultValue('namespace')) {
+            this['namespace'] = Metrics_queryQueryResponse.propInfo['namespace'].default;
+        }
         if (values) {
             this.fillModelArray<Metrics_queryQueryResult>(this, 'results', values['results'], Metrics_queryQueryResult);
         }
@@ -60,6 +80,8 @@ export class Metrics_queryQueryResponse extends BaseModel implements IMetrics_qu
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
+                'tenant': new FormControl(this['tenant']),
+                'namespace': new FormControl(this['namespace']),
                 'results': new FormArray([]),
             });
             // generate FormArray control elements
@@ -74,6 +96,8 @@ export class Metrics_queryQueryResponse extends BaseModel implements IMetrics_qu
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
+            this._formGroup.controls['tenant'].setValue(this['tenant']);
+            this._formGroup.controls['namespace'].setValue(this['namespace']);
             this.fillModelArray<Metrics_queryQueryResult>(this, 'results', this['results'], Metrics_queryQueryResult);
         }
     }

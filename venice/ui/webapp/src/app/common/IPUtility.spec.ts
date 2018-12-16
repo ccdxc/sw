@@ -485,6 +485,54 @@ describe('IPUtility', () => {
     expected = 'TCP / 8000-9200, 9050-9070';
     ret = IPUtility.portRulesToString(rangeReference.ports);
     expect(ret).toEqual(expected);
+  });
+
+  it('isValidIP testing', () => {
+    let ip;
+    let ret;
+
+    ret = IPUtility.isValidIP(ip);
+    expect(ret).toBeFalsy();
+
+    ip = null;
+    ret = IPUtility.isValidIP(ip);
+    expect(ret).toBeFalsy();
+
+    ip = '';
+    ret = IPUtility.isValidIP(ip);
+    expect(ret).toBeFalsy();
+
+    ip = '1';
+    ret = IPUtility.isValidIP(ip);
+    expect(ret).toBeFalsy();
+
+    ip = '256.1.1.1';
+    ret = IPUtility.isValidIP(ip);
+    expect(ret).toBeFalsy();
+
+    ip = '10.0.0.0.';
+    ret = IPUtility.isValidIP(ip);
+    expect(ret).toBeFalsy();
+
+    ip = '10.a.0.0';
+    ret = IPUtility.isValidIP(ip);
+    expect(ret).toBeFalsy();
+
+    ip = '10.2.0';
+    ret = IPUtility.isValidIP(ip);
+    expect(ret).toBeFalsy();
+
+    ip = '0.0.0.0';
+    ret = IPUtility.isValidIP(ip);
+    expect(ret).toBeTruthy();
+
+    ip = '255.255.255.255';
+    ret = IPUtility.isValidIP(ip);
+    expect(ret).toBeTruthy();
+
+    ip = '10.0.0.1';
+    ret = IPUtility.isValidIP(ip);
+    expect(ret).toBeTruthy();
 
   });
 });

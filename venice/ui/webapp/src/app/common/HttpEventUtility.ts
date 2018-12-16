@@ -96,7 +96,7 @@ export class HttpEventUtility<T> {
 
       return this.dataArray;
     } catch (e) {
-      console.error(e, 'This is likely due to the backend response being in an unsupported format')
+      console.error(e, 'This is likely due to the backend response being in an unsupported format');
     }
   }
 

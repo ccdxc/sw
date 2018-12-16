@@ -22,6 +22,12 @@ export enum StatArrowDirection {
   HIDDEN = 'HIDDEN'
 }
 
+export enum CardStates {
+  READY = 'READY',
+  LOADING = 'LOADING',
+  FAILED = 'FAILED'
+}
+
 export interface HeroCardOptions {
   title: string;
   firstStat: Stat;
@@ -34,7 +40,7 @@ export interface HeroCardOptions {
   data?: Data;
   arrowDirection?: StatArrowDirection;
   timeRange?: string;
-  isReady?: boolean;
+  cardState?: CardStates;
 }
 
 @Component({
@@ -46,6 +52,7 @@ export interface HeroCardOptions {
 })
 export class HerocardComponent implements OnInit, OnChanges {
   hasHover: boolean = false;
+  cardStates = CardStates;
 
   @Input() title: string;
   @Input() firstStat: Stat;
@@ -56,15 +63,14 @@ export class HerocardComponent implements OnInit, OnChanges {
   @Input() backgroundIcon: Icon;
   @Input() icon: Icon;
   @Input() lastUpdateTime;
-  @Input() data;
+  @Input() data: Data;
   @Input() arrowDirection: StatArrowDirection = StatArrowDirection.HIDDEN;
   @Input() timeRange: string;
   // When set to true, card contents will fade into view
-  @Input() isReady: boolean = false;
+  @Input() cardState: CardStates = CardStates.LOADING;
 
 
   showGraph: boolean = false;
-  statArrowDirection: StatArrowDirection = StatArrowDirection.HIDDEN;
   layout = {
     showlegend: false,
     paper_bgcolor: 'rgba(0,0,0,0)',
@@ -105,24 +111,24 @@ export class HerocardComponent implements OnInit, OnChanges {
 
   constructor(private router: Router) { }
 
-  ngOnChanges() {
-    if (this.isReady) {
+  ngOnChanges(changes) {
+    if (this.cardState === CardStates.READY) {
       this.setupDataset();
     }
   }
 
   ngOnInit() {
-    if (this.isReady) {
+    if (this.cardState === CardStates.READY) {
       this.setupDataset();
     }
   }
 
 
   private setupDataset() {
-    this.statArrowDirection = this.arrowDirection;
     // If we only have one data point, we don't show the graph
-    if (this.data.x.length < 1) {
+    if (this.data.x.length <= 1) {
       this.showGraph = false;
+      return;
     }
     this.dataset = [
       // passed in graph data
