@@ -11,8 +11,9 @@
 
 namespace api {
 
-/**< forward declaration */
+/**< forward declarations */
 typedef struct api_ctxt_s api_ctxt_t;
+typedef struct obj_ctxt_s obj_ctxt_t;
 
 /**
  * @brief    API operation
@@ -23,6 +24,7 @@ typedef enum api_op_e {
     API_OP_DELETE,
     API_OP_UPDATE,
     API_OP_GET,
+    API_OP_INVALID,
 } api_op_t;
 
 /**
@@ -41,6 +43,9 @@ typedef enum obj_id_e {
 } obj_id_t;
 
 }    // namespace api
+
+using api::api_op_t;
+using api::obj_id_t;
 
 #endif    /** __API_HPP__ */
 

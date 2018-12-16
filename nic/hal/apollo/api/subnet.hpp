@@ -46,6 +46,7 @@ class subnet_entry : public api_base {
      */
     static void destroy(subnet_entry *subnet);
 
+#if 0
     /**
      * @brief     handle a subnet create by allocating all required resources
      *            and keeping them ready for commit phase
@@ -77,47 +78,75 @@ class subnet_entry : public api_base {
      * @return   SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t process_get(api_ctxt_t *api_ctxt) override;
+#endif
+
+    /**
+     * @brief     initialize subnet entry with the given config
+     * @param[in] api_ctxt API context carrying the configuration
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
+
+    /**
+     * @brief     update/override the subnet object with given config
+     * @param[in] api_ctxt API context carrying the configuration
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t update_config(api_ctxt_t *api_ctxt) override;
 
     /**
      * @brief    program all h/w tables relevant to this object except stage 0
      *           table(s), if any
-     * @param[in] api_ctxt    transient state associated with this API
+     * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t program_hw(api_ctxt_t *api_ctxt) override;
+    virtual sdk_ret_t program_hw(obj_ctxt_t *obj_ctxt) override;
 
     /**
      * @brief    cleanup all h/w tables relevant to this object except stage 0
      *           table(s), if any, by updating packed entries with latest epoch#
-     * @param[in] api_ctxt    transient state associated with this API
+     * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t cleanup_hw(api_ctxt_t *api_ctxt) override;
+    virtual sdk_ret_t cleanup_hw(obj_ctxt_t *obj_ctxt) override;
 
     /**
      * @brief    update all h/w tables relevant to this object except stage 0
      *           table(s), if any, by updating packed entries with latest epoch#
-     * @param[in] api_ctxt    transient state associated with this API
+     * @param[in] orig_obj    old version of the unmodified object
+     * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t update_hw(api_ctxt_t *api_ctxt) override;
+    virtual sdk_ret_t update_hw(api_base *orig_obj, obj_ctxt_t *obj_ctxt) override;
 
     /**
      * @brief    activate the epoch in the dataplane
      * @param[in] api_op      api operation
-     * @param[in] api_ctxt    transient state associated with this API
+     * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t activate_epoch(api_op_t api_op, api_ctxt_t *api_ctxt) override;
+    virtual sdk_ret_t activate_epoch(api_op_t api_op, obj_ctxt_t *obj_ctxt) override;
+
+    /**
+     * @brief     add given subnet to the database
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t add_to_db(void) override;
+
+    /**
+     * @brief     delete given subnet from the database
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t del_from_db(void) override;
 
     /**
      * @brief    this method is called on new object that needs to replace the
      *           old version of the object in the DBs
      * @param[in] old         old version of the object being swapped out
-     * @param[in] api_ctxt    transient state associated with this API
+     * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t update_db(api_base *old_obj, api_ctxt_t *api_ctxt) override;
+    virtual sdk_ret_t update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) override;
 
     /**
      * @brief    initiate delay deletion of this object
@@ -187,40 +216,20 @@ class subnet_entry : public api_base {
     }
 
 private:
-    /**
-     * @brief    constructor
-     */
+    /**< @brief    constructor */
     subnet_entry() {}    // TODO: move this to .cc and initialize hw indices to invalid values !!
-    /**
-     * @brief    destructor
-     */
-    ~subnet_entry() {}
-    /**
-     * @brief     initialize subnet entry with the given config
-     * @param[in] oci_subnet    subnet information
-     * @return    SDK_RET_OK on success, failure status code on error
-     *
-     * NOTE:     allocate all h/w resources (i.e., table indices as well here, we
-     *           can always release them in abort phase if something goes wrong
-     */
-    sdk_ret_t init(oci_subnet_t *oci_subnet);
 
-    /**
-     * @brief     free all h/w resources allocated for this subnet
-     */
+    /**< @brief    destructor */
+    ~subnet_entry() {}
+
+    /**< @brief     free all h/w resources allocated for this subnet */
     void cleanup(void);
 
     /**
-     * @brief     add given subnet to the database
-     * @return   SDK_RET_OK on success, failure status code on error
+     * @brief    allocate h/w resources for this object
+     * @return    SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t add_to_db(void);
-
-    /**
-     * @brief     delete given subnet from the database
-     * @return   SDK_RET_OK on success, failure status code on error
-     */
-    sdk_ret_t del_from_db(void);
+    sdk_ret_t alloc_resources(void);
 
  private:
     oci_subnet_key_t    key_;               /**< subnet Key */

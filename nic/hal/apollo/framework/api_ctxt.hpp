@@ -23,8 +23,9 @@ namespace api {
 typedef struct api_ctxt_s {
     api_op_t    api_op;           /**< api operation */
     obj_id_t    obj_id;           /**< object identifier */
-    api_base    *curr_obj;        /**< current version of the object */
-    api_base    *new_obj;         /**< modified or next version of the object */
+    // TODO: remove these !!
+    //api_base    *curr_obj;        /**< current version of the object */
+    //api_base    *new_obj;         /**< modified or next version of the object */
     /**< API specific parameters */
     union {
         oci_vcn_key_t       vcn_key;
@@ -39,8 +40,6 @@ typedef struct api_ctxt_s {
 }    // namespace api
 
 using api::api_ctxt_t;
-using api::api_op_t;
-using api::obj_id_t;
 
 #endif    /** __API_CTXT_HPP__ */
 
