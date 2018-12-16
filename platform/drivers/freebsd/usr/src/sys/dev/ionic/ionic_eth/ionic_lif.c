@@ -160,10 +160,6 @@ int ionic_reinit(struct net_device *netdev)
 				IONIC_NETDEV_ERROR(lif->netdev, "Couldn't delete old MAC %6D, err: %d\n",
 					lif->dev_addr, ":", err);
 			}
-			/*
-			 * XXX: Its possible that old address couldn't be deleted but
-			 * 	new address is programmed, reinit?
-			 */
 			bcopy(IF_LLADDR(netdev), lif->dev_addr, ETHER_ADDR_LEN);
 		}
 	}
@@ -329,7 +325,6 @@ static int _ionic_lif_addr_add(struct lif *lif, const u8 *addr)
 
 	memcpy(ctx.cmd.rx_filter_add.mac.addr, addr, ETH_ALEN);
 
-	IONIC_NETDEV_ADDR_INFO(lif->netdev, addr, "rx_filter add ");
 	IONIC_NETDEV_ADDR_INFO(lif->netdev, addr, "Debug: Pushing add: ");
 
 	err = ionic_adminq_post_wait(lif, &ctx);
@@ -370,9 +365,8 @@ static int _ionic_lif_addr_del(struct lif *lif, const u8 *addr)
 	if (err)
 		return err;
 
-	IONIC_NETDEV_ADDR_INFO(lif->netdev, addr, "rx_filter del (filter id %d) ADDR ",
-		    ctx.cmd.rx_filter_del.filter_id);
-	IONIC_NETDEV_ADDR_INFO(lif->netdev, addr, "Debug: Pushing del: ");
+	IONIC_NETDEV_ADDR_INFO(lif->netdev, addr, "Debug: Pushing del (filter id: %d): ",
+						   ctx.cmd.rx_filter_del.filter_id);
 
 	return 0;
 }
@@ -396,6 +390,10 @@ static int ionic_lif_addr(struct lif *lif, const u8 *addr, bool add)
 {
 	struct lif_addr_work *work;
 
+	/*
+	 * Deferred filters are being scheduled out of order which is
+	 * not right. So disabling it for now.
+	 */
 	if (false) {
 		work = kmalloc(sizeof(*work), GFP_ATOMIC);
 		if (!work) {
@@ -569,7 +567,7 @@ void ionic_set_multi(struct lif* lif)
 	 *  - Not Visited: Delete the MC addrs which are not visited
 	 *  - Visited: Compress and make visisted false
 	 */
-	j = -1;
+	j = 0;
 	for (i = 0 ; i < lif->num_mc_addrs; i++) {
 		IONIC_NETDEV_ADDR_INFO(lif->netdev, lif->mc_addrs[i].addr, "Debug: Curr MC: ");
 			f = ionic_rx_filter_by_addr(lif, lif->mc_addrs[i].addr);
@@ -577,29 +575,24 @@ void ionic_set_multi(struct lif* lif)
 			IONIC_NETDEV_ADDR_INFO(lif->netdev, lif->mc_addrs[i].addr, "Debug: Del MC: ");
 			ionic_addr_del(ifp, lif->mc_addrs[i].addr);
 		} else {
-			j++;
-			bcopy(lif->mc_addrs[i].addr, lif->mc_addrs[j].addr,
+			bcopy(lif->mc_addrs[i].addr, lif->mc_addrs[j++].addr,
 				  ETHER_ADDR_LEN);
 			f->visited = false;
 		}
 	}
-	lif->num_mc_addrs = j + 1;
+	lif->num_mc_addrs = j;
 
 	/*
 	 * Travers newly added mc addrs.
 	 *  - < Max: Copy to lif MC addr list and increment num_mc_addrs
 	 *  - else: STOP
 	 */
-	for (i = 0; i < num_new_mc_addrs; i++) {
-		if (lif->num_mc_addrs < max_maddrs) {
-			IONIC_NETDEV_ADDR_INFO(lif->netdev, new_mc_addrs[i].addr, "Debug: Add MC: ");
-			ionic_addr_add(ifp, new_mc_addrs[i].addr);
-			bcopy(new_mc_addrs[i].addr,
-				  lif->mc_addrs[lif->num_mc_addrs++].addr,
-				  ETHER_ADDR_LEN);
-		} else {
-			break;
-		}
+	for (i = 0; i < num_new_mc_addrs && lif->num_mc_addrs < max_maddrs; i++) {
+		IONIC_NETDEV_ADDR_INFO(lif->netdev, new_mc_addrs[i].addr, "Debug: Add MC: ");
+		ionic_addr_add(ifp, new_mc_addrs[i].addr);
+		bcopy(new_mc_addrs[i].addr,
+			  lif->mc_addrs[lif->num_mc_addrs++].addr,
+			  ETHER_ADDR_LEN);
 	}
 	IONIC_RX_FILTER_UNLOCK(&lif->rx_filters);
 	free(new_mc_addrs, M_IONIC);
