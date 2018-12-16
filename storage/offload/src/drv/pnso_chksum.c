@@ -119,6 +119,7 @@ chksum_setup(struct service_info *svc_info,
 		num_tags = 1;
 	}
 	svc_info->si_num_tags = num_tags;
+	cpdc_update_batch_tags(svc_info, num_tags);
 
 	chn_service_hw_ring_take_set(svc_info, num_tags);
 
@@ -199,6 +200,9 @@ chksum_ring_db(struct service_info *svc_info)
 		(svc_info->si_flags & CHAIN_SFLAG_FIRST_SERVICE);
 	if (ring_db) {
 		OSAL_LOG_INFO("ring door bell <===");
+
+		/* in batch mode, seq desc needs an update to its batch size */
+		cpdc_update_seq_batch_size(svc_info);
 
 		seq_info = &svc_info->si_seq_info;
 		seq_ring_db(svc_info);

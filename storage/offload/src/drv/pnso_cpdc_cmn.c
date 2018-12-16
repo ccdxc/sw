@@ -690,8 +690,54 @@ cpdc_update_batch_tags(struct service_info *svc_info, uint32_t num_tags)
 	OSAL_ASSERT(0);
 }
 
+static void __attribute__((unused))
+pprint_seq_desc(const struct sequencer_desc *desc)
+{
+	if (!desc)
+		return;
+
+	OSAL_LOG_DEBUG("--- YOYO");
+
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "seq_desc", (uint64_t) desc);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "seq_desc_pa",
+			osal_virt_to_phy((void *) desc));
+
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "sd_desc_addr", desc->sd_desc_addr);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "sd_pndx_addr", desc->sd_pndx_addr);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "sd_pndx_shadow_addr",
+			desc->sd_pndx_shadow_addr);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "sd_ring_addr", desc->sd_ring_addr);
+
+	OSAL_LOG_DEBUG("%30s: %d", "sd_desc_size", desc->sd_desc_size);
+	OSAL_LOG_DEBUG("%30s: %d", "sd_pndx_size", desc->sd_pndx_size);
+	OSAL_LOG_DEBUG("%30s: %d", "sd_ring_size", desc->sd_ring_size);
+	OSAL_LOG_DEBUG("%30s: %d", "sd_batch_mode", desc->sd_batch_mode);
+	OSAL_LOG_DEBUG("%30s: %d", "sd_batch_size", desc->sd_batch_size);
+}
+
+static void __attribute__((unused))
+pprint_seq_info(const struct sequencer_info *seq_info)
+{
+	if (!seq_info)
+		return;
+
+	OSAL_LOG_DEBUG("--- YOYO");
+
+	OSAL_LOG_DEBUG("%30s: %s", "sqi_ring", seq_info->sqi_ring->name);
+	OSAL_LOG_DEBUG("%30s: %d", "sqi_qtype", seq_info->sqi_qtype);
+	OSAL_LOG_DEBUG("%30s: %d", "sqi_status_qtype",
+			seq_info->sqi_status_qtype);
+	OSAL_LOG_DEBUG("%30s: %d", "sqi_index", seq_info->sqi_index);
+	OSAL_LOG_DEBUG("%30s: %d", "sqi_batch_mode", seq_info->sqi_batch_mode);
+	OSAL_LOG_DEBUG("%30s: %d", "sqi_batch_size", seq_info->sqi_batch_size);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "sqi_sqi_desc",
+			(uint64_t) seq_info->sqi_desc);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "sqi_status_desc",
+			(uint64_t) seq_info->sqi_status_desc);
+}
+
 void
-cpdc_update_seq_batch_size(struct service_info *svc_info)
+cpdc_update_seq_batch_size(const struct service_info *svc_info)
 {
 	struct batch_info *batch_info;
 	struct batch_page *batch_page;
@@ -699,47 +745,52 @@ cpdc_update_seq_batch_size(struct service_info *svc_info)
 	struct service_batch_info *svc_batch_info;
 
 	struct sequencer_desc *seq_desc;
-	uint16_t prev_batch_size;
+	struct sequencer_info *seq_info;
 
 	if (!cpdc_is_service_in_batch(svc_info->si_flags))
 		return;
 
 	OSAL_ASSERT((svc_info->si_type == PNSO_SVC_TYPE_HASH) ||
 			(svc_info->si_type == PNSO_SVC_TYPE_CHKSUM));
-	
+
 	if (!((svc_info->si_desc_flags & PNSO_HASH_DFLAG_PER_BLOCK) ||
 		(svc_info->si_desc_flags & PNSO_CHKSUM_DFLAG_PER_BLOCK)))
 		return;
 
-	seq_desc = svc_info->si_seq_info.sqi_desc;
+	seq_info = (struct sequencer_info *) &svc_info->si_seq_info;
+	seq_desc = seq_info->sqi_desc;
+
+	pprint_seq_info(seq_info);
+	pprint_seq_desc(seq_desc);
+	OSAL_LOG_DEBUG("--- YOYO");
+
 	if (seq_desc->sd_batch_mode) {
-		svc_batch_info = &svc_info->si_batch_info;
+		svc_batch_info =
+			(struct service_batch_info *) &svc_info->si_batch_info;
 		chain = svc_info->si_centry->ce_chain_head;
 		batch_info = chain->sc_batch_info;
 		batch_page =
 			batch_info->bi_pages[svc_batch_info->sbi_bulk_desc_idx];
 
-		prev_batch_size = be16_to_cpu(seq_desc->sd_batch_size);
-
 		if (svc_info->si_type == PNSO_SVC_TYPE_HASH) {
 			seq_desc->sd_batch_size =
 				cpu_to_be16(batch_page->bp_tags.bpt_num_hashes);
 
-			svc_info->si_seq_info.sqi_batch_size =
+			seq_info->sqi_batch_size =
 				batch_page->bp_tags.bpt_num_hashes;
 		} else {
 			seq_desc->sd_batch_size = cpu_to_be16(
 					batch_page->bp_tags.bpt_num_chksums);
 
-			svc_info->si_seq_info.sqi_batch_size =
+			seq_info->sqi_batch_size =
 				batch_page->bp_tags.bpt_num_chksums;
 		}
 
-		OSAL_LOG_DEBUG("svc_type: %d bpt_num_hashes: %u bpt_num_chksums: %u prev_batch_size: %u curr_num_tags: %u",
+		OSAL_LOG_DEBUG("svc_type: %d bpt_num_hashes: %u bpt_num_chksums: %u num_tags: %u",
 			svc_info->si_type,
 			batch_page->bp_tags.bpt_num_hashes,
 			batch_page->bp_tags.bpt_num_chksums,
-			prev_batch_size, svc_info->si_seq_info.sqi_batch_size);
+			seq_info->sqi_batch_size);
 	}
 }
 
