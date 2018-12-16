@@ -619,15 +619,6 @@ DeviceManager::CreateMnets()
     }
 }
 
-#ifdef __aarch64__
-void
-DeviceManager::PcieEventHandler(const pciehdev_eventdata_t *evd)
-{
-    Device *dev = (Device *)pciehdev_get_priv(evd->pdev);
-    dev->DevcmdHandler();
-}
-#endif
-
 void
 DeviceManager::DevcmdPoll()
 {
@@ -644,8 +635,10 @@ DeviceManager::LinkEventHandler(link_eventdata_t *evd)
 
     for (auto it = devices.cbegin(); it != devices.cend(); it++) {
         dev = it->second;
-        eth_dev = (Eth*) dev;
-        eth_dev->LinkEventHandler(evd);
+        if (dev->GetType() == ETH) {
+            eth_dev = (Eth*) dev;
+            eth_dev->LinkEventHandler(evd);
+        }
     }
 }
 
@@ -822,8 +815,10 @@ DeviceManager::GenerateQstateInfoJson(std::string qstate_info_file)
     DumpQstateInfo(lifs);
     for (auto it = devices.cbegin(); it != devices.cend(); it++) {
         Device *dev = it->second;
-        Eth *eth_dev = (Eth *) dev;
-        eth_dev->GenerateQstateInfoJson(lifs);
+        if (dev->GetType() == ETH) {
+            Eth *eth_dev = (Eth *) dev;
+            eth_dev->GenerateQstateInfoJson(lifs);
+        }
     }
 
     root.push_back(std::make_pair("lifs", lifs));

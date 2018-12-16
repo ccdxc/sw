@@ -72,81 +72,6 @@ const char rdma_qstate_64[32]     = { 0 };
 sdk::lib::indexer *Eth::fltr_allocator = sdk::lib::indexer::factory(4096);
 sdk::lib::indexer *Eth::mnic_allocator = sdk::lib::indexer::factory(32, true /*thread_safe*/, true /*skip_zero*/);
 
-struct queue_info Eth::qinfo [NUM_QUEUE_TYPES] = {
-    [ETH_QTYPE_RX] = {
-        .type_num = ETH_QTYPE_RX,
-        .size = 1,
-        .entries = 0,
-        .purpose = ::intf::LIF_QUEUE_PURPOSE_RX,
-        .prog = "rxdma_stage0.bin",
-        .label = "eth_rx_stage0",
-        .qstate = qstate
-    },
-    [ETH_QTYPE_TX] = {
-        .type_num = ETH_QTYPE_TX,
-        .size = 1,
-        .entries = 0,
-        .purpose = ::intf::LIF_QUEUE_PURPOSE_TX,
-        .prog = "txdma_stage0.bin",
-        .label = "eth_tx_stage0",
-        .qstate = qstate
-    },
-    [ETH_QTYPE_ADMIN] = {
-        .type_num = ETH_QTYPE_ADMIN,
-        .size = 2,
-        .entries = 0,
-        .purpose = ::intf::LIF_QUEUE_PURPOSE_ADMIN,
-        .prog = "txdma_stage0.bin",
-        .label = "adminq_stage0",
-        .qstate = admin_qstate
-    },
-    [ETH_QTYPE_SQ] = {
-        .type_num = ETH_QTYPE_SQ,
-        .size = 4,
-        .entries = 0,
-        .purpose = ::intf::LIF_QUEUE_PURPOSE_RDMA_SEND,
-        .prog = "txdma_stage0.bin",
-        .label = "rdma_req_tx_stage0",
-        .qstate = rdma_qstate_512
-    },
-    [ETH_QTYPE_RQ] = {
-        .type_num = ETH_QTYPE_RQ,
-        .size = 4,
-        .entries = 0,
-        .purpose = ::intf::LIF_QUEUE_PURPOSE_RDMA_SEND,
-        .prog = "rxdma_stage0.bin",
-        .label = "rdma_resp_rx_stage0",
-        .qstate = rdma_qstate_512
-    },
-    [ETH_QTYPE_CQ] = {
-        .type_num = ETH_QTYPE_CQ,
-        .size = 1,
-        .entries = 0,
-        .purpose = ::intf::LIF_QUEUE_PURPOSE_CQ,
-        .prog = "txdma_stage0.bin",
-        .label = "rdma_req_tx_stage0",
-        .qstate = rdma_qstate_64
-    },
-    [ETH_QTYPE_EQ] = {
-        .type_num = ETH_QTYPE_EQ,
-        .size = 1,
-        .entries = 0,
-        .purpose = ::intf::LIF_QUEUE_PURPOSE_EQ,
-        .prog = "txdma_stage0.bin",
-        .label = "rdma_req_tx_stage0",
-        .qstate = rdma_qstate_32
-    },
-    [ETH_QTYPE_SVC] = {
-        .type_num = ETH_QTYPE_SVC,
-        .size = 1,
-        .entries = 1,
-        .purpose = ::intf::LIF_QUEUE_PURPOSE_SVC,
-        .prog = "txdma_stage0.bin",
-        .label = "notify_stage0",
-        .qstate = qstate
-    },
-};
-
 void Eth::Update()
 {
     int32_t     cosA = 1;
@@ -204,13 +129,87 @@ Eth::Eth(HalClient *hal_client,
     memset(&mnet_req, 0, sizeof(mnet_dev_create_req_t));
 
     // Create LIF
-    qinfo[ETH_QTYPE_RX].entries = (uint32_t)log2(spec->rxq_count);
-    qinfo[ETH_QTYPE_TX].entries = (uint32_t)log2(spec->txq_count);
-    qinfo[ETH_QTYPE_ADMIN].entries = (uint32_t)log2(spec->adminq_count + spec->rdma_adminq_count);
-    qinfo[ETH_QTYPE_SQ].entries = (uint32_t)log2(spec->rdma_sq_count);
-    qinfo[ETH_QTYPE_RQ].entries = (uint32_t)log2(spec->rdma_rq_count);
-    qinfo[ETH_QTYPE_CQ].entries = (uint32_t)log2(spec->rdma_cq_count);
-    qinfo[ETH_QTYPE_EQ].entries = (uint32_t)log2(spec->eq_count + spec->rdma_eq_count);
+    memset(qinfo, 0, sizeof(qinfo));
+
+    qinfo[ETH_QTYPE_RX] = {
+            .type_num = ETH_QTYPE_RX,
+            .size = 1,
+            .entries = (uint32_t)log2(spec->rxq_count),
+            .purpose = ::intf::LIF_QUEUE_PURPOSE_RX,
+            .prog = "rxdma_stage0.bin",
+            .label = "eth_rx_stage0",
+            .qstate = qstate
+    };
+
+    qinfo[ETH_QTYPE_TX] = {
+            .type_num = ETH_QTYPE_TX,
+            .size = 1,
+            .entries = (uint32_t)log2(spec->txq_count),
+            .purpose = ::intf::LIF_QUEUE_PURPOSE_TX,
+            .prog = "txdma_stage0.bin",
+            .label = "eth_tx_stage0",
+            .qstate = qstate
+    };
+
+    qinfo[ETH_QTYPE_ADMIN] = {
+            .type_num = ETH_QTYPE_ADMIN,
+            .size = 2,
+            .entries = (uint32_t)log2(spec->adminq_count + spec->rdma_adminq_count),
+            .purpose = ::intf::LIF_QUEUE_PURPOSE_ADMIN,
+            .prog = "txdma_stage0.bin",
+            .label = "adminq_stage0",
+            .qstate = admin_qstate
+    };
+
+    qinfo[ETH_QTYPE_SQ] = {
+            .type_num = ETH_QTYPE_SQ,
+            .size = 4,
+            .entries = (uint32_t)log2(spec->rdma_sq_count),
+            .purpose = ::intf::LIF_QUEUE_PURPOSE_RDMA_SEND,
+            .prog = "txdma_stage0.bin",
+            .label = "rdma_req_tx_stage0",
+            .qstate = rdma_qstate_512
+    };
+
+    qinfo[ETH_QTYPE_RQ] = {
+            .type_num = ETH_QTYPE_RQ,
+            .size = 4,
+            .entries = (uint32_t)log2(spec->rdma_rq_count),
+            .purpose = ::intf::LIF_QUEUE_PURPOSE_RDMA_SEND,
+            .prog = "rxdma_stage0.bin",
+            .label = "rdma_resp_rx_stage0",
+            .qstate = rdma_qstate_512
+    };
+
+    qinfo[ETH_QTYPE_CQ] = {
+            .type_num = ETH_QTYPE_CQ,
+            .size = 1,
+            .entries = (uint32_t)log2(spec->rdma_cq_count),
+            .purpose = ::intf::LIF_QUEUE_PURPOSE_CQ,
+            .prog = "txdma_stage0.bin",
+            .label = "rdma_req_tx_stage0",
+            .qstate = rdma_qstate_64
+        };
+
+    qinfo[ETH_QTYPE_EQ] = {
+            .type_num = ETH_QTYPE_EQ,
+            .size = 1,
+            .entries = (uint32_t)log2(spec->eq_count + spec->rdma_eq_count),
+            .purpose = ::intf::LIF_QUEUE_PURPOSE_EQ,
+            .prog = "txdma_stage0.bin",
+            .label = "rdma_req_tx_stage0",
+            .qstate = rdma_qstate_32
+        };
+
+    qinfo[ETH_QTYPE_SVC] = {
+            .type_num = ETH_QTYPE_SVC,
+            .size = 1,
+            .entries = 1,
+            .purpose = ::intf::LIF_QUEUE_PURPOSE_SVC,
+            .prog = "txdma_stage0.bin",
+            .label = "notify_stage0",
+            .qstate = qstate
+        };
 
     memset(&hal_lif_info_, 0, sizeof(hal_lif_info_t));
     hal_lif_info_.id = spec->lif_id;
@@ -1115,8 +1114,8 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
             NIC_LOG_ERR("Failed to create LIF");
             return (DEVCMD_ERROR);
         }
+        Update();
     }
-    Update();
 
     // Clear all non-intrinsic fields
     for (uint32_t qid = 0; qid < spec->rxq_count; qid++) {

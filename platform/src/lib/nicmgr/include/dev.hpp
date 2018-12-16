@@ -236,9 +236,6 @@ public:
     Device *AddDevice(enum DeviceType type, void *dev_spec);
     static DeviceManager *GetInstance() { return instance; }
 
-#ifdef __aarch64__
-    static void PcieEventHandler(const pciehdev_eventdata_t *evd);
-#endif
     void Update();
     void CreateMnets();
 

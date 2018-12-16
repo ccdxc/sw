@@ -910,11 +910,11 @@ static int ionic_lif_stats_dump_start(struct lif *lif, unsigned int ver)
 
 	pr_debug("stats_dump START ver %d addr 0x%llx\n", ver,
 		 lif->stats_dump_pa);
-
+#if 0
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
 		goto err_out_free;
-
+#endif
 	return 0;
 
 err_out_free:
@@ -936,13 +936,13 @@ static void ionic_lif_stats_dump_stop(struct lif *lif)
 	int err;
 
 	pr_debug("stats_dump STOP\n");
-
+#if 0
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err) {
 		netdev_err(netdev, "stats_dump cmd failed %d\n", err);
 		return;
 	}
-
+#endif
 	dma_free_coherent(dev, sizeof(*lif->stats_dump), lif->stats_dump,
 			  lif->stats_dump_pa);
 }

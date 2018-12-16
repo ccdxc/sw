@@ -198,7 +198,7 @@ private:
     /* Mnet Info */
     struct mnet_dev_create_req_t mnet_req;
     // Hardware Info
-    static struct queue_info qinfo[NUM_QUEUE_TYPES];
+    struct queue_info qinfo[NUM_QUEUE_TYPES];
     // PD Info
     PdClient *pd;
     // HAL Info

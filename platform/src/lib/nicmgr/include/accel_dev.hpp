@@ -227,7 +227,7 @@ private:
     ev::timer                   sync_timer;     // timer to sync to hub
 
     // Hardware Info
-    static struct queue_info    qinfo[NUM_QUEUE_TYPES];
+    struct queue_info    qinfo[NUM_QUEUE_TYPES];
     delphi::objects::AccelPfInfoPtr delphi_pf;
     std::vector<delphi::objects::AccelSeqQueueInfoPtr> delphi_qinfo_vec;
     std::vector<delphi::objects::AccelSeqQueueMetricsPtr> delphi_qmetrics_vec;

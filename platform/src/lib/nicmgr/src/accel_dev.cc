@@ -63,36 +63,6 @@ string string_format( const std::string& format, Args ... args )
 const uint8_t   blank_qstate[STORAGE_SEQ_CB_SIZE] = { 0 };
 const uint8_t   blank_page[ACCEL_DEV_PAGE_SIZE] = { 0 };
 
-struct queue_info Accel_PF::qinfo [NUM_QUEUE_TYPES] = {
-    [STORAGE_SEQ_QTYPE_SQ] = {
-        .type_num = STORAGE_SEQ_QTYPE_SQ,
-        .size = HW_CB_MULTIPLE(STORAGE_SEQ_CB_SIZE_SHFT),
-        .entries = 6,   // modified at runtime
-        .purpose = ::intf::LIF_QUEUE_PURPOSE_STORAGE,
-        .prog = "txdma_stage0.bin",
-        .label = "storage_seq_stage0",
-        .qstate = (const char *)blank_qstate,
-    },
-    [STORAGE_SEQ_QTYPE_UNUSED] = {
-        .type_num = STORAGE_SEQ_QTYPE_UNUSED,
-        .size = HW_CB_MIN_MULTIPLE,
-        .entries = 0,
-        .purpose = ::intf::LIF_QUEUE_PURPOSE_ADMIN,
-        .prog = "txdma_stage0.bin",
-        .label = "adminq_stage0",
-        .qstate = (const char *)blank_qstate,
-    },
-    [STORAGE_SEQ_QTYPE_ADMIN] = {
-        .type_num = STORAGE_SEQ_QTYPE_ADMIN,
-        .size = HW_CB_MULTIPLE(ADMIN_QSTATE_SIZE_SHFT),
-        .entries = 0,
-        .purpose = ::intf::LIF_QUEUE_PURPOSE_ADMIN,
-        .prog = "txdma_stage0.bin",
-        .label = "adminq_stage0",
-        .qstate = (const char *)blank_qstate,
-    },
-};
-
 static types::CryptoKeyType crypto_key_type_tbl[] = {
     [CMD_CRYPTO_KEY_TYPE_AES128] = types::CRYPTO_KEY_TYPE_AES128,
     [CMD_CRYPTO_KEY_TYPE_AES256] = types::CRYPTO_KEY_TYPE_AES256,
@@ -275,8 +245,39 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     static_assert((offsetof(dev_cmd_regs_t, data) % 4) == 0);
 
     // Create LIF
-    qinfo[STORAGE_SEQ_QTYPE_SQ].entries = log_2(spec->seq_queue_count);
-    spec->seq_created_count = 1 << qinfo[STORAGE_SEQ_QTYPE_SQ].entries;
+    memset(qinfo, 0, sizeof(qinfo));
+
+    qinfo[STORAGE_SEQ_QTYPE_SQ] = {
+        .type_num = STORAGE_SEQ_QTYPE_SQ,
+        .size = HW_CB_MULTIPLE(STORAGE_SEQ_CB_SIZE_SHFT),
+        .entries = log_2(spec->seq_queue_count),   // modified at runtime
+        .purpose = ::intf::LIF_QUEUE_PURPOSE_STORAGE,
+        .prog = "txdma_stage0.bin",
+        .label = "storage_seq_stage0",
+        .qstate = (const char *)blank_qstate,
+    };
+
+    qinfo[STORAGE_SEQ_QTYPE_UNUSED] = {
+        .type_num = STORAGE_SEQ_QTYPE_UNUSED,
+        .size = HW_CB_MIN_MULTIPLE,
+        .entries = 0,
+        .purpose = ::intf::LIF_QUEUE_PURPOSE_ADMIN,
+        .prog = "txdma_stage0.bin",
+        .label = "adminq_stage0",
+        .qstate = (const char *)blank_qstate,
+    };
+
+    qinfo[STORAGE_SEQ_QTYPE_ADMIN] = {
+        .type_num = STORAGE_SEQ_QTYPE_ADMIN,
+        .size = HW_CB_MULTIPLE(ADMIN_QSTATE_SIZE_SHFT),
+        .entries = 0,
+        .purpose = ::intf::LIF_QUEUE_PURPOSE_ADMIN,
+        .prog = "txdma_stage0.bin",
+        .label = "adminq_stage0",
+        .qstate = (const char *)blank_qstate,
+    };
+
+    spec->seq_created_count = 1 << log_2(spec->seq_queue_count);
     info.pushed_to_hal = false;
     info.id = spec->lif_id;
     info.hw_lif_id = spec->hw_lif_id;
