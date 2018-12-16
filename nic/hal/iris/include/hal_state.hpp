@@ -11,6 +11,7 @@
 #include "nic/sdk/include/sdk/timestamp.hpp"
 #include "nic/sdk/include/sdk/shmmgr.hpp"
 #include "nic/include/eventmgr.hpp"
+#include "nic/sdk/include/sdk/types.hpp"
 #include "nic/include/bitmap.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/include/hal_cfg.hpp"
@@ -688,6 +689,7 @@ public:
     void set_fte_span(fte_span_t *span) { oper_db_->set_fte_span(span); }
     fte_span_t *fte_span(void) const { return oper_db_->fte_span(); }
 
+    sdk::types::platform_type_t platform_type() { return platform_; }
 private:
     // following come from shared memory or non-linux HBM memory
     hal_cfg_db           *cfg_db_;
@@ -698,6 +700,7 @@ private:
     shmmgr               *mmgr_;
     sdk::lib::catalog    *catalog_;
     hal_obj_meta         **obj_meta_;
+    sdk::types::platform_type_t platform_;
 
 private:
     void cleanup(void);
@@ -740,6 +743,43 @@ static inline if_id_t
 get_app_redir_if_id (void)
 {
     return g_hal_state->app_redir_if_id();
+}
+
+// Platform type check functions
+static inline bool
+is_platform_type_sim(void)
+{
+    return g_hal_state->platform_type() == platform_type_t::PLATFORM_TYPE_SIM;
+}
+
+static inline bool
+is_platform_type_haps(void)
+{
+    return g_hal_state->platform_type() == platform_type_t::PLATFORM_TYPE_HAPS;
+}
+
+static inline bool
+is_platform_type_hw(void)
+{
+    return g_hal_state->platform_type() == platform_type_t::PLATFORM_TYPE_HW;
+}
+
+static inline bool
+is_platform_type_mock(void)
+{
+    return g_hal_state->platform_type() == platform_type_t::PLATFORM_TYPE_MOCK;
+}
+
+static inline bool
+is_platform_type_zebu(void)
+{
+    return g_hal_state->platform_type() == platform_type_t::PLATFORM_TYPE_ZEBU;
+}
+
+static inline bool
+is_platform_type_rtl(void)
+{
+    return g_hal_state->platform_type() == platform_type_t::PLATFORM_TYPE_RTL;
 }
 
 //------------------------------------------------------------------------------

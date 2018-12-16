@@ -136,9 +136,6 @@ copp_pd_program_copp_tbl (pd_copp_t *pd_copp, bool update, bool is_restore)
     uint64_t        rate_tokens = 0;
     uint64_t        burst_tokens = 0;
     uint64_t        rate;
-    hal::hal_cfg_t  *hal_cfg = 
-        (hal::hal_cfg_t *)hal::hal_get_current_thread()->data();
-
 
     copp_tbl = g_hal_state_pd->dm_table(P4TBL_ID_COPP);
     HAL_ASSERT_RETURN((copp_tbl != NULL), HAL_RET_ERR);
@@ -185,7 +182,7 @@ copp_pd_program_copp_tbl (pd_copp_t *pd_copp, bool update, bool is_restore)
 
     // TODO Fixme. Setting entry-valid to 0 until copp is verified and values
     // are determined
-    if (hal_cfg && (hal_cfg->platform != hal::HAL_PLATFORM_HW)) {
+    if (!is_platform_type_hw()) {
         COPP_ACTION(d, entry_valid) = 0;
     }
     if (is_restore) {

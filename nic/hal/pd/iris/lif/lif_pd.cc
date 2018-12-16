@@ -26,11 +26,7 @@ pd_lif_copy_asicpd_params (asicpd_scheduler_lif_params_t *out, pd_lif_t *lif_pd)
     out->lif_id = lif_get_lif_id(lif);
     out->tx_sched_table_offset = lif_pd->tx_sched_table_offset;
     out->tx_sched_num_table_entries = lif_pd->tx_sched_num_table_entries;
-#if 0
-    if ((g_hal_cfg.platform != HAL_PLATFORM_HAPS &&
-        g_hal_cfg.platform != HAL_PLATFORM_HW) ||
-        (lif_pd->hw_lif_id >= SERVICE_LIF_START && lif_pd->hw_lif_id < SERVICE_LIF_END)) {
-#endif
+
     if (lif->qstate_pgm_in_hal) {
         out->total_qcount = lif_get_total_qcount(lif_pd->hw_lif_id);
     } else {

@@ -7,7 +7,6 @@
 #include "nic/hal/pd/asic_pd.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 #include "nic/sdk/include/sdk/pal.hpp"
-#include "nic/sdk/include/sdk/types.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 
 namespace hal {
@@ -15,7 +14,6 @@ namespace pd {
 
 using sdk::lib::pal_ret_t;
 using sdk::lib::PAL_RET_OK;
-using sdk::types::platform_type_t;
 
 // asic model's cfg port socket descriptor
 static bool g_asic_rw_ready_;
@@ -542,27 +540,6 @@ asic_rw_loop (void *ctxt)
     }
 }
 
-platform_type_t
-hal_platform_to_sdk_platform_type (hal_platform_t platform)
-{
-    switch(platform) {
-    case HAL_PLATFORM_SIM:
-    case HAL_PLATFORM_RTL:
-        return sdk::types::platform_type_t::PLATFORM_TYPE_SIM;
-
-    case HAL_PLATFORM_HW:
-    case HAL_PLATFORM_HAPS:
-        return sdk::types::platform_type_t::PLATFORM_TYPE_HW;
-
-    case HAL_PLATFORM_MOCK:
-        return sdk::types::platform_type_t::PLATFORM_TYPE_MOCK;
-
-    default:
-        break;
-    }
-
-    return sdk::types::platform_type_t::PLATFORM_TYPE_HW;
-}
 
 //------------------------------------------------------------------------------
 // attempt to connect to ASIC model in sim mode
@@ -577,8 +554,7 @@ asic_rw_init (hal_cfg_t *hal_cfg)
     pd::pd_func_args_t     pd_func_args = {0};
 
     // initialize PAL
-    palrv = sdk::lib::pal_init(
-        hal::pd::hal_platform_to_sdk_platform_type(hal_cfg->platform));
+    palrv = sdk::lib::pal_init(hal_cfg->platform);
     HAL_ASSERT_TRACE_RETURN_VOID(IS_PAL_API_SUCCESS(palrv),
                                  "PAL init failure, err : {}", palrv);
 
@@ -589,8 +565,7 @@ asic_rw_init (hal_cfg_t *hal_cfg)
     asic_cfg.admin_cos = 1;
     asic_cfg.cfg_path = hal_cfg->cfg_path;
     asic_cfg.catalog = hal_cfg->catalog;
-    asic_cfg.platform =
-        hal::pd::hal_platform_to_sdk_platform_type(hal_cfg->platform);
+    asic_cfg.platform = hal_cfg->platform;
     args.cfg = &asic_cfg;
     pd_func_args.pd_asic_init = &args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_ASIC_INIT, &pd_func_args);

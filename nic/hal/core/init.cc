@@ -409,15 +409,15 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
     try {
         std::string mode = pt.get<std::string>("mode");
         if (mode == "sim") {
-            hal_cfg->platform = HAL_PLATFORM_SIM;
+            hal_cfg->platform = platform_type_t::PLATFORM_TYPE_SIM;
         } else if (mode == "hw") {
-            hal_cfg->platform = HAL_PLATFORM_HW;
+            hal_cfg->platform = platform_type_t::PLATFORM_TYPE_HW;
         } else if (mode == "rtl") {
-            hal_cfg->platform = HAL_PLATFORM_RTL;
+            hal_cfg->platform = platform_type_t::PLATFORM_TYPE_RTL;
         } else if (mode == "haps") {
-            hal_cfg->platform = HAL_PLATFORM_HAPS;
+            hal_cfg->platform = platform_type_t::PLATFORM_TYPE_HAPS;
         } else if (mode == "mock") {
-            hal_cfg->platform = HAL_PLATFORM_MOCK;
+            hal_cfg->platform = platform_type_t::PLATFORM_TYPE_MOCK;
         }
 
         sparam = pt.get<std::string>("asic.name");
@@ -572,30 +572,6 @@ hal_logger_init (hal_cfg_t *hal_cfg)
     return HAL_RET_OK;
 }
 
-platform_type_t
-hal_platform_to_sdk_platform_type (hal_platform_t platform)
-{
-    switch(platform) {
-    case HAL_PLATFORM_SIM:
-        return sdk::types::platform_type_t::PLATFORM_TYPE_SIM;
-    case HAL_PLATFORM_RTL:
-        return sdk::types::platform_type_t::PLATFORM_TYPE_RTL;
-
-    case HAL_PLATFORM_HW:
-        return sdk::types::platform_type_t::PLATFORM_TYPE_HW;
-    case HAL_PLATFORM_HAPS:
-        return sdk::types::platform_type_t::PLATFORM_TYPE_HAPS;
-
-    case HAL_PLATFORM_MOCK:
-        return sdk::types::platform_type_t::PLATFORM_TYPE_MOCK;
-
-    default:
-        break;
-    }
-
-    return sdk::types::platform_type_t::PLATFORM_TYPE_HW;
-}
-
 //------------------------------------------------------------------------------
 // initialize port control operations
 //------------------------------------------------------------------------------
@@ -610,15 +586,14 @@ hal_linkmgr_init (hal_cfg_t *hal_cfg)
 
 #if !defined(APOLLO) && !defined(HELLO)
     // Enable linkmgr only for sim/mock
-    if (hal_cfg->platform == HAL_PLATFORM_SIM ||
-        hal_cfg->platform == HAL_PLATFORM_MOCK ||
-        hal_cfg->platform == HAL_PLATFORM_HW) {
+    if (hal_cfg->platform == platform_type_t::PLATFORM_TYPE_SIM ||
+        hal_cfg->platform == platform_type_t::PLATFORM_TYPE_MOCK ||
+        hal_cfg->platform == platform_type_t::PLATFORM_TYPE_HW) {
 
         sdk::linkmgr::linkmgr_cfg_t sdk_cfg;
         memset(&sdk_cfg, 0, sizeof(sdk_cfg));
 
-        sdk_cfg.platform_type  =
-                hal_platform_to_sdk_platform_type(hal_cfg->platform);
+        sdk_cfg.platform_type  = hal_cfg->platform;
         sdk_cfg.cfg_path       = hal_cfg->cfg_path.c_str();
         sdk_cfg.catalog        = hal_cfg->catalog;
         sdk_cfg.server_builder = hal_cfg->server_builder;

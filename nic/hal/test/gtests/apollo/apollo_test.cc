@@ -734,15 +734,15 @@ TEST_F(apollo_test, test1) {
 
     cfg.cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
     const char *hal_conf_file = "conf/apollo/hal.json";
-    hal::hal_platform_t platform = hal::HAL_PLATFORM_SIM;
+    platform_type_t platform = platform_type_t::PLATFORM_TYPE_SIM;
     catalog = sdk::lib::catalog::factory(cfg.cfg_path + "/catalog.json");
 
     if (getenv("HAL_PLATFORM_RTL")) {
         hal_conf_file = "conf/apollo/hal_rtl.json";
-        platform = hal::HAL_PLATFORM_RTL;
+        platform = platform_type_t::PLATFORM_TYPE_RTL;
     } else if (getenv("HAL_PLATFORM_HW")) {
         hal_conf_file = "conf/apollo/hal_hw.json";
-        platform = hal::HAL_PLATFORM_HW;
+        platform = platform_type_t::PLATFORM_TYPE_HW;
         catalog = sdk::lib::catalog::factory(cfg.cfg_path + "/catalog_hw.json");
     }
     ASSERT_TRUE(catalog != NULL);
@@ -760,7 +760,7 @@ TEST_F(apollo_test, test1) {
         cfg.default_config_dir = "8x25_hbm";
     }
 
-    cfg.platform = hal::hal_platform_to_sdk_platform_type(platform);
+    cfg.platform = platform;
     cfg.admin_cos = 1;
     cfg.pgm_name = std::string("apollo");
 

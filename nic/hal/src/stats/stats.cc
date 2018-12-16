@@ -41,8 +41,8 @@ hal_stats_init (hal_cfg_t *hal_cfg)
 {
 
     // no stats functionality in sim and rtl mode
-    if (hal_cfg->platform == hal::HAL_PLATFORM_SIM ||
-        hal_cfg->platform == hal::HAL_PLATFORM_RTL) {
+    if (hal_cfg->platform == platform_type_t::PLATFORM_TYPE_SIM ||
+        hal_cfg->platform == platform_type_t::PLATFORM_TYPE_RTL) {
         return HAL_RET_OK;
     }
 

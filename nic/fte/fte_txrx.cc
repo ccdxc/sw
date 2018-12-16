@@ -6,6 +6,7 @@
 #include <sstream>
 #include <iostream>
 #include <iomanip>
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/include/cpupkt_api.hpp"
 #include "nic/include/pd_api.hpp"
@@ -300,16 +301,16 @@ void inst_t::start(sdk::lib::thread *curr_thread)
 
     ctx_mem_init();
     while (true) {
-        if (hal_cfg->platform == hal::HAL_PLATFORM_HW) {
+        if (hal::is_platform_type_hw()) {
             usleep(1000); //asicrw crash that was causing this should 
                            // been resolved by other changes to asicrw
-        } else if (hal_cfg->platform == hal::HAL_PLATFORM_SIM) {
+        } else if (hal::is_platform_type_sim()) {
             usleep(1000000/30);
-        } else if (hal_cfg->platform == hal::HAL_PLATFORM_RTL) {
+        } else if (hal::is_platform_type_rtl()) {
             usleep(1000000 * 3);
-        } else if (hal_cfg->platform == hal::HAL_PLATFORM_HAPS) {
+        } else if (hal::is_platform_type_haps()) {
             usleep(1000000/10);
-        } else { /* HAL_PLATFORM_MOCK */
+        } else { /* PLATFORM_MOCK */
             usleep(1000);
         }
         process_arq();
