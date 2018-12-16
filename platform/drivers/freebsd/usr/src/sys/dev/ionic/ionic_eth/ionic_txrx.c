@@ -868,7 +868,7 @@ static int ionic_tx_setup(struct txque *txq, struct mbuf *m)
 	if (!ionic_tx_avail(txq, nsegs)) {
 		stats->no_descs++;
 		bus_dmamap_unload(txq->buf_tag, txbuf->dma_map);
-		IONIC_QUE_ERROR(txq, "BUG! Tx ring full, head: %u tail: %u nsegs :%d\n",
+		IONIC_TX_TRACE(txq, "No space available, head: %u tail: %u nsegs :%d\n",
 			txq->head_index, txq->tail_index, nsegs);
 		return (ENOBUFS);
 	}
@@ -1011,7 +1011,7 @@ static int ionic_tx_tso_setup(struct txque *txq, struct mbuf *m)
 
 	if (!ionic_tx_avail(txq, nsegs)) {
 		stats->no_descs++;
-		IONIC_QUE_ERROR(txq, "BUG! Tx ring full, head: %u tail: %u nsegs :%d\n",
+		IONIC_TX_TRACE(txq, "No space available, head: %u tail: %u nsegs :%d\n",
 			txq->head_index, txq->tail_index, nsegs);
 		return (ENOBUFS);
 	}
@@ -1517,6 +1517,9 @@ ionic_setup_hw_stats(struct lif *lif, struct sysctl_ctx_list *ctx,
 	struct sysctl_oid_list *child)
 {
 	struct stats_dump *stat = lif->stats_dump;
+
+	if (stat == NULL)
+		return;
 
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_ucast__bytes", CTLFLAG_RD,
        &stat->rx_ucast_bytes, "");

@@ -1501,7 +1501,7 @@ void ionic_lifs_free(struct ionic *ionic)
 	}
 }
 
-#if 0
+#ifdef IONIC_ENABLE_HW_STATS
 static int ionic_lif_stats_dump_start(struct lif *lif, unsigned int ver)
 {
 	struct net_device *netdev = lif->netdev;
@@ -1683,8 +1683,9 @@ static void ionic_lif_rxqs_deinit(struct lif *lif)
 
 static void ionic_lif_deinit(struct lif *lif)
 {
-
-//	ionic_lif_stats_dump_stop(lif);
+#ifdef IONIC_ENABLE_HW_STATS
+	ionic_lif_stats_dump_stop(lif);
+#endif
 	ionic_rx_filters_deinit(lif);
 	ionic_lif_rss_teardown(lif);
 
@@ -2263,7 +2264,7 @@ static int ionic_lif_init(struct lif *lif)
 		goto err_out_rxqs_deinit;
 	}
 
-#if 0
+#ifdef IONIC_ENABLE_HW_STATS
 	err = ionic_lif_stats_dump_start(lif, STATS_DUMP_VERSION_1);
 	if (err)
 		goto err_out_rss_teardown;
@@ -2277,8 +2278,10 @@ static int ionic_lif_init(struct lif *lif)
 
 	return 0;
 
-//err_out_rss_teardown:
-//	ionic_lif_rss_teardown(lif);
+#ifdef IONIC_ENABLE_HW_STATS
+err_out_rss_teardown:
+	ionic_lif_rss_teardown(lif);
+#endif
 err_out_rxqs_deinit:
 	ionic_lif_rxqs_deinit(lif);
 err_out_txqs_deinit:
@@ -2496,9 +2499,9 @@ int ionic_lifs_size(struct ionic *ionic)
 	unsigned int nintrs, dev_nintrs = ident->dev.nintrs;
 	int err;
 
-	IONIC_DEV_INFO(ionic->dev, "Lifs: %u, Intrs: %u, NotifyQs: %u, "
-		       "TxQs: %u,RxQs: %u EQs: %u, "
-		       "ucasts: %u,mcasts: %u,Intr coal: %u,div:%u\n",
+	dev_info(ionic->dev, "Lifs: %u,Intrs: %u,NotifyQs: %u, "
+		       "TxQs: %u,RxQs: %u,EQs: %u,"
+		       "ucasts: %u,mcasts: %u,intr_coal: %u,div: %u\n",
 		ident->dev.nlifs, dev_nintrs,
 		ident->dev.notify_qtype.qid_count,
 		ident->dev.tx_qtype.qid_count,
@@ -2557,7 +2560,8 @@ try_again:
 	ionic->nrxqs_per_lif = nqs;
 	ionic->nintrs = nintrs;
 
-	IONIC_DEV_INFO(ionic->dev, "dev_nintrs %d Tx/Rx Qs: %d\n", dev_nintrs, nqs);
+	dev_info(ionic->dev, "intrs: %d/%d, Tx/Rx Qs: %d, NQs: %d, EQs: %d\n",
+				dev_nintrs, nintrs, nqs, nnqs, neqs);
 	ionic_max_queues = nqs;
 
 	return 0;
