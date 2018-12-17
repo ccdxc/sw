@@ -121,6 +121,31 @@ struct adminq {
 	struct admin_comp *comp_ring;
 };
 
+struct notifyq {
+	char name[QUEUE_NAME_MAX_SZ];
+
+	struct lif *lif;
+	unsigned int num_descs;
+	unsigned int index;					/* Queue number. */
+	unsigned int pid;
+	unsigned int qid;
+	unsigned int qtype;
+
+	struct ionic_dma_info cmd_dma; 		/* DMA ring for command and completion. */
+	dma_addr_t cmd_ring_pa;
+
+	struct mtx mtx;
+	int comp_index;						/* Index for completion descriptors. */
+
+	struct intr intr;
+	/*
+	 * H/w command and completion descriptor rings.
+	 * Points to area allocated by DMA.
+	 */
+	struct notifyq_cmd *cmd_ring;
+	union notifyq_comp *comp_ring;
+};
+
 struct rxque {
 	char name[QUEUE_NAME_MAX_SZ];
 
@@ -222,9 +247,11 @@ struct lif {
 	struct workqueue_struct *adminq_wq;
 	struct adminq *adminqcq;
 
+	struct notifyq *notifyq;
 	struct txque **txqs;
 	struct rxque **rxqs;
 
+	unsigned int nnqs;
 	unsigned int neqs;
 	unsigned int ntxqs;
 	unsigned int nrxqs;
@@ -271,6 +298,12 @@ struct lif {
 	int num_vlans;
 	eventhandler_tag vlan_attach;
 	eventhandler_tag vlan_detach;
+
+	u64 last_eid;
+	u32 notifyblock_sz;
+	dma_addr_t notifyblock_pa;
+	struct ionic_dma_info notify_dma;
+	struct notify_block *notifyblock;
 };
 
 #ifdef OVERRIDE_KASSERT
@@ -296,7 +329,13 @@ struct lif {
 #define IONIC_ADMIN_LOCK_DESTROY(x)	mtx_destroy(&(x)->mtx)
 #define IONIC_ADMIN_LOCK(x)			mtx_lock(&(x)->mtx);
 #define IONIC_ADMIN_UNLOCK(x)		mtx_unlock(&(x)->mtx);
-#define IONIC_CORE_LOCK_OWNED(x) 	mtx_owned(&(x)->mtx)
+#define IONIC_ADMIN_LOCK_OWNED(x) 	mtx_owned(&(x)->mtx)
+
+#define IONIC_NOTIFYQ_LOCK_INIT(x) 		mtx_init(&(x)->mtx, (x)->name, NULL, MTX_DEF)
+#define IONIC_NOTIFYQ_LOCK_DESTROY(x)	mtx_destroy(&(x)->mtx)
+#define IONIC_NOTIFYQ_LOCK(x)			mtx_lock(&(x)->mtx);
+#define IONIC_NOTIFYQ_UNLOCK(x)			mtx_unlock(&(x)->mtx);
+#define IONIC_NOTIFYQ_LOCK_OWNED(x) 	mtx_owned(&(x)->mtx)
 
 #define IONIC_TX_LOCK_INIT(x)		mtx_init(&(x)->tx_mtx, (x)->name, NULL, MTX_DEF)
 #define IONIC_TX_LOCK_DESTROY(x) 	mtx_destroy(&(x)->tx_mtx)

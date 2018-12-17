@@ -225,6 +225,15 @@ static inline void ionic_struct_size_checks(void)
 	BUILD_BUG_ON(sizeof(q_enable_comp) != 16);
 	BUILD_BUG_ON(sizeof(struct q_disable_cmd) != 64);
 	BUILD_BUG_ON(sizeof(q_disable_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct notifyq_init_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct notifyq_init_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct notifyq_event) != 64);
+	BUILD_BUG_ON(sizeof(struct link_change_event) != 64);
+	BUILD_BUG_ON(sizeof(struct reset_event) != 64);
+	BUILD_BUG_ON(sizeof(struct heartbeat_event) != 64);
+	BUILD_BUG_ON(sizeof(struct log_event) != 64);
+	BUILD_BUG_ON(sizeof(struct notifyq_cmd) != 4);
+	BUILD_BUG_ON(sizeof(union notifyq_comp) != 64);
 	BUILD_BUG_ON(sizeof(struct station_mac_addr_get_cmd) != 64);
 	BUILD_BUG_ON(sizeof(struct station_mac_addr_get_comp) != 16);
 	BUILD_BUG_ON(sizeof(struct rx_mode_set_cmd) != 64);

@@ -63,8 +63,8 @@ SYSCTL_INT(_hw_ionic, OID_AUTO, max_queues, CTLFLAG_RDTUN,
 
 /* XXX: 40 seconds for now. */
 int ionic_devcmd_timeout = 40;
-TUNABLE_INT("hw.ionicdevcmd_timeout", &ionic_devcmd_timeout);
-SYSCTL_INT(_hw_ionic, OID_AUTO, devcmd_timeout, CTLFLAG_RDTUN,
+TUNABLE_INT("hw.ionic.devcmd_timeout", &ionic_devcmd_timeout);
+SYSCTL_INT(_hw_ionic, OID_AUTO, devcmd_timeout, CTLFLAG_RWTUN,
     &ionic_devcmd_timeout, 0, "Timeout in seconds for devcmd");
 
 int ionic_enable_msix = 1;
@@ -76,6 +76,11 @@ int adminq_descs = 16;
 TUNABLE_INT("hw.ionic.adminq_descs", &adminq_descs);
 SYSCTL_INT(_hw_ionic, OID_AUTO, adminq_descs, CTLFLAG_RDTUN,
     &adminq_descs, 0, "Number of Admin descriptors");
+
+int ionic_notifyq_descs = 64;
+TUNABLE_INT("hw.ionic.notifyq_descs", &ionic_notifyq_descs);
+SYSCTL_INT(_hw_ionic, OID_AUTO, notifyq_descs, CTLFLAG_RDTUN,
+    &ionic_notifyq_descs, 0, "Number of notifyq descriptors");
 
 int ntxq_descs = 16384;
 TUNABLE_INT("hw.ionic.tx_descs", &ntxq_descs);
@@ -1649,6 +1654,7 @@ ionic_setup_device_stats(struct lif *lif)
 	struct sysctl_oid *queue_node;
 	struct sysctl_oid_list *queue_list;
 	struct adminq* adminq = lif->adminqcq;
+	struct notifyq* notifyq = lif->notifyq;
 	int i;
 
 #define QUEUE_NAME_LEN 32
@@ -1677,6 +1683,18 @@ ionic_setup_device_stats(struct lif *lif)
         &adminq->head_index, 0, "Head index");
 	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "tail", CTLFLAG_RD,
         &adminq->tail_index, 0, "Tail index");
+    SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "comp_index", CTLFLAG_RD,
+        &adminq->comp_index, 0, "Completion index");
+
+	snprintf(namebuf, QUEUE_NAME_LEN, "nq");
+	queue_node = SYSCTL_ADD_NODE(ctx, child, OID_AUTO, namebuf,
+				CTLFLAG_RD, NULL, "Queue Name");
+	queue_list = SYSCTL_CHILDREN(queue_node);
+
+	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "num_descs", CTLFLAG_RD,
+       &notifyq->num_descs, 0, "Number of descriptors");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "last_eid", CTLFLAG_RD,
+        &lif->last_eid, "Last event Id");
     SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "comp_index", CTLFLAG_RD,
         &adminq->comp_index, 0, "Completion index");
 

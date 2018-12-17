@@ -129,6 +129,7 @@ struct ionic {
 	dma_addr_t ident_pa;
 	struct list_head lifs;
 	bool is_mgmt_nic;
+	unsigned int nnqs_per_lif;
 	unsigned int neqs_per_lif;
 	unsigned int ntxqs_per_lif;
 	unsigned int nrxqs_per_lif;

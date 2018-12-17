@@ -54,5 +54,6 @@ extern int ionic_max_queues;
 extern int ntxq_descs;
 extern int nrxq_descs;
 extern int adminq_descs;
+extern int ionic_notifyq_descs;
 
 #endif /* _IONIC_TXRX_H_ */
