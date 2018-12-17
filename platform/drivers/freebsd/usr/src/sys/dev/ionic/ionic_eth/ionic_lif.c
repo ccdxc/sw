@@ -353,7 +353,7 @@ static int _ionic_lif_addr_del(struct lif *lif, const u8 *addr)
 	f = ionic_rx_filter_by_addr(lif, addr);
 	if (!f) {
 		IONIC_RX_FILTER_UNLOCK(&lif->rx_filters);
-        IONIC_NETDEV_ERROR(lif->netdev, "Failed to delete filter. Not created\n");
+		IONIC_NETDEV_ERROR(lif->netdev, "Failed to delete filter. Not created\n");
 		return ENOENT;
 	}
 
@@ -376,8 +376,8 @@ static void ionic_lif_addr_work(struct work_struct *work)
 	struct lif_addr_work *w  = container_of(work, struct lif_addr_work,
 						work);
 
-	IONIC_NETDEV_ADDR_INFO(w->lif->netdev, w->addr, "Work start: rx_filter %s ADDR Work: 0x%lx",
-						   w->add ? "add" : "del", (long)w);
+	IONIC_NETDEV_ADDR_INFO(w->lif->netdev, w->addr, "Work start: rx_filter %s ADDR Work: %p",
+						   w->add ? "add" : "del", w);
 	if (w->add)
 		_ionic_lif_addr_add(w->lif, w->addr);
 	else
