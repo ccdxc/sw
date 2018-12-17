@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation, Simp
 import { AbstractControl, FormArray, FormControl, FormGroup } from '@angular/forms';
 import { SelectItem } from 'primeng/primeng';
 import { RepeaterData, RepeaterItem, ValueType } from './index';
+import { Animations } from '../../../animations';
 
 
 /**
@@ -36,6 +37,7 @@ import { RepeaterData, RepeaterItem, ValueType } from './index';
   selector: 'app-repeater',
   templateUrl: './repeater.component.html',
   styleUrls: ['./repeater.component.css'],
+  animations: [Animations],
   encapsulation: ViewEncapsulation.None,
 })
 export class RepeaterComponent implements OnInit, OnChanges {

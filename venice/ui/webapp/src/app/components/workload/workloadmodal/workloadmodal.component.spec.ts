@@ -24,6 +24,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
+import { MessageService } from 'primeng/primeng';
 
 @NgModule({
   declarations: [WorkloadModalComponent, LabelselectorComponent],
@@ -52,7 +53,8 @@ describe('WorkloadModalComponent', () => {
         LogService,
         LogPublishersService,
         MatIconRegistry,
-        MatDialog
+        MatDialog,
+        MessageService
       ]
     })
       .compileComponents();

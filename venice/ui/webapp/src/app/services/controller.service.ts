@@ -18,6 +18,7 @@ import { Subject, Subscription } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import { LogService } from '@app/services/logging/log.service';
 import { AUTH_KEY, AUTH_BODY } from '@app/core/auth/auth.reducer';
+import { MessageService } from 'primeng/primeng';
 
 interface Message {
   type: Eventtypes;
@@ -81,7 +82,8 @@ export class ControllerService {
     private loader: NgModuleFactoryLoader,
     protected domSanitizer: DomSanitizer,
     protected matIconRegistry: MatIconRegistry,
-    protected logger: LogService
+    protected logger: LogService,
+    protected messageService: MessageService,
   ) {
     this._subscribeToEvents();
     this._registerSVGIcons();
@@ -382,5 +384,29 @@ export class ControllerService {
 
   clear(): void {
     this.logger.clear();
+  }
+
+  // Toaster methods
+  invokeSuccessToaster(summary, detail) {
+    this.messageService.add({
+      severity: 'success',
+      summary: summary,
+      detail: detail
+    });
+  }
+
+  invokeRESTErrorToaster(summary, error) {
+    const errorMsg = error.body != null ? error.body.message : '';
+    this.messageService.add({
+      severity: 'error',
+      summary: summary,
+      detail: errorMsg
+    });
+  }
+
+  restErrorHandler(summary) {
+    return (error) => {
+      this.invokeRESTErrorToaster(summary, error);
+    };
   }
 }

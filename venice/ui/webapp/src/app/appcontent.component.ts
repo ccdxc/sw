@@ -2,7 +2,7 @@ import { OverlayContainer } from '@angular/cdk/overlay';
 import { Component, HostBinding, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { MatDialog } from '@angular/material';
 import { MatSidenav, MatSidenavContainer } from '@angular/material/sidenav';
-import { logout } from '@app/core';
+import { logout, AUTH_BODY } from '@app/core';
 import { AlerttableService } from '@app/services/alerttable.service';
 import { LogService } from '@app/services/logging/log.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
@@ -42,7 +42,6 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
 
   protected isSideNavExpanded = true;
 
-
   // alerts
   alerts = [];
   alertNumbers = 0;
@@ -62,6 +61,8 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
     }
 
   ];
+
+  userName: string = '';
 
   @HostBinding('class') componentCssClass;
   private unsubscribeStore$: Subject<void> = new Subject<void>();
@@ -99,6 +100,10 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
 
     this._subscribeToEvents();
     this._bindtoStore();
+    const authBody = JSON.parse(sessionStorage.getItem(AUTH_BODY));
+    if (authBody != null && authBody.meta != null && authBody.meta.name != null) {
+      this.userName = authBody.meta.name;
+    }
   }
 
 

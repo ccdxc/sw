@@ -6,6 +6,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { MatIconRegistry } from '@angular/material';
+import { MessageService } from 'primeng/primeng';
 
 describe('MonitoringGroupComponent', () => {
   let component: MonitoringGroupComponent;
@@ -21,7 +22,8 @@ describe('MonitoringGroupComponent', () => {
         ControllerService,
         LogService,
         LogPublishersService,
-        MatIconRegistry
+        MatIconRegistry,
+        MessageService
       ]
     })
       .compileComponents();

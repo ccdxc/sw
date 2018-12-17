@@ -1,0 +1,69 @@
+@import 'src/global-mixins';
+
+$horizontal-gutter: 10px;
+$vertical-gutter: 5px;
+
+.syslog-syslog,
+.syslog-font  {
+  @include primary-font();
+}
+
+.syslog-format {
+    margin-left: 5px;
+    margin-top: 9px;
+    @include global-mat-radio(12px);
+}
+
+.syslog-credential-radio {
+    @include global-mat-radio(12px);
+}
+
+.syslog-override {
+    width: 155px;
+}
+
+.syslog-name,
+.syslog-description {
+    margin: $vertical-gutter $horizontal-gutter;
+    height: 30px !important;
+}
+
+.syslog-input {
+    width: 155px;
+}
+
+.syslog-value {
+    margin: $vertical-gutter $horizontal-gutter;
+}
+
+.syslog-testconnectionbutton {
+  margin: $vertical-gutter $horizontal-gutter;
+  line-height: 30px;
+  display: grid;
+}
+
+.syslog-fieldtitle {
+    margin: $vertical-gutter $horizontal-gutter;
+}
+
+.syslog-and {
+    white-space: nowrap;
+    margin-top: 2*$vertical-gutter;
+    color: #6ba0e5;
+    display: inline-block;
+    > span:hover {
+        text-decoration: underline;
+        cursor: pointer;
+    }
+    > mat-icon:hover {
+        cursor: pointer;
+    }
+}
+
+.syslog-group {
+    margin-top: 2*$vertical-gutter;
+}
+
+.syslog-divider {
+  border-bottom: 1px solid #dddddd;
+}

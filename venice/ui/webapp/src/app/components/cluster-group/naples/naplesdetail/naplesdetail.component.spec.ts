@@ -141,7 +141,8 @@ describe('NaplesdetailComponent', () => {
         {
           provide: ActivatedRoute,
           useClass: MockActivatedRoute
-        }
+        },
+        MessageService
       ]
     })
       .compileComponents();

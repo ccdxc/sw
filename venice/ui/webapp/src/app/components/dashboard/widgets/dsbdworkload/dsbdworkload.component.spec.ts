@@ -13,6 +13,7 @@ import { DsbdworkloadComponent } from './dsbdworkload.component';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
+import { MessageService } from 'primeng/primeng';
 
 @Component({
   template: ''
@@ -39,7 +40,8 @@ describe('DsbdworkloadComponent', () => {
         ControllerService,
         LogService,
         LogPublishersService,
-        WorkloadService
+        WorkloadService,
+        MessageService
       ]
     })
       .compileComponents();

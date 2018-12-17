@@ -1,7 +1,9 @@
 <div style="height:100%">
   <!-- Since we are resizing lazy rendered tables manually, it needs to be called
         when tabs change so it knows to resize itself -->
-  <mat-tab-group [disableRipple]="true" (selectedIndexChange)="lazyRenderWrapper?.resizeTable()" fxFlex>
+  <mat-tab-group fxFlex [disableRipple]="true" 
+                  (selectedIndexChange)="selectedIndexChangeEvent($event)"
+                  >
     <mat-tab label="ALERTS">
       <ng-container *ngTemplateOutlet="AlertsTableTemplate"></ng-container>
     </mat-tab>

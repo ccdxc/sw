@@ -16,6 +16,15 @@ const routes: Routes = [
         loadChildren: '@app/components/monitoring-group/alertsevents/alertpolicies/alertpolicies.module#AlertPoliciesModule'
       }
     ]
+  },
+  {
+    path: 'eventpolicy',
+    children: [
+      {
+        path: '',
+        loadChildren: '@app/components/monitoring-group/alertsevents/eventpolicy/eventpolicy.module#EventPolicyModule'
+      }
+    ]
   }
 ];
 

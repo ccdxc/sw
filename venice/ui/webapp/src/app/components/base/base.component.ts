@@ -1,12 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { ControllerService } from '../../services/controller.service';
-import { Eventtypes } from '../../enum/eventtypes.enum';
-import { Utility } from '../../common/Utility';
-import { CommonComponent } from '../../common.component';
-import { SortEvent, MessageService } from 'primeng/components/common/api';
-import { FormsModule, FormGroup, FormArray, Validators, FormGroupDirective } from '@angular/forms';
-import { environment } from '@env/environment';
+import { FormArray, FormGroup } from '@angular/forms';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { MessageService, SortEvent } from 'primeng/components/common/api';
+import { CommonComponent } from '../../common.component';
+import { ControllerService } from '../../services/controller.service';
 
 // declare var google: any;
 
@@ -40,26 +37,15 @@ export class BaseComponent extends CommonComponent implements OnInit {
   }
 
   invokeSuccessToaster(summary, detail) {
-    this.messageService.add({
-      severity: 'success',
-      summary: summary,
-      detail: detail
-    });
+    this._controllerService.invokeSuccessToaster(summary, detail);
   }
 
   invokeRESTErrorToaster(summary, error) {
-    const errorMsg = error.body != null ? error.body.message : '';
-    this.messageService.add({
-      severity: 'error',
-      summary: summary,
-      detail: errorMsg
-    });
+    this._controllerService.invokeRESTErrorToaster(summary, error);
   }
 
   restErrorHandler(summary) {
-    return (error) => {
-      this.invokeRESTErrorToaster(summary, error);
-    };
+    return this._controllerService.restErrorHandler(summary);
   }
 
   routeToHomepage() {

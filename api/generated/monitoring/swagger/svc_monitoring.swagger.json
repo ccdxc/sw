@@ -14107,7 +14107,7 @@
             "LOG_LOCAL6",
             "LOG_LOCAL7"
           ],
-          "default": "SyslogFacility_LOG_USER",
+          "default": "LOG_USER",
           "title": "override default facility with this in exported logs"
         },
         "prefix": {

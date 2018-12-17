@@ -14,6 +14,8 @@ import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { PrimengModule } from '@app/lib/primeng.module';
 import { WidgetsModule } from 'web-app-framework';
 import { MessageService } from 'primeng/primeng';
+import { SharedModule } from '@app/components/shared/shared.module';
+import { MonitoringGroupModule } from '@app/components/monitoring-group/monitoring-group.module';
 
 describe('NewdestinationComponent', () => {
   let component: NewdestinationComponent;
@@ -30,7 +32,9 @@ describe('NewdestinationComponent', () => {
         PrimengModule,
         WidgetsModule,
         MaterialdesignModule,
-        RouterTestingModule
+        RouterTestingModule,
+        SharedModule,
+        MonitoringGroupModule
       ],
       providers: [
         ControllerService,

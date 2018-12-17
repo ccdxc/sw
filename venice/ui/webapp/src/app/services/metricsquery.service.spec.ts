@@ -7,6 +7,7 @@ import { LogPublishersService } from './logging/log-publishers.service';
 import { MatIconRegistry } from '@angular/material';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
+import { MessageService } from 'primeng/primeng';
 
 describe('MetricsqueryService', () => {
   beforeEach(() => {
@@ -16,7 +17,8 @@ describe('MetricsqueryService', () => {
         ControllerService,
         LogService,
         LogPublishersService,
-        MatIconRegistry
+        MatIconRegistry,
+        MessageService
       ],
       imports: [
         HttpClientTestingModule,

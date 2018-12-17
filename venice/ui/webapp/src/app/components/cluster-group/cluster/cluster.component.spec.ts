@@ -68,7 +68,8 @@ describe('ClusterComponent', () => {
         SearchService,
         MonitoringService,
         MessageService,
-        MetricsqueryService
+        MetricsqueryService,
+        MessageService
       ]
     })
       .compileComponents();

@@ -4,11 +4,14 @@ $horizontal-gutter: 10px;
 $vertical-gutter: 5px;
 
 .newdestination-container {
-    border-bottom: 6px solid #6ba0e5;
     background: white;
     &:hover {
         background: white;
     }
+}
+
+.newdestination-border {
+    border-bottom: 6px solid #6ba0e5;
 }
 
 .newdestination-content {
@@ -68,9 +71,10 @@ $vertical-gutter: 5px;
 
 .newdestination-save, 
 .newdestination-cancel {
+    display: inline-block;
     padding: 4px 10px;
     line-height: 25px;
-    margin: $vertical-gutter $horizontal-gutter;
+    margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
 }
 
 .newdestination-buttoncontainer {
@@ -87,6 +91,10 @@ $vertical-gutter: 5px;
 .newdestination-text {
     margin-top: 2*$vertical-gutter;
     height: 30px;
+}
+
+.newdestination-divider {
+    border-bottom: 1px solid #dddddd;
 }
 
 .newdestination-snmp {

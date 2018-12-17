@@ -189,7 +189,7 @@ func (m *SyslogExportConfig) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.FacilityOverride = "SyslogFacility_LOG_USER"
+		m.FacilityOverride = "LOG_USER"
 	}
 	return ret
 }

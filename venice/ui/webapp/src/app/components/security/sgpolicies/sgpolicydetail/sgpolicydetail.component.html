@@ -123,7 +123,7 @@
             </td>
             <td> {{rowData.rule.action}}</td>
             <td> 
-              {{  rowData.rule['apps'].join(', ') }}
+              {{ formatApp(rowData.rule) }}
             </td>
           </tr>
         </ng-template>

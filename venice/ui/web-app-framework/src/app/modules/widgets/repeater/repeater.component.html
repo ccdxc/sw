@@ -1,6 +1,6 @@
-<div class="repeater">
-  <ng-container *ngFor="let repeater of repeaterList; let first = first; let last = last;" [formGroup]="repeater.formGroup">
-    <div fxFlex="row" fxLayout="start center" class="repeater-group" >
+<div class="repeater" fxLayout="column">
+  <div fxFlex="nogrow" fxLayout="column" [@fastSlideInOut] *ngFor="let repeater of repeaterList; let first = first; let last = last;" [formGroup]="repeater.formGroup">
+    <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start center" class="repeater-group" >
       <!-- Key -->
       <div fxFlex="nogrow" class="repeater-selector repeater-key">
           <p-dropdown [styleClass]="styleClass" *ngIf="!isToUseInputField(repeater)" 
@@ -64,5 +64,5 @@
         <mat-icon (click)="removeRepeater(repeater.id)"  tabindex="0" (keydown)="onRomveRepeaterKeydown($event, repeater.id)">delete</mat-icon>
       </div>
     </div>
-  </ng-container>
+  </div>
 </div>

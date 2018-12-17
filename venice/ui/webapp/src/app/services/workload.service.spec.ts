@@ -17,6 +17,7 @@ import { WorkloadService } from './workload.service';
 import { MatIconRegistry } from '@angular/material';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
+import { MessageService } from 'primeng/primeng';
 
 /**
  * workload.service.spec.ts
@@ -37,7 +38,8 @@ describe('WorkloadService', () => {
         ControllerService,
         LogService,
         LogPublishersService,
-        MatIconRegistry
+        MatIconRegistry,
+        MessageService
       ],
       imports: [
         HttpClientTestingModule,

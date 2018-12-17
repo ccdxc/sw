@@ -218,8 +218,6 @@ export class NodedetailComponent extends BaseComponent implements OnInit, OnDest
           this.avgDayData = data.results[2];
           this.clusterAvgData = data.results[3];
           this.tryGenCharts();
-        } else {
-          this.setChartErrorStates();
         }
       },
       (err) => {

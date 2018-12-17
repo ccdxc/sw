@@ -6,6 +6,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { NetworkcoreComponent } from './networkcore.component';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
+import { MessageService } from 'primeng/primeng';
 
 
 
@@ -30,6 +31,7 @@ describe('NetworkcoreComponent', () => {
         LogService,
         LogPublishersService,
         MatIconRegistry,
+        MessageService
       ]
     })
       .compileComponents();

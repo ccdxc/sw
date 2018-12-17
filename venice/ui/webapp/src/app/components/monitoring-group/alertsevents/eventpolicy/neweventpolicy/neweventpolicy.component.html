@@ -1,0 +1,48 @@
+<div [style.width]="'100%'" fxLayout="column">
+  <div fxFlex="auto" fxLayout="row" fxLayoutAlign="center start" class="neweventpolicy-container">
+    <!-- Limiting the size of the creation form - If it is inline, we have more room to fit in the save/cancel buttons -->
+    <div fxFlex="auto" fxLayout="row" [style.max-width]="isInline ? '1300px' : '1200px'" fxLayoutAlign="start stretch" class="neweventpolicy-content">
+      <div fxFlex fxLayout="column">
+        <div fxFlex="nogrow" fxLayout="column">
+         <div fxFlex="30px" fxLayout="row" [formGroup]="newPolicy.$formGroup.get('meta')" class="neweventpolicy-row">
+          <input fxFlex="300px" formControlName="name" class="neweventpolicy-name" [ngClass]="isErrorState(newPolicy.$formGroup.get('meta.name')) ? 'error' : ''" spellcheck="false" type="text" pInputText placeholder="Unique Policy Name...">
+        </div>
+        <div fxFlex="25px"></div> <!-- Buffer, creating as a div so there are no hiccups in the animation-->
+        <div fxFlex="noshrink" fxLayout="row" class="neweventpolicy-row"></div>
+          <div fxFlex="nogrow" class="neweventpolicy-text">EXPORT EVENT IF:</div>
+          <app-fieldselector fxFlex="nogrow" #fieldSelector 
+                    kind="Event"
+                    [formArray]="newPolicy.$formGroup.get(['spec', 'selector', 'requirements'])"
+                    keyFormName="key" 
+                    operatorFormName="operator" 
+                    valueFormName="values"
+                  >
+          </app-fieldselector>
+        </div>
+
+        <div fxFlex="20px" fxLayout="row">
+          <div fxFlex="30px"></div>
+          <div fxFlex="auto" class="neweventpolicy-divider"></div>
+          <div fxFlex="30px"></div>
+        </div>
+
+        <div fxFlex="noshrink" fxLayout="row">
+          <app-syslog #syslogComponent 
+          [syslogExport]="newPolicy.$formGroup.get(['spec']).value"
+          fxFlex="nogrow" fxLayout="column"></app-syslog>
+        </div>
+      </div>
+      <div *ngIf="isInline" class="neweventpolicy-buttoncontainer" fxFlex="nogrow" fxLayout="row wrap" fxLayoutAlign="start start">
+        <div fxFlex="nogrow">
+          <span (click)="savePolicy()" class="global-button-primary neweventpolicy-save">SAVE</span>
+        </div>
+        <div fxFlex="nogrow">
+          <span (click)="cancelPolicy()" class="global-button-neutral neweventpolicy-cancel">CANCEL</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div fxFlex="0px" class="neweventpolicy-border"></div>
+
+</div>

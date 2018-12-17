@@ -20,6 +20,7 @@ import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { DestinationpolicyComponent } from './destinations.component';
 import { NewdestinationComponent } from './newdestination/newdestination.component';
 import { MessageService } from 'primeng/primeng';
+import { MonitoringGroupModule } from '@app/components/monitoring-group/monitoring-group.module';
 
 
 describe('DestinationpolicyComponent', () => {
@@ -37,7 +38,8 @@ describe('DestinationpolicyComponent', () => {
         HttpClientTestingModule,
         PrimengModule,
         MaterialdesignModule,
-        RouterTestingModule
+        RouterTestingModule,
+        MonitoringGroupModule
       ],
       providers: [
         ControllerService,

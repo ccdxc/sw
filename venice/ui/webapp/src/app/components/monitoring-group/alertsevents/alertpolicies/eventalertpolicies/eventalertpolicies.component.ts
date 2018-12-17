@@ -74,7 +74,7 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
 
   ngOnInit() {
     if (this.isActiveTab) {
-      this.setDefautlToolbar();
+      this.setDefaultToolbar();
     }
     this.setRowData();
   }
@@ -83,12 +83,12 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
     return this.constructor.name;
   }
 
-  setDefautlToolbar() {
+  setDefaultToolbar() {
     const currToolbar = this._controllerService.getToolbarData();
     currToolbar.buttons = [
       {
         cssClass: 'global-button-primary eventalertpolicies-button',
-        text: 'ADD EVENT POLICY',
+        text: 'ADD ALERT POLICY',
         computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
         callback: () => { this.createNewPolicy(); }
       },
@@ -153,7 +153,7 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
   ngOnChanges(changes: SimpleChanges) {
     // We only set the toolbar if we are becoming the active tab,
     if (changes.isActiveTab != null && this.isActiveTab) {
-      this.setDefautlToolbar();
+      this.setDefaultToolbar();
     }
   }
 
@@ -291,7 +291,7 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
     }
     const sub = this._monitoringService.DeleteAlertPolicy(eventalertpolicy.meta.name).subscribe(
       (response) => {
-        this.messageService.add({ severity: 'success', summary: 'Delete Successful', detail: 'Deleted policy' + eventalertpolicy.meta.name });
+        this.messageService.add({ severity: 'success', summary: 'Delete Successful', detail: 'Deleted policy ' + eventalertpolicy.meta.name });
       },
       (error) => {
         if (error.body instanceof Error) {

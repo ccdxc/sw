@@ -18,6 +18,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { MatIconRegistry } from '@angular/material';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
+import { MessageService } from 'primeng/primeng';
 
 @Component({
   template: ''
@@ -44,7 +45,8 @@ describe('SettingsGroupComponent', () => {
         ControllerService,
         LogService,
         LogPublishersService,
-        MatIconRegistry
+        MatIconRegistry,
+        MessageService
       ]
     })
       .compileComponents();

@@ -8,6 +8,7 @@ import { MatIconRegistry } from '@angular/material';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { BehaviorSubject } from 'rxjs';
+import { MessageService } from 'primeng/primeng';
 
 describe('EventsService', () => {
   let postSpy;
@@ -17,7 +18,8 @@ describe('EventsService', () => {
         ControllerService,
         LogService,
         LogPublishersService,
-        MatIconRegistry
+        MatIconRegistry,
+        MessageService
       ],
       imports: [
         HttpClientTestingModule,

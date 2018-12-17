@@ -7,6 +7,7 @@ import { AuthService } from './auth.service';
 import { ControllerService } from './controller.service';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
+import { MessageService } from 'primeng/primeng';
 
 describe('AuthService', () => {
   beforeEach(() => {
@@ -15,7 +16,9 @@ describe('AuthService', () => {
         ControllerService,
         LogService,
         LogPublishersService,
-        MatIconRegistry],
+        MatIconRegistry,
+        MessageService
+      ],
       imports: [
         HttpClientTestingModule,
         RouterTestingModule

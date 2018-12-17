@@ -56,7 +56,6 @@ export class DsbdworkloadComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   formatData(data) {
-    console.log('format', data);
     this.veniceEndpointCount = data.veniceEndpointCount;
     this.veniceNewEndpointCount = data.veniceNewEndpointCount;
     const endpointList = data.endpointList;

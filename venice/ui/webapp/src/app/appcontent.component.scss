@@ -61,6 +61,18 @@
   right: 0;
 }
 
+.app-shell-toolbar-user-menu {
+  padding: 10px;
+}
+
+.app-shell-toolbar-user-menu-name {
+  text-align: center;
+}
+
+.app-logout-button {
+  outline: none !important;
+}
+
 .app-shell-router-outter-div {
   // Subtracting the top toolbar from the div height
   height: calc(100% - 65px);

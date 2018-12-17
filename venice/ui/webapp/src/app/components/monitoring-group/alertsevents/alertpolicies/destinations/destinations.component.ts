@@ -39,7 +39,7 @@ export class DestinationpolicyComponent extends TabcontentComponent implements O
 
   cols: any[] = [
     { field: 'meta.name', header: 'Policy Name', class: 'destinations-column-name', sortable: true },
-    { field: 'spec.syslog-servers', header: 'Syslog Servers', class: 'destinations-column-syslog', sortable: false },
+    { field: 'spec.syslog-export', header: 'Syslog Exports', class: 'destinations-column-syslog', sortable: false },
     { field: 'status.total-notifications-sent', header: 'Notications Sent', class: 'destinations-column-notifications-sent', sortable: false, isLast: true },
     // Following fields are currently not supported
     // { field: 'spec.email-list', header: 'Email List', class: 'destinationpolicy-column-email-list', sortable: true },
@@ -157,8 +157,8 @@ export class DestinationpolicyComponent extends TabcontentComponent implements O
     const value = Utility.getObjectValueByPropertyPath(alerteventpolicies, fields);
     const column = col.field;
     switch (column) {
-      case 'spec.syslog-servers':
-        return value.map(item => item.target.destination).join(', ');
+      case 'spec.syslog-export':
+        return value.targets.map(item => item.destination).join(', ');
       case 'spec.email-list':
         return JSON.stringify(value, null, 2);
       case 'spec.snmp-trap-servers':

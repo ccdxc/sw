@@ -154,8 +154,6 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
           this.avgDayData = data.results[2];
           this.maxObjData = data.results[3];
           this.tryGenCharts();
-        } else {
-          this.setChartErrorStates();
         }
       },
       (err) => {

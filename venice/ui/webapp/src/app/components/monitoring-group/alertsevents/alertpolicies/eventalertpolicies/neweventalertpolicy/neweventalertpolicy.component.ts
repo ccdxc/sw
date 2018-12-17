@@ -1,16 +1,16 @@
 import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, ViewChild, ViewEncapsulation } from '@angular/core';
-import { Validators, FormControl, FormGroup, FormArray } from '@angular/forms';
+import { Validators } from '@angular/forms';
 import { ErrorStateMatcher } from '@angular/material';
 import { Animations } from '@app/animations';
 import { Utility } from '@app/common/Utility';
+import { BaseComponent } from '@app/components/base/base.component';
 import { FieldselectorComponent } from '@app/components/shared/fieldselector/fieldselector.component';
 import { ToolbarButton } from '@app/models/frontend/shared/toolbar.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
-import { IApiStatus, IMonitoringAlertDestination, IMonitoringAlertPolicy, MonitoringAlertPolicy, MonitoringAlertPolicySpec, FieldsRequirement } from '@sdk/v1/models/generated/monitoring';
-import { SelectItem, MessageService } from 'primeng/primeng';
+import { IApiStatus, IMonitoringAlertDestination, IMonitoringAlertPolicy, MonitoringAlertPolicy, MonitoringAlertPolicySpec } from '@sdk/v1/models/generated/monitoring';
+import { MessageService, SelectItem } from 'primeng/primeng';
 import { Observable } from 'rxjs';
-import { BaseComponent } from '@app/components/base/base.component';
 
 @Component({
   selector: 'app-neweventalertpolicy',

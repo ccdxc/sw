@@ -33,6 +33,14 @@
     height: 30px;
 }
 
+/* In case we use mat-icon by name (not svgIcon), we have to adjust padding a little bit. */
+.pagebody-icon-byname {
+    width: 30px;
+    height: 30px;
+    font-size: 30px;
+    opacity: 0.3;
+}
+
 /* avoid UI issue of having uncessary space gap */
 .pagebody-content {
     height: 100%;

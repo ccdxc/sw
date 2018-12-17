@@ -181,6 +181,7 @@ describe('WorkloadComponent', () => {
         WorkloadService,
         MatIconRegistry,
         UIConfigsService,
+        MessageService,
         MessageService
       ]
     })

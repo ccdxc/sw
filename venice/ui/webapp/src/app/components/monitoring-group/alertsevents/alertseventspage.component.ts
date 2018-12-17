@@ -15,6 +15,9 @@ import { Utility } from '@app/common/Utility';
 export class AlertseventspageComponent extends BaseComponent implements OnInit, OnDestroy {
   hideAlertpolicies: boolean = this.uiconfigsService.isObjectDisabled('AlertPolicies');
 
+  breadCrumb = [{ label: 'Alerts & Events', url: Utility.getBaseUIUrl() + 'monitoring/alertsevents' }];
+
+
   constructor(protected _controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
     protected messageService: MessageService) {
@@ -22,20 +25,32 @@ export class AlertseventspageComponent extends BaseComponent implements OnInit, 
   }
 
   ngOnInit() {
+    // Default tab is alerts
+    this.setTabToolbar('alerts');
+  }
+
+  setTabToolbar(tabName) {
     let buttons = [];
-    if (!this.hideAlertpolicies) {
+    if (tabName === 'alerts') {
       buttons = [
         {
           cssClass: 'global-button-primary alertsevents-button',
           text: 'ALERT POLICIES',
           callback: () => { this._controllerService.navigate(['/monitoring', 'alertsevents', 'alertpolicies']); }
+        },
+      ];
+    } else {
+      buttons = [
+        {
+          cssClass: 'global-button-primary alertsevents-button',
+          text: 'EVENT POLICY',
+          callback: () => { this._controllerService.navigate(['/monitoring', 'alertsevents', 'eventpolicy']); }
         }
       ];
     }
-
     this._controllerService.setToolbarData({
       buttons: buttons,
-      breadcrumb: [{ label: 'Alerts & Events', url: Utility.getBaseUIUrl() + 'monitoring/alertsevents' }]
+      breadcrumb: this.breadCrumb
     });
   }
 

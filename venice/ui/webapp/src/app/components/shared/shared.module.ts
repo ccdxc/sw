@@ -28,6 +28,7 @@ import { WidgetsModule } from 'web-app-framework';
     FlexLayoutModule,
     MaterialdesignModule,
     PrimengModule,
+    FormsModule,
     ReactiveFormsModule,
     FormsModule,
     WidgetsModule
@@ -46,7 +47,7 @@ import { WidgetsModule } from 'web-app-framework';
     AlertseventsComponent,
     WhitespaceTrimDirective,
     FieldselectorComponent,
-    HerocardComponent
+    HerocardComponent,
   ],
   exports: [
     PagebodyComponent,
@@ -63,7 +64,7 @@ import { WidgetsModule } from 'web-app-framework';
     AlertseventsComponent,
     WhitespaceTrimDirective,
     FieldselectorComponent,
-    HerocardComponent
-  ]
+    HerocardComponent,
+  ],
 })
 export class SharedModule { }

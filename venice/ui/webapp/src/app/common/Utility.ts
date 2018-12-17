@@ -664,6 +664,9 @@ export class Utility {
     } else {
       propInfo = instance.getPropInfo(keys[keys.length - 1]);
     }
+    if (propInfo == null) {
+      console.error('propInfo was null, supplied property path is likely invalid');
+    }
     return propInfo;
   }
 

@@ -8,6 +8,7 @@ import { LogPublishersService } from '@app/services/logging/log-publishers.servi
 import { LogService } from '@app/services/logging/log.service';
 import { AuthService } from '@app/services/auth.service';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { MessageService } from 'primeng/primeng';
 
 class MockControllerService extends ControllerService {
   static isLoggedIn = false;
@@ -27,7 +28,8 @@ describe('AuthGuardService', () => {
         LogService,
         LogPublishersService,
         AuthService,
-        MockControllerService
+        MockControllerService,
+        MessageService
       ],
       imports: [
         RouterTestingModule,

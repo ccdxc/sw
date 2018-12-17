@@ -35,7 +35,8 @@
                         <button mat-icon-button class="app-user-button" [matMenuTriggerFor]="toolbarUserMenu">
                             <mat-icon>person</mat-icon>
                         </button>
-                        <mat-menu #toolbarUserMenu="matMenu">
+                        <mat-menu class="app-shell-toolbar-user-menu" #toolbarUserMenu="matMenu">
+                            <div class="app-shell-toolbar-user-menu-name">User: {{ userName}} </div>
                             <button mat-menu-item class="app-logout-button" (click)="onLogoutClick()">
                                 <mat-icon style="color: black">power_settings_new</mat-icon>
                                 <span>Logout</span>

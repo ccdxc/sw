@@ -7,19 +7,21 @@ import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { RouterTestingModule } from '@angular/router/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { MessageService } from 'primeng/primeng';
 
 describe('LocalStorageService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [LocalStorageService,
-      ControllerService,
-      MatIconRegistry,
+        ControllerService,
+        MatIconRegistry,
         LogService,
         LogPublishersService,
+        MessageService
       ],
-    imports: [
-      RouterTestingModule
-    ]
+      imports: [
+        RouterTestingModule
+      ]
 
     });
   });

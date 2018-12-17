@@ -132,7 +132,7 @@ enum SyslogFacility {
 // syslog export configurations
 message  SyslogExportConfig {
     // override default facility with this in exported logs
-    string FacilityOverride = 1 [(gogoproto.jsontag) = "facility-override,omitempty", (venice.check) = "StrEnum(SyslogFacility)", (venice.default)="SyslogFacility_LOG_USER"];
+    string FacilityOverride = 1 [(gogoproto.jsontag) = "facility-override,omitempty", (venice.check) = "StrEnum(SyslogFacility)", (venice.default)="LOG_USER"];
     // add prefix in exported logs
     string Prefix = 2 [(gogoproto.jsontag) = "prefix,omitempty"];
 }

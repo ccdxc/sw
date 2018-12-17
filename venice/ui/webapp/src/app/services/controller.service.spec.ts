@@ -6,6 +6,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { ControllerService } from './controller.service';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
+import { MessageService } from 'primeng/primeng';
 
 
 describe('ControllerService', () => {
@@ -15,6 +16,7 @@ describe('ControllerService', () => {
         LogService,
         LogPublishersService,
         MatIconRegistry,
+        MessageService
       ],
       imports: [
         HttpClientTestingModule,

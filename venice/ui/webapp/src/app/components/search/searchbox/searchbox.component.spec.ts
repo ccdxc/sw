@@ -23,6 +23,7 @@ import { SearchboxComponent } from '@app/components/search/searchbox/searchbox.c
 import { SearchsuggestionsComponent } from '@app/components/search/searchsuggestions/searchsuggestions.component';
 import { SearchresultComponent } from '@app/components/search/searchresult/searchresult.component';
 import { GuidesearchComponent } from '@app/components/search/guidedsearch/guidedsearch.component';
+import { MessageService } from 'primeng/primeng';
 
 @Component({
   template: ''
@@ -61,11 +62,11 @@ describe('SearchboxComponent', () => {
         LogService,
         LogPublishersService,
         MatIconRegistry,
-
+        MessageService,
         SearchService
       ]
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {

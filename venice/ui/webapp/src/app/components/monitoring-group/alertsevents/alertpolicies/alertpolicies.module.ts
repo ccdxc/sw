@@ -20,6 +20,7 @@ import { NewdestinationComponent } from '@app/components/monitoring-group/alerts
 import { WidgetsModule } from 'web-app-framework';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { NeweventalertpolicyComponent } from '@app/components/monitoring-group/alertsevents/alertpolicies/eventalertpolicies/neweventalertpolicy/neweventalertpolicy.component';
+import { MonitoringGroupModule } from '../../monitoring-group.module';
 
 @NgModule({
   imports: [
@@ -34,7 +35,8 @@ import { NeweventalertpolicyComponent } from '@app/components/monitoring-group/a
     AlertPoliciesRoutingModule,
     SharedModule,
     WidgetsModule,
-    SharedModule
+    SharedModule,
+    MonitoringGroupModule
   ],
   declarations: [AlertpoliciesComponent,
     ObjectpolicyComponent,

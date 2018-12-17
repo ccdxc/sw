@@ -1,71 +1,76 @@
-<div fxFlex fxLayout="row" fxLayoutAlign="center start" class="neweventalertpolicy-container" >
-  <!-- Limiting the size of the creation form - If it is inline, we have more room to fit in the save/cancel buttons -->
-  <div fxFlex fxLayout="row" [style.max-width]="isInline ? '1300px' : '1200px'" fxLayoutAlign="start stretch" class="neweventalertpolicy-content" [formGroup]="newPolicy.$formGroup">
+<div [style.width]="'100%'" fxLayout="column">
+  <div fxFlex="auto" fxLayout="row" fxLayoutAlign="center start" class="neweventalertpolicy-container" >
+    <!-- Limiting the size of the creation form - If it is inline, we have more room to fit in the save/cancel buttons -->
+    <div fxFlex="auto" fxLayout="row" [style.max-width]="isInline ? '1300px' : '1200px'" fxLayoutAlign="start stretch" class="neweventalertpolicy-content" [formGroup]="newPolicy.$formGroup">
 
-    <ng-container formGroupName="spec">
-      <mat-slide-toggle formControlName="enable" fxFlex='nogrow' class="neweventalertpolicy-toggle"></mat-slide-toggle>
-    </ng-container>
-    <div fxFlex fxLayout="column">
-      <div fxFlex="nogrow" fxLayout="row" class="neweventalertpolicy-row" formGroupName="meta"> <!-- First row-->
-        <input fxFlex="300px" formControlName="name"
-              class="neweventalertpolicy-name" [ngClass]="isErrorState(newPolicy.$formGroup.get('meta.name')) ? 'error' : ''" spellcheck="false"
-              type="text"  pInputText  placeholder="Unique Policy Name...">
-        <!-- Commented out as it still isn't decided whether there will be a description -->
-        <!-- <input fxFlex class="neweventalertpolicy-description" spellcheck="false" type="text"  pInputText  placeholder="Brief Description (optional)..."> -->
-      </div>
-      <div fxFlex fxLayout="row" class="neweventalertpolicy-row" formGroupName="spec"> <!-- Second row-->
-        <div fxFlex fxLayout="row wrap">
-          <div fxFlex="noshrink" fxLayout="row">
-            <div fxFlex="nogrow" class="neweventalertpolicy-text">IF EVENT:</div>
-            <app-fieldselector #fieldSelector 
-                      kind="Event"
-                      [formArray]="newPolicy.$formGroup.get(['spec', 'requirements'])"
-                      keyFormName="key" 
-                      operatorFormName="operator" 
-                      valueFormName="values"
-                    >
-            </app-fieldselector>
-          </div>
-          <div fxFlex></div>
-
-          <div fxFlex="nogrow" fxLayout="row">
-            <div fxFlex="nogrow" fxLayout="column">
-              <div fxFlex="nogrow" class="neweventalertpolicy-text">THEN ALERT:</div>
-              <div fxFlex="nogrow" class="neweventalertpolicy-text">DESTINATIONS</div>
-            </div>
-            <div fxFlex fxLayout="column">
-              <div fxFlex="nogrow" fxLayout="row" fxLayoutAlgin="start">
-                <p-dropdown class="neweventalertpolicy-severity" fxFlex="200px" formControlName="severity" styleClass="neweventalertpolicy-font"
-                                [options]="alertOptions"></p-dropdown>
-                <div fxFlex="30px" fxLayout="row" fxLayoutAlign="center center">
-                  <mat-icon fxFlex="none" *ngIf="newPolicy.$formGroup.value.spec.severity?.toLowerCase() === 'critical'" class="global-alert-critical-icon">error</mat-icon>
-                  <mat-icon fxFlex="none" *ngIf="newPolicy.$formGroup.value.spec.severity?.toLowerCase() === 'warning'" class="global-alert-warning-icon">error</mat-icon>
-                  <mat-icon fxFlex="none" *ngIf="newPolicy.$formGroup.value.spec.severity?.toLowerCase() === 'info'" class="global-alert-info-icon">notifications</mat-icon>
-                </div>
-                <div fxFlex></div>
-              </div>
-              <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start">
-                <p-multiSelect class="neweventalertpolicy-destinations" fxFlex="300px" 
-                                formControlName="destinations" appendTo="body" styleClass="neweventalertpolicy-font"
-                                [filter]="false" 
-                                [options]="destinationOptions"></p-multiSelect>
-
-              </div>
-
-            </div>
-          </div>
-          <div fxFlex></div>
+      <ng-container formGroupName="spec">
+        <mat-slide-toggle formControlName="enable" fxFlex='nogrow' class="neweventalertpolicy-toggle"></mat-slide-toggle>
+      </ng-container>
+      <div fxFlex fxLayout="column">
+        <div fxFlex="nogrow" fxLayout="row" class="neweventalertpolicy-row" formGroupName="meta"> <!-- First row-->
+          <input fxFlex="300px" formControlName="name"
+                class="neweventalertpolicy-name" [ngClass]="isErrorState(newPolicy.$formGroup.get('meta.name')) ? 'error' : ''" spellcheck="false"
+                type="text"  pInputText  placeholder="Unique Policy Name...">
+          <!-- Commented out as it still isn't decided whether there will be a description -->
+          <!-- <input fxFlex class="neweventalertpolicy-description" spellcheck="false" type="text"  pInputText  placeholder="Brief Description (optional)..."> -->
         </div>
+        <div fxFlex="noshrink" fxLayout="row" class="neweventalertpolicy-row" formGroupName="spec"> <!-- Second row-->
+          <div fxFlex fxLayout="row wrap">
+            <div fxFlex="auto" fxLayout="row">
+              <div fxFlex="nogrow" class="neweventalertpolicy-text">IF EVENT:</div>
+              <app-fieldselector #fieldSelector 
+                        kind="Event"
+                        [formArray]="newPolicy.$formGroup.get(['spec', 'requirements'])"
+                        keyFormName="key" 
+                        operatorFormName="operator" 
+                        valueFormName="values"
+                      >
+              </app-fieldselector>
+            </div>
+            <div fxFlex></div>
+
+            <div fxFlex="nogrow" fxLayout="row">
+              <div fxFlex="nogrow" fxLayout="column">
+                <div fxFlex="nogrow" class="neweventalertpolicy-text">THEN ALERT:</div>
+                <div fxFlex="nogrow" class="neweventalertpolicy-text">DESTINATIONS</div>
+              </div>
+              <div fxFlex fxLayout="column">
+                <div fxFlex="nogrow" fxLayout="row" fxLayoutAlgin="start">
+                  <p-dropdown class="neweventalertpolicy-severity" fxFlex="200px" formControlName="severity" styleClass="neweventalertpolicy-font"
+                                  [options]="alertOptions"></p-dropdown>
+                  <div fxFlex="30px" fxLayout="row" fxLayoutAlign="center center">
+                    <mat-icon fxFlex="none" *ngIf="newPolicy.$formGroup.value.spec.severity?.toLowerCase() === 'critical'" class="global-alert-critical-icon">error</mat-icon>
+                    <mat-icon fxFlex="none" *ngIf="newPolicy.$formGroup.value.spec.severity?.toLowerCase() === 'warning'" class="global-alert-warning-icon">error</mat-icon>
+                    <mat-icon fxFlex="none" *ngIf="newPolicy.$formGroup.value.spec.severity?.toLowerCase() === 'info'" class="global-alert-info-icon">notifications</mat-icon>
+                  </div>
+                  <div fxFlex></div>
+                </div>
+                <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start">
+                  <p-multiSelect class="neweventalertpolicy-destinations" fxFlex="300px" 
+                                  formControlName="destinations" appendTo="body" styleClass="neweventalertpolicy-font"
+                                  [filter]="false" 
+                                  [options]="destinationOptions"></p-multiSelect>
+
+                </div>
+
+              </div>
+            </div>
+            <div fxFlex></div>
+          </div>
+        </div>
+        <div fxFlex="20px"></div> <!-- Buffer, creating as a div so there are no hiccups in the animation-->
       </div>
-      <div fxFlex="20px"></div> <!-- Buffer, creating as a div so there are no hiccups in the animation-->
-    </div>
-    <div *ngIf="isInline" class="neweventalertpolicy-buttoncontainer" fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start start">
-      <div fxFlex="nogrow">
-        <span (click)="savePolicy()" class="global-button-primary neweventalertpolicy-save">SAVE</span>
-      </div>
-      <div fxFlex="nogrow">
-        <span (click)="cancelPolicy()" class="global-button-neutral neweventalertpolicy-cancel">CANCEL</span>
+      <div *ngIf="isInline" class="neweventalertpolicy-buttoncontainer" fxFlex="nogrow" fxLayout="row wrap" fxLayoutAlign="start start">
+        <div fxFlex="nogrow">
+          <span (click)="savePolicy()" class="global-button-primary neweventalertpolicy-save">SAVE</span>
+        </div>
+        <div fxFlex="nogrow">
+          <span (click)="cancelPolicy()" class="global-button-neutral neweventalertpolicy-cancel">CANCEL</span>
+        </div>
       </div>
     </div>
   </div>
+
+  <div fxFlex="0px" class="neweventalertpolicy-border"></div>
+
 </div>

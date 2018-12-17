@@ -427,7 +427,7 @@ ui:
 	npm version;
 	cd venice/ui/webapp && npm install --prefer-cache ../web-app-framework/dist/web-app-framework-0.0.0.tgz && npm run replaceShrinkwrap;
 	$(MAKE) ui-venice-sdk
-	cd venice/ui/webapp && ng build --prod && npm run svgo && ./gzipDist.sh
+	cd venice/ui/webapp && ng build --prod && ./gzipDist.sh
 
 ui-autogen:
 	printf "\n+++++++++++++++++ Generating ui-autogen +++++++++++++++++\n";

@@ -8,7 +8,7 @@ import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { WorkloadService } from '@app/services/generated/workload.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { IApiStatus, WorkloadWorkload } from '@sdk/v1/models/generated/workload';
+import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
 import { Table } from 'primeng/table';
 import { Subscription } from 'rxjs';
 import { BaseComponent } from '../base/base.component';

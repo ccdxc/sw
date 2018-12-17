@@ -1,0 +1,62 @@
+<app-pagebody [icon]="bodyIcon" header="Event Policies">
+  <app-neweventpolicy [@slideInOut] (formClose)="creationFormClose()" fxFlex="none" *ngIf="creatingMode"></app-neweventpolicy>
+  <div fxFlex class="eventpolicy-tablecontainer">
+    <ng-container *ngTemplateOutlet="Header"></ng-container>
+    <ng-container *ngTemplateOutlet="Table"></ng-container>
+    <div *ngIf="creatingMode || showEditingForm" class="eventpolicy-overlay"></div>
+  </div>
+</app-pagebody>
+
+<ng-template #Header>
+  <app-tableheader title="Policies" [total]="displayedPolicies.length" [icon]="headerIcon" width="250px">
+  </app-tableheader>
+</ng-template>
+
+<ng-template #Table>
+    <p-table class="global-primeng-table" [columns]="cols" [value]="displayedPolicies"
+    dataKey="meta.name" 
+    [rows]="15" 
+    [scrollable]="true" #eventPoliciesTable
+    [responsive]="true" [loading]="loading" [resizableColumns]="true"  rowExpandMode="single">
+<!-- Table Header -->
+<ng-template pTemplate="header" let-columns>
+<tr>
+  <th *ngFor="let col of cols; " [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class" [colSpan]=" col.isLast ? 2 : 1">
+     {{col.header}}
+     <p-sortIcon *ngIf="col.sortable" style="float: right;" [field]="col.field"></p-sortIcon>
+ </th>
+</tr>
+</ng-template>
+<!-- Table Body -->
+<ng-template pTemplate="body" let-rowData let-rowIndex="rowIndex">
+<tr [ngClass]="expandedRowData?.meta.name === rowData.meta.name ? 'eventpolicy-rowhighlight': ''" [pSelectableRow]="rowData">
+  
+  <td *ngFor="let col of cols" [ngSwitch]="col.field" [class]="col.class">
+    <ng-container *ngSwitchCase="'spec.selector'">
+      <ng-container *ngFor="let req of formatRequirements(rowData.spec.selector.requirements)">
+        <span style="display: block">{{req}}</span>
+      </ng-container>
+    </ng-container>
+    <ng-container *ngSwitchDefault>
+     {{displayColumn(rowData, col)}}
+    </ng-container>
+  </td>
+  <td class="global-column-action">
+    <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
+     <mat-icon matTooltip="Edit policy" class="global-table-action-icon" (click)="onUpdateRecord($event, rowData)">edit</mat-icon>
+     <mat-icon matTooltip="Delete policy" class="global-table-action-icon" (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
+    </div>
+  </td>
+</tr>
+</ng-template>
+<ng-template pTemplate="rowexpansion" let-rowData let-columns="columns">
+<tr class="eventpolicy-rowexpand-tr">
+     <td [attr.colspan]="columns.length + 1">
+       <div [@slideInOut] (@slideInOut.done)="rowExpandAnimationComplete($event)" *ngIf="showEditingForm" class="eventpolicy-rowexpand">
+         <app-neweventpolicy [policyData]="rowData" [isInline]="true" (formClose)="onUpdateRecord($event, rowData)"></app-neweventpolicy>
+       </div>
+     </td>
+</tr>
+</ng-template>
+</p-table>
+</ng-template>

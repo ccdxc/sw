@@ -40,6 +40,7 @@ import { SearchsuggestionsComponent } from '@app/components/search/searchsuggest
 import { SearchresultComponent } from '@app/components/search/searchresult/searchresult.component';
 import { GuidesearchComponent } from '@app/components/search/guidedsearch/guidedsearch.component';
 import { SharedModule } from '@app/components/shared/shared.module';
+import { MessageService } from 'primeng/primeng';
 
 describe('AppComponent', () => {
   beforeEach(() => {
@@ -74,6 +75,7 @@ describe('AppComponent', () => {
         LogPublishersService,
         Store,
         OverlayContainer,
+        MessageService
       ],
     });
 

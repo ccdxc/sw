@@ -1,6 +1,7 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { PagebodyComponent } from './pagebody.component';
+import { MaterialdesignModule } from '@app/lib/materialdesign.module';
 
 describe('PagebodyComponent', () => {
   let component: PagebodyComponent;
@@ -8,7 +9,12 @@ describe('PagebodyComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [PagebodyComponent]
+      declarations: [PagebodyComponent,
+
+      ],
+      imports: [
+        MaterialdesignModule
+      ]
     })
       .compileComponents();
   }));

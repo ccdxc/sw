@@ -17,7 +17,6 @@ import { SearchPolicySearchRequest } from '@sdk/v1/models/generated/search';
 import { ISecuritySGRule, SecuritySGPolicy } from '@sdk/v1/models/generated/security';
 import { Table } from 'primeng/table';
 import { MessageService } from 'primeng/primeng';
-import { map } from 'rxjs/internal/operators';
 
 /**
  * Component for displaying a security policy and providing IP searching
@@ -456,6 +455,20 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
       );
     });
     return retRules;
+  }
+
+  formatApp(rule: ISecuritySGRule) {
+    let protoPorts = [];
+    let apps = [];
+    if (rule['apps'] != null) {
+      apps = rule['apps'];
+    }
+    if (rule['proto-ports'] != null) {
+      protoPorts = rule['proto-ports'].map((entry) => {
+        return entry.protocol + '/' + entry.ports;
+      });
+    }
+    return protoPorts.concat(apps).join(', ');
   }
 
 

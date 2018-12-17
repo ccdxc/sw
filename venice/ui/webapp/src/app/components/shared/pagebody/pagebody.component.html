@@ -1,7 +1,12 @@
 <div class="pagebody-container" fxLayout="column">
     <div *ngIf="header" fxFlex="nogrow" fxLayout="row" class="pagebody-header">
         <div fxFlex="48px" class="pagebody-iconcontainer">
-            <div [ngStyle]="_iconStyles" class="pagebody-icon"></div>
+            <mat-icon fxFlex="30px" [ngStyle]="_iconStyles" *ngIf="icon.svgIcon" [svgIcon]="icon.svgIcon" class="pagebody-icon">
+                </mat-icon>
+            <mat-icon fxFlex="30px" [ngStyle]="_iconStyles" *ngIf="icon.matIcon" class="pagebody-icon pagebody-icon-byname">
+                {{icon.matIcon}}
+            </mat-icon>
+            <div *ngIf="icon.matIcon == null && icon.svgIcon == null" [ngStyle]="_iconStyles" class="pagebody-icon"></div>
         </div>
         <div fxFlex="noshrink" class="pagebody-headercontent">
             {{header}}

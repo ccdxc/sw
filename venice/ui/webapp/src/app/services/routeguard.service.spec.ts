@@ -5,6 +5,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { ControllerService } from '@app/services/controller.service';
 import { RouteGuard } from '@app/services/routeguard.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { MessageService } from 'primeng/primeng';
 
 class MockUIConfigService extends UIConfigsService {
   static allowRoute = false;
@@ -31,6 +32,7 @@ describe('RouteGuardService', () => {
       providers: [RouteGuard,
         ControllerService,
         { provide: UIConfigsService, useClass: MockUIConfigService },
+        MessageService
       ],
     })
       .compileComponents(); // compile template and css

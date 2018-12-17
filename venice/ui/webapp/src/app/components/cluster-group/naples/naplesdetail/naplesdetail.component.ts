@@ -208,8 +208,6 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
           this.avgDayData = data.results[2];
           this.clusterAvgData = data.results[3];
           this.tryGenCharts();
-        } else {
-          this.setChartErrorStates();
         }
       },
       (err) => {

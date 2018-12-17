@@ -7,6 +7,7 @@ import { MatIconRegistry } from '@angular/material';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { LogService } from '@app/services/logging/log.service';
 import { RouterTestingModule } from '@angular/router/testing';
+import { MessageService } from 'primeng/primeng';
 
 describe('MissingpageComponent', () => {
   let component: MissingpageComponent;
@@ -24,6 +25,7 @@ describe('MissingpageComponent', () => {
         LogService,
         LogPublishersService,
         MatIconRegistry,
+        MessageService
       ]
     })
       .compileComponents();

@@ -1,0 +1,50 @@
+@import 'src/global-mixins';
+
+$horizontal-gutter: 10px;
+$vertical-gutter: 5px;
+
+.neweventpolicy-container {
+  background: white;
+  &:hover {
+      background: white;
+  }
+}
+
+.neweventpolicy-row {
+  margin: 0px $horizontal-gutter;
+}
+
+.neweventpolicy-content {
+  background: white;
+  min-height: 180px;
+  margin-top: 4* $vertical-gutter;
+  @include primary-font();
+}
+
+.neweventpolicy-text {
+    margin-top: 2*$vertical-gutter;
+    margin-left: $horizontal-gutter;
+    height: 30px;
+    @include primary-font();
+}
+
+.neweventpolicy-border {
+  border-bottom: 6px solid #6ba0e5;
+  z-index: 100;
+}
+
+.neweventpolicy-divider {
+  border-bottom: 1px solid #dddddd;
+}
+
+.neweventpolicy-save, 
+.neweventpolicy-cancel {
+    display: inline-block;
+    padding: 4px 10px;
+    line-height: 25px;
+    margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
+}
+
+.neweventpolicy-buttoncontainer {
+    margin-top: 1.5 * $vertical-gutter;
+}

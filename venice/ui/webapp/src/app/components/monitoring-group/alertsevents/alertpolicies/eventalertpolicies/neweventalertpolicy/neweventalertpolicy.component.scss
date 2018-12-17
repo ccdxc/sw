@@ -4,11 +4,14 @@ $horizontal-gutter: 10px;
 $vertical-gutter: 5px;
 
 .neweventalertpolicy-container {
-    border-bottom: 6px solid #6ba0e5;
     background: white;
     &:hover {
         background: white;
     }
+}
+
+.neweventalertpolicy-border {
+    border-bottom: 6px solid #6ba0e5;
 }
 
 .neweventalertpolicy-content {
@@ -45,9 +48,10 @@ $vertical-gutter: 5px;
 
 .neweventalertpolicy-save, 
 .neweventalertpolicy-cancel {
+    display: inline-block;
     padding: 4px 10px;
     line-height: 25px;
-    margin: $vertical-gutter $horizontal-gutter;
+    margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
 }
 
 .neweventalertpolicy-buttoncontainer {

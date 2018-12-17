@@ -1,4 +1,4 @@
-import { Component, Input, OnDestroy, OnInit, ViewChild, ViewEncapsulation, SimpleChanges, OnChanges } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit, ViewChild, ViewEncapsulation, SimpleChanges, OnChanges, Output, EventEmitter } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { Utility } from '@app/common/Utility';
@@ -55,6 +55,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   // If provided, will only show alerts and events
   // where the source node matches
   @Input() selector: AlertsEventsSelector;
+  @Output() activeTab: EventEmitter<string> = new EventEmitter<string>();
 
   subscriptions: Subscription[] = [];
   severityEnum = EventsEvent_severity_uihint;
@@ -96,6 +97,14 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   };
 
   eventsIcon: Icon = {
+    margin: {
+      top: '0px',
+      left: '0px',
+    },
+    matIcon: 'event'
+  };
+
+  alertsIcon: Icon = {
     margin: {
       top: '0px',
       left: '0px',
@@ -190,6 +199,14 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
     }
   }
 
+  emitActiveTab(tabIndex) {
+    if (tabIndex === 0) {
+      this.activeTab.emit('alerts');
+    } else {
+      this.activeTab.emit('events');
+    }
+  }
+
   genQueryBodies() {
     if (this.selector != null) {
       this.eventsPostBody = {
@@ -208,6 +225,13 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   resizeTable(delay: number = 0) {
     if (this.lazyRenderWrapper) {
       this.lazyRenderWrapper.resizeTable(delay);
+    }
+  }
+
+  selectedIndexChangeEvent(event) {
+    this.emitActiveTab(event);
+    if (this.lazyRenderWrapper != null) {
+      this.lazyRenderWrapper.resizeTable()
     }
   }
 

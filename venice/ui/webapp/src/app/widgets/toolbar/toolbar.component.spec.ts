@@ -21,6 +21,7 @@ import { LogPublishersService } from '@app/services/logging/log-publishers.servi
 import { ToolbarData, ToolbarButton } from '@app/models/frontend/shared/toolbar.interface';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { By } from '@angular/platform-browser';
+import { MessageService } from 'primeng/primeng';
 
 describe('ToolbarComponent', () => {
   let component: ToolbarComponent;
@@ -40,7 +41,8 @@ describe('ToolbarComponent', () => {
         ControllerService,
         LogService,
         LogPublishersService,
-        MatIconRegistry
+        MatIconRegistry,
+        MessageService
       ]
     })
       .compileComponents();

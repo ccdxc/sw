@@ -11,6 +11,7 @@ import { LoginComponent } from './login.component';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { MessageService } from 'primeng/primeng';
 
 describe('LoginComponent', () => {
   let component: LoginComponent;
@@ -31,7 +32,8 @@ describe('LoginComponent', () => {
         LogPublishersService,
         AuthService,
         MatIconRegistry,
-        UIConfigsService
+        UIConfigsService,
+        MessageService
       ]
     })
       .compileComponents();

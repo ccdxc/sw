@@ -1,4 +1,4 @@
-<mat-tab-group [disableRipple]="true" [(selectedIndex)]="selectedIndex" fxFlex>
+<mat-tab-group [disableRipple]="true" [(selectedIndex)]="selectedIndex" class="penuitabs-group">
   <mat-tab *ngFor="let tab of tabItems; let i = index" [disabled]="editMode && selectedIndex != i">
     <ng-template  mat-tab-label>
       <div fxLayout="row" fxLayoutAlign="space-between center">

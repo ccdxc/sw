@@ -70,7 +70,8 @@ describe('NodedetailComponent', () => {
         {
           provide: ActivatedRoute,
           useClass: MockActivatedRoute
-        }
+        },
+        MessageService
       ]
     })
       .compileComponents();

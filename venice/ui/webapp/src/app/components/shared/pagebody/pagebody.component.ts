@@ -24,6 +24,9 @@ export class PagebodyComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.hasOptions = this.options != null;
     this._iconStyles = this._setIconStyles();
+    if (this.icon == null) {
+      this.icon = {};
+    }
   }
 
   _setIconStyles() {
@@ -34,8 +37,10 @@ export class PagebodyComponent implements OnInit, OnDestroy {
     const styles = {
       'margin-top': this.icon.margin.top,
       'margin-left': this.icon.margin.left,
-      'background-image': 'url(' + this.icon.url + ')',
     };
+    if (this.icon.url) {
+      styles['background-image'] = 'url(' + this.icon.url + ')';
+    }
     return styles;
   }
 

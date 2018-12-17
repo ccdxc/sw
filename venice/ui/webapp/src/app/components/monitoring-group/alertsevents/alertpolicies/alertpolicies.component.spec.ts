@@ -26,6 +26,7 @@ import { ObjectpolicyComponent } from './objectpolicy/objectpolicy.component';
 import { NeweventalertpolicyComponent } from '@app/components/monitoring-group/alertsevents/alertpolicies/eventalertpolicies/neweventalertpolicy/neweventalertpolicy.component';
 import { NewdestinationComponent } from '@app/components/monitoring-group/alertsevents/alertpolicies/destinations/newdestination/newdestination.component';
 import { MessageService } from 'primeng/primeng';
+import { MonitoringGroupModule } from '../../monitoring-group.module';
 
 
 describe('AlertpoliciesComponent', () => {
@@ -51,7 +52,8 @@ describe('AlertpoliciesComponent', () => {
         PrimengModule,
         MaterialdesignModule,
         WidgetsModule,
-        RouterTestingModule
+        RouterTestingModule,
+        MonitoringGroupModule
       ],
       providers: [
         ControllerService,
