@@ -136,62 +136,52 @@ private:
 bool
 hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
 {
+    slab_ptr_t        slab = NULL;
+    hal_slab_args_t   slab_args;
+
     // initialize slab for HAL handles
-    slabs_[HAL_SLAB_HANDLE] =
-        slab::factory("hal_handle",
-                      HAL_SLAB_HANDLE, sizeof(hal_handle),
-                      64, true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_HANDLE] != NULL), false);
+    slab = register_slab(HAL_SLAB_HANDLE, slab_args={.name = "hal_handle", 
+                       .size=sizeof(hal_handle), .num_elements=64, 
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_HANDLE_HT_ENTRY] =
-        slab::factory("hal_hdl_ht_ent",
-                      HAL_SLAB_HANDLE_HT_ENTRY,
-                      sizeof(hal_handle_ht_entry_t),
-                      64, true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_HANDLE_HT_ENTRY] != NULL), false);
+    slab = register_slab(HAL_SLAB_HANDLE_HT_ENTRY, slab_args={.name = "hal_hdl_ht_ent",
+                       .size=sizeof(hal_handle_ht_entry_t), .num_elements=64,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_HANDLE_LIST_ENTRY] =
-        slab::factory("hal_hdl_list_ent",
-                      HAL_SLAB_HANDLE_LIST_ENTRY,
-                      sizeof(hal_handle_list_entry_t),
-                      64, true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_HANDLE_LIST_ENTRY] != NULL), false);
+    slab = register_slab(HAL_SLAB_HANDLE_LIST_ENTRY, slab_args={.name="hal_hdl_list_ent",
+                        .size=sizeof(hal_handle_list_entry_t), .num_elements=64,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-	slabs_[HAL_SLAB_HANDLE_ID_HT_ENTRY] =
-        slab::factory("hal_hdl_id_ht_ent",
-                      HAL_SLAB_HANDLE_ID_HT_ENTRY,
-                      sizeof(hal_handle_id_ht_entry_t),
-                      64, true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_HANDLE_ID_HT_ENTRY] != NULL), false);
+    slab = register_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, slab_args={.name="hal_hdl_id_ht_ent",
+                        .size=sizeof(hal_handle_id_ht_entry_t), .num_elements=64,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_HANDLE_ID_LIST_ENTRY] =
-        slab::factory("hal_hdl_id_list_ent",
-                      HAL_SLAB_HANDLE_ID_LIST_ENTRY,
-                      sizeof(hal_handle_id_list_entry_t),
-                      64, true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_HANDLE_ID_LIST_ENTRY] != NULL), false);
+    slab = register_slab(HAL_SLAB_HANDLE_ID_LIST_ENTRY, slab_args={.name="hal_hdl_id_list_ent",
+                        .size=sizeof(hal_handle_id_list_entry_t), .num_elements=64,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
 	// initialize vrf related data structures
-	slabs_[HAL_SLAB_VRF] =
-        slab::factory("vrf", HAL_SLAB_VRF,
-                      sizeof(hal::vrf_t), 16,
-                      false, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_VRF] != NULL), false);
+    slab = register_slab(HAL_SLAB_VRF, slab_args={.name="vrf",
+                        .size=sizeof(hal::vrf_t), .num_elements=16,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
     // initialize network related data structures
-    slabs_[HAL_SLAB_NETWORK] =
-        slab::factory("network", HAL_SLAB_NETWORK,
-                      sizeof(hal::network_t), 16,
-                      false, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NETWORK] != NULL), false);
+    slab = register_slab(HAL_SLAB_NETWORK, slab_args={.name="network",
+                        .size=sizeof(hal::network_t), .num_elements=16,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
     // initialize security profile related data structures
-    slabs_[HAL_SLAB_SECURITY_PROFILE] =
-        slab::factory("nwsec_profile",
-                      HAL_SLAB_SECURITY_PROFILE,
-                      sizeof(hal::nwsec_profile_t), 8,
-                      false, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_SECURITY_PROFILE] != NULL), false);
+    slab = register_slab(HAL_SLAB_SECURITY_PROFILE, slab_args={.name="nwsec_profile",
+                        .size=sizeof(hal::nwsec_profile_t), .num_elements=8,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
 #if 0
     // initialize dos policy related data structures
@@ -212,273 +202,271 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
 #endif
 
     // initialize L2 segment related data structures
-    slabs_[HAL_SLAB_L2SEG] =
-        slab::factory("l2seg", HAL_SLAB_L2SEG,
-                      sizeof(hal::l2seg_t), 16,
-                      false, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_L2SEG] != NULL), false);
+    slab = register_slab(HAL_SLAB_L2SEG, slab_args={.name="l2seg",
+                        .size=sizeof(hal::l2seg_t), .num_elements=16,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_L2SEG_UPLINK_OIF_LIST] =
-            slab::factory("l2seg_uplink_oif_list",
-                          HAL_SLAB_L2SEG_UPLINK_OIF_LIST,
-                          sizeof(hal::l2_seg_uplink_oif_list_t), 16,
-                          false, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_L2SEG_UPLINK_OIF_LIST] != NULL), false);
+    slab = register_slab(HAL_SLAB_L2SEG_UPLINK_OIF_LIST, 
+                         slab_args={.name="l2seg_uplink_oif_list",
+                        .size=sizeof(hal::l2_seg_uplink_oif_list_t), .num_elements=16,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
     // initialize multicast related data structures
-    slabs_[HAL_SLAB_MC_ENTRY] =
-        slab::factory("mc_entry", HAL_SLAB_MC_ENTRY,
-                      sizeof(hal::mc_entry_t), 16,
-                      false, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_MC_ENTRY] != NULL), false);
-    slabs_[HAL_SLAB_OIF_LIST] =
-            slab::factory("oif_list", HAL_SLAB_OIF_LIST,
-                          sizeof(hal::oif_list_t), 16,
-                          false, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_OIF_LIST] != NULL), false);
-    slabs_[HAL_SLAB_OIF] =
-            slab::factory("oif", HAL_SLAB_OIF,
-                          sizeof(hal::oif_db_t), 16,
-                          false, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_OIF] != NULL), false);
+    slab = register_slab(HAL_SLAB_MC_ENTRY,
+                         slab_args={.name="mc_entry",
+                        .size=sizeof(hal::mc_entry_t), .num_elements=16,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
+
+    slab = register_slab(HAL_SLAB_OIF_LIST,
+                         slab_args={.name="oif_list",
+                        .size=sizeof(hal::oif_list_t), .num_elements=16,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
+
+    slab = register_slab(HAL_SLAB_OIF,
+                         slab_args={.name="oif",
+                        .size=sizeof(hal::oif_db_t), .num_elements=16,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
     // initialize LIF related data structures
-    slabs_[HAL_SLAB_LIF] =
-        slab::factory("lif", HAL_SLAB_LIF,
-                      sizeof(hal::lif_t), 8,
-                      false, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_LIF] != NULL), false);
+    slab = register_slab(HAL_SLAB_LIF,
+                         slab_args={.name="lif",
+                        .size=sizeof(hal::lif_t), .num_elements=8,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
     // initialize interface related data structures
-    slabs_[HAL_SLAB_IF] =
-        slab::factory("interface", HAL_SLAB_IF,
-                      sizeof(hal::if_t), 16,
-                      false, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_IF] != NULL), false);
+    slab = register_slab(HAL_SLAB_IF,
+                         slab_args={.name="interface",
+                        .size=sizeof(hal::if_t), .num_elements=16,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
     // initialize enic l2seg entry related data structures
-    slabs_[HAL_SLAB_ENIC_L2SEG_ENTRY] =
-        slab::factory("if_l2seg_entry", HAL_SLAB_ENIC_L2SEG_ENTRY,
-                      sizeof(hal::if_l2seg_entry_t), 16,
-                      false, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_ENIC_L2SEG_ENTRY] != NULL), false);
+    slab = register_slab(HAL_SLAB_ENIC_L2SEG_ENTRY,
+                         slab_args={.name="if_l2seg_entry",
+                        .size=sizeof(hal::if_l2seg_entry_t), .num_elements=16,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
     // initialize endpoint related data structures
-    slabs_[HAL_SLAB_EP] =
-        slab::factory("ep", HAL_SLAB_EP, sizeof(hal::ep_t), 128,
-                      true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_EP] != NULL), false);
+    slab = register_slab(HAL_SLAB_EP,
+                         slab_args={.name="ep",
+                        .size=sizeof(hal::ep_t), .num_elements=128,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_EP_IP_ENTRY] = slab::factory("ep_ip_entry",
-                                                 HAL_SLAB_EP_IP_ENTRY,
-                                                 sizeof(hal::ep_ip_entry_t),
-                                                 64, true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_EP_IP_ENTRY] != NULL), false);
+    slab = register_slab(HAL_SLAB_EP_IP_ENTRY,
+                         slab_args={.name="ep_ip_entry",
+                        .size=sizeof(hal::ep_ip_entry_t), .num_elements=64,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_EP_L3_ENTRY] =
-        slab::factory("ep_l3_entry", HAL_SLAB_EP_L3_ENTRY,
-                      sizeof(hal::ep_l3_entry_t),
-                      64, true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_EP_L3_ENTRY] != NULL), false);
+    slab = register_slab(HAL_SLAB_EP_L3_ENTRY,
+                         slab_args={.name="ep_l3_entry",
+                        .size=sizeof(hal::ep_l3_entry_t), .num_elements=64,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
     // initialize flow/session related data structures
-    slabs_[HAL_SLAB_FLOW] =
-        slab::factory("flow", HAL_SLAB_FLOW, sizeof(hal::flow_t), 128,
-                      true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_FLOW] != NULL), false);
+    slab = register_slab(HAL_SLAB_FLOW,
+                         slab_args={.name="flow",
+                        .size=sizeof(hal::flow_t), .num_elements=128,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_SESSION] =
-        slab::factory("session", HAL_SLAB_SESSION,
-                      sizeof(hal::session_t), 128,
-                      true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_SESSION] != NULL), false);
+    slab = register_slab(HAL_SLAB_SESSION,
+                         slab_args={.name="session",
+                        .size=sizeof(hal::session_t), .num_elements=128,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
     // initialize l4lb related data structures
-    slabs_[HAL_SLAB_L4LB] =
-        slab::factory("l4lb", HAL_SLAB_L4LB,
-                      sizeof(hal::l4lb_service_entry_t), 16,
-                      true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_L4LB] != NULL), false);
+    slab = register_slab(HAL_SLAB_L4LB,
+                         slab_args={.name="l4lb",
+                        .size=sizeof(hal::l4lb_service_entry_t), .num_elements=16,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
     // initialize Qos-class related data structures
-    slabs_[HAL_SLAB_QOS_CLASS] =
-        slab::factory("qos_class", HAL_SLAB_QOS_CLASS,
-                      sizeof(hal::qos_class_t), 8,
-                      false, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_QOS_CLASS] != NULL), false);
+    slab = register_slab(HAL_SLAB_QOS_CLASS,
+                         slab_args={.name="qos_class",
+                        .size=sizeof(hal::qos_class_t), .num_elements=8,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
     // initialize Copp related data structures
-    slabs_[HAL_SLAB_COPP] =
-        slab::factory("copp", HAL_SLAB_COPP,
-                      sizeof(hal::copp_t), 8,
-                      false, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_COPP] != NULL), false);
+    slab = register_slab(HAL_SLAB_COPP,
+                         slab_args={.name="copp",
+                        .size=sizeof(hal::copp_t), .num_elements=8,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
     // initialize Acl related data structures
-    slabs_[HAL_SLAB_ACL] =
-        slab::factory("acl", HAL_SLAB_ACL,
-                      sizeof(hal::acl_t), 8,
-                      false, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_ACL] != NULL), false);
+    slab = register_slab(HAL_SLAB_ACL,
+                         slab_args={.name="acl",
+                        .size=sizeof(hal::acl_t), .num_elements=8,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_CPU_PKT] =
-        slab::factory("cpu_pkt", HAL_SLAB_CPU_PKT,
-                      9216, 64,
-                      true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_CPU_PKT] != NULL), false);
+    slab = register_slab(HAL_SLAB_CPU_PKT,
+                         slab_args={.name="cpu_pkt",
+                        .size=9216, .num_elements=64,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_NWSEC_GROUP] =
-        slab::factory("nwsec_group", HAL_SLAB_NWSEC_GROUP,
-                      sizeof(hal::nwsec_group_t), 64,
-                      true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NWSEC_GROUP] != NULL), false);
+    slab = register_slab(HAL_SLAB_NWSEC_GROUP,
+                         slab_args={.name="nwsec_group",
+                        .size=sizeof(hal::nwsec_group_t), .num_elements=64,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_V4ADDR_LIST_ELEM] =
-        slab::factory("v4addr_list_elem", HAL_SLAB_V4ADDR_LIST_ELEM,
-                      sizeof(hal::addr_list_elem_t) +
-                          sizeof(ipv4_range_t),
-                      8, true, true, true, mmgr);
-    HAL_ASSERT_RETURN(slabs_[HAL_SLAB_V4ADDR_LIST_ELEM] != NULL, false);
+    slab = register_slab(HAL_SLAB_V4ADDR_LIST_ELEM,
+                         slab_args={.name="v4addr_list_elem",
+                        .size=(sizeof(hal::addr_list_elem_t) + sizeof(ipv4_range_t)), .num_elements=8,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_V6ADDR_LIST_ELEM] =
-        slab::factory("v6addr_list_elem", HAL_SLAB_V6ADDR_LIST_ELEM,
-                      sizeof(hal::addr_list_elem_t) +
-                          sizeof(ipv6_range_t),
-                      8, true, true, true, mmgr);
-    HAL_ASSERT_RETURN(slabs_[HAL_SLAB_V6ADDR_LIST_ELEM] != NULL, false);
+    slab = register_slab(HAL_SLAB_V6ADDR_LIST_ELEM,
+                         slab_args={.name="v6addr_list_elem",
+                        .size=(sizeof(hal::addr_list_elem_t) + sizeof(ipv6_range_t)), .num_elements=8,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_PORT_LIST_ELEM] =
-        slab::factory("port_list_elem", HAL_SLAB_PORT_LIST_ELEM,
-                      sizeof(hal::port_list_elem_t), 64,
-                      true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_PORT_LIST_ELEM] != NULL), false);
+    slab = register_slab(HAL_SLAB_PORT_LIST_ELEM,
+                         slab_args={.name="port_list_elem",
+                        .size=sizeof(hal::port_list_elem_t), .num_elements=64,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_SG_LIST_ELEM] =
-        slab::factory("sg_list_elem", HAL_SLAB_SG_LIST_ELEM,
-                      sizeof(hal::sg_list_elem_t), 64,
-                      true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_SG_LIST_ELEM] != NULL), false);
+    slab = register_slab(HAL_SLAB_SG_LIST_ELEM,
+                         slab_args={.name="sg_list_elem",
+                        .size=sizeof(hal::sg_list_elem_t), .num_elements=64,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_ICMP_LIST_ELEM] =
-        slab::factory("icmp_list_elem", HAL_SLAB_ICMP_LIST_ELEM,
-                      sizeof(hal::icmp_list_elem_t), 64,
-                      true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_ICMP_LIST_ELEM] != NULL), false);
+    slab = register_slab(HAL_SLAB_ICMP_LIST_ELEM,
+                         slab_args={.name="icmp_list_elem",
+                        .size=sizeof(hal::icmp_list_elem_t), .num_elements=64,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_MACADDR_LIST_ELEM] =
-        slab::factory("macaddr_list_elem", HAL_SLAB_MACADDR_LIST_ELEM,
-                      sizeof(hal::mac_addr_list_elem_t), 64,
-                      true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_MACADDR_LIST_ELEM] != NULL), false);
+    slab = register_slab(HAL_SLAB_MACADDR_LIST_ELEM,
+                         slab_args={.name="macaddr_list_elem",
+                        .size=sizeof(hal::mac_addr_list_elem_t), .num_elements=64,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_NAT_POOL] =
-        slab::factory("natpool", HAL_SLAB_NAT_POOL,
-                      sizeof(hal::nat_pool_t), 8,
-                      true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NAT_POOL] != NULL), false);
+    slab = register_slab(HAL_SLAB_NAT_POOL,
+                         slab_args={.name="natpool",
+                        .size=sizeof(hal::nat_pool_t), .num_elements=8,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_NAT_CFG_RULE] =
-        slab::factory("nat_cfg_rule", HAL_SLAB_NAT_CFG_RULE,
-                      sizeof(hal::nat_cfg_rule_t), 64,
-                      true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NAT_CFG_RULE] != NULL), false);
+    slab = register_slab(HAL_SLAB_NAT_CFG_RULE,
+                         slab_args={.name="nat_cfg_rule",
+                        .size=sizeof(hal::nat_cfg_rule_t), .num_elements=64,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_NAT_CFG_POL] =
-        slab::factory("nat_cfg_policy", HAL_SLAB_NAT_CFG_POL,
-                      sizeof(hal::nat_cfg_pol_t), 64,
-                      true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NAT_CFG_POL] != NULL), false);
+    slab = register_slab(HAL_SLAB_NAT_CFG_POL,
+                         slab_args={.name="nat_cfg_policy",
+                        .size=sizeof(hal::nat_cfg_pol_t), .num_elements=64,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_NEXTHOP] =
-        slab::factory("nexthop", HAL_SLAB_NEXTHOP,
-                      sizeof(hal::nexthop_t), 64,
-                      true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NEXTHOP] != NULL), false);
+    slab = register_slab(HAL_SLAB_NEXTHOP,
+                         slab_args={.name="nexthop",
+                        .size=sizeof(hal::nexthop_t), .num_elements=64,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_ROUTE] =
-        slab::factory("route", HAL_SLAB_ROUTE,
-                      sizeof(hal::route_t), 64,
-                      true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_ROUTE] != NULL), false);
+    slab = register_slab(HAL_SLAB_ROUTE,
+                         slab_args={.name="route",
+                        .size=sizeof(hal::route_t), .num_elements=64,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_ROUTE_ACL_RULE] =
-        slab::factory("route_acl_rule", HAL_SLAB_ROUTE_ACL_RULE,
-                      sizeof(hal::route_acl_rule_t), 64,
-                      true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_ROUTE_ACL_RULE] != NULL), false);
+    slab = register_slab(HAL_SLAB_ROUTE_ACL_RULE,
+                         slab_args={.name="route_acl_rule",
+                        .size=sizeof(hal::route_acl_rule_t), .num_elements=64,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_FLOWMON_RULE] =
-        slab::factory("flowmon_rule", HAL_SLAB_FLOWMON_RULE,
-                      sizeof(hal::flow_monitor_rule_t), 64,
-                      true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_FLOWMON_RULE] != NULL), false);
+    slab = register_slab(HAL_SLAB_FLOWMON_RULE,
+                         slab_args={.name="flowmon_rule",
+                        .size=sizeof(hal::flow_monitor_rule_t), .num_elements=64,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
     HAL_ASSERT_RETURN((flow_monitor_acl_ctx_create() == HAL_RET_OK), false);
 
-    slabs_[HAL_SLAB_ROUTE_ACL_USERDATA] =
-        slab::factory("route_acl_userdata",
-                      HAL_SLAB_ROUTE_ACL_USERDATA, sizeof(route_acl_user_data_t),
-                      64, true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_ROUTE_ACL_USERDATA] != NULL), false);
+    slab = register_slab(HAL_SLAB_ROUTE_ACL_USERDATA,
+                         slab_args={.name="route_acl_userdata",
+                        .size=sizeof(route_acl_user_data_t), .num_elements=64,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_IPSEC_CFG_RULE] =
-        slab::factory("ipsec_cfg_rule", HAL_SLAB_IPSEC_CFG_RULE,
-                      sizeof(hal::ipsec_cfg_rule_t), 64,
-                      true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_IPSEC_CFG_RULE] != NULL), false);
+    slab = register_slab(HAL_SLAB_IPSEC_CFG_RULE,
+                         slab_args={.name="ipsec_cfg_rule",
+                        .size=sizeof(hal::ipsec_cfg_rule_t), .num_elements=64,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_IPSEC_CFG_POL] =
-        slab::factory("ipsec_cfg_policy", HAL_SLAB_IPSEC_CFG_POL,
-                      sizeof(hal::ipsec_cfg_pol_t), 64,
-                      true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_IPSEC_CFG_POL] != NULL), false);
+    slab = register_slab(HAL_SLAB_IPSEC_CFG_POL,
+                         slab_args={.name="ipsec_cfg_policy",
+                        .size=sizeof(hal::ipsec_cfg_pol_t), .num_elements=64,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_TCP_PROXY_CFG_RULE] =
-        slab::factory("tcp_proxy_cfg_rule", HAL_SLAB_TCP_PROXY_CFG_RULE,
-                      sizeof(hal::tcp_proxy_cfg_rule_t), 64,
-                      true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_TCP_PROXY_CFG_RULE] != NULL), false);
+    slab = register_slab(HAL_SLAB_TCP_PROXY_CFG_RULE,
+                         slab_args={.name="tcp_proxy_cfg_rule",
+                        .size=sizeof(hal::tcp_proxy_cfg_rule_t), .num_elements=64,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_TCP_PROXY_CFG_POL] =
-        slab::factory("tcp_proxy_cfg_policy", HAL_SLAB_TCP_PROXY_CFG_POL,
-                      sizeof(hal::tcp_proxy_cfg_pol_t), 64,
-                      true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_TCP_PROXY_CFG_POL] != NULL), false);
+    slab = register_slab(HAL_SLAB_TCP_PROXY_CFG_POL,
+                         slab_args={.name="tcp_proxy_cfg_policy",
+                        .size=sizeof(hal::tcp_proxy_cfg_pol_t), .num_elements=64,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
     // initialize filter related data structures
-    slabs_[HAL_SLAB_FILTER] =
-        slab::factory("filter", HAL_SLAB_FILTER, sizeof(hal::filter_t), 128,
-                      true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_FILTER] != NULL), false);
+    slab = register_slab(HAL_SLAB_FILTER,
+                         slab_args={.name="filter",
+                        .size=sizeof(hal::filter_t), .num_elements=128,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-	// initialize FTE Span
-	slabs_[HAL_SLAB_FTE_SPAN] =
-        slab::factory("fte_span", HAL_SLAB_FTE_SPAN,
-                      sizeof(hal::fte_span_t), 16,
-                      false, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_FTE_SPAN] != NULL), false);
+    // initialize FTE Span
+    slab = register_slab(HAL_SLAB_FTE_SPAN,
+                         slab_args={.name="fte_span",
+                        .size=sizeof(hal::fte_span_t), .num_elements=16,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
     if (hal_cfg->features == HAL_FEATURE_SET_GFT) {
         // initialize GFT related slabs
-        slabs_[HAL_SLAB_GFT_EXACT_MATCH_PROFILE] =
-            slab::factory("gft_exactm_prof",
-                          HAL_SLAB_GFT_EXACT_MATCH_PROFILE,
-                          sizeof(hal::gft_exact_match_profile_t),
-                          16, false, true, true, mmgr);
-        HAL_ASSERT_RETURN((slabs_[HAL_SLAB_GFT_EXACT_MATCH_PROFILE] != NULL), false);
+        slab = register_slab(HAL_SLAB_GFT_EXACT_MATCH_PROFILE,
+                         slab_args={.name="gft_exactm_prof",
+                        .size=sizeof(hal::gft_exact_match_profile_t), .num_elements=16,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+        HAL_ASSERT_RETURN((slab != NULL), false);
 
-        slabs_[HAL_SLAB_GFT_HDR_TRANSPOSITION_PROFILE] =
-            slab::factory("gft_hdr_xpos_prof",
-                          HAL_SLAB_GFT_HDR_TRANSPOSITION_PROFILE,
-                          sizeof(hal::gft_hdr_xposition_profile_t),
-                          16, false, true, true, mmgr);
-        HAL_ASSERT_RETURN((slabs_[HAL_SLAB_GFT_HDR_TRANSPOSITION_PROFILE] != NULL), false);
+        slab = register_slab(HAL_SLAB_GFT_HDR_TRANSPOSITION_PROFILE,
+                         slab_args={.name="gft_hdr_xpos_prof",
+                        .size=sizeof(hal::gft_hdr_xposition_profile_t), .num_elements=16,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+        HAL_ASSERT_RETURN((slab != NULL), false);
 
-        slabs_[HAL_SLAB_GFT_EXACT_MATCH_FLOW_ENTRY] =
-             slab::factory("gft_exactm_flow_ent",
-                           HAL_SLAB_GFT_EXACT_MATCH_FLOW_ENTRY,
-                           sizeof(hal::gft_exact_match_flow_entry_t),
-                           16, false, true, true, mmgr);
-        HAL_ASSERT_RETURN((slabs_[HAL_SLAB_GFT_EXACT_MATCH_FLOW_ENTRY] != NULL), false);
+        slab = register_slab(HAL_SLAB_GFT_EXACT_MATCH_FLOW_ENTRY,
+                         slab_args={.name="gft_exactm_flow_ent",
+                        .size=sizeof(hal::gft_exact_match_flow_entry_t), .num_elements=16,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+        HAL_ASSERT_RETURN((slab != NULL), false);
     }
 
     return true;
@@ -491,136 +479,149 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
 bool
 hal_cfg_db::init_vss(hal_cfg_t *hal_cfg)
 {
+    slab_ptr_t        slab = NULL;
+    hal_slab_args_t  slab_args;
+
     // initialize Crypto Cert Store related data structures
-    slabs_[HAL_SLAB_CRYPTO_CERT_STORE] = slab::factory("crypto_cert_store",
-                                                       HAL_SLAB_CRYPTO_CERT_STORE,
-                                                       sizeof(hal::crypto_cert_t),
-                                                       16,
-                                                       false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_CRYPTO_CERT_STORE] != NULL), false);
+    slab = register_slab(HAL_SLAB_CRYPTO_CERT_STORE,
+                         slab_args={.name="crypto_cert_store",
+                        .size=sizeof(hal::crypto_cert_t), .num_elements=16,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
     // initialize TLS CB related data structures
-    slabs_[HAL_SLAB_TLSCB] = slab::factory("tlscb", HAL_SLAB_TLSCB,
-                                sizeof(hal::tlscb_t), 16,
-                                false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_TLSCB] != NULL), false);
+    slab = register_slab(HAL_SLAB_TLSCB,
+                         slab_args={.name="tlscb",
+                        .size=sizeof(hal::tlscb_t), .num_elements=16,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
     // initialize TCB CB related data structures
-    slabs_[HAL_SLAB_TCPCB] = slab::factory("tcpcb", HAL_SLAB_TCPCB,
-                                sizeof(hal::tcpcb_t), 16,
-                                false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_TCPCB] != NULL), false);
+    slab = register_slab(HAL_SLAB_TCPCB,
+                         slab_args={.name="tcpcb",
+                        .size=sizeof(hal::tcpcb_t), .num_elements=16,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
     // initialize WRing related data structures
-    slabs_[HAL_SLAB_WRING] = slab::factory("wring", HAL_SLAB_WRING,
-                                sizeof(hal::wring_t), 16,
-                                false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_WRING] != NULL), false);
+    slab = register_slab(HAL_SLAB_WRING,
+                         slab_args={.name="wring",
+                        .size=sizeof(hal::wring_t), .num_elements=16,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
     // initialize IPSEC CB related data structures
-    slabs_[HAL_SLAB_IPSECCB] = slab::factory("ipseccb", HAL_SLAB_IPSECCB,
-                                  sizeof(hal::ipseccb_t), 16,
-                                  false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_IPSECCB] != NULL), false);
+    slab = register_slab(HAL_SLAB_IPSECCB,
+                         slab_args={.name="ipseccb",
+                        .size=sizeof(hal::ipseccb_t), .num_elements=16,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_IPSEC_SA] = slab::factory("ipsec_sa", HAL_SLAB_IPSEC_SA,
-                                  sizeof(hal::ipsec_sa_t), 16,
-                                  false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_IPSEC_SA] != NULL), false);
+    slab = register_slab(HAL_SLAB_IPSEC_SA,
+                         slab_args={.name="ipsec_sa",
+                        .size=sizeof(hal::ipsec_sa_t), .num_elements=16,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
     // initialize CPU CB related data structures
-    slabs_[HAL_SLAB_CPUCB] = slab::factory("cpucb", HAL_SLAB_CPUCB,
-                                sizeof(hal::cpucb_t), 16,
-                                false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_CPUCB] != NULL), false);
+    slab = register_slab(HAL_SLAB_CPUCB,
+                         slab_args={.name="cpucb",
+                        .size=sizeof(hal::cpucb_t), .num_elements=16,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
     // initialize Raw Redirect CB related data structures
-    slabs_[HAL_SLAB_RAWRCB] = slab::factory("rawrcb", HAL_SLAB_RAWRCB,
-                                 sizeof(hal::rawrcb_t), 16,
-                                 false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_RAWRCB] != NULL), false);
+    slab = register_slab(HAL_SLAB_RAWRCB,
+                         slab_args={.name="rawrcb",
+                        .size=sizeof(hal::rawrcb_t), .num_elements=16,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
     // initialize Raw Chain CB related data structures
-    slabs_[HAL_SLAB_RAWCCB] = slab::factory("rawccb", HAL_SLAB_RAWCCB,
-                                 sizeof(hal::rawccb_t), 16,
-                                 false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_RAWCCB] != NULL), false);
+    slab = register_slab(HAL_SLAB_RAWCCB,
+                         slab_args={.name="rawccb",
+                        .size=sizeof(hal::rawccb_t), .num_elements=16,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
     // initialize Raw Redirect CB related data structures
-    slabs_[HAL_SLAB_PROXYRCB] = slab::factory("proxyrcb", HAL_SLAB_PROXYRCB,
-                                   sizeof(hal::proxyrcb_t), 16,
-                                   false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_PROXYRCB] != NULL), false);
+    slab = register_slab(HAL_SLAB_PROXYRCB,
+                         slab_args={.name="proxyrcb",
+                        .size=sizeof(hal::proxyrcb_t), .num_elements=16,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
     // initialize Raw Chain CB related data structures
-    slabs_[HAL_SLAB_PROXYCCB] = slab::factory("proxyccb", HAL_SLAB_PROXYCCB,
-                                   sizeof(hal::proxyccb_t), 16,
-                                   false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_PROXYCCB] != NULL), false);
+    slab = register_slab(HAL_SLAB_PROXYCCB,
+                         slab_args={.name="proxyccb",
+                        .size=sizeof(hal::proxyccb_t), .num_elements=16,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-   slabs_[HAL_SLAB_NWSEC_POLICY] =
-        slab::factory("nwsec_policy", HAL_SLAB_NWSEC_POLICY,
-                      sizeof(hal::nwsec_policy_t), 64,
-                      true, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NWSEC_POLICY] != NULL), false);
+    slab = register_slab(HAL_SLAB_NWSEC_POLICY,
+                         slab_args={.name="nwsec_policy",
+                        .size=sizeof(hal::nwsec_policy_t), .num_elements=64,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_NWSEC_POLICY_APPID] =
-        slab::factory("nwsec_policy_appid", HAL_SLAB_NWSEC_POLICY_APPID,
-                      sizeof(hal::nwsec_policy_appid_t),
-                      64, true, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NWSEC_POLICY_APPID] != NULL), false);
+    slab = register_slab(HAL_SLAB_NWSEC_POLICY_APPID,
+                         slab_args={.name="nwsec_policy_appid",
+                        .size=sizeof(hal::nwsec_policy_appid_t), .num_elements=64,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_NWSEC_RULE] =
-        slab::factory("nwsec_rule", HAL_SLAB_NWSEC_RULE,
-                      sizeof(hal::nwsec_rule_t), 1024,
-                      true, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NWSEC_RULE] != NULL), false);
+    slab = register_slab(HAL_SLAB_NWSEC_RULE,
+                         slab_args={.name="nwsec_rule",
+                        .size=sizeof(hal::nwsec_rule_t), .num_elements=1024,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_NWSEC_RULE_LIST] =
-        slab::factory("nwsec_rule_list", HAL_SLAB_NWSEC_RULE_LIST,
-                      sizeof(hal::nwsec_rulelist_t), 1024,
-                      true, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NWSEC_RULE_LIST] != NULL), false);
+    slab = register_slab(HAL_SLAB_NWSEC_RULE_LIST,
+                         slab_args={.name="nwsec_rule_list",
+                        .size=sizeof(hal::nwsec_rulelist_t), .num_elements=1024,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_IPV4_RULE] =
-        slab::factory("ipv4_rule", HAL_SLAB_IPV4_RULE,
-                      sizeof(hal::ipv4_rule_t), 1024,
-                      true, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_IPV4_RULE] != NULL), false);
+    slab = register_slab(HAL_SLAB_IPV4_RULE,
+                         slab_args={.name="ipv4_rule",
+                        .size=sizeof(hal::ipv4_rule_t), .num_elements=1024,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
+    slab = register_slab(HAL_SLAB_RULE_CFG,
+                         slab_args={.name="rule_cfg",
+                        .size=sizeof(hal::rule_cfg_t), .num_elements=1024,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_RULE_CFG] =
-        slab::factory("rule_cfg", HAL_SLAB_RULE_CFG,
-                      sizeof(hal::rule_cfg_t), 1024,
-                      true, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_RULE_CFG] != NULL), false);
+    slab = register_slab(HAL_SLAB_RULE_DATA,
+                         slab_args={.name="rule_data",
+                        .size=sizeof(hal::rule_data_t), .num_elements=1024,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_RULE_DATA] =
-        slab::factory("rule_data", HAL_SLAB_RULE_DATA,
-                      sizeof(hal::rule_data_t), 1024,
-                      true, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_RULE_DATA] != NULL), false);
+    slab = register_slab(HAL_SLAB_RULE_CTR,
+                         slab_args={.name="rule_ctr",
+                        .size=sizeof(hal::rule_ctr_t), .num_elements=1024,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_RULE_CTR] =
-        slab::factory("rule_ctr", HAL_SLAB_RULE_CTR,
-                      sizeof(hal::rule_ctr_t), 1024,
-                      true, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_RULE_CTR] != NULL), false);
+    slab = register_slab(HAL_SLAB_PROXY,
+                         slab_args={.name="proxy",
+                        .size=sizeof(hal::proxy_t), .num_elements=HAL_MAX_PROXY,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slabs_[HAL_SLAB_PROXY] = slab::factory("proxy", HAL_SLAB_PROXY,
-                                           sizeof(hal::proxy_t), HAL_MAX_PROXY,
-                                           false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_PROXY] != NULL), false);
-
-    slabs_[HAL_SLAB_PROXY_FLOW_INFO] =
-        slab::factory("proxy_flow_info", HAL_SLAB_PROXY_FLOW_INFO,
-                      sizeof(hal::proxy_flow_info_t),
-                      HAL_MAX_PROXY_FLOWS,
-                      false, true, true);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_PROXY_FLOW_INFO] != NULL), false);
+    slab = register_slab(HAL_SLAB_PROXY_FLOW_INFO,
+                         slab_args={.name="proxy_flow_info",
+                        .size=sizeof(hal::proxy_flow_info_t), .num_elements=HAL_MAX_PROXY_FLOWS,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
 
     return true;
 }
+
+
 
 //------------------------------------------------------------------------------
 // init() function to instantiate all the config db init state
@@ -2054,6 +2055,20 @@ shmmgr *
 hal_mmgr (void)
 {
     return g_hal_state->mmgr();
+}
+
+/*
+ * Register slab to hal state
+ * TBD: Move away from ENUMs so hal_state need not
+ * be polluted with plugin information
+ */
+sdk::lib::slab*
+hal_cfg_db::register_slab(hal_slab_t slab_id, hal_slab_args_t& slab_args) {
+
+    slabs_[slab_id] = slab::factory(slab_args.name, slab_id, slab_args.size,
+                                     slab_args.num_elements, slab_args.thread_safe,
+                                   slab_args.grow_on_demand, slab_args.zero_on_alloc, mmgr_);
+    return slabs_[slab_id];
 }
 
 }    // namespace hal

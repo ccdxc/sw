@@ -64,6 +64,16 @@ enum {
 // TODO: this should be coming from catalogue or platform API
 #define HAL_MAX_TM_PORTS                             12
 
+typedef struct hal_slab_args_
+{
+    const char *name;
+    uint32_t    size;
+    uint32_t    num_elements;
+    bool        thread_safe;
+    bool        grow_on_demand;
+    bool        zero_on_alloc;
+} hal_slab_args_t;
+
 // forward declaration
 class hal_handle;
 
@@ -89,6 +99,8 @@ public:
     // API to call after processing any packet by FTE, any operation by config
     // thread or periodic thread etc.
     hal_ret_t db_close(void);
+
+    slab_ptr_t register_slab(hal_slab_t slab_id, hal_slab_args_t& slab_args);
 
     // API to register a config object with HAL infra
     hal_ret_t register_cfg_object(hal_obj_id_t obj_id, uint32_t obj_sz);
@@ -687,6 +699,9 @@ public:
 
     void set_fte_span(fte_span_t *span) { oper_db_->set_fte_span(span); }
     fte_span_t *fte_span(void) const { return oper_db_->fte_span(); }
+    slab_ptr_t register_slab(hal_slab_t slab_id, hal_slab_args_t& slab_args) {
+        return (cfg_db_->register_slab(slab_id, slab_args)); 
+    }
 
 private:
     // following come from shared memory or non-linux HBM memory
