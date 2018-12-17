@@ -9,6 +9,7 @@ import iota.protos.pygen.types_pb2 as types_pb2
 import iota.protos.pygen.cfg_svc_pb2 as cfg_svc
 import iota.protos.pygen.topo_svc_pb2 as topo_svc
 
+import iota.harness.infra.resmgr as resmgr
 import iota.harness.infra.store as store
 import iota.harness.infra.types as types
 import iota.harness.infra.utils.utils as utils
@@ -442,3 +443,9 @@ def GetCoverageFiles(src_cov_file, dst_dir):
 
     Logger.error("Copied coverage files")
     return types.status.SUCCESS
+
+def AllocateTcpPort():
+    return resmgr.TcpPortAllocator.Alloc()
+
+def AllocateUdpPort():
+    return resmgr.UdpPortAllocator.Alloc()

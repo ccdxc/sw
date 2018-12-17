@@ -45,3 +45,17 @@ class TestbedVlanAllocator(object):
 
     def Alloc(self):
         return next(self.__pool)
+
+TESTBED_NUM_PORTS = 8000
+class TestbedPortAllocator():
+    def __init__(self):
+        self.__start = 6000
+        self.__count = TESTBED_NUM_PORTS
+        self.__pool = iter(range(self.__start, self.__start + self.__count))
+        return
+
+    def Alloc(self):
+        return next(self.__pool)
+
+TcpPortAllocator = TestbedPortAllocator()
+UdpPortAllocator = TestbedPortAllocator()

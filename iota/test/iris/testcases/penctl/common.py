@@ -38,10 +38,11 @@ def SendTraffic(tc):
     tc.cmd_descr = "Server: %s(%s) <--> Client: %s(%s)" %\
                    (tc.intf1.Name(), tc.intf1.GetIP(), tc.intf2.Name(), tc.intf2.GetIP())
     api.Logger.info("Starting Iperf  from %s" % (tc.cmd_descr))
-
-    iperf_server_cmd = cmd_builder.iperf_server_cmd()
+    
+    port = api.AllocateTcpPort()
+    iperf_server_cmd = cmd_builder.iperf_server_cmd(port = port)
     tc.intf1.AddCommand(req, iperf_server_cmd, background = True)
-    iperf_client_cmd = cmd_builder.iperf_client_cmd(server_ip = tc.intf1.GetIP(),
+    iperf_client_cmd = cmd_builder.iperf_client_cmd(server_ip = tc.intf1.GetIP(), port = port,
                             proto='tcp', pktsize=512, ipproto='v4')
     tc.intf2.AddCommand(req, iperf_client_cmd)
 

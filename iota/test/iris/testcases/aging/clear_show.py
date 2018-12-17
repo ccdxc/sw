@@ -24,14 +24,14 @@ def Trigger(tc):
     api.Logger.info("Starting clear & show stress test from %s" % (cmd_cookie))
 
     
-    basecmd = 'iperf '
+    basecmd = 'iperf -p %d ' % api.AllocateTcpPort()
     proto   = 6
     timeout = 250 
     #tc.secprof = sec_profile_obj.gl_securityprofile_json_template
     #timeout = int(tc.secprof['security-profiles'][0]['spec']['timeouts']['tcp']) + \
     #          int(tc.secprof['security-profiles'][0]['spec']['timeouts']['tcp-close'])
     if tc.iterators.proto == 'udp':
-        basecmd = 'iperf -u '
+        basecmd = 'iperf -u -p %d ' % api.AllocateUdpPort()
         proto   = 17
         timeout = 150
         #timeout = tc.security_profile['security-profiles'][0]['spec']['timeouts']['udp']

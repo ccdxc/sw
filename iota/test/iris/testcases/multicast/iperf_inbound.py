@@ -31,9 +31,9 @@ def Trigger(tc):
     api.Trigger_AddCommand(req, w2.node_name, w2.workload_name,
                            basecmd, background = True)
 
-    basecmd = 'iperf'
+    basecmd = 'iperf -p %d ' % api.AllocateTcpPort()
     if tc.iterators.proto == 'udp':
-        basecmd = 'iperf -u'
+        basecmd = 'iperf -u -p %d ' % api.AllocateUdpPort()
     api.Trigger_AddCommand(req, w1.node_name, w1.workload_name,
                            "%s -s -t 300 -B %s -i 1" % (basecmd, group), background = True)
     api.Trigger_AddCommand(req, w2.node_name, w2.workload_name,

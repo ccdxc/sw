@@ -43,12 +43,17 @@ def Trigger(tc):
                    (tc.intf1.Name(), tc.intf1.GetIP(), tc.intf2.Name(), tc.intf2.GetIP())
     api.Logger.info("Starting Iperf test from %s" % (tc.cmd_descr))
 
-    iperf_server_cmd = cmd_builder.iperf_server_cmd()
-    tc.intf1.AddCommand(req, iperf_server_cmd, background = True)
     proto = getattr(tc.iterators, "proto", 'tcp')
+    if proto == 'tcp':
+        port = api.AllocateTcpPort()
+    else:
+        port = api.AllocateUdpPort()
+
+    iperf_server_cmd = cmd_builder.iperf_server_cmd(port = port)
+    tc.intf1.AddCommand(req, iperf_server_cmd, background = True)
     pktsize = getattr(tc.iterators, "pktsize", 512)
     ipproto = getattr(tc.iterators, "ipproto", 'v4')
-    iperf_client_cmd = cmd_builder.iperf_client_cmd(server_ip = tc.intf1.GetIP(),
+    iperf_client_cmd = cmd_builder.iperf_client_cmd(server_ip = tc.intf1.GetIP(), port = port,
                             proto=proto, pktsize=pktsize, ipproto=ipproto)
     tc.intf2.AddCommand(req, iperf_client_cmd)
 

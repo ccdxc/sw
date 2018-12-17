@@ -6,7 +6,6 @@ symmetric_key = "6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:
 
 msft_key = "6d:5a:56:da:25:5b:0e:c2:41:67:25:3d:43:a3:8f:b0:d0:ca:2b:cb:ae:7b:30:b4:77:cb:2d:a3:80:30:f2:0c:6a:42:b7:3b:be:ac:01:fa"
 
-
 def ethtool_feature_cmd(node, intf,feature, on_off):
     return " ".join(["ethtool", "-K", intf, feature,  on_off])
 
@@ -117,7 +116,8 @@ def ip_link_filter_promiscuous(node, intf,op):
 def tcpdump_cmd(node, intf,filename):
     return " ".join(["tcpdump", "-xxi", intf,"-w",  filename])
 
-def iperf_server_cmd(port=5200, time=300, run_core=None):
+def iperf_server_cmd(port = None, time=300, run_core=None):
+    assert(port)
     cmd = ["iperf", "-s","-p", str(port)]
     if run_core:
         cmd.extend(["-A", str(run_core)])
@@ -127,7 +127,8 @@ def iperf_server_cmd(port=5200, time=300, run_core=None):
 
     return " ".join(cmd)
 
-def iperf_client_cmd(server_ip, port=5200, time=10, pktsize=None, proto='tcp', run_core=None, ipproto='v4'):
+def iperf_client_cmd(server_ip, port = None, time=10, pktsize=None, proto='tcp', run_core=None, ipproto='v4'):
+    assert(port)
     cmd = ["iperf", "-c", str(server_ip), "-p", str(port)]
 
     if time:
