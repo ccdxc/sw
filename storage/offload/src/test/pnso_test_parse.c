@@ -582,7 +582,6 @@ static struct svc_param_desc g_algo_map[] = {
 /* Keep alphabetized */
 static struct svc_param_desc g_output_flags_map[] = {
 	OUTPUT_FLAG_DESC(APPEND),
-	OUTPUT_FLAG_DESC(JUMBO),
 	OUTPUT_FLAG_DESC(TINY),
 
 	/* Must be last */

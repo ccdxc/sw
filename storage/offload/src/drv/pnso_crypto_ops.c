@@ -31,7 +31,7 @@ static enum crypto_algo_cmd_lo   crypto_algo_cmd_lo_tbl[PNSO_CRYPTO_TYPE_MAX] = 
 	[PNSO_CRYPTO_TYPE_GCM] = CRYPTO_ALGO_CMD_LO_AES_GCM,
 };
 
-#define CRYPTO_POLL_LOOP_TIMEOUT (100 * OSAL_NSEC_PER_MSEC)
+#define CRYPTO_POLL_LOOP_TIMEOUT (500 * OSAL_NSEC_PER_USEC)
 
 static pnso_error_t
 crypto_validate_input(struct service_info *svc_info,
