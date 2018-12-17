@@ -116,9 +116,7 @@ func getHost(index int) *pencluster.Host {
 				},
 			},
 		},
-		Status: pencluster.HostStatus{
-			Type: pencluster.HostStatus_BAREMETAL.String(),
-		},
+		Status: pencluster.HostStatus{},
 	}
 }
 

@@ -77,7 +77,7 @@ class TestMgmtNode:
             self.runCmd("""sh -c 'echo export PENSERVER=http://{}:9000 >> ~/.bashrc' """.format(self.clustervip))
             self.runCmd("""sh -c 'echo source /etc/bash_completion.d/venice >> ~/.bashrc' """)
 class Node:
-    def __init__(self, name, ipaddress, containerIndex, nettype=None, venice_image=None, venice_image_dir=None, dev_mode=None, custom_config_file=None):
+    def __init__(self, name, ipaddress, containerIndex, nettype=None, venice_image=None, venice_image_dir=None, dev_mode=None, custom_config_file=None, disableTmpfs=False):
         self.containerIndex = containerIndex
         self.debug = debug
         self.name = name
@@ -87,6 +87,7 @@ class Node:
         self.venice_image_dir = venice_image_dir
         self.dev_mode = dev_mode
         self.custom_config_file = custom_config_file
+	self.disableTmpfs = disableTmpfs
     def runCmd(self, command, ignore_error=False):
         return runCommand("""docker exec {} """.format(self.name) + command, ignore_error)
     def startNode(self):
@@ -97,14 +98,16 @@ class Node:
         extra_config = ""
         if self.nettype == 'bridge': # all original ports are exposed for macvlan in its own ip. for bridge, we need to expose explicitly
             extra_config = """ -p {}:9000 -p {}:9200 -p {}:8080 """.format(exposedPortBase + self.containerIndex, exposedPortBase + 200 + self.containerIndex, 8080 + self.containerIndex - 1)
+	if self.disableTmpfs is False:
+            extra_config = extra_config + "--tmpfs /var/lib/pensando "
         if self.custom_config_file is not None :
             extra_config = extra_config + """ -v {}:/etc/pensando/configs/shared/common/venice-conf.json """.format(self.custom_config_file)
         if self.dev_mode:
-            runCommand("""docker run --tmpfs /var/lib/pensando -v/sys/fs/cgroup:/sys/fs/cgroup:ro {} -l pens -l pens-dind --network pen-dind-net --ip {} -v {}:/dind -v sshSecrets:/root/.ssh -v {}:/import/src/github.com/pensando/sw --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.3""".format(extra_config, self.ipaddress, script_src_dir, src_dir, self.name, self.name))
+            runCommand("""docker run -v/sys/fs/cgroup:/sys/fs/cgroup:ro {} -l pens -l pens-dind --network pen-dind-net --ip {} -v {}:/dind -v sshSecrets:/root/.ssh -v {}:/import/src/github.com/pensando/sw --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.3""".format(extra_config, self.ipaddress, script_src_dir, src_dir, self.name, self.name))
         elif self.venice_image_dir != '':
-            runCommand("""docker run --tmpfs /var/lib/pensando -v/sys/fs/cgroup:/sys/fs/cgroup:ro {} -l pens -l pens-dind --network pen-dind-net --ip {} -v {}:/dind -v sshSecrets:/root/.ssh -v {}:/venice:ro --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.3""".format(extra_config, self.ipaddress, script_src_dir, self.venice_image_dir, self.name, self.name))
+            runCommand("""docker run -v/sys/fs/cgroup:/sys/fs/cgroup:ro {} -l pens -l pens-dind --network pen-dind-net --ip {} -v {}:/dind -v sshSecrets:/root/.ssh -v {}:/venice:ro --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.3""".format(extra_config, self.ipaddress, script_src_dir, self.venice_image_dir, self.name, self.name))
         else:
-            runCommand("""docker run --tmpfs /var/lib/pensando -v/sys/fs/cgroup:/sys/fs/cgroup:ro {} -l pens -l pens-dind --network pen-dind-net --ip {} -v {}:/dind -v sshSecrets:/root/.ssh -v {}:/venice.tgz:ro --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.3""".format(extra_config, self.ipaddress, script_src_dir, self.venice_image, self.name, self.name))
+            runCommand("""docker run -v/sys/fs/cgroup:/sys/fs/cgroup:ro {} -l pens -l pens-dind --network pen-dind-net --ip {} -v {}:/dind -v sshSecrets:/root/.ssh -v {}:/venice.tgz:ro --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.3""".format(extra_config, self.ipaddress, script_src_dir, self.venice_image, self.name, self.name))
         # hitting https://github.com/kubernetes/kubernetes/issues/50770 on docker-ce on mac but not on linux
         while self.runCmd("""docker ps >/dev/null 2>&1""", ignore_error=True) != 0 and not debug:
             time.sleep(2)
@@ -340,6 +343,7 @@ parser.add_argument("-custom_config_file", default="bin/venice-conf.json", help=
 parser.add_argument("-restart", action='store_true', default=False, help="restart venice components in existing Cluster by loading new Pensando code")
 parser.add_argument("-delete", action='store_true', default=False, help="delete cluster by deleting containers")
 parser.add_argument("-stop", action='store_true', default=False, help="stop venice cluster but keep containers")
+parser.add_argument("-disableTmpfs", action='store_true', default=False, help="dont use tmpfs partition for data")
 args = parser.parse_args()
 
 dev_mode = True
@@ -416,7 +420,7 @@ if os.path.exists(abspath) and os.path.isfile(abspath):
 
 nodes = []
 for addr in xrange(len(nodeList)):
-    node = Node(nodeList[addr], ipList[addr], containerIndex, args.nettype, args.venice_image, args.venice_image_dir, dev_mode, custom_config_file)
+    node = Node(nodeList[addr], ipList[addr], containerIndex, args.nettype, args.venice_image, args.venice_image_dir, dev_mode, custom_config_file, args.disableTmpfs)
     containerIndex = containerIndex + 1
     nodes.append(node)
 

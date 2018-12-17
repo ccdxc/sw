@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"reflect"
 	"strings"
 	"time"
 
@@ -24,13 +25,13 @@ var _ = Describe("cluster tests", func() {
 
 	Context("Failover test", func() {
 		var (
-			obj               api.ObjectMeta
-			cl                *cmd.Cluster
-			clusterIf         cmd.ClusterV1ClusterInterface
-			err               error
-			oldLeader         string
-			oldLeaderIP       string
-			serviceListBefore string
+			obj                  api.ObjectMeta
+			cl                   *cmd.Cluster
+			clusterIf            cmd.ClusterV1ClusterInterface
+			err                  error
+			oldLeader, newLeader string
+			oldLeaderIP          string
+			serviceListBefore    cmdprotos.ServiceList
 		)
 		BeforeEach(func() {
 			validateCluster()
@@ -51,8 +52,6 @@ var _ = Describe("cluster tests", func() {
 			oldLeader = cl.Status.Leader
 			oldLeaderIP = ts.tu.NameToIPMap[oldLeader]
 
-			serviceListBefore = getServices(oldLeader)
-
 			By(fmt.Sprintf("Pausing cmd on old leader %v", oldLeader))
 			ts.tu.CommandOutput(oldLeaderIP, "docker pause pen-cmd")
 			Eventually(func() bool {
@@ -66,6 +65,7 @@ var _ = Describe("cluster tests", func() {
 				if cl.Status.Leader == oldLeader {
 					return false
 				}
+				newLeader = cl.Status.Leader
 				By(fmt.Sprintf("Found new leader %v", cl.Status.Leader))
 				return true
 			}, 30, 1).Should(BeTrue(), "Did not find a new leader")
@@ -76,11 +76,26 @@ var _ = Describe("cluster tests", func() {
 			ts.tu.CommandOutput(oldLeaderIP, "docker unpause pen-cmd")
 			time.Sleep(2 * time.Second)
 
-			By(fmt.Sprintf("before: %v", serviceListBefore))
+			serviceListBefore = getServices(oldLeader)
+			By(fmt.Sprintf("before: %v", serviceListBefore.String()))
+		outerLoop:
+			for i, svc := range serviceListBefore.Items {
+				if svc.Name == "pen-kube-apiserver" {
+					for j, inst := range svc.Instances {
+						if inst.Name == oldLeader {
+							serviceListBefore.Items[i].Instances[j].Name = newLeader
+							serviceListBefore.Items[i].Instances[j].Node = newLeader
+							By(fmt.Sprintf("Replaced %v to %v in serviceListBefore", oldLeader, newLeader))
+							break outerLoop
+						}
+					}
+				}
+			}
+
 			Eventually(func() bool {
 				serviceListAfter := getServices(oldLeader)
 				By(fmt.Sprintf("after: %v", serviceListAfter))
-				return serviceListAfter == serviceListBefore
+				return reflect.DeepEqual(serviceListAfter, serviceListBefore)
 			}, 20, 2).Should(BeTrue(), "Services should be same after leader change")
 
 			validateCluster()
@@ -88,7 +103,7 @@ var _ = Describe("cluster tests", func() {
 	})
 })
 
-func getServices(node string) string {
+func getServices(node string) cmdprotos.ServiceList {
 	var srvList cmdprotos.ServiceList
 	srvURL := "http://" + node + ":" + globals.CMDRESTPort + "/api/v1/services"
 	By(fmt.Sprintf("Getting services from %v", node))
@@ -99,7 +114,7 @@ func getServices(node string) string {
 	err = json.Unmarshal(data, &srvList)
 	Expect(err).ShouldNot(HaveOccurred())
 	resp.Body.Close()
-	return srvList.String()
+	return srvList
 }
 
 func validateCluster() {
@@ -149,9 +164,11 @@ func validateCluster() {
 	Expect(cl.UUID).ShouldNot(BeEmpty())
 
 	By(fmt.Sprintf("Resolver data should be same on all quorum nodes"))
-	serviceListNode1 := getServices(ts.tu.QuorumNodes[0])
+	s := getServices(ts.tu.QuorumNodes[0])
+	serviceListNode1 := s.String()
 	for _, n := range ts.tu.QuorumNodes[1:] {
-		serviceList := getServices(n)
+		s = getServices(n)
+		serviceList := s.String()
 		Expect(serviceListNode1).To(Equal(serviceList))
 	}
 

@@ -199,9 +199,7 @@ func (it *veniceIntegSuite) startNmd(c *C) {
 					},
 				},
 			},
-			Status: pencluster.HostStatus{
-				Type: pencluster.HostStatus_BAREMETAL.String(),
-			},
+			Status: pencluster.HostStatus{},
 		}
 		_, err := it.apisrvClient.ClusterV1().Host().Create(context.Background(), host)
 		if err != nil {

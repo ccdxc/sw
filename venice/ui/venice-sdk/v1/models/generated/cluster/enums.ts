@@ -6,12 +6,6 @@
 
 // generate enum based on strings instead of numbers
 // (see https://blog.rsuter.com/how-to-implement-an-enum-with-string-values-in-typescript/)
-export enum ClusterHostStatus_type {
-    'UNKNOWN' = "UNKNOWN",
-    'BAREMETAL' = "BAREMETAL",
-    'HYPERVISOR' = "HYPERVISOR",
-}
-
 export enum ClusterMemInfo_type {
     'UNKNOWN' = "UNKNOWN",
     'HBM' = "HBM",
@@ -152,7 +146,6 @@ export class AllEnums {
         return AllEnums._instance;
     }
 
-    ClusterHostStatus_type = ClusterHostStatus_type;
     ClusterMemInfo_type = ClusterMemInfo_type;
     ClusterNodeCondition_type = ClusterNodeCondition_type;
     ClusterNodeCondition_status = ClusterNodeCondition_status;

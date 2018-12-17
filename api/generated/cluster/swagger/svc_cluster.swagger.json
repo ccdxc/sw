@@ -752,13 +752,6 @@
             "type": "string"
           },
           {
-            "name": "status.type",
-            "description": "Type of the host.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
             "name": "status.admitted-smart-nics",
             "description": "AdmittedSmartNICs contains a list of admitted SmartNICs that are on this host.",
             "in": "query",
@@ -3901,16 +3894,6 @@
     "clusterHostStatus": {
       "type": "object",
       "properties": {
-        "type": {
-          "type": "string",
-          "enum": [
-            "UNKNOWN",
-            "BAREMETAL",
-            "HYPERVISOR"
-          ],
-          "default": "UNKNOWN",
-          "title": "Type of the host"
-        },
         "admitted-smart-nics": {
           "type": "array",
           "items": {

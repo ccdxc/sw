@@ -214,9 +214,7 @@ func (m *Host) Clone(into interface{}) (interface{}, error) {
 func (m *Host) Defaults(ver string) bool {
 	m.Kind = "Host"
 	m.Tenant, m.Namespace = "", ""
-	var ret bool
-	ret = m.Status.Defaults(ver) || ret
-	return ret
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -258,13 +256,7 @@ func (m *HostStatus) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *HostStatus) Defaults(ver string) bool {
-	var ret bool
-	ret = true
-	switch ver {
-	default:
-		m.Type = "UNKNOWN"
-	}
-	return ret
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -604,17 +596,6 @@ func (m *Host) Validate(ver, path string, ignoreStatus bool) []error {
 	if m.Tenant != "" {
 		ret = append(ret, errors.New("Tenant not allowed for Host"))
 	}
-	if !ignoreStatus {
-
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Status"
-		if errs := m.Status.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
-		}
-	}
 	return ret
 }
 
@@ -625,19 +606,6 @@ func (m *HostSpec) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *HostStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
-	if vs, ok := validatorMapCluster["HostStatus"][ver]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	} else if vs, ok := validatorMapCluster["HostStatus"]["all"]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	}
 	return ret
 }
 
@@ -793,16 +761,6 @@ func init() {
 	)
 
 	validatorMapCluster = make(map[string]map[string][]func(string, interface{}) error)
-
-	validatorMapCluster["HostStatus"] = make(map[string][]func(string, interface{}) error)
-	validatorMapCluster["HostStatus"]["all"] = append(validatorMapCluster["HostStatus"]["all"], func(path string, i interface{}) error {
-		m := i.(*HostStatus)
-
-		if _, ok := HostStatus_HostType_value[m.Type]; !ok {
-			return errors.New("HostStatus.Type did not match allowed strings")
-		}
-		return nil
-	})
 
 	validatorMapCluster["MemInfo"] = make(map[string][]func(string, interface{}) error)
 	validatorMapCluster["MemInfo"]["all"] = append(validatorMapCluster["MemInfo"]["all"], func(path string, i interface{}) error {

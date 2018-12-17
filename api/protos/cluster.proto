@@ -377,18 +377,7 @@ message SmartNICID {
 // HostStatus contains the current state of the Host.
 message HostStatus {
 
-    // Type of Host
-    enum HostType {
-        UNKNOWN     = 0; // Unknown type
-        BAREMETAL   = 1; // Baremetal server
-        HYPERVISOR  = 2; // Hypervisor (virtualized) server
-    }
-
-    // Type of the host
-    string Type                             = 1 [(venice.check) = "StrEnum(HostStatus.HostType)",
-                                                (gogoproto.jsontag) = "type,omitempty"];
-
     // AdmittedSmartNICs contains a list of admitted SmartNICs that are on this host
-    repeated string AdmittedSmartNICs         = 2 [(gogoproto.nullable) = false,
+    repeated string AdmittedSmartNICs         = 1 [(gogoproto.nullable) = false,
                                                   (gogoproto.jsontag) = "admitted-smart-nics,omitempty"];
 }

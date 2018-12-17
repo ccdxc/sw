@@ -963,9 +963,7 @@ func (w *Watcher) CreateHost(name, macAddr string) error {
 				},
 			},
 		},
-		Status: cluster.HostStatus{
-			Type: "HYPERVISOR",
-		},
+		Status: cluster.HostStatus{},
 	}
 
 	evt := kvstore.WatchEvent{

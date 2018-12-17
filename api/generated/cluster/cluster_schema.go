@@ -199,7 +199,6 @@ var typesMapCluster = map[string]*api.Struct{
 			"resource-version":    api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
 			"self-link":           api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
 			"tenant":              api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
-			"type":                api.CLIInfo{Path: "Status.Type", Skip: false, Insert: "", Help: ""},
 			"uuid":                api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
 		},
 	},
@@ -212,8 +211,6 @@ var typesMapCluster = map[string]*api.Struct{
 	"cluster.HostStatus": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(HostStatus{}) },
 		Fields: map[string]api.Field{
-			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{ID: "type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
 			"AdmittedSmartNICs": api.Field{Name: "AdmittedSmartNICs", CLITag: api.CLIInfo{ID: "admitted-smart-nics", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "admitted-smart-nics", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},

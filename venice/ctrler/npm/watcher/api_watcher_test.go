@@ -424,9 +424,7 @@ func TestAPIServerRestarts(t *testing.T) {
 				},
 			},
 		},
-		Status: cluster.HostStatus{
-			Type: "HYPERVISOR",
-		},
+		Status: cluster.HostStatus{},
 	}
 
 	// workload params
@@ -715,9 +713,7 @@ func TestWorkloadWatcher(t *testing.T) {
 				},
 			},
 		},
-		Status: cluster.HostStatus{
-			Type: "HYPERVISOR",
-		},
+		Status: cluster.HostStatus{},
 	}
 
 	// workload params
