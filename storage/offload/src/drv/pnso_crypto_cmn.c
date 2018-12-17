@@ -356,15 +356,26 @@ get_batch_desc(struct service_info *svc_info)
 {
 	struct service_batch_info *svc_batch_info;
 	struct crypto_desc *desc;
+	struct batch_info *batch_info;
+	struct mem_pool *mpool;
+	uint32_t obj_size;
+	char *t;
 
 	svc_batch_info = &svc_info->si_batch_info;
-	desc = &svc_batch_info->u.sbi_crypto_desc[svc_batch_info->sbi_desc_idx];
 
-	OSAL_LOG_DEBUG("num_entries: %d desc_idx: %d bulk_desc: 0x" PRIx64 " desc: 0x" PRIx64,
+	batch_info = svc_batch_info->sbi_batch_info;
+	mpool = batch_info->bi_pcr->mpools[batch_info->bi_mpool_type];
+	obj_size = mpool_get_object_size(mpool);
+	t = (char *) svc_batch_info->u.sbi_cpdc_desc;
+	t = t + (obj_size * svc_batch_info->sbi_desc_idx);
+	desc = (struct crypto_desc *) t;
+
+	OSAL_LOG_DEBUG("num_entries: %d desc_idx: %d bulk_desc: 0x" PRIx64 " desc: 0x" PRIx64 " obj_size: %u",
 			svc_batch_info->sbi_num_entries,
 			svc_batch_info->sbi_desc_idx,
 			(uint64_t) svc_batch_info->u.sbi_crypto_desc,
-			(uint64_t) desc);
+			(uint64_t) desc,
+			obj_size);
 	return desc;
 }
 
