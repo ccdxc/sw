@@ -939,7 +939,7 @@ Eth::_CmdIdentify(void *req, void *req_data, void *resp, void *resp_data)
     rsp->dev.rdma_rq_qtype.qid_base = 0;
 
     rsp->dev.rdma_cq_qtype.qtype = 5;
-    rsp->dev.rdma_cq_qtype.qid_count = spec->rdma_rq_count;
+    rsp->dev.rdma_cq_qtype.qid_count = spec->rdma_cq_count;
     rsp->dev.rdma_cq_qtype.qid_base = 0;
 
     rsp->dev.rdma_eq_qtype.qtype = 6;

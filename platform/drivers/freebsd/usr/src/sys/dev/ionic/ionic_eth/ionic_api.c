@@ -93,7 +93,7 @@ int ionic_api_get_intr(struct lif *lif, int *irq)
 
 	err = ionic_dev_intr_reserve(lif, &intr_obj);
 	if (err)
-		return err;
+		return -err;
 
 	err = ionic_get_msix_irq(lif->ionic, intr_obj.index);
 	if (err < 0) {

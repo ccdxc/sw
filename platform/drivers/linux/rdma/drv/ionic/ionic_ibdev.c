@@ -3259,7 +3259,7 @@ static int ionic_poll_cq(struct ib_cq *ibcq, int nwc, struct ib_wc *wc)
 		qp = tbl_lookup(&dev->qp_tbl, qid);
 
 		if (unlikely(!qp)) {
-			dev_dbg(&dev->ibdev.dev, "missing qp for qid %u", qid);
+			dev_dbg(&dev->ibdev.dev, "missing qp for qid %u\n", qid);
 			goto cq_next;
 		}
 
@@ -3318,7 +3318,7 @@ static int ionic_poll_cq(struct ib_cq *ibcq, int nwc, struct ib_wc *wc)
 
 		default:
 			dev_dbg(&dev->ibdev.dev,
-				"unexpected cqe type %u", type);
+				"unexpected cqe type %u\n", type);
 
 			rc = -EIO;
 			goto out;
@@ -4960,7 +4960,7 @@ static void ionic_v1_prep_base(struct ionic_qp *qp,
 		qp->sq_msn_prod = ionic_queue_next(&qp->sq, qp->sq_msn_prod);
 	}
 
-	dev_dbg(&dev->ibdev.dev, "post send %u prod %u", qp->qpid, qp->sq.prod);
+	dev_dbg(&dev->ibdev.dev, "post send %u prod %u\n", qp->qpid, qp->sq.prod);
 	print_hex_dump_debug("wqe ", DUMP_PREFIX_OFFSET, 16, 1,
 			     wqe, BIT(qp->sq.stride_log2), true);
 
@@ -5486,7 +5486,7 @@ static int ionic_prep_one_rc(struct ionic_qp *qp,
 		rc = ionic_v1_prep_reg(qp, reg_wr(wr));
 		break;
 	default:
-		dev_dbg(&dev->ibdev.dev, "invalid opcode %d", wr->opcode);
+		dev_dbg(&dev->ibdev.dev, "invalid opcode %d\n", wr->opcode);
 		rc = -EINVAL;
 	}
 
@@ -5505,7 +5505,7 @@ static int ionic_prep_one_ud(struct ionic_qp *qp,
 		rc = ionic_v1_prep_send_ud(qp, ud_wr(wr));
 		break;
 	default:
-		dev_dbg(&dev->ibdev.dev, "invalid opcode %d", wr->opcode);
+		dev_dbg(&dev->ibdev.dev, "invalid opcode %d\n", wr->opcode);
 		rc = -EINVAL;
 	}
 
@@ -5624,7 +5624,7 @@ static int ionic_v1_prep_recv(struct ionic_qp *qp,
 	if (qp->is_srq)
 		wqe->base.flags |= cpu_to_be16(IONIC_V1_FLAG_FENCE);
 
-	dev_dbg(&dev->ibdev.dev, "post recv %u prod %u", qp->qpid, qp->rq.prod);
+	dev_dbg(&dev->ibdev.dev, "post recv %u prod %u\n", qp->qpid, qp->rq.prod);
 	print_hex_dump_debug("wqe ", DUMP_PREFIX_OFFSET, 16, 1,
 			     wqe, BIT(qp->rq.stride_log2), true);
 
@@ -6456,7 +6456,7 @@ static void ionic_rdma_admincq_event(struct ib_event *event, void *cq_context)
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(event->device);
 
-	dev_err(&dev->ibdev.dev, "admincq event %d", event->event);
+	dev_err(&dev->ibdev.dev, "admincq event %d\n", event->event);
 }
 
 static struct ionic_cq *ionic_create_rdma_admincq(struct ionic_ibdev *dev,

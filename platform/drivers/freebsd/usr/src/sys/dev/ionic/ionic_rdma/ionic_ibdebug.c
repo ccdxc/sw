@@ -558,7 +558,7 @@ void ionic_dbgfs_add_mr(struct ionic_ibdev *dev, struct ionic_mr *mr)
 	ctx = &mr->debug_ctx;
 	sysctl_ctx_init(ctx);
 
-	oidp = ionic_id_node(ctx, parent, mr->mrid, "MR Info");
+	oidp = ionic_id_node(ctx, parent, ionic_mrid_index(mr->mrid), "MR Info");
 	if (!oidp)
 		return;
 

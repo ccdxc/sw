@@ -2442,7 +2442,7 @@ try_again:
 	} 
 #endif
 
-#ifndef IONIC_SEPERATE_TX_INTR
+#ifdef IONIC_SEPERATE_TX_INTR
 	/* Seperate interrupts for transmit and receive. */
 	nintrs = nlifs * (nnqs + neqs + 2 * nqs + 1 /* adminq */);
 #else

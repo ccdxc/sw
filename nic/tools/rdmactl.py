@@ -730,7 +730,7 @@ if args.cqcb is not None:
     cqcb = RdmaCQstate(bin_str)
     cqcb.show()
 elif args.eqcb is not None:
-    bin_str = exec_dump_cmd(DUMP_TYPE_EQ, args.cqcb, 0, 64)
+    bin_str = exec_dump_cmd(DUMP_TYPE_EQ, args.eqcb, 0, 64)
     eqcb = RdmaEQstate(bin_str)
     eqcb.show()
 elif args.aqcb0 is not None:
