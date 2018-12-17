@@ -9,7 +9,7 @@
 #include "lib/slab/slab.hpp"
 
 
-#define SDK_DEBUG 1
+#define SDK_DEBUG 0
 
 namespace sdk {
 namespace lib {
