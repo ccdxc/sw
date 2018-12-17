@@ -186,12 +186,29 @@ func StopExecCmd(cmdInfo *CommandInfo) error {
 		}
 		cmdInfo.Handle.(*exec.Cmd).Process.Signal(syscall.SIGTERM)
 
-		time.Sleep(2 * time.Second)
-		//For bg command, exit code set to 0 as we killed it.
-		cmdInfo.Ctx.ExitCode = 0
-		<-cmdInfo.Ctx.status
+		//For bg command, don't return success until command terminates
+		cmdInfo.Ctx.ExitCode = 255
+
+		//Try multiple times to kill the same process
+		for i := 0; i < 3; i++ {
+			//Wait for 5 seconds before forcefully killing
+			timeoutEvent := time.After(time.Duration(5) * time.Second)
+			select {
+			case <-timeoutEvent:
+				killCmd := []string{"sudo", "kill", "-SIGKILL", strconv.Itoa(cmdInfo.Handle.(*exec.Cmd).Process.Pid)}
+				Utils.Run(killCmd, 0, false, true, nil)
+			case <-cmdInfo.Ctx.status:
+				//Command successfully terminated.
+				cmdInfo.Ctx.ExitCode = 0
+				break
+			}
+		}
+
 	}
 
+	if cmdInfo.Ctx.ExitCode != 0 {
+		cmdInfo.Ctx.Stderr = "Command failed to terminate."
+	}
 	cmdInfo.Ctx.Done = true
 	cmdInfo.Handle = nil
 	return nil
