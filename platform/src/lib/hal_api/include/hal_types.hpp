@@ -7,9 +7,9 @@
 
 #define NUM_QUEUE_TYPES     8
 
-#define LIF_DEFAULT_MAX_VLAN_FILTERS        100
-#define LIF_DEFAULT_MAX_MAC_FILTERS         100
-#define LIF_DEFAULT_MAX_MAC_VLAN_FILTERS    100
+#define LIF_DEFAULT_MAX_VLAN_FILTERS        400
+#define LIF_DEFAULT_MAX_MAC_FILTERS         400
+#define LIF_DEFAULT_MAX_MAC_VLAN_FILTERS    400
 
 #define NATIVE_VLAN_ID 8192
 /*
@@ -99,7 +99,8 @@ struct eth_spec {
 
 typedef enum {
     HAL_IRISC_RET_SUCCESS,
-    HAL_IRISC_RET_LIMIT_REACHED
+    HAL_IRISC_RET_LIMIT_REACHED,
+    HAL_IRISC_DUP_ADDR_ADD
 } hal_irisc_ret_t;
 
 #endif  /* __HAL_TYPES_HPP__ */

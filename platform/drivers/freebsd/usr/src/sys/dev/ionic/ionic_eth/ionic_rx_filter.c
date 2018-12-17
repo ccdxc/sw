@@ -88,6 +88,7 @@ int ionic_rx_filter_save(struct lif *lif, u32 flow_id, u16 rxq_index,
 	f->flow_id = flow_id;
 	f->filter_id = ctx->comp.rx_filter_add.filter_id;
 	f->rxq_index = rxq_index;
+	f->visited = false;
 	memcpy(&f->cmd, &ctx->cmd, sizeof(f->cmd));
 
 	INIT_HLIST_NODE(&f->by_hash);

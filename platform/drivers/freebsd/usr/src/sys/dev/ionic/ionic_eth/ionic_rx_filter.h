@@ -23,6 +23,7 @@ struct rx_filter {
 	u32 flow_id;
 	u32 filter_id;
 	u16 rxq_index;
+	bool visited;  /* temp variable */
 	struct rx_filter_add_cmd cmd;
 	struct hlist_node by_hash;
 	struct hlist_node by_id;
@@ -49,7 +50,7 @@ struct rx_filters {
 #define IONIC_RX_FILTER_UNLOCK(x)	mtx_unlock(&(x)->mtx)
 #else
 #define IONIC_RX_FILTER_INIT(x) 	spin_lock_init(&(x)->lock);
-#define IONIC_RX_FILTER_DESTROY(x)	
+#define IONIC_RX_FILTER_DESTROY(x)
 #define IONIC_RX_FILTER_LOCK(x)		spin_lock_bh(&(x)->lock);
 #define IONIC_RX_FILTER_UNLOCK(x)	spin_unlock_bh(&(x)->lock);
 

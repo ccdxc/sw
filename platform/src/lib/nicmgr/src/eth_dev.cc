@@ -1740,6 +1740,7 @@ Eth::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
     struct rx_filter_add_cmd *cmd = (struct rx_filter_add_cmd *)req;
     struct rx_filter_add_comp *comp = (struct rx_filter_add_comp *)resp;
     EthLif *eth_lif = NULL;
+    hal_irisc_ret_t ret = HAL_IRISC_RET_SUCCESS;
 
     eth_lif = hal->eth_lif_map[hal_lif_info_.id];
     if (cmd->match == RX_FILTER_MATCH_MAC) {
@@ -1750,7 +1751,12 @@ Eth::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
         NIC_LOG_DEBUG("lif-{}: Add RX_FILTER_MATCH_MAC mac:{}",
                 hal_lif_info_.id, macaddr2str(mac_addr));
 
-        eth_lif->AddMac(mac_addr);
+        ret = eth_lif->AddMac(mac_addr);
+
+        if (ret != HAL_IRISC_RET_SUCCESS) {
+            NIC_LOG_WARN("lif-{}: Duplicate Add. Return devcmd error: {}", hal_lif_info_.id,  DEVCMD_ERROR);
+            return (DEVCMD_ERROR);
+        }
 
         // Store filter
         if (fltr_allocator->alloc(&filter_id) != sdk::lib::indexer::SUCCESS) {
@@ -1804,6 +1810,7 @@ Eth::_CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data)
     struct rx_filter_del_cmd *cmd = (struct rx_filter_del_cmd *)req;
     //struct rx_filter_del_comp *comp = (struct rx_filter_del_comp *)resp;
     EthLif *eth_lif = NULL;
+    indexer::status rs;
 
     eth_lif = hal->eth_lif_map[hal_lif_info_.id];
     if (eth_lif == NULL) {
@@ -1836,6 +1843,14 @@ Eth::_CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data)
         NIC_LOG_ERR("Invalid filter id {}", cmd->filter_id);
         return (DEVCMD_ERROR);
     }
+
+    rs = fltr_allocator->free(cmd->filter_id);
+    if (rs != indexer::SUCCESS) {
+        HAL_TRACE_ERR("Failed to free filter_id: {}, err: {}",
+                      cmd->filter_id, rs);
+        return (DEVCMD_ERROR);
+    }
+    NIC_LOG_DEBUG("Freed filter_id: {}", cmd->filter_id);
 
     return (DEVCMD_SUCCESS);
 }

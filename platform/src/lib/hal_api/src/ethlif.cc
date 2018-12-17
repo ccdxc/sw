@@ -389,6 +389,7 @@ EthLif::AddMac(mac_t mac, bool re_add)
         }
     } else {
         NIC_LOG_WARN("Mac already registered: {}", macaddr2str(mac));
+        return HAL_IRISC_DUP_ADDR_ADD;
     }
     return HAL_IRISC_RET_SUCCESS;
 }

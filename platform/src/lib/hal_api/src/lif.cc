@@ -239,14 +239,14 @@ Lif::TriggerHalUpdate()
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
-            NIC_LOG_DEBUG("Created Lif id: {} hw_lif_id: {}, handle: {}",
+            NIC_LOG_DEBUG("Updated Lif id: {} hw_lif_id: {}, handle: {}",
                             id_, lif_info->hw_lif_id, handle_);
         } else {
-            NIC_LOG_ERR("Failed to create Lif for id: {}. err: {}",
+            NIC_LOG_ERR("Failed to update Lif for id: {}. err: {}",
                           id_, rsp.api_status());
         }
     } else {
-        NIC_LOG_ERR("Failed to create Lif for id: {}. err: {}:{}",
+        NIC_LOG_ERR("Failed to update Lif for id: {}. err: {}:{}",
                       id_, status.error_code(), status.error_message());
     }
 
