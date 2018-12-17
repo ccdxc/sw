@@ -405,8 +405,8 @@ static int ionic_lif_addr(struct lif *lif, const u8 *addr, bool add)
 		work->lif = lif;
 		memcpy(work->addr, addr, ETH_ALEN);
 		work->add = add;
-		IONIC_NETDEV_ADDR_INFO(lif->netdev, addr, "deferred: rx_filter %s ADDR Work: 0x%lx",
-                               add ? "add" : "del", (long)work);
+		IONIC_NETDEV_ADDR_INFO(lif->netdev, addr, "deferred: rx_filter %s ADDR Work: %p",
+                               add ? "add" : "del", work);
 		queue_work(lif->adminq_wq, &work->work);
 	} else {
 		if (add)
