@@ -18,17 +18,6 @@
 // never being enable.
 
 action ipsg_miss() {
-    if (l4_metadata.tcp_normalization_en == TRUE) {
-        tcp_stateless_normalization();
-    }
-    if (l4_metadata.icmp_normalization_en == TRUE) {
-        icmp_normalization();
-    }
-
-    if (control_metadata.ipsg_enable == FALSE) {
-        // return
-    }
-
     if ((flow_lkp_metadata.lkp_type == FLOW_KEY_LOOKUP_TYPE_IPV4) or
         (flow_lkp_metadata.lkp_type == FLOW_KEY_LOOKUP_TYPE_IPV6)) {
         modify_field(control_metadata.drop_reason, DROP_IPSG);
@@ -45,17 +34,6 @@ action ipsg_miss() {
 // prevent spoofing of (mac, ip) from workloads which are mapped to a 
 // different LIF.
 action ipsg_hit(src_lif, mac, vlan_valid, vlan_id) {
-    if (l4_metadata.tcp_normalization_en == TRUE) {
-        tcp_stateless_normalization();
-    }
-    if (l4_metadata.icmp_normalization_en == TRUE) {
-        icmp_normalization();
-    }
-
-    if (control_metadata.ipsg_enable == FALSE) {
-        // return
-    }
-
     if ((control_metadata.src_lif != src_lif) or
         (ethernet.srcAddr != mac) or
         (vlan_tag.valid != vlan_valid) or
@@ -88,7 +66,8 @@ table ipsg {
 }
 
 control process_ipsg {
-    if (control_metadata.nic_mode == NIC_MODE_SMART) {
+    if ((control_metadata.nic_mode == NIC_MODE_SMART) and
+        (control_metadata.ipsg_enable == TRUE)) {
         apply(ipsg);
     }
 }

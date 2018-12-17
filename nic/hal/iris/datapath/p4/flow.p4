@@ -271,7 +271,7 @@ action flow_hit_to_vm_bounce(dst_lport, qos_class_id) {
     modify_field(qos_metadata.qos_class_id, qos_class_id);
 }
 
-@pragma stage 2
+@pragma stage 3
 @pragma hbm_table
 @pragma numthreads 2
 table flow_info {
@@ -340,7 +340,7 @@ action flow_hash_info(entry_valid, export_en,
     }
 }
 
-@pragma stage 1
+@pragma stage 2
 @pragma hbm_table
 @pragma hash_type 0
 @pragma include_k_in_d
@@ -363,7 +363,7 @@ table flow_hash {
     size : FLOW_HASH_TABLE_SIZE;
 }
 
-@pragma stage 1
+@pragma stage 2
 @pragma hbm_table
 @pragma overflow_table flow_hash
 table flow_hash_overflow {
