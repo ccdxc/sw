@@ -32,7 +32,7 @@ testbundles:
     - classic/rdma.testbundle
     #- classic/rdma_regr.testbundle
     - linktest/linktest.testbundle
-    - storage/regression.testbundle
+    #- storage/regression.testbundle
     - penctl/penctl.testbundle
     - mnic/mnic_classic.testbundle
     - classic/driver-features.testbundle
