@@ -728,6 +728,8 @@ export class Utility {
         return cat + '/alertsevents/alertpolicies';
       case 'AlertDestination':
         return cat + '/alertsevents/alertdestinations';
+      case 'AuthenticationPolicy':
+        return 'settings/authpolicy';
       default:
         return cat + '/' + pluralize.plural(kind.toLowerCase()) + '/' + name;
     }
