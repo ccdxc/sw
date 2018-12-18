@@ -430,7 +430,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 		it.tmpFiles = append(it.tmpFiles, n)
 
 		log.Infof("creating telemetry policy agent")
-		tpa, aerr := tpa.NewPolicyAgent(fmt.Sprintf("dummy-uuid-%d", i), globals.Tpm, rc, state.AgentMode_MANAGED, "mock", agent.NetworkAgent)
+		tpa, aerr := tpa.NewPolicyAgent(fmt.Sprintf("dummy-uuid-%d", i), globals.Tpm, rc, state.AgentMode_MANAGED, "mock", agent.NetworkAgent, "/tmp/tpa.sock")
 		c.Assert(aerr, IsNil)
 		if tsa == nil {
 			c.Fatalf("cannot create telemetry policy agent. Err: %v", err)
@@ -537,7 +537,9 @@ func (it *veniceIntegSuite) TearDownSuite(c *C) {
 
 	// stop server and client
 	log.Infof("Stop all Test Controllers")
-	it.tpm.Stop()
+	if it.tpm != nil {
+		it.tpm.Stop()
+	}
 	it.ctrler.Stop()
 	it.ctrler = nil
 	it.tsCtrler.Stop()
