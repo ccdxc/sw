@@ -82,7 +82,6 @@ compress_setup(struct service_info *svc_info,
 	struct pnso_compression_desc *pnso_cp_desc;
 	struct cpdc_desc *cp_desc;
 	struct cpdc_status_desc *status_desc;
-	struct per_core_resource *pcr;
 	uint16_t threshold_len;
 
 	OSAL_LOG_DEBUG("enter ...");
@@ -94,8 +93,6 @@ compress_setup(struct service_info *svc_info,
 	svc_info->si_desc_flags = pnso_cp_desc->flags;
 	threshold_len = pnso_cp_desc->threshold_len;
 
-	pcr = svc_info->si_pcr;
-
 	cp_desc = cpdc_get_desc(svc_info, false);
 	if (!cp_desc) {
 		err = ENOMEM;
@@ -104,7 +101,7 @@ compress_setup(struct service_info *svc_info,
 	}
 	svc_info->si_desc = cp_desc;
 
-	status_desc = cpdc_get_status_desc(pcr, false);
+	status_desc = cpdc_get_status_desc(svc_info->si_pcr, false);
 	if (!status_desc) {
 		err = ENOMEM;
 		OSAL_LOG_ERROR("cannot obtain cp status desc from pool! err: %d",
@@ -133,8 +130,8 @@ compress_setup(struct service_info *svc_info,
 
 	CPDC_PPRINT_DESC(cp_desc);
 
-	PAS_INC_NUM_CP_REQUESTS(pcr);
-	PAS_INC_NUM_CP_BYTES_IN(pcr, svc_info->si_src_blist.len);
+	PAS_INC_NUM_CP_REQUESTS(svc_info->si_pcr);
+	PAS_INC_NUM_CP_BYTES_IN(svc_info->si_pcr, svc_info->si_src_blist.len);
 
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit! service initialized!");
@@ -468,7 +465,6 @@ compress_teardown(struct service_info *svc_info)
 {
 	struct cpdc_desc *cp_desc;
 	struct cpdc_status_desc *status_desc;
-	struct per_core_resource *pcr;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -478,10 +474,8 @@ compress_teardown(struct service_info *svc_info)
 	pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_dst_sgl);
 	pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_src_sgl);
 
-	pcr = svc_info->si_pcr;
-
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
-	cpdc_put_status_desc(pcr, false, status_desc);
+	cpdc_put_status_desc(svc_info->si_pcr, false, status_desc);
 	svc_info->si_status_desc = NULL;
 
 	cp_desc = (struct cpdc_desc *) svc_info->si_desc;

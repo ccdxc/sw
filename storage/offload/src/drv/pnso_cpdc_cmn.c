@@ -349,7 +349,7 @@ get_batch_desc(struct service_info *svc_info)
 	return desc;
 }
 
-struct cpdc_desc *__attribute__((unused))
+struct cpdc_desc *
 cpdc_get_desc(struct service_info *svc_info, bool per_block)
 {
 	struct cpdc_desc *desc;

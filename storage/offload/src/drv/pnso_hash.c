@@ -60,7 +60,6 @@ hash_setup(struct service_info *svc_info,
 	struct cpdc_desc *hash_desc;
 	struct cpdc_status_desc *status_desc;
 	struct cpdc_sgl *sgl = NULL;
-	struct per_core_resource *pcr;
 	bool per_block;
 	uint32_t num_tags;
 
@@ -72,8 +71,6 @@ hash_setup(struct service_info *svc_info,
 	svc_info->si_desc_flags = pnso_hash_desc->flags;
 	per_block = is_dflag_pblock_enabled(pnso_hash_desc->flags);
 
-	pcr = svc_info->si_pcr;
-
 	hash_desc = cpdc_get_desc(svc_info, per_block);
 	if (!hash_desc) {
 		err = ENOMEM;
@@ -83,7 +80,7 @@ hash_setup(struct service_info *svc_info,
 	}
 	svc_info->si_desc = hash_desc;
 
-	sgl = cpdc_get_sgl(pcr, per_block);
+	sgl = cpdc_get_sgl(svc_info->si_pcr, per_block);
 	if (!sgl) {
 		err = ENOMEM;
 		OSAL_LOG_ERROR("cannot obtain hash sgl from pool! err: %d",
@@ -92,7 +89,7 @@ hash_setup(struct service_info *svc_info,
 	}
 	svc_info->si_p4_sgl = sgl;
 
-	status_desc = cpdc_get_status_desc(pcr, per_block);
+	status_desc = cpdc_get_status_desc(svc_info->si_pcr, per_block);
 	if (!status_desc) {
 		err = ENOMEM;
 		OSAL_LOG_ERROR("cannot obtain hash status desc from pool! err: %d",
@@ -131,7 +128,7 @@ hash_setup(struct service_info *svc_info,
 		OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d", err);
 		goto out;
 	}
-	PAS_INC_NUM_HASH_REQUESTS(pcr);
+	PAS_INC_NUM_HASH_REQUESTS(svc_info->si_pcr);
 
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit! service initialized!");
