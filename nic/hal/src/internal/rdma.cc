@@ -1948,8 +1948,8 @@ rdma_aq_create (RdmaAqSpec& spec, RdmaAqResponse *rsp)
     aqcb.aqcb0.cq_id = spec.cq_num();
     aqcb.aqcb0.cqcb_addr = lif_manager()->GetLIFQStateAddr(lif, Q_TYPE_RDMA_CQ, spec.cq_num());
     
-    aqcb.aqcb0.proxy_pindex = 0;
-
+    aqcb.aqcb0.first_pass = 1;
+    
     //stage0_rdma_aq_rx_prog_addr(&offset);
     stage0_rdma_aq_tx_prog_addr(&offset);
     aqcb.aqcb0.ring_header.pc = offset >> 6;

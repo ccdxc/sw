@@ -36,12 +36,16 @@ rdma_aq_tx_aqcb_process:
     .brcase     1
         seq         c1, d.error, 1
         bcf         [c1], error
-
+        seq         c2, d.first_pass, 1 //BD slot                                      
         seq         c1, d.busy, 1
-        bcf         [c1], exit              
+        bcf         [c1], exit 
+        nop
+
         tblwr       d.busy, 1 //BD Slot
 
-        phvwr       p.busy, r0
+        //Default   values
+        phvwr       p.first_pass, 1
+        phvwr       CAPRI_PHV_FIELD(TO_S_FB_INFO_P, aq_cmd_done), 1
     
         // copy intrinsic to global
         add            r1, r0, offsetof(struct phv_, common_global_global_data) 
@@ -50,7 +54,6 @@ rdma_aq_tx_aqcb_process:
         CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, qtype, CAPRI_TXDMA_INTRINSIC_QTYPE)
         CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, qid, CAPRI_TXDMA_INTRINSIC_QID)
 
-        CAPRI_SET_FIELD2(TO_WQE_INFO_P, cb_addr, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR)
         CAPRI_SET_FIELD2(TO_S6_INFO_P, cb_addr, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR)
 
         //set       dma_cmd_ptr in phv
@@ -59,20 +62,22 @@ rdma_aq_tx_aqcb_process:
 
         DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_RDMA_BUSY)
         mfspr       r2, spr_tbladdr
-        add         r2, r2, FIELD_OFFSET(aqcb0_t, busy)
-        DMA_HBM_PHV2MEM_SETUP_F(r6, busy, map_count_completed, r2)    
+        add         r2, r2, FIELD_OFFSET(aqcb0_t, map_count_completed)
+        DMA_HBM_PHV2MEM_SETUP_F(r6, map_count_completed, busy, r2)    
     
         CAPRI_RESET_TABLE_0_ARG()
 
-        phvwr       CAPRI_PHV_FIELD(TO_S_FB_INFO_P, wqe_id), AQ_C_INDEX_HX
+        phvwr.!c2   CAPRI_PHV_FIELD(TO_WQE_INFO_P, map_count_completed), d.map_count_completed
+        CAPRI_SET_FIELD2(TO_WQE_INFO_P, cb_addr, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR)
+        phvwr       CAPRI_PHV_FIELD(TO_S_FB_INFO_P, wqe_id), AQ_C_INDEX
 
         // Compute WQE address & encode
-        add         r3, d.phy_base_addr, AQ_C_INDEX_HX, AQ_WQE_T_LOG_SIZE_BYTES
+        add         r3, d.phy_base_addr, AQ_C_INDEX, AQ_WQE_T_LOG_SIZE_BYTES
 
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, rdma_aq_tx_wqe_process, r3)
 
-        /* increment the cindex */
-        tblmincri   AQ_C_INDEX_HX, d.log_num_wqes, 1
+        /* increment the proxy cindex only if it is the first pass of an admin command */
+        tblmincri.c2   AQ_PROXY_C_INDEX, d.log_num_wqes, 1
 
         tblwr.e     d.ring_empty_sched_eval_done, 0 //BD Slot
         nop

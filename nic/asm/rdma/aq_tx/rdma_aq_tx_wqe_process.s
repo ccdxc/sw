@@ -11,7 +11,8 @@ struct aq_tx_s1_t0_k k;
 
 #define IN_TO_S_P to_s1_info
 #define IN_S2S_P  t0_s2s_aqcb_to_wqe_info
-
+#define TO_S_FB_INFO_P to_s7_fb_stats_info
+    
 #define PHV_GLOBAL_COMMON_P phv_global_common
     
 #define K_CQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, cqcb_base_addr_hi)
@@ -22,7 +23,8 @@ struct aq_tx_s1_t0_k k;
 #define K_BARMAP_SIZE CAPRI_KEY_RANGE(IN_TO_S_P, barmap_size_sbit0_ebit3, barmap_size_sbit4_ebit7)
 #define K_CB_ADDR CAPRI_KEY_RANGE(IN_S2S_P, cb_addr_sbit0_ebit31, cb_addr_sbit32_ebit33)
 #define K_AH_BASE_ADDR_PAGE_ID CAPRI_KEY_RANGE(IN_TO_S_P, ah_base_addr_page_id_sbit0_ebit3, ah_base_addr_page_id_sbit20_ebit21)
-
+#define K_MAP_COUNT_COMPLETED CAPRI_KEY_RANGE(IN_S2S_P, map_count_completed_sbit0_ebit5, map_count_completed_sbit30_ebit31)
+    
 #define TO_SQCB2_INFO_P      to_s5_info
 #define TO_RQCB0_INFO_P      to_s5_info
 #define TO_SQCB0_INFO_P      to_s6_info    
@@ -157,15 +159,27 @@ create_mr:
     // hbm_add = (start_page_id + lkey->pt_base) * 8 + (pt_base_addr)
     PT_BASE_ADDR_GET2(r2)
     add         r4, r4, d.{mr.tbl_index}.wx
+    add         r4, r4, K_MAP_COUNT_COMPLETED
+    
     // r6 holds the map_count
     beqi        r6, 1<<CAPRI_LOG_SIZEOF_U64, mr_skip_dma_pt
     add         r5, r2, r4, CAPRI_LOG_SIZEOF_U64    // BD Slot
 
-    DMA_CMD_STATIC_BASE_GET(r4, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_MR_PT_SRC)
-    DMA_HOST_MEM2MEM_SRC_SETUP(r4, r6, d.{mr.dma_addr}.dx)
-    DMA_CMD_STATIC_BASE_GET(r4, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_MR_PT_DST)
+    add         r2, d.{mr.dma_addr}.dx, K_MAP_COUNT_COMPLETED, CAPRI_LOG_SIZEOF_U64
 
+    sub         r6, r6, K_MAP_COUNT_COMPLETED, CAPRI_LOG_SIZEOF_U64
+    sle         c2, r6, DMA_DATA_SIZE
+    add.!c2     r6, r0, DMA_DATA_SIZE
+    
+    DMA_CMD_STATIC_BASE_GET(r4, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_MR_PT_SRC1)
+    DMA_HOST_MEM2MEM_SRC_SETUP(r4, r6, r2)
+    DMA_CMD_STATIC_BASE_GET(r4, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_MR_PT_DST1)
     DMA_HBM_MEM2MEM_DST_SETUP(r4, r6, r5)
+
+    add.!c2          r3, K_MAP_COUNT_COMPLETED, DMA_MAX_MAP_COUNT 
+    phvwrpair.!c2    p.map_count_completed, r3, p.first_pass, 0
+    phvwr.!c2        CAPRI_PHV_FIELD(TO_S_FB_INFO_P, aq_cmd_done), 0
+
     b           mr_no_skip_dma_pt
     nop
 

@@ -160,7 +160,8 @@ header_type aq_tx_to_stage_fb_stats_info_t {
         query_qp                         :    1;
         destroy_qp                       :    1;
         stats_dump                       :    1;
-        pad                              :   65;
+        aq_cmd_done                      :    1;
+        pad                              :   64;
     }
 }
 
@@ -190,7 +191,9 @@ header_type aq_tx_aqcb_to_modqp_t {
 // specific to aq. hence for now cb_addr is being populated in s2s.
 header_type aq_tx_aqcb_to_wqe_t {
     fields {
-        cb_addr             : 34;
+        cb_addr             :  34;
+        map_count_completed :  32;
+        pad                 :  94;
     }
 }
 
@@ -314,6 +317,7 @@ action aq_tx_aqwqe_process () {
     
     // stage to stage
     modify_field(t0_s2s_aqcb_to_wqe_info_scr.cb_addr, t0_s2s_aqcb_to_wqe_info.cb_addr);
+    modify_field(t0_s2s_aqcb_to_wqe_info_scr.map_count_completed, t0_s2s_aqcb_to_wqe_info.map_count_completed);
 }
 
 action aq_tx_modify_qp_2_process () {
@@ -485,6 +489,7 @@ action aq_tx_feedback_process () {
     // to stage
     modify_field(to_s7_fb_stats_info_scr.cb_addr, to_s7_fb_stats_info.cb_addr);
     modify_field(to_s7_fb_stats_info_scr.wqe_id, to_s7_fb_stats_info.wqe_id);
+    modify_field(to_s7_fb_stats_info_scr.aq_cmd_done, to_s7_fb_stats_info.aq_cmd_done);    
     modify_field(to_s7_fb_stats_info_scr.pad, to_s7_fb_stats_info.pad);                                                   
     // stage to stage
     

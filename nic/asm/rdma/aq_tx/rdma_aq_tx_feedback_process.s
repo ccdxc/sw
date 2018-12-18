@@ -7,14 +7,16 @@
 
 struct aq_tx_phv_t p;
 struct aq_tx_s7_t0_k k;
-
+struct aqcb0_t d;
+    
 #define IN_TO_S_P to_s7_fb_stats_info
     
 #define K_COMMON_GLOBAL_QID CAPRI_KEY_RANGE(phv_global_common, qid_sbit0_ebit4, qid_sbit21_ebit23)
 #define K_COMMON_GLOBAL_QTYPE CAPRI_KEY_FIELD(phv_global_common, qtype)
 #define K_WQE_ID  CAPRI_KEY_RANGE(IN_TO_S_P, wqe_id_sbit0_ebit5, wqe_id_sbit14_ebit15)
 #define K_CB_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, cb_addr_sbit0_ebit31, cb_addr_sbit32_ebit33)
-    
+
+#define K_AQ_CMD_DONE CAPRI_KEY_FIELD(IN_TO_S_P, aq_cmd_done)
 %%
 
     .param      rdma_aq_tx_stats_process
@@ -22,12 +24,18 @@ struct aq_tx_s7_t0_k k;
 .align
 rdma_aq_tx_feedback_process:
 
-    mfspr         r1, spr_mpuid
-    seq           c1, r1[4:2], STAGE_7
-    bcf           [!c1], bubble_to_next_stage
+    mfspr       r1, spr_mpuid
+    seq         c1, r1[4:2], STAGE_7
+    bcf         [!c1], bubble_to_next_stage
 
     // OP_TYPE, ERROR and STATUS is set in prior stages
-    phvwr       p.rdma_feedback.feedback_type, RDMA_AQ_FEEDBACK
+
+    seq         c2, K_AQ_CMD_DONE, 1
+    tblwr.c2    AQ_C_INDEX, AQ_PROXY_C_INDEX
+
+    bcf         [!c2], exit
+    
+    phvwr       p.rdma_feedback.feedback_type, RDMA_AQ_FEEDBACK  //BD slot
     phvwr       p.rdma_feedback.aq_completion.wqe_id, K_WQE_ID
 
     //get DMA cmd entry based on dma_cmd_index
@@ -65,7 +73,7 @@ bubble_to_next_stage:
     bcf         [!c1], exit
 
     CAPRI_GET_TABLE_0_K(aq_tx_phv_t, r7)
-    CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, r0)
+    CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, K_CB_ADDR)
 
     //Get AQCB1 addr
     add r1, K_CB_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES

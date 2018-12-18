@@ -53,10 +53,26 @@
 #define AQ_TX_DMA_CMD_STATS_DUMP_2 (AQ_TX_MAX_DMA_CMDS - 5)
 #define AQ_TX_DMA_CMD_STATS_DUMP_1 (AQ_TX_MAX_DMA_CMDS - 6)
 
-/* DMA Cmds for Reg MR */
-#define AQ_TX_DMA_CMD_MR_PT_DST (AQ_TX_MAX_DMA_CMDS - 3)
-#define AQ_TX_DMA_CMD_MR_PT_SRC (AQ_TX_MAX_DMA_CMDS - 4)
-#define AQ_TX_DMA_CMD_MR_KT_UPDATE (AQ_TX_MAX_DMA_CMDS - 5)
+/* 
+ * DMA Cmds for Reg MR 
+ * 
+ * For now we transfer one DMA worth of data: (2047 * 8)
+ *
+ * TODO: To be implemented later to further optimize
+ * With 3 DMA cmds for PT table transfer, we can transfer 6K entries 
+ * at a time. That is equal to an MR of size 24MB in one pass. If MR size 
+ * is greater then it needs multiple passes.
+ */
+#define DMA_DATA_SIZE (2047 * 8)
+#define DMA_MAX_MAP_COUNT 2047
+    
+#define AQ_TX_DMA_CMD_MR_PT_DST3 (AQ_TX_MAX_DMA_CMDS - 3)
+#define AQ_TX_DMA_CMD_MR_PT_SRC3 (AQ_TX_MAX_DMA_CMDS - 4)
+#define AQ_TX_DMA_CMD_MR_PT_DST2 (AQ_TX_MAX_DMA_CMDS - 5)
+#define AQ_TX_DMA_CMD_MR_PT_SRC2 (AQ_TX_MAX_DMA_CMDS - 6)
+#define AQ_TX_DMA_CMD_MR_PT_DST1 (AQ_TX_MAX_DMA_CMDS - 7)
+#define AQ_TX_DMA_CMD_MR_PT_SRC1 (AQ_TX_MAX_DMA_CMDS - 8)
+#define AQ_TX_DMA_CMD_MR_KT_UPDATE (AQ_TX_MAX_DMA_CMDS - 9)
 
 #define AQ_TX_CQCB_ADDR_GET(_r, _cqid, _cqcb_base_addr_hi)  \
     CQCB_ADDR_GET(_r, _cqid, _cqcb_base_addr_hi);
@@ -117,9 +133,9 @@ struct aq_tx_phv_t {
     union {
         struct aq_tx_dma_cmds_flit_t flit_9;
         struct {
-            busy: 8;
-            mr_create_pending: 8;
             map_count_completed: 32;
+            first_pass: 8;
+            busy: 8;
             pad: 80;
             dma_cmds_1_2_3: 384;
         };

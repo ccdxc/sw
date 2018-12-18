@@ -2258,7 +2258,7 @@ Eth::_CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_data
     aqcb.aqcb0.cq_id = cmd->cid;
     aqcb.aqcb0.cqcb_addr = GetQstateAddr(ETH_QTYPE_CQ, cmd->cid);
 
-    aqcb.aqcb0.proxy_pindex = 0;
+    aqcb.aqcb0.first_pass = 1;
 
     ret = pd->lm_->GetPCOffset("p4plus", "txdma_stage0.bin", "rdma_aq_tx_stage0", &offset);
     if (ret < 0) {
