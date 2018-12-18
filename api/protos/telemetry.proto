@@ -95,7 +95,7 @@ message FwlogPolicySpec {
     string Format = 2 [(gogoproto.jsontag) = "format,omitempty", (venice.check) = "StrEnum(MonitoringExportFormat)"];
 
     // filter firewall logs, FWLOG_ALL default
-    repeated string Filter = 3 [(gogoproto.jsontag) = "filter,omitempty", (venice.check) = "StrEnum(FwlogFilter)"];
+    repeated string Filter = 3 [(gogoproto.jsontag) = "filter,omitempty", (venice.check) = "StrEnum(FwlogFilter)", (venice.default)="FIREWALL_ACTION_ALL"];
 
     // configuration to use for syslog format
     // default facility is set to "local4", can be overridden with FacilityOverride

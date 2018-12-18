@@ -36,7 +36,7 @@ export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringF
         },
         'filter': {
             enum: MonitoringFwlogPolicySpec_filter_uihint,
-            default: 'FIREWALL_ACTION_NONE',
+            default: 'FIREWALL_ACTION_ALL',
             type: 'Array<string>'
         },
         'config': {

@@ -179,7 +179,7 @@ func (m *FwlogPolicySpec) Defaults(ver string) bool {
 	switch ver {
 	default:
 		for k := range m.Filter {
-			m.Filter[k] = "FIREWALL_ACTION_NONE"
+			m.Filter[k] = "FIREWALL_ACTION_ALL"
 		}
 		m.Format = "SYSLOG_BSD"
 	}

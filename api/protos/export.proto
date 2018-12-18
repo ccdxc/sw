@@ -69,63 +69,83 @@ message ExternalCred {
 
 enum SyslogFacility {
     // kernel messages
+    // ui-hint: Kernel
     LOG_KERN = 0;
 
     // user-level messages
+    // ui-hint: User
     LOG_USER = 8;
 
     // mail system
+    // ui-hint: Mail
     LOG_MAIL = 16;
 
     // system daemons
+    // ui-hint: Daemon
     LOG_DAEMON = 24;
 
     // security/authorization messages
+    // ui-hint: Auth
     LOG_AUTH = 32;
 
     // messages generated internally by syslogd
+    // ui-hint: Syslog
     LOG_SYSLOG = 40;
 
     // line printer subsystem
+    // ui-hint: LPR
     LOG_LPR	= 48;
 
     // network news subsystem
+    // ui-hint: News
     LOG_NEWS = 56;
 
     // UUCP subsystem
+    // ui-hint: UUCP
     LOG_UUCP = 64;
 
     // clock daemon
+    // ui-hint: CRON
     LOG_CRON = 72;
 
     // security/authorization messages (private)
+    // ui-hint: Private Auth
     LOG_AUTHPRIV = 80;
 
+    // ui-hint: FTP
     LOG_FTP = 88;
 
     /* other codes through 15 reserved for system use */
     // reserved for local use
+    // ui-hint: local 0
     LOG_LOCAL0 = 128;
 
     // reserved for local use
+    // ui-hint: local 1
     LOG_LOCAL1 = 136;
 
     // reserved for local use
+    // ui-hint: local 2
     LOG_LOCAL2 = 144;
 
     // reserved for local use
+    // ui-hint: local 3
     LOG_LOCAL3 = 152;
 
     // reserved for local use
+    // ui-hint: local 4
     LOG_LOCAL4 = 160;
 
     // reserved for local use
+    // ui-hint: local 5
     LOG_LOCAL5 = 168;
 
     // reserved for local use
+    // ui-hint: local 6
     LOG_LOCAL6 = 176;
 
     // reserved for local use
+    // ui-hint: local 7
     LOG_LOCAL7 = 184;
 }
 

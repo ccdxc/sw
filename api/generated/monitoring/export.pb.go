@@ -54,44 +54,63 @@ type SyslogFacility int32
 
 const (
 	// kernel messages
+	// ui-hint: Kernel
 	SyslogFacility_LOG_KERN SyslogFacility = 0
 	// user-level messages
+	// ui-hint: User
 	SyslogFacility_LOG_USER SyslogFacility = 8
 	// mail system
+	// ui-hint: Mail
 	SyslogFacility_LOG_MAIL SyslogFacility = 16
 	// system daemons
+	// ui-hint: Daemon
 	SyslogFacility_LOG_DAEMON SyslogFacility = 24
 	// security/authorization messages
+	// ui-hint: Auth
 	SyslogFacility_LOG_AUTH SyslogFacility = 32
 	// messages generated internally by syslogd
+	// ui-hint: Syslog
 	SyslogFacility_LOG_SYSLOG SyslogFacility = 40
 	// line printer subsystem
+	// ui-hint: LPR
 	SyslogFacility_LOG_LPR SyslogFacility = 48
 	// network news subsystem
+	// ui-hint: News
 	SyslogFacility_LOG_NEWS SyslogFacility = 56
 	// UUCP subsystem
+	// ui-hint: UUCP
 	SyslogFacility_LOG_UUCP SyslogFacility = 64
 	// clock daemon
+	// ui-hint: CRON
 	SyslogFacility_LOG_CRON SyslogFacility = 72
 	// security/authorization messages (private)
+	// ui-hint: Private Auth
 	SyslogFacility_LOG_AUTHPRIV SyslogFacility = 80
-	//
+	// ui-hint: FTP
 	SyslogFacility_LOG_FTP SyslogFacility = 88
 	// reserved for local use
+	// ui-hint: local 0
 	SyslogFacility_LOG_LOCAL0 SyslogFacility = 128
 	// reserved for local use
+	// ui-hint: local 1
 	SyslogFacility_LOG_LOCAL1 SyslogFacility = 136
 	// reserved for local use
+	// ui-hint: local 2
 	SyslogFacility_LOG_LOCAL2 SyslogFacility = 144
 	// reserved for local use
+	// ui-hint: local 3
 	SyslogFacility_LOG_LOCAL3 SyslogFacility = 152
 	// reserved for local use
+	// ui-hint: local 4
 	SyslogFacility_LOG_LOCAL4 SyslogFacility = 160
 	// reserved for local use
+	// ui-hint: local 5
 	SyslogFacility_LOG_LOCAL5 SyslogFacility = 168
 	// reserved for local use
+	// ui-hint: local 6
 	SyslogFacility_LOG_LOCAL6 SyslogFacility = 176
 	// reserved for local use
+	// ui-hint: local 7
 	SyslogFacility_LOG_LOCAL7 SyslogFacility = 184
 )
 

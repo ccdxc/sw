@@ -256,6 +256,29 @@ export enum MonitoringSyslogExport_format_uihint {
     'SYSLOG_RFC5424' = "RFC5424",
 }
 
+export enum MonitoringSyslogExportConfig_facility_override_uihint {
+    'LOG_AUTH' = "Auth",
+    'LOG_AUTHPRIV' = "Private Auth",
+    'LOG_CRON' = "CRON",
+    'LOG_DAEMON' = "Daemon",
+    'LOG_FTP' = "FTP",
+    'LOG_KERN' = "Kernel",
+    'LOG_LOCAL0' = "local 0",
+    'LOG_LOCAL1' = "local 1",
+    'LOG_LOCAL2' = "local 2",
+    'LOG_LOCAL3' = "local 3",
+    'LOG_LOCAL4' = "local 4",
+    'LOG_LOCAL5' = "local 5",
+    'LOG_LOCAL6' = "local 6",
+    'LOG_LOCAL7' = "local 7",
+    'LOG_LPR' = "LPR",
+    'LOG_MAIL' = "Mail",
+    'LOG_NEWS' = "News",
+    'LOG_SYSLOG' = "Syslog",
+    'LOG_USER' = "User",
+    'LOG_UUCP' = "UUCP",
+}
+
 export enum MonitoringTroubleshootingSessionStatus_state_uihint {
     'TS_RUNNING' = "Running",
     'TS_SCHEDULED' = "Scheduled",
@@ -330,5 +353,6 @@ export class AllEnums {
     MonitoringMirrorSessionSpec_packet_filters_uihint = MonitoringMirrorSessionSpec_packet_filters_uihint;
     MonitoringMirrorSessionStatus_oper_state_uihint = MonitoringMirrorSessionStatus_oper_state_uihint;
     MonitoringSyslogExport_format_uihint = MonitoringSyslogExport_format_uihint;
+    MonitoringSyslogExportConfig_facility_override_uihint = MonitoringSyslogExportConfig_facility_override_uihint;
     MonitoringTroubleshootingSessionStatus_state_uihint = MonitoringTroubleshootingSessionStatus_state_uihint;
 }

@@ -7,7 +7,7 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
-import { MonitoringSyslogExportConfig_facility_override,  } from './enums';
+import { MonitoringSyslogExportConfig_facility_override,  MonitoringSyslogExportConfig_facility_override_uihint  } from './enums';
 
 export interface IMonitoringSyslogExportConfig {
     'facility-override'?: MonitoringSyslogExportConfig_facility_override;
@@ -20,7 +20,7 @@ export class MonitoringSyslogExportConfig extends BaseModel implements IMonitori
     'prefix': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'facility-override': {
-            enum: MonitoringSyslogExportConfig_facility_override,
+            enum: MonitoringSyslogExportConfig_facility_override_uihint,
             default: 'LOG_USER',
             type: 'string'
         },
