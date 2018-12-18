@@ -1,5 +1,5 @@
 meta:
-    name    : rdma_regr
+    name    : rdma_reg
     os      : [ linux, freebsd ]
     nics    : [ pensando, mellanox ]
     targetcount : 300
@@ -46,11 +46,13 @@ testcases:
         testcase: testcases.rdma.packet_sweep
         iterators :
             type     : nested
-            num_qp   : [1, 8]
+            num_qp   : [1]
             rdma_cm  : [ 'no']
-            mtu      : [512, 1024, 2048, 4096]
+            #mtu      : [512, 1024, 2048, 4096]
+            mtu      : [1024, 4096]
             transport: ['RC']
-            command  : ['ib_send_bw', 'ib_read_bw', 'ib_write_bw']
+            #command  : ['ib_send_bw', 'ib_read_bw', 'ib_write_bw']
+            command  : ['ib_send_bw', 'ib_write_bw']
 
     -   name    : RC_RDMACM_Packet_Sweep
         testcase: testcases.rdma.packet_sweep
@@ -58,17 +60,20 @@ testcases:
             type     : nested
             num_qp   : [1]
             rdma_cm  : [ 'yes']
-            mtu      : [512, 1024, 2048, 4096]
+            #mtu      : [512, 1024, 2048, 4096]
+            mtu      : [1024, 4096]
             transport: ['RC']
-            command  : ['ib_send_bw', 'ib_read_bw', 'ib_write_bw']
+            #command  : ['ib_send_bw', 'ib_read_bw', 'ib_write_bw']
+            command  : ['ib_send_bw', 'ib_write_bw']
 
     -   name    : UD_TCPCM_Packet_Sweep
         testcase: testcases.rdma.packet_sweep
         iterators :
             type     : nested
-            num_qp   : [1, 8]
+            num_qp   : [1]
             rdma_cm  : [ 'no']
-            mtu      : [512, 1024, 2048, 4096]
+            #mtu      : [512, 1024, 2048, 4096]
+            mtu      : [1024, 4096]
             transport: ['UD']
             command  : ['ib_send_bw']
 
@@ -78,7 +83,8 @@ testcases:
             type     : nested
             num_qp   : [1]
             rdma_cm  : [ 'yes']
-            mtu      : [512, 1024, 2048, 4096]
+            #mtu      : [512, 1024, 2048, 4096]
+            mtu      : [1024, 4096]
             transport: ['UD']
             command  : ['ib_send_bw']
 
