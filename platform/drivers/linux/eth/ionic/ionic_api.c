@@ -212,13 +212,6 @@ int ionic_api_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx)
 {
 	struct queue *adminq = &lif->adminqcq->q;
 	int err = 0;
-#ifdef FAKE_ADMINQ
-	struct ionic *ionic = lif->ionic;
-	unsigned long irqflags;
-
-	if (!use_AQ)
-		goto fake_adminq;
-#endif
 
 	WARN_ON(in_interrupt());
 
@@ -240,22 +233,5 @@ err_out:
 	spin_unlock(&lif->adminq_lock);
 
 	return err;
-#ifdef FAKE_ADMINQ
-fake_adminq:
-
-	spin_lock_irqsave(&ionic->cmd_lock, irqflags);
-	list_add(&ctx->list, &ionic->cmd_list);
-	spin_unlock_irqrestore(&ionic->cmd_lock, irqflags);
-
-	/* schedule on a buddy cpu, in case this cpu needs to busy-wait */
-
-#ifdef PENSANDO_MNIC
-	schedule_work(&ionic->cmd_work);
-#else
-	schedule_work_on(raw_smp_processor_id()^1, &ionic->cmd_work);
-#endif //PENSANDO_MNIC
-
-	return 0;
-#endif
 }
 EXPORT_SYMBOL_GPL(ionic_api_adminq_post);

@@ -17,9 +17,6 @@ extern unsigned int nrxq_descs;
 extern unsigned int ntxqs;
 extern unsigned int nrxqs;
 extern unsigned int devcmd_timeout;
-#ifdef FAKE_ADMINQ
-extern unsigned int use_AQ;
-#endif
 
 struct ionic {
 	struct pci_dev *pdev;
@@ -44,11 +41,6 @@ struct ionic {
 	dma_addr_t scratch_bufs_pa[NUM_SCRATCH_BUFS];
 	struct debugfs_blob_wrapper scratch_bufs_blob[NUM_SCRATCH_BUFS];
 #endif
-#endif
-#ifdef FAKE_ADMINQ
-	spinlock_t cmd_lock;
-	struct list_head cmd_list;
-	struct work_struct cmd_work;
 #endif
 	struct work_struct nb_work;
 	struct notifier_block nb;
