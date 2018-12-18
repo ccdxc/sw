@@ -50,6 +50,7 @@ enum cmd_opcode {
 	CMD_OPCODE_Q_DISABLE			= 10,
 
 	CMD_OPCODE_NOTIFYQ_INIT			= 11,
+	CMD_OPCODE_LIF_RESET			= 12,
 
 	CMD_OPCODE_STATION_MAC_ADDR_GET		= 15,
 	CMD_OPCODE_MTU_SET			= 16,
@@ -88,6 +89,7 @@ enum status_code {
 	IONIC_RC_ENOSPC		= 15,	/* No space left or alloc failure */
 	IONIC_RC_ERANGE		= 16,	/* Parameter out of range */
 	IONIC_RC_BAD_ADDR	= 17,	/* Descriptor contains a bad ptr */
+	IONIC_RC_DEV_CMD	= 18,	/* Device cmd attempted on AdminQ */
 
 	IONIC_RC_ERDMA		= 30,	/* Generic RDMA error */
 };
@@ -1002,6 +1004,21 @@ struct notify_block {
 	u16 autoneg_status;
 	u16 link_flap_count;
 };
+
+/**
+ * struct lif_reset_cmd - LIF reset command
+ * @opcode:    opcode = 12
+ * @index:     LIF index
+ */
+struct lif_reset_cmd {
+        u16 opcode;
+        u16 rsvd;
+        u32 index:24;
+        u32 rsvd2:8;
+        u32 rsvd3[14];
+};
+
+typedef struct admin_comp lif_reset_comp;
 
 /**
  * struct station_mac_addr_get_cmd - Get LIF's station MAC address
