@@ -19,6 +19,8 @@
 #include "gen/proto/system.pb.h"
 #include "nic/p4/common/defines.h"
 
+#define HAL_MAX_INACTIVTY_TIMEOUT    0xFFFFFFFF
+
 using sdk::lib::ht_ctxt_t;
 using sdk::lib::dllist_ctxt_t;
 
@@ -196,6 +198,7 @@ typedef struct flow_cfg_s {
     uint16_t                  nat_dport;           // NAT destination port
     uint8_t                   eg_mirror_session;   // Mirror sessions in egress direction
     uint8_t                   ing_mirror_session;  // Mirror sessions in ingress direction
+    uint32_t                  idle_timeout;        // Idle timeout for session
 } __PACK__ flow_cfg_t;
 
 typedef struct flow_pgm_attrs_s {
@@ -328,6 +331,7 @@ typedef struct session_cfg_s {
     uint8_t             conn_track_en:1;          // enable connection tracking
 
     session_id_t        session_id;               // unique session id
+    uint32_t            idle_timeout;             // Session idle timeout
 } __PACK__ session_cfg_t;
 
 static const uint8_t MAX_SESSION_FLOWS = 2;
@@ -367,6 +371,7 @@ struct session_s {
     hal_handle_t        vrf_handle;               // src vrf handle
     void                *tcp_cxntrack_timer;      // Timer to check connection establishment
                                                   // and connection close
+    uint32_t            idle_timeout;             // idle timeout configured for a session
 
     // PD state
     pd::pd_session_t    *pd;                      // all PD specific state

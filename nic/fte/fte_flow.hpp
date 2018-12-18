@@ -251,6 +251,18 @@ public:
         return info;
     }
 
+    hal_ret_t set_aging_info(const aging_info_t& aging_info) {
+        aging_info_ = aging_info;
+        valid_.aging_info = true;
+        return HAL_RET_OK;
+    }
+    const aging_info_t& aging_info() const {
+        return aging_info_;
+    }
+    bool valid_aging_info() const {
+        return valid_.aging_info;
+    }
+
 private:
     // Max header updates we track per flow
     // This is enough to pop the outer, rewrite inner and push new outer
@@ -270,6 +282,7 @@ private:
         uint8_t qos_info:1;
         uint8_t lkp_info:1;
         uint8_t export_info:1;
+        uint8_t aging_info:1;
      } valid_;
 
     hal::flow_key_t           key_;                 // flow's key
@@ -284,6 +297,7 @@ private:
     qos_info_t                qos_info_;            // Qos Info
     lkp_info_t                lkp_info_;            // Flow lookup info
     export_info_t             export_info_;         // Flow Export info
+    aging_info_t              aging_info_;          // Aging info
 
     uint8_t                   num_header_updates_; // no.of valid updates
     header_update_t           header_updates_[MAX_HEADER_UPDATES];

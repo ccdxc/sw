@@ -45,6 +45,7 @@ DEFINE_ENUM(pipeline_event_t, FTE_PIPELINE_EVENT_ENTRIES)
     ENTRY(FLOWUPD_QOS_INFO,      10, "qos info")                        \
     ENTRY(FLOWUPD_EXPORT_INFO,   11, "export info")                      \
     ENTRY(FLOWUPD_LKP_KEY,       12, "flow key")                        \
+    ENTRY(FLOWUPD_AGING_INFO,    13, "Session Aging info")              \
 
 DEFINE_ENUM(flow_update_type_t, FTE_FLOW_UPDATE_CODES)
 #undef FTE_FLOW_UPDATE_CODES
@@ -278,6 +279,12 @@ typedef struct mcast_info_s {
 
 std::ostream& operator<<(std::ostream& os, const mcast_info_t& val);
 
+typedef struct aging_info_s {
+    uint32_t idle_timeout;
+} aging_info_t;
+
+std::ostream& operator<<(std::ostream& os, const aging_info_t& val);
+
 typedef struct ingress_info_s {
     // Expected source interface for host pinning mode
     hal::if_t *expected_sif;
@@ -335,6 +342,7 @@ typedef struct flow_update_s {
         mirror_info_t mirror_info;
         export_info_t export_info;
         hal::flow_key_t    key;
+        aging_info_t  aging_info;
     };
 }__PACK__ flow_update_t;
 

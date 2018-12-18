@@ -462,6 +462,7 @@ ctx_t::update_flow_table()
     std::string      update_type = "create";
 
     session_args.session = &session_cfg;
+    session_cfg.idle_timeout = HAL_MAX_INACTIVTY_TIMEOUT;
     if (protobuf_request()) {
         session_cfg.session_id = sess_spec_->session_id();
         session_state.tcp_ts_option = sess_spec_->tcp_ts_option();
@@ -541,6 +542,10 @@ ctx_t::update_flow_table()
             session_state.iflow_state = iflow->flow_state();
         }
 
+        if (iflow->valid_aging_info()) {
+            session_cfg.idle_timeout = iflow->aging_info().idle_timeout;
+        }
+
         if (is_proxy_enabled()) {
             iflow_attrs.is_proxy_en = 1;
         }
@@ -553,7 +558,8 @@ ctx_t::update_flow_table()
                         "is_eg_proxy_mirror={} ing_mirror_session={} eg_mirror_session={} "
                         "slif_en={} slif={} qos_class_en={} qos_class_id={} "
                         "is_proxy_en={} is_proxy_mcast={} export_en={} export_id1={} "
-                        "export_id2={} export_id3={} export_id4={} conn_track_en={}",
+                        "export_id2={} export_id3={} export_id4={} conn_track_en={} "
+                        "session_idle_timeout={}",
                         stage, iflow_cfg.key, iflow_attrs.lkp_inst, iflow_attrs.vrf_hwid,
                         iflow_cfg.action, iflow_attrs.mac_sa_rewrite,
                         iflow_attrs.mac_da_rewrite, iflow_attrs.ttl_dec, iflow_attrs.mcast_en,
@@ -567,7 +573,7 @@ ctx_t::update_flow_table()
                         iflow_attrs.qos_class_en, iflow_attrs.qos_class_id, iflow_attrs.is_proxy_en,
                         iflow_attrs.is_proxy_mcast, iflow_attrs.export_en, iflow_attrs.export_id1,
                         iflow_attrs.export_id2, iflow_attrs.export_id3, iflow_attrs.export_id4,
-                        session_cfg.conn_track_en);
+                        session_cfg.conn_track_en, session_cfg.idle_timeout);
     }
 
     for (uint8_t stage = 0; valid_rflow_ && !hal_cleanup() && stage <= rstage_; stage++) {
