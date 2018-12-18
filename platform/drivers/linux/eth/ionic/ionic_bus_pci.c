@@ -251,6 +251,8 @@ static void ionic_remove(struct pci_dev *pdev)
 		pci_disable_device(pdev);
 		ionic_debugfs_del_dev(ionic);
 	}
+
+	dev_info(ionic->dev, "removed\n");
 }
 
 static int ionic_sriov_configure(struct pci_dev *pdev, int numvfs)
