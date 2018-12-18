@@ -50,7 +50,7 @@ VMK_MODPARAM(devcmd_timeout,
              "Devcmd timeout in seconds (default 30 secs)");
 
 #ifdef FAKE_ADMINQ
-unsigned int use_AQ = 1;
+unsigned int use_AQ = 0;
 
 VMK_MODPARAM(use_AQ,
              uint,
