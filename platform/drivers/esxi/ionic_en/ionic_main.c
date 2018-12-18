@@ -33,24 +33,37 @@ unsigned int nrxqs = 32;
 unsigned int devcmd_timeout = 30;
 
 VMK_MODPARAM(ntxq_descs,
-             int,
+             uint,
              "Descriptors per Tx queue, must be power of 2");
 VMK_MODPARAM(nrxq_descs,
-             int,
+             uint,
              "Descriptors per Rx queue, must be power of 2");
 VMK_MODPARAM(ntxqs,
-             int,
+             uint,
              "Hard set the number of Tx queues per LIF");
 VMK_MODPARAM(nrxqs,
-             int,
+             uint,
              "Hard set the number of Rx queues per LIF");
 
 VMK_MODPARAM(devcmd_timeout,
-             int,
+             uint,
              "Devcmd timeout in seconds (default 30 secs)");
 
+#ifdef FAKE_ADMINQ
+unsigned int use_AQ = 1;
+
+VMK_MODPARAM(use_AQ,
+             uint,
+             "Set to non-0 to enable AQ testing, defaults to 1");
+#endif
+
+
+
+
 VMK_ReturnStatus
-ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx)
+ionic_adminq_check_err(struct lif *lif,
+                       struct ionic_admin_ctx *ctx,
+                       vmk_Bool is_timeout)
 {
 //	struct net_device *netdev = lif->netdev;
 	static struct cmds {
@@ -78,15 +91,16 @@ ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx)
 	char *name = "UNKNOWN";
         int i;
 
-	if (ctx->comp.comp.status) {
+	if (ctx->comp.comp.status || is_timeout) {
                 for (i = 0; i < list_len; i++) {
                         if (cmd[i].cmd == ctx->cmd.cmd.opcode) {
                                 name = cmd[i].name;
                                 break;
                         }
                 }
-		ionic_err("(%d) %s failed: %d\n", ctx->cmd.cmd.opcode,
-			  name, ctx->comp.comp.status);
+		ionic_err("(%d) %s failed: %d %s\n", ctx->cmd.cmd.opcode,
+			  name, ctx->comp.comp.status,
+                          (is_timeout ? "(timeout)" : ""));
 		return VMK_FAILURE;
 	}
 
@@ -98,6 +112,7 @@ VMK_ReturnStatus
 ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
 {
 	VMK_ReturnStatus status;
+        vmk_Bool is_timeout;
 
 	status = ionic_api_adminq_post(lif, ctx);
 	if (status != VMK_OK) {
@@ -107,10 +122,14 @@ ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
 	}
 //		return err;
 
-	ionic_wait_for_completion(&ctx->work);
+	is_timeout = ionic_wait_for_completion(&ctx->work,
+                                               devcmd_timeout *
+                                               vmk_TimerTCToMS(HZ));
 //	wait_for_completion(&ctx->work);
 
-	return ionic_adminq_check_err(lif, ctx);
+	return ionic_adminq_check_err(lif,
+                                      ctx,
+                                      is_timeout);
 }
 
 int ionic_netpoll(int budget, ionic_cq_cb cb, 
@@ -216,7 +235,7 @@ ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait)
 
 
 
-#ifndef ADMINQ
+#ifdef FAKE_ADMINQ
 #define XXX_DEVCMD_HALF_PAGE 0x800
 
 // XXX temp func to get side-band data from 2nd half page of dev_cmd reg space.
@@ -392,7 +411,7 @@ ionic_setup(struct ionic *ionic)
                 goto lifs_lock_err;
         }                
 
-#ifndef ADMINQ
+#ifdef FAKE_ADMINQ
 //        spin_lock_init(&ionic->cmd_lock);
 //        INIT_LIST_HEAD(&ionic->cmd_list);
 //        INIT_WORK(&ionic->cmd_work, ionic_dev_cmd_work);

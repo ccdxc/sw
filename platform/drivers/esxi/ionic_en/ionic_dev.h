@@ -236,7 +236,7 @@ static inline void ionic_struct_size_checks(void)
         VMK_ASSERT_ON_COMPILE(sizeof(rx_filter_del_comp) == 16);
         VMK_ASSERT_ON_COMPILE(sizeof(struct stats_dump_cmd) == 64);
         VMK_ASSERT_ON_COMPILE(sizeof(struct stats_dump_comp) == 16);
-        VMK_ASSERT_ON_COMPILE(sizeof(union stats_dump) == 4096);
+        VMK_ASSERT_ON_COMPILE(sizeof(struct stats_dump) == 4096);
         VMK_ASSERT_ON_COMPILE(sizeof(struct rss_hash_set_cmd) == 64);
         VMK_ASSERT_ON_COMPILE(sizeof(rss_hash_set_comp) == 16);
         VMK_ASSERT_ON_COMPILE(sizeof(struct rss_indir_set_cmd) == 64);

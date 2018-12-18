@@ -1,5 +1,4 @@
-#include "ionic_api.h"
-#include "ionic_lif.h"
+#include "ionic.h"
 
 #if 0
 struct lif *get_netdev_ionic_lif(struct net_device *netdev,
@@ -153,7 +152,6 @@ EXPORT_SYMBOL_GPL(ionic_api_put_dbid);
 
 #endif
 
-#ifdef ADMINQ
 static void ionic_api_adminq_cb(struct queue *q, struct desc_info *desc_info,
 				struct cq_info *cq_info, void *cb_arg)
 {
@@ -174,22 +172,24 @@ static void ionic_api_adminq_cb(struct queue *q, struct desc_info *desc_info,
 //	complete_all(&ctx->work);
 	ionic_complete(&ctx->work);
 }
-#endif
 
 VMK_ReturnStatus
 ionic_api_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx)
 {
-	VMK_ReturnStatus status;	
-
-#ifdef ADMINQ
+	VMK_ReturnStatus status = VMK_OK;	
 	struct queue *adminq = &lif->adminqcq->q;
 
-	//WARN_ON(in_interrupt());
+#ifdef FAKE_ADMINQ
+        struct ionic *ionic = lif->ionic;
 
-//	spin_lock(&lif->adminq_lock);
+        if (!use_AQ) {
+                goto fake_adminq;
+        }
+#endif
+
 	vmk_SpinlockLock(lif->adminq_lock);
 	if (!ionic_q_has_space(adminq, 1)) {
-		status = VMK_NO_MEMORY;
+                status = VMK_NO_MEMORY;
 		goto err_out;
 	}
 
@@ -204,23 +204,14 @@ ionic_api_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx)
 	ionic_q_post(adminq, true, ionic_api_adminq_cb, ctx);
 
 err_out:
-//	spin_unlock(&lif->adminq_lock);
 	vmk_SpinlockUnlock(lif->adminq_lock);
 	return status;
-#else
-	struct ionic *ionic = lif->ionic;
-	//unsigned long irqflags;
-/*
-	spin_lock_irqsave(&ionic->cmd_lock, irqflags);
-	list_add(&ctx->list, &ionic->cmd_list);
-	spin_unlock_irqrestore(&ionic->cmd_lock, irqflags);
-*/
+
+#ifdef FAKE_ADMINQ
+fake_adminq:
         vmk_SpinlockLock(ionic->cmd_lock);
         vmk_ListInsert(&ctx->list, &ionic->cmd_list);
 	vmk_SpinlockUnlock(ionic->cmd_lock);
-
-        /* schedule on a buddy cpu, in case this cpu needs to busy-wait */
-//	schedule_work_on(raw_smp_processor_id()^1, &ionic->cmd_work);
 
         status = ionic_work_queue_submit(ionic->cmd_work_queue,
                                          &ionic->cmd_work,

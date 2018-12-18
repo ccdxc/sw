@@ -845,8 +845,8 @@ ionic_tx_calc_csum(struct queue *q,
 //        desc->O = ctx->is_encap;
         /* Since ESXi doesn't has API to check if we need l3 csum,
          * we make it follow the l4 csum value */
-        desc->csum_l3 = VMK_TRUE; 
-        desc->csum_l4 = VMK_TRUE;
+        desc->l3_csum = VMK_TRUE; 
+        desc->l4_csum = VMK_TRUE;
 //        if (skb->csum_not_inet)
 //                stats->crc32_csum++;
 //        else

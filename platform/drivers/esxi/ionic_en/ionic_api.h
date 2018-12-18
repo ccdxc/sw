@@ -21,6 +21,8 @@
 
 #include "ionic.h"
 
+#define FAKE_ADMINQ     1
+
 #include "ionic_if.h"
 #include "ionic_completion.h"
 
@@ -52,7 +54,7 @@ struct ionic_admin_ctx {
         union adminq_cmd cmd;
         union adminq_comp comp;
 
-#ifndef ADMINQ
+#ifdef FAKE_ADMINQ
         //struct list_head list;
         vmk_ListLinks list;
         void *side_data;

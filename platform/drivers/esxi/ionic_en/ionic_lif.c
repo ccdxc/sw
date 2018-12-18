@@ -1453,8 +1453,10 @@ ionic_rss_ind_tbl_set(struct lif *lif, const u32 *indir)
                         .addr = lif->rss_ind_tbl_pa,
                 },  
 #ifdef HAPS
+#ifdef FAKE_ADMINQ
                 .side_data = lif->rss_ind_tbl,
                 .side_data_len = RSS_IND_TBL_SIZE,
+#endif
 #endif
         };  
 
@@ -1663,12 +1665,17 @@ static void ionic_lif_rxqs_deinit(struct lif *lif)
 
 static void ionic_lif_deinit(struct lif *lif)
 {
+        if (!(lif->flags & LIF_F_INITED)) {
+                return;
+        }
+
 //	ionic_lif_stats_dump_stop(lif);
 	ionic_rx_filters_deinit(lif);
 	ionic_lif_rss_teardown(lif);
 	ionic_lif_qcq_deinit(lif->adminqcq);
 	ionic_lif_txqs_deinit(lif);
 	ionic_lif_rxqs_deinit(lif);
+        lif->flags &= ~LIF_F_INITED;
 }
 
 void ionic_lifs_deinit(struct ionic *ionic)
@@ -1716,8 +1723,9 @@ ionic_lif_adminq_init(struct lif *lif)
 //	struct napi_struct *napi = &qcq->napi;
         struct adminq_init_comp comp;
 
-	ionic_dev_cmd_adminq_init(idev, q, 0, lif->index, 0);
-	status = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
+	ionic_dev_cmd_adminq_init(idev, q, 0, lif->index, qcq->cq.bound_intr->index);
+
+        status = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
 	if (status != VMK_OK) {
                 ionic_err("ionic_dev_cmd_wait_check() failed, status: %s",
                           vmk_StatusToString(status));
@@ -1752,6 +1760,9 @@ ionic_lif_adminq_init(struct lif *lif)
 	}
 
 	qcq->flags |= QCQ_F_INITED;
+
+        vmk_NetPollEnable(qcq->netpoll);
+	ionic_intr_mask(&qcq->intr, VMK_FALSE);
 
 	return status;
 }
@@ -2150,9 +2161,6 @@ ionic_lif_init(struct lif *lif)
                 return status;
         }
 
-	/* Enabling interrupts on adminq from here on... */
-	ionic_intr_mask(&lif->adminqcq->intr, VMK_FALSE);
-
 	status  = ionic_get_features(lif);
 	if (status != VMK_OK) {
                 ionic_err("ionic_get_features() failed, status: %s",
@@ -2219,6 +2227,7 @@ ionic_lif_init(struct lif *lif)
         IONIC_EN_SHARED_AREA_END_WRITE(lif->uplink_handle);
 
 	lif->api_private = NULL;
+        lif->flags |= LIF_F_INITED;
 
 	return status;
 /*
@@ -2343,9 +2352,10 @@ ionic_lifs_size(struct ionic *ionic)
 
         union identity *ident = ionic->ident;
         unsigned int nlifs = ident->dev.nlifs;
-        unsigned int neqs_per_lif = ident->dev.neqs_per_lif;
-        unsigned int ntxqs_per_lif = ident->dev.ntxqs_per_lif;
-        unsigned int nrxqs_per_lif = ident->dev.nrxqs_per_lif;
+        unsigned int neqs_per_lif = ident->dev.rdma_eq_qtype.qid_count; 
+//        unsigned int nnqs_per_lif = ident->dev.notify_qtype.qid_count;
+        unsigned int ntxqs_per_lif = ident->dev.tx_qtype.qid_count;
+        unsigned int nrxqs_per_lif = ident->dev.rx_qtype.qid_count;
         unsigned int nintrs, dev_nintrs = ident->dev.nintrs;
 //        int err;
 

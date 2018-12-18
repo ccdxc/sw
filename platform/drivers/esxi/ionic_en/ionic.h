@@ -44,9 +44,8 @@
 #include "ionic_device_list.h"
 #include "ionic_txrx.h"
 #include "ionic_en_mq.h"
-
+#include "ionic_api.h"
 //#define ADMINQ
-
 #define HAPS
 #define IONIC_DRV_NAME        "ionic_en"
 #define DRV_DESCRIPTION       "Pensando Ethernet NIC Driver"
@@ -65,6 +64,10 @@ extern unsigned int ntxqs;
 extern unsigned int nrxqs;
 extern unsigned int devcmd_timeout;
 extern struct ionic_driver ionic_driver;
+
+#ifdef FAKE_ADMINQ
+extern unsigned int use_AQ;
+#endif
 
 struct ionic_admin_ctx;
 
@@ -126,7 +129,7 @@ struct ionic {
         struct debugfs_blob_wrapper scratch_bufs_blob[NUM_SCRATCH_BUFS];
 #endif
 #endif
-#ifndef ADMINQ
+#ifdef FAKE_ADMINQ
         spinlock_t cmd_lock;
  //       struct list_head cmd_list;
         vmk_ListLinks cmd_list;

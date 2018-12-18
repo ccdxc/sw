@@ -37,6 +37,8 @@ enum cmd_opcode {
         CMD_OPCODE_Q_ENABLE                     = 9,
         CMD_OPCODE_Q_DISABLE                    = 10,
 
+        CMD_OPCODE_NOTIFYQ_INIT                 = 11,
+
         CMD_OPCODE_STATION_MAC_ADDR_GET         = 15,
         CMD_OPCODE_MTU_SET                      = 16,
         CMD_OPCODE_RX_MODE_SET                  = 17,
@@ -72,6 +74,36 @@ enum cmd_opcode {
         CMD_OPCODE_RDMA_LAST_CMD                = 65, //Keep this as last rdma cmd
 
         CMD_OPCODE_DEBUG_Q_DUMP                 = 0xf0,
+};
+
+enum status_code {
+        IONIC_RC_SUCCESS        = 0,    /* Success */
+        IONIC_RC_EVERSION       = 1,    /* Incorrect version for request */
+        IONIC_RC_EOPCODE        = 2,    /* Invalid cmd opcode */
+        IONIC_RC_EIO            = 3,    /* I/O error */
+        IONIC_RC_EPERM          = 4,    /* Permission denied */
+        IONIC_RC_EQID           = 5,    /* Bad qid */
+        IONIC_RC_EQTYPE         = 6,    /* Bad qtype */
+        IONIC_RC_ENOENT         = 7,    /* No such element */
+        IONIC_RC_EINTR          = 8,    /* operation interrupted */
+        IONIC_RC_EAGAIN         = 9,    /* Try again */
+        IONIC_RC_ENOMEM         = 10,   /* Out of memory */
+        IONIC_RC_EFAULT         = 11,   /* Bad address */
+        IONIC_RC_EBUSY          = 12,   /* Device or resource busy */
+        IONIC_RC_EEXIST         = 13,   /* object already exists */
+        IONIC_RC_EINVAL         = 14,   /* Invalid argument */
+        IONIC_RC_ENOSPC         = 15,   /* No space left or alloc failure */
+        IONIC_RC_ERANGE         = 16,   /* Parameter out of range */
+        IONIC_RC_BAD_ADDR       = 17,   /* Descriptor contains a bad ptr */
+
+        IONIC_RC_ERDMA          = 30,   /* Generic RDMA error */
+};
+
+enum notifyq_opcode {
+        EVENT_OPCODE_LINK_CHANGE                = 1,
+        EVENT_OPCODE_RESET                      = 2,
+        EVENT_OPCODE_HEARTBEAT                  = 3,
+        EVENT_OPCODE_LOG                        = 4,
 };
 
 #pragma pack(push, 1)
@@ -188,6 +220,19 @@ enum os_type {
 };
 
 /**
+ * struct lif_logical_qtype - Descriptor of logical to numeric queue type.
+ * @ qtype:             Numeric Queue Type.
+ * @ qid_base:          Minimum Queue ID of the logical type.
+ * @ qid_count:         Number of Queue IDs of the logical type.
+ */
+struct lif_logical_qtype {
+        u8 qtype;
+        u8 rsvd[3];
+        u32 qid_count;
+        u32 qid_base;
+};
+
+/**
  * union identity - 4096 bytes of driver/device identity information
  *
  * Supplied by driver (IN):
@@ -209,24 +254,10 @@ enum os_type {
  *     @fw_version:       NULL-terminated string representing the
  *                        firmware version
  *     @nlifs:            Number of LIFs provisioned
- *     @ndbpgs_per_lif:   Number of doorbell pages per LIF
- *     @nadminqs_per_lif: Number of admin queues per LIF provisioned
- *     @ntxqs_per_lif:    Number of Ethernet transmit queues per LIF
- *                        provisioned
- *     @nrxqs_per_lif:    Number of Ethernet receive queues per LIF
- *                        provisioned
- *     @ncps_per_lif:     Number of completion queues per LIF
- *                        provisioned
- *     @nrdmasqs_per_lif: Number of RMDA send queues per LIF
- *                        provisioned
- *     @nrdmarqs_per_lif: Number of RDMA receive queues per LIF
- *                        provisioned
- *     @neqs_per_lif:     Number of event queues per LIF provisioned
  *     @nintrs:           Number of interrupts provisioned
- *     @nucasts_per_lif:  Number of perfect unicast addresses
- *                        supported
- *     @nmcasts_per_lif:  Number of perfect multicast addresses
- *                        supported.
+ *     @ndbpgs_per_lif:   Number of doorbell pages per LIF
+ *     @nucasts_per_lif:  Number of perfect unicast addresses supported
+ *     @nmcasts_per_lif:  Number of perfect multicast addresses supported.
  *     @intr_coal_mult:   Interrupt coalescing multiplication factor.
  *                        Scale user-supplied interrupt coalescing
  *                        value in usecs to device units using:
@@ -236,10 +267,22 @@ enum os_type {
  *                        value in usecs to device units using:
  *                           device units = usecs * mult / div
  *     @rdma_version:     RDMA version of opcodes and queue descriptors.
- *     @rdma_qp_opcodes:  Number of rdma queue pair opcodes supported for the
- *                        current version and six prior versions.
- *     @rdma_admin_opcodes: Number of rdma admin opcodes supported for the
- *                        current version and six prior versions.
+ *     @rdma_qp_opcodes:  Number of rdma queue pair opcodes supported.
+ *     @rdma_admin_opcodes: Number of rdma admin opcodes supported.
+ *     @rdma_max_stride:  Max work request stride.
+ *     @rdma_cl_stride:   Cache line stride.
+ *     @rdma_pte_stride:  Page table entry stride.
+ *     @rdma_rrq_stride:  Remote RQ work request stride.
+ *     @rdma_rsq_stride:  Remote SQ work request stride.
+ *     @admin_qtype:      Admin Qtype.
+ *     @tx_qtype:         Transmit Qtype.
+ *     @rx_qtype:         Receive Qtype.
+ *     @notify_qtype:     Notify Qtype.
+ *     @rdma_aq_qtype:    RDMA Admin Qtype.
+ *     @rdma_sq_qtype:    RDMA Send Qtype.
+ *     @rdma_rq_qtype:    RDMA Receive Qtype.
+ *     @rdma_cq_qtype:    RDMA Completion Qtype.
+ *     @rdma_eq_qtype:    RDMA Event Qtype.
  */
 union identity {
         struct {
@@ -253,29 +296,38 @@ union identity {
         struct {
                 u8 asic_type;
                 u8 asic_rev;
-                u8 rsvd[2];
+                u8 rsvd_asicid[2];
                 char serial_num[20];
                 char fw_version[20];
                 u32 nlifs;
-                u32 ndbpgs_per_lif;
-                u32 nadminqs_per_lif;
-                u32 ntxqs_per_lif;
-                u32 nrxqs_per_lif;
-                u32 ncqs_per_lif;
-                u32 nrdmasqs_per_lif;
-                u32 nrdmarqs_per_lif;
-                u32 nrdma_pts_per_lif;
-                u32 nrdma_mrs_per_lif;
-                u32 nrdma_ahs_per_lif;
-                u32 neqs_per_lif;
                 u32 nintrs;
+                u32 ndbpgs_per_lif;
                 u32 nucasts_per_lif;
                 u32 nmcasts_per_lif;
                 u32 intr_coal_mult;
                 u32 intr_coal_div;
                 u16 rdma_version;
-                u8 rdma_qp_opcodes[7];
-                u8 rdma_admin_opcodes[7];
+                u8 rdma_qp_opcodes;
+                u8 rdma_admin_opcodes;
+                u32 nrdma_pts_per_lif;
+                u32 nrdma_mrs_per_lif;
+                u32 nrdma_ahs_per_lif;
+                u8 rdma_max_stride;
+                u8 rdma_cl_stride;
+                u8 rdma_pte_stride;
+                u8 rdma_rrq_stride;
+                u8 rdma_rsq_stride;
+                u8 rsvd_dimensions[11];
+                struct lif_logical_qtype tx_qtype;
+                struct lif_logical_qtype rx_qtype;
+                struct lif_logical_qtype admin_qtype;
+                struct lif_logical_qtype notify_qtype;
+                struct lif_logical_qtype rdma_aq_qtype;
+                struct lif_logical_qtype rdma_sq_qtype;
+                struct lif_logical_qtype rdma_rq_qtype;
+                struct lif_logical_qtype rdma_cq_qtype;
+                struct lif_logical_qtype rdma_eq_qtype;
+                struct lif_logical_qtype rsvd_qtype[7];
         } dev;
         u32 words[1024];
 };
@@ -521,6 +573,10 @@ enum txq_desc_opcode {
  * @csum_offset:  Offset into inner-most L4 header of checksum
  *                field.  Only applicable for
  *                TXQ_DESC_OPCODE_CALC_CSUM.
+ * @l3_csum:      NIC populates L3 checksum even without csum_offset provided
+ *                Valid for TXQ_DESC_OPCODE_CALC_CSUM.
+ * @l4_csum:      NIC populates L4 checksum even without csum_offset provided
+ *                Valid for TXQ_DESC_OPCODE_CALC_CSUM.
  */
 struct txq_desc {
         u64 addr:52;
@@ -542,8 +598,8 @@ struct txq_desc {
                 };
                 struct {
                         u16 csum_offset:14;
-                        u16 csum_l3:1;
-                        u16 csum_l4:1;
+                        u8 l3_csum:1;
+                        u8 l4_csum:1;
                 };
         };
 };
@@ -874,6 +930,87 @@ struct q_disable_cmd {
 typedef struct admin_comp q_disable_comp;
 
 /**
+ * struct notifyq_init_cmd - Event queue init command
+ * @opcode:       opcode = 11
+ * @pid:          Process ID
+ * @index:        LIF-relative queue index
+ * @intr_index:   Interrupt control register index
+ * @lif_index:    LIF index (should be 0)
+ * @ring_size:    NotifyQ queue ring size, encoded as a log2(size),
+ *                in number of descs.  The actual ring size is
+ *                (1 << ring_size).  For example, to
+ *                select a ring size of 64 descriptors write
+ *                ring_size = 6.  The minimum ring_size value is 2
+ *                for a ring size of 4 descriptors.  The maximum
+ *                ring_size value is 16 for a ring size of 64k
+ *                descriptors.  Values of ring_size <2 and >16 are
+ *                reserved.
+ * @notify_size:  Notify block size, encoded as a log2(size), in
+ *                number of bytes.  If the size is smaller that the
+ *                data available, the data will be truncated.
+ * @ring_base:    Notify queue ring base address. Should be aligned
+ *                on PAGE_SIZE. If not aligned properly can cause
+ *                CQ Errors
+ * @notify_base:  Base address for a block of memory reserved for
+ *                link status data, to be updated by the NIC and
+ *                read by the driver.  When link status changes,
+ *                the NIC should update this before signaling an
+ *                interrupt on the NotifyQ.
+ */
+struct notifyq_init_cmd {
+        u16 opcode;
+        u16 pid;
+        u16 index;
+        u16 intr_index;
+        u32 lif_index;
+        u8 ring_size;
+        u8 notify_size;
+        u16 rsvd;
+        dma_addr_t ring_base;
+        dma_addr_t notify_base;
+        u32 rsvd2[8];
+};
+
+/**
+ * struct notifyq_init_comp - Event queue init command completion
+ * @status:     The status of the command.  Values for status are:
+ *                 0 = Successful completion
+ * @comp_index: The index in the descriptor ring for which this
+ *              is the completion.
+ * @qid:        Queue ID
+ * @qtype:      Queue type
+ * @color:      Color bit.
+ */
+struct notifyq_init_comp {
+        u8 status;
+        u8 rsvd;
+        u16 comp_index;
+        u32 qid;
+        u8 qtype;
+        u8 rsvd3[6];
+        u8 color;
+};
+
+/**
+ * Struct notify_block - Memory block for notifications, updated by the NIC
+ * @eid:             most recent NotifyQ event id
+ * @link_status      link up/down
+ * @link_error_bits: error bits if needed
+ * @link_speed:      speed of link in Gbps
+ * @phy_type:        type of physical connection
+ * @autoneg_status:  autonegotiation status
+ */
+struct notify_block {
+        u64 eid;
+        u16 link_status;
+        u16 link_error_bits;
+        u32 link_speed;         /* units of 1Mbps: e.g. 10000 = 10Gbps */
+        u16 phy_type;
+        u16 autoneg_status;
+        u16 link_flap_count;
+};
+
+/**
  * struct station_mac_addr_get_cmd - Get LIF's station MAC address
  *                                   command
  * @opcode:     opcode = 15
@@ -1065,23 +1202,91 @@ struct stats_dump_comp {
 };
 
 /**
- * union stats_dump - 4096 bytes of device stats
- * TODO define stats dump area, placeholders for now:
- * @stat1:  64-bit device stat
- * @stat2:  64-bit device stat
+ * struct stats_dump - 4096 bytes of device stats
  */
-union stats_dump {
-        struct {
-                /* TODO these are placeholders */
-                u64 stat1;
-                u64 stat2;
-        } ver1;
-        u32 words[1024];
+struct stats_dump {
+        u64 rx_ucast_bytes;            /*   0 */
+        u64 rx_ucast_packets;          /*   8 */
+        u64 rx_mcast_bytes;            /*  16 */
+        u64 rx_mcast_packets;          /*  24 */
+        u64 rx_bcast_bytes;            /*  32 */
+        u64 rx_bcast_packets;          /*  40 */
+        u64 pad1[2];
+
+        u64 rx_ucast_drop_bytes;       /*  64 */
+        u64 rx_ucast_drop_packets;     /*  72 */
+        u64 rx_mcast_drop_bytes;       /*  80 */
+        u64 rx_mcast_drop_packets;     /*  88 */
+        u64 rx_bcast_drop_bytes;       /*  96 */
+        u64 rx_bcast_drop_packets;     /* 104 */
+        u64 rx_dma_error;              /* 112 */
+        u64 pad2;
+
+        u64 tx_ucast_bytes;            /* 128 */
+        u64 tx_ucast_packets;          /* 136 */
+        u64 tx_mcast_bytes;            /* 144 */
+        u64 tx_mcast_packets;          /* 152 */
+        u64 tx_bcast_bytes;            /* 160 */
+        u64 tx_bcast_packets;          /* 168 */
+        u64 pad3[2];
+
+        u64 tx_ucast_drop_bytes;       /* 192 */
+        u64 tx_ucast_drop_packets;     /* 200 */
+        u64 tx_mcast_drop_bytes;       /* 208 */
+        u64 tx_mcast_drop_packets;     /* 216 */
+        u64 tx_bcast_drop_bytes;       /* 224 */
+        u64 tx_bcast_drop_packets;     /* 232 */
+        u64 tx_dma_error;              /* 240 */
+        u64 pad4[2];
+
+        u64 rx_queue_disabled_drop;    /* 256 */
+        u64 rx_queue_empty_drop;       /* 264 */
+        u64 rx_queue_scheduled;        /* 272 */
+        u64 rx_desc_fetch_error;       /* 280 */
+        u64 rx_desc_data_error;        /* 288 */
+        u64 pad5[3];
+
+        u64 tx_queue_disabled;         /* 320 */
+        u64 tx_queue_scheduled;        /* 328 */
+        u64 tx_desc_fetch_error;       /* 336 */
+        u64 tx_desc_data_error;        /* 344 */
+        u64 pad6[5];
+
+        /* Debug counters */
+        u64 rx_rss;                    /* 384 */
+        u64 rx_csum_complete;          /* 392 */
+        u64 rx_csum_ip_bad;            /* 400 */
+        u64 rx_csum_tcp_bad;           /* 408 */
+        u64 rx_csum_udp_bad;           /* 416 */
+        u64 rx_vlan_strip;             /* 424 */
+        u64 pad7[3];
+
+        u64 tx_csum_hw;                /* 448 */
+        u64 tx_csum_hw_inner;          /* 456 */
+        u64 tx_vlan_insert;            /* 464 */
+        u64 tx_sg;                     /* 472 */
+        u64 tx_tso_sg;                 /* 480 */
+        u64 tx_tso_sop;                /* 488 */
+        u64 tx_tso_eop;                /* 496 */
+        u64 pad8[6];
+
+        u64 tx_opcode_invalid;         /* 560 */
+        u64 tx_opcode_csum_none;       /* 568 */
+        u64 tx_opcode_csum_partial;    /* 576 */
+        u64 tx_opcode_csum_hw;         /* 584 */
+        u64 tx_opcode_csum_tso;        /* 592 */
+
+        u64 pad_to_1024[51];
+        u64 pad_to_2048[128];
+        u64 pad_to_3072[128];
+        u64 pad_to_4096[128];
 };
 
 #define RSS_HASH_KEY_SIZE       40
 
 enum rss_hash_types {
+/* Conflicts with FreeBSD rss definitions. */
+#ifndef __FreeBSD__
         RSS_TYPE_IPV4           = BIT(0),
         RSS_TYPE_IPV4_TCP       = BIT(1),
         RSS_TYPE_IPV4_UDP       = BIT(2),
@@ -1091,6 +1296,17 @@ enum rss_hash_types {
         RSS_TYPE_IPV6_EX        = BIT(6),
         RSS_TYPE_IPV6_TCP_EX    = BIT(7),
         RSS_TYPE_IPV6_UDP_EX    = BIT(8),
+#else
+        IONIC_RSS_TYPE_IPV4             = BIT(0),
+        IONIC_RSS_TYPE_IPV4_TCP = BIT(1),
+        IONIC_RSS_TYPE_IPV4_UDP = BIT(2),
+        IONIC_RSS_TYPE_IPV6             = BIT(3),
+        IONIC_RSS_TYPE_IPV6_TCP = BIT(4),
+        IONIC_RSS_TYPE_IPV6_UDP = BIT(5),
+        IONIC_RSS_TYPE_IPV6_EX  = BIT(6),
+        IONIC_RSS_TYPE_IPV6_TCP_EX      = BIT(7),
+        IONIC_RSS_TYPE_IPV6_UDP_EX      = BIT(8),
+#endif
 };
 
 /**
@@ -1186,9 +1402,11 @@ struct rdma_reset_cmd {
  * @lif_id:        hardware lif id
  * @qid_ver:       (qid | (rdma version << 24))
  * @cid:           intr, eq_id, or cq_id
- * @db_id:         doorbell page id
+ * @dbid:          doorbell page id
  * @depth_log2:    log base two of queue depth
  * @stride_log2:   log base two of queue stride
+ * @dma_addr:      address of the queue memory
+ * @xxx_table_index: temporary, but should not need pgtbl for contig. queues.
  *
  * The same command struct is used to create an rdma event queue, completion
  * queue, or rdma admin queue.  The cid is an interrupt number for an event
@@ -1331,7 +1549,7 @@ struct create_cq_cmd {
         u64 va_len;
         u32 pt_size;
         u32 table_index;
-        u8 rsvd2[8];
+        u8  rsvd2[8];
 };
 
 /**
@@ -1460,10 +1678,175 @@ struct modify_qp_comp {
         u32 rsvd2[3];
 };
 
+/******************************************************************
+ ******************* Notify Events ********************************
+ ******************************************************************/
+
+/**
+ * struct notifyq_event
+ * @eid:   event number
+ * @ecode: event code
+ * @data:  unspecified data about the event
+ *
+ * This is the generic event report struct from which the other
+ * actual events will be formed.
+ */
+struct notifyq_event {
+        u64 eid;
+        u16 ecode;
+        u8 data[54];
+};
+
+/**
+ * struct link_change_event
+ * @eid:                event number
+ * @ecode:              event code = EVENT_OPCODE_LINK_CHANGE
+ * @link_status:        link up or down, with error bits
+ * @phy_type:           specifies the type of PHY connected
+ * @link_speed:         speed of the network link
+ * @autoneg_status:     autonegotiation data
+ *
+ * Sent when the network link state changes between UP and DOWN
+ */
+struct link_change_event {
+        u64 eid;
+        u16 ecode;
+        u16 link_status;        /* 0 = down, 1 = up */
+        u16 link_error_bits;    /* TBD */
+        u16 phy_type;
+        u32 link_speed;         /* units of 1Mbps: e.g. 10000 = 10Gbps */
+        u16 autoneg_status;
+        u8 rsvd[42];
+};
+
+/**
+ * struct reset_event
+ * @eid:                event number
+ * @ecode:              event code = EVENT_OPCODE_RESET
+ * @reset_code:         reset type
+ * @state:              0=pending, 1=complete, 2=error
+ *
+ * Sent when the NIC or some subsystem is going to be or
+ * has been reset.
+ */
+struct reset_event {
+        u64 eid;
+        u16 ecode;
+        u8 reset_code;
+        u8 state;
+        u8 rsvd[52];
+};
+
+/**
+ * struct heartbeat_event
+ * @eid:        event number
+ * @ecode:      event code = EVENT_OPCODE_HEARTBEAT
+ *
+ * Sent periodically by the NIC to indicate continued health
+ */
+struct heartbeat_event {
+        u64 eid;
+        u16 ecode;
+        u8 rsvd[54];
+};
+
+/**
+ * struct log_event
+ * @eid:        event number
+ * @ecode:      event code = EVENT_OPCODE_LOG
+ * @data:       log data
+ *
+ * Sent to notify the driver of an internal error.
+ */
+struct log_event {
+        u64 eid;
+        u16 ecode;
+        u8 data[54];
+};
+
+/**
+ * struct ionic_lif_stats
+ */
+struct ionic_lif_stats {
+        // RX
+        uint64_t rx_ucast_bytes;
+        uint64_t rx_ucast_packets;
+        uint64_t rx_mcast_bytes;
+        uint64_t rx_mcast_packets;
+        uint64_t rx_bcast_bytes;
+        uint64_t rx_bcast_packets;
+        uint64_t rx_dma_error;
+        uint64_t rsvd0;
+        // RX drops
+        uint64_t rx_ucast_drop_bytes;
+        uint64_t rx_ucast_drop_packets;
+        uint64_t rx_mcast_drop_bytes;
+        uint64_t rx_mcast_drop_packets;
+        uint64_t rx_bcast_drop_bytes;
+        uint64_t rx_bcast_drop_packets;
+        uint64_t rsvd1;
+        uint64_t rsvd2;
+        // TX
+        uint64_t tx_ucast_bytes;
+        uint64_t tx_ucast_packets;
+        uint64_t tx_mcast_bytes;
+        uint64_t tx_mcast_packets;
+        uint64_t tx_bcast_bytes;
+        uint64_t tx_bcast_packets;
+        uint64_t tx_dma_error;
+        uint64_t rsvd3;
+        // TX drops
+        uint64_t tx_ucast_drop_bytes;
+        uint64_t tx_ucast_drop_packets;
+        uint64_t tx_mcast_drop_bytes;
+        uint64_t tx_mcast_drop_packets;
+        uint64_t tx_bcast_drop_bytes;
+        uint64_t tx_bcast_drop_packets;
+        uint64_t rsvd4;
+        uint64_t rsvd5;
+        //Rx Queue/Ring drops
+        uint64_t rx_q_disable_drop;
+        uint64_t rx_q_empty_drop;
+        uint64_t rx_q_empty_scheduled;
+        uint64_t rx_desc_fetch_error;
+        uint64_t rx_desc_data_error;
+        uint64_t rsvd6;
+        uint64_t rsvd7;
+        uint64_t rsvd8;
+        //Tx Queue/Ring drops
+        uint64_t tx_q_disable_drop;
+        uint64_t tx_q_empty_drop;
+        uint64_t tx_desc_fetch_error;
+        uint64_t tx_desc_data_error;
+        uint64_t rsvd9;
+        uint64_t rsvd10;
+        uint64_t rsvd11;
+        uint64_t rsvd12;
+        // RDMA/ROCE TX
+        uint64_t roce_tx_ucast_bytes;
+        uint64_t roce_tx_ucast_packets;
+        uint64_t roce_tx_mcast_bytes;
+        uint64_t roce_tx_mcast_packets;
+        uint64_t roce_tx_cnp_packets;
+        uint64_t rsvd13;
+        uint64_t rsvd14;
+        uint64_t rsvd15;
+        // RDMA/ROCE RX
+        uint64_t roce_rx_ucast_bytes;
+        uint64_t roce_rx_ucast_packets;
+        uint64_t roce_rx_mcast_bytes;
+        uint64_t roce_rx_mcast_packets;
+        uint64_t roce_rx_cnp_packets;
+        uint64_t roce_rx_ecn_packets;
+        uint64_t rsvd16;
+        uint64_t rsvd17;
+};
+
 #pragma pack(pop)
 
 union adminq_cmd {
         struct admin_cmd cmd;
+        struct notifyq_init_cmd notifyq_init;
         struct nop_cmd nop;
         struct txq_init_cmd txq_init;
         struct rxq_init_cmd rxq_init;
@@ -1490,6 +1873,7 @@ union adminq_cmd {
 
 union adminq_comp {
         struct admin_comp comp;
+        struct notifyq_init_comp notifyq_init;
         struct nop_comp nop;
         struct txq_init_comp txq_init;
         struct rxq_init_comp rxq_init;
@@ -1505,5 +1889,16 @@ union adminq_comp {
         struct modify_qp_comp modify_qp;
 };
 
-#endif /* _IONIC_IF_H_ */
+struct notifyq_cmd {
+        u32 data;       /* Not used but needed for qcq structure */
+};
 
+union notifyq_comp {
+        struct notifyq_event event;
+        struct link_change_event link_change;
+        struct reset_event reset;
+        struct heartbeat_event heartbeat;
+        struct log_event log;
+};
+
+#endif /* _IONIC_IF_H_ */

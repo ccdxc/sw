@@ -119,7 +119,7 @@ struct lif {
         unsigned int nrxqcqs;
         unsigned int rx_mode;
         u32 hw_features;
-        union stats_dump *stats_dump;
+        struct stats_dump *stats_dump;
         dma_addr_t stats_dump_pa;
         u8 rss_hash_key[RSS_HASH_KEY_SIZE];
         u8 *rss_ind_tbl;
@@ -130,6 +130,7 @@ struct lif {
         u32 tx_coalesce_usecs;
         u32 rx_coalesce_usecs;
         void *api_private;
+        u32 flags;
         //struct dentry *debugfs;
 };
 

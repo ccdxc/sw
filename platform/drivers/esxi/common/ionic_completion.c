@@ -179,9 +179,10 @@ ionic_complete(struct ionic_completion *completion)               // IN
  *
  *  Parameters:
  *     completion  - IN (completion struct)
+ *     timeout_ms  - IN (timeout in ms)
  *
  *  Results:
- *    None
+ *    Is completion generates before timeout
  *
  *  Side-effects:
  *     None
@@ -189,24 +190,29 @@ ionic_complete(struct ionic_completion *completion)               // IN
  ******************************************************************************
  */
 
-void
-ionic_wait_for_completion(struct ionic_completion *completion)    // IN
+vmk_Bool
+ionic_wait_for_completion(struct ionic_completion *completion,    // IN
+                          vmk_uint32 timeout_ms)                  // IN
 {
         VMK_ReturnStatus status = VMK_OK;
+        vmk_Bool is_timeout = VMK_FALSE;
         VMK_ASSERT(completion);
 
-retry:
         vmk_SpinlockLockIgnoreDeathPending(completion->lock);
         if (!completion->done) {
                 status = vmk_WorldWait(completion->event_id,
                                        completion->lock,
-                                       VMK_TIMEOUT_UNLIMITED_MS,
-                                       "wait_for_completion_sync");
+                                       timeout_ms,
+                                       "wait_for_completion");
 
-                if ((status == VMK_OK && !completion->done) ||
-                    (status == VMK_WAIT_INTERRUPTED)) {
-                        goto retry;
+                if (status == VMK_OK && completion->done) {
+                        is_timeout = VMK_FALSE;
+                } else if (status == VMK_WAIT_INTERRUPTED && !completion->done) {
+                        is_timeout = VMK_TRUE;
+                } else if (status == VMK_TIMEOUT && !completion->done) {
+                        is_timeout =  VMK_TRUE;
                 }
+
         } else {
                 vmk_SpinlockUnlock(completion->lock);
         }
@@ -218,17 +224,14 @@ retry:
          *  - VMK_TIMEOUT       - timeout on an unlimited wait is a bug
          *  - VMK_DEATH_PENDING - shouldn't happen, means that there is a bug
          *  - VMK_WAIT_INTERRUPTED - we can't have this status here (check code above)
-         *
-         * ionic_wait_for_completion_sync should wait indefinitely.
-         * Any return (other than if the completion has actually happened)
-         * is considered as failure.
          */
 
         if (status != VMK_OK) {
                 ionic_err("ionic_wait_for_completion(): vmk_WorldWait"
                           "- failed (%s)", vmk_StatusToString(status));
-                /* Crash the system for debugging */
                 VMK_ASSERT(0);
         }
+        
+        return is_timeout;
 }
 

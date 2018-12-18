@@ -30,7 +30,7 @@
 // TODO: Figure out the max
 #define IONIC_MAX_NUM_TX_QUEUE                  32
 #define IONIC_MAX_NUM_RX_QUEUE                  32
-#define IONIC_NUM_RX_RSS_QUEUES                 4
+#define IONIC_NUM_RX_RSS_QUEUES                 0
 
 #define IONIC_EN_DEFAULT_MTU_SIZE               1500
 

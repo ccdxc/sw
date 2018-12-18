@@ -1524,8 +1524,10 @@ ionic_en_uplink_init(struct ionic_en_priv_data *priv_data)         // IN
         VMK_ASSERT_ON_COMPILE(IONIC_MAX_NUM_RX_QUEUE >
                               IONIC_NUM_RX_RSS_QUEUES * IONIC_NUM_RX_RINGS_PER_RSS_QUEUE);
 
-        uplink_handle->max_rx_rss_queues = IONIC_NUM_RX_RSS_QUEUES;
-        uplink_handle->rx_rings_per_rss_queue = IONIC_NUM_RX_RINGS_PER_RSS_QUEUE;
+        if (!uplink_handle->is_mgmt_nic) {
+                uplink_handle->max_rx_rss_queues = IONIC_NUM_RX_RSS_QUEUES;
+                uplink_handle->rx_rings_per_rss_queue = IONIC_NUM_RX_RINGS_PER_RSS_QUEUE;
+        }
         uplink_handle->max_rx_normal_queues = uplink_handle->max_rx_queues -
                                               uplink_handle->max_rx_rss_queues;
 
