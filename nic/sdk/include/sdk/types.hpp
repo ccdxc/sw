@@ -119,6 +119,12 @@ enum class port_pause_type_t {
     PORT_PAUSE_TYPE_PFC,   // PFC
 };
 
+enum class port_loopback_mode_t {
+    PORT_LOOPBACK_MODE_NONE,    // Disable loopback
+    PORT_LOOPBACK_MODE_MAC,     // MAC loopback
+    PORT_LOOPBACK_MODE_PHY,     // PHY/Serdes loopback
+};
+
 typedef enum xcvr_state_s {
     XCVR_REMOVED,
     XCVR_INSERTED,
@@ -196,6 +202,7 @@ using sdk::types::cable_type_t;
 using sdk::types::xcvr_event_info_t;
 using sdk::types::port_an_args_t;
 using sdk::types::port_link_sm_t;
+using sdk::types::port_loopback_mode_t;
 
 #endif    // __SDK_TYPES_HPP__
 

@@ -22,7 +22,8 @@ typedef struct mac_info_s {
     uint8_t  rx_pad_enable;
     uint32_t mtu;
     bool     force_global_init;
-    port_pause_type_t pause;
+    uint8_t  loopback;
+    port_pause_type_t    pause;
 } mac_info_t;
 
 typedef struct mac_fn_s_ {

@@ -34,7 +34,7 @@ port_pause_type_spec_to_sdk_port_pause_type(::port::PortPauseType pause_type);
 sdk_port_pause_type_to_port_pause_type_spec(port_pause_type_t pause_type);
 
 ::port::PortLinkState
-sdk_port_link_sm_to_port_link_sm_spec (port_link_sm_t link_sm);
+sdk_port_link_sm_to_port_link_sm_spec(port_link_sm_t link_sm);
 
 ::port::PortOperStatus
 sdk_port_oper_st_to_port_oper_st_spec(port_oper_status_t oper_st);
@@ -42,6 +42,8 @@ sdk_port_oper_st_to_port_oper_st_spec(port_oper_status_t oper_st);
 ::port::PortBreakoutMode
 sdk_port_breakout_mode_to_port_breakout_mode_spec(
                             port_breakout_mode_t breakout_mode);
+port_loopback_mode_t
+port_lb_mode_spec_to_sdk_port_lb_mode(::port::PortLoopBackMode loopback_mode);
 
 }    // namespace linkmgr
 

@@ -127,6 +127,8 @@ populate_port_create_args (PortSpec& spec, port_args_t *args)
         linkmgr::port_speed_spec_to_sdk_port_speed(spec.port_speed());
     args->fec_type        =
         linkmgr::port_fec_type_spec_to_sdk_port_fec_type(spec.fec_type());
+    args->loopback_mode   =
+        linkmgr::port_lb_mode_spec_to_sdk_port_lb_mode(spec.loopback_mode());
 
     for (uint32_t i = 0; i < spec.num_lanes(); ++i) {
         args->sbus_addr[i] = sbus_addr(asic, asic_port, i);
@@ -268,6 +270,8 @@ populate_port_update_args (PortSpec& spec, port_args_t *args)
         linkmgr::port_speed_spec_to_sdk_port_speed(spec.port_speed());
     args->fec_type    =
         linkmgr::port_fec_type_spec_to_sdk_port_fec_type(spec.fec_type());
+    args->loopback_mode   =
+        linkmgr::port_lb_mode_spec_to_sdk_port_lb_mode(spec.loopback_mode());
 }
 
 Status

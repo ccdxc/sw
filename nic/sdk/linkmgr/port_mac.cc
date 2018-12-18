@@ -455,6 +455,7 @@ mac_cfg_hw (mac_info_t *mac_info)
     uint32_t     num_lanes     = mac_info->num_lanes;
     uint32_t     fec           = mac_info->fec;
     uint32_t     mx_api_speed  = 0;
+    uint8_t      loopback      = mac_info->loopback;
     port_pause_type_t pause      = mac_info->pause;
     port_speed_t      port_speed = (port_speed_t) mac_info->speed;
 
@@ -510,6 +511,9 @@ mac_cfg_hw (mac_info_t *mac_info)
 
     SDK_LINKMGR_TRACE_DEBUG("mac_inst: %d, mac_ch: %d, mx_init: 0x%x",
                     inst_id, start_lane, mx_init[inst_id]);
+
+    // set MAC serdes loopback if enabled
+    cap_mx_serdes_lpbk_set(0, inst_id, mac_ch_en, loopback);
 
     for (uint32_t ch = start_lane; ch < start_lane + num_lanes; ch++) {
         cap_mx_cfg_ch(chip_id, inst_id, ch);

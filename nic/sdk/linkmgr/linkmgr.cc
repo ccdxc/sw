@@ -689,6 +689,7 @@ port_create (port_args_t *args)
     port_p->set_mtu(args->mtu);
     port_p->set_pause(args->pause);
     port_p->set_cable_type(args->cable_type);
+    port_p->set_loopback_mode(args->loopback_mode);
 
     // store the user configured admin state
     port_p->set_user_admin_state(args->user_admin_state);
@@ -830,6 +831,22 @@ port_update (void *pd_p, port_args_t *args)
         SDK_TRACE_DEBUG("AN updated. new: %d, old: %d",
                         args->auto_neg_enable, port_p->auto_neg_enable());
         port_p->set_auto_neg_enable(args->auto_neg_enable);
+        configured = true;
+    }
+
+    if (args->loopback_mode != port_p->loopback_mode()) {
+        SDK_TRACE_DEBUG(
+            "loopback updated. new: %s, old: %s",
+            args->loopback_mode ==
+                port_loopback_mode_t::PORT_LOOPBACK_MODE_MAC? "mac" :
+            args->loopback_mode ==
+                port_loopback_mode_t::PORT_LOOPBACK_MODE_PHY? "phy" : "none",
+            port_p->loopback_mode() ==
+                port_loopback_mode_t::PORT_LOOPBACK_MODE_MAC? "mac" :
+            port_p->loopback_mode() ==
+                port_loopback_mode_t::PORT_LOOPBACK_MODE_PHY? "phy" : "none");
+
+        port_p->set_loopback_mode(args->loopback_mode);
         configured = true;
     }
 

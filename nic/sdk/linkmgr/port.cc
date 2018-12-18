@@ -103,6 +103,8 @@ port::port_mac_cfg(void)
     mac_info.num_lanes = this->num_lanes_;
 
     mac_info.fec       = static_cast<uint32_t>(this->fec_type_);
+    mac_info.loopback  =
+        loopback_mode() == port_loopback_mode_t::PORT_LOOPBACK_MODE_MAC? 1 : 0;
 
     // Enable Tx padding. Disable Rx padding
     mac_info.tx_pad_enable = 1;
@@ -250,6 +252,9 @@ port::port_serdes_cfg(void)
 
         serdes_fns()->serdes_basic_cfg(sbus_addr, serdes_info);
         serdes_fns()->serdes_cfg(sbus_addr, serdes_info);
+        serdes_fns()->serdes_rx_lpbk(sbus_addr,
+                loopback_mode() == port_loopback_mode_t::PORT_LOOPBACK_MODE_PHY?
+                true : false);
     }
 
     return SDK_RET_OK;
