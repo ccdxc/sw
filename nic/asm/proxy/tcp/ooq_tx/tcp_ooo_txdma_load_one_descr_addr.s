@@ -9,14 +9,13 @@
 
 struct phv_ p;
 struct s3_t0_ooq_tcp_tx_k_ k;
-struct s3_t0_ooq_tcp_tx_ooq_tcp_txdma_load_one_descr_d d;
+struct s3_t0_ooq_tcp_tx_ooq_tcp_txdma_load_descr_addr_d d;
 
 %%
     .align
-    .param tcp_ooo_txdma_load_qstate_and_update
+    .param tcp_ooo_txdma_load_one_descr 
 tcp_ooo_txdma_load_one_descr_addr:
-    //write tcp flags from descr scratch to phv
-    add r1, k.common_phv_qstate_addr, r0 
-    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, tcp_ooo_txdma_load_qstate_and_update, r1, TABLE_SIZE_512_BITS) 
+    phvwr p.to_s4_curr_rnmdr_addr, d.one_descr_addr
+    phvwr p.{tcp_app_header_ts...tcp_app_header_prev_echo_ts}, d.one_descr_addr 
     nop.e
     nop

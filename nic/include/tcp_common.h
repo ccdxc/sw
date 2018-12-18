@@ -18,6 +18,8 @@
 #define TCP_OOO_RX2TX_ENTRY_RING_SIZE 16
 #define TCP_OOO_RX2TX_ENTRY_SHIFT      4
 
+#define TCP_MAX_OOQ_DESCR_MASK 255
+
 #define TCP_ESTABLISHED   1
 #define TCP_SYN_SENT      2
 #define TCP_SYN_RECV      3

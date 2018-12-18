@@ -14,6 +14,7 @@ struct s0_t0_ooq_tcp_tx_ooq_tcp_txdma_load_stage0_d d;
 %%
     .align
     .param tcp_ooq_txdma_load_rx2tx_slot
+    .param tcp_ooq_txdma_process_next_descr_addr
 tcp_ooq_load_qstate:
      seq c1, d.pi_0, d.ci_0
      bcf [c1], tcp_ooq_load_qstate_do_nothing
@@ -51,11 +52,11 @@ tcp_ooq_load_qstate_process_next_pkt_descr:
     add r1, d.current_descr_qbase_addr, r0
     sll r2, d.curr_index, 3
     add r3, d.curr_index, 1
-    phvwr p.to_s4_curr_index, r3
+    phvwr p.to_s5_curr_index, r3
     add r2, r1, r2
-    phvwr p.to_s2_one_descr_addr, r2
+    //phvwr p.to_s3_curr_rnmdr_addr, r2
     //Launch dummy table for stage1
-
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, tcp_ooq_txdma_process_next_descr_addr, r2, TABLE_SIZE_128_BITS) 
     nop.e
     nop
 
