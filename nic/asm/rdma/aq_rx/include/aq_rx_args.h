@@ -32,8 +32,8 @@ struct aq_rx_to_stage_rqcb1_t {
 
 struct aq_rx_to_stage_cqcb_t {
     cqcb_base_addr_hi                :   24;
-    wqe_id                           :   16;
     log_num_cq_entries               :    4;
+    wqe_id                           :   16;
     aqcb_addr                        :   28;
     cq_id                            :   24;
     status                           :    8;

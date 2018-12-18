@@ -176,8 +176,8 @@ header_type aq_rx_to_stage_rqcb1_t {
 header_type aq_rx_to_stage_cqcb_t {
     fields {
         cqcb_base_addr_hi                :   24;
-        wqe_id                           :   16;
         log_num_cq_entries               :    4;
+        wqe_id                           :   16;
         aqcb_addr                        :   28;
         cq_id                            :   24;
         status                           :    8;
@@ -549,8 +549,8 @@ action rdma_aq_rx_cqcb_process () {
 
     // to stage
     modify_field(to_s6_info_scr.cqcb_base_addr_hi, to_s6_info.cqcb_base_addr_hi);
-    modify_field(to_s6_info_scr.wqe_id, to_s6_info.wqe_id);
     modify_field(to_s6_info_scr.log_num_cq_entries, to_s6_info.log_num_cq_entries);
+    modify_field(to_s6_info_scr.wqe_id, to_s6_info.wqe_id);
     modify_field(to_s6_info_scr.aqcb_addr, to_s6_info.aqcb_addr);    
 
     modify_field(to_s6_info_scr.cq_id, to_s6_info.cq_id);
