@@ -185,6 +185,10 @@ gen-clean:
 clean:
 	@$(MAKE) c-stop >/dev/null 2>&1
 	@rm -fr bin/* venice/ui/webapp/node_modules  venice/ui/web-app-framework/node_modules  venice/ui/venice-sdk/node_modules venice/ui/webapp/dist
+	@rm -f nic/sim/naples/venice-sim.tar tools/docker-files/venice/venice-sim.tar test/topos/gs/venice_sim_addons.tar
+	@rm -f tools/docker-files/netagent/nmd tools/docker-files/netagent/nevtsproxy tools/docker-files/netagent/tmagent tools/docker-files/npm/pen-npm
+	@for c in $(TO_DOCKERIZE); do rm -f tools/docker-files/$${c}/$${c};  done
+
 
 helper-containers:
 	@cd tools/docker-files/ntp; docker build -t ${REGISTRY_URL}/pens-ntp:v0.4 .

@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 import json
-
+import time
 import iota.harness.api as api
 import iota.protos.pygen.cfg_svc_pb2 as cfg_svc_pb2
 import iota.protos.pygen.types_pb2 as types_pb2
@@ -26,8 +26,10 @@ def Main(step):
         json_object["spec"]["quorum-nodes"].append(vn)
     req.config = json.dumps(json_object)
 
-    resp = api.MakeCluster(req)
-    if resp == None:
-        return api.types.status.FAILURE
-    
-    return api.types.status.SUCCESS
+    for i in range(1, 4):
+        time.sleep(3)
+        resp = api.MakeCluster(req)
+        if resp != None:
+            return api.types.status.SUCCESS
+
+    return api.types.status.FAILURE
