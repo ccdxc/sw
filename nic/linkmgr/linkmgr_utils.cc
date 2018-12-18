@@ -180,6 +180,79 @@ sdk_port_pause_type_to_port_pause_type_spec (port_pause_type_t pause_type)
 
     return ::port::PORT_PAUSE_TYPE_NONE;
 }
+
+::port::PortLinkState
+sdk_port_link_sm_to_port_link_sm_spec (port_link_sm_t link_sm)
+{
+    switch(link_sm) {
+    case port_link_sm_t::PORT_LINK_SM_DISABLED:
+        return ::port::PORT_LINK_SM_DISABLED;
+
+    case port_link_sm_t::PORT_LINK_SM_ENABLED:
+        return ::port::PORT_LINK_SM_ENABLED;
+
+    case port_link_sm_t::PORT_LINK_SM_AN_CFG:
+        return ::port::PORT_LINK_SM_AN_CFG;
+
+    case port_link_sm_t::PORT_LINK_SM_AN_DISABLED:
+        return ::port::PORT_LINK_SM_AN_DISABLED;
+
+    case port_link_sm_t::PORT_LINK_SM_AN_START:
+        return ::port::PORT_LINK_SM_AN_START;
+
+    case port_link_sm_t::PORT_LINK_SM_AN_WAIT_HCD:
+        return ::port::PORT_LINK_SM_AN_WAIT_HCD;
+
+    case port_link_sm_t::PORT_LINK_SM_AN_COMPLETE:
+        return ::port::PORT_LINK_SM_AN_COMPLETE;
+
+    case port_link_sm_t::PORT_LINK_SM_SERDES_CFG:
+        return ::port::PORT_LINK_SM_SERDES_CFG;
+
+    case port_link_sm_t::PORT_LINK_SM_WAIT_SERDES_RDY:
+        return ::port::PORT_LINK_SM_WAIT_SERDES_RDY;
+
+    case port_link_sm_t::PORT_LINK_SM_MAC_CFG:
+        return ::port::PORT_LINK_SM_MAC_CFG;
+
+    case port_link_sm_t::PORT_LINK_SM_SIGNAL_DETECT:
+        return ::port::PORT_LINK_SM_SIGNAL_DETECT;
+
+    case port_link_sm_t::PORT_LINK_SM_DFE_TUNING:
+        return ::port::PORT_LINK_SM_DFE_TUNING;
+
+    case port_link_sm_t::PORT_LINK_SM_DFE_DISABLED:
+        return ::port::PORT_LINK_SM_DFE_DISABLED;
+
+    case port_link_sm_t::PORT_LINK_SM_DFE_START_ICAL:
+        return ::port::PORT_LINK_SM_DFE_START_ICAL;
+
+    case port_link_sm_t::PORT_LINK_SM_DFE_WAIT_ICAL:
+        return ::port::PORT_LINK_SM_DFE_WAIT_ICAL;
+
+    case port_link_sm_t::PORT_LINK_SM_DFE_START_PCAL:
+        return ::port::PORT_LINK_SM_DFE_START_PCAL;
+
+    case port_link_sm_t::PORT_LINK_SM_DFE_WAIT_PCAL:
+        return ::port::PORT_LINK_SM_DFE_WAIT_PCAL;
+
+    case port_link_sm_t::PORT_LINK_SM_DFE_PCAL_CONTINUOUS:
+        return ::port::PORT_LINK_SM_DFE_PCAL_CONTINUOUS;
+
+
+    case port_link_sm_t::PORT_LINK_SM_WAIT_MAC_SYNC:
+        return ::port::PORT_LINK_SM_WAIT_MAC_SYNC;
+
+    case port_link_sm_t::PORT_LINK_SM_UP:
+        return ::port::PORT_LINK_SM_UP;
+
+    default:
+        return ::port::PORT_LINK_SM_DISABLED;
+    }
+
+    return ::port::PORT_LINK_SM_DISABLED;
+}
+
 port_fec_type_t
 port_fec_type_spec_to_sdk_port_fec_type (::port::PortFecType fec_type)
 {

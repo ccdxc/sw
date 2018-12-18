@@ -67,6 +67,7 @@ typedef struct port_args_s {
     xcvr_state_t          xcvr_state;                 // Xcvr state
     xcvr_pid_t            xcvr_pid;                   // Xcvr pid
     port_an_args_t        *port_an_args;              // an cfg based on xcvr
+    port_link_sm_t        link_sm;                    // internal port state machine
     uint8_t               mac_addr[6];                // MAC addr of port
     uint32_t              sbus_addr[MAX_PORT_LANES];  // set the sbus addr for each lane
 } __PACK__ port_args_t;

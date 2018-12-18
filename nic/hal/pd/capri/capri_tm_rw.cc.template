@@ -803,7 +803,10 @@ capri_tm_uplink_input_dscp_map_update(tm_port_t port,
 
                 for (unsigned i = 0; i < HAL_ARRAY_SIZE(dscp_map->ip_dscp); i++) {
                     if (dscp_map->ip_dscp[i]) {
-                        cpp_helper.set_slc(dscp_map_val, tc, i*3, ((i+1)*3)-1);
+                        cpp_helper.set_slc(dscp_map_val,
+                                           tc,
+                                           dscp_map->ip_dscp[i] * 3,
+                                           ((dscp_map->ip_dscp[i]+1) * 3) - 1);
                     }
                 }
 

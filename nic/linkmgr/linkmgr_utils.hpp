@@ -33,6 +33,9 @@ port_pause_type_spec_to_sdk_port_pause_type(::port::PortPauseType pause_type);
 ::port::PortPauseType
 sdk_port_pause_type_to_port_pause_type_spec(port_pause_type_t pause_type);
 
+::port::PortLinkState
+sdk_port_link_sm_to_port_link_sm_spec (port_link_sm_t link_sm);
+
 ::port::PortOperStatus
 sdk_port_oper_st_to_port_oper_st_spec(port_oper_status_t oper_st);
 
