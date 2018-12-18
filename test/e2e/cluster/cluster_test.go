@@ -184,6 +184,9 @@ func validateCluster() {
 							ts.tu.QuorumNodes[0], ts.tu.QuorumNodes[index], ts.tu.QuorumNodes[0], svcNode1.String(), ts.tu.QuorumNodes[index], (*svc).String())
 					}
 				}
+				if len(m) != 0 {
+					return fmt.Sprintf("services %v on %s are not present on %s", m, ts.tu.QuorumNodes[0], ts.tu.QuorumNodes[index])
+				}
 			}
 		}
 		return ""
