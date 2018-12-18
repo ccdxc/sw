@@ -33,20 +33,20 @@ req_rx_sqcb1_write_back_process:
 
     // check if qp is already in error disable state. if so, drop the phv instead of recirc
     sle             c2, d.state, QP_STATE_ERR
-    bcf             [c2], drop_response
+    bcf             [c2], drop_phv
     CAPRI_SET_TABLE_2_VALID(0)  //BD Slot
 
     seq            c1, K_MY_TOKEN_ID, d.nxt_to_go_token_id // Branch Delay Slot
     bcf            [!c1], recirc_for_turn
 
     seq            c1, d.bktrack_in_progress, 1 // BD-Slot
-    bcf            [c1], drop_phv
+    bcf            [c1], inc_token_and_drop_phv
     nop            // BD-Slot
 
-    bbeq           CAPRI_KEY_FIELD(IN_TO_S_P, error_drop_phv), 1, drop_phv
+    bbeq           CAPRI_KEY_FIELD(IN_TO_S_P, error_drop_phv), 1, inc_token_and_drop_phv
 
     scwlt24        c2, K_REXMIT_PSN, d.rexmit_psn // Branch Delay Slot
-    bcf            [c2], drop_phv
+    bcf            [c2], inc_token_and_drop_phv
 
     seq            c1, CAPRI_KEY_FIELD(IN_P, incr_nxt_to_go_token_id), 1 // BD-Slot
     tbladd.c1      d.nxt_to_go_token_id, 1
@@ -162,11 +162,6 @@ exit:
      nop.e
      nop
 
-drop_response:
-    //skip to payload end
-    DMA_CMD_STATIC_BASE_GET_E(r7, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_START)
-    DMA_SKIP_CMD_SETUP(r7, 1 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/)
-
 recirc_for_turn:
     seq            c1, d.state, QP_STATE_ERR
     bcf            [c1], drop_phv
@@ -183,9 +178,13 @@ recirc_for_turn:
     phvwr          p.common.p4_intr_recirc, 1
     CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_recirc_mpu_only_process, r0)
 
-drop_phv:
+inc_token_and_drop_phv:
     tbladd.e      d.nxt_to_go_token_id, 1
     phvwr         p.common.p4_intr_global_drop, 1
+
+drop_phv:
+    phvwr.e       p.common.p4_intr_global_drop, 1
+    nop
 
 recirc_error_disable_qp:
 error_disable_exit:

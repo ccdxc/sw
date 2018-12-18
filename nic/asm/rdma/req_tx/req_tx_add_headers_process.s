@@ -85,6 +85,7 @@ req_tx_add_headers_process:
 
 check_credits:
     scwlt24        c5, d.lsn_rx, d.ssn
+    sne.c5         c5, d.rexmit_psn, d.tx_psn
     bcf            [c5], credit_check_fail
     tblwr.!c5      d.need_credits, 0 // Branch Delay Slot
 
@@ -498,7 +499,7 @@ rrq_p_index_chk:
 
 local_ack_timer:
     // Skip timer logic if not last/only or read/atomic requests
-    bcf            [!c1 & !c7], load_hdr_template
+    bcf            [!c1 & !c7 & !c5], load_hdr_template
     tblwr.c5       d.need_credits, 1 // Branch Delay Slot
 
     // if retransmit timer is disabled (local_ack_timeout = 0), do not track

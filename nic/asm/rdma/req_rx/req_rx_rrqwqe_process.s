@@ -178,7 +178,7 @@ read_or_atomic_or_implicit_nak:
     // read_resp_last or read_resp_only should be >= the corresponding message's
     // sequence number
     scwlt24.c4     c2, K_AETH_MSN, d.msn
-    bcf            [c4 & !c3 & c2], invalid_rsp_msn
+    bcf            [c4 & !c3 & c2], invalid_read_or_atomic_rsp_msn
 
     // pkt->psn == sqcb1_p->psn + sqcb1_p->msg_psn
     add            r6, d.psn, K_MSG_PSN
@@ -331,9 +331,10 @@ implicit_nak:
               CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_cq), 1
 
 invalid_syndrome:
-invalid_rsp_msn:
 invalid_nak_code:
-    phvwr         p.common.p4_intr_global_drop, 1
     phvwr.e       CAPRI_PHV_FIELD(TO_S4_P, error_drop_phv), 1
     CAPRI_SET_TABLE_0_VALID(0)
 
+invalid_read_or_atomic_rsp_msn:
+    phvwr          CAPRI_PHV_FIELD(TO_S4_P, error_drop_phv), 1
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_sqcb1_write_back_process, r0)

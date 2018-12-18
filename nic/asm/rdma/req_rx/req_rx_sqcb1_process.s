@@ -244,7 +244,7 @@ process_aeth:
     // Skip LSN update if not ACK syndrome or ACK syndrome but invalid credits
     bcf            [!c6], post_rexmit_psn_to_ack_timestamp
 
-    DECODE_ACK_SYNDROME_CREDITS(r2, CAPRI_APP_DATA_AETH_SYNDROME, c1)
+    DECODE_ACK_SYNDROME_CREDITS(r2, r5, CAPRI_APP_DATA_AETH_SYNDROME, c1)
     mincr          r2, 24, CAPRI_APP_DATA_AETH_MSN
 
 post_lsn_to_ack_timestamp:
@@ -403,9 +403,8 @@ recirc_pkt:
 
 drop_packet:
     // Drop if not a known recirc reason
-    CAPRI_SET_TABLE_0_VALID(0)
     phvwr.e        p.common.p4_intr_global_drop, 1
-    nop
+    CAPRI_SET_TABLE_0_VALID(0)
 
 recirc_for_turn:
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_recirc_mpu_only_process, r0)
@@ -424,9 +423,8 @@ check_state:
     bcf       [!c1], process_req_rx
     nop       // Branch Delay Slot
 
-    CAPRI_SET_TABLE_0_VALID(0)
     phvwr.e        p.common.p4_intr_global_drop, 1
-    nop
+    CAPRI_SET_TABLE_0_VALID(0)
 
 process_recirc_sge_work_pending:
     CAPRI_RESET_TABLE_0_ARG()

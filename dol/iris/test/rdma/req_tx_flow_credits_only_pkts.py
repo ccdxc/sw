@@ -229,7 +229,7 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify that lsn_rx is updated by 64 credits
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'lsn_rx', (msn+64)):
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'lsn_rx', (msn+96)):
             return False
 
         # verify that lsn_tx same as before

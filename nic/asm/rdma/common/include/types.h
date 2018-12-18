@@ -1161,11 +1161,13 @@ union header_template_t {
 
 #define SYNDROME_CREDITS_MASK 0x1F
 
-#define DECODE_ACK_SYNDROME_CREDITS(_credits_r, _syndrome, _cf)         \
-    seq            _cf, _syndrome[4:0], r0;                             \
-    srl            _credits_r, _syndrome[4:0], 1;                       \
-    sllv.!_cf      _credits_r, 1, _credits_r;
-
+#define DECODE_ACK_SYNDROME_CREDITS(_credits_r, _tmp_r, _syndrome, _cf) \
+    sll            _credits_r, 1, _syndrome[4:1];                       \
+    sne            _cf, _syndrome[0], 0;                                \
+    srl._cf        _tmp_r, _credits_r, 1;                               \
+    add._cf        _credits_r, _credits_r, _tmp_r;                      \
+    seq            _cf, _syndrome[4:0], 0;                              \
+    add._cf        _credits_r, 0, 0;
 
 /* Definitions for RDMA Feedback phv */
 struct phv_intr_global_t {

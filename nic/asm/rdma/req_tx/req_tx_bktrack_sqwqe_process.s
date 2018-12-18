@@ -72,7 +72,7 @@ wqe_bktrack:
     // set bktrack_in_progress to true to start with
     setcf          c6, [c0]
     //if (rexmit_psn < tx_psn)
-    slt            c2, K_REXMIT_PSN, r1
+    scwlt24        c2, K_REXMIT_PSN, r1
     bcf            [!c2], wqe_match
     // set empty_rrq to false as bktracking is in progress
     // set is_op_type_read to false
