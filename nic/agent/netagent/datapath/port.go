@@ -26,6 +26,7 @@ func (hd *Datapath) CreatePort(port *netproto.Port) (*netproto.Port, error) {
 				NumLanes:      port.Spec.Lanes,
 				AutoNegEnable: autoNegEnable,
 				FecType:       fecType,
+				Pause:         halproto.PortPauseType_PORT_PAUSE_TYPE_LINK,
 			},
 		},
 	}
