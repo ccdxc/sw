@@ -118,18 +118,15 @@ def tcpdump_cmd(node, intf,filename):
 
 def iperf_server_cmd(port = None, time=300, run_core=None):
     assert(port)
-    cmd = ["iperf", "-s","-p", str(port)]
+    cmd = ["iperf3", "-s","-p", str(port)]
     if run_core:
         cmd.extend(["-A", str(run_core)])
-
-    if time:
-        cmd.extend(["-t", str(time)])
 
     return " ".join(cmd)
 
 def iperf_client_cmd(server_ip, port = None, time=10, pktsize=None, proto='tcp', run_core=None, ipproto='v4'):
     assert(port)
-    cmd = ["iperf", "-c", str(server_ip), "-p", str(port)]
+    cmd = ["iperf3", "-c", str(server_ip), "-p", str(port)]
 
     if time:
         cmd.extend(["-t", str(time)])
@@ -168,7 +165,7 @@ def bsd_ethtool_ring_size_cmd(node, intf,ring_type, size):
         cmds = naples.RemoveIonicDriverCommands(os_type = naples.OS_TYPE_BSD)
         cmds.extend(naples.InsertIonicDriverCommands(os_type = naples.OS_TYPE_BSD, **args))
         return cmds
-    return " ".join(["ethtool", "-G", ring_type,  size])
+    return " ".join(["ethtool", "-G", ring_type,  str(size)])
 
 def bsd_ethtool_queue_size_cmd(node, intf,queue_type, size):
     args = { }
@@ -180,7 +177,7 @@ def bsd_ethtool_queue_size_cmd(node, intf,queue_type, size):
         cmds = naples.RemoveIonicDriverCommands(os_type = naples.OS_TYPE_BSD)
         cmds.extend(naples.InsertIonicDriverCommands(os_type = naples.OS_TYPE_BSD, **args))
         return cmds
-    return " ".join(["ethtool", "-L", intf, queue_type,  size])
+    return " ".join(["ethtool", "-L", intf, queue_type,  str(size)])
 
 def bsd_ip_link_pkt_filter_cmd(node, intf,pkt_filter, on_off):
     return " ".join(["ip", "link", "set", "dev", intf,pkt_filter, on_off])

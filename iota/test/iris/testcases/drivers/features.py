@@ -16,7 +16,7 @@ def Setup(tc):
         ret = api.RestartNodes(tc.nodes)
         if ret != api.types.status.SUCCESS:
             api.Logger.error("Node restart failed")
-            return api.types.FAILURE
+            return api.types.status.FAILURE
 
     test_type = getattr(tc.args, "test-type", interface.INTF_TEST_TYPE_HOST)
     ret = interface.ConfigureInterfaces(tc, test_type)
@@ -38,30 +38,40 @@ def Setup(tc):
 
 def Trigger(tc):
 
-    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    req1 = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    req2 = api.Trigger_CreateExecuteCommandsRequest(serial = False)
+
     tc.cmd_descr = "Server: %s(%s) <--> Client: %s(%s)" %\
                    (tc.intf1.Name(), tc.intf1.GetIP(), tc.intf2.Name(), tc.intf2.GetIP())
     api.Logger.info("Starting Iperf test from %s" % (tc.cmd_descr))
 
     proto = getattr(tc.iterators, "proto", 'tcp')
-    if proto == 'tcp':
-        port = api.AllocateTcpPort()
-    else:
-        port = api.AllocateUdpPort()
-
-    iperf_server_cmd = cmd_builder.iperf_server_cmd(port = port)
-    tc.intf1.AddCommand(req, iperf_server_cmd, background = True)
+    
+    number_of_iperf_threads = getattr(tc.args, "iperf_threads", 0)
+    
     pktsize = getattr(tc.iterators, "pktsize", 512)
     ipproto = getattr(tc.iterators, "ipproto", 'v4')
-    iperf_client_cmd = cmd_builder.iperf_client_cmd(server_ip = tc.intf1.GetIP(), port = port,
-                            proto=proto, pktsize=pktsize, ipproto=ipproto)
-    tc.intf2.AddCommand(req, iperf_client_cmd)
 
+    for i in range(number_of_iperf_threads):
+        if proto == 'tcp':
+            port = api.AllocateTcpPort()
+        else:
+            port = api.AllocateUdpPort()
+ 
+        iperf_server_cmd = cmd_builder.iperf_server_cmd(port = port)
+        tc.intf1.AddCommand(req1, iperf_server_cmd, background = True)
 
-    trig_resp = api.Trigger(req)
-    term_resp = api.Trigger_TerminateAllCommands(trig_resp)
+        iperf_client_cmd = cmd_builder.iperf_client_cmd(server_ip = tc.intf1.GetIP(), port = port,
+                                 proto=proto, pktsize=pktsize, ipproto=ipproto)
+        tc.intf2.AddCommand(req2, iperf_client_cmd)
 
-    tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
+    trig_resp1 = api.Trigger(req1)
+    trig_resp2 = api.Trigger(req2)
+    term_resp1 = api.Trigger_TerminateAllCommands(trig_resp1)
+
+    response = api.Trigger_AggregateCommandsResponse(trig_resp1, term_resp1)
+    tc.resp = api.Trigger_AggregateCommandsResponse(response, trig_resp2)
+ 
     return api.types.status.SUCCESS
 
 

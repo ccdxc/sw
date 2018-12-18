@@ -5,6 +5,7 @@ import iota.test.iris.testcases.drivers.common as common
 import iota.test.iris.testcases.drivers.cmd_builder as cmd_builder
 import iota.test.iris.testcases.drivers.verify as verify
 import iota.test.iris.utils.naples_host as utils
+import ipaddress
 
 
 INTF_TEST_TYPE_OOB_1G       = "oob-1g"
@@ -104,21 +105,29 @@ class Interface:
     def AddCommand(self, req, cmd, background = False):
         Interface.__CMD_WRAPPER[self.__type](req, self.__node, cmd, background = background)
 
-    def ConfigureInterface(self, ip, netmask = 24):
+    def ConfigureInterface(self, ip, netmask = 24, ipproto = 'v4'):
         self.__ip = ip
-        self.__prefix = '255.255.255.0'
-        return self.ReconfigureInterface()
+        if ipproto == 'v4':
+            self.__prefix = '255.255.255.0'
+        return self.ReconfigureInterface(ipproto)
 
-    def ReconfigureInterface(self):
+    def ReconfigureInterface(self, ipproto):
         req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-        ip = self.GetIP() + " netmask " + self.__prefix + " up"
-        ifconfig_cmd = "ifconfig " + self.Name() + " " + ip
+   
+        if ipproto == 'v6':
+            ip = self.GetIP() + "/64"
+            ifconfig_cmd = "ifconfig " + self.Name() + " " + "inet6 add " + ip
+        else:
+            ip = self.GetIP() + " netmask " + self.__prefix + " up"
+            ifconfig_cmd = "ifconfig " + self.Name() + " " + ip
+        api.Logger.info ("ifconfig: ", ifconfig_cmd)
+
         self.AddCommand(req, ifconfig_cmd)
         trig_resp = api.Trigger(req)
         for cmd in trig_resp.commands:
-            if cmd.exit_code != 0:
+            api.PrintCommandResults(cmd)
+            if cmd.exit_code != 0 and  "SIOCSIFADDR: File exists" not in cmd.stderr:
                 return api.types.status.FAILURE
-
 
         return api.types.status.SUCCESS
 
@@ -154,11 +163,20 @@ def GetNodeInterface(node):
 def __configure_interfaces(tc, tc_type):
     ip1 = ip_map[tc_type][0]
     ip2 = ip_map[tc_type][1]
-    ret = tc.intf1.ConfigureInterface(ip1, ip_prefix)
+   
+    ipproto = getattr(tc.iterators, "ipproto", 'v4')
+    if ipproto == 'v6':
+        ip1 = ipaddress.IPv6Address('2002::' + ip1).compressed
+        ip2 = ipaddress.IPv6Address('2002::' + ip2).compressed
+        
+        api.Logger.info("IPV6:", ip1)
+        api.Logger.info("IPV6:", ip2)
+
+    ret = tc.intf1.ConfigureInterface(ip1, ip_prefix, ipproto)
     if ret != api.types.status.SUCCESS:
         api.Logger.error("Configure interface failed")
         return api.types.status.FAILURE
-    ret = tc.intf2.ConfigureInterface(ip2, ip_prefix)
+    ret = tc.intf2.ConfigureInterface(ip2, ip_prefix, ipproto)
     if ret != api.types.status.SUCCESS:
         api.Logger.error("Configure interface failed")
         return api.types.status.FAILURE

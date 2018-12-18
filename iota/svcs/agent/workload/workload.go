@@ -404,7 +404,7 @@ func (app *bareMetalWorkload) StopCommand(commandHandle string) (*Cmd.CommandCtx
 		return &Cmd.CommandCtx{ExitCode: -1, Stdout: "", Stderr: "", Done: true}, nil
 	}
 
-	app.logger.Printf("Stopping bare meta Running cmd %v %v\n", cmdInfo.Ctx.Stdout, cmdInfo.Handle)
+	app.logger.Printf("Stopping bare metal Running cmd %v %v\n", cmdInfo.Ctx.Stdout, cmdInfo.Handle)
 
 	Cmd.StopExecCmd(cmdInfo)
 	time.Sleep(2 * time.Second)

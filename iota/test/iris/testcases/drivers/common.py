@@ -149,7 +149,8 @@ def setup_features(tc):
 
     if driverReloaded:
         for intfObj in tc.test_intfs:
-            intfObj.ReconfigureInterface()
+            ipproto = getattr(tc.iterators, "ipproto", 'v4')
+            intfObj.ReconfigureInterface(ipproto)
 
     return api.types.status.SUCCESS
 
