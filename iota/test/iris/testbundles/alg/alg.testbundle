@@ -1,15 +1,50 @@
 meta:
-    name    : alg 
+    name    : alg
     nics    : [ pensando, intel, mellanox, broadcom ]
-    targetcount : 80 
+    targetcount : 80
 
 testcases:
-    -   name    : tftp_Local_Workloads
-        testcase: testcases.alg.tftp.tftp
+    -   name    : TFTP_RRQ_WRQ
+        testcase: testcases.alg.tftp.tftp_rrq_wrq
+        args    :
+            type: local_only
+    
+    -   name    : TFTP_RRQ_WRQ_OACK
+        testcase: testcases.alg.tftp.tftp_rrq_wrq_oack
         args    :
             type: local_only
 
-    -   name     : ftp_basic
+    -   name    : TFTP_RRQ_WRQ_ERROR
+        testcase: testcases.alg.tftp.tftp_rrq_wrq_error
+        args    :
+            type: local_only
+
+    -   name    : TFTP_RRQ_WRQ_TEST_CLEANUP
+        testcase: testcases.alg.tftp.tftp_rrq_wrq_test_cleanup
+        args    :
+            type: local_only
+
+    -   name    : TFTP_RRQ_WRQ_TEST_MEMLEAK
+        testcase: testcases.alg.tftp.tftp_rrq_wrq_test_memleak
+        args    :
+            type: local_only
+
+    -   name    : TFTP_TEST_IDLE_TIMEOUT_CLEANUP
+        testcase: testcases.alg.tftp.tftp_test_idle_timeout_cleanup
+        args    :
+            type: local_only
+
+    -   name    : TFTP_TEST_UNKNOWN_OPCODE
+        testcase: testcases.alg.tftp.tftp_unknown_opcode
+        args    :
+            type: local_only
+
+    -   name    : TFTP_TEST_NON_STANDARD_PORT
+        testcase: testcases.alg.tftp.tftp_nonstandard_port
+        args    :
+            type: local_only
+
+    -   name     : FTP_GET_PUT
         testcase : testcases.alg.ftp.ftp_basic
         iterators:
             type : simple
@@ -17,53 +52,93 @@ testcases:
         args     :
             type : local_only
 
-    -   name    : ftp_test_memleak
+    -   name    : FTP_TEST_MEMLEAK
         testcase: testcases.alg.ftp.ftp_test_memleak
         args    :
             type: local_only
             count: 15
 
-    -   name     : ftp_epsv
+    -   name     : FTP_EPSV
         testcase : testcases.alg.ftp.ftp_epsv
         args     :
            type : local_only
 
-    -   name     : ftp_test_control_ageout
+    -   name     : FTP_TEST_CONTROL_AGEOUT 
         testcase : testcases.alg.ftp.ftp_test_control_ageout
         args     :
             type : local_only
 
-    -   name     : ftp_deny_mismatch_ip
+    -   name     : FTP_DENY_MISMATCH_IP
         testcase : testcases.alg.ftp.ftp_deny_mismatch_ip
         args     :
             type : local_only
 
-    -   name     : ftp_allow_mismatch_ip
+    -   name     : FTP_ALLOW_MISMATCH_IP
         testcase : testcases.alg.ftp.ftp_allow_mismatch_ip
         args     :
             type : local_only
 
-    -   name     : ftp_data_conn_fail
+    -   name     : FTP_DATA_CONN_FAIL
         testcase : testcases.alg.ftp.ftp_data_conn_fail
         args     :
             type : local_only
 
-    -   name     : ftp_nonstandard_port
+    -   name     : FTP_NONSTANDARD_PORT
         testcase : testcases.alg.ftp.ftp_nonstandard_port
         args     :
            type : local_only
 
-    -   name    : rtsp_Local_Workloads
+    -   name    : RTSP
         testcase: testcases.alg.rtsp.rtsp
         args    :
             type: local_only
 
-    -   name    : sunrpc_Local_Workloads
+    -   name    : SUNRPC
         testcase: testcases.alg.sunrpc.sunrpc
         args    :
             type: local_only
-
-    -   name    : dns_Local_Workloads
-        testcase: testcases.alg.dns.dns
+     
+    -   name    : DNS_QUERY
+        testcase: testcases.alg.dns.dns_basic
         args    :
-            type: local_only 
+            type: local_only
+
+    -   name    : DNS_TEST_MEMLEAK
+        testcase: testcases.alg.dns.dns_test_memleak
+        args    :
+            type: local_only
+
+    -   name    : DNS_DROP_LONG_DOMAIN_NAME
+        testcase: testcases.alg.dns.dns_drop_long_domain_name
+        args    :
+            type: local_only
+
+    -   name    : DNS_ALLOW_LONG_DOMAIN_NAME
+        testcase: testcases.alg.dns.dns_allow_long_domain_name
+        args    :
+            type: local_only
+
+    -   name    : DNS_DROP_MULTI_QUESTION
+        testcase: testcases.alg.dns.dns_drop_multi_question
+        args    :
+            type: local_only
+
+    -   name    : DNS_ALLOW_MULTI_QUESTION
+        testcase: testcases.alg.dns.dns_allow_multi_question
+        args    :
+            type: local_only
+
+    -   name    : DNS_DROP_LONG_LABEL
+        testcase: testcases.alg.dns.dns_drop_long_label
+        args    :
+            type: local_only
+
+    -   name    : DNS_ALLOW_LONG_LABEL 
+        testcase: testcases.alg.dns.dns_allow_long_label
+        args    :
+            type: local_only
+
+    -   name    : DNS_TEST_QUERYTIMEOUT
+        testcase: testcases.alg.dns.dns_test_querytimeout
+        args    :
+            type: local_only
