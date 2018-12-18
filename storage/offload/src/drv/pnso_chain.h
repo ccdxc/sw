@@ -277,6 +277,7 @@ struct service_chain {
 	uint16_t sc_num_services;	/* number of services in the chain */
 
 	struct chain_entry *sc_entry;	/* list of services */
+	struct chain_entry *sc_last_entry;	/* last service in chain */
 	struct pnso_service_result *sc_res;	/* caller supplied result */
 
 	struct per_core_resource *sc_pcr;	/* to access pool/etc. */

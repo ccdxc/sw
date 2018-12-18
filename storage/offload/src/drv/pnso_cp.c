@@ -170,7 +170,7 @@ compress_chain(struct chain_entry *centry)
 			}
 		}
 
-		OSAL_LOG_DEBUG("lone service, chaining not needed! si_type: %d si_flags: %d",
+		OSAL_LOG_DEBUG("lone or last service, chaining not needed! si_type: %d si_flags: %d",
 				svc_info->si_type, svc_info->si_flags);
 		goto done;
 	}
@@ -304,7 +304,7 @@ compress_poll(const struct service_info *svc_info)
 		(svc_info->si_flags & CHAIN_SFLAG_MODE_ASYNC)) {
 		err = (status_desc->csd_integrity_data ==
 				CPDC_PAD_STATUS_DATA) ? PNSO_OK : EBUSY;
-		OSAL_LOG_DEBUG("cp/pad async/poll mode. err: %d", err);
+		OSAL_LOG_DEBUG("cp/pad async/poll mode. transient err: %d", err);
 		goto out;
 	}
 
@@ -328,8 +328,10 @@ compress_poll(const struct service_info *svc_info)
 		osal_yield();
 	}
 
-out:
 	OSAL_LOG_DEBUG("exit! err: %d", err);
+	return err;
+out:
+	OSAL_LOG_DEBUG("exit!");
 	return err;
 }
 

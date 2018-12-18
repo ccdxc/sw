@@ -1,0 +1,45 @@
+alias_group5:
+  - alias: 'hash_algo=sha2_256'
+svc_chains:
+  - svc_chain:
+      idx: 1
+      #description: "Compress+Hash chaining"
+      input:
+        pattern: ababababababababababababababababababababababababababababababababababababab1234
+        len: '$2block'
+      ops:
+        - compress:
+            flags: 'zero_pad,insert_header'
+            hdr_fmt_idx: 1
+            threshold_delta: 8
+            output_file: '%test_id%_compressed.bin'
+        - hash:
+            algo_type: '$hash_algo'
+            flags: 'per_block'
+            output_file: '%test_id%_hash_full.bin'
+tests:
+  - test:
+      idx: 1
+      svc_chains: 1
+      repeat: 64
+      mode: 'poll'
+      validations:
+        - retcode_compare:
+            idx: 1
+            retcode: 0
+            svc_retcodes: 0
+        - size_compare:
+            idx: 2
+            type: lt
+            file1: '1_compressed.bin'
+            val: '$2block'
+        - data_compare:
+            idx: 3
+            file1: '1_compressed.bin'
+            pattern: 0x00
+            offset: eof
+            len: eob
+        - size_compare:
+            idx: 1
+            file1: '1_hash_full.bin'
+            val: 64

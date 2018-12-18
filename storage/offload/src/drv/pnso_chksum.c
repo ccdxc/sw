@@ -98,7 +98,7 @@ chksum_setup(struct service_info *svc_info,
 			cpdc_fill_per_block_desc(pnso_chksum_desc->algo_type,
 					svc_info->si_block_size,
 					svc_info->si_src_blist.len,
-					svc_params->sp_src_blist, sgl,
+					svc_info->si_src_blist.blist, sgl,
 					chksum_desc, status_desc,
 					fill_chksum_desc);
 	} else {
@@ -487,6 +487,11 @@ chksum_teardown(struct service_info *svc_info)
 	OSAL_LOG_DEBUG("chksum_desc: %p flags: %d", svc_info->si_desc,
 			svc_info->si_desc_flags);
 
+	/*
+	 * Trace the dst/SGL once more to verify any padding applied
+	 * by sequencer.
+	 */
+	CPDC_PPRINT_DESC(svc_info->si_desc);
 	if (!per_block) {
 		pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_dst_sgl);
 		pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_src_sgl);

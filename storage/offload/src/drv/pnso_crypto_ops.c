@@ -507,6 +507,7 @@ crypto_poll(const struct service_info *svc_info)
 	if ((svc_info->si_flags & CHAIN_SFLAG_MODE_POLL) ||
 		(svc_info->si_flags & CHAIN_SFLAG_MODE_ASYNC)) {
 		err = (status_desc->csd_cpl_data == cpl_data) ? PNSO_OK : EBUSY;
+		OSAL_LOG_DEBUG("transient err: %d", err);
 		goto out;
 	}
 
@@ -529,8 +530,10 @@ crypto_poll(const struct service_info *svc_info)
 		osal_yield();
 	}
 
-out:
 	OSAL_LOG_DEBUG("exit! err: %d", err);
+	return err;
+out:
+	OSAL_LOG_DEBUG("exit!");
 	return err;
 }
 

@@ -102,7 +102,7 @@ hash_setup(struct service_info *svc_info,
 		num_tags = cpdc_fill_per_block_desc(pnso_hash_desc->algo_type,
 				svc_info->si_block_size,
 				svc_info->si_src_blist.len,
-				svc_params->sp_src_blist, sgl,
+				svc_info->si_src_blist.blist, sgl,
 				hash_desc, status_desc, fill_hash_desc);
 	} else {
 		err = cpdc_update_service_info_sgl(svc_info);
@@ -150,8 +150,8 @@ hash_chain(struct chain_entry *centry)
 	OSAL_ASSERT(centry);
 	svc_info = &centry->ce_svc_info;
 
-	if (svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) {
-		OSAL_LOG_DEBUG("lone service, chaining not needed! si_type: %d si_flags: %d",
+	if (!chn_service_has_sub_chain(svc_info)) {
+		OSAL_LOG_DEBUG("lone or last service, chaining not needed! si_type: %d si_flags: %d",
 				svc_info->si_type, svc_info->si_flags);
 		goto done;
 	}
@@ -549,6 +549,11 @@ hash_teardown(struct service_info *svc_info)
 	OSAL_LOG_DEBUG("hash_desc: %p flags: %d", svc_info->si_desc,
 			svc_info->si_desc_flags);
 
+	/*
+	 * Trace the dst/SGL once more to verify any padding applied
+	 * by sequencer.
+	 */
+	CPDC_PPRINT_DESC(svc_info->si_desc);
 	if (!per_block) {
 		pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_dst_sgl);
 		pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_src_sgl);

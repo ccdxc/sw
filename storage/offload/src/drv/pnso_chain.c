@@ -196,18 +196,9 @@ chn_get_first_centry(struct service_chain *chain)
 struct chain_entry *
 chn_get_last_centry(struct service_chain *chain)
 {
-	struct chain_entry *sc_entry, *ce_last = NULL;
-
 	OSAL_ASSERT(chain);
-	OSAL_ASSERT(chain->sc_entry);
-
-	sc_entry = chain->sc_entry;
-	while (sc_entry) {
-		ce_last = sc_entry;
-		sc_entry = sc_entry->ce_next;
-	}
-
-	return ce_last;
+	OSAL_ASSERT(chain->sc_last_entry);
+	return chain->sc_last_entry;
 }
 
 bool
@@ -607,9 +598,8 @@ chn_create_chain(struct request_params *req_params)
 	struct pnso_service_result *res;
 	struct service_chain *chain = NULL;
 	struct chain_entry *centry = NULL;
-	struct chain_entry *last_ce;
 	struct chain_entry *centry_prev = NULL;
-	struct service_info *svc_info;
+	struct service_info *svc_info = NULL;
 	struct service_params svc_params;
 	struct service_buf_list interm_blist;
 	uint32_t i;
@@ -727,20 +717,29 @@ chn_create_chain(struct request_params *req_params)
 		PAS_INC_NUM_SERVICES(pcr);
 	}
 	chain->sc_req_id = osal_atomic_fetch_add(&g_req_id, 1);
+	chain->sc_last_entry = centry;
 
-	/* chain the services  */
+	/*
+	 * After completing service linkages and setups above, execute
+	 * chain() for the services. This is done for every service in the
+	 * chain, which helps facilitate multi-level chaining.
+	 *
+	 * Note also that chain() has to be performed before enable_interrupt()
+	 * since the latter is designed to have the last say in programming
+	 * some of the chain paramaters.
+	 */
 	centry = chain->sc_entry;
-	svc_info = &centry->ce_svc_info;
-
-	err = svc_info->si_ops.chain(centry);
-	if (err)
-		goto out_chain;
+	while (centry) {
+		svc_info = &centry->ce_svc_info;
+		err = svc_info->si_ops.chain(centry);
+		if (err)
+			goto out_chain;
+		centry = centry->ce_next;
+	}
 
 	/* setup interrupt params in last chain's last service */
-	if (!(req_params->rp_flags & REQUEST_RFLAG_TYPE_BATCH) &&
+	if (svc_info && !(req_params->rp_flags & REQUEST_RFLAG_TYPE_BATCH) &&
 		(req_params->rp_flags & REQUEST_RFLAG_MODE_ASYNC)) {
-		last_ce = chn_get_last_centry(chain);
-		svc_info = &last_ce->ce_svc_info;
 		err = svc_info->si_ops.enable_interrupt(svc_info, chain);
 		if (err)
 			goto out_chain;
@@ -790,7 +789,6 @@ chn_execute_chain(struct service_chain *chain)
 {
 	pnso_error_t err = EINVAL;
 	struct per_core_resource *pcr = putil_get_per_core_resource();
-	struct chain_entry *sc_entry;
 	struct chain_entry *ce_first, *ce_last;
 
 	PAS_DECL_HW_PERF();
@@ -799,15 +797,9 @@ chn_execute_chain(struct service_chain *chain)
 
 	OSAL_ASSERT(chain);
 
-	ce_first = ce_last = chain->sc_entry;
+	ce_first = chain->sc_entry;
 	if (!ce_first)
 		goto out;
-
-	sc_entry = chain->sc_entry;
-	while (sc_entry) {
-		ce_last = sc_entry;
-		sc_entry = sc_entry->ce_next;
-	}
 
 	/* ring 'first' service door bell */
 	err = ce_first->ce_svc_info.si_ops.ring_db(&ce_first->ce_svc_info);
@@ -838,6 +830,7 @@ chn_execute_chain(struct service_chain *chain)
 	}
 
 	/* wait for 'last' service completion */
+	ce_last = chain->sc_last_entry;
 	err = ce_last->ce_svc_info.si_ops.poll(&ce_last->ce_svc_info);
 	PAS_END_HW_PERF(pcr);
 	if (err) {

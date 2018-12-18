@@ -55,6 +55,7 @@ cpdc_poll(const struct service_info *svc_info)
 	if ((svc_info->si_flags & CHAIN_SFLAG_MODE_POLL) ||
 		(svc_info->si_flags & CHAIN_SFLAG_MODE_ASYNC)) {
 		err = status_desc->csd_valid ? PNSO_OK : EBUSY;
+		OSAL_LOG_DEBUG("transient err: %d", err);
 		goto out;
 	}
 
@@ -77,8 +78,10 @@ cpdc_poll(const struct service_info *svc_info)
 		osal_yield();
 	}
 
-out:
 	OSAL_LOG_DEBUG("exit! err: %d", err);
+	return err;
+out:
+	OSAL_LOG_DEBUG("exit!");
 	return err;
 }
 
@@ -844,7 +847,7 @@ out:
 pnso_error_t
 cpdc_setup_interrupt_params(struct service_info *svc_info, void *poll_ctx)
 {
-	pnso_error_t err;
+	pnso_error_t err = PNSO_OK;
 	struct cpdc_desc *cp_desc;
 	struct per_core_resource *pcr;
 
@@ -854,6 +857,15 @@ cpdc_setup_interrupt_params(struct service_info *svc_info, void *poll_ctx)
 	OSAL_LOG_DEBUG("cp_desc: 0x" PRIx64 " pcr: 0x" PRIx64 " poll_ctx: 0x" PRIx64,
 			(uint64_t) cp_desc, (uint64_t) pcr,
 			(uint64_t) poll_ctx);
+
+	/*
+	 * When a chain successor is present, that service will take care of
+	 * setting up the interrupt.
+	 */
+	if (chn_service_has_sub_chain(svc_info)) {
+		OSAL_LOG_DEBUG("subordinate service will set up interrupt");
+		goto out;
+	}
 
 	cp_desc->u.cd_bits.cc_otag_on = 1;
 
@@ -886,7 +898,6 @@ cpdc_setup_interrupt_params(struct service_info *svc_info, void *poll_ctx)
 		cp_desc->cd_otag_data = sonic_get_intr_assert_data();
 	}
 
-	err = PNSO_OK;
 out:
 	return  err;
 }
