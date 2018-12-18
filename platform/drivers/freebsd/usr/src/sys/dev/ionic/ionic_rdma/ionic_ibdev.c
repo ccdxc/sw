@@ -1554,6 +1554,7 @@ static int ionic_build_hdr(struct ionic_ibdev *dev,
 	}
 
 	if (vlan != 0xffff) {
+		vlan |= attr->sl << 13; /* 802.1q PCP */
 		hdr->vlan.tag = cpu_to_be16(vlan);
 		hdr->vlan.type = hdr->eth.type;
 		hdr->eth.type = cpu_to_be16(ETH_P_8021Q);
@@ -3313,6 +3314,10 @@ static int ionic_v1_modify_qp_cmd(struct ionic_ibdev *dev,
 
 		wr.wqe.mod_qp.ah_id_len = cpu_to_le32(qp->ahid | (hdr_len << 24));
 		wr.wqe.mod_qp.dma_addr = hdr_dma;
+
+		wr.wqe.mod_qp.en_pcp = attr->ah_attr.sl;
+		wr.wqe.mod_qp.ip_dscp =
+			rdma_ah_read_grh(&attr->ah_attr)->traffic_class >> 2;
 	}
 
 	ionic_admin_post(dev, &wr);

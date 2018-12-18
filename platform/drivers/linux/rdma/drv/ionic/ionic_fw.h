@@ -654,7 +654,9 @@ struct ionic_v1_admin_wqe {
 			__u8		rrq_depth;
 			__le16		pkey_id;
 			__le32		ah_id_len;
-			__u8		rsvd[4];
+			__u8		en_pcp;
+			__u8		ip_dscp;
+			__u8		rsvd[2];
 			__le32		rrq_index;
 			__le32		rsq_index;
 			__le64		dma_addr;
