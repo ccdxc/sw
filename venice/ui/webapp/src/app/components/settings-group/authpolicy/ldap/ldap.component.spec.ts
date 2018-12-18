@@ -50,7 +50,7 @@ describe('LdapComponent', () => {
 
     const rank = fixture.debugElement.query(By.css('.authpolicy-rank'));
     expect(rank).toBeNull();
-
+   /*  //TODO: disable create LDAP in UI for GS-0.3
     // Clicking create button
     createButton.nativeElement.click();
     fixture.detectChanges();
@@ -68,6 +68,7 @@ describe('LdapComponent', () => {
     expect(overlay).toBeDefined();
     createButton = fixture.debugElement.query(By.css('.ldap-create'));
     expect(createButton).toBeDefined();
+    */
 
     // Saving the create form
 

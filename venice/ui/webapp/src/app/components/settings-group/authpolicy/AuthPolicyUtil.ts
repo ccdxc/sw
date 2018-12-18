@@ -1,4 +1,4 @@
-import { LDAPCheckResponse , LDAPCheckType, CheckResponseError } from '@app/components/settings-group/authpolicy/.';
+import { LDAPCheckResponse, LDAPCheckType, CheckResponseError } from '@app/components/settings-group/authpolicy/.';
 import { AuthAuthenticationPolicy, ApiStatus, AuthLdap, IAuthAuthenticationPolicy, AuthAuthenticators_authenticator_order, IApiStatus, AuthLdapServerStatus_result } from '@sdk/v1/models/generated/auth';
 
 export class AuthPolicyUtil {
@@ -9,12 +9,14 @@ export class AuthPolicyUtil {
         };
         if (checkResponse) {
             _checkResponseError.type = checkResponse.type;
-            checkResponse.authpolicy.status['ldap-servers'].forEach(server => {
-                if ( server.result === AuthLdapServerStatus_result.Bind_Failure
-                    || server.result === AuthLdapServerStatus_result.Connect_Failure  ) {
-                    _checkResponseError.errors.push(server);
-                }
-            });
+            if (checkResponse.authpolicy.status['ldap-servers']) {
+                checkResponse.authpolicy.status['ldap-servers'].forEach(server => {
+                    if (server.result === AuthLdapServerStatus_result.Bind_Failure
+                        || server.result === AuthLdapServerStatus_result.Connect_Failure) {
+                        _checkResponseError.errors.push(server);
+                    }
+                });
+            }
         }
         return _checkResponseError;
     }
