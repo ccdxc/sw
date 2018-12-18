@@ -244,8 +244,12 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
    * @param entry
    */
   onSearchResultEntryClick($event, category, entry) {
-    const route = Utility.genSelfLinkRoute(entry.object.kind, entry.object.meta.name);
+    const route = Utility.genSelfLinkUIRoute(entry.object.kind, entry.object.meta.name);
     this.router.navigateByUrl(route);
+  }
+
+  isSelflinkHasUIpage(category, entry): boolean {
+    return Utility.isObjectSelfLinkHasUILink(entry.object.kind, entry.object.meta.name);
   }
 
   /**

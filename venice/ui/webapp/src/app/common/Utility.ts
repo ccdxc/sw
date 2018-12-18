@@ -710,8 +710,23 @@ export class Utility {
     return category;
   }
 
-  public static genSelfLinkRoute(kind, name) {
-    const cat = this.findCategoryByKind(kind).toLowerCase();
+  /**
+   * This API check if object self-link has correspoonding UI URL
+   * @param kind
+   * @param name
+   */
+  public static isObjectSelfLinkHasUILink(kind: any, name: string): boolean {
+    const route = this.genSelfLinkUIRoute(kind, name);
+     return (route != null);
+  }
+
+  /**
+   * This API convert object self-link to UI page link;
+   * For example, search result dispaly auth-policy link as '/configs/v1/auth/authn-policy'. It will convert to UI page URL 'settings/authpolicy'
+   */
+  public static genSelfLinkUIRoute(kind: any, name: string, isToUseDefault: boolean = false): string {
+    let cat = this.findCategoryByKind(kind);
+    cat = (cat) ? cat.toLowerCase() : '';
     switch (kind) {
       case 'Cluster':
       case 'Node':
@@ -731,7 +746,7 @@ export class Utility {
       case 'AuthenticationPolicy':
         return 'settings/authpolicy';
       default:
-        return cat + '/' + pluralize.plural(kind.toLowerCase()) + '/' + name;
+        return  (!isToUseDefault) ? null : cat + '/' + pluralize.plural(kind.toLowerCase()) + '/' + name;
     }
   }
 

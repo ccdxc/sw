@@ -48,7 +48,8 @@
                             <div class="searchresult-button-category-kind-entry-div">
                                 <div class="searchresult-button-category-kind-entry-kind">{{entry.object.kind}}</div>
                                 <div>
-                                    <a class="searchresult-button-category-kind-entry-link" (click)="onSearchResultEntryClick($event,category, entry)">{{entry.object.meta['self-link']}}</a>
+                                    <a *ngIf="isSelflinkHasUIpage(category, entry)"  class="searchresult-button-category-kind-entry-link" (click)="onSearchResultEntryClick($event,category, entry)">{{entry.object.meta['self-link']}}</a>
+                                    <span *ngIf="!isSelflinkHasUIpage(category, entry)" class="searchresult-button-category-kind-entry-label-text">{{entry.object.meta['self-link']}}</span>
                                 </div>
                                 <div class="searchresult-button-category-kind-entry-content">
                                     <span class="searchresult-button-category-kind-entry-label-text">name: </span>
