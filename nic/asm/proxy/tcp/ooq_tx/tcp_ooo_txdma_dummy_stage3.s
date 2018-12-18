@@ -14,10 +14,10 @@ struct s3_t0_ooq_tcp_tx_ooq_tcp_txdma_load_descr_addr_d d;
 %%
     .align
     .param tcp_ooo_txdma_load_one_descr 
-tcp_ooo_txdma_load_one_descr_addr:
-    phvwr p.to_s4_curr_rnmdr_addr, d.one_descr_addr
-    phvwr p.{tcp_app_header_ts...tcp_app_header_prev_echo_ts}, d.one_descr_addr
-    add r1, d.one_descr_addr, r0 
+tcp_ooo_txdma_dummy_stage3:
+    phvwr p.to_s4_curr_rnmdr_addr, k.to_s3_curr_rnmdr_addr
+    phvwr p.{tcp_app_header_ts...tcp_app_header_prev_echo_ts}, k.to_s3_curr_rnmdr_addr
+    add r1, k.to_s3_curr_rnmdr_addr, r0
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, tcp_ooo_txdma_load_one_descr, r1, TABLE_SIZE_512_BITS)
     nop.e
     nop
