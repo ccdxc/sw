@@ -3,6 +3,7 @@
 package memdb
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"sync"
@@ -249,4 +250,31 @@ func (md *Memdb) ListObjects(kind string) []Object {
 	}
 
 	return objs
+}
+
+// MarshalJSON converts memdb contents to json
+func (md *Memdb) MarshalJSON() ([]byte, error) {
+	// lock the memdb for access
+	md.Lock()
+	defer md.Unlock()
+
+	contents := map[string]struct {
+		Object      map[string]Object
+		NumWatchers int
+	}{}
+
+	for kind, objs := range md.objdb {
+		o := map[string]Object{}
+		for name, obj := range objs.objects {
+			o[name] = obj
+		}
+
+		contents[kind] = struct {
+			Object      map[string]Object
+			NumWatchers int
+		}{Object: o, NumWatchers: len(objs.watchers)}
+
+	}
+
+	return json.Marshal(contents)
 }

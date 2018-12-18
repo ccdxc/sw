@@ -3,6 +3,7 @@
 package memdb
 
 import (
+	"encoding/json"
 	"fmt"
 	"runtime"
 	"testing"
@@ -294,5 +295,44 @@ func TestStopWatchObjects(t *testing.T) {
 		for _, w := range watchers {
 			_ = waitForWatch(t, w, UpdateEvent)
 		}
+	}
+}
+
+func TestMarshal(t *testing.T) {
+	// create a new memdb
+	md := NewMemdb()
+
+	// tets object
+	obj := testObj{
+		TypeMeta: api.TypeMeta{Kind: "testObj"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "tenant",
+			Name:   "testName",
+		},
+		field: "testField",
+	}
+
+	// add an object
+	err := md.AddObject(&obj)
+	AssertOk(t, err, "Error creating object")
+
+	// start watch on objects
+	watchChan := make(chan Event, WatchLen)
+	md.WatchObjects("testObj", watchChan)
+
+	mo, err := md.MarshalJSON()
+	AssertOk(t, err, "Error marshalling object")
+
+	o := map[string]struct {
+		NumWatchers int
+	}{}
+
+	err = json.Unmarshal(mo, &o)
+	AssertOk(t, err, "Error unmarshalling ")
+
+	Assert(t, len(o) == 1, "invalid number of objects", len(o))
+
+	for _, v := range o {
+		Assert(t, v.NumWatchers == 1, "invalid number of watchers", v)
 	}
 }

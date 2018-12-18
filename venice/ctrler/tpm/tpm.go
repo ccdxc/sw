@@ -9,7 +9,6 @@ import (
 	"reflect"
 	"time"
 
-	"encoding/json"
 	"net/http"
 
 	"github.com/pensando/sw/api"
@@ -344,16 +343,11 @@ func (pm *PolicyManager) deleteDatabase(tenantName string, dbName string) error 
 
 // Debug dump all policy cache for debug
 func (pm *PolicyManager) Debug(w http.ResponseWriter, r *http.Request) {
-	policyNames := []string{"StatsPolicy", "FwlogPolicy", "FlowExportPolicy"}
-	policyData := map[string]map[string]memdb.Object{}
-
-	for _, key := range policyNames {
-		policyData[key] = map[string]memdb.Object{}
-
-		pl := pm.policyDb.ListObjects(key)
-		for _, p := range pl {
-			policyData[key][p.GetObjectMeta().GetName()] = p
-		}
+	d, err := pm.policyDb.MarshalJSON()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
-	json.NewEncoder(w).Encode(policyData)
+
+	w.Write(d)
 }
