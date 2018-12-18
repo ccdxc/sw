@@ -163,13 +163,30 @@ func validateCluster() {
 	Expect(cl.Kind).Should(Equal("Cluster"))
 	Expect(cl.UUID).ShouldNot(BeEmpty())
 
-	By(fmt.Sprintf("Resolver data should be same on all quorum nodes"))
-	s := getServices(ts.tu.QuorumNodes[0])
-	serviceListNode1 := s.String()
-	for _, n := range ts.tu.QuorumNodes[1:] {
-		s = getServices(n)
-		serviceList := s.String()
-		Expect(serviceListNode1).To(Equal(serviceList))
-	}
+	Eventually(func() string {
+		s1 := getServices(ts.tu.QuorumNodes[0])
+		serviceListNode1 := s1.String()
+		for index, n := range ts.tu.QuorumNodes[1:] {
+			s := getServices(n)
+			serviceList := s.String()
+			if serviceListNode1 != serviceList {
+				m := make(map[string]cmdprotos.Service)
+
+				for _, svc := range s1.Items {
+					m[svc.Name] = *svc
+				}
+				for _, svc := range s.Items {
+					if reflect.DeepEqual(m[svc.Name], *svc) {
+						delete(m, svc.Name)
+					} else {
+						svcNode1 := m[svc.Name]
+						return fmt.Sprintf("serviceList on %s and %s differ.\nOn %s, serviceList is %s \nOn %s, serviceList is %s\n",
+							ts.tu.QuorumNodes[0], ts.tu.QuorumNodes[index], ts.tu.QuorumNodes[0], svcNode1.String(), ts.tu.QuorumNodes[index], (*svc).String())
+					}
+				}
+			}
+		}
+		return ""
+	}, 15, 3).Should(BeEmpty(), "Resolver data should be same on all quorum nodes")
 
 }
