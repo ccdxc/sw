@@ -124,7 +124,7 @@ ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
 
 	is_timeout = ionic_wait_for_completion(&ctx->work,
                                                devcmd_timeout *
-                                               vmk_TimerTCToMS(HZ));
+                                               VMK_MSEC_PER_SEC);
 //	wait_for_completion(&ctx->work);
 
 	return ionic_adminq_check_err(lif,
