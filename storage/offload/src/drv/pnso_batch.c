@@ -177,6 +177,7 @@ put_bulk_batch_desc(struct batch_info *batch_info, uint32_t page_idx)
 		crypto_put_batch_bulk_desc(mpool,
 				batch_info->bi_bulk_desc[page_idx]);
 	} else {
+		/* both cpdc desc and pb vector as well covered */
 		mpool = pcr->mpools[batch_info->bi_mpool_type];
 		cpdc_put_batch_bulk_desc(mpool,
 				batch_info->bi_bulk_desc[page_idx]);
@@ -188,20 +189,33 @@ put_bulk_batch_desc(struct batch_info *batch_info, uint32_t page_idx)
 }
 
 static inline enum mem_pool_type
-get_batch_mpool_type(enum pnso_service_type svc_type)
+get_batch_mpool_type(struct pnso_service *svc)
 {
 	enum mem_pool_type mpool_type;
+	struct pnso_hash_desc *hash_desc;
+	struct pnso_checksum_desc *chksum_desc;
 
-	switch (svc_type) {
+	switch (svc->svc_type) {
 	case PNSO_SVC_TYPE_ENCRYPT:
 	case PNSO_SVC_TYPE_DECRYPT:
 		mpool_type = MPOOL_TYPE_CRYPTO_DESC_VECTOR;
 		break;
 	case PNSO_SVC_TYPE_COMPRESS:
 	case PNSO_SVC_TYPE_DECOMPRESS:
-	case PNSO_SVC_TYPE_HASH:
-	case PNSO_SVC_TYPE_CHKSUM:
 		mpool_type = MPOOL_TYPE_CPDC_DESC_VECTOR;
+		break;
+	case PNSO_SVC_TYPE_HASH:
+		hash_desc = &svc->u.hash_desc;
+		mpool_type = (hash_desc->flags & PNSO_HASH_DFLAG_PER_BLOCK) ?
+			MPOOL_TYPE_CPDC_DESC_PB_VECTOR :
+			MPOOL_TYPE_CPDC_DESC_VECTOR;
+		break;
+	case PNSO_SVC_TYPE_CHKSUM:
+		chksum_desc = &svc->u.chksum_desc;
+		mpool_type = (chksum_desc->flags &
+				PNSO_CHKSUM_DFLAG_PER_BLOCK) ?
+			MPOOL_TYPE_CPDC_DESC_PB_VECTOR :
+			MPOOL_TYPE_CPDC_DESC_VECTOR;
 		break;
 	default:
 		mpool_type = MPOOL_TYPE_NONE;
@@ -248,7 +262,7 @@ init_batch_info(struct pnso_service_request *req)
 	enum mem_pool_type mpool_type;
 	struct batch_info *batch_info = NULL;
 
-	mpool_type = get_batch_mpool_type(req->svc[0].svc_type);
+	mpool_type = get_batch_mpool_type(&req->svc[0]);
 	if (mpool_type == MPOOL_TYPE_NONE)
 		goto out;
 
