@@ -335,16 +335,42 @@ static struct cpdc_desc *
 get_batch_desc(struct service_info *svc_info)
 {
 	struct service_batch_info *svc_batch_info;
+	struct batch_info *batch_info;
+	struct batch_page *batch_page;
+	struct batch_page_tags *page_tags;
 	struct cpdc_desc *desc;
+	uint32_t idx;
 
 	svc_batch_info = &svc_info->si_batch_info;
-	desc = &svc_batch_info->u.sbi_cpdc_desc[svc_batch_info->sbi_desc_idx];
+	batch_info = svc_batch_info->sbi_batch_info;
 
-	OSAL_LOG_DEBUG("num_entries: %d desc_idx: %d bulk_desc: 0x" PRIx64 " desc: 0x" PRIx64,
-			svc_batch_info->sbi_num_entries,
-			svc_batch_info->sbi_desc_idx,
-			(uint64_t) svc_batch_info->u.sbi_cpdc_desc,
-			(uint64_t) desc);
+	if (batch_info->bi_mpool_type == MPOOL_TYPE_CPDC_DESC_PB_VECTOR) {
+		batch_page = batch_info->bi_pages[
+			svc_batch_info->sbi_bulk_desc_idx];
+		page_tags = &batch_page->bp_tags;
+
+		idx = (svc_info->si_type == PNSO_SVC_TYPE_HASH) ?
+			page_tags->bpt_num_hashes :
+			page_tags->bpt_num_chksums;
+
+		desc = &svc_batch_info->u.sbi_cpdc_desc[idx];
+
+		OSAL_LOG_DEBUG("per-block num_entries: %d bulk_desc_idx: %d idx: %u bulk_desc: 0x" PRIx64 " desc: 0x" PRIx64,
+				svc_batch_info->sbi_num_entries,
+				svc_batch_info->sbi_bulk_desc_idx,
+				idx,
+				(uint64_t) svc_batch_info->u.sbi_cpdc_desc,
+				(uint64_t) desc);
+	}  else {
+		desc = &svc_batch_info->u.sbi_cpdc_desc[
+				svc_batch_info->sbi_desc_idx];
+
+		OSAL_LOG_DEBUG("num_entries: %d desc_idx: %d bulk_desc: 0x" PRIx64 " desc: 0x" PRIx64,
+				svc_batch_info->sbi_num_entries,
+				svc_batch_info->sbi_desc_idx,
+				(uint64_t) svc_batch_info->u.sbi_cpdc_desc,
+				(uint64_t) desc);
+	}
 
 	return desc;
 }
@@ -691,52 +717,6 @@ cpdc_update_batch_tags(struct service_info *svc_info, uint32_t num_tags)
 	OSAL_ASSERT(0);
 }
 
-static void __attribute__((unused))
-pprint_seq_desc(const struct sequencer_desc *desc)
-{
-	if (!desc)
-		return;
-
-	OSAL_LOG_DEBUG("--- YOYO");
-
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "seq_desc", (uint64_t) desc);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "seq_desc_pa",
-			osal_virt_to_phy((void *) desc));
-
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "sd_desc_addr", desc->sd_desc_addr);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "sd_pndx_addr", desc->sd_pndx_addr);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "sd_pndx_shadow_addr",
-			desc->sd_pndx_shadow_addr);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "sd_ring_addr", desc->sd_ring_addr);
-
-	OSAL_LOG_DEBUG("%30s: %d", "sd_desc_size", desc->sd_desc_size);
-	OSAL_LOG_DEBUG("%30s: %d", "sd_pndx_size", desc->sd_pndx_size);
-	OSAL_LOG_DEBUG("%30s: %d", "sd_ring_size", desc->sd_ring_size);
-	OSAL_LOG_DEBUG("%30s: %d", "sd_batch_mode", desc->sd_batch_mode);
-	OSAL_LOG_DEBUG("%30s: %d", "sd_batch_size", desc->sd_batch_size);
-}
-
-static void __attribute__((unused))
-pprint_seq_info(const struct sequencer_info *seq_info)
-{
-	if (!seq_info)
-		return;
-
-	OSAL_LOG_DEBUG("--- YOYO");
-
-	OSAL_LOG_DEBUG("%30s: %s", "sqi_ring", seq_info->sqi_ring->name);
-	OSAL_LOG_DEBUG("%30s: %d", "sqi_qtype", seq_info->sqi_qtype);
-	OSAL_LOG_DEBUG("%30s: %d", "sqi_status_qtype",
-			seq_info->sqi_status_qtype);
-	OSAL_LOG_DEBUG("%30s: %d", "sqi_index", seq_info->sqi_index);
-	OSAL_LOG_DEBUG("%30s: %d", "sqi_batch_mode", seq_info->sqi_batch_mode);
-	OSAL_LOG_DEBUG("%30s: %d", "sqi_batch_size", seq_info->sqi_batch_size);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "sqi_sqi_desc",
-			(uint64_t) seq_info->sqi_desc);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "sqi_status_desc",
-			(uint64_t) seq_info->sqi_status_desc);
-}
-
 void
 cpdc_update_seq_batch_size(const struct service_info *svc_info)
 {
@@ -760,10 +740,6 @@ cpdc_update_seq_batch_size(const struct service_info *svc_info)
 
 	seq_info = (struct sequencer_info *) &svc_info->si_seq_info;
 	seq_desc = seq_info->sqi_desc;
-
-	pprint_seq_info(seq_info);
-	pprint_seq_desc(seq_desc);
-	OSAL_LOG_DEBUG("--- YOYO");
 
 	if (seq_desc->sd_batch_mode) {
 		svc_batch_info =
