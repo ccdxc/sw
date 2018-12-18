@@ -263,7 +263,7 @@ ionic_en_query_port(struct ionic_en_uplink_handle *uplink_handle)  // IN
 
         /*For now we use hardcoded link status */
         if (!uplink_handle->is_mgmt_nic) {
-                speed = VMK_LINK_SPEED_10000_MBPS;
+                speed = VMK_LINK_SPEED_100000_MBPS;
         } else {
                 speed = VMK_LINK_SPEED_1000_MBPS;
         }
