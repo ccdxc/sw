@@ -22,49 +22,11 @@ namespace api {
  * @{
  */
 
-/**
- * @brief    cleanup state maintained for this vcn including any hw entries we
- *           are holding on to
- */
-void
-vcn_entry::cleanup(void) {
-    // TODO: fix me
-    //SDK_SPINLOCK_DESTROY(&slock_);
-    // TODO: check if indices are valid before calling tbl mgmt. APIs
-    vcn_db()->vcn_idxr()->free(hw_id_);
-}
-
-/**
- * @brief    release all the s/w state associate with the given vcn, if any,
- *           and free the memory
- * @param[in] vcn     vcn to be freed
- * NOTE: h/w entries should have been cleaned up (by calling cleanup_hw()
- * before calling this
- */
-void
-vcn_entry::destroy(vcn_entry *vcn) {
-    vcn->cleanup();
-    vcn->~vcn_entry();
-}
-
-/**
- * @brief     initialize vcn entry with the given config
- * @param[in] oci_vcn    vcn information
- * @return    SDK_RET_OK on success, failure status code on error
- *
- * NOTE:     allocate all h/w resources (i.e., table indices as well here, we
- *           can always release them in abort phase if something goes wrong
- */
-sdk_ret_t
-vcn_entry::init(oci_vcn_t *oci_vcn) {
+/**< @brief    constructor */
+vcn_entry::vcn_entry() {
     //SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_SHARED);
-    memcpy(&this->key_, &oci_vcn->key, sizeof(oci_vcn_key_t));
-    this->ht_ctxt_.reset();
-    if (vcn_db()->vcn_idxr()->alloc((uint32_t *)&this->hw_id_) !=
-            sdk::lib::indexer::SUCCESS) {
-        return sdk::SDK_RET_NO_RESOURCE;
-    }
-    return sdk::SDK_RET_OK;
+    ht_ctxt_.reset();
+    hw_id_ = 0xFFFF;
 }
 
 /**
@@ -84,6 +46,26 @@ vcn_entry::factory(oci_vcn_t *oci_vcn) {
     return vcn;
 }
 
+/**< @brief    destructor */
+vcn_entry::~vcn_entry() {
+    // TODO: fix me
+    //SDK_SPINLOCK_DESTROY(&slock_);
+}
+
+/**
+ * @brief    release all the s/w & h/w resources associated with this object
+ *           and free the memory
+ * @param[in] vcn     vcn to be freed
+ * NOTE: h/w entries themselves should have been cleaned up (by calling
+ *       cleanup_hw() before calling this
+ */
+void
+vcn_entry::destroy(vcn_entry *vcn) {
+    vcn->free_resources_();
+    vcn->~vcn_entry();
+}
+
+#if 0
 /**
  * @brief     handle a vcn create by allocating all required resources
  *            and keeping them ready for commit phase
@@ -92,7 +74,8 @@ vcn_entry::factory(oci_vcn_t *oci_vcn) {
  */
 sdk_ret_t
 vcn_entry::process_create(api_ctxt_t *api_ctxt) {
-    return init(&api_ctxt->vcn_info);
+    init(&api_ctxt->vcn_info);
+    return alloc_resources();
 }
 
 /**
@@ -127,60 +110,118 @@ sdk_ret_t
 vcn_entry::process_get(api_ctxt_t *api_ctxt) {
     return sdk::SDK_RET_OK;
 }
+#endif
+
+/**
+ * @brief     initialize vcn entry with the given config
+ * @param[in] api_ctxt API context carrying the configuration
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+vcn_entry::init_config(api_ctxt_t *api_ctxt) {
+    oci_vcn_t *oci_vcn = &api_ctxt->vcn_info;
+
+    memcpy(&this->key_, &oci_vcn->key, sizeof(oci_vcn_key_t));
+    return sdk::SDK_RET_OK;
+}
+
+/**
+ * @brief     update/override the vcn object with given config
+ * @param[in] api_ctxt API context carrying the configuration
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+vcn_entry::update_config(api_ctxt_t *api_ctxt) {
+    return sdk::SDK_RET_OK;
+}
+
+/**
+ * @brief    allocate h/w resources for this object
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+// TODO: this should ideally go to impl class
+sdk_ret_t
+vcn_entry::alloc_resources_(void) {
+    if (vcn_db()->vcn_idxr()->alloc((uint32_t *)&this->hw_id_) !=
+            sdk::lib::indexer::SUCCESS) {
+        return sdk::SDK_RET_NO_RESOURCE;
+    }
+    return sdk::SDK_RET_OK;
+}
 
 /**
  * @brief    program all h/w tables relevant to this object except stage 0
  *           table(s), if any
- * @param[in] api_ctxt    transient state associated with this API
+ * @param[in] obj_ctxt    transient state associated with this API
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-vcn_entry::program_hw(api_ctxt_t *api_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
+vcn_entry::program_hw(obj_ctxt_t *obj_ctxt) {
+    // there is no h/w programming for VCN config but a h/w id is needed so we
+    // can use while programming vnics, routes etc.
+    this->alloc_resources_();
+    return sdk::SDK_RET_OK;
+}
+
+/**
+ * @brief     free h/w resources used by this object, if any
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+vcn_entry::free_resources_(void) {
+    if (hw_id_ != 0xFF) {
+        vcn_db()->vcn_idxr()->free(hw_id_);
+    }
+    return sdk::SDK_RET_OK;
 }
 
 /**
  * @brief    cleanup all h/w tables relevant to this object except stage 0
  *           table(s), if any, by updating packed entries with latest epoch#
- * @param[in] api_ctxt    transient state associated with this API
+ * NOTE:     we shouldn't release h/w entries here !!
+ * @param[in] obj_ctxt    transient state associated with this API
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-vcn_entry::cleanup_hw(api_ctxt_t *api_ctxt) {
+vcn_entry::cleanup_hw(obj_ctxt_t *obj_ctxt) {
+    // there is no h/w programming for VCN config, so nothing to cleanup
     return sdk::SDK_RET_INVALID_OP;
 }
 
 /**
  * @brief    update all h/w tables relevant to this object except stage 0
  *           table(s), if any, by updating packed entries with latest epoch#
- * @param[in] api_ctxt    transient state associated with this API
+ * @param[in] orig_obj    old version of the unmodified object
+ * @param[in] obj_ctxt    transient state associated with this API
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-vcn_entry::update_hw(api_ctxt_t *api_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
+vcn_entry::update_hw(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+    // there is no h/w programming for VCN config, so nothing to update
+    return sdk::SDK_RET_OK;
 }
 
 /**
  * @brief    activate the epoch in the dataplane
  * @param[in] api_op      api operation
- * @param[in] api_ctxt    transient state associated with this API
+ * @param[in] obj_ctxt    transient state associated with this API
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-vcn_entry::activate_epoch(api_op_t api_op, api_ctxt_t *api_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
+vcn_entry::activate_epoch(api_op_t api_op, obj_ctxt_t *obj_ctxt) {
+    // there is no h/w programming for VCN config, so nothing to activate
+    return sdk::SDK_RET_OK;
 }
 
 /**
  * @brief    this method is called on new object that needs to replace the
  *           old version of the object in the DBs
- * @param[in] old         old version of the object being swapped out
- * @param[in] api_ctxt    transient state associated with this API
+ * @param[in] orig_obj    old version of the object being swapped out
+ * @param[in] obj_ctxt    transient state associated with this API
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-vcn_entry::update_db(api_base *old_obj, api_ctxt_t *api_ctxt) {
+vcn_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 

@@ -60,23 +60,44 @@ vnic_entry::destroy(vnic_entry *vnic) {
 
 /**
  * @brief     initialize vnic entry with the given config
- * @param[in] oci_vnic    vnic information
+ * @param[in] api_ctxt API context carrying the configuration
  * @return    SDK_RET_OK on success, failure status code on error
- *
- * NOTE:     allocate all h/w resources (i.e., table indices as well here, we
- *           can always release them in abort phase if something goes wrong
  */
 sdk_ret_t
-vnic_entry::init(oci_vnic_t *oci_vnic) {
+vnic_entry::init_config(api_ctxt_t *api_ctxt) {
+    oci_vnic_t *oci_vnic = &api_ctxt->vnic_info;
+
     //SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_SHARED);
     memcpy(&this->key_, &oci_vnic->key, sizeof(oci_vnic_key_t));
     this->ht_ctxt_.reset();
-    // allocate hw id for this vnic, vnic specific index tables in the p4
-    // datapath are indexed by this
+    return sdk::SDK_RET_OK;
+}
+
+/**
+ * @brief    allocate h/w resources for this object
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+// TODO: this should ideally go to impl class
+sdk_ret_t
+vnic_entry::alloc_resources(void) {
+    /**
+     * allocate hw id for this vnic, vnic specific index tables in the p4
+     * datapath are indexed by this
+     */
     if (vnic_db()->vnic_idxr()->alloc((uint32_t *)&this->hw_id_) !=
             sdk::lib::indexer::SUCCESS) {
         return sdk::SDK_RET_NO_RESOURCE;
     }
+    return sdk::SDK_RET_OK;
+}
+
+/**
+ * @brief     update/override the subnet object with given config
+ * @param[in] api_ctxt API context carrying the configuration
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+vnic_entry::update_config(api_ctxt_t *api_ctxt) {
     return sdk::SDK_RET_OK;
 }
 
@@ -98,6 +119,7 @@ vnic_entry::factory(oci_vnic_t *oci_vnic) {
 
 }
 
+#if 0
 /**
  * @brief     handle a vnic create by allocating all required resources
  *            and keeping them ready for commit phase
@@ -141,37 +163,39 @@ sdk_ret_t
 vnic_entry::process_get(api_ctxt_t *api_ctxt) {
     return sdk::SDK_RET_OK;
 }
+#endif
 
 /**
  * @brief    program all h/w tables relevant to this object except stage 0
  *           table(s), if any
- * @param[in] api_ctxt    transient state associated with this API
+ * @param[in] obj_ctxt    transient state associated with this API
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-vnic_entry::program_hw(api_ctxt_t *api_ctxt) {
+vnic_entry::program_hw(obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
 /**
  * @brief    cleanup all h/w tables relevant to this object except stage 0
  *           table(s), if any, by updating packed entries with latest epoch#
- * @param[in] api_ctxt    transient state associated with this API
+ * @param[in] obj_ctxt    transient state associated with this API
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-vnic_entry::cleanup_hw(api_ctxt_t *api_ctxt) {
+vnic_entry::cleanup_hw(obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
 /**
  * @brief    update all h/w tables relevant to this object except stage 0
  *           table(s), if any, by updating packed entries with latest epoch#
- * @param[in] api_ctxt    transient state associated with this API
+ * @param[in] orig_obj    old version of the unmodified object
+ * @param[in] obj_ctxt    transient state associated with this API
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-vnic_entry::update_hw(api_ctxt_t *api_ctxt) {
+vnic_entry::update_hw(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
@@ -241,23 +265,23 @@ vnic_entry::delay_delete(void) {
 /**
  * @brief    activate the epoch in the dataplane
  * @param[in] api_op      api operation
- * @param[in] api_ctxt    transient state associated with this API
+ * @param[in] obj_ctxt    transient state associated with this API
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-vnic_entry::activate_epoch(api_op_t api_op, api_ctxt_t *api_ctxt) {
+vnic_entry::activate_epoch(api_op_t api_op, obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
 /**
  * @brief    this method is called on new object that needs to replace the
  *           old version of the object in the DBs
- * @param[in] old         old version of the object being swapped out
- * @param[in] api_ctxt    transient state associated with this API
+ * @param[in] orig_obj    old version of the object being swapped out
+ * @param[in] obj_ctxt    transient state associated with this API
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-vnic_entry::update_db(api_base *old_obj, api_ctxt_t *api_ctxt) {
+vnic_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 

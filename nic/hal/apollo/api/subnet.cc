@@ -51,21 +51,40 @@ subnet_entry::destroy(subnet_entry *subnet) {
 
 /**
  * @brief     initialize subnet entry with the given config
- * @param[in] oci_subnet    subnet information
+ * @param[in] api_ctxt API context carrying the configuration
  * @return    SDK_RET_OK on success, failure status code on error
- *
- * NOTE:     allocate all h/w resources (i.e., table indices as well here, we
- *           can always release them in abort phase if something goes wrong
  */
 sdk_ret_t
-subnet_entry::init(oci_subnet_t *oci_subnet) {
+subnet_entry::init_config(api_ctxt_t *api_ctxt) {
+    oci_subnet_t *oci_subnet = &api_ctxt->subnet_info;
+
     //SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_SHARED);
     memcpy(&this->key_, &oci_subnet->key, sizeof(oci_subnet_key_t));
     this->ht_ctxt_.reset();
+    return sdk::SDK_RET_OK;
+}
+
+/**
+ * @brief    allocate h/w resources for this object
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+// TODO: this should ideally go to impl class
+sdk_ret_t
+subnet_entry::alloc_resources(void) {
     if (subnet_db()->subnet_idxr()->alloc((uint32_t *)&this->hw_id_) !=
             sdk::lib::indexer::SUCCESS) {
         return sdk::SDK_RET_NO_RESOURCE;
     }
+    return sdk::SDK_RET_OK;
+}
+
+/**
+ * @brief     update/override the subnet object with given config
+ * @param[in] api_ctxt API context carrying the configuration
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+subnet_entry::update_config(api_ctxt_t *api_ctxt) {
     return sdk::SDK_RET_OK;
 }
 
@@ -87,6 +106,7 @@ subnet_entry::factory(oci_subnet_t *oci_subnet) {
 
 }
 
+#if 0
 /**
  * @brief     handle a subnet create by allocating all required resources
  *            and keeping them ready for commit phase
@@ -130,60 +150,62 @@ sdk_ret_t
 subnet_entry::process_get(api_ctxt_t *api_ctxt) {
     return sdk::SDK_RET_OK;
 }
+#endif
 
 /**
  * @brief    program all h/w tables relevant to this object except stage 0
  *           table(s), if any
- * @param[in] api_ctxt    transient state associated with this API
+ * @param[in] obj_ctxt    transient state associated with this API
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-subnet_entry::program_hw(api_ctxt_t *api_ctxt) {
+subnet_entry::program_hw(obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
 /**
  * @brief    cleanup all h/w tables relevant to this object except stage 0
  *           table(s), if any, by updating packed entries with latest epoch#
- * @param[in] api_ctxt    transient state associated with this API
+ * @param[in] obj_ctxt    transient state associated with this API
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-subnet_entry::cleanup_hw(api_ctxt_t *api_ctxt) {
+subnet_entry::cleanup_hw(obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
 /**
  * @brief    update all h/w tables relevant to this object except stage 0
  *           table(s), if any, by updating packed entries with latest epoch#
- * @param[in] api_ctxt    transient state associated with this API
+ * @param[in] orig_obj    old version of the unmodified object
+ * @param[in] obj_ctxt    transient state associated with this API
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-subnet_entry::update_hw(api_ctxt_t *api_ctxt) {
+subnet_entry::update_hw(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
 /**
  * @brief    activate the epoch in the dataplane
  * @param[in] api_op      api operation
- * @param[in] api_ctxt    transient state associated with this API
+ * @param[in] obj_ctxt    transient state associated with this API
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-subnet_entry::activate_epoch(api_op_t api_op, api_ctxt_t *api_ctxt) {
+subnet_entry::activate_epoch(api_op_t api_op, obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
 /**
  * @brief    this method is called on new object that needs to replace the
  *           old version of the object in the DBs
- * @param[in] old         old version of the object being swapped out
- * @param[in] api_ctxt    transient state associated with this API
+ * @param[in] orig_obj    old version of the unmodified object
+ * @param[in] obj_ctxt    transient state associated with this API
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-subnet_entry::update_db(api_base *old_obj, api_ctxt_t *api_ctxt) {
+subnet_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
