@@ -14,8 +14,12 @@ import (
 )
 
 var (
-	portNum   uint32
-	portPause string
+	portNum        uint32
+	portPause      string
+	portFecType    string
+	portAutoNeg    string
+	portMtu        uint32
+	portAdminState string
 )
 
 var portShowCmd = &cobra.Command{
@@ -36,6 +40,10 @@ func init() {
 	updateCmd.AddCommand(portCmd)
 	portCmd.Flags().Uint32Var(&portNum, "port", 1, "Specify port number")
 	portCmd.Flags().StringVar(&portPause, "pause", "none", "Specify pause - link, pfc, none")
+	portCmd.Flags().StringVar(&portFecType, "fec-type", "none", "Specify fec-type - rs, fc, none")
+	portCmd.Flags().StringVar(&portAutoNeg, "auto-neg", "disable", "Enable or disable auto-neg using enable | disable")
+	portCmd.Flags().StringVar(&portAdminState, "admin-state", "up", "Set port admin state - none, up, down")
+	portCmd.Flags().Uint32Var(&portMtu, "mtu", 0, "Specify port MTU")
 
 	showCmd.AddCommand(portShowCmd)
 	portShowCmd.Flags().Uint32Var(&portNum, "port", 1, "Specify port number")
@@ -68,7 +76,9 @@ func portShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func portUpdateCmdHandler(cmd *cobra.Command, args []string) {
-	if cmd.Flags().Changed("pause") == false || isPauseTypeValid(portPause) == false {
+	if cmd.Flags().Changed("pause") == false && cmd.Flags().Changed("fec-type") == false &&
+		cmd.Flags().Changed("auto-neg") == false && cmd.Flags().Changed("mtu") == false &&
+		cmd.Flags().Changed("admin-state") == false {
 		fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
 		return
 	}
@@ -77,7 +87,45 @@ func portUpdateCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd.Flags().Changed("port") {
 		halctlStr += ("--port " + fmt.Sprint(portNum) + " ")
 	}
-	halctlStr += ("--pause " + portPause)
+
+	if cmd.Flags().Changed("pause") == true {
+		if isPauseTypeValid(portPause) == false {
+			fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
+			return
+		}
+		halctlStr += ("--pause " + portPause + " ")
+	}
+
+	if cmd.Flags().Changed("fec-type") == true {
+		if isFecTypeValid(portFecType) == false {
+			fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
+			return
+		}
+		halctlStr += ("--fec-type " + portFecType + " ")
+	}
+
+	if cmd.Flags().Changed("auto-neg") == true {
+		if strings.Compare(portAutoNeg, "disable") == 0 {
+			halctlStr += ("--auto-neg " + portAutoNeg + " ")
+		} else if strings.Compare(portAutoNeg, "enable") == 0 {
+			halctlStr += ("--auto-neg " + portAutoNeg + " ")
+		} else {
+			fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
+			return
+		}
+	}
+
+	if cmd.Flags().Changed("admin-state") == true {
+		if isAdminStateValid(portAdminState) == false {
+			fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
+			return
+		}
+		halctlStr += ("--admin-state " + portAdminState + " ")
+	}
+
+	if cmd.Flags().Changed("mtu") == true {
+		halctlStr += ("--mtu " + fmt.Sprint(portMtu) + " ")
+	}
 
 	execCmd := strings.Fields(halctlStr)
 	v := &nmd.NaplesCmdExecute{
@@ -108,6 +156,32 @@ func isPauseTypeValid(str string) bool {
 	case "pfc":
 		return true
 	case "none":
+		return true
+	default:
+		return false
+	}
+}
+
+func isAdminStateValid(str string) bool {
+	switch str {
+	case "none":
+		return true
+	case "up":
+		return true
+	case "down":
+		return true
+	default:
+		return false
+	}
+}
+
+func isFecTypeValid(str string) bool {
+	switch str {
+	case "none":
+		return true
+	case "rs":
+		return true
+	case "fc":
 		return true
 	default:
 		return false

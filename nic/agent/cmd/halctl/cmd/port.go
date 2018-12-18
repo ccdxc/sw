@@ -19,8 +19,12 @@ import (
 )
 
 var (
-	portNum   uint32
-	portPause string
+	portNum        uint32
+	portPause      string
+	portFecType    string
+	portAutoNeg    string
+	portMtu        uint32
+	portAdminState string
 )
 
 var portClearStatsCmd = &cobra.Command{
@@ -72,6 +76,10 @@ func init() {
 	debugCmd.AddCommand(portDebugCmd)
 	portDebugCmd.Flags().Uint32Var(&portNum, "port", 1, "Specify port number")
 	portDebugCmd.Flags().StringVar(&portPause, "pause", "none", "Specify pause - link, pfc, none")
+	portDebugCmd.Flags().StringVar(&portFecType, "fec-type", "none", "Specify fec-type - rs, fc, none")
+	portDebugCmd.Flags().StringVar(&portAutoNeg, "auto-neg", "disable", "Enable or disable auto-neg using enable | disable")
+	portDebugCmd.Flags().StringVar(&portAdminState, "admin-state", "up", "Set port admin state - none, up, down")
+	portDebugCmd.Flags().Uint32Var(&portMtu, "mtu", 0, "Specify port MTU")
 }
 
 func handlePortDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
@@ -292,7 +300,7 @@ func portShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func portShowHeaderPrint() {
-	hdrLine := strings.Repeat("-", 120)
+	hdrLine := strings.Repeat("-", 130)
 	fmt.Println("MAC-Info: MAC ID/MAC Channel/Num lanes          Debounce: Debounce time in ms")
 	fmt.Println("FEC-Type: FC - FireCode, RS - ReedSolomon")
 	fmt.Println(hdrLine)
@@ -425,11 +433,57 @@ func portDebugCmdHandler(cmd *cobra.Command, args []string) {
 
 	success := true
 
-	if cmd.Flags().Changed("pause") == false || isPauseTypeValid(portPause) == false {
+	if cmd.Flags().Changed("pause") == false && cmd.Flags().Changed("fec-type") == false &&
+		cmd.Flags().Changed("auto-neg") == false && cmd.Flags().Changed("mtu") == false &&
+		cmd.Flags().Changed("admin-state") == false {
 		fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
 		return
 	}
-	pauseType := inputToPauseType(portPause)
+
+	pauseType := inputToPauseType("none")
+	fecType := inputToFecType("none")
+	adminState := inputToAdminState("none")
+	autoNeg := false
+	var mtu uint32
+
+	if cmd.Flags().Changed("pause") == true {
+		if isPauseTypeValid(portPause) == false {
+			fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
+			return
+		}
+		pauseType = inputToPauseType(portPause)
+	}
+
+	if cmd.Flags().Changed("fec-type") == true {
+		if isFecTypeValid(portFecType) == false {
+			fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
+			return
+		}
+		fecType = inputToFecType(portFecType)
+	}
+
+	if cmd.Flags().Changed("auto-neg") == true {
+		if strings.Compare(portAutoNeg, "disable") == 0 {
+			autoNeg = false
+		} else if strings.Compare(portAutoNeg, "enable") == 0 {
+			autoNeg = true
+		} else {
+			fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
+			return
+		}
+	}
+
+	if cmd.Flags().Changed("admin-state") == true {
+		if isAdminStateValid(portAdminState) == false {
+			fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
+			return
+		}
+		adminState = inputToAdminState(portAdminState)
+	}
+
+	if cmd.Flags().Changed("mtu") == true {
+		mtu = portMtu
+	}
 
 	client := halproto.NewPortClient(c.ClientConn)
 
@@ -467,6 +521,22 @@ func portDebugCmdHandler(cmd *cobra.Command, args []string) {
 			continue
 		}
 
+		if cmd.Flags().Changed("pause") == false {
+			pauseType = resp.GetSpec().GetPause()
+		}
+		if cmd.Flags().Changed("fec-type") == false {
+			fecType = resp.GetSpec().GetFecType()
+		}
+		if cmd.Flags().Changed("auto-neg") == false {
+			autoNeg = resp.GetSpec().GetAutoNegEnable()
+		}
+		if cmd.Flags().Changed("admin-state") == false {
+			adminState = resp.GetSpec().GetAdminState()
+		}
+		if cmd.Flags().Changed("mtu") == false {
+			mtu = resp.GetSpec().GetMtu()
+		}
+
 		var portSpec *halproto.PortSpec
 		portSpec = &halproto.PortSpec{
 			KeyOrHandle: &halproto.PortKeyHandle{
@@ -476,13 +546,13 @@ func portDebugCmdHandler(cmd *cobra.Command, args []string) {
 			},
 
 			PortType:      resp.GetSpec().GetPortType(),
-			AdminState:    resp.GetSpec().GetAdminState(),
+			AdminState:    adminState,
 			PortSpeed:     resp.GetSpec().GetPortSpeed(),
 			NumLanes:      resp.GetSpec().GetNumLanes(),
-			FecType:       resp.GetSpec().GetFecType(),
-			AutoNegEnable: resp.GetSpec().GetAutoNegEnable(),
+			FecType:       fecType,
+			AutoNegEnable: autoNeg,
 			DebounceTime:  resp.GetSpec().GetDebounceTime(),
-			Mtu:           resp.GetSpec().GetMtu(),
+			Mtu:           mtu,
 			MacStatsReset: false,
 			Pause:         pauseType,
 		}
@@ -510,6 +580,58 @@ func portDebugCmdHandler(cmd *cobra.Command, args []string) {
 
 	if success == true {
 		fmt.Printf("Update port succeeded\n")
+	}
+}
+
+func isAdminStateValid(str string) bool {
+	switch str {
+	case "none":
+		return true
+	case "up":
+		return true
+	case "down":
+		return true
+	default:
+		return false
+	}
+}
+
+func inputToAdminState(str string) halproto.PortAdminState {
+	switch str {
+	case "none":
+		return halproto.PortAdminState_PORT_ADMIN_STATE_NONE
+	case "up":
+		return halproto.PortAdminState_PORT_ADMIN_STATE_UP
+	case "down":
+		return halproto.PortAdminState_PORT_ADMIN_STATE_DOWN
+	default:
+		return halproto.PortAdminState_PORT_ADMIN_STATE_NONE
+	}
+}
+
+func isFecTypeValid(str string) bool {
+	switch str {
+	case "none":
+		return true
+	case "rs":
+		return true
+	case "fc":
+		return true
+	default:
+		return false
+	}
+}
+
+func inputToFecType(str string) halproto.PortFecType {
+	switch str {
+	case "none":
+		return halproto.PortFecType_PORT_FEC_TYPE_NONE
+	case "rs":
+		return halproto.PortFecType_PORT_FEC_TYPE_RS
+	case "fc":
+		return halproto.PortFecType_PORT_FEC_TYPE_FC
+	default:
+		return halproto.PortFecType_PORT_FEC_TYPE_NONE
 	}
 }
 
