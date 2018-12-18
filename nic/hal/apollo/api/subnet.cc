@@ -24,68 +24,13 @@ namespace api {
  * @{
  */
 
-/**
- * @brief    cleanup state maintained for this subnet including any hw entries
- *           we are holding on to
- */
-void
-subnet_entry::cleanup(void) {
-    // TODO: fix me
-    //SDK_SPINLOCK_DESTROY(&slock_);
-    // TODO: check if indices are valid before calling tbl mgmt. APIs
-    subnet_db()->subnet_idxr()->free(hw_id_);
-}
-
-/**
- * @brief    release all the s/w state associate with the given subnet, if any,
- *           and free the memory
- * @param[in] subnet     subnet to be freed
- * NOTE: h/w entries should have been cleaned up (by calling cleanup_hw()
- * before calling this
- */
-void
-subnet_entry::destroy(subnet_entry *subnet) {
-    subnet->cleanup();
-    subnet->~subnet_entry();
-}
-
-/**
- * @brief     initialize subnet entry with the given config
- * @param[in] api_ctxt API context carrying the configuration
- * @return    SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t
-subnet_entry::init_config(api_ctxt_t *api_ctxt) {
-    oci_subnet_t *oci_subnet = &api_ctxt->subnet_info;
-
+/**< @brief    constructor */
+subnet_entry::subnet_entry() {
     //SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_SHARED);
-    memcpy(&this->key_, &oci_subnet->key, sizeof(oci_subnet_key_t));
-    this->ht_ctxt_.reset();
-    return sdk::SDK_RET_OK;
-}
-
-/**
- * @brief    allocate h/w resources for this object
- * @return    SDK_RET_OK on success, failure status code on error
- */
-// TODO: this should ideally go to impl class
-sdk_ret_t
-subnet_entry::alloc_resources(void) {
-    if (subnet_db()->subnet_idxr()->alloc((uint32_t *)&this->hw_id_) !=
-            sdk::lib::indexer::SUCCESS) {
-        return sdk::SDK_RET_NO_RESOURCE;
-    }
-    return sdk::SDK_RET_OK;
-}
-
-/**
- * @brief     update/override the subnet object with given config
- * @param[in] api_ctxt API context carrying the configuration
- * @return    SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t
-subnet_entry::update_config(api_ctxt_t *api_ctxt) {
-    return sdk::SDK_RET_OK;
+    ht_ctxt_.reset();
+    hw_id_ = 0xFFFF;
+    lpm_base_addr_ = 0XFFFFFFFFFFFFFFFF;
+    policy_base_addr_ = 0XFFFFFFFFFFFFFFFF;
 }
 
 /**
@@ -103,7 +48,25 @@ subnet_entry::factory(oci_subnet_t *oci_subnet) {
         new (subnet) subnet_entry();
     }
     return subnet;
+}
 
+/**< @brief    destructor */
+subnet_entry::~subnet_entry() {
+    // TODO: fix me
+    //SDK_SPINLOCK_DESTROY(&slock_);
+}
+
+/**
+ * @brief    release all the s/w & h/w state associated with this object, if
+ *           any, and free the memory
+ * @param[in] subnet     subnet to be freed
+ * NOTE: h/w entries themselves should have been cleaned up (by calling
+ *       cleanup_hw() before calling this
+ */
+void
+subnet_entry::destroy(subnet_entry *subnet) {
+    subnet->free_resources_();
+    subnet->~subnet_entry();
 }
 
 #if 0
@@ -153,14 +116,75 @@ subnet_entry::process_get(api_ctxt_t *api_ctxt) {
 #endif
 
 /**
+ * @brief     initialize subnet entry with the given config
+ * @param[in] api_ctxt API context carrying the configuration
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+subnet_entry::init_config(api_ctxt_t *api_ctxt) {
+    oci_subnet_t *oci_subnet = &api_ctxt->subnet_info;
+
+    memcpy(&this->key_, &oci_subnet->key, sizeof(oci_subnet_key_t));
+    memcpy(&this->vr_mac_, &oci_subnet->vr_mac, sizeof(mac_addr_t));
+    // TODO: do we need to store vr_ip as well ? forgot now !!
+    this->ht_ctxt_.reset();
+    return sdk::SDK_RET_OK;
+}
+
+/**
+ * @brief     update/override the subnet object with given config
+ * @param[in] api_ctxt API context carrying the configuration
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+subnet_entry::update_config(api_ctxt_t *api_ctxt) {
+    return sdk::SDK_RET_OK;
+}
+
+/**
+ * @brief    allocate h/w resources for this object
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+// TODO: this should ideally go to impl class
+sdk_ret_t
+subnet_entry::alloc_resources_(void) {
+    if (subnet_db()->subnet_idxr()->alloc((uint32_t *)&this->hw_id_) !=
+            sdk::lib::indexer::SUCCESS) {
+        return sdk::SDK_RET_NO_RESOURCE;
+    }
+    return sdk::SDK_RET_OK;
+}
+
+/**
  * @brief    program all h/w tables relevant to this object except stage 0
- *           table(s), if any
+ *           table(s), if any, during creation of the object
  * @param[in] obj_ctxt    transient state associated with this API
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
 subnet_entry::program_hw(obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
+    // there is no h/w programming for subnet config but a h/w id is needed so
+    // we can use while programming vnics, routes etc.
+    this->alloc_resources_();
+    return sdk::SDK_RET_OK;
+}
+
+/**
+ * @brief     free h/w resources used by this object, if any
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+subnet_entry::free_resources_(void) {
+    if (hw_id_ != 0xFF) {
+        subnet_db()->subnet_idxr()->free(hw_id_);
+    }
+    if (lpm_base_addr_ != 0xFFFFFFFFFFFFFFFF) {
+        // TODO: free this block
+    }
+    if (policy_base_addr_ != 0xFFFFFFFFFFFFFFFF) {
+        // TODO: free this block
+    }
+    return sdk::SDK_RET_OK;
 }
 
 /**
@@ -336,55 +360,6 @@ subnet_state::subnet_free(subnet_entry *subnet) {
 }
 
 /** @} */    // end of OCI_SUBNET_STATE
-
-#if 0
-/**
- * @brief handle subnet create message
- *
- * @param[in] subnet subnet information
- * @return #SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t
-subnet_db::subnet_create(_In_ oci_subnet_t *oci_subnet) {
-    subnet_t *subnet;
-
-    if ((subnet = subnet_alloc_init(oci_subnet)) == NULL) {
-        return sdk::SDK_RET_OOM;
-    }
-    return sdk::SDK_RET_OK;
-}
-
-/**
- * @brief handle subnet delete API
- *
- * @param[in] subnet_key subnet key information
- * @return #SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t
-subnet_db::subnet_delete(_In_ oci_subnet_key_t *subnet_key) {
-    subnet_t *subnet;
-
-    if ((subnet = subnet_del_from_db(subnet_key)) == NULL) {
-        return sdk::SDK_RET_ENTRY_NOT_FOUND;
-    }
-    subnet_delete(subnet);
-
-    return sdk::SDK_RET_OK;
-}
-
-/**
- * @brief Uninitialize and free internal subnet structure
- *
- * @param[in] subnet subnet
- */
-void
-subnet_db::subnet_delete(_In_ subnet_t *subnet) {
-    if (subnet) {
-        subnet_cleanup(subnet);
-        subnet_free(subnet);
-    }
-}
-#endif
 
 }    // namespace api
 
