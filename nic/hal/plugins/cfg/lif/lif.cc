@@ -322,14 +322,6 @@ lif_qstate_map_init (LifSpec& spec, uint32_t hw_lif_id, lif_t *lif, bool dont_ze
     // Program if
     // - Its not hw
     // - Service lif
-#if 0
-    if ((g_hal_cfg.platform != HAL_PLATFORM_HAPS &&
-        g_hal_cfg.platform != HAL_PLATFORM_HW &&
-         g_hal_cfg.qemu != true) ||
-        (hw_lif_id >= SERVICE_LIF_START && hw_lif_id < SERVICE_LIF_END)) {
-        // make sure that when you are creating with hw_lif_id the lif is alloced
-        // already, otherwise this call may return an error
-#endif
     if (lif->qstate_pgm_in_hal) {
         if ((ec = lif_manager()->InitLIFQState(hw_lif_id, &qs_params, hint_cos)) < 0) {
             HAL_TRACE_ERR("Failed to initialize LIFQState: err_code : {}", ec);
@@ -576,8 +568,7 @@ lif_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
 
     // For NICmgr created lifs, hal doesn't have to do this init.
-    if (g_hal_cfg.platform != HAL_PLATFORM_HAPS &&
-        g_hal_cfg.platform != HAL_PLATFORM_HW &&
+    if (!is_platform_type_haps() && !is_platform_type_hw() &&
         g_hal_cfg.qemu != true) {
         // For rdma enabled Lifs, call RDMA specific init (allocates KT, PT, etc)
         if (lif->enable_rdma) {

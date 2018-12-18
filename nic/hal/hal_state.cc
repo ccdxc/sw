@@ -1450,6 +1450,7 @@ hal_state::hal_state(hal_obj_meta **obj_meta, hal_cfg_t *hal_cfg, shmmgr *mmgr)
         api_stats_ = (hal_stats_t *)HAL_CALLOC(HAL_MEM_ALLOC_API_STATS,
                                         sizeof(hal_stats_t) * HAL_API_MAX);
     }
+    platform_ = hal_cfg->platform;
     HAL_ASSERT_GOTO(api_stats_, error);
     return;
 

@@ -353,22 +353,22 @@ void PdClient::init(void)
 
     switch (platform_){
     case PLATFORM_SIM:
-        hal_cfg.platform = hal::HAL_PLATFORM_SIM;
+        hal_cfg.platform = platform_type_t::PLATFORM_TYPE_SIM;
         break;
     case PLATFORM_HW:
-        hal_cfg.platform = hal::HAL_PLATFORM_HW;
+        hal_cfg.platform = platform_type_t::PLATFORM_TYPE_HW;
         break;
     case PLATFORM_HAPS:
-        hal_cfg.platform = hal::HAL_PLATFORM_HAPS;
+        hal_cfg.platform = platform_type_t::PLATFORM_TYPE_HAPS;
         break;
     case PLATFORM_RTL:
-        hal_cfg.platform = hal::HAL_PLATFORM_RTL;
+        hal_cfg.platform = platform_type_t::PLATFORM_TYPE_RTL;
         break;
     case PLATFORM_MOCK:
-        hal_cfg.platform = hal::HAL_PLATFORM_MOCK;
+        hal_cfg.platform = platform_type_t::PLATFORM_TYPE_MOCK;
         break;
     default :
-        hal_cfg.platform = hal::HAL_PLATFORM_NONE;
+        hal_cfg.platform = platform_type_t::PLATFORM_TYPE_NONE;
         break;
     }
 

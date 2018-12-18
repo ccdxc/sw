@@ -127,7 +127,6 @@ std::string asic_pd_csr_dump(char *csr_str);
 std::string asic_csr_dump(char *csr_str);
 vector< tuple <std::string, std::string, std::string>> asic_csr_dump_reg(char *block_name, bool exlude_mem);
 vector<std::string> asic_csr_list_get(std::string path, int level);
-platform_type_t hal_platform_to_sdk_platform_type(hal_platform_t platform);
 
 }    // namespace pd
 }    // namespace hal

@@ -147,7 +147,6 @@ ipfix_init(uint16_t export_id, uint64_t pktaddr, uint16_t payload_start,
     uint8_t         pgm_offset = 0;
     uint32_t        qid = export_id;
     lif_id_t        lif_id = SERVICE_LIF_IPFIX;
-    hal_cfg_t       *hal_cfg = NULL;
     ipfix_qstate_t  qstate = { 0 };
 
     ret = lif_manager()->GetPCOffset("p4plus", "txdma_stage0.bin",
@@ -162,9 +161,7 @@ ipfix_init(uint16_t export_id, uint64_t pktaddr, uint16_t payload_start,
     qstate.ipfix_hdr_offset = payload_start;
     qstate.next_record_offset = qstate.ipfix_hdr_offset + 16;
 
-    hal_cfg = g_hal_state_pd->hal_cfg();
-    HAL_ASSERT(hal_cfg);
-    if (hal_cfg->platform != HAL_PLATFORM_HW) {
+    if (!is_platform_type_hw()) {
         // For SIM, HAPS and RTL mode we need to use a smaller range since
         // the full flow hash table walk takes too long. Also install fake flow
         // entries within that range
@@ -219,7 +216,7 @@ ipfix_module_init (hal_cfg_t *hal_cfg)
     }
 
     // no periodic doorbell in sim mode
-    if (hal_cfg->platform == hal::HAL_PLATFORM_SIM) {
+    if (is_platform_type_sim()) {
         return HAL_RET_OK;
     }
 

@@ -96,7 +96,6 @@ ht *hal_handle_id_ht(void);
 void hal_handle_cfg_db_lock(bool readlock, bool lock);
 hal_ret_t hal_cfg_db_open(cfg_op_t cfg_op);
 hal_ret_t hal_cfg_db_close(void);
-platform_type_t hal_platform_to_sdk_platform_type(hal_platform_t platform);
 
 }    // namespace hal
 
