@@ -1467,6 +1467,9 @@ class capri_parser:
                 continue
 
             ohi_start = ohi.start * 8 # byte->bit
+            if not isinstance(ohi.length, int):
+                # can be called for a variable len header, which cannot move to phv
+                return False
             ohi_length = ohi.length * 8
             if fld.offset >= ohi_start and (fld.offset+cf.width) <= (ohi_start+ohi_length):
                 cf.reset_ohi()
