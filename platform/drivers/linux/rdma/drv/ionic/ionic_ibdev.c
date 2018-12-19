@@ -101,6 +101,9 @@ MODULE_PARM_DESC(xxx_aq_idx, "XXX Check aq cindex matches polling completion.");
 static bool ionic_xxx_aq_dbell = true;
 module_param_named(xxx_aq_dbell, ionic_xxx_aq_dbell, bool, 0644);
 MODULE_PARM_DESC(xxx_aq_dbell, "XXX Enable ringing aq doorbell (to test handling of aq failure).");
+static int ionic_xxx_qid_skip = 512;
+module_param_named(xxx_qid_skip, ionic_xxx_qid_skip, int, 0644);
+MODULE_PARM_DESC(xxx_qid_skip, "XXX Skip every N'th qid");
 /* XXX remove above section for release */
 
 static bool ionic_dbgfs_enable = true; /* XXX false for release */
@@ -155,6 +158,16 @@ static struct workqueue_struct *ionic_evt_workq;
 
 /* access single-threaded thru ionic_dev_workq */
 static LIST_HEAD(ionic_ibdev_list);
+
+static void ionic_xxx_resid_skip(struct resid_bits *bits)
+{
+	int i = ionic_xxx_qid_skip - 1;
+
+	while (i < bits->inuse_size) {
+		set_bit(i, bits->inuse);
+		i += ionic_xxx_qid_skip;
+	}
+}
 
 static int ionic_validate_udata(struct ib_udata *udata,
 				size_t inlen, size_t outlen)
@@ -6176,6 +6189,11 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 					      dev->size_srqid));
 	if (rc)
 		goto err_qpid;
+
+	if (ionic_xxx_qid_skip > 0) {
+		ionic_xxx_resid_skip(&dev->inuse_qpid);
+		ionic_xxx_resid_skip(&dev->inuse_cqid);
+	}
 
 	/* skip reserved SMI and GSI qpids */
 	dev->inuse_qpid.next_id = 2;
