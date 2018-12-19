@@ -11,6 +11,7 @@
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <string.h>
 #include "pal.h"
 
 #define I2C_NODE "/dev/i2c-"
@@ -69,9 +70,12 @@ static int pal_i2c_write(const uint8_t *buffer, uint32_t size,
     int i;
     int fd;
     char filename[64];
-    uint8_t wbuf = addr;
+    uint8_t *wbuf = malloc(size + 1);
 
-    struct i2c_msg msgs[2];
+    wbuf[0] = addr;
+    memcpy(&wbuf[1], buffer, sizeof(size));
+
+    struct i2c_msg msgs[1];
     struct i2c_rdwr_ioctl_data msgset[1];
 
     snprintf(filename, 64, "%s%d", I2C_NODE, bus);
@@ -88,16 +92,11 @@ static int pal_i2c_write(const uint8_t *buffer, uint32_t size,
     
         msgs[0].addr = slaveaddr;
         msgs[0].flags = 0;
-        msgs[0].len = 1;
-        msgs[0].buf = &wbuf;
-
-        msgs[1].addr = slaveaddr;
-        msgs[1].flags = 0;
-        msgs[1].len = size;
-        msgs[1].buf = (uint8_t*)buffer;
+        msgs[0].len = size + 1;
+        msgs[0].buf = wbuf;
 
         msgset[0].msgs = msgs;
-        msgset[0].nmsgs = 2;
+        msgset[0].nmsgs = 1;
 
         if (ioctl(fd, I2C_RDWR, &msgset) < 0) {
             printf("ioctl(I2C_RDWR) in i2c_write failed\n");
