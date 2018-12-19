@@ -217,19 +217,22 @@ class subnet_entry : public api_base {
 
 private:
     /**< @brief    constructor */
-    subnet_entry() {}    // TODO: move this to .cc and initialize hw indices to invalid values !!
+    subnet_entry();
 
     /**< @brief    destructor */
-    ~subnet_entry() {}
-
-    /**< @brief     free all h/w resources allocated for this subnet */
-    void cleanup(void);
+    ~subnet_entry();
 
     /**
      * @brief    allocate h/w resources for this object
      * @return    SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t alloc_resources(void);
+    sdk_ret_t alloc_resources_(void);
+
+    /**
+     * @brief     free h/w resources used by this object, if any
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t free_resources_(void);
 
  private:
     oci_subnet_key_t    key_;               /**< subnet Key */

@@ -220,9 +220,6 @@ private:
     /**< @brief    destructor */
     ~vcn_entry();
 
-    /**< @brief     free all h/w resources allocated for this vcn */
-    void cleanup_(void);    // TODO: do we need this ?
-
     /**
      * @brief    allocate h/w resources for this object
      * @return    SDK_RET_OK on success, failure status code on error

@@ -151,7 +151,7 @@ vcn_entry::alloc_resources_(void) {
 
 /**
  * @brief    program all h/w tables relevant to this object except stage 0
- *           table(s), if any
+ *           table(s), if any, during creation of the object
  * @param[in] obj_ctxt    transient state associated with this API
  * @return   SDK_RET_OK on success, failure status code on error
  */
@@ -185,7 +185,7 @@ vcn_entry::free_resources_(void) {
 sdk_ret_t
 vcn_entry::cleanup_hw(obj_ctxt_t *obj_ctxt) {
     // there is no h/w programming for VCN config, so nothing to cleanup
-    return sdk::SDK_RET_INVALID_OP;
+    return sdk::SDK_RET_OK;
 }
 
 /**
@@ -342,55 +342,6 @@ vcn_state::vcn_find(oci_vcn_key_t *vcn_key) {
 }
 
 /** @} */    // end of OCI_VCN_STATE
-
-#if 0
-/**
- * @brief handle vcn create message
- *
- * @param[in] vcn vcn information
- * @return #SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t
-vcn_db::vcn_create(_In_ oci_vcn_t *oci_vcn) {
-    vcn_t *vcn;
-
-    if ((vcn = vcn_alloc_init(oci_vcn)) == NULL) {
-        return sdk::SDK_RET_OOM;
-    }
-    return sdk::SDK_RET_OK;
-}
-
-/**
- * @brief handle vcn delete API
- *
- * @param[in] vcn_key vcn key information
- * @return #SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t
-vcn_db::vcn_delete(_In_ oci_vcn_key_t *vcn_key) {
-    vcn_t *vcn;
-
-    if ((vcn = vcn_del_from_db(vcn_key)) == NULL) {
-        return sdk::SDK_RET_ENTRY_NOT_FOUND;
-    }
-    vcn_delete(vcn);
-
-    return sdk::SDK_RET_OK;
-}
-
-/**
- * @brief Uninitialize and free internal vcn structure
- *
- * @param[in] vcn vcn
- */
-void
-vcn_db::vcn_delete(_In_ vcn_t *vcn) {
-    if (vcn) {
-        vcn_cleanup(vcn);
-        vcn_free(vcn);
-    }
-}
-#endif
 
 }    // namespace api
 
