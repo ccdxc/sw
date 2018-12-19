@@ -44,6 +44,8 @@ sdk_port_breakout_mode_to_port_breakout_mode_spec(
                             port_breakout_mode_t breakout_mode);
 port_loopback_mode_t
 port_lb_mode_spec_to_sdk_port_lb_mode(::port::PortLoopBackMode loopback_mode);
+::port::PortLoopBackMode
+sdk_port_lp_mode_to_port_lp_mode_spec(port_loopback_mode_t loopback_mode);
 
 }    // namespace linkmgr
 

@@ -940,6 +940,7 @@ port_get (void *pd_p, port_args_t *args)
     args->user_admin_state = port_p->user_admin_state();
     args->pause       = port_p->pause();
     args->link_sm     = port_p->port_link_sm();
+    args->loopback_mode = port_p->loopback_mode();
 
     if (args->link_sm == port_link_sm_t::PORT_LINK_SM_AN_CFG &&
         port_p->auto_neg_enable() == true) {

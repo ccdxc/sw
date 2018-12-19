@@ -270,6 +270,21 @@ port_fec_type_spec_to_sdk_port_fec_type (::port::PortFecType fec_type)
     return port_fec_type_t::PORT_FEC_TYPE_NONE;
 }
 
+::port::PortLoopBackMode
+sdk_port_lp_mode_to_port_lp_mode_spec (port_loopback_mode_t loopback_mode)
+{
+    switch(loopback_mode) {
+    case port_loopback_mode_t::PORT_LOOPBACK_MODE_MAC:
+        return ::port::PORT_LOOPBACK_MODE_MAC;
+
+    case port_loopback_mode_t::PORT_LOOPBACK_MODE_PHY:
+        return ::port::PORT_LOOPBACK_MODE_PHY;
+
+    default:
+        return ::port::PORT_LOOPBACK_MODE_NONE;
+    }
+}
+
 port_loopback_mode_t
 port_lb_mode_spec_to_sdk_port_lb_mode (::port::PortLoopBackMode loopback_mode)
 {

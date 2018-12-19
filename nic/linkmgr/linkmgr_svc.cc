@@ -431,6 +431,10 @@ populate_port_get_response_spec (port_args_t *port_args,
         response->set_link_state(
             linkmgr::sdk_port_link_sm_to_port_link_sm_spec(port_args->link_sm));
 
+        // loopback mode
+        spec->set_loopback_mode (
+                linkmgr::sdk_port_lp_mode_to_port_lp_mode_spec(
+                                    port_args->loopback_mode));
         // MAC stats
         stats = response->mutable_stats();
 
