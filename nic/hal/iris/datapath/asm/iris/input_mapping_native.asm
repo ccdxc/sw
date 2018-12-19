@@ -44,6 +44,7 @@ native_ipv4_packet_common:
                    flow_lkp_metadata_ipv4_flags}, r1
 
   bbeq          k.esp_valid, TRUE, native_ipv4_esp_packet
+  phvwr         p.{tunnel_metadata_tunnel_type,tunnel_metadata_tunnel_vni}, r0
 
   seq           c1, k.roce_bth_valid, TRUE
   cmov          r1, c1, r0, k.udp_srcPort
@@ -67,6 +68,7 @@ native_ipv6_packet:
   phvwr         p.flow_lkp_metadata_pkt_type, r7
 
 native_ipv6_packet_common:
+  phvwr         p.{tunnel_metadata_tunnel_type,tunnel_metadata_tunnel_vni}, r0
   sub           r7, k.ipv6_payloadLen, k.tcp_dataOffset, 2
   phvwr         p.l4_metadata_tcp_data_len, r7
 
@@ -98,6 +100,7 @@ native_non_ip_packet:
   phvwr         p.flow_lkp_metadata_pkt_type, r7
 
 native_non_ip_packet_common:
+  phvwr         p.{tunnel_metadata_tunnel_type,tunnel_metadata_tunnel_vni}, r0
   phvwr         p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_MAC
   seq           c1, k.vlan_tag_valid, 1
   phvwr.c1      p.flow_lkp_metadata_lkp_dport, k.vlan_tag_etherType

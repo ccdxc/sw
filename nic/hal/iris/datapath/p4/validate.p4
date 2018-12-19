@@ -185,7 +185,7 @@ action validate_packet() {
     check_parser_errors();
 }
 
-@pragma stage 3
+@pragma stage 1
 table validate_packet {
     actions {
         validate_packet;

@@ -48,16 +48,17 @@ input_properties_mac_vlan:
   phvwrpair     p.{control_metadata_dst_lport,control_metadata_src_lport}, r1, \
                     p.flow_lkp_metadata_lkp_vrf, \
                     d.input_properties_mac_vlan_d.vrf
-  or            r1, d.input_properties_mac_vlan_d.mdest_flow_miss_action, \
-                    d.input_properties_mac_vlan_d.ipsg_enable, 2
-  or            r1, r1, d.input_properties_mac_vlan_d.rewrite_index, 3
+  or            r1, d.input_properties_mac_vlan_d.allow_flood, \
+                    d.input_properties_mac_vlan_d.mdest_flow_miss_action, 2
+  or            r1, r1, d.input_properties_mac_vlan_d.rewrite_index, 4
   phvwr         p.{flow_miss_metadata_rewrite_index, \
-                    control_metadata_ipsg_enable, \
-                    control_metadata_mdest_flow_miss_action}, r1
+                    control_metadata_mdest_flow_miss_action, \
+                    control_metadata_clear_promiscuous_repl, \
+                    control_metadata_allow_flood}, r1
   phvwr         p.control_metadata_flow_miss_qos_class_id, \
                     d.input_properties_mac_vlan_d.flow_miss_qos_class_id
-  phvwr         p.control_metadata_allow_flood, \
-                    d.input_properties_mac_vlan_d.allow_flood
+  phvwr         p.control_metadata_ipsg_enable, \
+                    d.input_properties_mac_vlan_d.ipsg_enable
   phvwr         p.{control_metadata_mirror_on_drop_en, \
                     control_metadata_mirror_on_drop_session_id}, \
                     d.{input_properties_mac_vlan_d.mirror_on_drop_en, \

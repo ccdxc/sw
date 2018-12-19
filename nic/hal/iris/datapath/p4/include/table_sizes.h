@@ -4,9 +4,6 @@
 #define INPUT_PROPERTIES_MAC_VLAN_TABLE_SIZE               1024
 #define DECODE_ROCE_OPCODE_TABLE_SIZE                      256
 #define L4_PROFILE_TABLE_SIZE                              256
-#define DDOS_SRC_VF_TABLE_SIZE                             256
-#define DDOS_SRC_DST_TABLE_SIZE                            512
-#define DDOS_SERVICE_TABLE_SIZE                            256
 #define FLOW_HASH_TABLE_SIZE                               2097152
 #define FLOW_HASH_OVERFLOW_TABLE_SIZE                      262144
 #define FLOW_TABLE_SIZE                                    1048576

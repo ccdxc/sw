@@ -50,8 +50,9 @@ action set_tm_oport_enforce_src_lport(vlan_strip, nports, egress_mirror_en,
                     egress_port5, egress_port6, egress_port7, egress_port8,
                     mnic_enforce_src_lport) {
 
-    if (mnic_enforce_src_lport != 0 and control_metadata.src_lport != mnic_enforce_src_lport) {
-            drop_packet ();
+    if ((mnic_enforce_src_lport != 0) and
+        (control_metadata.src_lport != mnic_enforce_src_lport)) {
+        drop_packet ();
     }
 
     set_tm_oport(vlan_strip, nports, egress_mirror_en,
@@ -60,9 +61,6 @@ action set_tm_oport_enforce_src_lport(vlan_strip, nports, egress_mirror_en,
                     egress_port1, egress_port2, egress_port3, egress_port4,
                     egress_port5, egress_port6, egress_port7, egress_port8,
                     mnic_enforce_src_lport);
-
-    // dummy ops to keep compiler happy
-    modify_field(control_metadata.src_lport, mnic_enforce_src_lport);
 }
 
 // When ever a new parameter is added to this set_tm_oport add to the
@@ -124,6 +122,7 @@ action set_tm_oport(vlan_strip, nports, egress_mirror_en,
     modify_field(scratch_metadata.flag, egress_mirror_en);
     modify_field(scratch_metadata.flag, encap_vlan_id_valid);
     modify_field(scratch_metadata.vlan_id, access_vlan_id);
+    modify_field(control_metadata.src_lport, mnic_enforce_src_lport);
 }
 
 action output_mapping_drop () {

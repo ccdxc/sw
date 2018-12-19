@@ -191,11 +191,9 @@ action l4_profile(icmp_normalization_en,
     if (p4plus_to_p4.valid == TRUE) {
         f_p4plus_to_p4_1();
     }
-
-    ip_normalization_checks();
 }
 
-@pragma stage 1
+@pragma stage 2
 table l4_profile {
     reads {
         l4_metadata.profile_idx : exact;
@@ -1904,38 +1902,24 @@ control process_session_state {
     }
 }
 
-#if 0
-@pragma stage 2
-table tcp_stateless_normalization {
-    actions {
-        tcp_stateless_normalization;
+action normalization() {
+    ip_normalization_checks();
+    if (l4_metadata.tcp_normalization_en == TRUE) {
+        tcp_stateless_normalization();
     }
-    default_action : tcp_stateless_normalization;
+    if (l4_metadata.icmp_normalization_en == TRUE) {
+        icmp_normalization();
+    }
 }
 
-@pragma stage 2
-table icmp_normalization {
+@pragma stage 3
+table normalization {
     actions {
-        icmp_normalization;
+        normalization;
     }
-    default_action : icmp_normalization;
-}
-
-@pragma stage 5
-table tcp_options_fixup {
-    actions {
-        tcp_options_fixup;
-    }
-    default_action : tcp_options_fixup;
+    default_action : normalization;
 }
 
 control process_normalization {
-    if (l4_metadata.tcp_normalization_en == TRUE) {
-        apply(tcp_stateless_normalization);
-    }
-    if (l4_metadata.icmp_normalization_en == TRUE) {
-        apply(icmp_normalization);
-    }
-    apply(tcp_options_fixup);
+    apply(normalization);
 }
-#endif

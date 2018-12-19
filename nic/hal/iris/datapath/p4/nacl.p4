@@ -70,7 +70,7 @@ action nacl_deny() {
     drop_packet();
 }
 
-@pragma stage 3
+@pragma stage 4
 table nacl {
     reads {
         // lkp_vrf identifies a segment and the vni/vlan derive a lkp_vrf.
@@ -117,7 +117,5 @@ table nacl {
 }
 
 control process_nacl {
-    if (control_metadata.nic_mode == NIC_MODE_SMART) {
-        apply(nacl);
-    }
+    apply(nacl);
 }

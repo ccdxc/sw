@@ -742,7 +742,7 @@ table p4plus_to_p4_1 {
     default_action : f_p4plus_to_p4_1;
 }
 
-@pragma stage 3
+@pragma stage 5
 table p4plus_to_p4_2 {
     actions {
         f_p4plus_to_p4_2;

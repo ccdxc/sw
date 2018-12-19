@@ -99,6 +99,9 @@ action native_ipv4_packet() {
         }
     }
     set_packet_type(ethernet.dstAddr);
+
+    modify_field(tunnel_metadata.tunnel_type, 0);
+    modify_field(tunnel_metadata.tunnel_vni, 0);
 }
 
 action native_ipv6_packet() {
@@ -120,6 +123,9 @@ action native_ipv6_packet() {
         modify_field(flow_lkp_metadata.lkp_dport, udp.dstPort);
     }
     set_packet_type(ethernet.dstAddr);
+
+    modify_field(tunnel_metadata.tunnel_type, 0);
+    modify_field(tunnel_metadata.tunnel_vni, 0);
 }
 
 action native_non_ip_packet() {
@@ -137,6 +143,9 @@ action native_non_ip_packet() {
     modify_field(flow_lkp_metadata.lkp_dport, 0);
     modify_field(flow_lkp_metadata.ip_ttl, 0);
     set_packet_type(ethernet.dstAddr);
+
+    modify_field(tunnel_metadata.tunnel_type, 0);
+    modify_field(tunnel_metadata.tunnel_vni, 0);
 }
 
 action input_mapping_miss() {
@@ -204,7 +213,7 @@ table input_mapping_native {
 //              overlay mode where one copy of packet is sent to uplink
 //              to GIPo with this VNID.
 action input_properties(vrf, dir, mdest_flow_miss_action, flow_miss_qos_class_id,
-                        flow_miss_idx, ipsg_enable, dscp, l4_profile_idx,
+                        flow_miss_idx, ipsg_enable, l4_profile_idx,
                         dst_lport, src_lport, allow_flood, bounce_vnid,
                         mirror_on_drop_en, mirror_on_drop_session_id,
                         clear_promiscuous_repl, nic_mode) {
@@ -230,8 +239,7 @@ action input_properties(vrf, dir, mdest_flow_miss_action, flow_miss_qos_class_id
     modify_field(control_metadata.nic_mode, scratch_metadata.flag);
 }
 
-// this table will only be programmed for uplinks and not for southbound enics
-@pragma stage 0
+@pragma stage 1
 @pragma overflow_table input_properties
 table input_properties_otcam {
     reads {
@@ -249,8 +257,7 @@ table input_properties_otcam {
     size : INPUT_PROPERTIES_OTCAM_TABLE_SIZE;
 }
 
-// this table will only be programmed for uplinks and not for southbound enics
-@pragma stage 0
+@pragma stage 1
 @pragma hash_type 0
 table input_properties {
     reads {
@@ -274,8 +281,9 @@ table input_properties {
 // Micro-VLAN derives the input_properties and the other entry with
 // User-VLAN will be used for dejavu check.
 action input_properties_mac_vlan(src_lif, src_lif_check_en,
-                                 vrf, dir, mdest_flow_miss_action,flow_miss_qos_class_id,
-                                 flow_miss_idx, ipsg_enable, dscp,
+                                 vrf, dir, mdest_flow_miss_action,
+                                 flow_miss_qos_class_id,
+                                 flow_miss_idx, ipsg_enable,
                                  l4_profile_idx, dst_lport, src_lport,
                                  allow_flood, rewrite_index,
                                  tunnel_rewrite_index, tunnel_vnid,
@@ -302,9 +310,9 @@ action input_properties_mac_vlan(src_lif, src_lif_check_en,
     modify_field(control_metadata.src_lif, src_lif);
 
     input_properties(vrf, dir, mdest_flow_miss_action, flow_miss_qos_class_id,
-                     flow_miss_idx, ipsg_enable, dscp, l4_profile_idx,
-                     dst_lport, src_lport, allow_flood, tunnel_vnid,
-                     mirror_on_drop_en, mirror_on_drop_session_id, 0, NIC_MODE_SMART);
+                     flow_miss_idx, ipsg_enable, l4_profile_idx, dst_lport,
+                     src_lport, allow_flood, tunnel_vnid, mirror_on_drop_en,
+                     mirror_on_drop_session_id, 0, NIC_MODE_SMART);
 
     // dummy ops to keep compiler happy
     modify_field(scratch_metadata.src_lif_check_en, src_lif_check_en);
@@ -336,7 +344,7 @@ action adjust_lkp_fields() {
 // NOTE: (user-vlan, mac) is only needed in end-host mode for dejavu
 //       checks
 // in direct-io mode, don't program any mode
-@pragma stage 0
+@pragma stage 1
 table input_properties_mac_vlan {
     reads {
         entry_inactive.input_mac_vlan : ternary;
