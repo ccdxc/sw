@@ -77,6 +77,8 @@ export class VeniceUIHttpInterceptor implements HttpInterceptor {
           } else {
             errMsg = errorReponse.message ? errorReponse.message : errorReponse.toString();
           }
+          // Addrssing https://pensando.atlassian.net/browse/VS-42 - in case server is changed, we want to ask user to re-logiin.          
+          Utility.getInstance().interceptHttpError(errorReponse);
           this.logger.error(`VeniceUIHttpInterceptor log: Request for ${req.urlWithParams} took ${elapsed} ms.`, this.getClassName());
           this.logger.error('VeniceUIHttpInterceptor log ' + errMsg, this.getClassName());
           return _throw(errorReponse);

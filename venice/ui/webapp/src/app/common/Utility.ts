@@ -9,6 +9,7 @@ import * as $ from 'jquery';
 import * as pluralize from 'pluralize';
 import { CategoryMapping } from '@sdk/v1/models/generated/category-mapping.model';
 import { AUTH_KEY, AUTH_BODY } from '@app/core/auth/auth.reducer';
+import { HttpErrorResponse } from '@angular/common/http';
 
 
 
@@ -118,7 +119,7 @@ export class Utility {
   }
 
   static getMacAddress(): string {
-    return 'XX:XX:XX:XX:XX:XX'.replace(/X/g, function() {
+    return 'XX:XX:XX:XX:XX:XX'.replace(/X/g, function () {
       return '0123456789ABCDEF'.charAt(Math.floor(Math.random() * 16));
     });
   }
@@ -240,7 +241,7 @@ export class Utility {
 
   // encode(decode) html text into html entity
   static decodeHtmlEntity(str: string) {
-    return str.replace(/&#(\d+);/g, function(match, dec) {
+    return str.replace(/&#(\d+);/g, function (match, dec) {
       return String.fromCharCode(dec);
     });
   }
@@ -254,7 +255,7 @@ export class Utility {
   }
 
   static escape(s): any {
-    return s.replace(/[&"<>]/g, function(c) {
+    return s.replace(/[&"<>]/g, function (c) {
       return {
         '&': '&amp;',
         '"': '&quot;',
@@ -603,14 +604,14 @@ export class Utility {
   public static stringInject(str, data): string {
     if (typeof str === 'string' && (data instanceof Array)) {
 
-      return str.replace(/({\d})/g, function(i) {
+      return str.replace(/({\d})/g, function (i) {
         return data[i.replace(/{/, '').replace(/}/, '')];
       });
     } else if (typeof str === 'string' && (data instanceof Object)) {
 
       for (const key in data) {
         if (data.hasOwnProperty(key)) {
-          return str.replace(/({([^}]+)})/g, function(i) {
+          return str.replace(/({([^}]+)})/g, function (i) {
             i.replace(/{/, '').replace(/}/, '');
             if (!data[key]) {
               return i;
@@ -833,5 +834,24 @@ export class Utility {
 
     return null;
   }
-}
 
+  /**
+   * This API will inform user to re-login to Venice. It is being used in this.getControllerService()
+   * @param errorReponse
+   */
+  interceptHttpError(errorReponse: any | HttpErrorResponse) {
+    if (errorReponse instanceof HttpErrorResponse) {
+      // TODO: for now, it is for GS0.3
+      const url = errorReponse.url;
+      const isLoginURL: boolean = (url.indexOf('login') >= 0);
+      if (errorReponse.status === 401 && !isLoginURL) {  // 401 is authentication error
+        const r = confirm('Authentication credentials are no longer valid. Please login again.');
+        if (r === true && this.getControllerService()) {
+            this.getControllerService().publish(Eventtypes.LOGOUT, {});
+        } else {
+          return;
+        }
+      }
+    }
+  }
+}
