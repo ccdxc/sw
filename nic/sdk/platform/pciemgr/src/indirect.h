@@ -39,7 +39,6 @@ struct pciehw_s;
 typedef struct pciehw_s pciehw_t;
 
 int pciehw_indirect_init(void);
-int pciehw_indirect_poll(void);
 void pciehw_indirect_dbg(int argc, char *argv[]);
 void pciehw_indirect_complete(indirect_entry_t *ientry);
 

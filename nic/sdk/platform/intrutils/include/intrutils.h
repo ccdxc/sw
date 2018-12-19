@@ -78,6 +78,7 @@ u_int64_t intr_pba_cfg_addr(const int lif);
 u_int64_t intr_state_addr(const int intr);
 
 void intr_drvcfg(const int intr);
+int intr_drvcfg_mask(const int intr, const int on);
 void intr_pba_cfg(const int lif, const int intrb, const size_t intrc);
 void intr_pba_clear(const int intr);
 void intr_msixcfg(const int intr,
@@ -96,6 +97,7 @@ void intr_fwcfg_legacy(const int intr,
 int intr_fwcfg_function_mask(const int intr, const int on);
 void intr_fwcfg_mode(const int intr, const int legacy, const int fmask);
 void intr_fwcfg_local(const int intr, const int on);
+int intr_config_local_msi(const int intr, u_int64_t msgaddr, u_int32_t msgdata);
 void intr_state(const int intr, intr_state_t *v);
 
 void intr_hwinit(void);

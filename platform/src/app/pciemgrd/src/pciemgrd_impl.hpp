@@ -11,6 +11,8 @@ typedef struct pciemgrenv_s {
     u_int8_t interactive:1;
     u_int8_t gold:1;
     u_int8_t reboot_on_hostdn:1;
+    u_int8_t poll_port:1;
+    u_int8_t poll_dev:1;
     u_int8_t enabled_ports;
     pciehdev_params_t params;
 } pciemgrenv_t;
@@ -23,5 +25,6 @@ int gold_loop(void);
 void logger_init(void);
 int open_hostports(void);
 void close_hostports(void);
+int intr_init(void);
 
 #endif /* __PCIEMGRD_IMPL_H__ */

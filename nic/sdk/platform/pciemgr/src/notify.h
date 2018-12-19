@@ -22,7 +22,6 @@ struct pciehw_s;
 typedef struct pciehw_s pciehw_t;
 
 int pciehw_notify_init(void);
-int pciehw_notify_poll(void);
 void pciehw_notify_dbg(int argc, char *argv[]);
 
 #endif /* __NOTIFY_H__ */

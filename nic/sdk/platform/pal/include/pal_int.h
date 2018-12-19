@@ -6,7 +6,6 @@
 #define _PAL_INT_H_
 
 #include <stdint.h>
-#include <stdbool.h>
 
 /* *Physical* address. The compiler can't tell us this because it only
  * deals with virtual addresses */
@@ -47,7 +46,7 @@ struct pal_int {
 	uint64_t		csr_paddr;
 	uint32_t		root_enable_mask;
 	uint64_t		root_csr_paddr;
-	bool			have_int_enable;
+	uint8_t			have_int_enable;
 	char			devname[256];
 	int			uio_dir_fd;
 	int			fd;

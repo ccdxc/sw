@@ -17,6 +17,7 @@
 #include "nic/sdk/platform/pal/include/pal.h"
 #include "nic/sdk/platform/pciemgrutils/include/pciesys.h"
 #include "nic/sdk/platform/pcietlp/include/pcietlp.h"
+#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 #include "pciehw_impl.h"
 #include "indirect.h"
 
@@ -39,12 +40,6 @@ indirect_int_addr(void)
 }
 
 static void
-indirect_int_set(const u_int64_t addr, const u_int32_t data)
-{
-    req_int_set(indirect_int_addr(), addr, data);
-}
-
-static void
 indirect_int_get(u_int64_t *addrp, u_int32_t *datap)
 {
     req_int_get(indirect_int_addr(), addrp, datap);
@@ -64,16 +59,6 @@ indirect_reason_str(const int reason)
 
     if (reason < nreasons) return reason_tab[reason].name;
     return "unknown";
-}
-
-static void
-indirect_init(void)
-{
-    pciehw_mem_t *phwmem = pciehw_get_hwmem();
-    u_int64_t pa;
-
-    pa = pal_mem_vtop(&phwmem->indirect_intr_dest[0]);
-    indirect_int_set(pa, 1);
 }
 
 /*****************************************************************
@@ -304,8 +289,10 @@ handle_indirect(indirect_entry_t *ientry)
 static indirect_entry_t indirect_entry[PCIEHW_NPORTS];
 
 int
-pciehw_indirect_intr(pciehw_port_t *p, const int port)
+pciehw_indirect_intr(const int port)
 {
+    pciehw_shmem_t *pshmem = pciehw_get_shmem();
+    pciehw_port_t *p = &pshmem->port[port];
     indirect_entry_t *ientry = &indirect_entry[port];
     const int pending = read_pending_indirect_entry(port, ientry);
 
@@ -321,6 +308,14 @@ pciehw_indirect_intr(pciehw_port_t *p, const int port)
     return 0;
 }
 
+int
+pciehw_indirect_intr_init(const int port,
+                          const u_int64_t msgaddr, const u_int32_t msgdata)
+{
+    return req_int_init(indirect_int_addr(), "indirect_intr", port,
+                        msgaddr, msgdata | 0x80000000);
+}
+
 /******************************************************************
  * apis
  */
@@ -328,7 +323,6 @@ pciehw_indirect_intr(pciehw_port_t *p, const int port)
 int
 pciehw_indirect_init(void)
 {
-    indirect_init();
     return 0;
 }
 
@@ -336,18 +330,30 @@ int
 pciehw_indirect_poll(void)
 {
     pciehw_mem_t *phwmem = pciehw_get_hwmem();
-    pciehw_shmem_t *pshmem = pciehw_get_shmem();
     int port;
 
     for (port = 0; port < PCIEHW_NPORTS; port++) {
         if (phwmem->indirect_intr_dest[port] != 0) {
-            pciehw_port_t *p = &pshmem->port[port];
-
             phwmem->indirect_intr_dest[port] = 0;
-            pciehw_indirect_intr(p, port);
+            pciehw_indirect_intr(port);
         }
     }
     return 0;
+}
+
+/*
+ * Arrange to have the notify interrupt written to memory,
+ * then we can poll memory locations to see if there is work to do.
+ */
+int
+pciehw_indirect_poll_init(void)
+{
+    pciehw_mem_t *phwmem = pciehw_get_hwmem();
+    const int port = 0;
+    const u_int64_t msgaddr = pal_mem_vtop(&phwmem->indirect_intr_dest[0]);
+    const u_int32_t msgdata = 1;
+
+    return req_int_init(indirect_int_addr(), "indirect_intr", port, msgaddr, msgdata);
 }
 
 /******************************************************************

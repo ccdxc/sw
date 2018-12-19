@@ -306,27 +306,10 @@ dev_evhandler(const pciehdev_eventdata_t *evd)
     pciemgrs_msgfree(m);
 }
 
-static void
-server_poll(void *arg)
-{
-    pciemgrenv_t *pme = pciemgrenv_get();
-
-    // poll for port events
-    for (int port = 0; port < PCIEPORT_NPORTS; port++) {
-        if (pme->enabled_ports & (1 << port)) {
-            pcieport_poll(port);
-        }
-    }
-
-    // poll for device events
-    pciehdev_poll();
-}
-
 int
 server_loop(void)
 {
     pciemgrenv_t *pme = pciemgrenv_get();
-    evutil_timer timer;
     int r = 0;
 
     logger_init();
@@ -344,6 +327,7 @@ server_loop(void)
         pciesys_logerror("pciehdev_register_event_handler failed %d\n", r);
         goto close_dev_error_out;
     }
+    intr_init();
 
 #ifdef __aarch64__
     // connect to delphi
@@ -351,7 +335,6 @@ server_loop(void)
 #endif
 
     pciemgrs_open(NULL, pciemgr_msg_cb);
-    evutil_timer_start(&timer, server_poll, NULL, 0.01, 0.01);
     pciesys_loginfo("pciemgrd ready\n");
     evutil_run();
     pciemgrs_close();

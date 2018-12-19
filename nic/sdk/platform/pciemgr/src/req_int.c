@@ -45,3 +45,61 @@ req_int_get(const u_int64_t reg, u_int64_t *addrp, u_int32_t *datap)
     *addrp = in.addrdw << 2;
     *datap = in.data;
 }
+
+/*
+ * The pcie request hardware provides a single base register
+ * CFG_TGT_REQ_*_INT.addrdw to configure notify interrupts.
+ * Each per-port interrupt is sent to the address
+ * (CFG_TGT_REQ_*_INT.adddw << 2) + (port * 4),
+ * and the data is a constant for all ports from CFG_TGT_REQ_*_INT.data.
+ *
+ * This routine provides the abstraction that we can configure each
+ * port independently.  When the first port is configured we set the
+ * base port0 values for msgaddr0/msgdata0 and configure the hw to match.
+ * Subsequent ports msgaddr/data are validated to be sure they match
+ * what the hw will do.
+ */
+int
+req_int_init(const u_int64_t reg, const char *label,
+             const int port, u_int64_t msgaddr, u_int32_t msgdata)
+{
+    u_int64_t msgaddr0;
+    u_int32_t msgdata0;
+    int r = 0;
+
+    /* validate port is within range */
+    if (port < 0 || port >= PCIEHW_NPORTS) {
+        pciesys_logerror("%s port%d invalid port\n", label, port);
+        return -1;
+    }
+
+    /*
+     * First time through set msgaddr0/data0 and hw to match.
+     * Doesn't matter which port we configure first,
+     * but subsequent ports must follow the pattern
+     *     msgaddr = msgaddr0 + (port * 4)
+     *     msgdata = msgdata0
+     */
+    req_int_get(reg, &msgaddr0, &msgdata0);
+    if (port == 0 || msgaddr0 == 0) {
+        msgaddr0 = msgaddr - (port * 4);
+        msgdata0 = msgdata;
+        req_int_set(reg, msgaddr0, msgdata0);
+    }
+
+    if (msgaddr != msgaddr0 + (port * 4)) {
+        pciesys_logerror("%s port%d "
+                         "msgaddr 0x%" PRIx64 " doesn't align with port0 0x%" PRIx64 "\n",
+                         label, port,
+                         msgaddr, msgaddr0);
+        r = -1;
+    }
+    if (msgdata != msgdata0) {
+        pciesys_logerror("%s port%d "
+                         "msgdata 0x%x doesn't match port0 0x%x\n",
+                         label, port,
+                         msgdata, msgdata0);
+        r = -1;
+    }
+    return r;
+}

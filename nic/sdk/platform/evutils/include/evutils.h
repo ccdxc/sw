@@ -54,6 +54,11 @@ void evutil_stop(void);
 void evutil_add_fd(int fd, evutil_cb_t *rdcb, evutil_cb_t *wrcb, void *cbarg);
 void evutil_remove_fd(const int fd);
 
+struct pal_int;
+void evutil_add_pal_int(struct pal_int *pal_int,
+                        evutil_cb_t *isrcb, void *cbarg);
+void evutil_remove_pal_int(struct pal_int *pal_int);
+
 /*
  * Relative timers: Runs after I/O handlers
  */

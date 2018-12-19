@@ -3,7 +3,7 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   := pciemgrd-gold.bin
 MODULE_SOLIBS   := pciemgr pciemgrutils pciehdevices pcieport pcietlp \
-                   intrutils cfgspace pal misc
+                   intrutils cfgspace evutils pal misc
 MODULE_INCS     := ${MODULE_SRC_DIR}/../include
 MODULE_FLAGS    := -DPCIEMGRD_GOLD
 MODULE_SRCS     := ${MODULE_SRC_DIR}/pciemgrd.cc \

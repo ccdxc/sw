@@ -159,6 +159,21 @@ intr_drvcfg(const int intr)
     pal_reg_wr32(pa + offsetof(intr_drvcfg_t, coal_curr), 0);
 }
 
+/*
+ * Set the drvcfg_mask for this interrupt resource.
+ * Return the previous value of the mask so caller can
+ * restore to previous value if desired.
+ */
+int
+intr_drvcfg_mask(const int intr, const int on)
+{
+    const u_int64_t pa = intr_drvcfg_addr(intr);
+    const int omask = pal_reg_rd32(pa + offsetof(intr_drvcfg_t, mask));
+
+    pal_reg_wr32(pa + offsetof(intr_drvcfg_t, mask), on);
+    return omask;
+}
+
 void
 intr_pba_clear(const int intr)
 {
@@ -301,6 +316,23 @@ intr_fwcfg_mode(const int intr, const int legacy, const int fmask)
         pal_reg_wr32w(pa, v.w, NWORDS(v.w));
     }
     intr_fwcfg_function_mask(intr, fmask);
+}
+
+int
+intr_config_local_msi(const int intr, u_int64_t msgaddr, u_int32_t msgdata)
+{
+    /* lif,port unused for local intrs */
+    intr_fwcfg_msi(intr, 0, 0);
+    /* allow local interrupt destination */
+    intr_fwcfg_local(intr, 1);
+    /* set msgaddr/data, unmask at msixcfg */
+    intr_msixcfg(intr, msgaddr, msgdata, 0);
+    /* default drvcfg settings */
+    intr_drvcfg(intr);
+    /* unmask at drvcfg */
+    intr_drvcfg_mask(intr, 0);
+
+    return 0;
 }
 
 void

@@ -34,6 +34,16 @@ void pciehw_event_hostup(const int port, const int gen, const int width);
 void pciehw_event_hostdn(const int port);
 void pciehw_event_buschg(const int port, const u_int8_t secbus);
 
+int pciehw_notify_poll_init(void);
+int pciehw_notify_poll(void);
+int pciehw_notify_intr_init(const int port, u_int64_t msgaddr, u_int32_t msgdata);
+int pciehw_notify_intr(const int port);
+
+int pciehw_indirect_poll_init(void);
+int pciehw_indirect_poll(void);
+int pciehw_indirect_intr_init(const int port, u_int64_t msgaddr, u_int32_t msgdata);
+int pciehw_indirect_intr(const int port);
+
 #define AXIMSTF_TLP     0x1
 #define AXIMSTF_IND     0x2
 #define AXIMSTF_RAW     0x4

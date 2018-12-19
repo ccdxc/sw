@@ -21,6 +21,7 @@
 #include "nic/sdk/platform/cfgspace/include/cfgspace.h"
 #include "nic/sdk/platform/pciehdevices/include/pciehdevices.h"
 #include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
+#include "nic/sdk/platform/evutils/include/evutils.h"
 #include "nic/sdk/platform/pciemgr/include/pciehw.h"
 #include "nic/sdk/platform/pciemgr/include/pciehw_dev.h"
 #include "nic/sdk/platform/pcieport/include/pcieport.h"
@@ -479,6 +480,10 @@ cmd_poll(int argc, char *argv[])
         }
     }
 
+    /* Poll mode for these events. */
+    pciehw_notify_poll_init();
+    pciehw_indirect_poll_init();
+
     osigint  = signal(SIGINT,  polling_sighand);
     osigterm = signal(SIGTERM, polling_sighand);
 
@@ -512,6 +517,24 @@ cmd_poll(int argc, char *argv[])
 
     signal(SIGINT,  osigint);
     signal(SIGTERM, osigterm);
+}
+
+static void
+cmd_run(int argc, char *argv[])
+{
+    int opt;
+
+    getopt_reset(1, 1);
+    while ((opt = getopt(argc, argv, "")) != -1) {
+        switch (opt) {
+        }
+    }
+
+    intr_init();
+
+    printf("Running, ^C to exit...\n");
+    evutil_run();
+    printf("Running stopped\n");
 }
 
 static int exit_request;
@@ -552,6 +575,7 @@ static cmd_t cmdtab[] = {
     CMDENT(show, "show device info", ""),
     CMDENT(cfg, "show cfg info for device", "[-m] <vdev> ..."),
     CMDENT(poll, "poll for intrs", ""),
+    CMDENT(run, "run and wait for intrs", ""),
     CMDENT(dbg, "invoke debug interface", ""),
     CMDENT(exit, "exit program", ""),
     CMDENT(quit, "exit program", ""),

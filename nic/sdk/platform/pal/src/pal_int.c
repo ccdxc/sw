@@ -583,7 +583,7 @@ int pal_int_open_msi(struct pal_int *pal_int, uint64_t *msgaddr,
 	memcpy(&hi, &buf[sizeof(*msgaddr) / 2], sizeof(*msgaddr) / 2);
 	*msgaddr = (int64_t)hi << 32 | lo;
 	memcpy(msgdata, &buf[sizeof(msgaddr)], sizeof(*msgdata));
-	return 0;
+	return pal_int->fd;
 }
 
 /*
@@ -627,4 +627,9 @@ int pal_int_end(struct pal_int *pal_int)
 {
 	enable_intr(pal_int);
 	return 0;
+}
+
+int pal_int_fd(struct pal_int *pal_int)
+{
+	return pal_int->fd;
 }

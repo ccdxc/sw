@@ -16,6 +16,7 @@
 
 #include "platform/include/common/pci_ids.h"
 #include "nic/sdk/platform/pal/include/pal.h"
+#include "nic/sdk/platform/evutils/include/evutils.h"
 #include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 #include "nic/sdk/platform/pciemgrutils/include/pciesys.h"
 #include "nic/sdk/platform/pcieport/include/pcieport.h"
@@ -166,6 +167,81 @@ close_hostports(void)
     }
 }
 
+static void
+intr_poll(void *arg)
+{
+    pciemgrenv_t *pme = pciemgrenv_get();
+
+    // poll for port events
+    if (pme->poll_port) {
+        for (int port = 0; port < PCIEPORT_NPORTS; port++) {
+            if (pme->enabled_ports & (1 << port)) {
+                pcieport_poll(port);
+            }
+        }
+    }
+
+    // poll for device events
+    if (pme->poll_dev) {
+        pciehdev_poll();
+    }
+}
+
+static void
+notify_intr(void *arg)
+{
+    pciehw_notify_intr(0);
+}
+
+static void
+indirect_intr(void *arg)
+{
+    pciehw_indirect_intr(0);
+}
+
+int
+intr_init(void)
+{
+    pciemgrenv_t *pme = pciemgrenv_get();
+    int need_poll_timer = 0;
+
+    if (pme->poll_port) {
+        need_poll_timer = 1;
+    } else {
+        // XXX need to get port intr connected
+        need_poll_timer = 1;
+    }
+    if (pme->poll_dev) {
+        pciehw_notify_poll_init();
+        pciehw_indirect_poll_init();
+        need_poll_timer = 1;
+    } else {
+        uint64_t msgaddr;
+        uint32_t msgdata;
+
+        static struct pal_int notifyint;
+        pal_int_open_msi(&notifyint, &msgaddr, &msgdata);
+        evutil_add_pal_int(&notifyint, notify_intr, NULL);
+        pciesys_logdebug("intr_init notify "
+                         "msgaddr 0x%" PRIx64 " msgdata 0x%" PRIx32 "\n",
+                         msgaddr, msgdata);
+        pciehw_notify_intr_init(0, msgaddr, msgdata);
+
+        static struct pal_int indirectint;
+        pal_int_open_msi(&indirectint, &msgaddr, &msgdata);
+        evutil_add_pal_int(&indirectint, indirect_intr, NULL);
+        pciesys_logdebug("intr_init indirect "
+                         "msgaddr 0x%" PRIx64 " msgdata 0x%" PRIx32 "\n",
+                         msgaddr, msgdata);
+        pciehw_indirect_intr_init(0, msgaddr, msgdata);
+    }
+    if (need_poll_timer) {
+        static evutil_timer timer;
+        evutil_timer_start(&timer, intr_poll, NULL, 0.01, 0.01);
+    }
+    return 0;
+}
+
 static u_int64_t
 getenv_override_ull(const char *label, const char *name, const u_int64_t def)
 {
@@ -192,6 +268,8 @@ pciemgrd_params(pciemgrenv_t *pme)
                                                pme->reboot_on_hostdn);
     pme->enabled_ports = pciemgrd_param_ull("PCIE_ENABLED_PORTS",
                                             pme->enabled_ports);
+    pme->poll_port = pciemgrd_param_ull("PCIE_POLL_PORT", pme->poll_port);
+    pme->poll_dev = pciemgrd_param_ull("PCIE_POLL_DEV", pme->poll_dev);
 }
 
 int
@@ -232,6 +310,8 @@ main(int argc, char *argv[])
 
     /* on asic single port, on haps 2 ports enabled */
     pme->enabled_ports = pal_is_asic() ? 0x1 : 0x5;
+    pme->poll_port = 1;
+    pme->poll_dev = 0;
     while ((opt = getopt(argc, argv, "b:Cde:FGiI:P:V:D:R:")) != -1) {
         switch (opt) {
         case 'b':

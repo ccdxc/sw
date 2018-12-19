@@ -15,4 +15,8 @@ req_int_set(const u_int64_t reg, const u_int64_t addr, const u_int32_t data);
 void
 req_int_get(const u_int64_t reg, u_int64_t *addrp, u_int32_t *datap);
 
+int
+req_int_init(const u_int64_t reg, const char *label,
+             const int port, u_int64_t msgaddr, u_int32_t msgdata);
+
 #endif /* __REQ_INT_H__ */

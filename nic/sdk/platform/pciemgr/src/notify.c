@@ -17,6 +17,7 @@
 #include "nic/sdk/platform/pal/include/pal.h"
 #include "nic/sdk/platform/pciemgrutils/include/pciesys.h"
 #include "nic/sdk/platform/pcietlp/include/pcietlp.h"
+#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 #include "pciehw_impl.h"
 #include "notify.h"
 
@@ -51,12 +52,6 @@ notify_int_addr(void)
 {
     return (CAP_ADDR_BASE_PXB_PXB_OFFSET +
             CAP_PXB_CSR_CFG_TGT_REQ_NOTIFY_INT_BYTE_OFFSET);
-}
-
-static void
-notify_int_set(const u_int64_t addr, const u_int32_t data)
-{
-    req_int_set(notify_int_addr(), addr, data);
 }
 
 static void
@@ -185,13 +180,8 @@ notify_ring_init(const int port)
 static void
 notify_init(void)
 {
-    pciehw_mem_t *phwmem = pciehw_get_hwmem();
     pciehw_shmem_t *pshmem = pciehw_get_shmem();
-    u_int64_t pa;
     u_int32_t maxents, ring_size;
-
-    pa = pal_mem_vtop(&phwmem->notify_intr_dest[0]);
-    notify_int_set(pa, 1);
 
     maxents = NOTIFY_NENTRIES;
 
@@ -314,7 +304,7 @@ pciehw_notify_init(void)
     return 0;
 }
 
-static int
+int
 pciehw_notify_intr(const int port)
 {
     pciehw_mem_t *phwmem = pciehw_get_hwmem();
@@ -325,6 +315,7 @@ pciehw_notify_intr(const int port)
     int pi, ci, i, endidx;
     u_int32_t pici_delta;
 
+    p->notify_intr++;
     notify_get_masked_pici(port, &pi, &ci, ring_mask);
 
     if (ci == pi) {
@@ -364,6 +355,16 @@ pciehw_notify_intr(const int port)
     return 0;
 }
 
+/*
+ * CFG_TGT_REQ_NOTIFY_INT
+ */
+int
+pciehw_notify_intr_init(const int port, u_int64_t msgaddr, u_int32_t msgdata)
+{
+    return req_int_init(notify_int_addr(), "notify_intr", port,
+                        msgaddr, msgdata | 0x80000000);
+}
+
 int
 pciehw_notify_poll(void)
 {
@@ -377,6 +378,21 @@ pciehw_notify_poll(void)
         }
     }
     return 0;
+}
+
+/*
+ * Arrange to have the notify interrupt written to memory,
+ * then we can poll memory locations to see if there is work to do.
+ */
+int
+pciehw_notify_poll_init(void)
+{
+    pciehw_mem_t *phwmem = pciehw_get_hwmem();
+    const int port = 0;
+    const u_int64_t msgaddr = pal_mem_vtop(&phwmem->notify_intr_dest[0]);
+    const u_int32_t msgdata = 1;
+
+    return req_int_init(notify_int_addr(), "notify_intr", port, msgaddr, msgdata);
 }
 
 /******************************************************************

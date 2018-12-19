@@ -86,6 +86,7 @@ pcieport_link_init(void)
 static int
 pcieport_already_init(void)
 {
+#ifdef __aarch64__
     pcieport_info_t *pi = pcieport_info_get();
     pcieport_t *p = &pi->pcieport[0];
 
@@ -96,6 +97,7 @@ pcieport_already_init(void)
     if (pcieport_get_ltssm_en(p)) {
         return 1;
     }
+#endif
     return 0;
 }
 
