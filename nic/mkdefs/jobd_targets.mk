@@ -114,7 +114,7 @@ jobd/dol/telemetry: ${JOBD_PREREQS}
 
 .PHONY: jobd/dol/p4pt
 jobd/dol/p4pt: ${JOBD_PREREQS}
-	${NICDIR}/run.py ${COVERAGE_OPTS} --topo p4pt --feature p4pt
+	${NICDIR}/run.py ${COVERAGE_OPTS} --modellogs --topo p4pt --feature p4pt
 
 .PHONY: jobd/dol/app_redir
 jobd/dol/app_redir: ${JOBD_PREREQS}
