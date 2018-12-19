@@ -304,7 +304,7 @@ func (s *sworkloadSvc_workloadBackend) regWatchersFunc(ctx context.Context, logg
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "workload.Endpoint")
 						return nil
 					}
-					in, ok := ev.Object.(*workload.Endpoint)
+					evin, ok := ev.Object.(*workload.Endpoint)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -312,6 +312,12 @@ func (s *sworkloadSvc_workloadBackend) regWatchersFunc(ctx context.Context, logg
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*workload.Endpoint)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "workload", "v1")
 
 					strEvent := &workload.AutoMsgEndpointWatchHelper_WatchEvent{
@@ -397,7 +403,7 @@ func (s *sworkloadSvc_workloadBackend) regWatchersFunc(ctx context.Context, logg
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "workload.Workload")
 						return nil
 					}
-					in, ok := ev.Object.(*workload.Workload)
+					evin, ok := ev.Object.(*workload.Workload)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -405,6 +411,12 @@ func (s *sworkloadSvc_workloadBackend) regWatchersFunc(ctx context.Context, logg
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*workload.Workload)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "workload", "v1")
 
 					strEvent := &workload.AutoMsgWorkloadWatchHelper_WatchEvent{

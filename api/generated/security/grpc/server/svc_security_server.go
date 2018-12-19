@@ -620,7 +620,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "security.SecurityGroup")
 						return nil
 					}
-					in, ok := ev.Object.(*security.SecurityGroup)
+					evin, ok := ev.Object.(*security.SecurityGroup)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -628,6 +628,12 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*security.SecurityGroup)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "security", "v1")
 
 					strEvent := &security.AutoMsgSecurityGroupWatchHelper_WatchEvent{
@@ -713,7 +719,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "security.SGPolicy")
 						return nil
 					}
-					in, ok := ev.Object.(*security.SGPolicy)
+					evin, ok := ev.Object.(*security.SGPolicy)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -721,6 +727,12 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*security.SGPolicy)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "security", "v1")
 
 					strEvent := &security.AutoMsgSGPolicyWatchHelper_WatchEvent{
@@ -806,7 +818,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "security.App")
 						return nil
 					}
-					in, ok := ev.Object.(*security.App)
+					evin, ok := ev.Object.(*security.App)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -814,6 +826,12 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*security.App)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "security", "v1")
 
 					strEvent := &security.AutoMsgAppWatchHelper_WatchEvent{
@@ -899,7 +917,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "security.FirewallProfile")
 						return nil
 					}
-					in, ok := ev.Object.(*security.FirewallProfile)
+					evin, ok := ev.Object.(*security.FirewallProfile)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -907,6 +925,12 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*security.FirewallProfile)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "security", "v1")
 
 					strEvent := &security.AutoMsgFirewallProfileWatchHelper_WatchEvent{
@@ -992,7 +1016,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "security.Certificate")
 						return nil
 					}
-					in, ok := ev.Object.(*security.Certificate)
+					evin, ok := ev.Object.(*security.Certificate)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -1000,6 +1024,12 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*security.Certificate)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "security", "v1")
 
 					strEvent := &security.AutoMsgCertificateWatchHelper_WatchEvent{
@@ -1085,7 +1115,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "security.TrafficEncryptionPolicy")
 						return nil
 					}
-					in, ok := ev.Object.(*security.TrafficEncryptionPolicy)
+					evin, ok := ev.Object.(*security.TrafficEncryptionPolicy)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -1093,6 +1123,12 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*security.TrafficEncryptionPolicy)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "security", "v1")
 
 					strEvent := &security.AutoMsgTrafficEncryptionPolicyWatchHelper_WatchEvent{

@@ -426,7 +426,7 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regWatchersFunc(ctx context.Context, l
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "{{$pkgname}}.{{.}}")
 						return nil
 					}
-					in, ok := ev.Object.(*{{$pkgname}}.{{.}})
+					evin, ok := ev.Object.(*{{$pkgname}}.{{.}})
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -434,6 +434,12 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regWatchersFunc(ctx context.Context, l
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*{{$pkgname}}.{{.}})
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "{{$svcprefix}}", "{{$svcver}}")
 					{{$crudname := .}}{{with (index $storageTransformers.Map (getWatchHelperName .))}}{{if .HasTransformers}}{
 						txin, err := {{$pkgname}}.Storage{{$crudname}}Transformer.TransformFromStorage(nctx, *in)

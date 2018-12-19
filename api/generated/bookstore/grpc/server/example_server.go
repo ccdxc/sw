@@ -2609,7 +2609,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "bookstore.Order")
 						return nil
 					}
-					in, ok := ev.Object.(*bookstore.Order)
+					evin, ok := ev.Object.(*bookstore.Order)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -2617,6 +2617,12 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*bookstore.Order)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "bookstore", "v1")
 
 					strEvent := &bookstore.AutoMsgOrderWatchHelper_WatchEvent{
@@ -2702,7 +2708,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "bookstore.Book")
 						return nil
 					}
-					in, ok := ev.Object.(*bookstore.Book)
+					evin, ok := ev.Object.(*bookstore.Book)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -2710,6 +2716,12 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*bookstore.Book)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "bookstore", "v1")
 
 					strEvent := &bookstore.AutoMsgBookWatchHelper_WatchEvent{
@@ -2795,7 +2807,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "bookstore.Publisher")
 						return nil
 					}
-					in, ok := ev.Object.(*bookstore.Publisher)
+					evin, ok := ev.Object.(*bookstore.Publisher)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -2803,6 +2815,12 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*bookstore.Publisher)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "bookstore", "v1")
 
 					strEvent := &bookstore.AutoMsgPublisherWatchHelper_WatchEvent{
@@ -2888,7 +2906,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "bookstore.Store")
 						return nil
 					}
-					in, ok := ev.Object.(*bookstore.Store)
+					evin, ok := ev.Object.(*bookstore.Store)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -2896,6 +2914,12 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*bookstore.Store)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "bookstore", "v1")
 
 					strEvent := &bookstore.AutoMsgStoreWatchHelper_WatchEvent{
@@ -2981,7 +3005,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "bookstore.Coupon")
 						return nil
 					}
-					in, ok := ev.Object.(*bookstore.Coupon)
+					evin, ok := ev.Object.(*bookstore.Coupon)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -2989,6 +3013,12 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*bookstore.Coupon)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "bookstore", "v1")
 
 					strEvent := &bookstore.AutoMsgCouponWatchHelper_WatchEvent{
@@ -3074,7 +3104,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "bookstore.Customer")
 						return nil
 					}
-					in, ok := ev.Object.(*bookstore.Customer)
+					evin, ok := ev.Object.(*bookstore.Customer)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -3082,6 +3112,12 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*bookstore.Customer)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "bookstore", "v1")
 					{
 						txin, err := bookstore.StorageCustomerTransformer.TransformFromStorage(nctx, *in)

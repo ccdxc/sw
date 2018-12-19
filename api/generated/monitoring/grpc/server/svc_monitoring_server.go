@@ -924,7 +924,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "monitoring.EventPolicy")
 						return nil
 					}
-					in, ok := ev.Object.(*monitoring.EventPolicy)
+					evin, ok := ev.Object.(*monitoring.EventPolicy)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -932,6 +932,12 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*monitoring.EventPolicy)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "monitoring", "v1")
 
 					strEvent := &monitoring.AutoMsgEventPolicyWatchHelper_WatchEvent{
@@ -1017,7 +1023,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "monitoring.StatsPolicy")
 						return nil
 					}
-					in, ok := ev.Object.(*monitoring.StatsPolicy)
+					evin, ok := ev.Object.(*monitoring.StatsPolicy)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -1025,6 +1031,12 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*monitoring.StatsPolicy)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "monitoring", "v1")
 
 					strEvent := &monitoring.AutoMsgStatsPolicyWatchHelper_WatchEvent{
@@ -1110,7 +1122,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "monitoring.FwlogPolicy")
 						return nil
 					}
-					in, ok := ev.Object.(*monitoring.FwlogPolicy)
+					evin, ok := ev.Object.(*monitoring.FwlogPolicy)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -1118,6 +1130,12 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*monitoring.FwlogPolicy)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "monitoring", "v1")
 
 					strEvent := &monitoring.AutoMsgFwlogPolicyWatchHelper_WatchEvent{
@@ -1203,7 +1221,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "monitoring.FlowExportPolicy")
 						return nil
 					}
-					in, ok := ev.Object.(*monitoring.FlowExportPolicy)
+					evin, ok := ev.Object.(*monitoring.FlowExportPolicy)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -1211,6 +1229,12 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*monitoring.FlowExportPolicy)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "monitoring", "v1")
 
 					strEvent := &monitoring.AutoMsgFlowExportPolicyWatchHelper_WatchEvent{
@@ -1296,7 +1320,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "monitoring.Alert")
 						return nil
 					}
-					in, ok := ev.Object.(*monitoring.Alert)
+					evin, ok := ev.Object.(*monitoring.Alert)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -1304,6 +1328,12 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*monitoring.Alert)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "monitoring", "v1")
 
 					strEvent := &monitoring.AutoMsgAlertWatchHelper_WatchEvent{
@@ -1389,7 +1419,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "monitoring.AlertPolicy")
 						return nil
 					}
-					in, ok := ev.Object.(*monitoring.AlertPolicy)
+					evin, ok := ev.Object.(*monitoring.AlertPolicy)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -1397,6 +1427,12 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*monitoring.AlertPolicy)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "monitoring", "v1")
 
 					strEvent := &monitoring.AutoMsgAlertPolicyWatchHelper_WatchEvent{
@@ -1482,7 +1518,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "monitoring.AlertDestination")
 						return nil
 					}
-					in, ok := ev.Object.(*monitoring.AlertDestination)
+					evin, ok := ev.Object.(*monitoring.AlertDestination)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -1490,6 +1526,12 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*monitoring.AlertDestination)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "monitoring", "v1")
 
 					strEvent := &monitoring.AutoMsgAlertDestinationWatchHelper_WatchEvent{
@@ -1575,7 +1617,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "monitoring.MirrorSession")
 						return nil
 					}
-					in, ok := ev.Object.(*monitoring.MirrorSession)
+					evin, ok := ev.Object.(*monitoring.MirrorSession)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -1583,6 +1625,12 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*monitoring.MirrorSession)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "monitoring", "v1")
 
 					strEvent := &monitoring.AutoMsgMirrorSessionWatchHelper_WatchEvent{
@@ -1668,7 +1716,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "monitoring.TroubleshootingSession")
 						return nil
 					}
-					in, ok := ev.Object.(*monitoring.TroubleshootingSession)
+					evin, ok := ev.Object.(*monitoring.TroubleshootingSession)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -1676,6 +1724,12 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*monitoring.TroubleshootingSession)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "monitoring", "v1")
 
 					strEvent := &monitoring.AutoMsgTroubleshootingSessionWatchHelper_WatchEvent{
@@ -1761,7 +1815,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "monitoring.TechSupportRequest")
 						return nil
 					}
-					in, ok := ev.Object.(*monitoring.TechSupportRequest)
+					evin, ok := ev.Object.(*monitoring.TechSupportRequest)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -1769,6 +1823,12 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*monitoring.TechSupportRequest)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "monitoring", "v1")
 
 					strEvent := &monitoring.AutoMsgTechSupportRequestWatchHelper_WatchEvent{

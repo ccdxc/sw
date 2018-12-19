@@ -229,7 +229,7 @@ func (s *srolloutSvc_rolloutBackend) regWatchersFunc(ctx context.Context, logger
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "rollout.Rollout")
 						return nil
 					}
-					in, ok := ev.Object.(*rollout.Rollout)
+					evin, ok := ev.Object.(*rollout.Rollout)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -237,6 +237,12 @@ func (s *srolloutSvc_rolloutBackend) regWatchersFunc(ctx context.Context, logger
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*rollout.Rollout)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "rollout", "v1")
 
 					strEvent := &rollout.AutoMsgRolloutWatchHelper_WatchEvent{

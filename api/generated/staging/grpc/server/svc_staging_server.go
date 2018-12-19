@@ -245,7 +245,7 @@ func (s *sstagingSvc_stagingBackend) regWatchersFunc(ctx context.Context, logger
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "staging.Buffer")
 						return nil
 					}
-					in, ok := ev.Object.(*staging.Buffer)
+					evin, ok := ev.Object.(*staging.Buffer)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -253,6 +253,12 @@ func (s *sstagingSvc_stagingBackend) regWatchersFunc(ctx context.Context, logger
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*staging.Buffer)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "staging", "v1")
 
 					strEvent := &staging.AutoMsgBufferWatchHelper_WatchEvent{

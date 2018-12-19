@@ -527,7 +527,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "cluster.Cluster")
 						return nil
 					}
-					in, ok := ev.Object.(*cluster.Cluster)
+					evin, ok := ev.Object.(*cluster.Cluster)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -535,6 +535,12 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*cluster.Cluster)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "cluster", "v1")
 
 					strEvent := &cluster.AutoMsgClusterWatchHelper_WatchEvent{
@@ -620,7 +626,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "cluster.Node")
 						return nil
 					}
-					in, ok := ev.Object.(*cluster.Node)
+					evin, ok := ev.Object.(*cluster.Node)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -628,6 +634,12 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*cluster.Node)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "cluster", "v1")
 
 					strEvent := &cluster.AutoMsgNodeWatchHelper_WatchEvent{
@@ -713,7 +725,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "cluster.Host")
 						return nil
 					}
-					in, ok := ev.Object.(*cluster.Host)
+					evin, ok := ev.Object.(*cluster.Host)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -721,6 +733,12 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*cluster.Host)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "cluster", "v1")
 
 					strEvent := &cluster.AutoMsgHostWatchHelper_WatchEvent{
@@ -806,7 +824,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "cluster.SmartNIC")
 						return nil
 					}
-					in, ok := ev.Object.(*cluster.SmartNIC)
+					evin, ok := ev.Object.(*cluster.SmartNIC)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -814,6 +832,12 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*cluster.SmartNIC)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "cluster", "v1")
 
 					strEvent := &cluster.AutoMsgSmartNICWatchHelper_WatchEvent{
@@ -899,7 +923,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "cluster.Tenant")
 						return nil
 					}
-					in, ok := ev.Object.(*cluster.Tenant)
+					evin, ok := ev.Object.(*cluster.Tenant)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -907,6 +931,12 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*cluster.Tenant)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "cluster", "v1")
 
 					strEvent := &cluster.AutoMsgTenantWatchHelper_WatchEvent{

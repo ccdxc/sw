@@ -387,7 +387,7 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "network.Network")
 						return nil
 					}
-					in, ok := ev.Object.(*network.Network)
+					evin, ok := ev.Object.(*network.Network)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -395,6 +395,12 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*network.Network)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "network", "v1")
 
 					strEvent := &network.AutoMsgNetworkWatchHelper_WatchEvent{
@@ -480,7 +486,7 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "network.Service")
 						return nil
 					}
-					in, ok := ev.Object.(*network.Service)
+					evin, ok := ev.Object.(*network.Service)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -488,6 +494,12 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*network.Service)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "network", "v1")
 
 					strEvent := &network.AutoMsgServiceWatchHelper_WatchEvent{
@@ -573,7 +585,7 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "network.LbPolicy")
 						return nil
 					}
-					in, ok := ev.Object.(*network.LbPolicy)
+					evin, ok := ev.Object.(*network.LbPolicy)
 					if !ok {
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
@@ -581,6 +593,12 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*network.LbPolicy)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "network", "v1")
 
 					strEvent := &network.AutoMsgLbPolicyWatchHelper_WatchEvent{
