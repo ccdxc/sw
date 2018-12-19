@@ -1644,17 +1644,17 @@ struct ionic_lif_stats {
 	uint64_t rdma_resp_rx_cqe_err;
 	uint64_t rdma_resp_rx_cqe_flush_err;
 	uint64_t rdma_resp_rx_local_len_err;
-	uint64_t rsvd55;
-	uint64_t rsvd56;
+	uint64_t rdma_resp_rx_inv_request_err;
+	uint64_t rdma_resp_rx_local_qp_oper_err;
 
+	uint64_t rdma_resp_rx_out_of_atomic_resource;
 	uint64_t rdma_resp_tx_pkt_seq_err;
-	uint64_t rdma_resp_tx_rnr_retry_err;
-	uint64_t rdma_resp_tx_remote_access_err;
 	uint64_t rdma_resp_tx_remote_inv_req_err;
+	uint64_t rdma_resp_tx_remote_access_err;
 	uint64_t rdma_resp_tx_remote_oper_err;
+	uint64_t rdma_resp_tx_rnr_retry_err;
 	uint64_t rsvd57;
 	uint64_t rsvd58;
-	uint64_t rsvd59;
 };
 
 #pragma pack(pop)

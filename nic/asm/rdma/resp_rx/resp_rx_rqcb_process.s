@@ -605,7 +605,10 @@ recirc_atomic_rnr:
     add         r1, r0, -1 
     tblmincr    d.rsq_pindex, d.log_rsq_size, r1
 
-    b           process_rnr
+    phvwr       CAPRI_PHV_RANGE(TO_S_STATS_INFO_P, lif_error_id_vld, lif_error_id), \
+                    ((1 << 4) | LIF_STATS_RDMA_RESP_STAT(LIF_STATS_RESP_RX_OUT_OF_ATOMIC_RESOURCE_OFFSET))
+
+    b           process_rnr_atomic
     // enable speculation
     tblwr       d.busy, 0 // BD Slot
 
@@ -739,6 +742,8 @@ inv_req_nak:
     phvwr       CAPRI_PHV_FIELD(TO_S_CQCB_P, async_error_event), 1
     phvwrpair   p.s1.eqwqe.code, EQE_CODE_QP_ERR_REQEST, p.s1.eqwqe.type, EQE_TYPE_QP
     phvwr       p.s1.eqwqe.qid, CAPRI_RXDMA_INTRINSIC_QID
+    phvwr       CAPRI_PHV_RANGE(TO_S_STATS_INFO_P, lif_error_id_vld, lif_error_id), \
+                    ((1 << 4) | LIF_STATS_RDMA_RESP_STAT(LIF_STATS_RESP_RX_INV_REQUEST_OFFSET))
 
     phvwrpair   CAPRI_PHV_FIELD(TO_S_WB1_P, incr_nxt_to_go_token_id), 1, \
                 CAPRI_PHV_FIELD(TO_S_WB1_P, async_or_async_error_event), 1
@@ -755,10 +760,15 @@ inv_req_nak:
     or          r7, r7, RESP_RX_FLAG_ERR_DIS_QP // BD Slot
 
 seq_err_nak:
+    phvwr       CAPRI_PHV_RANGE(TO_S_STATS_INFO_P, lif_error_id_vld, lif_error_id), \
+                    ((1 << 4) | LIF_STATS_RDMA_RESP_STAT(LIF_STATS_RESP_RX_OUT_OF_SEQ_OFFSET))
     b           nak_prune
     phvwr       p.s1.ack_info.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_SEQ_ERR) // BD Slot
 
 process_rnr:
+    phvwr       CAPRI_PHV_RANGE(TO_S_STATS_INFO_P, lif_error_id_vld, lif_error_id), \
+                    ((1 << 4) | LIF_STATS_RDMA_RESP_STAT(LIF_STATS_RESP_RX_OUT_OF_BUFFER_OFFSET))
+process_rnr_atomic:
     //revert the e_psn
     sub         r1, 0, 1 
     tblmincr    d.e_psn, 24, r1
@@ -964,5 +974,7 @@ process_feedback:
     RXDMA_DMA_CMD_PTR_SET(RESP_RX_DMA_CMD_START_FLIT_ID, 0) //BD Slot
     phvwrpair   p.cqe.status, CQ_STATUS_WQE_FLUSHED_ERR, p.cqe.error, 1
     phvwrpair   p.cqe.qid, CAPRI_RXDMA_INTRINSIC_QID, p.cqe.type, CQE_TYPE_RECV //BD Slot
+    phvwr       CAPRI_PHV_RANGE(TO_S_STATS_INFO_P, lif_error_id_vld, lif_error_id), \
+                    ((1 << 4) | LIF_STATS_RDMA_RESP_STAT(LIF_STATS_RESP_RX_CQE_FLUSH_ERR_OFFSET))
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)
 

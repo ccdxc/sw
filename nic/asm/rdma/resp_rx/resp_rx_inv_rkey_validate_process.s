@@ -2,6 +2,7 @@
 #include "resp_rx.h"
 #include "rqcb.h"
 #include "common_phv.h"
+#include "defines.h"
 
 struct resp_rx_phv_t p;
 struct resp_rx_s4_t3_k k;
@@ -16,8 +17,9 @@ struct key_entry_aligned_t d;
 #define KEY_P   r7
 
 #define IN_TO_S_P to_s4_lkey_info
-#define TO_S_STATS_P to_s7_stats_info
 #define TO_S_WB1_P to_s5_wb1_info
+#define TO_S_STATS_INFO_P to_s7_stats_info
+
 
 %%
 
@@ -72,7 +74,7 @@ update_state:
     // move state update post write_back (inv_rkey_process)
     CAPRI_SET_FIELD2(TO_S_WB1_P, inv_rkey, 1)
     // if key type is not MR, must be MW, update stats
-    CAPRI_SET_FIELD2_C(TO_S_STATS_P, incr_mem_window_inv, 1, !c1)
+    CAPRI_SET_FIELD2_C(TO_S_STATS_INFO_P, incr_mem_window_inv, 1, !c1)
 
 exit:
     CAPRI_SET_TABLE_3_VALID_CE(c0, 0)
@@ -95,6 +97,9 @@ error_completion:
     phvwr       p.s1.ack_info.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_ACC_ERR)
     // set error disable flag and ACK flag
     or          GLOBAL_FLAGS, GLOBAL_FLAGS, (RESP_RX_FLAG_ERR_DIS_QP|RESP_RX_FLAG_ACK_REQ)
+
+    phvwr       CAPRI_PHV_RANGE(TO_S_STATS_INFO_P, lif_error_id_vld, lif_error_id), \
+                    ((1 << 4) | LIF_STATS_RDMA_RESP_STAT(LIF_STATS_RESP_RX_CQE_ERR_OFFSET))
 
     CAPRI_SET_TABLE_3_VALID_CE(c0, 0)
     CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, GLOBAL_FLAGS) // Exit Slot

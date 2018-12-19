@@ -3,6 +3,7 @@
 #include "resp_rx.h"
 #include "rqcb.h"
 #include "common_phv.h"
+#include "defines.h"
 
 struct resp_rx_phv_t p;
 struct resp_rx_s3_t0_k k;
@@ -28,6 +29,8 @@ struct rqwqe_base_t d;
 #define GLOBAL_FLAGS r6
 
 #define IN_P    t0_s2s_rqcb_to_wqe_info
+#define TO_S_STATS_INFO_P to_s7_stats_info
+
 #define K_PRIV_OPER_ENABLE CAPRI_KEY_FIELD(IN_TO_S_P, priv_oper_enable)
 #define K_REM_PYLD_BYTES CAPRI_KEY_FIELD(IN_P, remaining_payload_bytes)
 
@@ -218,6 +221,10 @@ nak:
     // there are no sges left. generate NAK
     phvwr          p.cqe.recv.wrid, d.wrid
     phvwrpair      p.cqe.status, CQ_STATUS_LOCAL_LEN_ERR, p.cqe.error, 1 // BD Slot
+
+    phvwr          CAPRI_PHV_RANGE(TO_S_STATS_INFO_P, lif_cqe_error_id_vld, lif_error_id), \
+                    ((1<< 5) | (1 << 4) | LIF_STATS_RDMA_RESP_STAT(LIF_STATS_RESP_RX_LOCAL_LEN_ERR_OFFSET))
+
     // turn on ACK req bit
     // set err_dis_qp and completion flags
     or          GLOBAL_FLAGS, GLOBAL_FLAGS, RESP_RX_FLAG_ERR_DIS_QP | RESP_RX_FLAG_COMPLETION | RESP_RX_FLAG_ACK_REQ

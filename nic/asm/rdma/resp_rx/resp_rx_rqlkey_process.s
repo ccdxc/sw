@@ -2,6 +2,7 @@
 #include "resp_rx.h"
 #include "rqcb.h"
 #include "common_phv.h"
+#include "defines.h"
 
 struct resp_rx_phv_t p;
 struct resp_rx_s4_t1_k k;
@@ -25,6 +26,7 @@ struct key_entry_aligned_t d;
 #define LKEY_TO_PT_INFO_T   struct resp_rx_lkey_to_pt_info_t
 #define INFO_WBCB1_P t2_s2s_rqcb1_write_back_info
 #define TO_S_WB_P    to_s5_wb1_info
+#define TO_S_STATS_INFO_P to_s7_stats_info
 
 #define IN_P t1_s2s_key_info
 #define IN_TO_S_P to_s4_lkey_info
@@ -165,6 +167,9 @@ error_completion:
 
     phvwr       p.s1.ack_info.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_OP_ERR)
     phvwrpair   p.cqe.status, CQ_STATUS_LOCAL_ACC_ERR, p.cqe.error, 1
+
+    phvwr       CAPRI_PHV_RANGE(TO_S_STATS_INFO_P, lif_error_id_vld, lif_error_id), \
+                    ((1 << 4) | LIF_STATS_RDMA_RESP_STAT(LIF_STATS_RESP_RX_CQE_ERR_OFFSET))
 
     // set error disable flag 
     // if it is send and error is encourntered, even first/middle packets

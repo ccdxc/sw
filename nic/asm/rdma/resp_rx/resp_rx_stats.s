@@ -19,8 +19,9 @@ struct rqcb5_t d;
 #define MASK_32 32
 
 #define K_FLAGS CAPRI_KEY_RANGE(IN_P, incr_recirc_drop, dup_rd_atomic_drop)
+#define K_LIF_CQE_ERROR_ID_VLD CAPRI_KEY_FIELD(IN_P, lif_cqe_error_id_vld)
 #define K_LIF_ERROR_ID_VLD CAPRI_KEY_FIELD(IN_P, lif_error_id_vld)
-#define K_LIF_ERROR_ID CAPRI_KEY_RANGE(IN_P, lif_error_id_sbit0_ebit1, lif_error_id_sbit2_ebit3)
+#define K_LIF_ERROR_ID CAPRI_KEY_RANGE(IN_P, lif_error_id_sbit0_ebit0, lif_error_id_sbit1_ebit3)
 
 %%
 
@@ -120,6 +121,14 @@ handle_error_lif_stats:
     #lif resp error-id stats
     addi            r3, r2, LIF_STATS_RESP_DEBUG_ERR_START_OFFSET
     add             r3, r3, K_LIF_ERROR_ID, 3
+
+    ATOMIC_INC_VAL_1(r1, r3, r4, r5, 1)
+
+    bbeq            K_LIF_CQE_ERROR_ID_VLD, 0, error_done
+
+    #lif CQE error-id stat
+    addi            r3, r2, LIF_STATS_RESP_DEBUG_ERR_START_OFFSET
+    add             r3, r3, LIF_STATS_RDMA_RESP_STAT(LIF_STATS_RESP_RX_CQE_ERR_OFFSET), 3
 
     ATOMIC_INC_VAL_1(r1, r3, r4, r5, 1)
 

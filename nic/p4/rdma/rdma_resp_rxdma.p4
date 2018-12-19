@@ -391,9 +391,10 @@ header_type resp_rx_to_stage_stats_info_t {
         dup_wr_send                      :    1;
         dup_rd_atomic_bt                 :    1;
         dup_rd_atomic_drop               :    1;
+        lif_cqe_error_id_vld             :    1;
         lif_error_id_vld                 :    1;
         lif_error_id                     :    4;
-        pad                              :  102;
+        pad                              :  101;
     }
 }
 
@@ -1622,6 +1623,7 @@ action resp_rx_stats_process () {
     modify_field(to_s7_stats_info_scr.dup_rd_atomic_bt, to_s7_stats_info.dup_rd_atomic_bt);
     modify_field(to_s7_stats_info_scr.dup_rd_atomic_drop, to_s7_stats_info.dup_rd_atomic_drop);
     modify_field(to_s7_stats_info_scr.lif_error_id_vld, to_s7_stats_info.lif_error_id_vld);
+    modify_field(to_s7_stats_info_scr.lif_cqe_error_id_vld, to_s7_stats_info.lif_cqe_error_id_vld);
     modify_field(to_s7_stats_info_scr.lif_error_id, to_s7_stats_info.lif_error_id);
     modify_field(to_s7_stats_info_scr.pad, to_s7_stats_info.pad);
 

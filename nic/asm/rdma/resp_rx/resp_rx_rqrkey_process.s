@@ -2,6 +2,7 @@
 #include "resp_rx.h"
 #include "rqcb.h"
 #include "common_phv.h"
+#include "defines.h"
 
 struct resp_rx_phv_t p;
 struct resp_rx_s2_t1_k k;
@@ -24,6 +25,7 @@ struct key_entry_aligned_t d;
 #define TO_S_LKEY_P  to_s4_lkey_info
 #define TO_S_WB1_P to_s5_wb1_info
 #define TO_S_CQCB_P to_s6_cqcb_info
+#define TO_S_STATS_INFO_P to_s7_stats_info
 
 
 #define IN_P t1_s2s_rkey_info
@@ -194,6 +196,9 @@ error_completion:
 
     phvwr       p.s1.ack_info.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_ACC_ERR)
     phvwrpair   p.cqe.status, CQ_STATUS_LOCAL_ACC_ERR, p.cqe.error, 1
+
+    phvwr.c1    CAPRI_PHV_RANGE(TO_S_STATS_INFO_P, lif_error_id_vld, lif_error_id), \
+                    ((1 << 4) | LIF_STATS_RDMA_RESP_STAT(LIF_STATS_RESP_RX_CQE_ERR_OFFSET))
 
     // set error disable flag 
     // turn on ACK req bit when error disabling QP

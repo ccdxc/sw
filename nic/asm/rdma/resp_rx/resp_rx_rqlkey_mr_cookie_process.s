@@ -2,12 +2,14 @@
 #include "resp_rx.h"
 #include "rqcb.h"
 #include "common_phv.h"
+#include "defines.h"
 
 struct resp_rx_phv_t p;
 struct resp_rx_s4_t0_k k;
 struct key_entry_aligned_t d;
 
 #define IN_TO_S_P    to_s4_lkey_info
+#define TO_S_STATS_INFO_P to_s7_stats_info
 
 #define GLOBAL_FLAGS r6
 #define DMA_CMD_BASE r1
@@ -53,6 +55,8 @@ error_completion:
 
     phvwr       p.s1.ack_info.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_ACC_ERR)
     phvwrpair   p.cqe.status, CQ_STATUS_LOCAL_ACC_ERR, p.cqe.error, 1
+    phvwr       CAPRI_PHV_RANGE(TO_S_STATS_INFO_P, lif_error_id_vld, lif_error_id), \
+                    ((1 << 4) | LIF_STATS_RDMA_RESP_STAT(LIF_STATS_RESP_RX_CQE_ERR_OFFSET))
 
     // set error disable flag 
     // turn on ACK req bit

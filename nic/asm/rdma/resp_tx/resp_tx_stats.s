@@ -15,9 +15,6 @@ struct rqcb4_t d;
 #define K_LAST_MSN CAPRI_KEY_FIELD(IN_P, last_msn)
 #define K_LAST_PSN CAPRI_KEY_FIELD(IN_P, last_psn)
 
-#define K_LIF_ERROR_ID_VLD CAPRI_KEY_FIELD(IN_P, lif_error_id_vld)
-#define K_LIF_ERROR_ID CAPRI_KEY_FIELD(IN_P, lif_error_id)
-
 #define GLOBAL_FLAGS r7
 #define RQCB4_ADDR   r3
 #define STATS_PC     r6
@@ -51,8 +48,6 @@ resp_tx_stats_process:
     tblmincri.c7     d.num_atomic_resp_msgs, MASK_16, 1 //BD Slot
     tblmincri.c6     d.num_read_resp_pkts, MASK_32, 1
 
-    bbeq             K_LIF_ERROR_ID_VLD, 1, handle_error_lif_stats
-
     setcf            c1, [c4 | c2]  // only | last
     setcf            c1, [c6 & c1]  // read & (only | last)
     tblmincri.c1     d.num_read_resp_msgs, MASK_16, 1
@@ -83,8 +78,9 @@ resp_tx_stats_process:
     tblmincri.c1    d.num_acks, MASK_32, 1     //count only positive standalone acks
     seq             c1, r2[7:5], AETH_CODE_RNR
     tblmincri.c1    d.num_rnrs, MASK_32, 1
-    seq             c1, r2, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_SEQ_ERR)
-    tblmincri.c1    d.num_seq_errs, MASK_32, 1
+    seq             c2, r2, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_SEQ_ERR)
+    bcf             [c1 | c2], handle_error_lif_stats
+    tblmincri.c2    d.num_seq_errs, MASK_32, 1 //BD Slot
 
 handle_lif_stats:
 
@@ -129,16 +125,44 @@ err_dis_qp_stats:
 handle_error_lif_stats:
 
 #ifndef GFT
-    bbeq            K_LIF_ERROR_ID_VLD, 0, error_done
 
     addi            r1, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START //BD Slot
     addi            r2, r0, lif_stats_base[30:0] // substract 0x80000000 because hw adds it
     add             r2, r2, K_GLOBAL_LIF, LIF_STATS_SIZE_SHIFT
-
-    #lif req error-id stats
+ 
     addi            r3, r2, LIF_STATS_RESP_DEBUG_ERR_START_OFFSET
-    add             r3, r3, K_LIF_ERROR_ID, 3
 
+    seq             c3, r6[7:5], AETH_CODE_ACK
+    //if ACK, ignore error counting
+    bcf             [c3], error_done
+
+    seq             c3, r6[7:5], AETH_CODE_RNR //BD Slot
+    //else if RNR, set up the offset and jump
+    bcf             [c3], atomic_incr
+
+    add.c3          r3, r3, LIF_STATS_RDMA_RESP_STAT(LIF_STATS_RESP_TX_RNR_RETRY_ERR_OFFSET), 3 //BD Slot
+
+    seq             c3, r6[7:5], AETH_CODE_NAK
+    //else if not NAK, ignore error counting
+    bcf             [!c3], error_done
+
+    seq             c3, r6, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_SEQ_ERR) //BD Slot
+    bcf             [c3], atomic_incr
+    add.c3          r3, r3, LIF_STATS_RDMA_RESP_STAT(LIF_STATS_RESP_TX_PACKET_SEQ_ERR_OFFSET), 3 //BD Slot
+
+    seq             c3, r6, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_INV_REQ)
+    bcf             [c3], atomic_incr
+    add.c3          r3, r3, LIF_STATS_RDMA_RESP_STAT(LIF_STATS_RESP_TX_REMOTE_INV_REQ_ERR_OFFSET), 3 //BD Slot
+
+    seq             c3, r6, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_ACC_ERR)
+    bcf             [c3], atomic_incr
+    add.c3          r3, r3, LIF_STATS_RDMA_RESP_STAT(LIF_STATS_RESP_TX_REMOTE_ACC_ERR_OFFSET), 3 //BD Slot
+
+    seq             c3, r6, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_OP_ERR)
+    bcf             [!c3], error_done
+    add.c3          r3, r3, LIF_STATS_RDMA_RESP_STAT(LIF_STATS_RESP_TX_REMOTE_OPER_ERR_OFFSET), 3 //BD Slot
+
+atomic_incr:
     ATOMIC_INC_VAL_1(r1, r3, r4, r5, 1)
 
 error_done:
