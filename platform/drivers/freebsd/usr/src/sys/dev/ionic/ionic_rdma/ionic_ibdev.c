@@ -43,14 +43,14 @@
 #include "ionic_ibdev.h"
 
 MODULE_AUTHOR("Allen Hubbe <allenbh@pensando.io>");
-MODULE_DESCRIPTION("Pensando Capri RoCE HCA driver");
+MODULE_DESCRIPTION("Pensando RoCE HCA driver");
 MODULE_LICENSE("Dual BSD/GPL");
 
 #define DRIVER_NAME "ionic_rdma"
 #define DRIVER_SHORTNAME "ionr"
-#define DRIVER_VERSION "0.2 pre-release"
-#define DRIVER_DESCRIPTION "Pensando Capri RoCE HCA driver"
-#define DEVICE_DESCRIPTION "Pensando Capri RoCE HCA"
+#define DRIVER_VERSION "0.2.0"
+#define DRIVER_DESCRIPTION "Pensando RoCE HCA driver"
+#define DEVICE_DESCRIPTION "Pensando RoCE HCA"
 
 /* not a valid queue position or negative error status */
 #define IONIC_ADMIN_POSTED 0x10000

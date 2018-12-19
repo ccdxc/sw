@@ -748,6 +748,7 @@ void ionic_dbgfs_add_aq(struct ionic_ibdev *dev, struct ionic_aq *aq)
 	struct sysctl_oid *oidp;
 
 	aq->debug = NULL;
+	aq->debug_wr = NULL;
 
 	if (!dev->debug_aq)
 		return;
