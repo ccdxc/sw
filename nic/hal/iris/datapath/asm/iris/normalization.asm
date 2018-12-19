@@ -1,8 +1,9 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
+#include "INGRESS_normalization_k.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 
-struct normalization_k k;
+struct normalization_k_ k;
 struct phv_ p;
 
 %%

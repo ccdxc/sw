@@ -1,4 +1,5 @@
 tcp_options_fixup:
+  phvwrpair   p.inner_ipv4_option_rr_valid, 0, p.ipv4_option_rr_valid, 0
   seq         c1, k.tcp_valid, TRUE
   nop.!c1.e
   seq         c1, k.tcp_options_blob_valid, TRUE
@@ -79,7 +80,7 @@ lb_padding_done:
   // Now we need to update all the packet lengths, It could be add or subtract
   sub          r3, r1, r2
 
-  add          r4, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, capri_p4_intrinsic_packet_len_sbit6_ebit13}, r3
+  add          r4, k.capri_p4_intrinsic_packet_len, r3
   phvwr        p.capri_p4_intrinsic_packet_len, r4
   add          r4, k.ipv4_totalLen, r3
   phvwr        p.ipv4_totalLen, r4

@@ -16,14 +16,8 @@ qos:
 
   /* qos info */
   phvwr     p.qos_metadata_cos_en, d.qos_d.cos_en
-  ASSERT_PHVWR(p, qos_metadata_cos, qos_metadata_dscp,
-               d, qos_d.cos, qos_d.dscp)
-  phvwr.e   p.{qos_metadata_cos, \
-               qos_metadata_dscp_en, \
-               qos_metadata_dscp}, \
-            d.{qos_d.cos, \
-               qos_d.dscp_en, \
-               qos_d.dscp}
+  phvwr.e   p.{qos_metadata_cos,qos_metadata_dscp_en,qos_metadata_dscp}, \
+                d.{qos_d.cos,qos_d.dscp_en,qos_d.dscp}
 
   /* output queue selection */
   phvwr     p.control_metadata_dest_tm_oq, d.qos_d.dest_tm_oq

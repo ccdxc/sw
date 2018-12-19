@@ -1,10 +1,11 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
+#include "INGRESS_session_state_k.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 
-struct session_state_k k;
-struct session_state_d d;
-struct phv_               p;
+struct session_state_k_ k;
+struct session_state_d  d;
+struct phv_             p;
 
 %%
 
@@ -70,7 +71,7 @@ lb_tcp_session_state_initiator:
   bcf          [c1 & c2 & c3], lb_tcp_session_initator_normalization
   add          r7, k.tcp_ackNo, d.u.tcp_session_state_info_d.syn_cookie_delta // r7 = adjusted_ack_num
 lb_initator_normlizaiton_return:
-  add          r5, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, r2  // tcp_seq_num_hi
+  add          r5, k.tcp_seqNo, r2  // tcp_seq_num_hi
   add          r4, d.u.tcp_session_state_info_d.rflow_tcp_ack_num, r6 // rflow_tcp_ack_num + rcvr_win_sz
   seq          c1, k.tcp_flags, TCP_FLAG_ACK
   seq.!c1      c1, k.tcp_flags, (TCP_FLAG_ACK | TCP_FLAG_PSH)
@@ -79,11 +80,11 @@ lb_initator_normlizaiton_return:
   scwle        c7, r5, r4 // tcp_seq_num_hi <= rflow_tcp_ack_num + rcvr_win_sz (optimized)
 
   setcf        c1, [c1 & c2 & c6]  // c1 = (ACK or ACK|PSH), c2 = Both Established,
-  seq          c2, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, d.u.tcp_session_state_info_d.iflow_tcp_seq_num
+  seq          c2, k.tcp_seqNo, d.u.tcp_session_state_info_d.iflow_tcp_seq_num
   setcf        c2, [c5 & c2 & c7]
   sub          r1, d.u.tcp_session_state_info_d.rflow_tcp_ack_num, 1 // rflow_tcp_ack_num - 1
-  scwle        c3, r1, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}   // rflow_tcp_ack_num -1 <= tcp.seqNo
-  scwlt        c4, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, r4
+  scwle        c3, r1, k.tcp_seqNo   // rflow_tcp_ack_num -1 <= tcp.seqNo
+  scwlt        c4, k.tcp_seqNo, r4
   setcf.!c2    c2, [!c5 & c3 & c4]
   bcf          ![c1 & c2], lb_tcp_session_state_initiator_non_best
   scwle        c1, d.u.tcp_session_state_info_d.iflow_tcp_ack_num, k.tcp_ackNo
@@ -107,23 +108,23 @@ lb_tcp_session_state_initiator_non_best:
   // Since we don't want o change rest of the code, doing what we are doing earlier in
   // good packet case back here.
   // R5 OPTIM
-  sub          r5, r5, 1	
- 
+  sub          r5, r5, 1
+
   smeqb        c1, k.tcp_flags, TCP_FLAG_SYN|TCP_FLAG_FIN, 0
   add.!c1      r5, r5, 1
   bcf          ![c5 & c6], lb_tss_i_1
-  seq          c1, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, d.u.tcp_session_state_info_d.iflow_tcp_seq_num
+  seq          c1, k.tcp_seqNo, d.u.tcp_session_state_info_d.iflow_tcp_seq_num
   bcf          [c1 & c7], lb_tss_i_tcp_state_transition
-  scwle        c1, d.u.tcp_session_state_info_d.rflow_tcp_ack_num, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}
+  scwle        c1, d.u.tcp_session_state_info_d.rflow_tcp_ack_num, k.tcp_seqNo
   setcf        c1, [c1 & c7]
   b.c1         lb_tss_i_tcp_state_transition
   ori.c1       r2, r2, TCP_PACKET_REORDER
-  scwlt        c1, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, d.u.tcp_session_state_info_d.rflow_tcp_ack_num
+  scwlt        c1, k.tcp_seqNo, d.u.tcp_session_state_info_d.rflow_tcp_ack_num
   scwlt        c2, r5, d.u.tcp_session_state_info_d.rflow_tcp_ack_num
   setcf        c1, [c1 & c2]
   b.c1         lb_tss_i_tcp_session_update
   ori.c1       r2, r2, TCP_FULL_REXMIT
-  scwlt        c1, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, d.u.tcp_session_state_info_d.rflow_tcp_ack_num
+  scwlt        c1, k.tcp_seqNo, d.u.tcp_session_state_info_d.rflow_tcp_ack_num
   setcf        c1, [c1 & c7]
   b.c1         lb_tss_i_tcp_state_transition
   ori.c1       r2, r2, TCP_PARTIAL_OVERLAP
@@ -141,7 +142,7 @@ lb_tss_i_1:
   tblwr.c1     d.u.tcp_session_state_info_d.iflow_tcp_state, FLOW_STATE_TCP_SYN_RCVD
   // SYN Retransmit
   seq          c1, d.u.tcp_session_state_info_d.iflow_tcp_state, FLOW_STATE_TCP_SYN_RCVD
-  add          r1, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, 1
+  add          r1, k.tcp_seqNo, 1
   seq          c3, r1, d.u.tcp_session_state_info_d.iflow_tcp_seq_num
   setcf        c1, [c1 & c2 & c3]
   b.c1         lb_tss_i_exit
@@ -149,8 +150,8 @@ lb_tss_i_1:
   sle          c1, d.u.tcp_session_state_info_d.rflow_tcp_state, FLOW_STATE_TCP_SYN_RCVD
   b.c1         lb_tss_i_tcp_state_transition
   sub          r1, d.u.tcp_session_state_info_d.rflow_tcp_ack_num, 1
-  scwle        c1, r1, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}
-  scwlt        c2, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, r4
+  scwle        c1, r1, k.tcp_seqNo
+  scwlt        c2, k.tcp_seqNo, r4
   setcf        c1, [c1 & c2]
   b.c1         lb_tss_i_tcp_state_transition
   ori.!c1      r2, r2, TCP_OUT_OF_WINDOW
@@ -168,9 +169,9 @@ lb_tss_i_2:
 
 lb_tss_i_3:
   // Only case we will be here is if tcp_data_len == 0 and tcp_rcvr_win_sz == 0
-  seq          c1, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, d.u.tcp_session_state_info_d.rflow_tcp_ack_num
+  seq          c1, k.tcp_seqNo, d.u.tcp_session_state_info_d.rflow_tcp_ack_num
   sub          r1, d.u.tcp_session_state_info_d.rflow_tcp_ack_num, 1
-  seq          c2, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, r1
+  seq          c2, k.tcp_seqNo, r1
   setcf        c1, [c1 | c2]
   b.c1         lb_tss_i_tcp_state_transition
   ori.!c1      r2, r2, TCP_OUT_OF_WINDOW
@@ -197,7 +198,7 @@ lb_tss_i_tcp_state_transition:
   b.!c1        lb_tss_i_exit
   slt          c1, d.u.tcp_session_state_info_d.rflow_tcp_state, FLOW_STATE_TCP_ACK_RCVD
   b.c1         lb_tss_i_reset
-  seq          c1, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31},  d.u.tcp_session_state_info_d.rflow_tcp_ack_num
+  seq          c1, k.tcp_seqNo,  d.u.tcp_session_state_info_d.rflow_tcp_ack_num
   b.c1         lb_tss_i_reset
   b.!c1        lb_tss_i_exit
   nop
@@ -354,7 +355,7 @@ lb_tcp_session_state_responder:
   // All normalizaiton checks are in c3. c3 = TRUE (needs normaliaiton, otherwise no normalization)
   // c1 = normalizatio en, c2 = established connection, c3 = bad condition hit
   bcf          [c1 & c2 & c3], lb_tcp_session_responder_normalization
-  sub          r7, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, d.u.tcp_session_state_info_d.syn_cookie_delta // r7 = adjusted_seq_num
+  sub          r7, k.tcp_seqNo, d.u.tcp_session_state_info_d.syn_cookie_delta // r7 = adjusted_seq_num
 
 lb_responder_normalization_return:
   add          r5, r7, r2  // tcp_seq_num_hi
@@ -484,7 +485,7 @@ lb_tss_r_tcp_state_transition:
   b.!c1        lb_tss_r_exit
   slt          c1, d.u.tcp_session_state_info_d.iflow_tcp_state, FLOW_STATE_TCP_ACK_RCVD
   b.c1         lb_tss_r_reset
-  seq          c1, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31},  d.u.tcp_session_state_info_d.iflow_tcp_ack_num
+  seq          c1, k.tcp_seqNo, d.u.tcp_session_state_info_d.iflow_tcp_ack_num
   b.c1         lb_tss_r_reset
   b.!c1        lb_tss_r_exit
   nop
@@ -721,7 +722,7 @@ lb_tss_r_exit:
 
 #endif /* 0 */
 
-// We come here only in case we have hit a bad packet. We will normalize the 
+// We come here only in case we have hit a bad packet. We will normalize the
 // initator and responder values and go into a common code.
 // R4 - Copy the tcp_mss values, was not copied in good packet path
 // R6 - tcp_rcvr_win_sz - already copied
@@ -739,8 +740,7 @@ lb_tcp_session_responder_normalization:
 
 lb_tcp_data_len_gt_mss_size:
   b.c2         lb_tcp_data_len_gt_win_size
-  seq          c2, k.{l4_metadata_tcp_data_len_gt_win_size_action_sbit0_ebit0, \
-                      l4_metadata_tcp_data_len_gt_win_size_action_sbit1_ebit1},\
+  seq          c2, k.l4_metadata_tcp_data_len_gt_win_size_action, \
                       NORMALIZATION_ACTION_ALLOW
   slt          c3, r4, r2
   b.!c3        lb_tcp_data_len_gt_win_size
@@ -748,7 +748,7 @@ lb_tcp_data_len_gt_mss_size:
   phvwr.c4.e   p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr.c4     p.capri_intrinsic_drop, 1
   sub          r1, r2, r4 // r1 = tcp_data_len - mss
-  sub          r5, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, capri_p4_intrinsic_packet_len_sbit6_ebit13}, r1 // r5 = k.capri_p4_intrinsic_packet_len - r1
+  sub          r5, k.capri_p4_intrinsic_packet_len, r1 // r5 = k.capri_p4_intrinsic_packet_len - r1
   phvwr        p.capri_p4_intrinsic_packet_len, r5
   phvwr        p.capri_deparser_len_trunc_pkt_len, r4 // This is the payload length after TCP options which is nothing but MSS.
   sub          r5, k.ipv4_totalLen, r1   // r5 = k.ipv4_totalLen - r1
@@ -758,7 +758,7 @@ lb_tcp_data_len_gt_mss_size:
   phvwr.c1     p.udp_len, r5
   sub.c1       r5, k.inner_ipv4_totalLen, r1   // r5 = k.inner_ipv4_totalLen - r1
   phvwr.c1     p.inner_ipv4_totalLen, r5
-  phvwrmi      p.control_metadata_checksum_ctl, CHECKSUM_L3_L4_UPDATE_MASK, CHECKSUM_L3_L4_UPDATE_MASK 
+  phvwrmi      p.control_metadata_checksum_ctl, CHECKSUM_L3_L4_UPDATE_MASK, CHECKSUM_L3_L4_UPDATE_MASK
   // Update the checksum calculation.
   // Finally update the tcp_data_len to MSS value which will be used by
   // connection tracking code
@@ -774,14 +774,13 @@ lb_tcp_data_len_gt_win_size:
                       NORMALIZATION_ACTION_ALLOW
   slt          c3, r6, r2
   b.!c3        lb_tcp_unexpected_sack_option
-  seq          c4, k.{l4_metadata_tcp_data_len_gt_win_size_action_sbit0_ebit0, \
-                      l4_metadata_tcp_data_len_gt_win_size_action_sbit1_ebit1},\
+  seq          c4, k.l4_metadata_tcp_data_len_gt_win_size_action, \
                       NORMALIZATION_ACTION_DROP
   phvwr.c4.e   p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr.c4     p.capri_intrinsic_drop, 1
   // Edit
   sub          r1, r2, r6 // r1 = tcp_data_len - rcvr_win_sz
-  sub          r5, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, capri_p4_intrinsic_packet_len_sbit6_ebit13}, r1 // r5 = k.capri_p4_intrinsic_packet_len - r1
+  sub          r5, k.capri_p4_intrinsic_packet_len, r1 // r5 = k.capri_p4_intrinsic_packet_len - r1
   phvwr        p.capri_p4_intrinsic_packet_len, r5
   phvwr        p.capri_deparser_len_trunc_pkt_len, r6 // This is the payload length after TCP options which is nothing but MSS.
   sub          r5, k.ipv4_totalLen, r1   // r5 = k.ipv4_totalLen - r1

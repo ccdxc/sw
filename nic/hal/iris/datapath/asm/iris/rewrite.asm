@@ -1,10 +1,11 @@
 #include "egress.h"
 #include "EGRESS_p.h"
+#include "EGRESS_rewrite_k.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 
-struct rewrite_k k;
-struct rewrite_d d;
-struct phv_      p;
+struct rewrite_k_ k;
+struct rewrite_d  d;
+struct phv_       p;
 
 %%
 
@@ -17,8 +18,7 @@ rewrite:
   seq         c1, k.vlan_tag_valid, 1
   phvwr.c1    p.ethernet_etherType, k.vlan_tag_etherType
   phvwr.c1    p.vlan_tag_valid, 0
-  sub.c1      r1, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
-                   capri_p4_intrinsic_packet_len_sbit6_ebit13}, 4
+  sub.c1      r1, k.capri_p4_intrinsic_packet_len, 4
   phvwr.c1    p.capri_p4_intrinsic_packet_len, r1
 
   smeqb       c1, k.rewrite_metadata_flags, REWRITE_FLAGS_MAC_SA, REWRITE_FLAGS_MAC_SA

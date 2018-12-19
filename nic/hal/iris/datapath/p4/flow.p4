@@ -311,10 +311,14 @@ action flow_hash_info(entry_valid, export_en,
     modify_field(scratch_metadata.more_hashs, more_hashs);
     modify_field(scratch_metadata.more_hints, more_hints);
 
+    modify_field(rewrite_metadata.entropy_hash, scratch_metadata.entropy_hash);
+    if (control_metadata.nic_mode != NIC_MODE_SMART) {
+        //return;
+    }
+
     // If register C1 indicates hit, take flow_index. Otherwise walk
     // through the hints to pick the overflow entry
     modify_field(flow_info_metadata.flow_index, flow_index);
-    modify_field(rewrite_metadata.entropy_hash, scratch_metadata.entropy_hash);
 
     // pack fields into control_metadata.lkp_flags_egress to transfer to egress
     modify_field(scratch_metadata.cpu_flags, flow_lkp_metadata.lkp_type);
@@ -377,9 +381,7 @@ table flow_hash_overflow {
 }
 
 control process_flow_table {
-    // NCC-predication (currently) does not allow sourcing condition bits from headers
-    // If a header can be placed in first flit, this problem can be fixed XXX
-    if (control_metadata.nic_mode == NIC_MODE_SMART and control_metadata.skip_flow_lkp == FALSE) {
+    if (control_metadata.skip_flow_lkp == FALSE) {
         if (valid(recirc_header) and
             (control_metadata.recirc_reason == RECIRC_FLOW_HASH_OVERFLOW)) {
             apply(flow_hash_overflow);
