@@ -81,6 +81,7 @@ enum deferred_work_type {
 	DW_TYPE_RX_MODE,
 	DW_TYPE_RX_ADDR_ADD,
 	DW_TYPE_RX_ADDR_DEL,
+	DW_TYPE_LINK_STATUS,
 };
 
 struct deferred_work {
@@ -112,14 +113,22 @@ struct lif_sw_stats {
 	u64 rx_csum_ip_bad;
 };
 
-#define LIF_F_INITED		BIT(0)
-#define LIF_F_SW_DBG_STATS	BIT(1)
+enum lif_state_flags {
+	LIF_INITED,
+	LIF_SW_DEBUG_STATS,
+	LIF_UP,
+	LIF_LINK_CHECK_NEEDED,
+
+	/* leave this as last */
+	LIF_STATE_SIZE
+};
 
 #define LIF_NAME_MAX_SZ		(32)
 struct lif {
 	char name[LIF_NAME_MAX_SZ];
 	struct list_head list;
 	struct net_device *netdev;
+	DECLARE_BITMAP(state, LIF_STATE_SIZE);
 	struct ionic *ionic;
 	bool registered;
 	unsigned int index;

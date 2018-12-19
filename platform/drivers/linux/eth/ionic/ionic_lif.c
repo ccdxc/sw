@@ -17,6 +17,7 @@
 static void ionic_lif_rx_mode(struct lif *lif, unsigned int rx_mode);
 static int ionic_lif_addr_add(struct lif *lif, const u8 *addr);
 static int ionic_lif_addr_del(struct lif *lif, const u8 *addr);
+static void ionic_link_status_check(struct lif *lif);
 
 static void ionic_lif_deferred_work(struct work_struct *work)
 {
@@ -41,6 +42,9 @@ static void ionic_lif_deferred_work(struct work_struct *work)
 			break;
 		case DW_TYPE_RX_ADDR_DEL:
 			ionic_lif_addr_del(lif, w->addr);
+			break;
+		case DW_TYPE_LINK_STATUS:
+			ionic_link_status_check(lif);
 			break;
 		};
 		kfree(w);
@@ -97,8 +101,6 @@ static int ionic_open(struct net_device *netdev)
 			return err;
 	}
 
-	netif_tx_wake_all_queues(netdev);
-
 	for (i = 0; i < lif->nrxqcqs; i++) {
 		ionic_rx_fill(&lif->rxqcqs[i]->q);
 		err = ionic_qcq_enable(lif->rxqcqs[i]);
@@ -106,8 +108,10 @@ static int ionic_open(struct net_device *netdev)
 			return err;
 	}
 
-	netif_carrier_on(netdev);
+	if (netif_carrier_ok(netdev))
+		netif_tx_wake_all_queues(netdev);
 
+	set_bit(LIF_UP, lif->state);
 	return 0;
 }
 
@@ -141,8 +145,10 @@ static int ionic_stop(struct net_device *netdev)
 	unsigned int i;
 	int err;
 
-	netif_carrier_off(netdev);
-	netif_tx_disable(netdev);
+	clear_bit(LIF_UP, lif->state);
+
+	if (netif_carrier_ok(netdev))
+		netif_tx_disable(netdev);
 
 	for (i = 0; i < lif->ntxqcqs; i++) {
 		err = ionic_qcq_disable(lif->txqcqs[i]);
@@ -178,6 +184,43 @@ static int ionic_adminq_napi(struct napi_struct *napi, int budget)
 	return ionic_napi(napi, budget, ionic_adminq_service, NULL);
 }
 
+static void ionic_link_status_check(struct lif *lif)
+{
+	struct net_device *netdev = lif->netdev;
+	bool link_up;
+
+	clear_bit(LIF_LINK_CHECK_NEEDED, lif->state);
+
+	if (!lif->notifyblock)
+		return;
+
+	link_up = lif->notifyblock->link_status;
+
+	/* filter out the no-change cases */
+	if ((link_up && netif_carrier_ok(netdev)) ||
+	    (!link_up && !netif_carrier_ok(netdev)))
+		return;
+
+	if (link_up) {
+		netdev_info(netdev, "Link up - %d Gbps\n",
+			    lif->notifyblock->link_speed);
+		netif_carrier_on(netdev);
+
+		if (test_bit(LIF_UP, lif->state))
+			netif_tx_wake_all_queues(lif->netdev);
+	} else {
+		if (test_bit(LIF_UP, lif->state))
+			netif_tx_stop_all_queues(netdev);
+
+		netdev_info(netdev, "Link down\n");
+		netif_carrier_off(netdev);
+	}
+
+	/* TODO: Propagate link status to other lifs on
+	 *       this ionic device.
+	 */
+}
+
 static bool ionic_notifyq_cb(struct cq *cq, struct cq_info *cq_info,
 			     void *cb_arg)
 {
@@ -196,11 +239,6 @@ static bool ionic_notifyq_cb(struct cq *cq, struct cq_info *cq_info,
 
 	lif->last_eid = comp->event.eid;
 
-	/* TODO: pay attention to link_flap_count
-	 *       and make sure that enough interrupt credits get
-	 *       returned in case we missed some events
-	 */
-
 	dev_dbg(&netdev->dev, "notifyq event:\n");
 	dynamic_hex_dump("event ", DUMP_PREFIX_OFFSET, 16, 1,
 			 comp, sizeof(*comp), true);
@@ -216,6 +254,9 @@ static bool ionic_notifyq_cb(struct cq *cq, struct cq_info *cq_info,
 			    comp->link_change.phy_type,
 			    comp->link_change.link_speed,
 			    comp->link_change.autoneg_status);
+
+		set_bit(LIF_LINK_CHECK_NEEDED, lif->state);
+
 		break;
 	case EVENT_OPCODE_RESET:
 		netdev_info(netdev, "Notifyq EVENT_OPCODE_RESET eid=%lld\n",
@@ -245,7 +286,51 @@ static bool ionic_notifyq_cb(struct cq *cq, struct cq_info *cq_info,
 
 static int ionic_notifyq_napi(struct napi_struct *napi, int budget)
 {
-	return ionic_napi(napi, budget, ionic_notifyq_cb, NULL);
+	struct qcq *qcq = container_of(napi, struct qcq, napi);
+	struct lif *lif = qcq->q.lif;
+	struct cq *cq = &qcq->cq;
+	int napi_return;
+	void *reg;
+	u32 val;
+
+	napi_return = ionic_napi(napi, budget, ionic_notifyq_cb, NULL);
+
+	/* if we ran out of budget, there are more events
+	 * to process and napi will reschedule us soon
+	 */
+	if (napi_return == budget)
+		goto return_to_napi;
+
+	/* After outstanding events are processed we can check on
+	 * the link status and any outstanding interrupt credits.
+	 *
+	 * We wait until here to check on the link status in case
+	 * there was a long list of link events from a flap episode.
+	 */
+	if (test_bit(LIF_LINK_CHECK_NEEDED, lif->state)) {
+		struct deferred_work *work;
+
+		work = kzalloc(sizeof(*work), GFP_ATOMIC);
+		if (!work) {
+			netdev_err(lif->netdev, "%s OOM\n", __func__);
+		} else {
+			work->type = DW_TYPE_LINK_STATUS;
+			ionic_lif_deferred_enqueue(&lif->deferred, work);
+		}
+	}
+
+	/* We check the interrupt credits to be sure we've returned
+	 * enough, in case we missed a few events in an overflow.
+	 */
+	reg = intr_to_credits(cq->bound_intr->ctrl);
+	val = ioread32(reg) & 0xFFFF;
+	if (val) {
+		netdev_info(lif->netdev, "returning %d nq credits\n", val);
+		ionic_intr_return_credits(cq->bound_intr, val, true, true);
+	}
+
+return_to_napi:
+	return napi_return;
 }
 
 static void ionic_get_stats64(struct net_device *netdev,
@@ -1172,6 +1257,9 @@ static void ionic_lif_qcq_deinit(struct lif *lif, struct qcq *qcq)
 {
 	struct device *dev = lif->ionic->dev;
 
+	if (!qcq)
+		return;
+
 	if (!(qcq->flags & QCQ_F_INITED))
 		return;
 	ionic_intr_mask(&qcq->intr, true);
@@ -1199,9 +1287,9 @@ static void ionic_lif_rxqs_deinit(struct lif *lif)
 
 static void ionic_lif_deinit(struct lif *lif)
 {
-	if (!(lif->flags & LIF_F_INITED))
+	if (!test_bit(LIF_INITED, lif->state))
 		return;
-	lif->flags &= ~LIF_F_INITED;
+	clear_bit(LIF_INITED, lif->state);
 
 	ionic_lif_stats_stop(lif);
 	ionic_lif_txqs_deinit(lif);
@@ -1700,8 +1788,7 @@ static int ionic_lif_init(struct lif *lif)
 	ionic_set_rx_mode(lif->netdev);
 
 	lif->api_private = NULL;
-	lif->flags |= LIF_F_INITED;
-
+	set_bit(LIF_INITED, lif->state);
 	return 0;
 
 err_out_rss_teardown:
@@ -1747,6 +1834,7 @@ int ionic_lif_register(struct lif *lif)
 		return err;
 	}
 
+	ionic_link_status_check(lif);
 	lif->registered = true;
 
 	return 0;
@@ -1858,7 +1946,9 @@ int ionic_lifs_register(struct ionic *ionic)
 		err = ionic_lif_register(lif);
 		if (err)
 			return err;
+		ionic_link_status_check(lif);
 	}
+
 
 	return 0;
 }

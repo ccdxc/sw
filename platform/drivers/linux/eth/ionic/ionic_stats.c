@@ -98,7 +98,7 @@ static u64 ionic_sw_stats_get_count(struct lif *lif)
 	total += lif->nrxqcqs * IONIC_NUM_RX_STATS;
 
 #ifdef IONIC_DEBUG_STATS
-	if (lif->flags & LIF_F_SW_DBG_STATS) {
+	if (test_bit(LIF_SW_DEBUG_STATS, lif->state)) {
 		/* tx debug stats */
 		total += lif->ntxqcqs * (IONIC_NUM_DBG_CQ_STATS +
 					 IONIC_NUM_TX_Q_STATS +
@@ -134,7 +134,7 @@ static void ionic_sw_stats_get_strings(struct lif *lif, u8 **buf)
 			*buf += ETH_GSTRING_LEN;
 		}
 #ifdef IONIC_DEBUG_STATS
-		if (lif->flags & LIF_F_SW_DBG_STATS) {
+		if (test_bit(LIF_SW_DEBUG_STATS, lif->state)) {
 			for (i = 0; i < IONIC_NUM_TX_Q_STATS; i++) {
 				snprintf(*buf, ETH_GSTRING_LEN, "txq_%d_%s",
 					   q_num,
@@ -184,7 +184,7 @@ static void ionic_sw_stats_get_strings(struct lif *lif, u8 **buf)
 			*buf += ETH_GSTRING_LEN;
 		}
 #ifdef IONIC_DEBUG_STATS
-		if (lif->flags & LIF_F_SW_DBG_STATS) {
+		if (test_bit(LIF_SW_DEBUG_STATS, lif->state)) {
 			for (i = 0; i < IONIC_NUM_DBG_CQ_STATS; i++) {
 				snprintf(*buf, ETH_GSTRING_LEN,
 					 "rxq_%d_cq_%s",
@@ -239,7 +239,7 @@ static void ionic_sw_stats_get_values(struct lif *lif, u64 **buf)
 			(*buf)++;
 		}
 #ifdef IONIC_DEBUG_STATS
-		if (lif->flags & LIF_F_SW_DBG_STATS) {
+		if (test_bit(LIF_SW_DEBUG_STATS, lif->state)) {
 			for (i = 0; i < IONIC_NUM_TX_Q_STATS; i++) {
 				**buf = IONIC_READ_STAT64(&txqcq->q,
 					   &ionic_txq_stats_desc[i]);
@@ -280,7 +280,7 @@ static void ionic_sw_stats_get_values(struct lif *lif, u64 **buf)
 			(*buf)++;
 		}
 #ifdef IONIC_DEBUG_STATS
-		if (lif->flags & LIF_F_SW_DBG_STATS) {
+		if (test_bit(LIF_SW_DEBUG_STATS, lif->state)) {
 			for (i = 0; i < IONIC_NUM_DBG_CQ_STATS; i++) {
 				**buf = IONIC_READ_STAT64(&rxqcq->cq,
 					   &ionic_dbg_cq_stats_desc[i]);

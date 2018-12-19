@@ -301,7 +301,7 @@ static u32 ionic_get_priv_flags(struct net_device *netdev)
 #ifdef IONIC_DEBUG_STATS
 	struct lif *lif = netdev_priv(netdev);
 
-	if (lif->flags & LIF_F_SW_DBG_STATS)
+	if (test_bit(LIF_SW_DEBUG_STATS, lif->state))
 		priv_flags |= PRIV_F_SW_DBG_STATS;
 #endif
 
@@ -314,9 +314,9 @@ static int ionic_set_priv_flags(struct net_device *netdev, u32 priv_flags)
 	u32 flags = lif->flags;
 
 #ifdef IONIC_DEBUG_STATS
-	flags &= ~LIF_F_SW_DBG_STATS;
+	clear_bit(LIF_SW_DEBUG_STATS, lif->state);
 	if (priv_flags & PRIV_F_SW_DBG_STATS)
-		flags |= LIF_F_SW_DBG_STATS;
+		set_bit(LIF_SW_DEBUG_STATS, lif->state);
 #endif
 
 	if (flags != lif->flags)
