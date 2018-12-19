@@ -430,8 +430,8 @@ static int sonic_seq_q_give(struct queue *q, uint32_t count)
 	switch (q->qgroup) {
 	case STORAGE_SEQ_QGROUP_CPDC:
 	case STORAGE_SEQ_QGROUP_CRYPTO:
-		err =  sonic_accounting_atomic_give_safe(&q->descs_inuse,
-							 count);
+		err =  sonic_accounting_atomic_give(&q->descs_inuse,
+						    count);
 		break;
 
 	default:

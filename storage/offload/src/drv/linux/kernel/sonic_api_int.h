@@ -45,8 +45,6 @@ int sonic_accounting_atomic_take(osal_atomic_int_t *atomic_c,
 				 uint32_t high_water);
 int sonic_accounting_atomic_give(osal_atomic_int_t *atomic_c,
 				 uint32_t count);
-int sonic_accounting_atomic_give_safe(osal_atomic_int_t *atomic_c,
-				      uint32_t count);
 int sonic_accel_ring_take(struct sonic_accel_ring *ring, uint32_t count);
 int sonic_accel_ring_give(struct sonic_accel_ring *ring, uint32_t count);
 int sonic_accel_rings_sanity_check(void);
