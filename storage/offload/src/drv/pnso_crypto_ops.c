@@ -438,7 +438,7 @@ out:
 }
 
 static pnso_error_t
-crypto_ring_db(const struct service_info *svc_info)
+crypto_ring_db(struct service_info *svc_info)
 {
 	if (chn_service_is_starter(svc_info)) {
 		seq_ring_db(svc_info);

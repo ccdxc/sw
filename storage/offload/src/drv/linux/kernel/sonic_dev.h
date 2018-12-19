@@ -425,6 +425,7 @@ bool sonic_q_has_space(struct queue *q, unsigned int want);
 void sonic_q_service(struct queue *q, struct cq_info *cq_info,
 		     unsigned int stop_index);
 void *sonic_q_consume_entry(struct queue *q, uint32_t *index);
+int sonic_q_unconsume(struct queue *q, uint32_t count);
 void sonic_q_ringdb(struct queue *q, uint32_t index);
 u64 sonic_q_ringdb_data(struct queue *q, uint32_t index);
 

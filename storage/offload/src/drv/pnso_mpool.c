@@ -349,9 +349,11 @@ mpool_destroy(struct mem_pool **mpoolp)
 
 	mpool = *mpoolp;
 
-	OSAL_LOG_INFO("pool deallocated. mpc_type: %s mpc_num_objects: %d mpool: 0x" PRIx64,
+	OSAL_LOG_INFO("pool deallocated. mpc_type: %s mpc_num_objects: %d mps_top: %d mpool: 0x" PRIx64,
 		      mpool_get_type_str(mpool->mp_config.mpc_type),
-		      mpool->mp_config.mpc_num_objects, (uint64_t) mpool);
+		      mpool->mp_config.mpc_num_objects,
+		      mpool->mp_stack.mps_top,
+		      (uint64_t) mpool);
 
 	/* TODO-mpool: for graceful exit, ensure stack top is back to full */
 	mpool->mp_magic = MPOOL_MAGIC_INVALID;
@@ -463,10 +465,12 @@ mpool_pprint(const struct mem_pool *mpool)
 	OSAL_LOG_DEBUG("%-30s: 0x" PRIx64, "mpool->mp_stack.mps_objects",
 			(uint64_t) mpool->mp_stack.mps_objects);
 
-	objects = mpool->mp_stack.mps_objects;
-	for (i = 0; i < mpool->mp_config.mpc_num_objects; i++) {
-		OSAL_LOG_DEBUG("%30s[%d]: 0x" PRIx64 " 0x" PRIx64 "",
-				"mpool->mp_stack.mps_objects", i,
-				(uint64_t) &objects[i], (uint64_t) objects[i]);
+	if (mpool->mp_stack.mps_num_objects != mpool->mp_stack.mps_top) {
+		objects = mpool->mp_stack.mps_objects;
+		for (i = 0; i < mpool->mp_config.mpc_num_objects; i++) {
+			OSAL_LOG_DEBUG("%30s[%d]: 0x" PRIx64 " 0x" PRIx64 "",
+				       "mpool->mp_stack.mps_objects", i,
+				       (uint64_t) &objects[i], (uint64_t) objects[i]);
+		}
 	}
 }

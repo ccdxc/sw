@@ -329,6 +329,8 @@ int sonic_accounting_atomic_take(osal_atomic_int_t *atomic_c,
 				 uint32_t count,
 				 uint32_t high_water)
 {
+	int prev;
+
 	if (unlikely((count > high_water) || (high_water == 0))) {
 		OSAL_LOG_ERROR("Accounting take error: count %u, high_water %u",
 			       count, high_water);
@@ -338,54 +340,37 @@ int sonic_accounting_atomic_take(osal_atomic_int_t *atomic_c,
 	if (unlikely(count == 0))
 		return PNSO_OK;
 
-	if (likely(osal_atomic_add_unless(atomic_c, count, high_water - count)))
-			return PNSO_OK;
-
-	return -EPERM;
+	prev = osal_atomic_fetch_add(atomic_c, count);
+	if (prev + count >= high_water) {
+		osal_atomic_fetch_sub(atomic_c, count);
+		return -EPERM;
+	}
+	return PNSO_OK;
 }
 
 int sonic_accounting_atomic_give(osal_atomic_int_t *atomic_c,
 				 uint32_t count)
 {
-	/* Optimize for the most common case */
-	if (likely(count == 1)) {
-		if (likely(osal_atomic_dec_if_positive(atomic_c) >= 0))
-			return PNSO_OK;
+	int prev;
 
-		return -EPERM;
-	}
+	if (count == 0)
+		return PNSO_OK;
 
-	if (unlikely(osal_atomic_fetch_sub_post(atomic_c, count) < 0)) {
+	prev = osal_atomic_fetch_sub(atomic_c, count);
+	if (prev - (int) count < 0) {
+		osal_atomic_fetch_add(atomic_c, count);
 		OSAL_LOG_ERROR("Accounting counter underflow on sub count %u",
 			       count);
 		OSAL_ASSERT(0);
 		return -EPERM;
 	}
-
 	return PNSO_OK;
 }
 
 int sonic_accounting_atomic_give_safe(osal_atomic_int_t *atomic_c,
 				      uint32_t count)
 {
-	/* Optimize for the most common case */
-	if (likely(count == 1)) {
-		if (likely(osal_atomic_dec_if_positive(atomic_c) >= 0))
-			return PNSO_OK;
-
-		return -EPERM;
-	}
-
-	/*
-	 * "safe" means never lets atomic counter go negative
-	 * at the cost of performance.
-	 */
-	while (count--) {
-		if (unlikely(osal_atomic_dec_if_positive(atomic_c) < 0))
-			return -EPERM;
-	}
-
-	return PNSO_OK;
+	return sonic_accounting_atomic_give(atomic_c, count);
 }
 
 /*

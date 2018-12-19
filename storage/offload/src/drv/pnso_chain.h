@@ -75,6 +75,7 @@ extern "C" {
 #define CHAIN_SFLAG_MODE_SYNC		(1 << 4)
 #define CHAIN_SFLAG_MODE_POLL		(1 << 5)
 #define CHAIN_SFLAG_MODE_ASYNC		(1 << 6)
+#define CHAIN_SFLAG_RANG_DB		(1 << 7)
 
 /* chain flags */
 #define CHAIN_CFLAG_MODE_SYNC		(1 << 0)
@@ -138,7 +139,7 @@ struct service_ops {
 			void *poll_ctx);
 
 	/* a NULL-op for all services except the first within the chain */
-	pnso_error_t (*ring_db)(const struct service_info *svc_info);
+	pnso_error_t (*ring_db)(struct service_info *svc_info);
 
 	/* a NULL-op for all services except the last within the chain */
 	pnso_error_t (*poll)(const struct service_info *svc_info);

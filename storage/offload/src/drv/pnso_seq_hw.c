@@ -662,14 +662,20 @@ static void
 hw_cleanup_desc(struct service_info *svc_info)
 {
 	if (svc_info->si_seq_info.sqi_seq_q) {
-		sonic_q_service(svc_info->si_seq_info.sqi_seq_q, NULL,
-				svc_info->si_seq_info.sqi_seq_total_takes);
+		if (svc_info->si_flags & CHAIN_SFLAG_RANG_DB) {
+			sonic_q_service(svc_info->si_seq_info.sqi_seq_q, NULL,
+					svc_info->si_seq_info.sqi_seq_total_takes);
+		} else {
+			sonic_q_unconsume(svc_info->si_seq_info.sqi_seq_q,
+					  svc_info->si_seq_info.sqi_seq_total_takes);
+		}
 		svc_info->si_seq_info.sqi_seq_total_takes = 0;
+		svc_info->si_seq_info.sqi_seq_q = NULL;
 	}
 }
 
 static void
-hw_ring_db(const struct service_info *svc_info)
+hw_ring_db(struct service_info *svc_info)
 {
 	struct queue *seq_q;
 	uint16_t index;
@@ -685,6 +691,7 @@ hw_ring_db(const struct service_info *svc_info)
 
 	index = svc_info->si_seq_info.sqi_index;
 	sonic_q_ringdb(seq_q, index);
+	svc_info->si_flags |= CHAIN_SFLAG_RANG_DB;
 
 out:
 	OSAL_LOG_DEBUG("exit!");
@@ -960,14 +967,20 @@ out:
 static void
 hw_cleanup_cpdc_chain(struct service_info *svc_info)
 {
-	const struct cpdc_chain_params *cpdc_chain = &svc_info->si_cpdc_chain;
+	struct cpdc_chain_params *cpdc_chain = &svc_info->si_cpdc_chain;
 
 	if (cpdc_chain->ccp_seq_spec.sqs_seq_status_q) {
-		sonic_q_service(cpdc_chain->ccp_seq_spec.sqs_seq_status_q, NULL,
-				svc_info->si_seq_info.sqi_status_total_takes);
+		if (svc_info->si_flags & CHAIN_SFLAG_RANG_DB) {
+			sonic_q_service(cpdc_chain->ccp_seq_spec.sqs_seq_status_q, NULL,
+					svc_info->si_seq_info.sqi_status_total_takes);
+		} else {
+			sonic_q_unconsume(cpdc_chain->ccp_seq_spec.sqs_seq_status_q,
+					  svc_info->si_seq_info.sqi_status_total_takes);
+		}
 		svc_info->si_seq_info.sqi_status_total_takes = 0;
 		sonic_put_seq_statusq(
 				cpdc_chain->ccp_seq_spec.sqs_seq_status_q);
+		cpdc_chain->ccp_seq_spec.sqs_seq_status_q = NULL;
 	}
 }
 
@@ -1019,15 +1032,21 @@ hw_setup_crypto_chain(struct service_info *svc_info,
 static void
 hw_cleanup_crypto_chain(struct service_info *svc_info)
 {
-	const struct crypto_chain_params *crypto_chain =
+	struct crypto_chain_params *crypto_chain =
 		&svc_info->si_crypto_chain;
 
 	if (crypto_chain->ccp_seq_spec.sqs_seq_status_q) {
-		sonic_q_service(crypto_chain->ccp_seq_spec.sqs_seq_status_q, NULL,
-				svc_info->si_seq_info.sqi_status_total_takes);
+		if (svc_info->si_flags & CHAIN_SFLAG_RANG_DB) {
+			sonic_q_service(crypto_chain->ccp_seq_spec.sqs_seq_status_q, NULL,
+					svc_info->si_seq_info.sqi_status_total_takes);
+		} else {
+			sonic_q_unconsume(crypto_chain->ccp_seq_spec.sqs_seq_status_q,
+					  svc_info->si_seq_info.sqi_status_total_takes);
+		}
 		svc_info->si_seq_info.sqi_status_total_takes = 0;
 		sonic_put_seq_statusq(
 				crypto_chain->ccp_seq_spec.sqs_seq_status_q);
+		crypto_chain->ccp_seq_spec.sqs_seq_status_q = NULL;
 	}
 }
 

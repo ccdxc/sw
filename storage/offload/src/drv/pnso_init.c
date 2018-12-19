@@ -177,6 +177,13 @@ out:
 OSAL_EXPORT_SYMBOL(pnso_init);
 
 void
+pnso_set_log_level(int level)
+{
+	g_osal_log_level = level;
+}
+OSAL_EXPORT_SYMBOL(pnso_set_log_level);
+
+void
 pnso_deinit(void)
 {
 	struct lif			*lif = sonic_get_lif();
@@ -186,11 +193,14 @@ pnso_deinit(void)
 
 	if (!pnso_initialized)
 		return;
+	//g_osal_log_level = OSAL_LOG_LEVEL_DEBUG;
 
 	num_pc_res = sonic_get_num_per_core_res(lif);
 	for (i = 0; i < num_pc_res; i++) {
 		pcr = sonic_get_per_core_res_by_res_id(lif, i);
 		pas_show_stats(&pcr->api_stats);
+		//cpdc_pprint_mpools(pcr);
+		sonic_pprint_seq_bmps(pcr);
 		pc_res_deinit(pcr);
 	}
 

@@ -17,7 +17,7 @@ void *seq_setup_desc(struct service_info *svc_info, const void *src_desc,
 		size_t desc_size);
 void seq_cleanup_desc(struct service_info *svc_info);
 
-void seq_ring_db(const struct service_info *svc_info);
+void seq_ring_db(struct service_info *svc_info);
 
 pnso_error_t seq_setup_cp_chain_params(struct service_info *svc_info,
 	struct cpdc_desc *cp_desc, struct cpdc_status_desc *status_desc);

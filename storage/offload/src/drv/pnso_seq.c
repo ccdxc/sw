@@ -27,7 +27,7 @@ seq_cleanup_desc(struct service_info *svc_info)
 }
 
 void
-seq_ring_db(const struct service_info *svc_info)
+seq_ring_db(struct service_info *svc_info)
 {
 	g_sequencer_ops->ring_db(svc_info);
 }

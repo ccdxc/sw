@@ -22,7 +22,7 @@ struct sequencer_ops {
 
 	void (*cleanup_desc)(struct service_info *svc_info);
 
-	void (*ring_db)(const struct service_info *svc_info);
+	void (*ring_db)(struct service_info *svc_info);
 
 	pnso_error_t (*setup_cp_chain_params)(struct service_info *svc_info,
 			struct cpdc_desc *cp_desc,

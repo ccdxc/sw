@@ -758,3 +758,21 @@ cpdc_setup_interrupt_params(struct service_info *svc_info, void *poll_ctx)
 out:
 	return  err;
 }
+
+
+void
+cpdc_pprint_mpools(struct per_core_resource *pcr)
+{
+       MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_CPDC_DESC]);
+       MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_CPDC_DESC_VECTOR]);
+       MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_CPDC_SGL]);
+       MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_CPDC_SGL_VECTOR]);
+       MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_CPDC_STATUS_DESC]);
+       MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_CPDC_STATUS_DESC_VECTOR]);
+       MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_SERVICE_CHAIN]);
+       MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_SERVICE_CHAIN_ENTRY]);
+       MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_BATCH_PAGE]);
+       MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_BATCH_INFO]);
+       MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS]);
+}
+

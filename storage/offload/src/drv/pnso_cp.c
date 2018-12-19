@@ -244,7 +244,7 @@ compress_enable_interrupt(struct service_info *svc_info, void *poll_ctx)
 }
 
 static pnso_error_t
-compress_ring_db(const struct service_info *svc_info)
+compress_ring_db(struct service_info *svc_info)
 {
 	pnso_error_t err = EINVAL;
 	const struct sequencer_info *seq_info;
@@ -482,9 +482,11 @@ compress_teardown(struct service_info *svc_info)
 
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 	cpdc_put_status_desc(pcr, false, status_desc);
+	svc_info->si_status_desc = NULL;
 
 	cp_desc = (struct cpdc_desc *) svc_info->si_desc;
 	cpdc_put_desc(svc_info, false, cp_desc);
+	svc_info->si_desc = NULL;
 
 	seq_cleanup_cpdc_chain(svc_info);
 	seq_cleanup_desc(svc_info);

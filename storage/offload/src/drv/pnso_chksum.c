@@ -185,7 +185,7 @@ chksum_enable_interrupt(struct service_info *svc_info, void *poll_ctx)
 }
 
 static pnso_error_t
-chksum_ring_db(const struct service_info *svc_info)
+chksum_ring_db(struct service_info *svc_info)
 {
 	pnso_error_t err = EINVAL;
 	const struct sequencer_info *seq_info;

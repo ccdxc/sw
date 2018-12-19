@@ -42,7 +42,7 @@ decompact_enable_interrupt(struct service_info *svc_info, void *poll_ctx)
 }
 
 static pnso_error_t
-decompact_ring_db(const struct service_info *svc_info)
+decompact_ring_db(struct service_info *svc_info)
 {
 	return EOPNOTSUPP;
 }

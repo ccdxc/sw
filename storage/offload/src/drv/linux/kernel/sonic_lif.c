@@ -1085,6 +1085,33 @@ int sonic_get_seq_sq(struct lif *lif, enum sonic_queue_type sonic_qtype,
 	return sonic_get_per_core_seq_sq(pc_res, sonic_qtype, q);
 }
 
+void
+sonic_pprint_bmp(struct per_core_resource *pcr, unsigned long *bmp, int max, const char *name)
+{
+	int count = 0;
+	unsigned long id;
+
+	spin_lock(&pcr->seq_statusq_lock);
+	id = find_first_bit(bmp, max);
+	if (id < max) {
+		do {
+			count++;
+			id = find_next_bit(bmp, max, id+1);
+		} while (id < max);
+	}
+	spin_unlock(&pcr->seq_statusq_lock);
+
+	OSAL_LOG_NOTICE("SONIC bmp %s has %d non-zero entries\n",
+			name, count);
+}
+
+void
+sonic_pprint_seq_bmps(struct per_core_resource *pcr)
+{
+	sonic_pprint_bmp(pcr, pcr->cpdc_seq_status_qs_bmp, pcr->num_cpdc_status_qs, "CPDC STATUS");
+	sonic_pprint_bmp(pcr, pcr->crypto_seq_status_qs_bmp, pcr->num_crypto_status_qs, "CRYPTO STATUS");
+}
+
 int
 sonic_get_seq_statusq(struct lif *lif, enum sonic_queue_type sonic_qtype,
 		struct queue **q)

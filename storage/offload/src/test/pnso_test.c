@@ -23,6 +23,8 @@
 #include "sim.h"
 #endif
 
+extern void pnso_set_log_level(int level);
+
 static osal_atomic_int_t g_shutdown;
 static osal_atomic_int_t g_shutdown_complete;
 static osal_atomic_int_t g_testcase_active;
@@ -1898,6 +1900,7 @@ static int worker_loop(void *param)
 	struct batch_context *batch_ctx;
 	int poll_err;
 	bool is_busy;
+	uint64_t cur_ts;
 
 	while (pnso_test_is_active() &&
 	       !osal_thread_should_stop(&ctx->worker_thread)) {
@@ -1906,6 +1909,10 @@ static int worker_loop(void *param)
 		/* Poll for finished work item */
 		batch_ctx = worker_queue_dequeue(ctx->poll_q);
 		if (batch_ctx) {
+			cur_ts = osal_get_clock_nsec();
+			if (batch_ctx->req_rc != PNSO_OK)
+				PNSO_LOG_ERROR("ERROR! Should not be polling for errored out batch_ctx!\n");
+
 			poll_err = batch_ctx->poll_fn(batch_ctx->poll_ctx);
 			if (poll_err == EBUSY) {
 				/* Not ready yet, re-enqueue */
@@ -1914,12 +1921,14 @@ static int worker_loop(void *param)
 			} else if (poll_err == PNSO_OK) {
 				/* completion handler called by poll_fn */
 				PNSO_LOG_DEBUG("DEBUG: polled batch completion\n");
+				ctx->last_active_ts = cur_ts;
 				is_busy = true;
 			} else {
 				/* error case, call completion handler directly */
 				PNSO_LOG_ERROR("poll_fn returned status %d, call completion_cb directly\n",
 					       poll_err);
 				batch_completion_cb(batch_ctx, NULL);
+				ctx->last_active_ts = cur_ts;
 				is_busy = true;
 			}
 		}
@@ -1936,7 +1945,8 @@ static int worker_loop(void *param)
 				return -1;
 			}
 #endif
-			ctx->last_active_ts = osal_get_clock_nsec();
+			cur_ts = osal_get_clock_nsec();
+			ctx->last_active_ts = cur_ts;
 			run_testcase_batch(batch_ctx);
 			is_busy = true;
 		}
