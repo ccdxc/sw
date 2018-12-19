@@ -41,6 +41,11 @@ def Trigger(tc):
     #==============================================================
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
+    if tc.iterators.rdma_cm == 'yes':
+        cm_opt = " -R "
+    else:
+        cm_opt = " "
+
     i = 0
     while (i < 2):
         j = (i + 1) % 2
@@ -53,7 +58,7 @@ def Trigger(tc):
         api.Logger.info("Starting ib_write_bw test from %s" % (tc.cmd_descr))
 
         # cmd for server
-        cmd = "ib_write_bw -d " + tc.devices[i] + " -n 10 -F -x " + tc.gid[i] + " -m 4096 -s 10000 -q " + str(tc.iterators.num_qp) + " --report_gbits"
+        cmd = "ib_write_bw -d " + tc.devices[i] + " -n 10 -F -x " + tc.gid[i] + " -m 4096 -s 10000 -q " + str(tc.iterators.num_qp) + cm_opt + " --report_gbits"
         api.Trigger_AddCommand(req, 
                                w1.node_name, 
                                w1.workload_name,
@@ -69,7 +74,7 @@ def Trigger(tc):
                                cmd)
 
         # cmd for client
-        cmd = "ib_write_bw -d " + tc.devices[j] + " -n 10 -F -x " + tc.gid[j] + " -m 4096 -s 10000 -q " + str(tc.iterators.num_qp) + " --report_gbits " + w1.ip_address
+        cmd = "ib_write_bw -d " + tc.devices[j] + " -n 10 -F -x " + tc.gid[j] + " -m 4096 -s 10000 -q " + str(tc.iterators.num_qp) + cm_opt + " --report_gbits " + w1.ip_address
         api.Trigger_AddCommand(req, 
                                w2.node_name, 
                                w2.workload_name,

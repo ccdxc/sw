@@ -69,7 +69,7 @@ def Trigger(tc):
                                w1.node_name, 
                                w1.workload_name,
                                tc.ib_prefix[i] + cmd,
-                               background = True)
+                               background = True, timeout=600)
 
         # On Naples-Mellanox setups, with Mellanox as server, it takes a few seconds before the server
         # starts listening. So sleep for a few seconds before trying to start the client
@@ -80,11 +80,11 @@ def Trigger(tc):
                                cmd)
 
         # cmd for client
-        cmd = tc.iterators.command + " -d " + tc.devices[i] + " -n 10 -F -x " + tc.gid[i] + " -a -q " + str(tc.iterators.num_qp) + " -m " + str(tc.iterators.mtu) + cm_opt + transport_opt + " --report_gbits " + w1.ip_address
+        cmd = tc.iterators.command + " -d " + tc.devices[j] + " -n 10 -F -x " + tc.gid[j] + " -a -q " + str(tc.iterators.num_qp) + " -m " + str(tc.iterators.mtu) + cm_opt + transport_opt + " --report_gbits " + w1.ip_address
         api.Trigger_AddCommand(req, 
                                w2.node_name, 
                                w2.workload_name,
-                               tc.ib_prefix[j] + cmd)
+                               tc.ib_prefix[j] + cmd, timeout=600)
 
         i = i + 1
     # end while
