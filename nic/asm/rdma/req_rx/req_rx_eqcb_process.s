@@ -12,11 +12,6 @@ struct eqcb_t d;
 #define EQWQE_P r1
 #define DMA_CMD_BASE r4
 
-#define IN_P t1_s2s_cqcb_to_eq_info
-
-#define K_ASYNC_EQ CAPRI_KEY_FIELD(IN_P, async_eq)
-#define K_CMD_EOP CAPRI_KEY_FIELD(IN_P, cmd_eop)
-
 #define PHV_EQWQE_START       eqwqe.qid
 #define PHV_EQWQE_END         eqwqe.color
 #define PHV_ASYNC_EQWQE_START async_eqwqe.qid
@@ -26,6 +21,18 @@ struct eqcb_t d;
 #define PHV_EQ_INT_ASSERT_DATA_END         int_assert_data
 #define PHV_ASYNC_EQ_INT_ASSERT_DATA_BEGIN int_assert_data
 #define PHV_ASYNC_EQ_INT_ASSERT_DATA_END   int_assert_data
+
+#define IN_P t1_s2s_cqcb_to_eq_info
+
+// it should be noted that this program gets fired for regular eq in table 1 and async eq in table 0.
+// but note that we are using k structure as s7_t1_k. This should be ok as long as both t0 and t1 key
+// is defined exactly same (pls see the rdma_resp_rxdma.p4). Pls do not change this assumption.
+// If we want different structures for t0 and t1, we cannot share the program anymore and at that time
+// define a new program for async eqcb_process.
+
+#define K_ASYNC_EQ CAPRI_KEY_FIELD(IN_P, async_eq)
+#define K_CMD_EOP CAPRI_KEY_FIELD(IN_P, cmd_eop)
+#define K_DONOT_RESET_TBL_VLD CAPRI_KEY_FIELD(IN_P, donot_reset_tbl_vld)
 
 %%
 
@@ -70,6 +77,7 @@ async_eq:
     phvwri          p.async_int_assert_data, CAPRI_INT_ASSERT_DATA
     DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, PHV_ASYNC_EQ_INT_ASSERT_DATA_BEGIN, PHV_ASYNC_EQ_INT_ASSERT_DATA_END, d.int_assert_addr)
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
+    seq             c1, K_DONOT_RESET_TBL_VLD, 1
 
     DMA_SET_END_OF_CMDS_E(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
-    CAPRI_SET_TABLE_0_VALID(0)
+    CAPRI_SET_TABLE_0_VALID_C(!c1, 0)

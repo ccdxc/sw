@@ -38,11 +38,6 @@ struct common_p4plus_stage0_app_header_table_k k;
 req_rx_sqcb1_process:
     add            r1, r0, CAPRI_APP_DATA_RAW_FLAGS  // Branch Delay Slot
 
-    // is this a new packet or recirc packet
-    seq            c1, CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT, 0
-    bcf            [!c1], recirc_pkt
-    cmov           TOKEN_ID, c1, d.token_id, CAPRI_APP_DATA_RECIRC_TOKEN_ID // BD Slot
-
     // Do not check and increment token_id for feedback phv unlike
     // response packets. Feedback phvs can be processed out of order from
     // response packets and can be completed in 1 pass. Hence there is no
@@ -50,6 +45,18 @@ req_rx_sqcb1_process:
     beqi           r1, REQ_RX_FLAG_RDMA_FEEDBACK, process_feedback
     // Initialize cqe to success initially
     phvwrpair      p.cqe.status, CQ_STATUS_SUCCESS, p.cqe.qid, CAPRI_RXDMA_INTRINSIC_QID // Branch Delay Slot
+
+    // If QP is not in RTS state, do not process any received packet. Branch to
+    // check for drain state and process packets until number of acknowledged
+    // messages (msn) matches total number of messages sent out (max_ssn -1)
+    seq            c1, d.state, QP_STATE_RTS // Branch Delay Slot
+    bcf            [!c1], check_state
+
+    // is this a new packet or recirc packet
+    seq            c1, CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT, 0 // Branch Delay Slot
+process_req_rx:
+    bcf            [!c1], recirc_pkt
+    cmov           TOKEN_ID, c1, d.token_id, CAPRI_APP_DATA_RECIRC_TOKEN_ID // BD Slot
 
     // If bktrack is in progress do not process any response packets to
     // avoid updating CB state while bktrack logic is updating the same
@@ -64,17 +71,10 @@ req_rx_sqcb1_process:
 
     bcf             [!c2 | !c3], drop_packet
 
-    // If QP is not in RTS state, do not process any received packet. Branch to
-    // check for drain state and process packets until number of acknowledged
-    // messages (msn) matches total number of messages sent out (max_ssn -1)
-    seq            c1, d.state, QP_STATE_RTS // Branch Delay Slot
-    bcf            [!c1], check_state
-
     // copy cur_timestamp loaded in r4 into phv to DMA ack_timestamp
     // into sqcb2 for valid aeth packet
     phvwr          p.ack_timestamp, r4 // Branch Delay slot
 
-process_req_rx:
     // get token_id for this packet
     phvwr          p.common.rdma_recirc_token_id, TOKEN_ID
     phvwr          CAPRI_PHV_FIELD(TO_S4_P, my_token_id), TOKEN_ID
@@ -419,8 +419,8 @@ process_recirc_error_disable_qp:
     CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_dummy_sqcb1_write_back_process, r0) //Exit Slot
 
 check_state:
-    slt       c1, d.state, QP_STATE_SQD
-    bcf       [!c1], process_req_rx
+    slt       c2, d.state, QP_STATE_SQD
+    bcf       [!c2], process_req_rx
     nop       // Branch Delay Slot
 
     phvwr.e        p.common.p4_intr_global_drop, 1

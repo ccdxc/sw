@@ -330,7 +330,8 @@ header_type req_rx_cqcb_to_eq_info_t {
     fields {
         async_eq                         :  1;
         cmd_eop                          :  1;
-        pad                              :  158;
+        donot_reset_tbl_vld              :  1;
+        pad                              :  157;
     }
 }
 
@@ -1275,6 +1276,7 @@ action req_rx_eqcb_process_t0 () {
     // stage to stage
     modify_field(t0_s2s_cqcb_to_eq_info_scr.async_eq, t0_s2s_cqcb_to_eq_info.async_eq);
     modify_field(t0_s2s_cqcb_to_eq_info_scr.cmd_eop, t0_s2s_cqcb_to_eq_info.cmd_eop);
+    modify_field(t0_s2s_cqcb_to_eq_info_scr.donot_reset_tbl_vld, t0_s2s_cqcb_to_eq_info.donot_reset_tbl_vld);
     modify_field(t0_s2s_cqcb_to_eq_info_scr.pad, t0_s2s_cqcb_to_eq_info.pad);
 
 }
@@ -1287,6 +1289,7 @@ action req_rx_eqcb_process_t1 () {
     // stage to stage
     modify_field(t1_s2s_cqcb_to_eq_info_scr.async_eq, t1_s2s_cqcb_to_eq_info.async_eq);
     modify_field(t1_s2s_cqcb_to_eq_info_scr.cmd_eop, t1_s2s_cqcb_to_eq_info.cmd_eop);
+    modify_field(t1_s2s_cqcb_to_eq_info_scr.donot_reset_tbl_vld, t1_s2s_cqcb_to_eq_info.donot_reset_tbl_vld);
     modify_field(t1_s2s_cqcb_to_eq_info_scr.pad, t1_s2s_cqcb_to_eq_info.pad);
 
 }

@@ -49,11 +49,6 @@ struct req_tx_s0_t0_k k;
 
 .align
 req_tx_sqcb_process:
-    // Bypass state ccheck for recirc pkts as state has already been checked
-    // in the previous pass.
-    seq            c1, CAPRI_TXDMA_INTRINSIC_RECIRC_COUNT, 0
-    bcf            [!c1], process_recirc
-
     // If QP is not in RTS state, do no process any event. Branch to check for
     // drain state and process only if SQ has to be drained till a specific WQE
     seq            c7, d.state, QP_STATE_RTS
@@ -61,6 +56,10 @@ req_tx_sqcb_process:
     tblwr.c7       d.sq_drained, 0 // Branch Delay Slot
 
 process_req_tx:
+    seq            c1, CAPRI_TXDMA_INTRINSIC_RECIRC_COUNT, 0
+    bcf            [!c1], process_recirc
+    nop            // Branch Delay Slot
+
 #   // moving to _ext program
 #   // copy intrinsic to global
 #   add            r1, r0, offsetof(struct phv_, common_global_global_data) 
