@@ -50,6 +50,11 @@ public:
         this->cable_type_ = cable_type;
     }
 
+    port_loopback_mode_t loopback_mode(void) { return this->loopback_mode_; }
+    void set_loopback_mode(port_loopback_mode_t loopback_mode) {
+        this->loopback_mode_ = loopback_mode;
+    }
+
     uint32_t port_num(void) { return this->port_num_; }
     void set_port_num(uint32_t port_num) {
         this->port_num_ = port_num;
@@ -304,13 +309,11 @@ private:
     bool                  fec_ability_;               //  AN fec_ability
     uint32_t              fec_request_;               //  AN fec_request
     uint32_t              sbus_addr_[MAX_PORT_LANES]; // sbus addr for each serdes
-
     mac_fn_t              *mac_fns_;                  // mac functions
     serdes_fn_t           *serdes_fns_;               // serdes functions
-
     uint32_t              num_retries_;               // max linkup retries
-
-    sdk::types::cable_type_t cable_type_;             // cable type
+    cable_type_t          cable_type_;                // cable type
+    port_loopback_mode_t  loopback_mode_;             // port loopback mode - MAC/PHY
 
     // MAC port num calculation based on mac instance and mac channel
     uint32_t  port_mac_port_num_calc(void);

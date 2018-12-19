@@ -144,6 +144,12 @@ enum PortLinkState {
   PORT_LINK_SM_UP                  = 19;
 }
 
+enum PortLoopBackMode {
+    PORT_LOOPBACK_MODE_NONE = 0;    // disable loopback
+    PORT_LOOPBACK_MODE_MAC  = 1;    // MAC loopback
+    PORT_LOOPBACK_MODE_PHY  = 2;    // PHY/Serdes loopback
+}
+
 // PortSpec message is used to do add/mod properties of a port
 message PortSpec {
   option (delphi.update_event) = true;
@@ -163,7 +169,8 @@ message PortSpec {
   uint32            debounce_time    = 11;  // Debounce time in ms
   uint32            mtu              = 12;  // port mtu
   PortPauseType     pause            = 13;  // MAC pause
-  bool              mac_stats_reset  = 14;  // Reset port mac stats. Only during update
+  PortLoopBackMode  loopback_mode    = 14;  // Port loopback mdoe - MAC/PHY
+  bool              mac_stats_reset  = 15;  // Reset port mac stats. Only during update
 }
 
 message PortStatus {
