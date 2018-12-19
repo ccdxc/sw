@@ -51,6 +51,8 @@ PACKAGES = %w[
   nfs-utils-lib
   lftp 
   git
+  iperf3
+  vlc
 ]
 
 run "yum install -y #{PACKAGES.join(" ")}"
