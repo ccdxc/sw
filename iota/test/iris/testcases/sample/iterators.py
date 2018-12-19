@@ -7,6 +7,7 @@ import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
 import iota.test.iris.testcases.storage.pnsodefs as pnsodefs
 
 def Setup(tc):
+    tc.SetTestCount(5)
     return api.types.status.SUCCESS
 
 def Trigger(tc):

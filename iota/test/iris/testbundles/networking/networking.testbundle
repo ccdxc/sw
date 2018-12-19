@@ -10,6 +10,7 @@ testcases:
 
     -   name    : Ping_Local_Workloads
         testcase: testcases.networking.ping
+        stress  : True
         args    :
             type: local_only
         iterators :
@@ -19,6 +20,7 @@ testcases:
 
     -   name    : Ping_Remote_Workloads
         testcase: testcases.networking.ping
+        stress  : True
         args    :
             type: remote_only
         iterators :
@@ -28,6 +30,7 @@ testcases:
 
     -   name    : Iperf_Remote_Workloads
         testcase: testcases.networking.iperf
+        stress  : True
         iterators:
             type      : nested
             proto     : [ udp, tcp ]

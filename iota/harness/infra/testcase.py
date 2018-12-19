@@ -85,10 +85,18 @@ class TestcaseData:
     def __init__(self, args):
         self.__status = types.status.FAILURE
         self.__timer = timeprofiler.TimeProfiler()
+        self.__test_count = 1
         self.args = args
         self.__instid = ""
         self.iterators = TestcaseDataIters()
         return
+
+    def SetTestCount(self, count):
+        self.__test_count = count
+        return
+
+    def GetTestCount(self):
+        return self.__test_count
 
     def SetInstanceId(self, instid):
         self.__instid = instid
@@ -137,6 +145,7 @@ class Testcase:
         self.__resolve()
         self.__enable = getattr(self.__spec, 'enable', True)
         self.__ignored = getattr(self.__spec, "ignore", False)
+        self.__stress = getattr(self.__spec, "stress", False)
         
  
         self.__timer = timeprofiler.TimeProfiler()
@@ -145,11 +154,25 @@ class Testcase:
         self.status = types.status.UNAVAIL
 
         self.__setup_iters()
-
+        self.__apply_stress_factor()
+    
         self.__stats_pass = 0
         self.__stats_fail = 0
         self.__stats_ignored = 0
         self.__stats_error = 0
+        return
+
+    def __apply_stress_factor(self):
+        if GlobalOptions.stress == False or self.__stress == False:
+            return
+        
+        newlist = []
+        for itdata in self.__iters:
+            for s in range(GlobalOptions.stress_factor):
+                sdata = copy.deepcopy(itdata)
+                newlist.append(sdata)
+        assert(len(newlist) != 0)
+        self.__iters = newlist
         return
 
     def __get_instance_id(self, iter_id):
@@ -256,15 +279,15 @@ class Testcase:
             return types.status.FAILURE
         return types.status.SUCCESS
 
-    def __update_stats(self, status):
+    def __update_stats(self, status, count):
         if status == types.status.SUCCESS:
-            self.__stats_pass += 1
+            self.__stats_pass += count
         elif status == types.status.FAILURE:
-            self.__stats_fail += 1
+            self.__stats_fail += count
         elif status == types.status.IGNORED:
-            self.__stats_ignored += 1
+            self.__stats_ignored += count
         else:
-            self.__stats_error += 1
+            self.__stats_error += count
         return
 
     def __run_common_verifs(self):
@@ -371,7 +394,7 @@ class Testcase:
     
     def __aggregate_stats(self):
         for iter_data in self.__iters:
-            self.__update_stats(iter_data.GetStatus())
+            self.__update_stats(iter_data.GetStatus(), iter_data.GetTestCount())
         return
 
     def GetStats(self):
