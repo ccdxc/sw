@@ -290,6 +290,7 @@ export class GuidesearchComponent implements OnInit, OnChanges {
     if (this.labelOutput) {
       this.labelOutput.length = 0;
     }
+    this.isAllInputsValidated();
   }
 
   /**
@@ -297,13 +298,26 @@ export class GuidesearchComponent implements OnInit, OnChanges {
    * Make up a search-spec object and emit an event.  Let upper class to handle the search.
    */
   onProceedGuidedSearchClick($event) {
-    const obj: GuidedSearchCriteria = {
+    const obj: GuidedSearchCriteria = this.genGuidedSearchCriteria();
+    const isEmpty = SearchUtil.isGuidedSearchCriteriaEmpty(obj);
+    if (!isEmpty) {
+         this.proceedGuidedSearch.emit(obj);
+    }
+  }
+
+  private genGuidedSearchCriteria(): GuidedSearchCriteria {
+    return {
       in: this.selectedCategories,
       is: this.selectedKinds,
       has: (this.fieldRepeater) ? this.fieldRepeater.getValues() : [],
       tag: (this.labelRepeater) ? this.labelRepeater.getValues() : []
     };
-    this.proceedGuidedSearch.emit(obj);
+  }
+
+  isAllInputsValidated(): boolean {
+    const obj: GuidedSearchCriteria = this.genGuidedSearchCriteria();
+    const isEmpty = SearchUtil.isGuidedSearchCriteriaEmpty(obj);
+    return !isEmpty;
   }
 
   /**

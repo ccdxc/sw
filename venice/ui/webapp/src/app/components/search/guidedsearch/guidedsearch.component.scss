@@ -53,7 +53,17 @@ $vertical-gutter: 5px;
     padding-top:5px;
 }
 
-.guidesearch-search, 
+.guidesearch-search {
+    padding: 4px 8px;
+    line-height: 16px;
+    margin: 5px 10px;
+}
+
+.guidesearch-search:disabled {
+    opacity: 0.7;
+    cursor: not-allowed ;
+}
+
 .guidesearch-clear {
     padding: 4px 10px;
     line-height: 25px;

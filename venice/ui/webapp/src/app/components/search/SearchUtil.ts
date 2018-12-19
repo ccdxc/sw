@@ -1,7 +1,7 @@
 import { SearchInputTypeValue, SearchSpec, SearchExpression, SearchModelField } from '@app/components/search';
 import { Utility } from '@app/common/Utility';
 import { CategoryMapping } from '@sdk/v1/models/generated/category-mapping.model';
-import { SearchSuggestion, CompileSearchInputStringResult, SearchGrammarItem, SearchsuggestionTypes, SearchInputErrors, ExamineCategoryOrKindResult } from './';
+import { SearchSuggestion, CompileSearchInputStringResult, SearchGrammarItem, SearchsuggestionTypes, SearchInputErrors, ExamineCategoryOrKindResult , GuidedSearchCriteria} from './';
 
 export class SearchUtil {
   public static LAST_SEARCH_DATA = 'last_search_data';
@@ -710,5 +710,9 @@ export class SearchUtil {
       return true;
     }
     return false;
+  }
+
+  public static isGuidedSearchCriteriaEmpty( obj: GuidedSearchCriteria): boolean {
+     return (!obj.in || obj.in.length === 0) && (!obj.is || obj.is.length === 0)  && (!obj.tag || obj.tag.length === 0) && (!obj.has || obj.has.length === 0 );
   }
 }

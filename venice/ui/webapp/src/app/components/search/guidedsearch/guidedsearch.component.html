@@ -81,7 +81,7 @@
           <span (click)="onCancelGuidedSearchClick($event)" tabindex="0"  (keydown)="($event.which ==13)? onCancelGuidedSearchClick($event) : ''" class="global-button-neutral guidesearch-clear">CLEAR</span>
       </div>
       <div fxFlex="nogrow">
-        <span (click)="onProceedGuidedSearchClick($event)"  tabindex="0"  (keydown)="($event.which ==13)? onProceedGuidedSearchClick($event) : ''"  class="global-button-primary guidesearch-search">SEARCH</span>
+        <button (click)="onProceedGuidedSearchClick($event)"  tabindex="0"  (keydown)="($event.which ==13)? onProceedGuidedSearchClick($event) : ''"  class="global-button-primary guidesearch-search">SEARCH</button>
       </div>
       
   </div>
