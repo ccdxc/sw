@@ -3,7 +3,7 @@
  *
  * @file    vnic.cc
  *
- * @brief   This file deals with OCI VNIC API handling
+ * @brief   This file deals with vnic api handling
  */
 
 #include <stdio.h>
@@ -11,7 +11,7 @@
 #include "nic/sdk/include/sdk/timestamp.hpp"
 #include "nic/hal/apollo/core/mem.hpp"
 #include "nic/hal/apollo/api/vnic.hpp"
-#include "nic/hal/apollo/api/oci_state.hpp"
+#include "nic/hal/apollo/core/oci_state.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/hal/apollo/framework/api_ctxt.hpp"
@@ -34,71 +34,11 @@ namespace api {
  * @{
  */
 
-/**
- * @brief    cleanup state maintained for this vnic including any hw entries we
- *           are holding on to
- */
-void
-vnic_entry::cleanup(void) {
-    // TODO: fix me
-    //SDK_SPINLOCK_DESTROY(&vnic->slock);
-    vnic_db()->vnic_idxr()->free(hw_id_);    // TODO: more state to free here !!!
-}
-
-/**
- * @brief    release all the s/w state associate with the given vnic, if any,
- *           and free the memory
- * @param[in] vnic     vnic to be freed
- * NOTE: h/w entries should have been cleaned up (by calling cleanup_hw()
- * before calling this
- */
-void
-vnic_entry::destroy(vnic_entry *vnic) {
-    vnic->cleanup();
-    vnic->~vnic_entry();
-}
-
-/**
- * @brief     initialize vnic entry with the given config
- * @param[in] api_ctxt API context carrying the configuration
- * @return    SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t
-vnic_entry::init_config(api_ctxt_t *api_ctxt) {
-    oci_vnic_t *oci_vnic = &api_ctxt->vnic_info;
-
-    //SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_SHARED);
-    memcpy(&this->key_, &oci_vnic->key, sizeof(oci_vnic_key_t));
-    this->ht_ctxt_.reset();
-    return sdk::SDK_RET_OK;
-}
-
-/**
- * @brief    allocate h/w resources for this object
- * @return    SDK_RET_OK on success, failure status code on error
- */
-// TODO: this should ideally go to impl class
-sdk_ret_t
-vnic_entry::alloc_resources(void) {
-    /**
-     * allocate hw id for this vnic, vnic specific index tables in the p4
-     * datapath are indexed by this
-     */
-    if (vnic_db()->vnic_idxr()->alloc((uint32_t *)&this->hw_id_) !=
-            sdk::lib::indexer::SUCCESS) {
-        return sdk::SDK_RET_NO_RESOURCE;
-    }
-    return sdk::SDK_RET_OK;
-}
-
-/**
- * @brief     update/override the subnet object with given config
- * @param[in] api_ctxt API context carrying the configuration
- * @return    SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t
-vnic_entry::update_config(api_ctxt_t *api_ctxt) {
-    return sdk::SDK_RET_OK;
+/**< @brief    constructor */
+vnic_entry::vnic_entry() {
+    //SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
+    ht_ctxt_.reset();
+    hw_id_ = 0xFFFF;
 }
 
 /**
@@ -117,6 +57,25 @@ vnic_entry::factory(oci_vnic_t *oci_vnic) {
     }
     return vnic;
 
+}
+
+/**< @brief    destructor */
+vnic_entry::~vnic_entry() {
+    // TODO: fix me
+    //SDK_SPINLOCK_DESTROY(&slock_);
+}
+
+/**
+ * @brief    release all the s/w & h/w resources associated with this object,
+ *           if any, and free the memory
+ * @param[in] vnic     vnic to be freed
+ * NOTE: h/w entries themselves should have been cleaned up (by calling
+ *       cleanup_hw() before calling this
+ */
+void
+vnic_entry::destroy(vnic_entry *vnic) {
+    vnic->free_resources_();
+    vnic->~vnic_entry();
 }
 
 #if 0
@@ -166,6 +125,47 @@ vnic_entry::process_get(api_ctxt_t *api_ctxt) {
 #endif
 
 /**
+ * @brief     initialize vnic entry with the given config
+ * @param[in] api_ctxt API context carrying the configuration
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+vnic_entry::init_config(api_ctxt_t *api_ctxt) {
+    oci_vnic_t *oci_vnic = &api_ctxt->api_params->vnic_info;
+
+    memcpy(&this->key_, &oci_vnic->key, sizeof(oci_vnic_key_t));
+    return sdk::SDK_RET_OK;
+}
+
+/**
+ * @brief    allocate h/w resources for this object
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+// TODO: this should ideally go to impl class
+sdk_ret_t
+vnic_entry::alloc_resources(void) {
+    /**
+     * allocate hw id for this vnic, vnic specific index tables in the p4
+     * datapath are indexed by this
+     */
+    if (vnic_db()->vnic_idxr()->alloc((uint32_t *)&this->hw_id_) !=
+            sdk::lib::indexer::SUCCESS) {
+        return sdk::SDK_RET_NO_RESOURCE;
+    }
+    return sdk::SDK_RET_OK;
+}
+
+/**
+ * @brief     update/override the subnet object with given config
+ * @param[in] api_ctxt API context carrying the configuration
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+vnic_entry::update_config(api_ctxt_t *api_ctxt) {
+    return sdk::SDK_RET_OK;
+}
+
+/**
  * @brief    program all h/w tables relevant to this object except stage 0
  *           table(s), if any
  * @param[in] obj_ctxt    transient state associated with this API
@@ -174,6 +174,18 @@ vnic_entry::process_get(api_ctxt_t *api_ctxt) {
 sdk_ret_t
 vnic_entry::program_hw(obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
+}
+
+/**
+ * @brief     free h/w resources used by this object, if any
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+vnic_entry::free_resources_(void) {
+    if (hw_id_ != 0xFF) {
+        vnic_db()->vnic_idxr()->free(hw_id_);
+    }
+    return sdk::SDK_RET_OK;
 }
 
 /**
@@ -534,15 +546,18 @@ error:
 sdk_ret_t
 oci_vnic_create (_In_ oci_vnic_t *vnic)
 {
-    api_ctxt_t    api_ctxt;   // TODO: get this from slab
+    api_ctxt_t    api_ctxt;
     sdk_ret_t     rv;
 
-    memset(&api_ctxt, 0, sizeof(api_ctxt));
-    api_ctxt.api_op = api::API_OP_CREATE;
-    api_ctxt.obj_id = api::OBJ_ID_VNIC;
-    api_ctxt.vnic_info = *vnic;
-    rv = api::g_api_engine.process_api(&api_ctxt);
-    return rv;
+    api_ctxt.api_params = (api_params_t *)api::api_params_slab()->alloc();
+    if (likely(api_ctxt.api_params != NULL)) {
+        api_ctxt.api_op = api::API_OP_CREATE;
+        api_ctxt.obj_id = api::OBJ_ID_VNIC;
+        api_ctxt.api_params->vnic_info = *vnic;
+        rv = api::g_api_engine.process_api(&api_ctxt);
+        return rv;
+    }
+    return sdk::SDK_RET_OOM;
 }
 
 /**
@@ -554,15 +569,18 @@ oci_vnic_create (_In_ oci_vnic_t *vnic)
 sdk_ret_t
 oci_vnic_delete (_In_ oci_vnic_key_t *vnic_key)
 {
-    api_ctxt_t    api_ctxt;   // TODO: get this from slab ??
+    api_ctxt_t    api_ctxt;
     sdk_ret_t     rv;
 
-    memset(&api_ctxt, 0, sizeof(api_ctxt));
-    api_ctxt.api_op = api::API_OP_DELETE;
-    api_ctxt.obj_id = api::OBJ_ID_VNIC;
-    api_ctxt.vnic_key = *vnic_key;
-    rv = api::g_api_engine.process_api(&api_ctxt);
-    return rv;
+    api_ctxt.api_params = (api_params_t *)api::api_params_slab()->alloc();
+    if (likely(api_ctxt.api_params != NULL)) {
+        api_ctxt.api_op = api::API_OP_DELETE;
+        api_ctxt.obj_id = api::OBJ_ID_VNIC;
+        api_ctxt.api_params->vnic_key = *vnic_key;
+        rv = api::g_api_engine.process_api(&api_ctxt);
+        return rv;
+    }
+    return sdk::SDK_RET_OOM;
 }
 
 /** @} */ // end of OCI_VNIC_API

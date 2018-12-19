@@ -3,14 +3,14 @@
  *
  * @file    subnet.cc
  *
- * @brief   This file deals with OCI subnet API handling
+ * @brief   This file deals with subnet api handling
  */
 
 #include <stdio.h>
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/hal/apollo/core/mem.hpp"
 #include "nic/hal/apollo/api/subnet.hpp"
-#include "nic/hal/apollo/api/oci_state.hpp"
+#include "nic/hal/apollo/core/oci_state.hpp"
 #include "nic/hal/apollo/framework/api_ctxt.hpp"
 #include "nic/hal/apollo/framework/api_engine.hpp"
 
@@ -26,7 +26,7 @@ namespace api {
 
 /**< @brief    constructor */
 subnet_entry::subnet_entry() {
-    //SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_SHARED);
+    //SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
     ht_ctxt_.reset();
     hw_id_ = 0xFFFF;
     lpm_base_addr_ = 0XFFFFFFFFFFFFFFFF;
@@ -122,7 +122,7 @@ subnet_entry::process_get(api_ctxt_t *api_ctxt) {
  */
 sdk_ret_t
 subnet_entry::init_config(api_ctxt_t *api_ctxt) {
-    oci_subnet_t *oci_subnet = &api_ctxt->subnet_info;
+    oci_subnet_t *oci_subnet = &api_ctxt->api_params->subnet_info;
 
     memcpy(&this->key_, &oci_subnet->key, sizeof(oci_subnet_key_t));
     memcpy(&this->vr_mac_, &oci_subnet->vr_mac, sizeof(mac_addr_t));
@@ -381,12 +381,15 @@ oci_subnet_create (_In_ oci_subnet_t *subnet)
     api_ctxt_t    api_ctxt;
     sdk_ret_t     rv;
 
-    memset(&api_ctxt, 0, sizeof(api_ctxt));
-    api_ctxt.api_op = api::API_OP_CREATE;
-    api_ctxt.obj_id = api::OBJ_ID_SUBNET;
-    api_ctxt.subnet_info = *subnet;
-    rv = api::g_api_engine.process_api(&api_ctxt);
-    return rv;
+    api_ctxt.api_params = (api_params_t *)api::api_params_slab()->alloc();
+    if (likely(api_ctxt.api_params != NULL)) {
+        api_ctxt.api_op = api::API_OP_CREATE;
+        api_ctxt.obj_id = api::OBJ_ID_SUBNET;
+        api_ctxt.api_params->subnet_info = *subnet;
+        rv = api::g_api_engine.process_api(&api_ctxt);
+        return rv;
+    }
+    return sdk::SDK_RET_OOM;
 }
 
 /**
@@ -398,15 +401,18 @@ oci_subnet_create (_In_ oci_subnet_t *subnet)
 sdk_ret_t
 oci_subnet_delete (_In_ oci_subnet_key_t *subnet_key)
 {
-    api_ctxt_t    api_ctxt;   // TODO: get this from slab ??
+    api_ctxt_t    api_ctxt;
     sdk_ret_t     rv;
 
-    memset(&api_ctxt, 0, sizeof(api_ctxt));
-    api_ctxt.api_op = api::API_OP_DELETE;
-    api_ctxt.obj_id = api::OBJ_ID_SUBNET;
-    api_ctxt.subnet_key = *subnet_key;
-    rv = api::g_api_engine.process_api(&api_ctxt);
-    return rv;
+    api_ctxt.api_params = (api_params_t *)api::api_params_slab()->alloc();
+    if (likely(api_ctxt.api_params != NULL)) {
+        api_ctxt.api_op = api::API_OP_DELETE;
+        api_ctxt.obj_id = api::OBJ_ID_SUBNET;
+        api_ctxt.api_params->subnet_key = *subnet_key;
+        rv = api::g_api_engine.process_api(&api_ctxt);
+        return rv;
+    }
+    return sdk::SDK_RET_OOM;
 }
 
 /** @} */    // end of OCI_SUBNET_API
