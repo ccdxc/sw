@@ -77,4 +77,6 @@ typedef struct fru_data
 } fru_data_t;
 
 int readKey(std::string key, std::string &value);
+int readMac(std::string &value);
+int readNumberMacs(std::string &value);
 #endif /* __DEV_HPP__ */

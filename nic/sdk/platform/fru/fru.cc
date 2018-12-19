@@ -183,3 +183,13 @@ int readKey(std::string key, std::string &value)
     }
     return 0;
 }
+
+int readMac(std::string &value)
+{
+    return readKey(MACADDRESS_KEY, value);
+}
+
+int readNumberMacs(std::string &value)
+{
+    return readKey(NUMMACADDR_KEY, value);
+}
