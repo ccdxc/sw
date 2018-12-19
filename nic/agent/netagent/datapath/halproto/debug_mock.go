@@ -717,6 +717,24 @@ func (mr *MockDebugClientMockRecorder) SchedulerActiveQGet(ctx, in interface{}, 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SchedulerActiveQGet", reflect.TypeOf((*MockDebugClient)(nil).SchedulerActiveQGet), varargs...)
 }
 
+// PacketBufferUpdate mocks base method
+func (m *MockDebugClient) PacketBufferUpdate(ctx context.Context, in *PacketBufferRequestMsg, opts ...grpc.CallOption) (*PacketBufferResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "PacketBufferUpdate", varargs...)
+	ret0, _ := ret[0].(*PacketBufferResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// PacketBufferUpdate indicates an expected call of PacketBufferUpdate
+func (mr *MockDebugClientMockRecorder) PacketBufferUpdate(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PacketBufferUpdate", reflect.TypeOf((*MockDebugClient)(nil).PacketBufferUpdate), varargs...)
+}
+
 // MockDebugServer is a mock of DebugServer interface
 type MockDebugServer struct {
 	ctrl     *gomock.Controller
@@ -1063,4 +1081,17 @@ func (m *MockDebugServer) SchedulerActiveQGet(arg0 context.Context, arg1 *Schedu
 // SchedulerActiveQGet indicates an expected call of SchedulerActiveQGet
 func (mr *MockDebugServerMockRecorder) SchedulerActiveQGet(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SchedulerActiveQGet", reflect.TypeOf((*MockDebugServer)(nil).SchedulerActiveQGet), arg0, arg1)
+}
+
+// PacketBufferUpdate mocks base method
+func (m *MockDebugServer) PacketBufferUpdate(arg0 context.Context, arg1 *PacketBufferRequestMsg) (*PacketBufferResponseMsg, error) {
+	ret := m.ctrl.Call(m, "PacketBufferUpdate", arg0, arg1)
+	ret0, _ := ret[0].(*PacketBufferResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// PacketBufferUpdate indicates an expected call of PacketBufferUpdate
+func (mr *MockDebugServerMockRecorder) PacketBufferUpdate(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PacketBufferUpdate", reflect.TypeOf((*MockDebugServer)(nil).PacketBufferUpdate), arg0, arg1)
 }

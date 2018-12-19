@@ -862,5 +862,11 @@ pd_pb_stats_clear (pd_func_args_t *pd_func_args)
     return first_err_ret;
 }
 
+hal_ret_t
+pd_packet_buffer_update (pd_func_args_t *pd_func_args)
+{
+    return HAL_RET_OK;
+}
+
 }    // namespace pd
 }    // namespace hal

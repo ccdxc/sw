@@ -30,6 +30,7 @@ var (
 	regAddr             uint64
 	regData             uint32
 	regInstance         uint32
+	platPbPause         string
 )
 
 var debugCmd = &cobra.Command{
@@ -110,6 +111,13 @@ var platDebugCmd = &cobra.Command{
 	Long:  "set platform options",
 }
 
+var pbPlatDebugCmd = &cobra.Command{
+	Use:   "packet-buffer",
+	Short: "set packet-buffer options",
+	Long:  "set packet-buffer options",
+	Run:   pbPlatDebugCmdHandler,
+}
+
 var platHbmDebugCmd = &cobra.Command{
 	Use:   "hbm",
 	Short: "set platform hbm options",
@@ -153,6 +161,7 @@ func init() {
 	debugCmd.AddCommand(debugUpdateCmd)
 	debugCmd.AddCommand(debugDeleteCmd)
 	platDebugCmd.AddCommand(platHbmDebugCmd)
+	platDebugCmd.AddCommand(pbPlatDebugCmd)
 	platHbmDebugCmd.AddCommand(platLlcDebugCmd)
 	traceDebugCmd.AddCommand(flushLogsDebugCmd)
 	fwDebugCmd.AddCommand(secProfDebugCmd)
@@ -180,6 +189,56 @@ func init() {
 	regShowCmd.Flags().Uint32Var(&regID, "reg-id", 0, "Specify register ID")
 	regShowCmd.Flags().Uint64Var(&regAddr, "reg-addr", 0, "Specify register address")
 	regShowCmd.Flags().Uint32Var(&regInstance, "instance", 0, "Specify register instance")
+
+	pbPlatDebugCmd.Flags().StringVar(&platPbPause, "pause", "", "Enable or Disable packet-buffer pause using enable | disable")
+	pbPlatDebugCmd.MarkFlagRequired("pause")
+}
+
+func pbPlatDebugCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	defer c.Close()
+
+	pause := false
+	client := halproto.NewDebugClient(c.ClientConn)
+
+	if strings.Compare(platPbPause, "enable") == 0 {
+		pause = true
+	} else if strings.Compare(platPbPause, "disable") == 0 {
+		pause = false
+	} else {
+		fmt.Printf("Invalid argument. Refer to help string\n")
+		return
+	}
+
+	req := &halproto.PacketBufferRequest{
+		Spec: &halproto.PacketBufferSpec{
+			Pause: pause,
+		},
+	}
+
+	reqMsg := &halproto.PacketBufferRequestMsg{
+		Request: []*halproto.PacketBufferRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.PacketBufferUpdate(context.Background(), reqMsg)
+	if err != nil {
+		fmt.Printf("Packet buffer update failed. %v\n", err)
+		return
+	}
+
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+		} else {
+			fmt.Printf("Pause set to: %t\n", pause)
+		}
+	}
 }
 
 func regShowCmdHandler(cmd *cobra.Command, args []string) {

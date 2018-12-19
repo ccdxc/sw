@@ -50,6 +50,8 @@ service Debug {
 
   rpc SchedulerStatsGet (types.Empty) returns (SchedulerStatsResponseMsg) {}
   rpc SchedulerActiveQGet (SchedulerActiveQRequestMsg) returns (SchedulerActiveQResponseMsg) {}
+
+  rpc PacketBufferUpdate (PacketBufferRequestMsg) returns (PacketBufferResponseMsg) {}
 }
 
 
@@ -636,4 +638,24 @@ message SchedulerActiveQResponse {
 
 message SchedulerActiveQResponseMsg {
   repeated SchedulerActiveQResponse response = 1;
+}
+
+message PacketBufferSpec {
+  bool pause = 1;
+}
+
+message PacketBufferRequest {
+  PacketBufferSpec spec = 1;
+}
+
+message PacketBufferRequestMsg {
+  repeated PacketBufferRequest request = 1;
+}
+
+message PacketBufferResponse {
+  types.ApiStatus   api_status            = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+}
+
+message PacketBufferResponseMsg {
+  repeated PacketBufferResponse response = 1;
 }

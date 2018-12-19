@@ -896,5 +896,19 @@ scheduler_stats_get(debug::SchedulerStatsResponse *rsp)
     return ret;
 }
 
+hal_ret_t
+packet_buffer_update (debug::PacketBufferRequest *req, debug::PacketBufferResponse *rsp)
+{
+    hal_ret_t                           ret = HAL_RET_OK;
+    pd::pd_func_args_t                  pd_func_args = {0};
+    pd::pd_packet_buffer_update_args_t  pb_args;
+
+    pd_func_args.pd_packet_buffer_update = &pb_args;
+    pd::hal_pd_call(pd::PD_FUNC_ID_PACKET_BUFFER_UPDATE, &pd_func_args);
+
+    rsp->set_api_status(types::API_STATUS_OK);
+
+    return ret;
+}
 
 }    // namespace hal

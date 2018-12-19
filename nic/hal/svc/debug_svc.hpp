@@ -68,6 +68,10 @@ using debug::HbmCacheResponse;
 using debug::HbmCacheResponseMsg;
 using debug::SchedulerStatsResponse;
 using debug::SchedulerStatsResponseMsg;
+using debug::PacketBufferRequest;
+using debug::PacketBufferRequestMsg;
+using debug::PacketBufferResponse;
+using debug::PacketBufferResponseMsg;
 
 class DebugServiceImpl final : public Debug::Service {
 public:
@@ -140,6 +144,9 @@ public:
     Status SchedulerStatsGet(ServerContext *context,
                              const Empty *req,
                              SchedulerStatsResponseMsg *rsp);
+    Status PacketBufferUpdate(ServerContext *context,
+                              const PacketBufferRequestMsg *req,
+                              PacketBufferResponseMsg *rsp);
 };
 
 #endif  // __DEBUG_SVC_HPP__

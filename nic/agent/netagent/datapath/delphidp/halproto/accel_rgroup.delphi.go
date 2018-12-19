@@ -215,6 +215,11 @@ It has these top-level messages:
 	SchedulerActiveQRequestMsg
 	SchedulerActiveQResponse
 	SchedulerActiveQResponseMsg
+	PacketBufferSpec
+	PacketBufferRequest
+	PacketBufferRequestMsg
+	PacketBufferResponse
+	PacketBufferResponseMsg
 	ICMPMsg
 	DoSService
 	DoSSessionLimits
