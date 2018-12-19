@@ -17,6 +17,7 @@ enum {
     OCI_SLAB_VCN,
     OCI_SLAB_SUBNET,
     OCI_SLAB_VNIC,
+    OCI_SLAB_API_PARAMS,
     OCI_SLAB_MAX,
 };
 

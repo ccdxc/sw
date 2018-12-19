@@ -178,7 +178,7 @@ oci_int_tep_free (oci_int_tep_t *int_tep)
 static inline sdk_ret_t
 oci_int_tep_init (oci_int_tep_t *int_tep, oci_tep_t *tep)
 {
-    //SDK_SPINLOCK_INIT(&int_tep->slock, PTHREAD_PROCESS_SHARED);
+    //SDK_SPINLOCK_INIT(&int_tep->slock, PTHREAD_PROCESS_PRIVATE);
     memcpy(&int_tep->key, &tep->key, sizeof(oci_tep_key_t));
 
     int_tep->ht_ctxt.reset();

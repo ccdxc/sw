@@ -12,12 +12,9 @@
 #include "nic/hal/apollo/api/vcn.hpp"
 #include "nic/hal/apollo/api/subnet.hpp"
 #include "nic/hal/apollo/api/vnic.hpp"
-#include "nic/hal/apollo/api/oci_state.hpp"
+#include "nic/hal/apollo/core/oci_state.hpp"
 
 namespace api {
-
-/**< (singleton) instance of all OCI state in one place */
-oci_state g_oci_state;
 
 /**
  * @brief callback invoked by the timerwheel to release an object to its slab

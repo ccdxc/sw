@@ -9,6 +9,7 @@
 #if !defined (__OCI_STATE_HPP__)
 #define __OCI_STATE_HPP__
 
+#include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/hal/apollo/api/vcn.hpp"
 #include "nic/hal/apollo/api/subnet.hpp"
 #include "nic/hal/apollo/api/vnic.hpp"
@@ -22,11 +23,12 @@ namespace api {
 
 class oci_state {
 public:
-    oci_state() { }
-    ~oci_state() { }
+    oci_state();
+    ~oci_state();
     vcn_state *vcn_db(void) { return &vcn_db_; }
     subnet_state *subnet_db(void) { return &subnet_db_; }
     vnic_state *vnic_db(void) { return &vnic_db_ ; }
+
 private:
     vcn_state       vcn_db_;
     subnet_state    subnet_db_;

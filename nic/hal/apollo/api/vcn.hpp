@@ -3,7 +3,7 @@
  *
  * @file    vcn.hpp
  *
- * @brief   This file deals with OCI vcn functionality
+ * @brief   This file deals with vcn functionality
  */
 
 #if !defined (__VCN_HPP__)
@@ -280,6 +280,7 @@ public:
      * @param[in] vcn_key vcn key
      */
     vcn_entry *vcn_find(oci_vcn_key_t *vcn_key);
+
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 
 private:

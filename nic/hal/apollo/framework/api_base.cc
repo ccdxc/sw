@@ -6,7 +6,7 @@
  * @brief   base object definition for all API objects
  */
 
-#include "nic/hal/apollo/api/oci_state.hpp"
+#include "nic/hal/apollo/core/oci_state.hpp"
 #include "nic/hal/apollo/framework/api_base.hpp"
 #include "nic/hal/apollo/framework/api_ctxt.hpp"
 
@@ -23,15 +23,15 @@ api_base::factory(api_ctxt_t *api_ctxt) {
     case OBJ_ID_SWITCHPORT:
         break;
     case OBJ_ID_VCN:
-        obj = vcn_entry::factory(&api_ctxt->vcn_info);
+        obj = vcn_entry::factory(&api_ctxt->api_params->vcn_info);
         return obj;
     case OBJ_ID_SUBNET:
-        obj = subnet_entry::factory(&api_ctxt->subnet_info);
+        obj = subnet_entry::factory(&api_ctxt->api_params->subnet_info);
         return obj;
     case OBJ_ID_TEP:
         break;
     case OBJ_ID_VNIC:
-        obj = vnic_entry::factory(&api_ctxt->vnic_info);
+        obj = vnic_entry::factory(&api_ctxt->api_params->vnic_info);
         return obj;
     case OBJ_ID_ROUTE:
         break;
@@ -55,15 +55,15 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
     case OBJ_ID_SWITCHPORT:
         break;
     case OBJ_ID_VCN:
-        obj = vcn_db()->vcn_find(&api_ctxt->vcn_key);
+        obj = vcn_db()->vcn_find(&api_ctxt->api_params->vcn_key);
         return obj;
     case OBJ_ID_SUBNET:
-        obj = subnet_db()->subnet_find(&api_ctxt->subnet_key);
+        obj = subnet_db()->subnet_find(&api_ctxt->api_params->subnet_key);
         return obj;
     case OBJ_ID_TEP:
         break;
     case OBJ_ID_VNIC:
-        obj = vnic_db()->vnic_find(&api_ctxt->vnic_key);
+        obj = vnic_db()->vnic_find(&api_ctxt->api_params->vnic_key);
         return obj;
     case OBJ_ID_ROUTE:
         break;

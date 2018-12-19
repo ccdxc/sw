@@ -3,14 +3,14 @@
  *
  * @file    vcn.cc
  *
- * @brief   This file deals with OCI vcn API handling
+ * @brief   This file deals with vcn api handling
  */
 
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/include/sdk/timestamp.hpp"
 #include "nic/hal/apollo/core/mem.hpp"
 #include "nic/hal/apollo/api/vcn.hpp"
-#include "nic/hal/apollo/api/oci_state.hpp"
+#include "nic/hal/apollo/core/oci_state.hpp"
 #include "nic/hal/apollo/framework/api_ctxt.hpp"
 #include "nic/hal/apollo/framework/api_engine.hpp"
 
@@ -24,7 +24,7 @@ namespace api {
 
 /**< @brief    constructor */
 vcn_entry::vcn_entry() {
-    //SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_SHARED);
+    //SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
     ht_ctxt_.reset();
     hw_id_ = 0xFFFF;
 }
@@ -119,7 +119,7 @@ vcn_entry::process_get(api_ctxt_t *api_ctxt) {
  */
 sdk_ret_t
 vcn_entry::init_config(api_ctxt_t *api_ctxt) {
-    oci_vcn_t *oci_vcn = &api_ctxt->vcn_info;
+    oci_vcn_t *oci_vcn = &api_ctxt->api_params->vcn_info;
 
     memcpy(&this->key_, &oci_vcn->key, sizeof(oci_vcn_key_t));
     return sdk::SDK_RET_OK;
@@ -360,15 +360,18 @@ vcn_state::vcn_find(oci_vcn_key_t *vcn_key) {
 sdk_ret_t
 oci_vcn_create (_In_ oci_vcn_t *vcn)
 {
-    api_ctxt_t    api_ctxt;   // TODO: get this from slab
+    api_ctxt_t    api_ctxt;
     sdk_ret_t     rv;
 
-    memset(&api_ctxt, 0, sizeof(api_ctxt));
-    api_ctxt.api_op = api::API_OP_CREATE;
-    api_ctxt.obj_id = api::OBJ_ID_VCN;
-    api_ctxt.vcn_info = *vcn;
-    rv = api::g_api_engine.process_api(&api_ctxt);
-    return rv;
+    api_ctxt.api_params = (api_params_t *)api::api_params_slab()->alloc();
+    if (likely(api_ctxt.api_params != NULL)) {
+        api_ctxt.api_op = api::API_OP_CREATE;
+        api_ctxt.obj_id = api::OBJ_ID_VCN;
+        api_ctxt.api_params->vcn_info = *vcn;
+        rv = api::g_api_engine.process_api(&api_ctxt);
+        return rv;
+    }
+    return sdk::SDK_RET_OOM;
 }
 
 /**
@@ -380,15 +383,18 @@ oci_vcn_create (_In_ oci_vcn_t *vcn)
 sdk_ret_t
 oci_vcn_delete (_In_ oci_vcn_key_t *vcn_key)
 {
-    api_ctxt_t    api_ctxt;   // TODO: get this from slab ??
+    api_ctxt_t    api_ctxt;
     sdk_ret_t     rv;
 
-    memset(&api_ctxt, 0, sizeof(api_ctxt));
-    api_ctxt.api_op = api::API_OP_DELETE;
-    api_ctxt.obj_id = api::OBJ_ID_VCN;
-    api_ctxt.vcn_key = *vcn_key;
-    rv = api::g_api_engine.process_api(&api_ctxt);
-    return rv;
+    api_ctxt.api_params = (api_params_t *)api::api_params_slab()->alloc();
+    if (likely(api_ctxt.api_params != NULL)) {
+        api_ctxt.api_op = api::API_OP_DELETE;
+        api_ctxt.obj_id = api::OBJ_ID_VCN;
+        api_ctxt.api_params->vcn_key = *vcn_key;
+        rv = api::g_api_engine.process_api(&api_ctxt);
+        return rv;
+    }
+    return sdk::SDK_RET_OOM;
 }
 
 /** @} */    // end of OCI_VCN_API

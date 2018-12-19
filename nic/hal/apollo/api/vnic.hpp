@@ -3,7 +3,7 @@
  *
  * @file    vnic.hpp
  *
- * @brief   This file deals with OCI VNIC functionality
+ * @brief   This file deals with vnic functionality
  */
 
 #if !defined (__VNIC_HPP__)
@@ -217,19 +217,22 @@ public:
 
 private:
     /**< @brief    constructor */
-    vnic_entry() {}    // TODO: move this to .cc and initialize hw indices to invalid values !!
+    vnic_entry();
 
     /**< @brief    destructor */
-    ~vnic_entry() {}
-
-    /**< @brief     free all h/w resources allocated for this vnic */
-    void cleanup(void);
+    ~vnic_entry();
 
     /**
      * @brief    allocate h/w resources for this object
      * @return    SDK_RET_OK on success, failure status code on error
      */
     sdk_ret_t alloc_resources(void);
+
+    /**
+     * @brief     free h/w resources used by this object, if any
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t free_resources_(void);
 
 private:
     oci_vnic_key_t    key_;        /**< vnic key */
@@ -280,6 +283,7 @@ public:
      * @param[in] vnic_key vnic key
      */
     vnic_entry *vnic_find(oci_vnic_key_t *vnic_key) const;
+
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 
 private:
