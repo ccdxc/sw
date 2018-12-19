@@ -174,6 +174,7 @@ crypto_dst_blist_setup(struct service_info *svc_info,
 				svc_info->si_src_blist.len, svc_info->si_dst_blist.len);
 		return EINVAL;
 	}
+
 	return PNSO_OK;
 }
 
@@ -259,22 +260,6 @@ crypto_setup(struct service_info *svc_info,
 }
 
 static pnso_error_t
-crypto_encrypt_setup(struct service_info *svc_info,
-		     const struct service_params *svc_params)
-{
-	svc_info->si_type = PNSO_SVC_TYPE_ENCRYPT;
-	return crypto_setup(svc_info, svc_params);
-}
-
-static pnso_error_t
-crypto_decrypt_setup(struct service_info *svc_info,
-		     const struct service_params *svc_params)
-{
-	svc_info->si_type = PNSO_SVC_TYPE_DECRYPT;
-	return crypto_setup(svc_info, svc_params);
-}
-
-static pnso_error_t
 crypto_chain(struct chain_entry *centry)
 {
 	struct service_info		*svc_info = &centry->ce_svc_info;
@@ -336,8 +321,8 @@ crypto_chain(struct chain_entry *centry)
 		}
 
 
-		OSAL_ASSERT(centry->ce_next);
-		svc_next = &centry->ce_next->ce_svc_info;
+		svc_next = chn_service_next_svc_get(svc_info);
+		OSAL_ASSERT(svc_next);
 		err = svc_next->si_ops.sub_chain_from_crypto(svc_next,
 				crypto_chain);
 		if (!err)
@@ -538,40 +523,57 @@ out:
 }
 
 static pnso_error_t
-crypto_read_status(const struct service_info *svc_info)
+crypto_read_status(struct service_info *svc_info)
 {
-	struct crypto_status_desc *status_desc;
+	struct pnso_service_status	*svc_status;
+	struct crypto_status_desc	*status_desc;
 	pnso_error_t err;
 
+	svc_status = svc_info->si_svc_status;
 	status_desc = svc_info->si_status_desc;
 	err = status_desc->csd_err;
-	if (err)
+	if (err) {
 		OSAL_LOG_ERROR("hw error reported: %d", err);
+		svc_status->err = crypto_desc_status_convert(err);
+	}
 
-	return err;
+	return svc_status->err;
 }
 
 static pnso_error_t
 crypto_write_result(struct service_info *svc_info)
 {
-	struct pnso_service_status *svc_status;
-	struct crypto_status_desc *status_desc;
+	struct pnso_service_status	*svc_status;
+	bool from_parent;
 
+	/*
+	 * In chaining case, the actual data length may have been determined
+	 * in the parent service and propagated down the chain. For example,
+	 * if the parent were the CP service, the output compressed data length
+	 * plus any padding would have been ccomputed and stored.
+	 */
 	svc_status = svc_info->si_svc_status;
-	status_desc = svc_info->si_status_desc;
-	if (status_desc->csd_err) {
-		svc_status->err =
-			crypto_desc_status_convert(status_desc->csd_err);
-		OSAL_LOG_ERROR("service failed: %d", svc_status->err);
-		return EINVAL;
+        from_parent = chn_service_deps_data_len_set_from_parent(svc_info);
+	svc_status->u.dst.data_len = chn_service_deps_data_len_get(svc_info);
+	if (from_parent) {
+
+		/*
+		 * In debug mode, verify the padding adjustment in the dst AOL.
+		 *
+		 * CAUTION: it can be costly to invoke crypto_aol_total_len_get()
+		 * so do not call it outside of the DEBUG macro.
+		 */
+		OSAL_LOG_DEBUG("my data_len %u parent data_len %u",
+				crypto_aol_total_len_get(&svc_info->si_src_aol),
+				svc_status->u.dst.data_len);
 	}
 
 	if (svc_info->si_type == PNSO_SVC_TYPE_ENCRYPT)
 		PAS_INC_NUM_ENC_BYTES(svc_info->si_pcr,
-				svc_info->si_src_blist.len);
+				svc_status->u.dst.data_len);
 	else
 		PAS_INC_NUM_DEC_BYTES(svc_info->si_pcr,
-				svc_info->si_src_blist.len);
+				svc_status->u.dst.data_len);
 
 	return PNSO_OK;
 }
@@ -609,7 +611,7 @@ crypto_teardown(struct service_info *svc_info)
 }
 
 struct service_ops encrypt_ops = {
-	.setup = crypto_encrypt_setup,
+	.setup = crypto_setup,
 	.chain = crypto_chain,
 	.sub_chain_from_cpdc = crypto_sub_chain_from_cpdc,
 	.sub_chain_from_crypto = crypto_sub_chain_from_crypto,
@@ -623,7 +625,7 @@ struct service_ops encrypt_ops = {
 };
 
 struct service_ops decrypt_ops = {
-	.setup = crypto_decrypt_setup,
+	.setup = crypto_setup,
 	.chain = crypto_chain,
 	.sub_chain_from_cpdc = crypto_sub_chain_from_cpdc,
 	.sub_chain_from_crypto = crypto_sub_chain_from_crypto,

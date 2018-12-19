@@ -380,6 +380,11 @@ setup_service_param_buffers(struct pnso_service *pnso_svc,
 		return EINVAL;
 	}
 
+	/*
+	 * Pre-set the "service dependency" data length...As HW operation
+	 * progresses for the service, this data length may later get updated.
+	 */
+	chn_service_deps_data_len_set(svc_info, svc_info->si_src_blist.len);
 	return PNSO_OK;
 }
 
@@ -431,6 +436,7 @@ init_service_info(enum pnso_service_type svc_type,
 {
 	accel_ring_id_t ring_id = ACCEL_RING_ID_MAX;
 
+	svc_info->si_type = svc_type;
 	switch (svc_type) {
 	case PNSO_SVC_TYPE_ENCRYPT:
 		svc_info->si_ops = encrypt_ops;
@@ -452,6 +458,7 @@ init_service_info(enum pnso_service_type svc_type,
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CP_SQ;
 		svc_info->si_seq_info.sqi_status_qtype =
 			SONIC_QTYPE_CPDC_STATUS;
+                svc_info->si_desc_flags = svc_params->u.sp_cp_desc->flags;
 		break;
 	case PNSO_SVC_TYPE_DECOMPRESS:
 		svc_info->si_ops = dc_ops;
@@ -459,6 +466,7 @@ init_service_info(enum pnso_service_type svc_type,
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_DC_SQ;
 		svc_info->si_seq_info.sqi_status_qtype =
 			SONIC_QTYPE_CPDC_STATUS;
+                svc_info->si_desc_flags = svc_params->u.sp_dc_desc->flags;
 		break;
 	case PNSO_SVC_TYPE_HASH:
 		svc_info->si_ops = hash_ops;
@@ -466,6 +474,7 @@ init_service_info(enum pnso_service_type svc_type,
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CP_SQ;
 		svc_info->si_seq_info.sqi_status_qtype =
 			SONIC_QTYPE_CPDC_STATUS;
+                svc_info->si_desc_flags = svc_params->u.sp_hash_desc->flags;
 		break;
 	case PNSO_SVC_TYPE_CHKSUM:
 		svc_info->si_ops = chksum_ops;
@@ -475,6 +484,7 @@ init_service_info(enum pnso_service_type svc_type,
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CP_SQ;
 		svc_info->si_seq_info.sqi_status_qtype =
 			SONIC_QTYPE_CPDC_STATUS;
+                svc_info->si_desc_flags = svc_params->u.sp_chksum_desc->flags;
 		break;
 	case PNSO_SVC_TYPE_DECOMPACT:
 	case PNSO_SVC_TYPE_NONE:
@@ -667,6 +677,7 @@ chn_create_chain(struct request_params *req_params)
 
 		centry->ce_chain_head = chain;
 		centry->ce_next = NULL;
+		centry->ce_prev = centry_prev;
 		svc_info = &centry->ce_svc_info;
 
 		if (i == 0) {

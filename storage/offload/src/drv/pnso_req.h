@@ -10,6 +10,12 @@
 extern "C" {
 #endif
 
+#define REQ_SZ_TO_NUM_BLKS(sz, blk_sz)			\
+	(((sz) + (blk_sz) - 1) / (blk_sz))
+
+#define REQ_SZ_ROUND_UP_TO_BLK_SZ(sz, blk_sz)		\
+	(REQ_SZ_TO_NUM_BLKS(sz, blk_sz) * (blk_sz))
+
 struct request_params {
 	uint16_t rp_flags;	/* mode/type flags (rflags) */
 

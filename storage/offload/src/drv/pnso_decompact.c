@@ -60,7 +60,7 @@ decompact_poll(const struct service_info *svc_info)
 }
 
 static pnso_error_t
-decompact_read_status(const struct service_info *svc_info)
+decompact_read_status(struct service_info *svc_info)
 {
 	return EOPNOTSUPP;
 }

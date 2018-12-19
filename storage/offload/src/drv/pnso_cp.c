@@ -89,8 +89,6 @@ compress_setup(struct service_info *svc_info,
 	pnso_cp_desc = (struct pnso_compression_desc *)
 		svc_params->u.sp_cp_desc;
 
-	svc_info->si_type = PNSO_SVC_TYPE_COMPRESS;
-	svc_info->si_desc_flags = pnso_cp_desc->flags;
 	threshold_len = pnso_cp_desc->threshold_len;
 
 	cp_desc = cpdc_get_desc(svc_info, false);
@@ -336,7 +334,7 @@ out:
 }
 
 static pnso_error_t
-compress_read_status(const struct service_info *svc_info)
+compress_read_status(struct service_info *svc_info)
 {
 	pnso_error_t err = EINVAL;
 	struct cpdc_desc *cp_desc;
@@ -419,7 +417,6 @@ compress_write_result(struct service_info *svc_info)
 	pnso_error_t err = EINVAL;
 	struct pnso_service_status *svc_status;
 	struct cpdc_status_desc *status_desc;
-	struct service_deps *svc_deps;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -451,13 +448,9 @@ compress_write_result(struct service_info *svc_info)
 	}
 
 	svc_status->u.dst.data_len = status_desc->csd_output_data_len;
+	chn_service_deps_data_len_set(svc_info, status_desc->csd_output_data_len);
 	PAS_INC_NUM_CP_BYTES_OUT(svc_info->si_pcr,
 			status_desc->csd_output_data_len);
-
-	/* next service may need 'len' */
-	svc_deps = cpdc_get_service_deps(svc_info);
-	if (svc_deps)
-		svc_deps->sd_dst_data_len = status_desc->csd_output_data_len;
 
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit! status/result update success!");

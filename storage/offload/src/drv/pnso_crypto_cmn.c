@@ -294,6 +294,28 @@ crypto_aol_put(const struct per_core_resource *pcr,
 	svc_aol->aol = NULL;
 }
 
+uint32_t
+crypto_aol_total_len_get(const struct service_crypto_aol *svc_aol)
+{
+	struct crypto_aol *aol;
+	uint32_t          total_len = 0;
+
+	aol = svc_aol->aol;
+	while (aol) {
+		total_len += aol->ca_len_0 + aol->ca_len_1 + aol->ca_len_2;
+
+		/*
+		 * Follow swlink based on the HW link as P4+ might have
+		 * truncated the list as a result of pad processing.
+		 */
+		if (!aol->ca_next)
+			break;
+		CRYPTO_AOL_SWLINK_GET(aol, aol);
+	}
+
+	return total_len;
+}
+
 pnso_error_t
 crypto_desc_status_convert(uint64_t status)
 {

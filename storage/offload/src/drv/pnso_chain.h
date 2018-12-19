@@ -146,7 +146,7 @@ struct service_ops {
 	pnso_error_t (*poll)(const struct service_info *svc_info);
 
 	/* get hardware status of the service */
-	pnso_error_t (*read_status)(const struct service_info *svc_info);
+	pnso_error_t (*read_status)(struct service_info *svc_info);
 
 	/* copy the status to update the caller */
 	pnso_error_t (*write_result)(struct service_info *svc_info);
@@ -186,13 +186,8 @@ struct service_batch_info {
 	} u;
 };
 
-/* TODO-chain:
- *	revisit to generalize this struct/members and to share among all
- *	other future services
- *
- */
 struct service_deps {
-	uint32_t sd_dst_data_len;	/* for compressed output buffer len */
+	uint32_t sd_data_len;
 };
 
 enum service_buf_list_type {
@@ -263,11 +258,13 @@ struct service_info {
 	struct service_buf_list si_dst_blist;
 	struct interm_buf_list si_iblist;
 	struct chain_sgl_pdma *si_sgl_pdma;
+	struct service_deps si_svc_deps;	/* to share dependent params */
 };
 
 struct chain_entry {
 	struct service_chain *ce_chain_head;	/* back pointer to chain head */
 	struct chain_entry *ce_next;		/* next service in the chain */
+	struct chain_entry *ce_prev;		/* previous service in the chain */
 	struct service_info ce_svc_info;	/* service within the chain */
 };
 
@@ -282,8 +279,6 @@ struct service_chain {
 
 	struct per_core_resource *sc_pcr;	/* to access pool/etc. */
 	struct batch_info *sc_batch_info;	/* backpointer to  batch info */
-
-	struct service_deps sc_svc_deps;	/* to share dependent params */
 
 	completion_cb_t	sc_req_cb;	/* caller supplied call-back */
 	void *sc_req_cb_ctx;		/* caller supplied cb context */
@@ -377,6 +372,72 @@ chn_service_hw_ring_take_set(struct service_info *svc_info,
 			     uint32_t count)
 {
 	svc_info->si_seq_info.sqi_hw_dflt_takes = count;
+}
+
+static inline struct service_info *
+chn_service_next_svc_get(struct service_info *svc_info)
+{
+	struct chain_entry *ce_next = svc_info->si_centry->ce_next;
+	return ce_next ? &ce_next->ce_svc_info : NULL;
+}
+
+static inline struct service_info *
+chn_service_prev_svc_get(struct service_info *svc_info)
+{
+	struct chain_entry *ce_prev = svc_info->si_centry->ce_prev;
+	return ce_prev ? &ce_prev->ce_svc_info : NULL;
+}
+
+static inline bool
+chn_service_is_padding_applic(const struct service_info *svc_info)
+{
+	return (svc_info->si_type == PNSO_SVC_TYPE_COMPRESS) &&
+	       (svc_info->si_desc_flags & PNSO_CP_DFLAG_ZERO_PAD);
+}
+
+static inline uint32_t
+chn_service_deps_data_len_get(const struct service_info *svc_info)
+{
+	return svc_info->si_svc_deps.sd_data_len;
+}
+
+static inline void
+chn_service_deps_data_len_set(struct service_info *svc_info,
+			      uint32_t data_len)
+{
+	svc_info->si_svc_deps.sd_data_len = data_len;
+	if (chn_service_is_padding_applic(svc_info)) {
+		OSAL_ASSERT(is_power_of_2(svc_info->si_block_size));
+		svc_info->si_svc_deps.sd_data_len =
+			REQ_SZ_ROUND_UP_TO_BLK_SZ(data_len,
+						  svc_info->si_block_size);
+	}
+}
+
+static inline bool
+chn_service_deps_data_len_set_from_parent(struct service_info *svc_info)
+{
+	struct service_info	*svc_prev;
+
+	/*
+	 * In chaining case, the actual data length may have been determined
+	 * in the parent service and propagated down the chain. For example,
+	 * if the parent were the CP service, the output compressed data length
+	 * plus any padding would have been ccomputed and stored.
+	 */
+	svc_prev = chn_service_prev_svc_get(svc_info);
+	if (svc_prev)
+		chn_service_deps_data_len_set(svc_info,
+				 chn_service_deps_data_len_get(svc_prev));
+	return !!svc_prev;
+}
+
+static inline uint32_t
+chn_service_deps_num_blks_get(const struct service_info *svc_info)
+{
+	OSAL_ASSERT(is_power_of_2(svc_info->si_block_size));
+	return REQ_SZ_TO_NUM_BLKS(svc_info->si_svc_deps.sd_data_len,
+				  svc_info->si_block_size);
 }
 
 #ifdef __cplusplus

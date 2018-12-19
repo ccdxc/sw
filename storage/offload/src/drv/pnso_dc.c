@@ -57,18 +57,10 @@ decompress_setup(struct service_info *svc_info,
 		const struct service_params *svc_params)
 {
 	pnso_error_t err;
-	struct pnso_decompression_desc *pnso_dc_desc;
 	struct cpdc_desc *dc_desc;
 	struct cpdc_status_desc *status_desc;
-	size_t src_buf_len, dst_buf_len;
 
 	OSAL_LOG_DEBUG("enter ...");
-
-	pnso_dc_desc = (struct pnso_decompression_desc *)
-		svc_params->u.sp_dc_desc;
-
-	svc_info->si_type = PNSO_SVC_TYPE_DECOMPRESS;
-	svc_info->si_desc_flags = pnso_dc_desc->flags;
 
 	dc_desc = cpdc_get_desc(svc_info, false);
 	if (!dc_desc) {
@@ -94,12 +86,9 @@ decompress_setup(struct service_info *svc_info,
 		goto out;
 	}
 
-	src_buf_len = pbuf_get_buffer_list_len(svc_params->sp_src_blist);
-	dst_buf_len = pbuf_get_buffer_list_len(svc_params->sp_dst_blist);
-
 	fill_dc_desc(dc_desc, svc_info->si_src_sgl.sgl,
 			svc_info->si_dst_sgl.sgl, status_desc,
-			src_buf_len, dst_buf_len);
+			svc_info->si_src_blist.len, svc_info->si_dst_blist.len);
 	clear_dc_header_present(svc_info->si_desc_flags, dc_desc);
 
 	err = cpdc_setup_seq_desc(svc_info, dc_desc, 0);
@@ -109,7 +98,7 @@ decompress_setup(struct service_info *svc_info,
 	}
 
 	PAS_INC_NUM_DC_REQUESTS(svc_info->si_pcr);
-	PAS_INC_NUM_DC_BYTES_IN(svc_info->si_pcr, src_buf_len);
+	PAS_INC_NUM_DC_BYTES_IN(svc_info->si_pcr, svc_info->si_src_blist.len);
 
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit! service initialized!");
@@ -214,7 +203,7 @@ decompress_poll(const struct service_info *svc_info)
 }
 
 static pnso_error_t
-decompress_read_status(const struct service_info *svc_info)
+decompress_read_status(struct service_info *svc_info)
 {
 	pnso_error_t err;
 	struct cpdc_desc *dc_desc;
@@ -276,6 +265,7 @@ decompress_write_result(struct service_info *svc_info)
 	}
 
 	svc_status->u.dst.data_len = status_desc->csd_output_data_len;
+	chn_service_deps_data_len_set(svc_info, status_desc->csd_output_data_len);
 	PAS_INC_NUM_DC_BYTES_OUT(svc_info->si_pcr,
 			status_desc->csd_output_data_len);
 

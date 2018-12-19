@@ -64,6 +64,8 @@ uint32_t cpdc_get_status_desc_size(void);
 
 uint32_t cpdc_get_sgl_size(void);
 
+uint32_t cpdc_sgl_total_len_get(const struct service_cpdc_sgl *svc_sgl);
+
 struct cpdc_status_desc *cpdc_get_next_status_desc(
 		struct cpdc_status_desc *desc, uint32_t object_size);
 
@@ -76,8 +78,6 @@ uint32_t cpdc_fill_per_block_desc(uint32_t algo_type, uint32_t block_size,
 		struct cpdc_sgl *sgl, struct cpdc_desc *desc,
 		struct cpdc_status_desc *status_desc,
 		fill_desc_fn_t fill_desc_fn);
-
-struct service_deps *cpdc_get_service_deps(const struct service_info *svc_info);
 
 bool cpdc_is_service_in_batch(uint8_t flags);
 

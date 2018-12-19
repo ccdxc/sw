@@ -66,9 +66,6 @@ hash_setup(struct service_info *svc_info,
 	OSAL_LOG_DEBUG("enter ...");
 
 	pnso_hash_desc = (struct pnso_hash_desc *) svc_params->u.sp_hash_desc;
-
-	svc_info->si_type = PNSO_SVC_TYPE_HASH;
-	svc_info->si_desc_flags = pnso_hash_desc->flags;
 	per_block = is_dflag_pblock_enabled(pnso_hash_desc->flags);
 
 	hash_desc = cpdc_get_desc(svc_info, per_block);
@@ -252,46 +249,13 @@ hash_poll(const struct service_info *svc_info)
 	return cpdc_poll(svc_info);
 }
 
-static inline uint32_t
-get_num_tags(const struct service_info *svc_info)
-{
-	struct service_deps *svc_deps;
-	uint32_t len, block_size, num_tags;
-
-	/*
-	 * first assume that this is a lone-service, and init number of tags
-	 * with what was discovered at setup()
-	 *
-	 */
-	num_tags = svc_info->si_num_tags;
-
-	svc_deps = cpdc_get_service_deps(svc_info);
-	if (!svc_deps)
-		goto out;
-
-	len = svc_deps->sd_dst_data_len;
-	if (len == 0)
-		goto out;
-
-	block_size = svc_info->si_block_size;
-	num_tags = (len + (block_size - 1)) / block_size;
-
-	OSAL_LOG_INFO("block_size: %d len: %d num_tags: %d",
-			block_size, len, num_tags);
-	return num_tags;
-
-out:
-	OSAL_LOG_INFO("lone service ... num_tags: %d", num_tags);
-	return num_tags;
-}
-
 static pnso_error_t
-hash_read_status_per_block(const struct service_info *svc_info)
+hash_read_status(struct service_info *svc_info)
 {
 	pnso_error_t err = EINVAL;
 	struct pnso_service_status *svc_status;
 	struct cpdc_status_desc *status_desc, *st_desc;
-	uint32_t i, status_object_size, num_tags;
+	uint32_t i, status_object_size, orig_num_tags;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -307,19 +271,37 @@ hash_read_status_per_block(const struct service_info *svc_info)
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 	if (!status_desc) {
 		OSAL_LOG_ERROR("invalid hash status desc! err: %d", err);
-		OSAL_ASSERT(err);
+		OSAL_ASSERT(!err);
+		goto out;
 	}
 	st_desc = status_desc;
-
 	status_object_size = cpdc_get_status_desc_size();
-	num_tags = get_num_tags(svc_info);
-	svc_status->u.hash.num_tags = num_tags;
 
-	OSAL_LOG_INFO("block_size: %d object_size: %d si_num_tags: %d num_tags: %d",
+	if (chn_service_deps_data_len_set_from_parent(svc_info)) {
+
+		/*
+		 * In debug mode, verify the padding adjustment in the dst SGL.
+		 *
+		 * CAUTION: it can be costly to invoke cpdc_sgl_total_len_get()
+		 * so do not call it outside of the DEBUG macro.
+		 */
+		OSAL_LOG_DEBUG("my data_len %u parent data_len %u",
+				cpdc_sgl_total_len_get(&svc_info->si_src_sgl),
+				chn_service_deps_data_len_get(svc_info));
+        }
+
+	orig_num_tags = svc_info->si_num_tags;
+	if (is_dflag_pblock_enabled(svc_info->si_desc_flags)) {
+		svc_info->si_num_tags = chn_service_deps_num_blks_get(svc_info);
+		OSAL_ASSERT(svc_info->si_num_tags >= 1);
+	} else
+		OSAL_ASSERT(svc_info->si_num_tags == 1);
+
+	OSAL_LOG_INFO("block_size: %d object_size: %d new num_tags: %d old num_tags: %d",
 			svc_info->si_block_size, status_object_size,
-			svc_info->si_num_tags, num_tags);
+			svc_info->si_num_tags, orig_num_tags);
 
-	for (i = 0; i < num_tags; i++) {
+	for (i = 0; i < svc_info->si_num_tags; i++) {
 
 		CPDC_PPRINT_STATUS_DESC(st_desc);
 
@@ -333,6 +315,7 @@ hash_read_status_per_block(const struct service_info *svc_info)
 			svc_status->err =
 				cpdc_convert_desc_error(st_desc->csd_err);
 			OSAL_LOG_ERROR("service failed! err: %d", err);
+			err = svc_status->err;
 			goto out;
 		}
 
@@ -350,91 +333,32 @@ out:
 }
 
 static pnso_error_t
-hash_read_status_buffer(const struct service_info *svc_info)
-{
-	pnso_error_t err;
-	struct cpdc_desc *hash_desc;
-	struct cpdc_status_desc *status_desc;
-	struct pnso_service_status *svc_status;
-
-	OSAL_LOG_DEBUG("enter ...");
-
-	hash_desc = (struct cpdc_desc *) svc_info->si_desc;
-	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
-	svc_status = svc_info->si_svc_status;
-
-	err = cpdc_common_read_status(hash_desc, status_desc);
-	if (err)
-		goto out;
-
-	svc_status->u.hash.num_tags = svc_info->si_num_tags;
-
-	OSAL_LOG_DEBUG("exit! status verification success!");
-	return err;
-
-out:
-	OSAL_LOG_ERROR("exit! err: %d", err);
-	return err;
-}
-
-static pnso_error_t
-hash_read_status(const struct service_info *svc_info)
-{
-	pnso_error_t err = EINVAL;
-	bool per_block;
-
-	OSAL_ASSERT(svc_info);
-
-	per_block = is_dflag_pblock_enabled(svc_info->si_desc_flags);
-	err = per_block ? hash_read_status_per_block(svc_info) :
-		hash_read_status_buffer(svc_info);
-
-	return err;
-}
-
-static pnso_error_t
-hash_write_result_per_block(struct service_info *svc_info)
+hash_write_result(struct service_info *svc_info)
 {
 	pnso_error_t err = EINVAL;
 	struct pnso_service_status *svc_status;
 	struct cpdc_status_desc *status_desc, *st_desc;
-	uint32_t i, status_object_size, num_tags;
+	uint32_t i, status_object_size;
 
 	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(svc_info);
 
 	svc_status = svc_info->si_svc_status;
-	if (svc_status->svc_type != svc_info->si_type) {
-		OSAL_LOG_ERROR("service type mismatch! svc_type: %d si_type: %d err: %d",
-			svc_status->svc_type,  svc_info->si_type, err);
-		goto out;
-	}
-
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 	if (!status_desc) {
 		OSAL_LOG_ERROR("invalid hash status desc! err: %d", err);
-		OSAL_ASSERT(err);
-	}
-
-	if (!status_desc->csd_valid) {
-		svc_status->err = err;
-		OSAL_LOG_ERROR("valid bit not set! err: %d", err);
+		OSAL_ASSERT(!err);
 		goto out;
 	}
 
-	if (status_desc->csd_err) {
-		svc_status->err = cpdc_convert_desc_error(status_desc->csd_err);
-		OSAL_LOG_ERROR("service failed! err: %d", err);
-		goto out;
-	}
-
-	num_tags = svc_status->u.hash.num_tags;
-	OSAL_ASSERT(num_tags >= 0);
+	OSAL_ASSERT(is_dflag_pblock_enabled(svc_info->si_desc_flags) ?
+                    svc_info->si_num_tags >= 1 : svc_info->si_num_tags == 1);
+	svc_status->u.hash.num_tags = svc_info->si_num_tags;
 
 	status_object_size = cpdc_get_status_desc_size();
 	st_desc = status_desc;
-	for (i = 0; i < num_tags; i++) {
+	for (i = 0; i < svc_info->si_num_tags; i++) {
 		memcpy(svc_status->u.hash.tags[i].hash,
 				st_desc->csd_sha,
 				PNSO_HASH_TAG_LEN);
@@ -447,7 +371,7 @@ hash_write_result_per_block(struct service_info *svc_info)
 		st_desc = cpdc_get_next_status_desc(st_desc,
 				status_object_size);
 	}
-	PAS_INC_NUM_HASHES(svc_info->si_pcr, num_tags);
+	PAS_INC_NUM_HASHES(svc_info->si_pcr, svc_info->si_num_tags);
 
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit! status/result update success!");
@@ -455,80 +379,6 @@ hash_write_result_per_block(struct service_info *svc_info)
 
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
-	return err;
-}
-
-static pnso_error_t
-hash_write_result_buffer(struct service_info *svc_info)
-{
-	pnso_error_t err = EINVAL;
-	struct pnso_service_status *svc_status;
-	struct cpdc_status_desc *status_desc;
-
-	OSAL_LOG_DEBUG("enter ...");
-
-	OSAL_ASSERT(svc_info);
-
-	svc_status = svc_info->si_svc_status;
-	if (svc_status->svc_type != svc_info->si_type) {
-		OSAL_LOG_ERROR("service type mismatch! svc_type: %d si_type: %d err: %d",
-			svc_status->svc_type,  svc_info->si_type, err);
-		goto out;
-	}
-
-	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
-	if (!status_desc) {
-		OSAL_LOG_ERROR("invalid hash status desc! err: %d", err);
-		OSAL_ASSERT(err);
-	}
-
-	if (!status_desc->csd_valid) {
-		svc_status->err = err;
-		OSAL_LOG_ERROR("valid bit not set! err: %d", err);
-		goto out;
-	}
-
-	if (status_desc->csd_err) {
-		svc_status->err = cpdc_convert_desc_error(status_desc->csd_err);
-		OSAL_LOG_ERROR("service failed! err: %d", err);
-		goto out;
-	}
-
-	svc_status->u.hash.num_tags = svc_info->si_num_tags;
-	OSAL_ASSERT(svc_info->si_num_tags == 1);
-
-	memcpy(svc_status->u.hash.tags[0].hash,
-			status_desc->csd_sha,
-			PNSO_HASH_TAG_LEN);
-	PAS_INC_NUM_HASHES(svc_info->si_pcr, 1);
-
-	OSAL_LOG_INFO("tag: 0 status_desc: 0x" PRIx64 " hash: %*phN",
-			(uint64_t) status_desc, 64,
-			svc_status->u.hash.tags[0].hash);
-
-	err = PNSO_OK;
-	OSAL_LOG_DEBUG("exit! status/result update success!");
-	return err;
-
-out:
-	OSAL_LOG_ERROR("exit! err: %d", err);
-	return err;
-}
-
-static pnso_error_t
-hash_write_result(struct service_info *svc_info)
-{
-	pnso_error_t err;
-	bool per_block;
-
-	OSAL_LOG_DEBUG("enter ...");
-
-	OSAL_ASSERT(svc_info);
-
-	per_block = is_dflag_pblock_enabled(svc_info->si_desc_flags);
-	err = per_block ? hash_write_result_per_block(svc_info) :
-		hash_write_result_buffer(svc_info);
-
 	return err;
 }
 

@@ -612,6 +612,28 @@ out:
 	return err;
 }
 
+uint32_t
+cpdc_sgl_total_len_get(const struct service_cpdc_sgl *svc_sgl)
+{
+	struct cpdc_sgl *sgl;
+	uint32_t        total_len = 0;
+
+	sgl = svc_sgl->sgl;
+	while (sgl) {
+		total_len += sgl->cs_len_0 + sgl->cs_len_1 + sgl->cs_len_2;
+
+		/*
+		 * Follow swlink based on the HW link as P4+ might have
+		 * truncated the list as a result of pad processing.
+		 */
+		if (!sgl->cs_next)
+			break;
+		CPDC_SGL_SWLINK_GET(sgl, sgl);
+	}
+
+	return total_len;
+}
+
 pnso_error_t
 cpdc_convert_desc_error(int error)
 {
@@ -642,23 +664,6 @@ cpdc_convert_desc_error(int error)
 		OSAL_ASSERT(0);	/* unreachable code */
 		return EOPNOTSUPP;
 	}
-}
-
-struct service_deps *
-cpdc_get_service_deps(const struct service_info *svc_info)
-{
-	struct service_chain *chead;
-	struct chain_entry *centry;
-	struct service_deps *svc_deps;
-
-	if (!svc_info->si_centry)
-		return NULL;
-
-	centry = svc_info->si_centry;
-	chead = centry->ce_chain_head;
-	svc_deps = &chead->sc_svc_deps;
-
-	return svc_deps;
 }
 
 bool
@@ -869,8 +874,7 @@ cpdc_setup_interrupt_params(struct service_info *svc_info, void *poll_ctx)
 
 	cp_desc->u.cd_bits.cc_otag_on = 1;
 
-	if ((svc_info->si_type == PNSO_SVC_TYPE_COMPRESS) &&
-		(svc_info->si_desc_flags & PNSO_CP_DFLAG_ZERO_PAD)) {
+	if (chn_service_is_padding_applic(svc_info)) {
 		cp_desc->cd_otag_addr =
 			sonic_intr_get_db_addr(pcr, (uint64_t) poll_ctx);
 		if (!cp_desc->cd_otag_addr) {

@@ -1169,12 +1169,6 @@ static pnso_error_t run_testcase_svc_chain(struct request_context *req_ctx,
 		struct buffer_context *buf_ctx = &req_ctx->outputs[i];
 
 		svc_status->svc_type = svc->svc.svc_type; /* TODO: needed? */
-		if (svc->svc.svc_type == PNSO_SVC_TYPE_ENCRYPT ||
-		    svc->svc.svc_type == PNSO_SVC_TYPE_DECRYPT) {
-			/* TODO: remove hack */
-			svc_status->u.dst.data_len = input_len;
-		}
-
 		if (svc->output_path[0]) {
 			uint32_t output_len = get_max_output_len_by_type(
 							svc->svc.svc_type,
