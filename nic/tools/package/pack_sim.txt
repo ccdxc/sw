@@ -49,7 +49,6 @@ nic/build/x86_64/iris/lib/libp4pd*.so                               /nic/lib/
 nic/build/x86_64/iris/lib/libpd*.so                                 /nic/lib/
 nic/build/x86_64/iris/lib/libperiodic.so                            /nic/lib/
 nic/build/x86_64/iris/lib/libplugin*.so                             /nic/lib/
-nic/build/x86_64/iris/lib/libprint.so                               /nic/lib/
 nic/build/x86_64/iris/lib/libprotobuf.so.14                         /nic/lib/
 nic/build/x86_64/iris/lib/libsdkpal.so                              /nic/lib/
 nic/build/x86_64/iris/lib/libpal.so                                 /nic/lib/

@@ -14,7 +14,6 @@ nic/build/x86_64/apollo/lib/libmodel_client.so                  /nic/lib/
 nic/build/x86_64/apollo/lib/libhalproto.so                      /nic/lib/
 nic/build/x86_64/apollo/lib/libcapri_csrint.so                  /nic/lib/
 nic/build/x86_64/apollo/lib/libcapri_csr_cpu_hal.so             /nic/lib/
-nic/build/x86_64/apollo/lib/libprint.so                         /nic/lib/
 nic/build/x86_64/apollo/lib/liblist.so                          /nic/lib/
 nic/build/x86_64/apollo/lib/libslab.so                          /nic/lib/
 nic/build/x86_64/apollo/lib/libshmmgr.so                        /nic/lib/
