@@ -522,6 +522,8 @@ static void ionic_set_rx_mode(struct net_device *netdev)
 	rx_mode |= (netdev->if_flags & IFF_PROMISC) ? RX_MODE_F_PROMISC : 0;
 	rx_mode |= (netdev->if_flags & IFF_ALLMULTI) ? RX_MODE_F_ALLMULTI : 0;
 
+	IONIC_NETDEV_INFO(netdev, "Setting RX Mode: %d\n", rx_mode);
+
 	if (lif->rx_mode != rx_mode) {
 		lif->rx_mode = rx_mode;
 		ionic_lif_rx_mode(lif, rx_mode);

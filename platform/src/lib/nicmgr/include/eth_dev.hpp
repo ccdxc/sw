@@ -179,6 +179,9 @@ public:
     void Update();
     hal_lif_info_t *GetHalLifInfo(void) { return &hal_lif_info_; }
     void SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client);
+    void FreeUpMacFilters();
+    void FreeUpVlanFilters();
+    void FreeUpMacVlanFilters();
 
 private:
     /* Static members */
