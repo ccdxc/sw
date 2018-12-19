@@ -59,5 +59,6 @@ struct pc_res_init_params {
 extern uint64_t pad_buffer;
 
 void pnso_deinit(void);
+void pnso_set_log_level(int level);
 
 #endif /* __PNSO_INIT_H__ */

@@ -1085,7 +1085,7 @@ int sonic_get_seq_sq(struct lif *lif, enum sonic_queue_type sonic_qtype,
 	return sonic_get_per_core_seq_sq(pc_res, sonic_qtype, q);
 }
 
-void
+static void
 sonic_pprint_bmp(struct per_core_resource *pcr, unsigned long *bmp, int max, const char *name)
 {
 	int count = 0;
