@@ -14,6 +14,7 @@ import (
 // Copier implements all remote to/from copy functions
 type Copier struct {
 	SSHClientConfig *ssh.ClientConfig
+	SSHClient       *ssh.Client
 }
 
 // NewCopier returns a new copier instance
@@ -24,15 +25,30 @@ func NewCopier(c *ssh.ClientConfig) *Copier {
 	return copier
 }
 
+// NewCopierWithSSHClient returns a new copier instance
+func NewCopierWithSSHClient(c *ssh.Client) *Copier {
+	copier := &Copier{
+		SSHClient: c,
+	}
+	return copier
+}
+
 // CopyTo copies the source files to the remote destination
 func (c *Copier) CopyTo(ipPort, dstDir string, files []string) error {
 	//fmt.Println("ANCALAGON: ", files)
-	client, err := ssh.Dial("tcp", ipPort, c.SSHClientConfig)
-	if client == nil || err != nil {
-		log.Errorf("Copier | CopyTo node %v failed, Err: %v", ipPort, err)
-		return err
+	var client *ssh.Client
+
+	if c.SSHClient == nil {
+		sshClient, err := ssh.Dial("tcp", ipPort, c.SSHClientConfig)
+		if sshClient == nil || err != nil {
+			log.Errorf("Copier | CopyTo node111 %v failed, Err: %v", ipPort, err)
+			return err
+		}
+		defer sshClient.Close()
+		client = sshClient
+	} else {
+		client = c.SSHClient
 	}
-	defer client.Close()
 
 	sftp, err := sftp.NewClient(client)
 	if sftp == nil || err != nil {
@@ -91,12 +107,19 @@ func (c *Copier) CopyTo(ipPort, dstDir string, files []string) error {
 // CopyFrom copies the remote source files to the local destination
 func (c *Copier) CopyFrom(ipPort, dstDir string, files []string) error {
 
-	client, err := ssh.Dial("tcp", ipPort, c.SSHClientConfig)
-	if client == nil || err != nil {
-		log.Errorf("Copier | CopyFrom node %v failed, Err: %v", ipPort, err)
-		return err
+	var client *ssh.Client
+
+	if c.SSHClient == nil {
+		sshclient, err := ssh.Dial("tcp", ipPort, c.SSHClientConfig)
+		if sshclient == nil || err != nil {
+			log.Errorf("Copier | CopyFrom node %v failed, Err: %v", ipPort, err)
+			return err
+		}
+		defer sshclient.Close()
+		client = sshclient
+	} else {
+		client = c.SSHClient
 	}
-	defer client.Close()
 
 	sftp, err := sftp.NewClient(client)
 	if sftp == nil || err != nil {

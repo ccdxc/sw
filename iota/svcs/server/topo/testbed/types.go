@@ -7,9 +7,10 @@ import (
 
 // TestNode wraps an iota TestNode
 type TestNode struct {
-	SSHCfg   *ssh.ClientConfig
-	Node     *iota.Node
-	RespNode *iota.Node
+	SSHCfg    *ssh.ClientConfig
+	SSHClient *ssh.Client
+	Node      *iota.Node
+	RespNode  *iota.Node
 	//Workloads   []*iota.Workload
 	AgentClient  iota.IotaAgentApiClient
 	TriggerInfo  []*iota.TriggerMsg

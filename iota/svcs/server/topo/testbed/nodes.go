@@ -11,6 +11,7 @@ import (
 	constants "github.com/pensando/sw/iota/svcs/common"
 	"github.com/pensando/sw/iota/svcs/common/runner"
 	"github.com/pensando/sw/venice/utils/log"
+	"golang.org/x/crypto/ssh"
 )
 
 const (
@@ -19,6 +20,17 @@ const (
 
 // AddNode adds a node to the topology
 func (n *TestNode) AddNode() error {
+	addr := fmt.Sprintf("%s:%d", n.Node.IpAddress, constants.SSHPort)
+	sshclient, err := ssh.Dial("tcp", addr, n.SSHCfg)
+	if sshclient == nil || err != nil {
+		msg := fmt.Sprintf("SSH connect to %v (%v) failed", n.Node.Name, n.Node.IpAddress)
+		log.Error(msg)
+		n.RespNode = &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
+		return err
+	}
+
+	n.SSHClient = sshclient
+
 	resp, err := n.AgentClient.AddNode(context.Background(), n.Node)
 	n.RespNode = resp
 	log.Infof("TOPO SVC | DEBUG | AddNode Agent . Received Response Msg: %v", resp)
@@ -68,7 +80,19 @@ func (n *TestNode) RestartNode() error {
 
 	time.Sleep(3 * time.Second)
 
-	return waitForNodeUp(restartTimeout)
+	if err := waitForNodeUp(restartTimeout); err != nil {
+		return err
+	}
+
+	sshclient, err := ssh.Dial("tcp", addr, n.SSHCfg)
+	if sshclient == nil || err != nil {
+		log.Errorf("SSH connect to %v (%v) failed", n.Node.Name, n.Node.IpAddress)
+		return err
+	}
+
+	n.SSHClient = sshclient
+
+	return nil
 }
 
 // ReloadNode saves and reboots the nodes.

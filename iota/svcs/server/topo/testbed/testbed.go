@@ -70,10 +70,15 @@ func (n *TestNode) CleanUpNode(cfg *ssh.ClientConfig) error {
 
 // CopyTo copies a file to the node
 func (n *TestNode) CopyTo(cfg *ssh.ClientConfig, dstDir string, files []string) error {
-	copier := copier.NewCopier(cfg)
+	var copyHandle *copier.Copier
+	if n.SSHClient == nil {
+		copyHandle = copier.NewCopier(cfg)
+	} else {
+		copyHandle = copier.NewCopierWithSSHClient(n.SSHClient)
+	}
 	addr := fmt.Sprintf("%s:%d", n.Node.IpAddress, constants.SSHPort)
 
-	if err := copier.CopyTo(addr, dstDir, files); err != nil {
+	if err := copyHandle.CopyTo(addr, dstDir, files); err != nil {
 		log.Errorf("TOPO SVC | CopyTo node %v failed, IPAddress: %v , Err: %v", n.Node.Name, n.Node.IpAddress, err)
 		return fmt.Errorf("CopyTo node failed, TestNode: %v, IPAddress: %v , Err: %v", n.Node.Name, n.Node.IpAddress, err)
 	}
@@ -83,10 +88,17 @@ func (n *TestNode) CopyTo(cfg *ssh.ClientConfig, dstDir string, files []string) 
 
 // CopyFrom copies a file to the node
 func (n *TestNode) CopyFrom(cfg *ssh.ClientConfig, dstDir string, files []string) error {
-	copier := copier.NewCopier(cfg)
+	//copier := copier.NewCopier(cfg)
+	var copyHandle *copier.Copier
+	if n.SSHClient == nil {
+		copyHandle = copier.NewCopier(cfg)
+	} else {
+		copyHandle = copier.NewCopierWithSSHClient(n.SSHClient)
+	}
+
 	addr := fmt.Sprintf("%s:%d", n.Node.IpAddress, constants.SSHPort)
 
-	if err := copier.CopyFrom(addr, dstDir, files); err != nil {
+	if err := copyHandle.CopyFrom(addr, dstDir, files); err != nil {
 		log.Errorf("TOPO SVC | InitTestBed | CopyFrom node %v failed, IPAddress: %v , Err: %v", n.Node.Name, n.Node.IpAddress, err)
 		return fmt.Errorf("CopyFrom node failed, TestNode: %v, IPAddress: %v , Err: %v", n.Node.Name, n.Node.IpAddress, err)
 	}
