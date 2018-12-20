@@ -69,6 +69,20 @@ func TestSgpolicyCreateDelete(t *testing.T) {
 	Assert(t, (len(prsg.Status.Policies) == 1), "Policy not found in sg status", prsg)
 	Assert(t, (prsg.Status.Policies[0] == sgps.Name), "Policy not found in sg status", prsg)
 
+	// update sg policy
+	newRule := security.SGRule{
+		ProtoPorts: []security.ProtoPort{
+			{
+				Protocol: "tcp",
+				Ports:    "8000",
+			},
+		},
+		Action: "PERMIT",
+	}
+	sgp.Spec.Rules = append(sgp.Spec.Rules, newRule)
+	err = stateMgr.UpdateSgPolicy(&sgp)
+	AssertOk(t, err, "Error updating sgpolicy")
+
 	// verify we can not attach a policy to unknown sg
 	sgp2 := security.SGPolicy{
 		TypeMeta: api.TypeMeta{Kind: "Sgpolicy"},
@@ -165,7 +179,7 @@ func getPolicyVersionForNode(s *Statemgr, policyname, nodename string) (string, 
 	return version, nil
 }
 
-func TestSmartPolicNodeVersions(t *testing.T) {
+func TestSmartPolicyNodeVersions(t *testing.T) {
 	// create network state manager
 	writerObjects := make(map[interface{}]struct{})
 	stateMgr, err := NewStatemgr(newDummyWriter(writerObjects))

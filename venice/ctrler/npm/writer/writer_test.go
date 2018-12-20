@@ -68,20 +68,20 @@ func TestNetworkWriter(t *testing.T) {
 	}
 
 	// create the network object in api server
-	_, err = apicl.NetworkV1().Network().Create(context.Background(), &nw)
+	tnw, err := apicl.NetworkV1().Network().Create(context.Background(), &nw)
 	AssertOk(t, err, "Error creating network")
 
 	// write the update
-	nw.Status = network.NetworkStatus{
+	tnw.Status = network.NetworkStatus{
 		Workloads: []string{"test1", "test2"},
 	}
-	err = wr.WriteNetwork(&nw)
+	err = wr.WriteNetwork(tnw)
 	AssertOk(t, err, "Error writing to apisrv")
 
 	// get the values back from api server
 	ns, err := apicl.NetworkV1().Network().Get(context.Background(), &nw.ObjectMeta)
 	AssertOk(t, err, "Error getting network")
-	Assert(t, (len(ns.Status.Workloads) == len(nw.Status.Workloads)), "Network params did not match", ns)
+	Assert(t, (len(ns.Status.Workloads) == len(tnw.Status.Workloads)), "Network params did not match", ns)
 
 	// stop api server
 	apiSrv.Stop()

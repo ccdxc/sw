@@ -89,6 +89,12 @@ func (sg *SecurityGroupState) DelEndpoint(ep *EndpointState) error {
 
 // AddPolicy adds a policcy to sg
 func (sg *SecurityGroupState) AddPolicy(sgp *SgpolicyState) error {
+	// if policy exists, dont try to add it
+	_, ok := sg.policies[sgp.Name]
+	if ok {
+		return nil
+	}
+
 	// add to db
 	sg.policies[sgp.Name] = sgp
 	sg.Status.Policies = append(sg.Status.Policies, sgp.Name)

@@ -4,7 +4,6 @@ package writer
 
 import (
 	"context"
-	"strings"
 
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cluster"
@@ -85,13 +84,15 @@ func (wr *APISrvWriter) WriteNetwork(nw *network.Network) error {
 		return err
 	}
 
-	// FIXME: clear the resource version till we figure out CAS semantics
-	nw.ObjectMeta.ResourceVersion = ""
+	if nw.ObjectMeta.ResourceVersion != "" {
+		nnw := *nw
+		// FIXME: clear the resource version till we figure out CAS semantics
+		nnw.ObjectMeta.ResourceVersion = ""
 
-	// write it
-	_, err = apicl.NetworkV1().Network().Update(context.Background(), nw)
-	if (err != nil) && (strings.Contains(err.Error(), "Object store error")) {
-		// retry create
+		// write it
+		_, err = apicl.NetworkV1().Network().Update(context.Background(), &nnw)
+	} else {
+		//  create
 		_, err = apicl.NetworkV1().Network().Create(context.Background(), nw)
 	}
 
@@ -111,12 +112,13 @@ func (wr *APISrvWriter) WriteEndpoint(ep *workload.Endpoint, update bool) error 
 		return err
 	}
 
-	// FIXME: clear the resource version till we figure out CAS semantics
-	ep.ObjectMeta.ResourceVersion = ""
-
 	// write it
 	if update {
-		_, err = apicl.WorkloadV1().Endpoint().Update(context.Background(), ep)
+		// FIXME: clear the resource version till we figure out CAS semantics
+		nep := *ep
+		nep.ObjectMeta.ResourceVersion = ""
+
+		_, err = apicl.WorkloadV1().Endpoint().Update(context.Background(), &nep)
 	} else {
 		_, err = apicl.WorkloadV1().Endpoint().Create(context.Background(), ep)
 		// if create fails, try update instead
@@ -141,10 +143,11 @@ func (wr *APISrvWriter) WriteTenant(tn *cluster.Tenant) error {
 	}
 
 	// FIXME: clear the resource version till we figure out CAS semantics
-	tn.ObjectMeta.ResourceVersion = ""
+	ttn := *tn
+	ttn.ObjectMeta.ResourceVersion = ""
 
 	// write it
-	_, err = apicl.ClusterV1().Tenant().Update(context.Background(), tn)
+	_, err = apicl.ClusterV1().Tenant().Update(context.Background(), &ttn)
 	return err
 }
 
@@ -162,10 +165,11 @@ func (wr *APISrvWriter) WriteSecurityGroup(sg *security.SecurityGroup) error {
 	}
 
 	// FIXME: clear the resource version till we figure out CAS semantics
-	sg.ObjectMeta.ResourceVersion = ""
+	tsg := *sg
+	tsg.ObjectMeta.ResourceVersion = ""
 
 	// write it
-	_, err = apicl.SecurityV1().SecurityGroup().Update(context.Background(), sg)
+	_, err = apicl.SecurityV1().SecurityGroup().Update(context.Background(), &tsg)
 	return err
 }
 
@@ -183,10 +187,11 @@ func (wr *APISrvWriter) WriteSGPolicy(sgp *security.SGPolicy) error {
 	}
 
 	// FIXME: clear the resource version till we figure out CAS semantics
-	sgp.ObjectMeta.ResourceVersion = ""
+	tsgp := *sgp
+	tsgp.ObjectMeta.ResourceVersion = ""
 
 	// write it
-	_, err = apicl.SecurityV1().SGPolicy().Update(context.Background(), sgp)
+	_, err = apicl.SecurityV1().SGPolicy().Update(context.Background(), &tsgp)
 	return err
 }
 
@@ -204,10 +209,11 @@ func (wr *APISrvWriter) WriteApp(app *security.App) error {
 	}
 
 	// FIXME: clear the resource version till we figure out CAS semantics
-	app.ObjectMeta.ResourceVersion = ""
+	tapp := *app
+	tapp.ObjectMeta.ResourceVersion = ""
 
 	// write it
-	_, err = apicl.SecurityV1().App().Update(context.Background(), app)
+	_, err = apicl.SecurityV1().App().Update(context.Background(), &tapp)
 	return err
 }
 

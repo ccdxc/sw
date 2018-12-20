@@ -14,6 +14,7 @@ import (
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
 	"github.com/pensando/sw/venice/utils/debug"
+	"github.com/pensando/sw/venice/utils/kvstore"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -298,6 +299,10 @@ func TestSgPolicyWatcher(t *testing.T) {
 	Assert(t, (len(sgp.Spec.AttachGroups) == 1), "sg policy attachment did not match", sgp)
 	Assert(t, (sgp.Spec.AttachGroups[0] == "testsg"), "sg policy attachment did not match", sgp)
 	Assert(t, (len(sgp.Spec.Rules) == 1), "sg policy rules did not match", sgp)
+
+	// trigger update event
+	err = watcher.SgpolicyEvent(kvstore.Updated, &sgp.SGPolicy)
+	AssertOk(t, err, "Error updating sg policy")
 
 	err = watcher.DeleteSgpolicy("testTenant", "testTenant", "pol1")
 	AssertOk(t, err, "Error deleting sg policy")

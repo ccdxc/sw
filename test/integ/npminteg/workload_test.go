@@ -42,7 +42,7 @@ func (it *integTestSuite) TestNpmWorkloadCreateDelete(c *C) {
 
 	// create a workload on each host
 	for i, ag := range it.agents {
-		err := it.ctrler.Watchr.CreateWorkload("default", "default", fmt.Sprintf("testWorkload-%s", ag.nagent.NetworkAgent.NodeUUID), fmt.Sprintf("testHost-%s", ag.nagent.NetworkAgent.NodeUUID), ag.nagent.NetworkAgent.NodeUUID, uint32(100+i), 1)
+		err = it.ctrler.Watchr.CreateWorkload("default", "default", fmt.Sprintf("testWorkload-%s", ag.nagent.NetworkAgent.NodeUUID), fmt.Sprintf("testHost-%s", ag.nagent.NetworkAgent.NodeUUID), ag.nagent.NetworkAgent.NodeUUID, uint32(100+i), 1)
 		AssertOk(c, err, "Error creating workload")
 	}
 
@@ -63,8 +63,8 @@ func (it *integTestSuite) TestNpmWorkloadCreateDelete(c *C) {
 				return
 			}
 			foundLocal := false
-			for _, ag := range it.agents {
-				epname := fmt.Sprintf("testWorkload-%s-%s", ag.nagent.NetworkAgent.NodeUUID, ag.nagent.NetworkAgent.NodeUUID)
+			for _, nag := range it.agents {
+				epname := fmt.Sprintf("testWorkload-%s-%s", nag.nagent.NetworkAgent.NodeUUID, nag.nagent.NetworkAgent.NodeUUID)
 				eps, perr := ag.datapath.FindEndpoint(fmt.Sprintf("%s|%s", "default", epname))
 				if perr != nil || len(eps.Request) != 1 {
 					waitCh <- fmt.Errorf("Endpoint %s not found in datapath, eps=%+v, err=%v", epname, eps, perr)

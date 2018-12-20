@@ -160,21 +160,17 @@ func NewVeniceObj(obj interface{}, metrics interface{}, opts *TableOpts) (Table,
 		return nil, err
 	}
 
-	global.Lock()
-	_, tableExists := global.tables[objKind]
-	global.Unlock()
-
 	table, err := NewObj(objKind, keys, opts)
 	if err != nil {
 		return nil, err
 	}
-	if !tableExists {
-		global.Lock()
-		t := table.(*iTable)
-		if err := fillFields(t, metrics); err != nil {
-			return nil, err
-		}
-		global.Unlock()
+
+	global.Lock()
+	defer global.Unlock()
+
+	t := table.(*iTable)
+	if err := fillFields(t, metrics); err != nil {
+		return nil, err
 	}
 
 	return table, nil

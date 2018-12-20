@@ -3,7 +3,6 @@
 package veniceinteg
 
 import (
-	"context"
 	"fmt"
 
 	. "gopkg.in/check.v1"
@@ -19,6 +18,9 @@ import (
 )
 
 func (it *veniceIntegSuite) TestVeniceIntegSecurityPolicy(c *C) {
+	ctx, err := it.loggedInCtx()
+	AssertOk(c, err, "Error creating logged in context")
+
 	// sg policy params
 	sgp := security.SGPolicy{
 		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
@@ -46,7 +48,7 @@ func (it *veniceIntegSuite) TestVeniceIntegSecurityPolicy(c *C) {
 	}
 
 	// create security policy
-	_, err := it.apisrvClient.SecurityV1().SGPolicy().Create(context.Background(), &sgp)
+	_, err = it.restClient.SecurityV1().SGPolicy().Create(ctx, &sgp)
 	AssertOk(c, err, "Error creating security policy")
 
 	// verify policy gets created in agent
@@ -59,10 +61,73 @@ func (it *veniceIntegSuite) TestVeniceIntegSecurityPolicy(c *C) {
 			}
 		}
 		return (notFound == false), nil
-	}, "SgPolicy not found in agent", "100ms", "10s")
+	}, "SgPolicy not found in agent", "100ms", it.pollTimeout())
+
+	// verify sgpolicy status reflects propagation status
+	AssertEventually(c, func() (bool, interface{}) {
+		tsgp, gerr := it.restClient.SecurityV1().SGPolicy().Get(ctx, &sgp.ObjectMeta)
+		if err != nil {
+			return false, gerr
+		}
+		if tsgp.Status.PropagationStatus.GenerationID != tsgp.ObjectMeta.GenerationID {
+			return false, tsgp
+		}
+		if (tsgp.Status.PropagationStatus.Updated != int32(it.config.NumHosts)) || (tsgp.Status.PropagationStatus.Pending != 0) ||
+			(tsgp.Status.PropagationStatus.MinVersion != "") {
+			return false, tsgp
+		}
+		return true, nil
+	}, "SgPolicy status was not updated", "100ms", it.pollTimeout())
+
+	// update the policy by adding a new rule
+	newRule := security.SGRule{
+		FromIPAddresses: []string{"12.0.0.0/24"},
+		ToIPAddresses:   []string{"13.0.0.0/24"},
+		ProtoPorts: []security.ProtoPort{
+			{
+				Protocol: "tcp",
+				Ports:    "8000",
+			},
+		},
+		Action: "PERMIT",
+	}
+	sgp.Spec.Rules = append(sgp.Spec.Rules, newRule)
+	_, err = it.restClient.SecurityV1().SGPolicy().Update(ctx, &sgp)
+	AssertOk(c, err, "Error updating security policy")
+
+	// verify policy gets updated in agent
+	AssertEventually(c, func() (bool, interface{}) {
+		notFound := false
+		for _, ag := range it.agents {
+			rsgp, cerr := ag.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
+			if (cerr != nil) || (rsgp.Name != sgp.Name) {
+				notFound = true
+			}
+			if len(rsgp.Spec.Rules) != len(sgp.Spec.Rules) {
+				notFound = true
+			}
+		}
+		return (notFound == false), nil
+	}, "SgPolicy was not updated in agent", "100ms", it.pollTimeout())
+
+	// verify sgpolicy status reflects propagation status
+	AssertEventually(c, func() (bool, interface{}) {
+		tsgp, gerr := it.restClient.SecurityV1().SGPolicy().Get(ctx, &sgp.ObjectMeta)
+		if err != nil {
+			return false, gerr
+		}
+		if tsgp.Status.PropagationStatus.GenerationID != tsgp.ObjectMeta.GenerationID {
+			return false, tsgp
+		}
+		if (tsgp.Status.PropagationStatus.Updated != int32(it.config.NumHosts)) || (tsgp.Status.PropagationStatus.Pending != 0) ||
+			(tsgp.Status.PropagationStatus.MinVersion != "") {
+			return false, tsgp
+		}
+		return true, nil
+	}, "SgPolicy status was not updated", "100ms", it.pollTimeout())
 
 	// delete policy
-	_, err = it.apisrvClient.SecurityV1().SGPolicy().Delete(context.Background(), &sgp.ObjectMeta)
+	_, err = it.restClient.SecurityV1().SGPolicy().Delete(ctx, &sgp.ObjectMeta)
 	AssertOk(c, err, "Error deleting sgpolicy")
 
 	// verify policy gets deleted in agent
@@ -75,14 +140,17 @@ func (it *veniceIntegSuite) TestVeniceIntegSecurityPolicy(c *C) {
 			}
 		}
 		return (found == false), nil
-	}, "SgPolicy still found in agent", "100ms", "10s")
+	}, "SgPolicy still found in agent", "100ms", it.pollTimeout())
 }
 
 func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
-	wrloads := make([]workload.Workload, it.numAgents)
+	wrloads := make([]workload.Workload, it.config.NumHosts)
+
+	ctx, err := it.loggedInCtx()
+	AssertOk(c, err, "Error creating logged in context")
 
 	// create a wait channel
-	waitCh := make(chan error, it.numAgents*2)
+	waitCh := make(chan error, it.config.NumHosts*2)
 
 	// sg params
 	sg := security.SecurityGroup{
@@ -98,7 +166,7 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 	}
 
 	// create security policy
-	_, err := it.apisrvClient.SecurityV1().SecurityGroup().Create(context.Background(), &sg)
+	_, err = it.restClient.SecurityV1().SecurityGroup().Create(ctx, &sg)
 	AssertOk(c, err, "Error creating security group")
 
 	// verify policy gets created in agent
@@ -113,7 +181,7 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 			}
 		}
 		return (notFound == false), []interface{}{rsg, cerr}
-	}, "security group not found in agent", "100ms", "10s")
+	}, "security group not found in agent", "100ms", it.pollTimeout())
 
 	// create a workload on each NIC/host
 	for i := range it.agents {
@@ -139,7 +207,7 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 		}
 
 		// create workload
-		_, err := it.apisrvClient.WorkloadV1().Workload().Create(context.Background(), &wrloads[i])
+		_, err := it.restClient.WorkloadV1().Workload().Create(ctx, &wrloads[i])
 		AssertOk(c, err, "Error creating workload")
 	}
 
@@ -147,8 +215,8 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 	for i, ag := range it.agents {
 		go func(ag *netagent.Agent, dp *datapath.Datapath) {
 			found := CheckEventually(func() (bool, interface{}) {
-				return ((dp.GetEndpointCount() == it.numAgents) && (len(ag.NetworkAgent.ListEndpoint()) == it.numAgents)), nil
-			}, "10ms", "10s")
+				return ((dp.GetEndpointCount() == it.config.NumHosts) && (len(ag.NetworkAgent.ListEndpoint()) == it.config.NumHosts)), nil
+			}, "10ms", it.pollTimeout())
 			if !found {
 				waitCh <- fmt.Errorf("Endpoint count incorrect in datapath")
 				return
@@ -183,12 +251,12 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 	}
 
 	// wait for all goroutines to complete
-	for i := 0; i < it.numAgents; i++ {
+	for i := 0; i < it.config.NumHosts; i++ {
 		AssertOk(c, <-waitCh, "Endpoint info incorrect in datapath")
 	}
 
 	// delete the security group
-	_, err = it.apisrvClient.SecurityV1().SecurityGroup().Delete(context.Background(), &sg.ObjectMeta)
+	_, err = it.restClient.SecurityV1().SecurityGroup().Delete(ctx, &sg.ObjectMeta)
 	AssertOk(c, err, "Error creating workload")
 
 	// verify policy gets removed from agent
@@ -201,7 +269,7 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 			}
 		}
 		return (found == false), nil
-	}, "security group still found in agent", "100ms", "10s")
+	}, "security group still found in agent", "100ms", it.pollTimeout())
 
 	// verify SG to endpoint association is removed
 	for i, ag := range it.agents {
@@ -218,7 +286,7 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 					}
 				}
 				return true, nil
-			}, "10ms", "10s")
+			}, "10ms", it.pollTimeout())
 			if !found {
 				waitCh <- fmt.Errorf("Endpoint count incorrect in datapath")
 				return
@@ -243,13 +311,13 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 	}
 
 	// wait for all goroutines to complete
-	for i := 0; i < it.numAgents; i++ {
+	for i := 0; i < it.config.NumHosts; i++ {
 		AssertOk(c, <-waitCh, "Endpoint info incorrect in datapath")
 	}
 
 	// delete workloads
 	for i := range it.agents {
-		_, err = it.apisrvClient.WorkloadV1().Workload().Delete(context.Background(), &wrloads[i].ObjectMeta)
+		_, err = it.apisrvClient.WorkloadV1().Workload().Delete(ctx, &wrloads[i].ObjectMeta)
 		AssertOk(c, err, "Error creating workload")
 	}
 
@@ -258,7 +326,7 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 		go func(ag *netagent.Agent, dp *datapath.Datapath) {
 			if !CheckEventually(func() (bool, interface{}) {
 				return (dp.GetEndpointCount() == 0), nil
-			}, "10ms", "10s") {
+			}, "10ms", it.pollTimeout()) {
 				waitCh <- fmt.Errorf("Endpoint was not deleted from datapath")
 				return
 			}
@@ -268,7 +336,7 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 	}
 
 	// wait for all goroutines to complete
-	for i := 0; i < it.numAgents; i++ {
+	for i := 0; i < it.config.NumHosts; i++ {
 		AssertOk(c, <-waitCh, "Endpoint delete error")
 	}
 

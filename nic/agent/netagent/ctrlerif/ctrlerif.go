@@ -32,6 +32,7 @@ type NpmClient struct {
 	resolverClient  resolver.Interface            // Resolver client
 	waitGrp         sync.WaitGroup                // wait group to wait on all go routines to exit
 	agent           types.CtrlerIntf              // net Agent API
+	clientFactory   *rpckit.RPCClientFactory      // client factory
 	netGrpcClient   *rpckit.RPCClient             // grpc client for network
 	sgGrpcClient    *rpckit.RPCClient             // grpc client for security group
 	epGrpcClient    *rpckit.RPCClient             // grpc client for endpoint
@@ -67,6 +68,7 @@ func NewNpmClient(agent types.CtrlerIntf, srvURL string, resolverClient resolver
 		pendingEpCreate: make(map[string]*netproto.Endpoint),
 		pendingEpDelete: make(map[string]*netproto.Endpoint),
 		startTime:       time.Now(),
+		clientFactory:   rpckit.NewClientFactory(agent.GetAgentID()),
 	}
 
 	client.debugStats = debug.New(fmt.Sprintf("npmif-%s", client.getAgentName())).Tsdb().Kind("netagentStats").TsdbPeriod(5 * time.Second).Build()
@@ -380,7 +382,7 @@ func (client *NpmClient) runNetworkWatcher(ctx context.Context, ch chan<- netpro
 
 	for {
 		// create a grpc client
-		rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL,
+		rpcClient, err := client.clientFactory.NewRPCClient(client.getAgentName(), client.srvURL,
 			rpckit.WithBalancer(balancer.New(client.resolverClient)), rpckit.WithRemoteServerName(globals.Npm))
 		if err != nil {
 			log.Errorf("Error connecting to grpc server. Err: %v", err)
@@ -461,7 +463,7 @@ func (client *NpmClient) runEndpointWatcher(ctx context.Context, ch chan<- netpr
 
 	for {
 		// create a grpc client
-		rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL,
+		rpcClient, err := client.clientFactory.NewRPCClient(client.getAgentName(), client.srvURL,
 			rpckit.WithBalancer(balancer.New(client.resolverClient)), rpckit.WithRemoteServerName(globals.Npm))
 		if err != nil {
 			log.Errorf("Error connecting to grpc server. Err: %v", err)
@@ -531,7 +533,7 @@ func (client *NpmClient) runSecurityGroupWatcher(ctx context.Context, ch chan<- 
 
 	for {
 		// create a grpc client
-		rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL,
+		rpcClient, err := client.clientFactory.NewRPCClient(client.getAgentName(), client.srvURL,
 			rpckit.WithBalancer(balancer.New(client.resolverClient)), rpckit.WithRemoteServerName(globals.Npm))
 		if err != nil {
 			log.Errorf("Error connecting to grpc server. Err: %v", err)
@@ -600,7 +602,7 @@ func (client *NpmClient) runSecurityPolicyWatcher(ctx context.Context, ch chan<-
 
 	for {
 		// create a grpc client
-		rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL,
+		rpcClient, err := client.clientFactory.NewRPCClient(client.getAgentName(), client.srvURL,
 			rpckit.WithBalancer(balancer.New(client.resolverClient)), rpckit.WithRemoteServerName(globals.Npm))
 		if err != nil {
 			log.Errorf("Error connecting to grpc server. Err: %v", err)
@@ -671,7 +673,7 @@ func (client *NpmClient) runSecurityProfileWatcher(ctx context.Context, ch chan<
 
 	for {
 		// create a grpc client
-		rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL,
+		rpcClient, err := client.clientFactory.NewRPCClient(client.getAgentName(), client.srvURL,
 			rpckit.WithBalancer(balancer.New(client.resolverClient)), rpckit.WithRemoteServerName(globals.Npm))
 		if err != nil {
 			log.Errorf("Error connecting to grpc server. Err: %v", err)
@@ -742,7 +744,7 @@ func (client *NpmClient) runAppWatcher(ctx context.Context, ch chan<- netproto.A
 
 	for {
 		// create a grpc client
-		rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL,
+		rpcClient, err := client.clientFactory.NewRPCClient(client.getAgentName(), client.srvURL,
 			rpckit.WithBalancer(balancer.New(client.resolverClient)), rpckit.WithRemoteServerName(globals.Npm))
 		if err != nil {
 			log.Errorf("Error connecting to grpc server. Err: %v", err)
@@ -836,7 +838,7 @@ func (client *NpmClient) EndpointCreateReq(epinfo *netproto.Endpoint) (*netproto
 	client.Unlock()
 
 	// create a grpc client
-	rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL,
+	rpcClient, err := client.clientFactory.NewRPCClient(client.getAgentName(), client.srvURL,
 		rpckit.WithBalancer(balancer.New(client.resolverClient)), rpckit.WithRemoteServerName(globals.Npm))
 	if err != nil {
 		log.Errorf("Error connecting to grpc server. Err: %v", err)
@@ -874,7 +876,7 @@ func (client *NpmClient) EndpointDeleteReq(epinfo *netproto.Endpoint) (*netproto
 	client.Unlock()
 
 	// create a grpc client
-	rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL,
+	rpcClient, err := client.clientFactory.NewRPCClient(client.getAgentName(), client.srvURL,
 		rpckit.WithBalancer(balancer.New(client.resolverClient)), rpckit.WithRemoteServerName(globals.Npm))
 	if err != nil {
 		log.Errorf("Error connecting to grpc server. Err: %v", err)

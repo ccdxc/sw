@@ -23,7 +23,7 @@ import (
 	authntestutils "github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/log"
-	mockresolver "github.com/pensando/sw/venice/utils/resolver/mock"
+	"github.com/pensando/sw/venice/utils/resolver"
 
 	// for registering services and hooks
 	_ "github.com/pensando/sw/api/generated/exports/apigw"
@@ -110,7 +110,7 @@ func GetAuthorizationHeader(apiGwAddr string, creds *auth.PasswordCredential) (s
 }
 
 // StartAPIGateway helper function to start API gateway.
-func StartAPIGateway(serverAddr string, backends map[string]string, skipServices []string, resolvers []string, l log.Logger) (apigw.APIGateway, string, error) {
+func StartAPIGateway(serverAddr string, skipAuth bool, backends map[string]string, skipServices []string, resolvers []string, l log.Logger) (apigw.APIGateway, string, error) {
 	log.Info("starting API gateway ...")
 
 	// Start the API Gateway
@@ -120,9 +120,9 @@ func StartAPIGateway(serverAddr string, backends map[string]string, skipServices
 		Logger:          l,
 		BackendOverride: backends,
 		Resolvers:       resolvers,
-		SkipBackends: []string{
-			"metrics_query", //TODO fix after hookup
-		},
+		SkipAuth:        skipAuth,
+		SkipAuthz:       skipAuth,
+		SkipBackends:    skipServices,
 	}
 	// skip services
 	gwConfig.SkipBackends = append(gwConfig.SkipBackends, skipServices...)
@@ -146,7 +146,7 @@ func StartAPIGateway(serverAddr string, backends map[string]string, skipServices
 }
 
 // StartSpyglass helper function to spyglass finder and indexer
-func StartSpyglass(service, apiServerAddr string, mr *mockresolver.ResolverClient, cache scache.Interface, logger log.Logger, esClient elastic.ESClient) (interface{}, string, error) {
+func StartSpyglass(service, apiServerAddr string, mr resolver.Interface, cache scache.Interface, logger log.Logger, esClient elastic.ESClient) (interface{}, string, error) {
 	var err error
 	if esClient == nil {
 		esClient, err = CreateElasticClient("", mr, logger.WithContext("submodule", "elastic"), nil, nil)
@@ -199,7 +199,7 @@ func StartSpyglass(service, apiServerAddr string, mr *mockresolver.ResolverClien
 }
 
 // StartEvtsMgr helper function to start events manager
-func StartEvtsMgr(serverAddr string, mr *mockresolver.ResolverClient, logger log.Logger, esClient elastic.ESClient) (*evtsmgr.EventsManager, string, error) {
+func StartEvtsMgr(serverAddr string, mr resolver.Interface, logger log.Logger, esClient elastic.ESClient) (*evtsmgr.EventsManager, string, error) {
 	log.Infof("starting events manager")
 
 	var err error
@@ -218,7 +218,7 @@ func StartEvtsMgr(serverAddr string, mr *mockresolver.ResolverClient, logger log
 }
 
 // StartEvtsProxy helper function to start events proxy
-func StartEvtsProxy(serverAddr string, mr *mockresolver.ResolverClient, logger log.Logger, dedupInterval,
+func StartEvtsProxy(serverAddr string, mr resolver.Interface, logger log.Logger, dedupInterval,
 	batchInterval time.Duration) (*evtsproxy.EventsProxy, string, string, error) {
 	log.Infof("starting events proxy")
 

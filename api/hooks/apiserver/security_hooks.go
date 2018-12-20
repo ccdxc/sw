@@ -9,7 +9,7 @@ import (
 
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/venice/apiserver"
-	"github.com/pensando/sw/venice/apiserver/pkg"
+	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -94,7 +94,7 @@ func (s *securityHooks) validateProtoPort(rules []security.SGRule) error {
 			} else {
 				found := false
 				for _, p := range supportedProtocols {
-					if p == pp.Protocol {
+					if p == strings.ToLower(pp.Protocol) {
 						found = true
 						break
 					}
@@ -197,7 +197,7 @@ func (s *securityHooks) validateApp(ctx context.Context, kv kvstore.Interface, t
 		} else {
 			found := false
 			for _, p := range supportedProtocols {
-				if p == pp.Protocol {
+				if p == strings.ToLower(pp.Protocol) {
 					found = true
 					break
 				}

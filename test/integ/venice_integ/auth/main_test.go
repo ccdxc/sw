@@ -12,7 +12,7 @@ import (
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apiserver"
-	"github.com/pensando/sw/venice/cmd/types/protos"
+	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/spyglass/finder"
 	"github.com/pensando/sw/venice/utils"
@@ -97,9 +97,9 @@ func (tInfo *tInfo) setup() error {
 	}
 
 	// start API gateway
-	tInfo.apiGw, tInfo.apiGwAddr, err = testutils.StartAPIGateway(":0",
+	tInfo.apiGw, tInfo.apiGwAddr, err = testutils.StartAPIGateway(":0", false,
 		map[string]string{globals.APIServer: tInfo.apiServerAddr, globals.Spyglass: tInfo.fdrAddr},
-		[]string{},
+		[]string{"metrics_query"},
 		[]string{}, tInfo.l)
 	if err != nil {
 		return err

@@ -166,9 +166,9 @@ func (tInfo *testInfo) setup(t *testing.T) error {
 	tInfo.updateResolver(globals.APIServer, tInfo.apiServerAddr)
 
 	// start API gateway
-	tInfo.apiGw, tInfo.apiGwAddr, err = testutils.StartAPIGateway(":0",
+	tInfo.apiGw, tInfo.apiGwAddr, err = testutils.StartAPIGateway(":0", false,
 		map[string]string{globals.APIServer: tInfo.apiServerAddr, globals.Spyglass: tInfo.fdrAddr},
-		[]string{}, []string{}, tInfo.l)
+		[]string{"metrics_query"}, []string{}, tInfo.l)
 	if err != nil {
 		return err
 	}

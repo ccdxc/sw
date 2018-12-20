@@ -3,6 +3,7 @@ package ctrlerif
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 
@@ -217,4 +218,9 @@ func TestRpcServer(t *testing.T) {
 		return client.rpcClient != nil, client
 
 	}, "failed to connect to rpc server")
+
+	// stop rpc server and client
+	f.Stop()
+	time.Sleep(time.Millisecond * 10)
+	client.Stop()
 }

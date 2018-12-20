@@ -106,7 +106,7 @@ func (w *nodewatcher) periodicUpdate(ctx context.Context) {
 
 			// memory
 			vmstat, err := mem.VirtualMemory()
-			if err != nil {
+			if err != nil || vmstat == nil {
 				w.logger.Errorf("Node Watcher: failed to read virtual memory info, error: %v", err)
 				continue
 			}

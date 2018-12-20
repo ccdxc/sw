@@ -140,16 +140,20 @@ func (w *Watcher) handleSgPolicyEvent(et kvstore.WatchEventType, sgp *security.S
 		// ask statemgr to create the network
 		err := w.statemgr.CreateSgpolicy(sgp)
 		if err != nil {
-			log.Errorf("Error creating sg policy {%+v}. Err: %v", sgp.ObjectMeta, err)
+			log.Errorf("Error creating sg policy {%+v}. Err: %v", sgp, err)
 			return
 		}
 	case kvstore.Updated:
-		// FIXME:
+		err := w.statemgr.UpdateSgPolicy(sgp)
+		if err != nil {
+			log.Errorf("Error updating sg policy {%+v}. Err: %v", sgp, err)
+			return
+		}
 	case kvstore.Deleted:
 		// ask statemgr to delete the network
 		err := w.statemgr.DeleteSgpolicy(sgp.Tenant, sgp.Name)
 		if err != nil {
-			log.Errorf("Error deleting sg policy {%+v}. Err: %v", sgp.ObjectMeta, err)
+			log.Errorf("Error deleting sg policy {%+v}. Err: %v", sgp, err)
 			return
 		}
 	}
@@ -190,6 +194,8 @@ func (w *Watcher) handleWorkloadEvent(evt *kvstore.WatchEvent) {
 	case *workload.Workload:
 		wrload := evt.Object.(*workload.Workload)
 
+		log.Infof("Watcher: Got Workload watch event(%s): {%+v}", evt.Type, wrload)
+
 		// handle based on event type
 		switch evt.Type {
 		case kvstore.Updated:
@@ -218,6 +224,8 @@ func (w *Watcher) handleHostEvent(evt *kvstore.WatchEvent) {
 	switch tp := evt.Object.(type) {
 	case *cluster.Host:
 		host := evt.Object.(*cluster.Host)
+
+		log.Infof("Watcher: Got Host watch event(%s): {%+v}", evt.Type, host)
 
 		// handle based on event type
 		switch evt.Type {
@@ -248,6 +256,8 @@ func (w *Watcher) handleSnicEvent(evt *kvstore.WatchEvent) {
 	case *cluster.SmartNIC:
 		snic := evt.Object.(*cluster.SmartNIC)
 
+		log.Infof("Watcher: Got SmartNIC watch event(%s): {%+v}", evt.Type, snic)
+
 		// handle based on event type
 		switch evt.Type {
 		case kvstore.Updated:
@@ -277,6 +287,8 @@ func (w *Watcher) handleAppEvent(evt *kvstore.WatchEvent) {
 	case *security.App:
 		app := evt.Object.(*security.App)
 
+		log.Infof("Watcher: Got App watch event(%s): {%+v}", evt.Type, app)
+
 		// handle based on event type
 		switch evt.Type {
 		case kvstore.Updated:
@@ -305,6 +317,8 @@ func (w *Watcher) handleFwprofileEvent(evt *kvstore.WatchEvent) {
 	switch tp := evt.Object.(type) {
 	case *security.FirewallProfile:
 		fwp := evt.Object.(*security.FirewallProfile)
+
+		log.Infof("Watcher: Got FirewallProfile watch event(%s): {%+v}", evt.Type, fwp)
 
 		// handle based on event type
 		switch evt.Type {
@@ -362,7 +376,7 @@ func (w *Watcher) runNetwatcher() {
 				return
 			}
 
-			log.Infof("Watcher: Got network watch event(%s): {%+v}", evt.Type, nw.ObjectMeta)
+			log.Infof("Watcher: Got network watch event(%s): {%+v}", evt.Type, nw)
 
 			// TODO make sure we honor the order of events when handling events in parallel
 			go w.handleNetworkEvent(evt.Type, nw)
@@ -403,7 +417,7 @@ func (w *Watcher) runVmmEpwatcher() {
 				return
 			}
 
-			log.Infof("Watcher: Got vmm endpoint watch event(%s): {%+v}", evt.Type, ep.ObjectMeta)
+			log.Infof("Watcher: Got vmm endpoint watch event(%s): {%+v}", evt.Type, ep)
 
 			// TODO process each event in its own go routine
 			w.handleEndpointEvent(evt.Type, ep)
@@ -444,7 +458,7 @@ func (w *Watcher) runSgwatcher() {
 				return
 			}
 
-			log.Infof("Watcher: Got SecurityGroup watch event(%s): {%+v}", evt.Type, ep.ObjectMeta)
+			log.Infof("Watcher: Got SecurityGroup watch event(%s): {%+v}", evt.Type, ep)
 
 			// TODO process each event in its own go routine
 			w.handleSgEvent(evt.Type, ep)
@@ -484,7 +498,7 @@ func (w *Watcher) runSgPolicyWatcher() {
 				return
 			}
 
-			log.Infof("Watcher: Got SgPolicy watch event(%s): {%+v}", evt.Type, sgp.ObjectMeta)
+			log.Infof("Watcher: Got SgPolicy watch event(%s): {%+v}", evt.Type, sgp)
 
 			// TODO process each event in its own go routine
 			w.handleSgPolicyEvent(evt.Type, sgp)
@@ -526,7 +540,7 @@ func (w *Watcher) runTenantwatcher() {
 				return
 			}
 
-			log.Infof("Watcher: Got tenant watch event(%s): {%+v}", evt.Type, tn.ObjectMeta)
+			log.Infof("Watcher: Got tenant watch event(%s): {%+v}", evt.Type, tn)
 
 			// TODO process each event in its own go routine
 			w.handleTenantEvent(evt.Type, tn)
@@ -785,6 +799,19 @@ func (w *Watcher) CreateSgpolicy(tenant, namespace, pname string, attachTenant b
 	evt := kvstore.WatchEvent{
 		Type:   kvstore.Created,
 		Object: &sgp,
+	}
+
+	// inject the object into the sg policy watcher
+	w.sgPolicyWatcher <- evt
+
+	return nil
+}
+
+// SgpolicyEvent injects an sgp event
+func (w *Watcher) SgpolicyEvent(etype kvstore.WatchEventType, sgp *security.SGPolicy) error {
+	evt := kvstore.WatchEvent{
+		Type:   etype,
+		Object: sgp,
 	}
 
 	// inject the object into the sg policy watcher

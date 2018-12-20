@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/vmware/govmomi/vim25/soap"
-	. "gopkg.in/check.v1"
+	check "gopkg.in/check.v1"
 
 	"github.com/pensando/sw/venice/orch/simapi"
 	"github.com/pensando/sw/venice/orch/vchub/defs"
@@ -17,7 +17,7 @@ import (
 	"github.com/pensando/sw/venice/orch/vchub/vcprobe"
 	kvs "github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
-	. "github.com/pensando/sw/venice/utils/testutils"
+	"github.com/pensando/sw/venice/utils/testutils"
 )
 
 type vchSuite struct {
@@ -29,7 +29,7 @@ type vchSuite struct {
 	vcp      *vcprobe.VCProbe
 }
 
-func (vt *vchSuite) SetUp(c *C, numAgents int) {
+func (vt *vchSuite) SetUp(c *check.C, numAgents int) {
 	// create a vcsim
 	vt.vcSim = sim.New()
 	for ix := 0; ix < numAgents; ix++ {
@@ -43,20 +43,20 @@ func (vt *vchSuite) SetUp(c *C, numAgents int) {
 
 	// setup and start a vchub instance
 	_, err = vchstore.Init("", kvs.KVStoreTypeMemkv)
-	c.Assert(err, IsNil)
+	c.Assert(err, check.IsNil)
 
 	vt.vch, err = vchsrv.NewVCHServer(vchTestURL)
-	c.Assert(err, IsNil)
+	c.Assert(err, check.IsNil)
 	vt.storeCh = make(chan defs.StoreMsg, 64)
 	vt.vchStore = vchstore.NewVCHStore(context.Background())
 	vt.vchStore.Run(vt.storeCh)
 
 	u, err := soap.ParseURL(vcURL)
-	c.Assert(err, IsNil)
+	c.Assert(err, check.IsNil)
 
 	vt.vcp = vcprobe.NewVCProbe(u, vt.storeCh)
 
-	AssertEventually(c, func() (bool, interface{}) {
+	testutils.AssertEventually(c, func() (bool, interface{}) {
 		if vt.vcp.Start() == nil {
 			vt.vcp.Run()
 			return true, nil

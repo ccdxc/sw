@@ -78,6 +78,7 @@ func (w *watchChan) watchStatsPolicy(ctx context.Context, cl tpmproto.StatsPolic
 				return
 			}
 			log.Errorf("received error in stats policy stream, error:%s", err)
+			time.Sleep(time.Second)
 			continue
 		}
 		w.statsChan <- event
@@ -95,6 +96,7 @@ func (w *watchChan) watchFwlogPolicy(ctx context.Context, cl tpmproto.FwlogPolic
 				return
 			}
 			log.Errorf("received error in fwlog policy stream, error:%s", err)
+			time.Sleep(time.Second)
 			continue
 		}
 		w.fwlogChan <- event
@@ -112,6 +114,7 @@ func (w *watchChan) watchFlowExpPolicy(ctx context.Context, cl tpmproto.FlowExpo
 				return
 			}
 			log.Errorf("received error in flow export policy stream, error:%s", err)
+			time.Sleep(time.Second)
 			continue
 		}
 		w.flowExpChan <- event

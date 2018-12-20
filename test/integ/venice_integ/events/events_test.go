@@ -15,7 +15,7 @@ import (
 	"time"
 
 	es "github.com/olivere/elastic"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/client"
@@ -34,12 +34,14 @@ import (
 	. "github.com/pensando/sw/venice/utils/testutils"
 	"github.com/pensando/sw/venice/utils/testutils/policygen"
 	"github.com/pensando/sw/venice/utils/testutils/serviceutils"
+
 	// import gateway services
 	_ "github.com/pensando/sw/api/generated/auth/gateway"
 	_ "github.com/pensando/sw/api/generated/events/gateway"
 	_ "github.com/pensando/sw/api/generated/monitoring/gateway"
 	_ "github.com/pensando/sw/api/generated/search/gateway"
 	_ "github.com/pensando/sw/venice/apigw/svc"
+
 	// import API server services
 	_ "github.com/pensando/sw/api/generated/auth/grpc/server"
 	_ "github.com/pensando/sw/api/generated/events/grpc/server"
@@ -365,8 +367,8 @@ func TestEventsRESTEndpoints(t *testing.T) {
 	defer fdr.Stop()
 
 	// API gateway
-	apiGw, apiGwAddr, err := testutils.StartAPIGateway(":0",
-		map[string]string{globals.APIServer: ti.apiServerAddr, globals.Spyglass: fdrAddr}, []string{}, []string{}, ti.logger)
+	apiGw, apiGwAddr, err := testutils.StartAPIGateway(":0", false,
+		map[string]string{globals.APIServer: ti.apiServerAddr, globals.Spyglass: fdrAddr}, []string{"metrics_query"}, []string{}, ti.logger)
 	AssertOk(t, err, "failed to start API gateway")
 	defer apiGw.Stop()
 

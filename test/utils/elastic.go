@@ -153,8 +153,10 @@ func StopElasticsearch(name, authDir string) error {
 
 	log.Info("stopping elasticsearch ...")
 
-	defer certs.DeleteTLSCredentials(authDir)
-	defer os.RemoveAll(authDir)
+	if authDir != "" {
+		defer certs.DeleteTLSCredentials(authDir)
+		defer os.RemoveAll(authDir)
+	}
 
 	cmd := []string{"rm", "-f", name}
 

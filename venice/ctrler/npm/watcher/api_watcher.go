@@ -491,6 +491,7 @@ func (w *Watcher) runVmmWatcher(ctx context.Context, vmmURL string, resolver res
 	b := balancer.New(resolver)
 
 	// loop forever
+	backoff := time.Duration(1)
 	for {
 		// create a grpc client
 		rpcClient, err := rpckit.NewRPCClient(globals.Npm, vmmURL, rpckit.WithBalancer(b))
@@ -520,6 +521,7 @@ func (w *Watcher) runVmmWatcher(ctx context.Context, vmmURL string, resolver res
 		}
 
 		// wait for a bit and retry connecting
-		time.Sleep(time.Second)
+		time.Sleep(time.Second * backoff)
+		backoff = backoff * 2
 	}
 }

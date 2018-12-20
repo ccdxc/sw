@@ -10,7 +10,6 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
-	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
 /* Rough Architecture for Pensando Agent
@@ -55,8 +54,6 @@ func NewAgent(dp types.NetDatapathAPI, dbPath, ctrlerURL string, resolverClient 
 	var ag Agent
 	// create a new network agent
 	nagent, err := state.NewNetAgent(dp, mode, dbPath)
-
-	rpckit.SetDefaultClientFactory(rpckit.NewClientFactory(nagent.NodeUUID))
 
 	if err != nil {
 		log.Errorf("Error creating network agent. Err: %v", err)

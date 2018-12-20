@@ -71,8 +71,26 @@ func TestSGPolicyCreateAtSGs(t *testing.T) {
 					Ports:    "80",
 				},
 				{
+					Protocol: "TCP",
+					Ports:    "8000",
+				},
+				{
+					Protocol: "Tcp",
+					Ports:    "8000",
+				},
+				{
 					Protocol: "udp",
 					Ports:    "53",
+				},
+				{
+					Protocol: "UDP",
+					Ports:    "53",
+				},
+				{
+					Protocol: "icmp",
+				},
+				{
+					Protocol: "ICMP",
 				},
 			},
 			Action:        "PERMIT",

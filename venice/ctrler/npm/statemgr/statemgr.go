@@ -7,8 +7,15 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/ctrler/npm/writer"
+	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
 )
+
+// updatable is an interface all updatable objects have to implement
+type updatable interface {
+	Write() error
+	GetKey() string
+}
 
 // Statemgr is the object state manager
 type Statemgr struct {
@@ -19,7 +26,7 @@ type Statemgr struct {
 	smartNicReactor      *SmartNICReactor        // smart nic event reactor
 	fwProfileReactor     *FirewallProfileReactor // firewall profile reactor
 	appReactor           *AppReactor             // app reactor
-	periodicUpdaterQueue chan writer.Writable    // queue for periodically writing items back to GUI
+	periodicUpdaterQueue chan updatable          // queue for periodically writing items back to apiserver
 }
 
 // ErrIsObjectNotFound returns true if the error is object not found
@@ -129,9 +136,9 @@ func NewStatemgr(wr writer.Writer) (*Statemgr, error) {
 }
 
 // runPeriodicUpdater runs periodic and write objects back
-func runPeriodicUpdater(queue chan writer.Writable) {
-	ticker := time.NewTicker(5 * time.Second)
-	pending := make(map[writer.Writable]struct{})
+func runPeriodicUpdater(queue chan updatable) {
+	ticker := time.NewTicker(time.Second)
+	pending := make(map[string]updatable)
 	shouldExit := false
 	for {
 		select {
@@ -140,13 +147,14 @@ func runPeriodicUpdater(queue chan writer.Writable) {
 				shouldExit = true
 				continue
 			}
-			pending[obj] = struct{}{}
+			pending[obj.GetKey()] = obj
 		case _ = <-ticker.C:
-			for obj := range pending {
+			for _, obj := range pending {
 				obj.Write()
 			}
-			pending = make(map[writer.Writable]struct{})
+			pending = make(map[string]updatable)
 			if shouldExit == true {
+				log.Warnf("Exiting periodic updater")
 				return
 			}
 		}
@@ -154,13 +162,13 @@ func runPeriodicUpdater(queue chan writer.Writable) {
 }
 
 // NewPeriodicUpdater creates a new periodic updater
-func newPeriodicUpdater() chan writer.Writable {
-	updateChan := make(chan writer.Writable)
+func newPeriodicUpdater() chan updatable {
+	updateChan := make(chan updatable)
 	go runPeriodicUpdater(updateChan)
 	return updateChan
 }
 
 // PeriodicUpdaterPush enqueues an object to the periodic updater
-func (sm *Statemgr) PeriodicUpdaterPush(obj writer.Writable) {
+func (sm *Statemgr) PeriodicUpdaterPush(obj updatable) {
 	sm.periodicUpdaterQueue <- obj
 }

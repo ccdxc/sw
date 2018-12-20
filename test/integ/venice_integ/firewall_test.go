@@ -1,9 +1,8 @@
-// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
 
 package veniceinteg
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -12,13 +11,12 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	authntestutils "github.com/pensando/sw/venice/utils/authn/testutils"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
 // TestNpmFirewallProfile tests firewall profile create/update/delete operations
 func (it *veniceIntegSuite) TestFirewallProfile(c *C) {
-	ctx, err := authntestutils.NewLoggedInContext(context.Background(), integTestAPIGWURL, it.userCred)
+	ctx, err := it.loggedInCtx()
 	AssertOk(c, err, "Error creating logged in context")
 
 	// firewall profile
@@ -61,7 +59,7 @@ func (it *veniceIntegSuite) TestFirewallProfile(c *C) {
 			}
 		}
 		return true, nil
-	}, "Firewall profile not found in agent", "100ms", "10s")
+	}, "Firewall profile not found in agent", "100ms", it.pollTimeout())
 
 	// verify all the parameters
 	for _, ag := range it.agents {
@@ -100,7 +98,7 @@ func (it *veniceIntegSuite) TestFirewallProfile(c *C) {
 			}
 		}
 		return true, nil
-	}, "Firewall profile params incorrect in agent", "100ms", "10s")
+	}, "Firewall profile params incorrect in agent", "100ms", it.pollTimeout())
 
 	// delete firewall profile
 	_, err = it.restClient.SecurityV1().FirewallProfile().Delete(ctx, &fwp.ObjectMeta)
@@ -115,11 +113,11 @@ func (it *veniceIntegSuite) TestFirewallProfile(c *C) {
 			}
 		}
 		return true, nil
-	}, "Firewall profile still found in agent after deleting", "100ms", "10s")
+	}, "Firewall profile still found in agent after deleting", "100ms", it.pollTimeout())
 }
 
 func (it *veniceIntegSuite) TestIcmpApp(c *C) {
-	ctx, err := authntestutils.NewLoggedInContext(context.Background(), integTestAPIGWURL, it.userCred)
+	ctx, err := it.loggedInCtx()
 	AssertOk(c, err, "Error creating logged in context")
 
 	// ICMP app
@@ -160,7 +158,7 @@ func (it *veniceIntegSuite) TestIcmpApp(c *C) {
 			}
 		}
 		return true, nil
-	}, "App not found in agent", "100ms", "10s")
+	}, "App not found in agent", "100ms", it.pollTimeout())
 
 	// verify ALG params
 	for _, ag := range it.agents {
@@ -196,6 +194,47 @@ func (it *veniceIntegSuite) TestIcmpApp(c *C) {
 	_, err = it.restClient.SecurityV1().SGPolicy().Create(ctx, &sgp)
 	AssertOk(c, err, "Error creating sg policy")
 
+	// verify agents have this policy and params are correct
+	AssertEventually(c, func() (bool, interface{}) {
+		for _, ag := range it.agents {
+			nsgp, cerr := ag.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
+			if cerr != nil {
+				return false, cerr
+			}
+			if len(nsgp.Spec.Rules) != len(sgp.Spec.Rules) {
+				return false, nsgp
+			}
+			if len(nsgp.Spec.Rules[0].Dst.AppConfigs) != 1 {
+				return false, nsgp
+			}
+			if nsgp.Spec.Rules[0].Dst.AppConfigs[0].AppName != sgp.Spec.Rules[0].Apps[0] {
+				return false, nsgp
+			}
+		}
+		return true, nil
+	}, "Sg policy not found in agent or params didnt match", "100ms", it.pollTimeout())
+
+	// verify app has sgpolicy in status
+	AssertEventually(c, func() (bool, interface{}) {
+		gapp, gerr := it.restClient.SecurityV1().App().Get(ctx, &icmpApp.ObjectMeta)
+		if gerr != nil {
+			return false, gerr
+		}
+		if len(gapp.Status.AttachedPolicies) == 0 {
+			return false, gapp
+		}
+		found := false
+		for _, tp := range gapp.Status.AttachedPolicies {
+			if tp == sgp.Name {
+				found = true
+			}
+		}
+		if !found {
+			return false, gapp
+		}
+		return true, nil
+	}, "App did not have sgpolicy in status", "100ms", it.pollTimeout())
+
 	// verify creating agpolicy with unknown app fails
 	sgpInv := security.SGPolicy{
 		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
@@ -217,6 +256,7 @@ func (it *veniceIntegSuite) TestIcmpApp(c *C) {
 		},
 	}
 	_, err = it.restClient.SecurityV1().SGPolicy().Create(ctx, &sgpInv)
+	// FIXME: this check should be reversed once we have named ref validation
 	Assert(c, (err == nil), "sg policy create with unknown-app failed")
 
 	// verify agents dont have this policy
@@ -229,11 +269,24 @@ func (it *veniceIntegSuite) TestIcmpApp(c *C) {
 			}
 		}
 		return true, nil
-	}, "Invalid Sg policy found in agent", "100ms", "10s")
+	}, "Invalid Sg policy found in agent", "100ms", it.pollTimeout())
 
 	// delete sg policy
 	_, err = it.restClient.SecurityV1().SGPolicy().Delete(ctx, &sgp.ObjectMeta)
 	AssertOk(c, err, "Error creating sg policy")
+
+	// verify sgpolicy is removed from app
+	AssertEventually(c, func() (bool, interface{}) {
+		gapp, gerr := it.restClient.SecurityV1().App().Get(ctx, &icmpApp.ObjectMeta)
+		if gerr != nil {
+			return false, gerr
+		}
+		if len(gapp.Status.AttachedPolicies) != 0 {
+			return false, gapp
+		}
+
+		return true, nil
+	}, "App still has sgpolicy in status", "100ms", it.pollTimeout())
 
 	// verify sg policy is gone from agents
 	AssertEventually(c, func() (bool, interface{}) {
@@ -244,7 +297,7 @@ func (it *veniceIntegSuite) TestIcmpApp(c *C) {
 			}
 		}
 		return true, nil
-	}, "Sg policy still found in agent after deleting", "100ms", "10s")
+	}, "Sg policy still found in agent after deleting", "100ms", it.pollTimeout())
 
 	// delete app
 	_, err = it.restClient.SecurityV1().App().Delete(ctx, &icmpApp.ObjectMeta)
@@ -259,11 +312,11 @@ func (it *veniceIntegSuite) TestIcmpApp(c *C) {
 			}
 		}
 		return true, nil
-	}, "App still found in agent after deleting", "100ms", "10s")
+	}, "App still found in agent after deleting", "100ms", it.pollTimeout())
 }
 
 func (it *veniceIntegSuite) TestDnsApp(c *C) {
-	ctx, err := authntestutils.NewLoggedInContext(context.Background(), integTestAPIGWURL, it.userCred)
+	ctx, err := it.loggedInCtx()
 	AssertOk(c, err, "Error creating logged in context")
 
 	// ICMP app
@@ -309,7 +362,7 @@ func (it *veniceIntegSuite) TestDnsApp(c *C) {
 			}
 		}
 		return true, nil
-	}, "App not found in agent", "100ms", "10s")
+	}, "App not found in agent", "100ms", it.pollTimeout())
 
 	// verify ALG params
 	for _, ag := range it.agents {
@@ -338,11 +391,11 @@ func (it *veniceIntegSuite) TestDnsApp(c *C) {
 			}
 		}
 		return true, nil
-	}, "App still found in agent after deleting", "100ms", "10s")
+	}, "App still found in agent after deleting", "100ms", it.pollTimeout())
 }
 
 func (it *veniceIntegSuite) TestFtpApp(c *C) {
-	ctx, err := authntestutils.NewLoggedInContext(context.Background(), integTestAPIGWURL, it.userCred)
+	ctx, err := it.loggedInCtx()
 	AssertOk(c, err, "Error creating logged in context")
 
 	// ICMP app
@@ -383,7 +436,7 @@ func (it *veniceIntegSuite) TestFtpApp(c *C) {
 			}
 		}
 		return true, nil
-	}, "App not found in agent", "100ms", "10s")
+	}, "App not found in agent", "100ms", it.pollTimeout())
 
 	// verify ALG params
 	for _, ag := range it.agents {
@@ -407,11 +460,11 @@ func (it *veniceIntegSuite) TestFtpApp(c *C) {
 			}
 		}
 		return true, nil
-	}, "App still found in agent after deleting", "100ms", "10s")
+	}, "App still found in agent after deleting", "100ms", it.pollTimeout())
 }
 
 func (it *veniceIntegSuite) TestRPCApp(c *C) {
-	ctx, err := authntestutils.NewLoggedInContext(context.Background(), integTestAPIGWURL, it.userCred)
+	ctx, err := it.loggedInCtx()
 	AssertOk(c, err, "Error creating logged in context")
 
 	// ICMP app
@@ -482,7 +535,7 @@ func (it *veniceIntegSuite) TestRPCApp(c *C) {
 			}
 		}
 		return true, nil
-	}, "App not found in agent", "100ms", "10s")
+	}, "App not found in agent", "100ms", it.pollTimeout())
 
 	// verify ALG params
 	for _, ag := range it.agents {
@@ -520,13 +573,13 @@ func (it *veniceIntegSuite) TestRPCApp(c *C) {
 			}
 		}
 		return true, nil
-	}, "App still found in agent after deleting", "100ms", "10s")
+	}, "App still found in agent after deleting", "100ms", it.pollTimeout())
 }
 
 // TestFirewallFtpAlg validates FTP alg operations
 // FIXME: revisit this once netagent datapath can fully handle app object
 func (it *veniceIntegSuite) TestFirewallFtpAlg(c *C) {
-	ctx, err := authntestutils.NewLoggedInContext(context.Background(), integTestAPIGWURL, it.userCred)
+	ctx, err := it.loggedInCtx()
 	AssertOk(c, err, "Error creating logged in context")
 
 	// app
@@ -567,7 +620,7 @@ func (it *veniceIntegSuite) TestFirewallFtpAlg(c *C) {
 			}
 		}
 		return true, nil
-	}, "App not found in agent", "100ms", "10s")
+	}, "App not found in agent", "100ms", it.pollTimeout())
 
 	// create an sg policy using the app
 	sgp := security.SGPolicy{
@@ -612,7 +665,7 @@ func (it *veniceIntegSuite) TestFirewallFtpAlg(c *C) {
 			}
 		}
 		return true, nil
-	}, "Sg policy not found in agent", "100ms", "10s")
+	}, "Sg policy not found in agent", "100ms", it.pollTimeout())
 
 	// verify datapath has the sg policy
 	AssertEventually(c, func() (bool, interface{}) {
@@ -638,7 +691,7 @@ func (it *veniceIntegSuite) TestFirewallFtpAlg(c *C) {
 			}
 		}
 		return true, nil
-	}, "Sg policy incorrect in datapath", "100ms", "10s")
+	}, "Sg policy incorrect in datapath", "100ms", it.pollTimeout())
 
 	// delete sg policy
 	_, err = it.restClient.SecurityV1().SGPolicy().Delete(ctx, &sgp.ObjectMeta)
@@ -653,7 +706,7 @@ func (it *veniceIntegSuite) TestFirewallFtpAlg(c *C) {
 			}
 		}
 		return true, nil
-	}, "Sg policy still found in agent after deleting", "100ms", "10s")
+	}, "Sg policy still found in agent after deleting", "100ms", it.pollTimeout())
 
 	// delete app
 	_, err = it.restClient.SecurityV1().App().Delete(ctx, &app.ObjectMeta)
@@ -668,5 +721,5 @@ func (it *veniceIntegSuite) TestFirewallFtpAlg(c *C) {
 			}
 		}
 		return true, nil
-	}, "App still found in agent after deleting", "100ms", "10s")
+	}, "App still found in agent after deleting", "100ms", it.pollTimeout())
 }

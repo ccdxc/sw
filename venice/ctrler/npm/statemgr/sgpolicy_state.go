@@ -5,6 +5,7 @@ package statemgr
 import (
 	"fmt"
 	"strconv"
+	"sync"
 
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/venice/utils/log"
@@ -13,6 +14,7 @@ import (
 
 // SgpolicyState security policy state
 type SgpolicyState struct {
+	sync.Mutex                                       // to lock the policy
 	security.SGPolicy                                // embedded security policy object
 	groups            map[string]*SecurityGroupState // list of groups this policy is attached to
 	stateMgr          *Statemgr                      // pointer to state manager
@@ -29,6 +31,9 @@ func versionToInt(v string) int {
 
 // Write writes the object to api server
 func (sgp *SgpolicyState) Write() error {
+	sgp.Lock()
+	defer sgp.Unlock()
+
 	// Consolidate the NodeVersions
 	prop := &sgp.Status.PropagationStatus
 	prop.GenerationID = sgp.GenerationID
@@ -123,6 +128,11 @@ func (sgp *SgpolicyState) detachFromApps() error {
 	return nil
 }
 
+// GetKey returns key for the object
+func (sgp *SgpolicyState) GetKey() string {
+	return fmt.Sprintf("%s/%s/%s", sgp.Tenant, sgp.Namespace, sgp.Name)
+}
+
 // SgpolicyStateFromObj converts from memdb object to sgpolicy state
 func SgpolicyStateFromObj(obj memdb.Object) (*SgpolicyState, error) {
 	switch obj.(type) {
@@ -178,11 +188,9 @@ func (sm *Statemgr) ListSgpolicies() ([]*SgpolicyState, error) {
 // CreateSgpolicy creates a sg policy
 func (sm *Statemgr) CreateSgpolicy(sgp *security.SGPolicy) error {
 	// see if we already have it
-	esgp, err := sm.FindObject("Sgpolicy", sgp.ObjectMeta.Tenant, sgp.ObjectMeta.Name)
+	_, err := sm.FindSgpolicy(sgp.ObjectMeta.Tenant, sgp.ObjectMeta.Name)
 	if err == nil {
-		// FIXME: how do we handle an existing sg object changing?
-		log.Errorf("Can not change existing sg policy {%+v}. New state: {%+v}", esgp, sgp)
-		return fmt.Errorf("Can not change sg policy after its created")
+		return sm.UpdateSgPolicy(sgp)
 	}
 
 	// create new sg state
@@ -213,7 +221,48 @@ func (sm *Statemgr) CreateSgpolicy(sgp *security.SGPolicy) error {
 		return err
 	}
 
-	log.Infof("Created Sgpolicy state {%+v}", sgps.ObjectMeta)
+	return nil
+}
+
+// UpdateSgPolicy updates a sg policy
+func (sm *Statemgr) UpdateSgPolicy(sgp *security.SGPolicy) error {
+	// see if we already have it
+	sgps, err := sm.FindSgpolicy(sgp.ObjectMeta.Tenant, sgp.ObjectMeta.Name)
+	if err != nil {
+		// FIXME: how do we handle an existing sg object changing?
+		log.Errorf("Can find sg policy for updating {%+v}. Err: {%v}", sgp.ObjectMeta, err)
+		return fmt.Errorf("Can not find sg policy")
+	}
+
+	// if nothing has changed, just return
+	if sgps.Spec.String() == sgp.Spec.String() {
+		return nil
+	}
+
+	// update state
+	sgps.ObjectMeta = sgp.ObjectMeta
+	sgps.Spec = sgp.Spec
+
+	// find and update all attached apps
+	err = sgps.updateAttachedApps()
+	if err != nil {
+		log.Errorf("Error updating attached apps. Err: %v", err)
+		return err
+	}
+
+	// store it in local DB
+	err = sm.memDB.UpdateObject(sgps)
+	if err != nil {
+		log.Errorf("Error storing the sg policy in memdb. Err: %v", err)
+		return err
+	}
+
+	// make sure the attached security group exists
+	err = sgps.updateAttachedSgs()
+	if err != nil {
+		log.Errorf("Error attching policy to sgs. Err: %v", err)
+		return err
+	}
 
 	return nil
 }
@@ -221,33 +270,27 @@ func (sm *Statemgr) CreateSgpolicy(sgp *security.SGPolicy) error {
 // DeleteSgpolicy deletes a sg policy
 func (sm *Statemgr) DeleteSgpolicy(tenant, sgname string) error {
 	// see if we already have it
-	sgo, err := sm.FindObject("SGPolicy", tenant, sgname)
+	sgp, err := sm.FindSgpolicy(tenant, sgname)
 	if err != nil {
 		log.Errorf("Can not find the sg policy %s|%s", tenant, sgname)
 		return fmt.Errorf("Sgpolicy not found")
 	}
 
-	// convert it to security group state
-	sg, err := SgpolicyStateFromObj(sgo)
-	if err != nil {
-		return err
-	}
-
 	// cleanup sg state
-	err = sg.Delete()
+	err = sgp.Delete()
 	if err != nil {
-		log.Errorf("Error deleting the sg policy {%+v}. Err: %v", sg.ObjectMeta, err)
+		log.Errorf("Error deleting the sg policy {%+v}. Err: %v", sgp.ObjectMeta, err)
 		return err
 	}
 
 	// detach from policies
-	err = sg.detachFromApps()
+	err = sgp.detachFromApps()
 	if err != nil {
 		return err
 	}
 
 	// delete it from the DB
-	return sm.memDB.DeleteObject(sg)
+	return sm.memDB.DeleteObject(sgp)
 }
 
 // UpdateSgpolicyStatus updates the status of an sg policy
@@ -256,6 +299,11 @@ func (sm *Statemgr) UpdateSgpolicyStatus(nodeuuid, tenant, name, generationID st
 	if err != nil {
 		return
 	}
+
+	// lock policy for concurrent modifications
+	policy.Lock()
+	defer policy.Unlock()
+
 	if policy.NodeVersions == nil {
 		policy.NodeVersions = make(map[string]string)
 	}

@@ -3,14 +3,10 @@
 package veniceinteg
 
 import (
-	"context"
-
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/generated/network"
-
-	. "github.com/pensando/sw/venice/utils/authn/testutils"
 )
 
 // createTenant creates a tenant using REST api
@@ -22,7 +18,7 @@ func (it *veniceIntegSuite) createTenant(tenantName string) (*cluster.Tenant, er
 			Name: tenantName,
 		},
 	}
-	ctx, err := NewLoggedInContext(context.Background(), integTestAPIGWURL, it.userCred)
+	ctx, err := it.loggedInCtx()
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +32,7 @@ func (it *veniceIntegSuite) getTenant(tenantName string) (*cluster.Tenant, error
 	meta := api.ObjectMeta{
 		Name: tenantName,
 	}
-	ctx, err := NewLoggedInContext(context.Background(), integTestAPIGWURL, it.userCred)
+	ctx, err := it.loggedInCtx()
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +46,7 @@ func (it *veniceIntegSuite) deleteTenant(tenantName string) (*cluster.Tenant, er
 	meta := api.ObjectMeta{
 		Name: tenantName,
 	}
-	ctx, err := NewLoggedInContext(context.Background(), integTestAPIGWURL, it.userCred)
+	ctx, err := it.loggedInCtx()
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +70,7 @@ func (it *veniceIntegSuite) createNetwork(tenant, namespace, net, subnet, gw str
 		},
 		Status: network.NetworkStatus{},
 	}
-	ctx, err := NewLoggedInContext(context.Background(), integTestAPIGWURL, it.userCred)
+	ctx, err := it.loggedInCtx()
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +86,7 @@ func (it *veniceIntegSuite) deleteNetwork(tenant, net string) (*network.Network,
 		Namespace: "",
 		Tenant:    tenant,
 	}
-	ctx, err := NewLoggedInContext(context.Background(), integTestAPIGWURL, it.userCred)
+	ctx, err := it.loggedInCtx()
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +102,7 @@ func (it *veniceIntegSuite) getStatsPolicy(tenantName string) (*monitoring.Stats
 		Tenant: tenantName,
 	}
 
-	ctx, err := NewLoggedInContext(context.Background(), integTestAPIGWURL, it.userCred)
+	ctx, err := it.loggedInCtx()
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +118,7 @@ func (it *veniceIntegSuite) getFwlogPolicy(tenantName string) (*monitoring.Fwlog
 		Tenant: tenantName,
 	}
 
-	ctx, err := NewLoggedInContext(context.Background(), integTestAPIGWURL, it.userCred)
+	ctx, err := it.loggedInCtx()
 	if err != nil {
 		return nil, err
 	}

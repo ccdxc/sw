@@ -13,7 +13,6 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
-	authntestutils "github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -172,7 +171,7 @@ func (it *veniceIntegSuite) TestMirrorSessions(c *C) {
 	log.Infof("----- TEST START: TestMirrorSessions")
 	// This is a dummy test case and will be replaced with more realistic test cases
 	// It is used only to iron-out framework and overall code structure of TS controller
-	ctx, err := authntestutils.NewLoggedInContext(context.Background(), integTestAPIGWURL, it.userCred)
+	ctx, err := it.loggedInCtx()
 	AssertOk(c, err, "Error creating logged in context")
 	activeMs := make(map[string]api.ObjectMeta)
 
@@ -315,7 +314,7 @@ func (it *veniceIntegSuite) TestMirrorSessions(c *C) {
 
 func (it *veniceIntegSuite) TestMirrorSessionUpdate(c *C) {
 	log.Infof("----- TEST START: TestMirrorSessionUpdate")
-	ctx, err := authntestutils.NewLoggedInContext(context.Background(), integTestAPIGWURL, it.userCred)
+	ctx, err := it.loggedInCtx()
 	AssertOk(c, err, "Error creating logged in context")
 	activeMs := make(map[string]api.ObjectMeta)
 

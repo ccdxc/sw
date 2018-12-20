@@ -324,14 +324,14 @@ func (a *apiGw) Run(config apigw.Config) {
 	m := http.NewServeMux()
 
 	// Register UI to serve GZIP compressed files if available
-	m.Handle("/", gzipserver.GzipFileServer(http.Dir("/dist")))
+	m.Handle("/", gzipserver.GzipFileServer(http.Dir("./dist")))
 
 	// Register Staging
 	stagingPrefix := "/" + globals.StagingURIPrefix + "/"
 	m.Handle(stagingPrefix, HandleStaging(m))
 
 	// Docs
-	m.Handle("/docs/", http.StripPrefix("/docs/", http.FileServer(http.Dir("/docs"))))
+	m.Handle("/docs/", http.StripPrefix("/docs/", http.FileServer(http.Dir("./docs"))))
 
 	// Create the GRPC connection for the server.
 	s := grpc.NewServer()
