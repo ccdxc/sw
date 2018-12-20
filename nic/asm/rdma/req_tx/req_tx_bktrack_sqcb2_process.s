@@ -13,7 +13,8 @@ struct sqcb2_t d;
 #define TO_S4_BT_P to_s4_bt_info
 #define TO_S5_BT_P to_s5_bt_info
 #define TO_S6_BT_P to_s6_bt_info
-#define TO_S7_BT_P to_s7_bt_info
+
+#define TO_S7_BT_WB_P to_s7_bt_wb_info
 
 #define IN_P t0_s2s_sqcb0_to_sqcb2_info
 #define IN_TO_S_P to_s1_bt_info
@@ -94,8 +95,10 @@ wqe_bktrack:
     phvwrpair CAPRI_PHV_FIELD(TO_S4_BT_P, wqe_addr), r2, \
               CAPRI_PHV_FIELD(TO_S5_BT_P, wqe_addr), r2
 
-    phvwr    CAPRI_PHV_FIELD(TO_S6_BT_P, wqe_addr), r2
-    phvwr CAPRI_PHV_FIELD(TO_S7_BT_P, wqe_addr), r2
+    phvwrpair CAPRI_PHV_FIELD(TO_S6_BT_P, wqe_addr), r2, \
+              CAPRI_PHV_FIELD(TO_S7_BT_WB_P, wqe_addr), r2
+
+    phvwr    CAPRI_PHV_FIELD(TO_S7_BT_WB_P, wqe_start_psn), d.wqe_start_psn
 
     scwlt24       c2, d.tx_psn, d.rexmit_psn
     // sge_addr = wqe_addr + TXWQE_SGE_OFFSET + (sizeof(sge_t) * current_sge_id)

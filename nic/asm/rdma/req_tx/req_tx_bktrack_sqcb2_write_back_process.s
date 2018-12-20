@@ -2,10 +2,11 @@
 #include "sqcb.h"
 
 struct req_tx_phv_t p;
-struct req_tx_s3_t1_k k;
+struct req_tx_s7_t1_k k;
 struct sqcb2_t d;
 
 #define IN_P t1_s2s_bktrack_sqcb2_write_back_info
+#define IN_TO_S_P to_s7_bt_wb_info
 
 #define K_SSN             CAPRI_KEY_RANGE(IN_P, ssn_sbit0_ebit7, ssn_sbit16_ebit23)
 #define K_TX_PSN          CAPRI_KEY_RANGE(IN_P, tx_psn_sbit0_ebit7, tx_psn_sbit16_ebit23)
@@ -15,10 +16,17 @@ struct sqcb2_t d;
 #define K_OP_TYPE         CAPRI_KEY_FIELD(IN_P, op_type)
 #define K_SQ_C_INDEX      CAPRI_KEY_RANGE(IN_P, sq_cindex_sbit0_ebit2, sq_cindex_sbit11_ebit15)
 #define K_BKTRACK_IN_PROGRESS CAPRI_KEY_FIELD(IN_P, bktrack_in_progress)
+#define K_WQE_START_PSN   CAPRI_KEY_FIELD(IN_TO_S_P, wqe_start_psn)
 %%
 
 .align
 req_tx_bktrack_sqcb2_write_back_process:
+     // Pin write_back to stage 7
+     mfspr         r1, spr_mpuid
+     seq           c1, r1[4:2], STAGE_7
+     bcf           [!c1], bubble_to_next_stage
+     nop           // Branch Delay Slot
+
      tblwr         d.tx_psn, K_TX_PSN
      tblwr         d.ssn, K_SSN
      tblwr         d.imm_data, K_IMM_DATA
@@ -34,8 +42,7 @@ req_tx_bktrack_sqcb2_write_back_process:
      //tblwr         d.lsn_tx, d.lsn_rx
      //tblwr         d.lsn, d.lsn_rx
 
-     seq           c1, CAPRI_KEY_FIELD(IN_P, skip_wqe_start_psn), 1
-     tblwr.!c1     d.wqe_start_psn, K_TX_PSN
+     tblwr     d.wqe_start_psn, K_WQE_START_PSN
 
      // set rrq_pindex to start from 0
      tblwr         d.rrq_pindex, 0
@@ -78,3 +85,15 @@ req_tx_bktrack_sqcb2_write_back_process:
 exit:
      tblwr.e         d.busy, 0
      CAPRI_SET_TABLE_1_VALID(0)
+
+
+bubble_to_next_stage:
+    seq           c1, r1[4:2], STAGE_6
+    bcf           [!c1], end
+
+    CAPRI_GET_TABLE_1_K(req_tx_phv_t, r7) // Branch Delay Slot
+    CAPRI_NEXT_TABLE_I_READ_SET_SIZE_E(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS)
+
+end:
+   nop.e
+   nop

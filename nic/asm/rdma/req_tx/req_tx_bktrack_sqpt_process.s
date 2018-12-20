@@ -10,7 +10,8 @@ struct req_tx_s2_t0_k k;
 #define TO_S4_BT_P to_s4_bt_info
 #define TO_S5_BT_P to_s5_bt_info
 #define TO_S6_BT_P to_s6_bt_info
-#define TO_S7_BT_P to_s7_bt_info
+
+#define TO_S7_BT_WB_P to_s7_bt_wb_info
 
 #define IN_P t0_s2s_sq_bktrack_info
 #define IN_TO_S_P to_s2_bt_info
@@ -71,4 +72,4 @@ req_tx_bktrack_sqpt_process:
 
     phvwrpair.e CAPRI_PHV_FIELD(TO_S4_BT_P, wqe_addr), r1, CAPRI_PHV_FIELD(TO_S5_BT_P, wqe_addr), r1
 
-    phvwrpair CAPRI_PHV_FIELD(TO_S6_BT_P, wqe_addr), r1, CAPRI_PHV_FIELD(TO_S7_BT_P, wqe_addr), r1
+    phvwrpair CAPRI_PHV_FIELD(TO_S6_BT_P, wqe_addr), r1, CAPRI_PHV_FIELD(TO_S7_BT_WB_P, wqe_addr), r1

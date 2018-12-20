@@ -14,7 +14,8 @@ struct req_tx_s3_t0_k k;
 #define TO_S4_BT_P to_s4_bt_info
 #define TO_S5_BT_P to_s5_bt_info
 #define TO_S6_BT_P to_s6_bt_info
-#define TO_S7_BT_P to_s7_bt_info
+
+#define TO_S7_BT_WB_P to_s7_bt_wb_info
 
 #define IN_P t0_s2s_sq_bktrack_info
 #define IN_TO_S_P to_s3_bt_info
@@ -97,25 +98,25 @@ next_sge:
     sub.!c1        r2, r7, r5
     add.c1         r2, r5, r0
 
+    add            r4, r4, 1
     // tx_psn = tx_psn + num_pkts
     add            r3, r6, r3
     beq            r1, r0, sge_bktrack
     mincr          r3, 24, r0 // Branch Delay Slot
 
-    // current_sge_id = current_sge_id + 1
-    sub            r1, r1, 1, LOG_SIZEOF_SGE_T_BITS
     b              sge_loop
-    add            r4, r4, 1 // Branch Delay Slot
+    // current_sge_id = current_sge_id + 1
+    sub            r1, r1, 1, LOG_SIZEOF_SGE_T_BITS // Branch Delay Slot
 
 next_sge_start:
+    add            r4, r4, 1
     beq            r1, r0, sge_bktrack
     // current_sge_offset -= sge_p->len
     sub            r2, r2, r5 // Branch Delay Slot
 
-    // current_sge_id = current_sge_id + 1
-    sub            r1, r1, 1, LOG_SIZEOF_SGE_T_BITS
     b              sge_loop
-    add            r4, r4, 1 // Branch Delay Slot
+    // current_sge_id = current_sge_id + 1
+    sub            r1, r1, 1, LOG_SIZEOF_SGE_T_BITS // Branch Delay Slot
 
 sge_bktrack:
     mfspr          r5, spr_mpuid
@@ -158,10 +159,7 @@ sqcb_writeback:
     phvwr CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, in_progress), 1
     phvwr.c6 CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, bktrack_in_progress), 1
 
-    srl            r1, r1, LOG_SIZEOF_SGE_T_BITS
-    sub            r1, (HBM_NUM_SGES_PER_CACHELINE - 1), r1
-    add            r1, K_CURRENT_SGE_ID, r1
-    phvwrpair CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, current_sge_offset), r2, CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, current_sge_id), r1
+    phvwrpair CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, current_sge_offset), r2, CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, current_sge_id), r4
     //sub            r2, K_NUM_SGES, r1
     phvwrpair CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, op_type), CAPRI_KEY_FIELD(IN_P, op_type), CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, num_sges), K_NUM_SGES
     phvwr CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, sq_c_index), K_SQ_C_INDEX
@@ -171,10 +169,9 @@ sqcb_writeback:
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_write_back_process, r5)
 
     CAPRI_RESET_TABLE_1_ARG()
-    phvwrpair CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, tx_psn), r3, CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, skip_wqe_start_psn), 1
+    phvwrpair CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, tx_psn), r3, CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, sq_cindex), K_SQ_C_INDEX
     phvwrpair CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, ssn), K_SSN, \
               CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, imm_data_or_inv_key), K_IMM_DATA
-    phvwr     CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, sq_cindex), K_SQ_C_INDEX
     phvwr.c6  CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, bktrack_in_progress), 1
 
     SQCB2_ADDR_GET(r5)
