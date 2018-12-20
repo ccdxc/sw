@@ -485,13 +485,12 @@ compress_teardown(struct service_info *svc_info)
 	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(svc_info);
-	CPDC_PPRINT_DESC(svc_info->si_desc);
-
-	pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_dst_sgl);
-	pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_src_sgl);
 
 	seq_cleanup_cpdc_chain(svc_info);
 	seq_cleanup_desc(svc_info);
+
+	pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_dst_sgl);
+	pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_src_sgl);
 
 	cpdc_teardown_rmem_dst_blist(svc_info);
 	cpdc_teardown_rmem_status_desc(svc_info, false);

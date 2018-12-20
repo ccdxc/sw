@@ -359,7 +359,6 @@ chksum_teardown(struct service_info *svc_info)
 	struct cpdc_desc *chksum_desc;
 	struct cpdc_status_desc *status_desc;
 	struct cpdc_sgl *sgl;
-	struct per_core_resource *pcr;
 	bool per_block;
 
 	OSAL_LOG_DEBUG("enter ...");
@@ -372,26 +371,22 @@ chksum_teardown(struct service_info *svc_info)
 	 */
 	CPDC_PPRINT_DESC(svc_info->si_desc);
 
-	per_block = svc_is_chksum_per_block_enabled(svc_info->si_desc_flags);
-	OSAL_LOG_DEBUG("chksum_desc: %p flags: %d", svc_info->si_desc,
-			svc_info->si_desc_flags);
+	seq_cleanup_desc(svc_info);
 
+	per_block = svc_is_chksum_per_block_enabled(svc_info->si_desc_flags);
 	if (!per_block) {
 		pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_dst_sgl);
 		pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_src_sgl);
 	}
 
-	pcr = svc_info->si_pcr;
-
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
-	cpdc_put_status_desc(pcr, per_block, status_desc);
+	cpdc_put_status_desc(svc_info->si_pcr, per_block, status_desc);
 
 	sgl = (struct cpdc_sgl *) svc_info->si_p4_sgl;
-	cpdc_put_sgl(pcr, per_block, sgl);
+	cpdc_put_sgl(svc_info->si_pcr, per_block, sgl);
 
 	chksum_desc = (struct cpdc_desc *) svc_info->si_desc;
 	cpdc_put_desc(svc_info, per_block, chksum_desc);
-	seq_cleanup_desc(svc_info);
 
 	OSAL_LOG_DEBUG("exit!");
 }
