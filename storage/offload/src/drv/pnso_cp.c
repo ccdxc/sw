@@ -474,16 +474,14 @@ compress_teardown(struct service_info *svc_info)
 	pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_dst_sgl);
 	pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_src_sgl);
 
+	seq_cleanup_cpdc_chain(svc_info);
+	seq_cleanup_desc(svc_info);
+
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 	cpdc_put_status_desc(svc_info->si_pcr, false, status_desc);
-	svc_info->si_status_desc = NULL;
 
 	cp_desc = (struct cpdc_desc *) svc_info->si_desc;
 	cpdc_put_desc(svc_info, false, cp_desc);
-	svc_info->si_desc = NULL;
-
-	seq_cleanup_cpdc_chain(svc_info);
-	seq_cleanup_desc(svc_info);
 
 	OSAL_LOG_DEBUG("exit!");
 }

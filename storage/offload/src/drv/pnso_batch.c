@@ -628,7 +628,9 @@ execute_batch(struct batch_info *batch_info)
 	pnso_error_t err = EINVAL;
 	struct service_chain *first_chain, *last_chain;
 	struct chain_entry *first_ce, *last_ce;
-	uint32_t idx;
+	struct batch_page *bp;
+	struct batch_page_entry *bpe;
+	uint32_t idx, i;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -646,6 +648,14 @@ execute_batch(struct batch_info *batch_info)
 			OSAL_LOG_DEBUG("failed to ring service door bell! svc_type: %d err: %d",
 				       first_ce->ce_svc_info.si_type, err);
 			goto out;
+		}
+
+		/* mark all chains in page with RANG_DB flag */
+		bp = GET_PAGE(batch_info, idx);
+		for (i = idx; i < idx + MAX_PAGE_ENTRIES; i++) {
+			bpe = GET_PAGE_ENTRY(bp, i);
+			if (bpe->bpe_chain)
+				bpe->bpe_chain->sc_flags |= CHAIN_CFLAG_RANG_DB;
 		}
 
 		idx += MAX_PAGE_ENTRIES;

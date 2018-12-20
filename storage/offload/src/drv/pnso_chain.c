@@ -807,6 +807,7 @@ chn_execute_chain(struct service_chain *chain)
 		PAS_END_HW_PERF(pcr);
 		goto out;
 	}
+	chain->sc_flags |= CHAIN_CFLAG_RANG_DB;
 
 	if ((chain->sc_flags & CHAIN_CFLAG_MODE_POLL) ||
 		(chain->sc_flags & CHAIN_CFLAG_MODE_ASYNC)) {

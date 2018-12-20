@@ -562,6 +562,10 @@ crypto_teardown(struct service_info *svc_info)
 
 	crypto_aol_put(pcr, &svc_info->si_src_aol);
 	crypto_aol_put(pcr, &svc_info->si_dst_aol);
+
+	seq_cleanup_crypto_chain(svc_info);
+	seq_cleanup_desc(svc_info);
+
 	pc_res_mpool_object_put(pcr, MPOOL_TYPE_CRYPTO_STATUS_DESC,
 				svc_info->si_status_desc);
 
@@ -572,8 +576,6 @@ crypto_teardown(struct service_info *svc_info)
 				svc_info->si_istatus_desc);
 	pc_res_sgl_pdma_put(pcr, svc_info->si_sgl_pdma);
 	pc_res_sgl_put(pcr, &svc_info->si_src_sgl);
-	seq_cleanup_crypto_chain(svc_info);
-	seq_cleanup_desc(svc_info);
 
 	OSAL_LOG_DEBUG("exit!");
 }

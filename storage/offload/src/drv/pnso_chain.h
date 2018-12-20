@@ -75,7 +75,6 @@ extern "C" {
 #define CHAIN_SFLAG_MODE_SYNC		(1 << 4)
 #define CHAIN_SFLAG_MODE_POLL		(1 << 5)
 #define CHAIN_SFLAG_MODE_ASYNC		(1 << 6)
-#define CHAIN_SFLAG_RANG_DB		(1 << 7)
 
 /* chain flags */
 #define CHAIN_CFLAG_MODE_SYNC		(1 << 0)
@@ -84,6 +83,7 @@ extern "C" {
 #define CHAIN_CFLAG_RESERVED		(1 << 3) /* rsvd for batch/poll-async */
 #define CHAIN_CFLAG_IN_BATCH		(1 << 4)
 #define CHAIN_CFLAG_POLLED		(1 << 5)
+#define CHAIN_CFLAG_RANG_DB		(1 << 6)
 
 #ifdef NDEBUG
 #define PPRINT_CHAIN(c)

@@ -502,6 +502,9 @@ int sonic_q_unconsume(struct queue *q, uint32_t count)
 	int err = PNSO_OK;
 	unsigned int index;
 
+	OSAL_LOG_DEBUG("unconsume %u entries for qtype=%u qgroup=%u\n",
+		       count, q->qtype, q->qgroup);
+
 	if (count == 0)
 		goto out;
 

@@ -658,13 +658,18 @@ out:
 	return NULL;
 }
 
+static bool is_db_rung(struct service_info *svc_info)
+{
+	struct service_chain *sc = svc_info->si_centry->ce_chain_head;
+
+	return (sc->sc_flags & CHAIN_CFLAG_RANG_DB) != 0;
+}
+
 static void
 hw_cleanup_desc(struct service_info *svc_info)
 {
 	if (svc_info->si_seq_info.sqi_seq_q) {
-		/* TODO: enable once the real fix arrives */
-		// if (svc_info->si_flags & CHAIN_SFLAG_RANG_DB) {
-		if (true) {
+		if (is_db_rung(svc_info)) {
 			sonic_q_service(svc_info->si_seq_info.sqi_seq_q, NULL,
 					svc_info->si_seq_info.sqi_seq_total_takes);
 		} else {
@@ -672,7 +677,6 @@ hw_cleanup_desc(struct service_info *svc_info)
 					  svc_info->si_seq_info.sqi_seq_total_takes);
 		}
 		svc_info->si_seq_info.sqi_seq_total_takes = 0;
-		svc_info->si_seq_info.sqi_seq_q = NULL;
 	}
 }
 
@@ -693,7 +697,6 @@ hw_ring_db(struct service_info *svc_info)
 
 	index = svc_info->si_seq_info.sqi_index;
 	sonic_q_ringdb(seq_q, index);
-	svc_info->si_flags |= CHAIN_SFLAG_RANG_DB;
 
 out:
 	OSAL_LOG_DEBUG("exit!");
@@ -972,9 +975,7 @@ hw_cleanup_cpdc_chain(struct service_info *svc_info)
 	struct cpdc_chain_params *cpdc_chain = &svc_info->si_cpdc_chain;
 
 	if (cpdc_chain->ccp_seq_spec.sqs_seq_status_q) {
-		/* TODO: enable once the real fix arrives */
-		// if (svc_info->si_flags & CHAIN_SFLAG_RANG_DB) {
-		if (true) {
+		if (is_db_rung(svc_info)) {
 			sonic_q_service(cpdc_chain->ccp_seq_spec.sqs_seq_status_q, NULL,
 					svc_info->si_seq_info.sqi_status_total_takes);
 		} else {
@@ -1040,9 +1041,7 @@ hw_cleanup_crypto_chain(struct service_info *svc_info)
 		&svc_info->si_crypto_chain;
 
 	if (crypto_chain->ccp_seq_spec.sqs_seq_status_q) {
-		/* TODO: enable once the real fix arrives */
-		// if (svc_info->si_flags & CHAIN_SFLAG_RANG_DB) {
-		if (true) {
+		if (is_db_rung(svc_info)) {
 			sonic_q_service(crypto_chain->ccp_seq_spec.sqs_seq_status_q, NULL,
 					svc_info->si_seq_info.sqi_status_total_takes);
 		} else {
