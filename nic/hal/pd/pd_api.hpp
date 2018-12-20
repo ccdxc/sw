@@ -2876,6 +2876,11 @@ typedef struct pd_clock_detail_get_args_s {
     uint64_t   sw_clock;
 } __PACK__ pd_clock_detail_get_args_t;
 
+// packet buffer
+typedef struct pd_packet_buffer_update_args_s {
+    bool       pause;
+} __PACK__ pd_packet_buffer_update_args_t;
+
 // slab
 typedef struct pd_get_slab_args_s {
     hal_slab_t slab_id;
@@ -3210,7 +3215,8 @@ typedef struct pd_tcp_global_stats_get_args_s {
     ENTRY(PD_FUNC_ID_EGRESS_DROP_STATS_CLEAR,  285, "PD_FUNC_ID_EGRESS_DROP_STATS_CLEAR")\
     ENTRY(PD_FUNC_ID_MC_ENTRY_GET,             286, "PD_FUNC_ID_MC_ENTRY_GET")\
     ENTRY(PD_FUNC_ID_TCP_GLOBAL_STATS_GET,     287, "PD_FUNC_ID_TCP_GLOBAL_STATS_GET") \
-    ENTRY(PD_FUNC_ID_MAX,                      288, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_PACKET_BUFFER_UPDATE,     288, "PD_FUNC_ID_PACKET_BUFFER_UPDATE") \
+    ENTRY(PD_FUNC_ID_MAX,                      289, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3586,6 +3592,9 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_clock_delta_comp);
         PD_UNION_ARGS_FIELD(pd_clock_detail_get);
 
+        // packet buffer
+        PD_UNION_ARGS_FIELD(pd_packet_buffer_update);
+ 
         // slab
         PD_UNION_ARGS_FIELD(pd_get_slab);
 
@@ -4016,6 +4025,9 @@ PD_FUNCP_TYPEDEF(pd_conv_hw_clock_to_sw_clock);
 PD_FUNCP_TYPEDEF(pd_conv_sw_clock_to_hw_clock);
 PD_FUNCP_TYPEDEF(pd_clock_delta_comp);
 PD_FUNCP_TYPEDEF(pd_clock_detail_get);
+
+//packet buffer
+PD_FUNCP_TYPEDEF(pd_packet_buffer_update);
 
 // slab
 PD_FUNCP_TYPEDEF(pd_get_slab);

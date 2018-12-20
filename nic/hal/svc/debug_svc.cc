@@ -508,3 +508,16 @@ DebugServiceImpl::SchedulerStatsGet(ServerContext *context,
 
     return Status::OK;
 }
+
+Status
+DebugServiceImpl::PacketBufferUpdate(ServerContext *context,
+                                     const PacketBufferRequestMsg *req,
+                                     PacketBufferResponseMsg *rsp)
+{
+    HAL_TRACE_DEBUG("Rcvd Packet Buffer Update Request");
+
+    PacketBufferRequest request = req->request(0);
+    hal::packet_buffer_update(&request, rsp->add_response());
+
+    return Status::OK;
+}

@@ -104,6 +104,9 @@ hal_ret_t clock_get(ClockResponse *response);
 hal_ret_t
 scheduler_stats_get(SchedulerStatsResponse *rsp);
 
+hal_ret_t
+packet_buffer_update(debug::PacketBufferRequest *req, debug::PacketBufferResponse *rsp);
+
 }    // namespace hal
 
 #endif    // __DEBUG_HPP__
