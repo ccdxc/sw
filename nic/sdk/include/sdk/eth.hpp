@@ -51,15 +51,29 @@ typedef uint8_t    mac_addr_t[ETH_ADDR_LEN];
 
 #define IS_MCAST_MAC_ADDR(mac_addr)            ((mac_addr)[0] & 0x1)
 
-// thread safe helper to stringify MAC address
-extern char *macaddr2str(const mac_addr_t mac_addr);
-
 static inline void
 mac_str_to_addr (char *str, mac_addr_t *mac_addr)
 {
     unsigned char* mac = (unsigned char*) mac_addr;
     sscanf(str, "%" SCNx8 ":%" SCNx8 ":%" SCNx8 ":%" SCNx8 ":%" SCNx8 ":%" SCNx8,
            &mac[0], &mac[1], &mac[2], &mac[3], &mac[4], &mac[5]);
+}
+
+//------------------------------------------------------------------------------
+// thread safe helper to stringify MAC address
+//------------------------------------------------------------------------------
+static inline char *
+macaddr2str (const mac_addr_t mac_addr)
+{
+    static thread_local char       macaddr_str[4][20];
+    static thread_local uint8_t    macaddr_str_next = 0;
+    char                           *buf;
+
+    buf = macaddr_str[macaddr_str_next++ & 0x3];
+    snprintf(buf, 20, "%02x:%02x:%02x:%02x:%02x:%02x",
+             mac_addr[0], mac_addr[1], mac_addr[2],
+             mac_addr[3], mac_addr[4], mac_addr[5]);
+    return buf;
 }
 
 // spdlog formatter for mac_addr_t

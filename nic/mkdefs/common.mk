@@ -70,7 +70,7 @@ export NIC_COMMON_LDLIBS            := pthread z m rt Judy dl ev ${NIC_COMMON_LD
 
 export NIC_COMMON_FLAGS := -pthread -rdynamic
 
-export NIC_SDK_SOLIBS   := print list slab shmmgr mmgr sdkpal sdkfru \
+export NIC_SDK_SOLIBS   := list slab shmmgr mmgr sdkpal sdkfru \
     ht indexer logger thread utils periodic twheel directmap \
     hash hbmhash tcam timerfd catalog sdkplatformutils sdkcapri \
     sdkp4loader

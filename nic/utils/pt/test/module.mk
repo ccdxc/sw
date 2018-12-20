@@ -2,7 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET = pt_test.gtest
-MODULE_SOLIBS = pt trace logger print \
+MODULE_SOLIBS = pt trace logger \
                 hal_mock trace mtrack \
                 slab shmmgr
 MODULE_LDLIBS = rt
