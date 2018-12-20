@@ -362,6 +362,7 @@ class Testcase:
                 if self.__ignored:
                     Logger.info("Iteration Instance: %s FINAL RESULT = %d" % (instance_id, result))
                     iter_data.SetStatus(types.status.IGNORED)
+                    final_result = types.status.SUCCESS
                 else:
                     final_result = result
 
