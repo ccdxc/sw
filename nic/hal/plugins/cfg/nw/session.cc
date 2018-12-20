@@ -71,7 +71,6 @@ session_stats_t  g_session_stats = {};
 #define HAL_MAX_SESSION_PER_ENQ                     5
 #define HAL_MAX_DATA_THREAD                        (g_hal_state->oper_db()->max_data_threads())
 #define HAL_MAX_ERRORS                              255
-#define HAL_MAX_INACTIVTY_TIMEOUT                   0xFFFFFFFF
 
 void *
 session_get_handle_key_func (void *entry)
@@ -487,6 +486,10 @@ session_aging_timeout (session_t *session,
     vrf_t              *vrf = NULL;
     nwsec_profile_t    *nwsec_prof = NULL;
 
+    if (session->idle_timeout != HAL_MAX_INACTIVTY_TIMEOUT) {
+        return ((uint64_t)(session->idle_timeout * TIME_NSECS_PER_SEC));
+    }
+    
     vrf = vrf_lookup_by_handle(session->vrf_handle);
     if (vrf != NULL && vrf->nwsec_profile_handle != HAL_HANDLE_INVALID) {
         nwsec_prof = find_nwsec_profile_by_handle(vrf->nwsec_profile_handle);
@@ -1322,6 +1325,7 @@ session_create (const session_args_t *args, hal_handle_t *session_handle,
     }
     session->hal_handle = hal_alloc_handle();
     session->conn_track_en = args->session->conn_track_en;
+    session->idle_timeout = args->session->idle_timeout;
 
     // allocate all PD resources and finish programming, if any
     pd::pd_session_create_args_init(&pd_session_args);
@@ -1395,6 +1399,8 @@ session_update(const session_args_t *args, session_t *session)
         HAL_TRACE_ERR("session fte_id {} current fte_id {}", session->fte_id, fte::fte_id());
         return HAL_RET_OK; 
     }
+
+    session->idle_timeout = args->session->idle_timeout;
 
     if (args->iflow[0]) {
         session->iflow->config = *args->iflow[0];
@@ -1858,7 +1864,7 @@ build_and_send_tcp_pkt (void *data)
 
         HAL_TRACE_DEBUG("Sending another tickle and starting timer {} iflow stats: {} rflow stats {}",
                          session->hal_handle, session->iflow->stats.num_tcp_tickles_sent, 
-                         session->rflow->stats.num_tcp_tickles_sent);
+                         (session->rflow)?session->rflow->stats.num_tcp_tickles_sent:0);
    
         /*
          * If Tickles were generated then we increment the tickle count

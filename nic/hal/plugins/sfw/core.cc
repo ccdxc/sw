@@ -352,7 +352,6 @@ sfw_exec(ctx_t& ctx)
                 sfw_info->alg_proto = match_rslt.alg;
                 memcpy(&sfw_info->alg_opts, &match_rslt.alg_opts, sizeof(alg_opts));
                 sfw_info->sfw_done = true;
-                //ctx.log         = match_rslt.log;
                 HAL_TRACE_DEBUG("Match result: {}", match_rslt);
                 if (match_rslt.sfw_action == nwsec::SECURITY_RULE_ACTION_REJECT &&
                     ctx.valid_rflow()) {
@@ -361,6 +360,15 @@ sfw_exec(ctx_t& ctx)
                     // queue as the flow doesnt really exist.
                     ctx.register_completion_handler(net_sfw_generate_reject_pkt);
                     ctx.set_ignore_session_create(true);
+                } else if (match_rslt.sfw_action == nwsec::SECURITY_RULE_ACTION_ALLOW) {
+#if SFW_IDLE_TIMEOUT_SUPPORT
+                    flow_update_t flowupd = {type: FLOWUPD_AGING_INFO;
+                    flowupd.aging_info.idle_timeout = match_rslt.idle_timeout;
+                    ret = ctx.update_flow(flowupd);
+                    if (ret != HAL_RET_OK) {
+                        HAL_TRACE_ERR("Failed to update aging action");
+                    }
+#endif
                 }
             } else {
                 // ToDo ret value was ok but match_rslt.valid is 0

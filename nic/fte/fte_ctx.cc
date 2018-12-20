@@ -470,6 +470,12 @@ ctx_t::update_flow(const flow_update_t& flowupd,
             LOG_FLOW_UPDATE(key);
         }
         break;
+    case FLOWUPD_AGING_INFO:
+        ret = flow->set_aging_info(flowupd.aging_info);
+        if (ret == HAL_RET_OK) {
+            LOG_FLOW_UPDATE(aging_info);
+        }
+        break;
     }
 
     if (ret == HAL_RET_OK)  {
@@ -823,6 +829,12 @@ std::ostream& operator<<(std::ostream& os, const export_info_t& val)
     os << " ,export_id3=" << (uint32_t)val.export_id3;
     os << " ,export_id4=" << (uint32_t)val.export_id4;
     return os << " }";
+}
+
+std::ostream& operator<<(std::ostream& os, const aging_info_t& val)
+{
+    os << "{ idle_timeout=" << val.idle_timeout;
+    return os << "}";
 }
 
 } // namespace fte
