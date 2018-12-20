@@ -21,22 +21,30 @@ api_base::factory(api_ctxt_t *api_ctxt) {
 
     switch (api_ctxt->obj_id) {
     case OBJ_ID_SWITCHPORT:
-        break;
+        obj = switchport_entry::factory(&api_ctxt->api_params->switchport_info);
+        return obj;
+
     case OBJ_ID_VCN:
         obj = vcn_entry::factory(&api_ctxt->api_params->vcn_info);
         return obj;
+
     case OBJ_ID_SUBNET:
         obj = subnet_entry::factory(&api_ctxt->api_params->subnet_info);
         return obj;
+
     case OBJ_ID_TEP:
         break;
+
     case OBJ_ID_VNIC:
         obj = vnic_entry::factory(&api_ctxt->api_params->vnic_info);
         return obj;
+
     case OBJ_ID_ROUTE:
         break;
+
     case OBJ_ID_SECURITY_RULES:
         break;
+
     default:
         break;
     }
@@ -53,22 +61,30 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
 
     switch (api_ctxt->obj_id) {
     case OBJ_ID_SWITCHPORT:
-        break;
+        obj = switchport_db()->switchport_find();
+        return obj;
+
     case OBJ_ID_VCN:
         obj = vcn_db()->vcn_find(&api_ctxt->api_params->vcn_key);
         return obj;
+
     case OBJ_ID_SUBNET:
         obj = subnet_db()->subnet_find(&api_ctxt->api_params->subnet_key);
         return obj;
+
     case OBJ_ID_TEP:
         break;
+
     case OBJ_ID_VNIC:
         obj = vnic_db()->vnic_find(&api_ctxt->api_params->vnic_key);
         return obj;
+
     case OBJ_ID_ROUTE:
         break;
+
     case OBJ_ID_SECURITY_RULES:
         break;
+
     default:
         break;
     }

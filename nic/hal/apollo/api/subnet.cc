@@ -211,14 +211,17 @@ subnet_entry::update_hw(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 }
 
 /**
- * @brief    activate the epoch in the dataplane
+ * @brief    activate the epoch in the dataplane by programming stage 0
+ *           tables, if any
+ * @param[in] epoch       epoch being activated
  * @param[in] api_op      api operation
  * @param[in] obj_ctxt    transient state associated with this API
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-subnet_entry::activate_epoch(api_op_t api_op, obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
+subnet_entry::activate_epoch(oci_epoch_t epoch, api_op_t api_op,
+                             obj_ctxt_t *obj_ctxt) {
+    return sdk::SDK_RET_OK;
 }
 
 /**

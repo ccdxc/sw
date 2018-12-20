@@ -120,12 +120,15 @@ public:
     virtual sdk_ret_t update_hw(api_base *orig_obj, obj_ctxt_t *obj_ctxt) override;
 
     /**
-     * @brief    activate the epoch in the dataplane
+     * @brief    activate the epoch in the dataplane by programming stage 0
+     *           tables, if any
+     * @param[in] epoch       epoch being activated
      * @param[in] api_op      api operation
      * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t activate_epoch(api_op_t api_op, obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t activate_epoch(oci_epoch_t epoch, api_op_t api_op,
+                                     obj_ctxt_t *obj_ctxt) override;
 
     /**
      * @brief     add given vnic to the database
@@ -239,7 +242,8 @@ private:
     ht_ctxt_t         ht_ctxt_;    /**< hash table context */
 
     /**< P4 datapath specific state */
-    uint32_t          hw_id_;      /**< hardware id */
+    uint16_t          hw_id_;      /**< hardware id */
+    uint16_t          vnic_by_slot_hash_idx_;
 } __PACK__;
 
 
@@ -289,6 +293,9 @@ public:
 private:
     ht *vnic_ht(void) { return vnic_ht_; }
     indexer *vnic_idxr(void) { return vnic_idxr_; }
+    directmap *local_vnic_by_vlan_tx_tbl(void) { return local_vnic_by_vlan_tx_; }
+    sdk_hash *local_vnic_by_slot_rx_tbl(void) { return local_vnic_by_slot_rx_; }
+    directmap *egress_local_vnic_info_rx_tbl(void) { return egress_local_vnic_info_rx_; }
     slab *vnic_slab(void) { return vnic_slab_; }
     friend class vnic_entry;   /**< vnic_entry class is friend of vnic_state */
 
