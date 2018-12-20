@@ -1698,6 +1698,9 @@ int ionic_lifs_size(struct ionic *ionic)
 	unsigned int nintrs, dev_nintrs = ident->dev.nintrs;
 	int err;
 
+	ntxqs_per_lif = min(ntxqs_per_lif, num_online_cpus());
+	nrxqs_per_lif = min(nrxqs_per_lif, num_online_cpus());
+
 	if (ntxqs > 0)
 		ntxqs_per_lif = min(ntxqs_per_lif, ntxqs);
 	if (nrxqs > 0)
