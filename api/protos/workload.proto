@@ -80,13 +80,9 @@ message WorkloadIntfSpec {
 // Status of a Workload interface
 message WorkloadIntfStatus {
 
-    // MACAddress contains the MAC address of the interface as seen by the workload
-    // cli-tags: id=mac-address-status
-    string MACAddress           = 1 [(gogoproto.jsontag) = "mac-address,omitempty"];
-
     // List of all IP addresses configured and discovered on a Workload Interface
-    repeated string IpAddresses = 2 [(gogoproto.jsontag) = "ip-addresses,omitempty"];
+    repeated string IpAddresses = 1 [(gogoproto.jsontag) = "ip-addresses,omitempty"];
 
     // Endpoint associated with this Workload interface
-    string Endpoint             = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "endpoint,omitempty"];
+    string Endpoint             = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "endpoint,omitempty"];
 }
