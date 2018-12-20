@@ -42,6 +42,18 @@ def sendCmd(self, cmd, exp):
     self.expect(exp)
     return self.before
 
+def copyToHost(src, dest, host):
+    logging.info("Copying {0} to {1}\n".format(src, host))
+    cmd = 'sshpass -p docker scp -o StrictHostKeyChecking=no ' + src + ' root@' + host + ':' + dest
+    ret = os.system(cmd)
+    if (ret != 0):
+        logging.info("ERROR: Failed to copy {0} to {1}".format(src, host))
+        exit()
+    else:
+        logging.info("Copied {0} successfully to {1}".format(src, host))
+
+    return
+
 if __name__ == "__main__":
     initLogger()
     parser = argparse.ArgumentParser()
@@ -56,6 +68,21 @@ if __name__ == "__main__":
     else:
         print("Loading tclsh on {0}. Please wait...\n".format(args.host))
 
+    # check if memtun is already present on the host
+    logging.info("Checking if memtun is already present on {0}\n".format(args.host))
+    cmd = 'sshpass -p docker ssh -o StrictHostKeyChecking=no root@' + args.host + ' -t ls -lrt /tmp/memtun'
+    ret = os.system(cmd)
+    if (ret != 0):
+        copyToHost('/home/haps/memtun/memtun', '/tmp', args.host)
+
+    # check if tcl tar file is already present on the host
+    logging.info("Checking if tcl tar file is already present on {0}\n".format(args.host))
+    cmd = 'sshpass -p docker ssh -o StrictHostKeyChecking=no root@' + args.host + ' -t ls -lrt /tmp/nic.tar.gz'
+    ret = os.system(cmd)
+    if (ret != 0):
+        copyToHost('/home/sanshanb/util/nic.tar.gz', '/tmp', args.host)
+
+    # ssh to host
     cmd = 'ssh root@' + args.host
     ch = pexpect.spawn (cmd)
     fileName = getLogFileName()
@@ -64,10 +91,21 @@ if __name__ == "__main__":
     ch.expect('Password: ')
     sendCmd(ch, 'docker', '#')
 
+    # check if memtun is running on the host
     op = sendCmd(ch, 'ps -ef | grep memtun | grep -v grep', '#')
     if ("memtun 1.0.0.1" not in op):
-        logging.info("ERROR: memtun is not running on the host\n")
-        exit()
+        logging.info("memtun is not running on the host\n")
+
+        # try to start memtun
+        logging.info("Starting memtun. Please wait...")
+        op = sendCmd(ch, '/tmp/memtun 1.0.0.1 &', '#')
+        time.sleep(5)
+
+        # check if memtun was started successfully
+        op = sendCmd(ch, 'ps -ef | grep memtun | grep -v grep', '#')
+        if ("memtun 1.0.0.1" not in op):
+            logging.info("ERROR: failed to start memtun on the host\n")
+            exit()
     else:
         logging.info("memtun is running on the host\n")
 
@@ -85,7 +123,7 @@ if __name__ == "__main__":
         logging.info("memtun is running on the NIC\n")
 
     op = sendCmd(ch, 'ls -lrt /asic_tclsh/nic.tar.gz', '#')
-    if ("/asic_tclsh/nic.tar.gz not in op"):
+    if ("No such file or directory" in op):
         logging.info("Copying nic.tar.gz\n")
         sendCmd(ch, 'scp -o StrictHostKeyChecking=no root@1.0.0.1:/home/sanshanb/util/nic.tar.gz /', 'Password: ')
         sendCmd(ch, 'docker', '#')
@@ -96,20 +134,20 @@ if __name__ == "__main__":
         logging.info("Found existing nic.tar.gz\n")
 
     op = sendCmd(ch, 'ls -lrt /asic_tclsh/nic.tar', '#')
-    if ("/asic_tclsh/nic.tar not in op"):
+    if ("No such file or directory" in op):
         logging.info("Extracting nic.tar\n")
         sendCmd(ch, 'gunzip nic.tar.gz', '#')
     else:
         logging.info("Found existing nic.tar\n")
 
     op = sendCmd(ch, 'ls -lrt /asic_tclsh/nic', '#')
-    if ("/asic_tclsh/nic not in op"):
+    if ("No such file or directory" in op):
         logging.info("Extracting nic\n")
         sendCmd(ch, 'tar xvf nic.tar', '#')
     else:
         logging.info("Found existing nic\n")
 
-    sendCmd(ch, 'cd nic/', '#')
+    sendCmd(ch, 'cd /asic_tclsh/nic/', '#')
     sendCmd(ch, 'cd fake_root_target/nic/', '#')
     sendCmd(ch, 'export ASIC_LIB_BUNDLE=`pwd`', '#')
     sendCmd(ch, 'export ASIC_SRC=$ASIC_LIB_BUNDLE/asic_src', '#')
