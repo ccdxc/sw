@@ -1282,6 +1282,10 @@ func TestPolicyOps(t *testing.T) {
 	err = s.CreateFlowExportPolicy(context.Background(), pol)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create export policy %+v", pol))
 
+	// create again
+	err = s.CreateFlowExportPolicy(context.Background(), pol)
+	tu.Assert(t, err != nil, "policy exists, create didn't fail")
+
 	collDelResp := &halproto.CollectorDeleteResponseMsg{
 		Response: []*halproto.CollectorDeleteResponse{
 			{

@@ -864,6 +864,10 @@ func (s *PolicyState) CreateFlowExportPolicy(ctx context.Context, p *tpmprotos.F
 		return err
 	}
 
+	if policyCtx.tpmPolicy != nil {
+		return fmt.Errorf("policy %s already exists", p.Name)
+	}
+
 	policyCtx.collectorKeys = collKeys
 
 	numCollector := policyCtx.findNumCollectors()

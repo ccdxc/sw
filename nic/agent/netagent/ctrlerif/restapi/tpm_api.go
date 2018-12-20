@@ -43,25 +43,29 @@ func (s *RestServer) FlowExportPolicyGetHandler(r *http.Request) (interface{}, e
 	o.ObjectMeta.Tenant = mux.Vars(r)["ObjectMeta.Tenant"]
 	o.ObjectMeta.Namespace = mux.Vars(r)["ObjectMeta.Namespace"]
 	o.ObjectMeta.Name = mux.Vars(r)["ObjectMeta.Name"]
-
-	p, err := s.TpAgent.GetFlowExportPolicy(r.Context(), &o)
-	return p, err
+	res, err := s.TpAgent.GetFlowExportPolicy(r.Context(), &o)
+	if err != nil {
+		return MakeErrorResponse(http.StatusInternalServerError, err)
+	}
+	return res, err
 
 }
 
 func (s *RestServer) FlowExportPolicyListHandler(r *http.Request) (interface{}, error) {
-	p, err := s.TpAgent.ListFlowExportPolicy(r.Context())
-	return p, err
+	res, err := s.TpAgent.ListFlowExportPolicy(r.Context())
+	if err != nil {
+		return MakeErrorResponse(http.StatusInternalServerError, err)
+	}
+	return res, err
 }
 
 func (s *RestServer) FlowExportPolicyPostHandler(r *http.Request) (interface{}, error) {
 	var o tpmprotos.FlowExportPolicy
 
-	var res Response
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
 	if err != nil {
-		return nil, err
+		return MakeErrorResponse(http.StatusInternalServerError, err)
 	}
 	c, _ := types.TimestampProto(time.Now())
 	o.CreationTime = api.Timestamp{
@@ -72,10 +76,9 @@ func (s *RestServer) FlowExportPolicyPostHandler(r *http.Request) (interface{}, 
 	}
 	err = s.TpAgent.CreateFlowExportPolicy(r.Context(), &o)
 	if err != nil {
-		res.StatusCode = http.StatusInternalServerError
-		res.Error = err.Error()
-		return res, err
+		return MakeErrorResponse(http.StatusInternalServerError, err)
 	}
+	res := &Response{}
 	res.References = []string{fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)}
 	res.StatusCode = http.StatusOK
 	return res, err
@@ -90,18 +93,21 @@ func (s *RestServer) FlowExportPolicyDeleteHandler(r *http.Request) (interface{}
 	o.ObjectMeta.Namespace = mux.Vars(r)["ObjectMeta.Namespace"]
 	o.ObjectMeta.Name = mux.Vars(r)["ObjectMeta.Name"]
 
-	return Response{}, s.TpAgent.DeleteFlowExportPolicy(r.Context(), &o)
+	err := s.TpAgent.DeleteFlowExportPolicy(r.Context(), &o)
+	if err != nil {
+		return MakeErrorResponse(http.StatusInternalServerError, err)
+	}
+	return &Response{}, err
 
 }
 
 func (s *RestServer) FlowExportPolicyPutHandler(r *http.Request) (interface{}, error) {
 	var o tpmprotos.FlowExportPolicy
 
-	var res Response
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
 	if err != nil {
-		return nil, err
+		return MakeErrorResponse(http.StatusInternalServerError, err)
 	}
 	m, _ := types.TimestampProto(time.Now())
 	o.ModTime = api.Timestamp{
@@ -109,13 +115,12 @@ func (s *RestServer) FlowExportPolicyPutHandler(r *http.Request) (interface{}, e
 	}
 	err = s.TpAgent.UpdateFlowExportPolicy(r.Context(), &o)
 	if err != nil {
-		res.StatusCode = http.StatusInternalServerError
-		res.Error = err.Error()
-		return res, err
+		return MakeErrorResponse(http.StatusInternalServerError, err)
 	}
+	res := &Response{}
 	res.References = []string{fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)}
 	res.StatusCode = http.StatusOK
-	return res, err
+	return &res, err
 
 }
 

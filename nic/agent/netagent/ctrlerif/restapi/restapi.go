@@ -36,6 +36,19 @@ type Response struct {
 	References []string `json:"references,omitempty"`
 }
 
+// MakeErrorResponse generates error response for MakeHTTPHandler() API
+func MakeErrorResponse(code int, err error) (*Response, error) {
+	res := &Response{
+		StatusCode: code,
+	}
+
+	if err != nil {
+		res.Error = err.Error()
+	}
+
+	return res, err
+}
+
 type routeAddFunc func(*mux.Router, *RestServer)
 
 // NewRestServer creates a new HTTP server servicg REST api
