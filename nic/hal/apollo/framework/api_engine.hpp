@@ -10,6 +10,7 @@
 #define __API_ENGINE_HPP__
 
 #include <vector>
+#include <unordered_map>
 
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/slab/slab.hpp"

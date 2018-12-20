@@ -1,10 +1,10 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
-#include "nic/include/hal_mem.hpp"
-#include "nic/utils/bitmap/bitmap.hpp"
+#include "include/sdk/bitmap.hpp"
+#include "include/sdk/mem.hpp"
 
-namespace hal {
-namespace utils {
+namespace sdk {
+namespace lib {
 
 // NOTE: defines below are for 64 bit word size
 #define WORD_SIZE               64
@@ -15,12 +15,12 @@ namespace utils {
 //------------------------------------------------------------------------------
 // initialize an instance of bitmap class
 //------------------------------------------------------------------------------
-hal_ret_t
+sdk_ret_t
 bitmap::init(uint32_t size, bool thread_safe)
 {
     thread_safe_ = thread_safe;
     if (thread_safe_) {
-        HAL_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
+        SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
     }
 
     size_ = size;
@@ -28,13 +28,13 @@ bitmap::init(uint32_t size, bool thread_safe)
     num_set_ = 0;
 
     // allocate the memory
-    bits_ = (uint64_t *)HAL_CALLOC(HAL_MEM_ALLOC_LIB_BITMAP,
+    bits_ = (uint64_t *)SDK_CALLOC(SDK_MEM_ALLOC_LIB_BITMAP,
                                    sizeof(uint64_t) * num_words_);
     if (bits_ == NULL) {
-        return HAL_RET_OOM;
+        return SDK_RET_OOM;
     }
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
 //------------------------------------------------------------------------------
@@ -43,20 +43,20 @@ bitmap::init(uint32_t size, bool thread_safe)
 bitmap *
 bitmap::factory(uint32_t size, bool thread_safe)
 {
-    hal_ret_t    ret;
+    sdk_ret_t    ret;
     void         *mem;
     bitmap       *new_bmap;
 
-    mem = HAL_CALLOC(HAL_MEM_ALLOC_LIB_BITMAP, sizeof(bitmap));
+    mem = SDK_CALLOC(SDK_MEM_ALLOC_LIB_BITMAP, sizeof(bitmap));
     if (mem == NULL) {
         return NULL;
     }
     new_bmap = new (mem) bitmap();
 
     ret = new_bmap->init(size, thread_safe);
-    if (ret != HAL_RET_OK) {
+    if (ret != SDK_RET_OK) {
         new_bmap->~bitmap();
-        HAL_FREE(HAL_MEM_ALLOC_LIB_BITMAP, mem);
+        SDK_FREE(SDK_MEM_ALLOC_LIB_BITMAP, mem);
         return NULL;
     }
 
@@ -70,13 +70,13 @@ bitmap::factory(uint32_t size, bool thread_safe)
 bitmap::~bitmap()
 {
     if (thread_safe_) {
-        HAL_SPINLOCK_LOCK(&slock_);
+        SDK_SPINLOCK_LOCK(&slock_);
     }
     if (bits_) {
-        HAL_FREE(HAL_MEM_ALLOC_LIB_BITMAP, bits_);
+        SDK_FREE(SDK_MEM_ALLOC_LIB_BITMAP, bits_);
     }
     if (thread_safe_) {
-        HAL_SPINLOCK_DESTROY(&slock_);
+        SDK_SPINLOCK_DESTROY(&slock_);
     }
 }
 
@@ -87,32 +87,32 @@ bitmap::destroy(bitmap *bmap)
         return;
     }
     bmap->~bitmap();
-    HAL_FREE(HAL_MEM_ALLOC_LIB_BITMAP, bmap);
+    SDK_FREE(SDK_MEM_ALLOC_LIB_BITMAP, bmap);
 }
 
 //------------------------------------------------------------------------------
 // set the bit at given position
 //------------------------------------------------------------------------------
-hal_ret_t
+sdk_ret_t
 bitmap::set(uint32_t posn)
 {
     uint32_t    word = posn >> WORD_SIZE_SHIFT;
     uint8_t     off = posn & WORD_SIZE_MASK;
 
     if (posn >= size_) {
-        return HAL_RET_NO_RESOURCE;
+        return SDK_RET_NO_RESOURCE;
     }
 
     if (thread_safe_) {
-        HAL_SPINLOCK_LOCK(&slock_);
+        SDK_SPINLOCK_LOCK(&slock_);
     }
     bits_[word] |= (1ull << off);
     num_set_++;
     if (thread_safe_) {
-        HAL_SPINLOCK_UNLOCK(&slock_);
+        SDK_SPINLOCK_UNLOCK(&slock_);
     }
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
 //------------------------------------------------------------------------------
@@ -125,7 +125,7 @@ bitmap::is_set(uint32_t posn)
     uint8_t     off = posn & WORD_SIZE_MASK;
 
     if (posn >= size_) {
-        return HAL_RET_NO_RESOURCE;
+        return SDK_RET_NO_RESOURCE;
     }
 
     return (bits_[word] & (1ull << off));
@@ -134,29 +134,29 @@ bitmap::is_set(uint32_t posn)
 //------------------------------------------------------------------------------
 // clear the bit at given position
 //------------------------------------------------------------------------------
-hal_ret_t
+sdk_ret_t
 bitmap::clear(uint32_t posn)
 {
     uint32_t    word = posn >> WORD_SIZE_SHIFT;
     uint8_t     off = posn & WORD_SIZE_MASK;
 
     if (posn >= size_) {
-        return HAL_RET_NO_RESOURCE;
+        return SDK_RET_NO_RESOURCE;
     }
 
     if (thread_safe_) {
-        HAL_SPINLOCK_LOCK(&slock_);
+        SDK_SPINLOCK_LOCK(&slock_);
     }
     bits_[word] &= ~(1ull << off);
     num_set_--;
     if (thread_safe_) {
-        HAL_SPINLOCK_UNLOCK(&slock_);
+        SDK_SPINLOCK_UNLOCK(&slock_);
     }
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 bitmap::first_set_(uint32_t posn, uint32_t *first_set_p)
 {
     uint32_t    start_word = posn >> WORD_SIZE_SHIFT;
@@ -179,26 +179,26 @@ bitmap::first_set_(uint32_t posn, uint32_t *first_set_p)
 
     if (word >= num_words_) {
         unlock_();
-        return HAL_RET_NO_RESOURCE;
+        return SDK_RET_NO_RESOURCE;
     }
 
     off = ffs_(bits_[word] & mask);
     unlock_();
 
-    HAL_ASSERT(off);
+    SDK_ASSERT(off);
     off--;
     *first_set_p = (word << WORD_SIZE_SHIFT) | off;
 
     if (*first_set_p >= size_) {
-        return HAL_RET_NO_RESOURCE;
+        return SDK_RET_NO_RESOURCE;
     }
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
 //------------------------------------------------------------------------------
 // find the first bit set
 //------------------------------------------------------------------------------
-hal_ret_t
+sdk_ret_t
 bitmap::first_set(uint32_t *first_set_p)
 {
     return first_set_(0, first_set_p);
@@ -207,13 +207,13 @@ bitmap::first_set(uint32_t *first_set_p)
 //------------------------------------------------------------------------------
 // find the next bit set after posn
 //------------------------------------------------------------------------------
-hal_ret_t
+sdk_ret_t
 bitmap::next_set(uint32_t posn, uint32_t *set_p)
 {
     return first_set_(posn+1, set_p);
 }
 
-hal_ret_t
+sdk_ret_t
 bitmap::last_set_(uint32_t posn, uint32_t *last_set_p)
 {
     uint32_t    start_word = posn >> WORD_SIZE_SHIFT;
@@ -223,7 +223,7 @@ bitmap::last_set_(uint32_t posn, uint32_t *last_set_p)
     uint64_t    mask = ALL_ONES;
 
     if (start_word >= num_words_) {
-        return HAL_RET_NO_RESOURCE;
+        return SDK_RET_NO_RESOURCE;
     }
 
     if (start_off < (WORD_SIZE-1)) {
@@ -242,32 +242,32 @@ bitmap::last_set_(uint32_t posn, uint32_t *last_set_p)
 
     if (word == 0) {
         unlock_();
-        return HAL_RET_NO_RESOURCE;
+        return SDK_RET_NO_RESOURCE;
     }
 
     off = log2_floor(bits_[word-1] & mask);
     unlock_();
 
-    HAL_ASSERT(off != 64);
+    SDK_ASSERT(off != 64);
     *last_set_p = ((word-1) << WORD_SIZE_SHIFT) | off;
     if (*last_set_p >= size_) {
-        return HAL_RET_NO_RESOURCE;
+        return SDK_RET_NO_RESOURCE;
     }
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 //------------------------------------------------------------------------------
 // find the prev bit set before posn
 //------------------------------------------------------------------------------
-hal_ret_t
+sdk_ret_t
 bitmap::prev_set(uint32_t posn, uint32_t *set_p)
 {
     if (posn == 0) {
-        return HAL_RET_NO_RESOURCE;
+        return SDK_RET_NO_RESOURCE;
     }
     return last_set_(posn-1, set_p);
 }
 
-hal_ret_t
+sdk_ret_t
 bitmap::first_free_(uint32_t posn, uint32_t *first_free_p)
 {
     uint32_t    start_word = posn >> WORD_SIZE_SHIFT;
@@ -290,25 +290,25 @@ bitmap::first_free_(uint32_t posn, uint32_t *first_free_p)
 
     if (word >= num_words_) {
         unlock_();
-        return HAL_RET_NO_RESOURCE;
+        return SDK_RET_NO_RESOURCE;
     }
 
     off = ffs_(~(bits_[word] | mask));
     unlock_();
 
-    HAL_ASSERT(off);
+    SDK_ASSERT(off);
     off--;
     *first_free_p = (word << WORD_SIZE_SHIFT) | off;
     if (*first_free_p >= size_) {
-        return HAL_RET_NO_RESOURCE;
+        return SDK_RET_NO_RESOURCE;
     }
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
 //------------------------------------------------------------------------------
 // find the first bit free
 //------------------------------------------------------------------------------
-hal_ret_t
+sdk_ret_t
 bitmap::first_free(uint32_t *first_free_p)
 {
     return first_free_(0, first_free_p);
@@ -317,13 +317,13 @@ bitmap::first_free(uint32_t *first_free_p)
 //------------------------------------------------------------------------------
 // find the next bit free after posn
 //------------------------------------------------------------------------------
-hal_ret_t
+sdk_ret_t
 bitmap::next_free(uint32_t posn, uint32_t *free_p)
 {
     return first_free_(posn+1, free_p);
 }
 
-hal_ret_t
+sdk_ret_t
 bitmap::last_free_(uint32_t posn, uint32_t *last_free_p)
 {
     uint32_t    start_word = posn >> WORD_SIZE_SHIFT;
@@ -333,7 +333,7 @@ bitmap::last_free_(uint32_t posn, uint32_t *last_free_p)
     uint64_t    mask = 0;
 
     if (start_word >= num_words_) {
-        return HAL_RET_NO_RESOURCE;
+        return SDK_RET_NO_RESOURCE;
     }
 
     if (start_off < (WORD_SIZE - 1)) {
@@ -352,28 +352,28 @@ bitmap::last_free_(uint32_t posn, uint32_t *last_free_p)
 
     if (word == 0) {
         unlock_();
-        return HAL_RET_NO_RESOURCE;
+        return SDK_RET_NO_RESOURCE;
     }
 
     off = log2_floor(~(bits_[word-1] | mask));
     unlock_();
 
-    HAL_ASSERT(off < 64);
+    SDK_ASSERT(off < 64);
     *last_free_p = ((word-1) << WORD_SIZE_SHIFT) | off;
     if (*last_free_p >= size_) {
-        return HAL_RET_NO_RESOURCE;
+        return SDK_RET_NO_RESOURCE;
     }
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
 //------------------------------------------------------------------------------
 // find the prev bit free before posn
 //------------------------------------------------------------------------------
-hal_ret_t
+sdk_ret_t
 bitmap::prev_free(uint32_t posn, uint32_t *free_p)
 {
     if (posn == 0) {
-        return HAL_RET_NO_RESOURCE;
+        return SDK_RET_NO_RESOURCE;
     }
     return last_free_(posn-1, free_p);
 }

@@ -20,6 +20,7 @@ hal_ret_t
 nat_pool_address_alloc (nat_pool_t *pool, ip_addr_t *nat_addr)
 {
     hal_ret_t         ret         = HAL_RET_OK;
+    sdk_ret_t         sret;
     dllist_ctxt_t     *curr       = NULL;
     addr_list_elem_t  *addr_range = NULL;
     uint32_t          free_idx    = 0;
@@ -31,7 +32,8 @@ nat_pool_address_alloc (nat_pool_t *pool, ip_addr_t *nat_addr)
     }
 
     HAL_SPINLOCK_LOCK(&pool->slock);
-    ret = pool->addr_bmap->first_free(&free_idx);
+    sret = pool->addr_bmap->first_free(&free_idx);
+    ret = hal_sdk_ret_to_hal_ret(sret);
     if (ret != HAL_RET_OK) {
         // we are supposed to find free NAT address, but didn't
         HAL_TRACE_ERR("NAT address allocation failure, unexpected err : {}",
@@ -93,6 +95,7 @@ hal_ret_t
 nat_pool_address_free (nat_pool_t *pool, ip_addr_t *nat_addr)
 {
     hal_ret_t         ret         = HAL_RET_OK;
+    sdk_ret_t         sret;
     dllist_ctxt_t     *curr       = NULL;
     addr_list_elem_t  *addr_range = NULL;
     uint32_t          num_addrs   = 0;
@@ -120,7 +123,8 @@ nat_pool_address_free (nat_pool_t *pool, ip_addr_t *nat_addr)
     }
 
     // reset the bit corresponding to this address in the NAT pool
-    ret = pool->addr_bmap->clear(num_addrs + offset);
+    sret = pool->addr_bmap->clear(num_addrs + offset);
+    ret = hal_sdk_ret_to_hal_ret(sret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to reset the bit corresponding to the addr {} in "
                       "NAT pool ({}, {}), err : {}", ipaddr2str(nat_addr),

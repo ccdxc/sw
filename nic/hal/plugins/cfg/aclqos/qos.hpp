@@ -7,13 +7,13 @@
 
 #include "nic/include/base.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"
-#include "nic/include/bitmap.hpp"
+#include "nic/sdk/include/sdk/bitmap.hpp"
 #include "gen/proto/qos.pb.h"
 #include "nic/include/pd.hpp"
+#include "nic/include/hal_lock.hpp"
 #include "nic/utils/block_list/block_list.hpp"
 
 using sdk::lib::ht_ctxt_t;
-using hal::utils::bitmap;
 using hal::utils::block_list;
 
 using kh::QosClassKeyHandle;

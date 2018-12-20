@@ -142,6 +142,7 @@ acl_tcam::place_entry_(void *key, void *key_mask, void *data,
     // - update the tcam_entries_ array and move the entries accordingly
     // - update the inuse_bmp_
     hal_ret_t ret = HAL_RET_OK;
+    sdk_ret_t sret;
     bool prev_exists = false, next_exists = false;
     uint32_t prev_end, next_start;
     uint32_t target_up = 0;
@@ -197,7 +198,8 @@ acl_tcam::place_entry_(void *key, void *key_mask, void *data,
     } else {
         // Find a free spot between prev_end and next_start
         if (prev_exists) {
-            ret = inuse_bmp_->next_free(prev_end, &free_spot);
+            sret = inuse_bmp_->next_free(prev_end, &free_spot);
+            ret = hal_sdk_ret_to_hal_ret(sret);
             if (ret != HAL_RET_OK) {
                 // There is no space after prev_end. Maybe there's space
                 // before
@@ -205,7 +207,8 @@ acl_tcam::place_entry_(void *key, void *key_mask, void *data,
                 ret = HAL_RET_OK;
             }
         } else {
-            ret = inuse_bmp_->first_free(&free_spot);
+            sret = inuse_bmp_->first_free(&free_spot);
+            ret = hal_sdk_ret_to_hal_ret(sret);
             if (ret != HAL_RET_OK) {
                 // There is no space at all!
                 HAL_TRACE_ERR("Table {} placing entry failed due to no space",
@@ -723,14 +726,17 @@ acl_tcam::create_move_chain_(uint32_t target_up,
     uint32_t num_moves;
     move_chain_t *move_chain = NULL;
     hal_ret_t ret = HAL_RET_OK;
+    sdk_ret_t sret;
     bool move_up = false;
 
-    ret = inuse_bmp_->prev_free(target_up, &up_free);
+    sret = inuse_bmp_->prev_free(target_up, &up_free);
+    ret = hal_sdk_ret_to_hal_ret(sret);
     if (ret != HAL_RET_OK) {
         up_full = true;
     }
 
-    ret = inuse_bmp_->next_free(target_down, &down_free);
+    sret = inuse_bmp_->next_free(target_down, &down_free);
+    ret = hal_sdk_ret_to_hal_ret(sret);
     if (ret != HAL_RET_OK) {
         down_full = true;
     }
@@ -884,6 +890,7 @@ void
 acl_tcam::update_priority_range_for_clear_(priority_t priority, uint32_t index)
 {
     hal_ret_t ret;
+    sdk_ret_t sret;
     prio_range_t *prio_range;
 
     prio_range = get_prio_range_(priority);
@@ -895,11 +902,13 @@ acl_tcam::update_priority_range_for_clear_(priority_t priority, uint32_t index)
         tcam_prio_map_->erase(priority);
     } else if (prio_range->start == index) {
         // New start is the next in use bit
-        ret = inuse_bmp_->next_set(index, &prio_range->start);
+        sret = inuse_bmp_->next_set(index, &prio_range->start);
+        ret = hal_sdk_ret_to_hal_ret(sret);
         HAL_ASSERT(ret == HAL_RET_OK);
     } else if (prio_range->end == index) {
         // New end is the prev in use bit
-        ret = inuse_bmp_->prev_set(index, &prio_range->end);
+        sret = inuse_bmp_->prev_set(index, &prio_range->end);
+        ret = hal_sdk_ret_to_hal_ret(sret);
         HAL_ASSERT(ret == HAL_RET_OK);
     }
 }

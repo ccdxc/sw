@@ -8,7 +8,6 @@
 #ifndef __SDK_PLATFORM_MPARTITION_HPP__
 #define __SDK_PLATFORM_MPARTITION_HPP__
 
-#include "nic/include/base.hpp"
 #include "include/sdk/base.hpp"
 #include "include/sdk/types.hpp"
 #include "include/sdk/shmmgr.hpp"

@@ -21,7 +21,7 @@
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_tm_rw.hpp"
 #include "nic/utils/pack_bytes/pack_bytes.hpp"
-#include "nic/include/bitmap.hpp"
+#include "nic/sdk/include/sdk/bitmap.hpp"
 
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"

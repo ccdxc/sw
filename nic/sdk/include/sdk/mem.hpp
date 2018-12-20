@@ -20,6 +20,7 @@ enum {
     SDK_MEM_ALLOC_LIB_TWHEEL,
     SDK_MEM_ALLOC_LIB_PLATFORM,
     SDK_MEM_ALLOC_LIB_DIRECTMAP,
+    SDK_MEM_ALLOC_LIB_BITMAP,
 };
 
 static inline void *

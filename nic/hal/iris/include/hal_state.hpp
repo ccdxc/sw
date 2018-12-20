@@ -10,9 +10,10 @@
 #include "nic/sdk/include/sdk/ht.hpp"
 #include "nic/sdk/include/sdk/timestamp.hpp"
 #include "nic/sdk/include/sdk/shmmgr.hpp"
+#include "nic/sdk/include/sdk/bitmap.hpp"
+#include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/include/eventmgr.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
-#include "nic/include/bitmap.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
@@ -40,7 +41,6 @@ namespace hal {
 using sdk::lib::slab;
 using sdk::lib::indexer;
 using sdk::lib::ht;
-using hal::utils::bitmap;
 using hal::utils::eventmgr;
 using sdk::lib::dllist_ctxt_t;
 using acl::acl_ctx_t;
