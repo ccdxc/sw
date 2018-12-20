@@ -1265,9 +1265,9 @@ func TestAppAlgConfig(t *testing.T) {
 					Ports:    "21",
 				},
 			},
-			ALG: security.ALG{
+			ALG: &security.ALG{
 				Type: "FTP",
-				FtpAlg: security.FtpAlg{
+				FtpAlg: &security.FtpAlg{
 					AllowMismatchIPAddress: true,
 				},
 			},
@@ -1305,9 +1305,9 @@ func TestAppAlgConfig(t *testing.T) {
 					Protocol: "icmp",
 				},
 			},
-			ALG: security.ALG{
+			ALG: &security.ALG{
 				Type: "ICMP",
-				IcmpAlg: security.IcmpAlg{
+				IcmpAlg: &security.IcmpAlg{
 					Type: "1",
 					Code: "0",
 				},
@@ -1332,9 +1332,9 @@ func TestAppAlgConfig(t *testing.T) {
 					Protocol: "udp",
 				},
 			},
-			ALG: security.ALG{
+			ALG: &security.ALG{
 				Type: "DNS",
-				DnsAlg: security.DnsAlg{
+				DnsAlg: &security.DnsAlg{
 					DropMultiQuestionPackets: true,
 				},
 			},
@@ -1358,9 +1358,9 @@ func TestAppAlgConfig(t *testing.T) {
 					Protocol: "udp",
 				},
 			},
-			ALG: security.ALG{
+			ALG: &security.ALG{
 				Type: "SunRPC",
-				SunrpcAlg: security.SunrpcAlg{
+				SunrpcAlg: &security.SunrpcAlg{
 					ProgramID: "1",
 				},
 			},
@@ -1384,9 +1384,9 @@ func TestAppAlgConfig(t *testing.T) {
 					Protocol: "icmp",
 				},
 			},
-			ALG: security.ALG{
+			ALG: &security.ALG{
 				Type: "MSRPC",
-				MsrpcAlg: security.MsrpcAlg{
+				MsrpcAlg: &security.MsrpcAlg{
 					ProgramUUID: "1",
 				},
 			},
@@ -1405,7 +1405,7 @@ func TestAppAlgConfig(t *testing.T) {
 			Name:      "testApp",
 		},
 		Spec: security.AppSpec{
-			ALG: security.ALG{
+			ALG: &security.ALG{
 				Type: "foo",
 			},
 		},
@@ -1428,9 +1428,9 @@ func TestAppAlgConfig(t *testing.T) {
 					Protocol: "icmp",
 				},
 			},
-			ALG: security.ALG{
+			ALG: &security.ALG{
 				Type: "ICMP",
-				IcmpAlg: security.IcmpAlg{
+				IcmpAlg: &security.IcmpAlg{
 					Type: "foo",
 					Code: "0",
 				},
@@ -1455,9 +1455,9 @@ func TestAppAlgConfig(t *testing.T) {
 					Protocol: "icmp",
 				},
 			},
-			ALG: security.ALG{
+			ALG: &security.ALG{
 				Type: "ICMP",
-				IcmpAlg: security.IcmpAlg{
+				IcmpAlg: &security.IcmpAlg{
 					Type: "300",
 					Code: "0",
 				},
@@ -1482,9 +1482,9 @@ func TestAppAlgConfig(t *testing.T) {
 					Protocol: "icmp",
 				},
 			},
-			ALG: security.ALG{
+			ALG: &security.ALG{
 				Type: "ICMP",
-				IcmpAlg: security.IcmpAlg{
+				IcmpAlg: &security.IcmpAlg{
 					Type: "1",
 					Code: "foo",
 				},
@@ -1509,9 +1509,9 @@ func TestAppAlgConfig(t *testing.T) {
 					Protocol: "icmp",
 				},
 			},
-			ALG: security.ALG{
+			ALG: &security.ALG{
 				Type: "ICMP",
-				IcmpAlg: security.IcmpAlg{
+				IcmpAlg: &security.IcmpAlg{
 					Type: "1",
 					Code: "20",
 				},
@@ -1536,9 +1536,9 @@ func TestAppAlgConfig(t *testing.T) {
 					Protocol: "icmp",
 				},
 			},
-			ALG: security.ALG{
+			ALG: &security.ALG{
 				Type: "ICMP",
-				FtpAlg: security.FtpAlg{
+				FtpAlg: &security.FtpAlg{
 					AllowMismatchIPAddress: true,
 				},
 			},
@@ -1562,9 +1562,9 @@ func TestAppAlgConfig(t *testing.T) {
 					Protocol: "icmp",
 				},
 			},
-			ALG: security.ALG{
+			ALG: &security.ALG{
 				Type: "FTP",
-				IcmpAlg: security.IcmpAlg{
+				IcmpAlg: &security.IcmpAlg{
 					Type: "1",
 					Code: "0",
 				},
@@ -1589,9 +1589,9 @@ func TestAppAlgConfig(t *testing.T) {
 					Protocol: "icmp",
 				},
 			},
-			ALG: security.ALG{
+			ALG: &security.ALG{
 				Type: "DNS",
-				IcmpAlg: security.IcmpAlg{
+				IcmpAlg: &security.IcmpAlg{
 					Type: "1",
 					Code: "0",
 				},
@@ -1616,9 +1616,9 @@ func TestAppAlgConfig(t *testing.T) {
 					Protocol: "icmp",
 				},
 			},
-			ALG: security.ALG{
+			ALG: &security.ALG{
 				Type: "SunRPC",
-				IcmpAlg: security.IcmpAlg{
+				IcmpAlg: &security.IcmpAlg{
 					Type: "1",
 					Code: "0",
 				},
@@ -1643,9 +1643,9 @@ func TestAppAlgConfig(t *testing.T) {
 					Protocol: "icmp",
 				},
 			},
-			ALG: security.ALG{
+			ALG: &security.ALG{
 				Type: "MSRPC",
-				IcmpAlg: security.IcmpAlg{
+				IcmpAlg: &security.IcmpAlg{
 					Type: "1",
 					Code: "0",
 				},
@@ -1670,9 +1670,9 @@ func TestAppAlgConfig(t *testing.T) {
 					Protocol: "icmp",
 				},
 			},
-			ALG: security.ALG{
+			ALG: &security.ALG{
 				Type: "TFTP",
-				IcmpAlg: security.IcmpAlg{
+				IcmpAlg: &security.IcmpAlg{
 					Type: "1",
 					Code: "0",
 				},
@@ -1697,9 +1697,9 @@ func TestAppAlgConfig(t *testing.T) {
 					Protocol: "icmp",
 				},
 			},
-			ALG: security.ALG{
+			ALG: &security.ALG{
 				Type: "RTSP",
-				IcmpAlg: security.IcmpAlg{
+				IcmpAlg: &security.IcmpAlg{
 					Type: "1",
 					Code: "0",
 				},

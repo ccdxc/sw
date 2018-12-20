@@ -109,7 +109,9 @@ func (m *AppSpec) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *AppSpec) Defaults(ver string) bool {
 	var ret bool
-	ret = m.ALG.Defaults(ver) || ret
+	if m.ALG != nil {
+		ret = m.ALG.Defaults(ver) || ret
+	}
 	return ret
 }
 
@@ -282,14 +284,15 @@ func (m *App) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *AppSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
-
-	dlmtr := "."
-	if path == "" {
-		dlmtr = ""
-	}
-	npath := path + dlmtr + "ALG"
-	if errs := m.ALG.Validate(ver, npath, ignoreStatus); errs != nil {
-		ret = append(ret, errs...)
+	if m.ALG != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "ALG"
+		if errs := m.ALG.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
 	}
 	if vs, ok := validatorMapApp["AppSpec"][ver]; ok {
 		for _, v := range vs {

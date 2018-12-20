@@ -306,7 +306,7 @@ func TestAppWriter(t *testing.T) {
 		},
 		Spec: security.AppSpec{
 			Timeout: "5m",
-			ALG: security.ALG{
+			ALG: &security.ALG{
 				Type: "FTP",
 			},
 		},

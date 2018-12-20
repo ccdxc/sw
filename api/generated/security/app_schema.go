@@ -20,15 +20,15 @@ var typesMapApp = map[string]*api.Struct{
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{ID: "Type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"IcmpAlg": api.Field{Name: "IcmpAlg", CLITag: api.CLIInfo{ID: "icmp", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "icmp", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.IcmpAlg"},
+			"IcmpAlg": api.Field{Name: "IcmpAlg", CLITag: api.CLIInfo{ID: "icmp", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "icmp", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.IcmpAlg"},
 
-			"DnsAlg": api.Field{Name: "DnsAlg", CLITag: api.CLIInfo{ID: "dns", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "dns", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.DnsAlg"},
+			"DnsAlg": api.Field{Name: "DnsAlg", CLITag: api.CLIInfo{ID: "dns", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "dns", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.DnsAlg"},
 
-			"FtpAlg": api.Field{Name: "FtpAlg", CLITag: api.CLIInfo{ID: "ftp", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ftp", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.FtpAlg"},
+			"FtpAlg": api.Field{Name: "FtpAlg", CLITag: api.CLIInfo{ID: "ftp", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ftp", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.FtpAlg"},
 
-			"SunrpcAlg": api.Field{Name: "SunrpcAlg", CLITag: api.CLIInfo{ID: "sunrpc", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "sunrpc", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.SunrpcAlg"},
+			"SunrpcAlg": api.Field{Name: "SunrpcAlg", CLITag: api.CLIInfo{ID: "sunrpc", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "sunrpc", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.SunrpcAlg"},
 
-			"MsrpcAlg": api.Field{Name: "MsrpcAlg", CLITag: api.CLIInfo{ID: "msrpc", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "msrpc", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.MsrpcAlg"},
+			"MsrpcAlg": api.Field{Name: "MsrpcAlg", CLITag: api.CLIInfo{ID: "msrpc", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "msrpc", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.MsrpcAlg"},
 		},
 	},
 	"security.App": &api.Struct{
@@ -101,7 +101,7 @@ var typesMapApp = map[string]*api.Struct{
 
 			"Timeout": api.Field{Name: "Timeout", CLITag: api.CLIInfo{ID: "timeout", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "timeout", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"ALG": api.Field{Name: "ALG", CLITag: api.CLIInfo{ID: "alg", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "alg", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.ALG"},
+			"ALG": api.Field{Name: "ALG", CLITag: api.CLIInfo{ID: "alg", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "alg", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.ALG"},
 		},
 	},
 	"security.AppStatus": &api.Struct{

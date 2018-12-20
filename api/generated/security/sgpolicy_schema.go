@@ -116,7 +116,7 @@ var typesMapSgpolicy = map[string]*api.Struct{
 	"security.SGRule": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(SGRule{}) },
 		Fields: map[string]api.Field{
-			"Apps": api.Field{Name: "Apps", CLITag: api.CLIInfo{ID: "apps", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "apps", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"Apps": api.Field{Name: "Apps", CLITag: api.CLIInfo{ID: "apps", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "apps", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"ProtoPorts": api.Field{Name: "ProtoPorts", CLITag: api.CLIInfo{ID: "proto-ports", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "proto-ports", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.ProtoPort"},
 

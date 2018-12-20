@@ -137,9 +137,9 @@ func (it *veniceIntegSuite) TestIcmpApp(c *C) {
 				},
 			},
 			Timeout: "5m",
-			ALG: security.ALG{
+			ALG: &security.ALG{
 				Type: "ICMP",
-				IcmpAlg: security.IcmpAlg{
+				IcmpAlg: &security.IcmpAlg{
 					Type: "1",
 					Code: "2",
 				},
@@ -282,9 +282,9 @@ func (it *veniceIntegSuite) TestDnsApp(c *C) {
 				},
 			},
 			Timeout: "5m",
-			ALG: security.ALG{
+			ALG: &security.ALG{
 				Type: "DNS",
-				DnsAlg: security.DnsAlg{
+				DnsAlg: &security.DnsAlg{
 					DropMultiQuestionPackets:   true,
 					DropLargeDomainNamePackets: true,
 					DropLongLabelPackets:       true,
@@ -361,9 +361,9 @@ func (it *veniceIntegSuite) TestFtpApp(c *C) {
 				},
 			},
 			Timeout: "5m",
-			ALG: security.ALG{
+			ALG: &security.ALG{
 				Type: "FTP",
-				FtpAlg: security.FtpAlg{
+				FtpAlg: &security.FtpAlg{
 					AllowMismatchIPAddress: true,
 				},
 			},
@@ -431,9 +431,9 @@ func (it *veniceIntegSuite) TestRPCApp(c *C) {
 				},
 			},
 			Timeout: "5m",
-			ALG: security.ALG{
+			ALG: &security.ALG{
 				Type: "SunRPC",
-				SunrpcAlg: security.SunrpcAlg{
+				SunrpcAlg: &security.SunrpcAlg{
 					ProgramID: fmt.Sprintf("%d", pgmID),
 				},
 			},
@@ -454,9 +454,9 @@ func (it *veniceIntegSuite) TestRPCApp(c *C) {
 				},
 			},
 			Timeout: "5m",
-			ALG: security.ALG{
+			ALG: &security.ALG{
 				Type: "MSRPC",
-				MsrpcAlg: security.MsrpcAlg{
+				MsrpcAlg: &security.MsrpcAlg{
 					ProgramUUID: fmt.Sprintf("%d", pgmID),
 				},
 			},
@@ -545,9 +545,9 @@ func (it *veniceIntegSuite) TestFirewallFtpAlg(c *C) {
 				},
 			},
 			Timeout: "5m",
-			ALG: security.ALG{
+			ALG: &security.ALG{
 				Type: "FTP",
-				FtpAlg: security.FtpAlg{
+				FtpAlg: &security.FtpAlg{
 					AllowMismatchIPAddress: true,
 				},
 			},

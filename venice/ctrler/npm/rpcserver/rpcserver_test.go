@@ -675,9 +675,9 @@ func TestAppRPC(t *testing.T) {
 				},
 			},
 			Timeout: "5m",
-			ALG: security.ALG{
+			ALG: &security.ALG{
 				Type: "FTP",
-				FtpAlg: security.FtpAlg{
+				FtpAlg: &security.FtpAlg{
 					AllowMismatchIPAddress: true,
 				},
 			},
@@ -721,9 +721,9 @@ func TestAppRPC(t *testing.T) {
 				},
 			},
 			Timeout: "5m",
-			ALG: security.ALG{
+			ALG: &security.ALG{
 				Type: "FTP",
-				FtpAlg: security.FtpAlg{
+				FtpAlg: &security.FtpAlg{
 					AllowMismatchIPAddress: true,
 				},
 			},

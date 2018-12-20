@@ -19,7 +19,7 @@ message AppSpec {
     // Timeout specifies for how long the connection be kept before removing the flow entry, specified in string as '200s', '5m', etc.
     string Timeout                          = 2 [(gogoproto.jsontag) = "timeout,omitempty", (venice.check) = "Duration()"];
     // ALG configuration if specified
-    ALG    ALG                              = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "alg,omitempty"];
+    ALG    ALG                              = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "alg,omitempty"];
 }
 
 // ALG specifies the application specific configuration for the list of applications mentioned below.
@@ -35,11 +35,11 @@ message ALG {
         RTSP    = 6;
     }
     string     Type       = 1 [(venice.check) = "StrEnum(ALG.ALGType)"];
-    IcmpAlg    IcmpAlg    = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "icmp,omitempty"];
-    DnsAlg     DnsAlg     = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "dns,omitempty"];
-    FtpAlg     FtpAlg     = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "ftp,omitempty"];
-    SunrpcAlg  SunrpcAlg  = 5 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "sunrpc,omitempty"];
-    MsrpcAlg   MsrpcAlg   = 6 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "msrpc,omitempty"];
+    IcmpAlg    IcmpAlg    = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "icmp,omitempty"];
+    DnsAlg     DnsAlg     = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "dns,omitempty"];
+    FtpAlg     FtpAlg     = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ftp,omitempty"];
+    SunrpcAlg  SunrpcAlg  = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "sunrpc,omitempty"];
+    MsrpcAlg   MsrpcAlg   = 6 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "msrpc,omitempty"];
 }
 
 // ICMP ALG configuration

@@ -235,19 +235,14 @@ func (s *securityHooks) validateApp(ctx context.Context, kv kvstore.Interface, t
 	}
 
 	// validate ALG types
-	if app.Spec.ALG.Type != "" {
-		IcmpAlg := security.IcmpAlg{}
-		DNSAlg := security.DnsAlg{}
-		FtpAlg := security.FtpAlg{}
-		SunrpcAlg := security.SunrpcAlg{}
-		MsrpcAlg := security.MsrpcAlg{}
+	if app.Spec.ALG != nil && app.Spec.ALG.Type != "" {
 
 		switch app.Spec.ALG.Type {
 		case "ICMP":
-			if (app.Spec.ALG.DnsAlg != DNSAlg) ||
-				(app.Spec.ALG.FtpAlg != FtpAlg) ||
-				(app.Spec.ALG.SunrpcAlg != SunrpcAlg) ||
-				(app.Spec.ALG.MsrpcAlg != MsrpcAlg) {
+			if (app.Spec.ALG.DnsAlg != nil) ||
+				(app.Spec.ALG.FtpAlg != nil) ||
+				(app.Spec.ALG.SunrpcAlg != nil) ||
+				(app.Spec.ALG.MsrpcAlg != nil) {
 				return i, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
 			}
 
@@ -271,47 +266,47 @@ func (s *securityHooks) validateApp(ctx context.Context, kv kvstore.Interface, t
 				}
 			}
 		case "DNS":
-			if (app.Spec.ALG.IcmpAlg != IcmpAlg) ||
-				(app.Spec.ALG.FtpAlg != FtpAlg) ||
-				(app.Spec.ALG.SunrpcAlg != SunrpcAlg) ||
-				(app.Spec.ALG.MsrpcAlg != MsrpcAlg) {
+			if (app.Spec.ALG.IcmpAlg != nil) ||
+				(app.Spec.ALG.FtpAlg != nil) ||
+				(app.Spec.ALG.SunrpcAlg != nil) ||
+				(app.Spec.ALG.MsrpcAlg != nil) {
 				return i, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
 			}
 		case "FTP":
-			if (app.Spec.ALG.IcmpAlg != IcmpAlg) ||
-				(app.Spec.ALG.DnsAlg != DNSAlg) ||
-				(app.Spec.ALG.SunrpcAlg != SunrpcAlg) ||
-				(app.Spec.ALG.MsrpcAlg != MsrpcAlg) {
+			if (app.Spec.ALG.IcmpAlg != nil) ||
+				(app.Spec.ALG.DnsAlg != nil) ||
+				(app.Spec.ALG.SunrpcAlg != nil) ||
+				(app.Spec.ALG.MsrpcAlg != nil) {
 				return i, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
 			}
 		case "SunRPC":
-			if (app.Spec.ALG.IcmpAlg != IcmpAlg) ||
-				(app.Spec.ALG.DnsAlg != DNSAlg) ||
-				(app.Spec.ALG.FtpAlg != FtpAlg) ||
-				(app.Spec.ALG.MsrpcAlg != MsrpcAlg) {
+			if (app.Spec.ALG.IcmpAlg != nil) ||
+				(app.Spec.ALG.DnsAlg != nil) ||
+				(app.Spec.ALG.FtpAlg != nil) ||
+				(app.Spec.ALG.MsrpcAlg != nil) {
 				return i, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
 			}
 		case "MSRPC":
-			if (app.Spec.ALG.IcmpAlg != IcmpAlg) ||
-				(app.Spec.ALG.DnsAlg != DNSAlg) ||
-				(app.Spec.ALG.FtpAlg != FtpAlg) ||
-				(app.Spec.ALG.SunrpcAlg != SunrpcAlg) {
+			if (app.Spec.ALG.IcmpAlg != nil) ||
+				(app.Spec.ALG.DnsAlg != nil) ||
+				(app.Spec.ALG.FtpAlg != nil) ||
+				(app.Spec.ALG.SunrpcAlg != nil) {
 				return i, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
 			}
 		case "TFTP":
-			if (app.Spec.ALG.IcmpAlg != IcmpAlg) ||
-				(app.Spec.ALG.DnsAlg != DNSAlg) ||
-				(app.Spec.ALG.FtpAlg != FtpAlg) ||
-				(app.Spec.ALG.SunrpcAlg != SunrpcAlg) ||
-				(app.Spec.ALG.MsrpcAlg != MsrpcAlg) {
+			if (app.Spec.ALG.IcmpAlg != nil) ||
+				(app.Spec.ALG.DnsAlg != nil) ||
+				(app.Spec.ALG.FtpAlg != nil) ||
+				(app.Spec.ALG.SunrpcAlg != nil) ||
+				(app.Spec.ALG.MsrpcAlg != nil) {
 				return i, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
 			}
 		case "RTSP":
-			if (app.Spec.ALG.IcmpAlg != IcmpAlg) ||
-				(app.Spec.ALG.DnsAlg != DNSAlg) ||
-				(app.Spec.ALG.FtpAlg != FtpAlg) ||
-				(app.Spec.ALG.SunrpcAlg != SunrpcAlg) ||
-				(app.Spec.ALG.MsrpcAlg != MsrpcAlg) {
+			if (app.Spec.ALG.IcmpAlg != nil) ||
+				(app.Spec.ALG.DnsAlg != nil) ||
+				(app.Spec.ALG.FtpAlg != nil) ||
+				(app.Spec.ALG.SunrpcAlg != nil) ||
+				(app.Spec.ALG.MsrpcAlg != nil) {
 				return i, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
 			}
 		default:

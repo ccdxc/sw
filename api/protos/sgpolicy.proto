@@ -33,7 +33,7 @@ message SGRule {
 
     // list of apps objects to which the rule applies to
     repeated string Apps                = 1 [ (venice.objRelation) = {Type: "NamedRef", To: "security/App"},
-                                             (gogoproto.nullable) = false, (gogoproto.jsontag) = "apps,omitempty"];
+                                             (gogoproto.nullable) = true, (gogoproto.jsontag) = "apps,omitempty"];
 
     // list of (protocol, ports) pairs to which the rule applies to, in addition to apps
     repeated ProtoPort ProtoPorts       = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "proto-ports,omitempty"];
