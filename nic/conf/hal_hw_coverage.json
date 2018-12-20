@@ -20,6 +20,7 @@
     "run": [{
         "iota": {
             "cmd": "coverage/iota_script.sh",
+            "max-run-time" : 240,
             "modules": [
                 "hal"
             ]

@@ -26,8 +26,8 @@ parser.add_argument('--max-job-run-time', dest='max_job_run_time',
 parser.add_argument('--skip-asm-ins-stats', dest='skip_asm_ins_stats', action='store_true', help='Skip ASM pipeline .)')
 args = parser.parse_args()
 
-def _get_max_job_run_time():
-    return int(args.max_job_run_time) * 60
+def _get_max_job_run_time(run_time):
+    return int(run_time) * 60
 
 bazel_tmp_dir = env.coverage_output_path + ".bazel_tmp_out"
 subprocess.call(["mkdir", "-p", bazel_tmp_dir])
@@ -535,14 +535,17 @@ def run_and_generate_coverage(data):
         for run_name in run:
             if args.run_only and args.run_only != run_name:
                 continue
+
+            run_time = getattr(run[run_name], "max-run-time", args.max_job_run_time)
+            run_time = _get_max_job_run_time(run_time)
             if "cmd" in run[run_name]:
-                run_cmd(run[run_name]["cmd"], _get_max_job_run_time())
+                run_cmd(run[run_name]["cmd"], run_time)
                 generate_run_coverage(run_name, run)
             elif "cmd_cfg" in run[run_name]:
                 with open(run[run_name]["cmd_cfg"]) as cmd_cfg_file:
                     cmd_cfg_data = json.load(cmd_cfg_file)
                     for sub_run in cmd_cfg_data:
-                        run_cmd(cmd_cfg_data[sub_run], _get_max_job_run_time())
+                        run_cmd(cmd_cfg_data[sub_run], run_time)
                         generate_run_coverage(run_name, run, sub_run)
             else:
                 #Run not specified, may be all the meta files already generated.
