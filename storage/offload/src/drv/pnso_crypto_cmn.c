@@ -100,6 +100,7 @@ crypto_pprint_desc(const struct crypto_desc *desc)
 pnso_error_t
 crypto_aol_packed_get(const struct per_core_resource *pcr,
 		      const struct service_buf_list *svc_blist,
+		      uint32_t total_len_max,
 		      struct service_crypto_aol *svc_aol)
 {
 	struct buffer_list_iter buffer_list_iter;
@@ -110,7 +111,7 @@ crypto_aol_packed_get(const struct per_core_resource *pcr,
 	uint32_t total_len;
 	pnso_error_t err = ENOMEM;
 
-	iter = buffer_list_iter_init(&buffer_list_iter, svc_blist);
+	iter = buffer_list_iter_init(&buffer_list_iter, svc_blist, total_len_max);
 	svc_aol->mpool_type = MPOOL_TYPE_CRYPTO_AOL;
 	svc_aol->aol = NULL;
 	total_len = 0;
@@ -180,6 +181,7 @@ pnso_error_t
 crypto_aol_vec_sparse_get(const struct per_core_resource *pcr,
 			  uint32_t block_size,
 			  const struct service_buf_list *svc_blist,
+			  uint32_t total_len_max,
 			  struct service_crypto_aol *svc_aol)
 {
 	struct buffer_list_iter buffer_list_iter;
@@ -201,7 +203,7 @@ crypto_aol_vec_sparse_get(const struct per_core_resource *pcr,
 		goto out;
 	}
 
-	iter = buffer_list_iter_init(&buffer_list_iter, svc_blist);
+	iter = buffer_list_iter_init(&buffer_list_iter, svc_blist, total_len_max);
 	aol_vec = svc_aol->aol;
 	total_len = 0;
 	cur_count = 0;

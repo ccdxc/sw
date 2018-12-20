@@ -23,11 +23,13 @@ void crypto_pprint_desc(const struct crypto_desc *desc);
 pnso_error_t
 crypto_aol_packed_get(const struct per_core_resource *pcr,
 		      const struct service_buf_list *svc_blist,
+		      uint32_t total_len_max,
 		      struct service_crypto_aol *svc_aol);
 pnso_error_t
 crypto_aol_vec_sparse_get(const struct per_core_resource *pcr,
 			  uint32_t block_size,
 			  const struct service_buf_list *svc_blist,
+			  uint32_t total_len_max,
 			  struct service_crypto_aol *svc_aol);
 void crypto_aol_put(const struct per_core_resource *pcr,
 		    struct service_crypto_aol *svc_aol);

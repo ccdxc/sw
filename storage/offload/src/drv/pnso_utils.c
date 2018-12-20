@@ -51,7 +51,7 @@ pc_res_sgl_packed_get(const struct per_core_resource *pcr,
 		return err;
 	}
 
-	iter = buffer_list_iter_init(&buffer_list_iter, svc_blist);
+	iter = buffer_list_iter_init(&buffer_list_iter, svc_blist, svc_blist->len);
 
 	svc_sgl->mpool_type = mpool_type;
 	svc_sgl->sgl = NULL;
@@ -173,7 +173,7 @@ pc_res_sgl_vec_packed_get(const struct per_core_resource *pcr,
 		goto out;
 	}
 
-	iter = buffer_list_iter_init(&buffer_list_iter, svc_blist);
+	iter = buffer_list_iter_init(&buffer_list_iter, svc_blist, svc_blist->len);
 	sgl_vec = svc_sgl->sgl;
 	cur_count = 0;
 	while (iter && (cur_count < num_vec_elems)) {
@@ -249,7 +249,8 @@ pc_res_sgl_pdma_packed_get(const struct per_core_resource *pcr,
 	sgl_pdma = pc_res_mpool_object_get(pcr, MPOOL_TYPE_CHAIN_SGL_PDMA);
 	if (sgl_pdma) {
 		memset(sgl_pdma, 0, sizeof(*sgl_pdma));
-		iter = buffer_list_iter_init(&buffer_list_iter, svc_blist);
+		iter = buffer_list_iter_init(&buffer_list_iter, svc_blist,
+					     svc_blist->len);
 		for (i = 0; iter && (i < ARRAY_SIZE(sgl_pdma->tuple)); i++) {
 			iter = buffer_list_iter_addr_len_get(iter,
 				SGL_PDMA_TUPLE_MAX_LEN, &addr_len);
@@ -280,12 +281,15 @@ pc_res_sgl_pdma_put(const struct per_core_resource *pcr,
 
 struct buffer_list_iter *
 buffer_list_iter_init(struct buffer_list_iter *iter,
-		      const struct service_buf_list *svc_blist)
+		      const struct service_buf_list *svc_blist,
+		      uint32_t total_len_max)
 {
 	const struct pnso_buffer_list *buf_list = svc_blist->blist;
 
+	OSAL_ASSERT(total_len_max);
 	memset(iter, 0, sizeof(*iter));
 	iter->blist_type = svc_blist->type;
+	iter->total_len_max = total_len_max;
 	if (buf_list->count) {
 		iter->cur_count = buf_list->count;
 		iter->cur_list = &buf_list->buffers[0];
@@ -320,15 +324,22 @@ buffer_list_iter_next(struct buffer_list_iter *iter)
 
 struct buffer_list_iter *
 buffer_list_iter_addr_len_get(struct buffer_list_iter *iter,
-			      uint32_t max_len,
+			      uint32_t tuple_len_max,
 			      struct buffer_addr_len *ret_addr_len)
 {
 	uint32_t len = 0;
 
-	OSAL_ASSERT(max_len);
+	OSAL_ASSERT(tuple_len_max);
 	ret_addr_len->addr = 0;
 	ret_addr_len->len = 0;
-	while (iter) {
+
+	/*
+	 * Truncate list once total_len_max has been reached
+	 */
+	if (!iter->total_len_max)
+		iter = NULL;
+
+	while (iter && iter->total_len_max) {
 		if (iter->cur_len == 0) {
 			iter = buffer_list_iter_next(iter);
 			continue;
@@ -337,11 +348,13 @@ buffer_list_iter_addr_len_get(struct buffer_list_iter *iter,
 		if (len)
 			break;
 
-		len = iter->cur_len > max_len ? max_len : iter->cur_len;
+		len = min(iter->cur_len, tuple_len_max);
+		len = min(len, iter->total_len_max);
 		ret_addr_len->addr = iter->cur_addr;
 		ret_addr_len->len = len;
 		iter->cur_addr += len;
 		iter->cur_len -= len;
+                iter->total_len_max -= len;
 	}
 
 	return iter;

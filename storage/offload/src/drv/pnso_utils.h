@@ -23,6 +23,7 @@
 struct buffer_list_iter {
 	enum service_buf_list_type blist_type;
 	const struct pnso_flat_buffer *cur_list;
+	uint32_t total_len_max;
 	uint32_t cur_count;
 	uint32_t cur_len;
 	uint64_t cur_addr;
@@ -68,7 +69,8 @@ void pc_res_sgl_pdma_put(const struct per_core_resource *pcr,
 			 struct chain_sgl_pdma *sgl_pdma);
 struct buffer_list_iter *
 buffer_list_iter_init(struct buffer_list_iter *iter,
-		      const struct service_buf_list *svc_blist);
+		      const struct service_buf_list *svc_blist,
+		      uint32_t total_len_max);
 
 struct buffer_list_iter *
 buffer_list_iter_addr_len_get(struct buffer_list_iter *iter,

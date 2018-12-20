@@ -193,14 +193,26 @@ crypto_src_dst_aol_fill(struct service_info *svc_info)
 	 */
 	if (chn_service_is_starter(svc_info)) {
 		src_err = crypto_aol_packed_get(pcr, &svc_info->si_src_blist,
+						svc_info->si_src_blist.len,
 						&svc_info->si_src_aol);
+		/*
+		 * NOTE: earlier we had ensured dst list length is no less than
+		 * src list length. Now we enforce HW requirement that both
+		 * src and dst AOL must express the same total length.
+		 */
 		dst_err = crypto_aol_packed_get(pcr, &svc_info->si_dst_blist,
+						svc_info->si_src_blist.len,
 						&svc_info->si_dst_aol);
 	} else {
 		src_err = crypto_aol_vec_sparse_get(pcr, svc_info->si_block_size,
-				&svc_info->si_src_blist, &svc_info->si_src_aol);
+				&svc_info->si_src_blist, svc_info->si_src_blist.len,
+				&svc_info->si_src_aol);
+		/*
+		 * Same NOTE as above.
+		 */
 		dst_err = crypto_aol_vec_sparse_get(pcr, svc_info->si_block_size,
-				&svc_info->si_dst_blist, &svc_info->si_dst_aol);
+				&svc_info->si_dst_blist, svc_info->si_src_blist.len,
+				&svc_info->si_dst_aol);
 	}
 
 	if (src_err) {
