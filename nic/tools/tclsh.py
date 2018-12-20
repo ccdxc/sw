@@ -6,6 +6,7 @@ import sys
 import os
 import argparse
 import getpass
+import time
 
 def getPid():
     return os.getpid()
@@ -88,7 +89,7 @@ if __name__ == "__main__":
     fileName = getLogFileName()
     fout = open(fileName,'a')
     ch.logfile = fout
-    ch.expect('Password: ')
+    ch.expect('[Pp]assword.*')
     sendCmd(ch, 'docker', '#')
 
     # check if memtun is running on the host
@@ -125,7 +126,7 @@ if __name__ == "__main__":
     op = sendCmd(ch, 'ls -lrt /asic_tclsh/nic.tar.gz', '#')
     if ("No such file or directory" in op):
         logging.info("Copying nic.tar.gz\n")
-        sendCmd(ch, 'scp -o StrictHostKeyChecking=no root@1.0.0.1:/home/sanshanb/util/nic.tar.gz /', 'Password: ')
+        sendCmd(ch, 'scp -o StrictHostKeyChecking=no root@1.0.0.1:/home/sanshanb/util/nic.tar.gz /', '[Pp]assword.*')
         sendCmd(ch, 'docker', '#')
         sendCmd(ch, 'mkdir /asic_tclsh', '#')
         sendCmd(ch, 'cd /asic_tclsh', '#')
