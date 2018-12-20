@@ -289,8 +289,10 @@ int ionic_adminq_clean(struct adminq* adminq, int limit)
 		}
 
 		IONIC_NETDEV_INFO(adminq->lif->netdev, "admin comp:\n");
-		print_hex_dump_debug("comp ", DUMP_PREFIX_OFFSET, 16, 1,
+#ifdef IONIC_DEBUG
+		print_hex_dump_debug("admin comp ", DUMP_PREFIX_OFFSET, 16, 1,
 			     comp, sizeof(struct admin_comp), true);
+#endif
 
 		adminq->comp_index = (adminq->comp_index + 1) % adminq->num_descs;
 		adminq->tail_index = (adminq->tail_index + 1) % adminq->num_descs;
@@ -1415,9 +1417,11 @@ static int ionic_qcqs_alloc(struct lif *lif)
 	if (err)
 		return err;
 
-	err = ionic_notifyq_alloc(lif, 0, ionic_notifyq_descs, lif->kern_pid, &lif->notifyq);
-	if (err)
-		goto err_out_free_adminq;
+	if (lif->ionic->nnqs_per_lif) {
+		err = ionic_notifyq_alloc(lif, 0, ionic_notifyq_descs, lif->kern_pid, &lif->notifyq);
+		if (err)
+			goto err_out_free_adminq;
+	}
 
 	for (i = 0; i < lif->ntxqs; i++) {
 		err = ionic_txque_alloc(lif, i, ntxq_descs, lif->kern_pid,
@@ -1439,7 +1443,8 @@ err_out_free_txqs:
 	for (i = 0; i < lif->ntxqs; i++)
 		ionic_txq_free(lif, lif->txqs[i]);
 err_out_free_notifyq:
-	ionic_notifyq_free(lif, lif->notifyq);
+	if(lif->notifyq)
+		ionic_notifyq_free(lif, lif->notifyq);
 err_out_free_adminq:
 	ionic_adminq_free(lif, lif->adminq);
 
@@ -1767,6 +1772,9 @@ static void ionic_lif_notifyq_deinit(struct lif *lif)
 
 	struct notifyq *notifyq = lif->notifyq;
 
+	if (notifyq == NULL)
+		return;
+
 	ionic_intr_mask(&notifyq->intr, true);
 
 	if (notifyq->intr.vector)
@@ -1986,14 +1994,15 @@ static int ionic_notifyq_clean(struct notifyq* notifyq)
 	lif->last_eid = comp->event.eid;
 
 	IONIC_NETDEV_INFO(lif->netdev, "noytifyq event:\n");
-	print_hex_dump_debug("comp ", DUMP_PREFIX_OFFSET, 16, 1,
+#ifdef IONIC_DEBUG
+	print_hex_dump_debug("event ", DUMP_PREFIX_OFFSET, 16, 1,
 						comp, sizeof(union notifyq_comp), true);
+#endif
 
 	ionic_process_event(notifyq, comp);
 
 	notifyq->comp_index = (notifyq->comp_index + 1) % notifyq->num_descs;
 
-	IONIC_QUE_WARN(notifyq, "exit comp index: %d\n", notifyq->comp_index);
 	return 1;
 }
 
@@ -2571,10 +2580,12 @@ static int ionic_lif_init(struct lif *lif)
 	ionic_intr_mask(intr, false);
 
 	/* Enable notifyQ and arm it. */
-	err = ionic_lif_notifyq_init(lif, lif->notifyq);
-	if (err) {
-		IONIC_NETDEV_ERROR(lif->netdev, "notifyq init failed, error = %d\n", err);
-		goto err_out_adminq_deinit;
+	if (lif->notifyq) {
+		err = ionic_lif_notifyq_init(lif, lif->notifyq);
+		if (err) {
+			IONIC_NETDEV_ERROR(lif->netdev, "notifyq init failed, error = %d\n", err);
+			goto err_out_adminq_deinit;
+		}
 	}
 
 	/* Register for VLAN events */

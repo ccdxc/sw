@@ -42,7 +42,7 @@ struct rx_filter {
 
 struct rx_filters {
 #ifdef __FreeBSD__
-	struct mtx mtx;
+	struct sx sx;
 #else
 	spinlock_t lock;
 #endif
@@ -52,10 +52,10 @@ struct rx_filters {
 
 #ifdef __FreeBSD__
 #define IONIC_RX_FILTER_INIT(x) 					\
-	mtx_init(&(x)->mtx, "rx filter", NULL, MTX_DEF)
-#define IONIC_RX_FILTER_DESTROY(x)	mtx_destroy(&(x)->mtx)
-#define IONIC_RX_FILTER_LOCK(x)		mtx_lock(&(x)->mtx)
-#define IONIC_RX_FILTER_UNLOCK(x)	mtx_unlock(&(x)->mtx)
+	sx_init(&(x)->sx, "rx filter")//mtx_init(&(x)->mtx, "rx filter", NULL, MTX_DEF)
+#define IONIC_RX_FILTER_DESTROY(x)	sx_destroy(&(x)->sx)
+#define IONIC_RX_FILTER_LOCK(x)		sx_xlock(&(x)->sx)
+#define IONIC_RX_FILTER_UNLOCK(x)	sx_xunlock(&(x)->sx)
 #else
 #define IONIC_RX_FILTER_INIT(x) 	spin_lock_init(&(x)->lock);
 #define IONIC_RX_FILTER_DESTROY(x)
