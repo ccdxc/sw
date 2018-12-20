@@ -203,9 +203,6 @@ private:
     enum lif_state lif_state;
     // Coses
     uint8_t  coses; // {uint8_t CosA:4; uint8_t CosB:4;}
-    // Notify state
-    uint64_t eid;
-    uint16_t link_flap_count;
     // Stats
     uint64_t stats_mem_addr;
     uint64_t host_stats_mem_addr;

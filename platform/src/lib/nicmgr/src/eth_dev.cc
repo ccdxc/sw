@@ -502,6 +502,16 @@ Eth::LinkEventHandler(link_eventdata_t *evd)
         return;
     }
 
+    // Update the local notify block
+    ++notify_block->eid;
+    notify_block->link_status = evd->oper_status;
+    notify_block->link_error_bits = 0;
+    notify_block->phy_type = 0;
+    notify_block->link_speed = evd->port_speed;
+    notify_block->autoneg_status = 0;
+    ++notify_block->link_flap_count;
+    WRITE_MEM(notify_block_addr, (uint8_t *)notify_block, sizeof(struct notify_block), 0);
+
     if (host_notify_block_addr == 0) {
         NIC_LOG_WARN("lif-{}: Host notify block is not created!", hal_lif_info_.hw_lif_id);
         return;
@@ -509,16 +519,7 @@ Eth::LinkEventHandler(link_eventdata_t *evd)
 
     uint64_t addr, req_db_addr;
 
-    notify_block->eid = ++eid;
-    notify_block->link_status = evd->oper_status;
-    notify_block->link_error_bits = 0;
-    notify_block->phy_type = 0;
-    notify_block->link_speed = evd->port_speed;
-    notify_block->autoneg_status = 0;
-    notify_block->link_flap_count = ++link_flap_count;
-
-    WRITE_MEM(notify_block_addr, (uint8_t *)notify_block, sizeof(struct notify_block), 0);
-
+    // Update the host notify block
     struct edma_cmd_desc cmd = {
         .opcode = EDMA_OPCODE_LOCAL_TO_HOST,
         .len = sizeof(struct notify_block),
@@ -531,7 +532,6 @@ Eth::LinkEventHandler(link_eventdata_t *evd)
     NIC_LOG_INFO("lif-{}: notify_block_addr local {:#x} host {:#x}",
         hal_lif_info_.hw_lif_id, notify_block_addr, host_notify_block_addr);
 
-    // Update the notify block
     addr = edma_ring_base + edma_ring_head * sizeof(struct edma_cmd_desc);
     WRITE_MEM(addr, (uint8_t *)&cmd, sizeof(struct edma_cmd_desc), 0);
     req_db_addr =
@@ -544,7 +544,7 @@ Eth::LinkEventHandler(link_eventdata_t *evd)
                 (ETH_QTYPE_SVC << 3);
 
     NIC_LOG_INFO("lif-{}: Updating notify block, eid {} edma_idx {} edma_desc_addr {:#x}",
-        hal_lif_info_.hw_lif_id, eid, edma_ring_head, addr);
+        hal_lif_info_.hw_lif_id, notify_block->eid, edma_ring_head, addr);
     edma_ring_head = (edma_ring_head + 1) % ETH_EDMAQ_RING_SIZE;
     WRITE_DB64(req_db_addr, (ETH_EDMAQ_ID << 24) | edma_ring_head);
 
@@ -552,7 +552,7 @@ Eth::LinkEventHandler(link_eventdata_t *evd)
 
     // Send the link event notification
     struct link_change_event msg = {
-        .eid = eid,
+        .eid = notify_block->eid,
         .ecode = EVENT_OPCODE_LINK_CHANGE,
         .link_status = evd->oper_status,
         .link_error_bits = 0,
@@ -573,7 +573,7 @@ Eth::LinkEventHandler(link_eventdata_t *evd)
                 (ETH_QTYPE_SVC << 3);
 
     NIC_LOG_INFO("lif-{}: Sending notify event, eid {} notify_idx {} notify_desc_addr {:#x}",
-        hal_lif_info_.hw_lif_id, eid, notify_ring_head, addr);
+        hal_lif_info_.hw_lif_id, notify_block->eid, notify_ring_head, addr);
     notify_ring_head = (notify_ring_head + 1) % ETH_NOTIFYQ_RING_SIZE;
     WRITE_DB64(req_db_addr, (ETH_NOTIFYQ_ID << 24) | notify_ring_head);
 
@@ -1083,8 +1083,10 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
                  cmd->index,
                  hal_lif_info_.pushed_to_hal);
 
-    eid = 0;
-    link_flap_count = 0;
+    // Reset the notify block
+    MEM_SET(notify_block_addr, 0, sizeof(struct notify_block), 0);
+    notify_block->eid = 1;
+    notify_block->link_flap_count = 0;
 
     // Trigger Hal for Lif create if this is the first time
     if (!hal_lif_info_.pushed_to_hal) {
@@ -1465,6 +1467,41 @@ Eth::_CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
 
     comp->qid = cmd->index;
     comp->qtype = ETH_QTYPE_SVC;
+
+    if (host_notify_block_addr) {
+        // Update host notify block
+        uint64_t addr, req_db_addr;
+
+        struct edma_cmd_desc cmd = {
+            .opcode = EDMA_OPCODE_LOCAL_TO_HOST,
+            .len = sizeof(struct notify_block),
+            .src_lif = (uint16_t)hal_lif_info_.hw_lif_id,
+            .src_addr = notify_block_addr,
+            .dst_lif = (uint16_t)hal_lif_info_.hw_lif_id,
+            .dst_addr = host_notify_block_addr,
+        };
+
+        NIC_LOG_INFO("lif-{}: notify_block_addr local {:#x} host {:#x}",
+            hal_lif_info_.hw_lif_id, notify_block_addr, host_notify_block_addr);
+
+        addr = edma_ring_base + edma_ring_head * sizeof(struct edma_cmd_desc);
+        WRITE_MEM(addr, (uint8_t *)&cmd, sizeof(struct edma_cmd_desc), 0);
+        req_db_addr =
+    #ifdef __aarch64__
+                    CAP_ADDR_BASE_DB_WA_OFFSET +
+    #endif
+                    CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS +
+                    (0b1001 /* PI_UPD + SCHED_EVAL */ << 17) +
+                    (hal_lif_info_.hw_lif_id << 6) +
+                    (ETH_QTYPE_SVC << 3);
+
+        NIC_LOG_INFO("lif-{}: Updating notify block, eid {} edma_idx {} edma_desc_addr {:#x}",
+            hal_lif_info_.hw_lif_id, notify_block->eid, edma_ring_head, addr);
+        edma_ring_head = (edma_ring_head + 1) % ETH_EDMAQ_RING_SIZE;
+        WRITE_DB64(req_db_addr, (ETH_EDMAQ_ID << 24) | edma_ring_head);
+
+        // FIXME: Wait for completion
+    }
 
     NIC_LOG_INFO("lif-{}: qid {} qtype {}",
                  hal_lif_info_.hw_lif_id, comp->qid, comp->qtype);
