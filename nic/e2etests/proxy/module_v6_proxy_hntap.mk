@@ -5,7 +5,7 @@ MODULE_ARCH     = x86_64
 MODULE_PIPELINE = iris
 MODULE_SRCS     = ${MODULE_SRC_DIR}/proxy_hntap-v6.cc
 MODULE_SOLIBS   = hntapv6_lib e2etest_lib e2e_driver \
-                  trace print host_mem bm_allocator \
+                  trace host_mem bm_allocator \
                   logger model_client halproto mtrack \
                   sdkplatformutils shmmgr
 MODULE_LDLIBS   = zmq pthread z m rt Judy dl ev \

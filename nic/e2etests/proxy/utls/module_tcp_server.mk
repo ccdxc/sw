@@ -4,7 +4,7 @@ MODULE_TARGET   = nic_proxy_e2etest_tcp_server.bin
 MODULE_ARCH     = x86_64
 MODULE_PIPELINE = iris
 MODULE_SRCS     = ${MODULE_SRC_DIR}/tcp-server.cc
-MODULE_SOLIBS   = e2e_driver trace print host_mem bm_allocator \
+MODULE_SOLIBS   = e2e_driver trace host_mem bm_allocator \
                   logger model_client halproto mtrack \
                   sdkplatformutils shmmgr
 MODULE_LDLIBS   = zmq pthread z m rt Judy dl ev \
