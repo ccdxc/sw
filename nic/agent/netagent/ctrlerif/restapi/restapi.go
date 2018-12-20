@@ -111,6 +111,10 @@ func NewRestServer(agent types.CtrlerIntf, tsagent troubleshooting.CtrlerIntf, t
 	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/goroutine", pprof.Handler("goroutine").ServeHTTP)
 	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/threadcreate", pprof.Handler("threadcreate").ServeHTTP)
 
+	if tpAgent != nil { // telemetry IPFIX policy debug
+		router.Methods("GET").Subrouter().Handle("/debug/tpa", http.HandlerFunc(tpAgent.Debug))
+	}
+
 	log.Infof("Starting server at %s", listenURL)
 
 	// listener

@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"os"
-	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
@@ -15,8 +13,6 @@ import (
 	"time"
 
 	"github.com/pensando/sw/venice/globals"
-
-	"github.com/gorilla/mux"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
@@ -70,31 +66,12 @@ type policyDb struct {
 }
 
 // NewTpAgent creates new telemetry policy agent state
-func NewTpAgent(netAgent *agstate.Nagent, halTm halproto.TelemetryClient, dbgSock string) (*PolicyState, error) {
+func NewTpAgent(netAgent *agstate.Nagent, halTm halproto.TelemetryClient) (*PolicyState, error) {
 	state := &PolicyState{
 		store:    netAgent.Store,
 		netAgent: netAgent,
 		hal:      halTm,
 	}
-
-	// debug
-	if dbgSock == "" {
-		dbgSock = defaultDbgSock
-	}
-	router := mux.NewRouter()
-	router.HandleFunc("/debug", state.debug).Methods("GET")
-	// sudo curl --unix-socket /var/run/pensando/tpa.sock http://localhost/debug
-	os.Remove(dbgSock)
-	os.MkdirAll(filepath.Dir(dbgSock), 0644)
-	l, err := net.Listen("unix", dbgSock)
-	if err != nil {
-
-		log.Fatalf("failed to initialize debug, %s", err)
-	}
-
-	go func() {
-		log.Fatal(http.Serve(l, router))
-	}()
 
 	return state, nil
 }
@@ -1008,7 +985,8 @@ type debugInfo struct {
 	FlowRuleTable  []debugFlowRules
 }
 
-func (s *PolicyState) debug(w http.ResponseWriter, r *http.Request) {
+// Debug is the tpa debug entry point from REST
+func (s *PolicyState) Debug(w http.ResponseWriter, r *http.Request) {
 	dbgInfo := debugInfo{
 		Policy:         map[string]debugPolicy{},
 		CollectorTable: []debugCollector{},

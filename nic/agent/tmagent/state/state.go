@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"net/http"
 	"strconv"
 	"strings"
 	"sync"
@@ -619,4 +620,8 @@ func (s *PolicyState) GetFlowExportPolicy(tx context.Context, p *tpmprotos.FlowE
 // ListFlowExportPolicy is the LIST all entry point
 func (s *PolicyState) ListFlowExportPolicy(tx context.Context) ([]*tpmprotos.FlowExportPolicy, error) {
 	return []*tpmprotos.FlowExportPolicy{}, nil
+}
+
+// Debug is the debug entry point from REST
+func (s *PolicyState) Debug(w http.ResponseWriter, r *http.Request) {
 }

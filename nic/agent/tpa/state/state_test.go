@@ -27,7 +27,6 @@ import (
 )
 
 const emDbPath = "/tmp/naples-tpagent.db"
-const dbgSock = "/tmp/test_tpa_sock"
 
 func cleanup(t *testing.T, ag *PolicyState) {
 	l, err := ag.store.List(&types.FlowExportPolicyTable{
@@ -65,7 +64,7 @@ func TestValidateMeta(t *testing.T) {
 		Store:       ds,
 	}
 
-	ag, err := NewTpAgent(na, mockdatapath.MockHal(), dbgSock)
+	ag, err := NewTpAgent(na, mockdatapath.MockHal())
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, ag)
@@ -93,7 +92,7 @@ func TestStoreOps(t *testing.T) {
 		Store:       ds,
 	}
 
-	ag, err := NewTpAgent(na, mockdatapath.MockHal(), dbgSock)
+	ag, err := NewTpAgent(na, mockdatapath.MockHal())
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, ag)
@@ -193,7 +192,7 @@ func TestFindNumExports(t *testing.T) {
 		}
 	}
 
-	s, err := NewTpAgent(na, mockdatapath.MockHal(), dbgSock)
+	s, err := NewTpAgent(na, mockdatapath.MockHal())
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 	defer cleanup(t, s)
 
@@ -300,7 +299,7 @@ func TestValidatePolicy(t *testing.T) {
 		},
 	}
 
-	ag, err := NewTpAgent(na, mockdatapath.MockHal(), dbgSock)
+	ag, err := NewTpAgent(na, mockdatapath.MockHal())
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 	defer cleanup(t, ag)
 
@@ -494,7 +493,7 @@ func TestNewTpAgent(t *testing.T) {
 		Store:       ds,
 	}
 
-	ag, err := NewTpAgent(na, mockdatapath.MockHal(), dbgSock)
+	ag, err := NewTpAgent(na, mockdatapath.MockHal())
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, ag)
@@ -590,7 +589,7 @@ func TestCreateFlowExportPolicy(t *testing.T) {
 		}
 	}
 
-	s, err := NewTpAgent(na, mockdatapath.MockHal(), dbgSock)
+	s, err := NewTpAgent(na, mockdatapath.MockHal())
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 	defer cleanup(t, s)
 
@@ -758,7 +757,7 @@ func TestCreateFlowExportPolicyWithMock(t *testing.T) {
 		}
 	}
 
-	s, err := NewTpAgent(na, halMock, dbgSock)
+	s, err := NewTpAgent(na, halMock)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, s)
@@ -861,7 +860,7 @@ func TestNetagentInfo(t *testing.T) {
 		Store:       ds,
 	}
 
-	s, err := NewTpAgent(na, halMock, dbgSock)
+	s, err := NewTpAgent(na, halMock)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, s)
@@ -1006,7 +1005,7 @@ func TestTpaDebug(t *testing.T) {
 		Store:       ds,
 	}
 
-	s, err := NewTpAgent(na, halMock, dbgSock)
+	s, err := NewTpAgent(na, halMock)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, s)
@@ -1133,7 +1132,7 @@ func TestTpaDebug(t *testing.T) {
 	tu.AssertOk(t, err, "failed to create policy")
 
 	resp := httptest.NewRecorder()
-	s.debug(resp, nil)
+	s.Debug(resp, nil)
 	b, err := ioutil.ReadAll(resp.Body)
 	tu.AssertOk(t, err, "failed to read debug")
 
@@ -1208,7 +1207,7 @@ func TestPolicyOps(t *testing.T) {
 		}
 	}
 
-	s, err := NewTpAgent(na, halMock, dbgSock)
+	s, err := NewTpAgent(na, halMock)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, s)

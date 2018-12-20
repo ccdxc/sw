@@ -4,8 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strconv"
-	"strings"
+	"net/http"
 
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 
@@ -28,6 +27,7 @@ type CtrlerIntf interface {
 	ListFwLogPolicy(tx context.Context) ([]*tpmprotos.FwlogPolicy, error)
 	UpdateFwLogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error
 	DeleteFwLogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error
+	Debug(w http.ResponseWriter, r *http.Request)
 }
 
 // CollectorKey is the key to collector hash table
