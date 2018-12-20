@@ -987,6 +987,10 @@ Eth::_CmdReset(void *req, void *req_data, void *resp, void *resp_data)
             return (DEVCMD_ERROR);
         }
         eth_lif->Reset();
+        // Free up filter ids
+        FreeUpMacFilters();
+        FreeUpVlanFilters();
+        FreeUpMacVlanFilters();
     }
 
     // RSS configuration
@@ -2173,6 +2177,63 @@ Eth::GenerateQstateInfoJson(pt::ptree &lifs)
     qstates.clear();
     lif.clear();
     return 0;
+}
+
+void
+Eth::FreeUpMacFilters()
+{
+    uint64_t filter_id;
+    indexer::status rs;
+
+    for (auto it = mac_addrs.cbegin(); it != mac_addrs.cend();) {
+        filter_id = it->first;
+        rs = fltr_allocator->free(filter_id);
+        if (rs != indexer::SUCCESS) {
+            HAL_TRACE_ERR("Failed to free filter_id: {}, err: {}",
+                          filter_id, rs);
+            // return (DEVCMD_ERROR);
+        }
+        NIC_LOG_DEBUG("Freed filter_id: {}", filter_id);
+        it = mac_addrs.erase(it);
+    }
+}
+
+void
+Eth::FreeUpVlanFilters()
+{
+    uint64_t filter_id;
+    indexer::status rs;
+
+    for (auto it = vlans.cbegin(); it != vlans.cend();) {
+        filter_id = it->first;
+        rs = fltr_allocator->free(filter_id);
+        if (rs != indexer::SUCCESS) {
+            HAL_TRACE_ERR("Failed to free filter_id: {}, err: {}",
+                          filter_id, rs);
+            // return (DEVCMD_ERROR);
+        }
+        NIC_LOG_DEBUG("Freed filter_id: {}", filter_id);
+        it = vlans.erase(it);
+    }
+}
+
+void
+Eth::FreeUpMacVlanFilters()
+{
+    uint64_t filter_id;
+    indexer::status rs;
+
+    for (auto it = mac_vlans.cbegin(); it != mac_vlans.cend();) {
+        filter_id = it->first;
+        rs = fltr_allocator->free(filter_id);
+        if (rs != indexer::SUCCESS) {
+            HAL_TRACE_ERR("Failed to free filter_id: {}, err: {}",
+                          filter_id, rs);
+            // return (DEVCMD_ERROR);
+        }
+        NIC_LOG_DEBUG("Freed filter_id: {}", filter_id);
+        it = mac_vlans.erase(it);
+    }
 }
 
 types::LifType
