@@ -455,7 +455,8 @@ api_engine::activate_epoch_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
          * programming and clear the dirty flag on the object
          */
         SDK_ASSERT(obj_ctxt->cloned_obj == NULL);
-        ret = api_obj->activate_epoch(API_OP_CREATE, obj_ctxt);
+        ret = api_obj->activate_epoch(batch_ctxt_.epoch, API_OP_CREATE,
+                                      obj_ctxt);
         SDK_ASSERT(ret == sdk::SDK_RET_OK);
         del_from_dirty_list_(api_obj);
         break;
@@ -471,7 +472,8 @@ api_engine::activate_epoch_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
          * (note that s/w can't access this obj anymore from this point
          *  onwards by doing lookups)
          */
-        ret = api_obj->activate_epoch(API_OP_DELETE, obj_ctxt);
+        ret = api_obj->activate_epoch(batch_ctxt_.epoch, API_OP_DELETE,
+                                      obj_ctxt);
         SDK_ASSERT(ret == sdk::SDK_RET_OK);
         api_obj->del_from_db();
         api_obj->delay_delete();
@@ -490,7 +492,8 @@ api_engine::activate_epoch_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
          */
         ret = obj_ctxt->cloned_obj->update_db(api_obj, obj_ctxt);
         SDK_ASSERT(ret == sdk::SDK_RET_OK);
-        ret = obj_ctxt->cloned_obj->activate_epoch(API_OP_UPDATE, obj_ctxt);
+        ret = obj_ctxt->cloned_obj->activate_epoch(batch_ctxt_.epoch,
+                                                   API_OP_UPDATE, obj_ctxt);
         SDK_ASSERT(ret == sdk::SDK_RET_OK);
         del_from_dirty_list_(api_obj);
         /**

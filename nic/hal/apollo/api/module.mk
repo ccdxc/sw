@@ -3,7 +3,8 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libociapi.so
 MODULE_PIPELINE = apollo
-MODULE_SRCS     = ${MODULE_SRC_DIR}/vcn.cc \
+MODULE_SRCS     = ${MODULE_SRC_DIR}/switchport.cc \
+                  ${MODULE_SRC_DIR}/vcn.cc \
                   ${MODULE_SRC_DIR}/subnet.cc \
                   ${MODULE_SRC_DIR}/vnic.cc \
                   ${MODULE_SRC_DIR}/batch.cc \

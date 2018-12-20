@@ -12,6 +12,7 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/hal/apollo/framework/obj_base.hpp"
 #include "nic/hal/apollo/framework/api.hpp"
+#include "nic/hal/apollo/include/api/oci.hpp"
 
 namespace api {
 
@@ -130,7 +131,8 @@ public:
      * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t activate_epoch(api_op_t api_op, obj_ctxt_t *obj_ctxt) {
+    virtual sdk_ret_t activate_epoch(oci_epoch_t epoch, api_op_t api_op,
+                                     obj_ctxt_t *obj_ctxt) {
         return sdk::SDK_RET_INVALID_OP;
     }
 

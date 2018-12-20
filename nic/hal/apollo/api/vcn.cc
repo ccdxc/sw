@@ -7,7 +7,6 @@
  */
 
 #include "nic/sdk/include/sdk/base.hpp"
-#include "nic/sdk/include/sdk/timestamp.hpp"
 #include "nic/hal/apollo/core/mem.hpp"
 #include "nic/hal/apollo/api/vcn.hpp"
 #include "nic/hal/apollo/core/oci_state.hpp"
@@ -202,13 +201,16 @@ vcn_entry::update_hw(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 }
 
 /**
- * @brief    activate the epoch in the dataplane
+ * @brief    activate the epoch in the dataplane by programming stage 0
+ *           tables, if any
+ * @param[in] epoch       epoch being activated
  * @param[in] api_op      api operation
  * @param[in] obj_ctxt    transient state associated with this API
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-vcn_entry::activate_epoch(api_op_t api_op, obj_ctxt_t *obj_ctxt) {
+vcn_entry::activate_epoch(oci_epoch_t epoch, api_op_t api_op,
+                          obj_ctxt_t *obj_ctxt) {
     // there is no h/w programming for VCN config, so nothing to activate
     return sdk::SDK_RET_OK;
 }

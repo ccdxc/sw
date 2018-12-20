@@ -117,15 +117,19 @@ class subnet_entry : public api_base {
      * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t update_hw(api_base *orig_obj, obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t update_hw(api_base *orig_obj,
+                                obj_ctxt_t *obj_ctxt) override;
 
     /**
-     * @brief    activate the epoch in the dataplane
+     * @brief    activate the epoch in the dataplane by programming stage 0
+     *           tables, if any
+     * @param[in] epoch       epoch being activated
      * @param[in] api_op      api operation
      * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t activate_epoch(api_op_t api_op, obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t activate_epoch(oci_epoch_t epoch, api_op_t api_op,
+                                     obj_ctxt_t *obj_ctxt) override;
 
     /**
      * @brief     add given subnet to the database
@@ -214,6 +218,13 @@ class subnet_entry : public api_base {
 
         return false;
     }
+
+    mac_addr_t& vr_mac(void) { return vr_mac_; }
+
+    // TODO: impl APIs
+    uint16_t hw_id(void) const { return hw_id_; }
+    mem_addr_t lpm_root(void) const { return lpm_base_addr_; }
+    mem_addr_t policy_tree_root(void) const { return policy_base_addr_; }
 
 private:
     /**< @brief    constructor */

@@ -3,7 +3,7 @@
  *
  * @file    oci_vcn.hpp
  *
- * @brief   This module defines OCI VCN interface
+ * @brief   This module defines vcn interface
  */
 
 #if !defined (__OCI_VCN_HPP__)

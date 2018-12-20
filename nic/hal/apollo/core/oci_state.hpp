@@ -10,6 +10,7 @@
 #define __OCI_STATE_HPP__
 
 #include "nic/sdk/lib/slab/slab.hpp"
+#include "nic/hal/apollo/api/switchport.hpp"
 #include "nic/hal/apollo/api/vcn.hpp"
 #include "nic/hal/apollo/api/subnet.hpp"
 #include "nic/hal/apollo/api/vnic.hpp"
@@ -25,16 +26,24 @@ class oci_state {
 public:
     oci_state();
     ~oci_state();
+    switchport_state *switchport_db(void) { return &switchport_db_; }
     vcn_state *vcn_db(void) { return &vcn_db_; }
     subnet_state *subnet_db(void) { return &subnet_db_; }
     vnic_state *vnic_db(void) { return &vnic_db_ ; }
 
 private:
-    vcn_state       vcn_db_;
-    subnet_state    subnet_db_;
-    vnic_state      vnic_db_;
+    switchport_state    switchport_db_;
+    vcn_state           vcn_db_;
+    subnet_state        subnet_db_;
+    vnic_state          vnic_db_;
 };
 extern oci_state g_oci_state;
+
+static inline switchport_state *
+switchport_db (void)
+{
+    return g_oci_state.switchport_db();
+}
 
 static inline vcn_state *
 vcn_db (void)
