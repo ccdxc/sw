@@ -92,16 +92,19 @@ def collect(ch, args):
 
     cmdlist = []
     if (args.rxdma == '1'):
-        cmdlist.append('rxdma,*,*,table_key_enable=1,instr_enable=1,trace_size=8192,wrap=1')
+        cmdlist.append('rxdma,*,*,table_key_enable=1,instr_enable=1,trace_size=4096,wrap=1')
 
     if (args.txdma == '1'):
-        cmdlist.append('txdma,*,*,table_key_enable=1,instr_enable=1,trace_size=8192,wrap=1')
+        cmdlist.append('txdma,*,*,table_key_enable=1,instr_enable=1,trace_size=4096,wrap=1')
 
     if (args.p4ig == '1'):
-        cmdlist.append('p4ig,*,*,table_key_enable=1,instr_enable=1,trace_size=8192,wrap=1')
+        cmdlist.append('p4ig,*,*,table_key_enable=1,instr_enable=1,trace_size=4096,wrap=1')
 
     if (args.p4eg == '1'):
-        cmdlist.append('p4eg,*,*,table_key_enable=1,instr_enable=1,trace_size=8192,wrap=1')
+        cmdlist.append('p4eg,*,*,table_key_enable=1,instr_enable=1,trace_size=4096,wrap=1')
+
+    if (args.all == '1'):
+        cmdlist.append('*,*,*,table_key_enable=1,instr_enable=1,trace_size=4096,wrap=1')
 
     for cmd in cmdlist:
         cmd = 'echo ' + cmd + ' >> /captrace.cfg'
@@ -149,6 +152,7 @@ if __name__ == "__main__":
     parser.add_argument('--txdma', help='enable captrace for TxDMA')
     parser.add_argument('--p4ig', help='enable captrace for P4 ingress')
     parser.add_argument('--p4eg', help='enable captrace for P4 egress')
+    parser.add_argument('--all', help='enable captrace for all pipelines')
 
     args=parser.parse_args()
 

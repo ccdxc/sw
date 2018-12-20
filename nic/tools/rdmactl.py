@@ -24,6 +24,7 @@ DUMP_TYPE_EQ=2
 DUMP_TYPE_PT=3
 DUMP_TYPE_KT=4
 DUMP_TYPE_AQ=5
+DUMP_TYPE_LIF=6
 
 DBG_WR_CTRL='dbg_wr_ctrl'
 DBG_WR_DATA='dbg_wr_data'
@@ -657,6 +658,60 @@ class RdmaPageTableEntry(Packet):
         LELongField("pa_7", 0),
     ]
 
+class LifStats(Packet):
+    name = "LifStats"
+    fields_desc = [
+        XBitField("rsvd_eth_reg", 0, 3072),
+        XLELongField("tx_rdma_ucast_bytes", 0),
+        XLELongField("tx_rdma_ucast_packets", 0),
+        XLELongField("tx_rdma_mcast_bytes", 0),
+        XLELongField("tx_rdma_mcast_packets", 0),
+        XLELongField("tx_rdma_cnp_packets", 0),
+        XBitField("rsvd_rdma_tx", 0, 192),
+
+        XLELongField("rx_rdma_ucast_bytes", 0),
+        XLELongField("rx_rdma_ucast_packets", 0),
+        XLELongField("rx_rdma_mcast_bytes", 0),
+        XLELongField("rx_rdma_mcast_packets", 0),
+        XLELongField("rx_rdma_cnp_packets", 0),
+        XLELongField("rx_rdma_ecn_packets", 0),
+        XBitField("rsvd_rdma_rx", 0, 128),
+
+        XBitField("rsvd_eth_dbg", 0, 1024),
+
+        XLELongField("rdma_req_rx_pkt_seq_err", 0),
+        XLELongField("rdma_req_rx_rnr_retry_err", 0),
+        XLELongField("rdma_req_rx_remote_access_err", 0),
+        XLELongField("rdma_req_rx_remote_inv_req_err", 0),
+        XLELongField("rdma_req_rx_remote_oper_err", 0),
+        XLELongField("rdma_req_rx_implied_nak_seq_err", 0),
+        XLELongField("rdma_req_rx_cqe_err", 0),
+        XLELongField("rdma_req_rx_cqe_flush_err", 0),
+
+        XLELongField("rdma_req_tx_local_access_err", 0),
+        XLELongField("rdma_req_tx_local_oper_err", 0),
+        XLELongField("rdma_req_tx_memory_mgmt_err", 0),
+        XBitField("rsvd_rdma_dbg_req", 0, 320),
+
+        XLELongField("rdma_resp_rx_dup_requests", 0),
+        XLELongField("rdma_resp_rx_out_of_buffer", 0),
+        XLELongField("rdma_resp_rx_out_of_seq_pkts", 0),
+        XLELongField("rdma_resp_rx_cqe_err", 0),
+        XLELongField("rdma_resp_rx_cqe_flush_er", 0),
+        XLELongField("rdma_resp_rx_local_len_err", 0),
+        XLELongField("rdma_resp_rx_inv_request_err", 0),
+        XLELongField("rdma_resp_rx_local_qp_oper_err", 0),
+
+        XLELongField("rdma_resp_rx_out_of_atomic_resource", 0),
+        XLELongField("rdma_resp_tx_pkt_seq_err", 0),
+        XLELongField("rdma_resp_tx_remote_inv_req_err", 0),
+        XLELongField("rdma_resp_tx_remote_access_err", 0),
+        XLELongField("rdma_resp_tx_remote_oper_err", 0),
+        XLELongField("rdma_resp_tx_rnr_retry_err", 0),
+        XBitField("rsvd_rdma_dbg_resp", 0, 128),
+    ]
+
+
 def exec_dump_cmd(tbl_type, tbl_index, start_offset, num_bytes):
     cmd_str = CTRL_FMT.format(
             lif = args.lif, pci = args.pcie_id,
@@ -716,6 +771,7 @@ grp.add_argument('--resp_tx_stats', help='prints resp_tx stats given qid', type=
 grp.add_argument('--resp_rx_stats', help='prints resp_rx stats given qid', type=int, metavar='qid')
 grp.add_argument('--kt_entry', help='prints key table entry given key id', type=int, metavar='key_id')
 grp.add_argument('--pt_entry', help='print page table entry given pt offset', type=int, metavar='pt_offset')
+grp.add_argument('--lif_stats', help='prints rdma LIF statistics', type=int, metavar='lif-id')
 
 args = parser.parse_args()
 
@@ -802,3 +858,7 @@ elif args.pt_entry is not None:
     bin_str = exec_dump_cmd(DUMP_TYPE_PT, args.pt_entry, 0, 64)
     pt_entry = RdmaPageTableEntry(bin_str)
     pt_entry.show()
+elif args.lif_stats is not None:
+    bin_str = exec_dump_cmd(DUMP_TYPE_LIF, args.lif_stats, 0, 1024)
+    lif_stats = LifStats(bin_str)
+    lif_stats.show()

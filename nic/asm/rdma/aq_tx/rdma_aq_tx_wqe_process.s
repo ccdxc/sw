@@ -33,10 +33,12 @@ struct aq_tx_s1_t0_k k;
 %%
 
     .param      tx_dummy
+    .param      lif_stats_base
     .param      rdma_cq_tx_stage0
     .param      rdma_req_tx_stage0    
     .param      rdma_aq_tx_feedback_process
     .param      rdma_aq_tx_modify_qp_2_process
+
 .align
 rdma_aq_tx_wqe_process:
 
@@ -526,7 +528,9 @@ stats_dump:
     .brcase     AQ_STATS_DUMP_TYPE_AQ
         b           aq_dump
         nop
-    .brcase     6
+    .brcase     AQ_STATS_DUMP_TYPE_LIF
+        b           lif_dump
+        nop
     .brcase     7
     .brcase     8
     .brcase     9
@@ -549,6 +553,24 @@ aq_dump:
 
     b           prepare_feedback
     nop
+
+lif_dump:
+
+#ifndef GFT
+
+    addi    r2, r0, lif_stats_base[31:0]
+    add     r2, r2, K_GLOBAL_LIF, LIF_STATS_SIZE_SHIFT
+
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_1)
+    DMA_HBM_MEM2MEM_SRC_SETUP(r6, (1 << LIF_STATS_SIZE_SHIFT), r2)
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_2)
+    DMA_HOST_MEM2MEM_DST_SETUP(r6, (1 << LIF_STATS_SIZE_SHIFT), d.{stats.dma_addr}.dx)
+
+#endif
+
+    b           prepare_feedback
+    nop
+
 
 pt_dump:
 

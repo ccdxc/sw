@@ -3,6 +3,7 @@ from ctypes import *
 from pprint import pformat
 
 
+#libcapisa = cdll.LoadLibrary('asic/capri/model/capsim-master/gen/x86_64/lib/libcapisa.so')
 libcapisa = cdll.LoadLibrary('/home/neel/tools/captrace/libcapisa.so')
 libcapisa.c_libcapisa_init()
 
@@ -106,14 +107,13 @@ class TraceFileHeader(LittleEndianStructure):
         ("phv_debug", c_uint8),
         ("phv_error", c_uint8),
         ("watch_pc", c_uint64),
-        ("base_addr", c_uint64),
+        ("trace_addr", c_uint64),
         ("table_key", c_uint8),
         ("instructions", c_uint8),
         ("wrap", c_uint8),
         ("reset", c_uint8),
-        ("buf_size", c_uint32),
-        ("mpu_trace_size", c_uint32),
-        ("__pad", c_int8 * 23)
+        ("trace_size", c_uint32),
+        ("__pad", c_int8 * 27)
     ]
 
 
@@ -130,12 +130,12 @@ def decode_mpu_trace_file(bytez):
         # print(ctypes_pformat(fhdr))
         s += sizeof(TraceFileHeader)
 
-        assert(fhdr.mpu_trace_size != 0)
+        assert(fhdr.trace_size != 0)
         # Read Trace
-        for thdr, key, data, instructions in decode_mpu_trace_kd(bytez[s: s + fhdr.mpu_trace_size]):
+        for thdr, key, data, instructions in decode_mpu_trace_kd(bytez[s: s + (fhdr.trace_size * 64)]):
             yield fhdr, thdr, key, data, instructions
 
-        s += fhdr.mpu_trace_size
+        s += (fhdr.trace_size * 64)
 
 
 def decode_mpu_trace_kd(bytez):
