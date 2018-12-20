@@ -53,6 +53,7 @@ P4_TARGETIDS        :=
 ASM_TARGETIDS       :=
 PROTO_TARGETIDS     :=
 SVCGEN_TARGETIDS    :=
+MEMRGNS_TARGETIDS   :=
 MOCKGEN_TARGETIDS   :=
 GOIMPORTS_TARGETIDS :=
 EXPORT_TARGETIDS    :=
@@ -168,6 +169,11 @@ define INCLUDE_MODULEMK
     else ifeq "$$(suffix $${MODULE_TARGET})" ".svcgen"
         $${TGID}_RECIPE_TYPE        := SVCGEN
         SVCGEN_TARGETIDS            += $${TGID}
+    else ifeq "$$(suffix $${MODULE_TARGET})" ".memrgns"
+        $${TGID}_RECIPE_TYPE        := MEMRGNS
+        $${TGID}_BASECMD            := $${MODULE_BASECMD}
+        $${TGID}_ARGS               := $${MODULE_ARGS}
+        MEMRGNS_TARGETIDS           += $${TGID}
     else ifeq "$$(suffix $${MODULE_TARGET})" ".mockgen"
         $${TGID}_RECIPE_TYPE        := MOCKGEN
         $${TGID}_MOCKGEN_OPTS       := $${MODULE_MOCKGEN_OPTS}
@@ -299,6 +305,7 @@ $(foreach modpath,${MODULE_PATHS}, \
     $(eval $(call INCLUDE_MODULEMK,${modpath})))
 
 TARGETIDS := $(strip ${CXX_TARGETIDS} ${P4_TARGETIDS} \
+                     ${MEMRGNS_TARGETIDS} \
                      ${ASM_TARGETIDS} ${PROTO_TARGETIDS} \
                      ${SVCGEN_TARGETIDS} ${MOCKGEN_TARGETIDS} \
                      ${GOIMPORTS_TARGETIDS} ${EXPORT_TARGETIDS} \

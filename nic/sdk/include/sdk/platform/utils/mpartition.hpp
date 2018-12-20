@@ -11,6 +11,7 @@
 #include "include/sdk/base.hpp"
 #include "include/sdk/types.hpp"
 #include "include/sdk/shmmgr.hpp"
+#include "include/sdk/platform/utils/mcache_pipe.hpp"
 
 namespace sdk {
 namespace platform {
@@ -20,52 +21,28 @@ namespace utils {
 
 #define INVALID_MEM_ADDRESS     0xFFFFFFFFFFFFFFFF
 
-#define JKEY_REGIONS            "regions"
-#define JKEY_REGION_NAME        "name"
-#define JKEY_SIZE_KB            "size_kb"
-#define JKEY_CACHE_PIPE         "cache"
-#define JKEY_RESET_REGION       "reset"
-#define JKEY_START_OFF          "start_offset"
-
 /**
- * @brief Memory mpartition cache pipes
- */
-typedef enum mpartition_cache_pipe_s {
-    // Note: Values are used in bitmap
-    MPARTITION_CACHE_PIPE_NONE           = 0,    /**< None */
-    MPARTITION_CACHE_PIPE_P4IG           = 1,    /**< P4 ingress */
-    MPARTITION_CACHE_PIPE_P4EG           = 2,    /**< P4 egress */
-    MPARTITION_CACHE_PIPE_P4IG_P4EG      = 3,    /**< P4 ingress and egress */
-    MPARTITION_CACHE_PIPE_P4PLUS_TXDMA   = 4,    /**< P4plus txdma */
-    MPARTITION_CACHE_PIPE_P4PLUS_RXDMA   = 8,    /**< P4plus rxdma */
-    MPARTITION_CACHE_PIPE_P4PLUS_PCIE_DB = 16,   /**< P4plus pcie */
-    MPARTITION_CACHE_PIPE_P4PLUS_ALL     = 28,   /**< TxDMA + RxDMA + PCIE + DB blocks */
-} mpartition_cache_pipe_t;
-
-/**
- * @brief Memory mpartition region 
+ * @brief Memory mpartition region
  */
 typedef struct mpartition_region_s {
     char                    mem_reg_name[MEM_REG_NAME_MAX_LEN];   /**< Name */
     uint32_t                size_kb;        /**< Size */
     mem_addr_t              start_offset;   /**< Start address offset */
-    mpartition_cache_pipe_t cache_pipe;     /**< Cached pipe */
+    cache_pipe_t            cache_pipe;     /**< Cached pipe */
     bool                    reset;          /**< True to bzero this region during init */
 } mpartition_region_t;
 
 class mpartition {
 public:
-    /** 
+    /**
      * @brief Factory method
      *
-     * @param[in] mpartition_json_file Location of the memory partition json
      * @param[in] base_addr Base address of the memory
+     * @param[in] mmgr Pointer to the memory manager - optional
      *
-     * @return #mpartition pointer on success, NULL on error 
+     * @return #mpartition pointer on success, NULL on error
      */
-    static mpartition *factory(const char *mpartition_json_file, 
-                               mem_addr_t base_addr,
-                               shmmgr *mmgr = NULL);
+    static mpartition *factory(mem_addr_t base_addr, shmmgr *mmgr = NULL);
     static void destroy(mpartition *mpartition);
 
     /**
@@ -152,9 +129,52 @@ private:
 private:
     mpartition() {};
     ~mpartition();
-    sdk_ret_t init(const char *mpartition_json_file, mem_addr_t base_addr,
-                   shmmgr *mmgr = NULL);
+    sdk_ret_t init(mem_addr_t base_addr, shmmgr *mmgr = NULL);
 };
+
+// Functions to check the cache_pipe type
+static inline bool
+is_region_cache_pipe_none(mpartition_region_t *reg)
+{
+    return reg->cache_pipe == cache_pipe_t::MEM_REGION_CACHE_PIPE_NONE;
+}
+
+static inline bool
+is_region_cache_pipe_p4_ig(mpartition_region_t *reg)
+{
+    return reg->cache_pipe & cache_pipe_t::MEM_REGION_CACHE_PIPE_P4IG;
+}
+
+static inline bool
+is_region_cache_pipe_p4_eg(mpartition_region_t *reg)
+{
+    return reg->cache_pipe & cache_pipe_t::MEM_REGION_CACHE_PIPE_P4EG;
+}
+
+static inline bool
+is_region_cache_pipe_p4plus_txdma(mpartition_region_t *reg)
+{
+    return reg->cache_pipe & cache_pipe_t::MEM_REGION_CACHE_PIPE_P4PLUS_TXDMA;
+}
+
+static inline bool
+is_region_cache_pipe_p4plus_rxdma(mpartition_region_t *reg)
+{
+    return reg->cache_pipe & cache_pipe_t::MEM_REGION_CACHE_PIPE_P4PLUS_RXDMA;
+}
+
+static inline bool
+is_region_cache_pipe_p4plus_pciedb(mpartition_region_t *reg)
+{
+    return reg->cache_pipe & cache_pipe_t::MEM_REGION_CACHE_PIPE_P4PLUS_PCIE_DB;
+}
+
+static inline bool
+is_region_cache_pipe_p4plus_all(mpartition_region_t *reg)
+{
+    return (reg->cache_pipe & cache_pipe_t::MEM_REGION_CACHE_PIPE_P4PLUS_ALL) ==
+           cache_pipe_t::MEM_REGION_CACHE_PIPE_P4PLUS_ALL;
+}
 
 }   // namespace utils
 }   // namespace platform

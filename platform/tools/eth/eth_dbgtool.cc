@@ -309,7 +309,7 @@ void
 eth_stats(uint16_t lif)
 {
     sdk::platform::utils::mpartition *mp_ =
-        sdk::platform::utils::mpartition::factory("/nic/conf/iris/hbm_mem.json", CAPRI_HBM_BASE);
+        sdk::platform::utils::mpartition::factory(CAPRI_HBM_BASE);
     assert(mp_);
 
     uint64_t addr = mp_->start_addr("lif_stats") + (lif << 10);

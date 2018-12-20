@@ -110,12 +110,12 @@ int32_t LIFManager::WriteQStateImpl(
     reg = mp_->region_by_address(q_addr);
     HAL_ASSERT(reg != NULL);
 
-    if (reg->cache_pipe == sdk::platform::utils::MPARTITION_CACHE_PIPE_P4PLUS_RXDMA) {
-        action = P4PLUS_CACHE_INVALIDATE_RXDMA;
-    } else if (reg->cache_pipe == sdk::platform::utils::MPARTITION_CACHE_PIPE_P4PLUS_TXDMA) {
-        action = P4PLUS_CACHE_INVALIDATE_TXDMA;
-    } else if (reg->cache_pipe == sdk::platform::utils::MPARTITION_CACHE_PIPE_P4PLUS_ALL) {
+    if (is_region_cache_pipe_p4plus_all(reg)) {
         action = P4PLUS_CACHE_INVALIDATE_BOTH;
+    } else if (is_region_cache_pipe_p4plus_rxdma(reg)) {
+        action = P4PLUS_CACHE_INVALIDATE_RXDMA;
+    } else if (is_region_cache_pipe_p4plus_txdma(reg)) {
+        action = P4PLUS_CACHE_INVALIDATE_TXDMA;
     }
 
     if (action != P4PLUS_CACHE_ACTION_NONE) {

@@ -1,6 +1,11 @@
 {
     "regions": [
         {
+            "_comment" : "memtun address is hardcoded to HBM base + 64MB(above cc regions)",
+             "name": "memtun",
+             "size_kb": 256
+        },
+        {
             "name": "lif2qstate_map",
             "size_kb": 131072,
             "cache": "p4plus-all"
@@ -166,6 +171,14 @@
         {
             "name": "nicmgrd",
             "size_kb": 65536
+        },
+        {
+            "name": "pciemgr",
+            "size_kb" : 32768
+        },
+        {
+            "name": "devcmd",
+            "size_kb": 32768
         }
     ]
 }

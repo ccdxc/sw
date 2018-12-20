@@ -11,7 +11,7 @@
 
 #include "nic/include/mpu_trace.hpp"
 #include "nic/sdk/include/sdk/pal.hpp"
-#include "platform/include/common/memregion.h"
+#include "gen/platform/mem_regions.hpp"
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -20,8 +20,9 @@ using grpc::Status;
 using debug::Debug;
 
 
-#define TRACE_BASE          roundup(MEMREGION_MPUTRACE_PA, 4096)
-#define TRACE_END           (MEMREGION_MPUTRACE_PA + MEMREGION_MPUTRACE_SZ)
+#define TRACE_BASE  roundup(MEM_REGION_ADDR(MPU_TRACE), 4096)
+#define TRACE_END  (MEM_REGION_ADDR(MPU_TRACE) + \
+     MEM_REGION_MPU_TRACE_SIZE_KB * 1024)
 #define TRACE_ENTRY_SIZE    (64)
 
 std::string svc_endpoint = "localhost:50054";
