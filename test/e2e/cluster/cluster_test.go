@@ -52,6 +52,8 @@ var _ = Describe("cluster tests", func() {
 			oldLeader = cl.Status.Leader
 			oldLeaderIP = ts.tu.NameToIPMap[oldLeader]
 
+			serviceListBefore = getServices(oldLeader)
+
 			By(fmt.Sprintf("Pausing cmd on old leader %v", oldLeader))
 			ts.tu.CommandOutput(oldLeaderIP, "docker pause pen-cmd")
 			Eventually(func() bool {
@@ -76,7 +78,6 @@ var _ = Describe("cluster tests", func() {
 			ts.tu.CommandOutput(oldLeaderIP, "docker unpause pen-cmd")
 			time.Sleep(2 * time.Second)
 
-			serviceListBefore = getServices(oldLeader)
 			By(fmt.Sprintf("before: %v", serviceListBefore.String()))
 		outerLoop:
 			for i, svc := range serviceListBefore.Items {
@@ -93,8 +94,8 @@ var _ = Describe("cluster tests", func() {
 			}
 
 			Eventually(func() bool {
-				serviceListAfter := getServices(oldLeader)
-				By(fmt.Sprintf("after: %v", serviceListAfter))
+				serviceListAfter := getServices(newLeader)
+				By(fmt.Sprintf("after: %v", serviceListAfter.String()))
 				return reflect.DeepEqual(serviceListAfter, serviceListBefore)
 			}, 20, 2).Should(BeTrue(), "Services should be same after leader change")
 
