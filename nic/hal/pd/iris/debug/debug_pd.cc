@@ -6,7 +6,6 @@
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/hal/src/debug/debug.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
-#include "nic/sdk/platform/drivers/xcvr.hpp"
 
 namespace hal {
 namespace pd {
@@ -413,13 +412,6 @@ end:
     }
 
     return ret;
-}
-
-hal_ret_t
-xcvr_valid_check_enable (bool enable)
-{
-    sdk::platform::xcvr_set_valid_check(enable);
-    return HAL_RET_OK;
 }
 
 }    // namespace pd

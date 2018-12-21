@@ -130,6 +130,7 @@ asic_pd_llc_get (pd_llc_get_args_t *llc_args);
 
 hal_ret_t
 asic_pd_scheduler_stats_get (pd_scheduler_stats_get_args_t *scheduler_stats_args);
+hal_ret_t xcvr_valid_check_enable(bool enable);
 
 }    // namespace pd
 }    // namespace hal

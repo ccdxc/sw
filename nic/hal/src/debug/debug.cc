@@ -11,7 +11,6 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/sdk/include/sdk/timestamp.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
-#include "nic/hal/pd/hal_pd.hpp"
 
 using sdk::lib::slab;
 

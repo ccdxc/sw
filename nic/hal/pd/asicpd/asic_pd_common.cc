@@ -15,6 +15,7 @@
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 #include "nic/hal/pd/capri/capri_sw_phv.hpp"
+#include "nic/sdk/platform/drivers/xcvr.hpp"
 
 namespace hal {
 namespace pd {
@@ -705,6 +706,13 @@ asic_pd_scheduler_stats_get (pd_scheduler_stats_get_args_t *scheduler_stats_args
         cos_entry->set_doorbell_count(asic_stats.cos_stats[i].doorbell_count);
         cos_entry->set_xon_status(asic_stats.cos_stats[i].xon_status);
     }
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+xcvr_valid_check_enable (bool enable)
+{
+    sdk::platform::xcvr_set_valid_check(enable);
     return HAL_RET_OK;
 }
 
