@@ -468,7 +468,7 @@ build_batch(struct batch_info *batch_info, struct request_params *req_params)
 	pnso_error_t err;
 	struct batch_page *batch_page;
 	struct batch_page_entry *page_entry;
-	struct service_chain *chain;
+	struct service_chain *chain = NULL;
 	uint32_t idx, num_entries;
 
 	OSAL_LOG_DEBUG("enter ...");

@@ -700,6 +700,7 @@ validate_service_request(struct pnso_service_request *svc_req)
 			goto out;
 	}
 
+	svc_type = svc_req->svc[0].svc_type;
 	err = validate_req_source_buffer(svc_type, svc_req->sgl);
 	if (err) {
 		OSAL_LOG_DEBUG("invalid # of buffers in req sgl specified! count: %d err: %d",

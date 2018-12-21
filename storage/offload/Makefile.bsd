@@ -48,4 +48,4 @@ CFLAGS+= -DHAPS -D__KERNEL__ -DDENABLE_PNSO_SONIC_TEST
 
 .include <bsd.kmod.mk>
 
-CFLAGS+= -Wno-pointer-arith -Wno-cast-qual
+CFLAGS+= -Wno-pointer-arith -Wno-cast-qual -Wconditional-uninitialized -Werror -Waddress-of-packed-member
