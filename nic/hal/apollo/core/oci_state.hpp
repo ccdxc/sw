@@ -11,6 +11,7 @@
 
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/hal/apollo/api/switchport.hpp"
+#include "nic/hal/apollo/api/tep.hpp"
 #include "nic/hal/apollo/api/vcn.hpp"
 #include "nic/hal/apollo/api/subnet.hpp"
 #include "nic/hal/apollo/api/vnic.hpp"
@@ -27,12 +28,14 @@ public:
     oci_state();
     ~oci_state();
     switchport_state *switchport_db(void) { return &switchport_db_; }
+    tep_state *tep_db(void) { return &tep_db_; }
     vcn_state *vcn_db(void) { return &vcn_db_; }
     subnet_state *subnet_db(void) { return &subnet_db_; }
     vnic_state *vnic_db(void) { return &vnic_db_ ; }
 
 private:
     switchport_state    switchport_db_;
+    tep_state           tep_db_;
     vcn_state           vcn_db_;
     subnet_state        subnet_db_;
     vnic_state          vnic_db_;
@@ -43,6 +46,12 @@ static inline switchport_state *
 switchport_db (void)
 {
     return g_oci_state.switchport_db();
+}
+
+static inline tep_state *
+tep_db (void)
+{
+    return g_oci_state.tep_db();
 }
 
 static inline vcn_state *

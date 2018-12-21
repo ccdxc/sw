@@ -14,6 +14,7 @@
 namespace api {
 
 enum {
+    OCI_SLAB_TEP,
     OCI_SLAB_VCN,
     OCI_SLAB_SUBNET,
     OCI_SLAB_VNIC,

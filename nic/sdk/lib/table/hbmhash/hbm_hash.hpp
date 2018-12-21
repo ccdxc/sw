@@ -101,7 +101,6 @@ public:
 
 
 private:
-
     // Private Data
     std::string         table_name_;                    // table name
     uint32_t            table_id_;                      // table id
