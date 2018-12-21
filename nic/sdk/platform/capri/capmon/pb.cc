@@ -1,6 +1,13 @@
-/*
- * Copyright (c) 2018, Pensando Systems Inc.
- */
+//
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+//===----------------------------------------------------------------------===//
+///
+/// \file
+/// This file contains the implementation for displaying pb counters
+///
+//===----------------------------------------------------------------------===//
+
 #include <stdint.h>
 #include <stdio.h>
 
@@ -69,7 +76,8 @@ pb_read_counters(int verbose)
 
     for (port = 0; port < 12; port++) {
         portempty = true;
-        pal_reg_rd32w(CAP_ADDR_BASE_PB_PBC_OFFSET + CAP_PBC_CSR_STA_OQ_BYTE_ADDRESS +
+        pal_reg_rd32w(CAP_ADDR_BASE_PB_PBC_OFFSET +
+                          CAP_PBC_CSR_STA_OQ_BYTE_ADDRESS +
                           (port * 4 * CAP_PBC_CSR_STA_OQ_ARRAY_ELEMENT_SIZE),
                       oq_cnt, 14);
 
