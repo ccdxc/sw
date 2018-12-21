@@ -40,6 +40,7 @@ typedef struct xcvr_s {
     xcvr_state_t   state;
     xcvr_pid_t     pid;
     uint8_t        sprom_read_count;
+    bool           debounce;
     port_an_args_t port_an_args;
     uint8_t        cache[XCVR_SPROM_CACHE_SIZE];
 } __PACK__ xcvr_t;
@@ -84,6 +85,21 @@ xcvr_pid (int port) {
 inline xcvr_type_t
 xcvr_type (int port) {
     return g_xcvr[port].type;
+}
+
+inline bool
+xcvr_get_debounce (int port) {
+    return g_xcvr[port].debounce;
+}
+
+inline void
+xcvr_set_debounce (int port) {
+    g_xcvr[port].debounce = true;
+}
+
+inline void
+xcvr_reset_debounce (int port) {
+    g_xcvr[port].debounce = false;
 }
 
 inline void

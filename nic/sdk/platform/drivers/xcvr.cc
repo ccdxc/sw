@@ -45,6 +45,7 @@ static bool
 xcvr_state_change (int port) {
     // Detect xcvr and set state
     bool present = sdk::lib::pal_is_qsfp_port_present(port + 1);
+    bool debounce = xcvr_get_debounce(port);
 
     // TODO For testing
 #if 0
@@ -60,26 +61,42 @@ xcvr_state_change (int port) {
     }
 #endif
 
-    if (present) {
-        if (xcvr_state(port) == xcvr_state_t::XCVR_REMOVED) {
-            SDK_TRACE_DEBUG("Xcvr port %d state changed from %d to %d",
-                            port + 1,
-                            xcvr_state(port),
-                            xcvr_state_t::XCVR_INSERTED);
-            xcvr_set_state(port, xcvr_state_t::XCVR_INSERTED);
-            return true;
+    if (debounce) {
+        // debounce flag set. If state change proceed with steps else reset debounce
+        if (present) {
+            if (xcvr_state(port) == xcvr_state_t::XCVR_REMOVED) {
+                SDK_TRACE_DEBUG("Xcvr port %d state changed from %d to %d",
+                                port + 1,
+                                xcvr_state(port),
+                                xcvr_state_t::XCVR_INSERTED);
+                xcvr_set_state(port, xcvr_state_t::XCVR_INSERTED);
+                xcvr_reset_debounce(port);
+                return true;
+            }
+        } else {
+            if (xcvr_state(port) != xcvr_state_t::XCVR_REMOVED) {
+                SDK_TRACE_DEBUG("Xcvr port %d state changed from %d to %d",
+                                port + 1,
+                                xcvr_state(port),
+                                xcvr_state_t::XCVR_REMOVED);
+                xcvr_set_state(port, xcvr_state_t::XCVR_REMOVED);
+                xcvr_reset_debounce(port);
+                return true;
+            }
         }
+        xcvr_reset_debounce(port);
     } else {
-        if (xcvr_state(port) != xcvr_state_t::XCVR_REMOVED) {
-            SDK_TRACE_DEBUG("Xcvr port %d state changed from %d to %d",
-                            port + 1,
-                            xcvr_state(port),
-                            xcvr_state_t::XCVR_REMOVED);
-            xcvr_set_state(port, xcvr_state_t::XCVR_REMOVED);
-            return true;
+        // debounce not set. If state change set debounce
+        if (present) {
+            if (xcvr_state(port) == xcvr_state_t::XCVR_REMOVED) {
+                xcvr_set_debounce(port);
+            }
+        } else {
+            if (xcvr_state(port) != xcvr_state_t::XCVR_REMOVED) {
+                xcvr_set_debounce(port);
+            }
         }
     }
-
     return false;
 }
 
@@ -271,7 +288,9 @@ xcvr_poll_timer (void)
             xcvr_send_notification(port);
             break;
         case xcvr_state_t::XCVR_REMOVED:
-            xcvr_reset(port);
+            if (state_change) {
+                xcvr_reset(port);
+            }
             break;
         case xcvr_state_t::XCVR_SPROM_READ:
         case xcvr_state_t::XCVR_SPROM_READ_ERR:
