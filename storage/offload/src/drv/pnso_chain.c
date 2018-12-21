@@ -66,16 +66,24 @@ pprint_service_info(const struct service_info *svc_info)
 			(uint64_t) svc_info->si_dst_aol.aol);
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_p4_sgl",
 			(uint64_t) svc_info->si_p4_sgl);
+
 	OSAL_LOG_DEBUG("%30s: %u", "=== si_iblist count",
 			svc_info->si_iblist.blist.count);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_src_blist",
-			(uint64_t) svc_info->si_src_blist.blist);
+
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_src_blist.type",
+			(uint64_t) svc_info->si_src_blist.type);
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_src_blist.len",
 			(uint64_t) svc_info->si_src_blist.len);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_dst_blist",
-			(uint64_t) svc_info->si_dst_blist.blist);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_src_blist",
+			(uint64_t) svc_info->si_src_blist.blist);
+
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_dst_blist.type",
+			(uint64_t) svc_info->si_dst_blist.type);
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_dst_blist.len",
 			(uint64_t) svc_info->si_dst_blist.len);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_dst_blist",
+			(uint64_t) svc_info->si_dst_blist.blist);
+
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_sgl_pdma",
 			(uint64_t) svc_info->si_sgl_pdma);
 

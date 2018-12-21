@@ -100,8 +100,14 @@ hash_setup(struct service_info *svc_info,
 		num_tags = cpdc_fill_per_block_desc(pnso_hash_desc->algo_type,
 				svc_info->si_block_size,
 				svc_info->si_src_blist.len,
-				svc_info->si_src_blist.blist, sgl,
+				&svc_info->si_src_blist, sgl,
 				hash_desc, status_desc, fill_hash_desc);
+		if (num_tags == 0) {
+			err = EINVAL;
+			OSAL_LOG_ERROR("failed to setup hash per-block! err: %d",
+					err);
+			goto out;
+		}
 	} else {
 		err = cpdc_update_service_info_sgl(svc_info);
 		if (err) {

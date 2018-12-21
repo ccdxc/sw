@@ -579,7 +579,7 @@ cpdc_update_service_info_sgl(struct service_info *svc_info)
 
 uint32_t
 cpdc_fill_per_block_desc(uint32_t algo_type, uint32_t block_size,
-		uint32_t src_buf_len, struct pnso_buffer_list *src_blist,
+		uint32_t src_buf_len, struct service_buf_list *svc_blist,
 		struct cpdc_sgl *sgl, struct cpdc_desc *desc,
 		struct cpdc_status_desc *status_desc,
 		fill_desc_fn_t fill_desc_fn)
@@ -587,59 +587,67 @@ cpdc_fill_per_block_desc(uint32_t algo_type, uint32_t block_size,
 	struct cpdc_desc *pb_desc;
 	struct cpdc_status_desc *pb_status_desc;
 	struct cpdc_sgl *pb_sgl;
-	struct pnso_flat_buffer flat_buf;
 	uint32_t desc_object_size, status_object_size, sgl_object_size;
-	uint32_t len, block_cnt, buf_len, i = 0;
-	char *buf;
+	uint32_t block_cnt, pb_len, total_len, i = 0;
+	struct buffer_list_iter buffer_list_iter;
+	struct buffer_list_iter *iter;
+	struct buffer_addr_len addr_len;
 
-	/*
-	 * per-block support assumes the input buffer will be mapped to a
-	 * flat buffer and for 8-blocks max.  Memory for this flat buffer
-	 * should come from HBM memory.
-	 *
-	 */
-	flat_buf.len = src_buf_len;
-	flat_buf.buf = (uint64_t) osal_phy_to_virt(src_blist->buffers[0].buf);
-
-	block_cnt = pbuf_get_flat_buffer_block_count(&flat_buf, block_size);
+	block_cnt = REQ_SZ_TO_NUM_BLKS(svc_blist->len, block_size);
 	pb_desc = desc;
 	pb_status_desc = status_desc;
 	pb_sgl = sgl;
 
-	OSAL_LOG_INFO("block_cnt: %d block_size: %d src_buf_len: %d buf: 0x" PRIx64 " desc: 0x" PRIx64 " status_desc: 0x" PRIx64,
-			block_cnt, block_size, src_buf_len, flat_buf.buf,
-			(uint64_t) desc, (uint64_t) status_desc);
+       desc_object_size = cpdc_get_desc_size();
+       status_object_size = cpdc_get_status_desc_size();
+       sgl_object_size = cpdc_get_sgl_size();
 
-	desc_object_size = cpdc_get_desc_size();
-	status_object_size = cpdc_get_status_desc_size();
-	sgl_object_size = cpdc_get_sgl_size();
+       total_len = svc_blist->len;
+       iter = buffer_list_iter_init(&buffer_list_iter, svc_blist, total_len);
+       for (i = 0; iter && (i < block_cnt); i++) {
+	       memset(pb_sgl, 0, sizeof(struct cpdc_sgl));
 
-	buf_len = src_buf_len;
-	for (i = 0; buf_len && (i < block_cnt); i++) {
-		buf = (char *) flat_buf.buf + (i * block_size);
-		len = buf_len > block_size ? block_size : buf_len;
+	       iter = buffer_list_iter_addr_len_get(iter, block_size,
+			       &addr_len);
+	       BUFFER_ADDR_LEN_SET(pb_sgl->cs_addr_0, pb_sgl->cs_len_0,
+			       addr_len);
+	       pb_len = pb_sgl->cs_len_0;
 
-		memset(pb_sgl, 0, sizeof(struct cpdc_sgl));
-		pb_sgl->cs_addr_0 = sonic_virt_to_phy(buf);
-		pb_sgl->cs_len_0 = len;
+               if (iter && (pb_len < block_size)) {
+		       iter = buffer_list_iter_addr_len_get(iter,
+				       block_size - pb_len, &addr_len);
+		       BUFFER_ADDR_LEN_SET(pb_sgl->cs_addr_1, pb_sgl->cs_len_1,
+				       addr_len);
+		       pb_len += pb_sgl->cs_len_1;
+		}
 
-		OSAL_LOG_INFO("blk_num: %d buf: 0x" PRIx64 ", len: %d desc: 0x" PRIx64 " status_desc: 0x" PRIx64 " sgl: 0x" PRIx64,
-			i, (uint64_t) buf, len, (uint64_t) pb_desc,
-			(uint64_t) pb_status_desc, (uint64_t) pb_sgl);
+	       if (iter && (pb_len < block_size)) {
+		       iter = buffer_list_iter_addr_len_get(iter,
+				       block_size - pb_len, &addr_len);
+		       BUFFER_ADDR_LEN_SET(pb_sgl->cs_addr_2,
+				       pb_sgl->cs_len_2, addr_len);
+		       pb_len += pb_sgl->cs_len_2;
+	       }
 
-		fill_desc_fn(algo_type, len, false,
-				pb_sgl, pb_desc, pb_status_desc);
-		buf_len -= len;
+	       total_len -= pb_len;
+	       if (total_len && (pb_len < block_size)) {
+		       OSAL_LOG_ERROR("unable to hold a block size worth of data in one SGL");
+		       goto out;
+	       }
 
-		pb_desc = get_next_desc(pb_desc, desc_object_size);
+	       fill_desc_fn(algo_type, pb_len, false, pb_sgl, pb_desc,
+			       pb_status_desc);
+	       pb_desc = get_next_desc(pb_desc, desc_object_size);
 
-		pb_status_desc = cpdc_get_next_status_desc(pb_status_desc,
-				status_object_size);
+	       pb_status_desc = cpdc_get_next_status_desc(pb_status_desc,
+			       status_object_size);
 
-		pb_sgl = get_next_sgl(pb_sgl, sgl_object_size);
-	}
+	       pb_sgl = get_next_sgl(pb_sgl, sgl_object_size);
+       }
 
 	return i;
+out:
+	return 0;
 }
 
 pnso_error_t
