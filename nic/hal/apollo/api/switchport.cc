@@ -13,6 +13,10 @@
 #include "nic/hal/apollo/framework/api_ctxt.hpp"
 #include "nic/hal/apollo/framework/api_engine.hpp"
 
+// TODO: move these to impl
+#include "gen/p4gen/apollo/include/p4pd.h"
+#include "nic/hal/pd/asicpd/asic_pd_common.hpp"
+
 namespace api {
 
 /**
@@ -76,6 +80,12 @@ switchport_entry::alloc_resources_(void) {
 sdk_ret_t
 switchport_entry::program_config(obj_ctxt_t *obj_ctxt) {
     // TODO: need to progam table constants here !!!
+    hal::pd::asicpd_program_table_constant(P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX,
+                                           ip_addr_);
+    hal::pd::asicpd_program_table_constant(P4TBL_ID_NEXTHOP_TX,
+                                           ip_addr_);
+    hal::pd::asicpd_program_table_constant(P4TBL_ID_TEP_TX,
+                                           MAC_TO_UINT64(mac_addr_));
     return sdk::SDK_RET_OK;
 }
 
