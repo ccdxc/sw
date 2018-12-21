@@ -260,9 +260,10 @@ header_type req_rx_to_stage_sqcb1_wb_info_t {
 header_type req_rx_to_stage_stats_info_t {
     fields {
         pyld_bytes                       :   16;
+        lif_cqe_error_id_vld             :    1;
         lif_error_id_vld                 :    1;
         lif_error_id                     :    4;
-        pad                              :  106;
+        pad                              :  105;
     }
 }
 
@@ -1152,6 +1153,9 @@ action rdma_stage0_completion_feedback_action () {
     modify_field(rdma_completion_feedback_scr.wrid, rdma_completion_feedback.wrid);
     modify_field(rdma_completion_feedback_scr.status, rdma_completion_feedback.status);
     modify_field(rdma_completion_feedback_scr.error, rdma_completion_feedback.error);
+    modify_field(rdma_completion_feedback_scr.lif_cqe_error_id_vld, rdma_completion_feedback.lif_cqe_error_id_vld);
+    modify_field(rdma_completion_feedback_scr.lif_error_id_vld, rdma_completion_feedback.lif_error_id_vld);
+    modify_field(rdma_completion_feedback_scr.lif_error_id, rdma_completion_feedback.lif_error_id);
 }
 
 
@@ -1504,6 +1508,7 @@ action req_rx_stats_process () {
 
     // to stage
     modify_field(to_s7_stats_info_scr.pyld_bytes, to_s7_stats_info.pyld_bytes);
+    modify_field(to_s7_stats_info_scr.lif_cqe_error_id_vld, to_s7_stats_info.lif_cqe_error_id_vld);
     modify_field(to_s7_stats_info_scr.lif_error_id_vld, to_s7_stats_info.lif_error_id_vld);
     modify_field(to_s7_stats_info_scr.lif_error_id, to_s7_stats_info.lif_error_id);
     modify_field(to_s7_stats_info_scr.pad, to_s7_stats_info.pad);

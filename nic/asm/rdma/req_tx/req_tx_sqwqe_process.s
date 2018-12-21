@@ -1,6 +1,7 @@
 #include "capri.h"
 #include "req_tx.h"
 #include "sqcb.h"
+#include "defines.h"
 
 struct req_tx_phv_t p;
 struct sqwqe_t d;
@@ -428,7 +429,9 @@ frpmr_second_pass:
 
 ud_error:
     // Any error should move Qstate to SQ_ERR and halt SQ processing
-    phvwr          p.{rdma_feedback.completion.status, rdma_feedback.completion.error}, (CQ_STATUS_LOCAL_QP_OPER_ERR << 1 | 1)
+    phvwrpair      p.{rdma_feedback.completion.status, rdma_feedback.completion.error}, (CQ_STATUS_LOCAL_QP_OPER_ERR << 1 | 1), \
+                   p.{rdma_feedback.completion.lif_cqe_error_id_vld, rdma_feedback.completion.lif_error_id_vld, rdma_feedback.completion.lif_error_id}, \
+                       ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_TX_LOCAL_OPER_ERR_OFFSET))
     phvwr.e        CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp), 1
     CAPRI_SET_TABLE_0_1_VALID(0, 0)
 

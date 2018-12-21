@@ -688,10 +688,12 @@ class LifStats(Packet):
         XLELongField("rdma_req_rx_cqe_err", 0),
         XLELongField("rdma_req_rx_cqe_flush_err", 0),
 
+        XLELongField("rdma_req_rx_dup_responses", 0),
+        XLELongField("rdma_req_rx_invalid_packets", 0),
         XLELongField("rdma_req_tx_local_access_err", 0),
         XLELongField("rdma_req_tx_local_oper_err", 0),
         XLELongField("rdma_req_tx_memory_mgmt_err", 0),
-        XBitField("rsvd_rdma_dbg_req", 0, 320),
+        XBitField("rsvd_rdma_dbg_req", 0, 192),
 
         XLELongField("rdma_resp_rx_dup_requests", 0),
         XLELongField("rdma_resp_rx_out_of_buffer", 0),

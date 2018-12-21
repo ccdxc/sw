@@ -243,9 +243,10 @@ header_type req_tx_to_stage_stats_info_t {
         timeout_local_ack                :    1;
         timeout_rnr                      :    1;
         sq_drain                         :    1;
+        lif_cqe_error_id_vld             :    1;
         lif_error_id_vld                 :    1;
         lif_error_id                     :    4;
-        pad                              :   99;
+        pad                              :   98;
     }
 }
 
@@ -2102,6 +2103,7 @@ action req_tx_stats_process () {
     modify_field(to_s7_stats_info_scr.timeout_local_ack, to_s7_stats_info.timeout_local_ack);
     modify_field(to_s7_stats_info_scr.timeout_rnr, to_s7_stats_info.timeout_rnr);
     modify_field(to_s7_stats_info_scr.sq_drain, to_s7_stats_info.sq_drain);
+    modify_field(to_s7_stats_info_scr.lif_cqe_error_id_vld, to_s7_stats_info.lif_cqe_error_id_vld);
     modify_field(to_s7_stats_info_scr.lif_error_id_vld, to_s7_stats_info.lif_error_id_vld);
     modify_field(to_s7_stats_info_scr.lif_error_id, to_s7_stats_info.lif_error_id);
 

@@ -1,5 +1,6 @@
 #include "req_rx.h"
 #include "sqcb.h"
+#include "defines.h"
 
 struct req_rx_phv_t p;
 //this routine is invoked on s3_t0 and s3_t1
@@ -17,6 +18,8 @@ struct key_entry_aligned_t d;
 
 #define LKEY_TO_PTSEG_T struct req_rx_rrqlkey_to_ptseg_info_t
 #define RRQSGE_TO_LKEY_P t0_s2s_rrqsge_to_lkey_info
+
+#define TO_S7_P to_s7_stats_info
 
 %%
     .param    req_rx_rrqptseg_process
@@ -113,12 +116,17 @@ set_arg:
 
 pd_check_failure:
 invalid_region:
+    phvwr       CAPRI_PHV_RANGE(TO_S7_P, lif_cqe_error_id_vld, lif_error_id), \
+                    ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_TX_LOCAL_ACCESS_ERR_OFFSET))
     b              error_completion
     phvwrpair      p.cqe.status, CQ_STATUS_LOCAL_PROT_ERR, p.cqe.error, 1 
 
 access_violation:
     phvwrpair      p.cqe.status, CQ_STATUS_LOCAL_ACC_ERR, p.cqe.error, 1 
     //fall through
+
+    phvwr       CAPRI_PHV_RANGE(TO_S7_P, lif_cqe_error_id_vld, lif_error_id), \
+                    ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_TX_LOCAL_ACCESS_ERR_OFFSET))
 
 error_completion:
     add          r1, K_SGE_INDEX, r0

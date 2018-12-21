@@ -1,5 +1,6 @@
 #include "req_rx.h"
 #include "sqcb.h"
+#include "defines.h"
 
 struct req_rx_phv_t p;
 struct req_rx_s4_t2_k k;
@@ -11,6 +12,7 @@ struct sqcb1_t d;
 
 #define K_STATUS CAPRI_KEY_FIELD(IN_P, status)
 #define TO_S6_P to_s6_cq_info
+#define TO_S7_P to_s7_stats_info
 
 %%
     .param req_rx_cqcb_process
@@ -95,6 +97,9 @@ flush_completion:
     add            r1, FIELD_OFFSET(sqcb0_t, state), r1
     DMA_HBM_PHV2MEM_SETUP(r7, service, state, r1)
     phvwr          CAPRI_PHV_FIELD(TO_S6_P, state), QP_STATE_ERR
+    phvwr          CAPRI_PHV_RANGE(TO_S7_P, lif_error_id_vld, lif_error_id), \
+                    ((1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_RX_CQE_FLUSH_ERR_OFFSET))
+
     tblwr.e        d.state, QP_STATE_ERR
     phvwrpair      p.service, d.service, p.{flush_rq...state}, QP_STATE_ERR
 

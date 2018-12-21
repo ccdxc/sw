@@ -115,10 +115,14 @@ set_arg:
 pd_check_failure:
 invalid_region:
     b            error_completion
-    phvwr        p.{rdma_feedback.completion.status, rdma_feedback.completion.error}, (CQ_STATUS_LOCAL_PROT_ERR << 1 | 1)
+    phvwrpair    p.{rdma_feedback.completion.status, rdma_feedback.completion.error}, (CQ_STATUS_LOCAL_PROT_ERR << 1 | 1), \
+                 p.{rdma_feedback.completion.lif_cqe_error_id_vld, rdma_feedback.completion.lif_error_id_vld, rdma_feedback.completion.lif_error_id}, \
+                       ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_TX_LOCAL_ACCESS_ERR_OFFSET))
 
 access_violation:
-    phvwr        p.{rdma_feedback.completion.status, rdma_feedback.completion.error}, (CQ_STATUS_LOCAL_ACC_ERR << 1 | 1)
+    phvwrpair    p.{rdma_feedback.completion.status, rdma_feedback.completion.error}, (CQ_STATUS_LOCAL_ACC_ERR << 1 | 1), \
+                 p.{rdma_feedback.completion.lif_cqe_error_id_vld, rdma_feedback.completion.lif_error_id_vld, rdma_feedback.completion.lif_error_id}, \
+                       ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_TX_LOCAL_ACCESS_ERR_OFFSET))
     //fall through
 
 error_completion:

@@ -1,5 +1,6 @@
 #include "req_rx.h"
 #include "sqcb.h"
+#include "defines.h"
 
 struct req_rx_phv_t p;
 struct rrqwqe_d_t d;
@@ -30,6 +31,8 @@ struct req_rx_s1_t0_k k;
 #define TO_S1_RECIRC_P to_s1_recirc_info
 #define TO_S4_P to_s4_sqcb1_wb_info
 #define TO_S6_P to_s6_cq_info
+#define TO_S7_P to_s7_stats_info
+
 %%
     .param    req_rx_rrqsge_process
     .param    req_rx_rrqsge_opt_process
@@ -120,14 +123,20 @@ nak:
     IS_MASKED_VAL_EQUAL_B(c3, r1, NAK_CODE_MASK, NAK_CODE_INV_REQ)
     phvwrpair.c3   p.cqe.status, CQ_STATUS_REMOTE_INV_REQ_ERR, \
                    p.cqe.error, 1
+    phvwr.c3       CAPRI_PHV_RANGE(TO_S7_P, lif_cqe_error_id_vld, lif_error_id), \
+                    ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_RX_REMOTE_INV_REQ_ERR_OFFSET))
 
     IS_MASKED_VAL_EQUAL_B(c3, r1, NAK_CODE_MASK, NAK_CODE_REM_ACC_ERR)
     phvwrpair.c3   p.cqe.status, CQ_STATUS_REMOTE_ACC_ERR, \
                    p.cqe.error, 1
+    phvwr.c3       CAPRI_PHV_RANGE(TO_S7_P, lif_cqe_error_id_vld, lif_error_id), \
+                    ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_RX_REMOTE_ACC_ERR_OFFSET))
 
     IS_MASKED_VAL_EQUAL_B(c3, r1, NAK_CODE_MASK, NAK_CODE_REM_OP_ERR)
     phvwrpair.c3   p.cqe.status, CQ_STATUS_REMOTE_OPER_ERR, \
                    p.cqe.error, 1
+    phvwr.c3       CAPRI_PHV_RANGE(TO_S7_P, lif_cqe_error_id_vld, lif_error_id), \
+                    ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_RX_REMOTE_OPER_ERR_OFFSET))
 
     phvwr          CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp), 1
     // post err completion for msn one more than the one last completed
@@ -170,6 +179,9 @@ rnr:
     phvwrpair.e    CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rexmit_psn), K_BTH_PSN, \
                    CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, msn), r2
     phvwr          CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_cq), 1
+
+    phvwr          CAPRI_PHV_RANGE(TO_S7_P, lif_error_id_vld, lif_error_id), \
+                    ((1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_RX_RNR_RETRY_ERR_OFFSET))
 
 read_or_atomic_or_implicit_nak:
     ARE_ALL_FLAGS_SET(c3, r5, REQ_RX_FLAG_FIRST) // Branch Delay Slot
@@ -311,6 +323,9 @@ implicit_nak:
     add            r2, d.msn, 0
     mincr          r2, 24, -1
     phvwr          p.cqe.send.msn, r2
+
+    phvwr          CAPRI_PHV_RANGE(TO_S7_P, lif_error_id_vld, lif_error_id), \
+                    ((1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_RX_IMPLIED_NAK_SEQ_ERR_OFFSET))
 
     sne            c1, K_REMAINING_PAYLOAD_BYTES, 0
     DMA_CMD_STATIC_BASE_GET_C(r3, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_SKIP_TO_EOP, c1)

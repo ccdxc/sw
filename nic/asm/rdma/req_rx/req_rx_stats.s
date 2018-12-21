@@ -19,6 +19,7 @@ struct sqcb5_t d;
 #define MASK_16 16
 #define MASK_32 32
 
+#define K_LIF_CQE_ERROR_ID_VLD CAPRI_KEY_FIELD(IN_P, lif_cqe_error_id_vld)
 #define K_LIF_ERROR_ID_VLD CAPRI_KEY_FIELD(IN_P, lif_error_id_vld)
 #define K_LIF_ERROR_ID CAPRI_KEY_FIELD(IN_P, lif_error_id)
 
@@ -97,6 +98,14 @@ handle_error_lif_stats:
     #lif req error-id stats
     addi            r3, r2, LIF_STATS_REQ_DEBUG_ERR_START_OFFSET
     add             r3, r3, K_LIF_ERROR_ID, 3
+
+    ATOMIC_INC_VAL_1(r1, r3, r4, r5, 1)
+
+    bbeq            K_LIF_CQE_ERROR_ID_VLD, 0, error_done
+
+    #lif CQE error-id stat
+    addi            r3, r2, LIF_STATS_RESP_DEBUG_ERR_START_OFFSET
+    add             r3, r3, LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_RX_CQE_ERR_OFFSET), 3
 
     ATOMIC_INC_VAL_1(r1, r3, r4, r5, 1)
 

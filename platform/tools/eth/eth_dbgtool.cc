@@ -370,6 +370,8 @@ eth_stats(uint16_t lif)
     printf("rdma_req_cqe_err            : %lu\n", stats.rdma_req_rx_cqe_err);
     printf("rdma_req_cqe_flush_err      : %lu\n", stats.rdma_req_rx_cqe_flush_err);
 
+    printf("rdma_duplicate_responses    : %lu\n", stats.rdma_req_rx_dup_responses);
+    printf("rdma_req_invalid_packets    : %lu\n", stats.rdma_req_rx_invalid_packets);
     printf("rdma_req_local_access_err   : %lu\n", stats.rdma_req_tx_local_access_err);
     printf("rdma_req_local_oper_err     : %lu\n", stats.rdma_req_tx_local_oper_err);
     printf("rdma_req_memory_mgmt_err    : %lu\n", stats.rdma_req_tx_memory_mgmt_err);

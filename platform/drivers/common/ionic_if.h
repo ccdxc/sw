@@ -1642,11 +1642,11 @@ struct ionic_lif_stats {
 	uint64_t rdma_req_rx_cqe_err;
 	uint64_t rdma_req_rx_cqe_flush_err;
 
+	uint64_t rdma_req_rx_dup_responses;
+	uint64_t rdma_req_rx_invalid_packets;
 	uint64_t rdma_req_tx_local_access_err;
 	uint64_t rdma_req_tx_local_oper_err;
 	uint64_t rdma_req_tx_memory_mgmt_err;
-	uint64_t rsvd50;
-	uint64_t rsvd51;
 	uint64_t rsvd52;
 	uint64_t rsvd53;
 	uint64_t rsvd54;

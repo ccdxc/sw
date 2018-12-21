@@ -1321,7 +1321,10 @@ struct rdma_feedback_t {
             wrid: 64;
             status: 8;
             error: 1;
-            pad: 7;
+            lif_cqe_error_id_vld: 1;
+            lif_error_id_vld: 1;
+            lif_error_id: 4;
+            pad: 1;
         }completion;
         /* Type: RDMA_CQ_ARM_FEEDBACK */
         struct {

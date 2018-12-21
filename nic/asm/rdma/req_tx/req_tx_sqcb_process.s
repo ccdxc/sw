@@ -566,8 +566,11 @@ flush_rq:
     phvwri         p.p4_to_p4plus.raw_flags, RESP_RX_FLAG_ERR_DIS_QP
     phvwri         p.p4_to_p4plus.table0_valid, 1
 
-    phvwrpair.e    p.rdma_feedback.feedback_type, RDMA_COMPLETION_FEEDBACK, \
+    phvwrpair      p.rdma_feedback.feedback_type, RDMA_COMPLETION_FEEDBACK, \
                    p.rdma_feedback.completion.status, CQ_STATUS_WQE_FLUSHED_ERR
+    phvwr.e        p.{rdma_feedback.completion.lif_error_id_vld, rdma_feedback.completion.lif_error_id}, \
+                       ((1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_RX_CQE_FLUSH_ERR_OFFSET))
+
 
     // unset flush_rq bit so that flush feedback msg is sent only once upon
     // transitioning to QP_STATE_ERR

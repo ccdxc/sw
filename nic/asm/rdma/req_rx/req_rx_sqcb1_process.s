@@ -1,5 +1,6 @@
 #include "req_rx.h"
 #include "sqcb.h"
+#include "defines.h"
 
 struct req_rx_phv_t p;
 struct sqcb1_t d;
@@ -13,6 +14,7 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define SQCB1_TO_SGE_RECIRC_P t0_s2s_sqcb1_to_sge_recirc_info
 #define SQCB1_TO_SQ_DRAIN_P t2_s2s_sqcb1_to_sq_drain_feedback_info
 
+#define TO_S7_P to_s7_stats_info
 #define TO_S4_P to_s4_sqcb1_wb_info
 #define TO_S3_P to_s3_rrqlkey_info
 #define TO_S2_P to_s2_rrqsge_info
@@ -300,12 +302,24 @@ recirc_work_done:
     
 duplicate_read_resp_mid:
 duplicate_resp:
+    b           exit
+    phvwr       CAPRI_PHV_RANGE(TO_S7_P, lif_error_id_vld, lif_error_id), \
+                    ((1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_RX_DUPLICATE_RESPONSES_OFFSET)) //BD Slot
+
 invalid_pkt_psn:
 invalid_pkt_msn:
+    b           exit
+    phvwr       CAPRI_PHV_RANGE(TO_S7_P, lif_error_id_vld, lif_error_id), \
+                    ((1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_RX_PACKET_SEQ_ERR_OFFSET)) //BD Slot
+
 invalid_serv_type:
 invalid_pyld_len:
 invalid_opcode:
 rrq_empty:
+    b           exit
+    phvwr       CAPRI_PHV_RANGE(TO_S7_P, lif_error_id_vld, lif_error_id), \
+                    ((1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_RX_INVALID_PACKETS_OFFSET)) //BD Slot
+
 exit:
     phvwr          CAPRI_PHV_FIELD(TO_S4_P, error_drop_phv), 1
     // Load dummy-write-back in stage1 which eventually loads sqcb1-write-back in stage3 to increment nxt-to-go-token-id and drop pvh.
@@ -347,8 +361,11 @@ completion_feedback:
     CAPRI_COMPLETION_FEEDBACK_WRID(r7) // Branch Delay Slot
     phvwr          p.cqe.send.wrid, r7
     seq            c1, CAPRI_COMPLETION_FEEDBACK_STATUS, CQ_STATUS_SUCCESS
+    phvwr.!c1      CAPRI_PHV_RANGE(TO_S7_P, lif_cqe_error_id_vld, lif_error_id), \
+                       CAPRI_COMPLETION_FEEDBACK_LIF_STATS_INFO
+                       
     bcf            [c1], set_cqcb_arg
-    phvwrpair      p.cqe.status[7:0], CAPRI_COMPLETION_FEEDBACK_STATUS, p.cqe.error, CAPRI_COMPLETION_FEEDBACK_ERROR
+    phvwrpair      p.cqe.status[7:0], CAPRI_COMPLETION_FEEDBACK_STATUS, p.cqe.error, CAPRI_COMPLETION_FEEDBACK_ERROR //BD Slot
 
 process_err_feedback:
     phvwr          CAPRI_PHV_FIELD(SQCB1_TO_COMPL_FEEDBACK_P, status), CAPRI_COMPLETION_FEEDBACK_STATUS

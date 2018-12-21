@@ -1,6 +1,7 @@
 #include "capri.h"
 #include "req_tx.h"
 #include "sqcb.h"
+#include "defines.h"
 #include "nic/p4/common/defines.h"
 
 struct req_tx_phv_t p;
@@ -78,6 +79,9 @@ error_completion:
     // Set completion status to Memory-Management-Operation-Error
     phvwrpair      p.rdma_feedback.feedback_type, RDMA_COMPLETION_FEEDBACK, \
                    p.{rdma_feedback.completion.status, rdma_feedback.completion.error}, (CQ_STATUS_MEM_MGMT_OPER_ERR << 1 | 1)
+    phvwr          p.{rdma_feedback.completion.lif_cqe_error_id_vld, rdma_feedback.completion.lif_error_id_vld, rdma_feedback.completion.lif_error_id}, \
+                       ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_TX_MEMORY_MGMT_ERR_OFFSET))
+
     // Set error-disable-qp. TODO: Using just as a place-holder. Full-blown error_disable_qp code will follow.
     phvwr.e        CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp),  1
     nop

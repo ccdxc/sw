@@ -1,5 +1,6 @@
 #include "req_rx.h"
 #include "sqcb.h"
+#include "defines.h"
 
 struct req_rx_phv_t p;
 struct req_rx_s4_t2_k k;
@@ -41,7 +42,8 @@ req_rx_sqcb1_write_back_process:
 
     seq            c1, d.bktrack_in_progress, 1 // BD-Slot
     bcf            [c1], inc_token_and_drop_phv
-    nop            // BD-Slot
+
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_stats_process, r0) //BD Slot
 
     bbeq           CAPRI_KEY_FIELD(IN_TO_S_P, error_drop_phv), 1, inc_token_and_drop_phv
 
@@ -59,8 +61,6 @@ req_rx_sqcb1_write_back_process:
 
 update_qstate:
     phvwr          CAPRI_PHV_FIELD(TO_S6_P, state), d.state
-
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_stats_process, r0)
 
     seq            c1, CAPRI_KEY_FIELD(IN_P, last_pkt), 1
     bcf            [!c1], post_cq
