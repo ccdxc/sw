@@ -20,6 +20,7 @@ var (
 	portAutoNeg    string
 	portMtu        uint32
 	portAdminState string
+	portSpeed      string
 )
 
 var portShowCmd = &cobra.Command{
@@ -38,11 +39,12 @@ var portCmd = &cobra.Command{
 
 func init() {
 	updateCmd.AddCommand(portCmd)
-	portCmd.Flags().Uint32Var(&portNum, "port", 1, "Specify port number")
+	portCmd.Flags().Uint32Var(&portNum, "port", 0, "Specify port number")
 	portCmd.Flags().StringVar(&portPause, "pause", "none", "Specify pause - link, pfc, none")
 	portCmd.Flags().StringVar(&portFecType, "fec-type", "none", "Specify fec-type - rs, fc, none")
 	portCmd.Flags().StringVar(&portAutoNeg, "auto-neg", "disable", "Enable or disable auto-neg using enable | disable")
 	portCmd.Flags().StringVar(&portAdminState, "admin-state", "up", "Set port admin state - none, up, down")
+	portCmd.Flags().StringVar(&portSpeed, "speed", "", "Set port speed - none, 1g, 10g, 25g, 40g, 50g, 100g")
 	portCmd.Flags().Uint32Var(&portMtu, "mtu", 0, "Specify port MTU")
 
 	showCmd.AddCommand(portShowCmd)
@@ -78,7 +80,7 @@ func portShowCmdHandler(cmd *cobra.Command, args []string) {
 func portUpdateCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd.Flags().Changed("pause") == false && cmd.Flags().Changed("fec-type") == false &&
 		cmd.Flags().Changed("auto-neg") == false && cmd.Flags().Changed("mtu") == false &&
-		cmd.Flags().Changed("admin-state") == false {
+		cmd.Flags().Changed("admin-state") == false && cmd.Flags().Changed("speed") == false {
 		fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
 		return
 	}
@@ -123,6 +125,14 @@ func portUpdateCmdHandler(cmd *cobra.Command, args []string) {
 		halctlStr += ("--admin-state " + portAdminState + " ")
 	}
 
+	if cmd.Flags().Changed("speed") == true {
+		if isSpeedValid(strings.ToUpper(portSpeed)) == false {
+			fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
+			return
+		}
+		halctlStr += ("--speed " + strings.ToUpper(portSpeed) + " ")
+	}
+
 	if cmd.Flags().Changed("mtu") == true {
 		halctlStr += ("--mtu " + fmt.Sprint(portMtu) + " ")
 	}
@@ -145,6 +155,27 @@ func portUpdateCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	return
+}
+
+func isSpeedValid(str string) bool {
+	switch str {
+	case "none":
+		return true
+	case "1G":
+		return true
+	case "10G":
+		return true
+	case "25G":
+		return true
+	case "40G":
+		return true
+	case "50G":
+		return true
+	case "100G":
+		return true
+	default:
+		return false
+	}
 }
 
 func isPauseTypeValid(str string) bool {

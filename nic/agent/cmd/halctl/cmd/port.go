@@ -25,6 +25,7 @@ var (
 	portAutoNeg    string
 	portMtu        uint32
 	portAdminState string
+	portSpeed      string
 )
 
 var portClearStatsCmd = &cobra.Command{
@@ -74,11 +75,12 @@ func init() {
 	portClearStatsCmd.Flags().Uint32Var(&portNum, "port", 1, "Speficy port number")
 
 	debugCmd.AddCommand(portDebugCmd)
-	portDebugCmd.Flags().Uint32Var(&portNum, "port", 1, "Specify port number")
+	portDebugCmd.Flags().Uint32Var(&portNum, "port", 0, "Specify port number")
 	portDebugCmd.Flags().StringVar(&portPause, "pause", "none", "Specify pause - link, pfc, none")
 	portDebugCmd.Flags().StringVar(&portFecType, "fec-type", "none", "Specify fec-type - rs, fc, none")
 	portDebugCmd.Flags().StringVar(&portAutoNeg, "auto-neg", "disable", "Enable or disable auto-neg using enable | disable")
 	portDebugCmd.Flags().StringVar(&portAdminState, "admin-state", "up", "Set port admin state - none, up, down")
+	portDebugCmd.Flags().StringVar(&portSpeed, "speed", "", "Set port speed - none, 1g, 10g, 25g, 40g, 50g, 100g")
 	portDebugCmd.Flags().Uint32Var(&portMtu, "mtu", 0, "Specify port MTU")
 }
 
@@ -436,7 +438,7 @@ func portDebugCmdHandler(cmd *cobra.Command, args []string) {
 
 	if cmd.Flags().Changed("pause") == false && cmd.Flags().Changed("fec-type") == false &&
 		cmd.Flags().Changed("auto-neg") == false && cmd.Flags().Changed("mtu") == false &&
-		cmd.Flags().Changed("admin-state") == false {
+		cmd.Flags().Changed("admin-state") == false && cmd.Flags().Changed("speed") == false {
 		fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
 		return
 	}
@@ -444,6 +446,7 @@ func portDebugCmdHandler(cmd *cobra.Command, args []string) {
 	pauseType := inputToPauseType("none")
 	fecType := inputToFecType("none")
 	adminState := inputToAdminState("none")
+	speed := inputToSpeed("none")
 	autoNeg := false
 	var mtu uint32
 
@@ -480,6 +483,15 @@ func portDebugCmdHandler(cmd *cobra.Command, args []string) {
 			return
 		}
 		adminState = inputToAdminState(portAdminState)
+	}
+
+	if cmd.Flags().Changed("speed") == true {
+		if isSpeedValid(strings.ToUpper(portSpeed)) == false {
+			fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
+			return
+		}
+		speed = inputToSpeed(strings.ToUpper(portSpeed))
+		autoNeg = false
 	}
 
 	if cmd.Flags().Changed("mtu") == true {
@@ -528,11 +540,14 @@ func portDebugCmdHandler(cmd *cobra.Command, args []string) {
 		if cmd.Flags().Changed("fec-type") == false {
 			fecType = resp.GetSpec().GetFecType()
 		}
-		if cmd.Flags().Changed("auto-neg") == false {
+		if cmd.Flags().Changed("auto-neg") == false && cmd.Flags().Changed("speed") == false {
 			autoNeg = resp.GetSpec().GetAutoNegEnable()
 		}
 		if cmd.Flags().Changed("admin-state") == false {
 			adminState = resp.GetSpec().GetAdminState()
+		}
+		if cmd.Flags().Changed("speed") == false {
+			speed = resp.GetSpec().GetPortSpeed()
 		}
 		if cmd.Flags().Changed("mtu") == false {
 			mtu = resp.GetSpec().GetMtu()
@@ -548,7 +563,7 @@ func portDebugCmdHandler(cmd *cobra.Command, args []string) {
 
 			PortType:      resp.GetSpec().GetPortType(),
 			AdminState:    adminState,
-			PortSpeed:     resp.GetSpec().GetPortSpeed(),
+			PortSpeed:     speed,
 			NumLanes:      resp.GetSpec().GetNumLanes(),
 			FecType:       fecType,
 			AutoNegEnable: autoNeg,
@@ -581,6 +596,48 @@ func portDebugCmdHandler(cmd *cobra.Command, args []string) {
 
 	if success == true {
 		fmt.Printf("Update port succeeded\n")
+	}
+}
+
+func isSpeedValid(str string) bool {
+	switch str {
+	case "none":
+		return true
+	case "1G":
+		return true
+	case "10G":
+		return true
+	case "25G":
+		return true
+	case "40G":
+		return true
+	case "50G":
+		return true
+	case "100G":
+		return true
+	default:
+		return false
+	}
+}
+
+func inputToSpeed(str string) halproto.PortSpeed {
+	switch str {
+	case "none":
+		return halproto.PortSpeed_PORT_SPEED_NONE
+	case "1G":
+		return halproto.PortSpeed_PORT_SPEED_1G
+	case "10G":
+		return halproto.PortSpeed_PORT_SPEED_10G
+	case "25G":
+		return halproto.PortSpeed_PORT_SPEED_25G
+	case "40G":
+		return halproto.PortSpeed_PORT_SPEED_40G
+	case "50G":
+		return halproto.PortSpeed_PORT_SPEED_50G
+	case "100G":
+		return halproto.PortSpeed_PORT_SPEED_100G
+	default:
+		return halproto.PortSpeed_PORT_SPEED_NONE
 	}
 }
 
