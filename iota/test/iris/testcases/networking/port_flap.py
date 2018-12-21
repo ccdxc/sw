@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 import iota.harness.api as api
 import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
-import iota.test.iris.config.netagent.cfg_api as netagent_cfg_api
+import iota.test.iris.config.netagent.api as netagent_cfg_api
 
 
 def Setup(tc):

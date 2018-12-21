@@ -1,5 +1,8 @@
 {
-    "securityprofiles": [
+    "type" : "netagent",
+    "rest-endpoint" : "api/security/profiles/",
+  "object-key" : "meta.tenant/meta.namespace/meta.name",
+    "objects": [
     {
       "kind": "SecurityProfile",
       "meta": {

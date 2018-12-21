@@ -1,5 +1,9 @@
 {
-"mirrors" : [
+    "type" : "netagent",
+    "rest-endpoint" : "api/mirror/sessions/",
+  "object-key" : "meta.tenant/meta.namespace/meta.name",
+
+"objects" : [
   {
     "kind": "MirrorSession",
     "meta": {

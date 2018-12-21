@@ -1,5 +1,8 @@
 {
-    "networks" : [
+    "type" : "netagent",
+    "rest-endpoint" : "api/networks/",
+  "object-key" : "meta.tenant/meta.namespace/meta.name",
+    "objects" : [
       {
         "kind": "Network",
         "meta": {

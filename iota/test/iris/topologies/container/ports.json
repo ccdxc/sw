@@ -1,5 +1,8 @@
 {
-  "ports": [
+    "type" : "netagent",
+  "rest-endpoint" : "api/system/ports/",
+  "object-key" : "meta.tenant/meta.namespace/meta.name",
+  "objects": [
     {
       "kind": "Port",
       "meta": {

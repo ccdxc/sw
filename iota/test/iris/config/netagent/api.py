@@ -1,26 +1,15 @@
 #! /usr/bin/python3
 import os
 import pdb
-import requests
-import json
-import grpc
-import sys
-import copy
-
-from enum import Enum
 import iota.harness.api as api
-from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
+import iota.test.iris.config.api as cfg_api
 
-class CfgOper(Enum):
-    ADD    = 1
-    DELETE = 2
-    UPDATE = 3
+base_url = "http://1.0.0.2:9007/"
 
 
 AGENT_URLS = []
 AGENT_IPS = []
 gl_hw = False
-
 
 def Init(agent_ips, hw=False):
     global AGENT_URLS
@@ -32,151 +21,154 @@ def Init(agent_ips, hw=False):
 
     global gl_hw
     gl_hw = hw
+
     return
 
+def __get_base_url(node_ip):
+    if gl_hw:
+        return  "http://1.0.0.2:9007/"
+    return "http://" + node_ip + ":9007/"
 
-def __get_delete_url(obj, url):
-    return url +  obj.meta.tenant + "/" + obj.meta.namespace  + "/" + obj.meta.name
+def PushConfigObjects(objects, ignore_error=False):
+    agent_ips = api.GetNaplesMgmtIpAddresses()
+    for agent_ip in agent_ips:
+        ret = cfg_api.PushConfigObjects(objects, __get_base_url(agent_ip),
+            remote_node=agent_ip if gl_hw else None)
+        if not ignore_error and ret != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
+    return api.types.status.SUCCESS
 
-def __rest_api_handler(rest_api_path, obj, oper = CfgOper.ADD):
-    for agent_url in AGENT_URLS:
-        json_data = json.dumps(obj, default=lambda o: getattr(o, '__dict__', str(o)))
+def DeleteConfigObjects(objects, ignore_error=False):
+    agent_ips = api.GetNaplesMgmtIpAddresses()
+    for agent_ip in agent_ips:
+        ret = cfg_api.DeleteConfigObjects(objects, __get_base_url(agent_ip),
+            remote_node=agent_ip if gl_hw else None)
+        if not ignore_error and ret != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
+    return api.types.status.SUCCESS
 
-        method = None
-        url = None
-        if oper == CfgOper.ADD:
-            url = agent_url + rest_api_path
-            method = requests.post
-        elif oper == CfgOper.DELETE:
-            url = __get_delete_url(obj, agent_url + rest_api_path)
-            method = method.delete
-        elif oper == CfgOper.UPDATE:
-            url = __get_delete_url(obj, agent_url + rest_api_path)
-            method = method.put
-        else:
-            assert(0)
-        api.Logger.info("URL = ", url)
-        api.Logger.info("JSON Data = ", json_data)
-        headers = {'Content-type': 'application/json'}
-        if not GlobalOptions.dryrun:
-            response = method(url, data=json_data, headers=headers)
-            api.Logger.info("REST response = ", response.text)
-            assert(response.status_code == requests.codes.ok)
-    return
+def UpdateConfigObjects(objects, ignore_error=False):
+    agent_ips = api.GetNaplesMgmtIpAddresses()
+    for agent_ip in agent_ips:
+        ret = cfg_api.UpdateConfigObjects(objects, __get_base_url(agent_ip),
+            remote_node=agent_ip if gl_hw else None)
+        if not ignore_error and ret != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
+    return api.types.status.SUCCESS
 
+#Assuming all nodes have same, return just from one node.
+def GetConfigObjects(objects, ignore_error=False):
+    agent_ips = api.GetNaplesMgmtIpAddresses()
+    for agent_ip in agent_ips:
+        get_objects = cfg_api.GetConfigObjects(objects, __get_base_url(agent_ip),
+            remote_node=agent_ip if gl_hw else None)
+        return get_objects
+    return []
 
-def __hw_rest_api_handler(rest_api_path, obj, cfgOper = CfgOper.ADD):
-    with open('temp_config.json', 'w') as outfile:
-        outfile.write(json.dumps(obj, default=lambda o: getattr(o, '__dict__', str(o))))
-    outfile.close()
-    for agent_ip in AGENT_IPS:
-        api.Logger.info("Pushing config to Node: %s" % agent_ip)
-        if GlobalOptions.debug:
-            os.system("cat temp_config.json")
+def RemoveConfigObjects(objects):
+    return cfg_api.RemoveConfigObjects(objects)
 
-        os.system("sshpass -p vm scp temp_config.json vm@%s:~" % agent_ip)
-        url = None
-        oper = None
-        if cfgOper == CfgOper.DELETE:
-            url = __get_delete_url(obj, "http://1.0.0.2:9007/" + rest_api_path)
-            oper = "DELETE"
-        elif cfgOper == CfgOper.ADD:
-            url = "http://1.0.0.2:9007/" + rest_api_path
-            oper = "POST"
-        elif cfgOper == CfgOper.UPDATE:
-            url = __get_delete_url(obj, "http://1.0.0.2:9007/" + rest_api_path)
-            oper = "PUT"
-        else:
-            print (oper)
-            assert(0)
-        api.Logger.info("Url : %s" % url)
-        cmd = ("sshpass -p %s ssh %s@%s curl -X %s -d @temp_config.json -H \"Content-Type:application/json\" %s" %
-                        (api.GetTestbedPassword(), api.GetTestbedUsername(), agent_ip, oper, url))
-        api.Logger.info("Cmd : %s" % cmd)
-        if not GlobalOptions.dryrun:
-            ret = os.system(cmd)
-            assert(ret == 0)
-    os.system("rm -f temp_config.json")
-    return
+def QueryConfigs(kind, filter=None):
+    return cfg_api.QueryConfigs(kind, filter)
 
+def ReadConfigs(directory, file_pattern="*.json"):
+    return cfg_api.ReadConfigs(directory, file_pattern)
 
-def __config(objlist, rest_api_path, oper = CfgOper.ADD):
-    for obj in objlist:
-        if gl_hw:
-            __hw_rest_api_handler(rest_api_path, obj, oper)
-        else:
-            __rest_api_handler(rest_api_path, obj, oper)
-    return
+def AddOneConfig(config_file):
+    return cfg_api.AddOneConfig(config_file)
 
+def ResetConfigs():
+    cfg_api.ResetConfigs()
 
-def ConfigureTenants(objlist, oper = CfgOper.ADD):
-    __config(objlist, 'api/tenants/', oper)
-    return
+def PrintConfigObjects(objects):
+    cfg_api.PrintConfigsObjects()
 
+def AddMirrors():
+    return PushConfigObjects(cfg_api.QueryConfigs(kind='MirrorSession'))
 
-def ConfigureSecurityProfiles(objlist, oper = CfgOper.ADD):
-    __config(objlist, 'api/security/profiles/', oper)
-    return
+def DeleteMirrors():
+    return DeleteConfigObjects(cfg_api.QueryConfigs(kind='MirrorSession'))
 
-def ConfigureSecurityGroupPolicies(objlist, oper = CfgOper.ADD):
-    __config(objlist, 'api/security/policies/', oper)
-    return
+def AddNetworks():
+    return PushConfigObjects(cfg_api.QueryConfigs(kind='Network'))
 
+def DeleteNetworks():
+    return DeleteConfigObjects(cfg_api.QueryConfigs(kind='Network'))
 
-def ConfigureSecurityGroups(objlist):
-    #__config(objlist, 'api/sgs/')
-    return
+def AddEndpoints():
+    return PushConfigObjects(cfg_api.QueryConfigs(kind='Endpoint'))
+
+def DeleteEndpoints():
+    return DeleteConfigObjects(cfg_api.QueryConfigs(kind='Endpoint'))
+
+def AddSgPolicies():
+    return PushConfigObjects(cfg_api.QueryConfigs(kind='SGPolicy'))
+
+def DeleteSgPolicies():
+    return DeleteConfigObjects(cfg_api.QueryConfigs(kind='SGPolicy'))
+
+def AddSecurityProfiles():
+    return PushConfigObjects(cfg_api.QueryConfigs(kind='SecurityProfile'))
+
+def DeleteSecurityProfiles():
+    return DeleteConfigObjects(cfg_api.QueryConfigs(kind='SecurityProfile'))
 
 
-def ConfigureNetworks(objlist, oper = CfgOper.ADD):
-    __config(objlist, 'api/networks/', oper)
-    return
+def PortUp():
+    port_objects = cfg_api.QueryConfigs(kind='Port')
+    for obj in port_objects:
+        obj.spec.admin_status = "UP"
+    UpdateConfigObjects(port_objects)
 
-def ConfigureFlowExport(objlist, oper = CfgOper.ADD):
-    __config(objlist, 'api/telemetry/flowexports/', oper)
-    return
+def PortDown():
+    port_objects = cfg_api.QueryConfigs(kind='Port')
+    for obj in port_objects:
+        obj.spec.admin_status = "UP"
+    UpdateConfigObjects(port_objects)
 
-def ConfigureTunnels(objlist, oper = CfgOper.ADD):
-    __config(objlist, 'api/tunnels/', oper)
-    return
 
-def ConfigureMirror(objlist, oper = CfgOper.ADD):
-    __config(objlist, 'api/mirror/sessions/', oper)
-    return
+def FlapPorts():
+    PortDown()
+    PortUp()
+    return api.types.status.SUCCESS
 
-def ConfigureEndpoints(objlist, oper = CfgOper.ADD):
-    newOjList = []
+
+def UpdateNodeUuidEndpoints(objects):
     agent_uuid_map = api.GetNaplesNodeUuidMap()
-    for ep in objlist:
-        epCopy = copy.deepcopy(ep)
-        node_name = getattr(ep.spec, "node-uuid", None)
+    for ep in objects:
+        node_name = getattr(ep.spec, "node_uuid", None)
         assert(node_name)
-        setattr(epCopy.spec, "node-uuid", "%s" % agent_uuid_map[node_name])
-        newOjList.append(epCopy)
-    __config(newOjList, 'api/endpoints/', oper)
-    return
+        ep.spec.node_uuid = agent_uuid_map[node_name]
+        ep.spec._node_name = node_name
 
-def PortUp(objlist, oper = CfgOper.UPDATE):
-    newObjList = []
-    for port in objlist:
-        portCopy = copy.deepcopy(port)
-        setattr(portCopy.spec, "admin-status", "UP")
-        newObjList.append(portCopy)
-    __config(newObjList, 'api/system/ports/', oper)
+def UpdateTestBedVlans(objects):
+    for obj in objects:
+        vlan = api.Testbed_AllocateVlan()
+        api.Logger.info("Network Object: %s, Allocated Vlan = %d" % (obj.meta.name, vlan))
+        obj.spec.vlan_id = vlan
 
-def PortDown(objlist, oper = CfgOper.UPDATE):
-    newObjList = []
-    for port in objlist:
-        portCopy = copy.deepcopy(port)
-        setattr(portCopy.spec, "admin-status", "DOWN")
-        newObjList.append(portCopy)
-    __config(newObjList, 'api/system/ports/', oper)
+def PushBaseConfig():
+    objects = QueryConfigs(kind='Network')
+    UpdateTestBedVlans(objects)
+    PushConfigObjects(objects, ignore_error=True)
+    objects = QueryConfigs(kind='Endpoint')
+    UpdateNodeUuidEndpoints(objects)
+    PushConfigObjects(objects, ignore_error=True)
+    objects = QueryConfigs(kind='SGPolicy')
+    PushConfigObjects(objects, ignore_error=True)
+    objects = QueryConfigs(kind='SecurityProfile')
+    PushConfigObjects(objects, ignore_error=True)
+    objects = QueryConfigs(kind='Tunnel')
+    PushConfigObjects(objects, ignore_error=True)
 
-def PortAttrSet(objlist, oper,attrName, attrVal):
-    newObjList = []
-    for port in objlist:
-        portCopy = copy.deepcopy(port)
-        setattr(portCopy.spec, attrName, attrVal)
-        newObjList.append(portCopy)
-    __config(newObjList, 'api/system/ports/', oper)
-
+def DeleteBaseConfig():
+    objects = QueryConfigs(kind='Tunnel')
+    DeleteConfigObjects(objects, ignore_error=True)
+    objects = QueryConfigs(kind='SecurityProfile')
+    DeleteConfigObjects(objects, ignore_error=True)
+    objects = QueryConfigs(kind='SGPolicy')
+    DeleteConfigObjects(objects, ignore_error=True)
+    objects = QueryConfigs(kind='Endpoint')
+    DeleteConfigObjects(objects, ignore_error=True)
+    objects = QueryConfigs(kind='Network')
+    DeleteConfigObjects(objects, ignore_error=True)

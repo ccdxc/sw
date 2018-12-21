@@ -1,5 +1,9 @@
 {
-"flowexports": [
+    "type" : "netagent",
+    "rest-endpoint" : "api/telemetry/flowexports",
+  "object-key" : "meta.tenant/meta.namespace/meta.name",
+
+"objects": [
   {
     "kind": "FlowExportPolicy",
     "meta": {
@@ -25,7 +29,7 @@
   {
     "kind": "FlowExportPolicy",
     "meta": {
-      "name": "scale-flow-export-ipfix-0",
+      "name": "scale-flow-export-ipfix-1",
       "tenant": "default",
       "namespace": "default"
     },

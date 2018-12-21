@@ -15,7 +15,7 @@ images:
 
 setup:
     topology: test/iris/topologies/container/container.topology
-    config  : 
+    config  :
         - step : config.netagent.hw_push_config
         - step : testcases.drivers.install_iperf
 
@@ -27,11 +27,11 @@ common:
 testbundles:
     # Relative paths from iota/test/iris/testbundles/
     - networking/networking.testbundle
-    - networking/telemetry.testbundle
+    #- networking/telemetry.testbundle
     - linktest/linktest.testbundle
     - aging/aging.testbundle
     - alg/alg.testbundle
-    - firewall/policy.testbundle
+    #- firewall/policy.testbundle
     - firewall/conntrack.testbundle
     - firewall/normalization.testbundle
     - linktest/linktest.testbundle

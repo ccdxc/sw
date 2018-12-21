@@ -1,5 +1,8 @@
 {
-    "sgpolicies": [
+    "type" : "netagent",
+    "rest-endpoint" : "api/security/policies/",
+  "object-key" : "meta.tenant/meta.namespace/meta.name",
+    "objects": [
     {
       "kind": "SGPolicy",
       "meta": {

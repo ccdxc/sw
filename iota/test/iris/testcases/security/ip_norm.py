@@ -2,7 +2,6 @@
 import pdb
 import iota.harness.api as api
 import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
-import iota.test.iris.config.netagent.cfg_api as netagent_cfg_api
 
 def __get_workload_pairs():
     pairs = []

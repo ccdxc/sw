@@ -1,5 +1,8 @@
 {
-"tunnels" : [
+    "type" : "netagent",
+    "rest-endpoint" : "api/tunnels/",
+  "object-key" : "meta.tenant/meta.namespace/meta.name",
+"objects" : [
   {
     "kind": "Tunnel",
     "meta": {
