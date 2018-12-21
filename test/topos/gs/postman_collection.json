@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "94e9c718-8642-4252-a213-85b280c3d3dd",
+		"_postman_id": "fc37a4bb-99cd-4d5b-8d42-14d3b4ec9659",
 		"name": "Venice REST APIs",
 		"description": "2018-07-22 REST API examples (POST/GET/PUT/DELETE) for Host and Workload objects",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -10,7 +10,7 @@
 			"name": "Login",
 			"item": [
 				{
-					"name": "http://localhost:10001/v1/login",
+					"name": "login",
 					"request": {
 						"method": "POST",
 						"header": [
@@ -24,12 +24,10 @@
 							"raw": "{\n\t\"username\": \"admin\",\n\t\"password\": \"password\",\n\t\"tenant\": \"default\"\n}"
 						},
 						"url": {
-							"raw": "http://localhost:10001/v1/login",
-							"protocol": "http",
+							"raw": "{{apigw-node1}}/v1/login",
 							"host": [
-								"localhost"
+								"{{apigw-node1}}"
 							],
-							"port": "10001",
 							"path": [
 								"v1",
 								"login"
@@ -56,7 +54,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"api-version\": \"v1\",\n  \"meta\": {\n    \"name\": \"esx-host1.local\"\n  },\n  \"spec\": {\n    \"interfaces\": {\n      \"00:50:56:00:00:01\": {\n        \"mac-addrs\": [\n          \"00:50:56:00:00:01\"\n        ]\n      },\n      \"00:50:56:00:00:02\": {\n        \"mac-addrs\": [\n          \"00:50:56:00:00:02\"\n        ]\n      }\n    }\n  }\n}"
+							"raw": "{\n    \"api-version\": \"v1\",\n    \"meta\": {\n        \"name\": \"esx-host1.local\"\n    },\n    \"spec\": {\n        \"smart-nics\": [\n            {\n                \"name\": \"naples1-host\",\n                \"mac-address\": \"00:50:56:00:00:01\"\n            },\n            {\n                \"name\": \"naples2-host\",\n                \"mac-address\": \"00:50:56:00:00:02\"\n            }\n        ]\n    }\n}"
 						},
 						"url": {
 							"raw": "{{apigw-node1}}/configs/cluster/v1/hosts",
@@ -85,7 +83,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"api-version\": \"v1\",\n  \"meta\": {\n    \"name\": \"esx-host1.local\",\n    \"labels\": {\n      \"Location\": \"us-west-A\"\n    }\n  },\n  \"spec\": {\n    \"interfaces\": {\n      \"00:50:56:00:00:01\": {\n        \"mac-addrs\": [\n          \"00:50:56:00:00:01\"\n        ]\n      },\n      \"00:50:56:00:00:02\": {\n        \"mac-addrs\": [\n          \"00:50:56:00:00:02\"\n        ]\n      }\n    }\n  }\n}"
+							"raw": "{\n    \"api-version\": \"v1\",\n    \"meta\": {\n        \"name\": \"esx-host1.local\",\n        \"labels\": {\n            \"Location\": \"us-west-A\"\n        }\n    },\n    \"spec\": {\n        \"smart-nics\": [\n            {\n                \"name\": \"naples1-host\",\n                \"mac-address\": \"00:50:56:00:00:01\"\n            },\n            {\n                \"name\": \"naples2-host\",\n                \"mac-address\": \"00:50:56:00:00:02\"\n            }\n        ]\n    }\n}"
 						},
 						"url": {
 							"raw": "{{apigw-node1}}/configs/cluster/v1/hosts/esx-host1.local",
@@ -110,7 +108,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"kind\": \"Cluster\",\n    \"metadata\": {\n        \"name\": \"testCluster\"\n    },\n    \"spec\": {\n        \"quorumNodes\": [ \"node1\", \"node2\", \"node3\" ],\n        \"virtualIP\": \"192.168.30.10\"\n    }\n}"
+							"raw": ""
 						},
 						"url": {
 							"raw": "{{apigw-node1}}/configs/cluster/v1/hosts/esx-host1.local",
@@ -135,7 +133,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"kind\": \"Cluster\",\n    \"metadata\": {\n        \"name\": \"testCluster\"\n    },\n    \"spec\": {\n        \"quorumNodes\": [ \"node1\", \"node2\", \"node3\" ],\n        \"virtualIP\": \"192.168.30.10\"\n    }\n}"
+							"raw": ""
 						},
 						"url": {
 							"raw": "{{apigw-node1}}/configs/cluster/v1/hosts",
@@ -189,7 +187,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"api-version\": \"v1\",\n  \"meta\": {\n    \"name\": \"gs-vm-1\",\n    \"namespace\": \"default\"\n  },\n  \"spec\": {\n    \"host-name\": \"naples1-host\",\n    \"interfaces\": {\n      \"00:50:56:00:00:03\": {\n        \"micro-seg-vlan\": 103,\n        \"external-vlan\": 1003\n      },\n      \"00:50:56:00:00:04\": {\n        \"micro-seg-vlan\": 104,\n        \"external-vlan\": 1004\n      }\n    }\n  }\n}"
+							"raw": "{\n    \"api-version\": \"v1\",\n    \"meta\": {\n        \"name\": \"gs-vm-1\",\n        \"namespace\": \"default\"\n    },\n    \"spec\": {\n        \"host-name\": \"naples1-host\",\n        \"interfaces\": [\n            {\n                \"mac-address\": \"00:50:56:00:00:03\",\n                \"micro-seg-vlan\": 103,\n                \"external-vlan\": 1003\n            },\n            {\n                \"mac-address\": \"00:50:56:00:00:04\",\n                \"micro-seg-vlan\": 104,\n                \"external-vlan\": 1004\n            }\n        ]\n    }\n}"
 						},
 						"url": {
 							"raw": "{{apigw-node1}}/configs/workload/v1/workloads",
@@ -218,7 +216,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"api-version\": \"v1\",\n  \"meta\": {\n    \"name\": \"gs-vm-1\",\n    \"namespace\": \"default\",\n    \"labels\": {\n      \"Location\": \"us-west-A\"\n    }\n  },\n  \"spec\": {\n    \"host-name\": \"naples1-host\",\n    \"interfaces\": {\n      \"00:50:56:00:00:03\": {\n        \"micro-seg-vlan\": 103,\n        \"external-vlan\": 1003\n      },\n      \"00:50:56:00:00:04\": {\n        \"micro-seg-vlan\": 104,\n        \"external-vlan\": 1004\n      }\n    }\n  }\n}"
+							"raw": "{\n    \"api-version\": \"v1\",\n    \"meta\": {\n        \"name\": \"gs-vm-1\",\n        \"namespace\": \"default\",\n        \"labels\": {\n            \"Location\": \"us-west-A\"\n        }\n    },\n    \"spec\": {\n        \"host-name\": \"naples1-host\",\n        \"interfaces\": [\n            {\n                \"mac-address\": \"00:50:56:00:00:03\",\n                \"micro-seg-vlan\": 103,\n                \"external-vlan\": 1003\n            },\n            {\n                \"mac-address\": \"00:50:56:00:00:04\",\n                \"micro-seg-vlan\": 105,\n                \"external-vlan\": 1004\n            }\n        ]\n    }\n}"
 						},
 						"url": {
 							"raw": "{{apigw-node1}}/configs/workload/v1/workloads/gs-vm-1",
@@ -243,7 +241,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"kind\": \"Cluster\",\n    \"metadata\": {\n        \"name\": \"testCluster\"\n    },\n    \"spec\": {\n        \"quorumNodes\": [ \"node1\", \"node2\", \"node3\" ],\n        \"virtualIP\": \"192.168.30.10\"\n    }\n}"
+							"raw": ""
 						},
 						"url": {
 							"raw": "{{apigw-node1}}/configs/workload/v1/workloads/gs-vm-1",
@@ -268,7 +266,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"kind\": \"Cluster\",\n    \"metadata\": {\n        \"name\": \"testCluster\"\n    },\n    \"spec\": {\n        \"quorumNodes\": [ \"node1\", \"node2\", \"node3\" ],\n        \"virtualIP\": \"192.168.30.10\"\n    }\n}"
+							"raw": ""
 						},
 						"url": {
 							"raw": "{{apigw-node1}}/configs/workload/v1/workloads",
@@ -327,7 +325,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\"kind\":\"SGPolicy\",\"meta\":{\"name\":\"ny-dc01-sg\",\"tenant\":\"default\",\"namespace\":\"default\"},\"spec\":{\"attach-tenant\":true,\"rules\":[{\"apps\":[\"tcp/80\",\"udp/53\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"172.0.0.1\",\"172.0.0.2\",\"10.0.0.1/30\"],\"to-ip-addresses\":[\"192.168.1.1/16\"]},{\"apps\":[\"tcp/443\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"183.189.83.73\",\"183.189.83.74\",\"183.189.83.75\"],\"to-ip-addresses\":[\"192.168.1.1/16\"]},{\"apps\":[\"tcp/21\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"240.52.85.31-240.52.85.40\"],\"to-ip-addresses\":[\"any\"]},{\"apps\":[\"tcp/179\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"16.95.165.16\",\"16.95.165.17\"],\"to-ip-addresses\":[\"116.95.165.15/30\"]},{\"apps\":[\"tcp/25\",\"tcp/22\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"128.100.241.59\"],\"to-ip-addresses\":[\"240.52.85.31\"]},{\"apps\":[\"tcp/80\",\"udp/53\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"212.207.6.48/22\"],\"to-ip-addresses\":[\"212.207.6.48/30\"]}]}}"
+							"raw": "{\n    \"kind\": \"SGPolicy\",\n    \"meta\": {\n        \"name\": \"ny-dc01-sg\",\n        \"tenant\": \"default\",\n        \"namespace\": \"default\"\n    },\n    \"spec\": {\n        \"attach-tenant\": true,\n        \"rules\": [\n            {\n                \"apps\": [\n                    \"6_ftp_21_21_1\"\n                ],\n                \"action\": \"PERMIT\",\n                \"from-ip-addresses\": [\n                    \"172.0.0.1\",\n                    \"172.0.0.2\",\n                    \"10.0.0.1/30\"\n                ],\n                \"to-ip-addresses\": [\n                    \"192.168.1.1/16\"\n                ]\n            },\n            {\n                \"action\": \"PERMIT\",\n                \"from-ip-addresses\": [\n                    \"10.100.124.239/32\"\n                ],\n                \"to-ip-addresses\": [\n                    \"10.103.45.77/32\"\n                ],\n                \"proto-ports\": [\n                    {\n                        \"protocol\": \"tcp\",\n                        \"ports\": \"5439-5440\"\n                    }\n                ]\n            }\n            \n        ]\n    }\n}"
 						},
 						"url": {
 							"raw": "{{apigw-node1}}/configs/security/v1/sgpolicies",
@@ -380,7 +378,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\"kind\":\"SGPolicy\",\"meta\":{\"name\":\"ny-dc01-sg\",\"tenant\":\"default\",\"namespace\":\"default\"},\"spec\":{\"attach-tenant\":true,\"rules\": [{\"apps\":[\"tcp/80\",\"udp/53\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"172.0.0.1\",\"172.0.0.2\",\"10.0.0.1/30\"],\"to-ip-addresses\":[\"229.204.171.210/16\"]},{\"apps\":[\"tcp/443\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"183.189.83.73\",\"183.189.83.74\",\"183.189.83.75\"],\"to-ip-addresses\":[\"229.204.171.210/16\"]},{\"apps\":[\"tcp/21\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"240.52.85.31-240.52.85.40\"],\"to-ip-addresses\":[\"any\"]},{\"apps\":[\"tcp/179\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"16.95.165.16\",\"16.95.165.17\"],\"to-ip-addresses\":[\"116.95.165.15/30\"]},{\"apps\":[\"tcp/25\",\"tcp/22\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"128.100.241.59\"],\"to-ip-addresses\":[\"240.52.85.31\"]},{\"apps\":[\"tcp/80\",\"udp/53\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"212.207.6.48/22\"],\"to-ip-addresses\":[\"212.207.6.49/30\"]},{\"apps\":[\"tcp/21\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"92.4.8.126-92.4.8.129\"],\"to-ip-addresses\":[\"any\"]},{\"apps\":[\"tcp/179\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"2.142.238.239\",\"2.142.238.245\"],\"to-ip-addresses\":[\"212.207.6.49/30\"]},{\"apps\":[\"tcp/25\",\"tcp/22\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"5.93.112.144\"],\"to-ip-addresses\":[\"240.52.85.31\"]},{\"apps\":[\"tcp/80\",\"udp/53\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"158.202.161.168/22\"],\"to-ip-addresses\":[\"158.202.161.169/30\"]},{\"apps\":[\"tcp/80\",\"udp/53\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"124.227.120.107\",\"124.227.120.108\",\"10.0.0.1/30\"],\"to-ip-addresses\":[\"229.204.171.210/16\"]},{\"apps\":[\"tcp/443\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"214.2.89.43\",\"214.2.89.44\",\"214.2.89.46\"],\"to-ip-addresses\":[\"229.204.171.210/16\"]},{\"apps\":[\"tcp/21\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"70.75.133.21-70.75.133.42\"],\"to-ip-addresses\":[\"any\"]},{\"apps\":[\"tcp/179\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"251.25.144.65\"],\"to-ip-addresses\":[\"116.95.165.15/30\"]},{\"apps\":[\"tcp/25\",\"tcp/22\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"95.100.136.42\"],\"to-ip-addresses\":[\"240.52.85.31\"]},{\"apps\":[\"tcp/80\",\"udp/53\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"212.207.6.48/22\"],\"to-ip-addresses\":[\"212.207.6.49/30\"]},{\"apps\":[\"tcp/21\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"120.47.124.235-120.47.124.240\"],\"to-ip-addresses\":[\"any\"]},{\"apps\":[\"tcp/179\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"1.234.42.77\",\"16.95.165.17\"],\"to-ip-addresses\":[\"116.95.165.15/30\"]},{\"apps\":[\"tcp/25\",\"tcp/22\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"199.43.134.53\"],\"to-ip-addresses\":[\"240.52.85.31\"]},{\"apps\":[\"tcp/80\",\"udp/53\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"42.167.154.28/22\"],\"to-ip-addresses\":[\"42.167.154.29/30\"]},{\"apps\":[\"tcp/80\",\"udp/53\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"253.247.131.5\",\"253.247.131.6\",\"10.0.0.1/30\"],\"to-ip-addresses\":[\"229.204.171.210/16\"]},{\"apps\":[\"tcp/443\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"34.59.61.183\",\"34.59.61.184\",\"34.59.61.185\"],\"to-ip-addresses\":[\"229.204.171.210/16\"]},{\"apps\":[\"tcp/21\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"93.88.205.233-93.88.205.250\"],\"to-ip-addresses\":[\"any\"]},{\"apps\":[\"tcp/179\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"113.40.223.122\",\"113.40.223.123\"],\"to-ip-addresses\":[\"116.95.165.15/30\"]},{\"apps\":[\"tcp/25\",\"tcp/22\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"249.183.228.146\"],\"to-ip-addresses\":[\"240.52.85.31\"]},{\"apps\":[\"tcp/80\",\"udp/53\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"164.191.86.49/22\"],\"to-ip-addresses\":[\"164.191.86.50/30\"]},{\"apps\":[\"tcp/21\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"126.19.191.244-126.19.191.255\"],\"to-ip-addresses\":[\"any\"]},{\"apps\":[\"tcp/179\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"84.216.46.122\",\"84.216.46.123\"],\"to-ip-addresses\":[\"116.95.165.15/30\"]},{\"apps\":[\"tcp/25\",\"tcp/22\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"6.222.126.131\"],\"to-ip-addresses\":[\"6.222.126.132\"]},{\"apps\":[\"tcp/80\",\"udp/53\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"254.97.123.233/22\"],\"to-ip-addresses\":[\"254.97.123.234/30\"]},{\"apps\":[\"tcp/80\",\"udp/53\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"191.39.242.20\",\"191.39.242.21\",\"191.39.242.23\"],\"to-ip-addresses\":[\"229.204.171.210/16\"]},{\"apps\":[\"tcp/443\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"149.146.249.60\"],\"to-ip-addresses\":[\"229.204.171.210/16\"]},{\"apps\":[\"tcp/21\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"125.18.78.65-125.18.78.255\"],\"to-ip-addresses\":[\"any\"]},{\"apps\":[\"tcp/179\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"141.138.102.19\",\"141.138.102.20\"],\"to-ip-addresses\":[\"116.95.165.15/30\"]},{\"apps\":[\"tcp/25\",\"tcp/22\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"193.45.169.106\"],\"to-ip-addresses\":[\"240.52.85.31\"]},{\"apps\":[\"tcp/80\",\"udp/53\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"140.110.19.33/22\"],\"to-ip-addresses\":[\"140.110.19.34/30\"]},{\"apps\":[\"tcp/21\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"174.236.151.110-174.236.151.128\"],\"to-ip-addresses\":[\"any\"]},{\"apps\":[\"tcp/179\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"71.137.88.35\"],\"to-ip-addresses\":[\"116.95.165.15/30\"]},{\"apps\":[\"tcp/25\",\"tcp/22\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"128.100.241.59\"],\"to-ip-addresses\":[\"240.52.85.31\"]},{\"apps\":[\"tcp/80\",\"udp/53\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"3.185.65.114/22\"],\"to-ip-addresses\":[\"3.185.65.115/30\"]},{\"apps\":[\"tcp/80\",\"udp/53\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"189.71.4.108\"],\"to-ip-addresses\":[\"189.71.4.109\"]},{\"apps\":[\"tcp/443\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"128.30.44.82\",\"128.30.44.84\",\"128.30.44.85\"],\"to-ip-addresses\":[\"229.204.171.210/16\"]},{\"apps\":[\"tcp/21\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"169.65.23.43-169.65.23.128\"],\"to-ip-addresses\":[\"any\"]},{\"apps\":[\"tcp/179\"],\"action\":\"REJECT\",\"from-ip-addresses\":[\"251.181.108.36\",\"251.181.108.37\"],\"to-ip-addresses\":[\"116.95.165.15/30\"]},{\"apps\":[\"tcp/25\",\"tcp/22\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"49.154.123.223\"],\"to-ip-addresses\":[\"240.52.85.31\"]},{\"apps\":[\"tcp/80\",\"udp/53\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"61.246.215.33/22\"],\"to-ip-addresses\":[\"61.246.215.34/30\"]},{\"apps\":[\"tcp/21\"],\"action\":\"DENY\",\"from-ip-addresses\":[\"101.228.232.157-101.228.232.255\"],\"to-ip-addresses\":[\"any\"]},{\"apps\":[\"tcp/179\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"112.229.170.113\",\"112.229.170.114\"],\"to-ip-addresses\":[\"116.95.165.15/30\"]},{\"apps\":[\"tcp/25\",\"tcp/22\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"199.28.232.59\"],\"to-ip-addresses\":[\"240.52.85.31\"]},{\"apps\":[\"tcp/80\",\"udp/53\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"7.68.128.220/22\"],\"to-ip-addresses\":[\"7.68.128.221/30\"]},{\"apps\":[\"tcp/80\",\"udp/53\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"81.57.66.62\",\"81.57.66.63\"],\"to-ip-addresses\":[\"45.17.192.219\"]},{\"apps\":[\"tcp/443\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"98.10.104.157\",\"183.189.83.74\"],\"to-ip-addresses\":[\"183.189.83.75\"]},{\"apps\":[\"tcp/21\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"81.47.11.188-81.47.11.255\"],\"to-ip-addresses\":[\"any\"]},{\"apps\":[\"tcp/179\"],\"action\":\"DENY\",\"from-ip-addresses\":[\"104.39.3.226\",\"104.39.3.227\"],\"to-ip-addresses\":[\"116.95.165.15/30\"]},{\"apps\":[\"tcp/25\",\"tcp/22\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"128.100.241.59\"],\"to-ip-addresses\":[\"170.31.146.41\"]},{\"apps\":[\"tcp/80\",\"udp/53\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"37.232.218.135/22\"],\"to-ip-addresses\":[\"37.232.218.136/30\"]},{\"apps\":[\"tcp/21\"],\"action\":\"REJECT\",\"from-ip-addresses\":[\"72.40.202.214-72.40.202.255\"],\"to-ip-addresses\":[\"any\"]},{\"apps\":[\"tcp/179\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"16.95.165.17\"],\"to-ip-addresses\":[\"80.70.46.120/30\"]},{\"apps\":[\"tcp/25\",\"tcp/22\"],\"action\":\"DENY\",\"from-ip-addresses\":[\"163.5.116.75\"],\"to-ip-addresses\":[\"240.52.85.31\"]},{\"apps\":[\"tcp/80\",\"udp/53\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"43.121.155.6/22\"],\"to-ip-addresses\":[\"43.121.155.7/30\"]},{\"apps\":[\"tcp/80\",\"udp/53\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"13.109.216.148\",\"13.109.216.149\"],\"to-ip-addresses\":[\"229.204.171.210/16\"]},{\"apps\":[\"tcp/443\"],\"action\":\"DENY\",\"from-ip-addresses\":[\"10.146.156.151\"],\"to-ip-addresses\":[\"229.204.171.210/16\"]},{\"apps\":[\"tcp/21\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"228.45.217.250-228.45.217.255\"],\"to-ip-addresses\":[\"any\"]},{\"apps\":[\"tcp/179\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"29.161.120.19\",\"129.161.120.120\"],\"to-ip-addresses\":[\"116.95.165.15/30\"]},{\"apps\":[\"tcp/25\",\"tcp/22\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"193.195.68.176\"],\"to-ip-addresses\":[\"240.52.85.31\"]},{\"apps\":[\"tcp/80\",\"udp/53\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"185.158.165.29/22\"],\"to-ip-addresses\":[\"185.158.165.30/30\"]},{\"apps\":[\"tcp/21\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"218.206.43.146-218.206.43.255\"],\"to-ip-addresses\":[\"any\"]},{\"apps\":[\"tcp/179\"],\"action\":\"REJECT\",\"from-ip-addresses\":[\"248.104.240.143\",\"248.104.240.147\"],\"to-ip-addresses\":[\"116.95.165.15/30\"]},{\"apps\":[\"tcp/25\",\"tcp/22\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"9.231.145.69\"],\"to-ip-addresses\":[\"165.105.83.70\"]},{\"apps\":[\"tcp/80\",\"udp/53\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"31.227.136.240/22\"],\"to-ip-addresses\":[\"31.227.136.241/30\"]},{\"apps\":[\"tcp/80\",\"udp/53\"],\"action\":\"DENY\",\"from-ip-addresses\":[\"166.32.1.248\"],\"to-ip-addresses\":[\"229.204.171.210/16\"]},{\"apps\":[\"tcp/443\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"144.90.106.20\",\"144.90.106.22\",\"144.90.106.24\"],\"to-ip-addresses\":[\"229.204.171.210/16\"]},{\"apps\":[\"tcp/21\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"177.23.236.57-177.23.236.255\"],\"to-ip-addresses\":[\"any\"]},{\"apps\":[\"tcp/179\"],\"action\":\"REJECT\",\"from-ip-addresses\":[\"116.95.6.23\",\"116.95.6.27\"],\"to-ip-addresses\":[\"116.95.165.15/30\"]},{\"apps\":[\"tcp/25\",\"tcp/22\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"242.74.51.111\"],\"to-ip-addresses\":[\"240.52.85.31\"]},{\"apps\":[\"tcp/80\",\"udp/53\"],\"action\":\"DENY\",\"from-ip-addresses\":[\"151.41.246.170/22\"],\"to-ip-addresses\":[\"151.41.246.171/30\"]},{\"apps\":[\"tcp/21\"],\"action\":\"DENY\",\"from-ip-addresses\":[\"240.52.85.31-240.52.85.40\"],\"to-ip-addresses\":[\"any\"]},{\"apps\":[\"tcp/179\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"129.172.4.198\",\"129.172.4.200\"],\"to-ip-addresses\":[\"116.95.165.15/30\"]},{\"apps\":[\"tcp/25\",\"tcp/22\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"50.189.214.24\"],\"to-ip-addresses\":[\"240.52.85.31\"]},{\"apps\":[\"tcp/80\",\"udp/53\"],\"action\":\"DENY\",\"from-ip-addresses\":[\"48.167.93.164/22\"],\"to-ip-addresses\":[\"48.167.93.165/30\"]},{\"apps\":[\"tcp/80\",\"udp/53\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"167.196.173.2\",\"167.196.173.3\"],\"to-ip-addresses\":[\"229.204.171.210/16\"]},{\"apps\":[\"tcp/443\"],\"action\":\"REJECT\",\"from-ip-addresses\":[\"72.117.43.229\",\"72.117.43.255\",\"72.117.43.234\"],\"to-ip-addresses\":[\"229.204.171.210/16\"]},{\"apps\":[\"tcp/21\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"232.210.84.39-251.213.40.242\"],\"to-ip-addresses\":[\"any\"]},{\"apps\":[\"tcp/179\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"104.147.193.101\",\"104.147.193.128\"],\"to-ip-addresses\":[\"116.95.165.15/30\"]},{\"apps\":[\"tcp/25\",\"tcp/22\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"159.57.20.223\"],\"to-ip-addresses\":[\"240.52.85.31\"]},{\"apps\":[\"tcp/80\",\"udp/53\"],\"action\":\"DENY\",\"from-ip-addresses\":[\"210.17.163.205/22\"],\"to-ip-addresses\":[\"210.17.163.206/30\"]},{\"apps\":[\"tcp/21\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"157.79.88.34-157.79.88.128\"],\"to-ip-addresses\":[\"any\"]},{\"apps\":[\"tcp/179\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"50.15.255.23\",\"50.15.255.255\"],\"to-ip-addresses\":[\"116.95.165.15/30\"]},{\"apps\":[\"tcp/25\",\"tcp/22\"],\"action\":\"REJECT\",\"from-ip-addresses\":[\"152.90.135.142\"],\"to-ip-addresses\":[\"240.52.85.31\"]},{\"apps\":[\"tcp/80\",\"udp/53\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"155.73.245.69/22\"],\"to-ip-addresses\":[\"155.73.245.70/30\"]},{\"apps\":[\"tcp/80\",\"udp/53\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"220.225.248.161\"],\"to-ip-addresses\":[\"229.204.171.210/16\"]},{\"apps\":[\"tcp/443\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"162.36.220.214\"],\"to-ip-addresses\":[\"229.204.171.210/16\"]},{\"apps\":[\"tcp/21\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"240.52.85.31-240.52.85.40\"],\"to-ip-addresses\":[\"any\"]},{\"apps\":[\"tcp/179\"],\"action\":\"DENY\",\"from-ip-addresses\":[\"145.203.100.85\"],\"to-ip-addresses\":[\"116.95.165.15/30\"]},{\"apps\":[\"tcp/25\",\"tcp/22\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"3.118.248.84\"],\"to-ip-addresses\":[\"240.52.85.31\"]},{\"apps\":[\"tcp/80\",\"udp/53\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"119.209.227.158/22\"],\"to-ip-addresses\":[\"119.209.227.159/30\"]},{\"apps\":[\"tcp/21\"],\"action\":\"REJECT\",\"from-ip-addresses\":[\"124.21.171.113-124.21.171.128\"],\"to-ip-addresses\":[\"any\"]},{\"apps\":[\"tcp/179\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"61.45.126.127\"],\"to-ip-addresses\":[\"116.95.165.15/30\"]},{\"apps\":[\"tcp/25\",\"tcp/22\"],\"action\":\"PERMIT\",\"from-ip-addresses\":[\"102.119.158.40\"],\"to-ip-addresses\":[\"240.52.85.31\"]},{\"apps\":[\"tcp/80\",\"udp/53\"],\"action\":\"DENY\",\"from-ip-addresses\":[\"230.91.160.41/22\"],\"to-ip-addresses\":[\"230.91.160.42/30\"]}]}}"
+							"raw": "{\n    \"kind\": \"SGPolicy\",\n    \"meta\": {\n        \"name\": \"ny-dc01-sg\",\n        \"tenant\": \"default\",\n        \"namespace\": \"default\"\n    },\n    \"spec\": {\n        \"attach-tenant\": true,\n        \"rules\": [\n            {\n                \"apps\": [\n                    \"6_ftp_21_21_1\"\n                ],\n                \"action\": \"PERMIT\",\n                \"from-ip-addresses\": [\n                    \"172.0.0.1\",\n                    \"172.0.0.2\",\n                    \"10.0.0.1/30\"\n                ],\n                \"to-ip-addresses\": [\n                    \"192.168.1.1/16\"\n                ]\n            },\n            {\n                \"action\": \"PERMIT\",\n                \"from-ip-addresses\": [\n                    \"10.100.124.239/32\"\n                ],\n                \"to-ip-addresses\": [\n                    \"10.103.45.77/32\",\n                    \"10.103.45.79/32\"\n                ],\n                \"proto-ports\": [\n                    {\n                        \"protocol\": \"tcp\",\n                        \"ports\": \"5439-5440\"\n                    }\n                ]\n            }\n            \n        ]\n    }\n}"
 						},
 						"url": {
 							"raw": "{{apigw-node1}}/configs/security/v1/sgpolicies/ny-dc01-sg",
@@ -448,16 +446,23 @@
 					"response": []
 				},
 				{
-					"name": "get_sg_policy_after_deletion",
+					"name": "create_App",
 					"request": {
-						"method": "GET",
-						"header": [],
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
 						"body": {
 							"mode": "raw",
-							"raw": ""
+							"raw": "{\n    \"api-version\": \"v1\",\n    \"kind\": \"App\",\n    \"meta\": {\n        \"name\": \"6_ftp_21_21_1\",\n        \"namespace\": \"default\",\n        \"tenant\": \"default\"\n    },\n    \"spec\": {\n        \"alg\": {\n            \"Type\": \"FTP\"\n        },\n        \"proto-ports\": [\n            {\n                \"ports\": \"21-21\",\n                \"protocol\": \"6\"\n            }\n        ]\n    }\n}"
 						},
 						"url": {
-							"raw": "{{apigw-node1}}/configs/security/v1/sgpolicies",
+							"raw": "{{apigw-node1}}/configs/security/v1/apps",
 							"host": [
 								"{{apigw-node1}}"
 							],
@@ -465,7 +470,105 @@
 								"configs",
 								"security",
 								"v1",
-								"sgpolicies"
+								"apps"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "updateApp",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"api-version\": \"v1\",\n    \"kind\": \"App\",\n    \"meta\": {\n        \"name\": \"6_ftp_21_21_1\",\n        \"namespace\": \"default\",\n        \"tenant\": \"default\"\n    },\n    \"spec\": {\n        \"alg\": {\n            \"Type\": \"FTP\",\n            \"ftp\": {\n                \"allow-mismatch-ip-address\": true\n            }\n        },\n        \"proto-ports\": [\n            {\n                \"ports\": \"21-21\",\n                \"protocol\": \"6\"\n            }\n        ]\n    }\n}"
+						},
+						"url": {
+							"raw": "{{apigw-node1}}/configs/security/v1/apps/6_ftp_21_21_1",
+							"host": [
+								"{{apigw-node1}}"
+							],
+							"path": [
+								"configs",
+								"security",
+								"v1",
+								"apps",
+								"6_ftp_21_21_1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get_apps",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"api-version\": \"v1\",\n    \"kind\": \"App\",\n    \"meta\": {\n        \"name\": \"6_ftp_21_21_1\",\n        \"namespace\": \"default\",\n        \"tenant\": \"default\"\n    },\n    \"spec\": {\n        \"alg\": {\n            \"Type\": \"FTP\"\n        },\n        \"proto-ports\": [\n            {\n                \"ports\": \"21-21\",\n                \"protocol\": \"6\"\n            }\n        ]\n    }\n}"
+						},
+						"url": {
+							"raw": "{{apigw-node1}}/configs/security/v1/apps",
+							"host": [
+								"{{apigw-node1}}"
+							],
+							"path": [
+								"configs",
+								"security",
+								"v1",
+								"apps"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "deleteApp",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"api-version\": \"v1\",\n    \"kind\": \"App\",\n    \"meta\": {\n        \"name\": \"6_ftp_21_21_1\",\n        \"namespace\": \"default\",\n        \"tenant\": \"default\"\n    },\n    \"spec\": {\n        \"alg\": {\n            \"Type\": \"FTP\"\n        },\n        \"proto-ports\": [\n            {\n                \"ports\": \"21-21\",\n                \"protocol\": \"6\"\n            }\n        ]\n    }\n}"
+						},
+						"url": {
+							"raw": "{{apigw-node1}}/configs/security/v1/apps/6_ftp_21_21_1",
+							"host": [
+								"{{apigw-node1}}"
+							],
+							"path": [
+								"configs",
+								"security",
+								"v1",
+								"apps",
+								"6_ftp_21_21_1"
 							]
 						}
 					},
@@ -507,7 +610,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"kind\": \"SGPolicy\",\n  \"meta\": {\n    \"name\": \"ny-dc01-sg-new\",\n    \"tenant\": \"default\",\n    \"namespace\": \"default\"\n  },\n  \"spec\": {\n    \"attach-tenant\": true,\n    \"rules\": [\n      {\n        \"apps\": [\n          \"tcp/80\",\n          \"udp/53\"\n        ],\n        \"action\": \"PERMIT\",\n        \"from-ip-addresses\": [\n          \"172.0.0.1\",\n          \"172.0.0.2\",\n          \"10.0.0.1/30\"\n        ],\n        \"to-ip-addresses\": [\n          \"192.168.1.1/16\"\n        ]\n      },\n      {\n        \"apps\": [\n          \"tcp/443\"\n        ],\n        \"action\": \"PERMIT\",\n        \"from-ip-addresses\": [\n          \"183.189.83.73\",\n          \"183.189.83.74\",\n          \"183.189.83.75\"\n        ],\n        \"to-ip-addresses\": [\n          \"192.168.1.1/16\"\n        ]\n      },\n      {\n        \"apps\": [\n          \"tcp/21\"\n        ],\n        \"action\": \"PERMIT\",\n        \"from-ip-addresses\": [\n          \"240.52.85.31-240.52.85.40\"\n        ],\n        \"to-ip-addresses\": [\n          \"any\"\n        ]\n      },\n      {\n        \"apps\": [\n          \"tcp/179\"\n        ],\n        \"action\": \"PERMIT\",\n        \"from-ip-addresses\": [\n          \"16.95.165.16\",\n          \"16.95.165.17\"\n        ],\n        \"to-ip-addresses\": [\n          \"116.95.165.15/30\"\n        ]\n      },\n      {\n        \"apps\": [\n          \"tcp/25\",\n          \"tcp/22\"\n        ],\n        \"action\": \"PERMIT\",\n        \"from-ip-addresses\": [\n          \"128.100.241.59\"\n        ],\n        \"to-ip-addresses\": [\n          \"240.52.85.31\"\n        ]\n      },\n      {\n        \"apps\": [\n          \"tcp/80\",\n          \"udp/53\"\n        ],\n        \"action\": \"PERMIT\",\n        \"from-ip-addresses\": [\n          \"212.207.6.48/22\"\n        ],\n        \"to-ip-addresses\": [\n          \"212.207.6.48/30\"\n        ]\n      }\n    ]\n  }\n}"
+							"raw": "{\n    \"kind\": \"SGPolicy\",\n    \"meta\": {\n        \"name\": \"ny-dc01-sg-new\",\n        \"tenant\": \"default\",\n        \"namespace\": \"default\"\n    },\n    \"spec\": {\n        \"attach-tenant\": true,\n        \"rules\": [\n            {\n                \"apps\": [\n                    \"6_ftp_21_21_2\"\n                ],\n                \"action\": \"PERMIT\",\n                \"from-ip-addresses\": [\n                    \"172.0.0.1\",\n                    \"172.0.0.2\",\n                    \"10.0.0.1/30\"\n                ],\n                \"to-ip-addresses\": [\n                    \"192.168.1.1/16\"\n                ]\n            },\n            {\n                \"action\": \"PERMIT\",\n                \"from-ip-addresses\": [\n                    \"10.100.124.239/32\"\n                ],\n                \"to-ip-addresses\": [\n                    \"10.103.45.77/32\"\n                ],\n                \"proto-ports\": [\n                    {\n                        \"protocol\": \"tcp\",\n                        \"ports\": \"5439-5440\"\n                    }\n                ]\n            }\n            \n        ]\n    }\n}"
 						},
 						"url": {
 							"raw": "{{apigw-node1}}/staging/TestBuffer/security/v1/sgpolicies",
@@ -526,11 +629,46 @@
 					"response": []
 				},
 				{
+					"name": "stage_App",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"api-version\": \"v1\",\n    \"kind\": \"App\",\n    \"meta\": {\n        \"name\": \"6_ftp_21_21_2\",\n        \"namespace\": \"default\",\n        \"tenant\": \"default\"\n    },\n    \"spec\": {\n        \"alg\": {\n            \"Type\": \"FTP\"\n        },\n        \"proto-ports\": [\n            {\n                \"ports\": \"21-21\",\n                \"protocol\": \"6\"\n            }\n        ]\n    }\n}"
+						},
+						"url": {
+							"raw": "{{apigw-node1}}/staging/TestBuffer/security/v1/apps",
+							"host": [
+								"{{apigw-node1}}"
+							],
+							"path": [
+								"staging",
+								"TestBuffer",
+								"security",
+								"v1",
+								"apps"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "ValidateStagingBuffer",
 					"request": {
 						"method": "GET",
 						"header": [],
-						"body": {},
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
 						"url": {
 							"raw": "{{apigw-node1}}/configs/staging/v1/buffers/TestBuffer",
 							"host": [
@@ -568,6 +706,31 @@
 								"buffers",
 								"TestBuffer",
 								"commit"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "deleteStagingBuffer",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"kind\": \"Buffer\",\n  \"meta\": {\n    \"name\": \"TestBuffer\",\n    \"tenant\": \"default\",\n    \"namespace\": \"default\"\n  },\n  \"spec\": {}\n}"
+						},
+						"url": {
+							"raw": "{{apigw-node1}}/configs/staging/v1/buffers/TestBuffer",
+							"host": [
+								"{{apigw-node1}}"
+							],
+							"path": [
+								"configs",
+								"staging",
+								"v1",
+								"buffers",
+								"TestBuffer"
 							]
 						}
 					},
