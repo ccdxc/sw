@@ -34,6 +34,8 @@ using sdk::types::xcvr_pid_t;
 using sdk::types::cable_type_t;
 using sdk::types::xcvr_state_t;
 
+extern bool xcvr_valid_enable;
+
 typedef struct xcvr_s {
     xcvr_type_t    type;         // QSFP28, QSFP, SFP
     cable_type_t   cable_type;   // CU, Fiber
@@ -135,6 +137,18 @@ void xcvr_init(xcvr_event_notify_t xcvr_notify_cb);
 bool xcvr_valid(int port);
 sdk_ret_t xcvr_get(int port, port_args_t *port_arg);
 sdk_ret_t xcvr_enable(int port, bool enable, uint8_t mask);
+
+static inline bool
+xcvr_valid_check_enabled (void)
+{
+    return xcvr_valid_enable;
+}
+
+static inline void
+xcvr_set_valid_check (bool enable)
+{
+    xcvr_valid_enable = enable;
+}
 
 } // namespace platform
 } // namespace sdk

@@ -147,6 +147,12 @@ public:
     Status PacketBufferUpdate(ServerContext *context,
                               const PacketBufferRequestMsg *req,
                               PacketBufferResponseMsg *rsp);
+    Status XcvrValidCheckEnable(ServerContext *context,
+                                const Empty *req,
+                                Empty *rsp);
+    Status XcvrValidCheckDisable(ServerContext *context,
+                                 const Empty *req,
+                                 Empty *rsp);
 };
 
 #endif  // __DEBUG_SVC_HPP__

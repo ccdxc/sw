@@ -17,6 +17,7 @@ typedef struct p4pd_def_cfg_s {
 extern hal_ret_t hal_pd_init(hal::hal_cfg_t *hal_cfg);
 extern hal_ret_t p4pd_table_defaults_init(p4pd_def_cfg_t *p4pd_def_cfg);
 extern hal_ret_t hal_pd_clock_delta_comp_init(hal::hal_cfg_t *hal_cfg);
+hal_ret_t xcvr_valid_check_enable(bool enable);
 
 }    // namespace pd
 }    // namespace hal

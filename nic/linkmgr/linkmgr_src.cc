@@ -280,6 +280,11 @@ port_event_cb (uint32_t port_num, port_event_t event, port_speed_t port_speed)
 static void
 xcvr_event_cb (xcvr_event_info_t *xcvr_event_info)
 {
+    // ignore xcvr events if xcvr valid check is disabled
+    if (!sdk::platform::xcvr_valid_check_enabled()) {
+        return;
+    }
+
     xcvr_event_port_enable(xcvr_event_info);
     xcvr_event_notify(xcvr_event_info);
 }

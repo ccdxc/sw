@@ -107,6 +107,9 @@ scheduler_stats_get(SchedulerStatsResponse *rsp);
 hal_ret_t
 packet_buffer_update(debug::PacketBufferRequest *req, debug::PacketBufferResponse *rsp);
 
+// enable/disable transceiver valid checks for links
+hal_ret_t xcvr_valid_check_enable(bool enable);
+
 }    // namespace hal
 
 #endif    // __DEBUG_HPP__

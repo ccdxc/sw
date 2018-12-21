@@ -11,6 +11,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/sdk/include/sdk/timestamp.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
+#include "nic/hal/pd/hal_pd.hpp"
 
 using sdk::lib::slab;
 
@@ -909,6 +910,12 @@ packet_buffer_update (debug::PacketBufferRequest *req, debug::PacketBufferRespon
     rsp->set_api_status(types::API_STATUS_OK);
 
     return ret;
+}
+
+hal_ret_t
+xcvr_valid_check_enable (bool enable)
+{
+    return pd::xcvr_valid_check_enable(enable);
 }
 
 }    // namespace hal

@@ -521,3 +521,23 @@ DebugServiceImpl::PacketBufferUpdate(ServerContext *context,
 
     return Status::OK;
 }
+
+Status
+DebugServiceImpl::XcvrValidCheckEnable(ServerContext *context,
+                                       const Empty *req,
+                                       Empty *rsp)
+{
+    HAL_TRACE_DEBUG("Received transceiver valid check enable Request");
+    hal::xcvr_valid_check_enable(true);
+    return Status::OK;
+}
+
+Status
+DebugServiceImpl::XcvrValidCheckDisable(ServerContext *context,
+                                        const Empty *req,
+                                        Empty *rsp)
+{
+    HAL_TRACE_DEBUG("Received transceiver valid check disable Request");
+    hal::xcvr_valid_check_enable(false);
+    return Status::OK;
+}

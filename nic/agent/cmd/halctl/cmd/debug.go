@@ -31,6 +31,7 @@ var (
 	regData             uint32
 	regInstance         uint32
 	platPbPause         string
+	xcvrValid           string
 )
 
 var debugCmd = &cobra.Command{
@@ -151,6 +152,13 @@ var platHbmCacheLlcDebugCmd = &cobra.Command{
 	Run:   llcDebugCmdHandler,
 }
 
+var xcvrDebugCmd = &cobra.Command{
+	Use:   "transceiver",
+	Short: "debug transceiver",
+	Long:  "debug transceiver",
+	Run:   xcvrDebugCmdHandler,
+}
+
 func init() {
 	rootCmd.AddCommand(debugCmd)
 	debugCmd.AddCommand(traceDebugCmd)
@@ -192,6 +200,12 @@ func init() {
 
 	pbPlatDebugCmd.Flags().StringVar(&platPbPause, "pause", "", "Enable or Disable packet-buffer pause using enable | disable")
 	pbPlatDebugCmd.MarkFlagRequired("pause")
+
+	// debug transceiver
+	debugCmd.AddCommand(xcvrDebugCmd)
+
+	// debug transceiver --valid-check <enable|disable>
+	xcvrDebugCmd.Flags().StringVar(&xcvrValid, "valid-check", "enable", "Enable/Disable transceiver valid checks for links")
 }
 
 func pbPlatDebugCmdHandler(cmd *cobra.Command, args []string) {
@@ -477,6 +491,59 @@ func llcDebugCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Printf("HBM cache setup success\n")
 		}
 	}
+}
+
+func xcvrDebugCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+
+	defer c.Close()
+
+	client := halproto.NewDebugClient(c.ClientConn)
+
+	if cmd.Flags().Changed("valid-check") == false {
+		fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
+		return
+	}
+
+	enable := true
+
+	var empty *halproto.Empty
+
+	if cmd.Flags().Changed("valid-check") == true {
+		if strings.Compare(xcvrValid, "enable") == 0 {
+			// HAL call
+			_, err = client.XcvrValidCheckEnable(context.Background(), empty)
+			enable = true
+		} else if strings.Compare(xcvrValid, "disable") == 0 {
+			// HAL call
+			_, err = client.XcvrValidCheckDisable(context.Background(), empty)
+			enable = false
+		} else {
+			fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
+			return
+		}
+	}
+
+	enableStr := "enable"
+
+	if enable == true {
+		enableStr = "enable"
+	} else {
+		enableStr = "disable"
+	}
+
+	if err != nil {
+		fmt.Printf("Transceiver valid check %s failed. %v\n", enableStr, err)
+		return
+	}
+
+	fmt.Printf("Transceiver valid check %s success\n", enableStr)
 }
 
 func traceShowCmdHandler(cmd *cobra.Command, args []string) {

@@ -735,6 +735,42 @@ func (mr *MockDebugClientMockRecorder) PacketBufferUpdate(ctx, in interface{}, o
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PacketBufferUpdate", reflect.TypeOf((*MockDebugClient)(nil).PacketBufferUpdate), varargs...)
 }
 
+// XcvrValidCheckEnable mocks base method
+func (m *MockDebugClient) XcvrValidCheckEnable(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "XcvrValidCheckEnable", varargs...)
+	ret0, _ := ret[0].(*Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// XcvrValidCheckEnable indicates an expected call of XcvrValidCheckEnable
+func (mr *MockDebugClientMockRecorder) XcvrValidCheckEnable(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "XcvrValidCheckEnable", reflect.TypeOf((*MockDebugClient)(nil).XcvrValidCheckEnable), varargs...)
+}
+
+// XcvrValidCheckDisable mocks base method
+func (m *MockDebugClient) XcvrValidCheckDisable(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "XcvrValidCheckDisable", varargs...)
+	ret0, _ := ret[0].(*Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// XcvrValidCheckDisable indicates an expected call of XcvrValidCheckDisable
+func (mr *MockDebugClientMockRecorder) XcvrValidCheckDisable(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "XcvrValidCheckDisable", reflect.TypeOf((*MockDebugClient)(nil).XcvrValidCheckDisable), varargs...)
+}
+
 // MockDebugServer is a mock of DebugServer interface
 type MockDebugServer struct {
 	ctrl     *gomock.Controller
@@ -1094,4 +1130,30 @@ func (m *MockDebugServer) PacketBufferUpdate(arg0 context.Context, arg1 *PacketB
 // PacketBufferUpdate indicates an expected call of PacketBufferUpdate
 func (mr *MockDebugServerMockRecorder) PacketBufferUpdate(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PacketBufferUpdate", reflect.TypeOf((*MockDebugServer)(nil).PacketBufferUpdate), arg0, arg1)
+}
+
+// XcvrValidCheckEnable mocks base method
+func (m *MockDebugServer) XcvrValidCheckEnable(arg0 context.Context, arg1 *Empty) (*Empty, error) {
+	ret := m.ctrl.Call(m, "XcvrValidCheckEnable", arg0, arg1)
+	ret0, _ := ret[0].(*Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// XcvrValidCheckEnable indicates an expected call of XcvrValidCheckEnable
+func (mr *MockDebugServerMockRecorder) XcvrValidCheckEnable(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "XcvrValidCheckEnable", reflect.TypeOf((*MockDebugServer)(nil).XcvrValidCheckEnable), arg0, arg1)
+}
+
+// XcvrValidCheckDisable mocks base method
+func (m *MockDebugServer) XcvrValidCheckDisable(arg0 context.Context, arg1 *Empty) (*Empty, error) {
+	ret := m.ctrl.Call(m, "XcvrValidCheckDisable", arg0, arg1)
+	ret0, _ := ret[0].(*Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// XcvrValidCheckDisable indicates an expected call of XcvrValidCheckDisable
+func (mr *MockDebugServerMockRecorder) XcvrValidCheckDisable(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "XcvrValidCheckDisable", reflect.TypeOf((*MockDebugServer)(nil).XcvrValidCheckDisable), arg0, arg1)
 }
