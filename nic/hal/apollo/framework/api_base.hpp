@@ -84,6 +84,7 @@ public:
         return sdk::SDK_RET_INVALID_OP;
     }
 
+#if 0
     /**
      * @brief    update/override the api object with given config
      * @param[in] api_ctxt    transient state associated with this API
@@ -92,6 +93,7 @@ public:
     virtual sdk_ret_t update_config(api_ctxt_t *api_ctxt) {
         return sdk::SDK_RET_INVALID_OP;
     }
+#endif
 
     /**
      * @brief    program all h/w tables relevant to this object except stage 0
@@ -99,7 +101,7 @@ public:
      * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t program_hw(obj_ctxt_t *obj_ctxt) {
+    virtual sdk_ret_t program_config(obj_ctxt_t *obj_ctxt) {
         return sdk::SDK_RET_INVALID_OP;
     }
 
@@ -110,7 +112,7 @@ public:
      * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t cleanup_hw(obj_ctxt_t *obj_ctxt) {
+    virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) {
         return sdk::SDK_RET_INVALID_OP;
     }
 
@@ -121,7 +123,7 @@ public:
      * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t update_hw(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+    virtual sdk_ret_t update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
         return sdk::SDK_RET_INVALID_OP;
     }
 
@@ -131,8 +133,8 @@ public:
      * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t activate_epoch(oci_epoch_t epoch, api_op_t api_op,
-                                     obj_ctxt_t *obj_ctxt) {
+    virtual sdk_ret_t activate_config(oci_epoch_t epoch, api_op_t api_op,
+                                      obj_ctxt_t *obj_ctxt) {
         return sdk::SDK_RET_INVALID_OP;
     }
 

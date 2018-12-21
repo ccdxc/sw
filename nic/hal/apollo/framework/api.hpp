@@ -23,7 +23,6 @@ typedef enum api_op_e {
     API_OP_CREATE,
     API_OP_DELETE,
     API_OP_UPDATE,
-    API_OP_GET,
     API_OP_INVALID,
 } api_op_t;
 
