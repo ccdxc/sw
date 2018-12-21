@@ -574,18 +574,20 @@ out:
 }
 
 static pnso_error_t
-validate_res_compression_service(struct pnso_service_status *status, uint32_t num_services)
+validate_res_compression_service(struct pnso_service_status *status,
+		uint32_t num_services)
 {
-	pnso_error_t err = EINVAL;
+	pnso_error_t err = PNSO_OK;
 
-	err = validate_res_status(status);
+	/* refer to comments in encryption service validation */
+	if (num_services <= 1)
+		err = validate_res_status(status);
 	if (err) {
 		OSAL_LOG_DEBUG("invalid output params specified for compression! err: %d",
 				err);
 		goto out;
 	}
 
-	err = PNSO_OK;
 out:
 	return err;
 }

@@ -67,7 +67,9 @@ fill_cp_desc(struct service_info *svc_info, struct cpdc_desc *desc,
 	desc->cd_threshold_len = threshold_len;
 
 	if (svc_info->si_istatus_desc) {
-		desc->cd_status_addr = (uint64_t) svc_info->si_istatus_desc;
+		desc->cd_status_addr = mpool_get_object_phy_addr(
+				MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS_DESC,
+				svc_info->si_istatus_desc);
 		osal_rmem_set(desc->cd_status_addr, 0,
 				min(sizeof(*status_desc), 8));
 	} else 
