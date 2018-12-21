@@ -12,7 +12,7 @@
 #include <linux/pci_regs.h>
 
 #include "platform/src/lib/misc/include/bdf.h"
-#include "platform/src/lib/pal/include/pal.h"
+#include "nic/sdk/platform/pal/include/pal.h"
 #include "platform/src/lib/pcietlp/include/pcietlp.h"
 #include "platform/src/lib/pciemgrutils/include/pciemgrutils.h"
 #include "platform/src/lib/cfgspace/include/cfgspace.h"

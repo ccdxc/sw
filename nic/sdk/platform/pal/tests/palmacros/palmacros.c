@@ -8,7 +8,7 @@
 #include <string.h>
 #include <inttypes.h>
 #include <assert.h>
-#include "platform/src/lib/pal/src/mm_int.h"
+#include "platform/pal/src/mm_int.h"
 
 int main() {
     u_int64_t top = 0;

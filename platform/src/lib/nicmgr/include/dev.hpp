@@ -57,7 +57,7 @@ static inline uint64_t READ_REG64(uint64_t addr)
 #define WRITE_DB64      sdk::lib::pal_ring_db64
 
 #else
-#include "platform/src/lib/pal/include/pal.h"
+#include "nic/sdk/platform/pal/include/pal.h"
 #define READ_MEM        pal_mem_rd
 #define WRITE_MEM       pal_mem_wr
 #define MEM_SET         pal_memset

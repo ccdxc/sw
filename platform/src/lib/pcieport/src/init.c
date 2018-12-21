@@ -10,7 +10,7 @@
 #include <assert.h>
 #include <inttypes.h>
 
-#include "platform/src/lib/pal/include/pal.h"
+#include "nic/sdk/platform/pal/include/pal.h"
 #include "platform/src/lib/pciemgrutils/include/pciesys.h"
 #include "pcieport.h"
 #include "pcieport_impl.h"

@@ -12,7 +12,7 @@
 #include <inttypes.h>
 #include <sys/time.h>
 
-#include "platform/src/lib/pal/include/pal.h"
+#include "nic/sdk/platform/pal/include/pal.h"
 #include "platform/src/lib/pciemgrutils/include/pciesys.h"
 #include "portcfg.h"
 #include "pcieport.h"

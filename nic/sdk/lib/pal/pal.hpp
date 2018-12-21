@@ -5,7 +5,7 @@
 
 #include "include/sdk/base.hpp"
 #include "include/sdk/types.hpp"
-#include "platform/src/lib/pal/include/pal_types.h"
+#include "platform/pal/include/pal_types.h"
 
 namespace sdk {
 namespace lib {

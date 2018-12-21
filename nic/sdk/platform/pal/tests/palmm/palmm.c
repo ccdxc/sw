@@ -8,7 +8,7 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include "platform/src/lib/pal/include/pal.h"
+#include "platform/pal/include/pal.h"
 
 #define GARBAGE "01234567"
 #define GARBAGESZ 8

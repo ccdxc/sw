@@ -2,7 +2,7 @@
 
 #include "lib/pal/pal.hpp"
 #include "lib/pal/pal_internal.hpp"
-#include "platform/src/lib/pal/include/pal_types.h"
+#include "platform/pal/include/pal_types.h"
 
 namespace sdk {
 namespace lib {

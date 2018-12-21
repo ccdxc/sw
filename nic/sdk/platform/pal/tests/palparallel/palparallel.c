@@ -6,7 +6,7 @@
 #include <ctype.h>
 #include <time.h>
 
-#include "platform/src/lib/pal/include/pal.h"
+#include "platform/pal/include/pal.h"
 
 #define MAXAPPNAME 64
 #define MAXREGIONNAME 64

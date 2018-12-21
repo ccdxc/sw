@@ -12,7 +12,7 @@
 #include "nic/sdk/platform/drivers/xcvr.hpp"
 #include "nic/sdk/include/sdk/asic/capri/cap_mx_api.h"
 #include "lib/pal/pal.hpp"
-#include "platform/src/lib/pal/include/pal_types.h"
+#include "platform/pal/include/pal_types.h"
 #include "platform/drivers/xcvr.hpp"
 #include "nic/sdk/platform/fru/fru.hpp"
 #include "nic/sdk/include/sdk/eth.hpp"
