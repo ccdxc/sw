@@ -949,13 +949,19 @@ class Checksum:
         used in case of IP hdr either is v6 or when v4 is not included
         in header checksum verification in p4.
         '''
-        select          = 1 # Load current offset + index
-        na              = 0 # NA
-        index           = 0
-        log_str = ParserCalField._build_ohi_instr(sram, ohi_instr_inst, select, na,\
+        instruction_already_generated = False
+        for _, v in enumerate(ohi_inst_allocator):
+            if  v != None and parse_state.phdr_offset_ohi_id == v[1]:
+                instruction_already_generated = True
+                break
+        if not instruction_already_generated:
+            select          = 1 # Load current offset + index
+            na              = 0 # NA
+            index           = 0
+            log_str = ParserCalField._build_ohi_instr(sram, ohi_instr_inst, select, na,\
                               index, parse_state.phdr_offset_ohi_id)
-        self.csum_verify_logger.debug("%s" % (log_str))
-        ohi_instr_inst += 1
+            self.csum_verify_logger.debug("%s" % (log_str))
+            ohi_instr_inst += 1
         return ohi_instr_inst
 
     def CsumParserPayloadLenGenerate(self, parse_state, sram, ohi_instr_inst,\
