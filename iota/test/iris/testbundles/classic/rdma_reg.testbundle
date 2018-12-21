@@ -1,6 +1,6 @@
 meta:
     name    : rdma_reg
-    os      : [ linux, freebsd ]
+    os      : [ linux ]
     nics    : [ pensando, mellanox ]
     targetcount : 300
 
