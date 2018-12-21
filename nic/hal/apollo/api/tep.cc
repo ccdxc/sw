@@ -62,7 +62,7 @@ tep_entry::~tep_entry() {
  *           if any, and free the memory
  * @param[in] tep     tep to be freed
  * NOTE: h/w entries themselves should have been cleaned up (by calling
- *       cleanup_hw() before calling this
+ *       impl->cleanup_hw() before calling this
  */
 void
 tep_entry::destroy(tep_entry *tep) {
@@ -115,11 +115,12 @@ tep_entry::alloc_resources_(void) {
 //       plane & PMD APIs are ready, we will directly write to hw with fixed MAC
 #define tep_tx_udp_action    action_u.tep_tx_udp_tep_tx
 sdk_ret_t
-tep_entry::program_hw(obj_ctxt_t *obj_ctxt) {
+tep_entry::program_config(obj_ctxt_t *obj_ctxt) {
     sdk_ret_t              ret;
     oci_tep_t              *tep_info;
     tep_tx_actiondata_t    tep_tx_data = { 0 };
 
+    // impl->program_hw();
     tep_info = &obj_ctxt->api_params->tep_info;
     tep_tx_data.action_id = TEP_TX_UDP_TEP_TX_ID;
     // TODO: take care of byte ordering issue, if any, here !!
@@ -153,7 +154,8 @@ tep_entry::free_resources_(void) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-tep_entry::cleanup_hw(obj_ctxt_t *obj_ctxt) {
+tep_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
+    //impl->cleanup_hw();
     return sdk::SDK_RET_INVALID_OP;
 }
 
@@ -165,7 +167,8 @@ tep_entry::cleanup_hw(obj_ctxt_t *obj_ctxt) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-tep_entry::update_hw(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+tep_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+    // impl->update_hw();
     return sdk::SDK_RET_INVALID_OP;
 }
 
@@ -178,8 +181,8 @@ tep_entry::update_hw(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-tep_entry::activate_epoch(oci_epoch_t epoch, api_op_t api_op,
-                          obj_ctxt_t *obj_ctxt) {
+tep_entry::activate_config(oci_epoch_t epoch, api_op_t api_op,
+                           obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 

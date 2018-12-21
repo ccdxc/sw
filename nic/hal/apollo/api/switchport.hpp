@@ -45,8 +45,8 @@ public:
      * @brief    release all the s/w state associate with the given switchport,
      *           if any, and free the memory
      * @param[in] switchport     switchport to be freed
-     * NOTE: h/w entries should have been cleaned up (by calling cleanup_hw()
-     *       before calling this
+     * NOTE: h/w entries should have been cleaned up (by calling
+     *       impl->cleanup_hw() before calling this
      */
     static void destroy(switchport_entry *switchport);
 
@@ -57,12 +57,14 @@ public:
      */
     virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
 
+#if 0
     /**
      * @brief     update/override the switchport object with given config
      * @param[in] api_ctxt API context carrying the configuration
      * @return    SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t update_config(api_ctxt_t *api_ctxt) override;
+#endif
 
     /**
      * @brief    program all h/w tables relevant to this object except stage 0
@@ -70,7 +72,7 @@ public:
      * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t program_hw(obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t program_config(obj_ctxt_t *obj_ctxt) override;
 
     /**
      * @brief    update all h/w tables relevant to this object except stage 0
@@ -79,8 +81,8 @@ public:
      * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t update_hw(api_base *orig_obj,
-                                obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t update_config(api_base *orig_obj,
+                                    obj_ctxt_t *obj_ctxt) override;
 
     /**
      * @brief    activate the epoch in the dataplane by programming stage 0
@@ -90,8 +92,8 @@ public:
      * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t activate_epoch(oci_epoch_t epoch, api_op_t api_op,
-                                     obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t activate_config(oci_epoch_t epoch, api_op_t api_op,
+                                      obj_ctxt_t *obj_ctxt) override;
 
     /**
      * @brief     add given switchport to the database

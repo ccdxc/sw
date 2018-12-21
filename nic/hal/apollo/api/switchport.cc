@@ -46,6 +46,7 @@ switchport_entry::init_config(api_ctxt_t *api_ctxt) {
     return sdk::SDK_RET_OK;
 }
 
+#if 0
 /**
  * @brief     update/override the switchport object with given config
  * @param[in] api_ctxt API context carrying the configuration
@@ -55,6 +56,7 @@ sdk_ret_t
 switchport_entry::update_config(api_ctxt_t *api_ctxt) {
     return sdk::SDK_RET_OK;
 }
+#endif
 
 /**
  * @brief    allocate h/w resources for this object
@@ -72,7 +74,7 @@ switchport_entry::alloc_resources_(void) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-switchport_entry::program_hw(obj_ctxt_t *obj_ctxt) {
+switchport_entry::program_config(obj_ctxt_t *obj_ctxt) {
     // TODO: need to progam table constants here !!!
     return sdk::SDK_RET_OK;
 }
@@ -94,8 +96,9 @@ switchport_entry::free_resources_(void) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-switchport_entry::update_hw(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+switchport_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     // TODO: need to progam table constants here !!!
+    // impl->update_hw()
     return sdk::SDK_RET_OK;
 }
 
@@ -108,8 +111,8 @@ switchport_entry::update_hw(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-switchport_entry::activate_epoch(oci_epoch_t epoch, api_op_t api_op,
-                          obj_ctxt_t *obj_ctxt) {
+switchport_entry::activate_config(oci_epoch_t epoch, api_op_t api_op,
+                                  obj_ctxt_t *obj_ctxt) {
     // there is no stage 0 programming for switchport cfg, so this is a no-op
     return sdk::SDK_RET_OK;
 }

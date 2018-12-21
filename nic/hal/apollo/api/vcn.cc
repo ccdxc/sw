@@ -56,7 +56,7 @@ vcn_entry::~vcn_entry() {
  *           and free the memory
  * @param[in] vcn     vcn to be freed
  * NOTE: h/w entries themselves should have been cleaned up (by calling
- *       cleanup_hw() before calling this
+ *       imp->cleanup_hw() before calling this
  */
 void
 vcn_entry::destroy(vcn_entry *vcn) {
@@ -124,6 +124,7 @@ vcn_entry::init_config(api_ctxt_t *api_ctxt) {
     return sdk::SDK_RET_OK;
 }
 
+#if 0
 /**
  * @brief     update/override the vcn object with given config
  * @param[in] api_ctxt API context carrying the configuration
@@ -133,6 +134,7 @@ sdk_ret_t
 vcn_entry::update_config(api_ctxt_t *api_ctxt) {
     return sdk::SDK_RET_OK;
 }
+#endif
 
 /**
  * @brief    allocate h/w resources for this object
@@ -155,9 +157,10 @@ vcn_entry::alloc_resources_(void) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-vcn_entry::program_hw(obj_ctxt_t *obj_ctxt) {
+vcn_entry::program_config(obj_ctxt_t *obj_ctxt) {
     // there is no h/w programming for VCN config but a h/w id is needed so we
     // can use while programming vnics, routes etc.
+    // impl->program_hw();
     alloc_resources_();
     return sdk::SDK_RET_OK;
 }
@@ -182,8 +185,9 @@ vcn_entry::free_resources_(void) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-vcn_entry::cleanup_hw(obj_ctxt_t *obj_ctxt) {
+vcn_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
     // there is no h/w programming for VCN config, so nothing to cleanup
+    // impl->cleanup_hw();
     return sdk::SDK_RET_OK;
 }
 
@@ -195,8 +199,9 @@ vcn_entry::cleanup_hw(obj_ctxt_t *obj_ctxt) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-vcn_entry::update_hw(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+vcn_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     // there is no h/w programming for VCN config, so nothing to update
+    // impl->update_hw();
     return sdk::SDK_RET_OK;
 }
 
@@ -209,8 +214,8 @@ vcn_entry::update_hw(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-vcn_entry::activate_epoch(oci_epoch_t epoch, api_op_t api_op,
-                          obj_ctxt_t *obj_ctxt) {
+vcn_entry::activate_config(oci_epoch_t epoch, api_op_t api_op,
+                           obj_ctxt_t *obj_ctxt) {
     // there is no h/w programming for VCN config, so nothing to activate
     return sdk::SDK_RET_OK;
 }

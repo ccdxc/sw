@@ -133,13 +133,39 @@ private:
      */
     api_op_t api_op_(api_op_t curr_op, api_op_t new_op);
 
+    /**
+     * @brief    process an API and form effected list of objs
+     * @param[in] api_ctxt    transient state associated with this API
+     */
     sdk_ret_t pre_process_api_(api_ctxt_t *api_ctxt);
 
-    sdk_ret_t process_obj_(api_base *api_obj, obj_ctxt_t *obj_ctxt);
+    /**
+     * @brief    process given object from the dirty list by doing add/update of
+     *           corresponding h/w entries, based on accumulated configuration
+     *           without activating the epoch
+     * @param[in] api_obj    API object being processed
+     * @param[in] obj_ctxt   transient information maintained to process the API
+     */
+    sdk_ret_t program_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt);
 
-    sdk_ret_t activate_epoch_(api_base *api_obj, obj_ctxt_t *obj_ctxt);
+    /**
+     * @brief    if object has effected any stage 0 datapath table(s), switch to
+     *           new epoch in this stage
+     *           NOTE: NO failures must happen in this stage
+     * @param[in] api_obj    API object being processed
+     * @param[in] obj_ctxt   transient information maintained to process the API
+     */
+    sdk_ret_t activate_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt);
 
-    sdk_ret_t rollback_obj_(api_base *api_obj, obj_ctxt_t *obj_ctxt);
+    /**
+     * @brief    abort all changes made to an object, rollback to its previous
+     *           state
+     * NOTE:     this is not expected to fail and also epoch is not activated
+     *           if we are here
+     * @param[in] api_obj    API object being processed
+     * @param[in] obj_ctxt   transient information maintained to process the API
+     */
+    sdk_ret_t rollback_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt);
 
     /**
      * @brief    pre process all API calls in a given batch and form dirty
@@ -152,13 +178,13 @@ private:
      * @brief    datapath table update stage
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t table_update_stage_(void);
+    sdk_ret_t program_config_stage_(void);
 
     /**
      * @brief    final epoch activation stage
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t epoch_activation_stage_(void);
+    sdk_ret_t activate_config_stage_(void);
 
     /**
      * @brief    add given api object to dirty list of the API batch
@@ -180,23 +206,16 @@ private:
     }
 
 private:
-    /**
-     * some API ops can't be de-duped, they have to be processed
-     * one after another (e.g., CREATE and GET in same batch), but for now
-     * API_OP_INVALID is returned here as GET can be service inline (i.e., no
-     * dirty list obj will have GET as its api_op)
-     */
+    /**< API operation de-dup matrix */
     api_op_t dedup_api_op_[API_OP_INVALID][API_OP_INVALID] = {
         // API_OP_NONE
-        {API_OP_INVALID, API_OP_CREATE, API_OP_INVALID, API_OP_INVALID, API_OP_INVALID},
+        {API_OP_INVALID, API_OP_CREATE, API_OP_INVALID, API_OP_INVALID },
         // API_OP_CREATE
-        {API_OP_INVALID, API_OP_INVALID, API_OP_NONE, API_OP_CREATE, API_OP_INVALID},
+        {API_OP_INVALID, API_OP_INVALID, API_OP_NONE, API_OP_CREATE },
         // API_OP_DELETE
-        {API_OP_INVALID, API_OP_UPDATE, API_OP_DELETE, API_OP_INVALID, API_OP_INVALID},
+        {API_OP_INVALID, API_OP_UPDATE, API_OP_DELETE, API_OP_INVALID },
         // API_OP_UPDATE
-        {API_OP_INVALID, API_OP_INVALID, API_OP_DELETE, API_OP_UPDATE, API_OP_INVALID},
-        // API_OP_GET
-        {API_OP_INVALID, API_OP_INVALID, API_OP_INVALID, API_OP_INVALID, API_OP_INVALID},
+        {API_OP_INVALID, API_OP_INVALID, API_OP_DELETE, API_OP_UPDATE },
     };
     api_batch_ctxt_t    batch_ctxt_;
     slab                *api_params_slab_;

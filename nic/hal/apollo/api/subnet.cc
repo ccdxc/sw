@@ -61,7 +61,7 @@ subnet_entry::~subnet_entry() {
  *           any, and free the memory
  * @param[in] subnet     subnet to be freed
  * NOTE: h/w entries themselves should have been cleaned up (by calling
- *       cleanup_hw() before calling this
+ *       impl->cleanup_hw() before calling this
  */
 void
 subnet_entry::destroy(subnet_entry *subnet) {
@@ -131,6 +131,7 @@ subnet_entry::init_config(api_ctxt_t *api_ctxt) {
     return sdk::SDK_RET_OK;
 }
 
+#if 0
 /**
  * @brief     update/override the subnet object with given config
  * @param[in] api_ctxt API context carrying the configuration
@@ -140,6 +141,7 @@ sdk_ret_t
 subnet_entry::update_config(api_ctxt_t *api_ctxt) {
     return sdk::SDK_RET_OK;
 }
+#endif
 
 /**
  * @brief    allocate h/w resources for this object
@@ -162,9 +164,10 @@ subnet_entry::alloc_resources_(void) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-subnet_entry::program_hw(obj_ctxt_t *obj_ctxt) {
+subnet_entry::program_config(obj_ctxt_t *obj_ctxt) {
     // there is no h/w programming for subnet config but a h/w id is needed so
     // we can use while programming vnics, routes etc.
+    //impl->program_hw();
     this->alloc_resources_();
     return sdk::SDK_RET_OK;
 }
@@ -194,7 +197,8 @@ subnet_entry::free_resources_(void) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-subnet_entry::cleanup_hw(obj_ctxt_t *obj_ctxt) {
+subnet_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
+    // impl->cleanup_hw();
     return sdk::SDK_RET_INVALID_OP;
 }
 
@@ -206,7 +210,8 @@ subnet_entry::cleanup_hw(obj_ctxt_t *obj_ctxt) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-subnet_entry::update_hw(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+subnet_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+    // impl->update_hw();
     return sdk::SDK_RET_INVALID_OP;
 }
 
@@ -219,8 +224,8 @@ subnet_entry::update_hw(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-subnet_entry::activate_epoch(oci_epoch_t epoch, api_op_t api_op,
-                             obj_ctxt_t *obj_ctxt) {
+subnet_entry::activate_config(oci_epoch_t epoch, api_op_t api_op,
+                              obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_OK;
 }
 

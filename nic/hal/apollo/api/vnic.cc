@@ -72,7 +72,7 @@ vnic_entry::~vnic_entry() {
  *           if any, and free the memory
  * @param[in] vnic     vnic to be freed
  * NOTE: h/w entries themselves should have been cleaned up (by calling
- *       cleanup_hw() before calling this
+ *       impl->cleanup_hw() before calling this
  */
 void
 vnic_entry::destroy(vnic_entry *vnic) {
@@ -139,6 +139,7 @@ vnic_entry::init_config(api_ctxt_t *api_ctxt) {
     return sdk::SDK_RET_OK;
 }
 
+#if 0
 /**
  * @brief     update/override the subnet object with given config
  * @param[in] api_ctxt API context carrying the configuration
@@ -148,6 +149,7 @@ sdk_ret_t
 vnic_entry::update_config(api_ctxt_t *api_ctxt) {
     return sdk::SDK_RET_OK;
 }
+#endif
 
 /**
  * @brief    allocate h/w resources for this object
@@ -178,7 +180,7 @@ vnic_entry::alloc_resources_(void) {
 // TODO: this should ideally go to impl class (other than subnet_db lookup
 #define egress_local_vnic_info_rx_action    action_u.egress_local_vnic_info_rx_egress_local_vnic_info_rx
 sdk_ret_t
-vnic_entry::program_hw(obj_ctxt_t *obj_ctxt) {
+vnic_entry::program_config(obj_ctxt_t *obj_ctxt) {
     sdk_ret_t                                 ret;
     p4pd_error_t                              p4pd_ret;
     subnet_entry                              *subnet;
@@ -187,6 +189,7 @@ vnic_entry::program_hw(obj_ctxt_t *obj_ctxt) {
     vnic_tx_stats_actiondata_t                vnic_tx_stats_data = { 0 };
     oci_vnic_t                                *vnic_info;
 
+    //impl->program_hw();
     alloc_resources_();
 
     vnic_info = &obj_ctxt->api_params->vnic_info;
@@ -263,7 +266,8 @@ vnic_entry::free_resources_(void) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-vnic_entry::cleanup_hw(obj_ctxt_t *obj_ctxt) {
+vnic_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
+    // impl->cleanup_hw();
     return sdk::SDK_RET_OK;
 }
 
@@ -275,7 +279,8 @@ vnic_entry::cleanup_hw(obj_ctxt_t *obj_ctxt) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-vnic_entry::update_hw(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+vnic_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+    // impl->update_hw();
     return sdk::SDK_RET_OK;
 }
 
@@ -290,7 +295,7 @@ vnic_entry::update_hw(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 #define local_vnic_by_vlan_tx_info    action_u.local_vnic_by_vlan_tx_local_vnic_info_tx
 #define local_vnic_by_slot_rx_info    action_u.local_vnic_by_slot_rx_local_vnic_info_rx
 sdk_ret_t
-vnic_entry::activate_epoch(oci_epoch_t epoch, api_op_t api_op,
+vnic_entry::activate_config(oci_epoch_t epoch, api_op_t api_op,
                            obj_ctxt_t *obj_ctxt) {
     sdk_ret_t                                   ret;
     vcn_entry                                   *vcn;
