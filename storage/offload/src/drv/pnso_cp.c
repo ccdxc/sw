@@ -355,8 +355,9 @@ compress_read_status(struct service_info *svc_info)
 	struct cpdc_desc *cp_desc;
 	struct cpdc_status_desc *status_desc;
 	struct cpdc_sgl	*dst_sgl;
-	struct pnso_compression_header *cp_hdr;
-	uint64_t cp_hdr_pa;
+	struct pnso_compression_header *cp_hdr = NULL;
+	struct chain_sgl_pdma_tuple *tuple;
+	struct pnso_buffer_list *buf_list;
 	uint32_t datain_len;
 
 	OSAL_LOG_DEBUG("enter ...");
@@ -380,13 +381,28 @@ compress_read_status(struct service_info *svc_info)
 	if (cp_desc->u.cd_bits.cc_enabled &&
 			cp_desc->u.cd_bits.cc_insert_header) {
 		dst_sgl = svc_info->si_dst_sgl.sgl;
-		cp_hdr_pa = sonic_devpa_to_hostpa(dst_sgl->cs_addr_0);
-		cp_hdr = (struct pnso_compression_header *)
-			sonic_phy_to_virt(cp_hdr_pa);
+
+		if (svc_info->si_sgl_pdma) {
+			tuple = &svc_info->si_sgl_pdma->tuple[0];
+			if (tuple->len >= sizeof (*cp_hdr))
+				cp_hdr = sonic_phy_to_virt(tuple->addr);
+		} else if (svc_info->si_dst_blist.type ==
+				SERVICE_BUF_LIST_TYPE_HOST) {
+			buf_list = svc_info->si_dst_blist.blist;
+			if (buf_list->buffers[0].len >= sizeof (*cp_hdr))
+				cp_hdr = (struct pnso_compression_header *)
+					buf_list->buffers[0].buf;
+		}
+
+		if (!cp_hdr) {
+			OSAL_LOG_DEBUG("skip cp header checks");
+			goto out;
+		}
+
 		OSAL_LOG_DEBUG("compress_read_status: dst_sgl=0x" PRIx64 ", cs_addr_0=0x" PRIx64 ", cp_hdr-0x" PRIx64 "\n",
-			       (uint64_t)dst_sgl,
-			       (uint64_t)dst_sgl->cs_addr_0,
-			       (uint64_t)cp_hdr);
+			       (uint64_t) dst_sgl,
+			       (uint64_t) dst_sgl->cs_addr_0,
+			       (uint64_t) cp_hdr);
 
 		/* TODO-cp: verify hard-coded CP version, etc. */
 
