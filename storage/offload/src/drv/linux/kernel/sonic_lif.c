@@ -817,6 +817,7 @@ static int sonic_lif_per_core_resource_init(struct lif *lif,
 	if (err)
 		goto done;
 
+#if 0
 	err = sonic_lif_cpdc_seq_qs_control(res, CMD_OPCODE_SEQ_QUEUE_ENABLE);
 	if (err)
 		goto done;
@@ -824,6 +825,7 @@ static int sonic_lif_per_core_resource_init(struct lif *lif,
 	err = sonic_lif_crypto_seq_qs_control(res, CMD_OPCODE_SEQ_QUEUE_ENABLE);
 	if (err)
 		goto done;
+#endif
 
 	err = sonic_ev_intr_init(res, seq_q_count);
 	if (err)
@@ -1219,7 +1221,7 @@ static int sonic_lif_seq_q_init(struct queue *q)
 			.pid = q->pid,
 			.qgroup = q->qgroup,
 			.cos = 0,
-			.enable = false,
+			.enable = true, /* TODO: false after adminq speedup */
 			.total_wrings = 1,
 			.host_wrings = 1,
 			.entry_size = ilog2(q->desc_size),
