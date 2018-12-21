@@ -25,10 +25,11 @@ clear_dc_header_present(uint16_t flags, struct cpdc_desc *desc)
 }
 
 static void
-fill_dc_desc(struct service_info *svc_info, struct cpdc_desc *desc,
-		uint32_t src_buf_len, uint32_t dst_buf_len)
+fill_dc_desc(struct service_info *svc_info, struct cpdc_desc *desc)
 {
 	struct cpdc_status_desc *status_desc = svc_info->si_status_desc;
+	uint32_t src_buf_len = svc_info->si_src_blist.len;
+	uint32_t dst_buf_len = svc_info->si_dst_blist.len;
 
 	memset(desc, 0, sizeof(*desc));
 	memset(status_desc, 0, sizeof(*status_desc));
@@ -108,7 +109,7 @@ decompress_setup(struct service_info *svc_info,
 		goto out;
 	}
 
-	fill_dc_desc(svc_info, dc_desc, src_buf_len, dst_buf_len);
+	fill_dc_desc(svc_info, dc_desc);
 	clear_dc_header_present(svc_info->si_desc_flags, dc_desc);
 
 	err = cpdc_setup_seq_desc(svc_info, dc_desc, 0);

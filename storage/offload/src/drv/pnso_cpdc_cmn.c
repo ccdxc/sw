@@ -1005,7 +1005,7 @@ cpdc_pprint_mpools(struct per_core_resource *pcr)
        MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_SERVICE_CHAIN_ENTRY]);
        MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_BATCH_PAGE]);
        MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_BATCH_INFO]);
-       MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS]);
+       MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS_DESC]);
 }
 
 /* TODO-cpdc:

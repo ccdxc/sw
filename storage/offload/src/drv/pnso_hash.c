@@ -403,7 +403,7 @@ hash_teardown(struct service_info *svc_info)
 
 	seq_cleanup_desc(svc_info);
 
-	per_block = svc_is_dflag_pblock_enabled(svc_info->si_desc_flags);
+	per_block = is_dflag_pblock_enabled(svc_info->si_desc_flags);
 	if (!per_block) {
 		pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_dst_sgl);
 		pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_src_sgl);
