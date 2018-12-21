@@ -47,7 +47,7 @@ def Trigger(tc):
 
     proto = getattr(tc.iterators, "proto", 'tcp')
     
-    number_of_iperf_threads = getattr(tc.args, "iperf_threads", 0)
+    number_of_iperf_threads = getattr(tc.args, "iperf_threads", 1)
     
     pktsize = getattr(tc.iterators, "pktsize", 512)
     ipproto = getattr(tc.iterators, "ipproto", 'v4')
