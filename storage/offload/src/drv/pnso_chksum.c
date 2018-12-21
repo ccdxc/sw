@@ -182,6 +182,12 @@ chksum_enable_interrupt(struct service_info *svc_info, void *poll_ctx)
 	return cpdc_setup_interrupt_params(svc_info, poll_ctx);
 }
 
+static void
+chksum_disable_interrupt(struct service_info *svc_info)
+{
+	return cpdc_cleanup_interrupt_params(svc_info);
+}
+
 static pnso_error_t
 chksum_ring_db(struct service_info *svc_info)
 {
@@ -507,6 +513,7 @@ struct service_ops chksum_ops = {
 	.sub_chain_from_cpdc = chksum_sub_chain_from_cpdc,
 	.sub_chain_from_crypto = chksum_sub_chain_from_crypto,
 	.enable_interrupt = chksum_enable_interrupt,
+	.disable_interrupt = chksum_disable_interrupt,
 	.ring_db = chksum_ring_db,
 	.poll = chksum_poll,
 	.read_status = chksum_read_status,

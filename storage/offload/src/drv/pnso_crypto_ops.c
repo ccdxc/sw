@@ -437,6 +437,31 @@ out:
 	return  err;
 }
 
+static void
+crypto_disable_interrupt(struct service_info *svc_info)
+{
+	struct crypto_chain_params	*crypto_chain;
+	struct per_core_resource	*pcr;
+
+	/*
+	 * HW lacks ability to signal per-descriptor interrupt so P4+ chainer
+	 * will be used for that purpose. Also note that when a chain successor
+	 * is present, that service will take care of setting up the interrupt.
+	 */
+	OSAL_ASSERT(chn_service_is_mode_async(svc_info));
+	if (!chn_service_has_sub_chain(svc_info)) {
+		crypto_chain = &svc_info->si_crypto_chain;
+		pcr = svc_info->si_pcr;
+		OSAL_LOG_DEBUG("pcr: 0x"PRIx64,
+			       (uint64_t)pcr);
+		if (crypto_chain->ccp_next_db_spec.nds_addr &&
+		    crypto_chain->ccp_cmd.ccpc_intr_en) {
+			sonic_intr_put_db_addr(pcr,
+				crypto_chain->ccp_next_db_spec.nds_addr);
+		}
+	}
+}
+
 static pnso_error_t
 crypto_ring_db(struct service_info *svc_info)
 {
@@ -586,6 +611,7 @@ struct service_ops encrypt_ops = {
 	.sub_chain_from_cpdc = crypto_sub_chain_from_cpdc,
 	.sub_chain_from_crypto = crypto_sub_chain_from_crypto,
 	.enable_interrupt = crypto_enable_interrupt,
+	.disable_interrupt = crypto_disable_interrupt,
 	.ring_db = crypto_ring_db,
 	.poll = crypto_poll,
 	.read_status = crypto_read_status,
@@ -599,6 +625,7 @@ struct service_ops decrypt_ops = {
 	.sub_chain_from_cpdc = crypto_sub_chain_from_cpdc,
 	.sub_chain_from_crypto = crypto_sub_chain_from_crypto,
 	.enable_interrupt = crypto_enable_interrupt,
+	.disable_interrupt = crypto_disable_interrupt,
 	.ring_db = crypto_ring_db,
 	.poll = crypto_poll,
 	.read_status = crypto_read_status,

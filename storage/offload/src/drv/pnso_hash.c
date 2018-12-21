@@ -211,6 +211,12 @@ hash_enable_interrupt(struct service_info *svc_info, void *poll_ctx)
 	return cpdc_setup_interrupt_params(svc_info, poll_ctx);
 }
 
+static void
+hash_disable_interrupt(struct service_info *svc_info)
+{
+	return cpdc_cleanup_interrupt_params(svc_info);
+}
+
 static pnso_error_t
 hash_ring_db(struct service_info *svc_info)
 {
@@ -569,6 +575,7 @@ struct service_ops hash_ops = {
 	.sub_chain_from_cpdc = hash_sub_chain_from_cpdc,
 	.sub_chain_from_crypto = hash_sub_chain_from_crypto,
 	.enable_interrupt = hash_enable_interrupt,
+	.disable_interrupt = hash_disable_interrupt,
 	.ring_db = hash_ring_db,
 	.poll = hash_poll,
 	.read_status = hash_read_status,

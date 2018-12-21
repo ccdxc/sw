@@ -891,6 +891,33 @@ out:
 	return  err;
 }
 
+void
+cpdc_cleanup_interrupt_params(struct service_info *svc_info)
+{
+	struct cpdc_desc *cp_desc;
+	struct per_core_resource *pcr;
+
+	cp_desc = (struct cpdc_desc *) svc_info->si_desc;
+	pcr = svc_info->si_pcr;
+
+	OSAL_LOG_DEBUG("cp_desc: 0x" PRIx64 " pcr: 0x" PRIx64,
+			(uint64_t) cp_desc, (uint64_t) pcr);
+
+	if (!cp_desc->u.cd_bits.cc_otag_on)
+		return;
+
+	if ((svc_info->si_type == PNSO_SVC_TYPE_COMPRESS) &&
+		(svc_info->si_desc_flags & PNSO_CP_DFLAG_ZERO_PAD)) {
+		if (cp_desc->cd_otag_addr) {
+			sonic_intr_put_db_addr(pcr, cp_desc->cd_otag_addr);
+		}
+	} else {
+		if (cp_desc->cd_db_addr && cp_desc->u.cd_bits.cc_db_on) {
+			sonic_intr_put_db_addr(pcr, cp_desc->cd_db_addr);
+		}
+	}
+}
+
 
 void
 cpdc_pprint_mpools(struct per_core_resource *pcr)

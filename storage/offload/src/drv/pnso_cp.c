@@ -240,6 +240,12 @@ compress_enable_interrupt(struct service_info *svc_info, void *poll_ctx)
 	return cpdc_setup_interrupt_params(svc_info, poll_ctx);
 }
 
+static void
+compress_disable_interrupt(struct service_info *svc_info)
+{
+	return cpdc_cleanup_interrupt_params(svc_info);
+}
+
 static pnso_error_t
 compress_ring_db(struct service_info *svc_info)
 {
@@ -492,6 +498,7 @@ struct service_ops cp_ops = {
 	.sub_chain_from_cpdc = compress_sub_chain_from_cpdc,
 	.sub_chain_from_crypto = compress_sub_chain_from_crypto,
 	.enable_interrupt = compress_enable_interrupt,
+	.disable_interrupt = compress_disable_interrupt,
 	.ring_db = compress_ring_db,
 	.poll = compress_poll,
 	.read_status = compress_read_status,

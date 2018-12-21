@@ -137,6 +137,7 @@ struct service_ops {
 	/* configure the service for async/interrupt handling */
 	pnso_error_t (*enable_interrupt)(struct service_info *svc_info,
 			void *poll_ctx);
+	void (*disable_interrupt)(struct service_info *svc_info);
 
 	/* a NULL-op for all services except the first within the chain */
 	pnso_error_t (*ring_db)(struct service_info *svc_info);

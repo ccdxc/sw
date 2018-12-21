@@ -41,6 +41,12 @@ decompact_enable_interrupt(struct service_info *svc_info, void *poll_ctx)
 	return EOPNOTSUPP;
 }
 
+static void
+decompact_disable_interrupt(struct service_info *svc_info)
+{
+	/* EOPNOTSUPP */
+}
+
 static pnso_error_t
 decompact_ring_db(struct service_info *svc_info)
 {
@@ -77,6 +83,7 @@ struct service_ops decompact_ops = {
 	.sub_chain_from_cpdc = decompact_sub_chain_from_cpdc,
 	.sub_chain_from_crypto = decompact_sub_chain_from_crypto,
 	.enable_interrupt = decompact_enable_interrupt,
+	.disable_interrupt = decompact_disable_interrupt,
 	.ring_db = decompact_ring_db,
 	.poll = decompact_poll,
 	.read_status = decompact_read_status,

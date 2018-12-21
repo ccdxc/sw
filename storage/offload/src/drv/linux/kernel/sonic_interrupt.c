@@ -128,10 +128,15 @@ sonic_intr_db_fired_clr(struct sonic_event_list *evl,
 	db_data->primed = 0;
 }
 
-static int sonic_poll_ev_list(struct sonic_event_list *evl, int budget, struct sonic_work_data *work)
+#define SONIC_ISR_MAX_IDLE_COUNT 10000
+#define SONIC_EV_WORK_TIMEOUT (100 * OSAL_NSEC_PER_MSEC)
+
+static int
+sonic_poll_ev_list(struct sonic_event_list *evl, int budget,
+		   struct sonic_work_data *work, int *used_count)
 {
 	struct sonic_db_data *db_data;
-	uint32_t id, first_id, next_id;
+	uint32_t id, first_id;
 	uint32_t loop_count = 0;
 	uint32_t fired;
 	uint64_t usr_data;
@@ -139,41 +144,39 @@ static int sonic_poll_ev_list(struct sonic_event_list *evl, int budget, struct s
 	int found_zero_data = 0;
 
 	first_id = evl->next_used_evid;
-	next_id = first_id;
 	while (loop_count < budget) {
 		loop_count++;
-		id = find_next_bit(evl->inuse_evid_bmp, evl->size_ev_bmp, next_id);
+		id = find_next_bit(evl->inuse_evid_bmp, evl->size_ev_bmp,
+				   evl->next_used_evid);
 		if (id >= evl->size_ev_bmp) {
 			id = find_first_bit(evl->inuse_evid_bmp, first_id);
 			if (id >= first_id)
 				break;
 		}
-		next_id = id + 1;
+		evl->next_used_evid = id + 1;
 		db_data = sonic_intr_db_primed_usr_data_get(evl, id, &usr_data);
 		if (usr_data && sonic_intr_db_fired_chk(evl, id, &fired)) {
 
 			//OSAL_LOG_DEBUG("found ev id %d with data 0x%llx\n",
 			//		id, (unsigned long long) *data);
-			if (!found_zero_data)
-				evl->next_used_evid = next_id;
 			work->ev_data[found].evid = id;
 			work->ev_data[found].data = usr_data;
 			sonic_intr_db_primed_usr_data_put(db_data);
 			found++;
 		} else {
-			/* Expect this event to trigger soon */
-			if (!found_zero_data) {
-				evl->next_used_evid = id;
-			}
-
 			found_zero_data++;
 		}
 	}
+	*used_count = found + found_zero_data;
 
 	work->timestamp = 0;
 	work->ev_count = found;
 	if (found) {
 		work->found_work = true;
+		evl->idle_count = 0;
+	} else {
+		if (evl->idle_count++ == SONIC_ISR_MAX_IDLE_COUNT)
+			OSAL_LOG_CRITICAL("sonic_async_ev_isr stuck in idle loop!\n");
 	}
 
 	//if (!found || found > 2 || (found + found_zero_data) >= budget || loop_count > budget) {
@@ -183,8 +186,6 @@ static int sonic_poll_ev_list(struct sonic_event_list *evl, int budget, struct s
 
 	return found;
 }
-
-#define SONIC_EV_WORK_TIMEOUT (100 * OSAL_NSEC_PER_MSEC)
 
 static void sonic_ev_work_handler(struct work_struct *work)
 {
@@ -197,6 +198,7 @@ static void sonic_ev_work_handler(struct work_struct *work)
 	uint32_t incomplete_count = 0;
 	uint32_t prev_ev_count;
 	uint32_t i;
+	int used_count = 0;
 	int npolled = 0;
 
 	OSAL_LOG_DEBUG("sonic_ev_work_handler enter (workid %u)...\n", work_id);
@@ -251,18 +253,32 @@ static void sonic_ev_work_handler(struct work_struct *work)
 	}
 
 	/* Try to get more work */
-	prev_ev_count = swd->ev_count;
-	npolled = sonic_poll_ev_list(evl, SONIC_ASYNC_BUDGET, &evl->work_data);
-	if (npolled || !swd->found_work) {
-		/* Return credits, but don't unmask */
-		sonic_intr_return_credits(&evl->pc_res->intr, prev_ev_count,
-					  false, false);
-		queue_work(evl->wq, &swd->work);
+	if (!swd->found_work) {
+		/* No credits to return */
+		npolled = sonic_poll_ev_list(evl, SONIC_ASYNC_BUDGET, &evl->work_data, &used_count);
+		if (npolled || used_count) {
+			queue_work(evl->wq, &swd->work);
+		} else {
+			OSAL_LOG_DEBUG("no work available, ev list empty\n");
+
+			/* Just unmask in hopes our isr kicks in */
+			xchg(&evl->armed, true);
+			sonic_intr_mask(&evl->pc_res->intr, false);
+		}
 	} else {
-		/* Return credits and unmask */
-		xchg(&evl->armed, true);
-		sonic_intr_return_credits(&evl->pc_res->intr, prev_ev_count,
-					  true, false);
+		prev_ev_count = swd->ev_count;
+		npolled = sonic_poll_ev_list(evl, SONIC_ASYNC_BUDGET, &evl->work_data, &used_count);
+		if (npolled) {
+			/* Return credits, but don't unmask */
+			sonic_intr_return_credits(&evl->pc_res->intr, prev_ev_count,
+						  false, false);
+			queue_work(evl->wq, &swd->work);
+		} else {
+			/* Return credits and unmask */
+			xchg(&evl->armed, true);
+			sonic_intr_return_credits(&evl->pc_res->intr, prev_ev_count,
+						  true, false);
+		}
 	}
 
 done:
@@ -270,12 +286,11 @@ done:
 		       work_id, complete_count, incomplete_count, npolled);
 }
 
-#define SONIC_ISR_MAX_IDLE_COUNT 1000
-
 irqreturn_t sonic_async_ev_isr(int irq, void *evlptr)
 {
 	struct sonic_event_list *evl = (struct sonic_event_list *) evlptr;
 	int npolled = 0;
+	int used_count = 0;
 	bool was_armed;
 
 	was_armed = xchg(&evl->armed, false);
@@ -289,20 +304,8 @@ irqreturn_t sonic_async_ev_isr(int irq, void *evlptr)
 	}
 
 	evl->work_data.found_work = false;
-	npolled = sonic_poll_ev_list(evl, SONIC_ASYNC_BUDGET, &evl->work_data);
+	npolled = sonic_poll_ev_list(evl, SONIC_ASYNC_BUDGET, &evl->work_data, &used_count);
 	queue_work(evl->wq, &evl->work_data.work);
-
-	if (!npolled) {
-	       	if (evl->idle_count++ == SONIC_ISR_MAX_IDLE_COUNT)
-	             OSAL_LOG_CRITICAL("sonic_async_ev_isr stuck in idle loop!\n");
-
-		//xchg(&evl->armed, true);
-		//sonic_intr_mask(&evl->pc_res->intr, false);
-	} else {
-		//if (evl->idle_count)
-		//        OSAL_LOG_WARN("isr idle count was %d\n", evl->idle_count);
-		evl->idle_count = 0;
-	}
 
 	//OSAL_LOG_DEBUG("... exit sonic_async_ev_isr, enqueued %d work items\n", npolled);
 

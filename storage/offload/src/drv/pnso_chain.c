@@ -523,6 +523,7 @@ chn_destroy_chain(struct service_chain *chain)
 	struct mem_pool *svc_chain_entry_mpool;
 	struct chain_entry *sc_entry;
 	struct chain_entry *sc_next;
+	struct chain_entry *sc_last;
 	struct service_info *svc_info;
 	uint32_t i;
 
@@ -541,6 +542,16 @@ chn_destroy_chain(struct service_chain *chain)
 
 	svc_chain_entry_mpool = pcr->mpools[MPOOL_TYPE_SERVICE_CHAIN_ENTRY];
 	OSAL_ASSERT(svc_chain_entry_mpool);
+
+	if ((chain->sc_flags & CHAIN_CFLAG_MODE_ASYNC) &&
+	    !(chain->sc_flags & CHAIN_CFLAG_RANG_DB)) {
+		/* cleanup for async mode submission failure */
+		sc_last = chn_get_last_centry(chain);
+		if (sc_last) {
+			svc_info = &sc_last->ce_svc_info;
+			svc_info->si_ops.disable_interrupt(svc_info);
+		}
+	}
 
 	i = 0;
 	sc_entry = chain->sc_entry;
