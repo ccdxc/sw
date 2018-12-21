@@ -79,7 +79,7 @@ TUNABLE_INT("hw.ionic.enable_msix", &ionic_enable_msix);
 SYSCTL_INT(_hw_ionic, OID_AUTO, enable_msix, CTLFLAG_RWTUN,
     &ionic_enable_msix, 0, "Enable MSI/X");
 
-int ionic_use_adminq = 1;
+int ionic_use_adminq = 0;
 TUNABLE_INT("hw.ionic.use_adminq", &ionic_use_adminq);
 SYSCTL_INT(_hw_ionic, OID_AUTO, use_adminq, CTLFLAG_RDTUN,
     &ionic_use_adminq, 0, "Enable adminQ");
