@@ -181,10 +181,10 @@ func (s *securityHooks) validateIPAddresses(addresses []string) error {
 }
 
 // validateApp validates contents of app
-func (s *securityHooks) validateApp(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
-	app, ok := i.(security.App)
+func (s *securityHooks) validateApp(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryRun bool, in interface{}) (interface{}, bool, error) {
+	app, ok := in.(security.App)
 	if !ok {
-		return i, false, fmt.Errorf("invalid input type")
+		return in, false, fmt.Errorf("invalid input type")
 	}
 
 	for _, pp := range app.Spec.ProtoPorts {
@@ -192,7 +192,7 @@ func (s *securityHooks) validateApp(ctx context.Context, kv kvstore.Interface, t
 		if err == nil {
 			// protocol number specified, check its between 0-255 range (0 is valid proto)
 			if protoNum < 0 || protoNum >= 255 {
-				return i, false, fmt.Errorf("Invalid protocol number %v", pp.Protocol)
+				return in, false, fmt.Errorf("Invalid protocol number %v", pp.Protocol)
 			}
 		} else {
 			found := false
@@ -204,7 +204,7 @@ func (s *securityHooks) validateApp(ctx context.Context, kv kvstore.Interface, t
 			}
 
 			if !found {
-				return i, false, fmt.Errorf("invalid protocol %v", pp.Protocol)
+				return in, false, fmt.Errorf("invalid protocol %v", pp.Protocol)
 			}
 		}
 
@@ -215,20 +215,20 @@ func (s *securityHooks) validateApp(ctx context.Context, kv kvstore.Interface, t
 				for _, port := range ports {
 					i, err := strconv.Atoi(port)
 					if err != nil {
-						return i, false, fmt.Errorf("port %v must be an integer value", port)
+						return in, false, fmt.Errorf("port %v must be an integer value", port)
 					}
 					if 0 > i || i > 65535 {
-						return i, false, fmt.Errorf("port %v outside range", port)
+						return in, false, fmt.Errorf("port %v outside range", port)
 					}
 				}
 				if len(ports) == 2 {
 					first, _ := strconv.Atoi(ports[0])
 					second, _ := strconv.Atoi(ports[1])
 					if first > second {
-						return i, false, fmt.Errorf("Invalid port range %v. first number bigger than second", prange)
+						return in, false, fmt.Errorf("Invalid port range %v. first number bigger than second", prange)
 					}
 				} else if len(ports) > 2 {
-					return i, false, fmt.Errorf("Invalid port range format: %v", prange)
+					return in, false, fmt.Errorf("Invalid port range format: %v", prange)
 				}
 			}
 		}
@@ -243,26 +243,26 @@ func (s *securityHooks) validateApp(ctx context.Context, kv kvstore.Interface, t
 				(app.Spec.ALG.FtpAlg != nil) ||
 				(app.Spec.ALG.SunrpcAlg != nil) ||
 				(app.Spec.ALG.MsrpcAlg != nil) {
-				return i, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
+				return in, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
 			}
 
 			// validate ICMP type
 			if app.Spec.ALG.IcmpAlg != nil && app.Spec.ALG.IcmpAlg.Type != "" {
 				i, err := strconv.Atoi(app.Spec.ALG.IcmpAlg.Type)
 				if err != nil {
-					return i, false, fmt.Errorf("ICMP Type %v must be an integer value", app.Spec.ALG.IcmpAlg.Type)
+					return in, false, fmt.Errorf("ICMP Type %v must be an integer value", app.Spec.ALG.IcmpAlg.Type)
 				}
 				if 0 > i || i > 255 {
-					return i, false, fmt.Errorf("ICMP Type %v outside range", app.Spec.ALG.IcmpAlg.Type)
+					return in, false, fmt.Errorf("ICMP Type %v outside range", app.Spec.ALG.IcmpAlg.Type)
 				}
 			}
 			if app.Spec.ALG.IcmpAlg != nil && app.Spec.ALG.IcmpAlg.Code != "" {
 				i, err := strconv.Atoi(app.Spec.ALG.IcmpAlg.Code)
 				if err != nil {
-					return i, false, fmt.Errorf("ICMP Code %v must be an integer value", app.Spec.ALG.IcmpAlg.Code)
+					return in, false, fmt.Errorf("ICMP Code %v must be an integer value", app.Spec.ALG.IcmpAlg.Code)
 				}
 				if 0 > i || i > 18 {
-					return i, false, fmt.Errorf("ICMP Code %v outside range", app.Spec.ALG.IcmpAlg.Code)
+					return in, false, fmt.Errorf("ICMP Code %v outside range", app.Spec.ALG.IcmpAlg.Code)
 				}
 			}
 		case "DNS":
@@ -270,28 +270,28 @@ func (s *securityHooks) validateApp(ctx context.Context, kv kvstore.Interface, t
 				(app.Spec.ALG.FtpAlg != nil) ||
 				(app.Spec.ALG.SunrpcAlg != nil) ||
 				(app.Spec.ALG.MsrpcAlg != nil) {
-				return i, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
+				return in, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
 			}
 		case "FTP":
 			if (app.Spec.ALG.IcmpAlg != nil) ||
 				(app.Spec.ALG.DnsAlg != nil) ||
 				(app.Spec.ALG.SunrpcAlg != nil) ||
 				(app.Spec.ALG.MsrpcAlg != nil) {
-				return i, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
+				return in, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
 			}
 		case "SunRPC":
 			if (app.Spec.ALG.IcmpAlg != nil) ||
 				(app.Spec.ALG.DnsAlg != nil) ||
 				(app.Spec.ALG.FtpAlg != nil) ||
 				(app.Spec.ALG.MsrpcAlg != nil) {
-				return i, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
+				return in, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
 			}
 		case "MSRPC":
 			if (app.Spec.ALG.IcmpAlg != nil) ||
 				(app.Spec.ALG.DnsAlg != nil) ||
 				(app.Spec.ALG.FtpAlg != nil) ||
 				(app.Spec.ALG.SunrpcAlg != nil) {
-				return i, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
+				return in, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
 			}
 		case "TFTP":
 			if (app.Spec.ALG.IcmpAlg != nil) ||
@@ -299,7 +299,7 @@ func (s *securityHooks) validateApp(ctx context.Context, kv kvstore.Interface, t
 				(app.Spec.ALG.FtpAlg != nil) ||
 				(app.Spec.ALG.SunrpcAlg != nil) ||
 				(app.Spec.ALG.MsrpcAlg != nil) {
-				return i, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
+				return in, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
 			}
 		case "RTSP":
 			if (app.Spec.ALG.IcmpAlg != nil) ||
@@ -307,13 +307,13 @@ func (s *securityHooks) validateApp(ctx context.Context, kv kvstore.Interface, t
 				(app.Spec.ALG.FtpAlg != nil) ||
 				(app.Spec.ALG.SunrpcAlg != nil) ||
 				(app.Spec.ALG.MsrpcAlg != nil) {
-				return i, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
+				return in, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
 			}
 		default:
-			return i, false, fmt.Errorf("Invalid ALG type: %v", app.Spec.ALG.Type)
+			return in, false, fmt.Errorf("Invalid ALG type: %v", app.Spec.ALG.Type)
 		}
 	}
-	return i, true, nil
+	return in, true, nil
 }
 
 func registerSGPolicyHooks(svc apiserver.Service, logger log.Logger) {
