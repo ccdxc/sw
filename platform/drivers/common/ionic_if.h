@@ -51,6 +51,7 @@ enum cmd_opcode {
 
 	CMD_OPCODE_NOTIFYQ_INIT			= 11,
 	CMD_OPCODE_LIF_RESET			= 12,
+	CMD_OPCODE_SET_NETDEV_INFO		= 13,
 
 	CMD_OPCODE_STATION_MAC_ADDR_GET		= 15,
 	CMD_OPCODE_MTU_SET			= 16,
@@ -1023,6 +1024,24 @@ struct lif_reset_cmd {
 typedef struct admin_comp lif_reset_comp;
 
 /**
+ * struct set_netdev_info_cmd - Tell the NIC of the LIF's netdev and PCI names
+ * @opcode:     opcode = 13
+ * @nd_name:	The netdev name string, 0 terminated
+ * @dev_name:	The bus info, e.g. PCI slot-device-function, 0 terminated
+ */
+#ifndef IFNAMSIZ
+#define	IFNAMSIZ	16
+#endif
+struct set_netdev_info_cmd {
+	u16 opcode;
+	char nd_name[IFNAMSIZ];
+	char dev_name[IFNAMSIZ];
+	u16 rsvd[15];
+};
+
+typedef struct admin_comp set_netdev_info_comp;
+
+/**
  * struct station_mac_addr_get_cmd - Get LIF's station MAC address
  *                                   command
  * @opcode:     opcode = 15
@@ -1620,6 +1639,7 @@ union adminq_cmd {
 	struct features_cmd features;
 	struct q_enable_cmd q_enable;
 	struct q_disable_cmd q_disable;
+	struct set_netdev_info_cmd netdev_info;
 	struct station_mac_addr_get_cmd station_mac_addr_get;
 	struct mtu_set_cmd mtu_set;
 	struct rx_mode_set_cmd rx_mode_set;

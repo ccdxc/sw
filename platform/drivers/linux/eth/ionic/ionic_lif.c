@@ -1844,8 +1844,8 @@ static void ionic_lif_notify_work(struct work_struct *ws)
 {
 }
 
-static int ionic_lif_changeupper(struct ionic *ionic, struct lif *lif,
-				 struct netdev_notifier_changeupper_info *info)
+static void ionic_lif_changeupper(struct ionic *ionic, struct lif *lif,
+				  struct netdev_notifier_changeupper_info *info)
 {
 	struct netdev_lag_upper_info *upper_info;
 
@@ -1860,17 +1860,15 @@ static int ionic_lif_changeupper(struct ionic *ionic, struct lif *lif,
 	if (!netif_is_lag_port(lif->netdev) ||
 	    !netif_is_lag_master(info->upper_dev) ||
 	    !info->upper_info)
-		return 0;
+		return;
 
 	upper_info = info->upper_info;
 
 	dev_dbg(ionic->dev, "upper tx type %d\n",
 		upper_info->tx_type);
-
-	return 0;
 }
 
-static int ionic_lif_changelowerstate(struct ionic *ionic, struct lif *lif,
+static void ionic_lif_changelowerstate(struct ionic *ionic, struct lif *lif,
 			    struct netdev_notifier_changelowerstate_info *info)
 {
 	struct netdev_lag_lower_state_info *lower_info;
@@ -1882,14 +1880,33 @@ static int ionic_lif_changelowerstate(struct ionic *ionic, struct lif *lif,
 
 	if (!netif_is_lag_port(lif->netdev) ||
 	    !info->lower_state_info)
-		return 0;
+		return;
 
 	lower_info = info->lower_state_info;
 
 	dev_dbg(ionic->dev, "link up %d enable %d\n",
 		lower_info->link_up, lower_info->tx_enabled);
+}
 
-	return 0;
+
+static void ionic_lif_set_netdev_info(struct ionic *ionic, struct lif *lif)
+{
+	struct ionic_admin_ctx ctx = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
+		.cmd.netdev_info = {
+			.opcode = CMD_OPCODE_SET_NETDEV_INFO,
+		},
+	};
+
+	strlcpy(ctx.cmd.netdev_info.nd_name, lif->netdev->name,
+		sizeof(ctx.cmd.netdev_info.nd_name));
+	strlcpy(ctx.cmd.netdev_info.dev_name, ionic_bus_info(ionic),
+		sizeof(ctx.cmd.netdev_info.dev_name));
+
+	dev_info(ionic->dev, "NETDEV_CHANGENAME %s %s\n",
+		ctx.cmd.netdev_info.nd_name, ctx.cmd.netdev_info.dev_name);
+
+	ionic_adminq_post_wait(lif, &ctx);
 }
 
 struct lif *ionic_netdev_lif(struct net_device *netdev)
@@ -1906,23 +1923,23 @@ static int ionic_lif_notify(struct notifier_block *nb,
 	struct ionic *ionic = container_of(nb, struct ionic, nb);
 	struct net_device *ndev = netdev_notifier_info_to_dev(info);
 	struct lif *lif = ionic_netdev_lif(ndev);
-	int err;
 
 	if (!lif || lif->ionic != ionic)
 		return NOTIFY_DONE;
 
 	switch (event) {
 	case NETDEV_CHANGEUPPER:
-		err = ionic_lif_changeupper(ionic, lif, info);
+		ionic_lif_changeupper(ionic, lif, info);
 		break;
 	case NETDEV_CHANGELOWERSTATE:
-		err = ionic_lif_changelowerstate(ionic, lif, info);
+		ionic_lif_changelowerstate(ionic, lif, info);
+		break;
+	case NETDEV_CHANGENAME:
+		ionic_lif_set_netdev_info(ionic, lif);
 		break;
 	default:
 		return NOTIFY_DONE;
 	}
-
-	(void)err;
 
 	return NOTIFY_DONE;
 }
