@@ -772,7 +772,6 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 	chain_params->ccp_pad_boundary_shift =
 		(uint8_t) ilog2(PNSO_MEM_ALIGN_PAGE);
 
-	chain_params->ccp_cmd.ccpc_sgl_pdma_pad_only = 1;
 	chain_params->ccp_sgl_vec_addr = cp_desc->cd_dst;
 
 	if (chn_service_has_interm_blist(svc_info)) {
@@ -795,7 +794,8 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 
 		chain_params->ccp_cmd.ccpc_status_dma_en = 1;
 		chain_params->ccp_cmd.ccpc_stop_chain_on_error = 1;
-	}
+	} else
+		chain_params->ccp_cmd.ccpc_sgl_pdma_pad_only = 1;
 
 	OSAL_LOG_INFO("ring: %s index: %u src_desc: 0x" PRIx64 " status_desc: 0x" PRIx64 "",
 			ring->name, index, (uint64_t) cp_desc,
