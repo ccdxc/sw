@@ -100,6 +100,8 @@ struct ionic_en_uplink_handle {
         vmk_Bool                        is_started;        
 
         vmk_Semaphore                   mq_binary_sema;
+        vmk_Semaphore                   stats_binary_sema;
+        vmk_UplinkStats                 uplink_stats;
 
         vmk_Bool                        is_mgmt_nic;
         vmk_Bool                        is_ready_notify_linkup;

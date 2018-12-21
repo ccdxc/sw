@@ -685,6 +685,48 @@ out:
 /*
  *****************************************************************************
  *
+ * ionic_en_uplink_lif_stats_get
+ *
+ *     Get uplink stats from the given lif
+ *
+ *  Parameters:
+ *     lif            - IN (lif)
+ *     uplink_stats   - IN (uplink stats pointer)
+ *
+ *  Results:
+ *     None
+ *
+ *  Side effects:
+ *     None
+ *
+ *****************************************************************************
+ */
+
+static void
+ionic_en_uplink_lif_stats_get(struct lif *lif,
+                              vmk_UplinkStats *uplink_stats)
+{
+        vmk_uint32 i;
+        struct rx_stats *rx_stats;
+        struct tx_stats *tx_stats;
+
+        for (i = 0; i < lif->nrxqcqs; i++) {
+                rx_stats = &lif->rxqcqs[i]->stats.rx;
+                uplink_stats->rxPkts += rx_stats->pkts;
+                uplink_stats->rxBytes += rx_stats->bytes;
+        }
+
+        for (i = 0; i < lif->ntxqcqs; i++) {
+                tx_stats = &lif->txqcqs[i]->stats.tx;
+                uplink_stats->txPkts += tx_stats->pkts;
+                uplink_stats->txBytes += tx_stats->bytes;
+        }
+}
+
+
+/*
+ *****************************************************************************
+ *
  * ionic_en_uplink_stats_get
  *
  *     Get uplink stats
@@ -706,6 +748,23 @@ VMK_ReturnStatus
 ionic_en_uplink_stats_get(vmk_AddrCookie driver_data,             // IN
                           vmk_UplinkStats *stats)                 // IN/OUT
 {
+        struct lif *lif;
+        struct ionic_en_priv_data *priv_data =
+                (struct ionic_en_priv_data *) driver_data.ptr;
+        struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle; 
+
+        ionic_info("ionic_en_uplink_stats_get() called");
+
+        lif = VMK_LIST_ENTRY(vmk_ListFirst(&priv_data->ionic.lifs),
+                             struct lif, list);
+
+        vmk_Memset(stats, 0, sizeof(vmk_UplinkStats));
+
+        vmk_SemaLock(&uplink_handle->stats_binary_sema);
+        ionic_en_uplink_lif_stats_get(lif,
+                                      stats);
+        vmk_SemaUnlock(&uplink_handle->stats_binary_sema);
+
         return VMK_OK;
 }
 
@@ -1381,7 +1440,19 @@ ionic_en_uplink_locks_init(struct ionic_en_uplink_handle *uplink_handle)  // IN
                 goto mq_seam_create_err;
         }
 
+        status = ionic_binary_sema_create(ionic_driver.heap_id,
+                                          "stats_binary_sema",
+                                          &uplink_handle->stats_binary_sema);
+        if (status != VMK_OK) {
+                ionic_err("ionic_binary_sema_create() failed, status: %s",
+                          vmk_StatusToString(status));
+                goto stats_seam_create_err;
+        }
+
         return status;
+
+stats_seam_create_err:
+        ionic_sema_destroy(&uplink_handle->mq_binary_sema);
 
 mq_seam_create_err:
         ionic_sema_destroy(&uplink_handle->status_binary_sema);
@@ -1424,6 +1495,7 @@ link_status_lock_err:
 static void
 ionic_en_uplink_locks_destroy(struct ionic_en_uplink_handle *uplink_handle)  // IN
 {
+        ionic_sema_destroy(&uplink_handle->stats_binary_sema);
         ionic_sema_destroy(&uplink_handle->mq_binary_sema);
         ionic_sema_destroy(&uplink_handle->status_binary_sema);
         ionic_sema_destroy(&uplink_handle->vlan_filter_binary_sema);
