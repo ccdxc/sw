@@ -7,14 +7,14 @@ import time
 import re
 import pdb
 
-def GetProtocolDirectory(proto):
-    return api.GetTopologyDirectory() + "/gen/telemetry/{}".format(proto)
+def GetProtocolDirectory(feature, proto):
+    return api.GetTopologyDirectory() + "/gen/telemetry/{}/{}".format(feature, proto)
 
-def GetTargetJsons(proto):
-    return glob.glob(GetProtocolDirectory(proto) + "/*_policy.json")
+def GetTargetJsons(feature, proto):
+    return glob.glob(GetProtocolDirectory(feature, proto) + "/*_policy.json")
 
-def GetTargetVerifJsons(proto):
-    return glob.glob(GetProtocolDirectory(proto) + "/*_verif.json")
+def GetTargetVerifJsons(feature, proto):
+    return glob.glob(GetProtocolDirectory(feature, proto) + "/*_verif.json")
 
 def ReadJson(filename):
     return api.parser.JsonParse(filename)
@@ -32,13 +32,18 @@ def GetHping3Cmd(protocol, destination_ip, destination_port):
 def GetVerifJsonFromPolicyJson(policy_json):
     return policy_json.replace("_policy", "_verif")
 
-def VerifyCmd(cmd, action):
+def VerifyCmd(cmd, action, feature):
     api.PrintCommandResults(cmd)
     result = api.types.status.SUCCESS
     if 'tcpdump' in cmd.command:
-        matchObj = re.search( r'(.*) GREv0, length(.*)', cmd.stdout, 0)
-        if matchObj is None:
-            result = api.types.status.FAILURE
+        if feature == 'mirror':
+            matchObj = re.search( r'(.*) GREv0, length(.*)', cmd.stdout, 0)
+            if matchObj is None:
+                result = api.types.status.FAILURE
+        elif feature == 'flowmon':
+            matchObj = re.search( r'(.*)2055: UDP, length(.*)', cmd.stdout, 0)
+            if matchObj is None:
+                result = api.types.status.FAILURE
     return result
 
 def GetDestPort(port):
@@ -50,22 +55,27 @@ def GetDestPort(port):
         return '3000'
     return port 
 
-def RunCmd(workload, protocol, destination_ip, destination_port, collector_w, action):
+def RunCmd(workload, protocol, destination_ip, destination_port, collector_w, action, feature):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     result = api.types.status.SUCCESS
-
-    api.Trigger_AddCommand(req, collector_w.node_name, collector_w.workload_name,
-                           "tcpdump -nni %s ip proto gre" % (collector_w.interface), background=True)
+    
+    if feature == 'mirror':
+        api.Trigger_AddCommand(req, collector_w.node_name, collector_w.workload_name,
+                               "tcpdump -nni %s ip proto gre" % (collector_w.interface), background=True)
+    elif feature == 'flowmon':
+        api.Trigger_AddCommand(req, collector_w.node_name, collector_w.workload_name,
+                               "tcpdump -nni %s udp and dst port 2055" % (collector_w.interface), background=True)
     cmd = GetHping3Cmd(protocol, destination_ip, destination_port)
     api.Trigger_AddCommand(req, workload.node_name, workload.workload_name, cmd)
     api.Logger.info("Running from workload_ip {} COMMAND {}".format(workload.ip_address, cmd))
 
     trig_resp = api.Trigger(req)
-    #time.sleep(1)
+    if feature == 'flowmon':
+        time.sleep(1)
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)
     resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
     for cmd in resp.commands:
-        result = VerifyCmd(cmd, action)
+        result = VerifyCmd(cmd, action, feature)
         if (result == api.types.status.FAILURE):
             api.Logger.info("Testcase FAILED!! cmd: {}".format(cmd))
             break;
@@ -107,7 +117,7 @@ def GetDestWorkload(verif, tc):
                 break
     return dst_wl
 
-def RunAll(collector_w, verif_json, tc):
+def RunAll(collector_w, verif_json, tc, feature):
     res = api.types.status.SUCCESS
     api.Logger.info("VERIFY JSON FILE {}".format(verif_json))
 
@@ -128,7 +138,7 @@ def RunAll(collector_w, verif_json, tc):
             continue
         dest_port = GetDestPort(verif[i]['port'])
         action = verif[i]['result']
-        res = RunCmd(src_w, protocol, dest_w.ip_address, dest_port, collector_w, action)
+        res = RunCmd(src_w, protocol, dest_w.ip_address, dest_port, collector_w, action, feature)
         count = count + 1
     ret['res'] = res
     ret['count'] = count
