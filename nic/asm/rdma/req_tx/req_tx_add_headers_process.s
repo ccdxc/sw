@@ -602,7 +602,9 @@ error_disable_exit:
     phvwrpair      p.p4_intr_rxdma.intr_qtype, K_GLOBAL_QTYPE, p.p4_to_p4plus.p4plus_app_id, P4PLUS_APPTYPE_RDMA
     phvwri         p.p4_to_p4plus.raw_flags, REQ_RX_FLAG_RDMA_FEEDBACK
     phvwri         p.p4_to_p4plus.table0_valid, 1
-    bbeq           CAPRI_KEY_FIELD(IN_P, first), 1, exit
-    DMA_SET_END_OF_PKT_END_OF_CMDS(DMA_CMD_PHV2PKT_T, r6) //BD-Slot
+    //purposefully disabling this optimization - so, fetch wrid program is invoked all the time
+    //from there stats program is invoked to update error stats
+    //bbeq           CAPRI_KEY_FIELD(IN_P, first), 1, exit
+    DMA_SET_END_OF_PKT_END_OF_CMDS(DMA_CMD_PHV2PKT_T, r6)
     // Load wqe in case of mid/last pkt errors to fetch wrid to be posted in error-completion.
     CAPRI_NEXT_TABLE3_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqwqe_fetch_wrid_process, K_WQE_ADDR)

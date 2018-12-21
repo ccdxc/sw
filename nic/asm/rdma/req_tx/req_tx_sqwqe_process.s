@@ -27,7 +27,7 @@ struct req_tx_s2_t0_k k;
 #define TO_S5_SQCB_WB_ADD_HDR_P to_s5_sqcb_wb_add_hdr_info
 #define TO_S6_FRPMR_WB_P        to_s6_frpmr_sqcb_wb_info
 #define TO_S6_SQCB_WB_ADD_HDR_P to_s6_sqcb_wb_add_hdr_info
-#define TO_S7_STATS_P           to_s7_stats_info
+#define TO_S7_STATS_INFO_P      to_s7_stats_info
 
 
 #define K_LOG_PMTU CAPRI_KEY_FIELD(IN_P, log_pmtu)
@@ -152,9 +152,9 @@ send_or_write:
 
     seq            c4, K_FAST_REG_ENABLE, 0x1
     seq            c5, d.ud_send.q_key[31:31], 0x1
-    bcf            [c5 & !c4], ud_error
+    bcf            [c5 & !c4], ud_error_fast_reg
     seq            c6, K_PRIVILEGED_QKEY[31:31], 0x1  // BD slot
-    bcf            [c5 & !c6], ud_error
+    bcf            [c5 & !c6], ud_error_priv
     cmov           r4, c5, K_PRIVILEGED_QKEY, d.ud_send.q_key // BD slot
 
     phvwrpair DETH_Q_KEY, r4, DETH_SRC_QP, K_GLOBAL_QID
@@ -165,7 +165,7 @@ send_or_write:
     add            r5, r0, d.ud_send.length
     add            r6, d.ud_send.ah_handle, r0
     muli           r2, r6, AT_ENTRY_SIZE_BYTES
-    blt            r4, r5, ud_error
+    blt            r4, r5, ud_error_pmtu
     add            r2, r2, K_AH_BASE_ADDR_PAGE_ID, HBM_PAGE_SIZE_SHIFT
     // AH_SIZE is the last byte in AH_ENTRY
     add            r6, r2, HDR_TEMPLATE_T_SIZE_BYTES
@@ -420,13 +420,28 @@ load_frpmr_sqlkey:
     CAPRI_NEXT_TABLE1_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_frpmr_sqlkey_process, r6)
 
 frpmr_second_pass:
-    phvwrpair      CAPRI_PHV_FIELD(TO_S7_STATS_P, npg), 1, \
-                   CAPRI_PHV_FIELD(TO_S7_STATS_P, npg_frpmr), 1
+    phvwrpair      CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, npg), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, npg_frpmr), 1
 
     phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, sge_index), 0, CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, lkey_state_update), 1
     b              load_frpmr_sqlkey             
     phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, sge_index), 1, CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, lkey_state_update), 1 //BD-slot
 
+ud_error_fast_reg:
+    b              ud_error
+    phvwrpair      CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_ud_fast_reg), 1 //BD Slot
+    
+ud_error_priv:
+    b              ud_error
+    phvwrpair      CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_ud_priv), 1 //BD Slot
+    
+ud_error_pmtu:
+    b              ud_error
+    phvwrpair      CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_ud_pmtu), 1 //BD Slot
+    
 ud_error:
     // Any error should move Qstate to SQ_ERR and halt SQ processing
     phvwrpair      p.{rdma_feedback.completion.status, rdma_feedback.completion.error}, (CQ_STATUS_LOCAL_QP_OPER_ERR << 1 | 1), \

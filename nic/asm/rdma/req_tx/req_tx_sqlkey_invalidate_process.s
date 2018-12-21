@@ -12,6 +12,8 @@ struct key_entry_aligned_t d;
 #define IN_P t0_s2s_sqwqe_to_lkey_inv_info
 #define IN_TO_S_P to_s4_dcqcn_bind_mw_info
 
+#define TO_S7_STATS_INFO_P to_s7_stats_info
+
 #define K_SGE_INDEX CAPRI_KEY_FIELD(IN_P, sge_index)
 #define WQE_TO_LKEY_T0 t0_s2s_sqwqe_to_lkey_inv_info
 #define WQE_TO_LKEY_T1 t1_s2s_sqwqe_to_lkey_inv_info
@@ -40,11 +42,11 @@ req_tx_sqlkey_invalidate_process:
     nop
 
     // it is an error to invalidate an MR not eligible for invalidation
-    bbeq         d.mr_flags.inv_en, 0, error_completion
+    bbeq         d.mr_flags.inv_en, 0, err_inv_not_allowed
 
     // it is an error to invalidate an MR in INVALID state
     seq          c1, d.state, KEY_STATE_INVALID // BD-slot 
-    bcf          [c1], error_completion
+    bcf          [c1], err_inv_state
 
     seq          c1, d.type, MR_TYPE_MW_TYPE_2 // BD-slot
     bcf          [!c1], invalidate
@@ -55,7 +57,7 @@ req_tx_sqlkey_invalidate_process:
 
     // Type 2 MW in Free state can only be invalidated via QP associated to same PD as MW.
     seq          c3, CAPRI_KEY_FIELD(IN_TO_S_P, header_template_addr_or_pd), d.pd    // BD-slot
-    bcf          [!c3], error_completion
+    bcf          [!c3], err_inv_pd
     nop     // BD-Slot
 
     nop.e   
@@ -64,7 +66,7 @@ req_tx_sqlkey_invalidate_process:
 inv_valid_mw:
     // Type 2 MW in valid state can only be invalidated via QP on which MW was bound
     seq          c4, K_GLOBAL_QID, d.qp
-    bcf          [!c4], error_completion
+    bcf          [!c4], err_inv_qp
     nop //BD-slot
     //fall-through
 
@@ -74,6 +76,26 @@ invalidate:
 
     nop.e
     nop
+
+err_inv_not_allowed:
+    b              error_completion
+    phvwrpair      CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_inv_lkey_inv_not_allowed), 1 //BD Slot
+
+err_inv_state:
+    b              error_completion
+    phvwrpair      CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_inv_lkey_invalid_state), 1 //BD Slot
+
+err_inv_pd:
+    b              error_completion
+    phvwrpair      CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_inv_lkey_pd_mismatch), 1 //BD Slot
+
+err_inv_qp:
+    b              error_completion
+    phvwrpair      CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_inv_lkey_qp_mismatch), 1 //BD Slot
 
 error_completion:
     // Set completion status to Memory-Management-Operation-Error

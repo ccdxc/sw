@@ -104,7 +104,7 @@ handle_error_lif_stats:
     bbeq            K_LIF_CQE_ERROR_ID_VLD, 0, error_done
 
     #lif CQE error-id stat
-    addi            r3, r2, LIF_STATS_RESP_DEBUG_ERR_START_OFFSET
+    addi            r3, r2, LIF_STATS_REQ_DEBUG_ERR_START_OFFSET
     add             r3, r3, LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_RX_CQE_ERR_OFFSET), 3
 
     ATOMIC_INC_VAL_1(r1, r3, r4, r5, 1)

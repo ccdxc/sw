@@ -109,10 +109,31 @@ exit:
     nop
 
 mw_type_disallowed:
+    b              handle_error
+    phvwrpair      CAPRI_PHV_FIELD(TO_S7_STATS_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_P, qp_err_dis_bind_mw_rkey_type_disallowed), 1 //BD Slot
+
 invalid_mw_state:
+    b              handle_error
+    phvwrpair      CAPRI_PHV_FIELD(TO_S7_STATS_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_P, qp_err_dis_bind_mw_rkey_inv_mw_state), 1 //BD Slot
+
 invalid_len:
+    b              handle_error
+    phvwrpair      CAPRI_PHV_FIELD(TO_S7_STATS_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_P, qp_err_dis_bind_mw_rkey_inv_len), 1 //BD Slot
+
 invalid_zbva:
+    b              handle_error
+    phvwrpair      CAPRI_PHV_FIELD(TO_S7_STATS_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_P, qp_err_dis_bind_mw_rkey_inv_zbva), 1 //BD Slot
+
 pd_check_failure:
+    b              handle_error
+    phvwrpair      CAPRI_PHV_FIELD(TO_S7_STATS_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_P, qp_err_dis_bind_mw_rkey_inv_pd), 1 //BD Slot
+
+handle_error:
     phvwrpair      p.rdma_feedback.feedback_type, RDMA_COMPLETION_FEEDBACK, \
                    p.{rdma_feedback.completion.status, rdma_feedback.completion.error}, \
                    (CQ_STATUS_MEM_MGMT_OPER_ERR << 1 | 1)

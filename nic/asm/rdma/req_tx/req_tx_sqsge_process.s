@@ -19,7 +19,7 @@ struct req_tx_s3_t0_k k;
 #define TO_S3_SQSGE_P to_s3_sqsge_info
 #define TO_S4_DCQCN_BIND_MW_P to_s4_dcqcn_bind_mw_info
 #define TO_S5_SQCB_WB_ADD_HDR_P to_s5_sqcb_wb_add_hdr_info
-#define TO_S7_STATS_P to_s7_stats_info
+#define TO_S7_STATS_INFO_P to_s7_stats_info
 
 #define K_CURRENT_SGE_ID CAPRI_KEY_RANGE(IN_P, current_sge_id_sbit0_ebit1, current_sge_id_sbit2_ebit7)
 #define K_CURRENT_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit1, current_sge_offset_sbit26_ebit31)
@@ -142,7 +142,7 @@ sge_loop:
     // Pass packet_len to dcqcn_enforce and to add_headers_2 for padding and to stats_process
     phvwr          CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, packet_len), r5
     phvwr          CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, packet_len), r5
-    phvwr          CAPRI_PHV_FIELD(TO_S7_STATS_P, pyld_bytes), r5
+    phvwr          CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, pyld_bytes), r5
 
     // if (index == num_valid_sges)
     srl            r1, r1, LOG_SIZEOF_SGE_T_BITS
@@ -234,6 +234,8 @@ err_no_dma_cmds:
                        ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_TX_LOCAL_OPER_ERR_OFFSET))
 
     phvwr          CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp), 1
+    phvwrpair      CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_no_dma_cmds), 1
     b              trigger_dcqcn
-    CAPRI_SET_TABLE_0_VALID(0)
+    CAPRI_SET_TABLE_0_VALID(0) //BD Slot
 

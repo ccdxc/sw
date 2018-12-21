@@ -25,6 +25,7 @@ struct req_tx_s0_t0_k k;
 #define TO_S4_DCQCN_BIND_MW_P   to_s4_dcqcn_bind_mw_info
 #define TO_S1_DCQCN_BIND_MW_P   to_s1_dcqcn_bind_mw_info
 #define TO_S5_SQCB_WB_ADD_HDR_P to_s5_sqcb_wb_add_hdr_info
+#define TO_S7_STATS_INFO_P      to_s7_stats_info
 
 #define TO_S1_BT_P to_s1_bt_info
 #define TO_S2_BT_P to_s2_bt_info
@@ -565,6 +566,9 @@ flush_rq:
     phvwrpair      p.p4_intr_rxdma.intr_qtype, Q_TYPE_RDMA_RQ, p.p4_to_p4plus.p4plus_app_id, P4PLUS_APPTYPE_RDMA
     phvwri         p.p4_to_p4plus.raw_flags, RESP_RX_FLAG_ERR_DIS_QP
     phvwri         p.p4_to_p4plus.table0_valid, 1
+
+    phvwrpair      CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_flush_rq), 1
 
     phvwrpair      p.rdma_feedback.feedback_type, RDMA_COMPLETION_FEEDBACK, \
                    p.rdma_feedback.completion.status, CQ_STATUS_WQE_FLUSHED_ERR

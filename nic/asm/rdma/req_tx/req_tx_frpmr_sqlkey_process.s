@@ -11,6 +11,8 @@ struct key_entry_aligned_t d;
 #define IN_P t0_s2s_sqwqe_to_lkey_frpmr_info
 #define IN_TO_S_P to_s4_frpmr_sqlkey_info
 
+#define TO_S7_STATS_INFO_P  to_s7_stats_info
+
 #define WQE_TO_LKEY_T0      t0_s2s_sqwqe_to_lkey_frpmr_info
 #define WQE_TO_LKEY_T1      t1_s2s_sqwqe_to_lkey_frpmr_info
 #define FRPMR_WRITE_BACK_P  t2_s2s_frpmr_write_back_info
@@ -52,16 +54,16 @@ req_tx_frpmr_sqlkey_process:
     // PD check.
     seq          c1, CAPRI_KEY_FIELD(IN_TO_S_P, header_template_addr_or_pd), d.pd    // BD-slot
     // QP FRPMR enable check.
-    bbeq         K_FAST_REG_ENABLE, 0, error_completion
+    bbeq         K_FAST_REG_ENABLE, 0, err_fast_reg_not_enabled
     CAPRI_RESET_TABLE_2_ARG() //BD-slot
     // State check. 
     seq          c2, d.state, KEY_STATE_FREE
     // num-pt-entries set to max available space in PT table during alloc_lkey.
     sle          c3, K_NUM_PT_ENTRIES, d.num_pt_entries_rsvd  
-    bcf           [!c1 | !c2 | !c3], error_completion
+    bcf           [!c1 | !c2 | !c3], err_invalid_pd_state_len
     nop
     // Consumer lkey ownership check.
-    bbeq         d.mr_flags.ukey_en, 0, error_completion
+    bbeq         d.mr_flags.ukey_en, 0, err_ukey_not_enabled
     srl          r4, K_VA, K_LOG_PAGE_SIZE //BD Slot
     andi         r4, r4, 0x7
     add          r4, r4, d.pt_base
@@ -86,6 +88,25 @@ frpmr:
 load_frpmr_wb:
     SQCB0_ADDR_GET(r2)
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_frpmr_write_back_process, r2)
+
+err_fast_reg_not_enabled:
+    b              error_completion
+    phvwrpair      CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_frpmr_fast_reg_not_enabled), 1 //BD Slot
+
+err_invalid_pd_state_len:
+    phvwrpair.!c1  CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_frpmr_invalid_pd), 1
+    phvwrpair.!c2  CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_frpmr_invalid_state), 1
+    b              error_completion
+    phvwrpair.!c3  CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_frpmr_invalid_len), 1 //BD Slot
+
+err_ukey_not_enabled:
+    b              error_completion
+    phvwrpair      CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_frpmr_ukey_not_enabled), 1 //BD Slot
 
 error_completion:
     // Set completion status to Memory-Management-Operation-Error

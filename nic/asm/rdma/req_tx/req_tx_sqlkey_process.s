@@ -1,7 +1,7 @@
 #include "capri.h"
 #include "req_tx.h"
 #include "sqcb.h"
-#include "nic/p4/common/defines.h"
+#include "defines.h"
 
 struct req_tx_phv_t p;
 struct req_tx_s4_t0_k k;
@@ -13,6 +13,7 @@ struct key_entry_aligned_t d;
 #define IN_P t0_s2s_sge_to_lkey_info
 #define IN_TO_S_P to_s4_dcqcn_bind_mw_info
 //#define IN_TO_S_P to_s1_dcqcn_bind_mw_info
+#define TO_S7_STATS_INFO_P to_s7_stats_info
 
 
 #define K_SGE_VA CAPRI_KEY_RANGE(IN_P, sge_va_sbit0_ebit7, sge_va_sbit56_ebit63)
@@ -30,7 +31,7 @@ req_tx_sqlkey_process:
 
     
      //If Reserved LKEY is used, but QP doesn't have privileged operations enabled
-     bbeq         CAPRI_KEY_FIELD(IN_P, rsvd_key_err), 1, error_completion
+     bbeq         CAPRI_KEY_FIELD(IN_P, rsvd_key_err), 1, rsvd_lkey_error
 
      // check if lkey-state is valid.
      seq          c1, d.state, KEY_STATE_VALID  // Branch Delay Slot
@@ -112,14 +113,33 @@ set_arg:
      nop.e
      nop
 
+rsvd_lkey_error: 
+    phvwrpair    CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_disabled), 1, \
+                 CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_lkey_rsvd_lkey), 1 //BD Slot
+    b            error_completion
+    phvwrpair    p.{rdma_feedback.completion.status, rdma_feedback.completion.error}, (CQ_STATUS_MEM_MGMT_OPER_ERR << 1 | 1), \
+                 p.{rdma_feedback.completion.lif_cqe_error_id_vld, rdma_feedback.completion.lif_error_id_vld, rdma_feedback.completion.lif_error_id}, \
+                       ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_TX_MEMORY_MGMT_ERR_OFFSET)) //BD SLot
+
 pd_check_failure:
+    b            local_prot_error
+    phvwrpair    CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_disabled), 1, \
+                 CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_lkey_inv_pd), 1 //BD Slot
 invalid_region:
+    b            local_prot_error
+    phvwrpair    CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_disabled), 1, \
+                 CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_lkey_inv_state), 1 //BD Slot
+
+local_prot_error:
+
     b            error_completion
     phvwrpair    p.{rdma_feedback.completion.status, rdma_feedback.completion.error}, (CQ_STATUS_LOCAL_PROT_ERR << 1 | 1), \
                  p.{rdma_feedback.completion.lif_cqe_error_id_vld, rdma_feedback.completion.lif_error_id_vld, rdma_feedback.completion.lif_error_id}, \
-                       ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_TX_LOCAL_ACCESS_ERR_OFFSET))
+                       ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_TX_LOCAL_ACCESS_ERR_OFFSET)) //BD SLot
 
 access_violation:
+    phvwrpair    CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_disabled), 1, \
+                 CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_lkey_access_violation), 1 
     phvwrpair    p.{rdma_feedback.completion.status, rdma_feedback.completion.error}, (CQ_STATUS_LOCAL_ACC_ERR << 1 | 1), \
                  p.{rdma_feedback.completion.lif_cqe_error_id_vld, rdma_feedback.completion.lif_error_id_vld, rdma_feedback.completion.lif_error_id}, \
                        ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_TX_LOCAL_ACCESS_ERR_OFFSET))

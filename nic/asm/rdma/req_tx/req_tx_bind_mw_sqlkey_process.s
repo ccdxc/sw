@@ -19,6 +19,7 @@ struct key_entry_aligned_t d;
 #define SQLKEY_TO_RKEY_MW_INFO_P t0_s2s_sqlkey_to_rkey_mw_info
 #define SQCB_WRITE_BACK_P t2_s2s_sqcb_write_back_info
 #define TO_S4_DCQCN_BIND_MW_P to_s4_dcqcn_bind_mw_info
+#define TO_S7_STATS_INFO_P to_s7_stats_info
 
 
 %%
@@ -87,8 +88,26 @@ req_tx_bind_mw_sqlkey_process:
     nop
 
 invalid_mr:
+    phvwrpair.c1   CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_bind_mw_lkey_state_valid), 1
+    phvwrpair.!c2  CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_bind_mw_lkey_no_bind), 1
+    b              handle_error
+    phvwrpair.c3   CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_bind_mw_lkey_zero_based), 1 //BD Slot
+
 invalid_acc_ctrl:
+    b              handle_error
+    phvwrpair      CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_bind_mw_lkey_invalid_acc_ctrl), 1 //BD Slot
+
 invalid_va:
+    b              handle_error
+    phvwrpair      CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_bind_mw_lkey_invalid_va), 1 //BD Slot
+
+
+handle_error:
     phvwrpair      p.rdma_feedback.feedback_type, RDMA_COMPLETION_FEEDBACK, \
                    p.{rdma_feedback.completion.status, rdma_feedback.completion.error}, \
                    (CQ_STATUS_MEM_MGMT_OPER_ERR << 1 | 1)
