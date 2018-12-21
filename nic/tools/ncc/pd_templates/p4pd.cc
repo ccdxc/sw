@@ -662,8 +662,6 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
     /* P4 field is extended.. a less than byte field is extended to byte */
     k = *((uint8_t*)&(swkey->${p4fldname}) + ${kbyte});
     m = *((uint8_t*)&(swkey_mask->${p4fldname}_mask) + ${kbyte});
-    k &= (1 << ${p4fldwidth}) - 1;
-    m &= (1 << ${p4fldwidth}) - 1;
 //::                                else:
     k = *((uint8_t*)&(swkey->${p4fldname}) + ${kbyte});
     m = *((uint8_t*)&(swkey_mask->${p4fldname}_mask) + ${kbyte});
@@ -674,8 +672,6 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
     /* P4 field is extended.. a less than byte field is extended to byte */
     k = *((uint8_t*)&(swkey->${p4fldname}[${kbyte}]));
     m = *((uint8_t*)&(swkey_mask->${p4fldname}_mask[${kbyte}]));
-    k &= (1 << ${p4fldwidth}) - 1;
-    m &= (1 << ${p4fldwidth}) - 1;
 //::                                else:
     k = *((uint8_t*)&(swkey->${p4fldname}[${kbyte}]));
     m = *((uint8_t*)&(swkey_mask->${p4fldname}_mask[${kbyte}]));
@@ -767,8 +763,6 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
     /* P4 field is extended.. a less than byte field is extended to byte */
     k = *((uint8_t*)&(swkey->${ustr}${p4fldname}) + ${kbyte});
     m = *((uint8_t*)&(swkey_mask->${ustr_mask}${p4fldname}_mask) + ${kbyte});
-    k &= (1 << ${p4fldwidth}) - 1;
-    m &= (1 << ${p4fldwidth}) - 1;
 //::                                    else:
     k = *((uint8_t*)&(swkey->${ustr}${p4fldname}) + ${kbyte});
     m = *((uint8_t*)&(swkey_mask->${ustr_mask}${p4fldname}_mask) + ${kbyte});
@@ -778,8 +772,6 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
     /* P4 field is extended.. a less than byte field is extended to byte */
     k = *((uint8_t*)&(swkey->${ustr}${p4fldname}[${kbyte}]));
     m = *((uint8_t*)&(swkey_mask->${ustr_mask}${p4fldname}_mask[${kbyte}]));
-    k &= (1 << ${p4fldwidth}) - 1;
-    m &= (1 << ${p4fldwidth}) - 1;
 //::                                    else:
     k = *((uint8_t*)&(swkey->${ustr}${p4fldname}[${kbyte}]));
     m = *((uint8_t*)&(swkey_mask->${ustr_mask}${p4fldname}_mask[${kbyte}]));
@@ -858,14 +850,10 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
     /* P4 field is extended.. a less than byte field is extended to byte */
     k = *((uint8_t*)&(swkey->${ustr}${p4fldname}) + ${kbyte});
     m = *((uint8_t*)&(swkey_mask->${ustr_mask}${p4fldname}_mask) + ${kbyte});
-    k &= (1 << ${p4fldwidth}) - 1;
-    m &= (1 << ${p4fldwidth}) - 1;
 //::                                    else:
     /* P4 field is extended.. a less than byte field is extended to byte */
     k = *((uint8_t*)&(swkey->${ustr}${p4fldname}) + ${kbyte});
     m = *((uint8_t*)&(swkey_mask->${ustr_mask}${p4fldname}_mask) + ${kbyte});
-    k &= (1 << ${p4fldwidth}) - 1;
-    m &= (1 << ${p4fldwidth}) - 1;
 //::                                    #endif
 //::                                else:
 //::                                    if kbit < 7:
