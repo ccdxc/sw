@@ -34,6 +34,9 @@
 
 #define IONIC_EN_DEFAULT_MTU_SIZE               1500
 
+#define IONIC_EN_TX_COAL_USECS                  64
+#define IONIC_EN_RX_COAL_USECS                  64
+
 #define IONIC_EN_SHARED_AREA_BEGIN_WRITE(uplink_handle)                          \
 {                                                                                \
    vmk_SpinlockLockIgnoreDeathPending((uplink_handle)->share_data_write_lock);   \
@@ -103,6 +106,9 @@ struct ionic_en_uplink_handle {
         vmk_Semaphore                   stats_binary_sema;
         vmk_UplinkStats                 uplink_stats;
 
+        vmk_Semaphore                   coal_binary_sema;
+        vmk_UplinkCoalesceParams        coal_params;
+
         vmk_Bool                        is_mgmt_nic;
         vmk_Bool                        is_ready_notify_linkup;
         vmk_Bool                        is_init;
@@ -159,6 +165,9 @@ ionic_en_uplink_quiesce_io(vmk_AddrCookie driver_data);
 VMK_ReturnStatus
 ionic_en_uplink_reset(vmk_AddrCookie driver_data);
 
+void
+ionic_en_uplink_default_coal_params_set(struct ionic_en_priv_data *priv_data);
+
 VMK_ReturnStatus
 ionic_en_uplink_init(struct ionic_en_priv_data *priv_data);
 
@@ -194,5 +203,13 @@ ionic_en_netpoll_create(vmk_NetPoll *netpoll,
                         enum ionic_en_ring_type ring_type,
                         vmk_NetPollCallback poll,
                         void *poll_arg);
+
+VMK_ReturnStatus
+ionic_en_uplink_coal_params_get(vmk_AddrCookie driver_data,
+                                vmk_UplinkCoalesceParams *params);
+
+VMK_ReturnStatus
+ionic_en_uplink_coal_params_set(vmk_AddrCookie driver_data,
+                                vmk_UplinkCoalesceParams *params);
 
 #endif /* End of _IONIC_EN_UPLINK_H_ */

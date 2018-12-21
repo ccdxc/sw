@@ -822,6 +822,8 @@ ionic_en_scan(vmk_Device device)                                  // IN
                 goto lifs_init_err;
         }
 
+        ionic_en_uplink_default_coal_params_set(priv_data);
+
         status = ionic_logical_dev_register(ionic_driver.drv_handle,
                                             device,
                                             priv_data,

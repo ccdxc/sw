@@ -73,7 +73,6 @@ static vmk_UplinkVLANFilterOps ionic_en_vlan_filter_ops = {
    .removeVLANFilter       = ionic_en_vlan_filter_remove,
 };
 
-
 static vmk_UplinkMultiQueueOps ionic_en_multi_queue_ops = {
    .queueOps = {
       .queueAlloc             = ionic_en_queue_alloc,
@@ -90,6 +89,11 @@ static vmk_UplinkMultiQueueOps ionic_en_multi_queue_ops = {
       .queueSetCoalesceParams = ionic_en_queue_set_coalesce_params,
    },
    .queueSetCount = NULL,
+};
+
+static vmk_UplinkCoalesceParamsOps ionic_en_uplink_coal_params_ops = {
+        .getParams            = ionic_en_uplink_coal_params_get,
+        .setParams            = ionic_en_uplink_coal_params_set,
 };
 
 
@@ -703,8 +707,8 @@ out:
  */
 
 static void
-ionic_en_uplink_lif_stats_get(struct lif *lif,
-                              vmk_UplinkStats *uplink_stats)
+ionic_en_uplink_lif_stats_get(struct lif *lif,                  // IN
+                              vmk_UplinkStats *uplink_stats)    // IN/OUT
 {
         vmk_uint32 i;
         struct rx_stats *rx_stats;
@@ -754,6 +758,8 @@ ionic_en_uplink_stats_get(vmk_AddrCookie driver_data,             // IN
         struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle; 
 
         ionic_info("ionic_en_uplink_stats_get() called");
+
+        VMK_ASSERT(stats);
 
         lif = VMK_LIST_ENTRY(vmk_ListFirst(&priv_data->ionic.lifs),
                              struct lif, list);
@@ -843,6 +849,11 @@ ionic_en_uplink_associate(vmk_AddrCookie driver_data,             // IN
                                        VMK_UPLINK_CAP_IPV4_TSO,
                                        NULL);
         VMK_ASSERT(status == VMK_OK || status == VMK_IS_DISABLED);
+        
+        status = vmk_UplinkCapRegister(uplink,
+                                       VMK_UPLINK_CAP_COALESCE_PARAMS,
+                                       &ionic_en_uplink_coal_params_ops);
+        VMK_ASSERT(status == VMK_OK);
         
 /*
         status = vmk_UplinkCapRegister(uplink_handle->uplink_dev,
@@ -1449,7 +1460,19 @@ ionic_en_uplink_locks_init(struct ionic_en_uplink_handle *uplink_handle)  // IN
                 goto stats_seam_create_err;
         }
 
+        status = ionic_binary_sema_create(ionic_driver.heap_id,
+                                          "coal_binary_sema",
+                                          &uplink_handle->coal_binary_sema);
+        if (status != VMK_OK) {
+                ionic_err("ionic_binary_sema_create() failed, status: %s",
+                          vmk_StatusToString(status));
+                goto coal_seam_create_err;
+        }
+
         return status;
+
+coal_seam_create_err:
+        ionic_sema_destroy(&uplink_handle->stats_binary_sema);
 
 stats_seam_create_err:
         ionic_sema_destroy(&uplink_handle->mq_binary_sema);
@@ -1495,6 +1518,7 @@ link_status_lock_err:
 static void
 ionic_en_uplink_locks_destroy(struct ionic_en_uplink_handle *uplink_handle)  // IN
 {
+        ionic_sema_destroy(&uplink_handle->coal_binary_sema);
         ionic_sema_destroy(&uplink_handle->stats_binary_sema);
         ionic_sema_destroy(&uplink_handle->mq_binary_sema);
         ionic_sema_destroy(&uplink_handle->status_binary_sema);
@@ -1502,6 +1526,62 @@ ionic_en_uplink_locks_destroy(struct ionic_en_uplink_handle *uplink_handle)  // 
         ionic_spinlock_destroy(uplink_handle->admin_status_lock);
         ionic_spinlock_destroy(uplink_handle->link_status_lock);
         ionic_spinlock_destroy(uplink_handle->share_data_write_lock);
+}
+
+
+/*
+ *****************************************************************************
+ *
+ * ionic_en_uplink_default_coal_params_set
+ *
+ *     Set default uplink/queues coalesce parameters
+ *
+ *  Parameters:
+ *     priv_data - IN (ionic_en_priv_data handle)
+ *
+ *  Results:
+ *     None
+ *
+ *  Side effects:
+ *     None
+ *
+ *****************************************************************************
+ */
+
+void
+ionic_en_uplink_default_coal_params_set(struct ionic_en_priv_data *priv_data) // IN
+{
+        VMK_ReturnStatus status;
+        vmk_AddrCookie driver_data;
+        vmk_UplinkCoalesceParams *params;
+        vmk_UplinkSharedQueueData *queue_data;
+        vmk_uint32 i;
+        struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle;
+
+        driver_data.ptr = priv_data;
+        params = &uplink_handle->coal_params; 
+
+        params->txUsecs = IONIC_EN_TX_COAL_USECS;
+        params->rxUsecs = IONIC_EN_RX_COAL_USECS;
+
+        status = ionic_en_uplink_coal_params_set(driver_data,
+                                                 params);
+        if (status != VMK_OK) {
+                ionic_err("ionic_en_uplink_coal_params_set() failed, "
+                          "status: %s", vmk_StatusToString(status));
+                params->txUsecs = 0;
+                params->rxUsecs = 0;
+        }
+
+        for (i = 0;
+             i < uplink_handle->max_tx_queues + uplink_handle->max_rx_queues;
+             i++) {
+                queue_data = &uplink_handle->uplink_q_data[i];
+
+                vmk_Memcpy(&queue_data->coalesceParams,
+                           &uplink_handle->coal_params,
+                           sizeof(vmk_UplinkCoalesceParams));
+        }
 }
 
 
@@ -1570,10 +1650,15 @@ ionic_en_uplink_init(struct ionic_en_priv_data *priv_data)         // IN
                 return status;
         }
 
+        status = ionic_en_uplink_locks_init(uplink_handle);
+        if (status != VMK_OK) {
+                ionic_err("ionic_en_uplink_locks_init() failed, status: %s",
+                          vmk_StatusToString(status));
+                return status;
+        }
 
         uplink_q_info->supportedQueueTypes = VMK_UPLINK_QUEUE_TYPE_TX |
                                              VMK_UPLINK_QUEUE_TYPE_RX;
-        // TODO: VLAN also
         uplink_q_info->supportedRxQueueFilterClasses =
                 VMK_UPLINK_QUEUE_FILTER_CLASS_MAC_ONLY |
                 VMK_UPLINK_QUEUE_FILTER_CLASS_VLAN_ONLY;
@@ -1618,11 +1703,14 @@ ionic_en_uplink_init(struct ionic_en_priv_data *priv_data)         // IN
                                                          uplink_q_info->maxRxQueues);
         if (uplink_q_info->activeQueues == NULL) {
                 ionic_err("vmk_BitVectorAlloc() failed, status: VMK_NO_MEMORY");
-                return VMK_NO_MEMORY;
+                status = VMK_NO_MEMORY;
+                goto bit_vec_alloc_error;
         }
         vmk_BitVectorZap(uplink_q_info->activeQueues);
 
-        for (i = 0; i < ntxqs_per_lif + nrxqs_per_lif; i++) {
+        for (i = 0;
+             i < uplink_handle->max_tx_queues + uplink_handle->max_rx_queues;
+             i++) {
                 queue_data                    = &uplink_handle->uplink_q_data[i];
                 queue_data->flags             = VMK_UPLINK_QUEUE_FLAG_UNUSED;
                 queue_data->qid               = VMK_UPLINK_QUEUE_INVALID_QUEUEID;
@@ -1643,8 +1731,6 @@ ionic_en_uplink_init(struct ionic_en_priv_data *priv_data)         // IN
                         queue_data->supportedFeatures |= VMK_UPLINK_QUEUE_FEAT_RSS;
                 }
 
-                // TODO: coalesce params for each queue need to be set here
-
                 if (i < uplink_q_info->maxRxQueues) {
                         queue_data->type      = VMK_UPLINK_QUEUE_TYPE_RX;
                         // TODO: Figure out the number
@@ -1654,15 +1740,6 @@ ionic_en_uplink_init(struct ionic_en_priv_data *priv_data)         // IN
                         queue_data->maxFilters= 0;
                 }
         }
-
-        status = ionic_en_uplink_locks_init(uplink_handle);
-        if (status != VMK_OK) {
-                ionic_err("ionic_en_uplink_locks_init() failed, status: %s",
-                          vmk_StatusToString(status));
-                goto locks_init_err;
-        }
-
-        uplink_handle->trans_type = VMK_UPLINK_TRANSCEIVER_TYPE_INTERNAL;
 
         status = ionic_en_default_q_alloc(priv_data);
         if (status != VMK_OK) {
@@ -1676,11 +1753,11 @@ ionic_en_uplink_init(struct ionic_en_priv_data *priv_data)         // IN
         return status;
 
 default_q_err:
-        ionic_en_uplink_locks_destroy(uplink_handle);
-
-locks_init_err:
         vmk_BitVectorFree(ionic_driver.heap_id,
                           uplink_q_info->activeQueues);
+bit_vec_alloc_error:
+        ionic_en_uplink_locks_destroy(uplink_handle);
+
         return status;
 }
 
@@ -2228,3 +2305,145 @@ ionic_en_netpoll_create(vmk_NetPoll *netpoll,                           // OUT
         return status;
 }
 
+
+/*
+ *****************************************************************************
+ *
+ * ionic_en_uplink_coal_params_get
+ *
+ *     Get coalesce parameters
+ *
+ *  Parameters:
+ *     driver_data - IN (private driver data pointing to the adapter)
+ *     params      - IN (Uplink coalesce parameters)
+ *
+ *  Results:
+ *     VMK_ReturnStatus
+ *
+ *  Side effects:
+ *     None
+ *
+ *****************************************************************************
+ */
+
+VMK_ReturnStatus
+ionic_en_uplink_coal_params_get(vmk_AddrCookie driver_data,             // IN
+                                vmk_UplinkCoalesceParams *params)       // IN/OUT
+{
+        struct ionic_en_priv_data *priv_data =
+                (struct ionic_en_priv_data *) driver_data.ptr;
+        struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle; 
+
+        ionic_info("ionic_en_uplink_coal_params_get() called");
+
+        VMK_ASSERT(params);
+
+        vmk_SemaLock(&uplink_handle->coal_binary_sema);
+
+        vmk_Memcpy(params,
+                   &uplink_handle->coal_params,
+                   sizeof(vmk_UplinkCoalesceParams));
+
+        vmk_SemaUnlock(&uplink_handle->coal_binary_sema);
+
+        return VMK_OK;
+}
+
+
+/*
+ *****************************************************************************
+ *
+ * ionic_en_uplink_coal_params_set 
+ *
+ *     Set coalesce parameters
+ *
+ *  Parameters:
+ *     driver_data - IN (private driver data pointing to the adapter)
+ *     params      - IN (Uplink coalesce parameters)
+ *
+ *  Results:
+ *     VMK_ReturnStatus
+ *
+ *  Side effects:
+ *     None
+ *
+ *****************************************************************************
+ */
+
+VMK_ReturnStatus
+ionic_en_uplink_coal_params_set(vmk_AddrCookie driver_data,             // IN
+                                vmk_UplinkCoalesceParams *params)       // IN
+{
+        VMK_ReturnStatus status = VMK_OK;
+        vmk_uint32 tx_coal, rx_coal, i;
+        union identity *ident;
+        struct lif *lif;
+        struct ionic_en_priv_data *priv_data =
+                (struct ionic_en_priv_data *) driver_data.ptr;
+        struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle; 
+
+        ionic_info("ionic_en_uplink_coal_params_set() called");
+
+        VMK_ASSERT(params);
+
+        if (params->rxMaxFrames ||
+            params->txMaxFrames ||
+            params->useAdaptiveRx ||
+            params->useAdaptiveTx ||
+            params->rateSampleInterval ||
+            params->pktRateLowWatermark ||
+            params->pktRateHighWatermark ||
+            params->rxUsecsLow ||
+            params->rxFramesLow ||
+            params->txUsecsLow ||
+            params->txFramesLow ||
+            params->rxUsecsHigh ||
+            params->rxFramesHigh ||
+            params->txUsecsHigh ||
+            params->txFramesHigh) {
+                return VMK_NOT_SUPPORTED;
+        }
+
+        lif = VMK_LIST_ENTRY(vmk_ListFirst(&priv_data->ionic.lifs),
+                             struct lif, list);
+        ident = lif->ionic->ident;
+
+        vmk_SemaLock(&uplink_handle->coal_binary_sema);
+
+        if (ident->dev.intr_coal_div == 0) {
+                status = VMK_FAILURE;
+                goto out;
+        }
+
+        /* Convert from usecs to device units */
+        tx_coal = (params->txUsecs * ident->dev.intr_coal_mult) /
+                  ident->dev.intr_coal_div;
+        rx_coal = (params->rxUsecs * ident->dev.intr_coal_mult) /
+                  ident->dev.intr_coal_div;
+
+        if (tx_coal > INTR_CTRL_COAL_MAX || rx_coal > INTR_CTRL_COAL_MAX) {
+                status = VMK_LIMIT_EXCEEDED;
+                goto out;
+        }
+
+        if (params->txUsecs != uplink_handle->coal_params.txUsecs) {
+                for (i = 0; i < lif->ntxqcqs; i++) {
+                        ionic_intr_coal_set(&lif->txqcqs[i]->intr, tx_coal);
+                }
+                uplink_handle->coal_params.txUsecs = params->txUsecs;
+        }
+        if (params->rxUsecs != uplink_handle->coal_params.rxUsecs) {
+                for (i = 0; i < lif->nrxqcqs; i++) {
+                        ionic_intr_coal_set(&lif->rxqcqs[i]->intr, rx_coal);
+                }
+                uplink_handle->coal_params.rxUsecs = params->rxUsecs;
+        }
+
+        vmk_Memcpy(&uplink_handle->coal_params,
+                   params,
+                   sizeof(vmk_UplinkCoalesceParams));
+
+out:
+        vmk_SemaUnlock(&uplink_handle->coal_binary_sema);
+        return status;
+}
