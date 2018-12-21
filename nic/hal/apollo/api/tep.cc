@@ -3,274 +3,307 @@
  *
  * @file    tep.cc
  *
- * @brief   This file deals with OCI Tunnel EndPoint (TEP) API handling
+ * @brief   This file deals with Tunnel EndPoint (TEP) api handling
  */
 
 #include <stdio.h>
-#include "nic/sdk/include/sdk/base.hpp"
-#include "nic/sdk/include/sdk/pal.hpp"
-#include "nic/sdk/include/sdk/types.hpp"
-#include "nic/sdk/include/sdk/indexer.hpp"
-#include "nic/sdk/include/sdk/ht.hpp"
-#include "nic/hal/apollo/include/api/oci_tep.hpp"
+#include "nic/hal/apollo/core/mem.hpp"
+#include "nic/hal/apollo/api/tep.hpp"
+#include "nic/hal/apollo/core/oci_state.hpp"
+#include "gen/p4gen/apollo/include/p4pd.h"
+#include "nic/sdk/lib/p4/p4_api.hpp"
+#include "nic/hal/apollo/framework/api_ctxt.hpp"
+#include "nic/hal/apollo/framework/api_engine.hpp"
 
 using sdk::lib::ht;
 using sdk::lib::indexer;
 
 namespace api {
 
-static inline void oci_int_tep_db_init (void);
-
 /**
- * @defgroup OCI_INT_TEP - Internal TEP
+ * @defgroup OCI_TEP_ENTRY - tep entry functionality
+ * @ingroup OCI_TEP
  * @{
  */
 
+/**< @brief    constructor */
+tep_entry::tep_entry() {
+    //SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
+    ht_ctxt_.reset();
+    hw_id_ = 0xFFFF;
+}
+
 /**
- * @defgroup OCI_INT_TEP_GSTATE - Internal TEP global state functionality
- * @ingroup OCI_INT_TEP
- * @{
+ * @brief    factory method to allocate and initialize a tep entry
+ * @param[in] oci_tep    tep information
+ * @return    new instance of tep or NULL, in case of error
  */
+tep_entry *
+tep_entry::factory(oci_tep_t *oci_tep) {
+    tep_entry *tep;
 
-#define  OCI_INT_TEP_ID_MAX  1024
+    /**< create tep entry with defaults, if any */
+    tep = tep_db()->tep_alloc();
+    if (tep) {
+        new (tep) tep_entry();
+    }
+    return tep;
+
+}
+
+/**< @brief    destructor */
+tep_entry::~tep_entry() {
+    // TODO: fix me
+    //SDK_SPINLOCK_DESTROY(&slock_);
+}
 
 /**
- * @brief oci_int_gstate
- */
-typedef struct oci_int_tep_gstate_s
-{
-    //slab *slab[MAX];   /**< Memory slab */
-    ht      *ht;         /**< Hash table root */
-    indexer *id_idxr;    /**< Indexer to allocate internal id */
-} oci_int_tep_gstate_t;
-
-oci_int_tep_gstate_t g_int_tep_state;
-
-/**
- * @brief Initialize global internal TEP state
+ * @brief    release all the s/w & h/w resources associated with this object,
+ *           if any, and free the memory
+ * @param[in] tep     tep to be freed
+ * NOTE: h/w entries themselves should have been cleaned up (by calling
+ *       cleanup_hw() before calling this
  */
 void
-oci_g_int_tep_state_init (void)
-{
-    //TODO: slab init
-
-    oci_int_tep_db_init();
-
-    g_int_tep_state.id_idxr = sdk::lib::indexer::factory(OCI_INT_TEP_ID_MAX);
-    SDK_ASSERT_RETURN_VOID(g_int_tep_state.id_idxr != NULL);
+tep_entry::destroy(tep_entry *tep) {
+    tep->free_resources_();
+    tep->~tep_entry();
 }
 
-/** @} */ // end of OCI_INT_TEP_GSTATE
-
 /**
- * @defgroup OCI_INT_TEP_DB - Internal TEP database functionality
- * @ingroup OCI_INT_TEP
- * @{
+ * @brief     initialize tep entry with the given config
+ * @param[in] api_ctxt API context carrying the configuration
+ * @return    SDK_RET_OK on success, failure status code on error
  */
+sdk_ret_t
+tep_entry::init_config(api_ctxt_t *api_ctxt) {
+    oci_tep_t *oci_tep = &api_ctxt->api_params->tep_info;
 
-
-static void *
-oci_int_tep_key_func_get (void *entry)
-{
-    oci_int_tep_t *int_tep = (oci_int_tep_t *)entry;
-    return (void *)&(int_tep->key);
-}
-
-static uint32_t
-oci_int_tep_hash_func_compute (void *key, uint32_t ht_size)
-{
-    return sdk::lib::hash_algo::fnv_hash(key, sizeof(oci_tep_key_t)) % ht_size;
-}
-
-static bool
-oci_int_tep_key_func_compare (void *key1, void *key2)
-{
-    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (!memcmp(key1, key2, sizeof(oci_tep_key_t)))
-        return true;
-
-    return false;
+    memcpy(&this->key_, &oci_tep->key, sizeof(oci_tep_key_t));
+    return sdk::SDK_RET_OK;
 }
 
 /**
- * @brief Initialize internal TEP database
+ * @brief    allocate h/w resources for this object
+ * @return    SDK_RET_OK on success, failure status code on error
  */
-static inline void
-oci_int_tep_db_init (void)
-{
-    g_int_tep_state.ht = sdk::lib::ht::factory(
-        OCI_INT_TEP_ID_MAX >> 1, oci_int_tep_key_func_get,
-        oci_int_tep_hash_func_compute, oci_int_tep_key_func_compare);
-    SDK_ASSERT_RETURN_VOID(g_int_tep_state.ht != NULL);
-}
-
-/**
- * @brief Add internal TEP to database
- *
- * @param[in] tep Internal TEP  
- */ 
-static inline sdk_ret_t
-oci_int_tep_db_add (oci_int_tep_t *int_tep)
-{
-    return (g_int_tep_state.ht->insert_with_key(&int_tep->key, int_tep,
-                                                &int_tep->ht_ctxt));
-}
-
-/**
- * @brief Delete internal TEP from database
- *
- * @param[in] tep_key TEP key
- */
-static inline oci_int_tep_t *
-oci_int_tep_db_del (oci_tep_key_t *tep_key)
-{
-    return (oci_int_tep_t *)(g_int_tep_state.ht->remove(tep_key));
-}
-
-/**
- * @brief Lookup internal TEP in database
- *
- * @param[in] tep_key Internal TEP key
- */
-static inline oci_int_tep_t *
-oci_int_tep_db_lookup (oci_tep_key_t *tep_key)
-{
-    return (oci_int_tep_t *)(g_int_tep_state.ht->lookup(tep_key));
-}
-
-/** @} */ // end of OCI_INT_TEP_DB
-
-/**
- * @defgroup OCI_INT_TEP_INIT - Internal TEP setup/teardown functionality
- * @ingroup OCI_INT_TEP
- * @{
- */
-
-/**
- * @brief Allocate internal TEP structure
- *
- * @return Pointer to the allocated internal TEP, NULL if no memory
- */
-static inline oci_int_tep_t *
-oci_int_tep_alloc (void)
-{
-//    return ((oci_int_tep_t *)g_int_tep_state->int_tep_slab()->alloc());
-    return NULL;
-}
-
-/**
- * @brief Free internal TEP structure
- *
- * @param[in] int_tep Internal TEP
- */
-static inline void
-oci_int_tep_free (oci_int_tep_t *int_tep)
-{
-//    sdk::delay_delete_to_slab(OCI_SLAB_INT_TEP, int_tep);
-}
-
-/**
- * @brief Initialize internal TEP structure
- *
- * @param[in] int_tep Internal TEP
- * @param[in] tep TEP
- */
-static inline sdk_ret_t
-oci_int_tep_init (oci_int_tep_t *int_tep, oci_tep_t *tep)
-{
-    //SDK_SPINLOCK_INIT(&int_tep->slock, PTHREAD_PROCESS_PRIVATE);
-    memcpy(&int_tep->key, &tep->key, sizeof(oci_tep_key_t));
-
-    int_tep->ht_ctxt.reset();
-
-    if (g_int_tep_state.id_idxr->alloc(&int_tep->id) !=
-        sdk::lib::indexer::SUCCESS)
-        return SDK_RET_NO_RESOURCE;
-
-    return SDK_RET_OK;
-}
-
-/**
- * @brief Uninitialize internal TEP structure
- *
- * @param[in] tep Internal TEP
- */
-static inline void
-oci_int_tep_uninit (oci_int_tep_t *int_tep)
-{
-    //SDK_SPINLOCK_DESTROY(&int_tep->slock);
-    g_int_tep_state.id_idxr->free(int_tep->id);
-}
-
-/**
- * @brief Allocate and initialize internal TEP structure
- *
- * @return Pointer to the allocated and initialized internal TEP,
- *         NULL if no memory
- */
-static inline oci_int_tep_t *
-oci_int_tep_alloc_init (oci_tep_t *tep)
-{
-    oci_int_tep_t *int_tep;
-
-    if ((int_tep = oci_int_tep_alloc()) == NULL)
-        return NULL;
-
-    oci_int_tep_init(int_tep, tep);
-    return int_tep;
-}
-
-/**
- * @brief Uninitialize and free internal TEP structure
- *
- * @param[in] tep Internal TEP
- */
-static inline void
-oci_int_tep_uninit_free (_In_ oci_int_tep_t *tep)
-{
-    if (tep) {
-        oci_int_tep_uninit(tep);
-        oci_int_tep_free(tep);
+// TODO: 1. this should ideally go to impl class
+//       2. we don't need an indexer here if we can use directmap here to
+//          "reserve" an index
+sdk_ret_t
+tep_entry::alloc_resources_(void) {
+    /**
+     * allocate hw id for this tep, tep specific index tables in the p4
+     * datapath are indexed by this
+     */
+    if (tep_db()->tep_idxr()->alloc((uint32_t *)&this->hw_id_) !=
+            sdk::lib::indexer::SUCCESS) {
+        return sdk::SDK_RET_NO_RESOURCE;
     }
+    return sdk::SDK_RET_OK;
 }
 
-/** @} */ // end of OCI_INT_TEP_DB
+/**
+ * @brief    program all h/w tables relevant to this object except stage 0
+ *           table(s), if any
+ * @param[in] obj_ctxt    transient state associated with this API
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
+// TODO: this should ideally go to impl class (other than subnet_db lookup
+// TODO: we should simply be generating ARP request in the substrate in this API
+//       and come back and do this h/w programming later, but until that control
+//       plane & PMD APIs are ready, we will directly write to hw with fixed MAC
+#define tep_tx_udp_action    action_u.tep_tx_udp_tep_tx
+sdk_ret_t
+tep_entry::program_hw(obj_ctxt_t *obj_ctxt) {
+    sdk_ret_t              ret;
+    oci_tep_t              *tep_info;
+    tep_tx_actiondata_t    tep_tx_data = { 0 };
+
+    tep_info = &obj_ctxt->api_params->tep_info;
+    tep_tx_data.action_id = TEP_TX_UDP_TEP_TX_ID;
+    // TODO: take care of byte ordering issue, if any, here !!
+    tep_tx_data.tep_tx_udp_action.dipo = tep_info->key.ip_addr;
+    MAC_UINT64_TO_ADDR(tep_tx_data.tep_tx_udp_action.dmac,
+                       0x00020B0A0D0E);
+    ret = tep_db()->tep_tx_tbl()->insert_withid(&tep_tx_data, hw_id_);
+    return ret;
+}
 
 /**
- * @defgroup OCI_INT_TEP_API - First level of TEP API handling
- * @ingroup OCI_INT_TEP
+ * @brief     free h/w resources used by this object, if any
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+// TODO: release the directmap entry as well
+sdk_ret_t
+tep_entry::free_resources_(void) {
+    if (hw_id_ != 0xFF) {
+        tep_db()->tep_idxr()->free(hw_id_);
+        // TODO: how do we know whether we actually programmed h/w or not ? need
+        // a bit in api_base ?
+        tep_db()->tep_tx_tbl()->remove(hw_id_);
+    }
+    return sdk::SDK_RET_OK;
+}
+
+/**
+ * @brief    cleanup all h/w tables relevant to this object except stage 0
+ *           table(s), if any, by updating packed entries with latest epoch#
+ * @param[in] obj_ctxt    transient state associated with this API
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+tep_entry::cleanup_hw(obj_ctxt_t *obj_ctxt) {
+    return sdk::SDK_RET_INVALID_OP;
+}
+
+/**
+ * @brief    update all h/w tables relevant to this object except stage 0
+ *           table(s), if any, by updating packed entries with latest epoch#
+ * @param[in] orig_obj    old version of the unmodified object
+ * @param[in] obj_ctxt    transient state associated with this API
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+tep_entry::update_hw(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+    return sdk::SDK_RET_INVALID_OP;
+}
+
+/**
+ * @brief    activate the epoch in the dataplane by programming stage 0
+ *           tables, if any
+ * @param[in] epoch       epoch being activated
+ * @param[in] api_op      api operation
+ * @param[in] obj_ctxt    transient state associated with this API
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+tep_entry::activate_epoch(oci_epoch_t epoch, api_op_t api_op,
+                          obj_ctxt_t *obj_ctxt) {
+    return sdk::SDK_RET_INVALID_OP;
+}
+
+/**
+ * @brief    this method is called on new object that needs to replace the
+ *           old version of the object in the DBs
+ * @param[in] orig_obj    old version of the object being swapped out
+ * @param[in] obj_ctxt    transient state associated with this API
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+tep_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+    return sdk::SDK_RET_INVALID_OP;
+}
+
+/**
+ * @brief add tep to database
+ *
+ * @param[in] tep tep
+ */
+sdk_ret_t
+tep_entry::add_to_db(void) {
+    return tep_db()->tep_ht()->insert_with_key(&key_, this,
+                                               &ht_ctxt_);
+}
+
+/**
+ * @brief delete tep from database
+ *
+ * @param[in] tep_key tep key
+ */
+sdk_ret_t
+tep_entry::del_from_db(void) {
+    tep_db()->tep_ht()->remove(&key_);
+    return sdk::SDK_RET_OK;
+}
+
+/**
+ * @brief    initiate delay deletion of this object
+ */
+sdk_ret_t
+tep_entry::delay_delete(void) {
+    return delay_delete_to_slab(OCI_SLAB_TEP, this);
+}
+
+/** @} */    // end of OCI_TEP_ENTRY
+
+/**
+ * @defgroup OCI_TEP_STATE - tep database functionality
+ * @ingroup OCI_TEP
  * @{
  */
 
 /**
- * @brief Handle TEP create message
- *
- * @param[in] tep TEP information
- * @return #SDK_RET_OK on success, failure status code on error
+ * @brief    constructor
  */
-static inline sdk_ret_t
-oci_tep_create_handle (_In_ oci_tep_t *tep)
-{
-    oci_int_tep_t *int_tep;
+tep_state::tep_state() {
+    p4pd_table_properties_t    tinfo;
 
-    if ((int_tep = oci_int_tep_alloc_init(tep)) == NULL)
-        return SDK_RET_OOM;
+    // TODO: need to tune multi-threading related params later
+    tep_ht_ = ht::factory(OCI_MAX_TEP >> 2,
+                          tep_entry::tep_key_func_get,
+                          tep_entry::tep_hash_func_compute,
+                          tep_entry::tep_key_func_compare);
+    SDK_ASSERT(tep_ht_ != NULL);
 
-    return SDK_RET_OK;
+    tep_idxr_ = indexer::factory(OCI_MAX_TEP);
+    SDK_ASSERT(tep_idxr_ != NULL);
+
+    tep_slab_ = slab::factory("tep", OCI_SLAB_TEP, sizeof(tep_entry),
+                               16, true, true, true, NULL);
+    SDK_ASSERT(tep_slab_ != NULL);
+
+    /**< instantiate P4 tables for bookkeeping */
+    p4pd_table_properties_get(P4TBL_ID_TEP_TX, &tinfo);
+    // TODO: table_health_monitor_cb is passed as NULL here !!
+    tep_tx_tbl_ = directmap::factory(tinfo.tablename, P4TBL_ID_TEP_TX,
+                                     tinfo.tabledepth,
+                                     tinfo.actiondata_struct_size,
+                                     false, true, NULL);
+    SDK_ASSERT(tep_tx_tbl_ != NULL);
 }
 
 /**
- * @brief Validate VNC API data
- *
- * @param[in] tep TEP information
- * @return #SDK_RET_OK on success, failure status code on error
+ * @brief    destructor
  */
-static inline sdk_ret_t
-oci_tep_create_validate (_In_ oci_tep_t *tep)
-{
-    //TODO: validate the data ranges of tep fields
-    return SDK_RET_OK;
+tep_state::~tep_state() {
+    ht::destroy(tep_ht_);
+    indexer::destroy(tep_idxr_);
+    slab::destroy(tep_slab_);
+    directmap::destroy(tep_tx_tbl_);
 }
+
+/**
+ * @brief     allocate tep instance
+ * @return    pointer to the allocated tep , NULL if no memory
+ */
+tep_entry *
+tep_state::tep_alloc(void) {
+    return ((tep_entry *)tep_slab_->alloc());
+}
+
+/**
+ * @brief        lookup tep in database with given key
+ * @param[in]    tep_key tep key
+ * @return       pointer to the tep instance found or NULL
+ */
+tep_entry *
+tep_state::tep_find(oci_tep_key_t *tep_key) const {
+    return (tep_entry *)(tep_ht_->lookup(tep_key));
+}
+
+/**
+ * @brief free tep instance
+ * @param[in] tep tep instance
+ */
+void
+tep_state::tep_free(tep_entry *tep) {
+    api::delay_delete_to_slab(OCI_SLAB_TEP, tep);
+}
+
+/** @} */    // end of OCI_TEP_STATE
+
+}    // namespace api
 
 /**
  * @brief Create TEP
@@ -281,47 +314,18 @@ oci_tep_create_validate (_In_ oci_tep_t *tep)
 sdk_ret_t
 oci_tep_create (_In_ oci_tep_t *tep)
 {
-    sdk_ret_t rv;
+    api_ctxt_t    api_ctxt;
+    sdk_ret_t     rv;
 
-    if ((rv = oci_tep_create_validate(tep)) != SDK_RET_OK)
+    api_ctxt.api_params = (api_params_t *)api::api_params_slab()->alloc();
+    if (likely(api_ctxt.api_params != NULL)) {
+        api_ctxt.api_op = api::API_OP_CREATE;
+        api_ctxt.obj_id = api::OBJ_ID_TEP;
+        api_ctxt.api_params->tep_info = *tep;
+        rv = api::g_api_engine.process_api(&api_ctxt);
         return rv;
-
-    if ((rv = oci_tep_create_handle(tep)) != SDK_RET_OK)
-        return rv;
-
-    return SDK_RET_OK;
-}
-
-/**
- * @brief Handle TEP delete API
- *
- * @param[in] tep_key TEP key information
- * @return #SDK_RET_OK on success, failure status code on error
- */
-static inline sdk_ret_t
-oci_tep_delete_handle (_In_ oci_tep_key_t *tep_key)
-{
-    oci_int_tep_t *int_tep;
-
-    if ((int_tep = oci_int_tep_db_del(tep_key)) == NULL)
-        return SDK_RET_ENTRY_NOT_FOUND;
-
-    oci_int_tep_uninit_free(int_tep);
-
-    return SDK_RET_OK;
-}
-
-/**
- * @brief Validate VNC delete API
- *
- * @param[in] tep_key TEP key information
- * @return #SDK_RET_OK on success, failure status code on error
- */
-static inline sdk_ret_t
-oci_tep_delete_validate (_In_ oci_tep_key_t *tep_key)
-{
-    //TODO: validate the data ranges of tep_key fields
-    return SDK_RET_OK;
+    }
+    return sdk::SDK_RET_OOM;
 }
 
 /**
@@ -333,17 +337,18 @@ oci_tep_delete_validate (_In_ oci_tep_key_t *tep_key)
 sdk_ret_t
 oci_tep_delete (_In_ oci_tep_key_t *tep_key)
 {
-    sdk_ret_t rv;
+    api_ctxt_t    api_ctxt;
+    sdk_ret_t     rv;
 
-    if ((rv = oci_tep_delete_validate(tep_key)) != SDK_RET_OK)
+    api_ctxt.api_params = (api_params_t *)api::api_params_slab()->alloc();
+    if (likely(api_ctxt.api_params != NULL)) {
+        api_ctxt.api_op = api::API_OP_DELETE;
+        api_ctxt.obj_id = api::OBJ_ID_TEP;
+        api_ctxt.api_params->tep_key = *tep_key;
+        rv = api::g_api_engine.process_api(&api_ctxt);
         return rv;
-    
-    if ((rv = oci_tep_delete_handle(tep_key)) != SDK_RET_OK)
-        return rv;
-
-    return SDK_RET_OK;
+    }
+    return sdk::SDK_RET_OOM;
 }
 
-/** @} */ // end of OCI_INT_TEP_API
-
-}  // namespace api 
+/** @} */ // end of OCI_TEP_API

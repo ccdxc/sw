@@ -229,7 +229,7 @@ private:
      * @brief    allocate h/w resources for this object
      * @return    SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t alloc_resources(void);
+    sdk_ret_t alloc_resources_(void);
 
     /**
      * @brief     free h/w resources used by this object, if any
@@ -293,9 +293,9 @@ public:
 private:
     ht *vnic_ht(void) { return vnic_ht_; }
     indexer *vnic_idxr(void) { return vnic_idxr_; }
-    directmap *local_vnic_by_vlan_tx_tbl(void) { return local_vnic_by_vlan_tx_; }
-    sdk_hash *local_vnic_by_slot_rx_tbl(void) { return local_vnic_by_slot_rx_; }
-    directmap *egress_local_vnic_info_rx_tbl(void) { return egress_local_vnic_info_rx_; }
+    directmap *local_vnic_by_vlan_tx_tbl(void) { return local_vnic_by_vlan_tx_tbl_; }
+    sdk_hash *local_vnic_by_slot_rx_tbl(void) { return local_vnic_by_slot_rx_tbl_; }
+    directmap *egress_local_vnic_info_rx_tbl(void) { return egress_local_vnic_info_rx_tbl_; }
     slab *vnic_slab(void) { return vnic_slab_; }
     friend class vnic_entry;   /**< vnic_entry class is friend of vnic_state */
 
@@ -317,9 +317,9 @@ private:
      *   NOTE: there is no explicit table mgmt for rx and tx stats, we directly
      *         index using hw_id_ of vnic and and bzero out when we create vnic
      */
-    directmap       *local_vnic_by_vlan_tx_;        /**< indexer for LOCAL_VNIC_BY_VLAN_TX table */
-    sdk_hash        *local_vnic_by_slot_rx_;        /**< hash table for LOCAL_VNIC_BY_SLOT_RX table */
-    directmap       *egress_local_vnic_info_rx_;    /**< indexer for EGRESS_LOCAL_VNIC_INFO_RX table */
+    directmap       *local_vnic_by_vlan_tx_tbl_;        /**< directmap table for LOCAL_VNIC_BY_VLAN_TX */
+    sdk_hash        *local_vnic_by_slot_rx_tbl_;        /**< hash table for LOCAL_VNIC_BY_SLOT_RX */
+    directmap       *egress_local_vnic_info_rx_tbl_;    /**< directmap table for EGRESS_LOCAL_VNIC_INFO_RX */
 };
 
 /** @} */    // end of OCI_VNIC_STATE

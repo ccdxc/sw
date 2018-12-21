@@ -21,6 +21,7 @@
  */
 
 #define OCI_MAX_VNIC               1024
+
 /**
  * @brief VNIC Key
  */

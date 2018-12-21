@@ -3,11 +3,11 @@
  *
  * @file    oci_tep.hpp
  *
- * @brief   This module defines OCI Tunnel interface
+ * @brief   This module defines Tunnel EndPoint (TEP) interface
  */
 
-#if !defined (__OCI_TEP_H_)
-#define __OCI_TEP_H_
+#if !defined (__OCI_TEP_HPP__)
+#define __OCI_TEP_HPP__
 
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/hal/apollo/include/api/oci.hpp"
@@ -18,26 +18,28 @@
  * @{
  */
 
+#define OCI_MAX_TEP                1024
+
 /**
- * @brief Defines tep type
+ * @brief Defines encap type
  */
-typedef enum oci_tep_type_e {
-    OCI_TEP_TYPE_IPINIP_GRE = 0,    /**< GRE tunnel */
-} oci_tep_type_t;
+typedef enum oci_encap_type_e {
+    OCI_ENCAP_TYPE_IPINIP_GRE = 0,    /**< GRE tunnel */
+} oci_encap_type_t;
 
 /**
  * @brief Tunnel Key
  */
 typedef struct oci_tep_key_s {
-    ipv4_addr_t dst;    /**< Tunnel destination */
+    ipv4_addr_t    ip_addr;    /**< Tunnel IP address */
 } __PACK__ oci_tep_key_t;
 
 /**
  * @brief Tunnel
  */
 typedef struct oci_tep_s {
-    oci_tep_key_t key;      /**< Tunnel key */
-    oci_tep_type_t type;    /**< Tunnel type */
+    oci_tep_key_t       key;     /**< Tunnel key */
+    oci_encap_type_t    type;    /**< Tunnel type */
 } __PACK__ oci_tep_t;
 
 /**
@@ -47,8 +49,7 @@ typedef struct oci_tep_s {
  *
  * @return #SDK_RET_OK on success, failure status code on error
  */
-sdk_ret_t oci_tep_create (
-    _In_ oci_tep_t *tep);
+sdk_ret_t oci_tep_create(_In_ oci_tep_t *tep);
 
 
 /**
@@ -58,10 +59,10 @@ sdk_ret_t oci_tep_create (
  *
  * @return #SDK_RET_OK on success, failure status code on error
  */
-sdk_ret_t oci_tep_delete (
-    _In_ oci_tep_key_t *tep_key);
+sdk_ret_t oci_tep_delete(_In_ oci_tep_key_t *tep_key);
 
 /**
  * @}
  */
-#endif /** __OCI_TEP_H_ */
+
+#endif    /** __OCI_TEP_HPP__ */

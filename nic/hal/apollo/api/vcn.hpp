@@ -286,7 +286,7 @@ public:
      * @brief     lookup a vcn in database given the key
      * @param[in] vcn_key vcn key
      */
-    vcn_entry *vcn_find(oci_vcn_key_t *vcn_key);
+    vcn_entry *vcn_find(oci_vcn_key_t *vcn_key) const;
 
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 

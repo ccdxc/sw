@@ -158,7 +158,7 @@ sdk_ret_t
 vcn_entry::program_hw(obj_ctxt_t *obj_ctxt) {
     // there is no h/w programming for VCN config but a h/w id is needed so we
     // can use while programming vnics, routes etc.
-    this->alloc_resources_();
+    alloc_resources_();
     return sdk::SDK_RET_OK;
 }
 
@@ -339,7 +339,7 @@ vcn_state::vcn_alloc(void) {
  * @return       pointer to the vcn instance found or NULL
  */
 vcn_entry *
-vcn_state::vcn_find(oci_vcn_key_t *vcn_key) {
+vcn_state::vcn_find(oci_vcn_key_t *vcn_key) const {
     return (vcn_entry *)(vcn_ht_->lookup(vcn_key));
 }
 

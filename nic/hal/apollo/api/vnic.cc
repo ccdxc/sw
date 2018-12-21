@@ -8,7 +8,6 @@
 
 #include <stdio.h>
 #include "nic/sdk/include/sdk/base.hpp"
-#include "nic/sdk/include/sdk/timestamp.hpp"
 #include "nic/hal/apollo/core/mem.hpp"
 #include "nic/hal/apollo/api/vnic.hpp"
 #include "nic/hal/apollo/api/utils.hpp"
@@ -41,6 +40,7 @@ vnic_entry::vnic_entry() {
     //SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
     ht_ctxt_.reset();
     hw_id_ = 0xFFFF;
+    vnic_by_slot_hash_idx_ = 0xFFFF;
 }
 
 /**
@@ -153,9 +153,11 @@ vnic_entry::update_config(api_ctxt_t *api_ctxt) {
  * @brief    allocate h/w resources for this object
  * @return    SDK_RET_OK on success, failure status code on error
  */
-// TODO: this should ideally go to impl class
+// TODO: 1. this should ideally go to impl class
+//       2. we don't need an indexer here if we can use directmap here to
+//          "reserve" an index
 sdk_ret_t
-vnic_entry::alloc_resources(void) {
+vnic_entry::alloc_resources_(void) {
     /**
      * allocate hw id for this vnic, vnic specific index tables in the p4
      * datapath are indexed by this
@@ -184,6 +186,8 @@ vnic_entry::program_hw(obj_ctxt_t *obj_ctxt) {
     vnic_rx_stats_actiondata_t                vnic_rx_stats_data = { 0 };
     vnic_tx_stats_actiondata_t                vnic_tx_stats_data = { 0 };
     oci_vnic_t                                *vnic_info;
+
+    alloc_resources_();
 
     vnic_info = &obj_ctxt->api_params->vnic_info;
     subnet = subnet_db()->subnet_find(&vnic_info->subnet_id);
@@ -226,17 +230,28 @@ vnic_entry::program_hw(obj_ctxt_t *obj_ctxt) {
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
 
-    return sdk::SDK_RET_INVALID_OP;
+    return sdk::SDK_RET_OK;
 }
 
 /**
  * @brief     free h/w resources used by this object, if any
  * @return    SDK_RET_OK on success, failure status code on error
  */
+// TODO: we need to free tbl mgmt. lib entries as well !!
 sdk_ret_t
 vnic_entry::free_resources_(void) {
+    egress_local_vnic_info_rx_actiondata_t    egress_vnic_data = { 0 };
+
     if (hw_id_ != 0xFF) {
         vnic_db()->vnic_idxr()->free(hw_id_);
+        // TODO: how do we know whether we actually programmed h/w or not ?
+        vnic_db()->egress_local_vnic_info_rx_tbl()->retrieve(hw_id_,
+                                                             &egress_vnic_data);
+        vnic_db()->egress_local_vnic_info_rx_tbl()->remove(hw_id_);
+        vnic_db()->local_vnic_by_vlan_tx_tbl()->remove(egress_vnic_data.egress_local_vnic_info_rx_action.overlay_vlan_id);
+        if (vnic_by_slot_hash_idx_ != 0xFFFF) {
+            vnic_db()->local_vnic_by_slot_rx_tbl()->remove(vnic_by_slot_hash_idx_);
+        }
     }
     return sdk::SDK_RET_OK;
 }
@@ -461,24 +476,26 @@ vnic_state::vnic_state() {
                            vnic_entry::vnic_hash_func_compute,
                            vnic_entry::vnic_key_func_compare);
     SDK_ASSERT(vnic_ht_ != NULL);
+
     vnic_idxr_ = indexer::factory(OCI_MAX_VNIC);
     SDK_ASSERT(vnic_idxr_ != NULL);
+
     vnic_slab_ = slab::factory("vnic", OCI_SLAB_VNIC, sizeof(vnic_entry),
                                16, true, true, true, NULL);
     SDK_ASSERT(vnic_slab_ != NULL);
 
     /**< instantiate P4 tables for bookkeeping */
     p4pd_table_properties_get(P4TBL_ID_LOCAL_VNIC_BY_VLAN_TX, &tinfo);
-    local_vnic_by_vlan_tx_ =
+    local_vnic_by_vlan_tx_tbl_ =
         directmap::factory(tinfo.tablename, P4TBL_ID_LOCAL_VNIC_BY_VLAN_TX,
                            tinfo.tabledepth, tinfo.actiondata_struct_size,
                            false, true, table_health_monitor_cb);
-    SDK_ASSERT(local_vnic_by_vlan_tx_ != NULL);
+    SDK_ASSERT(local_vnic_by_vlan_tx_tbl_ != NULL);
 
     p4pd_table_properties_get(P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX, &tinfo);
     p4pd_table_properties_get(P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX_OTCAM,
                               &oflow_tinfo);
-    local_vnic_by_slot_rx_ =
+    local_vnic_by_slot_rx_tbl_ =
         sdk_hash::factory(tinfo.tablename, P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX,
                           P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX_OTCAM,
                           tinfo.tabledepth,
@@ -487,14 +504,14 @@ vnic_state::vnic_state() {
                           tinfo.actiondata_struct_size,
                           static_cast<sdk_hash::HashPoly>(tinfo.hash_type),
                           true, table_health_monitor_cb);
-    SDK_ASSERT(local_vnic_by_slot_rx_ != NULL);
+    SDK_ASSERT(local_vnic_by_slot_rx_tbl_ != NULL);
 
     p4pd_table_properties_get(P4TBL_ID_EGRESS_LOCAL_VNIC_INFO_RX, &tinfo);
-    egress_local_vnic_info_rx_ =
+    egress_local_vnic_info_rx_tbl_ =
         directmap::factory(tinfo.tablename, P4TBL_ID_EGRESS_LOCAL_VNIC_INFO_RX,
                            tinfo.tabledepth, tinfo.actiondata_struct_size,
                            false, true, table_health_monitor_cb);
-    SDK_ASSERT(egress_local_vnic_info_rx_ != NULL);
+    SDK_ASSERT(egress_local_vnic_info_rx_tbl_ != NULL);
 }
 
 /**
@@ -504,9 +521,9 @@ vnic_state::~vnic_state() {
     ht::destroy(vnic_ht_);
     indexer::destroy(vnic_idxr_);
     slab::destroy(vnic_slab_);
-    directmap::destroy(local_vnic_by_vlan_tx_);
-    sdk_hash::destroy(local_vnic_by_slot_rx_);
-    directmap::destroy(egress_local_vnic_info_rx_);
+    directmap::destroy(local_vnic_by_vlan_tx_tbl_);
+    sdk_hash::destroy(local_vnic_by_slot_rx_tbl_);
+    directmap::destroy(egress_local_vnic_info_rx_tbl_);
 }
 
 /**
