@@ -4,6 +4,7 @@ package rpcserver
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -746,6 +747,101 @@ func TestAppRPC(t *testing.T) {
 	evt, err = stream.Recv()
 	AssertOk(t, err, "Error receiving from stream")
 	Assert(t, (evt.EventType == api.EventType_DeleteEvent), "Invalid event type", evt)
+
+	// stop the rpc server
+	rpcClient.Close()
+	rpcServer.Stop()
+	time.Sleep(time.Millisecond * 10)
+}
+
+// TestAppConvert tests conversion logic between NPM and Netagent protos
+func TestAppConvert(t *testing.T) {
+	// create rpc server and client
+	stateMgr, rpcServer, rpcClient := createRPCServerClient(t)
+	Assert(t, ((stateMgr != nil) && (rpcServer != nil) && (rpcClient != nil)), "Err creating rpc server")
+	defer rpcServer.Stop()
+
+	// create API client
+	appRPRClient := netproto.NewAppApiClient(rpcClient.ClientConn)
+
+	// apps
+	apps := []security.App{
+
+		security.App{
+			TypeMeta: api.TypeMeta{Kind: "App"},
+			ObjectMeta: api.ObjectMeta{
+				Name:      "testApp",
+				Namespace: "",
+				Tenant:    "default",
+			},
+			Spec: security.AppSpec{
+				ProtoPorts: []security.ProtoPort{
+					{
+						Protocol: "tcp",
+						Ports:    "21",
+					},
+				},
+				Timeout: "5m",
+				ALG: &security.ALG{
+					Type: "FTP",
+					FtpAlg: &security.FtpAlg{
+						AllowMismatchIPAddress: true,
+					},
+				},
+			},
+		},
+		security.App{ // App with FTP Alg but no ALG-Specific params
+			TypeMeta: api.TypeMeta{Kind: "App"},
+			ObjectMeta: api.ObjectMeta{
+				Name:      "testApp2",
+				Namespace: "",
+				Tenant:    "default",
+			},
+			Spec: security.AppSpec{
+				ProtoPorts: []security.ProtoPort{
+					{
+						Protocol: "tcp",
+						Ports:    "21",
+					},
+				},
+				Timeout: "5m",
+				ALG: &security.ALG{
+					Type: "FTP",
+				},
+			},
+		},
+
+		security.App{ // App without ALG
+			TypeMeta: api.TypeMeta{Kind: "App"},
+			ObjectMeta: api.ObjectMeta{
+				Name:      "testApp3",
+				Namespace: "",
+				Tenant:    "default",
+			},
+			Spec: security.AppSpec{
+				ProtoPorts: []security.ProtoPort{
+					{
+						Protocol: "tcp",
+						Ports:    "21",
+					},
+				},
+				Timeout: "5m",
+			},
+		},
+	}
+	for _, app := range apps {
+		err := stateMgr.AppReactor().CreateApp(app)
+		AssertOk(t, err, fmt.Sprintf("Error creating app %v", app))
+	}
+
+	// verify list app
+	ometa := api.ObjectMeta{Name: "default", Tenant: "default"}
+	rapps, err := appRPRClient.ListApps(context.Background(), &ometa)
+	AssertOk(t, err, "Error listing app")
+	Assert(t, (len(rapps.Apps) == len(apps)), "Received invalid number of apps", rapps)
+	for index, app := range apps {
+		Assert(t, (rapps.Apps[index].Name == app.Name), "Invalid app params", rapps)
+	}
 
 	// stop the rpc server
 	rpcClient.Close()

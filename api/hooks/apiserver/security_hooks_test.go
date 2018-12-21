@@ -1336,6 +1336,29 @@ func TestAppAlgConfig(t *testing.T) {
 	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
 	AssertOk(t, err, "failed to create app with ICMP ALG config. Error: %v", err)
 
+	// ICMP ALG
+	app = security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "icmp",
+				},
+			},
+			ALG: &security.ALG{
+				Type: "ICMP",
+			},
+		},
+	}
+
+	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
+	AssertOk(t, err, "failed to create app with ICMP ALG config without Specific Type. Error: %v", err)
+
 	// DNS ALG
 	app = security.App{
 		TypeMeta: api.TypeMeta{Kind: "App"},

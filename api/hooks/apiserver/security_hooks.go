@@ -247,7 +247,7 @@ func (s *securityHooks) validateApp(ctx context.Context, kv kvstore.Interface, t
 			}
 
 			// validate ICMP type
-			if app.Spec.ALG.IcmpAlg.Type != "" {
+			if app.Spec.ALG.IcmpAlg != nil && app.Spec.ALG.IcmpAlg.Type != "" {
 				i, err := strconv.Atoi(app.Spec.ALG.IcmpAlg.Type)
 				if err != nil {
 					return i, false, fmt.Errorf("ICMP Type %v must be an integer value", app.Spec.ALG.IcmpAlg.Type)
@@ -256,7 +256,7 @@ func (s *securityHooks) validateApp(ctx context.Context, kv kvstore.Interface, t
 					return i, false, fmt.Errorf("ICMP Type %v outside range", app.Spec.ALG.IcmpAlg.Type)
 				}
 			}
-			if app.Spec.ALG.IcmpAlg.Code != "" {
+			if app.Spec.ALG.IcmpAlg != nil && app.Spec.ALG.IcmpAlg.Code != "" {
 				i, err := strconv.Atoi(app.Spec.ALG.IcmpAlg.Code)
 				if err != nil {
 					return i, false, fmt.Errorf("ICMP Code %v must be an integer value", app.Spec.ALG.IcmpAlg.Code)

@@ -10,6 +10,7 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
 	"github.com/pensando/sw/venice/utils/log"
@@ -36,48 +37,70 @@ func convertApp(aps *statemgr.AppState) *netproto.App {
 		ObjectMeta: aps.ObjectMeta,
 		Spec: netproto.AppSpec{
 			Protocol:   protoPort,
-			ALGType:    aps.Spec.ALG.Type,
 			AppTimeout: aps.Spec.Timeout,
 			ALG:        &netproto.ALG{},
 		},
 	}
+	if aps.Spec.ALG != nil {
+		app.Spec.ALGType = aps.Spec.ALG.Type
 
-	switch aps.Spec.ALG.Type {
-	case "ICMP":
-		ictype, _ := strconv.Atoi(aps.Spec.ALG.IcmpAlg.Type)
-		icode, _ := strconv.Atoi(aps.Spec.ALG.IcmpAlg.Code)
+		switch aps.Spec.ALG.Type {
+		case "ICMP":
+			icmpAlg := security.IcmpAlg{}
+			if aps.Spec.ALG.IcmpAlg != nil {
+				icmpAlg = *aps.Spec.ALG.IcmpAlg
+			}
+			ictype, _ := strconv.Atoi(icmpAlg.Type)
+			icode, _ := strconv.Atoi(icmpAlg.Code)
 
-		app.Spec.ALG.ICMP = &netproto.ICMP{
-			Type: uint32(ictype),
-			Code: uint32(icode),
+			app.Spec.ALG.ICMP = &netproto.ICMP{
+				Type: uint32(ictype),
+				Code: uint32(icode),
+			}
+		case "DNS":
+			dnsAlg := security.DnsAlg{}
+			if aps.Spec.ALG.DnsAlg != nil {
+				dnsAlg = *aps.Spec.ALG.DnsAlg
+			}
+			app.Spec.ALG.DNS = &netproto.DNS{
+				DropMultiQuestionPackets: dnsAlg.DropMultiQuestionPackets,
+				DropLargeDomainPackets:   dnsAlg.DropLargeDomainNamePackets,
+				DropLongLabelPackets:     dnsAlg.DropLongLabelPackets,
+				DropMultiZonePackets:     dnsAlg.DropMultiZonePackets,
+				MaxMessageLength:         dnsAlg.MaxMessageLength,
+				QueryResponseTimeout:     dnsAlg.QueryResponseTimeout,
+			}
+		case "FTP":
+			ftpAlg := security.FtpAlg{}
+			if aps.Spec.ALG.FtpAlg != nil {
+				ftpAlg = *aps.Spec.ALG.FtpAlg
+			}
+			app.Spec.ALG.FTP = &netproto.FTP{
+				AllowMismatchIPAddresses: ftpAlg.AllowMismatchIPAddress,
+			}
+		case "SunRPC":
+			sunrpcAlg := security.SunrpcAlg{}
+			if aps.Spec.ALG.SunrpcAlg != nil {
+				sunrpcAlg = *aps.Spec.ALG.SunrpcAlg
+			}
+			pgmID, _ := strconv.Atoi(sunrpcAlg.ProgramID)
+			app.Spec.ALG.SUNRPC = &netproto.RPC{
+				ProgramID:       uint32(pgmID),
+				MapEntryTimeout: aps.Spec.Timeout,
+			}
+		case "MSRPC":
+			msrpcAlg := security.MsrpcAlg{}
+			if aps.Spec.ALG.MsrpcAlg != nil {
+				msrpcAlg = *aps.Spec.ALG.MsrpcAlg
+			}
+			pgmID, _ := strconv.Atoi(msrpcAlg.ProgramUUID)
+			app.Spec.ALG.MSRPC = &netproto.RPC{
+				ProgramID:       uint32(pgmID),
+				MapEntryTimeout: aps.Spec.Timeout,
+			}
+		case "TFTP":
+		case "RTSP":
 		}
-	case "DNS":
-		app.Spec.ALG.DNS = &netproto.DNS{
-			DropMultiQuestionPackets: aps.Spec.ALG.DnsAlg.DropMultiQuestionPackets,
-			DropLargeDomainPackets:   aps.Spec.ALG.DnsAlg.DropLargeDomainNamePackets,
-			DropLongLabelPackets:     aps.Spec.ALG.DnsAlg.DropLongLabelPackets,
-			DropMultiZonePackets:     aps.Spec.ALG.DnsAlg.DropMultiZonePackets,
-			MaxMessageLength:         aps.Spec.ALG.DnsAlg.MaxMessageLength,
-			QueryResponseTimeout:     aps.Spec.ALG.DnsAlg.QueryResponseTimeout,
-		}
-	case "FTP":
-		app.Spec.ALG.FTP = &netproto.FTP{
-			AllowMismatchIPAddresses: aps.Spec.ALG.FtpAlg.AllowMismatchIPAddress,
-		}
-	case "SunRPC":
-		pgmID, _ := strconv.Atoi(aps.Spec.ALG.SunrpcAlg.ProgramID)
-		app.Spec.ALG.SUNRPC = &netproto.RPC{
-			ProgramID:       uint32(pgmID),
-			MapEntryTimeout: aps.Spec.Timeout,
-		}
-	case "MSRPC":
-		pgmID, _ := strconv.Atoi(aps.Spec.ALG.MsrpcAlg.ProgramUUID)
-		app.Spec.ALG.MSRPC = &netproto.RPC{
-			ProgramID:       uint32(pgmID),
-			MapEntryTimeout: aps.Spec.Timeout,
-		}
-	case "TFTP":
-	case "RTSP":
 	}
 
 	return &app
