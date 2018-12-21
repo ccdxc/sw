@@ -56,7 +56,6 @@ testcases:
 
     -   name: CpDcZeroPad16K32K
         testcase    : testcases.storage.ymltest2
-        enable      : False
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST_COMBO2
@@ -70,7 +69,6 @@ testcases:
 
     -   name: CpDcWithHeader4K8K
         testcase    : testcases.storage.ymltest2
-        enable      : False
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST_COMBO1
@@ -84,7 +82,6 @@ testcases:
 
     -   name: CpDcWithHeaderZeroPad16K32K
         testcase    : testcases.storage.ymltest2
-        enable      : False
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST_COMBO2
@@ -98,7 +95,6 @@ testcases:
 
     -   name    : CompressFail
         testcase: testcases.storage.ymltest
-        enable      : False
         args    :
             dir     : *STORAGE_TEST_DIR
             wait    : 1
@@ -108,7 +104,6 @@ testcases:
 
     -   name    : DecompressFail
         testcase: testcases.storage.ymltest
-        enable      : False
         args    :
             dir     : *STORAGE_TEST_DIR
             wait    : 1
