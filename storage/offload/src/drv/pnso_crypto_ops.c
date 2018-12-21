@@ -352,15 +352,17 @@ static pnso_error_t
 crypto_sub_chain_from_cpdc(struct service_info *svc_info,
 			   struct cpdc_chain_params *cpdc_chain)
 {
+	cpdc_chain->ccp_cmd.ccpc_aol_pad_en =
+		!!cpdc_chain->ccp_pad_buf_addr;
+
+	if (cpdc_chain->ccp_cmd.ccpc_sgl_pdma_en)
+		cpdc_chain->ccp_sgl_vec_addr =
+			cpdc_chain->ccp_aol_dst_vec_addr;
+
 	cpdc_chain->ccp_aol_src_vec_addr =
 		sonic_virt_to_phy(svc_info->si_src_aol.aol);
 	cpdc_chain->ccp_aol_dst_vec_addr =
 		sonic_virt_to_phy(svc_info->si_dst_aol.aol);
-
-	cpdc_chain->ccp_cmd.ccpc_aol_pad_en =
-		!!cpdc_chain->ccp_pad_buf_addr;
-	cpdc_chain->ccp_cmd.ccpc_sgl_pad_en =
-		cpdc_chain->ccp_cmd.ccpc_sgl_pdma_pad_only;
 
 	cpdc_chain->ccp_cmd.ccpc_next_doorbell_en = true;
 	cpdc_chain->ccp_cmd.ccpc_next_db_action_ring_push = true;
