@@ -549,8 +549,10 @@ func TestSGPolicyRPC(t *testing.T) {
 
 	// update the status
 	_, err = sgRPCClient.UpdateSGPolicyStatus(context.Background(), &evt.SGPolicy)
+	AssertOk(t, err, "Error updating sg")
 
 	stateSgp, err := stateMgr.FindSgpolicy("default", "testSGPolicy")
+	AssertOk(t, err, "Error finding sg")
 	Assert(t, stateSgp.NodeVersions["testnode"] == "1", "Nodes didn't update", stateSgp.NodeVersions)
 
 	// delete the sg policy
@@ -767,7 +769,7 @@ func TestAppConvert(t *testing.T) {
 	// apps
 	apps := []security.App{
 
-		security.App{
+		{
 			TypeMeta: api.TypeMeta{Kind: "App"},
 			ObjectMeta: api.ObjectMeta{
 				Name:      "testApp",
@@ -790,7 +792,7 @@ func TestAppConvert(t *testing.T) {
 				},
 			},
 		},
-		security.App{ // App with FTP Alg but no ALG-Specific params
+		{ // App with FTP Alg but no ALG-Specific params
 			TypeMeta: api.TypeMeta{Kind: "App"},
 			ObjectMeta: api.ObjectMeta{
 				Name:      "testApp2",
@@ -811,7 +813,7 @@ func TestAppConvert(t *testing.T) {
 			},
 		},
 
-		security.App{ // App without ALG
+		{ // App without ALG
 			TypeMeta: api.TypeMeta{Kind: "App"},
 			ObjectMeta: api.ObjectMeta{
 				Name:      "testApp3",
@@ -828,6 +830,122 @@ func TestAppConvert(t *testing.T) {
 				Timeout: "5m",
 			},
 		},
+		{
+			TypeMeta: api.TypeMeta{Kind: "App"},
+			ObjectMeta: api.ObjectMeta{
+				Name:      "testApp-icmp",
+				Namespace: "",
+				Tenant:    "default",
+			},
+			Spec: security.AppSpec{
+				ALG: &security.ALG{
+					Type: "ICMP",
+				},
+			},
+		},
+		{
+			TypeMeta: api.TypeMeta{Kind: "App"},
+			ObjectMeta: api.ObjectMeta{
+				Name:      "testApp-icmp2",
+				Namespace: "",
+				Tenant:    "default",
+			},
+			Spec: security.AppSpec{
+				ALG: &security.ALG{
+					Type: "ICMP",
+					IcmpAlg: &security.IcmpAlg{
+						Type: "8",
+					},
+				},
+			},
+		},
+		{
+			TypeMeta: api.TypeMeta{Kind: "App"},
+			ObjectMeta: api.ObjectMeta{
+				Name:      "testApp-dns",
+				Namespace: "",
+				Tenant:    "default",
+			},
+			Spec: security.AppSpec{
+				ALG: &security.ALG{
+					Type: "DNS",
+				},
+			},
+		},
+		{
+			TypeMeta: api.TypeMeta{Kind: "App"},
+			ObjectMeta: api.ObjectMeta{
+				Name:      "testApp-dns2",
+				Namespace: "",
+				Tenant:    "default",
+			},
+			Spec: security.AppSpec{
+				ALG: &security.ALG{
+					Type: "DNS",
+					DnsAlg: &security.DnsAlg{
+						DropLargeDomainNamePackets: true,
+					},
+				},
+			},
+		},
+		{
+			TypeMeta: api.TypeMeta{Kind: "App"},
+			ObjectMeta: api.ObjectMeta{
+				Name:      "testApp-sunrpc",
+				Namespace: "",
+				Tenant:    "default",
+			},
+			Spec: security.AppSpec{
+				ALG: &security.ALG{
+					Type: "SunRPC",
+				},
+			},
+		},
+		{
+			TypeMeta: api.TypeMeta{Kind: "App"},
+			ObjectMeta: api.ObjectMeta{
+				Name:      "testApp-sunrpc2",
+				Namespace: "",
+				Tenant:    "default",
+			},
+			Spec: security.AppSpec{
+				ALG: &security.ALG{
+					Type: "SunRPC",
+					SunrpcAlg: &security.SunrpcAlg{
+						ProgramID: "1",
+					},
+				},
+			},
+		},
+		{
+			TypeMeta: api.TypeMeta{Kind: "App"},
+			ObjectMeta: api.ObjectMeta{
+				Name:      "testApp-msrpc",
+				Namespace: "",
+				Tenant:    "default",
+			},
+			Spec: security.AppSpec{
+				ALG: &security.ALG{
+					Type: "MSRPC",
+				},
+			},
+		},
+		{
+			TypeMeta: api.TypeMeta{Kind: "App"},
+			ObjectMeta: api.ObjectMeta{
+				Name:      "testApp-msrpc2",
+				Namespace: "",
+				Tenant:    "default",
+			},
+			Spec: security.AppSpec{
+				ALG: &security.ALG{
+					Type: "MSRPC",
+					MsrpcAlg: &security.MsrpcAlg{
+						ProgramUUID: "1",
+					},
+				},
+			},
+		},
 	}
 	for _, app := range apps {
 		err := stateMgr.AppReactor().CreateApp(app)
@@ -839,9 +957,6 @@ func TestAppConvert(t *testing.T) {
 	rapps, err := appRPRClient.ListApps(context.Background(), &ometa)
 	AssertOk(t, err, "Error listing app")
 	Assert(t, (len(rapps.Apps) == len(apps)), "Received invalid number of apps", rapps)
-	for index, app := range apps {
-		Assert(t, (rapps.Apps[index].Name == app.Name), "Invalid app params", rapps)
-	}
 
 	// stop the rpc server
 	rpcClient.Close()
