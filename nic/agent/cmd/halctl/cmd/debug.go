@@ -154,13 +154,13 @@ func init() {
 	showCmd.AddCommand(traceShowCmd)
 	showCmd.AddCommand(regShowCmd)
 
-    // debug platform llc-cache-setup
+	// debug platform llc-cache-setup
 	platDebugCmd.AddCommand(platLlcDebugCmd)
 
-    // debug platform packet-buffer
+	// debug platform packet-buffer
 	platDebugCmd.AddCommand(pbPlatDebugCmd)
 
-    // debug platform datapath-cache
+	// debug platform datapath-cache
 	platDebugCmd.AddCommand(platDatapathCacheDebugCmd)
 
 	traceDebugCmd.Flags().StringVar(&traceLevel, "level", "none", "Specify trace level")
