@@ -33,7 +33,7 @@ public:
 
     /**
      * @brief        factory method to instantiate an object
-     *  @param[in]    api_ctxt API context carrying object related configuration
+     * @param[in]    api_ctxt API context carrying object related configuration
      */
     static api_base *factory(api_ctxt_t *api_ctxt);
 
@@ -229,4 +229,3 @@ protected:
 }    // namespace api
  
 #endif    /** __API_BASE_HPP__ */
-

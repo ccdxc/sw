@@ -8,6 +8,7 @@ MODULE_SRCS     = ${MODULE_SRC_DIR}/switchport.cc \
                   ${MODULE_SRC_DIR}/vcn.cc \
                   ${MODULE_SRC_DIR}/subnet.cc \
                   ${MODULE_SRC_DIR}/vnic.cc \
+                  ${MODULE_SRC_DIR}/mapping.cc \
                   ${MODULE_SRC_DIR}/batch.cc \
                   ${MODULE_SRC_DIR}/init.cc
 MODULE_SOLIBS   = ociframework

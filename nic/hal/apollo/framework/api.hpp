@@ -38,6 +38,7 @@ typedef enum obj_id_e {
     OBJ_ID_VNIC,
     OBJ_ID_ROUTE,
     OBJ_ID_SECURITY_RULES,
+    OBJ_ID_MAPPING,
     OBJ_ID_MAX,
 } obj_id_t;
 

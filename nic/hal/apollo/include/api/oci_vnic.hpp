@@ -3,19 +3,19 @@
  *
  * @file    oci_vnic.hpp
  *
- * @brief   This module defines OCI VNIC interface
+ * @brief   This module defines vnic interface
  */
 
 #if !defined (__OCI_VNIC_HPP__)
 #define __OCI_VNIC_HPP__
 
-#include "nic/sdk/include/sdk/ip.hpp"
+#include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/hal/apollo/include/api/oci.hpp"
 #include "nic/hal/apollo/include/api/oci_vcn.hpp"
 #include "nic/hal/apollo/include/api/oci_subnet.hpp"
 
 /**
- * @defgroup OCI_VNIC - VNIC specific API definitions
+ * @defgroup OCI_VNIC - vnic specific API definitions
  *
  * @{
  */
@@ -46,11 +46,6 @@ typedef struct oci_vnic_s {
                                                        with this VNIC */
     bool                src_dst_check;            /**< TRUE if source/destination
                                                        check is enabled */
-    uint32_t            local;                    /**< TRUE if vnic is local */
-#if 0
-    uint16_t           num_ips;                  /**< no. of IPs for this VNIC */
-    oci_vnic_ip_t      ip_info[OCI_MAX_IP_PER_VNIC]; /**< IP information */
-#endif
 } __PACK__ oci_vnic_t;
 
 /**
@@ -68,37 +63,6 @@ sdk_ret_t oci_vnic_create(_In_ oci_vnic_t *vnic);
  * @return #SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t oci_vnic_delete(_In_ oci_vnic_key_t *vnic_key);
-
-#define OCI_MAX_IP_PER_VNIC        32
-
-/**
- * @brief VNIC IP mapping information
- */
-typedef struct oci_vnic_ip_mapping_s {
-    oci_vnic_key_t    key;                  /**< VNIC Key */
-    ip_addr_t         overlay_ip;           /**< Overlay/Private IP address */
-    ip_addr_t         public_ip;            /**< Public IP address */
-    uint32_t          public_ip_valid:1;    /**< TRUE if public IP is valid */
-    ipv4_addr_t       tep;                  /**< Tunnel dst behind which the
-                                                 VNIC is present */
-    // TODO: what about slot ??
-} oci_vnic_ip_mapping_t;
-
-/**
- * @brief Create VNIC's IP mapping
- *
- * @param[in] vnic_ip_mapping        VNIC's IP mapping information
- * @return #SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t oci_vnic_ip_mapping_create(_In_ oci_vnic_ip_mapping_t *vnic_ip_mapping);
-
-/**
- * @brief Delete VNIC's IP mapping
- *
- * @param[in] oci_vnic_ip_mapping    VNIC's IP mapping information
- * @return #SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t oci_vnic_ip_mappnig_delete(_In_ oci_vnic_ip_mapping_t *vnic_ip_mapping);
 
 /**
  * @}
