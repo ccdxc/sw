@@ -279,12 +279,6 @@ public:
     vcn_entry *vcn_alloc(void);
 
     /**
-     * @brief     destroy vcn and free the memory back to the slab
-     * @param[in] vcn vcn instance
-     */
-    void vcn_free(vcn_entry *vcn);
-
-    /**
      * @brief     lookup a vcn in database given the key
      * @param[in] vcn_key vcn key
      */
@@ -301,7 +295,7 @@ private:
 private:
     ht         *vcn_ht_;      /**< Hash table root */
     indexer    *vcn_idxr_;    /**< Indexer to allocate hw vcn id */
-    slab       *vcn_slab_;    /**< slab for allocating vcn state */
+    slab       *vcn_slab_;    /**< slab for allocating vcn entry */
 };
 
 /** * @} */    // end of OCI_VCN_STATE

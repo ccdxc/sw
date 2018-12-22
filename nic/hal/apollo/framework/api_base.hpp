@@ -224,7 +224,8 @@ public:
 protected:
     bool    in_dirty_list_;    /**< true if object is in the dirty list */
     bool    hw_dirty_;         /**< true if hw entries are updated but not yet activated */
-};
+    bool    stateless_;        /**< true this object doesn't go into any databases */
+} __PACK__;
 
 }    // namespace api
  

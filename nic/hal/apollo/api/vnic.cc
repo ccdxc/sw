@@ -550,15 +550,6 @@ vnic_state::vnic_find(oci_vnic_key_t *vnic_key) const {
     return (vnic_entry *)(vnic_ht_->lookup(vnic_key));
 }
 
-/**
- * @brief free vnic instance
- * @param[in] vnic vnic instance
- */
-void
-vnic_state::vnic_free(vnic_entry *vnic) {
-    api::delay_delete_to_slab(OCI_SLAB_VNIC, vnic);
-}
-
 /** @} */    // end of OCI_VNIC_STATE
 
 }    // namespace api
