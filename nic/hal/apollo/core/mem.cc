@@ -27,6 +27,11 @@ void
 slab_delay_delete_cb (void *timer, uint32_t slab_id, void *elem)
 {
     switch (slab_id) {
+    case OCI_SLAB_TEP:
+        tep_entry::destroy((tep_entry *)elem);
+        tep_db()->tep_slab()->free(elem);
+        break;
+
     case OCI_SLAB_VCN:
         vcn_entry::destroy((vcn_entry *)elem);
         vcn_db()->vcn_slab()->free(elem);
@@ -40,6 +45,11 @@ slab_delay_delete_cb (void *timer, uint32_t slab_id, void *elem)
     case OCI_SLAB_VNIC:
         vnic_entry::destroy((vnic_entry *)elem);
         vnic_db()->vnic_slab()->free(elem);
+        break;
+
+    case OCI_SLAB_MAPPING:
+        mapping_entry::destroy((mapping_entry *)elem);
+        mapping_db()->mapping_slab()->free(elem);
         break;
 
     default:

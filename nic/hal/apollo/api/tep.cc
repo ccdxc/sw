@@ -295,15 +295,6 @@ tep_state::tep_find(oci_tep_key_t *tep_key) const {
     return (tep_entry *)(tep_ht_->lookup(tep_key));
 }
 
-/**
- * @brief free tep instance
- * @param[in] tep tep instance
- */
-void
-tep_state::tep_free(tep_entry *tep) {
-    api::delay_delete_to_slab(OCI_SLAB_TEP, tep);
-}
-
 /** @} */    // end of OCI_TEP_STATE
 
 }    // namespace api

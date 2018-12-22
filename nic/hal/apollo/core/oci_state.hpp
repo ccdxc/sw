@@ -15,6 +15,7 @@
 #include "nic/hal/apollo/api/vcn.hpp"
 #include "nic/hal/apollo/api/subnet.hpp"
 #include "nic/hal/apollo/api/vnic.hpp"
+#include "nic/hal/apollo/api/mapping.hpp"
 
 namespace api {
 
@@ -32,6 +33,7 @@ public:
     vcn_state *vcn_db(void) { return &vcn_db_; }
     subnet_state *subnet_db(void) { return &subnet_db_; }
     vnic_state *vnic_db(void) { return &vnic_db_ ; }
+    mapping_state *mapping_db(void) { return &mapping_db_; }
 
 private:
     switchport_state    switchport_db_;
@@ -39,6 +41,7 @@ private:
     vcn_state           vcn_db_;
     subnet_state        subnet_db_;
     vnic_state          vnic_db_;
+    mapping_state       mapping_db_;
 };
 extern oci_state g_oci_state;
 
@@ -70,6 +73,12 @@ static inline vnic_state *
 vnic_db (void)
 {
     return g_oci_state.vnic_db();
+}
+
+static inline mapping_state *
+mapping_db (void)
+{
+    return g_oci_state.mapping_db();
 }
 
 /** * @} */    // end of OCI_STATE

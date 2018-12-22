@@ -358,15 +358,6 @@ subnet_state::subnet_find(oci_subnet_key_t *subnet_key) const {
     return (subnet_entry *)(subnet_ht_->lookup(subnet_key));
 }
 
-/**
- * @brief        free subnet instance
- * @param[in] subnet subnet instance
- */
-void
-subnet_state::subnet_free(subnet_entry *subnet) {
-    api::delay_delete_to_slab(OCI_SLAB_SUBNET, subnet);
-}
-
 /** @} */    // end of OCI_SUBNET_STATE
 
 }    // namespace api

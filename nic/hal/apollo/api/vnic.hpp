@@ -248,7 +248,6 @@ private:
     uint16_t          vnic_by_slot_hash_idx_;
 } __PACK__;
 
-
 /** @} */    // end of OCI_VNIC_ENTRY
 
 /**
@@ -279,12 +278,6 @@ public:
     vnic_entry *vnic_alloc(void);
 
     /**
-     * @brief     destroy vnic and free the memory back to the slab
-     * @param[in] vnic vnic instance
-     */
-    void vnic_free(vnic_entry *vnic);
-
-    /**
      * @brief     lookup a vnic in database given the key
      * @param[in] vnic_key vnic key
      */
@@ -313,7 +306,7 @@ private:
     indexer         *vnic_idxr_;                    /**< indexer to allocate hw
                                                          vnic id */
     slab            *vnic_slab_;                    /**< slab for allocating
-                                                         vnic state */
+                                                         vnic entry */
 
     /**< P4 datapath tables for vnic
      *   NOTE: there is no explicit table mgmt for rx and tx stats, we directly

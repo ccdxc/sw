@@ -217,12 +217,6 @@ public:
     tep_entry *tep_alloc(void);
 
     /**
-     * @brief     destroy tep and free the memory back to the slab
-     * @param[in] tep tep instance
-     */
-    void tep_free(tep_entry *tep);
-
-    /**
      * @brief     lookup a tep in database given the key
      * @param[in] tep_key tep key
      */
@@ -239,7 +233,7 @@ private:
 
 private:
     ht           *tep_ht_;      /**< Hash table root */
-    slab         *tep_slab_;    /**< slab for allocating tep state */
+    slab         *tep_slab_;    /**< slab for allocating tep entry */
     indexer      *tep_idxr_;    /**< indexer to allocate hw ids for TEPs */
     directmap    *tep_tx_tbl_;  /**< directmap table for TEP_TX */
 };

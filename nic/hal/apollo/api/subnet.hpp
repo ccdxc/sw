@@ -290,12 +290,6 @@ public:
     subnet_entry *subnet_alloc(void);
 
     /**
-     * @brief     destroy subnet and free the memory back to the slab
-     * @param[in] subnet subnet
-     */
-    void subnet_free(subnet_entry *subnet);
-
-    /**
      * @brief     lookup a subnet in database given the key
      * @param[in] subnet_key subnet key
      */
@@ -311,7 +305,7 @@ private:
 private:
     ht      *subnet_ht_;      /**< Hash table root */
     indexer *subnet_idxr_;    /**< Indexer to allocate hw subnet id */
-    slab    *subnet_slab_;    /**< slab for allocating subnet state */
+    slab    *subnet_slab_;    /**< slab for allocating subnet entry */
 };
 
 /** * @} */ // end of OCI_SUBNET_STATE
