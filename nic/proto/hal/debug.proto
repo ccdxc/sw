@@ -52,6 +52,9 @@ service Debug {
   rpc SchedulerActiveQGet (SchedulerActiveQRequestMsg) returns (SchedulerActiveQResponseMsg) {}
 
   rpc PacketBufferUpdate (PacketBufferRequestMsg) returns (PacketBufferResponseMsg) {}
+
+  rpc XcvrValidCheckEnable  (types.Empty) returns (types.Empty) {}
+  rpc XcvrValidCheckDisable (types.Empty) returns (types.Empty) {}
 }
 
 

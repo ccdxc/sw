@@ -911,4 +911,10 @@ packet_buffer_update (debug::PacketBufferRequest *req, debug::PacketBufferRespon
     return ret;
 }
 
+hal_ret_t
+xcvr_valid_check_enable (bool enable)
+{
+    return pd::xcvr_valid_check_enable(enable);
+}
+
 }    // namespace hal

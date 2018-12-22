@@ -31,6 +31,7 @@ var (
 	regData             uint32
 	regInstance         uint32
 	platPbPause         string
+	xcvrValid           string
 )
 
 var debugCmd = &cobra.Command{
@@ -118,37 +119,25 @@ var pbPlatDebugCmd = &cobra.Command{
 	Run:   pbPlatDebugCmdHandler,
 }
 
-var platHbmDebugCmd = &cobra.Command{
-	Use:   "hbm",
-	Short: "set platform hbm options",
-	Long:  "set platform hbm options",
-}
-
 var platLlcDebugCmd = &cobra.Command{
-	Use:   "llc-setup",
-	Short: "debug platform hbm llc-setup [cache-read|cache-write|scratchpad-access|cache-hit|cache-miss|partial-write|cache-maint-op|eviction|retry-needed|retry-access|disable]",
-	Long:  "debug platform hbm llc-setup [cache-read|cache-write|scratchpad-access|cache-hit|cache-miss|partial-write|cache-maint-op|eviction|retry-needed|retry-access|disable]",
+	Use:   "llc-cache-setup",
+	Short: "debug platform llc-cache-setup [cache-read|cache-write|scratchpad-access|cache-hit|cache-miss|partial-write|cache-maint-op|eviction|retry-needed|retry-access|disable]",
+	Long:  "debug platform llc-cache-setup [cache-read|cache-write|scratchpad-access|cache-hit|cache-miss|partial-write|cache-maint-op|eviction|retry-needed|retry-access|disable]",
 	Run:   llcSetupCmdHandler,
 }
 
-var platHbmCacheDebugCmd = &cobra.Command{
-	Use:   "hbm-cache",
-	Short: "Set platform hbm-cache options",
-	Long:  "Set platform hbm-cache options",
+var platDatapathCacheDebugCmd = &cobra.Command{
+	Use:   "datapath-cache",
+	Short: "debug platform datapath-cache [p4-ingress|p4-egress|p4-all|p4plus-rxdma|p4plus-txdma|p4plus-all|all] [enable|disable]",
+	Long:  "debug platform datapath-cache [p4-ingress|p4-egress|p4-all|p4plus-rxdma|p4plus-txdma|p4plus-all|all] [enable|disable]",
+	Run:   datapathCacheDebugCmdHandler,
 }
 
-var platHbmCacheSramDebugCmd = &cobra.Command{
-	Use:   "sram",
-	Short: "debug platform hbm-cache sram [p4-ingress|p4-egress|p4-all|p4plus-rxdma|p4plus-txdma|p4plus-all|all] [enable|disable]",
-	Long:  "debug platform hbm-cache sram [p4-ingress|p4-egress|p4-all|p4plus-rxdma|p4plus-txdma|p4plus-all|all] [enable|disable]",
-	Run:   sramDebugCmdHandler,
-}
-
-var platHbmCacheLlcDebugCmd = &cobra.Command{
-	Use:   "llc",
-	Short: "debug platform hbm-cache llc [enable|disable]",
-	Long:  "debug platform hbm-cache llc [enable|disable]",
-	Run:   llcDebugCmdHandler,
+var xcvrDebugCmd = &cobra.Command{
+	Use:   "transceiver",
+	Short: "debug transceiver",
+	Long:  "debug transceiver",
+	Run:   xcvrDebugCmdHandler,
 }
 
 func init() {
@@ -160,16 +149,19 @@ func init() {
 	debugCmd.AddCommand(debugCreateCmd)
 	debugCmd.AddCommand(debugUpdateCmd)
 	debugCmd.AddCommand(debugDeleteCmd)
-	platDebugCmd.AddCommand(platHbmDebugCmd)
-	platDebugCmd.AddCommand(pbPlatDebugCmd)
-	platHbmDebugCmd.AddCommand(platLlcDebugCmd)
 	traceDebugCmd.AddCommand(flushLogsDebugCmd)
 	fwDebugCmd.AddCommand(secProfDebugCmd)
 	showCmd.AddCommand(traceShowCmd)
 	showCmd.AddCommand(regShowCmd)
-	platDebugCmd.AddCommand(platHbmCacheDebugCmd)
-	platHbmCacheDebugCmd.AddCommand(platHbmCacheSramDebugCmd)
-	platHbmCacheDebugCmd.AddCommand(platHbmCacheLlcDebugCmd)
+
+	// debug platform llc-cache-setup
+	platDebugCmd.AddCommand(platLlcDebugCmd)
+
+	// debug platform packet-buffer
+	platDebugCmd.AddCommand(pbPlatDebugCmd)
+
+	// debug platform datapath-cache
+	platDebugCmd.AddCommand(platDatapathCacheDebugCmd)
 
 	traceDebugCmd.Flags().StringVar(&traceLevel, "level", "none", "Specify trace level")
 	secProfDebugCmd.Flags().Uint32Var(&secProfID, "id", 0, "Specify firewall security profile ID")
@@ -192,6 +184,12 @@ func init() {
 
 	pbPlatDebugCmd.Flags().StringVar(&platPbPause, "pause", "", "Enable or Disable packet-buffer pause using enable | disable")
 	pbPlatDebugCmd.MarkFlagRequired("pause")
+
+	// debug transceiver
+	debugCmd.AddCommand(xcvrDebugCmd)
+
+	// debug transceiver --valid-check <enable|disable>
+	xcvrDebugCmd.Flags().StringVar(&xcvrValid, "valid-check", "enable", "Enable/Disable transceiver valid checks for links")
 }
 
 func pbPlatDebugCmdHandler(cmd *cobra.Command, args []string) {
@@ -348,7 +346,7 @@ func regDebugCmdHandler(cmd *cobra.Command, args []string) {
 	}
 }
 
-func sramDebugCmdHandler(cmd *cobra.Command, args []string) {
+func datapathCacheDebugCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
@@ -424,59 +422,57 @@ func sramDebugCmdHandler(cmd *cobra.Command, args []string) {
 	}
 }
 
-func llcDebugCmdHandler(cmd *cobra.Command, args []string) {
+func xcvrDebugCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
+
 	if err != nil {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
+
 	defer c.Close()
 
 	client := halproto.NewDebugClient(c.ClientConn)
 
-	var enable bool
-
-	if len(args) != 1 {
-		fmt.Printf("Arguments required. Use -h to get list of arguments\n")
+	if cmd.Flags().Changed("valid-check") == false {
+		fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
 		return
 	}
 
-	if strings.Compare(args[1], "enable") == 0 {
-		enable = true
-	} else if strings.Compare(args[1], "disable") == 0 {
-		enable = false
-	} else {
-		fmt.Printf("Invalid argument\n")
-		return
-	}
+	enable := true
 
-	req := &halproto.HbmCacheRequest{
-		CacheRegions: &halproto.HbmCacheRequest_Llc{
-			Llc: &halproto.HbmCacheLlc{
-				Enable: enable,
-			},
-		},
-	}
+	var empty *halproto.Empty
 
-	reqMsg := &halproto.HbmCacheRequestMsg{
-		Request: []*halproto.HbmCacheRequest{req},
-	}
-
-	// HAL call
-	respMsg, err := client.HbmCacheSetup(context.Background(), reqMsg)
-	if err != nil {
-		fmt.Printf("HBM cache setup failed. %v\n", err)
-		return
-	}
-
-	for _, resp := range respMsg.Response {
-		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+	if cmd.Flags().Changed("valid-check") == true {
+		if strings.Compare(xcvrValid, "enable") == 0 {
+			// HAL call
+			_, err = client.XcvrValidCheckEnable(context.Background(), empty)
+			enable = true
+		} else if strings.Compare(xcvrValid, "disable") == 0 {
+			// HAL call
+			_, err = client.XcvrValidCheckDisable(context.Background(), empty)
+			enable = false
 		} else {
-			fmt.Printf("HBM cache setup success\n")
+			fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
+			return
 		}
 	}
+
+	enableStr := "enable"
+
+	if enable == true {
+		enableStr = "enable"
+	} else {
+		enableStr = "disable"
+	}
+
+	if err != nil {
+		fmt.Printf("Transceiver valid check %s failed. %v\n", enableStr, err)
+		return
+	}
+
+	fmt.Printf("Transceiver valid check %s success\n", enableStr)
 }
 
 func traceShowCmdHandler(cmd *cobra.Command, args []string) {

@@ -17,6 +17,9 @@ using sdk::linkmgr::port_args_t;
 xcvr_t g_xcvr[XCVR_MAX_PORTS];
 xcvr_event_notify_t g_xcvr_notify_cb;
 
+// global var to enable/disable transceiver checks for links
+bool xcvr_valid_enable = true;
+
 sdk_ret_t
 xcvr_get (int port, port_args_t *port_arg) {
     port_arg->xcvr_state = xcvr_state(port);
@@ -304,6 +307,12 @@ xcvr_poll_timer (void)
 bool
 xcvr_valid (int port)
 {
+    // if the xcvr valid check is disable, return true
+    if (!xcvr_valid_check_enabled()) {
+        return true;
+    }
+
+    // if older boards, return true
     if (sdk::lib::pal_cpld_rev_old() == true) {
         return true;
     }
