@@ -102,6 +102,11 @@ void sonic_q_free(struct lif *lif, struct queue *q)
 		devm_kfree(lif->sonic->dev, q->info);
 		q->info = NULL;
 	}
+	if (q->base) {
+		dma_free_coherent(lif->sonic->dev, q->total_size, q->base,
+				  q->base_pa);
+		q->base = NULL;
+	}
 }
 
 int sonic_q_alloc(struct lif *lif, struct queue *q,
@@ -122,6 +127,7 @@ int sonic_q_alloc(struct lif *lif, struct queue *q,
 			sonic_q_free(lif, q);
 			return -ENOMEM;
 		}
+		q->total_size = total_size;
 	}
 
 	return 0;
@@ -184,17 +190,17 @@ static int sonic_qcq_alloc(struct lif *lif, unsigned int index,
 	if (err)
 		goto err_out_free_intr;
 
-	new->base = dma_zalloc_coherent(dev, total_size, &new->base_pa,
-				 GFP_KERNEL);
-	if (!new->base) {
+	new->q.base = dma_zalloc_coherent(dev, total_size, &new->q.base_pa,
+					  GFP_KERNEL);
+	if (!new->q.base) {
 		err = -ENOMEM;
 		goto err_out_free_intr;
 	}
 
-	new->total_size = total_size;
+	new->q.total_size = total_size;
 
-	q_base = new->base;
-	q_base_pa = new->base_pa;
+	q_base = new->q.base;
+	q_base_pa = new->q.base_pa;
 
 	cq_base = (void *)ALIGN((uintptr_t)q_base + q_size, PAGE_SIZE);
 	cq_base_pa = ALIGN(q_base_pa + q_size, PAGE_SIZE);
@@ -219,8 +225,6 @@ static void sonic_qcq_free(struct lif *lif, struct qcq *qcq)
 		return;
 
 	sonic_q_free(lif, &qcq->q);
-	dma_free_coherent(lif->sonic->dev, qcq->total_size, qcq->base,
-	qcq->base_pa);
 	sonic_intr_free(lif, &qcq->intr);
 }
 

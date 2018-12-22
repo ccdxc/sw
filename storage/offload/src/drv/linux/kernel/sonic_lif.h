@@ -50,9 +50,6 @@ struct rx_stats {
 #define QCQ_F_RX_STATS		BIT(4)
 
 struct qcq {
-	void *base;
-	dma_addr_t base_pa;
-	unsigned int total_size;
 	struct queue q;
 	struct cq cq;
 	struct intr intr;

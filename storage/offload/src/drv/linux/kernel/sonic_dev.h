@@ -274,6 +274,7 @@ struct queue {
 	struct lif *lif;
 	struct per_core_resource *pc_res;
 	unsigned int index;
+	unsigned int total_size;
 	void *base;
 	dma_addr_t base_pa;
 	struct desc_info *info;
