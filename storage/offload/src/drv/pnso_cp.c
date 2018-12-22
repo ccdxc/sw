@@ -71,7 +71,7 @@ fill_cp_desc(struct service_info *svc_info, struct cpdc_desc *desc,
 				MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS_DESC,
 				svc_info->si_istatus_desc);
 		osal_rmem_set(desc->cd_status_addr, 0,
-				min(sizeof(*status_desc), 8));
+				min(sizeof(*status_desc), (size_t) 8));
 	} else 
 		desc->cd_status_addr = (uint64_t)
 			sonic_virt_to_phy(status_desc);
@@ -357,9 +357,9 @@ compress_read_status(struct service_info *svc_info)
 	struct cpdc_desc *cp_desc;
 	struct cpdc_status_desc *status_desc;
 	struct cpdc_sgl	*dst_sgl;
-	struct pnso_compression_header *cp_hdr = NULL;
 	struct chain_sgl_pdma_tuple *tuple;
-	struct pnso_buffer_list *buf_list;
+	struct pnso_compression_header *cp_hdr = NULL;
+	uint64_t cp_hdr_pa;
 	uint32_t datain_len;
 
 	OSAL_LOG_DEBUG("enter ...");
@@ -390,10 +390,10 @@ compress_read_status(struct service_info *svc_info)
 				cp_hdr = sonic_phy_to_virt(tuple->addr);
 		} else if (svc_info->si_dst_blist.type ==
 				SERVICE_BUF_LIST_TYPE_HOST) {
-			buf_list = svc_info->si_dst_blist.blist;
-			if (buf_list->buffers[0].len >= sizeof (*cp_hdr))
-				cp_hdr = (struct pnso_compression_header *)
-					buf_list->buffers[0].buf;
+			dst_sgl = svc_info->si_dst_sgl.sgl;
+			cp_hdr_pa = sonic_devpa_to_hostpa(dst_sgl->cs_addr_0);
+			cp_hdr = (struct pnso_compression_header *)
+				sonic_phy_to_virt(cp_hdr_pa);
 		}
 
 		if (!cp_hdr) {

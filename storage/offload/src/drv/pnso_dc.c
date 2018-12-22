@@ -53,7 +53,7 @@ fill_dc_desc(struct service_info *svc_info, struct cpdc_desc *desc)
 				MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS_DESC,
 				svc_info->si_istatus_desc);
 		osal_rmem_set(desc->cd_status_addr, 0,
-				min(sizeof(*status_desc), 8));
+				min(sizeof(*status_desc), (size_t) 8));
 	} else 
 		desc->cd_status_addr = (uint64_t)
 			sonic_virt_to_phy(status_desc);
