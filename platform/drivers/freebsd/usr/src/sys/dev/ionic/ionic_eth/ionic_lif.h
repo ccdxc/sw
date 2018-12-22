@@ -308,7 +308,7 @@ struct lif {
 	int num_mc_addrs;
 
 	/* 4096 bit array for VLAN. */
-	uint64_t vlan_bitmap[64];
+	uint8_t vlan_bitmap[4096 / 8];
 	int num_vlans;
 	eventhandler_tag vlan_attach;
 	eventhandler_tag vlan_detach;
@@ -383,8 +383,7 @@ void ionic_dev_intr_unreserve(struct lif *lif, struct intr *intr);
 struct lif *ionic_netdev_lif(struct net_device *netdev);
 
 int ionic_reinit(struct net_device *netdev);
-int ionic_set_features(struct lif *lif, uint16_t set_feature);
-int ionic_set_hw_feature(struct lif *lif, uint16_t set_feature);
+int ionic_set_hw_features(struct lif *lif, uint32_t features);
 
 int ionic_rss_ind_tbl_set(struct lif *lif, const u32 *indir);
 int ionic_rss_hash_key_set(struct lif *lif, const u8 *key, uint16_t rss_types);
@@ -397,6 +396,7 @@ void ionic_tx_ring_doorbell(struct txque *txq, int index);
 int ionic_tx_clean(struct txque* txq , int tx_limit);
 
 int ionic_change_mtu(struct net_device *netdev, int new_mtu);
+void ionic_set_rx_mode(struct net_device *netdev);
 void ionic_set_multi(struct lif* lif);
 
 extern int ionic_devcmd_timeout;

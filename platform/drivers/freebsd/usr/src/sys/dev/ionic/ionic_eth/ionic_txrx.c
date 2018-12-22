@@ -160,28 +160,31 @@ static void ionic_dump_mbuf(struct mbuf* m)
 }
 
 /* Update mbuf with correct checksum etc. */
-static void ionic_rx_checksum(struct mbuf *m, struct rxq_comp *comp, struct rx_stats *stats)
+static void ionic_rx_checksum(struct ifnet *ifp, struct mbuf *m,
+	struct rxq_comp *comp, struct rx_stats *stats)
 {
-
 	m->m_pkthdr.csum_flags = 0;
-	if (comp->csum_ip_ok) {
-		m->m_pkthdr.csum_flags = CSUM_IP_CHECKED | CSUM_IP_VALID;
-		stats->csum_ip_ok++;
-		m->m_pkthdr.csum_data = htons(0xffff);
-	}
 
-	if (m->m_pkthdr.csum_flags && (comp->csum_tcp_ok || comp->csum_udp_ok)) {
-		m->m_pkthdr.csum_flags |= CSUM_DATA_VALID | CSUM_PSEUDO_HDR;
-		stats->csum_l4_ok++;
+	if (comp->csum_ip_ok) {
+		if ((if_getcapenable(ifp) & (IFCAP_RXCSUM | IFCAP_RXCSUM_IPV6))) {
+			m->m_pkthdr.csum_flags = CSUM_IP_CHECKED | CSUM_IP_VALID;
+			m->m_pkthdr.csum_data = htons(0xffff);
+			stats->csum_ip_ok++;
+			if (comp->csum_tcp_ok || comp->csum_udp_ok) {
+				m->m_pkthdr.csum_flags |= CSUM_DATA_VALID | CSUM_PSEUDO_HDR;
+				stats->csum_l4_ok++;
+			}
+		}
 	}
 
 	if (comp->csum_ip_bad) {
 		stats->csum_ip_bad++;
+		if (comp->csum_tcp_ok || comp->csum_udp_ok)
+			stats->csum_l4_ok++;
 	}
 
-	if (comp->csum_tcp_bad || comp->csum_udp_bad) {
+	if (comp->csum_tcp_bad || comp->csum_udp_bad)
 		stats->csum_l4_bad++;
-	}
 }
 
 /*
@@ -300,23 +303,24 @@ void ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *rxbuf,
 	m->m_pkthdr.len = comp->len;
 	m->m_len = comp->len;
 
-	/* Update the checksum if h/w has calculated. */
-	if (ifp->if_capenable & (IFCAP_RXCSUM | IFCAP_RXCSUM_IPV6))
-		ionic_rx_checksum(m, comp, stats);
+	// rx checksum offload
+	ionic_rx_checksum(ifp, m, comp, stats);
 
 	/* Populate mbuf with h/w RSS hash, type etc. */
 	is_tcp = ionic_rx_rss(m, comp, rxq->index, stats);
 
-	if (comp->V) {
+	// rx vlan strip offload
+	if ((if_getcapenable(ifp) & IFCAP_VLAN_HWTAGGING) && comp->V) {
 		m->m_pkthdr.ether_vtag = le16toh(comp->vlan_tci);
 		m->m_flags |= M_VLANTAG;
 	}
+
 	/*
 	 * Use h/w RSS engine of L4 checksum to determine if its TCP packet.
 	 * XXX: add more cases of LRO.
 	 * XXX: LRO with VLAN??
 	 */
-	if ((ifp->if_capenable & IFCAP_LRO) && (is_tcp || comp->csum_tcp_ok)) {
+	if ((if_getcapenable(ifp) & IFCAP_LRO) && (is_tcp || comp->csum_tcp_ok)) {
 		if (rxq->lro.lro_cnt != 0) {
 			if ((error = tcp_lro_rx(&rxq->lro, m, 0)) == 0) {/* third arg -Checksum?? */
 				rxbuf->m = NULL;
@@ -902,8 +906,8 @@ static int ionic_tx_setup(struct txque *txq, struct mbuf *m)
 		offload = true;
 	}
 
-	if (m->m_pkthdr.csum_flags & 
-		(CSUM_IP | CSUM_TCP | CSUM_UDP | CSUM_UDP_IPV6 | CSUM_TCP_IPV6)) {
+	if (m->m_pkthdr.csum_flags &
+			(CSUM_IP | CSUM_TCP | CSUM_UDP | CSUM_UDP_IPV6 | CSUM_TCP_IPV6)) {
 		desc->l4_csum = 1;
 		offload = true;
 	}
@@ -918,8 +922,8 @@ static int ionic_tx_setup(struct txque *txq, struct mbuf *m)
 	desc->num_sg_elems = nsegs - 1; /* First one is header. */
 	desc->O = 0;
 	if (m->m_flags & M_VLANTAG) {
-			desc->V = 1;
-			desc->vlan_tci = htole16(m->m_pkthdr.ether_vtag);;
+		desc->V = 1;
+		desc->vlan_tci = htole16(m->m_pkthdr.ether_vtag);
 	}
 
 	/* Populate sg list with rest of segments. */
@@ -1062,10 +1066,9 @@ static int ionic_tx_tso_setup(struct txque *txq, struct mbuf *m)
 		desc->mss = mss;
 		desc->addr = seg[i].ds_addr + frag_offset;
 		desc->C = 1;
-
 		if (m->m_flags & M_VLANTAG) {
 			desc->V = 1;
-			desc->vlan_tci = htole16(m->m_pkthdr.ether_vtag);;
+			desc->vlan_tci = htole16(m->m_pkthdr.ether_vtag);
 		}
 
 		desc->E = (remain_len <= desc_max_size) ? 1 : 0;
@@ -1766,51 +1769,50 @@ ionic_setup_sysctls(struct lif *lif)
 
 
 /*
- * Set features.
+ * Set netdev capabilities
  */
 int
 ionic_set_os_features(struct ifnet* ifp, uint32_t hw_features)
 {
-    /*
-	 * Set software only capabilities.
-	 * XXX: read counters from h/w using stats_dump
-	 */
-	ifp->if_capabilities = IFCAP_JUMBO_MTU | IFCAP_HWSTATS | IFCAP_LRO;
+	if_setcapabilitiesbit(ifp, (IFCAP_VLAN_MTU | IFCAP_JUMBO_MTU |
+		IFCAP_HWSTATS | IFCAP_LRO), 0);
 
 	if (hw_features & ETH_HW_TX_CSUM)
-		ifp->if_capabilities |=  IFCAP_TXCSUM | IFCAP_TXCSUM_IPV6;
+		if_setcapabilitiesbit(ifp,
+			(IFCAP_TXCSUM | IFCAP_TXCSUM_IPV6 | IFCAP_VLAN_HWCSUM), 0);
 
 	if (hw_features & ETH_HW_RX_CSUM)
-		ifp->if_capabilities |=  IFCAP_RXCSUM | IFCAP_RXCSUM_IPV6;
+		if_setcapabilitiesbit(ifp,
+			(IFCAP_RXCSUM | IFCAP_RXCSUM_IPV6 | IFCAP_VLAN_HWCSUM), 0);
 
 	if (hw_features & ETH_HW_TSO)
-		ifp->if_capabilities |=  IFCAP_TSO4;
+		if_setcapabilitiesbit(ifp, IFCAP_TSO4, 0);
 
 	if (hw_features & ETH_HW_TSO_IPV6)
-		ifp->if_capabilities |=  IFCAP_TSO6;
+		if_setcapabilitiesbit(ifp, IFCAP_TSO6, 0);
 
-#define ETH_HW_VLAN (ETH_HW_VLAN_TX_TAG | ETH_HW_VLAN_RX_STRIP | ETH_HW_VLAN_RX_FILTER)
+	if (hw_features & (ETH_HW_VLAN_TX_TAG | ETH_HW_VLAN_RX_STRIP))
+		if_setcapabilitiesbit(ifp, IFCAP_VLAN_HWTAGGING, 0);
 
-	if ((hw_features & ETH_HW_VLAN)) { 
-		ifp->if_capabilities |=  IFCAP_VLAN_MTU |
-			IFCAP_VLAN_HWTAGGING |
-			IFCAP_VLAN_HWCSUM |
-			IFCAP_VLAN_HWFILTER;
+	if (hw_features & ETH_HW_VLAN_RX_FILTER)
+		if_setcapabilitiesbit(ifp, IFCAP_VLAN_HWFILTER, 0);
 
-		if (hw_features & (ETH_HW_TSO | ETH_HW_TSO_IPV6))
-			ifp->if_capabilities |= IFCAP_VLAN_HWTSO;
-	}
+	if (hw_features & (ETH_HW_TSO | ETH_HW_TSO_IPV6))
+		if_setcapabilitiesbit(ifp, IFCAP_VLAN_HWTSO, 0);
 
-	ifp->if_capenable = ifp->if_capabilities;
-	IONIC_NETDEV_INFO(ifp, "if_capenable: 0x%x\n", ifp->if_capenable);
+	// Enable all capabilities
+	if_setcapenable(ifp, if_getcapabilities(ifp));
+
 	ifp->if_hwassist = 0;
 
-	if (ifp->if_capenable & IFCAP_TSO)
-		ifp->if_hwassist |= CSUM_TSO;
-	if (ifp->if_capenable & IFCAP_TXCSUM)
-		ifp->if_hwassist |= (CSUM_TCP | CSUM_UDP | CSUM_IP);
-	if (ifp->if_capenable & IFCAP_TXCSUM_IPV6)
-		ifp->if_hwassist |= (CSUM_UDP_IPV6 | CSUM_TCP_IPV6);
+	if ((if_getcapenable(ifp) & IFCAP_TSO))
+		if_sethwassistbits(ifp, CSUM_TSO, 0);
+
+	if ((if_getcapenable(ifp) & IFCAP_TXCSUM))
+		if_sethwassistbits(ifp, (CSUM_IP | CSUM_TCP | CSUM_UDP), 0);
+
+	if ((if_getcapenable(ifp) & IFCAP_TXCSUM_IPV6))
+		if_sethwassistbits(ifp, (CSUM_TCP_IPV6 | CSUM_UDP_IPV6), 0);
 
 	return (0);
 }
@@ -1834,7 +1836,8 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 	struct lif* lif = if_getsoftc(ifp);
 	struct ifreq *ifr = (struct ifreq *) data;
 	int error = 0;
-	uint16_t hw_features;
+	int mask;
+	uint32_t hw_features;
 
 	switch (command) {  
 	case SIOCSIFMEDIA:
@@ -1846,62 +1849,100 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 
 	case SIOCSIFCAP:
 	{
-		int mask = ifr->ifr_reqcap ^ ifp->if_capenable;
+		mask = ifr->ifr_reqcap ^ if_getcapenable(ifp);
 
-		IONIC_NETDEV_INFO(ifp, "Required: 0x%x enabled: 0x%x\n",
-			ifr->ifr_reqcap, ifp->if_capenable);
-		if (!mask) {
-			IONIC_NETDEV_INFO(ifp, "Nothing to do\n");
-			break;
-		}
+		IONIC_CORE_LOCK(lif);
 
 		hw_features = lif->hw_features;
 
-		if (mask & (IFCAP_RXCSUM | IFCAP_RXCSUM_IPV6)) {
-			ifp->if_capenable ^= IFCAP_RXCSUM;
-			ifp->if_capenable ^= IFCAP_RXCSUM_IPV6;
-			hw_features ^= ETH_HW_RX_CSUM;
+		if ((mask & IFCAP_LRO) && (if_getcapabilities(ifp) & IFCAP_LRO)) {
+			if_togglecapenable(ifp, IFCAP_LRO);
 		}
 
-		if (mask & (IFCAP_TXCSUM | IFCAP_TXCSUM_IPV6)) {
-			ifp->if_capenable ^= IFCAP_TXCSUM;
-			ifp->if_capenable ^= IFCAP_TXCSUM_IPV6;
+		// tx checksum offloads
+		if ((mask & IFCAP_TXCSUM) && (if_getcapabilities(ifp) & IFCAP_TXCSUM)) {
+			if_togglecapenable(ifp, IFCAP_TXCSUM);
+		}
+
+		if ((mask & IFCAP_TXCSUM_IPV6) &&
+			(if_getcapabilities(ifp) & IFCAP_TXCSUM_IPV6)) {
+			if_togglecapenable(ifp, IFCAP_TXCSUM_IPV6);
+		}
+
+		if ((mask & (IFCAP_TXCSUM | IFCAP_TXCSUM_IPV6)) &&
+			(if_getcapabilities(ifp) & (IFCAP_TXCSUM | IFCAP_TXCSUM_IPV6))) {
 			hw_features ^= ETH_HW_TX_CSUM;
 		}
 
-		if (mask & IFCAP_TSO4) {
-			ifp->if_capenable ^= IFCAP_TSO4;
-			/* XXX: clear ETH_HW_TX_SG? */
+		if ((if_getcapenable(ifp) & IFCAP_TXCSUM))
+			if_sethwassistbits(ifp, (CSUM_IP | CSUM_TCP | CSUM_UDP), 0);
+		else
+			if_sethwassistbits(ifp, 0, (CSUM_IP | CSUM_TCP | CSUM_UDP));
+
+		if ((if_getcapenable(ifp) & IFCAP_TXCSUM_IPV6))
+			if_sethwassistbits(ifp, (CSUM_TCP_IPV6 | CSUM_UDP_IPV6), 0);
+		else
+			if_sethwassistbits(ifp, 0, (CSUM_TCP_IPV6 | CSUM_UDP_IPV6));
+
+		// rx checksum offload
+		if ((mask & IFCAP_RXCSUM) && (if_getcapabilities(ifp) & IFCAP_RXCSUM)) {
+			if_togglecapenable(ifp, IFCAP_RXCSUM);
+		}
+
+		if ((mask & IFCAP_RXCSUM_IPV6) &&
+			(if_getcapabilities(ifp) & IFCAP_RXCSUM_IPV6)) {
+			if_togglecapenable(ifp, IFCAP_RXCSUM_IPV6);
+		}
+
+		if ((mask & (IFCAP_RXCSUM | IFCAP_RXCSUM_IPV6)) &&
+			(if_getcapabilities(ifp) & (IFCAP_RXCSUM | IFCAP_RXCSUM_IPV6))) {
+			hw_features ^= ETH_HW_RX_CSUM;
+		}
+
+		// checksum offload for vlan tagged packets
+		if ((mask & IFCAP_VLAN_HWCSUM) &&
+			(if_getcapabilities(ifp) & IFCAP_VLAN_HWCSUM)) {
+			if_togglecapenable(ifp, IFCAP_VLAN_HWCSUM);
+		}
+
+		// rx vlan strip & tx vlan insert offloads
+		if ((mask & IFCAP_VLAN_HWTAGGING) &&
+			(if_getcapabilities(ifp) & IFCAP_VLAN_HWTAGGING)) {
+			if_togglecapenable(ifp, IFCAP_VLAN_HWTAGGING);
+			hw_features ^= (ETH_HW_VLAN_TX_TAG | ETH_HW_VLAN_RX_STRIP);
+		}
+
+		if ((mask & IFCAP_VLAN_HWFILTER) &&
+			(if_getcapabilities(ifp) & IFCAP_VLAN_HWFILTER)) {
+			if_togglecapenable(ifp, IFCAP_VLAN_HWFILTER);
+			hw_features ^= IFCAP_VLAN_HWFILTER;
+		}
+
+		// tso offloads
+		if ((mask & IFCAP_TSO4) &&
+			(if_getcapabilities(ifp) & IFCAP_TSO4)) {
+			if_togglecapenable(ifp, IFCAP_TSO4);
 			hw_features ^= ETH_HW_TSO;
 		}
 
-		if (mask & IFCAP_TSO6) {
-			ifp->if_capenable ^= IFCAP_TSO6;
-			/* XXX: clear ETH_HW_TX_SG? */
+		if ((mask & IFCAP_TSO6) &&
+			(if_getcapabilities(ifp) & IFCAP_TSO6)) {
+			if_togglecapenable(ifp, IFCAP_TSO6);
 			hw_features ^= ETH_HW_TSO_IPV6;
 		}
 
-		if (mask & IFCAP_LRO) {
-			ifp->if_capenable ^= IFCAP_LRO;
-		}
+		if ((mask & IFCAP_VLAN_HWTSO))
+			if_togglecapenable(ifp, IFCAP_VLAN_HWTSO);
 
-		if (mask & IFCAP_VLAN_HWTAGGING) {
-			ifp->if_capenable ^= IFCAP_VLAN_HWTAGGING;
-			hw_features ^= ETH_HW_VLAN_TX_TAG;
-		}
-		if (mask & IFCAP_VLAN_HWFILTER) {
-			ifp->if_capenable ^= IFCAP_VLAN_HWFILTER;
-			hw_features ^= (ETH_HW_VLAN_RX_STRIP | ETH_HW_VLAN_RX_FILTER);
-		}
-		if (mask & IFCAP_VLAN_HWTSO) {
-			ifp->if_capenable ^= IFCAP_VLAN_HWTSO;
-		}
+		if ((if_getcapenable(ifp) & IFCAP_TSO))
+			if_sethwassistbits(ifp, CSUM_TSO, 0);
+		else
+			if_sethwassistbits(ifp, 0, CSUM_TSO);
 
-		IONIC_CORE_LOCK(lif);
-		error = ionic_set_hw_feature(lif, hw_features);
-
+		// enable offloads on hardware
+		error = ionic_set_hw_features(lif, hw_features);
 		if (error) {				
-			IONIC_NETDEV_ERROR(lif->netdev, "Failed to set capbilities, err: %d\n\n",
+			IONIC_NETDEV_ERROR(lif->netdev, "Failed to set capabilities, err: %d\n",
 				error);
 			IONIC_CORE_UNLOCK(lif);
 			break;
@@ -1909,24 +1950,44 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 		
 		IONIC_CORE_UNLOCK(lif);
 		VLAN_CAPABILITIES(ifp);
+
 		break;
 	}
 
 	case SIOCSIFMTU:
 		IONIC_NETDEV_INFO(ifp, "ioctl: SIOCSIFMTU (Set Interface MTU)\n");
-		if (ifr->ifr_mtu > IONIC_MAX_MTU) {
+		if (ifr->ifr_mtu + ETHER_CRC_LEN > IONIC_MAX_MTU) {
 			error = EINVAL;
 		} else {
-			lif->max_frame_size = ifr->ifr_mtu + (ETHER_HDR_LEN + ETHER_CRC_LEN);
-
+			lif->max_frame_size = ifr->ifr_mtu + ETHER_HDR_LEN + ETHER_VLAN_ENCAP_LEN + ETHER_CRC_LEN;
 			ionic_change_mtu(ifp, ifr->ifr_mtu);
 		}
 		break;
 
 	case SIOCADDMULTI:
 	case SIOCDELMULTI:
+		IONIC_NETDEV_INFO(ifp, "ioctl: %s (Add/Del Multicast Filter)\n",
+			(command == SIOCADDMULTI) ? "SIOCADDMULTI" : "SIOCDELMULTI");
 		IONIC_CORE_LOCK(lif);
-		ionic_set_multi(lif);
+		if (ifp->if_drv_flags & IFF_DRV_RUNNING)
+			ionic_set_multi(lif);
+		IONIC_CORE_UNLOCK(lif);
+		break;
+
+	case SIOCSIFFLAGS:
+		IONIC_NETDEV_INFO(ifp, "ioctl: SIOCSIFFLAGS (Set interface flags)\n");
+		IONIC_CORE_LOCK(lif);
+		if (ifp->if_flags & IFF_UP) {
+			if (ifp->if_drv_flags & IFF_DRV_RUNNING) {
+				ionic_set_rx_mode(lif->netdev);
+			} else {
+				ionic_open(lif);
+			}
+		} else { /* If not up. */
+			if (ifp->if_drv_flags & IFF_DRV_RUNNING) {
+				ionic_stop(ifp);
+			}
+		}
 		IONIC_CORE_UNLOCK(lif);
 		break;
 

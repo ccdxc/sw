@@ -511,7 +511,7 @@ static void ionic_lif_rx_mode(struct lif *lif, unsigned int rx_mode)
 	}
 }
 
-static void ionic_set_rx_mode(struct net_device *netdev)
+void ionic_set_rx_mode(struct net_device *netdev)
 {
 	struct lif *lif = netdev_priv(netdev);
 	unsigned int rx_mode;
@@ -546,8 +546,6 @@ void ionic_set_multi(struct lif* lif)
 	struct rx_filter *f;
 
 	max_maddrs = lif->ionic->ident->dev.nmcasts_per_lif;
-
-	IONIC_NETDEV_INFO(lif->netdev, "Debug: Got Set Multicast Addresses\n");
 
 	if (lif->mc_addrs == NULL)
 		return;
@@ -698,11 +696,6 @@ int ionic_change_mtu(struct net_device *netdev, int new_mtu)
 	return 0;
 }
 
-/******************** VLAN related *************************/
-#define IONIC_VLAN_ENTRY_SHIFT		6
-#define IONIC_VLAN_ENTRIES			BIT(IONIC_VLAN_ENTRY_SHIFT)
-#define IONIC_VLAN_ENTRY_BIT_MASK	(IONIC_VLAN_ENTRIES - 1)
-
 static int ionic_vlan_rx_add_vid(struct net_device *netdev,
 				u16 vid)
 {
@@ -769,25 +762,12 @@ static int ionic_vlan_rx_delete_vid(struct net_device *netdev,
 	return 0;
 }
 
-static uint8_t
-ionic_get_vlan_index(struct lif* lif, uint16_t vtag)
-{
-	int max_index = ARRAY_SIZE(lif->vlan_bitmap);
-
-	return (vtag >> IONIC_VLAN_ENTRY_SHIFT) & (max_index - 1);
-}
-
-static uint8_t
-ionic_get_vlan_bit(uint16_t vtag)
-{
-	return vtag & IONIC_VLAN_ENTRY_BIT_MASK;
-}
-
 static void
 ionic_register_vlan(void *arg, struct ifnet *ifp, u16 vtag)
 {
 	struct lif *lif = ifp->if_softc;
-	u16  index, bit;
+	int index = vtag / 8;
+	int bit = vtag % 8;
 
 	if (ifp->if_softc != arg)   /* Not our event */
 		return;
@@ -795,12 +775,18 @@ ionic_register_vlan(void *arg, struct ifnet *ifp, u16 vtag)
 	if ((vtag == 0) || (vtag > MAX_VLAN_TAG))  /* Invalid */
 		return;
 
+	// TODO: log error if we run out of vlan filters
+
 	IONIC_CORE_LOCK(lif);
-	index = ionic_get_vlan_index(lif, vtag);
-	bit = ionic_get_vlan_bit(vtag);
 
 	if (lif->vlan_bitmap[index] & BIT(bit)) {
-		IONIC_NETDEV_INFO(lif->netdev, "VLAN: %d already exist\n", vtag);
+		IONIC_NETDEV_DEBUG(lif->netdev, "VLAN: %d is already registered\n", vtag);
+		IONIC_CORE_UNLOCK(lif);
+		return;
+	}
+
+	if (ionic_vlan_rx_add_vid(ifp, vtag)) {
+		IONIC_NETDEV_ERROR(lif->netdev, "VLAN: %d register failed\n", vtag);
 		IONIC_CORE_UNLOCK(lif);
 		return;
 	}
@@ -808,9 +794,7 @@ ionic_register_vlan(void *arg, struct ifnet *ifp, u16 vtag)
 	lif->vlan_bitmap[index] |= BIT(bit);
 	++lif->num_vlans;
 
-	IONIC_NETDEV_INFO(lif->netdev, "Register VLAN(%d): %d\n",
-		lif->num_vlans, vtag);
-	ionic_vlan_rx_add_vid(ifp, vtag);
+	IONIC_NETDEV_INFO(lif->netdev, "VLAN: %d registered\n", vtag);
 
 	IONIC_CORE_UNLOCK(lif);
 }
@@ -819,7 +803,8 @@ static void
 ionic_unregister_vlan(void *arg, struct ifnet *ifp, u16 vtag)
 {
 	struct lif *lif = ifp->if_softc;
-	u16 index, bit;
+	int index = vtag / 8;
+	int bit = vtag % 8;
 
 	if (ifp->if_softc != arg)
 		return;
@@ -828,10 +813,15 @@ ionic_unregister_vlan(void *arg, struct ifnet *ifp, u16 vtag)
 		return;
 
 	IONIC_CORE_LOCK(lif);
-	index = ionic_get_vlan_index(lif, vtag);
-	bit = ionic_get_vlan_bit(vtag);
+
 	if ((lif->vlan_bitmap[index] & BIT(bit)) == 0) {
-		IONIC_NETDEV_INFO(lif->netdev, "VLAN: %d doesn exist\n", vtag);
+		IONIC_NETDEV_DEBUG(lif->netdev, "VLAN: %d is not registered\n", vtag);
+		IONIC_CORE_UNLOCK(lif);
+		return;
+	}
+
+	if (ionic_vlan_rx_delete_vid(ifp, vtag)) {
+		IONIC_NETDEV_ERROR(lif->netdev, "VLAN: %d unregister failed\n", vtag);
 		IONIC_CORE_UNLOCK(lif);
 		return;
 	}
@@ -839,9 +829,7 @@ ionic_unregister_vlan(void *arg, struct ifnet *ifp, u16 vtag)
 	lif->vlan_bitmap[index] &= ~BIT(bit);
 	--lif->num_vlans;
 
-	IONIC_NETDEV_INFO(lif->netdev, "Unregister VLAN(%d): %d\n",
-		lif->num_vlans, vtag);
-	ionic_vlan_rx_delete_vid(ifp, vtag);
+	IONIC_NETDEV_INFO(lif->netdev, "VLAN: %d unregistered\n", vtag);
 
 	IONIC_CORE_UNLOCK(lif);
 }
@@ -2538,7 +2526,7 @@ static int ionic_station_set(struct lif *lif)
 
 	ether_ifattach(netdev, lif->dev_addr);
 
-	lif->max_frame_size = netdev->if_mtu + ETHER_HDR_LEN + ETHER_CRC_LEN;
+	lif->max_frame_size = netdev->if_mtu + ETHER_HDR_LEN + ETHER_VLAN_ENCAP_LEN + ETHER_CRC_LEN;
 
 	ifmedia_init(&lif->media, IFM_IMASK, ionic_media_change,
 	    ionic_media_status);
@@ -2679,17 +2667,22 @@ int ionic_lifs_init(struct ionic *ionic)
 /*
  * Configure the NIC for required capabilities.
  */
-int ionic_set_hw_feature(struct lif *lif, uint16_t set_feature)
+int ionic_set_hw_features(struct lif *lif, uint32_t features)
 {
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.features = {
 			.opcode = CMD_OPCODE_FEATURES,
 			.set = FEATURE_SET_ETH_HW_FEATURES,
-			.wanted = set_feature,
+			.wanted = features,
 		},
 	};
 	int err;
+
+	if (features == lif->hw_features) {
+		IONIC_NETDEV_INFO(lif->netdev, "features unchanged\n");
+		return (0);
+	}
 
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
@@ -2731,66 +2724,23 @@ int ionic_set_hw_feature(struct lif *lif, uint16_t set_feature)
 	if (lif->hw_features & ETH_HW_TSO_UDP_CSUM)
 		IONIC_NETDEV_INFO(lif->netdev, "feature ETH_HW_TSO_UDP_CSUM\n");
 
-#if 0
-	if (ctx.cmd.features.wanted != ctx.comp.features.supported) {
-		IONIC_NETDEV_WARN(lif->netdev, "Feature wanted 0x%X != enabled 0x%X\n", ctx.cmd.features.wanted, ctx.comp.features.supported);
-	}
-#endif
-
 	return 0;
 }
 
-int ionic_set_features(struct lif *lif, uint16_t set_features)
+/*
+ * Set HW & SW capabilities
+ */
+static int ionic_set_features(struct lif *lif, uint32_t features)
 {
 	int err;
 
-	err = ionic_set_hw_feature(lif, set_features);
+	err = ionic_set_hw_features(lif, features);
 	if (err)
 		return err;
 
-#ifdef __FreeBSD__
-	ionic_set_os_features(lif->netdev, lif->hw_features);
-#else /* Linux specific. */
-	netdev->features |= NETIF_F_HIGHDMA;
-
-	if (lif->hw_features & ETH_HW_VLAN_TX_TAG)
-		netdev->hw_features |= NETIF_F_HW_VLAN_CTAG_TX;
-	if (lif->hw_features & ETH_HW_VLAN_RX_STRIP)
-		netdev->hw_features |= NETIF_F_HW_VLAN_CTAG_RX;
-	if (lif->hw_features & ETH_HW_VLAN_RX_FILTER)
-		netdev->hw_features |= NETIF_F_HW_VLAN_CTAG_FILTER;
-	if (lif->hw_features & ETH_HW_RX_HASH)
-		netdev->hw_features |= NETIF_F_RXHASH;
-	if (lif->hw_features & ETH_HW_TX_SG)
-		netdev->hw_features |= NETIF_F_SG;
-
-	if (lif->hw_features & ETH_HW_TX_CSUM)
-		netdev->hw_enc_features |= NETIF_F_HW_CSUM;
-	if (lif->hw_features & ETH_HW_RX_CSUM)
-		netdev->hw_enc_features |= NETIF_F_RXCSUM;
-	if (lif->hw_features & ETH_HW_TSO)
-		netdev->hw_enc_features |= NETIF_F_TSO;
-	if (lif->hw_features & ETH_HW_TSO_IPV6)
-		netdev->hw_enc_features |= NETIF_F_TSO6;
-	if (lif->hw_features & ETH_HW_TSO_ECN)
-		netdev->hw_enc_features |= NETIF_F_TSO_ECN;
-	if (lif->hw_features & ETH_HW_TSO_GRE)
-		netdev->hw_enc_features |= NETIF_F_GSO_GRE;
-	if (lif->hw_features & ETH_HW_TSO_GRE_CSUM)
-		netdev->hw_enc_features |= NETIF_F_GSO_GRE_CSUM;
-	if (lif->hw_features & ETH_HW_TSO_IPXIP4)
-		netdev->hw_enc_features |= NETIF_F_GSO_IPXIP4;
-	if (lif->hw_features & ETH_HW_TSO_IPXIP6)
-		netdev->hw_enc_features |= NETIF_F_GSO_IPXIP6;
-	if (lif->hw_features & ETH_HW_TSO_UDP)
-		netdev->hw_enc_features |= NETIF_F_GSO_UDP_TUNNEL;
-	if (lif->hw_features & ETH_HW_TSO_UDP_CSUM)
-		netdev->hw_enc_features |= NETIF_F_GSO_UDP_TUNNEL_CSUM;
-
-	netdev->hw_features |= netdev->hw_enc_features;
-	netdev->features |= netdev->hw_features;
-	netdev->vlan_features |= netdev->features;
-#endif
+	err = ionic_set_os_features(lif->netdev, lif->hw_features);
+	if (err)
+		return err;
 
 	return 0;
 }
