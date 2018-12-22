@@ -7,7 +7,7 @@ meta:
 testcases:
     -   name    : Ping_Mirror_Policy
         testcase: testcases.telemetry.ping_mirror_policy
-        enable  : False
+        enable  : True
         args    :
             type: remote_only
             collector: 192.168.100.101

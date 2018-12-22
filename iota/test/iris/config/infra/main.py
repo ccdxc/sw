@@ -180,6 +180,8 @@ class ConfigObject(DictObject):
     def Delete(self, base_url, remote_node=None):
         full_url = self.RestObjURL(base_url)
         out = self.__common_rest(full_url, None,  remote_node=remote_node, oper=CfgOper.DELETE)
+        if out is None:
+            return api.types.status.SUCCESS
         if out["status-code"] == 200:
             api.Logger.error("Delete success for Key : ", self.Key())
             return api.types.status.SUCCESS

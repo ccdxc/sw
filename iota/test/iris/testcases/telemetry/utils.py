@@ -2,9 +2,10 @@
 import json
 import glob
 import iota.harness.api as api
-import iota.test.iris.config.netagent.cfg_api as netagent_cfg_api
+#import iota.test.iris.config.netagent.cfg_api as netagent_cfg_api
 import time
 import re
+import pdb
 
 def GetProtocolDirectory(proto):
     return api.GetTopologyDirectory() + "/gen/telemetry/{}".format(proto)
@@ -71,8 +72,10 @@ def RunCmd(workload, protocol, destination_ip, destination_port, collector_w, ac
     return result
 
 def GetSourceWorkload(verif, tc):
+    workloads = api.GetWorkloads()
     sip = verif['src_ip']
-    for wl in tc.workloads:
+    src_wl = None
+    for wl in workloads:
         if '/24' in sip or 'any' in sip:
             if verif['dst_ip'] != wl.ip_address:
                 src_wl = wl
@@ -81,11 +84,18 @@ def GetSourceWorkload(verif, tc):
             if sip == wl.ip_address:
                 src_wl = wl
                 break
+    if src_wl is None:
+        api.Logger.info("Did not get a matching workload. Dump all workloads")
+        api.Logger.info("sip: {}".format(sip))
+        api.Logger.info("verif_dst_ip: {}".format(verif['dst_ip']))
+        for wl in workloads:
+            api.Logger.info("wl.ip_address: {}".format(wl.ip_address))
     return src_wl
 
 def GetDestWorkload(verif, tc):
+    workloads = api.GetWorkloads()
     dip = verif['dst_ip']
-    for wl in tc.workloads:
+    for wl in workloads:
         if '/24' in dip or 'any' in dip:
             if verif['src_ip'] != wl.ip_address:
                 dst_wl = wl

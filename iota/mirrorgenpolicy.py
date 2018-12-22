@@ -5,11 +5,15 @@ import os
 import collections
 import random
 
-mirrorpolicy_template = { "mirrors" : [
+mirrorpolicy_template = { 
+    "type" : "netagent",
+    "rest-endpoint"    : "api/mirror/sessions/",
+    "object-key" : "meta.tenant/meta.namespace/meta.name",
+    "objects" : [
     {
     "kind"                  : "MirrorSession",
     "meta": {
-        "name"              : "mirror-0",
+        "name"              : "mirror-2",
         "tenant"            : "default",
         "namespace"         : "default",
         "creation-time"     : "1970-01-01T00:00:00Z",
@@ -122,9 +126,9 @@ def Main():
         obj = json.load(fp)
     EP = [] 
 
-    for i in range(0, len(obj["endpoints"])):
-        print("EP[%d] : %s" % (i, obj["endpoints"][i]["spec"]["ipv4-address"]))
-        EP.append(StripIpMask(obj["endpoints"][i]["spec"]["ipv4-address"]))
+    for i in range(0, len(obj["objects"])):
+        print("EP[%d] : %s" % (i, obj["objects"][i]["spec"]["ipv4-address"]))
+        EP.append(StripIpMask(obj["objects"][i]["spec"]["ipv4-address"]))
 
     #EP.append(GetIpRange(EP[0]))
     json.dump(EP, open("EP.json", "w"))
@@ -137,7 +141,7 @@ def Main():
     for protocol in GlobalOptions.protocols:
         for action in GlobalOptions.actions:
             mirrorpolicy = mirrorpolicy_template
-            match_rules = mirrorpolicy_template['mirrors'][0]['spec']['match-rules']
+            match_rules = mirrorpolicy_template['objects'][0]['spec']['match-rules']
             del match_rules[:]
             verif =[] 
             for i in range(0, len(EP)):
@@ -158,7 +162,7 @@ def Main():
     for protocol in GlobalOptions.protocols:
         for action in GlobalOptions.actions:
             mirrorpolicy = mirrorpolicy_template
-            match_rules = mirrorpolicy_template['mirrors'][0]['spec']['match-rules']
+            match_rules = mirrorpolicy_template['objects'][0]['spec']['match-rules']
             del match_rules[:]
             verif =[] 
             for i in range(0, len(EP_SUBNET)):
@@ -180,7 +184,7 @@ def Main():
     for protocol in GlobalOptions.protocols:
         for action in GlobalOptions.actions:
             mirrorpolicy = mirrorpolicy_template
-            match_rules = mirrorpolicy_template['mirrors'][0]['spec']['match-rules']
+            match_rules = mirrorpolicy_template['objects'][0]['spec']['match-rules']
             del match_rules[:]
             verif =[] 
             for i in range(0, len(EP_ANY)):
@@ -201,7 +205,7 @@ def Main():
     for protocol in GlobalOptions.protocols:
         for action in GlobalOptions.actions:
             mirrorpolicy = mirrorpolicy_template
-            match_rules = mirrorpolicy_template['mirrors'][0]['spec']['match-rules']
+            match_rules = mirrorpolicy_template['objects'][0]['spec']['match-rules']
             for i in range(0, len(EP)):
                 for j in range(i+1, len(EP)):
                     for k in GlobalOptions.ports:
