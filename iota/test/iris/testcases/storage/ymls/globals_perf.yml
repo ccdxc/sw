@@ -1,0 +1,35 @@
+global_params:
+    per_core_qdepth : 512
+    cpu_mask        : 0xf
+    block_size      : 4096
+
+cp_hdr_formats:
+    - format:
+        idx: 1
+        cp_hdr_fields:
+            - field:
+                type: indata_chksum
+                offset: 0
+                len: 4
+                val: 0
+            - field:
+                type: outdata_length
+                offset: 4
+                len: 2
+                val: 0
+            - field:
+                type: algo
+                offset: 6
+                len: 2
+                val: 1
+
+cp_hdr_mapping:
+    - entry:
+        pnso_algo: 1
+        hdr_algo: 1
+
+crypto_keys:
+    - key:
+        idx: 1
+        key1: 'abcd1234ABCD1234abcd1234ABCD1234'
+        key2: 'abcd1234ABCD1234abcd1234ABCD1234'

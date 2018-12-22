@@ -313,6 +313,7 @@ class Testcase:
             ret = self.__mk_testcase_directory(instance_id)
             if ret != types.status.SUCCESS: 
                 iter_data.SetStatus(ret)
+                iter_data.StopTime()
                 return ret
             
             api.ChangeDirectory(instance_id)

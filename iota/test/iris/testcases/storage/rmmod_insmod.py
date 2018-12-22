@@ -6,13 +6,6 @@ import iota.test.iris.testcases.storage.pnsodefs as pnsodefs
 import os
 import pdb
 
-def __copy_sonic_to_all_naples(tc):
-    for n in tc.nodes:
-        resp = api.CopyToHost(n, [tc.sonicpkg])
-        if not api.IsApiResponseOk(resp):
-            return api.types.status.FAILURE
-    return api.types.status.SUCCESS
-
 def __verify_PencakeInsmodDmesg(dmesg_output):
     lines = dmesg_output.split('\n')
     idx = lines[-2].find(pnsodefs.PNSO_PENCAKE_SUCCESS_MSG)
@@ -32,47 +25,29 @@ def Setup(tc):
 
     tc.os = api.GetNodeOs(tc.nodes[0])
 
-    tc.sonicpkg = api.GetTopDir() + '/' + tc.args.package
-    ret = __copy_sonic_to_all_naples(tc)
-    if ret != api.types.status.SUCCESS:
-        return ret
-
     api.SetTestsuiteAttr(pnsodefs.PNSO_TEST_MAXCPUS_ATTR, tc.args.maxcpus)
     return api.types.status.SUCCESS
 
 def Trigger(tc):
-    pkgname = os.path.basename(tc.args.package)
     req = api.Trigger_CreateExecuteCommandsRequest()
     for n in tc.nodes:
-        api.Trigger_AddHostCommand(req, n, "mkdir -p %s" % api.GetHostToolsDir())
-        api.Trigger_AddHostCommand(req, n, "tar xf %s" % pkgname)
-        if tc.os == 'linux':
-            api.Trigger_AddHostCommand(req, n, "make modules", rundir = pnsodefs.PNSO_DRIVER_DIR, timeout=120)
-        else:
-            api.Trigger_AddHostCommand(req, n, "./freebsd_build.sh", rundir = pnsodefs.PNSO_DRIVER_DIR, timeout=120)
-        api.Trigger_AddHostCommand(req, n, "ls sonic.ko", rundir = pnsodefs.PNSO_DRIVER_DIR)
-        api.Trigger_AddHostCommand(req, n, "ls pencake.ko", rundir = pnsodefs.PNSO_DRIVER_DIR)
         api.Trigger_AddHostCommand(req, n, "dmesg -c 2>&1 > /dev/null")
-        api.Trigger_AddHostCommand(req, n, "cp sonic.ko %s" % api.GetHostToolsDir(), rundir = pnsodefs.PNSO_DRIVER_DIR)
-        api.Trigger_AddHostCommand(req, n, "cp pencake.ko %s" % api.GetHostToolsDir(), rundir = pnsodefs.PNSO_DRIVER_DIR)
-        
         if tc.os == 'linux':
             api.Trigger_AddHostCommand(req, n, "rmmod pencake || true", rundir = pnsodefs.PNSO_DRIVER_DIR)
             api.Trigger_AddHostCommand(req, n, "rmmod sonic || true", rundir = pnsodefs.PNSO_DRIVER_DIR)
-            api.Trigger_AddHostCommand(req, n, 
-                        "insmod sonic.ko core_count=%d" % tc.args.maxcpus,
-                        rundir = pnsodefs.PNSO_DRIVER_DIR, timeout = int(tc.args.maxcpus) * 100)
-            api.Trigger_AddHostCommand(req, n, "insmod pencake.ko repeat=1",
+            api.Trigger_AddHostCommand(req, n, "insmod %s/sonic.ko core_count=%d" % (api.GetHostToolsDir(), tc.args.maxcpus),
+                                       rundir = pnsodefs.PNSO_DRIVER_DIR, timeout = int(tc.args.maxcpus) * 100)
+            api.Trigger_AddHostCommand(req, n, "insmod %s/pencake.ko repeat=1" % api.GetHostToolsDir(),
                                        rundir = pnsodefs.PNSO_DRIVER_DIR)
         else:
             api.Trigger_AddHostCommand(req, n, "kldunload pencake || true", rundir = pnsodefs.PNSO_DRIVER_DIR)
             api.Trigger_AddHostCommand(req, n, "kldunload sonic || true", rundir = pnsodefs.PNSO_DRIVER_DIR)
-            api.Trigger_AddHostCommand(req, n, 
-                        "kenv compat.linuxkpi.sonic_core_count=%d" % tc.args.maxcpus,
-                        rundir = pnsodefs.PNSO_DRIVER_DIR)
-            api.Trigger_AddHostCommand(req, n, "kldload ./sonic.ko", rundir = pnsodefs.PNSO_DRIVER_DIR, timeout = int(tc.args.maxcpus) * 100)
-            api.Trigger_AddHostCommand(req, n, "kldload ./pencake.ko", rundir = pnsodefs.PNSO_DRIVER_DIR)
-
+            api.Trigger_AddHostCommand(req, n, "kenv compat.linuxkpi.sonic_core_count=%d" % tc.args.maxcpus,
+                                       rundir = pnsodefs.PNSO_DRIVER_DIR)
+            api.Trigger_AddHostCommand(req, n, "kldload %s/sonic.ko" % api.GetHostToolsDir(),
+                                       rundir = pnsodefs.PNSO_DRIVER_DIR, timeout = int(tc.args.maxcpus) * 100)
+            api.Trigger_AddHostCommand(req, n, "kldload %s/pencake.ko" % api.GetHostToolsDir(), 
+                                       rundir = pnsodefs.PNSO_DRIVER_DIR)
         api.Trigger_AddHostCommand(req, n, "sleep 10")
         cmd = api.Trigger_AddHostCommand(req, n, "dmesg | tail -n 100")
         tc.dmesg_commands.append(cmd)

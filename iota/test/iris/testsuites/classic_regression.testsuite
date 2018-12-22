@@ -32,11 +32,11 @@ testbundles:
     - classic/rdma.testbundle
     - classic/rdma_reg.testbundle
     - linktest/linktest.testbundle
-    #- storage/regression.testbundle
     - penctl/penctl.testbundle
     - mnic/mnic_classic.testbundle
     - classic/driver-features.testbundle
     - linktest/linktest.testbundle
+    - storage/regression.testbundle
  
 teardown:
     #- step      : verif.utils.collect_logs_and_cores

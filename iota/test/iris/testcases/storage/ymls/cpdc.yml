@@ -3,7 +3,7 @@ svc_chains:
         idx: 1
         input:
             pattern : ababababababababababababababababababababababababababababababababababababab1234
-            len     : 'param::blocksize'
+            len     : 'param::inputlen'
         ops:
             - compress:
                 flags           : 'param::cpflags'
@@ -37,7 +37,7 @@ tests:
             idx: 2
             type: lt
             file1: '1_compressed.bin'
-            val: 'param::blocksize'
+            val: 'param::inputlen'
         #- data_compare:
         #    idx: 3
         #    file1: '1_compressed.bin'
@@ -55,4 +55,4 @@ tests:
         - size_compare:
             idx: 1
             file1: '2_decompressed.bin'
-            val: 'param::blocksize'
+            val: 'param::inputlen'

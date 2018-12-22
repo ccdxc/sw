@@ -4,7 +4,7 @@ svc_chains:
         name    : "Hash"
         input   :
             pattern : aaabbbaaabbb
-            len     : 'param::blocksize'
+            len     : 'param::inputlen'
         ops:
             - hash:
                 algo_type   : 'param::algo'
@@ -16,24 +16,12 @@ svc_chains:
         name    : "Hashx2Block"
         input   :
             pattern : aaabbbaaabbb
-            len     : 'param::x2blocksize'
+            len     : 'param::x2inputlen'
         ops:
             - hash:
                 algo_type   : 'param::algo'
                 flags       : 'param::flags'
                 output_file : '%chain_id%_hash_per_block.bin'
-svc_chains:
-    - svc_chain:
-        idx     : 3
-        name    : "Hashx16Block"
-        input:
-            pattern : aaabbbaaabbb
-            len     : 'param::x16blocksize'
-        ops:
-            - hash:
-                algo_type   : 'param::algo'
-                flags       : 'param::flags'
-                output_file : '%chain_id%_hash_large_per_block.bin'
 
 tests:
     - test:
@@ -47,7 +35,7 @@ tests:
             - size_compare:
                 idx     : 1
                 file1   : '%chain_id%_hash_full.bin'
-                val     : 'param::hash_compare_val'
+                val     : 'param::hash_compare_val1x'
 
     - test:
         idx         : 2
@@ -61,16 +49,3 @@ tests:
                 idx     : 1
                 file1   : '%chain_id%_hash_per_block.bin'
                 val     : 'param::hash_compare_val2x'
-
-    - test:
-        idx         : 3
-        name        : "Hash large input per-block"
-        svc_chains  : 3
-        repeat      : 'param::repeat'
-        batch_depth : 'param::batch_depth'
-        mode        : 'param::mode'
-        validations :
-            - size_compare:
-                idx     : 1
-                file1   : '%chain_id%_hash_large_per_block.bin'
-                val     : 'param::hash_compare_val16x'

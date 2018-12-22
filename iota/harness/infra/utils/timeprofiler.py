@@ -1,26 +1,33 @@
 #! /usr/bin/python3
-import timeit
+import datetime
 
 class TimeProfiler:
     def __init__(self):
         self.start = None
         self.end = None
+        self.stop = None
+        self.delta = None
         self.total = 0
         return
 
     def Start(self):
-        self.start = timeit.default_timer()
+        self.start = datetime.datetime.now()
         return
 
     def Stop(self):
-        self.stop = timeit.default_timer()
-        self.total += (self.stop - self.start)
+        self.stop = datetime.datetime.now()
+        self.delta = (self.stop - self.start)
+        self.total = self.delta.seconds
         return
 
     def TotalTime(self):
+        if self.stop is None:
+            self.stop = datetime.datetime.now()
+            self.delta = (self.stop - self.start)
+
         assert(self.total is not None)
         mins, secs = divmod(self.total, 60)
         hours, mins = divmod(mins, 60)
-        total_time = "%02d:%02d:%02d" %\
-                     (hours, mins, secs)
+        total_time = "%02d:%02d:%02d.%03d" %\
+                     (hours, mins, secs, self.delta.microseconds / 1000)
         return total_time

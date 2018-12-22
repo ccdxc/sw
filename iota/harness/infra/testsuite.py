@@ -285,4 +285,6 @@ class TestSuite:
         return
 
     def GetAttr(self, attr):
-        return self.__attrs[attr]
+        if attr in self.__attrs:
+            return self.__attrs[attr]
+        return None

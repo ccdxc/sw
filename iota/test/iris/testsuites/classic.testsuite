@@ -30,8 +30,6 @@ testbundles:
     - multicast/multicast.testbundle
     - classic/rdma.testbundle
     - linktest/linktest.testbundle
-    - storage/storage.testbundle
-    - penctl/penctl.testbundle
     - mnic/mnic_classic.testbundle
     - linktest/linktest.testbundle
     - classic/driver-features-int_mgmt-sanity.testbundle
@@ -40,6 +38,8 @@ testbundles:
     - linktest/linktest.testbundle
     - classic/driver-features-sanity.testbundle
     - linktest/linktest.testbundle
+    - storage/storage.testbundle
+    - penctl/penctl.testbundle
  
 teardown:
     #- step      : verif.utils.collect_logs_and_cores

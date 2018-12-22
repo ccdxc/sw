@@ -9,14 +9,17 @@ meta:
 
 aliases:
     - &STORAGE_TEST_DIR storage/offload/src/test
-    - &BLOCK_SIZE_2K 2048
-    - &BLOCK_SIZE_4K 4096
-    - &BLOCK_SIZE_8K 8192
-    - &BLOCK_SIZE_16K 16384
-    - &BLOCK_SIZE_32K 32768
+    - &INPUT_LEN_2K 2048
+    - &INPUT_LEN_4K 4096
+    - &INPUT_LEN_8K 8192
+    - &INPUT_LEN_16K 16384
+    - &INPUT_LEN_32K 32768
     - &CPUS_ITER_LIST [ 1, 2, 4, 6, 8, 16, 24 ]
+
+# TBD: Zero Pad Resource limitation
+    - &CPUS_ITER_LIST_ZERO_PAD [ 1, 2, 4 ]
     - &BATCH_DEPTH_ITER_LIST [ 1, 16, 31, 32, 33, 64 ]
-    - &BATCH_DEPTH_LARGE_ITER_LIST [ 128, 256 ]
+    - &BATCH_DEPTH_LARGE_ITER_LIST [ 128, 256, 512 ]
     - &BATCH_DEPTH_ITER_LIST_ZERO_PAD [ 1, 16, 31, 32, 33, 64 ]
     - &BATCH_DEPTH_LARGE_ITER_LIST_ZERO_PAD [ 128, 256, 512 ]
     - &MODE_ITER_LIST [ sync, poll, async ]
@@ -33,10 +36,6 @@ aliases:
     - &DCFLAGS_WITH_HEADER header_present
     - &CPFLAGS_WITH_HEADER_ZERO_PAD insert_header,zero_pad
     - &DCFLAGS_WITH_HEADER_ZERO_PAD header_present
-    - &HASH_FLAGS_LIST [ '0', 'per_block' ]
-    - &HASH_ALGO_LIST [ 'sha2_256' ]
-    - &CHKSUM_FLAGS_LIST [ '0', 'per_block' ]
-    - &CHKSUM_ALGO_LIST [ 'crc32c' ]
 
 testcases:
     -   name    : CompileInsmodSonicPencake
@@ -45,145 +44,146 @@ testcases:
             package: storage/gen/storage-offload.tar.xz
             maxcpus: 32
 
-    -   name: CpDcDefault4K8K
+    -   name    : RmmodInsmodSonicPencake
+        testcase: testcases.storage.rmmod_insmod
+        args    :
+            maxcpus: 32
+
+    -   name: CpDc4K8K
         testcase    : testcases.storage.ymltest2
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST
             batch_depth : *BATCH_DEPTH_ITER_LIST
             mode        : *MODE_ITER_LIST
-            blocksize   : [ *BLOCK_SIZE_4K, *BLOCK_SIZE_8K ]
+            inputlen    : [ *INPUT_LEN_4K, *INPUT_LEN_8K ]
         args    :
+            wait        : '0.5'
             test        : *CPDC_TEST_YML
             cpflags     : *CPFLAGS_DEFAULT
             dcflags     : *DCFLAGS_DEFAULT
 
-    #PS-347
-    -   name: CpDcDefault4K8KLargeBD
+    -   name: CpDc4K8KLbd
         testcase    : testcases.storage.ymltest2
-        ignore      : True
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST
             batch_depth : *BATCH_DEPTH_LARGE_ITER_LIST
             mode        : *MODE_ITER_LIST
-            blocksize   : [ *BLOCK_SIZE_4K, *BLOCK_SIZE_8K ]
+            inputlen    : [ *INPUT_LEN_4K, *INPUT_LEN_8K ]
         args    :
+            wait        : '0.75'
             test        : *CPDC_TEST_YML
             cpflags     : *CPFLAGS_DEFAULT
             dcflags     : *DCFLAGS_DEFAULT
 
-    # PS-345
-    -   name: CpDcZeroPad4K8K
+    -   name: CpDcZp4K8K
         testcase    : testcases.storage.ymltest2
-        ignore      : True
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST
             batch_depth : *BATCH_DEPTH_ITER_LIST_ZERO_PAD
             mode        : *MODE_ITER_LIST
-            blocksize   : [ *BLOCK_SIZE_4K, *BLOCK_SIZE_8K ]
+            inputlen    : [ *INPUT_LEN_4K, *INPUT_LEN_8K ]
         args    :
-            blocksize   : *BLOCK_SIZE_4K
+            wait        : '0.5'
             test        : *CPDC_TEST_YML
             cpflags     : *CPFLAGS_ZERO_PAD
             dcflags     : *DCFLAGS_ZERO_PAD
 
     # PS-339
-    -   name: CpDcZeroPad4K8KLargeBD
+    -   name: CpDcZp4K8KLbd
         testcase    : testcases.storage.ymltest2
         enable      : False
         ignore      : True
         iterators   :
             type        : nested
-            cpus        : *CPUS_ITER_LIST
+            cpus        : *CPUS_ITER_LIST_ZERO_PAD
             batch_depth : *BATCH_DEPTH_LARGE_ITER_LIST_ZERO_PAD
             mode        : *MODE_ITER_LIST
-            blocksize   : [ *BLOCK_SIZE_4K, *BLOCK_SIZE_8K ]
+            inputlen    : [ *INPUT_LEN_4K, *INPUT_LEN_8K ]
         args    :
-            blocksize   : *BLOCK_SIZE_4K
+            wait        : '0.75'
             test        : *CPDC_TEST_YML
             cpflags     : *CPFLAGS_ZERO_PAD
             dcflags     : *DCFLAGS_ZERO_PAD
 
-    -   name: CpDcWithHeader4K8K
+    -   name: CpDcWHdr4K8K
         testcase    : testcases.storage.ymltest2
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST
             batch_depth : *BATCH_DEPTH_ITER_LIST
             mode        : *MODE_ITER_LIST
-            blocksize   : [ *BLOCK_SIZE_4K, *BLOCK_SIZE_8K ]
+            inputlen    : [ *INPUT_LEN_4K, *INPUT_LEN_8K ]
         args    :
-            blocksize   : *BLOCK_SIZE_4K
+            wait        : '0.5'
             test        : *CPDC_TEST_YML
             cpflags     : *CPFLAGS_WITH_HEADER
             dcflags     : *DCFLAGS_WITH_HEADER
 
-    # PS-341
-    -   name: CpDcWithHeader4K8KLargeBD
+    -   name: CpDcWHdr4K8KLbd
         testcase    : testcases.storage.ymltest2
-        ignore      : True
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST
             batch_depth : *BATCH_DEPTH_LARGE_ITER_LIST
             mode        : *MODE_ITER_LIST
-            blocksize   : [ *BLOCK_SIZE_4K, *BLOCK_SIZE_8K ]
+            inputlen    : [ *INPUT_LEN_4K, *INPUT_LEN_8K ]
         args    :
-            blocksize   : *BLOCK_SIZE_4K
+            wait        : '0.75'
             test        : *CPDC_TEST_YML
             cpflags     : *CPFLAGS_WITH_HEADER
             dcflags     : *DCFLAGS_WITH_HEADER
 
-    # PS-340
-    -   name: CpDcWithHeaderZeroPad4K8K
+    -   name: CpDcWHdrZp4K8K
         testcase    : testcases.storage.ymltest2
-        ignore      : True
+        ignore      : False
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST
             batch_depth : *BATCH_DEPTH_ITER_LIST_ZERO_PAD
             mode        : *MODE_ITER_LIST
-            blocksize   : [ *BLOCK_SIZE_4K, *BLOCK_SIZE_8K ]
+            inputlen    : [ *INPUT_LEN_4K, *INPUT_LEN_8K ]
         args    :
-            blocksize   : *BLOCK_SIZE_4K
+            wait        : '0.5'
             test        : *CPDC_TEST_YML
             cpflags     : *CPFLAGS_WITH_HEADER_ZERO_PAD
             dcflags     : *DCFLAGS_WITH_HEADER_ZERO_PAD
 
     # PS-344
-    -   name: CpDcWithHeaderZeroPad4K8KLargeBD
+    -   name: CpDcWHdrZp4K8KLbd
         testcase    : testcases.storage.ymltest2
         enable      : False
         ignore      : True
         iterators   :
             type        : nested
-            cpus        : *CPUS_ITER_LIST
+            cpus        : *CPUS_ITER_LIST_ZERO_PAD
             batch_depth : *BATCH_DEPTH_LARGE_ITER_LIST_ZERO_PAD
             mode        : *MODE_ITER_LIST
-            blocksize   : [ *BLOCK_SIZE_4K, *BLOCK_SIZE_8K ]
+            inputlen    : [ *INPUT_LEN_4K, *INPUT_LEN_8K ]
         args    :
-            blocksize   : *BLOCK_SIZE_4K
+            wait        : '0.75'
             test        : *CPDC_TEST_YML
             cpflags     : *CPFLAGS_WITH_HEADER_ZERO_PAD
             dcflags     : *DCFLAGS_WITH_HEADER_ZERO_PAD
 
-    -   name: CpDcDefault16K32K
+    -   name: CpDc16K32K
         testcase    : testcases.storage.ymltest2
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST
             batch_depth : *BATCH_DEPTH_ITER_LIST
             mode        : *MODE_ITER_LIST
-            blocksize   : [ *BLOCK_SIZE_16K, *BLOCK_SIZE_32K ]
+            inputlen    : [ *INPUT_LEN_16K, *INPUT_LEN_32K ]
         args    :
+            wait        : '0.5'
             test        : *CPDC_TEST_YML
             cpflags     : *CPFLAGS_DEFAULT
             dcflags     : *DCFLAGS_DEFAULT
 
     # PS-360
-    -   name: CpDcDefault16K32KLargeBD
+    -   name: CpDc16K32KLbd
         testcase    : testcases.storage.ymltest2
         enable      : False
         ignore      : True
@@ -192,129 +192,246 @@ testcases:
             cpus        : *CPUS_ITER_LIST
             batch_depth : *BATCH_DEPTH_LARGE_ITER_LIST
             mode        : *MODE_ITER_LIST
-            blocksize   : [ *BLOCK_SIZE_16K, *BLOCK_SIZE_32K ]
+            inputlen    : [ *INPUT_LEN_16K, *INPUT_LEN_32K ]
         args    :
+            wait        : '0.75'
             test        : *CPDC_TEST_YML
             cpflags     : *CPFLAGS_DEFAULT
             dcflags     : *DCFLAGS_DEFAULT
 
-    -   name: CpDcZeroPad16K32K
+    -   name: CpDcZp16K32K
         testcase    : testcases.storage.ymltest2
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST
             batch_depth : *BATCH_DEPTH_ITER_LIST_ZERO_PAD
             mode        : *MODE_ITER_LIST
-            blocksize   : [ *BLOCK_SIZE_16K, *BLOCK_SIZE_32K ]
+            inputlen    : [ *INPUT_LEN_16K, *INPUT_LEN_32K ]
         args    :
-            blocksize   : *BLOCK_SIZE_4K
+            wait        : '0.5'
             test        : *CPDC_TEST_YML
             cpflags     : *CPFLAGS_ZERO_PAD
             dcflags     : *DCFLAGS_ZERO_PAD
 
-    -   name: CpDcZeroPad16K32KLargeBD
+    -   name: CpDcZp16K32KLbd
         testcase    : testcases.storage.ymltest2
         enable      : False
         ignore      : True
         iterators   :
             type        : nested
-            cpus        : *CPUS_ITER_LIST
+            cpus        : *CPUS_ITER_LIST_ZERO_PAD
             batch_depth : *BATCH_DEPTH_LARGE_ITER_LIST_ZERO_PAD
             mode        : *MODE_ITER_LIST
-            blocksize   : [ *BLOCK_SIZE_16K, *BLOCK_SIZE_32K ]
+            inputlen    : [ *INPUT_LEN_16K, *INPUT_LEN_32K ]
         args    :
-            blocksize   : *BLOCK_SIZE_4K
+            wait        : '0.75'
             test        : *CPDC_TEST_YML
             cpflags     : *CPFLAGS_ZERO_PAD
             dcflags     : *DCFLAGS_ZERO_PAD
 
-    -   name: CpDcWithHeader16K32K
+    -   name: CpDcWHdr16K32K
         testcase    : testcases.storage.ymltest2
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST
             batch_depth : *BATCH_DEPTH_ITER_LIST
             mode        : *MODE_ITER_LIST
-            blocksize   : [ *BLOCK_SIZE_16K, *BLOCK_SIZE_32K ]
+            inputlen    : [ *INPUT_LEN_16K, *INPUT_LEN_32K ]
         args    :
-            blocksize   : *BLOCK_SIZE_4K
+            wait        : '0.5'
             test        : *CPDC_TEST_YML
             cpflags     : *CPFLAGS_WITH_HEADER
             dcflags     : *DCFLAGS_WITH_HEADER
 
-    -   name: CpDcWithHeader16K32KLargeBD
+    -   name: CpDcWHdr16K32KLbd
         testcase    : testcases.storage.ymltest2
-        ignore      : True
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST
             batch_depth : *BATCH_DEPTH_LARGE_ITER_LIST
             mode        : *MODE_ITER_LIST
-            blocksize   : [ *BLOCK_SIZE_16K, *BLOCK_SIZE_32K ]
+            inputlen    : [ *INPUT_LEN_16K, *INPUT_LEN_32K ]
         args    :
-            blocksize   : *BLOCK_SIZE_4K
+            wait        : '0.75'
             test        : *CPDC_TEST_YML
             cpflags     : *CPFLAGS_WITH_HEADER
             dcflags     : *DCFLAGS_WITH_HEADER
 
-    -   name: CpDcWithHeaderZeroPad16K32K
-        testcase    : testcases.storage.ymltest2
-        enable      : False
-        iterators   :
-            type        : nested
-            cpus        : *CPUS_ITER_LIST
-            batch_depth : *BATCH_DEPTH_ITER_LIST_ZERO_PAD
-            mode        : *MODE_ITER_LIST
-            blocksize   : [ *BLOCK_SIZE_16K, *BLOCK_SIZE_32K ]
-        args    :
-            blocksize   : *BLOCK_SIZE_4K
-            test        : *CPDC_TEST_YML
-            cpflags     : *CPFLAGS_WITH_HEADER_ZERO_PAD
-            dcflags     : *DCFLAGS_WITH_HEADER_ZERO_PAD
-
-    -   name: CpDcWithHeaderZeroPad16K32KLargeBD
+    -   name: CpDcWHdrZp16K32K
         testcase    : testcases.storage.ymltest2
         enable      : False
         ignore      : True
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST
+            batch_depth : *BATCH_DEPTH_ITER_LIST_ZERO_PAD
+            mode        : *MODE_ITER_LIST
+            inputlen    : [ *INPUT_LEN_16K, *INPUT_LEN_32K ]
+        args    :
+            wait        : '0.5'
+            test        : *CPDC_TEST_YML
+            cpflags     : *CPFLAGS_WITH_HEADER_ZERO_PAD
+            dcflags     : *DCFLAGS_WITH_HEADER_ZERO_PAD
+
+    -   name: CpDcWHdrZp16K32KLbd
+        testcase    : testcases.storage.ymltest2
+        enable      : False
+        ignore      : True
+        iterators   :
+            type        : nested
+            cpus        : *CPUS_ITER_LIST_ZERO_PAD
             batch_depth : *BATCH_DEPTH_LARGE_ITER_LIST_ZERO_PAD
             mode        : *MODE_ITER_LIST
-            blocksize   : [ *BLOCK_SIZE_16K, *BLOCK_SIZE_32K ]
+            inputlen    : [ *INPUT_LEN_16K, *INPUT_LEN_32K ]
         args    :
-            blocksize   : *BLOCK_SIZE_4K
+            wait        : '0.75'
             test        : *CPDC_TEST_YML
             cpflags     : *CPFLAGS_WITH_HEADER_ZERO_PAD
             dcflags     : *DCFLAGS_WITH_HEADER_ZERO_PAD
 
     -   name    : CompressFail
         testcase: testcases.storage.ymltest
-        iterators:
-            type        : nested
-            mode        : *MODE_ITER_LIST
-            blocksize   : [ *BLOCK_SIZE_4K, *BLOCK_SIZE_8K, *BLOCK_SIZE_16K, *BLOCK_SIZE_32K ]
         args    :
             dir     : *STORAGE_TEST_DIR
-            wait    : 5 # Wait in seconds.
+            wait    : 1
             cfg     : [ 4k.yml, globals.yml ]
             test    : cp_fail.yml
             failtest: True
 
     -   name    : DecompressFail
         testcase: testcases.storage.ymltest
-        iterators:
-            type        : nested
-            mode        : *MODE_ITER_LIST
-            blocksize   : [ *BLOCK_SIZE_4K, *BLOCK_SIZE_8K, *BLOCK_SIZE_16K, *BLOCK_SIZE_32K ]
         args    :
             dir     : *STORAGE_TEST_DIR
-            wait    : 5 # Wait in seconds.
+            wait    : 1
             cfg     : [ 4k.yml, globals.yml ]
             test    : dc_fail.yml
             failtest: True
 
-    -   name        : Hash4K8K
+    -   name        : Hash4K8KSha2_256
+        testcase    : testcases.storage.ymltest2
+        ignore      : False
+        iterators   :
+            type        : nested
+            cpus        : *CPUS_ITER_LIST
+            batch_depth : *BATCH_DEPTH_ITER_LIST
+            mode        : *MODE_ITER_LIST
+            inputlen    : [ *INPUT_LEN_4K, *INPUT_LEN_8K ]
+        args    :
+            wait        : '0.5'
+            flags       : '0'
+            algo        : 'sha2_256'
+            test        : *HASH_TEST_YML
+
+    -   name        : Hash4K8KSha2_256Pb
+        testcase    : testcases.storage.ymltest2
+        enable      : False
+        ignore      : True
+        iterators   :
+            type        : nested
+            cpus        : *CPUS_ITER_LIST
+            batch_depth : *BATCH_DEPTH_ITER_LIST
+            mode        : *MODE_ITER_LIST
+            inputlen    : [ *INPUT_LEN_4K, *INPUT_LEN_8K ]
+        args    :
+            wait        : '0.5'
+            flags       : 'per_block'
+            algo        : 'sha2_256'
+            test        : *HASH_TEST_YML
+
+    -   name        : Hash16K32KSha2_256
+        testcase    : testcases.storage.ymltest2
+        ignore      : False
+        iterators   :
+            type        : nested
+            cpus        : *CPUS_ITER_LIST
+            batch_depth : *BATCH_DEPTH_ITER_LIST
+            mode        : *MODE_ITER_LIST
+            inputlen    : [ *INPUT_LEN_16K, *INPUT_LEN_32K ]
+        args    :
+            wait        : '0.5'
+            flags       : '0'
+            algo        : 'sha2_256'
+            test        : *HASH_TEST_YML
+
+    -   name        : Hash16K32KSha2_256Pb
+        testcase    : testcases.storage.ymltest2
+        enable      : False
+        ignore      : True
+        iterators   :
+            type        : nested
+            cpus        : *CPUS_ITER_LIST
+            batch_depth : *BATCH_DEPTH_ITER_LIST
+            mode        : *MODE_ITER_LIST
+            inputlen    : [ *INPUT_LEN_16K, *INPUT_LEN_32K ]
+        args    :
+            wait        : '0.5'
+            flags       : 'per_block'
+            algo        : 'sha2_256'
+            test        : *HASH_TEST_YML
+
+    -   name        : Hash4K8KLbdSha2_256
+        testcase    : testcases.storage.ymltest2
+        ignore      : False
+        iterators   :
+            type        : nested
+            cpus        : *CPUS_ITER_LIST
+            batch_depth : *BATCH_DEPTH_LARGE_ITER_LIST
+            mode        : *MODE_ITER_LIST
+            inputlen    : [ *INPUT_LEN_4K, *INPUT_LEN_8K ]
+        args    :
+            wait        : '0.75'
+            flags       : '0'
+            algo        : 'sha2_256'
+            test        : *HASH_TEST_YML
+
+    -   name        : Hash4K8KLbdSha2_256Pb
+        testcase    : testcases.storage.ymltest2
+        enable      : False
+        ignore      : True
+        iterators   :
+            type        : nested
+            cpus        : *CPUS_ITER_LIST
+            batch_depth : *BATCH_DEPTH_LARGE_ITER_LIST
+            mode        : *MODE_ITER_LIST
+            inputlen    : [ *INPUT_LEN_4K, *INPUT_LEN_8K ]
+        args    :
+            wait        : '0.75'
+            flags       : 'per_block'
+            algo        : 'sha2_256'
+            test        : *HASH_TEST_YML
+
+    -   name        : Hash16K32KLbdSha2_256
+        testcase    : testcases.storage.ymltest2
+        ignore      : False
+        iterators   :
+            type        : nested
+            cpus        : *CPUS_ITER_LIST
+            batch_depth : *BATCH_DEPTH_LARGE_ITER_LIST
+            mode        : *MODE_ITER_LIST
+            inputlen    : [ *INPUT_LEN_16K, *INPUT_LEN_32K ]
+        args    :
+            wait        : '0.75'
+            flags       : '0'
+            algo        : 'sha2_256'
+            test        : *HASH_TEST_YML
+
+    -   name        : Hash16K32KLbdSha2_256Pb
+        testcase    : testcases.storage.ymltest2
+        enable      : False
+        ignore      : True
+        iterators   :
+            type        : nested
+            cpus        : *CPUS_ITER_LIST
+            batch_depth : *BATCH_DEPTH_LARGE_ITER_LIST
+            mode        : *MODE_ITER_LIST
+            inputlen    : [ *INPUT_LEN_16K, *INPUT_LEN_32K ]
+        args    :
+            wait        : '0.75'
+            flags       : 'per_block'
+            algo        : 'sha2_256'
+            test        : *HASH_TEST_YML
+
+    -   name        : Csum4K8KCrc32c
         testcase    : testcases.storage.ymltest2
         ignore      : True
         iterators   :
@@ -322,14 +439,30 @@ testcases:
             cpus        : *CPUS_ITER_LIST
             batch_depth : *BATCH_DEPTH_ITER_LIST
             mode        : *MODE_ITER_LIST
-            blocksize   : [ *BLOCK_SIZE_4K, *BLOCK_SIZE_8K ]
-            flags       : *HASH_FLAGS_LIST
-            algo        : *HASH_ALGO_LIST
+            inputlen    : [ *INPUT_LEN_4K, *INPUT_LEN_8K ]
         args    :
-            wait        : 5
-            test        : *HASH_TEST_YML
+            wait        : '0.5'
+            flags       : '0'
+            algo        : 'crc32c'
+            test        : *CHKSUM_TEST_YML
 
-    -   name        : Hash16K32K
+    -   name        : Csum4K8KCrc32cPb
+        testcase    : testcases.storage.ymltest2
+        enable      : False
+        ignore      : True
+        iterators   :
+            type        : nested
+            cpus        : *CPUS_ITER_LIST
+            batch_depth : *BATCH_DEPTH_ITER_LIST
+            mode        : *MODE_ITER_LIST
+            inputlen    : [ *INPUT_LEN_4K, *INPUT_LEN_8K ]
+        args    :
+            wait        : '0.5'
+            flags       : 'per_block'
+            algo        : 'crc32c'
+            test        : *CHKSUM_TEST_YML
+
+    -   name        : Csum16K32KCrc32c
         testcase    : testcases.storage.ymltest2
         ignore      : True
         iterators   :
@@ -337,75 +470,30 @@ testcases:
             cpus        : *CPUS_ITER_LIST
             batch_depth : *BATCH_DEPTH_ITER_LIST
             mode        : *MODE_ITER_LIST
-            blocksize   : [ *BLOCK_SIZE_16K, *BLOCK_SIZE_32K ]
-            flags       : *HASH_FLAGS_LIST
-            algo        : *HASH_ALGO_LIST
+            inputlen    : [ *INPUT_LEN_16K, *INPUT_LEN_32K ]
         args    :
-            wait        : 5
-            test        : *HASH_TEST_YML
+            wait        : '0.5'
+            flags       : '0'
+            algo        : 'crc32c'
+            test        : *CHKSUM_TEST_YML
 
-    -   name        : Hash4K8KLargeBD
+    -   name        : Csum16K32KCrc32cPb
         testcase    : testcases.storage.ymltest2
-        ignore      : True
-        iterators   :
-            type        : nested
-            cpus        : *CPUS_ITER_LIST
-            batch_depth : *BATCH_DEPTH_LARGE_ITER_LIST
-            mode        : *MODE_ITER_LIST
-            blocksize   : [ *BLOCK_SIZE_4K, *BLOCK_SIZE_8K ]
-            flags       : *HASH_FLAGS_LIST
-            algo        : *HASH_ALGO_LIST
-        args    :
-            wait        : 5
-            test        : *HASH_TEST_YML
-
-    -   name        : Hash16K32KLargeBD
-        testcase    : testcases.storage.ymltest2
-        ignore      : True
-        iterators   :
-            type        : nested
-            cpus        : *CPUS_ITER_LIST
-            batch_depth : *BATCH_DEPTH_LARGE_ITER_LIST
-            mode        : *MODE_ITER_LIST
-            blocksize   : [ *BLOCK_SIZE_16K, *BLOCK_SIZE_32K ]
-            flags       : *HASH_FLAGS_LIST
-            algo        : *HASH_ALGO_LIST
-        args    :
-            wait        : 5
-            test        : *HASH_TEST_YML
-
-
-    -   name        : Checksum4K8K
-        testcase    : testcases.storage.ymltest2
+        enable      : False
         ignore      : True
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST
             batch_depth : *BATCH_DEPTH_ITER_LIST
             mode        : *MODE_ITER_LIST
-            blocksize   : [ *BLOCK_SIZE_4K, *BLOCK_SIZE_8K ]
-            flags       : *CHKSUM_FLAGS_LIST
-            algo        : *CHKSUM_ALGO_LIST
+            inputlen    : [ *INPUT_LEN_16K, *INPUT_LEN_32K ]
         args    :
-            wait        : 5
+            wait        : '0.5'
+            flags       : 'per_block'
+            algo        : 'crc32c'
             test        : *CHKSUM_TEST_YML
 
-    -   name        : Checksum16K32K
-        testcase    : testcases.storage.ymltest2
-        ignore      : True
-        iterators   :
-            type        : nested
-            cpus        : *CPUS_ITER_LIST
-            batch_depth : *BATCH_DEPTH_ITER_LIST
-            mode        : *MODE_ITER_LIST
-            blocksize   : [ *BLOCK_SIZE_16K, *BLOCK_SIZE_32K ]
-            flags       : *CHKSUM_FLAGS_LIST
-            algo        : *CHKSUM_ALGO_LIST
-        args    :
-            wait        : 5
-            test        : *CHKSUM_TEST_YML
-
-    -   name        : Checksum4K8KLargeBD
+    -   name        : Csum4K8KLbdCrc32c
         testcase    : testcases.storage.ymltest2
         ignore      : True
         iterators   :
@@ -413,14 +501,31 @@ testcases:
             cpus        : *CPUS_ITER_LIST
             batch_depth : *BATCH_DEPTH_LARGE_ITER_LIST
             mode        : *MODE_ITER_LIST
-            blocksize   : [ *BLOCK_SIZE_4K, *BLOCK_SIZE_8K ]
-            flags       : *CHKSUM_FLAGS_LIST
-            algo        : *CHKSUM_ALGO_LIST
+            inputlen    : [ *INPUT_LEN_4K, *INPUT_LEN_8K ]
         args    :
-            wait        : 5
+            wait        : '0.75'
+            flags       : '0'
+            algo        : 'crc32c'
             test        : *CHKSUM_TEST_YML
 
-    -   name        : Checksum16K32KLargeBD
+    -   name        : Csum4K8KLbdCrc32cPb
+        testcase    : testcases.storage.ymltest2
+        enable      : False
+        ignore      : True
+        iterators   :
+            type        : nested
+            cpus        : *CPUS_ITER_LIST
+            batch_depth : *BATCH_DEPTH_LARGE_ITER_LIST
+            mode        : *MODE_ITER_LIST
+            inputlen    : [ *INPUT_LEN_4K, *INPUT_LEN_8K ]
+        args    :
+            wait        : '0.75'
+            flags       : 'per_block'
+            algo        : 'crc32c'
+            test        : *CHKSUM_TEST_YML
+
+
+    -   name        : Csum16K32KLbdCrc32c
         testcase    : testcases.storage.ymltest2
         ignore      : True
         iterators   :
@@ -428,12 +533,29 @@ testcases:
             cpus        : *CPUS_ITER_LIST
             batch_depth : *BATCH_DEPTH_LARGE_ITER_LIST
             mode        : *MODE_ITER_LIST
-            blocksize   : [ *BLOCK_SIZE_16K, *BLOCK_SIZE_32K ]
-            flags       : *CHKSUM_FLAGS_LIST
-            algo        : *CHKSUM_ALGO_LIST
+            inputlen    : [ *INPUT_LEN_16K, *INPUT_LEN_32K ]
         args    :
-            wait        : 5
+            wait        : '0.75'
+            flags       : '0'
+            algo        : 'crc32c'
             test        : *CHKSUM_TEST_YML
+
+    -   name        : Csum16K32KLbdCrc32cPb
+        testcase    : testcases.storage.ymltest2
+        enable      : False
+        ignore      : True
+        iterators   :
+            type        : nested
+            cpus        : *CPUS_ITER_LIST
+            batch_depth : *BATCH_DEPTH_LARGE_ITER_LIST
+            mode        : *MODE_ITER_LIST
+            inputlen    : [ *INPUT_LEN_16K, *INPUT_LEN_32K ]
+        args    :
+            wait        : '0.75'
+            flags       : 'per_block'
+            algo        : 'crc32c'
+            test        : *CHKSUM_TEST_YML
+
 
 #    -   name    : Crypto
 #TBD TBD
@@ -444,7 +566,7 @@ testcases:
 #            cpus        : *CPUS_ITER_LIST
 #            batch_depth : *BATCH_DEPTH_ITER_LIST
 #            mode        : *MODE_ITER_LIST
-#            blocksize   : [ *BLOCK_SIZE_4K, *BLOCK_SIZE_8K, *BLOCK_SIZE_16K, *BLOCK_SIZE_32K ]
+#            inputlen    : [ *INPUT_LEN_4K, *INPUT_LEN_8K, *INPUT_LEN_16K, *INPUT_LEN_32K ]
 #        args    :
 #            dir : *STORAGE_TEST_DIR
 #            wait: 5 # Wait in seconds.
@@ -457,7 +579,7 @@ testcases:
 #TBD TBD
 #        iterators:
 #            mode        : *MODE_ITER_LIST
-#            blocksize   : [ *BLOCK_SIZE_4K, *BLOCK_SIZE_8K, *BLOCK_SIZE_16K, *BLOCK_SIZE_32K ]
+#            inputlen    : [ *INPUT_LEN_4K, *INPUT_LEN_8K, *INPUT_LEN_16K, *INPUT_LEN_32K ]
 #        args    :
 #            dir : *STORAGE_TEST_DIR
 #            wait: 5 # Wait in seconds.

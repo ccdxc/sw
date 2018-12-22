@@ -27,10 +27,11 @@ parser = argparse.ArgumentParser(description='Pensando Storage Offload Test')
 parser.add_argument('--cfg', nargs='+', dest='cfg', 
                     help='Config YML Files (1 or more - space separated)')
 parser.add_argument('--test', dest='test', help='Test YML File')
-parser.add_argument('--wait', dest='wait', default=2, type=int, help='Test Wait Time')
+parser.add_argument('--timeout', dest='timeout', default=60, type=int, help='Test timeout')
 parser.add_argument('--failure-test', dest='failure_test',
                     action='store_true', help='Failure Test')
 GlobalOptions = parser.parse_args()
+GlobalOptions.retry_wait = 0.2
 
 old_success_count = GetSuccessCount()
 old_failure_count = GetFailureCount()
@@ -43,12 +44,14 @@ for cfgidx in range(num_cfgs):
     os.system("cp -v %s /sys/module/pencake/cfg/%d" % (GlobalOptions.cfg[cfgidx], cfgidx))
 os.system("cp -v %s /sys/module/pencake/cfg/%d" % (GlobalOptions.test, num_cfgs))
 os.system("echo start > /sys/module/pencake/cfg/ctl")
-
-time.sleep(GlobalOptions.wait)
-new_success_count = GetSuccessCount()
-new_failure_count = GetFailureCount()
-
 num_tests = GetTestCount()
+
+for retry in range(int(GlobalOptions.timeout / 0.2)):
+    time.sleep(GlobalOptions.retry_wait)
+    new_success_count = GetSuccessCount()
+    new_failure_count = GetFailureCount()
+    change_count = (new_failure_count - old_failure_count) + (new_success_count - old_success_count)
+    if change_count >= num_tests: break
 
 print("PenCAKE Test Results:")
 print(" - Failure Test      : %s" % str(GlobalOptions.failure_test))

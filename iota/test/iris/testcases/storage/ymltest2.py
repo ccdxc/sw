@@ -25,7 +25,7 @@ def Setup(tc):
 def Trigger(tc):
     req = api.Trigger_CreateExecuteCommandsRequest()
     for n in tc.nodes:
-        cmd = "./pnsotest_%s.py --wait %d --cfg blocksize.yml globals.yml --test %s" % (api.GetNodeOs(n), tc.args.wait, tc.args.test)
+        cmd = "./pnsotest_%s.py --cfg blocksize.yml globals.yml --test %s" % (api.GetNodeOs(n), tc.args.test)
         if getattr(tc.args, "failtest", False):
             cmd += " --failure-test"
 

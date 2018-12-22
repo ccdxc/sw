@@ -1,0 +1,168 @@
+svc_chains:
+    - svc_chain:
+        idx     : 1
+        name    : "Compression threshold failure"
+        input:
+            random  : 1234
+            len     : 'param::inputlen'
+        ops:
+            - compress:
+                flags       : 'zero_pad,insert_header'
+                hdr_fmt_idx : 1
+                hdr_algo    : 1
+                threshold   : 4088
+                output_file : '%chain_id%_cp_fail.bin'
+
+svc_chains:
+    - svc_chain:
+        idx     : 2
+        name    : "Compression threshold failure with bypass"
+        input:
+            random  : 1234
+            len     : 'param::inputlen'
+        ops:
+            - compress:
+                flags       : 'zero_pad,insert_header,bypass_onfail'
+                hdr_fmt_idx : 1
+                hdr_algo    : 1
+                threshold   : 4088
+                output_file : '%chain_id%_cp_fail.bin'
+
+svc_chains:
+    - svc_chain:
+        idx     : 3
+        name    : "Compression invalid format id failure"
+        input:
+            pattern : abcdefghij
+            len     : 'param::inputlen'
+        ops:
+            - compress:
+                flags           : 'zero_pad,insert_header'
+                hdr_fmt_idx     : 99
+                hdr_algo        : 99
+                threshold_delta : 8
+                output_file     : '%chain_id%_cp_fail.bin'
+
+    - svc_chain:
+        idx     : 4
+        name    : "Compression invalid format id failure with bypass"
+        input:
+            pattern : abcdefghij
+            len     : 'param::inputlen'
+        ops:
+            - compress:
+                flags           : 'zero_pad,insert_header,bypass_onfail'
+                hdr_fmt_idx     : 99
+                hdr_algo        : 99
+                threshold_delta : 8
+                output_file     : '%chain_id%_cp_fail.bin'
+
+    - svc_chain:
+        idx     : 5
+        name    : "Compression invalid algo failure"
+        input:
+            pattern : abcdefghij
+            len     : 'param::inputlen'
+        ops:
+            - compress:
+                flags           : 'zero_pad,insert_header'
+                algo_type       : 99
+                hdr_fmt_idx     : 1
+                hdr_algo        : 1
+                threshold_delta : 8
+                output_file     : '%chain_id%_cp_fail.bin'
+
+    - svc_chain:
+        idx     : 6
+        name    : "Compression invalid algo failure with bypass"
+        input:
+            pattern : abcdefghij
+            len     : 'param::inputlen'
+        ops:
+            - compress:
+                flags           : 'zero_pad,insert_header,bypass_onfail'
+                algo_type       : 99
+                hdr_fmt_idx     : 1
+                hdr_algo        : 1
+                threshold_delta : 8
+                output_file     : '%chain_id%_cp_fail.bin'
+
+tests:
+    - test:
+        idx         : 1
+        name        : "Compression threshold failure"
+        svc_chains  : 1
+        repeat      : 'param::repeat'
+        batch_depth : 'param::batch_depth'
+        mode        : 'param::mode'
+        validations :
+            - retcode_compare:
+                idx         : 1
+                retcode     : 20005
+                svc_retcodes: 20005
+
+    - test:
+        idx         : 2
+        name        : "Compression threshold failure with bypass"
+        svc_chains  : 2
+        repeat      : 'param::repeat'
+        batch_depth : 'param::batch_depth'
+        mode        : 'param::mode'
+        validations :
+            - retcode_compare:
+                idx         : 1
+                retcode     : 0
+                svc_retcodes: 20005
+
+    - test:
+        idx         : 3
+        name        : "Compression invalid format id failure"
+        svc_chains  : 3
+        repeat        : 'param::repeat'
+        batch_depth   : 'param::batch_depth'
+        mode          : 'param::mode'
+        validations:
+            - retcode_compare:
+                idx         : 1
+                retcode     : 20008
+                svc_retcodes: 20008
+
+    - test:
+        idx       : 4
+        name      : "Compression invalid format id failure with bypass"
+        svc_chains: 4
+        repeat        : 'param::repeat'
+        batch_depth   : 'param::batch_depth'
+        mode          : 'param::mode'
+        validations:
+            - retcode_compare:
+                idx         : 1
+                retcode     : 0
+                svc_retcodes: 20008
+
+    - test:
+        idx       : 5
+        name      : "Compression invalid algo failure"
+        svc_chains: 5
+        repeat        : 'param::repeat'
+        batch_depth   : 'param::batch_depth'
+        mode          : 'param::mode'
+        validations:
+            - retcode_compare:
+                idx         : 1
+                retcode     : 20009
+                svc_retcodes: 20009
+
+    - test:
+        idx: 6
+        name: "Compression invalid algo failure with bypass"
+        svc_chains: 6
+        repeat        : 'param::repeat'
+        batch_depth   : 'param::batch_depth'
+        mode          : 'param::mode'
+        validations:
+            - retcode_compare:
+                idx: 1
+                retcode: 0
+                svc_retcodes: 20009
+

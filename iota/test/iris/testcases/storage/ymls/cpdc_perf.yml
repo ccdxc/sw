@@ -1,0 +1,52 @@
+svc_chains:
+  - svc_chain:
+      idx: 1
+      input:
+        # pattern: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+        random: 12345
+        random_len: 2800
+        len: 8192
+      ops:
+        - compress:
+            flags: 'insert_header'
+            hdr_fmt_idx: 1
+            hdr_algo: 1
+            threshold_delta: 8
+            output_file: '%chain_id%_compressed.bin'
+
+  - svc_chain:
+      idx: 2
+      input:
+        file: '1_compressed.bin'
+      ops:
+        - decompress:
+            flags: 'header_present'
+            hdr_fmt_idx: 1
+            output_file: '%chain_id%_decompressed.bin'
+tests:
+  - test:
+      idx: 1
+      name: 'COMPRESSION_TEST-RAND-PATTERN'
+      svc_chains: 1
+      turbo: 1
+      batch_depth: 16
+      repeat: 8000000
+      mode: 'poll'
+      validations:
+        - retcode_compare:
+            idx: 1
+            retcode: 0
+            svc_retcodes: 0
+  - test:
+      idx: 2
+      name: 'DECOMPRESSION_TEST-RAND-PATTERN'
+      svc_chains: 2
+      turbo: 1
+      batch_depth: 16
+      repeat: 8000000
+      mode: 'poll'
+      validations:
+        - retcode_compare:
+            idx: 1
+            retcode: 0
+            svc_retcodes: 0            

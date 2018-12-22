@@ -1,0 +1,27 @@
+svc_chains:
+    - svc_chain:
+        idx     : 1
+        name    : "Hash"
+        input   :
+            pattern : 'aaabbbaaabbb'
+            len     : '4096'
+        ops:
+            - hash:
+                algo_type   : 'sha2_512'
+                flags       : '0'
+                output_file : '%chain_id%_hash_full.bin'
+
+tests:
+    - test:
+        idx         : 1
+        name        : "Hash_FULL"
+        svc_chains  : 1
+        repeat      : '1000000'
+        batch_depth : '16'
+        mode        : 'poll'
+        turbo       : 1
+        validations :
+            - size_compare:
+                idx     : 1
+                file1   : '%chain_id%_hash_full.bin'
+                val     : '64'

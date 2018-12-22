@@ -3,6 +3,7 @@ import grpc
 import pdb
 import os
 import sys
+import time
 from iota.harness.infra.utils.logger import Logger as Logger
 
 import iota.protos.pygen.types_pb2 as types_pb2
@@ -124,7 +125,12 @@ def Trigger(req):
 def EntityCopy(req):
     global gl_topo_svc_stub
     Logger.debug("Entity Copy Message:")
-    return __rpc(req, gl_topo_svc_stub.EntityCopy)
+    for i in range(5):
+        ret = __rpc(req, gl_topo_svc_stub.EntityCopy)
+        if ret != None: return ret
+        Logger.info("Entity copy failed...Retrying")
+        time.sleep(1)
+    return None
 
 def PushConfig(req):
     global gl_cfg_svc_stub
@@ -391,8 +397,14 @@ def CopyToHost(node_name, files, dest_dir = ""):
     return __CopyCommon(topo_svc.DIR_IN, node_name, "%s_host" % node_name, files, dest_dir)
 
 def CopyToHostTools(node_name, files):
-    return __CopyCommon(topo_svc.DIR_IN, node_name,
-                        "%s_host" % node_name, files, GetHostToolsDir())
+    req = topo_svc.EntityCopyMsg()
+    req.direction = topo_svc.DIR_IN
+    req.node_name = node_name
+    req.entity_name = '%s_host' % node_name
+    req.dest_dir = GetHostToolsDir()
+    for f in files:
+        req.files.append(f)
+    return EntityCopy(req)
 
 def CopyToNaples(node_name, files, dest_dir):
     copy_resp = __CopyCommon(topo_svc.DIR_IN, node_name,
