@@ -1896,7 +1896,7 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 		if (mask & IFCAP_VLAN_HWTSO) {
 			ifp->if_capenable ^= IFCAP_VLAN_HWTSO;
 		}
-		break;
+
 		IONIC_CORE_LOCK(lif);
 		error = ionic_set_hw_feature(lif, hw_features);
 
@@ -1925,7 +1925,6 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 
 	case SIOCADDMULTI:
 	case SIOCDELMULTI:
-		break;
 		IONIC_CORE_LOCK(lif);
 		ionic_set_multi(lif);
 		IONIC_CORE_UNLOCK(lif);
