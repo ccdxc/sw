@@ -19,6 +19,7 @@
 #include <stdbool.h>
 #include <sys/types.h>
 
+// TODO: cleanup - not using these anywhere !!!
 /**
  * @brief    API status codes
  */
@@ -47,6 +48,7 @@ typedef uint32_t  oci_rule_id_t;
 typedef uint32_t  oci_rsc_pool_id_t;
 typedef uint32_t  oci_epoch_t;
 typedef uint32_t  oci_slot_id_t;
+typedef uint32_t  oci_mapping_id_t;
 
 /**
  * @}
