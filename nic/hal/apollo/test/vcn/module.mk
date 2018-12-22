@@ -11,7 +11,7 @@ MODULE_SOLIBS   = pal ociframework ocicore ociapi ocitestutils \
 				  sdkp4 sdkp4utils \
 				  p4pd_common_p4plus_rxdma pdcommon \
 				  p4pd_common_p4plus_txdma asicpd pdcapri capri_csrint \
-				  capri_csr_cpu_hal sdkcapri bm_allocator sdkplatformutils \
+				  capri_csr_cpu_hal sdkcapri bm_allocator sdkplatformutils sdkxcvrdriver \
 				  hal_mock halproto mtrack
 MODULE_LDLIBS   =  ${NIC_COMMON_LDLIBS} \
 				   ${NIC_CAPSIM_LDLIBS} \
