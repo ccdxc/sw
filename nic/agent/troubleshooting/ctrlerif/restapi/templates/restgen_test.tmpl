@@ -63,6 +63,11 @@ var _ Evaluator
                         if !ok {
                             t.Errorf("Could not create test{{title .}}{{title $crudObject}} in Response: %v", {{lower $crudObject}}Get)
                         }
+
+                        // post it again
+                        nresp := Response{}
+                        err = netutils.HTTPPost("http://"+agentRestURL+"/api/mirror/sessions/", &{{lower $crudObject}}Get, &nresp)
+                        Assert(t, err != nil, "POST didn't fail for existing policy")
                     }
                 {{else if strEq . "put"}}
                     func Test{{title $crudObject}}Update(t *testing.T){

@@ -58,6 +58,11 @@ func TestMirrorSessionPost(t *testing.T) {
 	if !ok {
 		t.Errorf("Could not create testPostMirrorSession in Response: %v", mirrorsessionGet)
 	}
+
+	// post it again
+	nresp := Response{}
+	err = netutils.HTTPPost("http://"+agentRestURL+"/api/mirror/sessions/", &mirrorsessionGet, &nresp)
+	Assert(t, err != nil, "POST didn't fail for existing policy")
 }
 
 func TestMirrorSessionUpdate(t *testing.T) {
