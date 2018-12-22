@@ -80,17 +80,24 @@ func (c *Common) SetInventoryPath(p string) {
 func (c Common) ObjectName(ctx context.Context) (string, error) {
 	var o mo.ManagedEntity
 
-	name := c.Name()
-	if name != "" {
-		return name, nil
-	}
-
 	err := c.Properties(ctx, c.Reference(), []string{"name"}, &o)
 	if err != nil {
 		return "", err
 	}
 
-	return o.Name, nil
+	if o.Name != "" {
+		return o.Name, nil
+	}
+
+	// Network has its own "name" field...
+	var n mo.Network
+
+	err = c.Properties(ctx, c.Reference(), []string{"name"}, &n)
+	if err != nil {
+		return "", err
+	}
+
+	return n.Name, nil
 }
 
 func (c Common) Properties(ctx context.Context, r types.ManagedObjectReference, ps []string, dst interface{}) error {
@@ -122,4 +129,15 @@ func (c Common) Rename(ctx context.Context, name string) (*Task, error) {
 	}
 
 	return NewTask(c.c, res.Returnval), nil
+}
+
+func (c Common) SetCustomValue(ctx context.Context, key string, value string) error {
+	req := types.SetCustomValue{
+		This:  c.Reference(),
+		Key:   key,
+		Value: value,
+	}
+
+	_, err := methods.SetCustomValue(ctx, c.c, &req)
+	return err
 }

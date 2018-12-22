@@ -17,11 +17,11 @@ package simulator
 import (
 	"strings"
 
+	"github.com/pensando/vic/pkg/vsphere/simulator/esx"
 	"github.com/vmware/govmomi/vim25/methods"
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/soap"
 	"github.com/vmware/govmomi/vim25/types"
-	"github.com/pensando/vic/pkg/vsphere/simulator/esx"
 )
 
 type ResourcePool struct {
@@ -42,15 +42,15 @@ func NewResourcePool() *ResourcePool {
 
 func NewResourceConfigSpec() types.ResourceConfigSpec {
 	spec := types.ResourceConfigSpec{
-		CpuAllocation:    new(types.ResourceAllocationInfo),
-		MemoryAllocation: new(types.ResourceAllocationInfo),
+		CpuAllocation:    types.ResourceAllocationInfo{},
+		MemoryAllocation: types.ResourceAllocationInfo{},
 	}
 
 	return spec
 }
 
-func (p *ResourcePool) setDefaultConfig(c types.BaseResourceAllocationInfo) {
-	info := c.GetResourceAllocationInfo()
+func (p *ResourcePool) setDefaultConfig(info types.ResourceAllocationInfo) {
+	//info := c.GetResourceAllocationInfo()
 
 	if info.Shares == nil {
 		info.Shares = new(types.SharesInfo)

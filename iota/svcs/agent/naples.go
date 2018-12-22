@@ -46,7 +46,7 @@ var (
 
 var workloadTypeMap = map[iota.WorkloadType]string{
 	iota.WorkloadType_WORKLOAD_TYPE_CONTAINER:  Workload.WorkloadTypeContainer,
-	iota.WorkloadType_WORKLOAD_TYPE_VM:         Workload.WorkloadTypeVM,
+	iota.WorkloadType_WORKLOAD_TYPE_VM:         Workload.WorkloadTypeESX,
 	iota.WorkloadType_WORKLOAD_TYPE_BARE_METAL: Workload.WorkloadTypeBareMetal,
 }
 
@@ -766,6 +766,7 @@ func (naples *naplesHwNode) AddWorkload(in *iota.Workload) (*iota.Workload, erro
 		iotaWload.workload.TearDown()
 		return resp, err
 	}
+	naples.logger.Println("Successfully sent arp probe")
 
 	return resp, nil
 }

@@ -1952,12 +1952,13 @@
   revision = "be1fbeda19366dea804f00efff2dd73a1642fdcc"
 
 [[projects]]
-  digest = "1:5c31c65499027159da4dd7a69132e62bb38a94998e9f5004b8437f1e8de4e3f9"
+  digest = "1:43f3eedd427bcb1522b1bcb10de0f9bfe0cafe78225ebc35585822695fcb6f53"
   name = "github.com/vmware/govmomi"
   packages = [
     ".",
     "find",
     "list",
+    "nfc",
     "object",
     "property",
     "session",
@@ -1973,7 +1974,7 @@
     "vim25/xml",
   ]
   pruneopts = "NUT"
-  revision = "35ddbd457a017bd933712fbbab56f4d6cacb32b5"
+  revision = "6712f991d8852a25ae4304a720463301c1ac4c64"
 
 [[projects]]
   digest = "1:8dec56eca8bcdce50ea9d4a0a973e941b5178b969d1f1ab9c1aab0102502d33a"
@@ -2698,8 +2699,12 @@
     "github.com/vishvananda/netlink",
     "github.com/vishvananda/netns",
     "github.com/vmware/govmomi",
+    "github.com/vmware/govmomi/find",
+    "github.com/vmware/govmomi/object",
+    "github.com/vmware/govmomi/ovf",
     "github.com/vmware/govmomi/property",
     "github.com/vmware/govmomi/view",
+    "github.com/vmware/govmomi/vim25/mo",
     "github.com/vmware/govmomi/vim25/soap",
     "github.com/vmware/govmomi/vim25/types",
     "github.com/willf/bitset",

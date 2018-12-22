@@ -19,12 +19,15 @@ import iota.protos.pygen.types_pb2 as types_pb2
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 from iota.harness.infra.utils.logger import Logger as Logger
 
+ESX_CTRL_VM_BRINGUP_SCRIPT = "%s/iota/bin/iota_esx_setup" % (GlobalOptions.topdir)
+
 class _Testbed:
     def __init__(self):
         self.curr_ts = None     # Current Testsuite
         self.prev_ts = None     # Previous Testsute
         self.__node_ips = []
         self.__os = None
+        self.esx_ctrl_vm_ip = None
 
         self.__fw_upgrade_done = False
         self.__read_testbed_json()
@@ -100,6 +103,10 @@ class _Testbed:
             node_os = getattr(instance, 'NodeOs', None)
             if node_os == "freebsd":
                 node_msg.os = topo_pb2.TESTBED_NODE_OS_FREEBSD
+            elif node_os == "esx":
+                node_msg.os = topo_pb2.TESTBED_NODE_OS_ESX
+                node_msg.esx_username = instance.EsxUsername
+                node_msg.esx_password = instance.EsxPassword
             else:
                 node_msg.os = topo_pb2.TESTBED_NODE_OS_LINUX
         return msg
@@ -134,15 +141,22 @@ class _Testbed:
         proc_hdls = []
         logfiles = []
         for instance in self.__tbspec.Instances:
-            cmd = ["timeout", "1200"]
+            cmd = ["timeout", "1400"]
+            if not hasattr(instance, "NicMgmtIP") or instance.NicMgmtIP is None or instance.NicMgmtIP == '':
+                instance.NicMgmtIP = "1.0.0.2"
             if self.__get_instance_nic_type(instance) == "pensando":
                 cmd.extend([ "%s/iota/scripts/boot_naples.py" % GlobalOptions.topdir ])
                 cmd.extend(["--console-ip", instance.NicConsoleIP])
+                cmd.extend(["--mnic-ip", instance.NicMgmtIP])
                 cmd.extend(["--console-port", instance.NicConsolePort])
                 cmd.extend(["--host-ip", instance.NodeMgmtIP])
                 cmd.extend(["--cimc-ip", instance.NodeCimcIP])
                 cmd.extend(["--image", "%s/nic/naples_fw.tar" % GlobalOptions.topdir])
                 cmd.extend(["--mode", "%s" % api.GetNicMode()])
+                if instance.NodeOs == "esx":
+                    cmd.extend(["--esx-script", ESX_CTRL_VM_BRINGUP_SCRIPT])
+                    cmd.extend(["--host-username", instance.EsxUsername])
+                    cmd.extend(["--host-password", instance.EsxPassword])
                 cmd.extend(["--drivers-pkg", "%s/platform/gen/drivers-%s.tar.xz" % (GlobalOptions.topdir, instance.NodeOs)])
                 cmd.extend(["--uuid", "%s" % instance.Resource.NICUuid])
                 cmd.extend(["--os", "%s" % instance.NodeOs])
@@ -158,6 +172,9 @@ class _Testbed:
                 cmd.extend(["--host-ip", instance.NodeMgmtIP])
                 cmd.extend(["--cimc-ip", instance.NodeCimcIP])
                 cmd.extend(["--os", "%s" % instance.NodeOs])
+                if instance.NodeOs == "esx":
+                    cmd.extend(["--host-username", instance.EsxUsername])
+                    cmd.extend(["--host-password", instance.EsxPassword])
                 logfile = "%s/%s-%s-reboot.log" % (GlobalOptions.logdir, self.curr_ts.Name(), instance.Name)
                 Logger.info("Rebooting Node %s (logfile = %s)" % (instance.Name, logfile))
 
@@ -165,7 +182,7 @@ class _Testbed:
             cmdstring = ""
             for c in cmd: cmdstring += "%s " % c
             Logger.info("Command = ", cmdstring)
-            
+
             loghdl = open(logfile, "w")
             proc_hdl = subprocess.Popen(cmd, stdout=loghdl, stderr=loghdl)
             proc_hdls.append(proc_hdl)
@@ -202,6 +219,10 @@ class _Testbed:
         if resp is None:
             Logger.error("Failed to initialize testbed: ")
             return types.status.FAILURE
+        for instance,node in zip(self.__tbspec.Instances, resp.nodes):
+            if getattr(instance, 'NodeOs', None) == "esx":
+                instance.esx_ctrl_vm_ip = node.esx_ctrl_node_ip_address
+
         return types.status.SUCCESS
 
     def InitForTestsuite(self, ts):

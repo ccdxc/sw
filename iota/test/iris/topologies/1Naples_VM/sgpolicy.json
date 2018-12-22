@@ -1,0 +1,99 @@
+{
+    "sgpolicies": [
+    {
+      "kind": "SGPolicy",
+      "meta": {
+        "name": "allow-all",
+        "tenant": "default",
+        "namespace": "default",
+        "creation-time": "1970-01-01T00:00:00Z",
+        "mod-time": "1970-01-01T00:00:00Z"
+      },
+      "spec": {
+        "attach-tenant": true,
+        "policy-rules": [
+         {
+               "action": "PERMIT",
+               "source": {
+                  "addresses": [
+                     "192.168.100.101"
+                  ]
+               },
+               "destination": {
+                  "addresses": [
+                     "192.168.100.102"
+                  ],
+                  "app-configs": [
+                     {
+                        "protocol": "udp",
+                        "port": "59379"
+                     }
+                  ]
+               }
+         },
+         {
+               "action": "PERMIT",
+               "source": {
+                  "addresses": [
+                     "192.168.100.102"
+                  ]
+               },
+               "destination": {
+                  "addresses": [
+                     "192.168.100.101"
+                  ],
+                  "app-configs": [
+                     {
+                        "protocol": "udp",
+                        "port": "59739"
+                     }
+                  ]
+               }
+         },
+         {
+               "action": "PERMIT",
+               "source": {
+                  "addresses": [
+                     "192.168.100.101"
+                  ]
+               },
+               "destination": {
+                  "addresses": [
+                     "192.168.100.102"
+                  ],
+                  "app-configs": [
+                     {
+                        "protocol": "udp",
+                        "port": "69"
+                     }
+                  ]
+               }
+         },
+         {
+               "action": "PERMIT",
+               "source": {
+                  "addresses": [
+                     "192.168.100.102"
+                  ]
+               },
+               "destination": {
+                  "addresses": [
+                     "192.168.100.101"
+                  ],
+                  "app-configs": [
+                     {
+                        "protocol": "udp",
+                        "port": "69"
+                     }
+                  ]
+               }
+         },
+         {
+            "action": "PERMIT"
+         }
+        ]
+      },
+      "status": {}
+    }
+    ]
+}

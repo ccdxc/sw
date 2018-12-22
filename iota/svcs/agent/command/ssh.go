@@ -62,14 +62,14 @@ func RunSSHCommand(SSHHandle *ssh.Client, cmd string, TimedOut uint32, sudo bool
 	shout := io.MultiWriter(&stdoutBuf)
 	ssherr := io.MultiWriter(&stderrBuf)
 
-        ioCopies := make(chan int)
+	ioCopies := make(chan int)
 	go func() {
 		io.Copy(shout, sshOut)
-                ioCopies <- 1
+		ioCopies <- 1
 	}()
 	go func() {
 		io.Copy(ssherr, sshErr)
-                ioCopies <- 2
+		ioCopies <- 2
 	}()
 
 	if bg {
@@ -96,9 +96,9 @@ func RunSSHCommand(SSHHandle *ssh.Client, cmd string, TimedOut uint32, sudo bool
 		} else {
 			logger.Println("sucess command : " + cmd)
 		}
-                for i := 0; i < 2; i++ {
-                        <-ioCopies
-                }
+		for i := 0; i < 2; i++ {
+			<-ioCopies
+		}
 		cmdInfo.Ctx.Stdout = stdoutBuf.String()
 		cmdInfo.Ctx.Stderr = stderrBuf.String()
 		cmdInfo.Ctx.Done = true
@@ -132,7 +132,7 @@ func RunSSHCommand(SSHHandle *ssh.Client, cmd string, TimedOut uint32, sudo bool
 }
 
 //StartSSHBgCommand start bg ssh Command
-func StartSSHBgCommand(SSHHandle *ssh.Client, cmd string) (*CommandInfo, error) {
+func StartSSHBgCommand(SSHHandle *ssh.Client, cmd string, sudo bool) (*CommandInfo, error) {
 	var stdoutBuf, stderrBuf bytes.Buffer
 	cmdInfo := &CommandInfo{Ctx: &CommandCtx{}}
 
@@ -154,6 +154,9 @@ func StartSSHBgCommand(SSHHandle *ssh.Client, cmd string) (*CommandInfo, error) 
 
 		fullCmd := "sh -c \"" + cmd + "\""
 
+		if sudo {
+			fullCmd = SudoCmd(fullCmd)
+		}
 		err := sshSession.Start(fullCmd)
 		if err == nil {
 			err := sshSession.Wait()

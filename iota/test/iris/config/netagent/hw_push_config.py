@@ -87,8 +87,8 @@ def AddWorkloads():
 
 def Main(step):
     #time.sleep(120)
-    agent_ips = api.GetNaplesMgmtIpAddresses()
-    netagent_api.Init(agent_ips, hw = True)
+    agent_nodes = api.GetNaplesHostnames()
+    netagent_api.Init(agent_nodes, hw = True)
 
     netagent_api.ReadConfigs(api.GetTopologyDirectory())
     #Delete path is not stable yet

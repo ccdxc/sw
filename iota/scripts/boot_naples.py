@@ -7,10 +7,13 @@ import time
 import socket
 import pdb
 import requests
+import subprocess
+import json
 
 HOST_NAPLES_DIR         = "/naples"
 HOST_NAPLES_DRIVERS_DIR = "%s/drivers" % HOST_NAPLES_DIR
 HOST_NAPLES_IMAGES_DIR  = "%s/images" % HOST_NAPLES_DIR
+HOST_ESX_NAPLES_IMAGES_DIR  = "/home/vm"
 
 parser = argparse.ArgumentParser(description='Naples Boot Script')
 # Mandatory parameters
@@ -56,6 +59,13 @@ parser.add_argument('--mode-change', dest='mode_change',
                     action='store_true', help='Only change mode and reboot.')
 parser.add_argument('--os', dest='os',
                     default="", help='Node OS (Freebsd or Linux).')
+parser.add_argument('--mnic-ip', dest='mnic_ip',
+                    default="1.0.0.2", help='Mnic IP.')
+parser.add_argument('--skip-driver-install', dest='skip_driver_install',
+                    action='store_true', help='Skips host driver install')
+parser.add_argument('--esx-script', dest='esx_script',
+                    default="", help='ESX start up script')
+
 
 GlobalOptions = parser.parse_args()
 
@@ -66,10 +76,15 @@ ROOT_EXP_PROMPT="~#"
 if GlobalOptions.os == 'freebsd':
     ROOT_EXP_PROMPT="~]#"
 
+if GlobalOptions.os == 'esx':
+
+    ROOT_EXP_PROMPT="~]"
+
 def IpmiReset():
     os.system("ipmitool -I lanplus -H %s -U %s -P %s power cycle" %\
               (GlobalOptions.cimc_ip, GlobalOptions.cimc_username, GlobalOptions.cimc_password))
     return
+
 
 class NaplesManagement:
     def __init__(self):
@@ -111,7 +126,7 @@ class NaplesManagement:
     def connect(self):
         while True:
             self.hdl = pexpect.spawn("telnet %s %s" %\
-                                     (GlobalOptions.console_ip, 
+                                     (GlobalOptions.console_ip,
                                       GlobalOptions.console_port))
             self.hdl.timeout = GlobalOptions.timeout
             self.hdl.logfile = sys.stdout.buffer
@@ -122,11 +137,12 @@ class NaplesManagement:
             else:
                 self.__clearline()
         self.hdl.sendline("")
+
         match_idx = self.hdl.expect_exact(["capri login:", "#"], timeout = 120)
         if match_idx == 0:
             self.login()
         return
-   
+
     def __reset(self):
         self.hdl.sendline("sync")
         self.hdl.expect_exact("#")
@@ -151,17 +167,20 @@ class NaplesManagement:
     def boot_altfw(self):
         self.__get_capri_prompt()
         self.hdl.sendline("boot goldfw")
-        self.hdl.expect_exact("capri login:", timeout = 120)
+        if GlobalOptions.os == 'esx':
+            self.hdl.expect_exact(["capri-gold login:", "#"], timeout = 120)
+        else:
+            self.hdl.expect_exact("capri login:", timeout = 120)
         self.login()
         return
 
     def set_mode(self):
         self.hdl.sendline("echo %s > /sysconfig/config0/app-start.conf && sync" % GlobalOptions.mode)
         self.hdl.expect_exact("#")
-        
+
         self.hdl.sendline("echo %s > /sysconfig/config0/sysuuid" % GlobalOptions.uuid)
         self.hdl.expect_exact("#")
-        
+
         self.hdl.sendline("rm -rf /data/log")
         self.hdl.expect_exact("#")
         return
@@ -199,11 +218,11 @@ class HostManagement:
         self.__ssh_host = "%s@%s" % (GlobalOptions.host_username, GlobalOptions.host_ip)
         self.__scp_pfx = "sshpass -p %s scp -o StrictHostKeyChecking=no " % GlobalOptions.host_password
         self.__ssh_pfx = "sshpass -p %s ssh -o StrictHostKeyChecking=no " % GlobalOptions.host_password
-        self.__wait_for_ssh()
-        self.__connect()
+        self._wait_for_ssh()
+        self._connect()
         return
 
-    def __connect(self):
+    def _connect(self):
         self.hdl = pexpect.spawn("ssh -o StrictHostKeyChecking=no %s" % self.__ssh_host)
         self.hdl.timeout = GlobalOptions.timeout
         self.hdl.logfile = sys.stdout.buffer
@@ -213,15 +232,15 @@ class HostManagement:
         self.hdl.sendline("uptime")
         self.hdl.expect_exact(ROOT_EXP_PROMPT)
         return
- 
 
-    def __wait_for_ssh(self):
+
+    def _wait_for_ssh(self, port = 22):
         print("Waiting for host to be up.")
         for retry in range(150):
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            ret = sock.connect_ex(('%s' % GlobalOptions.host_ip, 22))
+            ret = sock.connect_ex(('%s' % GlobalOptions.host_ip, port))
             sock.settimeout(1)
-            if ret == 0: 
+            if ret == 0:
                 return
             else:
                 time.sleep(5)
@@ -244,8 +263,8 @@ class HostManagement:
 
         if naples_dir:
             naples_dest_filename = naples_dir + "/" + os.path.basename(src_filename)
-            ret = self.run("sshpass -p %s scp -o StrictHostKeyChecking=no %s root@1.0.0.2:%s" %\
-                           (GlobalOptions.password, dest_filename, naples_dest_filename))
+            ret = self.run("sshpass -p %s scp -o StrictHostKeyChecking=no %s root@%s:%s" %\
+                           (GlobalOptions.password, dest_filename, GlobalOptions.mnic_ip, naples_dest_filename))
             assert(ret == 0)
 
         return 0
@@ -257,7 +276,7 @@ class HostManagement:
             cmd = "%s %s \"%s\"" % (self.__ssh_pfx, self.__ssh_host, command)
         print(cmd)
         retcode = os.system(cmd)
-        if not ignore_result: 
+        if not ignore_result:
             assert(retcode == 0)
         return retcode
 
@@ -269,20 +288,23 @@ class HostManagement:
         self.hdl.sendline("uptime")
         self.hdl.expect_exact(ROOT_EXP_PROMPT)
         self.hdl.sendline("reboot && sleep 30")
+        print("Rebooted host....")
         match = self.hdl.expect_exact([ROOT_EXP_PROMPT, pexpect.TIMEOUT, pexpect.EOF], timeout=10)
         self.hdl.close()
-        
+
         # Wait for the host to start rebooting.
+        print("wating for ssh..")
         time.sleep(30)
-        self.__wait_for_ssh()
-        self.__connect()
+        self._wait_for_ssh()
+        print("connecting....")
+        self._connect()
         return
 
     def init(self):
         assert(self.run("lspci | grep 1dd8") == 0)
         self.hdl.sendline("%s/nodeinit.sh" % HOST_NAPLES_DIR)
         self.hdl.expect_exact(ROOT_EXP_PROMPT)
-        self.run("ping -c 5 1.0.0.2")
+        self.run("ping -c 5 %s" % (GlobalOptions.mnic_ip))
         self.run("rm -f /root/.ssh/known_hosts")
         self.run("rm -rf /pensando")
         self.run("mkdir /pensando")
@@ -308,42 +330,183 @@ class HostManagement:
 
         return
 
+    def copy_fw_image(self):
+        # Copy the firmare
+        self.copyin(GlobalOptions.image,
+                    host_dir = HOST_NAPLES_IMAGES_DIR,
+                    naples_dir = "/tmp")
+
+    def install_scripts(self):
+        self.copyin("../platform/hosttools/x86_64/%s/memtun" % GlobalOptions.os, HOST_NAPLES_DIR)
+        self.copyin("scripts/%s/nodeinit.sh" % GlobalOptions.os, HOST_NAPLES_DIR)
+
+
+class EsxHostManagement(HostManagement):
+    def __init__(self):
+        HostManagement.__init__(self)
+        self.__fw_copied = False
+        return
+
+    def ctrl_vm_copyin(self, src_filename, host_dir, naples_dir = None):
+        dest_filename = host_dir + "/" + os.path.basename(src_filename)
+        cmd = "%s %s %s:%s" % (self.__ctr_vm_scp_pfx, src_filename,
+                               self.__ctr_vm_ssh_host, dest_filename)
+        print(cmd)
+        ret = os.system(cmd)
+        assert(ret == 0)
+
+        self.ctrl_vm_run("sync")
+        ret = self.ctrl_vm_run("ls -l %s" % dest_filename)
+        assert(ret == 0)
+
+        if naples_dir:
+            naples_dest_filename = naples_dir + "/" + os.path.basename(src_filename)
+            ret = self.ctrl_vm_run("sshpass -p %s scp -o StrictHostKeyChecking=no %s root@%s:%s" %\
+                           (GlobalOptions.password, dest_filename, GlobalOptions.mnic_ip, naples_dest_filename))
+            assert(ret == 0)
+
+        return 0
+
+    def ctrl_vm_run(self, command, background = False, ignore_result = False):
+        if background:
+            cmd = "%s -f %s \"%s\"" % (self.__ctr_vm_ssh_pfx, self.__ctr_vm_ssh_host, command)
+        else:
+            cmd = "%s %s \"%s\"" % (self.__ctr_vm_ssh_pfx, self.__ctr_vm_ssh_host, command)
+        print(cmd)
+        retcode = os.system(cmd)
+        if not ignore_result:
+            assert(retcode == 0)
+        return retcode
+
+    def __check_naples_deivce(self):
+        assert(self.run("lspci | grep Pensando") == 0)
+
+    def __esx_host_init(self):
+        outFile = "/tmp/esx_" +  GlobalOptions.host_ip + ".json"
+        self._wait_for_ssh(port=443)
+        time.sleep(30)
+        esx_startup_cmd = ["timeout", "1200"]
+        esx_startup_cmd.extend([GlobalOptions.esx_script])
+        esx_startup_cmd.extend(["--esx-host", GlobalOptions.host_ip])
+        esx_startup_cmd.extend(["--esx-username", GlobalOptions.host_username])
+        esx_startup_cmd.extend(["--esx-password", GlobalOptions.host_password])
+        esx_startup_cmd.extend(["--esx-outfile", outFile])
+        proc_hdl = subprocess.Popen(esx_startup_cmd)
+        while proc_hdl.poll() is None:
+            time.sleep(5)
+            continue
+        assert(proc_hdl.returncode == 0)
+        with open(outFile) as f:
+            data = json.load(f)
+            self.__esx_ctrl_vm_ip = data["ctrlVMIP"]
+            self.__esx_ctrl_vm_username = data["ctrlVMUsername"]
+            self.__esx_ctrl_vm_password = data["ctrlVMPassword"]
+
+    def init(self):
+        self.__check_naples_deivce()
+        if not self.__fw_copied:
+            self.__esx_host_init()
+            self.__ctr_vm_ssh_host = "%s@%s" % (self.__esx_ctrl_vm_username, self.__esx_ctrl_vm_ip)
+            self.__ctr_vm_scp_pfx = "sshpass -p %s scp -o StrictHostKeyChecking=no " % self.__esx_ctrl_vm_password
+            self.__ctr_vm_ssh_pfx = "sshpass -p %s ssh -o StrictHostKeyChecking=no " % self.__esx_ctrl_vm_password
+
+    def copy_fw_image(self):
+        # Copy the firmare
+        self.ctrl_vm_copyin(GlobalOptions.image,
+                    host_dir = HOST_ESX_NAPLES_IMAGES_DIR,
+                    naples_dir = "/tmp")
+        self.__fw_copied = True
+
+    def install_scripts(self):
+        pass
+
+    def install_drivers(self):
+        if GlobalOptions.drivers_pkg:
+            # Install IONIC driver package.
+            #ESX removes folder after reboot, add it again
+            self.run("rm -rf %s" % HOST_NAPLES_DIR)
+            self.run("mkdir -p %s" % HOST_NAPLES_DRIVERS_DIR)
+            self.run("mkdir -p %s" % HOST_NAPLES_IMAGES_DIR)
+
+            self.copyin(GlobalOptions.drivers_pkg, HOST_NAPLES_DRIVERS_DIR)
+            assert(self.run("cd %s && tar xf %s" %\
+                     (HOST_NAPLES_DRIVERS_DIR, os.path.basename(GlobalOptions.drivers_pkg))) == 0)
+            install_success = False
+            for _ in range(0, 3):
+                ret = self.run("cd %s/drivers-esx/ && chmod +x ./build.sh && ./build.sh" % HOST_NAPLES_DRIVERS_DIR, ignore_result = True)
+                if ret == 0:
+                    install_success = True
+                    break
+                print("Installed failed , trying again..")
+                self._connect()
+            assert(install_success)
+            self.reboot()
+            #After installing drivers, no need to do esx startup as we are done installing firmware and driver
+            self.__check_naples_deivce()
+            #Sleep for some time to get all other services up
+            time.sleep(30)
+
+
 def ChangeNicMode():
     nap = NaplesManagement()
     nap.connect()
     nap.set_mode()
     #nap.reboot()
 
-    host = HostManagement()
+    host = None
+    if GlobalOptions.os == 'esx':
+        host = EsxHostManagement()
+    else:
+        host = HostManagement()
     host.reboot()
     host.init()
     host.install_drivers()
     return
 
+class flushfile(object):
+    def __init__(self, f):
+        self.f = f
+        self.buffer = sys.stdout.buffer
+
+    def write(self, x):
+        self.f.write(x)
+        self.f.flush()
+
+    def flush(self):
+        self.f.flush()
+
+sys.stdout = flushfile(sys.stdout)
+
 def Main():
     nap = NaplesManagement()
     nap.connect()
     nap.boot_altfw()
-    
-    host = HostManagement()
+
+    host = None
+    if GlobalOptions.os == 'esx':
+        host = EsxHostManagement()
+    else:
+        host = HostManagement()
     host.run("rm -rf %s" % HOST_NAPLES_DIR)
     host.run("mkdir -p %s" % HOST_NAPLES_DRIVERS_DIR)
     host.run("mkdir -p %s" % HOST_NAPLES_IMAGES_DIR)
-    host.copyin("../platform/hosttools/x86_64/%s/memtun" % GlobalOptions.os, HOST_NAPLES_DIR)
-    host.copyin("scripts/%s/nodeinit.sh" % GlobalOptions.os, HOST_NAPLES_DIR)
+
+    host.install_scripts()
     host.reboot()
     host.init()
 
     # Copy the firmare
-    host.copyin(GlobalOptions.image, 
-                host_dir = HOST_NAPLES_IMAGES_DIR,
-                naples_dir = "/tmp")
-    
+    host.copy_fw_image()
+
+    #After host reboot, naples also rebooted.
+    if GlobalOptions.os == 'esx':
+        nap.login()
+
     # Install the firmware
     nap.install_fw()
     host.reboot()
     host.init()
-        
+
     # Install the drivers.
     host.install_drivers()
     return

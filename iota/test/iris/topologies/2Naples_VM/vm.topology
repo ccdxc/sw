@@ -1,0 +1,19 @@
+meta:
+    name: 2Naples_VM
+    description: 2Naples VM Topology
+
+nodes:
+    - node: node1
+      name: node1
+      role: PERSONALITY_NAPLES
+      workloads:
+            type    : WORKLOAD_TYPE_VM
+            image   : "build-115"
+
+
+    - node: node2
+      name: node2
+      role: PERSONALITY_NAPLES
+      workloads:
+            type    : WORKLOAD_TYPE_VM
+            image   : "build-115"

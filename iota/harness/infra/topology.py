@@ -41,6 +41,9 @@ class Node(object):
 
         self.__ip_address = self.__inst.NodeMgmtIP
         self.__os = getattr(self.__inst, "NodeOs", "linux")
+        self.__nic_mgmt_ip = getattr(self.__inst, "NicMgmtIP", None)
+        if self.__nic_mgmt_ip is None or self.__nic_mgmt_ip == "" :
+            self.__nic_mgmt_ip = "1.0.0.2"
 
         self.__role = self.__get_instance_role(spec.role)
 
@@ -50,6 +53,9 @@ class Node(object):
         self.__data_intfs = [ "eth2", "eth3" ]
         self.__host_intfs = []
         self.__host_if_alloc_idx = 0
+        self.__esx_username = getattr(self.__inst, "EsxUsername", "")
+        self.__esx_password = getattr(self.__inst, "EsxPassword", "")
+        self.__esx_ctrl_vm_ip = getattr(self.__inst, "esx_ctrl_vm_ip", "")
 
         if self.IsWorkloadNode():
             self.__workload_type = topo_pb2.WorkloadType.Value(spec.workloads.type)
@@ -71,6 +77,9 @@ class Node(object):
 
     def GetNicType(self):
         return self.__inst.Resource.NICType
+
+    def GetNicMgmtIP(self):
+        return self.__nic_mgmt_ip
 
     def Name(self):
         return self.__name
@@ -114,6 +123,8 @@ class Node(object):
         return self.__control_ip
 
     def MgmtIpAddress(self):
+        if self.__os== 'esx':
+            return self.__esx_ctrl_vm_ip
         return self.__ip_address
 
     def WorkloadType(self):
@@ -127,6 +138,12 @@ class Node(object):
         msg.image = ""
         msg.ip_address = self.__ip_address
         msg.name = self.__name
+
+        if self.__os== 'esx':
+            msg.os = topo_pb2.TESTBED_NODE_OS_ESX
+            msg.esx_config.username = self.__esx_username
+            msg.esx_config.password = self.__esx_password
+            msg.esx_config.ip_address = self.__ip_address
 
         if self.Role() == topo_pb2.PERSONALITY_VENICE:
             msg.venice_config.control_intf = self.__control_intf
@@ -149,7 +166,11 @@ class Node(object):
                 msg.naples_config.venice_ips.append(str(n.ControlIpAddress()))
 
             # TBD: Fix these hard-code values and use it from testbed json.
-            msg.naples_config.naples_ip_address = "1.0.0.2"
+            if self.__nic_mgmt_ip is None or self.__nic_mgmt_ip == "" :
+                msg.naples_config.naples_ip_address = "1.0.0.2"
+            else:
+                msg.naples_config.naples_ip_address = self.__nic_mgmt_ip
+
             msg.naples_config.naples_username = "root"
             msg.naples_config.naples_password = "pen123"
 
@@ -331,6 +352,13 @@ class Topology(object):
 
     def GetNodeOs(self, node_name):
         return self.__nodes[node_name].GetOs()
+
+    def GetNaplesMgmtIP(self, node_name):
+        if self.__nodes[node_name].IsNaples():
+            return self.__nodes[node_name].MgmtIpAddress()
+
+    def GetNicMgmtIP(self, node_name):
+        return self.__nodes[node_name].GetNicMgmtIP()
 
     def GetNicType(self, node_name):
         return self.__nodes[node_name].GetNicType()

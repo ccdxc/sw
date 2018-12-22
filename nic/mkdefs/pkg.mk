@@ -57,8 +57,13 @@ package-ionic:
 	@echo "Building IONIC driver package."
 	${TOPDIR}/platform/tools/drivers-linux.sh
 
+.PHONY: package-esx
+package-esx:
+	@echo "Building ESX IONIC driver package."
+	${TOPDIR}/platform/tools/drivers-esx.sh
+
 .PHONY: package-drivers
-package-drivers: package-ionic package-storage-offload package-freebsd
+package-drivers: package-ionic package-storage-offload package-freebsd package-esx
 
 .PHONY: package-freebsd
 package-freebsd:

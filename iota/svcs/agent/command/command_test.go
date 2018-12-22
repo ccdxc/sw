@@ -78,7 +78,7 @@ func Test_SSH_Background(t *testing.T) {
 	logger := log.New()
 	logger.Out = io.MultiWriter(os.Stdout)
 
-	cmdResp, err := StartSSHBgCommand(SSHHandle, "sleep 300")
+	cmdResp, err := StartSSHBgCommand(SSHHandle, "sleep 300", false)
 	TestUtils.Assert(t, err == nil, "Command succeded!")
 	TestUtils.Assert(t, !cmdResp.Ctx.Done, "Command not completed!")
 	TestUtils.Assert(t, cmdResp.Handle != nil, "Command Handle set ")
@@ -90,7 +90,7 @@ func Test_SSH_Background(t *testing.T) {
 	TestUtils.Assert(t, cmdResp.Handle == nil, "Command Handle not set ")
 	TestUtils.Assert(t, !cmdResp.Ctx.TimedOut, "Command TimedOut!")
 
-	cmdResp, err = StartSSHBgCommand(SSHHandle, "ping abc.com")
+	cmdResp, err = StartSSHBgCommand(SSHHandle, "ping abc.com", false)
 	TestUtils.Assert(t, err == nil, "Command succeded!")
 	TestUtils.Assert(t, !cmdResp.Ctx.Done, "Command not completed!")
 	TestUtils.Assert(t, cmdResp.Handle != nil, "Command Handle set ")

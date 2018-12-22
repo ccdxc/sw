@@ -10,6 +10,7 @@ import (
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	constants "github.com/pensando/sw/iota/svcs/common"
 	"github.com/pensando/sw/iota/svcs/common/runner"
+	vmware "github.com/pensando/sw/iota/svcs/common/vmware"
 	"github.com/pensando/sw/venice/utils/log"
 	"golang.org/x/crypto/ssh"
 )
@@ -20,7 +21,15 @@ const (
 
 // AddNode adds a node to the topology
 func (n *TestNode) AddNode() error {
-	addr := fmt.Sprintf("%s:%d", n.Node.IpAddress, constants.SSHPort)
+	var ip string
+	var err error
+
+	if ip, err = n.GetNodeIP(); err != nil {
+		log.Errorf("TOPO SVC | CopyTo node failed to get node IP")
+		return fmt.Errorf("TOPO SVC | CopyTo node failed to get node IP")
+	}
+
+	addr := fmt.Sprintf("%s:%d", ip, constants.SSHPort)
 	sshclient, err := ssh.Dial("tcp", addr, n.SSHCfg)
 	if sshclient == nil || err != nil {
 		msg := fmt.Sprintf("SSH connect to %v (%v) failed", n.Node.Name, n.Node.IpAddress)
@@ -48,29 +57,72 @@ func (n *TestNode) AddNode() error {
 	return nil
 }
 
+func (n *TestNode) waitForNodeUp(timeout time.Duration) error {
+	cTimeout := time.After(time.Second * time.Duration(timeout))
+	for {
+		conn, _ := net.DialTimeout("tcp", net.JoinHostPort(n.Node.GetIpAddress(), "22"), 2*time.Second)
+		if conn != nil {
+			log.Printf("Connected to host : ", n.Node.GetIpAddress())
+			conn.Close()
+			break
+		}
+		select {
+		case <-cTimeout:
+			msg := fmt.Sprintf("Timeout system to be up %s ", n.Node.GetIpAddress())
+			log.Errorf(msg)
+			return errors.New(msg)
+		default:
+			time.Sleep(100 * time.Millisecond)
+		}
+	}
+	return nil
+}
+
+//GetAgentURL get agents URL
+func (n *TestNode) GetAgentURL() (string, error) {
+
+	var ip string
+	var err error
+	if ip, err = n.GetNodeIP(); err != nil {
+		return "", err
+	}
+
+	agentURL := fmt.Sprintf("%s:%d", ip, constants.IotaAgentPort)
+	return agentURL, nil
+}
+
+//GetNodeIP gets node IP
+func (n *TestNode) GetNodeIP() (string, error) {
+
+	var ip string
+	var err error
+	var host *vmware.Host
+
+	if n.Node.GetOs() != iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+		ip = n.Node.IpAddress
+	} else {
+		if n.Node.EsxConfig == nil {
+			log.Errorf("TOPO SVC | GetNodeIP | No ESX config present %v", err.Error())
+			return "", err
+		}
+		host, err = vmware.NewHost(context.Background(), n.Node.EsxConfig.IpAddress, n.Node.EsxConfig.Username, n.Node.EsxConfig.Password)
+		if err != nil {
+			log.Errorf("TOPO SVC | GetNodeIP | Failed to  connect to ESX host  %v %v %v %v", err.Error(), n.Node.EsxConfig.IpAddress, n.Node.EsxConfig.Username, n.Node.EsxConfig.Password)
+			return "", err
+		}
+
+		ip, err = host.GetVMIP(constants.EsxControlVMName)
+		if err != nil {
+			log.Errorf("TOPO SVC | GetNodeIP | Failed to get IP address for control VM  %v", err.Error())
+			return "", err
+		}
+	}
+
+	return ip, nil
+}
+
 //RestartNode Restart node
 func (n *TestNode) RestartNode() error {
-
-	waitForNodeUp := func(timeout time.Duration) error {
-		cTimeout := time.After(time.Second * time.Duration(timeout))
-		for {
-			conn, _ := net.DialTimeout("tcp", net.JoinHostPort(n.Node.GetIpAddress(), "22"), 2*time.Second)
-			if conn != nil {
-				log.Printf("Connected to host : ", n.Node.GetIpAddress())
-				conn.Close()
-				break
-			}
-			select {
-			case <-cTimeout:
-				msg := fmt.Sprintf("Timeout system to be up %s ", n.Node.GetIpAddress())
-				log.Errorf(msg)
-				return errors.New(msg)
-			default:
-				time.Sleep(100 * time.Millisecond)
-			}
-		}
-		return nil
-	}
 
 	runner := runner.NewRunner(n.SSHCfg)
 	addr := fmt.Sprintf("%s:%d", n.Node.IpAddress, constants.SSHPort)
@@ -80,7 +132,7 @@ func (n *TestNode) RestartNode() error {
 
 	time.Sleep(3 * time.Second)
 
-	if err := waitForNodeUp(restartTimeout); err != nil {
+	if err := n.waitForNodeUp(restartTimeout); err != nil {
 		return err
 	}
 

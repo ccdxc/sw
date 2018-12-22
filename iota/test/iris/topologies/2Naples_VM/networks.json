@@ -1,0 +1,23 @@
+{
+    "networks" : [
+      {
+        "kind": "Network",
+        "meta": {
+          "name": "nw0",
+          "tenant": "default",
+          "namespace": "default",
+          "generation-id": "",
+          "creation-time": "1970-01-01T00:00:00Z",
+          "mod-time": "1970-01-01T00:00:00Z"
+        },
+        "spec": {
+          "ipv4-subnet": "192.168.100.0/24",
+          "ipv4-gateway": "192.168.100.1",
+          "ipv6-subnet": "2000::/64",
+          "ipv6-gateway": "2000::1/64",
+          "vlan-id": -1
+        },
+        "status": {}
+      }
+    ]
+}

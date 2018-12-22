@@ -1,0 +1,77 @@
+{
+    "TestbedID": 7,
+    "TestbedVlanBase": 300,
+    "Instances": [
+        {
+            "Type": "bm",
+            "DataNetworks": [
+                {
+                    "Name"              : "data-1",
+                    "SwitchIP"          : "lab-bm5-n3k-1",
+                    "SwitchPassword"    : "N0isystem$",
+                    "SwitchPort"        : 25,
+                    "SwitchUsername"    : "admin"
+               },
+               {
+                   "Name"               : "data-2",
+                   "SwitchIP"           : "lab-bm5-n3k-1",
+                   "SwitchPassword"     : "N0isystem$",
+                   "SwitchPort"         : 26,
+                   "SwitchUsername"     : "admin"
+               }
+            ],
+            "NodeMgmtIP"    : "192.168.69.181",
+            "NodeCimcIP"    : "lab-bm4-30-cimc",
+            "NodeOs"        : "esx",
+            "NicConsoleIP"  : "chamber-ts3",
+            "NicConsolePort": "2031",
+            "NicMgmtIP"     : "169.254.0.1",
+            "Name"          : "lab-bm4-30",
+	    "EsxUsername"   : "root",
+	    "EsxPassword"   : "ubuntu123",
+            "Resource"      : {
+                "NICType"       : "pensando",
+                "NICSerialNum"  : "FLM1842002D",
+                "NICUuid"       : "00:AE:DA:00:0D:38"
+            }
+       },
+        {
+            "Type": "bm",
+            "DataNetworks": [
+                {
+                    "Name"              : "data-1",
+                    "SwitchIP"          : "lab-bm5-n3k-1",
+                    "SwitchPassword"    : "N0isystem$",
+                    "SwitchPort"        : 25,
+                    "SwitchUsername"    : "admin"
+               },
+               {
+                   "Name"               : "data-2",
+                   "SwitchIP"           : "lab-bm5-n3k-1",
+                   "SwitchPassword"     : "N0isystem$",
+                   "SwitchPort"         : 26,
+                   "SwitchUsername"     : "admin"
+               }
+            ],
+            "NodeMgmtIP"    : "192.168.68.126",
+            "NodeCimcIP"    : "lab-bm4-31-cimc",
+            "NodeOs"        : "esx",
+            "NicConsoleIP"  : "chamber-ts3",
+            "NicConsolePort": "2032",
+            "NicMgmtIP"     : "169.254.0.1",
+            "Name"          : "lab-bm4-31",
+	    "EsxUsername"   : "root",
+	    "EsxPassword"   : "ubuntu123",
+            "Resource"      : {
+                "NICType"       : "pensando",
+                "NICSerialNum"  : "FLM1842002D",
+                "NICUuid"       : "00:AE:FA:00:0D:38"
+            }
+       }
+  ],
+  "Provision": {
+    "Username": "vm",
+    "Password": "vm",
+    "PrivateKeyFile": ""
+  }
+}

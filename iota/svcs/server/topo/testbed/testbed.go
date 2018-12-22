@@ -1,7 +1,10 @@
 package testbed
 
 import (
+	"context"
 	"fmt"
+	"os"
+	"os/exec"
 
 	"golang.org/x/crypto/ssh"
 
@@ -9,12 +12,133 @@ import (
 	constants "github.com/pensando/sw/iota/svcs/common"
 	"github.com/pensando/sw/iota/svcs/common/copier"
 	"github.com/pensando/sw/iota/svcs/common/runner"
+	vmware "github.com/pensando/sw/iota/svcs/common/vmware"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pkg/errors"
 )
+
+func (n *TestNode) downloadControlVMImage() (string, error) {
+
+	ctrlVMDir := constants.ControlVMImageDirectory + "/" + constants.EsxControlVMImage
+	imageName := constants.EsxControlVMImage + ".ova"
+	cwd, _ := os.Getwd()
+	mkdir := []string{"mkdir", "-p", ctrlVMDir}
+	if stdout, err := exec.Command(mkdir[0], mkdir[1:]...).CombinedOutput(); err != nil {
+		return "", errors.Wrap(err, string(stdout))
+	}
+
+	os.Chdir(ctrlVMDir)
+	defer os.Chdir(cwd)
+
+	buildIt := []string{constants.BuildItBinary, "-t", constants.BuildItURL, "image", "pull", "-o", imageName, constants.EsxControlVMImage}
+	if stdout, err := exec.Command(buildIt[0], buildIt[1:]...).CombinedOutput(); err != nil {
+		return "", errors.Wrap(err, string(stdout))
+	}
+
+	tarCmd := []string{"tar", "-xvf", imageName}
+	if stdout, err := exec.Command(tarCmd[0], tarCmd[1:]...).CombinedOutput(); err != nil {
+		return "", errors.Wrap(err, string(stdout))
+	}
+
+	return ctrlVMDir, nil
+}
+
+func (n *TestNode) cleanupEsxNode() error {
+
+	host, err := vmware.NewHost(context.Background(), n.Node.EsxConfig.IpAddress, n.Node.EsxConfig.Username, n.Node.EsxConfig.Password)
+	if err != nil {
+		log.Errorf("TOPO SVC | CleanTestBed | Clean Esx node, failed to get host handle  %v", err.Error())
+		return err
+	}
+
+	vms, err := host.GetAllVms()
+	if err != nil {
+		log.Errorf("TOPO SVC | CleanTestBed | unable to list VMS %v", err.Error())
+		return err
+	}
+
+	for _, vm := range vms {
+		vm.Destroy()
+		if err != nil {
+			log.Errorf("TOPO SVC | CleanTestBed | Destroy vm node failed %v", err.Error())
+		}
+	}
+
+	if nws, err := host.ListNetworks(); err == nil {
+		delNws := []vmware.NWSpec{}
+		for _, nw := range nws {
+			if nw.Name != "VM Network" {
+				delNws = append(delNws, vmware.NWSpec{Name: nw.Name})
+			}
+		}
+		host.RemoveNetworks(delNws)
+	}
+
+	if vswitches, err := host.ListVswitchs(); err == nil {
+		for _, vswitch := range vswitches {
+			if vswitch.Name != "vSwitch0" {
+				host.RemoveVswitch(vswitch)
+			}
+		}
+	}
+
+	return nil
+}
+
+func (n *TestNode) initEsxNode() error {
+	var ctrlVMDir string
+	var err error
+
+	if ctrlVMDir, err = n.downloadControlVMImage(); err != nil {
+		return errors.Wrap(err, "Download control image failed")
+	}
+
+	host, err := vmware.NewHost(context.Background(), n.Node.EsxConfig.IpAddress, n.Node.EsxConfig.Username, n.Node.EsxConfig.Password)
+	if err != nil {
+		log.Errorf("TOPO SVC | InitTestBed | Init Esx node, failed to get host handle  %v", err.Error())
+		return err
+	}
+
+	err = host.DestoryVM(constants.EsxControlVMName)
+	if err != nil {
+		log.Errorf("TOPO SVC | InitTestBed | Delete control node failed %v", err.Error())
+	}
+
+	vsname := constants.EsxIotaCtrlSwitch
+	vsspec := vmware.VswitchSpec{Name: vsname}
+	host.AddVswitch(vsspec)
+
+	nws := []vmware.NWSpec{{Name: constants.EsxDefaultNetwork, Vlan: int32(constants.EsxDefaultNetworkVlan)}, {Name: constants.EsxVMNetwork, Vlan: int32(constants.EsxVMNetworkVlan)}}
+	host.AddNetworks(nws, vsspec)
+
+	vmInfo, err := host.DeployVM(constants.EsxControlVMName, constants.EsxControlVMCpus, constants.EsxControlVMMemory, constants.EsxControlVMNetworks, ctrlVMDir)
+
+	if err != nil {
+
+		log.Errorf("TOPO SVC | InitTestBed | Add control node failed %v", err.Error())
+		return err
+	}
+
+	log.Println("Init ESX node complete with IP : %s", vmInfo.IP)
+	n.Node.IpAddress = vmInfo.IP
+
+	return n.waitForNodeUp(restartTimeout)
+}
 
 // InitNode initializes an iota test node. It copies over IOTA Agent binary and starts it on the remote node
 func (n *TestNode) InitNode(c *ssh.ClientConfig, dstDir string, commonArtifacts []string) error {
 	var agentBinary string
+
+	if n.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+		if err := n.cleanupEsxNode(); err != nil {
+			log.Errorf("TOPO SVC | InitTestBed | Clean up ESX node failed :  %v", err.Error())
+			return err
+		}
+		if err := n.initEsxNode(); err != nil {
+			log.Errorf("TOPO SVC | InitTestBed | Init ESX node failed :  %v", err.Error())
+			return err
+		}
+	}
 
 	runner := runner.NewRunner(c)
 	addr := fmt.Sprintf("%s:%d", n.Node.IpAddress, constants.SSHPort)
@@ -59,10 +183,17 @@ func (n *TestNode) CleanUpNode(cfg *ssh.ClientConfig) error {
 	runner := runner.NewRunner(cfg)
 	addr := fmt.Sprintf("%s:%d", n.Node.IpAddress, constants.SSHPort)
 
-	// Dont enforce error handling for clean up path
-	for _, cmd := range constants.CleanupCommands {
-		err := runner.Run(addr, cmd, constants.RunCommandForeground)
-		log.Errorf("TOPO SVC | CleanUpNode | Clean up on node %v failed, IPAddress: %v , Err: %v", n.Node.Name, n.Node.IpAddress, err)
+	if n.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+		if err := n.cleanupEsxNode(); err != nil {
+			log.Errorf("TOPO SVC | CleanUpNode | Clean up  ESX node failed :  %v", err.Error())
+			return err
+		}
+	} else {
+		// Dont enforce error handling for clean up path
+		for _, cmd := range constants.CleanupCommands {
+			err := runner.Run(addr, cmd, constants.RunCommandForeground)
+			log.Errorf("TOPO SVC | CleanUpNode | Clean up on node %v failed, IPAddress: %v , Err: %v", n.Node.Name, n.Node.IpAddress, err)
+		}
 	}
 
 	return nil
@@ -70,7 +201,14 @@ func (n *TestNode) CleanUpNode(cfg *ssh.ClientConfig) error {
 
 // CopyTo copies a file to the node
 func (n *TestNode) CopyTo(cfg *ssh.ClientConfig, dstDir string, files []string) error {
+	var ip string
+	var err error
 	var copyHandle *copier.Copier
+
+	if ip, err = n.GetNodeIP(); err != nil {
+		log.Errorf("TOPO SVC | CopyTo node failed to get node IP")
+		return fmt.Errorf("TOPO SVC | CopyTo node failed to get node IP")
+	}
 	if n.SSHClient == nil {
 		copyHandle = copier.NewCopier(cfg)
 	} else {
@@ -79,8 +217,8 @@ func (n *TestNode) CopyTo(cfg *ssh.ClientConfig, dstDir string, files []string) 
 	addr := fmt.Sprintf("%s:%d", n.Node.IpAddress, constants.SSHPort)
 
 	if err := copyHandle.CopyTo(addr, dstDir, files); err != nil {
-		log.Errorf("TOPO SVC | CopyTo node %v failed, IPAddress: %v , Err: %v", n.Node.Name, n.Node.IpAddress, err)
-		return fmt.Errorf("CopyTo node failed, TestNode: %v, IPAddress: %v , Err: %v", n.Node.Name, n.Node.IpAddress, err)
+		log.Errorf("TOPO SVC | CopyTo node %v failed, IPAddress: %v , Err: %v", n.Node.Name, ip, err)
+		return fmt.Errorf("CopyTo node failed, TestNode: %v, IPAddress: %v , Err: %v", n.Node.Name, ip, err)
 	}
 
 	return nil
@@ -89,6 +227,8 @@ func (n *TestNode) CopyTo(cfg *ssh.ClientConfig, dstDir string, files []string) 
 // CopyFrom copies a file to the node
 func (n *TestNode) CopyFrom(cfg *ssh.ClientConfig, dstDir string, files []string) error {
 	//copier := copier.NewCopier(cfg)
+	var ip string
+	var err error
 	var copyHandle *copier.Copier
 	if n.SSHClient == nil {
 		copyHandle = copier.NewCopier(cfg)
@@ -96,11 +236,16 @@ func (n *TestNode) CopyFrom(cfg *ssh.ClientConfig, dstDir string, files []string
 		copyHandle = copier.NewCopierWithSSHClient(n.SSHClient)
 	}
 
+	if ip, err = n.GetNodeIP(); err != nil {
+		log.Errorf("TOPO SVC | CopyTo node failed to get node IP")
+		return fmt.Errorf("TOPO SVC | CopyTo node failed to get node IP")
+	}
+
 	addr := fmt.Sprintf("%s:%d", n.Node.IpAddress, constants.SSHPort)
 
 	if err := copyHandle.CopyFrom(addr, dstDir, files); err != nil {
-		log.Errorf("TOPO SVC | InitTestBed | CopyFrom node %v failed, IPAddress: %v , Err: %v", n.Node.Name, n.Node.IpAddress, err)
-		return fmt.Errorf("CopyFrom node failed, TestNode: %v, IPAddress: %v , Err: %v", n.Node.Name, n.Node.IpAddress, err)
+		log.Errorf("TOPO SVC | InitTestBed | CopyFrom node %v failed, IPAddress: %v , Err: %v", n.Node.Name, ip, err)
+		return fmt.Errorf("CopyFrom node failed, TestNode: %v, IPAddress: %v , Err: %v", n.Node.Name, ip, err)
 	}
 
 	return nil

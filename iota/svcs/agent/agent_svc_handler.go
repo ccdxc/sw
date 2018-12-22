@@ -74,7 +74,7 @@ func (agent *Service) AddNode(ctx context.Context, in *iota.Node) (*iota.Node, e
 		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST, ErrorMsg: msg}}, nil
 	}
 
-	if agent.node = newIotaNode(in.Type); agent.node == nil {
+	if agent.node = newIotaNode(in.Type, in.Os); agent.node == nil {
 		msg := fmt.Sprintf("Personality type not supported %d", in.Type)
 		agent.logger.Error(msg)
 		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST, ErrorMsg: msg}}, nil
@@ -315,6 +315,10 @@ func newNaples() IotaNode {
 	return &naplesHwNode{dataNode: dataNode{iotaNode: iotaNode{name: "naples"}}}
 }
 
+func newEsxNaples() IotaNode {
+	return &esxNaplesHwNode{naplesHwNode: naplesHwNode{dataNode: dataNode{iotaNode: iotaNode{name: "naples-esx"}}}}
+}
+
 func newMellanox() IotaNode {
 	return &mellanoxNode{dataNode: dataNode{iotaNode: iotaNode{name: "mellanox"}}}
 }
@@ -339,7 +343,13 @@ func newNaplesQemu() IotaNode {
 	return &naplesQemuNode{naplesSimNode: naplesSimNode{dataNode: dataNode{iotaNode: iotaNode{name: "naples-qemu"}}}}
 }
 
-func newIotaNode(nodeType iota.PersonalityType) IotaNode {
+func newIotaNode(nodeType iota.PersonalityType, os iota.TestBedNodeOs) IotaNode {
+
+	//Hack for now as its just one type
+	if nodeType == iota.PersonalityType_PERSONALITY_NAPLES && os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+		return newEsxNaples()
+	}
+
 	if _, ok := iotaNodes[nodeType]; ok {
 		return iotaNodes[nodeType]()
 	}

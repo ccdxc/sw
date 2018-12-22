@@ -50,6 +50,54 @@ const (
 
 	// IotaWorkloadImage is the docker image that will be used for workloads
 	IotaWorkloadImage = "registry.test.pensando.io:5000/pensando/iota/centos:1.1"
+
+	// EsxControlVmName Esx Control VM name
+	EsxControlVMName = "iota-control-vm"
+
+	// EsxDataVmName Esx Data VM prefix
+	EsxDataVMPrefix = "iota-data-vm-"
+
+	// EsxDataVmName Esx Data nw prefix
+	EsxDataNWPrefix = "iota-data-nw-"
+
+	// EsxControlVMImage image to use
+	EsxControlVMImage = "build-114"
+
+	// BuildItBinary
+	BuildItBinary = "/sw/iota/images/buildit"
+
+	// EsxControlVmCpus Esx Control VM Cpus
+	EsxControlVMCpus = 4
+
+	// EsxControlVmMemory Esx Control VM memory (4g)
+	EsxControlVMMemory = 4
+
+	// BuildItURL
+	BuildItURL = "buildit.test.pensando.io"
+
+	// ControlVmImageDirectory
+	ControlVMImageDirectory = "/tmp"
+
+	// DataVmImageDirectory
+	DataVMImageDirectory = "/pensando/iota"
+
+	NaplesMnicIP            = "169.254.0.1"
+	CtrlVMNaplesInterfaceIP = "169.254.0.2/24"
+
+	EsxDataVMUsername            = "vm"
+	EsxDataVMPassword            = "vm"
+	EsxDataVMInterface           = "eth1"
+	EsxCtrlVMMgmtInterface       = "eth0"
+	EsxCtrlVMNaplesMgmtInterface = "eth1"
+	EsxDefaultNetwork            = "iota-def-network"
+	EsxVMNetwork                 = "iota-vm-network"
+	EsxDataNetwork               = "iota-data-network"
+	EsxIotaCtrlSwitch            = "iota-ctrl-switch"
+	EsxIotaDataSwitch            = "iota-data-switch"
+	EsxNaplesMgmtNetwork         = "iota-naples-mgmt-network"
+	EsxIotaNaplesMgmtSwitch      = "iota-naples-mgmt-switch"
+	EsxDefaultNetworkVlan        = 4093
+	EsxVMNetworkVlan             = 4092
 )
 
 // incrementing constants. List all constants whose value you don't care here
@@ -87,4 +135,8 @@ var (
 		`sudo iptables -F`,
 		`sudo systemctl restart docker`,
 	}
+
+	EsxControlVMNetworks = []string{"VM Network", EsxDefaultNetwork, EsxDefaultNetwork, EsxDefaultNetwork}
+
+	EsxDataVMNetworks = []string{"VM Network", EsxVMNetwork, EsxDefaultNetwork, EsxDefaultNetwork}
 )

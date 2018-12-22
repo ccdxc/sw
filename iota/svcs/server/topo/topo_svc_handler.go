@@ -61,6 +61,7 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 	ts.TestBedInfo.AllocatedVlans = vlans
 
 	ts.SSHConfig = testbed.InitSSHConfig(ts.TestBedInfo.Username, ts.TestBedInfo.Password)
+	ts.SSHConfig = testbed.InitSSHConfig(ts.TestBedInfo.Username, ts.TestBedInfo.Password)
 
 	// Run init
 	initTestBed := func(ctx context.Context) error {
@@ -72,6 +73,12 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 				Node: &iota.Node{
 					IpAddress: node.IpAddress,
 					Name:      nodeName,
+					//Used if node OS is ESX
+					EsxConfig: &iota.VmwareESXConfig{
+						IpAddress: node.IpAddress,
+						Username:  node.EsxUsername,
+						Password:  node.EsxPassword,
+					},
 				},
 				Os:     node.Os,
 				SSHCfg: ts.SSHConfig,
@@ -98,6 +105,11 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 		ts.TestBedInfo.ApiResponse.ErrorMsg = fmt.Sprintf("Topo SVC InitTestBed | Init Test Bed Call Failed. %s", err.Error())
 		return ts.TestBedInfo, nil
 	}
+	for index, node := range ts.Nodes {
+		if node.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+			req.Nodes[index].EsxCtrlNodeIpAddress = node.Node.IpAddress
+		}
+	}
 	ts.TestBedInfo.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
 	return ts.TestBedInfo, nil
 }
@@ -122,7 +134,13 @@ func (ts *TopologyService) CleanUpTestBed(ctx context.Context, req *iota.TestBed
 			n := testbed.TestNode{
 				Node: &iota.Node{
 					IpAddress: node.IpAddress,
+					EsxConfig: &iota.VmwareESXConfig{
+						IpAddress: node.IpAddress,
+						Username:  node.EsxUsername,
+						Password:  node.EsxPassword,
+					},
 				},
+				Os: node.GetOs(),
 			}
 
 			pool.Go(func() error {
@@ -159,28 +177,36 @@ func (ts *TopologyService) AddNodes(ctx context.Context, req *iota.NodeMsg) (*io
 	newNodes := []*testbed.TestNode{}
 	for _, n := range req.Nodes {
 		svcName := n.Name
-		agentURL := fmt.Sprintf("%s:%d", n.IpAddress, common.IotaAgentPort)
-		c, err := common.CreateNewGRPCClient(svcName, agentURL)
 
-		if err != nil {
+		tbNode := &testbed.TestNode{
+			Node:   n,
+			SSHCfg: ts.SSHConfig,
+		}
+
+		if agentURL, err := tbNode.GetAgentURL(); err != nil {
 			log.Errorf("TOPO SVC | AddNodes | AddNodes call failed to establish GRPC Connection to Agent running on Node: %v. Err: %v", n.Name, err)
 			req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
-			req.ApiResponse.ErrorMsg = fmt.Sprintf("Could not create GRPC Connection to IOTA Agent. Err: %v", err)
+			req.ApiResponse.ErrorMsg = fmt.Sprintf("Could not get agent URL. Err: %v", err)
 			return req, nil
+		} else {
+			c, err := common.CreateNewGRPCClient(svcName, agentURL)
+			if err != nil {
+				log.Errorf("TOPO SVC | AddNodes | AddNodes call failed to establish GRPC Connection to Agent running on Node: %v. Err: %v", n.Name, err)
+				req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+				req.ApiResponse.ErrorMsg = fmt.Sprintf("Could not create GRPC Connection to IOTA Agent. Err: %v", err)
+				return req, nil
+			}
+			tbNode.AgentClient = iota.NewIotaAgentApiClient(c.Client)
 		}
 
 		if _, ok := ts.ProvisionedNodes[n.Name]; ok {
-			log.Errorf("TOPO SVC | AddNodes | AddNodes call failed as node already provisoned : %v. Err: %v", n.Name, err)
+			log.Errorf("TOPO SVC | AddNodes | AddNodes call failed as node already provisoned : %v", n.Name)
 			req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
-			req.ApiResponse.ErrorMsg = fmt.Sprintf("TOPO SVC | AddNodes | AddNodes call failed as node already provisoned : %v. Err: %v", n.Name, err)
+			req.ApiResponse.ErrorMsg = fmt.Sprintf("TOPO SVC | AddNodes | AddNodes call failed as node already provisoned : %v", n.Name)
 			return req, nil
 		}
 
-		ts.ProvisionedNodes[n.Name] = &testbed.TestNode{
-			Node:        n,
-			AgentClient: iota.NewIotaAgentApiClient(c.Client),
-			SSHCfg:      ts.SSHConfig,
-		}
+		ts.ProvisionedNodes[n.Name] = tbNode
 		newNodes = append(newNodes, ts.ProvisionedNodes[n.Name])
 	}
 

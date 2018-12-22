@@ -110,6 +110,7 @@ func GetVeth(d types.BaseVirtualDevice) *types.VirtualEthernetCard {
 
 // probeSmartNICs probes the vCenter for SmartNICs
 func (v *VCProbe) probeSmartNICs() error {
+	var err error
 	v.wg.Add(1)
 	defer v.wg.Done()
 	root := v.client.ServiceContent.RootFolder
@@ -120,23 +121,23 @@ func (v *VCProbe) probeSmartNICs() error {
 		return err
 	}
 
-	updFunc := func(c types.ManagedObjectReference, pc []types.PropertyChange) bool {
-		if c.Type != "HostSystem" {
-			log.Errorf("Expected HostSystem, got %+v", c)
-			return false
-		}
-		hostKey := c.Value
-		v.updateSNIC(hostKey, pc)
-
-		return false
-	}
-
-	hostRef := types.ManagedObjectReference{Type: "HostSystem"}
-	// for now, we watch only config. might add name and customValue in the future
 	hostProps := []string{"config"}
+	hostRef := types.ManagedObjectReference{Type: "HostSystem"}
+	filter := new(property.WaitFilter).Add(hostView.Reference(), hostRef.Type, hostProps)
 
+	updFunc := func(updates []types.ObjectUpdate) bool {
+		for _, update := range updates {
+			if update.Obj.Type != "HostSystem" {
+				log.Errorf("Expected HostSystem, got %+v", update.Obj)
+				continue
+			}
+			hostKey := update.Obj.Value
+			v.updateSNIC(hostKey, update.ChangeSet)
+		}
+		return true
+	}
 	for {
-		err = property.WaitForView(v.ctx, property.DefaultCollector(v.client.Client), hostView.Reference(), hostRef, hostProps, updFunc)
+		err = property.WaitForUpdates(v.ctx, property.DefaultCollector(v.client.Client), filter, updFunc)
 
 		if err != nil {
 			log.Errorf("property.WaitForView returned %v", err)
@@ -230,6 +231,7 @@ func (v *VCProbe) updateSNIC(hostKey string, pc []types.PropertyChange) {
 
 // probeNwIFs probes the vCenter for VNICs
 func (v *VCProbe) probeNwIFs() error {
+	var err error
 	v.wg.Add(1)
 	defer v.wg.Done()
 	root := v.client.ServiceContent.RootFolder
@@ -240,22 +242,24 @@ func (v *VCProbe) probeNwIFs() error {
 		return err
 	}
 
-	updFunc := func(c types.ManagedObjectReference, pc []types.PropertyChange) bool {
-		if c.Type != "VirtualMachine" {
-			log.Errorf("Expected VirtualMachine, got %+v", c)
-			return false
-		}
-		vmKey := c.Value
-		v.updateNwIF(vmKey, pc)
-
-		return false
-	}
-
 	vmRef := types.ManagedObjectReference{Type: "VirtualMachine"}
 	vmProps := []string{"config", "name", "runtime", "tag", "customValue"}
+	filter := new(property.WaitFilter).Add(vmView.Reference(), vmRef.Type, vmProps)
+
+	updFunc := func(updates []types.ObjectUpdate) bool {
+		for _, update := range updates {
+			if update.Obj.Type != "VirtualMachine" {
+				log.Errorf("Expected VirtualMachine, got %+v", update.Obj)
+				continue
+			}
+			vmKey := vmRef.Value
+			v.updateNwIF(vmKey, update.ChangeSet)
+		}
+		return true
+	}
 
 	for {
-		err = property.WaitForView(v.ctx, property.DefaultCollector(v.client.Client), vmView.Reference(), vmRef, vmProps, updFunc)
+		err = property.WaitForUpdates(v.ctx, property.DefaultCollector(v.client.Client), filter, updFunc)
 
 		if err != nil {
 			log.Errorf("property.WaitForView returned %v", err)

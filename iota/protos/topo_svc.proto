@@ -100,6 +100,17 @@ message Entity {
     string name      = 2;
 }
 
+message VmwareESXConfig {
+    // User name of ESX
+    string username   = 1;
+
+    // Password of ESX
+    string password   = 2;
+
+    // IP address of esx
+    string ip_address = 3;
+}
+
 // Node captures personality details of an E2E node
 message Node {
     // PersonalityType captures the node personality. naples node, venice node or qemu
@@ -126,7 +137,7 @@ message Node {
         MellanoxConfig  mellanox_config = 8;
 
         BroadcomConfig  broadcom_config = 9;
-        
+
         IntelConfig     intel_config    = 10;
     }
 
@@ -137,6 +148,12 @@ message Node {
 
     // Optionally run a start up script during add or reload.
     string              startup_script  = 13;
+
+    // ESX configuration if node type is esx
+    VmwareESXConfig     esx_config      = 14;
+
+    // Node OS
+    TestBedNodeOs       os              = 15;
 }
 
 
@@ -404,6 +421,7 @@ enum TestBedNodeType {
 enum TestBedNodeOs {
     TESTBED_NODE_OS_LINUX   = 0;
     TESTBED_NODE_OS_FREEBSD = 1;
+    TESTBED_NODE_OS_ESX     = 2;
 }
 
 message TestBedNode {
@@ -411,33 +429,45 @@ message TestBedNode {
     // Node Management IP Address
     string ip_address               = 2;
     // Node CIMC IP Address
+
     string cimc_ip_address          = 3;
     // Node CIMC username
     string cimc_username            = 4;
     // Node CIMC password
     string cimc_password            = 5;
     // NIC Management IP Address
-    string nic_ip_address           = 6;
+
+    // Node CIMC username
+    string esx_username             = 6;
+    // Node CIMC password
+    string esx_password             = 7;
+    // NIC Management IP Address
+
+    string nic_ip_address           = 8;
     // NIC Console ip address
-    string nic_console_ip_address   = 7;
+    string nic_console_ip_address   = 9;
     // NIC Console port
-    string nic_console_port         = 8;
+    string nic_console_port         = 10;
     // NIC Console username
-    string nic_console_username     = 9;
+    string nic_console_username     = 11;
     // NIC Console password
-    string nic_console_password     = 10;
+    string nic_console_password     = 12;
     // NIC username
-    string nic_username             = 11;
+    string nic_username             = 13;
     // NIC password
-    string nic_password             = 12;
+    string nic_password             = 14;
     // Initialization script - used for HW
-    string init_script              = 13;
+    string init_script              = 15;
     // Control interface for this node.
-    string control_intf             = 14;
+    string control_intf             = 16;
     // Switch ports for this node.
-    repeated uint32 switch_port_ids = 15;
+    repeated uint32 switch_port_ids = 17;
     // Node OS
-    TestBedNodeOs os = 16;
+    TestBedNodeOs os = 18;
+
+    // IP address of ESX control vm
+    string esx_ctrl_node_ip_address = 19;
+
 }
 
 // CopyDirection defines direction whether to copy in or copy out

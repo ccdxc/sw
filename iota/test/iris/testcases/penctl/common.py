@@ -20,7 +20,7 @@ core_file_names = [
 
 
 def GetNaplesMgmtIP(node):
-    return  "1.0.0.2"
+    return api.GetNicMgmtIP(node)
 
 def GetNaplesTunIntf(node):
     return  "tun0"

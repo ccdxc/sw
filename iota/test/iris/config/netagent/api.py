@@ -8,49 +8,59 @@ base_url = "http://1.0.0.2:9007/"
 
 
 AGENT_URLS = []
-AGENT_IPS = []
+AGENT_NODES = []
 gl_hw = False
 
-def Init(agent_ips, hw=False):
+def Init(agent_nodes, hw=False):
     global AGENT_URLS
-    for agent_ip in agent_ips:
+    for node in agent_nodes:
+        agent_ip = api.GetNaplesMgmtIpAddress(node)
+        if agent_ip == None:
+            assert(0)
         AGENT_URLS.append('http://%s:9007/' % agent_ip)
 
-    global AGENT_IPS
-    AGENT_IPS = agent_ips
+    global AGENT_NODES
+    AGENT_NODES = agent_nodes
 
     global gl_hw
     gl_hw = hw
 
     return
 
-def __get_base_url(node_ip):
-    if gl_hw:
-        return  "http://1.0.0.2:9007/"
-    return "http://" + node_ip + ":9007/"
+def __get_base_url(nic_ip):
+    return "http://" + nic_ip + ":9007/"
 
 def PushConfigObjects(objects, ignore_error=False):
-    agent_ips = api.GetNaplesMgmtIpAddresses()
-    for agent_ip in agent_ips:
-        ret = cfg_api.PushConfigObjects(objects, __get_base_url(agent_ip),
+    for node in AGENT_NODES:
+        agent_ip = api.GetNaplesMgmtIpAddress(node)
+        if agent_ip == None:
+            assert(0)
+        nic_ip = api.GetNicMgmtIP(node)
+        ret = cfg_api.PushConfigObjects(objects, __get_base_url(nic_ip),
             remote_node=agent_ip if gl_hw else None)
         if not ignore_error and ret != api.types.status.SUCCESS:
             return api.types.status.FAILURE
     return api.types.status.SUCCESS
 
 def DeleteConfigObjects(objects, ignore_error=False):
-    agent_ips = api.GetNaplesMgmtIpAddresses()
-    for agent_ip in agent_ips:
-        ret = cfg_api.DeleteConfigObjects(objects, __get_base_url(agent_ip),
+    for node in AGENT_NODES:
+        agent_ip = api.GetNaplesMgmtIpAddress(node)
+        if agent_ip == None:
+            assert(0)
+        nic_ip = api.GetNicMgmtIP(node)
+        ret = cfg_api.DeleteConfigObjects(objects, __get_base_url(nic_ip),
             remote_node=agent_ip if gl_hw else None)
         if not ignore_error and ret != api.types.status.SUCCESS:
             return api.types.status.FAILURE
     return api.types.status.SUCCESS
 
 def UpdateConfigObjects(objects, ignore_error=False):
-    agent_ips = api.GetNaplesMgmtIpAddresses()
-    for agent_ip in agent_ips:
-        ret = cfg_api.UpdateConfigObjects(objects, __get_base_url(agent_ip),
+    for node in AGENT_NODES:
+        agent_ip = api.GetNaplesMgmtIpAddress(node)
+        if agent_ip == None:
+            assert(0)
+        nic_ip = api.GetNicMgmtIP(node)
+        ret = cfg_api.UpdateConfigObjects(objects, __get_base_url(nic_ip),
             remote_node=agent_ip if gl_hw else None)
         if not ignore_error and ret != api.types.status.SUCCESS:
             return api.types.status.FAILURE
@@ -58,9 +68,12 @@ def UpdateConfigObjects(objects, ignore_error=False):
 
 #Assuming all nodes have same, return just from one node.
 def GetConfigObjects(objects, ignore_error=False):
-    agent_ips = api.GetNaplesMgmtIpAddresses()
-    for agent_ip in agent_ips:
-        get_objects = cfg_api.GetConfigObjects(objects, __get_base_url(agent_ip),
+    for node in AGENT_NODES:
+        agent_ip = api.GetNaplesMgmtIpAddress(node)
+        if agent_ip == None:
+            assert(0)
+        nic_ip = api.GetNicMgmtIP(node)
+        get_objects = cfg_api.GetConfigObjects(objects, __get_base_url(nic_ip),
             remote_node=agent_ip if gl_hw else None)
         return get_objects
     return []

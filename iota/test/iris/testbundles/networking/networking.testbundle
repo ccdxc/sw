@@ -1,6 +1,6 @@
 meta:
     name    : networking
-    os      : [ linux, freebsd ]
+    os      : [ linux, freebsd, esx ]
     nics    : [ pensando, mellanox, intel, broadcom ]
     targetcount : 35
 

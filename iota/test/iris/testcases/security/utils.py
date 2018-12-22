@@ -76,7 +76,9 @@ class Command(object):
         return self.out
 
 def GetSecurityPolicy(workload):
-    cmd = 'sshpass -p vm ssh vm@{} curl -X GET -H "Content-Type:application/json" http://1.0.0.2:9007/api/security/policies/'.format(workload.workload_name)
+    mnicIP = api.GetNicMgmtIP(workload.node_name)
+
+    cmd = 'sshpass -p vm ssh vm@{} curl -X GET -H "Content-Type:application/json" http://{}:9007/api/security/policies/'.format(workload.workload_name,mnicIP)
     return Command(cmd).run()
 
 def GetProtocolDirectory(proto):
@@ -99,7 +101,7 @@ def GetHping3Cmd(protocol, destination_ip, destination_port, source_port = 0, ):
         cmd = "hping3 --{} -p {} -c 1 {}".format(protocol.lower(), int(destination_port), destination_ip)
     else:
         cmd = "hping3 --{} -c 1 {}".format(protocol.lower(), destination_ip)
-        
+
     return cmd
 
 def GetVerifJsonFromPolicyJson(policy_json):
@@ -133,7 +135,7 @@ def GetRuleHit(workload, ruleid):
             print("FOUND Rule id {}".format(ruleid))
             return None
     return None
-        
+
 
 def VerifyCmd(cmd, action):
     api.PrintCommandResults(cmd)
@@ -150,10 +152,10 @@ def GetDestPort(port):
         return "100"
     if '-' in port:
         return "120"
-    return port 
+    return port
 
 def RunCmd(workload, protocol, destination_ip, destination_port, action, ruleid):
-    req = api.Trigger_CreateExecuteCommandsRequest() 
+    req = api.Trigger_CreateExecuteCommandsRequest()
     result = api.types.status.SUCCESS
 
     #GetRuleHit(workload, ruleid)
@@ -201,7 +203,7 @@ def ParseVerifStr(verif_str):
             protocol.append(js[0]["spec"]["policy-rules"][i]["destination"]["app-configs"][k]["port"])
             dst_port.append(js[0]["spec"]["policy-rules"][i]["destination"]["app-configs"][k]["port"])
         result = js[0]["spec"]["policy-rules"][i]["action"]
-        ruleid = js[0]["spec"]["policy-rules"][i]["rule-id"] 
+        ruleid = js[0]["spec"]["policy-rules"][i]["rule-id"]
         v = GetVerif(protocol, src_ip, src_port, dst_ip, dst_port, result, ruleid)
         verif.append(v)
     return verif
@@ -220,11 +222,11 @@ def GetVerifDict(workload):
     for cmd in resp.commands:
         api.Logger.info("CMD = {}", cmd)
         if cmd.exit_code != 0:
-            return verif 
+            return verif
     #out = GetSecurityPolicy(workload)
     verif = ParseVerifStr(cmd.stdout)
     #verif = ParseVerifStr(out)
-         
+
     return verif
 
 def RunAll(src_w, dest_w):

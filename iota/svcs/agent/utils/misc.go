@@ -16,7 +16,10 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"golang.org/x/crypto/ssh"
+
 	"github.com/pkg/errors"
+	"github.com/pkg/sftp"
 )
 
 const (
@@ -130,6 +133,76 @@ func SetUpIPAddress(intfName string, ip string) error {
 		}
 	}
 	return errors.Errorf("IP address not set to interface : %s", intfName)
+}
+
+func writeDhcpInterfaceDisableFile(intfName string, file string) error {
+
+	config := `TYPE=Ethernet
+PROXY_METHOD=none
+BROWSER_ONLY=no
+BOOTPROTO=static
+DEFROUTE=yes
+IPV4_FAILURE_FATAL=no
+IPV6INIT=yes
+IPV6_AUTOCONF=yes
+IPV6_DEFROUTE=yes
+IPV6_FAILURE_FATAL=no
+NM_CONTROLLED=no
+IPV6_ADDR_GEN_MODE=stable-privacy
+ONBOOT=no` + fmt.Sprintf("\nNAME=%s\nDEVICE=%s\n", intfName, intfName)
+
+	fname := file
+	return ioutil.WriteFile(fname, []byte(config), 0644)
+}
+
+//DisableDhcpOnInterfaceRemote disable DHCP on Remote interface
+func DisableDhcpOnInterfaceRemote(conn *ssh.Client, intfName string) error {
+
+	tmpFile := "/tmp/." + intfName
+	dstFile := "/etc/sysconfig/network-scripts/ifcfg-" + intfName
+
+	sftp, err := sftp.NewClient(conn)
+	if sftp == nil || err != nil {
+		return errors.New("Cannot create sftp client to disable dhcp interface")
+	}
+
+	defer sftp.Close()
+
+	if err = writeDhcpInterfaceDisableFile(intfName, tmpFile); err != nil {
+		return errors.Wrap(err, "Error in creating temp file")
+	}
+
+	out, err := ioutil.ReadFile(tmpFile)
+	if err != nil {
+		return errors.Wrap(err, "Error in reading temp file")
+	}
+
+	f, err := sftp.Create(tmpFile)
+	if err != nil {
+		return errors.Wrap(err, "Error in creating dst file")
+	}
+	f.Chmod(0766)
+
+	if _, err = f.Write(out); err != nil {
+		return errors.Wrap(err, "Error in writing file")
+	}
+	f.Close()
+
+	time.Sleep(1 * time.Second)
+
+	cmd := "sudo cp " + tmpFile + " " + dstFile + " && " + "sudo service network restart"
+
+	// Create a session. It is one session per command.
+	session, err := conn.NewSession()
+	if err != nil {
+		return err
+	}
+	defer session.Close()
+	var b bytes.Buffer  // import "bytes"
+	session.Stdout = &b // get output
+
+	// Finally, run the command
+	return session.Run(cmd)
 }
 
 //DisableDhcpOnInterface disable DHCP on interface

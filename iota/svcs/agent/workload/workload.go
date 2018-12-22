@@ -14,7 +14,6 @@ import (
 	Cmd "github.com/pensando/sw/iota/svcs/agent/command"
 	Utils "github.com/pensando/sw/iota/svcs/agent/utils"
 	log "github.com/sirupsen/logrus"
-	//Common "github.com/pensando/sw/iota/svcs/common"
 )
 
 const (
@@ -27,6 +26,9 @@ const (
 	//WorkloadTypeRemote remote workload
 	WorkloadTypeRemote = "remote"
 	bgCmdHandlePrefix  = "bg-cmd"
+
+	//WorkloadTypeESX vm workload
+	WorkloadTypeESX = "esx-vm"
 )
 
 var (
@@ -416,6 +418,8 @@ func (app *remoteWorkload) RunCommand(cmd []string, dir string, timeout uint32, 
 
 	runCmd := strings.Join(cmd, " ")
 	//Ignore diretory for remote workload for now
+	//Even though mount is suppoted, commenting out as on naples remote
+	//we don't to mount yet.
 	/*if dir != "" {
 		runCmd = "cd " + app.baseDir + "/" + dir + " && " + strings.Join(cmd, " ")
 	} else {
@@ -427,11 +431,45 @@ func (app *remoteWorkload) RunCommand(cmd []string, dir string, timeout uint32, 
 		return cmdInfo.Ctx, "", nil
 	}
 
-	cmdInfo, _ := Cmd.StartSSHBgCommand(app.sshHandle, runCmd)
+	cmdInfo, _ := Cmd.StartSSHBgCommand(app.sshHandle, runCmd, false)
 	handleKey := app.genBgCmdHandle()
 	app.bgCmds[handleKey] = cmdInfo
 
 	return cmdInfo.Ctx, handleKey, nil
+}
+
+func (app *remoteWorkload) mountDirectory(userName string, password string, srcDir string, dstDir string) error {
+
+	mkdir := []string{"mkdir", "-p", dstDir}
+	cmdInfo, _, _ := app.RunCommand(mkdir, "", 0, false, false)
+	if cmdInfo.ExitCode != 0 {
+		return errors.New("mkdir command failed " + cmdInfo.Stderr)
+	}
+
+	sshKeygen := []string{"ssh-keygen", "-f", "~/.ssh/id_rsa", "-t", "rsa", "-N", "''"}
+	cmdInfo, _, _ = app.RunCommand(sshKeygen, "", 0, false, false)
+	if cmdInfo.ExitCode != 0 {
+		return errors.New("ssh-keygen command failed " + cmdInfo.Stderr)
+	}
+
+	myIP, err := Utils.GetIPAddressOfInterface("eth0")
+	if err != nil {
+		return err
+	}
+
+	sshCopyID := []string{"sshpass", "-v", "-p", password, "ssh-copy-id", "-o", "StrictHostKeyChecking=no", userName + "@" + myIP}
+	cmdInfo, _, _ = app.RunCommand(sshCopyID, "", 0, false, false)
+	if cmdInfo.ExitCode != 0 {
+		return errors.New("ssh-copy-id command failed " + cmdInfo.Stderr)
+	}
+
+	sshFS := []string{"sudo", "nohup", "sshfs", "-o", "allow_other,IdentityFile=/home/" + userName + "/.ssh/id_rsa,StrictHostKeyChecking=no", userName + "@" + myIP + ":" + srcDir, dstDir}
+	cmdInfo, _, _ = app.RunCommand(sshFS, "", 0, false, false)
+	if cmdInfo.ExitCode != 0 {
+		return errors.New("sshfs command failed " + cmdInfo.Stderr)
+	}
+
+	return nil
 }
 
 func (app *remoteWorkload) BringUp(args ...string) error {
@@ -451,7 +489,7 @@ func (app *remoteWorkload) BringUp(args ...string) error {
 	}
 	fmt.Println("App : ", app.ip, app.port, app.username, app.password)
 	if app.sshHandle, err = ssh.Dial("tcp", app.ip+":"+app.port, config); err != nil {
-		err = errors.Wrapf(err, "SSH connect failed")
+		err = errors.Wrapf(err, "SSH connect failed %v:%v@%v", app.username, app.password, app.ip)
 		return err
 	}
 
@@ -496,6 +534,7 @@ func newRemoteWorkload(name string, parent string, logger *log.Logger) Workload 
 var iotaWorkloads = map[string]func(name string, parent string, logger *log.Logger) Workload{
 	WorkloadTypeContainer: newContainerWorkload,
 	WorkloadTypeVM:        newVMWorkload,
+	WorkloadTypeESX:       newVMESXWorkload,
 	WorkloadTypeBareMetal: newBareMetalWorkload,
 	WorkloadTypeRemote:    newRemoteWorkload,
 }
