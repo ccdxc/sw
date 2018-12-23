@@ -307,6 +307,9 @@ xcvr_poll_timer (void)
 bool
 xcvr_valid (int port)
 {
+    // ignore all xcvr checks
+    return true;
+
     // if the xcvr valid check is disable, return true
     if (!xcvr_valid_check_enabled()) {
         return true;
