@@ -145,7 +145,7 @@ class Testcase:
         self.__resolve()
         self.__enable = getattr(self.__spec, 'enable', True)
         self.__ignored = getattr(self.__spec, "ignore", False)
-        self.__stress = getattr(self.__spec, "stress", False)
+        self.__stress = getattr(self.__spec, "stress", GlobalOptions.stress)
         
  
         self.__timer = timeprofiler.TimeProfiler()
