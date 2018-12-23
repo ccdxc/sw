@@ -16,11 +16,11 @@ typedef enum pal_ret_s {
 } pal_ret_t;
 
 typedef enum qsfp_page {
+    QSFP_PAGE_LOW,
     QSFP_PAGE_HIGH0,
     QSFP_PAGE_HIGH1,
     QSFP_PAGE_HIGH2,
     QSFP_PAGE_HIGH3,
-    QSFP_PAGE_LOW,
 } qsfp_page_t;
 
 #define MAX_CPLD_REV_OLD  0x6

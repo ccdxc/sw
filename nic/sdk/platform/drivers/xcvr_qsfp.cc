@@ -99,13 +99,11 @@ qsfp_sprom_parse (int port, uint8_t *data)
     case 0x2:
         // 40GBASE-LR4
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_40GBASE_LR4);
-        set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
         break;
 
     case 0x4:
         // 40GBASE-SR4
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_40GBASE_SR4);
-        set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
         break;
 
     case 0x8:
@@ -131,19 +129,16 @@ qsfp_sprom_parse (int port, uint8_t *data)
     case 0x2:
         // 100GBASE-SR4
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_SR4);
-        set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
         break;
 
     case 0x3:
         // 100GBASE-LR4
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_LR4);
-        set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
         break;
 
     case 0x4:
         // 100GBASE-ER4
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_ER4);
-        set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
         break;
 
     case 0x8:
@@ -164,7 +159,6 @@ qsfp_sprom_parse (int port, uint8_t *data)
     case 0x10:
         // 40GBASE-ER4
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_40GBASE_ER4);
-        set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
         break;
 
     case 0x17:

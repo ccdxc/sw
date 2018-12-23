@@ -29,19 +29,15 @@ sfp_sprom_parse (int port, uint8_t *data)
         if (data[3] & (1 << 4)) {
             // 10G Base SR
             xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_10GBASE_SR);
-            set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
         } else if (data[3] & ( 1 << 5)) {
             // 10G Base LR
             xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_10GBASE_LR);
-            set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
         } else if (data[3] & ( 1 << 6)) {
             // 10G Base LRM
             xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_10GBASE_LRM);
-            set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
         } else if (data[3] & ( 1 << 7)) {
             // 10G Base ER
             xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_10GBASE_ER);
-            set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
         }
 
         return sdk_ret;
@@ -55,19 +51,16 @@ sfp_sprom_parse (int port, uint8_t *data)
     case 0x2:
         // 25GBASE-SR
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_25GBASE_SR);
-        set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
         break;
 
     case 0x3:
         // 25GBASE-LR
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_25GBASE_LR);
-        set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
         break;
 
     case 0x4:
         // 25GBASE-ER
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_25GBASE_ER);
-        set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
         break;
 
     case 0x8:
