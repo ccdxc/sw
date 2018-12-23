@@ -12,7 +12,8 @@ ifneq ($(PIPELINE),hello)
 	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py --target host
 ifeq ($(ARCH),aarch64)
 	ARCH=${ARCH} ${TOPDIR}/nic/tools/update_version.sh
-	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py
+	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py \
+        --pipeline $(PIPELINE) --no-strip
 else
 	ARCH=${ARCH} ${TOPDIR}/nic/tools/update_version.sh
 	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py \

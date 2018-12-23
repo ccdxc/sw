@@ -72,7 +72,7 @@ if args.target == 'sim':
     strip_bin   = 'strip'
     output_dir  = pwd + '/fake_root_target/x86_64'
     if args.pipeline == 'apollo':
-        files.append('nic/tools/package/pack_sim_apollo.txt')
+        files.append('nic/tools/package/pack_apollo.txt')
     elif args.pipeline == 'gft':
         files.append('nic/tools/package/pack_sim_gft.txt')
     else:
@@ -117,8 +117,11 @@ elif args.target == 'debug' or args.target == 'debug-arm':
     process_files(files, arch, args.pipeline)
 else:
     print ("Packaging for haps")
-    files.append('nic/tools/package/pack_haps.txt')
     files.append('nic/tools/package/pack_platform.txt')
+    if args.pipeline == 'apollo':
+        files.append('nic/tools/package/pack_apollo.txt')
+    else:
+        files.append('nic/tools/package/pack_haps.txt')
 
 if args.no_strip == True:
     strip_target = 0
@@ -147,6 +150,7 @@ for input_file in files:
         items = line.split()
         items[0] = items[0].replace("$ARCH", arch)
         items[0] = items[0].replace("$PIPELINE", args.pipeline)
+        items[1] = items[1].replace("$PIPELINE", args.pipeline)
         print items[0]
         directory = output_dir + '/' + items[1]
         if items[1][-1] == '/':
