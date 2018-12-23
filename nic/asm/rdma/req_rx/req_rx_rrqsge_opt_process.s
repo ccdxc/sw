@@ -21,6 +21,8 @@ struct req_rx_s2_t0_k k;
 #define TO_S1_RECIRC_P to_s1_recirc_info
 #define K_PRIV_OPER_ENABLE CAPRI_KEY_FIELD(IN_TO_S_P, priv_oper_enable)
 
+#define TO_S7_P to_s7_stats_info
+
 %%
     .param    req_rx_rrqlkey_process
     .param    req_rx_rrqlkey_rsvd_lkey_process
@@ -171,7 +173,17 @@ set_arg:
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_sqcb1_write_back_process, r5)
 
 insufficient_sges:
+    b              insufficient_resources
+    phvwrpair      CAPRI_PHV_FIELD(TO_S7_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_P, qp_err_dis_rrqsge_insuff_sges), 1 //BD Slot
 insufficient_sge_len:
+    b              insufficient_resources
+    phvwrpair      CAPRI_PHV_FIELD(TO_S7_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_P, qp_err_dis_rrqsge_insuff_sge_len), 1 //BD Slot
+
+insufficient_resources:
+    phvwr          CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_cq), 1
+    phvwrpair      p.cqe.status, CQ_STATUS_LOCAL_ACC_ERR, p.cqe.error, 1 
     phvwr          CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp), 1
     b              set_arg
     CAPRI_SET_TABLE_0_VALID(0) // Branch Delay Slot

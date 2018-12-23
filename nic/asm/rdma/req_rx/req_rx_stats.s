@@ -22,6 +22,8 @@ struct sqcb5_t d;
 #define K_LIF_CQE_ERROR_ID_VLD CAPRI_KEY_FIELD(IN_P, lif_cqe_error_id_vld)
 #define K_LIF_ERROR_ID_VLD CAPRI_KEY_FIELD(IN_P, lif_error_id_vld)
 #define K_LIF_ERROR_ID CAPRI_KEY_FIELD(IN_P, lif_error_id)
+#define K_ERR_DIS_REASON_CODES CAPRI_KEY_RANGE(IN_P, qp_err_disabled, qp_err_dis_rsvd_sbit13_ebit18)
+#define K_QP_ERR_DISABLED      CAPRI_KEY_FIELD(IN_P, qp_err_disabled)
 
 %%
 
@@ -38,6 +40,9 @@ req_rx_stats_process:
     add              GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS //BD Slot
 
     bbeq             K_LIF_ERROR_ID_VLD, 1, handle_error_lif_stats
+    tblor            d.{qp_err_disabled...qp_err_dis_rsvd}, K_ERR_DIS_REASON_CODES //BD Slot
+
+    bbeq             K_QP_ERR_DISABLED, 1, handle_error_stats
 
     crestore         [c6, c5, c4, c3, c2, c1], GLOBAL_FLAGS, (REQ_RX_FLAG_RDMA_FEEDBACK | REQ_RX_FLAG_ATOMIC_AETH | REQ_RX_FLAG_ACK | REQ_RX_FLAG_READ_RESP | REQ_RX_FLAG_FIRST | REQ_RX_FLAG_ONLY) //BD Slot
 
@@ -115,6 +120,9 @@ error_done:
     nop.e
     nop
 
+handle_error_stats:
+    nop.e
+    nop
 
 
 bubble_to_next_stage:

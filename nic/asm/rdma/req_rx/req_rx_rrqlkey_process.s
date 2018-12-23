@@ -36,24 +36,23 @@ req_rx_rrqlkey_process:
 proceed_rrqlkey_process:
 
      //If Reserved LKEY is used, but QP doesn't have privileged operations enabled
-     bbeq        CAPRI_KEY_FIELD(IN_P, rsvd_key_err), 1, error_completion
+     bbeq        CAPRI_KEY_FIELD(IN_P, rsvd_key_err), 1, rsvd_lkey_err
 
      seq          c1, d.state, KEY_STATE_VALID //BD Slot
-     bcf          [!c1], invalid_region
   
-     seq          c1, K_PD, d.pd // Branch Delay Slot
-     bcf          [!c1], pd_check_failure
+     seq          c2, K_PD, d.pd
+     bcf          [!c1 | !c2], pd_state_check_failure
 
      // if (!(lkey_p->access_ctrl & ACC_CTRL_LOCAL_WRITE))
      and          r2, d.acc_ctrl, ACC_CTRL_LOCAL_WRITE // Branch Delay Slot
-     beq          r2, r0, access_violation
+     beq          r2, r0, access_violation_no_wr
 
      // if ((lkey_info_p->sge_va < lkey_p->base_va) ||
      //     ((lkey_info_p->sge_va + lkey_info_p->sge_bytes) > (lkey_p->base_va + lkey_p->len)))
      slt          c1, K_SGE_VA, d.base_va // Branch Delay Slot
      add          r3, d.len, d.base_va
      sslt         c2, r3, K_SGE_VA, K_SGE_BYTES
-     bcf          [c1|c2], access_violation
+     bcf          [c1|c2], access_violation_len
 
      // my_pt_base_addr = (void *)(hbm_addr_get(PHV_GLOBAL_PT_BASE_ADDR_GET()) +
      //                            (lkey_p->pt_base * sizeof(u64))
@@ -114,12 +113,35 @@ set_arg:
      nop.e
      nop
 
-pd_check_failure:
-invalid_region:
+rsvd_lkey_err:
+    phvwrpair      p.cqe.status, CQ_STATUS_LOCAL_PROT_ERR, p.cqe.error, 1 
+    phvwr       CAPRI_PHV_RANGE(TO_S7_P, lif_cqe_error_id_vld, lif_error_id), \
+                    ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_TX_LOCAL_ACCESS_ERR_OFFSET))
+    b              error_completion
+    phvwrpair      CAPRI_PHV_FIELD(TO_S7_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_P, qp_err_dis_rrqlkey_rsvd_lkey), 1 //BD Slot
+
+pd_state_check_failure:
+    phvwrpair.!c1  CAPRI_PHV_FIELD(TO_S7_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_P, qp_err_dis_rrqlkey_inv_state), 1
+    phvwrpair.!c2  CAPRI_PHV_FIELD(TO_S7_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_P, qp_err_dis_rrqlkey_pd_mismatch), 1
     phvwr       CAPRI_PHV_RANGE(TO_S7_P, lif_cqe_error_id_vld, lif_error_id), \
                     ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_TX_LOCAL_ACCESS_ERR_OFFSET))
     b              error_completion
     phvwrpair      p.cqe.status, CQ_STATUS_LOCAL_PROT_ERR, p.cqe.error, 1 
+
+access_violation_no_wr:
+    b              access_violation
+    phvwrpair      CAPRI_PHV_FIELD(TO_S7_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_P, qp_err_dis_rrqlkey_acc_no_wr_perm), 1 //BD Slot
+
+access_violation_len:
+    phvwrpair.c1   CAPRI_PHV_FIELD(TO_S7_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_P, qp_err_dis_rrqlkey_acc_len_lower), 1
+    b              access_violation
+    phvwrpair.c2   CAPRI_PHV_FIELD(TO_S7_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_P, qp_err_dis_rrqlkey_acc_len_higher), 1 //BD Slot
 
 access_violation:
     phvwrpair      p.cqe.status, CQ_STATUS_LOCAL_ACC_ERR, p.cqe.error, 1 

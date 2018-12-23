@@ -125,18 +125,24 @@ nak:
                    p.cqe.error, 1
     phvwr.c3       CAPRI_PHV_RANGE(TO_S7_P, lif_cqe_error_id_vld, lif_error_id), \
                     ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_RX_REMOTE_INV_REQ_ERR_OFFSET))
+    phvwrpair.c3   CAPRI_PHV_FIELD(TO_S7_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_P, qp_err_dis_rrqwqe_remote_inv_req_err_rcvd), 1
 
     IS_MASKED_VAL_EQUAL_B(c3, r1, NAK_CODE_MASK, NAK_CODE_REM_ACC_ERR)
     phvwrpair.c3   p.cqe.status, CQ_STATUS_REMOTE_ACC_ERR, \
                    p.cqe.error, 1
     phvwr.c3       CAPRI_PHV_RANGE(TO_S7_P, lif_cqe_error_id_vld, lif_error_id), \
                     ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_RX_REMOTE_ACC_ERR_OFFSET))
+    phvwrpair.c3   CAPRI_PHV_FIELD(TO_S7_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_P, qp_err_dis_rrqwqe_remote_acc_err_rcvd), 1
 
     IS_MASKED_VAL_EQUAL_B(c3, r1, NAK_CODE_MASK, NAK_CODE_REM_OP_ERR)
     phvwrpair.c3   p.cqe.status, CQ_STATUS_REMOTE_OPER_ERR, \
                    p.cqe.error, 1
     phvwr.c3       CAPRI_PHV_RANGE(TO_S7_P, lif_cqe_error_id_vld, lif_error_id), \
                     ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_RX_REMOTE_OPER_ERR_OFFSET))
+    phvwrpair.c3   CAPRI_PHV_FIELD(TO_S7_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_P, qp_err_dis_rrqwqe_remote_oper_err_rcvd), 1
 
     phvwr          CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp), 1
     // post err completion for msn one more than the one last completed

@@ -304,7 +304,23 @@ struct sqcb5_t {
     num_atomic_ack:16;
     num_pkts_in_cur_msg: 16;
     max_pkts_in_any_msg : 16;
-    pad: 288;
+
+    qp_err_disabled                  :    1;
+    qp_err_dis_rrqlkey_pd_mismatch   :    1;
+    qp_err_dis_rrqlkey_inv_state     :    1;
+    qp_err_dis_rrqlkey_rsvd_lkey     :    1;
+    qp_err_dis_rrqlkey_acc_no_wr_perm:    1;
+    qp_err_dis_rrqlkey_acc_len_lower :    1;
+    qp_err_dis_rrqlkey_acc_len_higher:    1;
+    qp_err_dis_rrqsge_insuff_sges    :    1;
+    qp_err_dis_rrqsge_insuff_sge_len :    1;
+    qp_err_dis_rrqsge_insuff_dma_cmds:    1;
+    qp_err_dis_rrqwqe_remote_inv_req_err_rcvd :    1;
+    qp_err_dis_rrqwqe_remote_acc_err_rcvd     :    1;
+    qp_err_dis_rrqwqe_remote_oper_err_rcvd    :    1;
+    qp_err_dis_rsvd                  :    19;
+
+    pad: 256;
 };
 
 struct sqcb_t {
