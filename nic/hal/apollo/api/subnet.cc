@@ -69,52 +69,6 @@ subnet_entry::destroy(subnet_entry *subnet) {
     subnet->~subnet_entry();
 }
 
-#if 0
-/**
- * @brief     handle a subnet create by allocating all required resources
- *            and keeping them ready for commit phase
- * @param[in] api_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t
-subnet_entry::process_create(api_ctxt_t *api_ctxt) {
-    return init(&api_ctxt->subnet_info);
-}
-
-/**
- * @brief     handle a subnet update by allocating all required resources
- *            and keeping them ready for commit phase
- * @param[in] api_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t
-subnet_entry::process_update(api_ctxt_t *api_ctxt) {
-    return sdk::SDK_RET_OK;
-}
-
-/**
- * @brief     handle a subnet delete by allocating all required resources
- *            and keeping them ready for commit phase
- * @param[in] api_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t
-subnet_entry::process_delete(api_ctxt_t *api_ctxt) {
-    return sdk::SDK_RET_OK;
-}
-
-/**
- * @brief     handle a subnet get by allocating all required resources
- *            and keeping them ready for commit phase
- * @param[in] api_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t
-subnet_entry::process_get(api_ctxt_t *api_ctxt) {
-    return sdk::SDK_RET_OK;
-}
-#endif
-
 /**
  * @brief     initialize subnet entry with the given config
  * @param[in] api_ctxt API context carrying the configuration
@@ -131,23 +85,10 @@ subnet_entry::init_config(api_ctxt_t *api_ctxt) {
     return sdk::SDK_RET_OK;
 }
 
-#if 0
-/**
- * @brief     update/override the subnet object with given config
- * @param[in] api_ctxt API context carrying the configuration
- * @return    SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t
-subnet_entry::update_config(api_ctxt_t *api_ctxt) {
-    return sdk::SDK_RET_OK;
-}
-#endif
-
 /**
  * @brief    allocate h/w resources for this object
  * @return    SDK_RET_OK on success, failure status code on error
  */
-// TODO: this should ideally go to impl class
 sdk_ret_t
 subnet_entry::alloc_resources_(void) {
     if (subnet_db()->subnet_idxr()->alloc((uint32_t *)&this->hw_id_) !=
@@ -165,11 +106,11 @@ subnet_entry::alloc_resources_(void) {
  */
 sdk_ret_t
 subnet_entry::program_config(obj_ctxt_t *obj_ctxt) {
-    // there is no h/w programming for subnet config but a h/w id is needed so
-    // we can use while programming vnics, routes etc.
-    //impl->program_hw();
-    this->alloc_resources_();
-    return sdk::SDK_RET_OK;
+    /**
+     * there is no h/w programming for subnet config but a h/w id is needed so
+     * we can use while programming vnics, routes etc.
+     */
+    return alloc_resources_();
 }
 
 /**

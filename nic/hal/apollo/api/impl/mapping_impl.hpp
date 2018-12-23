@@ -1,46 +1,58 @@
 /**
  * Copyright (c) 2018 Pensando Systems, Inc.
  *
- * @file    impl_base.hpp
+ * @file    mapping_impl.hpp
  *
- * @brief   base object definition for all impl objects
+ * @brief   This file mapping implementation in the p4/hw
  */
+#if !defined (__MAPPING_IMPL_HPP__)
+#define __MAPPING_IMPL_HPP__
 
-#if !defined (__IMPL_BASE_HPP__)
-#define __IMPL_BASE_HPP__
-
-#include "nic/sdk/include/sdk/base.hpp"
-#include "nic/hal/apollo/framework/obj_base.hpp"
 #include "nic/hal/apollo/framework/api.hpp"
+#include "nic/hal/apollo/framework/api_base.hpp"
+#include "nic/hal/apollo/framework/impl_base.hpp"
+#include "nic/hal/apollo/include/api/oci_mapping.hpp"
 
 namespace impl {
 
 /**
- * @brief    base class for all impl objects
+ * @defgroup OCI_MAPPING_IMPL - mapping functionality
+ * @ingroup OCI_MAPPING
+ * @{
  */
-class impl_base : public obj_base {
-public:
-    /**< @brief    constructor */
-    impl_base() {}
 
-    /**< @brief    destructor */
-    ~impl_base() {}
+/**
+ * @brief    mapping implementation
+ */
+class mapping_impl : public impl_base {
+public:
+    /**
+     * @brief    factory method to allocate & initialize mapping impl instance
+     * @param[in] oci_mapping    mapping information
+     * @return    new instance of mapping or NULL, in case of error
+     */
+    static mapping_impl *factory(oci_mapping_t *oci_mapping);
+
+    /**
+     * @brief    release all the s/w state associated with the given mapping,
+     *           if any, and free the memory
+     * @param[in] mapping     mapping to be freed
+     * NOTE: h/w entries should have been cleaned up (by calling
+     *       impl->cleanup_hw() before calling this
+     */
+    static void destroy(mapping_impl *impl);
 
     /**
      * @brief    allocate/reserve h/w resources for this object
      * @return    SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t alloc_resources(api_base *api_obj) {
-        return sdk::SDK_RET_INVALID_OP;
-    }
+    virtual sdk_ret_t alloc_resources(api_base *api_obj) override;
 
     /**
      * @brief     free h/w resources used by this object, if any
      * @return    SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t free_resources(api_base *api_obj) {
-        return sdk::SDK_RET_INVALID_OP;
-    }
+    virtual sdk_ret_t free_resources(api_base *api_obj) override;
 
     /**
      * @brief    program all h/w tables relevant to this object except stage 0
@@ -49,9 +61,7 @@ public:
      * @return   SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t program_hw(api_base *api_obj,
-                                 obj_ctxt_t *obj_ctxt) {
-        return sdk::SDK_RET_INVALID_OP;
-    }
+                                 obj_ctxt_t *obj_ctxt) override;
 
     /**
      * @brief    cleanup all h/w tables relevant to this object except stage 0
@@ -60,9 +70,7 @@ public:
      * @return   SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t cleanup_hw(api_base *api_obj,
-                                 obj_ctxt_t *obj_ctxt) {
-        return sdk::SDK_RET_INVALID_OP;
-    }
+                                 obj_ctxt_t *obj_ctxt) override;
 
     /**
      * @brief    update all h/w tables relevant to this object except stage 0
@@ -72,9 +80,7 @@ public:
      * @return   SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t update_hw(api_base *curr_obj, api_base *prev_obj,
-                                obj_ctxt_t *obj_ctxt) {
-        return sdk::SDK_RET_INVALID_OP;
-    }
+                                obj_ctxt_t *obj_ctxt) override;
 
     /**
      * @brief    activate the epoch in the dataplane by programming stage 0
@@ -87,13 +93,18 @@ public:
     virtual sdk_ret_t activate_hw(api_base *api_obj,
                                   oci_epoch_t epoch,
                                   api_op_t api_op,
-                                  obj_ctxt_t *obj_ctxt) {
-        return sdk::SDK_RET_INVALID_OP;
-    }
+                                  obj_ctxt_t *obj_ctxt) override;
+
+private:
+    /**< @brief    constructor */
+    mapping_impl();
+
+    /**< @brief    destructor */
+    ~mapping_impl();
 };
+
+/** @} */    // end of OCI_MAPPING_IMPL
 
 }    // namespace impl
 
-using impl::impl_base;
- 
-#endif    /** __IMPL_BASE_HPP__ */
+#endif    /** __MAPPING_IMPL_HPP__ */

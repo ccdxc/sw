@@ -228,5 +228,7 @@ protected:
 } __PACK__;
 
 }    // namespace api
+
+using api::api_base;
  
 #endif    /** __API_BASE_HPP__ */

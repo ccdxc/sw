@@ -46,6 +46,8 @@ typedef enum obj_id_e {
 
 using api::api_op_t;
 using api::obj_id_t;
+using api::api_ctxt_t;
+using api::obj_ctxt_t;
 
 #endif    /** __API_HPP__ */
 
