@@ -7,7 +7,6 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"net"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -20,47 +19,7 @@ var naplesIP string
 var revProxyPort string
 
 func getNaplesIPFromIntf(ifname string) (string, error) {
-	ifaces, err := net.Interfaces()
-	if err != nil {
-		return "", err
-	}
-	for _, iface := range ifaces {
-		if verbose {
-			fmt.Printf("Interface %s\n", iface.Name)
-		}
-		if iface.Name == ifname {
-			if verbose {
-				fmt.Printf("Found naples interface %s\n", iface.Name)
-			}
-			addrs, err := iface.Addrs()
-			if err != nil {
-				return "", err
-			}
-			for _, addr := range addrs {
-				var ip net.IP
-				switch v := addr.(type) {
-				case *net.IPNet:
-					ip = v.IP
-				case *net.IPAddr:
-					ip = v.IP
-				}
-				ip = ip.To4()
-				if ip == nil {
-					continue // not an ipv4 address
-				}
-				if verbose {
-					fmt.Println(iface.Name + ":" + ip.String())
-				}
-				ip[3]++
-				naplesIP = ip.String()
-				if verbose {
-					fmt.Println("Naples Ip: " + naplesIP)
-				}
-				return naplesIP, nil
-			}
-		}
-	}
-	return "", errors.New("Interface " + ifname + " not found")
+	return "169.254.0.1", nil
 }
 
 func pickNetwork(cmd *cobra.Command, args []string) error {
