@@ -167,6 +167,7 @@ class NaplesManagement(EntityManagement):
         self.SendlineExpect(GlobalOptions.console_password, "#", hdl = hdl)
         
         for i in range(6):
+            time.sleep(5)
             self.SendlineExpect("clear line %d" % (GlobalOptions.console_port - 2000), "[confirm]", hdl = hdl)
             self.SendlineExpect("", " [OK]", hdl = hdl)
         hdl.close()
