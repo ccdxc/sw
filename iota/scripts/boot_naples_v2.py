@@ -148,7 +148,8 @@ class EntityManagement:
         return retcode
 
     def RunNaplesCmd(self, command, ignore_failure = False):
-        full_command = "sshpass -p %s ssh root@%s %s" %\
+        assert(ignore_failure == True or ignore_failure == False)
+        full_command = "sshpass -p %s ssh -o StrictHostKeyChecking=no root@%s %s" %\
                        (GlobalOptions.password, GlobalOptions.mnic_ip, command)
         return self.RunSshCmd(full_command, ignore_failure)
 
@@ -205,11 +206,6 @@ class NaplesManagement(EntityManagement):
         self.SendlineExpect("rm -rf /data/core/* && sync", "#")
         return
 
-    def InstallFirmware(self):
-        self.SendlineExpect("/nic/tools/sysupdate.sh -p /tmp/naples_fw.tar", 
-                            "===> Setting startup firmware", timeout = 600,)
-        return
-
     def Close(self):
         if self.hdl:
             self.hdl.close()
@@ -261,10 +257,22 @@ class HostManagement(EntityManagement):
         print("Rebooting Host : %s" % GlobalOptions.host_ip)
         return
 
-    def InstallMainFirmware(self):
+    def InstallMainFirmware(self, mount_data = True, copy_fw = True):
         assert(self.RunSshCmd("lspci | grep 1dd8") == 0)
-        self.CopyIN(GlobalOptions.image, host_dir = HOST_NAPLES_DIR, naples_dir = "/tmp")
-        self.RunNaplesCmd("/nic/tools/sysupdate.sh -p /tmp/naples_fw.tar")
+        if mount_data:
+            self.RunNaplesCmd("/nic/tools/fwupdate -r | grep goldfw")
+            self.RunNaplesCmd("mkdir -p /data && sync")
+            self.RunNaplesCmd("mount /dev/mmcblk0p10 /data/")
+
+        if copy_fw:
+            self.CopyIN(GlobalOptions.image, host_dir = HOST_NAPLES_DIR, naples_dir = "/data")
+
+        self.RunNaplesCmd("/nic/tools/sysupdate.sh -p /data/naples_fw.tar")
+        if mount_data:
+            self.RunNaplesCmd("sync && sync && sync")
+            self.RunNaplesCmd("umount /data/")
+        
+        self.RunNaplesCmd("/nic/tools/fwupdate -l")
         return
 
 def AtExitCleanup():
@@ -310,6 +318,9 @@ def Main():
     # Common to Case 2 and Case 1.
     # Initialize the Node, this is needed in all cases.
     host.Init(driver_pkg = GlobalOptions.drivers_pkg)
+
+    # Update MainFwB also to same image - TEMP CHANGE
+    host.InstallMainFirmware(mount_data = False, copy_fw = False)
     return
 
 if __name__ == '__main__':
