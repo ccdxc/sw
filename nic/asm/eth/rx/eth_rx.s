@@ -49,11 +49,19 @@ eth_rx:
 eth_rx_desc_addr_error:
     SET_STAT(_r_stats, _C_TRUE, desc_fetch_error)
 
+    DMA_CMD_PTR(_r_ptr, _r_index, r7)
+    DMA_SKIP_TO_EOP(_r_ptr, _C_FALSE)
+    DMA_CMD_NEXT(_r_index)
+
     b               eth_rx_done
     phvwri          p.eth_rx_cq_desc_status, ETH_RX_DESC_ADDR_ERROR
 
 eth_rx_desc_data_error:
     SET_STAT(_r_stats, _C_TRUE, desc_data_error)
+
+    DMA_CMD_PTR(_r_ptr, _r_index, r7)
+    DMA_SKIP_TO_EOP(_r_ptr, _C_FALSE)
+    DMA_CMD_NEXT(_r_index)
 
     b               eth_rx_done
     phvwri          p.eth_rx_cq_desc_status, ETH_RX_DESC_DATA_ERROR

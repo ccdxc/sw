@@ -86,6 +86,14 @@ struct mem2mem {
     cmd_type: 3;
 };
 
+struct skip {
+    rsvd: 109;
+    skip_to_eop: 1;
+    size: 14;
+    cmd_eop: 1;
+    cmd_type: 3;
+};
+
 #define CAPRI_RAW_TABLE_SIZE_MPU_ONLY      (7)
 
 #define NUM_DMA_CMDS_PER_FLIT               4
@@ -131,6 +139,20 @@ struct mem2mem {
 
 #define DMA_CMD_PREV(_r_index) \
     addi        _r_index, _r_index, -1
+
+/**
+ * SKIP
+ */
+
+#define DMA_SKIP(_r, _c, _size) \
+    phvwrp      _r, offsetof(struct skip, cmd_type), sizeof(struct skip.cmd_type), CAPRI_DMA_COMMAND_SKIP; \
+    phvwrp      _r, offsetof(struct skip, size), sizeof(struct skip.size), _size; \
+    phvwrp._c   _r, offsetof(struct skip, cmd_eop), sizeof(struct skip.cmd_eop), 1;
+
+#define DMA_SKIP_TO_EOP(_r, _c) \
+    phvwrp      _r, offsetof(struct skip, cmd_type), sizeof(struct skip.cmd_type), CAPRI_DMA_COMMAND_SKIP; \
+    phvwrp      _r, offsetof(struct skip, skip_to_eop), sizeof(struct skip.skip_to_eop), 1; \
+    phvwrp._c   _r, offsetof(struct skip, cmd_eop), sizeof(struct skip.cmd_eop), 1;
 
 /**
  * PHV2PKT
