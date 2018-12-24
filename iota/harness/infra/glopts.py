@@ -49,7 +49,7 @@ parser.add_argument('--regression', dest='regression',
                     action='store_true', help='Only run regression Testsuites.')
 parser.add_argument('--stress', dest='stress',
                     action='store_true', help='Enable stress test mode.')
-parser.add_argument('--stress-factor', dest='stress_factor', default=1,
+parser.add_argument('--stress-factor', dest='stress_factor', type=int, default=1,
                     help='Stress factor - Control # of iterations in stress test.')
 parser.add_argument('--logdir', dest='logdir', default=None,
                     help='Save logs in a specific directory. (Relative to IOTA directory)')

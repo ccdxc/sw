@@ -21,9 +21,8 @@ class TimeProfiler:
         return
 
     def TotalTime(self):
-        if self.stop is None:
-            self.stop = datetime.datetime.now()
-            self.delta = (self.stop - self.start)
+        if self.stop is None or self.start is None:
+            return "NA"
 
         assert(self.total is not None)
         mins, secs = divmod(self.total, 60)
