@@ -55,12 +55,12 @@ parser.add_argument('--debug', dest='debug',
                     action='store_true', help='Enable Debug Mode')
 parser.add_argument('--uuid', dest='uuid',
                     default="", help='Node UUID (Base MAC Address).')
-parser.add_argument('--mode-change', dest='mode_change',
+parser.add_argument('--only-mode-change', dest='only_mode_change',
                     action='store_true', help='Only change mode and reboot.')
 parser.add_argument('--os', dest='os',
                     default="", help='Node OS (Freebsd or Linux).')
 parser.add_argument('--mnic-ip', dest='mnic_ip',
-                    default="1.0.0.2", help='Mnic IP.')
+                    default="169.254.0.1", help='Mnic IP.')
 parser.add_argument('--skip-driver-install', dest='skip_driver_install',
                     action='store_true', help='Skips host driver install')
 parser.add_argument('--esx-script', dest='esx_script',
@@ -512,7 +512,7 @@ def Main():
     return
 
 if __name__ == '__main__':
-    if not GlobalOptions.mode_change:
+    if not GlobalOptions.only_mode_change:
         Main()
     else:
         ChangeNicMode()

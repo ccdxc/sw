@@ -209,7 +209,7 @@ def ParseVerifStr(verif_str):
     return verif
 
 def GetVerifDict(workload):
-    cmd = 'curl -X GET -H "Content-Type:application/json" http://1.0.0.2:9007/api/security/policies/'
+    cmd = 'curl -X GET -H "Content-Type:application/json" http://169.254.0.1:9007/api/security/policies/'
     req = api.Trigger_CreateExecuteCommandsRequest()
     result = api.types.status.SUCCESS
     verif = None

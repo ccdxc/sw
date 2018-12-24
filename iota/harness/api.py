@@ -414,7 +414,9 @@ def CopyToHostTools(node_name, files):
 
 def CopyToNaples(node_name, files, dest_dir):
     copy_resp = __CopyCommon(topo_svc.DIR_IN, node_name,
-                        "%s_host" % node_name, files, dest_dir)
+                             "%s_host" % node_name, files, dest_dir)
+    if not copy_resp:
+        return None
     if copy_resp.api_response.api_status == types_pb2.API_STATUS_OK:
         req = Trigger_CreateExecuteCommandsRequest()
         for f in files:

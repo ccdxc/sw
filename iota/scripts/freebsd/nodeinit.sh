@@ -1,7 +1,17 @@
 #! /usr/local/bin/bash
-killall memtun
-/naples/memtun 1.0.0.1 > /naples/memtun.log 2>&1 &
-sleep 3
-ps -ax | grep memtun
-ifconfig tun0 1.0.0.1 1.0.0.2
-cd /naples/drivers/drivers-freebsd/ && kldload sys/modules/ionic/ionic.ko
+set -e
+
+rm -f /root/.ssh/known_hosts
+rm -rf /pensando
+mkdir /pensando
+chown vm:vm /pensando
+
+cd /naples
+tar xf drivers-freebsd.tar.xz
+cd drivers-freebsd
+env OS_DIR=/usr/src ./build.sh
+kldload sys/modules/ionic/ionic.ko
+sleep 2
+
+ifconfig ionic2 169.254.0.2/24
+ping -c 5 169.254.0.1

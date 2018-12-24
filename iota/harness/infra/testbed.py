@@ -143,9 +143,13 @@ class _Testbed:
         for instance in self.__tbspec.Instances:
             cmd = ["timeout", "1400"]
             if not hasattr(instance, "NicMgmtIP") or instance.NicMgmtIP is None or instance.NicMgmtIP == '':
-                instance.NicMgmtIP = "1.0.0.2"
+                instance.NicMgmtIP = instance.NicIntMgmtIP
+
             if self.__get_instance_nic_type(instance) == "pensando":
-                cmd.extend([ "%s/iota/scripts/boot_naples.py" % GlobalOptions.topdir ])
+                if instance.NodeOs == "esx":
+                    cmd.extend([ "%s/iota/scripts/boot_naples.py" % GlobalOptions.topdir ])
+                else:
+                    cmd.extend([ "%s/iota/scripts/boot_naples_v2.py" % GlobalOptions.topdir ])
                 cmd.extend(["--console-ip", instance.NicConsoleIP])
                 cmd.extend(["--mnic-ip", instance.NicMgmtIP])
                 cmd.extend(["--console-port", instance.NicConsolePort])
@@ -163,7 +167,7 @@ class _Testbed:
                 if self.__fw_upgrade_done or GlobalOptions.only_reboot:
                     logfile = "%s/%s-%s-reboot.log" % (GlobalOptions.logdir, self.curr_ts.Name(), instance.Name)
                     Logger.info("Rebooting Node %s (logfile = %s)" % (instance.Name, logfile))
-                    cmd.extend(["--mode-change"])
+                    cmd.extend(["--only-mode-change"])
                 else:
                     logfile = "%s/%s-firmware-upgrade.log" % (GlobalOptions.logdir, instance.Name)
                     Logger.info("Updating Firmware on %s (logfile = %s)" % (instance.Name, logfile))

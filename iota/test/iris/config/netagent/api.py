@@ -4,8 +4,7 @@ import pdb
 import iota.harness.api as api
 import iota.test.iris.config.api as cfg_api
 
-base_url = "http://1.0.0.2:9007/"
-
+base_url = "http://169.254.0.1:9007/"
 
 AGENT_URLS = []
 AGENT_NODES = []

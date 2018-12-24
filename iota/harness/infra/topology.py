@@ -43,7 +43,7 @@ class Node(object):
         self.__os = getattr(self.__inst, "NodeOs", "linux")
         self.__nic_mgmt_ip = getattr(self.__inst, "NicMgmtIP", None)
         if self.__nic_mgmt_ip is None or self.__nic_mgmt_ip == "" :
-            self.__nic_mgmt_ip = "1.0.0.2"
+            self.__nic_mgmt_ip = self.__inst.NicIntMgmtIP
 
         self.__role = self.__get_instance_role(spec.role)
 
@@ -165,11 +165,7 @@ class Node(object):
                 if n.Role() != topo_pb2.PERSONALITY_VENICE: continue
                 msg.naples_config.venice_ips.append(str(n.ControlIpAddress()))
 
-            # TBD: Fix these hard-code values and use it from testbed json.
-            if self.__nic_mgmt_ip is None or self.__nic_mgmt_ip == "" :
-                msg.naples_config.naples_ip_address = "1.0.0.2"
-            else:
-                msg.naples_config.naples_ip_address = self.__nic_mgmt_ip
+            msg.naples_config.naples_ip_address = self.__nic_mgmt_ip
 
             msg.naples_config.naples_username = "root"
             msg.naples_config.naples_password = "pen123"
@@ -215,6 +211,7 @@ class Node(object):
         return
 
     def GetStartUpScript(self):
+        return None
         if self.IsNaplesHw():
             return api.HOST_NAPLES_DIR + "/" + "nodeinit.sh"
         return None
