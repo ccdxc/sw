@@ -278,6 +278,12 @@ public:
     vnic_entry *vnic_alloc(void);
 
     /**
+     * @brief      free vnic instance back to slab
+     * @param[in]  vnic   pointer to the allocated vnic
+     */
+    void vnic_free(vnic_entry *vnic);
+
+    /**
      * @brief     lookup a vnic in database given the key
      * @param[in] vnic_key vnic key
      */

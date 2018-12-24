@@ -163,6 +163,12 @@ public:
      */
     mapping_entry *mapping_alloc(void);
 
+    /**
+     * @brief      free mapping instance back to slab
+     * @param[in]  mapping   pointer to the allocated mapping
+     */
+    void mapping_free(mapping_entry *mapping);
+
 #if 0
     /**
      * @brief     lookup a mapping in database given the key

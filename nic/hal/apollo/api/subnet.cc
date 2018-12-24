@@ -290,6 +290,15 @@ subnet_state::subnet_alloc(void) {
 }
 
 /**
+ * @brief      free subnet instance back to slab
+ * @param[in]  subnet   pointer to the allocated subnet
+ */
+void
+subnet_state::subnet_free(subnet_entry *subnet) {
+    subnet_slab_->free(subnet);
+}
+
+/**
  * @brief        lookup subnet in database with given key
  * @param[in]    subnet_key subnet  key
  * @return       pointer to the subnet instance found or NULL

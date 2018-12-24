@@ -7,15 +7,13 @@
  */
 
 #include "nic/sdk/include/sdk/base.hpp"
+#include "nic/sdk/include/sdk/mem.hpp"
 #include "nic/hal/apollo/core/mem.hpp"
+#include "nic/hal/apollo/framework/impl.hpp"
 #include "nic/hal/apollo/api/switchport.hpp"
 #include "nic/hal/apollo/core/oci_state.hpp"
 #include "nic/hal/apollo/framework/api_ctxt.hpp"
 #include "nic/hal/apollo/framework/api_engine.hpp"
-
-// TODO: move these to impl
-#include "gen/p4gen/apollo/include/p4pd.h"
-#include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 
 namespace api {
 
@@ -32,7 +30,33 @@ namespace api {
  */
 switchport_entry *
 switchport_entry::factory(oci_switchport_t *oci_switchport) {
-    return switchport_db()->switchport_alloc();
+    switchport_entry    *switchport;
+
+    switchport = switchport_db()->switchport_alloc();
+    if (switchport) {
+        new (switchport) switchport_entry();
+        switchport->impl_ =
+            impl_base::factory(impl::IMPL_OBJ_ID_SWITCHPORT, oci_switchport);
+        if (switchport->impl_ == NULL) {
+            switchport->~switchport_entry();
+            switchport_db()->switchport_free(switchport);
+            return NULL;
+        }
+    }
+    return switchport;
+}
+
+/**
+ * @brief    release all the s/w state associate with the given switchport,
+ *           if any, and free the memory
+ * @param[in] switchport     switchport to be freed
+ * NOTE: h/w entries should have been cleaned up (by calling
+ *       impl->cleanup_hw() before calling this
+ */
+void
+switchport_entry::destroy(switchport_entry *switchport) {
+    impl_base::destroy(impl::IMPL_OBJ_ID_SWITCHPORT, switchport->impl_);
+    switchport->~switchport_entry();
 }
 
 /**
@@ -50,27 +74,6 @@ switchport_entry::init_config(api_ctxt_t *api_ctxt) {
     return sdk::SDK_RET_OK;
 }
 
-#if 0
-/**
- * @brief     update/override the switchport object with given config
- * @param[in] api_ctxt API context carrying the configuration
- * @return    SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t
-switchport_entry::update_config(api_ctxt_t *api_ctxt) {
-    return sdk::SDK_RET_OK;
-}
-#endif
-
-/**
- * @brief    allocate h/w resources for this object
- * @return    SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t
-switchport_entry::alloc_resources_(void) {
-    return sdk::SDK_RET_OK;
-}
-
 /**
  * @brief    program all h/w tables relevant to this object except stage 0
  *           table(s), if any, during creation of the object
@@ -79,23 +82,19 @@ switchport_entry::alloc_resources_(void) {
  */
 sdk_ret_t
 switchport_entry::program_config(obj_ctxt_t *obj_ctxt) {
-    // TODO: need to progam table constants here !!!
-    hal::pd::asicpd_program_table_constant(P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX,
-                                           ip_addr_);
-    hal::pd::asicpd_program_table_constant(P4TBL_ID_NEXTHOP_TX,
-                                           ip_addr_);
-    hal::pd::asicpd_program_table_constant(P4TBL_ID_TEP_TX,
-                                           MAC_TO_UINT64(mac_addr_));
-    return sdk::SDK_RET_OK;
+    return impl_->program_hw(this, obj_ctxt);
 }
 
 /**
- * @brief     free h/w resources used by this object, if any
- * @return    SDK_RET_OK on success, failure status code on error
+ * @brief    cleanup all h/w tables relevant to this object except stage 0
+ *           table(s), if any, by updating packed entries with latest epoch#
+ *           and setting invalid bit (if any) in the h/w entries
+ * @param[in] obj_ctxt    transient state associated with this API
+ * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-switchport_entry::free_resources_(void) {
-    return sdk::SDK_RET_OK;
+switchport_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
+    return impl_->cleanup_hw(this, obj_ctxt);
 }
 
 /**
@@ -107,9 +106,7 @@ switchport_entry::free_resources_(void) {
  */
 sdk_ret_t
 switchport_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    // TODO: need to progam table constants here !!!
-    // impl->update_hw()
-    return sdk::SDK_RET_OK;
+    return impl_->update_hw(orig_obj, this, obj_ctxt);
 }
 
 /**
@@ -136,20 +133,62 @@ switchport_entry::activate_config(oci_epoch_t epoch, api_op_t api_op,
  */
 sdk_ret_t
 switchport_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+    // TODO: will address this later !!
     return sdk::SDK_RET_INVALID_OP;
 }
 
-/**
- * @brief add switchport to database
- *
- * @param[in] switchport switchport
- */
+/**< @brief add switchport to database */
 sdk_ret_t
 switchport_entry::add_to_db(void) {
+    /**< this is a singleton obj, so this is no-op */
     return sdk::SDK_RET_OK;
 }
 
+/**< @brief delete switchport from database */
+sdk_ret_t
+switchport_entry::del_from_db(void) {
+    /**< this is a singleton obj, so this is no-op */
+    return sdk::SDK_RET_OK;
+}
+
+/**
+ * @brief    initiate delay deletion of this object
+ */
+sdk_ret_t
+switchport_entry::delay_delete(void) {
+    return delay_delete_to_slab(OCI_SLAB_SWITCHPORT, this);
+}
+
 /** @} */    // end of OCI_SWITCHPORT_ENTRY
+
+/**
+ * @defgroup OCI_SWITCHPORT_STATE - switchport database functionality
+ * @ingroup OCI_SWITCHPORT
+ * @{
+ */
+
+/**
+ * @brief     allocate switchport instance
+ * @return    pointer to the allocated switchport , NULL if no memory
+ */
+switchport_entry *
+switchport_state::switchport_alloc(void) {
+    return (switchport_entry *)SDK_CALLOC(SDK_MEM_ALLOC_OCI_SWITCPORT,
+                                          sizeof(switchport_entry));
+}
+
+/**
+ * @brief      free switchport instance back to slab
+ * @param[in]  switchport   pointer to the allocated switchport
+ */
+void
+switchport_state::switchport_free(switchport_entry *switchport) {
+    SDK_FREE(SDK_MEM_ALLOC_OCI_SWITCPORT, switchport);
+}
+
+/** @} */    // end of OCI_SWITCHPORT_STATE
+
+}    // namespace api
 
 /**
  * @defgroup OCI_SWITCHPORT_API - first level of switchport API handling
@@ -181,5 +220,3 @@ oci_switchport_create (_In_ oci_switchport_t *switchport)
 }
 
 /** @} */    // end of OCI_SWITCHPORT_API
-
-}    // namespace api

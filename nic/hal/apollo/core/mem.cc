@@ -14,6 +14,8 @@
 #include "nic/hal/apollo/api/vnic.hpp"
 #include "nic/hal/apollo/core/oci_state.hpp"
 
+// TODO: move all the calls to xxx_free() to inside xxx_entry()::destroy()
+
 namespace api {
 
 /**
@@ -27,29 +29,34 @@ void
 slab_delay_delete_cb (void *timer, uint32_t slab_id, void *elem)
 {
     switch (slab_id) {
+    case OCI_SLAB_SWITCHPORT:
+        switchport_entry::destroy((switchport_entry *)elem);
+        switchport_db()->switchport_free((switchport_entry *)elem);
+        break;
+
     case OCI_SLAB_TEP:
         tep_entry::destroy((tep_entry *)elem);
-        tep_db()->tep_slab()->free(elem);
+        tep_db()->tep_free((tep_entry *)elem);
         break;
 
     case OCI_SLAB_VCN:
         vcn_entry::destroy((vcn_entry *)elem);
-        vcn_db()->vcn_slab()->free(elem);
+        vcn_db()->vcn_free((vcn_entry *)elem);
         break;
 
     case OCI_SLAB_SUBNET:
         subnet_entry::destroy((subnet_entry *)elem);
-        subnet_db()->subnet_slab()->free(elem);
+        subnet_db()->subnet_free((subnet_entry *)elem);
         break;
 
     case OCI_SLAB_VNIC:
         vnic_entry::destroy((vnic_entry *)elem);
-        vnic_db()->vnic_slab()->free(elem);
+        vnic_db()->vnic_free((vnic_entry *)elem);
         break;
 
     case OCI_SLAB_MAPPING:
         mapping_entry::destroy((mapping_entry *)elem);
-        mapping_db()->mapping_slab()->free(elem);
+        mapping_db()->mapping_free((mapping_entry *)elem);
         break;
 
     default:

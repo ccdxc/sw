@@ -1,62 +1,58 @@
 /**
  * Copyright (c) 2018 Pensando Systems, Inc.
  *
- * @file    impl_base.hpp
+ * @file    vnic_impl.hpp
  *
- * @brief   base object definition for all impl objects
+ * @brief   VNIC implementation in the p4/hw
  */
+#if !defined (__VNIC_IMPL_HPP__)
+#define __VNIC_IMPL_HPP__
 
-#if !defined (__IMPL_BASE_HPP__)
-#define __IMPL_BASE_HPP__
-
-#include "nic/sdk/include/sdk/base.hpp"
 #include "nic/hal/apollo/framework/api.hpp"
-#include "nic/hal/apollo/framework/obj_base.hpp"
 #include "nic/hal/apollo/framework/api_base.hpp"
-#include "nic/hal/apollo/framework/impl.hpp"
+#include "nic/hal/apollo/framework/impl_base.hpp"
+#include "nic/hal/apollo/include/api/oci_vnic.hpp"
 
 namespace impl {
 
 /**
- * @brief    base class for all impl objects
+ * @defgroup OCI_VNIC_IMPL - vnic functionality
+ * @ingroup OCI_VNIC
+ * @{
  */
-class impl_base : public obj_base {
+
+/**
+ * @brief    VNIC implementation
+ */
+class vnic_impl : public impl_base {
 public:
-    /**< @brief    constructor */
-    impl_base() {}
-
-    /**< @brief    destructor */
-    ~impl_base() {}
+    /**
+     * @brief    factory method to allocate & initialize vnic impl instance
+     * @param[in] oci_vnic    vnic information
+     * @return    new instance of vnic or NULL, in case of error
+     */
+    static vnic_impl *factory(oci_vnic_t *oci_vnic);
 
     /**
-     * @brief        factory method to instantiate an impl object
-     * @param[in]    impl    object id
-     * @param[in]    args    args (not interpreted by this class)
+     * @brief    release all the s/w state associated with the given vnic,
+     *           if any, and free the memory
+     * @param[in] vnic     vnic to be freed
+     * NOTE: h/w entries should have been cleaned up (by calling
+     *       impl->cleanup_hw() before calling this
      */
-    static impl_base *factory(impl_obj_id_t obj_id, void *args);
-
-    /**
-     * @brief    release all the resources associated with this object
-     *           and free the memory
-     * @param[in] impl_obj    impl instance to be freed
-     */
-    static void destroy(impl_obj_id_t obj_id, impl_base *impl_obj);
+    static void destroy(vnic_impl *impl);
 
     /**
      * @brief    allocate/reserve h/w resources for this object
      * @return    SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t alloc_resources(api_base *api_obj) {
-        return sdk::SDK_RET_INVALID_OP;
-    }
+    virtual sdk_ret_t alloc_resources(api_base *api_obj) override;
 
     /**
      * @brief     free h/w resources used by this object, if any
      * @return    SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t free_resources(api_base *api_obj) {
-        return sdk::SDK_RET_INVALID_OP;
-    }
+    virtual sdk_ret_t free_resources(api_base *api_obj) override;
 
     /**
      * @brief    program all h/w tables relevant to this object except stage 0
@@ -65,9 +61,7 @@ public:
      * @return   SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t program_hw(api_base *api_obj,
-                                 obj_ctxt_t *obj_ctxt) {
-        return sdk::SDK_RET_INVALID_OP;
-    }
+                                 obj_ctxt_t *obj_ctxt) override;
 
     /**
      * @brief    cleanup all h/w tables relevant to this object except stage 0
@@ -76,22 +70,17 @@ public:
      * @return   SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t cleanup_hw(api_base *api_obj,
-                                 obj_ctxt_t *obj_ctxt) {
-        return sdk::SDK_RET_INVALID_OP;
-    }
+                                 obj_ctxt_t *obj_ctxt) override;
 
     /**
      * @brief    update all h/w tables relevant to this object except stage 0
      *           table(s), if any, by updating packed entries with latest epoch#
      * @param[in] orig_obj    old version of the unmodified object
-     * @param[in] curr_obj    cloned and updated version of the object
      * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t update_hw(api_base *orig_obj, api_base *curr_obj,
-                                obj_ctxt_t *obj_ctxt) {
-        return sdk::SDK_RET_INVALID_OP;
-    }
+    virtual sdk_ret_t update_hw(api_base *curr_obj, api_base *prev_obj,
+                                obj_ctxt_t *obj_ctxt) override;
 
     /**
      * @brief    activate the epoch in the dataplane by programming stage 0
@@ -104,13 +93,18 @@ public:
     virtual sdk_ret_t activate_hw(api_base *api_obj,
                                   oci_epoch_t epoch,
                                   api_op_t api_op,
-                                  obj_ctxt_t *obj_ctxt) {
-        return sdk::SDK_RET_INVALID_OP;
-    }
+                                  obj_ctxt_t *obj_ctxt) override;
+
+private:
+    /**< @brief    constructor */
+    vnic_impl();
+
+    /**< @brief    destructor */
+    ~vnic_impl();
 };
+
+/** @} */    // end of OCI_VNIC_IMPL
 
 }    // namespace impl
 
-using impl::impl_base;
- 
-#endif    /** __IMPL_BASE_HPP__ */
+#endif    /** __VNIC_IMPL_HPP__ */
