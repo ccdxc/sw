@@ -30,7 +30,7 @@ adminq_fetch_desc:
 
   // Setup Descriptor read for next stage
   phvwri          p.{app_header_table0_valid...app_header_table3_valid}, (1 << 3)
-  phvwri          p.common_te0_phv_table_lock_en, 1
+  phvwri          p.common_te0_phv_table_lock_en, 0
   phvwrpair       p.common_te0_phv_table_raw_table_size, LG2_ADMINQ_CMD_DESC_SIZE, p.common_te0_phv_table_addr, r1
   phvwri          p.common_te0_phv_table_pc, adminq_process_desc[38:6]
 
@@ -41,6 +41,8 @@ adminq_fetch_desc:
   phvwr.f         p.adminq_t0_s2s_nicmgr_qstate_addr, d.{nicmgr_qstate_addr}.dx
 
 adminq_spurious_db:
+  CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, k.p4_txdma_intr_qtype, k.p4_intr_global_lif)   // R4 = ADDR
+  CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, 0, 0)   // R3 = DATA
   phvwri.e        p.p4_intr_global_drop, 1
   phvwri.f        p.{app_header_table0_valid...app_header_table3_valid}, 0
 

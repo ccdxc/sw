@@ -645,6 +645,9 @@ DeviceManager::LinkEventHandler(link_eventdata_t *evd)
 void
 DeviceManager::AdminQPoll()
 {
+    Device *dev = NULL;
+    bool req_error = false;
+
     uint16_t p_index0 = 0, c_index0 = 0;
 
     uint64_t req_desc_addr = 0, resp_desc_addr = 0;
@@ -699,10 +702,13 @@ DeviceManager::AdminQPoll()
                req_desc_addr);
 
         // Process devcmd
-        Device *dev = (Device *)devices[req_desc.lif];
-        if (dev == NULL) {
-            NIC_LOG_ERR("Invalid AdminQ request for lif {}!", req_desc.lif);
+        if (devices.find(req_desc.lif) == devices.cend()) {
+            req_error = true;
+            NIC_LOG_ERR("Invalid AdminQ request! lif {} qtype {} qid {}",
+                req_desc.lif, req_desc.qtype, req_desc.qid);
         } else {
+            req_error = false;
+            dev = devices[req_desc.lif];
             dev->CmdHandler(&req_desc.cmd, (void *)&req_data,
                 &resp_desc.comp, (void *)&resp_data);
         }
@@ -725,50 +731,52 @@ DeviceManager::AdminQPoll()
         NIC_LOG_DEBUG("request: POST: p_index0 {}, c_index0 {}, head {}, tail {}",
                p_index0, c_index0, req_head, req_tail);
 
-        // Write nicmgr response descriptor
-        invalidate_txdma_cacheline(resp_qstate_addr);
+        if (!req_error) {
+            invalidate_txdma_cacheline(resp_qstate_addr);
 
-        READ_MEM(resp_qstate_addr + offsetof(admin_qstate_t, p_index0),
-                 (uint8_t *)&p_index0, sizeof(p_index0), 0);
+            // Write nicmgr response descriptor
+            READ_MEM(resp_qstate_addr + offsetof(admin_qstate_t, p_index0),
+                    (uint8_t *)&p_index0, sizeof(p_index0), 0);
 
-        READ_MEM(resp_qstate_addr + offsetof(admin_qstate_t, c_index0),
-                 (uint8_t *)&c_index0, sizeof(c_index0), 0);
+            READ_MEM(resp_qstate_addr + offsetof(admin_qstate_t, c_index0),
+                    (uint8_t *)&c_index0, sizeof(c_index0), 0);
 
-        NIC_LOG_DEBUG("response: PRE: p_index0 {}, c_index0 {}, head {}, tail {}",
-               p_index0, c_index0, resp_head, resp_tail);
+            NIC_LOG_DEBUG("response: PRE: p_index0 {}, c_index0 {}, head {}, tail {}",
+                p_index0, c_index0, resp_head, resp_tail);
 
-        resp_desc_addr = resp_ring_base + (sizeof(resp_desc) * resp_tail);
+            resp_desc_addr = resp_ring_base + (sizeof(resp_desc) * resp_tail);
 
-        resp_desc.lif = req_desc.lif;
-        resp_desc.qtype = req_desc.qtype;
-        resp_desc.qid = req_desc.qid;
-        resp_desc.comp_index = req_desc.comp_index;
-        resp_desc.adminq_qstate_addr = req_desc.adminq_qstate_addr;
+            resp_desc.lif = req_desc.lif;
+            resp_desc.qtype = req_desc.qtype;
+            resp_desc.qid = req_desc.qid;
+            resp_desc.comp_index = req_desc.comp_index;
+            resp_desc.adminq_qstate_addr = req_desc.adminq_qstate_addr;
 
-        NIC_LOG_DEBUG("response: lif {} qtype {} qid {} comp_index {}"
-               " adminq_qstate_addr {:#x} desc_addr {:#x}",
-               resp_desc.lif, resp_desc.qtype, resp_desc.qid,
-               resp_desc.comp_index, resp_desc.adminq_qstate_addr,
-               resp_desc_addr);
+            NIC_LOG_DEBUG("response: lif {} qtype {} qid {} comp_index {}"
+                " adminq_qstate_addr {:#x} desc_addr {:#x}",
+                resp_desc.lif, resp_desc.qtype, resp_desc.qid,
+                resp_desc.comp_index, resp_desc.adminq_qstate_addr,
+                resp_desc_addr);
 
-        WRITE_MEM(resp_desc_addr, (uint8_t *)&resp_desc, sizeof(resp_desc), 0);
+            WRITE_MEM(resp_desc_addr, (uint8_t *)&resp_desc, sizeof(resp_desc), 0);
 
-        // Ring doorbell to update the PI and run nicmgr response program
-        resp_tail = (resp_tail + 1) & (ring_size - 1);
-        resp_db_data = resp_tail;
-        NIC_LOG_DEBUG("resp_db_addr {:#x} resp_db_data {:#x}", resp_db_addr, resp_db_data);
-        WRITE_DB64(resp_db_addr, resp_db_data);
+            // Ring doorbell to update the PI and run nicmgr response program
+            resp_tail = (resp_tail + 1) & (ring_size - 1);
+            resp_db_data = resp_tail;
+            NIC_LOG_DEBUG("resp_db_addr {:#x} resp_db_data {:#x}", resp_db_addr, resp_db_data);
+            WRITE_DB64(resp_db_addr, resp_db_data);
 
-        invalidate_txdma_cacheline(resp_qstate_addr);
+            invalidate_txdma_cacheline(resp_qstate_addr);
 
-        READ_MEM(resp_qstate_addr + offsetof(admin_qstate_t, p_index0),
-                 (uint8_t *)&p_index0, sizeof(p_index0), 0);
+            READ_MEM(resp_qstate_addr + offsetof(admin_qstate_t, p_index0),
+                    (uint8_t *)&p_index0, sizeof(p_index0), 0);
 
-        READ_MEM(resp_qstate_addr + offsetof(admin_qstate_t, c_index0),
-                 (uint8_t *)&c_index0, sizeof(c_index0), 0);
+            READ_MEM(resp_qstate_addr + offsetof(admin_qstate_t, c_index0),
+                    (uint8_t *)&c_index0, sizeof(c_index0), 0);
 
-        NIC_LOG_DEBUG("response: POST: p_index0 {}, c_index0 {}, head {}, tail {}",
-               p_index0, c_index0, resp_head, resp_tail);
+            NIC_LOG_DEBUG("response: POST: p_index0 {}, c_index0 {}, head {}, tail {}",
+                p_index0, c_index0, resp_head, resp_tail);
+        }
     }
 }
 

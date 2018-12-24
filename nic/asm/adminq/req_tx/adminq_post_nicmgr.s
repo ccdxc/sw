@@ -22,8 +22,8 @@ struct tx_table_s2_t0_adminq_post_nicmgr_d d;
 #define   _r_index            r6        // Current DMA command index in PHV
 
 #define NICMGR_DB_ADDR    (0x8800000 + \
-                          (0x4 /* UPD = DB_IDX_UPD_CIDX_SET | DB_SCHED_UPD_NOP */ << 17) + \
-                          (65 /* HAL_LIF_ID_NICMGR_ADMINQ */ /* LIF */ << 6) + \
+                          (0b0100 /* UPD = DB_IDX_UPD_CIDX_SET */ << 17) + \
+                          (65  /* NICMGR_LIF */ << 6) + \
                           (0x0 /* QTYPE */ << 3))
 
 
@@ -45,7 +45,7 @@ adminq_post_nicmgr:
 
   seq             c1, d.enable, 0
   bcf             [c1], adminq_post_nicmgr_queue_disabled
-  seq             c2, d.c_index0, d.p_index0
+  seq             c2, d.ci_fetch, d.p_index0
   bcf             [c2], adminq_post_nicmgr_queue_full
   nop
 
@@ -53,17 +53,18 @@ adminq_post_nicmgr:
   add             _r_index, r0, k.adminq_global_dma_cur_index
 
   // Compute the descriptor address
-  add             _r_desc_addr, d.{ring_base}.dx, d.{c_index0}.hx, LG2_NICMGR_REQ_DESC_SIZE
+  add             _r_desc_addr, d.{ring_base}.dx, d.{ci_fetch}.hx, LG2_NICMGR_REQ_DESC_SIZE
+  tblmincri       d.{ci_fetch}.hx, d.{ring_size}.hx, 1
 
   // Do we need to generate an interrupt?
   seq             c3, r0, d.intr_assert_index
 
   // DMA nicmgr request descriptor
   DMA_CMD_PTR(_r_ptr, _r_index, r7)
-  DMA_HBM_PHV2MEM(_r_ptr, !c3, _r_desc_addr, CAPRI_PHV_START_OFFSET(nicmgr_req_desc_lif), CAPRI_PHV_END_OFFSET(nicmgr_req_desc_adminq_cmd_desc), r7)
+  DMA_HBM_PHV2MEM(_r_ptr, _C_FALSE, _r_desc_addr, CAPRI_PHV_START_OFFSET(nicmgr_req_desc_lif), CAPRI_PHV_END_OFFSET(nicmgr_req_desc_adminq_cmd_desc), r7)
   DMA_CMD_NEXT(_r_index)
 
-  bcf             [c3], adminq_post_nicmgr_ci_db
+  bcf             [c3], adminq_post_nicmgr_ci_update
   nop
 
 adminq_post_nicmgr_interrupt:
@@ -74,30 +75,27 @@ adminq_post_nicmgr_interrupt:
   // DMA nicmgr request interrupt
   phvwri          p.adminq_to_s2_intr_assert_data, 0x01000000
   DMA_CMD_PTR(_r_ptr, _r_index, r7)
-  DMA_HBM_PHV2MEM(_r_ptr, !c0, _r_intr_addr, CAPRI_PHV_START_OFFSET(adminq_to_s2_intr_assert_data), CAPRI_PHV_END_OFFSET(adminq_to_s2_intr_assert_data), r7)
+  DMA_HBM_PHV2MEM_WF(_r_ptr, _C_FALSE, _r_intr_addr, CAPRI_PHV_START_OFFSET(adminq_to_s2_intr_assert_data), CAPRI_PHV_END_OFFSET(adminq_to_s2_intr_assert_data), r7)
   DMA_CMD_NEXT(_r_index)
 
-// TODO: Remove this section when nicmgr becomes interrupt driven
-adminq_post_nicmgr_ci_db:
-  // DMA nicmgr c-index update
-  add             _r_db_data, r0, d.{c_index0}.hx
-  mincr           _r_db_data, d.{ring_size}.hx, 1
-
+adminq_post_nicmgr_ci_update:
+  // TODO: Remove this section when nicmgr becomes interrupt driven
+#if 1
+  // DMA nicmgr real c-index update
+  add             _r_db_data, r0, d.{ci_fetch}.hx
   addi            _r_db_addr, r0, NICMGR_DB_ADDR
   phvwr           p.adminq_to_s2_nicmgr_db_data, _r_db_data.dx
 
   DMA_CMD_PTR(_r_ptr, _r_index, r7)
-  DMA_HBM_PHV2MEM_WF(_r_ptr, c0, _r_db_addr, CAPRI_PHV_START_OFFSET(adminq_to_s2_nicmgr_db_data), CAPRI_PHV_END_OFFSET(adminq_to_s2_nicmgr_db_data), r7)
+  DMA_HBM_PHV2MEM_WF(_r_ptr, _C_TRUE, _r_db_addr, CAPRI_PHV_START_OFFSET(adminq_to_s2_nicmgr_db_data), CAPRI_PHV_END_OFFSET(adminq_to_s2_nicmgr_db_data), r7)
   DMA_CMD_NEXT(_r_index)
-
-#if 0
-adminq_post_nicmgr_ci_update:
+#else
   // Claim the descriptor
   tblwr.f         d.c_index0, d.ci_fetch
 
   // Eval doorbell when pi == ci
   seq             c3, d.{p_index0}.hx, d.{c_index0}.hx
-  bcf             [!c3], nicmgr_commit_done
+  bcf             [!c3], adminq_post_nicmgr_done
   nop.!c3.e
 
 adminq_post_nicmgr_evaldb:
