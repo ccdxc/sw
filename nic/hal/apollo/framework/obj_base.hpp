@@ -19,6 +19,8 @@ class obj_base {
 
 }    // namespace api
 
+using api::obj_base;
+
 
 #endif    /** __OBJ_BASE_HPP__ */
 

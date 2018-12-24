@@ -1,7 +1,7 @@
 /**
  * Copyright (c) 2018 Pensando Systems, Inc.
  *
- * @file    api_obj.cc
+ * @file    api_base.cc
  *
  * @brief   base object definition for all API objects
  */

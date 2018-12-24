@@ -97,7 +97,8 @@ mapping_entry::alloc_resources_(void) {
 sdk_ret_t
 mapping_entry::program_config(obj_ctxt_t *obj_ctxt) {
     // impl->program_hw();
-    alloc_resources_();
+    //alloc_resources_();
+
     return sdk::SDK_RET_OK;
 }
 

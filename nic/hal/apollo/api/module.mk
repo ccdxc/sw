@@ -11,5 +11,5 @@ MODULE_SRCS     = ${MODULE_SRC_DIR}/switchport.cc \
                   ${MODULE_SRC_DIR}/mapping.cc \
                   ${MODULE_SRC_DIR}/batch.cc \
                   ${MODULE_SRC_DIR}/init.cc
-MODULE_SOLIBS   = ociframework
+MODULE_SOLIBS   = ociframework ociapi_impl
 include ${MKDEFS}/post.mk

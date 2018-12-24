@@ -64,53 +64,6 @@ vcn_entry::destroy(vcn_entry *vcn) {
     vcn->~vcn_entry();
 }
 
-#if 0
-/**
- * @brief     handle a vcn create by allocating all required resources
- *            and keeping them ready for commit phase
- * @param[in] api_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t
-vcn_entry::process_create(api_ctxt_t *api_ctxt) {
-    init(&api_ctxt->vcn_info);
-    return alloc_resources();
-}
-
-/**
- * @brief     handle a vcn update by allocating all required resources
- *            and keeping them ready for commit phase
- * @param[in] api_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t
-vcn_entry::process_update(api_ctxt_t *api_ctxt) {
-    return sdk::SDK_RET_ERR;
-}
-
-/**
- * @brief     handle a vcn delete by allocating all required resources
- *            and keeping them ready for commit phase
- * @param[in] api_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t
-vcn_entry::process_delete(api_ctxt_t *api_ctxt) {
-    return sdk::SDK_RET_ERR;
-}
-
-/**
- * @brief     handle a vcn get by allocating all required resources
- *            and keeping them ready for commit phase
- * @param[in] api_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t
-vcn_entry::process_get(api_ctxt_t *api_ctxt) {
-    return sdk::SDK_RET_OK;
-}
-#endif
-
 /**
  * @brief     initialize vcn entry with the given config
  * @param[in] api_ctxt API context carrying the configuration
@@ -124,23 +77,10 @@ vcn_entry::init_config(api_ctxt_t *api_ctxt) {
     return sdk::SDK_RET_OK;
 }
 
-#if 0
-/**
- * @brief     update/override the vcn object with given config
- * @param[in] api_ctxt API context carrying the configuration
- * @return    SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t
-vcn_entry::update_config(api_ctxt_t *api_ctxt) {
-    return sdk::SDK_RET_OK;
-}
-#endif
-
 /**
  * @brief    allocate h/w resources for this object
  * @return    SDK_RET_OK on success, failure status code on error
  */
-// TODO: this should ideally go to impl class
 sdk_ret_t
 vcn_entry::alloc_resources_(void) {
     if (vcn_db()->vcn_idxr()->alloc((uint32_t *)&this->hw_id_) !=
@@ -158,11 +98,11 @@ vcn_entry::alloc_resources_(void) {
  */
 sdk_ret_t
 vcn_entry::program_config(obj_ctxt_t *obj_ctxt) {
-    // there is no h/w programming for VCN config but a h/w id is needed so we
-    // can use while programming vnics, routes etc.
-    // impl->program_hw();
-    alloc_resources_();
-    return sdk::SDK_RET_OK;
+    /**
+     * there is no h/w programming for VCN config but a h/w id is needed so we
+     * can use while programming vnics, routes etc.
+     */
+    return alloc_resources_();
 }
 
 /**
@@ -186,8 +126,7 @@ vcn_entry::free_resources_(void) {
  */
 sdk_ret_t
 vcn_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
-    // there is no h/w programming for VCN config, so nothing to cleanup
-    // impl->cleanup_hw();
+    /**< there is no h/w programming for VCN config, so nothing to cleanup */
     return sdk::SDK_RET_OK;
 }
 
@@ -200,8 +139,7 @@ vcn_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
  */
 sdk_ret_t
 vcn_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    // there is no h/w programming for VCN config, so nothing to update
-    // impl->update_hw();
+    /**< there is no h/w programming for VCN config, so nothing to update */
     return sdk::SDK_RET_OK;
 }
 
@@ -216,7 +154,7 @@ vcn_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 vcn_entry::activate_config(oci_epoch_t epoch, api_op_t api_op,
                            obj_ctxt_t *obj_ctxt) {
-    // there is no h/w programming for VCN config, so nothing to activate
+    /**< there is no h/w programming for VCN config, so nothing to activate */
     return sdk::SDK_RET_OK;
 }
 
@@ -229,41 +167,9 @@ vcn_entry::activate_config(oci_epoch_t epoch, api_op_t api_op,
  */
 sdk_ret_t
 vcn_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+    /**< nothing to update on vcn, so no updates supported */
     return sdk::SDK_RET_INVALID_OP;
 }
-
-#if 0
-/**
- * @brief    commit() is invokved during commit phase of the API processing and
- *           is not expected to fail as all required resources are already
- *           allocated by now. Based on the API operation, this API is expected
- *           to process either create/retrieve/update/delete. If any temporary
- *           state was stashed in the api_ctxt while processing this API, it
- *           should be freed here
- * @param[in] api_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- *
- * NOTE:     commit() is not expected to fail
- */
-sdk_ret_t
-vcn_entry::commit(api_ctxt_t *api_ctxt) {
-    return sdk::SDK_RET_OK;
-}
-
-/**
- * @brief     abort() is invoked during abort phase of the API processing and is
- *            not expected to fail. During this phase, all associated resources
- *            must be freed and global DBs need to be restored back to their
- *            original state and any transient state stashed in api_ctxt while
- *            processing this API should also be freed here
- * @param[in] api_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t
-vcn_entry::abort(api_ctxt_t *api_ctxt) {
-    return sdk::SDK_RET_OK;
-}
-#endif
 
 /**
  * @brief add vcn to database
