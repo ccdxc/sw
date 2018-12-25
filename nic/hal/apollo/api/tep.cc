@@ -10,8 +10,6 @@
 #include "nic/hal/apollo/core/mem.hpp"
 #include "nic/hal/apollo/api/tep.hpp"
 #include "nic/hal/apollo/core/oci_state.hpp"
-#include "gen/p4gen/apollo/include/p4pd.h"
-#include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/hal/apollo/framework/api_ctxt.hpp"
 #include "nic/hal/apollo/framework/api_engine.hpp"
 
@@ -30,7 +28,6 @@ namespace api {
 tep_entry::tep_entry() {
     //SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
     ht_ctxt_.reset();
-    hw_id_ = 0xFFFF;
 }
 
 /**
@@ -46,6 +43,12 @@ tep_entry::factory(oci_tep_t *oci_tep) {
     tep = tep_db()->tep_alloc();
     if (tep) {
         new (tep) tep_entry();
+        tep->impl_ = impl_base::factory(impl::IMPL_OBJ_ID_TEP, oci_tep);
+        if (tep->impl_ == NULL) {
+            tep_entry::destroy(tep);
+            tep_db()->tep_free(tep);
+            return NULL;
+        }
     }
     return tep;
 
@@ -66,6 +69,9 @@ tep_entry::~tep_entry() {
  */
 void
 tep_entry::destroy(tep_entry *tep) {
+    if (tep->impl_) {
+        impl_base::destroy(impl::IMPL_OBJ_ID_TEP, tep->impl_);
+    }
     tep->free_resources_();
     tep->~tep_entry();
 }
@@ -92,15 +98,7 @@ tep_entry::init_config(api_ctxt_t *api_ctxt) {
 //          "reserve" an index
 sdk_ret_t
 tep_entry::alloc_resources_(void) {
-    /**
-     * allocate hw id for this tep, tep specific index tables in the p4
-     * datapath are indexed by this
-     */
-    if (tep_db()->tep_idxr()->alloc((uint32_t *)&this->hw_id_) !=
-            sdk::lib::indexer::SUCCESS) {
-        return sdk::SDK_RET_NO_RESOURCE;
-    }
-    return sdk::SDK_RET_OK;
+    return impl_->alloc_resources(this);
 }
 
 /**
@@ -109,42 +107,25 @@ tep_entry::alloc_resources_(void) {
  * @param[in] obj_ctxt    transient state associated with this API
  * @return   SDK_RET_OK on success, failure status code on error
  */
-// TODO: this should ideally go to impl class (other than subnet_db lookup
 // TODO: we should simply be generating ARP request in the substrate in this API
 //       and come back and do this h/w programming later, but until that control
 //       plane & PMD APIs are ready, we will directly write to hw with fixed MAC
-#define tep_tx_udp_action    action_u.tep_tx_udp_tep_tx
 sdk_ret_t
 tep_entry::program_config(obj_ctxt_t *obj_ctxt) {
-    sdk_ret_t              ret;
-    oci_tep_t              *tep_info;
-    tep_tx_actiondata_t    tep_tx_data = { 0 };
+    sdk_ret_t    ret;
 
-    // impl->program_hw();
-    tep_info = &obj_ctxt->api_params->tep_info;
-    tep_tx_data.action_id = TEP_TX_UDP_TEP_TX_ID;
-    // TODO: take care of byte ordering issue, if any, here !!
-    tep_tx_data.tep_tx_udp_action.dipo = tep_info->key.ip_addr;
-    MAC_UINT64_TO_ADDR(tep_tx_data.tep_tx_udp_action.dmac,
-                       0x00020B0A0D0E);
-    ret = tep_db()->tep_tx_tbl()->insert_withid(&tep_tx_data, hw_id_);
-    return ret;
+    ret = alloc_resources_();
+    SDK_ASSERT_RETURN((ret == sdk::SDK_RET_OK), ret);
+    return impl_->program_hw(this, obj_ctxt);
 }
 
 /**
  * @brief     free h/w resources used by this object, if any
  * @return    SDK_RET_OK on success, failure status code on error
  */
-// TODO: release the directmap entry as well
 sdk_ret_t
 tep_entry::free_resources_(void) {
-    if (hw_id_ != 0xFF) {
-        tep_db()->tep_idxr()->free(hw_id_);
-        // TODO: how do we know whether we actually programmed h/w or not ? need
-        // a bit in api_base ?
-        tep_db()->tep_tx_tbl()->remove(hw_id_);
-    }
-    return sdk::SDK_RET_OK;
+    return impl_->free_resources(this);
 }
 
 /**
@@ -155,8 +136,7 @@ tep_entry::free_resources_(void) {
  */
 sdk_ret_t
 tep_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
-    //impl->cleanup_hw();
-    return sdk::SDK_RET_INVALID_OP;
+    return impl_->cleanup_hw(this, obj_ctxt);
 }
 
 /**
@@ -183,7 +163,7 @@ tep_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 tep_entry::activate_config(oci_epoch_t epoch, api_op_t api_op,
                            obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
+    return sdk::SDK_RET_OK;
 }
 
 /**
@@ -240,8 +220,6 @@ tep_entry::delay_delete(void) {
  * @brief    constructor
  */
 tep_state::tep_state() {
-    p4pd_table_properties_t    tinfo;
-
     // TODO: need to tune multi-threading related params later
     tep_ht_ = ht::factory(OCI_MAX_TEP >> 2,
                           tep_entry::tep_key_func_get,
@@ -249,21 +227,9 @@ tep_state::tep_state() {
                           tep_entry::tep_key_func_compare);
     SDK_ASSERT(tep_ht_ != NULL);
 
-    tep_idxr_ = indexer::factory(OCI_MAX_TEP);
-    SDK_ASSERT(tep_idxr_ != NULL);
-
     tep_slab_ = slab::factory("tep", OCI_SLAB_TEP, sizeof(tep_entry),
                                16, true, true, true, NULL);
     SDK_ASSERT(tep_slab_ != NULL);
-
-    /**< instantiate P4 tables for bookkeeping */
-    p4pd_table_properties_get(P4TBL_ID_TEP_TX, &tinfo);
-    // TODO: table_health_monitor_cb is passed as NULL here !!
-    tep_tx_tbl_ = directmap::factory(tinfo.tablename, P4TBL_ID_TEP_TX,
-                                     tinfo.tabledepth,
-                                     tinfo.actiondata_struct_size,
-                                     false, true, NULL);
-    SDK_ASSERT(tep_tx_tbl_ != NULL);
 }
 
 /**
@@ -271,9 +237,7 @@ tep_state::tep_state() {
  */
 tep_state::~tep_state() {
     ht::destroy(tep_ht_);
-    indexer::destroy(tep_idxr_);
     slab::destroy(tep_slab_);
-    directmap::destroy(tep_tx_tbl_);
 }
 
 /**

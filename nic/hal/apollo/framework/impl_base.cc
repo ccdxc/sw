@@ -10,6 +10,7 @@
 #include "nic/hal/apollo/framework/impl_base.hpp"
 #include "nic/hal/apollo/include/api/oci_switchport.hpp"
 #include "nic/hal/apollo/api/impl/switchport_impl.hpp"    // TODO: think how to accomodate a new impl
+#include "nic/hal/apollo/api/impl/tep_impl.hpp"
 
 namespace impl {
 
@@ -36,10 +37,13 @@ impl_base::factory(impl_obj_id_t obj_id, void *args) {
  * @param[in] impl_obj    impl instance to be freed
  */
 void
-impl_base::destroy(impl_obj_id_t obj_id, impl_base *impl_obj) {
+impl_base::destroy(impl_obj_id_t obj_id, impl_base *impl) {
     switch (obj_id) {
     case IMPL_OBJ_ID_SWITCHPORT:
-        return switchport_impl::destroy((switchport_impl *)impl_obj);
+        return switchport_impl::destroy((switchport_impl *)impl);
+
+    case IMPL_OBJ_ID_TEP:
+        return tep_impl::destroy((tep_impl *)impl);
 
     default:
         break;

@@ -15,6 +15,7 @@
 #include "nic/sdk/include/sdk/ht.hpp"
 #include "nic/sdk/lib/table/directmap/directmap.hpp"
 #include "nic/hal/apollo/framework/api_base.hpp"
+#include "nic/hal/apollo/framework/impl_base.hpp"
 #include "nic/hal/apollo/include/api/oci_tep.hpp"
 
 using sdk::lib::ht_ctxt_t;
@@ -152,9 +153,6 @@ public:
         return false;
     }
 
-    // TODO: this is impl API
-    uint16_t hwid(void) { return hw_id_; }
-
 private:
     /**< @brief    constructor */
     tep_entry();
@@ -182,9 +180,7 @@ private:
      */
     oci_tep_key_t    key_;        /**< tep key */
     ht_ctxt_t        ht_ctxt_;    /**< hash table context */
-
-    /**< P4 datapath specific state */
-    uint16_t         hw_id_;      /**< hardware id for this tep */
+    impl_base        *impl_;      /**< impl object instance */
 } __PACK__;
 
 /** @} */    // end of OCI_TEP_ENTRY
@@ -232,18 +228,19 @@ public:
 
 private:
     ht *tep_ht(void) { return tep_ht_; }
-    directmap *tep_tx_tbl(void) { return tep_tx_tbl_; }
-    indexer *tep_idxr(void) { return tep_idxr_; }
     slab *tep_slab(void) { return tep_slab_; }
     friend class tep_entry;   /**< tep_entry class is friend of tep_state */
 
 private:
     ht           *tep_ht_;      /**< Hash table root */
     slab         *tep_slab_;    /**< slab for allocating tep entry */
-    indexer      *tep_idxr_;    /**< indexer to allocate hw ids for TEPs */
-    directmap    *tep_tx_tbl_;  /**< directmap table for TEP_TX */
 };
 
+/** * @} */    // end of OCI_TEP_STATE
+
 }  /** end namespace api */
+
+using api::tep_entry;
+using api::tep_state;
 
 #endif    /** __TEP_HPP__ */

@@ -14,13 +14,14 @@
 
 namespace impl {
 
-switchport_impl    g_switchport_impl;
-
 /**
  * @defgroup OCI_SWITCHPORT_IMPL - switchport entry datapath implementation
  * @ingroup OCI_SWITCHPORT
  * @{
  */
+
+/**< as there is no state in this impl, single instance is good enough */
+switchport_impl    g_switchport_impl;
 
 /**
  * @brief    factory method to allocate & initialize switchport impl instance
@@ -60,7 +61,7 @@ switchport_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                                            switchport->ip_addr());
     hal::pd::asicpd_program_table_constant(P4TBL_ID_TEP_TX,
                                            MAC_TO_UINT64(switchport->mac_addr()));
-    return sdk::SDK_RET_INVALID_OP;
+    return sdk::SDK_RET_OK;
 }
 
 /**

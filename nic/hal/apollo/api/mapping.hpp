@@ -189,4 +189,7 @@ private:
 
 }    // namespace api
 
+using api::mapping_entry;
+using api::mapping_state;
+
 #endif    /** __MAPPING_HPP__ */

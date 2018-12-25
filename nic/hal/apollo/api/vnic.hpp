@@ -327,4 +327,7 @@ private:
 
 }    // namespace api
 
+using api::vnic_entry;
+using api::vnic_state;
+
 #endif    /** __VNIC_HPP__ */

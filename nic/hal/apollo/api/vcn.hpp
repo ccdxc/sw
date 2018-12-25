@@ -237,4 +237,7 @@ private:
 
 }    // namespace api
 
+using api::vcn_entry;
+using api::vcn_state;
+
 #endif    /** __VCN_HPP__ */
