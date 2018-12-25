@@ -97,11 +97,20 @@ public:
 
 private:
     /**< @brief    constructor */
-    vnic_impl();
+    vnic_impl() {
+        hw_id_ = 0xFFFF;
+        vnic_by_slot_hash_idx_ = 0xFFFF;
+    }
 
     /**< @brief    destructor */
-    ~vnic_impl();
-};
+    ~vnic_impl() {}
+
+private:
+    /**< P4 datapath specific state */
+    uint16_t          hw_id_;      /**< hardware id */
+    // TODO: if we have remove(key) API, we don't need to store this
+    uint16_t          vnic_by_slot_hash_idx_;
+} __PACK__;
 
 /** @} */    // end of OCI_VNIC_IMPL
 

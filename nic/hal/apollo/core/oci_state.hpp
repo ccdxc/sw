@@ -45,44 +45,44 @@ private:
 };
 extern oci_state g_oci_state;
 
+/** * @} */    // end of OCI_STATE
+
+}    // namespace api
+
 static inline switchport_state *
 switchport_db (void)
 {
-    return g_oci_state.switchport_db();
+    return api::g_oci_state.switchport_db();
 }
 
 static inline tep_state *
 tep_db (void)
 {
-    return g_oci_state.tep_db();
+    return api::g_oci_state.tep_db();
 }
 
 static inline vcn_state *
 vcn_db (void)
 {
-    return g_oci_state.vcn_db();
+    return api::g_oci_state.vcn_db();
 }
 
 static inline subnet_state *
 subnet_db (void)
 {
-    return g_oci_state.subnet_db();
+    return api::g_oci_state.subnet_db();
 }
 
 static inline vnic_state *
 vnic_db (void)
 {
-    return g_oci_state.vnic_db();
+    return api::g_oci_state.vnic_db();
 }
 
 static inline mapping_state *
 mapping_db (void)
 {
-    return g_oci_state.mapping_db();
+    return api::g_oci_state.mapping_db();
 }
-
-/** * @} */    // end of OCI_STATE
-
-}    // namespace api
 
 #endif    /** __OCI_STATE_HPP__ */

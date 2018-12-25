@@ -10,11 +10,9 @@
 #define __VNIC_HPP__
 
 #include "nic/sdk/include/sdk/slab.hpp"
-#include "nic/sdk/include/sdk/indexer.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"
-#include "nic/sdk/lib/table/directmap/directmap.hpp"
-#include "nic/sdk/lib/table/hash/hash.hpp"
 #include "nic/hal/apollo/framework/api_base.hpp"
+#include "nic/hal/apollo/framework/impl_base.hpp"
 #include "nic/hal/apollo/include/api/oci_vnic.hpp"
 
 namespace api {
@@ -242,10 +240,7 @@ private:
 private:
     oci_vnic_key_t    key_;        /**< vnic key */
     ht_ctxt_t         ht_ctxt_;    /**< hash table context */
-
-    /**< P4 datapath specific state */
-    uint16_t          hw_id_;      /**< hardware id */
-    uint16_t          vnic_by_slot_hash_idx_;
+    impl_base        *impl_;       /**< impl object instance */
 } __PACK__;
 
 /** @} */    // end of OCI_VNIC_ENTRY
@@ -293,10 +288,6 @@ public:
 
 private:
     ht *vnic_ht(void) { return vnic_ht_; }
-    indexer *vnic_idxr(void) { return vnic_idxr_; }
-    directmap *local_vnic_by_vlan_tx_tbl(void) { return local_vnic_by_vlan_tx_tbl_; }
-    sdk_hash *local_vnic_by_slot_rx_tbl(void) { return local_vnic_by_slot_rx_tbl_; }
-    directmap *egress_local_vnic_info_rx_tbl(void) { return egress_local_vnic_info_rx_tbl_; }
     slab *vnic_slab(void) { return vnic_slab_; }
     friend class vnic_entry;   /**< vnic_entry class is friend of vnic_state */
 
@@ -309,18 +300,8 @@ private:
                                                          instead of 4k index
                                                          table, we use hash
                                                          table */
-    indexer         *vnic_idxr_;                    /**< indexer to allocate hw
-                                                         vnic id */
     slab            *vnic_slab_;                    /**< slab for allocating
                                                          vnic entry */
-
-    /**< P4 datapath tables for vnic
-     *   NOTE: there is no explicit table mgmt for rx and tx stats, we directly
-     *         index using hw_id_ of vnic and and bzero out when we create vnic
-     */
-    directmap       *local_vnic_by_vlan_tx_tbl_;        /**< directmap table for LOCAL_VNIC_BY_VLAN_TX */
-    sdk_hash        *local_vnic_by_slot_rx_tbl_;        /**< hash table for LOCAL_VNIC_BY_SLOT_RX */
-    directmap       *egress_local_vnic_info_rx_tbl_;    /**< directmap table for EGRESS_LOCAL_VNIC_INFO_RX */
 };
 
 /** @} */    // end of OCI_VNIC_STATE

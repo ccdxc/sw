@@ -94,7 +94,7 @@ private:
 private:
     /**< P4 datapath specific state */
     uint16_t         hw_id_;      /**< hardware id for this tep */
-};
+} __PACK__;
 
 /** @} */    // end of OCI_TEP_IMPL
 

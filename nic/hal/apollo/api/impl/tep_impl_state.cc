@@ -6,7 +6,6 @@
  * @brief   This file contains Tunnel EndPoint (TEP)
  *          datapath database handling
  */
-
 #include "nic/hal/apollo/include/api/oci_tep.hpp"
 #include "nic/hal/apollo/api/impl/tep_impl_state.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
@@ -50,4 +49,3 @@ tep_impl_state::~tep_impl_state() {
 /** @} */    // end of OCI_TEP_IMPL_STATE
 
 }    // namespace impl
-

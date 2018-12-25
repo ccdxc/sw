@@ -1,10 +1,11 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#ifndef __ETH_H__
-#define __ETH_H__
+#ifndef __ETH_HPP__
+#define __ETH_HPP__
 
 #include <stdio.h>
 #include <inttypes.h>
+#include <ostream>
 
 #define L2_MIN_HDR_LEN                                 14
 #define L2_ETH_HDR_LEN                                 14
@@ -84,5 +85,5 @@ inline std::ostream& operator<<(std::ostream& os, mac_addr_t mac) {
 // NOTE: this is temporary until we have reserved block
 #define PENSANDO_NIC_MAC        0x022222111111ull
 
-#endif    // __ETH_H__
+#endif    // __ETH_HPP__
 
