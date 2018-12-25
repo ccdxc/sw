@@ -85,4 +85,4 @@ mapping_db (void)
 
 }    // namespace api
 
-#endif    /** __STATE_HPP__ */
+#endif    /** __OCI_STATE_HPP__ */

@@ -318,4 +318,7 @@ private:
 
 }    // namespace api
 
+using api::subnet_entry;
+using api::subnet_state;
+
 #endif    /** __SUBNET_HPP__ */
