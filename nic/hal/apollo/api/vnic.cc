@@ -541,6 +541,15 @@ vnic_state::vnic_alloc(void) {
 }
 
 /**
+ * @brief      free vnic instance back to slab
+ * @param[in]  vnic   pointer to the allocated vnic
+ */
+void
+vnic_state::vnic_free(vnic_entry *vnic) {
+    vnic_slab_->free(vnic);
+}
+
+/**
  * @brief        lookup vnic in database with given key
  * @param[in]    vnic_key vnic key
  * @return       pointer to the vnic instance found or NULL

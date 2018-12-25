@@ -233,6 +233,15 @@ mapping_state::mapping_alloc(void) {
     return ((mapping_entry *)mapping_slab_->alloc());
 }
 
+/**
+ * @brief      free mapping instance back to slab
+ * @param[in]  mapping   pointer to the allocated mapping
+ */
+void
+mapping_state::mapping_free(mapping_entry *mapping) {
+    mapping_slab_->free(mapping);
+}
+
 #if 0
 /**
  * @brief        lookup mapping in database with given key

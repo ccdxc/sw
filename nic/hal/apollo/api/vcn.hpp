@@ -44,55 +44,12 @@ public:
      */
     static void destroy(vcn_entry *vcn);
 
-#if 0
-    /**
-     * @brief     handle a vcn create by allocating all required resources
-     *            and keeping them ready for commit phase
-     * @param[in] api_ctxt    transient state associated with this API
-     * @return   SDK_RET_OK on success, failure status code on error
-     */
-    virtual sdk_ret_t process_create(api_ctxt_t *api_ctxt) override;
-
-    /**
-     * @brief     handle a vcn update by allocating all required resources
-     *            and keeping them ready for commit phase
-     * @param[in] api_ctxt    transient state associated with this API
-     * @return   SDK_RET_OK on success, failure status code on error
-     */
-    virtual sdk_ret_t process_update(api_ctxt_t *api_ctxt) override;
-
-    /**
-     * @brief     handle a vcn delete by allocating all required resources
-     *            and keeping them ready for commit phase
-     * @param[in] api_ctxt    transient state associated with this API
-     * @return   SDK_RET_OK on success, failure status code on error
-     */
-    virtual sdk_ret_t process_delete(api_ctxt_t *api_ctxt) override;
-
-    /**
-     * @brief     handle a vcn get by allocating all required resources
-     *            and keeping them ready for commit phase
-     * @param[in] api_ctxt    transient state associated with this API
-     * @return   SDK_RET_OK on success, failure status code on error
-     */
-    virtual sdk_ret_t process_get(api_ctxt_t *api_ctxt) override;
-#endif
-
     /**
      * @brief     initialize vcn entry with the given config
      * @param[in] api_ctxt API context carrying the configuration
      * @return    SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
-
-#if 0
-    /**
-     * @brief     update/override the vcn object with given config
-     * @param[in] api_ctxt API context carrying the configuration
-     * @return    SDK_RET_OK on success, failure status code on error
-     */
-    virtual sdk_ret_t update_config(api_ctxt_t *api_ctxt) override;
-#endif
 
     /**
      * @brief    program all h/w tables relevant to this object except stage 0
@@ -156,34 +113,6 @@ public:
      * @brief    initiate delay deletion of this object
      */
     virtual sdk_ret_t delay_delete(void) override;
-
-#if 0
-    /**
-     * @brief    commit() is invokved during commit phase of the API processing
-     *           and is not expected to fail as all required resources are
-     *           already allocated by now. Based on the API operation, this API
-     *           is expected to process either create/retrieve/update/delete. If
-     *           any temporary state was stashed in the api_ctxt while
-     *           processing this API, it should be freed here
-     * @param[in] api_ctxt    transient state associated with this API
-     * @return   SDK_RET_OK on success, failure status code on error
-     *
-     * NOTE:     commit() is not expected to fail
-     */
-    virtual sdk_ret_t commit(api_ctxt_t *api_ctxt) override;
-
-    /**
-     * @brief     abort() is invoked during abort phase of the API processing
-     *            and is not expected to fail. During this phase, all associated
-     *            resources must be freed and global DBs need to be restored
-     *            back to their original state and any transient state stashed
-     *            in api_ctxt while processing this API should also be freed
-     *            here
-     * @param[in] api_ctxt    transient state associated with this API
-     * @return   SDK_RET_OK on success, failure status code on error
-     */
-    virtual sdk_ret_t abort(api_ctxt_t *api_ctxt) override;
-#endif
 
     /**
      * @brief     helper function to get key given vcn entry
@@ -277,6 +206,12 @@ public:
      * @return pointer to the allocated vcn, NULL if no memory
      */
     vcn_entry *vcn_alloc(void);
+
+    /**
+     * @brief      free vcn instance back to slab
+     * @param[in]  vcn   pointer to the allocated vcn
+     */
+    void vcn_free(vcn_entry *vcn);
 
     /**
      * @brief     lookup a vcn in database given the key

@@ -245,6 +245,15 @@ vcn_state::vcn_alloc(void) {
 }
 
 /**
+ * @brief      free vcn instance back to slab
+ * @param[in]  vcn   pointer to the allocated vcn
+ */
+void
+vcn_state::vcn_free(vcn_entry *vcn) {
+    vcn_slab_->free(vcn);
+}
+
+/**
  * @brief        lookup vcn in database with given key
  * @param[in]    vcn_key vcn key
  * @return       pointer to the vcn instance found or NULL

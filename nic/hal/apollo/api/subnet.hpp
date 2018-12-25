@@ -290,6 +290,12 @@ public:
     subnet_entry *subnet_alloc(void);
 
     /**
+     * @brief      free subnet instance back to slab
+     * @param[in]  subnet   pointer to the allocated subnet
+     */
+    void subnet_free(subnet_entry *subnet);
+
+    /**
      * @brief     lookup a subnet in database given the key
      * @param[in] subnet_key subnet key
      */

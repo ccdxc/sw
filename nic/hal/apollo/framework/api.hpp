@@ -50,4 +50,3 @@ using api::api_ctxt_t;
 using api::obj_ctxt_t;
 
 #endif    /** __API_HPP__ */
-

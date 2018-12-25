@@ -37,11 +37,11 @@ sdk_calloc (const char *id_str, uint32_t size)
     return calloc(1, (size));
 }
 
-#define SDK_MALLOC(alloc_id, size)    sdk_malloc(#alloc_id, size)
-#define SDK_CALLOC(alloc_id, size)    sdk_calloc(#alloc_id, size)
-#define SDK_FREE(alloc_id, ptr)       ::free(ptr)
-
 }    // namespace sdk
+
+#define SDK_MALLOC(alloc_id, size)    sdk::sdk_malloc(#alloc_id, size)
+#define SDK_CALLOC(alloc_id, size)    sdk::sdk_calloc(#alloc_id, size)
+#define SDK_FREE(alloc_id, ptr)       ::free(ptr)
 
 #endif    // __SDK_MEM_HPP__
 

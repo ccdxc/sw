@@ -3,7 +3,7 @@
  *
  * @file    mapping_impl.hpp
  *
- * @brief   This file mapping implementation in the p4/hw
+ * @brief   mapping implementation in the p4/hw
  */
 #if !defined (__MAPPING_IMPL_HPP__)
 #define __MAPPING_IMPL_HPP__

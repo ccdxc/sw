@@ -217,6 +217,12 @@ public:
     tep_entry *tep_alloc(void);
 
     /**
+     * @brief      free tep instance back to slab
+     * @param[in]  tep   pointer to the allocated tep
+     */
+    void tep_free(tep_entry *tep);
+
+    /**
      * @brief     lookup a tep in database given the key
      * @param[in] tep_key tep key
      */

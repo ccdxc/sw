@@ -37,44 +37,6 @@ public:
      */
     static api_base *factory(api_ctxt_t *api_ctxt);
 
-#if 0
-    /**
-     * @brief    process a create operation on an object
-     * @param[in] api_ctxt    transient state associated with this API
-     * @return   SDK_RET_OK on success, failure status code on error
-     */
-    virtual sdk_ret_t process_create(api_ctxt_t *api_ctxt) {
-        return sdk::SDK_RET_INVALID_OP;
-    }
-
-    /**
-     * @brief    process a delete operation on an object
-     * @param[in] api_ctxt    transient state associated with this API
-     * @return   SDK_RET_OK on success, failure status code on error
-     */
-    virtual sdk_ret_t process_delete(api_ctxt_t *api_ctxt) {
-        return sdk::SDK_RET_INVALID_OP;
-    }
-
-    /**
-     * @brief    process a update operation on an object
-     * @param[in] api_ctxt    transient state associated with this API
-     * @return   SDK_RET_OK on success, failure status code on error
-     */
-    virtual sdk_ret_t process_update(api_ctxt_t *api_ctxt) {
-        return sdk::SDK_RET_INVALID_OP;
-    }
-
-    /**
-     * @brief    process a get operation on an object
-     * @param[in] api_ctxt    transient state associated with this API
-     * @return   SDK_RET_OK on success, failure status code on error
-     */
-    virtual sdk_ret_t process_get(api_ctxt_t *api_ctxt) {
-        return sdk::SDK_RET_INVALID_OP;
-    }
-#endif
-
     /**
      * @brief    initiaize the api object with given config
      * @param[in] api_ctxt    transient state associated with this API
@@ -83,17 +45,6 @@ public:
     virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) {
         return sdk::SDK_RET_INVALID_OP;
     }
-
-#if 0
-    /**
-     * @brief    update/override the api object with given config
-     * @param[in] api_ctxt    transient state associated with this API
-     * @return   SDK_RET_OK on success, failure status code on error
-     */
-    virtual sdk_ret_t update_config(api_ctxt_t *api_ctxt) {
-        return sdk::SDK_RET_INVALID_OP;
-    }
-#endif
 
     /**
      * @brief    program all h/w tables relevant to this object except stage 0
@@ -149,6 +100,15 @@ public:
         return sdk::SDK_RET_INVALID_OP;
     }
 
+    /**< @brief        add the object to corresponding internal db(s) */
+    virtual sdk_ret_t add_to_db(void) { return sdk::SDK_RET_INVALID_OP; }
+
+    /**< @brief        delete the object from corresponding internal db(s) */
+    virtual sdk_ret_t del_from_db(void) { return sdk::SDK_RET_INVALID_OP; }
+
+    /**< @brief        enqueue the object for delayed destruction */
+    virtual sdk_ret_t delay_delete(void) { return sdk::SDK_RET_INVALID_OP; }
+
     /**
      * @brief        find an object based on the object id & key information
      *  @param[in]    api_ctxt API context carrying object related information
@@ -179,47 +139,6 @@ public:
 
     /**< @brief    clear hw dirty bit on this object */
     void clear_hw_dirty(void) { hw_dirty_ = false; }
-
-    /**< @brief        add the object to corresponding internal db(s) */
-    virtual sdk_ret_t add_to_db(void) { return sdk::SDK_RET_INVALID_OP; }
-
-    /**< @brief        delete the object from corresponding internal db(s) */
-    virtual sdk_ret_t del_from_db(void) { return sdk::SDK_RET_INVALID_OP; }
-
-    /**< @brief        enqueue the object for delayed destruction */
-    virtual sdk_ret_t delay_delete(void) { return sdk::SDK_RET_INVALID_OP; }
-
-#if 0
-    /**
-     * @brief    commit() is invokved during commit phase of the API processing
-     *           and is not expected to fail as all required resources are
-     *           already allocated by now. Based on the API operation, this API
-     *           is expected to process either create/retrieve/update/delete. If
-     *           any temporary state was stashed in the api_ctxt while
-     *           processing this API, it should be freed here
-     * @param[in] api_ctxt    transient state associated with this API
-     * @return   SDK_RET_OK on success, failure status code on error
-     *
-     * NOTE:     commit() is not expected to fail
-     */
-    virtual sdk_ret_t commit(api_ctxt_t *api_ctxt) { return sdk::SDK_RET_OK; }
-
-    /**
-     * @brief     abort() is invoked during abort phase of the API processing
-     *            and is not expected to fail. During this phase, all associated
-     *            resources must be freed and global DBs need to be restored
-     *            back to their original state and any transient state stashed
-     *            in api_ctxt while processing this API should also be freed
-     *            here. Note that abort() can be called on an object that is not
-     *            fully programmed in h/w, so we should be able to handle cases
-     *            where only partial resources allocated and where partial
-     *            information is programmed in the h/w (even after allocating
-     *            resources fully)
-     * @param[in] api_ctxt    transient state associated with this API
-     * @return   SDK_RET_OK on success, failure status code on error
-     */
-    virtual sdk_ret_t abort(api_ctxt_t *api_ctxt) { return sdk::SDK_RET_OK; }
-#endif
 
 protected:
     bool    in_dirty_list_;    /**< true if object is in the dirty list */

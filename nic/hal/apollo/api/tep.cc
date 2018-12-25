@@ -286,6 +286,15 @@ tep_state::tep_alloc(void) {
 }
 
 /**
+ * @brief      free tep instance back to slab
+ * @param[in]  tep   pointer to the allocated tep
+ */
+void
+tep_state::tep_free(tep_entry *tep) {
+    tep_slab_->free(tep);
+}
+
+/**
  * @brief        lookup tep in database with given key
  * @param[in]    tep_key tep key
  * @return       pointer to the tep instance found or NULL
