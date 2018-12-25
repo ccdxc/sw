@@ -143,7 +143,7 @@ class _Testbed:
         for instance in self.__tbspec.Instances:
             cmd = ["timeout", "1400"]
             if not hasattr(instance, "NicMgmtIP") or instance.NicMgmtIP is None or instance.NicMgmtIP == '':
-                instance.NicMgmtIP = instance.NicIntMgmtIP
+                instance.NicMgmtIP = getattr(instance, "NicIntMgmtIP", "169.254.0.1")
 
             if self.__get_instance_nic_type(instance) == "pensando":
                 if instance.NodeOs == "esx":

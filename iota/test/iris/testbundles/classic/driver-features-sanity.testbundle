@@ -114,9 +114,10 @@ testcases:
             test-type    : host
             iperf_threads     :  1
             #capture_pcap : true
+
     -   name    : UplinkIntf_TSO_AFTER_RESTART
         testcase: testcases.drivers.features
-        disable : False
+        enable  : False
         iterators :
             type               : nested
             mtu                : [ '8192']
@@ -133,6 +134,7 @@ testcases:
             test-type    : host
             iperf_threads     :  1
             restart      : true
+
     -   name    : UplinkIntf_RSS
         testcase: testcases.drivers.features
         disable : False

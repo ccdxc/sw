@@ -42,8 +42,9 @@ class Node(object):
         self.__ip_address = self.__inst.NodeMgmtIP
         self.__os = getattr(self.__inst, "NodeOs", "linux")
         self.__nic_mgmt_ip = getattr(self.__inst, "NicMgmtIP", None)
+        self.__nic_int_mgmt_ip = getattr(self.__inst, "NicIntMgmtIP", "169.254.0.1")
         if self.__nic_mgmt_ip is None or self.__nic_mgmt_ip == "" :
-            self.__nic_mgmt_ip = self.__inst.NicIntMgmtIP
+            self.__nic_mgmt_ip = self.__nic_int_mgmt_ip
 
         self.__role = self.__get_instance_role(spec.role)
 

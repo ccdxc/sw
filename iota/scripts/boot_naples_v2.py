@@ -219,13 +219,16 @@ class HostManagement(EntityManagement):
     def Init(self, driver_pkg = None, cleanup = True):
         self.WaitForSsh()
         os.system("date")
+
+        nodeinit_args = ""
         if cleanup:
+            nodeinit_args = "--cleanup"
             self.RunSshCmd("rm -rf /naples && mkdir /naples")
 
         if driver_pkg:
             self.CopyIN("scripts/%s/nodeinit.sh" % GlobalOptions.os, HOST_NAPLES_DIR)
             self.CopyIN(driver_pkg, HOST_NAPLES_DIR)
-            self.RunSshCmd("%s/nodeinit.sh" % HOST_NAPLES_DIR)
+            self.RunSshCmd("%s/nodeinit.sh %s" % (HOST_NAPLES_DIR, nodeinit_args))
         return
 
     def CopyIN(self, src_filename, host_dir, naples_dir = None):

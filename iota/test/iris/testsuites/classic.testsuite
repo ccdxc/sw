@@ -36,10 +36,10 @@ testbundles:
     - linktest/linktest.testbundle
     - classic/driver-features-oob-1g-sanity.testbundle
     - linktest/linktest.testbundle
-    - classic/driver-features-sanity.testbundle
+    #- classic/driver-features-sanity.testbundle
     - linktest/linktest.testbundle
     - storage/storage.testbundle
-    - penctl/penctl.testbundle
+    #- penctl/penctl.testbundle
  
 teardown:
     #- step      : verif.utils.collect_logs_and_cores
