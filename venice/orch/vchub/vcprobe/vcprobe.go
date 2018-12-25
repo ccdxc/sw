@@ -123,7 +123,7 @@ func (v *VCProbe) probeSmartNICs() error {
 
 	hostProps := []string{"config"}
 	hostRef := types.ManagedObjectReference{Type: "HostSystem"}
-	filter := new(property.WaitFilter).Add(hostView.Reference(), hostRef.Type, hostProps)
+	filter := new(property.WaitFilter).Add(hostView.Reference(), hostRef.Type, hostProps, hostView.TraversalSpec())
 
 	updFunc := func(updates []types.ObjectUpdate) bool {
 		for _, update := range updates {
@@ -244,7 +244,7 @@ func (v *VCProbe) probeNwIFs() error {
 
 	vmRef := types.ManagedObjectReference{Type: "VirtualMachine"}
 	vmProps := []string{"config", "name", "runtime", "tag", "customValue"}
-	filter := new(property.WaitFilter).Add(vmView.Reference(), vmRef.Type, vmProps)
+	filter := new(property.WaitFilter).Add(vmView.Reference(), vmRef.Type, vmProps, vmView.TraversalSpec())
 
 	updFunc := func(updates []types.ObjectUpdate) bool {
 		for _, update := range updates {
