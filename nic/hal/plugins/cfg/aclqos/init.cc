@@ -343,13 +343,15 @@ hal_acl_config_init (void)
         HAL_TRACE_DEBUG("Quiesce acl entry created");
     }
 
-    ret = hal_eplearn_acl_config_init();
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Eplearn acl entry create failed ret {}", ret);
-        goto end;
+    if (g_hal_state->forwarding_mode() != HAL_FORWARDING_MODE_CLASSIC) {
+        ret = hal_eplearn_acl_config_init();
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Eplearn acl entry create failed ret {}", ret);
+            goto end;
+        }
+        HAL_TRACE_DEBUG("Eplearn acl entry created");
+        ret = HAL_RET_OK;
     }
-    HAL_TRACE_DEBUG("Eplearn acl entry created");
-    ret = HAL_RET_OK;
 
 end:
 

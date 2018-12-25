@@ -1,20 +1,13 @@
 meta:
     name    : mnichostpin
     os      : [ linux ]
-    nics    : [ pensando ]
-    targetcount : 5
+    nics    : [ pensando, intel, mellanox, broadcom ]
+    targetcount : 2
 
 testcases:
-    -   name    : MnicInterfaceUp
-        testcase: testcases.mnic.if_up
-        ignore: False
-        verifs:
-            #-   step    : verif.operstate.verify_stats_agent
-            #-   step    : verif.operstate.verify_stats_hw
-
     -   name    : ping_int_mnic0_intf
         testcase: testcases.mnic.ping_int_mnic0
-        ignore: True
+        ignore: False
         args    :
             mtu: 1500
         verifs:
@@ -30,20 +23,3 @@ testcases:
             #-   step    : verif.operstate.verify_stats_agent
             #-   step    : verif.operstate.verify_stats_hw
 
-    -   name    : ping_inb_mnic0_intf
-        testcase: testcases.mnic.ping_inb0
-        ignore: False
-        args    :
-            mtu: 1500
-        verifs:
-            #-   step    : verif.operstate.verify_stats_agent
-            #-   step    : verif.operstate.verify_stats_hw
-
-    -   name    : ping_inb_mnic1_intf
-        testcase: testcases.mnic.ping_inb1
-        ignore: False
-        args    :
-            mtu: 1500
-        verifs:
-            #-   step    : verif.operstate.verify_stats_agent
-            #-   step    : verif.operstate.verify_stats_hw

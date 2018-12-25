@@ -37,7 +37,6 @@ def GetHostInternalMgmtInterfaces(node):
             iface_name = command.stdout
             interface_names.append(iface_name.strip("\n"))
 
-    api.Logger.info (" interface_names: ", interface_names)
     return interface_names
 
 def GetNaplesInternalMgmtInterfaces(node):

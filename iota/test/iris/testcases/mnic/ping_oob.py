@@ -6,17 +6,25 @@ def Setup(tc):
 
 def Trigger(tc):
     pairs = api.GetRemoteWorkloadPairs()
+    mgmt_ip = api.GetNaplesMgmtIpAddresses()
     w1 = pairs[0][0]
     w2 = pairs[0][1]
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-    tc.cmd_descr = "Server: %s(%s) <--> Client: %s(%s)" %\
+    tc.cmd_descr = "Node1: %s(%s) <--> Node2: %s(%s)" %\
             (w1.workload_name, w1.ip_address, w2.workload_name, w2.ip_address)
-    api.Logger.info("Starting Iperf test from %s" % (tc.cmd_descr))
+    api.Logger.info("Starting Ping test between %s" % (tc.cmd_descr))
 
-    if w1.IsNaples() and w2.IsNaples():
-        api.Trigger_AddNaplesCommand(req, w1.node_name, "ifconfig oob_mnic0 10.10.10.10 netmask 255.255.255.0 up")
-        api.Trigger_AddNaplesCommand(req, w2.node_name, "ifconfig oob_mnic0 10.10.10.11 netmask 255.255.255.0 up")
-        api.Trigger_AddNaplesCommand(req, w1.node_name, "ping -I oob_mnic0 -c3 10.10.10.11")
+    if w1.IsNaples() or w2.IsNaples():
+        if w1.IsNaples():
+            for if_ip in mgmt_ip:
+                ping_cmd = "ping -I oob_mnic0 -c3 %s" % (if_ip)
+            api.Trigger_AddNaplesCommand(req, w1.node_name, ping_cmd)
+
+        if w2.IsNaples():
+            for if_ip in mgmt_ip:
+                ping_cmd = "ping -I oob_mnic0 -c3 %s" % (if_ip)
+            api.Trigger_AddNaplesCommand(req, w2.node_name, ping_cmd)
+
         tc.resp = api.Trigger(req)
     else:
         tc.resp = None
