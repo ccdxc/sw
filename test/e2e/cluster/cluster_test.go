@@ -79,7 +79,6 @@ var _ = Describe("cluster tests", func() {
 			time.Sleep(2 * time.Second)
 
 			By(fmt.Sprintf("before: %v", serviceListBefore.String()))
-		outerLoop:
 			for i, svc := range serviceListBefore.Items {
 				if svc.Name == "pen-kube-apiserver" {
 					for j, inst := range svc.Instances {
@@ -87,17 +86,28 @@ var _ = Describe("cluster tests", func() {
 							serviceListBefore.Items[i].Instances[j].Name = newLeader
 							serviceListBefore.Items[i].Instances[j].Node = newLeader
 							By(fmt.Sprintf("Replaced %v to %v in serviceListBefore", oldLeader, newLeader))
-							break outerLoop
 						}
 					}
 				}
 			}
 
+			xformList := func(inp []*cmdprotos.Service) []*cmdprotos.Service {
+				filteredItemList := []*cmdprotos.Service{nil}
+				for _, svc := range inp {
+					if svc.Name != "pen-filebeat" {
+						filteredItemList = append(filteredItemList, svc)
+					}
+				}
+				return filteredItemList
+			}
+			serviceListBefore.Items = xformList(serviceListBefore.Items)
+
 			Eventually(func() bool {
 				serviceListAfter := getServices(newLeader)
 				By(fmt.Sprintf("after: %v", serviceListAfter.String()))
+				serviceListAfter.Items = xformList(serviceListAfter.Items)
 				return reflect.DeepEqual(serviceListAfter, serviceListBefore)
-			}, 20, 2).Should(BeTrue(), "Services should be same after leader change")
+			}, 20, 2).Should(BeTrue(), "Services except filebeat,pen-kubeapiserver should be same after leader change")
 
 			validateCluster()
 		})
