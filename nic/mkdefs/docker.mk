@@ -10,10 +10,10 @@ CONTAINER_NAME:=${CUR_USER}_${CUR_TIME}
 # get a shell with the dependencies image loaded, with the host filesystem mounted.
 ifeq ($(USER),)
 docker/shell:
-	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v $(SW_DIR)/bazel-cache:/root/.cache -w /sw/nic pensando/nic bash
+	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v /vol/builds:/vol/builds -v $(SW_DIR):/sw -v $(SW_DIR)/bazel-cache:/root/.cache -w /sw/nic pensando/nic bash
 else
 docker/shell: docker/build-shell-image
-	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v $(SW_DIR)/bazel-cache:/home/$(CUR_USER)/.cache -w /sw/nic pensando/nic su -l $(CUR_USER)
+	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v /vol/builds:/vol/builds -v $(SW_DIR):/sw -v $(SW_DIR)/bazel-cache:/home/$(CUR_USER)/.cache -w /sw/nic pensando/nic su -l $(CUR_USER)
 endif
 
 docker/build-shell-image: docker/install_box
