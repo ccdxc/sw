@@ -1,6 +1,6 @@
 import iota.harness.api as api
 import iota.test.iris.testcases.drivers.cmd_builder as cmd_builder
-
+import iota.test.iris.utils.naples_host as naples_host_util
 
 PENCTL_EXEC =  {
 }
@@ -20,13 +20,14 @@ core_file_names = [
 
 
 def GetNaplesMgmtIP(node):
-    return api.GetNicMgmtIP(node)
+    return  "169.254.0.1"
 
-def GetNaplesTunIntf(node):
-    return  "tun0"
+def GetNaplesMgmtIntf(node):
+    naples_host_mgmt_if = naples_host_util.GetHostInternalMgmtInterfaces(node)
+    return naples_host_mgmt_if[0]
 
 def __get_pen_ctl_cmd(node):
-    mgmt_intf = GetNaplesTunIntf(node)
+    mgmt_intf = GetNaplesMgmtIntf(node)
     return "PENETHDEV=%s %s " % (mgmt_intf, PENCTL_EXEC[node])
 
 def AddPenctlCommand(req, node, cmd):
@@ -38,7 +39,7 @@ def SendTraffic(tc):
     tc.cmd_descr = "Server: %s(%s) <--> Client: %s(%s)" %\
                    (tc.intf1.Name(), tc.intf1.GetIP(), tc.intf2.Name(), tc.intf2.GetIP())
     api.Logger.info("Starting Iperf  from %s" % (tc.cmd_descr))
-    
+
     port = api.AllocateTcpPort()
     iperf_server_cmd = cmd_builder.iperf_server_cmd(port = port)
     tc.intf1.AddCommand(req, iperf_server_cmd, background = True)
