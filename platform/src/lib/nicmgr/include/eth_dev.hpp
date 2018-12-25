@@ -138,6 +138,8 @@ static_assert((offsetof(struct dev_cmd_regs, data) % 4) == 0);
 #define ETH_EDMAQ_ID                    1
 #define LG2_ETH_EDMAQ_RING_SIZE         4
 #define ETH_EDMAQ_RING_SIZE             (1 << LG2_ETH_EDMAQ_RING_SIZE)
+#define ETH_EDMAQ_COMP_POLL_US          (1000)
+#define ETH_EDMAQ_COMP_POLL_MAX         (10)
 
 enum lif_state {
     LIF_STATE_RESET,
@@ -167,7 +169,6 @@ public:
 
     void DevcmdHandler();
     void DevObjSave();
-    static void StatsUpdateHandler(void *obj);
     void LinkEventHandler(link_eventdata_t *evd);
     enum DevcmdStatus CmdHandler(void *req, void *req_data, void *resp, void *resp_data);
 
@@ -213,6 +214,8 @@ private:
     uint64_t host_notify_block_addr;
     // EdmaQ
     uint16_t edma_ring_head;
+    uint16_t edma_comp_tail;
+    uint16_t edma_exp_color;
     uint64_t edma_ring_base;
     uint64_t edma_comp_base;
     // Rss config
@@ -228,6 +231,9 @@ private:
     map<uint64_t, tuple<uint64_t, uint16_t>> mac_vlans;
     // Tasks
     evutil_timer stats_timer;
+    // Callbacks
+    static void StatsUpdate(void *obj);
+    static void NotifyBlockUpdate(void *arg);
 
     /* Command Handlers */
     enum DevcmdStatus _CmdReset(void *req, void *req_data, void *resp, void *resp_data);

@@ -1626,7 +1626,6 @@ void ionic_lifs_free(struct ionic *ionic)
 	}
 }
 
-#ifdef IONIC_ENABLE_HW_STATS
 static int ionic_lif_stats_dump_start(struct lif *lif, unsigned int ver)
 {
 	struct net_device *netdev = lif->netdev;
@@ -1639,19 +1638,19 @@ static int ionic_lif_stats_dump_start(struct lif *lif, unsigned int ver)
 	};
 	int error;
 
-	if ((error = ionic_dma_alloc(lif->ionic, sizeof(struct stats_dump), &lif->stats_dma, BUS_DMA_NOWAIT))) {
+	if ((error = ionic_dma_alloc(lif->ionic, sizeof(struct ionic_lif_stats), &lif->stats_dma, BUS_DMA_NOWAIT))) {
 		IONIC_NETDEV_ERROR(netdev, "failed to allocated stats DMA, err: %d\n", error);
 		return error;
 	}
 
 	lif->stats_dump_pa = lif->stats_dma.dma_paddr;
-	lif->stats_dump = (struct stats_dump *)lif->stats_dma.dma_vaddr;
+	lif->stats_dump = (struct ionic_lif_stats *)lif->stats_dma.dma_vaddr;
 
 	if (!lif->stats_dump) {
 		IONIC_NETDEV_ERROR(netdev, "failed to allocate stats buffer\n");
 		return ENOMEM;
 	}
-	bzero(lif->stats_dump, sizeof(struct stats_dump));
+	bzero(lif->stats_dump, sizeof(struct ionic_lif_stats));
 	ctx.cmd.stats_dump.addr = lif->stats_dump_pa;
 
 	IONIC_NETDEV_INFO(netdev, "stats_dump START ver %d addr %p(0x%lx)\n", ver,
@@ -1698,7 +1697,6 @@ static void ionic_lif_stats_dump_stop(struct lif *lif)
 		lif->stats_dump_pa = 0;
 	}
 }
-#endif
 
 int
 ionic_rss_ind_tbl_set(struct lif *lif, const u32 *indir)
@@ -1822,9 +1820,7 @@ static void ionic_lif_rxqs_deinit(struct lif *lif)
 
 static void ionic_lif_deinit(struct lif *lif)
 {
-#ifdef IONIC_ENABLE_HW_STATS
 	ionic_lif_stats_dump_stop(lif);
-#endif
 	ionic_rx_filters_deinit(lif);
 	ionic_lif_rss_teardown(lif);
 
@@ -2611,11 +2607,9 @@ static int ionic_lif_init(struct lif *lif)
 		goto err_out_rxqs_deinit;
 	}
 
-#ifdef IONIC_ENABLE_HW_STATS
 	err = ionic_lif_stats_dump_start(lif, STATS_DUMP_VERSION_1);
 	if (err)
 		goto err_out_rss_teardown;
-#endif
 
 	ionic_set_rx_mode(lif->netdev);
 
@@ -2625,10 +2619,8 @@ static int ionic_lif_init(struct lif *lif)
 
 	return 0;
 
-#ifdef IONIC_ENABLE_HW_STATS
 err_out_rss_teardown:
 	ionic_lif_rss_teardown(lif);
-#endif
 err_out_rxqs_deinit:
 	ionic_lif_rxqs_deinit(lif);
 err_out_txqs_deinit:

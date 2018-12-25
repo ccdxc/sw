@@ -1194,87 +1194,6 @@ struct stats_dump_comp {
 	u32 color:1;
 };
 
-/**
- * struct stats_dump - 4096 bytes of device stats
- */
-struct stats_dump {
-	u64 rx_ucast_bytes;            /*   0 */
-	u64 rx_ucast_packets;          /*   8 */
-	u64 rx_mcast_bytes;            /*  16 */
-	u64 rx_mcast_packets;          /*  24 */
-	u64 rx_bcast_bytes;            /*  32 */
-	u64 rx_bcast_packets;          /*  40 */
-	u64 pad1[2];
-
-	u64 rx_ucast_drop_bytes;       /*  64 */
-	u64 rx_ucast_drop_packets;     /*  72 */
-	u64 rx_mcast_drop_bytes;       /*  80 */
-	u64 rx_mcast_drop_packets;     /*  88 */
-	u64 rx_bcast_drop_bytes;       /*  96 */
-	u64 rx_bcast_drop_packets;     /* 104 */
-	u64 rx_dma_error;              /* 112 */
-	u64 pad2;
-
-	u64 tx_ucast_bytes;            /* 128 */
-	u64 tx_ucast_packets;          /* 136 */
-	u64 tx_mcast_bytes;            /* 144 */
-	u64 tx_mcast_packets;          /* 152 */
-	u64 tx_bcast_bytes;            /* 160 */
-	u64 tx_bcast_packets;          /* 168 */
-	u64 pad3[2];
-
-	u64 tx_ucast_drop_bytes;       /* 192 */
-	u64 tx_ucast_drop_packets;     /* 200 */
-	u64 tx_mcast_drop_bytes;       /* 208 */
-	u64 tx_mcast_drop_packets;     /* 216 */
-	u64 tx_bcast_drop_bytes;       /* 224 */
-	u64 tx_bcast_drop_packets;     /* 232 */
-	u64 tx_dma_error;              /* 240 */
-	u64 pad4[2];
-
-	u64 rx_queue_disabled_drop;    /* 256 */
-	u64 rx_queue_empty_drop;       /* 264 */
-	u64 rx_queue_scheduled;        /* 272 */
-	u64 rx_desc_fetch_error;       /* 280 */
-	u64 rx_desc_data_error;        /* 288 */
-	u64 pad5[3];
-
-	u64 tx_queue_disabled;         /* 320 */
-	u64 tx_queue_scheduled;        /* 328 */
-	u64 tx_desc_fetch_error;       /* 336 */
-	u64 tx_desc_data_error;        /* 344 */
-	u64 pad6[5];
-
-	/* Debug counters */
-	u64 rx_rss;                    /* 384 */
-	u64 rx_csum_complete;          /* 392 */
-	u64 rx_csum_ip_bad;            /* 400 */
-	u64 rx_csum_tcp_bad;           /* 408 */
-	u64 rx_csum_udp_bad;           /* 416 */
-	u64 rx_vlan_strip;             /* 424 */
-	u64 pad7[3];
-
-	u64 tx_csum_hw;                /* 448 */
-	u64 tx_csum_hw_inner;          /* 456 */
-	u64 tx_vlan_insert;            /* 464 */
-	u64 tx_sg;                     /* 472 */
-	u64 tx_tso_sg;                 /* 480 */
-	u64 tx_tso_sop;                /* 488 */
-	u64 tx_tso_eop;                /* 496 */
-	u64 pad8[6];
-
-	u64 tx_opcode_invalid;         /* 560 */
-	u64 tx_opcode_csum_none;       /* 568 */
-	u64 tx_opcode_csum_partial;    /* 576 */
-	u64 tx_opcode_csum_hw;         /* 584 */
-	u64 tx_opcode_csum_tso;        /* 592 */
-
-	u64 pad_to_1024[51];
-	u64 pad_to_2048[128];
-	u64 pad_to_3072[128];
-	u64 pad_to_4096[128];
-};
-
 #define RSS_HASH_KEY_SIZE	40
 
 enum rss_hash_types {
@@ -1528,8 +1447,8 @@ struct ionic_lif_stats {
 	uint64_t rx_mcast_packets;
 	uint64_t rx_bcast_bytes;
 	uint64_t rx_bcast_packets;
-	uint64_t rx_dma_error;
 	uint64_t rsvd0;
+	uint64_t rsvd1;
 	// RX drops
 	uint64_t rx_ucast_drop_bytes;
 	uint64_t rx_ucast_drop_packets;
@@ -1537,7 +1456,7 @@ struct ionic_lif_stats {
 	uint64_t rx_mcast_drop_packets;
 	uint64_t rx_bcast_drop_bytes;
 	uint64_t rx_bcast_drop_packets;
-	uint64_t rsvd1;
+	uint64_t rx_dma_error;
 	uint64_t rsvd2;
 	// TX
 	uint64_t tx_ucast_bytes;
@@ -1546,8 +1465,8 @@ struct ionic_lif_stats {
 	uint64_t tx_mcast_packets;
 	uint64_t tx_bcast_bytes;
 	uint64_t tx_bcast_packets;
-	uint64_t tx_dma_error;
 	uint64_t rsvd3;
+	uint64_t rsvd4;
 	// TX drops
 	uint64_t tx_ucast_drop_bytes;
 	uint64_t tx_ucast_drop_packets;
@@ -1555,20 +1474,20 @@ struct ionic_lif_stats {
 	uint64_t tx_mcast_drop_packets;
 	uint64_t tx_bcast_drop_bytes;
 	uint64_t tx_bcast_drop_packets;
-	uint64_t rsvd4;
+	uint64_t tx_dma_error;
 	uint64_t rsvd5;
 	//Rx Queue/Ring drops
-	uint64_t rx_q_disable_drop;
-	uint64_t rx_q_empty_drop;
-	uint64_t rx_q_empty_scheduled;
+	uint64_t rx_queue_disabled_drop;
+	uint64_t rx_queue_empty_drop;
+	uint64_t rx_queue_scheduled;
 	uint64_t rx_desc_fetch_error;
 	uint64_t rx_desc_data_error;
 	uint64_t rsvd6;
 	uint64_t rsvd7;
 	uint64_t rsvd8;
 	//Tx Queue/Ring drops
-	uint64_t tx_q_disable_drop;
-	uint64_t tx_q_empty_drop;
+	uint64_t tx_queue_disabled;
+	uint64_t tx_queue_scheduled;
 	uint64_t tx_desc_fetch_error;
 	uint64_t tx_desc_data_error;
 	uint64_t rsvd9;

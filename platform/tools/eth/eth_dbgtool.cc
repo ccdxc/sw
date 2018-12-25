@@ -348,6 +348,25 @@ eth_stats(uint16_t lif)
     printf("tx_bcast_drop_packets       : %lu\n", stats.tx_bcast_drop_packets);
     printf("tx_dma_error                : %lu\n", stats.tx_dma_error);
 
+    printf("rx_queue_disabled_drop      : %lu\n", stats.rx_queue_disabled_drop);
+    printf("rx_queue_empty_drop         : %lu\n", stats.rx_queue_empty_drop);
+    printf("rx_queue_scheduled          : %lu\n", stats.rx_queue_scheduled);
+    printf("rx_desc_fetch_error         : %lu\n", stats.rx_desc_fetch_error);
+    printf("rx_desc_data_error          : %lu\n", stats.rx_desc_data_error);
+
+    printf("tx_queue_disabled           : %lu\n", stats.tx_queue_disabled);
+    printf("tx_queue_scheduled          : %lu\n", stats.tx_queue_scheduled);
+    printf("tx_desc_fetch_error         : %lu\n", stats.tx_desc_fetch_error);
+    printf("tx_desc_data_error          : %lu\n", stats.tx_desc_data_error);
+
+    printf("tx_ucast_drop_bytes         : %lu\n", stats.tx_ucast_drop_bytes);
+    printf("tx_ucast_drop_packets       : %lu\n", stats.tx_ucast_drop_packets);
+    printf("tx_mcast_drop_bytes         : %lu\n", stats.tx_mcast_drop_bytes);
+    printf("tx_mcast_drop_packets       : %lu\n", stats.tx_mcast_drop_packets);
+    printf("tx_bcast_drop_bytes         : %lu\n", stats.tx_bcast_drop_bytes);
+    printf("tx_bcast_drop_packets       : %lu\n", stats.tx_bcast_drop_packets);
+    printf("tx_dma_error                : %lu\n", stats.tx_dma_error);
+
     printf("tx_rdma_ucast_bytes         : %lu\n", stats.tx_rdma_ucast_bytes);
     printf("tx_rdma_ucast_packets       : %lu\n", stats.tx_rdma_ucast_packets);
     printf("tx_rdma_mcast_bytes         : %lu\n", stats.tx_rdma_mcast_bytes);

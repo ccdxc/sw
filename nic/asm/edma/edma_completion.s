@@ -38,7 +38,7 @@ edma_completion:
 
     // DMA Completion descriptor
     DMA_CMD_PTR(_r_ptr, _r_index, r7)
-    DMA_PHV2MEM(_r_ptr, !c1, r0, k.edma_t0_s2s_cq_desc_addr, CAPRI_PHV_START_OFFSET(edma_comp_desc_status), CAPRI_PHV_END_OFFSET(edma_comp_desc_color), r7)
+    DMA_PHV2MEM_WF(_r_ptr, !c1, r0, k.edma_t0_s2s_cq_desc_addr, CAPRI_PHV_START_OFFSET(edma_comp_desc_status), CAPRI_PHV_END_OFFSET(edma_comp_desc_rsvd2), r7)
     DMA_CMD_NEXT(_r_index)
 
     bcf             [!c1], edma_completion_done

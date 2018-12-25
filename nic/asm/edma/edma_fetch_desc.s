@@ -27,7 +27,7 @@ edma_fetch_desc:
   nop
 
   // Compute descriptor fetch address
-  add             _r_desc_addr, d.{ring_base}.dx, d.{c_index0}.hx, LG2_EDMA_CMD_DESC_SIZE
+  add             _r_desc_addr, d.{ring_base}.dx, d.{p_index0}.hx, LG2_EDMA_CMD_DESC_SIZE
 
   // Compute completion entry address
   add             _r_cq_desc_addr, d.{cq_ring_base}.dx, d.{c_index0}.hx, LG2_EDMA_COMP_DESC_SIZE

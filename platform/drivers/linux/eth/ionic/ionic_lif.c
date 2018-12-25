@@ -183,7 +183,7 @@ static void ionic_get_stats64(struct net_device *netdev,
 			      struct rtnl_link_stats64 *ns)
 {
 	struct lif *lif = netdev_priv(netdev);
-	struct stats_dump *sd = lif->stats_dump;
+	struct ionic_lif_stats *sd = lif->stats_dump;
 	unsigned int i;
 	u64 cnt;
 
@@ -232,20 +232,20 @@ static void ionic_get_stats64(struct net_device *netdev,
 	//ns->collisions;
 
 	//ns->rx_length_errors;
-	ns->rx_over_errors = sd->rx_queue_empty_drop;
+	//ns->rx_over_errors = sd->rx_queue_empty_drop;
 	//ns->rx_crc_errors;
 	//ns->rx_frame_errors;
 	//ns->rx_fifo_errors;
-	ns->rx_missed_errors = sd->rx_dma_error +
-			       sd->rx_queue_disabled_drop +
-			       sd->rx_queue_scheduled +
-			       sd->rx_desc_fetch_error +
-			       sd->rx_desc_data_error;
-	ns->tx_aborted_errors = sd->tx_dma_error +
-				sd->tx_queue_disabled +
-				sd->tx_queue_scheduled +
-				sd->tx_desc_fetch_error +
-				sd->tx_desc_data_error;
+	// ns->rx_missed_errors = sd->rx_dma_error +
+	// 		       sd->rx_queue_disabled_drop +
+	// 		       sd->rx_queue_scheduled +
+	// 		       sd->rx_desc_fetch_error +
+	// 		       sd->rx_desc_data_error;
+	// ns->tx_aborted_errors = sd->tx_dma_error +
+	// 			sd->tx_queue_disabled +
+	// 			sd->tx_queue_scheduled +
+	// 			sd->tx_desc_fetch_error +
+	// 			sd->tx_desc_data_error;
 	//ns->tx_carrier_errors;
 	//ns->tx_fifo_errors;
 	//ns->tx_heartbeat_errors;
@@ -253,19 +253,19 @@ static void ionic_get_stats64(struct net_device *netdev,
 	//ns->rx_compressed;
 	//ns->tx_compressed;
 
-	ns->rx_errors = ns->rx_length_errors +
-			ns->rx_over_errors +
-			ns->rx_crc_errors +
-			ns->rx_frame_errors +
-			ns->rx_fifo_errors +
-			ns->rx_missed_errors;
-	ns->tx_errors = ns->tx_aborted_errors +
-			ns->tx_carrier_errors +
-			ns->tx_fifo_errors +
-			ns->tx_heartbeat_errors +
-			ns->tx_window_errors +
-			ns->rx_compressed +
-			ns->tx_compressed;
+	// ns->rx_errors = ns->rx_length_errors +
+	// 		ns->rx_over_errors +
+	// 		ns->rx_crc_errors +
+	// 		ns->rx_frame_errors +
+	// 		ns->rx_fifo_errors +
+	// 		ns->rx_missed_errors;
+	// ns->tx_errors = ns->tx_aborted_errors +
+	// 		ns->tx_carrier_errors +
+	// 		ns->tx_fifo_errors +
+	// 		ns->tx_heartbeat_errors +
+	// 		ns->tx_window_errors +
+	// 		ns->rx_compressed +
+	// 		ns->tx_compressed;
 }
 
 static int ionic_lif_addr_add(struct lif *lif, const u8 *addr)
@@ -938,11 +938,11 @@ static int ionic_lif_stats_dump_start(struct lif *lif, unsigned int ver)
 
 	pr_debug("stats_dump START ver %d addr 0x%llx\n", ver,
 		 lif->stats_dump_pa);
-#if 0
+
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
 		goto err_out_free;
-#endif
+
 	return 0;
 
 err_out_free:
@@ -964,7 +964,6 @@ static void ionic_lif_stats_dump_stop(struct lif *lif)
 	int err;
 
 	pr_debug("stats_dump STOP\n");
-#if 0
 
 	if (!lif->stats_dump_pa)
 		return;
@@ -974,7 +973,7 @@ static void ionic_lif_stats_dump_stop(struct lif *lif)
 		netdev_err(netdev, "stats_dump cmd failed %d\n", err);
 		return;
 	}
-#endif
+
 	dma_free_coherent(dev, sizeof(*lif->stats_dump), lif->stats_dump,
 			  lif->stats_dump_pa);
 }

@@ -69,9 +69,9 @@ struct edma_comp_desc {
     uint8_t status;
     uint8_t rsvd;
     uint16_t comp_index;
-    uint8_t  rsvd1[11];
-    uint8_t color : 1;
-    uint8_t rsvd2 : 7;
+    uint8_t rsvd1[11];
+    uint8_t rsvd2:7;
+    uint8_t color:1;
 };
 
 static_assert(sizeof(struct edma_cmd_desc) == 32, "");

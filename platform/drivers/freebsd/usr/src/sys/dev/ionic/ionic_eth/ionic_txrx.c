@@ -1536,127 +1536,110 @@ static void
 ionic_setup_hw_stats(struct lif *lif, struct sysctl_ctx_list *ctx,
 	struct sysctl_oid_list *child)
 {
-	struct stats_dump *stat = lif->stats_dump;
+	struct ionic_lif_stats *stat = lif->stats_dump;
 
 	if (stat == NULL)
 		return;
 
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_ucast__bytes", CTLFLAG_RD,
-       &stat->rx_ucast_bytes, "");
+	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_ucast_bytes", CTLFLAG_RD,
+		&stat->rx_ucast_bytes, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_ucast_packets", CTLFLAG_RD,
-       &stat->rx_ucast_packets, "");
+		&stat->rx_ucast_packets, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_mcast_bytes", CTLFLAG_RD,
-       &stat->rx_mcast_bytes, "");
+		&stat->rx_mcast_bytes, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_mcast_packets", CTLFLAG_RD,
-       &stat->rx_mcast_packets, "");
+		&stat->rx_mcast_packets, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_bcast_bytes", CTLFLAG_RD,
-       &stat->rx_bcast_bytes, "");
+		&stat->rx_bcast_bytes, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_bcast_packets", CTLFLAG_RD,
-       &stat->rx_bcast_packets, "");
+		&stat->rx_bcast_packets, "");
 
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_ucast_drop_bytes", CTLFLAG_RD,
-       &stat->rx_ucast_drop_bytes, "");
+		&stat->rx_ucast_drop_bytes, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_ucast_drop_packets", CTLFLAG_RD,
-       &stat->rx_ucast_drop_packets, "");
+		&stat->rx_ucast_drop_packets, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_mcast_drop_bytes", CTLFLAG_RD,
-       &stat->rx_mcast_drop_bytes, "");
+		&stat->rx_mcast_drop_bytes, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_mcast_drop_packets", CTLFLAG_RD,
-       &stat->rx_mcast_drop_packets, "");
+		&stat->rx_mcast_drop_packets, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_bcast_drop_bytes", CTLFLAG_RD,
-       &stat->rx_bcast_drop_bytes, "");
+		&stat->rx_bcast_drop_bytes, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_bcast_drop_packets", CTLFLAG_RD,
-       &stat->rx_bcast_drop_packets, "");
-
+		&stat->rx_bcast_drop_packets, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_dma_error", CTLFLAG_RD,
-       &stat->rx_dma_error, "");
+		&stat->rx_dma_error, "");
 
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_ucast__bytes", CTLFLAG_RD,
-       &stat->tx_ucast_bytes, "");
+	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_ucast_bytes", CTLFLAG_RD,
+		&stat->tx_ucast_bytes, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_ucast_packets", CTLFLAG_RD,
-       &stat->tx_ucast_packets, "");
+		&stat->tx_ucast_packets, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_mcast_bytes", CTLFLAG_RD,
-       &stat->tx_mcast_bytes, "");
+		&stat->tx_mcast_bytes, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_mcast_packets", CTLFLAG_RD,
-       &stat->tx_mcast_packets, "");
+		&stat->tx_mcast_packets, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_bcast_bytes", CTLFLAG_RD,
-       &stat->tx_bcast_bytes, "");
+		&stat->tx_bcast_bytes, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_bcast_packets", CTLFLAG_RD,
-       &stat->tx_bcast_packets, "");
+		&stat->tx_bcast_packets, "");
 
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_ucast_drop_bytes", CTLFLAG_RD,
-       &stat->tx_ucast_drop_bytes, "");
+		&stat->tx_ucast_drop_bytes, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_ucast_drop_packets", CTLFLAG_RD,
-       &stat->tx_ucast_drop_packets, "");
+		&stat->tx_ucast_drop_packets, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_mcast_drop_bytes", CTLFLAG_RD,
-       &stat->tx_mcast_drop_bytes, "");
+		&stat->tx_mcast_drop_bytes, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_mcast_drop_packets", CTLFLAG_RD,
-       &stat->tx_mcast_drop_packets, "");
+		&stat->tx_mcast_drop_packets, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_bcast_drop_bytes", CTLFLAG_RD,
-       &stat->tx_bcast_drop_bytes, "");
+		&stat->tx_bcast_drop_bytes, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_bcast_drop_packets", CTLFLAG_RD,
-       &stat->tx_bcast_drop_packets, "");
-
+		&stat->tx_bcast_drop_packets, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_dma_error", CTLFLAG_RD,
-       &stat->tx_dma_error, "");
+		&stat->tx_dma_error, "");
 
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_queue_disabled_drop", CTLFLAG_RD,
-       &stat->rx_queue_disabled_drop, "");
+		&stat->rx_queue_disabled_drop, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_queue_empty_drop", CTLFLAG_RD,
-       &stat->rx_queue_empty_drop, "");
+		&stat->rx_queue_empty_drop, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_queue_scheduled", CTLFLAG_RD,
-       &stat->rx_queue_scheduled, "");
+		&stat->rx_queue_scheduled, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_desc_fetch_error", CTLFLAG_RD,
-       &stat->rx_desc_fetch_error, "");
+		&stat->rx_desc_fetch_error, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_desc_data_error", CTLFLAG_RD,
-       &stat->rx_desc_data_error, "");
+		&stat->rx_desc_data_error, "");
 
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_queue_disabled", CTLFLAG_RD,
-       &stat->tx_queue_disabled, "");
+		&stat->tx_queue_disabled, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_queue_scheduled", CTLFLAG_RD,
-       &stat->tx_queue_scheduled, "");
+		&stat->tx_queue_scheduled, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_desc_fetch_error", CTLFLAG_RD,
-       &stat->tx_desc_fetch_error, "");
+		&stat->tx_desc_fetch_error, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_desc_data_error", CTLFLAG_RD,
-       &stat->tx_desc_data_error, "");
+		&stat->tx_desc_data_error, "");
 
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_rss", CTLFLAG_RD,
-       &stat->rx_rss, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_csum_complete", CTLFLAG_RD,
-       &stat->rx_csum_complete, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_csum_ip_bad", CTLFLAG_RD,
-       &stat->rx_csum_ip_bad, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_csum_tcp_bad", CTLFLAG_RD,
-       &stat->rx_csum_tcp_bad, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_csum_udp_bad", CTLFLAG_RD,
-       &stat->rx_csum_udp_bad, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_vlan_strip", CTLFLAG_RD,
-       &stat->rx_vlan_strip, "");
+	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_rdma_ucast_bytes", CTLFLAG_RD,
+		&stat->tx_rdma_ucast_bytes, "");
+	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_rdma_ucast_packets", CTLFLAG_RD,
+		&stat->tx_rdma_ucast_packets, "");
+	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_rdma_mcast_bytes", CTLFLAG_RD,
+		&stat->tx_rdma_mcast_bytes, "");
+	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_rdma_mcast_packets", CTLFLAG_RD,
+		&stat->tx_rdma_mcast_packets, "");
+	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_rdma_cnp_packets", CTLFLAG_RD,
+		&stat->tx_rdma_cnp_packets, "");
 
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_csum_hw", CTLFLAG_RD,
-       &stat->tx_csum_hw, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_csum_hw_inner", CTLFLAG_RD,
-       &stat->tx_csum_hw_inner, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_vlan_insert", CTLFLAG_RD,
-       &stat->tx_vlan_insert, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_sg", CTLFLAG_RD,
-       &stat->tx_sg, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_tso_sg", CTLFLAG_RD,
-       &stat->tx_tso_sg, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_tso_sop", CTLFLAG_RD,
-       &stat->tx_tso_sop, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_tso_eop", CTLFLAG_RD,
-       &stat->tx_tso_eop, "");
-
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_opcode_invalid", CTLFLAG_RD,
-       &stat->tx_opcode_invalid, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_opcode_csum_none", CTLFLAG_RD,
-       &stat->tx_opcode_csum_none, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_opcode_csum_partial", CTLFLAG_RD,
-       &stat->tx_opcode_csum_partial, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_opcode_csum_hw", CTLFLAG_RD,
-       &stat->tx_opcode_csum_hw, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_opcode_csum_tso", CTLFLAG_RD,
-       &stat->tx_opcode_csum_tso, "");
+	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_rdma_ucast_bytes", CTLFLAG_RD,
+		&stat->rx_rdma_ucast_bytes, "");
+	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_rdma_ucast_packets", CTLFLAG_RD,
+		&stat->rx_rdma_ucast_packets, "");
+	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_rdma_mcast_bytes", CTLFLAG_RD,
+		&stat->rx_rdma_mcast_bytes, "");
+	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_rdma_mcast_packets", CTLFLAG_RD,
+		&stat->rx_rdma_mcast_packets, "");
+	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_rdma_cnp_packets", CTLFLAG_RD,
+		&stat->rx_rdma_cnp_packets, "");
+	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_rdma_ecn_packets", CTLFLAG_RD,
+		&stat->rx_rdma_ecn_packets, "");
 }
 
 static void
