@@ -223,12 +223,13 @@ Eth::Eth(HalClient *hal_client,
     memcpy(hal_lif_info_.queue_info, qinfo, sizeof(hal_lif_info_.queue_info));
 
     NIC_LOG_INFO("lif created: name: {}, id:{}, type: {},"
-                 " hw_lif_id: {}, mac:{},",
+                 " hw_lif_id: {}, mac: {}, uplink: {}",
                  hal_lif_info_.name,
                  hal_lif_info_.id,
                  eth_dev_type_to_str(spec->eth_type),
                  hal_lif_info_.hw_lif_id,
-                 macaddr2str(spec->mac_addr));
+                 macaddr2str(spec->mac_addr),
+                 spec->uplink ? spec->uplink->GetPortNum() : 0);
 
     // Configure PCI resources
     pci_resources.lif_valid = 1;
@@ -491,6 +492,10 @@ Eth::StatsUpdateHandler(void *obj)
 void
 Eth::LinkEventHandler(link_eventdata_t *evd)
 {
+    if (spec->uplink == NULL || spec->uplink->GetPortNum() != evd->port_id) {
+        return;
+    }
+
     if (lif_state != LIF_STATE_INITED &&
         lif_state != LIF_STATE_UP &&
         lif_state != LIF_STATE_DOWN) {

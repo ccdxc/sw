@@ -390,6 +390,7 @@ DeviceManager::LoadConfig(string path)
                              val.get<uint64_t>("id"),
                              val.get<bool>("oob", false));
                 Uplink *up1 = Uplink::Factory(val.get<uint64_t>("id"), val.get<bool>("oob", false));
+                up1->SetPortNum(val.get<uint64_t>("port"));
                 uplinks[val.get<uint64_t>("id")] = up1;
             }
         }
@@ -434,8 +435,8 @@ DeviceManager::LoadConfig(string path)
             }
             eth_spec->if_name = val.get<string>("name");
             eth_spec->qos_group = val.get<string>("qos_group", "DEFAULT");
-            NIC_LOG_DEBUG("Creating mnic device with name: {} type: {}, lif_id: {}, hw_lif_id: {},"
-                         "pinned_uplink: {} intr_count: {} qos_group {}",
+            NIC_LOG_DEBUG("Creating mnic device with name: {}, type: {}, lif_id: {}, hw_lif_id: {},"
+                         " pinned_uplink: {}, intr_count: {}, qos_group {}",
                          eth_spec->if_name,
                          eth_dev_type_to_str(eth_spec->eth_type),
                          eth_spec->lif_id,

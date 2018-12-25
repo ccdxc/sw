@@ -65,6 +65,7 @@ Uplink::Uplink(uplink_id_t id, bool is_oob)
     id_       = id;
     is_oob_   = is_oob;
     num_lifs_ = 0;
+    port_num_ = -1;
 }
 
 void
