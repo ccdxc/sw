@@ -1,8 +1,8 @@
 meta:
     name    : telemetry
-    nics    : [ pensando, mellanox, intel, broadcom ]
+    nics    : [ pensando ]
     os      : [ linux ]
-    targetcount : 80 
+    targetcount : 800
 
 testcases:
     -   name    : Ping_Mirror_Policy

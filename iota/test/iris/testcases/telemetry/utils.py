@@ -121,6 +121,10 @@ def RunAll(collector_w, verif_json, tc):
         protocol = verif[i]['protocol'] 
         src_w = GetSourceWorkload(verif[i], tc)
         dest_w = GetDestWorkload(verif[i], tc)
+        if src_w == None:
+            continue
+        if dest_w == None:
+            continue
         dest_port = GetDestPort(verif[i]['port'])
         action = verif[i]['result']
         res = RunCmd(src_w, protocol, dest_w.ip_address, dest_port, collector_w, action)
