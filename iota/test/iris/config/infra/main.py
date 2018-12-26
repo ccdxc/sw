@@ -187,7 +187,7 @@ class ConfigObject(DictObject):
         if out is None:
             return api.types.status.SUCCESS
         if out["status-code"] == 200:
-            api.Logger.error("Delete success for Key : ", self.Key())
+            api.Logger.info("Delete success for Key : ", self.Key())
             return api.types.status.SUCCESS
         api.Logger.error("Delete failed for Key : %s : %s" % (self.Key(), out))
         return api.types.status.FAILURE
@@ -252,6 +252,8 @@ class ConfigStore():
     def RemoveConfig(self, object):
         if object.Key() in self.__kind[object.Kind()]:
             del self.__kind[object.Kind()][object.Key()]
+            return api.types.status.SUCCESS
+        return api.types.status.FAILURE
 
     def PrintConfigs(self):
         for kind in self.__kind.keys():
