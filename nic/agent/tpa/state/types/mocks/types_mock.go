@@ -6,6 +6,7 @@ package mocks
 
 import (
 	context "context"
+	http "net/http"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -158,4 +159,14 @@ func (m *MockCtrlerIntf) DeleteFwLogPolicy(ctx context.Context, p *protos.FwlogP
 // DeleteFwLogPolicy indicates an expected call of DeleteFwLogPolicy
 func (mr *MockCtrlerIntfMockRecorder) DeleteFwLogPolicy(ctx, p interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteFwLogPolicy", reflect.TypeOf((*MockCtrlerIntf)(nil).DeleteFwLogPolicy), ctx, p)
+}
+
+// Debug mocks base method
+func (m *MockCtrlerIntf) Debug(w http.ResponseWriter, r *http.Request) {
+	m.ctrl.Call(m, "Debug", w, r)
+}
+
+// Debug indicates an expected call of Debug
+func (mr *MockCtrlerIntfMockRecorder) Debug(w, r interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Debug", reflect.TypeOf((*MockCtrlerIntf)(nil).Debug), w, r)
 }

@@ -109,7 +109,10 @@ func waitForever() {
 
 func launchVCHub(opts *cliOpts) {
 	// Initialize store and start grpc server
-	store.Init(opts.storeURL, opts.storeType)
+	if _, err := store.Init(opts.storeURL, opts.storeType); err != nil {
+		log.Errorf("failed to init store %v", err)
+		os.Exit(1)
+	}
 	_, err := server.NewVCHServer(opts.listenURL)
 	if err != nil {
 		log.Errorf("VCHServer start failed %v", err)
