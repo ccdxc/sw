@@ -693,6 +693,7 @@ chn_create_chain(struct request_params *req_params)
 			chain->sc_entry = centry;
 		} else
 			centry_prev->ce_next = centry;
+		chain->sc_last_entry = centry;
 		centry_prev = centry;
 
 		set_service_mode(req_params->rp_flags, &svc_info->si_flags);
@@ -734,7 +735,6 @@ chn_create_chain(struct request_params *req_params)
 		PAS_INC_NUM_SERVICES(pcr);
 	}
 	chain->sc_req_id = osal_atomic_fetch_add(&g_req_id, 1);
-	chain->sc_last_entry = centry;
 
 	/*
 	 * After completing service linkages and setups above, execute
