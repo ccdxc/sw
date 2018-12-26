@@ -1939,12 +1939,15 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 
 	case SIOCSIFMTU:
 		IONIC_NETDEV_INFO(ifp, "ioctl: SIOCSIFMTU (Set Interface MTU)\n");
-		if (ifr->ifr_mtu + ETHER_CRC_LEN > IONIC_MAX_MTU) {
-			error = EINVAL;
-		} else {
-			lif->max_frame_size = ifr->ifr_mtu + ETHER_HDR_LEN + ETHER_VLAN_ENCAP_LEN + ETHER_CRC_LEN;
-			ionic_change_mtu(ifp, ifr->ifr_mtu);
+		IONIC_CORE_LOCK(lif);
+		error = ionic_change_mtu(ifp, ifr->ifr_mtu);
+		if (error) {
+			IONIC_NETDEV_ERROR(lif->netdev, "Failed to set mtu, err: %d\n", error);
+			IONIC_CORE_UNLOCK(lif);
+			break;
 		}
+		if_setmtu(ifp, ifr->ifr_mtu);
+		IONIC_CORE_UNLOCK(lif);
 		break;
 
 	case SIOCADDMULTI:
@@ -1954,6 +1957,29 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 		IONIC_CORE_LOCK(lif);
 		if (ifp->if_drv_flags & IFF_DRV_RUNNING)
 			ionic_set_multi(lif);
+		/* multicast filters are accumulated in ifp->if_multiaddrs, while
+		   the interface is down */
+		IONIC_CORE_UNLOCK(lif);
+		break;
+
+	case SIOCSIFADDR:
+		IONIC_NETDEV_INFO(ifp, "ioctl: SIOCSIFADDR (Set interface address)\n");
+		/* bringup the interface when ip address is set */
+		error = ether_ioctl(ifp, command, data);
+		if (error) {
+			IONIC_NETDEV_ERROR(ifp, "Failed to set ip, err: %d\n", error);
+			break;
+		}
+		IONIC_CORE_LOCK(lif);
+		if (ifp->if_flags & IFF_UP) {
+			if (ifp->if_drv_flags & IFF_DRV_RUNNING) {
+				ionic_set_rx_mode(lif->netdev);
+			} else {
+				/* if_init = ionic_open is done from ether_ioctl */
+				/* FIXME: Remove fake link up */
+				ionic_up_link(ifp);
+			}
+		}
 		IONIC_CORE_UNLOCK(lif);
 		break;
 
@@ -1965,10 +1991,14 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 				ionic_set_rx_mode(lif->netdev);
 			} else {
 				ionic_open(lif);
+				/* FIXME: Remove fake link up */
+				ionic_up_link(ifp);
 			}
-		} else { /* If not up. */
+		} else {
 			if (ifp->if_drv_flags & IFF_DRV_RUNNING) {
 				ionic_stop(ifp);
+				/* FIXME: Remove fake link down */
+				ionic_down_link(ifp);
 			}
 		}
 		IONIC_CORE_UNLOCK(lif);

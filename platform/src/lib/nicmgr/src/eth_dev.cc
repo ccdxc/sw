@@ -1146,6 +1146,7 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
     // Reset the notify block
     MEM_SET(notify_block_addr, 0, sizeof(struct notify_block), 0);
     notify_block->eid = 1;
+    notify_block->link_status = spec->uplink ? false : true;
     notify_block->link_flap_count = 0;
 
     // Trigger Hal for Lif create if this is the first time

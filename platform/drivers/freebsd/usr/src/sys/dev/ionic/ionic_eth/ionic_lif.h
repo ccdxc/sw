@@ -382,7 +382,6 @@ void ionic_dev_intr_unreserve(struct lif *lif, struct intr *intr);
 
 struct lif *ionic_netdev_lif(struct net_device *netdev);
 
-int ionic_reinit(struct net_device *netdev);
 int ionic_set_hw_features(struct lif *lif, uint32_t features);
 
 int ionic_rss_ind_tbl_set(struct lif *lif, const u32 *indir);
