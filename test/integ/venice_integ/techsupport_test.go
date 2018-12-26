@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"reflect"
 	"sync/atomic"
+	"time"
 
 	. "gopkg.in/check.v1"
 
@@ -127,7 +128,7 @@ func (ag *techSupportAgent) sendUpdate(ctx context.Context, c *C, reqName, insta
 	}
 	_, err = ag.tsAPIClient.UpdateTechSupportResult(ctx, updParams)
 	ok := (expectSuccess && err == nil) || (!expectSuccess && err != nil)
-	Assert(c, ok, "Unexpected RPC error: %v", err)
+	Assert(c, ok, "Unexpected RPC error: %v, expectSuccess: %v", err, expectSuccess)
 }
 
 func (ag *techSupportAgent) stop() {
@@ -543,6 +544,7 @@ func (it *veniceIntegSuite) TestTechSupportStatusUpdates(c *C) {
 
 	err = it.deleteTechSupportRequest(ctx, &tsr.ObjectMeta)
 	AssertOk(c, err, "Error deleting TechSupportRequest")
+	time.Sleep(time.Second)
 
 	// Negative test-case: send update for deleted request
 	for _, agent := range agents {

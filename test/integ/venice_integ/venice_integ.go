@@ -820,11 +820,12 @@ func (it *veniceIntegSuite) TearDownSuite(c *check.C) {
 	// stop delphi hub
 	it.hub.Stop()
 	// stop the agents
-	for i, ag := range it.agents {
+	for _, ag := range it.agents {
 		ag.Stop()
-
+	}
+	for i, nmd := range it.nmds {
 		// stop nmd
-		it.nmds[i].Stop()
+		nmd.Stop()
 		dbPath := fmt.Sprintf("/tmp/nmd-%d.db", i)
 		os.Remove(dbPath)
 	}

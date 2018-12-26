@@ -133,11 +133,14 @@ message OrderStatus {
   string Message = 5;
 }
 
+message CouponSpec {
+  string DiscountCode = 1;
+}
 message Coupon {
   api.TypeMeta T = 1  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
   api.ObjectMeta O = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,inline"];
   option (venice.objectPrefix) = {Collection: "Coupon"};
-  string DiscountCode = 3;
+  CouponSpec Spec = 3 [(gogoproto.nullable) = false];
 }
 
 message CustomerPersonalInfo {

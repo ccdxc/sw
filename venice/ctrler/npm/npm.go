@@ -32,10 +32,9 @@ package npm
 import (
 	"net/http"
 
-	"github.com/pensando/sw/venice/ctrler/npm/rpcserver"
+	"github.com/pensando/sw/nic/agent/netagent/protos/generated/nimbus"
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
-	"github.com/pensando/sw/venice/ctrler/npm/watcher"
-	"github.com/pensando/sw/venice/ctrler/npm/writer"
+	"github.com/pensando/sw/venice/globals"
 	debugStats "github.com/pensando/sw/venice/utils/debug/stats"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -43,11 +42,9 @@ import (
 
 // Netctrler is a netctrler instance
 type Netctrler struct {
-	StateMgr   *statemgr.Statemgr   // state manager
-	Watchr     *watcher.Watcher     // watcher
-	RPCServer  *rpcserver.RPCServer // rpc server
+	StateMgr   *statemgr.Statemgr // state manager
+	mserver    *nimbus.MbusServer // nimbu server
 	debugStats *debugStats.Stats
-	writr      writer.Writer
 }
 
 // NewNetctrler returns a controller instance
@@ -55,64 +52,43 @@ func NewNetctrler(serverURL, restURL, apisrvURL, vmmURL string, resolver resolve
 
 	debugStats := debugStats.New(restURL).Build()
 
-	wr, err := writer.NewAPISrvWriter(apisrvURL, resolver)
+	// create nimbus server
+	msrv, err := nimbus.NewMbusServer(globals.Npm, serverURL)
 	if err != nil {
-		log.Errorf("Error creating api server writer. Err: %v", err)
-		return nil, err
+		log.Fatalf("Could not start RPC server. Err: %v", err)
 	}
 
 	// create network state manager
-	stateMgr, err := statemgr.NewStatemgr(wr)
+	stateMgr, err := statemgr.NewStatemgr(apisrvURL, resolver, msrv)
 	if err != nil {
 		log.Errorf("Could not create network manager. Err: %v", err)
 		return nil, err
 	}
 
-	// create watcher on api server
-	watcher, err := watcher.NewWatcher(stateMgr, apisrvURL, vmmURL, resolver, debugStats)
-	if err != nil {
-		log.Errorf("Error creating api server watcher. Err: %v", err)
-		return nil, err
-	}
+	log.Infof("RPC server is running at %v", serverURL)
 
-	log.Infof("API server watcher %v is running", watcher)
-
-	// create RPC server
-	rpcServer, err := rpcserver.NewRPCServer(serverURL, stateMgr, debugStats)
-	if err != nil {
-		log.Errorf("Error creating RPC server. Err: %v", err)
-		return nil, err
-	}
-
-	log.Infof("RPC server {%v} is running at %v", rpcServer, serverURL)
-
+	// start a REST server for debug endpoints
 	go http.ListenAndServe(restURL, nil)
 
 	// create the controller instance
 	ctrler := Netctrler{
 		StateMgr:   stateMgr,
-		Watchr:     watcher,
-		RPCServer:  rpcServer,
+		mserver:    msrv,
 		debugStats: debugStats,
-		writr:      wr,
 	}
 
-	return &ctrler, err
+	// start the RPC server
+	msrv.Start()
+
+	return &ctrler, nil
 }
 
 // Stop server and release resources
 func (c *Netctrler) Stop() error {
-	if c.Watchr != nil {
-		c.Watchr.Stop()
-		c.Watchr = nil
+	if c.mserver != nil {
+		c.mserver.Stop()
 	}
-	if c.RPCServer != nil {
-		c.RPCServer.Stop()
-		c.RPCServer = nil
-	}
-	c.StateMgr = nil
-	if c.writr != nil {
-		c.writr.Close()
-	}
+
+	c.StateMgr.Stop()
 	return nil
 }

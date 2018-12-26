@@ -27,7 +27,7 @@ func (na *Nagent) CreateNetwork(nt *netproto.Network) error {
 	oldNt, err := na.FindNetwork(nt.ObjectMeta)
 	if err == nil {
 		// check if network contents are same
-		if !proto.Equal(oldNt, nt) {
+		if !proto.Equal(&oldNt.Spec, &nt.Spec) {
 			log.Errorf("Network %+v already exists", oldNt)
 			return errors.New("network already exists")
 		}

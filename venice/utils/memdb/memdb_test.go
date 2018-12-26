@@ -336,3 +336,43 @@ func TestMarshal(t *testing.T) {
 		Assert(t, v.NumWatchers == 1, "invalid number of watchers", v)
 	}
 }
+
+func TestMemdbNodeState(t *testing.T) {
+	// create a new memdb
+	md := NewMemdb()
+
+	// tets object
+	obj := testObj{
+		TypeMeta: api.TypeMeta{Kind: "testObj"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "tenant",
+			Name:   "testName",
+		},
+		field: "testField",
+	}
+
+	// add an object
+	err := md.AddObject(&obj)
+	AssertOk(t, err, "Error creating object")
+
+	// verify find works
+	fobj, err := md.FindObject("testObj", &obj.ObjectMeta)
+	AssertOk(t, err, "Error finding the object")
+	AssertEquals(t, obj.Name, fobj.GetObjectMeta().Name, "Found invalid object")
+
+	// add some node state
+	err = md.AddNodeState("node-id", &obj)
+	AssertOk(t, err, "Error adding node state")
+
+	// list all node states and verify we fine the node
+	objs, err := md.NodeStatesForObject("testObj", &obj.ObjectMeta)
+	AssertOk(t, err, "Error getting list of node states")
+	Assert(t, (len(objs) == 1), "Invalid number of node states")
+
+	// delete node state and verify its gone
+	err = md.DelNodeState("node-id", &obj)
+	AssertOk(t, err, "Error deleting node state")
+	objs, err = md.NodeStatesForObject("testObj", &obj.ObjectMeta)
+	AssertOk(t, err, "Error getting list of node states")
+	Assert(t, (len(objs) == 0), "Invalid number of node states after delete")
+}

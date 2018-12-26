@@ -3,12 +3,17 @@
 package statemgr
 
 import (
+	"strings"
 	"time"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/venice/ctrler/npm/writer"
+	"github.com/pensando/sw/api/generated/ctkit"
+	"github.com/pensando/sw/nic/agent/netagent/protos/generated/nimbus"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
+	"github.com/pensando/sw/venice/utils/resolver"
+	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 // updatable is an interface all updatable objects have to implement
@@ -17,88 +22,55 @@ type updatable interface {
 	GetKey() string
 }
 
+// Topics are the Nimbus message bus topics
+type Topics struct {
+	AppTopic             *nimbus.AppTopic
+	EndpointTopic        *nimbus.EndpointTopic
+	NetworkTopic         *nimbus.NetworkTopic
+	SecurityProfileTopic *nimbus.SecurityProfileTopic
+	SecurityGroupTopic   *nimbus.SecurityGroupTopic
+	SGPolicyTopic        *nimbus.SGPolicyTopic
+}
+
 // Statemgr is the object state manager
 type Statemgr struct {
-	memDB                *memdb.Memdb            // database of all objects
-	writer               writer.Writer           // writer to apiserver
-	workloadReactor      *WorkloadReactor        // workload event reactor
-	hostReactor          *HostReactor            // host event reactor
-	smartNicReactor      *SmartNICReactor        // smart nic event reactor
-	fwProfileReactor     *FirewallProfileReactor // firewall profile reactor
-	appReactor           *AppReactor             // app reactor
-	periodicUpdaterQueue chan updatable          // queue for periodically writing items back to apiserver
+	mbus                 *nimbus.MbusServer // nimbus server
+	periodicUpdaterQueue chan updatable     // queue for periodically writing items back to apiserver
+	ctrler               ctkit.Controller   // controller instance
+	topics               Topics             // message bus topics
 }
 
 // ErrIsObjectNotFound returns true if the error is object not found
 func ErrIsObjectNotFound(err error) bool {
-	return (err == memdb.ErrObjectNotFound)
+	return (err == memdb.ErrObjectNotFound) || strings.Contains(err.Error(), "not found")
 }
 
 // FindObject looks up an object in local db
-func (sm *Statemgr) FindObject(kind, tenant, name string) (memdb.Object, error) {
+func (sm *Statemgr) FindObject(kind, tenant, ns, name string) (runtime.Object, error) {
 	// form network key
 	ometa := api.ObjectMeta{
-		Tenant: tenant,
-		Name:   name,
+		Tenant:    tenant,
+		Namespace: ns,
+		Name:      name,
 	}
 
 	// find it in db
-	return sm.memDB.FindObject(kind, &ometa)
+	return sm.ctrler.FindObject(kind, &ometa)
 }
 
 // ListObjects list all objects of a kind
-func (sm *Statemgr) ListObjects(kind string) []memdb.Object {
-	return sm.memDB.ListObjects(kind)
-}
-
-// WatchObjects watches network state for changes
-func (sm *Statemgr) WatchObjects(kind string, watchChan chan memdb.Event) error {
-	// just add the channel to the list of watchers
-	return sm.memDB.WatchObjects(kind, watchChan)
-}
-
-// StopWatchObjects Stops watches of network state
-func (sm *Statemgr) StopWatchObjects(kind string, watchChan chan memdb.Event) error {
-	// just remove the channel from the list of watchers
-	return sm.memDB.StopWatchObjects(kind, watchChan)
-}
-
-// WorkloadReactor returns the workload event reactor
-func (sm *Statemgr) WorkloadReactor() WorkloadHandler {
-	return sm.workloadReactor
-}
-
-// HostReactor returns the host event reactor
-func (sm *Statemgr) HostReactor() HostHandler {
-	return sm.hostReactor
-}
-
-// SmartNICReactor returns the snic event reactor
-func (sm *Statemgr) SmartNICReactor() SmartNICHandler {
-	return sm.smartNicReactor
-}
-
-// FirewallProfileReactor returns the firewall profile event reactor
-func (sm *Statemgr) FirewallProfileReactor() FirewallProfileHandler {
-	return sm.fwProfileReactor
-}
-
-// AppReactor returns the app event reactor
-func (sm *Statemgr) AppReactor() AppHandler {
-	return sm.appReactor
+func (sm *Statemgr) ListObjects(kind string) []runtime.Object {
+	return sm.ctrler.ListObjects(kind)
 }
 
 func (sm *Statemgr) smartNICCreated(nic *SmartNICState) {
 	// Update SGPolicies
 	policies, _ := sm.ListSgpolicies()
 	for _, policy := range policies {
-		if _, ok := policy.NodeVersions[nic.Name]; ok == false {
-			policy.NodeVersions[nic.Name] = ""
+		if _, ok := policy.NodeVersions[nic.SmartNIC.Name]; ok == false {
+			policy.NodeVersions[nic.SmartNIC.Name] = ""
 		}
 	}
-
-	// store it in local DB
-	sm.memDB.AddObject(nic)
 }
 
 func (sm *Statemgr) smartNICDeleted(nic *SmartNICState) error {
@@ -106,26 +78,104 @@ func (sm *Statemgr) smartNICDeleted(nic *SmartNICState) error {
 	// Update SGPolicies
 	policies, _ := sm.ListSgpolicies()
 	for _, policy := range policies {
-		delete(policy.NodeVersions, nic.Name)
+		delete(policy.NodeVersions, nic.SmartNIC.Name)
 	}
 
-	// delete the object
-	return sm.memDB.DeleteObject(nic)
+	return nil
+}
+
+// Stop stops the watchers
+func (sm *Statemgr) Stop() error {
+	return sm.ctrler.Stop()
 }
 
 // NewStatemgr creates a new state manager object
-func NewStatemgr(wr writer.Writer) (*Statemgr, error) {
+func NewStatemgr(apisrvURL string, rslvr resolver.Interface, mserver *nimbus.MbusServer) (*Statemgr, error) {
 	// create new statemgr instance
 	statemgr := &Statemgr{
-		memDB:  memdb.NewMemdb(),
-		writer: wr,
+		mbus: mserver,
 	}
 
-	statemgr.workloadReactor, _ = NewWorkloadReactor(statemgr)
-	statemgr.hostReactor, _ = NewHostReactor(statemgr)
-	statemgr.smartNicReactor, _ = NewSmartNICReactor(statemgr)
-	statemgr.fwProfileReactor, _ = NewFirewallProfileReactor(statemgr)
-	statemgr.appReactor, _ = NewAppReactor(statemgr)
+	// create controller instance
+	ctrler, err := ctkit.NewController(globals.Npm, apisrvURL, rslvr)
+	if err != nil {
+		log.Fatalf("Error creating controller. Err: %v", err)
+	}
+	statemgr.ctrler = ctrler
+
+	// start all object watches
+	err = ctrler.Tenant().Watch(statemgr)
+	if err != nil {
+		log.Fatalf("Error watching sg policy")
+	}
+	err = ctrler.SGPolicy().Watch(statemgr)
+	if err != nil {
+		log.Fatalf("Error watching sg policy")
+	}
+	err = ctrler.SecurityGroup().Watch(statemgr)
+	if err != nil {
+		log.Fatalf("Error watching security group")
+	}
+	err = ctrler.App().Watch(statemgr)
+	if err != nil {
+		log.Fatalf("Error watching app")
+	}
+	err = ctrler.Network().Watch(statemgr)
+	if err != nil {
+		log.Fatalf("Error watching network")
+	}
+	err = ctrler.FirewallProfile().Watch(statemgr)
+	if err != nil {
+		log.Fatalf("Error watching firewall profile")
+	}
+	err = ctrler.Host().Watch(statemgr)
+	if err != nil {
+		log.Fatalf("Error watching host")
+	}
+	err = ctrler.SmartNIC().Watch(statemgr)
+	if err != nil {
+		log.Fatalf("Error watching smartnic")
+	}
+	err = ctrler.Workload().Watch(statemgr)
+	if err != nil {
+		log.Fatalf("Error watching workloads")
+	}
+	err = ctrler.Endpoint().Watch(statemgr)
+	if err != nil {
+		log.Fatalf("Error watching endpoint")
+	}
+
+	// create all topics on the message bus
+	statemgr.topics.EndpointTopic, err = nimbus.AddEndpointTopic(mserver, statemgr)
+	if err != nil {
+		log.Errorf("Error starting endpoint RPC server")
+		return nil, err
+	}
+	statemgr.topics.AppTopic, err = nimbus.AddAppTopic(mserver, nil)
+	if err != nil {
+		log.Errorf("Error starting App RPC server")
+		return nil, err
+	}
+	statemgr.topics.SecurityProfileTopic, err = nimbus.AddSecurityProfileTopic(mserver, nil)
+	if err != nil {
+		log.Errorf("Error starting SecurityProfile RPC server")
+		return nil, err
+	}
+	statemgr.topics.SecurityGroupTopic, err = nimbus.AddSecurityGroupTopic(mserver, nil)
+	if err != nil {
+		log.Errorf("Error starting SG RPC server")
+		return nil, err
+	}
+	statemgr.topics.SGPolicyTopic, err = nimbus.AddSGPolicyTopic(mserver, statemgr)
+	if err != nil {
+		log.Errorf("Error starting SG policy RPC server")
+		return nil, err
+	}
+	statemgr.topics.NetworkTopic, err = nimbus.AddNetworkTopic(mserver, nil)
+	if err != nil {
+		log.Errorf("Error starting network RPC server")
+		return nil, err
+	}
 
 	// newPeriodicUpdater creates a new go subroutines
 	// Given that objects returned by `NewStatemgr` should live for the duration

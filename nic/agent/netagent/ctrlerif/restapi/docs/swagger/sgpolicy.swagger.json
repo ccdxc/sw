@@ -493,7 +493,7 @@
     "netprotoSGPolicyList": {
       "type": "object",
       "properties": {
-        "sgpolicies": {
+        "SGPolicys": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/netprotoSGPolicy"

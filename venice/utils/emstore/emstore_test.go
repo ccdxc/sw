@@ -117,7 +117,7 @@ func TestMemstoreAddDelete(t *testing.T) {
 }
 
 func TestBoltdbBenchmark(t *testing.T) {
-	var numIteration = 10 * 1000
+	var numIteration = 3 * 1000
 	var batchSize = 100
 
 	// create a temp dir

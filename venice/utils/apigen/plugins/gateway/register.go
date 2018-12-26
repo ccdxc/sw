@@ -16,6 +16,7 @@ import (
 	"github.com/golang/glog"
 
 	gogoproto "github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
+	gogen "github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	plugin "github.com/gogo/protobuf/protoc-gen-gogo/plugin"
 	"github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
 	reg "github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/plugins"
@@ -2296,6 +2297,7 @@ func init() {
 	reg.RegisterFunc("HasSuffix", strings.HasSuffix)
 	reg.RegisterFunc("TrimSuffix", strings.TrimSuffix)
 	reg.RegisterFunc("ToLower", strings.ToLower)
+	reg.RegisterFunc("CamelCase", gogen.CamelCase)
 	reg.RegisterFunc("isActionMethod", isActionMethod)
 	reg.RegisterFunc("getActionTarget", getActionTarget)
 	reg.RegisterFunc("getCLIFlagMap", getCLIFlagMap)

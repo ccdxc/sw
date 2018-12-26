@@ -6,36 +6,26 @@ import (
 	"fmt"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-// WorkloadReactor is the event reactor for workload events
-type WorkloadReactor struct {
-	stateMgr *Statemgr // state manager
-}
-
-// WorkloadHandler workload event handler interface
-type WorkloadHandler interface {
-	CreateWorkload(w workload.Workload) error
-	DeleteWorkload(w workload.Workload) error
-}
-
 // networkName returns network name for the external vlan
-func (wr *WorkloadReactor) networkName(extVlan uint32) string {
+func (sm *Statemgr) networkName(extVlan uint32) string {
 	return "Network-Vlan-" + fmt.Sprintf("%d", extVlan)
 }
 
-// CreateWorkload handle workload creation
-func (wr *WorkloadReactor) CreateWorkload(w workload.Workload) error {
+// OnWorkloadCreate handle workload creation
+func (sm *Statemgr) OnWorkloadCreate(w *ctkit.Workload) error {
 	// loop over each interface of the workload
 	for ii := range w.Spec.Interfaces {
 		// check if we have a network for this workload
-		netName := wr.networkName(w.Spec.Interfaces[ii].ExternalVlan)
-		nw, err := wr.stateMgr.FindNetwork(w.Tenant, netName)
+		netName := sm.networkName(w.Spec.Interfaces[ii].ExternalVlan)
+		_, err := sm.FindNetwork(w.Tenant, netName)
 		if (err != nil) && (ErrIsObjectNotFound(err)) {
-			err = wr.stateMgr.CreateNetwork(&network.Network{
+			err = sm.ctrler.Network().Create(&network.Network{
 				TypeMeta: api.TypeMeta{Kind: "Network"},
 				ObjectMeta: api.ObjectMeta{
 					Name:      netName,
@@ -53,18 +43,16 @@ func (wr *WorkloadReactor) CreateWorkload(w workload.Workload) error {
 				log.Errorf("Error creating network. Err: %v", err)
 				return err
 			}
-			nw, _ = wr.stateMgr.FindNetwork(w.Tenant, netName)
-
 		} else if err != nil {
 			return err
 		}
 
 		// check if we already have the endpoint for this workload
 		epName := w.Name + "-" + w.Spec.Interfaces[ii].MACAddress
-		_, err = wr.stateMgr.FindEndpoint(w.Tenant, epName)
+		_, err = sm.FindEndpoint(w.Tenant, epName)
 		if (err != nil) && (ErrIsObjectNotFound(err)) {
 			// find the host for the workload
-			host, err := wr.stateMgr.FindHost("", w.Spec.HostName)
+			host, err := sm.FindHost("", w.Spec.HostName)
 			if err != nil {
 				log.Errorf("Error finding the host %s for endpoint %v. Err: %v", w.Spec.HostName, epName, err)
 				return err
@@ -72,20 +60,20 @@ func (wr *WorkloadReactor) CreateWorkload(w workload.Workload) error {
 
 			// find the smart nic by mac addr
 			nodeUUID := ""
-			for jj := range host.Spec.SmartNICs {
-				snicMac := host.Spec.SmartNICs[jj].MACAddress
-				snic, err := wr.stateMgr.FindSmartNICByMacAddr(snicMac)
+			for jj := range host.Host.Spec.SmartNICs {
+				snicMac := host.Host.Spec.SmartNICs[jj].MACAddress
+				snic, err := sm.FindSmartNICByMacAddr(snicMac)
 				if err != nil {
-					snic, err = wr.stateMgr.FindSmartNIC("", host.Spec.SmartNICs[jj].Name)
+					snic, err = sm.FindSmartNIC("", host.Host.Spec.SmartNICs[jj].Name)
 					if err != nil {
 						log.Errorf("Error finding smart nic for mac add %v", snicMac)
 						return err
 					}
 				}
-				if snic.Status.PrimaryMAC != "" {
-					nodeUUID = snic.Status.PrimaryMAC
+				if snic.SmartNIC.Status.PrimaryMAC != "" {
+					nodeUUID = snic.SmartNIC.Status.PrimaryMAC
 				} else {
-					nodeUUID = snic.Name
+					nodeUUID = snic.SmartNIC.Name
 				}
 			}
 			// create the endpoint for the interface
@@ -109,7 +97,7 @@ func (wr *WorkloadReactor) CreateWorkload(w workload.Workload) error {
 				},
 			}
 
-			_, err = nw.CreateEndpoint(&epInfo)
+			err = sm.ctrler.Endpoint().Create(&epInfo)
 			if err != nil {
 				log.Errorf("Error creating endpoint. Err: %v", err)
 				return err
@@ -122,13 +110,18 @@ func (wr *WorkloadReactor) CreateWorkload(w workload.Workload) error {
 	return nil
 }
 
-// DeleteWorkload handles workload deletion
-func (wr *WorkloadReactor) DeleteWorkload(w workload.Workload) error {
+// OnWorkloadUpdate handles workload update event
+func (sm *Statemgr) OnWorkloadUpdate(w *ctkit.Workload) error {
+	return nil
+}
+
+// OnWorkloadDelete handles workload deletion
+func (sm *Statemgr) OnWorkloadDelete(w *ctkit.Workload) error {
 	// loop over each interface of the workload
 	for ii := range w.Spec.Interfaces {
 		// find the network for the interface
-		netName := wr.networkName(w.Spec.Interfaces[ii].ExternalVlan)
-		nw, err := wr.stateMgr.FindNetwork(w.Tenant, netName)
+		netName := sm.networkName(w.Spec.Interfaces[ii].ExternalVlan)
+		nw, err := sm.FindNetwork(w.Tenant, netName)
 		if err != nil {
 			log.Errorf("Error finding the network %v. Err: %v", netName, err)
 			return err
@@ -143,10 +136,13 @@ func (wr *WorkloadReactor) DeleteWorkload(w workload.Workload) error {
 		}
 
 		// delete the endpoint
-		_, err = nw.DeleteEndpoint(&api.ObjectMeta{
-			Name:      epName,
-			Tenant:    w.Tenant,
-			Namespace: w.Namespace,
+		err = sm.ctrler.Endpoint().Delete(&workload.Endpoint{
+			TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+			ObjectMeta: api.ObjectMeta{
+				Name:      epName,
+				Tenant:    w.Tenant,
+				Namespace: w.Namespace,
+			},
 		})
 		if err != nil {
 			log.Errorf("Error deleting the endpoint. Err: %v", err)
@@ -155,12 +151,4 @@ func (wr *WorkloadReactor) DeleteWorkload(w workload.Workload) error {
 	}
 
 	return nil
-}
-
-// NewWorkloadReactor creates new workload event reactor
-func NewWorkloadReactor(stateMgr *Statemgr) (*WorkloadReactor, error) {
-	wr := WorkloadReactor{
-		stateMgr: stateMgr,
-	}
-	return &wr, nil
 }

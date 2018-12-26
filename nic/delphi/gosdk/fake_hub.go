@@ -44,7 +44,10 @@ func (h *hub) Start() {
 }
 
 func (h *hub) Stop() {
-	h.listener.Close()
+	if h.listener != nil {
+		h.listener.Close()
+		h.listener = nil
+	}
 	h.quit <- struct{}{}
 }
 
@@ -94,7 +97,6 @@ func (h *hub) runLoop() {
 	for {
 		select {
 		case _ = <-h.quit:
-			h.listener.Close()
 			for _, c := range h.clients {
 				c.Close()
 			}

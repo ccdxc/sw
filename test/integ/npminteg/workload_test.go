@@ -17,14 +17,14 @@ func (it *integTestSuite) TestNpmWorkloadCreateDelete(c *C) {
 	waitCh := make(chan error, it.numAgents*2)
 
 	// create a host for each agent
-	for _, ag := range it.agents {
-		err := it.ctrler.Watchr.CreateHost(fmt.Sprintf("testHost-%s", ag.nagent.NetworkAgent.NodeUUID), ag.nagent.NetworkAgent.NodeUUID)
+	for idx, ag := range it.agents {
+		err := it.CreateHost(fmt.Sprintf("testHost-%d", idx), ag.nagent.NetworkAgent.NodeUUID)
 		AssertOk(c, err, "Error creating host")
 	}
 
 	// create a network in controller
 	// FIXME: we shouldnt have to create this network
-	err := it.ctrler.Watchr.CreateNetwork("default", "default", "Vlan-1", "10.1.0.0/16", "10.1.1.254")
+	err := it.CreateNetwork("default", "default", "Vlan-1", "10.1.0.0/22", "10.1.1.254")
 	c.Assert(err, IsNil)
 	AssertEventually(c, func() (bool, interface{}) {
 		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "Vlan-1")
@@ -42,7 +42,7 @@ func (it *integTestSuite) TestNpmWorkloadCreateDelete(c *C) {
 
 	// create a workload on each host
 	for i, ag := range it.agents {
-		err = it.ctrler.Watchr.CreateWorkload("default", "default", fmt.Sprintf("testWorkload-%s", ag.nagent.NetworkAgent.NodeUUID), fmt.Sprintf("testHost-%s", ag.nagent.NetworkAgent.NodeUUID), ag.nagent.NetworkAgent.NodeUUID, uint32(100+i), 1)
+		err = it.CreateWorkload("default", "default", fmt.Sprintf("testWorkload-%s", ag.nagent.NetworkAgent.NodeUUID), fmt.Sprintf("testHost-%d", i), ag.nagent.NetworkAgent.NodeUUID, uint32(100+i), 1)
 		AssertOk(c, err, "Error creating workload")
 	}
 
@@ -94,8 +94,8 @@ func (it *integTestSuite) TestNpmWorkloadCreateDelete(c *C) {
 	}
 
 	// now delete the workloads
-	for i, ag := range it.agents {
-		err := it.ctrler.Watchr.DeleteWorkload("default", "default", fmt.Sprintf("testWorkload-%s", ag.nagent.NetworkAgent.NodeUUID), fmt.Sprintf("testHost-%s", ag.nagent.NetworkAgent.NodeUUID), ag.nagent.NetworkAgent.NodeUUID, uint32(100+i), 1)
+	for _, ag := range it.agents {
+		err := it.DeleteWorkload("default", "default", fmt.Sprintf("testWorkload-%s", ag.nagent.NetworkAgent.NodeUUID))
 		AssertOk(c, err, "Error deleting workload")
 	}
 
@@ -118,7 +118,7 @@ func (it *integTestSuite) TestNpmWorkloadCreateDelete(c *C) {
 	}
 
 	// delete the network
-	err = it.ctrler.Watchr.DeleteNetwork("default", "Vlan-1")
+	err = it.DeleteNetwork("default", "Vlan-1")
 	c.Assert(err, IsNil)
 	AssertEventually(c, func() (bool, interface{}) {
 		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "Vlan-1")

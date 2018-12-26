@@ -30,6 +30,11 @@ func (o *ObjectMeta) GetObjectMeta() *ObjectMeta {
 	return o
 }
 
+// GetKey returns the key string (tenant/namespace/name) from object meta
+func (o *ObjectMeta) GetKey() string {
+	return fmt.Sprintf("%s/%s/%s", o.Tenant, o.Namespace, o.Name)
+}
+
 // Clone clones the object into into
 func (o *ObjectMeta) Clone(into interface{}) (interface{}, error) {
 	return nil, fmt.Errorf("not defined")

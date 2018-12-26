@@ -135,10 +135,6 @@ noverify = ["github.com/docker/docker", "github.com/pensando/vic", "github.com/v
   version = "0.8.0"
 
 [[constraint]]
-  branch = "master"
-  name = "github.com/prometheus/common"
-
-[[constraint]]
   name = "github.com/satori/go.uuid"
   version = "1.1.0"
 
@@ -163,8 +159,8 @@ noverify = ["github.com/docker/docker", "github.com/pensando/vic", "github.com/v
   name = "golang.org/x/crypto"
 
 [[constraint]]
-  branch = "master"
   name = "golang.org/x/net"
+  branch = "release-branch.go1.9"
 
 [[constraint]]
   branch = "master"

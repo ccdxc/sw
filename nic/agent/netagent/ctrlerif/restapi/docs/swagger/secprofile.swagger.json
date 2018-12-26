@@ -420,7 +420,7 @@
     "netprotoSecurityProfileList": {
       "type": "object",
       "properties": {
-        "Profiles": {
+        "SecurityProfiles": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/netprotoSecurityProfile"

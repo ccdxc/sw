@@ -23,7 +23,7 @@ service NetworkApi {
 
     rpc GetNetwork (api.ObjectMeta) returns (Network) {};
     rpc ListNetworks (api.ObjectMeta) returns (NetworkList) {};
-    rpc WatchNetworks (api.ObjectMeta) returns (stream NetworkEventList) {};
+    rpc WatchNetworks (api.ObjectMeta) returns (stream NetworkEvent) {};
 }
 
 // ApiResponse Object

@@ -9,30 +9,34 @@ import (
 	"net"
 	"sync"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/willf/bitset"
 
-	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/network"
-	"github.com/pensando/sw/api/generated/workload"
+	"github.com/pensando/sw/api/generated/ctkit"
+	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/memdb"
+	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 // NetworkState is a wrapper for network object
 type NetworkState struct {
-	sync.Mutex                                // lock the network object
-	network.Network                           // network object
-	endpointDB      map[string]*EndpointState // endpoint database
-	stateMgr        *Statemgr                 // pointer to network manager
+	sync.Mutex                           // lock the network object
+	Network    *ctkit.Network            `json:"-"` // network object
+	endpointDB map[string]*EndpointState // endpoint database
+	stateMgr   *Statemgr                 // pointer to network manager
 }
 
 // NetworkStateFromObj conerts from memdb object to network state
-func NetworkStateFromObj(obj memdb.Object) (*NetworkState, error) {
+func NetworkStateFromObj(obj runtime.Object) (*NetworkState, error) {
 	switch obj.(type) {
-	case *NetworkState:
-		nsobj := obj.(*NetworkState)
-		return nsobj, nil
+	case *ctkit.Network:
+		nobj := obj.(*ctkit.Network)
+		switch nobj.HandlerCtx.(type) {
+		case *NetworkState:
+			nts := nobj.HandlerCtx.(*NetworkState)
+			return nts, nil
+		default:
+			return nil, ErrIncorrectObjectType
+		}
 	default:
 		return nil, ErrIncorrectObjectType
 	}
@@ -60,6 +64,25 @@ func ipv4toMac(macPrefix []byte, ip net.IP) net.HardwareAddr {
 	return net.HardwareAddr(append(macPrefix[0:2], ip...))
 }
 
+func convertNetwork(nw *NetworkState) *netproto.Network {
+	nt := netproto.Network{
+		TypeMeta:   nw.Network.TypeMeta,
+		ObjectMeta: nw.Network.ObjectMeta,
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  nw.Network.Spec.IPv4Subnet,
+			IPv4Gateway: nw.Network.Spec.IPv4Gateway,
+			IPv6Subnet:  nw.Network.Spec.IPv6Subnet,
+			IPv6Gateway: nw.Network.Spec.IPv6Gateway,
+			VlanID:      nw.Network.Spec.VlanID,
+		},
+		Status: netproto.NetworkStatus{
+			AllocatedVlanID: nw.Network.Spec.VlanID,
+		},
+	}
+
+	return &nt
+}
+
 // allocIPv4Addr allocates new IP address
 func (ns *NetworkState) allocIPv4Addr(reqAddr string) (string, error) {
 	var allocatedAddr string
@@ -68,16 +91,16 @@ func (ns *NetworkState) allocIPv4Addr(reqAddr string) (string, error) {
 	defer ns.Unlock()
 
 	// parse the subnet
-	baseAddr, ipnet, err := net.ParseCIDR(ns.Spec.IPv4Subnet)
+	baseAddr, ipnet, err := net.ParseCIDR(ns.Network.Spec.IPv4Subnet)
 	if err != nil {
-		log.Errorf("Error parsing subnet %v. Err: %v", ns.Spec.IPv4Subnet, err)
+		log.Errorf("Error parsing subnet %v. Err: %v", ns.Network.Spec.IPv4Subnet, err)
 		return "", err
 	}
 
 	// read ipv4 allocation bitmap
 	subnetMaskLen, maskLen := ipnet.Mask.Size()
 	subnetSize := 1 << uint32(maskLen-subnetMaskLen)
-	buf := bytes.NewBuffer(ns.Status.AllocatedIPv4Addrs)
+	buf := bytes.NewBuffer(ns.Network.Status.AllocatedIPv4Addrs)
 	bs := bitset.New(uint(subnetSize))
 	bs.ReadFrom(buf)
 
@@ -90,7 +113,7 @@ func (ns *NetworkState) allocIPv4Addr(reqAddr string) (string, error) {
 
 		// verify requested address is in this subnet
 		if !ipnet.Contains(reqIPAddr) {
-			log.Errorf("Requested address %s is not in subnet %s", reqAddr, ns.Spec.IPv4Subnet)
+			log.Errorf("Requested address %s is not in subnet %s", reqAddr, ns.Network.Spec.IPv4Subnet)
 			return "", fmt.Errorf("requested address not in subnet")
 		}
 
@@ -124,7 +147,7 @@ func (ns *NetworkState) allocIPv4Addr(reqAddr string) (string, error) {
 
 	// save the bitset back
 	bs.WriteTo(buf)
-	ns.Status.AllocatedIPv4Addrs = buf.Bytes()
+	ns.Network.Status.AllocatedIPv4Addrs = buf.Bytes()
 
 	return allocatedAddr, nil
 }
@@ -143,22 +166,22 @@ func (ns *NetworkState) freeIPv4Addr(reqAddr string) error {
 	}
 
 	// parse the subnet
-	baseAddr, ipnet, err := net.ParseCIDR(ns.Spec.IPv4Subnet)
+	baseAddr, ipnet, err := net.ParseCIDR(ns.Network.Spec.IPv4Subnet)
 	if err != nil {
-		log.Errorf("Error parsing subnet %v. Err: %v", ns.Spec.IPv4Subnet, err)
+		log.Errorf("Error parsing subnet %v. Err: %v", ns.Network.Spec.IPv4Subnet, err)
 		return err
 	}
 
 	// verify the address is in subnet
 	if !ipnet.Contains(reqIP) {
-		log.Errorf("Requested address %s is not in subnet %s", reqAddr, ns.Spec.IPv4Subnet)
+		log.Errorf("Requested address %s is not in subnet %s", reqAddr, ns.Network.Spec.IPv4Subnet)
 		return fmt.Errorf("requested address not in subnet")
 	}
 
 	// read ipv4 allocation bitmap
 	subnetMaskLen, maskLen := ipnet.Mask.Size()
 	subnetSize := 1 << uint32(maskLen-subnetMaskLen)
-	buf := bytes.NewBuffer(ns.Status.AllocatedIPv4Addrs)
+	buf := bytes.NewBuffer(ns.Network.Status.AllocatedIPv4Addrs)
 	bs := bitset.New(uint(subnetSize))
 	bs.ReadFrom(buf)
 
@@ -176,7 +199,7 @@ func (ns *NetworkState) freeIPv4Addr(reqAddr string) error {
 
 	// save the bitset back
 	bs.WriteTo(buf)
-	ns.Status.AllocatedIPv4Addrs = buf.Bytes()
+	ns.Network.Status.AllocatedIPv4Addrs = buf.Bytes()
 
 	return nil
 }
@@ -208,116 +231,6 @@ func (ns *NetworkState) ListEndpoints() []*EndpointState {
 	return eplist
 }
 
-// CreateEndpoint creates an endpoint
-func (ns *NetworkState) CreateEndpoint(epinfo *workload.Endpoint) (*EndpointState, error) {
-	// see if we already have this endpoint
-	oldEps, ok := ns.FindEndpoint(epinfo.ObjectMeta.Name)
-	if ok {
-		// if we already have identical endpoint, we are done
-		if proto.Equal(oldEps, epinfo) {
-			return oldEps, nil
-		}
-
-		// FIXME: handle endpoint change
-		log.Errorf("Endpoint {%+v} already exists {%+v} in network %v", epinfo, oldEps, ns.ObjectMeta.Name)
-		return nil, fmt.Errorf("Endpoint already exists")
-	}
-
-	// copy endpoint info
-	epi := *epinfo
-
-	if ns.Spec.IPv4Subnet != "" {
-		// allocate an IP address
-		ipv4Addr, err := ns.allocIPv4Addr(epinfo.Status.IPv4Address)
-
-		if err != nil {
-			log.Errorf("Error allocating IP address from network {%+v}. Err: %v", ns, err)
-			return nil, err
-		}
-
-		// allocate a mac address based on IP address
-		macAddr := ipv4toMac([]byte{0x01, 0x01}, net.ParseIP(ipv4Addr))
-
-		// convert address to CIDR
-		_, ipNet, _ := net.ParseCIDR(ns.Spec.IPv4Subnet)
-		subnetMaskLen, _ := ipNet.Mask.Size()
-		ipv4Addr = fmt.Sprintf("%s/%d", ipv4Addr, subnetMaskLen)
-
-		// populate allocated values
-		epi.Status.IPv4Address = ipv4Addr
-		epi.Status.IPv4Gateway = ns.Spec.IPv4Gateway
-
-		// assign new mac address if we dont have one
-		if epi.Status.MacAddress == "" {
-			epi.Status.MacAddress = macAddr.String()
-		}
-
-	}
-
-	// create a new endpoint instance
-	eps, err := NewEndpointState(epi, ns.stateMgr)
-	if err != nil {
-		log.Errorf("Error creating endpoint state from spec{%+v}, Err: %v", epinfo, err)
-		return nil, err
-	}
-
-	// save the endpoint in the database
-	ns.Lock()
-	ns.endpointDB[eps.endpointKey()] = eps
-	ns.Unlock()
-	ns.stateMgr.memDB.AddObject(eps)
-
-	// write the modified network state to api server
-	err = ns.Write()
-	if err != nil {
-		log.Errorf("Error writing the network object. Err: %v", err)
-		return nil, err
-	}
-	return eps, nil
-}
-
-// DeleteEndpoint deletes an endpoint
-func (ns *NetworkState) DeleteEndpoint(epmeta *api.ObjectMeta) (*EndpointState, error) {
-	// see if we have the endpoint
-	eps, ok := ns.FindEndpoint(epmeta.Name)
-	if !ok {
-		log.Errorf("could not find the endpoint %+v", epmeta)
-		return nil, ErrEndpointNotFound
-	}
-
-	// free the IPv4 address
-	err := ns.freeIPv4Addr(eps.Status.IPv4Address)
-	if err != nil {
-		log.Errorf("Error freeing the endpoint address. Err: %v", err)
-	}
-
-	// delete the endpoint
-	err = eps.Delete()
-	if err != nil {
-		log.Errorf("Error deleting the endpoint{%+v}. Err: %v", eps, err)
-	}
-	// remove it from the database
-	ns.Lock()
-	delete(ns.endpointDB, eps.endpointKey())
-	ns.Unlock()
-	ns.stateMgr.memDB.DeleteObject(eps)
-
-	log.Infof("Deleted endpoint: %+v", eps)
-
-	// write the modified network state to api server
-	err = ns.Write()
-	if err != nil {
-		log.Errorf("Error writing the network object. Err: %v", err)
-	}
-
-	return eps, nil
-}
-
-// Write writes the object to api server
-func (ns *NetworkState) Write() error {
-	return ns.stateMgr.writer.WriteNetwork(&ns.Network)
-}
-
 // Delete cleans up all state associated with the network
 func (ns *NetworkState) Delete() error {
 	// check if network still has endpoints
@@ -330,7 +243,7 @@ func (ns *NetworkState) Delete() error {
 }
 
 // NewNetworkState creates new network state object
-func NewNetworkState(nw *network.Network, stateMgr *Statemgr) (*NetworkState, error) {
+func NewNetworkState(nw *ctkit.Network, stateMgr *Statemgr) (*NetworkState, error) {
 	// parse the subnet
 	if nw.Spec.IPv4Subnet != "" {
 		_, ipnet, err := net.ParseCIDR(nw.Spec.IPv4Subnet)
@@ -357,13 +270,15 @@ func NewNetworkState(nw *network.Network, stateMgr *Statemgr) (*NetworkState, er
 
 	// create the network state
 	ns := &NetworkState{
-		Network:    *nw,
+		Network:    nw,
 		endpointDB: make(map[string]*EndpointState),
 		stateMgr:   stateMgr,
 	}
+	nw.HandlerCtx = ns
 
 	// mark gateway addr as used
 	if nw.Spec.IPv4Gateway != "" {
+		log.Infof("Requested gw addr %s", nw.Spec.IPv4Gateway)
 		allocAddr, err := ns.allocIPv4Addr(nw.Spec.IPv4Gateway)
 		if err != nil {
 			log.Errorf("Error allocating gw address. Err: %v", err)
@@ -375,7 +290,7 @@ func NewNetworkState(nw *network.Network, stateMgr *Statemgr) (*NetworkState, er
 	}
 
 	// save it to api server
-	err := ns.Write()
+	err := ns.Network.Write()
 	if err != nil {
 		log.Errorf("Error writing the network state to api server. Err: %v", err)
 		return nil, err
@@ -387,7 +302,7 @@ func NewNetworkState(nw *network.Network, stateMgr *Statemgr) (*NetworkState, er
 // FindNetwork finds a network
 func (sm *Statemgr) FindNetwork(tenant, name string) (*NetworkState, error) {
 	// find the object
-	obj, err := sm.FindObject("Network", tenant, name)
+	obj, err := sm.FindObject("Network", tenant, "default", name)
 	if err != nil {
 		return nil, err
 	}
@@ -397,7 +312,7 @@ func (sm *Statemgr) FindNetwork(tenant, name string) (*NetworkState, error) {
 
 // ListNetworks lists all networks
 func (sm *Statemgr) ListNetworks() ([]*NetworkState, error) {
-	objs := sm.memDB.ListObjects("Network")
+	objs := sm.ListObjects("Network")
 
 	var networks []*NetworkState
 	for _, obj := range objs {
@@ -412,36 +327,33 @@ func (sm *Statemgr) ListNetworks() ([]*NetworkState, error) {
 	return networks, nil
 }
 
-// CreateNetwork creates local network state based on watch event
-func (sm *Statemgr) CreateNetwork(nw *network.Network) error {
-	// see if we already have it
-	ens, err := sm.FindObject("Network", nw.ObjectMeta.Tenant, nw.ObjectMeta.Name)
-	if err == nil {
-		// FIXME: how do we handle an existing network object changing?
-		log.Errorf("Can not change existing network {%+v}. New state: {%+v}", ens, nw)
-		return fmt.Errorf("Can not change network after its created")
-	}
-
+// OnNetworkCreate creates local network state based on watch event
+func (sm *Statemgr) OnNetworkCreate(nw *ctkit.Network) error {
 	// create new network state
 	ns, err := NewNetworkState(nw, sm)
 	if err != nil {
 		log.Errorf("Error creating new network state. Err: %v", err)
 		return err
 	}
-	log.Infof("Created Network state {Meta: %+v, Spec: %+v}", ns.ObjectMeta, ns.Spec)
+	log.Infof("Created Network state {Meta: %+v, Spec: %+v}", ns.Network.ObjectMeta, ns.Network.Spec)
 
 	// store it in local DB
-	sm.memDB.AddObject(ns)
+	sm.mbus.AddObject(convertNetwork(ns))
 
 	return nil
 }
 
-// DeleteNetwork deletes a network
-func (sm *Statemgr) DeleteNetwork(tenant, network string) error {
+// OnNetworkUpdate handles network update
+func (sm *Statemgr) OnNetworkUpdate(nw *ctkit.Network) error {
+	return nil
+}
+
+// OnNetworkDelete deletes a network
+func (sm *Statemgr) OnNetworkDelete(nto *ctkit.Network) error {
 	// see if we already have it
-	nso, err := sm.FindObject("Network", tenant, network)
+	nso, err := sm.FindObject("Network", nto.Tenant, "default", nto.Name)
 	if err != nil {
-		log.Errorf("Can not find the network %s|%s", tenant, network)
+		log.Errorf("Can not find the network %s|%s", nto.Tenant, nto.Name)
 		return fmt.Errorf("Network not found")
 	}
 
@@ -458,5 +370,5 @@ func (sm *Statemgr) DeleteNetwork(tenant, network string) error {
 		return err
 	}
 	// delete it from the DB
-	return sm.memDB.DeleteObject(nso)
+	return sm.mbus.DeleteObject(convertNetwork(ns))
 }

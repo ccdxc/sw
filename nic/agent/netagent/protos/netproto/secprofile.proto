@@ -88,7 +88,7 @@ message SecurityProfileStatus {
 }
 
 message SecurityProfileList {
-    repeated SecurityProfile Profiles  = 1;
+    repeated SecurityProfile SecurityProfiles  = 1;
 }
 
 // security profile watch event

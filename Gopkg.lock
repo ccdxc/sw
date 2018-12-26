@@ -117,25 +117,6 @@
   version = "v2"
 
 [[projects]]
-  branch = "master"
-  digest = "1:f3793f8a708522400cef1dba23385e901aede5519f68971fd69938ef330b07a1"
-  name = "github.com/alecthomas/template"
-  packages = [
-    ".",
-    "parse",
-  ]
-  pruneopts = "NUT"
-  revision = "a0175ee3bccc567396460bf5acd36800cb10c49c"
-
-[[projects]]
-  branch = "master"
-  digest = "1:fdd419e104ec26bb5bd63cc62637c640453ed2929a7453f3afadbd9a0223da66"
-  name = "github.com/alecthomas/units"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "2efee857e7cfd4f3d0138cc3cbb1b4966962b93a"
-
-[[projects]]
   digest = "1:e64acfe8cda1955db545ede8e863c54d69f1ac6cd058df4349be4040320840fd"
   name = "github.com/apache/thrift"
   packages = ["lib/go/thrift"]
@@ -1750,12 +1731,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ca9e981e77b7edaeb031cea770f15a73b21b60fac032101ab26fed1fed2ba9db"
+  digest = "1:4a6bb73eb5d7b8e67f25d22d87c84116cc69dfa80299dfd06622b8eee47917a8"
   name = "github.com/prometheus/common"
   packages = [
     "expfmt",
     "internal/bitbucket.org/ww/goautoneg",
-    "log",
     "model",
   ]
   pruneopts = "NUT"
@@ -1952,7 +1932,7 @@
   revision = "be1fbeda19366dea804f00efff2dd73a1642fdcc"
 
 [[projects]]
-  digest = "1:43f3eedd427bcb1522b1bcb10de0f9bfe0cafe78225ebc35585822695fcb6f53"
+  digest = "1:2094fba1efe22d16c8f69a89f2f24665a84386dd5d9f0e50186cafb639f74e37"
   name = "github.com/vmware/govmomi"
   packages = [
     ".",
@@ -1960,6 +1940,7 @@
     "list",
     "nfc",
     "object",
+    "ovf",
     "property",
     "session",
     "task",
@@ -2053,8 +2034,8 @@
   revision = "0c41d7ab0a0ee717d4590a44bcb987dfd9e183eb"
 
 [[projects]]
-  branch = "master"
-  digest = "1:0e6237e4115f77f220935e77bdf42faf725a40aa120a293fdf3b181ba74bbc57"
+  branch = "release-branch.go1.9"
+  digest = "1:822013bd5fe3619ec72d5440419f1d8eb60ad2603aa464d7b8a8e5486c1cb5f9"
   name = "golang.org/x/net"
   packages = [
     "bpf",
@@ -2077,7 +2058,7 @@
     "websocket",
   ]
   pruneopts = "NUT"
-  revision = "434ec0c7fe3742c984919a691b2018a6e9694425"
+  revision = "44b7c21cbf19450f38b337eb6b6fe4f6496fb5b3"
 
 [[projects]]
   branch = "master"
@@ -2089,14 +2070,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:910c1f68e2607407f30f058beafb37c5dabc6a94063a026090abd552f0c889d9"
+  digest = "1:d129afdf4044fab1e03a8912d0c2cb3241ac65781ad524764713afe79bbb5be8"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
     "unix",
     "windows",
-    "windows/registry",
-    "windows/svc/eventlog",
   ]
   pruneopts = "NUT"
   revision = "ac767d655b305d4e9612f5f6e33120b9176c4ad4"
@@ -2213,14 +2192,6 @@
   pruneopts = "NUT"
   revision = "35324cf48e33d8260e1c7c18854465a904ade249"
   version = "v1.17.0"
-
-[[projects]]
-  digest = "1:22b2dee6f30bc8601f087449a2a819df8388e54e9547349c658f14d8f8c590f2"
-  name = "gopkg.in/alecthomas/kingpin.v2"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "947dcec5ba9c011838740e680966fd7087a71d0d"
-  version = "v2.2.6"
 
 [[projects]]
   digest = "1:aea6e9483c167cc6fdf1274c442558c5dda8fd3373372be04d98c79100868da1"
@@ -2684,7 +2655,6 @@
     "github.com/pensando/vic/pkg/vsphere/simulator/esx",
     "github.com/pkg/errors",
     "github.com/pkg/sftp",
-    "github.com/prometheus/common/log",
     "github.com/russross/blackfriday",
     "github.com/satori/go.uuid",
     "github.com/shirou/gopsutil/cpu",

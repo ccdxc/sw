@@ -5,23 +5,19 @@ package statemgr
 import (
 	"fmt"
 
-	"github.com/pensando/sw/api/generated/security"
+	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/labels"
+	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/memdb"
+	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 // SecurityGroupState security group state
 type SecurityGroupState struct {
-	security.SecurityGroup                           // embedded security group object
-	policies               map[string]*SgpolicyState // list of policies attached to this security group
-	endpoints              map[string]*EndpointState // list of all matching endpoints in this security group
-	stateMgr               *Statemgr                 // pointer to network manager
-}
-
-// Write writes the object to api server
-func (sg *SecurityGroupState) Write() error {
-	return sg.stateMgr.writer.WriteSecurityGroup(&sg.SecurityGroup)
+	SecurityGroup *ctkit.SecurityGroup      `json:"-"` // security group object
+	policies      map[string]*SgpolicyState // list of policies attached to this security group
+	endpoints     map[string]*EndpointState // list of all matching endpoints in this security group
+	stateMgr      *Statemgr                 // pointer to network manager
 }
 
 // Delete cleans up all state associated with the sg
@@ -46,17 +42,17 @@ func (sg *SecurityGroupState) attachEndpoints() error {
 
 	// walk the endpoints and see which ones match
 	for _, ep := range eps {
-		if ep.Tenant == sg.Tenant {
-			if sg.Spec.WorkloadSelector.Matches(labels.Set(ep.Status.WorkloadAttributes)) {
+		if ep.Endpoint.Tenant == sg.SecurityGroup.Tenant {
+			if sg.SecurityGroup.Spec.WorkloadSelector.Matches(labels.Set(ep.Endpoint.Status.WorkloadAttributes)) {
 				err = ep.AddSecurityGroup(sg)
 				if err != nil {
-					log.Errorf("Error attaching endpoint %s to sg %s. Err: %v", ep.Name, sg.Name, err)
+					log.Errorf("Error attaching endpoint %s to sg %s. Err: %v", ep.Endpoint.Name, sg.SecurityGroup.Name, err)
 					return err
 				}
 
 				// add the ep to local list
-				sg.endpoints[ep.Name] = ep
-				sg.Status.Workloads = append(sg.Status.Workloads, ep.Name)
+				sg.endpoints[ep.Endpoint.Name] = ep
+				sg.SecurityGroup.Status.Workloads = append(sg.SecurityGroup.Status.Workloads, ep.Endpoint.Name)
 			}
 
 		}
@@ -68,82 +64,105 @@ func (sg *SecurityGroupState) attachEndpoints() error {
 // AddEndpoint adds an endpoint to sg
 func (sg *SecurityGroupState) AddEndpoint(ep *EndpointState) error {
 	// add the ep to local list
-	sg.endpoints[ep.Name] = ep
-	sg.Status.Workloads = append(sg.Status.Workloads, ep.Name)
-
-	return sg.stateMgr.memDB.UpdateObject(sg)
+	sg.endpoints[ep.Endpoint.Name] = ep
+	sg.SecurityGroup.Status.Workloads = append(sg.SecurityGroup.Status.Workloads, ep.Endpoint.Name)
+	sg.SecurityGroup.Write()
+	return sg.stateMgr.mbus.UpdateObject(convertSecurityGroup(sg))
 }
 
 // DelEndpoint removes an endpoint from sg
 func (sg *SecurityGroupState) DelEndpoint(ep *EndpointState) error {
 	// delete the endpoint
-	delete(sg.endpoints, ep.Name)
-	for i, epname := range sg.Status.Workloads {
-		if epname == ep.Name {
-			sg.Status.Workloads = append(sg.Status.Workloads[:i], sg.Status.Workloads[i+1:]...)
+	delete(sg.endpoints, ep.Endpoint.Name)
+	for i, epname := range sg.SecurityGroup.Status.Workloads {
+		if epname == ep.Endpoint.Name {
+			sg.SecurityGroup.Status.Workloads = append(sg.SecurityGroup.Status.Workloads[:i], sg.SecurityGroup.Status.Workloads[i+1:]...)
 		}
 	}
-
-	return sg.stateMgr.memDB.UpdateObject(sg)
+	sg.SecurityGroup.Write()
+	return sg.stateMgr.mbus.UpdateObject(convertSecurityGroup(sg))
 }
 
 // AddPolicy adds a policcy to sg
 func (sg *SecurityGroupState) AddPolicy(sgp *SgpolicyState) error {
 	// if policy exists, dont try to add it
-	_, ok := sg.policies[sgp.Name]
+	_, ok := sg.policies[sgp.SGPolicy.Name]
 	if ok {
 		return nil
 	}
 
 	// add to db
-	sg.policies[sgp.Name] = sgp
-	sg.Status.Policies = append(sg.Status.Policies, sgp.Name)
+	sg.policies[sgp.SGPolicy.Name] = sgp
+	sg.SecurityGroup.Status.Policies = append(sg.SecurityGroup.Status.Policies, sgp.SGPolicy.Name)
 
 	// trigger an update
-	return sg.stateMgr.memDB.UpdateObject(sg)
+	sg.SecurityGroup.Write()
+	return sg.stateMgr.mbus.UpdateObject(convertSecurityGroup(sg))
 }
 
 // DeletePolicy deletes a policcy from sg
 func (sg *SecurityGroupState) DeletePolicy(sgp *SgpolicyState) error {
 	// delete from db
-	delete(sg.policies, sgp.Name)
-	for i, pname := range sg.Status.Policies {
-		if pname == sgp.Name {
-			sg.Status.Policies = append(sg.Status.Policies[:i], sg.Status.Policies[i+1:]...)
+	delete(sg.policies, sgp.SGPolicy.Name)
+	for i, pname := range sg.SecurityGroup.Status.Policies {
+		if pname == sgp.SGPolicy.Name {
+			sg.SecurityGroup.Status.Policies = append(sg.SecurityGroup.Status.Policies[:i], sg.SecurityGroup.Status.Policies[i+1:]...)
 		}
 	}
 	// trigger an update
-	return sg.stateMgr.memDB.UpdateObject(sg)
+	sg.SecurityGroup.Write()
+	return sg.stateMgr.mbus.UpdateObject(convertSecurityGroup(sg))
 }
 
 // SecurityGroupStateFromObj conerts from memdb object to network state
-func SecurityGroupStateFromObj(obj memdb.Object) (*SecurityGroupState, error) {
+func SecurityGroupStateFromObj(obj runtime.Object) (*SecurityGroupState, error) {
 	switch obj.(type) {
-	case *SecurityGroupState:
-		sgobj := obj.(*SecurityGroupState)
-		return sgobj, nil
+	case *ctkit.SecurityGroup:
+		sgobj := obj.(*ctkit.SecurityGroup)
+		switch sgobj.HandlerCtx.(type) {
+		case *SecurityGroupState:
+			sgs := sgobj.HandlerCtx.(*SecurityGroupState)
+			return sgs, nil
+		default:
+			return nil, ErrIncorrectObjectType
+		}
+
 	default:
 		return nil, ErrIncorrectObjectType
 	}
 }
 
 // NewSecurityGroupState creates a new security group state object
-func NewSecurityGroupState(sg *security.SecurityGroup, stateMgr *Statemgr) (*SecurityGroupState, error) {
+func NewSecurityGroupState(sg *ctkit.SecurityGroup, stateMgr *Statemgr) (*SecurityGroupState, error) {
 	// create sg state object
 	sgs := SecurityGroupState{
-		SecurityGroup: *sg,
+		SecurityGroup: sg,
 		policies:      make(map[string]*SgpolicyState),
 		endpoints:     make(map[string]*EndpointState),
 		stateMgr:      stateMgr,
 	}
 
+	sg.HandlerCtx = &sgs
+
 	return &sgs, nil
+}
+
+func convertSecurityGroup(sgs *SecurityGroupState) *netproto.SecurityGroup {
+	sg := netproto.SecurityGroup{
+		TypeMeta:   sgs.SecurityGroup.TypeMeta,
+		ObjectMeta: sgs.SecurityGroup.ObjectMeta,
+		Spec: netproto.SecurityGroupSpec{
+			SecurityProfile: "", // FIXME: fill in security profile
+		},
+	}
+
+	return &sg
 }
 
 // FindSecurityGroup finds security group by name
 func (sm *Statemgr) FindSecurityGroup(tenant, name string) (*SecurityGroupState, error) {
 	// find the object
-	obj, err := sm.FindObject("SecurityGroup", tenant, name)
+	obj, err := sm.FindObject("SecurityGroup", tenant, "default", name)
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +172,7 @@ func (sm *Statemgr) FindSecurityGroup(tenant, name string) (*SecurityGroupState,
 
 // ListSecurityGroups lists all security groups
 func (sm *Statemgr) ListSecurityGroups() ([]*SecurityGroupState, error) {
-	objs := sm.memDB.ListObjects("SecurityGroup")
+	objs := sm.ListObjects("SecurityGroup")
 
 	var sgs []*SecurityGroupState
 	for _, obj := range objs {
@@ -168,16 +187,8 @@ func (sm *Statemgr) ListSecurityGroups() ([]*SecurityGroupState, error) {
 	return sgs, nil
 }
 
-// CreateSecurityGroup creates a security group
-func (sm *Statemgr) CreateSecurityGroup(sg *security.SecurityGroup) error {
-	// see if we already have it
-	esg, err := sm.FindObject("SecurityGroup", sg.ObjectMeta.Tenant, sg.ObjectMeta.Name)
-	if err == nil {
-		// FIXME: how do we handle an existing sg object changing?
-		log.Errorf("Can not change existing sg {%+v}. New state: {%+v}", esg, sg)
-		return fmt.Errorf("Can not change sg after its created")
-	}
-
+// OnSecurityGroupCreate creates a security group
+func (sm *Statemgr) OnSecurityGroupCreate(sg *ctkit.SecurityGroup) error {
 	// create new sg state
 	sgs, err := NewSecurityGroupState(sg, sm)
 	if err != nil {
@@ -188,26 +199,31 @@ func (sm *Statemgr) CreateSecurityGroup(sg *security.SecurityGroup) error {
 	// attach all matching endpoints
 	err = sgs.attachEndpoints()
 	if err != nil {
-		log.Errorf("Error attaching endpoints to security group %s. Err: %v", sgs.Name, err)
+		log.Errorf("Error attaching endpoints to security group %s. Err: %v", sgs.SecurityGroup.Name, err)
 		return err
 	}
 	log.Infof("Created Security Group state {%+v}", sgs)
 
 	// store it in local DB
-	return sm.memDB.AddObject(sgs)
+	return sm.mbus.AddObject(convertSecurityGroup(sgs))
 }
 
-// DeleteSecurityGroup deletes a security group
-func (sm *Statemgr) DeleteSecurityGroup(tenant, sgname string) error {
+// OnSecurityGroupUpdate handles sg updates
+func (sm *Statemgr) OnSecurityGroupUpdate(sg *ctkit.SecurityGroup) error {
+	return nil
+}
+
+// OnSecurityGroupDelete deletes a security group
+func (sm *Statemgr) OnSecurityGroupDelete(sgo *ctkit.SecurityGroup) error {
 	// see if we already have it
-	sgo, err := sm.FindObject("SecurityGroup", tenant, sgname)
+	obj, err := sm.FindObject("SecurityGroup", sgo.Tenant, "default", sgo.Name)
 	if err != nil {
-		log.Errorf("Can not find the sg %s|%s", tenant, sgname)
+		log.Errorf("Can not find the sg %s|%s", sgo.Tenant, sgo.Name)
 		return fmt.Errorf("SecurityGroup not found")
 	}
 
 	// convert it to security group state
-	sg, err := SecurityGroupStateFromObj(sgo)
+	sg, err := SecurityGroupStateFromObj(obj)
 	if err != nil {
 		return err
 	}
@@ -216,7 +232,7 @@ func (sm *Statemgr) DeleteSecurityGroup(tenant, sgname string) error {
 	for _, ep := range sg.endpoints {
 		err = ep.DelSecurityGroup(sg)
 		if err != nil {
-			log.Errorf("Error removing security group %s from endpoint %s. Err: %v", sg.Name, ep.Name, err)
+			log.Errorf("Error removing security group %s from endpoint %s. Err: %v", sg.SecurityGroup.Name, ep.Endpoint.Name, err)
 		}
 	}
 
@@ -227,5 +243,5 @@ func (sm *Statemgr) DeleteSecurityGroup(tenant, sgname string) error {
 		return err
 	}
 	// delete it from the DB
-	return sm.memDB.DeleteObject(sg)
+	return sm.mbus.DeleteObject(convertSecurityGroup(sg))
 }

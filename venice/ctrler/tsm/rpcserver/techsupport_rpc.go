@@ -89,7 +89,7 @@ func (r *TechSupportRPCServer) nodeSelectorMatch(nodeName, kind string, selector
 	// if there was no match in the node names list, we need to retrieve the node object and
 	// check object labels against the selector
 	if selector.Labels != nil {
-		nodeState, err := r.stateMgr.FindTechSupportObject(nodeName, kind)
+		nodeState, err := r.stateMgr.FindTechSupportObject(nodeName, "default", kind)
 		if err != nil {
 			log.Errorf("Error searching object with name %s kind %s in statemgr: %v", nodeName, kind, err)
 			return false

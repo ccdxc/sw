@@ -4,48 +4,42 @@ package statemgr
 
 import (
 	"fmt"
-	"sync"
 
-	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/memdb"
+	"github.com/pensando/sw/venice/utils/runtime"
 )
-
-// SmartNICReactor is the event reactor for smartNic events
-type SmartNICReactor struct {
-	stateMgr *Statemgr // state manager
-}
-
-// SmartNICHandler smartNic event handler interface
-type SmartNICHandler interface {
-	CreateSmartNIC(smartNic cluster.SmartNIC) error
-	DeleteSmartNIC(smartNic cluster.SmartNIC) error
-}
 
 // SmartNICState is a wrapper for smartNic object
 type SmartNICState struct {
-	sync.Mutex                 // lock the smartNic object
-	cluster.SmartNIC           // smartNic object
-	stateMgr         *Statemgr // pointer to state manager
+	SmartNIC *ctkit.SmartNIC `json:"-"` // smartNic object
+	stateMgr *Statemgr       // pointer to state manager
 }
 
 // SmartNICStateFromObj conerts from memdb object to smartNic state
-func SmartNICStateFromObj(obj memdb.Object) (*SmartNICState, error) {
+func SmartNICStateFromObj(obj runtime.Object) (*SmartNICState, error) {
 	switch obj.(type) {
-	case *SmartNICState:
-		nsobj := obj.(*SmartNICState)
-		return nsobj, nil
+	case *ctkit.SmartNIC:
+		sobj := obj.(*ctkit.SmartNIC)
+		switch sobj.HandlerCtx.(type) {
+		case *SmartNICState:
+			nsobj := sobj.HandlerCtx.(*SmartNICState)
+			return nsobj, nil
+		default:
+			return nil, ErrIncorrectObjectType
+		}
 	default:
 		return nil, ErrIncorrectObjectType
 	}
 }
 
 // NewSmartNICState creates new smartNic state object
-func NewSmartNICState(smartNic cluster.SmartNIC, stateMgr *Statemgr) (*SmartNICState, error) {
+func NewSmartNICState(smartNic *ctkit.SmartNIC, stateMgr *Statemgr) (*SmartNICState, error) {
 	hs := &SmartNICState{
 		SmartNIC: smartNic,
 		stateMgr: stateMgr,
 	}
+	smartNic.HandlerCtx = hs
 
 	// Notify statemgr about the smartnic
 	stateMgr.smartNICCreated(hs)
@@ -53,10 +47,10 @@ func NewSmartNICState(smartNic cluster.SmartNIC, stateMgr *Statemgr) (*SmartNICS
 	return hs, nil
 }
 
-// CreateSmartNIC handles smartNic creation
-func (hr *SmartNICReactor) CreateSmartNIC(smartNic cluster.SmartNIC) error {
+// OnSmartNICCreate handles smartNic creation
+func (sm *Statemgr) OnSmartNICCreate(smartNic *ctkit.SmartNIC) error {
 	// see if we already have the smartNic
-	hs, err := hr.stateMgr.FindSmartNIC(smartNic.Tenant, smartNic.Name)
+	hs, err := sm.FindSmartNIC(smartNic.Tenant, smartNic.Name)
 	if err == nil {
 		hs.SmartNIC = smartNic
 		return nil
@@ -65,7 +59,7 @@ func (hr *SmartNICReactor) CreateSmartNIC(smartNic cluster.SmartNIC) error {
 	log.Infof("Creating smart nic: %+v", smartNic)
 
 	// create new smartNic object
-	hs, err = NewSmartNICState(smartNic, hr.stateMgr)
+	hs, err = NewSmartNICState(smartNic, sm)
 	if err != nil {
 		log.Errorf("Error creating smartNic %+v. Err: %v", smartNic, err)
 		return err
@@ -74,10 +68,15 @@ func (hr *SmartNICReactor) CreateSmartNIC(smartNic cluster.SmartNIC) error {
 	return nil
 }
 
-// DeleteSmartNIC handles smartNic deletion
-func (hr *SmartNICReactor) DeleteSmartNIC(smartNic cluster.SmartNIC) error {
+// OnSmartNICUpdate handles update event on smartnic
+func (sm *Statemgr) OnSmartNICUpdate(smartNic *ctkit.SmartNIC) error {
+	return nil
+}
+
+// OnSmartNICDelete handles smartNic deletion
+func (sm *Statemgr) OnSmartNICDelete(smartNic *ctkit.SmartNIC) error {
 	// see if we have the smartNic
-	hs, err := hr.stateMgr.FindSmartNIC(smartNic.Tenant, smartNic.Name)
+	hs, err := sm.FindSmartNIC(smartNic.Tenant, smartNic.Name)
 	if err != nil {
 		log.Errorf("Could not find the smartNic %v. Err: %v", smartNic, err)
 		return err
@@ -86,22 +85,13 @@ func (hr *SmartNICReactor) DeleteSmartNIC(smartNic cluster.SmartNIC) error {
 	log.Infof("Deleting smart nic: %+v", smartNic)
 
 	// notify statemgr
-	return hr.stateMgr.smartNICDeleted(hs)
-}
-
-// NewSmartNICReactor creates new smartNic event reactor
-func NewSmartNICReactor(sm *Statemgr) (*SmartNICReactor, error) {
-	smartNic := SmartNICReactor{
-		stateMgr: sm,
-	}
-
-	return &smartNic, nil
+	return sm.smartNICDeleted(hs)
 }
 
 // FindSmartNIC finds a smartNic
 func (sm *Statemgr) FindSmartNIC(tenant, name string) (*SmartNICState, error) {
 	// find the object
-	obj, err := sm.FindObject("SmartNIC", tenant, name)
+	obj, err := sm.FindObject("SmartNIC", "", "", name)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +109,7 @@ func (sm *Statemgr) FindSmartNICByMacAddr(macAddr string) (*SmartNICState, error
 			return nil, err
 		}
 
-		if snic.Status.PrimaryMAC == macAddr {
+		if snic.SmartNIC.Status.PrimaryMAC == macAddr {
 			return snic, nil
 		}
 	}

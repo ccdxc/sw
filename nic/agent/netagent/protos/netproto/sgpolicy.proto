@@ -28,7 +28,7 @@ service SGPolicyApi {
     rpc GetSGPolicy (api.ObjectMeta) returns (SGPolicy) {};
     rpc ListSGPolicys (api.ObjectMeta) returns (SGPolicyList) {};
     rpc WatchSGPolicys (api.ObjectMeta) returns (stream SGPolicyEvent) {};
-    rpc UpdateSGPolicyStatus (SGPolicy) returns (SGPolicy) {};
+    rpc UpdateSGPolicy (SGPolicy) returns (SGPolicy) {};
 }
 
 // SGPolicy object
@@ -88,7 +88,7 @@ message SGPolicyStatus {
 }
 
 message SGPolicyList {
-    repeated SGPolicy sgpolicies  = 1;
+    repeated SGPolicy SGPolicys  = 1;
 }
 
 // sg policy watch event

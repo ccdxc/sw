@@ -52,3 +52,8 @@ templates:
   - template: "cliutils.tmpl"
     outputpath: "../exports/cliutils/utils.go"
     once: true
+  - template: "ctkit.tmpl"
+    outputpath: "../ctkit/{FILE}_ctkit.go"
+  - template: "ctkit_global.tmpl"
+    outputpath: "../ctkit/ctkit.go"
+    once: true

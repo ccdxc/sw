@@ -578,10 +578,6 @@
         "port": {
           "type": "string",
           "title": "Port for the app"
-        },
-        "app-name": {
-          "type": "string",
-          "title": "Additional ALG configurations"
         }
       }
     },

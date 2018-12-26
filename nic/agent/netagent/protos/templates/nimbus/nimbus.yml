@@ -1,0 +1,7 @@
+ basepath: "github.com/pensando/sw/nic/agent/netagent/protos/templates/nimbus"
+ templates:
+   - template: "nimbus_server.tmpl"
+     outputpath: "{FILE}_mserver.go"
+   - template: "nimbus_global.tmpl"
+     outputpath: "nimbus_server.go"
+     once: true   

@@ -16,7 +16,7 @@ const (
 	NetworkID            = "networkID"
 	SecurityGroupID      = "sgID"
 	TenantID             = "tenantID"
-	concurrencyCount     = 10000
+	concurrencyCount     = 3000
 	boltDBPath           = "/tmp/boltdb_resourceid_generation_test.db"
 	concurrentTestDBPath = "/tmp/boltdb_concurrent_resourceid_generation_test.db"
 )

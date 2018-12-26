@@ -3,70 +3,134 @@
 package statemgr
 
 import (
-	"sync"
+	"fmt"
+	"strconv"
 
-	"github.com/pensando/sw/api/generated/security"
+	"github.com/pensando/sw/api/generated/ctkit"
+	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/memdb"
+	"github.com/pensando/sw/venice/utils/runtime"
 )
-
-// AppReactor is the event reactor for app events
-type AppReactor struct {
-	stateMgr *Statemgr // state manager
-}
-
-// AppHandler app event handler interface
-type AppHandler interface {
-	CreateApp(app security.App) error
-	DeleteApp(app security.App) error
-}
 
 // AppState is a wrapper for app object
 type AppState struct {
-	sync.Mutex             // lock the app object
-	security.App           // app object
-	stateMgr     *Statemgr // pointer to state manager
+	App      *ctkit.App `json:"-"` // app object
+	stateMgr *Statemgr  // pointer to state manager
 }
 
-// AppStateFromObj conerts from memdb object to app state
-func AppStateFromObj(obj memdb.Object) (*AppState, error) {
+// AppStateFromObj converts from runtime object to app state
+func AppStateFromObj(obj runtime.Object) (*AppState, error) {
 	switch obj.(type) {
-	case *AppState:
-		nsobj := obj.(*AppState)
-		return nsobj, nil
+	case *ctkit.App:
+		apobj := obj.(*ctkit.App)
+		switch apobj.HandlerCtx.(type) {
+		case *AppState:
+			aps := apobj.HandlerCtx.(*AppState)
+			return aps, nil
+		default:
+			return nil, ErrIncorrectObjectType
+		}
 	default:
 		return nil, ErrIncorrectObjectType
 	}
 }
 
 // NewAppState creates new app state object
-func NewAppState(app security.App, stateMgr *Statemgr) (*AppState, error) {
-	hs := &AppState{
+func NewAppState(app *ctkit.App, stateMgr *Statemgr) (*AppState, error) {
+	aps := &AppState{
 		App:      app,
 		stateMgr: stateMgr,
 	}
+	app.HandlerCtx = aps
 
 	// store it in local DB
-	stateMgr.memDB.AddObject(hs)
+	stateMgr.mbus.AddObject(convertApp(aps))
 
-	return hs, nil
+	return aps, nil
+}
+
+// convertApp converts from npm state to netproto app
+func convertApp(aps *AppState) *netproto.App {
+	protoPort := []string{}
+
+	// convert protocol/port
+	for _, pp := range aps.App.Spec.ProtoPorts {
+		protoPort = append(protoPort, fmt.Sprintf("%s/%s", pp.Protocol, pp.Ports))
+	}
+
+	// build sg message
+	app := netproto.App{
+		TypeMeta:   aps.App.TypeMeta,
+		ObjectMeta: aps.App.ObjectMeta,
+		Spec: netproto.AppSpec{
+			ProtoPorts:     protoPort,
+			ALGType:        aps.App.Spec.ALG.Type,
+			AppIdleTimeout: aps.App.Spec.Timeout,
+			ALG:            &netproto.ALG{},
+		},
+	}
+
+	switch aps.App.Spec.ALG.Type {
+	case "ICMP":
+		ictype, _ := strconv.Atoi(aps.App.Spec.ALG.Icmp.Type)
+		icode, _ := strconv.Atoi(aps.App.Spec.ALG.Icmp.Code)
+
+		app.Spec.ALG.ICMP = &netproto.ICMP{
+			Type: uint32(ictype),
+			Code: uint32(icode),
+		}
+	case "DNS":
+		app.Spec.ALG.DNS = &netproto.DNS{
+			DropMultiQuestionPackets: aps.App.Spec.ALG.Dns.DropMultiQuestionPackets,
+			DropLargeDomainPackets:   aps.App.Spec.ALG.Dns.DropLargeDomainNamePackets,
+			DropLongLabelPackets:     aps.App.Spec.ALG.Dns.DropLongLabelPackets,
+			MaxMessageLength:         aps.App.Spec.ALG.Dns.MaxMessageLength,
+			QueryResponseTimeout:     aps.App.Spec.ALG.Dns.QueryResponseTimeout,
+		}
+	case "FTP":
+		app.Spec.ALG.FTP = &netproto.FTP{
+			AllowMismatchIPAddresses: aps.App.Spec.ALG.Ftp.AllowMismatchIPAddress,
+		}
+	case "SunRPC":
+		for _, sunrpc := range aps.App.Spec.ALG.Sunrpc {
+			pgmID, _ := strconv.Atoi(sunrpc.ProgramID)
+			app.Spec.ALG.SUNRPC = append(app.Spec.ALG.SUNRPC,
+				&netproto.RPC{
+					ProgramID:        uint32(pgmID),
+					ProgramIDTimeout: sunrpc.Timeout,
+				})
+		}
+	case "MSRPC":
+		for _, msrpc := range aps.App.Spec.ALG.Msrpc {
+			pgmID, _ := strconv.Atoi(msrpc.ProgramUUID)
+			app.Spec.ALG.MSRPC = append(app.Spec.ALG.MSRPC,
+				&netproto.RPC{
+					ProgramID:        uint32(pgmID),
+					ProgramIDTimeout: msrpc.Timeout,
+				})
+		}
+	case "TFTP":
+	case "RTSP":
+	}
+
+	return &app
 }
 
 // attachPolicy adds a policy to attached policy list
 func (app *AppState) attachPolicy(sgpName string) error {
 	// see if the policy is already part of the list
-	for _, pn := range app.Status.AttachedPolicies {
+	for _, pn := range app.App.Status.AttachedPolicies {
 		if pn == sgpName {
 			return nil
 		}
 	}
 
 	// add the policy to the list
-	app.Status.AttachedPolicies = append(app.Status.AttachedPolicies, sgpName)
+	app.App.Status.AttachedPolicies = append(app.App.Status.AttachedPolicies, sgpName)
 
 	// save the updated app
-	app.stateMgr.memDB.UpdateObject(app)
-	app.stateMgr.writer.WriteApp(&app.App)
+	app.stateMgr.mbus.UpdateObject(convertApp(app))
+	app.App.Write()
 
 	return nil
 }
@@ -74,22 +138,22 @@ func (app *AppState) attachPolicy(sgpName string) error {
 // detachPolicy removes a policy from
 func (app *AppState) detachPolicy(sgpName string) error {
 	// see if the policy is already part of the list
-	for idx, pn := range app.Status.AttachedPolicies {
+	for idx, pn := range app.App.Status.AttachedPolicies {
 		if pn == sgpName {
-			app.Status.AttachedPolicies = append(app.Status.AttachedPolicies[:idx], app.Status.AttachedPolicies[idx+1:]...)
+			app.App.Status.AttachedPolicies = append(app.App.Status.AttachedPolicies[:idx], app.App.Status.AttachedPolicies[idx+1:]...)
 		}
 	}
 	// save the updated app
-	app.stateMgr.memDB.UpdateObject(app)
-	app.stateMgr.writer.WriteApp(&app.App)
+	app.stateMgr.mbus.UpdateObject(convertApp(app))
+	app.App.Write()
 
 	return nil
 }
 
-// CreateApp handles app creation
-func (hr *AppReactor) CreateApp(app security.App) error {
+// OnAppCreate handles app creation
+func (sm *Statemgr) OnAppCreate(app *ctkit.App) error {
 	// see if we already have the app
-	hs, err := hr.stateMgr.FindApp(app.Tenant, app.Name)
+	hs, err := sm.FindApp(app.Tenant, app.Name)
 	if err == nil {
 		hs.App = app
 		return nil
@@ -98,7 +162,7 @@ func (hr *AppReactor) CreateApp(app security.App) error {
 	log.Infof("Creating app: %+v", app)
 
 	// create new app object
-	hs, err = NewAppState(app, hr.stateMgr)
+	hs, err = NewAppState(app, sm)
 	if err != nil {
 		log.Errorf("Error creating app %+v. Err: %v", app, err)
 		return err
@@ -107,34 +171,30 @@ func (hr *AppReactor) CreateApp(app security.App) error {
 	return nil
 }
 
-// DeleteApp handles app deletion
-func (hr *AppReactor) DeleteApp(app security.App) error {
+// OnAppUpdate handles update app event
+func (sm *Statemgr) OnAppUpdate(app *ctkit.App) error {
+	return nil
+}
+
+// OnAppDelete handles app deletion
+func (sm *Statemgr) OnAppDelete(app *ctkit.App) error {
 	// see if we have the app
-	hs, err := hr.stateMgr.FindApp(app.Tenant, app.Name)
+	fapp, err := sm.FindApp(app.Tenant, app.Name)
 	if err != nil {
 		log.Errorf("Could not find the app %v. Err: %v", app, err)
 		return err
 	}
 
-	log.Infof("Deleting app: %+v", app)
+	log.Infof("Deleting app: %+v", fapp)
 
 	// delete the object
-	return hr.stateMgr.memDB.DeleteObject(hs)
-}
-
-// NewAppReactor creates new app event reactor
-func NewAppReactor(sm *Statemgr) (*AppReactor, error) {
-	app := AppReactor{
-		stateMgr: sm,
-	}
-
-	return &app, nil
+	return sm.mbus.DeleteObject(convertApp(fapp))
 }
 
 // FindApp finds a app
 func (sm *Statemgr) FindApp(tenant, name string) (*AppState, error) {
 	// find the object
-	obj, err := sm.FindObject("App", tenant, name)
+	obj, err := sm.FindObject("App", tenant, "default", name)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +204,7 @@ func (sm *Statemgr) FindApp(tenant, name string) (*AppState, error) {
 
 // ListApps lists all apps
 func (sm *Statemgr) ListApps() ([]*AppState, error) {
-	objs := sm.memDB.ListObjects("App")
+	objs := sm.ListObjects("App")
 
 	var apps []*AppState
 	for _, obj := range objs {

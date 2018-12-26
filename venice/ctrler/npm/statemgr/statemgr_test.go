@@ -4,18 +4,15 @@ package statemgr
 
 import (
 	"fmt"
-	"sync"
 	"testing"
-	"time"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/api/labels"
-	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/memdb"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -26,7 +23,7 @@ func createNetwork(stateMgr *Statemgr, tenant, net, subnet, gw string) error {
 		TypeMeta: api.TypeMeta{Kind: "Network"},
 		ObjectMeta: api.ObjectMeta{
 			Name:      net,
-			Namespace: "",
+			Namespace: "default",
 			Tenant:    tenant,
 		},
 		Spec: network.NetworkSpec{
@@ -37,7 +34,7 @@ func createNetwork(stateMgr *Statemgr, tenant, net, subnet, gw string) error {
 	}
 
 	// create a network
-	return stateMgr.CreateNetwork(&np)
+	return stateMgr.ctrler.Network().Create(&np)
 }
 
 func createSg(stateMgr *Statemgr, tenant, sgname string, selector *labels.Selector) (*security.SecurityGroup, error) {
@@ -45,8 +42,9 @@ func createSg(stateMgr *Statemgr, tenant, sgname string, selector *labels.Select
 	sg := security.SecurityGroup{
 		TypeMeta: api.TypeMeta{Kind: "SecurityGroup"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: tenant,
-			Name:   sgname,
+			Tenant:    tenant,
+			Namespace: "default",
+			Name:      sgname,
 		},
 		Spec: security.SecurityGroupSpec{
 			WorkloadSelector: selector,
@@ -54,7 +52,7 @@ func createSg(stateMgr *Statemgr, tenant, sgname string, selector *labels.Select
 	}
 
 	// create sg
-	err := stateMgr.CreateSecurityGroup(&sg)
+	err := stateMgr.ctrler.SecurityGroup().Create(&sg)
 
 	return &sg, err
 }
@@ -70,17 +68,17 @@ func createTenant(stateMgr *Statemgr, tenant string) error {
 	}
 
 	// create a network
-	return stateMgr.CreateTenant(&tn)
+	return stateMgr.ctrler.Tenant().Create(&tn)
 }
 
 // createEndpoint utility function to create an endpoint
-func createEndpoint(stateMgr *Statemgr, tenant, endpoint, net string) (*EndpointState, error) {
+func createEndpoint(stateMgr *Statemgr, tenant, endpoint, net string) (*workload.Endpoint, error) {
 	// network params
 	ep := workload.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
 			Name:      endpoint,
-			Namespace: "",
+			Namespace: "default",
 			Tenant:    tenant,
 		},
 		Spec: workload.EndpointSpec{},
@@ -92,73 +90,13 @@ func createEndpoint(stateMgr *Statemgr, tenant, endpoint, net string) (*Endpoint
 		},
 	}
 
-	nw, err := stateMgr.FindNetwork(tenant, net)
-	if err != nil {
-		log.Errorf("could not find the network %v", net)
-		return nil, err
-	}
-	return nw.CreateEndpoint(&ep)
-}
-
-// dummy writer
-type dummyWriter struct {
-	objects map[interface{}]struct{}
-	mutex   *sync.Mutex
-}
-
-func (d *dummyWriter) store(obj interface{}) {
-	if d.objects == nil {
-		return
-	}
-	d.mutex.Lock()
-	defer d.mutex.Unlock()
-	d.objects[obj] = struct{}{}
-}
-
-func (d *dummyWriter) WriteNetwork(nw *network.Network) error {
-	d.store(nw)
-	return nil
-}
-
-func (d *dummyWriter) WriteEndpoint(ep *workload.Endpoint, update bool) error {
-	d.store(ep)
-	return nil
-}
-
-func (d *dummyWriter) WriteSecurityGroup(sg *security.SecurityGroup) error {
-	d.store(sg)
-	return nil
-}
-
-func (d *dummyWriter) WriteSGPolicy(sgp *security.SGPolicy) error {
-	d.store(sgp)
-	return nil
-}
-
-func (d *dummyWriter) WriteTenant(tn *cluster.Tenant) error {
-	d.store(tn)
-	return nil
-}
-func (d *dummyWriter) WriteApp(app *security.App) error {
-	d.store(app)
-	return nil
-}
-
-func (d *dummyWriter) Close() error {
-	return nil
-}
-
-func newDummyWriter(m map[interface{}]struct{}) *dummyWriter {
-	return &dummyWriter{
-		objects: m,
-		mutex:   &sync.Mutex{},
-	}
+	return &ep, stateMgr.ctrler.Endpoint().Create(&ep)
 }
 
 // TestNetworkCreateDelete tests network create
 func TestNetworkCreateDelete(t *testing.T) {
 	// create network state manager
-	stateMgr, err := NewStatemgr(newDummyWriter(nil))
+	stateMgr, err := newStatemgr()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -171,9 +109,9 @@ func TestNetworkCreateDelete(t *testing.T) {
 	// verify network got created
 	nw, err := stateMgr.FindNetwork("default", "default")
 	AssertOk(t, err, "Could not find the network")
-	Assert(t, (nw.Spec.IPv4Subnet == "10.1.1.0/24"), "Network subnet did not match", nw)
-	Assert(t, (nw.Spec.IPv4Gateway == "10.1.1.254"), "Network gateway did not match", nw)
-	Assert(t, (nw.TypeMeta.Kind == "Network"), "Network type meta did not match", nw)
+	Assert(t, (nw.Network.Spec.IPv4Subnet == "10.1.1.0/24"), "Network subnet did not match", nw)
+	Assert(t, (nw.Network.Spec.IPv4Gateway == "10.1.1.254"), "Network gateway did not match", nw)
+	Assert(t, (nw.Network.TypeMeta.Kind == "Network"), "Network type meta did not match", nw)
 
 	// verify can not create networks with invalid params
 	err = createNetwork(stateMgr, "default", "invalid", "10.1.1.0/24", "10.1.1.255")
@@ -189,10 +127,10 @@ func TestNetworkCreateDelete(t *testing.T) {
 
 	// verify we cant create duplicate networks
 	err = createNetwork(stateMgr, "default", "default", "10.1.1.0/24", "10.1.1.254")
-	Assert(t, (err != nil), "Duplicate network creation succeeded")
+	AssertOk(t, err, "Network update failed")
 
 	// delete the network
-	err = stateMgr.DeleteNetwork("default", "default")
+	err = stateMgr.ctrler.Network().Delete(&nw.Network.Network)
 	AssertOk(t, err, "Failed to delete the network")
 
 	// verify network is deleted from the db
@@ -200,31 +138,16 @@ func TestNetworkCreateDelete(t *testing.T) {
 	Assert(t, (err != nil), "Network still found after its deleted")
 }
 
-func TestNetworkListWatch(t *testing.T) {
+func TestNetworkList(t *testing.T) {
 	// create network state manager
-	stateMgr, err := NewStatemgr(newDummyWriter(nil))
+	stateMgr, err := newStatemgr()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
 	}
-
-	// start a watch
-	watchChan := make(chan memdb.Event, memdb.WatchLen)
-	stateMgr.WatchObjects("Network", watchChan)
-
 	// create a network
 	err = createNetwork(stateMgr, "default", "default", "10.1.1.0/24", "10.1.1.254")
 	AssertOk(t, err, "Error creating the network")
-
-	// verify we get a watch event
-	select {
-	case wnt, ok := <-watchChan:
-		Assert(t, ok, "Error reading from channel", wnt)
-		Assert(t, (wnt.Obj.GetObjectMeta().Name == "default"), "Received invalid network", wnt)
-		log.Infof("Received network watch {%+v}", wnt)
-	case <-time.After(time.Second):
-		t.Fatalf("Timed out while waiting for channel event")
-	}
 
 	// verify the list works
 	nets, err := stateMgr.ListNetworks()
@@ -236,7 +159,7 @@ func TestNetworkListWatch(t *testing.T) {
 // TestEndpointCreateDelete tests network create
 func TestEndpointCreateDelete(t *testing.T) {
 	// create network state manager
-	stateMgr, err := NewStatemgr(newDummyWriter(nil))
+	stateMgr, err := newStatemgr()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -251,7 +174,7 @@ func TestEndpointCreateDelete(t *testing.T) {
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
 			Name:      "testEndpoint",
-			Namespace: "",
+			Namespace: "default",
 			Tenant:    "default",
 		},
 		Spec: workload.EndpointSpec{},
@@ -268,31 +191,29 @@ func TestEndpointCreateDelete(t *testing.T) {
 	AssertOk(t, err, "Could not find the network")
 
 	// create endpoint
-	eps, err := nw.CreateEndpoint(&epinfo)
+	err = stateMgr.ctrler.Endpoint().Create(&epinfo)
 	Assert(t, (err == nil), "Error creating the endpoint", epinfo)
-	Assert(t, (eps.TypeMeta.Kind == "Endpoint"), "Endpoint type meta did not match", eps)
-	Assert(t, (eps.Status.IPv4Address == "10.1.1.1/24"), "Endpoint address did not match", eps)
-	Assert(t, (eps.Status.IPv4Gateway == "10.1.1.254"), "Endpoint gateway did not match", eps)
-
-	// verify we can find the endpoint
-	foundEp, ok := nw.FindEndpoint("testEndpoint")
-	Assert(t, ok, "Could not find the endpoint", "testEndpoint")
-	Assert(t, (foundEp == eps), "Created and found eps did not match", []*EndpointState{eps, foundEp})
+	eps, err := stateMgr.FindEndpoint("default", "testEndpoint")
+	Assert(t, (err == nil), "Error finding the endpoint", epinfo)
+	Assert(t, (eps.Endpoint.TypeMeta.Kind == "Endpoint"), "Endpoint type meta did not match", eps)
+	Assert(t, (eps.Endpoint.Status.IPv4Address == "10.1.1.1/24"), "Endpoint address did not match", eps)
+	Assert(t, (eps.Endpoint.Status.IPv4Gateway == "10.1.1.254"), "Endpoint gateway did not match", eps)
 
 	// verify can not delete a network when it still has endpoints
-	err = stateMgr.DeleteNetwork("default", "default")
+	err = stateMgr.ctrler.Network().Delete(&nw.Network.Network)
 	Assert(t, (err != nil), "Was able to delete network with endpoint")
 
 	// verify you cant create duplicate endpoints
 	epinfo.Status.IPv4Address = "10.1.1.5"
-	_, err = nw.CreateEndpoint(&epinfo)
-	Assert(t, (err != nil), "Was able to create duplicate endpoint", epinfo)
+	err = stateMgr.ctrler.Endpoint().Create(&epinfo)
+	AssertOk(t, err, "updating endpoint failed")
 
 	// verify creating new EP after ip addr have run out fails
 	newEP := workload.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
 			Name:      "newEndpoint",
-			Namespace: "",
+			Namespace: "default",
 			Tenant:    "default",
 		},
 		Spec: workload.EndpointSpec{},
@@ -303,31 +224,33 @@ func TestEndpointCreateDelete(t *testing.T) {
 			HomingHostName: "testHost",
 		},
 	}
-	nep, err := nw.CreateEndpoint(&newEP)
+	err = stateMgr.ctrler.Endpoint().Create(&newEP)
 	AssertOk(t, err, "Endpoint failed")
-	Assert(t, (nep.Status.IPv4Address == "10.1.1.2/24"), "Endpoint address did not match", eps)
+
+	nep, err := stateMgr.FindEndpoint("default", "newEndpoint")
+	AssertOk(t, err, "Error finding the endpoint")
+	Assert(t, (nep.Endpoint.Status.IPv4Address == "10.1.1.2/24"), "Endpoint address did not match", eps)
 
 	// delete the endpoint
-	deletedEp, err := nw.DeleteEndpoint(&epinfo.ObjectMeta)
+	err = stateMgr.ctrler.Endpoint().Delete(&epinfo)
 	Assert(t, (err == nil), "Error deleting the endpoint", epinfo)
-	Assert(t, (deletedEp == eps), "Deleted and created eps did not match", []*EndpointState{eps, deletedEp})
 
 	// verify endpoint is gone from the database
-	_, ok = nw.FindEndpoint("testEndpoint")
-	Assert(t, (ok == false), "Deleted endpoint still found in network db", "testEndpoint")
+	_, err = stateMgr.FindEndpoint("default", "testEndpoint")
+	Assert(t, (err != nil), "Deleted endpoint still found in network db", "testEndpoint")
 
 	// verify deleting non existing endpoint returns an error
-	_, err = nw.DeleteEndpoint(&epinfo.ObjectMeta)
+	err = stateMgr.ctrler.Endpoint().Delete(&epinfo)
 	Assert(t, (err != nil), "Deleting non existing endpoint succeeded", epinfo)
 
 	// delete the second endpoint
-	_, err = nw.DeleteEndpoint(&newEP.ObjectMeta)
+	err = stateMgr.ctrler.Endpoint().Delete(&newEP)
 	Assert(t, (err == nil), "Error deleting the endpoint", epinfo)
 }
 
 func TestEndpointCreateFailure(t *testing.T) {
 	// create network state manager
-	stateMgr, err := NewStatemgr(newDummyWriter(nil))
+	stateMgr, err := newStatemgr()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -338,9 +261,10 @@ func TestEndpointCreateFailure(t *testing.T) {
 
 	// endpoint params
 	epinfo := workload.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
 			Name:      "testEndpoint",
-			Namespace: "",
+			Namespace: "default",
 			Tenant:    "default",
 		},
 		Status: workload.EndpointStatus{
@@ -352,19 +276,22 @@ func TestEndpointCreateFailure(t *testing.T) {
 	}
 
 	// find the network
-	nw, err := stateMgr.FindNetwork("default", "default")
+	_, err = stateMgr.FindNetwork("default", "default")
 	AssertOk(t, err, "Could not find the network")
 
 	// create endpoint
-	eps, err := nw.CreateEndpoint(&epinfo)
+	err = stateMgr.ctrler.Endpoint().Create(&epinfo)
 	Assert(t, (err == nil), "Error creating the endpoint", epinfo)
-	Assert(t, (eps.Status.IPv4Address == "10.1.1.1/30"), "Endpoint address did not match", eps)
+	eps, err := stateMgr.FindEndpoint("default", "testEndpoint")
+	Assert(t, (err == nil), "Error finding the endpoint", epinfo)
+	Assert(t, (eps.Endpoint.Status.IPv4Address == "10.1.1.1/30"), "Endpoint address did not match", eps)
 
 	// verify creating new EP after ip addr have run out fails
 	newEP := workload.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
 			Name:      "newEndpoint",
-			Namespace: "",
+			Namespace: "default",
 			Tenant:    "default",
 		},
 		Status: workload.EndpointStatus{
@@ -374,23 +301,25 @@ func TestEndpointCreateFailure(t *testing.T) {
 			HomingHostName: "testHost",
 		},
 	}
-	nep, err := nw.CreateEndpoint(&newEP)
-	Assert(t, (err != nil), "Endpoint creation should have failed", nep)
+	err = stateMgr.ctrler.Endpoint().Create(&newEP)
+	Assert(t, (err != nil), "Endpoint creation should have failed", newEP)
 
 	// delete the first endpoint
-	_, err = nw.DeleteEndpoint(&epinfo.ObjectMeta)
+	err = stateMgr.ctrler.Endpoint().Delete(&epinfo)
 	Assert(t, (err == nil), "Error deleting the endpoint", epinfo)
 
 	// verify now the creation goes thru
-	nep, err = nw.CreateEndpoint(&newEP)
+	err = stateMgr.ctrler.Endpoint().Create(&newEP)
 	AssertOk(t, err, "Second endpoint creation failed")
-	Assert(t, (nep.Status.IPv4Address == "10.1.1.1/30"), "Endpoint address did not match", nep)
+	nep, err := stateMgr.FindEndpoint("default", "newEndpoint")
+	Assert(t, (err == nil), "Error finding the endpoint", newEP)
+	Assert(t, (nep.Endpoint.Status.IPv4Address == "10.1.1.1/30"), "Endpoint address did not match", nep)
 }
 
 // TestEndpointListWatch tests ep watch and list
-func TestEndpointListWatch(t *testing.T) {
+func TestEndpointList(t *testing.T) {
 	// create network state manager
-	stateMgr, err := NewStatemgr(newDummyWriter(nil))
+	stateMgr, err := newStatemgr()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -399,45 +328,32 @@ func TestEndpointListWatch(t *testing.T) {
 	err = createNetwork(stateMgr, "default", "default", "10.1.1.0/24", "10.1.1.254")
 	AssertOk(t, err, "Error creating the network")
 
-	// start a watch on endpoint
-	watchChan := make(chan memdb.Event, memdb.WatchLen)
-	stateMgr.WatchObjects("Endpoint", watchChan)
-
 	// endpoint params
-	epinfo := workload.Endpoint{
-		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
-		ObjectMeta: api.ObjectMeta{
-			Name:      "testEndpoint",
-			Namespace: "",
-			Tenant:    "default",
-		},
-		Spec: workload.EndpointSpec{},
-		Status: workload.EndpointStatus{
-			WorkloadName:   "testContainerName",
-			Network:        "default",
-			HomingHostAddr: "192.168.1.1",
-			HomingHostName: "testHost",
+	epinfo := ctkit.Endpoint{
+		Endpoint: workload.Endpoint{
+			TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+			ObjectMeta: api.ObjectMeta{
+				Name:      "testEndpoint",
+				Namespace: "default",
+				Tenant:    "default",
+			},
+			Spec: workload.EndpointSpec{},
+			Status: workload.EndpointStatus{
+				WorkloadName:   "testContainerName",
+				Network:        "default",
+				HomingHostAddr: "192.168.1.1",
+				HomingHostName: "testHost",
+			},
 		},
 	}
 
 	// find the network
-	nw, err := stateMgr.FindNetwork("default", "default")
+	_, err = stateMgr.FindNetwork("default", "default")
 	AssertOk(t, err, "Could not find the network")
 
 	// create endpoint
-	eps, err := nw.CreateEndpoint(&epinfo)
-	Assert(t, (err == nil), "Error creating the endpoint", epinfo)
-
-	// verify we get a watch event
-	select {
-	case wep, ok := <-watchChan:
-		Assert(t, ok, "Error reading from channel", wep)
-		Assert(t, (wep.Obj.GetObjectKind() == "Endpoint"), "Watch rcvd invalid object kind", wep)
-		Assert(t, (wep.Obj.GetObjectMeta().Name == eps.Endpoint.Name), "Received invalid endpoint", wep)
-		log.Infof("Received endpoint watch {%+v}", wep)
-	case <-time.After(time.Second):
-		t.Fatalf("Timed out while waiting for channel event")
-	}
+	err = stateMgr.OnEndpointCreate(&epinfo)
+	Assert(t, (err == nil), "Error creating the endpoint", &epinfo)
 
 	// verify the list works
 	nets, err := stateMgr.ListNetworks()
@@ -445,15 +361,62 @@ func TestEndpointListWatch(t *testing.T) {
 	Assert(t, (len(nets) == 1), "Incorrect number of networks received", nets)
 	for _, nt := range nets {
 		endps := nt.ListEndpoints()
-		Assert(t, (len(endps) == 1), "Invalid number of endpoints received", eps)
-		Assert(t, (endps[0].Endpoint.Name == eps.Endpoint.Name), "Invalid endpoint params received", endps[0])
+		Assert(t, (len(endps) == 1), "Invalid number of endpoints received", endps)
+		Assert(t, (endps[0].Endpoint.Name == epinfo.Endpoint.Name), "Invalid endpoint params received", endps[0])
 	}
+
+}
+
+func TestEndpointNodeState(t *testing.T) {
+	// create network state manager
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+	// create a network
+	err = createNetwork(stateMgr, "default", "default", "10.1.1.0/24", "10.1.1.254")
+	AssertOk(t, err, "Error creating the network")
+
+	// endpoint params
+	epinfo := ctkit.Endpoint{
+		Endpoint: workload.Endpoint{
+			TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+			ObjectMeta: api.ObjectMeta{
+				Name:      "testEndpoint",
+				Namespace: "default",
+				Tenant:    "default",
+			},
+			Spec: workload.EndpointSpec{},
+			Status: workload.EndpointStatus{
+				WorkloadName:   "testContainerName",
+				Network:        "default",
+				HomingHostAddr: "192.168.1.1",
+				HomingHostName: "testHost",
+			},
+		},
+	}
+
+	// create endpoint
+	err = stateMgr.OnEndpointCreate(&epinfo)
+	Assert(t, (err == nil), "Error creating the endpoint", &epinfo)
+
+	nep, err := stateMgr.mbus.FindEndpoint(&epinfo.ObjectMeta)
+	AssertOk(t, err, "Error finding endpoint in mbus")
+
+	// trigger node state add
+	err = stateMgr.OnEndpointAgentStatusSet("node-1", nep)
+	AssertOk(t, err, "Error adding node status")
+
+	// trigger node state delete
+	err = stateMgr.OnEndpointAgentStatusDelete("node-1", nep)
+	AssertOk(t, err, "Error deleting node status")
 
 }
 
 func TestSgCreateDelete(t *testing.T) {
 	// create network state manager
-	stateMgr, err := NewStatemgr(newDummyWriter(nil))
+	stateMgr, err := newStatemgr()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -465,10 +428,10 @@ func TestSgCreateDelete(t *testing.T) {
 	// verify we can find the sg
 	sgs, err := stateMgr.FindSecurityGroup("default", "testSg")
 	AssertOk(t, err, "Could not find the security group")
-	AssertEquals(t, sgs.Spec.WorkloadSelector.String(), sg.Spec.WorkloadSelector.String(), "Security group params did not match")
+	AssertEquals(t, sgs.SecurityGroup.Spec.WorkloadSelector.String(), sg.Spec.WorkloadSelector.String(), "Security group params did not match")
 
 	// delete the security group
-	err = stateMgr.DeleteSecurityGroup("default", "testSg")
+	err = stateMgr.ctrler.SecurityGroup().Delete(&sgs.SecurityGroup.SecurityGroup)
 	AssertOk(t, err, "Error deleting security group")
 
 	// verify the sg is gone
@@ -478,7 +441,7 @@ func TestSgCreateDelete(t *testing.T) {
 
 func TestSgAttachEndpoint(t *testing.T) {
 	// create network state manager
-	stateMgr, err := NewStatemgr(newDummyWriter(nil))
+	stateMgr, err := newStatemgr()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -498,7 +461,7 @@ func TestSgAttachEndpoint(t *testing.T) {
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
 			Name:      "testEndpoint",
-			Namespace: "",
+			Namespace: "default",
 			Tenant:    "default",
 		},
 		Spec: workload.EndpointSpec{},
@@ -512,20 +475,22 @@ func TestSgAttachEndpoint(t *testing.T) {
 	}
 
 	// find the network
-	nw, err := stateMgr.FindNetwork("default", "default")
+	_, err = stateMgr.FindNetwork("default", "default")
 	AssertOk(t, err, "Could not find the network")
 
 	// create endpoint
-	eps, err := nw.CreateEndpoint(&epinfo)
+	err = stateMgr.ctrler.Endpoint().Create(&epinfo)
 	Assert(t, (err == nil), "Error creating the endpoint", epinfo)
 
 	// verify endpoint is associated with the sg
-	Assert(t, (len(eps.Status.SecurityGroups) == 1), "Sg was not linked to endpoint", eps)
+	eps, err := stateMgr.FindEndpoint("default", "testEndpoint")
+	Assert(t, (err == nil), "Error finding the endpoint", epinfo)
+	Assert(t, (len(eps.Endpoint.Status.SecurityGroups) == 1), "Sg was not linked to endpoint", eps)
 	Assert(t, (len(eps.groups) == 1), "Sg was not linked to endpoint", eps)
-	Assert(t, (eps.Status.SecurityGroups[0] == sg.Name), "Sg was not linked to endpoint", eps)
-	Assert(t, (len(sg.Status.Workloads) == 1), "Endpoint is not linked to sg", sg)
+	Assert(t, (eps.Endpoint.Status.SecurityGroups[0] == sg.SecurityGroup.Name), "Sg was not linked to endpoint", eps)
+	Assert(t, (len(sg.SecurityGroup.Status.Workloads) == 1), "Endpoint is not linked to sg", sg)
 	Assert(t, (len(sg.endpoints) == 1), "Endpoint is not linked to sg", sg)
-	Assert(t, (sg.Status.Workloads[0] == eps.Name), "Endpoint is not linked to sg", sg)
+	Assert(t, (sg.SecurityGroup.Status.Workloads[0] == eps.Endpoint.Name), "Endpoint is not linked to sg", sg)
 
 	// create a new sg
 	_, err = createSg(stateMgr, "default", "testSg2", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
@@ -534,28 +499,28 @@ func TestSgAttachEndpoint(t *testing.T) {
 	AssertOk(t, err, "Error finding sg")
 
 	// verify endpoint is associated with the new sg too..
-	Assert(t, (len(eps.Status.SecurityGroups) == 2), "Sg was not linked to endpoint", eps)
+	Assert(t, (len(eps.Endpoint.Status.SecurityGroups) == 2), "Sg was not linked to endpoint", eps)
 	Assert(t, (len(eps.groups) == 2), "Sg was not linked to endpoint", eps)
-	Assert(t, (eps.Status.SecurityGroups[1] == sg2.Name), "Sg was not linked to endpoint", eps)
-	Assert(t, (len(sg2.Status.Workloads) == 1), "Endpoint is not linked to sg", sg2)
+	Assert(t, (eps.Endpoint.Status.SecurityGroups[1] == sg2.SecurityGroup.Name), "Sg was not linked to endpoint", eps)
+	Assert(t, (len(sg2.SecurityGroup.Status.Workloads) == 1), "Endpoint is not linked to sg", sg2)
 	Assert(t, (len(sg2.endpoints) == 1), "Endpoint is not linked to sg", sg2)
-	Assert(t, (sg2.Status.Workloads[0] == eps.Name), "Endpoint is not linked to sg", sg2)
+	Assert(t, (sg2.SecurityGroup.Status.Workloads[0] == eps.Endpoint.Name), "Endpoint is not linked to sg", sg2)
 
 	// delete the second sg
-	err = stateMgr.DeleteSecurityGroup("default", "testSg2")
+	err = stateMgr.ctrler.SecurityGroup().Delete(&sg2.SecurityGroup.SecurityGroup)
 	AssertOk(t, err, "Error deleting security group")
 
 	// verify sg is removed from endpoint
-	Assert(t, (len(eps.Status.SecurityGroups) == 1), "Sg is still linked to endpoint", eps)
+	Assert(t, (len(eps.Endpoint.Status.SecurityGroups) == 1), "Sg is still linked to endpoint", eps)
 	Assert(t, (len(eps.groups) == 1), "Sg is still linked to endpoint", eps)
-	Assert(t, (eps.Status.SecurityGroups[0] == sg.Name), "Sg is still linked to endpoint", eps)
+	Assert(t, (eps.Endpoint.Status.SecurityGroups[0] == sg.SecurityGroup.Name), "Sg is still linked to endpoint", eps)
 
 	// delete the endpoint
-	_, err = nw.DeleteEndpoint(&eps.ObjectMeta)
+	err = stateMgr.ctrler.Endpoint().Delete(&eps.Endpoint.Endpoint)
 	AssertOk(t, err, "Error deleting endpoint")
 
 	// verify endpoint is removed from sg
-	Assert(t, (len(sg.Status.Workloads) == 0), "Endpoint is still linked to sg", sg)
+	Assert(t, (len(sg.SecurityGroup.Status.Workloads) == 0), "Endpoint is still linked to sg", sg)
 }
 
 // test concurrent add/delete/change of endpoints
@@ -563,7 +528,7 @@ func TestEndpointConcurrency(t *testing.T) {
 	var concurrency = 100
 
 	// create network state manager
-	stateMgr, err := NewStatemgr(newDummyWriter(nil))
+	stateMgr, err := newStatemgr()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -573,7 +538,7 @@ func TestEndpointConcurrency(t *testing.T) {
 	AssertOk(t, err, "Error creating the network")
 
 	// find the network
-	nw, err := stateMgr.FindNetwork("default", "default")
+	_, err = stateMgr.FindNetwork("default", "default")
 	AssertOk(t, err, "Could not find the network")
 
 	waitCh := make(chan error, concurrency*2)
@@ -585,8 +550,9 @@ func TestEndpointConcurrency(t *testing.T) {
 			epinfo := workload.Endpoint{
 				TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 				ObjectMeta: api.ObjectMeta{
-					Name:   fmt.Sprintf("testEndpoint-%d", idx),
-					Tenant: "default",
+					Name:      fmt.Sprintf("testEndpoint-%d", idx),
+					Namespace: "default",
+					Tenant:    "default",
 				},
 				Spec: workload.EndpointSpec{},
 				Status: workload.EndpointStatus{
@@ -599,7 +565,7 @@ func TestEndpointConcurrency(t *testing.T) {
 			}
 
 			// create endpoint
-			_, eperr := nw.CreateEndpoint(&epinfo)
+			eperr := stateMgr.ctrler.Endpoint().Create(&epinfo)
 			waitCh <- eperr
 		}(i)
 	}
@@ -609,9 +575,11 @@ func TestEndpointConcurrency(t *testing.T) {
 	}
 
 	// create few SGs concurrently that match on endpoints
+	tsg := make([]*security.SecurityGroup, concurrency)
 	for i := 0; i < concurrency; i++ {
 		go func(idx int) {
-			_, serr := createSg(stateMgr, "default", fmt.Sprintf("testSg-%d", idx), labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
+			var serr error
+			tsg[idx], serr = createSg(stateMgr, "default", fmt.Sprintf("testSg-%d", idx), labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 			waitCh <- serr
 		}(i)
 	}
@@ -623,7 +591,7 @@ func TestEndpointConcurrency(t *testing.T) {
 	// delete the sgs concurrently
 	for i := 0; i < concurrency; i++ {
 		go func(idx int) {
-			serr := stateMgr.DeleteSecurityGroup("default", fmt.Sprintf("testSg-%d", idx))
+			serr := stateMgr.ctrler.SecurityGroup().Delete(tsg[idx])
 			waitCh <- serr
 		}(i)
 	}
@@ -634,12 +602,15 @@ func TestEndpointConcurrency(t *testing.T) {
 	// delete endpoint
 	for i := 0; i < concurrency; i++ {
 		go func(idx int) {
-			ometa := api.ObjectMeta{
-				Name:   fmt.Sprintf("testEndpoint-%d", idx),
-				Tenant: "default",
+			ometa := workload.Endpoint{
+				ObjectMeta: api.ObjectMeta{
+					Name:      fmt.Sprintf("testEndpoint-%d", idx),
+					Namespace: "default",
+					Tenant:    "default",
+				},
 			}
 			// delete the endpoint
-			_, eperr := nw.DeleteEndpoint(&ometa)
+			eperr := stateMgr.ctrler.Endpoint().Delete(&ometa)
 			waitCh <- eperr
 		}(i)
 	}
@@ -652,7 +623,7 @@ func TestEndpointConcurrency(t *testing.T) {
 // TestTenantCreateDelete tests tenant create and delete
 func TestTenantCreateDelete(t *testing.T) {
 	// create network state manager
-	stateMgr, err := NewStatemgr(newDummyWriter(nil))
+	stateMgr, err := newStatemgr()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -665,7 +636,7 @@ func TestTenantCreateDelete(t *testing.T) {
 	// verify tenant got created
 	tn, err := stateMgr.FindTenant("testTenant")
 	AssertOk(t, err, "Error finding the tenant")
-	AssertEquals(t, tn.Name, "testTenant", "Did not match expected tenant name")
+	AssertEquals(t, tn.Tenant.Name, "testTenant", "Did not match expected tenant name")
 
 	// create networks
 	err = createNetwork(stateMgr, "testTenant", "testNetwork1", "10.1.1.0/24", "10.1.1.254")
@@ -674,9 +645,9 @@ func TestTenantCreateDelete(t *testing.T) {
 	AssertOk(t, err, "Error creating network")
 
 	// create security groups
-	_, err = createSg(stateMgr, "testTenant", "testSg1", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
+	sg1, err := createSg(stateMgr, "testTenant", "testSg1", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	AssertOk(t, err, "Error creating security group")
-	_, err = createSg(stateMgr, "testTenant", "testSg2", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
+	sg2, err := createSg(stateMgr, "testTenant", "testSg2", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	AssertOk(t, err, "Error creating security group")
 
 	// create endpoints
@@ -686,7 +657,7 @@ func TestTenantCreateDelete(t *testing.T) {
 	AssertOk(t, err, "Error creating endpoint")
 
 	// delete the tenant
-	err = stateMgr.DeleteTenant("testTenant")
+	err = stateMgr.ctrler.Tenant().Delete(&tn.Tenant.Tenant)
 	AssertOk(t, err, "Deleting tenant failed.")
 
 	// verify tenant is deleted from the db
@@ -703,39 +674,47 @@ func TestTenantCreateDelete(t *testing.T) {
 	ep1.Delete()
 	ep2.Delete()
 
-	_, err = nw1.DeleteEndpoint(ep1.GetObjectMeta())
+	err = stateMgr.OnEndpointDelete(ep1.Endpoint)
 	AssertOk(t, err, "Could not delete endpoint")
-	_, err = nw2.DeleteEndpoint(ep2.GetObjectMeta())
+	err = stateMgr.OnEndpointDelete(ep2.Endpoint)
 	AssertOk(t, err, "Could not delete endpoint")
 
-	err = stateMgr.DeleteSecurityGroup("testTenant", "testSg1")
+	err = stateMgr.ctrler.SecurityGroup().Delete(sg1)
 	AssertOk(t, err, "Error deleting the security group.")
-	err = stateMgr.DeleteSecurityGroup("testTenant", "testSg2")
+	err = stateMgr.ctrler.SecurityGroup().Delete(sg2)
 	AssertOk(t, err, "Error deleting the security group.")
 
-	err = stateMgr.DeleteNetwork("testTenant", "testNetwork1")
+	err = stateMgr.ctrler.Network().Delete(&nw1.Network.Network)
 	AssertOk(t, err, "Error deleting the network.")
-	err = stateMgr.DeleteNetwork("testTenant", "testNetwork2")
+	err = stateMgr.ctrler.Network().Delete(&nw2.Network.Network)
 	AssertOk(t, err, "Error deleting the network.")
 }
 
 // TestNonExistentTenantDeletion will test that non existent tenants can't be deleted
 func TestNonExistentTenantDeletion(t *testing.T) {
 	// create network state manager
-	stateMgr, err := NewStatemgr(newDummyWriter(nil))
+	stateMgr, err := newStatemgr()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
 	}
 
+	ntn := ctkit.Tenant{
+		Tenant: cluster.Tenant{
+			TypeMeta: api.TypeMeta{Kind: "Tenant"},
+			ObjectMeta: api.ObjectMeta{
+				Name: "nonExistingTenant",
+			},
+		},
+	}
 	// delete the tenant
-	err = stateMgr.DeleteTenant("nonExistingTenant")
+	err = stateMgr.OnTenantDelete(&ntn)
 	Assert(t, err == ErrTenantNotFound, "Deleting tenant failed.")
 }
 
 func TestWorkloadCreateDelete(t *testing.T) {
 	// create network state manager
-	stateMgr, err := NewStatemgr(newDummyWriter(nil))
+	stateMgr, err := newStatemgr()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -745,9 +724,7 @@ func TestWorkloadCreateDelete(t *testing.T) {
 	snic := cluster.SmartNIC{
 		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
 		ObjectMeta: api.ObjectMeta{
-			Name:      "testSmartNIC",
-			Namespace: "",
-			Tenant:    "default",
+			Name: "testSmartNIC",
 		},
 		Spec: cluster.SmartNICSpec{},
 		Status: cluster.SmartNICStatus{
@@ -756,16 +733,14 @@ func TestWorkloadCreateDelete(t *testing.T) {
 	}
 
 	// create the smartNic
-	err = stateMgr.smartNicReactor.CreateSmartNIC(snic)
+	err = stateMgr.ctrler.SmartNIC().Create(&snic)
 	AssertOk(t, err, "Could not create the smartNic")
 
 	// host params
 	host := cluster.Host{
 		TypeMeta: api.TypeMeta{Kind: "Host"},
 		ObjectMeta: api.ObjectMeta{
-			Name:      "testHost",
-			Namespace: "",
-			Tenant:    "",
+			Name: "testHost",
 		},
 		Spec: cluster.HostSpec{
 			SmartNICs: []cluster.SmartNICID{
@@ -777,7 +752,7 @@ func TestWorkloadCreateDelete(t *testing.T) {
 	}
 
 	// create the host
-	err = stateMgr.hostReactor.CreateHost(host)
+	err = stateMgr.ctrler.Host().Create(&host)
 	AssertOk(t, err, "Could not create the host")
 
 	// workload params
@@ -785,7 +760,7 @@ func TestWorkloadCreateDelete(t *testing.T) {
 		TypeMeta: api.TypeMeta{Kind: "Workload"},
 		ObjectMeta: api.ObjectMeta{
 			Name:      "testWorkload",
-			Namespace: "",
+			Namespace: "default",
 			Tenant:    "default",
 		},
 		Spec: workload.WorkloadSpec{
@@ -801,7 +776,7 @@ func TestWorkloadCreateDelete(t *testing.T) {
 	}
 
 	// create the workload
-	err = stateMgr.workloadReactor.CreateWorkload(wr)
+	err = stateMgr.ctrler.Workload().Create(&wr)
 	AssertOk(t, err, "Could not create the workload")
 
 	// verify we can find the network for the workload
@@ -811,10 +786,10 @@ func TestWorkloadCreateDelete(t *testing.T) {
 	// verify we can find the endpoint associated with the workload
 	foundEp, ok := nw.FindEndpoint("testWorkload-00:01:02:03:04:05")
 	Assert(t, ok, "Could not find the endpoint", "testWorkload-00:01:02:03:04:05")
-	Assert(t, (foundEp.Status.WorkloadName == wr.Name), "endpoint params did not match")
+	Assert(t, (foundEp.Endpoint.Status.WorkloadName == wr.Name), "endpoint params did not match")
 
 	// delete the workload
-	err = stateMgr.workloadReactor.DeleteWorkload(wr)
+	err = stateMgr.ctrler.Workload().Delete(&wr)
 	AssertOk(t, err, "Error deleting the workload")
 
 	// verify endpoint is gone from the database
@@ -824,7 +799,7 @@ func TestWorkloadCreateDelete(t *testing.T) {
 
 func TestHostCreateDelete(t *testing.T) {
 	// create network state manager
-	stateMgr, err := NewStatemgr(newDummyWriter(nil))
+	stateMgr, err := newStatemgr()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -834,9 +809,7 @@ func TestHostCreateDelete(t *testing.T) {
 	host := cluster.Host{
 		TypeMeta: api.TypeMeta{Kind: "Host"},
 		ObjectMeta: api.ObjectMeta{
-			Name:      "testHost",
-			Namespace: "",
-			Tenant:    "default",
+			Name: "testHost",
 		},
 		Spec: cluster.HostSpec{
 			SmartNICs: []cluster.SmartNICID{
@@ -848,16 +821,16 @@ func TestHostCreateDelete(t *testing.T) {
 	}
 
 	// create the host
-	err = stateMgr.hostReactor.CreateHost(host)
+	err = stateMgr.ctrler.Host().Create(&host)
 	AssertOk(t, err, "Could not create the host")
 
 	// verify we can find the endpoint associated with the host
 	foundHost, err := stateMgr.FindHost("default", "testHost")
 	AssertOk(t, err, "Could not find the host")
-	Assert(t, (len(foundHost.Spec.SmartNICs) == 1), "host params did not match")
+	Assert(t, (len(foundHost.Host.Spec.SmartNICs) == 1), "host params did not match")
 
 	// delete the host
-	err = stateMgr.hostReactor.DeleteHost(host)
+	err = stateMgr.ctrler.Host().Delete(&host)
 	AssertOk(t, err, "Error deleting the host")
 
 	// verify endpoint is gone from the database
@@ -867,7 +840,7 @@ func TestHostCreateDelete(t *testing.T) {
 
 func TestSmartNicCreateDelete(t *testing.T) {
 	// create network state manager
-	stateMgr, err := NewStatemgr(newDummyWriter(nil))
+	stateMgr, err := newStatemgr()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -877,9 +850,7 @@ func TestSmartNicCreateDelete(t *testing.T) {
 	snic := cluster.SmartNIC{
 		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
 		ObjectMeta: api.ObjectMeta{
-			Name:      "testSmartNIC",
-			Namespace: "",
-			Tenant:    "default",
+			Name: "testSmartNIC",
 		},
 		Status: cluster.SmartNICStatus{
 			PrimaryMAC: "00:01:02:03:04:05",
@@ -887,19 +858,19 @@ func TestSmartNicCreateDelete(t *testing.T) {
 	}
 
 	// create the smartNic
-	err = stateMgr.smartNicReactor.CreateSmartNIC(snic)
+	err = stateMgr.ctrler.SmartNIC().Create(&snic)
 	AssertOk(t, err, "Could not create the smartNic")
 
 	// verify we can find the endpoint associated with the smartNic
 	foundSmartNIC, err := stateMgr.FindSmartNIC("default", "testSmartNIC")
 	AssertOk(t, err, "Could not find the smartNic")
-	Assert(t, (foundSmartNIC.Status.PrimaryMAC == "00:01:02:03:04:05"), "smartNic params did not match")
+	Assert(t, (foundSmartNIC.SmartNIC.Status.PrimaryMAC == "00:01:02:03:04:05"), "smartNic params did not match")
 
 	foundSmartNIC, err = stateMgr.FindSmartNICByMacAddr("00:01:02:03:04:05")
 	AssertOk(t, err, "Could not find the smartNic")
 
 	// delete the smartNic
-	err = stateMgr.smartNicReactor.DeleteSmartNIC(snic)
+	err = stateMgr.ctrler.SmartNIC().Delete(&snic)
 	AssertOk(t, err, "Error deleting the smartNic")
 
 	// verify endpoint is gone from the database

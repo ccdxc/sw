@@ -3,13 +3,13 @@
 package npminteg
 
 import (
+	"context"
 	"fmt"
 
 	. "gopkg.in/check.v1"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/security"
-	"github.com/pensando/sw/venice/utils/kvstore"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -27,8 +27,9 @@ func (it *integTestSuite) TestNpmSgPolicy(c *C) {
 			AttachTenant: true,
 			Rules: []security.SGRule{
 				{
-					Action:        "PERMIT",
-					ToIPAddresses: []string{"10.1.1.1/24"},
+					Action:          "PERMIT",
+					ToIPAddresses:   []string{"10.1.1.1/24"},
+					FromIPAddresses: []string{"10.1.1.1/24"},
 					ProtoPorts: []security.ProtoPort{
 						{
 							Protocol: "tcp",
@@ -41,7 +42,7 @@ func (it *integTestSuite) TestNpmSgPolicy(c *C) {
 	}
 
 	// create sg policy
-	err := it.ctrler.Watchr.SgpolicyEvent(kvstore.Created, &sgp)
+	_, err := it.apisrvClient.SecurityV1().SGPolicy().Create(context.Background(), &sgp)
 	AssertOk(c, err, "error creating sg policy")
 
 	// verify agent state has the policy and has the rules
@@ -64,11 +65,11 @@ func (it *integTestSuite) TestNpmSgPolicy(c *C) {
 		if err != nil {
 			return false, gerr
 		}
-		if tsgp.Status.PropagationStatus.GenerationID != sgp.ObjectMeta.GenerationID {
+		if tsgp.SGPolicy.Status.PropagationStatus.GenerationID != sgp.ObjectMeta.GenerationID {
 			return false, tsgp
 		}
-		if (tsgp.Status.PropagationStatus.Updated != int32(it.numAgents)) || (tsgp.Status.PropagationStatus.Pending != 0) ||
-			(tsgp.Status.PropagationStatus.MinVersion != "") {
+		if (tsgp.SGPolicy.Status.PropagationStatus.Updated != int32(it.numAgents)) || (tsgp.SGPolicy.Status.PropagationStatus.Pending != 0) ||
+			(tsgp.SGPolicy.Status.PropagationStatus.MinVersion != "") {
 			return false, tsgp
 		}
 		return true, nil
@@ -76,8 +77,9 @@ func (it *integTestSuite) TestNpmSgPolicy(c *C) {
 
 	// update the policy
 	newRule := security.SGRule{
-		Action:        "PERMIT",
-		ToIPAddresses: []string{"10.1.1.1/24"},
+		Action:          "PERMIT",
+		ToIPAddresses:   []string{"10.1.1.1/24"},
+		FromIPAddresses: []string{"10.1.1.1/24"},
 		ProtoPorts: []security.ProtoPort{
 			{
 				Protocol: "tcp",
@@ -87,7 +89,7 @@ func (it *integTestSuite) TestNpmSgPolicy(c *C) {
 	}
 	sgp.Spec.Rules = append(sgp.Spec.Rules, newRule)
 	sgp.ObjectMeta.GenerationID = "2"
-	err = it.ctrler.Watchr.SgpolicyEvent(kvstore.Updated, &sgp)
+	_, err = it.apisrvClient.SecurityV1().SGPolicy().Update(context.Background(), &sgp)
 	AssertOk(c, err, "error updating sg policy")
 
 	// verify agent state updated policy
@@ -110,11 +112,11 @@ func (it *integTestSuite) TestNpmSgPolicy(c *C) {
 		if err != nil {
 			return false, gerr
 		}
-		if tsgp.Status.PropagationStatus.GenerationID != sgp.ObjectMeta.GenerationID {
+		if tsgp.SGPolicy.Status.PropagationStatus.GenerationID != sgp.ObjectMeta.GenerationID {
 			return false, tsgp
 		}
-		if (tsgp.Status.PropagationStatus.Updated != int32(it.numAgents)) || (tsgp.Status.PropagationStatus.Pending != 0) ||
-			(tsgp.Status.PropagationStatus.MinVersion != "") {
+		if (tsgp.SGPolicy.Status.PropagationStatus.Updated != int32(it.numAgents)) || (tsgp.SGPolicy.Status.PropagationStatus.Pending != 0) ||
+			(tsgp.SGPolicy.Status.PropagationStatus.MinVersion != "") {
 			return false, tsgp
 		}
 		return true, nil

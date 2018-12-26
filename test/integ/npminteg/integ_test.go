@@ -8,29 +8,35 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pensando/sw/nic/delphi/gosdk"
-
-	log "github.com/sirupsen/logrus"
-
-	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/nic/agent/netagent/state"
-	"github.com/pensando/sw/venice/ctrler/npm"
-	"github.com/pensando/sw/venice/utils/tsdb"
-
 	// This import is a workaround for delphi client crash
 	_ "github.com/pensando/sw/nic/delphi/sdk/proto"
 
 	. "gopkg.in/check.v1"
+	check "gopkg.in/check.v1"
 
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/generated/cluster"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
+	"github.com/pensando/sw/nic/agent/netagent/state"
+	"github.com/pensando/sw/nic/delphi/gosdk"
 	testutils "github.com/pensando/sw/test/utils"
+	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/cmd/grpc/service"
 	"github.com/pensando/sw/venice/cmd/services/mock"
-	"github.com/pensando/sw/venice/cmd/types/protos"
+	types "github.com/pensando/sw/venice/cmd/types/protos"
+	"github.com/pensando/sw/venice/ctrler/npm"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/balancer"
+	"github.com/pensando/sw/venice/utils/events/recorder"
+	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	. "github.com/pensando/sw/venice/utils/testutils"
+	"github.com/pensando/sw/venice/utils/testutils/serviceutils"
+	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 // integ test suite parameters
@@ -39,22 +45,37 @@ const (
 	integTestRPCURL    = "localhost:9595"
 	integTestRESTURL   = "localhost:9596"
 	agentDatapathKind  = "mock"
+	integTestApisrvURL = "localhost:8082"
 )
 
 // integTestSuite is the state of integ test
 type integTestSuite struct {
-	ctrler       *npm.Netctrler
-	agents       []*Dpagent
-	datapathKind datapath.Kind
-	numAgents    int
-	resolverSrv  *rpckit.RPCServer
-	resolverCli  resolver.Interface
-	hub          gosdk.Hub
+	apiSrv         apiserver.Server
+	apiSrvAddr     string
+	ctrler         *npm.Netctrler
+	agents         []*Dpagent
+	datapathKind   datapath.Kind
+	numAgents      int
+	logger         log.Logger
+	resolverSrv    *rpckit.RPCServer
+	resolverClient resolver.Interface
+	apisrvClient   apiclient.Services
+	hub            gosdk.Hub
 }
 
 // test args
 var numAgents = flag.Int("agents", numIntegTestAgents, "Number of agents")
 var datapathKind = flag.String("datapath", agentDatapathKind, "Specify the datapath type. mock | hal")
+
+var (
+	evtType = append(evtsapi.GetEventTypes(), cluster.GetEventTypes()...)
+	// create events recorder
+	_, _ = recorder.NewRecorder(&recorder.Config{
+		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "npm_integ_test"},
+		EvtTypes:      evtType,
+		BackupDir:     "/tmp",
+		SkipEvtsProxy: true})
+)
 
 // Hook up gocheck into the "go test" runner.
 func TestNpmInteg(t *testing.T) {
@@ -81,6 +102,10 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 
 	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
 
+	// create a logger
+	l := log.GetNewLogger(log.GetDefaultConfig("NpmIntegTest"))
+	it.logger = l
+
 	// Create a mock resolver
 	m := mock.NewResolverService()
 	resolverHandler := service.NewRPCHandler(m)
@@ -104,12 +129,31 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 	}
 	m.AddServiceInstance(&npmSi)
 
-	// create a controller
+	// start API server
+	it.apiSrv, it.apiSrvAddr, err = serviceutils.StartAPIServer(integTestApisrvURL, "npm-integ-test", l)
+	c.Assert(err, check.IsNil)
+
+	// populate the mock resolver with apiserver instance.
+	apiSrvSi := types.ServiceInstance{
+		TypeMeta: api.TypeMeta{
+			Kind: "ServiceInstance",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: "pen-apiserver-test",
+		},
+		Service: globals.APIServer,
+		Node:    "localhost",
+		URL:     integTestApisrvURL,
+	}
+	m.AddServiceInstance(&apiSrvSi)
+
 	rc := resolver.New(&resolver.Config{Name: globals.Npm, Servers: []string{resolverServer.GetListenURL()}})
-	ctrler, err := npm.NewNetctrler(integTestRPCURL, integTestRESTURL, "", "", rc)
+
+	// create a controller
+	ctrler, err := npm.NewNetctrler(integTestRPCURL, integTestRESTURL, integTestApisrvURL, "", rc)
 	c.Assert(err, IsNil)
 	it.ctrler = ctrler
-	it.resolverCli = rc
+	it.resolverClient = rc
 
 	log.Infof("Creating %d/%d agents", it.numAgents, *numAgents)
 
@@ -121,6 +165,16 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 	}
 
 	log.Infof("Total number of agents: %v", len(it.agents))
+
+	// wait a little for things to settle down
+	time.Sleep(time.Millisecond * 100)
+
+	// create api server client
+	apicl, err := apiclient.NewGrpcAPIClient("integ_test", globals.APIServer, l, rpckit.WithBalancer(balancer.New(rc)))
+	if err != nil {
+		c.Fatalf("cannot create grpc client. Err: %v", err)
+	}
+	it.apisrvClient = apicl
 }
 
 func (it *integTestSuite) SetUpTest(c *C) {
@@ -142,12 +196,12 @@ func (it *integTestSuite) TearDownSuite(c *C) {
 	it.agents = []*Dpagent{}
 
 	// stop server and client
-	it.ctrler.RPCServer.Stop()
+	it.ctrler.Stop()
 	it.ctrler = nil
 	it.resolverSrv.Stop()
 	it.resolverSrv = nil
-	it.resolverCli.Stop()
-	it.resolverCli = nil
+	it.resolverClient.Stop()
+	it.resolverClient = nil
 	testutils.CleanupIntegTLSProvider()
 
 	time.Sleep(time.Millisecond * 100) // allow goroutines to cleanup and terminate gracefully
@@ -158,7 +212,7 @@ func (it *integTestSuite) TearDownSuite(c *C) {
 // basic connectivity tests between NPM and agent
 func (it *integTestSuite) TestNpmAgentBasic(c *C) {
 	// create a network in controller
-	err := it.ctrler.Watchr.CreateNetwork("default", "default", "testNetwork", "10.1.1.0/24", "10.1.1.254")
+	err := it.CreateNetwork("default", "default", "testNetwork", "10.1.1.0/24", "10.1.1.254")
 	AssertOk(c, err, "error creating network")
 
 	// verify agent receives the network
@@ -173,7 +227,7 @@ func (it *integTestSuite) TestNpmAgentBasic(c *C) {
 	}
 
 	// delete the network
-	err = it.ctrler.Watchr.DeleteNetwork("default", "testNetwork")
+	err = it.DeleteNetwork("default", "testNetwork")
 	c.Assert(err, IsNil)
 
 	// verify network is removed from all agents
@@ -188,7 +242,7 @@ func (it *integTestSuite) TestNpmAgentBasic(c *C) {
 // test endpoint create workflow e2e
 func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 	// create a network in controller
-	err := it.ctrler.Watchr.CreateNetwork("default", "default", "testNetwork", "10.1.0.0/16", "10.1.1.254")
+	err := it.CreateNetwork("default", "default", "testNetwork", "10.1.0.0/22", "10.1.1.254")
 	c.Assert(err, IsNil)
 	AssertEventually(c, func() (bool, interface{}) {
 		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "testNetwork")
@@ -214,26 +268,12 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 			hostName := fmt.Sprintf("testHost-%d", i)
 
 			// make the call
-			ep, cerr := ag.createEndpointReq("default", "default", "testNetwork", epname, hostName)
+			cerr := it.CreateEndpoint("default", "default", "testNetwork", epname, epname, "01:01:01:01:01:01", hostName, "20.1.1.1", map[string]string{"env": "production", "app": "procurement"}, 2)
 			if cerr != nil {
 				waitCh <- fmt.Errorf("endpoint create failed: %v", cerr)
 				return
 			}
-			if ep.Name != epname {
-				waitCh <- fmt.Errorf("Endpoint name did not match")
-				return
-			}
-			if ep.Spec.HomingHostName != hostName {
-				waitCh <- fmt.Errorf("host name did not match")
-				return
-			}
 
-			// verify endpoint was added to datapath
-			_, cerr = ag.nagent.NetworkAgent.FindEndpoint("default", "default", epname)
-			if cerr != nil {
-				waitCh <- fmt.Errorf("Endpoint not found in datapath")
-				return
-			}
 			waitCh <- nil
 		}(i, ag)
 	}
@@ -275,21 +315,14 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 	for i, ag := range it.agents {
 		go func(i int, ag *Dpagent) {
 			epname := fmt.Sprintf("testEndpoint-%d", i)
-			hostName := fmt.Sprintf("testHost-%d", i)
 
 			// make the call
-			_, cerr := ag.deleteEndpointReq("default", "testNetwork", epname, hostName)
+			cerr := it.DeleteEndpoint("default", "default", epname)
 			if cerr != nil && cerr != state.ErrEndpointNotFound {
 				waitCh <- fmt.Errorf("Endpoint delete failed: %v", err)
 				return
 			}
 
-			// verify endpoint was deleted from datapath
-			eps, cerr := ag.nagent.NetworkAgent.FindEndpoint("default", "default", epname)
-			if eps != nil || cerr == nil {
-				waitCh <- fmt.Errorf("Endpoint was not deleted from datapath")
-				return
-			}
 			waitCh <- nil
 		}(i, ag)
 	}
@@ -319,7 +352,7 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 	}
 
 	// delete the network
-	err = it.ctrler.Watchr.DeleteNetwork("default", "testNetwork")
+	err = it.DeleteNetwork("default", "testNetwork")
 	c.Assert(err, IsNil)
 	AssertEventually(c, func() (bool, interface{}) {
 		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "testNetwork")

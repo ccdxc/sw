@@ -781,6 +781,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r := i.(bookstore.CouponList)
 			return &r
 		}),
+		"bookstore.CouponSpec": apisrvpkg.NewMessage("bookstore.CouponSpec"),
 		"bookstore.Customer": apisrvpkg.NewMessage("bookstore.Customer").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := bookstore.Customer{}

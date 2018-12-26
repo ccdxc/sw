@@ -675,10 +675,9 @@ func (srv *fakeRPCServer) WatchNetworks(meta *api.ObjectMeta, stream netproto.Ne
 			EventType: api.EventType_CreateEvent,
 			Network:   *net,
 		}
-		watchEvtList := netproto.NetworkEventList{NetworkEvents: []*netproto.NetworkEvent{&watchEvt}}
 
 		// send create event
-		err := stream.Send(&watchEvtList)
+		err := stream.Send(&watchEvt)
 		if err != nil {
 			log.Errorf("Error sending stream. Err: %v", err)
 			return err
@@ -686,8 +685,7 @@ func (srv *fakeRPCServer) WatchNetworks(meta *api.ObjectMeta, stream netproto.Ne
 
 		// send update event
 		watchEvt.EventType = api.EventType_UpdateEvent
-		watchEvtList = netproto.NetworkEventList{NetworkEvents: []*netproto.NetworkEvent{&watchEvt}}
-		err = stream.Send(&watchEvtList)
+		err = stream.Send(&watchEvt)
 		if err != nil {
 			log.Errorf("Error sending stream. Err: %v", err)
 			return err
@@ -695,8 +693,7 @@ func (srv *fakeRPCServer) WatchNetworks(meta *api.ObjectMeta, stream netproto.Ne
 
 		// send delete event
 		watchEvt.EventType = api.EventType_DeleteEvent
-		watchEvtList = netproto.NetworkEventList{NetworkEvents: []*netproto.NetworkEvent{&watchEvt}}
-		err = stream.Send(&watchEvtList)
+		err = stream.Send(&watchEvt)
 		if err != nil {
 			log.Errorf("Error sending stream. Err: %v", err)
 			return err
@@ -810,7 +807,7 @@ func (srv *fakeRPCServer) ListSGPolicys(context.Context, *api.ObjectMeta) (*netp
 	return nil, nil
 }
 
-func (srv *fakeRPCServer) UpdateSGPolicyStatus(ctx context.Context, sgp *netproto.SGPolicy) (*netproto.SGPolicy, error) {
+func (srv *fakeRPCServer) UpdateSGPolicy(ctx context.Context, sgp *netproto.SGPolicy) (*netproto.SGPolicy, error) {
 	srv.Lock()
 	defer srv.Unlock()
 	srv.sgpUpdatedb[objectKey(sgp.ObjectMeta)] = sgp

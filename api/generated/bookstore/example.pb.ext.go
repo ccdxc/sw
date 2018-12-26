@@ -729,6 +729,27 @@ func (m *CouponList) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *CouponSpec) Clone(into interface{}) (interface{}, error) {
+	var out *CouponSpec
+	var ok bool
+	if into == nil {
+		out = &CouponSpec{}
+	} else {
+		out, ok = into.(*CouponSpec)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *CouponSpec) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *Customer) Clone(into interface{}) (interface{}, error) {
 	var out *Customer
 	var ok bool
@@ -1501,6 +1522,11 @@ func (m *Coupon) Validate(ver, path string, ignoreStatus bool) []error {
 }
 
 func (m *CouponList) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *CouponSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }

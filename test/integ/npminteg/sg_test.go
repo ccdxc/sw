@@ -16,7 +16,7 @@ import (
 // TestNpmSgCreateDelete
 func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 	// create sg in watcher
-	err := it.ctrler.Watchr.CreateSecurityGroup("default", "default", "testsg", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
+	err := it.CreateSecurityGroup("default", "default", "testsg", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	c.Assert(err, IsNil)
 
 	// verify all agents have the security group
@@ -29,7 +29,9 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 	// incoming rule
 	rules := []security.SGRule{
 		{
-			Action: "PERMIT",
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"10.1.1.1/24"},
+			ToIPAddresses:   []string{"10.1.1.1/24"},
 			ProtoPorts: []security.ProtoPort{
 				{
 					Protocol: "tcp",
@@ -40,7 +42,7 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 	}
 
 	// create sg policy
-	err = it.ctrler.Watchr.CreateSgpolicy("default", "default", "testpolicy", true, []string{}, rules)
+	err = it.CreateSgpolicy("default", "default", "testpolicy", true, []string{}, rules)
 	c.Assert(err, IsNil)
 
 	// construct object meta
@@ -62,7 +64,7 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 	}
 
 	// delete the sg policy
-	err = it.ctrler.Watchr.DeleteSgpolicy("default", "default", "testpolicy")
+	err = it.DeleteSgpolicy("default", "default", "testpolicy")
 	c.Assert(err, IsNil)
 
 	// verify rules are gone from agent
@@ -76,7 +78,7 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 		}, "Sg rules still found on agent", "10ms", it.pollTimeout())
 	}
 	// delete the security group
-	err = it.ctrler.Watchr.DeleteSecurityGroup("default", "testsg")
+	err = it.DeleteSecurityGroup("default", "testsg")
 	c.Assert(err, IsNil)
 
 	// verify sg is removed from datapath
@@ -89,7 +91,7 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 
 func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	// create a network in controller
-	err := it.ctrler.Watchr.CreateNetwork("default", "default", "testNetwork", "10.1.0.0/16", "10.1.1.254")
+	err := it.CreateNetwork("default", "default", "testNetwork", "10.1.0.0/22", "10.1.1.254")
 	c.Assert(err, IsNil)
 	AssertEventually(c, func() (bool, interface{}) {
 		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "testNetwork")
@@ -97,7 +99,7 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	}, "Network not found in statemgr")
 
 	// create sg in watcher
-	err = it.ctrler.Watchr.CreateSecurityGroup("default", "default", "testsg", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
+	err = it.CreateSecurityGroup("default", "default", "testsg", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	c.Assert(err, IsNil)
 	AssertEventually(c, func() (bool, interface{}) {
 		_, serr := it.ctrler.StateMgr.FindSecurityGroup("default", "testsg")
@@ -105,7 +107,7 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	}, "Sg not found in statemgr")
 
 	// create endpoint
-	err = it.ctrler.Watchr.CreateEndpoint("default", "default", "testNetwork", "testEndpoint1", "testVm1", "01:01:01:01:01:01", "host1", "20.1.1.1", map[string]string{"env": "production", "app": "procurement"}, 2)
+	err = it.CreateEndpoint("default", "default", "testNetwork", "testEndpoint1", "testVm1", "01:01:01:01:01:01", "host1", "20.1.1.1", map[string]string{"env": "production", "app": "procurement"}, 2)
 	c.Assert(err, IsNil)
 
 	// verify endpoint is present in all agents
@@ -118,7 +120,7 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	}
 
 	// create second endpoint
-	err = it.ctrler.Watchr.CreateEndpoint("default", "default", "testNetwork", "testEndpoint2", "testVm2", "02:02:02:02:02:02", "host2", "20.2.2.2", map[string]string{"env": "production", "app": "procurement"}, 3)
+	err = it.CreateEndpoint("default", "default", "testNetwork", "testEndpoint2", "testVm2", "02:02:02:02:02:02", "host2", "20.2.2.2", map[string]string{"env": "production", "app": "procurement"}, 3)
 	c.Assert(err, IsNil)
 
 	// verify new endpoint is present in all agents
@@ -129,7 +131,7 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	}
 
 	// delete the second endpoint
-	err = it.ctrler.Watchr.DeleteEndpoint("default", "testNetwork", "testEndpoint2", "testVm2", "02:02:02:02:02:02", "host2", "20.2.2.2")
+	err = it.DeleteEndpoint("default", "default", "testEndpoint2")
 	c.Assert(err, IsNil)
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
@@ -138,7 +140,7 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	}
 
 	// delete the security group
-	err = it.ctrler.Watchr.DeleteSecurityGroup("default", "testsg")
+	err = it.DeleteSecurityGroup("default", "testsg")
 	c.Assert(err, IsNil)
 
 	// verify sg is removed from the endpoint
@@ -158,7 +160,7 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	}
 
 	// delete endpoint
-	err = it.ctrler.Watchr.DeleteEndpoint("default", "testNetwork", "testEndpoint1", "testVm1", "01:01:01:01:01:01", "host1", "20.1.1.1")
+	err = it.DeleteEndpoint("default", "default", "testEndpoint1")
 	c.Assert(err, IsNil)
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
@@ -167,7 +169,7 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	}
 
 	// delete the network
-	err = it.ctrler.Watchr.DeleteNetwork("default", "testNetwork")
+	err = it.DeleteNetwork("default", "testNetwork")
 	c.Assert(err, IsNil)
 	AssertEventually(c, func() (bool, interface{}) {
 		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "testNetwork")

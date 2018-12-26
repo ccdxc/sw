@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/sirupsen/logrus"
+	"github.com/pensando/sw/venice/utils/log"
 
 	"github.com/pensando/sw/api"
 )
@@ -41,11 +41,18 @@ type Event struct {
 	Obj       Object
 }
 
+// objState maintains per object state
+type objState struct {
+	sync.Mutex
+	obj       Object            // main object
+	nodeState map[string]Object // per node state
+}
+
 // Objdb contains objects of a specific kind
 type Objdb struct {
 	sync.Mutex
 	WatchLock sync.RWMutex
-	objects   map[string]Object
+	objects   map[string]*objState
 	watchers  []chan Event
 }
 
@@ -89,11 +96,14 @@ func NewMemdb() *Memdb {
 
 // memdbKey returns objdb key for the object
 func memdbKey(ometa *api.ObjectMeta) string {
-	return fmt.Sprintf("%s|%s", ometa.Tenant, ometa.Name)
+	return ometa.GetKey()
 }
 
 // getObjdb returns object db for specific object kind
 func (md *Memdb) getObjdb(kind string) *Objdb {
+	if kind == "" {
+		panic("object kind is empty")
+	}
 	// lock the memdb for access
 	md.Lock()
 	defer md.Unlock()
@@ -106,7 +116,7 @@ func (md *Memdb) getObjdb(kind string) *Objdb {
 
 	// create new objectdb
 	od = &Objdb{
-		objects: make(map[string]Object),
+		objects: make(map[string]*objState),
 	}
 
 	// save it and return
@@ -146,6 +156,9 @@ func (md *Memdb) StopWatchObjects(kind string, watchChan chan Event) error {
 
 // AddObject adds an object to memdb and sends out watch notifications
 func (md *Memdb) AddObject(obj Object) error {
+	if obj.GetObjectKind() == "" {
+		log.Errorf("Object kind is empty: %+v", obj)
+	}
 	// get objdb
 	od := md.getObjdb(obj.GetObjectKind())
 	key := memdbKey(obj.GetObjectMeta())
@@ -159,7 +172,10 @@ func (md *Memdb) AddObject(obj Object) error {
 	}
 
 	// add it to db and send out watch notification
-	od.objects[key] = obj
+	od.objects[key] = &objState{
+		obj:       obj,
+		nodeState: make(map[string]Object),
+	}
 	od.Unlock()
 
 	od.watchEvent(obj, CreateEvent)
@@ -176,15 +192,15 @@ func (md *Memdb) UpdateObject(obj Object) error {
 	od.Lock()
 
 	// if we dont have the object, return error
-	_, ok := od.objects[key]
+	ostate, ok := od.objects[key]
 	if !ok {
 		od.Unlock()
-		logrus.Errorf("Object {%+v} not found", obj.GetObjectMeta())
+		log.Errorf("Object {%+v} not found", obj.GetObjectMeta())
 		return errors.New("Object not found")
 	}
 
 	// add it to db and send out watch notification
-	od.objects[key] = obj
+	ostate.obj = obj
 	od.Unlock()
 
 	od.watchEvent(obj, UpdateEvent)
@@ -204,7 +220,7 @@ func (md *Memdb) DeleteObject(obj Object) error {
 	_, ok := od.objects[memdbKey(obj.GetObjectMeta())]
 	if !ok {
 		od.Unlock()
-		logrus.Errorf("Object {%+v} not found", obj.GetObjectMeta())
+		log.Errorf("Object {%+v} not found", obj.GetObjectMeta())
 		return errors.New("Object not found")
 	}
 
@@ -226,12 +242,12 @@ func (md *Memdb) FindObject(kind string, ometa *api.ObjectMeta) (Object, error) 
 	defer od.Unlock()
 
 	// see if we have the object
-	obj, ok := od.objects[memdbKey(ometa)]
+	ostate, ok := od.objects[memdbKey(ometa)]
 	if !ok {
 		return nil, ErrObjectNotFound
 	}
 
-	return obj, nil
+	return ostate.obj, nil
 }
 
 // ListObjects returns a list of all objects of a kind
@@ -246,10 +262,80 @@ func (md *Memdb) ListObjects(kind string) []Object {
 	// walk all objects and add it to return list
 	var objs []Object
 	for _, obj := range od.objects {
-		objs = append(objs, obj)
+		objs = append(objs, obj.obj)
 	}
 
 	return objs
+}
+
+// AddNodeState adds node state to an object
+func (md *Memdb) AddNodeState(nodeID string, obj Object) error {
+	if obj.GetObjectKind() == "" {
+		log.Errorf("Object kind is empty: %+v", obj)
+	}
+	// get objdb
+	od := md.getObjdb(obj.GetObjectKind())
+	key := memdbKey(obj.GetObjectMeta())
+
+	// if we have the object, make this an update
+	od.Lock()
+	ostate, ok := od.objects[key]
+	od.Unlock()
+	if !ok {
+		return fmt.Errorf("Object %v/%v not found", obj.GetObjectKind(), key)
+	}
+
+	// lock the object state for parallel update
+	ostate.Lock()
+	defer ostate.Unlock()
+
+	// save node state
+	ostate.nodeState[nodeID] = obj
+	return nil
+}
+
+// DelNodeState deletes node state from object
+func (md *Memdb) DelNodeState(nodeID string, obj Object) error {
+	if obj.GetObjectKind() == "" {
+		log.Errorf("Object kind is empty: %+v", obj)
+	}
+	// get objdb
+	od := md.getObjdb(obj.GetObjectKind())
+	key := memdbKey(obj.GetObjectMeta())
+
+	// if we have the object, make this an update
+	od.Lock()
+	ostate, ok := od.objects[key]
+	od.Unlock()
+	if !ok {
+		return fmt.Errorf("Object %v/%v not found", obj.GetObjectKind(), key)
+	}
+
+	// lock the object state for parallel update
+	ostate.Lock()
+	defer ostate.Unlock()
+
+	// delete node state
+	delete(ostate.nodeState, nodeID)
+	return nil
+}
+
+// NodeStatesForObject returns all node states for an object
+func (md *Memdb) NodeStatesForObject(kind string, ometa *api.ObjectMeta) (map[string]Object, error) {
+	// get objdb
+	od := md.getObjdb(kind)
+
+	// lock object db
+	od.Lock()
+	defer od.Unlock()
+
+	// see if we have the object
+	ostate, ok := od.objects[memdbKey(ometa)]
+	if !ok {
+		return nil, ErrObjectNotFound
+	}
+
+	return ostate.nodeState, nil
 }
 
 // MarshalJSON converts memdb contents to json
@@ -266,7 +352,7 @@ func (md *Memdb) MarshalJSON() ([]byte, error) {
 	for kind, objs := range md.objdb {
 		o := map[string]Object{}
 		for name, obj := range objs.objects {
-			o[name] = obj
+			o[name] = obj.obj
 		}
 
 		contents[kind] = struct {

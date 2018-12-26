@@ -28,6 +28,7 @@ The following Messages are defined.
   BookStatus
   Coupon
   CouponList
+  CouponSpec
   Customer
   CustomerList
   CustomerPersonalInfo

@@ -9,6 +9,8 @@ import (
 	"sync"
 	"time"
 
+	"google.golang.org/grpc/connectivity"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/nic/agent/netagent/state"
@@ -108,6 +110,60 @@ func NewNpmClient(agent types.CtrlerIntf, srvURL string, resolverClient resolver
 // getAgentName returns a unique name for each agent instance
 func (client *NpmClient) getAgentName() string {
 	return "netagent-" + client.agent.GetAgentID()
+}
+
+// IsConnected returns true if all GRPC connectes are ready
+func (client *NpmClient) IsConnected() bool {
+	if (client.netGrpcClient == nil) || (client.netGrpcClient.ClientConn == nil) || (client.netGrpcClient.ClientConn.GetState() != connectivity.Ready) {
+		if (client.netGrpcClient != nil) && (client.netGrpcClient.ClientConn != nil) {
+			log.Infof("netGrpcClient conn state: %v", client.netGrpcClient.ClientConn.GetState())
+		} else {
+			log.Infof("netGrpcClient conn : %+v", client.netGrpcClient)
+		}
+		return false
+	}
+	if (client.sgGrpcClient == nil) || (client.sgGrpcClient.ClientConn == nil) || (client.sgGrpcClient.ClientConn.GetState() != connectivity.Ready) {
+		if (client.sgGrpcClient != nil) && (client.sgGrpcClient.ClientConn != nil) {
+			log.Infof("sgGrpcClient conn state: %v", client.sgGrpcClient.ClientConn.GetState())
+		} else {
+			log.Infof("sgGrpcClient conn : %+v", client.sgGrpcClient)
+		}
+		return false
+	}
+	if (client.epGrpcClient == nil) || (client.epGrpcClient.ClientConn == nil) || (client.epGrpcClient.ClientConn.GetState() != connectivity.Ready) {
+		if (client.epGrpcClient != nil) && (client.epGrpcClient.ClientConn != nil) {
+			log.Infof("epGrpcClient conn state: %v", client.epGrpcClient.ClientConn.GetState())
+		} else {
+			log.Infof("epGrpcClient conn : %+v", client.epGrpcClient)
+		}
+		return false
+	}
+	if (client.sgpGrpcClient == nil) || (client.sgpGrpcClient.ClientConn == nil) || (client.sgpGrpcClient.ClientConn.GetState() != connectivity.Ready) {
+		if (client.sgpGrpcClient != nil) && (client.sgpGrpcClient.ClientConn != nil) {
+			log.Infof("sgpGrpcClient conn state: %v", client.sgpGrpcClient.ClientConn.GetState())
+		} else {
+			log.Infof("sgpGrpcClient conn : %+v", client.sgpGrpcClient)
+		}
+		return false
+	}
+	if (client.secpGrpcClient == nil) || (client.secpGrpcClient.ClientConn == nil) || (client.secpGrpcClient.ClientConn.GetState() != connectivity.Ready) {
+		if (client.secpGrpcClient != nil) && (client.secpGrpcClient.ClientConn != nil) {
+			log.Infof("secpGrpcClient conn state: %v", client.secpGrpcClient.ClientConn.GetState())
+		} else {
+			log.Infof("secpGrpcClient conn : %+v", client.secpGrpcClient)
+		}
+		return false
+	}
+	if (client.appGrpcClient == nil) || (client.appGrpcClient.ClientConn == nil) || (client.appGrpcClient.ClientConn.GetState() != connectivity.Ready) {
+		if (client.appGrpcClient != nil) && (client.appGrpcClient.ClientConn != nil) {
+			log.Infof("appGrpcClient conn state: %v", client.appGrpcClient.ClientConn.GetState())
+		} else {
+			log.Infof("appGrpcClient conn : %+v", client.appGrpcClient)
+		}
+		return false
+	}
+
+	return true
 }
 
 // processNetworkEvent handles network event
@@ -279,7 +335,7 @@ func (client *NpmClient) processSecurityPolicyEvent(evt netproto.SGPolicyEvent) 
 			if evt.EventType == api.EventType_CreateEvent || evt.EventType == api.EventType_UpdateEvent {
 				sgpRPCClient := netproto.NewSGPolicyApiClient(client.sgpGrpcClient.ClientConn)
 				log.Infof("SGPolicy: Sending update back {%+v}", &evt.SGPolicy)
-				sgpRPCClient.UpdateSGPolicyStatus(context.Background(), &evt.SGPolicy)
+				sgpRPCClient.UpdateSGPolicy(context.Background(), &evt.SGPolicy)
 			}
 			return
 		}
@@ -412,7 +468,7 @@ func (client *NpmClient) runNetworkWatcher(ctx context.Context, ch chan<- netpro
 		// loop till the end
 		for {
 			// receive from stream
-			evtList, err := stream.Recv()
+			evt, err := stream.Recv()
 			if err != nil {
 				log.Errorf("Error receiving from watch channel. Exiting network watch. Err: %v", err)
 
@@ -424,20 +480,18 @@ func (client *NpmClient) runNetworkWatcher(ctx context.Context, ch chan<- netpro
 				break
 			}
 
-			for _, evt := range evtList.NetworkEvents {
-				t, err := evt.Network.ModTime.Time()
-				if err == nil && client.startTime.Before(t) && evt.EventType != api.EventType_DeleteEvent {
-					latency := time.Since(t)
-					if latency >= 0 {
-						tsdb.LogField("latency", evt.Network.ObjectMeta, "net_latency", float64(latency))
-					}
+			t, err := evt.Network.ModTime.Time()
+			if err == nil && client.startTime.Before(t) && evt.EventType != api.EventType_DeleteEvent {
+				latency := time.Since(t)
+				if latency >= 0 {
+					tsdb.LogField("latency", evt.Network.ObjectMeta, "net_latency", float64(latency))
 				}
 			}
 
+			log.Infof("Ctrlerif: agent %s got Network watch event: {%+v}", client.getAgentName(), evt)
+
 			// process the event
-			for _, evt := range evtList.NetworkEvents {
-				ch <- *evt
-			}
+			ch <- *evt
 		}
 
 		rpcClient.Close()
@@ -684,7 +738,7 @@ func (client *NpmClient) runSecurityProfileWatcher(ctx context.Context, ch chan<
 			time.Sleep(time.Second)
 			continue
 		}
-		client.sgpGrpcClient = rpcClient
+		client.secpGrpcClient = rpcClient
 
 		// start the watch
 		secpRPCClient := netproto.NewSecurityProfileApiClient(rpcClient.ClientConn)
@@ -755,7 +809,7 @@ func (client *NpmClient) runAppWatcher(ctx context.Context, ch chan<- netproto.A
 			time.Sleep(time.Second)
 			continue
 		}
-		client.sgpGrpcClient = rpcClient
+		client.appGrpcClient = rpcClient
 
 		// start the watch
 		appRPCClient := netproto.NewAppApiClient(rpcClient.ClientConn)

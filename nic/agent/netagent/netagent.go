@@ -235,3 +235,8 @@ func (ag *Agent) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 		ag.NpmClient = npmClient
 	}
 }
+
+// IsNpmClientConnected returns true if NPM client is connected to server
+func (ag *Agent) IsNpmClientConnected() bool {
+	return ag.NpmClient.IsConnected()
+}

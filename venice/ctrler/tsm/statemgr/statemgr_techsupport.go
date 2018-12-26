@@ -199,9 +199,10 @@ func (sm *Statemgr) handleTechSupportEvent(evt *kvstore.WatchEvent) {
 }
 
 // FindTechSupportObject gets state of a TechSupport object by name and kind
-func (sm *Statemgr) FindTechSupportObject(name, kind string) (TechSupportObjectState, error) {
+func (sm *Statemgr) FindTechSupportObject(name, ns, kind string) (TechSupportObjectState, error) {
 	searchMeta := &api.ObjectMeta{
-		Name: name,
+		Name:      name,
+		Namespace: ns,
 	}
 	dbMs, err := sm.FindObject(kind, searchMeta)
 	if err != nil {

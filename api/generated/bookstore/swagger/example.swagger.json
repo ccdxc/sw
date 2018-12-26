@@ -2564,8 +2564,8 @@
         "meta": {
           "$ref": "#/definitions/apiObjectMeta"
         },
-        "DiscountCode": {
-          "type": "string"
+        "Spec": {
+          "$ref": "#/definitions/bookstoreCouponSpec"
         }
       }
     },
@@ -2590,6 +2590,14 @@
         }
       },
       "title": "CouponList is a container object for list of Coupon objects"
+    },
+    "bookstoreCouponSpec": {
+      "type": "object",
+      "properties": {
+        "DiscountCode": {
+          "type": "string"
+        }
+      }
     },
     "bookstoreCustomer": {
       "type": "object",
