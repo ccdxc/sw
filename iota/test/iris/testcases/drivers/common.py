@@ -115,7 +115,7 @@ def setup_features(tc):
         for feature, cmdBuilderDict in feature_cmd_map.items():
             feature_value = getattr(tc.iterators, feature, None)
             if not feature_value:
-                api.Logger.error("Feature %s not provided " % feature)
+                api.Logger.debug("Feature %s not provided, skipping..." % feature)
                 continue
             os_type = intfObj.OsType()
             callback = cmdBuilderDict[os_type]["cmd"]

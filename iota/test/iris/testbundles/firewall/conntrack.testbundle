@@ -116,7 +116,7 @@ testcases:
 
     -   name    : TDL_NZ_ROW_OVLP_FIN_RESP
         testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw_overlap_fin
-        ignore:   False
+        ignore:   True
         args    :
             resp_flow: True
 

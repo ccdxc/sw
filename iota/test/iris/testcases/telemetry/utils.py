@@ -95,6 +95,7 @@ def GetSourceWorkload(verif, tc):
 def GetDestWorkload(verif, tc):
     workloads = api.GetWorkloads()
     dip = verif['dst_ip']
+    dst_wl = None
     for wl in workloads:
         if '/24' in dip or 'any' in dip:
             if verif['src_ip'] != wl.ip_address:

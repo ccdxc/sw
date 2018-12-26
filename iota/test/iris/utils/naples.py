@@ -2,9 +2,7 @@
 
 import iota.harness.api as api
 
-HOST_NAPLES_DRIVERS_DIR = "%s/drivers" % api.HOST_NAPLES_DIR
-
-
+HOST_NAPLES_DRIVERS_DIR = "%s" % api.HOST_NAPLES_DIR
 
 OS_TYPE_LINUX = "linux"
 OS_TYPE_BSD   = "freebsd"

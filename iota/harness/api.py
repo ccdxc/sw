@@ -129,7 +129,7 @@ def EntityCopy(req):
         ret = __rpc(req, gl_topo_svc_stub.EntityCopy)
         if ret != None: return ret
         Logger.info("Entity copy failed...Retrying")
-        time.sleep(1)
+        time.sleep(5)
     return None
 
 def PushConfig(req):

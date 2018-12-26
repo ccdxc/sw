@@ -18,7 +18,7 @@ ip_prefix = 24
 ip_map =  {
     INTF_TEST_TYPE_HOST: ("1.1.1.1", "1.1.1.2"),
     INTF_TEST_TYPE_OOB_1G: ("2.2.2.1", "2.2.2.2"),
-    INTF_TEST_TYPE_INT_MGMT: ("3.3.3.1", "3.3.3.2"),
+    INTF_TEST_TYPE_INT_MGMT: ("169.254.0.2", "169.254.0.1"),
     INTF_TEST_TYPE_IB_100G: ("4.4.4.1", "4.4.4.2"),
 }
 
@@ -67,7 +67,6 @@ def GetNaplesInbandInterfaces(node):
 
 
 class Interface:
-
     __CMD_WRAPPER = {
         InterfaceType.HOST             : api.Trigger_AddHostCommand,
         InterfaceType.HOST_INTERNAL    : api.Trigger_AddHostCommand,
@@ -158,8 +157,6 @@ class NodeInterface:
 def GetNodeInterface(node):
     return NodeInterface(node)
 
-
-
 def __configure_interfaces(tc, tc_type):
     ip1 = ip_map[tc_type][0]
     ip2 = ip_map[tc_type][1]
@@ -229,3 +226,17 @@ def ConfigureInterfaces(tc, test_type = INTF_TEST_TYPE_HOST):
     tc.test_intfs = [tc.intf1, tc.intf2]
 
     return ret
+
+def RestoreIntMmgmtInterfaceConfig():
+    nodes = api.GetNaplesHostnames()
+    node_intfs = {}
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
+    
+    for node in nodes:
+        node_if_info = GetNodeInterface(node)
+        for intf in node_if_info.HostIntIntfs():
+            api.Trigger_AddHostCommand(req, node, "ifconfig %s 169.254.0.2/24" % intf.Name())
+    resp = api.Trigger(req)
+    if resp == None:
+        api.Abort()
+    return api.types.status.FAILURE

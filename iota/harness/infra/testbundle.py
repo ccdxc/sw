@@ -9,7 +9,6 @@ import iota.harness.infra.utils.loader as loader
 import iota.harness.api as api
 import iota.harness.infra.testcase as testcase
 import iota.harness.infra.topology as topology
-import iota.harness.infra.logcollector as logcollector
 import iota.harness.infra.utils.utils as utils
 import iota.harness.infra.utils.timeprofiler as timeprofiler
 
@@ -145,6 +144,5 @@ class TestBundle:
         self.__update_stats()
         Logger.info("Testbundle %s FINAL STATUS = %d" % (self.Name(), self.result))
         
-        logcollector.CollectLogs()
         self.__timer.Stop()
         return self.result

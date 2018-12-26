@@ -9,7 +9,7 @@ class IotaProcess:
         return
 
     def Start(self):
-        Logger.debug("Starting %s (Logfile = %s)" % (self.__cmd, self.__logfile))
+        Logger.info("Starting IOTA Server: %s (Logfile = %s)" % (self.__cmd, self.__logfile))
         log = open(self.__logfile, "w")
         self.__p = Popen(self.__cmd, stdout=log, stderr=log, shell=True)
         return
@@ -17,3 +17,6 @@ class IotaProcess:
     def Stop(self):
         self.__p.kill()
         return
+
+    def IsRunning(self):
+        return self.__p.poll() is None

@@ -3,6 +3,7 @@ import sys
 import os
 import pdb
 import atexit
+import socket
 
 topdir = os.path.dirname(sys.argv[0]) + '/../'
 topdir = os.path.abspath(topdir)
@@ -51,11 +52,19 @@ def InitLogger():
         Logger.SetLoggingLevel(types.loglevel.INFO)
     return
 
+def __find_free_port():
+    s = socket.socket()
+    s.bind(('', 0))
+    port = s.getsockname()[1]
+    s.close()
+    return port
+
 def __start_server():
     global gl_srv_process
+    glopts.GlobalOptions.svcport = __find_free_port()
     srv_binary = "%s/iota/bin/server/iota_server" % topdir
     srv_logfile = "%s/server.log" % glopts.GlobalOptions.logdir
-    srv_args = "--port %d" % int(glopts.GlobalOptions.svcport)
+    srv_args = "--port %d" % glopts.GlobalOptions.svcport
     if glopts.GlobalOptions.dryrun:
         srv_args += " --stubmode"
     gl_srv_process = procs.IotaProcess("%s %s" % (srv_binary, srv_args), srv_logfile)

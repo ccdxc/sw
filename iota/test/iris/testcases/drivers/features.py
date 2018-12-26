@@ -93,4 +93,5 @@ def Verify(tc):
     return verify.driver_feature_verify(tc)
 
 def Teardown(tc):
+    interface.RestoreIntMmgmtInterfaceConfig()
     return api.types.status.SUCCESS

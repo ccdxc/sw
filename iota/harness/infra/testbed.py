@@ -141,7 +141,7 @@ class _Testbed:
         proc_hdls = []
         logfiles = []
         for instance in self.__tbspec.Instances:
-            cmd = ["timeout", "1400"]
+            cmd = ["timeout", "1800"]
             if not hasattr(instance, "NicMgmtIP") or instance.NicMgmtIP is None or instance.NicMgmtIP == '':
                 instance.NicMgmtIP = getattr(instance, "NicIntMgmtIP", "169.254.0.1")
 

@@ -140,6 +140,7 @@ class ConfigObject(DictObject):
         return data
 
     def Push(self, base_url, remote_node=None):
+        if GlobalOptions.dryrun: return api.types.status.SUCCESS
         full_url = base_url + self.__rest_ep
         self.__update_raw()
         out = self.__common_rest(full_url, self.__raw, remote_node=remote_node, oper=CfgOper.ADD)
@@ -152,6 +153,7 @@ class ConfigObject(DictObject):
 
 
     def Get(self, base_url, remote_node=None):
+        if GlobalOptions.dryrun: return api.types.status.SUCCESS
         full_url = base_url + self.__rest_ep
         out = self.__common_rest(full_url, None, remote_node=remote_node, oper=CfgOper.GET)
         #For now agent does not implement individual get, so read and pick the one which matched
@@ -167,6 +169,7 @@ class ConfigObject(DictObject):
 
 
     def Update(self, base_url, remote_node=None):
+        if GlobalOptions.dryrun: return api.types.status.SUCCESS
         full_url = self.RestObjURL(base_url)
         self.__update_raw()
         out = self.__common_rest(full_url, self.__raw, remote_node=remote_node, oper=CfgOper.UPDATE)
@@ -178,6 +181,7 @@ class ConfigObject(DictObject):
 
 
     def Delete(self, base_url, remote_node=None):
+        if GlobalOptions.dryrun: return api.types.status.SUCCESS
         full_url = self.RestObjURL(base_url)
         out = self.__common_rest(full_url, None,  remote_node=remote_node, oper=CfgOper.DELETE)
         if out is None:
