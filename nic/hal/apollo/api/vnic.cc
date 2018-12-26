@@ -14,16 +14,6 @@
 #include "nic/hal/apollo/framework/api_ctxt.hpp"
 #include "nic/hal/apollo/framework/api_engine.hpp"
 
-// TODO: push p4 programming to impl class
-// TODO: HACK !!!, remove
-void table_health_monitor_cb(uint32_t table_id,
-                             char *name,
-                             table_health_state_t curr_state,
-                             uint32_t capacity,
-                             uint32_t usage,
-                             table_health_state_t *new_state) {
-}
-
 namespace api {
 
 /**
@@ -209,7 +199,7 @@ vnic_entry::del_from_db(void) {
  */
 sdk_ret_t
 vnic_entry::delay_delete(void) {
-    return delay_delete_to_slab(OCI_SLAB_VNIC, this);
+    return delay_delete_to_slab(OCI_SLAB_ID_VNIC, this);
 }
 
 /** @} */    // end of OCI_VNIC_ENTRY
@@ -231,7 +221,7 @@ vnic_state::vnic_state() {
                            vnic_entry::vnic_key_func_compare);
     SDK_ASSERT(vnic_ht_ != NULL);
 
-    vnic_slab_ = slab::factory("vnic", OCI_SLAB_VNIC, sizeof(vnic_entry),
+    vnic_slab_ = slab::factory("vnic", OCI_SLAB_ID_VNIC, sizeof(vnic_entry),
                                16, true, true, true, NULL);
     SDK_ASSERT(vnic_slab_ != NULL);
 }

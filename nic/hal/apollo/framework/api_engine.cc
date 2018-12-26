@@ -733,8 +733,8 @@ api_engine::batch_abort(void) {
 /**< @brief    constructor */
 api_engine::api_engine() {
     api_params_slab_ =
-        slab::factory("api params", OCI_SLAB_API_PARAMS, sizeof(api_params_t),
-                      128, true, true, true, NULL);
+        slab::factory("api params", OCI_SLAB_ID_API_PARAMS,
+                      sizeof(api_params_t), 128, true, true, true, NULL);
 }
 
 /**< @brief    destructor */

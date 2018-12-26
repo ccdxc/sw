@@ -44,6 +44,13 @@ mapping_entry::factory(oci_mapping_t *oci_mapping) {
     mapping = mapping_db()->mapping_alloc();
     if (mapping) {
         new (mapping) mapping_entry();
+        mapping->impl_ =
+            impl_base::factory(impl::IMPL_OBJ_ID_MAPPING, oci_mapping);
+        if (mapping->impl_ == NULL) {
+            mapping_entry::destroy(mapping);
+            mapping_db()->mapping_free(mapping);
+            return NULL;
+        }
     }
     return mapping;
 }
@@ -61,6 +68,9 @@ mapping_entry::~mapping_entry() {
  */
 void
 mapping_entry::destroy(mapping_entry *mapping) {
+    if (mapping->impl_) {
+        impl_base::destroy(impl::IMPL_OBJ_ID_MAPPING, mapping->impl_);
+    }
     mapping->free_resources_();
     mapping->~mapping_entry();
 }
@@ -72,8 +82,7 @@ mapping_entry::destroy(mapping_entry *mapping) {
  */
 sdk_ret_t
 mapping_entry::init_config(api_ctxt_t *api_ctxt) {
-    // TODO: come back and fill this up
-    return sdk::SDK_RET_INVALID_OP;
+    return sdk::SDK_RET_OK;
 }
 
 /**
@@ -83,9 +92,7 @@ mapping_entry::init_config(api_ctxt_t *api_ctxt) {
 // TODO: this should ideally go to impl class
 sdk_ret_t
 mapping_entry::alloc_resources_(void) {
-    // TODO: need hbmhash->reserve() given a key
-    // TODO: impl->alloc_resources_();
-    return sdk::SDK_RET_OK;
+    return impl_->alloc_resources(this);
 }
 
 /**
@@ -96,9 +103,11 @@ mapping_entry::alloc_resources_(void) {
  */
 sdk_ret_t
 mapping_entry::program_config(obj_ctxt_t *obj_ctxt) {
-    //alloc_resources_();
-    // impl->program_hw();
-    return sdk::SDK_RET_OK;
+    sdk_ret_t    ret;
+
+    alloc_resources_();
+    SDK_ASSERT_RETURN((ret == sdk::SDK_RET_OK), ret);
+    return impl_->program_hw(this, obj_ctxt);
 }
 
 /**
@@ -107,11 +116,7 @@ mapping_entry::program_config(obj_ctxt_t *obj_ctxt) {
  */
 sdk_ret_t
 mapping_entry::free_resources_(void) {
-    /**
-      * we are not tracking indices in s/w for mappings, and h/w entries are
-      * cleaned up in cleanup_config already, so this is a no-op
-      */
-    return sdk::SDK_RET_OK;
+    return impl_->free_resources(this);
 }
 
 /**
@@ -123,8 +128,7 @@ mapping_entry::free_resources_(void) {
  */
 sdk_ret_t
 mapping_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
-    // impl->cleanup_hw();
-    return sdk::SDK_RET_OK;
+    return impl_->cleanup_hw(this, obj_ctxt);
 }
 
 /**
@@ -136,9 +140,8 @@ mapping_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
  */
 sdk_ret_t
 mapping_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    // update operation is not supported on mapping
-    // impl->update_hw();
-    return sdk::SDK_RET_OK;
+    /**< update operation is not supported on mapping */
+    return sdk::SDK_RET_INVALID_OP;
 }
 
 /**
@@ -165,13 +168,15 @@ mapping_entry::activate_config(oci_epoch_t epoch, api_op_t api_op,
  */
 sdk_ret_t
 mapping_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    /**< mappings are not added to s/w db, so its a no-op */
-    return sdk::SDK_RET_OK;
+    /**
+     * mappings are not added to s/w db, so its a no-op, however, since update
+     * operation is not supported on this object, we shouldn't endup here
+     */
+    return sdk::SDK_RET_INVALID_OP;
 }
 
 /**
  * @brief add mapping to database
- *
  * @param[in] mapping mapping
  */
 sdk_ret_t
@@ -195,7 +200,7 @@ mapping_entry::del_from_db(void) {
  */
 sdk_ret_t
 mapping_entry::delay_delete(void) {
-    return delay_delete_to_slab(OCI_SLAB_MAPPING, this);
+    return delay_delete_to_slab(OCI_SLAB_ID_MAPPING, this);
 }
 
 /** @} */    // end of OCI_MAPPING_ENTRY
@@ -210,7 +215,7 @@ mapping_entry::delay_delete(void) {
  * @brief    constructor
  */
 mapping_state::mapping_state() {
-    mapping_slab_ = slab::factory("mapping", OCI_SLAB_MAPPING,
+    mapping_slab_ = slab::factory("mapping", OCI_SLAB_ID_MAPPING,
                                   sizeof(mapping_entry),
                                   16, true, true, NULL);
     SDK_ASSERT(mapping_slab_ != NULL);

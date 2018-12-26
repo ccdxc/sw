@@ -9,7 +9,7 @@
 #define __MAPPING_IMPL_STATEHPP__
 
 #include "nic/hal/apollo/framework/api_base.hpp"
-#include "nic/sdk/lib/table/directmap/directmap.hpp"
+#include "nic/sdk/include/sdk/hbm_hash.hpp"
 
 namespace impl {
 
@@ -38,9 +38,13 @@ public:
     ~mapping_impl_state();
 
 private:
-    friend class mapping_impl;   /**< mapping_impl class is friend of mapping_impl_state */
+    /**< mapping_impl class is friend of mapping_impl_state */
+    friend class mapping_impl;
 
 private:
+    HbmHash    *local_ip_mapping_tbl_;
+    HbmHash    *remote_vnic_mapping_rx_tbl_;
+    HbmHash    *remote_vnic_mapping_tx_tbl_;
 };
 
 /** * @} */    // end of OCI_MAPPING_IMPL_STATE

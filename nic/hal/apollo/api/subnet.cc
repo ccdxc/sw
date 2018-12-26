@@ -242,7 +242,7 @@ subnet_entry::del_from_db(void) {
  */
 sdk_ret_t
 subnet_entry::delay_delete(void) {
-    return delay_delete_to_slab(OCI_SLAB_SUBNET, this);
+    return delay_delete_to_slab(OCI_SLAB_ID_SUBNET, this);
 }
 
 /** @} */    // end of OCI_SUBNET_ENTRY
@@ -265,7 +265,7 @@ subnet_state::subnet_state() {
     SDK_ASSERT(subnet_ht_!= NULL);
     subnet_idxr_ = indexer::factory(OCI_MAX_SUBNET);
     SDK_ASSERT(subnet_idxr_ != NULL);
-    subnet_slab_ = slab::factory("subnet", OCI_SLAB_SUBNET,
+    subnet_slab_ = slab::factory("subnet", OCI_SLAB_ID_SUBNET,
                                  sizeof(subnet_entry),
                                  16, true, true, NULL);
     SDK_ASSERT(subnet_slab_ != NULL);
