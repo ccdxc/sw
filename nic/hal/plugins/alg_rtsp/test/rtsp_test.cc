@@ -78,6 +78,7 @@ hal_handle_t rtsp_test::client_eph, rtsp_test::server_eph, rtsp_test::client_eph
 TEST_F(rtsp_test, rtsp_session)
 {
     hal_ret_t ret;
+    hal::session_t *session = NULL;
 
     // Create TCP control session
     // TCP SYN
@@ -94,6 +95,7 @@ TEST_F(rtsp_test, rtsp_session)
     EXPECT_TRUE(ctx_.session()->rflow->pgm_attrs.mcast_en);
     EXPECT_EQ(ctx_.session()->iflow->pgm_attrs.mcast_ptr, P4_NW_MCAST_INDEX_FLOW_REL_COPY);
     EXPECT_EQ(ctx_.session()->rflow->pgm_attrs.mcast_ptr, P4_NW_MCAST_INDEX_FLOW_REL_COPY);
+    session = ctx_.session();
 
     // TCP SYN re-transmit on ALG_CFLOW_LIFQ
     ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, server_eph, client_eph, tcp);
@@ -108,6 +110,17 @@ TEST_F(rtsp_test, rtsp_session)
     tcp.mss(200);
     ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, client_eph, server_eph, tcp);
     EXPECT_EQ(ret, HAL_RET_OK);
+
+    //TCP ACK on ALG_CFLOW_LIFQ
+    tcp = Tins::TCP(RTSP_PORT, 1000);
+    tcp.flags(Tins::TCP::ACK);
+    tcp.seq(1);
+    tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));
+    tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));
+    tcp.mss(200);
+    ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, server_eph, client_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    EXPECT_EQ(ctx_.session(), session);
 
     // RTSP Setup
     tcp = Tins::TCP(RTSP_PORT, 1000) /
@@ -191,6 +204,7 @@ TEST_F(rtsp_test, rtsp_session_interleaved)
     hal_ret_t              ret;
     SessionGetResponseMsg  resp;
     uint8_t                alg_sessions = 0, ctrl_alg_sessions = 0;
+    hal::session_t        *session = NULL;
     
     // Create TCP control session
     // TCP SYN
@@ -207,6 +221,7 @@ TEST_F(rtsp_test, rtsp_session_interleaved)
     EXPECT_TRUE(ctx_.session()->rflow->pgm_attrs.mcast_en);
     EXPECT_EQ(ctx_.session()->iflow->pgm_attrs.mcast_ptr, P4_NW_MCAST_INDEX_FLOW_REL_COPY);
     EXPECT_EQ(ctx_.session()->rflow->pgm_attrs.mcast_ptr, P4_NW_MCAST_INDEX_FLOW_REL_COPY);
+    session = ctx_.session();
 
     // TCP SYN re-transmit on ALG_CFLOW_LIFQ
     ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, server_eph, client_eph, tcp);
@@ -256,5 +271,336 @@ TEST_F(rtsp_test, rtsp_session_interleaved)
         }
     }
     EXPECT_EQ(alg_sessions, 1);
+    EXPECT_EQ(ctrl_alg_sessions, 1);
+
+    ret = session_delete(session, true);
+    ASSERT_EQ(ret, HAL_RET_OK); 
+}
+
+TEST_F(rtsp_test, rtsp_session_setup_error_response)
+{
+    hal_ret_t                ret;
+    hal::session_t          *session = NULL;
+    SessionGetResponseMsg    resp;
+    uint8_t                  alg_sessions = 0, ctrl_alg_sessions = 0;
+
+    // Create TCP control session
+    // TCP SYN
+    Tins::TCP tcp = Tins::TCP(RTSP_PORT, 3000);
+    tcp.flags(Tins::TCP::SYN);
+    tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));
+    tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));
+    tcp.mss(1200);
+    ret = inject_ipv4_pkt(fte::FLOW_MISS_LIFQ, server_eph, client_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    EXPECT_FALSE(ctx_.drop());
+    EXPECT_FALSE(ctx_.drop_flow());
+    EXPECT_TRUE(ctx_.session()->iflow->pgm_attrs.mcast_en);
+    EXPECT_TRUE(ctx_.session()->rflow->pgm_attrs.mcast_en);
+    EXPECT_EQ(ctx_.session()->iflow->pgm_attrs.mcast_ptr, P4_NW_MCAST_INDEX_FLOW_REL_COPY);
+    EXPECT_EQ(ctx_.session()->rflow->pgm_attrs.mcast_ptr, P4_NW_MCAST_INDEX_FLOW_REL_COPY);
+    session = ctx_.session();
+
+    // TCP SYN re-transmit on ALG_CFLOW_LIFQ
+    ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, server_eph, client_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+
+
+    // TCP SYN/ACK on ALG_CFLOW_LIFQ
+    tcp = Tins::TCP(3000, RTSP_PORT);
+    tcp.flags(Tins::TCP::SYN | Tins::TCP::ACK);
+    tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));
+    tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));
+    tcp.mss(200);
+    ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, client_eph, server_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+
+    //TCP ACK on ALG_CFLOW_LIFQ
+    tcp = Tins::TCP(RTSP_PORT, 3000);
+    tcp.flags(Tins::TCP::ACK);
+    tcp.seq(1);
+    tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));
+    tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));
+    tcp.mss(200);
+    ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, server_eph, client_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    EXPECT_EQ(ctx_.session(), session);
+
+    // RTSP Setup
+    tcp = Tins::TCP(RTSP_PORT, 3000) /
+        Tins::RawPDU("SETUP rtsp://example.com/foo/bar/baz.rm RTSP/1.0\r\n"
+                     "CSeq: 302\r\n"
+                     "Transport: RTP/AVP;unicast;client_port=4588-4589\r\n"
+                     "\r\n");
+    tcp.seq(1);
+    ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, server_eph, client_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    EXPECT_FALSE(ctx_.drop());
+
+    //RTSP Resp
+    tcp = Tins::TCP(3000, RTSP_PORT) /
+        Tins::RawPDU("RTSP/1.0 453 Not Enough Bandwidth\r\n"
+                     "CSeq: 302\r\n"
+                     "Server: foobarbaz\r\n"
+                     "\r\n");
+    tcp.seq(1);
+    ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, client_eph, server_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    EXPECT_FALSE(ctx_.drop());
+
+    CHECK_DENY_UDP(client_eph, server_eph, 4588, 6256, "c:4588 <- s:6256");
+    CHECK_DENY_UDP(client_eph, server_eph, 4589, 6257, "c:4589 <- s:6257");
+    CHECK_DENY_UDP(server_eph, client_eph, 6256, 4588, "c:4588 -> s:6256");
+    CHECK_DENY_UDP(server_eph, client_eph, 6257, 4589, "c:4589 -> s:6257");
+
+    CHECK_DENY_UDP(client_eph, server_eph, 4589, 6256, "c:4589 <- s:6256");
+    CHECK_DENY_UDP(client_eph, server_eph, 4588, 6257, "c:4588 <- s:6257");
+    CHECK_DENY_UDP(server_eph, client_eph, 6257, 4588, "c:4588 -> s:6257");
+    CHECK_DENY_UDP(server_eph, client_eph, 6256, 4589, "c:4589 -> s:6256");
+
+    CHECK_DENY_UDP(client_eph, server_eph, 6256, 4588, "s:4588 -> c:6256");
+    CHECK_DENY_UDP(client_eph, server_eph, 6257 ,4589, "s:4589 -> c:6257");
+    CHECK_DENY_UDP(server_eph, client_eph, 4588, 6256, "s:4588 <- c:6256");
+    CHECK_DENY_UDP(server_eph, client_eph, 4589, 6257, "s:4589 <- c:6257"); 
+
+    ret = hal::session_get_all(&resp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    for (int idx=0; idx<resp.response_size(); idx++) {
+        SessionGetResponse rsp = resp.response(idx);
+        if (rsp.status().alg() == nwsec::APP_SVC_RTSP) {
+            alg_sessions++;
+            if (rsp.status().rtsp_info().iscontrol())
+                ctrl_alg_sessions++;
+        }
+    }
+    EXPECT_EQ(alg_sessions, 1);
+    EXPECT_EQ(ctrl_alg_sessions, 1);
+
+    ret = session_delete(session, true);
+    ASSERT_EQ(ret, HAL_RET_OK);
+} 
+
+TEST_F(rtsp_test, rtsp_session_cseq_error)
+{
+    hal_ret_t ret;
+    hal::session_t *session = NULL;
+    uint8_t         alg_sessions = 0, ctrl_alg_sessions = 0;
+    SessionGetResponseMsg    resp;
+
+    // Create TCP control session
+    // TCP SYN
+    Tins::TCP tcp = Tins::TCP(RTSP_PORT, 4000);
+    tcp.flags(Tins::TCP::SYN);
+    tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));
+    tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));
+    tcp.mss(1200);
+    ret = inject_ipv4_pkt(fte::FLOW_MISS_LIFQ, server_eph, client_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    EXPECT_FALSE(ctx_.drop());
+    EXPECT_FALSE(ctx_.drop_flow());
+    EXPECT_TRUE(ctx_.session()->iflow->pgm_attrs.mcast_en);
+    EXPECT_TRUE(ctx_.session()->rflow->pgm_attrs.mcast_en);
+    EXPECT_EQ(ctx_.session()->iflow->pgm_attrs.mcast_ptr, P4_NW_MCAST_INDEX_FLOW_REL_COPY);
+    EXPECT_EQ(ctx_.session()->rflow->pgm_attrs.mcast_ptr, P4_NW_MCAST_INDEX_FLOW_REL_COPY);
+    session = ctx_.session();
+
+    // TCP SYN re-transmit on ALG_CFLOW_LIFQ
+    ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, server_eph, client_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+
+
+    // TCP SYN/ACK on ALG_CFLOW_LIFQ
+    tcp = Tins::TCP(4000, RTSP_PORT);
+    tcp.flags(Tins::TCP::SYN | Tins::TCP::ACK);
+    tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));
+    tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));
+    tcp.mss(200);
+    ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, client_eph, server_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+
+    //TCP ACK on ALG_CFLOW_LIFQ
+    tcp = Tins::TCP(RTSP_PORT, 4000);
+    tcp.flags(Tins::TCP::ACK);
+    tcp.seq(1);
+    tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));
+    tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));
+    tcp.mss(200);
+    ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, server_eph, client_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    EXPECT_EQ(ctx_.session(), session);
+
+    // RTSP Setup
+    tcp = Tins::TCP(RTSP_PORT, 4000) /
+        Tins::RawPDU("SETUP rtsp://example.com/foo/bar/baz.rm RTSP/1.0\r\n"
+                     "CSeq: 302\r\n"
+                     "Transport: RTP/AVP;unicast;client_port=5588-5589\r\n"
+                     "\r\n");
+    tcp.seq(1);
+    ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, server_eph, client_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    EXPECT_FALSE(ctx_.drop());
+
+    //RTSP Resp
+    tcp = Tins::TCP(4000, RTSP_PORT) /
+        Tins::RawPDU("RTSP/1.0 200 OK\r\n"
+                     "Session: 47112344\r\n"
+                     "Transport: RTP/AVP;unicast;\r\n"
+                     "  source=10.0.0.2;destination=10.0.0.1;\r\n"
+                     "  client_port=5588-5589;server_port=7256-7257\r\n"
+                     "\r\n");
+    tcp.seq(1);
+    ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, client_eph, server_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    EXPECT_FALSE(ctx_.drop());
+
+    // Check expected flows
+    CHECK_DENY_UDP(client_eph, server_eph, 5588, 7256, "c:5588 <- s:7256");
+    CHECK_DENY_UDP(client_eph, server_eph, 5589, 7257, "c:5589 <- s:7257");
+    CHECK_DENY_UDP(server_eph, client_eph, 7256, 5588, "c:5588 -> s:7256");
+    CHECK_DENY_UDP(server_eph, client_eph, 7257, 5589, "c:5589 -> s:7257");
+
+    CHECK_DENY_UDP(client_eph, server_eph, 5589, 7256, "c:5589 <- s:7256");
+    CHECK_DENY_UDP(client_eph, server_eph, 5588, 7257, "c:5588 <- s:7257");
+    CHECK_DENY_UDP(server_eph, client_eph, 7257, 5588, "c:5588 -> s:7257");
+    CHECK_DENY_UDP(server_eph, client_eph, 7256, 5589, "c:5589 -> s:7256");
+
+    CHECK_DENY_UDP(client_eph, server_eph, 7256, 5588, "s:5588 -> c:7256");
+    CHECK_DENY_UDP(client_eph, server_eph, 7257 ,5589, "s:5589 -> c:7257");
+    CHECK_DENY_UDP(server_eph, client_eph, 5588, 7256, "s:5588 <- c:7256");
+    CHECK_DENY_UDP(server_eph, client_eph, 5589, 7257, "s:5589 <- c:7257");
+
+    ret = hal::session_get_all(&resp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    for (int idx=0; idx<resp.response_size(); idx++) {
+        SessionGetResponse rsp = resp.response(idx);
+        if (rsp.status().alg() == nwsec::APP_SVC_RTSP) {
+            if (rsp.status().rtsp_info().iscontrol()) {
+                ctrl_alg_sessions++;
+                EXPECT_EQ(rsp.status().rtsp_info().parse_errors(), 1);
+            } else {
+                alg_sessions++;
+            }
+        }
+    }
+    EXPECT_EQ(alg_sessions, 0);
+    EXPECT_EQ(ctrl_alg_sessions, 1);
+
+    ret = session_delete(session, true);
+    ASSERT_EQ(ret, HAL_RET_OK);
+} 
+
+TEST_F(rtsp_test, rtsp_session_id_error)
+{
+    hal_ret_t ret;
+    hal::session_t *session = NULL;
+    uint8_t         alg_sessions = 0, ctrl_alg_sessions = 0;
+    SessionGetResponseMsg    resp;
+
+    // Create TCP control session
+    // TCP SYN
+    Tins::TCP tcp = Tins::TCP(RTSP_PORT, 4100);
+    tcp.flags(Tins::TCP::SYN);
+    tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));
+    tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));
+    tcp.mss(1200);
+    ret = inject_ipv4_pkt(fte::FLOW_MISS_LIFQ, server_eph, client_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    EXPECT_FALSE(ctx_.drop());
+    EXPECT_FALSE(ctx_.drop_flow());
+    EXPECT_TRUE(ctx_.session()->iflow->pgm_attrs.mcast_en);
+    EXPECT_TRUE(ctx_.session()->rflow->pgm_attrs.mcast_en);
+    EXPECT_EQ(ctx_.session()->iflow->pgm_attrs.mcast_ptr, P4_NW_MCAST_INDEX_FLOW_REL_COPY);
+    EXPECT_EQ(ctx_.session()->rflow->pgm_attrs.mcast_ptr, P4_NW_MCAST_INDEX_FLOW_REL_COPY);
+    session = ctx_.session();
+
+    // TCP SYN re-transmit on ALG_CFLOW_LIFQ
+    ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, server_eph, client_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+
+
+    // TCP SYN/ACK on ALG_CFLOW_LIFQ
+    tcp = Tins::TCP(4100, RTSP_PORT);
+    tcp.flags(Tins::TCP::SYN | Tins::TCP::ACK);
+    tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));
+    tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));
+    tcp.mss(200);
+    ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, client_eph, server_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+
+    //TCP ACK on ALG_CFLOW_LIFQ
+    tcp = Tins::TCP(RTSP_PORT, 4100);
+    tcp.flags(Tins::TCP::ACK);
+    tcp.seq(1);
+    tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));
+    tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));
+    tcp.mss(200);
+    ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, server_eph, client_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    EXPECT_EQ(ctx_.session(), session);
+
+    // RTSP Setup Track1
+    tcp = Tins::TCP(RTSP_PORT, 4100) /
+        Tins::RawPDU("SETUP rtsp://192.168.100.101/small.vob/track1 RTSP/1.0\r\n"
+                     "CSeq: 4\r\n"
+                     "User-Agent: openRTSP (LIVE555 Streaming Media v2013.11.26)\r\n"
+                     "Transport: RTP/AVP;unicast;client_port=57692-57693\r\n");
+    tcp.seq(1);
+    ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, server_eph, client_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    EXPECT_FALSE(ctx_.drop());
+
+    //RTSP Resp
+    tcp = Tins::TCP(4100, RTSP_PORT) /
+        Tins::RawPDU("RTSP/1.0 200 OK\r\n"
+                     "CSeq: 4\r\n"
+                     "Date: Tue, Dec 18 2018 19:58:12 GMT\r\n"
+                     "Transport: RTP/AVP;unicast;client_port=57692-57693;server_port=6970-6971\r\n"
+                     "Session: B1A845B1\r\n"
+                     "\r\n");
+    tcp.seq(1);
+    ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, client_eph, server_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    EXPECT_FALSE(ctx_.drop());
+
+    // RTSP TEARDOWN
+    tcp = Tins::TCP(RTSP_PORT, 4100) /
+        Tins::RawPDU("TEARDOWN rtsp://192.168.100.101/small.vob/ RTSP/1.0\r\n"
+                     "CSeq: 5\r\n"
+                     "User-Agent: openRTSP (LIVE555 Streaming Media v2013.11.26)\r\n"
+                     "Session: B1A845\r\n"
+                     "\r\n");
+    tcp.seq(178);
+    ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, server_eph, client_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    EXPECT_FALSE(ctx_.drop());
+
+    // Check expected flows
+    CHECK_ALLOW_UDP(server_eph, client_eph, 57692, 6970, "c:57692 <- s:6970");
+    CHECK_ALLOW_UDP(server_eph, client_eph, 57693, 6971, "c:57693 <- s:6971");
+    CHECK_ALLOW_UDP(client_eph, server_eph, 6970, 57692, "c:6970 -> s:57692");
+    CHECK_ALLOW_UDP(client_eph, server_eph, 6971, 57693, "c:6971 -> s:57693");
+
+    CHECK_DENY_UDP(client_eph, server_eph, 57693, 6970, "c:57693 <- s:6970");
+    CHECK_DENY_UDP(client_eph, server_eph, 57692, 6971, "c:57692 <- s:6971");
+    CHECK_DENY_UDP(server_eph, client_eph, 6970, 57693, "c:6970 -> s:57693");
+    CHECK_DENY_UDP(server_eph, client_eph, 6971, 57692, "c:6971 -> s:57692");
+
+    CHECK_DENY_UDP(client_eph, server_eph, 57692, 6970, "s:57692 -> c:6970");
+    CHECK_DENY_UDP(client_eph, server_eph, 57693, 6971, "s:57693 -> c:6971");
+    CHECK_DENY_UDP(server_eph, client_eph, 6970, 57692, "s:6970 <- c:57692");
+    CHECK_DENY_UDP(server_eph, client_eph, 6971, 57693, "s:6971 <- c:57693");
+
+    ret = hal::session_get_all(&resp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    for (int idx=0; idx<resp.response_size(); idx++) {
+        SessionGetResponse rsp = resp.response(idx);
+        if (rsp.status().alg() == nwsec::APP_SVC_RTSP) {
+            alg_sessions++;
+            if (rsp.status().rtsp_info().iscontrol()) {
+                ctrl_alg_sessions++;
+            }
+        }
+    }
+    EXPECT_EQ(alg_sessions, 3);
     EXPECT_EQ(ctrl_alg_sessions, 1);
 }

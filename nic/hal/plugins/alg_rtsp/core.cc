@@ -18,6 +18,10 @@ namespace sfw = hal::plugins::sfw;
 namespace alg_utils = hal::plugins::alg_utils;
 namespace lib = sdk::lib;
 
+static void incr_parse_error(rtsp_session_t *info) {
+    SDK_ATOMIC_INC_UINT32(&info->parse_errors, 1);
+}
+
 /*
  * APP Session get handler
  */
@@ -39,9 +43,12 @@ fte::pipeline_action_t alg_rtsp_session_get_cb(fte::ctx_t &ctx) {
 
     sess_resp->mutable_status()->set_alg(nwsec::APP_SVC_RTSP);
 
+    rtsp_session_t   *ctrl_sess = (rtsp_session_t *)l4_sess->info;
     if (l4_sess->isCtrl == true) {
         sess_resp->mutable_status()->mutable_rtsp_info()->\
                                 set_iscontrol(true);
+        sess_resp->mutable_status()->mutable_rtsp_info()->\
+                                set_parse_errors((ctrl_sess)?ctrl_sess->parse_errors:0);
     } else {
         sess_resp->mutable_status()->mutable_rtsp_info()->\
                                set_iscontrol(false);
@@ -325,20 +332,22 @@ process_control_message(void *ctxt, uint8_t *payload, size_t pkt_len)
     rtsp_session_t             *ctrl_sess = (rtsp_session_t *)l4_sess->info;
     alg_utils::app_session_t   *app_sess;
     rtsp_session_key_t          sess_key = ctrl_sess->sess_key;
+    hal_ret_t                   ret = HAL_RET_OK;
 
     while (offset < pkt_len) {
         rtsp_msg_t msg = {};
 
         if (!rtsp_parse_msg((const char*)payload, pkt_len, &offset, &msg)) {
             ERR("failed to parse message");
-            return 0;
+            incr_parse_error(ctrl_sess); 
+            return pkt_len;
         }
 
         DEBUG("rtsp control msg {}", msg);
 
         // noop if session id is not known
         if (!msg.hdrs.valid.session) {
-            return HAL_RET_OK;
+            return pkt_len;
         }
 
         // Lookup/create session
@@ -349,10 +358,15 @@ process_control_message(void *ctxt, uint8_t *payload, size_t pkt_len)
         // create expected flows if it is a rtsp resp with transport header
         switch (msg.type) {
         case RTSP_MSG_REQUEST:
-            return process_req_message(*ctx, app_sess, &msg);
+            ret =  process_req_message(*ctx, app_sess, &msg);
+            break;
         case RTSP_MSG_RESPONSE:
-            return process_resp_message(*ctx, app_sess, &msg);
+            ret =  process_resp_message(*ctx, app_sess, &msg);
+            break;
         }
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("RTSP Processing failure");
+        }   
     }
     return pkt_len;
 }

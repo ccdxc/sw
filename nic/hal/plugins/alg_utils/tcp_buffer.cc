@@ -110,7 +110,7 @@ tcp_buffer_t::insert_segment (uint32_t seq, uint8_t *payload, size_t payload_len
         seq += processed;
         payload += processed;
         payload_len -= processed;
-        //HAL_TRACE_DEBUG("Processed bytes: {}", processed);
+        HAL_TRACE_DEBUG("Processed bytes: {}", processed);
     }
 
     // Allocate/expand the buffer

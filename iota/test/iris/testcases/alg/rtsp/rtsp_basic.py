@@ -8,38 +8,50 @@ def Setup(tc):
 
 def Trigger(tc):
     pairs = api.GetLocalWorkloadPairs()
-    w1 = pairs[0][0]
-    w2 = pairs[0][1]
+    server = pairs[0][0]
+    client = pairs[0][1]
     tc.cmd_cookies = []
+
+    naples = server
+    if not server.IsNaples():
+       naples = client
+       if not client.IsNaples():
+          return api.types.status.SUCCESS
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     tc.cmd_descr = "Server: %s(%s) <--> Client: %s(%s)" %\
-                   (w1.workload_name, w1.ip_address, w2.workload_name, w2.ip_address)
+                   (server.workload_name, server.ip_address, client.workload_name, client.ip_address)
     api.Logger.info("Starting RTSP test from %s" % (tc.cmd_descr))
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
     fullpath = dir_path + '/' + "small.vob"
     api.Logger.info("fullpath %s" % (fullpath))
-    resp = api.CopyToWorkload(w1.node_name, w1.workload_name, [fullpath], 'rtspdir')
+    resp = api.CopyToWorkload(server.node_name, server.workload_name, [fullpath], 'rtspdir')
     if resp is None:
        return api.types.status.FAILURE
 
-    api.Trigger_AddCommand(req, w2.node_name, w2.workload_name,
+    api.Trigger_AddCommand(req, client.node_name, client.workload_name,
                            "ls -al | grep video")
     tc.cmd_cookies.append("Before RTSP")
 
     server_cmd = "cd rtspdir && live555MediaServer"
-    api.Trigger_AddCommand(req, w1.node_name, w1.workload_name,
+    api.Trigger_AddCommand(req, server.node_name, server.workload_name,
                            server_cmd, background = True)
     tc.cmd_cookies.append("Run RTSP server")
     
-    api.Trigger_AddCommand(req, w2.node_name, w2.workload_name,
-                           "openRTSP rtsp://%s/small.vob" % w1.ip_address)
+    api.Trigger_AddCommand(req, client.node_name, client.workload_name,
+                           "openRTSP rtsp://%s/small.vob" % server.ip_address)
     tc.cmd_cookies.append("Run RTSP client")
- 
-    #Add Naples command
 
-    api.Trigger_AddCommand(req, w2.node_name, w2.workload_name,
+    ## Add Naples command validation
+    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
+    #                            "/nic/bin/halctl show session --alg rtsp | grep ESTABLISHED")
+    #tc.cmd_cookies.append("show session RTSP established")
+    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
+    #                        "/nic/bin/halctl show nwsec flow-gate | grep RTSP")
+    #tc.cmd_cookies.append("show flow-gate") 
+
+    api.Trigger_AddCommand(req, client.node_name, client.workload_name,
                            "ls -al | grep video")
     tc.cmd_cookies.append("After RTSP")
 
@@ -63,6 +75,10 @@ def Verify(tc):
                 result = api.types.status.SUCCESS
             else:
                 result = api.types.status.FAILURE
+        if (tc.cmd_cookies[cookie_idx].find("show session FTP") != -1 or \
+            tc.cmd_cookies[cookie_idx].find("show flow-gate") != -1) and \
+            cmd.stdout == '':
+            result = api.types.status.FAILURE
         cookie_idx += 1       
     return result
 
