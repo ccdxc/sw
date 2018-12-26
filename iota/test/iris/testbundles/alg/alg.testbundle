@@ -1,5 +1,5 @@
 meta:
-    name    : alg
+    name    : alg 
     nics    : [ pensando, intel, mellanox, broadcom ]
     targetcount : 80
 
@@ -88,8 +88,28 @@ testcases:
         args     :
            type : local_only
 
-    -   name    : RTSP
-        testcase: testcases.alg.rtsp.rtsp
+    -   name    : RTSP_BASIC
+        testcase: testcases.alg.rtsp.rtsp_basic
+        args    :
+            type: local_only
+
+    -   name    : RTSP_INTERLEAVED
+        testcase: testcases.alg.rtsp.rtsp_interleaved
+        args    :
+            type: local_only
+
+    -   name    : RTSP_MULTICAST_ONE_CLIENT
+        testcase: testcases.alg.rtsp.rtsp_multicast_one_client
+        args    :
+            type: local_only
+
+    -   name    : RTSP_MULTICAST_MULTIPLE_CLIENT
+        testcase: testcases.alg.rtsp.rtsp_multicast_multiple_clients
+        args    :
+            type: local_only
+ 
+    -   name    : RTSP_TEST_CONTROL_TIMEOUT
+        testcase: testcases.alg.rtsp.rtsp_control_session_timeout
         args    :
             type: local_only
 

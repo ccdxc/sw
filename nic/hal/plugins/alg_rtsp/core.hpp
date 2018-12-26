@@ -52,6 +52,7 @@ struct rtsp_session_t {
     rtsp_session_key_t sess_key;
     uint32_t           timeout;  // session timeout
     bool               isCtrl;   // Is this a control session
+    uint32_t           parse_errors; // Parse errors
 };
 
 fte::pipeline_action_t alg_rtsp_exec (fte::ctx_t &ctx);
