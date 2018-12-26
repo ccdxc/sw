@@ -1972,13 +1972,13 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 		}
 		IONIC_CORE_LOCK(lif);
 		if (ifp->if_flags & IFF_UP) {
-			if (ifp->if_drv_flags & IFF_DRV_RUNNING) {
-				ionic_set_rx_mode(lif->netdev);
-			} else {
+			if ((ifp->if_drv_flags & IFF_DRV_RUNNING) == 0) {
 				/* if_init = ionic_open is done from ether_ioctl */
 				/* FIXME: Remove fake link up */
 				ionic_up_link(ifp);
 			}
+			ionic_set_rx_mode(lif->netdev);
+			ionic_set_mac(lif->netdev);
 		}
 		IONIC_CORE_UNLOCK(lif);
 		break;
@@ -1987,7 +1987,6 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 		IONIC_NETDEV_INFO(ifp, "ioctl: SIOCSIFFLAGS (Set interface flags)\n");
 		IONIC_CORE_LOCK(lif);
 		if (ifp->if_flags & IFF_UP) {
-			/* if interface is administratively up */
 			if ((ifp->if_drv_flags & IFF_DRV_RUNNING) == 0) {
 				/* if the lif is stopped then open it */
 				ionic_open(lif);
@@ -1995,8 +1994,8 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 				ionic_up_link(ifp);
 			}
 			ionic_set_rx_mode(lif->netdev);
-		} else {
-			/* if the interface is brought down administratively */
+			ionic_set_mac(lif->netdev);
+		} else { /* If not up. */
 			if (ifp->if_drv_flags & IFF_DRV_RUNNING) {
 				/* if the lif is open then stop it */
 				ionic_stop(ifp);

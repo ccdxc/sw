@@ -2470,6 +2470,43 @@ static int ionic_station_set(struct lif *lif)
 	return 0;
 }
 
+int ionic_set_mac(struct net_device *netdev)
+{
+	struct lif *lif = netdev_priv(netdev);
+	int err = 0;
+
+	KASSERT(lif, ("lif is NULL"));
+	KASSERT(IONIC_CORE_LOCK_OWNED(lif), ("%s is not locked", lif->name));
+
+	/* if mac addr has not changed then nop */
+	if (bcmp(IF_LLADDR(netdev), lif->dev_addr, ETHER_ADDR_LEN) == 0) {
+		return (0);
+	}
+
+	/* add filter for new mac addr */
+	err = ionic_addr_add(lif->netdev, IF_LLADDR(netdev));
+	if (err) {
+		IONIC_NETDEV_ERROR(lif->netdev, "Failed to add new MAC %6D, err: %d\n",
+			lif->dev_addr, ":", err);
+		return (err);
+	}
+
+	/* remove the filter for old mac addr */
+	err = ionic_addr_del(lif->netdev, lif->dev_addr);
+	if (err) {
+		IONIC_NETDEV_ERROR(lif->netdev, "Failed to delete old MAC %6D, err: %d\n",
+			lif->dev_addr, ":", err);
+		return (err);
+	}
+
+	IONIC_NETDEV_INFO(lif->netdev, "Changed MAC from %6D to %6D\n",
+		lif->dev_addr, ":", IF_LLADDR(netdev), ":");
+
+	bcopy(IF_LLADDR(netdev), lif->dev_addr, ETHER_ADDR_LEN);
+
+	return (err);
+}
+
 static int ionic_lif_init(struct lif *lif)
 {
 	struct ionic_dev *idev = &lif->ionic->idev;

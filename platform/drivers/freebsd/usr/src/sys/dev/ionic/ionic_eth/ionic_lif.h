@@ -388,5 +388,7 @@ void ionic_clear_rx_mode(struct net_device *netdev);
 
 void ionic_set_multi(struct lif* lif);
 
+int ionic_set_mac(struct net_device *netdev);
+
 extern int ionic_devcmd_timeout;
 #endif /* _IONIC_LIF_H_ */
