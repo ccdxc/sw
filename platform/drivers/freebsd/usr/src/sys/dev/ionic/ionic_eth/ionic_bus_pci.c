@@ -300,7 +300,7 @@ static void ionic_remove(struct pci_dev *pdev)
 
 	ionic_free_msix_vector(ionic);
 	ionic_forget_identity(ionic);
-
+	ionic_reset(ionic);
 	ionic_unmap_bars(ionic);
 	ionic_pci_deinit(pdev);
 	pci_set_drvdata(pdev, NULL);

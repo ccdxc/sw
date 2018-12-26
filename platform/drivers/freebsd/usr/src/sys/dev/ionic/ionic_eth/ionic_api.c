@@ -377,8 +377,10 @@ static int ionic_api_do_adminq(struct lif* lif, struct ionic_admin_ctx *ctx)
 
 	IONIC_QUE_INFO(adminq, "post admin queue command %d@%d:\n",
 		cmd->opcode, adminq->head_index);
+#ifdef IONIC_DEBUG
 	print_hex_dump_debug("cmd ", DUMP_PREFIX_OFFSET, 16, 1,
 			     &ctx->cmd, sizeof(ctx->cmd), true);
+#endif
 
 	adminq->head_index = (adminq->head_index + 1) % adminq->num_descs;
 	ionic_adminq_ring_doorbell(adminq, adminq->head_index);

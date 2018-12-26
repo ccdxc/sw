@@ -506,7 +506,7 @@ int ionic_setup_rx_intr(struct rxque* rxq)
 #endif
 
 	TASK_INIT(&rxq->task, 0, ionic_rx_task_handler, rxq);
-    rxq->taskq = taskqueue_create_fast(rxq->intr.name, M_NOWAIT,
+    rxq->taskq = taskqueue_create(rxq->intr.name, M_NOWAIT,
 	    taskqueue_thread_enqueue, &rxq->taskq);
 
 #ifdef RSS
@@ -633,7 +633,7 @@ int ionic_setup_tx_intr(struct txque* txq)
 #endif
 
 	TASK_INIT(&txq->task, 0, ionic_tx_task_handler, txq);
-    txq->taskq = taskqueue_create_fast(txq->name, M_NOWAIT,
+    txq->taskq = taskqueue_create(txq->name, M_NOWAIT,
 	    taskqueue_thread_enqueue, &txq->taskq);
 
 #ifdef RSS

@@ -320,18 +320,6 @@ struct lif {
 	struct notify_block *notifyblock;
 };
 
-#ifdef OVERRIDE_KASSERT
-#undef KASSERT
-/* Override KASSERT for debug only. */
-#define KASSERT(c, msg)	do {												\
-							if (!(c)) {										\
-								printf("PANIC[%s:%d]",  __func__, __LINE__);\
-								printf msg;									\
-								printf("\n");								\
-							}												\
-} while(0)
-#endif
-
 /* lif lock. */
 #define IONIC_CORE_LOCK_INIT(x) 	mtx_init(&(x)->mtx, (x)->name, NULL, MTX_DEF)
 #define IONIC_CORE_LOCK_DESTROY(x)	mtx_destroy(&(x)->tx_mtx)
