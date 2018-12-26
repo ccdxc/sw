@@ -23,3 +23,6 @@
 [submodule "nic/third-party/ofp"]
 	path = nic/third-party/ofp
 	url = git@github.com:pensando/ofp
+[submodule "nic/buildroot"]
+	path = nic/buildroot
+	url = git@github.com:/pensando/buildroot

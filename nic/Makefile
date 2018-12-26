@@ -27,6 +27,7 @@ endif
 
 include ${MKDEFS}/common.mk
 include ${MKINFRA}/config.mk
+include ${MKDEFS}/image.mk
 
 .DEFAULT_GOAL := package
 .PHONY: all clean
