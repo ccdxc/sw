@@ -473,7 +473,7 @@ crypto_ring_db(struct service_info *svc_info)
 }
 
 static pnso_error_t
-crypto_poll(const struct service_info *svc_info)
+crypto_poll(struct service_info *svc_info)
 {
 	const struct crypto_chain_params *crypto_chain;
 	pnso_error_t			err = PNSO_OK;

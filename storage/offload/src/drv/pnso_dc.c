@@ -220,9 +220,9 @@ decompress_ring_db(struct service_info *svc_info)
 }
 
 static pnso_error_t
-decompress_poll(const struct service_info *svc_info)
+decompress_poll(struct service_info *svc_info)
 {
-	return cpdc_poll(svc_info);
+	return cpdc_poll(svc_info, NULL);
 }
 
 static pnso_error_t

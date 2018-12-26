@@ -10,6 +10,7 @@ aliases:
     - &CPUS_ITER_LIST_COMBO2 [ 2, 4 ]
     - &INPUT_LEN_LIST_COMBO1 [ 4096, 8192 ]
     - &INPUT_LEN_LIST_COMBO2 [ 16384, 32768 ]
+    - &INPUT_LEN_LIST_COMBO3 [ 16384 ]
 #    - &BATCH_DEPTH_ITER_LIST_COMBO1 [ 1, 31, 64, 256 ]
     - &BATCH_DEPTH_ITER_LIST_COMBO1 [ 1, 31, 64, 128 ]
 #    - &BATCH_DEPTH_ITER_LIST_COMBO2 [ 32, 33, 128, 512 ]
@@ -129,10 +130,8 @@ testcases:
             algo        : 'sha2_256'
             test        : *HASH_TEST_YML
 
-    # TBD: Re-enable after fixing per-block
     -   name        : Hash4K8KPbSha2_256
         testcase    : testcases.storage.ymltest2
-        enable      : False
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST_COMBO1
@@ -153,23 +152,21 @@ testcases:
             cpus        : *CPUS_ITER_LIST_COMBO2
             batch_depth : *BATCH_DEPTH_ITER_LIST_COMBO2
             mode        : *MODE_ITER_LIST_COMBO2
-            inputlen    : *INPUT_LEN_LIST_COMBO2
+            inputlen    : *INPUT_LEN_LIST_COMBO3
         args    :
             wait        : '1.0'
             flags       : '0'
             algo        : 'sha2_256'
             test        : *HASH_TEST_YML
 
-    # TBD: Re-enable after fixing per-block
     -   name        : Hash16K32KPbSha2_256
         testcase    : testcases.storage.ymltest2
-        enable      : False
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST_COMBO2
             batch_depth : *BATCH_DEPTH_ITER_LIST_COMBO2
             mode        : *MODE_ITER_LIST_COMBO2
-            inputlen    : *INPUT_LEN_LIST_COMBO2
+            inputlen    : *INPUT_LEN_LIST_COMBO3
         args    :
             wait        : '1.0'
             flags       : 'per_block'
@@ -191,10 +188,8 @@ testcases:
             flags       : '0'
             test        : *CHKSUM_TEST_YML
 
-    # TBD: Re-enable after fixing per-block 
     -   name        : Csum4K8KPbCrc32c
         testcase    : testcases.storage.ymltest2
-        enable      : False
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST_COMBO1
@@ -204,35 +199,32 @@ testcases:
         args    :
             wait        : '1.0'
             algo        : 'crc32c'
-            flags       : 'per-block'
+            flags       : 'per_block'
             test        : *CHKSUM_TEST_YML
 
 
     -   name        : Csum16K32KCrc32c
         testcase    : testcases.storage.ymltest2
-        enable      : False
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST_COMBO2
             batch_depth : *BATCH_DEPTH_ITER_LIST_COMBO1
             mode        : *MODE_ITER_LIST_COMBO1
-            inputlen    : *INPUT_LEN_LIST_COMBO2
+            inputlen    : *INPUT_LEN_LIST_COMBO3
         args    :
             wait        : '1.0'
             algo        : 'crc32c'
             flags       : '0'
             test        : *CHKSUM_TEST_YML
 
-    # TBD: Re-enable after fixing per-block
     -   name        : Csum16K32KPbCrc32c
         testcase    : testcases.storage.ymltest2
-        enable      : False
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST_COMBO2
             batch_depth : *BATCH_DEPTH_ITER_LIST_COMBO1
             mode        : *MODE_ITER_LIST_COMBO1
-            inputlen    : *INPUT_LEN_LIST_COMBO2
+            inputlen    : *INPUT_LEN_LIST_COMBO3
         args    :
             wait        : '1.0'
             algo        : 'crc32c'

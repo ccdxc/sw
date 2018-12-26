@@ -90,23 +90,24 @@ def Setup(tc):
     tc.args.x16inputlen = inputlen * 16
    
     flags = __get_param(tc, 'flags', '0')
+    nblks = inputlen/pnsodefs.PNSO_TEST_DEFAULT_INPUT_LEN
     if tc.args.test == 'hash.yml':
         if flags == '0':
             tc.args.hash_compare_val1x = 64
             tc.args.hash_compare_val2x = 64
             tc.args.hash_compare_val16x = 64
         else:
-            tc.args.hash_compare_val1x = 64
-            tc.args.hash_compare_val2x = 128
-            tc.args.hash_compare_val16x = 1024
+            tc.args.hash_compare_val1x = 64 * nblks
+            tc.args.hash_compare_val2x = 128 * nblks
+            tc.args.hash_compare_val16x = 1024 * nblks
 
     if tc.args.test == 'chksum.yml':
         if flags == '0':
             tc.args.chksum_compare_val1x = 8
             tc.args.chksum_compare_val2x = 8
         else:
-            tc.args.chksum_compare_val1x = 8
-            tc.args.chksum_compare_val2x = 16
+            tc.args.chksum_compare_val1x = 8 * nblks
+            tc.args.chksum_compare_val2x = 16 * nblks
 
     __prepare_ymls(tc)
     tc.files.append(tc.blocksize_yml)

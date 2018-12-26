@@ -54,7 +54,7 @@ decompact_ring_db(struct service_info *svc_info)
 }
 
 static pnso_error_t
-decompact_poll(const struct service_info *svc_info)
+decompact_poll(struct service_info *svc_info)
 {
 	return EOPNOTSUPP;
 }

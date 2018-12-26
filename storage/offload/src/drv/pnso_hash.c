@@ -251,9 +251,58 @@ hash_ring_db(struct service_info *svc_info)
 }
 
 static pnso_error_t
-hash_poll(const struct service_info *svc_info)
+hash_poll(struct service_info *svc_info)
 {
-	return cpdc_poll(svc_info);
+	pnso_error_t err = EINVAL;
+	struct cpdc_status_desc *st_desc;
+	uint32_t status_object_size, orig_num_tags;
+
+	err = cpdc_poll(svc_info, NULL);
+	if(err != PNSO_OK)
+		return err;
+
+	st_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
+	if (!st_desc) {
+		OSAL_LOG_ERROR("invalid hash status desc! err: %d", err);
+		OSAL_ASSERT(!err);
+		return err;
+	}
+	status_object_size = cpdc_get_status_desc_size();
+
+	if(!svc_info->tags_updated) {
+		if (chn_service_deps_data_len_set_from_parent(svc_info)) {
+
+			/*
+			 * In debug mode, verify the padding adjustment in the dst SGL.
+			 *
+			 * CAUTION: it can be costly to invoke cpdc_sgl_total_len_get()
+			 * so do not call it outside of the DEBUG macro.
+			 */
+			OSAL_LOG_DEBUG("my data_len %u parent data_len %u",
+					cpdc_sgl_total_len_get(&svc_info->si_src_sgl),
+					chn_service_deps_data_len_get(svc_info));
+		}
+
+		orig_num_tags = svc_info->si_num_tags;
+		if (is_dflag_pblock_enabled(svc_info->si_desc_flags)) {
+			svc_info->si_num_tags = chn_service_deps_num_blks_get(svc_info);
+			OSAL_ASSERT(svc_info->si_num_tags >= 1);
+		} else
+			OSAL_ASSERT(svc_info->si_num_tags == 1);
+
+		OSAL_LOG_INFO("block_size: %d object_size: %d new num_tags: %d old num_tags: %d",
+				svc_info->si_block_size, status_object_size,
+				svc_info->si_num_tags, orig_num_tags);
+		svc_info->tags_updated = true;
+	}
+
+	if(svc_info->si_num_tags > 1) {
+		st_desc = cpdc_get_next_status_desc(st_desc,
+				status_object_size * (svc_info->si_num_tags - 1));
+		return cpdc_poll(svc_info, st_desc);
+	}
+
+	return err;
 }
 
 static pnso_error_t
@@ -284,29 +333,32 @@ hash_read_status(struct service_info *svc_info)
 	st_desc = status_desc;
 	status_object_size = cpdc_get_status_desc_size();
 
-	if (chn_service_deps_data_len_set_from_parent(svc_info)) {
+	if(!svc_info->tags_updated) {
+		if (chn_service_deps_data_len_set_from_parent(svc_info)) {
 
-		/*
-		 * In debug mode, verify the padding adjustment in the dst SGL.
-		 *
-		 * CAUTION: it can be costly to invoke cpdc_sgl_total_len_get()
-		 * so do not call it outside of the DEBUG macro.
-		 */
-		OSAL_LOG_DEBUG("my data_len %u parent data_len %u",
-				cpdc_sgl_total_len_get(&svc_info->si_src_sgl),
-				chn_service_deps_data_len_get(svc_info));
-        }
+			/*
+			 * In debug mode, verify the padding adjustment in the dst SGL.
+			 *
+			 * CAUTION: it can be costly to invoke cpdc_sgl_total_len_get()
+			 * so do not call it outside of the DEBUG macro.
+			 */
+			OSAL_LOG_DEBUG("my data_len %u parent data_len %u",
+					cpdc_sgl_total_len_get(&svc_info->si_src_sgl),
+					chn_service_deps_data_len_get(svc_info));
+					}
 
-	orig_num_tags = svc_info->si_num_tags;
-	if (is_dflag_pblock_enabled(svc_info->si_desc_flags)) {
-		svc_info->si_num_tags = chn_service_deps_num_blks_get(svc_info);
-		OSAL_ASSERT(svc_info->si_num_tags >= 1);
-	} else
-		OSAL_ASSERT(svc_info->si_num_tags == 1);
+		orig_num_tags = svc_info->si_num_tags;
+		if (is_dflag_pblock_enabled(svc_info->si_desc_flags)) {
+			svc_info->si_num_tags = chn_service_deps_num_blks_get(svc_info);
+			OSAL_ASSERT(svc_info->si_num_tags >= 1);
+		} else
+			OSAL_ASSERT(svc_info->si_num_tags == 1);
 
-	OSAL_LOG_INFO("block_size: %d object_size: %d new num_tags: %d old num_tags: %d",
-			svc_info->si_block_size, status_object_size,
-			svc_info->si_num_tags, orig_num_tags);
+		OSAL_LOG_INFO("block_size: %d object_size: %d new num_tags: %d old num_tags: %d",
+				svc_info->si_block_size, status_object_size,
+				svc_info->si_num_tags, orig_num_tags);
+		svc_info->tags_updated = true;
+	}
 
 	for (i = 0; i < svc_info->si_num_tags; i++) {
 
@@ -314,7 +366,8 @@ hash_read_status(struct service_info *svc_info)
 
 		if (!st_desc->csd_valid) {
 			svc_status->err = err;
-			OSAL_LOG_ERROR("valid bit not set! err: %d", err);
+			OSAL_LOG_ERROR("valid bit not set! status_desc: 0x" PRIx64 " err: %d",
+					(uint64_t) status_desc, err);
 			goto out;
 		}
 

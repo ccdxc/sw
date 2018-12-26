@@ -40,16 +40,16 @@ cpdc_common_chain(struct chain_entry *centry)
 }
 
 pnso_error_t
-cpdc_poll(const struct service_info *svc_info)
+cpdc_poll(const struct service_info *svc_info, struct cpdc_status_desc *status_desc)
 {
 	pnso_error_t err;
 
-	volatile struct cpdc_status_desc *status_desc;
 	uint64_t start_ts;
 
 	OSAL_LOG_DEBUG("enter ...");
 
-	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
+	if(status_desc == NULL)
+		status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 
 	if ((svc_info->si_flags & CHAIN_SFLAG_MODE_POLL) ||
 		(svc_info->si_flags & CHAIN_SFLAG_MODE_ASYNC)) {
