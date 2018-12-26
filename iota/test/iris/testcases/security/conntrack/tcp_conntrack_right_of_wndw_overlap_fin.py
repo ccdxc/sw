@@ -12,6 +12,7 @@ def Trigger(tc):
     api.Logger.info("Trigger.")
     pairs = api.GetLocalWorkloadPairs()
     resp_flow = getattr(tc.args, "resp_flow", 0)
+    tc.resp_flow = resp_flow
     tc.cmd_cookies = {}
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
@@ -38,9 +39,9 @@ def Trigger(tc):
 
     if resp_flow:
         #right of window overlap
-        iwindo_size= iwindo_sz * (2 ** rwinscale)
+        iwindo_size= iwindo_sz * (2 ** iwinscale)
         cmd_cookie = "hping3 -c 1 -s 1237 -p 52255 -M {}  -L {} --fin --ack --tcp-timestamp {} -d {}".format(wrap_around(rseq_num + iwindo_size, -200), rack_num, client.ip_address, 500)    
-        add_command(req, tc, 'fail ping', client, cmd_cookie)
+        add_command(req, tc, 'fail ping', server, cmd_cookie)
     else:
         rwindo_size= rwindo_sz * (2 ** rwinscale)
         #right of window overlap
@@ -68,8 +69,11 @@ def Verify(tc):
                 return api.types.status.SUCCESS
             print(cmd.stdout)
             yaml_out = get_yaml(cmd)
-            init_flow = get_initflow(yaml_out)
-            conn_info = get_conntrack_info(init_flow)
+            if tc.resp_flow:
+                flow = get_respflow(yaml_out)
+            else:
+                flow = get_initflow(yaml_out)
+            conn_info = get_conntrack_info(flow)
             excep =  get_exceptions(conn_info)
             if (excep['tcpoutofwindow'] == False):
                 return api.types.status.FAILURE 
