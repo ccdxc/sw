@@ -205,7 +205,7 @@ tep_entry::del_from_db(void) {
  */
 sdk_ret_t
 tep_entry::delay_delete(void) {
-    return delay_delete_to_slab(OCI_SLAB_TEP, this);
+    return delay_delete_to_slab(OCI_SLAB_ID_TEP, this);
 }
 
 /** @} */    // end of OCI_TEP_ENTRY
@@ -227,7 +227,7 @@ tep_state::tep_state() {
                           tep_entry::tep_key_func_compare);
     SDK_ASSERT(tep_ht_ != NULL);
 
-    tep_slab_ = slab::factory("tep", OCI_SLAB_TEP, sizeof(tep_entry),
+    tep_slab_ = slab::factory("tep", OCI_SLAB_ID_TEP, sizeof(tep_entry),
                                16, true, true, true, NULL);
     SDK_ASSERT(tep_slab_ != NULL);
 }

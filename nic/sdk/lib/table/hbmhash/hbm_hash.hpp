@@ -310,4 +310,6 @@ public:
 }   // namespace table
 }   // namespace sdk
 
+using sdk::table::HbmHash;
+
 #endif // __HBM_HASH_HPP__

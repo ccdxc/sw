@@ -13,12 +13,9 @@
 #include "nic/sdk/include/sdk/slab.hpp"
 #include "nic/sdk/include/sdk/indexer.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"
-#include "nic/sdk/lib/table/directmap/directmap.hpp"
 #include "nic/hal/apollo/framework/api_base.hpp"
 #include "nic/hal/apollo/framework/impl_base.hpp"
 #include "nic/hal/apollo/include/api/oci_tep.hpp"
-
-using sdk::lib::ht_ctxt_t;
 
 namespace api {
 

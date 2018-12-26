@@ -61,6 +61,13 @@
 #define TCP_FLOW_RESPONDER             1
 
 /*****************************************************************************/
+/* number of hints in various HBM hash tables                                */
+/*****************************************************************************/
+#define P4_LOCAL_IP_MAPPING_NUM_HINTS_PER_ENTRY          10
+#define P4_REMOTE_VNIC_MAPPING_RX_NUM_HINTS_PER_ENTRY    10
+#define P4_REMOTE_VNIC_MAPPING_TX_NUM_HINTS_PER_ENTRY    8
+
+/*****************************************************************************/
 /* Header sizes                                                              */
 /*****************************************************************************/
 #define APOLLO_PREDICATE_HDR_SZ         1

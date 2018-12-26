@@ -11,6 +11,7 @@
 
 #include "nic/sdk/include/sdk/slab.hpp"
 #include "nic/hal/apollo/framework/api_base.hpp"
+#include "nic/hal/apollo/framework/impl_base.hpp"
 #include "nic/hal/apollo/include/api/oci_mapping.hpp"
 
 namespace api {
@@ -131,6 +132,9 @@ private:
      * @return    SDK_RET_OK on success, failure status code on error
      */
     sdk_ret_t free_resources_(void);
+
+private:
+    impl_base        *impl_;      /**< impl object instance */
 } __PACK__;
 
 

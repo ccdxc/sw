@@ -198,7 +198,7 @@ vcn_entry::del_from_db(void) {
  */
 sdk_ret_t
 vcn_entry::delay_delete(void) {
-    return delay_delete_to_slab(OCI_SLAB_VCN, this);
+    return delay_delete_to_slab(OCI_SLAB_ID_VCN, this);
 }
 
 /** @} */    // end of OCI_VCN_ENTRY
@@ -221,7 +221,7 @@ vcn_state::vcn_state() {
     SDK_ASSERT(vcn_ht_!= NULL);
     vcn_idxr_ = indexer::factory(OCI_MAX_VCN);
     SDK_ASSERT(vcn_idxr_ != NULL);
-    vcn_slab_ = slab::factory("vcn", OCI_SLAB_VCN, sizeof(vcn_entry),
+    vcn_slab_ = slab::factory("vcn", OCI_SLAB_ID_VCN, sizeof(vcn_entry),
                               16, true, true, NULL);
     SDK_ASSERT(vcn_slab_ != NULL);
 }
