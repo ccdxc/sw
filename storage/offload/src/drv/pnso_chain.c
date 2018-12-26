@@ -197,7 +197,6 @@ struct chain_entry *
 chn_get_first_centry(struct service_chain *chain)
 {
 	OSAL_ASSERT(chain);
-	OSAL_ASSERT(chain->sc_entry);
 	return chain->sc_entry;
 }
 
@@ -205,7 +204,6 @@ struct chain_entry *
 chn_get_last_centry(struct service_chain *chain)
 {
 	OSAL_ASSERT(chain);
-	OSAL_ASSERT(chain->sc_last_entry);
 	return chain->sc_last_entry;
 }
 
@@ -552,8 +550,8 @@ chn_destroy_chain(struct service_chain *chain)
 	svc_chain_entry_mpool = pcr->mpools[MPOOL_TYPE_SERVICE_CHAIN_ENTRY];
 	OSAL_ASSERT(svc_chain_entry_mpool);
 
-	if ((chain->sc_flags & CHAIN_CFLAG_MODE_ASYNC) &&
-	    !(chain->sc_flags & CHAIN_CFLAG_RANG_DB)) {
+	if (!(chain->sc_flags & CHAIN_CFLAG_RANG_DB) &&
+	    (chain->sc_flags & CHAIN_CFLAG_MODE_ASYNC)) {
 		/* cleanup for async mode submission failure */
 		sc_last = chn_get_last_centry(chain);
 		if (sc_last) {

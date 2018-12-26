@@ -137,6 +137,7 @@ static const unsigned char default_alias_yaml[] =
 "  - alias: 'default_turbo=1'\n"
 "  - alias: 'default_rate=0'\n"
 "  - alias: 'default_status_interval=0'\n"
+"  - alias: 'default_len=8192'\n"
 "\n";
 
 static const unsigned char default_global_yaml[] = 
@@ -182,7 +183,7 @@ static const unsigned char default_global_yaml[] =
 "        pattern: a\n"
 "        #random_seed: 123\n"
 "        #random_len: 64\n"
-"        len: 8192\n"
+"        len: '$default_len'\n"
 "      ops:\n"
 "        - compress:\n"
 "            flags: 'zero_pad,insert_header'\n"
@@ -202,7 +203,7 @@ static const unsigned char default_global_yaml[] =
 "      idx: 3\n"
 "      input:\n"
 "        pattern: a\n"
-"        len: 8192\n"
+"        len: '$default_len'\n"
 "      ops:\n"
 "        - hash:\n"
 "            algo_type: 'sha2_256'\n"
@@ -212,7 +213,7 @@ static const unsigned char default_global_yaml[] =
 "      idx: 4\n"
 "      input:\n"
 "        pattern: a\n"
-"        len: 8192\n"
+"        len: '$default_len'\n"
 "      ops:\n"
 "        - chksum:\n"
 "            algo_type: 'crc32c'\n"
@@ -222,7 +223,7 @@ static const unsigned char default_global_yaml[] =
 "      idx: 5\n"
 "      input:\n"
 "        pattern: a\n"
-"        len: 8192\n"
+"        len: '$default_len'\n"
 "      ops:\n"
 "        - compress:\n"
 "            flags: 'zero_pad,insert_header'\n"
@@ -341,12 +342,12 @@ static const unsigned char *default_feature_yaml_list[PNSO_SVC_TYPE_MAX] = {
 "        - size_compare:\n"
 "            idx: 2\n"
 "            file1: 'decompressed.bin'\n"
-"            val: 8192\n"
+"            val: '$default_len'\n"
 "        - data_compare:\n"
 "            idx: 3\n"
 "            file1: 'decompressed.bin'\n"
 "            pattern: a\n"
-"            len: 8192\n",
+"            len: '$default_len'\n",
 
 	[PNSO_SVC_TYPE_HASH] =
 "tests:\n"
