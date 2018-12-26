@@ -88,6 +88,7 @@ if GlobalOptions.os == 'esx':
 def IpmiReset():
     os.system("ipmitool -I lanplus -H %s -U %s -P %s power cycle" %\
               (GlobalOptions.cimc_ip, GlobalOptions.cimc_username, GlobalOptions.cimc_password))
+    time.sleep(60)
     return
 
 class FlushFile(object):
@@ -288,12 +289,18 @@ def AtExitCleanup():
 # 3) Only initialize the node and start tests.
 
 def Main():
-    global naples
-    naples = NaplesManagement()
+    # Reset the setup:
+    # If the previous run left it in bad state, we may not get ssh or console.
+    if GlobalOptions.only_mode_change == False and GlobalOptions.only_init == False:
+        IpmiReset()
 
     global host
     host = HostManagement(GlobalOptions.host_ip)
-   
+    host.WaitForSsh()
+    
+    global naples
+    naples = NaplesManagement()
+
     if GlobalOptions.only_init == True:
         # Case 3: Only INIT option. Install drivers and return.
         host.Init(driver_pkg = GlobalOptions.drivers_pkg)
