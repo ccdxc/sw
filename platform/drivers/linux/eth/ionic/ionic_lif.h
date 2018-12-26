@@ -4,6 +4,8 @@
 #ifndef _IONIC_LIF_H_
 #define _IONIC_LIF_H_
 
+#define NOTIFYQ_LENGTH	64	/* must be a power of two */
+
 #include "ionic_rx_filter.h"
 
 /* Compile this out for removing debug stats */
@@ -46,6 +48,7 @@ struct rx_stats {
 #define QCQ_F_INTR		BIT(2)
 #define QCQ_F_TX_STATS		BIT(3)
 #define QCQ_F_RX_STATS		BIT(4)
+#define QCQ_F_NOTIFYQ		BIT(5)
 
 struct napi_stats {
 	u64 poll_count;
@@ -124,8 +127,10 @@ struct lif {
 	struct doorbell __iomem *kern_dbpage;
 	spinlock_t adminq_lock;
 	struct qcq *adminqcq;
+	struct qcq *notifyqcq;
 	struct qcq **txqcqs;
 	struct qcq **rxqcqs;
+	u64 last_eid;
 	unsigned int neqs;
 	unsigned int ntxqcqs;
 	unsigned int nrxqcqs;
@@ -147,6 +152,9 @@ struct lif {
 	void (*api_reset_cb)(void *api_private);
 	struct dentry *dentry;
 	u32 flags;
+	u32 notifyblock_sz;
+	struct notify_block *notifyblock;
+	dma_addr_t notifyblock_pa;
 };
 
 #define lif_to_txqcq(lif, i)	(lif->txqcqs[i])

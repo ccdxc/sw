@@ -48,6 +48,7 @@ int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx,
 		{ CMD_OPCODE_Q_ENABLE, "CMD_OPCODE_Q_ENABLE" },
 		{ CMD_OPCODE_Q_DISABLE, "CMD_OPCODE_Q_DISABLE" },
 		{ CMD_OPCODE_LIF_RESET, "CMD_OPCODE_LIF_RESET" },
+		{ CMD_OPCODE_NOTIFYQ_INIT, "CMD_OPCODE_NOTIFYQ_INIT" },
 		{ CMD_OPCODE_STATION_MAC_ADDR_GET,
 			"CMD_OPCODE_STATION_MAC_ADDR_GET" },
 		{ CMD_OPCODE_MTU_SET, "CMD_OPCODE_MTU_SET" },
@@ -61,7 +62,7 @@ int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx,
 	};
 	int list_len = ARRAY_SIZE(cmds);
 	struct cmds *cmd = cmds;
-	char *name = "UNKNOWN";
+	char *name = "UNKNOWN cmd opcode";
 	int i;
 
 	if (ctx->comp.comp.status || timeout) {

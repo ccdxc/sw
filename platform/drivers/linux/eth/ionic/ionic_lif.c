@@ -178,6 +178,76 @@ static int ionic_adminq_napi(struct napi_struct *napi, int budget)
 	return ionic_napi(napi, budget, ionic_adminq_service, NULL);
 }
 
+static bool ionic_notifyq_cb(struct cq *cq, struct cq_info *cq_info,
+			     void *cb_arg)
+{
+	union notifyq_comp *comp = cq_info->cq_desc;
+	struct net_device *netdev;
+	struct queue *q;
+	struct lif *lif;
+
+	q = cq->bound_q;
+	lif = q->info[0].cb_arg;
+	netdev = lif->netdev;
+
+	/* Have we run out of new completions to process? */
+	if (!(comp->event.eid > lif->last_eid))
+		return false;
+
+	lif->last_eid = comp->event.eid;
+
+	/* TODO: pay attention to link_flap_count
+	 *       and make sure that enough interrupt credits get
+	 *       returned in case we missed some events
+	 */
+
+	dev_dbg(&netdev->dev, "notifyq event:\n");
+	dynamic_hex_dump("event ", DUMP_PREFIX_OFFSET, 16, 1,
+			 comp, sizeof(*comp), true);
+
+	switch (comp->event.ecode) {
+	case EVENT_OPCODE_LINK_CHANGE:
+		netdev_info(netdev, "Notifyq EVENT_OPCODE_LINK_CHANGE eid=%lld\n",
+			    comp->event.eid);
+		netdev_info(netdev,
+			    "  link_status=%d link_errors=0x%02x phy_type=%d link_speed=%d autoneg=%d\n",
+			    comp->link_change.link_status,
+			    comp->link_change.link_error_bits,
+			    comp->link_change.phy_type,
+			    comp->link_change.link_speed,
+			    comp->link_change.autoneg_status);
+		break;
+	case EVENT_OPCODE_RESET:
+		netdev_info(netdev, "Notifyq EVENT_OPCODE_RESET eid=%lld\n",
+			    comp->event.eid);
+		netdev_info(netdev, "  reset_code=%d state=%d\n",
+			    comp->reset.reset_code,
+			    comp->reset.state);
+		break;
+	case EVENT_OPCODE_HEARTBEAT:
+		netdev_info(netdev, "Notifyq EVENT_OPCODE_HEARTBEAT eid=%lld\n",
+			    comp->event.eid);
+		break;
+	case EVENT_OPCODE_LOG:
+		netdev_info(netdev, "Notifyq EVENT_OPCODE_LOG eid=%lld\n",
+			    comp->event.eid);
+		print_hex_dump(KERN_INFO, "notifyq ", DUMP_PREFIX_OFFSET, 16, 1,
+			       comp->log.data, sizeof(comp->log.data), true);
+		break;
+	default:
+		netdev_warn(netdev, "Notifyq bad event ecode=%d eid=%lld\n",
+			    comp->event.ecode, comp->event.eid);
+		break;
+	}
+
+	return true;
+}
+
+static int ionic_notifyq_napi(struct napi_struct *napi, int budget)
+{
+	return ionic_napi(napi, budget, ionic_notifyq_cb, NULL);
+}
+
 static void ionic_get_stats64(struct net_device *netdev,
 			      struct rtnl_link_stats64 *ns)
 {
@@ -618,25 +688,29 @@ static int ionic_qcq_alloc(struct lif *lif, unsigned int index,
 		total_size += ALIGN(sg_size, PAGE_SIZE);
 
 	new = devm_kzalloc(dev, sizeof(*new), GFP_KERNEL);
-	if (!new)
-		return -ENOMEM;
+	if (!new) {
+		err = -ENOMEM;
+		goto err_out;
+	}
 
 	new->flags = flags;
 
 	new->q.info = devm_kzalloc(dev, sizeof(*new->q.info) * num_descs,
 				   GFP_KERNEL);
-	if (!new->q.info)
-		return -ENOMEM;
+	if (!new->q.info) {
+		err = -ENOMEM;
+		goto err_out;
+	}
 
 	err = ionic_q_init(lif, idev, &new->q, index, base, num_descs,
 			   desc_size, sg_desc_size, pid);
 	if (err)
-		return err;
+		goto err_out;
 
 	if (flags & QCQ_F_INTR) {
 		err = ionic_intr_alloc(lif, &new->intr);
 		if (err)
-			return err;
+			goto err_out;
 
 		err = ionic_bus_get_irq(lif->ionic, new->intr.index);
 		if (err < 0)
@@ -649,8 +723,10 @@ static int ionic_qcq_alloc(struct lif *lif, unsigned int index,
 
 	new->cq.info = devm_kzalloc(dev, sizeof(*new->cq.info) * num_descs,
 				    GFP_KERNEL);
-	if (!new->cq.info)
-		return -ENOMEM;
+	if (!new->cq.info) {
+		err = -ENOMEM;
+		goto err_out_free_intr;
+	}
 
 	err = ionic_cq_init(lif, &new->cq, &new->intr, num_descs, cq_desc_size);
 	if (err)
@@ -688,7 +764,8 @@ static int ionic_qcq_alloc(struct lif *lif, unsigned int index,
 
 err_out_free_intr:
 	ionic_intr_free(lif, &new->intr);
-
+err_out:
+	dev_err(dev, "qcq alloc of %s%d failed %d\n", base, index, err);
 	return err;
 }
 
@@ -735,6 +812,16 @@ static int ionic_qcqs_alloc(struct lif *lif)
 			      0, lif->kern_pid, &lif->adminqcq);
 	if (err)
 		return err;
+
+	if (lif->ionic->nnqs_per_lif) {
+		flags = QCQ_F_INTR | QCQ_F_NOTIFYQ;
+		err = ionic_qcq_alloc(lif, 0, "notifyq", flags, NOTIFYQ_LENGTH,
+				      sizeof(struct notifyq_cmd),
+				      sizeof(union notifyq_comp),
+				      0, lif->kern_pid, &lif->notifyqcq);
+		if (err)
+			return err;
+	}
 
 	flags = QCQ_F_TX_STATS | QCQ_F_INTR | QCQ_F_SG;
 	for (i = 0; i < lif->ntxqcqs; i++) {
@@ -787,6 +874,8 @@ static void ionic_qcqs_free(struct lif *lif)
 	devm_kfree(lif->ionic->dev, lif->txqcqs);
 	lif->txqcqs = NULL;
 
+	ionic_qcq_free(lif, lif->notifyqcq);
+	lif->notifyqcq = NULL;
 	ionic_qcq_free(lif, lif->adminqcq);
 	lif->adminqcq = NULL;
 }
@@ -859,14 +948,37 @@ static int ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 		goto err_out_free_dbid;
 	}
 
+	/* notify block shared with NIC */
+	lif->notifyblock_sz = ALIGN(sizeof(*lif->notifyblock), PAGE_SIZE);
+	lif->notifyblock = devm_kzalloc(dev, lif->notifyblock_sz,
+					GFP_KERNEL | GFP_DMA);
+	if (!lif->notifyblock) {
+		err = -ENOMEM;
+		goto err_out_unmap_dbell;
+	}
+	lif->notifyblock_pa = dma_map_single(dev, lif->notifyblock,
+					     lif->notifyblock_sz,
+					     DMA_BIDIRECTIONAL);
+	if (dma_mapping_error(dev, lif->notifyblock_pa)) {
+		err = -EIO;
+		goto err_out_free_notify;
+	}
+
 	err = ionic_qcqs_alloc(lif);
 	if (err)
-		goto err_out_unmap_dbell;
+		goto err_out_unmap_notify;
 
 	list_add_tail(&lif->list, &ionic->lifs);
 
 	return 0;
 
+err_out_unmap_notify:
+	dma_unmap_single(dev, lif->notifyblock_pa, lif->notifyblock_sz,
+			 DMA_BIDIRECTIONAL);
+	lif->notifyblock_pa = 0;
+err_out_free_notify:
+	devm_kfree(dev, lif->notifyblock);
+	lif->notifyblock = NULL;
 err_out_unmap_dbell:
 	ionic_bus_unmap_dbpage(ionic, lif->kern_dbpage);
 	lif->kern_dbpage = NULL;
@@ -911,6 +1023,14 @@ void ionic_lifs_free(struct ionic *ionic)
 		kfree(lif->dbid_inuse);
 		lif->dbid_inuse = NULL;
 		free_netdev(lif->netdev);
+		if (lif->notifyblock) {
+			dma_unmap_single(ionic->dev, lif->notifyblock_pa,
+					 lif->notifyblock_sz,
+					 DMA_BIDIRECTIONAL);
+			devm_kfree(ionic->dev, lif->notifyblock);
+			lif->notifyblock = NULL;
+			lif->notifyblock_pa = 0;
+		}
 	}
 }
 
@@ -1088,6 +1208,7 @@ static void ionic_lif_deinit(struct lif *lif)
 	ionic_lif_rxqs_deinit(lif);
 	ionic_rx_filters_deinit(lif);
 	ionic_lif_rss_teardown(lif);
+	ionic_lif_qcq_deinit(lif, lif->notifyqcq);
 
 	/* drop adminq last */
 	napi_disable(&lif->adminqcq->napi);
@@ -1157,6 +1278,60 @@ static int ionic_lif_adminq_init(struct lif *lif)
 	if (err)
 		netdev_warn(lif->netdev, "debugfs add for adminq failed %d\n",
 			    err);
+
+	return 0;
+}
+
+int ionic_lif_notifyq_init(struct lif *lif)
+{
+	struct device *dev = lif->ionic->dev;
+	struct qcq *qcq = lif->notifyqcq;
+	struct napi_struct *napi = &qcq->napi;
+	struct queue *q = &qcq->q;
+	int err;
+
+	struct ionic_admin_ctx ctx = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
+		.cmd.notifyq_init.opcode = CMD_OPCODE_NOTIFYQ_INIT,
+		.cmd.notifyq_init.index = q->index,
+		.cmd.notifyq_init.pid = q->pid,
+		.cmd.notifyq_init.intr_index = qcq->intr.index,
+		.cmd.notifyq_init.lif_index = lif->index,
+		.cmd.notifyq_init.ring_size = ilog2(q->num_descs),
+		.cmd.notifyq_init.ring_base = q->base_pa,
+		.cmd.notifyq_init.notify_size = ilog2(lif->notifyblock_sz),
+		.cmd.notifyq_init.notify_base = lif->notifyblock_pa,
+	};
+
+	err = ionic_adminq_post_wait(lif, &ctx);
+	if (err)
+		return err;
+
+	q->qid = ctx.comp.notifyq_init.qid;
+	q->qtype = ctx.comp.notifyq_init.qtype;
+	q->db = NULL;
+
+	/* preset the callback info */
+	q->info[0].cb_arg = lif;
+
+	netif_napi_add(lif->netdev, napi, ionic_notifyq_napi,
+		       NAPI_POLL_WEIGHT);
+
+	err = ionic_request_irq(lif, qcq);
+	if (err) {
+		netif_napi_del(napi);
+		return err;
+	}
+
+	qcq->flags |= QCQ_F_INITED;
+
+	/* Enabling interrupts on notifyq from here on... */
+	napi_enable(napi);
+	ionic_intr_mask(&lif->notifyqcq->intr, false);
+
+	err = ionic_debugfs_add_qcq(lif, qcq);
+	if (err)
+		dev_warn(dev, "debugfs add for notifyq failed %d\n", err);
 
 	return 0;
 }
@@ -1486,13 +1661,19 @@ static int ionic_lif_init(struct lif *lif)
 	if (err)
 		goto err_out_adminq_deinit;
 
+	if (lif->ionic->nnqs_per_lif) {
+		err = ionic_lif_notifyq_init(lif);
+		if (err)
+			goto err_out_adminq_deinit;
+	}
+
 	err = ionic_set_features(lif);
 	if (err)
-		goto err_out_adminq_deinit;
+		goto err_out_notifyq_deinit;
 
 	err = ionic_lif_txqs_init(lif);
 	if (err)
-		goto err_out_adminq_deinit;
+		goto err_out_notifyq_deinit;
 
 	err = ionic_lif_rxqs_init(lif);
 	if (err)
@@ -1531,6 +1712,8 @@ err_out_rxqs_deinit:
 	ionic_lif_rxqs_deinit(lif);
 err_out_txqs_deinit:
 	ionic_lif_txqs_deinit(lif);
+err_out_notifyq_deinit:
+	ionic_lif_qcq_deinit(lif, lif->notifyqcq);
 err_out_adminq_deinit:
 	ionic_lif_qcq_deinit(lif, lif->adminqcq);
 
@@ -1738,6 +1921,7 @@ try_again:
 		goto try_fewer;
 	}
 
+	ionic->nnqs_per_lif = nnqs_per_lif;
 	ionic->neqs_per_lif = neqs_per_lif;
 	ionic->ntxqs_per_lif = ntxqs_per_lif;
 	ionic->nrxqs_per_lif = nrxqs_per_lif;

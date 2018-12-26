@@ -523,6 +523,27 @@ int ionic_debugfs_add_qcq(struct lif *lif, struct qcq *qcq)
 					intr_ctrl_regset);
 	}
 
+	if (qcq->flags & QCQ_F_NOTIFYQ) {
+		stats_dentry = debugfs_create_dir("notifyblock", qcq_dentry);
+		if (IS_ERR_OR_NULL(stats_dentry))
+			return PTR_ERR(stats_dentry);
+
+		debugfs_create_u64("eid", 0400, stats_dentry,
+				   &lif->notifyblock->eid);
+		debugfs_create_u16("link_status", 0400, stats_dentry,
+				   &lif->notifyblock->link_status);
+		debugfs_create_u16("link_error_bits", 0400, stats_dentry,
+				   &lif->notifyblock->link_error_bits);
+		debugfs_create_u32("link_speed", 0400, stats_dentry,
+				   &lif->notifyblock->link_speed);
+		debugfs_create_u16("phy_type", 0400, stats_dentry,
+				   &lif->notifyblock->phy_type);
+		debugfs_create_u16("autoneg_status", 0400, stats_dentry,
+				   &lif->notifyblock->autoneg_status);
+		debugfs_create_u16("link_flap_count", 0400, stats_dentry,
+				   &lif->notifyblock->link_flap_count);
+	}
+
 	return 0;
 }
 
