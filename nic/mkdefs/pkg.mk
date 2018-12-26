@@ -13,7 +13,7 @@ ifneq ($(PIPELINE),hello)
 ifeq ($(ARCH),aarch64)
 	ARCH=${ARCH} ${TOPDIR}/nic/tools/update_version.sh
 	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py \
-        --pipeline $(PIPELINE) --no-strip
+        --pipeline $(PIPELINE)
 else
 	ARCH=${ARCH} ${TOPDIR}/nic/tools/update_version.sh
 	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py \
