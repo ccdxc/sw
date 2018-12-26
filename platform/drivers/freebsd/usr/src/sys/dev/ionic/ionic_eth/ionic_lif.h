@@ -396,6 +396,8 @@ int ionic_tx_clean(struct txque* txq , int tx_limit);
 
 int ionic_change_mtu(struct net_device *netdev, int new_mtu);
 void ionic_set_rx_mode(struct net_device *netdev);
+void ionic_clear_rx_mode(struct net_device *netdev);
+
 void ionic_set_multi(struct lif* lif);
 
 extern int ionic_devcmd_timeout;

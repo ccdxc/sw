@@ -460,11 +460,23 @@ void ionic_set_rx_mode(struct net_device *netdev)
 	rx_mode |= (netdev->if_flags & IFF_PROMISC) ? RX_MODE_F_PROMISC : 0;
 	rx_mode |= (netdev->if_flags & IFF_ALLMULTI) ? RX_MODE_F_ALLMULTI : 0;
 
-	IONIC_NETDEV_INFO(netdev, "Setting RX Mode: %d\n", rx_mode);
+	IONIC_NETDEV_INFO(netdev, "Setting rx mode %d\n", rx_mode);
 
 	if (lif->rx_mode != rx_mode) {
 		lif->rx_mode = rx_mode;
 		ionic_lif_rx_mode(lif, rx_mode);
+	}
+}
+
+void ionic_clear_rx_mode(struct net_device *netdev)
+{
+	struct lif *lif = netdev_priv(netdev);
+
+	IONIC_NETDEV_INFO(netdev, "Clearing rx mode %d\n");
+
+	if (lif->rx_mode != 0) {
+		lif->rx_mode = 0;
+		ionic_lif_rx_mode(lif, 0);
 	}
 }
 
@@ -2531,8 +2543,6 @@ static int ionic_lif_init(struct lif *lif)
 	err = ionic_lif_stats_dump_start(lif, STATS_DUMP_VERSION_1);
 	if (err)
 		goto err_out_rss_teardown;
-
-	ionic_set_rx_mode(lif->netdev);
 
 	ionic_setup_sysctls(lif);
 
