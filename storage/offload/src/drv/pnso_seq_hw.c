@@ -913,10 +913,10 @@ out:
 }
 
 static pnso_error_t
-hw_setup_hash_chain_params(struct cpdc_chain_params *chain_params,
+hw_setup_hashorchksum_chain_params(struct cpdc_chain_params *chain_params,
 		struct service_info *svc_info,
-		struct cpdc_desc *hash_desc, struct cpdc_sgl *sgl,
-		uint32_t num_hash_blks)
+		struct cpdc_desc *desc, struct cpdc_sgl *sgl,
+		uint32_t num_blks)
 {
 	pnso_error_t err = EINVAL;
 	struct sonic_accel_ring *ring = svc_info->si_seq_info.sqi_ring;
@@ -934,18 +934,21 @@ hw_setup_hash_chain_params(struct cpdc_chain_params *chain_params,
 	ring_spec->rs_ring_addr = ring->accel_ring.ring_base_pa;
 	ring_spec->rs_pndx_addr = ring->accel_ring.ring_pndx_pa;
 	ring_spec->rs_pndx_shadow_addr = ring->accel_ring.ring_shadow_pndx_pa;
-	ring_spec->rs_desc_addr = sonic_virt_to_phy((void *) hash_desc);
-	ring_spec->rs_desc_size = (uint8_t) ilog2(ring->accel_ring.ring_desc_size);
-	ring_spec->rs_pndx_size = (uint8_t) ilog2(ring->accel_ring.ring_pndx_size);
+	ring_spec->rs_desc_addr = sonic_virt_to_phy((void *) desc);
+	ring_spec->rs_desc_size =
+		(uint8_t) ilog2(ring->accel_ring.ring_desc_size);
+	ring_spec->rs_pndx_size =
+		(uint8_t) ilog2(ring->accel_ring.ring_pndx_size);
 	ring_spec->rs_ring_size = (uint8_t) ilog2(ring->accel_ring.ring_size);
-	ring_spec->rs_num_descs = num_hash_blks;
+	ring_spec->rs_num_descs = num_blks;
 
 	chain_params->ccp_sgl_vec_addr = sonic_virt_to_phy((void *) sgl);
 	chain_params->ccp_cmd.ccpc_sgl_pad_en = 1;
 	chain_params->ccp_cmd.ccpc_sgl_sparse_format_en = 1;
 	/*
-	 * hash executes multiple requests, one per block; hence, indicate to
-	 * P4+ to push a vector of descriptors
+	 * hash/chksum executes multiple requests, one per block; hence,
+	 * indicate to P4+ to push a vector of descriptors
+	 *
 	 */
 	chain_params->ccp_cmd.ccpc_desc_vec_push_en = 1;
 
@@ -1083,7 +1086,8 @@ const struct sequencer_ops hw_seq_ops = {
 	.ring_db = hw_ring_db,
 	.setup_cp_chain_params = hw_setup_cp_chain_params,
 	.setup_cp_pad_chain_params = hw_setup_cp_pad_chain_params,
-	.setup_hash_chain_params = hw_setup_hash_chain_params,
+	.setup_hash_chain_params = hw_setup_hashorchksum_chain_params,
+	.setup_chksum_chain_params = hw_setup_hashorchksum_chain_params,
 	.setup_cpdc_chain_desc = hw_setup_cpdc_chain_desc,
 	.cleanup_cpdc_chain = hw_cleanup_cpdc_chain,
 	.setup_crypto_chain = hw_setup_crypto_chain,

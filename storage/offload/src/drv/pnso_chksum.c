@@ -163,10 +163,27 @@ static pnso_error_t
 chksum_sub_chain_from_cpdc(struct service_info *svc_info,
 			   struct cpdc_chain_params *cpdc_chain)
 {
-	/*
-	 * This is supportable when there's a valid use case.
-	 */
-	return EOPNOTSUPP;
+	pnso_error_t err;
+	struct cpdc_desc *chksum_desc;
+
+	OSAL_LOG_DEBUG("enter ...");
+
+	chksum_desc = (struct cpdc_desc *) svc_info->si_desc;
+	err = seq_setup_chksum_chain_params(cpdc_chain, svc_info, chksum_desc,
+			svc_info->si_p4_sgl, svc_info->si_num_tags);
+	if (err) {
+		OSAL_LOG_ERROR("failed to setup checksum in chain! err: %d", err);
+		goto out;
+	}
+	CPDC_PPRINT_DESC(chksum_desc);
+
+	err = PNSO_OK;
+	OSAL_LOG_DEBUG("exit!");
+	return err;
+
+out:
+	OSAL_LOG_ERROR("exit! err: %d", err);
+	return err;
 }
 
 static pnso_error_t
