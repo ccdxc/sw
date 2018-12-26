@@ -24,45 +24,67 @@ $ git clone https://github.com/<your-github-id>/<forked-repo>
 $ make dev
 ```
 
-##### 3. SSH into one of the VMs
+##### 3. SSH into the VMs
 ```
-$ vagrant ssh node1
+$ vagrant ssh
 [vagrant@node1 ~]$ cd /import/src/github.com/pensando/sw/
 ```
 
-##### 4. Create a pensando cluster
+##### 4. Build and unit-test your code
+
 ```
-[vagrant@node1 sw]$ make cluster
+$ make
 ```
 
-This will compile the code, package it as containers and run the pensando base container on each node and init the cluster by posting a JSON message to CMD. After this step, all pensando services and k8s will be running on all nodes
+Running make is `sw` folder will compile all venice binaries and run unit test. `make build` will just compile all binaries. `make unit-test-cover` will run all unit tests. `make gen` will compile all proto file and genrate code from it.
+
+##### 5. Create a pensando cluster
 ```
-[vagrant@node1 sw]$ kubectl get pods -o wide
-NAME                             READY     STATUS    RESTARTS   AGE       IP              NODE
-pen-apigw-19qdk                  1/1       Running   0          30m       192.168.30.11   node1
-pen-apigw-9qhmc                  1/1       Running   0          30m       192.168.30.13   node3
-pen-apigw-zn2l0                  1/1       Running   0          30m       192.168.30.12   node2
-pen-apiserver-427759635-250c1    1/1       Running   0          30m       192.168.30.11   node1
-pen-collector-1221202462-57nbz   1/1       Running   0          30m       192.168.30.11   node1
-pen-filebeat-r823q               1/1       Running   0          30m       192.168.30.13   node3
-pen-filebeat-scn1t               1/1       Running   0          30m       192.168.30.11   node1
-pen-filebeat-xq1m8               1/1       Running   0          30m       192.168.30.12   node2
-pen-influx-2461472228-4k4z6      1/1       Running   0          30m       192.168.30.11   node1
-pen-npm-2316830654-6td2m         1/1       Running   0          30m       192.168.30.13   node3
-pen-ntp-rs3x5                    1/1       Running   0          30m       192.168.30.12   node2
-pen-ntp-xnfxm                    1/1       Running   0          30m       192.168.30.11   node1
-pen-ntp-zh3nk                    1/1       Running   0          30m       192.168.30.13   node3
-pen-vchub-3041794971-blzzq       1/1       Running   0          30m       192.168.30.12   node2
+[vagrant@node1 sw]$ make dind-cluster
+```
+
+This will compile the code, package it as containers and run an end-to-end cluster that contains a venice node(`node1`), a naples node(`naples1`) and a test node(`node0`)
+
+```
+[vagrant@node1 sw]$ docker ps
+CONTAINER ID        IMAGE                                           COMMAND             CREATED             STATUS              PORTS                                                                      NAMES
+5f9ed1c57954        registry.test.pensando.io:5000/pens-e2e:v0.4    "/bin/sh"           2 minutes ago       Up 2 minutes        0.0.0.0:10000->9000/tcp, 0.0.0.0:10200->9200/tcp                           node0
+f045420c41d4        registry.test.pensando.io:5000/pens-dind:v0.3   "/usr/sbin/init"    4 minutes ago       Up 4 minutes        0.0.0.0:8080->8080/tcp, 0.0.0.0:10001->9000/tcp, 0.0.0.0:10201->9200/tcp   node1
+32f236b3c8b6        pen-netagent                                    "/bin/sh"           5 minutes ago       Up 5 minutes        0.0.0.0:15002->9008/tcp                                                    naples1
+```
+
+The test node(`node0`) will be on same docker network as venice and naples node. You can login to this node to access the Venice or Naples APIs or access k8s cluster etc.
+
+```
+[vagrant@node1 sw]$ docker exec -it node0 bash
+bash-4.4# kubectl get pods
+NAME                              READY     STATUS    RESTARTS   AGE
+pen-aggregator-2210543135-j0tzx   1/1       Running   0          7m
+pen-apigw-017xn                   1/1       Running   0          7m
+pen-apiserver-3792987535-v2zpc    1/1       Running   0          7m
+pen-citadel-z96vp                 1/1       Running   0          7m
+pen-elastic-p8nwb                 1/1       Running   0          7m
+pen-evtsmgr-5scp6                 1/1       Running   0          7m
+pen-evtsproxy-rmwrk               1/1       Running   1          7m
+pen-filebeat-tdpjq                1/1       Running   2          7m
+pen-npm-2716891048-3szhk          1/1       Running   0          7m
+pen-ntp-523w2                     1/1       Running   0          7m
+pen-rollout-2426213013-w1pqr      1/1       Running   0          7m
+pen-spyglass-1736375977-x31dn     1/1       Running   0          7m
+pen-tpm-3421035719-8c87r          1/1       Running   4          7m
+pen-tsm-3948591964-x9bwq          1/1       Running   0          7m
+pen-vos-575597762-f8n3k           1/1       Running   0          7m
+bash-4.4# 
 ```
 
 ##### 5. Stop the cluster
 ```
-[vagrant@node1 sw]$ make cluster-stop
+[vagrant@node1 sw]$ make dind-cluster-stop
 ```
 
 This will stop all pensando services and k8s services and cleanup all state.
 
-##### 6. To remove the testbed:
+##### 6. To remove the VMs:
 
 ```
 $ make dev-clean
@@ -125,37 +147,3 @@ git push origin <branch-name> --force
 	- Automated CI tests will run when pull request is submitted
 	- Module owners will review the code
 	- Module owners will merge the pull request
-
-
-
-### Deploying from Mac (not required anymore)
-
-##### 1. make deploy to compile and deploy code
-```
-$ make deploy
-```
-##### 2. Create a cluster, run tests
-```
-$ curl -XPOST -d @/tmp/cluster.json http://192.168.30.11:9001/api/v1/cluster
-```
-###### Sample cluster.json file
-{
-	"kind": "Cluster",
-	"metadata": {
-		"name": "testCluster"
-	},
-	"spec": {
-		"quorumNodes": [ "node1", "node2", "node3" ],
-		"virtualIP": "192.168.30.10"
-	}
-}
-
-##### 3. Clean up
-
-```
-To cleanup the cluster (remove configs etc):
-$ make clean
-```
-
-### E2E cluster simulation
-Please see [E2E Simulation](docs/e2esim.md) for more info

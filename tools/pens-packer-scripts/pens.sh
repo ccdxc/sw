@@ -42,9 +42,9 @@ sudo yum install -y net-tools tcpdump wget git gcc gcc-c++ CUnit-devel  \
 
 
 cd /tmp
-wget https://dl.google.com/go/go1.10.linux-amd64.tar.gz
-sudo tar -C /usr/local -xzf go1.10.linux-amd64.tar.gz
-rm go1.10.linux-amd64.tar.gz
+wget https://dl.google.com/go/go1.11.linux-amd64.tar.gz
+sudo tar -C /usr/local -xzf go1.11.linux-amd64.tar.gz
+rm go1.11.linux-amd64.tar.gz
 
 
 # Install Swagger
@@ -97,14 +97,18 @@ sudo pip install setuptools
 sudo pip install --upgrade setuptools
 sudo pip install pipenv
 
-# install protobuf related tools
-mkdir -p ~/go && cd ~/go
-export GOPATH=$PWD
-rm -rf protobuf
-git clone --depth=1 https://github.com/google/protobuf.git
-cd protobuf
-./autogen.sh && ./configure && make
-sudo make install && sudo ldconfig
+# prep protobuf-cpp
+cd /tmp
+wget https://github.com/google/protobuf/releases/download/v3.4.1/protobuf-cpp-3.4.1.tar.gz
+sudo tar -xzf protobuf-cpp-3.4.1.tar.gz
+
+# install protobuf-cpp
+cd protobuf-3.4.1
+sudo ./autogen.sh && sudo ./configure --prefix /usr
+sudo make
+sudo make install
+sudo ldconfig
+
 
 # install gcc 6.1
 cd /tmp
