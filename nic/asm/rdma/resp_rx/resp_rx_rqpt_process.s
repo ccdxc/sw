@@ -7,6 +7,7 @@ struct resp_rx_phv_t p;
 struct resp_rx_s2_t0_k k;
 
 #define INFO_OUT1_P t0_s2s_rqcb_to_wqe_info
+#define TO_S_STATS_INFO_P to_s7_stats_info
 
 #define GLOBAL_FLAGS r7
 
@@ -24,9 +25,13 @@ struct resp_rx_s2_t0_k k;
     .param  resp_rx_rqwqe_wrid_process
     .param  resp_rx_rqwqe_process
     .param  resp_rx_rqwqe_opt_process
+    .param  resp_rx_rqcb1_write_back_mpu_only_process
 
 .align
 resp_rx_rqpt_process:
+    bcf             [c2 | c3 | c7], table_error
+    nop // BD Slot
+    
     bbeq    K_RQ_IN_HBM, 1, skip_rqpt_process
     // populate r3 with hbm_wqe_ptr. If q is not in hbm, r3 would be overwritten with right value
     add     r3, r0, K_HBM_WQE_PTR   //BD Slot
@@ -73,3 +78,23 @@ skip_rqpt_process:
 
 rqwqe_opt:
     CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqwqe_opt_process, r3)
+
+table_error:
+    // set err_dis_qp and completion flags
+    add         GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS
+    or          GLOBAL_FLAGS, GLOBAL_FLAGS, RESP_RX_FLAG_ERR_DIS_QP | RESP_RX_FLAG_COMPLETION
+    CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, GLOBAL_FLAGS)
+
+    phvwrpair   p.cqe.status, CQ_STATUS_LOCAL_QP_OPER_ERR, p.cqe.error, 1
+    // TODO update lif_error_id if needed
+
+    // update stats
+    phvwr.c2       CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_table_error), 1
+    phvwr.c3       CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_phv_intrinsic_error), 1
+    phvwr.c7       CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_table_resp_error), 1
+
+    phvwr          p.common.p4_intr_global_drop, 1
+    CAPRI_SET_TABLE_0_VALID(0)
+
+    // invoke an mpu-only program which will bubble down and eventually invoke write back
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)

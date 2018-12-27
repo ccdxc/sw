@@ -52,11 +52,12 @@ struct common_p4plus_stage0_app_header_table_k k;
 
 .align
 resp_rx_rqcb_process:
+    bcf             [c2 | c3 | c7], table_error
     // table 0 valid bit would be set by the time we get into S0 because
     // to get +64 logic, p4 program would have set table 0 valid bit to TRUE.
     // we need to this bit back to 0 right way otherwise table 0 gets fired
     // unnecessarily in further stages and cause wrong behavior (mainly for write/read/atomic)
-    CAPRI_SET_TABLE_0_VALID(0)
+    CAPRI_SET_TABLE_0_VALID(0) // BD Slot
 
     // feedback phv comes with RESP_RX_FLAG_ERR_DIS_QP. Take a detour.
     // feedback phv is processed right away without going thru any token_id checks.
@@ -978,3 +979,7 @@ process_feedback:
                     ((1 << 4) | LIF_STATS_RDMA_RESP_STAT(LIF_STATS_RESP_RX_CQE_FLUSH_ERR_OFFSET))
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)
 
+table_error:
+    // TODO add LIF stats
+    phvwr.e        p.common.p4_intr_global_drop, 1
+    nop // Exit Slot

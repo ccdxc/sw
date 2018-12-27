@@ -290,7 +290,10 @@ struct sqcb4_t {
     qp_err_dis_inv_lkey_pd_mismatch          : 1;
     qp_err_dis_inv_lkey_invalid_state        : 1;
     qp_err_dis_inv_lkey_inv_not_allowed      : 1;
-    qp_err_dis_rsvd                          : 33;
+    qp_err_dis_table_error                   : 1;
+    qp_err_dis_phv_intrinsic_error           : 1;
+    qp_err_dis_table_resp_error              : 1;
+    qp_err_dis_rsvd                          : 30;
     pad: 48;
 };
 
@@ -304,7 +307,6 @@ struct sqcb5_t {
     num_atomic_ack:16;
     num_pkts_in_cur_msg: 16;
     max_pkts_in_any_msg : 16;
-
     qp_err_disabled                  :    1;
     qp_err_dis_rrqlkey_pd_mismatch   :    1;
     qp_err_dis_rrqlkey_inv_state     :    1;
@@ -318,8 +320,10 @@ struct sqcb5_t {
     qp_err_dis_rrqwqe_remote_inv_req_err_rcvd :    1;
     qp_err_dis_rrqwqe_remote_acc_err_rcvd     :    1;
     qp_err_dis_rrqwqe_remote_oper_err_rcvd    :    1;
-    qp_err_dis_rsvd                  :    19;
-
+    qp_err_dis_table_error           :    1;
+    qp_err_dis_phv_intrinsic_error   :    1;
+    qp_err_dis_table_resp_error      :    1;
+    qp_err_dis_rsvd                  :    16;
     pad: 256;
 };
 

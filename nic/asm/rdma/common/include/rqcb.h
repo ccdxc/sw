@@ -269,7 +269,11 @@ struct rqcb5_t {
     num_dup_wr_send_pkts: 16;
     num_dup_rd_atomic_bt_pkts: 16;
     num_dup_rd_atomic_drop_pkts: 16;
-    pad: 144;
+    // errors
+    qp_err_dis_table_error: 1;
+    qp_err_dis_phv_intrinsic_error: 1;
+    qp_err_dis_table_resp_error: 1;
+    pad: 141;
 };
 
 struct rqcb_t {

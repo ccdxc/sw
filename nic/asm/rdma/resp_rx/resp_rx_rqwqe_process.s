@@ -47,13 +47,14 @@ struct rqwqe_base_t d;
 
 .align
 resp_rx_rqwqe_process:
+    bcf             [c2 | c3 | c7], table_error
     // current_sge_id = rqcb_to_wqe_info_p->current_sge_id;
     // current_sge_offset = rqcb_to_wqe_info_p->current_sge_offset; 
 
     //DANGER: because of register scarcity, encode both
     // current_sge_id and current_sge_offset in r1 and free r2 
     // now r1 = (current_sge_id << 32) + current_sge_offset
-    add         r1, CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit7, current_sge_offset_sbit24_ebit31), CAPRI_KEY_FIELD(IN_P, current_sge_id), SGE_OFFSET_SHIFT
+    add         r1, CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit7, current_sge_offset_sbit24_ebit31), CAPRI_KEY_FIELD(IN_P, current_sge_id), SGE_OFFSET_SHIFT // BD Slot
 
     add         REM_PYLD_BYTES, r0, CAPRI_KEY_FIELD(IN_P, remaining_payload_bytes)
     seq         c1, CAPRI_KEY_FIELD(IN_P, in_progress), 1
@@ -359,3 +360,23 @@ send_only_zero_len:
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)
     b           send_only_zero_len_join
     CAPRI_SET_TABLE_0_VALID(0)  //BD Slot
+
+table_error:
+    // set err_dis_qp and completion flags
+    add         GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS
+    or          GLOBAL_FLAGS, GLOBAL_FLAGS, RESP_RX_FLAG_ERR_DIS_QP | RESP_RX_FLAG_COMPLETION
+    CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, GLOBAL_FLAGS)
+
+    phvwrpair   p.cqe.status, CQ_STATUS_LOCAL_QP_OPER_ERR, p.cqe.error, 1
+    // TODO update lif_error_id if needed
+
+    // update stats
+    phvwr.c2       CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_table_error), 1
+    phvwr.c3       CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_phv_intrinsic_error), 1
+    phvwr.c7       CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_table_resp_error), 1
+
+    phvwr          p.common.p4_intr_global_drop, 1
+    CAPRI_SET_TABLE_0_VALID(0)
+
+    // invoke an mpu-only program which will bubble down and eventually invoke write back
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)

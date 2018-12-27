@@ -277,7 +277,10 @@ header_type req_tx_to_stage_stats_info_t {
         qp_err_dis_inv_lkey_pd_mismatch          : 1;
         qp_err_dis_inv_lkey_invalid_state        : 1;
         qp_err_dis_inv_lkey_inv_not_allowed      : 1;
-        qp_err_dis_rsvd                          : 33;
+        qp_err_dis_table_error                   : 1;
+        qp_err_dis_phv_intrinsic_error           : 1;
+        qp_err_dis_table_resp_error              : 1;
+        qp_err_dis_rsvd                          : 30;
         pad                                      : 34;
     }
 }
@@ -2172,6 +2175,10 @@ action req_tx_stats_process () {
     modify_field(to_s7_stats_info_scr.qp_err_dis_inv_lkey_qp_mismatch, to_s7_stats_info.qp_err_dis_inv_lkey_qp_mismatch);
     modify_field(to_s7_stats_info_scr.qp_err_dis_inv_lkey_pd_mismatch, to_s7_stats_info.qp_err_dis_inv_lkey_pd_mismatch);
     modify_field(to_s7_stats_info_scr.qp_err_dis_inv_lkey_invalid_state, to_s7_stats_info.qp_err_dis_inv_lkey_invalid_state);
+    modify_field(to_s7_stats_info_scr.qp_err_dis_inv_lkey_inv_not_allowed, to_s7_stats_info.qp_err_dis_inv_lkey_inv_not_allowed);
+    modify_field(to_s7_stats_info_scr.qp_err_dis_table_error, to_s7_stats_info.qp_err_dis_table_error);
+    modify_field(to_s7_stats_info_scr.qp_err_dis_phv_intrinsic_error, to_s7_stats_info.qp_err_dis_phv_intrinsic_error);
+    modify_field(to_s7_stats_info_scr.qp_err_dis_table_resp_error, to_s7_stats_info.qp_err_dis_table_resp_error);
     modify_field(to_s7_stats_info_scr.qp_err_dis_rsvd, to_s7_stats_info.qp_err_dis_rsvd);
 
     // stage to stage

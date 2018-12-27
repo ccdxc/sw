@@ -38,6 +38,9 @@ struct req_tx_s3_t0_k k;
 
 .align
 req_tx_sqsge_process:
+    bcf            [c2 | c3 | c7], table_error
+    nop // BD Slot
+
     // Use conditional flag to select between sge_index 0 and 1
     // sge_index = 0
     setcf          c7, [c0]
@@ -241,3 +244,20 @@ err_no_dma_cmds:
     b              trigger_dcqcn
     CAPRI_SET_TABLE_0_VALID(0) //BD Slot
 
+table_error:
+    phvwrpair      p.{rdma_feedback.completion.status, rdma_feedback.completion.error}, (CQ_STATUS_LOCAL_QP_OPER_ERR << 1 | 1), \
+                   p.{rdma_feedback.completion.lif_cqe_error_id_vld, rdma_feedback.completion.lif_error_id_vld, rdma_feedback.completion.lif_error_id}, \
+                       ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_TX_LOCAL_OPER_ERR_OFFSET))
+
+    // set err_dis_qp
+    phvwr          CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp), 1
+
+    phvwr          CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_disabled), 1
+    // update stats
+    phvwr.c2       CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_table_error), 1
+    phvwr.c3       CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_phv_intrinsic_error), 1
+    phvwr.c7       CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_table_resp_error), 1
+    phvwr          p.common.p4_intr_global_drop, 1
+
+    b              trigger_dcqcn
+    CAPRI_SET_TABLE_0_VALID(0) // BD Slot

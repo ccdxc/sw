@@ -50,9 +50,10 @@ struct req_tx_s0_t0_k k;
 
 .align
 req_tx_sqcb_process:
+    bcf             [c2 | c3 | c7], table_error
     // If QP is not in RTS state, do no process any event. Branch to check for
     // drain state and process only if SQ has to be drained till a specific WQE
-    seq            c7, d.state, QP_STATE_RTS
+    seq            c7, d.state, QP_STATE_RTS // BD Slot
     bcf            [!c7], check_state
     tblwr.c7       d.sq_drained, 0 // Branch Delay Slot
 
@@ -652,3 +653,7 @@ drop:
     phvwr.e        p.common.p4_intr_global_drop, 1
     nop
 
+table_error:
+    // TODO add LIF stats
+    phvwr.e        p.common.p4_intr_global_drop, 1
+    nop // Exit Slot
