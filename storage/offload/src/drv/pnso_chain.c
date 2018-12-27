@@ -574,7 +574,6 @@ chn_destroy_chain(struct service_chain *chain)
 		mpool_put_object(svc_chain_entry_mpool, sc_entry);
 		sc_entry = sc_next;
 	}
-	OSAL_ASSERT(i == chain->sc_num_services);
 
 	mpool_put_object(svc_chain_mpool, chain);
 	OSAL_LOG_DEBUG("exit!");
