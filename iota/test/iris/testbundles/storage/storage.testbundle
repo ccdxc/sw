@@ -18,6 +18,7 @@ aliases:
     - &MODE_ITER_LIST_COMBO1 [ sync, poll ]
     - &MODE_ITER_LIST_COMBO2 [ poll, async ]
     - &CPDC_TEST_YML cpdc.yml
+    - &CPDC_PAD_TEST_YML cpdc_pad.yml
     - &CP_FAIL_TEST_YML cp_fail.yml
     - &DC_FAIL_TEST_YML dc_fail.yml
     - &HASH_TEST_YML hash.yml
@@ -63,7 +64,7 @@ testcases:
             inputlen    : *INPUT_LEN_LIST_COMBO2
         args    :
             wait        : '1.0'
-            test        : *CPDC_TEST_YML
+            test        : *CPDC_PAD_TEST_YML
             cpflags     : *CPFLAGS_ZERO_PAD
             dcflags     : *DCFLAGS_ZERO_PAD
 
@@ -92,7 +93,7 @@ testcases:
             inputlen    : *INPUT_LEN_LIST_COMBO2
         args    :
             wait        : '1.0'
-            test        : *CPDC_TEST_YML
+            test        : *CPDC_PAD_TEST_YML
             cpflags     : *CPFLAGS_WITH_HEADER_ZERO_PAD
             dcflags     : *DCFLAGS_WITH_HEADER_ZERO_PAD
 
