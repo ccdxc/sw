@@ -14,6 +14,7 @@ run "ln -s /usr/bin/python3.6 /usr/bin/python3"
 run "ln -s /usr/bin/pip3.6 /usr/bin/pip3"
 run "yum install -y epel-release"
 run "yum install -y nfs-utils nfs-utils-lib"
+run "yum install -y epel-release.noarch bash-completion.noarch" # For halctl bash-completion
 run "yum install -y centos-release-scl" # Needed by buildroot for newer "make" installed by devtoolset-7
 
 PIP2_PACKAGES = %w[
