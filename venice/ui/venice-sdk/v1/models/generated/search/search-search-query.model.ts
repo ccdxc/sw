@@ -93,9 +93,13 @@ export class SearchSearchQuery extends BaseModel implements ISearchSearchQuery {
         }
         if (values && values['categories'] != null) {
             this['categories'] = values['categories'];
+        } else if (fillDefaults && SearchSearchQuery.hasDefaultValue('categories')) {
+            this['categories'] = [ SearchSearchQuery.propInfo['categories'].default];
         }
         if (values && values['kinds'] != null) {
             this['kinds'] = values['kinds'];
+        } else if (fillDefaults && SearchSearchQuery.hasDefaultValue('kinds')) {
+            this['kinds'] = [ SearchSearchQuery.propInfo['kinds'].default];
         }
         if (values) {
             this['fields'].setValues(values['fields']);

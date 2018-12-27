@@ -231,7 +231,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   selectedIndexChangeEvent(event) {
     this.emitActiveTab(event);
     if (this.lazyRenderWrapper != null) {
-      this.lazyRenderWrapper.resizeTable()
+      this.lazyRenderWrapper.resizeTable();
     }
   }
 

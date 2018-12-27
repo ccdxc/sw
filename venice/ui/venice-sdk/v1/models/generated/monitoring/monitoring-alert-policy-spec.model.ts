@@ -150,6 +150,8 @@ export class MonitoringAlertPolicySpec extends BaseModel implements IMonitoringA
         }
         if (values && values['destinations'] != null) {
             this['destinations'] = values['destinations'];
+        } else if (fillDefaults && MonitoringAlertPolicySpec.hasDefaultValue('destinations')) {
+            this['destinations'] = [ MonitoringAlertPolicySpec.propInfo['destinations'].default];
         }
         this.setFormGroupValuesToBeModelValues();
     }

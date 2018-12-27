@@ -91,6 +91,8 @@ export class NetworkTLSServerPolicySpec extends BaseModel implements INetworkTLS
     setValues(values: any, fillDefaults = true): void {
         if (values && values['tls-server-certificates'] != null) {
             this['tls-server-certificates'] = values['tls-server-certificates'];
+        } else if (fillDefaults && NetworkTLSServerPolicySpec.hasDefaultValue('tls-server-certificates')) {
+            this['tls-server-certificates'] = [ NetworkTLSServerPolicySpec.propInfo['tls-server-certificates'].default];
         }
         if (values && values['client-authentication'] != null) {
             this['client-authentication'] = values['client-authentication'];
@@ -99,9 +101,13 @@ export class NetworkTLSServerPolicySpec extends BaseModel implements INetworkTLS
         }
         if (values && values['tls-server-trust-roots'] != null) {
             this['tls-server-trust-roots'] = values['tls-server-trust-roots'];
+        } else if (fillDefaults && NetworkTLSServerPolicySpec.hasDefaultValue('tls-server-trust-roots')) {
+            this['tls-server-trust-roots'] = [ NetworkTLSServerPolicySpec.propInfo['tls-server-trust-roots'].default];
         }
         if (values && values['tls-server-allowed-peer-id'] != null) {
             this['tls-server-allowed-peer-id'] = values['tls-server-allowed-peer-id'];
+        } else if (fillDefaults && NetworkTLSServerPolicySpec.hasDefaultValue('tls-server-allowed-peer-id')) {
+            this['tls-server-allowed-peer-id'] = [ NetworkTLSServerPolicySpec.propInfo['tls-server-allowed-peer-id'].default];
         }
         this.setFormGroupValuesToBeModelValues();
     }

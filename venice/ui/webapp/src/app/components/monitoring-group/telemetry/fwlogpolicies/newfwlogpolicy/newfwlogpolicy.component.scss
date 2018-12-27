@@ -1,0 +1,60 @@
+@import 'src/global-mixins';
+
+$horizontal-gutter: 10px;
+$vertical-gutter: 5px;
+
+.newfwlogpolicy-container {
+  background: white;
+  &:hover {
+      background: white;
+  }
+}
+
+.newfwlogpolicy-name {
+  margin: $vertical-gutter $horizontal-gutter;
+  height: 30px !important;
+}
+
+.newfwlogpolicy-content {
+  background: white;
+  min-height: 180px;
+  margin-top: 4* $vertical-gutter;
+  @include primary-font();
+}
+
+.newfwlogpolicy-text {
+    margin-top: 2*$vertical-gutter;
+    margin-left: $horizontal-gutter;
+    height: 30px;
+    @include primary-font();
+}
+
+.newfwlogpolicy-font  {
+    @include primary-font();
+}
+
+.newfwlogpolicy-border {
+  border-bottom: 6px solid #6ba0e5;
+  z-index: 100;
+}
+
+.newfwlogpolicy-divider {
+  border-bottom: 1px solid #dddddd;
+}
+
+.newfwlogpolicy-filter {
+  margin: $vertical-gutter $horizontal-gutter;
+  height: 30px !important;
+}
+
+.newfwlogpolicy-save, 
+.newfwlogpolicy-cancel {
+    display: inline-block;
+    padding: 4px 10px;
+    line-height: 25px;
+    margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
+}
+
+.newfwlogpolicy-buttoncontainer {
+    margin-top: 1.5 * $vertical-gutter;
+}

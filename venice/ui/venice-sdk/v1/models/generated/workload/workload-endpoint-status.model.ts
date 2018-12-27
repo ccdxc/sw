@@ -171,6 +171,8 @@ export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpoi
         }
         if (values && values['SecurityGroups'] != null) {
             this['SecurityGroups'] = values['SecurityGroups'];
+        } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('SecurityGroups')) {
+            this['SecurityGroups'] = [ WorkloadEndpointStatus.propInfo['SecurityGroups'].default];
         }
         if (values && values['micro-segment-vlan'] != null) {
             this['micro-segment-vlan'] = values['micro-segment-vlan'];

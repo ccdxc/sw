@@ -51,6 +51,8 @@ export class ClusterHostStatus extends BaseModel implements IClusterHostStatus {
     setValues(values: any, fillDefaults = true): void {
         if (values && values['admitted-smart-nics'] != null) {
             this['admitted-smart-nics'] = values['admitted-smart-nics'];
+        } else if (fillDefaults && ClusterHostStatus.hasDefaultValue('admitted-smart-nics')) {
+            this['admitted-smart-nics'] = [ ClusterHostStatus.propInfo['admitted-smart-nics'].default];
         }
         this.setFormGroupValuesToBeModelValues();
     }

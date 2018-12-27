@@ -63,6 +63,8 @@ export class SecuritySGPolicySpec extends BaseModel implements ISecuritySGPolicy
     setValues(values: any, fillDefaults = true): void {
         if (values && values['attach-groups'] != null) {
             this['attach-groups'] = values['attach-groups'];
+        } else if (fillDefaults && SecuritySGPolicySpec.hasDefaultValue('attach-groups')) {
+            this['attach-groups'] = [ SecuritySGPolicySpec.propInfo['attach-groups'].default];
         }
         if (values && values['attach-tenant'] != null) {
             this['attach-tenant'] = values['attach-tenant'];

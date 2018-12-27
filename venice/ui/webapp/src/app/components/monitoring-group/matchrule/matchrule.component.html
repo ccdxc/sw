@@ -1,0 +1,85 @@
+<div fxFlex="auto" fxLayout="row">
+  <div fxFlex="nogrow" fxLayout="column" [formGroup]="flowTarget">
+    <div fxFlex="noshrink" class="matchrule-syslog" fxLayout="column" formArrayName="match-rules"
+      >
+  <div fxFlex="auto" fxLayout="column" [@slideInOut] *ngFor="let rule of matchRules; let index = index; let first = first" [formGroupName]="index">
+      <div fxFlex="auto" fxLayout="row wrap" fxLayoutGap="10px">
+        <ng-container *ngTemplateOutlet="matchRule; context:{index:index}"></ng-container>
+          <div fxFlex="auto" fxLayout="row">
+          <div fxFlex="auto" fxLayout="row" fxLayoutAlign="start start">
+            <div fxFlex="20"></div>
+            <div fxFlex="auto" fxLayout="column" fxLayoutAlign="start end" class="matchrule-fieldtitle matchrule-and">
+              <span fxFlex="nogrow" *ngIf="first" (click)="addMatchRule()">+ AND</span>
+              <mat-icon fxFlex="nogrow" [style.color]="'#767676'" *ngIf="flowTarget.get(['match-rules']).length > 1"
+                (click)="deleteMatchRule(index)">delete</mat-icon>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div fxFlex="10px" class="matchrule-divider"></div> <!-- Buffer, creating as a div so there are no hiccups in the animation-->
+    </div>
+  </div>
+</div>
+
+<ng-template #matchRule let-index="index">
+  <div fxFlex="nogrow" fxLayout="row wrap" [formGroup]="flowTarget.get(['match-rules', index])">
+    <ng-container *ngTemplateOutlet="selector; context:{index: index, title:'source'}"></ng-container>
+    <ng-container *ngTemplateOutlet="selector; context:{index: index, title:'destination'}"></ng-container>
+    <div fxFlex="nogrow" fxLayout="column" >
+      <div fxFlex="10px"></div>
+      <div fxFlex="30px" class="matchrule-fieldtitle">APPS/PORTS</div>
+      <div class="matchrule-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+        <span>Apps:</span>
+      </div>
+      <div class="matchrule-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+        <span>Protocol/Ports:</span>
+      </div>
+    </div>
+    <div fxFlex="nogrow" fxLayout="column" formGroupName="app-protocol-selectors">
+        <div fxFlex="10px"></div>
+        <div fxFlex="30px" class="matchrule-fieldtitle"></div>
+        <div fxFlex="30px" fxLayout="row" class="matchrule-value">
+          <input fxFlex="nogrow" formControlName="applications" class="matchrule-input" spellcheck="false" type="text" pInputText
+            placeholder="">
+        </div>
+        <div fxFlex="30px" fxLayout="row" class="matchrule-value">
+          <input fxFlex="nogrow" formControlName="ports" class="matchrule-input" spellcheck="false" type="text" pInputText
+            placeholder="protocol/port...">
+        </div>
+    </div> 
+  </div>
+</ng-template>
+
+<ng-template #selector let-index="index" let-title="title">
+  <div fxFlex="nogrow" fxLayout="column">
+    <div fxFlex="10px"></div>
+    <div fxFlex="30px" class="matchrule-fieldtitle">{{ title.toUpperCase() }}</div>
+    <div class="matchrule-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+      <span>Endpoints:</span>
+    </div>
+    <div class="matchrule-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+      <span>IP Address:</span>
+    </div>
+    <div class="matchrule-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+      <span>MAC Address:</span>
+    </div>
+  </div>
+  <div fxFlex="nogrow" fxLayout="column" [formGroup]="flowTarget.get(['match-rules', index, title])">
+      <div fxFlex="10px"></div>
+      <div fxFlex="30px" class="matchrule-fieldtitle"></div>
+      <div fxFlex="30px" fxLayout="row" class="matchrule-value">
+        <input fxFlex="nogrow" formControlName="endpoints" class="matchrule-input" spellcheck="false" type="text" pInputText
+          placeholder="">
+      </div>
+      <div fxFlex="30px" fxLayout="row" class="matchrule-value">
+        <input fxFlex="nogrow" formControlName="ip-addresses" class="matchrule-input" spellcheck="false" type="text" pInputText
+          placeholder="">
+      </div>
+      <div fxFlex="30px" fxLayout="row" class="matchrule-value">
+        <input fxFlex="nogrow" formControlName="mac-addresses" class="matchrule-input" spellcheck="false" type="text" pInputText
+          placeholder="">
+      </div>
+  </div> 
+
+</ng-template>

@@ -8,6 +8,7 @@ import { MonitoringGroupComponent } from './monitoring-group.component';
 import { MonitoringRoutingModule } from './monitoring-group.route';
 import { TroubleshootingComponent } from './troubleshooting/troubleshooting.component';
 import { SyslogComponent } from './syslog/syslog.component';
+import { MatchruleComponent } from './matchrule/matchrule.component';
 
 
 
@@ -23,7 +24,7 @@ import { SyslogComponent } from './syslog/syslog.component';
     MaterialdesignModule,
     MonitoringRoutingModule
   ],
-  declarations: [TroubleshootingComponent, MonitoringGroupComponent, SyslogComponent],
-  exports: [TroubleshootingComponent, MonitoringGroupComponent, SyslogComponent]
+  declarations: [TroubleshootingComponent, MonitoringGroupComponent, SyslogComponent, MatchruleComponent],
+  exports: [TroubleshootingComponent, MonitoringGroupComponent, SyslogComponent, MatchruleComponent]
 })
 export class MonitoringGroupModule { }

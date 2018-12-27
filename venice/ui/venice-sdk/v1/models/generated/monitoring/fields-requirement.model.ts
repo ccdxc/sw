@@ -82,6 +82,8 @@ export class FieldsRequirement extends BaseModel implements IFieldsRequirement {
         }
         if (values && values['values'] != null) {
             this['values'] = values['values'];
+        } else if (fillDefaults && FieldsRequirement.hasDefaultValue('values')) {
+            this['values'] = [ FieldsRequirement.propInfo['values'].default];
         }
         this.setFormGroupValuesToBeModelValues();
     }

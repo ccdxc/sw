@@ -79,6 +79,8 @@ export class MonitoringMatchedRequirement extends BaseModel implements IMonitori
         }
         if (values && values['values'] != null) {
             this['values'] = values['values'];
+        } else if (fillDefaults && MonitoringMatchedRequirement.hasDefaultValue('values')) {
+            this['values'] = [ MonitoringMatchedRequirement.propInfo['values'].default];
         }
         if (values && values['observed-value'] != null) {
             this['observed-value'] = values['observed-value'];

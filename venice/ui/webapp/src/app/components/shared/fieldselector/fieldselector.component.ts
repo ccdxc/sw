@@ -41,7 +41,6 @@ export class FieldselectorComponent implements OnInit, OnChanges {
     } else {
       this.genFieldData();
     }
-    // this.convertArrayValuesToString();
   }
 
   ngOnChanges(changes: SimpleChanges) {

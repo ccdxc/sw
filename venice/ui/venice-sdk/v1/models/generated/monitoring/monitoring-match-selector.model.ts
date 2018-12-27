@@ -63,12 +63,18 @@ export class MonitoringMatchSelector extends BaseModel implements IMonitoringMat
     setValues(values: any, fillDefaults = true): void {
         if (values && values['endpoints'] != null) {
             this['endpoints'] = values['endpoints'];
+        } else if (fillDefaults && MonitoringMatchSelector.hasDefaultValue('endpoints')) {
+            this['endpoints'] = [ MonitoringMatchSelector.propInfo['endpoints'].default];
         }
         if (values && values['ip-addresses'] != null) {
             this['ip-addresses'] = values['ip-addresses'];
+        } else if (fillDefaults && MonitoringMatchSelector.hasDefaultValue('ip-addresses')) {
+            this['ip-addresses'] = [ MonitoringMatchSelector.propInfo['ip-addresses'].default];
         }
         if (values && values['mac-addresses'] != null) {
             this['mac-addresses'] = values['mac-addresses'];
+        } else if (fillDefaults && MonitoringMatchSelector.hasDefaultValue('mac-addresses')) {
+            this['mac-addresses'] = [ MonitoringMatchSelector.propInfo['mac-addresses'].default];
         }
         this.setFormGroupValuesToBeModelValues();
     }

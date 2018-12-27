@@ -61,9 +61,13 @@ export class MonitoringAppProtoSelector extends BaseModel implements IMonitoring
     setValues(values: any, fillDefaults = true): void {
         if (values && values['ports'] != null) {
             this['ports'] = values['ports'];
+        } else if (fillDefaults && MonitoringAppProtoSelector.hasDefaultValue('ports')) {
+            this['ports'] = [ MonitoringAppProtoSelector.propInfo['ports'].default];
         }
         if (values && values['applications'] != null) {
             this['applications'] = values['applications'];
+        } else if (fillDefaults && MonitoringAppProtoSelector.hasDefaultValue('applications')) {
+            this['applications'] = [ MonitoringAppProtoSelector.propInfo['applications'].default];
         }
         this.setFormGroupValuesToBeModelValues();
     }

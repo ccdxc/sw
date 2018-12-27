@@ -58,6 +58,8 @@ export class TechSupportRequestSpecNodeSelectorSpec extends BaseModel implements
     setValues(values: any, fillDefaults = true): void {
         if (values && values['names'] != null) {
             this['names'] = values['names'];
+        } else if (fillDefaults && TechSupportRequestSpecNodeSelectorSpec.hasDefaultValue('names')) {
+            this['names'] = [ TechSupportRequestSpecNodeSelectorSpec.propInfo['names'].default];
         }
         if (values) {
             this['labels'].setValues(values['labels']);

@@ -56,6 +56,8 @@ export class NetworkNetworkStatus extends BaseModel implements INetworkNetworkSt
     setValues(values: any, fillDefaults = true): void {
         if (values && values['workloads'] != null) {
             this['workloads'] = values['workloads'];
+        } else if (fillDefaults && NetworkNetworkStatus.hasDefaultValue('workloads')) {
+            this['workloads'] = [ NetworkNetworkStatus.propInfo['workloads'].default];
         }
         if (values && values['allocated-ipv4-addrs'] != null) {
             this['allocated-ipv4-addrs'] = values['allocated-ipv4-addrs'];

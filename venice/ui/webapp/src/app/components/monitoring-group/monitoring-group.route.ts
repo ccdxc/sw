@@ -1,20 +1,11 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { MonitoringGroupComponent } from './monitoring-group.component';
-import { TroubleshootingComponent } from './troubleshooting/troubleshooting.component';
 
 const routes: Routes = [
   {
     path: '',
-    redirectTo: 'troubleshooting',
+    redirectTo: 'alertsevents',
     pathMatch: 'full'
-  },
-  {
-    path: 'troubleshooting',
-    component: MonitoringGroupComponent,
-    children: [
-      { path: '', component: TroubleshootingComponent }
-    ]
   },
   {
     path: 'alertsevents',
@@ -22,6 +13,15 @@ const routes: Routes = [
       {
         path: '',
         loadChildren: '@app/components/monitoring-group/alertsevents/alertseventspage.module#AlertsEventsPageModule'
+      }
+    ]
+  },
+  {
+    path: 'telemetry',
+    children: [
+      {
+        path: '',
+        loadChildren: '@app/components/monitoring-group/telemetry/telemetry.module#TelemetryModule'
       }
     ]
   },

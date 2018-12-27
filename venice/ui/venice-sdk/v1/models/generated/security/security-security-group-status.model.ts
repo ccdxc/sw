@@ -57,9 +57,13 @@ export class SecuritySecurityGroupStatus extends BaseModel implements ISecurityS
     setValues(values: any, fillDefaults = true): void {
         if (values && values['workloads'] != null) {
             this['workloads'] = values['workloads'];
+        } else if (fillDefaults && SecuritySecurityGroupStatus.hasDefaultValue('workloads')) {
+            this['workloads'] = [ SecuritySecurityGroupStatus.propInfo['workloads'].default];
         }
         if (values && values['Policies'] != null) {
             this['Policies'] = values['Policies'];
+        } else if (fillDefaults && SecuritySecurityGroupStatus.hasDefaultValue('Policies')) {
+            this['Policies'] = [ SecuritySecurityGroupStatus.propInfo['Policies'].default];
         }
         this.setFormGroupValuesToBeModelValues();
     }

@@ -14,11 +14,11 @@ import { FormArray, FormGroup } from '@angular/forms';
 })
 export class SyslogComponent implements OnInit {
   @Input() syslogExport: IMonitoringSyslogExport;
+  @Input() showSyslogOptions: boolean = true;
+  @Input() formatOptions: SelectItem[] = Utility.convertEnumToSelectItem(MonitoringSyslogExport.propInfo['format'].enum);
   syslogServerForm: FormGroup;
 
   syslogOverrideOptions: SelectItem[] = Utility.convertEnumToSelectItem(MonitoringSyslogExportConfig.propInfo['facility-override'].enum);
-
-  syslogFormatOptions: SelectItem[] = Utility.convertEnumToSelectItem(MonitoringSyslogExport.propInfo['format'].enum);
 
   syslogCredentialOptions: SelectItem[] = Utility.convertEnumToSelectItem(MonitoringExternalCred.propInfo['auth-type'].enum);
 
@@ -42,7 +42,16 @@ export class SyslogComponent implements OnInit {
   }
 
   getValues(): IMonitoringSyslogExport {
-    return this.syslogServerForm.value;
+    // remove syslog configs if they are off
+    if (this.showSyslogOptions) {
+      return this.syslogServerForm.value;
+    } else {
+      const _ = Utility.getLodash();
+      // Cloning so that we don't change the form group object
+      const formValues = _.cloneDeep(this.syslogServerForm.value);
+      delete formValues.config;
+      return formValues;
+    }
   }
 
   getSelectedCredentialMethod(index: number): string {

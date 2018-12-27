@@ -187,6 +187,8 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
         }
         if (values && values['field-change-selector'] != null) {
             this['field-change-selector'] = values['field-change-selector'];
+        } else if (fillDefaults && ApiListWatchOptions.hasDefaultValue('field-change-selector')) {
+            this['field-change-selector'] = [ ApiListWatchOptions.propInfo['field-change-selector'].default];
         }
         if (values && values['from'] != null) {
             this['from'] = values['from'];

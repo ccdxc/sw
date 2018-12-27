@@ -78,6 +78,8 @@ export class Metrics_queryResultSeries extends BaseModel implements IMetrics_que
         }
         if (values && values['columns'] != null) {
             this['columns'] = values['columns'];
+        } else if (fillDefaults && Metrics_queryResultSeries.hasDefaultValue('columns')) {
+            this['columns'] = [ Metrics_queryResultSeries.propInfo['columns'].default];
         }
         if (values) {
             this.fillModelArray<ApiInterfaceSlice>(this, 'values', values['values'], ApiInterfaceSlice);

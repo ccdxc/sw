@@ -85,9 +85,13 @@ export class NetworkTLSClientPolicySpec extends BaseModel implements INetworkTLS
         }
         if (values && values['tls-client-trust-roots'] != null) {
             this['tls-client-trust-roots'] = values['tls-client-trust-roots'];
+        } else if (fillDefaults && NetworkTLSClientPolicySpec.hasDefaultValue('tls-client-trust-roots')) {
+            this['tls-client-trust-roots'] = [ NetworkTLSClientPolicySpec.propInfo['tls-client-trust-roots'].default];
         }
         if (values && values['tls-client-allowed-peer-id'] != null) {
             this['tls-client-allowed-peer-id'] = values['tls-client-allowed-peer-id'];
+        } else if (fillDefaults && NetworkTLSClientPolicySpec.hasDefaultValue('tls-client-allowed-peer-id')) {
+            this['tls-client-allowed-peer-id'] = [ NetworkTLSClientPolicySpec.propInfo['tls-client-allowed-peer-id'].default];
         }
         this.setFormGroupValuesToBeModelValues();
     }

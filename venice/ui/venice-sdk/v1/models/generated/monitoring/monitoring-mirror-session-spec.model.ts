@@ -104,6 +104,8 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
         }
         if (values && values['packet-filters'] != null) {
             this['packet-filters'] = values['packet-filters'];
+        } else if (fillDefaults && MonitoringMirrorSessionSpec.hasDefaultValue('packet-filters')) {
+            this['packet-filters'] = [ MonitoringMirrorSessionSpec.propInfo['packet-filters'].default];
         }
         this.setFormGroupValuesToBeModelValues();
     }

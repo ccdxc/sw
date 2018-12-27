@@ -54,6 +54,8 @@ export class SearchTextRequirement extends BaseModel implements ISearchTextRequi
     setValues(values: any, fillDefaults = true): void {
         if (values && values['text'] != null) {
             this['text'] = values['text'];
+        } else if (fillDefaults && SearchTextRequirement.hasDefaultValue('text')) {
+            this['text'] = [ SearchTextRequirement.propInfo['text'].default];
         }
         this.setFormGroupValuesToBeModelValues();
     }

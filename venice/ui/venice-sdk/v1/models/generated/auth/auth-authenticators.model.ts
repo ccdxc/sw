@@ -75,6 +75,8 @@ export class AuthAuthenticators extends BaseModel implements IAuthAuthenticators
     setValues(values: any, fillDefaults = true): void {
         if (values && values['authenticator-order'] != null) {
             this['authenticator-order'] = values['authenticator-order'];
+        } else if (fillDefaults && AuthAuthenticators.hasDefaultValue('authenticator-order')) {
+            this['authenticator-order'] = [ AuthAuthenticators.propInfo['authenticator-order'].default];
         }
         if (values) {
             this['ldap'].setValues(values['ldap']);
