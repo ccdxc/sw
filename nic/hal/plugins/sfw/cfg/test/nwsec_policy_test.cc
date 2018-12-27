@@ -365,9 +365,9 @@ TEST_F(nwsec_policy_test, test2)
     // Create nwsec
     rule_spec->set_rule_id(1);
     rule_spec->mutable_action()->set_sec_action(nwsec::SecurityAction::SECURITY_RULE_ACTION_ALLOW);
-    nwsec::AppData *app_data  = rule_spec->mutable_action()->add_app_data();
-    app_data->set_alg(nwsec::APP_SVC_FTP);
-    app_data->mutable_ftp_option_info()->set_allow_mismatch_ip_address(1);
+    nwsec::AppData app_data  = rule_spec->mutable_action()->app_data();
+    app_data.set_alg(nwsec::APP_SVC_FTP);
+    app_data.mutable_ftp_option_info()->set_allow_mismatch_ip_address(1);
     types::RuleMatch *match = rule_spec->mutable_match();
     match->set_protocol(types::IPPROTO_TCP);
 
@@ -381,9 +381,9 @@ TEST_F(nwsec_policy_test, test2)
     rule_spec = pol_spec.add_rule();
     rule_spec->set_rule_id(1);
     rule_spec->mutable_action()->set_sec_action(nwsec::SecurityAction::SECURITY_RULE_ACTION_ALLOW);
-    app_data  = rule_spec->mutable_action()->add_app_data();
-    app_data->set_alg(nwsec::APP_SVC_FTP);
-    app_data->mutable_ftp_option_info()->set_allow_mismatch_ip_address(1);
+    app_data  = rule_spec->mutable_action()->app_data();
+    app_data.set_alg(nwsec::APP_SVC_FTP);
+    app_data.mutable_ftp_option_info()->set_allow_mismatch_ip_address(1);
     match = rule_spec->mutable_match();
     match->set_protocol(types::IPPROTO_TCP);
 

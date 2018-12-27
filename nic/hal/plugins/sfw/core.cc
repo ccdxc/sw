@@ -300,7 +300,7 @@ sfw_exec(ctx_t& ctx)
 
     // security policy action
     flow_update_t flowupd = {type: FLOWUPD_ACTION};
-
+    match_rslt.idle_timeout = HAL_MAX_INACTIVTY_TIMEOUT;
     HAL_TRACE_DEBUG("In sfw_exec....");
 
 
@@ -350,6 +350,7 @@ sfw_exec(ctx_t& ctx)
             if (match_rslt.valid) {
                 flowupd.action  = match_rslt.action;
                 sfw_info->alg_proto = match_rslt.alg;
+                sfw_info->idle_timeout = match_rslt.idle_timeout;
                 memcpy(&sfw_info->alg_opts, &match_rslt.alg_opts, sizeof(alg_opts));
                 sfw_info->sfw_done = true;
                 HAL_TRACE_DEBUG("Match result: {}", match_rslt);
@@ -360,15 +361,13 @@ sfw_exec(ctx_t& ctx)
                     // queue as the flow doesnt really exist.
                     ctx.register_completion_handler(net_sfw_generate_reject_pkt);
                     ctx.set_ignore_session_create(true);
-                } else if (match_rslt.sfw_action == nwsec::SECURITY_RULE_ACTION_ALLOW) {
-#if SFW_IDLE_TIMEOUT_SUPPORT
-                    flow_update_t flowupd = {type: FLOWUPD_AGING_INFO;
+                } else {
+                    flow_update_t flowupd = {type: FLOWUPD_AGING_INFO};
                     flowupd.aging_info.idle_timeout = match_rslt.idle_timeout;
                     ret = ctx.update_flow(flowupd);
                     if (ret != HAL_RET_OK) {
                         HAL_TRACE_ERR("Failed to update aging action");
                     }
-#endif
                 }
             } else {
                 // ToDo ret value was ok but match_rslt.valid is 0

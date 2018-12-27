@@ -222,18 +222,26 @@ hal_handle_t fte_base_test::add_nwsec_policy(hal_handle_t vrfh, std::vector<fte_
         }
 
         if (rule.app.alg) {
-            nwsec::AppData *app_data = rule_spec->mutable_action()->add_app_data();
+            nwsec::AppData* app_data = rule_spec->mutable_action()->mutable_app_data();
             app_data->set_alg(rule.app.alg);
             if (rule.app.has_alg_opts) {
                 if (rule.app.alg == nwsec::APP_SVC_FTP) {
                     app_data->mutable_ftp_option_info()->set_allow_mismatch_ip_address(\
                                           rule.app.alg_opt.opt.ftp_opts.allow_mismatch_ip_address); 
                 } else if (rule.app.alg == nwsec::APP_SVC_SUN_RPC) {
-                    app_data->set_idle_timeout(\
-                                      rule.app.alg_opt.opt.sunrpc_opts.map_entry_timeout);
+                    for (uint8_t idx=0; idx<rule.app.alg_opt.opt.sunrpc_opts.programid_sz; idx++) {
+                        nwsec::AppData_RPCData *rpc_data = app_data->mutable_sun_rpc_option_info()->add_data();
+      
+                        rpc_data->set_program_id(rule.app.alg_opt.opt.sunrpc_opts.program_ids[idx].program_id);
+                        rpc_data->set_idle_timeout(rule.app.alg_opt.opt.sunrpc_opts.program_ids[idx].timeout); 
+                    }
                 } else if (rule.app.alg == nwsec::APP_SVC_MSFT_RPC) {
-                    app_data->set_idle_timeout(\
-                                      rule.app.alg_opt.opt.msrpc_opts.map_entry_timeout);
+                    for (uint8_t idx=0; idx<rule.app.alg_opt.opt.msrpc_opts.uuid_sz; idx++) {
+                        nwsec::AppData_RPCData *rpc_data = app_data->mutable_msrpc_option_info()->add_data();
+
+                        rpc_data->set_program_id(rule.app.alg_opt.opt.msrpc_opts.uuids[idx].program_id);
+                        rpc_data->set_idle_timeout(rule.app.alg_opt.opt.msrpc_opts.uuids[idx].timeout);
+                    }
                 } else if (rule.app.alg == nwsec::APP_SVC_DNS) {
                     app_data->mutable_dns_option_info()->set_drop_multi_question_packets(\
                                       rule.app.alg_opt.opt.dns_opts.drop_multi_question_packets);
@@ -241,8 +249,6 @@ hal_handle_t fte_base_test::add_nwsec_policy(hal_handle_t vrfh, std::vector<fte_
                                       rule.app.alg_opt.opt.dns_opts.drop_large_domain_name_packets);
                     app_data->mutable_dns_option_info()->set_drop_long_label_packets(\
                                       rule.app.alg_opt.opt.dns_opts.drop_long_label_packets);
-                    app_data->mutable_dns_option_info()->set_drop_multizone_packets(\
-                                      rule.app.alg_opt.opt.dns_opts.drop_multizone_packets);
                     app_data->mutable_dns_option_info()->set_max_msg_length(\
                                       rule.app.alg_opt.opt.dns_opts.max_msg_length);
                 }

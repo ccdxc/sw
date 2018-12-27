@@ -16,7 +16,7 @@
 #include "nic/hal/src/utils/rule_match.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
 
-
+#define MAX_UUID_SZ 128
 
 using sdk::lib::ht_ctxt_t;
 using acl::acl_ctx_t;
@@ -49,6 +49,11 @@ namespace hal {
 //      nwsec_policy_rules_t sharable between cfg and oper db
 //
 //
+
+typedef struct rpc_programid_ {
+    char     program_id[MAX_UUID_SZ];
+    uint32_t timeout;
+} rpc_programid_t;
 
 typedef struct nwsec_policy_appid_s {
     hal_spinlock_t      slock;              // Lock to protect this structure
@@ -320,11 +325,13 @@ typedef struct alg_options {
         } dns_opts;
 
         struct msrpc_options {
-            uint32_t map_entry_timeout;
+            uint8_t           uuid_sz;
+            rpc_programid_t  *uuids;
         } msrpc_opts;
 
         struct sunrpc_options {
-            uint32_t map_entry_timeout;
+            uint8_t           programid_sz;
+            rpc_programid_t  *program_ids;
         } sunrpc_opts;
         
         struct sip_options {
@@ -344,6 +351,7 @@ typedef struct fw_action_s {
     nwsec::LogAction         log_action;
     nwsec::ALGName           alg;
     alg_opts                 app_options;
+    uint32_t                 idle_timeout;
     //TBD:lseshan 
     //app_data_t               app_data;  Multiple app data - This should be
     //replaced by dllist_ctxt_t app_data

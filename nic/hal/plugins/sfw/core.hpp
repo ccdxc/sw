@@ -24,6 +24,7 @@ typedef struct sfw_info_s {
     bool            skip_sfw;
     bool            sfw_done;
     hal::alg_opts   alg_opts;
+    uint32_t        idle_timeout;
 } sfw_info_t;
 std::ostream& operator<<(std::ostream& os, const sfw_info_t& val);
 
@@ -35,6 +36,7 @@ typedef struct net_sfw_match_result_s {
     bool            log;
     SecurityAction  sfw_action;
     hal::rule_key_t rule_id;
+    uint32_t        idle_timeout;
 } net_sfw_match_result_t;
 std::ostream& operator<<(std::ostream& os, const net_sfw_match_result_t& val);
 
