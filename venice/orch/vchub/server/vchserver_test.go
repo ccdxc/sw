@@ -1086,6 +1086,11 @@ func TestVCPNwIF(t *testing.T) {
 	storeCh := make(chan defs.StoreMsg, 96)
 	vchStore := store.NewVCHStore(context.Background())
 	vchStore.Run(storeCh)
+	defer func() {
+		close(storeCh)
+		vchStore.WaitForExit()
+	}()
+
 	v1 := vcp.NewVCProbe(u1, storeCh)
 	time.Sleep(100 * time.Millisecond)
 	err = v1.Start()
@@ -1095,10 +1100,14 @@ func TestVCPNwIF(t *testing.T) {
 	}
 
 	v1.Run()
+	defer func() {
+		v1.Stop()
+	}()
 	AssertEventually(t, func() (bool, interface{}) {
 		ifMap := getExpectedNwIFs(t)
-		return checkNwIFList(ifMap) == nil, nil
-	}, "Default NwIFs", "50ms", "5s")
+		err := checkNwIFList(ifMap)
+		return err == nil, fmt.Sprintf("{ err : %s }", err)
+	}, "Default NwIFs", "1s", "2s")
 
 	// Add a new NwIF and verify
 	doneCh := make(chan bool)
@@ -1129,7 +1138,4 @@ func TestVCPNwIF(t *testing.T) {
 
 	}
 
-	v1.Stop()
-	close(storeCh)
-	vchStore.WaitForExit()
 }
