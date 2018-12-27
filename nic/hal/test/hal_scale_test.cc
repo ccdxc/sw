@@ -95,8 +95,8 @@ uint32_t     g_num_sessions = 0;
 uint32_t     g_batch_size = 1;
 
 enum {
-    SIM = 0,
-    HW  = 1,
+    PLATFORM_SIM = 0,
+    PLATFORM_HW  = 1,
 };
 
 class hal_client {
@@ -993,7 +993,7 @@ main (int argc, char** argv)
     uint64_t     vrf_id = 1, l2seg_id = 1, sg_id = 1, if_id = 2, nw_id = 1;
     std::string  svc_endpoint = hal_svc_endpoint_;
     int          oc;
-    uint32_t     target = HW, sip = 0, dip = 0;
+    uint32_t     target = PLATFORM_HW, sip = 0, dip = 0;
     uint16_t     sport_lo = 0, sport_hi = 0, dport_lo = 0, dport_hi = 0;
     uint32_t     num_sip = 1, num_dip = 1;
 
@@ -1084,9 +1084,9 @@ main (int argc, char** argv)
             break;
         case 't':
             if (!strcmp(optarg, "sim")) {
-                target = SIM;
+                target = PLATFORM_SIM;
             } else if (!strcmp(optarg, "hw")){
-                target = HW;
+                target = PLATFORM_HW;
             } else {
                 std::cout << "Invalid Argument" << std::endl;
                 return 0;
@@ -1132,7 +1132,7 @@ main (int argc, char** argv)
               << "Number of sessions to be created is " << g_num_sessions << std::endl
               << "Batch size is " << g_batch_size << std::endl;
 
-    if (target == SIM) {
+    if (target == PLATFORM_SIM) {
         setup_sim_config(hclient, vrf_id, l2seg_id, sg_id, if_id, nw_id, sip, dip);
     } else {
         // heimdall would have pushed the config already, just setup sessions
@@ -1142,7 +1142,7 @@ main (int argc, char** argv)
 
     if (g_no_cleanup) {
         return 0;
-    } else if (target == SIM) {
+    } else if (target == PLATFORM_SIM) {
         cleanup_sim_config(hclient, vrf_id, l2seg_id, sg_id, if_id, nw_id);
     }
 

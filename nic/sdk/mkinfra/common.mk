@@ -17,6 +17,18 @@ COMMON_GXX_FLAGS        := -fstack-protector \
                            -Wuninitialized \
                            -Wno-builtin-macro-redefined \
                            -MD
+ifeq ($(PLATFORM),haps)
+    COMMON_GXX_FLAGS        += -DHAPS
+endif
+
+ifeq ($(PLATFORM),hw)
+    COMMON_GXX_FLAGS        += -DHW
+endif
+
+ifeq ($(PLATFORM),sim)
+    COMMON_GXX_FLAGS        += -DSIM
+endif
+
 COMMON_GPP_FLAGS        := ${COMMON_GXX_FLAGS} --std=c++11
 COMMON_AR_FLAGS         := rcs
 COMMON_ARLIB_FLAGS      :=
