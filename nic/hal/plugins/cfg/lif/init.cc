@@ -33,9 +33,7 @@ lif_init (hal_cfg_t *hal_cfg)
 {
     program_info *pinfo = program_info::factory((hal_cfg->cfg_path +
                                                 "/gen/mpu_prog_info.json").c_str());
-    mpartition *mp = mpartition::factory((hal_cfg->cfg_path +
-                                         "/iris/hbm_mem.json").c_str(),
-                                         CAPRI_HBM_BASE);
+    mpartition *mp = mpartition::factory(CAPRI_HBM_BASE);
 
     HAL_ASSERT(pinfo && mp);
 

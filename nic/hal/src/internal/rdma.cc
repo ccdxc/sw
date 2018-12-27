@@ -18,8 +18,6 @@
 
 namespace hal {
 
-const static char *kHBMLabel = "rdma";
-const static uint32_t kHBMSizeKB = 128 * 1024;  // 128 MB
 const static uint32_t kAllocUnit = 4096;
 
 #define MAX_LIFS 2048                  // TODO: why are there multiple definitions of this ?? why not in some global file ??
@@ -29,24 +27,14 @@ RDMAManager *g_rdma_manager = nullptr;
 extern sdk::platform::capri::LIFManager *lif_manager();
 
 RDMAManager::RDMAManager() {
-  pd::pd_get_start_offset_args_t off_args = {0};
-  pd::pd_get_size_kb_args_t size_args = {0};
-  pd::pd_func_args_t pd_func_args = {0};
-
-  off_args.reg_name = kHBMLabel;
-  pd_func_args.pd_get_start_offset = &off_args;
-  pd::hal_pd_call(pd::PD_FUNC_ID_GET_START_OFFSET, &pd_func_args);
-  uint64_t hbm_addr = off_args.offset;
-
-  size_args.reg_name = kHBMLabel;
-  pd_func_args.pd_get_size_kb = &size_args;
-  pd::hal_pd_call(pd::PD_FUNC_ID_GET_REG_SIZE, &pd_func_args);
-  //assert(size_args.size == kHBMSizeKB);
-
-
-
-
+  sdk::platform::utils::mpartition *mp = lif_manager()->get_mpartition();
+  uint64_t hbm_addr = mp->start_addr("rdma");
+  uint32_t kHBMSizeKB = mp->size_kb("rdma");
   uint32_t num_units = (kHBMSizeKB * 1024) / kAllocUnit;
+
+  // Minimum 128 MB
+  HAL_ASSERT(kHBMSizeKB >= (128 * 1024));
+
   if (hbm_addr & 0xFFF) {
     // Not 4K aligned.
     hbm_addr = (hbm_addr + 0xFFF) & ~0xFFFULL;
@@ -1122,6 +1110,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     if_t         *hal_if = NULL;
     l2seg_t      *l2seg = NULL;
     oif_t        oif;
+    sdk::platform::utils::mpartition *mp = lif_manager()->get_mpartition();
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("PI-LIF:{}: RDMA QP Create for lif {}", __FUNCTION__, lif);
@@ -1391,12 +1380,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     HAL_TRACE_DEBUG("{}: LIF: {}: Writting initial RQCB State", __FUNCTION__, lif);
     lif_manager()->WriteQState(lif, Q_TYPE_RDMA_RQ, spec.qp_num(), (uint8_t *)rqcb_p, sizeof(rqcb_t));
 
-    pd::pd_get_start_offset_args_t off_args = {0};
-    pd::pd_func_args_t          pd_func_args = {0};
-    off_args.reg_name = "rdma-atomic-resource-addr";
-    pd_func_args.pd_get_start_offset = &off_args;
-    pd::hal_pd_call(pd::PD_FUNC_ID_GET_START_OFFSET, &pd_func_args);
-    rdma_atomic_res_addr = off_args.offset;
+    rdma_atomic_res_addr = mp->start_addr("rdma-atomic-resource-addr");
 
     rsp->set_api_status(types::API_STATUS_OK);
     rsp->set_rsq_base_addr(rsq_base_addr);
@@ -1862,6 +1846,7 @@ rdma_eq_create (RdmaEqSpec& spec, RdmaEqResponse *rsp)
     uint8_t      eqwqe_size;
     eqcb_t       eqcb;
     uint64_t     hbm_eq_intr_table_base;
+    sdk::platform::utils::mpartition *mp = lif_manager()->get_mpartition();
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("PI-LIF:{}: RDMA EQ Create for lif {}", __FUNCTION__, lif);
@@ -1891,12 +1876,7 @@ rdma_eq_create (RdmaEqSpec& spec, RdmaEqResponse *rsp)
 
     rsp->set_api_status(types::API_STATUS_OK);
     // Fill the EQ Interrupt address = Intr_table base + 8 bytes for each intr_num
-    pd::pd_get_start_offset_args_t off_args = {0};
-    pd::pd_func_args_t          pd_func_args = {0};
-    off_args.reg_name = "rdma-eq-intr-table";
-    pd_func_args.pd_get_start_offset = &off_args;
-    pd::hal_pd_call(pd::PD_FUNC_ID_GET_START_OFFSET, &pd_func_args);
-    hbm_eq_intr_table_base = off_args.offset;
+    hbm_eq_intr_table_base = mp->start_addr("rdma-eq-intr-table");
     HAL_ASSERT(hbm_eq_intr_table_base > 0);
     //eqcb.int_assert_addr = hbm_eq_intr_table_base + spec.int_num() * sizeof(uint8_t);
 
@@ -1925,6 +1905,7 @@ rdma_aq_create (RdmaAqSpec& spec, RdmaAqResponse *rsp)
     uint64_t     offset;
     uint64_t     rdma_atomic_res_addr;
     //uint64_t     offset_verify;
+    sdk::platform::utils::mpartition *mp = lif_manager()->get_mpartition();
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("PI-LIF:{}: RDMA AQ Create for lif {}", __FUNCTION__, lif);
@@ -1968,12 +1949,7 @@ rdma_aq_create (RdmaAqSpec& spec, RdmaAqResponse *rsp)
     HAL_TRACE_DEBUG("{}: QstateAddr = {:#x}\n", __FUNCTION__,
                     lif_manager()->GetLIFQStateAddr(lif, Q_TYPE_ADMINQ, spec.aq_num()));
 
-    pd::pd_get_start_offset_args_t off_args = {0};
-    pd::pd_func_args_t          pd_func_args = {0};
-    off_args.reg_name = "rdma-atomic-resource-addr";
-    pd_func_args.pd_get_start_offset = &off_args;
-    pd::hal_pd_call(pd::PD_FUNC_ID_GET_START_OFFSET, &pd_func_args);
-    rdma_atomic_res_addr = off_args.offset;
+    rdma_atomic_res_addr = mp->start_addr("rdma-atomic-resource-addr");
 
     rsp->set_rdma_atomic_res_addr(rdma_atomic_res_addr);
     rsp->set_api_status(types::API_STATUS_OK);

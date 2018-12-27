@@ -26,6 +26,7 @@
 #include "hal_client.hpp"
 #include "pd_client.hpp"
 #include "platform/src/lib/hal_api/include/print.hpp"
+#include "gen/platform/mem_regions.hpp"
 
 using namespace nicmgr;
 using namespace nicmgr_status_msgs;
@@ -40,6 +41,12 @@ using nicmgr_status_msgs::EthDeviceHostDownStatusMsg;
 using nicmgr_status_msgs::EthDeviceHostUpStatusMsg;
 
 extern class pciemgr *pciemgr;
+
+/**
+ * Memory Regions
+ */
+#define DEVCMD_BASE roundup(MEM_REGION_ADDR(DEVCMD), 4096)
+
 
 static uint8_t *
 memrev (uint8_t *block, size_t elnum)

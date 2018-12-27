@@ -18,8 +18,8 @@
 #include "nic/asic/capri/model/cap_ms/cap_ms_csr.h"
 #include "nic/asic/capri/model/cap_pcie/cap_pxb_csr.h"
 
-sdk::platform::utils::mpartition *g_mpartition;
 static uint32_t capri_freq = 0;
+static sdk::platform::utils::mpartition *mpart = NULL;
 
 static inline hal_ret_t
 cap_nx_block_write(uint32_t chip, uint64_t addr, int size,
@@ -58,13 +58,8 @@ cap_nx_read_pb_axi_cnt(int rd) { // 1=>rd , 0=> wr
 hal_ret_t
 capri_hbm_parse (std::string cfg_path, std::string pgm_name)
 {
-    std::string             full_path;
-
-    // makeup the full file path
-    full_path =  cfg_path + "/" + pgm_name + "/" + std::string("hbm_mem.json");
-    g_mpartition = sdk::platform::utils::mpartition::factory(full_path.c_str(),
-                                                             CAPRI_HBM_BASE);
-    if (!g_mpartition) {
+    mpart = sdk::platform::utils::mpartition::factory(CAPRI_HBM_BASE);
+    if (!mpart) {
         return HAL_RET_ERR;
     }
     return HAL_RET_OK;
@@ -73,37 +68,37 @@ capri_hbm_parse (std::string cfg_path, std::string pgm_name)
 hbm_addr_t
 get_hbm_base (void)
 {
-    return g_mpartition->base();
+    return mpart->base();
 }
 
 hbm_addr_t
 get_hbm_offset (const char *reg_name)
 {
-    return g_mpartition->start_offset(reg_name);
+    return mpart->start_offset(reg_name);
 }
 
 hbm_addr_t
 get_start_offset (const char *reg_name)
 {
-    return g_mpartition->start_addr(reg_name);
+    return mpart->start_addr(reg_name);
 }
 
 uint32_t
 get_size_kb (const char *reg_name)
 {
-    return g_mpartition->size_kb(reg_name);
+    return mpart->size_kb(reg_name);
 }
 
 mpartition_region_t *
 get_hbm_region (char *reg_name)
 {
-    return g_mpartition->region(reg_name);
+    return mpart->region(reg_name);
 }
 
 mpartition_region_t *
 get_hbm_region_by_address (uint64_t addr)
 {
-    return g_mpartition->region_by_address(addr);
+    return mpart->region_by_address(addr);
 }
 
 // for HW platform this is now done during uboot
@@ -116,13 +111,13 @@ reset_hbm_regions (capri_cfg_t *capri_cfg)
 
     if (capri_cfg && (capri_cfg->platform == platform_type_t::PLATFORM_TYPE_HAPS ||
                     capri_cfg->platform == platform_type_t::PLATFORM_TYPE_HW)) {
-        for (int i = 0; i < g_mpartition->num_regions(); i++) {
-            reg = g_mpartition->region(i);
+        for (int i = 0; i < mpart->num_regions(); i++) {
+            reg = mpart->region(i);
             if (reg->reset) {
                 if (capri_cfg->platform == platform_type_t::PLATFORM_TYPE_HAPS) {
                     // Reset only for haps
                     HAL_TRACE_DEBUG("Resetting {} hbm region", reg->mem_reg_name);
-                    hal::pd::asic_mem_write(g_mpartition->addr(reg->start_offset),
+                    hal::pd::asic_mem_write(mpart->addr(reg->start_offset),
                                             NULL, reg->size_kb * 1024);
                 } else if (capri_cfg->platform == platform_type_t::PLATFORM_TYPE_HW) {
                     /*
@@ -255,11 +250,11 @@ capri_hbm_cache_program_region (mpartition_region_t *reg,
     cap_pics_csr_t & pics_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pics_csr_t, 0, inst_id);
     if (slave) {
         pics_csr.picc.filter_addr_lo_s.data[filter_idx].read();
-        pics_csr.picc.filter_addr_lo_s.data[filter_idx].value(g_mpartition->addr(reg->start_offset) >> 6); //28 MSB bits only
+        pics_csr.picc.filter_addr_lo_s.data[filter_idx].value(mpart->addr(reg->start_offset) >> 6); //28 MSB bits only
         pics_csr.picc.filter_addr_lo_s.data[filter_idx].write();
 
         pics_csr.picc.filter_addr_hi_s.data[filter_idx].read();
-        pics_csr.picc.filter_addr_hi_s.data[filter_idx].value((g_mpartition->addr(reg->start_offset) +
+        pics_csr.picc.filter_addr_hi_s.data[filter_idx].value((mpart->addr(reg->start_offset) +
                                                  (reg->size_kb * 1024)) >> 6);
         pics_csr.picc.filter_addr_hi_s.data[filter_idx].write();
 
@@ -271,11 +266,11 @@ capri_hbm_cache_program_region (mpartition_region_t *reg,
 
     if (master) {
         pics_csr.picc.filter_addr_lo_m.data[filter_idx].read();
-        pics_csr.picc.filter_addr_lo_m.data[filter_idx].value(g_mpartition->addr(reg->start_offset) >> 6); //28 MSB bits only
+        pics_csr.picc.filter_addr_lo_m.data[filter_idx].value(mpart->addr(reg->start_offset) >> 6); //28 MSB bits only
         pics_csr.picc.filter_addr_lo_m.data[filter_idx].write();
 
         pics_csr.picc.filter_addr_hi_m.data[filter_idx].read();
-        pics_csr.picc.filter_addr_hi_m.data[filter_idx].value((g_mpartition->addr(reg->start_offset) +
+        pics_csr.picc.filter_addr_hi_m.data[filter_idx].value((mpart->addr(reg->start_offset) +
                                                  (reg->size_kb * 1024)) >> 6);
         pics_csr.picc.filter_addr_hi_m.data[filter_idx].write();
 
@@ -295,11 +290,11 @@ capri_hbm_cache_program_db (mpartition_region_t *reg,
     cap_wa_csr_t & wa_csr = CAP_BLK_REG_MODEL_ACCESS(cap_wa_csr_t, 0, 0);
 
     wa_csr.filter_addr_lo.data[filter_idx].read();
-    wa_csr.filter_addr_lo.data[filter_idx].value(g_mpartition->addr(reg->start_offset) >> 6); //28 MSB bits only
+    wa_csr.filter_addr_lo.data[filter_idx].value(mpart->addr(reg->start_offset) >> 6); //28 MSB bits only
     wa_csr.filter_addr_lo.data[filter_idx].write();
 
     wa_csr.filter_addr_hi.data[filter_idx].read();
-    wa_csr.filter_addr_hi.data[filter_idx].value((g_mpartition->addr(reg->start_offset) +
+    wa_csr.filter_addr_hi.data[filter_idx].value((mpart->addr(reg->start_offset) +
                                         (reg->size_kb * 1024)) >> 6);
     wa_csr.filter_addr_hi.data[filter_idx].write();
 
@@ -318,11 +313,11 @@ capri_hbm_cache_program_pcie (mpartition_region_t *reg,
     cap_pxb_csr_t & pxb_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pxb_csr_t, 0, 0);
 
     pxb_csr.filter_addr_lo.data[filter_idx].read();
-    pxb_csr.filter_addr_lo.data[filter_idx].value(g_mpartition->addr(reg->start_offset) >> 6); //28 MSB bits only
+    pxb_csr.filter_addr_lo.data[filter_idx].value(mpart->addr(reg->start_offset) >> 6); //28 MSB bits only
     pxb_csr.filter_addr_lo.data[filter_idx].write();
 
     pxb_csr.filter_addr_hi.data[filter_idx].read();
-    pxb_csr.filter_addr_hi.data[filter_idx].value((g_mpartition->addr(reg->start_offset) +
+    pxb_csr.filter_addr_hi.data[filter_idx].value((mpart->addr(reg->start_offset) +
                                         (reg->size_kb * 1024)) >> 6);
     pxb_csr.filter_addr_hi.data[filter_idx].write();
 
@@ -345,54 +340,54 @@ capri_hbm_cache_regions_init (void)
     uint32_t            p4plus_pcie_filter_idx = 0;
     uint32_t            p4plus_db_filter_idx = 0;
 
-    for (int i = 0; i < g_mpartition->num_regions(); i++) {
-        reg = g_mpartition->region(i);
-        if (reg->cache_pipe == sdk::platform::utils::MPARTITION_CACHE_PIPE_NONE) {
+    for (int i = 0; i < mpart->num_regions(); i++) {
+        reg = mpart->region(i);
+        if (is_region_cache_pipe_none(reg)) {
             continue;
         }
 
-        if (reg->cache_pipe & sdk::platform::utils::MPARTITION_CACHE_PIPE_P4IG) {
+        if (is_region_cache_pipe_p4_ig(reg)) {
             HAL_TRACE_DEBUG("Programming {} to P4IG cache(region 1), "
                             "start={} size={} index={}", reg->mem_reg_name,
-                            g_mpartition->addr(reg->start_offset), reg->size_kb, p4ig_filter_idx);
+                            mpart->addr(reg->start_offset), reg->size_kb, p4ig_filter_idx);
             capri_hbm_cache_program_region(reg, 1, p4ig_filter_idx, 1, 0);
             p4ig_filter_idx++;
         }
 
-        if (reg->cache_pipe & sdk::platform::utils::MPARTITION_CACHE_PIPE_P4EG) {
+        if (is_region_cache_pipe_p4_eg(reg)) {
             HAL_TRACE_DEBUG("Programming {} to P4EG cache(region 2), "
                             "start={} size={} index={}", reg->mem_reg_name,
-                            g_mpartition->addr(reg->start_offset), reg->size_kb, p4eg_filter_idx);
+                            mpart->addr(reg->start_offset), reg->size_kb, p4eg_filter_idx);
             capri_hbm_cache_program_region(reg, 2, p4eg_filter_idx, 1, 0);
             p4eg_filter_idx++;
         }
 
-        if (reg->cache_pipe & sdk::platform::utils::MPARTITION_CACHE_PIPE_P4PLUS_TXDMA) {
+        if (is_region_cache_pipe_p4plus_txdma(reg)) {
             HAL_TRACE_DEBUG("Programming {} to P4PLUS TXDMA cache(region 3), "
                             "start={} size={} index={}", reg->mem_reg_name,
-                            g_mpartition->addr(reg->start_offset), reg->size_kb, p4plus_txdma_filter_idx);
+                            mpart->addr(reg->start_offset), reg->size_kb, p4plus_txdma_filter_idx);
             capri_hbm_cache_program_region(reg, 3, p4plus_txdma_filter_idx, 1, 1);
             p4plus_txdma_filter_idx++;
         }
 
-        if (reg->cache_pipe & sdk::platform::utils::MPARTITION_CACHE_PIPE_P4PLUS_RXDMA) {
+        if (is_region_cache_pipe_p4plus_rxdma(reg)) {
             HAL_TRACE_DEBUG("Programming {} to P4PLUS RXDMA cache(region 0), "
                             "start={} size={} index={}", reg->mem_reg_name,
-                            g_mpartition->addr(reg->start_offset), reg->size_kb, p4plus_rxdma_filter_idx);
+                            mpart->addr(reg->start_offset), reg->size_kb, p4plus_rxdma_filter_idx);
             capri_hbm_cache_program_region(reg, 0, p4plus_rxdma_filter_idx, 1, 1);
             p4plus_rxdma_filter_idx++;
         }
 
-        if (reg->cache_pipe & sdk::platform::utils::MPARTITION_CACHE_PIPE_P4PLUS_PCIE_DB) {
+        if (is_region_cache_pipe_p4plus_pciedb(reg)) {
             HAL_TRACE_DEBUG("Programming {} to PCIE, "
                             "start={} size={} index={}", reg->mem_reg_name,
-                            g_mpartition->addr(reg->start_offset), reg->size_kb, p4plus_pcie_filter_idx);
+                            mpart->addr(reg->start_offset), reg->size_kb, p4plus_pcie_filter_idx);
             capri_hbm_cache_program_pcie(reg, p4plus_pcie_filter_idx);
             p4plus_pcie_filter_idx++;
 
             HAL_TRACE_DEBUG("Programming {} to Doorbell, "
                             "start={} size={} index={}", reg->mem_reg_name,
-                            g_mpartition->addr(reg->start_offset), reg->size_kb, p4plus_db_filter_idx);
+                            mpart->addr(reg->start_offset), reg->size_kb, p4plus_db_filter_idx);
             capri_hbm_cache_program_db(reg, p4plus_db_filter_idx);
             p4plus_db_filter_idx++;
         }

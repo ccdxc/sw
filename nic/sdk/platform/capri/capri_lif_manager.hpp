@@ -28,7 +28,7 @@ public:
     void set_program_info(program_info *pinfo);
     virtual int32_t GetPCOffset(const char *handle, const char *prog_name,
                                 const char *label, uint8_t *offset);
-
+    class mpartition *get_mpartition(void) { return mp_; }
 protected:
     virtual int32_t InitLIFQStateImpl(LIFQState *qstate, int cos);
     virtual int32_t ReadQStateImpl(

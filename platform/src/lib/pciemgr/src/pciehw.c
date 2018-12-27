@@ -17,7 +17,7 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 
-#include "platform/include/common/memregion.h"
+#include "gen/platform/mem_regions.hpp"
 #include "platform/src/lib/misc/include/misc.h"
 #include "platform/src/lib/misc/include/bdf.h"
 #include "platform/src/lib/pal/include/pal.h"
@@ -239,7 +239,7 @@ pciehw_memmap_hwmem(const pciehdev_initmode_t initmode)
 {
     pciehw_t *phw = pciehw_get();
     const char *pciehw_addr_env = getenv("PCIEHW_ADDR");
-    u_int64_t pciehw_pa = roundup(MEMREGION_PCIEMGR_PA, 1024*1024);
+    u_int64_t pciehw_pa = roundup(MEM_REGION_ADDR(PCIEMGR), 1024*1024);
     pciehw_mem_t *pciehwmem;
 
     if (pciehw_addr_env) {
@@ -247,9 +247,8 @@ pciehw_memmap_hwmem(const pciehdev_initmode_t initmode)
         pciesys_loginfo("$PCIEHW_ADDR override 0x%"PRIx64"\n", pciehw_pa);
     }
 
-    assert(MEMREGION_PCIEMGR_PA +
-           MEMREGION_PCIEMGR_SZ -
-           pciehw_pa >= sizeof(pciehw_mem_t));
+    assert((MEM_REGION_ADDR(PCIEMGR) + MEM_REGION_PCIEMGR_SIZE_KB * 1024 -
+           pciehw_pa) >= sizeof(pciehw_mem_t));
 
     pciehwmem = pal_mem_map(pciehw_pa, sizeof(pciehw_mem_t), MATTR_UNCACHED);
     if (pciehwmem == NULL) {
