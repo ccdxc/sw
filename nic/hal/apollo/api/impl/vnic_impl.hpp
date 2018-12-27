@@ -95,6 +95,8 @@ public:
                                   api_op_t api_op,
                                   obj_ctxt_t *obj_ctxt) override;
 
+    uint16_t hw_id(void) { return hw_id_; }
+
 private:
     /**< @brief    constructor */
     vnic_impl() {

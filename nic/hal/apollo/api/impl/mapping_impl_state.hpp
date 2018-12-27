@@ -38,13 +38,18 @@ public:
     ~mapping_impl_state();
 
 private:
+    HbmHash *local_ip_mapping_tbl(void) { return local_ip_mapping_tbl_; }
+    HbmHash *remote_vnic_mapping_rx_tbl(void) { return remote_vnic_mapping_rx_tbl_; }
+    HbmHash *remote_vnic_mapping_tx_tbl(void) { return remote_vnic_mapping_tx_tbl_; }
+    directmap *nat_tbl(void) { return nat_tbl_; }
     /**< mapping_impl class is friend of mapping_impl_state */
     friend class mapping_impl;
 
 private:
-    HbmHash    *local_ip_mapping_tbl_;
-    HbmHash    *remote_vnic_mapping_rx_tbl_;
-    HbmHash    *remote_vnic_mapping_tx_tbl_;
+    HbmHash      *local_ip_mapping_tbl_;
+    HbmHash      *remote_vnic_mapping_rx_tbl_;
+    HbmHash      *remote_vnic_mapping_tx_tbl_;
+    directmap    *nat_tbl_;
 };
 
 /** * @} */    // end of OCI_MAPPING_IMPL_STATE

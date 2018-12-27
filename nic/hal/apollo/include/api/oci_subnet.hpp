@@ -25,8 +25,8 @@
  * @brief Subnet Key
  */
 typedef struct oci_subnet_key_s {
-    oci_vcn_id_t vcn_id;    /**< VCN ID */
-    oci_subnet_id_t id;     /**< Subnet ID */
+    oci_vcn_id_t       vcn_id;    /**< VCN ID */
+    oci_subnet_id_t    id;        /**< Subnet ID */
 } __PACK__ oci_subnet_key_t;
 
 /**

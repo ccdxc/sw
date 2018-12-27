@@ -57,6 +57,8 @@ tep_impl::destroy(tep_impl *impl) {
  */
 sdk_ret_t
 tep_impl::alloc_resources(api_base *api_obj) {
+    // TODO: if directmap provides a way to reserve() we dont need this indexer
+    //       at all !!
     if (tep_impl_db()->tep_idxr()->alloc((uint32_t *)&hw_id_) !=
             sdk::lib::indexer::SUCCESS) {
         return sdk::SDK_RET_NO_RESOURCE;

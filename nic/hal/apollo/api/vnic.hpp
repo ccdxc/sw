@@ -218,6 +218,12 @@ public:
         return false;
     }
 
+    /**
+     * @brief     return impl instance of this vnic object
+     * @return    impl instance of the vnic object
+     */
+    impl_base *impl(void) { return impl_; }
+
 private:
     /**< @brief    constructor */
     vnic_entry();
@@ -240,7 +246,7 @@ private:
 private:
     oci_vnic_key_t    key_;        /**< vnic key */
     ht_ctxt_t         ht_ctxt_;    /**< hash table context */
-    impl_base        *impl_;       /**< impl object instance */
+    impl_base         *impl_;      /**< impl object instance */
 } __PACK__;
 
 /** @} */    // end of OCI_VNIC_ENTRY
