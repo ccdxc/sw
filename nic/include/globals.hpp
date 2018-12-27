@@ -19,7 +19,9 @@
 #define HAL_LIF_ID_NICMGR_ADMINQ           HAL_LIF_ID_NICMGR_MIN    // nicmgr's adminq
 
 // vrf id ranges
-#define NICMGR_VRF_ID_MIN                  1      // nicmgr vrf id range min
+#define HAL_VRF_ID_MIN                     1      // HAL vrf id range min
+#define HAL_VRF_ID_MAX                     16     // HAL vrf id range max
+#define NICMGR_VRF_ID_MIN                  17     // nicmgr vrf id range min
 #define NICMGR_VRF_ID_MAX                  64     // nicmgr vrf id range max
 #define NETAGENT_VRF_ID_MIN                65     // netagent vrf id range min
 
@@ -30,4 +32,3 @@
 #define NETAGENT_NWSEC_PROFILE_ID_MAX      255    // netagent security profile id max
 
 #endif    // __GLOBALS_HPP__
-

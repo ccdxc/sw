@@ -2,6 +2,7 @@
 #include <iostream>
 #include <grpc++/grpc++.h>
 
+#include "nic/include/globals.hpp"
 #include "vrf.hpp"
 
 using namespace std;
@@ -43,7 +44,7 @@ HalVrf::HalVrf(types::VrfType type, Uplink *uplink)
     this->type = type;
     this->uplink = uplink;
 
-    id += VRF_ID_BASE;
+    id += NICMGR_VRF_ID_MIN;
 
     NIC_LOG_DEBUG("HalVrf create id: {}", id);
 
