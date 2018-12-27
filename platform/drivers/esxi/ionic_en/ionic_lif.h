@@ -30,6 +30,7 @@ struct tx_stats {
         u64 drop;
         u64 linearize;
         u64 stop;
+        u64 wake;
         u64 no_csum;
         u64 csum;
         u64 crc32_csum;
@@ -53,6 +54,9 @@ struct rx_stats {
 
 struct qcq {
         vmk_uint32 ring_idx;
+        /* tx/rx_ring that associates with this qcq */
+        void *ring;
+
         void *base;
         dma_addr_t base_pa;
         unsigned int total_size;
@@ -65,6 +69,7 @@ struct qcq {
                 struct tx_stats tx;
                 struct rx_stats rx;
         } stats;
+
         unsigned int flags;
 };
 

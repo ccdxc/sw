@@ -41,7 +41,7 @@ enum ionic_en_ring_type{
 struct ionic_en_tx_ring {
         vmk_uint32                      ring_idx;
         vmk_uint32                      shared_q_data_idx;
-        struct ionic_en_priv_data       *priv_data;
+        struct ionic_en_uplink_handle   *uplink_handle;
         struct qcq                      *txqcq;
         vmk_NetPoll                     netpoll;
         vmk_Bool                        is_init;
@@ -51,7 +51,7 @@ struct ionic_en_tx_ring {
 struct ionic_en_rx_ring {
         vmk_uint32                      ring_idx;
         vmk_uint32                      shared_q_data_idx;
-        struct ionic_en_priv_data       *priv_data;
+        struct ionic_en_uplink_handle   *uplink_handle;
         struct qcq                      *rxqcq;
         vmk_NetPoll                     netpoll;
         vmk_UplinkQueueMACFilterInfo    mac_filter[IONIC_EN_MAX_FILTERS_PER_RX_Q];

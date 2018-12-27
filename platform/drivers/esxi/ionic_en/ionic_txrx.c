@@ -456,6 +456,8 @@ ionic_tx_unmap_frag(struct queue *q,
 static void ionic_tx_clean(struct queue *q, struct desc_info *desc_info,
                            struct cq_info *cq_info, void *cb_arg)
 {
+        struct qcq *qcq = q_to_qcq(q);
+        struct ionic_en_tx_ring *tx_ring = qcq->ring;
         struct txq_desc *desc = desc_info->desc;
         struct txq_sg_desc *sg_desc = desc_info->sg_desc;
         struct txq_sg_elem *elem = sg_desc->elems;
@@ -472,8 +474,14 @@ static void ionic_tx_clean(struct queue *q, struct desc_info *desc_info,
                                     elem->len,
                                     (vmk_IOA) elem->addr);
 
-        //where and how to release the packet
         if (VMK_LIKELY(pkt)) {
+                if (VMK_UNLIKELY(ionic_en_is_queue_stop(tx_ring->uplink_handle,
+                                                        tx_ring->shared_q_data_idx))) {
+                        ionic_en_txq_start(tx_ring->uplink_handle,
+                                           tx_ring->shared_q_data_idx,
+                                           VMK_TRUE);
+                        stats->wake++;
+                }
                 ionic_en_pkt_release(pkt, NULL);
                 stats->clean++;
         }
@@ -504,7 +512,7 @@ ionic_tx_netpoll(vmk_AddrCookie priv,
         vmk_Bool poll_again = VMK_TRUE;
         void *qcq = priv.ptr;
 
-//        ionic_err("ionic_tx_netpoll(), ring_idx: %d", ((struct qcq*)qcq)->ring_idx);
+        ionic_err("ionic_tx_netpoll(), ring_idx: %d", ((struct qcq*)qcq)->ring_idx);
 
 	polled = ionic_netpoll(budget, ionic_tx_service, qcq);
 
@@ -524,7 +532,7 @@ ionic_rx_netpoll(vmk_AddrCookie priv,
         void *qcq = priv.ptr;
         struct cq *cq = &((struct qcq *)qcq)->cq;
 
-//        ionic_err("ionic_rx_netpoll(), ring_idx: %d", ((struct qcq*)qcq)->ring_idx);
+        ionic_err("ionic_rx_netpoll(), ring_idx: %d", ((struct qcq*)qcq)->ring_idx);
 
         polled = ionic_netpoll(budget, ionic_rx_service, qcq);
 
@@ -1076,7 +1084,6 @@ ionic_pkt_header_parse(vmk_PktHandle *pkt,
 }
 
 
-
 static VMK_ReturnStatus
 ionic_tx_descs_needed(struct queue *q,
                       vmk_PktHandle *pkt,
@@ -1251,12 +1258,14 @@ ionic_en_tx_ring_init(vmk_uint32 ring_idx,
 
         tx_ring->ring_idx          = ring_idx;
         tx_ring->shared_q_data_idx = shared_q_data_idx;
-        tx_ring->priv_data         = priv_data;
+        tx_ring->uplink_handle     = &priv_data->uplink_handle;
         tx_ring->txqcq             = lif->txqcqs[ring_idx]; 
         tx_ring->netpoll           = lif->txqcqs[ring_idx]->netpoll;
 
         tx_ring->is_init           = VMK_TRUE;
         tx_ring->is_actived        = VMK_TRUE;
+
+        lif->txqcqs[ring_idx]->ring = tx_ring;
 
         ionic_en_txq_start(&priv_data->uplink_handle,
                            shared_q_data_idx,
@@ -1341,12 +1350,14 @@ ionic_en_rx_ring_init(vmk_uint32 ring_idx,
 
         rx_ring->ring_idx          = ring_idx;
         rx_ring->shared_q_data_idx = shared_q_data_idx;
-        rx_ring->priv_data         = priv_data;
+        rx_ring->uplink_handle     = uplink_handle;
         rx_ring->rxqcq             = lif->rxqcqs[ring_idx]; 
         rx_ring->netpoll           = lif->rxqcqs[ring_idx]->netpoll;
 
         rx_ring->is_init           = VMK_TRUE;
         rx_ring->is_actived        = VMK_TRUE;
+
+        lif->rxqcqs[ring_idx]->ring = rx_ring;
 
         ionic_en_rxq_start(uplink_handle, shared_q_data_idx);
 }

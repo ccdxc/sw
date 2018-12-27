@@ -1024,7 +1024,8 @@ ionic_en_rxq_start(struct ionic_en_uplink_handle *uplink_handle,  // IN
 {
         vmk_UplinkSharedQueueData *shared_q_data;
 
-        ionic_info("ionic_en_rxq_start() called");
+        ionic_info("ionic_en_rxq_start() called, shared_q_data_idx: %d",
+                   shared_q_data_idx);
 
         IONIC_EN_VALIDATE_SHARED_QUEUE_IDX(uplink_handle,
                                            shared_q_data_idx,
@@ -1054,6 +1055,7 @@ ionic_en_rxq_start(struct ionic_en_uplink_handle *uplink_handle,  // IN
 
         (uplink_handle->uplink_q_info.activeRxQueues)++;
 
+        ionic_info("shared idx: %d is actived", shared_q_data_idx);
 out:
         IONIC_EN_SHARED_AREA_END_WRITE(uplink_handle);
 }
@@ -1085,7 +1087,8 @@ ionic_en_rxq_quiesce(struct ionic_en_uplink_handle *uplink_handle,   // IN
 {
         vmk_UplinkSharedQueueData *shared_q_data;
 
-        ionic_info("ionic_en_rxq_quiesce() called");
+        ionic_info("ionic_en_rxq_quiesce() called, shared_q_data_idx: %d",
+                   shared_q_data_idx);
 
         IONIC_EN_VALIDATE_SHARED_QUEUE_IDX(uplink_handle,
                                            shared_q_data_idx,
@@ -1105,6 +1108,8 @@ ionic_en_rxq_quiesce(struct ionic_en_uplink_handle *uplink_handle,   // IN
 
         shared_q_data->state = VMK_UPLINK_QUEUE_STATE_STOPPED;
         (uplink_handle->uplink_q_info.activeRxQueues)--;
+
+        ionic_info("shared idx: %d is quiesced", shared_q_data_idx);
 
 out:
         IONIC_EN_SHARED_AREA_END_WRITE(uplink_handle);
@@ -1139,7 +1144,8 @@ ionic_en_txq_start(struct ionic_en_uplink_handle *uplink_handle,  // IN
 {
         vmk_UplinkSharedQueueData *shared_q_data;
 
-        ionic_info("ionic_en_txq_start() called, shared_idx: %d", shared_q_data_idx);
+        ionic_info("ionic_en_txq_start() called, shared_idx: %d",
+                   shared_q_data_idx);
 
         IONIC_EN_VALIDATE_SHARED_QUEUE_IDX(uplink_handle,
                                            shared_q_data_idx,
@@ -1165,8 +1171,9 @@ ionic_en_txq_start(struct ionic_en_uplink_handle *uplink_handle,  // IN
                 shared_q_data->activeFeatures |= VMK_UPLINK_QUEUE_FEAT_PAIR;
         }
 
-        ionic_info("shared idx: %d is actived", shared_q_data_idx);
         (uplink_handle->uplink_q_info.activeTxQueues)++;
+
+        ionic_info("shared idx: %d is actived", shared_q_data_idx);
 
 out:
         IONIC_EN_SHARED_AREA_END_WRITE(uplink_handle);
@@ -1206,6 +1213,9 @@ ionic_en_txq_quiesce(struct ionic_en_uplink_handle *uplink_handle,    // IN
 {
         vmk_UplinkSharedQueueData *shared_q_data;
 
+        ionic_info("ionic_en_txq_quiesce() called, shared_q_data_idx: %d",
+                   shared_q_data_idx);
+
         IONIC_EN_VALIDATE_SHARED_QUEUE_IDX(uplink_handle,
                                            shared_q_data_idx,
                                            VMK_UPLINK_QUEUE_TYPE_TX);
@@ -1226,6 +1236,7 @@ ionic_en_txq_quiesce(struct ionic_en_uplink_handle *uplink_handle,    // IN
         shared_q_data->state = VMK_UPLINK_QUEUE_STATE_STOPPED;
         (uplink_handle->uplink_q_info.activeTxQueues)--;
 
+        ionic_info("shared_q_data_idx: %d is quiesced", shared_q_data_idx);
 out:
         IONIC_EN_SHARED_AREA_END_WRITE(uplink_handle);
 

@@ -506,8 +506,6 @@ ionic_en_uplink_tx(vmk_AddrCookie driver_data,                    // IN
                 }
         }
 
-        vmk_CPUMemFenceWrite();
-
         return status;
 
 tx_ring_err:
@@ -756,8 +754,6 @@ ionic_en_uplink_stats_get(vmk_AddrCookie driver_data,             // IN
         struct ionic_en_priv_data *priv_data =
                 (struct ionic_en_priv_data *) driver_data.ptr;
         struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle; 
-
-        ionic_info("ionic_en_uplink_stats_get() called");
 
         VMK_ASSERT(stats);
 
@@ -1728,7 +1724,7 @@ ionic_en_uplink_init(struct ionic_en_priv_data *priv_data)         // IN
                 }
 
                 if (ionic_en_is_rss_q_idx(priv_data, i)) {
-                        queue_data->supportedFeatures |= VMK_UPLINK_QUEUE_FEAT_RSS;
+                        queue_data->supportedFeatures = VMK_UPLINK_QUEUE_FEAT_RSS;
                 }
 
                 if (i < uplink_q_info->maxRxQueues) {
