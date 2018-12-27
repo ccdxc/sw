@@ -1,6 +1,5 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include <atomic>
 #include "nic/sdk/include/sdk/thread.hpp"
 #include "nic/include/hal_pd.hpp"
 #include "nic/include/hal.hpp"

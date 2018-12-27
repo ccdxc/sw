@@ -5,7 +5,6 @@
 #include "nic/hal/pd/capri/capri.hpp"
 #include "nic/hal/pd/capri/capri_state.hpp"
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
-#include "nic/include/asic_pd.hpp"
 
 //------------------------------------------------------------------------------
 // (private) constructor method
