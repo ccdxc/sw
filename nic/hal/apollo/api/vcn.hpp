@@ -148,8 +148,11 @@ public:
         return false;
     }
 
-    // TODO: this is impl API
-    uint16_t hwid(void) { return hw_id_; }
+    /**
+     * @brief     return h/w index for this vcn
+     * @return    h/w table index for this vcn
+     */
+    uint16_t hw_id(void) { return hw_id_; }
 
 private:
     /**< @brief    constructor */
