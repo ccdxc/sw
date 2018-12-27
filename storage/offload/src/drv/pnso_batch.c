@@ -622,15 +622,41 @@ read_write_result_all_chains(struct batch_info *batch_info)
 	}
 }
 
+static void
+set_batch_page_cflag(struct batch_page *bp, uint16_t cflag)
+{
+	struct batch_page_entry *bpe;
+	uint32_t i;
+
+	for (i = 0; i < MAX_PAGE_ENTRIES; i++) {
+		bpe = GET_PAGE_ENTRY(bp, i);
+		if (!bpe->bpe_chain)
+			break;
+		bpe->bpe_chain->sc_flags |= cflag;
+	}
+}
+
+static void
+clear_batch_page_cflag(struct batch_page *bp, uint16_t cflag)
+{
+	struct batch_page_entry *bpe;
+	uint32_t i;
+
+	for (i = 0; i < MAX_PAGE_ENTRIES; i++) {
+		bpe = GET_PAGE_ENTRY(bp, i);
+		if (!bpe->bpe_chain)
+			break;
+		bpe->bpe_chain->sc_flags &= ~cflag;
+	}
+}
+
 static pnso_error_t
 execute_batch(struct batch_info *batch_info)
 {
 	pnso_error_t err = EINVAL;
 	struct service_chain *first_chain, *last_chain;
 	struct chain_entry *first_ce, *last_ce;
-	struct batch_page *bp;
-	struct batch_page_entry *bpe;
-	uint32_t idx, i;
+	uint32_t idx;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -642,20 +668,14 @@ execute_batch(struct batch_info *batch_info)
 		OSAL_LOG_DEBUG("ring DB batch idx: %d", idx);
 
 		/* ring DB first chain's first service within the mini-batch  */
+		set_batch_page_cflag(GET_PAGE(batch_info, idx), CHAIN_CFLAG_RANG_DB);
 		err = first_ce->ce_svc_info.si_ops.ring_db(
 				&first_ce->ce_svc_info);
 		if (err) {
+			clear_batch_page_cflag(GET_PAGE(batch_info, idx), CHAIN_CFLAG_RANG_DB);
 			OSAL_LOG_DEBUG("failed to ring service door bell! svc_type: %d err: %d",
 				       first_ce->ce_svc_info.si_type, err);
 			goto out;
-		}
-
-		/* mark all chains in page with RANG_DB flag */
-		bp = GET_PAGE(batch_info, idx);
-		for (i = idx; i < idx + MAX_PAGE_ENTRIES; i++) {
-			bpe = GET_PAGE_ENTRY(bp, i);
-			if (bpe->bpe_chain)
-				bpe->bpe_chain->sc_flags |= CHAIN_CFLAG_RANG_DB;
 		}
 
 		idx += MAX_PAGE_ENTRIES;

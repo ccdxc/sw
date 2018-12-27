@@ -807,6 +807,7 @@ chn_execute_chain(struct service_chain *chain)
 	pnso_error_t err = EINVAL;
 	struct per_core_resource *pcr = putil_get_per_core_resource();
 	struct chain_entry *ce_first, *ce_last;
+	bool is_sync_mode = (chain->sc_flags & CHAIN_CFLAG_MODE_SYNC) != 0;
 
 	PAS_DECL_HW_PERF();
 
@@ -819,27 +820,18 @@ chn_execute_chain(struct service_chain *chain)
 		goto out;
 
 	/* ring 'first' service door bell */
+	chain->sc_flags |= CHAIN_CFLAG_RANG_DB;
 	err = ce_first->ce_svc_info.si_ops.ring_db(&ce_first->ce_svc_info);
 	PAS_START_HW_PERF();
 	if (err) {
+		chain->sc_flags &= ~((uint16_t) CHAIN_CFLAG_RANG_DB);
 		OSAL_LOG_ERROR("failed to ring service door bell! svc_type: %d err: %d",
 			       ce_first->ce_svc_info.si_type, err);
 		PAS_END_HW_PERF(pcr);
 		goto out;
 	}
-	chain->sc_flags |= CHAIN_CFLAG_RANG_DB;
 
-	if ((chain->sc_flags & CHAIN_CFLAG_MODE_POLL) ||
-		(chain->sc_flags & CHAIN_CFLAG_MODE_ASYNC)) {
-		OSAL_LOG_DEBUG("in non-sync mode ... sc_flags: %d",
-				chain->sc_flags);
-		PAS_END_HW_PERF(pcr);
-		goto out;
-	}
-	PAS_START_HW_PERF();
-
-	if ((chain->sc_flags & CHAIN_CFLAG_MODE_POLL) ||
-		(chain->sc_flags & CHAIN_CFLAG_MODE_ASYNC)) {
+	if (!is_sync_mode) {
 		OSAL_LOG_DEBUG("in non-sync mode ... sc_flags: %d",
 				chain->sc_flags);
 		PAS_END_HW_PERF(pcr);
