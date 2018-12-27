@@ -1,3 +1,9 @@
+/*
+ * {C} Copyright 2018 Pensando Systems Inc.
+ * All rights reserved.
+ *
+ */
+
 #ifndef __PNSO_CPDC_CMN_H__
 #define __PNSO_CPDC_CMN_H__
 
@@ -120,4 +126,5 @@ pnso_error_t cpdc_setup_rmem_dst_blist(struct service_info *svc_info,
 
 void cpdc_teardown_rmem_dst_blist(struct service_info *svc_info);
 
+void cpdc_update_tags(struct service_info *svc_info);
 #endif /* __PNSO_CPDC_CMN_H__ */

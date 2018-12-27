@@ -1083,3 +1083,36 @@ cpdc_teardown_rmem_dst_blist(struct service_info *svc_info)
 	putil_put_interm_buf_list(svc_info);
 	pc_res_sgl_pdma_put(svc_info->si_pcr, svc_info->si_sgl_pdma);
 }
+
+void 
+cpdc_update_tags(struct service_info *svc_info)
+{
+	uint32_t orig_num_tags;
+	if (chn_service_deps_data_len_set_from_parent(svc_info)) {
+
+		/*
+		 * In debug mode, verify the padding adjustment in the dst SGL.
+		 *
+		 * CAUTION: it can be costly to invoke cpdc_sgl_total_len_get()
+		 * so do not call it outside of the DEBUG macro.
+		 */
+		OSAL_LOG_DEBUG("my data_len %u parent data_len %u",
+				cpdc_sgl_total_len_get(&svc_info->si_src_sgl),
+				chn_service_deps_data_len_get(svc_info));
+	}
+
+	orig_num_tags = svc_info->si_num_tags;
+	if((svc_info->si_type == PNSO_SVC_TYPE_HASH && 
+			svc_info->si_desc_flags & PNSO_HASH_DFLAG_PER_BLOCK) ||
+		 (svc_info->si_type == PNSO_SVC_TYPE_CHKSUM && 
+			svc_info->si_desc_flags & PNSO_CHKSUM_DFLAG_PER_BLOCK)) {
+		svc_info->si_num_tags = chn_service_deps_num_blks_get(svc_info);
+		OSAL_ASSERT(svc_info->si_num_tags >= 1);
+	} else
+		OSAL_ASSERT(svc_info->si_num_tags == 1);
+
+	OSAL_LOG_INFO("block_size: %d new num_tags: %d old num_tags: %d",
+			svc_info->si_block_size, 
+			svc_info->si_num_tags, orig_num_tags);
+	svc_info->tags_updated = true;
+}

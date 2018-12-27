@@ -1,20 +1,9 @@
 /*
- * Copyright 2017-2018 Pensando Systems, Inc.  All rights reserved.
- *
- * This program is free software; you may redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; version 2 of the License.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
- * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * {C} Copyright 2018 Pensando Systems Inc.
+ * All rights reserved.
  *
  */
+
 #define LINUXKPI_PARAM_PREFIX sonic_
 #include <linux/module.h>
 #ifndef __FreeBSD__
@@ -35,7 +24,7 @@
 
 MODULE_DESCRIPTION(DRV_DESCRIPTION);
 MODULE_AUTHOR("Pensando");
-MODULE_LICENSE("GPL");
+MODULE_LICENSE("Dual BSD/GPL");
 #ifndef __FreeBSD__
 MODULE_VERSION(DRV_VERSION);
 #else
@@ -158,8 +147,6 @@ static int sonic_dev_cmd_wait(struct sonic_dev *idev, unsigned long max_wait)
 			return 0;
 
 		wait = schedule_timeout_interruptible(HZ / 10);
-		if (wait > 0)
-			return -EINTR;
 
 	} while (time_after(time, jiffies));
 
