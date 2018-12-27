@@ -6,7 +6,7 @@
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
-#include "nic/hal/pd/capri/capri_tm_rw.hpp"
+#include "include/sdk/platform/capri/capri_tm_rw.hpp"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 #include "nic/hal/pd/iris/aclqos/qos_pd.hpp"
 
@@ -772,6 +772,7 @@ pd_pb_stats_get (pd_func_args_t *pd_func_args)
 {
     hal_ret_t              first_err_ret = HAL_RET_OK;
     hal_ret_t              ret = HAL_RET_OK;
+    sdk_ret_t              sdk_ret;
     pd_pb_stats_get_args_t *args = pd_func_args->pd_pb_stats_get;
     pd_system_args_t       *pd_sys_args = args->pd_sys_args;
     SystemResponse         *rsp = pd_sys_args->rsp;
@@ -785,7 +786,8 @@ pd_pb_stats_get (pd_func_args_t *pd_func_args)
     pb_stats = rsp->mutable_stats()->mutable_packet_buffer_stats();
 
     for (port = 0; port < TM_NUM_PORTS; port++) {
-        ret = capri_tm_get_pb_debug_stats(port, &debug_stats, reset);
+        sdk_ret = capri_tm_get_pb_debug_stats(port, &debug_stats, reset);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to get pb debug stats for port {} ret {}",
                           port, ret);
@@ -842,13 +844,15 @@ pd_pb_stats_clear (pd_func_args_t *pd_func_args)
 {
     hal_ret_t              first_err_ret = HAL_RET_OK;
     hal_ret_t              ret = HAL_RET_OK;
+    sdk_ret_t              sdk_ret;
     unsigned               port;
     bool                   reset = true;
 
     HAL_TRACE_DEBUG("Clearing PB stats");
 
     for (port = 0; port < TM_NUM_PORTS; port++) {
-        ret = capri_tm_get_pb_debug_stats(port, NULL, reset);
+        sdk_ret = capri_tm_get_pb_debug_stats(port, NULL, reset);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to clear pb debug stats for port {} ret {}",
                           port, ret);

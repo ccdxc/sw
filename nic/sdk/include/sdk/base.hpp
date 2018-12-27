@@ -168,11 +168,23 @@ SDK_DEFINE_ENUM(sdk_ret_t, SDK_RET_ENTRIES)
 SDK_DEFINE_ENUM_TO_STR(sdk_ret_t, SDK_RET_ENTRIES)
 #undef SDK_RET_ENTRIES
 
+typedef enum sdk_status_e {
+    SDK_STATUS_NONE,
+    SDK_STATUS_ASIC_INIT_DONE,
+    SDK_STATUS_MEM_INIT_DONE,
+    SDK_STATUS_PACKET_BUFFER_INIT_DONE,
+    SDK_STATUS_DATA_PLANE_INIT_DONE,
+    SDK_STATUS_SCHEDULER_INIT_DONE,
+    SDK_STATUS_UP
+} sdk_status_t;
+#define INVALID_INDEXER_INDEX                        0xFFFFFFFF
+
 }    // namespace sdk
 
 using sdk::sdk_ret_t;
 using sdk::SDK_RET_OK;
 using sdk::SDK_RET_ERR;
+using sdk::sdk_status_t;
 
 #endif    // __SDK_BASE_HPP__
 

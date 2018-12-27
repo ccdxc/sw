@@ -1,7 +1,7 @@
 #ifndef __CAPRI_H
 #define __CAPRI_H
 
-#include "capri_common.h"
+#include "nic/sdk/include/sdk/platform/capri/capri_common.hpp"
 
 #define CAPRI_NUM_STAGES    8
 #define CAPRI_STAGE_FIRST   0

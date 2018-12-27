@@ -5,9 +5,11 @@
 #include "nic/hal/pd/iris/nw/if_pd.hpp"
 #include "nic/hal/pd/iris/nw/uplinkpc_pd.hpp"
 #include "nic/hal/pd/iris/nw/uplinkif_pd.hpp"
-#include "nic/hal/pd/capri/capri_tm_rw.hpp"
+#include "include/sdk/platform/capri/capri_tm_rw.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/hal/pd/iris/nw/l2seg_pd.hpp"
+
+using namespace sdk::platform::capri;
 
 namespace hal {
 namespace pd {
@@ -558,6 +560,7 @@ uplinkpc_pd_pgm_tm_register_per_upif(pd_uplinkpc_t *pd_uppc,
                                      pd_uplinkif_t *pd_upif, bool add)
 {
     hal_ret_t                   ret = HAL_RET_OK;
+    sdk_ret_t                   sdk_ret;
     uint8_t                     tm_oport = 0;
     if_t                        *pi_if = NULL;
     uint32_t                    hw_lif_id = 0;
@@ -573,7 +576,8 @@ uplinkpc_pd_pgm_tm_register_per_upif(pd_uplinkpc_t *pd_uppc,
     }
     tm_oport = uplinkif_get_port_num((if_t *)(pd_upif->pi_if));
 
-    ret = capri_tm_uplink_lif_set(tm_oport, hw_lif_id);
+    sdk_ret = capri_tm_uplink_lif_set(tm_oport, hw_lif_id);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("if_id:{} unable to program for if_id",
                       if_get_if_id(pi_if));

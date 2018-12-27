@@ -11,19 +11,11 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <stdint.h>
-#ifndef P4PD_CLI
 #include "nic/include/base.hpp"
-#endif
-#include "nic/hal/pd/capri/capri.hpp"
+#include "include/sdk/platform/capri/capri_cfg.hpp"
 
 #define CAPRI_P4_NUM_STAGES     6
 #define CAPRI_P4PLUS_NUM_STAGES 8
-
-// Capri core-clock frequencies
-#define CORECLK_FREQ_ASIC_00        1093750000  /* 1093.750MHz (precise) */
-#define CORECLK_FREQ_ASIC_01         957031250  /*  957.031MHz (precise) */
-#define CORECLK_FREQ_ASIC_10         833333333  /*  833.333MHz (precise) */
-#define CORECLK_FREQ_ASIC_11         750250000  /*  750.250MHz (precise) */
 
 #define CAPRI_OK (0)
 #define CAPRI_FAIL (-1)
@@ -172,6 +164,4 @@ uint8_t capri_get_action_pc(uint32_t tableid, uint8_t actionid);
 
 bool p4plus_invalidate_cache(uint64_t addr, uint32_t size_in_bytes,
                              p4plus_cache_action_t action);
-
-
 #endif

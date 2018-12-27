@@ -1,6 +1,11 @@
-#ifndef __P4_COMMON_CAPRI_H__
-#define __P4_COMMON_CAPRI_H__
+#ifndef __CAPRI_P4_HPP__
+#define __CAPRI_P4_HPP__
 
+#ifdef __cplusplus
+namespace sdk {
+namespace platform {
+namespace capri {
+#endif
 /*****************************************************************************/
 /* TM port values                                                            */
 /*****************************************************************************/
@@ -47,5 +52,11 @@
 /* TM reserved queues                                                        */
 /*****************************************************************************/
 #define TM_P4_RECIRC_QUEUE             23 /* Recirc queue in the P4 ports */
+
+#ifdef __cplusplus
+} // namespace capri
+} // namespace platform
+} // namespace sdk
+#endif
 
 #endif

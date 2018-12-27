@@ -3,22 +3,22 @@
 #include "nic/include/base.hpp"
 #include "nic/include/hal_mem.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
-#include "nic/hal/pd/capri/capri.hpp"
+#include "include/sdk/platform/capri/capri_cfg.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_config.hpp"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
-#include "nic/hal/pd/capri/capri_tm_rw.hpp"
-#include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
+#include "include/sdk/platform/capri/capri_tm_rw.hpp"
+#include "include/sdk/platform/capri/capri_txs_scheduler.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/hal/svc/hal_ext.hpp"
 #include "nic/include/asic_pd.hpp"
 #include "nic/sdk/asic/rw/asicrw.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
-#include "nic/hal/pd/capri/capri_pxb_pcie.hpp"
-#include "nic/hal/pd/capri/capri_state.hpp"
+#include "include/sdk/platform/capri/capri_pxb_pcie.hpp"
+#include "include/sdk/platform/capri/capri_state.hpp"
 #include "nic/hal/pd/capri/capri_sw_phv.hpp"
 #include "nic/hal/pd/capri/capri_barco_crypto.hpp"
-#include "nic/include/capri_common.h"
+#include "include/sdk/platform/capri/capri_common.hpp"
 #include "nic/asic/capri/verif/apis/cap_npv_api.h"
 #include "nic/asic/capri/verif/apis/cap_dpa_api.h"
 #include "nic/asic/capri/verif/apis/cap_pics_api.h"
@@ -34,10 +34,11 @@
 #include "nic/asic/capri/model/cap_prd/cap_prd_csr.h"
 #include "nic/asic/capri/model/utils/cap_csr_py_if.h"
 
-class capri_state_pd *g_capri_state_pd;
 uint64_t capri_hbm_base;
 uint64_t hbm_repl_table_offset;
 uint32_t capri_coreclk_freq; //Mhz
+
+using namespace sdk::platform::capri;
 
 /* capri_default_config_init
  * Load any bin files needed for initializing default configs
@@ -424,11 +425,16 @@ static hal_ret_t
 capri_init (capri_cfg_t *cfg)
 {
     hal_ret_t    ret;
+    sdk_ret_t    sdk_ret;
 
     HAL_ASSERT_TRACE_RETURN((cfg != NULL), HAL_RET_INVALID_ARG, "Invalid cfg");
     HAL_TRACE_DEBUG("Initializing Capri");
 
-    g_capri_state_pd = capri_state_pd::factory();
+    ret = capri_hbm_parse(cfg->cfg_path, cfg->pgm_name);
+    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+                            "Capri HBM parse init failure, err : {}", ret);
+
+    g_capri_state_pd = sdk::platform::capri::capri_state_pd::factory();
     HAL_ASSERT_TRACE_RETURN((g_capri_state_pd != NULL), HAL_RET_INVALID_ARG,
                             "Failed to instantiate Capri PD");
 
@@ -450,7 +456,8 @@ capri_init (capri_cfg_t *cfg)
                             "Capri cache init failure, err : {}", ret);
 
     // do asic init before overwriting with the default configs
-    ret = capri_tm_asic_init();
+    sdk_ret = capri_tm_asic_init();
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
                             "Capri TM ASIC init failure, err : {}", ret);
 
@@ -461,7 +468,8 @@ capri_init (capri_cfg_t *cfg)
                                 ret);
     }
 
-    ret = capri_txs_scheduler_init(cfg->admin_cos, cfg);
+    sdk_ret = capri_txs_scheduler_init(cfg->admin_cos, cfg);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
                             "Capri scheduler init failure, err : {}", ret);
 
@@ -469,12 +477,14 @@ capri_init (capri_cfg_t *cfg)
     // This will be done by PCIe manager for the actual chip
     if (cfg->platform == platform_type_t::PLATFORM_TYPE_SIM ||
         cfg->platform == platform_type_t::PLATFORM_TYPE_RTL) {
-        ret = capri_pxb_pcie_init();
+        sdk_ret_t sret = capri_pxb_pcie_init();
+        ret = hal_sdk_ret_to_hal_ret(sret);
         HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
                                 "PXB/PCIE init failure, err : {}", ret);
     }
 
-    ret = capri_tm_init(cfg->catalog);
+    sdk_ret = capri_tm_init(cfg->catalog);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
                             "Capri TM init failure, err : {}", ret);
 
@@ -513,12 +523,6 @@ capri_init (capri_cfg_t *cfg)
 namespace hal {
 namespace pd {
 
-static hal_ret_t
-asic_hbm_parse (asic_cfg_t *cfg)
-{
-    return hal_sdk_ret_to_hal_ret(capri_hbm_parse(cfg->cfg_path, cfg->pgm_name));
-}
-
 //------------------------------------------------------------------------------
 // perform all the CAPRI specific initialization
 //------------------------------------------------------------------------------
@@ -529,8 +533,6 @@ asic_init (asic_cfg_t *cfg)
     capri_cfg_t    capri_cfg;
 
     HAL_ASSERT(cfg != NULL);
-    ret = asic_hbm_parse(cfg);
-    HAL_ASSERT(ret == HAL_RET_OK);
 
     capri_cfg.loader_info_file = cfg->loader_info_file;
     capri_cfg.default_config_dir = cfg->default_config_dir;
@@ -556,6 +558,7 @@ asic_init (asic_cfg_t *cfg)
         capri_cfg.asm_cfg[i].sort_func =
             cfg->asm_cfg[i].sort_func;
     }
+    capri_cfg.completion_func = cfg->completion_func;
     ret = capri_init(&capri_cfg);
     if (ret == HAL_RET_OK) {
         return SDK_RET_OK;

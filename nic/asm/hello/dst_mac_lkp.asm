@@ -1,7 +1,7 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
-#include "../../../p4/common/capri.h"
-#include "../../../p4/common/defines.h"
+#include "sdk/include/sdk/platform/capri/capri_p4.h"
+#include "p4/common/defines.h"
 
 struct dst_mac_lkp_k    k;
 struct dst_mac_lkp_d    d;

@@ -12,7 +12,7 @@
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "gen/p4gen/gft/include/p4pd.h"
 #include "nic/p4/gft/include/defines.h"
-#include "nic/hal/pd/capri/capri_tm_rw.hpp"
+#include "include/sdk/platform/capri/capri_tm_rw.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 #include "nic/hal/pd/asic_pd.hpp"
 
@@ -1466,6 +1466,8 @@ TEST_F(gft_test, test1) {
     cfg.asm_cfg[0].name = std::string("gft");
     cfg.asm_cfg[0].path = std::string("asm_bin");
     cfg.asm_cfg[0].base_addr = std::string(JP4_PRGM);
+
+    cfg.completion_func = NULL;
 
     ret = hal::pd::asic_init(&cfg);
     ASSERT_EQ(ret, SDK_RET_OK);

@@ -142,9 +142,9 @@ qos_class_pd_alloc_queues (pd_qos_class_t *pd_qos_class)
     // Allocate queues in all the ports
 
     if (qos_group == QOS_GROUP_SPAN) {
-        pd_qos_class->p4_eg_q[HAL_PD_QOS_IQ_COMMON] = HAL_TM_P4_SPAN_QUEUE;
+        pd_qos_class->p4_eg_q[HAL_PD_QOS_IQ_COMMON] = CAPRI_TM_P4_SPAN_QUEUE;
     } else if (qos_group == QOS_GROUP_CPU_COPY) {
-        pd_qos_class->p4_eg_q[HAL_PD_QOS_IQ_COMMON] = HAL_TM_P4_CPU_COPY_QUEUE;
+        pd_qos_class->p4_eg_q[HAL_PD_QOS_IQ_COMMON] = CAPRI_TM_P4_CPU_COPY_QUEUE;
     } else {
         // Allocate the iqs first in uplink and txdma
         if (q_alloc_params.cnt_uplink_iq) {
@@ -155,11 +155,11 @@ qos_class_pd_alloc_queues (pd_qos_class_t *pd_qos_class)
             }
 
             pd_qos_class->p4_ig_q[HAL_PD_QOS_IQ_RX] =
-                HAL_TM_P4_UPLINK_IQ_OFFSET + pd_qos_class->uplink.iq;
-            if (pd_qos_class->p4_ig_q[HAL_PD_QOS_IQ_RX] == HAL_TM_P4_SPAN_QUEUE) {
-                pd_qos_class->p4_eg_q[HAL_PD_QOS_IQ_RX] = HAL_TM_P4_EG_UPLINK_SPAN_QUEUE_REPLACEMENT;
-            } else if (pd_qos_class->p4_ig_q[HAL_PD_QOS_IQ_RX] == HAL_TM_P4_CPU_COPY_QUEUE) {
-                pd_qos_class->p4_eg_q[HAL_PD_QOS_IQ_RX] = HAL_TM_P4_EG_UPLINK_CPU_COPY_QUEUE_REPLACEMENT;
+                CAPRI_TM_P4_UPLINK_IQ_OFFSET + pd_qos_class->uplink.iq;
+            if (pd_qos_class->p4_ig_q[HAL_PD_QOS_IQ_RX] == CAPRI_TM_P4_SPAN_QUEUE) {
+                pd_qos_class->p4_eg_q[HAL_PD_QOS_IQ_RX] = CAPRI_TM_P4_EG_UPLINK_SPAN_QUEUE_REPLACEMENT;
+            } else if (pd_qos_class->p4_ig_q[HAL_PD_QOS_IQ_RX] == CAPRI_TM_P4_CPU_COPY_QUEUE) {
+                pd_qos_class->p4_eg_q[HAL_PD_QOS_IQ_RX] = CAPRI_TM_P4_EG_UPLINK_CPU_COPY_QUEUE_REPLACEMENT;
             } else {
                 pd_qos_class->p4_eg_q[HAL_PD_QOS_IQ_RX] = pd_qos_class->p4_ig_q[HAL_PD_QOS_IQ_RX];
             }
@@ -197,7 +197,7 @@ qos_class_pd_alloc_queues (pd_qos_class_t *pd_qos_class)
             if (rs != indexer::SUCCESS) {
                 return HAL_RET_NO_RESOURCE;
             }
-            pd_qos_class->dest_oq += HAL_TM_RXDMA_OQ_OFFSET;
+            pd_qos_class->dest_oq += CAPRI_TM_RXDMA_OQ_OFFSET;
         }
     }
 
@@ -249,9 +249,9 @@ qos_class_pd_dealloc_res (pd_qos_class_t *pd_qos_class)
         if (pd_qos_class->dest_oq_type == HAL_PD_QOS_OQ_COMMON) {
             g_hal_state_pd->qos_common_oq_idxr()->free(pd_qos_class->dest_oq);
         } else {
-            HAL_ASSERT(pd_qos_class->dest_oq >= HAL_TM_RXDMA_OQ_OFFSET);
+            HAL_ASSERT(pd_qos_class->dest_oq >= CAPRI_TM_RXDMA_OQ_OFFSET);
             g_hal_state_pd->qos_rxdma_oq_idxr()->free(
-                pd_qos_class->dest_oq - HAL_TM_RXDMA_OQ_OFFSET);
+                pd_qos_class->dest_oq - CAPRI_TM_RXDMA_OQ_OFFSET);
         }
     }
     return HAL_RET_OK;
@@ -300,6 +300,7 @@ static hal_ret_t
 program_oq (tm_port_t port, tm_q_t oq, qos_class_t *qos_class)
 {
     hal_ret_t ret = HAL_RET_OK;
+    sdk_ret_t sdk_ret;
     tm_queue_node_params_t q_node_params = {};
     tm_q_t parent_node = 0;
 
@@ -320,8 +321,9 @@ program_oq (tm_port_t port, tm_q_t oq, qos_class_t *qos_class)
     }
 
     // Update the oq config
-    ret = capri_tm_scheduler_map_update(port, TM_QUEUE_NODE_TYPE_LEVEL_0,
+    sdk_ret = capri_tm_scheduler_map_update(port, TM_QUEUE_NODE_TYPE_LEVEL_0,
                                         oq, &q_node_params);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         return ret;
     }
@@ -333,6 +335,7 @@ static hal_ret_t
 qos_class_pd_program_uplink_iq_params (pd_qos_class_t *pd_qos_class)
 {
     hal_ret_t             ret = HAL_RET_OK;
+    sdk_ret_t             sdk_ret;
     tm_uplink_iq_params_t iq_params;
     tm_port_t             port;
     qos_class_t           *qos_class = pd_qos_class->pi_qos_class;
@@ -352,7 +355,8 @@ qos_class_pd_program_uplink_iq_params (pd_qos_class_t *pd_qos_class)
     iq_params.p4_q = pd_qos_class->p4_ig_q[HAL_PD_QOS_IQ_RX];
 
     for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
-        ret = capri_tm_uplink_iq_params_update(port, iq, &iq_params);
+        sdk_ret = capri_tm_uplink_iq_params_update(port, iq, &iq_params);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Error programming the iq params for "
                           "Qos-class {} on port {} ret {}",
@@ -368,6 +372,7 @@ qos_class_pd_program_uplink_iq_map (pd_qos_class_t *pd_qos_class)
 {
     // Program the dscp, dot1q to iq map
     hal_ret_t                  ret = HAL_RET_OK;
+    sdk_ret_t                  sdk_ret;
     tm_port_t                  port;
     qos_class_t                *qos_class = pd_qos_class->pi_qos_class;
     tm_q_t                     iq;
@@ -385,9 +390,10 @@ qos_class_pd_program_uplink_iq_map (pd_qos_class_t *pd_qos_class)
     dscp_map.dot1q_pcp = qos_class->cmap.dot1q_pcp;
 
     for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
-        ret = capri_tm_uplink_input_map_update(port,
+        sdk_ret = capri_tm_uplink_input_map_update(port,
                                                qos_class->cmap.dot1q_pcp,
                                                iq);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Error programming the uplink map for "
                           "Qos-class {} on port {} ret {}",
@@ -395,7 +401,8 @@ qos_class_pd_program_uplink_iq_map (pd_qos_class_t *pd_qos_class)
             return ret;
         }
 
-        ret = capri_tm_uplink_input_dscp_map_update(port, &dscp_map);
+        sdk_ret = capri_tm_uplink_input_dscp_map_update(port, &dscp_map);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Error programming the uplink dscp map for "
                           "Qos-class {} on port {} ret {}",
@@ -411,6 +418,7 @@ qos_class_pd_update_uplink_iq_map_remove (bool dot1q_remove, uint32_t dot1q_pcp,
                                           bool *ip_dscp_vals, uint32_t cnt_ip_dscp)
 {
     hal_ret_t                  ret = HAL_RET_OK;
+    sdk_ret_t                  sdk_ret;
     tm_port_t                  port;
     qos_class_t                *default_qos_class = NULL;
     tm_uplink_input_dscp_map_t dscp_map = {0};
@@ -431,9 +439,10 @@ qos_class_pd_update_uplink_iq_map_remove (bool dot1q_remove, uint32_t dot1q_pcp,
 
     for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
         if (dot1q_remove) {
-            ret = capri_tm_uplink_input_map_update(port,
+            sdk_ret = capri_tm_uplink_input_map_update(port,
                                                    dot1q_pcp,
                                                    default_qos_class_iq);
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("Error programming the uplink map "
                               "on port {} ret {}",
@@ -442,7 +451,8 @@ qos_class_pd_update_uplink_iq_map_remove (bool dot1q_remove, uint32_t dot1q_pcp,
             }
         }
 
-        ret = capri_tm_uplink_input_dscp_map_update(port, &dscp_map);
+        sdk_ret = capri_tm_uplink_input_dscp_map_update(port, &dscp_map);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Error programming the uplink dscp map "
                           "on port {} ret {}",
@@ -457,6 +467,7 @@ static hal_ret_t
 qos_class_pd_program_uplink_xoff (pd_qos_class_t *pd_qos_class)
 {
     hal_ret_t             ret = HAL_RET_OK;
+    sdk_ret_t             sdk_ret;
     tm_port_t             port;
     qos_class_t           *qos_class = pd_qos_class->pi_qos_class;
 
@@ -466,8 +477,9 @@ qos_class_pd_program_uplink_xoff (pd_qos_class_t *pd_qos_class)
     }
 
     for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
-        ret = capri_tm_uplink_oq_update(port, pd_qos_class->dest_oq,
+        sdk_ret = capri_tm_uplink_oq_update(port, pd_qos_class->dest_oq,
                                         qos_class->no_drop, qos_class->cmap.dot1q_pcp);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Error programming the xoff params for "
                           "Qos-class {} on port {} ret {}",
@@ -984,12 +996,14 @@ qos_class_pd_populate_qos_queue_stats (tm_port_t port,
 {
     hal_ret_t                first_err_ret = HAL_RET_OK;
     hal_ret_t                ret = HAL_RET_OK;
+    sdk_ret_t                sdk_ret;
     tm_iq_stats_t            iq_stats;
     tm_oq_stats_t            oq_stats;
 
     for (unsigned i = 0; i < HAL_PD_QOS_MAX_IQS; i++) {
         if (iqs[i].valid) {
-            ret = capri_tm_get_iq_stats(port, iqs[i].iq, &iq_stats);
+            sdk_ret = capri_tm_get_iq_stats(port, iqs[i].iq, &iq_stats);
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("Failed to get iq stats for port {} queue {} ret {}",
                               port, iqs[i].iq, ret);
@@ -1013,7 +1027,8 @@ qos_class_pd_populate_qos_queue_stats (tm_port_t port,
 
     for (unsigned i = 0; i < HAL_PD_QOS_MAX_OQS; i++) {
         if (oqs[i].valid) {
-            ret = capri_tm_get_oq_stats(port, oqs[i].oq, &oq_stats);
+            sdk_ret = capri_tm_get_oq_stats(port, oqs[i].oq, &oq_stats);
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("Failed to get oq stats for port {} queue {} ret {}",
                               port, oqs[i].oq, ret);
@@ -1222,7 +1237,7 @@ pd_qos_class_get_qos_class_id (pd_func_args_t *pd_func_args)
 
     pd_qos_class = qos_class->pd;
 
-    *qos_class_id = HAL_TM_INVALID_Q;
+    *qos_class_id = CAPRI_TM_INVALID_Q;
     if (capri_tm_port_is_uplink_port(dest_port)) {
         group = dest_port % 2;
         if (capri_tm_q_valid(pd_qos_class->p4_ig_q[HAL_PD_QOS_IQ_TX_UPLINK_GROUP_0 + group])) {
@@ -1265,7 +1280,8 @@ pd_qos_class_get_admin_cos (pd_func_args_t *pd_func_args)
 hal_ret_t
 pd_qos_class_periodic_stats_update (pd_func_args_t *pd_func_args)
 {
-    return capri_tm_periodic_stats_update();
+    sdk_ret_t sdk_ret = capri_tm_periodic_stats_update();
+    return hal_sdk_ret_to_hal_ret(sdk_ret);
 }
 
 }    // namespace pd

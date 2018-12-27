@@ -6,9 +6,10 @@
 #include "nic/hal/plugins/cfg/aclqos/qos.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/hal/pd/capri/capri_tm_rw.hpp"
+#include "include/sdk/platform/capri/capri_tm_rw.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 
+using namespace sdk::platform::capri;
 
 namespace hal {
 namespace pd {
@@ -111,17 +112,17 @@ qos_class_pd_init (pd_qos_class_t *qos_class)
     }
 
     // Set here if you want to initialize any fields
-    qos_class->uplink.iq = HAL_TM_INVALID_Q;
+    qos_class->uplink.iq = CAPRI_TM_INVALID_Q;
     for (unsigned i = 0; i < HAL_ARRAY_SIZE(qos_class->p4_ig_q); i++) {
-        qos_class->p4_ig_q[i] = HAL_TM_INVALID_Q;
+        qos_class->p4_ig_q[i] = CAPRI_TM_INVALID_Q;
     }
     for (unsigned i = 0; i < HAL_ARRAY_SIZE(qos_class->p4_eg_q); i++) {
-        qos_class->p4_eg_q[i] = HAL_TM_INVALID_Q;
+        qos_class->p4_eg_q[i] = CAPRI_TM_INVALID_Q;
     }
     for (unsigned i = 0; i < HAL_ARRAY_SIZE(qos_class->txdma); i++) {
-        qos_class->txdma[i].iq = HAL_TM_INVALID_Q;
+        qos_class->txdma[i].iq = CAPRI_TM_INVALID_Q;
     }
-    qos_class->dest_oq = HAL_TM_INVALID_Q;
+    qos_class->dest_oq = CAPRI_TM_INVALID_Q;
 
     return qos_class;
 }

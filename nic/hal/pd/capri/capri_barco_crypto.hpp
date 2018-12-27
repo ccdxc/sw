@@ -2,7 +2,7 @@
 #define __CAPRI_BARCO_CRYPTO_HPP__
 
 #include "gen/proto/types.pb.h"
-#include "nic/hal/pd/capri/capri.hpp"
+#include "include/sdk/platform/capri/capri_cfg.hpp"
 
 namespace hal {
 namespace pd {

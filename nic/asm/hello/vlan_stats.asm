@@ -1,6 +1,6 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
-#include "../../p4/common/capri.h"
+#include "sdk/include/sdk/platform/capri/capri_p4.h"
 
 struct vlan_stats_k k;
 struct vlan_stats_d d;

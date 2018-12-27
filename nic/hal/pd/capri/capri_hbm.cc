@@ -1,6 +1,6 @@
 #include "nic/include/base.hpp"
 #include "nic/sdk/include/sdk/base.hpp"
-#include "nic/include/capri_common.h"
+#include "include/sdk/platform/capri/capri_common.hpp"
 #include <unistd.h>
 #include <iostream>
 #include "nic/hal/pd/capri/capri_hbm.hpp"
@@ -59,14 +59,14 @@ cap_nx_read_pb_axi_cnt(int rd) { // 1=>rd , 0=> wr
     }
 }
 
-sdk_ret_t
+hal_ret_t
 capri_hbm_parse (std::string cfg_path, std::string pgm_name)
 {
-    mpart = sdk::platform::utils::mpartition::factory(CAPRI_HBM_BASE);
+    mpart = sdk::platform::utils::mpartition::factory();
     if (!mpart) {
-        return sdk::SDK_RET_ERR;
+        return HAL_RET_ERR;
     }
-    return sdk::SDK_RET_OK;
+    return HAL_RET_OK;
 }
 
 hbm_addr_t

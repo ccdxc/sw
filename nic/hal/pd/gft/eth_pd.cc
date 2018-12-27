@@ -14,11 +14,9 @@
 #include "gen/p4gen/gft/include/p4pd.h"
 #include "gen/p4gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 
-#ifndef P4PD_CLI
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/model_sim/include/lib_model_client.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
-#endif
 
 namespace hal {
 namespace pd {

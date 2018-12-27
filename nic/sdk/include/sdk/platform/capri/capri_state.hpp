@@ -3,6 +3,10 @@
 #ifndef __CAPRI_STATE_HPP__
 #define __CAPRI_STATE_HPP__
 
+namespace sdk {
+namespace platform {
+namespace capri {
+
 class capri_state_pd {
 public:
     static capri_state_pd *factory(void);
@@ -25,6 +29,11 @@ private:
     bool init(void);
     
 };
+
+extern class capri_state_pd *g_capri_state_pd;
+} // namespace capri
+} // namespace platform
+} // namespace sdk
 
 #endif    // __CAPRI_STATE_HPP__
 

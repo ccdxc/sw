@@ -1,7 +1,7 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
-#include "../../p4/common/capri.h"
-#include "../../p4/common/defines.h"
+#include "sdk/include/sdk/platform/capri/capri_p4.h"
+#include "p4/common/defines.h"
 
 struct tunnel_k k;
 struct tunnel_d d;

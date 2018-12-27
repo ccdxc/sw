@@ -18,7 +18,7 @@
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/hal/pd/iris/internal/system_pd.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
-#include "nic/hal/pd/capri/capri_tm_rw.hpp"
+#include "include/sdk/platform/capri/capri_tm_rw.hpp"
 #include <string.h>
 
 namespace hal {

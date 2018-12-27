@@ -1,5 +1,5 @@
 
-#include "nic/include/capri_common.h"
+#include "nic/sdk/include/sdk/platform/capri/capri_common.hpp"
 #include "nic/p4/common/defines.h"
 #include "nic/asm/common-p4+/include/capri-macros.h"
 

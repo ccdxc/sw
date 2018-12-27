@@ -66,6 +66,8 @@ fill_asic_cfg (asic_cfg_t *asic_cfg) {
     asic_cfg->asm_cfg[2].name = std::string("apollo_txdma");
     asic_cfg->asm_cfg[2].path = std::string("txdma_asm");
     asic_cfg->asm_cfg[2].base_addr = std::string(JTXDMA_PRGM);
+
+    asic_cfg->completion_func = NULL;
 }
 
 // TODO:

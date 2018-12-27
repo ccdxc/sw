@@ -1,7 +1,7 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
-#include "nic/include/capri_common.h"
+#include "nic/sdk/include/sdk/platform/capri/capri_common.hpp"
 #include "nw.h"
 
 struct drop_stats_k k;

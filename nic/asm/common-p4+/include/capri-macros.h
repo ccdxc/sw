@@ -1,7 +1,7 @@
 #ifndef __CAPRI_MACROS_H__
 #define __CAPRI_MACROS_H__
 
-#include "nic/include/capri_common.h"
+#include "nic/sdk/include/sdk/platform/capri/capri_common.hpp"
 #include "nic/include/capri_barco.h"
 
 #define CAPRI_READ_IDX(_idx, _table_type, _stage_entry) \

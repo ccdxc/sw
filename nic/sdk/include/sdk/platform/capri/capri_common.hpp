@@ -1,6 +1,11 @@
-#ifndef __CAPRI_COMMON_H
-#define __CAPRI_COMMON_H
+#ifndef __CAPRI_COMMON_HPP_
+#define __CAPRI_COMMON_HPP_
 
+#ifdef __cplusplus
+namespace sdk {
+namespace platform {
+namespace capri {
+#endif
 /*
  * #defines shared by ASM and C code
  */
@@ -402,4 +407,16 @@
 #define CAPRI_BARCO_RING_SLOTS_SHIFT    10
 #define CAPRI_BARCO_RING_SLOTS_MASK     ((1 << CAPRI_BARCO_RING_SLOTS_SHIFT) - 1)
 
+// Capri core-clock frequencies
+#define CORECLK_FREQ_ASIC_00        1093750000  /* 1093.750MHz (precise) */
+#define CORECLK_FREQ_ASIC_01         957031250  /*  957.031MHz (precise) */
+#define CORECLK_FREQ_ASIC_10         833333333  /*  833.333MHz (precise) */
+#define CORECLK_FREQ_ASIC_11         750250000  /*  750.250MHz (precise) */
+
+
+#ifdef __cplusplus
+} // namespace capri
+} // namespace platform
+} // namespace sdk
+#endif
 #endif

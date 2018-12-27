@@ -4,7 +4,6 @@
 
 namespace acl {
 
-using sdk::sdk_spinlock_t;
 using sdk::lib::ht;
 using sdk::lib::ht_ctxt_t;
 
