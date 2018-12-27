@@ -100,7 +100,7 @@ wqe_bktrack:
 
     phvwr    CAPRI_PHV_FIELD(TO_S7_BT_WB_P, wqe_start_psn), d.wqe_start_psn
 
-    scwlt24       c2, d.tx_psn, d.rexmit_psn
+    scwle24       c2, d.tx_psn, d.rexmit_psn
     // sge_addr = wqe_addr + TXWQE_SGE_OFFSET + (sizeof(sge_t) * current_sge_id)
     add.c2        r2,  K_WQE_ADDR, K_CURRENT_SGE_ID, LOG_SIZEOF_SGE_T
     add.c2        r2, r2, TXWQE_SGE_OFFSET

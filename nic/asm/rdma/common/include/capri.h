@@ -61,6 +61,7 @@
 
 #define CAPRI_APP_DATA_RECIRC_REASON k.rdma_recirc_recirc_reason
 #define CAPRI_APP_DATA_RECIRC_TOKEN_ID k.rdma_recirc_token_id
+#define CAPRI_APP_DATA_RECIRC_SPEC_CINDEX  k.rdma_recirc_recirc_spec_cindex
 
 //BTH header fields
 #define CAPRI_APP_DATA_BTH_OPCODE k.rdma_bth_bth_opcode

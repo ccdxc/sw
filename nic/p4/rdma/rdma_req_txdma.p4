@@ -490,6 +490,7 @@ header_type req_tx_to_stage_sqsge_info_t {
         packet_len                       : 14;
         congestion_mgmt_enable           : 1;
         priv_oper_enable                 : 1;
+        spec_cindex                      : 16;
     }
 }
 
@@ -923,6 +924,7 @@ action req_tx_stage0_recirc_action () {
 
     // recirc header bits
     modify_field(rdma_recirc_scr.recirc_reason, rdma_recirc.recirc_reason);
+    modify_field(rdma_recirc_scr.recirc_spec_cindex, rdma_recirc.recirc_spec_cindex);
 }
 
 
@@ -1483,6 +1485,7 @@ action req_tx_bind_mw_sqlkey_process_s4 () {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s4_dcqcn_bind_mw_info_scr.spec_cindex, to_s4_dcqcn_bind_mw_info.spec_cindex);
 
     // stage to stage
     modify_field(t0_s2s_sqwqe_to_lkey_mw_info_scr.va, t0_s2s_sqwqe_to_lkey_mw_info.va);
@@ -1605,6 +1608,7 @@ action req_tx_sqsge_process () {
     modify_field(to_s3_sqsge_info_scr.packet_len, to_s3_sqsge_info.packet_len);
     modify_field(to_s3_sqsge_info_scr.congestion_mgmt_enable, to_s3_sqsge_info.congestion_mgmt_enable);
     modify_field(to_s3_sqsge_info_scr.priv_oper_enable, to_s3_sqsge_info.priv_oper_enable);
+    modify_field(to_s3_sqsge_info_scr.spec_cindex, to_s3_sqsge_info.spec_cindex);
 
     // stage to stage
     modify_field(t0_s2s_wqe_to_sge_info_scr.in_progress, t0_s2s_wqe_to_sge_info.in_progress);
