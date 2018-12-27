@@ -1617,6 +1617,9 @@ ionic_setup_hw_stats(struct lif *lif, struct sysctl_ctx_list *ctx,
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_desc_data_error", CTLFLAG_RD,
 		&stat->tx_desc_data_error, "");
 
+	/* H/w stats for RoCE devices. */
+	if (lif->api_private == NULL)
+		return;
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_rdma_ucast_bytes", CTLFLAG_RD,
 		&stat->tx_rdma_ucast_bytes, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_rdma_ucast_packets", CTLFLAG_RD,
@@ -1642,6 +1645,61 @@ ionic_setup_hw_stats(struct lif *lif, struct sysctl_ctx_list *ctx,
 		&stat->rx_rdma_ecn_packets, "");
 }
 
+#define QUEUE_NAME_LEN 32
+static void
+ionic_notifyq_sysctl(struct lif *lif, struct sysctl_ctx_list *ctx,
+		struct sysctl_oid_list *child)
+{
+	struct notifyq* notifyq = lif->notifyq;
+	struct sysctl_oid *queue_node;
+	struct sysctl_oid_list *queue_list;
+	char namebuf[QUEUE_NAME_LEN];
+
+	if(notifyq == NULL)
+		return;
+
+	snprintf(namebuf, QUEUE_NAME_LEN, "nq");
+	queue_node = SYSCTL_ADD_NODE(ctx, child, OID_AUTO, namebuf,
+				CTLFLAG_RD, NULL, "Queue Name");
+	queue_list = SYSCTL_CHILDREN(queue_node);
+
+	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "num_descs", CTLFLAG_RD,
+	&notifyq->num_descs, 0, "Number of descriptors");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "last_eid", CTLFLAG_RD,
+	&lif->last_eid, "Last event Id");
+	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "comp_index", CTLFLAG_RD,
+	&notifyq->comp_index, 0, "Completion index");
+}
+
+static void
+ionic_adminq_sysctl(struct lif *lif, struct sysctl_ctx_list *ctx,
+		struct sysctl_oid_list *child)
+{
+	struct adminq* adminq = lif->adminq;
+	struct sysctl_oid *queue_node;
+	struct sysctl_oid_list *queue_list;
+	char namebuf[QUEUE_NAME_LEN];
+
+	if(adminq == NULL)
+		return;
+
+	snprintf(namebuf, QUEUE_NAME_LEN, "adq");
+	queue_node = SYSCTL_ADD_NODE(ctx, child, OID_AUTO, namebuf,
+				CTLFLAG_RD, NULL, "Queue Name");
+	queue_list = SYSCTL_CHILDREN(queue_node);
+
+	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "num_descs", CTLFLAG_RD,
+	&adminq->num_descs, 0, "Number of descriptors");
+	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "head", CTLFLAG_RD,
+	&adminq->head_index, 0, "Head index");
+	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "tail", CTLFLAG_RD,
+	&adminq->tail_index, 0, "Tail index");
+	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "comp_index", CTLFLAG_RD,
+	&adminq->comp_index, 0, "Completion index");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "comp_err", CTLFLAG_RD,
+	&adminq->stats.comp_err, "Completions with error");
+}
+
 static void
 ionic_setup_device_stats(struct lif *lif)
 {
@@ -1651,12 +1709,8 @@ ionic_setup_device_stats(struct lif *lif)
 
 	struct sysctl_oid *queue_node;
 	struct sysctl_oid_list *queue_list;
-	struct adminq* adminq = lif->adminq;
-	struct notifyq* notifyq = lif->notifyq;
-	int i;
-
-#define QUEUE_NAME_LEN 32
 	char namebuf[QUEUE_NAME_LEN];
+	int i;
 
 	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "numq", CTLFLAG_RD,
        &lif->ntxqs, 0, "Number of Tx/Rx queue pairs");
@@ -1672,50 +1726,25 @@ ionic_setup_device_stats(struct lif *lif)
 	    CTLTYPE_UINT | CTLFLAG_RW, lif, 0,
 	    ionic_intr_coal_handler, "IU", "Interrupt coalescing timeout in usecs");
 
-	snprintf(namebuf, QUEUE_NAME_LEN, "adq");
-	queue_node = SYSCTL_ADD_NODE(ctx, child, OID_AUTO, namebuf,
-				CTLFLAG_RD, NULL, "Queue Name");
-	queue_list = SYSCTL_CHILDREN(queue_node);
-
-	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "num_descs", CTLFLAG_RD,
-       &adminq->num_descs, 0, "Number of descriptors");
-	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "head", CTLFLAG_RD,
-        &adminq->head_index, 0, "Head index");
-	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "tail", CTLFLAG_RD,
-        &adminq->tail_index, 0, "Tail index");
-    SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "comp_index", CTLFLAG_RD,
-        &adminq->comp_index, 0, "Completion index");
-	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "comp_err", CTLFLAG_RD,
-        &adminq->stats.comp_err, "Completions with error");
-
-	snprintf(namebuf, QUEUE_NAME_LEN, "nq");
-	queue_node = SYSCTL_ADD_NODE(ctx, child, OID_AUTO, namebuf,
-				CTLFLAG_RD, NULL, "Queue Name");
-	queue_list = SYSCTL_CHILDREN(queue_node);
-
-	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "num_descs", CTLFLAG_RD,
-       &notifyq->num_descs, 0, "Number of descriptors");
-	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "last_eid", CTLFLAG_RD,
-        &lif->last_eid, "Last event Id");
-    SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "comp_index", CTLFLAG_RD,
-        &adminq->comp_index, 0, "Completion index");
+	ionic_adminq_sysctl(lif, ctx, child);
+	ionic_notifyq_sysctl(lif, ctx, child);
 
 	for (i = 0; i < lif->nrxqs; i++) {
 		snprintf(namebuf, QUEUE_NAME_LEN, "rxq%d", i);
 		queue_node = SYSCTL_ADD_NODE(ctx, child, OID_AUTO, namebuf,
-					    CTLFLAG_RD, NULL, "Queue Name");
+					CTLFLAG_RD, NULL, "Queue Name");
 		queue_list = SYSCTL_CHILDREN(queue_node);
-        ionic_lif_add_rxtstat(lif->rxqs[i], ctx, queue_list);
-    }
+		ionic_lif_add_rxtstat(lif->rxqs[i], ctx, queue_list);
+	}
 
-    for (i = 0; i < lif->ntxqs; i++) {
+	for (i = 0; i < lif->ntxqs; i++) {
 		snprintf(namebuf, QUEUE_NAME_LEN, "txq%d", i);
 		queue_node = SYSCTL_ADD_NODE(ctx, child, OID_AUTO, namebuf,
-					    CTLFLAG_RD, NULL, "Queue Name");
+					CTLFLAG_RD, NULL, "Queue Name");
 		queue_list = SYSCTL_CHILDREN(queue_node);
 
 		ionic_lif_add_txtstat(lif->txqs[i], ctx, queue_list);
-    }
+	}
 }
 
 void
