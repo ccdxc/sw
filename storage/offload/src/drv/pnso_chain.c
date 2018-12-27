@@ -892,3 +892,16 @@ chn_service_hw_ring_give(struct service_info *svc_info)
 	return err;
 }
 
+uint32_t
+chn_service_deps_data_len_get(const struct service_info *svc_info)
+{
+	struct cpdc_status_desc *status_desc;
+
+	if ((svc_info->si_type == PNSO_SVC_TYPE_COMPRESS) ||
+		(svc_info->si_type == PNSO_SVC_TYPE_DECOMPRESS)) {
+		status_desc = svc_info->si_status_desc;
+		return status_desc->csd_output_data_len;
+	}
+
+	return svc_info->si_svc_deps.sd_data_len;
+}
