@@ -680,8 +680,11 @@ func (c *overlay) ConsistentUpdate(ctx context.Context, key string, into runtime
 
 // Get retrieves object from the cache if it exists.
 func (c *overlay) Get(ctx context.Context, key string, into runtime.Object) error {
-	defer c.Unlock()
-	c.Lock()
+	dm := getDryRun(ctx)
+	if dm == nil {
+		defer c.Unlock()
+		c.Lock()
+	}
 	ovObj := c.overlay[key]
 	if ovObj != nil {
 		if ovObj.oper == operDelete {
@@ -724,8 +727,11 @@ func (c *overlay) list(ctx context.Context, prefix string, opts api.ListWatchOpt
 
 // ListFiltered returns a list in into filtered as per the opts passed in
 func (c *overlay) ListFiltered(ctx context.Context, prefix string, into runtime.Object, opts api.ListWatchOptions) error {
-	defer c.Unlock()
-	c.Lock()
+	dm := getDryRun(ctx)
+	if dm == nil {
+		defer c.Unlock()
+		c.Lock()
+	}
 	// Collect from the API cache
 	intoItems, err := helper.ValidListObjForDecode(into)
 	if err != nil {

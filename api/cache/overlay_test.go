@@ -568,6 +568,14 @@ func TestOverlayGet(t *testing.T) {
 	AssertOk(t, err, "expecting get to succeed, got (%s)", err)
 	Assert(t, reflect.DeepEqual(obj, obj1), "retrieved object does not match [%+v]\n[%+v]", retobj, obj)
 
+	// check get in a dryrun
+	ov.Lock()
+	dryRunCtx := setDryRun(ctx, 100)
+	err = ov.Get(dryRunCtx, key, obj1)
+	AssertOk(t, err, "expecting get to succeed, got (%s)", err)
+	Assert(t, reflect.DeepEqual(obj, obj1), "retrieved object does not match [%+v]\n[%+v]", retobj, obj)
+	ov.Unlock()
+
 	// The KV store should not have been touched anytime for anykind of write
 	Assert(t, c.FakeKvStore.Creates == 0 && c.FakeKvStore.Updates == 0 && c.FakeKvStore.Deletes == 0, "backend has been written to!")
 }
@@ -752,6 +760,16 @@ func TestOverlayList(t *testing.T) {
 	if e, ok := validateList(getList, expList); !ok {
 		t.Errorf(" List did not match [%s]", e)
 	}
+
+	// test as part of dryRun
+	ov.Lock()
+	dryRunCtx := setDryRun(ctx, 100)
+	err = ov.List(dryRunCtx, key, getList)
+	AssertOk(t, err, "List failed")
+	if e, ok := validateList(getList, expList); !ok {
+		t.Errorf(" List did not match [%s]", e)
+	}
+	ov.Unlock()
 }
 
 func TestParseParsePath(t *testing.T) {

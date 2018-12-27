@@ -217,7 +217,7 @@ func (m *MethodHdlr) updateStagingBuffer(ctx context.Context, tenant, buffid str
 		}
 		err = kv.CreatePrimary(ctx, svcName, methName, uri, key, origObj, obj)
 		if err != nil {
-			return nil, err
+			return nil, errKVStoreOperation.makeError(i, []string{err.Error()}, "")
 		}
 		return i, nil
 	case apiserver.UpdateOper:
@@ -237,6 +237,9 @@ func (m *MethodHdlr) updateStagingBuffer(ctx context.Context, tenant, buffid str
 			err = kv.UpdatePrimary(ctx, svcName, methName, uri, key, origObj, obj, updateFn(obj))
 		} else {
 			err = kv.UpdatePrimary(ctx, svcName, methName, uri, key, origObj, obj, nil)
+		}
+		if err != nil {
+			err = errKVStoreOperation.makeError(i, []string{err.Error()}, "")
 		}
 		resp = i
 	case apiserver.DeleteOper:

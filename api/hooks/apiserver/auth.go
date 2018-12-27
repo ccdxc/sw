@@ -90,8 +90,10 @@ func (s *authHooks) hashPassword(ctx context.Context, kv kvstore.Interface, txn 
 		}
 		r.Spec.Password = cur.Spec.Password
 		// add a comparator for CAS
-		s.logger.Infof("set the comparator version for [%s] as [%s]", key, cur.ResourceVersion)
-		txn.AddComparator(kvstore.Compare(kvstore.WithVersion(key), "=", cur.ResourceVersion))
+		if !dryRun {
+			s.logger.Infof("set the comparator version for [%s] as [%s]", key, cur.ResourceVersion)
+			txn.AddComparator(kvstore.Compare(kvstore.WithVersion(key), "=", cur.ResourceVersion))
+		}
 	default:
 	}
 	return r, true, nil
