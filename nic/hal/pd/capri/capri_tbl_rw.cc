@@ -29,7 +29,7 @@
 #include "nic/asic/capri/verif/apis/cap_pics_api.h"
 #include "nic/asic/capri/verif/apis/cap_pict_api.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
-#include "nic/hal/pd/capri/csr/cpu_hal_if.h"
+#include "nic/sdk/platform/capri/csr/asicrw_if.hpp"
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 
 /* When ready to use unified memory mgmt library, change CALLOC and FREE then */
