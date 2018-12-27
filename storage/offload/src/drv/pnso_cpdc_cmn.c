@@ -510,7 +510,9 @@ cpdc_teardown_rmem_status_desc(struct service_info *svc_info, bool per_block)
 	struct per_core_resource *pcr;
 
 	pcr = svc_info->si_pcr;
-	if (chn_service_has_sub_chain(svc_info))
+	if ((chn_service_has_sub_chain(svc_info) ||
+		((svc_info->si_type == PNSO_SVC_TYPE_COMPRESS) &&
+		 (svc_info->si_desc_flags & PNSO_CP_DFLAG_ZERO_PAD))))
 		cpdc_put_rmem_status_desc(pcr, per_block,
 				svc_info->si_istatus_desc);
 }
@@ -523,7 +525,9 @@ cpdc_setup_rmem_status_desc(struct service_info *svc_info, bool per_block)
 	struct cpdc_status_desc *status_desc;
 
 	pcr = svc_info->si_pcr;
-	if (chn_service_has_sub_chain(svc_info)) {
+	if (chn_service_has_sub_chain(svc_info) ||
+		((svc_info->si_type == PNSO_SVC_TYPE_COMPRESS) &&
+		 (svc_info->si_desc_flags & PNSO_CP_DFLAG_ZERO_PAD))) {
 		status_desc = cpdc_get_rmem_status_desc(pcr, per_block);
 		if (!status_desc) {
 			err = ENOMEM;

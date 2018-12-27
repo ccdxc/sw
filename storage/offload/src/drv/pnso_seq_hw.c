@@ -837,12 +837,23 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 	chain_params->ccp_cmd.ccpc_sgl_pdma_en = 1;
 	chain_params->ccp_cmd.ccpc_sgl_pad_en = 1;
 	chain_params->ccp_cmd.ccpc_sgl_pdma_pad_only = 1;
+	chain_params->ccp_cmd.ccpc_stop_chain_on_error = 1;
 
 	chain_params->ccp_status_addr_0 =
 		sonic_virt_to_phy((void *) status_desc);
 	chain_params->ccp_pad_buf_addr = pad_buffer;
 	chain_params->ccp_pad_boundary_shift =
-		(uint8_t) ilog2(PNSO_MEM_ALIGN_PAGE);
+			(uint8_t) ilog2(PNSO_MEM_ALIGN_PAGE);
+
+	if (svc_info->si_istatus_desc) {
+		chain_params->ccp_status_addr_0 = (uint64_t)
+			svc_info->si_istatus_desc;	/* rmem */
+		chain_params->ccp_status_addr_1 =
+			sonic_virt_to_phy(svc_info->si_status_desc);
+		chain_params->ccp_status_len = sizeof(struct cpdc_status_desc);
+
+		chain_params->ccp_cmd.ccpc_status_dma_en = 1;
+	}
 
 	chain_params->ccp_sgl_vec_addr = cp_desc->cd_dst;
 
