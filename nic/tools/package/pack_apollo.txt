@@ -10,8 +10,8 @@ nic/build/$ARCH/$PIPELINE/lib/libp4pd_$PIPELINE_txdma.so          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libhal_mock.so                      /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libmodel_client.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libhalproto.so                      /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libcapri_csrint.so                  /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libcapri_csr_cpu_hal.so             /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdkcapri_csrint.so               /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdkcapri_asicrw_if.so            /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liblist.so                          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libslab.so                          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libshmmgr.so                        /nic/lib/

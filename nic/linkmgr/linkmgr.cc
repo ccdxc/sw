@@ -13,7 +13,7 @@
 #include "nic/sdk/include/sdk/periodic.hpp"
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
 #include "nic/asic/capri/model/utils/cap_csr_py_if.h"
-#include "nic/hal/pd/capri/csr/cpu_hal_if.h"
+#include "nic/sdk/platform/capri/csr/asicrw_if.hpp"
 #include "nic/linkmgr/delphi/linkmgr_delphi.hpp"
 
 using grpc::Server;

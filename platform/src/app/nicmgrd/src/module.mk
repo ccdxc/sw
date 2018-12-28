@@ -8,7 +8,7 @@ MODULE_SOLIBS   := nicmgr nicmgr_sysmgr nicmgr_upgrade hal_api mnet \
                     ${NIC_SDK_SOLIBS} trace mtrack bm_allocator \
                     commonproto nicmgrproto halproto \
                     delphisdk upgrade upgrade_app upgradeutils sysmgr \
-                    capri_csrint capri_csr_cpu_hal \
+                    sdkcapri_csrint sdkcapri_asicrw_if \
                     pdcapri pdcommon hal_mock \
                     sdkp4 sdkp4utils p4pd_common_p4plus_rxdma sdkxcvrdriver \
                     p4pd_common_p4plus_txdma p4pd_${PIPELINE} \
