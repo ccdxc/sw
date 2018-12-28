@@ -28,7 +28,7 @@ def get_owner(filename):
     gl_owner_db[filename] = owner
     return owner
 
-class VerifStep:
+class SetupStep:
     def __init__(self, spec):
         self.__spec = spec
         self.__timer = timeprofiler.TimeProfiler()
@@ -37,13 +37,13 @@ class VerifStep:
         return
 
     def __resolve(self):
-        Logger.debug("Resolving testcase verif module: %s" % self.__spec.step)
+        Logger.debug("Resolving testcase setup module: %s" % self.__spec.step)
         self.__mod = loader.Import(self.__spec.step, self.__spec.packages)
         return
 
     def __execute(self):
-        Logger.debug("Running testcase verif module: %s" % self.__spec.step)
-        return loader.RunCallback(self.__mod, 'Main', True, None) 
+        Logger.debug("Running testcase setup module: %s" % self.__spec.step)
+        return loader.RunCallback(self.__mod, 'Main', True, None)
 
     def Main(self):
         self.__timer.Start()
@@ -61,6 +61,71 @@ class VerifStep:
         print(types.FORMAT_TESTCASE_SUMMARY % (modname, self.__get_owner(), types.status.str(self.__status).title(), self.__timer.TotalTime()))
         return types.status.SUCCESS
 
+class VerifStep:
+    def __init__(self, spec):
+        self.__spec = spec
+        self.__timer = timeprofiler.TimeProfiler()
+        self.__resolve()
+        self.__status = api.types.status.FAILURE
+        return
+
+    def __resolve(self):
+        Logger.debug("Resolving testcase verif module: %s" % self.__spec.step)
+        self.__mod = loader.Import(self.__spec.step, self.__spec.packages)
+        return
+
+    def __execute(self):
+        Logger.debug("Running testcase verif module: %s" % self.__spec.step)
+        return loader.RunCallback(self.__mod, 'Main', True, None)
+
+    def Main(self):
+        self.__timer.Start()
+        self.__status = self.__execute()
+        self.__timer.Stop()
+        if self.__status != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
+        return self.__status
+
+    def __get_owner(self):
+        return get_owner(self.__mod.__file__)
+
+    def PrintResultSummary(self):
+        modname = "- %s" % self.__mod.__name__.split('.')[-1]
+        print(types.FORMAT_TESTCASE_SUMMARY % (modname, self.__get_owner(), types.status.str(self.__status).title(), self.__timer.TotalTime()))
+        return types.status.SUCCESS
+
+class DebugStep:
+    def __init__(self, spec):
+        self.__spec = spec
+        self.__timer = timeprofiler.TimeProfiler()
+        self.__resolve()
+        self.__status = api.types.status.FAILURE
+        return
+
+    def __resolve(self):
+        Logger.debug("Resolving testcase debug module: %s" % self.__spec.step)
+        self.__mod = loader.Import(self.__spec.step, self.__spec.packages)
+        return
+
+    def __execute(self, iter_data):
+        Logger.debug("Running testcase debug module: %s" % self.__spec.step)
+        return loader.RunCallback(self.__mod, 'Main', True, iter_data)
+
+    def Main(self, iter_data):
+        self.__timer.Start()
+        self.__status = self.__execute(iter_data)
+        self.__timer.Stop()
+        if self.__status != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
+        return self.__status
+
+    def __get_owner(self):
+        return get_owner(self.__mod.__file__)
+
+    def PrintResultSummary(self):
+        modname = "- %s" % self.__mod.__name__.split('.')[-1]
+        print(types.FORMAT_TESTCASE_SUMMARY % (modname, self.__get_owner(), types.status.str(self.__status).title(), self.__timer.TotalTime()))
+        return types.status.SUCCESS
 
 class TestcaseDataIters:
     def __init__(self):
@@ -140,14 +205,16 @@ class Testcase:
         self.__parent = parent
         self.__spec.name = self.__spec.name.replace(' ', '_')
         self.__tc = None
+        self.__setups = []
         self.__verifs = []
+        self.__debugs = []
         self.__iterid = 0
         self.__resolve()
         self.__enable = getattr(self.__spec, 'enable', True)
         self.__ignored = getattr(self.__spec, "ignore", False)
         self.__stress = getattr(self.__spec, "stress", GlobalOptions.stress)
-        
- 
+
+
         self.__timer = timeprofiler.TimeProfiler()
         self.__iters = []
         self.__aborted = False
@@ -155,7 +222,7 @@ class Testcase:
 
         self.__setup_iters()
         self.__apply_stress_factor()
-    
+
         self.__stats_pass = 0
         self.__stats_fail = 0
         self.__stats_ignored = 0
@@ -165,7 +232,7 @@ class Testcase:
     def __apply_stress_factor(self):
         if GlobalOptions.stress == False or self.__stress == False:
             return
-        
+
         newlist = []
         for itdata in self.__iters:
             for s in range(GlobalOptions.stress_factor):
@@ -183,7 +250,7 @@ class Testcase:
             td = copy.deepcopy(src)
         else:
             td = TestcaseData(getattr(self.__spec, 'args', None))
-        
+
         if not self.__enable:
             td.SetStatus(types.status.DISABLED)
         elif self.__ignored:
@@ -250,6 +317,13 @@ class Testcase:
     def __resolve_testcase(self):
         Logger.debug("Resolving testcase module: %s" % self.__spec.testcase)
         self.__tc = loader.Import(self.__spec.testcase, self.__spec.packages)
+        setups_spec = getattr(self.__spec, 'setups', [])
+        if setups_spec is None:
+            return types.status.SUCCESS
+        for v in setups_spec:
+            v.packages = self.__spec.packages
+            setup = SetupStep(v)
+            self.__setups.append(setup)
         verifs_spec = getattr(self.__spec, 'verifs', [])
         if verifs_spec is None:
             return types.status.SUCCESS
@@ -257,6 +331,13 @@ class Testcase:
             v.packages = self.__spec.packages
             verif = VerifStep(v)
             self.__verifs.append(verif)
+        debugs_spec = getattr(self.__spec, 'debugs', [])
+        if debugs_spec is None:
+            return types.status.SUCCESS
+        for d in debugs_spec:
+            d.packages = self.__spec.packages
+            debug = DebugStep(d)
+            self.__debugs.append(debug)
         return types.status.SUCCESS
 
     def __resolve(self):
@@ -298,6 +379,14 @@ class Testcase:
                 result = status
         return result
 
+    def __run_common_debugs(self, iter_data):
+        result = types.status.SUCCESS
+        for s in self.__debugs:
+            status = s.Main(iter_data)
+            if status != types.status.SUCCESS:
+                result = status
+        return result
+
 
     def __execute(self):
         final_result = types.status.SUCCESS
@@ -311,13 +400,13 @@ class Testcase:
             Logger.SetTestcase(instance_id)
             Logger.debug("Testcase Iteration directory = %s" % instance_id)
             ret = self.__mk_testcase_directory(instance_id)
-            if ret != types.status.SUCCESS: 
+            if ret != types.status.SUCCESS:
                 iter_data.SetStatus(ret)
                 iter_data.StopTime()
                 return ret
-            
+
             api.ChangeDirectory(instance_id)
-            
+
             result = types.status.SUCCESS
             setup_result = loader.RunCallback(self.__tc, 'Setup', False, iter_data)
             if setup_result != types.status.SUCCESS:
@@ -338,6 +427,12 @@ class Testcase:
                     Logger.error("Common verifs failed.")
                     result = verify_result
 
+                iter_data.SetStatus(result)
+                debug_result = self.__run_common_debugs(iter_data);
+                if debug_result != types.status.SUCCESS:
+                    Logger.error("Common verifs failed.")
+                    result = debug_result
+
                 teardown_result = loader.RunCallback(self.__tc, 'Teardown', False, iter_data)
                 if teardown_result != types.status.SUCCESS:
                     Logger.error("Teardown callback failed.")
@@ -355,10 +450,10 @@ class Testcase:
                     Logger.error("Error: STOPPING ON FIRST FAILURE.")
                     iter_data.SetStatus(result)
                     return ret
-                
+
                 iter_data.SetStatus(result)
                 Logger.info("Iteration Instance: %s FINAL RESULT = %d" % (instance_id, result))
- 
+
             if result != types.status.SUCCESS or GlobalOptions.dryrun:
                 if self.__ignored:
                     Logger.info("Iteration Instance: %s FINAL RESULT = %d" % (instance_id, result))
@@ -372,7 +467,7 @@ class Testcase:
 
     def __get_owner(self):
         return get_owner(self.__tc.__file__)
-        
+
 
     def PrintResultSummary(self):
         if not self.__enable: return
@@ -380,7 +475,7 @@ class Testcase:
             iters_str = iter_data.iterators.Summary()
             print(types.FORMAT_TESTCASE_SUMMARY %\
                   (self.__parent.Name(), iter_data.Name(), self.__get_owner(),
-                   types.status.str(iter_data.GetStatus()).title(), 
+                   types.status.str(iter_data.GetStatus()).title(),
                    iter_data.TotalTime()))
             if iters_str: print("- Iterators: %s" % iters_str)
             for v in self.__verifs:
@@ -393,7 +488,7 @@ class Testcase:
     def Abort(self):
         self.__aborted = True
         return
-    
+
     def __aggregate_stats(self):
         for iter_data in self.__iters:
             self.__update_stats(iter_data.GetStatus(), iter_data.GetTestCount())
@@ -413,7 +508,7 @@ class Testcase:
             if self.Name() == GlobalOptions.testcase_begin:
                 Logger.debug("Match found for Testcase starting marker %s" % self.Name())
                 GlobalOptions.inb_markers = True
-                
+
         if GlobalOptions.markers_present and not GlobalOptions.inb_markers:
             Logger.info("Skipping Testcase: %s due to cmdline testcase begin/end markers." % self.Name())
             self.__enable = False

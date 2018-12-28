@@ -52,7 +52,7 @@ def Trigger(tc):
     tc.resp2 = api.Trigger(req2)
 
     for w in api.GetWorkloads():
-        api.CopyFromWorkload(w.node_name, w.workload_name, 
+        api.CopyFromWorkload(w.node_name, w.workload_name,
                              [ '%s_ls.out' % w.workload_name ], tc.GetLogsDir())
 
     return api.types.status.SUCCESS

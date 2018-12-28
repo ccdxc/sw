@@ -67,8 +67,18 @@ class TestBundle:
                 Logger.info("Skipping disabled test case %s" % tc_spec.name)
                 continue
             tc_spec.packages = self.__parent.GetPackages()
-            if getattr(self.__spec, 'common', None) and getattr(self.__spec.common, 'verifs', None):
-                tc_spec.verifs = self.__spec.common.verifs
+            if getattr(tc_spec, 'verifs', None):
+                tc_spec.verifs += self.__parent.GetVerifs()
+            else:
+                tc_spec.verifs = self.__parent.GetVerifs()
+            if getattr(tc_spec, 'setups', None):
+                tc_spec.setups += self.__parent.GetSetups()
+            else:
+                tc_spec.setups = self.__parent.GetSetups()
+            if getattr(tc_spec, 'debugs', None):
+                tc_spec.debugs += self.__parent.GetDebugs()
+            else:
+                tc_spec.debugs = self.__parent.GetDebugs()
             tc = testcase.Testcase(tc_spec, self)
             self.__testcases.append(tc)
         return types.status.SUCCESS
@@ -112,7 +122,7 @@ class TestBundle:
             self.__stats_fail += f
             self.__stats_ignored += i
             self.__stats_error += e
-            
+
         self.__stats_total = (self.__stats_pass + self.__stats_fail +\
                               self.__stats_ignored + self.__stats_error)
         self.__stats_target = getattr(self.__spec.meta, 'targetcount', 0)
@@ -129,7 +139,7 @@ class TestBundle:
 
     def Main(self):
         self.__skip = self.__apply_skip_filters()
-        if self.__skip: 
+        if self.__skip:
             return types.status.SUCCESS
 
         # Start the testsuite timer
@@ -143,6 +153,6 @@ class TestBundle:
         self.result = self.__execute_testcases()
         self.__update_stats()
         Logger.info("Testbundle %s FINAL STATUS = %d" % (self.Name(), self.result))
-        
+
         self.__timer.Stop()
         return self.result
