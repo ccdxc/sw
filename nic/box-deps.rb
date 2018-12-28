@@ -246,6 +246,11 @@ run "pip install --ignore-installed --upgrade #{PIP2_PACKAGES.join(" ")}"
 run "pip3 install --upgrade #{PIP3_PACKAGES.join(" ")}"
 
 run "yum install -y dkms iproute2 net-tools zip zlib1g-dev"
+inside BASE_BUILD_DIR do
+  run "wget https://github.com/bazelbuild/bazel/releases/download/0.14.1/bazel-0.14.1-installer-linux-x86_64.sh"
+  run "chmod +x bazel-0.14.1-installer-linux-x86_64.sh"
+  run "./bazel-0.14.1-installer-linux-x86_64.sh"
+end
 
 copy "nic/toolchain.tar.gz", "#{BASE_BUILD_DIR}/toolchain.tar.gz"
 inside "/" do
