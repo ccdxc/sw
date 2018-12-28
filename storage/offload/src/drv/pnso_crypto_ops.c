@@ -450,6 +450,8 @@ crypto_disable_interrupt(struct service_info *svc_info)
 	OSAL_ASSERT(chn_service_is_mode_async(svc_info));
 	if (!chn_service_has_sub_chain(svc_info)) {
 		crypto_chain = &svc_info->si_crypto_chain;
+		if (!crypto_chain)
+			return;
 		pcr = svc_info->si_pcr;
 		OSAL_LOG_DEBUG("pcr: 0x"PRIx64,
 			       (uint64_t)pcr);

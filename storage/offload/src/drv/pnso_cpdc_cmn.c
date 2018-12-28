@@ -389,7 +389,6 @@ cpdc_get_desc(struct service_info *svc_info, bool per_block)
 	desc = in_batch ? get_batch_desc(svc_info) :
 		get_desc(svc_info->si_pcr, per_block);
 
-	OSAL_ASSERT(desc);
 	return desc;
 }
 
@@ -980,6 +979,8 @@ cpdc_cleanup_interrupt_params(struct service_info *svc_info)
 	struct per_core_resource *pcr;
 
 	cp_desc = (struct cpdc_desc *) svc_info->si_desc;
+	if (!cp_desc)
+		return;
 	pcr = svc_info->si_pcr;
 
 	OSAL_LOG_DEBUG("cp_desc: 0x" PRIx64 " pcr: 0x" PRIx64,
