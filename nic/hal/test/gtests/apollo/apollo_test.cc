@@ -733,22 +733,29 @@ TEST_F(apollo_test, test1) {
     };
 
     cfg.cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
-    const char *hal_conf_file = "conf/apollo/hal.json";
+#if SIM
+    const char *hal_conf_file = "apollo/hal.json";
+#else
+    const char *hal_conf_file = "apollo/hal_hw.json";
+#endif
+
     platform_type_t platform = platform_type_t::PLATFORM_TYPE_SIM;
-    catalog = sdk::lib::catalog::factory(cfg.cfg_path + "/catalog.json");
+    printf("Parsing sim catalog ...\n");
+    catalog = sdk::lib::catalog::factory(cfg.cfg_path + "catalog.json");
 
     if (getenv("HAL_PLATFORM_RTL")) {
-        hal_conf_file = "conf/apollo/hal_rtl.json";
+        hal_conf_file = "apollo/hal_rtl.json";
         platform = platform_type_t::PLATFORM_TYPE_RTL;
     } else if (getenv("HAL_PLATFORM_HW")) {
-        hal_conf_file = "conf/apollo/hal_hw.json";
+        hal_conf_file = "apollo/hal_hw.json";
         platform = platform_type_t::PLATFORM_TYPE_HW;
+        printf("Parsing hw catalog ...\n");
         catalog = sdk::lib::catalog::factory(cfg.cfg_path + "/catalog_hw.json");
     }
     ASSERT_TRUE(catalog != NULL);
     cfg.catalog = catalog;
 
-    std::ifstream json_cfg(hal_conf_file);
+    std::ifstream json_cfg(cfg.cfg_path + hal_conf_file);
     ptree hal_conf;
     read_json(json_cfg, hal_conf);
     cfg.loader_info_file = hal_conf.get<std::string>("asic.loader_info_file").c_str();
@@ -764,12 +771,16 @@ TEST_F(apollo_test, test1) {
     cfg.admin_cos = 1;
     cfg.pgm_name = std::string("apollo");
 
-    printf("Connecting to ASIC SIM\n");
+    printf("Connecting to ASIC\n");
     hal::hal_sdk_init();
     hal::utils::trace_init("hal", 0, true, "hal.log",
                            TRACE_FILE_SIZE_DEFAULT, TRACE_NUM_FILES_DEFAULT,
                            ::utils::trace_debug);
+#ifdef HW
+    ret = sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_HW);
+#else
     ret = sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM);
+#endif
 
     ret = asic_hbm_parse(&cfg);
     HAL_ASSERT(ret == HAL_RET_OK);
@@ -793,28 +804,39 @@ TEST_F(apollo_test, test1) {
     cfg.asm_cfg[2].path = std::string("txdma_asm");
     cfg.asm_cfg[2].base_addr = std::string(JTXDMA_PRGM);
 
+    printf("Doing asic init ...\n");
     ret = hal::pd::asic_init(&cfg);
     ASSERT_EQ(ret, HAL_RET_OK);
+    printf("Doing p4pd init ...\n");
     ret = p4pd_init(&p4pd_cfg);
     ASSERT_EQ(ret, HAL_RET_OK);
+    printf("Doing p4+ rxdma init ...\n");
     ret = p4pluspd_rxdma_init(&p4pd_rxdma_cfg);
     ASSERT_EQ(ret, HAL_RET_OK);
+    printf("Doing p4+ txdma init ...\n");
     ret = p4pluspd_txdma_init(&p4pd_txdma_cfg);
     ASSERT_EQ(ret, HAL_RET_OK);
+    printf("Doing p4+ mpu init ...\n");
     ret = hal::pd::asicpd_p4plus_table_mpu_base_init(&p4pd_cfg);
     ASSERT_EQ(ret, HAL_RET_OK);
+    printf("Doing p4 mpu init ...\n");
     ret = hal::pd::asicpd_table_mpu_base_init(&p4pd_cfg);
     ASSERT_EQ(ret, HAL_RET_OK);
+    printf("Programming mpu PC ...\n");
     ret = hal::pd::asicpd_program_table_mpu_pc();
     ASSERT_EQ(ret, HAL_RET_OK);
+    printf("Doing deparser init ...\n");
     ret = hal::pd::asicpd_deparser_init();
     ASSERT_EQ(ret, HAL_RET_OK);
+    printf("Programming HBM table base addresses ...\n");
     ret = hal::pd::asicpd_program_hbm_table_base_addr();
     ASSERT_EQ(ret, HAL_RET_OK);
 
     trie_mem_init();
 
+#ifdef SIM
     config_done();
+#endif
 
     init_service_lif();
     key_native_init();
@@ -826,12 +848,12 @@ TEST_F(apollo_test, test1) {
     route_init();
     slacl_init();
 
+#ifdef SIM
     uint32_t port = 0;
     uint32_t cos = 0;
     std::vector<uint8_t> ipkt;
     std::vector<uint8_t> opkt;
     std::vector<uint8_t> epkt;
-
     uint32_t i = 0;
     uint32_t tcscale = 1;
     int tcid = 0;
@@ -882,8 +904,8 @@ TEST_F(apollo_test, test1) {
             testcase_end(tcid, i+1);
         }
     }
-
     exit_simulation();
+#endif
 }
 
 int main(int argc, char **argv) {
