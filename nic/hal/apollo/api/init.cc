@@ -9,6 +9,7 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 #include "nic/hal/apollo/include/api/oci_init.hpp"
+#include "nic/hal/apollo/framework/asic_impl_base.hpp"
 
 /**
  * @defgroup OCI_VCN_API - batch API handling
@@ -21,14 +22,25 @@
  * @param[in]    params init time parameters
  * @return #SDK_RET_OK on success, failure status code on error
  */
+// TODO:
+// 1. linkmgr_init()
+// 2. periodic_thread_init()
+// 3. etc.
 sdk_ret_t
 oci_init (oci_init_params_t *params)
 {
+    asic_cfg_t        asic_cfg;
+    asic_impl_base    *asic_impl;
+
+    /**< initializer the logger */
     sdk::lib::logger::init(params->debug_trace_cb, params->error_trace_cb);
-    // TODO:
-    // 1. asic_init()
-    // 2. pipeline_init()
-    // 3. linkmgr_init()
+
+    // TODO: setup all asic specific config params
+    asic_cfg.asic_type = sdk::types::SDK_ASIC_TYPE_CAPRI;
+    asic_impl = asic_impl_base::factory(&asic_cfg);
+    SDK_ASSERT(asic_impl != NULL);
+    asic_impl->asic_init();
+
     return sdk::SDK_RET_OK;
 }
 
