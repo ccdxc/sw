@@ -112,7 +112,7 @@ class EntityManagement:
             self.scp_pfx = "sshpass -p %s scp -o StrictHostKeyChecking=no " % password
             self.ssh_pfx = "sshpass -p %s ssh -o StrictHostKeyChecking=no " % password
         return
-    
+
     def SendlineExpect(self, line, expect, hdl = None,
                        timeout = GlobalOptions.timeout):
         if hdl is None: hdl = self.hdl
@@ -167,7 +167,7 @@ class NaplesManagement(EntityManagement):
         if idx == 0:
             self.SendlineExpect(GlobalOptions.console_username, "Password:", hdl = hdl)
         self.SendlineExpect(GlobalOptions.console_password, "#", hdl = hdl)
-        
+
         for i in range(6):
             time.sleep(5)
             self.SendlineExpect("clear line %d" % (GlobalOptions.console_port - 2000), "[confirm]", hdl = hdl)
@@ -185,7 +185,7 @@ class NaplesManagement(EntityManagement):
 
         midx = self.SendlineExpect("", ["#", "capri login:", "capri-gold login:"],
                                    hdl = self.hdl, timeout = 120)
-        if midx == 0: return 
+        if midx == 0: return
         # Got capri login prompt, send username/password.
         self.SendlineExpect(GlobalOptions.username, "Password:")
         ret = self.SendlineExpect(GlobalOptions.password, ["#", pexpect.TIMEOUT], timeout = 3)
@@ -194,7 +194,7 @@ class NaplesManagement(EntityManagement):
     def InitForUpgrade(self, goldfw = True, mode = True, uuid = True):
         if goldfw:
             self.SendlineExpect("fwupdate -s goldfw", "#")
-        
+
         self.SendlineExpect("mkdir -p /sysconfig/config0", "#")
         self.SendlineExpect("mount /dev/mmcblk0p6 /sysconfig/config0", "#")
         if mode:
@@ -275,7 +275,7 @@ class HostManagement(EntityManagement):
         if mount_data:
             self.RunNaplesCmd("sync && sync && sync")
             self.RunNaplesCmd("umount /data/")
-        
+
         self.RunNaplesCmd("/nic/tools/fwupdate -l")
         return
 
@@ -289,17 +289,20 @@ def AtExitCleanup():
 # 3) Only initialize the node and start tests.
 
 def Main():
+    global naples
+    naples = NaplesManagement()
+    naples.Connect()
+
     # Reset the setup:
     # If the previous run left it in bad state, we may not get ssh or console.
     if GlobalOptions.only_mode_change == False and GlobalOptions.only_init == False:
+        naples.InitForUpgrade(goldfw = True)
         IpmiReset()
 
     global host
     host = HostManagement(GlobalOptions.host_ip)
     host.WaitForSsh()
-    
-    global naples
-    naples = NaplesManagement()
+
 
     if GlobalOptions.only_init == True:
         # Case 3: Only INIT option. Install drivers and return.
