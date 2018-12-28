@@ -877,6 +877,7 @@ static int ionic_tx_setup(struct txque *txq, struct mbuf *m)
 	txbuf = &txq->txbuf[index];
 	sg = &txq->sg_ring[index];
 
+	bzero(desc, sizeof(*desc));
 	stats->pkts++;
 	stats->bytes += m->m_len;
 
@@ -1054,7 +1055,8 @@ static int ionic_tx_tso_setup(struct txque *txq, struct mbuf *m)
 		desc = &txq->cmd_ring[index];
 		txbuf = &txq->txbuf[index];
 		sg = &txq->sg_ring[index];
-		
+
+		bzero(desc, sizeof(*desc));
 		desc->opcode = TXQ_DESC_OPCODE_TSO;
 		desc->S = (i == 0) ? 1 : 0;
 

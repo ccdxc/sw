@@ -2191,6 +2191,7 @@ static void ionic_rx_fill(struct rxque *rxq)
 		rxbuf = &rxq->rxbuf[index];
 		desc = &rxq->cmd_ring[index];
 
+		bzero(desc, sizeof(*desc));
 		KASSERT((rxbuf->m == NULL), ("%s: rxbuf not empty for %d", rxq->name, index));
 		if ((error = ionic_rx_mbuf_alloc(rxq, index, rxq->lif->rx_mbuf_size))) {
 			IONIC_QUE_ERROR(rxq, "rx_fill mbuf alloc failed for p_index :%d, error: %d\n",
