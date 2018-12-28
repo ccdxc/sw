@@ -217,11 +217,11 @@ func TestUUID(t *testing.T) {
 
 func TestL3L4Proto(t *testing.T) {
 	goodCases := []string{
-		"TCP/1234", "Udp", "IcMp", "aRP", "ipprotocol/17", "ethertype/0x806",
+		"TCP/1234", "Udp", "udp/65535", "IcMp", "aRP", "ipprotocol/17", "ethertype/0x806",
 		"icmp/1", "icmp/3/2", "icmp/echo reply", "icmp/redirect/5",
 	}
 	badCases := []string{
-		"SCP/1234", "Udp/1/2", "foo", "ipprotocol", "ipprotocol/17/1/2", "ethertype/0x806/10",
+		"SCP/1234", "Udp/1/2", "udp/-123", "foo", "ipprotocol", "ipprotocol/17/1/2", "ethertype/0x806/10",
 		"ethertype", "ethertype/abc", "ipprotocol/xyz", "ipprotocol/500", "icmp/xyz",
 	}
 	for _, c := range goodCases {

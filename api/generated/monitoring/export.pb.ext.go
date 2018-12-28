@@ -226,6 +226,19 @@ func (m *ExportConfig) Validate(ver, path string, ignoreStatus bool) []error {
 			ret = append(ret, errs...)
 		}
 	}
+	if vs, ok := validatorMapExport["ExportConfig"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapExport["ExportConfig"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
 	return ret
 }
 
@@ -335,6 +348,16 @@ func init() {
 
 		if _, ok := AuthConfig_Algos_value[m.Algo]; !ok {
 			return errors.New("AuthConfig.Algo did not match allowed strings")
+		}
+		return nil
+	})
+
+	validatorMapExport["ExportConfig"] = make(map[string][]func(string, interface{}) error)
+
+	validatorMapExport["ExportConfig"]["all"] = append(validatorMapExport["ExportConfig"]["all"], func(path string, i interface{}) error {
+		m := i.(*ExportConfig)
+		if !validators.ProtoPort(m.Transport) {
+			return fmt.Errorf("%v validation failed", path+"."+"Transport")
 		}
 		return nil
 	})

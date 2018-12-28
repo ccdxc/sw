@@ -13425,6 +13425,8 @@
         },
         "transport": {
           "type": "string",
+          "example": "tcp/1234, arp",
+          "description": "should be a valid layer3 or layer 4 protocol and port/type\n",
           "title": "protocol and Port number where an external collector is gathering the data\nexample \"TCP/2055\""
         },
         "credentials": {

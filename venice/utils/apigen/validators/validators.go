@@ -354,12 +354,12 @@ func strProtoPortVldtr(i interface{}) bool {
 		var err error
 		if p == 1 && l3ok && l3proto == 0 {
 			// ethertype are 16 bit values
-			_, err = strconv.ParseInt(l3l4Info[p], 0, 16)
+			_, err = strconv.ParseUint(l3l4Info[p], 0, 16)
 		} else if p == 1 && l4ok && l4proto == 0 {
 			// ip protocol are 8 bit values
-			_, err = strconv.ParseInt(l3l4Info[p], 0, 8)
+			_, err = strconv.ParseUint(l3l4Info[p], 0, 8)
 		} else {
-			_, err = strconv.ParseInt(l3l4Info[p], 0, 16)
+			_, err = strconv.ParseUint(l3l4Info[p], 0, 16)
 		}
 		if err != nil {
 			return false
