@@ -1,5 +1,6 @@
 #include "req_rx.h"
 #include "sqcb.h"
+#include "defines.h"
 
 struct req_rx_phv_t p;
 struct req_rx_s2_t0_k k;
@@ -31,12 +32,13 @@ struct req_rx_s2_t0_k k;
 
 .align
 req_rx_rrqsge_opt_process:
+    bcf            [c2 | c3 | c7], table_error
+    // total bytes transferred till now, which is used to determine current_sge_offset
+    sll            r2, CAPRI_KEY_FIELD(IN_TO_S_P, msg_psn), CAPRI_KEY_FIELD(IN_TO_S_P, log_pmtu) // BD Slot
+
     // Use conditional flag to select between sge_index 0 and 1
     // sge_index = 0
     setcf          c7, [c0]
-
-    // total bytes transferred till now, which is used to determine current_sge_offset
-    sll            r2, CAPRI_KEY_FIELD(IN_TO_S_P, msg_psn), CAPRI_KEY_FIELD(IN_TO_S_P, log_pmtu)
 
     // r3 = K_REMAINING_PAYLOAD_BYTES
     add            r3, r0, K_REMAINING_PAYLOAD_BYTES // Branch Delay Slot
@@ -188,3 +190,22 @@ insufficient_resources:
     b              set_arg
     CAPRI_SET_TABLE_0_VALID(0) // Branch Delay Slot
 
+table_error:
+    // set err_dis_qp
+    phvwr          CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp), 1
+
+    phvwrpair      p.cqe.status, CQ_STATUS_LOCAL_QP_OPER_ERR, p.cqe.error, 1
+    phvwr          CAPRI_PHV_RANGE(TO_S7_P, lif_cqe_error_id_vld, lif_error_id), \
+                    ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_RX_REMOTE_ACC_ERR_OFFSET))
+
+    // update stats
+    phvwr          CAPRI_PHV_FIELD(TO_S7_P, qp_err_disabled), 1
+    phvwr.c2       CAPRI_PHV_FIELD(TO_S7_P, qp_err_dis_table_error), 1
+    phvwr.c3       CAPRI_PHV_FIELD(TO_S7_P, qp_err_dis_phv_intrinsic_error), 1
+    phvwr.c7       CAPRI_PHV_FIELD(TO_S7_P, qp_err_dis_table_resp_error), 1
+
+    phvwr          p.common.p4_intr_global_drop, 1
+    CAPRI_SET_TABLE_0_VALID(0)
+
+    // invoke an mpu-only program which will bubble down and eventually invoke write back
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_sqcb1_write_back_process, r0)

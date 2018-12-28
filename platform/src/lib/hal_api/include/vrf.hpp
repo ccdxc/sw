@@ -9,8 +9,6 @@
 #include "hal.hpp"
 #include "gen/proto/types.pb.h"
 
-#define VRF_ID_BASE 17
-
 class Uplink;
 
 class HalVrf : public HalObject

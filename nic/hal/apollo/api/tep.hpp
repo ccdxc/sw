@@ -150,6 +150,12 @@ public:
         return false;
     }
 
+    /**
+     * @brief     return impl instance of this tep object
+     * @return    impl instance of the tep object
+     */
+    impl_base *impl(void) { return impl_; }
+
 private:
     /**< @brief    constructor */
     tep_entry();

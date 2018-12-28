@@ -278,7 +278,10 @@ class RdmaRQstate(Packet):
         ShortField("num_dup_wr_send_pkts", 0),
         ShortField("num_dup_rd_atomic_bt_pkts", 0),
         ShortField("num_dup_rd_atomic_drop_pkts", 0),
-        BitField("pad", 0, 144),
+        BitField("qp_err_dis_table_error", 0, 1),
+        BitField("qp_err_dis_phv_intrinsic_error", 0, 1),
+        BitField("qp_err_dis_table_resp_error", 0, 1),
+        BitField("pad", 0, 141),
     ]
 
 class RdmaSQstate(Packet):
@@ -503,8 +506,10 @@ class RdmaSQstate(Packet):
         BitField("qp_err_dis_inv_lkey_pd_mismatch", 0, 1),
         BitField("qp_err_dis_inv_lkey_invalid_state", 0, 1),
         BitField("qp_err_dis_inv_lkey_inv_not_allowed", 0, 1),
-        BitField("qp_err_dis_rsvd", 0, 33),
-
+        BitField("qp_err_dis_table_error", 0, 1),
+        BitField("qp_err_dis_phv_intrinsic_error", 0, 1),
+        BitField("qp_err_dis_table_resp_error", 0, 1),
+        BitField("qp_err_dis_rsvd", 0, 30),
         BitField("sqcb4", 0, 48),
 
         #SQCB5
@@ -517,7 +522,24 @@ class RdmaSQstate(Packet):
         ShortField("rx_num_atomic_ack", 0),
         ShortField("rx_num_pkts_in_cur_msg", 0),
         ShortField("rx_num_pkts_in_any_msg", 0),
-        BitField("sqcb5", 0, 288),
+        BitField("qp_err_disabled", 0, 1),
+        BitField("qp_err_dis_rrqlkey_pd_mismatch", 0, 1),
+        BitField("qp_err_dis_rrqlkey_inv_state", 0, 1),
+        BitField("qp_err_dis_rrqlkey_rsvd_lkey", 0, 1),
+        BitField("qp_err_dis_rrqlkey_acc_no_wr_perm", 0, 1),
+        BitField("qp_err_dis_rrqlkey_acc_len_lower", 0, 1),
+        BitField("qp_err_dis_rrqlkey_acc_len_higher", 0, 1),
+        BitField("qp_err_dis_rrqsge_insuff_sges", 0, 1),
+        BitField("qp_err_dis_rrqsge_insuff_sge_len", 0, 1),
+        BitField("qp_err_dis_rrqsge_insuff_dma_cmds", 0, 1),
+        BitField("qp_err_dis_rrqwqe_remote_inv_req_err_rcvd", 0, 1),
+        BitField("qp_err_dis_rrqwqe_remote_acc_err_rcvd", 0, 1),
+        BitField("qp_err_dis_rrqwqe_remote_oper_err_rcvd", 0, 1),
+        BitField("qp_err_dis_table_error", 0, 1),
+        BitField("qp_err_dis_phv_intrinsic_error", 0, 1),
+        BitField("qp_err_dis_table_resp_error", 0, 1),
+        BitField("qp_err_dis_rsvd", 0, 16),
+        BitField("sqcb5", 0, 256),
     ]
 
 class RdmaCQstate(Packet):

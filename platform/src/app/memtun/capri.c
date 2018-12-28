@@ -10,8 +10,7 @@
 #include <stdint.h>
 #include <fcntl.h>
 #include "dtls.h"
-
-#include "platform/include/common/memregion.h"
+#include "gen/platform/mem_regions.hpp"
 
 static char *progname;
 
@@ -117,9 +116,9 @@ main(int argc, char *argv[])
 
     progname = argv[0];
 
-    phys = MEMREGION_MEMTUN_PA;
-#if MEMREGION_MEMTUN_SZ < (256 * 1024)
-#   error "MEMREGION_MEMTUN_SZ < (256 * 1024)"
+    phys = MEM_REGION_ADDR(MEMTUN);
+#if MEM_REGION_MEMTUN_SIZE_KB < 256
+#   error "MEM_REGION_MEMTUN_SIZE < (256 * 1024)"
 #endif
 
     if (argc >= 2) {

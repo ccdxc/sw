@@ -5,8 +5,7 @@
             <mat-toolbar color="primary">
                 <mat-toolbar-row class="app-shell-tool-bar-row">
                     <div class="app-shell-header-logo-div">
-                        <img id="app-header-logo" class="navbar-btn app-header-logo" src="../../../assets/images/headers/pensando-header-logo.svg"
-                        />
+                        <img id="app-header-logo" class="navbar-btn app-header-logo" src="../../../assets/images/headers/pensando-header-logo.svg" />
                         <!-- Commenting out collapsed sidenav for August release
                             The pin/unpin isn't completely smooth
                             Menu expanded doesn't always cause the main content
@@ -19,9 +18,9 @@
                             <mat-icon svgIcon="menu-collapse" *ngIf="isSideNavExpanded"></mat-icon>
                         </button> -->
                     </div>
-                    
+
                     <div class="app-shell-header-search-div">
-                        <app-searchbox ></app-searchbox>
+                        <app-searchbox></app-searchbox>
                     </div>
 
                     <span class="app-shell-spacer"></span>
@@ -41,7 +40,7 @@
                                 <mat-icon style="color: black">power_settings_new</mat-icon>
                                 <span>Logout</span>
                             </button>
-                        </mat-menu>                       
+                        </mat-menu>
                         <button mat-icon-button (click)="onToolbarIconClick($event, 'settings')" class="hidden-sm-down">
                             <mat-icon>settings</mat-icon>
                         </button>
@@ -51,7 +50,8 @@
             </mat-toolbar>
 
             <mat-sidenav-container #container class="app-shell-container" autosize>
-                <mat-sidenav #rightSideNav opened="false" mode="over" position="end" [ngSwitch]="whichRightSideNav()" class="app-shell-right-sidenav">
+                <mat-sidenav #rightSideNav opened="false" mode="over" position="end" [ngSwitch]="whichRightSideNav()"
+                    class="app-shell-right-sidenav">
                     <div *ngSwitchCase="'notifications'">
                         <ng-container *ngTemplateOutlet="sideNavNotification; "></ng-container>
                     </div>
@@ -110,10 +110,12 @@
                                         <span class="app-l-side-nav-item-label">SG Policies</span>
                                     </a>
                                 </li>
-                                <!-- Commenting out for August release -->
-                                <!-- <li>
-                                    <a class="app-sidenav-item" id="app">Apps</a>
-                                </li> -->
+                                <li>
+                                    <a class="app-sidenav-item" id="securityapps">
+                                        <i class="glyphicon app-l-side-nav-li app-l-side-nav-security-apps"></i>
+                                        <span class="app-l-side-nav-item-label">Security Apps</span>
+                                    </a>
+                                </li>
                             </ul>
                         </li>
 
@@ -148,10 +150,13 @@
                                         <span class="app-l-side-nav-item-label">Alerts & Events</span>
                                     </a>
                                 </li>
-                                <!-- <li>
-                                    <a class="app-sidenav-item" id="fwlogs">Firewall Logs</a>
-				                </li>
                                 <li>
+                                    <a class="app-sidenav-item" id="telemetry">
+                                        <i class="glyphicon app-l-side-nav-li app-l-side-nav-monitoring-telemetrypolicies"></i>
+                                        <span class="app-l-side-nav-item-label">Telemetry Policies</span>
+                                    </a>
+				                </li>
+                                <!-- <li>
                                     <a class="app-sidenav-item" id="flowexport">Flow Export</a>
 				                </li>
                                 <li>
@@ -167,28 +172,24 @@
                         <app-toaster>
                             <ng-template let-message let-onClose="onClose" pTemplate="message">
                                 <div fxLayout="row" [class]="'app-ptoast-' + message.severity + ' app-ptoast-template'">
-                                    <mat-icon *ngIf="message.severity === 'success'" fxFlex="none" 
-                                            class="app-ptoast-icon">
+                                    <mat-icon *ngIf="message.severity === 'success'" fxFlex="none" class="app-ptoast-icon">
                                         check_circle
                                     </mat-icon>
-                                    <mat-icon *ngIf="message.severity === 'info'" fxFlex="none" 
-                                            class="app-ptoast-icon">
-                                        info 
+                                    <mat-icon *ngIf="message.severity === 'info'" fxFlex="none" class="app-ptoast-icon">
+                                        info
                                     </mat-icon>
-                                    <mat-icon *ngIf="message.severity === 'warn'" fxFlex="none" 
-                                            class="app-ptoast-icon">
-                                        warning 
+                                    <mat-icon *ngIf="message.severity === 'warn'" fxFlex="none" class="app-ptoast-icon">
+                                        warning
                                     </mat-icon>
-                                    <mat-icon *ngIf="message.severity === 'error'" fxFlex="none" 
-                                            class="app-ptoast-icon">
-                                        error 
+                                    <mat-icon *ngIf="message.severity === 'error'" fxFlex="none" class="app-ptoast-icon">
+                                        error
                                     </mat-icon>
                                     <div fxFlex fxLayout="column">
                                         <div fxFlex="nogrow" class="ui-toast-summary">{{message.summary}}</div>
                                         <div fxFlex="nogrow" class="ui-toast-detail">{{message.detail}}</div>
                                     </div>
                                     <div fxFlex="none" fxLayout="column" fxLayoutAlign="center center">
-                                        <mat-icon fxFlex="none" class="app-ptoast-close" (click)="onClose($event)" >close</mat-icon>
+                                        <mat-icon fxFlex="none" class="app-ptoast-close" (click)="onClose($event)">close</mat-icon>
                                     </div>
                                 </div>
                             </ng-template>
@@ -211,9 +212,9 @@
 </ng-template>
 
 <ng-template #sideNavSettings let-item="item">
-    <div class="app-shell-sideNav-right-panel-div app-shell-sideNav-right-Settings">       
-       <!-- comment out for GS0.3 -->
-       <!--  
+    <div class="app-shell-sideNav-right-panel-div app-shell-sideNav-right-Settings">
+        <!-- comment out for GS0.3 -->
+        <!--  
         <button mat-icon-button routerLink="settings" class="hidden-sm-down">
             <mat-icon>settings</mat-icon>
             Themes and endpoints
@@ -224,8 +225,8 @@
             <mat-icon>settings</mat-icon>
             Authentication Policy
         </button>
-       <!--  Comment out user-management as UI and backend-REST are not ready for 2018-11-05 CAB -->
-       <!--
+        <!--  Comment out user-management as UI and backend-REST are not ready for 2018-11-05 CAB -->
+        <!--
            <button mat-icon-button (click)="settingsNavigate(['/settings', 'users'])" class="hidden-sm-down">
             <mat-icon>person</mat-icon>
                 User Management

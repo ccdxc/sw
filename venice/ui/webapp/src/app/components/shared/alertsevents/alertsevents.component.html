@@ -17,7 +17,8 @@
   <div fxFlex class="alertsevents-events-table">
     <app-lazyrender [data]="filteredEvents" [rows]="28" [virtualRowHeight]="36">
       <p-table #eventTable class="global-primeng-table-lazyload" [columns]="eventCols" 
-                dataKey="meta.name" [responsive]="true" 
+                dataKey="meta.name" [responsive]="true"
+                sortField="meta.mod-time" [sortOrder]='-1'
                 [loading]="eventsLoading" [resizableColumns]="true">
         <!-- Table Caption -->
         <ng-template pTemplate="caption">
@@ -55,8 +56,7 @@
       <ng-template pTemplate="header" let-columns>
         <tr>
           <th *ngFor="let col of eventCols" [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class">
-             {{col.header}}
-             <p-sortIcon *ngIf="col.sortable" style="float: right;" [field]="col.field"></p-sortIcon>
+            <app-sorticon *ngIf="col.sortable" [field]="col.field">{{col.header}}</app-sorticon>
           </th>
         </tr>
       </ng-template>
@@ -96,6 +96,7 @@
       <app-lazyrender [data]="filteredAlerts" [rows]="28" [virtualRowHeight]="36" [runDoCheck]="true">
         <p-table #eventTable class="global-primeng-table-lazyload" [columns]="alertCols" 
                   [rowTrackBy]='alertTrackBy'
+                  sortField="meta.mod-time" [sortOrder]='-1'
                   dataKey="meta.name" [responsive]="true" 
                   [loading]="alertsLoading" [resizableColumns]="true">
           <!-- Table Caption -->
@@ -140,8 +141,7 @@
         <ng-template pTemplate="header" let-columns>
           <tr>
             <th *ngFor="let col of alertCols" [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class" [colSpan]=" col.isLast ? 2 : 1">
-               {{col.header}}
-               <p-sortIcon *ngIf="col.sortable" style="float: right;" [field]="col.field"></p-sortIcon>
+              <app-sorticon *ngIf="col.sortable" [field]="col.field">{{col.header}}</app-sorticon>
             </th>
           </tr>
         </ng-template>

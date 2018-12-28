@@ -31,7 +31,7 @@ static enum crypto_algo_cmd_lo   crypto_algo_cmd_lo_tbl[PNSO_CRYPTO_TYPE_MAX] = 
 	[PNSO_CRYPTO_TYPE_GCM] = CRYPTO_ALGO_CMD_LO_AES_GCM,
 };
 
-#define CRYPTO_POLL_LOOP_TIMEOUT (500 * OSAL_NSEC_PER_USEC)
+#define CRYPTO_POLL_LOOP_TIMEOUT (1500 * OSAL_NSEC_PER_USEC)
 
 static pnso_error_t
 crypto_validate_input(struct service_info *svc_info,
@@ -473,7 +473,7 @@ crypto_ring_db(struct service_info *svc_info)
 }
 
 static pnso_error_t
-crypto_poll(const struct service_info *svc_info)
+crypto_poll(struct service_info *svc_info)
 {
 	const struct crypto_chain_params *crypto_chain;
 	pnso_error_t			err = PNSO_OK;

@@ -87,6 +87,8 @@ export class WorkloadWorkloadIntfSpec extends BaseModel implements IWorkloadWork
         }
         if (values && values['ip-addresses'] != null) {
             this['ip-addresses'] = values['ip-addresses'];
+        } else if (fillDefaults && WorkloadWorkloadIntfSpec.hasDefaultValue('ip-addresses')) {
+            this['ip-addresses'] = [ WorkloadWorkloadIntfSpec.propInfo['ip-addresses'].default];
         }
         this.setFormGroupValuesToBeModelValues();
     }

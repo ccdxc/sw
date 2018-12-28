@@ -134,7 +134,7 @@ func (v *VCProbe) probeSmartNICs() error {
 			hostKey := update.Obj.Value
 			v.updateSNIC(hostKey, update.ChangeSet)
 		}
-		return true
+		return false
 	}
 	for {
 		err = property.WaitForUpdates(v.ctx, property.DefaultCollector(v.client.Client), filter, updFunc)
@@ -252,10 +252,10 @@ func (v *VCProbe) probeNwIFs() error {
 				log.Errorf("Expected VirtualMachine, got %+v", update.Obj)
 				continue
 			}
-			vmKey := vmRef.Value
+			vmKey := update.Obj.Value
 			v.updateNwIF(vmKey, update.ChangeSet)
 		}
-		return true
+		return false
 	}
 
 	for {

@@ -102,7 +102,7 @@ func (tc *TagClient) CreateSession(ctx context.Context) error {
 		return err
 	}
 	err = netutils.ReadHTTPResp(r, &token)
-	if token.Value == "" {
+	if err != nil || token.Value == "" {
 		return fmt.Errorf("Failed to get session token")
 	}
 

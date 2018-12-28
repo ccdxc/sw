@@ -1,0 +1,57 @@
+@import 'src/global-mixins';
+
+$horizontal-gutter: 10px;
+$vertical-gutter: 5px;
+
+.newflowexport-container {
+  background: white;
+  &:hover {
+      background: white;
+  }
+}
+
+.newflowexport-name {
+  margin: $vertical-gutter $horizontal-gutter;
+  height: 30px !important;
+}
+
+.newflowexport-content {
+  background: white;
+  min-height: 180px;
+  margin-top: 4* $vertical-gutter;
+  @include primary-font();
+}
+
+.newflowexport-text {
+  margin-top: 15px;
+  margin-left: $horizontal-gutter;
+  margin-right: $horizontal-gutter;
+  height: 30px;
+  @include primary-font();
+}
+
+.newflowexport-border {
+  border-bottom: 6px solid #6ba0e5;
+  z-index: 100;
+}
+
+.newflowexport-divider {
+  border-bottom: 1px solid #dddddd;
+}
+
+.newflowexport-filter {
+  margin: $vertical-gutter $horizontal-gutter;
+  height: 30px !important;
+}
+
+.newflowexport-save, 
+.newflowexport-cancel {
+    display: inline-block;
+    padding: 4px 10px;
+    line-height: 25px;
+    margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
+}
+
+.newflowexport-buttoncontainer {
+    margin-top: 1.5 * $vertical-gutter;
+}

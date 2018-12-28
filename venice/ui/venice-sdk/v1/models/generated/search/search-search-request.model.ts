@@ -135,6 +135,8 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
         }
         if (values && values['tenants'] != null) {
             this['tenants'] = values['tenants'];
+        } else if (fillDefaults && SearchSearchRequest.hasDefaultValue('tenants')) {
+            this['tenants'] = [ SearchSearchRequest.propInfo['tenants'].default];
         }
         this.setFormGroupValuesToBeModelValues();
     }

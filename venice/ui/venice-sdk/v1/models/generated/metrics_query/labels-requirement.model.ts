@@ -82,6 +82,8 @@ export class LabelsRequirement extends BaseModel implements ILabelsRequirement {
         }
         if (values && values['values'] != null) {
             this['values'] = values['values'];
+        } else if (fillDefaults && LabelsRequirement.hasDefaultValue('values')) {
+            this['values'] = [ LabelsRequirement.propInfo['values'].default];
         }
         this.setFormGroupValuesToBeModelValues();
     }

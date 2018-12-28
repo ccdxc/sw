@@ -51,6 +51,8 @@ export class NetworkLbPolicyStatus extends BaseModel implements INetworkLbPolicy
     setValues(values: any, fillDefaults = true): void {
         if (values && values['type'] != null) {
             this['type'] = values['type'];
+        } else if (fillDefaults && NetworkLbPolicyStatus.hasDefaultValue('type')) {
+            this['type'] = [ NetworkLbPolicyStatus.propInfo['type'].default];
         }
         this.setFormGroupValuesToBeModelValues();
     }

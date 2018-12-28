@@ -136,6 +136,8 @@ export class Metrics_queryQuerySpec extends BaseModel implements IMetrics_queryQ
         }
         if (values && values['fields'] != null) {
             this['fields'] = values['fields'];
+        } else if (fillDefaults && Metrics_queryQuerySpec.hasDefaultValue('fields')) {
+            this['fields'] = [ Metrics_queryQuerySpec.propInfo['fields'].default];
         }
         if (values && values['function'] != null) {
             this['function'] = values['function'];

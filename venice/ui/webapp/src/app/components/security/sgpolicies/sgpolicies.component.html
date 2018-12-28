@@ -2,7 +2,8 @@
   <div fxFlex class="sgpolicies-table">
     <app-lazyrender [data]="filteredSGPolicies" [rows]="28" [virtualRowHeight]="36" [runDoCheck]="true">
       <p-table #sgpoliciesTable class="global-primeng-table-lazyload" [columns]="cols" 
-                dataKey="meta.name" [responsive]="true" 
+                dataKey="meta.name" [responsive]="true"
+                sortField="meta.mod-time" [sortOrder]='-1' 
                 [loading]="loading" [resizableColumns]="true">
         <!-- Table Caption -->
         <ng-template pTemplate="caption">
@@ -13,8 +14,7 @@
       <ng-template pTemplate="header" let-columns>
         <tr>
           <th *ngFor="let col of cols" [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class">
-              {{col.header}}
-              <p-sortIcon *ngIf="col.sortable" style="float: right;" [field]="col.field"></p-sortIcon>
+             <app-sorticon *ngIf="col.sortable" [field]="col.field">{{col.header}}</app-sorticon>
           </th>
         </tr>
       </ng-template>

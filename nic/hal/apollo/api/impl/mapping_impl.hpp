@@ -12,6 +12,8 @@
 #include "nic/hal/apollo/framework/api_base.hpp"
 #include "nic/hal/apollo/framework/impl_base.hpp"
 #include "nic/hal/apollo/include/api/oci_mapping.hpp"
+#include "nic/hal/apollo/api/vcn.hpp"
+#include "nic/hal/apollo/api/subnet.hpp"
 
 namespace impl {
 
@@ -20,6 +22,23 @@ namespace impl {
  * @ingroup OCI_MAPPING
  * @{
  */
+
+typedef struct local_ip_mapping_data_s {
+    uint16_t    vcn_id;
+    uint8_t     vcn_id_valid;    // TODO: when is this used ?
+    uint32_t    xlate_index;
+    uint8_t     ip_type;         // TODO: there is no use for this anymore !!
+} __PACK__ local_ip_mapping_data_t;
+
+typedef struct remote_vnic_mapping_rx_data_s {
+    uint16_t    vcn_id;
+    uint16_t    subnet_id;
+    uint8_t     overlay_mac[6];
+} __PACK__ remote_vnic_mapping_rx_data_t;
+
+typedef struct remote_vnic_mapping_tx_data_s {
+    uint16_t    nexthop_index;
+} __PACK__ remote_vnic_mapping_tx_data_t;
 
 /**
  * @brief    mapping implementation
@@ -97,10 +116,60 @@ public:
 
 private:
     /**< @brief    constructor */
-    mapping_impl();
+    mapping_impl() {
+        nat_idx1_ = nat_idx2_ = 0xFFFFFFFF;
+        local_ip_mapping_data_idx1_ = 0xFFFFFFFF;
+        local_ip_mapping_data_idx2_ = 0xFFFFFFFF;
+        remote_vnic_mapping_rx_idx_ = 0xFFFFFFFF;
+        remote_vnic_mapping_tx_idx_ = 0xFFFFFFFF;
+    }
 
     /**< @brief    destructor */
-    ~mapping_impl();
+    ~mapping_impl() {}
+
+    /**
+     * @brief     add necessary entries to NAT table
+     * @param[in] mapping_info    IP mapping details
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t add_nat_entries_(oci_mapping_t *mapping_info);
+
+    /**
+     * @brief     add necessary entries to LOCAL_IP_MAPPING table
+     * @param[in] vcn             VCN of this IP
+     * @param[in] mapping_info    IP mapping details
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t add_local_ip_mapping_entries_(vcn_entry *vcn,
+                                            oci_mapping_t *mapping_info);
+
+    /**
+     * @brief     add necessary entries to REMOTE_VNIC_MAPPING_RX table
+     * @param[in] vcn             VCN of this IP
+     * @param[in] subnet          subnet of this IP
+     * @param[in] mapping_info    IP mapping details
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t add_remote_vnic_mapping_rx_entries_(vcn_entry *vcn,
+                                                  subnet_entry *subnet,
+                                                  oci_mapping_t *mapping_info);
+
+    /**
+     * @brief     add necessary entries to REMOTE_VNIC_MAPPING_TX table
+     * @param[in] vcn             VCN of this IP
+     * @param[in] subnet          subnet of this IP
+     * @param[in] mapping_info    IP mapping details
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t add_remote_vnic_mapping_tx_entries_(vcn_entry *vcn,
+                                                  oci_mapping_t *mapping_info);
+private:
+    bool        is_local_;
+    uint32_t    nat_idx1_, nat_idx2_;
+    uint32_t    local_ip_mapping_data_idx1_;
+    uint32_t    local_ip_mapping_data_idx2_;
+    uint32_t    remote_vnic_mapping_rx_idx_;
+    uint32_t    remote_vnic_mapping_tx_idx_;
 };
 
 /** @} */    // end of OCI_MAPPING_IMPL

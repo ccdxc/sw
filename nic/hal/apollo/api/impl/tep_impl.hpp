@@ -82,10 +82,23 @@ public:
     virtual sdk_ret_t update_hw(api_base *curr_obj, api_base *prev_obj,
                                 obj_ctxt_t *obj_ctxt) override;
 
+    /**
+     * @brief     return h/w index for this TEP
+     * @return    h/w table index for this TEP
+     */
+    uint16_t hw_id(void) { return hw_id_; }
+
+    /**
+     * @brief     return nexthop index for this TEP
+     * @return    nexthop index for this TEP
+     */
+    uint16_t nh_id(void) { return nh_id_; }
+
 private:
     /**< @brief    constructor */
     tep_impl() {
         hw_id_ = 0xFFFF;
+        nh_id_ = 0xFFFF;
     }
 
     /**< @brief    destructor */
@@ -93,7 +106,8 @@ private:
 
 private:
     /**< P4 datapath specific state */
-    uint16_t         hw_id_;      /**< hardware id for this tep */
+    uint16_t    hw_id_;    /**< hardware id for this tep */
+    uint16_t    nh_id_;    /**< nexthop index for this tep */
 } __PACK__;
 
 /** @} */    // end of OCI_TEP_IMPL

@@ -266,6 +266,7 @@ func TestListSmartNICs(t *testing.T) {
 
 	// Delete one object and verify
 	err = store.SmartNICDelete(context.Background(), testNic1Mac)
+	AssertOk(t, err, "SmartNICDelete should succeed")
 	nicMap[testNic2Mac] = suite.testNics[1]
 	verifySmartNICList(t, nicMap) // empties the map!
 }
@@ -457,6 +458,7 @@ func TestSmartNICInspect(t *testing.T) {
 
 	// Generate errors from store.
 	wCtx, wCancel = context.WithCancel(context.Background())
+	defer wCancel()
 	stream, err = suite.vcHubClient.WatchSmartNICs(wCtx, ws)
 	if err != nil {
 		t.Fatalf("Watch failed -- %v", err)
@@ -606,6 +608,7 @@ func TestListNwIFs(t *testing.T) {
 
 	// Delete one object and verify
 	err = store.NwIFDelete(context.Background(), testIf2ID)
+	AssertOk(t, err, "NwIfDelete should succeed")
 	ifMap[testIf1ID] = suite.testIfs[0]
 	verifyNwIFList(t, ifMap)
 }
@@ -767,9 +770,11 @@ func TestNwIFInspect(t *testing.T) {
 
 	ws := &orch.WatchSpec{}
 	wCtx, wCancel := context.WithCancel(context.Background())
+	defer wCancel()
 	// Generate an error from store.
 	suite.testStore.SetErrorState(true)
 	stream, err := suite.vcHubClient.WatchNwIFs(wCtx, ws)
+	AssertOk(t, err, "WatchNwIFs failed")
 	if stream != nil {
 		_, err = stream.Recv()
 		if err == nil {
@@ -782,6 +787,7 @@ func TestNwIFInspect(t *testing.T) {
 
 	// Generate errors from store.
 	wCtx, wCancel = context.WithCancel(context.Background())
+	defer wCancel()
 
 	doneCh := make(chan bool)
 	watcherFunc := func(errStr string) {
@@ -1086,6 +1092,11 @@ func TestVCPNwIF(t *testing.T) {
 	storeCh := make(chan defs.StoreMsg, 96)
 	vchStore := store.NewVCHStore(context.Background())
 	vchStore.Run(storeCh)
+	defer func() {
+		close(storeCh)
+		vchStore.WaitForExit()
+	}()
+
 	v1 := vcp.NewVCProbe(u1, storeCh)
 	time.Sleep(100 * time.Millisecond)
 	err = v1.Start()
@@ -1095,10 +1106,14 @@ func TestVCPNwIF(t *testing.T) {
 	}
 
 	v1.Run()
+	defer func() {
+		v1.Stop()
+	}()
 	AssertEventually(t, func() (bool, interface{}) {
 		ifMap := getExpectedNwIFs(t)
-		return checkNwIFList(ifMap) == nil, nil
-	}, "Default NwIFs", "50ms", "5s")
+		err := checkNwIFList(ifMap)
+		return err == nil, fmt.Sprintf("{ err : %s }", err)
+	}, "Default NwIFs", "1s", "2s")
 
 	// Add a new NwIF and verify
 	doneCh := make(chan bool)
@@ -1129,7 +1144,4 @@ func TestVCPNwIF(t *testing.T) {
 
 	}
 
-	v1.Stop()
-	close(storeCh)
-	vchStore.WaitForExit()
 }

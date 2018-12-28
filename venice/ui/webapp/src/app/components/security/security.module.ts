@@ -7,7 +7,6 @@ import { MaterialdesignModule } from '@lib/materialdesign.module';
 import { PrimengModule } from '@lib/primeng.module';
 import { SecurityComponent } from './security.component';
 import { SecurityRoutingModule } from './security.route';
-
 @NgModule({
   imports: [
     CommonModule,
@@ -15,12 +14,10 @@ import { SecurityRoutingModule } from './security.route';
 
     PrimengModule,
     MaterialdesignModule,
-    SharedModule,
     FlexLayoutModule,
     FormsModule,
     ReactiveFormsModule,
     SharedModule,
-
     SecurityRoutingModule
   ],
   declarations: [SecurityComponent],

@@ -163,10 +163,27 @@ static pnso_error_t
 chksum_sub_chain_from_cpdc(struct service_info *svc_info,
 			   struct cpdc_chain_params *cpdc_chain)
 {
-	/*
-	 * This is supportable when there's a valid use case.
-	 */
-	return EOPNOTSUPP;
+	pnso_error_t err;
+	struct cpdc_desc *chksum_desc;
+
+	OSAL_LOG_DEBUG("enter ...");
+
+	chksum_desc = (struct cpdc_desc *) svc_info->si_desc;
+	err = seq_setup_chksum_chain_params(cpdc_chain, svc_info, chksum_desc,
+			svc_info->si_p4_sgl, svc_info->si_num_tags);
+	if (err) {
+		OSAL_LOG_ERROR("failed to setup checksum in chain! err: %d", err);
+		goto out;
+	}
+	CPDC_PPRINT_DESC(chksum_desc);
+
+	err = PNSO_OK;
+	OSAL_LOG_DEBUG("exit!");
+	return err;
+
+out:
+	OSAL_LOG_ERROR("exit! err: %d", err);
+	return err;
 }
 
 static pnso_error_t
@@ -221,10 +238,37 @@ chksum_ring_db(struct service_info *svc_info)
 }
 
 static pnso_error_t
-chksum_poll(const struct service_info *svc_info)
+chksum_poll(struct service_info *svc_info)
 {
-	return cpdc_poll(svc_info);
+	pnso_error_t err = EINVAL;
+	struct cpdc_status_desc *st_desc;
+	uint32_t status_object_size;
+
+	err = cpdc_poll(svc_info, NULL);
+	if(err != PNSO_OK)
+		return err;
+
+	st_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
+	if (!st_desc) {
+		OSAL_LOG_ERROR("invalid hash status desc! err: %d", err);
+		OSAL_ASSERT(!err);
+		return err;
+	}
+	status_object_size = cpdc_get_status_desc_size();
+
+	if(!svc_info->tags_updated) {
+		cpdc_update_tags(svc_info);
+	}
+
+	if(svc_info->si_num_tags > 1) {
+		st_desc = cpdc_get_next_status_desc(st_desc,
+				status_object_size * (svc_info->si_num_tags - 1));
+		return cpdc_poll(svc_info, st_desc);
+	}
+
+	return err;
 }
+
 
 static pnso_error_t
 chksum_read_status(struct service_info *svc_info)
@@ -232,7 +276,7 @@ chksum_read_status(struct service_info *svc_info)
 	pnso_error_t err = EINVAL;
 	struct pnso_service_status *svc_status;
 	struct cpdc_status_desc *status_desc, *st_desc;
-	uint32_t i, status_object_size, orig_num_tags;
+	uint32_t i, status_object_size;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -254,29 +298,9 @@ chksum_read_status(struct service_info *svc_info)
 	st_desc = status_desc;
 	status_object_size = cpdc_get_status_desc_size();
 
-	if (chn_service_deps_data_len_set_from_parent(svc_info)) {
-
-		/*
-		 * In debug mode, verify the padding adjustment in the dst SGL.
-		 *
-		 * CAUTION: it can be costly to invoke cpdc_sgl_total_len_get()
-		 * so do not call it outside of the DEBUG macro.
-		 */
-		OSAL_LOG_DEBUG("my data_len %u parent data_len %u",
-				cpdc_sgl_total_len_get(&svc_info->si_src_sgl),
-				chn_service_deps_data_len_get(svc_info));
-        }
-
-	orig_num_tags = svc_info->si_num_tags;
-	if (svc_is_chksum_per_block_enabled(svc_info->si_desc_flags)) {
-		svc_info->si_num_tags = chn_service_deps_num_blks_get(svc_info);
-		OSAL_ASSERT(svc_info->si_num_tags >= 1);
-	} else
-		OSAL_ASSERT(svc_info->si_num_tags == 1);
-
-	OSAL_LOG_INFO("block_size: %d object_size: %d new num_tags: %d old num_tags: %d",
-			svc_info->si_block_size, status_object_size,
-			svc_info->si_num_tags, orig_num_tags);
+	if(!svc_info->tags_updated) {
+		cpdc_update_tags(svc_info);
+	}
 
 	for (i = 0; i < svc_info->si_num_tags; i++) {
 

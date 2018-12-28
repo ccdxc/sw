@@ -3,7 +3,8 @@
     <div fxFlex="auto" class="syslog-syslog" fxLayout="column" formArrayName="targets"
       >
       <div fxFlex="10px"></div> <!-- Buffer, creating as a div so there are no hiccups in the animation-->
-      <div fxFlex="30px" class="syslog-fieldtitle">SYSLOG EXPORT CONFIGURATION</div>
+      <div *ngIf="showSyslogOptions" fxFlex="30px" class="syslog-fieldtitle">SYSLOG EXPORT CONFIGURATION</div>
+      <div *ngIf="!showSyslogOptions" fxFlex="30px" class="syslog-fieldtitle">EXPORT CONFIGURATION</div>
       <ng-container *ngTemplateOutlet="syslogOptions"></ng-container>
       <div fxFlex="10px"></div>
       <div fxFlex="nogrow" fxLayout="column" [@slideInOut] *ngFor="let target of targets; let index = index; let first = first" [formGroupName]="index">
@@ -12,8 +13,7 @@
         <ng-container *ngTemplateOutlet="syslogCredentials; context:{index:index}"></ng-container>
           <div fxFlex="nogrow" fxLayout="row">
           <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start start">
-            <div fxFlex="20"></div>
-            <div fxFlex="nogrow" fxLayout="column" fxLayoutAlign="start end" class="syslog-fieldtitle syslog-and">
+            <div fxFlex="55px" fxLayout="column" fxLayoutAlign="start end" class="syslog-fieldtitle syslog-and">
               <span fxFlex="nogrow" *ngIf="first" (click)="addTarget()">+ ADD</span>
               <mat-icon fxFlex="nogrow" [style.color]="'#767676'" *ngIf="syslogServerForm.get(['targets']).length > 1"
                 (click)="removeTarget(index)">delete</mat-icon>
@@ -30,7 +30,7 @@
 
 <ng-template #syslogOptions>
   <div fxFlex="nogrow" fxLayout="row wrap" [formGroup]="syslogServerForm">
-    <ng-container formGroupName="config">
+    <ng-container *ngIf="showSyslogOptions" formGroupName="config">
       <div fxFlex="nogrow" fxLayout="column">
         <div class="syslog-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
           <span>Facility Override:</span>
@@ -59,7 +59,7 @@
         <span>Format:</span>
       </div>
       <mat-radio-group fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="10px" class="syslog-format" formControlName="format">
-        <mat-radio-button fxFlex="nogrow" color="primary" [disableRipple]="true" class="" *ngFor="let option of syslogFormatOptions"
+        <mat-radio-button fxFlex="nogrow" color="primary" [disableRipple]="true" class="" *ngFor="let option of formatOptions"
           [value]="option.value">
           {{option.label}}
         </mat-radio-button>

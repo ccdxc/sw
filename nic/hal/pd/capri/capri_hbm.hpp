@@ -6,7 +6,6 @@
 #include "nic/sdk/include/sdk/platform/p4loader/loader.hpp"
 
 using sdk::platform::utils::mpartition_region_t;
-using sdk::platform::utils::mpartition_cache_pipe_t;
 using hal::pd::asic_hbm_bw_t;
 
 #define JP4_PRGM                 "p4_program"

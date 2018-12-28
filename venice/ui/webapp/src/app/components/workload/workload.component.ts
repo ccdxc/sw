@@ -73,12 +73,12 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
   workloadEventUtility: HttpEventUtility<WorkloadWorkload>;
 
   cols: any[] = [
-    { field: 'meta.name', header: 'Workload Name', class: 'workload-column-name', sortable: false },
-    { field: 'spec.host-name', header: 'Host name', class: 'workload-column-host-name', sortable: false },
+    { field: 'meta.name', header: 'Workload Name', class: 'workload-column-name', sortable: true },
+    { field: 'spec.host-name', header: 'Host name', class: 'workload-column-host-name', sortable: true },
     { field: 'meta.labels', header: 'Labels', class: 'workload-column-labels', sortable: false },
     { field: 'spec.interfaces', header: 'Interfaces', class: 'workload-column-interfaces', sortable: false },
-    { field: 'meta.mod-time', header: 'Modification Time', class: 'workload-column-date', sortable: false },
-    { field: 'meta.creation-time', header: 'Creation Time', class: 'workload-column-date', sortable: false },
+    { field: 'meta.mod-time', header: 'Modification Time', class: 'workload-column-date', sortable: true },
+    { field: 'meta.creation-time', header: 'Creation Time', class: 'workload-column-date', sortable: true },
   ];
 
   // Name of the row we are hovering over

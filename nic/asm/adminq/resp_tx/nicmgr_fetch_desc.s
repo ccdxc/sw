@@ -47,8 +47,10 @@ nicmgr_fetch_desc:
   phvwr.f         p.nicmgr_t0_s2s_nicmgr_qstate_addr, k.p4_txdma_intr_qstate_addr
 
 nicmgr_spurious_db:
-  phvwri.e        p.p4_intr_global_drop, 1
-  phvwri.f        p.{app_header_table0_valid...app_header_table3_valid}, 0
+  CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, k.p4_txdma_intr_qtype, k.p4_intr_global_lif)   // R4 = ADDR
+  CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, 0, 0)   // R3 = DATA
+  phvwri.e        p.{app_header_table0_valid...app_header_table3_valid}, 0
+  phvwri.f        p.p4_intr_global_drop, 1
 
 nicmgr_queue_disabled:
   CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_CLEAR, k.p4_txdma_intr_qtype, k.p4_intr_global_lif)   // R4 = ADDR

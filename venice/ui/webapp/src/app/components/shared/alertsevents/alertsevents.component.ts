@@ -83,10 +83,10 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   // All columns are set as not sortable as it isn't currently supported
   // TODO: Support sorting columns
   eventCols: any[] = [
-    { field: 'meta.mod-time', header: 'Modification Time', class: 'alertsevents-column-date', sortable: false },
-    { field: 'meta.creation-time', header: 'Creation Time', class: 'alertsevents-column-date', sortable: false },
+    { field: 'meta.mod-time', header: 'Modification Time', class: 'alertsevents-column-date', sortable: true },
+    { field: 'meta.creation-time', header: 'Creation Time', class: 'alertsevents-column-date', sortable: true },
     { field: 'severity', header: 'Severity', class: 'alertsevents-column-severity', sortable: false },
-    { field: 'type', header: 'Type', class: 'alertsevents-column-event', sortable: false },
+    { field: 'type', header: 'Type', class: 'alertsevents-column-event', sortable: true },
     { field: 'message', header: 'Message', class: 'alertsevents-column-message', sortable: false },
     { field: 'source', header: 'Source Node & Component', class: 'alertsevents-column-source', sortable: false },
     { field: 'count', header: 'Count', class: 'alertsevents-column-count', sortable: false },
@@ -131,8 +131,8 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   // This are the alerts that will be displayed
   filteredAlerts: ReadonlyArray<MonitoringAlert> = [];
   alertCols: any[] = [
-    { field: 'meta.mod-time', header: 'Modification Time', class: 'alertsevents-column-date', sortable: false },
-    { field: 'meta.creation-time', header: 'Creation Time', class: 'alertsevents-column-date', sortable: false },
+    { field: 'meta.mod-time', header: 'Modification Time', class: 'alertsevents-column-date', sortable: true },
+    { field: 'meta.creation-time', header: 'Creation Time', class: 'alertsevents-column-date', sortable: true },
     { field: 'status.severity', header: 'Severity', class: 'alertsevents-column-severity', sortable: false },
     { field: 'status.message', header: 'Message', class: 'alertsevents-column-message', sortable: false },
     { field: 'spec.state', header: 'State', class: 'alertsevents-column-state', sortable: false },
@@ -231,7 +231,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   selectedIndexChangeEvent(event) {
     this.emitActiveTab(event);
     if (this.lazyRenderWrapper != null) {
-      this.lazyRenderWrapper.resizeTable()
+      this.lazyRenderWrapper.resizeTable();
     }
   }
 
@@ -286,6 +286,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
       },
       this.restErrorHandler('Failed to get Alerts')
     );
+    this.subscriptions.push(this.alertSubscription);
   }
 
   displayColumn(data, col): any {

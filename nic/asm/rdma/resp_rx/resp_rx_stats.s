@@ -18,10 +18,10 @@ struct rqcb5_t d;
 #define MASK_16 16
 #define MASK_32 32
 
-#define K_FLAGS CAPRI_KEY_RANGE(IN_P, incr_recirc_drop, dup_rd_atomic_drop)
+#define K_FLAGS CAPRI_KEY_RANGE(IN_P, incr_recirc_drop, qp_err_dis_table_resp_error)
 #define K_LIF_CQE_ERROR_ID_VLD CAPRI_KEY_FIELD(IN_P, lif_cqe_error_id_vld)
 #define K_LIF_ERROR_ID_VLD CAPRI_KEY_FIELD(IN_P, lif_error_id_vld)
-#define K_LIF_ERROR_ID CAPRI_KEY_RANGE(IN_P, lif_error_id_sbit0_ebit0, lif_error_id_sbit1_ebit3)
+#define K_LIF_ERROR_ID CAPRI_KEY_FIELD(IN_P, lif_error_id)
 
 %%
 
@@ -35,13 +35,17 @@ resp_rx_stats_process:
     seq              c1, r1[4:2], STAGE_7
     bcf              [!c1], bubble_to_next_stage
 
-    crestore         [c7, c6, c5, c4], K_FLAGS, 0xf //BD Slot
+    crestore         [c7, c6, c5, c4, c3, c2, c1], K_FLAGS, 0x7f //BD Slot
     // c7-recirc_drop, c6-dup_wr_send, c5-dup_rd_atomic_bt, c4-dup_rd_atomic_drop
+    // c3: table_error, c2: phv_intrinstic_error, c1: table_resp_error
 
     tblmincri.c7     d.num_recirc_drop_pkts, MASK_16, 1
     tblmincri.c6     d.num_dup_wr_send_pkts, MASK_16, 1
     tblmincri.c5     d.num_dup_rd_atomic_bt_pkts, MASK_16, 1
     tblmincri.c4     d.num_dup_rd_atomic_drop_pkts, MASK_16, 1
+    tblwr.c3         d.qp_err_dis_table_error, 1
+    tblwr.c2         d.qp_err_dis_phv_intrinsic_error, 1
+    tblwr.c1         d.qp_err_dis_table_resp_error, 1
 
     bcf              [c7 | c6 | c5 | c4], handle_error_lif_stats
     add              GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS //BD Slot

@@ -115,9 +115,13 @@ export class AuthPermission extends BaseModel implements IAuthPermission {
         }
         if (values && values['resource-names'] != null) {
             this['resource-names'] = values['resource-names'];
+        } else if (fillDefaults && AuthPermission.hasDefaultValue('resource-names')) {
+            this['resource-names'] = [ AuthPermission.propInfo['resource-names'].default];
         }
         if (values && values['actions'] != null) {
             this['actions'] = values['actions'];
+        } else if (fillDefaults && AuthPermission.hasDefaultValue('actions')) {
+            this['actions'] = [ AuthPermission.propInfo['actions'].default];
         }
         this.setFormGroupValuesToBeModelValues();
     }

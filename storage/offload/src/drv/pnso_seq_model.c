@@ -31,10 +31,10 @@ model_setup_cp_chain_params(struct chain_entry *centry,
 }
 
 static pnso_error_t
-model_setup_hash_chain_params(struct chain_entry *centry,
+model_setup_hashorchksum_chain_params(struct chain_entry *centry,
 		struct service_info *svc_info,
-		struct cpdc_desc *hash_desc, struct cpdc_sgl *sgl,
-		uint32_t num_hash_blks)
+		struct cpdc_desc *desc, struct cpdc_sgl *sgl,
+		uint32_t num_blks)
 {
 	return EOPNOTSUPP;
 }
@@ -51,6 +51,7 @@ const struct sequencer_ops model_seq_ops = {
 	.setup_desc = model_setup_desc,
 	.ring_db = model_ring_db,
 	.setup_cp_chain_params = model_setup_cp_chain_params,
-	.setup_hash_chain_params = model_setup_hash_chain_params,
+	.setup_hash_chain_params = model_setup_hashorchksum_chain_params,
+	.setup_chksum_chain_params = model_setup_hashorchksum_chain_params,
 	.setup_cpdc_chain_desc = model_setup_cpdc_chain_desc,
 };

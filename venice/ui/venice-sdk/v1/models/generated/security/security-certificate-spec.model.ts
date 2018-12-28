@@ -86,6 +86,8 @@ export class SecurityCertificateSpec extends BaseModel implements ISecurityCerti
         }
         if (values && values['usages'] != null) {
             this['usages'] = values['usages'];
+        } else if (fillDefaults && SecurityCertificateSpec.hasDefaultValue('usages')) {
+            this['usages'] = [ SecurityCertificateSpec.propInfo['usages'].default];
         }
         if (values && values['body'] != null) {
             this['body'] = values['body'];

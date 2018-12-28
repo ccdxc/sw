@@ -27,7 +27,7 @@ edma_fetch_desc:
   nop
 
   // Compute descriptor fetch address
-  add             _r_desc_addr, d.{ring_base}.dx, d.{p_index0}.hx, LG2_EDMA_CMD_DESC_SIZE
+  add             _r_desc_addr, d.{ring_base}.dx, d.{c_index0}.hx, LG2_EDMA_CMD_DESC_SIZE
 
   // Compute completion entry address
   add             _r_cq_desc_addr, d.{cq_ring_base}.dx, d.{c_index0}.hx, LG2_EDMA_COMP_DESC_SIZE
@@ -63,15 +63,15 @@ edma_fetch_desc_done:
   nop.!c3.e
   nop
 
+edma_spurious_db:
+  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, 0
+  phvwri.f        p.p4_intr_global_drop, 1
+
 edma_fetch_desc_eval_db:
-  CAPRI_RING_DOORBELL_ADDR_HOST(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, k.p4_txdma_intr_qtype, k.p4_intr_global_lif)   // R4 = ADDR
+  CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, k.p4_txdma_intr_qtype, k.p4_intr_global_lif)   // R4 = ADDR
   CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, 0, 0)   // R3 = DATA
   memwr.dx.e      _r_dbaddr, _r_dbval
   nop
-
-edma_spurious_db:
-  phvwri.e        p.p4_intr_global_drop, 1
-  phvwri.f        p.{app_header_table0_valid...app_header_table3_valid}, 0
 
 edma_queue_disabled:
   CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_CLEAR, k.p4_txdma_intr_qtype, k.p4_intr_global_lif)   // R4 = ADDR

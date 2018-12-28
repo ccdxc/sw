@@ -29,8 +29,9 @@ struct rdma_stage0_table_k k;
 
 resp_tx_rqcb_process:
 
+    bcf             [c2 | c3 | c7], table_error
     // are we in a state to process received packets ?
-    slt             c1, d.state, QP_STATE_INIT
+    slt             c1, d.state, QP_STATE_INIT // BD Slot
     bcf             [c1], state_fail
     nop             //BD Slot
 
@@ -258,3 +259,8 @@ state_fail:
                                          RQ_RING_ID, r1, r2)
     phvwr.e     p.common.p4_intr_global_drop, 1
     nop         //Exit Slot
+
+table_error:
+    // TODO add LIF stats
+    phvwr.e        p.common.p4_intr_global_drop, 1
+    nop // Exit Slot

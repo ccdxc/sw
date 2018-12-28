@@ -1,6 +1,11 @@
 {
     "regions": [
         {
+            "_comment" : "memtun address is hardcoded to HBM base + 64MB(above cc regions)",
+             "name": "memtun",
+             "size_kb": 256
+        },
+        {
             "name": "lif2qstate_map",
             "size_kb": 131072,
             "cache": "p4plus-all"
@@ -103,6 +108,18 @@
             "_comment2": "Num timers = hash depth * 16 * 12 = 196608",
             "name": "timers",
             "size_kb": 1088
+        },
+        {
+            "name": "pciemgr",
+            "size_kb" : 32768
+        },
+        {
+            "name": "devcmd",
+            "size_kb": 32768
+        },
+        {
+            "name": "mpu-trace",
+            "size_kb": 224
         }
     ]
 }

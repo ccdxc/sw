@@ -28,7 +28,6 @@
 #define ETH_ADDR_LEN                                 6
 typedef uint8_t    mac_addr_t[ETH_ADDR_LEN];
 
-
 #define MAC_TO_UINT64(mac_addr)                                         \
     (((mac_addr)[5] & 0xFF)                      |                      \
      (((mac_addr)[4] & 0xFF) << 8)               |                      \

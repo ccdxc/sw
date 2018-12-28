@@ -108,6 +108,8 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
         }
         if (values && values['controllers'] != null) {
             this['controllers'] = values['controllers'];
+        } else if (fillDefaults && ClusterSmartNICSpec.hasDefaultValue('controllers')) {
+            this['controllers'] = [ ClusterSmartNICSpec.propInfo['controllers'].default];
         }
         this.setFormGroupValuesToBeModelValues();
     }

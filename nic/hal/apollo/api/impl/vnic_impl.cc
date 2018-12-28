@@ -218,7 +218,7 @@ vnic_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
         vnic_by_vlan_data.action_id =
             LOCAL_VNIC_BY_VLAN_TX_LOCAL_VNIC_INFO_TX_ID;
         vnic_by_vlan_data.local_vnic_by_vlan_tx_info.local_vnic_tag = hw_id_;
-        vnic_by_vlan_data.local_vnic_by_vlan_tx_info.vcn_id = vcn->hwid();
+        vnic_by_vlan_data.local_vnic_by_vlan_tx_info.vcn_id = vcn->hw_id();
         vnic_by_vlan_data.local_vnic_by_vlan_tx_info.skip_src_dst_check =
             vnic_info->src_dst_check ? false : true;
         vnic_by_vlan_data.local_vnic_by_vlan_tx_info.resource_group_1 =
@@ -244,7 +244,7 @@ vnic_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
         vnic_by_slot_data.action_id =
             LOCAL_VNIC_BY_SLOT_RX_LOCAL_VNIC_INFO_RX_ID;
         vnic_by_slot_data.local_vnic_by_slot_rx_info.local_vnic_tag = hw_id_;
-        vnic_by_slot_data.local_vnic_by_slot_rx_info.vcn_id = vcn->hwid();
+        vnic_by_slot_data.local_vnic_by_slot_rx_info.vcn_id = vcn->hw_id();
         vnic_by_slot_data.local_vnic_by_slot_rx_info.skip_src_dst_check =
             vnic_info->src_dst_check ? false : true;
         vnic_by_slot_data.local_vnic_by_slot_rx_info.resource_group_1 =

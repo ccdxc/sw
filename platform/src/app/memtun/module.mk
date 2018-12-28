@@ -8,4 +8,5 @@ MODULE_SRCS     := ${MODULE_SRC_DIR}/capri.c \
                     ${MODULE_SRC_DIR}/tun.c \
                     ${MODULE_SRC_DIR}/util.c
 MODULE_LDLIBS   := pthread
+MODULE_PREREQS  := hal.memrgns
 include ${MKDEFS}/post.mk

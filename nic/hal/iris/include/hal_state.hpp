@@ -12,6 +12,7 @@
 #include "nic/sdk/include/sdk/shmmgr.hpp"
 #include "nic/sdk/include/sdk/bitmap.hpp"
 #include "nic/sdk/include/sdk/eth.hpp"
+#include "nic/sdk/include/sdk/platform/utils/mpartition.hpp"
 #include "nic/include/eventmgr.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/include/hal.hpp"
@@ -705,6 +706,10 @@ public:
     }
 
     sdk::types::platform_type_t platform_type() { return platform_; }
+
+    // Mem partition set/get function
+    void set_mpartition(sdk::platform::utils::mpartition *part) { mpart_ = part; }
+    sdk::platform::utils::mpartition *get_mpartition(void) {return mpart_; }
 private:
     // following come from shared memory or non-linux HBM memory
     hal_cfg_db           *cfg_db_;
@@ -716,6 +721,7 @@ private:
     sdk::lib::catalog    *catalog_;
     hal_obj_meta         **obj_meta_;
     sdk::types::platform_type_t platform_;
+    sdk::platform::utils::mpartition *mpart_;
 
 private:
     void cleanup(void);

@@ -50,9 +50,10 @@ struct req_tx_s0_t0_k k;
 
 .align
 req_tx_sqcb_process:
+    bcf             [c2 | c3 | c7], table_error
     // If QP is not in RTS state, do no process any event. Branch to check for
     // drain state and process only if SQ has to be drained till a specific WQE
-    seq            c7, d.state, QP_STATE_RTS
+    seq            c7, d.state, QP_STATE_RTS // BD Slot
     bcf            [!c7], check_state
     tblwr.c7       d.sq_drained, 0 // Branch Delay Slot
 
@@ -166,7 +167,8 @@ poll_for_work:
         phvwrpair CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, wqe_addr), r2, \
                   CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_cindex), SPEC_SQ_C_INDEX
 
-        phvwr     CAPRI_PHV_FIELD(TO_S3_SQSGE_P, priv_oper_enable), d.priv_oper_enable
+        phvwrpair CAPRI_PHV_FIELD(TO_S3_SQSGE_P, priv_oper_enable), d.priv_oper_enable, \
+                  CAPRI_PHV_FIELD(TO_S3_SQSGE_P, spec_cindex), SPEC_SQ_C_INDEX
                   
         
         // populate t0 PC and table address
@@ -224,7 +226,8 @@ pt_process:
 
         phvwr     CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd        
 
-        phvwr     CAPRI_PHV_FIELD(TO_S3_SQSGE_P, priv_oper_enable), d.priv_oper_enable
+        phvwrpair CAPRI_PHV_FIELD(TO_S3_SQSGE_P, priv_oper_enable), d.priv_oper_enable, \
+                  CAPRI_PHV_FIELD(TO_S3_SQSGE_P, spec_cindex), SPEC_SQ_C_INDEX
 
         seq.e          c1, d.poll_in_progress, 0x1
         tblmincri.!c1  SPEC_SQ_C_INDEX, d.log_num_wqes, 1 
@@ -267,6 +270,9 @@ in_progress:
         
         phvwrpair CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, wqe_addr), d.curr_wqe_ptr, \
                   CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_cindex), r1
+
+        phvwrpair CAPRI_PHV_FIELD(TO_S3_SQSGE_P, priv_oper_enable), d.priv_oper_enable, \
+                  CAPRI_PHV_FIELD(TO_S3_SQSGE_P, spec_cindex), r1
 
         mincr.e        r1, d.log_num_wqes, 1
         tblwr          SPEC_SQ_C_INDEX, r1
@@ -431,6 +437,9 @@ restart_timer:
 process_recirc:
     // reset sched_eval_done 
     tblwr          d.ring_empty_sched_eval_done, 0
+
+    seq            c1, CAPRI_APP_DATA_RECIRC_SPEC_CINDEX, SQ_C_INDEX
+    bcf            [!c1], exit
 
     // Revert spec_cindex to next sq_cindex upon recirc of the current one
     add            r1, r0, SQ_C_INDEX // Branch Delay Slot
@@ -644,3 +653,7 @@ drop:
     phvwr.e        p.common.p4_intr_global_drop, 1
     nop
 
+table_error:
+    // TODO add LIF stats
+    phvwr.e        p.common.p4_intr_global_drop, 1
+    nop // Exit Slot

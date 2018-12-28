@@ -57,7 +57,7 @@ export class EventpolicyComponent extends BaseComponent implements OnInit, OnDes
   shouldEnableButtons: boolean = true;
 
   cols: any[] = [
-    { field: 'meta.name', header: 'Name', class: 'eventpolicy-column-name', sortable: false },
+    { field: 'meta.name', header: 'Name', class: 'eventpolicy-column-name', sortable: true },
     { field: 'spec.selector', header: 'Filters', class: 'destinations-column-name', sortable: false },
     { field: 'spec.targets', header: 'Targets', class: 'eventpolicy-column-targets', sortable: false, isLast: true },
   ];

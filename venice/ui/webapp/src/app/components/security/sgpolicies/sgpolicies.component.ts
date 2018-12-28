@@ -42,9 +42,9 @@ export class SgpoliciesComponent extends BaseComponent implements OnInit, OnDest
 
   // All columns are set as not sortable as it isn't currently supported
   cols: any[] = [
-    { field: 'meta.name', header: 'SG Policy Name', class: 'sgpolicies-column-name', sortable: false },
-    { field: 'meta.mod-time', header: 'Modification Time', class: 'global-column-date', sortable: false },
-    { field: 'meta.creation-time', header: 'Creation Time', class: 'global-column-date', sortable: false },
+    { field: 'meta.name', header: 'SG Policy Name', class: 'sgpolicies-column-name', sortable: true },
+    { field: 'meta.mod-time', header: 'Modification Time', class: 'global-column-date', sortable: true },
+    { field: 'meta.creation-time', header: 'Creation Time', class: 'global-column-date', sortable: true },
   ];
 
   bodyIcon = {

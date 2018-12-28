@@ -277,7 +277,10 @@ header_type req_tx_to_stage_stats_info_t {
         qp_err_dis_inv_lkey_pd_mismatch          : 1;
         qp_err_dis_inv_lkey_invalid_state        : 1;
         qp_err_dis_inv_lkey_inv_not_allowed      : 1;
-        qp_err_dis_rsvd                          : 33;
+        qp_err_dis_table_error                   : 1;
+        qp_err_dis_phv_intrinsic_error           : 1;
+        qp_err_dis_table_resp_error              : 1;
+        qp_err_dis_rsvd                          : 30;
         pad                                      : 34;
     }
 }
@@ -490,6 +493,7 @@ header_type req_tx_to_stage_sqsge_info_t {
         packet_len                       : 14;
         congestion_mgmt_enable           : 1;
         priv_oper_enable                 : 1;
+        spec_cindex                      : 16;
     }
 }
 
@@ -923,6 +927,7 @@ action req_tx_stage0_recirc_action () {
 
     // recirc header bits
     modify_field(rdma_recirc_scr.recirc_reason, rdma_recirc.recirc_reason);
+    modify_field(rdma_recirc_scr.recirc_spec_cindex, rdma_recirc.recirc_spec_cindex);
 }
 
 
@@ -1483,6 +1488,7 @@ action req_tx_bind_mw_sqlkey_process_s4 () {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s4_dcqcn_bind_mw_info_scr.spec_cindex, to_s4_dcqcn_bind_mw_info.spec_cindex);
 
     // stage to stage
     modify_field(t0_s2s_sqwqe_to_lkey_mw_info_scr.va, t0_s2s_sqwqe_to_lkey_mw_info.va);
@@ -1605,6 +1611,7 @@ action req_tx_sqsge_process () {
     modify_field(to_s3_sqsge_info_scr.packet_len, to_s3_sqsge_info.packet_len);
     modify_field(to_s3_sqsge_info_scr.congestion_mgmt_enable, to_s3_sqsge_info.congestion_mgmt_enable);
     modify_field(to_s3_sqsge_info_scr.priv_oper_enable, to_s3_sqsge_info.priv_oper_enable);
+    modify_field(to_s3_sqsge_info_scr.spec_cindex, to_s3_sqsge_info.spec_cindex);
 
     // stage to stage
     modify_field(t0_s2s_wqe_to_sge_info_scr.in_progress, t0_s2s_wqe_to_sge_info.in_progress);
@@ -2168,6 +2175,10 @@ action req_tx_stats_process () {
     modify_field(to_s7_stats_info_scr.qp_err_dis_inv_lkey_qp_mismatch, to_s7_stats_info.qp_err_dis_inv_lkey_qp_mismatch);
     modify_field(to_s7_stats_info_scr.qp_err_dis_inv_lkey_pd_mismatch, to_s7_stats_info.qp_err_dis_inv_lkey_pd_mismatch);
     modify_field(to_s7_stats_info_scr.qp_err_dis_inv_lkey_invalid_state, to_s7_stats_info.qp_err_dis_inv_lkey_invalid_state);
+    modify_field(to_s7_stats_info_scr.qp_err_dis_inv_lkey_inv_not_allowed, to_s7_stats_info.qp_err_dis_inv_lkey_inv_not_allowed);
+    modify_field(to_s7_stats_info_scr.qp_err_dis_table_error, to_s7_stats_info.qp_err_dis_table_error);
+    modify_field(to_s7_stats_info_scr.qp_err_dis_phv_intrinsic_error, to_s7_stats_info.qp_err_dis_phv_intrinsic_error);
+    modify_field(to_s7_stats_info_scr.qp_err_dis_table_resp_error, to_s7_stats_info.qp_err_dis_table_resp_error);
     modify_field(to_s7_stats_info_scr.qp_err_dis_rsvd, to_s7_stats_info.qp_err_dis_rsvd);
 
     // stage to stage

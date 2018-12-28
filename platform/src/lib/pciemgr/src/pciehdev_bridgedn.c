@@ -9,7 +9,7 @@
 #include <sys/types.h>
 
 #include "platform/include/common/pci_ids.h"
-#include "platform/include/common/memregion.h"
+#include "gen/platform//mem_regions.hpp"
 #include "platform/src/lib/misc/include/misc.h"
 #include "platform/src/lib/pciemgrutils/include/pciemgrutils.h"
 
@@ -18,8 +18,8 @@ init_memtun_bar(const int port, pciehbars_t *pbars)
 {
     const char *memtun_addr_env = getenv("MEMTUN_ADDR");
     const char *memtun_size_env = getenv("MEMTUN_SIZE");
-    u_int64_t memtun_pa = MEMREGION_MEMTUN_PA;
-    u_int64_t memtun_sz = MEMREGION_MEMTUN_SZ;
+    u_int64_t memtun_pa = MEM_REGION_ADDR(MEMTUN);
+    u_int64_t memtun_sz = MEM_REGION_MEMTUN_SIZE_KB * 1024;
     pciehbarreg_t preg;
     pciehbar_t pbar;
     prt_t prt;

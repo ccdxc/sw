@@ -80,6 +80,8 @@ export class ClusterClusterSpec extends BaseModel implements IClusterClusterSpec
     setValues(values: any, fillDefaults = true): void {
         if (values && values['quorum-nodes'] != null) {
             this['quorum-nodes'] = values['quorum-nodes'];
+        } else if (fillDefaults && ClusterClusterSpec.hasDefaultValue('quorum-nodes')) {
+            this['quorum-nodes'] = [ ClusterClusterSpec.propInfo['quorum-nodes'].default];
         }
         if (values && values['virtual-ip'] != null) {
             this['virtual-ip'] = values['virtual-ip'];
@@ -88,6 +90,8 @@ export class ClusterClusterSpec extends BaseModel implements IClusterClusterSpec
         }
         if (values && values['ntp-servers'] != null) {
             this['ntp-servers'] = values['ntp-servers'];
+        } else if (fillDefaults && ClusterClusterSpec.hasDefaultValue('ntp-servers')) {
+            this['ntp-servers'] = [ ClusterClusterSpec.propInfo['ntp-servers'].default];
         }
         if (values && values['auto-admit-nics'] != null) {
             this['auto-admit-nics'] = values['auto-admit-nics'];

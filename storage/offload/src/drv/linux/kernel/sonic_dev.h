@@ -1,18 +1,6 @@
 /*
- * Copyright 2017-2018 Pensando Systems, Inc.  All rights reserved.
- *
- * This program is free software; you may redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; version 2 of the License.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
- * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * {C} Copyright 2018 Pensando Systems Inc.
+ * All rights reserved.
  *
  */
 
@@ -322,7 +310,7 @@ struct seq_queue {
 #define MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES MAX_PER_QUEUE_SQ_ENTRIES
 #define MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES MAX_PER_QUEUE_SQ_ENTRIES
 #define SONIC_MAX_CORES (32 < OSAL_MAX_CORES ? 32 : OSAL_MAX_CORES)
-#define SONIC_DEFAULT_CORES (24 < OSAL_MAX_CORES ? 24 : OSAL_MAX_CORES)
+#define SONIC_DEFAULT_CORES (20 < OSAL_MAX_CORES ? 20 : OSAL_MAX_CORES)
 
 struct per_core_resource {
 	bool initialized;

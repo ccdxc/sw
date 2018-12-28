@@ -116,7 +116,7 @@ set_arg:
 rsvd_lkey_err:
     phvwrpair      p.cqe.status, CQ_STATUS_LOCAL_PROT_ERR, p.cqe.error, 1 
     phvwr       CAPRI_PHV_RANGE(TO_S7_P, lif_cqe_error_id_vld, lif_error_id), \
-                    ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_TX_LOCAL_ACCESS_ERR_OFFSET))
+                    ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_RX_REMOTE_ACC_ERR_OFFSET))
     b              error_completion
     phvwrpair      CAPRI_PHV_FIELD(TO_S7_P, qp_err_disabled), 1, \
                    CAPRI_PHV_FIELD(TO_S7_P, qp_err_dis_rrqlkey_rsvd_lkey), 1 //BD Slot
@@ -127,7 +127,7 @@ pd_state_check_failure:
     phvwrpair.!c2  CAPRI_PHV_FIELD(TO_S7_P, qp_err_disabled), 1, \
                    CAPRI_PHV_FIELD(TO_S7_P, qp_err_dis_rrqlkey_pd_mismatch), 1
     phvwr       CAPRI_PHV_RANGE(TO_S7_P, lif_cqe_error_id_vld, lif_error_id), \
-                    ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_TX_LOCAL_ACCESS_ERR_OFFSET))
+                    ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_RX_REMOTE_ACC_ERR_OFFSET))
     b              error_completion
     phvwrpair      p.cqe.status, CQ_STATUS_LOCAL_PROT_ERR, p.cqe.error, 1 
 
@@ -148,7 +148,7 @@ access_violation:
     //fall through
 
     phvwr       CAPRI_PHV_RANGE(TO_S7_P, lif_cqe_error_id_vld, lif_error_id), \
-                    ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_TX_LOCAL_ACCESS_ERR_OFFSET))
+                    ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_RX_REMOTE_ACC_ERR_OFFSET))
 
 error_completion:
     add          r1, K_SGE_INDEX, r0

@@ -22,8 +22,9 @@ struct sqcb5_t d;
 #define K_LIF_CQE_ERROR_ID_VLD CAPRI_KEY_FIELD(IN_P, lif_cqe_error_id_vld)
 #define K_LIF_ERROR_ID_VLD CAPRI_KEY_FIELD(IN_P, lif_error_id_vld)
 #define K_LIF_ERROR_ID CAPRI_KEY_FIELD(IN_P, lif_error_id)
-#define K_ERR_DIS_REASON_CODES CAPRI_KEY_RANGE(IN_P, qp_err_disabled, qp_err_dis_rsvd_sbit13_ebit18)
+#define K_ERR_DIS_REASON_CODES CAPRI_KEY_RANGE(IN_P, qp_err_disabled, qp_err_dis_rsvd_sbit10_ebit15)
 #define K_QP_ERR_DISABLED      CAPRI_KEY_FIELD(IN_P, qp_err_disabled)
+#define K_FLAGS CAPRI_KEY_RANGE(IN_P, table_error, table_resp_error)
 
 %%
 
@@ -44,7 +45,7 @@ req_rx_stats_process:
 
     bbeq             K_QP_ERR_DISABLED, 1, handle_error_stats
 
-    crestore         [c6, c5, c4, c3, c2, c1], GLOBAL_FLAGS, (REQ_RX_FLAG_RDMA_FEEDBACK | REQ_RX_FLAG_ATOMIC_AETH | REQ_RX_FLAG_ACK | REQ_RX_FLAG_READ_RESP | REQ_RX_FLAG_FIRST | REQ_RX_FLAG_ONLY) //BD Slot
+    crestore         [c6, c5, c4, c3, c2, c1], GLOBAL_FLAGS, (REQ_RX_FLAG_RDMA_FEEDBACK | REQ_RX_FLAG_ATOMIC_AETH | REQ_RX_FLAG_ACK | REQ_RX_FLAG_READ_RESP | REQ_RX_FLAG_FIRST | REQ_RX_FLAG_ONLY) // BD Slot
 
     bcf              [c6], handle_lif_stats
     tblmincri.c6     d.num_feedback, MASK_16, 1 //BD Slot

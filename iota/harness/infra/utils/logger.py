@@ -78,6 +78,7 @@ class _Logger:
         self.tsname         = None
         self.tcname         = None
         self.tbname         = None
+        self.nodename       = None
 
         if stdout:
             global StdoutLoggerSink
@@ -104,6 +105,8 @@ class _Logger:
             prefix += "[TB:%s]" % self.tbname
         if self.tcname:
             prefix += "[TC:%s]" % self.tcname
+        if self.nodename:
+            prefix += "[Node:%s]" % self.nodename
         if level:
             prefix += "[%s]" % prefixes[level]
         else:
@@ -177,6 +180,10 @@ class _Logger:
 
     def SetTestcase(self, tcname):
         self.tcname = tcname
+        return
+
+    def SetNode(self, nodename):
+        self.nodename = nodename
         return
 
     def GetLogPrefix(self):

@@ -27,7 +27,7 @@ message ExportConfig {
 
     // protocol and Port number where an external collector is gathering the data
     // example "TCP/2055"
-    string Transport = 2 [(gogoproto.jsontag) = "transport,omitempty"];
+    string Transport = 2 [(gogoproto.jsontag) = "transport,omitempty", (venice.check)="ProtoPort()"];
 
     // Credentials provide secure access to the collector
     ExternalCred Credentials = 3 [(gogoproto.jsontag) = "credentials,omitempty"];

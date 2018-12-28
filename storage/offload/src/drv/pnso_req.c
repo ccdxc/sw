@@ -816,6 +816,7 @@ submit_chain(struct request_params *req_params)
 	pnso_error_t err;
 	struct per_core_resource *pcr = putil_get_per_core_resource();
 	struct service_chain *chain = NULL;
+	bool is_sync_mode;
 
 	chain = chn_create_chain(req_params);
 	if (!chain) {
@@ -826,6 +827,7 @@ submit_chain(struct request_params *req_params)
 	}
 	PAS_INC_NUM_CHAINS(pcr);
 
+	is_sync_mode = (chain->sc_flags & CHAIN_CFLAG_MODE_SYNC) != 0;
 	err = chn_execute_chain(chain);
 	if (err) {
 		OSAL_LOG_ERROR("failed to complete request/chain! err: %d",
@@ -834,8 +836,7 @@ submit_chain(struct request_params *req_params)
 		goto out_chain;
 	}
 
-	if ((chain->sc_flags & CHAIN_CFLAG_MODE_POLL) ||
-		(chain->sc_flags & CHAIN_CFLAG_MODE_ASYNC)) {
+	if (!is_sync_mode) {
 		OSAL_LOG_DEBUG("in non-sync mode ... sc_flags: %d",
 				chain->sc_flags);
 		goto out;

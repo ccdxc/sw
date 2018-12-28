@@ -1,3 +1,9 @@
+/*
+ * {C} Copyright 2018 Pensando Systems Inc.
+ * All rights reserved.
+ *
+ */
+
 #include <linux/kernel.h>
 #include <linux/slab.h>
 #include "osal_assert.h"

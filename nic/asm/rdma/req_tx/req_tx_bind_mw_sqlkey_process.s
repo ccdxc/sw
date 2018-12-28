@@ -8,6 +8,7 @@ struct req_tx_s4_t0_k k;
 struct key_entry_aligned_t d;
 
 #define IN_P t0_s2s_sqwqe_to_lkey_mw_info
+#define IN_TO_S_P to_s4_dcqcn_bind_mw_info
 
 #define K_ACC_CTRL CAPRI_KEY_FIELD(IN_P, acc_ctrl)
 #define K_VA       CAPRI_KEY_RANGE(IN_P, va_sbit0_ebit7, va_sbit56_ebit63)
@@ -15,6 +16,8 @@ struct key_entry_aligned_t d;
 #define K_ZBVA     CAPRI_KEY_FIELD(IN_P, zbva)
 #define K_R_KEY    CAPRI_KEY_RANGE(IN_P, r_key_sbit0_ebit7, r_key_sbit24_ebit31)
 #define K_MW_TYPE  CAPRI_KEY_FIELD(IN_P, mw_type) 
+
+#define K_SPEC_CINDEX CAPRI_KEY_FIELD(IN_TO_S_P, spec_cindex)
 
 #define SQLKEY_TO_RKEY_MW_INFO_P t0_s2s_sqlkey_to_rkey_mw_info
 #define SQCB_WRITE_BACK_P t2_s2s_sqcb_write_back_info
@@ -32,6 +35,7 @@ req_tx_bind_mw_sqlkey_process:
     mfspr          r1, spr_mpuid
     seq            c1, r1[4:2], STAGE_4
     bcf            [!c1], bubble_to_next_stage
+    phvwr.c1       p.common.rdma_recirc_recirc_spec_cindex, K_SPEC_CINDEX
 
     // if memory region is not in valid state or doesn't allow memory window or
     // is zero based virtual address region, then do not allow memory window

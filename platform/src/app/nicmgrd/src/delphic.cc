@@ -66,10 +66,10 @@ Status init_port_status_handler (delphi::SdkPtr sdk) {
     g_port_status_handler = std::make_shared<port_status_handler>(sdk);
 
     // mount objects
-    PortStatus::Mount(sdk, delphi::ReadMode);
+    delphi::objects::PortStatus::Mount(sdk, delphi::ReadMode);
 
     // Register PortStatus reactor
-    PortStatus::Watch(sdk, g_port_status_handler);
+    delphi::objects::PortStatus::Watch(sdk, g_port_status_handler);
 
     return Status::OK;
 }
@@ -102,7 +102,7 @@ error port_status_handler::update_port_status(PortStatusPtr port) {
         return error::OK();    // TODO: rameshp, pleaes fix this ???
     }
 
-    link_eventdata_t evd = {0};
+    port_status_t evd = {0};
     evd.port_id = port->mutable_key_or_handle()->port_id();
     evd.oper_status = (port->oper_status() == port::PortOperStatus::PORT_OPER_STATUS_UP);
 

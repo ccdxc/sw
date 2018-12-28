@@ -1,6 +1,5 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include <atomic>
 #include "nic/sdk/include/sdk/thread.hpp"
 #include "nic/include/hal_pd.hpp"
 #include "nic/include/hal.hpp"
@@ -395,6 +394,7 @@ asic_port_cfg (uint32_t port_num,
     return ret;
 }
 
+#if 0
 //------------------------------------------------------------------------------
 // logger init for asic rw
 //------------------------------------------------------------------------------
@@ -444,6 +444,7 @@ asic_rw_logger_init (void)
 
     return asic_rw_logger;
 }
+#endif
 
 //------------------------------------------------------------------------------
 // asic read-write thread's forever loop to server read and write requests from
@@ -458,9 +459,11 @@ asic_rw_loop (void *ctxt)
     pal_ret_t           rv        = PAL_RET_OK;
     asic_rw_entry_t     *rw_entry = NULL;
     sdk::lib::thread    *curr_thread = (sdk::lib::thread *)ctxt;
-    ::utils::log        *asic_rw_logger;
 
+#if 0
+    ::utils::log        *asic_rw_logger;
     asic_rw_logger = asic_rw_logger_init();
+#endif
     while (TRUE) {
         work_done = false;
         for (qid = 0; qid < HAL_THREAD_ID_MAX; qid++) {
@@ -471,14 +474,14 @@ asic_rw_loop (void *ctxt)
             // found a read/write request to serve
             cindx = g_asic_rw_workq[qid].cindx;
             rw_entry = &g_asic_rw_workq[qid].entries[cindx];
-
+#if 0
             asic_rw_logger->logger()->debug("[{}:{}] qid : {}, opn : {}, "
                                             "addr : {:#x}, len : {}",
                                             __func__, __LINE__, qid,
                                             rw_entry->opn, rw_entry->addr,
                                             rw_entry->len);
             asic_rw_logger->flush();
-
+#endif
             switch (rw_entry->opn) {
             case HAL_ASIC_RW_OPERATION_MEM_READ:
                 rv = sdk::lib::pal_mem_read(rw_entry->addr, rw_entry->data,

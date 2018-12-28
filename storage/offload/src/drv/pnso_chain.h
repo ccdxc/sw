@@ -143,7 +143,7 @@ struct service_ops {
 	pnso_error_t (*ring_db)(struct service_info *svc_info);
 
 	/* a NULL-op for all services except the last within the chain */
-	pnso_error_t (*poll)(const struct service_info *svc_info);
+	pnso_error_t (*poll)(struct service_info *svc_info);
 
 	/* get hardware status of the service */
 	pnso_error_t (*read_status)(struct service_info *svc_info);
@@ -228,6 +228,7 @@ struct service_info {
 
 	uint16_t si_block_size;
 	uint16_t si_desc_flags;		/* caller supplied desc flags */
+	bool tags_updated;
 	uint32_t si_num_tags;		/* for tracking # of hash or checksum */
 
 	void *si_desc;			/* desc of cp/dc/encrypt/etc. */
@@ -395,11 +396,7 @@ chn_service_is_padding_applic(const struct service_info *svc_info)
 	       (svc_info->si_desc_flags & PNSO_CP_DFLAG_ZERO_PAD);
 }
 
-static inline uint32_t
-chn_service_deps_data_len_get(const struct service_info *svc_info)
-{
-	return svc_info->si_svc_deps.sd_data_len;
-}
+uint32_t chn_service_deps_data_len_get(const struct service_info *svc_info);
 
 static inline void
 chn_service_deps_data_len_set(struct service_info *svc_info,

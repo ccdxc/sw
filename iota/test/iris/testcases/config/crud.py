@@ -86,6 +86,39 @@ def Trigger(tc):
         api.Logger.error("Unable to fetch security profile objects")
         return api.types.status.FAILURE
 
+
+    newObjects = netagent_cfg_api.AddOneConfig(api.GetTopologyDirectory() + "/test_cfg/test_security_profile.json")
+    if len(newObjects) == 0:
+        api.Logger.error("Adding new objects to store failed")
+        return api.types.status.FAILURE
+
+    nodes = api.GetNaplesHostnames()
+    push_nodes = [nodes[0]]
+    ret = netagent_cfg_api.PushConfigObjects(newObjects, node_names = push_nodes)
+    if ret != api.types.status.SUCCESS:
+        api.Logger.error("Unable to fetch security profile objects to node %s" % nodes[0])
+        return api.types.status.FAILURE
+
+    #Get will return copy of pushed objects to agent
+    get_config_objects = netagent_cfg_api.GetConfigObjects(newObjects, node_names = push_nodes)
+    if len(get_config_objects) == 0:
+        api.Logger.error("Unable to fetch newly pushed objects")
+        return api.types.status.FAILURE
+
+    #Delete the objects that is pushed
+    netagent_cfg_api.DeleteConfigObjects(get_config_objects)
+    #Get will return copy of pushed objects to agent
+    get_config_objects = netagent_cfg_api.GetConfigObjects(newObjects, node_names = push_nodes)
+    if len(get_config_objects) != 0:
+        api.Logger.error("Delete of new objects failed")
+        return api.types.status.FAILURE
+
+    #Remoe competely those objects from the store too.
+    ret = netagent_cfg_api.RemoveConfigObjects(newObjects)
+    if ret != api.types.status.SUCCESS:
+        api.Logger.error("Remove of new objects failed")
+        return api.types.status.FAILURE
+
     return api.types.status.SUCCESS
 
 def Verify(tc):

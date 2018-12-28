@@ -29,6 +29,7 @@ struct req_tx_s3_t0_k k;
 #define K_HEADER_TEMPLATE_ADDR CAPRI_KEY_FIELD(IN_TO_S_P, header_template_addr)
 #define K_PACKET_LEN CAPRI_KEY_RANGE(IN_TO_S_P, packet_len_sbit0_ebit7, packet_len_sbit8_ebit13)
 #define K_PRIV_OPER_ENABLE CAPRI_KEY_FIELD(IN_TO_S_P, priv_oper_enable)
+#define K_SPEC_CINDEX CAPRI_KEY_FIELD(IN_TO_S_P, spec_cindex)
 
 %%
     .param    req_tx_sqlkey_process
@@ -37,6 +38,9 @@ struct req_tx_s3_t0_k k;
 
 .align
 req_tx_sqsge_process:
+    bcf            [c2 | c3 | c7], table_error
+    nop // BD Slot
+
     // Use conditional flag to select between sge_index 0 and 1
     // sge_index = 0
     setcf          c7, [c0]
@@ -220,9 +224,10 @@ sge_recirc:
     sub            r6, K_NUM_VALID_SGES, 2 
     phvwr CAPRI_PHV_FIELD(WQE_TO_SGE_P, num_valid_sges), r6
     // Pass packet_len to stage 3 to accumulate packet_len across sge recirc
-    phvwr           CAPRI_PHV_FIELD(TO_S3_SQSGE_P, packet_len), r5
-    phvwr.e          p.common.rdma_recirc_recirc_reason, REQ_TX_RECIRC_REASON_SGE_WORK_PENDING
-    phvwr            p.common.p4_intr_recirc, 1
+    phvwr          CAPRI_PHV_FIELD(TO_S3_SQSGE_P, packet_len), r5
+    phvwrpair.e    p.common.rdma_recirc_recirc_reason, REQ_TX_RECIRC_REASON_SGE_WORK_PENDING, \
+                   p.common.rdma_recirc_recirc_spec_cindex, K_SPEC_CINDEX
+    phvwr          p.common.p4_intr_recirc, 1
 
 end:
     nop.e
@@ -239,3 +244,20 @@ err_no_dma_cmds:
     b              trigger_dcqcn
     CAPRI_SET_TABLE_0_VALID(0) //BD Slot
 
+table_error:
+    phvwrpair      p.{rdma_feedback.completion.status, rdma_feedback.completion.error}, (CQ_STATUS_LOCAL_QP_OPER_ERR << 1 | 1), \
+                   p.{rdma_feedback.completion.lif_cqe_error_id_vld, rdma_feedback.completion.lif_error_id_vld, rdma_feedback.completion.lif_error_id}, \
+                       ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_TX_LOCAL_OPER_ERR_OFFSET))
+
+    // set err_dis_qp
+    phvwr          CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp), 1
+
+    phvwr          CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_disabled), 1
+    // update stats
+    phvwr.c2       CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_table_error), 1
+    phvwr.c3       CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_phv_intrinsic_error), 1
+    phvwr.c7       CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_table_resp_error), 1
+    phvwr          p.common.p4_intr_global_drop, 1
+
+    b              trigger_dcqcn
+    CAPRI_SET_TABLE_0_VALID(0) // BD Slot

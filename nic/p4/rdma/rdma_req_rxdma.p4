@@ -276,7 +276,10 @@ header_type req_rx_to_stage_stats_info_t {
         qp_err_dis_rrqwqe_remote_inv_req_err_rcvd :    1;
         qp_err_dis_rrqwqe_remote_acc_err_rcvd     :    1;
         qp_err_dis_rrqwqe_remote_oper_err_rcvd    :    1;
-        qp_err_dis_rsvd                  :    19;
+        qp_err_dis_table_error           :    1;
+        qp_err_dis_phv_intrinsic_error   :    1;
+        qp_err_dis_table_resp_error      :    1;
+        qp_err_dis_rsvd                  :    16;
         pad                              :   74;
     }
 }
@@ -1538,6 +1541,9 @@ action req_rx_stats_process () {
     modify_field(to_s7_stats_info_scr.qp_err_dis_rrqwqe_remote_inv_req_err_rcvd, to_s7_stats_info.qp_err_dis_rrqwqe_remote_inv_req_err_rcvd);
     modify_field(to_s7_stats_info_scr.qp_err_dis_rrqwqe_remote_acc_err_rcvd, to_s7_stats_info.qp_err_dis_rrqwqe_remote_acc_err_rcvd);
     modify_field(to_s7_stats_info_scr.qp_err_dis_rrqwqe_remote_oper_err_rcvd, to_s7_stats_info.qp_err_dis_rrqwqe_remote_oper_err_rcvd);
+    modify_field(to_s7_stats_info_scr.qp_err_dis_table_error, to_s7_stats_info.qp_err_dis_table_error);
+    modify_field(to_s7_stats_info_scr.qp_err_dis_phv_intrinsic_error, to_s7_stats_info.qp_err_dis_phv_intrinsic_error);
+    modify_field(to_s7_stats_info_scr.qp_err_dis_table_resp_error, to_s7_stats_info.qp_err_dis_table_resp_error);
     modify_field(to_s7_stats_info_scr.qp_err_dis_rsvd, to_s7_stats_info.qp_err_dis_rsvd);
     modify_field(to_s7_stats_info_scr.pad, to_s7_stats_info.pad);
 

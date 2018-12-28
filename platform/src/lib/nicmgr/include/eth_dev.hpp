@@ -169,7 +169,7 @@ public:
 
     void DevcmdHandler();
     void DevObjSave();
-    void LinkEventHandler(link_eventdata_t *evd);
+    void LinkEventHandler(port_status_t *evd);
     enum DevcmdStatus CmdHandler(void *req, void *req_data, void *resp, void *resp_data);
 
     int GenerateQstateInfoJson(pt::ptree &lifs);

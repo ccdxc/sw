@@ -67,9 +67,13 @@ export class SecuritySecurityGroupSpec extends BaseModel implements ISecuritySec
         }
         if (values && values['service-labels'] != null) {
             this['service-labels'] = values['service-labels'];
+        } else if (fillDefaults && SecuritySecurityGroupSpec.hasDefaultValue('service-labels')) {
+            this['service-labels'] = [ SecuritySecurityGroupSpec.propInfo['service-labels'].default];
         }
         if (values && values['match-prefixes'] != null) {
             this['match-prefixes'] = values['match-prefixes'];
+        } else if (fillDefaults && SecuritySecurityGroupSpec.hasDefaultValue('match-prefixes')) {
+            this['match-prefixes'] = [ SecuritySecurityGroupSpec.propInfo['match-prefixes'].default];
         }
         this.setFormGroupValuesToBeModelValues();
     }

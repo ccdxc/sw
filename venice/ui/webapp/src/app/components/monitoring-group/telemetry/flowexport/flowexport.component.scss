@@ -1,0 +1,74 @@
+@import 'src/global-mixins';
+
+.flowexport-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.6);
+  z-index:10;
+}
+
+.flowexport-tablecontainer {
+  position: relative;
+}
+
+.flowexport-widget {
+  @include primary-font();
+}
+
+.flowexport-button {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.flowexport-icon {
+  position: absolute;
+  top: 8px;
+  font-size: 18px;
+}
+
+.flowexport-column-action-div {
+  display: inline-flex;
+}
+
+.flowexport-column-action {
+  width: 100px !important;
+}
+
+.flowexport-column-name {
+  width: 20%;
+}
+
+.flowexport-column-targets {
+  width: 300px;
+}
+
+// This column also includes the action items so we add an extra 100 px
+th.flowexport-column-targets {
+  width: 400px !important;
+}
+
+.flowexport-rowexpand {
+  overflow: hidden;
+  z-index: 20; // Needs to be higher than .evenalertpolicies-overlay z-index
+  position: relative; // needed for z-index to take effect
+}
+
+.flowexport-rowexpand-tr {
+  height: 0px !important;
+  // text-top interferes with the animation
+  vertical-align: top !important;
+  > td {
+    padding: 0px !important; // Padding interferes with animation on the rowexpands exit
+  }
+}
+
+.flowexport-rowhighlight {
+  > td {
+    z-index: 20; // Needs to be higher than .evenalertpolicies-overlay z-index
+    position: relative; // needed for z-index to take effect
+    background-color: rgb(234, 241, 249) !important;
+  }
+}

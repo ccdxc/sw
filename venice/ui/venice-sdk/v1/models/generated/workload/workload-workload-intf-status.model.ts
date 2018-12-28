@@ -56,6 +56,8 @@ export class WorkloadWorkloadIntfStatus extends BaseModel implements IWorkloadWo
     setValues(values: any, fillDefaults = true): void {
         if (values && values['ip-addresses'] != null) {
             this['ip-addresses'] = values['ip-addresses'];
+        } else if (fillDefaults && WorkloadWorkloadIntfStatus.hasDefaultValue('ip-addresses')) {
+            this['ip-addresses'] = [ WorkloadWorkloadIntfStatus.propInfo['ip-addresses'].default];
         }
         if (values && values['endpoint'] != null) {
             this['endpoint'] = values['endpoint'];

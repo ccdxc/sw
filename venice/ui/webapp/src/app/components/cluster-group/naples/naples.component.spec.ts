@@ -126,6 +126,6 @@ describe('NaplesComponent', () => {
     // check table contents
     const tableBody = fixture.debugElement.query(By.css('tbody'));
     expect(tableBody).toBeTruthy();
-    TestingUtility.verifyTable([new ClusterSmartNIC(naples2), new ClusterSmartNIC(naples1)], component.cols, tableBody);
+    TestingUtility.verifyTable([new ClusterSmartNIC(naples1), new ClusterSmartNIC(naples2)], component.cols, tableBody);
   });
 });

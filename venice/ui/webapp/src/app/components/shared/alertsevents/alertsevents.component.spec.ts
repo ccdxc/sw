@@ -34,6 +34,7 @@ import { By } from '@angular/platform-browser';
 import { TestingUtility } from '@app/common/TestingUtility';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { MessageService } from 'primeng/primeng';
+import { SorticonComponent } from '../sorticon/sorticon.component';
 
 
 @Component({
@@ -77,7 +78,8 @@ describe('AlertseventsComponent', () => {
         DummyComponent,
         PrettyDatePipe,
         TableheaderComponent,
-        WhitespaceTrimDirective
+        WhitespaceTrimDirective,
+        SorticonComponent
       ],
       imports: [
         RouterTestingModule.withRoutes([
@@ -132,7 +134,7 @@ describe('AlertseventsComponent', () => {
       expect(title.nativeElement.textContent).toContain('Events (0)');
 
       // Checking table header
-      const headers = eventsContainer.query(By.css('thead tr'));
+      const headers = eventsContainer.query(By.css('thead tr .sorticon-content'));
       headers.children.forEach((col, index) => {
         expect(col.nativeElement.textContent).toContain(component.eventCols[index].header);
       });
@@ -151,26 +153,26 @@ describe('AlertseventsComponent', () => {
         // Allows rendering for the setTimeout(.., 0) we have
         setTimeout(() => {
           fixture.detectChanges();
-        expect(tableBody.children.length).toBe(1);
-        const caseMap = {
-          'severity': (field, rowData, rowIndex) => {
-            expect(field.children.length).toBe(2);
-            if (rowData.severity === 'INFO') {
-              expect(field.children[0].nativeElement.textContent).toContain('notifications');
-            } else {
-              expect(field.children[0].nativeElement.textContent).toContain('error');
+          expect(tableBody.children.length).toBe(1);
+          const caseMap = {
+            'severity': (field, rowData, rowIndex) => {
+              expect(field.children.length).toBe(2);
+              if (rowData.severity === 'INFO') {
+                expect(field.children[0].nativeElement.textContent).toContain('notifications');
+              } else {
+                expect(field.children[0].nativeElement.textContent).toContain('error');
+              }
+              expect(field.children[1].nativeElement.textContent)
+                .toContain(EventsEventAttributes_severity_uihint[rowData.severity],
+                  'severity column did not match');
+            },
+            'source': (field, rowData, rowIndex) => {
+              expect(field.nativeElement.textContent).toContain(
+                rowData.source['node-name'] + ' : ' + rowData.source.component, 'source column did not match');
             }
-            expect(field.children[1].nativeElement.textContent)
-              .toContain(EventsEventAttributes_severity_uihint[rowData.severity],
-                'severity column did not match');
-          },
-          'source': (field, rowData, rowIndex) => {
-            expect(field.nativeElement.textContent).toContain(
-              rowData.source['node-name'] + ' : ' + rowData.source.component, 'source column did not match');
-          }
-        };
-        TestingUtility.verifyTable(poll1, component.eventCols, tableBody, caseMap);
-      }, 0);
+          };
+          TestingUtility.verifyTable(poll1, component.eventCols, tableBody, caseMap);
+        }, 0);
       });
     });
 

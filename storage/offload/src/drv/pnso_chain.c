@@ -197,7 +197,6 @@ struct chain_entry *
 chn_get_first_centry(struct service_chain *chain)
 {
 	OSAL_ASSERT(chain);
-	OSAL_ASSERT(chain->sc_entry);
 	return chain->sc_entry;
 }
 
@@ -205,7 +204,6 @@ struct chain_entry *
 chn_get_last_centry(struct service_chain *chain)
 {
 	OSAL_ASSERT(chain);
-	OSAL_ASSERT(chain->sc_last_entry);
 	return chain->sc_last_entry;
 }
 
@@ -552,8 +550,8 @@ chn_destroy_chain(struct service_chain *chain)
 	svc_chain_entry_mpool = pcr->mpools[MPOOL_TYPE_SERVICE_CHAIN_ENTRY];
 	OSAL_ASSERT(svc_chain_entry_mpool);
 
-	if ((chain->sc_flags & CHAIN_CFLAG_MODE_ASYNC) &&
-	    !(chain->sc_flags & CHAIN_CFLAG_RANG_DB)) {
+	if (!(chain->sc_flags & CHAIN_CFLAG_RANG_DB) &&
+	    (chain->sc_flags & CHAIN_CFLAG_MODE_ASYNC)) {
 		/* cleanup for async mode submission failure */
 		sc_last = chn_get_last_centry(chain);
 		if (sc_last) {
@@ -576,7 +574,6 @@ chn_destroy_chain(struct service_chain *chain)
 		mpool_put_object(svc_chain_entry_mpool, sc_entry);
 		sc_entry = sc_next;
 	}
-	OSAL_ASSERT(i == chain->sc_num_services);
 
 	mpool_put_object(svc_chain_mpool, chain);
 	OSAL_LOG_DEBUG("exit!");
@@ -695,6 +692,7 @@ chn_create_chain(struct request_params *req_params)
 			chain->sc_entry = centry;
 		} else
 			centry_prev->ce_next = centry;
+		chain->sc_last_entry = centry;
 		centry_prev = centry;
 
 		set_service_mode(req_params->rp_flags, &svc_info->si_flags);
@@ -736,7 +734,6 @@ chn_create_chain(struct request_params *req_params)
 		PAS_INC_NUM_SERVICES(pcr);
 	}
 	chain->sc_req_id = osal_atomic_fetch_add(&g_req_id, 1);
-	chain->sc_last_entry = centry;
 
 	/*
 	 * After completing service linkages and setups above, execute
@@ -809,6 +806,7 @@ chn_execute_chain(struct service_chain *chain)
 	pnso_error_t err = EINVAL;
 	struct per_core_resource *pcr = putil_get_per_core_resource();
 	struct chain_entry *ce_first, *ce_last;
+	bool is_sync_mode = (chain->sc_flags & CHAIN_CFLAG_MODE_SYNC) != 0;
 
 	PAS_DECL_HW_PERF();
 
@@ -821,27 +819,18 @@ chn_execute_chain(struct service_chain *chain)
 		goto out;
 
 	/* ring 'first' service door bell */
+	chain->sc_flags |= CHAIN_CFLAG_RANG_DB;
 	err = ce_first->ce_svc_info.si_ops.ring_db(&ce_first->ce_svc_info);
 	PAS_START_HW_PERF();
 	if (err) {
+		chain->sc_flags &= ~((uint16_t) CHAIN_CFLAG_RANG_DB);
 		OSAL_LOG_ERROR("failed to ring service door bell! svc_type: %d err: %d",
 			       ce_first->ce_svc_info.si_type, err);
 		PAS_END_HW_PERF(pcr);
 		goto out;
 	}
-	chain->sc_flags |= CHAIN_CFLAG_RANG_DB;
 
-	if ((chain->sc_flags & CHAIN_CFLAG_MODE_POLL) ||
-		(chain->sc_flags & CHAIN_CFLAG_MODE_ASYNC)) {
-		OSAL_LOG_DEBUG("in non-sync mode ... sc_flags: %d",
-				chain->sc_flags);
-		PAS_END_HW_PERF(pcr);
-		goto out;
-	}
-	PAS_START_HW_PERF();
-
-	if ((chain->sc_flags & CHAIN_CFLAG_MODE_POLL) ||
-		(chain->sc_flags & CHAIN_CFLAG_MODE_ASYNC)) {
+	if (!is_sync_mode) {
 		OSAL_LOG_DEBUG("in non-sync mode ... sc_flags: %d",
 				chain->sc_flags);
 		PAS_END_HW_PERF(pcr);
@@ -903,3 +892,16 @@ chn_service_hw_ring_give(struct service_info *svc_info)
 	return err;
 }
 
+uint32_t
+chn_service_deps_data_len_get(const struct service_info *svc_info)
+{
+	struct cpdc_status_desc *status_desc;
+
+	if ((svc_info->si_type == PNSO_SVC_TYPE_COMPRESS) ||
+		(svc_info->si_type == PNSO_SVC_TYPE_DECOMPRESS)) {
+		status_desc = svc_info->si_status_desc;
+		return status_desc->csd_output_data_len;
+	}
+
+	return svc_info->si_svc_deps.sd_data_len;
+}

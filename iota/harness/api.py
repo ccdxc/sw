@@ -223,6 +223,7 @@ def Abort():
     return store.GetTestbed().GetCurrentTestsuite().Abort()
 
 def PrintCommandResults(cmd):
+    Logger.SetNode(cmd.node_name)
     Logger.header('COMMAND')
     Logger.info("%s (Exit Code = %d) (TimedOut = %s)" % (cmd.command, cmd.exit_code, cmd.timed_out))
     def PrintOutputLines(name, output):
@@ -232,6 +233,7 @@ def PrintCommandResults(cmd):
             Logger.info(line)
     PrintOutputLines('STDOUT', cmd.stdout)
     PrintOutputLines('STDERR', cmd.stderr)
+    Logger.SetNode(None)
 
 def SetVeniceConfigs(json_objs):
     store.SetVeniceConfigs(json_objs)

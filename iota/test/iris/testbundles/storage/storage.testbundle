@@ -10,6 +10,7 @@ aliases:
     - &CPUS_ITER_LIST_COMBO2 [ 2, 4 ]
     - &INPUT_LEN_LIST_COMBO1 [ 4096, 8192 ]
     - &INPUT_LEN_LIST_COMBO2 [ 16384, 32768 ]
+    - &INPUT_LEN_LIST_COMBO3 [ 16384 ]
 #    - &BATCH_DEPTH_ITER_LIST_COMBO1 [ 1, 31, 64, 256 ]
     - &BATCH_DEPTH_ITER_LIST_COMBO1 [ 1, 31, 64, 128 ]
 #    - &BATCH_DEPTH_ITER_LIST_COMBO2 [ 32, 33, 128, 512 ]
@@ -17,10 +18,14 @@ aliases:
     - &MODE_ITER_LIST_COMBO1 [ sync, poll ]
     - &MODE_ITER_LIST_COMBO2 [ poll, async ]
     - &CPDC_TEST_YML cpdc.yml
+    - &CPDC_PAD_TEST_YML cpdc_pad.yml
     - &CP_FAIL_TEST_YML cp_fail.yml
     - &DC_FAIL_TEST_YML dc_fail.yml
     - &HASH_TEST_YML hash.yml
     - &CHKSUM_TEST_YML chksum.yml
+    - &CP_CHKSUM_CHAIN_YML cp_chksum_chain.yml
+    - &CP_HASH_CHAIN_YML cp_hash_chain.yml
+    - &DECRYPT_DC_CHAIN_YML decrypt_dc_chain.yml
     - &CPFLAGS_DEFAULT 0
     - &DCFLAGS_DEFAULT 0
     - &CPFLAGS_ZERO_PAD zero_pad
@@ -53,7 +58,6 @@ testcases:
 
     -   name: CpDcZp16K32K
         testcase    : testcases.storage.ymltest2
-        enable      : False
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST_COMBO2
@@ -62,7 +66,7 @@ testcases:
             inputlen    : *INPUT_LEN_LIST_COMBO2
         args    :
             wait        : '1.0'
-            test        : *CPDC_TEST_YML
+            test        : *CPDC_PAD_TEST_YML
             cpflags     : *CPFLAGS_ZERO_PAD
             dcflags     : *DCFLAGS_ZERO_PAD
 
@@ -82,7 +86,6 @@ testcases:
 
     -   name: CpDcWHdrZp16K32K
         testcase    : testcases.storage.ymltest2
-        enable      : False
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST_COMBO2
@@ -91,7 +94,7 @@ testcases:
             inputlen    : *INPUT_LEN_LIST_COMBO2
         args    :
             wait        : '1.0'
-            test        : *CPDC_TEST_YML
+            test        : *CPDC_PAD_TEST_YML
             cpflags     : *CPFLAGS_WITH_HEADER_ZERO_PAD
             dcflags     : *DCFLAGS_WITH_HEADER_ZERO_PAD
 
@@ -129,10 +132,8 @@ testcases:
             algo        : 'sha2_256'
             test        : *HASH_TEST_YML
 
-    # TBD: Re-enable after fixing per-block
     -   name        : Hash4K8KPbSha2_256
         testcase    : testcases.storage.ymltest2
-        enable      : False
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST_COMBO1
@@ -153,23 +154,21 @@ testcases:
             cpus        : *CPUS_ITER_LIST_COMBO2
             batch_depth : *BATCH_DEPTH_ITER_LIST_COMBO2
             mode        : *MODE_ITER_LIST_COMBO2
-            inputlen    : *INPUT_LEN_LIST_COMBO2
+            inputlen    : *INPUT_LEN_LIST_COMBO3
         args    :
             wait        : '1.0'
             flags       : '0'
             algo        : 'sha2_256'
             test        : *HASH_TEST_YML
 
-    # TBD: Re-enable after fixing per-block
     -   name        : Hash16K32KPbSha2_256
         testcase    : testcases.storage.ymltest2
-        enable      : False
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST_COMBO2
             batch_depth : *BATCH_DEPTH_ITER_LIST_COMBO2
             mode        : *MODE_ITER_LIST_COMBO2
-            inputlen    : *INPUT_LEN_LIST_COMBO2
+            inputlen    : *INPUT_LEN_LIST_COMBO3
         args    :
             wait        : '1.0'
             flags       : 'per_block'
@@ -191,10 +190,8 @@ testcases:
             flags       : '0'
             test        : *CHKSUM_TEST_YML
 
-    # TBD: Re-enable after fixing per-block 
     -   name        : Csum4K8KPbCrc32c
         testcase    : testcases.storage.ymltest2
-        enable      : False
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST_COMBO1
@@ -204,40 +201,70 @@ testcases:
         args    :
             wait        : '1.0'
             algo        : 'crc32c'
-            flags       : 'per-block'
+            flags       : 'per_block'
             test        : *CHKSUM_TEST_YML
 
 
     -   name        : Csum16K32KCrc32c
         testcase    : testcases.storage.ymltest2
-        enable      : False
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST_COMBO2
             batch_depth : *BATCH_DEPTH_ITER_LIST_COMBO1
             mode        : *MODE_ITER_LIST_COMBO1
-            inputlen    : *INPUT_LEN_LIST_COMBO2
+            inputlen    : *INPUT_LEN_LIST_COMBO3
         args    :
             wait        : '1.0'
             algo        : 'crc32c'
             flags       : '0'
             test        : *CHKSUM_TEST_YML
 
-    # TBD: Re-enable after fixing per-block
     -   name        : Csum16K32KPbCrc32c
         testcase    : testcases.storage.ymltest2
-        enable      : False
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST_COMBO2
             batch_depth : *BATCH_DEPTH_ITER_LIST_COMBO1
             mode        : *MODE_ITER_LIST_COMBO1
-            inputlen    : *INPUT_LEN_LIST_COMBO2
+            inputlen    : *INPUT_LEN_LIST_COMBO3
         args    :
             wait        : '1.0'
             algo        : 'crc32c'
             flags       : 'per_block'
             test        : *CHKSUM_TEST_YML
+
+    -   name        : CpCsumChain
+        testcase    : testcases.storage.ymltest2
+        iterators   :
+            type        : nested
+            cpus        : *CPUS_ITER_LIST_COMBO2
+            batch_depth : *BATCH_DEPTH_ITER_LIST_COMBO1
+            mode        : *MODE_ITER_LIST_COMBO1
+        args    :
+            wait        : '1.0'
+            test        : *CP_CHKSUM_CHAIN_YML
+
+    -   name        : CpHashChain
+        testcase    : testcases.storage.ymltest2
+        iterators   :
+            type        : nested
+            cpus        : *CPUS_ITER_LIST_COMBO2
+            batch_depth : *BATCH_DEPTH_ITER_LIST_COMBO1
+            mode        : *MODE_ITER_LIST_COMBO1
+        args    :
+            wait        : '1.0'
+            test        : *CP_HASH_CHAIN_YML
+
+#    -   name        : DecryptDcChain
+#        testcase    : testcases.storage.ymltest2
+#        iterators   :
+#            type        : nested
+#            cpus        : *CPUS_ITER_LIST_COMBO2
+#            batch_depth : *BATCH_DEPTH_ITER_LIST_COMBO1
+#            mode        : *MODE_ITER_LIST_COMBO1
+#        args    :
+#            wait        : '1.0'
+#            test        : *DECRYPT_DC_CHAIN_YML
 
 #    -   name    : Crypto
 #        testcase: testcases.storage.ymltest

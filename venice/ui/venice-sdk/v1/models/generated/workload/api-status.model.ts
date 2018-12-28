@@ -101,6 +101,8 @@ export class ApiStatus extends BaseModel implements IApiStatus {
         }
         if (values && values['message'] != null) {
             this['message'] = values['message'];
+        } else if (fillDefaults && ApiStatus.hasDefaultValue('message')) {
+            this['message'] = [ ApiStatus.propInfo['message'].default];
         }
         if (values && values['code'] != null) {
             this['code'] = values['code'];

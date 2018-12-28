@@ -71,6 +71,8 @@ export class StagingValidationError extends BaseModel implements IStagingValidat
         }
         if (values && values['error'] != null) {
             this['error'] = values['error'];
+        } else if (fillDefaults && StagingValidationError.hasDefaultValue('error')) {
+            this['error'] = [ StagingValidationError.propInfo['error'].default];
         }
         this.setFormGroupValuesToBeModelValues();
     }

@@ -48,7 +48,7 @@ static osal_atomic_int_t ctl_state;
 int
 pnso_test_cdev_init(void)
 {
-	mtx_init(&pnso_test_softc.mtx, "pnso char", NULL, MTX_SPIN);
+	mtx_init(&pnso_test_softc.mtx, "pnso char", NULL, MTX_DEF);
 
 	pnso_test_softc.input_max = BUFFERSIZE - 1;
 	pnso_test_softc.output_max = BUFFERSIZE - 1;
@@ -110,7 +110,7 @@ pnso_test_read(struct cdev *dev __unused, struct uio *uio, int ioflag __unused)
 	if ((pnso_test_softc.input == NULL) || (pnso_test_softc.output == NULL))
 		return (ENXIO);
 
-	mtx_lock_spin(&pnso_test_softc.mtx);
+	mtx_lock(&pnso_test_softc.mtx);
 	/*
 	 * How big is this read operation?  Either as big as the user wants,
 	 * or as big as the remaining data.  Note that the 'input_len' does not
@@ -122,7 +122,7 @@ pnso_test_read(struct cdev *dev __unused, struct uio *uio, int ioflag __unused)
 	if ((error = uiomove(pnso_test_softc.output, amt, uio)) != 0)
 		PNSO_LOG_ERROR("uiomove failed!\n");
 
-	mtx_unlock_spin(&pnso_test_softc.mtx);
+	mtx_unlock(&pnso_test_softc.mtx);
 	return (error);
 }
 
@@ -143,7 +143,7 @@ pnso_test_write(struct cdev *dev __unused, struct uio *uio, int ioflag __unused)
 	if (uio->uio_offset != 0 && (uio->uio_offset != pnso_test_softc.input_len))
 		return (EINVAL);
 
-	mtx_lock_spin(&pnso_test_softc.mtx);
+	mtx_lock(&pnso_test_softc.mtx);
 	/* This is a new message, reset length */
 	if (uio->uio_offset == 0) {
 		pnso_test_softc.input_len = 0;
@@ -162,7 +162,7 @@ pnso_test_write(struct cdev *dev __unused, struct uio *uio, int ioflag __unused)
 	if (error != 0)
 		PNSO_LOG_ERROR("Write failed: bad address!\n");
 
-	mtx_unlock_spin(&pnso_test_softc.mtx);
+	mtx_unlock(&pnso_test_softc.mtx);
 	/* Start the test. */
 	osal_atomic_set(&ctl_state, CTL_STATE_START);
 	
@@ -187,9 +187,9 @@ char *pnso_test_sysfs_alloc_and_get_cfg(void)
 	if (buf == NULL)
 		return (NULL);
 
-	mtx_lock_spin(&pnso_test_softc.mtx);
+	mtx_lock(&pnso_test_softc.mtx);
 	memcpy(buf, pnso_test_softc.input, len);
-	mtx_unlock_spin(&pnso_test_softc.mtx);
+	mtx_unlock(&pnso_test_softc.mtx);
 	
 	buf[len] = 0;
 	return (buf);
@@ -207,13 +207,13 @@ static void write_dev_data(const char *src, uint32_t size)
 	if (pnso_test_softc.output == NULL)
 		return;
 
-	mtx_lock_spin(&pnso_test_softc.mtx);
+	mtx_lock(&pnso_test_softc.mtx);
 	/* One less for null character. */
 	len = min(size, pnso_test_softc.output_max  - pnso_test_softc.output_len);
 	memcpy(pnso_test_softc.output + pnso_test_softc.output_len, src, len);
 	pnso_test_softc.output_len += len;
 	pnso_test_softc.output[pnso_test_softc.output_len] = 0;
-	mtx_unlock_spin(&pnso_test_softc.mtx);
+	mtx_unlock(&pnso_test_softc.mtx);
 }
 
 static void write_testcase_summary(uint32_t testcase_id, bool success)

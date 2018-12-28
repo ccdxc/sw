@@ -38,6 +38,7 @@ struct common_p4plus_stage0_app_header_table_k k;
 
 .align
 req_rx_sqcb1_process:
+    bcf            [c2 | c3 | c7], table_error
     add            r1, r0, CAPRI_APP_DATA_RAW_FLAGS  // Branch Delay Slot
 
     // Do not check and increment token_id for feedback phv unlike
@@ -447,3 +448,8 @@ process_recirc_sge_work_pending:
     CAPRI_RESET_TABLE_0_ARG()
 
     CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_sqcb1_recirc_sge_process, r0)
+
+table_error:
+    // TODO add LIF stats
+    phvwr.e        p.common.p4_intr_global_drop, 1
+    CAPRI_SET_TABLE_0_VALID(0) // Exit Slot

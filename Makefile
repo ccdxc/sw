@@ -95,17 +95,20 @@ goimports-src: gopkgsinstall
 ifdef JOB_ID
 	@echo "Running in CI; checking goimports and fmt"
 	@$(eval IMPRT := $(shell ${GOIMPORTS_CMD} ${GO_FILES}))
-	@echo "goimports found errors in the following files(if any):"
-	@echo $(IMPRT)
-	@test -z "$(IMPRT)"
-endif
+	@if [ "$(IMPRT)" != "" ]; then \
+		echo "*** goimports found errors in following files:"; \
+		echo "$(IMPRT)"; \
+		exit 1; \
+	fi
+else
 	@${GOIMPORTS_CMD} -w ${GO_FILES}
+endif
 
 # golint-src runs go linter and verifies code style matches golang recommendations
 golint-src: gopkglist
 	$(info +++ golint sources)
 	@$(eval LINT := $(shell golint ${GO_PKG} | grep -v pb.go))
-	@echo $(LINT)
+	@echo "$(LINT)"
 	@test -z "$(LINT)"
 
 # govet-src validates source code and reports suspicious constructs
@@ -139,6 +142,14 @@ unit-test-cover: gopkglist
 	$(info +++ running go tests)
 	@VENICE_DEV=1 CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go run scripts/report/report.go ${GO_PKG}
 
+unit-race-test: gopkglist
+	$(info +++ running go tests with race detector)
+	@VENICE_DEV=1 CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go test -race ${GO_PKG}
+
+unit-test-verbose: gopkglist
+	$(info +++ running go tests verbose)
+	@VENICE_DEV=1 CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" $(GOCMD) test -v -p 1 ${GO_PKG}; \
+
 c-start:
 	@tools/scripts/create-container.sh startCluster
 
@@ -160,24 +171,6 @@ install:
 	docker build --label org.label-schema.build-date="${BUILD_DATE}" --label org.label-schema.vendor="Pensando" --label org.label-schema.vcs-ref="${GIT_COMMIT}" --label org.label-schema.version="${GIT_VERSION}" --label org.label-schema.schema-version="1.0" --rm --no-cache -t pen-install:latest -f tools/docker-files/install/Dockerfile tools/docker-files/install
 	docker save -o bin/tars/pen-netagent.tar pen-netagent:latest
 	docker save -o bin/tars/pen-install.tar pen-install:latest
-
-deploy:
-	$(MAKE) venice-image
-	$(MAKE) c-start
-
-cluster:
-	$(MAKE) build
-	$(MAKE) venice-image
-	tools/scripts/startCluster.py -nodes ${PENS_NODES} -quorum ${PENS_QUORUM_NODENAMES}
-	tools/scripts/startSim.py
-
-cluster-stop:
-	tools/scripts/startCluster.py -nodes ${PENS_NODES} -stop
-	tools/scripts/startSim.py -stop
-
-cluster-restart:
-	tools/scripts/startCluster.py -nodes ${PENS_NODES} -quorum ${PENS_QUORUM_NODENAMES}
-	tools/scripts/startSim.py
 
 gen-clean:
 	@for c in ${TO_GEN}; do printf "\n+++++++++++++++++ Cleaning $${c} +++++++++++++++++\n"; PATH=$$PATH make -C $${c} gen-clean || exit 1; done
@@ -266,15 +259,6 @@ container-qcompile:
 		docker run --user $(shell id -u):$(shell id -g) -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -e "VENICE_CCOMPILE_FORCE=1" -v${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -v${PWD}/bin/pkg:/import/pkg${CACHEMOUNT} -v${PWD}/bin/cbin:/import/bin${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER};\
 	fi
 
-
-unit-race-test: gopkglist
-	$(info +++ running go tests with race detector)
-	@VENICE_DEV=1 CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go test -race ${GO_PKG}
-
-unit-test-verbose: gopkglist
-	$(info +++ running go tests verbose)
-	@VENICE_DEV=1 CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" $(GOCMD) test -v -p 1 ${GO_PKG}; \
-
 install_box:
 	@if [ ! -x /usr/local/bin/box ]; then echo "Installing box, sudo is required"; curl -sSL box-builder.sh | sudo bash; fi
 
@@ -319,31 +303,6 @@ node:
 	scripts/bringup-dev.sh Vagrantfile.node
 
 dev-clean:
-	scripts/cleanup-dev.sh
-
-test-cluster:
-	scripts/bringup-dev.sh Vagrantfile.e2e
-	vagrant ssh node1 -- 'cd /import/src/github.com/pensando/sw/; make build && make cluster'
-	scripts/setup_hostsim.sh
-	vagrant ssh node1 -- '/import/src/github.com/pensando/sw/tools/scripts/startSim.py -nodes $$NAPLES_NODES -simnodes $$HOSTSIM_NODES -hostif eth2 -uplink eth3 -simif eth2 -gobin /import/bin/cbin -simbin /import/bin'
-
-restart-test-cluster:
-	vagrant ssh node1 -- '/import/src/github.com/pensando/sw/tools/scripts/startSim.py -nodes $$NAPLES_NODES -simnodes $$HOSTSIM_NODES -hostif eth2 -uplink eth3 -simif eth2 -gobin /import/bin/cbin -simbin /import/bin -stop'
-	vagrant ssh node1 -- '/import/src/github.com/pensando/sw/tools/scripts/startCluster.py -nodes $$PENS_NODES -quorum $$PENS_QUORUM_NODENAMES'
-	vagrant ssh node1 -- '/import/src/github.com/pensando/sw/tools/scripts/startSim.py -nodes $$NAPLES_NODES -simnodes $$HOSTSIM_NODES -hostif eth2 -uplink eth3 -simif eth2 -gobin /import/bin/cbin -simbin /import/bin'
-
-e2e-test:
-	vagrant ssh node1 -- 'cd /import/src/github.com/pensando/sw/test/e2e; sudo -E E2E_TEST=1 GOPATH=/import /usr/local/go/bin/go test -v .'
-
-log-integ-test:
-	vagrant ssh node2 -- 'cd /import/src/github.com/pensando/sw/test/integ/loginfra; sudo -E LOG_INTEG_TEST=1 GOPATH=/import /usr/local/go/bin/go test -v .'
-
-start-agents:
-	vagrant ssh node2 -- " /import/src/github.com/pensando/sw/tools/scripts/agentScale.py -num-agents $(PENS_AGENTS)  |  sudo bash "
-stop-agents:
-	vagrant ssh node2 -- " /import/src/github.com/pensando/sw/tools/scripts/agentScale.py -num-agents $(PENS_AGENTS) -stop |  sudo bash "
-
-test-clean:
 	scripts/cleanup-dev.sh
 
 create-assets:

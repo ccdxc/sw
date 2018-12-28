@@ -643,7 +643,11 @@ export class Utility {
     }
     value = _.get(inputObject, fields);
     if (uiHintMap != null) {
-      value = uiHintMap[value];
+      if (Array.isArray(value)) {
+        value = value.map((v) => uiHintMap[v]);
+      } else {
+        value = uiHintMap[value];
+      }
     }
     return value;
   }
@@ -746,6 +750,10 @@ export class Utility {
         return cat + '/alertsevents/alertdestinations';
       case 'AuthenticationPolicy':
         return 'settings/authpolicy';
+      case 'App':
+        return 'security/securityapps';
+      case 'SGPolicy':
+        return 'security/sgpolicies';
       default:
         return  (!isToUseDefault) ? null : cat + '/' + pluralize.plural(kind.toLowerCase()) + '/' + name;
     }

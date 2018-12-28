@@ -84,6 +84,8 @@ export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringF
         }
         if (values && values['filter'] != null) {
             this['filter'] = values['filter'];
+        } else if (fillDefaults && MonitoringFwlogPolicySpec.hasDefaultValue('filter')) {
+            this['filter'] = [ MonitoringFwlogPolicySpec.propInfo['filter'].default];
         }
         if (values) {
             this['config'].setValues(values['config']);

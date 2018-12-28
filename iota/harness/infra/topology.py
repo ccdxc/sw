@@ -305,6 +305,9 @@ class Topology(object):
                 ips.append(n.MgmtIpAddress())
         return ips
 
+    def GetMgmtIPAddress(self, node_name):
+        return self.__nodes[node_name].MgmtIpAddress()
+
     def GetNaplesUuidMap(self):
         uuid_map = {}
         for n in self.__nodes.values():

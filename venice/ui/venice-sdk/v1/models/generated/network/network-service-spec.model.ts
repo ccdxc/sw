@@ -80,6 +80,8 @@ export class NetworkServiceSpec extends BaseModel implements INetworkServiceSpec
     setValues(values: any, fillDefaults = true): void {
         if (values && values['workload-labels'] != null) {
             this['workload-labels'] = values['workload-labels'];
+        } else if (fillDefaults && NetworkServiceSpec.hasDefaultValue('workload-labels')) {
+            this['workload-labels'] = [ NetworkServiceSpec.propInfo['workload-labels'].default];
         }
         if (values && values['virtual-ip'] != null) {
             this['virtual-ip'] = values['virtual-ip'];

@@ -3,6 +3,12 @@
 ## How to publish new vagrant box image
 There are two box images we use: 1) dev-vm 2) production vm (aka turin)
 
+In order to customize a VM, you must install packer on your Mac/Linux system, using
+the instructions specified [here](https://www.packer.io/intro/getting-started/setup.html).
+For Mac, if you have `homebrew` installed, it is as easy as running `brew install packer`.
+
+Following sub-sections specifies the steps to customize the vbox using packer.
+
 ### 1. Edit provisioning script
 
 Edit `tools/pens-packer-scripts/pens.sh` (for dev-vm) or `tools/pens-packer-scripts/pens_turin.sh` (for turin) script and add the new provisioning

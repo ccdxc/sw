@@ -1,0 +1,36 @@
+<div fxFlex="auto" fxLayout="column">
+  <div fxFlex="none" fxLayout="row" fxLayoutAlign="center start" class="newflowexport-container">
+    <!-- Limiting the size of the creation form - If it is inline, we have more room to fit in the save/cancel buttons -->
+    <div fxFlex fxLayout="row" [style.max-width]="isInline ? '1400px' : '1300px'" fxLayoutAlign="start stretch" class="newflowexport-content">
+      <div fxFlex fxLayout="column">
+        <div fxFlex="nogrow" fxLayout="row" [formGroup]="newPolicy.$formGroup.get(['meta'])">
+          <input fxFlex="300px" formControlName="name" class="newflowexport-name" [ngClass]="isErrorState(newPolicy.$formGroup.get('meta.name')) ? 'error' : ''" spellcheck="false" type="text" pInputText placeholder="Unique Policy Name...">
+        </div>
+        <div fxFlex="15px"></div> <!-- Buffer, creating as a div so there are no hiccups in the animation-->
+        <div fxFlex="noshrink" fxLayout="row">
+          <div fxFlex="nogrow" class="newflowexport-text">EXPORT PACKET IF:</div>
+          <app-matchrule #matchRules [rules]="newPolicy.$formGroup.get(['spec', 'match-rules']).value"></app-matchrule>
+        </div>
+
+        <div fxFlex="noshrink" fxLayout="row">
+          <app-syslog #syslogComponent 
+          [syslogExport]="syslogConfig"
+          [formatOptions]="formatOptions"
+          [showSyslogOptions]="false"
+          fxFlex="nogrow" fxLayout="column"></app-syslog>
+        </div>
+      </div>
+      <div *ngIf="isInline" class="newflowexport-buttoncontainer" fxFlex="nogrow" fxLayout="row wrap" fxLayoutAlign="start start">
+        <div fxFlex="nogrow">
+          <span (click)="savePolicy()" class="global-button-primary newflowexport-save">SAVE</span>
+        </div>
+        <div fxFlex="nogrow">
+          <span (click)="cancelPolicy()" class="global-button-neutral newflowexport-cancel">CANCEL</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div fxFlex="0px" class="newflowexport-border"></div>
+
+</div>

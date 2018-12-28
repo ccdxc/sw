@@ -29,12 +29,12 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
   naplesEventUtility: HttpEventUtility<ClusterSmartNIC>;
 
   cols: any[] = [
-    { field: 'meta.name', header: 'Name', class: 'naples-column-date', sortable: false },
-    { field: 'spec.hostname', header: 'Host name', class: 'naples-column-host-name', sortable: false },
+    { field: 'meta.name', header: 'Name', class: 'naples-column-date', sortable: true },
+    { field: 'spec.hostname', header: 'Host name', class: 'naples-column-host-name', sortable: true },
     { field: 'spec.ip-config.ip-address', header: 'Management IP Address', class: 'naples-column-mgmt-cidr', sortable: false },
     { field: 'status.admission-phase', header: 'Phase', class: 'naples-column-phase', sortable: false },
-    { field: 'meta.mod-time', header: 'Modification Time', class: 'naples-column-date', sortable: false },
-    { field: 'meta.creation-time', header: 'Creation Time', class: 'naples-column-date', sortable: false },
+    { field: 'meta.mod-time', header: 'Modification Time', class: 'naples-column-date', sortable: true },
+    { field: 'meta.creation-time', header: 'Creation Time', class: 'naples-column-date', sortable: true },
   ];
   subscriptions: Subscription[] = [];
 
@@ -102,6 +102,7 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
       },
       this.restErrorHandler('Failed to get NAPLES info')
     );
+    this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
   }
 
   displayColumn(data, col): any {

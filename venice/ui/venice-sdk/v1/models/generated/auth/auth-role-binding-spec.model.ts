@@ -62,9 +62,13 @@ export class AuthRoleBindingSpec extends BaseModel implements IAuthRoleBindingSp
     setValues(values: any, fillDefaults = true): void {
         if (values && values['users'] != null) {
             this['users'] = values['users'];
+        } else if (fillDefaults && AuthRoleBindingSpec.hasDefaultValue('users')) {
+            this['users'] = [ AuthRoleBindingSpec.propInfo['users'].default];
         }
         if (values && values['user-groups'] != null) {
             this['user-groups'] = values['user-groups'];
+        } else if (fillDefaults && AuthRoleBindingSpec.hasDefaultValue('user-groups')) {
+            this['user-groups'] = [ AuthRoleBindingSpec.propInfo['user-groups'].default];
         }
         if (values && values['role'] != null) {
             this['role'] = values['role'];

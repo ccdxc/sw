@@ -1,3 +1,9 @@
+/*
+ * {C} Copyright 2018 Pensando Systems Inc.
+ * All rights reserved.
+ *
+ */
+
 #ifndef __PNSO_CRYPTO_CMN_H__
 #define __PNSO_CRYPTO_CMN_H__
 

@@ -90,6 +90,8 @@ export class SecuritySGRule extends BaseModel implements ISecuritySGRule {
     setValues(values: any, fillDefaults = true): void {
         if (values && values['apps'] != null) {
             this['apps'] = values['apps'];
+        } else if (fillDefaults && SecuritySGRule.hasDefaultValue('apps')) {
+            this['apps'] = [ SecuritySGRule.propInfo['apps'].default];
         }
         if (values) {
             this.fillModelArray<SecurityProtoPort>(this, 'proto-ports', values['proto-ports'], SecurityProtoPort);
@@ -101,15 +103,23 @@ export class SecuritySGRule extends BaseModel implements ISecuritySGRule {
         }
         if (values && values['from-ip-addresses'] != null) {
             this['from-ip-addresses'] = values['from-ip-addresses'];
+        } else if (fillDefaults && SecuritySGRule.hasDefaultValue('from-ip-addresses')) {
+            this['from-ip-addresses'] = [ SecuritySGRule.propInfo['from-ip-addresses'].default];
         }
         if (values && values['to-ip-addresses'] != null) {
             this['to-ip-addresses'] = values['to-ip-addresses'];
+        } else if (fillDefaults && SecuritySGRule.hasDefaultValue('to-ip-addresses')) {
+            this['to-ip-addresses'] = [ SecuritySGRule.propInfo['to-ip-addresses'].default];
         }
         if (values && values['from-security-groups'] != null) {
             this['from-security-groups'] = values['from-security-groups'];
+        } else if (fillDefaults && SecuritySGRule.hasDefaultValue('from-security-groups')) {
+            this['from-security-groups'] = [ SecuritySGRule.propInfo['from-security-groups'].default];
         }
         if (values && values['to-security-groups'] != null) {
             this['to-security-groups'] = values['to-security-groups'];
+        } else if (fillDefaults && SecuritySGRule.hasDefaultValue('to-security-groups')) {
+            this['to-security-groups'] = [ SecuritySGRule.propInfo['to-security-groups'].default];
         }
         this.setFormGroupValuesToBeModelValues();
     }

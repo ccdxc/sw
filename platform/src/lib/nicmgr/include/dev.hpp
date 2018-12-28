@@ -75,14 +75,9 @@ static inline uint64_t READ_REG64(uint64_t addr)
 #ifdef __aarch64__
 #include "platform/src/lib/pciemgr/include/pciemgr.h"
 #endif
-#include "platform/include/common/memregion.h"
 #include "platform/src/lib/pciemgrutils/include/pciemgrutils.h"
 #include "platform/src/lib/pciehdevices/include/pciehdevices.h"
 
-/**
- * Memory Regions
- */
-#define DEVCMD_BASE             roundup(MEMREGION_DEVCMD_PA, 4096)
 
 /**
  * ADMINQ
@@ -192,15 +187,6 @@ enum DevcmdStatus
 };
 
 /**
- * 
- */
-typedef struct {
-    uint32_t    port_id;
-    uint32_t    port_speed;
-    bool        oper_status;
-} link_eventdata_t;
-
-/**
  * Utils
  */
 void invalidate_rxdma_cacheline(uint64_t addr);
@@ -241,7 +227,7 @@ public:
 
     void DevcmdPoll();
     void AdminQPoll();
-    void LinkEventHandler(link_eventdata_t *evd);
+    void LinkEventHandler(port_status_t *evd);
 
     Device *GetDevice(uint64_t id);
     void CreateUplinkVRFs();

@@ -71,6 +71,8 @@ export class ClusterIPConfig extends BaseModel implements IClusterIPConfig {
         }
         if (values && values['dns-servers'] != null) {
             this['dns-servers'] = values['dns-servers'];
+        } else if (fillDefaults && ClusterIPConfig.hasDefaultValue('dns-servers')) {
+            this['dns-servers'] = [ ClusterIPConfig.propInfo['dns-servers'].default];
         }
         this.setFormGroupValuesToBeModelValues();
     }

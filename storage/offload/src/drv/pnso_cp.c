@@ -288,7 +288,7 @@ compress_ring_db(struct service_info *svc_info)
 }
 
 static pnso_error_t
-compress_poll(const struct service_info *svc_info)
+compress_poll(struct service_info *svc_info)
 {
 	pnso_error_t err;
 	volatile struct cpdc_status_desc *status_desc;
@@ -298,7 +298,7 @@ compress_poll(const struct service_info *svc_info)
 
 	OSAL_ASSERT(svc_info);
 
-	err = cpdc_poll(svc_info);
+	err = cpdc_poll(svc_info, NULL);
 	if (err)
 		goto out;
 

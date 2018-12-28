@@ -68,6 +68,8 @@ export class SecurityCertificateStatus extends BaseModel implements ISecurityCer
         }
         if (values && values['workloads'] != null) {
             this['workloads'] = values['workloads'];
+        } else if (fillDefaults && SecurityCertificateStatus.hasDefaultValue('workloads')) {
+            this['workloads'] = [ SecurityCertificateStatus.propInfo['workloads'].default];
         }
         this.setFormGroupValuesToBeModelValues();
     }

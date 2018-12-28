@@ -18,7 +18,8 @@
 
 <ng-template #DataTable>
   <div fxFlex class="workload-table">
-    <p-table #workloadTable class="global-primeng-table" [columns]="cols" 
+    <p-table #workloadTable class="global-primeng-table" [columns]="cols"
+              sortField="meta.mod-time" [sortOrder]='-1' 
               dataKey="meta.name" [responsive]="true" [value]="workloads"
               [loading]="tableLoading" [resizableColumns]="true">
         <!-- Table Caption -->
@@ -30,8 +31,7 @@
       <ng-template pTemplate="header" let-columns>
         <tr>
           <th *ngFor="let col of cols" [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class">
-              {{col.header}}
-              <p-sortIcon *ngIf="col.sortable" style="float: right;" [field]="col.field"></p-sortIcon>
+              <app-sorticon *ngIf="col.sortable" [field]="col.field">{{col.header}}</app-sorticon>
           </th>
         </tr>
       </ng-template>

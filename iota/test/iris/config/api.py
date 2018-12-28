@@ -22,7 +22,10 @@ def ReadConfigs(directory, file_pattern="*.json"):
 #Removes Config object from store
 def RemoveConfigObjects(objects):
     for cfgObject in objects:
-        cfg_main.ObjectConfigStore.RemoveConfig(cfgObject)
+        ret = cfg_main.ObjectConfigStore.RemoveConfig(cfgObject)
+        if ret != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
+    return api.types.status.SUCCESS
 
 def QueryConfigs(kind, filter=None):
     return cfg_main.ObjectConfigStore.QueryConfigs(kind, filter)

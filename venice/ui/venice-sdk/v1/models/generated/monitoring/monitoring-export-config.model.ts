@@ -18,6 +18,8 @@ export interface IMonitoringExportConfig {
 
 export class MonitoringExportConfig extends BaseModel implements IMonitoringExportConfig {
     'destination': string = null;
+    /** should be a valid layer3 or layer 4 protocol and port/type
+     */
     'transport': string = null;
     'credentials': MonitoringExternalCred = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
@@ -25,6 +27,8 @@ export class MonitoringExportConfig extends BaseModel implements IMonitoringExpo
             type: 'string'
         },
         'transport': {
+            description:  'should be a valid layer3 or layer 4 protocol and port/type ',
+            hint:  'tcp/1234, arp',
             type: 'string'
         },
         'credentials': {
