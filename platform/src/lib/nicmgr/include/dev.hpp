@@ -187,15 +187,6 @@ enum DevcmdStatus
 };
 
 /**
- * 
- */
-typedef struct {
-    uint32_t    port_id;
-    uint32_t    port_speed;
-    bool        oper_status;
-} link_eventdata_t;
-
-/**
  * Utils
  */
 void invalidate_rxdma_cacheline(uint64_t addr);
@@ -236,7 +227,7 @@ public:
 
     void DevcmdPoll();
     void AdminQPoll();
-    void LinkEventHandler(link_eventdata_t *evd);
+    void LinkEventHandler(port_status_t *evd);
 
     Device *GetDevice(uint64_t id);
     void CreateUplinkVRFs();

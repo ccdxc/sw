@@ -283,11 +283,16 @@ Eth::Eth(HalClient *hal_client,
     }
 
     // Notify Queue
-    notify_block = (struct notify_block *)calloc(1, sizeof(struct notify_block));
-    assert (notify_block != NULL);
     notify_block_addr = pd->nicmgr_mem_alloc(sizeof(struct notify_block));
     host_notify_block_addr = 0;
+    notify_block = (struct notify_block *)calloc(1, sizeof(struct notify_block));
+    // notify_block = (struct notify_block *)pal_mem_map(notify_block_addr, sizeof(struct notify_block), 0);
+    if (notify_block == NULL) {
+        NIC_LOG_ERR("Failed to map notify block!");
+        return;
+    }
     MEM_SET(notify_block_addr, 0, sizeof(struct notify_block), 0);
+    // memset(notify_block, 0, sizeof(struct notify_block));
 
     NIC_LOG_INFO("lif-{}: notify_block_addr {:#x}",
         hal_lif_info_.hw_lif_id, notify_block_addr);
@@ -491,7 +496,7 @@ Eth::StatsUpdate(void *obj)
                 CAP_ADDR_BASE_DB_WA_OFFSET +
 #endif
                 CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS +
-                (0b1001 /* PI_UPD + SCHED_EVAL */ << 17) +
+                (0b1011 /* PI_UPD + SCHED_SET */ << 17) +
                 (eth->hal_lif_info_.hw_lif_id << 6) +
                 (ETH_QTYPE_SVC << 3);
 
@@ -552,7 +557,7 @@ Eth::NotifyBlockUpdate(void *obj)
                 CAP_ADDR_BASE_DB_WA_OFFSET +
 #endif
                 CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS +
-                (0b1001 /* PI_UPD + SCHED_EVAL */ << 17) +
+                (0b1011 /* PI_UPD + SCHED_SET */ << 17) +
                 (eth->hal_lif_info_.hw_lif_id << 6) +
                 (ETH_QTYPE_SVC << 3);
 
@@ -581,7 +586,7 @@ Eth::NotifyBlockUpdate(void *obj)
 }
 
 void
-Eth::LinkEventHandler(link_eventdata_t *evd)
+Eth::LinkEventHandler(port_status_t *evd)
 {
     if (spec->uplink == NULL || spec->uplink->GetPortNum() != evd->port_id) {
         return;
@@ -603,7 +608,7 @@ Eth::LinkEventHandler(link_eventdata_t *evd)
     notify_block->link_status = evd->oper_status;
     notify_block->link_error_bits = 0;
     notify_block->phy_type = 0;
-    notify_block->link_speed = evd->port_speed;
+    notify_block->link_speed = evd->oper_status ? evd->port_speed : 0;
     notify_block->autoneg_status = 0;
     ++notify_block->link_flap_count;
     WRITE_MEM(notify_block_addr, (uint8_t *)notify_block, sizeof(struct notify_block), 0);
@@ -635,7 +640,7 @@ Eth::LinkEventHandler(link_eventdata_t *evd)
                 CAP_ADDR_BASE_DB_WA_OFFSET +
 #endif
                 CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS +
-                (0b1001 /* PI_UPD + SCHED_EVAL */ << 17) +
+                (0b1011 /* PI_UPD + SCHED_SET */ << 17) +
                 (hal_lif_info_.hw_lif_id << 6) +
                 (ETH_QTYPE_SVC << 3);
 
@@ -1150,12 +1155,6 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
                  cmd->index,
                  hal_lif_info_.pushed_to_hal);
 
-    // Reset the notify block
-    MEM_SET(notify_block_addr, 0, sizeof(struct notify_block), 0);
-    notify_block->eid = 1;
-    notify_block->link_status = spec->uplink ? false : true;
-    notify_block->link_flap_count = 0;
-
     // Trigger Hal for Lif create if this is the first time
     if (!hal_lif_info_.pushed_to_hal) {
         uint64_t ret = hal->LifCreate(&hal_lif_info_);
@@ -1519,7 +1518,7 @@ Eth::_CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
     READ_MEM(addr, (uint8_t *)&qstate, sizeof(qstate), 0);
     qstate.cosA = 0;
     qstate.cosB = 0;
-    qstate.host = 1;
+    qstate.host = 0;
     qstate.total = 1;
     qstate.pid = cmd->pid;
     qstate.p_index0 = 0;
@@ -1541,8 +1540,24 @@ Eth::_CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
     WRITE_MEM(addr, (uint8_t *)&qstate, sizeof(qstate), 0);
 
     host_notify_block_addr = cmd->notify_base;
+    NIC_LOG_INFO("lif-{}: host_notify_block_addr {:#x}",
+                 hal_lif_info_.hw_lif_id, host_notify_block_addr);
 
     invalidate_txdma_cacheline(addr);
+
+    // Init the notify block
+    notify_block->eid = 1;
+    if (spec->uplink) {
+        port_status_t port_status;
+        hal->PortStatusGet(spec->uplink->GetPortNum(), port_status);
+        notify_block->link_status = port_status.oper_status;
+        notify_block->link_speed = port_status.port_speed;
+    } else {
+        notify_block->link_status = true;
+        notify_block->link_speed = 1000; // 1 Gbps
+    }
+    notify_block->link_flap_count = 0;
+    WRITE_MEM(notify_block_addr, (uint8_t *)notify_block, sizeof(struct notify_block), 0);
 
     Eth::NotifyBlockUpdate(this);
 

@@ -58,6 +58,8 @@ HalClient::HalClient(enum ForwardingMode fwd_mode)
     rdma_stub_ = Rdma::NewStub(channel);
     accel_rgroup_stub_ = AccelRGroup::NewStub(channel);
     crypto_stub_ = Internal::NewStub(channel);
+    port_stub_ = Port::NewStub(channel);
+
     this->fwd_mode = fwd_mode;
 }
 
@@ -2152,4 +2154,59 @@ HalClient::crypto_key_index_update(uint32_t key_index,
         return -1;
     }
     return 0;
+}
+
+int
+HalClient::PortStatusGet(uint32_t portnum, port_status_t &pi)
+{
+    PortGetRequestMsg       req_msg;
+    PortGetResponseMsg      rsp_msg;
+    ClientContext           context;
+    Status                  status;
+
+    auto req = req_msg.add_request();
+    req->mutable_key_or_handle()->set_port_id(portnum);
+    status = port_stub_->PortGet(&context, req_msg, &rsp_msg);
+    if (!status.ok()) {
+        NIC_FUNC_ERR("GRPC update status {} {}", status.error_code(),
+                     status.error_message());
+        return -1;
+    }
+
+    auto port = rsp_msg.response(0);
+    if (port.api_status() != types::API_STATUS_OK) {
+        NIC_FUNC_ERR("API status {} port {}", port.api_status(), portnum);
+        return -1;
+    }
+
+    pi.port_id = port.status().key_or_handle().port_id();
+    pi.oper_status = (port.status().oper_status() == port::PortOperStatus::PORT_OPER_STATUS_UP);
+
+    switch (port.status().port_speed()) {
+        case port::PortSpeed::PORT_SPEED_1G:
+            pi.port_speed = 1000;
+            break;
+        case port::PortSpeed::PORT_SPEED_10G:
+            pi.port_speed = 10000;
+            break;
+        case port::PortSpeed::PORT_SPEED_25G:
+            pi.port_speed = 25000;
+            break;
+        case port::PortSpeed::PORT_SPEED_40G:
+            pi.port_speed = 40000;
+            break;
+        case port::PortSpeed::PORT_SPEED_50G:
+            pi.port_speed = 50000;
+            break;
+        case port::PortSpeed::PORT_SPEED_100G:
+            pi.port_speed = 100000;
+            break;
+        default:
+            pi.port_speed = 0;
+    }
+
+    NIC_LOG_DEBUG("PortStatus: port {} status {} speed {}",
+        pi.port_id, pi.oper_status, pi.port_speed);
+
+    return (0);
 }

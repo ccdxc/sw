@@ -246,7 +246,7 @@ void DeviceManager::Update()
     invalidate_txdma_cacheline(hal_lif_info_.qstate_addr[NICMGR_QTYPE_REQ]);
     READ_MEM(hal_lif_info_.qstate_addr[NICMGR_QTYPE_REQ], (uint8_t *)&qstate_req, sizeof(qstate_req), 0);
 
-    qstate_req.host = 1;
+    qstate_req.host = 0;
     qstate_req.total = 1;
     qstate_req.p_index0 = req_head;
     qstate_req.c_index0 = req_tail;
@@ -269,7 +269,7 @@ void DeviceManager::Update()
     invalidate_txdma_cacheline(hal_lif_info_.qstate_addr[NICMGR_QTYPE_RESP]);
     READ_MEM(hal_lif_info_.qstate_addr[NICMGR_QTYPE_RESP], (uint8_t *)&qstate_resp, sizeof(qstate_resp), 0);
 
-    qstate_resp.host = 1;
+    qstate_resp.host = 0;
     qstate_resp.total = 1;
     qstate_resp.p_index0 = resp_head;
     qstate_resp.c_index0 = resp_tail;
@@ -629,7 +629,7 @@ DeviceManager::DevcmdPoll()
 }
 
 void
-DeviceManager::LinkEventHandler(link_eventdata_t *evd)
+DeviceManager::LinkEventHandler(port_status_t *evd)
 {
     Device *dev;
     Eth *eth_dev;
@@ -674,7 +674,7 @@ DeviceManager::AdminQPoll()
                 CAP_ADDR_BASE_DB_WA_OFFSET +
 #endif
                 CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS +
-                (0b1001 /* PI_UPD + SCHED_EVAL */ << 17) +
+                (0b1011 /* PI_UPD + SCHED_SET */ << 17) +
                 (hal_lif_info_.hw_lif_id << 6) +
                 (NICMGR_QTYPE_RESP << 3);
     uint64_t resp_db_data = 0x0;

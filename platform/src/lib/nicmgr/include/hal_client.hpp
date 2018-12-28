@@ -18,10 +18,10 @@
 #include "gen/proto/accel_rgroup.grpc.pb.h"
 #include "gen/proto/internal.grpc.pb.h"
 #include "gen/proto/internal.pb.h"
+#include "gen/proto/port.grpc.pb.h"
 
 #include "platform/src/lib/hal_api/include/ethlif.hpp"
 #include "platform/src/lib/hal_api/include/qos.hpp"
-
 
 using namespace kh;
 using namespace types;
@@ -33,6 +33,7 @@ using namespace l2segment;
 using namespace multicast;
 using namespace rdma;
 using namespace accelRGroup;
+using namespace port;
 
 using namespace grpc;
 using namespace std;
@@ -136,6 +137,16 @@ typedef struct {
 
 typedef void (*accel_rgroup_rmetrics_rsp_cb_t)(void *user_ctx,
                                                const accel_rgroup_rmetrics_rsp_t& indices);
+
+/**
+ * Port Status information
+ */
+typedef struct {
+    uint32_t    port_id;
+    uint32_t    port_speed;
+    bool        oper_status;
+} port_status_t;
+
 /**
  * Client for interacting with HAL
  */
@@ -336,6 +347,7 @@ public:
 
   map<uint64_t, EthLif*> eth_lif_map;
 
+  int PortStatusGet(uint32_t portnum, port_status_t &pi);
 
   friend ostream& operator<<(ostream&, const HalClient&);
 
@@ -352,6 +364,7 @@ private:
   std::unique_ptr<Rdma::Stub> rdma_stub_;
   std::unique_ptr<AccelRGroup::Stub> accel_rgroup_stub_;
   std::unique_ptr<Internal::Stub> crypto_stub_;
+  std::unique_ptr<Port::Stub> port_stub_;
 };
 
 #define   IB_QP_STATE        (1 << 0)
