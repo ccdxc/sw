@@ -223,8 +223,8 @@ def Abort():
     return store.GetTestbed().GetCurrentTestsuite().Abort()
 
 def PrintCommandResults(cmd):
-    Logger.header('COMMAND')
     Logger.SetNode(cmd.node_name)
+    Logger.header('COMMAND')
     Logger.info("%s (Exit Code = %d) (TimedOut = %s)" % (cmd.command, cmd.exit_code, cmd.timed_out))
     def PrintOutputLines(name, output):
         lines = output.split('\n')
