@@ -21,6 +21,7 @@ import { WhitespaceTrimDirective } from '@app/components/shared/directives/white
 import { FieldselectorComponent } from './fieldselector/fieldselector.component';
 import { HerocardComponent } from './herocard/herocard.component';
 import { WidgetsModule } from 'web-app-framework';
+import { SorticonComponent } from './sorticon/sorticon.component';
 
 @NgModule({
   imports: [
@@ -48,6 +49,7 @@ import { WidgetsModule } from 'web-app-framework';
     WhitespaceTrimDirective,
     FieldselectorComponent,
     HerocardComponent,
+    SorticonComponent,
   ],
   exports: [
     PagebodyComponent,
@@ -65,6 +67,7 @@ import { WidgetsModule } from 'web-app-framework';
     WhitespaceTrimDirective,
     FieldselectorComponent,
     HerocardComponent,
+    SorticonComponent
   ],
 })
 export class SharedModule { }

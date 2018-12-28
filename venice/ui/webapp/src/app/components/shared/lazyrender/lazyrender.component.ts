@@ -200,6 +200,7 @@ export class LazyrenderComponent implements OnInit, AfterContentInit, OnChanges,
    * @param event The event request passed in by Primeng
    */
   tableScrollLoad(event: LazyLoadEvent) {
+    this.dataChunkUtility.sort(event.sortField, event.sortOrder);
     this.dataLazy = this.dataChunkUtility.requestChunk(event.first, event.first + event.rows);
     this.setTableValues();
   }

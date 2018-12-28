@@ -25,7 +25,7 @@
 </app-pagebody>
 
 <ng-template #DataTable>
-  <p-table #naplesTable [value]="naples" class="global-primeng-table" [columns]="cols" 
+  <p-table #naplesTable [value]="naples" class="global-primeng-table" [columns]="cols" sortField="meta.mod-time" [sortOrder]='-1'
     dataKey="meta.name" [responsive]="true" [resizableColumns]="true">
     <!-- Table Caption -->
     <ng-template pTemplate="caption">
@@ -36,8 +36,7 @@
     <ng-template pTemplate="header" let-columns>
       <tr>
         <th *ngFor="let col of cols" [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class">
-            {{col.header}}
-            <p-sortIcon *ngIf="col.sortable" style="float: right;" [field]="col.field"></p-sortIcon>
+            <app-sorticon *ngIf="col.sortable" [field]="col.field">{{col.header}}</app-sorticon>
         </th>
       </tr>
     </ng-template>

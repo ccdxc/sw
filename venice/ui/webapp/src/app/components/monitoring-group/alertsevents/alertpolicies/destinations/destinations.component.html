@@ -21,15 +21,15 @@
 
 <ng-template #Table>
     <p-table class="global-primeng-table" [columns]="cols" [value]="destinations" 
-          [(selection)]="selectedDestinationPolicy" dataKey="meta.name" [rows]="15" 
+          [(selection)]="selectedDestinationPolicy" dataKey="meta.name" [rows]="15"
+          sortField="meta.mod-time" [sortOrder]='-1' 
           [scrollable]="true" scrollHeight="800px" #destinationsTable [responsive]="true" 
           [globalFilterFields]="globalFilterFields" [loading]="loading" [resizableColumns]="true" rowExpandMode="single">
        <!-- Table Header -->
        <ng-template pTemplate="header" let-columns>
          <tr>
            <th *ngFor="let col of cols; " [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class" [colSpan]=" col.isLast ? 2 : 1">
-              {{col.header}}
-              <p-sortIcon *ngIf="col.sortable" style="float: right;" [field]="col.field"></p-sortIcon>
+              <app-sorticon *ngIf="col.sortable" [field]="col.field">{{col.header}}</app-sorticon>
           </th>
          </tr>
        </ng-template>

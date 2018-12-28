@@ -20,6 +20,10 @@ export class ArrayChunkUtility {
     start: null,
     stop: null,
   };
+  lastRequestedSort = {
+    field: null,
+    order: null
+  }
   // Whether to instantly update the currentDataArray on updateData
   instantUpdate: boolean;
 
@@ -37,6 +41,46 @@ export class ArrayChunkUtility {
   constructor(data: any[], instantUpdate: boolean = false) {
     this.instantUpdate = instantUpdate;
     this.currentDataArray = Utility.getLodash().cloneDeep(data);
+  }
+
+  /**
+   * 
+   * @param field Field to sort by
+   * @param order 1 for asc, -1 for dec
+   */
+  sort(field: string, order: number) {
+    if (order !== 1 && order !== -1) {
+      console.error("Invalid sort order given")
+      return;
+    }
+    this.lastRequestedSort = {
+      field: field,
+      order: order
+    }
+    if (field == null || field === '') {
+      // Assume contents of the array are primitive types
+      // since field wasn't given
+      this.currentDataArray.sort((a, b) => {
+        // if order is 1, it will be ascending
+        // if order is -1, it will be descending
+        if (a < b) {
+          return -1 * order
+        } else if (a > b) {
+          return 1 * order
+        }
+        return 0
+      })
+    } else {
+      const _ = Utility.getLodash();
+      this.currentDataArray.sort((a, b) => {
+        if (_.get(a, field, 0) < _.get(b, field, 0)) {
+          return -1 * order
+        } else if (_.get(a, field, 0) > _.get(b, field, 0)) {
+          return 1 * order
+        }
+        return 0
+      })
+    }
   }
 
   /**
@@ -76,6 +120,9 @@ export class ArrayChunkUtility {
     if (this.newDataArray != null) {
       this.currentDataArray = this.newDataArray;
       this.newDataArray = null;
+      if (this.lastRequestedSort.order != null) {
+        this.sort(this.lastRequestedSort.field, this.lastRequestedSort.order);
+      }
     }
   }
 
