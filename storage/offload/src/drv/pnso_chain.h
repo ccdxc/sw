@@ -396,7 +396,7 @@ chn_service_is_padding_applic(const struct service_info *svc_info)
 	       (svc_info->si_desc_flags & PNSO_CP_DFLAG_ZERO_PAD);
 }
 
-uint32_t chn_service_deps_data_len_get(const struct service_info *svc_info);
+uint32_t chn_service_deps_data_len_get(struct service_info *svc_info);
 
 static inline void
 chn_service_deps_data_len_set(struct service_info *svc_info,

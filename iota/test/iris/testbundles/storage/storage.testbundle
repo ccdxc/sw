@@ -17,6 +17,7 @@ aliases:
     - &BATCH_DEPTH_ITER_LIST_COMBO2 [ 32, 33 ]
     - &MODE_ITER_LIST_COMBO1 [ sync, poll ]
     - &MODE_ITER_LIST_COMBO2 [ poll, async ]
+    - &MODE_ITER_LIST_COMBO3 [ sync, poll, async ]
     - &CPDC_TEST_YML cpdc.yml
     - &CPDC_PAD_TEST_YML cpdc_pad.yml
     - &CP_FAIL_TEST_YML cp_fail.yml
@@ -99,23 +100,33 @@ testcases:
             dcflags     : *DCFLAGS_WITH_HEADER_ZERO_PAD
 
     -   name    : CompressFail
-        testcase: testcases.storage.ymltest
-        enable  : False
+        testcase: testcases.storage.ymltest2
+        iterators   :
+            type        : nested
+            cpus        : [ 2 ]
+            batch_depth : [ 1, 33 ]
+            mode        : *MODE_ITER_LIST_COMBO3
+            inputlen    : [ 8192 ]
         args    :
             dir     : *STORAGE_TEST_DIR
-            wait    : 1
+            wait    : '1.0'
             cfg     : [ 4k.yml, globals.yml ]
-            test    : cp_fail.yml
+            test    : *CP_FAIL_TEST_YML
             failtest: True
 
     -   name    : DecompressFail
-        testcase: testcases.storage.ymltest
-        enable  : False
+        testcase: testcases.storage.ymltest2
+        iterators   :
+            type        : nested
+            cpus        : [ 2 ]
+            batch_depth : [ 1, 33 ]
+            mode        : *MODE_ITER_LIST_COMBO3
+            inputlen    : [ 8192 ]
         args    :
             dir     : *STORAGE_TEST_DIR
-            wait    : 1
+            wait    : '1.0'
             cfg     : [ 4k.yml, globals.yml ]
-            test    : dc_fail.yml
+            test    : *DC_FAIL_TEST_YML
             failtest: True
 
     -   name        : Hash4K8KSha2_256
@@ -239,7 +250,7 @@ testcases:
             type        : nested
             cpus        : *CPUS_ITER_LIST_COMBO2
             batch_depth : *BATCH_DEPTH_ITER_LIST_COMBO1
-            mode        : *MODE_ITER_LIST_COMBO1
+            mode        : *MODE_ITER_LIST_COMBO3
         args    :
             wait        : '1.0'
             test        : *CP_CHKSUM_CHAIN_YML
@@ -250,21 +261,21 @@ testcases:
             type        : nested
             cpus        : *CPUS_ITER_LIST_COMBO2
             batch_depth : *BATCH_DEPTH_ITER_LIST_COMBO1
-            mode        : *MODE_ITER_LIST_COMBO1
+            mode        : *MODE_ITER_LIST_COMBO3
         args    :
             wait        : '1.0'
             test        : *CP_HASH_CHAIN_YML
 
-#    -   name        : DecryptDcChain
-#        testcase    : testcases.storage.ymltest2
-#        iterators   :
-#            type        : nested
-#            cpus        : *CPUS_ITER_LIST_COMBO2
-#            batch_depth : *BATCH_DEPTH_ITER_LIST_COMBO1
-#            mode        : *MODE_ITER_LIST_COMBO1
-#        args    :
-#            wait        : '1.0'
-#            test        : *DECRYPT_DC_CHAIN_YML
+    -   name        : DecryptDcChain
+        testcase    : testcases.storage.ymltest2
+        iterators   :
+            type        : nested
+            cpus        : *CPUS_ITER_LIST_COMBO2
+            batch_depth : *BATCH_DEPTH_ITER_LIST_COMBO1
+            mode        : *MODE_ITER_LIST_COMBO3
+        args    :
+            wait        : '1.0'
+            test        : *DECRYPT_DC_CHAIN_YML
 
 #    -   name    : Crypto
 #        testcase: testcases.storage.ymltest

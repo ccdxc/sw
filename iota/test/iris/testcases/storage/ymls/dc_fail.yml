@@ -50,7 +50,7 @@ tests:
       idx: 1
       name: "Decompression bad input failure"
       svc_chains: 1
-      repeat: '$iter_low'
+      repeat: 1
       validations:
         - retcode_compare:
             type: ne
@@ -72,7 +72,7 @@ tests:
       idx: 3
       name: "Decompression output too large"
       svc_chains: 99,3
-      repeat: '$iter_low'
+      repeat: 1
       validations:
         - retcode_compare:
             idx: 1
