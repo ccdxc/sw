@@ -1,0 +1,58 @@
+<app-pagebody class="securityapps" header="Security Apps Overview" [icon]="bodyicon">
+
+  <div fxFlex class="securityapps-table-container">
+    <ng-container *ngTemplateOutlet="DataTable"></ng-container>
+  </div>
+
+</app-pagebody>
+
+<ng-template #DataTable>
+  <p-table #securityappsTable [value]="securityApps" class="global-primeng-table" [columns]="cols" [scrollable]="true"
+    [(selection)]="selectedSecurityApp" dataKey="meta.name" [rows]="15" [responsive]="true" [resizableColumns]="true"
+    rowExpandMode="single">
+    <!-- Table Caption -->
+    <ng-template pTemplate="caption">
+      <app-tableheader title="Security Apps" [total]="securityApps.length" [icon]="naplesIcon" width="250px">
+      </app-tableheader>
+    </ng-template>
+    <!-- Table Header -->
+    <ng-template pTemplate="header" let-columns>
+      <tr>
+
+        <th *ngFor="let col of cols" [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class">
+          {{col.header}}
+          <p-sortIcon *ngIf="col.sortable" style="float: right;" [field]="col.field"></p-sortIcon>
+        </th>
+      </tr>
+    </ng-template>
+    <!-- Table Body -->
+    <ng-template pTemplate="body" let-rowData let-expanded="expanded">
+      <tr>
+
+        <td *ngFor="let col of cols" [ngSwitch]="col.field" [class]="col.class">
+          <div *ngSwitchCase="'meta.name'">
+            <a href="#" (click)="onSecurityAppsTableRowClick($event, rowData)">{{rowData.meta.name}}</a>
+          </div>
+          <div *ngSwitchCase="'meta.mod-time'">
+            {{rowData.meta['mod-time'] | PrettyDate }}
+          </div>
+          <div *ngSwitchCase="'meta.creation-time'">
+            {{rowData.meta['creation-time'] | PrettyDate }}
+          </div>
+          <ng-container *ngSwitchDefault>
+            {{displayColumn(rowData, col)}}
+          </ng-container>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="rowexpansion" let-rowData let-columns="cols">
+      <tr  *ngIf="selectedSecurityApp" class="securityapps-rowexpand-tr">
+        <td [attr.colspan]="cols.length ">
+          <div class="securityapps-detail-div securityapps-rowexpand">
+            <pre>{{displaySecurityApp()}}</pre>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</ng-template>

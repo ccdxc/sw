@@ -2,6 +2,8 @@ import { NgModule } from '@angular/core';
 import { AccordionModule, AutoCompleteModule, BlockUIModule, BreadcrumbModule, CalendarModule, ChartModule, CheckboxModule, DataGridModule, DataTableModule, DropdownModule, FieldsetModule, GrowlModule, InputMaskModule, InputSwitchModule, InputTextareaModule, ListboxModule, MultiSelectModule, OverlayPanelModule, PanelModule, RadioButtonModule, SelectButtonModule, SharedModule, SliderModule, SplitButtonModule, StepsModule, ToolbarModule, TooltipModule, InputTextModule } from 'primeng/primeng';
 import { TableModule } from 'primeng/table';
 import { ToastModule } from 'primeng/toast';
+import {TreeModule} from 'primeng/tree';
+import {TreeTableModule} from 'primeng/treetable';
 
 
 /**
@@ -15,14 +17,14 @@ import { ToastModule } from 'primeng/toast';
     BlockUIModule, DropdownModule, SliderModule,
     ToolbarModule, FieldsetModule, InputTextModule, InputMaskModule, InputSwitchModule, InputTextareaModule, CheckboxModule,
     MultiSelectModule, ListboxModule, RadioButtonModule, DataGridModule, GrowlModule, OverlayPanelModule,
-    SelectButtonModule, TooltipModule, AutoCompleteModule, BreadcrumbModule, TableModule, InputTextModule, ToastModule
+    SelectButtonModule, TooltipModule, AutoCompleteModule, BreadcrumbModule, TableModule, InputTextModule, ToastModule, TreeModule, TreeTableModule
   ],
   exports: [
     ChartModule, SplitButtonModule, StepsModule, AccordionModule, CalendarModule, PanelModule, DataTableModule, SharedModule,
     BlockUIModule, DropdownModule, SliderModule,
     ToolbarModule, FieldsetModule, InputTextModule, InputMaskModule, InputSwitchModule, InputTextareaModule, CheckboxModule,
     MultiSelectModule, ListboxModule, RadioButtonModule, DataGridModule, GrowlModule, OverlayPanelModule,
-    SelectButtonModule, TooltipModule, AutoCompleteModule, BreadcrumbModule, TableModule, InputTextModule, ToastModule
+    SelectButtonModule, TooltipModule, AutoCompleteModule, BreadcrumbModule, TableModule, InputTextModule, ToastModule, TreeModule, TreeTableModule
   ],
   declarations: []
 })

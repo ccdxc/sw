@@ -15,6 +15,15 @@ const routes: Routes = [
         loadChildren: '@app/components/security/sgpolicies/sgpolicies.module#SgpoliciesModule'
       }
     ]
+  },
+  {
+    path: 'securityapps',
+    children: [
+      {
+        path: '',
+        loadChildren: '@app/components/security/securityapps/securityapps.module#SecurityappsModule'
+      }
+    ]
   }
 ];
 

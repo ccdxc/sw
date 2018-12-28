@@ -750,6 +750,10 @@ export class Utility {
         return cat + '/alertsevents/alertdestinations';
       case 'AuthenticationPolicy':
         return 'settings/authpolicy';
+      case 'App':
+        return 'security/securityapps';
+      case 'SGPolicy':
+        return 'security/sgpolicies';
       default:
         return  (!isToUseDefault) ? null : cat + '/' + pluralize.plural(kind.toLowerCase()) + '/' + name;
     }

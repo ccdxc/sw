@@ -4,7 +4,7 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { MessageService, SortEvent } from 'primeng/components/common/api';
 import { CommonComponent } from '../../common.component';
 import { ControllerService } from '../../services/controller.service';
-
+import { Utility } from '@app/common/Utility';
 // declare var google: any;
 
 /**
@@ -239,6 +239,16 @@ export class BaseComponent extends CommonComponent implements OnInit {
       return acc;
     }, {} as { [key: string]: any; });
     return hasError ? result : null;
+  }
+
+  displayColumn(data, col): any {
+    const fields = col.field.split('.');
+    const value = Utility.getObjectValueByPropertyPath(data, fields);
+    const column = col.field;
+    switch (column) {
+      default:
+        return Array.isArray(value) ? JSON.stringify(value, null, 2) : value;
+    }
   }
 
 }

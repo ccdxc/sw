@@ -286,6 +286,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
       },
       this.restErrorHandler('Failed to get Alerts')
     );
+    this.subscriptions.push(this.alertSubscription);
   }
 
   displayColumn(data, col): any {
