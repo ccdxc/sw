@@ -34,6 +34,7 @@ const (
 	broadcomPciDevicePrefix = "Ethernet"
 	bareMetalWorkloadName   = "bareMetalWorkload"
 	intelPciDevicePrefix    = "Ethernet"
+	maxStdoutSize           = 1024 * 1024 * 2
 )
 
 var (
@@ -545,6 +546,12 @@ func (dnode *dataNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, error) {
 		dnode.logger.Println("Command handle  :", cmd.Handle)
 		dnode.logger.Println("Command stdout :", cmd.Stdout)
 		dnode.logger.Println("Command stderr:", cmd.Stderr)
+
+		if len(cmd.Stdout) > maxStdoutSize || len(cmd.Stderr) > maxStdoutSize {
+			cmd.Stdout = ""
+			cmd.Stderr = "Stdout/Stderr output limit Exceeded."
+			cmd.ExitCode = 127
+		}
 	}
 
 	dnode.logger.Println("Completed running trigger.")
