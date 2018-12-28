@@ -54,10 +54,10 @@ fill_dc_desc(struct service_info *svc_info, struct cpdc_desc *desc)
 				svc_info->si_istatus_desc);
 		osal_rmem_set(desc->cd_status_addr, 0,
 				min(sizeof(*status_desc), (size_t) 8));
-	} else 
+	} else
 		desc->cd_status_addr = (uint64_t)
 			sonic_virt_to_phy(status_desc);
-	
+
 	desc->cd_status_data = CPDC_DC_STATUS_DATA;
 
 	CPDC_PPRINT_DESC(desc);
@@ -288,7 +288,8 @@ decompress_write_result(struct service_info *svc_info)
 	}
 
 	svc_status->u.dst.data_len = status_desc->csd_output_data_len;
-	chn_service_deps_data_len_set(svc_info, status_desc->csd_output_data_len);
+	chn_service_deps_data_len_set(svc_info,
+			status_desc->csd_output_data_len);
 	PAS_INC_NUM_DC_BYTES_OUT(svc_info->si_pcr,
 			status_desc->csd_output_data_len);
 

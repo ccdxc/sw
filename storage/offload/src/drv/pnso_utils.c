@@ -51,7 +51,8 @@ pc_res_sgl_packed_get(const struct per_core_resource *pcr,
 		return err;
 	}
 
-	iter = buffer_list_iter_init(&buffer_list_iter, svc_blist, svc_blist->len);
+	iter = buffer_list_iter_init(&buffer_list_iter, svc_blist,
+			svc_blist->len);
 
 	svc_sgl->mpool_type = mpool_type;
 	svc_sgl->sgl = NULL;
@@ -65,16 +66,21 @@ pc_res_sgl_packed_get(const struct per_core_resource *pcr,
 			goto out;
 		}
 		memset(sgl, 0, sizeof(*sgl));
-		iter = buffer_list_iter_addr_len_get(iter, block_size, &addr_len);
+		iter = buffer_list_iter_addr_len_get(iter, block_size,
+				&addr_len);
 		BUFFER_ADDR_LEN_SET(sgl->cs_addr_0, sgl->cs_len_0, addr_len);
 
 		if (iter) {
-			iter = buffer_list_iter_addr_len_get(iter, block_size, &addr_len);
-			BUFFER_ADDR_LEN_SET(sgl->cs_addr_1, sgl->cs_len_1, addr_len);
+			iter = buffer_list_iter_addr_len_get(iter, block_size,
+					&addr_len);
+			BUFFER_ADDR_LEN_SET(sgl->cs_addr_1, sgl->cs_len_1,
+					addr_len);
 		}
 		if (iter) {
-			iter = buffer_list_iter_addr_len_get(iter, block_size, &addr_len);
-			BUFFER_ADDR_LEN_SET(sgl->cs_addr_2, sgl->cs_len_2, addr_len);
+			iter = buffer_list_iter_addr_len_get(iter, block_size,
+					&addr_len);
+			BUFFER_ADDR_LEN_SET(sgl->cs_addr_2, sgl->cs_len_2,
+					addr_len);
 		}
 
 		/*
@@ -173,21 +179,28 @@ pc_res_sgl_vec_packed_get(const struct per_core_resource *pcr,
 		goto out;
 	}
 
-	iter = buffer_list_iter_init(&buffer_list_iter, svc_blist, svc_blist->len);
+	iter = buffer_list_iter_init(&buffer_list_iter, svc_blist,
+			svc_blist->len);
 	sgl_vec = svc_sgl->sgl;
 	cur_count = 0;
 	while (iter && (cur_count < num_vec_elems)) {
 		memset(sgl_vec, 0, sizeof(*sgl_vec));
-		iter = buffer_list_iter_addr_len_get(iter, block_size, &addr_len);
-		BUFFER_ADDR_LEN_SET(sgl_vec->cs_addr_0, sgl_vec->cs_len_0, addr_len);
+		iter = buffer_list_iter_addr_len_get(iter, block_size,
+				&addr_len);
+		BUFFER_ADDR_LEN_SET(sgl_vec->cs_addr_0, sgl_vec->cs_len_0,
+				addr_len);
 
 		if (iter) {
-			iter = buffer_list_iter_addr_len_get(iter, block_size, &addr_len);
-			BUFFER_ADDR_LEN_SET(sgl_vec->cs_addr_1, sgl_vec->cs_len_1, addr_len);
+			iter = buffer_list_iter_addr_len_get(iter, block_size,
+					&addr_len);
+			BUFFER_ADDR_LEN_SET(sgl_vec->cs_addr_1,
+					sgl_vec->cs_len_1, addr_len);
 		}
 		if (iter) {
-			iter = buffer_list_iter_addr_len_get(iter, block_size, &addr_len);
-			BUFFER_ADDR_LEN_SET(sgl_vec->cs_addr_2, sgl_vec->cs_len_2, addr_len);
+			iter = buffer_list_iter_addr_len_get(iter, block_size,
+					&addr_len);
+			BUFFER_ADDR_LEN_SET(sgl_vec->cs_addr_2,
+					sgl_vec->cs_len_2, addr_len);
 		}
 
 		/*
@@ -354,7 +367,7 @@ buffer_list_iter_addr_len_get(struct buffer_list_iter *iter,
 		ret_addr_len->len = len;
 		iter->cur_addr += len;
 		iter->cur_len -= len;
-                iter->total_len_max -= len;
+		iter->total_len_max -= len;
 	}
 
 	return iter;
@@ -456,7 +469,8 @@ putil_put_interm_buf_list(struct service_info *svc_info)
 uint64_t
 svc_poll_expiry_start(const struct service_info *svc_info)
 {
-	const struct batch_info *batch_info = svc_info->si_batch_info.sbi_batch_info;
+	const struct batch_info *batch_info =
+		svc_info->si_batch_info.sbi_batch_info;
 
 	return batch_info ? batch_info->bi_submit_ts : osal_get_clock_nsec();
 }
@@ -466,7 +480,8 @@ svc_poll_expiry_check(const struct service_info *svc_info,
 		      uint64_t start_ts,
 		      uint64_t per_svc_timeout)
 {
-	const struct batch_info *batch_info = svc_info->si_batch_info.sbi_batch_info;
+	const struct batch_info *batch_info =
+		svc_info->si_batch_info.sbi_batch_info;
 	uint64_t timeout = per_svc_timeout;
 
 	if (batch_info)

@@ -331,7 +331,7 @@ struct per_core_resource {
 	struct queue crypto_seq_status_qs[MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES];
 	spinlock_t seq_statusq_lock;
 
-  	struct intr intr;
+	struct intr intr;
 	struct sonic_event_list *evl; /* top half event list */
 
 	struct mem_pool *mpools[MPOOL_TYPE_MAX];

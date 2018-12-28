@@ -172,7 +172,8 @@ chksum_sub_chain_from_cpdc(struct service_info *svc_info,
 	err = seq_setup_chksum_chain_params(cpdc_chain, svc_info, chksum_desc,
 			svc_info->si_p4_sgl, svc_info->si_num_tags);
 	if (err) {
-		OSAL_LOG_ERROR("failed to setup checksum in chain! err: %d", err);
+		OSAL_LOG_ERROR("failed to setup checksum in chain! err: %d",
+				err);
 		goto out;
 	}
 	CPDC_PPRINT_DESC(chksum_desc);
@@ -245,7 +246,7 @@ chksum_poll(struct service_info *svc_info)
 	uint32_t status_object_size;
 
 	err = cpdc_poll(svc_info, NULL);
-	if(err != PNSO_OK)
+	if (err != PNSO_OK)
 		return err;
 
 	st_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
@@ -256,13 +257,14 @@ chksum_poll(struct service_info *svc_info)
 	}
 	status_object_size = cpdc_get_status_desc_size();
 
-	if(!svc_info->tags_updated) {
+	if (!svc_info->tags_updated) {
 		cpdc_update_tags(svc_info);
 	}
 
-	if(svc_info->si_num_tags > 1) {
+	if (svc_info->si_num_tags > 1) {
 		st_desc = cpdc_get_next_status_desc(st_desc,
-				status_object_size * (svc_info->si_num_tags - 1));
+				status_object_size *
+				(svc_info->si_num_tags - 1));
 		return cpdc_poll(svc_info, st_desc);
 	}
 
@@ -298,7 +300,7 @@ chksum_read_status(struct service_info *svc_info)
 	st_desc = status_desc;
 	status_object_size = cpdc_get_status_desc_size();
 
-	if(!svc_info->tags_updated) {
+	if (!svc_info->tags_updated) {
 		cpdc_update_tags(svc_info);
 	}
 
@@ -354,7 +356,7 @@ chksum_write_result(struct service_info *svc_info)
 	}
 
 	OSAL_ASSERT(svc_is_chksum_per_block_enabled(svc_info->si_desc_flags) ?
-                    svc_info->si_num_tags >= 1 : svc_info->si_num_tags == 1);
+		    svc_info->si_num_tags >= 1 : svc_info->si_num_tags == 1);
 	svc_status->u.chksum.num_tags = svc_info->si_num_tags;
 
 	status_object_size = cpdc_get_status_desc_size();

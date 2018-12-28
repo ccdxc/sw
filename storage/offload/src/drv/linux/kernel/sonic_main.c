@@ -270,13 +270,13 @@ static void sonic_dev_cmd_work(struct work_struct *work)
 	spin_unlock_irqrestore(&sonic->cmd_lock, irqflags);
 
 	OSAL_LOG_DEBUG("post admin dev command:\n");
-	if(g_osal_log_level >= OSAL_LOG_LEVEL_DEBUG) {
+	if (g_osal_log_level >= OSAL_LOG_LEVEL_DEBUG) {
 		print_hex_dump_debug("sonic: cmd ", DUMP_PREFIX_OFFSET, 16, 1,
 						 &ctx->cmd, sizeof(ctx->cmd), true);
 	}
 
 	if (ctx->side_data) {
-		if(g_osal_log_level >= OSAL_LOG_LEVEL_DEBUG) {
+		if (g_osal_log_level >= OSAL_LOG_LEVEL_DEBUG) {
 			dynamic_hex_dump("sonic: data ", DUMP_PREFIX_OFFSET, 16, 1,
 					 ctx->side_data, ctx->side_data_len, true);
 		}
@@ -301,7 +301,7 @@ static void sonic_dev_cmd_work(struct work_struct *work)
 	}
 
 	OSAL_LOG_DEBUG("comp admin dev command:\n");
-	if(g_osal_log_level >= OSAL_LOG_LEVEL_DEBUG) {
+	if (g_osal_log_level >= OSAL_LOG_LEVEL_DEBUG) {
 		print_hex_dump_debug("sonic: comp ", DUMP_PREFIX_OFFSET, 16, 1,
 						 &ctx->comp, sizeof(ctx->comp), true);
 	}
@@ -474,15 +474,15 @@ static void sonic_api_adminq_cb(struct queue *q, struct desc_info *desc_info,
 	struct admin_cpl *comp = (struct admin_cpl *) cq_info->cq_desc;
 
 	if (WARN_ON(comp->cpl_index != desc_info->index)) {
-		OSAL_LOG_ERROR("cpl_index  %u comp 0x" PRIx64 " desc_info_index %u desc_info 0x" PRIx64, 
-				comp->cpl_index, (uint64_t)comp, desc_info->index, (uint64_t)desc_info); 
+		OSAL_LOG_ERROR("cpl_index  %u comp 0x" PRIx64 " desc_info_index %u desc_info 0x" PRIx64,
+				comp->cpl_index, (uint64_t)comp, desc_info->index, (uint64_t)desc_info);
 		ctx->comp.cpl.status = -1;
 		dynamic_hex_dump("sonic: desc ", DUMP_PREFIX_OFFSET, 16, 1,
-			desc_info, sizeof(*desc_info), true); 
+			desc_info, sizeof(*desc_info), true);
 		dynamic_hex_dump("sonic: comp ", DUMP_PREFIX_OFFSET, 16, 1,
-			comp, sizeof(*comp), true); 
+			comp, sizeof(*comp), true);
 		dynamic_hex_dump("sonic: cmd ", DUMP_PREFIX_OFFSET, 16, 1,
-			&ctx->cmd, sizeof(ctx->cmd), true); 
+			&ctx->cmd, sizeof(ctx->cmd), true);
 		/* Completion with error. */
 		complete_all(&ctx->work);
 		return;
@@ -491,9 +491,9 @@ static void sonic_api_adminq_cb(struct queue *q, struct desc_info *desc_info,
 	memcpy(&ctx->comp, comp, sizeof(*comp));
 
 	OSAL_LOG_DEBUG("comp admin queue command:\n");
-	if(g_osal_log_level >= OSAL_LOG_LEVEL_DEBUG) {
+	if (g_osal_log_level >= OSAL_LOG_LEVEL_DEBUG) {
 		dynamic_hex_dump("sonic: comp ", DUMP_PREFIX_OFFSET, 16, 1,
-				&ctx->comp, sizeof(ctx->comp), true); 
+				&ctx->comp, sizeof(ctx->comp), true);
 	}
 
 	complete_all(&ctx->work);
@@ -517,7 +517,7 @@ int sonic_api_adminq_post(struct lif *lif, struct sonic_admin_ctx *ctx)
 	memcpy(adminq->head->desc, &ctx->cmd, sizeof(ctx->cmd));
 
 	OSAL_LOG_DEBUG("post admin queue command:\n");
-	if(g_osal_log_level >= OSAL_LOG_LEVEL_DEBUG) {
+	if (g_osal_log_level >= OSAL_LOG_LEVEL_DEBUG) {
 		dynamic_hex_dump("sonic: cmd ", DUMP_PREFIX_OFFSET, 16, 1,
 				 &ctx->cmd, sizeof(ctx->cmd), true);
 	}

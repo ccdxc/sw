@@ -35,7 +35,7 @@
 #define MAX_CPDC_SGLS_PER_REQ MAX_SGLS_PER_REQ
 #define MAX_CRYPTO_SGLS_PER_REQ MAX_SGLS_PER_REQ
 /*
- * 2 (hash + chksum) 
+ * 2 (hash + chksum)
  */
 #define MAX_CPDC_VEC_PER_REQ 2
 #define MAX_CPDC_SGL_VEC_PER_REQ MAX_CPDC_VEC_PER_REQ

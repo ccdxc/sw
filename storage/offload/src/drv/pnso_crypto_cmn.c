@@ -130,12 +130,14 @@ crypto_aol_packed_get(const struct per_core_resource *pcr,
 		if (iter) {
 			iter = buffer_list_iter_addr_len_get(iter,
 					CRYPTO_AOL_TUPLE_LEN_MAX, &addr_len);
-			BUFFER_ADDR_LEN_SET(aol->ca_addr_1, aol->ca_len_1, addr_len);
+			BUFFER_ADDR_LEN_SET(aol->ca_addr_1, aol->ca_len_1,
+					addr_len);
 		}
 		if (iter) {
 			iter = buffer_list_iter_addr_len_get(iter,
 					CRYPTO_AOL_TUPLE_LEN_MAX, &addr_len);
-			BUFFER_ADDR_LEN_SET(aol->ca_addr_2, aol->ca_len_2, addr_len);
+			BUFFER_ADDR_LEN_SET(aol->ca_addr_2, aol->ca_len_2,
+					addr_len);
 		}
 
 		/*
@@ -156,7 +158,7 @@ crypto_aol_packed_get(const struct per_core_resource *pcr,
 		total_len += aol->ca_len_0 + aol->ca_len_1 + aol->ca_len_2;
 		if (!svc_aol->aol)
 			svc_aol->aol = aol;
-                else {
+		else {
 			aol_prev->ca_next = sonic_virt_to_phy(aol);
 			CRYPTO_AOL_SWLINK_SET(aol_prev, aol);
 		}
@@ -164,7 +166,9 @@ crypto_aol_packed_get(const struct per_core_resource *pcr,
 	}
 
 	/*
-	 * Caller must have ensured that svc_blist had non-zero length to begin with.
+	 * Caller must have ensured that svc_blist had non-zero length to
+	 * begin with.
+	 *
 	 */
 	if (!total_len) {
 		OSAL_LOG_ERROR("buffer_list is empty");
@@ -203,14 +207,18 @@ crypto_aol_vec_sparse_get(const struct per_core_resource *pcr,
 		goto out;
 	}
 
-	iter = buffer_list_iter_init(&buffer_list_iter, svc_blist, total_len_max);
+	iter = buffer_list_iter_init(&buffer_list_iter, svc_blist,
+			total_len_max);
 	aol_vec = svc_aol->aol;
 	total_len = 0;
 	cur_count = 0;
 	while (iter && (cur_count < num_vec_elems)) {
 		memset(aol_vec, 0, sizeof(*aol_vec));
-		iter = buffer_list_iter_addr_len_get(iter, block_size, &addr_len);
-		BUFFER_ADDR_LEN_SET(aol_vec->ca_addr_0, aol_vec->ca_len_0, addr_len);
+
+		iter = buffer_list_iter_addr_len_get(iter, block_size,
+				&addr_len);
+		BUFFER_ADDR_LEN_SET(aol_vec->ca_addr_0, aol_vec->ca_len_0,
+				addr_len);
 
 		/*
 		 * Crypto requires ca_addr_0 to be populated for the entire AOL
@@ -262,6 +270,7 @@ crypto_aol_vec_sparse_get(const struct per_core_resource *pcr,
 		err = EINVAL;
 		goto out;
 	}
+
 	return PNSO_OK;
 out:
 	crypto_aol_put(pcr, svc_aol);

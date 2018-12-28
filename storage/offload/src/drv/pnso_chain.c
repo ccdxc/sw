@@ -464,7 +464,7 @@ init_service_info(enum pnso_service_type svc_type,
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CP_SQ;
 		svc_info->si_seq_info.sqi_status_qtype =
 			SONIC_QTYPE_CPDC_STATUS;
-                svc_info->si_desc_flags = svc_params->u.sp_cp_desc->flags;
+		svc_info->si_desc_flags = svc_params->u.sp_cp_desc->flags;
 		break;
 	case PNSO_SVC_TYPE_DECOMPRESS:
 		svc_info->si_ops = dc_ops;
@@ -472,7 +472,7 @@ init_service_info(enum pnso_service_type svc_type,
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_DC_SQ;
 		svc_info->si_seq_info.sqi_status_qtype =
 			SONIC_QTYPE_CPDC_STATUS;
-                svc_info->si_desc_flags = svc_params->u.sp_dc_desc->flags;
+		svc_info->si_desc_flags = svc_params->u.sp_dc_desc->flags;
 		break;
 	case PNSO_SVC_TYPE_HASH:
 		svc_info->si_ops = hash_ops;
@@ -480,7 +480,7 @@ init_service_info(enum pnso_service_type svc_type,
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CP_SQ;
 		svc_info->si_seq_info.sqi_status_qtype =
 			SONIC_QTYPE_CPDC_STATUS;
-                svc_info->si_desc_flags = svc_params->u.sp_hash_desc->flags;
+		svc_info->si_desc_flags = svc_params->u.sp_hash_desc->flags;
 		break;
 	case PNSO_SVC_TYPE_CHKSUM:
 		svc_info->si_ops = chksum_ops;
@@ -490,7 +490,7 @@ init_service_info(enum pnso_service_type svc_type,
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CP_SQ;
 		svc_info->si_seq_info.sqi_status_qtype =
 			SONIC_QTYPE_CPDC_STATUS;
-                svc_info->si_desc_flags = svc_params->u.sp_chksum_desc->flags;
+		svc_info->si_desc_flags = svc_params->u.sp_chksum_desc->flags;
 		break;
 	case PNSO_SVC_TYPE_DECOMPACT:
 	case PNSO_SVC_TYPE_NONE:
@@ -900,7 +900,8 @@ chn_service_deps_data_len_get(struct service_info *svc_info)
 	if ((svc_info->si_type == PNSO_SVC_TYPE_COMPRESS) ||
 		(svc_info->si_type == PNSO_SVC_TYPE_DECOMPRESS)) {
 		status_desc = svc_info->si_status_desc;
-		chn_service_deps_data_len_set(svc_info, status_desc->csd_output_data_len);
+		chn_service_deps_data_len_set(svc_info,
+				status_desc->csd_output_data_len);
 	}
 
 	return svc_info->si_svc_deps.sd_data_len;

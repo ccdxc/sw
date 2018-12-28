@@ -55,7 +55,7 @@ init_mpools(struct pc_res_init_params *pc_init,
 		goto out;
 
 	mpool_type = MPOOL_TYPE_CRYPTO_AOL;
-	err = mpool_create(mpool_type, num_objects * MAX_CRYPTO_SGLS_PER_REQ, 
+	err = mpool_create(mpool_type, num_objects * MAX_CRYPTO_SGLS_PER_REQ,
 			MPOOL_VEC_ELEM_SINGLE,
 			sizeof(struct crypto_aol), PNSO_MEM_ALIGN_DESC,
 			&pcr->mpools[mpool_type]);
@@ -76,7 +76,8 @@ init_mpools(struct pc_res_init_params *pc_init,
 	 *
 	 */
 	mpool_type = MPOOL_TYPE_CRYPTO_DESC_VECTOR;
-	err = mpool_create(mpool_type, num_objects * MAX_CRYPTO_DESC_VEC_PER_REQ, 
+	err = mpool_create(mpool_type, num_objects *
+			MAX_CRYPTO_DESC_VEC_PER_REQ,
 			PNSO_NUM_OBJECTS_IN_OBJECT,
 			sizeof(struct crypto_desc), PNSO_MEM_ALIGN_DESC,
 			&pcr->mpools[mpool_type]);

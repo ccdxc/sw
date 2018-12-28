@@ -363,7 +363,6 @@ write_bit_fields(void *ptr, unsigned int start_bit_offset,
 	}
 }
 
-
 static void
 fill_cpdc_seq_status_desc(struct cpdc_chain_params *chain_params,
 		uint8_t *seq_status_desc)
@@ -582,7 +581,8 @@ hw_setup_desc(struct service_info *svc_info, const void *src_desc,
 		goto out;
 	}
 
-	seq_desc = sonic_q_consume_entry(svc_info->si_seq_info.sqi_seq_q, &index);
+	seq_desc = sonic_q_consume_entry(svc_info->si_seq_info.sqi_seq_q,
+			&index);
 	if (!seq_desc) {
 		err = EINVAL;
 		OSAL_LOG_ERROR("failed to obtain sequencer desc! err: %d", err);
@@ -592,14 +592,20 @@ hw_setup_desc(struct service_info *svc_info, const void *src_desc,
 	svc_info->si_seq_info.sqi_seq_total_takes++;
 
 	memset(seq_desc, 0, sizeof(*seq_desc));
+
 	seq_desc->sd_desc_addr =
 		cpu_to_be64(sonic_virt_to_phy((void *) src_desc));
 	seq_desc->sd_pndx_addr = cpu_to_be64(ring->accel_ring.ring_pndx_pa);
-	seq_desc->sd_pndx_shadow_addr = cpu_to_be64(ring->accel_ring.ring_shadow_pndx_pa);
+	seq_desc->sd_pndx_shadow_addr =
+		cpu_to_be64(ring->accel_ring.ring_shadow_pndx_pa);
 	seq_desc->sd_ring_addr = cpu_to_be64(ring->accel_ring.ring_base_pa);
-	seq_desc->sd_desc_size = (uint8_t) ilog2(ring->accel_ring.ring_desc_size);
-	seq_desc->sd_pndx_size = (uint8_t) ilog2(ring->accel_ring.ring_pndx_size);
+
+	seq_desc->sd_desc_size =
+		(uint8_t) ilog2(ring->accel_ring.ring_desc_size);
+	seq_desc->sd_pndx_size =
+		(uint8_t) ilog2(ring->accel_ring.ring_pndx_size);
 	seq_desc->sd_ring_size = (uint8_t) ilog2(ring->accel_ring.ring_size);
+
 	if (svc_info->si_seq_info.sqi_batch_mode) {
 		seq_desc->sd_batch_mode = true;
 		seq_desc->sd_batch_size =
@@ -610,6 +616,7 @@ hw_setup_desc(struct service_info *svc_info, const void *src_desc,
 			ring->name, index, (uint64_t) src_desc, desc_size,
 			svc_info->si_seq_info.sqi_batch_mode,
 			svc_info->si_seq_info.sqi_batch_size);
+
 	PPRINT_SEQUENCER_ACCOUNTING(&svc_info->si_seq_info);
 	PPRINT_SEQUENCER_DESC(seq_desc);
 
@@ -633,11 +640,13 @@ hw_cleanup_desc(struct service_info *svc_info)
 {
 	if (svc_info->si_seq_info.sqi_seq_q) {
 		if (is_db_rung(svc_info)) {
-			sonic_q_service(svc_info->si_seq_info.sqi_seq_q, NULL,
-					svc_info->si_seq_info.sqi_seq_total_takes);
+			sonic_q_service(
+				svc_info->si_seq_info.sqi_seq_q, NULL,
+				svc_info->si_seq_info.sqi_seq_total_takes);
 		} else {
-			sonic_q_unconsume(svc_info->si_seq_info.sqi_seq_q,
-					  svc_info->si_seq_info.sqi_seq_total_takes);
+			sonic_q_unconsume(
+				svc_info->si_seq_info.sqi_seq_q,
+				svc_info->si_seq_info.sqi_seq_total_takes);
 		}
 		svc_info->si_seq_info.sqi_seq_total_takes = 0;
 	}
@@ -694,11 +703,13 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 		goto out;
 	}
 
-	err = sonic_get_seq_statusq(lif, SONIC_QTYPE_CPDC_STATUS, &seq_spec->sqs_seq_status_q);
+	err = sonic_get_seq_statusq(lif, SONIC_QTYPE_CPDC_STATUS,
+			&seq_spec->sqs_seq_status_q);
 	if (err)
 		goto out;
 
-	seq_status_desc = (uint8_t *) sonic_q_consume_entry(seq_spec->sqs_seq_status_q, &index);
+	seq_status_desc = (uint8_t *) sonic_q_consume_entry(
+			seq_spec->sqs_seq_status_q, &index);
 	if (!seq_status_desc) {
 		err = EINVAL;
 		OSAL_LOG_ERROR("failed to obtain sequencer statusq desc! err: %d",
@@ -711,7 +722,8 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 	/* skip sqs_seq_next_q/sqs_seq_next_status_q not needed for comp+hash */
 
 	cp_desc->cd_db_addr = sonic_get_lif_local_dbaddr();
-	cp_desc->cd_db_data = sonic_q_ringdb_data(seq_spec->sqs_seq_status_q, index);
+	cp_desc->cd_db_data = sonic_q_ringdb_data(
+			seq_spec->sqs_seq_status_q, index);
 	cp_desc->u.cd_bits.cc_db_on = 1;
 
 	chain_params->ccp_cmd.ccpc_next_doorbell_en = 1;
@@ -794,14 +806,16 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 		goto out;
 	}
 
-	err = sonic_get_seq_statusq(lif, SONIC_QTYPE_CPDC_STATUS, &seq_spec->sqs_seq_status_q);
+	err = sonic_get_seq_statusq(lif, SONIC_QTYPE_CPDC_STATUS,
+			&seq_spec->sqs_seq_status_q);
 	if (err) {
 		OSAL_LOG_ERROR("failed to obtain sequencer statusq err: %d",
 				err);
 		goto out;
 	}
 
-	seq_status_desc = (uint8_t *) sonic_q_consume_entry(seq_spec->sqs_seq_status_q, &index);
+	seq_status_desc = (uint8_t *) sonic_q_consume_entry(
+			seq_spec->sqs_seq_status_q, &index);
 	if (!seq_status_desc) {
 		err = EINVAL;
 		OSAL_LOG_ERROR("failed to obtain sequencer statusq desc! err: %d",
@@ -820,7 +834,8 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 		cpu_to_be64(CPDC_PAD_STATUS_DATA);
 
 	cp_desc->cd_db_addr = sonic_get_lif_local_dbaddr();
-	cp_desc->cd_db_data = sonic_q_ringdb_data(seq_spec->sqs_seq_status_q, index);
+	cp_desc->cd_db_data =
+		sonic_q_ringdb_data(seq_spec->sqs_seq_status_q, index);
 	cp_desc->u.cd_bits.cc_db_on = 1;
 
 	chain_params->ccp_cmd.ccpc_next_doorbell_en = 1;
@@ -949,15 +964,19 @@ hw_cleanup_cpdc_chain(struct service_info *svc_info)
 
 	if (cpdc_chain->ccp_seq_spec.sqs_seq_status_q) {
 		if (is_db_rung(svc_info)) {
-			sonic_q_service(cpdc_chain->ccp_seq_spec.sqs_seq_status_q, NULL,
-					svc_info->si_seq_info.sqi_status_total_takes);
+			sonic_q_service(
+				cpdc_chain->ccp_seq_spec.sqs_seq_status_q, NULL,
+				svc_info->si_seq_info.sqi_status_total_takes);
 		} else {
-			sonic_q_unconsume(cpdc_chain->ccp_seq_spec.sqs_seq_status_q,
-					  svc_info->si_seq_info.sqi_status_total_takes);
+			sonic_q_unconsume(
+				cpdc_chain->ccp_seq_spec.sqs_seq_status_q,
+				svc_info->si_seq_info.sqi_status_total_takes);
 		}
 		svc_info->si_seq_info.sqi_status_total_takes = 0;
+
 		sonic_put_seq_statusq(
 				cpdc_chain->ccp_seq_spec.sqs_seq_status_q);
+
 		cpdc_chain->ccp_seq_spec.sqs_seq_status_q = NULL;
 	}
 }
@@ -1001,6 +1020,7 @@ hw_setup_crypto_chain(struct service_info *svc_info,
 		       seq_info->sqi_ring->name, statusq_index, (uint64_t)desc);
 	fill_crypto_seq_status_desc(&svc_info->si_crypto_chain,
 				    seq_info->sqi_status_desc);
+
 	PPRINT_SEQUENCER_INFO(seq_info);
 	PPRINT_CRYPTO_CHAIN_PARAMS(&svc_info->si_crypto_chain);
 
@@ -1015,15 +1035,20 @@ hw_cleanup_crypto_chain(struct service_info *svc_info)
 
 	if (crypto_chain->ccp_seq_spec.sqs_seq_status_q) {
 		if (is_db_rung(svc_info)) {
-			sonic_q_service(crypto_chain->ccp_seq_spec.sqs_seq_status_q, NULL,
-					svc_info->si_seq_info.sqi_status_total_takes);
+			sonic_q_service(
+				crypto_chain->ccp_seq_spec.sqs_seq_status_q,
+				NULL,
+				svc_info->si_seq_info.sqi_status_total_takes);
 		} else {
-			sonic_q_unconsume(crypto_chain->ccp_seq_spec.sqs_seq_status_q,
-					  svc_info->si_seq_info.sqi_status_total_takes);
+			sonic_q_unconsume(
+				crypto_chain->ccp_seq_spec.sqs_seq_status_q,
+				svc_info->si_seq_info.sqi_status_total_takes);
 		}
 		svc_info->si_seq_info.sqi_status_total_takes = 0;
+
 		sonic_put_seq_statusq(
 				crypto_chain->ccp_seq_spec.sqs_seq_status_q);
+
 		crypto_chain->ccp_seq_spec.sqs_seq_status_q = NULL;
 	}
 }

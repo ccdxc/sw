@@ -21,8 +21,7 @@
 #define evid_to_db_pa(evl, id) (evl->db_base_pa + (sizeof(struct sonic_db_data) * (id)))
 #define db_pa_to_evid(evl, addr) (((dma_addr_t)(addr) - evl->db_base_pa) / sizeof(struct sonic_db_data))
 #define evid_to_db_va(evl, id) (struct sonic_db_data *)(evl->db_base + (sizeof(struct sonic_db_data) * (id)))
-#define db_va_to_evid(evl, addr) (((void*)(addr) - evl->db_base) / sizeof(struct sonic_db_data))
-
+#define db_va_to_evid(evl, addr) (((void *)(addr) - evl->db_base) / sizeof(struct sonic_db_data))
 
 static int sonic_get_evid(struct sonic_event_list *evl, u32 *evid)
 {
@@ -34,7 +33,8 @@ static int sonic_get_evid(struct sonic_event_list *evl, u32 *evid)
 
 	spin_lock_irqsave(&evl->inuse_lock, irqflags);
 
-	id = find_next_zero_bit(evl->inuse_evid_bmp, evl->size_ev_bmp, evl->next_evid);
+	id = find_next_zero_bit(evl->inuse_evid_bmp, evl->size_ev_bmp,
+			evl->next_evid);
 	if (id < evl->size_ev_bmp)
 		goto found;
 
@@ -99,6 +99,7 @@ sonic_intr_db_fired_clr(struct sonic_event_list *evl,
 			uint32_t id)
 {
 	struct sonic_db_data *db_data = evid_to_db_va(evl, id);
+
 	db_data->fired = 0;
 	db_data->primed = 0;
 }
@@ -235,7 +236,8 @@ static void sonic_ev_work_handler(struct work_struct *work)
 	/* Try to get more work */
 	if (!swd->found_work) {
 		/* No credits to return */
-		npolled = sonic_poll_ev_list(evl, SONIC_ASYNC_BUDGET, &evl->work_data, &used_count);
+		npolled = sonic_poll_ev_list(evl, SONIC_ASYNC_BUDGET,
+				&evl->work_data, &used_count);
 		if (used_count) {
 			if (!npolled)
 				osal_sched_yield();
@@ -249,17 +251,18 @@ static void sonic_ev_work_handler(struct work_struct *work)
 		}
 	} else {
 		prev_ev_count = swd->ev_count;
-		npolled = sonic_poll_ev_list(evl, SONIC_ASYNC_BUDGET, &evl->work_data, &used_count);
+		npolled = sonic_poll_ev_list(evl, SONIC_ASYNC_BUDGET,
+				&evl->work_data, &used_count);
 		if (npolled) {
 			/* Return credits, but don't unmask */
-			sonic_intr_return_credits(&evl->pc_res->intr, prev_ev_count,
-						  false, false);
+			sonic_intr_return_credits(&evl->pc_res->intr,
+					prev_ev_count, false, false);
 			queue_work(evl->wq, &swd->work);
 		} else {
 			/* Return credits and unmask */
 			xchg(&evl->armed, true);
-			sonic_intr_return_credits(&evl->pc_res->intr, prev_ev_count,
-						  true, false);
+			sonic_intr_return_credits(&evl->pc_res->intr,
+					prev_ev_count, true, false);
 		}
 	}
 
@@ -286,7 +289,8 @@ irqreturn_t sonic_async_ev_isr(int irq, void *evlptr)
 	}
 
 	evl->work_data.found_work = false;
-	npolled = sonic_poll_ev_list(evl, SONIC_ASYNC_BUDGET, &evl->work_data, &used_count);
+	npolled = sonic_poll_ev_list(evl, SONIC_ASYNC_BUDGET, &evl->work_data,
+			&used_count);
 	queue_work(evl->wq, &evl->work_data.work);
 
 	//OSAL_LOG_DEBUG("... exit sonic_async_ev_isr, enqueued %d work items\n", npolled);
@@ -294,7 +298,8 @@ irqreturn_t sonic_async_ev_isr(int irq, void *evlptr)
 	return IRQ_HANDLED;
 }
 
-uint64_t sonic_intr_get_db_addr(struct per_core_resource *pc_res, uint64_t usr_data)
+uint64_t sonic_intr_get_db_addr(struct per_core_resource *pc_res,
+		uint64_t usr_data)
 {
 	struct sonic_event_list *evl = pc_res->evl;
 	struct sonic_db_data *db_data;

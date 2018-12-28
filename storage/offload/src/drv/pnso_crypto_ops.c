@@ -21,12 +21,12 @@
 #include "pnso_utils.h"
 #include "sonic_api_int.h"
 
-static enum crypto_algo_cmd_hi   crypto_algo_cmd_hi_tbl[PNSO_CRYPTO_TYPE_MAX] = {
+static enum crypto_algo_cmd_hi crypto_algo_cmd_hi_tbl[PNSO_CRYPTO_TYPE_MAX] = {
 	[PNSO_CRYPTO_TYPE_XTS] = CRYPTO_ALGO_CMD_HI_AES_XTS,
 	[PNSO_CRYPTO_TYPE_GCM] = CRYPTO_ALGO_CMD_HI_AES_GCM,
 };
 
-static enum crypto_algo_cmd_lo   crypto_algo_cmd_lo_tbl[PNSO_CRYPTO_TYPE_MAX] = {
+static enum crypto_algo_cmd_lo crypto_algo_cmd_lo_tbl[PNSO_CRYPTO_TYPE_MAX] = {
 	[PNSO_CRYPTO_TYPE_XTS] = CRYPTO_ALGO_CMD_LO_AES_XTS,
 	[PNSO_CRYPTO_TYPE_GCM] = CRYPTO_ALGO_CMD_LO_AES_GCM,
 };
@@ -91,7 +91,8 @@ crypto_desc_fill(struct service_info *svc_info,
 		crypto_desc->cd_status_addr = mpool_get_object_phy_addr(
 				MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS,
 				svc_info->si_istatus_desc);
-                osal_rmem_set(crypto_desc->cd_status_addr, 0, sizeof(*status_desc));
+		osal_rmem_set(crypto_desc->cd_status_addr, 0,
+				sizeof(*status_desc));
 	} else
 		crypto_desc->cd_status_addr = sonic_virt_to_phy(status_desc);
 
@@ -151,7 +152,8 @@ crypto_dst_blist_setup(struct service_info *svc_info,
 			return ENOMEM;
 		}
 
-		if (chn_service_has_interm_blist(svc_info) && orig_dst_blist.len) {
+		if (chn_service_has_interm_blist(svc_info) &&
+				orig_dst_blist.len) {
 			svc_info->si_sgl_pdma =
 				pc_res_sgl_pdma_packed_get(pcr,
 						&orig_dst_blist);
@@ -171,7 +173,8 @@ crypto_dst_blist_setup(struct service_info *svc_info,
 	if ((svc_info->si_src_blist.len == 0) ||
 	    (svc_info->si_dst_blist.len < svc_info->si_src_blist.len)) {
 		OSAL_LOG_ERROR("length error: src_len %u dst_len %u",
-				svc_info->si_src_blist.len, svc_info->si_dst_blist.len);
+				svc_info->si_src_blist.len,
+				svc_info->si_dst_blist.len);
 		return EINVAL;
 	}
 
@@ -204,14 +207,18 @@ crypto_src_dst_aol_fill(struct service_info *svc_info)
 						svc_info->si_src_blist.len,
 						&svc_info->si_dst_aol);
 	} else {
-		src_err = crypto_aol_vec_sparse_get(pcr, svc_info->si_block_size,
-				&svc_info->si_src_blist, svc_info->si_src_blist.len,
+		src_err = crypto_aol_vec_sparse_get(pcr,
+				svc_info->si_block_size,
+				&svc_info->si_src_blist,
+				svc_info->si_src_blist.len,
 				&svc_info->si_src_aol);
 		/*
 		 * Same NOTE as above.
 		 */
-		dst_err = crypto_aol_vec_sparse_get(pcr, svc_info->si_block_size,
-				&svc_info->si_dst_blist, svc_info->si_src_blist.len,
+		dst_err = crypto_aol_vec_sparse_get(pcr,
+				svc_info->si_block_size,
+				&svc_info->si_dst_blist,
+				svc_info->si_src_blist.len,
 				&svc_info->si_dst_aol);
 	}
 
@@ -275,7 +282,8 @@ static pnso_error_t
 crypto_chain(struct chain_entry *centry)
 {
 	struct service_info		*svc_info = &centry->ce_svc_info;
-	struct crypto_chain_params	*crypto_chain = &svc_info->si_crypto_chain;
+	struct crypto_chain_params	*crypto_chain =
+		&svc_info->si_crypto_chain;
 	struct interm_buf_list		*iblist;
 	struct service_info		*svc_next;
 	pnso_error_t			err = PNSO_OK;
@@ -289,7 +297,8 @@ crypto_chain(struct chain_entry *centry)
 		crypto_chain->ccp_data_len = svc_info->si_dst_blist.len;
 		if (chn_service_has_interm_blist(svc_info)) {
 			iblist = &svc_info->si_iblist;
-			crypto_chain->ccp_crypto_buf_addr = iblist->blist.buffers[0].buf;
+			crypto_chain->ccp_crypto_buf_addr =
+				iblist->blist.buffers[0].buf;
 			if (svc_info->si_sgl_pdma) {
 				crypto_chain->ccp_sgl_pdma_dst_addr =
 					sonic_virt_to_phy(svc_info->si_sgl_pdma);
@@ -411,26 +420,27 @@ crypto_enable_interrupt(struct service_info *svc_info,
 			sonic_intr_get_db_addr(pcr, (uint64_t)poll_ctx);
 		if (!crypto_chain->ccp_next_db_spec.nds_addr) {
 			err = EINVAL;
-			OSAL_LOG_DEBUG("crypto failed sonic_intr_get_db_addr "
-				       "err: %d", err);
+			OSAL_LOG_DEBUG("crypto failed sonic_intr_get_db_addr err: %d",
+				       err);
 			goto out;
 		}
 		crypto_chain->ccp_next_db_spec.nds_data =
 				cpu_to_be64(sonic_intr_get_fire_data64());
 		crypto_chain->ccp_cmd.ccpc_next_doorbell_en = true;
 
-		crypto_chain->ccp_intr_addr = 
+		crypto_chain->ccp_intr_addr =
 			sonic_get_per_core_intr_assert_addr(pcr);
 		crypto_chain->ccp_intr_data = sonic_get_intr_assert_data();
 		crypto_chain->ccp_cmd.ccpc_intr_en = true;
 
 		/*
-	         * Note that if crypto here is a chain subordinate, then effectively
+		 * Note that if crypto here is a chain subordinate, then effectively
 		 * we're setting up one more chain level for async handling.
 		 */
 		err = seq_setup_crypto_chain(svc_info, svc_info->si_desc);
 		if (err != PNSO_OK)
-			OSAL_LOG_ERROR("failed seq_setup_crypto_chain: err %d", err);
+			OSAL_LOG_ERROR("failed seq_setup_crypto_chain: err %d",
+					err);
 	}
 out:
 	return  err;
@@ -488,14 +498,15 @@ crypto_poll(struct service_info *svc_info)
 	 * When chaining is involved, crypto_desc's cd_db_addr would point
 	 * to a seq statusQ's doorbell rather than status_desc. The completion
 	 * of the next service will imply completion of this crypto service.
-	 * 
+	 *
 	 * Also, if this service had been programmed to generate interrupt
 	 * for async mode, the same thing would have applied. That is,
 	 * cd_db_addr would ring a seq statusQ doorbell which would be
 	 * sufficient to indicate service completion.
 	 */
 	crypto_chain = &svc_info->si_crypto_chain;
-	if (chn_service_has_sub_chain(svc_info) || crypto_chain->ccp_cmd.ccpc_intr_en)
+	if (chn_service_has_sub_chain(svc_info) ||
+			crypto_chain->ccp_cmd.ccpc_intr_en)
 		goto out;
 
 	status_desc = svc_info->si_status_desc;
@@ -567,7 +578,7 @@ crypto_write_result(struct service_info *svc_info)
 	 * plus any padding would have been ccomputed and stored.
 	 */
 	svc_status = svc_info->si_svc_status;
-        from_parent = chn_service_deps_data_len_set_from_parent(svc_info);
+	from_parent = chn_service_deps_data_len_set_from_parent(svc_info);
 	svc_status->u.dst.data_len = chn_service_deps_data_len_get(svc_info);
 	if (from_parent) {
 

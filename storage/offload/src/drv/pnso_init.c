@@ -44,13 +44,14 @@ pnso_init(struct pnso_init_params *pnso_init)
 {
 	struct lif			*lif = sonic_get_lif();
 	struct per_core_resource	*pcr;
-	uint32_t			num_pc_res = sonic_get_num_per_core_res(lif);
 	uint32_t			avail_bufs;
 	uint32_t			pc_num_bufs;
 	uint32_t			i;
 	pnso_error_t			err = PNSO_OK;
+	uint32_t			num_pc_res =
+						sonic_get_num_per_core_res(lif);
 
-	if(!sonic_is_accel_dev_ready())
+	if (!sonic_is_accel_dev_ready())
 		return EAGAIN;
 
 	if (pnso_initialized) {
@@ -158,7 +159,8 @@ pnso_init(struct pnso_init_params *pnso_init)
 	 */
 	for (i = 0; (err == PNSO_OK) && (i < num_pc_res); i++) {
 		pcr = sonic_get_per_core_res_by_res_id(lif, i);
-		err = pc_res_interm_buf_init(&pc_initialized_params, pcr, pc_num_bufs);
+		err = pc_res_interm_buf_init(&pc_initialized_params,
+				pcr, pc_num_bufs);
 	}
 	if (err) {
 		OSAL_LOG_ERROR("failed to init intermediate buffers\n");
@@ -205,7 +207,8 @@ pnso_deinit(void)
 	}
 
 	if (osal_rmem_addr_valid(pad_buffer))
-		osal_rmem_free(pad_buffer, pc_initialized_params.pnso_init.block_size);
+		osal_rmem_free(pad_buffer,
+				pc_initialized_params.pnso_init.block_size);
 
 	pnso_initialized = false;
 }

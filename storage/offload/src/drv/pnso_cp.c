@@ -72,7 +72,7 @@ fill_cp_desc(struct service_info *svc_info, struct cpdc_desc *desc,
 				svc_info->si_istatus_desc);
 		osal_rmem_set(desc->cd_status_addr, 0,
 				min(sizeof(*status_desc), (size_t) 8));
-	} else 
+	} else
 		desc->cd_status_addr = (uint64_t)
 			sonic_virt_to_phy(status_desc);
 
@@ -198,8 +198,9 @@ compress_chain(struct chain_entry *centry)
 
 	if (centry->ce_next) {
 		next_svc_info = &centry->ce_next->ce_svc_info;
-		err = next_svc_info->si_ops.sub_chain_from_cpdc(next_svc_info,
-								&svc_info->si_cpdc_chain);
+		err = next_svc_info->si_ops.sub_chain_from_cpdc(
+				next_svc_info,
+				&svc_info->si_cpdc_chain);
 		if (err) {
 			OSAL_LOG_ERROR("failed to chain next service after cp! err: %d",
 					err);
@@ -210,7 +211,8 @@ compress_chain(struct chain_entry *centry)
 
 	err = seq_setup_cpdc_chain_status_desc(svc_info);
 	if (err) {
-		OSAL_LOG_ERROR("failed to setup sequencer status desc! err: %d", err);
+		OSAL_LOG_ERROR("failed to setup sequencer status desc! err: %d",
+				err);
 		goto out;
 	}
 
@@ -289,6 +291,7 @@ static pnso_error_t
 compress_poll(struct service_info *svc_info)
 {
 	pnso_error_t err;
+
 	volatile struct cpdc_status_desc *status_desc;
 	uint64_t start_ts;
 
@@ -322,7 +325,8 @@ compress_poll(struct service_info *svc_info)
 		(svc_info->si_flags & CHAIN_SFLAG_MODE_ASYNC)) {
 		err = (status_desc->csd_integrity_data ==
 				CPDC_PAD_STATUS_DATA) ? PNSO_OK : EBUSY;
-		OSAL_LOG_DEBUG("cp/pad async/poll mode. transient err: %d", err);
+		OSAL_LOG_DEBUG("cp/pad async/poll mode. transient err: %d",
+				err);
 		goto out;
 	}
 
@@ -389,7 +393,7 @@ compress_read_status(struct service_info *svc_info)
 
 		if (svc_info->si_sgl_pdma) {
 			tuple = &svc_info->si_sgl_pdma->tuple[0];
-			if (tuple->len >= sizeof (*cp_hdr))
+			if (tuple->len >= sizeof(*cp_hdr))
 				cp_hdr = sonic_phy_to_virt(tuple->addr);
 		} else if (svc_info->si_dst_blist.type ==
 				SERVICE_BUF_LIST_TYPE_HOST) {
@@ -485,7 +489,8 @@ compress_write_result(struct service_info *svc_info)
 	}
 
 	svc_status->u.dst.data_len = status_desc->csd_output_data_len;
-	chn_service_deps_data_len_set(svc_info, status_desc->csd_output_data_len);
+	chn_service_deps_data_len_set(svc_info,
+			status_desc->csd_output_data_len);
 	PAS_INC_NUM_CP_BYTES_OUT(svc_info->si_pcr,
 			status_desc->csd_output_data_len);
 

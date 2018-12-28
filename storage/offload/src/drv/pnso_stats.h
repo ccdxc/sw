@@ -147,7 +147,7 @@ struct pnso_api_stats {
 #define PAS_DECL_HW_PERF()	ktime_t h
 #define PAS_START_HW_PERF()	h = ktime_get()
 #define PAS_END_HW_PERF(pcr)						\
-	atomic64_add(ktime_us_delta(ktime_get(), h), 			\
+	atomic64_add(ktime_us_delta(ktime_get(), h),			\
 			&pcr->api_stats.pas_total_hw_latency)
 
 #define PAS_SHOW_STATS(pcr)	pas_show_stats(&pcr->api_stats);

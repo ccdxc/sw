@@ -166,7 +166,7 @@ struct sequencer_info {
 	uint8_t sqi_batch_mode;
 	uint16_t sqi_batch_size;
 
-	void *sqi_desc;      			/* sequencer descriptor */
+	void *sqi_desc;			/* sequencer descriptor */
 	uint8_t *sqi_status_desc;
 
 	uint32_t sqi_hw_dflt_takes;
@@ -179,7 +179,7 @@ struct service_batch_info {
 	uint16_t sbi_num_entries;	/* total # of requests */
 	uint16_t sbi_bulk_desc_idx;	/* index within batch info descs */
 	uint16_t sbi_desc_idx;	/* index within bulk desc */
-	struct batch_info *sbi_batch_info; /* bac kpointer to batch info if any */
+	struct batch_info *sbi_batch_info; /* back ptr to batch info if any */
 	union {
 		struct cpdc_desc *sbi_cpdc_desc;
 		struct crypto_desc *sbi_crypto_desc;
@@ -346,7 +346,7 @@ static inline bool
 chn_service_is_starter(const struct service_info *svc_info)
 {
 	return !!(svc_info->si_flags & (CHAIN_SFLAG_LONE_SERVICE |
-				        CHAIN_SFLAG_FIRST_SERVICE));
+					CHAIN_SFLAG_FIRST_SERVICE));
 }
 
 static inline bool
@@ -379,6 +379,7 @@ static inline struct service_info *
 chn_service_next_svc_get(struct service_info *svc_info)
 {
 	struct chain_entry *ce_next = svc_info->si_centry->ce_next;
+
 	return ce_next ? &ce_next->ce_svc_info : NULL;
 }
 
@@ -386,6 +387,7 @@ static inline struct service_info *
 chn_service_prev_svc_get(struct service_info *svc_info)
 {
 	struct chain_entry *ce_prev = svc_info->si_centry->ce_prev;
+
 	return ce_prev ? &ce_prev->ce_svc_info : NULL;
 }
 

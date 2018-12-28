@@ -61,7 +61,7 @@ struct crypto_aol {
 
 #define CRYPTO_AOL_SWLINK_GET(linkage, aol)	\
 	linkage = (typeof(linkage))(aol)->ca_rsvd_swlink
-        
+
 enum crypto_algo_cmd_hi {
 	CRYPTO_ALGO_CMD_HI_AES_GCM = 3,
 	CRYPTO_ALGO_CMD_HI_AES_XTS = 4,

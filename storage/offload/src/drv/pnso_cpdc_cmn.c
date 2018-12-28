@@ -40,7 +40,8 @@ cpdc_common_chain(struct chain_entry *centry)
 }
 
 pnso_error_t
-cpdc_poll(const struct service_info *svc_info, struct cpdc_status_desc *status_desc)
+cpdc_poll(const struct service_info *svc_info,
+		struct cpdc_status_desc *status_desc)
 {
 	pnso_error_t err;
 
@@ -48,8 +49,9 @@ cpdc_poll(const struct service_info *svc_info, struct cpdc_status_desc *status_d
 
 	OSAL_LOG_DEBUG("enter ...");
 
-	if(status_desc == NULL)
-		status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
+	if (status_desc == NULL)
+		status_desc =
+			(struct cpdc_status_desc *) svc_info->si_status_desc;
 
 	if ((svc_info->si_flags & CHAIN_SFLAG_MODE_POLL) ||
 		(svc_info->si_flags & CHAIN_SFLAG_MODE_ASYNC)) {
@@ -616,7 +618,7 @@ cpdc_fill_per_block_desc(uint32_t algo_type, uint32_t block_size,
 			       addr_len);
 	       pb_len = pb_sgl->cs_len_0;
 
-               if (iter && (pb_len < block_size)) {
+	if (iter && (pb_len < block_size)) {
 		       iter = buffer_list_iter_addr_len_get(iter,
 				       block_size - pb_len, &addr_len);
 		       BUFFER_ADDR_LEN_SET(pb_sgl->cs_addr_1, pb_sgl->cs_len_1,
@@ -624,19 +626,19 @@ cpdc_fill_per_block_desc(uint32_t algo_type, uint32_t block_size,
 		       pb_len += pb_sgl->cs_len_1;
 		}
 
-	       if (iter && (pb_len < block_size)) {
+	if (iter && (pb_len < block_size)) {
 		       iter = buffer_list_iter_addr_len_get(iter,
 				       block_size - pb_len, &addr_len);
 		       BUFFER_ADDR_LEN_SET(pb_sgl->cs_addr_2,
 				       pb_sgl->cs_len_2, addr_len);
 		       pb_len += pb_sgl->cs_len_2;
-	       }
+	}
 
 	       total_len -= pb_len;
-	       if (total_len && (pb_len < block_size)) {
+	if (total_len && (pb_len < block_size)) {
 		       OSAL_LOG_ERROR("unable to hold a block size worth of data in one SGL");
-		       goto out;
-	       }
+		goto out;
+	}
 
 	       fill_desc_fn(algo_type, pb_len, false, pb_sgl, pb_desc,
 			       pb_status_desc);
@@ -767,7 +769,7 @@ update_batch_tags(struct service_info *svc_info, uint32_t num_tags)
 		batch_page->bp_tags.bpt_num_hashes += num_tags;
 	else
 		batch_page->bp_tags.bpt_num_chksums += num_tags;
-	
+
 	OSAL_LOG_DEBUG("svc_type: %d page_idx: %u bpt_num_hashes: %u bpt_num_chksums: %u num_tags: %u",
 			svc_info->si_type, svc_batch_info->sbi_desc_idx,
 			batch_page->bp_tags.bpt_num_hashes,
@@ -1089,10 +1091,11 @@ cpdc_teardown_rmem_dst_blist(struct service_info *svc_info)
 	pc_res_sgl_pdma_put(svc_info->si_pcr, svc_info->si_sgl_pdma);
 }
 
-void 
+void
 cpdc_update_tags(struct service_info *svc_info)
 {
 	uint32_t orig_num_tags;
+
 	if (chn_service_deps_data_len_set_from_parent(svc_info)) {
 
 		/*
@@ -1107,17 +1110,17 @@ cpdc_update_tags(struct service_info *svc_info)
 	}
 
 	orig_num_tags = svc_info->si_num_tags;
-	if((svc_info->si_type == PNSO_SVC_TYPE_HASH && 
-			svc_info->si_desc_flags & PNSO_HASH_DFLAG_PER_BLOCK) ||
-		 (svc_info->si_type == PNSO_SVC_TYPE_CHKSUM && 
-			svc_info->si_desc_flags & PNSO_CHKSUM_DFLAG_PER_BLOCK)) {
+	if ((svc_info->si_type == PNSO_SVC_TYPE_HASH &&
+		svc_info->si_desc_flags & PNSO_HASH_DFLAG_PER_BLOCK) ||
+		(svc_info->si_type == PNSO_SVC_TYPE_CHKSUM &&
+		 svc_info->si_desc_flags & PNSO_CHKSUM_DFLAG_PER_BLOCK)) {
 		svc_info->si_num_tags = chn_service_deps_num_blks_get(svc_info);
 		OSAL_ASSERT(svc_info->si_num_tags >= 1);
 	} else
 		OSAL_ASSERT(svc_info->si_num_tags == 1);
 
 	OSAL_LOG_INFO("block_size: %d new num_tags: %d old num_tags: %d",
-			svc_info->si_block_size, 
+			svc_info->si_block_size,
 			svc_info->si_num_tags, orig_num_tags);
 	svc_info->tags_updated = true;
 }

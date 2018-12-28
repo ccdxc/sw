@@ -272,7 +272,7 @@ sonic_get_intr_assert_addr(uint32_t intr_idx)
 		       (unsigned long long) ident->dev.intr_assert_addr,
 		       (unsigned long long) intr_idx,
 		       (unsigned long long) ident->dev.intr_assert_stride);
-	return ident->dev.intr_assert_addr + 
+	return ident->dev.intr_assert_addr +
 		((uint64_t)intr_idx * ident->dev.intr_assert_stride);
 }
 
@@ -455,9 +455,10 @@ sonic_phy_to_virt(uint64_t phy)
 	return osal_phy_to_virt(pa);
 }
 
-bool 
+bool
 sonic_is_accel_dev_ready()
 {
 	struct lif *glif = sonic_get_lif();
+
 	return (glif && (glif->flags & LIF_F_INITED)) ? true : false;
 }

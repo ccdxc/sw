@@ -302,7 +302,7 @@ destroy_batch_chain(struct batch_info *batch_info)
 				num_entries, idx, (uint64_t) page_entry,
 				(uint64_t) page_entry->bpe_chain);
 
-		if(page_entry->bpe_chain)
+		if (page_entry->bpe_chain)
 			chn_destroy_chain(page_entry->bpe_chain);
 	}
 
@@ -436,7 +436,7 @@ out:
 	OSAL_LOG_DEBUG("exit! err: %d", err);
 	return err;
 }
-	
+
 static inline void
 set_batch_mode(uint16_t mode_flags, uint16_t *flags)
 {
@@ -508,8 +508,9 @@ build_batch(struct batch_info *batch_info, struct request_params *req_params)
 			OSAL_LOG_DEBUG("failed to build batch of chains! idx: %d err: %d",
 					idx, err);
 			PAS_INC_NUM_CHAIN_FAILURES(batch_info->bi_pcr);
-			if(idx) 
-				batch_info->bi_flags |= BATCH_BFLAG_CHAIN_PRESENT;
+			if (idx)
+				batch_info->bi_flags |=
+					BATCH_BFLAG_CHAIN_PRESENT;
 			goto out;
 		}
 		page_entry->bpe_chain = chain;
@@ -668,11 +669,13 @@ execute_batch(struct batch_info *batch_info)
 		OSAL_LOG_DEBUG("ring DB batch idx: %d", idx);
 
 		/* ring DB first chain's first service within the mini-batch  */
-		set_batch_page_cflag(GET_PAGE(batch_info, idx), CHAIN_CFLAG_RANG_DB);
+		set_batch_page_cflag(GET_PAGE(batch_info, idx),
+				CHAIN_CFLAG_RANG_DB);
 		err = first_ce->ce_svc_info.si_ops.ring_db(
 				&first_ce->ce_svc_info);
 		if (err) {
-			clear_batch_page_cflag(GET_PAGE(batch_info, idx), CHAIN_CFLAG_RANG_DB);
+			clear_batch_page_cflag(GET_PAGE(batch_info, idx),
+					CHAIN_CFLAG_RANG_DB);
 			OSAL_LOG_DEBUG("failed to ring service door bell! svc_type: %d err: %d",
 				       first_ce->ce_svc_info.si_type, err);
 			goto out;

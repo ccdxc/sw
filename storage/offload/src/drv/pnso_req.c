@@ -102,7 +102,8 @@ pprint_decompaction_desc(const struct pnso_decompaction_desc *desc)
 	if (!desc)
 		return;
 
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== decompact_desc", (uint64_t) desc);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== decompact_desc",
+			(uint64_t) desc);
 
 	OSAL_LOG_DEBUG("%30s: " PRIu64, "vvbn", (uint64_t) desc->vvbn);
 	OSAL_LOG_DEBUG("%30s: %d", "rsvd_1", desc->rsvd_1);
@@ -118,7 +119,8 @@ req_pprint_request(const struct pnso_service_request *req)
 	if (!req)
 		return;
 
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== pnso_service_request", (uint64_t) req);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== pnso_service_request",
+			(uint64_t) req);
 
 	OSAL_LOG_DEBUG("%30s: %d", "num_services", req->num_services);
 	for (i = 0; i < req->num_services; i++) {
@@ -191,7 +193,8 @@ req_pprint_result(const struct pnso_service_result *res)
 	if (!res)
 		return;
 
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== pnso_service_result", (uint64_t) res);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== pnso_service_result",
+			(uint64_t) res);
 
 	OSAL_LOG_DEBUG("%30s: %d", "err", res->err);
 
@@ -484,7 +487,8 @@ static validate_req_service_fn_t validate_req_service_fn[PNSO_SVC_TYPE_MAX] = {
 };
 
 static pnso_error_t
-validate_res_dummy_service(struct pnso_service_status *status, uint32_t num_services)
+validate_res_dummy_service(struct pnso_service_status *status,
+		uint32_t num_services)
 {
 	OSAL_ASSERT(0);
 	return EINVAL;
@@ -531,14 +535,16 @@ out:
 }
 
 static pnso_error_t
-validate_res_encryption_service(struct pnso_service_status *status, uint32_t num_services)
+validate_res_encryption_service(struct pnso_service_status *status,
+		uint32_t num_services)
 {
 	pnso_error_t err = PNSO_OK;
 
 	/*
-	 * Dst buffer list is optional in a service chain and since not all services
-	 * uniformly handle it (by supplying interm buffers), it is privately
-	 * dealt with here.
+	 * Dst buffer list is optional in a service chain and since not all
+	 * services uniformly handle it (by supplying interm buffers), it is
+	 * privately dealt with here.
+	 *
 	 */
 	if (num_services <= 1)
 		err = validate_res_status(status);
@@ -553,7 +559,8 @@ out:
 }
 
 static pnso_error_t
-validate_res_decryption_service(struct pnso_service_status *status, uint32_t num_services)
+validate_res_decryption_service(struct pnso_service_status *status,
+		uint32_t num_services)
 {
 	pnso_error_t err = PNSO_OK;
 
@@ -594,7 +601,8 @@ out:
 }
 
 static pnso_error_t
-validate_res_decompression_service(struct pnso_service_status *status, uint32_t num_services)
+validate_res_decompression_service(struct pnso_service_status *status,
+		uint32_t num_services)
 {
 	pnso_error_t err = EINVAL;
 
@@ -611,7 +619,8 @@ out:
 }
 
 static pnso_error_t
-validate_res_hash_service(struct pnso_service_status *status, uint32_t num_services)
+validate_res_hash_service(struct pnso_service_status *status,
+		uint32_t num_services)
 {
 	pnso_error_t err = EINVAL;
 
@@ -627,7 +636,8 @@ out:
 }
 
 static pnso_error_t
-validate_res_chksum_service(struct pnso_service_status *status, uint32_t num_services)
+validate_res_chksum_service(struct pnso_service_status *status,
+		uint32_t num_services)
 {
 	pnso_error_t err = EINVAL;
 
@@ -643,7 +653,8 @@ out:
 }
 
 static pnso_error_t
-validate_res_decompaction_service(struct pnso_service_status *status, uint32_t num_services)
+validate_res_decompaction_service(struct pnso_service_status *status,
+		uint32_t num_services)
 {
 	OSAL_ASSERT(0);
 	return EINVAL;
@@ -752,7 +763,8 @@ validate_service_result(struct pnso_service_result *svc_res)
 			goto out;
 		}
 
-		err = validate_res_service_fn[svc_type](&svc_res->svc[i], svc_res->num_services);
+		err = validate_res_service_fn[svc_type](&svc_res->svc[i],
+				svc_res->num_services);
 		if (err)
 			goto out;
 	}

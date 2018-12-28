@@ -84,7 +84,7 @@ struct cpdc_sgl {
 
 #define CPDC_SGL_SWLINK_GET(linkage, sgl)	\
 	linkage = (typeof(linkage))(sgl)->cs_rsvd_swlink
-        
+
 /**
  * struct cpdc_cmd - describes the operations (along with hints and other
  * constraints) to be performed in CPDC accelerator.

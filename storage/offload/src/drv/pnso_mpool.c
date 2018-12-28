@@ -473,7 +473,8 @@ mpool_pprint(const struct mem_pool *mpool)
 		for (i = 0; i < mpool->mp_config.mpc_num_objects; i++) {
 			OSAL_LOG_DEBUG("%30s[%d]: 0x" PRIx64 " 0x" PRIx64 "",
 				       "mpool->mp_stack.mps_objects", i,
-				       (uint64_t) &objects[i], (uint64_t) objects[i]);
+				       (uint64_t) &objects[i],
+				       (uint64_t) objects[i]);
 		}
 	}
 }
