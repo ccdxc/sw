@@ -333,8 +333,13 @@ return_to_napi:
 	return napi_return;
 }
 
+#ifdef HAVE_VOID_NDO_GET_STATS64
 static void ionic_get_stats64(struct net_device *netdev,
 			      struct rtnl_link_stats64 *ns)
+#else
+static struct rtnl_link_stats64 *ionic_get_stats64(struct net_device *netdev,
+						   struct rtnl_link_stats64 *ns)
+#endif
 {
 	struct lif *lif = netdev_priv(netdev);
 	struct ionic_lif_stats *ls = lif->lif_stats;
@@ -407,6 +412,10 @@ static void ionic_get_stats64(struct net_device *netdev,
 			ns->rx_missed_errors;
 
 	ns->tx_errors = ns->tx_aborted_errors;
+
+#ifndef HAVE_VOID_NDO_GET_STATS64
+	return ns;
+#endif
 }
 
 static int ionic_lif_addr_add(struct lif *lif, const u8 *addr)
@@ -711,10 +720,22 @@ static const struct net_device_ops ionic_netdev_ops = {
 	.ndo_set_rx_mode	= ionic_set_rx_mode,
 	.ndo_set_mac_address	= ionic_set_mac_address,
 	.ndo_validate_addr	= eth_validate_addr,
-	.ndo_change_mtu		= ionic_change_mtu,
-	.ndo_tx_timeout		= ionic_tx_timeout,
-	.ndo_vlan_rx_add_vid	= ionic_vlan_rx_add_vid,
-	.ndo_vlan_rx_kill_vid	= ionic_vlan_rx_kill_vid,
+#ifdef HAVE_RHEL7_EXTENDED_MIN_MAX_MTU
+        .extended.ndo_change_mtu = ionic_change_mtu,
+#else
+        .ndo_change_mtu         = ionic_change_mtu,
+#endif
+        .ndo_tx_timeout         = ionic_tx_timeout,
+        .ndo_vlan_rx_add_vid    = ionic_vlan_rx_add_vid,
+        .ndo_vlan_rx_kill_vid   = ionic_vlan_rx_kill_vid,
+#ifdef HAVE_RHEL7_NET_DEVICE_OPS_EXT
+/* RHEL7 requires this to be defined to enable extended ops.  RHEL7 uses the
+ * function get_ndo_ext to retrieve offsets for extended fields from with the
+ * net_device_ops struct and ndo_size is checked to determine whether or not
+ * the offset is valid.
+ */
+	.ndo_size		= sizeof(const struct net_device_ops),
+#endif
 };
 
 static irqreturn_t ionic_isr(int irq, void *data)
@@ -1002,8 +1023,15 @@ static int ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 	ionic_ethtool_set_ops(netdev);
 	netdev->watchdog_timeo = 2 * HZ;
 
+#ifdef HAVE_NETDEVICE_MIN_MAX_MTU
+#ifdef HAVE_RHEL7_EXTENDED_MIN_MAX_MTU
+	netdev->extended->min_mtu = IONIC_MIN_MTU;
+	netdev->extended->max_mtu = IONIC_MAX_MTU;
+#else
 	netdev->min_mtu = IONIC_MIN_MTU;
 	netdev->max_mtu = IONIC_MAX_MTU;
+#endif /* HAVE_RHEL7_EXTENDED_MIN_MAX_MTU */
+#endif /* HAVE_NETDEVICE_MIN_MAX_MTU */
 
 	mutex_init(&lif->dbid_inuse_lock);
 	lif->dbid_count = lif->ionic->ident->dev.ndbpgs_per_lif;
@@ -1525,10 +1553,14 @@ static int ionic_set_features(struct lif *lif)
 		netdev->hw_enc_features |= NETIF_F_GSO_GRE;
 	if (lif->hw_features & ETH_HW_TSO_GRE_CSUM)
 		netdev->hw_enc_features |= NETIF_F_GSO_GRE_CSUM;
+#ifdef NETIF_F_GSO_IPXIP4
 	if (lif->hw_features & ETH_HW_TSO_IPXIP4)
 		netdev->hw_enc_features |= NETIF_F_GSO_IPXIP4;
+#endif
+#ifdef NETIF_F_GSO_IPXIP6
 	if (lif->hw_features & ETH_HW_TSO_IPXIP6)
 		netdev->hw_enc_features |= NETIF_F_GSO_IPXIP6;
+#endif
 	if (lif->hw_features & ETH_HW_TSO_UDP)
 		netdev->hw_enc_features |= NETIF_F_GSO_UDP_TUNNEL;
 	if (lif->hw_features & ETH_HW_TSO_UDP_CSUM)
@@ -1844,6 +1876,7 @@ static void ionic_lif_notify_work(struct work_struct *ws)
 {
 }
 
+#ifdef NETDEV_CHANGEUPPER
 static void ionic_lif_changeupper(struct ionic *ionic, struct lif *lif,
 				  struct netdev_notifier_changeupper_info *info)
 {
@@ -1867,7 +1900,9 @@ static void ionic_lif_changeupper(struct ionic *ionic, struct lif *lif,
 	dev_dbg(ionic->dev, "upper tx type %d\n",
 		upper_info->tx_type);
 }
+#endif /* NETDEV_CHANGEUPPER */
 
+#ifdef NETDEV_CHANGELOWERSTATE
 static void ionic_lif_changelowerstate(struct ionic *ionic, struct lif *lif,
 			    struct netdev_notifier_changelowerstate_info *info)
 {
@@ -1908,6 +1943,7 @@ static void ionic_lif_set_netdev_info(struct ionic *ionic, struct lif *lif)
 
 	ionic_adminq_post_wait(lif, &ctx);
 }
+#endif /* NETDEV_CHANGELOWERSTATE */
 
 struct lif *ionic_netdev_lif(struct net_device *netdev)
 {
@@ -1928,15 +1964,19 @@ static int ionic_lif_notify(struct notifier_block *nb,
 		return NOTIFY_DONE;
 
 	switch (event) {
+#ifdef NETDEV_CHANGEUPPER
 	case NETDEV_CHANGEUPPER:
 		ionic_lif_changeupper(ionic, lif, info);
 		break;
+#endif
+#ifdef NETDEV_CHANGELOWERSTATE
 	case NETDEV_CHANGELOWERSTATE:
 		ionic_lif_changelowerstate(ionic, lif, info);
 		break;
 	case NETDEV_CHANGENAME:
 		ionic_lif_set_netdev_info(ionic, lif);
 		break;
+#endif
 	default:
 		return NOTIFY_DONE;
 	}

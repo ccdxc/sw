@@ -254,8 +254,12 @@ static u32 ionic_get_rxfh_key_size(struct net_device *netdev)
 	return RSS_HASH_KEY_SIZE;
 }
 
+#ifdef HAVE_RXFH_HASHFUNC
 static int ionic_get_rxfh(struct net_device *netdev, u32 *indir, u8 *key,
 			  u8 *hfunc)
+#else
+static int ionic_get_rxfh(struct net_device *netdev, u32 *indir, u8 *key)
+#endif
 {
 	struct lif *lif = netdev_priv(netdev);
 	unsigned int i;
@@ -267,8 +271,10 @@ static int ionic_get_rxfh(struct net_device *netdev, u32 *indir, u8 *key,
 	if (key)
 		memcpy(key, lif->rss_hash_key, RSS_HASH_KEY_SIZE);
 
+#ifdef HAVE_RXFH_HASHFUNC
 	if (hfunc)
 		*hfunc = ETH_RSS_HASH_TOP;
+#endif
 
 	return 0;
 }
@@ -317,14 +323,21 @@ int ionic_rss_hash_key_set(struct lif *lif, const u8 *key)
 	return ionic_adminq_post_wait(lif, &ctx);
 }
 
+#ifdef HAVE_RXFH_HASHFUNC
 static int ionic_set_rxfh(struct net_device *netdev, const u32 *indir,
 			  const u8 *key, const u8 hfunc)
+#else
+static int ionic_set_rxfh(struct net_device *netdev, const u32 *indir,
+			  const u8 *key)
+#endif
 {
 	struct lif *lif = netdev_priv(netdev);
 	int err;
 
+#ifdef HAVE_RXFH_HASHFUNC
 	if (hfunc != ETH_RSS_HASH_NO_CHANGE && hfunc != ETH_RSS_HASH_TOP)
 		return -EOPNOTSUPP;
+#endif
 
 	if (indir) {
 		err = ionic_rss_ind_tbl_set(lif, indir);

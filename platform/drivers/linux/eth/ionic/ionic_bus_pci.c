@@ -27,7 +27,11 @@ MODULE_DEVICE_TABLE(pci, ionic_id_table);
 
 int ionic_bus_get_irq(struct ionic *ionic, unsigned int num)
 {
+#ifdef HAVE_PCI_IRQ_API
 	return pci_irq_vector(ionic->pdev, num);
+#else
+	return ionic->msix[num].vector;
+#endif
 }
 
 const char *ionic_bus_info(struct ionic *ionic)
@@ -37,13 +41,41 @@ const char *ionic_bus_info(struct ionic *ionic)
 
 int ionic_bus_alloc_irq_vectors(struct ionic *ionic, unsigned int nintrs)
 {
+#ifdef HAVE_PCI_IRQ_API
 	return pci_alloc_irq_vectors(ionic->pdev, nintrs, nintrs,
 				     PCI_IRQ_MSIX);
+#else
+	int err;
+	int i;
+
+	if (ionic->msix)
+		return -EBUSY;
+
+	ionic->msix = devm_kzalloc(ionic->dev,
+				   sizeof(*ionic->msix) * nintrs, GFP_KERNEL);
+	if (!ionic->msix)
+		return -ENOMEM;
+	for (i = 0; i < nintrs; i++)
+		ionic->msix[i].entry = i;
+	err = pci_enable_msix_exact(ionic->pdev, ionic->msix, nintrs);
+	if (err < 0) {
+		devm_kfree(ionic->dev, ionic->msix);
+		ionic->msix = NULL;
+		return err;
+	}
+	return nintrs;
+#endif
 }
 
 void ionic_bus_free_irq_vectors(struct ionic *ionic)
 {
+#ifdef HAVE_PCI_IRQ_API
 	pci_free_irq_vectors(ionic->pdev);
+#else
+	pci_disable_msix(ionic->pdev);
+	devm_kfree(ionic->dev, ionic->msix);
+	ionic->msix = NULL;
+#endif
 }
 
 static int ionic_map_bars(struct ionic *ionic)
@@ -98,9 +130,17 @@ static void ionic_unmap_bars(struct ionic *ionic)
 
 void __iomem *ionic_bus_map_dbpage(struct ionic *ionic, int page_num)
 {
+#ifdef HAVE_PCI_IOMAP_RANGE
 	return pci_iomap_range(ionic->pdev,
 			       ionic->bars[IONIC_PCI_BAR_DBELL].res_index,
 			       page_num << PAGE_SHIFT, PAGE_SIZE);
+#else
+	int bar = ionic->bars[IONIC_PCI_BAR_DBELL].res_index;
+	u64 start = pci_resource_start(ionic->pdev, bar);
+	u64 offset = start + (page_num << PAGE_SHIFT);
+
+	return ioremap(offset, PAGE_SIZE);
+#endif /* HAVE_PCI_IOMAP_RANGE */
 }
 
 void ionic_bus_unmap_dbpage(struct ionic *ionic, void __iomem *page)

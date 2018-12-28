@@ -435,7 +435,11 @@ static void ionic_tx_tso_post(struct queue *q, struct txq_desc *desc,
 
 	if (done) {
 		skb_tx_timestamp(skb);
+#ifdef HAVE_SKB_XMIT_MORE
 		ionic_txq_post(q, !skb->xmit_more, ionic_tx_clean, skb);
+#else
+		ionic_txq_post(q, true, ionic_tx_clean, skb);
+#endif
 	} else {
 		ionic_txq_post(q, false, ionic_tx_clean, NULL);
 	}
@@ -619,9 +623,11 @@ static int ionic_tx_calc_csum(struct queue *q, struct sk_buff *skb)
 	desc->C = 1;
 	desc->O = encap;
 
+#ifdef HAVE_CSUM_NOT_INET
 	if (skb->csum_not_inet)
 		stats->crc32_csum++;
 	else
+#endif
 		stats->csum++;
 
 	return 0;
@@ -692,7 +698,11 @@ static int ionic_tx(struct queue *q, struct sk_buff *skb)
 		return err;
 
 	skb_tx_timestamp(skb);
+#ifdef HAVE_SKB_XMIT_MORE
 	ionic_txq_post(q, !skb->xmit_more, ionic_tx_clean, skb);
+#else
+	ionic_txq_post(q, true, ionic_tx_clean, skb);
+#endif
 
 	stats->pkts++;
 	stats->bytes += skb->len;

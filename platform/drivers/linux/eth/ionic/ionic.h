@@ -4,6 +4,7 @@
 #ifndef _IONIC_H_
 #define _IONIC_H_
 
+#include "kcompat.h"
 #include "ionic_api.h"
 #include "ionic_dev.h"
 #include "ionic_debugfs.h"
@@ -36,6 +37,9 @@ struct ionic {
 	unsigned int nrxqs_per_lif;
 	unsigned int nintrs;
 	DECLARE_BITMAP(intrs, INTR_CTRL_REGS_MAX);
+#ifndef HAVE_PCI_IRQ_API
+	struct msix_entry *msix;
+#endif
 #ifdef CONFIG_DEBUG_FS
 #ifdef DEBUGFS_TEST_API
 	void *scratch_bufs[NUM_SCRATCH_BUFS];
