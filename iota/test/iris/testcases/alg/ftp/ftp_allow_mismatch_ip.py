@@ -7,22 +7,6 @@ from iota.test.iris.testcases.alg.ftp.ftp_utils import *
 def Setup(tc):
     return api.types.status.SUCCESS
 
-def Cleanup(server, client):
-    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-    api.Trigger_AddCommand(req, server.node_name, server.workload_name,
-                           "rm -rf ftpdir/ftp_*")
-    api.Trigger_AddCommand(req, client.node_name, client.workload_name,
-                           "rm -rf ftpdir/ftp_*")
-    api.Trigger_AddCommand(req, server.node_name, server.workload_name,
-                           "rm -rf /home/admin/ftp")
-    api.Trigger_AddCommand(req, client.node_name, client.workload_name,
-                           "rm -rf /home/admin/ftp")
-    ftpfile = os.path.dirname(os.path.realpath(__file__)) + '/' + ".lftprc"
-    os.remove(ftpfile)
-    trig_resp = api.Trigger(req)
-    term_resp = api.Trigger_TerminateAllCommands(trig_resp)
-    return api.types.status.SUCCESS
-
 def Trigger(tc):
     triplet = GetThreeWorkloads()
     server = triplet[0][0]

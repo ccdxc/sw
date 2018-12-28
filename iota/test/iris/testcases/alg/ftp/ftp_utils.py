@@ -75,6 +75,7 @@ def SetupFTPClient(node, workload):
        return None
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    api.Trigger_AddCommand(req, node, workload, "mkdir /home/admin/ftp")
     api.Trigger_AddCommand(req, node, workload, "cp ftpdir/ftp_client.txt /home/admin/ftp/")
 
     trig_resp = api.Trigger(req)
@@ -101,4 +102,20 @@ def SetupFTPMediator(node, workload):
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)
     for cmd in trig_resp.commands:
         api.PrintCommandResults(cmd)
+    return api.types.status.SUCCESS
+
+def Cleanup(server, client):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    api.Trigger_AddCommand(req, server.node_name, server.workload_name,
+                           "rm -rf ftp_*")
+    api.Trigger_AddCommand(req, client.node_name, client.workload_name,
+                           "rm -rf ftp_*")
+    api.Trigger_AddCommand(req, server.node_name, server.workload_name,
+                           "rm -rf /home/admin/ftp")
+    api.Trigger_AddCommand(req, client.node_name, client.workload_name,
+                           "rm -rf /home/admin/ftp")
+    ftpfile = os.path.dirname(os.path.realpath(__file__)) + '/' + ".lftprc"
+    os.remove(ftpfile)
+    trig_resp = api.Trigger(req)
+    term_resp = api.Trigger_TerminateAllCommands(trig_resp)
     return api.types.status.SUCCESS
