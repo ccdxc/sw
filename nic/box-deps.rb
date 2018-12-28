@@ -302,6 +302,8 @@ run "rm -rf #{BASE_BUILD_DIR}" # this has no effect on size until the flatten is
 run "echo /usr/local/lib >>/etc/ld.so.conf"
 run "ldconfig -v"
 
+run "yum clean all"
+
 after do
   if getenv("RELEASE") != ""
     flatten
