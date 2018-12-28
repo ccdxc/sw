@@ -177,7 +177,7 @@ func validateCluster() {
 	Eventually(func() string {
 		s1 := getServices(ts.tu.QuorumNodes[0])
 		serviceListNode1 := s1.String()
-		for index, n := range ts.tu.QuorumNodes[1:] {
+		for index, n := range ts.tu.QuorumNodes {
 			s := getServices(n)
 			serviceList := s.String()
 			if serviceListNode1 != serviceList {

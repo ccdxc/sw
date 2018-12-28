@@ -45,6 +45,7 @@ func TestTags(t *testing.T) {
 	err = tp.tc.CreateTag("tagZone3")
 	Assert(t, err == nil, "CreateTag failed")
 	err = tp.fetchTags()
+	Assert(t, err == nil, "FetchTags failed")
 
 	// Attach some VMs
 	err = tp.tc.Attach("tagZone1", "vm-201")
