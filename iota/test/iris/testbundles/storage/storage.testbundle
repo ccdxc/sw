@@ -23,6 +23,9 @@ aliases:
     - &DC_FAIL_TEST_YML dc_fail.yml
     - &HASH_TEST_YML hash.yml
     - &CHKSUM_TEST_YML chksum.yml
+    - &CP_CHKSUM_CHAIN_YML cp_chksum_chain.yml
+    - &CP_HASH_CHAIN_YML cp_hash_chain.yml
+    - &DECRYPT_DC_CHAIN_YML decrypt_dc_chain.yml
     - &CPFLAGS_DEFAULT 0
     - &DCFLAGS_DEFAULT 0
     - &CPFLAGS_ZERO_PAD zero_pad
@@ -55,7 +58,6 @@ testcases:
 
     -   name: CpDcZp16K32K
         testcase    : testcases.storage.ymltest2
-        enable      : False
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST_COMBO2
@@ -84,7 +86,6 @@ testcases:
 
     -   name: CpDcWHdrZp16K32K
         testcase    : testcases.storage.ymltest2
-        enable      : False
         iterators   :
             type        : nested
             cpus        : *CPUS_ITER_LIST_COMBO2
@@ -231,6 +232,39 @@ testcases:
             algo        : 'crc32c'
             flags       : 'per_block'
             test        : *CHKSUM_TEST_YML
+
+    -   name        : CpCsumChain
+        testcase    : testcases.storage.ymltest2
+        iterators   :
+            type        : nested
+            cpus        : *CPUS_ITER_LIST_COMBO2
+            batch_depth : *BATCH_DEPTH_ITER_LIST_COMBO1
+            mode        : *MODE_ITER_LIST_COMBO1
+        args    :
+            wait        : '1.0'
+            test        : *CP_CHKSUM_CHAIN_YML
+
+    -   name        : CpHashChain
+        testcase    : testcases.storage.ymltest2
+        iterators   :
+            type        : nested
+            cpus        : *CPUS_ITER_LIST_COMBO2
+            batch_depth : *BATCH_DEPTH_ITER_LIST_COMBO1
+            mode        : *MODE_ITER_LIST_COMBO1
+        args    :
+            wait        : '1.0'
+            test        : *CP_HASH_CHAIN_YML
+
+#    -   name        : DecryptDcChain
+#        testcase    : testcases.storage.ymltest2
+#        iterators   :
+#            type        : nested
+#            cpus        : *CPUS_ITER_LIST_COMBO2
+#            batch_depth : *BATCH_DEPTH_ITER_LIST_COMBO1
+#            mode        : *MODE_ITER_LIST_COMBO1
+#        args    :
+#            wait        : '1.0'
+#            test        : *DECRYPT_DC_CHAIN_YML
 
 #    -   name    : Crypto
 #        testcase: testcases.storage.ymltest
