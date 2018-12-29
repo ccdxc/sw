@@ -15,6 +15,7 @@ run "ln -s /usr/bin/pip3.6 /usr/bin/pip3"
 run "yum install -y epel-release"
 run "yum install -y nfs-utils nfs-utils-lib"
 run "yum install -y epel-release.noarch bash-completion.noarch" # For halctl bash-completion
+run "yum install -y centos-release-scl" # Needed by buildroot for newer "make" installed by devtoolset-7
 
 PIP2_PACKAGES = %w[
   ply==3.9
@@ -25,7 +26,7 @@ PIP2_PACKAGES = %w[
 ]
 
 PIP3_PACKAGES = %w[
-  ruamel.yaml
+  ruamel.yaml==0.15.80
   scapy-python3
   google-api-python-client
   Tenjin
@@ -47,7 +48,9 @@ PIP3_PACKAGES = %w[
 ]
 
 PACKAGES = %w[
+  bc
   bison
+  perl-ExtUtils-MakeMaker
   python36u-devel
   python-pip
   python-devel
@@ -98,6 +101,7 @@ PACKAGES = %w[
   telnet
   sshpass
   ipmitool
+  devtoolset-7-make.x86_64
 ]
 
 run "yum install -y #{PACKAGES.join(" ")}"
@@ -238,7 +242,7 @@ inside "#{BASE_BUILD_DIR}/bind9" do
 end
 
 run "pip install --upgrade pip"
-run "pip install --upgrade #{PIP2_PACKAGES.join(" ")}"
+run "pip install --ignore-installed --upgrade #{PIP2_PACKAGES.join(" ")}"
 run "pip3 install --upgrade #{PIP3_PACKAGES.join(" ")}"
 
 run "yum install -y dkms iproute2 net-tools zip zlib1g-dev"
@@ -268,6 +272,17 @@ inside BASE_BUILD_DIR do
        && tar -zxvf snort-openappid.tar.gz"
 end
 
+COREUTILS_VERSION="8.30"
+inside BASE_BUILD_DIR do
+  run "wget https://ftp.gnu.org/gnu/coreutils/coreutils-#{COREUTILS_VERSION}.tar.xz \
+       && xz -d coreutils-#{COREUTILS_VERSION}.tar.xz \
+       && tar xvf coreutils-#{COREUTILS_VERSION}.tar \
+       && cd coreutils-#{COREUTILS_VERSION} \
+       && FORCE_UNSAFE_CONFIGURE=1 ./configure --prefix=/opt/coreutils \
+       && make \
+       && make install"
+end
+
 run "mkdir -p /var/log/snort && \
      mkdir -p /usr/local/lib/snort_dynamicrules && \
      mkdir -p /etc/snort && \
@@ -285,12 +300,14 @@ workdir "/sw/nic"
 entrypoint []
 cmd "bash"
 
-tag "pensando/nic:1.30"
+tag "pensando/nic:1.31"
 
 run "rm -rf #{BASE_BUILD_DIR}" # this has no effect on size until the flatten is processed
 
 run "echo /usr/local/lib >>/etc/ld.so.conf"
 run "ldconfig -v"
+
+run "yum clean all"
 
 after do
   if getenv("RELEASE") != ""
