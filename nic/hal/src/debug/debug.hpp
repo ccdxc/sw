@@ -78,6 +78,9 @@ hal_ret_t slab_get_from_req(debug::SlabGetRequest& req,
 hal_ret_t mpu_trace_enable(debug::MpuTraceRequest& req,
                            debug::MpuTraceResponseMsg *rsp);
 
+hal_ret_t register_update(debug::RegisterRequest& req,
+                           debug::RegisterResponse *rsp);
+
 hal_ret_t trace_update(debug::TraceSpec& spec, debug::TraceResponse *rsp);
 hal_ret_t trace_get(debug::TraceResponseMsg *rsp);
 hal_ret_t flush_logs (FlushLogsResponse *rsp);

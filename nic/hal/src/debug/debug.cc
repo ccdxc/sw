@@ -236,6 +236,36 @@ mpu_trace_enable (debug::MpuTraceRequest& req, debug::MpuTraceResponseMsg *rsp)
 }
 
 //------------------------------------------------------------------------------
+// process a register update request
+//------------------------------------------------------------------------------
+hal_ret_t
+register_update (debug::RegisterRequest& req, debug::RegisterResponse *rsp)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    pd::pd_func_args_t  pd_func_args = {0};
+
+    hal::pd::pd_reg_write_args_t args;
+
+    memset(&args, 0, sizeof(hal::pd::pd_reg_write_args_t));
+
+    args.register_id             = static_cast<pd::pd_reg_write_type_t>(req.reg_id());
+    args.instance                = req.instance();
+    args.value                   = req.reg_data();
+
+    pd_func_args.pd_reg_write = &args;
+    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_REG_WRITE,
+                               &pd_func_args);
+
+    if (ret != HAL_RET_OK) {
+        rsp->set_api_status(types::API_STATUS_ERR);
+        return ret;
+    }
+
+    rsp->set_api_status(types::API_STATUS_OK);
+
+    return ret;
+}
+//------------------------------------------------------------------------------
 // process a trace update request
 //------------------------------------------------------------------------------
 hal_ret_t

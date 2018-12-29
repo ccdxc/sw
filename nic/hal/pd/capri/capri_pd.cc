@@ -691,6 +691,45 @@ pd_mpu_trace_enable(pd_func_args_t *pd_func_args)
     return HAL_RET_OK;
 }
 
+// Enable MPU tracing on p4 ingress
+static hal_ret_t
+capri_dpp_int_credit(uint32_t instance, uint32_t value)
+{
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+
+    HAL_TRACE_DEBUG ("INGRESS: instance {:d} value {:d}",
+                     instance, value);
+
+    cap0.dpp.dpp[instance].int_credit.int_test_set.ptr_credit_ovflow_interrupt(value);
+    cap0.dpp.dpp[instance].int_credit.int_test_set.ptr_credit_undflow_interrupt(value);
+    cap0.dpp.dpp[instance].int_credit.int_test_set.pkt_credit_ovflow_interrupt(value);
+    cap0.dpp.dpp[instance].int_credit.int_test_set.pkt_credit_undflow_interrupt(value);
+    cap0.dpp.dpp[instance].int_credit.int_test_set.framer_credit_ovflow_interrupt(value);
+    cap0.dpp.dpp[instance].int_credit.int_test_set.framer_credit_undflow_interrupt(value);
+    cap0.dpp.dpp[instance].int_credit.int_test_set.framer_hdrfld_vld_ovfl_interrupt(value);
+    cap0.dpp.dpp[instance].int_credit.int_test_set.framer_hdrfld_offset_ovfl_interrupt(value);
+    cap0.dpp.dpp[instance].int_credit.int_test_set.err_framer_hdrsize_zero_ovfl_interrupt(value);
+    cap0.dpp.dpp[instance].int_credit.write();
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+pd_reg_write(pd_func_args_t *pd_func_args)
+{
+    pd_reg_write_args_t *args = pd_func_args->pd_reg_write;
+
+    switch (args->register_id) {
+    case pd_reg_write_type_t::DPP_INT_CREDIT:
+        return capri_dpp_int_credit(args->instance,
+                                    args->value);
+    default:
+        return HAL_RET_ERR;
+    }
+
+    return HAL_RET_OK;
+}
+
 hal_ret_t   pd_quiesce_start(pd_func_args_t *pd_func_args)
 {
     return capri_quiesce_start();

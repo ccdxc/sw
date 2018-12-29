@@ -2108,6 +2108,18 @@ typedef struct pd_mpu_trace_enable_args_s {
     pd_mpu_trace_info_args_t     mpu_trace_info;
 } __PACK__ pd_mpu_trace_enable_args_t;
 
+// reg type for wirting to register
+typedef enum pd_reg_write_type_e {
+    REG_NONE,
+    DPP_INT_CREDIT
+} pd_reg_write_type_t;
+
+typedef struct pd_reg_write_args_s {
+    pd_reg_write_type_t          register_id;
+    uint32_t                     instance;
+    uint64_t                     value;
+} __PACK__ pd_reg_write_args_t;
+
 typedef struct pd_debug_cli_write_args_s {
     uint32_t tableid;
     uint32_t index;
@@ -3216,7 +3228,8 @@ typedef struct pd_tcp_global_stats_get_args_s {
     ENTRY(PD_FUNC_ID_MC_ENTRY_GET,             286, "PD_FUNC_ID_MC_ENTRY_GET")\
     ENTRY(PD_FUNC_ID_TCP_GLOBAL_STATS_GET,     287, "PD_FUNC_ID_TCP_GLOBAL_STATS_GET") \
     ENTRY(PD_FUNC_ID_PACKET_BUFFER_UPDATE,     288, "PD_FUNC_ID_PACKET_BUFFER_UPDATE") \
-    ENTRY(PD_FUNC_ID_MAX,                      289, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_REG_WRITE,                289, "PD_FUNC_ID_REG_WRITE")\
+    ENTRY(PD_FUNC_ID_MAX,                      290, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3454,6 +3467,7 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_debug_cli_read);
         PD_UNION_ARGS_FIELD(pd_debug_cli_write);
         PD_UNION_ARGS_FIELD(pd_mpu_trace_enable);
+        PD_UNION_ARGS_FIELD(pd_reg_write);
         PD_UNION_ARGS_FIELD(pd_table_metadata_get);
         PD_UNION_ARGS_FIELD(pd_table_get);
 
@@ -3877,6 +3891,7 @@ PD_FUNCP_TYPEDEF(pd_del_l2seg_uplink);
 PD_FUNCP_TYPEDEF(pd_debug_cli_read);
 PD_FUNCP_TYPEDEF(pd_debug_cli_write);
 PD_FUNCP_TYPEDEF(pd_mpu_trace_enable);
+PD_FUNCP_TYPEDEF(pd_reg_write);
 PD_FUNCP_TYPEDEF(pd_table_metadata_get);
 PD_FUNCP_TYPEDEF(pd_table_get);
 
