@@ -12,6 +12,8 @@ PENCTL_DEST_DIR   = 'nic/bin/'
 PENCTL_PKG = "nic/host.tar"
 PENCTL_NAPLES_PKG = "nic/naples_fw.tar"
 
+DEF_TECH_SUPPORT_FILE = "naples-tech-support.tar.gz"
+
 core_file_names = [
     "core.delphi_hub.695",
     "core.nicmgrd.905",

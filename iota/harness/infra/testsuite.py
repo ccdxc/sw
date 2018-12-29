@@ -21,6 +21,9 @@ class TestSuite:
     def __init__(self, spec):
         self.__spec = spec
         self.__testbundles = []
+        self.__verifs = []
+        self.__debugs = []
+        self.__setups = []
 
         self.__aborted = False
         self.__attrs = {}
@@ -50,7 +53,7 @@ class TestSuite:
         return types.tbtype.ANY
 
     def GetPackages(self):
-        return self.__spec.packages 
+        return self.__spec.packages
 
     def GetImages(self):
         return self.__spec.images
@@ -61,11 +64,28 @@ class TestSuite:
     def GetNicMode(self):
         return self.__spec.meta.nicmode
 
+    def GetVerifs(self):
+        return self.__verifs
+
+    def GetDebugs(self):
+        return self.__debugs
+
+    def GetSetups(self):
+        return self.__setups
+
     def IsConfigOnly(self):
        return getattr(self.__spec.meta, "cfgonly", False)
- 
+
     def DoConfig(self):
         return self.__setup_config()
+
+    def __resolve_calls(self):
+        if getattr(self.__spec, 'common', None) and getattr(self.__spec.common, 'verifs', None):
+            self.__verifs = self.__spec.common.verifs
+        if getattr(self.__spec, 'common', None) and getattr(self.__spec.common, 'debugs', None):
+            self.__debugs = self.__spec.common.debugs
+        if getattr(self.__spec, 'common', None) and getattr(self.__spec.common, 'setups', None):
+            self.__setups = self.__spec.common.setups
 
     def __import_testbundles(self):
         for bunfile in self.__spec.testbundles:
@@ -138,7 +158,7 @@ class TestSuite:
             self.__stats_ignored += i
             self.__stats_error += e
             self.__stats_target += t
-            
+
         self.__stats_total = (self.__stats_pass + self.__stats_fail +\
                               self.__stats_ignored + self.__stats_error)
         if self.__stats_target != 0:
@@ -195,7 +215,7 @@ class TestSuite:
         if store.GetTestbed().GetOs() not in self.__get_oss() and not GlobalOptions.dryrun:
             Logger.debug("Skipping Testsuite: %s due to OS mismatch." % self.Name())
             return True
-       
+
         enable = getattr(self.__spec.meta, 'enable', True)
         return not enable
 
@@ -207,7 +227,7 @@ class TestSuite:
 
         # Start the testsuite timer
         self.__timer.Start()
-        
+
         # Update logger
         Logger.SetTestsuite(self.Name())
         Logger.info("Starting Testsuite: %s" % self.Name())
@@ -217,25 +237,26 @@ class TestSuite:
         if status != types.status.SUCCESS:
             self.__timer.Stop()
             return status
- 
+
         status = self.__parse_setup()
         if status != types.status.SUCCESS:
             self.__timer.Stop()
             return status
-       
+
         self.__import_testbundles()
         self.__resolve_teardown()
         self.__expand_iterators()
+        self.__resolve_calls()
 
         status = self.__setup()
         if status != types.status.SUCCESS:
             self.__timer.Stop()
             return status
-    
+
         self.result = self.__execute_testbundles()
         self.__update_stats()
         Logger.info("Testsuite %s FINAL STATUS = %d" % (self.Name(), self.result))
-        
+
         logcollector.CollectLogs()
         self.__timer.Stop()
         return self.result

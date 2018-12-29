@@ -23,6 +23,8 @@ common:
     verifs:
         #-   step    : verif.utils.verify_cores
         #-   step    : verif.utils.verify_topology_health
+    debugs:
+        -   step : verif.utils.collect_logs_and_cores
 
 testbundles:
     # Relative paths from iota/test/iris/testbundles/
@@ -40,6 +42,6 @@ testbundles:
     - linktest/linktest.testbundle
     - storage/storage.testbundle
     - penctl/penctl.testbundle
- 
+
 teardown:
     #- step      : verif.utils.collect_logs_and_cores
