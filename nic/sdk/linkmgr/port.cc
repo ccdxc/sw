@@ -1189,6 +1189,9 @@ port::port_event_notify(port_event_t event)
         break;
 
     case port_event_t::PORT_EVENT_LINK_DOWN:
+        // increment the link down counter
+        set_num_link_down(num_link_down() + 1);
+
         port_link_poll_timer_delete(this);
         break;
 

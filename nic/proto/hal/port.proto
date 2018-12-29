@@ -376,6 +376,7 @@ message MacStats {
 message PortStats {
     repeated MacStats     mac_stats      = 1;  // Port MAC stats
     repeated MgmtMacStats mgmt_mac_stats = 2;  // Mgmt Port MAC stats
+    uint32                num_link_down  = 3;  // Number of link down events
 }
 
 // PortGetRequest is used to get information about a port

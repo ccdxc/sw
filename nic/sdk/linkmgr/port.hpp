@@ -156,6 +156,11 @@ public:
     uint32_t num_retries(void) { return this->num_retries_; }
     void set_num_retries(uint32_t retries) { this->num_retries_ = retries; }
 
+    uint32_t num_link_down(void) { return this->num_link_down_; }
+    void set_num_link_down(uint32_t link_down) {
+        this->num_link_down_ = link_down;
+    }
+
     sdk_ret_t port_enable(void);
     sdk_ret_t port_disable(void);
     sdk_ret_t port_link_sm_process(void);
@@ -312,6 +317,7 @@ private:
     mac_fn_t              *mac_fns_;                  // mac functions
     serdes_fn_t           *serdes_fns_;               // serdes functions
     uint32_t              num_retries_;               // max linkup retries
+    uint32_t              num_link_down_;             // number of link down
     cable_type_t          cable_type_;                // cable type
     port_loopback_mode_t  loopback_mode_;             // port loopback mode - MAC/PHY
 
