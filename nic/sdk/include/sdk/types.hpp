@@ -183,6 +183,11 @@ typedef struct xcvr_event_info_s {
     port_an_args_t *port_an_args;
 } xcvr_event_info_t;
 
+typedef enum asic_type_e {
+    SDK_ASIC_TYPE_NONE,
+    SDK_ASIC_TYPE_CAPRI,
+} asic_type_t;
+
 }    // namespace types
 }    // namespace sdk
 
@@ -203,6 +208,7 @@ using sdk::types::xcvr_event_info_t;
 using sdk::types::port_an_args_t;
 using sdk::types::port_link_sm_t;
 using sdk::types::port_loopback_mode_t;
+using sdk::types::asic_type_t;
 
 #endif    // __SDK_TYPES_HPP__
 
