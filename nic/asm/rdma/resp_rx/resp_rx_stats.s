@@ -19,9 +19,13 @@ struct rqcb5_t d;
 #define MASK_32 32
 
 #define K_FLAGS CAPRI_KEY_RANGE(IN_P, incr_recirc_drop, qp_err_dis_table_resp_error)
+#define K_MAX_RECIRC_CNT_ERR CAPRI_KEY_FIELD(IN_P, max_recirc_cnt_err)
 #define K_LIF_CQE_ERROR_ID_VLD CAPRI_KEY_FIELD(IN_P, lif_cqe_error_id_vld)
 #define K_LIF_ERROR_ID_VLD CAPRI_KEY_FIELD(IN_P, lif_error_id_vld)
 #define K_LIF_ERROR_ID CAPRI_KEY_FIELD(IN_P, lif_error_id)
+#define K_RECIRC_REASON CAPRI_KEY_RANGE(IN_P, recirc_reason_sbit0_ebit0, recirc_reason_sbit1_ebit3)
+#define K_RECIRC_BTH_OPCODE CAPRI_KEY_RANGE(IN_P, recirc_bth_opcode_sbit0_ebit4, recirc_bth_opcode_sbit5_ebit7)
+#define K_RECIRC_BTH_PSN CAPRI_KEY_RANGE(IN_P, recirc_bth_psn_sbit0_ebit4, recirc_bth_psn_sbit21_ebit23)
 
 %%
 
@@ -39,7 +43,9 @@ resp_rx_stats_process:
     // c7-recirc_drop, c6-dup_wr_send, c5-dup_rd_atomic_bt, c4-dup_rd_atomic_drop
     // c3: table_error, c2: phv_intrinstic_error, c1: table_resp_error
 
-    tblmincri.c7     d.num_recirc_drop_pkts, MASK_16, 1
+    bbeq             K_MAX_RECIRC_CNT_ERR, 1, max_recirc_cnt_err
+
+    tblmincri.c7     d.num_recirc_drop_pkts, MASK_16, 1 //BD Slot
     tblmincri.c6     d.num_dup_wr_send_pkts, MASK_16, 1
     tblmincri.c5     d.num_dup_rd_atomic_bt_pkts, MASK_16, 1
     tblmincri.c4     d.num_dup_rd_atomic_drop_pkts, MASK_16, 1
@@ -144,6 +150,16 @@ error_done:
     nop
 
 
+max_recirc_cnt_err:
+    //if max_recirc_cnt_err bit is already set, do not overwrite the info
+    bbeq            d.max_recirc_cnt_err, 1, done
+    //a packet which went thru too many recirculations had to be terminated and qp had to                
+    //be put into error disabled state. The recirc reason, opcode, the psn of the packet etc.            
+    //are remembered for further debugging.
+    tblwr           d.max_recirc_cnt_err, 1     //BD Slot
+    tblwr           d.recirc_reason, K_RECIRC_REASON
+    tblwr.e         d.recirc_bth_opcode, K_RECIRC_BTH_OPCODE
+    tblwr           d.recirc_bth_psn, K_RECIRC_BTH_PSN  //Exit Slot
 
 bubble_to_next_stage:
     seq           c1, r1[4:2], STAGE_6

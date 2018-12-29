@@ -1,0 +1,85 @@
+# Test Spec
+selectors:
+#   src:
+#       tenant      : filter://overlay=VLAN,type=TENANT
+#       segment     : filter://any
+#       endpoint    : filter://remote=True
+#       interface   : filter://any
+#   dst:
+#       tenant      : filter://overlay=VLAN,type=TENANT
+#       segment     : filter://any
+#       endpoint    : filter://remote=False
+#       interface   : filter://any
+#   flow            : filter://fwtype=L2,type=IPV4,dport=4791,proto=UDP,label=RDMA
+    rdmasession     :
+        lqp         : filter://svc=0,tiny=False
+        rqp         : filter://svc=0
+#    maxflows    : 1 
+#   maxrdmasessions     : 1 
+
+packets:
+   - packet:
+        id          : BASE_FIRST_PKT # Base First packet
+        payloadsize : callback://rdma/rdma/GetPacketPayloadSize/msg_size=2700,pkt_num=0
+        template    : ref://factory/packets/id=PAYLOAD
+        headers     :
+            payload:
+                data    : pattern-random://0/255/1
+
+   - packet:
+        id          : IN_FIRST_PKT    # Input packet - first
+        payloadsize : ref://testcase/packets/id=BASE_FIRST_PKT/size
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
+        icrc        : True
+        encaps      :   
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
+                dst     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+            qtag:
+                vlan    : ref://testcase/config/rdmasession/session/responder/ep/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                hlim    : 64
+            udp:
+                sport   : ref://testcase/config/rdmasession/session/iflow/sport
+                dport   : ref://testcase/config/rdmasession/session/iflow/dport
+            bth:
+                opcode  : 0
+                destqp  : ref://testcase/config/rdmasession/lqp/id
+                psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0
+            payload:
+                data    : ref://testcase/packets/id=BASE_FIRST_PKT/rawbytes
+
+buffers:
+
+descriptors:
+
+session:
+    - step:
+        trigger:
+            # Inject a send_first packet on 'non-tiny' wqes, which goes thru token-id check 
+            # in stage 0. Program qstate such that this check fails and packet goes to recirc with reason
+            # inorder_work_not_done. This packet should keep looping and eventually upon reaching
+            # max_recirc_cnt QP should move to error disable state.
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=IN_FIRST_PKT
+                    port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+
+        expect:
+            # Packet should be silently dropped with some info logged in stats.
+            # QP should move to error disable state. For now, we are not generating any NAK,
+            # so no feedback gets generated to requester side and there by no flush error for sq.
+            # Similarly no error cqe is posted and hence driver wouldn't be aware that this
+            # problem has happened.
+            # We may have to change this behavior later.
+

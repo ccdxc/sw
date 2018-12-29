@@ -37,6 +37,9 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define WORK_NOT_DONE_RECIRC_CNT_MAX    8
 #define WQE_SIZE_2_SGES                 6
 
+#define P4_INTR_RECIRC_COUNT_MAX        6
+#define RDMA_RECIRC_ITER_COUNT_MAX      15
+
 %%
     .param    resp_rx_rqcb3_in_progress_process
     .param    resp_rx_write_dummy_process
@@ -49,6 +52,7 @@ struct common_p4plus_stage0_app_header_table_k k;
     .param    resp_rx_recirc_mpu_only_process
     .param    resp_rx_rqcb1_write_back_mpu_only_process
     .param    resp_rx_launch_rqpt_process
+    .param    resp_rx_rqcb1_write_back_err_process
 
 .align
 resp_rx_rqcb_process:
@@ -899,8 +903,11 @@ phv_drop:
 /****** Logic to recirc packets ******/
 recirc_work_not_done:
     seq     c6, TOKEN_ID, d.nxt_to_go_token_id
+    // clear the recirc iter count and recirc_cnt to 1 
+    phvwr.c6    p.common.rdma_recirc_recirc_iter_count, 0
     bcf     [c6], start_recirc_packet
-    nop     //BD Slot
+    phvwr.c6    p.common.p4_intr_recirc_count, 1 //BD Slot
+
     // fall thru to recirc
 
 recirc_wait_for_turn:
@@ -915,10 +922,23 @@ recirc_wait_for_turn:
 recirc_pkt:
     // turn off recirc, if this thread needs recirc again, respective
     // code would enable recirc flag there.
-    // set the recirc count to 1 for every recirc packet
-    phvwrpair   p.common.p4_intr_recirc_count, 1, \
-                p.common.p4_intr_recirc, 0
+    phvwr       p.common.p4_intr_recirc, 0
 
+    // if the p4 intrinsic recirc_count has not hit the limit, proceed with pkt handling
+    seq             c6, CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT, P4_INTR_RECIRC_COUNT_MAX
+    bcf             [!c6], skip_recirc_cnt_max_check
+
+    // check if phv's recirc iter count has hit the limit
+    add             r6, 1, CAPRI_APP_DATA_RECIRC_ITER_COUNT //BD Slot
+    
+    // did we reach recirc_iter_count to 15 ? 
+    seq             c6, r6, RDMA_RECIRC_ITER_COUNT_MAX
+    bcf             [c6], max_recirc_cnt_err
+    phvwr.!c6       p.common.p4_intr_recirc_count, 1  //BD Slot
+    phvwr           p.common.rdma_recirc_recirc_iter_count, r6
+                
+    
+skip_recirc_cnt_max_check:
     seq     c2, CAPRI_APP_DATA_RECIRC_REASON, CAPRI_RECIRC_REASON_SGE_WORK_PENDING
     bcf     [c2], recirc_sge_work_pending
     seq     c3, CAPRI_APP_DATA_RECIRC_REASON, CAPRI_RECIRC_REASON_INORDER_WORK_NOT_DONE // BD Slot
@@ -983,3 +1003,15 @@ table_error:
     // TODO add LIF stats
     phvwr.e        p.common.p4_intr_global_drop, 1
     nop // Exit Slot
+
+max_recirc_cnt_err:
+    //a packet which went thru too many recirculations had to be terminated and qp had to 
+    //be put into error disabled state. The recirc reason, opcode, the psn of the packet etc.
+    //are remembered for further debugging.
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, max_recirc_cnt_err), 1, \
+                CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, recirc_reason), CAPRI_APP_DATA_RECIRC_REASON
+
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, recirc_bth_opcode), CAPRI_APP_DATA_BTH_OPCODE, \
+                CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, recirc_bth_psn), CAPRI_APP_DATA_BTH_PSN
+
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_err_process, r0)

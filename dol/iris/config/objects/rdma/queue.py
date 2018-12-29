@@ -281,7 +281,11 @@ class RdmaRQstate(Packet):
         BitField("qp_err_dis_table_error", 0, 1),
         BitField("qp_err_dis_phv_intrinsic_error", 0, 1),
         BitField("qp_err_dis_table_resp_error", 0, 1),
-        BitField("pad", 0, 141),
+        BitField("max_recirc_cnt_err", 0, 1),
+        BitField("recirc_reason", 0, 4),
+        ByteField("recirc_bth_opcode", 0),
+        X3BytesField("recirc_bth_psn", 0),
+        BitField("pad", 0, 104),
     ]
 
 class RdmaSQstate(Packet):

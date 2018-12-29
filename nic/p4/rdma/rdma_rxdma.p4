@@ -154,7 +154,7 @@ action rdma_stage0_recirc_action () {
     // recirc header bits
     modify_field(rdma_recirc_scr.token_id, rdma_recirc.token_id);
     modify_field(rdma_recirc_scr.recirc_reason, rdma_recirc.recirc_reason);
-    modify_field(rdma_recirc_scr.rsvd, rdma_recirc.rsvd);
+    modify_field(rdma_recirc_scr.recirc_iter_count, rdma_recirc.recirc_iter_count);
 }
 
 /*

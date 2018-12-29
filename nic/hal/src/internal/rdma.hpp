@@ -1353,7 +1353,14 @@ typedef struct rqcb4_s {
 } rqcb4_t;
 
 typedef struct rqcb5_s {
-    uint8_t     rsvd[18];
+    uint8_t     rsvd[13];
+    uint32_t    recirc_bth_psn: 24;
+    uint8_t     recirc_bth_opcode;
+    uint8_t     recirc_reason: 4;
+    uint8_t     max_recirc_cnt_err:1;
+    uint8_t     qp_err_dis_table_resp_error: 1;
+    uint8_t     qp_err_dis_phv_intrinsic_error: 1;
+    uint8_t     qp_err_dis_table_error: 1;
     uint16_t    num_dup_rd_atomic_drop_pkts;
     uint16_t    num_dup_rd_atomic_bt_pkts;
     uint16_t    num_dup_wr_send_pkts;

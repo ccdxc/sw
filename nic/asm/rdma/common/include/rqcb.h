@@ -273,7 +273,14 @@ struct rqcb5_t {
     qp_err_dis_table_error: 1;
     qp_err_dis_phv_intrinsic_error: 1;
     qp_err_dis_table_resp_error: 1;
-    pad: 141;
+    //a packet which went thru too many recirculations had to be terminated and qp had to 
+    //be put into error disabled state. The recirc reason, opcode, the psn of the packet etc.
+    //are remembered for further debugging.
+    max_recirc_cnt_err: 1;
+    recirc_reason: 4;
+    recirc_bth_opcode: 8;
+    recirc_bth_psn: 24;
+    pad: 104;
 };
 
 struct rqcb_t {

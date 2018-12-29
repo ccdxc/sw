@@ -106,6 +106,7 @@
 #define rx_table_s5_t0_action resp_rx_ptseg_process
 
 #define rx_table_s5_t2_action resp_rx_rqcb1_write_back_process
+#define rx_table_s5_t2_action1 resp_rx_rqcb1_write_back_err_process
 
 #define rx_table_s6_t0_action resp_rx_inv_rkey_process
 
@@ -394,10 +395,14 @@ header_type resp_rx_to_stage_stats_info_t {
         qp_err_dis_table_error           :    1;
         qp_err_dis_phv_intrinsic_error   :    1;
         qp_err_dis_table_resp_error      :    1;
+        max_recirc_cnt_err               :    1;
         lif_cqe_error_id_vld             :    1;
         lif_error_id_vld                 :    1;
         lif_error_id                     :    4;
-        pad                              :   98;
+        recirc_reason                    :    4;
+        recirc_bth_opcode                :    8;
+        recirc_bth_psn                   :   24;
+        pad                              :   61;
     }
 }
 
@@ -783,7 +788,7 @@ action rdma_stage0_recirc_action () {
     // recirc header bits
     modify_field(rdma_recirc_scr.token_id, rdma_recirc.token_id);
     modify_field(rdma_recirc_scr.recirc_reason, rdma_recirc.recirc_reason);
-    modify_field(rdma_recirc_scr.rsvd, rdma_recirc.rsvd);
+    modify_field(rdma_recirc_scr.recirc_iter_count, rdma_recirc.recirc_iter_count);
 }
 
 /*
@@ -1628,9 +1633,13 @@ action resp_rx_stats_process () {
     modify_field(to_s7_stats_info_scr.qp_err_dis_table_error, to_s7_stats_info.qp_err_dis_table_error);
     modify_field(to_s7_stats_info_scr.qp_err_dis_phv_intrinsic_error, to_s7_stats_info.qp_err_dis_phv_intrinsic_error);
     modify_field(to_s7_stats_info_scr.qp_err_dis_table_resp_error, to_s7_stats_info.qp_err_dis_table_resp_error);
+    modify_field(to_s7_stats_info_scr.max_recirc_cnt_err, to_s7_stats_info.max_recirc_cnt_err);
     modify_field(to_s7_stats_info_scr.lif_cqe_error_id_vld, to_s7_stats_info.lif_cqe_error_id_vld);
     modify_field(to_s7_stats_info_scr.lif_error_id_vld, to_s7_stats_info.lif_error_id_vld);
     modify_field(to_s7_stats_info_scr.lif_error_id, to_s7_stats_info.lif_error_id);
+    modify_field(to_s7_stats_info_scr.recirc_reason, to_s7_stats_info.recirc_reason);
+    modify_field(to_s7_stats_info_scr.recirc_bth_opcode, to_s7_stats_info.recirc_bth_opcode);
+    modify_field(to_s7_stats_info_scr.recirc_bth_psn, to_s7_stats_info.recirc_bth_psn);
     modify_field(to_s7_stats_info_scr.pad, to_s7_stats_info.pad);
 
     // stage to stage
@@ -1824,3 +1833,7 @@ action resp_rx_rqcb1_write_back_process () {
 
 }
 
+action resp_rx_rqcb1_write_back_err_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+}

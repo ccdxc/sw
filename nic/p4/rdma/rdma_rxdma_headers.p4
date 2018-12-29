@@ -49,7 +49,7 @@ header_type roce_recirc_header_t {
         app_data0_1         : 144;
         token_id            : 8;
         recirc_reason       : 4;
-        rsvd                : 4;
+        recirc_iter_count   : 4;
         app_data0_2         : 96;
         app_data1           : 88;
         app_data2           : 72;

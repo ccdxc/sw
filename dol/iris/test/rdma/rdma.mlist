@@ -1105,6 +1105,22 @@ modules:
     #    spec    : resp_rx_write_fml_recirc.testspec
     #    ignore  : False
 
+    - module:
+        name    : RDMA_RX_RECIRC_MAX_CNT_ERR1
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_recirc_max_cnt_err1
+        spec    : resp_rx_recirc_max_cnt_err1.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_RECIRC_MAX_CNT_ERR2
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_recirc_max_cnt_err2
+        spec    : resp_rx_recirc_max_cnt_err2.testspec
+        ignore  : False
+
 # PD check testcases
     - module:
         name    : REQ_TX_SEND_FML_LOCAL_PROTECTION_ERR
