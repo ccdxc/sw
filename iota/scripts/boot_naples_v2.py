@@ -291,12 +291,16 @@ def AtExitCleanup():
 def Main():
     global naples
     naples = NaplesManagement()
-    naples.Connect()
 
     # Reset the setup:
     # If the previous run left it in bad state, we may not get ssh or console.
     if GlobalOptions.only_mode_change == False and GlobalOptions.only_init == False:
+        #First do a reset as naples may be in screwed up state.
+        IpmiReset()
+        time.sleep(10)
+        naples.Connect()
         naples.InitForUpgrade(goldfw = True)
+        #Do a reset again as old fw might lock up host boot
         IpmiReset()
 
     global host
