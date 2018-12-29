@@ -16,7 +16,7 @@ def Main(tc):
         common.AddPenctlCommand(req, n, "system tech-support")
         api.Trigger(req)
         # Copy tech support tar out
-        resp = api.CopyFromHost(n, [common.DEF_TECH_SUPPORT_FILE], tc_dir)
+        resp = api.CopyFromHost(n, [common.DEF_TECH_SUPPORT_FILE], "%s/%s" % (tc_dir, n))
         if resp == None or resp.api_response.api_status != types_pb2.API_STATUS_OK:
             api.Logger.error("Failed to copy techsupport file from node: %s" % n)
             return api.types.status.FAILURE
