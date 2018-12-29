@@ -25,7 +25,7 @@ namespace impl {
 asic_impl_base *
 asic_impl_base::factory(asic_cfg_t *asic_cfg) {
     switch (asic_cfg->asic_type) {
-        case sdk::types::SDK_ASIC_TYPE_CAPRI:
+        case sdk::asic::SDK_ASIC_TYPE_CAPRI:
         return capri_impl::factory(asic_cfg);
 
     default:

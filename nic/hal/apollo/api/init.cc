@@ -36,7 +36,7 @@ oci_init (oci_init_params_t *params)
     sdk::lib::logger::init(params->debug_trace_cb, params->error_trace_cb);
 
     // TODO: setup all asic specific config params
-    asic_cfg.asic_type = sdk::types::SDK_ASIC_TYPE_CAPRI;
+    asic_cfg.asic_type = sdk::asic::SDK_ASIC_TYPE_CAPRI;
     asic_impl = asic_impl_base::factory(&asic_cfg);
     SDK_ASSERT(asic_impl != NULL);
     asic_impl->asic_init();

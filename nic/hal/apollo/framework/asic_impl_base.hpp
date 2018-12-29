@@ -9,7 +9,7 @@
 #define __ASIC_IMPL_HPP__
 
 #include "nic/sdk/include/sdk/base.hpp"
-#include "nic/sdk/include/sdk/types.hpp"
+#include "nic/sdk/asic/asic.hpp"
 #include "nic/hal/apollo/framework/obj_base.hpp"
 
 namespace impl {
@@ -23,11 +23,6 @@ namespace impl {
 /**
  * @brief    asic implementation
  */
-
-/**< asic specific global information */
-typedef struct asic_cfg_s {
-    asic_type_t    asic_type;
-} __PACK__ asic_cfg_t;
 
 class asic_impl_base : public obj_base {
 public:
@@ -49,7 +44,6 @@ public:
 
 }    // namespace impl
 
-using impl::asic_cfg_t;
 using impl::asic_impl_base;
 
 #endif    /** __ASIC_IMPL_HPP__ */

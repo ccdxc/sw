@@ -299,6 +299,7 @@ private:
 
 using sdk::lib::mac_mode_t;
 using sdk::lib::serdes_info_t;
+using sdk::lib::catalog;
 
 #define MAC_MODE_1x100g mac_mode_t::MAC_MODE_1x100g
 #define MAC_MODE_1x40g mac_mode_t::MAC_MODE_1x40g

@@ -510,7 +510,7 @@ def run_gft_test(args):
 
 # Run Apollo tests
 def run_apollo_test(args):
-    os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
+    os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf/"
     os.chdir(nic_dir)
     cmd = ['build/x86_64/apollo/bin/apollo_test']
     p = Popen(cmd)
