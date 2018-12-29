@@ -438,6 +438,8 @@ populate_port_get_response_spec (port_args_t *port_args,
         // MAC stats
         stats = response->mutable_stats();
 
+        stats->set_num_link_down(port_args->num_link_down);
+
         if (port_args->port_type == port_type_t::PORT_TYPE_MGMT) {
             for (int i = 0; i < MAX_MGMT_MAC_STATS; ++i) {
                 auto mgmt_mac_stats = stats->add_mgmt_mac_stats();

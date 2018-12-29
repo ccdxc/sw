@@ -302,12 +302,12 @@ func portShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func portShowHeaderPrint() {
-	hdrLine := strings.Repeat("-", 140)
+	hdrLine := strings.Repeat("-", 150)
 	fmt.Println("MAC-Info: MAC ID/MAC Channel/Num lanes          Debounce: Debounce time in ms")
 	fmt.Println("FEC-Type: FC - FireCode, RS - ReedSolomon")
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-10s%-15s%-10s%-15s%-6s%-10s%-10s%-12s%-12s%-20s%-10s\n",
-		"Port", "Speed", "MAC-Info", "FEC-Type", "AutoNegEnable", "MTU", "Pause", "Debounce", "AdminStatus", "OperStatus", "LinkSM", "Loopback")
+	fmt.Printf("%-10s%-10s%-15s%-10s%-15s%-6s%-10s%-10s%-12s%-12s%-12s%-20s%-10s\n",
+		"Port", "Speed", "MAC-Info", "FEC-Type", "AutoNegEnable", "MTU", "Pause", "Debounce", "AdminStatus", "OperStatus", "NumLinkDown", "LinkSM", "Loopback")
 	fmt.Println(hdrLine)
 }
 
@@ -329,10 +329,12 @@ func portShowOneResp(resp *halproto.PortGetResponse) {
 	adminStateStr := strings.Replace(resp.GetSpec().GetAdminState().String(), "PORT_ADMIN_STATE_", "", -1)
 	operStatusStr := strings.Replace(resp.GetStatus().GetOperStatus().String(), "PORT_OPER_STATUS_", "", -1)
 
-	fmt.Printf("%-10s%-10s%-15s%-10s%-15t%-6d%-10s%-10d%-12s%-12s%-20s%-10s\n",
+	fmt.Printf("%-10s%-10s%-15s%-10s%-15t%-6d%-10s%-10d%-12s%-12s%-12d%-20s%-10s\n",
 		portStr, speedStr, macStr, fecStr, spec.GetAutoNegEnable(),
 		spec.GetMtu(), pauseStr, spec.GetDebounceTime(),
-		adminStateStr, operStatusStr, linkSmStr, loopbackStr)
+		adminStateStr, operStatusStr,
+		resp.GetStats().GetNumLinkDown(),
+		linkSmStr, loopbackStr)
 }
 
 func portStatsShowCmdHandler(cmd *cobra.Command, args []string) {
