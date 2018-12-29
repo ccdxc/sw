@@ -53,7 +53,6 @@ typedef struct {
 typedef void (*mpu_pgm_sort_t)(std::vector <std::string> &);
 typedef uint32_t (*mpu_pgm_symbols_t)(void **, platform_type_t);
 
-
 /**
  * p4_load_mpu_programs: Load all MPU programs in a given directory. Resolve
  *                          the parameters defined in the programs using an
@@ -129,9 +128,10 @@ sdk_ret_t p4_program_to_base_addr(const char *handle,
  */
 sdk_ret_t p4_list_program_addr(const char *cfg_path, const char *filename);
 
-} //namespace platform
-} //namnespace sdk
+}    // namespace platform
+}    // namnespace sdk
 
-
+using sdk::platform::mpu_pgm_sort_t;
+using sdk::platform::mpu_pgm_symbols_t;
 
 #endif   // _SDK_P4_LOADER_HPP_

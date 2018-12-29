@@ -707,7 +707,7 @@ class apollo_test : public ::testing::Test {
 TEST_F(apollo_test, test1) {
     int ret = 0;
     char *default_config_dir = NULL;
-    hal::pd::asic_cfg_t cfg;
+    asic_cfg_t cfg;
     sdk::lib::catalog *catalog;
 
     p4pd_cfg_t p4pd_cfg = {
@@ -782,7 +782,7 @@ TEST_F(apollo_test, test1) {
     ret = sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM);
 #endif
 
-    ret = asic_hbm_parse(&cfg);
+    ret = hal::pd::asic_hbm_parse(&cfg);
     HAL_ASSERT(ret == HAL_RET_OK);
 
     cfg.num_pgm_cfgs = 3;

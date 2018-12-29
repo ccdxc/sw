@@ -8,43 +8,13 @@
 #include "nic/sdk/include/sdk/catalog.hpp"
 #include "include/sdk/platform/p4loader/loader.hpp"
 #include "nic/include/base.hpp"
-#include "nic/include/hal_cfg.hpp"
+#include "nic/sdk/asic/asic.hpp"
 
 using std::vector;
 using std::tuple;
 
 namespace hal {
 namespace pd {
-
-#define ASIC_PGM_CFG_MAX        3
-#define ASIC_ASM_CFG_MAX        3
-
-typedef struct asic_pgm_cfg_s {
-    std::string                 path;
-} asic_pgm_cfg_t;
-
-typedef struct asic_asm_cfg_s {
-    std::string                 name;
-    std::string                 path;
-    std::string                 base_addr;
-    sdk::platform::mpu_pgm_sort_t              sort_func;
-    sdk::platform::mpu_pgm_symbols_t           symbols_func;
-} asic_asm_cfg_t;
-
-typedef struct asic_cfg_s {
-    std::string                 loader_info_file;
-    std::string                 default_config_dir;    // TODO: vasanth, pls. remove this up eventually
-    uint32_t                    admin_cos;
-    uint32_t                    repl_entry_width;
-    std::string                 cfg_path;
-    std::string                 pgm_name;
-    uint8_t                     num_pgm_cfgs;
-    uint8_t                     num_asm_cfgs;
-    asic_pgm_cfg_t              pgm_cfg[ASIC_PGM_CFG_MAX];
-    asic_asm_cfg_t              asm_cfg[ASIC_ASM_CFG_MAX];
-    sdk::lib::catalog           *catalog;
-    sdk::types::platform_type_t platform;
-} asic_cfg_t;
 
 // asic init
 typedef struct pd_asic_init_args_s {
