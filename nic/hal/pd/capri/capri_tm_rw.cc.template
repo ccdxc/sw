@@ -2432,7 +2432,7 @@ capri_tm_global_init (void)
 
     sched_timer = HAL_TM_CLOCK_SPEED_MHZ * HAL_TM_SCHEDULER_RATE_REFRESH_INTERVAL_US;
     pbc_csr.cfg_sched.read();
-    pbc_csr.cfg_sched.enable_wrr(1);
+    pbc_csr.cfg_sched.enable_wrr(0);
     pbc_csr.cfg_sched.timer(sched_timer);
 
     // Write all the registers
