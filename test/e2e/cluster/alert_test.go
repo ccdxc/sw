@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -22,10 +23,14 @@ var _ = Describe("alert test", func() {
 		serviceStoppedOn string
 	)
 	It("ServiceStopped events to INFO alerts", func() {
+		validateCluster()
+
 		// create alert policy to convert `ServiceStopped` events to INFO alerts
-		alertPolicy1 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, "eventstoalerts", "Event", evtsapi.SeverityLevel_INFO, "convert `ServiceStopped` events to INFO alerts", []*fields.Requirement{
-			&fields.Requirement{Key: "type", Operator: "in", Values: []string{evtsapi.ServiceStopped}},
-		}, []string{})
+		alertPolicy1 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, "eventstoalerts", "Event", evtsapi.SeverityLevel_INFO,
+			"convert `ServiceStopped` events to INFO alerts",
+			[]*fields.Requirement{
+				{Key: "type", Operator: "in", Values: []string{evtsapi.ServiceStopped}},
+			}, []string{})
 
 		// upload alert policy
 		alertPolicy1, err = ts.tu.APIClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy1)
@@ -109,19 +114,19 @@ func getRunningPod(serviceName string) string {
 			getNodesOut := ts.tu.LocalCommandOutput(fmt.Sprintf("kubectl get nodes  -l kubernetes.io/hostname=%s -o json", pod.Spec.NodeName))
 			json.Unmarshal([]byte(getNodesOut), &kubeGetNodesOut)
 			if len(kubeGetNodesOut.Items) == 0 {
-				By(fmt.Sprintf("no matching node found: {%s}", pod.Spec.NodeName))
+				By(fmt.Sprintf("ts=%s no matching node found: {%s}", time.Now().String(), pod.Spec.NodeName))
 				return ""
 			}
 
 			for _, cond := range kubeGetNodesOut.Items[0].Status.Conditions {
 				if cond.Type == "Ready" && cond.Status == "True" {
-					By(fmt.Sprintf("selected pod {%s} running on {%s}", pod.Metadata.Name, pod.Spec.NodeName))
+					By(fmt.Sprintf("ts=%s selected pod {%s} running on {%s}", time.Now().String(), pod.Metadata.Name, pod.Spec.NodeName))
 					return pod.Metadata.Name
 				}
 			}
 		}
 	}
 
-	By(fmt.Sprintf("no pod instance found for service {%s}", serviceName))
+	By(fmt.Sprintf("ts=%s no pod instance found for service {%s}", time.Now().String(), serviceName))
 	return ""
 }
