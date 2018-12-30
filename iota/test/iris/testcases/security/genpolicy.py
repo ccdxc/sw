@@ -123,6 +123,9 @@ def GetIpCidr(ip_address):
     return str(ret)
 
 def Main(step):
+    if not api.IsRegression():
+        return api.types.status.SUCCESS
+
     with open(endpoint_file, 'r') as fp:
         obj = json.load(fp)
     EP = [] 

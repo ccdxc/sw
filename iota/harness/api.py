@@ -252,6 +252,12 @@ def GetVeniceAuthToken():
 def IsSimulation():
     return GlobalOptions.mode == 'simulation'
 
+def IsDryrun():
+    return GlobalOptions.dryrun
+
+def IsRegression():
+    return GlobalOptions.regression
+
 def GetNicMode():
     return store.GetTestbed().GetCurrentTestsuite().GetNicMode()
 

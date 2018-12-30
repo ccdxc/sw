@@ -88,9 +88,14 @@ class TestSuite:
             self.__setups = self.__spec.common.setups
 
     def __import_testbundles(self):
-        for bunfile in self.__spec.testbundles:
+        for bunfile in self.__spec.testbundles.sanity:
             tbun = testbundle.TestBundle(bunfile, self)
             self.__testbundles.append(tbun)
+
+        if GlobalOptions.regression:
+            for bunfile in self.__spec.testbundles.regression:
+                tbun = testbundle.TestBundle(bunfile, self)
+                self.__testbundles.append(tbun)
         return
 
     def __resolve_teardown(self):
@@ -190,9 +195,6 @@ class TestSuite:
     def __get_oss(self):
         return getattr(self.__spec.meta, 'os', ['linux'])
 
-    def __is_regression(self):
-        return getattr(self.__spec.meta, 'type', None) == 'regression'
-
     def __apply_skip_filters(self):
         if GlobalOptions.testsuites and self.Name() not in GlobalOptions.testsuites:
             Logger.debug("Skipping Testsuite: %s because of command-line filters." % self.Name())
@@ -202,14 +204,6 @@ class TestSuite:
            self.GetTestbedType() != store.GetTestbed().GetTestbedType()\
            and not GlobalOptions.dryrun:
             Logger.debug("Skipping Testsuite: %s due to testbed type mismatch." % self.Name())
-            return True
-
-        if GlobalOptions.regression and not self.__is_regression():
-            Logger.debug("Skipping non regression testsuite : %s" % self.Name())
-            return True
-
-        if not GlobalOptions.regression and self.__is_regression():
-            Logger.debug("Skipping regression testsuite : %s" % self.Name())
             return True
 
         if store.GetTestbed().GetOs() not in self.__get_oss() and not GlobalOptions.dryrun:

@@ -7,6 +7,7 @@ import iota.test.iris.testcases.drivers.cmd_builder as cmd_builder
 import iota.test.iris.testcases.drivers.verify as verify
 
 def Setup(tc):
+    if api.IsDryrun(): return api.types.status.SUCCESS
     tc.nodes = api.GetWorkloadNodeHostnames()
     tc.node_intfs = {}
     for node in tc.nodes:
@@ -37,6 +38,7 @@ def Setup(tc):
     return api.types.status.SUCCESS
 
 def Trigger(tc):
+    if api.IsDryrun(): return api.types.status.SUCCESS
 
     req1 = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     req2 = api.Trigger_CreateExecuteCommandsRequest(serial = False)
@@ -76,6 +78,7 @@ def Trigger(tc):
 
 
 def Verify(tc):
+    if api.IsDryrun(): return api.types.status.SUCCESS
     if getattr(tc.args, 'capture_pcap', False):
         ret = common.stop_pcap_capture(tc)
         if ret != api.types.status.SUCCESS:

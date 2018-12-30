@@ -18,6 +18,7 @@ setup:
     config  :
         - step : config.netagent.hw_push_config
         - step : testcases.drivers.install_iperf
+        - step : testcases.security.genpolicy
 
 common:
     verifs:
@@ -27,19 +28,23 @@ common:
         -   step : verif.utils.collect_logs_and_cores
 
 testbundles:
-    # Relative paths from iota/test/iris/testbundles/
-    - networking/networking.testbundle
-    - networking/telemetry.testbundle
-    - linktest/linktest.testbundle
-    - aging/aging.testbundle
-    - alg/alg.testbundle
-    #- firewall/policy.testbundle
-    - firewall/conntrack.testbundle
-    - firewall/normalization.testbundle
-    - linktest/linktest.testbundle
-    - mnic/mnic_hostpin.testbundle
-    - mnic/mnic_hostpin_naples_only.testbundle
-    - cruds/cruds.testbundle
+    sanity:
+        # Relative paths from iota/test/iris/testbundles/
+        - networking/networking.testbundle
+        - networking/telemetry.testbundle
+        - linktest/linktest.testbundle
+        - aging/aging.testbundle
+        - alg/alg.testbundle
+        #- firewall/policy.testbundle
+        - firewall/conntrack.testbundle
+        - firewall/normalization.testbundle
+        - linktest/linktest.testbundle
+        - mnic/mnic_hostpin.testbundle
+        - mnic/mnic_hostpin_naples_only.testbundle
+        - cruds/cruds.testbundle
+
+    regression:
+        - firewall/policy_scale.testbundle
 
 teardown:
     #- step      : verif.utils.collect_logs_and_cores

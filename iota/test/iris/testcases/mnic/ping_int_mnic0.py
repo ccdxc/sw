@@ -7,6 +7,8 @@ def Setup(tc):
     return api.types.status.SUCCESS
 
 def Trigger(tc):
+    if api.IsDryrun(): return api.types.status.SUCCESS
+
     pairs = api.GetRemoteWorkloadPairs()
     w1 = pairs[0][0]
     w2 = pairs[0][1]
@@ -30,6 +32,7 @@ def Trigger(tc):
     return api.types.status.SUCCESS
 
 def Verify(tc):
+    if api.IsDryrun(): return api.types.status.SUCCESS
     if tc.resp is None:
         return api.types.status.FAILURE
     result = api.types.status.SUCCESS

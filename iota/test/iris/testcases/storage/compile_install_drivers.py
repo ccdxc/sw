@@ -89,7 +89,7 @@ def Trigger(tc):
     return api.types.status.SUCCESS
 
 def Verify(tc):
-    if api.GlobalOptions.dryrun:
+    if api.IsDryrun():
         return api.types.status.SUCCESS
 
     if tc.resp is None:

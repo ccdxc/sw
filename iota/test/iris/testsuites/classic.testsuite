@@ -26,22 +26,33 @@ common:
     debugs:
         -   step : verif.utils.collect_logs_and_cores
 
+    setup:
+        #-   step    : verif.utils.link_flap
+        #-   step    : verif.utils.del_add_config
+
 testbundles:
-    # Relative paths from iota/test/iris/testbundles/
-    - networking/networking.testbundle
-    - multicast/multicast.testbundle
-    - classic/rdma.testbundle
-    - linktest/linktest.testbundle
-    #- mnic/mnic_classic.testbundle
-    - linktest/linktest.testbundle
-    #- classic/driver-features-int_mgmt-sanity.testbundle
-    - linktest/linktest.testbundle
-    - classic/driver-features-oob-1g-sanity.testbundle
-    - linktest/linktest.testbundle
-    - classic/driver-features-sanity.testbundle
-    - linktest/linktest.testbundle
-    - storage/storage.testbundle
-    - penctl/penctl.testbundle
+    sanity:
+        # Relative paths from iota/test/iris/testbundles/
+        - networking/networking.testbundle
+        - multicast/multicast.testbundle
+        - classic/rdma.testbundle
+        - linktest/linktest.testbundle
+        #- mnic/mnic_classic.testbundle
+        - linktest/linktest.testbundle
+        #- classic/driver-features-int_mgmt-sanity.testbundle
+        - linktest/linktest.testbundle
+        - classic/driver-features-oob-1g-sanity.testbundle
+        - linktest/linktest.testbundle
+        - classic/driver-features-sanity.testbundle
+        - linktest/linktest.testbundle
+        - storage/storage.testbundle
+        - penctl/penctl.testbundle
+
+    regression:
+        # Relative paths from iota/test/iris/testbundles/
+        - classic/rdma_reg.testbundle
+        - classic/driver-features.testbundle
+        - storage/regression.testbundle
 
 teardown:
     #- step      : verif.utils.collect_logs_and_cores
