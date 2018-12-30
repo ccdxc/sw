@@ -82,8 +82,8 @@ is_asic_rw_thread (void)
     }
 
     if (asic_rw_thread == NULL ||
-         asic_rw_thread->is_running() == false) {
-         assert(0);
+        asic_rw_thread->is_running() == false) {
+        assert(0);
      }
 
     if (curr_thread->thread_id() == asic_rw_thread->thread_id()) {
