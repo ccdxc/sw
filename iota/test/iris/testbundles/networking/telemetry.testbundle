@@ -1,6 +1,6 @@
 meta:
     name    : telemetry
-    nics    : [ pensando ]
+    nics    : [ pensando, mellanox, intel, broadcom ]
     os      : [ linux ]
     targetcount : 800
 
@@ -16,6 +16,16 @@ testcases:
             pktsize : [128]
             proto   : [tcp, udp, icmp, mixed]
 
+#    -   name    : Flowmon_Policy
+#        testcase: testcases.telemetry.flowmon_policy
+#        args    :
+#            type: remote_only
+#            collector: 192.168.100.102
+#        iterators :
+#            type    : nested
+#            pktsize : [128]
+#            proto   : [tcp, udp, icmp, mixed]
+#
 #    -   name    : Ping_Mirror_Remote_Workloads
 #        testcase: testcases.telemetry.ping_mirror
 #        args    :

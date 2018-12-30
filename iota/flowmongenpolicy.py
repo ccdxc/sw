@@ -5,32 +5,27 @@ import os
 import collections
 import random
 
-mirrorpolicy_template = { 
+flowmonpolicy_template = { 
     "type" : "netagent",
-    "rest-endpoint"    : "api/mirror/sessions/",
+    "rest-endpoint"    : "api/telemetry/flowexports/",
     "object-key" : "meta.tenant/meta.namespace/meta.name",
     "objects" : [
     {
-    "kind"                  : "MirrorSession",
+    "kind"                  : "FlowExportPolicy",
     "meta": {
-        "name"              : "mirror-2",
+        "name"              : "flow-export-ipfix-0",
         "tenant"            : "default",
         "namespace"         : "default",
         "creation-time"     : "1970-01-01T00:00:00Z",
         "mod-time"          : "1970-01-01T00:00:00Z"
     },
     "spec": {
-        "enable": True,
-        "packet-size": 128,
-        "stop-condition": {},
-        "collectors": [
+        "interval": "1s",
+        "format": "IPFIX",
+        "exports": [
           {
-             "type": "ERSPAN",
-             "export-config": {
-              "destination": "192.168.100.101",
-              "transport": "TCP/8000"
-            },
-            "pcap-dir-name": ""
+            "destination": "192.168.100.102",
+            "transport": "UDP/2055"
           }
         ],
         "match-rules": [
@@ -105,7 +100,7 @@ GlobalOptions.protocols = ["udp", "tcp", "icmp"]
 GlobalOptions.directories = ["udp", "tcp", "icmp", "mixed"]
 #GlobalOptions.ports = ["10", "22", "24", "30", "50-100", "101-200", "201-250, 251-290", "10000-20000", "65535"]
 GlobalOptions.ports = ["120", "550", "65535"]
-GlobalOptions.actions = ["mirror"]
+GlobalOptions.actions = ["flowmon"]
 
 def StripIpMask(ip_address):
     if '/' in ip_address:
@@ -132,7 +127,7 @@ def Main():
 
     #EP.append(GetIpRange(EP[0]))
     json.dump(EP, open("EP.json", "w"))
-    GlobalOptions.topology_dir = GlobalOptions.topology_dir + '/gen/telemetry/mirror'
+    GlobalOptions.topology_dir = GlobalOptions.topology_dir + '/gen/telemetry/flowmon'
     for dir in GlobalOptions.directories:
         if not os.path.exists(GlobalOptions.topology_dir + "/{}".format(dir)):
             os.makedirs(GlobalOptions.topology_dir + "/{}".format(dir))
@@ -140,8 +135,8 @@ def Main():
     # Specific match policy
     for protocol in GlobalOptions.protocols:
         for action in GlobalOptions.actions:
-            mirrorpolicy = mirrorpolicy_template
-            match_rules = mirrorpolicy_template['objects'][0]['spec']['match-rules']
+            mirrorpolicy = flowmonpolicy_template
+            match_rules = flowmonpolicy_template['objects'][0]['spec']['match-rules']
             del match_rules[:]
             verif =[] 
             for i in range(0, len(EP)):
@@ -161,8 +156,8 @@ def Main():
     # Subnet policy
     for protocol in GlobalOptions.protocols:
         for action in GlobalOptions.actions:
-            mirrorpolicy = mirrorpolicy_template
-            match_rules = mirrorpolicy_template['objects'][0]['spec']['match-rules']
+            mirrorpolicy = flowmonpolicy_template
+            match_rules = flowmonpolicy_template['objects'][0]['spec']['match-rules']
             del match_rules[:]
             verif =[] 
             for i in range(0, len(EP_SUBNET)):
@@ -183,8 +178,8 @@ def Main():
     # Generic (any) Policy
     for protocol in GlobalOptions.protocols:
         for action in GlobalOptions.actions:
-            mirrorpolicy = mirrorpolicy_template
-            match_rules = mirrorpolicy_template['objects'][0]['spec']['match-rules']
+            mirrorpolicy = flowmonpolicy_template
+            match_rules = flowmonpolicy_template['objects'][0]['spec']['match-rules']
             del match_rules[:]
             verif =[] 
             for i in range(0, len(EP_ANY)):
@@ -204,8 +199,8 @@ def Main():
     verif =[] 
     for protocol in GlobalOptions.protocols:
         for action in GlobalOptions.actions:
-            mirrorpolicy = mirrorpolicy_template
-            match_rules = mirrorpolicy_template['objects'][0]['spec']['match-rules']
+            mirrorpolicy = flowmonpolicy_template
+            match_rules = flowmonpolicy_template['objects'][0]['spec']['match-rules']
             for i in range(0, len(EP)):
                 for j in range(i+1, len(EP)):
                     for k in GlobalOptions.ports:
