@@ -140,6 +140,8 @@ class EntityManagement:
         return
 
     def RunSshCmd(self, command, ignore_failure = False):
+        date_command = "%s %s \"date\"" % (self.ssh_pfx, self.ssh_host)
+        os.system(date_command)
         full_command = "%s %s \"%s\"" % (self.ssh_pfx, self.ssh_host, command)
         print(full_command)
         retcode = os.system(full_command)
