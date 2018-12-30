@@ -58,12 +58,16 @@ sdk_ret_t asic_ring_doorbell(uint64_t addr, uint64_t data,
                              asic_write_mode_t mode = ASIC_WRITE_MODE_BLOCKING);
 
 // starting point for asic read-write thread
-void *asic_rw_start(void *ctxt);
+void *asicrw_start(void *ctxt);
 
 // return TRUE if asic is initialized and ready for read/writes
-bool is_asic_rw_ready(void);
+bool is_asicrw_ready(void);
 
 }    // namespace asic
 }    // namespace sdk
+
+using sdk::asic::ASIC_WRITE_MODE_NON_BLOCKING;
+using sdk::asic::ASIC_WRITE_MODE_BLOCKING;
+using sdk::asic::ASIC_WRITE_MODE_WRITE_THRU;
 
 #endif    // __SDK_ASICRW_HPP__

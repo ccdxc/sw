@@ -1,3 +1,4 @@
+#include "nic/sdk/asic/rw/asicrw.hpp"
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
 #include "nic/hal/pd/cpupkt_api.hpp"
 #include "nic/include/pd_api.hpp"
@@ -129,7 +130,7 @@ pd_cpupkt_free_tx_descr (cpupkt_hw_id_t descr_addr, pd_descr_aol_t *descr)
     HAL_TRACE_DEBUG("cpu-id: {} update cpupr: slot: {:#x} ci: {} page: {:#x}, value: {:#x}",
                     tg_cpu_id, slot_addr, cpu_tx_page_cindex, descr->a0, value);
     if (asic_mem_write(slot_addr, (uint8_t *)&value, sizeof(uint64_t),
-                       ASIC_WRITE_MODE_WRITE_THRU) != HAL_RET_OK) {
+                       ASIC_WRITE_MODE_WRITE_THRU) != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to program page to slot");
         return HAL_RET_HW_FAIL;
     }
@@ -148,7 +149,7 @@ pd_cpupkt_free_tx_descr (cpupkt_hw_id_t descr_addr, pd_descr_aol_t *descr)
     HAL_TRACE_DEBUG("cpu-id: {} update cpudr: slot: {:#x} ci: {} descr: {:#x}, value: {#x}",
         tg_cpu_id, slot_addr, cpu_tx_descr_cindex, descr_addr, value);
     if (asic_mem_write(slot_addr, (uint8_t *)&value, sizeof(uint64_t),
-                       ASIC_WRITE_MODE_WRITE_THRU) != HAL_RET_OK) {
+                       ASIC_WRITE_MODE_WRITE_THRU) != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to program descr to slot");
         return HAL_RET_HW_FAIL;
     }
@@ -182,7 +183,7 @@ cpupkt_rx_upd_sem_index (cpupkt_qinst_info_t& qinst_info, bool init_pindex)
                     qinst_info.pc_index);
 
     if (asic_reg_write(ci_sem_addr, &qinst_info.pc_index, 1,
-                       ASIC_WRITE_MODE_WRITE_THRU) != HAL_RET_OK) {
+                       ASIC_WRITE_MODE_WRITE_THRU) != sdk::SDK_RET_OK) {
         qinst_info.ctr.rx_sem_wr_err++;
         HAL_TRACE_ERR("Failed to program CI semaphore");
         return HAL_RET_HW_FAIL;
@@ -194,7 +195,7 @@ cpupkt_rx_upd_sem_index (cpupkt_qinst_info_t& qinst_info, bool init_pindex)
                         qinst_info.queue_info->type, pi_sem_addr,
                         value);
         if (asic_reg_write(pi_sem_addr, &value, 1,
-                           ASIC_WRITE_MODE_WRITE_THRU) != HAL_RET_OK) {
+                           ASIC_WRITE_MODE_WRITE_THRU) != sdk::SDK_RET_OK) {
             HAL_TRACE_ERR("Failed to program PI semaphore");
             return HAL_RET_HW_FAIL;
         }
@@ -404,7 +405,7 @@ cpupkt_free_and_inc_queue_index (cpupkt_qinst_info_t& qinst_info)
     uint64_t value = 0;
     if (asic_mem_write(qinst_info.pc_index_addr, (uint8_t *)&value,
                        sizeof(uint64_t),
-                       ASIC_WRITE_MODE_WRITE_THRU) != HAL_RET_OK) {
+                       ASIC_WRITE_MODE_WRITE_THRU) != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to reset pc_index_addr");
         return HAL_RET_HW_FAIL;
     }
@@ -472,15 +473,16 @@ cpupkt_descr_to_headers (pd_descr_aol_t& descr,
 
     HAL_TRACE_DEBUG("read buffer of length {}", descr.l0 + descr.l1);
 
-    if (asic_mem_read(pktaddr, buffer, descr.l0, true) != HAL_RET_OK) {
+    if (sdk::asic::asic_mem_read(pktaddr, buffer, descr.l0, true) !=
+            sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to read hbm page");
         free(buffer);
         return HAL_RET_HW_FAIL;
     }
     if (descr.l1) {
         uint64_t pktaddr = descr.a1 + descr.o1;
-        if (asic_mem_read(pktaddr, buffer + descr.l0,
-                          descr.l1, true) != HAL_RET_OK) {
+        if (sdk::asic::asic_mem_read(pktaddr, buffer + descr.l0,
+                                     descr.l1, true) != SDK_RET_OK) {
             HAL_TRACE_ERR("Failed to read hbm page 1");
             free(buffer);
             return HAL_RET_HW_FAIL;
@@ -514,9 +516,9 @@ pd_cpupkt_poll_receive (pd_func_args_t *pd_func_args)
         value = 0;
         qinst_info = ctxt->rx.queue[i].qinst_info[0];
         qinst_info->ctr.poll_count++;
-        if (asic_mem_read(qinst_info->pc_index_addr,
-                            (uint8_t *)&value,
-                            sizeof(uint64_t), true) != HAL_RET_OK) {
+        if (sdk::asic::asic_mem_read(qinst_info->pc_index_addr,
+                                     (uint8_t *)&value,
+                                     sizeof(uint64_t), true) != sdk::SDK_RET_OK) {
             qinst_info->ctr.rx_slot_value_read_err++;
             HAL_TRACE_ERR("Failed to read the slot value from the hw");
             return HAL_RET_HW_FAIL;
@@ -534,8 +536,8 @@ pd_cpupkt_poll_receive (pd_func_args_t *pd_func_args)
                         value, descr_addr);
         // get the descriptor
         pd_descr_aol_t  descr = {0};
-        if (asic_mem_read(descr_addr, (uint8_t *)&descr,
-                          sizeof(pd_descr_aol_t), true) != HAL_RET_OK) {
+        if (sdk::asic::asic_mem_read(descr_addr, (uint8_t *)&descr,
+                                     sizeof(pd_descr_aol_t), true) != sdk::SDK_RET_OK) {
             qinst_info->ctr.rx_descr_read_err++;
             HAL_TRACE_ERR("Failed to read the descr from hw");
             return HAL_RET_HW_FAIL;
@@ -598,7 +600,7 @@ cpupkt_descr_free (cpupkt_hw_id_t descr_addr)
                         gc_slot_addr, descr_addr, gc_pindex, value);
     if (asic_mem_write(gc_slot_addr, (uint8_t *)&value,
                        sizeof(cpupkt_hw_id_t),
-                       ASIC_WRITE_MODE_WRITE_THRU) != HAL_RET_OK) {
+                       ASIC_WRITE_MODE_WRITE_THRU) != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to program gc queue");
         return HAL_RET_HW_FAIL;
     }
@@ -654,8 +656,8 @@ pd_cpupkt_descr_alloc (pd_func_args_t *pd_func_args)
         return ret;
     }
 
-    if (asic_mem_read(slot_addr, (uint8_t *)descr_addr,
-                      sizeof(cpupkt_hw_id_t), true) != HAL_RET_OK) {
+    if (sdk::asic::asic_mem_read(slot_addr, (uint8_t *)descr_addr,
+                                 sizeof(cpupkt_hw_id_t), true) != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to read descr addr from CPUDR PI: {}, slot: {:#x}",
                       cpu_tx_descr_pindex, slot_addr);
         return HAL_RET_HW_FAIL;
@@ -695,8 +697,9 @@ pd_cpupkt_page_alloc (pd_func_args_t *pd_func_args)
         return ret;
     }
 
-    if (asic_mem_read(slot_addr, (uint8_t *)page_addr,
-                      sizeof(cpupkt_hw_id_t), true) != HAL_RET_OK) {
+    if (sdk::asic::asic_mem_read(slot_addr, (uint8_t *)page_addr,
+                                 sizeof(cpupkt_hw_id_t),
+                                 true) != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to read page address from CPUPR PI: {} slot: {:#x}",
                       cpu_tx_page_pindex, slot_addr);
         return HAL_RET_HW_FAIL;
@@ -733,7 +736,7 @@ cpupkt_program_descr (uint32_t qid, cpupkt_hw_id_t page_addr, size_t len,
     HAL_TRACE_DEBUG("programming descr: descr_addr: {:#x}", *descr_addr);
     if (asic_mem_write(*descr_addr, (uint8_t *)&descr,
                        sizeof(pd_descr_aol_t),
-                       ASIC_WRITE_MODE_WRITE_THRU) != HAL_RET_OK) {
+                       ASIC_WRITE_MODE_WRITE_THRU) != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("failed to program descr");
         ret = HAL_RET_HW_FAIL;
         goto cleanup;
@@ -763,7 +766,7 @@ cpupkt_program_send_queue (cpupkt_ctxt_t* ctxt, types::WRingType type,
     if (asic_mem_write(qinst_info->pc_index_addr,
                        (uint8_t *)&descr_addr,
                        sizeof(cpupkt_hw_id_t),
-                       ASIC_WRITE_MODE_WRITE_THRU) != HAL_RET_OK) {
+                       ASIC_WRITE_MODE_WRITE_THRU) != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to program send queue");
         return HAL_RET_HW_FAIL;
     }
@@ -884,7 +887,7 @@ pd_cpupkt_send (pd_func_args_t *pd_func_args)
         HAL_TRACE_DEBUG("Copying CPU header of len: {} to addr: {:#x}, l2offset: {:#x}",
                         write_len, write_addr, cpu_header->l2_offset);
         if (asic_mem_write(write_addr, (uint8_t *)cpu_header, write_len,
-                           ASIC_WRITE_MODE_WRITE_THRU) != HAL_RET_OK) {
+                           ASIC_WRITE_MODE_WRITE_THRU) != sdk::SDK_RET_OK) {
             qinst_info.ctr.tx_page_copy_err++;
             HAL_TRACE_ERR("Failed to copy packet to the page");
             ret = HAL_RET_HW_FAIL;
@@ -899,7 +902,7 @@ pd_cpupkt_send (pd_func_args_t *pd_func_args)
         HAL_TRACE_DEBUG("Copying P4Plus to P4 header of len: {} to addr: {:#x}",
                         write_len, write_addr);
         if (asic_mem_write(write_addr, (uint8_t *)p4_header, write_len,
-                           ASIC_WRITE_MODE_WRITE_THRU) != HAL_RET_OK) {
+                           ASIC_WRITE_MODE_WRITE_THRU) != sdk::SDK_RET_OK) {
             HAL_TRACE_ERR("Failed to copy packet to the page");
             ret = HAL_RET_HW_FAIL;
             goto cleanup;
@@ -912,7 +915,7 @@ pd_cpupkt_send (pd_func_args_t *pd_func_args)
     total_len += write_len;
     HAL_TRACE_DEBUG("copying data of len: {} to page at addr: {:#x}", write_len, write_addr);
     if (asic_mem_write(write_addr, data, write_len,
-                       ASIC_WRITE_MODE_WRITE_THRU) != HAL_RET_OK) {
+                       ASIC_WRITE_MODE_WRITE_THRU) != sdk::SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to copy packet to the page");
         ret = HAL_RET_HW_FAIL;
         goto cleanup;

@@ -1,10 +1,14 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #include <string>
 #include <dlfcn.h>
 #include "nic/include/hal.hpp"
 #include "nic/include/hal_pd.hpp"
 #include "nic/include/asic_pd.hpp"
+#include "nic/sdk/asic/rw/asicrw.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 #include "nic/hal/pd/pd_api_c.h"
+#include "nic/sdk/lib/pal/pal.hpp"
 
 namespace hal {
 namespace pd {
@@ -23,7 +27,7 @@ hal_pd_stub_assert (pd_func_args_t *args)
 #define PD_FUNC_LOAD(PD_FUNC_ID, NAME)                                         \
 {                                                                              \
     g_pd_funcs[PD_FUNC_ID] =                                                   \
-        (pd_func_t)dlsym(RTLD_DEFAULT, #NAME);                                      \
+        (pd_func_t)dlsym(RTLD_DEFAULT, #NAME);                                 \
     dlsym_error = dlerror();                                                   \
     if (dlsym_error) {                                                         \
         HAL_TRACE_DEBUG("Failed to load symbol from PD lib {}:{}", #NAME,      \
@@ -573,6 +577,7 @@ hal_pd_clock_delta_comp_init (hal_cfg_t *hal_cfg)
 hal_ret_t
 hal_pd_init (hal_cfg_t *hal_cfg)
 {
+    pal_ret_t                           palrv;
     hal_ret_t                           ret;
     pd_mem_init_args_t                  mem_init_args;
     pd_mem_init_phase2_args_t           ph2_args;
@@ -580,6 +585,8 @@ hal_pd_init (hal_cfg_t *hal_cfg)
     pd_pgm_def_p4plus_entries_args_t    pgm_p4p_args;
     pd_func_args_t                      pd_func_args = { 0 };
     sdk::lib::thread                    *hal_thread;
+    asic_cfg_t                          asic_cfg;
+    pd_asic_init_args_t                 args;
 
     HAL_ASSERT(hal_cfg != NULL);
     hal_pd_module_init(hal_cfg);
@@ -593,6 +600,23 @@ hal_pd_init (hal_cfg_t *hal_cfg)
         goto cleanup;
     }
 
+    // initialize PAL
+    palrv = sdk::lib::pal_init(hal_cfg->platform);
+    HAL_ASSERT_GOTO(IS_PAL_API_SUCCESS(palrv), cleanup);
+
+    // do asic initialization
+    asic_cfg.loader_info_file = hal_cfg->loader_info_file;
+    asic_cfg.default_config_dir = hal_cfg->default_config_dir;
+
+    asic_cfg.admin_cos = 1;
+    asic_cfg.cfg_path = hal_cfg->cfg_path;
+    asic_cfg.catalog = hal_cfg->catalog;
+    asic_cfg.platform = hal_cfg->platform;
+    args.cfg = &asic_cfg;
+    pd_func_args.pd_asic_init = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_ASIC_INIT, &pd_func_args);
+    HAL_ASSERT_GOTO((ret == HAL_RET_OK), cleanup);
+
     // start the asic-rw thread
     HAL_TRACE_DEBUG("Starting asic-rw thread ...");
     hal_thread =
@@ -600,7 +624,7 @@ hal_pd_init (hal_cfg_t *hal_cfg)
                           HAL_THREAD_ID_ASIC_RW,
                           sdk::lib::THREAD_ROLE_CONTROL,
                           0x0,    // use all control cores
-                          hal::pd::asic_rw_start,
+                          sdk::asic::asicrw_start,
                           hal_thread_priority(sdk::lib::THREAD_ROLE_CONTROL),
                           hal_thread_sched_policy(sdk::lib::THREAD_ROLE_CONTROL),
                           hal_cfg);
@@ -610,7 +634,7 @@ hal_pd_init (hal_cfg_t *hal_cfg)
 
     HAL_TRACE_DEBUG("Waiting for asic-rw thread to be ready ...");
     // wait for ASIC RW thread to be ready before initializing table entries
-    while (!is_asic_rw_ready()) {
+    while (!sdk::asic::is_asicrw_ready()) {
         pthread_yield();
     }
 

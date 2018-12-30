@@ -11,6 +11,7 @@
 namespace hal {
 namespace pd {
 
+#if 0
 using sdk::lib::pal_ret_t;
 using sdk::lib::PAL_RET_OK;
 
@@ -22,20 +23,7 @@ static bool g_asic_rw_ready_;
 #define HAL_ASIC_RW_OPERATION_MEM_WRITE              1
 #define HAL_ASIC_RW_OPERATION_REG_READ               2
 #define HAL_ASIC_RW_OPERATION_REG_WRITE              3
-#define HAL_ASIC_RW_OPERATION_PORT                   4
-#define HAL_ASIC_RW_OPERATION_RING_DOORBELL          5
-
-//------------------------------------------------------------------------------
-// custom struct passed between control thread and asic-rw thread
-// for port related operations
-//------------------------------------------------------------------------------
-typedef struct asic_rw_port_entry_ {
-    uint32_t    port_num;  // port number
-    uint32_t    speed;     // port speed
-    uint32_t    type;      // buffer type between model client and server
-    uint32_t    num_lanes; // number of lanes for port
-    uint32_t    val;       // custom value per operation
-} asic_rw_port_entry_t;
+#define HAL_ASIC_RW_OPERATION_RING_DOORBELL          4
 
 //------------------------------------------------------------------------------
 // asic read-write entry, one such entry is added to the asic read/write
@@ -48,7 +36,6 @@ typedef struct asic_rw_entry_ {
     uint64_t             addr;       // address to write to or read from
     uint32_t             len;        // length of data to read or write
     uint8_t              *data;      // data to write or buffer to copy data to for mem read/write
-    asic_rw_port_entry_t port_entry; // port data
 } asic_rw_entry_t;
 
 //------------------------------------------------------------------------------
@@ -335,16 +322,6 @@ asic_ring_doorbell (uint64_t addr, uint64_t data, asic_write_mode_t mode)
     return rc;
 }
 
-//------------------------------------------------------------------------------
-// public API for saving cpu packet
-//------------------------------------------------------------------------------
-hal_ret_t
-asic_step_cpu_pkt (const uint8_t* pkt, size_t pkt_len)
-{
-    pal_ret_t prc = sdk::lib::pal_step_cpu_pkt(pkt, pkt_len);
-    return IS_PAL_API_SUCCESS(prc) ? HAL_RET_OK : HAL_RET_ERR;
-}
-
 hal_ret_t
 asic_port_cfg (uint32_t port_num,
                uint32_t speed,
@@ -392,6 +369,17 @@ asic_port_cfg (uint32_t port_num,
     ret = rw_entry->status;
 
     return ret;
+}
+#endif
+
+//------------------------------------------------------------------------------
+// public API for saving cpu packet
+//------------------------------------------------------------------------------
+hal_ret_t
+asic_step_cpu_pkt (const uint8_t* pkt, size_t pkt_len)
+{
+    pal_ret_t prc = sdk::lib::pal_step_cpu_pkt(pkt, pkt_len);
+    return IS_PAL_API_SUCCESS(prc) ? HAL_RET_OK : HAL_RET_ERR;
 }
 
 #if 0
@@ -446,6 +434,7 @@ asic_rw_logger_init (void)
 }
 #endif
 
+#if 0
 //------------------------------------------------------------------------------
 // asic read-write thread's forever loop to server read and write requests from
 // other HAL threads
@@ -612,6 +601,7 @@ asic_pd_csr_dump (char *csr_str)
     std::string val = "";
     return val;
 }
+#endif
 
 }    // namespace pd
 }    // namespace hal

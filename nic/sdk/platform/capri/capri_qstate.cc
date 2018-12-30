@@ -1,7 +1,8 @@
 // Functions related to Capri LIF 2 Qstate programming.
+
 #include "nic/sdk/include/sdk/platform/capri/capri_lif_manager.hpp"
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
-#include "nic/include/asic_pd.hpp"
+#include "nic/sdk/asic/rw/asicrw.hpp"
 
 using namespace sdk::platform::utils;
 
@@ -83,9 +84,9 @@ int clear_qstate_mem(uint64_t base_addr, uint32_t size) {
     // 256 byte boundary.
     static uint8_t zeros[256] = {0};
     for (uint32_t i = 0; i < (size / sizeof(zeros)); i++) {
-        hal_ret_t rc = hal::pd::asic_mem_write(base_addr + (i * sizeof(zeros)),
-                                               zeros, sizeof(zeros));
-        if (rc != HAL_RET_OK) {
+        sdk_ret_t rc = sdk::asic::asic_mem_write(base_addr + (i * sizeof(zeros)),
+                                                 zeros, sizeof(zeros));
+        if (rc != SDK_RET_OK) {
             return -EIO;
         }
     }
@@ -129,16 +130,16 @@ void read_lif_params_from_capri(LIFQState *qstate) {
 
 
 int32_t read_qstate(uint64_t q_addr, uint8_t *buf, uint32_t q_size) {
-    hal_ret_t rv = hal::pd::asic_mem_read(q_addr, buf, q_size);
-    if (rv != HAL_RET_OK) {
+    sdk_ret_t rv = sdk::asic::asic_mem_read(q_addr, buf, q_size);
+    if (rv != SDK_RET_OK) {
         return -EIO;
     }
     return 0;
 }
 
 int32_t write_qstate(uint64_t q_addr, const uint8_t *buf, uint32_t q_size) {
-    hal_ret_t rc = hal::pd::asic_mem_write(q_addr, (uint8_t *)buf, q_size);
-    if (rc != HAL_RET_OK) {
+    sdk_ret_t rc = sdk::asic::asic_mem_write(q_addr, (uint8_t *)buf, q_size);
+    if (rc != SDK_RET_OK) {
         return -EIO;
     }
     return 0;

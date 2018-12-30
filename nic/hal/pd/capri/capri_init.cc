@@ -12,6 +12,7 @@
 #include "nic/include/hal.hpp"
 #include "nic/hal/svc/hal_ext.hpp"
 #include "nic/include/asic_pd.hpp"
+#include "nic/sdk/asic/rw/asicrw.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/hal/pd/capri/capri_pxb_pcie.hpp"
 #include "nic/hal/pd/capri/capri_state.hpp"
@@ -87,7 +88,9 @@ capri_timer_hbm_init (void)
     timer_key_hbm_addr = timer_key_hbm_base_addr;
     while (timer_key_hbm_addr < timer_key_hbm_base_addr +
                                 CAPRI_TIMER_HBM_KEY_SPACE) {
-        capri_hbm_write_mem(timer_key_hbm_addr, (uint8_t *)zero_data, sizeof(zero_data));
+        sdk::asic::asic_mem_write(timer_key_hbm_addr, (uint8_t *)zero_data,
+                                  sizeof(zero_data),
+                                  ASIC_WRITE_MODE_WRITE_THRU);
         timer_key_hbm_addr += sizeof(zero_data);
     }
 

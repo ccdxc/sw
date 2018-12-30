@@ -1430,7 +1430,7 @@ pd_tcpcb_get (pd_func_args_t *pd_func_args)
 hal_ret_t
 pd_tcp_global_stats_get (pd_func_args_t *pd_func_args)
 {
-    hal_ret_t ret = HAL_RET_OK;
+    sdk_ret_t ret;
 
     sdk::types::mem_addr_t stats_mem_addr =
         get_start_offset(TCP_PROXY_STATS);
@@ -1438,11 +1438,9 @@ pd_tcp_global_stats_get (pd_func_args_t *pd_func_args)
 
     pd_tcp_global_stats_get_args_t *args = pd_func_args->pd_tcp_global_stats_get;
 
-    ret = asic_mem_read(stats_mem_addr, (uint8_t *)args,
-                        sizeof(pd_tcp_global_stats_get_args_t));
-     
-
-    return ret;
+    ret = sdk::asic::asic_mem_read(stats_mem_addr, (uint8_t *)args,
+                                   sizeof(pd_tcp_global_stats_get_args_t));
+    return hal_sdk_ret_to_hal_ret(ret);
 }
 
 }    // namespace pd

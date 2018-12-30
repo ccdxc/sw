@@ -5,6 +5,7 @@
 #include "nic/hal/pd/iris/nw/l2seg_pd.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/include/pd_api.hpp"
+#include "nic/sdk/asic/rw/asicrw.hpp"
 #include "nic/hal/plugins/cfg/nw/interface_api.hpp"
 #include "gen/p4gen/p4/include/p4pd.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
@@ -810,7 +811,7 @@ lif_pd_stats_read (intf::LifRxStats *rx_stats,
                    intf::LifTxStats *tx_stats,
                    pd_lif_t *pd_lif)
 {
-    hal_ret_t                       ret = HAL_RET_OK;
+    sdk_ret_t                       ret = SDK_RET_OK;
     lif_t                           *pi_lif = (lif_t *)pd_lif->pi_lif;
     delphi::objects::lifmetrics_t   lif_metrics = {0};
 
@@ -819,14 +820,15 @@ lif_pd_stats_read (intf::LifRxStats *rx_stats,
 
     stats_mem_addr += pd_lif->hw_lif_id << LIF_STATS_SIZE_SHIFT;
 
-    HAL_TRACE_DEBUG("lif:{}, stats_mem_addr: {:x}", pd_lif->hw_lif_id, stats_mem_addr);
+    HAL_TRACE_DEBUG("lif:{}, stats_mem_addr: {:x}",
+                    pd_lif->hw_lif_id, stats_mem_addr);
 
-    ret = asic_mem_read(stats_mem_addr, (uint8_t *)&lif_metrics,
-                        sizeof(delphi::objects::lifmetrics_t));
-    if (ret != HAL_RET_OK) {
+    ret = sdk::asic::asic_mem_read(stats_mem_addr, (uint8_t *)&lif_metrics,
+                                   sizeof(delphi::objects::lifmetrics_t));
+    if (ret != SDK_RET_OK) {
         HAL_TRACE_ERR("Error reading stats for lif {} hw-id {}, ret {}",
                       lif_get_lif_id(pi_lif), pd_lif->hw_lif_id, ret);
-        return ret;
+        return hal_sdk_ret_to_hal_ret(ret);
     }
 
     rx_stats->set_unicast_frames_ok(lif_metrics.rx_unicast_packets);
@@ -898,10 +900,8 @@ lif_pd_stats_read (intf::LifRxStats *rx_stats,
                     lif_metrics.tx_drop_multicast_bytes,
                     lif_metrics.tx_drop_broadcast_bytes);
 
-    return ret;
+    return HAL_RET_OK;
 }
-
-
 
 typedef struct lif_pd_rx_policer_stats_s {
     uint64_t permitted_bytes;
@@ -934,11 +934,12 @@ lif_pd_populate_rx_policer_stats (qos::PolicerStats *stats_rsp, pd_lif_t *pd_lif
         return ret;
     }
 
-    ret = asic_mem_read(stats_addr, (uint8_t *)&stats_0, sizeof(stats_0));
-    if (ret != HAL_RET_OK) {
+    sdk_ret = sdk::asic::asic_mem_read(stats_addr, (uint8_t *)&stats_0,
+                                       sizeof(stats_0));
+    if (sdk_ret != SDK_RET_OK) {
         HAL_TRACE_ERR("Error reading stats for lif {} hw-id {}, ret {}",
                       lif_get_lif_id(pi_lif), pd_lif->hw_lif_id, ret);
-        return ret;
+        return hal_sdk_ret_to_hal_ret(sdk_ret);
     }
 
     // read the d-vector
@@ -949,11 +950,12 @@ lif_pd_populate_rx_policer_stats (qos::PolicerStats *stats_rsp, pd_lif_t *pd_lif
                       lif_get_lif_id(pi_lif), pd_lif->hw_lif_id, ret);
         return ret;
     }
-    ret = asic_mem_read(stats_addr, (uint8_t *)&stats_1, sizeof(stats_1));
-    if (ret != HAL_RET_OK) {
+    sdk_ret = sdk::asic::asic_mem_read(stats_addr, (uint8_t *)&stats_1,
+                                       sizeof(stats_1));
+    if (sdk_ret != SDK_RET_OK) {
         HAL_TRACE_ERR("Error reading stats for lif {} hw-id {}, ret {}",
                       lif_get_lif_id(pi_lif), pd_lif->hw_lif_id, ret);
-        return ret;
+        return hal_sdk_ret_to_hal_ret(sdk_ret);
     }
 
     HAL_TRACE_DEBUG("Policer stat read lif {} hw_lif_id {} stats_addr {:#x} "

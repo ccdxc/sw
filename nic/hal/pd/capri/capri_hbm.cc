@@ -6,6 +6,7 @@
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/include/hal_mem.hpp"
 #include "nic/include/asic_pd.hpp"
+#include "nic/sdk/asic/rw/asicrw.hpp"
 #include <arpa/inet.h>
 #include "nic/include/hal.hpp"
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
@@ -27,8 +28,10 @@ cap_nx_block_write(uint32_t chip, uint64_t addr, int size,
                    uint32_t *data_in , bool no_zero_time,
                    uint32_t flags)
 {
-    return hal::pd::asic_reg_write(addr, data_in, 1,
-                                   hal::pd::ASIC_WRITE_MODE_BLOCKING);
+    sdk_ret_t    sdk_ret;
+    sdk_ret = sdk::asic::asic_reg_write(addr, data_in, 1,
+                                        ASIC_WRITE_MODE_BLOCKING);
+    return hal_sdk_ret_to_hal_ret(sdk_ret);
 }
 
 static inline uint32_t
@@ -36,8 +39,8 @@ cap_nx_block_read(uint32_t chip, uint64_t addr, int size,
                   bool no_zero_time, uint32_t flags)
 {
     uint32_t data = 0x0;
-    if(hal::pd::asic_reg_read(addr, &data, 1, false /*read_thru*/) !=
-                            HAL_RET_OK) {
+    if (sdk::asic::asic_reg_read(addr, &data, 1, false /*read_thru*/) !=
+                                 SDK_RET_OK) {
         HAL_TRACE_ERR("NX read failed. addr: {}", addr);
     }
     return data;
@@ -118,8 +121,8 @@ reset_hbm_regions (capri_cfg_t *capri_cfg)
                 if (capri_cfg->platform == platform_type_t::PLATFORM_TYPE_HAPS) {
                     // Reset only for haps
                     HAL_TRACE_DEBUG("Resetting {} hbm region", reg->mem_reg_name);
-                    hal::pd::asic_mem_write(mpart->addr(reg->start_offset),
-                                            NULL, reg->size_kb * 1024);
+                    sdk::asic::asic_mem_write(mpart->addr(reg->start_offset),
+                                              NULL, reg->size_kb * 1024);
                 } else if (capri_cfg->platform == platform_type_t::PLATFORM_TYPE_HW) {
                     /*
                      * Comparing for all "reset" regions is delaying HAL UP.
@@ -130,7 +133,7 @@ reset_hbm_regions (capri_cfg_t *capri_cfg)
                         // Check if its all 0s for HW
                         addr = reg->start_offset;
                         for (uint64_t j = 0; j < reg->size_kb; j++) {
-                            hal::pd::asic_mem_read(addr, tmp, 1024, true);
+                            sdk::asic::asic_mem_read(addr, tmp, 1024, true);
                             if (memcmp(tmp, zeros, 1024)) {
                                 HAL_TRACE_ERR("Fatal: HBM region {} has non-zero bytes.",
                                               reg->mem_reg_name);
@@ -148,16 +151,20 @@ reset_hbm_regions (capri_cfg_t *capri_cfg)
 int32_t
 capri_hbm_read_mem (uint64_t addr, uint8_t *buf, uint32_t size)
 {
-    hal_ret_t rc = hal::pd::asic_mem_read(addr, buf, size);
-    return (rc == HAL_RET_OK) ? 0 : -EIO;
+    sdk_ret_t rc;
+
+    rc = sdk::asic::asic_mem_read(addr, buf, size);
+    return (rc == SDK_RET_OK) ? 0 : -EIO;
 }
 
 int32_t
 capri_hbm_write_mem (uint64_t addr, const uint8_t *buf, uint32_t size)
 {
-    hal_ret_t rc = hal::pd::asic_mem_write(addr, (uint8_t *)buf, size,
-                                           hal::pd::ASIC_WRITE_MODE_BLOCKING);
-    return (rc == HAL_RET_OK) ? 0 : -EIO;
+    sdk_ret_t rc;
+
+    rc = sdk::asic::asic_mem_write(addr, (uint8_t *)buf, size,
+                                   ASIC_WRITE_MODE_BLOCKING);
+    return (rc == SDK_RET_OK) ? 0 : -EIO;
 }
 
 static hal_ret_t

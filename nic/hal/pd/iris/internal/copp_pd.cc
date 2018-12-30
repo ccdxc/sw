@@ -3,6 +3,7 @@
 #include "nic/hal/pd/iris/internal/copp_pd.hpp"
 #include "nic/hal/pd/iris/aclqos/qos_pd.hpp"
 #include "nic/include/pd_api.hpp"
+#include "nic/sdk/asic/rw/asicrw.hpp"
 #include "nic/hal/plugins/cfg/aclqos/qos_api.hpp"
 
 namespace hal {
@@ -444,8 +445,9 @@ copp_pd_populate_policer_stats (qos::PolicerStats *stats_rsp, pd_copp_t *pd_copp
         return ret;
     }
 
-    ret = asic_mem_read(stats_addr, (uint8_t *)&stats_0, sizeof(stats_0));
-    if (ret != HAL_RET_OK) {
+    sdk_ret = sdk::asic::asic_mem_read(stats_addr, (uint8_t *)&stats_0,
+                                       sizeof(stats_0));
+    if (sdk_ret != SDK_RET_OK) {
         HAL_TRACE_ERR("Error reading stats for copp {} hw-id {}, ret {}",
                       pi_copp->key, pd_copp->hw_policer_id, ret);
         return ret;
@@ -459,8 +461,10 @@ copp_pd_populate_policer_stats (qos::PolicerStats *stats_rsp, pd_copp_t *pd_copp
                       pi_copp->key, pd_copp->hw_policer_id, ret);
         return ret;
     }
-    ret = asic_mem_read(stats_addr, (uint8_t *)&stats_1, sizeof(stats_1));
-    if (ret != HAL_RET_OK) {
+
+    sdk_ret = sdk::asic::asic_mem_read(stats_addr, (uint8_t *)&stats_1,
+                                       sizeof(stats_1));
+    if (sdk_ret != SDK_RET_OK) {
         HAL_TRACE_ERR("Error reading stats for copp {} hw-id {}, ret {}",
                       pi_copp->key, pd_copp->hw_policer_id, ret);
         return ret;
