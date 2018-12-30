@@ -186,8 +186,11 @@ class ConfigObject(DictObject):
         out = self.__common_rest(full_url, None,  remote_node=remote_node, oper=CfgOper.DELETE)
         if out is None:
             return api.types.status.SUCCESS
-        if out["status-code"] == 200:
-            api.Logger.info("Delete success for Key : ", self.Key())
+        if 'status-code' in out:
+            if out["status-code"] == 200:
+                api.Logger.info("Delete success for Key : ", self.Key())
+                return api.types.status.SUCCESS
+        else:
             return api.types.status.SUCCESS
         api.Logger.error("Delete failed for Key : %s : %s" % (self.Key(), out))
         return api.types.status.FAILURE
