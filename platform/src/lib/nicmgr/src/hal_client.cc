@@ -2163,6 +2163,7 @@ HalClient::PortStatusGet(uint32_t portnum, port_status_t &pi)
     PortGetResponseMsg      rsp_msg;
     ClientContext           context;
     Status                  status;
+    uint32_t                speed;
 
     auto req = req_msg.add_request();
     req->mutable_key_or_handle()->set_port_id(portnum);
@@ -2182,7 +2183,12 @@ HalClient::PortStatusGet(uint32_t portnum, port_status_t &pi)
     pi.port_id = port.status().key_or_handle().port_id();
     pi.oper_status = (port.status().oper_status() == port::PortOperStatus::PORT_OPER_STATUS_UP);
 
-    switch (port.status().port_speed()) {
+    speed = port.status().port_speed();
+    if (speed == port::PortSpeed::PORT_SPEED_NONE) {
+        speed = port.spec().port_speed();
+    }
+
+    switch (speed) {
         case port::PortSpeed::PORT_SPEED_1G:
             pi.port_speed = 1000;
             break;
