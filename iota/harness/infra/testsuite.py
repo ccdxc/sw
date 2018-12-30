@@ -93,7 +93,7 @@ class TestSuite:
             self.__testbundles.append(tbun)
 
         if GlobalOptions.regression:
-            for bunfile in self.__spec.testbundles.regression:
+            for bunfile in getattr(self.__spec.testbundles, 'regression', []):
                 tbun = testbundle.TestBundle(bunfile, self)
                 self.__testbundles.append(tbun)
         return
