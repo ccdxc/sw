@@ -278,7 +278,7 @@ void ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *rxbuf,
 
 	IONIC_RX_TRACE(rxq, "input called for @%d\n", comp->comp_index);
 	if (comp->status) {
-		IONIC_QUE_WARN(rxq, "RX Status %d\n", comp->status);
+		IONIC_QUE_INFO(rxq, "RX Status %d\n", comp->status);
 		stats->comp_err++;
 		m_freem(m);
 		return;
@@ -286,7 +286,7 @@ void ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *rxbuf,
 
 #ifdef HAPS
 	if (comp->len > ETHER_MAX_FRAME(rxq->lif->netdev, ETHERTYPE_VLAN, 1)) {
-		IONIC_QUE_WARN(rxq, "RX PKT TOO LARGE!  comp->len %d\n", comp->len);
+		IONIC_QUE_INFO(rxq, "RX PKT TOO LARGE!  comp->len %d\n", comp->len);
 		m_freem(m);
 	
 		return;
@@ -1653,6 +1653,7 @@ ionic_notifyq_sysctl(struct lif *lif, struct sysctl_ctx_list *ctx,
 		struct sysctl_oid_list *child)
 {
 	struct notifyq* notifyq = lif->notifyq;
+	struct notify_block *nb = lif->notifyblock;
 	struct sysctl_oid *queue_node;
 	struct sysctl_oid_list *queue_list;
 	char namebuf[QUEUE_NAME_LEN];
@@ -1666,11 +1667,13 @@ ionic_notifyq_sysctl(struct lif *lif, struct sysctl_ctx_list *ctx,
 	queue_list = SYSCTL_CHILDREN(queue_node);
 
 	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "num_descs", CTLFLAG_RD,
-	&notifyq->num_descs, 0, "Number of descriptors");
-	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "last_eid", CTLFLAG_RD,
-	&lif->last_eid, "Last event Id");
+			&notifyq->num_descs, 0, "Number of descriptors");
 	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "comp_index", CTLFLAG_RD,
-	&notifyq->comp_index, 0, "Completion index");
+			&notifyq->comp_index, 0, "Completion index");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "last_eid", CTLFLAG_RD,
+			&lif->last_eid, "Last event Id");
+	SYSCTL_ADD_U16(ctx, queue_list, OID_AUTO, "nb_flap_count", CTLFLAG_RD,
+			&nb->link_flap_count, 0, "NB link flap count");
 }
 
 static void
@@ -2005,8 +2008,6 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 		if (ifp->if_flags & IFF_UP) {
 			if ((ifp->if_drv_flags & IFF_DRV_RUNNING) == 0) {
 				/* if_init = ionic_open is done from ether_ioctl */
-				/* FIXME: Remove fake link up */
-				ionic_up_link(ifp);
 			}
 			ionic_set_rx_mode(lif->netdev);
 			ionic_set_mac(lif->netdev);
@@ -2021,8 +2022,6 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 			if ((ifp->if_drv_flags & IFF_DRV_RUNNING) == 0) {
 				/* if the lif is stopped then open it */
 				ionic_open(lif);
-				/* FIXME: Remove fake link up */
-				ionic_up_link(ifp);
 			}
 			ionic_set_rx_mode(lif->netdev);
 			ionic_set_mac(lif->netdev);
@@ -2030,8 +2029,6 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 			if (ifp->if_drv_flags & IFF_DRV_RUNNING) {
 				/* if the lif is open then stop it */
 				ionic_stop(ifp);
-				/* FIXME: Remove fake link down */
-				ionic_down_link(ifp);
 			}
 			ionic_clear_rx_mode(lif->netdev);
 		}
@@ -2157,6 +2154,7 @@ void ionic_lif_rss_teardown(struct lif *lif)
 }
 
 
+#if 0
 void ionic_down_link(struct net_device *netdev)
 {
 #ifdef __FreeBSD__
@@ -2178,3 +2176,4 @@ void ionic_up_link(struct net_device *netdev)
 	netif_tx_disable(netdev);
 #endif
 }
+#endif
