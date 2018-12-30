@@ -81,7 +81,7 @@ endif
 release-clean:
 	@rm -rf obj/release
 
-BRCTR="registry.test.pensando.io:5000/pensando/buildroot/dmichaels:20181213.2002"
+BRCTR="registry.test.pensando.io:5000/pensando/buildroot/dmichaels:20181229.1213"
 .PHONY: firmware
 firmware: package
     ifeq (${ARCH},aarch64)
