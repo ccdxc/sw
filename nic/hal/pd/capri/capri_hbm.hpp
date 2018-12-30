@@ -17,7 +17,7 @@ using hal::pd::asic_hbm_bw_t;
 #include "nic/include/hal_cfg.hpp"
 #include "nic/hal/pd/capri/capri.hpp"
 
-hal_ret_t capri_hbm_parse(std::string cfg_path, std::string pgm_name);
+sdk_ret_t capri_hbm_parse(std::string cfg_path, std::string pgm_name);
 mpartition_region_t *get_hbm_region(char *name);
 uint64_t get_hbm_base(void);
 uint64_t get_hbm_offset(const char *reg_name);

@@ -513,7 +513,7 @@ capri_init (capri_cfg_t *cfg)
 hal_ret_t
 hal::pd::asic_hbm_parse (asic_cfg_t *cfg)
 {
-    return capri_hbm_parse(cfg->cfg_path, cfg->pgm_name);
+    return hal_sdk_ret_to_hal_ret(capri_hbm_parse(cfg->cfg_path, cfg->pgm_name));
 }
 
 hal_ret_t

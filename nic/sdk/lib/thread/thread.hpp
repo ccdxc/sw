@@ -61,34 +61,32 @@ public:
     void set_running(bool running) { running_ = running; }
     void set_data(void *data) { data_ = data; }
     void *data(void) const { return data_; }
-    thread_role_t thread_role (void) const { return thread_role_; }
-    uint64_t      cores_mask  (void) const { return cores_mask_;  }
-    uint64_t      get_cpu_mask (void);
+    thread_role_t thread_role(void) const { return thread_role_; }
+    uint64_t cores_mask(void) const { return cores_mask_; }
+    uint64_t get_cpu_mask(void);
 
     // set the current thread instance
-    static void set_current_thread (thread *curr_thread) {
+    static void set_current_thread(thread *curr_thread) {
         t_curr_thread_ = curr_thread;
     }
 
     // get the current thread instance
-    static thread* current_thread (void) {
+    static thread* current_thread(void) {
         return sdk::lib::thread::t_curr_thread_;
     }
 
-    static void control_cores_mask_set (uint64_t mask) {
+    static void control_cores_mask_set(uint64_t mask) {
         control_cores_mask_ = mask;
         SDK_TRACE_PRINT("control_cores_mask : %lu", control_cores_mask_);
     }
 
-    static void data_cores_mask_set (uint64_t mask) {
+    static void data_cores_mask_set(uint64_t mask) {
         data_cores_mask_ = data_cores_free_ = mask;
         SDK_TRACE_PRINT("data_cores_mask : %lu", data_cores_mask_);
     }
-
-    static uint64_t get_cpu_mask (cpu_set_t cpu_set);
-    static uint64_t control_cores_mask (void) { return control_cores_mask_; }
-    static uint64_t data_cores_mask    (void) { return data_cores_mask_;    }
-
+    static uint64_t get_cpu_mask(cpu_set_t cpu_set);
+    static uint64_t control_cores_mask(void) { return control_cores_mask_; }
+    static uint64_t data_cores_mask(void) { return data_cores_mask_; }
 
 private:
     char                       name_[SDK_MAX_THREAD_NAME_LEN];
@@ -117,12 +115,13 @@ private:
              thread_entry_func_t entry_func,
              uint32_t prio, int sched_policy, bool can_yield);
 
-    static sdk_ret_t
-    cores_mask_validate(thread_role_t thread_role, uint64_t mask);
+    static sdk_ret_t cores_mask_validate(thread_role_t thread_role,
+                                         uint64_t mask);
 };
 
 }    // namespace lib
 }    // namespace sdk
 
-#endif    // __SDK_THREAD_HPP__
+using sdk::lib::thread;
 
+#endif    // __SDK_THREAD_HPP__

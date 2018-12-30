@@ -53,11 +53,9 @@
 #include "gen/hal/svc/tcp_proxy_svc_gen.hpp"
 #include "gen/hal/svc/multicast_svc_gen.hpp"
 #include "gen/hal/svc/gft_svc_gen.hpp"
-//#include "gen/hal/svc/dos_svc_gen.hpp"
 #include "gen/hal/svc/l4lb_svc_gen.hpp"
 #include "nic/hal/lkl/lklshim.hpp"
 #include "nic/hal/lkl/lkl_api.hpp"
-//#include "nic/hal/iris/delphi/delphi.hpp"
 
 using grpc::Server;
 using grpc::ServerBuilder;

@@ -39,6 +39,7 @@ typedef struct oci_init_params_s {
     oci_init_mode_t            init_mode;         /**< mode of initialization */
     sdk_logger::logger_cb_t    debug_trace_cb;    /**< callback for debug traces */
     sdk_logger::logger_cb_t    error_trace_cb;    /**< callback for error traces */
+    std::string                cfg_file;          /**< config file path */
 } oci_init_params_t;
 
 /**

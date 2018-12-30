@@ -5,6 +5,7 @@
 
 #include <boost/crc.hpp>
 #include "boost/property_tree/json_parser.hpp"
+#include "nic/sdk/include/sdk/base.hpp"
 #include "nic/model_sim/include/lib_model_client.h"
 #include "nic/sdk/include/sdk/pal.hpp"
 #include "nic/sdk/include/sdk/utils.hpp"
@@ -782,9 +783,7 @@ TEST_F(apollo_test, test1) {
     ret = sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM);
 #endif
 
-    ret = hal::pd::asic_hbm_parse(&cfg);
-    HAL_ASSERT(ret == HAL_RET_OK);
-
+    SDK_ASSERT(hal::pd::asic_hbm_parse(&cfg) == sdk::SDK_RET_OK);
     cfg.num_pgm_cfgs = 3;
     memset(cfg.pgm_cfg, 0, sizeof(cfg.pgm_cfg));
     cfg.pgm_cfg[0].path = std::string("p4_bin");
