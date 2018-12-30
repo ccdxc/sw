@@ -16,6 +16,22 @@ def Trigger(tc):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
     server,client  = pairs[0]
+    cmd_cookie = "echo 1 > /proc/sys/net/ipv4/tcp_tw_reuse"
+    add_command(req, tc, 'server', server, cmd_cookie)
+    add_command(req, tc, 'client', client, cmd_cookie)
+    
+    cmd_cookie = "echo 1 > /proc/sys/net/ipv4/tcp_fin_timeout"
+    add_command(req, tc, 'server', server, cmd_cookie)
+    add_command(req, tc, 'client', client, cmd_cookie)
+
+    cmd_cookie = "echo  1 > /proc/sys/net/ipv4/tcp_orphan_retries"
+    add_command(req, tc, 'server', server, cmd_cookie)
+    add_command(req, tc, 'client', client, cmd_cookie)
+
+    cmd_cookie = "echo 1 > /proc/sys/net/ipv4/tcp_tw_reuse"
+    add_command(req, tc, 'server', server, cmd_cookie, True)
+    add_command(req, tc, 'client', client, cmd_cookie, True)
+
     cmd_cookie = start_nc_server(server, "1237")
     add_command(req, tc, 'server', server, cmd_cookie, True) 
 
