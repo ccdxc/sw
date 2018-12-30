@@ -104,9 +104,41 @@ static void ionic_calc_rx_size(struct lif *lif)
 		lif->rx_mbuf_size  = MCLBYTES;
 }
 
+/*
+ * Read the notifyQ to get the latest link event.
+ */
+static void ionic_read_notify_block(struct lif* lif)
+{
+	struct notify_block *nb = lif->notifyblock;
+#ifdef IONIC_NB_DEBUG
+	struct ifnet *ifp = lif->netdev;
+#endif
+
+	if (nb == NULL || lif == NULL)
+		return;
+
+	if (nb->eid < lif->last_eid)
+		return;
+
+	lif->last_eid = nb->eid;
+	lif->link_speed = nb->link_speed;
+	lif->link_up = nb->link_status ? true : false;
+	lif->link_error_bits = nb->link_error_bits;
+	lif->phy_type = nb->phy_type;
+	lif->autoneg_status = nb->autoneg_status;
+
+#ifdef IONIC_NB_DEBUG
+	if_printf(ifp, "from NB [%ld]link: %s speed: %d errors: 0x%02x phy_type: %d autoneg: %d flap: %d\n",
+		lif->last_eid, (lif->link_up ? "up" : "down"), lif->link_speed,
+		lif->link_error_bits, lif->phy_type, lif->autoneg_status,
+		nb->link_flap_count);
+#endif
+}
+
 void ionic_open(void *arg)
 {
 	struct lif *lif = arg;
+	struct ifnet  *ifp = lif->netdev;
 	struct rxque *rxq;
 	struct txque *txq;
 	unsigned int i;
@@ -117,6 +149,7 @@ void ionic_open(void *arg)
 
 	ionic_calc_rx_size(lif);
 
+	ionic_read_notify_block(lif);
 	for (i = 0; i < lif->nrxqs; i++) {
 		rxq = lif->rxqs[i];
 		IONIC_RX_LOCK(rxq);
@@ -137,6 +170,13 @@ void ionic_open(void *arg)
 #endif
 		IONIC_TX_UNLOCK(txq);
 	}
+
+	if (lif->link_up) {
+		ifp->if_drv_flags |= IFF_DRV_RUNNING;
+		if_link_state_change(ifp, LINK_STATE_UP);
+	} else {
+		if_link_state_change(ifp, LINK_STATE_DOWN);
+	}
 }
 
 int ionic_stop(struct net_device *netdev)
@@ -150,6 +190,8 @@ int ionic_stop(struct net_device *netdev)
 	IONIC_NETDEV_INFO(netdev, "stopping interface\n");
 	KASSERT(lif, ("lif is NULL"));
 	KASSERT(IONIC_CORE_LOCK_OWNED(lif), ("%s is not locked", lif->name));
+
+	lif->netdev->if_drv_flags &= ~IFF_DRV_RUNNING;
 
 	for (i = 0; i < lif->nrxqs; i++) {
 		rxq = lif->rxqs[i];
@@ -1843,46 +1885,72 @@ static int ionic_lif_adminq_init(struct lif *lif)
 	return (err);
 }
 
-static void ionic_process_event(struct notifyq* notifyq,
-	union notifyq_comp *comp)
+static void ionic_process_event(struct notifyq* notifyq, union notifyq_comp *comp)
 {
-	struct ifnet *ifp = notifyq->lif->netdev;
+	struct lif *lif = notifyq->lif;
+	struct ifnet *ifp = lif->netdev;
+	bool admin_up, running;
 
 	switch (comp->event.ecode) {
 	case EVENT_OPCODE_LINK_CHANGE:
-		if_printf(ifp, "Notifyq EVENT_OPCODE_LINK_CHANGE eid=%ld\n",
-			    comp->event.eid);
-		if_printf(ifp, "  link_status=%d link_errors=0x%02x phy_type=%d link_speed=%d autoneg=%d\n",
-			    comp->link_change.link_status,
-			    comp->link_change.link_error_bits,
-			    comp->link_change.phy_type,
-			    comp->link_change.link_speed,
-			    comp->link_change.autoneg_status);
+		ionic_read_notify_block(lif);
+
+#ifdef IONIC_NB_DEBUG
+		if_printf(ifp, "comp[%ld]link: %s speed: %d errors: 0x%02x phy_type: %d autoneg: %d\n",
+			comp->event.eid, (comp->link_change.link_status ? "up" : "down"),
+			comp->link_change.link_speed, comp->link_change.link_error_bits,
+			comp->link_change.phy_type, comp->link_change.autoneg_status);
+#endif
+		if (lif->last_eid < comp->event.eid) {
+			if_printf(ifp, "comp eid: %ld > last_eid: %ld\n",
+				comp->event.eid, lif->last_eid);
+			lif->link_speed = comp->link_change.link_speed;
+			lif->link_up = comp->link_change.link_status ? true : false;
+			lif->link_error_bits = comp->link_change.link_error_bits;
+			lif->phy_type = comp->link_change.phy_type;
+			lif->autoneg_status = comp->link_change.autoneg_status;
+			lif->last_eid = comp->event.eid;
+		}
+
+		IONIC_CORE_LOCK(lif);
+		if (lif->link_up)
+			if_link_state_change(ifp, LINK_STATE_UP);
+		else
+			if_link_state_change(ifp, LINK_STATE_DOWN);
+
+		admin_up = ifp->if_flags & IFF_UP;
+		running = ifp->if_drv_flags & IFF_DRV_RUNNING;
+
+		if (lif->link_up && admin_up && !running)
+			ionic_open(lif);
+		else if ((!lif->link_up || !admin_up) && running)
+			ionic_stop(lif->netdev);
+
+		IONIC_CORE_UNLOCK(lif);
+		if_printf(ifp, "[eid:%ld]link status: %s speed: %d\n",
+			lif->last_eid, (lif->link_up ? "up" : "down"), lif->link_speed);
 		break;
 
 	case EVENT_OPCODE_RESET:
-		if_printf(ifp, "Notifyq EVENT_OPCODE_RESET eid=%ld\n",
-			    comp->event.eid);
-		if_printf(ifp, "  reset_code=%d state=%d\n",
-			    comp->reset.reset_code,
+		if_printf(ifp, "[eid:%ld]reset_code: %d state: %d\n",
+				comp->event.eid, comp->reset.reset_code,
 			    comp->reset.state);
 		break;
 
 	case EVENT_OPCODE_HEARTBEAT:
-		if_printf(ifp, "Notifyq EVENT_OPCODE_HEARTBEAT eid=%ld\n",
-			    comp->event.eid);
+		if_printf(ifp, "[eid:%ld]heartbeat\n", comp->event.eid);
 		break;
 
 	case EVENT_OPCODE_LOG:
-		if_printf(ifp, "Notifyq EVENT_OPCODE_LOG eid=%ld\n",
+		if_printf(ifp, "[eid:%ld]log \n",
 			    comp->event.eid);
-		print_hex_dump(KERN_INFO, "notifyq ", DUMP_PREFIX_OFFSET, 16, 1,
+		print_hex_dump(KERN_INFO, "nq log", DUMP_PREFIX_OFFSET, 16, 1,
 			       comp->log.data, sizeof(comp->log.data), true);
 		break;
 
 	default:
-		if_printf(ifp, "Notifyq bad event ecode=%d eid=%ld\n",
-			    comp->event.ecode, comp->event.eid);
+		if_printf(ifp, "[eid:%ld]unknown event: %d\n",
+			    comp->event.eid, comp->event.ecode);
 		break;
 	}
 }
@@ -2028,6 +2096,7 @@ static int ionic_lif_notifyq_init(struct lif *lif, struct notifyq *notifyq)
 
 	ionic_intr_mask(&notifyq->intr, false);
 
+	ionic_read_notify_block(lif);
 	return 0;
 
 free_notify_block:
@@ -2398,16 +2467,47 @@ static int ionic_lif_rxqs_init(struct lif *lif)
 static void
 ionic_media_status(struct ifnet *ifp, struct ifmediareq *ifmr)
 {
+	struct lif* lif = ifp->if_softc;
+
+	IONIC_NOTIFYQ_LOCK(lif);
+	ionic_read_notify_block(lif);
+
 	ifmr->ifm_status = IFM_AVALID;
 	ifmr->ifm_active = IFM_ETHER;
 
-	/* XXX: if link is not up return */
+	if (lif->link_up)
+		if_link_state_change(ifp, LINK_STATE_UP);
+	else
+		if_link_state_change(ifp, LINK_STATE_DOWN);
+
+	if (!lif->link_up) {
+		IONIC_NOTIFYQ_UNLOCK(lif);
+		return;
+	}
 
 	ifmr->ifm_status |= IFM_ACTIVE;
 	ifmr->ifm_active |= IFM_FDX;
 
-	/* XXX: detect media type */
-	ifmr->ifm_active |= IFM_100G_CR4;
+	switch(lif->link_speed) {
+	case IONIC_LINK_SPEED_100G:
+		/* XXX: more media type. */
+		ifmr->ifm_active |= IFM_100G_CR4;
+		break;
+
+	case IONIC_LINK_SPEED_1G:
+		/* Only for mgmt interface. */
+		if (lif->ionic->is_mgmt_nic)
+			ifmr->ifm_active |= IFM_1000_KX;
+		else
+			ifmr->ifm_active |= IFM_UNKNOWN;
+		break;
+
+	default:
+		ifmr->ifm_active |= IFM_UNKNOWN;
+		break;
+	}
+
+	IONIC_NOTIFYQ_UNLOCK(lif);
 }
 
 static int
@@ -2461,11 +2561,14 @@ static int ionic_station_set(struct lif *lif)
 	ifmedia_init(&lif->media, IFM_IMASK, ionic_media_change,
 	    ionic_media_status);
 
-	/* XXX: add more media type */
-	ifmedia_add(&lif->media, IFM_ETHER | IFM_25G_CR, 0, NULL);
-	ifmedia_add(&lif->media, IFM_ETHER | IFM_100G_CR4, 0, NULL);
-	ifmedia_add(&lif->media, IFM_ETHER | IFM_AUTO, 0, NULL);
+	if (lif->ionic->is_mgmt_nic) {
+		ifmedia_add(&lif->media, IFM_ETHER | IFM_1000_KX, 0, NULL);
+	} else {
+		/* XXX: add more media type */
+		ifmedia_add(&lif->media, IFM_ETHER | IFM_100G_CR4, 0, NULL);
+	}
 
+	ifmedia_add(&lif->media, IFM_ETHER | IFM_AUTO, 0, NULL);
 	ifmedia_set(&lif->media, IFM_ETHER | IFM_AUTO);
 
 	return 0;

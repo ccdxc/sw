@@ -314,6 +314,15 @@ struct lif {
 	eventhandler_tag vlan_detach;
 
 	u64 last_eid;
+	bool link_up;
+
+#define IONIC_LINK_SPEED_100G	100000
+#define IONIC_LINK_SPEED_1G	1000
+	u32 link_speed;		/* units of 1Mbps: e.g. 10000 = 10Gbps */
+	u16 phy_type;
+	u16 autoneg_status;
+	u16 link_flap_count;
+	u16 link_error_bits;
 	u32 notifyblock_sz;
 	dma_addr_t notifyblock_pa;
 	struct ionic_dma_info notify_dma;
