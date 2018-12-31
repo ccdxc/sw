@@ -7,7 +7,10 @@
  */
 
 #include "nic/sdk/include/sdk/mem.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/hal/apollo/api/impl/capri_impl.hpp"
+// TODO: vijay please cleanup this along with asicpd move to sdk
+#include "nic/hal/pd/asic_pd.hpp"
 
 namespace impl {
 
@@ -24,6 +27,20 @@ namespace impl {
  */
 sdk_ret_t
 capri_impl::init_(asic_cfg_t *asic_cfg) {
+    asic_cfg_ = *asic_cfg;
+    if (asic_cfg->platform == platform_type_t::PLATFORM_TYPE_HW) {
+        catalog_ =
+            sdk::lib::catalog::factory(asic_cfg->cfg_path + "/catalog_hw.json");
+    } else if (asic_cfg->platform == platform_type_t::PLATFORM_TYPE_RTL) {
+        catalog_ =
+            sdk::lib::catalog::factory(asic_cfg->cfg_path + "/catalog_rtl.json");
+    } else if (asic_cfg->platform == platform_type_t::PLATFORM_TYPE_SIM) {
+        catalog_ =
+            sdk::lib::catalog::factory(asic_cfg->cfg_path + "/catalog.json");
+    }
+    if (catalog_ == NULL) {
+        return sdk::SDK_RET_ERR;
+    }
     return sdk::SDK_RET_OK;
 }
 
@@ -53,7 +70,14 @@ capri_impl::factory(asic_cfg_t *asic_cfg) {
  */
 sdk_ret_t
 capri_impl::asic_init(void) {
-    return sdk::SDK_RET_OK;
+    sdk::lib::pal_ret_t    pal_ret;
+    sdk_ret_t              ret;
+
+    pal_ret = sdk::lib::pal_init(asic_cfg_.platform);
+    SDK_ASSERT(pal_ret == sdk::lib::PAL_RET_OK);
+    ret = hal::pd::asic_init(&asic_cfg_);
+    SDK_ASSERT(ret == SDK_RET_OK);
+    return SDK_RET_OK;
 }
 
 /** @} */    // end of OCI_ASIC_IMPL

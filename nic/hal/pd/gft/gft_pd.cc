@@ -630,13 +630,9 @@ pd_gft_exact_match_flow_entry_create (pd_gft_exact_match_flow_entry_args_t *gft_
 hal_ret_t
 pd_asic_init (pd_func_args_t *pd_func_args)
 {
-    hal_ret_t ret = HAL_RET_OK;
     pd_asic_init_args_t *args = pd_func_args->pd_asic_init;
 
     args->cfg->pgm_name = std::string("gft");
-
-    ret = asic_hbm_parse(args->cfg);
-    HAL_ASSERT(ret == HAL_RET_OK);
 
     args->cfg->num_pgm_cfgs = 1;
     args->cfg->pgm_cfg[0].path = std::string("pgm_bin");
@@ -654,7 +650,7 @@ pd_asic_init (pd_func_args_t *pd_func_args)
     args->cfg->asm_cfg[1].sort_func = NULL;
     args->cfg->asm_cfg[1].base_addr = std::string(JP4PLUS_PRGM);
 
-    ret = asic_init(args->cfg);
+    asic_init(args->cfg);
 
     return HAL_RET_OK;
 }

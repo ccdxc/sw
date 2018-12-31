@@ -334,9 +334,6 @@ TEST_F(hello_test, test1) {
     ret = sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM);
     ASSERT_EQ(ret, HAL_RET_OK);
 
-    ret = asic_hbm_parse(&cfg);
-    HAL_ASSERT(ret == HAL_RET_OK);
-
     cfg.num_pgm_cfgs = 1;
     memset(cfg.pgm_cfg, 0, sizeof(cfg.pgm_cfg));
     cfg.pgm_cfg[0].path = std::string("p4_bin");
@@ -348,19 +345,19 @@ TEST_F(hello_test, test1) {
     cfg.asm_cfg[0].base_addr = std::string(JP4_PRGM);
 
     ret = hal::pd::asic_init(&cfg);
-    ASSERT_EQ(ret, HAL_RET_OK);
+    ASSERT_EQ(ret, SDK_RET_OK);
     ret = p4pd_init(&p4pd_cfg);
     ASSERT_EQ(ret, HAL_RET_OK);
     ret = hal::pd::asicpd_p4plus_table_mpu_base_init(&p4pd_cfg);
-    ASSERT_EQ(ret, HAL_RET_OK);
+    ASSERT_EQ(ret, SDK_RET_OK);
     ret = hal::pd::asicpd_table_mpu_base_init(&p4pd_cfg);
-    ASSERT_EQ(ret, HAL_RET_OK);
+    ASSERT_EQ(ret, SDK_RET_OK);
     ret = hal::pd::asicpd_program_table_mpu_pc();
-    ASSERT_EQ(ret, HAL_RET_OK);
+    ASSERT_EQ(ret, SDK_RET_OK);
     ret = hal::pd::asicpd_deparser_init();
-    ASSERT_EQ(ret, HAL_RET_OK);
+    ASSERT_EQ(ret, SDK_RET_OK);
     ret = hal::pd::asicpd_program_hbm_table_base_addr();
-    ASSERT_EQ(ret, HAL_RET_OK);
+    ASSERT_EQ(ret, SDK_RET_OK);
 
     config_done();
 

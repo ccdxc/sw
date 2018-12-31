@@ -10,11 +10,11 @@ namespace pd {
 //------------------------------------------------------------------------------
 // public API for saving cpu packet
 //------------------------------------------------------------------------------
-hal_ret_t
+sdk_ret_t
 asic_step_cpu_pkt (const uint8_t* pkt, size_t pkt_len)
 {
     pal_ret_t prc = sdk::lib::pal_step_cpu_pkt(pkt, pkt_len);
-    return IS_PAL_API_SUCCESS(prc) ? HAL_RET_OK : HAL_RET_ERR;
+    return IS_PAL_API_SUCCESS(prc) ? SDK_RET_OK : SDK_RET_ERR;
 }
 
 }    // namespace pd

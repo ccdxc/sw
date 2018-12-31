@@ -172,6 +172,7 @@ SDK_DEFINE_ENUM_TO_STR(sdk_ret_t, SDK_RET_ENTRIES)
 
 using sdk::sdk_ret_t;
 using sdk::SDK_RET_OK;
+using sdk::SDK_RET_ERR;
 
 #endif    // __SDK_BASE_HPP__
 
