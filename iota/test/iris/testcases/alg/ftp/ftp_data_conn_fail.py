@@ -68,7 +68,7 @@ def Trigger(tc):
     ## Add Naples command validation
     #sleep for tcp timeout
     #api.Trigger_AddCommand(req, naples.node_name, naples.workload_name,
-    #                       "halctl show session --alg ftp")
+    #                       "halctl show session --alg ftp | grep ESTABLISHED")
     #tc.cmd_cookies.append("show session")
     #api.Trigger_AddCommand(req, naples.node_name, naples.workload_name,
     #                       "halctl show security flow-gate")
@@ -101,14 +101,17 @@ def Verify(tc):
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):
             if (tc.cmd_cookies[cookie_idx].find("Before") != -1 or \
-               tc.cmd_cookies[cookie_idx].find("After") != -1):
+                tc.cmd_cookies[cookie_idx].find("Run") != -1 or \
+                tc.cmd_cookies[cookie_idx].find("After") != -1):
                 result = api.types.status.SUCCESS
             else:
                 result = api.types.status.FAILURE
-        #if ((tc.cmd_cookies[cookie_idx].find("Before") != -1 or \
-        #     tc.cmd_cookies[cookie_idx].find("After") != -1) and \
-        #     cmd.exit_code == 0):
-        #    result = api.types.status.FAILURE
+        if tc.cmd_cookies[cookie_idx].find("After") != -1 and \
+           cmd.exit_code == 0:
+           result = api.types.status.FAILURE 
+        if tc.cmd_cookies[cookie_idx].find("Run") != -1 and \
+           cmd.exit_code == 0:
+           result = api.types.status.FAILURE
         #Check if everything is cleaned up
         #if ((tc.cmd_cookies[cookie_idx].find("show session") != -1 or \
         #     tc.cmd_cookies[cookie_idx].find("show security flow gate") != -1) and \
