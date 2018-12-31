@@ -1,6 +1,7 @@
 #include "nic/include/base.hpp"
 #include "nic/hal/pd/capri/capri_config.hpp"
 #include "nic/include/asic_pd.hpp"
+#include "nic/sdk/asic/rw/asicrw.hpp"
 
 #include <stdint.h>
 #include <sys/types.h>
@@ -43,8 +44,8 @@ capri_load_config (char *config_dir)
         while ((readsz = read(fd, buff, sizeof(buff))) > 0) {
             nelems = readsz / sizeof(addr_data_t);
             for (int i = 0; i < nelems; i++) {
-                asic_reg_write(buff[i].addr, &buff[i].data, 1,
-                               hal::pd::ASIC_WRITE_MODE_BLOCKING);
+                sdk::asic::asic_reg_write(buff[i].addr, &buff[i].data, 1,
+                                          ASIC_WRITE_MODE_WRITE_THRU);
             }
         }
         rs = close(fd);
@@ -92,7 +93,7 @@ capri_verify_config (char *config_dir)
         while ((readsz = read(fd, buff, sizeof(buff))) > 0) {
             nelems = readsz / sizeof(addr_data_t);
             for (int i = 0; i < nelems; i++) {
-                hal::pd::asic_reg_read(buff[i].addr, &data, 1, true);
+                sdk::asic::asic_reg_read(buff[i].addr, &data, 1, true);
                 if (data != buff[i].data) {
                     HAL_TRACE_DEBUG("Reg config does not match addr {:#x} "
                                     "data {:#x} expected {:#x}",

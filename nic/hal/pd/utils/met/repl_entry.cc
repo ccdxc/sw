@@ -1,6 +1,8 @@
-#include "nic/hal/pd/utils/met/repl_entry.hpp"
+
 #include "nic/include/base.hpp"
+#include "nic/hal/pd/utils/met/repl_entry.hpp"
 #include "nic/include/asic_pd.hpp"
+#include "nic/sdk/asic/rw/asicrw.hpp"
 
 #define HAL_LOG_TBL_UPDATES
 
@@ -112,8 +114,8 @@ ReplEntryHw::read(uint32_t index)
 
     HAL_ASSERT(index < P4PD_REPL_TABLE_DEPTH);
 
-    hal::pd::asic_mem_read(capri_hbm_base + hbm_repl_table_offset + entry_offset,
-                           (uint8_t *)this, P4PD_REPL_ENTRY_WIDTH);
+    sdk::asic::asic_mem_read(capri_hbm_base + hbm_repl_table_offset + entry_offset,
+                             (uint8_t *)this, P4PD_REPL_ENTRY_WIDTH);
 
     if (get_last_entry() == 0) {
         set_next_ptr(get_next_ptr() - base_in_entry_units);
@@ -134,8 +136,8 @@ ReplEntryHw::write(uint32_t index)
         set_next_ptr(get_next_ptr() + base_in_entry_units);
     }
 
-    hal::pd::asic_mem_write(capri_hbm_base + hbm_repl_table_offset + entry_offset,
-                            (uint8_t *)this, P4PD_REPL_ENTRY_WIDTH);
+    sdk::asic::asic_mem_write(capri_hbm_base + hbm_repl_table_offset + entry_offset,
+                              (uint8_t *)this, P4PD_REPL_ENTRY_WIDTH);
 
     if (get_last_entry() == 0) {
         set_next_ptr(get_next_ptr() - base_in_entry_units);

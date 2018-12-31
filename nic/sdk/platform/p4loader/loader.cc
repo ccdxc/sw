@@ -13,6 +13,7 @@
 #include "include/sdk/platform/p4loader/loader.hpp"
 #include "nic/asic/capri/model/capsim-master/lib/libcapisa/include/libcapisa.h"
 #include "nic/asic/capri/model/capsim-master/lib/libmpuobj/include/libmpuobj.h"
+#include "nic/sdk/asic/rw/asicrw.hpp"
 #include "nic/include/asic_pd.hpp"
 
 namespace sdk {
@@ -180,7 +181,7 @@ p4_load_mpu_programs (const char *handle,
     p4_program_info_t *program_info;
     MpuSymbol *symbol, *param_u, *param_r;
     uint64_t val;
-    hal_ret_t rv;
+    sdk_ret_t rv;
     MpuSymbolTable global_labels;
 
     /* ISA library initialization */
@@ -382,10 +383,11 @@ p4_load_mpu_programs (const char *handle,
        }
 
        /* Write program to HBM */
-       rv = hal::pd::asic_mem_write(program_info[i].base_addr,
-                                    (uint8_t *) program_info[i].copy.text.data(),
-                                    program_info[i].size);
-       if (rv != HAL_RET_OK) {
+       rv = sdk::asic::asic_mem_write(program_info[i].base_addr,
+                                      (uint8_t *) program_info[i].copy.text.data(),
+                                      program_info[i].size,
+                                      ASIC_WRITE_MODE_WRITE_THRU);
+       if (rv != SDK_RET_OK) {
            SDK_TRACE_ERR("HBM program write failed");
            SDK_ASSERT_RETURN(0, SDK_RET_ERR);
        }

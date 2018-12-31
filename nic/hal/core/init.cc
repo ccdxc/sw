@@ -294,6 +294,7 @@ hal_main_thread_init (hal_cfg_t *hal_cfg)
     hal_thread->set_data(hal_thread);
     hal_thread->set_pthread_id(pthread_self());
     hal_thread->set_running(true);
+    SDK_THREAD_INIT(hal_thread);
 
     return HAL_RET_OK;
 }

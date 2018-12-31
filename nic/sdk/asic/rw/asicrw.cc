@@ -31,7 +31,6 @@ typedef struct asicrw_entry_ {
     uint64_t             addr;       // address to write to or read from
     uint32_t             len;        // length of data to read or write
     uint8_t              *data;      // data to write or buffer to copy data to for mem read/write
-    //asicrw_port_entry_t port_entry; // port data
 } asicrw_entry_t;
 
 //------------------------------------------------------------------------------
@@ -63,16 +62,12 @@ is_asicrw_ready (void)
 //       thread's context
 //------------------------------------------------------------------------------
 static sdk_ret_t
-asic_do_read (uint8_t opn, uint64_t addr, uint8_t *data, uint32_t len)
+asic_do_read (thread *curr_thread, uint8_t opn, uint64_t addr,
+              uint8_t *data, uint32_t len)
 {
     uint16_t          pindx;
     asicrw_entry_t    *rw_entry;
-    thread             *curr_thread = sdk::lib::thread::current_thread();
-    uint32_t           qid = 0;
-
-    if (curr_thread) {
-        qid = curr_thread->thread_id();
-    }
+    uint32_t          qid = curr_thread->thread_id();
 
     if (!data) {
         return SDK_RET_INVALID_ARG;
@@ -115,14 +110,16 @@ asic_reg_read (uint64_t addr, uint32_t *data, uint32_t num_words,
                bool read_thru)
 {
     sdk_ret_t    rc = SDK_RET_OK;
+    thread       *curr_thread = sdk::lib::thread::current_thread();
 
-    if (read_thru == true) {
+    if ((read_thru == true) || (g_asicrw_ready_ == false) ||
+        (curr_thread == NULL)) {
         // bypass asicrw thread
         pal_ret_t prc = sdk::lib::pal_reg_read(addr, data, num_words);
         rc = IS_PAL_API_SUCCESS(prc) ? SDK_RET_OK : SDK_RET_ERR;
     } else {
         // go thru asicrw thread
-        rc = asic_do_read(ASICRW_OP_REG_READ,
+        rc = asic_do_read(curr_thread, ASICRW_OP_REG_READ,
                           addr, (uint8_t *)data, num_words);
     }
 
@@ -140,15 +137,17 @@ asic_reg_read (uint64_t addr, uint32_t *data, uint32_t num_words,
 sdk_ret_t
 asic_mem_read (uint64_t addr, uint8_t *data, uint32_t len, bool read_thru)
 {
-    sdk_ret_t   rc = SDK_RET_OK;
+    sdk_ret_t    rc = SDK_RET_OK;
+    thread       *curr_thread = sdk::lib::thread::current_thread();
 
-    if (read_thru == true) {
+    if ((read_thru == true) || (g_asicrw_ready_ == false) ||
+        (curr_thread == NULL)) {
         // bypass asicrw thread
         pal_ret_t prc = sdk::lib::pal_mem_read(addr, data, len);
         rc = IS_PAL_API_SUCCESS(prc) ? SDK_RET_OK : SDK_RET_ERR;
     } else {
         // go thru asicrw thread
-        rc = asic_do_read(ASICRW_OP_MEM_READ, addr, data, len);
+        rc = asic_do_read(curr_thread, ASICRW_OP_MEM_READ, addr, data, len);
     }
 
     if (rc != SDK_RET_OK) {
@@ -163,18 +162,14 @@ asic_mem_read (uint64_t addr, uint8_t *data, uint32_t len, bool read_thru)
 // blocking and non-blocking writes
 //------------------------------------------------------------------------------
 static sdk_ret_t
-asic_do_write (uint8_t opn, uint64_t addr, uint8_t *data,
+asic_do_write (thread *curr_thread, uint8_t opn, uint64_t addr, uint8_t *data,
                uint32_t len, asic_write_mode_t mode)
 {
     sdk_ret_t          ret;
     uint16_t           pindx = 0;
-    sdk::lib::thread   *curr_thread = sdk::lib::thread::current_thread();
-    uint32_t           qid = 0;
     asicrw_entry_t     *rw_entry;
+    uint32_t           qid = curr_thread->thread_id();
 
-    if (curr_thread) {
-        qid = curr_thread->thread_id();
-    }
     if (g_asicrw_workq[qid].nentries >= ASICRW_Q_SIZE) {
         SDK_TRACE_ERR("asic write operation failed, qid %u, addr 0x%llx, "
                       "data %p, len %u", qid, addr, data, len);
@@ -196,7 +191,7 @@ asic_do_write (uint8_t opn, uint64_t addr, uint8_t *data,
 
     if (mode == ASIC_WRITE_MODE_BLOCKING) {
         while (SDK_ATOMIC_LOAD_BOOL(&rw_entry->done) == false) {
-            if (curr_thread->can_yield()) {
+            if (!curr_thread || curr_thread->can_yield()) {
                 pthread_yield();
             }
         }
@@ -218,16 +213,18 @@ asic_reg_write (uint64_t addr, uint32_t *data, uint32_t num_words,
                 asic_write_mode_t mode)
 {
     sdk_ret_t    rc = SDK_RET_OK;
+    thread       *curr_thread = sdk::lib::thread::current_thread();
 
     //SDK_TRACE_DEBUG("addr 0x%llx, data %p, len %u, mode %u",
                     //addr, data, num_words, mode);
-    if (mode == ASIC_WRITE_MODE_WRITE_THRU) {
+    if ((mode == ASIC_WRITE_MODE_WRITE_THRU) || (g_asicrw_ready_ == false) ||
+        (curr_thread == NULL)) {
         // bypass asicrw thread
         pal_ret_t prc = sdk::lib::pal_reg_write(addr, data, num_words);
         rc = IS_PAL_API_SUCCESS(prc) ? SDK_RET_OK : SDK_RET_ERR;
     } else {
         // go thru asicrw thread
-        rc = asic_do_write(ASICRW_OP_REG_WRITE,
+        rc = asic_do_write(curr_thread, ASICRW_OP_REG_WRITE,
                            addr, (uint8_t *)data, num_words, mode);
     }
     if (rc != SDK_RET_OK) {
@@ -246,17 +243,18 @@ asic_mem_write (uint64_t addr, uint8_t *data, uint32_t len,
                 asic_write_mode_t mode)
 {
     sdk_ret_t    rc = SDK_RET_OK;
+    thread       *curr_thread = sdk::lib::thread::current_thread();
 
     //SDK_TRACE_DEBUG("addr 0x%llx, data %p, len %u, mode %u",
                     //addr, data, len, mode);
-    if (mode == ASIC_WRITE_MODE_WRITE_THRU) {
-
+    if ((mode == ASIC_WRITE_MODE_WRITE_THRU) || (g_asicrw_ready_ == false) ||
+        (curr_thread == NULL)) {
         // bypass asicrw thread
         pal_ret_t prc = sdk::lib::pal_mem_write(addr, data, len);
         rc = IS_PAL_API_SUCCESS(prc) ? SDK_RET_OK : SDK_RET_ERR;
     } else {
         // go thru asicrw thread
-        rc = asic_do_write(ASICRW_OP_MEM_WRITE,
+        rc = asic_do_write(curr_thread, ASICRW_OP_MEM_WRITE,
                            addr, data, len, mode);
     }
     if (rc != SDK_RET_OK) {
@@ -274,15 +272,17 @@ sdk_ret_t
 asic_ring_doorbell (uint64_t addr, uint64_t data, asic_write_mode_t mode)
 {
     sdk_ret_t    rc = SDK_RET_OK;
+    thread       *curr_thread = sdk::lib::thread::current_thread();
 
     //SDK_TRACE_DEBUG("addr 0x%llx, data %llx, mode %u", addr, data, mode);
-    if (mode == ASIC_WRITE_MODE_WRITE_THRU) {
+    if ((mode == ASIC_WRITE_MODE_WRITE_THRU) || (g_asicrw_ready_ == false) ||
+        (curr_thread == NULL)) {
         // bypass asicrw thread
         pal_ret_t prc = sdk::lib::pal_ring_db64(addr, data);
         rc = IS_PAL_API_SUCCESS(prc) ? SDK_RET_OK : SDK_RET_ERR;
     } else {
         // go thru asicrw thread
-        rc = asic_do_write(ASICRW_OP_RING_DOORBELL,
+        rc = asic_do_write(curr_thread, ASICRW_OP_RING_DOORBELL,
                            addr, (uint8_t *)&data, sizeof(data), mode);
     }
     if (rc != SDK_RET_OK) {

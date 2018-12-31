@@ -16,6 +16,7 @@
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 #include "nic/hal/pd/asic_pd.hpp"
+#include "nic/sdk/asic/rw/asicrw.hpp"
 #include "nic/utils/pack_bytes/pack_bytes.hpp"
 #include "nic/hal/pd/globalpd/gpd_utils.hpp"
 #include "nic/p4/apollo/include/defines.h"
@@ -621,12 +622,12 @@ trie_mem_init(void) {
     memset(data, 0xFF, sizeof(data));
     uint64_t lpm_hbm_addr = get_start_offset(JLPMBASE);
     for (uint32_t i = 0; i < ROUTE_LPM_MEM_SIZE; i += sizeof(data)) {
-        hal::pd::asic_mem_write(lpm_hbm_addr+i, (uint8_t*)data, sizeof(data));
+        sdk::asic::asic_mem_write(lpm_hbm_addr+i, (uint8_t*)data, sizeof(data));
     }
 
     uint64_t slacl_hbm_addr = get_start_offset(JSLACLBASE);
     for (uint32_t i = 0; i < SLACL_LPM_MEM_SIZE; i += sizeof(data)) {
-        hal::pd::asic_mem_write(slacl_hbm_addr+i, (uint8_t*)data, sizeof(data));
+        sdk::asic::asic_mem_write(slacl_hbm_addr+i, (uint8_t*)data, sizeof(data));
     }
 }
 
@@ -639,7 +640,7 @@ route_init (void) {
     data = 0xFFFF;
     data |= ((uint64_t)htonl((g_layer1_dip & 0xFFFF0000))) << 16;
     data |= ((uint64_t)htons(g_nexthop_index)) << 48;
-    hal::pd::asic_mem_write(lpm_base_addr+offset, (uint8_t*)&data, sizeof(data));
+    sdk::asic::asic_mem_write(lpm_base_addr+offset, (uint8_t*)&data, sizeof(data));
 }
 
 static void
@@ -664,37 +665,37 @@ slacl_init (void) {
     data = 0xFFFF;
     data |= ((uint64_t)htonl((g_layer1_dip & 0xFFFF0000))) << 16;
     data |= ((uint64_t)htons(g_slacl_ip_class_id)) << 48;
-    hal::pd::asic_mem_write(slacl_ip_addr, (uint8_t*)&data, sizeof(data));
+    sdk::asic::asic_mem_write(slacl_ip_addr, (uint8_t*)&data, sizeof(data));
 
     data = -1;
     data &= ~((uint64_t)0xFFFF);
     data |= ((uint64_t)htons(g_slacl_sport_class_id));
-    hal::pd::asic_mem_write(slacl_sport_addr, (uint8_t*)&data, sizeof(data));
+    sdk::asic::asic_mem_write(slacl_sport_addr, (uint8_t*)&data, sizeof(data));
 
     data = -1;
     data &= ~(((uint64_t)0xFFFFFFFFFFULL) << 16);
     data |= ((uint64_t)htons(g_slacl_proto_dport_class_id)) << 40;
-    hal::pd::asic_mem_write(slacl_proto_dport_addr, (uint8_t*)&data, sizeof(data));
+    sdk::asic::asic_mem_write(slacl_proto_dport_addr, (uint8_t*)&data, sizeof(data));
 
     data = -1;
     data &= ~(((uint64_t)0xFFFFFFFFFFULL) << 16);
     data |= ((uint64_t)htons(g_slacl_proto_dport_class_id)) << 40;
-    hal::pd::asic_mem_write(slacl_proto_dport_addr, (uint8_t*)&data, sizeof(data));
+    sdk::asic::asic_mem_write(slacl_proto_dport_addr, (uint8_t*)&data, sizeof(data));
 
     start_bit =
         (((g_slacl_ip_class_id | (g_slacl_sport_class_id << 10)) % 51) * 10);
-    hal::pd::asic_mem_read(slacl_p1_addr, c_data, 64);
+    sdk::asic::asic_mem_read(slacl_p1_addr, c_data, 64);
     memrev(c_data, 64);
     hal::utils::pack_bytes_pack(c_data, start_bit, 10, g_slacl_p1_class_id);
     memrev(c_data, 64);
-    hal::pd::asic_mem_write(slacl_p1_addr, c_data, 64);
+    sdk::asic::asic_mem_write(slacl_p1_addr, c_data, 64);
 
     start_bit = (g_slacl_proto_dport_class_id << 1);
-    hal::pd::asic_mem_read(slacl_p2_addr, c_data, 64);
+    sdk::asic::asic_mem_read(slacl_p2_addr, c_data, 64);
     memrev(c_data, 64);
     hal::utils::pack_bytes_pack(c_data, start_bit, 2, 1);
     memrev(c_data, 64);
-    hal::pd::asic_mem_write(slacl_p2_addr, c_data, 64);
+    sdk::asic::asic_mem_write(slacl_p2_addr, c_data, 64);
 }
 
 class apollo_test : public ::testing::Test {
@@ -783,7 +784,7 @@ TEST_F(apollo_test, test1) {
     ret = sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM);
 #endif
 
-    SDK_ASSERT(hal::pd::asic_hbm_parse(&cfg) == sdk::SDK_RET_OK);
+    SDK_ASSERT(hal::pd::asic_hbm_parse(&cfg) == HAL_RET_OK);
     cfg.num_pgm_cfgs = 3;
     memset(cfg.pgm_cfg, 0, sizeof(cfg.pgm_cfg));
     cfg.pgm_cfg[0].path = std::string("p4_bin");

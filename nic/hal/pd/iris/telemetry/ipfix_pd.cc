@@ -200,7 +200,7 @@ ipfix_doorbell_ring_cb (void *timer, uint32_t timer_id, void *ctxt)
     data = (pid << DB_PID_SHFT) | (qid << DB_QID_SHFT) | (ring_id << DB_RING_SHFT) | p_index;
     HAL_TRACE_DEBUG("cpupkt: ringing Doorbell with addr: {:#x} data: {:#x}",
                     address, data);
-    hal::pd::asic_ring_doorbell(address, data);
+    sdk::asic::asic_ring_doorbell(address, data);
     return;
 }
 

@@ -9,7 +9,7 @@
 #include "nic/hal/svc/debug_svc.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/debug/debug.hpp"
-#include "nic/include/asic_pd.hpp"
+#include "nic/sdk/asic/rw/asicrw.hpp"
 #include "nic/linkmgr/linkmgr_debug.hpp"
 
 // TODO: we don't seem to be using these ??
@@ -41,7 +41,7 @@ DebugServiceImpl::RegisterGet(ServerContext *context,
         debug::RegisterResponse *rsp = rsp_msg->add_response();
         debug::RegisterData     *reg_data = rsp->mutable_data();
         if (req.id_name_or_addr_case() == debug::RegisterRequest::kAddr) {
-            hal::pd::asic_reg_read(req.addr(), &val, 1, true);
+            sdk::asic::asic_reg_read(req.addr(), &val, 1, true);
             reg_data->set_value(std::to_string(val));
             rsp->set_api_status(types::API_STATUS_OK);
         } else {
@@ -66,7 +66,7 @@ DebugServiceImpl::RegisterUpdate(ServerContext *context,
         debug::RegisterResponse *rsp = rsp_msg->add_response();
 
         if (req.id_name_or_addr_case() == debug::RegisterRequest::kAddr) {
-            hal::pd::asic_reg_write(req.addr(), &data);
+            sdk::asic::asic_reg_write(req.addr(), &data);
             rsp->set_api_status(types::API_STATUS_OK);
         } else if (req.id_name_or_addr_case() == debug::RegisterRequest::kRegId){
             hal::register_update(req, rsp);
@@ -179,14 +179,14 @@ DebugServiceImpl::MemoryUpdate(ServerContext *context,
     return Status::OK;
 }
 
+#define RAW_MEM_READ_MAX        1024
 Status
 DebugServiceImpl::MemoryRawGet(ServerContext *context,
                             const MemoryRawRequestMsg *req_msg,
                             MemoryRawResponseMsg *rsp_msg)
 {
-    hal_ret_t                               ret          = HAL_RET_OK;
-#define RAW_MEM_READ_MAX        1024
-    uint8_t                                 mem[RAW_MEM_READ_MAX];
+    sdk_ret_t    ret = SDK_RET_OK;
+    uint8_t      mem[RAW_MEM_READ_MAX];
 
     for (int i = 0; i < req_msg->request_size(); ++i) {
         debug::MemoryRawRequest req = req_msg->request(i);
@@ -198,8 +198,8 @@ DebugServiceImpl::MemoryRawGet(ServerContext *context,
             continue;
         }
 
-        ret = hal::pd::asic_mem_read(req.address(), mem, req.len());
-        if (ret != HAL_RET_OK) {
+        ret = sdk::asic::asic_mem_read(req.address(), mem, req.len());
+        if (ret != SDK_RET_OK) {
             HAL_TRACE_DEBUG("Raw read request (Addr:0x{:x}, Len:{}) failed",
                     req.address(), req.len());
             rsp->set_api_status(types::API_STATUS_HW_READ_ERROR);
@@ -218,17 +218,17 @@ DebugServiceImpl::MemoryRawUpdate(ServerContext *context,
                                const MemoryRawUpdateRequestMsg *req_msg,
                                MemoryRawUpdateResponseMsg *rsp_msg)
 {
-    hal_ret_t                          ret = HAL_RET_OK;
+    sdk_ret_t    ret = SDK_RET_OK;
 
     for (int i = 0; i < req_msg->request_size(); ++i) {
         debug::MemoryRawUpdateRequest req = req_msg->request(i);
         debug::MemoryRawUpdateResponse *rsp = rsp_msg->add_response();
 
-        ret = hal::pd::asic_mem_write(req.address(),
-                                      (uint8_t *)req.actiondata().c_str(),
-                                      req.len(),
-                                      hal::pd::ASIC_WRITE_MODE_BLOCKING);
-        if (ret != HAL_RET_OK) {
+        ret = sdk::asic::asic_mem_write(req.address(),
+                                        (uint8_t *)req.actiondata().c_str(),
+                                        req.len(),
+                                        ASIC_WRITE_MODE_BLOCKING);
+        if (ret != SDK_RET_OK) {
             HAL_TRACE_DEBUG("Raw write request (Addr:0x{:x}, Len:{}) failed",
                     req.address(), req.len());
             rsp->set_api_status(types::API_STATUS_HW_WRITE_ERROR);
@@ -246,7 +246,7 @@ DebugServiceImpl::MemTrackGet(ServerContext *context,
                               const MemTrackGetRequestMsg *req,
                               MemTrackGetResponseMsg *rsp)
 {
-    uint32_t               i, nreqs = req->request_size();
+    uint32_t    i, nreqs = req->request_size();
 
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");

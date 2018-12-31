@@ -171,6 +171,7 @@ SDK_DEFINE_ENUM_TO_STR(sdk_ret_t, SDK_RET_ENTRIES)
 }    // namespace sdk
 
 using sdk::sdk_ret_t;
+using sdk::SDK_RET_OK;
 
 #endif    // __SDK_BASE_HPP__
 

@@ -17,7 +17,7 @@
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/asic/capri/model/utils/cap_csr_py_if.h"
-
+#include "nic/sdk/asic/rw/asicrw.hpp"
 #include "nic/include/asic_pd.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
@@ -1580,8 +1580,8 @@ capri_hbm_table_entry_write (uint32_t tableid,
     assert(index < tbl_info.tabledepth);
     uint64_t entry_start_addr = (index * tbl_info.entry_width);
 
-    hal::pd::asic_mem_write(get_start_offset(tbl_info.tablename) + entry_start_addr,
-                            hwentry, (entry_size >> 3));
+    sdk::asic::asic_mem_write(get_start_offset(tbl_info.tablename) + entry_start_addr,
+                              hwentry, (entry_size >> 3));
     return CAPRI_OK;
 }
 
@@ -1618,8 +1618,8 @@ capri_hbm_table_entry_read (uint32_t tableid,
     assert(index < tbl_info.tabledepth);
     uint64_t entry_start_addr = (index * tbl_info.entry_width);
 
-    hal::pd::asic_mem_read(get_start_offset(tbl_info.tablename) + entry_start_addr,
-                           hwentry, tbl_info.entry_width);
+    sdk::asic::asic_mem_read(get_start_offset(tbl_info.tablename) + entry_start_addr,
+                             hwentry, tbl_info.entry_width);
     *entry_size = tbl_info.entry_width;
     return CAPRI_OK;
 }
@@ -1707,7 +1707,7 @@ capri_set_table_txdma_asm_base (int tableid,
 static void
 capri_debug_hbm_read (void)
 {
-    hal_ret_t ret = HAL_RET_OK;
+    sdk_ret_t ret = sdk::SDK_RET_OK;
     uint64_t start_addr = get_start_offset("mpu-debug");
     uint64_t count = (get_size_kb("mpu-debug") << 10) >> 3;
     uint64_t addr;
@@ -1716,8 +1716,8 @@ capri_debug_hbm_read (void)
     HAL_TRACE_DEBUG("------------------ READ HBM START -----------");
     for (uint64_t i = 0; i < count; i++) {
         addr = (start_addr + (i<<3)) & 0xffffffff8;
-        ret = hal::pd::asic_mem_read(addr, (uint8_t *)&data, sizeof(data));
-        if (ret != HAL_RET_OK) {
+        ret = sdk::asic::asic_mem_read(addr, (uint8_t *)&data, sizeof(data));
+        if (ret != sdk::SDK_RET_OK) {
             HAL_TRACE_DEBUG("ERROR reading {:#x} ret {} ", i, ret);
             continue;
         }
@@ -1731,7 +1731,7 @@ capri_debug_hbm_read (void)
 static void
 capri_debug_hbm_reset (void)
 {
-    hal_ret_t ret = HAL_RET_OK;
+    sdk_ret_t ret = sdk::SDK_RET_OK;
     uint64_t start_addr = get_start_offset("mpu-debug");
     uint64_t count = (get_size_kb("mpu-debug") << 10) >> 3;
     uint64_t addr;
@@ -1742,8 +1742,8 @@ capri_debug_hbm_reset (void)
     HAL_TRACE_DEBUG("------------------ RESET HBM START -----------");
     for (uint64_t i = 0; i < count; i++) {
         addr = (start_addr + (i<<3)) & 0xffffffff8;
-        ret = hal::pd::asic_mem_write(addr, (uint8_t *)&data, sizeof(data));
-        if (ret != HAL_RET_OK) {
+        ret = sdk::asic::asic_mem_write(addr, (uint8_t *)&data, sizeof(data));
+        if (ret != sdk::SDK_RET_OK) {
             HAL_TRACE_DEBUG("ERROR writing {:#x} ret {} ", i, ret);
             continue;
         }
@@ -1811,6 +1811,7 @@ asic_csr_list_get (string path, int level)
 extern void capri_tm_dump_debug_regs(void);
 extern void capri_tm_dump_config_regs(void);
 
+#if 0
 std::string
 hal::pd::asic_csr_dump (char *csr_str)
 {
@@ -1834,3 +1835,4 @@ hal::pd::asic_csr_dump (char *csr_str)
     }
     return val;
 }
+#endif

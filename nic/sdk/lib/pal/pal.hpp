@@ -240,5 +240,7 @@ pal_cpld_rev_old (void)
 }    // namespace lib
 }    // namespace sdk
 
+using sdk::lib::pal_ret_t;
+
 #endif // __PAL_HPP__
 
