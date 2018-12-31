@@ -78,7 +78,7 @@ void temp_sensor_test_usage(test_mode_e mode)
 #define MAX_LOCAL_TEMPERATURE_SUPPORTED      (85000)
 
 #define MIN_DIE_TEMPERATURE_SUPPORTED      (1000)
-#define MAX_DIE_TEMPERATURE_SUPPORTED      (85000)
+#define MAX_DIE_TEMPERATURE_SUPPORTED      (105000)
 
 
 
