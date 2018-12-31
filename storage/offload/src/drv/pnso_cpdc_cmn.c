@@ -583,6 +583,7 @@ cpdc_fill_per_block_desc(uint32_t algo_type, uint32_t block_size,
 		struct cpdc_status_desc *status_desc,
 		fill_desc_fn_t fill_desc_fn)
 {
+	pnso_error_t err;
 	struct cpdc_desc *pb_desc;
 	struct cpdc_status_desc *pb_status_desc;
 	struct cpdc_sgl *pb_sgl;
@@ -612,7 +613,7 @@ cpdc_fill_per_block_desc(uint32_t algo_type, uint32_t block_size,
 			       addr_len);
 	       pb_len = pb_sgl->cs_len_0;
 
-	if (iter && (pb_len < block_size)) {
+	       if (iter && (pb_len < block_size)) {
 		       iter = buffer_list_iter_addr_len_get(iter,
 				       block_size - pb_len, &addr_len);
 		       BUFFER_ADDR_LEN_SET(pb_sgl->cs_addr_1, pb_sgl->cs_len_1,
@@ -620,19 +621,21 @@ cpdc_fill_per_block_desc(uint32_t algo_type, uint32_t block_size,
 		       pb_len += pb_sgl->cs_len_1;
 		}
 
-	if (iter && (pb_len < block_size)) {
+	       if (iter && (pb_len < block_size)) {
 		       iter = buffer_list_iter_addr_len_get(iter,
 				       block_size - pb_len, &addr_len);
-		       BUFFER_ADDR_LEN_SET(pb_sgl->cs_addr_2,
-				       pb_sgl->cs_len_2, addr_len);
+		       BUFFER_ADDR_LEN_SET(pb_sgl->cs_addr_2, pb_sgl->cs_len_2,
+				       addr_len);
 		       pb_len += pb_sgl->cs_len_2;
-	}
+	       }
 
 	       total_len -= pb_len;
-	if (total_len && (pb_len < block_size)) {
-		       OSAL_LOG_ERROR("unable to hold a block size worth of data in one SGL");
-		goto out;
-	}
+	       if (total_len && (pb_len < block_size)) {
+		       err = EINVAL;
+		       OSAL_LOG_ERROR("unable to hold a block size worth of data in one SGL! block: %d total_len: %d pb_len: %d err: %d",
+				       i, total_len, pb_len, err);
+		       goto out;
+	       }
 
 	       fill_desc_fn(algo_type, pb_len, false, pb_sgl, pb_desc,
 			       pb_status_desc);
