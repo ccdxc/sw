@@ -38,14 +38,22 @@ public:
     virtual sdk_ret_t asic_init(void) override;
 
 private:
-    capri_impl() {}
+    capri_impl() {
+        catalog_ = NULL;
+    }
+
     ~capri_impl() {}
+
     /*
      * @brief    initialize an instance of capri impl class
      * @param[in] asic_cfg    asic information
      * @return    SDK_RET_OK on success, failure status code on error
      */
     sdk_ret_t init_(asic_cfg_t *asic_cfg);
+
+private:
+    sdk::lib::catalog    *catalog_;
+    asic_cfg_t           asic_cfg_;
 };
 
 }    // namespace impl

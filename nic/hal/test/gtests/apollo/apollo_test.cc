@@ -784,7 +784,6 @@ TEST_F(apollo_test, test1) {
     ret = sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM);
 #endif
 
-    SDK_ASSERT(hal::pd::asic_hbm_parse(&cfg) == HAL_RET_OK);
     cfg.num_pgm_cfgs = 3;
     memset(cfg.pgm_cfg, 0, sizeof(cfg.pgm_cfg));
     cfg.pgm_cfg[0].path = std::string("p4_bin");
@@ -806,7 +805,7 @@ TEST_F(apollo_test, test1) {
 
     printf("Doing asic init ...\n");
     ret = hal::pd::asic_init(&cfg);
-    ASSERT_EQ(ret, HAL_RET_OK);
+    ASSERT_EQ(ret, SDK_RET_OK);
     printf("Doing p4pd init ...\n");
     ret = p4pd_init(&p4pd_cfg);
     ASSERT_EQ(ret, HAL_RET_OK);
@@ -818,19 +817,19 @@ TEST_F(apollo_test, test1) {
     ASSERT_EQ(ret, HAL_RET_OK);
     printf("Doing p4+ mpu init ...\n");
     ret = hal::pd::asicpd_p4plus_table_mpu_base_init(&p4pd_cfg);
-    ASSERT_EQ(ret, HAL_RET_OK);
+    ASSERT_EQ(ret, SDK_RET_OK);
     printf("Doing p4 mpu init ...\n");
     ret = hal::pd::asicpd_table_mpu_base_init(&p4pd_cfg);
-    ASSERT_EQ(ret, HAL_RET_OK);
+    ASSERT_EQ(ret, SDK_RET_OK);
     printf("Programming mpu PC ...\n");
     ret = hal::pd::asicpd_program_table_mpu_pc();
-    ASSERT_EQ(ret, HAL_RET_OK);
+    ASSERT_EQ(ret, SDK_RET_OK);
     printf("Doing deparser init ...\n");
     ret = hal::pd::asicpd_deparser_init();
-    ASSERT_EQ(ret, HAL_RET_OK);
+    ASSERT_EQ(ret, SDK_RET_OK);
     printf("Programming HBM table base addresses ...\n");
     ret = hal::pd::asicpd_program_hbm_table_base_addr();
-    ASSERT_EQ(ret, HAL_RET_OK);
+    ASSERT_EQ(ret, SDK_RET_OK);
 
     trie_mem_init();
 

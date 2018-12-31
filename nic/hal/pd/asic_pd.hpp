@@ -17,11 +17,10 @@ typedef struct pd_asic_init_args_s {
 //------------------------------------------------------------------------------
 // public API for saving cpu packet.
 //------------------------------------------------------------------------------
-hal_ret_t asic_step_cpu_pkt(const uint8_t* pkt, size_t pkt_len);
+sdk_ret_t asic_step_cpu_pkt(const uint8_t* pkt, size_t pkt_len);
 
 // initialize the asic
-hal_ret_t asic_init(asic_cfg_t *asic_cfg);
-hal_ret_t asic_hbm_parse(asic_cfg_t *asic_cfg);
+sdk_ret_t asic_init(asic_cfg_t *asic_cfg);
 
 // check if the current thread is hal-control thread or not
 bool is_hal_ctrl_thread(void);

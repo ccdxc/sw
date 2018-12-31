@@ -11,14 +11,11 @@ namespace pd {
 hal_ret_t
 pd_asic_init (pd_func_args_t *pd_func_args)
 {
-    hal_ret_t ret = HAL_RET_OK;
-    pd_asic_init_args_t *args = pd_func_args->pd_asic_init;
+    sdk_ret_t              sdk_ret;
+    pd_asic_init_args_t    *args = pd_func_args->pd_asic_init;
 
     args->cfg->repl_entry_width = P4_REPL_ENTRY_WIDTH;
     args->cfg->pgm_name = std::string("iris");
-
-    ret = asic_hbm_parse(args->cfg);
-    HAL_ASSERT(ret == HAL_RET_OK);
 
     args->cfg->num_pgm_cfgs = 1;
     args->cfg->pgm_cfg[0].path = std::string("pgm_bin");
@@ -36,9 +33,9 @@ pd_asic_init (pd_func_args_t *pd_func_args)
     args->cfg->asm_cfg[1].sort_func = NULL;
     args->cfg->asm_cfg[1].base_addr = std::string(JP4PLUS_PRGM);
 
-    ret = asic_init(args->cfg);
+    sdk_ret = asic_init(args->cfg);
 
-    return ret;
+    return hal_sdk_ret_to_hal_ret(sdk_ret);
 }
 
 }    // namespace pd

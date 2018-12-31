@@ -507,24 +507,31 @@ capri_init (capri_cfg_t *cfg)
                             "Capri PRD init failure, err : {}", ret);
     hal::svc::set_hal_status(hal::HAL_STATUS_ASIC_INIT_DONE);
 
-    return ret;
+    return HAL_RET_OK;
+}
+
+namespace hal {
+namespace pd {
+
+static hal_ret_t
+asic_hbm_parse (asic_cfg_t *cfg)
+{
+    return hal_sdk_ret_to_hal_ret(capri_hbm_parse(cfg->cfg_path, cfg->pgm_name));
 }
 
 //------------------------------------------------------------------------------
 // perform all the CAPRI specific initialization
 //------------------------------------------------------------------------------
-hal_ret_t
-hal::pd::asic_hbm_parse (asic_cfg_t *cfg)
+sdk_ret_t
+asic_init (asic_cfg_t *cfg)
 {
-    return hal_sdk_ret_to_hal_ret(capri_hbm_parse(cfg->cfg_path, cfg->pgm_name));
-}
-
-hal_ret_t
-hal::pd::asic_init (asic_cfg_t *cfg)
-{
+    hal_ret_t      ret;
     capri_cfg_t    capri_cfg;
 
     HAL_ASSERT(cfg != NULL);
+    ret = asic_hbm_parse(cfg);
+    HAL_ASSERT(ret == HAL_RET_OK);
+
     capri_cfg.loader_info_file = cfg->loader_info_file;
     capri_cfg.default_config_dir = cfg->default_config_dir;
     capri_cfg.cfg_path = cfg->cfg_path;
@@ -549,5 +556,12 @@ hal::pd::asic_init (asic_cfg_t *cfg)
         capri_cfg.asm_cfg[i].sort_func =
             cfg->asm_cfg[i].sort_func;
     }
-    return capri_init(&capri_cfg);
+    ret = capri_init(&capri_cfg);
+    if (ret == HAL_RET_OK) {
+        return SDK_RET_OK;
+    }
+    return SDK_RET_ERR;
 }
+
+}    // namespace pd
+}    // namespace hal

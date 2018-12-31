@@ -96,22 +96,22 @@ uint8_t asicpd_get_action_id(uint32_t tableid, uint8_t actionpc);
 hal_ret_t asicpd_toeplitz_init(void);
 hal_ret_t asicpd_p4plus_table_init(hal::hal_cfg_t *hal_cfg);
 hal_ret_t asicpd_p4plus_recirc_init(void);
-hal_ret_t asicpd_program_table_mpu_pc(void);
+sdk_ret_t asicpd_program_table_mpu_pc(void);
 hal_ret_t asicpd_program_table_constant(uint32_t tableid,
                                         uint64_t const_value);
 hal_ret_t asicpd_program_table_thread_constant(uint32_t tableid,
                                                uint8_t table_thread,
                                                uint64_t const_value);
-hal_ret_t asicpd_table_mpu_base_init(p4pd_cfg_t *p4pd_cfg);
-hal_ret_t asicpd_deparser_init(void);
-hal_ret_t asicpd_program_hbm_table_base_addr(void);
+sdk_ret_t asicpd_table_mpu_base_init(p4pd_cfg_t *p4pd_cfg);
+sdk_ret_t asicpd_deparser_init(void);
+sdk_ret_t asicpd_program_hbm_table_base_addr(void);
 hal_ret_t asicpd_stats_addr_get (int tblid, uint32_t index,
                        asicpd_stats_region_info_t *region_arr, int arrlen,
                        hbm_addr_t *stats_addr_p);
 
 hal_ret_t asicpd_stats_region_init(asicpd_stats_region_info_t *region_arr,
                                    int arrlen);
-hal_ret_t asicpd_p4plus_table_mpu_base_init(p4pd_cfg_t *p4pd_cfg);
+sdk_ret_t asicpd_p4plus_table_mpu_base_init(p4pd_cfg_t *p4pd_cfg);
 
 
 hal_ret_t asicpd_sw_phv_inject(asicpd_swphv_type_t type, uint8_t prof_num, 

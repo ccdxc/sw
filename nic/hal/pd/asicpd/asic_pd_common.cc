@@ -1,5 +1,6 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
+#include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/include/sdk/thread.hpp"
 #include "nic/hal/pd/asic_pd.hpp"
 #include "nic/sdk/include/sdk/pal.hpp"
@@ -346,7 +347,7 @@ asicpd_p4plus_recirc_init (void)
     return HAL_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 asicpd_program_table_mpu_pc (void)
 {
     p4pd_table_properties_t       tbl_ctx;
@@ -376,7 +377,7 @@ asicpd_program_table_mpu_pc (void)
             }
         }
     }
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
 hal_ret_t
@@ -411,10 +412,10 @@ asicpd_program_table_thread_constant (uint32_t tableid, uint8_t table_thread_id,
     return HAL_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 asicpd_p4plus_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
 {
-    int ret = HAL_RET_OK;
+    sdk_ret_t ret = SDK_RET_OK;
     char action_name[P4ACTION_NAME_MAX_LEN] = {0};
     char progname[P4ACTION_NAME_MAX_LEN] = {0};
     uint64_t capri_action_rxdma_asm_base;
@@ -428,9 +429,9 @@ asicpd_p4plus_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
         snprintf(progname, P4ACTION_NAME_MAX_LEN, "%s%s",
                  p4pd_rxdma_tbl_names[i], ".bin");
         ret = sdk::platform::p4_program_to_base_addr(p4pd_cfg->p4pd_rxdma_pgm_name,
-                                         progname,
-                                         &capri_table_rxdma_asm_base);
-        if (ret != 0) {
+                                                     progname,
+                                                     &capri_table_rxdma_asm_base);
+        if (ret != SDK_RET_OK) {
             continue;
         }
         capri_set_table_rxdma_asm_base(i, capri_table_rxdma_asm_base);
@@ -453,9 +454,9 @@ asicpd_p4plus_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
         snprintf(progname, P4ACTION_NAME_MAX_LEN, "%s%s",
                  p4pd_txdma_tbl_names[i], ".bin");
         ret = sdk::platform::p4_program_to_base_addr(p4pd_cfg->p4pd_txdma_pgm_name,
-                                         progname,
-                                         &capri_table_txdma_asm_base);
-        if (ret != 0) {
+                                                     progname,
+                                                     &capri_table_txdma_asm_base);
+        if (ret != SDK_RET_OK) {
             continue;
         }
         capri_set_table_txdma_asm_base(i, capri_table_txdma_asm_base);
@@ -489,10 +490,10 @@ asicpd_p4plus_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
                                                tbl_info.stage_tableid,
                                                tbl_info.stage);
     }
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 asicpd_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
 {
     char        action_name[P4ACTION_NAME_MAX_LEN] = {0};
@@ -528,17 +529,17 @@ asicpd_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
         HAL_TRACE_DEBUG("Program-Name {}, Action-Name {}, Action-Pc {:#x}",
                         progname, action_name, capri_table_asm_err_offset[i]);
     }
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 asicpd_deparser_init (void)
 {
     capri_deparser_init(TM_PORT_INGRESS, TM_PORT_EGRESS);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 asicpd_program_hbm_table_base_addr (void)
 {
     p4pd_table_properties_t       tbl_ctx;
@@ -587,7 +588,7 @@ asicpd_program_hbm_table_base_addr (void)
                                           tbl_ctx.stage, P4_PIPELINE_TXDMA);
     }
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
 hal_ret_t

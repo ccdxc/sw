@@ -1134,7 +1134,7 @@ pd_mem_init_phase2 (pd_func_args_t *pd_func_args)
     ph2_args = pd_func_args->pd_mem_init_phase2;
     hal_cfg = ph2_args->hal_cfg;
 
-    HAL_ASSERT(asicpd_p4plus_table_mpu_base_init(&p4pd_cfg) == HAL_RET_OK);
+    HAL_ASSERT(asicpd_p4plus_table_mpu_base_init(&p4pd_cfg) == SDK_RET_OK);
     HAL_ASSERT(asicpd_stats_region_init(g_stats_region_arr,
                                         g_stats_region_arrlen) == HAL_RET_OK);
     HAL_ASSERT(hal_pd_lif_stats_region_init() == HAL_RET_OK);
@@ -1142,10 +1142,10 @@ pd_mem_init_phase2 (pd_func_args_t *pd_func_args)
     HAL_ASSERT(asicpd_p4plus_table_init(hal_cfg) == HAL_RET_OK);
     HAL_ASSERT(asicpd_p4plus_recirc_init() == HAL_RET_OK);
     // Following routines must be called after capri asic init
-    HAL_ASSERT(asicpd_table_mpu_base_init(&p4pd_cfg) == HAL_RET_OK);
-    HAL_ASSERT(asicpd_program_table_mpu_pc() == HAL_RET_OK);
-    HAL_ASSERT(asicpd_deparser_init() == HAL_RET_OK);
-    HAL_ASSERT(asicpd_program_hbm_table_base_addr() == HAL_RET_OK);
+    HAL_ASSERT(asicpd_table_mpu_base_init(&p4pd_cfg) == SDK_RET_OK);
+    HAL_ASSERT(asicpd_program_table_mpu_pc() == SDK_RET_OK);
+    HAL_ASSERT(asicpd_deparser_init() == SDK_RET_OK);
+    HAL_ASSERT(asicpd_program_hbm_table_base_addr() == SDK_RET_OK);
     hal::svc::set_hal_status(hal::HAL_STATUS_MEM_INIT_DONE);
 
     return HAL_RET_OK;
