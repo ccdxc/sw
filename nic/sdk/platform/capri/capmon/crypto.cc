@@ -18,7 +18,7 @@
 #include "cap_mpns_c_hdr.h"
 #include "cap_top_csr_defines.h"
 
-#include "platform/src/lib/pal/include/pal.h"
+#include "platform/pal/include/pal.h"
 #include "capmon.hpp"
 
 const char *offloadname[9] = {"GCM0", "GCM1", "XTS", "XTS_ENC", "HE",
