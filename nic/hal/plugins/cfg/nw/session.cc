@@ -1713,14 +1713,18 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
     // If there is no timeout configured then we do not age the session
     session_timeout = session_aging_timeout(session, iflow, rflow);
     if (!session_timeout) {
-        //HAL_TRACE_DEBUG("Session timeout is not configured");
+#if SESSION_AGE_DEBUG
+        HAL_TRACE_DEBUG("Session timeout is not configured");
+#endif
         return retval;
     }
 
     // Check initiator flow. Check for session state as we dont want to age half-closed
     // connections if half-closed timeout is disabled.
-    //HAL_TRACE_DEBUG("session_age_cb: last pkt ts: {} ctime_ns: {} session_timeout: {}",
-    //                session_state.iflow_state.last_pkt_ts, ctime_ns, session_timeout);
+#if SESSION_AGE_DEBUG
+    HAL_TRACE_DEBUG("session_age_cb: last pkt ts: {} ctime_ns: {} session_timeout: {}",
+                    session_state.iflow_state.last_pkt_ts, ctime_ns, session_timeout);
+#endif
     if ((tcp_session && (session_state.iflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED) &&
         TIME_DIFF(ctime_ns, session_state.iflow_state.last_pkt_ts) >= session_timeout) ||
         (TIME_DIFF(ctime_ns, session_state.iflow_state.last_pkt_ts) >= session_timeout)) {
@@ -1743,7 +1747,10 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
     }
 
    *session_state_p = session_state;
-   //HAL_TRACE_DEBUG("Session Aged: {}", retval);
+
+#if SESSION_AGE_DEBUG
+   HAL_TRACE_DEBUG("Session Aged: {}", retval);
+#endif
 
    return retval;
 }
@@ -1976,15 +1983,19 @@ session_age_cb (void *entry, void *ctxt)
     if (session->iflow->config.key.proto == IPPROTO_TCP &&
         session->conn_track_en &&
         session->tcp_cxntrack_timer != NULL) {
+#if SESSION_AGE_DEBUG 
         HAL_TRACE_DEBUG("Session connection tracking timer is on for {} -- bailing aging",
                         session->hal_handle);
+#endif
         return false;
     }
 
 
     retval = hal_has_session_aged(session, args->ctime_ns, &session_state);
     if (retval != SESSION_AGED_NONE) {
-	//HAL_TRACE_DEBUG("Aged session: {}", session->iflow->config.key);
+#if SESSION_AGE_DEBUG
+	    HAL_TRACE_DEBUG("Aged session: {}", session->iflow->config.key);
+#endif
         /*
          *  Send out TCP tickle if it is a TCP session and start a timer for 2
          *  seconds. We send 3 tickles (keepalives) before we send out TCP RST
@@ -2027,10 +2038,11 @@ session_age_cb (void *entry, void *ctxt)
             if (session->rflow != NULL && retval != SESSION_AGED_BOTH) {
                 return false;
             }
-
-            //HAL_TRACE_DEBUG("UDP Session: {} num_del_sess: {} session_list: {:p}",
-            //         session->hal_handle, args->num_del_sess[session->fte_id],
-            //         (void *)args->session_list[session->fte_id]);
+#if SESSION_AGE_DEBUG
+            HAL_TRACE_DEBUG("UDP Session: {} num_del_sess: {} session_list: {:p}",
+                    session->hal_handle, args->num_del_sess[session->fte_id],
+                    (void *)args->session_list[session->fte_id]);
+#endif
             // time to clean up the session, add handle to session list
             args->session_list[session->fte_id][args->num_del_sess[session->fte_id]++] = \
                                                                  session->hal_handle;
@@ -2040,8 +2052,10 @@ session_age_cb (void *entry, void *ctxt)
                                     process_hal_periodic_sess_delete,
                                     (void *)args->session_list[session->fte_id]);
                 HAL_ASSERT(ret == HAL_RET_OK);
-                //HAL_TRACE_DEBUG("Enqueued session_list: {:p}",
-                //                (void *)args->session_list[session->fte_id]);
+#if SESSION_AGE_DEBUG
+                HAL_TRACE_DEBUG("Enqueued session_list: {:p}",
+                                (void *)args->session_list[session->fte_id]);
+#endif
 
                 args->session_list[session->fte_id] = (hal_handle_t *)HAL_CALLOC(
                                  HAL_MEM_ALLOC_SESS_HANDLE_LIST_PER_FTE,
@@ -2069,6 +2083,9 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
     uint32_t              num_sessions = 0, bucket_no = 0;
 
     session_age_cb_args_t args;
+#if SESSION_AGE_DEBUG
+    HAL_TRACE_DEBUG("session age walk cb");
+#endif
 
     // We dont have any sessions yet - bail
     if (!g_hal_state->session_hal_handle_ht()->num_entries())
@@ -2109,8 +2126,9 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
     // get current time
     clock_gettime(CLOCK_MONOTONIC, &ctime);
     sdk::timestamp_to_nsecs(&ctime, &args.ctime_ns);
-
-    //HAL_TRACE_DEBUG("Entering timer id {}, bucket: {}", timer_id,  bucket);
+#if SESSION_AGE_DEBUG
+    HAL_TRACE_DEBUG("Entering timer id {}, bucket: {}", timer_id,  bucket);
+#endif
     while (num_sessions < HAL_SESSIONS_TO_SCAN_PER_INTVL &&
            bucket_no < g_hal_state->session_hal_handle_ht()->num_buckets()) {
         g_hal_state->session_hal_handle_ht()->walk_bucket_safe(bucket,
@@ -2118,7 +2136,9 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
         bucket_no++;
         bucket = (bucket + 1)%g_hal_state->session_hal_handle_ht()->num_buckets();
     }
-    //HAL_TRACE_DEBUG("Num sessions: {} bucket {} buckets {}", num_sessions, bucket, bucket_no); 
+#if SESSION_AGE_DEBUG
+    HAL_TRACE_DEBUG("Num sessions: {} bucket {} buckets {}", num_sessions, bucket, bucket_no); 
+#endif
 
     //Check if there are pending requests that need to be queued to FTE threads
     for (fte_id=0; fte_id<HAL_MAX_DATA_THREAD; fte_id++) {
