@@ -9,7 +9,6 @@
 
 #define MAX_DNS_DOMAINNAME_LEN 256
 #define MAX_DNS_LABEL_LEN      63
-#define DNS_ALG_SESS_TIMER_ID  0x1FF
 #define DNS_ALG_RFLOW_TIMEOUT  (30 * TIME_MSECS_PER_MIN) // 30 mins
 #define DNS_HEADER_LENGTH      12 // bytes
 #define DNS_OPCODE_SHIFT       3

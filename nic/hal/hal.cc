@@ -252,10 +252,13 @@ hal_init (hal_cfg_t *hal_cfg)
     HAL_TRACE_DEBUG("Spawned all HAL threads");
 
     // do platform dependent clock delta computation initialization
-    ret = pd::hal_pd_clock_delta_comp_init(hal_cfg);
-    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+    if ((hal_cfg->forwarding_mode != HAL_FORWARDING_MODE_CLASSIC) &&
+        (hal_cfg->features != HAL_FEATURE_SET_GFT)) {
+         ret = pd::hal_pd_clock_delta_comp_init(hal_cfg);
+         HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
                             "Clock delta computation initialization failure");
-    HAL_TRACE_DEBUG("Platform clock delta computation init done");
+         HAL_TRACE_DEBUG("Platform clock delta computation init done");
+    }
 
     // do rdma init
     ret = rdma_hal_init();

@@ -16,8 +16,6 @@ namespace pd {
 thread_local void *t_clock_delta_timer = NULL;
 thread_local void *t_clock_rollover_timer = NULL;
 
-#define HAL_TIMER_ID_CLOCK_SYNC            0
-#define HAL_TIMER_ID_CLOCK_ROLLOVER        1
 #define HAL_TIMER_ID_CLOCK_SYNC_INTVL     (60 * TIME_MSECS_PER_MIN)
 #define HAL_TIMER_ID_CLOCK_SYNC_INTVL_NS  (HAL_TIMER_ID_CLOCK_SYNC_INTVL * TIME_NSECS_PER_MSEC)
 #define HW_CLOCK_TICK_TO_NS(x)         (x * 1.200) //based on frequency of 833 MHz
