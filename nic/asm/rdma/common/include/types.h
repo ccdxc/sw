@@ -203,16 +203,16 @@ struct rdma_atomiceth_t {
     ((AETH_CODE_RNR << AETH_SYNDROME_CODE_SHIFT) | (_t))
 
 //TODO perform log(credits) * 2 
-#define RQ_CREDITS_GET(_credits, _tmp, _tmp_c) \
-    add             _tmp, r0, d.log_num_wqes; \
-    sllv            _tmp, 1, _tmp; \
-    add             _credits, PROXY_RQ_P_INDEX, _tmp; \
-    sub             _credits, _credits, PROXY_RQ_C_INDEX; \
+#define RQ_CREDITS_GET(_credits, _tmp1, _tmp2, _tmp_c) \
+    sub             _credits, PROXY_RQ_P_INDEX, PROXY_RQ_C_INDEX; \
     mincr           _credits, d.log_num_wqes, 0; \
-    seq             _tmp_c, _credits, r0; \
-    clz.!_tmp_c     _credits, _credits; \
-    sub.!_tmp_c     _credits, 63, _credits; \
-    sll.!_tmp_c     _credits, _credits, 1;
+    sle             _tmp_c, _credits, 1; \
+    clz.!_tmp_c     _tmp1, _credits; \
+    sub.!_tmp_c     _tmp1, 63, _tmp1; \
+    sub.!_tmp_c     _tmp2, _tmp1, 1; \
+    srl.!_tmp_c     _tmp2, _credits, _tmp2; \
+    sll.!_tmp_c     _credits, _tmp1, 1; \
+    add.!_tmp_c     _credits, _credits, _tmp2[0];
 
 struct rdma_cnp_rsvd_t {
     rsvd        : 128;

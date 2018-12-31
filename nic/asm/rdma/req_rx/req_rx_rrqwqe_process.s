@@ -337,6 +337,11 @@ implicit_nak:
     DMA_CMD_STATIC_BASE_GET_C(r3, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_SKIP_TO_EOP, c1)
     DMA_SKIP_CMD_SETUP_C(r3, 0 /* CMD_EOP */, 1 /* SKIP_TO_EOP */, c1)
 
+    // If its implicit nak, bktrack dma cmd will have end_of_cmd so unset end_of_cmd for
+    // lsn_or_rexmit_psn cmd
+    DMA_CMD_STATIC_BASE_GET(r3, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_LSN_OR_REXMIT_PSN)
+    DMA_UNSET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, r3)
+
     CAPRI_SET_TABLE_0_VALID(0)
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_sqcb1_write_back_process, r0)
 

@@ -169,7 +169,7 @@ packets:
                 destqp  : ref://testcase/config/rdmasession/rqp/id
                 psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0
             aeth:
-                syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
+                syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=1
                 msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=1
             atomic_acketh:
                 orig_remdt : callback://rdma/rdma/GetAtomicData/pktid=ORIG_DATA

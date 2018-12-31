@@ -173,7 +173,7 @@ packets:
                 destqp  : ref://testcase/config/rdmasession/rqp/id
                 psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0  #Resp should carry PSN from Req
             aeth:
-                syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
+                syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=1
                 msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=1
             payload:
                 data    : ref://testcase/packets/id=READ_RSP_PKT_PYLD/rawbytes

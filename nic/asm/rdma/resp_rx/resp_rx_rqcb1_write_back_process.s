@@ -15,6 +15,8 @@ struct rqcb1_t d;
 #define DMA_CMD_BASE r1
 #define GLOBAL_FLAGS r2
 #define TMP r3
+#define TMP1 r3
+#define TMP2 r5
 #define DB_ADDR r4
 #define DB_DATA r5
 #define RQCB2_ADDR r6
@@ -144,7 +146,7 @@ check_ack_nak:
     // bt_info are in a union 
     bcf         [!c3 & c4 & c2], invoke_stats
     // populate ack info
-    RQ_CREDITS_GET(ACK_CREDITS, TMP, c2) // BD Slot
+    RQ_CREDITS_GET(ACK_CREDITS, TMP1, TMP2, c2) // BD Slot
     phvwrpair   p.s1.ack_info.msn, d.msn, \
                 p.s1.ack_info.credits, ACK_CREDITS
                 

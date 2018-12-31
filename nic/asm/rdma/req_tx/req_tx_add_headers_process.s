@@ -498,7 +498,7 @@ rrq_p_index_chk:
     DMA_HBM_PHV2MEM_SETUP(r6, rrq_p_index, rrq_p_index, r3)
 
 local_ack_timer:
-    // Skip timer logic if not last/only or read/atomic requests
+    // Skip timer logic if not (last/only or read/atomic or ack_req set)
     bcf            [!c1 & !c7 & !c5], load_hdr_template
     tblwr.c5       d.need_credits, 1 // Branch Delay Slot
 

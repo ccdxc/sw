@@ -190,7 +190,7 @@ packets:
                 destqp  : ref://testcase/config/rdmasession/rqp/id
                 psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0  #Resp should carry PSN from Req
             aeth:
-                syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
+                syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=1
                 msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=1
             payload:
                 data    : ref://testcase/packets/id=READ_RESP_FIRST_PYLD/rawbytes
@@ -260,7 +260,7 @@ packets:
                 destqp  : ref://testcase/config/rdmasession/rqp/id
                 psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=2  #Resp should carry PSN from Req + 2
             aeth:
-                syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
+                syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=1
                 msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=1
             payload:
                 data    : ref://testcase/packets/id=READ_RESP_LAST_PYLD/rawbytes

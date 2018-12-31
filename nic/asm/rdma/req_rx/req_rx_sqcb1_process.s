@@ -259,8 +259,8 @@ post_lsn_to_ack_timestamp:
     phvwr          p.lsn, r2
 
     // if its unsolicited ack with valid credits, just post credits and exit
-    // As CQ posting is not needed, set cmdeop in credits DMA cmd
-    DMA_SET_END_OF_CMDS_C(DMA_CMD_PHV2MEM_T, r6, c3)
+    // unset end_of_cmd if later in write_back completion is posted
+    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, r6)
 
     b              set_arg
     // If its valid ack with credits, post credits, ack_timestamp

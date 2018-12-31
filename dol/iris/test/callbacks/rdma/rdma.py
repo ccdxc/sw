@@ -218,12 +218,14 @@ def GetAckSyndrome(tc, pkt, args):
     # 3 bits for ACK: 000
     # 5 bits for lsn(ciredits) = log2(rqwqes) * 2 . If no RQWQEs posted, set credits to zero: 00000
     credits = 0
-    if (args.rqwqes == 0):
-        credits = 0
+    if (args.rqwqes == 0 or args.rqwqes == 1):
+        credits = args.rqwqes
     else:
-        #credits = int(math.log(args.rqwqes, 2) + 1) * 2
-        credits = MSB(args.rqwqes) * 2
-    syndrome = ((0 << 5) | credits)
+        tmp1 = int(math.log(args.rqwqes, 2))
+        tmp2 = tmp1 - 1
+        tmp2 = (args.rqwqes >> tmp2)
+        credits = (tmp1 << 1) + (tmp2 & 0x1)
+    syndrome = (credits & 0x1F)
     return syndrome
 
 def GetNakSyndrome(tc, pkt, args):

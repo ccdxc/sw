@@ -84,6 +84,7 @@ post_cq:
     // implicit NAK, or rnr_retry_count upon rnr timer expiry
     DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_LSN_OR_REXMIT_PSN) // Branch Delay Slot
     DMA_HBM_PHV2MEM_PHV_END_SETUP(r6, rnr_timeout)
+    DMA_UNSET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, r6)
 
     // In case of RNR, end-of-cmd will always be set for  REQ_RX_DMA_CMD_RNR_TIMEOUT. Unset it here since CQE DMA will have it.
     DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_RNR_TIMEOUT) 

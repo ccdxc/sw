@@ -1127,6 +1127,8 @@ addi.e   _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PE
 #define DMA_UNSET_END_OF_CMDS(_cmd_t, _base_r)                                  \
     phvwrp     _base_r, offsetof(_cmd_t, cmdeop), sizeof(_cmd_t.cmdeop), 0
 
+#define DMA_UNSET_END_OF_CMDS_C(_cmd_t, _base_r, _cf)                           \
+    phvwrp._cf _base_r, offsetof(_cmd_t, cmdeop), sizeof(_cmd_t.cmdeop), 0
 
 #define DB_ADDR_BASE           0x8800000
 
