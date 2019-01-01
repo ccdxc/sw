@@ -1932,7 +1932,6 @@ Eth::_CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data)
     return (DEVCMD_SUCCESS);
 }
 
-
 enum DevcmdStatus
 Eth::_CmdMacAddrGet(void *req, void *req_data, void *resp, void *resp_data)
 {
@@ -1968,7 +1967,7 @@ Eth::_CmdStatsDumpStart(void *req, void *req_data, void *resp, void *resp_data)
     MEM_SET(stats_mem_addr, 0, LIF_STATS_SIZE, 0);
 
     Eth::StatsUpdate(this);
-    evutil_timer_start(&stats_timer, &Eth::StatsUpdate, this, 1, 1);
+    evutil_timer_start(&stats_timer, &Eth::StatsUpdate, this, 0.2, 0.2);
 
     return (DEVCMD_SUCCESS);
 }
