@@ -1,8 +1,8 @@
 meta:
     name    : penctl
     os      : [ linux, freebsd ]
-    nics    : [ pensando, mellanox ]
-    targetcount : 120 
+    nics    : [ pensando, mellanox, intel ]
+    targetcount : 120
 
 testcases:
     -   name: ACCEL_METRICS
@@ -48,6 +48,9 @@ testcases:
     -   name    : CHECK_TECH_SUPPORT
         ignore  : True
         testcase: testcases.penctl.techsupport
+
+    -   name    : CHECK_TECH_SUPPORT_COLL
+        testcase: testcases.penctl.techsupport_coll
 
     -   name    : CHECK_MODE
         testcase: testcases.penctl.mode
