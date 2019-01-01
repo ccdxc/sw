@@ -44,7 +44,7 @@ api_engine::update_tables(void) {
              * marked as dirty
              */
             ret = api_ctxt.new_obj->program_config(&api_ctxt);
-            SDK_ASSERT_RETURN((ret == sdk::SDK_RET_OK), ret);
+            SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
             break;
 
         case API_OP_DELETE:
@@ -59,7 +59,7 @@ api_engine::update_tables(void) {
              *       until then the h/w entries can't be used)
              */
             ret = api_ctxt.curr_obj->cleanup_config(&api_ctxt);
-            SDK_ASSERT_RETURN((ret == sdk::SDK_RET_OK), ret);
+            SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
             break;
 
         case API_OP_UPDATE:
@@ -73,14 +73,14 @@ api_engine::update_tables(void) {
              *       object should be freed back)
              */
             ret = api_ctxt.new_obj->update_config(&api_ctxt);
-            SDK_ASSERT_RETURN((ret == sdk::SDK_RET_OK), ret);
+            SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
             break;
 
         default:
             return sdk::SDK_RET_INVALID_OP;
         }
     }
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**
@@ -106,7 +106,7 @@ api_engine::activate_config(void) {
              * programming and clear the dirty flag on the object
              */
             ret = api_ctxt.new_obj->activate_config(API_OP_CREATE, &api_ctxt);
-            SDK_ASSERT(ret == sdk::SDK_RET_OK);
+            SDK_ASSERT(ret == SDK_RET_OK);
             api_ctxt.new_obj->clear_dirty();
             break;
 
@@ -122,7 +122,7 @@ api_engine::activate_config(void) {
              *  onwards by doing lookups)
              */
             ret = api_ctxt.curr_obj->activate_config(API_OP_DELETE, &api_ctxt);
-            SDK_ASSERT(ret == sdk::SDK_RET_OK);
+            SDK_ASSERT(ret == SDK_RET_OK);
             api_ctxt.curr_obj->del_from_db();
             api_ctxt.curr_obj->delay_delete();
             break;
@@ -135,9 +135,9 @@ api_engine::activate_config(void) {
              * come to FTEs with new epoch even before s/w swich is done
              */
             ret = api_ctxt.new_obj->update_db(api_ctxt.curr_obj, &api_ctxt);
-            SDK_ASSERT(ret == sdk::SDK_RET_OK);
+            SDK_ASSERT(ret == SDK_RET_OK);
             ret = api_ctxt.new_obj->activate_config(API_OP_UPDATE, &api_ctxt);
-            SDK_ASSERT(ret == sdk::SDK_RET_OK);
+            SDK_ASSERT(ret == SDK_RET_OK);
             /**< enqueue the current (i.e., old) object for delay deletion */
             api_ctxt.curr_obj->delay_delete();
             break;
@@ -146,7 +146,7 @@ api_engine::activate_config(void) {
             return sdk::SDK_RET_INVALID_OP;
         }
     }
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 #endif
 
@@ -164,7 +164,7 @@ api_engine::api_op_(api_op_t old_op, api_op_t new_op) {
  */
 sdk_ret_t
 api_engine::pre_process_api_(api_ctxt_t *api_ctxt) {
-    sdk_ret_t       ret = sdk::SDK_RET_OK;
+    sdk_ret_t       ret = SDK_RET_OK;
     obj_ctxt_t      obj_ctxt;
     api_base        *api_obj;
 
@@ -186,7 +186,7 @@ api_engine::pre_process_api_(api_ctxt_t *api_ctxt) {
             add_to_dirty_list_(api_obj, obj_ctxt);
             /**< initialize the object with the given config */
             ret = api_obj->init_config(api_ctxt);
-            SDK_ASSERT_GOTO((ret == sdk::SDK_RET_OK), error);
+            SDK_ASSERT_GOTO((ret == SDK_RET_OK), error);
             api_obj->add_to_db();
         } else {
             /**
@@ -213,19 +213,19 @@ api_engine::pre_process_api_(api_ctxt_t *api_ctxt) {
                     octxt.api_params = api_ctxt->api_params;
                     octxt.cloned_obj = api_obj->clone();
                     ret = octxt.cloned_obj->init_config(api_ctxt);
-                    SDK_ASSERT_GOTO((ret == sdk::SDK_RET_OK), error);
+                    SDK_ASSERT_GOTO((ret == SDK_RET_OK), error);
                 } else {
                     /**< ADD-XXX-DEL-XXX-ADD scenario, re-init same object */
                     SDK_ASSERT(octxt.api_op == API_OP_CREATE);
                     octxt.api_params = api_ctxt->api_params;
                     ret = api_obj->init_config(api_ctxt);
-                    SDK_ASSERT_GOTO((ret == sdk::SDK_RET_OK), error);
+                    SDK_ASSERT_GOTO((ret == SDK_RET_OK), error);
                 }
             } else {
                 /**< UPD-XXX-DEL-XXX-ADD scenario, re-init cloned obj's cfg */
                 octxt.api_params = api_ctxt->api_params;
                 ret = octxt.cloned_obj->init_config(api_ctxt);
-                SDK_ASSERT_GOTO((ret == sdk::SDK_RET_OK), error);
+                SDK_ASSERT_GOTO((ret == SDK_RET_OK), error);
             }
         }
         break;
@@ -274,12 +274,12 @@ api_engine::pre_process_api_(api_ctxt_t *api_ctxt) {
                      */
                     octxt.api_params = api_ctxt->api_params;
                     ret = api_obj->init_config(api_ctxt);
-                    SDK_ASSERT_GOTO((ret == sdk::SDK_RET_OK), error);
+                    SDK_ASSERT_GOTO((ret == SDK_RET_OK), error);
                 } else {
                     /**< XXX-UPD-XXX-UPD scenario, update the cloned obj */
                     octxt.api_params = api_ctxt->api_params;
                     ret = octxt.cloned_obj->init_config(api_ctxt);
-                    SDK_ASSERT_GOTO((ret == sdk::SDK_RET_OK), error);
+                    SDK_ASSERT_GOTO((ret == SDK_RET_OK), error);
                 }
             } else {
                 obj_ctxt.api_op = API_OP_UPDATE;
@@ -287,7 +287,7 @@ api_engine::pre_process_api_(api_ctxt_t *api_ctxt) {
                 obj_ctxt.api_params = api_ctxt->api_params;
                 add_to_dirty_list_(api_obj, obj_ctxt);
                 ret = obj_ctxt.cloned_obj->init_config(api_ctxt);
-                SDK_ASSERT_GOTO((ret == sdk::SDK_RET_OK), error);
+                SDK_ASSERT_GOTO((ret == SDK_RET_OK), error);
             }
         } else {
             ret = sdk::SDK_RET_ENTRY_NOT_FOUND;
@@ -300,7 +300,7 @@ api_engine::pre_process_api_(api_ctxt_t *api_ctxt) {
         goto error;
     }
 
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 
 error:
 
@@ -322,8 +322,9 @@ api_engine::pre_process_stage_(void) {
     for (auto it = batch_ctxt_.api_ctxts.begin();
          it != batch_ctxt_.api_ctxts.end(); ++it) {
         ret = pre_process_api_(&*it);
-        SDK_ASSERT_GOTO((ret == sdk::SDK_RET_OK), error);
+        SDK_ASSERT_GOTO((ret == SDK_RET_OK), error);
     }
+    return SDK_RET_OK;
 
 error:
 
@@ -346,7 +347,7 @@ api_engine::program_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     case API_OP_NONE:
         /**< no-op, but during ACTIVATE_EPOCH/ABORT stage, free the object */
         SDK_ASSERT(obj_ctxt->cloned_obj == NULL);
-        return sdk::SDK_RET_OK;
+        return SDK_RET_OK;
         break;
 
     case API_OP_CREATE:
@@ -356,7 +357,7 @@ api_engine::program_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
          */
         SDK_ASSERT(obj_ctxt->cloned_obj == NULL);
         ret = api_obj->program_config(obj_ctxt);
-        SDK_ASSERT_RETURN((ret == sdk::SDK_RET_OK), ret);
+        SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
         break;
 
     case API_OP_DELETE:
@@ -369,7 +370,7 @@ api_engine::program_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
          *       stage (by programming tables in stage 0, if needed)
          */
         ret = api_obj->cleanup_config(obj_ctxt);
-        SDK_ASSERT_RETURN((ret == sdk::SDK_RET_OK), ret);
+        SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
         break;
 
     case API_OP_UPDATE:
@@ -384,7 +385,7 @@ api_engine::program_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
          */
         SDK_ASSERT(obj_ctxt->cloned_obj != NULL);
         ret = obj_ctxt->cloned_obj->update_config(api_obj, obj_ctxt);
-        SDK_ASSERT_RETURN((ret == sdk::SDK_RET_OK), ret);
+        SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
         break;
 
     default:
@@ -402,7 +403,7 @@ api_engine::program_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
      */
     api_obj->set_hw_dirty();
 
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**
@@ -421,7 +422,7 @@ api_engine::program_config_stage_(void) {
     for (auto it = batch_ctxt_.dirty_objs.begin();
          it != batch_ctxt_.dirty_objs.end(); ++it) {
         ret = program_config_(it->first, &it->second);
-        SDK_ASSERT_GOTO((ret == sdk::SDK_RET_OK), error);
+        SDK_ASSERT_GOTO((ret == SDK_RET_OK), error);
     }
 
 error:
@@ -461,7 +462,7 @@ api_engine::activate_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         SDK_ASSERT(obj_ctxt->cloned_obj == NULL);
         ret = api_obj->activate_config(batch_ctxt_.epoch, API_OP_CREATE,
                                        obj_ctxt);
-        SDK_ASSERT(ret == sdk::SDK_RET_OK);
+        SDK_ASSERT(ret == SDK_RET_OK);
         del_from_dirty_list_(api_obj);
         break;
 
@@ -478,7 +479,7 @@ api_engine::activate_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
          */
         ret = api_obj->activate_config(batch_ctxt_.epoch, API_OP_DELETE,
                                        obj_ctxt);
-        SDK_ASSERT(ret == sdk::SDK_RET_OK);
+        SDK_ASSERT(ret == SDK_RET_OK);
         api_obj->del_from_db();
         api_obj->delay_delete();
         if (obj_ctxt->cloned_obj) {
@@ -495,10 +496,10 @@ api_engine::activate_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
          * come to FTEs with new epoch even before s/w swich is done
          */
         ret = obj_ctxt->cloned_obj->update_db(api_obj, obj_ctxt);
-        SDK_ASSERT(ret == sdk::SDK_RET_OK);
+        SDK_ASSERT(ret == SDK_RET_OK);
         ret = obj_ctxt->cloned_obj->activate_config(batch_ctxt_.epoch,
                                                     API_OP_UPDATE, obj_ctxt);
-        SDK_ASSERT(ret == sdk::SDK_RET_OK);
+        SDK_ASSERT(ret == SDK_RET_OK);
         del_from_dirty_list_(api_obj);
         /**
          * enqueue the current (i.e., old) object for delay deletion, note that
@@ -512,7 +513,7 @@ api_engine::activate_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         return sdk::SDK_RET_INVALID_OP;
     }
 
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**
@@ -527,9 +528,9 @@ api_engine::activate_config_stage_(void) {
     for (auto it = batch_ctxt_.dirty_objs.begin();
              it != batch_ctxt_.dirty_objs.end(); ++it) {
         ret = activate_config_(it->first, &it->second);
-        SDK_ASSERT(ret == sdk::SDK_RET_OK);
+        SDK_ASSERT(ret == SDK_RET_OK);
     }
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**
@@ -541,7 +542,7 @@ api_engine::activate_config_stage_(void) {
  */
 sdk_ret_t
 api_engine::rollback_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    sdk_ret_t    ret = sdk::SDK_RET_OK;
+    sdk_ret_t    ret = SDK_RET_OK;
 
     switch (obj_ctxt->api_op) {
     case API_OP_NONE:
@@ -634,7 +635,7 @@ api_engine::process_api(api_ctxt_t *api_ctxt) {
                       sdk::SDK_RET_INVALID_OP);
     /**< stash this API so we can process it later */
     batch_ctxt_.api_ctxts.push_back(*api_ctxt);
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**
@@ -649,7 +650,7 @@ api_engine::batch_begin(oci_batch_params_t *params) {
     batch_ctxt_.epoch = params->epoch;
     batch_ctxt_.stage = API_BATCH_STAGE_INIT;
     batch_ctxt_.api_ctxts.reserve(16);
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 };
 
 /**
@@ -665,7 +666,7 @@ api_engine::batch_commit(void) {
      * dirty object list
      */
     ret = pre_process_stage_();
-    if (ret != sdk::SDK_RET_OK) {
+    if (ret != SDK_RET_OK) {
         return ret;
     }
 
@@ -675,13 +676,13 @@ api_engine::batch_commit(void) {
      * exception of stage 0 programming
      */
     ret = program_config_stage_();
-    if (ret != sdk::SDK_RET_OK) {
+    if (ret != SDK_RET_OK) {
         return ret;
     }
 
     /**< activate the epoch in h/w & s/w by programming stage0 tables, if any */
     ret = activate_config_stage_();
-    if (ret != sdk::SDK_RET_OK) {
+    if (ret != SDK_RET_OK) {
         return ret;
     }
 
@@ -696,7 +697,7 @@ api_engine::batch_commit(void) {
     }
     batch_ctxt_.api_ctxts.clear();
     batch_ctxt_.dirty_objs.clear();
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**
@@ -713,7 +714,7 @@ api_engine::batch_abort(void) {
     for (auto it = batch_ctxt_.dirty_objs.begin();
          it != batch_ctxt_.dirty_objs.end(); ++it) {
         ret = rollback_config_(it->first, &it->second);
-        SDK_ASSERT(ret == sdk::SDK_RET_OK);
+        SDK_ASSERT(ret == SDK_RET_OK);
     }
 
     // clear all batch related info
@@ -727,7 +728,7 @@ api_engine::batch_abort(void) {
     }
     batch_ctxt_.api_ctxts.clear();
     batch_ctxt_.dirty_objs.clear();
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**< @brief    constructor */

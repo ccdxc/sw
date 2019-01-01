@@ -23,19 +23,19 @@ protected:
 
 TEST_F(vcn_test, vcn_create_delete) {
     sdk_ret_t             rv;
-    oci_vcn_t             oci_vcn;
     oci_batch_params_t    batch_params = { 0 };
+    oci_vcn_t             oci_vcn;
 
     batch_params.epoch = 1;
-    rv = oci_batch_start(&batch_params);
-    ASSERT_TRUE(rv == sdk::SDK_RET_OK);
 
+    rv = oci_batch_start(&batch_params);
+    ASSERT_TRUE(rv == SDK_RET_OK);
     oci_vcn.type = OCI_VCN_TYPE_TENANT;
     oci_vcn.key.id = 1;
     rv = oci_vcn_create(&oci_vcn);
-    ASSERT_TRUE(rv == sdk::SDK_RET_OK);
+    ASSERT_TRUE(rv == SDK_RET_OK);
     rv = oci_batch_commit();
-    ASSERT_TRUE(rv == sdk::SDK_RET_OK);
+    ASSERT_TRUE(rv == SDK_RET_OK);
 }
 
 int main(int argc, char **argv) {

@@ -56,6 +56,7 @@ oci_test_base::SetUpTestCase(bool enable_fte) {
     init_params.init_mode = OCI_INIT_MODE_FRESH_START;
     init_params.debug_trace_cb = debug_trace_cb;
     init_params.error_trace_cb = error_trace_cb;
+    init_params.cfg_file = "hal.json";
     oci_init(&init_params);
 }
 

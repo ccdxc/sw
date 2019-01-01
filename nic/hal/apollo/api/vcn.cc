@@ -74,7 +74,7 @@ vcn_entry::init_config(api_ctxt_t *api_ctxt) {
     oci_vcn_t *oci_vcn = &api_ctxt->api_params->vcn_info;
 
     memcpy(&this->key_, &oci_vcn->key, sizeof(oci_vcn_key_t));
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**
@@ -87,7 +87,7 @@ vcn_entry::alloc_resources_(void) {
             sdk::lib::indexer::SUCCESS) {
         return sdk::SDK_RET_NO_RESOURCE;
     }
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**
@@ -114,7 +114,7 @@ vcn_entry::free_resources_(void) {
     if (hw_id_ != 0xFF) {
         vcn_db()->vcn_idxr()->free(hw_id_);
     }
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**
@@ -127,7 +127,7 @@ vcn_entry::free_resources_(void) {
 sdk_ret_t
 vcn_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
     /**< there is no h/w programming for VCN config, so nothing to cleanup */
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**
@@ -140,7 +140,7 @@ vcn_entry::cleanup_config(obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 vcn_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     /**< there is no h/w programming for VCN config, so nothing to update */
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**
@@ -155,7 +155,7 @@ sdk_ret_t
 vcn_entry::activate_config(oci_epoch_t epoch, api_op_t api_op,
                            obj_ctxt_t *obj_ctxt) {
     /**< there is no h/w programming for VCN config, so nothing to activate */
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**
@@ -190,7 +190,7 @@ vcn_entry::add_to_db(void) {
 sdk_ret_t
 vcn_entry::del_from_db(void) {
     vcn_db()->vcn_ht()->remove(&key_);
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**

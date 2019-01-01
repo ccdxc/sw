@@ -14,6 +14,9 @@
 #include "nic/hal/apollo/framework/obj_base.hpp"
 #include "nic/hal/apollo/framework/api_base.hpp"
 #include "nic/hal/apollo/framework/impl.hpp"
+#include "nic/hal/apollo/framework/asic_impl_base.hpp"
+#include "nic/hal/apollo/framework/pipeline_impl_base.hpp"
+#include "nic/sdk/asic/asic.hpp"
 
 namespace impl {
 
@@ -27,6 +30,13 @@ public:
 
     /**< @brief    destructor */
     ~impl_base() {}
+
+    /**
+     * @brief    one time init function that must be called during bring up
+     * @param[in]    asic_cfg    asic configuration parameters
+     * @return       SDK_RET_OK on success, failure status code on error
+     */
+    static sdk_ret_t init(asic_cfg_t *asic_cfg);
 
     /**
      * @brief        factory method to instantiate an impl object
@@ -107,6 +117,10 @@ public:
                                   obj_ctxt_t *obj_ctxt) {
         return sdk::SDK_RET_INVALID_OP;
     }
+
+private:
+    static asic_impl_base        *asic_impl_;
+    static pipeline_impl_base    *pipeline_impl_;
 };
 
 }    // namespace impl

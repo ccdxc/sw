@@ -29,7 +29,7 @@ namespace impl {
 sdk_ret_t
 apollo_impl::init_(pipeline_cfg_t *pipeline_cfg) {
     pipeline_cfg_ = *pipeline_cfg;
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**
@@ -44,7 +44,7 @@ apollo_impl::factory(pipeline_cfg_t *pipeline_cfg) {
     impl = (apollo_impl *)SDK_CALLOC(SDK_MEM_ALLOC_OCI_PIPELINE_IMPL,
                                     sizeof(apollo_impl));
     new (impl) apollo_impl();
-    if (impl->init_(pipeline_cfg) != sdk::SDK_RET_OK) {
+    if (impl->init_(pipeline_cfg) != SDK_RET_OK) {
         impl->~apollo_impl();
         SDK_FREE(SDK_MEM_ALLOC_OCI_PIPELINE_IMPL, impl);
         return NULL;
@@ -102,7 +102,7 @@ apollo_impl::pipeline_init(void) {
     ret = hal::pd::asicpd_program_hbm_table_base_addr();
     SDK_ASSERT(ret == SDK_RET_OK);
 
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /** @} */    // end of OCI_PIPELINE_IMPL

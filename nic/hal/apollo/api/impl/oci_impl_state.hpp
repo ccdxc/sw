@@ -34,16 +34,17 @@ enum {
 
 class oci_impl_state {
 public:
+    sdk_ret_t init(void);
     oci_impl_state();
     ~oci_impl_state();
-    tep_impl_state *tep_impl_db(void) { return &tep_impl_db_; }
-    vnic_impl_state *vnic_impl_db(void) { return &vnic_impl_db_; }
-    mapping_impl_state *mapping_impl_db(void) { return &mapping_impl_db_; }
+    tep_impl_state *tep_impl_db(void) { return tep_impl_db_; }
+    vnic_impl_state *vnic_impl_db(void) { return vnic_impl_db_; }
+    mapping_impl_state *mapping_impl_db(void) { return mapping_impl_db_; }
 
 private:
-    tep_impl_state        tep_impl_db_;
-    vnic_impl_state       vnic_impl_db_;
-    mapping_impl_state    mapping_impl_db_;
+    tep_impl_state        *tep_impl_db_;
+    vnic_impl_state       *vnic_impl_db_;
+    mapping_impl_state    *mapping_impl_db_;
 };
 extern oci_impl_state g_oci_impl_state;
 

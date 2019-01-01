@@ -68,7 +68,7 @@ vnic_impl::alloc_resources(api_base *api_obj) {
             sdk::lib::indexer::SUCCESS) {
         return sdk::SDK_RET_NO_RESOURCE;
     }
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**
@@ -92,7 +92,7 @@ vnic_impl::free_resources(api_base *api_obj) {
             vnic_impl_db()->local_vnic_by_slot_rx_tbl()->remove(vnic_by_slot_hash_idx_);
         }
     }
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**
@@ -140,7 +140,7 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         subnet->hw_id();
     ret = vnic_impl_db()->egress_local_vnic_info_rx_tbl()->insert_withid(&egress_vnic_data,
                                                                          hw_id_);
-    if (ret != sdk::SDK_RET_OK) {
+    if (ret != SDK_RET_OK) {
         return ret;
     }
 
@@ -153,7 +153,7 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
 
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**
@@ -237,7 +237,7 @@ vnic_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
             vnic_info->slot;
         ret = vnic_impl_db()->local_vnic_by_vlan_tx_tbl()->insert_withid(&vnic_by_vlan_data,
                                                                          vnic_info->wire_vlan);
-        SDK_ASSERT_GOTO((ret == sdk::SDK_RET_OK), error);
+        SDK_ASSERT_GOTO((ret == SDK_RET_OK), error);
 
         /**< initialize local_vnic_by_slot_rx table entry */
         vnic_by_slot_key.mpls_dst_label = vnic_info->slot;
@@ -258,7 +258,7 @@ vnic_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
         ret = vnic_impl_db()->local_vnic_by_slot_rx_tbl()->insert(&vnic_by_slot_key,
                                                                   &vnic_by_slot_data,
                                                                   (uint32_t *)&vnic_by_slot_hash_idx_);
-        SDK_ASSERT_GOTO((ret == sdk::SDK_RET_OK), error);
+        SDK_ASSERT_GOTO((ret == SDK_RET_OK), error);
         break;
 
     case api::API_OP_UPDATE:
@@ -275,7 +275,7 @@ vnic_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
     default:
         break;
     }
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 
 error:
 

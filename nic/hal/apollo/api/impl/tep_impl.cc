@@ -63,7 +63,7 @@ tep_impl::alloc_resources(api_base *api_obj) {
             sdk::lib::indexer::SUCCESS) {
         return sdk::SDK_RET_NO_RESOURCE;
     }
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**

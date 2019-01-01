@@ -82,7 +82,7 @@ mapping_entry::destroy(mapping_entry *mapping) {
  */
 sdk_ret_t
 mapping_entry::init_config(api_ctxt_t *api_ctxt) {
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**
@@ -106,7 +106,7 @@ mapping_entry::program_config(obj_ctxt_t *obj_ctxt) {
     sdk_ret_t    ret;
 
     alloc_resources_();
-    SDK_ASSERT_RETURN((ret == sdk::SDK_RET_OK), ret);
+    SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
     return impl_->program_hw(this, obj_ctxt);
 }
 
@@ -156,7 +156,7 @@ sdk_ret_t
 mapping_entry::activate_config(oci_epoch_t epoch, api_op_t api_op,
                            obj_ctxt_t *obj_ctxt) {
     // there is no stage 0 h/w programming for mapping , so nothing to activate
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**
@@ -182,7 +182,7 @@ mapping_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 mapping_entry::add_to_db(void) {
     /**< mappings are not added to s/w db, so its a no-op */
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**
@@ -192,7 +192,7 @@ mapping_entry::add_to_db(void) {
 sdk_ret_t
 mapping_entry::del_from_db(void) {
     /**< mappings are not added to s/w db, so its a no-op */
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**
