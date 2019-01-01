@@ -13,6 +13,7 @@ def Setup(tc):
 
 def Trigger(tc):
     # Failing TC for collection of logs and cores to happen
+    api.Logger.info("Simulating failure of TC: %s ... to generate techsupport" % tc.Name())
     tc.SetStatus(api.types.status.FAILURE)
     tc.resp = collect_logs_cores.Main(tc)
     tc.SetStatus(api.types.status.SUCCESS)
