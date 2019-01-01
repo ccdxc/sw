@@ -12,6 +12,7 @@
 
 #include "osal_logger.h"
 #include "osal_time.h"
+#include "osal_sys.h"
 #include "sonic_dev.h"
 #include "sonic_lif.h"
 #include "sonic_interrupt.h"
@@ -116,7 +117,9 @@ sonic_poll_ev_list(struct sonic_event_list *evl, int budget,
 	uint64_t usr_data;
 	int found = 0;
 	int found_zero_data = 0;
+	unsigned long irqflags;
 
+	spin_lock_irqsave(&evl->inuse_lock, irqflags);
 	first_id = evl->next_used_evid;
 	while (loop_count < budget) {
 		loop_count++;
@@ -141,6 +144,7 @@ sonic_poll_ev_list(struct sonic_event_list *evl, int budget,
 			found_zero_data++;
 		}
 	}
+	spin_unlock_irqrestore(&evl->inuse_lock, irqflags);
 	*used_count = found + found_zero_data;
 
 	work->timestamp = 0;
@@ -221,6 +225,8 @@ static void sonic_ev_work_handler(struct work_struct *work)
 			/* reenqueue */
 			OSAL_LOG_DEBUG("work item %u reenqueued with %u events\n",
 				       work_id, incomplete_count);
+			if (!complete_count)
+				osal_sched_yield();
 			queue_work(evl->wq, &swd->work);
 			goto done;
 		}
@@ -230,7 +236,9 @@ static void sonic_ev_work_handler(struct work_struct *work)
 	if (!swd->found_work) {
 		/* No credits to return */
 		npolled = sonic_poll_ev_list(evl, SONIC_ASYNC_BUDGET, &evl->work_data, &used_count);
-		if (npolled || used_count) {
+		if (used_count) {
+			if (!npolled)
+				osal_sched_yield();
 			queue_work(evl->wq, &swd->work);
 		} else {
 			OSAL_LOG_DEBUG("no work available, ev list empty\n");
@@ -321,8 +329,10 @@ void sonic_intr_put_db_addr(struct per_core_resource *pc_res, uint64_t addr)
 
 	addr -= offsetof(struct sonic_db_data, fired);
 	evid = db_pa_to_evid(evl, sonic_devpa_to_hostpa(addr));
-	if (evid < evl->size_ev_bmp)
+	if (evid < evl->size_ev_bmp) {
+		sonic_intr_db_fired_clr(evl, evid);
 		sonic_put_evid(evl, evid);
+	}
 }
 
 void sonic_destroy_ev_list(struct per_core_resource *pc_res)
