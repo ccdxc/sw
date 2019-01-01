@@ -304,9 +304,9 @@ sdk_ret_t
 port::port_serdes_reset(bool reset)
 {
     uint32_t lane = 0;
+
     for (lane = 0; lane < num_lanes_; ++lane) {
-        serdes_fns()->serdes_reset(port_sbus_addr(lane),
-                                     reset);
+        serdes_fns()->serdes_spico_reset(port_sbus_addr(lane));
     }
 
     return SDK_RET_OK;
@@ -697,7 +697,7 @@ port::port_link_sm_an_process(void)
             this->bringup_timer_val_ += timeout;
             this->link_bring_up_timer_ =
                 sdk::lib::timer_schedule(
-                        0, timeout, this,
+                        SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
                         (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
                         false);
             an_ret = AN_WAIT;
@@ -762,7 +762,7 @@ port::port_link_sm_dfe_process(void)
 
                 this->link_bring_up_timer_ =
                     sdk::lib::timer_schedule(
-                        0, timeout, this,
+                        SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
                         (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
                         false);
 
@@ -797,7 +797,7 @@ port::port_link_sm_dfe_process(void)
 
                 this->link_bring_up_timer_ =
                     sdk::lib::timer_schedule(
-                        0, timeout, this,
+                        SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
                         (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
                         false);
 
@@ -857,6 +857,10 @@ port::port_link_sm_process(void)
                 // disable serdes
                 port_serdes_output_enable(false);
 
+                // TODO check with Avago?
+                // soft spico reset
+                port_serdes_reset(true);
+
                 // disable and put mac in reset
                 port_mac_soft_reset(true);
                 port_mac_enable(false);
@@ -897,7 +901,7 @@ port::port_link_sm_process(void)
 
                             this->link_bring_up_timer_ =
                                 sdk::lib::timer_schedule(
-                                    0, timeout, this,
+                                    SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
                                     (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
                                     false);
                         } else {
@@ -950,7 +954,7 @@ port::port_link_sm_process(void)
 
                     this->link_bring_up_timer_ =
                         sdk::lib::timer_schedule(
-                            0, timeout, this,
+                            SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
                             (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
                             false);
                     break;
@@ -985,7 +989,7 @@ port::port_link_sm_process(void)
 
                             this->link_bring_up_timer_ =
                                 sdk::lib::timer_schedule(
-                                0, timeout, this,
+                                SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
                                 (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
                                 false);
                         } else {
@@ -1025,7 +1029,7 @@ port::port_link_sm_process(void)
 
                     this->link_bring_up_timer_ =
                         sdk::lib::timer_schedule(
-                                0, timeout, this,
+                                SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
                                 (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
                                 false);
                     break;
@@ -1058,7 +1062,7 @@ port::port_link_sm_process(void)
 
                     this->link_bring_up_timer_ =
                         sdk::lib::timer_schedule(
-                            0, timeout, this,
+                            SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
                             (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
                             false);
 
@@ -1079,7 +1083,7 @@ port::port_link_sm_process(void)
 
                     this->link_bring_up_timer_ =
                         sdk::lib::timer_schedule(
-                            0, timeout, this,
+                            SDK_TIMER_ID_LINK_BRINGUP, timeout, this,
                             (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
                             false);
                     break;
@@ -1213,7 +1217,7 @@ port::port_link_dn_handler(void)
     if (this->debounce_time_ != 0) {
         this->link_debounce_timer_ =
             sdk::lib::timer_schedule(
-                0, this->debounce_time_, this,
+                SDK_TIMER_ID_LINK_DEBOUNCE, this->debounce_time_, this,
                 (sdk::lib::twheel_cb_t)link_debounce_timer_cb,
                 false);
         return SDK_RET_OK;
