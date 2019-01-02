@@ -76,7 +76,6 @@ HbmHash::factory(std::string table_name, uint32_t table_id,
 sdk_ret_t
 HbmHash::initialize_slabs()
 {
-    SDK_TRACE_DEBUG("Initializing slabs");
     hbm_hash_entry_slab_ = slab::factory("hbm_hash_entry",
                                          sdk::lib::SDK_SLAB_ID_HBM_HASH_ENTRY,
                                          sizeof(HbmHashEntry),

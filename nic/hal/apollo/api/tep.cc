@@ -86,7 +86,7 @@ tep_entry::init_config(api_ctxt_t *api_ctxt) {
     oci_tep_t *oci_tep = &api_ctxt->api_params->tep_info;
 
     memcpy(&this->key_, &oci_tep->key, sizeof(oci_tep_key_t));
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**
@@ -115,7 +115,7 @@ tep_entry::program_config(obj_ctxt_t *obj_ctxt) {
     sdk_ret_t    ret;
 
     ret = alloc_resources_();
-    SDK_ASSERT_RETURN((ret == sdk::SDK_RET_OK), ret);
+    SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
     return impl_->program_hw(this, obj_ctxt);
 }
 
@@ -163,7 +163,7 @@ tep_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 tep_entry::activate_config(oci_epoch_t epoch, api_op_t api_op,
                            obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**
@@ -197,7 +197,7 @@ tep_entry::add_to_db(void) {
 sdk_ret_t
 tep_entry::del_from_db(void) {
     tep_db()->tep_ht()->remove(&key_);
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**

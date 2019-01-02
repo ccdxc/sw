@@ -73,7 +73,7 @@ switchport_entry::init_config(api_ctxt_t *api_ctxt) {
     ip_addr_ = oci_switchport->switch_ip_addr;
     memcpy(mac_addr_, oci_switchport->switch_mac_addr, ETH_ADDR_LEN);
     gw_ip_addr_ = oci_switchport->gateway_ip_addr;
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**
@@ -123,7 +123,7 @@ sdk_ret_t
 switchport_entry::activate_config(oci_epoch_t epoch, api_op_t api_op,
                                   obj_ctxt_t *obj_ctxt) {
     // there is no stage 0 programming for switchport cfg, so this is a no-op
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**
@@ -143,14 +143,14 @@ switchport_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 switchport_entry::add_to_db(void) {
     /**< this is a singleton obj, so this is no-op */
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**< @brief delete switchport from database */
 sdk_ret_t
 switchport_entry::del_from_db(void) {
     /**< this is a singleton obj, so this is no-op */
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**

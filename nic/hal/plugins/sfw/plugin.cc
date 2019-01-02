@@ -12,10 +12,8 @@ namespace sfw {
 fte::pipeline_action_t sfw_exec(fte::ctx_t &ctx);
 fte::pipeline_action_t conntrack_exec(fte::ctx_t &ctx);
 
-hal_ret_t 
-sfwcfg_init(hal_cfg_t *hal_cfg);
-hal_ret_t
-sfwcfg_exit();
+hal_ret_t sfwcfg_init(hal_cfg_t *hal_cfg);
+hal_ret_t sfwcfg_exit(void);
 
 extern "C" hal_ret_t sfw_init(hal_cfg_t *hal_cfg) {
     fte::feature_info_t info = {

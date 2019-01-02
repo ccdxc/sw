@@ -9,7 +9,8 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 #include "nic/hal/apollo/include/api/oci_init.hpp"
-#include "nic/hal/apollo/framework/asic_impl_base.hpp"
+#include "nic/hal/apollo/framework/impl_base.hpp"
+#include "nic/hal/apollo/api/impl/oci_impl_state.hpp"
 
 /**
  * @defgroup OCI_VCN_API - batch API handling
@@ -31,13 +32,14 @@
 #define JTXDMA_PRGM     "txdma_program"
 static void
 fill_asic_cfg (asic_cfg_t *asic_cfg) {
+    asic_cfg->asic_type = sdk::asic::SDK_ASIC_TYPE_CAPRI;
     asic_cfg->cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
     if (asic_cfg->cfg_path.empty()) {
         asic_cfg->cfg_path = std::string("./");
     } else {
         asic_cfg->cfg_path += "/";
     }
-    //catalog = sdk::lib::catalog::factory(asic_cfg->cfg_path + "catalog.json");
+    asic_cfg->catalog = sdk::lib::catalog::factory(asic_cfg->cfg_path + "catalog.json");
     asic_cfg->loader_info_file = "capri_loader.conf";
     asic_cfg->default_config_dir = "2x100_hbm";
     asic_cfg->platform = platform_type_t::PLATFORM_TYPE_SIM;
@@ -73,19 +75,16 @@ fill_asic_cfg (asic_cfg_t *asic_cfg) {
 sdk_ret_t
 oci_init (oci_init_params_t *params)
 {
-    asic_cfg_t        asic_cfg;
-    asic_impl_base    *asic_impl;
+    asic_cfg_t            asic_cfg;
 
     /**< initializer the logger */
     sdk::lib::logger::init(params->debug_trace_cb, params->error_trace_cb);
 
     // TODO: setup all asic specific config params
     fill_asic_cfg(&asic_cfg);
-    asic_impl = asic_impl_base::factory(&asic_cfg);
-    SDK_ASSERT(asic_impl != NULL);
-    asic_impl->asic_init();
-
-    return sdk::SDK_RET_OK;
+    SDK_ASSERT(impl_base::init(&asic_cfg) == SDK_RET_OK);
+    impl::g_oci_impl_state.init();
+    return SDK_RET_OK;
 }
 
 /**
@@ -102,7 +101,7 @@ oci_teardown(void)
     // 5. bring asic down (scheduler etc.)
     // 6. kill FTE threads and other other threads
     // 7. flush all logs
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /** @} */    // end of OCI_VCN_API

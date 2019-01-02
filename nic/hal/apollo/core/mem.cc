@@ -97,7 +97,7 @@ delay_delete_to_slab (uint32_t slab_id, void *elem)
             return sdk::SDK_RET_ERR;
         }
     }
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 }    // namespace api

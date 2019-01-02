@@ -14,6 +14,30 @@
 
 namespace impl {
 
+asic_impl_base *impl_base::asic_impl_  = NULL;
+pipeline_impl_base *impl_base::pipeline_impl_  = NULL;
+
+/**
+ * @brief    one time init function that must be called during bring up
+ * @param[in]    asic_cfg    asic configuration parameters
+ * @return       SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+impl_base::init(asic_cfg_t *asic_cfg) {
+    pipeline_cfg_t        pipeline_cfg;
+
+    asic_impl_ = asic_impl_base::factory(asic_cfg);
+    SDK_ASSERT(asic_impl_ != NULL);
+    asic_impl_->asic_init();
+
+    pipeline_cfg.name = "apollo";
+    pipeline_impl_ = pipeline_impl_base::factory(&pipeline_cfg);
+    SDK_ASSERT(pipeline_impl_ != NULL);
+    pipeline_impl_->pipeline_init();
+
+    return SDK_RET_OK;
+}
+
 /**
  * @brief        factory method to instantiate an impl object
  * @param[in]    impl    object id

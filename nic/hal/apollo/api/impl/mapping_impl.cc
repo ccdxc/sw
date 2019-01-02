@@ -113,7 +113,7 @@ mapping_impl::add_nat_entries_(oci_mapping_t *mapping_info) {
                mapping_info->public_ip.addr.v6_addr.addr8,
                IP6_ADDR8_LEN);
         ret = mapping_impl_db()->nat_tbl()->insert(&nat_data, &nat_idx1_);
-        if (ret != sdk::SDK_RET_OK) {
+        if (ret != SDK_RET_OK) {
             return ret;
         }
 
@@ -122,11 +122,11 @@ mapping_impl::add_nat_entries_(oci_mapping_t *mapping_info) {
                mapping_info->key.ip_addr.addr.v6_addr.addr8,
                IP6_ADDR8_LEN);
         ret = mapping_impl_db()->nat_tbl()->insert(&nat_data, &nat_idx2_);
-        if (ret != sdk::SDK_RET_OK) {
+        if (ret != SDK_RET_OK) {
             goto error;
         }
     }
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 
 error:
     // TODO: handle cleanup in case of failure
@@ -161,7 +161,7 @@ mapping_impl::add_local_ip_mapping_entries_(vcn_entry *vcn,
     ret = mapping_impl_db()->local_ip_mapping_tbl()->insert(
               &local_ip_mapping_key, &local_ip_mapping_data,
               &local_ip_mapping_data_idx1_);
-    if (ret != sdk::SDK_RET_OK) {
+    if (ret != SDK_RET_OK) {
         goto error;
     }
 
@@ -178,11 +178,11 @@ mapping_impl::add_local_ip_mapping_entries_(vcn_entry *vcn,
         ret = mapping_impl_db()->local_ip_mapping_tbl()->insert(
                   &local_ip_mapping_key, &local_ip_mapping_data,
                   &local_ip_mapping_data_idx2_);
-        if (ret != sdk::SDK_RET_OK) {
+        if (ret != SDK_RET_OK) {
             goto error;
         }
     }
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 
 error:
     // TODO: handle cleanup in case of failure
@@ -263,12 +263,12 @@ mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     if (is_local_) {
         /**< allocate NAT table entries */
         ret = add_nat_entries_(mapping_info);
-        if (ret != sdk::SDK_RET_OK) {
+        if (ret != SDK_RET_OK) {
             goto error;
         }
 
         ret = add_local_ip_mapping_entries_(vcn, mapping_info);
-        if (ret != sdk::SDK_RET_OK) {
+        if (ret != SDK_RET_OK) {
             goto error;
         }
     } else {
@@ -276,16 +276,16 @@ mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         //       tables but once host-to-host path is finalized we can relax
         //       this, if needed !!
         ret = add_remote_vnic_mapping_rx_entries_(vcn, subnet, mapping_info);
-        if (ret != sdk::SDK_RET_OK) {
+        if (ret != SDK_RET_OK) {
             goto error;
         }
 
         ret = add_remote_vnic_mapping_tx_entries_(vcn, mapping_info);
-        if (ret != sdk::SDK_RET_OK) {
+        if (ret != SDK_RET_OK) {
             goto error;
         }
     }
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 
 error:
 

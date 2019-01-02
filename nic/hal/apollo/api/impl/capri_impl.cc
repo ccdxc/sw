@@ -41,7 +41,7 @@ capri_impl::init_(asic_cfg_t *asic_cfg) {
     if (catalog_ == NULL) {
         return sdk::SDK_RET_ERR;
     }
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**
@@ -56,7 +56,7 @@ capri_impl::factory(asic_cfg_t *asic_cfg) {
     impl = (capri_impl *)SDK_CALLOC(SDK_MEM_ALLOC_OCI_ASIC_IMPL,
                                     sizeof(capri_impl));
     new (impl) capri_impl();
-    if (impl->init_(asic_cfg) != sdk::SDK_RET_OK) {
+    if (impl->init_(asic_cfg) != SDK_RET_OK) {
         impl->~capri_impl();
         SDK_FREE(SDK_MEM_ALLOC_OCI_ASIC_IMPL, impl);
         return NULL;

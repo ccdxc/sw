@@ -82,7 +82,7 @@ subnet_entry::init_config(api_ctxt_t *api_ctxt) {
     memcpy(&this->vr_mac_, &oci_subnet->vr_mac, sizeof(mac_addr_t));
     // TODO: do we need to store vr_ip as well ? forgot now !!
     this->ht_ctxt_.reset();
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**
@@ -95,7 +95,7 @@ subnet_entry::alloc_resources_(void) {
             sdk::lib::indexer::SUCCESS) {
         return sdk::SDK_RET_NO_RESOURCE;
     }
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**
@@ -128,7 +128,7 @@ subnet_entry::free_resources_(void) {
     if (policy_base_addr_ != 0xFFFFFFFFFFFFFFFF) {
         // TODO: free this block
     }
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**
@@ -167,7 +167,7 @@ subnet_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 subnet_entry::activate_config(oci_epoch_t epoch, api_op_t api_op,
                               obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**
@@ -197,7 +197,7 @@ subnet_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
  */
 sdk_ret_t
 subnet_entry::commit(api_ctxt_t *api_ctxt) {
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**
@@ -211,7 +211,7 @@ subnet_entry::commit(api_ctxt_t *api_ctxt) {
  */
 sdk_ret_t
 subnet_entry::abort(api_ctxt_t *api_ctxt) {
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 #endif
 
@@ -234,7 +234,7 @@ subnet_entry::add_to_db(void) {
 sdk_ret_t
 subnet_entry::del_from_db(void) {
     subnet_db()->subnet_ht()->remove(&key_);
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 /**
