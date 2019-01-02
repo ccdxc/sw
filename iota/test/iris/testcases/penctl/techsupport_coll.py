@@ -15,13 +15,11 @@ def Trigger(tc):
     # Failing TC for collection of logs and cores to happen
     api.Logger.info("Simulating failure of TC: %s ... to generate techsupport" % tc.Name())
     tc.SetStatus(api.types.status.FAILURE)
-    tc.resp = collect_logs_cores.Main(tc)
+    resp = collect_logs_cores.Main(tc)
     tc.SetStatus(api.types.status.SUCCESS)
-    return api.types.status.SUCCESS
+    return resp
 
 def Verify(tc):
-    if tc.resp is None or tc.resp == api.types.status.FAILURE:
-        return api.types.status.FAILURE
     return api.types.status.SUCCESS
 
 
