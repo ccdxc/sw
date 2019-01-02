@@ -12,12 +12,23 @@ def Main(tc):
     req = api.Trigger_CreateExecuteCommandsRequest()
     tc_dir = tc.GetLogsDir()
     for n in nodes:
-        api.Logger.info("Techsupport fron node: %s" % n)
-        common.AddPenctlCommand(req, n, "system tech-support")
-        api.Trigger(req)
+        api.Logger.info("Techsupport for node: %s" % n)
+        common.AddPenctlCommand(req, n, "system tech-support -b %s-tech-support" % (n))
+
+    tc.resp = api.Trigger(req)
+
+    result = api.types.status.SUCCESS
+    for n,cmd in zip(nodes,tc.resp.commands):
+        api.PrintCommandResults(cmd)
+        if cmd.exit_code != 0:
+            api.Logger.error("Failed to execute penctl system tech-support on node: %s. err: %d" % (n, cmd.exit_code))
+            result = api.types.status.FAILURE
+            continue
         # Copy tech support tar out
-        resp = api.CopyFromHost(n, [common.DEF_TECH_SUPPORT_FILE], "%s/%s" % (tc_dir, n))
+        # TAR files are created at: pensando/iota/entities/node1_host/<test_case>
+        resp = api.CopyFromHost(n, ["%s-tech-support.tar.gz" % (n)], tc_dir)
         if resp == None or resp.api_response.api_status != types_pb2.API_STATUS_OK:
             api.Logger.error("Failed to copy techsupport file from node: %s" % n)
-            return api.types.status.FAILURE
-    return api.types.status.SUCCESS
+            result = api.types.status.FAILURE
+            continue
+    return result

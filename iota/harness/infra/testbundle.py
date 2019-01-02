@@ -45,13 +45,13 @@ class TestBundle:
 
     def __apply_skip_filters(self):
         if store.GetTestbed().GetOs() not in self.__spec.meta.os and not GlobalOptions.dryrun:
-            Logger.debug("Skipping Testbundle: %s due to OS mismatch." % self.__spec.meta.name)
+            Logger.info("Skipping Testbundle: %s due to OS mismatch." % self.__spec.meta.name)
             return True
         if GlobalOptions.testbundles and self.__spec.meta.name not in  GlobalOptions.testbundles:
             Logger.info("Skipping Testbundle: %s due to cmdline filter." % self.__spec.meta.name)
             return True
         if store.GetTopology().ValidateNics(self.__spec.meta.nics) != True and not GlobalOptions.dryrun:
-            Logger.debug("Skipping Testbundle: %s due to Incompatible NICs." % self.__spec.meta.name)
+            Logger.info("Skipping Testbundle: %s due to Incompatible NICs." % self.__spec.meta.name)
             return True
         return False
 
