@@ -1551,7 +1551,7 @@ Eth::_CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
         port_status_t port_status;
         hal->PortStatusGet(spec->uplink->GetPortNum(), port_status);
         notify_block->link_status = port_status.oper_status;
-        notify_block->link_speed = port_status.port_speed;
+        notify_block->link_speed = port_status.oper_status ? port_status.port_speed : 0;
     } else {
         notify_block->link_status = true;
         notify_block->link_speed = 1000; // 1 Gbps
