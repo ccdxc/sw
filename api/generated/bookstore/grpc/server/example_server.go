@@ -2602,6 +2602,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 				events = &bookstore.AutoMsgOrderWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "bookstore.Order")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -2701,6 +2702,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 				events = &bookstore.AutoMsgBookWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "bookstore.Book")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -2800,6 +2802,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 				events = &bookstore.AutoMsgPublisherWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "bookstore.Publisher")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -2899,6 +2902,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 				events = &bookstore.AutoMsgStoreWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "bookstore.Store")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -2998,6 +3002,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 				events = &bookstore.AutoMsgCouponWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "bookstore.Coupon")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -3097,6 +3102,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 				events = &bookstore.AutoMsgCustomerWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "bookstore.Customer")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():

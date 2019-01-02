@@ -380,6 +380,7 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 				events = &network.AutoMsgNetworkWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "network.Network")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -479,6 +480,7 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 				events = &network.AutoMsgServiceWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "network.Service")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -578,6 +580,7 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 				events = &network.AutoMsgLbPolicyWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "network.LbPolicy")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():

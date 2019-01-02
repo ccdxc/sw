@@ -222,6 +222,7 @@ func (s *srolloutSvc_rolloutBackend) regWatchersFunc(ctx context.Context, logger
 				events = &rollout.AutoMsgRolloutWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "rollout.Rollout")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():

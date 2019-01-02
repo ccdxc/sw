@@ -917,6 +917,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 				events = &monitoring.AutoMsgEventPolicyWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "monitoring.EventPolicy")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -1016,6 +1017,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 				events = &monitoring.AutoMsgStatsPolicyWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "monitoring.StatsPolicy")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -1115,6 +1117,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 				events = &monitoring.AutoMsgFwlogPolicyWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "monitoring.FwlogPolicy")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -1214,6 +1217,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 				events = &monitoring.AutoMsgFlowExportPolicyWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "monitoring.FlowExportPolicy")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -1313,6 +1317,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 				events = &monitoring.AutoMsgAlertWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "monitoring.Alert")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -1412,6 +1417,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 				events = &monitoring.AutoMsgAlertPolicyWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "monitoring.AlertPolicy")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -1511,6 +1517,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 				events = &monitoring.AutoMsgAlertDestinationWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "monitoring.AlertDestination")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -1610,6 +1617,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 				events = &monitoring.AutoMsgMirrorSessionWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "monitoring.MirrorSession")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -1709,6 +1717,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 				events = &monitoring.AutoMsgTroubleshootingSessionWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "monitoring.TroubleshootingSession")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -1808,6 +1817,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 				events = &monitoring.AutoMsgTechSupportRequestWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "monitoring.TechSupportRequest")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():

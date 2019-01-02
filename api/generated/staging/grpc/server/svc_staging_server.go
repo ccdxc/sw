@@ -238,6 +238,7 @@ func (s *sstagingSvc_stagingBackend) regWatchersFunc(ctx context.Context, logger
 				events = &staging.AutoMsgBufferWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "staging.Buffer")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():

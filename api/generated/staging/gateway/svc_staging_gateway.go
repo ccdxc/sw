@@ -228,6 +228,7 @@ func (a adapterStagingV1) AutoWatchSvcStagingV1(oldctx oldcontext.Context, in *a
 		in := i.(*api.ListWatchOptions)
 		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
 		if ok && iws.(bool) {
+			nctx, cancel := context.WithCancel(ctx)
 			ir, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPReq)
 			if !ok {
 				return nil, errors.New("unable to retrieve request")
@@ -241,13 +242,23 @@ func (a adapterStagingV1) AutoWatchSvcStagingV1(oldctx oldcontext.Context, in *a
 				log.Errorf("WebSocket Upgrade failed (%s)", err)
 				return nil, err
 			}
-			ctx = apiutils.SetVar(ctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
-			// Read the Request and unmarshall.
-			err = conn.ReadJSON(in)
-			if err != nil {
-				log.Errorf("Trying to read OPTS returned error(%s)", err)
-				return nil, err
-			}
+			ctx = apiutils.SetVar(nctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+			conn.SetCloseHandler(func(code int, text string) error {
+				cancel()
+				log.Infof("received close notification on websocket [AutoWatchStagingV1] (%v/%v)", code, text)
+				return nil
+			})
+			// start a dummy reciever
+			go func() {
+				for {
+					_, _, err := conn.ReadMessage()
+					if err != nil {
+						log.Errorf("received error on websocket receive (%s)", err)
+						cancel()
+						return
+					}
+				}
+			}()
 		}
 		return a.service.AutoWatchSvcStagingV1(ctx, in)
 	}
@@ -272,6 +283,7 @@ func (a adapterStagingV1) AutoWatchBuffer(oldctx oldcontext.Context, in *api.Lis
 		in := i.(*api.ListWatchOptions)
 		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
 		if ok && iws.(bool) {
+			nctx, cancel := context.WithCancel(ctx)
 			ir, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPReq)
 			if !ok {
 				return nil, errors.New("unable to retrieve request")
@@ -285,7 +297,23 @@ func (a adapterStagingV1) AutoWatchBuffer(oldctx oldcontext.Context, in *api.Lis
 				log.Errorf("WebSocket Upgrade failed (%s)", err)
 				return nil, err
 			}
-			ctx = apiutils.SetVar(ctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+			ctx = apiutils.SetVar(nctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+			conn.SetCloseHandler(func(code int, text string) error {
+				cancel()
+				log.Infof("received close notification on websocket [AutoWatchBuffer] (%v/%v)", code, text)
+				return nil
+			})
+			// start a dummy reciever
+			go func() {
+				for {
+					_, _, err := conn.ReadMessage()
+					if err != nil {
+						log.Errorf("received error on websocket receive (%s)", err)
+						cancel()
+						return
+					}
+				}
+			}()
 		}
 		return a.service.AutoWatchBuffer(ctx, in)
 	}

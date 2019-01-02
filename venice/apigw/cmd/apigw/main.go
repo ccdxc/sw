@@ -85,7 +85,7 @@ func main() {
 				MaxAge:     7,  // TODO: These needs to be part of Service Config Object
 			},
 		}
-		pl = log.GetNewLogger(logConfig)
+		pl = log.SetConfig(logConfig)
 
 		// Add ApiGw specific context data
 		pl = pl.WithContext("host", *host+*httpaddr)

@@ -3060,6 +3060,7 @@ func (r *EndpointsBookstoreV1RestClient) AutoWatchOrder(ctx context.Context, opt
 				case lw.OutCh <- &ev:
 				case <-ctx.Done():
 					close(lw.OutCh)
+					conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
 					return
 				}
 			}
@@ -3067,6 +3068,10 @@ func (r *EndpointsBookstoreV1RestClient) AutoWatchOrder(ctx context.Context, opt
 	}
 	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
 	lw.Run()
+	go func() {
+		<-ctx.Done()
+		conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+	}()
 	return lw, nil
 }
 
@@ -3198,6 +3203,7 @@ func (r *EndpointsBookstoreV1RestClient) AutoWatchBook(ctx context.Context, opti
 				case lw.OutCh <- &ev:
 				case <-ctx.Done():
 					close(lw.OutCh)
+					conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
 					return
 				}
 			}
@@ -3205,6 +3211,10 @@ func (r *EndpointsBookstoreV1RestClient) AutoWatchBook(ctx context.Context, opti
 	}
 	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
 	lw.Run()
+	go func() {
+		<-ctx.Done()
+		conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+	}()
 	return lw, nil
 }
 
@@ -3284,6 +3294,7 @@ func (r *EndpointsBookstoreV1RestClient) AutoWatchPublisher(ctx context.Context,
 				case lw.OutCh <- &ev:
 				case <-ctx.Done():
 					close(lw.OutCh)
+					conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
 					return
 				}
 			}
@@ -3291,6 +3302,10 @@ func (r *EndpointsBookstoreV1RestClient) AutoWatchPublisher(ctx context.Context,
 	}
 	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
 	lw.Run()
+	go func() {
+		<-ctx.Done()
+		conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+	}()
 	return lw, nil
 }
 
@@ -3414,6 +3429,7 @@ func (r *EndpointsBookstoreV1RestClient) AutoWatchStore(ctx context.Context, opt
 				case lw.OutCh <- &ev:
 				case <-ctx.Done():
 					close(lw.OutCh)
+					conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
 					return
 				}
 			}
@@ -3421,6 +3437,10 @@ func (r *EndpointsBookstoreV1RestClient) AutoWatchStore(ctx context.Context, opt
 	}
 	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
 	lw.Run()
+	go func() {
+		<-ctx.Done()
+		conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+	}()
 	return lw, nil
 }
 
@@ -3500,6 +3520,7 @@ func (r *EndpointsBookstoreV1RestClient) AutoWatchCoupon(ctx context.Context, op
 				case lw.OutCh <- &ev:
 				case <-ctx.Done():
 					close(lw.OutCh)
+					conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
 					return
 				}
 			}
@@ -3507,6 +3528,10 @@ func (r *EndpointsBookstoreV1RestClient) AutoWatchCoupon(ctx context.Context, op
 	}
 	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
 	lw.Run()
+	go func() {
+		<-ctx.Done()
+		conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+	}()
 	return lw, nil
 }
 
@@ -3646,6 +3671,7 @@ func (r *EndpointsBookstoreV1RestClient) AutoWatchCustomer(ctx context.Context, 
 				case lw.OutCh <- &ev:
 				case <-ctx.Done():
 					close(lw.OutCh)
+					conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
 					return
 				}
 			}
@@ -3653,6 +3679,10 @@ func (r *EndpointsBookstoreV1RestClient) AutoWatchCustomer(ctx context.Context, 
 	}
 	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
 	lw.Run()
+	go func() {
+		<-ctx.Done()
+		conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+	}()
 	return lw, nil
 }
 

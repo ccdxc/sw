@@ -64,7 +64,7 @@ func main() {
 				MaxAge:     7,  // TODO: These needs to be part of Service Config Object
 			},
 		}
-		pl = log.GetNewLogger(logConfig)
+		pl = log.SetConfig(logConfig)
 	}
 
 	kvstoreTLSConfig, err := etcd.GetEtcdClientCredentials()

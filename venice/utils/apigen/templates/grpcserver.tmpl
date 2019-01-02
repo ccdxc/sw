@@ -419,6 +419,7 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regWatchersFunc(ctx context.Context, l
 				events = &{{$pkgname}}.AutoMsg{{.}}WatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "{{$pkgname}}.{{.}}")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():

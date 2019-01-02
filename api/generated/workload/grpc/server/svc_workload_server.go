@@ -297,6 +297,7 @@ func (s *sworkloadSvc_workloadBackend) regWatchersFunc(ctx context.Context, logg
 				events = &workload.AutoMsgEndpointWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "workload.Endpoint")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -396,6 +397,7 @@ func (s *sworkloadSvc_workloadBackend) regWatchersFunc(ctx context.Context, logg
 				events = &workload.AutoMsgWorkloadWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "workload.Workload")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():

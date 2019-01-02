@@ -671,6 +671,7 @@ func (a adapterClusterV1) AutoWatchSvcClusterV1(oldctx oldcontext.Context, in *a
 		in := i.(*api.ListWatchOptions)
 		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
 		if ok && iws.(bool) {
+			nctx, cancel := context.WithCancel(ctx)
 			ir, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPReq)
 			if !ok {
 				return nil, errors.New("unable to retrieve request")
@@ -684,13 +685,23 @@ func (a adapterClusterV1) AutoWatchSvcClusterV1(oldctx oldcontext.Context, in *a
 				log.Errorf("WebSocket Upgrade failed (%s)", err)
 				return nil, err
 			}
-			ctx = apiutils.SetVar(ctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
-			// Read the Request and unmarshall.
-			err = conn.ReadJSON(in)
-			if err != nil {
-				log.Errorf("Trying to read OPTS returned error(%s)", err)
-				return nil, err
-			}
+			ctx = apiutils.SetVar(nctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+			conn.SetCloseHandler(func(code int, text string) error {
+				cancel()
+				log.Infof("received close notification on websocket [AutoWatchClusterV1] (%v/%v)", code, text)
+				return nil
+			})
+			// start a dummy reciever
+			go func() {
+				for {
+					_, _, err := conn.ReadMessage()
+					if err != nil {
+						log.Errorf("received error on websocket receive (%s)", err)
+						cancel()
+						return
+					}
+				}
+			}()
 		}
 		return a.service.AutoWatchSvcClusterV1(ctx, in)
 	}
@@ -716,6 +727,7 @@ func (a adapterClusterV1) AutoWatchCluster(oldctx oldcontext.Context, in *api.Li
 		in := i.(*api.ListWatchOptions)
 		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
 		if ok && iws.(bool) {
+			nctx, cancel := context.WithCancel(ctx)
 			ir, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPReq)
 			if !ok {
 				return nil, errors.New("unable to retrieve request")
@@ -729,7 +741,23 @@ func (a adapterClusterV1) AutoWatchCluster(oldctx oldcontext.Context, in *api.Li
 				log.Errorf("WebSocket Upgrade failed (%s)", err)
 				return nil, err
 			}
-			ctx = apiutils.SetVar(ctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+			ctx = apiutils.SetVar(nctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+			conn.SetCloseHandler(func(code int, text string) error {
+				cancel()
+				log.Infof("received close notification on websocket [AutoWatchCluster] (%v/%v)", code, text)
+				return nil
+			})
+			// start a dummy reciever
+			go func() {
+				for {
+					_, _, err := conn.ReadMessage()
+					if err != nil {
+						log.Errorf("received error on websocket receive (%s)", err)
+						cancel()
+						return
+					}
+				}
+			}()
 		}
 		return a.service.AutoWatchCluster(ctx, in)
 	}
@@ -755,6 +783,7 @@ func (a adapterClusterV1) AutoWatchNode(oldctx oldcontext.Context, in *api.ListW
 		in := i.(*api.ListWatchOptions)
 		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
 		if ok && iws.(bool) {
+			nctx, cancel := context.WithCancel(ctx)
 			ir, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPReq)
 			if !ok {
 				return nil, errors.New("unable to retrieve request")
@@ -768,7 +797,23 @@ func (a adapterClusterV1) AutoWatchNode(oldctx oldcontext.Context, in *api.ListW
 				log.Errorf("WebSocket Upgrade failed (%s)", err)
 				return nil, err
 			}
-			ctx = apiutils.SetVar(ctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+			ctx = apiutils.SetVar(nctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+			conn.SetCloseHandler(func(code int, text string) error {
+				cancel()
+				log.Infof("received close notification on websocket [AutoWatchNode] (%v/%v)", code, text)
+				return nil
+			})
+			// start a dummy reciever
+			go func() {
+				for {
+					_, _, err := conn.ReadMessage()
+					if err != nil {
+						log.Errorf("received error on websocket receive (%s)", err)
+						cancel()
+						return
+					}
+				}
+			}()
 		}
 		return a.service.AutoWatchNode(ctx, in)
 	}
@@ -794,6 +839,7 @@ func (a adapterClusterV1) AutoWatchHost(oldctx oldcontext.Context, in *api.ListW
 		in := i.(*api.ListWatchOptions)
 		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
 		if ok && iws.(bool) {
+			nctx, cancel := context.WithCancel(ctx)
 			ir, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPReq)
 			if !ok {
 				return nil, errors.New("unable to retrieve request")
@@ -807,7 +853,23 @@ func (a adapterClusterV1) AutoWatchHost(oldctx oldcontext.Context, in *api.ListW
 				log.Errorf("WebSocket Upgrade failed (%s)", err)
 				return nil, err
 			}
-			ctx = apiutils.SetVar(ctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+			ctx = apiutils.SetVar(nctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+			conn.SetCloseHandler(func(code int, text string) error {
+				cancel()
+				log.Infof("received close notification on websocket [AutoWatchHost] (%v/%v)", code, text)
+				return nil
+			})
+			// start a dummy reciever
+			go func() {
+				for {
+					_, _, err := conn.ReadMessage()
+					if err != nil {
+						log.Errorf("received error on websocket receive (%s)", err)
+						cancel()
+						return
+					}
+				}
+			}()
 		}
 		return a.service.AutoWatchHost(ctx, in)
 	}
@@ -833,6 +895,7 @@ func (a adapterClusterV1) AutoWatchSmartNIC(oldctx oldcontext.Context, in *api.L
 		in := i.(*api.ListWatchOptions)
 		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
 		if ok && iws.(bool) {
+			nctx, cancel := context.WithCancel(ctx)
 			ir, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPReq)
 			if !ok {
 				return nil, errors.New("unable to retrieve request")
@@ -846,7 +909,23 @@ func (a adapterClusterV1) AutoWatchSmartNIC(oldctx oldcontext.Context, in *api.L
 				log.Errorf("WebSocket Upgrade failed (%s)", err)
 				return nil, err
 			}
-			ctx = apiutils.SetVar(ctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+			ctx = apiutils.SetVar(nctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+			conn.SetCloseHandler(func(code int, text string) error {
+				cancel()
+				log.Infof("received close notification on websocket [AutoWatchSmartNIC] (%v/%v)", code, text)
+				return nil
+			})
+			// start a dummy reciever
+			go func() {
+				for {
+					_, _, err := conn.ReadMessage()
+					if err != nil {
+						log.Errorf("received error on websocket receive (%s)", err)
+						cancel()
+						return
+					}
+				}
+			}()
 		}
 		return a.service.AutoWatchSmartNIC(ctx, in)
 	}
@@ -872,6 +951,7 @@ func (a adapterClusterV1) AutoWatchTenant(oldctx oldcontext.Context, in *api.Lis
 		in := i.(*api.ListWatchOptions)
 		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
 		if ok && iws.(bool) {
+			nctx, cancel := context.WithCancel(ctx)
 			ir, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPReq)
 			if !ok {
 				return nil, errors.New("unable to retrieve request")
@@ -885,7 +965,23 @@ func (a adapterClusterV1) AutoWatchTenant(oldctx oldcontext.Context, in *api.Lis
 				log.Errorf("WebSocket Upgrade failed (%s)", err)
 				return nil, err
 			}
-			ctx = apiutils.SetVar(ctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+			ctx = apiutils.SetVar(nctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+			conn.SetCloseHandler(func(code int, text string) error {
+				cancel()
+				log.Infof("received close notification on websocket [AutoWatchTenant] (%v/%v)", code, text)
+				return nil
+			})
+			// start a dummy reciever
+			go func() {
+				for {
+					_, _, err := conn.ReadMessage()
+					if err != nil {
+						log.Errorf("received error on websocket receive (%s)", err)
+						cancel()
+						return
+					}
+				}
+			}()
 		}
 		return a.service.AutoWatchTenant(ctx, in)
 	}

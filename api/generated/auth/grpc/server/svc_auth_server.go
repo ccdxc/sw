@@ -479,6 +479,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 				events = &auth.AutoMsgUserWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "auth.User")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -585,6 +586,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 				events = &auth.AutoMsgAuthenticationPolicyWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "auth.AuthenticationPolicy")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -691,6 +693,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 				events = &auth.AutoMsgRoleWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "auth.Role")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -790,6 +793,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 				events = &auth.AutoMsgRoleBindingWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "auth.RoleBinding")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():

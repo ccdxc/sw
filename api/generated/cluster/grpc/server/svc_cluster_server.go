@@ -520,6 +520,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 				events = &cluster.AutoMsgClusterWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "cluster.Cluster")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -619,6 +620,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 				events = &cluster.AutoMsgNodeWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "cluster.Node")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -718,6 +720,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 				events = &cluster.AutoMsgHostWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "cluster.Host")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -817,6 +820,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 				events = &cluster.AutoMsgSmartNICWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "cluster.SmartNIC")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -916,6 +920,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 				events = &cluster.AutoMsgTenantWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "cluster.Tenant")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():

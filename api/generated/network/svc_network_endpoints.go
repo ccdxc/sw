@@ -1535,6 +1535,7 @@ func (r *EndpointsNetworkV1RestClient) AutoWatchNetwork(ctx context.Context, opt
 				case lw.OutCh <- &ev:
 				case <-ctx.Done():
 					close(lw.OutCh)
+					conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
 					return
 				}
 			}
@@ -1542,6 +1543,10 @@ func (r *EndpointsNetworkV1RestClient) AutoWatchNetwork(ctx context.Context, opt
 	}
 	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
 	lw.Run()
+	go func() {
+		<-ctx.Done()
+		conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+	}()
 	return lw, nil
 }
 
@@ -1681,6 +1686,7 @@ func (r *EndpointsNetworkV1RestClient) AutoWatchService(ctx context.Context, opt
 				case lw.OutCh <- &ev:
 				case <-ctx.Done():
 					close(lw.OutCh)
+					conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
 					return
 				}
 			}
@@ -1688,6 +1694,10 @@ func (r *EndpointsNetworkV1RestClient) AutoWatchService(ctx context.Context, opt
 	}
 	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
 	lw.Run()
+	go func() {
+		<-ctx.Done()
+		conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+	}()
 	return lw, nil
 }
 
@@ -1827,6 +1837,7 @@ func (r *EndpointsNetworkV1RestClient) AutoWatchLbPolicy(ctx context.Context, op
 				case lw.OutCh <- &ev:
 				case <-ctx.Done():
 					close(lw.OutCh)
+					conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
 					return
 				}
 			}
@@ -1834,6 +1845,10 @@ func (r *EndpointsNetworkV1RestClient) AutoWatchLbPolicy(ctx context.Context, op
 	}
 	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
 	lw.Run()
+	go func() {
+		<-ctx.Done()
+		conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+	}()
 	return lw, nil
 }
 

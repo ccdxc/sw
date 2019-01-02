@@ -2,6 +2,7 @@ package integration
 
 import (
 	"context"
+	"expvar"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -1930,8 +1931,7 @@ func TestStaging(t *testing.T) {
 }
 
 func TestRestWatchers(t *testing.T) {
-	ctx := context.Background()
-
+	ctx, cancel := context.WithCancel(context.Background())
 	// REST Client
 	restcl, err := apiclient.NewRestAPIClient("http://localhost:" + tinfo.apigwport)
 	if err != nil {
@@ -1956,7 +1956,10 @@ func TestRestWatchers(t *testing.T) {
 		_, err = restcl.BookstoreV1().Order().Delete(ctx, meta)
 		AssertOk(t, err, fmt.Sprintf("error deleting object[%v](%s)", meta, err))
 	}
-
+	cnt, err := strconv.ParseInt(expvar.Get("api.cache.watchers").String(), 10, 32)
+	if err != nil {
+		t.Fatalf("parsing watch count failed (%s)", err)
+	}
 	waitWatch := make(chan error)
 	go func() {
 		t.Logf("Starting Watchers")
@@ -2085,4 +2088,15 @@ func TestRestWatchers(t *testing.T) {
 		fmt.Sprintf("failed to receive all watch3 events[%v/%v]", len(watcher3ExpEvents), len(watcher3Events)),
 		"10ms",
 		"3s")
+	cancel()
+	nwcnt := int64(0)
+	AssertEventually(t, func() (bool, interface{}) {
+		nwcnt, err = strconv.ParseInt(expvar.Get("api.cache.watchers").String(), 10, 32)
+		if err != nil {
+			t.Fatalf("parsing watch count failed (%s)", err)
+		}
+		// This assumes that the tests are not run in parallel.
+		return nwcnt == cnt, nil
+	}, fmt.Sprintf("watchers did not close [exp/got][%v/%v]", cnt, nwcnt), "100ms", "3s")
+
 }

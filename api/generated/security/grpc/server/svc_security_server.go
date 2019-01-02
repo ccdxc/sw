@@ -613,6 +613,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 				events = &security.AutoMsgSecurityGroupWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "security.SecurityGroup")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -712,6 +713,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 				events = &security.AutoMsgSGPolicyWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "security.SGPolicy")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -811,6 +813,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 				events = &security.AutoMsgAppWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "security.App")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -910,6 +913,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 				events = &security.AutoMsgFirewallProfileWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "security.FirewallProfile")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -1009,6 +1013,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 				events = &security.AutoMsgCertificateWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "security.Certificate")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():
@@ -1108,6 +1113,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 				events = &security.AutoMsgTrafficEncryptionPolicyWatchHelper{}
 				return nil
 			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "security.TrafficEncryptionPolicy")
 			for {
 				select {
 				case ev, ok := <-watcher.EventChan():

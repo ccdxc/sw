@@ -100,6 +100,7 @@ func (a adapter{{$svcname}}) AutoWatchSvc{{$svcname}}(oldctx oldcontext.Context,
 		in := i.(*api.ListWatchOptions)
         iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
         if ok && iws.(bool) {
+			nctx, cancel := context.WithCancel(ctx)
             ir, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPReq)
             if !ok {
                 return  nil, errors.New("unable to retrieve request")
@@ -113,13 +114,23 @@ func (a adapter{{$svcname}}) AutoWatchSvc{{$svcname}}(oldctx oldcontext.Context,
                 log.Errorf("WebSocket Upgrade failed (%s)", err)
                 return nil, err
             }
-            ctx = apiutils.SetVar(ctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
-            // Read the Request and unmarshall.
-            err = conn.ReadJSON(in)
-            if err != nil {
-                log.Errorf("Trying to read OPTS returned error(%s)", err)
-                return nil,  err
-            }
+            ctx = apiutils.SetVar(nctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+            conn.SetCloseHandler(func(code int, text string) error {
+            	cancel()
+            	log.Infof("received close notification on websocket [AutoWatch{{$svcname}}] (%v/%v)", code, text)
+                return nil
+            })
+			// start a dummy reciever
+			go func() {
+				for {
+					_, _, err := conn.ReadMessage()
+					if err !=nil {
+						log.Errorf("received error on websocket receive (%s)", err)
+						cancel()
+						return
+					}
+				}
+			}()
         }
 		return a.service.AutoWatchSvc{{$svcname}}(ctx, in)
 	}
@@ -145,6 +156,7 @@ func (a adapter{{$svcname}}) AutoWatch{{.}}(oldctx oldcontext.Context, in *api.L
 		in := i.(*api.ListWatchOptions)
         iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
         if ok && iws.(bool) {
+			nctx, cancel := context.WithCancel(ctx)
             ir, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPReq)
             if !ok {
                 return  nil, errors.New("unable to retrieve request")
@@ -158,7 +170,23 @@ func (a adapter{{$svcname}}) AutoWatch{{.}}(oldctx oldcontext.Context, in *api.L
                 log.Errorf("WebSocket Upgrade failed (%s)", err)
                 return nil, err
             }
-            ctx = apiutils.SetVar(ctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+            ctx = apiutils.SetVar(nctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+            conn.SetCloseHandler(func(code int, text string) error {
+                cancel()
+                log.Infof("received close notification on websocket [AutoWatch{{.}}] (%v/%v)", code, text)
+                return nil
+             })
+			// start a dummy reciever
+            go func() {
+				for {
+					_, _, err := conn.ReadMessage()
+					if err !=nil {
+						log.Errorf("received error on websocket receive (%s)", err)
+						cancel()
+						return
+					}
+				}
+			}()
         }
 		return a.service.AutoWatch{{.}}(ctx, in)
 	}

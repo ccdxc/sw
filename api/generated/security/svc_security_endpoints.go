@@ -2758,6 +2758,7 @@ func (r *EndpointsSecurityV1RestClient) AutoWatchSecurityGroup(ctx context.Conte
 				case lw.OutCh <- &ev:
 				case <-ctx.Done():
 					close(lw.OutCh)
+					conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
 					return
 				}
 			}
@@ -2765,6 +2766,10 @@ func (r *EndpointsSecurityV1RestClient) AutoWatchSecurityGroup(ctx context.Conte
 	}
 	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
 	lw.Run()
+	go func() {
+		<-ctx.Done()
+		conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+	}()
 	return lw, nil
 }
 
@@ -2904,6 +2909,7 @@ func (r *EndpointsSecurityV1RestClient) AutoWatchSGPolicy(ctx context.Context, o
 				case lw.OutCh <- &ev:
 				case <-ctx.Done():
 					close(lw.OutCh)
+					conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
 					return
 				}
 			}
@@ -2911,6 +2917,10 @@ func (r *EndpointsSecurityV1RestClient) AutoWatchSGPolicy(ctx context.Context, o
 	}
 	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
 	lw.Run()
+	go func() {
+		<-ctx.Done()
+		conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+	}()
 	return lw, nil
 }
 
@@ -3050,6 +3060,7 @@ func (r *EndpointsSecurityV1RestClient) AutoWatchApp(ctx context.Context, option
 				case lw.OutCh <- &ev:
 				case <-ctx.Done():
 					close(lw.OutCh)
+					conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
 					return
 				}
 			}
@@ -3057,6 +3068,10 @@ func (r *EndpointsSecurityV1RestClient) AutoWatchApp(ctx context.Context, option
 	}
 	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
 	lw.Run()
+	go func() {
+		<-ctx.Done()
+		conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+	}()
 	return lw, nil
 }
 
@@ -3196,6 +3211,7 @@ func (r *EndpointsSecurityV1RestClient) AutoWatchFirewallProfile(ctx context.Con
 				case lw.OutCh <- &ev:
 				case <-ctx.Done():
 					close(lw.OutCh)
+					conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
 					return
 				}
 			}
@@ -3203,6 +3219,10 @@ func (r *EndpointsSecurityV1RestClient) AutoWatchFirewallProfile(ctx context.Con
 	}
 	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
 	lw.Run()
+	go func() {
+		<-ctx.Done()
+		conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+	}()
 	return lw, nil
 }
 
@@ -3342,6 +3362,7 @@ func (r *EndpointsSecurityV1RestClient) AutoWatchCertificate(ctx context.Context
 				case lw.OutCh <- &ev:
 				case <-ctx.Done():
 					close(lw.OutCh)
+					conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
 					return
 				}
 			}
@@ -3349,6 +3370,10 @@ func (r *EndpointsSecurityV1RestClient) AutoWatchCertificate(ctx context.Context
 	}
 	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
 	lw.Run()
+	go func() {
+		<-ctx.Done()
+		conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+	}()
 	return lw, nil
 }
 
@@ -3472,6 +3497,7 @@ func (r *EndpointsSecurityV1RestClient) AutoWatchTrafficEncryptionPolicy(ctx con
 				case lw.OutCh <- &ev:
 				case <-ctx.Done():
 					close(lw.OutCh)
+					conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
 					return
 				}
 			}
@@ -3479,6 +3505,10 @@ func (r *EndpointsSecurityV1RestClient) AutoWatchTrafficEncryptionPolicy(ctx con
 	}
 	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
 	lw.Run()
+	go func() {
+		<-ctx.Done()
+		conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+	}()
 	return lw, nil
 }
 
