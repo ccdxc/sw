@@ -1,0 +1,61 @@
+meta:
+    name    : penctl
+    os      : [ linux, freebsd ]
+    nics    : [ pensando, mellanox, intel ]
+    targetcount : 120
+
+testcases:
+    -   name    : CHECK_LOGS
+        testcase: testcases.penctl.log
+        iterators :
+            type : simple
+            option : ["nmd", "netagent", "tmagent"]
+
+    -   name    : CHECK_EVENTS
+        testcase: testcases.penctl.events
+
+    -   name    : CHECK_CORES
+        ignore  : True
+        testcase: testcases.penctl.cores
+
+    -   name    : CHECK_FIRMWARE
+        testcase: testcases.penctl.firmware
+
+    -   name    : CHECK_METRICS
+        testcase: testcases.penctl.lif_metrics
+
+    -   name    : CHECK_EXECUTE
+        testcase: testcases.penctl.execute
+        iterators :
+            type : simple
+            command : [ "/nic/bin/halctl show endpoint --yaml",
+                         "ls -al /nic/bin/ /nic/tools/" ]
+
+    -   name    : CHECK_DIAG
+        testcase: testcases.penctl.diag
+
+    -   name    : CHECK_TECH_SUPPORT
+        ignore  : True
+        testcase: testcases.penctl.techsupport
+
+    -   name    : CHECK_TECH_SUPPORT_COLL
+        testcase: testcases.penctl.techsupport_coll
+
+    -   name    : CHECK_MODE
+        testcase: testcases.penctl.mode
+
+    -   name    : CHECK_VERSION
+        testcase: testcases.penctl.version
+
+    -   name    : CHECK_TOP_HELP
+        testcase: testcases.penctl.help
+        iterators :
+            type   : nested
+            key    : [" "]
+            option : ["delete", "list", "show", "system", "update",
+                      "delete core",
+                      "list cores",
+                      "show events", "show firmware-version", "show logs", "show metrics", "show mode", "show proc-meminfo",
+                      "show running-firmware", "show startup-firmware", "show system-memory-usage",
+                      "show firmware-install", "show tech-support"
+                     ]
