@@ -637,8 +637,8 @@ cpdc_fill_per_block_desc(uint32_t algo_type, uint32_t block_size,
 		       goto out;
 	       }
 
-	       fill_desc_fn(algo_type, pb_len, false, pb_sgl, pb_desc,
-			       pb_status_desc);
+	       fill_desc_fn(algo_type, pb_len, pb_sgl, pb_desc, pb_status_desc);
+
 	       pb_desc = get_next_desc(pb_desc, desc_object_size);
 
 	       pb_status_desc = cpdc_get_next_status_desc(pb_status_desc,

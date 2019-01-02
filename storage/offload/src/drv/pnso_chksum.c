@@ -18,8 +18,7 @@
 #include "pnso_utils.h"
 
 static void
-fill_chksum_desc(uint32_t algo_type, uint32_t buf_len,
-		bool flat_buf, void *src_buf,
+fill_chksum_desc(uint32_t algo_type, uint32_t buf_len, void *src_buf,
 		struct cpdc_desc *desc, struct cpdc_status_desc *status_desc)
 {
 	memset(desc, 0, sizeof(*desc));
@@ -28,7 +27,7 @@ fill_chksum_desc(uint32_t algo_type, uint32_t buf_len,
 	desc->cd_src = (uint64_t) sonic_virt_to_phy(src_buf);
 
 	desc->u.cd_bits.cc_integrity_src = 1;
-	desc->u.cd_bits.cc_src_is_list = flat_buf ? 0 : 1;
+	desc->u.cd_bits.cc_src_is_list = 1;
 
 	/*
 	 * due to PNSO_CHKSUM_TYPE_NONE, subtract by 1 to align with
@@ -114,7 +113,7 @@ chksum_setup(struct service_info *svc_info,
 		}
 
 		fill_chksum_desc(pnso_chksum_desc->algo_type,
-				svc_info->si_src_blist.len, false,
+				svc_info->si_src_blist.len,
 				svc_info->si_src_sgl.sgl,
 				chksum_desc, status_desc);
 		num_tags = 1;

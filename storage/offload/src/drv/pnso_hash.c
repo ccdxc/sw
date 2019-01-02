@@ -24,8 +24,7 @@ is_dflag_pblock_enabled(uint16_t flags)
 }
 
 static void
-fill_hash_desc(uint32_t algo_type, uint32_t buf_len,
-		bool flat_buf, void *src_buf,
+fill_hash_desc(uint32_t algo_type, uint32_t buf_len, void *src_buf,
 		struct cpdc_desc *desc, struct cpdc_status_desc *status_desc)
 {
 	memset(desc, 0, sizeof(*desc));
@@ -34,7 +33,7 @@ fill_hash_desc(uint32_t algo_type, uint32_t buf_len,
 	desc->cd_src = (uint64_t) sonic_virt_to_phy(src_buf);
 
 	desc->u.cd_bits.cc_enabled = 0;
-	desc->u.cd_bits.cc_src_is_list = flat_buf ? 0 : 1;
+	desc->u.cd_bits.cc_src_is_list = 1;
 	desc->u.cd_bits.cc_hash_enabled = 1;
 
 	/*
@@ -118,7 +117,7 @@ hash_setup(struct service_info *svc_info,
 		}
 
 		fill_hash_desc(pnso_hash_desc->algo_type,
-				svc_info->si_src_blist.len, false,
+				svc_info->si_src_blist.len,
 				svc_info->si_src_sgl.sgl,
 				hash_desc, status_desc);
 		num_tags = 1;
