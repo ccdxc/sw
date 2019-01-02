@@ -419,7 +419,6 @@ steps:
         base        : ref://trackerstore/steps/id=RFLOW_BASE
         paddingsize : 6
         fields      :
-        fields      :
             flags   : syn,ack
             seq     : 6000
             ack     : 5001
