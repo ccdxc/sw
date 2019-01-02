@@ -7,7 +7,7 @@ import { LDAPCheckResponse, LDAPCheckType } from '@app/components/settings-group
 import { AuthPolicyUtil } from '@app/components/settings-group/authpolicy/AuthPolicyUtil';
 import { ControllerService } from '@app/services/controller.service';
 import { AuthService } from '@app/services/generated/auth.service';
-import { AuthAuthenticationPolicy, AuthLdap, IApiStatus, IAuthAuthenticationPolicy } from '@sdk/v1/models/generated/auth';
+import { AuthAuthenticationPolicy, AuthLdap, IApiStatus, IAuthAuthenticationPolicy, AuthAuthenticators_authenticator_order, AuthRadius } from '@sdk/v1/models/generated/auth';
 import { MessageService } from 'primeng/primeng';
 import { Observable } from 'rxjs';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
@@ -19,6 +19,8 @@ import { Eventtypes } from '@app/enum/eventtypes.enum';
  * Thus, the component manage update/test operations.
  *
  * This component internally contain  local, ldap, radius sub components.  It handles REST call on behalf of sub-component. For example, it manages LDAP component's test-server calls.
+ *
+ * Note: authpolicy.component.html includes two <app-ldap> and <app-radius> tags.  One for 'update' and the other for 'create', developer must be careful to wire up @Input and @Output.
  *
  * As Auth-policy is a singleton in Venice, user should re-login to Venice after auth-policy is updated.
  */
@@ -76,7 +78,7 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
         cssClass: 'global-button-primary authpolicy-toolbar-button',
         text: 'Save',
         callback: () => {
-          this.saveAuthenticationPolicy();
+          this.saveAuthenticationPolicy(this.authPolicy.getFormGroupValues());
         }
       };
       buttons.push(saveRankChange);
@@ -115,6 +117,7 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
   }
 
   onCheckLDAPServerConnect(ldap: AuthLdap) {
+    this.authPolicy.spec.authenticators.ldap = ldap;
     this._authService.LdapConnectionCheck(this.authPolicy.getFormGroupValues()).subscribe(
       response => {
         const respAuthPolicy: AuthAuthenticationPolicy = response.body as AuthAuthenticationPolicy;
@@ -140,6 +143,7 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
   }
 
   onCheckLDAPBindConnect(ldap: AuthLdap) {
+    this.authPolicy.spec.authenticators.ldap = ldap;
     this._authService.LdapBindCheck(this.authPolicy.getFormGroupValues()).subscribe(
       response => {
         const respAuthPolicy: AuthAuthenticationPolicy = response.body as AuthAuthenticationPolicy;
@@ -171,7 +175,7 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
    * If the user is in the UI, they must have setup at least a local auth policy. We should only be updating the current one.
    */
   onInvokeSaveLDAP(isNewLDAP: boolean) {
-    this.saveAuthenticationPolicy();
+    this.saveAuthenticationPolicy(this.authPolicy.getFormGroupValues());
   }
 
   /**
@@ -181,13 +185,13 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
    * This is similar to onInvokeSaveLDAP(..) API
    */
   onInvokeSaveRadius(isNewRadius: boolean) {
-    this.saveAuthenticationPolicy();
+    this.saveAuthenticationPolicy(this.authPolicy.getFormGroupValues());
   }
 
-  saveAuthenticationPolicy() {
+  saveAuthenticationPolicy(authAuthenticationPolicy: IAuthAuthenticationPolicy) {
     let handler: Observable<{ body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number }>;
     // If the user is in the UI, they must have setup at least a local auth policy. We should only be updating the current one.
-    handler = this._authService.UpdateAuthenticationPolicy(this.authPolicy.getFormGroupValues());
+    handler = this._authService.UpdateAuthenticationPolicy(authAuthenticationPolicy);
     handler.subscribe(
       (response) => {
         this.invokeSuccessToaster('Update Successful', 'Updated Authentication policy. System will log you out in 3 seconds');
@@ -203,5 +207,17 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
       },
       this.restErrorHandler('Update Failed')
     );
+  }
+
+  onInvokeCreateLDAP(ldap: AuthLdap) {
+    this.authPolicy.spec.authenticators['authenticator-order'].push(AuthAuthenticators_authenticator_order.LDAP);
+    this.authPolicy.spec.authenticators.ldap = ldap;
+    this.saveAuthenticationPolicy(this.authPolicy.getFormGroupValues());
+  }
+
+  onInvokeCreateRadius(radius: AuthRadius) {
+    this.authPolicy.spec.authenticators['authenticator-order'].push(AuthAuthenticators_authenticator_order.RADIUS);
+    this.authPolicy.spec.authenticators.radius = radius;
+    this.saveAuthenticationPolicy(this.authPolicy.getFormGroupValues());
   }
 }

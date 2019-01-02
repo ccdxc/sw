@@ -13,9 +13,9 @@
           Radius
         </div>
         <div fxFlex></div>
-       <!--  <div fxFlex="nogrow" class="global-button-primary authpolicy-button radius-create" (click)="createRadius()">
+        <div fxFlex="nogrow" class="global-button-primary authpolicy-button radius-create" (click)="createRadius()">
           CREATE RADIUS AUTHENTICATOR
-        </div> -->
+        </div>
       </div>
     </div>
   
@@ -72,7 +72,7 @@
   <!-- EDIT MODE, SHOW SAVE/CANCEL BUTTON -->
   <div *ngIf="radiusEditMode" fxFlex="nogrow" fxLayout="row">
     <div *ngIf="radiusEditMode" fxFlex="nogrow">
-      <div (click)="saveRadius()" class="global-button-primary authpolicy-save">SAVE</div>
+      <button (click)="saveRadius()" class="global-button-primary authpolicy-save" [disabled]="!enableSaveButton()">SAVE</button>
     </div>
     <div *ngIf="radiusEditMode" fxFlex="nogrow">
       <div (click)="cancelEdit()" class="global-button-neutral authpolicy-cancel">CANCEL</div>
@@ -153,7 +153,7 @@
           <!-- Field Title --> 
           <div fxFlex="nogrow" fxLayout="column">
             <div class="radius-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
-              <span>Server/Port:</span>
+              <span>* Server/Port:</span>
             </div>
           </div>
           <!-- Field Values -->
@@ -169,7 +169,7 @@
           <!-- Field Title --> 
           <div fxFlex="nogrow" fxLayout="column">
             <div class="radius-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
-              <span>Server Secret:</span>
+              <span>* Server Secret:</span>
             </div>
           </div>
           <!-- Field Values - edit mode -->
@@ -186,7 +186,7 @@
           <!-- Field Title --> 
           <div fxFlex="nogrow" fxLayout="column">
             <div class="radius-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
-              <span>Auth Method:</span>
+              <span>* Auth Method:</span>
             </div>
           </div>
           <!-- Field Values - edit mode -->

@@ -1,11 +1,22 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { LdapComponent } from './ldap.component';
-import { MaterialdesignModule } from '@app/lib/materialdesign.module';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { By } from '@angular/platform-browser';
+import { SharedModule } from '@app/components/shared/shared.module';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { ControllerService } from '@app/services/controller.service';
+import { LogService } from '@app/services/logging/log.service';
+import { LogPublishersService } from '@app/services/logging/log-publishers.service';
+
+import { MatIconRegistry } from '@angular/material';
+import { RouterTestingModule } from '@angular/router/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { AuthLdap } from '@sdk/v1/models/generated/auth';
+import { By } from '@angular/platform-browser';
+import { MessageService } from 'primeng/primeng';
+import { PrimengModule } from '@app/lib/primeng.module';
+import { MaterialdesignModule } from '@app/lib/materialdesign.module';
+import { AuthLdap} from '@sdk/v1/models/generated/auth';
+
+import { LdapComponent } from './ldap.component';
 
 describe('LdapComponent', () => {
   let component: LdapComponent;
@@ -16,9 +27,20 @@ describe('LdapComponent', () => {
       declarations: [LdapComponent],
       imports: [
         MaterialdesignModule,
+        RouterTestingModule,
+        HttpClientTestingModule,
+        SharedModule,
         FormsModule,
         ReactiveFormsModule,
-        NoopAnimationsModule
+        NoopAnimationsModule,
+        PrimengModule
+      ],
+      providers: [
+        ControllerService,
+        LogService,
+        LogPublishersService,
+        MatIconRegistry,
+        MessageService
       ]
     })
       .compileComponents();

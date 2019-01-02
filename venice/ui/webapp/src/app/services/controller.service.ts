@@ -182,6 +182,7 @@ export class ControllerService {
     return sessionStorage.getItem(AUTH_KEY) != null;
   }
 
+
   public directPageAsUserAlreadyLogin() {
     this._router.navigate(['dashboard']);
   }
@@ -397,16 +398,20 @@ export class ControllerService {
 
   invokeRESTErrorToaster(summary, error) {
     const errorMsg = error.body != null ? error.body.message : '';
-    this.messageService.add({
-      severity: 'error',
-      summary: summary,
-      detail: errorMsg
-    });
+    this.invokeErrorToaster(summary, errorMsg);
   }
 
   restErrorHandler(summary) {
     return (error) => {
       this.invokeRESTErrorToaster(summary, error);
     };
+  }
+
+  invokeErrorToaster(summary: string, errorMsg: string) {
+    this.messageService.add({
+      severity: 'error',
+      summary: summary,
+      detail: errorMsg
+    });
   }
 }

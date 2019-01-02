@@ -5,6 +5,7 @@ import { IAuthRadius, AuthRadius, AuthRadiusServer } from '@sdk/v1/models/genera
 import { FormArray } from '@angular/forms';
 import { SelectItem } from 'primeng/primeng';
 import { Utility } from '@app/common/Utility';
+import { ControllerService } from '@app/services/controller.service';
 
 /**
  * RadiusComponent is a child component of AuthPolicy.component (parent)
@@ -34,10 +35,11 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
 
 
   @Input() radiusData: AuthRadius;
-  @Output() invokeSaveRadius: EventEmitter<any> = new EventEmitter();
+  @Output() invokeSaveRadius: EventEmitter<Boolean> = new EventEmitter();
+  @Output() invokeCreateRadius: EventEmitter<AuthRadius> = new EventEmitter();
 
-  constructor() {
-    super();
+  constructor(protected _controllerService: ControllerService) {
+    super(_controllerService);
   }
 
   ngOnInit() {
@@ -69,9 +71,38 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
     }
   }
 
+  isAllInputsValid(authRadius: AuthRadius): boolean {
+    const radius = authRadius.getFormGroupValues();
+    if (radius.servers.length < 1) {
+      return false;
+    } else {
+      for (let i = 0; i < radius.servers.length; i++ ) {
+        const server = radius.servers[i];
+        if (!this.isRadiusServerValid(server)) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  isRadiusServerValid(server: any): boolean {
+    if (Utility.isEmpty(server.url) || Utility.isEmpty(server.secret)) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * This api serves html template. It controlls whether to enble "SAVE" button
+   */
+  enableSaveButton(): boolean {
+    return this.isAllInputsValid(this.radiusObject);
+  }
+
   setRadiusEnableControl( ) {
     if (this.radiusEditMode) {
-      this.radiusObject.$formGroup.controls['enabled'].enable();
+        this.radiusObject.$formGroup.controls['enabled'].enable();
     } else {
       this.radiusObject.$formGroup.controls['enabled'].disable();
     }
@@ -99,20 +130,32 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
     if (this.inCreateMode) {
       // create from is canceling,
       this.radiusData = null;
+      this.radiusObject.$formGroup.reset();
     }
     // Reset the radiusObject with the passed in data
     this.updateRadiusObject();
+    this.inCreateMode = false;
   }
 
   saveRadius() {
     this.updateRadiusData();
-    // POST DATA
-    this.invokeSaveRadius.emit(false); // emit event to parent to update RADIUS if REST call succeeds, ngOnChange() will bb invoked and refresh data.
+    if (this.inCreateMode) {
+      if (this.isAllInputsValid(this.radiusObject)) {
+        this.invokeCreateRadius.emit(this.radiusData);
+      } else {
+        this._controllerService.invokeErrorToaster('Invalid', 'There are invalid inputs.  Fields with "*" are requried');
+      }
+    } else {
+      // POST DATA
+      this.invokeSaveRadius.emit(false); // emit event to parent to update RADIUS if REST call succeeds, ngOnChange() will bb invoked and refresh data.
+    }
   }
 
   createRadius() {
     this.radiusData = new AuthRadius();
+    this.toggleEdit();
     this.inCreateMode = true;
     this.setRadiusEditMode(true);
+    this.radiusObject.$formGroup.controls['enabled'].setValue(true);  // set RADIUS enable when set "create RADIUS"
   }
 }

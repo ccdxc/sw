@@ -1,10 +1,21 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { LocalComponent } from './local.component';
-import { By } from '@angular/platform-browser';
-import { MaterialdesignModule } from '@app/lib/materialdesign.module';
+import { SharedModule } from '@app/components/shared/shared.module';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { ControllerService } from '@app/services/controller.service';
+import { LogService } from '@app/services/logging/log.service';
+import { LogPublishersService } from '@app/services/logging/log-publishers.service';
+
+import { MatIconRegistry } from '@angular/material';
+import { RouterTestingModule } from '@angular/router/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { AuthpolicybaseComponent } from '@app/components/settings-group/authpolicy/authpolicybase/authpolicybase.component';
+import { By } from '@angular/platform-browser';
+import { MessageService } from 'primeng/primeng';
+import { PrimengModule } from '@app/lib/primeng.module';
+import { MaterialdesignModule } from '@app/lib/materialdesign.module';
+
+import { LocalComponent } from './local.component';
 
 
 describe('LocalComponent', () => {
@@ -15,7 +26,22 @@ describe('LocalComponent', () => {
     TestBed.configureTestingModule({
       declarations: [LocalComponent],
       imports: [
-        MaterialdesignModule, NoopAnimationsModule]
+        MaterialdesignModule,
+        RouterTestingModule,
+        HttpClientTestingModule,
+        SharedModule,
+        FormsModule,
+        ReactiveFormsModule,
+        NoopAnimationsModule,
+        PrimengModule
+      ],
+      providers: [
+        ControllerService,
+        LogService,
+        LogPublishersService,
+        MatIconRegistry,
+        MessageService
+      ]
     })
       .compileComponents();
   }));

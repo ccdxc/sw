@@ -1,13 +1,15 @@
-import { Component, OnInit, ViewEncapsulation, Output, EventEmitter, Input, ViewChild, ViewChildren, SimpleChanges, OnChanges } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, Output, EventEmitter, Input, ViewChild, ViewChildren, SimpleChanges, OnChanges , AfterViewInit, AfterContentInit} from '@angular/core';
 import { AuthpolicybaseComponent } from '@app/components/settings-group/authpolicy/authpolicybase/authpolicybase.component';
 import { Animations } from '@app/animations';
-import { AuthLdap, AuthLdapServer } from '@sdk/v1/models/generated/auth';
+import { AuthLdap, AuthLdapServer, AuthAuthenticationPolicy } from '@sdk/v1/models/generated/auth';
 import { FormArray, FormControl, AbstractControl } from '@angular/forms';
 import { MatSlideToggleChange } from '@angular/material';
 
 import { LDAPCheckResponse, LDAPCheckType, CheckResponseError } from '@app/components/settings-group/authpolicy/.';
 import { AuthPolicyUtil } from '@app/components/settings-group/authpolicy/AuthPolicyUtil';
 import { Utility } from '@app/common/Utility';
+
+import { ControllerService } from '@app/services/controller.service';
 /**
  * LdapComponent (child) is a child component of AuthPolicy.component (parent)
  * parent passes in "LDAPData" to child, child has a "LDAPObject" to reflect "LDAPData".
@@ -28,7 +30,7 @@ import { Utility } from '@app/common/Utility';
   },
   animations: [Animations]
 })
-export class LdapComponent extends AuthpolicybaseComponent implements OnInit, OnChanges {
+export class LdapComponent extends AuthpolicybaseComponent implements OnInit, OnChanges , AfterContentInit{
   isHover: boolean = false;
   LDAPEditMode: boolean = false;
   inCreateMode: boolean = false;
@@ -39,12 +41,15 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
   @Input() LDAPData: AuthLdap;
   @Input() ldapBindCheckResponse: LDAPCheckResponse = null;
   @Input() ldapConnCheckResponse: LDAPCheckResponse = null;
-  @Output() invokeCheckLDAPServerConnect: EventEmitter<any> = new EventEmitter();
-  @Output() invokeCheckLDAPBindConnect: EventEmitter<any> = new EventEmitter();
-  @Output() invokeSaveLDAP: EventEmitter<any> = new EventEmitter();
+  @Output() invokeCheckLDAPServerConnect: EventEmitter<AuthLdap> = new EventEmitter();
+  @Output() invokeCheckLDAPBindConnect: EventEmitter<AuthLdap> = new EventEmitter();
+  @Output() invokeSaveLDAP: EventEmitter<Boolean> = new EventEmitter();
+  @Output() invokeCreateLDAP: EventEmitter<AuthLdap> = new EventEmitter();
 
-  constructor() {
-    super();
+  @Input() parentAuthPolicy: AuthAuthenticationPolicy = null;
+
+  constructor(protected _controllerService: ControllerService) {
+    super(_controllerService);
   }
 
   getClassName(): string {
@@ -52,6 +57,10 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
   }
 
   ngOnInit() {
+    this.setLDAPEditMode(true);
+  }
+
+  ngAfterContentInit() {
     this.updateLDAPObject();
     this.setLDAPEditMode(false); // set LDAPEditMode to false, UI will disable LDAD-enabled slider widget
   }
@@ -130,7 +139,7 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
   // true toggle on the UI means this field should be false.
   toggleSkipVerification(server: FormControl, index: number, event: MatSlideToggleChange) {
     server.get(['tls-options', 'skip-server-cert-verification']).setValue(!event.checked);
-    this.checkServerTlsDisabling(server, index);
+    // TODO: comment out this line "this.checkServerTlsDisabling(server, index);" // per pull/8528 comment  -> allow the trusted-certs be filled out while skip verification is true.
   }
 
   addServer() {
@@ -153,22 +162,62 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
       // create form is canceling,
       // Remove the data we added
       this.LDAPData = null;
+      this.LDAPObject.$formGroup.reset();
     }
     // Reset the LDAPObject with the passed in data
     this.updateLDAPObject();
+    this.inCreateMode = false;
   }
 
   saveLDAP() {
     this.updateLDAPData();
-    // POST DATA
-    this.invokeSaveLDAP.emit(true); // emit event to parent to update LDAP if REST call succeeds, ngOnChange() will bb invoked and refresh data.
+    if (this.inCreateMode) {
+      if (this.isAllInputsValid(this.LDAPObject)) {
+        this.invokeCreateLDAP.emit(this.LDAPData);
+      } else {
+        this._controllerService.invokeErrorToaster('Invalid', 'There are invalid inputs.  Fields with "*" are requried');
+      }
+    } else {
+      // POST DATA
+      this.invokeSaveLDAP.emit(true); // emit event to parent to update LDAP if REST call succeeds, ngOnChange() will bb invoked and refresh data.
+    }
+  }
+
+  isAllInputsValid(authLDAP: AuthLdap): boolean {
+    const ldap = authLDAP.getFormGroupValues();
+    if (    Utility.isEmpty(ldap['base-dn'] )
+         || Utility.isEmpty(ldap['bind-dn'])
+         || Utility.isEmpty(ldap['bind-password'])) {
+           return false;
+         }
+    if (ldap.servers.length < 1) {
+      return false;
+    } else {
+      for (let i = 0; i < ldap.servers.length; i++ ) {
+        const server = ldap.servers[i];
+        if (!this.isServerValid(server)) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+  isServerValid(server: AuthLdapServer): boolean {
+    if (       Utility.isEmpty(server.url)
+            || Utility.isEmpty(server['tls-options']['server-name'])
+            || (Utility.isEmpty(server['tls-options']['trusted-certs']) && server['tls-options']['skip-server-cert-verification'] === true)
+        ) {
+            return false;
+          }
+    return true;
   }
 
   createLDAP() {
-    this.invokeSaveLDAP.emit(true);  // emit event to parent to create LDAP
     this.LDAPData = new AuthLdap();
+    this.toggleEdit();
     this.inCreateMode = true;
     this.setLDAPEditMode(true);
+    this.LDAPObject.$formGroup.controls['enabled'].setValue(true);  // set LDAP enable when set "create LDAP"
   }
 
   onCheckLdapConnection($event) {
@@ -229,4 +278,13 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
     const msgs = this.getErrorMessages(this.ldapBindCheckResponse);
     return Object.values(msgs).join('\n');
   }
+
+  /**
+   * This api serves html template. It controlls whether to enble "SAVE" button
+   */
+  enableSaveButton(): boolean {
+    return this.isAllInputsValid(this.LDAPObject);
+  }
+
+
 }

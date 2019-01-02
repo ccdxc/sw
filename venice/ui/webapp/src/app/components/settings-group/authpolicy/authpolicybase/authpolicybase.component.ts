@@ -1,4 +1,5 @@
 import { Component, OnInit, Output, EventEmitter, Input, ViewEncapsulation } from '@angular/core';
+import { ControllerService } from '@app/services/controller.service';
 
 @Component({
   selector: 'app-authpolicybase',
@@ -23,7 +24,7 @@ export class AuthpolicybaseComponent implements OnInit {
   // actually changing the rank
   @Output() changeAuthRank: EventEmitter<number> = new EventEmitter();
 
-  constructor() { }
+  constructor(protected _controllerService: ControllerService) { }
 
   ngOnInit() {
   }

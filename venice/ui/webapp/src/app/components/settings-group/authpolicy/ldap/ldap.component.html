@@ -1,7 +1,10 @@
 <div fxFlex="noshrink" fxLayout="row" class="authpolicy-group" [ngClass]="!LDAPEditMode ? 'authpolicy-group-hover' : '' ">
-  <ng-container *ngIf="LDAPData != null; else LDAPCreate">
+  <ng-container *ngIf="LDAPData != null">
     <ng-container *ngTemplateOutlet="LDAP"></ng-container>
   </ng-container>
+  <ng-container *ngIf="LDAPData == null">
+      <ng-container *ngTemplateOutlet="LDAPCreate"></ng-container>
+    </ng-container>
 </div> 
 
 <ng-template #LDAPCreate>
@@ -13,9 +16,9 @@
         LDAP
       </div>
       <div fxFlex></div>
-     <!--  <div fxFlex="nogrow" class="global-button-primary authpolicy-button ldap-create" (click)="createLDAP()">
+      <div fxFlex="nogrow" class="global-button-primary authpolicy-button ldap-create" (click)="createLDAP()">
         CREATE LDAP AUTHENTICATOR
-      </div> -->
+      </div>
     </div>
   </div>
 
@@ -36,7 +39,6 @@
       <div class="ldap-title">
         LDAP
       </div>
-  
     </div>
     <ng-container *ngTemplateOutlet="LDAPConfig"></ng-container>
     <div fxFlex="40px"></div>
@@ -73,7 +75,8 @@
   <!-- EDIT MODE, SHOW SAVE/CANCEL BUTTON -->
   <div *ngIf="LDAPEditMode" fxFlex="nogrow" fxLayout="row">    
     <div  fxFlex="nogrow">
-      <div (click)="saveLDAP()" class="global-button-primary authpolicy-save">SAVE</div>
+      <button (click)="saveLDAP()" class="global-button-primary authpolicy-save" 
+       [disabled]="!enableSaveButton()" >SAVE</button>
     </div>
     <div fxFlex="nogrow">
       <div (click)="cancelEdit()" class="global-button-neutral authpolicy-cancel">CANCEL</div>
@@ -96,10 +99,10 @@
           <!-- Field Title --> 
           <div fxFlex="nogrow" fxLayout="column">
             <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
-              <span>Bind DN:</span>
+              <span>* Bind DN:</span>
             </div>
             <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
-              <span>Bind Password:</span>
+              <span>* Bind Password:</span>
             </div>
           </div>
           <!-- Field Values - edit mode -->
@@ -138,7 +141,7 @@
           <!-- Field Title --> 
           <div fxFlex="nogrow" fxLayout="column">
             <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
-              <span>Base DN:</span>
+              <span>* Base DN:</span>
             </div>
             <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
               <span>User Object Class:</span>

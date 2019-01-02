@@ -151,3 +151,9 @@ $vertical-gutter: 5px;
 .authpolicy-lock-open {
   color: red;
 }
+
+.authpolicy-save:disabled {
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  opacity: .25 !important;
+}
