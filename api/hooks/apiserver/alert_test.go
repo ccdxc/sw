@@ -102,15 +102,15 @@ func TestAlertHooks(t *testing.T) {
 			name:        "invalid alert key",
 			ctx:         userCtx,
 			key:         "invalid",
-			skipBackend: true,
+			skipBackend: false,
 			err:         kvstore.NewKeyNotFoundError("invalid", 0),
 		},
 		{
 			name:        "no user in the context",
 			ctx:         context.Background(),
 			key:         a1Key,
-			skipBackend: true,
-			err:         errors.New("no user data found in the context"),
+			skipBackend: false,
+			err:         errors.New("no user found in context"),
 		},
 	}
 
@@ -176,8 +176,8 @@ func TestAlertHooks(t *testing.T) {
 
 			if err == nil {
 				outObj := out.(monitoring.Alert)
-				Assert(t, outObj.Status.Resolved == nil, "tc {%s}: failed to update status", tc.name)
-				Assert(t, outObj.Status.Acknowledged == nil, "tc {%s}: failed to update status", tc.name)
+				Assert(t, outObj.Status.Resolved == nil, "tc {%s}: failed to update status, resolved: %v", tc.name, outObj.Status.Resolved)
+				Assert(t, outObj.Status.Acknowledged == nil, "tc {%s}: failed to update status, acknowledged: %v", tc.name, outObj.Status.Acknowledged)
 
 				updatedAP := &monitoring.AlertPolicy{}
 				err = kvs.Get(context.Background(), ap1Key, updatedAP)

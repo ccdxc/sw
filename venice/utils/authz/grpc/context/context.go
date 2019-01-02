@@ -96,3 +96,17 @@ func UserMetaFromIncomingContext(ctx context.Context) (*api.ObjectMeta, bool) {
 	}
 	return &api.ObjectMeta{Name: names[0], Tenant: tenants[0]}, true
 }
+
+// UserMetaFromOutgoingContext return user meta info from grpc metadata in outgoing context
+func UserMetaFromOutgoingContext(ctx context.Context) (*api.ObjectMeta, bool) {
+	md, ok := metadata.FromOutgoingContext(ctx)
+	if !ok || md == nil {
+		return nil, false
+	}
+	names := md[usernameKey]
+	tenants := md[userTenantKey]
+	if len(names) == 0 || len(tenants) == 0 {
+		return nil, false
+	}
+	return &api.ObjectMeta{Name: names[0], Tenant: tenants[0]}, true
+}
