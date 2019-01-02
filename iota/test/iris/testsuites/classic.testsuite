@@ -46,7 +46,7 @@ testbundles:
         - classic/driver-features-sanity.testbundle
         - linktest/linktest.testbundle
         - storage/storage.testbundle
-        - penctl/penctl.testbundle
+        - penctl/penctl_classic.testbundle
 
     regression:
         # Relative paths from iota/test/iris/testbundles/
