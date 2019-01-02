@@ -187,8 +187,11 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
       this.subscriptions.push(subscription);
     }
 
-    this.getAlerts();
-    this.getEvents();
+    // If get alerts/events wasn't triggered by on change
+    if (!this.alertSubscription) {
+      this.getAlerts();
+      this.getEvents();
+    }
   }
 
   ngOnChanges(change: SimpleChanges) {

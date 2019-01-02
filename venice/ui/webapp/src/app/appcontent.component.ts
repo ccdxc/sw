@@ -241,6 +241,8 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
       this.navigate(['/monitoring', 'alertsevents']);
     } else if (payload['id'] === 'telemetry') {
       this.navigate(['/monitoring', 'telemetry']);
+    } else if (payload['id'] === 'dashboard') {
+      this.navigate(['/dashboard']);
     } else {
       this.uiconfigsService.navigateToHomepage();
     }

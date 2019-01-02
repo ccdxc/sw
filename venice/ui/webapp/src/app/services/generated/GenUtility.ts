@@ -2,7 +2,7 @@ import { HttpClient, HttpResponse, HttpErrorResponse } from '@angular/common/htt
 import { Utility } from '@app/common/Utility';
 import * as oboe from 'oboe';
 import { publishReplay, refCount } from 'rxjs/operators';
-import { Observable ,  Subject } from 'rxjs';
+import { Observable ,  Subject, Subscriber, TeardownLogic } from 'rxjs';
 import { VeniceResponse } from '@app/models/frontend/shared/veniceresponse.interface';
 import { MockDataUtil } from '@app/common/MockDataUtil';
 import { AUTH_KEY } from '@app/core';
@@ -11,6 +11,7 @@ import { WebSocketSubject } from 'rxjs/observable/dom/WebSocketSubject';
 export class GenServiceUtility {
   protected _http;
   protected urlServiceMap: { [method: string]: Observable<VeniceResponse> } = {};
+  protected urlWsMap: { [method: string]: WebSocketSubject<any>} = {};
   protected ajaxStartCallback: (payload: any) => void;
   protected ajaxEndCallback: (payload: any) => void;
   protected useWebSockets: boolean;
@@ -20,6 +21,21 @@ export class GenServiceUtility {
     this.ajaxStartCallback = ajaxStartCallback;
     this.ajaxEndCallback = ajaxEndCallback;
     this.useWebSockets = useWebSockets;
+    window.addEventListener('unload', (event) => {
+      for (const key in this.urlWsMap) {
+        if (this.urlWsMap.hasOwnProperty(key)) {
+          const ws = this.urlWsMap[key];
+          if (ws != null) {
+            // Closing websocket
+            try {
+              ws.unsubscribe();
+            } catch (e) {
+              console.error(e);
+            }
+          }
+        }
+      }
+    });
   }
 
   /**
@@ -31,7 +47,7 @@ export class GenServiceUtility {
    * @param payload Query param object to send with the request
    * @param eventPayload payload to publish on connection end
    */
-  protected oboeObserverCreate(url: string, payload: any, eventPayload: any) {
+  protected oboeObserverCreate(url: string, payload: any, eventPayload: any): ((this: Observable<any>, subscriber: Subscriber<any>) => TeardownLogic) {
     return (observer) => {
       const headers = {};
       headers[AUTH_KEY] = Utility.getInstance().getXSRFtoken();
@@ -79,25 +95,28 @@ export class GenServiceUtility {
       // we add the query params to the url
       url += '?' + Utility.getJQuery().param(payload);
     }
-    if (this.urlServiceMap[url] == null)  {
-      if (this.useWebSockets) {
+    if (this.useWebSockets) {
+      if (this.urlWsMap[url] == null) {
         url = url.replace('http://', 'ws://');
         url = url.replace('https://', 'wss://');
-        const observer: any = new WebSocketSubject(url);
-        this.urlServiceMap[url] = observer;
-      } else {
-        // Creating cold observer that emits events when oboe receives new data
-        const oboeObserver: Observable<any> = Observable.create(this.oboeObserverCreate(url, payload, eventPayload));
-        // Creating a replay subject that subscribes and unsubscribes from the oboeObserver source
-        // only if it has subscribers.
-        // The connection will only be open if there is a listener, and closed as soon as there
-        // are no more listeners
-        const observer = oboeObserver.pipe(publishReplay(), refCount());
-        this.urlServiceMap[url] = observer;
+        const observer = new WebSocketSubject(url);
+        this.urlWsMap[url] = observer;
       }
+      return this.urlWsMap[url];
+    } 
+
+    // Watch 
+    if (this.urlServiceMap[url] == null) {
+      // Creating cold observer that emits events when oboe receives new data
+      const oboeObserver: Observable<any> = Observable.create(this.oboeObserverCreate(url, payload, eventPayload));
+      // Creating a replay subject that subscribes and unsubscribes from the oboeObserver source
+      // only if it has subscribers.
+      // The connection will only be open if there is a listener, and closed as soon as there
+      // are no more listeners
+      const observer = oboeObserver.pipe(publishReplay(), refCount());
+      this.urlServiceMap[url] = observer;
     }
-    const retObserver = this.urlServiceMap[url];
-    return retObserver;
+    return this.urlServiceMap[url];
   }
 
   public invokeAJAX(method: string, url: string, payload: any,
