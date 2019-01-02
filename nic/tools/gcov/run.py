@@ -536,7 +536,7 @@ def run_and_generate_coverage(data):
             if args.run_only and args.run_only != run_name:
                 continue
 
-            run_time = getattr(run[run_name], "max-run-time", args.max_job_run_time)
+            run_time = run[run_name].get("max-run-time", args.max_job_run_time)
             run_time = _get_max_job_run_time(run_time)
             if "cmd" in run[run_name]:
                 run_cmd(run[run_name]["cmd"], run_time)
