@@ -455,8 +455,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 		bufid = bufids[0]
 		l.Debugf("Staging Buffer Id is %v\n", bufid)
 	}
-	var dryRun bool
-	druRun := singletonAPISrv.config.IsDryRun(ctx)
+	dryRun := singletonAPISrv.config.IsDryRun(ctx)
 	if dryRun && bufid == "" {
 		l.ErrorLog("msg", "dry run without valid buffer ID")
 		return nil, errInternalError.makeError(nil, []string{"invalid staging buffer"}, "")
@@ -479,6 +478,14 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 
 	if bufid != "" {
 		orig = i
+	}
+	// If this is a dry run, transform from storage before using the object
+	if dryRun {
+		i, err = m.requestType.TransformFromStorage(context.Background(), oper, i)
+		if err != nil {
+			l.ErrorLog("msg", "transform from storage failed", "error", err)
+			return nil, errInternalError.makeError(i, []string{err.Error()}, "")
+		}
 	}
 	// Version transform if needed.
 	if singletonAPISrv.version != ver {
@@ -579,7 +586,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 			return nil, errInternalError.makeError(i, []string{err.Error()}, "")
 		}
 		kvold := kvwrite
-		i, kvwrite, err = v(ctx, kv, txn, key, oper, druRun, i)
+		i, kvwrite, err = v(ctx, kv, txn, key, oper, dryRun, i)
 		// Precommit errors are allowed in staged requests but not in dryRun calls or non-staged requests
 		if err != nil && (bufid == "" || dryRun) {
 			l.ErrorLog("msg", "precommit hook failed", "error", err)

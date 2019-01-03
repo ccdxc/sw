@@ -63,7 +63,10 @@ func (sst *secretValueTransformer) decrypt(nonceAndCiphertext, associatedData []
 // The original plaintext is unchanged, so caller should zeroize it when it is no longer needed.
 func (sst *secretValueTransformer) TransformToStorage(ctx context.Context, plaintext []byte) ([]byte, error) {
 	if plaintext == nil {
-		return nil, errors.New("TransformToStorage: secret cannot be nil")
+		return nil, nil
+	}
+	if len(plaintext) == 0 {
+		return plaintext, nil
 	}
 	ciphertext, err := sst.encrypt(plaintext, nil)
 	if err != nil {
@@ -77,7 +80,10 @@ func (sst *secretValueTransformer) TransformToStorage(ctx context.Context, plain
 // Caller should zeroize the plaintext when no longer needed.
 func (sst *secretValueTransformer) TransformFromStorage(ctx context.Context, storedData []byte) ([]byte, error) {
 	if storedData == nil {
-		return nil, errors.New("TransformFromStorage: data cannot be nil")
+		return nil, nil
+	}
+	if len(storedData) == 0 {
+		return storedData, nil
 	}
 	if ctxutils.GetPeerID(ctx) == globals.APIGw {
 		return nil, nil

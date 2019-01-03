@@ -18,11 +18,15 @@ import (
 func checkRoundTrip(t *testing.T, st ValueTransformer, preTx []byte) {
 	sst := st.(*secretValueTransformer)
 	postTx, err := sst.TransformToStorage(context.Background(), preTx)
+	if len(preTx) == 0 {
+		Assert(t, len(postTx) == 0, "empty secret not transformed to empty")
+		return
+	}
 	AssertOk(t, err, "Error transforming to storage")
 	// verify that output is base64 encoded
 	decPostTx, err := base64.StdEncoding.DecodeString(string(postTx))
 	AssertOk(t, err, "Transformed string failed base64 decode")
-	Assert(t, !bytes.Equal(decPostTx, preTx), "transformation did not alter string")
+	Assert(t, !bytes.Equal(decPostTx, preTx), "transformation did not alter string[%v/%v]", preTx, decPostTx)
 	minDecLen := len(preTx) + sst.aeadCipher.NonceSize()
 	Assert(t, len(decPostTx) >= minDecLen, fmt.Sprintf("Transformed string too small. Actual: %v, Min: %v", len(decPostTx), minDecLen))
 	invTx, err := sst.TransformFromStorage(context.Background(), postTx)
@@ -57,10 +61,12 @@ func TestSecretValueTransformer(t *testing.T) {
 	// NEGATIVE TEST-CASES
 
 	// nil data
-	_, err = sst.TransformToStorage(context.Background(), nil)
-	Assert(t, err != nil, "TransformToStorage did not reject nil data")
-	_, err = sst.TransformFromStorage(context.Background(), nil)
-	Assert(t, err != nil, "TransformFromStorage did not reject nil data")
+	ret, err := sst.TransformToStorage(context.Background(), nil)
+	AssertOk(t, err, "TransformToStorage rejected nil input")
+	Assert(t, ret == nil, "TransformToStorage did not return nil for nil input")
+	ret, err = sst.TransformFromStorage(context.Background(), nil)
+	AssertOk(t, err, "TransformFromStorage rejected nil data")
+	Assert(t, ret == nil, "TransformFromStorage did not return nil for nil data")
 
 	// garbage data
 	garbageString := make([]byte, 256)

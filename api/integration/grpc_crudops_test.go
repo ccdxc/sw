@@ -2,6 +2,7 @@ package integration
 
 import (
 	"context"
+	"encoding/base64"
 	"expvar"
 	"fmt"
 	"reflect"
@@ -1620,6 +1621,11 @@ func TestStaging(t *testing.T) {
 			_, err := restcl.BookstoreV1().Customer().Get(ctx, &objectMeta)
 			if err != nil {
 				t.Fatalf("Get of Order %s failed after commit (%s)", v, err)
+			}
+			cust, _ := apicl.BookstoreV1().Customer().Get(ctx, &objectMeta)
+			decpass, _ := base64.StdEncoding.DecodeString(string(cust.Spec.Password))
+			if string(cust.Spec.Password) != "Test123" {
+				t.Fatalf("expected password (%s), got (%s), base64 decoded (%s), for customer (%s)", "Test123", string(cust.Spec.Password), decpass, cust.Name)
 			}
 		}
 	}
