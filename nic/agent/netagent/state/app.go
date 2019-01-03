@@ -33,12 +33,12 @@ func (na *Nagent) CreateApp(app *netproto.App) error {
 		log.Infof("Received duplicate app create for {%+v}", app)
 		return nil
 	}
-	// Validate App Timeout is parseable.
-	if len(app.Spec.AppTimeout) > 0 {
-		err = validateTimeout(app.Spec.AppTimeout)
+	// Validate App Idle Timeout is parseable.
+	if len(app.Spec.AppIdleTimeout) > 0 {
+		err = validateTimeout(app.Spec.AppIdleTimeout)
 		if err != nil {
-			log.Errorf("invalid AppTimeout duration %s", app.Spec.AppTimeout)
-			return fmt.Errorf("invalid AppTimeout duration %s", app.Spec.AppTimeout)
+			log.Errorf("invalid AppIdleTimeout duration %s", app.Spec.AppIdleTimeout)
+			return fmt.Errorf("invalid AppIdleTimeout duration %s", app.Spec.AppIdleTimeout)
 		}
 	}
 	// Validate only one ALG is specified
@@ -56,17 +56,13 @@ func (na *Nagent) CreateApp(app *netproto.App) error {
 			algMapper = setBit(algMapper, 0)
 		}
 		if alg.ICMP != nil {
+			// TODO Validate ICMP Code and Type Ranges here
 			algMapper = setBit(algMapper, 1)
 		}
 		if alg.FTP != nil {
 			algMapper = setBit(algMapper, 2)
 		}
 		if alg.MSRPC != nil {
-			err = validateTimeout(alg.MSRPC.MapEntryTimeout)
-			if err != nil {
-				log.Errorf("invalid map entry timeout format in MSRPC App. %v", alg.MSRPC.MapEntryTimeout)
-				return err
-			}
 			algMapper = setBit(algMapper, 3)
 		}
 		if alg.RTSP != nil {
@@ -116,11 +112,6 @@ func (na *Nagent) CreateApp(app *netproto.App) error {
 		}
 
 		if alg.SUNRPC != nil {
-			err = validateTimeout(alg.SUNRPC.MapEntryTimeout)
-			if err != nil {
-				log.Errorf("invalid map entry timeout format in SunRPC App. %v", alg.SUNRPC.MapEntryTimeout)
-				return err
-			}
 			algMapper = setBit(algMapper, 6)
 		}
 		if alg.TFTP != nil {

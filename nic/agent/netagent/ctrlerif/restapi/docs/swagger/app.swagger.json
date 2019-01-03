@@ -461,23 +461,23 @@
     "netprotoAppSpec": {
       "type": "object",
       "properties": {
-        "protocol": {
+        "proto-ports": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "title": "List of proto/port"
+          "description": "List of protocol/ports. Valid combinations tcp/80 udp/10000-20000 icmp/5. For ICMP the port is interpreted as ICMP Code.."
         },
         "alg-type": {
           "type": "string",
-          "title": "ALG configuration if specified"
+          "title": "ALG specific configuration"
         },
         "alg": {
           "$ref": "#/definitions/netprotoALG"
         },
-        "app-timeout": {
+        "app-idle-timeout": {
           "type": "string",
-          "title": "AppTimeout is the app specific idle timeout. Specfied in pareable time, Eg: 10s, 1m30s or 1h45m15s and so on"
+          "title": "AppIdleTimeout is the app specific idle timeout. Specfied in parseable time, Eg: 10s, 1m30s or 1h45m15s and so on"
         }
       },
       "title": "app spec"
@@ -561,10 +561,6 @@
           "type": "integer",
           "format": "int64",
           "title": "RPC Program identifier"
-        },
-        "map-entry-timeout": {
-          "type": "string",
-          "title": "Defines timeout in hours, minutes, eg 24h, 300m"
         }
       },
       "title": "RPC ALG configuration for MSRPC and SunRPC"

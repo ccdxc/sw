@@ -8,6 +8,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/pensando/sw/nic/agent/netagent/datapath/delphidp/halproto"
 	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
@@ -345,7 +346,7 @@ func convertRuleAction(action string) *halproto.SecurityRuleAction {
 }
 
 // CreateSGPolicy creates a security group policy in the datapath
-func (dp *DelphiDatapath) CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []*netproto.SecurityGroup) error {
+func (dp *DelphiDatapath) CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []*netproto.SecurityGroup, ruleIDAppLUT *sync.Map) error {
 	var fwRules []*halproto.SecurityRule
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
@@ -391,7 +392,7 @@ func (dp *DelphiDatapath) CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, s
 }
 
 // UpdateSGPolicy updates a security group policy in the datapath
-func (dp *DelphiDatapath) UpdateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64) error {
+func (dp *DelphiDatapath) UpdateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, ruleIDAppLUT *sync.Map) error {
 	var fwRules []*halproto.SecurityRule
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{

@@ -23,7 +23,7 @@ func TestAppCreateDelete(t *testing.T) {
 			Name:      "testApp",
 		},
 		Spec: netproto.AppSpec{
-			Protocol: []string{"udp/53"},
+			ProtoPorts: []string{"udp/53"},
 			ALG: &netproto.ALG{
 				DNS: &netproto.DNS{
 					DropLargeDomainPackets: true,
@@ -62,6 +62,41 @@ func TestAppCreateDelete(t *testing.T) {
 	Assert(t, err != nil, "deleting non-existing app succeeded", ag)
 }
 
+func TestAppCreateDNS(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	dnsApp := netproto.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "dns",
+		},
+		Spec: netproto.AppSpec{
+			ProtoPorts: []string{"udp/53"},
+			ALG: &netproto.ALG{
+				DNS: &netproto.DNS{
+					DropLargeDomainPackets:   true,
+					DropMultiZonePackets:     true,
+					DropLongLabelPackets:     true,
+					DropMultiQuestionPackets: true,
+					QueryResponseTimeout:     "30s",
+				},
+			},
+		},
+	}
+
+	// create app
+	err := ag.CreateApp(&dnsApp)
+	AssertOk(t, err, "Error creating dns app")
+	p, err := ag.FindApp(dnsApp.ObjectMeta)
+	AssertOk(t, err, "DNS App was not found in DB")
+	Assert(t, p.Name == "dns", "App names did not match", dnsApp)
+}
+
 func TestAppUpdate(t *testing.T) {
 	// create netagent
 	ag, _, _ := createNetAgent(t)
@@ -77,7 +112,7 @@ func TestAppUpdate(t *testing.T) {
 			Name:      "testApp",
 		},
 		Spec: netproto.AppSpec{
-			Protocol: []string{"udp/53"},
+			ProtoPorts: []string{"udp/53"},
 			ALG: &netproto.ALG{
 				DNS: &netproto.DNS{
 					DropLargeDomainPackets: true,
@@ -96,7 +131,7 @@ func TestAppUpdate(t *testing.T) {
 	Assert(t, p.Name == "testApp", "App names did not match", app)
 
 	appSpec := netproto.AppSpec{
-		AppTimeout: "1m",
+		AppIdleTimeout: "1m",
 	}
 
 	app.Spec = appSpec
@@ -121,7 +156,7 @@ func TestAppCreateOnNonExistingNamespace(t *testing.T) {
 			Name:      "testApp",
 		},
 		Spec: netproto.AppSpec{
-			Protocol: []string{"udp/53"},
+			ProtoPorts: []string{"udp/53"},
 			ALG: &netproto.ALG{
 				DNS: &netproto.DNS{
 					DropLargeDomainPackets: true,
@@ -151,7 +186,7 @@ func TestAppUpdateOnNonExistentApp(t *testing.T) {
 			Name:      "testApp",
 		},
 		Spec: netproto.AppSpec{
-			Protocol: []string{"udp/53"},
+			ProtoPorts: []string{"udp/53"},
 			ALG: &netproto.ALG{
 				DNS: &netproto.DNS{
 					DropLargeDomainPackets: true,
@@ -181,7 +216,7 @@ func TestAppMultipleALGConfig_TwoALG(t *testing.T) {
 			Name:      "testApp",
 		},
 		Spec: netproto.AppSpec{
-			Protocol: []string{"udp/53"},
+			ProtoPorts: []string{"udp/53"},
 			ALG: &netproto.ALG{
 				DNS: &netproto.DNS{
 					DropLargeDomainPackets: true,
@@ -213,7 +248,7 @@ func TestAppMultipleALGConfig_ThreeALG(t *testing.T) {
 			Name:      "testApp",
 		},
 		Spec: netproto.AppSpec{
-			Protocol: []string{"udp/53"},
+			ProtoPorts: []string{"udp/53"},
 			ALG: &netproto.ALG{
 				DNS: &netproto.DNS{
 					DropLargeDomainPackets: true,
@@ -224,8 +259,7 @@ func TestAppMultipleALGConfig_ThreeALG(t *testing.T) {
 					AllowMismatchIPAddresses: true,
 				},
 				SUNRPC: &netproto.RPC{
-					ProgramID:       42,
-					MapEntryTimeout: "40s",
+					ProgramID: 42,
 				},
 			},
 		},
@@ -235,7 +269,7 @@ func TestAppMultipleALGConfig_ThreeALG(t *testing.T) {
 	Assert(t, err != nil, "app with multiple alg configs should fail")
 }
 
-func TestAppBadAppTimeout(t *testing.T) {
+func TestAppBadAppIdleTimeout(t *testing.T) {
 	// create netagent
 	ag, _, _ := createNetAgent(t)
 	Assert(t, ag != nil, "Failed to create agent %#v", ag)
@@ -248,7 +282,7 @@ func TestAppBadAppTimeout(t *testing.T) {
 			Name:      "testApp",
 		},
 		Spec: netproto.AppSpec{
-			Protocol: []string{"udp/53"},
+			ProtoPorts: []string{"udp/53"},
 			ALG: &netproto.ALG{
 				DNS: &netproto.DNS{
 					DropLargeDomainPackets: true,
@@ -256,7 +290,7 @@ func TestAppBadAppTimeout(t *testing.T) {
 					QueryResponseTimeout:   "30s",
 				},
 			},
-			AppTimeout: "bad timeout format",
+			AppIdleTimeout: "bad timeout format",
 		},
 	}
 	// create app
@@ -277,7 +311,7 @@ func TestAppBadDNSQueryResponseTimeout(t *testing.T) {
 			Name:      "testApp",
 		},
 		Spec: netproto.AppSpec{
-			Protocol: []string{"udp/53"},
+			ProtoPorts: []string{"udp/53"},
 			ALG: &netproto.ALG{
 				DNS: &netproto.DNS{
 					DropLargeDomainPackets: true,
@@ -285,7 +319,7 @@ func TestAppBadDNSQueryResponseTimeout(t *testing.T) {
 					QueryResponseTimeout:   "bad timeout format",
 				},
 			},
-			AppTimeout: "bad timeout format",
+			AppIdleTimeout: "bad timeout format",
 		},
 	}
 	// create app
@@ -306,13 +340,13 @@ func TestAppBadSIPMediaInActivityTimeout(t *testing.T) {
 			Name:      "testApp",
 		},
 		Spec: netproto.AppSpec{
-			Protocol: []string{"udp/53"},
+			ProtoPorts: []string{"udp/53"},
 			ALG: &netproto.ALG{
 				SIP: &netproto.SIP{
 					MediaInactivityTimeout: "bad timeout format",
 				},
 			},
-			AppTimeout: "1m",
+			AppIdleTimeout: "1m",
 		},
 	}
 	// create app
@@ -333,13 +367,13 @@ func TestAppBadSIPMaxCallDuration(t *testing.T) {
 			Name:      "testApp",
 		},
 		Spec: netproto.AppSpec{
-			Protocol: []string{"udp/53"},
+			ProtoPorts: []string{"udp/53"},
 			ALG: &netproto.ALG{
 				SIP: &netproto.SIP{
 					MaxCallDuration: "bad timeout format",
 				},
 			},
-			AppTimeout: "1m",
+			AppIdleTimeout: "1m",
 		},
 	}
 	// create app
@@ -360,13 +394,13 @@ func TestAppBadSIPCTimeout(t *testing.T) {
 			Name:      "testApp",
 		},
 		Spec: netproto.AppSpec{
-			Protocol: []string{"udp/53"},
+			ProtoPorts: []string{"udp/53"},
 			ALG: &netproto.ALG{
 				SIP: &netproto.SIP{
 					CTimeout: "bad timeout format",
 				},
 			},
-			AppTimeout: "1m",
+			AppIdleTimeout: "1m",
 		},
 	}
 	// create app
@@ -387,13 +421,13 @@ func TestAppBadSIPT1Timeout(t *testing.T) {
 			Name:      "testApp",
 		},
 		Spec: netproto.AppSpec{
-			Protocol: []string{"udp/53"},
+			ProtoPorts: []string{"udp/53"},
 			ALG: &netproto.ALG{
 				SIP: &netproto.SIP{
 					T1Timeout: "bad timeout format",
 				},
 			},
-			AppTimeout: "1m",
+			AppIdleTimeout: "1m",
 		},
 	}
 	// create app
@@ -414,70 +448,16 @@ func TestAppBadSIPT4Timeout(t *testing.T) {
 			Name:      "testApp",
 		},
 		Spec: netproto.AppSpec{
-			Protocol: []string{"udp/53"},
+			ProtoPorts: []string{"udp/53"},
 			ALG: &netproto.ALG{
 				SIP: &netproto.SIP{
 					T4Timeout: "bad timeout format",
 				},
 			},
-			AppTimeout: "1m",
+			AppIdleTimeout: "1m",
 		},
 	}
 	// create app
 	err := ag.CreateApp(&app)
 	Assert(t, err != nil, "app with bad sip t4 timeout must fail")
-}
-
-func TestAppBadSunRPCMapEntryTimeout(t *testing.T) {
-	// create netagent
-	ag, _, _ := createNetAgent(t)
-	Assert(t, ag != nil, "Failed to create agent %#v", ag)
-	defer ag.Stop()
-	app := netproto.App{
-		TypeMeta: api.TypeMeta{Kind: "App"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "testApp",
-		},
-		Spec: netproto.AppSpec{
-			Protocol: []string{"udp/53"},
-			ALG: &netproto.ALG{
-				SUNRPC: &netproto.RPC{
-					MapEntryTimeout: "bad timeout format",
-				},
-			},
-			AppTimeout: "1m",
-		},
-	}
-	// create app
-	err := ag.CreateApp(&app)
-	Assert(t, err != nil, "app with bad sunrpc map entry timeout must fail")
-}
-
-func TestAppBadMSRPCMapEntryTimeout(t *testing.T) {
-	// create netagent
-	ag, _, _ := createNetAgent(t)
-	Assert(t, ag != nil, "Failed to create agent %#v", ag)
-	defer ag.Stop()
-	app := netproto.App{
-		TypeMeta: api.TypeMeta{Kind: "App"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "testApp",
-		},
-		Spec: netproto.AppSpec{
-			Protocol: []string{"udp/53"},
-			ALG: &netproto.ALG{
-				MSRPC: &netproto.RPC{
-					MapEntryTimeout: "bad timeout format",
-				},
-			},
-			AppTimeout: "1m",
-		},
-	}
-	// create app
-	err := ag.CreateApp(&app)
-	Assert(t, err != nil, "app with bad msrpc map entry timeout must fail")
 }

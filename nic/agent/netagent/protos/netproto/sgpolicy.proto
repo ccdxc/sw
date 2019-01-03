@@ -62,20 +62,23 @@ message PolicyRule {
     }
 
     // list of actions for the rule. Some combinations are invalid, eg: ["PERMIT", "DENY"]
-    string Action           = 1 [(venice.check) = "StrEnum(PolicyRule.PolicyAction)",
-                                 (gogoproto.nullable) = true, (gogoproto.jsontag) = "action,omitemtpy"];
+    string Action               = 1 [(venice.check) = "StrEnum(PolicyRule.PolicyAction)",
+                                     (gogoproto.nullable) = true, (gogoproto.jsontag) = "action,omitemtpy"];
 
     // inbound rule match. IP Address, CIDR based IP mask, or hyphen separeted IP Range or App info based selector.
     // Emtpy src is interpreted as match all
-    MatchSelector Src       = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "source,omitempty"];
+    MatchSelector Src           = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "source,omitempty"];
 
     // outbound rule match. IP Address, CIDR based IP mask, or hyphen separeted IP Range or App info based selector.
     // Emtpy dst is interpreted as match all
-    MatchSelector Dst       = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "destination,omitempty"];
+    MatchSelector Dst           = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "destination,omitempty"];
 
     // Allocated ID
-    uint64 ID               = 4 [(gogoproto.jsontag) = "rule-id,omitempty"];
+    uint64 ID                   = 4 [(gogoproto.jsontag) = "rule-id,omitempty"];
 
+    // Optional AppName to fetch additional ALG configurations. ICMP Code is inferred from its corresponding App definition.
+    // A single rule can have the match parameters through the selectors or its corresponding App object
+    string AppName              = 5 [(gogoproto.jsontag) = "app-name,omitempty"];
 }
 
 

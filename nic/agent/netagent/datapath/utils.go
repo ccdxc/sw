@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"sync"
 
 	"strconv"
 
@@ -35,120 +36,226 @@ func ipv4Touint32(ip net.IP) uint32 {
 	return binary.BigEndian.Uint32(ip)
 }
 
-// convertMatchCriteria converts agent match object to hal match object
-func (hd *Datapath) convertMatchCriteria(src, dst *netproto.MatchSelector) ([]*halproto.RuleMatch, error) {
+// buildHALRuleMatches converts agent match object to hal match object.
+// RuleMatches for L4 Ports are built either using App/ALG Data or match selectors
+func (hd *Datapath) buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleIDAppLUT *sync.Map, ruleID *uint64) ([]*halproto.RuleMatch, error) {
 	var srcIPRanges, dstIPRanges []*halproto.IPAddressObj
-	var srcPortRanges, dstPortRanges []*halproto.L4PortRange
-	var srcProtocols, dstProtocols []halproto.IPProtocol
+	var srcProtoPorts, dstProtoPorts []string
+	var appProtoPorts []string
+	var app *netproto.App
+
 	var ruleMatches []*halproto.RuleMatch
 	var err error
 
-	// build src match attributes
+	// Check if ProtoPorts need to be parsed from the app object
+	if ruleIDAppLUT != nil && ruleID != nil {
+		obj, ok := ruleIDAppLUT.Load(ruleID)
+		// Rule has a corresponding ALG information
+		if ok {
+			app, ok := obj.(*netproto.App)
+			if !ok {
+				log.Errorf("failed to cast App object. %v", obj)
+				return nil, fmt.Errorf("failed to cast App object. %v", obj)
+			}
+			appProtoPorts = app.Spec.ProtoPorts
+		}
+	}
+
 	if src != nil {
 		srcIPRanges, err = hd.convertIPs(src.Addresses)
 		if err != nil {
-			log.Errorf("Could not convert match criteria from Src: {%v}. Err: %v", src, err)
+			log.Errorf("Could not convert IP Addresses from Src: {%v}. Err: %v", src.Addresses, err)
 			return nil, err
 		}
+
+		// Build proto/port from src app configs.
 		for _, s := range src.AppConfigs {
-			if s.Port != "" && s.Protocol != "" {
-				sPort, cerr := hd.convertPort(s.Port)
-				if cerr != nil {
-					log.Errorf("Could not convert port match criteria from: {%v} . Err: %v", s, err)
-					return nil, cerr
-				}
-				srcPortRanges = append(srcPortRanges, sPort)
-				srcProtocols = append(srcProtocols, hd.convertAppProtocol(s.Protocol))
-			}
+			// TODO Unify the proto/port definitions between App Object and Match Selectors to avoid manually building this.
+			protoPort := fmt.Sprintf("%s/%s", s.Protocol, s.Port)
+			srcProtoPorts = append(srcProtoPorts, protoPort)
 		}
 	}
 
-	// build dst match attributes
 	if dst != nil {
 		dstIPRanges, err = hd.convertIPs(dst.Addresses)
 		if err != nil {
-			log.Errorf("Could not convert match criteria from Dst: {%v}. Err: %v", dst, err)
+			log.Errorf("Could not convert IP Addresses from Dst: {%v}. Err: %v", dst.Addresses, err)
 			return nil, err
 		}
+
+		// Build proto/port from dst app configs.
+		log.Infof("BALERION CONVERT PORT: %v", dst.AppConfigs)
+
 		for _, d := range dst.AppConfigs {
-			if d.Port != "" && d.Protocol != "" {
-				dPort, err := hd.convertPort(d.Port)
-				if err != nil {
-					log.Errorf("Could not convert port match criteria from: {%v} . Err: %v", d, err)
-					return nil, err
-				}
-				dstPortRanges = append(dstPortRanges, dPort)
-				dstProtocols = append(dstProtocols, hd.convertAppProtocol(d.Protocol))
-			}
+			// TODO Unify the proto/port definitions between App Object and Match Selectors to avoid manually building this.
+			protoPort := fmt.Sprintf("%s/%s", d.Protocol, d.Port)
+			dstProtoPorts = append(dstProtoPorts, protoPort)
 		}
 	}
 
+	// For App parsed proto/ports there is no src or dst. Override dstProtoPorts here if there is a valid app for a given rule.
+	// TODO decide if we want to support src and dst based app proto/ports
+
+	if len(appProtoPorts) > 0 {
+		dstProtoPorts = appProtoPorts
+	}
+
+	// flatten appropriately
 	// flatten if needed
 	switch {
-	case len(srcPortRanges) == 0 && len(dstPortRanges) == 0:
+	// Empty src and dst proto ports. No flattening needed.
+	case len(srcProtoPorts) == 0 && len(dstProtoPorts) == 0:
 		var ruleMatch halproto.RuleMatch
 		ruleMatch.SrcAddress = srcIPRanges
 		ruleMatch.DstAddress = dstIPRanges
 		ruleMatches = append(ruleMatches, &ruleMatch)
 		return ruleMatches, nil
-	case len(srcPortRanges) == 0:
-		for i, p := range dstPortRanges {
+	// ICMP ALG Handler
+	case app != nil && app.Spec.ALG.ICMP != nil:
+		var ruleMatch halproto.RuleMatch
+
+		ruleMatch.SrcAddress = srcIPRanges
+		ruleMatch.DstAddress = dstIPRanges
+		appMatch := halproto.RuleMatch_AppMatch{
+			App: &halproto.RuleMatch_AppMatch_IcmpInfo{
+				IcmpInfo: &halproto.RuleMatch_ICMPAppInfo{
+					IcmpCode: app.Spec.ALG.ICMP.Code,
+					IcmpType: app.Spec.ALG.ICMP.Type,
+				},
+			},
+		}
+		ruleMatch.AppMatch = &appMatch
+		ruleMatch.Protocol = hd.convertAppProtocol("icmp")
+		ruleMatches = append(ruleMatches, &ruleMatch)
+		return ruleMatches, nil
+
+	case len(srcProtoPorts) == 0:
+		for _, protoPort := range dstProtoPorts {
 			var ruleMatch halproto.RuleMatch
+			var appMatch halproto.RuleMatch_AppMatch
 			ruleMatch.SrcAddress = srcIPRanges
 			ruleMatch.DstAddress = dstIPRanges
-			appMatch := halproto.RuleMatch_AppMatch{
+
+			protocol, matchInfo, err := hd.parseProtocolPort(protoPort)
+			if err != nil {
+				log.Errorf("Could not parse protocol/port information from %v. Err: %v", protoPort, err)
+				return nil, err
+			}
+
+			// Ensure that the protocol is not ICMP.
+			// ICMP related match criteria needs to be specified as a part of its ALG.
+			if protocol == "icmp" {
+				log.Errorf("ICMP cannot be specified as a part of the protoPort. It should be a part of the corresponding App object.")
+				return nil, fmt.Errorf("icmp cannot be specified as a part of the protoPort. It should be a part of the corresponding App object")
+			}
+			// Handle TCP/UDP proto/ports here.
+			portRange, err := hd.convertPort(matchInfo)
+			if err != nil {
+				log.Errorf("Could not parse protocol/port information from %v. Err: %v", protoPort, err)
+				return nil, err
+			}
+			appMatch = halproto.RuleMatch_AppMatch{
 				App: &halproto.RuleMatch_AppMatch_PortInfo{
 					PortInfo: &halproto.RuleMatch_L4PortAppInfo{
 						DstPortRange: []*halproto.L4PortRange{
-							p,
+							portRange,
 						},
 					},
 				},
 			}
+
 			ruleMatch.AppMatch = &appMatch
-			ruleMatch.Protocol = dstProtocols[i]
+			ruleMatch.Protocol = hd.convertAppProtocol(protocol)
 			ruleMatches = append(ruleMatches, &ruleMatch)
+
 		}
 		return ruleMatches, nil
-	case len(dstPortRanges) == 0:
-		for i, p := range srcPortRanges {
+	case len(dstProtoPorts) == 0:
+		for _, protoPort := range srcProtoPorts {
 			var ruleMatch halproto.RuleMatch
+			var appMatch halproto.RuleMatch_AppMatch
 			ruleMatch.SrcAddress = srcIPRanges
 			ruleMatch.DstAddress = dstIPRanges
-			appMatch := halproto.RuleMatch_AppMatch{
+			protocol, matchInfo, err := hd.parseProtocolPort(protoPort)
+			if err != nil {
+				log.Errorf("Could not parse protocol/port information from %v. Err: %v", protoPort, err)
+				return nil, err
+			}
+			if protocol == "icmp" {
+				log.Errorf("ICMP cannot be specified as a part of the protoPort. It should be a part of the corresponding App object.")
+				return nil, fmt.Errorf("icmp cannot be specified as a part of the protoPort. It should be a part of the corresponding App object")
+			}
+			// Handle TCP/UDP proto/ports here.
+			portRange, err := hd.convertPort(matchInfo)
+			if err != nil {
+				log.Errorf("Could not parse protocol/port information from %v. Err: %v", protoPort, err)
+				return nil, err
+			}
+			appMatch = halproto.RuleMatch_AppMatch{
 				App: &halproto.RuleMatch_AppMatch_PortInfo{
 					PortInfo: &halproto.RuleMatch_L4PortAppInfo{
 						SrcPortRange: []*halproto.L4PortRange{
-							p,
+							portRange,
 						},
 					},
 				},
 			}
+
 			ruleMatch.AppMatch = &appMatch
-			ruleMatch.Protocol = srcProtocols[i]
+			ruleMatch.Protocol = hd.convertAppProtocol(protocol)
 			ruleMatches = append(ruleMatches, &ruleMatch)
+
 		}
 		return ruleMatches, nil
-	case len(srcPortRanges) > 0 && len(dstPortRanges) > 0:
-		for _, sPort := range srcPortRanges {
-			for i, dPort := range dstPortRanges {
+	case len(srcProtoPorts) > 0 && len(dstProtoPorts) > 0:
+		for _, sProtoPort := range srcProtoPorts {
+			for _, dProtoPort := range dstProtoPorts {
 				var ruleMatch halproto.RuleMatch
+				var appMatch halproto.RuleMatch_AppMatch
 				ruleMatch.SrcAddress = srcIPRanges
 				ruleMatch.DstAddress = dstIPRanges
-				appMatch := halproto.RuleMatch_AppMatch{
+				_, srcMatchInfo, err := hd.parseProtocolPort(sProtoPort)
+				if err != nil {
+					log.Errorf("Could not parse source protocol/port information from %v. Err: %v", sProtoPort, err)
+					return nil, err
+				}
+
+				protocol, dstMatchInfo, err := hd.parseProtocolPort(dProtoPort)
+				if err != nil {
+					log.Errorf("Could not parse destination protocol/port information from %v. Err: %v", dProtoPort, err)
+					return nil, err
+				}
+
+				if protocol == "icmp" {
+					log.Errorf("ICMP cannot be specified as a part of the protoPort. It should be a part of the corresponding App object.")
+					return nil, fmt.Errorf("icmp cannot be specified as a part of the protoPort. It should be a part of the corresponding App object")
+				}
+				// Handle TCP/UDP proto/ports here.
+				srcPortRange, err := hd.convertPort(srcMatchInfo)
+				if err != nil {
+					log.Errorf("Could not parse source protocol/port information from %v. Err: %v", sProtoPort, err)
+					return nil, err
+				}
+				dstPortRange, err := hd.convertPort(dstMatchInfo)
+				if err != nil {
+					log.Errorf("Could not parse destination protocol/port information from %v. Err: %v", dProtoPort, err)
+					return nil, err
+				}
+				appMatch = halproto.RuleMatch_AppMatch{
 					App: &halproto.RuleMatch_AppMatch_PortInfo{
 						PortInfo: &halproto.RuleMatch_L4PortAppInfo{
 							SrcPortRange: []*halproto.L4PortRange{
-								sPort,
+								srcPortRange,
 							},
 							DstPortRange: []*halproto.L4PortRange{
-								dPort,
+								dstPortRange,
 							},
 						},
 					},
 				}
+
 				ruleMatch.AppMatch = &appMatch
-				ruleMatch.Protocol = dstProtocols[i]
+				ruleMatch.Protocol = hd.convertAppProtocol(protocol)
 				ruleMatches = append(ruleMatches, &ruleMatch)
 			}
 		}
@@ -156,6 +263,10 @@ func (hd *Datapath) convertMatchCriteria(src, dst *netproto.MatchSelector) ([]*h
 	default:
 		return ruleMatches, nil
 	}
+}
+
+func (hd *Datapath) buildHALRuleMatchesFromAppData(src, dst *netproto.MatchSelector, ruleIDAppLUT *sync.Map, ruleID *uint64) ([]*halproto.RuleMatch, error) {
+	return nil, nil
 }
 
 func (hd *Datapath) convertAppProtocol(protocol string) halproto.IPProtocol {
@@ -355,14 +466,14 @@ func (hd *Datapath) convertPort(port string) (*halproto.L4PortRange, error) {
 	switch len(portSlice) {
 	// single port
 	case 1:
-		port, err := strconv.Atoi(port)
-		if err != nil || port <= 0 || port > 65535 {
+		p, err := strconv.Atoi(port)
+		if err != nil || p <= 0 || p > 65535 {
 			log.Errorf("invalid port format. %v", port)
 			return nil, fmt.Errorf("invalid port format. %v", port)
 		}
 		halPort := &halproto.L4PortRange{
-			PortLow:  uint32(port),
-			PortHigh: uint32(port),
+			PortLow:  uint32(p),
+			PortHigh: uint32(p),
 		}
 		return halPort, nil
 	// port range
@@ -482,6 +593,17 @@ func (hd *Datapath) convertPortTypeFec(portType string) (halPortType halproto.Po
 		halFecType = halproto.PortFecType_PORT_FEC_TYPE_NONE
 	default:
 		halPortType = halproto.PortType_PORT_TYPE_NONE
+	}
+	return
+}
+
+func (hd *Datapath) parseProtocolPort(protoPort string) (protocol, port string, err error) {
+	if components := strings.Split(strings.TrimSpace(protoPort), "/"); len(components) == 2 {
+		protocol = components[0]
+		port = components[1]
+	} else {
+		err = fmt.Errorf("failed to parse protocol/port information from the App. %v. Err: %v", protocol, err)
+		return
 	}
 	return
 }

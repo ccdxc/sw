@@ -1225,7 +1225,7 @@ func TestAppWatch(t *testing.T) {
 			Name:   "testapp",
 		},
 		Spec: netproto.AppSpec{
-			Protocol: []string{"tcp/1000"},
+			ProtoPorts: []string{"tcp/1000"},
 		},
 	}
 	srv.appdb["testapp"] = &app

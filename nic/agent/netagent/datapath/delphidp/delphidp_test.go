@@ -567,7 +567,7 @@ func (ds *delphidpTestSuite) TestDelphiSgPolicy(t *C) {
 	}
 
 	// create a sg policy
-	err := ds.datapath.CreateSGPolicy(&sgPolicy, 100, nil)
+	err := ds.datapath.CreateSGPolicy(&sgPolicy, 100, nil, nil)
 	AssertOk(t, err, "Error creating sgpolicy in delphi")
 
 	AssertEventually(t, func() (bool, interface{}) {
@@ -576,7 +576,7 @@ func (ds *delphidpTestSuite) TestDelphiSgPolicy(t *C) {
 		return (len(sgplist) == 1), sgplist
 	}, "invalid number of sg policies")
 
-	err = ds.datapath.UpdateSGPolicy(&sgPolicy, 100)
+	err = ds.datapath.UpdateSGPolicy(&sgPolicy, 100, nil)
 	AssertOk(t, err, "Error updating sg policy in delphi")
 
 	// delete the network

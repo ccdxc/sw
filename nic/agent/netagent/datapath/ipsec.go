@@ -310,7 +310,7 @@ func (hd *Datapath) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy, ns *netproto.
 
 	for _, r := range ipSec.Spec.Rules {
 		// Match source and dest attributes
-		ruleMatches, err := hd.convertMatchCriteria(r.Src, r.Dst)
+		ruleMatches, err := hd.buildHALRuleMatches(r.Src, r.Dst, nil, nil)
 		if err != nil {
 			log.Errorf("Could not convert match criteria Err: %v", err)
 			return err

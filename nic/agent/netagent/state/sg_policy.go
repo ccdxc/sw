@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"hash/fnv"
+	"sync"
 
 	"github.com/gogo/protobuf/proto"
 
@@ -64,7 +65,22 @@ func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
 	}
 
 	for i, r := range sgp.Spec.Rules {
-		sgp.Spec.Rules[i].ID = generateHash(&r)
+		ruleHash := generateHash(&r)
+		sgp.Spec.Rules[i].ID = ruleHash
+		if len(r.AppName) > 0 {
+			meta := api.ObjectMeta{
+				Tenant:    sgp.Tenant,
+				Namespace: sgp.Namespace,
+				Name:      r.AppName,
+			}
+			app, err := na.FindApp(meta)
+			if err != nil {
+				log.Errorf("could not find the corresponding app. %v", r.AppName)
+				return fmt.Errorf("could not find the corresponding app. %v", r.AppName)
+			}
+
+			na.RuleIDAppLUT.Store(ruleHash, app)
+		}
 	}
 
 	sgp.Status.SGPolicyID, err = na.Store.GetNextID(types.SGPolicyID)
@@ -75,11 +91,14 @@ func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
 	}
 
 	// create it in datapath
-	err = na.Datapath.CreateSGPolicy(sgp, ns.Status.NamespaceID, securityGroups)
+	err = na.Datapath.CreateSGPolicy(sgp, ns.Status.NamespaceID, securityGroups, &na.RuleIDAppLUT)
 	if err != nil {
 		log.Errorf("Error creating security group policy in datapath. SGPolicy {%+v}. Err: %v", sgp, err)
 		return err
 	}
+
+	// Flush the look up table as it always reconstructed
+	na.RuleIDAppLUT = sync.Map{}
 
 	// Add dependencies depending on the attachment points
 	if len(sgp.Spec.AttachGroup) > 0 {
@@ -163,14 +182,33 @@ func (na *Nagent) UpdateSGPolicy(sgp *netproto.SGPolicy) error {
 
 	// Recompute hash
 	for i, r := range sgp.Spec.Rules {
+		ruleHash := generateHash(&r)
 		sgp.Spec.Rules[i].ID = generateHash(&r)
+		if len(r.AppName) > 0 {
+			meta := api.ObjectMeta{
+				Tenant:    sgp.Tenant,
+				Namespace: sgp.Namespace,
+				Name:      r.AppName,
+			}
+			app, err := na.FindApp(meta)
+			if err != nil {
+				log.Errorf("could not find the corresponding app. %v", r.AppName)
+				return fmt.Errorf("could not find the corresponding app. %v", r.AppName)
+			}
+
+			na.RuleIDAppLUT.Store(ruleHash, app)
+		}
 	}
 
-	err = na.Datapath.UpdateSGPolicy(sgp, ns.Status.NamespaceID)
+	err = na.Datapath.UpdateSGPolicy(sgp, ns.Status.NamespaceID, &na.RuleIDAppLUT)
 	if err != nil {
 		log.Errorf("Error updating the SG Policy {%+v} in datapath. Err: %v", existingSgp, err)
 		return err
 	}
+
+	// Flush the look up table as it always reconstructed
+	na.RuleIDAppLUT = sync.Map{}
+
 	key := na.Solver.ObjectKey(sgp.ObjectMeta, sgp.TypeMeta)
 	na.Lock()
 	na.SGPolicyDB[key] = sgp

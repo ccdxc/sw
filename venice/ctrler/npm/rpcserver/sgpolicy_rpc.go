@@ -187,13 +187,8 @@ func convertRules(veniceRules []security.SGRule) (agentRules []netproto.PolicyRu
 }
 
 // convertAppConfig converts venice app information to port protocol for agent
+// TODO Fix app association for NetAgent
 func convertAppConfig(apps []string, protoPorts []security.ProtoPort) (agentAppConfigs []*netproto.AppConfig) {
-	for _, a := range apps {
-		c := netproto.AppConfig{
-			AppName: a,
-		}
-		agentAppConfigs = append(agentAppConfigs, &c)
-	}
 	for _, pp := range protoPorts {
 		c := netproto.AppConfig{
 			Protocol: pp.Protocol,
