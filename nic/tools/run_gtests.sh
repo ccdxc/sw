@@ -12,11 +12,9 @@ export LUA_PATH="${SNORT_EXPORT_DIR}/lua/?.lua;;"
 export SNORT_DAQ_PATH=${SNORT_EXPORT_DIR}/x86_64/lib/
 export HAL_CONFIG_PATH=${TOPDIR}/conf
 export DISABLE_AGING=1
-export COVFILE=${TOPDIR}/coverage/sim_bullseye_hal.cov
-
 
 if [[ "$1" ==  --coveragerun ]]; then
-    CMD_OPTS="COVFILE\=${COVFILE}"
+    export COVFILE=${TOPDIR}/coverage/sim_bullseye_hal.cov
 fi
 PRELOADS=${BUILD_DIR}/lib/libp4pd_mock.so
 HBMHASH_PRELOADS=${BUILD_DIR}/lib/libhbmhashp4pd_mock.so
