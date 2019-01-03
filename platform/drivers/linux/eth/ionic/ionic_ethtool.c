@@ -292,7 +292,28 @@ int ionic_rss_ind_tbl_set(struct lif *lif, const u32 *indir)
 		for (i = 0; i < RSS_IND_TBL_SIZE; i++)
 			lif->rss_ind_tbl[i] = indir[i];
 
-	return ionic_adminq_post_wait(lif, &ctx);
+	netdev_info(lif->netdev, "rss_ind_tbl_set\n");
+
+//	return ionic_adminq_post_wait(lif, &ctx);
+//
+// NIC hasn't implemented this as a regulad adminq command yet
+// so we need to set this up as a dev_cmd instead
+//
+	{
+		struct ionic_dev *idev = &lif->ionic->idev;
+		u8 __iomem *data = (void __iomem *)lif->ionic->idev.dev_cmd;
+		int err;
+
+		data += 0x800;
+
+		for (i = 0; i < RSS_IND_TBL_SIZE; i++)
+			iowrite8(lif->rss_ind_tbl[i], &data[i]);
+
+		ionic_dev_cmd_go(idev, (union dev_cmd *)&ctx.cmd);
+		err = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
+
+		return err;
+	}
 }
 
 int ionic_rss_hash_key_set(struct lif *lif, const u8 *key)
