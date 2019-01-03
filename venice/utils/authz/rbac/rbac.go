@@ -31,6 +31,10 @@ func (a *authorizer) IsAuthorized(user *auth.User, operations ...authz.Operation
 	return a.permissionChecker.checkPermissions(user, operations)
 }
 
+func (a *authorizer) Stop() {
+	a.permissionChecker.stop()
+}
+
 // defaultPermissionChecker implements permissionChecker interface
 type defaultPermissionChecker struct {
 	permissionGetter PermissionGetter
@@ -48,6 +52,10 @@ func (pc *defaultPermissionChecker) checkPermissions(user *auth.User, operations
 	return true, nil
 }
 
+func (pc *defaultPermissionChecker) stop() {
+	pc.permissionGetter.Stop()
+}
+
 func newDefaultPermissionChecker(name, apiServer string, rslver resolver.Interface) permissionChecker {
 	return &defaultPermissionChecker{
 		permissionGetter: GetPermissionGetter(name, apiServer, rslver),
@@ -59,8 +67,13 @@ var gPermGetter *defaultPermissionGetter
 var once sync.Once
 
 type defaultPermissionGetter struct {
-	cache   *userPermissionsCache
-	watcher *watcher
+	cache        *userPermissionsCache
+	watcher      *watcher
+	name         string // module name using the watcher
+	apiServerURL string // api server address
+	resolver     resolver.Interface
+	stopped      bool
+	sync.Mutex
 }
 
 func (pg *defaultPermissionGetter) GetPermissions(user *auth.User) []auth.Permission {
@@ -84,18 +97,40 @@ func (pg *defaultPermissionGetter) GetRoleBindings(tenant string) []auth.RoleBin
 }
 
 func (pg *defaultPermissionGetter) Stop() {
+	pg.Lock()
+	defer pg.Unlock()
 	pg.watcher.stop()
+	pg.stopped = true
+}
+
+func (pg *defaultPermissionGetter) Start() {
+	pg.Lock()
+	defer pg.Unlock()
+	if pg.stopped {
+		pg.watcher.start(pg.name, pg.apiServerURL, pg.resolver)
+		pg.stopped = false
+	}
 }
 
 // GetPermissionGetter returns a singleton implementation of PermissionGetter
 func GetPermissionGetter(name, apiServer string, rslver resolver.Interface) PermissionGetter {
+	if gPermGetter != nil && gPermGetter.stopped {
+		gPermGetter.name = name
+		gPermGetter.apiServerURL = apiServer
+		gPermGetter.resolver = rslver
+		gPermGetter.Start()
+	}
+
 	once.Do(func() {
 		cache := newUserPermissionsCache()
 		// start the watcher on api server
 		watcher := newWatcher(cache, name, apiServer, rslver)
 		gPermGetter = &defaultPermissionGetter{
-			cache:   cache,
-			watcher: watcher,
+			cache:        cache,
+			watcher:      watcher,
+			name:         name,
+			apiServerURL: apiServer,
+			resolver:     rslver,
 		}
 	})
 

@@ -208,6 +208,17 @@ func (w *watcher) stop() {
 	w.waitGrp.Wait()
 }
 
+// start starts the watcher. It blocks if the watcher is not in a stopped state.
+func (w *watcher) start(name, apiServerURL string, rslver resolver.Interface) {
+	// create context and cancel
+	w.watchCtx, w.watchCancel = context.WithCancel(context.Background())
+	// unset stop flag
+	w.stopFlag.Lock()
+	w.stopFlag.flag = false
+	w.stopFlag.Unlock()
+	go w.runWatcher(name, apiServerURL, rslver)
+}
+
 func (w *watcher) stopped() (val bool) {
 	w.stopFlag.RLock()
 

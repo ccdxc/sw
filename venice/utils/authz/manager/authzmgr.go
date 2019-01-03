@@ -38,3 +38,10 @@ func (authzmgr *authorizationManager) IsAuthorized(user *auth.User, operations .
 	}
 	return true, nil
 }
+
+// Stop stops the underlying authorizers
+func (authzmgr *authorizationManager) Stop() {
+	for _, authorizer := range authzmgr.authorizers {
+		authorizer.Stop()
+	}
+}

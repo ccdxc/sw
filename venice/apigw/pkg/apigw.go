@@ -449,12 +449,16 @@ Loop:
 	a.runstate.cond.Broadcast()
 	a.runstate.cond.L.Unlock()
 	recorder.Event(evtsapi.ServiceRunning, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Service %s running on %s", globals.APIGw, utils.GetHostname()), nil)
-	a.logger.Infof("exit", <-a.doneCh)
+	a.logger.Info("exit ", <-a.doneCh)
 }
 
 func (a *apiGw) Stop() {
 	a.doneCh <- errors.New("User called stop")
+	a.runstate.cond.L.Lock()
+	a.runstate.running = false
+	a.runstate.cond.L.Unlock()
 	a.authnMgr.Uninitialize()
+	a.authzMgr.Stop()
 	if a.rslver != nil {
 		a.rslver.Stop()
 	}

@@ -17,6 +17,9 @@ type Authorizer interface {
 
 	// AllowedClusterKinds returns kinds in cluster scope for which user has authorization for give action type.
 	AllowedClusterKinds(user *auth.User, actionType auth.Permission_ActionType) ([]auth.ObjKind, error)
+
+	// Stop stops the authorizer
+	Stop()
 }
 
 // Operation represents an user operation on a resource about which an authorization decision has to be made

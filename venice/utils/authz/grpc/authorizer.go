@@ -22,6 +22,8 @@ func (a *authorizer) IsAuthorized(user *auth.User, operations ...authz.Operation
 	return a.authorizer.IsAuthorized(a.user, operations...)
 }
 
+func (a *authorizer) Stop() {}
+
 func (a *authorizer) AllowedTenantKinds(user *auth.User, tenant, namespace string, actionType auth.Permission_ActionType) ([]auth.ObjKind, error) {
 	return a.authorizer.AllowedTenantKinds(user, tenant, namespace, actionType)
 }

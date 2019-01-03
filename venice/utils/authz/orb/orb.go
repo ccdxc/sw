@@ -31,3 +31,7 @@ func (a *authorizer) IsAuthorized(user *auth.User, operations ...authz.Operation
 	}
 	return a.rbac.IsAuthorized(user, operations...)
 }
+
+func (a *authorizer) Stop() {
+	a.rbac.Stop()
+}

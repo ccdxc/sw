@@ -22,7 +22,10 @@ type PermissionGetter interface {
 	// GetRoleBindings retrieves role bindings within a given tenant
 	GetRoleBindings(tenant string) []auth.RoleBinding
 
-	// Stop un-initializes permission getter
+	// Start initializes/re-initializes PermissionGetter. It blocks if AuthGetter has not been un-initialized through Stop()
+	Start()
+
+	// Stop un-initializes PermissionGetter
 	Stop()
 }
 
@@ -30,4 +33,7 @@ type PermissionGetter interface {
 type permissionChecker interface {
 	// checkPermissions returns true if all requested operations are authorized
 	checkPermissions(user *auth.User, requestedOperations []authz.Operation) (bool, error)
+
+	// stops the permission checker
+	stop()
 }

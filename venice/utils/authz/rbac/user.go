@@ -19,6 +19,8 @@ func (pc *userPermissionChecker) checkPermissions(user *auth.User, operations []
 	return true, nil
 }
 
+func (pc *userPermissionChecker) stop() {}
+
 // NewUserAuthorizer returns an instance of user authorizer to check if an operation is allowed against his assigned permissions
 func NewUserAuthorizer(perms []auth.Permission) authz.Authorizer {
 	userAuthorizer := &authorizer{

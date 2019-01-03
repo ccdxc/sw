@@ -209,6 +209,7 @@ func GetAuthGetter(name, apiServer string, rslver resolver.Interface) AuthGetter
 	if gAuthGetter != nil && gAuthGetter.stopped {
 		gAuthGetter.resolver = rslver
 		gAuthGetter.watcher.resolver = rslver
+		gAuthGetter.watcher.apiServer = apiServer
 		gAuthGetter.apiServer = apiServer
 		gAuthGetter.Start()
 	}
