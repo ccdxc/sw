@@ -21,21 +21,7 @@ namespace linkmgr {
 }
 
 int
-sdk_error_logger (const char *format, ...)
-{
-    char       logbuf[128];
-    va_list    args;
-
-    va_start(args, format);
-    vsnprintf(logbuf, sizeof(logbuf), format, args);
-    HAL_TRACE_ERR_NO_META("{}", logbuf);
-    va_end(args);
-
-    return 0;
-}
-
-int
-sdk_debug_logger (const char *format, ...)
+sdk_logger (sdk_trace_level_e trace_level, const char *format, ...)
 {
     char       logbuf[128];
     va_list    args;
@@ -64,7 +50,7 @@ linkmgr_initialize (const char c_file[])
                            true, "linkmgr_gtest.log",
                            TRACE_FILE_SIZE_DEFAULT, TRACE_NUM_FILES_DEFAULT,
                            ::utils::trace_debug);
-    sdk::lib::logger::init(sdk_error_logger, sdk_debug_logger);
+    sdk::lib::logger::init(sdk_logger);
 
     sdk::lib::thread::control_cores_mask_set(0x1);
 

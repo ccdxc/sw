@@ -43,21 +43,7 @@ sigusr1_handler(int sig)
 }
 
 static int
-sdk_error_logger (const char *format, ...)
-{
-    char       logbuf[1024];
-    va_list    args;
-
-    va_start(args, format);
-    vsnprintf(logbuf, sizeof(logbuf), format, args);
-    NIC_LOG_DEBUG("{}", logbuf);
-    va_end(args);
-
-    return 0;
-}
-
-static int
-sdk_debug_logger (const char *format, ...)
+sdk_logger (sdk_trace_level_e trace_level, const char *format, ...)
 {
     char       logbuf[1024];
     va_list    args;
@@ -73,7 +59,7 @@ sdk_debug_logger (const char *format, ...)
 static void
 sdk_init (void)
 {
-    sdk::lib::logger::init(sdk_error_logger, sdk_debug_logger);
+    sdk::lib::logger::init(sdk_logger);
 }
 
 static void

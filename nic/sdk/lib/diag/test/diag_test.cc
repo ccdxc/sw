@@ -70,29 +70,25 @@ Logger GetCurrentLogger() {
     return current_logger;
 }
 
-int diag_error_logger (const char *format, ...)
+int diag_logger (sdk_trace_level_e trace_level, const char *format, ...)
 {
     char       logbuf[1024];
     va_list    args;
 
     va_start(args, format);
     vsnprintf(logbuf, sizeof(logbuf), format, args);
-    DIAG_TRACE_ERR("{}", logbuf);
     va_end(args);
 
-    return 0;
-}
-
-int diag_info_logger (const char *format, ...)
-{
-    char       logbuf[1024];
-    va_list    args;
-
-    va_start(args, format);
-    vsnprintf(logbuf, sizeof(logbuf), format, args);
-    DIAG_TRACE_INFO("{}", logbuf);
-    va_end(args);
-
+    switch (trace_level) {
+    case sdk::lib::SDK_TRACE_LEVEL_ERR:
+        DIAG_TRACE_ERR("{}", logbuf);
+        break;
+    case sdk::lib::SDK_TRACE_LEVEL_INFO:
+        DIAG_TRACE_INFO("{}", logbuf);
+        break;
+    default:
+        break;
+    }
     return 0;
 }
 
@@ -130,7 +126,7 @@ int main(int argc, char* argv[])
     offline_diag_logger = CreateLogger(logname);
     SetCurrentLogger(offline_diag_logger);
 
-    sdk::lib::logger::init(diag_error_logger, diag_info_logger);
+    sdk::lib::logger::init(diag_logger);
 
     assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_HAPS) == sdk::lib::PAL_RET_OK);
   

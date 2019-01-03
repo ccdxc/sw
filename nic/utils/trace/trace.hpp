@@ -71,6 +71,7 @@ enum trace_level_e {
     trace_warn     = 2,
     trace_info     = 3,
     trace_debug    = 4,
+    trace_verbose  = 5,
 };
 
 enum syslog_level_e {
