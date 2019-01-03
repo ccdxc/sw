@@ -32,9 +32,9 @@ OS_DIR=$(readlink -f "$OS_DIR")
 
 make_ext() {
 	make "-m$OS_DIR/share/mk" "SYSDIR=$OS_DIR/sys" \
-		"-C$1" clean cleandepend || exit
+		"DEBUG_FLAGS=-g" "-C$1" clean cleandepend || exit
 	make "-m$OS_DIR/share/mk" "SYSDIR=$OS_DIR/sys" \
-		"-C$1" || exit
+		"DEBUG_FLAGS=-g" "-C$1" || exit
 }
 
 make_ext sys/modules/ionic
