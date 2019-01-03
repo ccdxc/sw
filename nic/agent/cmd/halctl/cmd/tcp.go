@@ -193,7 +193,7 @@ func tcpProxySessionShowCmdHandler(cmd *cobra.Command, args []string) {
 	flowIndx := 1
 	if len(respMsg.Response) != 0 {
 		fmt.Printf("%s\n", strings.Repeat("-", 96))
-		fmt.Printf("%-12s%-12s%-12s%-12s%-12s%-12s%-12s%-12s\n",
+		fmt.Printf("%-12s%-16s%-16s%-12s%-12s%-12s%-12s%-12s\n",
 			"Flow", "Source IP", "Dest IP", "Source Port", "Dest Port",
 			"Queue Id1", "Queue Id2", "Flow Type")
 		fmt.Printf("%s\n", strings.Repeat("-", 96))
@@ -206,8 +206,8 @@ func tcpProxySessionShowCmdHandler(cmd *cobra.Command, args []string) {
 		}
 
 		fmt.Printf("%-12d", flowIndx)
-		fmt.Printf("%-12s", utils.IPAddrToStr(resp.TcpproxyFlow.SrcIp))
-		fmt.Printf("%-12s", utils.IPAddrToStr(resp.TcpproxyFlow.DstIp))
+		fmt.Printf("%-16s", utils.IPAddrToStr(resp.TcpproxyFlow.SrcIp))
+		fmt.Printf("%-16s", utils.IPAddrToStr(resp.TcpproxyFlow.DstIp))
 		fmt.Printf("%-12d", resp.TcpproxyFlow.Sport)
 		fmt.Printf("%-12d", resp.TcpproxyFlow.Dport)
 		fmt.Printf("%-12d", resp.TcpproxyFlow.Qid1)
