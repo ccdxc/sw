@@ -5,6 +5,7 @@ package cache
 import (
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/utils/log"
@@ -13,8 +14,9 @@ import (
 
 // SmartNICState security policy state
 type SmartNICState struct {
-	cluster.SmartNIC           // smartnic policy object
-	stateMgr         *Statemgr // pointer to state manager
+	*sync.Mutex
+	*cluster.SmartNIC           // smartnic policy object
+	stateMgr          *Statemgr // pointer to state manager
 }
 
 // SmartNICStateFromObj converts from memdb object to SmartNIC state
@@ -32,8 +34,9 @@ func SmartNICStateFromObj(obj memdb.Object) (*SmartNICState, error) {
 func NewSmartNICState(sn *cluster.SmartNIC, stateMgr *Statemgr) (*SmartNICState, error) {
 	// create smartnic state object
 	sns := SmartNICState{
-		SmartNIC: *sn,
+		SmartNIC: sn,
 		stateMgr: stateMgr,
+		Mutex:    new(sync.Mutex),
 	}
 
 	return &sns, nil
@@ -101,18 +104,19 @@ func (sm *Statemgr) CreateSmartNIC(sn *cluster.SmartNIC) error {
 func (sm *Statemgr) UpdateSmartNIC(sn *cluster.SmartNIC) error {
 
 	// see if we already have it
-	_, err := sm.FindObject("SmartNIC", sn.ObjectMeta.Tenant, sn.ObjectMeta.Name)
+	obj, err := sm.FindObject("SmartNIC", sn.ObjectMeta.Tenant, sn.ObjectMeta.Name)
 	if err != nil {
-		log.Errorf("Can not find the smartnic %s|%s", sn.ObjectMeta.Tenant, sn.ObjectMeta.Name)
+		log.Errorf("Can not find the smartnic %s|%s err: %v", sn.ObjectMeta.Tenant, sn.ObjectMeta.Name, err)
 		return fmt.Errorf("SmartNIC not found")
 	}
 
-	// create new smartnic state
-	sns, err := NewSmartNICState(sn, sm)
+	sns, err := SmartNICStateFromObj(obj)
 	if err != nil {
-		log.Errorf("Error creating new smartnic state. Err: %v", err)
-		return err
+		log.Errorf("Wrong object type in memdb! Expected SmartNIC, got %T", obj)
 	}
+	sns.Lock()
+	defer sns.Unlock()
+	sns.SmartNIC = sn
 
 	// store it in local DB
 	err = sm.memDB.UpdateObject(sns)

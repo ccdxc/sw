@@ -83,6 +83,7 @@ type TestUtils struct {
 
 	QuorumNodes   []string // names of Quorum Nodes in cluster
 	VeniceNodeIPs []string // IP addresses of venice cluster members
+	NaplesNodes   []string // names of NAPLES Nodes in cluster
 	NameToIPMap   map[string]string
 	IPToNameMap   map[string]string
 
@@ -148,6 +149,12 @@ func New(config *TestBedConfig, configFile string) *TestUtils {
 			ginkgo.Fail(fmt.Sprintf("err : %s", err))
 		}
 	}
+
+	for n := 1; n <= ts.NumNaplesHosts; n++ {
+		naplesName := fmt.Sprintf("naples%d", n)
+		ts.NaplesNodes = append(ts.NaplesNodes, naplesName)
+	}
+
 	ginkgo.By(fmt.Sprintf("TestBedConfig: %+v", ts.TestBedConfig))
 
 	return &ts

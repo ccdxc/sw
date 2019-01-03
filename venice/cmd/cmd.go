@@ -4,14 +4,17 @@ import (
 	"flag"
 	"fmt"
 	"path/filepath"
+	"time"
 
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/cmd/env"
+	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
 	"github.com/pensando/sw/venice/cmd/server"
 	"github.com/pensando/sw/venice/cmd/server/options"
 	"github.com/pensando/sw/venice/cmd/startup"
 	configs "github.com/pensando/sw/venice/cmd/systemd-configs"
+	cmdutils "github.com/pensando/sw/venice/cmd/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/events/recorder"
@@ -80,6 +83,26 @@ func main() {
 
 	if err = configs.GenerateRegistryConfig(env.RegistryURL); err != nil {
 		fmt.Printf("Error %v while generating registry config at startup", err)
+	}
+
+	if diOpt := cmdutils.GetConfigProperty("SmartNICDeadInterval"); diOpt != "" {
+		di, err := time.ParseDuration(diOpt)
+		if err == nil {
+			log.Infof("Overriding default SmartNIC DeadInterval. New value: %v", di)
+			smartnic.DeadInterval = di
+		} else {
+			log.Errorf("Invalid SmartNICDeadInterval: %v", diOpt)
+		}
+	}
+
+	if hwiOpt := cmdutils.GetConfigProperty("SmartNICHealthWatchInterval"); hwiOpt != "" {
+		hwi, err := time.ParseDuration(hwiOpt)
+		if err == nil {
+			log.Infof("Overriding default SmartNIC DeadInterval. New value: %v", hwi)
+			smartnic.HealthWatchInterval = hwi
+		} else {
+			log.Errorf("Invalid HealthWatchInterval: %v", hwiOpt)
+		}
 	}
 
 	// We need to issue equivalent of 'systemctl daemon-reload' before anything else to make systemd read the config files

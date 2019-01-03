@@ -469,7 +469,7 @@ func (m *masterService) handleSmartNICEvent(et kvstore.WatchEventType, nic *cmd.
 
 		err := env.StateMgr.CreateSmartNIC(nic)
 		if err != nil {
-			log.Fatalf("Error creating smartnic {%+v}. Err: %v", nic, err)
+			log.Errorf("Error creating smartnic {%+v}. Err: %v", nic, err)
 		}
 
 		// Initiate NIC registration only in cases where Phase is unknown or empty

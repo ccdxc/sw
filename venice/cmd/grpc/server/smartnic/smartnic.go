@@ -29,16 +29,10 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
 	"github.com/pensando/sw/venice/utils/netutils"
+	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 const (
-
-	// HealthWatchInterval is default health watch interval
-	HealthWatchInterval = 60 * time.Second
-
-	// DeadInterval is default dead time interval, after
-	// which NIC health status is declared UNKNOWN by CMD
-	DeadInterval = 120 * time.Second
 
 	// Max retry interval in seconds for Registration retries
 	// Retry interval is initially exponential and is capped
@@ -53,6 +47,13 @@ const (
 
 var (
 	errAPIServerDown = fmt.Errorf("API Server not reachable or down")
+
+	// HealthWatchInterval is default health watch interval
+	HealthWatchInterval = 60 * time.Second
+
+	// DeadInterval is default dead time interval, after
+	// which NIC health status is declared UNKNOWN by CMD
+	DeadInterval = 120 * time.Second
 
 	// Max time (in milliseconds) to complete the entire registration sequence,
 	// after which the server will cancel the request
@@ -348,12 +349,21 @@ func (s *RPCServer) UpdateSmartNIC(obj *cluster.SmartNIC) (*cluster.SmartNIC, er
 	var nicObj *cluster.SmartNIC
 	refObj, err := s.GetSmartNIC(obj.ObjectMeta)
 	if err == nil && refObj != nil {
-		// Update the object with CAS semantics, the phase and status conditions
-		if obj.Status.AdmissionPhase != "" {
-			refObj.Status.AdmissionPhase = obj.Status.AdmissionPhase
-		}
+
+		updateAPIServer := !runtime.FilterUpdate(refObj.Status, obj.Status, []string{"LastTransitionTime"}, nil)
+
 		refObj.Status.Conditions = obj.Status.Conditions
-		nicObj, err = cl.SmartNIC().Update(context.Background(), refObj)
+		// Always update the cache
+		err = s.stateMgr.UpdateSmartNIC(refObj)
+		if err != nil {
+			log.Errorf("Error updating statemgr state for nic %s: %v", refObj.ObjectMeta.Name, err)
+		}
+		// Update ApiServer if there is an actual state transition
+		if updateAPIServer {
+			nicObj, err = cl.SmartNIC().Update(context.Background(), refObj)
+		} else {
+			nicObj = refObj
+		}
 	} else {
 		return nil, fmt.Errorf("Unable to apply NIC update. Err: %v, update: %+v", err, obj)
 	}
@@ -611,8 +621,8 @@ func (s *RPCServer) UpdateNIC(ctx context.Context, req *grpc.UpdateNICRequest) (
 }
 
 //ListSmartNICs lists all smartNICs matching object selector
-func (s *RPCServer) ListSmartNICs(ctx context.Context, sel *api.ObjectMeta) ([]cluster.SmartNIC, error) {
-	var niclist []cluster.SmartNIC
+func (s *RPCServer) ListSmartNICs(ctx context.Context, sel *api.ObjectMeta) ([]*cluster.SmartNIC, error) {
+	var niclist []*cluster.SmartNIC
 	// get all smartnics
 	nics, err := s.stateMgr.ListSmartNICs()
 	if err != nil {
@@ -648,7 +658,7 @@ func (s *RPCServer) WatchNICs(sel *api.ObjectMeta, stream grpc.SmartNICUpdates_W
 	for _, nic := range nics {
 		watchEvt := grpc.SmartNICEvent{
 			EventType: api.EventType_CreateEvent,
-			Nic:       nic,
+			Nic:       *nic,
 		}
 		err = stream.Send(&watchEvt)
 		if err != nil {
@@ -684,12 +694,14 @@ func (s *RPCServer) WatchNICs(sel *api.ObjectMeta, stream grpc.SmartNICUpdates_W
 				return err
 			}
 
+			nic.Lock()
 			// construct the smartnic event object
 			watchEvt := grpc.SmartNICEvent{
 				EventType: etype,
-				Nic:       nic.SmartNIC,
+				Nic:       *nic.SmartNIC,
 			}
 			err = stream.Send(&watchEvt)
+			nic.Unlock()
 			if err != nil {
 				log.Errorf("Error sending stream. Err: %v closing watch", err)
 				return err
@@ -709,8 +721,25 @@ func (s *RPCServer) MonitorHealth() {
 	for {
 		select {
 
-		// NIC health watch timer callback
 		case <-time.After(s.HealthWatchIntvl):
+			if env.LeaderService == nil || !env.LeaderService.IsLeader() {
+				// only leader gets updates from the NIC and so can detect when a NIC becomes unresponsive
+				continue
+			}
+
+			// Get a list of all existing smartNICs
+			// Take it from the cache, not ApiServer, because we do not propagate state
+			// back to ApiServer unless there is a real change.
+			// condition.LastTransitionTime on ApiServer actually represents the last time
+			// there was a transition, not the last time the condition was reported.
+			// In the cache instead we set LastTransitionTime for each update.
+			nicStates, err := s.stateMgr.ListSmartNICs()
+			if err != nil {
+				log.Errorf("Failed to getting a list of nics, err: %v", err)
+				continue
+			}
+
+			log.Infof("Health watch timer callback, #nics: %d ", len(nicStates))
 
 			cl := s.ClientGetter.APIClient()
 			if cl == nil {
@@ -718,53 +747,39 @@ func (s *RPCServer) MonitorHealth() {
 				continue
 			}
 
-			// Get a list of all existing smartNICs
-			opts := api.ListWatchOptions{}
-			nics, err := cl.SmartNIC().List(context.Background(), &opts)
-			if err != nil {
-				log.Errorf("Failed to getting a list of nics, err: %v", err)
-				continue
-			}
-
-			log.Infof("Health watch timer callback, #nics: %d ", len(nics))
-
 			// Iterate on smartNIC objects
-			for _, nic := range nics {
-
+			for _, nicState := range nicStates {
+				nicState.Lock()
+				nic := nicState.SmartNIC
 				for i := 0; i < len(nic.Status.Conditions); i++ {
-
 					condition := nic.Status.Conditions[i]
-
 					// Inspect HEALTH condition with status that is marked healthy or unhealthy (i.e not unknown)
 					if condition.Type == cluster.SmartNICCondition_HEALTHY.String() && condition.Status != cluster.ConditionStatus_UNKNOWN.String() {
-
 						// parse the last reported time
 						t, err := time.Parse(time.RFC3339, condition.LastTransitionTime)
 						if err != nil {
 							log.Errorf("Failed parsing last transition time for NIC health, nic: %+v, err: %v", nic, err)
 							break
 						}
-
 						// if the time elapsed since last health update is over
 						// the deadInterval, update the Health status to unknown
 						if err == nil && time.Since(t) > s.DeadIntvl {
-
 							// update the nic health status to unknown
 							log.Infof("Updating NIC health to unknown, nic: %s DeadIntvl:%d", nic.Name, s.DeadIntvl)
 							lastUpdateTime := nic.Status.Conditions[i].LastTransitionTime
 							nic.Status.Conditions[i].Status = cluster.ConditionStatus_UNKNOWN.String()
 							nic.Status.Conditions[i].LastTransitionTime = time.Now().Format(time.RFC3339)
 							nic.Status.Conditions[i].Reason = fmt.Sprintf("NIC health update not received since %s", lastUpdateTime)
+							// push the update back to ApiServer
 							_, err := cl.SmartNIC().Update(context.Background(), nic)
 							if err != nil {
 								log.Errorf("Failed updating the NIC health status to unknown, nic: %s err: %s", nic.Name, err)
 							}
 						}
-
 						break
 					}
-
 				}
+				nicState.Unlock()
 			}
 		}
 	}

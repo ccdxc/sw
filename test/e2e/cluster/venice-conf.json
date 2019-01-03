@@ -1,0 +1,7 @@
+{
+    "Properties": {
+        "SmartNICDeadInterval": "10s",
+        "SmartNICHealthWatchInterval": "5s"
+    }
+}
+

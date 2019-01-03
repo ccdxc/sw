@@ -105,8 +105,11 @@ func createRPCServer(url, certFile, keyFile, caFile string) (*rpckit.RPCServer, 
 		return nil, fmt.Errorf("Error creating CertMgr instance: %v", err)
 	}
 
-	// Start CMD config watcher
 	l := mock.NewLeaderService("testMaster")
+	cmdenv.LeaderService = l
+	l.Start()
+
+	// Start CMD config watcher
 	s := cmdsvc.NewSystemdService(cmdsvc.WithSysIfSystemdSvcOption(&mock.SystemdIf{}))
 	cw := cmdapi.NewCfgWatcherService(tInfo.l, tInfo.apiServerAddr, cmdenv.StateMgr)
 	cmdenv.MasterService = cmdsvc.NewMasterService(

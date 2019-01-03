@@ -59,6 +59,7 @@ E2E_CONTAINER ?= pens-e2e:v0.4
 TARGETS ?= ws-tools pull-assets gen build
 BUILD_CMD ?= bash -c  "make ${TARGETS}"
 E2E_CONFIG ?= test/e2e/cluster/tb_config_dev.json
+E2E_CUSTOM_CONFIG ?= test/e2e/cluster/venice-conf.json
 GIT_COMMIT ?= $(shell git rev-list -1 HEAD --abbrev-commit)
 GIT_VERSION ?= $(shell git describe --dirty --always)
 BUILD_DATE ?= $(shell date   +%Y-%m-%dT%H:%M:%S%z)
@@ -320,13 +321,13 @@ pull-assets:
 dind-cluster:
 	$(MAKE) dind-cluster-stop
 	$(MAKE) venice-image
-	./test/e2e/dind/do.py -configFile ${E2E_CONFIG}
+	./test/e2e/dind/do.py -configFile ${E2E_CONFIG} -custom_config_file ${E2E_CUSTOM_CONFIG}
 
 dind-cluster-stop:
 	./test/e2e/dind/do.py -delete
 
 dind-cluster-restart:
-	./test/e2e/dind/do.py -restart -configFile=./${E2E_CONFIG}
+	./test/e2e/dind/do.py -restart -configFile=./${E2E_CONFIG} -custom_config_file=./${E2E_CUSTOM_CONFIG}
 
 # Target to run venice e2e on mac using a dind environment. Uses Agent with its datapath mocked
 e2e:

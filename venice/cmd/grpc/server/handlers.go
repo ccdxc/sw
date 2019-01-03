@@ -256,7 +256,6 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 		env.K8sService = services.NewK8sService(&k8sConfig)
 		env.ResolverService = services.NewResolverService(env.K8sService)
 		env.KVStore = kv
-		env.StateMgr = cache.NewStatemgr()
 		// Create leader service before its users
 		env.LeaderService = services.NewLeaderService(kv, masterLeaderKey, req.NodeId)
 		env.SystemdService = services.NewSystemdService()
