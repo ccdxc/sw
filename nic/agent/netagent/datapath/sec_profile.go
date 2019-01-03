@@ -413,6 +413,9 @@ func (hd *Datapath) UpdateSecurityProfile(profile *netproto.SecurityProfile) err
 				MulticastSrcDrop:       true,
 				IcmpDeprecatedMsgsDrop: true,
 				IcmpRedirectMsgDrop:    true,
+				CnxnTrackingEn:         true,
+				TcpNormalizationEn:     true,
+				IpNormalizationEn:      true,
 
 				// Default Normalization action allow
 				IpDfAction:            constants.IPDFAction,

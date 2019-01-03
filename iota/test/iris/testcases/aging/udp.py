@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 import time
 import iota.harness.api as api
-#import iota.test.iris.config.netagent.objects.security_profile as sec_profile_obj
+from iota.test.iris.testcases.aging.aging_utils import *
 import pdb
 
 def Setup(tc):
@@ -28,30 +28,37 @@ def Trigger(tc):
     api.Trigger_AddNaplesCommand(req, server.node_name, "/nic/bin/halctl clear session")
     tc.cmd_cookies.append(cmd_cookie)
 
-    basecmd = 'iperf -p %d ' % api.AllocateTcpPort()
-    proto   = 6
-    timeout = 250 
-    #tc.secprof = sec_profile_obj.gl_securityprofile_json_template
-    #timeout = int(tc.secprof['security-profiles'][0]['spec']['timeouts']['tcp']) + \
-    #          int(tc.secprof['security-profiles'][0]['spec']['timeouts']['tcp-close'])
-    if tc.iterators.proto == 'udp':
-        basecmd = 'iperf -u -p %d ' % api.AllocateUdpPort()
-        proto   = 17
-        timeout = 150
-        #timeout = tc.security_profile['security-profiles'][0]['spec']['timeouts']['udp']
+    server_port = api.AllocateUdpPort()
+    basecmd = 'iperf -u '
+    timeout_str = 'udp-timeout'
+    timeout = get_timeout(timeout_str)
 
-    cmd_cookie = "iperf -s"
+    #Step 0: Update the timeout in the config object
+    update_timeout(timeout_str, tc.iterators.timeout)
+
+    profilereq = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    api.Trigger_AddNaplesCommand(profilereq, naples.node_name, "/nic/bin/halctl show nwsec profile --id 11")
+    profcommandresp = api.Trigger(profilereq)
+    cmd = profcommandresp.commands[-1]
+    for command in profcommandresp.commands:
+        api.PrintCommandResults(command)
+    timeout = get_haltimeout(timeout_str, cmd)
+    tc.config_update_fail = 0
+    if (timeout != timetoseconds(tc.iterators.timeout)):
+        tc.config_update_fail = 1
+
+    cmd_cookie = "start server"
     api.Trigger_AddCommand(req, server.node_name, server.workload_name,
-                           "%s-s -t 300" % basecmd, background = True)
+                           "%s -p %s -s -t 300" % (basecmd, server_port), background = True)
     tc.cmd_cookies.append(cmd_cookie)
 
-    cmd_cookie = "iperf -c "
+    cmd_cookie = "start client"
     api.Trigger_AddCommand(req, client.node_name, client.workload_name,
-                           "%s -c %s" % (basecmd, server.ip_address))
+                           "%s -p %s -c %s" % (basecmd, server_port, server.ip_address))
     tc.cmd_cookies.append(cmd_cookie)
 
     cmd_cookie = "Before aging show session"
-    api.Trigger_AddNaplesCommand(req, naples.node_name, "/nic/bin/halctl show session --ipproto %s | grep %s" % (proto, naples.ip_address))
+    api.Trigger_AddNaplesCommand(req, naples.node_name, "/nic/bin/halctl show session --dstip %s | grep UDP" % (server.ip_address))
     tc.cmd_cookies.append(cmd_cookie)
 
     #Get it from the config
@@ -60,7 +67,7 @@ def Trigger(tc):
     tc.cmd_cookies.append(cmd_cookie)
 
     cmd_cookie = "After aging show session"
-    api.Trigger_AddNaplesCommand(req, naples.node_name, "/nic/bin/halctl show session --ipproto %s | grep %s" % (proto, naples.ip_address))
+    api.Trigger_AddNaplesCommand(req, naples.node_name, "/nic/bin/halctl show session --dstip %s | grep UDP" % (server.ip_address))
     tc.cmd_cookies.append(cmd_cookie)
 
     trig_resp = api.Trigger(req)
@@ -73,11 +80,12 @@ def Verify(tc):
     if tc.resp is None:
         return api.types.status.FAILURE
 
+    if tc.config_update_fail == 1:
+        return api.types.status.FAILURE
+
     result = api.types.status.SUCCESS
     cookie_idx = 0
-    grep_cmd = "TCP"
-    if tc.iterators.proto == 'udp':
-        grep_cmd = "UDP"
+    grep_cmd = "UDP"
 
     for cmd in tc.resp.commands:
         api.Logger.info("Results for %s" % (tc.cmd_cookies[cookie_idx]))
