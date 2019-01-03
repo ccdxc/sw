@@ -364,43 +364,6 @@ write_bit_fields(void *ptr, unsigned int start_bit_offset,
 }
 
 
-static struct queue *
-get_seq_q(const struct service_info *svc_info, bool status_q)
-{
-	struct queue *q = NULL;
-	struct per_core_resource *pcr;
-
-	/* TODO-seq: remove using hard-coded 0th status queue */
-	pcr = svc_info->si_pcr;
-
-	switch (svc_info->si_type) {
-	case PNSO_SVC_TYPE_ENCRYPT:
-		q = status_q ? &pcr->crypto_seq_status_qs[0] :
-			&pcr->crypto_enc_seq_q;
-		break;
-	case PNSO_SVC_TYPE_DECRYPT:
-		q = status_q ? &pcr->crypto_seq_status_qs[0] :
-			&pcr->crypto_dec_seq_q;
-		break;
-	case PNSO_SVC_TYPE_COMPRESS:
-	case PNSO_SVC_TYPE_HASH:
-	case PNSO_SVC_TYPE_CHKSUM:
-		q = status_q ? &pcr->cpdc_seq_status_qs[0] :
-			&pcr->cp_seq_q;
-		break;
-	case PNSO_SVC_TYPE_DECOMPRESS:
-		q = status_q ? &pcr->cpdc_seq_status_qs[0] :
-			&pcr->dc_seq_q;
-		break;
-	case PNSO_SVC_TYPE_DECOMPACT:
-	default:
-		OSAL_ASSERT(0);
-		break;
-	}
-
-	return q;
-}
-
 static void
 fill_cpdc_seq_status_desc(struct cpdc_chain_params *chain_params,
 		uint8_t *seq_status_desc)
@@ -684,19 +647,17 @@ static void
 hw_ring_db(struct service_info *svc_info)
 {
 	struct queue *seq_q;
-	uint16_t index;
 
 	OSAL_LOG_DEBUG("enter ... ");
 
-	seq_q = get_seq_q(svc_info, false);
+	seq_q = svc_info->si_seq_info.sqi_seq_q;
 	if (!seq_q) {
 		OSAL_LOG_ERROR("failed to get sequencer q!");
 		OSAL_ASSERT(seq_q);
 		goto out;
 	}
 
-	index = svc_info->si_seq_info.sqi_index;
-	sonic_q_ringdb(seq_q, index);
+	sonic_q_ringdb(seq_q, svc_info->si_seq_info.sqi_index);
 
 out:
 	OSAL_LOG_DEBUG("exit!");
@@ -726,17 +687,10 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 
 	seq_info = &svc_info->si_seq_info;
 	qtype = seq_info->sqi_qtype;
-	seq_info->sqi_index = 0;
 
 	lif = sonic_get_lif();
 	if (!lif) {
 		OSAL_ASSERT(lif);
-		goto out;
-	}
-
-	err = sonic_get_seq_sq(lif, qtype, &seq_spec->sqs_seq_q);
-	if (err) {
-		OSAL_ASSERT(!err);
 		goto out;
 	}
 
@@ -751,7 +705,6 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 				err);
 		goto out;
 	}
-	seq_info->sqi_index = index;
 	svc_info->si_seq_info.sqi_status_total_takes++;
 	seq_info->sqi_status_desc = seq_status_desc;
 
@@ -764,7 +717,6 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 	chain_params->ccp_cmd.ccpc_next_doorbell_en = 1;
 	chain_params->ccp_cmd.ccpc_next_db_action_ring_push = 1;
 	chain_params->ccp_cmd.ccpc_stop_chain_on_error = 1;
-	chain_params->ccp_cmd.ccpc_sgl_pdma_en = 1;
 
 	chain_params->ccp_status_addr_0 =
 		sonic_virt_to_phy((void *) status_desc);
@@ -959,39 +911,24 @@ hw_setup_hashorchksum_chain_params(struct cpdc_chain_params *chain_params,
 	return err;
 }
 
-static void *
-hw_setup_cpdc_chain_desc(struct service_info *svc_info,
-		const void *src_desc, size_t desc_size)
+static pnso_error_t
+hw_setup_cpdc_chain_status_desc(struct service_info *svc_info)
 {
-	pnso_error_t err = EINVAL;
+	pnso_error_t err = PNSO_OK;
 	struct cpdc_chain_params *chain_params;
 	struct sequencer_info *seq_info;
-	struct sequencer_desc *seq_desc;
 
 	OSAL_LOG_DEBUG("enter ...");
 
 	chain_params = &svc_info->si_cpdc_chain;
 	seq_info = &svc_info->si_seq_info;
-	PPRINT_SEQUENCER_INFO(seq_info);
 
 	fill_cpdc_seq_status_desc(chain_params, seq_info->sqi_status_desc);
 	PPRINT_CPDC_CHAIN_PARAMS(chain_params);
-
-	seq_desc = hw_setup_desc(svc_info, src_desc, desc_size);
-	if (!seq_desc) {
-		OSAL_ASSERT(seq_desc);
-		OSAL_LOG_ERROR("failed to setup seq desc! err: %d", err);
-		goto out;
-	}
-
 	PPRINT_SEQUENCER_INFO(seq_info);
 
-	OSAL_LOG_DEBUG("exit!");
-	return seq_desc;
-
-out:
-	OSAL_LOG_ERROR("exit! err: %d", err);
-	return NULL;
+	OSAL_LOG_DEBUG("exit! err: %d", err);
+	return err;
 }
 
 static void
@@ -1088,7 +1025,7 @@ const struct sequencer_ops hw_seq_ops = {
 	.setup_cp_pad_chain_params = hw_setup_cp_pad_chain_params,
 	.setup_hash_chain_params = hw_setup_hashorchksum_chain_params,
 	.setup_chksum_chain_params = hw_setup_hashorchksum_chain_params,
-	.setup_cpdc_chain_desc = hw_setup_cpdc_chain_desc,
+	.setup_cpdc_chain_status_desc = hw_setup_cpdc_chain_status_desc,
 	.cleanup_cpdc_chain = hw_cleanup_cpdc_chain,
 	.setup_crypto_chain = hw_setup_crypto_chain,
 	.cleanup_crypto_chain = hw_cleanup_crypto_chain,

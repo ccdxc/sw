@@ -208,11 +208,9 @@ compress_chain(struct chain_entry *centry)
 		OSAL_LOG_INFO("chaining of services after cp done!");
 	}
 
-	svc_info->si_seq_info.sqi_desc = seq_setup_cpdc_chain_desc(svc_info,
-			cp_desc, sizeof(*cp_desc));
-	if (!svc_info->si_seq_info.sqi_desc) {
-		err = EINVAL;
-		OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d", err);
+	err = seq_setup_cpdc_chain_status_desc(svc_info);
+	if (err) {
+		OSAL_LOG_ERROR("failed to setup sequencer status desc! err: %d", err);
 		goto out;
 	}
 
@@ -398,7 +396,7 @@ compress_read_status(struct service_info *svc_info)
 
 		if (!cp_hdr) {
 			OSAL_LOG_DEBUG("skip cp header checks");
-			goto out;
+			goto done;
 		}
 
 		OSAL_LOG_DEBUG("compress_read_status: dst_sgl=0x" PRIx64 ", cs_addr_0=0x" PRIx64 ", cp_hdr-0x" PRIx64 "\n",
@@ -435,6 +433,7 @@ compress_read_status(struct service_info *svc_info)
 		}
 	}
 
+done:
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit!");
 	return err;
