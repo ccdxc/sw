@@ -55,7 +55,7 @@ for target in job["targets"]:
         continue
     job_info = job["targets"][target]["commands"]
     cov_cmd = "JOB_ID=1 " + " ".join(job_info) + " COVERAGE=1"
-    job_cfg["_".join(a.split("/")[-2:])] = cov_cmd
+    job_cfg["_".join(target.split("/")[-2:])] = cov_cmd
 
 json.dump(job_cfg, output_file, indent=4)
 output_file.close()
