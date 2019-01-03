@@ -568,13 +568,12 @@ flow_monitor_rule_create (FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rs
     rsp->set_api_status(types::API_STATUS_OK);
     
 end:
-    if (flowmon_acl_ctx) {
+    if (flowmon_acl_ctx && (ret == HAL_RET_OK)) {
         ret = acl::acl_commit(flowmon_acl_ctx);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("ACL commit fail vrf {} id {}",
                            flowmon_acl_ctx_name(vrf_id, mirror_action), vrf_id);
             rsp->set_api_status(types::API_STATUS_ERR);
-            goto end;
         }
         acl::acl_deref(flowmon_acl_ctx);
     }
@@ -592,10 +591,10 @@ hal_ret_t
 flow_monitor_rule_delete (FlowMonitorRuleDeleteRequest &req, FlowMonitorRuleDeleteResponse *rsp)
 {
     bool                mirror_action = false;
-    hal_ret_t           ret;
+    hal_ret_t           ret = HAL_RET_OK;
     uint64_t            vrf_id;
     rule_key_t          rule_id;
-    flow_monitor_rule_t *rule;
+    flow_monitor_rule_t *rule = NULL;
     const acl_ctx_t     *flowmon_acl_ctx;
 
     vrf_id = req.vrf_key_handle().vrf_id();
@@ -629,8 +628,16 @@ flow_monitor_rule_delete (FlowMonitorRuleDeleteRequest &req, FlowMonitorRuleDele
     ret = rule_match_rule_del(&flowmon_acl_ctx, &rule->rule_match, 0, rule_id,
                               (void *)&rule->ref_count);
     flow_mon_rules[rule_id] = NULL;
-    flow_monitor_rule_free(rule);
+    //flow_monitor_rule_free(rule);
+    ret = acl::acl_commit(flowmon_acl_ctx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("ACL commit fail vrf {} id {}",
+                       flowmon_acl_ctx_name(vrf_id, mirror_action), vrf_id);
+        rsp->set_api_status(types::API_STATUS_ERR);
+        goto end;
+    }
     acl::acl_deref(flowmon_acl_ctx);
+    rsp->set_api_status(types::API_STATUS_OK);
 
 end:
     return ret;

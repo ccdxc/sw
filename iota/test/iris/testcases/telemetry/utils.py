@@ -128,6 +128,8 @@ def RunAll(collector_w, verif_json, tc, feature):
 
     api.Logger.info("VERIF = {}".format(verif))
     count = 0
+    if feature == 'flowmon':
+        time.sleep(30)
     for i in range(0, len(verif)):
         protocol = verif[i]['protocol'] 
         src_w = GetSourceWorkload(verif[i], tc)
@@ -139,6 +141,9 @@ def RunAll(collector_w, verif_json, tc, feature):
         dest_port = GetDestPort(verif[i]['port'])
         action = verif[i]['result']
         res = RunCmd(src_w, protocol, dest_w.ip_address, dest_port, collector_w, action, feature)
+        if (res == api.types.status.FAILURE):
+            api.Logger.info("Testcase FAILED!!")
+            break;
         count = count + 1
     ret['res'] = res
     ret['count'] = count

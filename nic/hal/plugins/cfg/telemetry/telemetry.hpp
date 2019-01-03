@@ -259,7 +259,9 @@ static inline void
 flow_monitor_rule_free(flow_monitor_rule_t *rule)
 {
     /* Decrementing the rule ref_count */
-    ref_dec(&rule->ref_count);
+    if (rule) {
+        ref_dec(&rule->ref_count);
+    }
     return;
 }
 

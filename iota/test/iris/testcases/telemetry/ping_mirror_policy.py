@@ -45,6 +45,9 @@ def Trigger(tc):
         agent_api.RemoveConfigObjects(newObjects)
         #agent_api.ConfigureMirror(mirror_json_obj.mirrors, oper = agent_api.CfgOper.DELETE)
         api.Logger.info("policy_json = {}, count = {}, total_count = {}".format(policy_json, ret_count, count))
+        if result != api.types.status.SUCCESS:
+            api.Logger.info("policy_json = {}, Encountered FAILURE, stopping".format(policy_json))
+            break
     tc.SetTestCount(count)
     return result
 
