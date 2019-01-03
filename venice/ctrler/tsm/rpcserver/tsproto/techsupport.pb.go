@@ -13,9 +13,10 @@
 		TechSupportRequestStatus
 		TechSupportRequest
 		TechSupportRequestEvent
+		WatchTechSupportRequestsParameters
 		TechSupportRequestEventList
-		TechSupportRequestList
-		UpdateResponse
+		UpdateTechSupportResultParameters
+		UpdateTechSupportResultResponse
 */
 package tsproto
 
@@ -26,6 +27,7 @@ import _ "google.golang.org/genproto/googleapis/api/annotations"
 import _ "github.com/pensando/sw/venice/utils/apigen/annotations"
 import _ "github.com/gogo/protobuf/gogoproto"
 import api "github.com/pensando/sw/api"
+import labels "github.com/pensando/sw/api/labels"
 
 import (
 	context "golang.org/x/net/context"
@@ -107,9 +109,9 @@ func (TechSupportRequestStatus_ActionStatus) EnumDescriptor() ([]byte, []int) {
 }
 
 type DestinationSpec struct {
-	Proto       DestinationSpec_Protocol `protobuf:"varint,1,opt,name=Proto,proto3,enum=tsproto.DestinationSpec_Protocol" json:"proto,omitempty"`
-	Path        string                   `protobuf:"bytes,2,opt,name=Path,proto3" json:"path,omitempty"`
-	Destination string                   `protobuf:"bytes,3,opt,name=Destination,proto3" json:"destination,omitempty"`
+	Proto       DestinationSpec_Protocol `protobuf:"varint,1,opt,name=Proto,json=proto,proto3,enum=tsproto.DestinationSpec_Protocol" json:"proto,omitempty"`
+	Path        string                   `protobuf:"bytes,2,opt,name=Path,json=path,proto3" json:"path,omitempty"`
+	Destination string                   `protobuf:"bytes,3,opt,name=Destination,json=destination,proto3" json:"destination,omitempty"`
 }
 
 func (m *DestinationSpec) Reset()                    { *m = DestinationSpec{} }
@@ -139,10 +141,10 @@ func (m *DestinationSpec) GetDestination() string {
 }
 
 type TechSupportRequestSpec struct {
-	InstanceId   string             `protobuf:"bytes,1,opt,name=InstanceId,proto3" json:"instance-id,omitempty"`
-	Labels       []string           `protobuf:"bytes,2,rep,name=Labels" json:"labels,omitempty"`
-	Destinations []*DestinationSpec `protobuf:"bytes,3,rep,name=Destinations" json:"destinations,omitempty"`
-	Verbosity    int32              `protobuf:"varint,4,opt,name=Verbosity,proto3" json:"verbosity,omitempty"`
+	InstanceID   string             `protobuf:"bytes,1,opt,name=InstanceID,json=instanceID,proto3" json:"instance-id,omitempty"`
+	Labels       *labels.Selector   `protobuf:"bytes,2,opt,name=Labels,json=labels" json:"labels,omitempty"`
+	Destinations []*DestinationSpec `protobuf:"bytes,3,rep,name=Destinations,json=destinations" json:"destinations,omitempty"`
+	Verbosity    int32              `protobuf:"varint,4,opt,name=Verbosity,json=verbosity,proto3" json:"verbosity,omitempty"`
 }
 
 func (m *TechSupportRequestSpec) Reset()         { *m = TechSupportRequestSpec{} }
@@ -152,14 +154,14 @@ func (*TechSupportRequestSpec) Descriptor() ([]byte, []int) {
 	return fileDescriptorTechsupport, []int{1}
 }
 
-func (m *TechSupportRequestSpec) GetInstanceId() string {
+func (m *TechSupportRequestSpec) GetInstanceID() string {
 	if m != nil {
-		return m.InstanceId
+		return m.InstanceID
 	}
 	return ""
 }
 
-func (m *TechSupportRequestSpec) GetLabels() []string {
+func (m *TechSupportRequestSpec) GetLabels() *labels.Selector {
 	if m != nil {
 		return m.Labels
 	}
@@ -181,10 +183,10 @@ func (m *TechSupportRequestSpec) GetVerbosity() int32 {
 }
 
 type TechSupportRequestStatus struct {
-	Status    TechSupportRequestStatus_ActionStatus `protobuf:"varint,1,opt,name=Status,proto3,enum=tsproto.TechSupportRequestStatus_ActionStatus" json:"status,omitempty"`
-	StartTime *api.Timestamp                        `protobuf:"bytes,2,opt,name=StartTime" json:"start-time,omitempty"`
-	EndTime   *api.Timestamp                        `protobuf:"bytes,3,opt,name=EndTime" json:"end-time,omitempty"`
-	URI       string                                `protobuf:"bytes,4,opt,name=URI,proto3" json:"uri,omitempty"`
+	Status    TechSupportRequestStatus_ActionStatus `protobuf:"varint,1,opt,name=Status,json=status,proto3,enum=tsproto.TechSupportRequestStatus_ActionStatus" json:"status,omitempty"`
+	StartTime *api.Timestamp                        `protobuf:"bytes,2,opt,name=StartTime,json=startTime" json:"start-time,omitempty"`
+	EndTime   *api.Timestamp                        `protobuf:"bytes,3,opt,name=EndTime,json=endTime" json:"end-time,omitempty"`
+	URI       string                                `protobuf:"bytes,4,opt,name=URI,json=uRI,proto3" json:"uri,omitempty"`
 }
 
 func (m *TechSupportRequestStatus) Reset()         { *m = TechSupportRequestStatus{} }
@@ -223,10 +225,10 @@ func (m *TechSupportRequestStatus) GetURI() string {
 }
 
 type TechSupportRequest struct {
-	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,embedded=T" json:",inline"`
-	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,embedded=O" json:"meta,omitempty"`
-	Spec           TechSupportRequestSpec   `protobuf:"bytes,3,opt,name=Spec" json:"spec,omitempty"`
-	Status         TechSupportRequestStatus `protobuf:"bytes,4,opt,name=Status" json:"status,omitempty"`
+	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,json=t,embedded=T" json:",inline"`
+	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=o,embedded=O" json:"meta,omitempty"`
+	Spec           TechSupportRequestSpec   `protobuf:"bytes,3,opt,name=Spec,json=spec" json:"spec,omitempty"`
+	Status         TechSupportRequestStatus `protobuf:"bytes,4,opt,name=Status,json=status" json:"status,omitempty"`
 }
 
 func (m *TechSupportRequest) Reset()                    { *m = TechSupportRequest{} }
@@ -249,8 +251,8 @@ func (m *TechSupportRequest) GetStatus() TechSupportRequestStatus {
 }
 
 type TechSupportRequestEvent struct {
-	EventType api.EventType       `protobuf:"varint,1,opt,name=EventType,proto3,enum=api.EventType" json:"event-type,omitempty"`
-	Request   *TechSupportRequest `protobuf:"bytes,2,opt,name=Request" json:"request,omitempty"`
+	EventType api.EventType       `protobuf:"varint,1,opt,name=EventType,json=eventType,proto3,enum=api.EventType" json:"event-type,omitempty"`
+	Request   *TechSupportRequest `protobuf:"bytes,2,opt,name=Request,json=request" json:"request,omitempty"`
 }
 
 func (m *TechSupportRequestEvent) Reset()         { *m = TechSupportRequestEvent{} }
@@ -274,15 +276,49 @@ func (m *TechSupportRequestEvent) GetRequest() *TechSupportRequest {
 	return nil
 }
 
+type WatchTechSupportRequestsParameters struct {
+	NodeName string                `protobuf:"bytes,1,opt,name=NodeName,json=nodeName,proto3" json:"node-name,omitempty"`
+	NodeKind string                `protobuf:"bytes,2,opt,name=NodeKind,json=nodeKind,proto3" json:"node-kind,omitempty"`
+	Options  *api.ListWatchOptions `protobuf:"bytes,3,opt,name=Options,json=options" json:"options,omitempty"`
+}
+
+func (m *WatchTechSupportRequestsParameters) Reset()         { *m = WatchTechSupportRequestsParameters{} }
+func (m *WatchTechSupportRequestsParameters) String() string { return proto.CompactTextString(m) }
+func (*WatchTechSupportRequestsParameters) ProtoMessage()    {}
+func (*WatchTechSupportRequestsParameters) Descriptor() ([]byte, []int) {
+	return fileDescriptorTechsupport, []int{5}
+}
+
+func (m *WatchTechSupportRequestsParameters) GetNodeName() string {
+	if m != nil {
+		return m.NodeName
+	}
+	return ""
+}
+
+func (m *WatchTechSupportRequestsParameters) GetNodeKind() string {
+	if m != nil {
+		return m.NodeKind
+	}
+	return ""
+}
+
+func (m *WatchTechSupportRequestsParameters) GetOptions() *api.ListWatchOptions {
+	if m != nil {
+		return m.Options
+	}
+	return nil
+}
+
 type TechSupportRequestEventList struct {
-	Events []*TechSupportRequestEvent `protobuf:"bytes,1,rep,name=Events" json:"events,omitempty"`
+	Events []*TechSupportRequestEvent `protobuf:"bytes,1,rep,name=Events,json=events" json:"events,omitempty"`
 }
 
 func (m *TechSupportRequestEventList) Reset()         { *m = TechSupportRequestEventList{} }
 func (m *TechSupportRequestEventList) String() string { return proto.CompactTextString(m) }
 func (*TechSupportRequestEventList) ProtoMessage()    {}
 func (*TechSupportRequestEventList) Descriptor() ([]byte, []int) {
-	return fileDescriptorTechsupport, []int{5}
+	return fileDescriptorTechsupport, []int{6}
 }
 
 func (m *TechSupportRequestEventList) GetEvents() []*TechSupportRequestEvent {
@@ -292,34 +328,52 @@ func (m *TechSupportRequestEventList) GetEvents() []*TechSupportRequestEvent {
 	return nil
 }
 
-type TechSupportRequestList struct {
-	Requests []*TechSupportRequest `protobuf:"bytes,1,rep,name=Requests" json:"requests,omitempty"`
+type UpdateTechSupportResultParameters struct {
+	NodeName string              `protobuf:"bytes,1,opt,name=NodeName,json=nodeName,proto3" json:"node-name,omitempty"`
+	NodeKind string              `protobuf:"bytes,2,opt,name=NodeKind,json=nodeKind,proto3" json:"node-kind,omitempty"`
+	Request  *TechSupportRequest `protobuf:"bytes,3,opt,name=Request,json=request" json:"request,omitempty"`
 }
 
-func (m *TechSupportRequestList) Reset()         { *m = TechSupportRequestList{} }
-func (m *TechSupportRequestList) String() string { return proto.CompactTextString(m) }
-func (*TechSupportRequestList) ProtoMessage()    {}
-func (*TechSupportRequestList) Descriptor() ([]byte, []int) {
-	return fileDescriptorTechsupport, []int{6}
+func (m *UpdateTechSupportResultParameters) Reset()         { *m = UpdateTechSupportResultParameters{} }
+func (m *UpdateTechSupportResultParameters) String() string { return proto.CompactTextString(m) }
+func (*UpdateTechSupportResultParameters) ProtoMessage()    {}
+func (*UpdateTechSupportResultParameters) Descriptor() ([]byte, []int) {
+	return fileDescriptorTechsupport, []int{7}
 }
 
-func (m *TechSupportRequestList) GetRequests() []*TechSupportRequest {
+func (m *UpdateTechSupportResultParameters) GetNodeName() string {
 	if m != nil {
-		return m.Requests
+		return m.NodeName
+	}
+	return ""
+}
+
+func (m *UpdateTechSupportResultParameters) GetNodeKind() string {
+	if m != nil {
+		return m.NodeKind
+	}
+	return ""
+}
+
+func (m *UpdateTechSupportResultParameters) GetRequest() *TechSupportRequest {
+	if m != nil {
+		return m.Request
 	}
 	return nil
 }
 
-type UpdateResponse struct {
-	Status string `protobuf:"bytes,1,opt,name=Status,proto3" json:"status,omitempty"`
+type UpdateTechSupportResultResponse struct {
+	Status string `protobuf:"bytes,1,opt,name=Status,json=status,proto3" json:"status,omitempty"`
 }
 
-func (m *UpdateResponse) Reset()                    { *m = UpdateResponse{} }
-func (m *UpdateResponse) String() string            { return proto.CompactTextString(m) }
-func (*UpdateResponse) ProtoMessage()               {}
-func (*UpdateResponse) Descriptor() ([]byte, []int) { return fileDescriptorTechsupport, []int{7} }
+func (m *UpdateTechSupportResultResponse) Reset()         { *m = UpdateTechSupportResultResponse{} }
+func (m *UpdateTechSupportResultResponse) String() string { return proto.CompactTextString(m) }
+func (*UpdateTechSupportResultResponse) ProtoMessage()    {}
+func (*UpdateTechSupportResultResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptorTechsupport, []int{8}
+}
 
-func (m *UpdateResponse) GetStatus() string {
+func (m *UpdateTechSupportResultResponse) GetStatus() string {
 	if m != nil {
 		return m.Status
 	}
@@ -332,9 +386,10 @@ func init() {
 	proto.RegisterType((*TechSupportRequestStatus)(nil), "tsproto.TechSupportRequestStatus")
 	proto.RegisterType((*TechSupportRequest)(nil), "tsproto.TechSupportRequest")
 	proto.RegisterType((*TechSupportRequestEvent)(nil), "tsproto.TechSupportRequestEvent")
+	proto.RegisterType((*WatchTechSupportRequestsParameters)(nil), "tsproto.WatchTechSupportRequestsParameters")
 	proto.RegisterType((*TechSupportRequestEventList)(nil), "tsproto.TechSupportRequestEventList")
-	proto.RegisterType((*TechSupportRequestList)(nil), "tsproto.TechSupportRequestList")
-	proto.RegisterType((*UpdateResponse)(nil), "tsproto.UpdateResponse")
+	proto.RegisterType((*UpdateTechSupportResultParameters)(nil), "tsproto.UpdateTechSupportResultParameters")
+	proto.RegisterType((*UpdateTechSupportResultResponse)(nil), "tsproto.UpdateTechSupportResultResponse")
 	proto.RegisterEnum("tsproto.DestinationSpec_Protocol", DestinationSpec_Protocol_name, DestinationSpec_Protocol_value)
 	proto.RegisterEnum("tsproto.TechSupportRequestStatus_ActionStatus", TechSupportRequestStatus_ActionStatus_name, TechSupportRequestStatus_ActionStatus_value)
 }
@@ -350,8 +405,8 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for TechSupportApi service
 
 type TechSupportApiClient interface {
-	WatchTechSupportRequests(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (TechSupportApi_WatchTechSupportRequestsClient, error)
-	UpdateResult(ctx context.Context, in *TechSupportRequest, opts ...grpc.CallOption) (*UpdateResponse, error)
+	WatchTechSupportRequests(ctx context.Context, in *WatchTechSupportRequestsParameters, opts ...grpc.CallOption) (TechSupportApi_WatchTechSupportRequestsClient, error)
+	UpdateTechSupportResult(ctx context.Context, in *UpdateTechSupportResultParameters, opts ...grpc.CallOption) (*UpdateTechSupportResultResponse, error)
 }
 
 type techSupportApiClient struct {
@@ -362,7 +417,7 @@ func NewTechSupportApiClient(cc *grpc.ClientConn) TechSupportApiClient {
 	return &techSupportApiClient{cc}
 }
 
-func (c *techSupportApiClient) WatchTechSupportRequests(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (TechSupportApi_WatchTechSupportRequestsClient, error) {
+func (c *techSupportApiClient) WatchTechSupportRequests(ctx context.Context, in *WatchTechSupportRequestsParameters, opts ...grpc.CallOption) (TechSupportApi_WatchTechSupportRequestsClient, error) {
 	stream, err := grpc.NewClientStream(ctx, &_TechSupportApi_serviceDesc.Streams[0], c.cc, "/tsproto.TechSupportApi/WatchTechSupportRequests", opts...)
 	if err != nil {
 		return nil, err
@@ -394,9 +449,9 @@ func (x *techSupportApiWatchTechSupportRequestsClient) Recv() (*TechSupportReque
 	return m, nil
 }
 
-func (c *techSupportApiClient) UpdateResult(ctx context.Context, in *TechSupportRequest, opts ...grpc.CallOption) (*UpdateResponse, error) {
-	out := new(UpdateResponse)
-	err := grpc.Invoke(ctx, "/tsproto.TechSupportApi/UpdateResult", in, out, c.cc, opts...)
+func (c *techSupportApiClient) UpdateTechSupportResult(ctx context.Context, in *UpdateTechSupportResultParameters, opts ...grpc.CallOption) (*UpdateTechSupportResultResponse, error) {
+	out := new(UpdateTechSupportResultResponse)
+	err := grpc.Invoke(ctx, "/tsproto.TechSupportApi/UpdateTechSupportResult", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -406,8 +461,8 @@ func (c *techSupportApiClient) UpdateResult(ctx context.Context, in *TechSupport
 // Server API for TechSupportApi service
 
 type TechSupportApiServer interface {
-	WatchTechSupportRequests(*api.ListWatchOptions, TechSupportApi_WatchTechSupportRequestsServer) error
-	UpdateResult(context.Context, *TechSupportRequest) (*UpdateResponse, error)
+	WatchTechSupportRequests(*WatchTechSupportRequestsParameters, TechSupportApi_WatchTechSupportRequestsServer) error
+	UpdateTechSupportResult(context.Context, *UpdateTechSupportResultParameters) (*UpdateTechSupportResultResponse, error)
 }
 
 func RegisterTechSupportApiServer(s *grpc.Server, srv TechSupportApiServer) {
@@ -415,7 +470,7 @@ func RegisterTechSupportApiServer(s *grpc.Server, srv TechSupportApiServer) {
 }
 
 func _TechSupportApi_WatchTechSupportRequests_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(api.ListWatchOptions)
+	m := new(WatchTechSupportRequestsParameters)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
@@ -435,20 +490,20 @@ func (x *techSupportApiWatchTechSupportRequestsServer) Send(m *TechSupportReques
 	return x.ServerStream.SendMsg(m)
 }
 
-func _TechSupportApi_UpdateResult_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(TechSupportRequest)
+func _TechSupportApi_UpdateTechSupportResult_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateTechSupportResultParameters)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TechSupportApiServer).UpdateResult(ctx, in)
+		return srv.(TechSupportApiServer).UpdateTechSupportResult(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tsproto.TechSupportApi/UpdateResult",
+		FullMethod: "/tsproto.TechSupportApi/UpdateTechSupportResult",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TechSupportApiServer).UpdateResult(ctx, req.(*TechSupportRequest))
+		return srv.(TechSupportApiServer).UpdateTechSupportResult(ctx, req.(*UpdateTechSupportResultParameters))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -458,8 +513,8 @@ var _TechSupportApi_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*TechSupportApiServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "UpdateResult",
-			Handler:    _TechSupportApi_UpdateResult_Handler,
+			MethodName: "UpdateTechSupportResult",
+			Handler:    _TechSupportApi_UpdateTechSupportResult_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
@@ -522,26 +577,21 @@ func (m *TechSupportRequestSpec) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.InstanceId) > 0 {
+	if len(m.InstanceID) > 0 {
 		dAtA[i] = 0xa
 		i++
-		i = encodeVarintTechsupport(dAtA, i, uint64(len(m.InstanceId)))
-		i += copy(dAtA[i:], m.InstanceId)
+		i = encodeVarintTechsupport(dAtA, i, uint64(len(m.InstanceID)))
+		i += copy(dAtA[i:], m.InstanceID)
 	}
-	if len(m.Labels) > 0 {
-		for _, s := range m.Labels {
-			dAtA[i] = 0x12
-			i++
-			l = len(s)
-			for l >= 1<<7 {
-				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
-				l >>= 7
-				i++
-			}
-			dAtA[i] = uint8(l)
-			i++
-			i += copy(dAtA[i:], s)
+	if m.Labels != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTechsupport(dAtA, i, uint64(m.Labels.Size()))
+		n1, err := m.Labels.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
 		}
+		i += n1
 	}
 	if len(m.Destinations) > 0 {
 		for _, msg := range m.Destinations {
@@ -587,21 +637,21 @@ func (m *TechSupportRequestStatus) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintTechsupport(dAtA, i, uint64(m.StartTime.Size()))
-		n1, err := m.StartTime.MarshalTo(dAtA[i:])
+		n2, err := m.StartTime.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n1
+		i += n2
 	}
 	if m.EndTime != nil {
 		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintTechsupport(dAtA, i, uint64(m.EndTime.Size()))
-		n2, err := m.EndTime.MarshalTo(dAtA[i:])
+		n3, err := m.EndTime.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n2
+		i += n3
 	}
 	if len(m.URI) > 0 {
 		dAtA[i] = 0x22
@@ -630,35 +680,35 @@ func (m *TechSupportRequest) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0xa
 	i++
 	i = encodeVarintTechsupport(dAtA, i, uint64(m.TypeMeta.Size()))
-	n3, err := m.TypeMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n3
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintTechsupport(dAtA, i, uint64(m.ObjectMeta.Size()))
-	n4, err := m.ObjectMeta.MarshalTo(dAtA[i:])
+	n4, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
 	i += n4
-	dAtA[i] = 0x1a
+	dAtA[i] = 0x12
 	i++
-	i = encodeVarintTechsupport(dAtA, i, uint64(m.Spec.Size()))
-	n5, err := m.Spec.MarshalTo(dAtA[i:])
+	i = encodeVarintTechsupport(dAtA, i, uint64(m.ObjectMeta.Size()))
+	n5, err := m.ObjectMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
 	i += n5
-	dAtA[i] = 0x22
+	dAtA[i] = 0x1a
 	i++
-	i = encodeVarintTechsupport(dAtA, i, uint64(m.Status.Size()))
-	n6, err := m.Status.MarshalTo(dAtA[i:])
+	i = encodeVarintTechsupport(dAtA, i, uint64(m.Spec.Size()))
+	n6, err := m.Spec.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
 	i += n6
+	dAtA[i] = 0x22
+	i++
+	i = encodeVarintTechsupport(dAtA, i, uint64(m.Status.Size()))
+	n7, err := m.Status.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n7
 	return i, nil
 }
 
@@ -686,11 +736,51 @@ func (m *TechSupportRequestEvent) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintTechsupport(dAtA, i, uint64(m.Request.Size()))
-		n7, err := m.Request.MarshalTo(dAtA[i:])
+		n8, err := m.Request.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n7
+		i += n8
+	}
+	return i, nil
+}
+
+func (m *WatchTechSupportRequestsParameters) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *WatchTechSupportRequestsParameters) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.NodeName) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintTechsupport(dAtA, i, uint64(len(m.NodeName)))
+		i += copy(dAtA[i:], m.NodeName)
+	}
+	if len(m.NodeKind) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTechsupport(dAtA, i, uint64(len(m.NodeKind)))
+		i += copy(dAtA[i:], m.NodeKind)
+	}
+	if m.Options != nil {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintTechsupport(dAtA, i, uint64(m.Options.Size()))
+		n9, err := m.Options.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n9
 	}
 	return i, nil
 }
@@ -725,7 +815,7 @@ func (m *TechSupportRequestEventList) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *TechSupportRequestList) Marshal() (dAtA []byte, err error) {
+func (m *UpdateTechSupportResultParameters) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -735,27 +825,37 @@ func (m *TechSupportRequestList) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *TechSupportRequestList) MarshalTo(dAtA []byte) (int, error) {
+func (m *UpdateTechSupportResultParameters) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
 	_ = l
-	if len(m.Requests) > 0 {
-		for _, msg := range m.Requests {
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintTechsupport(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
+	if len(m.NodeName) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintTechsupport(dAtA, i, uint64(len(m.NodeName)))
+		i += copy(dAtA[i:], m.NodeName)
+	}
+	if len(m.NodeKind) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTechsupport(dAtA, i, uint64(len(m.NodeKind)))
+		i += copy(dAtA[i:], m.NodeKind)
+	}
+	if m.Request != nil {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintTechsupport(dAtA, i, uint64(m.Request.Size()))
+		n10, err := m.Request.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
 		}
+		i += n10
 	}
 	return i, nil
 }
 
-func (m *UpdateResponse) Marshal() (dAtA []byte, err error) {
+func (m *UpdateTechSupportResultResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -765,7 +865,7 @@ func (m *UpdateResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *UpdateResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *UpdateTechSupportResultResponse) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -808,15 +908,13 @@ func (m *DestinationSpec) Size() (n int) {
 func (m *TechSupportRequestSpec) Size() (n int) {
 	var l int
 	_ = l
-	l = len(m.InstanceId)
+	l = len(m.InstanceID)
 	if l > 0 {
 		n += 1 + l + sovTechsupport(uint64(l))
 	}
-	if len(m.Labels) > 0 {
-		for _, s := range m.Labels {
-			l = len(s)
-			n += 1 + l + sovTechsupport(uint64(l))
-		}
+	if m.Labels != nil {
+		l = m.Labels.Size()
+		n += 1 + l + sovTechsupport(uint64(l))
 	}
 	if len(m.Destinations) > 0 {
 		for _, e := range m.Destinations {
@@ -878,6 +976,24 @@ func (m *TechSupportRequestEvent) Size() (n int) {
 	return n
 }
 
+func (m *WatchTechSupportRequestsParameters) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.NodeName)
+	if l > 0 {
+		n += 1 + l + sovTechsupport(uint64(l))
+	}
+	l = len(m.NodeKind)
+	if l > 0 {
+		n += 1 + l + sovTechsupport(uint64(l))
+	}
+	if m.Options != nil {
+		l = m.Options.Size()
+		n += 1 + l + sovTechsupport(uint64(l))
+	}
+	return n
+}
+
 func (m *TechSupportRequestEventList) Size() (n int) {
 	var l int
 	_ = l
@@ -890,19 +1006,25 @@ func (m *TechSupportRequestEventList) Size() (n int) {
 	return n
 }
 
-func (m *TechSupportRequestList) Size() (n int) {
+func (m *UpdateTechSupportResultParameters) Size() (n int) {
 	var l int
 	_ = l
-	if len(m.Requests) > 0 {
-		for _, e := range m.Requests {
-			l = e.Size()
-			n += 1 + l + sovTechsupport(uint64(l))
-		}
+	l = len(m.NodeName)
+	if l > 0 {
+		n += 1 + l + sovTechsupport(uint64(l))
+	}
+	l = len(m.NodeKind)
+	if l > 0 {
+		n += 1 + l + sovTechsupport(uint64(l))
+	}
+	if m.Request != nil {
+		l = m.Request.Size()
+		n += 1 + l + sovTechsupport(uint64(l))
 	}
 	return n
 }
 
-func (m *UpdateResponse) Size() (n int) {
+func (m *UpdateTechSupportResultResponse) Size() (n int) {
 	var l int
 	_ = l
 	l = len(m.Status)
@@ -1083,7 +1205,7 @@ func (m *TechSupportRequestSpec) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field InstanceId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field InstanceID", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1108,13 +1230,13 @@ func (m *TechSupportRequestSpec) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.InstanceId = string(dAtA[iNdEx:postIndex])
+			m.InstanceID = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Labels", wireType)
 			}
-			var stringLen uint64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTechsupport
@@ -1124,20 +1246,24 @@ func (m *TechSupportRequestSpec) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				msglen |= (int(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthTechsupport
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Labels = append(m.Labels, string(dAtA[iNdEx:postIndex]))
+			if m.Labels == nil {
+				m.Labels = &labels.Selector{}
+			}
+			if err := m.Labels.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -1646,6 +1772,147 @@ func (m *TechSupportRequestEvent) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *WatchTechSupportRequestsParameters) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTechsupport
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: WatchTechSupportRequestsParameters: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: WatchTechSupportRequestsParameters: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NodeName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTechsupport
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTechsupport
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.NodeName = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NodeKind", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTechsupport
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTechsupport
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.NodeKind = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Options", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTechsupport
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTechsupport
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Options == nil {
+				m.Options = &api.ListWatchOptions{}
+			}
+			if err := m.Options.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTechsupport(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTechsupport
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *TechSupportRequestEventList) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1727,7 +1994,7 @@ func (m *TechSupportRequestEventList) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *TechSupportRequestList) Unmarshal(dAtA []byte) error {
+func (m *UpdateTechSupportResultParameters) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1750,15 +2017,73 @@ func (m *TechSupportRequestList) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: TechSupportRequestList: wiretype end group for non-group")
+			return fmt.Errorf("proto: UpdateTechSupportResultParameters: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: TechSupportRequestList: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: UpdateTechSupportResultParameters: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Requests", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field NodeName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTechsupport
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTechsupport
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.NodeName = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NodeKind", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTechsupport
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTechsupport
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.NodeKind = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1782,8 +2107,10 @@ func (m *TechSupportRequestList) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Requests = append(m.Requests, &TechSupportRequest{})
-			if err := m.Requests[len(m.Requests)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if m.Request == nil {
+				m.Request = &TechSupportRequest{}
+			}
+			if err := m.Request.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1808,7 +2135,7 @@ func (m *TechSupportRequestList) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *UpdateResponse) Unmarshal(dAtA []byte) error {
+func (m *UpdateTechSupportResultResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1831,10 +2158,10 @@ func (m *UpdateResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: UpdateResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: UpdateTechSupportResultResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: UpdateResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: UpdateTechSupportResultResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1995,68 +2322,75 @@ var (
 func init() { proto.RegisterFile("techsupport.proto", fileDescriptorTechsupport) }
 
 var fileDescriptorTechsupport = []byte{
-	// 999 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x55, 0xcd, 0x6e, 0xdb, 0x46,
-	0x10, 0x16, 0x45, 0x59, 0x8e, 0xd6, 0xb6, 0x4c, 0xaf, 0x63, 0x9b, 0x51, 0x0a, 0x53, 0x61, 0xd3,
-	0xc2, 0x07, 0x9b, 0x0c, 0x5c, 0xe4, 0x10, 0x14, 0x28, 0x1a, 0xa6, 0x36, 0x6a, 0xd4, 0x8d, 0x55,
-	0x4b, 0x49, 0x03, 0x34, 0x17, 0x8a, 0x9c, 0x4a, 0x5b, 0xf0, 0x67, 0xab, 0x5d, 0xba, 0x30, 0x82,
-	0x9c, 0xfa, 0x06, 0xed, 0xa5, 0xf7, 0x3e, 0x40, 0x81, 0x3e, 0x45, 0x8e, 0x79, 0x02, 0xa2, 0x70,
-	0x6f, 0x7c, 0x85, 0xa2, 0x40, 0xb0, 0x4b, 0x5a, 0x5e, 0xc7, 0xb6, 0x72, 0xdb, 0x9d, 0xfd, 0xe6,
-	0xdb, 0x99, 0x8f, 0xdf, 0x2c, 0xd1, 0x0a, 0x87, 0x60, 0xcc, 0x32, 0x4a, 0xd3, 0x09, 0x77, 0xe8,
-	0x24, 0xe5, 0x29, 0x9e, 0xe7, 0x4c, 0x2e, 0x3a, 0x1f, 0x8d, 0xd2, 0x74, 0x14, 0x81, 0xeb, 0x53,
-	0xe2, 0xfa, 0x49, 0x92, 0x72, 0x9f, 0x93, 0x34, 0x61, 0x25, 0xac, 0xb3, 0x37, 0x22, 0x7c, 0x9c,
-	0x0d, 0x9d, 0x20, 0x8d, 0x5d, 0x0a, 0x09, 0xf3, 0x93, 0x30, 0x75, 0xd9, 0x2f, 0xee, 0x09, 0x24,
-	0x24, 0x00, 0x37, 0xe3, 0x24, 0x62, 0x22, 0x75, 0x04, 0x89, 0x9a, 0xed, 0x92, 0x24, 0x88, 0xb2,
-	0x10, 0xce, 0x69, 0x76, 0x14, 0x9a, 0x51, 0x3a, 0x4a, 0x5d, 0x19, 0x1e, 0x66, 0x3f, 0xca, 0x9d,
-	0xdc, 0xc8, 0x55, 0x05, 0xff, 0xe4, 0x86, 0x5b, 0x45, 0x8d, 0x31, 0x70, 0xbf, 0x84, 0xd9, 0xff,
-	0x69, 0x68, 0xf9, 0x2b, 0x60, 0x9c, 0x24, 0xf2, 0xd6, 0x3e, 0x85, 0x00, 0x1f, 0xa2, 0xb9, 0x9e,
-	0x38, 0x34, 0xb5, 0xae, 0xb6, 0xd5, 0xde, 0xbd, 0xe7, 0x54, 0x7d, 0x3a, 0xef, 0x01, 0x1d, 0x89,
-	0x0a, 0xd2, 0xc8, 0x5b, 0x2d, 0x72, 0x6b, 0x59, 0x62, 0xb6, 0xd3, 0x98, 0x70, 0x88, 0x29, 0x3f,
-	0x3d, 0x2e, 0x49, 0xf0, 0xa7, 0xa8, 0xd1, 0xf3, 0xf9, 0xd8, 0xac, 0x77, 0xb5, 0xad, 0x96, 0x87,
-	0x8b, 0xdc, 0x6a, 0x53, 0x9f, 0x8f, 0x15, 0xa0, 0x3c, 0xc7, 0x9f, 0xa3, 0x05, 0x85, 0xdf, 0xd4,
-	0x25, 0xfc, 0x4e, 0x91, 0x5b, 0x6b, 0xe1, 0x45, 0x58, 0xc9, 0x52, 0xd1, 0xf6, 0x43, 0x74, 0xeb,
-	0xbc, 0x18, 0xdc, 0x42, 0x73, 0x87, 0x69, 0xe0, 0x47, 0x46, 0x0d, 0xcf, 0x23, 0xbd, 0xff, 0xa4,
-	0x67, 0x68, 0x18, 0xa1, 0xe6, 0x73, 0x29, 0xb7, 0x51, 0x17, 0xe7, 0x5f, 0x0f, 0x06, 0xbd, 0xbe,
-	0xa1, 0xdb, 0xbf, 0xd5, 0xd1, 0xfa, 0x00, 0x82, 0x71, 0xbf, 0xfc, 0xae, 0xc7, 0xf0, 0x73, 0x06,
-	0x8c, 0x4b, 0x11, 0x1e, 0x21, 0x74, 0x90, 0x30, 0xee, 0x27, 0x01, 0x1c, 0x84, 0x52, 0x89, 0xaa,
-	0x1a, 0x52, 0x45, 0x77, 0x48, 0xa8, 0x54, 0xa3, 0x80, 0xf1, 0x36, 0x6a, 0x1e, 0xfa, 0x43, 0x88,
-	0x98, 0x59, 0xef, 0xea, 0x5b, 0x2d, 0xef, 0x76, 0x91, 0x5b, 0x46, 0x24, 0x23, 0x4a, 0x46, 0x85,
-	0xc1, 0x2f, 0xd0, 0xa2, 0xd2, 0x09, 0x33, 0xf5, 0xae, 0xbe, 0xb5, 0xb0, 0x6b, 0xde, 0x24, 0xba,
-	0xd7, 0x29, 0x72, 0x6b, 0x5d, 0x91, 0x44, 0xe5, 0xbc, 0xc4, 0x84, 0x1f, 0xa2, 0xd6, 0x73, 0x98,
-	0x0c, 0x53, 0x46, 0xf8, 0xa9, 0xd9, 0xe8, 0x6a, 0x5b, 0x73, 0xde, 0x46, 0x91, 0x5b, 0xab, 0x27,
-	0xe7, 0x41, 0x25, 0xf3, 0x02, 0x69, 0xff, 0x5f, 0x47, 0xe6, 0x35, 0xa2, 0x70, 0x9f, 0x67, 0x0c,
-	0xbf, 0x44, 0xcd, 0x72, 0x55, 0x99, 0xc3, 0x99, 0xd6, 0x79, 0x53, 0x8a, 0xf3, 0x38, 0x90, 0xb5,
-	0xcb, 0x4d, 0xa9, 0x05, 0x93, 0x6b, 0x55, 0x8b, 0x8a, 0x7d, 0x1f, 0xb5, 0xfa, 0xdc, 0x9f, 0xf0,
-	0x01, 0x89, 0x41, 0x1a, 0x66, 0x61, 0xb7, 0xed, 0xf8, 0x94, 0x38, 0x22, 0xc0, 0xb8, 0x1f, 0x53,
-	0xcf, 0x2c, 0x72, 0xeb, 0x36, 0x13, 0xa0, 0x1d, 0x4e, 0x62, 0x50, 0x5b, 0x98, 0xa6, 0xe2, 0x2f,
-	0xd1, 0xfc, 0x5e, 0x12, 0x4a, 0x16, 0xfd, 0x5a, 0x96, 0xf5, 0x22, 0xb7, 0x30, 0x24, 0xe1, 0xfb,
-	0x1c, 0xe7, 0x69, 0xf8, 0x63, 0xa4, 0x3f, 0x3b, 0x3e, 0x90, 0xaa, 0xb5, 0xbc, 0x95, 0x22, 0xb7,
-	0x96, 0xb2, 0x09, 0x51, 0x80, 0xe2, 0xd4, 0x1e, 0xa0, 0x45, 0xb5, 0x39, 0xe1, 0xb2, 0xef, 0x32,
-	0xc8, 0x20, 0x34, 0x6a, 0x78, 0x09, 0xb5, 0xfa, 0xc1, 0x18, 0xc2, 0x2c, 0x82, 0xd0, 0xd0, 0x70,
-	0x5b, 0xd8, 0xa9, 0x37, 0x49, 0x47, 0x13, 0x60, 0xcc, 0xa8, 0x0b, 0xe8, 0xbe, 0x4f, 0xc4, 0x99,
-	0x2e, 0xa0, 0x4f, 0xd2, 0x98, 0x46, 0xc0, 0x21, 0x34, 0x1a, 0xf6, 0x9f, 0x75, 0x84, 0xaf, 0x8a,
-	0x89, 0x1f, 0x20, 0x6d, 0x20, 0x45, 0x5f, 0xd8, 0x5d, 0x2a, 0xbb, 0x39, 0xa5, 0xf0, 0x2d, 0x70,
-	0xdf, 0x5b, 0x7d, 0x93, 0x5b, 0xb5, 0xb7, 0xb9, 0xa5, 0x15, 0xb9, 0x35, 0xbf, 0x4d, 0x92, 0x88,
-	0x24, 0x70, 0xac, 0x0d, 0xf0, 0x23, 0xa4, 0x1d, 0x55, 0x2a, 0x2e, 0xcb, 0x8c, 0xa3, 0xe1, 0x4f,
-	0x10, 0x70, 0x99, 0xd3, 0x51, 0x72, 0xda, 0xe2, 0x3d, 0x50, 0x7a, 0xd3, 0x8e, 0xf0, 0x37, 0xa8,
-	0x21, 0xcc, 0x56, 0xa9, 0x67, 0xcd, 0xfa, 0xc8, 0xc2, 0x93, 0xeb, 0x82, 0x4d, 0x30, 0x31, 0x0a,
-	0x81, 0x3a, 0xd9, 0x72, 0x94, 0xfa, 0x53, 0xcf, 0x34, 0x24, 0xdd, 0xbd, 0x0f, 0x7a, 0xc6, 0x33,
-	0x2b, 0xc2, 0x1b, 0xad, 0x62, 0xff, 0xa5, 0xa1, 0x8d, 0xab, 0xe9, 0x7b, 0x27, 0x90, 0x70, 0x61,
-	0x23, 0xb9, 0x10, 0x0a, 0x55, 0x3e, 0x2d, 0x0d, 0x30, 0x8d, 0x96, 0x36, 0x02, 0xb1, 0xdd, 0xe1,
-	0xa7, 0xf4, 0x92, 0x8d, 0xa6, 0x20, 0x7c, 0x88, 0xe6, 0x2b, 0xde, 0x4a, 0xc6, 0xbb, 0x33, 0x2a,
-	0xf7, 0xd6, 0x8a, 0xdc, 0x5a, 0x99, 0x94, 0x1b, 0xd5, 0x52, 0xd5, 0xb9, 0x1d, 0xa3, 0xbb, 0x37,
-	0x14, 0x7c, 0x48, 0x18, 0xc7, 0x4f, 0x51, 0x53, 0x6e, 0xc4, 0x64, 0x89, 0x17, 0xa0, 0x3b, 0xe3,
-	0x2e, 0x09, 0x2c, 0x67, 0x49, 0xf6, 0x70, 0x49, 0xa0, 0x92, 0xc5, 0x26, 0xd7, 0x3d, 0x6d, 0xf2,
-	0xa6, 0x23, 0x74, 0xab, 0xda, 0x9e, 0xdf, 0x35, 0xb3, 0x2f, 0x39, 0x2b, 0x55, 0x5f, 0xea, 0x45,
-	0x53, 0x12, 0xfb, 0x0b, 0xd4, 0x7e, 0x46, 0x43, 0x9f, 0xc3, 0x31, 0x30, 0x9a, 0x26, 0x0c, 0xc4,
-	0x13, 0xa8, 0x3c, 0x13, 0xad, 0xd9, 0x63, 0xbf, 0xfb, 0x7b, 0x1d, 0xb5, 0x95, 0x8b, 0x1f, 0x53,
-	0x82, 0x7f, 0x40, 0xe6, 0xf7, 0x3e, 0x0f, 0xc6, 0x57, 0xeb, 0x61, 0x78, 0x4d, 0x7e, 0x4b, 0xd1,
-	0x8a, 0x84, 0x1c, 0x51, 0xf9, 0xdc, 0x75, 0xee, 0x7f, 0x48, 0x30, 0x91, 0x61, 0xd7, 0x1e, 0x68,
-	0x78, 0x1f, 0x2d, 0x4e, 0xeb, 0xcd, 0x22, 0x8e, 0x67, 0xb5, 0xdf, 0xd9, 0x98, 0x1e, 0x5e, 0xee,
-	0xd1, 0xae, 0x75, 0x5e, 0xfe, 0xfd, 0xeb, 0x9d, 0x17, 0xd7, 0x0e, 0xab, 0x3e, 0x02, 0x8e, 0x1b,
-	0x91, 0x50, 0xbb, 0x41, 0x53, 0x11, 0xa0, 0x19, 0xc7, 0xcd, 0x10, 0xc4, 0x90, 0x77, 0xee, 0xbb,
-	0xaf, 0x2e, 0x46, 0xd1, 0x79, 0xea, 0xc7, 0xf0, 0xda, 0x7d, 0x25, 0xff, 0xa8, 0x17, 0x7f, 0x91,
-	0xd7, 0x9e, 0xf1, 0xe6, 0x6c, 0x53, 0x7b, 0x7b, 0xb6, 0xa9, 0xfd, 0x73, 0xb6, 0xa9, 0xfd, 0xf1,
-	0xef, 0x66, 0xad, 0xa7, 0x0d, 0x9b, 0xb2, 0x92, 0xcf, 0xde, 0x05, 0x00, 0x00, 0xff, 0xff, 0x6d,
-	0x83, 0x07, 0x10, 0x8e, 0x08, 0x00, 0x00,
+	// 1106 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x56, 0xcf, 0x4f, 0x1b, 0x47,
+	0x14, 0xf6, 0xda, 0xc6, 0xc6, 0x03, 0x18, 0x33, 0x04, 0x70, 0x9c, 0x8a, 0x85, 0x6d, 0x5a, 0xa1,
+	0x16, 0xd6, 0x88, 0x28, 0x87, 0xa8, 0x52, 0xd5, 0x38, 0x01, 0x15, 0x85, 0x82, 0x6b, 0x3b, 0x69,
+	0x0e, 0xb9, 0xac, 0x77, 0x5f, 0xed, 0x69, 0xd7, 0x33, 0x8b, 0x67, 0x96, 0x0a, 0x45, 0x39, 0xf5,
+	0x9f, 0xe8, 0xbd, 0xbd, 0x57, 0xea, 0x5f, 0x91, 0x63, 0x0e, 0x55, 0x2f, 0x95, 0x56, 0x15, 0xbd,
+	0xed, 0xbf, 0x50, 0x55, 0xaa, 0x66, 0x76, 0x6d, 0x86, 0x1f, 0x86, 0x43, 0x0f, 0xb9, 0xcd, 0xbc,
+	0xf9, 0xbe, 0xe7, 0xf7, 0xbe, 0xf7, 0xf9, 0x69, 0xd1, 0x82, 0x00, 0xb7, 0xcf, 0xc3, 0x20, 0x60,
+	0x43, 0x61, 0x07, 0x43, 0x26, 0x18, 0x2e, 0x0a, 0xae, 0x0e, 0xb5, 0x0f, 0x7a, 0x8c, 0xf5, 0x7c,
+	0xa8, 0x3b, 0x01, 0xa9, 0x3b, 0x94, 0x32, 0xe1, 0x08, 0xc2, 0x28, 0x4f, 0x60, 0xb5, 0xdd, 0x1e,
+	0x11, 0xfd, 0xb0, 0x6b, 0xbb, 0x6c, 0x50, 0x0f, 0x80, 0x72, 0x87, 0x7a, 0xac, 0xce, 0x7f, 0xa8,
+	0x9f, 0x00, 0x25, 0x2e, 0xd4, 0x43, 0x41, 0x7c, 0x2e, 0xa9, 0x3d, 0xa0, 0x3a, 0xbb, 0x4e, 0xa8,
+	0xeb, 0x87, 0x1e, 0x8c, 0xd2, 0x6c, 0x69, 0x69, 0x7a, 0xac, 0xc7, 0xea, 0x2a, 0xdc, 0x0d, 0xbf,
+	0x55, 0x37, 0x75, 0x51, 0xa7, 0x14, 0xfe, 0xd1, 0x84, 0x5f, 0x95, 0x35, 0x0e, 0x40, 0x38, 0x29,
+	0x6c, 0xfb, 0x06, 0x98, 0xef, 0x74, 0xc1, 0xe7, 0x75, 0x0e, 0x3e, 0xb8, 0x82, 0x0d, 0x13, 0x86,
+	0xf5, 0x8f, 0x81, 0xe6, 0x9f, 0x02, 0x17, 0x84, 0xaa, 0x3a, 0xdb, 0x01, 0xb8, 0xf8, 0x00, 0x4d,
+	0x35, 0xe5, 0x63, 0xd5, 0x58, 0x33, 0x36, 0xca, 0x3b, 0xeb, 0x76, 0xaa, 0x8c, 0x7d, 0x09, 0x68,
+	0x2b, 0x94, 0xcb, 0xfc, 0xc6, 0x62, 0x1c, 0x99, 0xf3, 0x0a, 0xb3, 0xc9, 0x06, 0x44, 0xc0, 0x20,
+	0x10, 0xa7, 0xad, 0xa9, 0x44, 0xd7, 0x8f, 0x51, 0xbe, 0xe9, 0x88, 0x7e, 0x35, 0xbb, 0x66, 0x6c,
+	0x94, 0x1a, 0x38, 0x8e, 0xcc, 0x72, 0xe0, 0x88, 0xbe, 0x06, 0xcc, 0xcb, 0x3b, 0xfe, 0x0c, 0xcd,
+	0x68, 0xf9, 0xab, 0x39, 0x05, 0xbf, 0x1b, 0x47, 0xe6, 0x92, 0x77, 0x1e, 0xd6, 0x58, 0x33, 0x5a,
+	0xd8, 0x7a, 0x88, 0xa6, 0x47, 0xc5, 0xe0, 0x12, 0x9a, 0x3a, 0x60, 0xae, 0xe3, 0x57, 0x32, 0xb8,
+	0x88, 0x72, 0xed, 0x27, 0xcd, 0x8a, 0x81, 0x11, 0x2a, 0xbc, 0x50, 0x03, 0xaa, 0x64, 0xe5, 0xfb,
+	0x97, 0x9d, 0x4e, 0xb3, 0x5d, 0xc9, 0x59, 0xbf, 0x64, 0xd1, 0x72, 0x07, 0xdc, 0x7e, 0x3b, 0x71,
+	0x42, 0x0b, 0x8e, 0x43, 0xe0, 0x42, 0x89, 0xf0, 0x08, 0xa1, 0x7d, 0xca, 0x85, 0x43, 0x5d, 0xd8,
+	0x7f, 0xaa, 0x94, 0x48, 0xab, 0x21, 0x69, 0x74, 0x8b, 0x78, 0x5a, 0x35, 0x88, 0x8c, 0xc1, 0xf8,
+	0x73, 0x54, 0x38, 0x50, 0x62, 0xab, 0x9e, 0x67, 0x76, 0x2a, 0x76, 0xa2, 0xbd, 0xdd, 0x4e, 0xb5,
+	0x6f, 0xdc, 0x89, 0x23, 0xb3, 0x92, 0x04, 0xb5, 0x1c, 0x85, 0x24, 0x82, 0x5f, 0xa2, 0x59, 0x4d,
+	0x09, 0x5e, 0xcd, 0xad, 0xe5, 0x36, 0x66, 0x76, 0xaa, 0x93, 0xc6, 0xd0, 0xa8, 0xc5, 0x91, 0xb9,
+	0xac, 0xa9, 0xa1, 0xe7, 0x9c, 0xd5, 0xe3, 0xf8, 0x21, 0x2a, 0xbd, 0x80, 0x61, 0x97, 0x71, 0x22,
+	0x4e, 0xab, 0xf9, 0x35, 0x63, 0x63, 0xaa, 0xb1, 0x12, 0x47, 0xe6, 0xe2, 0xc9, 0x28, 0xa8, 0x31,
+	0x4b, 0xe3, 0xa0, 0xf5, 0x6f, 0x16, 0x55, 0xaf, 0x91, 0x49, 0x38, 0x22, 0xe4, 0xf8, 0x15, 0x2a,
+	0x24, 0xa7, 0xd4, 0x2e, 0xf6, 0xb8, 0xce, 0x49, 0x14, 0xfb, 0xb1, 0xab, 0x6a, 0x57, 0x97, 0x44,
+	0x0b, 0xae, 0xce, 0xba, 0x16, 0x49, 0x04, 0xef, 0xa1, 0x52, 0x5b, 0x38, 0x43, 0xd1, 0x21, 0x03,
+	0x48, 0xe5, 0x2c, 0xdb, 0x4e, 0x40, 0x6c, 0x19, 0xe0, 0xc2, 0x19, 0x04, 0x8d, 0x6a, 0x1c, 0x99,
+	0x77, 0xb8, 0x04, 0x6d, 0x09, 0x32, 0x00, 0xbd, 0x05, 0x3e, 0xa2, 0xe2, 0x2f, 0x50, 0x71, 0x97,
+	0x7a, 0x2a, 0x4b, 0xee, 0xda, 0x2c, 0xcb, 0x71, 0x64, 0x62, 0xa0, 0xde, 0xe5, 0x1c, 0x45, 0x48,
+	0x68, 0xf8, 0x43, 0x94, 0x7b, 0xde, 0xda, 0x57, 0xaa, 0x95, 0x1a, 0x0b, 0x71, 0x64, 0xce, 0x85,
+	0x43, 0xa2, 0x01, 0x73, 0x61, 0x6b, 0xdf, 0xea, 0xa0, 0x59, 0xbd, 0x39, 0xe9, 0xbb, 0xaf, 0x43,
+	0x08, 0xc1, 0xab, 0x64, 0xf0, 0x1c, 0x2a, 0xb5, 0xdd, 0x3e, 0x78, 0xa1, 0x0f, 0x5e, 0xc5, 0xc0,
+	0x65, 0x69, 0xb0, 0xe6, 0x90, 0xf5, 0x86, 0xc0, 0x79, 0x25, 0x2b, 0xa1, 0x7b, 0x0e, 0x91, 0x6f,
+	0x39, 0x09, 0x7d, 0xc2, 0x06, 0x81, 0x0f, 0x02, 0xbc, 0x4a, 0xde, 0xfa, 0x39, 0x8b, 0xf0, 0x55,
+	0x31, 0xf1, 0x36, 0x32, 0x3a, 0x4a, 0xf4, 0x99, 0x9d, 0xb9, 0xa4, 0x9b, 0xd3, 0x00, 0xbe, 0x02,
+	0xe1, 0x34, 0x16, 0xdf, 0x46, 0x66, 0xe6, 0x5d, 0x64, 0x1a, 0x71, 0x64, 0x16, 0x37, 0x09, 0xf5,
+	0x09, 0x85, 0x96, 0x21, 0xf0, 0x23, 0x64, 0x1c, 0xa5, 0x2a, 0xce, 0x2b, 0xc6, 0x51, 0xf7, 0x3b,
+	0x70, 0x85, 0xe2, 0xd4, 0x34, 0x4e, 0x59, 0xee, 0x14, 0xad, 0x37, 0x83, 0xe1, 0x67, 0x28, 0x2f,
+	0xcd, 0x96, 0xaa, 0x67, 0xde, 0x34, 0x64, 0xe9, 0xc9, 0x65, 0x99, 0x4d, 0x66, 0xe2, 0x01, 0xb8,
+	0xfa, 0x7f, 0x5d, 0xde, 0x71, 0x7b, 0xec, 0x99, 0xbc, 0x4a, 0xb7, 0x7e, 0xab, 0x67, 0x1a, 0xd5,
+	0x34, 0xe1, 0x44, 0xab, 0x58, 0xbf, 0x1a, 0x68, 0xe5, 0x2a, 0x7d, 0xf7, 0x04, 0xa8, 0x90, 0x36,
+	0x52, 0x07, 0xa9, 0x50, 0xea, 0xd3, 0xc4, 0x00, 0xe3, 0x68, 0x62, 0x23, 0x90, 0xd7, 0x2d, 0x71,
+	0x1a, 0x5c, 0xb0, 0x11, 0x8c, 0x40, 0xf8, 0x00, 0x15, 0xd3, 0xbc, 0xa9, 0x8c, 0xf7, 0x6e, 0xa8,
+	0xbc, 0xb1, 0x14, 0x47, 0xe6, 0xc2, 0x30, 0xb9, 0xe8, 0x96, 0x4a, 0x43, 0xd6, 0x1f, 0x06, 0xb2,
+	0xbe, 0x71, 0x84, 0xdb, 0xbf, 0xca, 0xe5, 0x4d, 0x67, 0xe8, 0x0c, 0x40, 0xc0, 0x90, 0xe3, 0x07,
+	0x68, 0xfa, 0x90, 0x79, 0x70, 0xe8, 0x0c, 0x20, 0x5d, 0x44, 0xea, 0x4f, 0x4b, 0x99, 0x07, 0x5b,
+	0xd4, 0xb9, 0xe0, 0xd6, 0x69, 0x9a, 0x02, 0x47, 0xa4, 0x67, 0x84, 0x7a, 0xe9, 0xea, 0x3d, 0x27,
+	0x7d, 0x4f, 0xa8, 0x77, 0x99, 0x24, 0x81, 0x78, 0x0f, 0x15, 0x8f, 0x82, 0xd1, 0xd2, 0x91, 0xed,
+	0x2d, 0x29, 0x91, 0x0e, 0x08, 0x17, 0xaa, 0xce, 0xf4, 0x31, 0x69, 0x8c, 0x05, 0x97, 0x97, 0x4d,
+	0x31, 0x0d, 0x59, 0x03, 0x74, 0x6f, 0xc2, 0x24, 0x64, 0x2a, 0x7c, 0x88, 0x0a, 0xea, 0x22, 0x57,
+	0x86, 0x5c, 0x6d, 0x6b, 0x37, 0x88, 0xa8, 0x80, 0xc9, 0x92, 0x50, 0x63, 0xb8, 0x30, 0xf9, 0x24,
+	0x62, 0xfd, 0x69, 0xa0, 0xf5, 0xe7, 0x81, 0xe7, 0x08, 0xb8, 0xc0, 0xe7, 0xa1, 0x2f, 0xde, 0x8b,
+	0x8c, 0x9a, 0x4b, 0x72, 0xff, 0xdf, 0x25, 0x47, 0xc8, 0x9c, 0xd0, 0x5c, 0x0b, 0x78, 0xc0, 0x28,
+	0x07, 0xbc, 0x79, 0x61, 0x07, 0x97, 0x6e, 0xde, 0xa9, 0x3b, 0xbf, 0x67, 0x51, 0x59, 0xcb, 0xf5,
+	0x38, 0x20, 0xf8, 0x18, 0x55, 0x27, 0x19, 0x11, 0x7f, 0x3a, 0x2e, 0xfe, 0x76, 0xaf, 0xd6, 0xee,
+	0xdf, 0x36, 0x4a, 0x69, 0x00, 0x2b, 0xb3, 0x6d, 0xe0, 0x63, 0xb4, 0x32, 0xa1, 0x2d, 0xfc, 0xc9,
+	0x38, 0xc9, 0xad, 0x53, 0xad, 0x6d, 0xdc, 0x86, 0x1d, 0x89, 0x64, 0x65, 0x6a, 0xaf, 0x7e, 0xfb,
+	0xf1, 0xee, 0xcb, 0x6b, 0x57, 0x69, 0xae, 0x07, 0x02, 0xe7, 0x7d, 0x69, 0xce, 0x7c, 0xc0, 0x64,
+	0x20, 0x08, 0x05, 0x2e, 0x78, 0x20, 0x57, 0x70, 0xed, 0x7e, 0xfd, 0xf5, 0xf9, 0xa2, 0xb4, 0xa5,
+	0x2f, 0xde, 0xd4, 0x5f, 0xab, 0x2f, 0xa0, 0xf1, 0x27, 0x82, 0xf7, 0xa6, 0x51, 0x79, 0x7b, 0xb6,
+	0x6a, 0xbc, 0x3b, 0x5b, 0x35, 0xfe, 0x3a, 0x5b, 0x35, 0x7e, 0xfa, 0x7b, 0x35, 0xd3, 0x34, 0xba,
+	0x05, 0x55, 0xda, 0x83, 0xff, 0x02, 0x00, 0x00, 0xff, 0xff, 0x1b, 0xa0, 0x0a, 0xd4, 0x70, 0x0a,
+	0x00, 0x00,
 }

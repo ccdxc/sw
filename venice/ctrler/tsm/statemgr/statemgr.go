@@ -22,11 +22,15 @@ type syncFlag struct {
 type Statemgr struct {
 	waitGrp sync.WaitGroup // wait group to wait on all go routines to exit
 	memDB   *memdb.Memdb   // database of all objects
-	writer  writer.Writer  // writer to apiserver
+	writer  writer.Writer  // writer to ApiServer
 
 	// Channels to receive events from api server and internal timers
 	MirrorSessionWatcher chan kvstore.WatchEvent // mirror session object watcher
 	mirrorTimerWatcher   chan MirrorTimerEvent   // mirror session Timer watcher
+
+	// Channels to receive TechSupport events from ApiServer
+	// Affected objects can be TechSupportRequests, Controller nodes and SmartNIC nodes
+	TechSupportWatcher chan kvstore.WatchEvent
 
 	stopFlag syncFlag
 
@@ -66,11 +70,8 @@ func (sm *Statemgr) StopWatchObjects(kind string, watchChan chan memdb.Event) er
 
 // runMirrorSessionWatcher watches on a channel for changes from api server and internal events
 func (sm *Statemgr) runMirrorSessionWatcher() {
-	log.Infof("Mirror Session Watcher running")
-
-	// setup wait group
-	sm.waitGrp.Add(1)
 	defer sm.waitGrp.Done()
+	log.Infof("Mirror Session Watcher running")
 
 	// loop till channel is closed
 	for {
@@ -103,6 +104,25 @@ func (sm *Statemgr) runMirrorSessionWatcher() {
 			}
 			log.Infof("Watcher: Got Mirror session Timer event(%v) on %v, ver %v", evt.Type, evt.MirrorSessionState.Name, evt.MirrorSessionState.ResourceVersion)
 			sm.handleMirrorSessionTimerEvent(evt.Type, evt.MirrorSessionState)
+		}
+	}
+}
+
+// runTechSupportWatcher watches on a channel for changes from api server and internal events
+func (sm *Statemgr) runTechSupportWatchers() {
+	defer sm.waitGrp.Done()
+	log.Infof("TechSupportRequest Watcher running")
+
+	// loop till channel is closed
+	for {
+		select {
+		case evt, ok := <-sm.TechSupportWatcher:
+			// if channel has error, we are done..
+			if !ok {
+				// Since the channel is within the same controller process... no need to restart it
+				return
+			}
+			sm.handleTechSupportEvent(&evt)
 		}
 	}
 }
@@ -157,6 +177,7 @@ func (sm *Statemgr) Stop() {
 	// close the channels
 	close(sm.MirrorSessionWatcher)
 	close(sm.mirrorTimerWatcher)
+	close(sm.TechSupportWatcher)
 	// wait for all go routines to exit
 	log.Debugf("Tsm wait for all go routines")
 	sm.waitGrp.Wait()
@@ -171,12 +192,16 @@ func NewStatemgr(wr writer.Writer) (*Statemgr, error) {
 		writer:               wr,
 		MirrorSessionWatcher: make(chan kvstore.WatchEvent, watcherQueueLen),
 		mirrorTimerWatcher:   make(chan MirrorTimerEvent, watcherQueueLen),
+		TechSupportWatcher:   make(chan kvstore.WatchEvent, watcherQueueLen),
 		stopFlag: syncFlag{
 			flag: false,
 		},
 		numMirrorSessions: 0,
 	}
+
+	stateMgr.waitGrp.Add(2)
 	go stateMgr.runMirrorSessionWatcher()
+	go stateMgr.runTechSupportWatchers()
 
 	return stateMgr, nil
 }

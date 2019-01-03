@@ -4950,6 +4950,12 @@
             "format": "int32"
           },
           {
+            "name": "status.instance-id",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "status.status",
             "in": "query",
             "required": false,
@@ -5013,73 +5019,6 @@
             "in": "path",
             "required": true,
             "type": "string"
-          }
-        ],
-        "tags": [
-          "monitoring/v1"
-        ]
-      },
-      "put": {
-        "summary": "Update TechSupportRequest object",
-        "operationId": "UpdateTechSupportRequest",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/monitoringTechSupportRequest"
-            }
-          },
-          "400": {
-            "description": "Bad request parameters",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "401": {
-            "description": "Unauthorized request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "409": {
-            "description": "Conflict while processing request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "412": {
-            "description": "Pre-condition failed",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "501": {
-            "description": "Request not implemented",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "O.Name",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/monitoringTechSupportRequest"
-            }
           }
         ],
         "tags": [
@@ -14230,6 +14169,9 @@
     "monitoringTechSupportRequestStatus": {
       "type": "object",
       "properties": {
+        "instance-id": {
+          "type": "string"
+        },
         "status": {
           "type": "string",
           "enum": [
@@ -14240,7 +14182,13 @@
           ],
           "default": "Scheduled"
         },
-        "node-results": {
+        "ctrlr-node-results": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/monitoringTechSupportNodeResult"
+          }
+        },
+        "smartnic-node-results": {
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/monitoringTechSupportNodeResult"

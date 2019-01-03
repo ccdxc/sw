@@ -4189,7 +4189,8 @@ func makeURIMonitoringV1AutoUpdateStatsPolicyUpdateOper(in *StatsPolicy) string 
 
 //
 func makeURIMonitoringV1AutoUpdateTechSupportRequestUpdateOper(in *TechSupportRequest) string {
-	return fmt.Sprint("/configs/monitoring/v1", "/techsupport/", in.Name)
+	return ""
+
 }
 
 //
@@ -5573,23 +5574,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoAddTechSupportRequest(ctx context.
 
 // AutoUpdateTechSupportRequest CRUD method for TechSupportRequest
 func (r *EndpointsMonitoringV1RestClient) AutoUpdateTechSupportRequest(ctx context.Context, in *TechSupportRequest) (*TechSupportRequest, error) {
-	path := makeURIMonitoringV1AutoUpdateTechSupportRequestUpdateOper(in)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	ret, err := decodeHTTPrespMonitoringV1AutoUpdateTechSupportRequest(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*TechSupportRequest), err
+	return nil, errors.New("not allowed")
 }
 
 // AutoGetTechSupportRequest CRUD method for TechSupportRequest

@@ -17,6 +17,7 @@ import (
 // Writer is the api provided by writer object
 type Writer interface {
 	WriteMirrorSession(ms *monitoring.MirrorSession) error
+	WriteTechSupportRequest(ms *monitoring.TechSupportRequest) error
 	Close() error
 }
 
@@ -76,6 +77,26 @@ func (wr *APISrvWriter) WriteMirrorSession(ms *monitoring.MirrorSession) error {
 	// ms.ObjectMeta.ResourceVersion = ""
 
 	_, err = apicl.MonitoringV1().MirrorSession().Update(context.Background(), ms)
+	return err
+}
+
+// WriteTechSupportRequest updates TechSupportRequest object
+func (wr *APISrvWriter) WriteTechSupportRequest(tsr *monitoring.TechSupportRequest) error {
+	// if we have no URL, we are done
+	if wr.apisrvURL == "" {
+		return nil
+	}
+
+	// get the api client
+	apicl, err := wr.getAPIClient()
+	if err != nil {
+		return err
+	}
+	log.Infof("Updating TechSupportRequest %s Status %v Version %v", tsr.Name, tsr.Status, tsr.ResourceVersion)
+
+	tsr.ObjectMeta.ResourceVersion = "" // no need to worry about CAS because object Spec is immutable
+
+	_, err = apicl.MonitoringV1().TechSupportRequest().Update(context.Background(), tsr)
 	return err
 }
 

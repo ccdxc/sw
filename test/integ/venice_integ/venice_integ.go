@@ -139,6 +139,7 @@ type veniceIntegSuite struct {
 	apiSrvAddr          string
 	disabledServices    []string
 	apiGw               apigw.APIGateway
+	apiGwAddr           string
 	logger              log.Logger
 	ctrler              *npm.Netctrler
 	tpm                 *tpm.PolicyManager
@@ -737,7 +738,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 	// logConf.Filter = log.AllowAllFilter
 	l = log.GetNewLogger(logConf)
 	svcs := map[string]string{globals.APIServer: it.apiSrvAddr, globals.Spyglass: it.fdrAddr}
-	it.apiGw, _, err = testutils.StartAPIGateway(fmt.Sprintf(":%s", it.config.APIGatewayPort), it.config.APIGatewaySkipAuth, svcs, it.disabledServices, []string{it.resolverSrv.GetListenURL()}, l)
+	it.apiGw, it.apiGwAddr, err = testutils.StartAPIGateway(fmt.Sprintf(":%s", it.config.APIGatewayPort), it.config.APIGatewaySkipAuth, svcs, it.disabledServices, []string{it.resolverSrv.GetListenURL()}, l)
 	c.Assert(err, check.IsNil)
 
 	// start agents

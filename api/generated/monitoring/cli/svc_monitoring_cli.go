@@ -789,22 +789,7 @@ func restPostTechSupportRequest(hostname, token string, obj interface{}) error {
 }
 
 func restPutTechSupportRequest(hostname, token string, obj interface{}) error {
-
-	restcl, err := apiclient.NewRestAPIClient(hostname)
-	if err != nil {
-		return fmt.Errorf("cannot create REST client")
-	}
-	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
-
-	if v, ok := obj.(*monitoring.TechSupportRequest); ok {
-		nv, err := restcl.MonitoringV1().TechSupportRequest().Update(loginCtx, v)
-		if err != nil {
-			return err
-		}
-		*v = *nv
-	}
-	return nil
-
+	return fmt.Errorf("put operation not supported for TechSupportRequest object")
 }
 
 func init() {
@@ -856,7 +841,7 @@ func init() {
 
 	cl.AddRestPostFunc("monitoring.TechSupportRequest", "v1", restPostTechSupportRequest)
 	cl.AddRestDeleteFunc("monitoring.TechSupportRequest", "v1", restDeleteTechSupportRequest)
-	cl.AddRestPutFunc("monitoring.TechSupportRequest", "v1", restPutTechSupportRequest)
+
 	cl.AddRestGetFunc("monitoring.TechSupportRequest", "v1", restGetTechSupportRequest)
 
 }

@@ -14,8 +14,8 @@ import (
 type RPCServer struct {
 	stateMgr   *statemgr.Statemgr // reference to state manager
 	grpcServer *rpckit.RPCServer  // gRPC server instance
-	// XXX unexport msServer
-	MsServer *MirrorSessionRPCServer
+	msServer   *MirrorSessionRPCServer
+	ssServer   *TechSupportRPCServer
 }
 
 // Stop stops the rpc server
@@ -38,15 +38,19 @@ func NewRPCServer(listenURL string, stateMgr *statemgr.Statemgr) (*RPCServer, er
 		log.Fatalf("Error creating mirror session rpc server. Err; %v", err)
 	}
 
+	// create techsupport RPC server
+	tsServer := NewTechSupportRPCServer(stateMgr)
+
 	// register the RPC handlers and start the server
 	tsproto.RegisterMirrorSessionApiServer(grpcServer.GrpcServer, msServer)
+	tsproto.RegisterTechSupportApiServer(grpcServer.GrpcServer, tsServer)
 	grpcServer.Start()
 
 	// create rpc server object
 	rpcServer := RPCServer{
 		stateMgr:   stateMgr,
 		grpcServer: grpcServer,
-		MsServer:   msServer,
+		msServer:   msServer,
 	}
 
 	return &rpcServer, nil

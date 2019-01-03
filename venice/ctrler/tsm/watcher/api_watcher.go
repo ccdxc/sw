@@ -21,16 +21,46 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 	defer cancel()
 
 	// mirror session watcher
-	opts := api.ListWatchOptions{}
+	mirrorOpts := api.ListWatchOptions{}
 	// Watch all updates (spec and status)
 	// since resourceVersion is used when doing status updates, must know the correct version#
 	// this can be captured on receiving update
-	mirrorSessionWatcher, err := apicl.MonitoringV1().MirrorSession().Watch(ctx1, &opts)
+	mirrorSessionWatcher, err := apicl.MonitoringV1().MirrorSession().Watch(ctx1, &mirrorOpts)
 	if err != nil {
 		log.Errorf("Failed to start mirror session watch (%s)\n", err)
 		return
 	}
 	defer mirrorSessionWatcher.Stop()
+
+	tsrOpts := api.ListWatchOptions{
+		// We don't care about meta updates and we don't want to get back our own status updates
+		FieldChangeSelector: []string{"Spec"},
+	}
+	techSupportRequestWatcher, err := apicl.MonitoringV1().TechSupportRequest().Watch(ctx1, &tsrOpts)
+	if err != nil {
+		log.Errorf("Failed to start techSupport request watch (%s)\n", err)
+		return
+	}
+	defer techSupportRequestWatcher.Stop()
+
+	nodeOpts := api.ListWatchOptions{
+		FieldChangeSelector: []string{"ObjectMeta.Labels"},
+	}
+	controllerNodeWatcher, err := apicl.ClusterV1().Node().Watch(ctx1, &nodeOpts)
+	if err != nil {
+		log.Errorf("Failed to start Controller nodes watch (%s)\n", err)
+		return
+	}
+	defer controllerNodeWatcher.Stop()
+
+	// Do not watch for changes in Status.Phase, as NICs that are
+	// not admitted should not have any active connection to Venice.
+	smartNICNodeWatcher, err := apicl.ClusterV1().SmartNIC().Watch(ctx1, &nodeOpts)
+	if err != nil {
+		log.Errorf("Failed to start SmartNIC nodes watch (%s)\n", err)
+		return
+	}
+	defer smartNICNodeWatcher.Stop()
 
 	// wait for events
 	// api server will send events for all existing mirror session objects as well
@@ -45,6 +75,30 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 			}
 			log.Infof("apiwatcher: Got Mirror session  watch event: %v", evt.Type)
 			w.statemgr.MirrorSessionWatcher <- *evt
+
+		// TechSupport Events -- receive notifications on 3 separate ApiServer channels
+		// (1 per kind) and forward all of them to statemgr using a single channel
+		case evt, ok := <-techSupportRequestWatcher.EventChan():
+			if !ok {
+				log.Errorf("Error receiving from apisrv TechSupportRequest watcher")
+				return
+			}
+			w.statemgr.TechSupportWatcher <- *evt
+
+		case evt, ok := <-controllerNodeWatcher.EventChan():
+			if !ok {
+				log.Errorf("Error receiving from apisrv ControllerNode watcher")
+				return
+			}
+			w.statemgr.TechSupportWatcher <- *evt
+
+		case evt, ok := <-smartNICNodeWatcher.EventChan():
+			if !ok {
+				log.Errorf("Error receiving from apisrv SmartNIC watcher")
+				return
+			}
+			w.statemgr.TechSupportWatcher <- *evt
+
 		case <-ctx1.Done():
 			return
 		}
@@ -76,11 +130,26 @@ func (w *Watcher) runApisrvWatcher(ctx context.Context, apisrvURL string, resolv
 		} else {
 			log.Infof("API client connected {%+v}", apicl)
 
-			// purge deleted mirror sessions if this is reconnect to apiserver.
+			// purge deleted mirror sessions and techsupport requests if this is reconnect to apiserver.
 			msList, err := apicl.MonitoringV1().MirrorSession().List(ctx, &api.ListWatchOptions{})
 			if err == nil {
 				w.statemgr.PurgeDeletedMirrorSessions(msList)
 			}
+
+			// purge deleted nodes and TechSupportRequests if this is reconnect to apiserver.
+			tsrList, err := apicl.MonitoringV1().TechSupportRequest().List(ctx, &api.ListWatchOptions{})
+			if err == nil {
+				w.statemgr.PurgeDeletedTechSupportObjects(tsrList)
+			}
+			vnList, err := apicl.ClusterV1().Node().List(ctx, &api.ListWatchOptions{})
+			if err == nil {
+				w.statemgr.PurgeDeletedTechSupportObjects(vnList)
+			}
+			nnList, err := apicl.ClusterV1().SmartNIC().List(ctx, &api.ListWatchOptions{})
+			if err == nil {
+				w.statemgr.PurgeDeletedTechSupportObjects(nnList)
+			}
+
 			// handle api server watch events
 			w.handleApisrvWatch(ctx, apicl)
 			apicl.Close()

@@ -42,8 +42,10 @@ message TechSupportRequestSpec {
 }
 
 message TechSupportRequestStatus {
-  string Status = 1 [(gogoproto.jsontag) = "status,omitempty", (venice.check) = "StrEnum(TechSupportJobStatus)"];
-  map<string, TechSupportNodeResult> NodeResults = 2 [(gogoproto.jsontag) = "node-results,omitempty"];
+  string InstanceID = 1 [(gogoproto.jsontag) = "instance-id,omitempty"];
+  string Status = 2 [(gogoproto.jsontag) = "status,omitempty", (venice.check) = "StrEnum(TechSupportJobStatus)"];
+  map<string, TechSupportNodeResult> ControllerNodeResults = 3 [(gogoproto.jsontag) = "ctrlr-node-results,omitempty"];
+  map<string, TechSupportNodeResult> SmartNICNodeResults = 4 [(gogoproto.jsontag) = "smartnic-node-results,omitempty"];
 }
 
 message TechSupportRequest {

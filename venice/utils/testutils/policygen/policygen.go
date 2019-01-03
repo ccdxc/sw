@@ -166,7 +166,6 @@ func CreateSmartNIC(mac, phase, node string, condition *cluster.SmartNICConditio
 		},
 		ObjectMeta: api.ObjectMeta{
 			Name:            mac,
-			Tenant:          globals.DefaultTenant,
 			Namespace:       globals.DefaultNamespace,
 			ResourceVersion: fmt.Sprintf("%d", rand.Intn(10000)),
 			CreationTime: api.Timestamp{
@@ -184,6 +183,7 @@ func CreateSmartNIC(mac, phase, node string, condition *cluster.SmartNICConditio
 			IPConfig: &cluster.IPConfig{
 				IPAddress: "0.0.0.0/0",
 			},
+			MgmtMode: cluster.SmartNICSpec_NETWORK.String(),
 		},
 		Status: cluster.SmartNICStatus{
 			AdmissionPhase: phase,

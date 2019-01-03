@@ -451,16 +451,6 @@ export class Monitoringv1Service extends AbstractService {
     return this.invokeAJAXDeleteCall(url, 'DeleteTechSupportRequest') as Observable<{body: IMonitoringTechSupportRequest | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Update TechSupportRequest object */
-  public UpdateTechSupportRequest(O_Name, body: IMonitoringTechSupportRequest, stagingID: string = ""):Observable<{body: IMonitoringTechSupportRequest | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/techsupport/{O.Name}';
-    url = url.replace('{O.Name}', O_Name);
-    if (stagingID != null && stagingID.length != 0) {
-      url = url.replace('configs', 'staging/' + stagingID);
-    }
-    return this.invokeAJAXPutCall(url, body, 'UpdateTechSupportRequest') as Observable<{body: IMonitoringTechSupportRequest | IApiStatus | Error, statusCode: number}>;
-  }
-  
   /** List MirrorSession objects */
   public ListMirrorSession(queryParam: any = null, stagingID: string = ""):Observable<{body: IMonitoringMirrorSessionList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/MirrorSession';

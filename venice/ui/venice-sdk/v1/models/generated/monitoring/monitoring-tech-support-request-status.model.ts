@@ -10,21 +10,31 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { MonitoringTechSupportRequestStatus_status,  } from './enums';
 
 export interface IMonitoringTechSupportRequestStatus {
+    'instance-id'?: string;
     'status'?: MonitoringTechSupportRequestStatus_status;
-    'node-results'?: object;
+    'ctrlr-node-results'?: object;
+    'smartnic-node-results'?: object;
 }
 
 
 export class MonitoringTechSupportRequestStatus extends BaseModel implements IMonitoringTechSupportRequestStatus {
+    'instance-id': string = null;
     'status': MonitoringTechSupportRequestStatus_status = null;
-    'node-results': object = null;
+    'ctrlr-node-results': object = null;
+    'smartnic-node-results': object = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
+        'instance-id': {
+            type: 'string'
+        },
         'status': {
             enum: MonitoringTechSupportRequestStatus_status,
             default: 'Scheduled',
             type: 'string'
         },
-        'node-results': {
+        'ctrlr-node-results': {
+            type: 'object'
+        },
+        'smartnic-node-results': {
             type: 'object'
         },
     }
@@ -56,15 +66,25 @@ export class MonitoringTechSupportRequestStatus extends BaseModel implements IMo
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['instance-id'] != null) {
+            this['instance-id'] = values['instance-id'];
+        } else if (fillDefaults && MonitoringTechSupportRequestStatus.hasDefaultValue('instance-id')) {
+            this['instance-id'] = MonitoringTechSupportRequestStatus.propInfo['instance-id'].default;
+        }
         if (values && values['status'] != null) {
             this['status'] = values['status'];
         } else if (fillDefaults && MonitoringTechSupportRequestStatus.hasDefaultValue('status')) {
             this['status'] = <MonitoringTechSupportRequestStatus_status>  MonitoringTechSupportRequestStatus.propInfo['status'].default;
         }
-        if (values && values['node-results'] != null) {
-            this['node-results'] = values['node-results'];
-        } else if (fillDefaults && MonitoringTechSupportRequestStatus.hasDefaultValue('node-results')) {
-            this['node-results'] = MonitoringTechSupportRequestStatus.propInfo['node-results'].default;
+        if (values && values['ctrlr-node-results'] != null) {
+            this['ctrlr-node-results'] = values['ctrlr-node-results'];
+        } else if (fillDefaults && MonitoringTechSupportRequestStatus.hasDefaultValue('ctrlr-node-results')) {
+            this['ctrlr-node-results'] = MonitoringTechSupportRequestStatus.propInfo['ctrlr-node-results'].default;
+        }
+        if (values && values['smartnic-node-results'] != null) {
+            this['smartnic-node-results'] = values['smartnic-node-results'];
+        } else if (fillDefaults && MonitoringTechSupportRequestStatus.hasDefaultValue('smartnic-node-results')) {
+            this['smartnic-node-results'] = MonitoringTechSupportRequestStatus.propInfo['smartnic-node-results'].default;
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -73,8 +93,10 @@ export class MonitoringTechSupportRequestStatus extends BaseModel implements IMo
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
+                'instance-id': new FormControl(this['instance-id']),
                 'status': new FormControl(this['status'], [enumValidator(MonitoringTechSupportRequestStatus_status), ]),
-                'node-results': new FormControl(this['node-results']),
+                'ctrlr-node-results': new FormControl(this['ctrlr-node-results']),
+                'smartnic-node-results': new FormControl(this['smartnic-node-results']),
             });
         }
         return this._formGroup;
@@ -86,8 +108,10 @@ export class MonitoringTechSupportRequestStatus extends BaseModel implements IMo
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
+            this._formGroup.controls['instance-id'].setValue(this['instance-id']);
             this._formGroup.controls['status'].setValue(this['status']);
-            this._formGroup.controls['node-results'].setValue(this['node-results']);
+            this._formGroup.controls['ctrlr-node-results'].setValue(this['ctrlr-node-results']);
+            this._formGroup.controls['smartnic-node-results'].setValue(this['smartnic-node-results']);
         }
     }
 }

@@ -74,6 +74,16 @@ func NewRequirement(key string, op Operator, vals []string) (*Requirement, error
 	return &Requirement{Key: key, Operator: Operator_name[int32(op)], Values: vals}, nil
 }
 
+// MustGetRequirement is a wrapper around NewRequirement that panics in case of error.
+// Meant to be used in test-cases.
+func MustGetRequirement(key string, op Operator, vals []string) *Requirement {
+	ret, err := NewRequirement(key, op, vals)
+	if err != nil {
+		panic(fmt.Sprintf("Invalid requirement: %s %v %v", key, op, vals))
+	}
+	return ret
+}
+
 func (r *Requirement) hasValue(value string) bool {
 	for i := range r.Values {
 		if r.Values[i] == value {

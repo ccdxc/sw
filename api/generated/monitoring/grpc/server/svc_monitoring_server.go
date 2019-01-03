@@ -812,11 +812,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 
 		s.endpointsMonitoringV1.fnAutoUpdateTechSupportRequest = srv.AddMethod("AutoUpdateTechSupportRequest",
 			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.TechSupportRequest"], pkgMessages["monitoring.TechSupportRequest"], "monitoring", "AutoUpdateTechSupportRequest")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(monitoring.TechSupportRequest)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/techsupport/", in.Name), nil
+			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoUpdateTroubleshootingSession = srv.AddMethod("AutoUpdateTroubleshootingSession",

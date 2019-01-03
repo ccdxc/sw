@@ -151,9 +151,15 @@ func (m *TechSupportRequestStatus) Clone(into interface{}) (interface{}, error) 
 // Default sets up the defaults for the object
 func (m *TechSupportRequestStatus) Defaults(ver string) bool {
 	var ret bool
-	for k := range m.NodeResults {
-		if m.NodeResults[k] != nil {
-			i := m.NodeResults[k]
+	for k := range m.ControllerNodeResults {
+		if m.ControllerNodeResults[k] != nil {
+			i := m.ControllerNodeResults[k]
+			ret = i.Defaults(ver) || ret
+		}
+	}
+	for k := range m.SmartNICNodeResults {
+		if m.SmartNICNodeResults[k] != nil {
+			i := m.SmartNICNodeResults[k]
 			ret = i.Defaults(ver) || ret
 		}
 	}
@@ -262,12 +268,22 @@ func (m *TechSupportRequestSpec_NodeSelectorSpec) Validate(ver, path string, ign
 
 func (m *TechSupportRequestStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
-	for k, v := range m.NodeResults {
+	for k, v := range m.ControllerNodeResults {
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sNodeResults[%v]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sControllerNodeResults[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	for k, v := range m.SmartNICNodeResults {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sSmartNICNodeResults[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}

@@ -2555,7 +2555,7 @@ func (a *restObjMonitoringV1TechSupportRequest) Allowed(oper apiserver.APIOperTy
 	case apiserver.CreateOper:
 		return true
 	case apiserver.UpdateOper:
-		return true
+		return false
 	case apiserver.GetOper:
 		return true
 	case apiserver.DeleteOper:

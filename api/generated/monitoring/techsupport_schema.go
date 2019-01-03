@@ -66,6 +66,7 @@ var typesMapTechsupport = map[string]*api.Struct{
 		CLITags: map[string]api.CLIInfo{
 			"api-version":      api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
 			"generation-id":    api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
+			"instance-id":      api.CLIInfo{Path: "Status.InstanceID", Skip: false, Insert: "", Help: ""},
 			"kind":             api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"labels":           api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
 			"name":             api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
@@ -73,9 +74,9 @@ var typesMapTechsupport = map[string]*api.Struct{
 			"namespace":        api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
 			"resource-version": api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
 			"self-link":        api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
-			"status":           api.CLIInfo{Path: "Status.NodeResults[].Status", Skip: false, Insert: "", Help: ""},
+			"status":           api.CLIInfo{Path: "Status.SmartNICNodeResults[].Status", Skip: false, Insert: "", Help: ""},
 			"tenant":           api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
-			"uri":              api.CLIInfo{Path: "Status.NodeResults[].URI", Skip: false, Insert: "", Help: ""},
+			"uri":              api.CLIInfo{Path: "Status.SmartNICNodeResults[].URI", Skip: false, Insert: "", Help: ""},
 			"uuid":             api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
 			"verbosity":        api.CLIInfo{Path: "Spec.Verbosity", Skip: false, Insert: "", Help: ""},
 		},
@@ -101,12 +102,23 @@ var typesMapTechsupport = map[string]*api.Struct{
 	"monitoring.TechSupportRequestStatus": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(TechSupportRequestStatus{}) },
 		Fields: map[string]api.Field{
+			"InstanceID": api.Field{Name: "InstanceID", CLITag: api.CLIInfo{ID: "instance-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "instance-id", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
 			"Status": api.Field{Name: "Status", CLITag: api.CLIInfo{ID: "status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"NodeResults": api.Field{Name: "NodeResults", CLITag: api.CLIInfo{ID: "node-results", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "node-results", Pointer: true, Slice: false, Map: true, Inline: false, FromInline: false, KeyType: "TYPE_STRING", Type: "monitoring.TechSupportNodeResult"},
+			"ControllerNodeResults": api.Field{Name: "ControllerNodeResults", CLITag: api.CLIInfo{ID: "ctrlr-node-results", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ctrlr-node-results", Pointer: true, Slice: false, Map: true, Inline: false, FromInline: false, KeyType: "TYPE_STRING", Type: "monitoring.TechSupportNodeResult"},
+
+			"SmartNICNodeResults": api.Field{Name: "SmartNICNodeResults", CLITag: api.CLIInfo{ID: "smartnic-node-results", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "smartnic-node-results", Pointer: true, Slice: false, Map: true, Inline: false, FromInline: false, KeyType: "TYPE_STRING", Type: "monitoring.TechSupportNodeResult"},
 		},
 	},
-	"monitoring.TechSupportRequestStatus.NodeResultsEntry": &api.Struct{
+	"monitoring.TechSupportRequestStatus.ControllerNodeResultsEntry": &api.Struct{
+		Fields: map[string]api.Field{
+			"key": api.Field{Name: "key", CLITag: api.CLIInfo{ID: "key", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"value": api.Field{Name: "value", CLITag: api.CLIInfo{ID: "value", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.TechSupportNodeResult"},
+		},
+	},
+	"monitoring.TechSupportRequestStatus.SmartNICNodeResultsEntry": &api.Struct{
 		Fields: map[string]api.Field{
 			"key": api.Field{Name: "key", CLITag: api.CLIInfo{ID: "key", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
