@@ -2,7 +2,7 @@
 #define __HAL_PD_GCCB_HPP__
 
 #include "nic/include/base.hpp"
-#include "nic/include/capri_common.h"
+#include "include/sdk/platform/capri/capri_common.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 

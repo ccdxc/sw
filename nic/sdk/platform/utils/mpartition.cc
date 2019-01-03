@@ -9,11 +9,13 @@ namespace sdk {
 namespace platform {
 namespace utils {
 
+mpartition *mpartition::instance_ = nullptr;
+
 sdk_ret_t
-mpartition::init(mem_addr_t base_addr, shmmgr *mmgr)
+mpartition::region_init(shmmgr *mmgr)
 {
 
-    base_addr_ = base_addr;
+    base_addr_ = MEM_REGION_BASE;
     mmgr_ = mmgr;
 
     char nlist[][64] = MEM_REGION_NAME_LIST;
@@ -49,7 +51,7 @@ mpartition::init(mem_addr_t base_addr, shmmgr *mmgr)
 }
 
 mpartition *
-mpartition::factory(mem_addr_t base_addr, shmmgr *mmgr)
+mpartition::init(shmmgr *mmgr)
 {
     void          *mem;
     mpartition    *new_mpartition;
@@ -64,7 +66,7 @@ mpartition::factory(mem_addr_t base_addr, shmmgr *mmgr)
         return NULL;
     }
     new_mpartition = new (mem) mpartition();
-    if (new_mpartition->init(base_addr, mmgr) != SDK_RET_OK) {
+    if (new_mpartition->region_init(mmgr) != SDK_RET_OK) {
         SDK_TRACE_ERR("Failed to initialize program info");
         new_mpartition->~mpartition();
         if (mmgr) {
@@ -77,8 +79,19 @@ mpartition::factory(mem_addr_t base_addr, shmmgr *mmgr)
     return new_mpartition;
 }
 
-mpartition::~mpartition()
+mpartition *
+mpartition::factory(shmmgr *mmgr)
 {
+    if (instance_ == nullptr) {
+        instance_ = mpartition::init(mmgr);
+    }
+    return instance_;
+}
+
+mpartition *
+mpartition::get_instance(void)
+{
+    return mpartition::factory(NULL);
 }
 
 void
@@ -95,6 +108,7 @@ mpartition::destroy(mpartition *mpartition)
     } else {
         SDK_FREE(SDK_MEM_ALLOC_LIB_PLATFORM, mpartition);
     }
+    instance_ = nullptr;
 }
 
 mem_addr_t

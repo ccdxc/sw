@@ -1,11 +1,16 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#ifndef __CAPRI_HPP__
-#define __CAPRI_HPP__
+#ifndef __CAPRI_CFG_HPP__
+#define __CAPRI_CFG_HPP__
 
+#include "nic/sdk/asic/asic.hpp"
 #include "nic/sdk/include/sdk/catalog.hpp"
 #include "include/sdk/bm_allocator.hpp"
 #include "include/sdk/platform/p4loader/loader.hpp"
+
+namespace sdk {
+namespace platform {
+namespace capri {
 
 #define CAPRI_REPL_ENTRY_WIDTH          (64)
 #define CAPRI_REPL_TABLE_DEPTH          (64*1024)
@@ -41,6 +46,15 @@ typedef struct capri_cfg_s {
     std::string                 cfg_path;
     sdk::lib::catalog           *catalog;
     sdk::types::platform_type_t platform;
+    sdk::asic::completion_cb_t completion_func;
 } capri_cfg_t;
 
-#endif    // __CAPRI_HPP__
+} // namespace capri
+} // namespace platform
+} // namespace sdk
+
+using sdk::platform::capri::capri_cfg_t;
+using sdk::platform::capri::capri_asm_cfg_t;
+using sdk::platform::capri::capri_pgm_cfg_t;
+
+#endif    // __CAPRI_CFG_HPP__

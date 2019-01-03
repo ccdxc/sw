@@ -34,6 +34,17 @@ typedef struct mpartition_region_s {
 
 class mpartition {
 public:
+
+    /**
+     * @brief Singleton Get instance method
+     *
+     * @param[in] base_addr Base address of the memory
+     * @param[in] mmgr Pointer to the memory manager - optional
+     *
+     * @return #mpartition pointer on success, NULL on error
+     */
+    static mpartition *get_instance(void);
+
     /**
      * @brief Factory method
      *
@@ -42,7 +53,7 @@ public:
      *
      * @return #mpartition pointer on success, NULL on error
      */
-    static mpartition *factory(mem_addr_t base_addr, shmmgr *mmgr = NULL);
+    static mpartition *factory(shmmgr *mmgr = NULL);
     static void destroy(mpartition *mpartition);
 
     /**
@@ -121,15 +132,19 @@ public:
     int num_regions(void) { return num_regions_; }
 
 private:
+    static mpartition *instance_;
     mpartition_region_t *regions_;
     shmmgr              *mmgr_;
     int                 num_regions_;
     mem_addr_t          base_addr_;
 
 private:
-    mpartition() {};
-    ~mpartition();
-    sdk_ret_t init(mem_addr_t base_addr, shmmgr *mmgr = NULL);
+    mpartition() = default;
+    ~mpartition() = default;
+    mpartition(const mpartition &) = delete;
+    mpartition &operator=(const mpartition &) = delete;
+    static mpartition *init(shmmgr *mmgr = NULL);
+    sdk_ret_t region_init(shmmgr *mmgr = NULL);
 };
 
 // Functions to check the cache_pipe type

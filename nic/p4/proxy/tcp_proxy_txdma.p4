@@ -3,7 +3,7 @@
 /*****************************************************************************/
 
 #include "../common-p4+/common_txdma_dummy.p4"
-#include "../../include/capri_common.h"
+#include "nic/sdk/include/sdk/platform/capri/capri_common.hpp"
 
 /******************************************************************************
  * Table names

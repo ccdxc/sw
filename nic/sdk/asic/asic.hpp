@@ -15,6 +15,8 @@ namespace asic {
 #define SDK_ASIC_PGM_CFG_MAX        3
 #define SDK_ASIC_ASM_CFG_MAX        3
 
+typedef void (*completion_cb_t)(sdk_status_t status);
+
 typedef enum asic_type_e {
     SDK_ASIC_TYPE_NONE,
     SDK_ASIC_TYPE_CAPRI,
@@ -46,6 +48,7 @@ typedef struct asic_cfg_s {
     asic_asm_cfg_t       asm_cfg[SDK_ASIC_ASM_CFG_MAX];
     sdk::lib::catalog    *catalog;
     platform_type_t      platform;
+    completion_cb_t      completion_func;
 } asic_cfg_t;
 
 }    // namespace asic

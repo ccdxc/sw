@@ -21,5 +21,7 @@ typedef pthread_spinlock_t    sdk_spinlock_t;
 
 }    // namespace sdk
 
+using sdk::sdk_spinlock_t;
+
 #endif    // __SDK_LOCK_HPP__
 

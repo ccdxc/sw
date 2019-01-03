@@ -19,7 +19,7 @@
 #include "gen/p4gen/common_txdma_actions/include/common_txdma_actions_p4pd.h"
 #include "gen/p4gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 #include "include/sdk/bm_allocator.hpp"
-#include "nic/hal/pd/capri/capri_tm_rw.hpp"
+#include "include/sdk/platform/capri/capri_tm_rw.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 
 using sdk::lib::BMAllocator;

@@ -3,8 +3,10 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/plugins/cfg/nw/interface_api.hpp"
 #include "nic/hal/pd/gft/uplinkif_pd.hpp"
-#include "nic/hal/pd/capri/capri_tm_rw.hpp"
+#include "include/sdk/platform/capri/capri_tm_rw.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
+
+using namespace sdk::platform::capri;
 
 namespace hal {
 namespace pd {
@@ -194,10 +196,12 @@ hal_ret_t
 uplinkif_pd_depgm_tm_register (pd_uplinkif_t *pd_upif)
 {
     hal_ret_t                   ret = HAL_RET_OK;
+    sdk_ret_t                   sdk_ret;
     uint8_t                     tm_oport = 0;
 
     tm_oport = uplinkif_get_port_num((if_t *)(pd_upif->pi_if));
-    ret = capri_tm_uplink_lif_set(tm_oport, 0);
+    sdk_ret = capri_tm_uplink_lif_set(tm_oport, 0);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to deprogram for if_id: {}",
                       if_get_if_id((if_t *)pd_upif->pi_if));
@@ -233,11 +237,13 @@ hal_ret_t
 uplinkif_pd_pgm_tm_register(pd_uplinkif_t *pd_upif)
 {
     hal_ret_t                   ret = HAL_RET_OK;
+    sdk_ret_t                   sdk_ret;
     uint8_t                     tm_oport = 0;
 
     tm_oport = uplinkif_get_port_num((if_t *)(pd_upif->pi_if));
 
-    ret = capri_tm_uplink_lif_set(tm_oport, pd_upif->hw_lif_id);
+    sdk_ret = capri_tm_uplink_lif_set(tm_oport, pd_upif->hw_lif_id);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to program for if_id: {}",
                       if_get_if_id((if_t *)pd_upif->pi_if));

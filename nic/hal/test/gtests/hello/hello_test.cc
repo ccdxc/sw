@@ -18,7 +18,7 @@
 #include "nic/utils/pack_bytes/pack_bytes.hpp"
 #include "nic/hal/pd/globalpd/gpd_utils.hpp"
 #include "nic/utils/pack_bytes/pack_bytes.hpp"
-#include "nic/p4/common/capri.h"
+#include "nic/include/sdk/platform/capri/capri_p4.hpp"
 #include "nic/p4/common/defines.h"
 #include "gen/p4gen/hello/include/p4pd.h"
 
@@ -343,6 +343,8 @@ TEST_F(hello_test, test1) {
     cfg.asm_cfg[0].name = std::string("hello_p4");
     cfg.asm_cfg[0].path = std::string("p4_asm");
     cfg.asm_cfg[0].base_addr = std::string(JP4_PRGM);
+
+    cfg.completion_func = NULL;
 
     ret = hal::pd::asic_init(&cfg);
     ASSERT_EQ(ret, SDK_RET_OK);

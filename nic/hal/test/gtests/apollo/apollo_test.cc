@@ -803,6 +803,8 @@ TEST_F(apollo_test, test1) {
     cfg.asm_cfg[2].path = std::string("txdma_asm");
     cfg.asm_cfg[2].base_addr = std::string(JTXDMA_PRGM);
 
+    cfg.completion_func = NULL;
+
     printf("Doing asic init ...\n");
     ret = hal::pd::asic_init(&cfg);
     ASSERT_EQ(ret, SDK_RET_OK);

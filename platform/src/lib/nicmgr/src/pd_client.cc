@@ -343,7 +343,7 @@ void PdClient::init(void)
     ret = p4plus_txdma_init_tables();
     assert(ret == 0);
     NIC_LOG_DEBUG("Initializing HBM Memory Partitions from: {}...", hal_cfg_path_);
-    mp_ = mpartition::factory( CAPRI_HBM_BASE);
+    mp_ = mpartition::factory();
     assert(mp_);
     NIC_LOG_DEBUG("Initializing NIC LIF Mgr ...");
     lm_ = LIFManager::factory(mp_, NULL, kLif2QstateHBMLabel);

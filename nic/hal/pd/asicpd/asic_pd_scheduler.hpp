@@ -22,4 +22,5 @@ hal_ret_t asicpd_policer_tx_pd_program_hw(asicpd_scheduler_lif_params_t *lif);
 }   // namespace pd
 }   // namespace hal
 
+using namespace sdk::platform::capri;
 #endif 

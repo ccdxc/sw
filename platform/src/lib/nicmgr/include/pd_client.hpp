@@ -13,7 +13,7 @@
 #include "nic/sdk/include/sdk/table_monitor.hpp"
 #include "nic/sdk/include/sdk/bm_allocator.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
-#include "nic/include/capri_common.h"
+#include "include/sdk/platform/capri/capri_common.hpp"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 

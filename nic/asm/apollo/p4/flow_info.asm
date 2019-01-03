@@ -1,7 +1,7 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 #include "apollo.h"
-#include "nic/include/capri_common.h"
+#include "nic/sdk/include/sdk/platform/capri/capri_common.hpp"
 
 struct flow_info_k  k;
 struct flow_info_d  d;

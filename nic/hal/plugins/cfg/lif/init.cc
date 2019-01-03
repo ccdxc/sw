@@ -5,7 +5,7 @@
 #include "nic/hal/plugins/cfg/lif/lif.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/include/hal_cfg.hpp"
-#include "nic/include/capri_common.h"
+#include "include/sdk/platform/capri/capri_common.hpp"
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -33,7 +33,7 @@ lif_init (hal_cfg_t *hal_cfg)
 {
     program_info *pinfo = program_info::factory((hal_cfg->cfg_path +
                                                 "/gen/mpu_prog_info.json").c_str());
-    mpartition *mp = mpartition::factory(CAPRI_HBM_BASE);
+    mpartition *mp = mpartition::factory();
 
     HAL_ASSERT(pinfo && mp);
 

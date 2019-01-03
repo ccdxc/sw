@@ -1,7 +1,7 @@
 #include "egress.h"
 #include "EGRESS_p.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
-#include "nic/include/capri_common.h"
+#include "nic/sdk/include/sdk/platform/capri/capri_common.hpp"
 
 struct tx_stats_k k;
 struct phv_       p;

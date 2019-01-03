@@ -4,7 +4,7 @@
 
 
 #include "../common-p4+/common_txdma_dummy.p4"
-#include "../../include/capri_common.h"
+#include "nic/sdk/include/sdk/platform/capri/capri_common.hpp"
 
 #define tx_table_s0_t0 s0_t0_ooq_tcp_tx
 #define tx_table_s1_t0 s1_t0_ooq_tcp_tx

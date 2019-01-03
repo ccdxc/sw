@@ -6,7 +6,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
-#include "nic/hal/pd/capri/capri_pxb_pcie.hpp"
+#include "include/sdk/platform/capri/capri_pxb_pcie.hpp"
 #include "nic/hal/pd/capri/capri_barco_rings.hpp"
 #include "nic/hal/pd/capri/capri_accel_rgroup.hpp"
 #include "nic/hal/pd/capri/capri_barco_asym_apis.hpp"
@@ -119,8 +119,10 @@ pd_capri_program_label_to_offset (pd_func_args_t *pd_func_args)
 hal_ret_t
 pd_capri_pxb_cfg_lif_bdf (pd_func_args_t *pd_func_args)
 {
+    sdk_ret_t sret;
     pd_capri_pxb_cfg_lif_bdf_args_t *args = pd_func_args->pd_capri_pxb_cfg_lif_bdf;
-    return capri_pxb_cfg_lif_bdf(args->lif, args->bdf);
+    sret = capri_pxb_cfg_lif_bdf(args->lif, args->bdf);
+    return hal_sdk_ret_to_hal_ret(sret);
 }
 
 hal_ret_t

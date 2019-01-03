@@ -2,7 +2,7 @@
 #include <arpa/inet.h>
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/include/capri_common.h"
+#include "include/sdk/platform/capri/capri_common.hpp"
 #include "nic/hal/pd/iris/internal/rawrcb_pd.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"

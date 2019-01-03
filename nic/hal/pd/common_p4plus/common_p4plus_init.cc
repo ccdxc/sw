@@ -5,8 +5,9 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_barco_crypto.hpp"
-#include "nic/hal/pd/capri/capri_pxb_pcie.hpp"
-#include "nic/include/capri_common.h"
+#include "include/sdk/platform/capri/capri_pxb_pcie.hpp"
+#include "include/sdk/platform/capri/capri_txs_scheduler.hpp"
+#include "include/sdk/platform/capri/capri_common.hpp"
 
 namespace hal {
 namespace pd {
@@ -20,7 +21,7 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     uint64_t    offset;
     uint32_t capri_coreclk_freq; //Mhz
 
-    capri_coreclk_freq = (uint32_t)(capri_get_coreclk_freq(platform_type) / 1000000);
+    capri_coreclk_freq = (uint32_t)(sdk::platform::capri::capri_get_coreclk_freq(platform_type) / 1000000);
 
     HAL_TRACE_DEBUG("Capri core clock freq is {} Mhz", capri_coreclk_freq);
 

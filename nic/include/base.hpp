@@ -35,7 +35,6 @@
 #define HAL_GFT_INVALID_PROFILE_ID                   0
 #define HAL_GFT_INVALID_TABLE_ID                     0
 #define HAL_GFT_INVALID_FLOW_ENTRY_ID                0
-#define INVALID_INDEXER_INDEX                        0xFFFFFFFF
 
 using sdk::sdk_ret_t;
 

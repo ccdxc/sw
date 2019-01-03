@@ -11,29 +11,50 @@
 #include <assert.h>
 #include <map>
 #include <cmath>
-
-#include "nic/include/base.hpp"
-#include "nic/include/hal.hpp"
-#include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
-#include "nic/asic/capri/model/cap_psp/cap_psp_csr.h"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
-#include "nic/hal/plugins/cfg/aclqos/qos.hpp"
-#include "nic/hal/pd/pd_api.hpp"
-#include "nic/hal/pd/capri/capri.hpp"
-#include "nic/hal/pd/capri/capri_state.hpp"
+#include "include/sdk/platform/capri/capri_txs_scheduler.hpp"
+#include "include/sdk/platform/capri/capri_common.hpp"
+#include "include/sdk/platform//capri/capri_cfg.hpp"
+#include "include/sdk/platform/capri/capri_state.hpp"
 #include "nic/sdk/include/sdk/utils.hpp"
-#include "nic/hal/svc/hal_ext.hpp"
+#include "include/sdk/platform/utils/mpartition.hpp"
+#include "gen/platform/mem_regions.hpp"
 
+#include "nic/asic/capri/model/cap_psp/cap_psp_csr.h"
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
 #include "nic/asic/capri/model/cap_txs/cap_txs_csr.h"
 #include "nic/asic/capri/verif/apis/cap_txs_api.h"
 #include "nic/asic/capri/model/cap_wa/cap_wa_csr.h"
 
+namespace sdk {
+namespace platform {
+namespace capri {
+
 #define CHECK_BIT(var,pos) ((var) & (1 << (pos)))
 #define DTDM_CALENDAR_SIZE 64
 
-extern class capri_state_pd *g_capri_state_pd;
+class capri_state_pd *g_capri_state_pd;
+
+uint32_t
+capri_get_coreclk_freq(platform_type_t platform_type)
+{
+
+    cap_top_csr_t       &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_ms_csr_t        &ms_csr = cap0.ms.ms;
+
+    static const uint32_t core_freq[] = {
+        CORECLK_FREQ_ASIC_00, CORECLK_FREQ_ASIC_01,
+        CORECLK_FREQ_ASIC_10, CORECLK_FREQ_ASIC_11
+    };
+
+    // Below status register is not modelled in Model. So return 833 MHz always.
+    if (platform_type == platform_type_t::PLATFORM_TYPE_SIM) {
+        return CORECLK_FREQ_ASIC_10;
+    }
+
+    ms_csr.sta_pll_cfg.read();
+    return core_freq[((ms_csr.sta_pll_cfg.core_muldiv().convert_to<uint8_t>()) & 0x3)];
+}
 
 void
 capri_txs_timer_init_hsh_depth(uint32_t key_lines)
@@ -41,13 +62,17 @@ capri_txs_timer_init_hsh_depth(uint32_t key_lines)
     uint64_t timer_key_hbm_base_addr;
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_txs_csr_t *txs_csr = &cap0.txs.txs;
+    sdk::platform::utils::mpartition *mpart = NULL;
 
-    timer_key_hbm_base_addr = (uint64_t)get_start_offset((char *)JTIMERS);
+    mpart = sdk::platform::utils::mpartition::get_instance();
+    SDK_ASSERT(mpart != NULL);
+
+    timer_key_hbm_base_addr = mpart->start_addr(MEM_REGION_TIMERS_NAME);
 
     txs_csr->cfg_timer_static.read();
-    HAL_TRACE_DEBUG("hbm_base {:#x}", (uint64_t)txs_csr->cfg_timer_static.hbm_base());
-    HAL_TRACE_DEBUG("timer hash depth {}", txs_csr->cfg_timer_static.tmr_hsh_depth());
-    HAL_TRACE_DEBUG("timer wheel depth {}", txs_csr->cfg_timer_static.tmr_wheel_depth());
+    SDK_TRACE_DEBUG("hbm_base 0x%llx", (uint64_t)txs_csr->cfg_timer_static.hbm_base());
+    SDK_TRACE_DEBUG("timer hash depth %u", txs_csr->cfg_timer_static.tmr_hsh_depth());
+    SDK_TRACE_DEBUG("timer wheel depth %u", txs_csr->cfg_timer_static.tmr_wheel_depth());
     txs_csr->cfg_timer_static.hbm_base(timer_key_hbm_base_addr);
     txs_csr->cfg_timer_static.tmr_hsh_depth(key_lines - 1);
     txs_csr->cfg_timer_static.tmr_wheel_depth(CAPRI_TIMER_WHEEL_DEPTH - 1);
@@ -69,10 +94,10 @@ capri_txs_timer_init_pre (uint32_t key_lines, capri_cfg_t *capri_cfg)
     // timer hbm and sram init
 
     // sram_hw_init is not implemented in the C++ model, so skip it there
-    HAL_ASSERT(capri_cfg);
+    SDK_ASSERT(capri_cfg);
     txs_csr->cfw_timer_glb.read();
     if (capri_cfg->platform != platform_type_t::PLATFORM_TYPE_SIM) {
-        HAL_TRACE_DEBUG("timer sram init");
+        SDK_TRACE_DEBUG("timer sram init");
         txs_csr->cfw_timer_glb.sram_hw_init(1);
     }
 
@@ -80,12 +105,12 @@ capri_txs_timer_init_pre (uint32_t key_lines, capri_cfg_t *capri_cfg)
     // takes a long time
     if (capri_cfg->platform != platform_type_t::PLATFORM_TYPE_SIM &&
           capri_cfg->platform != platform_type_t::PLATFORM_TYPE_RTL) {
-        HAL_TRACE_DEBUG("timer hbm init");
+        SDK_TRACE_DEBUG("timer hbm init");
         txs_csr->cfw_timer_glb.hbm_hw_init(1);
     }
     txs_csr->cfw_timer_glb.write();
 
-    HAL_TRACE_DEBUG("Done timer pre init");
+    SDK_TRACE_DEBUG("Done timer pre init");
 }
 
 // This is called after hbm and sram init
@@ -137,11 +162,11 @@ capri_txs_timer_init_post (uint32_t key_lines, capri_cfg_t *capri_cfg)
     txs_csr->cfw_timer_glb.stmr_enable(1);
     txs_csr->cfw_timer_glb.write();
 
-    HAL_TRACE_DEBUG("Done timer post init");
+    SDK_TRACE_DEBUG("Done timer post init");
 }
 
 
-hal_ret_t
+sdk_ret_t
 capri_txs_scheduler_init (uint32_t admin_cos, capri_cfg_t *capri_cfg)
 {
 
@@ -151,8 +176,8 @@ capri_txs_scheduler_init (uint32_t admin_cos, capri_cfg_t *capri_cfg)
     uint64_t            txs_sched_hbm_base_addr;
     uint16_t            dtdm_lo_map, dtdm_hi_map;
     uint32_t            control_cos;
-    //hal::qos_class_t    *control_qos_class;
-    //hal_ret_t            ret = HAL_RET_OK;
+    sdk::platform::utils::mpartition *mpart = NULL;
+    //sdk_ret_t            ret = SDK_RET_OK;
 
     txs_csr.cfw_timer_glb.read();
     txs_csr.cfw_timer_glb.ftmr_enable(0);
@@ -171,13 +196,16 @@ capri_txs_scheduler_init (uint32_t admin_cos, capri_cfg_t *capri_cfg)
     txs_csr.cfg_sch.enable(0);
     txs_csr.cfg_sch.write();
 
+    mpart = sdk::platform::utils::mpartition::get_instance();
+    SDK_ASSERT(mpart != NULL);
+
     cap_wa_csr_cfg_wa_sched_hint_t   &wa_sched_hint_csr = cap0.db.wa.cfg_wa_sched_hint;
     wa_sched_hint_csr.read();
     /* 5 bit value: bit 0=host, 1=local, 2=32b, 3=timer, 4=arm4kremap" */
     wa_sched_hint_csr.enable_src_mask(0x0);
     wa_sched_hint_csr.write();
 
-    txs_sched_hbm_base_addr = (uint64_t) get_start_offset(CAPRI_HBM_REG_TXS_SCHEDULER);
+    txs_sched_hbm_base_addr = mpart->start_addr(MEM_REGION_TX_SCHEDULER_NAME);
 
     // Update HBM base addr.
     txs_csr.cfw_scheduler_static.read();
@@ -186,7 +214,7 @@ capri_txs_scheduler_init (uint32_t admin_cos, capri_cfg_t *capri_cfg)
     // Init sram.
     txs_csr.cfw_scheduler_glb.read();
     // skip init on RTL/Model.
-    HAL_ASSERT(capri_cfg);
+    SDK_ASSERT(capri_cfg);
     if (capri_cfg->platform != platform_type_t::PLATFORM_TYPE_SIM &&
         capri_cfg->platform != platform_type_t::PLATFORM_TYPE_RTL) {
         txs_csr.cfw_scheduler_glb.hbm_hw_init(1);
@@ -224,14 +252,14 @@ capri_txs_scheduler_init (uint32_t admin_cos, capri_cfg_t *capri_cfg)
         args.qos_class_id = &control_cos;
         ret = hal::pd::pd_qos_class_get_qos_class_id(&args);
         // ret = hal::pd::qos_class_get_qos_class_id(control_qos_class, NULL, &control_cos);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Error deriving qos-class-id for admin Qos class "
+        if (ret != SDK_RET_OK) {
+            SDK_TRACE_ERR("Error deriving qos-class-id for admin Qos class "
                           "{} ret {}",
                           control_qos_class->key, ret);
             control_cos = 0;
         }
     } else {
-        HAL_TRACE_DEBUG("control qos class not init'ed!! Setting it to default\n");
+        SDK_TRACE_DEBUG("control qos class not init'ed!! Setting it to default\n");
         control_cos = 0;
     }
 #endif
@@ -280,14 +308,15 @@ capri_txs_scheduler_init (uint32_t admin_cos, capri_cfg_t *capri_cfg)
 
     // init timer post init done
     capri_txs_timer_init_post(CAPRI_TIMER_NUM_KEY_CACHE_LINES, capri_cfg);
-    hal::svc::set_hal_status(hal::HAL_STATUS_SCHEDULER_INIT_DONE);
-
-    HAL_TRACE_DEBUG("Set hbm base addr for TXS sched to {:#x}, dtdm_lo_map {:#x}, dtdm_hi_map {:#x}",
+    if(capri_cfg->completion_func) {
+        capri_cfg->completion_func(sdk_status_t::SDK_STATUS_SCHEDULER_INIT_DONE);
+    }
+    SDK_TRACE_DEBUG("Set hbm base addr for TXS sched to 0x%lx, dtdm_lo_map 0x%lx, dtdm_hi_map 0x%lx",
                     txs_sched_hbm_base_addr, dtdm_lo_map, dtdm_hi_map);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 capri_txs_scheduler_lif_params_update(uint32_t hw_lif_id, capri_txs_sched_lif_params_t *txs_hw_params)
 {
 
@@ -299,9 +328,9 @@ capri_txs_scheduler_lif_params_update(uint32_t hw_lif_id, capri_txs_sched_lif_pa
     lif_cos_bmp = txs_hw_params->cos_bmp;
     if ((hw_lif_id >= CAPRI_TXS_MAX_TABLE_ENTRIES) ||
         (txs_hw_params->sched_table_offset >= CAPRI_TXS_MAX_TABLE_ENTRIES)) {
-        HAL_TRACE_ERR("CAPRI-TXS::{}: Invalid parameters to function {},{}",__func__, hw_lif_id,
+        SDK_TRACE_ERR("CAPRI-TXS::%s: Invalid parameters to function %u,%u",__func__, hw_lif_id,
                        txs_hw_params->sched_table_offset);
-        return HAL_RET_INVALID_ARG;
+        return SDK_RET_INVALID_ARG;
     }
 
     //Program mapping from (lif,queue,cos) to scheduler table entries.
@@ -334,14 +363,14 @@ capri_txs_scheduler_lif_params_update(uint32_t hw_lif_id, capri_txs_sched_lif_pa
         }
     }
 
-    HAL_TRACE_DEBUG("Programmed sched-table-offset {} and entries-per-cos {}"
-                    "and cos-bmp {:#x} for hw-lif-id {}", txs_hw_params->sched_table_offset,
+    SDK_TRACE_DEBUG("Programmed sched-table-offset %u and entries-per-cos %u"
+                    "and cos-bmp 0x%lx for hw-lif-id %u", txs_hw_params->sched_table_offset,
                      txs_hw_params->num_entries_per_cos, lif_cos_bmp, hw_lif_id);
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 capri_txs_policer_lif_params_update (uint32_t hw_lif_id,
                             capri_txs_policer_lif_params_t *txs_hw_params)
 {
@@ -350,9 +379,9 @@ capri_txs_policer_lif_params_update (uint32_t hw_lif_id,
 
     if ((hw_lif_id >= CAPRI_TXS_MAX_TABLE_ENTRIES) ||
         (txs_hw_params->sched_table_end_offset >= CAPRI_TXS_MAX_TABLE_ENTRIES)) {
-        HAL_TRACE_ERR("CAPRI-TXS::{}: Invalid parameters to function {},{}",__func__, hw_lif_id,
+        SDK_TRACE_ERR("CAPRI-TXS::%s: Invalid parameters to function %u,%u",__func__, hw_lif_id,
                        txs_hw_params->sched_table_end_offset);
-        return HAL_RET_INVALID_ARG;
+        return SDK_RET_INVALID_ARG;
     }
 
     // Program mapping from rate-limiter-table entry (indexed by hw-lif-id) to scheduler table entries.
@@ -362,18 +391,18 @@ capri_txs_policer_lif_params_update (uint32_t hw_lif_id,
     txs_csr.dhs_sch_rlid_map_sram.entry[hw_lif_id].sg_end(txs_hw_params->sched_table_end_offset);
     txs_csr.dhs_sch_rlid_map_sram.entry[hw_lif_id].write();
 
-    HAL_TRACE_DEBUG("Programmed sched-table-start-offset {} and sched-table-end-offset {}"
-                    "for hw-lif-id {}", txs_hw_params->sched_table_start_offset,
+    SDK_TRACE_DEBUG("Programmed sched-table-start-offset %u and sched-table-end-offset %u"
+                    "for hw-lif-id %u", txs_hw_params->sched_table_start_offset,
                      txs_hw_params->sched_table_end_offset, hw_lif_id);
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 capri_txs_scheduler_tx_alloc (capri_txs_sched_lif_params_t *tx_params,
                               uint32_t *alloc_offset, uint32_t *alloc_units)
 {
-    hal_ret_t     ret = HAL_RET_OK;
+    sdk_ret_t     ret = SDK_RET_OK;
     uint32_t      total_qcount = 0;
 
     *alloc_offset = INVALID_INDEXER_INDEX;
@@ -388,21 +417,21 @@ capri_txs_scheduler_tx_alloc (capri_txs_sched_lif_params_t *tx_params,
         //Allocate consecutive alloc_unit num of entries in sched table.
         *alloc_offset = g_capri_state_pd->txs_scheduler_map_idxr()->Alloc(*alloc_units);
         if (*alloc_offset < 0) {
-            ret = HAL_RET_NO_RESOURCE;
+            ret = SDK_RET_NO_RESOURCE;
         }
     }
     return ret;
 }
 
-hal_ret_t
+sdk_ret_t
 capri_txs_scheduler_tx_dealloc (uint32_t alloc_offset, uint32_t alloc_units)
 {
-    hal_ret_t     ret = HAL_RET_OK;
+    sdk_ret_t     ret = SDK_RET_OK;
     g_capri_state_pd->txs_scheduler_map_idxr()->Free(alloc_offset, alloc_units);
     return ret;
 }
 
-hal_ret_t
+sdk_ret_t
 capri_txs_scheduler_stats_get (capri_txs_scheduler_stats_t *scheduler_stats)
 {
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
@@ -442,7 +471,7 @@ capri_txs_scheduler_stats_get (capri_txs_scheduler_stats_t *scheduler_stats)
     scheduler_stats->ratelimit_stop_count =
         txs_csr.cnt_sch_rlid_start.val().convert_to<uint32_t>();
 
-    for (unsigned i = 0; i < HAL_ARRAY_SIZE(scheduler_stats->cos_stats); i++) {
+    for (unsigned i = 0; i < SDK_ARRAY_SIZE(scheduler_stats->cos_stats); i++) {
         scheduler_stats->cos_stats[i].cos = i;
         scheduler_stats->cos_stats[i].xon_status =
                                         (xon_status >> i) & 0x1 ? true : false;
@@ -481,5 +510,9 @@ capri_txs_scheduler_stats_get (capri_txs_scheduler_stats_t *scheduler_stats)
     scheduler_stats->cos_stats[15].doorbell_count =
         txs_csr.cnt_sch_txdma_cos15.val().convert_to<uint64_t>();
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
+
+} // namespace capri
+} // namespace platform
+} // namespace sdk

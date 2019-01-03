@@ -9,7 +9,7 @@
 #include "nic/hal/pd/iris/tcp_proxy/tcp_proxy_cb_pd.hpp"
 #include "nic/hal/pd/iris/p4pd_tcp_proxy_api.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
-#include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
+#include "include/sdk/platform/capri/capri_txs_scheduler.hpp"
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/hal/src/internal/proxy.hpp"

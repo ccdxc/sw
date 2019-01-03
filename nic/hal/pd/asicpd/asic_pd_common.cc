@@ -14,7 +14,7 @@
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 // TODO: Need to remove capri references and use lib symbols instead
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
-#include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
+#include "include/sdk/platform/capri/capri_txs_scheduler.hpp"
 #include "nic/hal/pd/capri/capri_sw_phv.hpp"
 #include "nic/sdk/platform/drivers/xcvr.hpp"
 
@@ -691,8 +691,11 @@ asic_pd_scheduler_stats_get (pd_scheduler_stats_get_args_t *scheduler_stats_args
     hal_ret_t ret;
     capri_txs_scheduler_stats_t asic_stats = {};
     debug::SchedulerStatsResponse *response = scheduler_stats_args->response;
+    sdk_ret_t     sdk_ret;
 
-    ret = capri_txs_scheduler_stats_get(&asic_stats);
+
+    sdk_ret = capri_txs_scheduler_stats_get(&asic_stats);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         return ret;
     }

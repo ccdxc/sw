@@ -21,11 +21,12 @@ int32_t get_pc_offset(const char *handle, const char *prog_name,
 
 using namespace sdk::platform::utils;
 
-const static uint32_t kAllocUnit = 4096;
 
 namespace sdk {
 namespace platform {
 namespace capri {
+
+const static uint32_t kAllocUnit = 4096;
 
 void LIFManager::destroy(LIFManager *lm) {
     assert(0);

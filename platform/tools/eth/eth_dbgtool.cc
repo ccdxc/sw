@@ -7,7 +7,7 @@
 #include <cstring>
 
 #include "nic/include/adminq.h"
-#include "nic/include/capri_common.h"
+#include "include/sdk/platform/capri/capri_common.hpp"
 #include "nic/include/edma.hpp"
 #include "nic/include/eth_common.h"
 #include "nic/include/notify.hpp"
@@ -309,7 +309,7 @@ void
 eth_stats(uint16_t lif)
 {
     sdk::platform::utils::mpartition *mp_ =
-        sdk::platform::utils::mpartition::factory(CAPRI_HBM_BASE);
+        sdk::platform::utils::mpartition::factory();
     assert(mp_);
 
     uint64_t addr = mp_->start_addr("lif_stats") + (lif << 10);

@@ -7,6 +7,7 @@
 #include "nic/include/tcp_common.h"
 
 using sdk::lib::ht_ctxt_t;
+using namespace sdk::platform::capri;
 
 namespace hal {
 namespace pd {

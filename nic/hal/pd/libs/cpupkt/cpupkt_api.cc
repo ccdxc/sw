@@ -5,7 +5,7 @@
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/asm/cpu-p4plus/include/cpu-defines.h"
-#include "nic/include/capri_common.h"
+#include "include/sdk/platform/capri/capri_common.hpp"
 
 namespace hal {
 namespace pd {

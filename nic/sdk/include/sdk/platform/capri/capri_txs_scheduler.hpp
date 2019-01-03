@@ -11,8 +11,11 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include "nic/include/base.hpp"
-#include "nic/hal/pd/capri/capri.hpp"
+#include "include/sdk/platform/capri/capri_cfg.hpp"
+
+namespace sdk {
+namespace platform {
+namespace capri {
 
 #define NUM_MAX_COSES 16
 
@@ -63,10 +66,10 @@ typedef struct capri_txs_policer_lif_params_s {
 /** capri_txs_scheduler_init
  * API to init the txs scheduler module
  *
- * @return hal_ret_t: Status of the operation
+ * @return sdk_ret_t: Status of the operation
  */
 
-hal_ret_t capri_txs_scheduler_init(uint32_t admin_cos, capri_cfg_t *capri_cfg);
+sdk_ret_t capri_txs_scheduler_init(uint32_t admin_cos, capri_cfg_t *capri_cfg);
 
 void capri_txs_timer_init_hsh_depth(uint32_t key_lines);
 
@@ -75,16 +78,16 @@ void capri_txs_timer_init_hsh_depth(uint32_t key_lines);
  *
  * @param  hw_lif_id[in]: hw lif id for this entry.
  * @param  txs_hw_params[in]. scheduler table params for this entry.
- * @return hal_ret_t: Status of the operation
+ * @return sdk_ret_t: Status of the operation
  */
-hal_ret_t capri_txs_scheduler_lif_params_update(uint32_t hw_lif_id, 
+sdk_ret_t capri_txs_scheduler_lif_params_update(uint32_t hw_lif_id, 
                                                 capri_txs_sched_lif_params_t *txs_hw_params);
 
-hal_ret_t capri_txs_scheduler_tx_alloc(capri_txs_sched_lif_params_t *tx_params,
+sdk_ret_t capri_txs_scheduler_tx_alloc(capri_txs_sched_lif_params_t *tx_params,
                                        uint32_t *alloc_offset,
                                        uint32_t *alloc_units);
 
-hal_ret_t capri_txs_scheduler_tx_dealloc(uint32_t alloc_offset,
+sdk_ret_t capri_txs_scheduler_tx_dealloc(uint32_t alloc_offset,
                                          uint32_t alloc_units);
 
 /** capri_txs_policer_lif_params_update
@@ -92,9 +95,9 @@ hal_ret_t capri_txs_scheduler_tx_dealloc(uint32_t alloc_offset,
  *      
  * @param  hw_lif_id[in]: hw lif id for this entry.
  * @param  txs_hw_params[in]. scheduler table params for this entry.
- * @return hal_ret_t: Status of the operation
+ * @return sdk_ret_t: Status of the operation
  */     
-hal_ret_t capri_txs_policer_lif_params_update(uint32_t hw_lif_id,
+sdk_ret_t capri_txs_policer_lif_params_update(uint32_t hw_lif_id,
                                  capri_txs_policer_lif_params_t *txs_hw_params);
 
 typedef struct capri_txs_scheduler_cos_stats_s {
@@ -111,7 +114,18 @@ typedef struct capri_txs_scheduler_stats_s {
     capri_txs_scheduler_cos_stats_t cos_stats[NUM_MAX_COSES];
 } capri_txs_scheduler_stats_t;
 
-hal_ret_t
+sdk_ret_t
 capri_txs_scheduler_stats_get(capri_txs_scheduler_stats_t *scheduler_stats);
+
+uint32_t
+capri_get_coreclk_freq(platform_type_t platform_type);
+
+} // namespace capri
+} // namespace platform
+} // namespace sdk
+
+using sdk::platform::capri::capri_txs_sched_lif_params_t;
+using sdk::platform::capri::capri_txs_policer_lif_params_t;
+using sdk::platform::capri::capri_txs_scheduler_stats_t;
 
 #endif

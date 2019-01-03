@@ -10,11 +10,12 @@
 #include <assert.h>
 #include <inttypes.h>
 #include <map>
-#include "nic/include/capri_common.h"
+#include "include/sdk/platform/capri/capri_common.hpp"
 
 #include "gen/p4gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
+#include "include/sdk/platform/capri/capri_tm_rw.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/asic/capri/model/utils/cap_csr_py_if.h"
 #include "nic/sdk/asic/rw/asicrw.hpp"
@@ -30,7 +31,7 @@
 #include "nic/asic/capri/verif/apis/cap_pict_api.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/sdk/platform/capri/csr/asicrw_if.hpp"
-#include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
+#include "include/sdk/platform/capri/capri_txs_scheduler.hpp"
 
 /* When ready to use unified memory mgmt library, change CALLOC and FREE then */
 #define CAPRI_CALLOC  calloc
@@ -918,26 +919,7 @@ capri_get_action_id (uint32_t tableid, uint8_t actionpc)
     return (0xff);
 }
 
-uint32_t
-capri_get_coreclk_freq(platform_type_t platform_type)
-{
 
-    cap_top_csr_t       &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_ms_csr_t        &ms_csr = cap0.ms.ms;
-
-    static const uint32_t core_freq[] = {
-        CORECLK_FREQ_ASIC_00, CORECLK_FREQ_ASIC_01,
-        CORECLK_FREQ_ASIC_10, CORECLK_FREQ_ASIC_11
-    };
-
-    // Below status register is not modelled in Model. So return 833 MHz always.
-    if (platform_type == platform_type_t::PLATFORM_TYPE_SIM) {
-        return CORECLK_FREQ_ASIC_10;
-    }
-
-    ms_csr.sta_pll_cfg.read();
-    return core_freq[((ms_csr.sta_pll_cfg.core_muldiv().convert_to<uint8_t>()) & 0x3)];
-}
 
 static void
 capri_sram_entry_details_get (uint32_t index,
@@ -1808,8 +1790,8 @@ asic_csr_list_get (string path, int level)
 }
 }
 
-extern void capri_tm_dump_debug_regs(void);
-extern void capri_tm_dump_config_regs(void);
+//extern void capri_tm_dump_debug_regs(void);
+//extern void capri_tm_dump_config_regs(void);
 
 #if 0
 std::string
@@ -1819,9 +1801,9 @@ hal::pd::asic_csr_dump (char *csr_str)
     std::string val = "";
 
     if (!strcmp(csr_str, "pbc_debug")) {
-        capri_tm_dump_debug_regs();
+        sdk::platform::capri::capri_tm_dump_debug_regs();
     } else if (!strcmp(csr_str, "pbc_config")) {
-        capri_tm_dump_config_regs();
+        sdk::platform::capri::capri_tm_dump_config_regs();
     } else if (!strcmp(csr_str, "mpu_debug")) {
         capri_debug_hbm_read();
     } else if (!strcmp(csr_str, "mpu_reset")) {

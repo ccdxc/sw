@@ -97,6 +97,7 @@ void hal_handle_cfg_db_lock(bool readlock, bool lock);
 hal_ret_t hal_cfg_db_open(cfg_op_t cfg_op);
 hal_ret_t hal_cfg_db_close(void);
 
+void asiccfg_init_completion_event(sdk_status_t status);
 }    // namespace hal
 
 #endif    // __HAL_HPP__
