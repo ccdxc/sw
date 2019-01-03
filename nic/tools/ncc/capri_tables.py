@@ -5589,9 +5589,7 @@ class capri_table_mapper:
     def insert_table(self, type, region, table):
         tables = self.tables[type][region]
         for i in range(len(tables)):
-            if  tables[i]['width']  < table['width'] or \
-               (tables[i]['width'] == table['width'] and \
-                tables[i]['depth']  < table['depth']):
+            if  ((tables[i]['width'] * tables[i]['depth']) < (table['width'] * table['depth'])):
                 return self.tables[type][region].insert(i, table)
 
         return self.tables[type][region].append(table)
