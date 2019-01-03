@@ -219,7 +219,7 @@ describe('WorkloadComponent', () => {
     const title = fixture.debugElement.query(By.css('.tableheader-title'));
     expect(title.nativeElement.textContent).toContain('Workloads (3)');
     // check table contents
-    const tableBody = fixture.debugElement.query(By.css('tbody'));
+    const tableBody = fixture.debugElement.query(By.css('.ui-table-scrollable-body tbody'));
     expect(tableBody).toBeTruthy();
 
     const caseMap = {

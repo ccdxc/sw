@@ -11,7 +11,7 @@ import { SorticonComponent } from './sorticon.component';
 class MockTable {
   tableService = {
     sortSource$: new Observable()
-  }
+  };
 }
 
 describe('SorticonComponent', () => {

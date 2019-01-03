@@ -56,7 +56,7 @@
       <ng-template pTemplate="header" let-columns>
         <tr>
           <th *ngFor="let col of eventCols" [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class">
-            <app-sorticon *ngIf="col.sortable" [field]="col.field">{{col.header}}</app-sorticon>
+            <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}</app-sorticon>
           </th>
         </tr>
       </ng-template>
@@ -141,7 +141,7 @@
         <ng-template pTemplate="header" let-columns>
           <tr>
             <th *ngFor="let col of alertCols" [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class" [colSpan]=" col.isLast ? 2 : 1">
-              <app-sorticon *ngIf="col.sortable" [field]="col.field">{{col.header}}</app-sorticon>
+              <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}</app-sorticon>
             </th>
           </tr>
         </ng-template>

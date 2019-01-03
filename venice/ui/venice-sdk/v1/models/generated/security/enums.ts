@@ -13,7 +13,7 @@ export enum LabelsRequirement_operator {
     'notIn' = "notIn",
 }
 
-export enum SecurityALG_Type {
+export enum SecurityALG_type {
     'ICMP' = "ICMP",
     'DNS' = "DNS",
     'FTP' = "FTP",
@@ -80,7 +80,7 @@ export class AllEnums {
     }
 
     LabelsRequirement_operator = LabelsRequirement_operator;
-    SecurityALG_Type = SecurityALG_Type;
+    SecurityALG_type = SecurityALG_type;
     SecurityCertificateSpec_usages = SecurityCertificateSpec_usages;
     SecurityCertificateStatus_validity = SecurityCertificateStatus_validity;
     SecuritySGRule_action = SecuritySGRule_action;

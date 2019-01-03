@@ -1,9 +1,9 @@
 <div class="sorticon-container" fxLayout="row" fxLayoutAlign="space-between stretch">
-    <div fxFlex="auto" class="sorticon-content">
-      <ng-content></ng-content>
-    </div>
-    <div fxFlex="none" class="sorticon-icon" fxLayout="column" fxLayoutAlign="center stretch">
-      <mat-icon fxFlex="none" class="sorticon-arrow" *ngIf="sortOrder === 1" >arrow_upward</mat-icon>
-      <mat-icon fxFlex="none" class="sorticon-arrow"  *ngIf="sortOrder === -1"  >arrow_downward</mat-icon>
-    </div>
+  <div fxFlex="auto" class="sorticon-content">
+    <ng-content></ng-content>
   </div>
+  <div *ngIf="isSortable" fxFlex="none" class="sorticon-icon" fxLayout="column" fxLayoutAlign="center stretch">
+    <mat-icon fxFlex="none" class="sorticon-arrow" *ngIf="sortOrder === 1" >arrow_upward</mat-icon>
+    <mat-icon fxFlex="none" class="sorticon-arrow"  *ngIf="sortOrder === -1"  >arrow_downward</mat-icon>
+  </div>
+</div>

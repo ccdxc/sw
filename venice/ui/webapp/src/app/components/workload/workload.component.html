@@ -18,9 +18,10 @@
 
 <ng-template #DataTable>
   <div fxFlex class="workload-table">
-    <p-table #workloadTable class="global-primeng-table" [columns]="cols"
+    <app-lazyrender [data]="workloads" [rows]="28" [virtualRowHeight]="36" [runDoCheck]="true">
+    <p-table #workloadTable class="global-primeng-table-lazyload" [columns]="cols"
               sortField="meta.mod-time" [sortOrder]='-1' 
-              dataKey="meta.name" [responsive]="true" [value]="workloads"
+              dataKey="meta.name" [responsive]="true"
               [loading]="tableLoading" [resizableColumns]="true">
         <!-- Table Caption -->
         <ng-template pTemplate="caption">
@@ -31,7 +32,7 @@
       <ng-template pTemplate="header" let-columns>
         <tr>
           <th *ngFor="let col of cols" [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class">
-              <app-sorticon *ngIf="col.sortable" [field]="col.field">{{col.header}}</app-sorticon>
+              <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}</app-sorticon>
           </th>
         </tr>
       </ng-template>
@@ -62,6 +63,7 @@
           </td>
         </tr>
       </ng-template>
-      </p-table>
+    </p-table>
+    </app-lazyrender>
   </div>
 </ng-template>

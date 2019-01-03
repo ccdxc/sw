@@ -34,7 +34,7 @@ message ALG {
         TFTP    = 5;
         RTSP    = 6;
     }
-    string     Type       = 1 [(venice.check) = "StrEnum(ALG.ALGType)"];
+    string     Type       = 1 [(gogoproto.jsontag) = "type,omitempty", (venice.check) = "StrEnum(ALG.ALGType)"];
     IcmpAlg    IcmpAlg    = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "icmp,omitempty"];
     DnsAlg     DnsAlg     = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "dns,omitempty"];
     FtpAlg     FtpAlg     = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ftp,omitempty"];

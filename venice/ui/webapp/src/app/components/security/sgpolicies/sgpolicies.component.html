@@ -14,7 +14,7 @@
       <ng-template pTemplate="header" let-columns>
         <tr>
           <th *ngFor="let col of cols" [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class">
-             <app-sorticon *ngIf="col.sortable" [field]="col.field">{{col.header}}</app-sorticon>
+             <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}</app-sorticon>
           </th>
         </tr>
       </ng-template>

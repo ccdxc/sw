@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, OnDestroy } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { Table } from 'primeng/table';
 
@@ -7,7 +7,8 @@ import { Table } from 'primeng/table';
   templateUrl: './sorticon.component.html',
   styleUrls: ['./sorticon.component.scss']
 })
-export class SorticonComponent implements OnInit {
+export class SorticonComponent implements OnInit, OnDestroy {
+  @Input() isSortable: boolean;
   @Input() field: string;
 
   subscription: Subscription;
@@ -24,16 +25,11 @@ export class SorticonComponent implements OnInit {
     this.updateSortState();
   }
 
-  onClick(event) {
-    event.preventDefault();
-  }
-
   updateSortState() {
     if (this.dt.sortMode === 'single') {
       this.sortOrder = this.dt.isSorted(this.field) ? this.dt.sortOrder : 0;
-    }
-    else if (this.dt.sortMode === 'multiple') {
-      let sortMeta = this.dt.getSortMeta(this.field);
+    } else if (this.dt.sortMode === 'multiple') {
+      const sortMeta = this.dt.getSortMeta(this.field);
       this.sortOrder = sortMeta ? sortMeta.order : 0;
     }
   }

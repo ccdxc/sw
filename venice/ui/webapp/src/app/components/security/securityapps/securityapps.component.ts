@@ -6,7 +6,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { SecurityService } from '@app/services/generated/security.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
-import { IApiStatus, SecurityAppList, SecurityApp, ISecurityAppList } from '@sdk/v1/models/generated/security';
+import { SecurityApp } from '@sdk/v1/models/generated/security';
 import { Table } from 'primeng/table';
 
 
@@ -23,7 +23,7 @@ import { MessageService } from 'primeng/primeng';
  * This component displays security-apps UI.
  * TODO: 2018-12-20, there is no UX design for this page yet. It simply show records to help QA viewing data.
  */
-export class SecurityappsComponent  extends BaseComponent implements OnInit, OnDestroy {
+export class SecurityappsComponent extends BaseComponent implements OnInit, OnDestroy {
   @ViewChild('securityappsTable') securityappsTable: Table;
 
   securityappsEventUtility: HttpEventUtility<SecurityApp>;
@@ -41,10 +41,10 @@ export class SecurityappsComponent  extends BaseComponent implements OnInit, OnD
     url: '/assets/images/icons/security/ico-app-black.svg',
   };
   cols: any[] = [
-    { field: 'meta.name', header: 'Name', class: 'naples-column-date', sortable: false },
-    { field: 'spec.alg.Type', header: 'ALG Type', class: 'naples-column-host-name', sortable: false },
-    { field: 'meta.mod-time', header: 'Modification Time', class: 'naples-column-date', sortable: false },
-    { field: 'meta.creation-time', header: 'Creation Time', class: 'naples-column-date', sortable: false },
+    { field: 'meta.name', header: 'Name', class: 'securityapps-column-date', sortable: true },
+    { field: 'spec.alg.type', header: 'ALG Type', class: 'securityapps-column-host-name', sortable: false },
+    { field: 'meta.mod-time', header: 'Modification Time', class: 'securityapps-column-date', sortable: true },
+    { field: 'meta.creation-time', header: 'Creation Time', class: 'securityapps-column-date', sortable: true },
   ];
 
   constructor(protected _controllerService: ControllerService,
@@ -96,11 +96,11 @@ export class SecurityappsComponent  extends BaseComponent implements OnInit, OnD
         // As server  keeps pushing records to UI and UI has a selected securityApp, we have to update the selected one.
         if (this.selectedSecurityApp) {
           let matchedSecurityApp: SecurityApp = null;
-          for (let i = 0; i < this.securityApps.length ; i++) {
-              const secApp = this.securityApps[i];
-              if (secApp.meta.name === this.selectedSecurityApp.meta.name) {
-                matchedSecurityApp = secApp;
-              }
+          for (let i = 0; i < this.securityApps.length; i++) {
+            const secApp = this.securityApps[i];
+            if (secApp.meta.name === this.selectedSecurityApp.meta.name) {
+              matchedSecurityApp = secApp;
+            }
           }
           this.selectedSecurityApp = matchedSecurityApp; // matchedSecurityApp could be null. It means the UI selected one is deleted in server.
         }

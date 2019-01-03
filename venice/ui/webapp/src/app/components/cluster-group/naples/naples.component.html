@@ -25,39 +25,44 @@
 </app-pagebody>
 
 <ng-template #DataTable>
-  <p-table #naplesTable [value]="naples" class="global-primeng-table" [columns]="cols" sortField="meta.mod-time" [sortOrder]='-1'
-    dataKey="meta.name" [responsive]="true" [resizableColumns]="true">
-    <!-- Table Caption -->
-    <ng-template pTemplate="caption">
-      <app-tableheader title="Naples" [total]="naples.length" [icon]="naplesIcon" width="250px">
-      </app-tableheader>
-    </ng-template>
-    <!-- Table Header -->
-    <ng-template pTemplate="header" let-columns>
-      <tr>
-        <th *ngFor="let col of cols" [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class">
-            <app-sorticon *ngIf="col.sortable" [field]="col.field">{{col.header}}</app-sorticon>
-        </th>
-      </tr>
-    </ng-template>
-    <!-- Table Body -->
-    <ng-template pTemplate="body" let-rowData>
-      <tr>
-        <td *ngFor="let col of cols" [ngSwitch]="col.field" [class]="col.class">
-          <div *ngSwitchCase="'meta.name'">
-            <a routerLink="./{{rowData.meta.name}}">{{rowData.meta.name}}</a>
-          </div>
-          <div *ngSwitchCase="'meta.mod-time'">
-            {{rowData.meta['mod-time'] | PrettyDate }}
-          </div>
-          <div *ngSwitchCase="'meta.creation-time'">
-            {{rowData.meta['creation-time'] | PrettyDate }}
-          </div>
-          <ng-container *ngSwitchDefault>
-            {{displayColumn(rowData, col)}}
-          </ng-container>
-        </td>
-      </tr>
-    </ng-template>
-  </p-table>
+  <app-lazyrender [data]="naples" [rows]="28" [virtualRowHeight]="36" [runDoCheck]="true">
+    <p-table #naplesTable 
+    class="global-primeng-table-lazyload" [columns]="cols"
+            dataKey="meta.name" [responsive]="true"
+            sortField="meta.mod-time" [sortOrder]='-1'
+            [resizableColumns]="true">
+      <!-- Table Caption -->
+      <ng-template pTemplate="caption">
+        <app-tableheader title="Naples" [total]="naples.length" [icon]="naplesIcon" width="250px">
+        </app-tableheader>
+      </ng-template>
+      <!-- Table Header -->
+      <ng-template pTemplate="header" let-columns>
+        <tr>
+          <th *ngFor="let col of cols" [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class">
+              <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}</app-sorticon>
+          </th>
+        </tr>
+      </ng-template>
+      <!-- Table Body -->
+      <ng-template pTemplate="body" let-rowData>
+        <tr>
+          <td *ngFor="let col of cols" [ngSwitch]="col.field" [class]="col.class">
+            <div *ngSwitchCase="'meta.name'">
+              <a routerLink="./{{rowData.meta.name}}">{{rowData.meta.name}}</a>
+            </div>
+            <div *ngSwitchCase="'meta.mod-time'">
+              {{rowData.meta['mod-time'] | PrettyDate }}
+            </div>
+            <div *ngSwitchCase="'meta.creation-time'">
+              {{rowData.meta['creation-time'] | PrettyDate }}
+            </div>
+            <ng-container *ngSwitchDefault>
+              {{displayColumn(rowData, col)}}
+            </ng-container>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </app-lazyrender>
 </ng-template>

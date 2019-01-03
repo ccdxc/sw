@@ -372,7 +372,7 @@
             "type": "string"
           },
           {
-            "name": "alg.Type",
+            "name": "alg.type",
             "in": "query",
             "required": false,
             "type": "string"
@@ -3135,7 +3135,7 @@
             "type": "string"
           },
           {
-            "name": "alg.Type",
+            "name": "alg.type",
             "in": "query",
             "required": false,
             "type": "string"
@@ -8582,7 +8582,7 @@
     "securityALG": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string",
           "enum": [
             "ICMP",

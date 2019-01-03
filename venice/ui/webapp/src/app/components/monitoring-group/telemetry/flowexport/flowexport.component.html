@@ -22,8 +22,7 @@
        <ng-template pTemplate="header" let-columns>
          <tr>
            <th *ngFor="let col of cols; " [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class" [colSpan]=" col.isLast ? 2 : 1">
-              {{col.header}}
-              <p-sortIcon *ngIf="col.sortable" style="float: right;" [field]="col.field"></p-sortIcon>
+              <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}</app-sorticon>
           </th>
          </tr>
        </ng-template>

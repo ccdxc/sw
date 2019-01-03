@@ -7,7 +7,7 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
-import { SecurityALG_Type,  } from './enums';
+import { SecurityALG_type,  } from './enums';
 import { SecurityIcmpAlg, ISecurityIcmpAlg } from './security-icmp-alg.model';
 import { SecurityDnsAlg, ISecurityDnsAlg } from './security-dns-alg.model';
 import { SecurityFtpAlg, ISecurityFtpAlg } from './security-ftp-alg.model';
@@ -15,7 +15,7 @@ import { SecuritySunrpcAlg, ISecuritySunrpcAlg } from './security-sunrpc-alg.mod
 import { SecurityMsrpcAlg, ISecurityMsrpcAlg } from './security-msrpc-alg.model';
 
 export interface ISecurityALG {
-    'Type'?: SecurityALG_Type;
+    'type'?: SecurityALG_type;
     'icmp'?: ISecurityIcmpAlg;
     'dns'?: ISecurityDnsAlg;
     'ftp'?: ISecurityFtpAlg;
@@ -25,15 +25,15 @@ export interface ISecurityALG {
 
 
 export class SecurityALG extends BaseModel implements ISecurityALG {
-    'Type': SecurityALG_Type = null;
+    'type': SecurityALG_type = null;
     'icmp': SecurityIcmpAlg = null;
     'dns': SecurityDnsAlg = null;
     'ftp': SecurityFtpAlg = null;
     'sunrpc': SecuritySunrpcAlg = null;
     'msrpc': SecurityMsrpcAlg = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'Type': {
-            enum: SecurityALG_Type,
+        'type': {
+            enum: SecurityALG_type,
             default: 'ICMP',
             type: 'string'
         },
@@ -86,10 +86,10 @@ export class SecurityALG extends BaseModel implements ISecurityALG {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values && values['Type'] != null) {
-            this['Type'] = values['Type'];
-        } else if (fillDefaults && SecurityALG.hasDefaultValue('Type')) {
-            this['Type'] = <SecurityALG_Type>  SecurityALG.propInfo['Type'].default;
+        if (values && values['type'] != null) {
+            this['type'] = values['type'];
+        } else if (fillDefaults && SecurityALG.hasDefaultValue('type')) {
+            this['type'] = <SecurityALG_type>  SecurityALG.propInfo['type'].default;
         }
         if (values) {
             this['icmp'].setValues(values['icmp']);
@@ -113,7 +113,7 @@ export class SecurityALG extends BaseModel implements ISecurityALG {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Type': new FormControl(this['Type'], [enumValidator(SecurityALG_Type), ]),
+                'type': new FormControl(this['type'], [enumValidator(SecurityALG_type), ]),
                 'icmp': this['icmp'].$formGroup,
                 'dns': this['dns'].$formGroup,
                 'ftp': this['ftp'].$formGroup,
@@ -130,7 +130,7 @@ export class SecurityALG extends BaseModel implements ISecurityALG {
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this._formGroup.controls['Type'].setValue(this['Type']);
+            this._formGroup.controls['type'].setValue(this['type']);
             this['icmp'].setFormGroupValuesToBeModelValues();
             this['dns'].setFormGroupValuesToBeModelValues();
             this['ftp'].setFormGroupValuesToBeModelValues();

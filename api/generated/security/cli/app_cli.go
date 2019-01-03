@@ -15,13 +15,6 @@ import (
 // CreateAppFlags specifies flags for App create operation
 var CreateAppFlags = []gen.CliFlag{
 	{
-		ID:     "Type",
-		Type:   "String",
-		Help:   "",
-		Skip:   false,
-		Insert: "",
-	},
-	{
 		ID:     "allow-mismatch-ip-address",
 		Type:   "Bool",
 		Help:   "",

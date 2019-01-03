@@ -18,7 +18,7 @@ var typesMapApp = map[string]*api.Struct{
 	"security.ALG": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(ALG{}) },
 		Fields: map[string]api.Field{
-			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{ID: "Type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{ID: "type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"IcmpAlg": api.Field{Name: "IcmpAlg", CLITag: api.CLIInfo{ID: "icmp", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "icmp", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.IcmpAlg"},
 
@@ -68,7 +68,6 @@ var typesMapApp = map[string]*api.Struct{
 		},
 
 		CLITags: map[string]api.CLIInfo{
-			"Type":                           api.CLIInfo{Path: "Spec.ALG.Type", Skip: false, Insert: "", Help: ""},
 			"allow-mismatch-ip-address":      api.CLIInfo{Path: "Spec.ALG.FtpAlg.AllowMismatchIPAddress", Skip: false, Insert: "", Help: ""},
 			"api-version":                    api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
 			"attached-policies":              api.CLIInfo{Path: "Status.AttachedPolicies", Skip: false, Insert: "", Help: ""},

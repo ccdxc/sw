@@ -124,7 +124,7 @@ describe('NaplesComponent', () => {
     const title = fixture.debugElement.query(By.css('.tableheader-title'));
     expect(title.nativeElement.textContent).toContain('Naples (2)');
     // check table contents
-    const tableBody = fixture.debugElement.query(By.css('tbody'));
+    const tableBody = fixture.debugElement.query(By.css('.ui-table-scrollable-body tbody'));
     expect(tableBody).toBeTruthy();
     TestingUtility.verifyTable([new ClusterSmartNIC(naples1), new ClusterSmartNIC(naples2)], component.cols, tableBody);
   });

@@ -13,7 +13,7 @@ import { FormArray, FormGroup } from '@angular/forms';
 export class MatchruleComponent implements OnInit {
   @Input() rules: IMonitoringMatchRule[] = [];
   flowTarget: FormGroup;
-  matchRules: FormGroup[]
+  matchRules: FormGroup[];
 
   constructor() { }
 

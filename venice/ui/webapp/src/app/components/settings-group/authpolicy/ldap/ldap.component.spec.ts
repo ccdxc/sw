@@ -54,11 +54,11 @@ describe('LdapComponent', () => {
   it('should create new', () => {
     fixture.detectChanges();
     // overlay exists
-    let overlay = fixture.debugElement.query(By.css('.ldap-overlay'));
+    const overlay = fixture.debugElement.query(By.css('.ldap-overlay'));
     expect(overlay).toBeDefined();
 
     // create button exists
-    let createButton = fixture.debugElement.query(By.css('.ldap-create'));
+    const createButton = fixture.debugElement.query(By.css('.ldap-create'));
     expect(createButton).toBeDefined();
 
     // arrow and ranks should't exist
@@ -72,25 +72,25 @@ describe('LdapComponent', () => {
 
     const rank = fixture.debugElement.query(By.css('.authpolicy-rank'));
     expect(rank).toBeNull();
-   /*  //TODO: disable create LDAP in UI for GS-0.3
-    // Clicking create button
-    createButton.nativeElement.click();
-    fixture.detectChanges();
-
-    // should be in edit mode
-    const saveButton = fixture.debugElement.query(By.css('.authpolicy-save'));
-    expect(saveButton).toBeTruthy();
-    const cancelButton = fixture.debugElement.query(By.css('.authpolicy-cancel'));
-    expect(cancelButton).toBeTruthy();
-
-    // Canceling the create form goes back to create new
-    cancelButton.nativeElement.click();
-
-    overlay = fixture.debugElement.query(By.css('.ldap-overlay'));
-    expect(overlay).toBeDefined();
-    createButton = fixture.debugElement.query(By.css('.ldap-create'));
-    expect(createButton).toBeDefined();
-    */
+    /*  //TODO: disable create LDAP in UI for GS-0.3
+     // Clicking create button
+     createButton.nativeElement.click();
+     fixture.detectChanges();
+ 
+     // should be in edit mode
+     const saveButton = fixture.debugElement.query(By.css('.authpolicy-save'));
+     expect(saveButton).toBeTruthy();
+     const cancelButton = fixture.debugElement.query(By.css('.authpolicy-cancel'));
+     expect(cancelButton).toBeTruthy();
+ 
+     // Canceling the create form goes back to create new
+     cancelButton.nativeElement.click();
+ 
+     overlay = fixture.debugElement.query(By.css('.ldap-overlay'));
+     expect(overlay).toBeDefined();
+     createButton = fixture.debugElement.query(By.css('.ldap-create'));
+     expect(createButton).toBeDefined();
+     */
 
     // Saving the create form
 
