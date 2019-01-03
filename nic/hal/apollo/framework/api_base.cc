@@ -65,18 +65,35 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
         return obj;
 
     case OBJ_ID_VCN:
-        obj = vcn_db()->vcn_find(&api_ctxt->api_params->vcn_key);
+        if (api_ctxt->api_op == API_OP_DELETE) {
+            obj = vcn_db()->vcn_find(&api_ctxt->api_params->vcn_key);
+        } else {
+            obj = vcn_db()->vcn_find(&api_ctxt->api_params->vcn_info.key);
+        }
         return obj;
 
     case OBJ_ID_SUBNET:
-        obj = subnet_db()->subnet_find(&api_ctxt->api_params->subnet_key);
+        if (api_ctxt->api_op == API_OP_DELETE) {
+            obj = subnet_db()->subnet_find(&api_ctxt->api_params->subnet_key);
+        } else {
+            obj = subnet_db()->subnet_find(&api_ctxt->api_params->subnet_info.key);
+        }
         return obj;
 
     case OBJ_ID_TEP:
+        if (api_ctxt->api_op == API_OP_DELETE) {
+            obj = tep_db()->tep_find(&api_ctxt->api_params->tep_key);
+        } else {
+            obj = tep_db()->tep_find(&api_ctxt->api_params->tep_info.key);
+        }
         break;
 
     case OBJ_ID_VNIC:
-        obj = vnic_db()->vnic_find(&api_ctxt->api_params->vnic_key);
+        if (api_ctxt->api_op == API_OP_DELETE) {
+            obj = vnic_db()->vnic_find(&api_ctxt->api_params->vnic_key);
+        } else {
+            obj = vnic_db()->vnic_find(&api_ctxt->api_params->vnic_info.key);
+        }
         return obj;
 
     case OBJ_ID_ROUTE:

@@ -523,10 +523,12 @@ api_engine::activate_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 api_engine::activate_config_stage_(void) {
     sdk_ret_t    ret;
+    unordered_map<api_base *, obj_ctxt_t>::iterator next_it;
 
     batch_ctxt_.stage = API_BATCH_STAGE_ACTIVATE_EPOCH;
-    for (auto it = batch_ctxt_.dirty_objs.begin();
-             it != batch_ctxt_.dirty_objs.end(); ++it) {
+    for (auto it = batch_ctxt_.dirty_objs.begin(), next_it = it;
+             it != batch_ctxt_.dirty_objs.end(); it = next_it) {
+        next_it++;
         ret = activate_config_(it->first, &it->second);
         SDK_ASSERT(ret == SDK_RET_OK);
     }
@@ -707,12 +709,14 @@ api_engine::batch_commit(void) {
 sdk_ret_t
 api_engine::batch_abort(void) {
     sdk_ret_t    ret;
+    unordered_map<api_base *, obj_ctxt_t>::iterator next_it;
 
     SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_ABORT),
                       sdk::SDK_RET_INVALID_ARG);
 
-    for (auto it = batch_ctxt_.dirty_objs.begin();
-         it != batch_ctxt_.dirty_objs.end(); ++it) {
+    for (auto it = batch_ctxt_.dirty_objs.begin(), next_it = it;
+         it != batch_ctxt_.dirty_objs.end(); it = next_it) {
+        next_it++;
         ret = rollback_config_(it->first, &it->second);
         SDK_ASSERT(ret == SDK_RET_OK);
     }
