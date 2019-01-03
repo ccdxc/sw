@@ -48,6 +48,7 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
         struct rx_stats *stats = q_to_rx_stats(q);
         dma_addr_t dma_addr;
         vmk_PktRssType hash_type = VMK_PKT_RSS_TYPE_NONE;
+        vmk_NetPollState poll_state;
 #ifdef HAPS
         vmk_uint32 mtu = 0;
 //        __sum16 csum;
@@ -162,12 +163,21 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
         }
 
 //        napi_gro_receive(&qcq->napi, skb);
-        status = vmk_NetPollRxPktQueue(qcq->netpoll,
-                                       pkt);
-        if (status != VMK_OK) {
-                ionic_err("vmk_NetPollRxPktQueue() failed, status: %s",
-                          vmk_StatusToString(status));
-                VMK_ASSERT(0);
+
+        status = vmk_NetPollCheckState(qcq->netpoll,
+                                       &poll_state);
+        VMK_ASSERT(status == VMK_OK);
+
+        if (VMK_LIKELY(poll_state == VMK_NETPOLL_ACTIVE)) {
+                status = vmk_NetPollRxPktQueue(qcq->netpoll,
+                                               pkt);
+                if (status != VMK_OK) {
+                        ionic_err("vmk_NetPollRxPktQueue() failed, status: %s",
+                                  vmk_StatusToString(status));
+                        VMK_ASSERT(0);
+                }
+        } else {
+                ionic_en_pkt_release(pkt, NULL);
         }
 
         pkt = NULL;
@@ -337,7 +347,7 @@ void ionic_rx_refill(struct queue *q)
 
                 desc = cur->desc;
 
-                ionic_rx_pkt_free(q, cur->cb_arg, desc->len, desc->addr);
+                //ionic_rx_pkt_free(q, cur->cb_arg, desc->len, desc->addr);
                 pkt = ionic_rx_pkt_alloc(q, len, &dma_addr);
                 if (VMK_UNLIKELY(!pkt)) {
                         ionic_err("ionic_rx_pkt_alloc() failed");
@@ -512,7 +522,7 @@ ionic_tx_netpoll(vmk_AddrCookie priv,
         vmk_Bool poll_again = VMK_TRUE;
         void *qcq = priv.ptr;
 
-        ionic_err("ionic_tx_netpoll(), ring_idx: %d", ((struct qcq*)qcq)->ring_idx);
+//        ionic_err("ionic_tx_netpoll(), ring_idx: %d", ((struct qcq*)qcq)->ring_idx);
 
 	polled = ionic_netpoll(budget, ionic_tx_service, qcq);
 
@@ -532,7 +542,7 @@ ionic_rx_netpoll(vmk_AddrCookie priv,
         void *qcq = priv.ptr;
         struct cq *cq = &((struct qcq *)qcq)->cq;
 
-        ionic_err("ionic_rx_netpoll(), ring_idx: %d", ((struct qcq*)qcq)->ring_idx);
+//        ionic_err("ionic_rx_netpoll(), ring_idx: %d", ((struct qcq*)qcq)->ring_idx);
 
         polled = ionic_netpoll(budget, ionic_rx_service, qcq);
 
@@ -1198,6 +1208,9 @@ ionic_start_xmit(vmk_PktHandle *pkt,
         ctx.priority   = vmk_PktPriorityGet(pkt);
         ctx.vlan_id    = vmk_PktVlanIDGet(pkt);
         ctx.mapped_len = vmk_PktFrameMappedLenGet(pkt);
+
+//        ionic_err("is_vlan: %d, vlan_id: %d",
+//                  (ctx.offload_flags & IONIC_TX_VLAN), ctx.vlan_id);
 
         if (ctx.is_tso_needed) {
                 status = ionic_tx_tso(q, pkt, &ctx);

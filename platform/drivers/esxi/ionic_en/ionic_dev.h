@@ -236,7 +236,6 @@ static inline void ionic_struct_size_checks(void)
         VMK_ASSERT_ON_COMPILE(sizeof(rx_filter_del_comp) == 16);
         VMK_ASSERT_ON_COMPILE(sizeof(struct stats_dump_cmd) == 64);
         VMK_ASSERT_ON_COMPILE(sizeof(struct stats_dump_comp) == 16);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct stats_dump) == 4096);
         VMK_ASSERT_ON_COMPILE(sizeof(struct rss_hash_set_cmd) == 64);
         VMK_ASSERT_ON_COMPILE(sizeof(rss_hash_set_comp) == 16);
         VMK_ASSERT_ON_COMPILE(sizeof(struct rss_indir_set_cmd) == 64);
@@ -245,16 +244,6 @@ static inline void ionic_struct_size_checks(void)
         VMK_ASSERT_ON_COMPILE(sizeof(struct debug_q_dump_comp) == 16);
         VMK_ASSERT_ON_COMPILE(sizeof(struct rdma_reset_cmd) == 64);
         VMK_ASSERT_ON_COMPILE(sizeof(struct rdma_queue_cmd) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct create_ah_cmd) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct create_ah_comp) == 16);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct create_mr_cmd) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct create_mr_comp) == 16);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct create_cq_cmd) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct create_cq_comp) == 16);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct create_qp_cmd) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct create_qp_comp) == 16);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct modify_qp_cmd) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct modify_qp_comp) == 16);
         VMK_ASSERT_ON_COMPILE(sizeof(union adminq_cmd) == 64);
         VMK_ASSERT_ON_COMPILE(sizeof(union adminq_comp) == 16);
 }

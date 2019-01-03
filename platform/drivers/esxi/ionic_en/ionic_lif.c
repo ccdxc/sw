@@ -181,7 +181,7 @@ ionic_qcq_disable(struct qcq *qcq)
 //	synchronize_irq(qcq->intr.vector);
 //	napi_disable(&qcq->napi);
         vmk_IntrSync(qcq->intr.cookie);
-        vmk_NetPollDisable(qcq->netpoll);
+//        vmk_NetPollDisable(qcq->netpoll);
 
 	status = ionic_adminq_post_wait(lif, &ctx);
         ionic_completion_destroy(&ctx.work);
@@ -245,6 +245,16 @@ ionic_stop(struct lif *lif)
 
 //	netif_carrier_off(netdev);
 //	netif_tx_disable(netdev);
+	for (i = 0; i < lif->nrxqcqs; i++) {
+		status = ionic_qcq_disable(lif->rxqcqs[i]);
+		if (status != VMK_OK) {
+                        ionic_err("ionic_qcq_disable() failed, status: %s",
+                                  vmk_StatusToString(status));
+                        /* In the failure case, we still keep disabling
+                           the next qcq element and record the status */
+                        status1 = status;
+                }
+        }
 
 	for (i = 0; i < lif->ntxqcqs; i++) {
 		// TODO post NOP Tx desc and wait for its completion
@@ -257,20 +267,19 @@ ionic_stop(struct lif *lif)
                            the next qcq element and record the status */
                         status1 = status;
                 }
-	}
+        }
 
+        for (i = 0; i < lif->nrxqcqs; i++) {
+                ionic_rx_flush(&lif->rxqcqs[i]->cq);
+        }
 
-	for (i = 0; i < lif->nrxqcqs; i++) {
-		status = ionic_qcq_disable(lif->rxqcqs[i]);
-		if (status != VMK_OK) {
-                        ionic_err("ionic_qcq_disable() failed, status: %s",
-                                  vmk_StatusToString(status));
-                        /* In the failure case, we still keep disabling
-                           the next qcq element and record the status */
-                        status1 = status;
-                }
-                //ionic_rx_flush(&lif->rxqcqs[i]->cq);
-       }
+        for (i = 0; i < lif->nrxqcqs; i++) {
+                vmk_NetPollDisable(lif->rxqcqs[i]->netpoll);
+        }
+
+        for (i = 0; i < lif->ntxqcqs; i++) {
+                vmk_NetPollDisable(lif->txqcqs[i]->netpoll);
+        }
 
 	return status1;
 }
@@ -664,6 +673,7 @@ ionic_vlan_rx_add_vid(struct lif *lif,
 
 	ionic_info("rx_filter add VLAN %d (id %d)\n", vid,
 		    ctx.comp.rx_filter_add.filter_id);
+        VMK_ASSERT(0);
 
 	return ionic_rx_filter_save(lif, 0, RXQ_INDEX_ANY, 0, &ctx);
 }
@@ -2216,8 +2226,8 @@ ionic_lif_init(struct lif *lif)
 */
         init_state = VMK_UPLINK_STATE_ENABLED |
                      VMK_UPLINK_STATE_BROADCAST_OK |
-                     VMK_UPLINK_STATE_MULTICAST_OK |
-                     VMK_UPLINK_STATE_PROMISC;
+                     VMK_UPLINK_STATE_MULTICAST_OK;// |
+//                     VMK_UPLINK_STATE_PROMISC;
 
         ionic_set_rx_mode(lif, init_state);
 

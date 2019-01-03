@@ -694,7 +694,7 @@ ionic_en_attach(vmk_Device device)                                // IN
         if (status != VMK_OK) {
                 ionic_err("ionic_dma_engine_create() failed, status: %s",
                           vmk_StatusToString(status));
-                goto dma_streaming_err;;
+                goto dma_streaming_err;
         }
 
         status = ionic_dma_engine_create("dma_engine_coherent",

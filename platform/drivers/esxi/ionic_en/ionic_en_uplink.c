@@ -65,12 +65,12 @@ typedef VMK_ReturnStatus
                                  vmk_VlanID vlanID);
 
 static vmk_UplinkVLANFilterOps ionic_en_vlan_filter_ops = {
-   .enableVLANFilter       = ionic_en_vlan_filter_enable,
-   .disableVLANFilter      = ionic_en_vlan_filter_disable,
-   .getVLANFilterBitmap    = ionic_en_vlan_filter_bitmap_get,
-   .setVLANFilterBitmap    = ionic_en_vlan_filter_bitmap_set,
-   .addVLANFilter          = ionic_en_vlan_filter_add,
-   .removeVLANFilter       = ionic_en_vlan_filter_remove,
+        .enableVLANFilter       = ionic_en_vlan_filter_enable,
+        .disableVLANFilter      = ionic_en_vlan_filter_disable,
+        .getVLANFilterBitmap    = ionic_en_vlan_filter_bitmap_get,
+        .setVLANFilterBitmap    = ionic_en_vlan_filter_bitmap_set,
+        .addVLANFilter          = ionic_en_vlan_filter_add,
+        .removeVLANFilter       = ionic_en_vlan_filter_remove,
 };
 
 static vmk_UplinkMultiQueueOps ionic_en_multi_queue_ops = {
@@ -814,7 +814,17 @@ ionic_en_uplink_associate(vmk_AddrCookie driver_data,             // IN
                           vmk_StatusToString(status));
                 return status;
         }
+/*
+        status = vmk_UplinkCapRegister(uplink,
+                                       VMK_UPLINK_CAP_VLAN_RX_STRIP,
+                                       NULL);
+        VMK_ASSERT(status == VMK_OK);
 
+        status = vmk_UplinkCapRegister(uplink,
+                                       VMK_UPLINK_CAP_VLAN_TX_INSERT,
+                                       NULL);
+        VMK_ASSERT(status == VMK_OK);
+*/
         status = vmk_UplinkCapRegister(uplink,
                                        VMK_UPLINK_CAP_VLAN_FILTER,
                                        &ionic_en_vlan_filter_ops);
@@ -845,12 +855,27 @@ ionic_en_uplink_associate(vmk_AddrCookie driver_data,             // IN
                                        VMK_UPLINK_CAP_IPV4_TSO,
                                        NULL);
         VMK_ASSERT(status == VMK_OK || status == VMK_IS_DISABLED);
-        
+ 
+        status = vmk_UplinkCapRegister(uplink,
+                                       VMK_UPLINK_CAP_IPV6_TSO,
+                                       NULL);
+        VMK_ASSERT(status == VMK_OK || status == VMK_IS_DISABLED);
+       
         status = vmk_UplinkCapRegister(uplink,
                                        VMK_UPLINK_CAP_COALESCE_PARAMS,
                                        &ionic_en_uplink_coal_params_ops);
         VMK_ASSERT(status == VMK_OK);
-        
+
+        status = vmk_UplinkCapRegister(uplink,
+                                       VMK_UPLINK_CAP_SG_TX,
+                                       NULL);
+        VMK_ASSERT(status == VMK_OK);
+
+         status = vmk_UplinkCapRegister(uplink,
+                                       VMK_UPLINK_CAP_MULTI_PAGE_SG,
+                                       NULL);
+        VMK_ASSERT(status == VMK_OK);
+       
 /*
         status = vmk_UplinkCapRegister(uplink_handle->uplink_dev,
                                        VMK_UPLINK_CAP_TRANSCEIVER_TYPE,
@@ -1244,14 +1269,14 @@ ionic_en_uplink_quiesce_io(vmk_AddrCookie driver_data)            // IN
         lif = VMK_LIST_ENTRY(vmk_ListFirst(&priv_data->ionic.lifs),
                              struct lif, list);
 
-        ionic_io_rings_deinit(priv_data, lif);
-
         status = ionic_stop(lif);
         //vmk_SpinlockLock(priv_data->ionic.lifs_lock);
         if (status != VMK_OK) {
                 ionic_err("ionic_stop() failed, status: %s",
                           vmk_StatusToString(status));
         }
+
+        ionic_io_rings_deinit(priv_data, lif);
 
         uplink_handle->is_started = VMK_FALSE;
 
@@ -1823,28 +1848,26 @@ static VMK_ReturnStatus
 ionic_en_vlan_filter_enable_disable(vmk_AddrCookie driver_data,             // IN
                                     ionic_en_vlan_filter_add_kill vlan_op)  // IN
 {
-        VMK_ReturnStatus status;
-        vmk_uint32 i;
-        vmk_VlanID vlan_id = 0;
+        VMK_ReturnStatus status = VMK_OK;
+        vmk_VlanID vlan_id;
         struct lif *lif = NULL;
         struct ionic_en_priv_data *priv_data = (struct ionic_en_priv_data *)driver_data.ptr;
         struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle;
 
-        vmk_SpinlockLock(priv_data->ionic.lifs_lock);
+        // Can't hold a spinlock here
+//        vmk_SpinlockLock(priv_data->ionic.lifs_lock);
         lif = VMK_LIST_ENTRY(vmk_ListFirst(&priv_data->ionic.lifs),
                              struct lif, list);
-        vmk_SpinlockLock(priv_data->ionic.lifs_lock);
+//        vmk_SpinlockLock(priv_data->ionic.lifs_lock);
 
         vmk_SemaLock(&uplink_handle->vlan_filter_binary_sema);
-        for (i = 0; i < IONIC_VLAN_FILTER_SIZE; i++) {
+        for (vlan_id = 0; vlan_id < IONIC_VLAN_FILTER_SIZE; vlan_id++) {
                 if (vmk_VLANBitmapGet(&uplink_handle->vlan_filter_bitmap,
                                       vlan_id)) {
+                        VMK_ASSERT(0);
                         status = vlan_op(lif, vlan_id);
-                        if (status != VMK_OK) {
-                               break;
-                        }
+                        VMK_ASSERT(status == VMK_OK);
                 }
-                vlan_id++;
         }
         vmk_SemaUnlock(&uplink_handle->vlan_filter_binary_sema);
 
@@ -1876,6 +1899,8 @@ VMK_ReturnStatus
 ionic_en_vlan_filter_enable(vmk_AddrCookie driver_data)                    //IN
 {  
         VMK_ReturnStatus status;
+
+        ionic_info("ionic_en_vlan_filter_enable() called");
 
         status = ionic_en_vlan_filter_enable_disable(driver_data,
                                                      ionic_vlan_rx_add_vid);
@@ -1912,6 +1937,8 @@ VMK_ReturnStatus
 ionic_en_vlan_filter_disable(vmk_AddrCookie driver_data)          // IN
 {
         VMK_ReturnStatus status;
+
+        ionic_info("ionic_en_vlan_filter_disable() called");
 
         status = ionic_en_vlan_filter_enable_disable(driver_data,
                                                      ionic_vlan_rx_kill_vid);
@@ -1992,24 +2019,29 @@ ionic_en_vlan_filter_bitmap_set(vmk_AddrCookie driver_data,       // IN
                                 vmk_VLANBitmap *bitmap)           // IN
 {
         VMK_ReturnStatus status = VMK_OK;
-        vmk_uint32 i;
         vmk_VlanID vlan_id = 0;
         vmk_Bool cond1, cond2;
         struct lif *lif = NULL;
         struct ionic_en_priv_data *priv_data = (struct ionic_en_priv_data *)driver_data.ptr;
         struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle;
 
-        vmk_SpinlockLock(priv_data->ionic.lifs_lock);
+        ionic_info("ionic_en_vlan_filter_bitmap_set() called");
+        // Can't hold a spin lock here
+//        vmk_SpinlockLock(priv_data->ionic.lifs_lock);
         lif = VMK_LIST_ENTRY(vmk_ListFirst(&priv_data->ionic.lifs),
                              struct lif, list);
-        vmk_SpinlockLock(priv_data->ionic.lifs_lock);
+//        vmk_SpinlockLock(priv_data->ionic.lifs_lock);
 
         vmk_SemaLock(&uplink_handle->vlan_filter_binary_sema);
-        for (i = 0; i < IONIC_VLAN_FILTER_SIZE; i++) {
+        for (vlan_id = 0; vlan_id < IONIC_VLAN_FILTER_SIZE; vlan_id++) {
                 cond1 = vmk_VLANBitmapGet(&uplink_handle->vlan_filter_bitmap,
                                           vlan_id);
                 cond2 = vmk_VLANBitmapGet(bitmap,
                                           vlan_id);
+
+                ionic_info("con1: %d, con2: %d, vlanid: %d",
+                           cond1, cond2, vlan_id);
+                VMK_ASSERT(0);
 
                 if (cond1 == cond2) {
                         continue;
@@ -2024,7 +2056,6 @@ ionic_en_vlan_filter_bitmap_set(vmk_AddrCookie driver_data,       // IN
                                   vmk_StatusToString(status));
                         break;
                 }
-                vlan_id++;
         }
 
         vmk_Memcpy(&uplink_handle->vlan_filter_bitmap,
@@ -2083,12 +2114,13 @@ ionic_en_vlan_filter_add_remove(vmk_AddrCookie driver_data,
          * we add it just for having additional protection */
         VMK_ASSERT(start_id >= end_id);
 
-        ionic_info("ionic_en_vlan_filter_add() called");
+        ionic_info("ionic_en_vlan_filter_add_remove() called");
 
-        vmk_SpinlockLock(priv_data->ionic.lifs_lock);
+        // Can't hold a spin lock here
+//        vmk_SpinlockLock(priv_data->ionic.lifs_lock);
         lif = VMK_LIST_ENTRY(vmk_ListFirst(&priv_data->ionic.lifs),
                              struct lif, list);
-        vmk_SpinlockLock(priv_data->ionic.lifs_lock);
+//        vmk_SpinlockLock(priv_data->ionic.lifs_lock);
 
         vmk_SemaLock(&uplink_handle->vlan_filter_binary_sema);
 
@@ -2204,7 +2236,7 @@ ionic_en_vlan_filter_remove(vmk_AddrCookie driver_data,           // IN
 {
         VMK_ReturnStatus status;
 
-        ionic_info("ionic_en_vlan_filter_add() called");
+        ionic_info("ionic_en_vlan_filter_remove() called");
 
         status = ionic_en_vlan_filter_add_remove(driver_data,
                                                  start_id,

@@ -1622,7 +1622,7 @@ ionic_en_rx_validate_filter_attrs(struct ionic_en_priv_data *priv_data,    // IN
         shared_q_data_idx = vmk_UplinkQueueIDQueueDataIndex(uplink_qid);
 
         // TODO: Determine if it's RSS
-        is_rss = ionic_en_is_rss_q_idx(priv_data, shared_q_data_idx);;
+        is_rss = ionic_en_is_rss_q_idx(priv_data, shared_q_data_idx);
  
         if (q_type != VMK_UPLINK_QUEUE_TYPE_RX) {
                 ionic_err("filter queue type %u is not supported", q_type);
@@ -1654,7 +1654,8 @@ ionic_en_rx_validate_filter_attrs(struct ionic_en_priv_data *priv_data,    // IN
                 goto out;
         }
 
-        if (ring_index == 0 && !is_rss) {
+        if (ring_index == 0 &&
+            !is_rss) {
                 ionic_warn("Ignore filter on default queue");
                 status = VMK_IGNORE;
                 goto out;
@@ -1859,7 +1860,7 @@ ionic_en_queue_apply_filter(vmk_AddrCookie driver_data,           // IN
         struct ionic_en_filter_info filter_info      = { .filter_class = class };
         vmk_Bool is_found                            = VMK_FALSE;
         vmk_uint32 i, filter_idx, shared_queue_data_idx, rx_ring_idx;
-        vmk_UplinkQueueMACFilterInfo *filters        = NULL;
+        vmk_UplinkQueueMACFilterInfo *mac_filters    = NULL;
         vmk_UplinkQueueVLANFilterInfo *vlan_filters  = NULL;
         vmk_EthAddress zero_mac_addr;
         vmk_UplinkQueueType q_type;
@@ -1890,14 +1891,15 @@ ionic_en_queue_apply_filter(vmk_AddrCookie driver_data,           // IN
                 filter_info.mac_filter_info =
                         (vmk_UplinkQueueMACFilterInfo *)(q_filter->filterInfo.ptr);
                 // TODO: Add RSS case
-                filters = is_rss? priv_data->uplink_handle.rx_rss_rings[rx_ring_idx].mac_filter :
+                mac_filters = is_rss? priv_data->uplink_handle.rx_rss_rings[rx_ring_idx].mac_filter :
                           priv_data->uplink_handle.rx_rings[rx_ring_idx].mac_filter;
-        } else {
-                VMK_ASSERT(class == VMK_UPLINK_QUEUE_FILTER_CLASS_VLAN_ONLY);
+        } else if (class == VMK_UPLINK_QUEUE_FILTER_CLASS_VLAN_ONLY) {
                 filter_info.vlan_filter_info =
                         (vmk_UplinkQueueVLANFilterInfo *)(q_filter->filterInfo.ptr);
                 vlan_filters = is_rss? priv_data->uplink_handle.rx_rss_rings[rx_ring_idx].vlan_filter :
                                priv_data->uplink_handle.rx_rings[rx_ring_idx].vlan_filter;
+        } else {
+                VMK_ASSERT(0);
         }
 
         vmk_SemaLock(&uplink_handle->mq_binary_sema);
@@ -1932,10 +1934,10 @@ ionic_en_queue_apply_filter(vmk_AddrCookie driver_data,           // IN
         if (class == VMK_UPLINK_QUEUE_FILTER_CLASS_MAC_ONLY) {
                 vmk_Memset(zero_mac_addr, 0, VMK_ETH_ADDR_LENGTH);
                 for (i = 0; i < shared_queue_data->maxFilters; i++) {
-                        if (!vmk_Memcmp(filters[i].mac,
+                        if (!vmk_Memcmp(mac_filters[i].mac,
                                         zero_mac_addr,
                                         VMK_ETH_ADDR_LENGTH)) {
-                                vmk_Memcpy(filters[i].mac,
+                                vmk_Memcpy(mac_filters[i].mac,
                                            filter_info.mac_filter_info->mac,
                                            VMK_ETH_ADDR_LENGTH);
                                 filter_idx = i;
@@ -1943,8 +1945,7 @@ ionic_en_queue_apply_filter(vmk_AddrCookie driver_data,           // IN
                                 break;
                         }
                 }
-        } else {
-                VMK_ASSERT(class == VMK_UPLINK_QUEUE_FILTER_CLASS_VLAN_ONLY);
+        } else if (class == VMK_UPLINK_QUEUE_FILTER_CLASS_VLAN_ONLY){
                 for (i = 0; i < shared_queue_data->maxFilters; i++) {
                         if (vlan_filters[i].vlanID == 0) {
                                 vmk_Memcpy(&(vlan_filters[i]),
@@ -2003,9 +2004,7 @@ ionic_en_queue_apply_filter(vmk_AddrCookie driver_data,           // IN
                            ionic_en_get_ring_type(priv_data, shared_queue_data_idx),
                            rx_ring_idx,
                            VMK_ETH_ADDR_FMT_ARGS(filter_info.mac_filter_info->mac));
-        } else {
-                VMK_ASSERT(class == VMK_UPLINK_QUEUE_FILTER_CLASS_VLAN_ONLY);
-
+        } else if (class == VMK_UPLINK_QUEUE_FILTER_CLASS_VLAN_ONLY) {
                 ionic_info("VLAN RX filter (class %u) at index %u is applied on "
                            "%s ring %u, VLAN ID: 0x%x",
                            class,
@@ -2019,7 +2018,7 @@ ionic_en_queue_apply_filter(vmk_AddrCookie driver_data,           // IN
 
 filter_reg_err:
         if (class == VMK_UPLINK_QUEUE_FILTER_CLASS_MAC_ONLY) {
-                vmk_Memset(filters[filter_idx].mac,
+                vmk_Memset(mac_filters[filter_idx].mac,
                            0,
                            VMK_ETH_ADDR_LENGTH);
         } else {
@@ -2067,7 +2066,7 @@ ionic_en_queue_remove_filter(vmk_AddrCookie driver_data,          // IN
         struct ionic_en_priv_data *priv_data = (struct ionic_en_priv_data *)driver_data.ptr;
         struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle;
         vmk_uint32 shared_queue_data_idx, rx_ring_idx;
-        vmk_uint32  filter_idx, vlan_filter_idx;
+        vmk_uint32 filter_idx, vlan_filter_idx;
         vmk_EthAddress zero_mac_addr;
         vmk_UplinkQueueType q_type;
         vmk_Bool is_rss;
@@ -2167,9 +2166,7 @@ ionic_en_queue_remove_filter(vmk_AddrCookie driver_data,          // IN
                            ionic_en_get_ring_type(priv_data, shared_queue_data_idx),
                            rx_ring_idx,
                            VMK_ETH_ADDR_FMT_ARGS(filter_info.mac_filter_info->mac));
-        } else {
-                VMK_ASSERT(filter_info.filter_class == VMK_UPLINK_QUEUE_FILTER_CLASS_VLAN_ONLY);
-
+        } else if (filter_info.filter_class == VMK_UPLINK_QUEUE_FILTER_CLASS_VLAN_ONLY) {
                 ionic_info("VLAN RX filter (class %u) at index %u is removed from "
                            "%s ring %u, VLAN ID: 0x%x",
                            filter_info.filter_class,
@@ -2177,14 +2174,15 @@ ionic_en_queue_remove_filter(vmk_AddrCookie driver_data,          // IN
                            ionic_en_get_ring_type(priv_data, shared_queue_data_idx),
                            rx_ring_idx,
                            filter_info.vlan_filter_info->vlanID);
+        } else {
+                VMK_ASSERT(0);
         }
 
         if (filter_info.filter_class == VMK_UPLINK_QUEUE_FILTER_CLASS_MAC_ONLY) {
                 vmk_Memset(filter_info.mac_filter_info,
                            0,
                            sizeof(vmk_UplinkQueueMACFilterInfo));
-        } else {
-                VMK_ASSERT(filter_info.filter_class == VMK_UPLINK_QUEUE_FILTER_CLASS_VLAN_ONLY);
+        } else if (filter_info.filter_class == VMK_UPLINK_QUEUE_FILTER_CLASS_VLAN_ONLY) {
                 vmk_Memset(filter_info.vlan_filter_info,
                            0,
                            sizeof(vmk_UplinkQueueVLANFilterInfo));

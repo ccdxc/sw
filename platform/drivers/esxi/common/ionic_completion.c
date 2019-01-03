@@ -198,8 +198,6 @@ ionic_wait_for_completion(struct ionic_completion *completion,    // IN
         vmk_Bool is_timeout = VMK_FALSE;
         VMK_ASSERT(completion);
 
-        ionic_info("timeoutttttttt: %d", timeout_ms);
-
         vmk_SpinlockLockIgnoreDeathPending(completion->lock);
         if (!completion->done) {
                 status = vmk_WorldWait(completion->event_id,

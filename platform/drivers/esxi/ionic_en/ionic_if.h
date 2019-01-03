@@ -1,9 +1,24 @@
 /*
- * Copyright 2017-2018 Pensando Systems, Inc.  All rights reserved.
+ * Copyright (c) 2017-2019 Pensando Systems, Inc.  All rights reserved.
  *
- * This program is free software; you may redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; version 2 of the License.
+ * This software is available to you under a choice of one of two
+ * licenses.  You may choose to be licensed under the terms of the GNU
+ * General Public License (GPL) Version 2, available from the file
+ * COPYING in the main directory of this source tree, or the
+ * OpenIB.org BSD license below:
+ *
+ *     Redistribution and use in source and binary forms, with or
+ *     without modification, are permitted provided that the following
+ *     conditions are met:
+ *
+ *      - Redistributions of source code must retain the above
+ *        copyright notice, this list of conditions and the following
+ *        disclaimer.
+ *
+ *      - Redistributions in binary form must reproduce the above
+ *        copyright notice, this list of conditions and the following
+ *        disclaimer in the documentation and/or other materials
+ *        provided with the distribution.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
@@ -13,7 +28,6 @@
  * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- *
  */
 
 #ifndef _IONIC_IF_H_
@@ -49,29 +63,10 @@ enum cmd_opcode {
         CMD_OPCODE_RSS_HASH_SET                 = 22,
         CMD_OPCODE_RSS_INDIR_SET                = 23,
 
-        CMD_OPCODE_RDMA_FIRST_CMD               = 50, //Keep this as first rdma cmd
-
         CMD_OPCODE_RDMA_RESET_LIF               = 50,
         CMD_OPCODE_RDMA_CREATE_EQ               = 51,
         CMD_OPCODE_RDMA_CREATE_CQ               = 52,
         CMD_OPCODE_RDMA_CREATE_ADMINQ           = 53,
-
-        //XXX below are makshift, version zero
-        //XXX to be removed when device supports rdma adminq
-        CMD_OPCODE_RDMA_FIRST_MAKESHIFT_CMD     = 54,
-
-        CMD_OPCODE_V0_RDMA_CREATE_MR            = 54,
-        CMD_OPCODE_V0_RDMA_DESTROY_MR           = 55,
-        CMD_OPCODE_V0_RDMA_CREATE_CQ            = 56,
-        CMD_OPCODE_V0_RDMA_DESTROY_CQ           = 57,
-        CMD_OPCODE_V0_RDMA_RESIZE_CQ            = 58,
-        CMD_OPCODE_V0_RDMA_CREATE_QP            = 59,
-        CMD_OPCODE_V0_RDMA_MODIFY_QP            = 60,
-        CMD_OPCODE_V0_RDMA_DESTROY_QP           = 61,
-        CMD_OPCODE_V0_RDMA_QUERY_PORT           = 62,
-        CMD_OPCODE_V0_RDMA_CREATE_AH            = 63,
-        CMD_OPCODE_V0_RDMA_DESTROY_AH           = 64,
-        CMD_OPCODE_RDMA_LAST_CMD                = 65, //Keep this as last rdma cmd
 
         CMD_OPCODE_DEBUG_Q_DUMP                 = 0xf0,
 };
@@ -1201,87 +1196,6 @@ struct stats_dump_comp {
         u32 color:1;
 };
 
-/**
- * struct stats_dump - 4096 bytes of device stats
- */
-struct stats_dump {
-        u64 rx_ucast_bytes;            /*   0 */
-        u64 rx_ucast_packets;          /*   8 */
-        u64 rx_mcast_bytes;            /*  16 */
-        u64 rx_mcast_packets;          /*  24 */
-        u64 rx_bcast_bytes;            /*  32 */
-        u64 rx_bcast_packets;          /*  40 */
-        u64 pad1[2];
-
-        u64 rx_ucast_drop_bytes;       /*  64 */
-        u64 rx_ucast_drop_packets;     /*  72 */
-        u64 rx_mcast_drop_bytes;       /*  80 */
-        u64 rx_mcast_drop_packets;     /*  88 */
-        u64 rx_bcast_drop_bytes;       /*  96 */
-        u64 rx_bcast_drop_packets;     /* 104 */
-        u64 rx_dma_error;              /* 112 */
-        u64 pad2;
-
-        u64 tx_ucast_bytes;            /* 128 */
-        u64 tx_ucast_packets;          /* 136 */
-        u64 tx_mcast_bytes;            /* 144 */
-        u64 tx_mcast_packets;          /* 152 */
-        u64 tx_bcast_bytes;            /* 160 */
-        u64 tx_bcast_packets;          /* 168 */
-        u64 pad3[2];
-
-        u64 tx_ucast_drop_bytes;       /* 192 */
-        u64 tx_ucast_drop_packets;     /* 200 */
-        u64 tx_mcast_drop_bytes;       /* 208 */
-        u64 tx_mcast_drop_packets;     /* 216 */
-        u64 tx_bcast_drop_bytes;       /* 224 */
-        u64 tx_bcast_drop_packets;     /* 232 */
-        u64 tx_dma_error;              /* 240 */
-        u64 pad4[2];
-
-        u64 rx_queue_disabled_drop;    /* 256 */
-        u64 rx_queue_empty_drop;       /* 264 */
-        u64 rx_queue_scheduled;        /* 272 */
-        u64 rx_desc_fetch_error;       /* 280 */
-        u64 rx_desc_data_error;        /* 288 */
-        u64 pad5[3];
-
-        u64 tx_queue_disabled;         /* 320 */
-        u64 tx_queue_scheduled;        /* 328 */
-        u64 tx_desc_fetch_error;       /* 336 */
-        u64 tx_desc_data_error;        /* 344 */
-        u64 pad6[5];
-
-        /* Debug counters */
-        u64 rx_rss;                    /* 384 */
-        u64 rx_csum_complete;          /* 392 */
-        u64 rx_csum_ip_bad;            /* 400 */
-        u64 rx_csum_tcp_bad;           /* 408 */
-        u64 rx_csum_udp_bad;           /* 416 */
-        u64 rx_vlan_strip;             /* 424 */
-        u64 pad7[3];
-
-        u64 tx_csum_hw;                /* 448 */
-        u64 tx_csum_hw_inner;          /* 456 */
-        u64 tx_vlan_insert;            /* 464 */
-        u64 tx_sg;                     /* 472 */
-        u64 tx_tso_sg;                 /* 480 */
-        u64 tx_tso_sop;                /* 488 */
-        u64 tx_tso_eop;                /* 496 */
-        u64 pad8[6];
-
-        u64 tx_opcode_invalid;         /* 560 */
-        u64 tx_opcode_csum_none;       /* 568 */
-        u64 tx_opcode_csum_partial;    /* 576 */
-        u64 tx_opcode_csum_hw;         /* 584 */
-        u64 tx_opcode_csum_tso;        /* 592 */
-
-        u64 pad_to_1024[51];
-        u64 pad_to_2048[128];
-        u64 pad_to_3072[128];
-        u64 pad_to_4096[128];
-};
-
 #define RSS_HASH_KEY_SIZE       40
 
 enum rss_hash_types {
@@ -1438,246 +1352,6 @@ struct rdma_queue_cmd {
         u32 xxx_table_index;
 };
 
-
-/*    XXX --- all below are makeshift --- XXX    */
-/* to be removed when device supports rdma adminq */
-
-
-/**
- * struct rdma_create_ah_cmd - Create Address Handle command
- * @opcode:        opcode = 63
- * @pd_id:      protection domain id
- * @header_template: header tempalte
- * @header_template_size: header template size
- **/
-struct create_ah_cmd {
-        u16 opcode;
-        u8 rsvd[6];
-        u32 ah_id;
-        u32 pd_id;
-        u64 header_template;
-        u32 header_template_size;
-        u8 rsvd2[36];
-};
-
-/**
- * rdma_create_ah_comp - create_ah command completion
- * @status:        Status of the command.
- *                  0 - Successful completion
- * @len:        Opaque value identifying the AH on the device
- * @handle:     Opaque value identifying the AH on the device
- *
- * The AH is identified by the vector <handle,len>.
- *
- * TODO: the driver should alloc the ah id, like other resources.
- * The completion should only indicate status.
- **/
-struct create_ah_comp {
-        u32 status:8;
-        u32 rsvd:24;
-        u32 len;
-        u64 handle;
-};
-
-/**
- * struct rdma_create_mr_cmd - Create Memory registration command
- * @opcode:        opcode = 54
- * @pd_num:        id of the pd
- * @lif:           hardware lif id
- * @access_flags:  access protaction requested for memory region
- * @start:         starting virtual address of the memory region
- * @length:        length of the memory region in bytes.
- * @pdir_dma:      PA of the page translation table
- * @page_size:     Host Page Size
- * @nchunks:       number of physical pages in the PT table.
- * @lkey:          local key
- * @rkey:          remote key
- *
- **/
-struct create_mr_cmd {
-        u16 opcode;
-        u16 pd_num;
-        u16 lif;
-        u16 access_flags;
-        u64 start;
-        u64 length;
-        u64 pt_dma;
-        u32 page_size;
-        u32 nchunks;
-        u32 lkey;
-        u32 rkey;
-        u32 table_index;
-        u8 rsvd[12];
-};
-
-/**
- * rdma_create_mr_comp - create_mr command completion
- * @status:        Status of the command. 
- *                  0 - Successful completion
- **/
-struct create_mr_comp {
-        u32 status:8;
-        u32 rsvd:24;
-        u32 rsvd2[3];
-};
-
-/**
- * struct create_cq_cmd - Create RDMA Completion queue command
- * @opcode:        opcode = 50
- * @cq_wqe_size:   work queue entry size for CQ
- * @num_cq_wqes:   number of wqes in CQ
- * @cq_num:        queue id for CQ. Driver manages the space.
- * @lif_id:        LIF ID
- * @host_pg_size:  Host Page Size
- * @cq_lkey:       local key for CQ memory
- * @eq_id:         EQ ID
- * @pt_base_addr:  page translation table base address for CQ memory
- * @cq_va:         Starting virtual address of CQ memory
- * @pt_size:       number of page translation table entries.
- **/
-struct create_cq_cmd {
-        u16 opcode;
-        u16 cq_wqe_size;
-        u32 cq_num;
-        u16 num_cq_wqes;
-        u16 lif_id;
-        u32 host_pg_size;
-        u32 cq_lkey;
-        u32 eq_id;
-        u64 pt_base_addr;
-        u64 cq_va;
-        u64 va_len;
-        u32 pt_size;
-        u32 table_index;
-        u8  rsvd2[8];
-};
-
-/**
- * struct create_cq_comp
- * @status: The status of the command.  Values for status are:
- *             0 = Successful completion
- */
-struct create_cq_comp {
-        u32 status:8;
-        u32 qtype:8;
-        u32 rsvd:16;
-        u32 rsvd2[3];
-};
-
-/**
- * struct create_qp_cmd - Create RDMA SQ/RQ queue command
- * @opcode:        opcode = 59
- * @sq_wqe_size:   work queue entry size for SQ
- * @rq_wqe_size:   work queue entry size for RQ
- * @num_sq_wqes:   number of wqes in SQ
- * @num_rq_wqes:   number of wqes in RQ
- * @num_rsq_wqes:  number of wqes in RSQ
- * @num_rrq_wqes:  number of wqes in RRQ
- * @pd:            pd number
- * @lif_id:        LIF ID
- * @service:       RC/UD
- * @flags:         qp flags
- * @pmtu:          path mtu for qp
- * @sq_cq_num:     cq for SQ
- * @rq_cq_num:     cq for RQ
- * @host_pg_size:  host page size
- * @sq_lkey:       local key for SQ
- * @rq_lkey:       local key for RQ
- **/
-
-struct create_qp_cmd {
-        u16 opcode;
-        u16 sq_wqe_size;
-        u16 rq_wqe_size;    
-        u16 num_sq_wqes;
-        u16 num_rq_wqes;    
-        u32 sq_table_index; /* XXX bad alignment */
-        u16 pd;
-        u16 lif_id;
-        u8  service;
-        u8  rsvd;
-        u32 pmtu;
-        u32 qp_num;
-        u32 sq_cq_num;
-        u32 rq_cq_num;    
-        u32 host_pg_size;
-    /*
-     * For we can transfer only one DMA mapped address range in dev commands
-     * because of HAPS devcmd limitations. So need to combine sq/rq translations
-     * to a single PT table.
-     */
-        u64 pt_base_addr;
-        u32 pt_size;
-        u32 sq_pt_size;
-        u32 flags;
-        u32 rq_table_index;
-};
-
-/**
- * struct create_cq_comp
- * @status: The status of the command.  Values for status are:
- *             0 = Successful completion
- * @sq_qtype: qtype for SQ
- * @rq_qtype: qtype for Q 
- */
-
-struct create_qp_comp {
-        u32 status:8;
-        u32 sq_qtype:8;
-        u32 rq_qtype:8;    
-        u32 rsvd:8;
-        u32 rsvd2[3];
-};
-
-/**
- * struct modify_qp_cmd - modify RDMA SQ/RQ queue command
- * @opcode:        opcode = 60
- * @lif_id:        lif id
- * @attr_mask:     mask to indicate which attributes are being modified
- * @qp_num:        qp number
- * @dest_qp_num:   destination qp number
- * @q_key:         q_key for UD
- * @e_psn:         initial expected seq number
- * @sq_psn:        initial send side psn
- * @header_template: header tempalte
- * @header_template_size: header template size
- */
-struct modify_qp_cmd {
-        u16 opcode;
-        u16 lif_id;
-        u32 attr_mask;
-        u32 qp_num;
-        u32 dest_qp_num;    
-        u32 q_key;
-        u32 e_psn;
-        u32 sq_psn;
-        u64 header_template;
-        u32 header_template_size;
-        u32 header_template_ah_id;
-        u32 path_mtu;
-        u8  rrq_depth;
-        u8  rsq_depth;
-        u8  state;
-        u8  retry_count;
-        u8  retry_timeout;
-        u8  min_rnr_timer;
-        u16 flags;
-        u32 rrq_index;
-        u32 rsq_index;
-};
-
-/**
- * struct create_qp_comp
- * @status: The status of the command.  Values for status are:
- *             0 = Successful completion
- */
-
-struct modify_qp_comp {
-        u32 status:8;
-        u32 rsvd:24;
-        u32 rsvd2[3];
-};
-
 /******************************************************************
  ******************* Notify Events ********************************
  ******************************************************************/
@@ -1775,8 +1449,8 @@ struct ionic_lif_stats {
         uint64_t rx_mcast_packets;
         uint64_t rx_bcast_bytes;
         uint64_t rx_bcast_packets;
-        uint64_t rx_dma_error;
         uint64_t rsvd0;
+        uint64_t rsvd1;
         // RX drops
         uint64_t rx_ucast_drop_bytes;
         uint64_t rx_ucast_drop_packets;
@@ -1784,7 +1458,7 @@ struct ionic_lif_stats {
         uint64_t rx_mcast_drop_packets;
         uint64_t rx_bcast_drop_bytes;
         uint64_t rx_bcast_drop_packets;
-        uint64_t rsvd1;
+        uint64_t rx_dma_error;
         uint64_t rsvd2;
         // TX
         uint64_t tx_ucast_bytes;
@@ -1793,8 +1467,8 @@ struct ionic_lif_stats {
         uint64_t tx_mcast_packets;
         uint64_t tx_bcast_bytes;
         uint64_t tx_bcast_packets;
-        uint64_t tx_dma_error;
         uint64_t rsvd3;
+        uint64_t rsvd4;
         // TX drops
         uint64_t tx_ucast_drop_bytes;
         uint64_t tx_ucast_drop_packets;
@@ -1802,44 +1476,120 @@ struct ionic_lif_stats {
         uint64_t tx_mcast_drop_packets;
         uint64_t tx_bcast_drop_bytes;
         uint64_t tx_bcast_drop_packets;
-        uint64_t rsvd4;
+        uint64_t tx_dma_error;
         uint64_t rsvd5;
         //Rx Queue/Ring drops
-        uint64_t rx_q_disable_drop;
-        uint64_t rx_q_empty_drop;
-        uint64_t rx_q_empty_scheduled;
+        uint64_t rx_queue_disabled_drop;
+        uint64_t rx_queue_empty_drop;
+        uint64_t rx_queue_scheduled;
         uint64_t rx_desc_fetch_error;
         uint64_t rx_desc_data_error;
         uint64_t rsvd6;
         uint64_t rsvd7;
         uint64_t rsvd8;
         //Tx Queue/Ring drops
-        uint64_t tx_q_disable_drop;
-        uint64_t tx_q_empty_drop;
+        uint64_t tx_queue_disabled;
+        uint64_t tx_queue_scheduled;
         uint64_t tx_desc_fetch_error;
         uint64_t tx_desc_data_error;
         uint64_t rsvd9;
         uint64_t rsvd10;
         uint64_t rsvd11;
         uint64_t rsvd12;
+
         // RDMA/ROCE TX
-        uint64_t roce_tx_ucast_bytes;
-        uint64_t roce_tx_ucast_packets;
-        uint64_t roce_tx_mcast_bytes;
-        uint64_t roce_tx_mcast_packets;
-        uint64_t roce_tx_cnp_packets;
+        uint64_t tx_rdma_ucast_bytes;
+        uint64_t tx_rdma_ucast_packets;
+        uint64_t tx_rdma_mcast_bytes;
+        uint64_t tx_rdma_mcast_packets;
+        uint64_t tx_rdma_cnp_packets;
         uint64_t rsvd13;
         uint64_t rsvd14;
         uint64_t rsvd15;
+
         // RDMA/ROCE RX
-        uint64_t roce_rx_ucast_bytes;
-        uint64_t roce_rx_ucast_packets;
-        uint64_t roce_rx_mcast_bytes;
-        uint64_t roce_rx_mcast_packets;
-        uint64_t roce_rx_cnp_packets;
-        uint64_t roce_rx_ecn_packets;
+        uint64_t rx_rdma_ucast_bytes;
+        uint64_t rx_rdma_ucast_packets;
+        uint64_t rx_rdma_mcast_bytes;
+        uint64_t rx_rdma_mcast_packets;
+        uint64_t rx_rdma_cnp_packets;
+        uint64_t rx_rdma_ecn_packets;
         uint64_t rsvd16;
         uint64_t rsvd17;
+
+        uint64_t rsvd18;
+        uint64_t rsvd19;
+        uint64_t rsvd20;
+        uint64_t rsvd21;
+        uint64_t rsvd22;
+        uint64_t rsvd23;
+        uint64_t rsvd24;
+        uint64_t rsvd25;
+
+        uint64_t rsvd26;
+        uint64_t rsvd27;
+        uint64_t rsvd28;
+        uint64_t rsvd29;
+        uint64_t rsvd30;
+        uint64_t rsvd31;
+        uint64_t rsvd32;
+        uint64_t rsvd33;
+
+        uint64_t rsvd34;
+        uint64_t rsvd35;
+        uint64_t rsvd36;
+        uint64_t rsvd37;
+        uint64_t rsvd38;
+        uint64_t rsvd39;
+        uint64_t rsvd40;
+        uint64_t rsvd41;
+
+        uint64_t rsvd42;
+        uint64_t rsvd43;
+        uint64_t rsvd44;
+        uint64_t rsvd45;
+        uint64_t rsvd46;
+        uint64_t rsvd47;
+        uint64_t rsvd48;
+        uint64_t rsvd49;
+
+        // RDMA/ROCE REQ Error/Debugs (768 - 895)
+        uint64_t rdma_req_rx_pkt_seq_err;
+        uint64_t rdma_req_rx_rnr_retry_err;
+        uint64_t rdma_req_rx_remote_access_err;
+        uint64_t rdma_req_rx_remote_inv_req_err;
+        uint64_t rdma_req_rx_remote_oper_err;
+        uint64_t rdma_req_rx_implied_nak_seq_err;
+        uint64_t rdma_req_rx_cqe_err;
+        uint64_t rdma_req_rx_cqe_flush_err;
+
+        uint64_t rdma_req_rx_dup_responses;
+        uint64_t rdma_req_rx_invalid_packets;
+        uint64_t rdma_req_tx_local_access_err;
+        uint64_t rdma_req_tx_local_oper_err;
+        uint64_t rdma_req_tx_memory_mgmt_err;
+        uint64_t rsvd52;
+        uint64_t rsvd53;
+        uint64_t rsvd54;
+
+        // RDMA/ROCE RESP Error/Debugs (896 - 1023)
+        uint64_t rdma_resp_rx_dup_requests;
+        uint64_t rdma_resp_rx_out_of_buffer;
+        uint64_t rdma_resp_rx_out_of_seq_pkts;
+        uint64_t rdma_resp_rx_cqe_err;
+        uint64_t rdma_resp_rx_cqe_flush_err;
+        uint64_t rdma_resp_rx_local_len_err;
+        uint64_t rdma_resp_rx_inv_request_err;
+        uint64_t rdma_resp_rx_local_qp_oper_err;
+
+        uint64_t rdma_resp_rx_out_of_atomic_resource;
+        uint64_t rdma_resp_tx_pkt_seq_err;
+        uint64_t rdma_resp_tx_remote_inv_req_err;
+        uint64_t rdma_resp_tx_remote_access_err;
+        uint64_t rdma_resp_tx_remote_oper_err;
+        uint64_t rdma_resp_tx_rnr_retry_err;
+        uint64_t rsvd57;
+        uint64_t rsvd58;
 };
 
 #pragma pack(pop)
@@ -1864,11 +1614,6 @@ union adminq_cmd {
         struct debug_q_dump_cmd debug_q_dump;
         struct rdma_reset_cmd rdma_reset;
         struct rdma_queue_cmd rdma_queue;
-        struct create_ah_cmd create_ah;
-        struct create_mr_cmd create_mr;
-        struct create_cq_cmd create_cq;
-        struct create_qp_cmd create_qp;
-        struct modify_qp_cmd modify_qp;
 };
 
 union adminq_comp {
@@ -1882,11 +1627,6 @@ union adminq_comp {
         struct rx_filter_add_comp rx_filter_add;
         struct stats_dump_comp stats_dump;
         struct debug_q_dump_comp debug_q_dump;
-        struct create_ah_comp create_ah;
-        struct create_mr_comp create_mr;
-        struct create_cq_comp create_cq;
-        struct create_qp_comp create_qp;
-        struct modify_qp_comp modify_qp;
 };
 
 struct notifyq_cmd {
