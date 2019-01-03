@@ -11,31 +11,40 @@
 #include "nic/hal/apollo/include/api/oci.hpp"
 #include "nic/hal/apollo/include/api/oci_init.hpp"
 
-/**  @brief    callback invoked for error traces
- */
-static int
-error_trace_cb (const char *format, ...)
-{
-    char       logbuf[1024];
-    va_list    args;
-
-    va_start(args, format);
-    vsnprintf(logbuf, sizeof(logbuf), format, args);
-    printf(logbuf);
-    printf("\n");
-    va_end(args);
-
-    return 0;
-}
-
 /**  @brief    callback invoked for debug traces
+ *   NOTE: this is sample implementation, hence doesn't check whether
+ *         user enabled traces at what level, it always prints the traces
+ *         but with a simple header prepended that tells what level the
+ *         trace is spwed at ... in reality, you call your favorite logger here
  */
 static int
-debug_trace_cb (const char *format, ...)
+trace_cb (sdk_trace_level_e trace_level, const char *format, ...)
 {
     char       logbuf[1024];
     va_list    args;
 
+    switch (trace_level) {
+    case sdk::lib::SDK_TRACE_LEVEL_NONE:
+        return 0;
+        break;
+    case sdk::lib::SDK_TRACE_LEVEL_ERR:
+        printf("[E] ");
+        break;
+    case sdk::lib::SDK_TRACE_LEVEL_WARN:
+        printf("[W] ");
+        break;
+    case sdk::lib::SDK_TRACE_LEVEL_INFO:
+        printf("[I] ");
+        break;
+    case sdk::lib::SDK_TRACE_LEVEL_DEBUG:
+        printf("[D] ");
+        break;
+    case sdk::lib::SDK_TRACE_LEVEL_VERBOSE:
+        printf("[V] ");
+        break;
+    default:
+        break;
+    }
     va_start(args, format);
     vsnprintf(logbuf, sizeof(logbuf), format, args);
     printf(logbuf);
@@ -54,8 +63,7 @@ oci_test_base::SetUpTestCase(bool enable_fte) {
 
     memset(&init_params, 0, sizeof(init_params));
     init_params.init_mode = OCI_INIT_MODE_FRESH_START;
-    init_params.debug_trace_cb = debug_trace_cb;
-    init_params.error_trace_cb = error_trace_cb;
+    init_params.trace_cb = trace_cb;
     init_params.cfg_file = "hal.json";
     oci_init(&init_params);
 }

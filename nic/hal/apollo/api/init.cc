@@ -78,7 +78,7 @@ oci_init (oci_init_params_t *params)
     asic_cfg_t            asic_cfg;
 
     /**< initializer the logger */
-    sdk::lib::logger::init(params->debug_trace_cb, params->error_trace_cb);
+    sdk::lib::logger::init(params->trace_cb);
 
     // TODO: setup all asic specific config params
     fill_asic_cfg(&asic_cfg);

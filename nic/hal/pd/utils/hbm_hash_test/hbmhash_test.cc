@@ -1691,43 +1691,27 @@ TEST_F(hbmhash_test, DISABLED_test21) {
                     fl->table_num_deletes(), fl->table_num_delete_errors());
 }
 
-
-
 static int
- hal_sdk_error_logger (const char *format, ...)
- {
-     char       logbuf[1024];
-     va_list    args;
+hal_sdk_logger (sdk_trace_level_e trace_level, const char *format, ...)
+{
+    char       logbuf[1024];
+    va_list    args;
 
-     va_start(args, format);
-     vsnprintf(logbuf, sizeof(logbuf), format, args);
-     HAL_TRACE_ERR_NO_META("{}", logbuf);
-     va_end(args);
+    va_start(args, format);
+    vsnprintf(logbuf, sizeof(logbuf), format, args);
+    HAL_TRACE_ERR_NO_META("{}", logbuf);
+    va_end(args);
 
-     return 0;
- }
+    return 0;
+}
 
- static int
- hal_sdk_debug_logger (const char *format, ...)
- {
-     char       logbuf[1024];
-     va_list    args;
-
-     va_start(args, format);
-     vsnprintf(logbuf, sizeof(logbuf), format, args);
-     HAL_TRACE_DEBUG_NO_META("{}", logbuf);
-     va_end(args);
-
-     return 0;
- }
-
- //------------------------------------------------------------------------------
+ //-----------------------------------------------------------------------------
  // SDK initiaization
- //------------------------------------------------------------------------------
+ //-----------------------------------------------------------------------------
  hal_ret_t
  hal_sdk_init (void)
  {
-     sdk::lib::logger::init(hal_sdk_error_logger, hal_sdk_debug_logger);
+     sdk::lib::logger::init(hal_sdk_logger);
      return HAL_RET_OK;
  }
 

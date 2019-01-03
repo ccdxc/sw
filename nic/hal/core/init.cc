@@ -9,6 +9,7 @@
 #include "nic/hal/core/core.hpp"
 #include "nic/hal/core/plugins.hpp"
 #include "nic/sdk/include/sdk/periodic.hpp"
+#include "nic/sdk/lib/logger/logger.hpp"
 #include "nic/linkmgr/linkmgr.hpp"
 
 namespace hal {
@@ -463,28 +464,32 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
 }
 
 static int
-hal_sdk_error_logger (const char *format, ...)
+hal_sdk_logger (sdk_trace_level_e tracel_level, const char *format, ...)
 {
     char       logbuf[1024];
     va_list    args;
 
     va_start(args, format);
     vsnprintf(logbuf, sizeof(logbuf), format, args);
-    HAL_TRACE_ERR_NO_META("{}", logbuf);
-    va_end(args);
-
-    return 0;
-}
-
-static int
-hal_sdk_debug_logger (const char *format, ...)
-{
-    char       logbuf[1024];
-    va_list    args;
-
-    va_start(args, format);
-    vsnprintf(logbuf, sizeof(logbuf), format, args);
-    HAL_TRACE_DEBUG_NO_META("{}", logbuf);
+    switch (tracel_level) {
+    case sdk::lib::SDK_TRACE_LEVEL_ERR:
+        HAL_TRACE_ERR_NO_META("{}", logbuf);
+        break;
+    case sdk::lib::SDK_TRACE_LEVEL_WARN:
+        HAL_TRACE_WARN_NO_META("{}", logbuf);
+        break;
+    case sdk::lib::SDK_TRACE_LEVEL_INFO:
+        HAL_TRACE_INFO_NO_META("{}", logbuf);
+        break;
+    case sdk::lib::SDK_TRACE_LEVEL_DEBUG:
+        HAL_TRACE_DEBUG_NO_META("{}", logbuf);
+        break;
+    case sdk::lib::SDK_TRACE_LEVEL_VERBOSE:
+        HAL_TRACE_VERBOSE_NO_META("{}", logbuf);
+        break;
+    default:
+        break;
+    }
     va_end(args);
 
     return 0;
@@ -496,7 +501,7 @@ hal_sdk_debug_logger (const char *format, ...)
 hal_ret_t
 hal_sdk_init (void)
 {
-    sdk::lib::logger::init(hal_sdk_error_logger, hal_sdk_debug_logger);
+    sdk::lib::logger::init(hal_sdk_logger);
     return HAL_RET_OK;
 }
 

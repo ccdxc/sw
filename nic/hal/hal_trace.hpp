@@ -93,6 +93,12 @@ using hal::utils::hal_trace_level;
                                        ##__VA_ARGS__);                         \
     }                                                                          \
 
+#define HAL_TRACE_WARN_NO_META(fmt, ...)                                       \
+    if (likely(hal::utils::hal_logger()) &&                                    \
+        (hal_trace_level() >= ::utils::trace_warn)) {                          \
+        hal::utils::hal_logger()->warn(fmt);                                   \
+    }
+
 #define HAL_TRACE_INFO(fmt, ...)                                               \
     if (likely(hal::utils::hal_logger()) &&                                    \
         (hal_trace_level() >= ::utils::trace_info)) {                          \
@@ -100,15 +106,35 @@ using hal::utils::hal_trace_level;
                                        ##__VA_ARGS__);                         \
     }                                                                          \
 
+#define HAL_TRACE_INFO_NO_META(fmt, ...)                                       \
+    if (likely(hal::utils::hal_logger()) &&                                    \
+        (hal_trace_level() >= ::utils::trace_info)) {                          \
+        hal::utils::hal_logger()->info(fmt);                                   \
+    }
+
+
 #define HAL_TRACE_DEBUG(fmt, ...)                                              \
-    if (likely(hal::utils::hal_logger())) {                                    \
+    if (likely(hal::utils::hal_logger()) &&                                    \
+        (hal_trace_level() >= ::utils::trace_debug)) {                         \
         hal::utils::hal_logger()->debug("[{}:{}] " fmt, __func__, __LINE__,    \
                                         ##__VA_ARGS__);                        \
     }                                                                          \
 
 #define HAL_TRACE_DEBUG_NO_META(fmt...)                                        \
-    if (likely(hal::utils::hal_logger())) {                                    \
+    if (likely(hal::utils::hal_logger()) &&                                    \
+        (hal_trace_level() >= ::utils::trace_debug)) {                         \
         hal::utils::hal_logger()->debug(fmt);                                  \
+    }                                                                          \
+
+#define HAL_TRACE_VERBOSE(fmt, ...)                                            \
+    if (likely(hal::utils::hal_logger())) {                                    \
+        hal::utils::hal_logger()->trace("[{}:{}] " fmt, __func__, __LINE__,    \
+                                        ##__VA_ARGS__);                        \
+    }                                                                          \
+
+#define HAL_TRACE_VERBOSE_NO_META(fmt...)                                      \
+    if (likely(hal::utils::hal_logger())) {                                    \
+        hal::utils::hal_logger()->trace(fmt);                                  \
     }                                                                          \
 
 #define HAL_ERR_IF(cond, fmt, ...)                                             \
@@ -145,4 +171,3 @@ using hal::utils::hal_trace_level;
     }
 
 #endif    // __HAL_TRACE_HPP__
-

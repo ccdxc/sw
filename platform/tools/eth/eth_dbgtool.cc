@@ -544,7 +544,7 @@ usage()
 }
 
 int
-debug_logger(const char *format, ...)
+debug_logger(sdk_trace_level_e trace_level, const char *format, ...)
 {
     return 0;
 }
@@ -556,7 +556,7 @@ main(int argc, char **argv)
         usage();
     }
 
-    sdk::lib::logger::init(&debug_logger, &debug_logger);
+    sdk::lib::logger::init(&debug_logger);
 
 #ifdef __x86_64__
     assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM) ==

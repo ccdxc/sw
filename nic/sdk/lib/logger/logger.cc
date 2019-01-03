@@ -10,15 +10,12 @@
 namespace sdk {
 namespace lib {
 
-logger::logger_cb_t logger::log_error_cb_ = printf;
-logger::logger_cb_t logger::log_debug_cb_ = printf;
+logger::trace_cb_t logger::trace_cb_ = NULL;
 
 void
-logger::init(sdk::lib::logger::logger_cb_t error_log_func,
-             sdk::lib::logger::logger_cb_t debug_log_func)
+logger::init(sdk::lib::logger::trace_cb_t trace_cb)
 {
-    log_error_cb_ = error_log_func;
-    log_debug_cb_ = debug_log_func;
+    trace_cb_ = trace_cb;
 }
 
 }    // namespace lib
