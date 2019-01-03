@@ -3,6 +3,7 @@ package finder
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	es "github.com/olivere/elastic"
 	"google.golang.org/grpc/codes"
@@ -10,8 +11,14 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/fields"
+	"github.com/pensando/sw/api/generated/auth"
 	evtsapi "github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/authz"
+	authzgrpc "github.com/pensando/sw/venice/utils/authz/grpc"
+	authzgrpcctx "github.com/pensando/sw/venice/utils/authz/grpc/context"
+	"github.com/pensando/sw/venice/utils/ctxutils"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -33,7 +40,7 @@ func (fdr *Finder) GetEvent(ctx context.Context, r *evtsapi.GetEventRequest) (*e
 		"",           // sorting is not required
 		false)        // sorting order doesn't matter as there will be only one event
 	if err != nil {
-		log.Errorf("failed to query elasticsearch, err: %+v", err)
+		fdr.logger.Errorf("failed to query elasticsearch, err: %+v", err)
 		return nil, status.Error(codes.Internal, "could not get the event")
 	}
 
@@ -44,8 +51,28 @@ func (fdr *Finder) GetEvent(ctx context.Context, r *evtsapi.GetEventRequest) (*e
 
 	res := evtsapi.Event{}
 	if err := json.Unmarshal(*result.Hits.Hits[0].Source, &res); err != nil {
-		log.Errorf("failed to unmarshal elasticsearch result, err: %+v", err)
+		fdr.logger.Errorf("failed to unmarshal elasticsearch result, err: %+v", err)
 		return nil, status.Errorf(codes.Internal, "could not get the event")
+	}
+	// check if user is authorized to view the event
+	if ctxutils.GetPeerID(ctx) == globals.APIGw {
+		userMeta, ok := authzgrpcctx.UserMetaFromIncomingContext(ctx)
+		if !ok {
+			fdr.logger.Errorf("no user in grpc metadata")
+			return nil, status.Errorf(codes.Internal, "no user in context")
+		}
+		user := &auth.User{ObjectMeta: *userMeta}
+		// check if user is authorized to view the event
+		authorizer, err := authzgrpc.NewAuthorizer(ctx)
+		if err != nil {
+			fdr.logger.Errorf("error creating grpc authorizer for GetEvent request: %v", err)
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+		resource := authz.NewResource(res.Tenant, "", auth.Permission_Event.String(), res.Namespace, res.Name)
+		ok, _ = authorizer.IsAuthorized(user, authz.NewOperation(resource, auth.Permission_Read.String()))
+		if !ok {
+			return nil, status.Error(codes.PermissionDenied, fmt.Sprintf("unauthorized to view event (%s)", r.GetUUID()))
+		}
 	}
 
 	return &res, nil
@@ -65,6 +92,8 @@ func (fdr *Finder) GetEvents(ctx context.Context, r *api.ListWatchOptions) (*evt
 	if r.GetMaxResults() > 0 {
 		maxResults = r.GetMaxResults()
 	}
+
+	fdr.logger.Infof("GetEvents request: {%+v}", *r)
 
 	// parse field selector
 	fSelector := r.GetFieldSelector()
@@ -124,6 +153,9 @@ func (fdr *Finder) GetEvents(ctx context.Context, r *api.ListWatchOptions) (*evt
 	// TODO: handle label selector; currently, events do not carry any labels.
 	// Once we finalize on what goes in the label, implement this
 
+	// constrain event search by tenant and namespace
+	query = query.Must(es.NewMatchPhraseQuery("meta.tenant", r.Tenant)).Must(es.NewMatchPhraseQuery("meta.namespace", r.Namespace))
+
 	// execute query
 	result, err := fdr.elasticClient.Search(ctx,
 		"*.events.*",    // search only in event indices
@@ -149,6 +181,7 @@ func (fdr *Finder) GetEvents(ctx context.Context, r *api.ListWatchOptions) (*evt
 		}
 		evts = append(evts, &evt)
 	}
+	fdr.logger.Infof("GetEvents response: {%+v}", evts)
 
 	return &evtsapi.EventList{TypeMeta: api.TypeMeta{Kind: "Event"}, Items: evts}, nil
 }

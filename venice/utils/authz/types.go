@@ -172,6 +172,20 @@ func (a *AbstractAuthorizer) AllowedTenantKinds(user *auth.User, tenant, namespa
 			allowedKinds = append(allowedKinds, auth.ObjKind(kind))
 		}
 	}
+	// add non-api server kinds like events
+	kinds := []string{auth.Permission_Event.String()}
+	for _, kind := range kinds {
+		resource := NewResource(tenant, "", kind, namespace, "")
+		operation := NewOperation(resource, actionType.String())
+		ok, err := a.IsAuthorized(user, operation)
+		if err != nil {
+			return nil, err
+		}
+		if !ok {
+			continue
+		}
+		allowedKinds = append(allowedKinds, auth.ObjKind(kind))
+	}
 	return allowedKinds, nil
 }
 

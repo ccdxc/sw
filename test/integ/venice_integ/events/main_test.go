@@ -15,6 +15,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/apiclient"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apiserver"
@@ -64,6 +65,7 @@ type tInfo struct {
 	batchInterval       time.Duration                // events batch interval
 	signer              certs.CSRSigner              // function to sign CSRs for TLS
 	trustRoots          []*x509.Certificate          // trust roots to verify TLS certs
+	apicl               apiclient.Services
 }
 
 // setup helper function create evtsmgr, evtsproxy, etc. services
@@ -76,6 +78,12 @@ func (t *tInfo) setup(tst *testing.T) error {
 
 	t.logger = log.GetNewLogger(logConfig)
 	t.mockResolver = mockresolver.New()
+
+	// start certificate server
+	err = testutils.SetupIntegTLSProvider()
+	if err != nil {
+		log.Fatalf("Error setting up TLS provider: %v", err)
+	}
 
 	t.signer, _, t.trustRoots, err = testutils.GetCAKit()
 	if err != nil {
@@ -130,6 +138,13 @@ func (t *tInfo) setup(tst *testing.T) error {
 	t.proxyEventsStoreDir = tmpProxyDir
 	t.updateResolver(globals.EvtsProxy, evtsProxyURL)
 
+	// grpc client
+	apicl, err := apiclient.NewGrpcAPIClient("events_test", t.apiServerAddr, t.logger)
+	if err != nil {
+		t.logger.Errorf("cannot create grpc client, Err: %v", err)
+		return err
+	}
+	t.apicl = apicl
 	return nil
 }
 
@@ -144,9 +159,11 @@ func (t *tInfo) teardown() {
 	t.evtsMgr.Stop()
 	t.evtsProxy.Stop()
 	t.apiServer.Stop()
+	// stop certificate server
+	testutils.CleanupIntegTLSProvider()
 
 	// remove the local persistent events store
-	log.Infof("removing events store %s", t.proxyEventsStoreDir)
+	t.logger.Infof("removing events store %s", t.proxyEventsStoreDir)
 
 	os.RemoveAll(t.proxyEventsStoreDir)
 }

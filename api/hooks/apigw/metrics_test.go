@@ -7,13 +7,16 @@ import (
 	"testing"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/metrics_query"
+	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apigw/pkg/mocks"
 	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/log"
 
-	"github.com/pensando/sw/api/generated/metrics_query"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -27,7 +30,7 @@ func TestMetricsOperationsHook(t *testing.T) {
 		err                bool
 	}{
 		{
-			name: "metrics operations hook test",
+			name: "metrics operations hook test with no tenant",
 			user: &auth.User{
 				TypeMeta: api.TypeMeta{Kind: "User"},
 				ObjectMeta: api.ObjectMeta{
@@ -44,7 +47,7 @@ func TestMetricsOperationsHook(t *testing.T) {
 			in: &metrics_query.QueryList{},
 			expectedOperations: []authz.Operation{
 				authz.NewOperation(authz.NewResource("testTenant",
-					"metrics_query", auth.Permission_MetricsQuery.String(),
+					"", auth.Permission_MetricsQuery.String(),
 					"", ""),
 					auth.Permission_Read.String()),
 			},
@@ -52,7 +55,7 @@ func TestMetricsOperationsHook(t *testing.T) {
 			err: false,
 		},
 		{
-			name: "metrics operations hook test",
+			name: "metrics operations hook test with different tenant than user's",
 			user: &auth.User{
 				TypeMeta: api.TypeMeta{Kind: "User"},
 				ObjectMeta: api.ObjectMeta{
@@ -69,12 +72,86 @@ func TestMetricsOperationsHook(t *testing.T) {
 			in: &metrics_query.QueryList{Tenant: "differentTenant"},
 			expectedOperations: []authz.Operation{
 				authz.NewOperation(authz.NewResource("differentTenant",
-					"metrics_query", auth.Permission_MetricsQuery.String(),
+					"", auth.Permission_MetricsQuery.String(),
 					"", ""),
 					auth.Permission_Read.String()),
 			},
 			out: &metrics_query.QueryList{Tenant: "differentTenant"},
 			err: false,
+		},
+		{
+			name: "metrics operations hook test with kinds in query list",
+			user: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: "User"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testUser",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "password",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			in: &metrics_query.QueryList{
+				Queries: []*metrics_query.QuerySpec{
+					{
+						TypeMeta: api.TypeMeta{
+							Kind: "Node",
+						},
+					},
+				},
+			},
+			expectedOperations: []authz.Operation{
+				authz.NewOperation(authz.NewResource("testTenant",
+					string(apiclient.GroupCluster), string(cluster.KindNode),
+					"", ""),
+					auth.Permission_Read.String()),
+				authz.NewOperation(authz.NewResource("testTenant",
+					"", auth.Permission_MetricsQuery.String(),
+					"", ""),
+					auth.Permission_Read.String()),
+			},
+			out: &metrics_query.QueryList{
+				Tenant: "testTenant",
+				Queries: []*metrics_query.QuerySpec{
+					{
+						TypeMeta: api.TypeMeta{
+							Kind: "Node",
+						},
+					},
+				},
+			},
+			err: false,
+		},
+		{
+			name:               "no user in context",
+			user:               nil,
+			in:                 &metrics_query.QueryList{},
+			expectedOperations: nil,
+			out:                &metrics_query.QueryList{},
+			err:                true,
+		},
+		{
+			name: "invalid object",
+			user: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: "User"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testUser",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "password",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			in:                 &struct{ name string }{name: "invalid object type"},
+			expectedOperations: nil,
+			out:                &struct{ name string }{name: "invalid object type"},
+			err:                true,
 		},
 	}
 	r := &metricsHooks{}
@@ -86,8 +163,8 @@ func TestMetricsOperationsHook(t *testing.T) {
 		Assert(t, test.err == (err != nil), fmt.Sprintf("got error [%v], [%s] test failed", err, test.name))
 		operations, _ := apigwpkg.OperationsFromContext(nctx)
 		Assert(t, areOperationsEqual(test.expectedOperations, operations),
-			fmt.Sprintf("unexpected operations, [%s] test failed, expected opertaions:%+v, got:%+v", test.name, test.expectedOperations,
-				operations))
+			fmt.Sprintf("unexpected operations, [%s] test failed, expected opertaions:%+v, got:%+v", test.name, login.PrintOperations(test.expectedOperations),
+				login.PrintOperations(operations)))
 		Assert(t, reflect.DeepEqual(test.out, out),
 			fmt.Sprintf("expected returned object [%v], got [%v], [%s] test failed", test.out, out, test.name))
 	}

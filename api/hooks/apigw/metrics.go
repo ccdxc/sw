@@ -2,6 +2,7 @@ package impl
 
 import (
 	"context"
+	"errors"
 
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/metrics_query"
@@ -9,6 +10,7 @@ import (
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 type metricsHooks struct {
@@ -20,26 +22,36 @@ func (e *metricsHooks) operations(ctx context.Context, in interface{}) (context.
 	e.logger.Debugf("APIGw metrics operations authz hook called for obj [%#v]", in)
 	// If tenant is not set in the request, we mutate the request to have the user's tenant
 	user, ok := apigwpkg.UserFromContext(ctx)
-	if !ok {
+	if !ok || user == nil {
 		e.logger.Errorf("No user present in context passed to metrics operations authz hook")
 		return ctx, in, apigwpkg.ErrNoUserInContext
 	}
 	req, ok := in.(*metrics_query.QueryList)
 	if !ok {
 		e.logger.Errorf("Unable to parse metric query request")
-		return ctx, in, apigwpkg.ErrNoUserInContext
+		return ctx, in, errors.New("invalid input type")
 	}
 	if req.Tenant == "" {
 		req.Tenant = user.GetTenant()
 	}
+	// get existing operations from context
+	operations, _ := apigwpkg.OperationsFromContext(ctx)
+	for _, query := range req.Queries {
+		s := runtime.GetDefaultScheme()
+		resource := authz.NewResource(
+			req.Tenant,
+			s.Kind2APIGroup(query.Kind),
+			query.Kind,
+			"",
+			"")
+		operations = append(operations, authz.NewOperation(resource, auth.Permission_Read.String()))
+	}
 	resource := authz.NewResource(
 		req.Tenant,
-		"metrics_query",
+		"",
 		auth.Permission_MetricsQuery.String(),
 		"",
 		"")
-	// get existing operations from context
-	operations, _ := apigwpkg.OperationsFromContext(ctx)
 	// append requested operation
 	operations = append(operations, authz.NewOperation(resource, auth.Permission_Read.String()))
 

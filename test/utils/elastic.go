@@ -218,7 +218,6 @@ func createElasticClient(elasticsearchAddr string, resolverClient resolver.Inter
 			return nil, fmt.Errorf("error creating temp dir for credentials: %v", err)
 		}
 		defer os.RemoveAll(authDir)
-
 		err = credentials.GenElasticClientsAuth(authDir, signer, trustRoots)
 		if err != nil {
 			return nil, fmt.Errorf("error generating Elastic client TLS credentials: %v", err)

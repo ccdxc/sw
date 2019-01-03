@@ -27,6 +27,7 @@ import (
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/spyglass/finder"
+	. "github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -379,7 +380,26 @@ func TestEventsRESTEndpoints(t *testing.T) {
 	defer testutils.CleanupAuth(ti.apiServerAddr, true, false, userCreds, ti.logger)
 	authzHeader, err := testutils.GetAuthorizationHeader(apiGwAddr, userCreds)
 	AssertOk(t, err, "failed to get authZ header")
+	const testTenant = "testtenant"
+	MustCreateTenant(ti.apicl, testTenant)
+	defer MustDeleteTenant(ti.apicl, testTenant)
+	MustCreateTestUser(ti.apicl, testutils.TestLocalUser, testutils.TestLocalPassword, testTenant)
+	defer MustDeleteUser(ti.apicl, testutils.TestLocalUser, testTenant)
+	MustCreateRoleBinding(ti.apicl, "AdminRoleBinding", testTenant, globals.AdminRole, []string{testutils.TestLocalUser}, nil)
+	defer MustDeleteRoleBinding(ti.apicl, "AdminRoleBinding", testTenant)
+	testtenantAuthzHeader, err := testutils.GetAuthorizationHeader(apiGwAddr, &auth.PasswordCredential{Username: testutils.TestLocalUser, Password: testutils.TestLocalPassword, Tenant: testTenant})
+	AssertOk(t, err, fmt.Sprintf("failed to get authZ header for user (%s|%s)", testTenant, testutils.TestLocalUser))
 
+	dummyObjRef := &auth.User{
+		TypeMeta: api.TypeMeta{
+			Kind: string(auth.KindUser),
+		},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    testTenant,
+			Namespace: globals.DefaultNamespace,
+			Name:      "testUser",
+		},
+	}
 	// define list of events to be recorded
 	recordEvents := []struct {
 		eventType string
@@ -398,6 +418,11 @@ func TestEventsRESTEndpoints(t *testing.T) {
 		{eventType3, evtsapi.SeverityLevel_INFO, fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO), nil},
 		{eventType3, evtsapi.SeverityLevel_WARNING, fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING), nil},
 		{eventType3, evtsapi.SeverityLevel_CRITICAL, fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), nil},
+
+		// events in non default tenant
+		{eventType3, evtsapi.SeverityLevel_INFO, fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO), dummyObjRef},
+		{eventType3, evtsapi.SeverityLevel_WARNING, fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING), dummyObjRef},
+		{eventType3, evtsapi.SeverityLevel_CRITICAL, fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), dummyObjRef},
 	}
 
 	wg := new(sync.WaitGroup)
@@ -437,6 +462,8 @@ func TestEventsRESTEndpoints(t *testing.T) {
 		events    map[string]*evtsapi.Event
 	}
 	type tc struct {
+		name          string
+		authzHdr      string
 		requestURI    string
 		requestBody   *api.ListWatchOptions
 		expStatusCode int
@@ -445,6 +472,8 @@ func TestEventsRESTEndpoints(t *testing.T) {
 
 	validTCs := []*tc{
 		{ // GET all events; should match 9 events
+			name:          "GET all events for default tenant; should match 9 events",
+			authzHdr:      authzHeader,
 			requestURI:    "events",
 			requestBody:   &api.ListWatchOptions{}, // default max-results to 1000
 			expStatusCode: http.StatusOK,
@@ -518,6 +547,8 @@ func TestEventsRESTEndpoints(t *testing.T) {
 			},
 		},
 		{ // GET events with severity = INFO; should match 3 events
+			name:          "GET events in default tenant with severity = INFO; should match 3 events",
+			authzHdr:      authzHeader,
 			requestURI:    "events",
 			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("severity=%s", evtsapi.SeverityLevel_INFO), MaxResults: 100},
 			expStatusCode: http.StatusOK,
@@ -547,7 +578,9 @@ func TestEventsRESTEndpoints(t *testing.T) {
 					}},
 			},
 		},
-		{ // GET events with severity = "CIRITCAL" and source.node-name="test-node"; should match 3 events
+		{ // GET events with severity = "CRITICAL" and source.node-name="test-node"; should match 3 events
+			name:          "GET events in default tenant with severity = 'CRITICAL' and source.node-name='test-node'; should match 3 events",
+			authzHdr:      authzHeader,
 			requestURI:    "events",
 			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("severity=%s,source.node-name=%s", evtsapi.SeverityLevel_CRITICAL, "test-node"), MaxResults: 100},
 			expStatusCode: http.StatusOK,
@@ -579,6 +612,8 @@ func TestEventsRESTEndpoints(t *testing.T) {
 			},
 		},
 		{ // Get events with severity = "CRITICAL" and type in ("EVENT-TYPE2"); should match only one event
+			name:          "Get events with severity = 'CRITICAL' and type in ('EVENT-TYPE2'); should match only one event",
+			authzHdr:      authzHeader,
 			requestURI:    "events",
 			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("severity=%s,type in (%s)", evtsapi.SeverityLevel_CRITICAL, eventType2), MaxResults: 100},
 			expStatusCode: http.StatusOK,
@@ -596,6 +631,8 @@ func TestEventsRESTEndpoints(t *testing.T) {
 			},
 		},
 		{ // GET events from timeNow to time.Now()+ 100s; should match ALL(9) events
+			name:          "GET events from timeNow to time.Now()+ 100s; should match ALL(9) events",
+			authzHdr:      authzHeader,
 			requestURI:    "events",
 			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("meta.creation-time>=%v,meta.creation-time<=%v", timeNow.Format(time.RFC3339Nano), time.Now().Add(100*time.Second).Format(time.RFC3339Nano)), MaxResults: 100},
 			expStatusCode: http.StatusOK,
@@ -669,6 +706,8 @@ func TestEventsRESTEndpoints(t *testing.T) {
 			},
 		},
 		{ // Get events with creation-time>timeNow
+			name:          "Get events with creation-time>timeNow",
+			authzHdr:      authzHeader,
 			requestURI:    "events",
 			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("severity=%s,type in (%s),meta.creation-time>%v", evtsapi.SeverityLevel_CRITICAL, eventType2, timeNow.Format(time.RFC3339Nano)), MaxResults: 100},
 			expStatusCode: http.StatusOK,
@@ -686,6 +725,8 @@ func TestEventsRESTEndpoints(t *testing.T) {
 			},
 		},
 		{ // Get events with modified-time>timeNow
+			name:          "Get events with modified-time>timeNow",
+			authzHdr:      authzHeader,
 			requestURI:    "events",
 			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("severity=%s,type in (%s),meta.mod-time>%v", evtsapi.SeverityLevel_CRITICAL, eventType2, timeNow.Format(time.RFC3339Nano)), MaxResults: 100},
 			expStatusCode: http.StatusOK,
@@ -703,6 +744,8 @@ func TestEventsRESTEndpoints(t *testing.T) {
 			},
 		},
 		{ // Get events with creation-time<=timeNow
+			name:          "Get events with creation-time<=timeNow",
+			authzHdr:      authzHeader,
 			requestURI:    "events",
 			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("severity=%s,type in (%s),meta.creation-time<=%v", evtsapi.SeverityLevel_CRITICAL, eventType2, timeNow.Format(time.RFC3339Nano)), MaxResults: 100},
 			expStatusCode: http.StatusOK,
@@ -712,6 +755,8 @@ func TestEventsRESTEndpoints(t *testing.T) {
 			},
 		},
 		{ // Get events with type in (EVENT-TYPE1,EVENT-TYPE2),source.node-name notin (test-node); should match none
+			name:          "Get events with type in (EVENT-TYPE1,EVENT-TYPE2),source.node-name notin (test-node); should match none",
+			authzHdr:      authzHeader,
 			requestURI:    "events",
 			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("type in (%s,%s),source.node-name notin (%s)", eventType1, eventType2, "test-node"), MaxResults: 100},
 			expStatusCode: http.StatusOK,
@@ -721,6 +766,8 @@ func TestEventsRESTEndpoints(t *testing.T) {
 			},
 		},
 		{ // GET events with severity="TEST"; should match none
+			name:          "GET events with severity='TEST'; should match none",
+			authzHdr:      authzHeader,
 			requestURI:    "events",
 			requestBody:   &api.ListWatchOptions{FieldSelector: "severity=TEST", MaxResults: 100},
 			expStatusCode: http.StatusOK,
@@ -730,6 +777,8 @@ func TestEventsRESTEndpoints(t *testing.T) {
 			},
 		},
 		{ // GET events with source.component="test" and type= "test"; should match none
+			name:          "GET events with source.component='test 'and type= 'test'; should match none",
+			authzHdr:      authzHeader,
 			requestURI:    "events",
 			requestBody:   &api.ListWatchOptions{FieldSelector: "source.component=test,type=test", MaxResults: 100},
 			expStatusCode: http.StatusOK,
@@ -739,6 +788,8 @@ func TestEventsRESTEndpoints(t *testing.T) {
 			},
 		},
 		{ // Get events with invalid field names
+			name:          "Get events with invalid field names",
+			authzHdr:      authzHeader,
 			requestURI:    "events",
 			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("invalid-field=%s,type in (%s)", evtsapi.SeverityLevel_CRITICAL, eventType2), MaxResults: 100},
 			expStatusCode: http.StatusInternalServerError,
@@ -748,6 +799,8 @@ func TestEventsRESTEndpoints(t *testing.T) {
 			},
 		},
 		{ // Get events with invalid field names
+			name:          "Get events with invalid field names",
+			authzHdr:      authzHeader,
 			requestURI:    "events",
 			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("meta.invalid<=%v", timeNow.Format(time.RFC3339Nano)), MaxResults: 100},
 			expStatusCode: http.StatusInternalServerError,
@@ -755,6 +808,47 @@ func TestEventsRESTEndpoints(t *testing.T) {
 				numEvents: 0,
 				events:    map[string]*evtsapi.Event{},
 			},
+		},
+		{ // GET events from testtenant; should match 3 events
+			name:          "GET events from testtenant; should match 3 events",
+			authzHdr:      authzHeader,
+			requestURI:    "events",
+			requestBody:   &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: testTenant, Namespace: globals.DefaultNamespace}}, // default max-results to 1000
+			expStatusCode: http.StatusOK,
+			expResponse: &expectedResponse{
+				numEvents: 3,
+				events: map[string]*evtsapi.Event{
+					fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO): {
+						EventAttributes: evtsapi.EventAttributes{
+							Type:     eventType3,
+							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)],
+							Count:    1,
+						},
+					},
+					fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING): {
+						EventAttributes: evtsapi.EventAttributes{
+							Type:     eventType3,
+							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_WARNING)],
+							Count:    1,
+						},
+					},
+					fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL): {
+						EventAttributes: evtsapi.EventAttributes{
+							Type:     eventType3,
+							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_CRITICAL)],
+							Count:    1,
+						},
+					},
+				},
+			},
+		},
+		{ // GET events from default tenant using testtenant user; should return authorization error
+			name:          "GET events from default tenant using testtenant user credentials; should return authorization error",
+			authzHdr:      testtenantAuthzHeader,
+			requestURI:    "events",
+			requestBody:   &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant, Namespace: globals.DefaultNamespace}}, // default max-results to 1000
+			expStatusCode: http.StatusForbidden,
+			expResponse:   &expectedResponse{},
 		},
 	}
 
@@ -765,13 +859,13 @@ func TestEventsRESTEndpoints(t *testing.T) {
 
 	// perform request and check the response
 	for _, rr := range validTCs {
-		log.Infof("executing TC: %v, %v", rr.requestURI, rr.requestBody)
+		ti.logger.Infof("executing TC: %v, %v, %v", rr.name, rr.requestURI, rr.requestBody)
 		switch {
 		case "events" == rr.requestURI: // */events/
 			url := fmt.Sprintf("http://%s/events/v1/%s", apiGwAddr, rr.requestURI)
 			resp := evtsapi.EventList{}
 			httpClient := netutils.NewHTTPClient()
-			httpClient.SetHeader("Authorization", authzHeader)
+			httpClient.SetHeader("Authorization", rr.authzHdr)
 
 			// both GET and POST should behave the same
 			for _, reqMethod := range []string{"GET", "POST"} {
@@ -779,7 +873,7 @@ func TestEventsRESTEndpoints(t *testing.T) {
 					func() (bool, interface{}) {
 						statusCode, _ := httpClient.Req(reqMethod, url, rr.requestBody, &resp)
 						if statusCode != rr.expStatusCode || len(resp.GetItems()) != rr.expResponse.numEvents {
-							return false, fmt.Sprintf("failed to get expected events for %v", rr.requestBody)
+							return false, fmt.Sprintf("failed to get expected events for %#v", *rr.requestBody)
 						}
 
 						return true, nil

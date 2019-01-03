@@ -2899,7 +2899,7 @@ func testAuthzInSearch(t *testing.T, searchMethod SearchMethod) {
 	defer MustDeleteUser(tInfo.apiClient, testutils.TestLocalUser, "tesla")
 	MustCreateRoleBinding(tInfo.apiClient, "AdminRoleBinding", "tesla", globals.AdminRole, []string{testutils.TestLocalUser}, nil)
 	defer MustDeleteRoleBinding(tInfo.apiClient, "AdminRoleBinding", "tesla")
-	// create user with no role
+	// create user with no role in tesla tenant
 	MustCreateTestUser(tInfo.apiClient, "noRoleUser", testutils.TestLocalPassword, "tesla")
 	defer MustDeleteUser(tInfo.apiClient, "noRoleUser", "tesla")
 	// create network search role
@@ -2912,6 +2912,27 @@ func testAuthzInSearch(t *testing.T, searchMethod SearchMethod) {
 	defer MustDeleteUser(tInfo.apiClient, "networkSearchUser", "tesla")
 	MustCreateRoleBinding(tInfo.apiClient, "NetworkSearchRoleBinding", "tesla", "NetworkSearchRole", []string{"networkSearchUser"}, nil)
 	defer MustDeleteRoleBinding(tInfo.apiClient, "NetworkSearchRoleBinding", "tesla")
+	// create network search role in default tenant
+	MustCreateRole(tInfo.apiClient, "NetworkSearchRole", globals.DefaultTenant,
+		login.NewPermission(globals.DefaultTenant, "", auth.Permission_Search.String(), "", "", auth.Permission_Read.String()),
+		login.NewPermission(globals.DefaultTenant, string(apiclient.GroupNetwork), string(network.KindNetwork), authz.ResourceNamespaceAll, "", auth.Permission_Read.String()))
+	defer MustDeleteRole(tInfo.apiClient, "NetworkSearchRole", globals.DefaultTenant)
+	// create user with network search role
+	MustCreateTestUser(tInfo.apiClient, "networkSearchUser", testutils.TestLocalPassword, globals.DefaultTenant)
+	defer MustDeleteUser(tInfo.apiClient, "networkSearchUser", globals.DefaultTenant)
+	MustCreateRoleBinding(tInfo.apiClient, "NetworkSearchRoleBinding", globals.DefaultTenant, "NetworkSearchRole", []string{"networkSearchUser"}, nil)
+	defer MustDeleteRoleBinding(tInfo.apiClient, "NetworkSearchRoleBinding", globals.DefaultTenant)
+	// create event search role in default tenant
+	MustCreateRole(tInfo.apiClient, "EventSearchRole", globals.DefaultTenant,
+		login.NewPermission(globals.DefaultTenant, "", auth.Permission_Search.String(), "", "", auth.Permission_Read.String()),
+		login.NewPermission(globals.DefaultTenant, "", auth.Permission_Event.String(), authz.ResourceNamespaceAll, "", auth.Permission_Read.String()))
+	defer MustDeleteRole(tInfo.apiClient, "EventSearchRole", globals.DefaultTenant)
+	// create user with event search role
+	MustCreateTestUser(tInfo.apiClient, "eventSearchUser", testutils.TestLocalPassword, globals.DefaultTenant)
+	defer MustDeleteUser(tInfo.apiClient, "eventSearchUser", globals.DefaultTenant)
+	MustCreateRoleBinding(tInfo.apiClient, "EventSearchRoleBinding", globals.DefaultTenant, "EventSearchRole", []string{"eventSearchUser"}, nil)
+	defer MustDeleteRoleBinding(tInfo.apiClient, "EventSearchRoleBinding", globals.DefaultTenant)
+
 	// authenticate users
 	audiAdminHdr, err := testutils.GetAuthorizationHeader(tInfo.apiGwAddr, &auth.PasswordCredential{
 		Username: testutils.TestLocalUser,
@@ -2929,7 +2950,7 @@ func testAuthzInSearch(t *testing.T, searchMethod SearchMethod) {
 	if err != nil {
 		t.Fatalf("tesla admin login failed, err: {%+v}", err)
 	}
-	noRoleUserHdr, err := testutils.GetAuthorizationHeader(tInfo.apiGwAddr, &auth.PasswordCredential{
+	noRoleTeslaUserHdr, err := testutils.GetAuthorizationHeader(tInfo.apiGwAddr, &auth.PasswordCredential{
 		Username: "noRoleUser",
 		Password: testutils.TestLocalPassword,
 		Tenant:   "tesla",
@@ -2944,6 +2965,22 @@ func testAuthzInSearch(t *testing.T, searchMethod SearchMethod) {
 	})
 	if err != nil {
 		t.Fatalf("tesla network search user login failed, err: {%+v}", err)
+	}
+	networkSearchDefaultUserHdr, err := testutils.GetAuthorizationHeader(tInfo.apiGwAddr, &auth.PasswordCredential{
+		Username: "networkSearchUser",
+		Password: testutils.TestLocalPassword,
+		Tenant:   globals.DefaultTenant,
+	})
+	if err != nil {
+		t.Fatalf("default tenant network search user login failed, err: {%+v}", err)
+	}
+	eventSearchDefaultUserHdr, err := testutils.GetAuthorizationHeader(tInfo.apiGwAddr, &auth.PasswordCredential{
+		Username: "eventSearchUser",
+		Password: testutils.TestLocalPassword,
+		Tenant:   globals.DefaultTenant,
+	})
+	if err != nil {
+		t.Fatalf("default tenant event search user login failed, err: {%+v}", err)
 	}
 	// Http error for no search authorization
 	httpUnauthorizedErrCode := grpcruntime.HTTPStatusFromCode(grpccodes.PermissionDenied)
@@ -3005,7 +3042,7 @@ func testAuthzInSearch(t *testing.T, searchMethod SearchMethod) {
 		},
 		// tesla no role user searching networks in tesla tenant
 		{
-			noRoleUserHdr,
+			noRoleTeslaUserHdr,
 			&search.SearchRequest{
 				QueryString: "kind:Network",
 				From:        from,
@@ -3059,6 +3096,44 @@ func testAuthzInSearch(t *testing.T, searchMethod SearchMethod) {
 					},
 				},
 			},
+			nil,
+		},
+		// default tenant network search user searching events in default tenant
+		{
+			networkSearchDefaultUserHdr,
+			&search.SearchRequest{
+				QueryString: "kind:Event",
+				From:        from,
+				MaxResults:  maxResults,
+				Tenants:     []string{globals.DefaultTenant},
+			},
+			search.SearchRequest_Full.String(),
+			"",
+			0,
+			nil,
+			nil,
+			nil,
+		},
+		// default tenant event search user searching events in default tenant
+		{
+			eventSearchDefaultUserHdr,
+			&search.SearchRequest{
+				QueryString: "kind:Event",
+				From:        from,
+				MaxResults:  maxResults * 2,
+				Tenants:     []string{globals.DefaultTenant},
+			},
+			search.SearchRequest_Preview.String(),
+			"",
+			eventCount,
+			map[string]map[string]map[string]int64{
+				"default": {
+					"Monitoring": {
+						"Event": eventCount,
+					},
+				},
+			},
+			nil,
 			nil,
 		},
 	}
