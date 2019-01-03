@@ -10,6 +10,7 @@
 
 #include "pnso_api.h"
 #include "pnso_crypto.h"
+#include "pnso_cpdc_cmn.h"
 
 /*
  * NOTE/TODO:
@@ -17,16 +18,6 @@
  *	and needs to addressed/tailored eventually.
  *
  */
-
-struct cp_header_format {
-	uint32_t fmt_idx;
-	uint32_t total_hdr_sz;
-	uint16_t flags;
-	uint16_t type_mask;
-	enum pnso_compression_type pnso_algo;
-	uint8_t *static_hdr;
-	struct pnso_compression_header_format fmt;
-};
 
 #define PNSO_MAX_CP_HEADER_FORMATS	8
 
@@ -57,7 +48,7 @@ tlv_to_buf(uint8_t *dst, uint32_t len, uint64_t val)
 	}
 }
 
-static struct cp_header_format *
+struct cp_header_format *
 lookup_hdr_format(uint32_t hdr_fmt_idx, bool alloc)
 {
 	size_t i;

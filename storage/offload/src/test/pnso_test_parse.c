@@ -912,6 +912,7 @@ FUNC_SET_PARAM(test_set_validation_data_len, ((struct test_validation *)parent)-
 	       g_dyn_offset_map, 0, 0, UINT_MAX)
 FUNC_SET_INT(test_set_validation_svc_chain, ((struct test_validation *)parent)->svc_chain_idx, 0, UINT_MAX)
 FUNC_SET_INT(test_set_validation_retcode, ((struct test_validation *)parent)->retcode, 0, UINT_MAX)
+FUNC_SET_INT(test_set_validation_req_retcode, ((struct test_validation *)parent)->req_retcode, 0, UINT_MAX)
 
 FUNC_SET_INT(test_set_cp_hdr_offset, ((struct test_cp_header *)parent)->fmt.fields[
 	((struct test_cp_header *)parent)->fmt.num_fields - 1].offset, 0, UINT_MAX);
@@ -1794,6 +1795,7 @@ CHILD_NODE_DESC(tests_test_validations_retcode_compare, idx,          NULL, test
 CHILD_NODE_DESC(tests_test_validations_retcode_compare, type,         NULL, test_set_compare_type, NULL) \
 CHILD_NODE_DESC(tests_test_validations_retcode_compare, svc_chain,    NULL, test_set_validation_svc_chain, NULL) \
 CHILD_NODE_DESC(tests_test_validations_retcode_compare, retcode,      NULL, test_set_validation_retcode, NULL) \
+CHILD_NODE_DESC(tests_test_validations_retcode_compare, req_retcode,  NULL, test_set_validation_req_retcode, NULL) \
 CHILD_NODE_DESC(tests_test_validations_retcode_compare, svc_retcodes, NULL, test_set_validation_svc_retcodes, NULL) \
 \
 CHILD_NODE_DESC(cp_hdr_formats, format,        test_create_cp_hdr_format, NULL, NULL) \

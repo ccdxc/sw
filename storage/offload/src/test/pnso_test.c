@@ -1577,18 +1577,18 @@ static pnso_error_t run_retcode_validation(struct request_context *req_ctx,
 	struct batch_context *batch_ctx = req_ctx->batch_ctx;
 	struct testcase_context *test_ctx = batch_ctx->test_ctx;
 
-	if (batch_ctx->req_rc != PNSO_OK) {
-		err = batch_ctx->req_rc;
-		goto done;
-	}
-
-	if (req_ctx->svc_res.num_services < validation->svc_count) {
-		err = EINVAL;
+	cmp = (int) batch_ctx->req_rc - (int) validation->req_retcode;
+	if (cmp != 0 || batch_ctx->req_rc != PNSO_OK) {
 		goto done;
 	}
 
 	cmp = (int) req_ctx->svc_res.err - (int) validation->retcode;
 	if (cmp != 0) {
+		goto done;
+	}
+
+	if (req_ctx->svc_res.num_services < validation->svc_count) {
+		err = EINVAL;
 		goto done;
 	}
 

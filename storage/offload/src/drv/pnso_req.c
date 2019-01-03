@@ -366,7 +366,8 @@ validate_req_compression_service(struct pnso_service *svc)
 	}
 
 	pnso_cp_desc = (struct pnso_compression_desc *) &svc->u.cp_desc;
-	if (!svc_is_cp_desc_valid(pnso_cp_desc)) {
+	err = svc_is_cp_desc_valid(pnso_cp_desc);
+	if (err != PNSO_OK) {
 		OSAL_LOG_DEBUG("invalid cp desc specified! err: %d", err);
 		goto out;
 	}
@@ -874,6 +875,7 @@ pnso_submit_request(struct pnso_service_request *svc_req,
 	if (err) {
 		OSAL_LOG_ERROR("invalid service request specified! err: %d",
 				err);
+		svc_res->err = err;
 		goto out;
 	}
 
@@ -936,6 +938,7 @@ pnso_add_to_batch(struct pnso_service_request *svc_req,
 	if (err) {
 		OSAL_LOG_ERROR("invalid service request specified! err: %d",
 				err);
+		svc_res->err = err;
 		goto out;
 	}
 

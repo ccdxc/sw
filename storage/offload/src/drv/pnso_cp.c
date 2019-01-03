@@ -300,6 +300,7 @@ compress_poll(struct service_info *svc_info)
 	if (err)
 		goto out;
 
+
 	/*
 	 * compression is done, however, bail-out only if service is not lone
 	 * and if cp/pad is not requested
@@ -312,7 +313,11 @@ compress_poll(struct service_info *svc_info)
 	OSAL_LOG_DEBUG("cp/pad lone or last service in chain");
 
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
-
+	if(status_desc->csd_err) {
+		OSAL_LOG_DEBUG("cp failed - no need to wait for pad result");
+		goto out;
+	}
+  
 	if ((svc_info->si_flags & CHAIN_SFLAG_MODE_POLL) ||
 		(svc_info->si_flags & CHAIN_SFLAG_MODE_ASYNC)) {
 		err = (status_desc->csd_integrity_data ==

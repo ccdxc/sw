@@ -215,6 +215,7 @@ struct test_validation {
 	uint32_t len;
 	uint32_t svc_chain_idx;
 	pnso_error_t retcode;
+	pnso_error_t req_retcode;
 	uint32_t svc_count;
 	pnso_error_t svc_retcodes[PNSO_SVC_TYPE_MAX];
 

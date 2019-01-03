@@ -98,21 +98,21 @@ tests:
         validations :
             - retcode_compare:
                 idx         : 1
-                retcode     : 20005
-                svc_retcodes: 20005
+                retcode     : 20004
+                svc_retcodes: 20004
 
-    - test:
-        idx         : 2
-        name        : "Compression threshold failure with bypass"
-        svc_chains  : 2
-        repeat      : 'param::repeat'
-        batch_depth : 'param::batch_depth'
-        mode        : 'param::mode'
-        validations :
-            - retcode_compare:
-                idx         : 1
-                retcode     : 0
-                svc_retcodes: 20005
+#    - test:
+#        idx         : 2
+#        name        : "Compression threshold failure with bypass"
+#        svc_chains  : 2
+#        repeat      : 'param::repeat'
+#        batch_depth : 'param::batch_depth'
+#        mode        : 'param::mode'
+#        validations :
+#            - retcode_compare:
+#                idx         : 1
+#                retcode     : 0
+#                svc_retcodes: 20004
 
     - test:
         idx         : 3
@@ -124,21 +124,21 @@ tests:
         validations:
             - retcode_compare:
                 idx         : 1
+                req_retcode     : 20008
                 retcode     : 20008
-                svc_retcodes: 20008
 
-    - test:
-        idx       : 4
-        name      : "Compression invalid format id failure with bypass"
-        svc_chains: 4
-        repeat        : 'param::repeat'
-        batch_depth   : 'param::batch_depth'
-        mode          : 'param::mode'
-        validations:
-            - retcode_compare:
-                idx         : 1
-                retcode     : 0
-                svc_retcodes: 20008
+#    - test:
+#        idx       : 4
+#        name      : "Compression invalid format id failure with bypass"
+#        svc_chains: 4
+#        repeat        : 'param::repeat'
+#        batch_depth   : 'param::batch_depth'
+#        mode          : 'param::mode'
+#        validations:
+#            - retcode_compare:
+#                idx         : 1
+#                retcode     : 0
+#                svc_retcodes: 20008
 
     - test:
         idx       : 5
@@ -150,19 +150,19 @@ tests:
         validations:
             - retcode_compare:
                 idx         : 1
+                req_retcode     : 20009
                 retcode     : 20009
-                svc_retcodes: 20009
 
-    - test:
-        idx: 6
-        name: "Compression invalid algo failure with bypass"
-        svc_chains: 6
-        repeat        : 'param::repeat'
-        batch_depth   : 'param::batch_depth'
-        mode          : 'param::mode'
-        validations:
-            - retcode_compare:
-                idx: 1
-                retcode: 0
-                svc_retcodes: 20009
+#    - test:
+#        idx: 6
+#        name: "Compression invalid algo failure with bypass"
+#        svc_chains: 6
+#        repeat        : 'param::repeat'
+#        batch_depth   : 'param::batch_depth'
+#        mode          : 'param::mode'
+#        validations:
+#            - retcode_compare:
+#                idx: 1
+#                retcode: 0
+#                svc_retcodes: 20009
 

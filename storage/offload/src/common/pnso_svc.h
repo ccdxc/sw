@@ -18,7 +18,7 @@ const char *svc_get_type_str(enum pnso_service_type svc_type);
 /* service descriptor validation routines */
 bool svc_is_crypto_desc_valid(const struct pnso_crypto_desc *desc);
 
-bool svc_is_cp_desc_valid(const struct pnso_compression_desc *desc);
+pnso_error_t svc_is_cp_desc_valid(const struct pnso_compression_desc *desc);
 
 bool svc_is_dc_desc_valid(const struct pnso_decompression_desc *desc);
 

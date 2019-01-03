@@ -101,7 +101,6 @@ testcases:
 
     -   name    : CompressFail
         testcase: testcases.storage.ymltest2
-        enable      : False
         iterators   :
             type        : nested
             cpus        : [ 2 ]
@@ -113,7 +112,6 @@ testcases:
             wait    : '1.0'
             cfg     : [ 4k.yml, globals.yml ]
             test    : *CP_FAIL_TEST_YML
-            failtest: True
 
     -   name    : DecompressFail
         testcase: testcases.storage.ymltest2
@@ -129,7 +127,6 @@ testcases:
             wait    : '1.0'
             cfg     : [ 4k.yml, globals.yml ]
             test    : *DC_FAIL_TEST_YML
-            failtest: True
 
     -   name        : Hash4K8KSha2_256
         testcase    : testcases.storage.ymltest2

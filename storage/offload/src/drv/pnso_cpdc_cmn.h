@@ -7,7 +7,18 @@
 #ifndef __PNSO_CPDC_CMN_H__
 #define __PNSO_CPDC_CMN_H__
 
+#include "pnso_cpdc.h"
 #include "pnso_chain.h"
+
+struct cp_header_format {
+	uint32_t fmt_idx;
+	uint32_t total_hdr_sz;
+	uint16_t flags;
+	uint16_t type_mask;
+	enum pnso_compression_type pnso_algo;
+	uint8_t *static_hdr;
+	struct pnso_compression_header_format fmt;
+};
 
 struct pnso_compression_header {
 	uint32_t chksum;
@@ -127,4 +138,8 @@ pnso_error_t cpdc_setup_rmem_dst_blist(struct service_info *svc_info,
 void cpdc_teardown_rmem_dst_blist(struct service_info *svc_info);
 
 void cpdc_update_tags(struct service_info *svc_info);
+
+struct cp_header_format *
+lookup_hdr_format(uint32_t hdr_fmt_idx, bool alloc);
+
 #endif /* __PNSO_CPDC_CMN_H__ */

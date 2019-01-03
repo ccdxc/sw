@@ -81,33 +81,56 @@ is_cp_flags_valid(uint16_t flags)
 	return true;
 }
 
-bool
+static inline pnso_error_t
+is_cp_hdr_idx_valid(const struct pnso_compression_desc *desc)
+{
+	struct cp_header_format *format;
+	if(desc->flags & PNSO_CP_DFLAG_INSERT_HEADER) {
+		format = lookup_hdr_format(desc->hdr_fmt_idx, true);
+		if (!format)
+			return ENOMEM;
+		if (format->fmt_idx != desc->hdr_fmt_idx) {
+			return PNSO_ERR_CPDC_HDR_IDX_INVALID;
+		}
+	}
+	return PNSO_OK;
+}
+
+pnso_error_t
 svc_is_cp_desc_valid(const struct pnso_compression_desc *desc)
 {
 	pnso_error_t err = EINVAL;
 
 	if (!is_cp_algo_type_valid(desc->algo_type)) {
+		err = PNSO_ERR_CPDC_ALGO_INVALID;
 		OSAL_LOG_ERROR("invalid cp algo type specified! algo_type: %hu err: %d",
 				desc->algo_type, err);
-		return false;
+		return err;
 	}
 
 	if (!is_cp_threshold_len_valid(desc->threshold_len)) {
 		OSAL_LOG_ERROR("invalid cp threshold len specified! threshold_len: %hu err: %d",
 				desc->threshold_len, err);
-		return false;
+		return err;
 	}
 
 	if (!is_cp_flags_valid(desc->flags)) {
 		OSAL_LOG_ERROR("invalid cp flags specified! flags: %hu err: %d",
 				desc->flags, err);
-		return false;
+		return err;
+	}
+
+	err = is_cp_hdr_idx_valid(desc);
+	if (err != PNSO_OK) {
+		OSAL_LOG_ERROR("invalid hdr index specified! hdr_idx : %hu err: %d",
+				desc->hdr_fmt_idx, err);
+		return err;
 	}
 
 	OSAL_LOG_DEBUG("compression desc is valid algo_type: %hu threshold_len: %hu flags: %hu",
 			desc->algo_type, desc->threshold_len, desc->flags);
 
-	return true;
+	return PNSO_OK;
 }
 
 /* -------------------------------------------------------------------------- */
