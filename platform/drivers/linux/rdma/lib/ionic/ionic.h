@@ -136,6 +136,7 @@ struct ionic_qp {
 
 	pthread_spinlock_t	sq_lock;
 	bool			sq_flush;
+	bool			sq_flush_rcvd;
 	struct ionic_queue	sq;
 	void			*sq_cmb_ptr;
 	struct ionic_sq_meta	*sq_meta;

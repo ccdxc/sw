@@ -413,17 +413,17 @@ static int ionic_poll_send(struct ionic_cq *cq, struct ionic_qp *qp,
 	do {
 		/* completed all send queue requests? */
 		if (ionic_queue_empty(&qp->sq))
-			return 0;
+			goto out_empty;
 
 		/* waiting for local completion? */
 		if (qp->sq.cons == qp->sq_npg_cons)
-			return 0;
+			goto out_empty;
 
 		meta = &qp->sq_meta[qp->sq.cons];
 
 		/* waiting for remote completion? */
 		if (meta->remote && meta->seq == qp->sq_msn_cons)
-			return 0;
+			goto out_empty;
 
 		ionic_queue_consume(&qp->sq);
 
@@ -451,6 +451,15 @@ static int ionic_poll_send(struct ionic_cq *cq, struct ionic_qp *qp,
 	}
 
 	return 1;
+
+out_empty:
+	if (qp->sq_flush_rcvd) {
+		qp->sq_flush = true;
+		cq->flush = true;
+		list_del(&qp->cq_flush_sq);
+		list_add_tail(&cq->flush_sq, &qp->cq_flush_sq);
+	}
+	return 0;
 }
 
 static int ionic_poll_send_many(struct ionic_cq *cq, struct ionic_qp *qp,
@@ -535,17 +544,20 @@ static int ionic_comp_npg(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 	st_len = be32toh(cqe->status_length);
 
 	if (ionic_v1_cqe_error(cqe) && st_len == IONIC_STS_WQE_FLUSHED_ERR) {
-		/* In case of flush err, ignore wqe_id.
+		/* Flush cqe does not consume a wqe on the device, and maybe
+		 * no such work request is posted.
 		 *
-		 * Normally seq is next after idx, but setting them equal
-		 * here will validate below even if the sq is empty.
+		 * The driver should begin flushing after the last indicated
+		 * normal or error completion.  Here, only set a hint that the
+		 * flush request was indicated.  In poll_send, if nothing more
+		 * can be polled normally, then begin flushing.
 		 */
-		cqe_idx = qp->sq_npg_cons;
-		cqe_seq = qp->sq_npg_cons;
-	} else {
-		cqe_idx = cqe->send.npg_wqe_id & qp->sq.mask;
-		cqe_seq = ionic_queue_next(&qp->sq, cqe_idx);
+		qp->sq_flush_rcvd = true;
+		return 0;
 	}
+
+	cqe_idx = cqe->send.npg_wqe_id & qp->sq.mask;
+	cqe_seq = ionic_queue_next(&qp->sq, cqe_idx);
 
 	rc = ionic_validate_cons(qp->sq.prod,
 				 qp->sq_npg_cons,
@@ -1124,6 +1136,7 @@ static void ionic_reset_qp(struct ionic_qp *qp)
 	if (qp->has_sq) {
 		ionic_spin_lock(ctx, &qp->sq_lock);
 		qp->sq_flush = false;
+		qp->sq_flush_rcvd = false;
 		qp->sq_msn_prod = 0;
 		qp->sq_msn_cons = 0;
 		qp->sq_npg_cons = 0;

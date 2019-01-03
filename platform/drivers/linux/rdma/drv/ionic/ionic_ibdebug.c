@@ -940,6 +940,7 @@ static int ionic_qp_info_show(struct seq_file *s, void *v)
 	struct ionic_qp *qp = s->private;
 
 	seq_printf(s, "qpid:\t%u\n", qp->qpid);
+	seq_printf(s, "state:\t%d\n", qp->state);
 
 	if (qp->has_sq) {
 		if (qp->sq.ptr)
@@ -956,6 +957,9 @@ static int ionic_qp_info_show(struct seq_file *s, void *v)
 			seq_printf(s, "sq_cmb_pgid:\t%d\n", qp->sq_cmb_pgid);
 			seq_printf(s, "sq_cmb_addr:\t%#llx\n", (u64)qp->sq_cmb_addr);
 		}
+
+		seq_printf(s, "sq_flush:\t%d\n", qp->sq_flush);
+		seq_printf(s, "sq_flush_rcvd:\t%d\n", qp->sq_flush_rcvd);
 	}
 
 	if (qp->has_rq) {
@@ -973,6 +977,8 @@ static int ionic_qp_info_show(struct seq_file *s, void *v)
 			seq_printf(s, "rq_cmb_pgid:\t%d\n", qp->rq_cmb_pgid);
 			seq_printf(s, "rq_cmb_addr:\t%#llx\n", (u64)qp->rq_cmb_addr);
 		}
+
+		seq_printf(s, "rq_flush:\t%d\n", qp->rq_flush);
 	}
 
 	return 0;

@@ -263,9 +263,6 @@ struct ionic_cq {
 	struct ib_umem		*umem;
 	struct ionic_tbl_res	res;
 
-	/* XXX xxx_notify */
-	struct delayed_work	notify_work;
-
 	struct sysctl_ctx_list	debug_ctx;
 	struct sysctl_oid	*debug;
 };
@@ -308,6 +305,7 @@ struct ionic_qp {
 
 	spinlock_t		sq_lock; /* for posting and polling */
 	bool			sq_flush;
+	bool			sq_flush_rcvd;
 	struct ionic_queue	sq;
 	void		__iomem *sq_cmb_ptr;
 	struct ionic_sq_meta	*sq_meta;

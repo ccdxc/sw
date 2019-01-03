@@ -45,7 +45,7 @@ make_ext sys/modules/ionic_rdma
 make_ext contrib/ofed/libionic
 
 cd perftest
-patch -p1 < ../perftest-freebsd.patch || exit
+patch -f -p1 < ../perftest-freebsd.patch
 ./configure || exit
 make -j12 || exit
 cd -

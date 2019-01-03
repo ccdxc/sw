@@ -92,9 +92,6 @@ MODULE_PARM_DESC(xxx_udp, "XXX Makeshift udp header in template.");
 static bool ionic_xxx_noop = false;
 module_param_named(xxx_noop, ionic_xxx_noop, bool, 0444);
 MODULE_PARM_DESC(xxx_noop, "XXX Adminq noop after probing device.");
-static bool ionic_xxx_notify = false;
-module_param_named(xxx_notify, ionic_xxx_notify, bool, 0644);
-MODULE_PARM_DESC(xxx_notify, "XXX Workaround for inoperable EQ (kernel space).");
 static bool ionic_xxx_aq_idx = false;
 module_param_named(xxx_aq_idx, ionic_xxx_aq_idx, bool, 0644);
 MODULE_PARM_DESC(xxx_aq_idx, "XXX Check aq cindex matches polling completion.");
@@ -764,10 +761,6 @@ cq_next:
 	if (old_prod != aq->q.prod && ionic_xxx_aq_dbell)
 		ionic_dbell_ring(&dev->dbpage[dev->aq_qtype],
 				 ionic_queue_dbell_val(&aq->q));
-
-	/* XXX work around event queue */
-	if (!ionic_queue_empty(&aq->q))
-		queue_work(ionic_evt_workq, &dev->admin_work);
 }
 
 static void ionic_admin_work(struct work_struct *ws)
@@ -2358,14 +2351,6 @@ static int ionic_destroy_cq_cmd(struct ionic_ibdev *dev, u32 cqid)
 	}
 }
 
-/* XXX workaround for inoperable event queue */
-static void ionic_cq_fake_notify(struct work_struct *ws)
-{
-	struct ionic_cq *cq = container_of(ws, struct ionic_cq,
-					   notify_work.work);
-	cq->ibcq.comp_handler(&cq->ibcq, cq->ibcq.cq_context);
-}
-
 static struct ionic_cq *__ionic_create_cq(struct ionic_ibdev *dev,
 					  struct ionic_tbl_buf *buf,
 					  const struct ib_cq_init_attr *attr,
@@ -2414,9 +2399,6 @@ static struct ionic_cq *__ionic_create_cq(struct ionic_ibdev *dev,
 	INIT_LIST_HEAD(&cq->poll_sq);
 	INIT_LIST_HEAD(&cq->flush_sq);
 	INIT_LIST_HEAD(&cq->flush_rq);
-
-	/* XXX workaround for inoperable event queue */
-	INIT_DELAYED_WORK(&cq->notify_work, ionic_cq_fake_notify);
 
 	if (!ctx) {
 		rc = ionic_queue_init(&cq->q, dev->hwdev,
@@ -2487,8 +2469,6 @@ static void __ionic_destroy_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
 	mutex_unlock(&dev->tbl_lock);
 
 	synchronize_rcu();
-
-	cancel_delayed_work_sync(&cq->notify_work);
 
 	ionic_dbgfs_rm_cq(cq);
 
@@ -2807,17 +2787,17 @@ static int ionic_poll_send(struct ionic_cq *cq, struct ionic_qp *qp,
 	do {
 		/* completed all send queue requests? */
 		if (ionic_queue_empty(&qp->sq))
-			return 0;
+			goto out_empty;
 
 		/* waiting for local completion? */
 		if (qp->sq.cons == qp->sq_npg_cons)
-			return 0;
+			goto out_empty;
 
 		meta = &qp->sq_meta[qp->sq.cons];
 
 		/* waiting for remote completion? */
 		if (meta->remote && meta->seq == qp->sq_msn_cons)
-			return 0;
+			goto out_empty;
 
 		ionic_queue_consume(&qp->sq);
 
@@ -2844,6 +2824,14 @@ static int ionic_poll_send(struct ionic_cq *cq, struct ionic_qp *qp,
 	}
 
 	return 1;
+
+out_empty:
+	if (qp->sq_flush_rcvd) {
+		qp->sq_flush = true;
+		cq->flush = true;
+		list_move_tail(&qp->cq_flush_sq, &cq->flush_sq);
+	}
+	return 0;
 }
 
 static int ionic_poll_send_many(struct ionic_cq *cq, struct ionic_qp *qp,
@@ -2925,17 +2913,20 @@ static int ionic_comp_npg(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 	st_len = be32_to_cpu(cqe->status_length);
 
 	if (ionic_v1_cqe_error(cqe) && st_len == IONIC_STS_WQE_FLUSHED_ERR) {
-		/* In case of flush err, ignore wqe_id.
+		/* Flush cqe does not consume a wqe on the device, and maybe
+		 * no such work request is posted.
 		 *
-		 * Normally seq is next after idx, but setting them equal
-		 * here will validate below even if the sq is empty.
+		 * The driver should begin flushing after the last indicated
+		 * normal or error completion.  Here, only set a hint that the
+		 * flush request was indicated.  In poll_send, if nothing more
+		 * can be polled normally, then begin flushing.
 		 */
-		cqe_idx = qp->sq_npg_cons;
-		cqe_seq = qp->sq_npg_cons;
-	} else {
-		cqe_idx = cqe->send.npg_wqe_id & qp->sq.mask;
-		cqe_seq = ionic_queue_next(&qp->sq, cqe_idx);
+		qp->sq_flush_rcvd = true;
+		return 0;
 	}
+
+	cqe_idx = cqe->send.npg_wqe_id & qp->sq.mask;
+	cqe_seq = ionic_queue_next(&qp->sq, cqe_idx);
 
 	rc = ionic_validate_cons(qp->sq.prod,
 				 qp->sq_npg_cons,
@@ -3174,11 +3165,7 @@ static int ionic_req_notify_cq(struct ib_cq *ibcq,
 
 	ionic_reserve_sync_cq(dev, cq);
 
-	/* XXX workaround for inoperable event queue */
-	if (ionic_xxx_notify)
-		queue_delayed_work(ionic_evt_workq, &cq->notify_work, HZ/4);
-	else
-		ionic_dbell_ring(&dev->dbpage[dev->cq_qtype], dbell_val);
+	ionic_dbell_ring(&dev->dbpage[dev->cq_qtype], dbell_val);
 
 	/* IB_CQ_REPORT_MISSED_EVENTS:
 	 *
@@ -4057,6 +4044,7 @@ static void ionic_reset_qp(struct ionic_qp *qp)
 	if (qp->has_sq) {
 		spin_lock_irqsave(&qp->sq_lock, irqflags);
 		qp->sq_flush = false;
+		qp->sq_flush_rcvd = false;
 		qp->sq_msn_prod = 0;
 		qp->sq_msn_cons = 0;
 		qp->sq_npg_cons = 0;

@@ -859,6 +859,7 @@ void ionic_dbgfs_add_qp(struct ionic_ibdev *dev, struct ionic_qp *qp)
 	qp->debug = oidp;
 
 	ionic_u32(ctx, parent, &qp->qpid, "qpid", "QP ID");
+	ionic_int(ctx, parent, (int *)&qp->state, "state", "QP State");
 
 	if (qp->has_sq) {
 		ionic_q_add(ctx, parent, &qp->sq, &qp->sq_res, qp->sq_umem,
@@ -874,6 +875,11 @@ void ionic_dbgfs_add_qp(struct ionic_ibdev *dev, struct ionic_qp *qp)
 			ionic_ulong(ctx, parent, &qp->sq_cmb_addr,
 				    "sq_cmb_addr", "SQCMB Phys Addr");
 		}
+
+		ionic_bool(ctx, parent, &qp->sq_flush,
+			   "sq_flush", "SQ Flush");
+		ionic_bool(ctx, parent, &qp->sq_flush_rcvd,
+			   "sq_flush_rcvd", "SQ Flush CQE Received");
 	}
 
 	if (qp->has_rq) {
@@ -890,6 +896,9 @@ void ionic_dbgfs_add_qp(struct ionic_ibdev *dev, struct ionic_qp *qp)
 			ionic_ulong(ctx, parent, &qp->rq_cmb_addr,
 				    "rq_cmb_addr", "RQCMB Phys Addr");
 		}
+
+		ionic_bool(ctx, parent, &qp->rq_flush,
+			   "rq_flush", "RQ Flush");
 	}
 }
 
