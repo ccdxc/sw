@@ -161,19 +161,18 @@ end:
 static hal_ret_t
 hal_delphi_thread_init (hal_cfg_t *hal_cfg)
 {
-    int                 thread_prio, sched_policy;
     sdk::lib::thread    *hal_thread;
 
     delphi::SetLogger(std::shared_ptr<logger>(utils::hal_logger()));
-    sched_policy = gl_super_user ? SCHED_RR : SCHED_OTHER;
-    thread_prio = sched_get_priority_max(sched_policy);
-    hal_thread = hal_thread_create(std::string("delphic").c_str(),
-                                   HAL_THREAD_ID_DELPHI_CLIENT,
-                                   sdk::lib::THREAD_ROLE_CONTROL,
-                                   0x0,    // use all control cores
-                                   svc::delphi_client_start,
-                                   thread_prio, sched_policy,
-                                   NULL);
+    hal_thread =
+        hal_thread_create(std::string("delphic").c_str(),
+                          HAL_THREAD_ID_DELPHI_CLIENT,
+                          sdk::lib::THREAD_ROLE_CONTROL,
+                          0x0,    // use all control cores
+                          svc::delphi_client_start,
+                          hal_thread_priority(sdk::lib::THREAD_ROLE_CONTROL),
+                          hal_thread_sched_policy(sdk::lib::THREAD_ROLE_CONTROL),
+                          NULL);
     HAL_ASSERT_TRACE_RETURN((hal_thread != NULL), HAL_RET_ERR,
                             "Failed to spawn delphic thread");
     hal_thread->start(hal_thread);
