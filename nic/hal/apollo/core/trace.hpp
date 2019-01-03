@@ -16,4 +16,4 @@
 #define OCI_TRACE_DEBUG(fmt, ...)
 #define OCI_TRACE_VERBOSE(fmt, ...)
 
-#endif /** __TRACE_HPP_ */
+#endif    /** __TRACE_HPP_ */
