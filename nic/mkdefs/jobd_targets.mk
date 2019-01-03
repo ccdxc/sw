@@ -167,6 +167,7 @@ jobd/gft/gtest: ${JOBD_PREREQS}
 .PHONY: jobd/apollo/gtest
 jobd/apollo/gtest: ${JOBD_PREREQS}
 	${NICDIR}/run.py ${COVERAGE_OPTS} --apollo_gtest
+	${NICDIR}/tools/run_gtests_apollo.sh ${COVERAGE_OPTS}
 
 .PHONY: jobd/storage
 jobd/storage: ${JOBD_PREREQS}
