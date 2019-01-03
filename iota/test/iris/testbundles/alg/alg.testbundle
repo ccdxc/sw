@@ -113,11 +113,41 @@ testcases:
         args    :
             type: local_only
 
-    -   name    : SUNRPC
-        testcase: testcases.alg.sunrpc.sunrpc
+    -   name    : SUNRPC_BASIC
+        testcase: testcases.alg.sunrpc.sunrpc_basic
         args    :
             type: local_only
-     
+ 
+    -   name    : SUNRPC_DIFFERENT_SIP
+        testcase: testcases.alg.sunrpc.sunrpc_different_sip
+        args    :
+            type: local_only
+
+    -   name    : SUNRPC_DIFFERENT_APP
+        testcase: testcases.alg.sunrpc.sunrpc_test_different_app
+        args    :
+            type: local_only
+
+    -   name    : SUNRPC_UNKNOWN_SIP
+        testcase: testcases.alg.sunrpc.sunrpc_unknown_sip
+        args    :
+            type: local_only
+
+    -   name    : SUNRPC_TEST_CONTROL_SESSION_CLOSE
+        testcase: testcases.alg.sunrpc.sunrpc_test_control_session_close
+        args    :
+            type: local_only
+
+    -   name    : SUNRPC_TEST_FLOWGATE_TIMEOUT
+        testcase: testcases.alg.sunrpc.sunrpc_test_flowgate_timeout
+        args    :
+            type: local_only
+
+    -   name    : SUNRPC_TEST_CLEAR_CONTROL_SESSION
+        testcase: testcases.alg.sunrpc.sunrpc_test_control_session_clear
+        args    :
+            type: local_only
+
     -   name    : DNS_QUERY
         testcase: testcases.alg.dns.dns_basic
         args    :

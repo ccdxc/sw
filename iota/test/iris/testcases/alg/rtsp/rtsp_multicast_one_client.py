@@ -54,10 +54,10 @@ def Trigger(tc):
     tc.cmd_cookies.append("Run RTSP client")
 
     ## Add Naples command validation
-    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
+    #api.Trigger_AddNaplesCommand(req, naples.node_name,
     #                            "/nic/bin/halctl show session --alg rtsp | grep ESTABLISHED")
     #tc.cmd_cookies.append("show session RTSP established")
-    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
+    #api.Trigger_AddNaplesCommand(req, naples.node_name,
     #                        "/nic/bin/halctl show nwsec flow-gate | grep RTSP")
     #tc.cmd_cookies.append("show flow-gate") 
 

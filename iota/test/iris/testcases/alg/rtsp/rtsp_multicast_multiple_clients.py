@@ -76,12 +76,21 @@ def Trigger(tc):
                            "sed -i 's/geteuid/getppid/' /usr/bin/vlc && cvlc -vvv rtp://%s:8888 --start-time=00 --run-time=5" % ip[0:end])
     tc.cmd_cookies.append("Run RTP client2")
 
+    api.Trigger_AddNaplesCommand(req2, naples.node_name,
+                                "/nic/bin/halctl show session --srcip %s "%(client2.ip_address))
+    tc.cmd_cookies.append("show session RTP")
+
     trig_resp2 = api.Trigger(req2)
     term_resp2 = api.Trigger_TerminateAllCommands(trig_resp2)
     tc.resp2 = api.Trigger_AggregateCommandsResponse(trig_resp2, term_resp2)
 
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)
     tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
+
+    ForceReleasePort("554/tcp", server)
+    ForceReleasePort("554/tcp", client1)
+    ForceReleasePort("554/tcp", client2)
+
     return api.types.status.SUCCESS
 
 def Verify(tc):
@@ -99,7 +108,7 @@ def Verify(tc):
                 result = api.types.status.SUCCESS
             else:
                 result = api.types.status.FAILURE
-        if (tc.cmd_cookies[cookie_idx].find("show session FTP") != -1 or \
+        if (tc.cmd_cookies[cookie_idx].find("show session RTSP") != -1 or \
             tc.cmd_cookies[cookie_idx].find("show flow-gate") != -1) and \
             cmd.stdout == '':
             result = api.types.status.FAILURE
@@ -111,6 +120,9 @@ def Verify(tc):
                 result = api.types.status.SUCCESS
             else:
                 result = api.types.status.FAILURE
+        if tc.cmd_cookies[cookie_idx].find("show session RTP") != -1 and \
+            cmd.stdout == '':
+            result = api.types.status.FAILURE
         cookie_idx += 1
     return result
 
