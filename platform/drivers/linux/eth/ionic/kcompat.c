@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 /* Copyright(c) 2013 - 2018 Intel Corporation. */
 
-#include "i40e.h"
 #include "kcompat.h"
 
 /*****************************************************************************/
@@ -1210,37 +1209,17 @@ u16 ___kc_skb_tx_hash(struct net_device *dev, const struct sk_buff *skb,
 
 u8 _kc_netdev_get_num_tc(struct net_device *dev)
 {
-	struct i40e_netdev_priv *np = netdev_priv(dev);
-	struct i40e_vsi *vsi = np->vsi;
-	struct i40e_pf *pf = vsi->back;
-	if (pf->flags & I40E_FLAG_DCB_ENABLED)
-		return vsi->tc_config.numtc;
-
 	return 0;
 }
 
 int _kc_netdev_set_num_tc(struct net_device *dev, u8 num_tc)
 {
-	struct i40e_netdev_priv *np = netdev_priv(dev);
-	struct i40e_vsi *vsi = np->vsi;
-
-	if (num_tc > I40E_MAX_TRAFFIC_CLASS)
-		return -EINVAL;
-
-	vsi->tc_config.numtc = num_tc;
-
-	return 0;
+	return -EINVAL;
 }
 
 u8 _kc_netdev_get_prio_tc_map(struct net_device *dev, u8 up)
 {
-	struct i40e_netdev_priv *np = netdev_priv(dev);
-	struct i40e_vsi *vsi = np->vsi;
-	struct i40e_pf *pf = vsi->back;
-	struct i40e_hw *hw = &pf->hw;
-	struct i40e_dcbx_config *dcbcfg = &hw->local_dcbx_config;
-
-	return dcbcfg->etscfg.prioritytable[up];
+	return 0;
 }
 
 #endif /* !(RHEL_RELEASE_CODE > RHEL_RELEASE_VERSION(6,0)) */

@@ -51,27 +51,6 @@
 /* NAPI enable/disable flags here */
 #define NAPI
 
-#define adapter_struct i40e_pf
-#define adapter_q_vector i40e_q_vector
-
-/* and finally set defines so that the code sees the changes */
-#ifdef NAPI
-#ifndef CONFIG_I40E_NAPI
-#define CONFIG_I40E_NAPI
-#endif
-#else
-#undef CONFIG_I40E_NAPI
-#endif /* NAPI */
-
-/* Dynamic LTR and deeper C-State support disable/enable */
-
-/* packet split disable/enable */
-#ifdef DISABLE_PACKET_SPLIT
-#ifndef CONFIG_I40E_DISABLE_PACKET_SPLIT
-#define CONFIG_I40E_DISABLE_PACKET_SPLIT
-#endif
-#endif /* DISABLE_PACKET_SPLIT */
-
 /* MSI compatibility code for all kernels and drivers */
 #ifdef DISABLE_PCI_MSI
 #undef CONFIG_PCI_MSI
@@ -963,10 +942,6 @@ static inline int _kc_test_and_set_bit(int nr, volatile unsigned long *addr)
 #define uninitialized_var(x) x = *(&(x))
 #endif
 #endif /* __KLOCWORK__ */
-
-#include "kcompat_vfd.h"
-struct vfd_objects *create_vfd_sysfs(struct pci_dev *pdev, int num_alloc_vfs);
-void destroy_vfd_sysfs(struct pci_dev *pdev, struct vfd_objects *vfd_obj);
 
 /*****************************************************************************/
 /* 2.4.3 => 2.4.0 */
@@ -5301,9 +5276,10 @@ extern unsigned int __kc_eth_get_headlen(unsigned char *data, unsigned int max_l
 /* netdev_phys_port_id renamed to netdev_phys_item_id */
 #define netdev_phys_item_id netdev_phys_port_id
 
-static inline void _kc_napi_complete_done(struct napi_struct *napi,
+static inline bool _kc_napi_complete_done(struct napi_struct *napi,
 					  int __always_unused work_done) {
 	napi_complete(napi);
+	return true;
 }
 #define napi_complete_done _kc_napi_complete_done
 
@@ -5443,6 +5419,8 @@ static inline struct sk_buff *__kc_napi_alloc_skb(struct napi_struct *napi, unsi
 static inline struct device_node *
 pci_device_to_OF_node(const struct pci_dev __always_unused *pdev) { return NULL; }
 #endif /* !CONFIG_OF && RHEL < 7.3 */
+#else
+#define HAVE_PCI_IOMAP_RANGE
 #endif /* < 4.0 */
 
 /*****************************************************************************/
@@ -5727,6 +5705,7 @@ pci_release_mem_regions(struct pci_dev *pdev)
 }
 #endif /* !SLE_VERSION(12,3,0) */
 #else
+#define HAVE_PCI_IRQ_API
 #define HAVE_UDP_ENC_RX_OFFLOAD
 #define HAVE_TCF_EXTS_TO_LIST
 #endif /* 4.8.0 */
@@ -5901,6 +5880,7 @@ static inline void __page_frag_cache_drain(struct page *page,
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(4,13,0))
 #define  PCI_EXP_LNKCAP_SLS_8_0GB 0x00000003 /* LNKCAP2 SLS Vector bit 2 */
 #else /* > 4.13 */
+#define HAVE_CSUM_NOT_INET
 #define HAVE_HWTSTAMP_FILTER_NTP_ALL
 #define HAVE_NDO_SETUP_TC_CHAIN_INDEX
 #define HAVE_PCI_ERROR_HANDLER_RESET_PREPARE
