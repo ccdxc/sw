@@ -11,6 +11,10 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+const (
+	SSH_CREATION_FAILED_EXIT_CODE = 127
+)
+
 //SudoCmd sudo cmd constructor
 var SudoCmd = func(cmd string) string {
 	return "sudo " + cmd

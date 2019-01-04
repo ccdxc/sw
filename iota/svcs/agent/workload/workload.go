@@ -40,6 +40,7 @@ var (
 type Workload interface {
 	Name() string
 	BringUp(args ...string) error
+	Reinit() error
 	SetBaseDir(dir string) error
 	RunCommand(cmd []string, dir string, timeout uint32, background bool, shell bool) (*Cmd.CommandCtx, string, error)
 	StopCommand(commandHandle string) (*Cmd.CommandCtx, error)
@@ -97,6 +98,10 @@ func (app *workloadBase) Name() string {
 }
 
 func (app *workloadBase) BringUp(args ...string) error {
+	return nil
+}
+
+func (app *workloadBase) Reinit() error {
 	return nil
 }
 
@@ -438,6 +443,7 @@ func (app *bareMetalWorkload) StopCommand(commandHandle string) (*Cmd.CommandCtx
 
 func (app *remoteWorkload) RunCommand(cmd []string, dir string, timeout uint32, background bool, shell bool) (*Cmd.CommandCtx, string, error) {
 
+	var cmdInfo *Cmd.CommandInfo
 	runCmd := strings.Join(cmd, " ")
 	//Ignore diretory for remote workload for now
 	//Even though mount is suppoted, commenting out as on naples remote
@@ -449,11 +455,35 @@ func (app *remoteWorkload) RunCommand(cmd []string, dir string, timeout uint32, 
 	}*/
 
 	if !background {
-		cmdInfo, _ := Cmd.RunSSHCommand(app.sshHandle, runCmd, timeout, false, false, app.logger)
+		for i := 0; i < 2; i++ {
+			cmdInfo, _ = Cmd.RunSSHCommand(app.sshHandle, runCmd, timeout, false, false, app.logger)
+			if cmdInfo.Ctx.ExitCode == Cmd.SSH_CREATION_FAILED_EXIT_CODE {
+				cmdInfo.Ctx.Stderr = "SSH connection failed"
+				//Try it again.
+				if err := app.Reinit(); err != nil {
+					return cmdInfo.Ctx, "", nil
+				}
+				continue
+			}
+			//Comand got executed on remote node, break up
+			break
+		}
 		return cmdInfo.Ctx, "", nil
 	}
 
-	cmdInfo, _ := Cmd.StartSSHBgCommand(app.sshHandle, runCmd, false)
+	for i := 0; i < 2; i++ {
+		cmdInfo, _ = Cmd.StartSSHBgCommand(app.sshHandle, runCmd, false)
+		if cmdInfo.Ctx.ExitCode == Cmd.SSH_CREATION_FAILED_EXIT_CODE {
+			cmdInfo.Ctx.Stderr = "SSH connection failed"
+			//Try it again.
+			if err := app.Reinit(); err != nil {
+				return cmdInfo.Ctx, "", nil
+			}
+			continue
+		}
+		//Comand got executed on remote node, break up
+		break
+	}
 	handleKey := app.genBgCmdHandle()
 	app.bgCmds[handleKey] = cmdInfo
 
@@ -494,13 +524,8 @@ func (app *remoteWorkload) mountDirectory(userName string, password string, srcD
 	return nil
 }
 
-func (app *remoteWorkload) BringUp(args ...string) error {
+func (app *remoteWorkload) Reinit() error {
 	var err error
-
-	app.ip = args[0]
-	app.port = args[1]
-	app.username = args[2]
-	app.password = args[3]
 
 	config := &ssh.ClientConfig{
 		User: app.username,
@@ -515,6 +540,18 @@ func (app *remoteWorkload) BringUp(args ...string) error {
 		return err
 	}
 
+	return nil
+}
+
+func (app *remoteWorkload) BringUp(args ...string) error {
+	var err error
+
+	app.ip = args[0]
+	app.port = args[1]
+	app.username = args[2]
+	app.password = args[3]
+
+	err = app.Reinit()
 	//app.name = name
 	app.bgCmds = make(map[string]*Cmd.CommandInfo)
 	return err
