@@ -44,7 +44,6 @@ packets:
 
    - packet:
         id          : BASE_LAST_PKT_WITH_PAD
-        payloadsize : 321
         payloadsize : callback://rdma/rdma/GetPktPayloadSizeWithPad/pktid=BASE_LAST_PKT
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
