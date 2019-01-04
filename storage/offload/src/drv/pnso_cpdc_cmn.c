@@ -668,9 +668,16 @@ cpdc_update_service_info_sgls(struct service_info *svc_info)
 		goto out;
 	}
 
-	err = pc_res_sgl_packed_get(svc_info->si_pcr, &svc_info->si_dst_blist,
-			CPDC_SGL_TUPLE_LEN_MAX, MPOOL_TYPE_CPDC_SGL,
-			&svc_info->si_dst_sgl);
+	if (!chn_service_has_sub_chain(svc_info) &&
+	    chn_service_is_padding_applic(svc_info)) {
+		err = pc_res_sgl_vec_packed_get(svc_info->si_pcr, &svc_info->si_dst_blist,
+				svc_info->si_block_size, MPOOL_TYPE_CPDC_SGL_VECTOR,
+				&svc_info->si_dst_sgl);
+        } else {
+		err = pc_res_sgl_packed_get(svc_info->si_pcr, &svc_info->si_dst_blist,
+				CPDC_SGL_TUPLE_LEN_MAX, MPOOL_TYPE_CPDC_SGL,
+				&svc_info->si_dst_sgl);
+        }
 	if (err) {
 		OSAL_LOG_ERROR("cannot obtain dst sgl from pool! err: %d", err);
 		goto out_sgl;

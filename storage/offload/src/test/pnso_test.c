@@ -632,7 +632,7 @@ static pnso_error_t copy_file_node_data(struct test_node_file *fnode,
 					const struct pnso_buffer_list *buflist)
 {
 	uint32_t dst_i;
-	uint32_t len;
+	uint32_t len, max_len;
 	uint32_t blk_count;
 	uint32_t alloc_size;
 	struct pnso_flat_buffer *fbuf;
@@ -641,10 +641,9 @@ static pnso_error_t copy_file_node_data(struct test_node_file *fnode,
 		return EINVAL;
 
 	len = pbuf_get_buffer_list_len(buflist);
-	if (fnode->padded_size && len > fnode->padded_size)
-		len = fnode->padded_size;
-	else if (len > fnode->file_size)
-		len = fnode->file_size;
+	max_len = fnode->padded_size ? fnode->padded_size : fnode->file_size;
+	if (len > max_len)
+		len = max_len;
 	if (!len)
 		return EINVAL;
 

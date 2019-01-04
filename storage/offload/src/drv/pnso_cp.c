@@ -35,16 +35,9 @@ is_dflag_bypass_onfail_enabled(uint16_t flags)
 	return (flags & PNSO_CP_DFLAG_BYPASS_ONFAIL) ? true : false;
 }
 
-static inline void
-clear_insert_header(uint16_t flags, struct cpdc_desc *desc)
-{
-	if (!is_dflag_insert_header_enabled(flags))
-		desc->u.cd_bits.cc_insert_header = 0;
-}
-
 static void
 fill_cp_desc(struct service_info *svc_info, struct cpdc_desc *desc,
-		uint16_t threshold_len)
+		uint32_t threshold_len)
 {
 	struct cpdc_status_desc *status_desc = svc_info->si_status_desc;
 
@@ -55,16 +48,17 @@ fill_cp_desc(struct service_info *svc_info, struct cpdc_desc *desc,
 	desc->cd_dst = (uint64_t) sonic_virt_to_phy(svc_info->si_dst_sgl.sgl);
 
 	desc->u.cd_bits.cc_enabled = 1;
-	desc->u.cd_bits.cc_insert_header = 1;
+	desc->u.cd_bits.cc_insert_header =
+		is_dflag_insert_header_enabled(svc_info->si_desc_flags);
 
 	desc->u.cd_bits.cc_src_is_list = 1;
 	desc->u.cd_bits.cc_dst_is_list = 1;
 
-	desc->cd_datain_len =
-		(svc_info->si_src_blist.len == MAX_CPDC_SRC_BUF_LEN) ?
-		0 : svc_info->si_src_blist.len;
+	desc->cd_datain_len = cpdc_desc_data_len_set_eval(svc_info->si_type,
+					svc_info->si_src_blist.len);
 
-	desc->cd_threshold_len = threshold_len;
+	desc->cd_threshold_len = cpdc_desc_data_len_set_eval(svc_info->si_type,
+					threshold_len);
 
 	if (svc_info->si_istatus_desc) {
 		desc->cd_status_addr = mpool_get_object_phy_addr(
@@ -87,7 +81,7 @@ compress_setup(struct service_info *svc_info,
 	struct pnso_compression_desc *pnso_cp_desc;
 	struct cpdc_desc *cp_desc;
 	struct cpdc_status_desc *status_desc;
-	uint16_t threshold_len;
+	uint32_t threshold_len;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -135,7 +129,6 @@ compress_setup(struct service_info *svc_info,
 	}
 
 	fill_cp_desc(svc_info, cp_desc, threshold_len);
-	clear_insert_header(svc_info->si_desc_flags, cp_desc);
 
 	err = cpdc_setup_seq_desc(svc_info, cp_desc, 0);
 	if (err) {
@@ -488,11 +481,11 @@ compress_write_result(struct service_info *svc_info)
 		goto out;
 	}
 
-	svc_status->u.dst.data_len = status_desc->csd_output_data_len;
-	chn_service_deps_data_len_set(svc_info,
-			status_desc->csd_output_data_len);
+	svc_status->u.dst.data_len = cpdc_desc_data_len_get_eval(svc_info->si_type,
+					status_desc->csd_output_data_len);
+	chn_service_deps_data_len_set(svc_info, svc_status->u.dst.data_len);
 	PAS_INC_NUM_CP_BYTES_OUT(svc_info->si_pcr,
-			status_desc->csd_output_data_len);
+			svc_status->u.dst.data_len);
 
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit! status/result update success!");
@@ -513,6 +506,11 @@ compress_teardown(struct service_info *svc_info)
 
 	OSAL_ASSERT(svc_info);
 
+	/*
+	 * Trace the desc/SGLs once more to verify any padding applied
+	 * by sequencer.
+	 */
+	CPDC_PPRINT_DESC(svc_info->si_desc);
 	seq_cleanup_cpdc_chain(svc_info);
 	seq_cleanup_desc(svc_info);
 

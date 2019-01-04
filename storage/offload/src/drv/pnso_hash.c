@@ -44,7 +44,8 @@ fill_hash_desc(uint32_t algo_type, uint32_t buf_len,
 	 */
 	desc->u.cd_bits.cc_hash_type = algo_type - 1;
 
-	desc->cd_datain_len = buf_len;
+	desc->cd_datain_len = 
+		cpdc_desc_data_len_set_eval(PNSO_SVC_TYPE_HASH, buf_len);
 
 	desc->cd_status_addr = (uint64_t) sonic_virt_to_phy(status_desc);
 	desc->cd_status_data = CPDC_HASH_STATUS_DATA;

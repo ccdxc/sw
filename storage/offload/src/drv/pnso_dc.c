@@ -43,10 +43,10 @@ fill_dc_desc(struct service_info *svc_info, struct cpdc_desc *desc)
 	desc->u.cd_bits.cc_src_is_list = 1;
 	desc->u.cd_bits.cc_dst_is_list = 1;
 
-	desc->cd_datain_len =
-		(src_buf_len == MAX_CPDC_SRC_BUF_LEN) ? 0 : src_buf_len;
-	desc->cd_threshold_len =
-		(dst_buf_len == MAX_CPDC_DST_BUF_LEN) ? 0 : dst_buf_len;
+	desc->cd_datain_len = cpdc_desc_data_len_set_eval(svc_info->si_type,
+							  src_buf_len);
+	desc->cd_threshold_len = cpdc_desc_data_len_set_eval(svc_info->si_type,
+							     dst_buf_len);
 
 	if (svc_info->si_istatus_desc) {
 		desc->cd_status_addr = mpool_get_object_phy_addr(
@@ -287,11 +287,11 @@ decompress_write_result(struct service_info *svc_info)
 		goto out;
 	}
 
-	svc_status->u.dst.data_len = status_desc->csd_output_data_len;
-	chn_service_deps_data_len_set(svc_info,
-			status_desc->csd_output_data_len);
+	svc_status->u.dst.data_len = cpdc_desc_data_len_get_eval(svc_info->si_type,
+					status_desc->csd_output_data_len);
+	chn_service_deps_data_len_set(svc_info, svc_status->u.dst.data_len);
 	PAS_INC_NUM_DC_BYTES_OUT(svc_info->si_pcr,
-			status_desc->csd_output_data_len);
+			svc_status->u.dst.data_len);
 
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit! status/result update success!");

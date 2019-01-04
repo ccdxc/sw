@@ -13,6 +13,7 @@
 #include "pnso_pbuf.h"
 #include "pnso_chain.h"
 #include "pnso_cpdc.h"
+#include "pnso_cpdc_cmn.h"
 #include "pnso_stats.h"
 #include "pnso_utils.h"
 
@@ -896,12 +897,14 @@ uint32_t
 chn_service_deps_data_len_get(struct service_info *svc_info)
 {
 	struct cpdc_status_desc *status_desc;
+	uint32_t len;
 
 	if ((svc_info->si_type == PNSO_SVC_TYPE_COMPRESS) ||
 		(svc_info->si_type == PNSO_SVC_TYPE_DECOMPRESS)) {
 		status_desc = svc_info->si_status_desc;
-		chn_service_deps_data_len_set(svc_info,
+		len = cpdc_desc_data_len_get_eval(svc_info->si_type,
 				status_desc->csd_output_data_len);
+		chn_service_deps_data_len_set(svc_info, len);
 	}
 
 	return svc_info->si_svc_deps.sd_data_len;

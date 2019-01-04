@@ -142,4 +142,39 @@ void cpdc_update_tags(struct service_info *svc_info);
 
 struct cp_header_format *lookup_hdr_format(uint32_t hdr_fmt_idx, bool alloc);
 
+static inline uint32_t
+cpdc_desc_data_len_set_eval(enum pnso_service_type svc_type,
+			    uint32_t data_len)
+{
+	switch (svc_type) {
+	case PNSO_SVC_TYPE_COMPRESS:
+	case PNSO_SVC_TYPE_DECOMPRESS:
+	case PNSO_SVC_TYPE_HASH:
+	case PNSO_SVC_TYPE_CHKSUM:
+		if (data_len == MAX_CPDC_DST_BUF_LEN)
+			data_len = 0;
+		break;
+	default:
+		break;
+	}
+
+	return data_len;
+}
+
+static inline uint32_t
+cpdc_desc_data_len_get_eval(enum pnso_service_type svc_type,
+			    uint32_t data_len)
+{
+	switch (svc_type) {
+	case PNSO_SVC_TYPE_DECOMPRESS:
+		if (data_len == 0)
+			data_len = MAX_CPDC_DST_BUF_LEN;
+		break;
+	default:
+		break;
+	}
+
+	return data_len;
+}
+
 #endif /* __PNSO_CPDC_CMN_H__ */
