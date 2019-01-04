@@ -1631,6 +1631,7 @@ struct ionic_lif_stats {
 union adminq_cmd {
 	struct admin_cmd cmd;
 	struct notifyq_init_cmd notifyq_init;
+	struct lif_reset_cmd lif_reset;
 	struct nop_cmd nop;
 	struct txq_init_cmd txq_init;
 	struct rxq_init_cmd rxq_init;

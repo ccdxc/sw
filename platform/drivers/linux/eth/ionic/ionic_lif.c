@@ -1184,10 +1184,19 @@ int ionic_lifs_alloc(struct ionic *ionic)
 	return 0;
 }
 
+static void ionic_lif_reset(struct lif *lif)
+{
+	struct ionic_dev *idev = &lif->ionic->idev;
+
+	ionic_dev_cmd_lif_reset(idev, lif->index);
+	ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
+}
+
 static void ionic_lif_free(struct lif *lif)
 {
 	struct device *dev = lif->ionic->dev;
 
+	ionic_lif_reset(lif);
 	cancel_work_sync(&lif->deferred.work);
 
 	ionic_qcq_free(lif, lif->notifyqcq);
@@ -1199,7 +1208,6 @@ static void ionic_lif_free(struct lif *lif)
 	kfree(lif->dbid_inuse);
 	lif->dbid_inuse = NULL;
 
-	free_netdev(lif->netdev);
 	if (lif->notifyblock) {
 		dma_unmap_single(dev, lif->notifyblock_pa,
 				 lif->notifyblock_sz,
@@ -1208,6 +1216,8 @@ static void ionic_lif_free(struct lif *lif)
 		lif->notifyblock = NULL;
 		lif->notifyblock_pa = 0;
 	}
+
+	free_netdev(lif->netdev);
 }
 
 void ionic_lifs_free(struct ionic *ionic)

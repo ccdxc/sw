@@ -148,6 +148,16 @@ void ionic_dev_cmd_lif_init(struct ionic_dev *idev, u32 index)
 	ionic_dev_cmd_go(idev, &cmd);
 }
 
+void ionic_dev_cmd_lif_reset(struct ionic_dev *idev, u32 index)
+{
+	union dev_cmd cmd = {
+		.lif_init.opcode = CMD_OPCODE_LIF_RESET,
+		.lif_init.index = index,
+	};
+
+	ionic_dev_cmd_go(idev, &cmd);
+}
+
 void ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct queue *adminq,
 			       unsigned int index, unsigned int lif_index,
 			       unsigned int intr_index)
