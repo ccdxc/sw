@@ -1,4 +1,5 @@
 #! /bin/bash
+
 export WS_TOP="/sw"
 export TOPDIR="/sw/nic"
 export HAL_LOG_DIR=${TOPDIR}
