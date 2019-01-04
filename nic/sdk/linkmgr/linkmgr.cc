@@ -344,7 +344,7 @@ xcvr_poll_timer_wrapper(linkmgr_entry_data_t *data)
     // Reschedule the xcvr timer
     xcvr_poll_timer_handle =
         sdk::lib::timer_schedule(
-            0, XCVR_POLL_TIME, NULL,
+            SDK_TIMER_ID_XCVR_POLL, XCVR_POLL_TIME, NULL,
             (sdk::lib::twheel_cb_t)xcvr_poll_timer_cb,
             false);
 
@@ -370,7 +370,7 @@ port_link_poll_timer(linkmgr_entry_data_t *data)
     // reschedule the poll timer
     port_link_poll_timer_handle =
         sdk::lib::timer_schedule(
-            0, LINKMGR_LINK_POLL_TIME, NULL,
+            SDK_TIMER_ID_LINK_POLL, LINKMGR_LINK_POLL_TIME, NULL,
             (sdk::lib::twheel_cb_t)port_link_poll_timer_cb,
             false);
 
@@ -480,7 +480,7 @@ thread_init (linkmgr_cfg_t *cfg)
     // start the poll timer
     port_link_poll_timer_handle =
         sdk::lib::timer_schedule(
-            0, LINKMGR_LINK_POLL_TIME, NULL,
+            SDK_TIMER_ID_LINK_POLL, LINKMGR_LINK_POLL_TIME, NULL,
             (sdk::lib::twheel_cb_t)port_link_poll_timer_cb,
             false);
 
@@ -534,7 +534,7 @@ xcvr_poll_init (linkmgr_cfg_t *cfg)
 
     xcvr_poll_timer_handle =
         sdk::lib::timer_schedule(
-            0, XCVR_POLL_TIME, NULL,
+            SDK_TIMER_ID_XCVR_POLL, XCVR_POLL_TIME, NULL,
             (sdk::lib::twheel_cb_t)xcvr_poll_timer_cb,
             false);
 

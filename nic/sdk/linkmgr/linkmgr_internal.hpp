@@ -61,6 +61,13 @@ extern char log_buf[];
     SDK_LINKMGR_LOG("ERROR", log_buf);                          \
 }
 
+typedef enum sdk_timer_id_e {
+    SDK_TIMER_ID_LINK_BRINGUP = 1000,   // TODO global unique across hal
+    SDK_TIMER_ID_XCVR_POLL,
+    SDK_TIMER_ID_LINK_POLL,
+    SDK_TIMER_ID_LINK_DEBOUNCE
+} sdk_timer_id_t;
+
 sdk_ret_t
 linkmgr_notify (uint8_t operation, linkmgr_entry_data_t *data,
                 q_notify_mode_t mode);
