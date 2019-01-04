@@ -621,14 +621,6 @@ DeviceManager::CreateMnets()
 }
 
 void
-DeviceManager::DevcmdPoll()
-{
-    for (auto it = devices.cbegin(); it != devices.cend(); it++) {
-        it->second->DevcmdPoll();
-    }
-}
-
-void
 DeviceManager::LinkEventHandler(port_status_t *evd)
 {
     Device *dev;

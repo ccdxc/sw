@@ -245,17 +245,17 @@ Eth::Eth(HalClient *hal_client,
     pci_resources.intrc = spec->intr_count;
     pci_resources.port = spec->pcie_port;
     pci_resources.npids = spec->rdma_pid_count;
-    // TODO: Need an allocator for this
-    pci_resources.devcmdpa = DEVCMD_BASE + (hal_lif_info_.hw_lif_id * 4096 * 2);
-    pci_resources.devcmddbpa = pci_resources.devcmdpa + 4096;
+
+    // Allocate & Init Devcmd Region
+    pci_resources.devcmdpa = pd->devcmd_mem_alloc(4096);
+    pci_resources.devcmddbpa = pd->devcmd_mem_alloc(4096);
     MEM_SET(pci_resources.devcmdpa, 0, 4096, 0);
     MEM_SET(pci_resources.devcmddbpa, 0, 4096, 0);
 
-    NIC_LOG_DEBUG("lif-{}: devcmd_addr {:#x} devcmddb_addr {:#x}",
-            hal_lif_info_.hw_lif_id,
+    NIC_LOG_DEBUG("{}: devcmd_addr {:#x} devcmddb_addr {:#x}",
+            spec->if_name,
             pci_resources.devcmdpa, pci_resources.devcmddbpa);
 
-    // Init Devcmd Region
     // TODO: mmap instead of calloc after porting to real pal
     devcmd = (struct dev_cmd_regs *)calloc(1, sizeof(struct dev_cmd_regs));
     assert (devcmd != NULL);
@@ -388,6 +388,8 @@ Eth::Eth(HalClient *hal_client,
                 hal_lif_info_.hw_lif_id, spec->pcie_port);
     }
 
+    evutil_timer_start(&devcmd_timer, Eth::DevcmdPoll, this, 0.0, 0.01);
+
     lif_state = LIF_STATE_CREATED;
 }
 
@@ -448,17 +450,17 @@ Eth::GetQstateAddr(uint8_t qtype, uint32_t qid)
 }
 
 void
-Eth::DevcmdPoll()
+Eth::DevcmdPoll(void *obj)
 {
+    Eth             *dev = (Eth *)obj;
     dev_cmd_db_t    db = {0};
     dev_cmd_db_t    db_clear = {0};
 
-    READ_MEM(pci_resources.devcmddbpa, (uint8_t *)&db, sizeof(db), 0);
+    READ_MEM(dev->pci_resources.devcmddbpa, (uint8_t *)&db, sizeof(db), 0);
     if (db.v) {
-        WRITE_MEM(pci_resources.devcmddbpa, (uint8_t *)&db_clear,
-                    sizeof(db_clear), 0);
-        NIC_LOG_DEBUG("{} lif-{} active", __FUNCTION__, hal_lif_info_.hw_lif_id);
-        DevcmdHandler();
+        WRITE_MEM(dev->pci_resources.devcmddbpa, (uint8_t *)&db_clear, sizeof(db_clear), 0);
+        NIC_FUNC_DEBUG("lif-{} active", dev->hal_lif_info_.hw_lif_id);
+        dev->DevcmdHandler();
     }
 }
 
@@ -1966,8 +1968,7 @@ Eth::_CmdStatsDumpStart(void *req, void *req_data, void *resp, void *resp_data)
 
     MEM_SET(stats_mem_addr, 0, LIF_STATS_SIZE, 0);
 
-    Eth::StatsUpdate(this);
-    evutil_timer_start(&stats_timer, &Eth::StatsUpdate, this, 0.2, 0.2);
+    evutil_timer_start(&stats_timer, &Eth::StatsUpdate, this, 0.0, 0.2);
 
     return (DEVCMD_SUCCESS);
 }

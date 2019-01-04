@@ -199,7 +199,6 @@ class PdClient;
  */
 class Device {
 public:
-    virtual void DevcmdPoll() = 0;
     virtual void DevcmdHandler() = 0;
     virtual enum DevcmdStatus CmdHandler(
         void *req, void *req_data,
@@ -225,7 +224,6 @@ public:
     void Update();
     void CreateMnets();
 
-    void DevcmdPoll();
     void AdminQPoll();
     void LinkEventHandler(port_status_t *evd);
 

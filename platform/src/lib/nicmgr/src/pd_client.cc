@@ -31,6 +31,9 @@ const static uint32_t kRdmaBarAllocUnit = 8 * 1024 * 1024;
 const static char *kNicmgrHBMLabel = "nicmgr";
 const static uint32_t kNicmgrAllocUnit = 64;
 
+const static char *kDevcmdHBMLabel = "devcmd";
+const static uint32_t kDevcmdAllocUnit = 4096;
+
 static uint8_t *memrev(uint8_t *block, size_t elnum)
 {
     uint8_t *s, *t, tmp;
@@ -282,6 +285,7 @@ void PdClient::nicmgr_mem_init (void)
 
 uint64_t PdClient::nicmgr_mem_alloc(uint32_t size)
 {
+    uint64_t addr = 0;
     uint32_t alloc_units;
 
     alloc_units = (size + kNicmgrAllocUnit - 1) & ~(kNicmgrAllocUnit-1);
@@ -295,9 +299,62 @@ uint64_t PdClient::nicmgr_mem_alloc(uint32_t size)
 
     nicmgr_allocation_sizes_[alloc_offset] = alloc_units;
     alloc_offset *= kNicmgrAllocUnit;
-    NIC_FUNC_DEBUG("size: {} alloc_offset: {} hbm_addr: {:#x}",
-                    size, alloc_offset, nicmgr_hbm_base_ + alloc_offset);
-    return nicmgr_hbm_base_ + alloc_offset;
+    addr = nicmgr_hbm_base_ + alloc_offset;
+    NIC_FUNC_DEBUG("size: {} alloc_offset: {} addr: {:#x}",
+                    size, alloc_offset, addr);
+
+    // Allocations must be cache-line aligned because this memory is used
+    // for rings.
+    assert((addr & 0x3F) == 0);
+
+    return addr;
+}
+
+void PdClient::devcmd_mem_init (void)
+{
+    uint64_t hbm_addr = mp_->start_addr(kDevcmdHBMLabel);
+    assert(hbm_addr > 0);
+
+    uint32_t size = mp_->size_kb(kDevcmdHBMLabel);
+    assert(size != 0);
+
+    uint32_t num_units = (size * 1024) / kDevcmdAllocUnit;
+    if (hbm_addr & 0xFFF) {
+        // Not 4K aligned.
+        hbm_addr = (hbm_addr + 0xFFF) & ~0xFFFULL;
+        num_units--;
+    }
+
+    devcmd_hbm_base_ = hbm_addr;
+    devcmd_hbm_allocator_.reset(new sdk::lib::BMAllocator(num_units));
+
+    NIC_FUNC_DEBUG("devcmd_hbm_base : {}\n", devcmd_hbm_base_);
+}
+
+uint64_t PdClient::devcmd_mem_alloc(uint32_t size)
+{
+    uint64_t addr = 0;
+    uint32_t alloc_units;
+
+    alloc_units = (size + kDevcmdAllocUnit - 1) & ~(kDevcmdAllocUnit - 1);
+    alloc_units /= kDevcmdAllocUnit;
+    uint64_t alloc_offset = devcmd_hbm_allocator_->Alloc(alloc_units);
+
+    if (alloc_offset < 0) {
+        NIC_FUNC_ERR("Invalid alloc_offset {}", alloc_offset);
+        return -ENOMEM;
+    }
+
+    devcmd_allocation_sizes_[alloc_offset] = alloc_units;
+    alloc_offset *= kDevcmdAllocUnit;
+    addr = devcmd_hbm_base_ + alloc_offset;
+    NIC_FUNC_DEBUG("size: {} alloc_offset: {} addr: {:#x}",
+                    size, alloc_offset, addr);
+
+    // devcmd allocations should be page aligned
+    assert((addr & 0xFFF) == 0);
+
+    return addr;
 }
 
 int
@@ -377,6 +434,7 @@ void PdClient::init(void)
 
     rdma_manager_init();
     nicmgr_mem_init();
+    devcmd_mem_init();
 }
 
 // called after HAL is UP and running

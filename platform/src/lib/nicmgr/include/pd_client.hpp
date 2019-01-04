@@ -128,6 +128,9 @@ public:
     void nicmgr_mem_init(void);
     uint64_t nicmgr_mem_alloc(uint32_t size);
 
+    void devcmd_mem_init(void);
+    uint64_t devcmd_mem_alloc(uint32_t size);
+
     uint64_t rdma_get_pt_base_addr(uint32_t lif);
     uint64_t rdma_get_kt_base_addr(uint32_t lif);
     uint64_t rdma_get_ah_base_addr(uint32_t lif);
@@ -137,16 +140,21 @@ private:
     ~PdClient(){}
     void init(void);
 
-    std::unique_ptr<sdk::lib::BMAllocator> rdma_hbm_allocator_;
-    std::unique_ptr<sdk::lib::BMAllocator> rdma_hbm_bar_allocator_;
     uint64_t rdma_hbm_base_;
-    uint64_t rdma_hbm_bar_base_;
+    std::unique_ptr<sdk::lib::BMAllocator> rdma_hbm_allocator_;
     std::map<uint64_t, uint64_t> rdma_allocation_sizes_;
+
+    uint64_t rdma_hbm_bar_base_;
+    std::unique_ptr<sdk::lib::BMAllocator> rdma_hbm_bar_allocator_;
     std::map<uint64_t, uint64_t> rdma_bar_allocation_sizes_;
 
-    std::unique_ptr<sdk::lib::BMAllocator> nicmgr_hbm_allocator_;
     uint64_t nicmgr_hbm_base_;
+    std::unique_ptr<sdk::lib::BMAllocator> nicmgr_hbm_allocator_;
     std::map<uint64_t, uint64_t> nicmgr_allocation_sizes_;
+
+    uint64_t devcmd_hbm_base_;
+    std::unique_ptr<sdk::lib::BMAllocator> devcmd_hbm_allocator_;
+    std::map<uint64_t, uint64_t> devcmd_allocation_sizes_;
 
     int p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_get(
         uint32_t idx, rx_stage0_load_rdma_params_actiondata_t *data);

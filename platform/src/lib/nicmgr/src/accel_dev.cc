@@ -61,7 +61,6 @@ string string_format( const std::string& format, Args ... args )
  * blank_qstate, used only during LIF creation and device reset.
  */
 const uint8_t   blank_qstate[STORAGE_SEQ_CB_SIZE] = { 0 };
-const uint8_t   blank_page[ACCEL_DEV_PAGE_SIZE] = { 0 };
 
 static types::CryptoKeyType crypto_key_type_tbl[] = {
     [CMD_CRYPTO_KEY_TYPE_AES128] = types::CRYPTO_KEY_TYPE_AES128,
@@ -218,31 +217,23 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
 
     pci_resources.cmbpa = hbm_addr;
     pci_resources.cmbsz = hbm_size;
-    NIC_LOG_DEBUG("HBM address {:#x} size {} bytes", pci_resources.cmbpa, pci_resources.cmbsz);
+    NIC_LOG_DEBUG("accel: cmb_addr {:#x} size {} bytes",
+        pci_resources.cmbpa, pci_resources.cmbsz);
 
-    // Find devcmd/devcmddb, etc., area
-    hbm_addr = pd->mp_->start_addr(ACCEL_DEVCMD_HBM_HANDLE);
-    hbm_size = pd->mp_->size_kb(ACCEL_DEVCMD_HBM_HANDLE);
-    if (hbm_addr == INVALID_MEM_ADDRESS || hbm_size == 0) {
-        NIC_LOG_ERR("Failed to get HBM base for {}", ACCEL_DEVCMD_HBM_HANDLE);
-        return;
-    }
+    // Allocate & Init Devcmd Region
+    pci_resources.devcmdpa = pd->devcmd_mem_alloc(ACCEL_DEV_PAGE_SIZE);
+    pci_resources.devcmddbpa = pd->devcmd_mem_alloc(ACCEL_DEV_PAGE_SIZE);
+    MEM_SET(pci_resources.devcmdpa, 0, ACCEL_DEV_PAGE_SIZE, 0);
+    MEM_SET(pci_resources.devcmddbpa, 0, ACCEL_DEV_PAGE_SIZE, 0);
 
-    // devcmd page needs to be page aligned, then all subsequent pages
-    // would fall into the same alignment.
-    hbm_size *= 1024;
-    assert(hbm_size >= ((ACCEL_DEV_BAR0_NUM_PAGES_MAX + 1) *
-                        ACCEL_DEV_PAGE_SIZE));
-    pci_resources.devcmdpa = ACCEL_DEV_PAGE_ALIGN(hbm_addr);
-    pci_resources.devcmddbpa = pci_resources.devcmdpa + ACCEL_DEV_PAGE_SIZE;
-    WRITE_MEM(pci_resources.devcmddbpa, (uint8_t *)blank_page, ACCEL_DEV_PAGE_SIZE, 0);
+    NIC_LOG_DEBUG("accel: devcmd_addr {:#x} devcmddb_addr {:#x}",
+        pci_resources.devcmdpa, pci_resources.devcmddbpa);
 
-    static_assert(sizeof(dev_cmd_regs_t) == ACCEL_DEV_PAGE_SIZE);
-    static_assert((offsetof(dev_cmd_regs_t, cmd) % 4) == 0);
-    static_assert(sizeof(devcmd->cmd) == 64);
-    static_assert((offsetof(dev_cmd_regs_t, cpl) % 4) == 0);
-    static_assert(sizeof(devcmd->cpl) == 16);
-    static_assert((offsetof(dev_cmd_regs_t, data) % 4) == 0);
+    // TODO: mmap instead of calloc after porting to real pal
+    devcmd = (dev_cmd_regs_t *)calloc(1, sizeof(dev_cmd_regs_t));
+    assert (devcmd != NULL);
+    devcmd->signature = DEV_CMD_SIGNATURE;
+    WRITE_MEM(pci_resources.devcmdpa, (uint8_t *)devcmd, sizeof(*devcmd), 0);
 
     // Create LIF
     memset(qinfo, 0, sizeof(qinfo));
@@ -332,14 +323,6 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     pci_resources.port = spec->pcie_port;
     pci_resources.npids = 0;
 
-    // Init Devcmd Region
-    devcmd = (dev_cmd_regs_t *)calloc(1, sizeof(dev_cmd_regs_t));
-    devcmd->signature = DEV_CMD_SIGNATURE;
-    WRITE_MEM(pci_resources.devcmdpa, (uint8_t *)devcmd, sizeof(*devcmd), 0);
-
-    NIC_LOG_DEBUG("lif{}: Devcmd PA {:#x} DevcmdDB PA {:#x}", info.hw_lif_id,
-        pci_resources.devcmdpa, pci_resources.devcmddbpa);
-
     if (spec->pcie_port == 0xff) {
         NIC_LOG_DEBUG("lif{}: Skipped creating PCI device, pcie_port {}", info.hw_lif_id,
             spec->pcie_port);
@@ -364,6 +347,8 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
             return;
         }
     }
+
+    evutil_timer_start(&devcmd_timer, &Accel_PF::DevcmdPoll, this, 0.0, 0.01);
 }
 
 int
@@ -426,21 +411,19 @@ Accel_PF::GetQstateAddr(uint8_t qtype, uint32_t qid)
 }
 
 void
-Accel_PF::DevcmdPoll()
+Accel_PF::DevcmdPoll(void *obj)
 {
-//#ifdef __x86_64__
-#if 1 // enabled per Brad regarding a recent pciemgr issue breaking devcmd
+    Accel_PF        *dev = (Accel_PF *)obj;
     dev_cmd_db_t    db;
     dev_cmd_db_t    db_clear = {0};
 
     db.v = 0;
-    READ_MEM(pci_resources.devcmddbpa, (uint8_t *)&db, sizeof(db), 0);
+    READ_MEM(dev->pci_resources.devcmddbpa, (uint8_t *)&db, sizeof(db), 0);
     if (db.v) {
-        NIC_LOG_DEBUG("lif{} active", info.hw_lif_id);
-        DevcmdHandler();
-        WRITE_MEM(pci_resources.devcmddbpa, (uint8_t *)&db_clear, sizeof(db_clear), 0);
+        WRITE_MEM(dev->pci_resources.devcmddbpa, (uint8_t *)&db_clear, sizeof(db_clear), 0);
+        NIC_LOG_DEBUG("lif{} active", dev->info.hw_lif_id);
+        dev->DevcmdHandler();
     }
-#endif
 }
 
 void
@@ -1610,6 +1593,7 @@ Accel_PF::LifInit()
         sync_timer.set<Accel_PF, &Accel_PF::periodic_sync>(this);
         sync_timer.start(intv, intv);
     }
+
     set_lif_init_done(true);
 }
 

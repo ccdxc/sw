@@ -74,7 +74,6 @@ static void
 nicmgrd_poll(void *arg)
 {
     if (g_hal_up) {
-        devmgr->DevcmdPoll();
         devmgr->AdminQPoll();
     }
 

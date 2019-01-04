@@ -165,7 +165,7 @@ public:
     struct dev_cmd_regs *devcmd;
     struct notify_block *notify_block;
 
-    void DevcmdPoll();
+    static void DevcmdPoll(void *obj);
 
     void DevcmdHandler();
     void DevObjSave();
@@ -230,6 +230,7 @@ private:
     map<uint64_t, uint16_t> vlans;
     map<uint64_t, tuple<uint64_t, uint16_t>> mac_vlans;
     // Tasks
+    evutil_timer devcmd_timer;
     evutil_timer stats_timer;
     // Callbacks
     static void StatsUpdate(void *obj);

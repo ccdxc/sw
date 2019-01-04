@@ -10,6 +10,8 @@
 #include "hal_client.hpp"
 #include "nic/include/accel_ring.h"
 #include "nic/include/storage_seq_common.h"
+#include "platform/src/lib/evutils/include/evutils.h"
+
 
 #define ACCEL_DEV_PAGE_SIZE             4096
 #define ACCEL_DEV_PAGE_MASK             (ACCEL_DEV_PAGE_SIZE - 1)
@@ -146,6 +148,13 @@ typedef struct dev_cmd_regs {
     uint8_t data[2048] __attribute__((aligned (2048)));
 } dev_cmd_regs_t;
 
+static_assert(sizeof(dev_cmd_regs_t) == ACCEL_DEV_PAGE_SIZE);
+static_assert((offsetof(dev_cmd_regs_t, cmd) % 4) == 0);
+static_assert(sizeof(union dev_cmd) == 64);
+static_assert((offsetof(dev_cmd_regs_t, cpl) % 4) == 0);
+static_assert(sizeof(union dev_cmd_cpl) == 16);
+static_assert((offsetof(dev_cmd_regs_t, data) % 4) == 0);
+
 #endif /* ACCEL_DEV_CMD_ENUMERATE */
 
 #ifndef _NICMGR_IF_HPP_
@@ -206,7 +215,7 @@ public:
              bool dol_integ);
 
     void DevcmdHandler();
-    void DevcmdPoll();
+    static void DevcmdPoll(void *obj);
     enum DevcmdStatus CmdHandler(void *req, void *req_data,
                                  void *resp, void *resp_data);
     void SetHalClient(HalClient *hal_client);
@@ -225,6 +234,7 @@ private:
     string                      name;
     accel_devspec_t             *spec;
     ev::timer                   sync_timer;     // timer to sync to hub
+    evutil_timer                devcmd_timer;
 
     // Hardware Info
     struct queue_info    qinfo[NUM_QUEUE_TYPES];
