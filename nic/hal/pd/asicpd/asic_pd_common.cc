@@ -12,11 +12,12 @@
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
-// TODO: Need to remove capri references and use lib symbols instead
-#include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "include/sdk/platform/capri/capri_txs_scheduler.hpp"
+#include "include/sdk/platform/capri/capri_tbl_rw.hpp"
 #include "nic/hal/pd/capri/capri_sw_phv.hpp"
 #include "nic/sdk/platform/drivers/xcvr.hpp"
+
+using namespace sdk::platform::capri;
 
 namespace hal {
 namespace pd {
@@ -667,22 +668,28 @@ asicpd_sw_phv_get (asicpd_swphv_type_t type, uint8_t prof_num,
 hal_ret_t
 asic_pd_hbm_bw_get (pd_hbm_bw_get_args_t *hbm_bw_args)
 {
-    return capri_hbm_bw(hbm_bw_args->num_samples,
+    sdk_ret_t sdk_ret;
+    sdk_ret = capri_hbm_bw(hbm_bw_args->num_samples,
                         hbm_bw_args->sleep_interval,
                         true,
                         hbm_bw_args->hbm_bw);
+    return hal_sdk_ret_to_hal_ret(sdk_ret);
 }
 
 hal_ret_t
 asic_pd_llc_setup (pd_llc_get_args_t *llc_args)
 {
-    return capri_nx_setup_llc_counters(llc_args->mask);
+    sdk_ret_t sdk_ret;
+    sdk_ret = capri_nx_setup_llc_counters(llc_args->mask);
+    return hal_sdk_ret_to_hal_ret(sdk_ret);
 }
 
 hal_ret_t
 asic_pd_llc_get (pd_llc_get_args_t *llc_args)
 {
-    return capri_nx_get_llc_counters(llc_args->data);
+    sdk_ret_t sdk_ret;
+    sdk_ret = capri_nx_get_llc_counters(llc_args->data);
+    return hal_sdk_ret_to_hal_ret(sdk_ret);
 }
 
 hal_ret_t

@@ -3,6 +3,8 @@
 #include "nic/hal/pd/utils/met/repl_entry.hpp"
 #include "nic/include/asic_pd.hpp"
 #include "nic/sdk/asic/rw/asicrw.hpp"
+#include "include/sdk/platform/utils/mpartition.hpp"
+#include "gen/platform/mem_regions.hpp"
 
 #define HAL_LOG_TBL_UPDATES
 
@@ -10,6 +12,9 @@
 using hal::pd::utils::ReplEntry;
 using hal::pd::utils::ReplEntryHw;
 
+static sdk::platform::utils::mpartition *mpart;
+static uint64_t capri_hbm_base;
+static uint64_t hbm_repl_table_offset;
 //---------------------------------------------------------------------------
 // Factory method to instantiate the class
 //---------------------------------------------------------------------------
@@ -18,6 +23,11 @@ ReplEntry::factory(void *data, uint32_t data_len, uint32_t mtrack_id)
 {
     void        *mem = NULL;
     ReplEntry   *re = NULL;
+
+    mpart = sdk::platform::utils::mpartition::get_instance();
+    HAL_ASSERT(mpart != NULL);
+    capri_hbm_base = mpart->base();
+    hbm_repl_table_offset = mpart->start_offset(MEM_REGION_MCAST_REPL_NAME);
 
     mem = HAL_CALLOC(mtrack_id, sizeof(ReplEntry));
     if (!mem) {

@@ -6,6 +6,7 @@
 #include "nic/include/base.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
+#include "include/sdk/platform/capri/capri_hbm_rw.hpp"
 #include "gen/proto/debug.pb.h"
 
 #define HAL_LOG_TBL_UPDATES 1
@@ -34,27 +35,6 @@ typedef struct asicpd_sw_phv_state_ {
     uint32_t    no_data_cntr;
     uint32_t    drop_no_data_cntr;
 } asicpd_sw_phv_state_t;
-
-typedef enum asic_block_e {
-    ASIC_BLOCK_PB,
-    ASIC_BLOCK_TXD,
-    ASIC_BLOCK_RXD,
-    ASIC_BLOCK_MS,
-    ASIC_BLOCK_PCIE,
-    ASIC_BLOCK_MAX
-} asic_block_t;
-
-typedef struct asic_bw_s {
-    double read;
-    double write;
-} asic_bw_t;
-
-typedef struct asic_hbm_bw_s {
-    asic_block_t type;
-    uint64_t     clk_diff;
-    asic_bw_t    max;
-    asic_bw_t    avg;
-} asic_hbm_bw_t;
 
 typedef struct pd_hbm_bw_get_args_s {
     uint32_t      num_samples;

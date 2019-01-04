@@ -22,19 +22,21 @@ name = "MEM_REGION_"
 # Headers and footers for the output file
 hdr="""
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved\n
-#ifndef _%sHPP_\n#define _%sHPP_
+#ifndef __%sHPP__\n#define __%sHPP__
 // This is an auto generated file
+
+#include "include/sdk/platform/utils/mcache_pipe.hpp"
+
 #ifdef  __cplusplus
 namespace mem {
 namespace regions {
 #endif
 
-#include "include/sdk/platform/utils/mcache_pipe.hpp"
 """%(name, name)
 
 ftr="""
-#define MEM_REGION_BASE            0x0C0000000UL
-#define MEM_REGION_ADDR(name)      (MEM_REGION_BASE + MEM_REGION_##name##_START_OFFSET)
+#define MEM_REGION_BASE_ADDR       0x0C0000000UL
+#define MEM_REGION_ADDR(name)      (MEM_REGION_BASE_ADDR + MEM_REGION_##name##_START_OFFSET)
 
 #ifdef  __cplusplus
 } // namespace mem

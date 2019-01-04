@@ -30,7 +30,6 @@ private:
     
 };
 
-extern class capri_state_pd *g_capri_state_pd;
 } // namespace capri
 } // namespace platform
 } // namespace sdk

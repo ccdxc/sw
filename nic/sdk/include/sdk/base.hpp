@@ -45,6 +45,17 @@ do {                                                       \
     }                                                      \
 } while (FALSE)
 
+#define SDK_ASSERT_TRACE_RETURN(cond, rv, args...)         \
+do {                                                       \
+    if (unlikely(!(cond))) {                               \
+        SDK_TRACE_ERR("ASSERT FAILURE(" #cond ")");        \
+        SDK_TRACE_ERR(args);                               \
+        __ASSERT__(FALSE);                                 \
+        return rv;                                         \
+    }                                                      \
+} while (FALSE)
+
+
 #define SDK_ASSERT_RETURN_VOID(cond)                       \
 do {                                                       \
     if (unlikely(!(cond))) {                               \

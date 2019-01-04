@@ -5,7 +5,7 @@
 
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
-#include "nic/hal/pd/capri/capri_tbl_rw.hpp"
+#include "include/sdk/platform/capri/capri_tbl_rw.hpp"
 #include "include/sdk/platform/capri/capri_pxb_pcie.hpp"
 #include "nic/hal/pd/capri/capri_barco_rings.hpp"
 #include "nic/hal/pd/capri/capri_accel_rgroup.hpp"
@@ -13,7 +13,7 @@
 #include "nic/hal/pd/capri/capri_barco_sym_apis.hpp"
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
-#include "nic/hal/pd/capri/capri_quiesce.hpp"
+#include "include/sdk/platform/capri/capri_quiesce.hpp"
 #include "nic/sdk/include/sdk/platform/capri/capri_qstate.hpp"
 
 using namespace sdk::platform::capri;
@@ -734,12 +734,16 @@ pd_reg_write(pd_func_args_t *pd_func_args)
 
 hal_ret_t   pd_quiesce_start(pd_func_args_t *pd_func_args)
 {
-    return capri_quiesce_start();
+    sdk_ret_t sdk_ret;
+    sdk_ret = sdk::platform::capri::capri_quiesce_start();
+    return hal_sdk_ret_to_hal_ret(sdk_ret);
 }
 
 hal_ret_t   pd_quiesce_stop(pd_func_args_t *pd_func_args)
 {
-    return capri_quiesce_stop();
+    sdk_ret_t sdk_ret;
+    sdk_ret = sdk::platform::capri::capri_quiesce_stop();
+    return hal_sdk_ret_to_hal_ret(sdk_ret);
 }
 
 } // namespace pd

@@ -49,6 +49,9 @@ typedef struct capri_cfg_s {
     sdk::asic::completion_cb_t completion_func;
 } capri_cfg_t;
 
+sdk_ret_t capri_load_config(char *pathname);
+sdk_ret_t capri_verify_config(char *config_dir);
+
 } // namespace capri
 } // namespace platform
 } // namespace sdk

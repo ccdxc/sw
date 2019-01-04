@@ -51,6 +51,9 @@ typedef struct asic_cfg_s {
     completion_cb_t      completion_func;
 } asic_cfg_t;
 
+// initialize the asic
+sdk_ret_t asic_init(asic_cfg_t *asic_cfg);
+
 }    // namespace asic
 }    // namespace sdk
 

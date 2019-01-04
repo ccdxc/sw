@@ -8,7 +8,7 @@
 #include "nic/sdk/include/sdk/pal.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/include/sdk/hbm_hash.hpp"
-#include "nic/hal/pd/capri/capri_tbl_rw.hpp"
+#include "include/sdk/platform/capri/capri_tbl_rw.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "gen/p4gen/p4/include/p4pd.h"
 #include <boost/multiprecision/cpp_int.hpp>

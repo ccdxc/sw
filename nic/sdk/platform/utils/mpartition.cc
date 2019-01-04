@@ -15,7 +15,7 @@ sdk_ret_t
 mpartition::region_init(shmmgr *mmgr)
 {
 
-    base_addr_ = MEM_REGION_BASE;
+    base_addr_ = MEM_REGION_BASE_ADDR;
     mmgr_ = mmgr;
 
     char nlist[][64] = MEM_REGION_NAME_LIST;

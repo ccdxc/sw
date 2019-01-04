@@ -4,11 +4,11 @@
 
 #include <errno.h>
 #include <assert.h>
-#include "nic/hal/pd/capri/capri_tbl_rw.hpp"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/sdk/include/sdk/platform/capri/capri_qstate.hpp"
 #include "nic/sdk/include/sdk/platform/capri/capri_lif_manager.hpp"
 #include "nic/sdk/include/sdk/base.hpp"
+#include "include/sdk/platform/capri/capri_tbl_rw.hpp"
+#include "include/sdk/platform/capri/capri_hbm_rw.hpp"
 
 #if 0
 void push_qstate_to_capri(hal::LIFQState *qstate);
@@ -109,7 +109,7 @@ int32_t LIFManager::WriteQStateImpl(
     capri_hbm_write_mem(q_addr, buf, q_size);
 
     reg = mp_->region_by_address(q_addr);
-    HAL_ASSERT(reg != NULL);
+    SDK_ASSERT(reg != NULL);
 
     if (is_region_cache_pipe_p4plus_all(reg)) {
         action = P4PLUS_CACHE_INVALIDATE_BOTH;
