@@ -83,8 +83,10 @@ static int ionic_qcq_enable(struct qcq *qcq)
 	if (err)
 		return err;
 
-	napi_enable(&qcq->napi);
-	ionic_intr_mask(&qcq->intr, false);
+	if (qcq->intr.index != INTR_INDEX_NOT_ASSIGNED) {
+		napi_enable(&qcq->napi);
+		ionic_intr_mask(&qcq->intr, false);
+	}
 
 	return 0;
 }
@@ -132,9 +134,11 @@ static int ionic_qcq_disable(struct qcq *qcq)
 	dev_dbg(dev, "q_disable.qid %d q_disable.qtype %d\n",
 		ctx.cmd.q_disable.qid, ctx.cmd.q_disable.qtype);
 
-	ionic_intr_mask(&qcq->intr, true);
-	synchronize_irq(qcq->intr.vector);
-	napi_disable(&qcq->napi);
+	if (qcq->intr.index != INTR_INDEX_NOT_ASSIGNED) {
+		ionic_intr_mask(&qcq->intr, true);
+		synchronize_irq(qcq->intr.vector);
+		napi_disable(&qcq->napi);
+	}
 
 	return ionic_adminq_post_wait(lif, &ctx);
 }
@@ -764,6 +768,12 @@ void ionic_intr_free(struct lif *lif, struct intr *intr)
 		clear_bit(intr->index, lif->ionic->intrs);
 }
 
+static void ionic_link_qcq_interrupts(struct qcq *src_qcq, struct qcq *n_qcq)
+{
+	n_qcq->intr.vector = src_qcq->intr.vector;
+	n_qcq->intr.ctrl = src_qcq->intr.ctrl;
+}
+
 static int ionic_qcq_alloc(struct lif *lif, unsigned int index,
 			   const char *base, unsigned int flags,
 			   unsigned int num_descs, unsigned int desc_size,
@@ -926,7 +936,7 @@ static int ionic_qcqs_alloc(struct lif *lif)
 			goto err_out_free_adminqcq;
 	}
 
-	flags = QCQ_F_TX_STATS | QCQ_F_INTR | QCQ_F_SG;
+	flags = QCQ_F_TX_STATS | QCQ_F_SG;
 	for (i = 0; i < lif->nxqs; i++) {
 		err = ionic_qcq_alloc(lif, i, "tx", flags, ntxq_descs,
 				      sizeof(struct txq_desc),
@@ -945,6 +955,8 @@ static int ionic_qcqs_alloc(struct lif *lif)
 				      0, lif->kern_pid, &lif->rxqcqs[i]);
 		if (err)
 			goto err_out_free_rxqcqs;
+
+		ionic_link_qcq_interrupts(lif->rxqcqs[i], lif->txqcqs[i]);
 	}
 
 	return 0;
@@ -1299,10 +1311,14 @@ static void ionic_lif_qcq_deinit(struct lif *lif, struct qcq *qcq)
 
 	if (!(qcq->flags & QCQ_F_INITED))
 		return;
-	ionic_intr_mask(&qcq->intr, true);
-	synchronize_irq(qcq->intr.vector);
-	devm_free_irq(dev, qcq->intr.vector, &qcq->napi);
-	netif_napi_del(&qcq->napi);
+
+	if (qcq->intr.index != INTR_INDEX_NOT_ASSIGNED) {
+		ionic_intr_mask(&qcq->intr, true);
+		synchronize_irq(qcq->intr.vector);
+		devm_free_irq(dev, qcq->intr.vector, &qcq->napi);
+		netif_napi_del(&qcq->napi);
+	}
+
 	qcq->flags &= ~QCQ_F_INITED;
 }
 
@@ -1586,8 +1602,6 @@ static int ionic_lif_txq_init(struct lif *lif, struct qcq *qcq)
 {
 	struct device *dev = lif->ionic->dev;
 	struct queue *q = &qcq->q;
-	struct cq *cq = &qcq->cq;
-	struct napi_struct *napi = &qcq->napi;
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.txq_init = {
@@ -1595,7 +1609,7 @@ static int ionic_lif_txq_init(struct lif *lif, struct qcq *qcq)
 			.I = false,
 			.E = false,
 			.pid = q->pid,
-			.intr_index = cq->bound_intr->index,
+			.intr_index = lif->rxqcqs[q->index]->intr.index,
 			.type = TXQ_TYPE_ETHERNET,
 			.index = q->index,
 			.cos = 0,
@@ -1605,12 +1619,11 @@ static int ionic_lif_txq_init(struct lif *lif, struct qcq *qcq)
 	};
 	int err;
 
+
 	dev_dbg(dev, "txq_init.pid %d\n", ctx.cmd.txq_init.pid);
 	dev_dbg(dev, "txq_init.index %d\n", ctx.cmd.txq_init.index);
-	dev_dbg(dev, "txq_init.ring_base 0x%llx\n",
-		ctx.cmd.txq_init.ring_base);
-	dev_dbg(dev, "txq_init.ring_size %d\n",
-		ctx.cmd.txq_init.ring_size);
+	dev_dbg(dev, "txq_init.ring_base 0x%llx\n", ctx.cmd.txq_init.ring_base);
+	dev_dbg(dev, "txq_init.ring_size %d\n", ctx.cmd.txq_init.ring_size);
 
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
@@ -1619,15 +1632,6 @@ static int ionic_lif_txq_init(struct lif *lif, struct qcq *qcq)
 	q->qid = ctx.comp.txq_init.qid;
 	q->qtype = ctx.comp.txq_init.qtype;
 	q->db = ionic_db_map(lif, q);
-
-	netif_napi_add(lif->netdev, napi, ionic_tx_napi,
-		       NAPI_POLL_WEIGHT);
-
-	err = ionic_request_irq(lif, qcq);
-	if (err) {
-		netif_napi_del(napi);
-		return err;
-	}
 
 	qcq->flags |= QCQ_F_INITED;
 
@@ -1687,10 +1691,8 @@ static int ionic_lif_rxq_init(struct lif *lif, struct qcq *qcq)
 
 	dev_dbg(dev, "rxq_init.pid %d\n", ctx.cmd.rxq_init.pid);
 	dev_dbg(dev, "rxq_init.index %d\n", ctx.cmd.rxq_init.index);
-	dev_dbg(dev, "rxq_init.ring_base 0x%llx\n",
-		   ctx.cmd.rxq_init.ring_base);
-	dev_dbg(dev, "rxq_init.ring_size %d\n",
-		   ctx.cmd.rxq_init.ring_size);
+	dev_dbg(dev, "rxq_init.ring_base 0x%llx\n", ctx.cmd.rxq_init.ring_base);
+	dev_dbg(dev, "rxq_init.ring_size %d\n", ctx.cmd.rxq_init.ring_size);
 
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
@@ -2062,7 +2064,7 @@ int ionic_lifs_size(struct ionic *ionic)
 try_again:
 	nintrs = nlifs * (nnqs_per_lif +
 			  neqs_per_lif +
-			  (nxqs * 2) +
+			  nxqs +
 			  1 /* adminq */);
 
 	if (nintrs > dev_nintrs)

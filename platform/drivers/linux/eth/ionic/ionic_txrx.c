@@ -171,6 +171,19 @@ static bool ionic_rx_service(struct cq *cq, struct cq_info *cq_info,
 	return true;
 }
 
+static bool ionic_tx_service(struct cq *cq, struct cq_info *cq_info,
+			     void *cb_arg)
+{
+	struct txq_comp *comp = cq_info->cq_desc;
+
+	if (comp->color != cq->done_color)
+		return false;
+
+	ionic_q_service(cq->bound_q, cq_info, comp->comp_index);
+
+	return true;
+}
+
 static struct sk_buff *ionic_rx_skb_alloc(struct queue *q, unsigned int len,
 					  dma_addr_t *dma_addr)
 {
@@ -289,12 +302,17 @@ void ionic_rx_flush(struct cq *cq)
 
 int ionic_rx_napi(struct napi_struct *napi, int budget)
 {
-	struct cq *cq = napi_to_cq(napi);
+	struct cq *rxcq = napi_to_cq(napi);
+	unsigned int qi = rxcq->bound_q->index;
+	struct lif *lif = rxcq->bound_q->lif;
+	struct cq *txcq = &lif->txqcqs[qi]->cq;
 	unsigned int work_done;
 
 	work_done = ionic_napi(napi, budget, ionic_rx_service, NULL);
 
-	ionic_rx_fill(cq->bound_q);
+	ionic_rx_fill(rxcq->bound_q);
+
+	ionic_cq_service(txcq, -1, ionic_tx_service, NULL);
 
 	return work_done;
 }
@@ -361,19 +379,6 @@ static void ionic_tx_clean(struct queue *q, struct desc_info *desc_info,
 		dev_kfree_skb_any(skb);
 		stats->clean++;
 	}
-}
-
-static bool ionic_tx_service(struct cq *cq, struct cq_info *cq_info,
-			     void *cb_arg)
-{
-	struct txq_comp *comp = cq_info->cq_desc;
-
-	if (comp->color != cq->done_color)
-		return false;
-
-	ionic_q_service(cq->bound_q, cq_info, comp->comp_index);
-
-	return true;
 }
 
 int ionic_tx_napi(struct napi_struct *napi, int budget)
