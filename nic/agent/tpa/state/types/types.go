@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 
@@ -87,17 +89,36 @@ type FlowMonitorRuleKey tstype.FlowMonitorRuleSpec
 
 // String function converts key to string
 func (c *FlowMonitorRuleKey) String() string {
-	return fmt.Sprintf("%s:%s:%d:%d:%d:%d:%d:%d:%d:%d", c.SourceIP, c.DestIP,
+	return fmt.Sprintf("%s:%s:%d:%d:%d:%d:%d:%d:%d:%d:%d", c.SourceIP, c.DestIP,
 		c.SourceMac, c.DestMac, c.EtherType, c.Protocol,
-		c.SourceL4Port, c.DestL4Port, c.SourceGroupID, c.VrfID)
+		c.SourceL4Port, c.DestL4Port, c.SourceGroupID, c.DestGroupID, c.VrfID)
 }
 
 // ParseFlowMonitorRuleKey parses string to flow rule key, used for debug
 func ParseFlowMonitorRuleKey(buff string) FlowMonitorRuleKey {
 	var c FlowMonitorRuleKey
-	fmt.Sscanf(buff, "%s:%s:%d:%d:%d:%d:%d:%d:%d:%d", &c.SourceIP, &c.DestIP,
-		&c.SourceMac, &c.DestMac, &c.EtherType, &c.Protocol,
-		&c.SourceL4Port, &c.DestL4Port, &c.SourceGroupID, &c.VrfID)
+
+	atoi := func(s string) int {
+		if v, err := strconv.Atoi(s); err == nil {
+			return v
+		}
+		return 0
+	}
+	s := strings.Split(buff, ":")
+	if len(s) == 11 {
+		c.SourceIP = s[0]
+		c.DestIP = s[1]
+		c.SourceMac = uint64(atoi(s[2]))
+		c.DestMac = uint64(atoi(s[3]))
+		c.EtherType = uint32(atoi(s[4]))
+		c.Protocol = uint32(atoi(s[5]))
+		c.SourceL4Port = uint32(atoi(s[6]))
+		c.DestL4Port = uint32(atoi(s[7]))
+		c.SourceGroupID = uint64(atoi(s[8]))
+		c.DestGroupID = uint64(atoi(s[9]))
+		c.VrfID = uint64(atoi(s[10]))
+	}
+
 	return c
 }
 

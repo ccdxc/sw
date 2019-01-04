@@ -1420,3 +1420,758 @@ func TestPolicyOps(t *testing.T) {
 	err = s.DeleteFlowExportPolicy(context.Background(), overlap)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create export policy %+v", overlap))
 }
+
+func TestMatchRule(t *testing.T) {
+	c := gomock.NewController(t)
+	defer c.Finish()
+	halMock := halproto.NewMockTelemetryClient(c)
+
+	ds, err := createDataStore()
+	tu.AssertOk(t, err, fmt.Sprintf("failed to create database"))
+
+	na := &agstate.Nagent{
+		TenantDB:    map[string]*netproto.Tenant{},
+		NetworkDB:   map[string]*netproto.Network{},
+		EndpointDB:  map[string]*netproto.Endpoint{},
+		NamespaceDB: map[string]*netproto.Namespace{},
+		Solver:      dependencies.NewDepSolver(),
+		Store:       ds,
+	}
+
+	key := na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "default"}, api.TypeMeta{Kind: "tenant"})
+	na.TenantDB[key] = &netproto.Tenant{
+		ObjectMeta: api.ObjectMeta{Tenant: "default"},
+		Spec:       netproto.TenantSpec{Meta: &api.ObjectMeta{Tenant: "default"}},
+		Status: netproto.TenantStatus{
+			TenantID: uint64(501),
+		},
+	}
+
+	key = na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Name: "default"}, api.TypeMeta{Kind: "namespace"})
+	na.NamespaceDB[key] = &netproto.Namespace{
+		ObjectMeta: api.ObjectMeta{Tenant: "default"},
+		Spec:       netproto.NamespaceSpec{},
+		Status: netproto.NamespaceStatus{
+			NamespaceID: uint64(501),
+		},
+	}
+
+	key = na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "default"}, api.TypeMeta{Kind: "network"})
+	na.NetworkDB[key] = &netproto.Network{
+		ObjectMeta: api.ObjectMeta{Name: "default", Namespace: "default", Tenant: "default"},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet: "",
+		},
+		Status: netproto.NetworkStatus{
+			NetworkID: uint64(101),
+		},
+	}
+
+	for i := 0; i < maxFlowExportCollectors; i++ {
+		name := fmt.Sprintf("ep%d", i+1)
+		addr := fmt.Sprintf("192.168.100.%d/32", 10+i)
+		key = na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: name}, api.TypeMeta{Kind: "endpoint"})
+		na.EndpointDB[key] = &netproto.Endpoint{
+			ObjectMeta: api.ObjectMeta{Name: "ep1", Namespace: "default", Tenant: "default"},
+			Spec: netproto.EndpointSpec{
+				NetworkName: "default",
+				IPv4Address: addr,
+			},
+			Status: netproto.EndpointStatus{},
+		}
+	}
+
+	s, err := NewTpAgent(na, halMock, dbgSock)
+	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
+
+	defer cleanup(t, s)
+
+	collResp := &halproto.CollectorResponseMsg{
+		Response: []*halproto.CollectorResponse{
+			{
+				ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+				Status: &halproto.CollectorStatus{
+					Handle: uint64(105),
+				},
+			},
+		},
+	}
+
+	flowResp := &halproto.FlowMonitorRuleResponseMsg{
+		Response: []*halproto.FlowMonitorRuleResponse{
+			{
+				ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+				Status: &halproto.FlowMonitorRuleStatus{
+					Handle: uint64(105),
+				},
+			},
+		},
+	}
+
+	// example test from iota
+	policyJSON := `{
+    "kind": "FlowExportPolicy",
+    "meta": {
+        "name": "flow-export-ipfix-0",
+        "namespace": "default",
+        "tenant": "default"
+    },
+    "spec": {
+        "exports": [
+            {
+                "destination": "192.168.100.12",
+                "transport": "UDP/2055"
+            }
+        ],
+        "format": "IPFIX",
+        "interval": "1s",
+        "match-rules": [
+            {
+                "app-protocol-selectors": {
+                    "ports": [
+                        "TCP/120"
+                    ]
+                },
+                "destination": {
+                    "ip-addresses": [
+                        "0.0.0.0/0"
+                    ]
+                },
+                "source": {
+                    "ip-addresses": [
+                        "192.168.100.101"
+                    ]
+                }
+            },
+            {
+                "app-protocol-selectors": {
+                    "ports": [
+                        "TCP/120"
+                    ]
+                },
+                "destination": {
+                    "ip-addresses": [
+                        "192.168.100.101"
+                    ]
+                },
+                "source": {
+                    "ip-addresses": [
+                        "0.0.0.0/0"
+                    ]
+                }
+            },
+            {
+                "app-protocol-selectors": {
+                    "ports": [
+                        "TCP/550"
+                    ]
+                },
+                "destination": {
+                    "ip-addresses": [
+                        "0.0.0.0/0"
+                    ]
+                },
+                "source": {
+                    "ip-addresses": [
+                        "192.168.100.101"
+                    ]
+                }
+            },
+            {
+                "app-protocol-selectors": {
+                    "ports": [
+                        "TCP/550"
+                    ]
+                },
+                "destination": {
+                    "ip-addresses": [
+                        "192.168.100.101"
+                    ]
+                },
+                "source": {
+                    "ip-addresses": [
+                        "0.0.0.0/0"
+                    ]
+                }
+            },
+            {
+                "app-protocol-selectors": {
+                    "ports": [
+                        "TCP/65535"
+                    ]
+                },
+                "destination": {
+                    "ip-addresses": [
+                        "0.0.0.0/0"
+                    ]
+                },
+                "source": {
+                    "ip-addresses": [
+                        "192.168.100.101"
+                    ]
+                }
+            },
+            {
+                "app-protocol-selectors": {
+                    "ports": [
+                        "TCP/65535"
+                    ]
+                },
+                "destination": {
+                    "ip-addresses": [
+                        "192.168.100.101"
+                    ]
+                },
+                "source": {
+                    "ip-addresses": [
+                        "0.0.0.0/0"
+                    ]
+                }
+            },
+            {
+                "app-protocol-selectors": {
+                    "ports": [
+                        "TCP/0"
+                    ]
+                },
+                "destination": {
+                    "ip-addresses": [
+                        "0.0.0.0/0"
+                    ]
+                },
+                "source": {
+                    "ip-addresses": [
+                        "192.168.100.101"
+                    ]
+                }
+            },
+            {
+                "app-protocol-selectors": {
+                    "ports": [
+                        "TCP/0"
+                    ]
+                },
+                "destination": {
+                    "ip-addresses": [
+                        "192.168.100.101"
+                    ]
+                },
+                "source": {
+                    "ip-addresses": [
+                        "0.0.0.0/0"
+                    ]
+                }
+            },
+            {
+                "app-protocol-selectors": {
+                    "ports": [
+                        "TCP/120"
+                    ]
+                },
+                "destination": {
+                    "ip-addresses": [
+                        "0.0.0.0/0"
+                    ]
+                },
+                "source": {
+                    "ip-addresses": [
+                        "192.168.100.102"
+                    ]
+                }
+            },
+            {
+                "app-protocol-selectors": {
+                    "ports": [
+                        "TCP/120"
+                    ]
+                },
+                "destination": {
+                    "ip-addresses": [
+                        "192.168.100.102"
+                    ]
+                },
+                "source": {
+                    "ip-addresses": [
+                        "0.0.0.0/0"
+                    ]
+                }
+            },
+            {
+                "app-protocol-selectors": {
+                    "ports": [
+                        "TCP/550"
+                    ]
+                },
+                "destination": {
+                    "ip-addresses": [
+                        "0.0.0.0/0"
+                    ]
+                },
+                "source": {
+                    "ip-addresses": [
+                        "192.168.100.102"
+                    ]
+                }
+            },
+            {
+                "app-protocol-selectors": {
+                    "ports": [
+                        "TCP/550"
+                    ]
+                },
+                "destination": {
+                    "ip-addresses": [
+                        "192.168.100.102"
+                    ]
+                },
+                "source": {
+                    "ip-addresses": [
+                        "0.0.0.0/0"
+                    ]
+                }
+            },
+            {
+                "app-protocol-selectors": {
+                    "ports": [
+                        "TCP/65535"
+                    ]
+                },
+                "destination": {
+                    "ip-addresses": [
+                        "0.0.0.0/0"
+                    ]
+                },
+                "source": {
+                    "ip-addresses": [
+                        "192.168.100.102"
+                    ]
+                }
+            },
+            {
+                "app-protocol-selectors": {
+                    "ports": [
+                        "TCP/65535"
+                    ]
+                },
+                "destination": {
+                    "ip-addresses": [
+                        "192.168.100.102"
+                    ]
+                },
+                "source": {
+                    "ip-addresses": [
+                        "0.0.0.0/0"
+                    ]
+                }
+            },
+            {
+                "app-protocol-selectors": {
+                    "ports": [
+                        "TCP/0"
+                    ]
+                },
+                "destination": {
+                    "ip-addresses": [
+                        "0.0.0.0/0"
+                    ]
+                },
+                "source": {
+                    "ip-addresses": [
+                        "192.168.100.102"
+                    ]
+                }
+            },
+            {
+                "app-protocol-selectors": {
+                    "ports": [
+                        "TCP/0"
+                    ]
+                },
+                "destination": {
+                    "ip-addresses": [
+                        "192.168.100.102"
+                    ]
+                },
+                "source": {
+                    "ip-addresses": [
+                        "0.0.0.0/0"
+                    ]
+                }
+            },
+            {
+                "app-protocol-selectors": {
+                    "ports": [
+                        "TCP/120"
+                    ]
+                },
+                "destination": {
+                    "ip-addresses": [
+                        "0.0.0.0/0"
+                    ]
+                },
+                "source": {
+                    "ip-addresses": [
+                        "192.168.100.103"
+                    ]
+                }
+            },
+            {
+                "app-protocol-selectors": {
+                    "ports": [
+                        "TCP/120"
+                    ]
+                },
+                "destination": {
+                    "ip-addresses": [
+                        "192.168.100.103"
+                    ]
+                },
+                "source": {
+                    "ip-addresses": [
+                        "0.0.0.0/0"
+                    ]
+                }
+            },
+            {
+                "app-protocol-selectors": {
+                    "ports": [
+                        "TCP/550"
+                    ]
+                },
+                "destination": {
+                    "ip-addresses": [
+                        "0.0.0.0/0"
+                    ]
+                },
+                "source": {
+                    "ip-addresses": [
+                        "192.168.100.103"
+                    ]
+                }
+            },
+            {
+                "app-protocol-selectors": {
+                    "ports": [
+                        "TCP/550"
+                    ]
+                },
+                "destination": {
+                    "ip-addresses": [
+                        "192.168.100.103"
+                    ]
+                },
+                "source": {
+                    "ip-addresses": [
+                        "0.0.0.0/0"
+                    ]
+                }
+            },
+            {
+                "app-protocol-selectors": {
+                    "ports": [
+                        "TCP/65535"
+                    ]
+                },
+                "destination": {
+                    "ip-addresses": [
+                        "0.0.0.0/0"
+                    ]
+                },
+                "source": {
+                    "ip-addresses": [
+                        "192.168.100.103"
+                    ]
+                }
+            },
+            {
+                "app-protocol-selectors": {
+                    "ports": [
+                        "TCP/65535"
+                    ]
+                },
+                "destination": {
+                    "ip-addresses": [
+                        "192.168.100.103"
+                    ]
+                },
+                "source": {
+                    "ip-addresses": [
+                        "0.0.0.0/0"
+                    ]
+                }
+            },
+            {
+                "app-protocol-selectors": {
+                    "ports": [
+                        "TCP/0"
+                    ]
+                },
+                "destination": {
+                    "ip-addresses": [
+                        "0.0.0.0/0"
+                    ]
+                },
+                "source": {
+                    "ip-addresses": [
+                        "192.168.100.103"
+                    ]
+                }
+            },
+            {
+                "app-protocol-selectors": {
+                    "ports": [
+                        "TCP/0"
+                    ]
+                },
+                "destination": {
+                    "ip-addresses": [
+                        "192.168.100.103"
+                    ]
+                },
+                "source": {
+                    "ip-addresses": [
+                        "0.0.0.0/0"
+                    ]
+                }
+            },
+            {
+                "app-protocol-selectors": {
+                    "ports": [
+                        "TCP/120"
+                    ]
+                },
+                "destination": {
+                    "ip-addresses": [
+                        "0.0.0.0/0"
+                    ]
+                },
+                "source": {
+                    "ip-addresses": [
+                        "192.168.100.104"
+                    ]
+                }
+            },
+            {
+                "app-protocol-selectors": {
+                    "ports": [
+                        "TCP/120"
+                    ]
+                },
+                "destination": {
+                    "ip-addresses": [
+                        "192.168.100.104"
+                    ]
+                },
+                "source": {
+                    "ip-addresses": [
+                        "0.0.0.0/0"
+                    ]
+                }
+            },
+            {
+                "app-protocol-selectors": {
+                    "ports": [
+                        "TCP/550"
+                    ]
+                },
+                "destination": {
+                    "ip-addresses": [
+                        "0.0.0.0/0"
+                    ]
+                },
+                "source": {
+                    "ip-addresses": [
+                        "192.168.100.104"
+                    ]
+                }
+            },
+            {
+                "app-protocol-selectors": {
+                    "ports": [
+                        "TCP/550"
+                    ]
+                },
+                "destination": {
+                    "ip-addresses": [
+                        "192.168.100.104"
+                    ]
+                },
+                "source": {
+                    "ip-addresses": [
+                        "0.0.0.0/0"
+                    ]
+                }
+            },
+            {
+                "app-protocol-selectors": {
+                    "ports": [
+                        "TCP/65535"
+                    ]
+                },
+                "destination": {
+                    "ip-addresses": [
+                        "0.0.0.0/0"
+                    ]
+                },
+                "source": {
+                    "ip-addresses": [
+                        "192.168.100.104"
+                    ]
+                }
+            },
+            {
+                "app-protocol-selectors": {
+                    "ports": [
+                        "TCP/65535"
+                    ]
+                },
+                "destination": {
+                    "ip-addresses": [
+                        "192.168.100.104"
+                    ]
+                },
+                "source": {
+                    "ip-addresses": [
+                        "0.0.0.0/0"
+                    ]
+                }
+            },
+            {
+                "app-protocol-selectors": {
+                    "ports": [
+                        "TCP/0"
+                    ]
+                },
+                "destination": {
+                    "ip-addresses": [
+                        "0.0.0.0/0"
+                    ]
+                },
+                "source": {
+                    "ip-addresses": [
+                        "192.168.100.104"
+                    ]
+                }
+            },
+            {
+                "app-protocol-selectors": {
+                    "ports": [
+                        "TCP/0"
+                    ]
+                },
+                "destination": {
+                    "ip-addresses": [
+                        "192.168.100.104"
+                    ]
+                },
+                "source": {
+                    "ip-addresses": [
+                        "0.0.0.0/0"
+                    ]
+                }
+            }
+        ]
+    },
+    "status": {}
+	}
+	`
+
+	/*
+		    "192.168.100.101:0.0.0.0/0:0:0:0:6:120:120:0:501",
+		    "0.0.0.0/0:192.168.100.103:0:0:0:6:0:0:0:501",
+		    "192.168.100.103:0.0.0.0/0:0:0:0:6:0:0:0:501",
+		    "192.168.100.101:0.0.0.0/0:0:0:0:6:0:0:0:501",
+		    "0.0.0.0/0:192.168.100.102:0:0:0:6:65535:65535:0:501",
+		    "0.0.0.0/0:192.168.100.103:0:0:0:6:65535:65535:0:501",
+			"0.0.0.0/0:192.168.100.101:0:0:0:6:550:550:0:501",
+			"192.168.100.102:0.0.0.0/0:0:0:0:6:65535:65535:0:501",
+			"192.168.100.104:0.0.0.0/0:0:0:0:6:120:120:0:501",
+			"192.168.100.102:0.0.0.0/0:0:0:0:6:0:0:0:501",
+			"192.168.100.103:0.0.0.0/0:0:0:0:6:65535:65535:0:501",
+			"0.0.0.0/0:192.168.100.104:0:0:0:6:120:120:0:501",
+			"192.168.100.102:0.0.0.0/0:0:0:0:6:120:120:0:501",
+			"0.0.0.0/0:192.168.100.101:0:0:0:6:120:120:0:501",
+			"192.168.100.104:0.0.0.0/0:0:0:0:6:550:550:0:501",
+			"0.0.0.0/0:192.168.100.104:0:0:0:6:65535:65535:0:501",
+			"192.168.100.104:0.0.0.0/0:0:0:0:6:0:0:0:501",
+			"0.0.0.0/0:192.168.100.104:0:0:0:6:550:550:0:501",
+			"192.168.100.102:0.0.0.0/0:0:0:0:6:550:550:0:501",
+			"0.0.0.0/0:192.168.100.103:0:0:0:6:550:550:0:501",
+			"0.0.0.0/0:192.168.100.101:0:0:0:6:65535:65535:0:501",
+			"192.168.100.103:0.0.0.0/0:0:0:0:6:550:550:0:501",
+			"0.0.0.0/0:192.168.100.102:0:0:0:6:0:0:0:501",
+			"0.0.0.0/0:192.168.100.102:0:0:0:6:550:550:0:501",
+			"192.168.100.101:0.0.0.0/0:0:0:0:6:550:550:0:501",
+			"0.0.0.0/0:192.168.100.103:0:0:0:6:120:120:0:501",
+			"0.0.0.0/0:192.168.100.101:0:0:0:6:0:0:0:501",
+			"0.0.0.0/0:192.168.100.104:0:0:0:6:0:0:0:501",
+			"192.168.100.103:0.0.0.0/0:0:0:0:6:120:120:0:501",
+			"0.0.0.0/0:192.168.100.102:0:0:0:6:120:120:0:501",
+			"192.168.100.101:0.0.0.0/0:0:0:0:6:65535:65535:0:501",
+		    "192.168.100.104:0.0.0.0/0:0:0:0:6:65535:65535:0:501"
+
+	*/
+	pol := &tpmprotos.FlowExportPolicy{}
+
+	err = json.Unmarshal([]byte(policyJSON), pol)
+	tu.AssertOk(t, err, "failed to convert json to policy")
+
+	halMock.EXPECT().CollectorCreate(gomock.Any(), gomock.Any()).Return(collResp, nil).Times(1)
+	halMock.EXPECT().FlowMonitorRuleCreate(gomock.Any(), gomock.Any()).Return(flowResp, nil).Times(32)
+
+	err = s.CreateFlowExportPolicy(context.Background(), pol)
+	tu.AssertOk(t, err, fmt.Sprintf("failed to create export policy %+v", pol))
+
+	resp := httptest.NewRecorder()
+	s.debug(resp, nil)
+	b, err := ioutil.ReadAll(resp.Body)
+	tu.AssertOk(t, err, "failed to read debug")
+
+	dbgInfo := &debugInfo{}
+	err = json.Unmarshal(b, dbgInfo)
+	tu.AssertOk(t, err, "failed to unmarshal debug")
+
+	pdebug := dbgInfo.Policy[fmt.Sprintf("%s/%s/%s", pol.Tenant, pol.Namespace, pol.Name)]
+	tu.Assert(t, pdebug.FlowExportPolicy != nil, "failed to find policy")
+	tu.Assert(t, len(pdebug.Collectors) == 1, "mismatch in collectors", pdebug.Collectors)
+	tu.Assert(t, len(dbgInfo.CollectorTable) == 1, "invalid collectors", dbgInfo.CollectorTable)
+	tu.Assert(t, len(dbgInfo.FlowRuleTable) == 32, "invalid num of flows", dbgInfo.FlowRuleTable)
+
+	collDelResp := &halproto.CollectorDeleteResponseMsg{
+		Response: []*halproto.CollectorDeleteResponse{
+			{
+				ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+			},
+		},
+	}
+
+	flowDelResp := &halproto.FlowMonitorRuleDeleteResponseMsg{
+		Response: []*halproto.FlowMonitorRuleDeleteResponse{
+			{
+				ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+			},
+		},
+	}
+
+	halMock.EXPECT().CollectorDelete(gomock.Any(), gomock.Any()).Return(collDelResp, nil).Times(1)
+	halMock.EXPECT().FlowMonitorRuleDelete(gomock.Any(), gomock.Any()).Return(flowDelResp, nil).Times(32)
+
+	err = s.DeleteFlowExportPolicy(context.Background(), pol)
+	tu.AssertOk(t, err, fmt.Sprintf("failed to delete export policy %+v", pol))
+
+	resp = httptest.NewRecorder()
+	s.debug(resp, nil)
+	b, err = ioutil.ReadAll(resp.Body)
+	tu.AssertOk(t, err, "failed to read debug")
+
+	dbgInfo = &debugInfo{}
+	err = json.Unmarshal(b, dbgInfo)
+	tu.AssertOk(t, err, "failed to unmarshal debug")
+
+	pdebug, ok := dbgInfo.Policy[fmt.Sprintf("%s/%s/%s", pol.Tenant, pol.Namespace, pol.Name)]
+	tu.Assert(t, ok == false, "didn't remove policy", pdebug)
+	tu.Assert(t, len(pdebug.Collectors) == 0, "mismatch in collectors", pdebug.Collectors)
+	tu.Assert(t, len(dbgInfo.CollectorTable) == 0, "invalid collectors", dbgInfo.CollectorTable)
+	tu.Assert(t, len(dbgInfo.FlowRuleTable) == 0, "invalid num of flows", dbgInfo.FlowRuleTable)
+
+}

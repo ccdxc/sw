@@ -1066,9 +1066,10 @@ func (s *PolicyState) debug(w http.ResponseWriter, r *http.Request) {
 				}
 
 				dbgInfo.CollectorTable = append(dbgInfo.CollectorTable, debugCollector{
-					CollectorKey: types.ParseCollectorKey(k), CollectorID: v.CollectorID,
-					StrKey:      k,
-					PolicyNames: names,
+					CollectorKey: types.ParseCollectorKey(k),
+					CollectorID:  v.CollectorID,
+					StrKey:       k,
+					PolicyNames:  names,
 				})
 			}
 
@@ -1095,9 +1096,19 @@ func (s *PolicyState) debug(w http.ResponseWriter, r *http.Request) {
 
 				}
 
+				// policy names
+				pname := []string{}
+				for k := range v.PolicyNames {
+					pname = append(pname, k)
+				}
+
 				dbgInfo.FlowRuleTable = append(dbgInfo.FlowRuleTable, debugFlowRules{
-					RuleKey: types.ParseFlowMonitorRuleKey(k), RuleID: v.RuleID,
-					StrKey: k, Collector: cmap})
+					RuleKey:     types.ParseFlowMonitorRuleKey(k),
+					RuleID:      v.RuleID,
+					PolicyNames: pname,
+					StrKey:      k,
+					Collector:   cmap,
+				})
 			}
 		}
 	}
