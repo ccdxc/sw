@@ -29,6 +29,7 @@ service Ipsec {
   rpc IpsecSADecryptDelete (IpsecSADecryptDeleteRequestMsg) returns (IpsecSADecryptDeleteResponseMsg) {}
   rpc IpsecSADecryptGet (IpsecSADecryptGetRequestMsg) returns (IpsecSADecryptGetResponseMsg) {}
 
+  rpc IpsecGlobalStatisticsGet (IpsecGlobalStatisticsGetRequestMsg) returns (IpsecGlobalStatisticsGetResponseMsg) {}
 }
 
 // IPSec protocols
@@ -161,6 +162,41 @@ message IPSecSADecryptGetSpec {
   uint64                         total_rx_drops            = 26;
   kh.VrfKeyHandle                tep_vrf                   = 27; 
 }
+
+message IPSecGlobalStatisticsGetSpec {
+    uint64         encrypt_input_desc_errors     = 1;
+    uint64         encrypt_output_desc_errors    = 2;
+    uint64         encrypt_cb_ring_base_errors   = 3;
+    uint64         encrypt_input_page_errors     = 4;
+    uint64         encrypt_barco_req_addr_errors = 5;
+    uint64         encrypt_barco_cb_base_errors  = 6;
+    uint64         encrypt_pad_addr_errors       = 7;
+    uint64         encrypt_tail_bytes_errors     = 8;
+    uint64         encrypt_output_page_errors    = 9;
+    uint64         encrypt_stage4_inpage_errors  = 10;
+    uint64         encrypt_table0_inpage_errors  = 11;
+    uint64         encrypt_table2_inpage_errors  = 12;
+    uint64         encrypt_table3_inpage_errors  = 13;
+    uint64         encrypt_bad_barco_addr_errors = 14;
+    uint64         encrypt_barco_full_errors     = 15;
+    uint64         encrypt_cb_ring_dma_errors    = 16;
+
+    uint64         decrypt_input_desc_errors     = 17;
+    uint64         decrypt_output_desc_errors    = 18;
+    uint64         decrypt_cb_ring_base_errors   = 19;
+    uint64         decrypt_input_page_errors     = 20;
+    uint64         decrypt_barco_req_addr_errors = 21;
+    uint64         decrypt_barco_cb_addr_errors  = 22;
+    uint64         decrypt_stage4_inpage_errors  = 23;
+    uint64         decrypt_output_page_errors    = 24;
+    uint64         decrypt_txdma1_enter_counters = 25;
+    uint64         decrypt_txdma2_enter_counters = 26;
+    uint64         decrypt_txdma1_drop_counters  = 27;
+}
+
+  
+   
+   
 
 enum IpsecSAActionType {
   IPSEC_SA_ACTION_TYPE_NONE = 0;
@@ -386,5 +422,22 @@ message IpsecSADecryptGetResponse {
 
 message IpsecSADecryptGetResponseMsg {
     repeated IpsecSADecryptGetResponse response = 1;
+}
+
+message IpsecGlobalStatisticsGetRequest {
+    uint32     clear_on_read = 1;
+}
+
+message IpsecGlobalStatisticsGetRequestMsg {
+    repeated IpsecGlobalStatisticsGetRequest request = 1;
+}
+
+message IpsecGlobalStatisticsGetResponse {
+    types.ApiStatus              api_status = 1;
+    IPSecGlobalStatisticsGetSpec spec = 2;
+}
+   
+message IpsecGlobalStatisticsGetResponseMsg {
+    repeated IpsecGlobalStatisticsGetResponse response = 1;
 }
 

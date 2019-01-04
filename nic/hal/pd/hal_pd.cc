@@ -192,6 +192,7 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_IPSEC_ENCRYPT_DELETE, pd_ipsec_encrypt_delete);
     PD_FUNC_LOAD(PD_FUNC_ID_IPSEC_ENCRYPT_UPDATE, pd_ipsec_encrypt_update);
     PD_FUNC_LOAD(PD_FUNC_ID_IPSEC_ENCRYPT_GET, pd_ipsec_encrypt_get);
+    PD_FUNC_LOAD(PD_FUNC_ID_IPSEC_GLOBAL_STATS_GET, pd_ipsec_global_stats_get);
 
     // ipsec_sa_decrypt pd calls
     PD_FUNC_LOAD(PD_FUNC_ID_IPSEC_DECRYPT_CREATE, pd_ipsec_decrypt_create);

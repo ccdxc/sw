@@ -158,6 +158,7 @@ PD_FUNC_STUB(pd_ipsec_encrypt_create);
 PD_FUNC_STUB(pd_ipsec_encrypt_update);
 PD_FUNC_STUB(pd_ipsec_encrypt_delete);
 PD_FUNC_STUB(pd_ipsec_encrypt_get);
+PD_FUNC_STUB(pd_ipsec_global_stats_get);
 
 // ipseccb_decrypt calls
 PD_FUNC_STUB(pd_ipsec_decrypt_create);

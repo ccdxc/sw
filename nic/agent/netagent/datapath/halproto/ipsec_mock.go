@@ -367,6 +367,24 @@ func (mr *MockIpsecClientMockRecorder) IpsecSADecryptGet(ctx, in interface{}, op
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IpsecSADecryptGet", reflect.TypeOf((*MockIpsecClient)(nil).IpsecSADecryptGet), varargs...)
 }
 
+// IpsecGlobalStatisticsGet mocks base method
+func (m *MockIpsecClient) IpsecGlobalStatisticsGet(ctx context.Context, in *IpsecGlobalStatisticsGetRequestMsg, opts ...grpc.CallOption) (*IpsecGlobalStatisticsGetResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "IpsecGlobalStatisticsGet", varargs...)
+	ret0, _ := ret[0].(*IpsecGlobalStatisticsGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IpsecGlobalStatisticsGet indicates an expected call of IpsecGlobalStatisticsGet
+func (mr *MockIpsecClientMockRecorder) IpsecGlobalStatisticsGet(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IpsecGlobalStatisticsGet", reflect.TypeOf((*MockIpsecClient)(nil).IpsecGlobalStatisticsGet), varargs...)
+}
+
 // MockIpsecServer is a mock of IpsecServer interface
 type MockIpsecServer struct {
 	ctrl     *gomock.Controller
@@ -544,4 +562,17 @@ func (m *MockIpsecServer) IpsecSADecryptGet(arg0 context.Context, arg1 *IpsecSAD
 // IpsecSADecryptGet indicates an expected call of IpsecSADecryptGet
 func (mr *MockIpsecServerMockRecorder) IpsecSADecryptGet(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IpsecSADecryptGet", reflect.TypeOf((*MockIpsecServer)(nil).IpsecSADecryptGet), arg0, arg1)
+}
+
+// IpsecGlobalStatisticsGet mocks base method
+func (m *MockIpsecServer) IpsecGlobalStatisticsGet(arg0 context.Context, arg1 *IpsecGlobalStatisticsGetRequestMsg) (*IpsecGlobalStatisticsGetResponseMsg, error) {
+	ret := m.ctrl.Call(m, "IpsecGlobalStatisticsGet", arg0, arg1)
+	ret0, _ := ret[0].(*IpsecGlobalStatisticsGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IpsecGlobalStatisticsGet indicates an expected call of IpsecGlobalStatisticsGet
+func (mr *MockIpsecServerMockRecorder) IpsecGlobalStatisticsGet(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IpsecGlobalStatisticsGet", reflect.TypeOf((*MockIpsecServer)(nil).IpsecGlobalStatisticsGet), arg0, arg1)
 }

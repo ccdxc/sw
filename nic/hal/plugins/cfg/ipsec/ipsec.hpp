@@ -59,6 +59,11 @@ using ipsec::IpsecSADecryptGetResponse;
 using ipsec::IpsecSADecryptGetRequestMsg;
 using ipsec::IpsecSADecryptGetResponseMsg;
 
+using ipsec::IpsecGlobalStatisticsGetResponse;
+using ipsec::IpsecGlobalStatisticsGetRequest;
+using ipsec::IpsecGlobalStatisticsGetResponseMsg;
+using ipsec::IpsecGlobalStatisticsGetRequestMsg;
+
 namespace hal {
 
 #define MAX_IPSEC_KEY_SIZE  32
@@ -207,6 +212,40 @@ typedef struct ipsec_rule_s {
     ht_ctxt_t             ht_ctxt;                 // id based hash table ctxt
     ht_ctxt_t             hal_handle_ht_ctxt;      // hal handle based hash table ctxt
 } __PACK__ ipsec_rule_t;
+
+typedef struct ipsec_global_stats_cb_s {
+    uint64_t         encrypt_input_desc_errors;
+    uint64_t         encrypt_output_desc_errors;
+    uint64_t         encrypt_cb_ring_base_errors;
+    uint64_t         encrypt_input_page_errors;
+    uint64_t         encrypt_barco_req_addr_errors;
+    uint64_t         encrypt_barco_cb_base_errors;
+    uint64_t         encrypt_pad_addr_errors;
+    uint64_t         encrypt_tail_bytes_errors;
+    uint64_t         encrypt_output_page_errors;
+    uint64_t         encrypt_stage4_inpage_errors;
+    uint64_t         encrypt_table0_inpage_errors;
+    uint64_t         encrypt_table2_inpage_errors;
+    uint64_t         encrypt_table3_inpage_errors;
+    uint64_t         encrypt_bad_barco_addr_errors;
+    uint64_t         encrypt_barco_full_errors;
+    uint64_t         encrypt_cb_ring_dma_errors;
+    uint64_t         encrypt_pad[16];
+
+    uint64_t         decrypt_input_desc_errors;
+    uint64_t         decrypt_output_desc_errors;
+    uint64_t         decrypt_cb_ring_base_errors;
+    uint64_t         decrypt_input_page_errors;
+    uint64_t         decrypt_barco_req_addr_errors;
+    uint64_t         decrypt_barco_cb_addr_errors;
+    uint64_t         decrypt_stage4_inpage_errors;
+    uint64_t         decrypt_output_page_errors;
+    uint64_t         decrypt_txdma1_enter_counters;
+    uint64_t         decrypt_txdma2_enter_counters;
+    uint64_t         decrypt_txdma1_drop_counters;
+    uint64_t         decrypt_pad[21];
+
+} __PACK__ ipsec_global_stats_cb_t;
 
 // max. number of CBs supported  (TODO: we can take this from cfg file)
 #define HAL_MAX_IPSEC_SA                          2048 
@@ -818,6 +857,9 @@ hal_ret_t ipsec_rule_delete(ipsec::IpsecRuleDeleteRequest& req,
 
 hal_ret_t ipsec_rule_get(ipsec::IpsecRuleGetRequest& req,
                     ipsec::IpsecRuleGetResponseMsg *rsp);
+
+hal_ret_t ipsec_global_statistics_get(ipsec::IpsecGlobalStatisticsGetRequest& req,
+                                      ipsec::IpsecGlobalStatisticsGetResponseMsg *rsp);
 
 }    // namespace hal
 

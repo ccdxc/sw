@@ -630,6 +630,27 @@ pd_ipsec_encrypt_delete (pd_func_args_t *pd_func_args)
     return ret;
 }
 
+hal_ret_t 
+pd_ipsec_global_stats_get (pd_func_args_t *pd_func_args)
+{
+    hal_ret_t                  ret;
+    pd_ipsec_global_stats_get_args_t *args = pd_func_args->pd_ipsec_global_stats_get;
+    ipsec_global_stats_cb_t *stats = args->stats_cb;
+    uint64_t hwid =  get_start_offset(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS);
+  
+    if (args == NULL) {
+        return HAL_RET_HW_FAIL;
+    }
+    HAL_TRACE_DEBUG("IPSEC Global Stats");
+    if(!p4plus_hbm_read(hwid,  (uint8_t *)stats, sizeof(ipsec_global_stats_cb_t))){
+        HAL_TRACE_ERR("Failed to get rx: stage0 entry for IPSEC CB");
+        return HAL_RET_HW_FAIL;
+    }
+    ret = HAL_RET_OK;
+    return ret;
+}
+
+
 hal_ret_t
 pd_ipsec_encrypt_get (pd_func_args_t *pd_func_args)
 {

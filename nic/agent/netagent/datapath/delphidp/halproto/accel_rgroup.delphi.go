@@ -614,6 +614,7 @@ It has these top-level messages:
 	IpsecSADecrypt
 	IPSecSAEncryptGetSpec
 	IPSecSADecryptGetSpec
+	IPSecGlobalStatisticsGetSpec
 	IpsecSAAction
 	IpsecRuleMatchSpec
 	IpsecRuleSpec
@@ -655,6 +656,10 @@ It has these top-level messages:
 	IpsecSADecryptGetRequestMsg
 	IpsecSADecryptGetResponse
 	IpsecSADecryptGetResponseMsg
+	IpsecGlobalStatisticsGetRequest
+	IpsecGlobalStatisticsGetRequestMsg
+	IpsecGlobalStatisticsGetResponse
+	IpsecGlobalStatisticsGetResponseMsg
 	SecurityProfileKeyHandle
 	CollectorKeyHandle
 	ExportControlKeyHandle

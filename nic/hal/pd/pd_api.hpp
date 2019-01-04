@@ -1224,6 +1224,7 @@ pd_ipsec_encrypt_delete_args_init (pd_ipsec_encrypt_delete_args_t *args)
     return;
 }
 
+
 typedef struct pd_ipsec_encrypt_get_args_s {
     ipsec_sa_t            *ipsec_sa;
 } __PACK__ pd_ipsec_encrypt_get_args_t;
@@ -1279,6 +1280,18 @@ static inline void
 pd_ipsec_decrypt_get_args_init (pd_ipsec_decrypt_get_args_t *args)
 {
     args->ipsec_sa = NULL;
+    return;
+}
+
+typedef struct pd_ipsec_global_stats_get_args_s {
+    uint32_t    clear_on_read;
+    ipsec_global_stats_cb_t *stats_cb;
+} __PACK__ pd_ipsec_global_stats_get_args_t;
+
+static inline void 
+pd_ipsec_global_stats_get_args_init(pd_ipsec_global_stats_get_args_t *args)
+{
+    args->clear_on_read = 0;
     return;
 }
 
@@ -3229,7 +3242,8 @@ typedef struct pd_tcp_global_stats_get_args_s {
     ENTRY(PD_FUNC_ID_TCP_GLOBAL_STATS_GET,     287, "PD_FUNC_ID_TCP_GLOBAL_STATS_GET") \
     ENTRY(PD_FUNC_ID_PACKET_BUFFER_UPDATE,     288, "PD_FUNC_ID_PACKET_BUFFER_UPDATE") \
     ENTRY(PD_FUNC_ID_REG_WRITE,                289, "PD_FUNC_ID_REG_WRITE")\
-    ENTRY(PD_FUNC_ID_MAX,                      290, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_IPSEC_GLOBAL_STATS_GET,   290, "PD_FUNC_ID_IPSEC_GLOBAL_STATS_GET") \
+    ENTRY(PD_FUNC_ID_MAX,                      291, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3359,6 +3373,7 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_ipsec_encrypt_update);
         PD_UNION_ARGS_FIELD(pd_ipsec_encrypt_delete);
         PD_UNION_ARGS_FIELD(pd_ipsec_encrypt_get);
+        PD_UNION_ARGS_FIELD(pd_ipsec_global_stats_get);
 
         // ipsec_sa_decrypt calls
         PD_UNION_ARGS_FIELD(pd_ipsec_decrypt_create);
@@ -3778,6 +3793,7 @@ PD_FUNCP_TYPEDEF(pd_ipsec_encrypt_create);
 PD_FUNCP_TYPEDEF(pd_ipsec_encrypt_update);
 PD_FUNCP_TYPEDEF(pd_ipsec_encrypt_delete);
 PD_FUNCP_TYPEDEF(pd_ipsec_encrypt_get);
+PD_FUNCP_TYPEDEF(pd_ipsec_global_stats_get);
 
 // ipsec_sa_decrypt calls
 PD_FUNCP_TYPEDEF(pd_ipsec_decrypt_create);
