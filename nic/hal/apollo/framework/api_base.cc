@@ -33,6 +33,8 @@ api_base::factory(api_ctxt_t *api_ctxt) {
         return obj;
 
     case OBJ_ID_TEP:
+        obj = tep_entry::factory(&api_ctxt->api_params->tep_info);
+        return obj;
         break;
 
     case OBJ_ID_VNIC:

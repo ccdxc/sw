@@ -3,9 +3,13 @@
 #ifndef __IP_HPP__
 #define __IP_HPP__
 
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <string.h>
+#include <cstring>
 #include "include/sdk/bitmap.hpp"
 #include "include/sdk/eth.hpp"
-#include <cstring>
 
 //------------------------------------------------------------------------------
 // IP address family
@@ -250,6 +254,35 @@ ippfx2str (const ip_prefix_t *ip_pfx)
     sprintf(buf, "%s/%d", ip_addr_buf, ip_pfx->len);
 
     return buf;
+}
+
+static inline  int
+str2ipv4pfx (char *str, ip_prefix_t *ip_pfx)
+{
+    char             *slash;
+    struct in_addr    addr;
+    char              buf[16];
+
+    // look for slash
+    slash = strchr(str, '/');
+    if (slash == NULL) {
+        if (!inet_aton(str, &addr)) {
+            return -1;
+        }
+        ip_pfx->addr.addr.v4_addr = ntohl(addr.s_addr);
+        ip_pfx->addr.af = IP_AF_IPV4;
+        ip_pfx->len = 32;
+    } else {
+        strncpy(buf, str, slash - str);
+        buf[slash - str] = '\0';
+        if (!inet_aton(buf, &addr)) {
+            return -1;
+        }
+        ip_pfx->addr.addr.v4_addr = ntohl(addr.s_addr);
+        ip_pfx->addr.af = IP_AF_IPV4;
+        ip_pfx->len = (uint8_t) atoi(++slash);
+    }
+    return 0;
 }
 
 // spdlog formatter for ip_addr_t
