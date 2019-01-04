@@ -37,6 +37,8 @@ namespace capri {
 
 static cpp_int_helper cpp_helper;
 
+qos_profile_t qos_profile = {true, true, 9216, 8, 25, 27, 16, 2, {0, 24}};
+
 typedef struct capri_tm_cfg_profile_s {
     uint32_t num_qs[NUM_TM_PORT_TYPES];
     uint32_t jumbo_mtu[NUM_TM_PORT_TYPES];
@@ -809,8 +811,8 @@ capri_tm_uplink_input_dscp_map_update(tm_port_t port,
                     if (dscp_map->ip_dscp[i]) {
                         cpp_helper.set_slc(dscp_map_val,
                                            tc,
-                                           dscp_map->ip_dscp[i] * 3,
-                                           ((dscp_map->ip_dscp[i]+1) * 3) - 1);
+                                           i * 3,
+                                           ((i+1) * 3) - 1);
                     }
                 }
 
@@ -2555,25 +2557,22 @@ capri_tm_init_enable_ports (void)
 }
 
 static sdk_ret_t
-populate_cfg_profile (capri_tm_cfg_profile_t *tm_cfg_profile,
-                      sdk::lib::catalog *catalog)
+capri_tm_init_qos_profile (capri_tm_cfg_profile_t *tm_cfg_profile,
+                           sdk::lib::catalog *catalog)
 {
-    const sdk::lib::qos_profile_t *qos_profile;
     uint32_t interpipe_mtu;
 
-    qos_profile = catalog->qos_profile();
-    if (!qos_profile) {
-        SDK_TRACE_ERR("QOS asic profile does not exist in the catalog");
-        return sdk::SDK_RET_INVALID_ARG;
-    }
+    tm_cfg_profile->sw_init_enabled = qos_profile.sw_init_enable;
+    tm_cfg_profile->sw_cfg_write_enabled = qos_profile.sw_cfg_write_enable;
 
-    tm_cfg_profile->sw_init_enabled = qos_profile->sw_init_enable;
-    tm_cfg_profile->sw_cfg_write_enabled = qos_profile->sw_cfg_write_enable;
     tm_cfg_profile->hbm_fifo_base =
-        g_capri_state_pd->mempartition()->start_addr(MEM_REGION_QOS_HBM_FIFO_NAME);
+            g_capri_state_pd->mempartition()->start_addr(
+                                            MEM_REGION_QOS_HBM_FIFO_NAME);
     tm_cfg_profile->hbm_fifo_size =
         g_capri_state_pd->mempartition()->size(MEM_REGION_QOS_HBM_FIFO_NAME);
+
     tm_cfg_profile->num_active_uplink_ports = catalog->num_uplink_ports();
+
     if (tm_cfg_profile->num_active_uplink_ports <= 1) {
         tm_cfg_profile->num_active_uplink_ports = 1;
         SDK_TRACE_INFO("num_uplink_ports %u is not valid. resetting it to %u",
@@ -2584,24 +2583,24 @@ populate_cfg_profile (capri_tm_cfg_profile_t *tm_cfg_profile,
         tm_cfg_profile->num_active_uplink_ports -= 1;
     }
 
-    tm_cfg_profile->jumbo_mtu[TM_PORT_TYPE_UPLINK] = qos_profile->jumbo_mtu;
-    interpipe_mtu = qos_profile->jumbo_mtu + CAPRI_TM_MAX_INTERPIPE_HDR_SZ;
+    tm_cfg_profile->jumbo_mtu[TM_PORT_TYPE_UPLINK] = qos_profile.jumbo_mtu;
+    interpipe_mtu = qos_profile.jumbo_mtu + CAPRI_TM_MAX_INTERPIPE_HDR_SZ;
     tm_cfg_profile->jumbo_mtu[TM_PORT_TYPE_P4IG] = interpipe_mtu;
     tm_cfg_profile->jumbo_mtu[TM_PORT_TYPE_P4EG] = interpipe_mtu;
     tm_cfg_profile->jumbo_mtu[TM_PORT_TYPE_DMA] = interpipe_mtu;
 
-    tm_cfg_profile->num_qs[TM_PORT_TYPE_UPLINK] = qos_profile->num_uplink_qs;
-    tm_cfg_profile->num_qs[TM_PORT_TYPE_P4IG] = qos_profile->num_p4ig_qs;
-    tm_cfg_profile->num_qs[TM_PORT_TYPE_P4EG] = qos_profile->num_p4eg_qs;
-    tm_cfg_profile->num_qs[TM_PORT_TYPE_DMA] = qos_profile->num_dma_qs;
+    tm_cfg_profile->num_qs[TM_PORT_TYPE_UPLINK] = qos_profile.num_uplink_qs;
+    tm_cfg_profile->num_qs[TM_PORT_TYPE_P4IG] = qos_profile.num_p4ig_qs;
+    tm_cfg_profile->num_qs[TM_PORT_TYPE_P4EG] = qos_profile.num_p4eg_qs;
+    tm_cfg_profile->num_qs[TM_PORT_TYPE_DMA] = qos_profile.num_dma_qs;
 
-    tm_cfg_profile->num_p4_high_perf_qs = qos_profile->num_p4_high_perf_qs;;
+    tm_cfg_profile->num_p4_high_perf_qs = qos_profile.num_p4_high_perf_qs;
     if (tm_cfg_profile->num_p4_high_perf_qs) {
-        tm_cfg_profile->p4_high_perf_qs = 
-            (tm_q_t *)SDK_MALLOC(sdk::SDK_MEM_ALLOC_PD, 
+        tm_cfg_profile->p4_high_perf_qs =
+            (tm_q_t *)SDK_MALLOC(sdk::SDK_MEM_ALLOC_PD,
                                  tm_cfg_profile->num_p4_high_perf_qs * sizeof(tm_q_t));
 
-        memcpy(tm_cfg_profile->p4_high_perf_qs, qos_profile->p4_high_perf_qs, 
+        memcpy(tm_cfg_profile->p4_high_perf_qs, qos_profile.p4_high_perf_qs,
                tm_cfg_profile->num_p4_high_perf_qs * sizeof(tm_q_t));
     }
 
@@ -2658,9 +2657,10 @@ capri_tm_init (sdk::lib::catalog* catalog)
     capri_tm_asic_profile_t asic_profile;
 
     populate_asic_profile(&asic_profile);
-    ret = populate_cfg_profile(tm_cfg_profile, catalog);
-    if (ret != sdk::SDK_RET_OK) {
-        SDK_TRACE_ERR("Error populating config profile from the catalog ret %d",
+
+    ret = capri_tm_init_qos_profile(tm_cfg_profile, catalog);
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("Error initing qos profile. ret: %d",
                       ret);
         return ret;
     }

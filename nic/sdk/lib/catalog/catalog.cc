@@ -222,40 +222,6 @@ catalog::catalog_platform_type_to_platform_type(std::string platform_type)
 }
 
 sdk_ret_t
-catalog::populate_qos_profile(ptree &prop_tree)
-{
-    qos_profile_t &qos_profile = catalog_db_.qos_profile;
-
-    qos_profile.sw_init_enable = prop_tree.get<bool>("qos.profile.sw_init_enable", false);
-    qos_profile.sw_cfg_write_enable = prop_tree.get<bool>("qos.profile.sw_cfg_write_enable", false);
-    qos_profile.jumbo_mtu = prop_tree.get<uint32_t>("qos.profile.jumbo_mtu", 0);
-    qos_profile.num_uplink_qs = prop_tree.get<uint32_t>("qos.profile.num_uplink_qs", 0);
-    qos_profile.num_p4ig_qs = prop_tree.get<uint32_t>("qos.profile.num_p4ig_qs", 0);
-    qos_profile.num_p4eg_qs = prop_tree.get<uint32_t>("qos.profile.num_p4eg_qs", 0);
-    qos_profile.num_dma_qs = prop_tree.get<uint32_t>("qos.profile.num_dma_qs", 0);
-    qos_profile.num_p4_high_perf_qs = 0;
-    if (prop_tree.get_child_optional("qos.profile.p4_high_perf_qs")) {
-        qos_profile.num_p4_high_perf_qs = prop_tree.get_child("qos.profile.p4_high_perf_qs").size();
-    }
-    if (qos_profile.num_p4_high_perf_qs) {
-        qos_profile.p4_high_perf_qs = (int32_t *) SDK_CALLOC(sdk::SDK_MEM_ALLOC_CATALOG, 
-                                                             qos_profile.num_p4_high_perf_qs * 
-                                                             sizeof(int32_t));
-        if (!qos_profile.p4_high_perf_qs) {
-            SDK_TRACE_ERR("Failed to allocate memory for qos profile");
-            return SDK_RET_ERR;
-        }
-        int i = 0;
-        for (ptree::value_type &q: prop_tree.get_child("qos.profile.p4_high_perf_qs")) {
-            qos_profile.p4_high_perf_qs[i] = q.second.get_value<std::uint32_t>();
-            i++;
-        }
-    }
-
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
 catalog::populate_mac_ch_profile(ch_profile_t *ch_profile,
                                  std::string  profile_str,
                                  ptree        &prop_tree)
@@ -550,8 +516,6 @@ catalog::populate_catalog(std::string &catalog_file, ptree &prop_tree)
 
     populate_serdes(dirname((char*)catalog_file.c_str()), prop_tree);
 
-    populate_qos_profile(prop_tree);
-
     return SDK_RET_OK;
 }
 
@@ -648,10 +612,6 @@ catalog::get_child_str (std::string catalog_file, std::string path, std::string&
 //------------------------------------------------------------------------------
 catalog::~catalog()
 {
-    if (catalog_db_.qos_profile.p4_high_perf_qs) {
-        SDK_FREE(sdk::SDK_MEM_ALLOC_CATALOG, 
-                 catalog_db_.qos_profile.p4_high_perf_qs);
-    }
 }
 
 void
