@@ -5,7 +5,7 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include "include/sdk/platform/capri/capri_cfg.hpp"
+#include "platform/capri/capri_cfg.hpp"
 #include "nic/sdk/asic/rw/asicrw.hpp"
 
 namespace sdk {

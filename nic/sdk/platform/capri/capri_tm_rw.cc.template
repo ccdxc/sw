@@ -18,10 +18,10 @@
 #include "include/sdk/base.hpp"
 #include "include/sdk/mem.hpp"
 #include "include/sdk/lock.hpp"
-#include "include/sdk/platform/capri/capri_p4.hpp"
-#include "include/sdk/platform/capri/capri_tm_rw.hpp"
+#include "platform/capri/capri_p4.hpp"
+#include "platform/capri/capri_tm_rw.hpp"
 #include "nic/sdk/include/sdk/bitmap.hpp"
-#include "include/sdk/platform/utils/mpartition.hpp"
+#include "platform/utils/mpartition.hpp"
 #include "gen/platform/mem_regions.hpp"
 
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"

@@ -5,7 +5,7 @@ MODULE_SRCS     = ${MODULE_SRC_DIR}/hello.p4
 MODULE_PIPELINE = hello
 MODULE_NCC_OPTS = --asm-out --gen-dir ${BLD_P4GEN_DIR} \
                   --cfg-dir ${BLD_PGMBIN_DIR}/hello_p4 \
-                  --i2e-user --fe-flags="-I${TOPDIR}"
+                  --i2e-user --fe-flags="-I${TOPDIR} -I${SDKDIR}"
 MODULE_DEPS     = $(shell find ${MODULE_DIR} -name '*.p4' -o -name '*.h') \
                   $(shell find ${MODULE_DIR}/../include -name '*.p4' -o -name '*.h') \
                   $(shell find ${TOPDIR}/nic/p4/include -name '*')

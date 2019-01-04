@@ -3,8 +3,8 @@
 #include <iostream>
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/asic/rw/asicrw.hpp"
-#include "include/sdk/platform/capri/capri_hbm_rw.hpp"
-#include "include/sdk/platform/capri/capri_common.hpp"
+#include "platform/capri/capri_hbm_rw.hpp"
+#include "platform/capri/capri_common.hpp"
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
 #include "nic/asic/capri/model/cap_pic/cap_pics_csr.h"
 #include "nic/asic/capri/model/cap_wa/cap_wa_csr.h"
@@ -678,7 +678,7 @@ capri_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
         clk_diff = cur_ts - prev_ts;
 
         hbm_bw = &hbm_bw_arr[index++];
-        hbm_bw->type = ASIC_BLOCK_TXD;
+        hbm_bw->type = asic_block_t::ASIC_BLOCK_TXDMA;
         hbm_bw->clk_diff = clk_diff;
         capri_tpc_bw_mon_rd_get(&max_rd, &avg_rd);
         capri_tpc_bw_mon_wr_get(&max_wr, &avg_wr);
@@ -691,7 +691,7 @@ capri_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
         populate_hbm_bw(max_rd, max_wr, avg_rd, avg_wr, hbm_bw, num_bits, window_size);
 
         hbm_bw = &hbm_bw_arr[index++];
-        hbm_bw->type = ASIC_BLOCK_RXD;
+        hbm_bw->type = asic_block_t::ASIC_BLOCK_RXDMA;
         hbm_bw->clk_diff = clk_diff;
         capri_rpc_bw_mon_rd_get(&max_rd, &avg_rd);
         capri_rpc_bw_mon_wr_get(&max_wr, &avg_wr);
@@ -704,7 +704,7 @@ capri_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
         populate_hbm_bw(max_rd, max_wr, avg_rd, avg_wr, hbm_bw, num_bits, window_size);
 
         hbm_bw = &hbm_bw_arr[index++];
-        hbm_bw->type = ASIC_BLOCK_MS;
+        hbm_bw->type = asic_block_t::ASIC_BLOCK_MS;
         hbm_bw->clk_diff = clk_diff;
         capri_ms_bw_mon_rd_get(&max_rd, &avg_rd);
         capri_ms_bw_mon_wr_get(&max_wr, &avg_wr);
@@ -717,7 +717,7 @@ capri_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
         populate_hbm_bw(max_rd, max_wr, avg_rd, avg_wr, hbm_bw, num_bits, window_size);
 
         hbm_bw = &hbm_bw_arr[index++];
-        hbm_bw->type = ASIC_BLOCK_PCIE;
+        hbm_bw->type = asic_block_t::ASIC_BLOCK_PCIE;
         hbm_bw->clk_diff = clk_diff;
         capri_pxb_bw_mon_rd_get(&max_rd, &avg_rd);
         capri_pxb_bw_mon_wr_get(&max_wr, &avg_wr);
@@ -734,7 +734,7 @@ capri_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
         }
 
         hbm_bw = &hbm_bw_arr[index++];
-        hbm_bw->type = ASIC_BLOCK_PB;
+        hbm_bw->type = asic_block_t::ASIC_BLOCK_PACKET_BUFFER;
         hbm_bw->clk_diff = clk_diff;
         rd_cnt = capri_pb_axi_read_cnt();
         wr_cnt = cap_nx_read_pb_axi_cnt(0);

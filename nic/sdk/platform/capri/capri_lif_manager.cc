@@ -4,11 +4,11 @@
 
 #include <errno.h>
 #include <assert.h>
-#include "nic/sdk/include/sdk/platform/capri/capri_qstate.hpp"
-#include "nic/sdk/include/sdk/platform/capri/capri_lif_manager.hpp"
+#include "platform/capri/capri_qstate.hpp"
+#include "platform/capri/capri_lif_manager.hpp"
 #include "nic/sdk/include/sdk/base.hpp"
-#include "include/sdk/platform/capri/capri_tbl_rw.hpp"
-#include "include/sdk/platform/capri/capri_hbm_rw.hpp"
+#include "platform/capri/capri_tbl_rw.hpp"
+#include "platform/capri/capri_hbm_rw.hpp"
 
 #if 0
 void push_qstate_to_capri(hal::LIFQState *qstate);

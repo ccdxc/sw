@@ -12,7 +12,7 @@
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "gen/p4gen/gft/include/p4pd.h"
 #include "nic/p4/gft/include/defines.h"
-#include "include/sdk/platform/capri/capri_tm_rw.hpp"
+#include "platform/capri/capri_tm_rw.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 #include "nic/hal/pd/asic_pd.hpp"
 
@@ -1469,7 +1469,7 @@ TEST_F(gft_test, test1) {
 
     cfg.completion_func = NULL;
 
-    ret = hal::pd::asic_init(&cfg);
+    ret = sdk::asic::asic_init(&cfg);
     ASSERT_EQ(ret, SDK_RET_OK);
     ret = p4pd_init(&p4pd_cfg);
     ASSERT_EQ(ret, HAL_RET_OK);

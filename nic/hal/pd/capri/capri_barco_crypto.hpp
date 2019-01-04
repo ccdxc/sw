@@ -3,7 +3,7 @@
 
 #include "gen/proto/types.pb.h"
 #include "nic/include/base.hpp"
-#include "include/sdk/platform/capri/capri_cfg.hpp"
+#include "platform/capri/capri_cfg.hpp"
 
 namespace hal {
 namespace pd {

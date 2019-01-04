@@ -7,7 +7,7 @@
 #include "nic/hal/plugins/sfw/cfg/nwsec.hpp"
 #include "nic/hal/plugins/cfg/nw/interface_api.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"
-#include "nic/sdk/include/sdk/platform/capri/capri_lif_manager.hpp"
+#include "platform/capri/capri_lif_manager.hpp"
 
 namespace hal {
 

@@ -1,9 +1,9 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 #include "include/sdk/base.hpp"
-#include "include/sdk/platform/capri/capri_cfg.hpp"
-#include "include/sdk/platform/capri/capri_state.hpp"
-#include "include/sdk/platform/capri/capri_txs_scheduler.hpp"
+#include "platform/capri/capri_cfg.hpp"
+#include "platform/capri/capri_state.hpp"
+#include "platform/capri/capri_txs_scheduler.hpp"
 
 namespace sdk {
 namespace platform {

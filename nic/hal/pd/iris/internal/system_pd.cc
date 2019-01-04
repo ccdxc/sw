@@ -6,7 +6,7 @@
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
-#include "include/sdk/platform/capri/capri_tm_rw.hpp"
+#include "platform/capri/capri_tm_rw.hpp"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 #include "nic/hal/pd/iris/aclqos/qos_pd.hpp"
 

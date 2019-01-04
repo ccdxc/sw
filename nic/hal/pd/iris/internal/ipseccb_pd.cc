@@ -10,7 +10,7 @@
 #include "nic/hal/plugins/cfg/nw/vrf_api.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/hal.hpp"
-#include "nic/sdk/include/sdk/platform/capri/capri_lif_manager.hpp"
+#include "platform/capri/capri_lif_manager.hpp"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 #include "gen/p4gen/esp_ipv4_tunnel_h2n_rxdma/include/esp_ipv4_tunnel_h2n_rxdma_p4plus_ingress.h"
 

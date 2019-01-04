@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 #include "nic/sdk/asic/rw/asicrw.hpp"
-#include "include/sdk/platform/capri/capri_tbl_rw.hpp"
+#include "platform/capri/capri_tbl_rw.hpp"
 
 /* PC address offset coming out of stage 0 CB is shifted left by 6 bits as stage0 pc
  * start is assumed to be 64B cacheline aligned

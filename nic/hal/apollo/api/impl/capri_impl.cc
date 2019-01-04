@@ -75,7 +75,7 @@ capri_impl::asic_init(void) {
 
     pal_ret = sdk::lib::pal_init(asic_cfg_.platform);
     SDK_ASSERT(pal_ret == sdk::lib::PAL_RET_OK);
-    ret = hal::pd::asic_init(&asic_cfg_);
+    ret = sdk::asic::asic_init(&asic_cfg_);
     SDK_ASSERT(ret == SDK_RET_OK);
     return SDK_RET_OK;
 }

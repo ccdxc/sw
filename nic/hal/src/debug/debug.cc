@@ -816,7 +816,7 @@ hbm_bw_get(const HbmBwGetRequest *req, HbmBwGetResponseMsg *rsp)
     hbm_bw_args.hbm_bw =
         (asic_hbm_bw_t*)HAL_CALLOC(HAL_MEM_ALLOC_DEBUG_CLI,
                                     hbm_bw_args.num_samples
-                                    * ASIC_BLOCK_MAX
+                                    * asic_block_t::ASIC_BLOCK_MAX
                                     * sizeof(asic_hbm_bw_t));
 
     ret = pd::asic_pd_hbm_bw_get(&hbm_bw_args);
@@ -825,7 +825,7 @@ hbm_bw_get(const HbmBwGetRequest *req, HbmBwGetResponseMsg *rsp)
         return ret;
     }
 
-    for (uint32_t i = 0; i < (hbm_bw_args.num_samples * ASIC_BLOCK_MAX); i ++) {
+    for (uint32_t i = 0; i < (hbm_bw_args.num_samples * asic_block_t::ASIC_BLOCK_MAX); i ++) {
         auto response = rsp->add_response();
         auto hbm_bw = &hbm_bw_args.hbm_bw[i];
         response->mutable_average()->set_read(hbm_bw->avg.read);

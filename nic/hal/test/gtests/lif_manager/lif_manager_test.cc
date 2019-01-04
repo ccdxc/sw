@@ -1,4 +1,4 @@
-#include "nic/sdk/include/sdk/platform/capri/capri_lif_manager.hpp"
+#include "platform/capri/capri_lif_manager.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>
 #include <errno.h>

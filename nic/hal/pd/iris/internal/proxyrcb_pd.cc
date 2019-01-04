@@ -2,14 +2,14 @@
 #include <arpa/inet.h>
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/pd_api.hpp"
-#include "include/sdk/platform/capri/capri_common.hpp"
+#include "platform/capri/capri_common.hpp"
 #include "nic/hal/pd/iris/internal/proxyrcb_pd.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/src/internal/proxyrcb.hpp"
 #include "nic/hal/hal.hpp"
-#include "nic/sdk/include/sdk/platform/capri/capri_lif_manager.hpp"
+#include "platform/capri/capri_lif_manager.hpp"
 #include "gen/p4gen/proxyr_txdma/include/proxyr_txdma_p4plus_ingress.h"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 

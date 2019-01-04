@@ -1,9 +1,13 @@
 #include "nic/hal/pd/utils/met/met.hpp"
 #include "nic/hal/pd/utils/met/repl_list.hpp"
+#include "platform/utils/mpartition.hpp"
+#include "nic/hal/pd/capri/capri_hbm.hpp"
 
 using hal::pd::utils::Met;
 using hal::pd::utils::ReplList;
 
+uint64_t repl_table_mem_addr;
+uint64_t repl_table_mem_offset;
 //---------------------------------------------------------------------------
 // Factory method to instantiate the class
 //---------------------------------------------------------------------------
@@ -16,6 +20,15 @@ Met::factory(std::string table_name, uint32_t table_id,
 {
     void        *mem = NULL;
     Met   *met = NULL;
+    sdk::platform::utils::mpartition *mpart;
+
+    mpart = sdk::platform::utils::mpartition::get_instance();
+    HAL_ASSERT(mpart != NULL);
+    repl_table_mem_addr = mpart->start_addr(JP4_REPL);
+    repl_table_mem_offset = mpart->start_offset(JP4_REPL);
+
+    HAL_TRACE_DEBUG("met : table memaddr {:#x} table mem offset {:#x}",
+                    repl_table_mem_addr, repl_table_mem_offset);
 
     mem = HAL_CALLOC(mtrack_id, sizeof(Met));
     if (!mem) {

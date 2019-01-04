@@ -5,16 +5,16 @@
 
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
-#include "include/sdk/platform/capri/capri_tbl_rw.hpp"
-#include "include/sdk/platform/capri/capri_pxb_pcie.hpp"
+#include "platform/capri/capri_tbl_rw.hpp"
+#include "platform/capri/capri_pxb_pcie.hpp"
 #include "nic/hal/pd/capri/capri_barco_rings.hpp"
 #include "nic/hal/pd/capri/capri_accel_rgroup.hpp"
 #include "nic/hal/pd/capri/capri_barco_asym_apis.hpp"
 #include "nic/hal/pd/capri/capri_barco_sym_apis.hpp"
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
-#include "include/sdk/platform/capri/capri_quiesce.hpp"
-#include "nic/sdk/include/sdk/platform/capri/capri_qstate.hpp"
+#include "platform/capri/capri_quiesce.hpp"
+#include "platform/capri/capri_qstate.hpp"
 
 using namespace sdk::platform::capri;
 

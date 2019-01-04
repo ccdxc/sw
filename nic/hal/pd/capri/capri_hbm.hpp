@@ -1,7 +1,7 @@
 #ifndef __CAPRI_HBM_HPP__
 #define __CAPRI_HBM_HPP__
 
-#include "include/sdk/platform/capri/capri_hbm_rw.hpp"
+#include "platform/capri/capri_hbm_rw.hpp"
 
 #define JP4_PRGM                 "p4_program"
 #define JP4PLUS_PRGM             "p4plus_program"

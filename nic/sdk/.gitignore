@@ -12,3 +12,4 @@ include/sdk/asic/capri/csrlite/cap_top_csr_defines.h
 build
 third-party/avago/fw
 third-party/locale
+platform/capri/capri_tm_rw.cc

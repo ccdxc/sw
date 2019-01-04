@@ -3,7 +3,7 @@ include ${MKDEFS}/pre.mk
 MODULE_TARGET   = app_redir_p4plus.p4bin
 MODULE_PIPELINE = iris gft
 MODULE_NCC_OPTS = --p4-plus --pd-gen --asm-out --no-ohi \
-                  --two-byte-profile --fe-flags="-I${TOPDIR}" \
+                  --two-byte-profile --fe-flags="-I${TOPDIR} -I${SDKDIR} -I${SDKDIR}" \
 				  --gen-dir ${BLD_P4GEN_DIR}
 MODULE_DEPS     = $(shell find ${MODULE_DIR} -name '*.p4' -o -name '*.h') \
                   $(shell find ${MODULE_DIR}/../include -name '*') \

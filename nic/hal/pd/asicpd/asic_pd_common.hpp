@@ -6,7 +6,7 @@
 #include "nic/include/base.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
-#include "include/sdk/platform/capri/capri_hbm_rw.hpp"
+#include "platform/capri/capri_hbm_rw.hpp"
 #include "gen/proto/debug.pb.h"
 
 #define HAL_LOG_TBL_UPDATES 1

@@ -10,8 +10,8 @@
 #include "nic/sdk/include/sdk/pal.hpp"
 #include "nic/sdk/include/sdk/utils.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
-#include "nic/sdk/include/sdk/platform/utils/lif_manager_base.hpp"
-#include "nic/sdk/include/sdk/platform/capri/capri_qstate.hpp"
+#include "platform/utils/lif_manager_base.hpp"
+#include "platform/capri/capri_qstate.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
@@ -806,7 +806,7 @@ TEST_F(apollo_test, test1) {
     cfg.completion_func = NULL;
 
     printf("Doing asic init ...\n");
-    ret = hal::pd::asic_init(&cfg);
+    ret = sdk::asic::asic_init(&cfg);
     ASSERT_EQ(ret, SDK_RET_OK);
     printf("Doing p4pd init ...\n");
     ret = p4pd_init(&p4pd_cfg);

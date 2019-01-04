@@ -1,9 +1,10 @@
 #ifndef __CAPRI_HBM_RW_HPP__
 #define __CAPRI_HBM_RW_HPP__
 
-#include "include/sdk/platform/capri/capri_cfg.hpp"
-#include "nic/sdk/include/sdk/platform/utils/mpartition.hpp"
-#include "nic/sdk/include/sdk/platform/p4loader/loader.hpp"
+#include "platform/capri/capri_cfg.hpp"
+#include "platform/utils/mpartition.hpp"
+#include "platform/p4loader/loader.hpp"
+#include "asic/asic.hpp"
 
 namespace sdk {
 namespace platform {
@@ -32,27 +33,6 @@ void reset_hbm_regions(capri_cfg_t *cfg);
 int32_t capri_hbm_read_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 int32_t capri_hbm_write_mem(uint64_t addr, const uint8_t *buf, uint32_t size);
 
-
-typedef enum asic_block_e {
-    ASIC_BLOCK_PB,
-    ASIC_BLOCK_TXD,
-    ASIC_BLOCK_RXD,
-    ASIC_BLOCK_MS,
-    ASIC_BLOCK_PCIE,
-    ASIC_BLOCK_MAX
-} asic_block_t;
-
-typedef struct asic_bw_s {
-    double read;
-    double write;
-} asic_bw_t;
-
-typedef struct asic_hbm_bw_s {
-    asic_block_t type;
-    uint64_t clk_diff;
-    asic_bw_t max;
-    asic_bw_t avg;
-} asic_hbm_bw_t;
 
 
 typedef struct capri_descr_s {
@@ -108,6 +88,4 @@ using sdk::platform::capri::get_start_offset;
 using sdk::platform::capri::get_size_kb;
 using sdk::platform::capri::capri_hbm_write_mem;
 using sdk::platform::capri::capri_hbm_read_mem;
-using sdk::platform::capri::asic_hbm_bw_t;
-using sdk::platform::capri::asic_block_t::ASIC_BLOCK_MAX;
 #endif    // __CAPRI_HBM_RW_HPP__

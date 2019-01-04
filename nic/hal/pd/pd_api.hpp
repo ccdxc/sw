@@ -33,8 +33,8 @@
 #include "nic/hal/src/internal/accel_rgroup.hpp"
 #include "nic/hal/plugins/cfg/aclqos/barco_rings.hpp"
 #include "nic/hal/plugins/cfg/gft/gft.hpp"
-#include "nic/sdk/include/sdk/platform/capri/capri_lif_manager.hpp"
-#include "nic/sdk/include/sdk/platform/utils/program.hpp"
+#include "platform/capri/capri_lif_manager.hpp"
+#include "platform/utils/program.hpp"
 #include "nic/hal/pd/cpupkt_api.hpp"
 #include "nic/hal/pd/asic_pd.hpp"
 

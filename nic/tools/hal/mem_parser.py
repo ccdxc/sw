@@ -25,7 +25,7 @@ hdr="""
 #ifndef __%sHPP__\n#define __%sHPP__
 // This is an auto generated file
 
-#include "include/sdk/platform/utils/mcache_pipe.hpp"
+#include "platform/utils/mcache_pipe.hpp"
 
 #ifdef  __cplusplus
 namespace mem {

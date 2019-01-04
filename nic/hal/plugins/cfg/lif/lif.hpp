@@ -13,7 +13,7 @@
 #include "nic/sdk/include/sdk/bitmap.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/hal/plugins/cfg/aclqos/qos.hpp"
-#include "nic/sdk/include/sdk/platform/capri/capri_lif_manager.hpp"
+#include "platform/capri/capri_lif_manager.hpp"
 
 #include "gen/proto/interface.pb.h"
 

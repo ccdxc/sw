@@ -9,9 +9,9 @@
 
 #include <memory>
 #include <map>
-#include "nic/sdk/include/sdk/platform/utils/mpartition.hpp"
-#include "nic/sdk/include/sdk/platform/utils/lif_manager_base.hpp"
-#include "nic/sdk/include/sdk/platform/utils/program.hpp"
+#include "platform/utils/mpartition.hpp"
+#include "platform/utils/lif_manager_base.hpp"
+#include "platform/utils/program.hpp"
 
 using namespace sdk::platform::utils;
 

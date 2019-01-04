@@ -12,8 +12,8 @@
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
-#include "include/sdk/platform/capri/capri_txs_scheduler.hpp"
-#include "include/sdk/platform/capri/capri_tbl_rw.hpp"
+#include "platform/capri/capri_txs_scheduler.hpp"
+#include "platform/capri/capri_tbl_rw.hpp"
 #include "nic/hal/pd/capri/capri_sw_phv.hpp"
 #include "nic/sdk/platform/drivers/xcvr.hpp"
 

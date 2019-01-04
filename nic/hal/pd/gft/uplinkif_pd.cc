@@ -3,7 +3,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/plugins/cfg/nw/interface_api.hpp"
 #include "nic/hal/pd/gft/uplinkif_pd.hpp"
-#include "include/sdk/platform/capri/capri_tm_rw.hpp"
+#include "platform/capri/capri_tm_rw.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 
 using namespace sdk::platform::capri;

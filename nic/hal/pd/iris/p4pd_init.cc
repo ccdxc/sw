@@ -15,7 +15,7 @@
 #include "nic/hal/pd/iris/nw/rw_pd.hpp"
 #include "nic/hal/pd/iris/nw/tnnl_rw_pd.hpp"
 #include "nic/hal/pd/iris/p4pd_defaults.hpp"
-#include "include/sdk/platform/capri/capri_tbl_rw.hpp"
+#include "platform/capri/capri_tbl_rw.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "gen/proto/types.pb.h"
 #include "nic/hal/pd/iris/aclqos/acl_pd.hpp"

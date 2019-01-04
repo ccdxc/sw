@@ -12,7 +12,7 @@
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_pd.hpp"
 #include "nic/sdk/include/sdk/periodic.hpp"
-#include "nic/sdk/include/sdk/platform/capri/capri_lif_manager.hpp"
+#include "platform/capri/capri_lif_manager.hpp"
 #include "nic/hal/src/internal/rdma.hpp"
 #include "nic/hal/src/internal/tcp_proxy_cb.hpp"
 #include "nic/hal/src/internal/proxy.hpp"

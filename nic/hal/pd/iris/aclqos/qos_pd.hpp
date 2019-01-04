@@ -6,7 +6,7 @@
 #include "nic/hal/plugins/cfg/aclqos/qos.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
-#include "include/sdk/platform/capri/capri_tm_rw.hpp"
+#include "platform/capri/capri_tm_rw.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 
 using namespace sdk::platform::capri;

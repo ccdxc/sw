@@ -4,7 +4,7 @@ MODULE_TARGET   = common_p4plus_rxdma.p4bin
 #MODULE_PIPELINE = iris gft
 MODULE_SRCS     = ${MODULE_SRC_DIR}/common_rxdma_actions.p4
 MODULE_NCC_OPTS = --p4-plus --pd-gen --asm-out --no-ohi \
-                  --two-byte-profile --fe-flags="-I${TOPDIR}" \
+                  --two-byte-profile --fe-flags="-I${TOPDIR} -I${SDKDIR}" \
                   --gen-dir ${BLD_P4GEN_DIR} \
                   --cfg-dir ${BLD_PGMBIN_DIR} \
                   --p4-plus-module rxdma

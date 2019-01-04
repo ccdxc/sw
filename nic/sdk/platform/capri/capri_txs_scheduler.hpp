@@ -11,7 +11,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include "include/sdk/platform/capri/capri_cfg.hpp"
+#include "platform/capri/capri_cfg.hpp"
 
 namespace sdk {
 namespace platform {

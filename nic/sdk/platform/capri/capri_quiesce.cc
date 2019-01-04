@@ -1,6 +1,6 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
-#include "include/sdk/platform/capri/capri_quiesce.hpp"
+#include "platform/capri/capri_quiesce.hpp"
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
 #include "nic/asic/capri/verif/apis/cap_quiesce_api.h"
 

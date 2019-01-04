@@ -5,12 +5,12 @@
  * Vishwas Danivas (Pensando Systems)
  */
 
-#include "include/sdk/platform/capri/capri_txs_scheduler.hpp"
-#include "include/sdk/platform/capri/capri_common.hpp"
-#include "include/sdk/platform//capri/capri_cfg.hpp"
-#include "include/sdk/platform/capri/capri_state.hpp"
+#include "platform/capri/capri_txs_scheduler.hpp"
+#include "platform/capri/capri_common.hpp"
+#include "platform//capri/capri_cfg.hpp"
+#include "platform/capri/capri_state.hpp"
 #include "nic/sdk/include/sdk/utils.hpp"
-#include "include/sdk/platform/utils/mpartition.hpp"
+#include "platform/utils/mpartition.hpp"
 #include "gen/platform/mem_regions.hpp"
 
 #include "nic/asic/capri/model/cap_psp/cap_psp_csr.h"

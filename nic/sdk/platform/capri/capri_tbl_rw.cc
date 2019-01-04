@@ -5,13 +5,13 @@
  * Mahesh Shirshyad (Pensando Systems)
  */
 #include <map>
-#include "include/sdk/platform/capri/capri_common.hpp"
+#include "platform/capri/capri_common.hpp"
 #include "gen/p4gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
-#include "include/sdk/platform/capri/capri_tbl_rw.hpp"
-#include "include/sdk/platform/capri/capri_hbm_rw.hpp"
-#include "include/sdk/platform/capri/capri_tm_rw.hpp"
-#include "include/sdk/platform/capri/capri_txs_scheduler.hpp"
+#include "platform/capri/capri_tbl_rw.hpp"
+#include "platform/capri/capri_hbm_rw.hpp"
+#include "platform/capri/capri_tm_rw.hpp"
+#include "platform/capri/capri_txs_scheduler.hpp"
 #include "nic/asic/capri/model/utils/cap_csr_py_if.h"
 #include "nic/sdk/asic/rw/asicrw.hpp"
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
@@ -216,10 +216,12 @@ capri_program_hbm_table_base_addr (int stage_tableid, char *tablename,
 {
     hbm_addr_t start_offset;
 
+#ifdef MEM_REGION_RSS_INDIR_TABLE_NAME
     if (strcmp(tablename, MEM_REGION_RSS_INDIR_TABLE_NAME) == 0) {
         // TODO: Work with Neel to clean capri_toeplitz_init
         return;
     }
+#endif
 
     assert(stage_tableid < 16);
     start_offset = get_start_offset(tablename);
@@ -355,8 +357,12 @@ capri_toeplitz_init (int stage, int stage_tableid)
 
     tbl_id = stage_tableid;
 
+#ifdef MEM_REGION_RSS_INDIR_TABLE_NAME
     tbl_base = get_start_offset(MEM_REGION_RSS_INDIR_TABLE_NAME);
     SDK_ASSERT(tbl_base > 0);
+#else
+    SDK_ASSERT(0);
+#endif
     // Align the table address because while calculating the read address TE shifts the LIF
     // value by LOG2 of size of the per lif indirection table.
     tbl_base = (tbl_base + ETH_RSS_INDIR_TBL_SZ) & ~(ETH_RSS_INDIR_TBL_SZ - 1);
