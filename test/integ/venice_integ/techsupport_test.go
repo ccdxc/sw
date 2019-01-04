@@ -17,6 +17,7 @@ import (
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/ctrler/tsm"
 	"github.com/pensando/sw/venice/ctrler/tsm/rpcserver/tsproto"
+	"github.com/pensando/sw/venice/ctrler/tsm/statemgr"
 	"github.com/pensando/sw/venice/globals"
 	authntestutils "github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/log"
@@ -337,6 +338,20 @@ func (it *veniceIntegSuite) getTechSupportRequestInstanceID(ctx context.Context,
 	return it.getTechSupportRequest(ctx, c, reqName).Status.InstanceID
 }
 
+// waitForTechSupportControllerUpdate returns when the TechSupportController has received an specific object update
+func (it *veniceIntegSuite) waitForTechSupportControllerUpdate(c *C, refObj statemgr.TechSupportObject) {
+	AssertEventually(c, func() (bool, interface{}) {
+		state, err := it.tsCtrler.StateMgr.GetTechSupportObjectState(refObj)
+		if err != nil {
+			return false, fmt.Errorf("Object %+v not found in TechSupport controller db", refObj.GetObjectMeta())
+		}
+		if state.GetObjectMeta().GetResourceVersion() != refObj.GetObjectMeta().GetResourceVersion() {
+			return false, fmt.Errorf("Version mismatch, Have: %v, Want: %v", state.GetObjectMeta().GetResourceVersion(), refObj.GetObjectMeta().GetResourceVersion())
+		}
+		return true, nil
+	}, fmt.Sprintf("TechSupport controller did not receive expected update: %+v", refObj), "500ms", "30s")
+}
+
 func (it *veniceIntegSuite) TestTechSupportRequestCreateDelete(c *C) {
 	tsrs := map[string]*monitoring.TechSupportRequest{
 		"TSR1": newTechSupportRequest("TSR1", []string{"node-1"}, nil),
@@ -449,16 +464,18 @@ func (it *veniceIntegSuite) TestTechSupportLabelBasedSelection(c *C) {
 	smartNIC2 := smartNICNodes["smartnic-2"]
 	delete(smartNIC2.ObjectMeta.Labels, "group")
 	smartNIC2.ObjectMeta.ResourceVersion = ""
-	_, err = it.apisrvClient.ClusterV1().SmartNIC().Update(ctx, smartNIC2)
+	smartNIC2Ref, err := it.apisrvClient.ClusterV1().SmartNIC().Update(ctx, smartNIC2)
 	AssertOk(c, err, "Error updating labels for node smartnic-2")
+	it.waitForTechSupportControllerUpdate(c, smartNIC2Ref)
 	agent2 := agents["smartnic-2"]
 	delete(agent2.matchingRequests, "NIC1OrBlue")
 
 	smartNIC4 := smartNICNodes["smartnic-4"]
 	smartNIC4.ObjectMeta.Labels = map[string]string{"star": "no"}
 	smartNIC4.ObjectMeta.ResourceVersion = ""
-	_, err = it.apisrvClient.ClusterV1().SmartNIC().Update(ctx, smartNIC4)
+	smartNIC4Ref, err := it.apisrvClient.ClusterV1().SmartNIC().Update(ctx, smartNIC4)
 	AssertOk(c, err, "Error updating labels for node smartnic-4")
+	it.waitForTechSupportControllerUpdate(c, smartNIC4Ref)
 	agent4 := agents["smartnic-4"]
 	agent4.matchingRequests["LblStar"] = tsrs["LblStar"]
 
