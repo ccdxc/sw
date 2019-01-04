@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-
-	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
+	"strconv"
+	"strings"
 
 	"github.com/pensando/sw/api"
-
+	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	tstype "github.com/pensando/sw/nic/agent/troubleshooting/state/types"
 	"github.com/pensando/sw/venice/ctrler/tpm/rpcserver/protos"
 )
