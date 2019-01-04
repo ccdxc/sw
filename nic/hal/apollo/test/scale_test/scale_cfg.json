@@ -1,0 +1,30 @@
+{
+    "objects" : [
+      {
+          "kind" : "switchport",
+          "ip-addr" : "1.0.0.1",
+          "mac-addr" : "0x000201000001",
+          "gw-ip-addr": "1.0.0.2"
+      },
+      {
+          "kind" : "tep",
+          "count" : "1024",
+          "prefix": "1.0.0.0/8"
+      },
+      {
+          "kind" : "vcn",
+          "count" : "1024",
+          "prefix" : "10.0.0.0/16",
+          "subnets" : 1
+      },
+      {
+          "kind" : "vnic",
+          "count" : "1024",
+          "vlan-start" : "1024"
+      },
+      {
+          "kind" : "mappings",
+          "count" : "1024"
+      }
+    ]
+}

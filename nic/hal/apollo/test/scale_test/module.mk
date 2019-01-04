@@ -1,7 +1,7 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = vcn_test.gtest
+MODULE_TARGET   = apollo_scale_test.gtest
 MODULE_PIPELINE = apollo
 MODULE_ARCH     = x86_64
 MODULE_SOLIBS   = pal ociframework ocicore ociapi ociapi_impl ocitestutils \
@@ -15,4 +15,7 @@ MODULE_LDLIBS   =  ${NIC_COMMON_LDLIBS} \
 				   ${NIC_CAPSIM_LDLIBS} \
 				   ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
 				   ${NIC_THIRDPARTY_SSL_LDLIBS}
+MODULE_INCS     = ${NIC_CSR_INCS}
+MODULE_FLAGS    = ${NIC_CSR_FLAGS}
+MODULE_DEFS     = -DCAPRI_SW ${NIC_CSR_DEFINES}
 include ${MKDEFS}/post.mk

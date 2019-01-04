@@ -49,6 +49,10 @@ impl_base::factory(impl_obj_id_t obj_id, void *args) {
     case IMPL_OBJ_ID_SWITCHPORT:
         return switchport_impl::factory((oci_switchport_t *)args);
 
+    case IMPL_OBJ_ID_TEP:
+        return tep_impl::factory((oci_tep_t *)args);
+        break;
+
     default:
         break;
     }

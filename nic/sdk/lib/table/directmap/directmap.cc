@@ -756,7 +756,7 @@ directmap::entry_trace_(void *data, uint32_t index)
     sdk_ret_t    ret;
 
     ret = entry_to_str(data, index, buff, sizeof(buff));
-    SDK_ASSERT(ret = SDK_RET_OK);
+    SDK_ASSERT(ret == SDK_RET_OK);
     SDK_TRACE_DEBUG("%s : Index: %d \n %s", name_, index, buff);
     return SDK_RET_OK;
 }

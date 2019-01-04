@@ -1,22 +1,23 @@
 #! /bin/bash
 
+set -e
 export WS_TOP="/sw"
-export TOPDIR="/sw/nic"
-export HAL_LOG_DIR=${TOPDIR}
+export NICDIR="/sw/nic"
+export HAL_LOG_DIR=${NICDIR}
 export CAPRI_MOCK_MODE=1
-export BUILD_DIR=${TOPDIR}/build/x86_64/apollo/
+export BUILD_DIR=${NICDIR}/build/x86_64/apollo/
 export GEN_TEST_RESULTS_DIR=${BUILD_DIR}/gtest_results
-export HAL_CONFIG_PATH=${TOPDIR}/conf
+export HAL_CONFIG_PATH=${NICDIR}/conf
 
 if [[ "$1" ==  --coveragerun ]]; then
-    export COVFILE=${TOPDIR}/coverage/sim_bullseye_hal.cov
+    export COVFILE=${NICDIR}/coverage/sim_bullseye_hal.cov
 fi
 
 function finish {
-   ${TOPDIR}/tools/savelogs.sh
+   echo "===== Collecting logs ====="
+   ${NICDIR}/tools/savelogs.sh
 }
 trap finish EXIT
 
-set -e
 export PATH=${PATH}:${BUILD_DIR}/bin
-${CMD_OPTS} vcn_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/vcn_test.xml"
+apollo_scale_test -c ${NICDIR}/hal/apollo/test/scale_test/scale_cfg.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml"
