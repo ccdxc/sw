@@ -119,74 +119,6 @@ func DecodeGrpcRespMacRange(ctx context.Context, response interface{}) (interfac
 	return response, nil
 }
 
-func encodeHTTPPFStatus(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPPFStatus(_ context.Context, r *http.Request) (interface{}, error) {
-	var req PFStatus
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqPFStatus encodes GRPC request
-func EncodeGrpcReqPFStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*PFStatus)
-	return req, nil
-}
-
-// DecodeGrpcReqPFStatus decodes GRPC request
-func DecodeGrpcReqPFStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*PFStatus)
-	return req, nil
-}
-
-// EncodeGrpcRespPFStatus encodes GRC response
-func EncodeGrpcRespPFStatus(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespPFStatus decodes GRPC response
-func DecodeGrpcRespPFStatus(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPPortCondition(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPPortCondition(_ context.Context, r *http.Request) (interface{}, error) {
-	var req PortCondition
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqPortCondition encodes GRPC request
-func EncodeGrpcReqPortCondition(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*PortCondition)
-	return req, nil
-}
-
-// DecodeGrpcReqPortCondition decodes GRPC request
-func DecodeGrpcReqPortCondition(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*PortCondition)
-	return req, nil
-}
-
-// EncodeGrpcRespPortCondition encodes GRC response
-func EncodeGrpcRespPortCondition(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespPortCondition decodes GRPC response
-func DecodeGrpcRespPortCondition(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
 func encodeHTTPSmartNIC(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -354,39 +286,5 @@ func EncodeGrpcRespSmartNICStatus(ctx context.Context, response interface{}) (in
 
 // DecodeGrpcRespSmartNICStatus decodes GRPC response
 func DecodeGrpcRespSmartNICStatus(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPUplinkStatus(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPUplinkStatus(_ context.Context, r *http.Request) (interface{}, error) {
-	var req UplinkStatus
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqUplinkStatus encodes GRPC request
-func EncodeGrpcReqUplinkStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*UplinkStatus)
-	return req, nil
-}
-
-// DecodeGrpcReqUplinkStatus decodes GRPC request
-func DecodeGrpcReqUplinkStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*UplinkStatus)
-	return req, nil
-}
-
-// EncodeGrpcRespUplinkStatus encodes GRC response
-func EncodeGrpcRespUplinkStatus(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespUplinkStatus decodes GRPC response
-func DecodeGrpcRespUplinkStatus(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }

@@ -146,6 +146,7 @@ func (n *NMD) StartManagedMode() error {
 						Hostname:    n.config.Spec.Hostname,
 						IPConfig:    n.config.Spec.IPConfig,
 						MgmtMode:    cmd.SmartNICSpec_NETWORK.String(),
+						NetworkMode: cmd.SmartNICSpec_OOB.String(),
 						MgmtVlan:    n.config.Spec.MgmtVlan,
 						Controllers: n.config.Spec.Controllers,
 					},

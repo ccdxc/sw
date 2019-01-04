@@ -9,12 +9,14 @@ import { BaseModel, PropInfoItem } from './base-model';
 
 import { ClusterIPConfig, IClusterIPConfig } from './cluster-ip-config.model';
 import { ClusterSmartNICSpec_mgmt_mode,  ClusterSmartNICSpec_mgmt_mode_uihint  } from './enums';
+import { ClusterSmartNICSpec_network_mode,  ClusterSmartNICSpec_network_mode_uihint  } from './enums';
 
 export interface IClusterSmartNICSpec {
     'admit'?: boolean;
     'hostname'?: string;
     'ip-config'?: IClusterIPConfig;
     'mgmt-mode'?: ClusterSmartNICSpec_mgmt_mode;
+    'network-mode'?: ClusterSmartNICSpec_network_mode;
     'mgmt-vlan'?: number;
     'controllers'?: Array<string>;
 }
@@ -25,9 +27,9 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
     'hostname': string = null;
     'ip-config': ClusterIPConfig = null;
     'mgmt-mode': ClusterSmartNICSpec_mgmt_mode = null;
-    /** MgmtVlan defines the vlan to be used in network managed mode. The default of 0
-    implies OOB 1G mgmt port is used for management. A non 0 vlan switches the
-    management port to a vlan on data ports. */
+    'network-mode': ClusterSmartNICSpec_network_mode = null;
+    /** value should be between 0 and 4095
+     */
     'mgmt-vlan': number = null;
     'controllers': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
@@ -45,8 +47,13 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
             default: 'HOST',
             type: 'string'
         },
+        'network-mode': {
+            enum: ClusterSmartNICSpec_network_mode_uihint,
+            default: 'OOB',
+            type: 'string'
+        },
         'mgmt-vlan': {
-            description:  'MgmtVlan defines the vlan to be used in network managed mode. The default of 0 implies OOB 1G mgmt port is used for management. A non 0 vlan switches the management port to a vlan on data ports.',
+            description:  'value should be between 0 and 4095 ',
             type: 'number'
         },
         'controllers': {
@@ -101,6 +108,11 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
         } else if (fillDefaults && ClusterSmartNICSpec.hasDefaultValue('mgmt-mode')) {
             this['mgmt-mode'] = <ClusterSmartNICSpec_mgmt_mode>  ClusterSmartNICSpec.propInfo['mgmt-mode'].default;
         }
+        if (values && values['network-mode'] != null) {
+            this['network-mode'] = values['network-mode'];
+        } else if (fillDefaults && ClusterSmartNICSpec.hasDefaultValue('network-mode')) {
+            this['network-mode'] = <ClusterSmartNICSpec_network_mode>  ClusterSmartNICSpec.propInfo['network-mode'].default;
+        }
         if (values && values['mgmt-vlan'] != null) {
             this['mgmt-vlan'] = values['mgmt-vlan'];
         } else if (fillDefaults && ClusterSmartNICSpec.hasDefaultValue('mgmt-vlan')) {
@@ -122,6 +134,7 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
                 'hostname': new FormControl(this['hostname']),
                 'ip-config': this['ip-config'].$formGroup,
                 'mgmt-mode': new FormControl(this['mgmt-mode'], [enumValidator(ClusterSmartNICSpec_mgmt_mode), ]),
+                'network-mode': new FormControl(this['network-mode'], [enumValidator(ClusterSmartNICSpec_network_mode), ]),
                 'mgmt-vlan': new FormControl(this['mgmt-vlan'], [maxValueValidator(4095), ]),
                 'controllers': new FormControl(this['controllers']),
             });
@@ -139,6 +152,7 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
             this._formGroup.controls['hostname'].setValue(this['hostname']);
             this['ip-config'].setFormGroupValuesToBeModelValues();
             this._formGroup.controls['mgmt-mode'].setValue(this['mgmt-mode']);
+            this._formGroup.controls['network-mode'].setValue(this['network-mode']);
             this._formGroup.controls['mgmt-vlan'].setValue(this['mgmt-vlan']);
             this._formGroup.controls['controllers'].setValue(this['controllers']);
         }

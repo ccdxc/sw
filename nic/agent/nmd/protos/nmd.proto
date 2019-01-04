@@ -39,6 +39,12 @@ enum MgmtMode {
     NETWORK  = 1; // Network managed mode
 }
 
+// Network Connectivity Mode (only if network managed)
+enum NetworkMode {
+    OOB      = 0; // Out Of Band Network Management
+    INBAND   = 1; // Inband Network Management
+}
+
 // NaplesSpec contains initial bootstrap configuration of the Naples I/O subsystem
 message NaplesSpec {
 
@@ -55,13 +61,16 @@ message NaplesSpec {
     // Operational mode of the NIC
     MgmtMode Mode                   = 4 [(gogoproto.jsontag) = "mode"];
 
+    // Operational mode of the NIC
+    NetworkMode NetworkMode         = 5 [(gogoproto.jsontag) = "network-mode"];
+
     // MgmtVlan defines the vlan to be used in network managed mode. The default of 0
     // implies OOB 1G mgmt port is used for management. A non 0 vlan switches the
     // management port to a vlan on data ports.
-    uint32 MgmtVlan                 = 5 [(gogoproto.jsontag) = "vlan,omitempty"];   
+    uint32 MgmtVlan                 = 6 [(gogoproto.jsontag) = "vlan,omitempty"];   
 
     // Controllers contains the list of controller IPs or Hostnames
-    repeated string Controllers   = 6 [(gogoproto.jsontag) = "controllers,omitempty"];
+    repeated string Controllers     = 7 [(gogoproto.jsontag) = "controllers,omitempty"];
 }
 
 // NaplesStatus contains current status of a Naples I/O subsystem

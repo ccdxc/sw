@@ -8,6 +8,7 @@
 
 	It is generated from these files:
 		cluster.proto
+		networkinterface.proto
 		smartnic.proto
 		svc_cluster.proto
 		tenant.proto
@@ -34,17 +35,19 @@
 		SmartNICID
 		StorageDeviceInfo
 		StorageInfo
+		NetworkInterface
+		NetworkInterfaceHostStatus
+		NetworkInterfaceSpec
+		NetworkInterfaceStatus
+		NetworkInterfaceUplinkStatus
 		BiosInfo
 		IPConfig
 		MacRange
-		PFStatus
-		PortCondition
 		SmartNIC
 		SmartNICCondition
 		SmartNICInfo
 		SmartNICSpec
 		SmartNICStatus
-		UplinkStatus
 		AutoMsgClusterWatchHelper
 		AutoMsgHostWatchHelper
 		AutoMsgNodeWatchHelper

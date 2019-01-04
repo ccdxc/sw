@@ -15,6 +15,7 @@ metrics_query.proto metrics_query true
 mirror.proto monitoring true
 network.proto network true
 networkencryption.proto security true
+networkinterface.proto cluster true
 rollout.proto rollout true
 search.proto search true
 securitygroup.proto security true

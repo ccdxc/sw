@@ -183,7 +183,8 @@ func CreateSmartNIC(mac, phase, node string, condition *cluster.SmartNICConditio
 			IPConfig: &cluster.IPConfig{
 				IPAddress: "0.0.0.0/0",
 			},
-			MgmtMode: cluster.SmartNICSpec_NETWORK.String(),
+			MgmtMode:    cluster.SmartNICSpec_NETWORK.String(),
+			NetworkMode: cluster.SmartNICSpec_OOB.String(),
 		},
 		Status: cluster.SmartNICStatus{
 			AdmissionPhase: phase,

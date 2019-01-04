@@ -1722,8 +1722,15 @@
             "type": "string"
           },
           {
+            "name": "spec.network-mode",
+            "description": "MgmtMode defines the management mode of the SmartNIC.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "spec.mgmt-vlan",
-            "description": "MgmtVlan defines the vlan to be used in network managed mode. The default of 0\nimplies OOB 1G mgmt port is used for management. A non 0 vlan switches the\nmanagement port to a vlan on data ports.",
+            "description": "MgmtVlan defines the vlan to be used in network managed mode. The default of 0\nmeans we use untagged-vlan for doing inband management. value should be between 0 and 4095",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -3945,6 +3952,109 @@
       },
       "title": "Memory/RAM information"
     },
+    "clusterNetworkInterface": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta",
+          "title": "Object name is Serial-Number of the SmartNIC"
+        },
+        "spec": {
+          "$ref": "#/definitions/clusterNetworkInterfaceSpec",
+          "description": "NetworkInterfaceSpec contains the configuration of the network adapter."
+        },
+        "status": {
+          "$ref": "#/definitions/clusterNetworkInterfaceStatus",
+          "description": "NetworkInterfaceStatus contains the current state of the network adapter."
+        }
+      }
+    },
+    "clusterNetworkInterfaceHostStatus": {
+      "type": "object",
+      "properties": {
+        "host-ifname": {
+          "type": "string",
+          "format": "uint64",
+          "title": "interface name seen by the host driver"
+        }
+      },
+      "title": "NetworkInterfaceHostStatus is populated for PF and VF"
+    },
+    "clusterNetworkInterfaceSpec": {
+      "type": "object",
+      "properties": {
+        "admin-status": {
+          "type": "string",
+          "enum": [
+            "NONE",
+            "UP",
+            "DOWN"
+          ],
+          "default": "NONE",
+          "title": "shut or no-shut"
+        },
+        "link-speed": {
+          "type": "string",
+          "title": "Should we allow manual configuration of the link speed, or only through a profile"
+        }
+      },
+      "title": "NetworkInterfaceSpec"
+    },
+    "clusterNetworkInterfaceStatus": {
+      "type": "object",
+      "properties": {
+        "smart-nic": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "NONE",
+            "HOST_PF",
+            "HOST_VF",
+            "UPLINK_ETH",
+            "UPLINK_MGMT"
+          ],
+          "default": "NONE"
+        },
+        "oper-status": {
+          "type": "string",
+          "enum": [
+            "NONE",
+            "UP",
+            "DOWN"
+          ],
+          "default": "NONE"
+        },
+        "primary-mac": {
+          "type": "string",
+          "example": "aa:BB:cc:DD:00:00, aabb.ccdd.0000, aa-BB-cc-DD-00-00",
+          "description": "should be a valid MAC address\n"
+        },
+        "if-host-status": {
+          "$ref": "#/definitions/clusterNetworkInterfaceHostStatus"
+        },
+        "if-uplink-status": {
+          "$ref": "#/definitions/clusterNetworkInterfaceUplinkStatus"
+        }
+      },
+      "title": "NetworkInterfaceStatus"
+    },
+    "clusterNetworkInterfaceUplinkStatus": {
+      "type": "object",
+      "properties": {
+        "link-speed": {
+          "type": "string",
+          "title": "LinkSpeed auto-negotiated"
+        }
+      }
+    },
     "clusterNode": {
       "type": "object",
       "properties": {
@@ -4095,69 +4205,6 @@
         }
       },
       "title": "OS information"
-    },
-    "clusterPFStatus": {
-      "type": "object",
-      "properties": {
-        "primary-mac": {
-          "type": "string",
-          "example": "aa:BB:cc:DD:00:00, aabb.ccdd.0000, aa-BB-cc-DD-00-00",
-          "description": "should be a valid MAC address\n",
-          "title": "Primary Mac address (TBD)"
-        },
-        "conditions": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/clusterPortCondition"
-          },
-          "title": "List of current PF conditions"
-        }
-      },
-      "title": "PF (Physical function) Status"
-    },
-    "clusterPortCondition": {
-      "type": "object",
-      "properties": {
-        "type": {
-          "type": "string",
-          "enum": [
-            "PORT_UP"
-          ],
-          "default": "PORT_UP",
-          "x-ui-hints": {
-            "PORT_UP": "Up"
-          },
-          "title": "Type indicates a certain Port condition"
-        },
-        "status": {
-          "type": "string",
-          "enum": [
-            "UNKNOWN",
-            "TRUE",
-            "FALSE"
-          ],
-          "default": "UNKNOWN",
-          "x-ui-hints": {
-            "FALSE": "False",
-            "TRUE": "True",
-            "UNKNOWN": "Unknown"
-          },
-          "title": "Condition Status"
-        },
-        "last-transition-time": {
-          "type": "string",
-          "title": "The last time the condition transitioned"
-        },
-        "reason": {
-          "type": "string",
-          "title": "The reason for the condition's last transition"
-        },
-        "message": {
-          "type": "string",
-          "description": "A detailed message indicating details about the transition."
-        }
-      },
-      "description": "PortCondition describes the state of a Port at a certain point."
     },
     "clusterSmartNIC": {
       "type": "object",
@@ -4321,11 +4368,25 @@
           },
           "title": "MgmtMode defines the management mode of the SmartNIC"
         },
+        "network-mode": {
+          "type": "string",
+          "enum": [
+            "OOB",
+            "INBAND"
+          ],
+          "default": "OOB",
+          "x-ui-hints": {
+            "INBAND": "Inband",
+            "OOB": "Out of Band"
+          },
+          "title": "MgmtMode defines the management mode of the SmartNIC"
+        },
         "mgmt-vlan": {
           "type": "integer",
           "format": "int64",
           "maximum": 4095,
-          "description": "MgmtVlan defines the vlan to be used in network managed mode. The default of 0\nimplies OOB 1G mgmt port is used for management. A non 0 vlan switches the\nmanagement port to a vlan on data ports."
+          "description": "value should be between 0 and 4095\n",
+          "title": "MgmtVlan defines the vlan to be used in network managed mode. The default of 0\nmeans we use untagged-vlan for doing inband management"
         },
         "controllers": {
           "type": "array",
@@ -4382,19 +4443,12 @@
           "$ref": "#/definitions/clusterSmartNICInfo",
           "title": "Naples I/O system info"
         },
-        "uplinks": {
+        "interfaces": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/clusterUplinkStatus"
+            "$ref": "#/definitions/clusterNetworkInterface"
           },
-          "title": "Uplink status"
-        },
-        "pfs": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/clusterPFStatus"
-          },
-          "title": "PFs status"
+          "title": "Network Interfaces"
         }
       },
       "title": "SmartNICStatus contains current status of a SmartNIC"
@@ -4492,29 +4546,6 @@
     "clusterTenantStatus": {
       "type": "object",
       "title": "status part of tenant object"
-    },
-    "clusterUplinkStatus": {
-      "type": "object",
-      "properties": {
-        "primary-mac": {
-          "type": "string",
-          "example": "aa:BB:cc:DD:00:00, aabb.ccdd.0000, aa-BB-cc-DD-00-00",
-          "description": "should be a valid MAC address\n",
-          "title": "Primary Mac address (TBD)"
-        },
-        "link-speed": {
-          "type": "string",
-          "title": "LinkSpeed of the Port"
-        },
-        "conditions": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/clusterPortCondition"
-          },
-          "title": "List of current Uplink conditions"
-        }
-      },
-      "title": "Uplink Status"
     },
     "googleprotobufAny": {
       "type": "object",

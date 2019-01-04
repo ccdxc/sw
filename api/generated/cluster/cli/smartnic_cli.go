@@ -49,6 +49,13 @@ var CreateSmartNICFlags = []gen.CliFlag{
 		Skip:   false,
 		Insert: "",
 	},
+	{
+		ID:     "network-mode",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
 }
 
 func removeSmartNICOper(obj interface{}) error {

@@ -9,6 +9,7 @@ import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 import "cluster.proto";
+import "networkinterface.proto";
 
 //------------------------------------ SMART NIC  -------------------------------------------
 //
@@ -75,14 +76,26 @@ message SmartNICSpec {
     string MgmtMode                 = 4 [(venice.check) = "StrEnum(SmartNICSpec.MgmtModes)",
                                         (gogoproto.jsontag) = "mgmt-mode,omitempty"];
 
+    // NetworkModes - is only applicable if the MgmtMode is NETWORK
+    enum NetworkModes {
+        // ui-hint: Out of Band
+        OOB     = 0;
+        // ui-hint: Inband
+        INBAND  = 1;
+    }
+
+    // MgmtMode defines the management mode of the SmartNIC
+    string NetworkMode              = 5 [(venice.check) = "StrEnum(SmartNICSpec.NetworkModes)",
+                                        (gogoproto.jsontag) = "network-mode,omitempty"];
+
+
     // MgmtVlan defines the vlan to be used in network managed mode. The default of 0
-    // implies OOB 1G mgmt port is used for management. A non 0 vlan switches the
-    // management port to a vlan on data ports.
-    uint32 MgmtVlan                 = 5 [(venice.check) = "IntRange(0,4095)",
+    // means we use untagged-vlan for doing inband management
+    uint32 MgmtVlan                 = 6 [(venice.check) = "IntRange(0,4095)",
                                         (gogoproto.jsontag) = "mgmt-vlan,omitempty"];   
 
     // Controllers contains the list of remote controllers IP addresses or hostnames
-    repeated string Controllers  = 6 [(gogoproto.jsontag) = "controllers,omitempty"];
+    repeated string Controllers     = 7 [(gogoproto.jsontag) = "controllers,omitempty"];
 }
 
 // IPConfig defines the static IP configuration for a SmartNIC
@@ -141,13 +154,8 @@ message SmartNICStatus {
     // Naples I/O system info
     SmartNICInfo SystemInfo                 = 6 [(gogoproto.jsontag) = "system-info,omitempty"];
 
-    // Uplink status
-    repeated UplinkStatus Uplinks           = 7 [(gogoproto.nullable) = false,
-                                                (gogoproto.jsontag) = "uplinks,omitempty"];
-
-    // PFs status
-    repeated PFStatus PFs                   = 8 [(gogoproto.nullable) = false,
-                                                (gogoproto.jsontag) = "pfs,omitempty"];
+    // Network Interfaces
+    repeated NetworkInterface Interfaces    = 7 [(gogoproto.jsontag) = "interfaces,omitempty"];
 }
 
 // SmartNICCondition describes the state of a SmartNIC at a certain point.
@@ -177,60 +185,6 @@ message SmartNICCondition {
 
     // A detailed message indicating details about the transition.
     string Message                  = 5 [(gogoproto.jsontag) = "message,omitempty"];
-}
-
-// Uplink Status
-message UplinkStatus {
-
-    // Primary Mac address (TBD)
-    string PrimaryMac                   = 1 [(venice.check) = "MacAddr()",
-                                            (gogoproto.jsontag) = "primary-mac,omitempty"];
-
-    // LinkSpeed of the Port
-    string LinkSpeed                    = 2 [(gogoproto.jsontag) = "link-speed,omitempty"];
-
-    // List of current Uplink conditions
-    repeated PortCondition Conditions   = 3 [(gogoproto.nullable) = false,
-                                            (gogoproto.jsontag) = "conditions,omitempty"];
-}
-
-// PortCondition describes the state of a Port at a certain point.
-message PortCondition {
-
-    // These are valid conditions of a Port
-    enum ConditionType {
-        // ui-hint: Up
-        PORT_UP     = 0; // Port is Up
-    }
-
-    // Type indicates a certain Port condition
-    string Type                 = 1 [(venice.check) = "StrEnum(PortCondition.ConditionType)",
-                                    (gogoproto.jsontag) = "type,omitempty"];
-
-    // Condition Status
-    string Status               = 2 [(venice.check) = "StrEnum(ConditionStatus)",
-                                    (gogoproto.jsontag) = "status,omitempty"];
-
-    // The last time the condition transitioned
-    string LastTransitionTime   = 3 [(gogoproto.jsontag) = "last-transition-time,omitempty"];
-
-    // The reason for the condition's last transition
-    string Reason               = 4 [(gogoproto.jsontag) = "reason,omitempty"];
-
-    // A detailed message indicating details about the transition.
-    string Message              = 5 [(gogoproto.jsontag) = "message,omitempty"];
-}
-
-// PF (Physical function) Status
-message PFStatus {
-
-    // Primary Mac address (TBD)
-    string PrimaryMac                   = 1 [(venice.check) = "MacAddr()",
-                                            (gogoproto.jsontag) = "primary-mac,omitempty"];
-
-    // List of current PF conditions
-    repeated PortCondition Conditions   = 2 [(gogoproto.nullable) = false,
-                                            (gogoproto.jsontag) = "conditions,omitempty"];
 }
 
 // MAC address Range

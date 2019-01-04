@@ -403,7 +403,8 @@ func TestAPIServerRestarts(t *testing.T) {
 			Namespace: "",
 		},
 		Spec: cluster.SmartNICSpec{
-			MgmtMode: cluster.SmartNICSpec_NETWORK.String(),
+			MgmtMode:    cluster.SmartNICSpec_NETWORK.String(),
+			NetworkMode: cluster.SmartNICSpec_OOB.String(),
 		},
 		Status: cluster.SmartNICStatus{
 			AdmissionPhase: "ADMITTED",
@@ -691,8 +692,9 @@ func TestWorkloadWatcher(t *testing.T) {
 			Namespace: "",
 		},
 		Spec: cluster.SmartNICSpec{
-			Hostname: "testSmartNIC",
-			MgmtMode: cluster.SmartNICSpec_NETWORK.String(),
+			Hostname:    "testSmartNIC",
+			MgmtMode:    cluster.SmartNICSpec_NETWORK.String(),
+			NetworkMode: cluster.SmartNICSpec_OOB.String(),
 		},
 		Status: cluster.SmartNICStatus{
 			AdmissionPhase: cluster.SmartNICStatus_ADMITTED.String(),

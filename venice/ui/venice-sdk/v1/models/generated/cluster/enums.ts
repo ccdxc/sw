@@ -12,6 +12,26 @@ export enum ClusterMemInfo_type {
     'DDR' = "DDR",
 }
 
+export enum ClusterNetworkInterfaceSpec_admin_status {
+    'NONE' = "NONE",
+    'UP' = "UP",
+    'DOWN' = "DOWN",
+}
+
+export enum ClusterNetworkInterfaceStatus_type {
+    'NONE' = "NONE",
+    'HOST_PF' = "HOST_PF",
+    'HOST_VF' = "HOST_VF",
+    'UPLINK_ETH' = "UPLINK_ETH",
+    'UPLINK_MGMT' = "UPLINK_MGMT",
+}
+
+export enum ClusterNetworkInterfaceStatus_oper_status {
+    'NONE' = "NONE",
+    'UP' = "UP",
+    'DOWN' = "DOWN",
+}
+
 export enum ClusterNodeCondition_type {
     'LEADER' = "LEADER",
 }
@@ -29,16 +49,6 @@ export enum ClusterNodeStatus_phase {
     'FAILED' = "FAILED",
 }
 
-export enum ClusterPortCondition_type {
-    'PORT_UP' = "PORT_UP",
-}
-
-export enum ClusterPortCondition_status {
-    'UNKNOWN' = "UNKNOWN",
-    'TRUE' = "TRUE",
-    'FALSE' = "FALSE",
-}
-
 export enum ClusterSmartNICCondition_type {
     'HEALTHY' = "HEALTHY",
     'UNREACHABLE' = "UNREACHABLE",
@@ -53,6 +63,11 @@ export enum ClusterSmartNICCondition_status {
 export enum ClusterSmartNICSpec_mgmt_mode {
     'HOST' = "HOST",
     'NETWORK' = "NETWORK",
+}
+
+export enum ClusterSmartNICSpec_network_mode {
+    'OOB' = "OOB",
+    'INBAND' = "INBAND",
 }
 
 export enum ClusterSmartNICStatus_admission_phase {
@@ -81,16 +96,6 @@ export enum ClusterNodeStatus_phase_uihint {
     'UNKNOWN' = "Unknown",
 }
 
-export enum ClusterPortCondition_type_uihint {
-    'PORT_UP' = "Up",
-}
-
-export enum ClusterPortCondition_status_uihint {
-    'FALSE' = "False",
-    'TRUE' = "True",
-    'UNKNOWN' = "Unknown",
-}
-
 export enum ClusterSmartNICCondition_type_uihint {
     'HEALTHY' = "Healthy",
     'UNREACHABLE' = "Not Reachable",
@@ -105,6 +110,11 @@ export enum ClusterSmartNICCondition_status_uihint {
 export enum ClusterSmartNICSpec_mgmt_mode_uihint {
     'HOST' = "Host",
     'NETWORK' = "Network",
+}
+
+export enum ClusterSmartNICSpec_network_mode_uihint {
+    'INBAND' = "Inband",
+    'OOB' = "Out of Band",
 }
 
 export enum ClusterSmartNICStatus_admission_phase_uihint {
@@ -147,23 +157,24 @@ export class AllEnums {
     }
 
     ClusterMemInfo_type = ClusterMemInfo_type;
+    ClusterNetworkInterfaceSpec_admin_status = ClusterNetworkInterfaceSpec_admin_status;
+    ClusterNetworkInterfaceStatus_type = ClusterNetworkInterfaceStatus_type;
+    ClusterNetworkInterfaceStatus_oper_status = ClusterNetworkInterfaceStatus_oper_status;
     ClusterNodeCondition_type = ClusterNodeCondition_type;
     ClusterNodeCondition_status = ClusterNodeCondition_status;
     ClusterNodeStatus_phase = ClusterNodeStatus_phase;
-    ClusterPortCondition_type = ClusterPortCondition_type;
-    ClusterPortCondition_status = ClusterPortCondition_status;
     ClusterSmartNICCondition_type = ClusterSmartNICCondition_type;
     ClusterSmartNICCondition_status = ClusterSmartNICCondition_status;
     ClusterSmartNICSpec_mgmt_mode = ClusterSmartNICSpec_mgmt_mode;
+    ClusterSmartNICSpec_network_mode = ClusterSmartNICSpec_network_mode;
     ClusterSmartNICStatus_admission_phase = ClusterSmartNICStatus_admission_phase;
 
     ClusterNodeCondition_type_uihint = ClusterNodeCondition_type_uihint;
     ClusterNodeCondition_status_uihint = ClusterNodeCondition_status_uihint;
     ClusterNodeStatus_phase_uihint = ClusterNodeStatus_phase_uihint;
-    ClusterPortCondition_type_uihint = ClusterPortCondition_type_uihint;
-    ClusterPortCondition_status_uihint = ClusterPortCondition_status_uihint;
     ClusterSmartNICCondition_type_uihint = ClusterSmartNICCondition_type_uihint;
     ClusterSmartNICCondition_status_uihint = ClusterSmartNICCondition_status_uihint;
     ClusterSmartNICSpec_mgmt_mode_uihint = ClusterSmartNICSpec_mgmt_mode_uihint;
+    ClusterSmartNICSpec_network_mode_uihint = ClusterSmartNICSpec_network_mode_uihint;
     ClusterSmartNICStatus_admission_phase_uihint = ClusterSmartNICStatus_admission_phase_uihint;
 }

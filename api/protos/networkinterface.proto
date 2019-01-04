@@ -1,0 +1,89 @@
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package cluster;
+
+import "google/api/annotations.proto";
+import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+// NetworkInterface represents a VF, PF or an Uplink within an I/O subsystem
+// Each NetworkInterface is uniquely prepended by I/O subsystem to provide unique name
+// Create/Delete: by the system as VFs, PFs and Uplinks are detected by the system
+// Update: by user to change the admin status (shut/no-shut)
+// List: by user to look at the operational status
+
+message NetworkInterface {
+
+    option (venice.objectPrefix) = {Collection: "smartnics"};
+
+    api.TypeMeta T          = 1 [(gogoproto.embed) = true,
+                                (gogoproto.nullable) = false,
+                                (gogoproto.jsontag) = ",inline"];
+
+    //Object name is Serial-Number of the SmartNIC
+    api.ObjectMeta O        = 2 [(gogoproto.embed) = true,
+                                (gogoproto.nullable) = false,
+                                (gogoproto.jsontag) = "meta,omitempty"];
+
+    // NetworkInterfaceSpec contains the configuration of the network adapter.
+    NetworkInterfaceSpec Spec       = 3 [(gogoproto.nullable) = false,
+                                (gogoproto.jsontag) = "spec,omitempty"];
+
+    // NetworkInterfaceStatus contains the current state of the network adapter.
+    NetworkInterfaceStatus Status   = 4 [(gogoproto.nullable) = false,
+                                (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// NetworkInterfaceSpec
+message NetworkInterfaceSpec {
+    enum IFStatus {
+        NONE              = 0;
+        UP                = 1;
+        DOWN              = 2;
+    }
+    // shut or no-shut
+    string AdminStatus      = 1 [(venice.check) = "StrEnum(NetworkInterfaceSpec.IFStatus)",
+                                (gogoproto.jsontag) = "admin-status,omitempty"];
+    // Should we allow manual configuration of the link speed, or only through a profile
+    string LinkSpeed        = 2 [(gogoproto.jsontag) = "link-speed,omitempty"];
+
+    // Future: Breakout Config, CDP, LLDP, LACP, configuration would come here
+    // Future: A lot of above configuration would be driven by profile when available
+}
+
+// NetworkInterfaceStatus
+message NetworkInterfaceStatus {
+    enum IFType {
+        NONE              = 0;
+        HOST_PF           = 1;
+        HOST_VF           = 2;
+        UPLINK_ETH        = 3;
+        UPLINK_MGMT       = 4;
+    }
+
+    string SmartNIC                             = 1 [(gogoproto.jsontag) = "smart-nic,omitempty"];
+    string Type                                 = 2 [(venice.check) = "StrEnum(NetworkInterfaceStatus.IFType)",
+                                                   (gogoproto.jsontag) = "type,omitempty"];
+    string OperStatus                           = 3 [(venice.check) = "StrEnum(NetworkInterfaceSpec.IFStatus)",
+                                                   (gogoproto.jsontag) = "oper-status,omitempty"];
+    string PrimaryMac                           = 4 [(venice.check) = "MacAddr()",
+                                                   (gogoproto.jsontag) = "primary-mac,omitempty"];
+    NetworkInterfaceHostStatus IFHostStatus     = 5 [(gogoproto.jsontag) = "if-host-status,omitempty"]; 
+    NetworkInterfaceUplinkStatus IFUplinkStatus = 6 [(gogoproto.jsontag) = "if-uplink-status,omitempty"];
+}
+
+// NetworkInterfaceHostStatus is populated for PF and VF
+message NetworkInterfaceHostStatus {
+    // interface name seen by the host driver
+    uint64 HostIfName   = 1 [(gogoproto.jsontag) = "host-ifname,omitempty"];
+}
+
+message NetworkInterfaceUplinkStatus {
+    // LinkSpeed auto-negotiated
+    string LinkSpeed                    = 2 [(gogoproto.jsontag) = "link-speed,omitempty"];
+
+    // Future: BFD, CDP, LLDP, LACP, Breakout status appears here
+}

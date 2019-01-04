@@ -320,6 +320,7 @@ func TestCreateNMDs(t *testing.T) {
 							TypeMeta:   api.TypeMeta{Kind: "Naples"},
 							Spec: proto.NaplesSpec{
 								Mode:        proto.MgmtMode_NETWORK,
+								NetworkMode: proto.NetworkMode_OOB,
 								Controllers: []string{*cmdURL},
 								Hostname:    priMac,
 								PrimaryMAC:  priMac,

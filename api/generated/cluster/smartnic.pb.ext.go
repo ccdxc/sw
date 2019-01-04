@@ -103,60 +103,6 @@ func (m *MacRange) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *PFStatus) Clone(into interface{}) (interface{}, error) {
-	var out *PFStatus
-	var ok bool
-	if into == nil {
-		out = &PFStatus{}
-	} else {
-		out, ok = into.(*PFStatus)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *PFStatus) Defaults(ver string) bool {
-	var ret bool
-	for k := range m.Conditions {
-		i := m.Conditions[k]
-		ret = i.Defaults(ver) || ret
-	}
-	return ret
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *PortCondition) Clone(into interface{}) (interface{}, error) {
-	var out *PortCondition
-	var ok bool
-	if into == nil {
-		out = &PortCondition{}
-	} else {
-		out, ok = into.(*PortCondition)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *PortCondition) Defaults(ver string) bool {
-	var ret bool
-	ret = true
-	switch ver {
-	default:
-		m.Status = "UNKNOWN"
-		m.Type = "PORT_UP"
-	}
-	return ret
-}
-
-// Clone clones the object into into or creates one of into is nil
 func (m *SmartNIC) Clone(into interface{}) (interface{}, error) {
 	var out *SmartNIC
 	var ok bool
@@ -254,6 +200,7 @@ func (m *SmartNICSpec) Defaults(ver string) bool {
 	switch ver {
 	default:
 		m.MgmtMode = "HOST"
+		m.NetworkMode = "OOB"
 	}
 	return ret
 }
@@ -281,44 +228,10 @@ func (m *SmartNICStatus) Defaults(ver string) bool {
 		i := m.Conditions[k]
 		ret = i.Defaults(ver) || ret
 	}
-	for k := range m.PFs {
-		i := m.PFs[k]
-		ret = i.Defaults(ver) || ret
-	}
-	for k := range m.Uplinks {
-		i := m.Uplinks[k]
-		ret = i.Defaults(ver) || ret
-	}
 	ret = true
 	switch ver {
 	default:
 		m.AdmissionPhase = "UNKNOWN"
-	}
-	return ret
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *UplinkStatus) Clone(into interface{}) (interface{}, error) {
-	var out *UplinkStatus
-	var ok bool
-	if into == nil {
-		out = &UplinkStatus{}
-	} else {
-		out, ok = into.(*UplinkStatus)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *UplinkStatus) Defaults(ver string) bool {
-	var ret bool
-	for k := range m.Conditions {
-		i := m.Conditions[k]
-		ret = i.Defaults(ver) || ret
 	}
 	return ret
 }
@@ -344,52 +257,6 @@ func (m *MacRange) Validate(ver, path string, ignoreStatus bool) []error {
 			}
 		}
 	} else if vs, ok := validatorMapSmartnic["MacRange"]["all"]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	}
-	return ret
-}
-
-func (m *PFStatus) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	for k, v := range m.Conditions {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := fmt.Sprintf("%s%sConditions[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
-		}
-	}
-	if vs, ok := validatorMapSmartnic["PFStatus"][ver]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	} else if vs, ok := validatorMapSmartnic["PFStatus"]["all"]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	}
-	return ret
-}
-
-func (m *PortCondition) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	if vs, ok := validatorMapSmartnic["PortCondition"][ver]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	} else if vs, ok := validatorMapSmartnic["PortCondition"]["all"]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
 				ret = append(ret, err)
@@ -497,12 +364,12 @@ func (m *SmartNICStatus) Validate(ver, path string, ignoreStatus bool) []error {
 			ret = append(ret, errs...)
 		}
 	}
-	for k, v := range m.PFs {
+	for k, v := range m.Interfaces {
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sPFs[%v]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sInterfaces[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -517,16 +384,6 @@ func (m *SmartNICStatus) Validate(ver, path string, ignoreStatus bool) []error {
 			ret = append(ret, errs...)
 		}
 	}
-	for k, v := range m.Uplinks {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := fmt.Sprintf("%s%sUplinks[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
-		}
-	}
 	if vs, ok := validatorMapSmartnic["SmartNICStatus"][ver]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
@@ -534,34 +391,6 @@ func (m *SmartNICStatus) Validate(ver, path string, ignoreStatus bool) []error {
 			}
 		}
 	} else if vs, ok := validatorMapSmartnic["SmartNICStatus"]["all"]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	}
-	return ret
-}
-
-func (m *UplinkStatus) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	for k, v := range m.Conditions {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := fmt.Sprintf("%s%sConditions[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
-		}
-	}
-	if vs, ok := validatorMapSmartnic["UplinkStatus"][ver]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	} else if vs, ok := validatorMapSmartnic["UplinkStatus"]["all"]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
 				ret = append(ret, err)
@@ -595,35 +424,6 @@ func init() {
 		m := i.(*MacRange)
 		if !validators.MacAddr(m.Start) {
 			return fmt.Errorf("%v validation failed", path+"."+"Start")
-		}
-		return nil
-	})
-
-	validatorMapSmartnic["PFStatus"] = make(map[string][]func(string, interface{}) error)
-
-	validatorMapSmartnic["PFStatus"]["all"] = append(validatorMapSmartnic["PFStatus"]["all"], func(path string, i interface{}) error {
-		m := i.(*PFStatus)
-		if !validators.MacAddr(m.PrimaryMac) {
-			return fmt.Errorf("%v validation failed", path+"."+"PrimaryMac")
-		}
-		return nil
-	})
-
-	validatorMapSmartnic["PortCondition"] = make(map[string][]func(string, interface{}) error)
-	validatorMapSmartnic["PortCondition"]["all"] = append(validatorMapSmartnic["PortCondition"]["all"], func(path string, i interface{}) error {
-		m := i.(*PortCondition)
-
-		if _, ok := ConditionStatus_value[m.Status]; !ok {
-			return errors.New("PortCondition.Status did not match allowed strings")
-		}
-		return nil
-	})
-
-	validatorMapSmartnic["PortCondition"]["all"] = append(validatorMapSmartnic["PortCondition"]["all"], func(path string, i interface{}) error {
-		m := i.(*PortCondition)
-
-		if _, ok := PortCondition_ConditionType_value[m.Type]; !ok {
-			return errors.New("PortCondition.Type did not match allowed strings")
 		}
 		return nil
 	})
@@ -669,22 +469,21 @@ func init() {
 		return nil
 	})
 
+	validatorMapSmartnic["SmartNICSpec"]["all"] = append(validatorMapSmartnic["SmartNICSpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*SmartNICSpec)
+
+		if _, ok := SmartNICSpec_NetworkModes_value[m.NetworkMode]; !ok {
+			return errors.New("SmartNICSpec.NetworkMode did not match allowed strings")
+		}
+		return nil
+	})
+
 	validatorMapSmartnic["SmartNICStatus"] = make(map[string][]func(string, interface{}) error)
 	validatorMapSmartnic["SmartNICStatus"]["all"] = append(validatorMapSmartnic["SmartNICStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*SmartNICStatus)
 
 		if _, ok := SmartNICStatus_Phase_value[m.AdmissionPhase]; !ok {
 			return errors.New("SmartNICStatus.AdmissionPhase did not match allowed strings")
-		}
-		return nil
-	})
-
-	validatorMapSmartnic["UplinkStatus"] = make(map[string][]func(string, interface{}) error)
-
-	validatorMapSmartnic["UplinkStatus"]["all"] = append(validatorMapSmartnic["UplinkStatus"]["all"], func(path string, i interface{}) error {
-		m := i.(*UplinkStatus)
-		if !validators.MacAddr(m.PrimaryMac) {
-			return fmt.Errorf("%v validation failed", path+"."+"PrimaryMac")
 		}
 		return nil
 	})

@@ -367,7 +367,8 @@ func doPhase1Exchange(t *testing.T, stream grpc.SmartNICRegistration_RegisterNIC
 			IPConfig: &cmd.IPConfig{
 				IPAddress: "0.0.0.0/0",
 			},
-			MgmtMode: cmd.SmartNICSpec_NETWORK.String(),
+			MgmtMode:    cmd.SmartNICSpec_NETWORK.String(),
+			NetworkMode: cmd.SmartNICSpec_OOB.String(),
 		},
 		Status: cmd.SmartNICStatus{
 			AdmissionPhase: "UNKNOWN",
@@ -786,7 +787,8 @@ func TestRegisterSmartNICProtocolErrors(t *testing.T) {
 			IPConfig: &cmd.IPConfig{
 				IPAddress: "0.0.0.0/0",
 			},
-			MgmtMode: cmd.SmartNICSpec_NETWORK.String(),
+			MgmtMode:    cmd.SmartNICSpec_NETWORK.String(),
+			NetworkMode: cmd.SmartNICSpec_OOB.String(),
 		},
 		Status: cmd.SmartNICStatus{
 			AdmissionPhase: cmd.SmartNICStatus_REGISTERING.String(),
@@ -885,7 +887,8 @@ func TestUpdateSmartNIC(t *testing.T) {
 			IPConfig: &cmd.IPConfig{
 				IPAddress: "10.1.1.1/24",
 			},
-			MgmtMode: cmd.SmartNICSpec_NETWORK.String(),
+			MgmtMode:    cmd.SmartNICSpec_NETWORK.String(),
+			NetworkMode: cmd.SmartNICSpec_OOB.String(),
 		},
 		Status: cmd.SmartNICStatus{
 			AdmissionPhase: "UNKNOWN",
@@ -993,8 +996,9 @@ func TestSmartNICConfigByUser(t *testing.T) {
 			IPConfig: &cmd.IPConfig{
 				IPAddress: "127.0.0.1/32",
 			},
-			Hostname: hostID,
-			MgmtMode: cmd.SmartNICSpec_NETWORK.String(),
+			Hostname:    hostID,
+			MgmtMode:    cmd.SmartNICSpec_NETWORK.String(),
+			NetworkMode: cmd.SmartNICSpec_OOB.String(),
 		},
 		Status: cmd.SmartNICStatus{
 			AdmissionPhase: "UNKNOWN",
@@ -1127,8 +1131,9 @@ func TestSmartNICConfigByUserErrorCases(t *testing.T) {
 			IPConfig: &cmd.IPConfig{
 				IPAddress: "remotehost", // unreachable hostname for testing error case
 			},
-			Hostname: hostID,
-			MgmtMode: cmd.SmartNICSpec_NETWORK.String(),
+			Hostname:    hostID,
+			MgmtMode:    cmd.SmartNICSpec_NETWORK.String(),
+			NetworkMode: cmd.SmartNICSpec_OOB.String(),
 		},
 		Status: cmd.SmartNICStatus{
 			AdmissionPhase: "UNKNOWN",

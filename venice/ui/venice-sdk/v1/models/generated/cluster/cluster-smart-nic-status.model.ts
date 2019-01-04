@@ -11,8 +11,7 @@ import { ClusterSmartNICStatus_admission_phase,  ClusterSmartNICStatus_admission
 import { ClusterSmartNICCondition, IClusterSmartNICCondition } from './cluster-smart-nic-condition.model';
 import { ClusterIPConfig, IClusterIPConfig } from './cluster-ip-config.model';
 import { ClusterSmartNICInfo, IClusterSmartNICInfo } from './cluster-smart-nic-info.model';
-import { ClusterUplinkStatus, IClusterUplinkStatus } from './cluster-uplink-status.model';
-import { ClusterPFStatus, IClusterPFStatus } from './cluster-pf-status.model';
+import { ClusterNetworkInterface, IClusterNetworkInterface } from './cluster-network-interface.model';
 
 export interface IClusterSmartNICStatus {
     'admission-phase'?: ClusterSmartNICStatus_admission_phase;
@@ -21,8 +20,7 @@ export interface IClusterSmartNICStatus {
     'primary-mac'?: string;
     'ip-config'?: IClusterIPConfig;
     'system-info'?: IClusterSmartNICInfo;
-    'uplinks'?: Array<IClusterUplinkStatus>;
-    'pfs'?: Array<IClusterPFStatus>;
+    'interfaces'?: Array<IClusterNetworkInterface>;
 }
 
 
@@ -41,8 +39,7 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
     'primary-mac': string = null;
     'ip-config': ClusterIPConfig = null;
     'system-info': ClusterSmartNICInfo = null;
-    'uplinks': Array<ClusterUplinkStatus> = null;
-    'pfs': Array<ClusterPFStatus> = null;
+    'interfaces': Array<ClusterNetworkInterface> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'admission-phase': {
             enum: ClusterSmartNICStatus_admission_phase_uihint,
@@ -65,10 +62,7 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
         'system-info': {
             type: 'object'
         },
-        'uplinks': {
-            type: 'object'
-        },
-        'pfs': {
+        'interfaces': {
             type: 'object'
         },
     }
@@ -95,8 +89,7 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
         this['conditions'] = new Array<ClusterSmartNICCondition>();
         this['ip-config'] = new ClusterIPConfig();
         this['system-info'] = new ClusterSmartNICInfo();
-        this['uplinks'] = new Array<ClusterUplinkStatus>();
-        this['pfs'] = new Array<ClusterPFStatus>();
+        this['interfaces'] = new Array<ClusterNetworkInterface>();
         this.setValues(values);
     }
 
@@ -130,10 +123,7 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
             this['system-info'].setValues(values['system-info']);
         }
         if (values) {
-            this.fillModelArray<ClusterUplinkStatus>(this, 'uplinks', values['uplinks'], ClusterUplinkStatus);
-        }
-        if (values) {
-            this.fillModelArray<ClusterPFStatus>(this, 'pfs', values['pfs'], ClusterPFStatus);
+            this.fillModelArray<ClusterNetworkInterface>(this, 'interfaces', values['interfaces'], ClusterNetworkInterface);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -148,15 +138,12 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
                 'primary-mac': new FormControl(this['primary-mac']),
                 'ip-config': this['ip-config'].$formGroup,
                 'system-info': this['system-info'].$formGroup,
-                'uplinks': new FormArray([]),
-                'pfs': new FormArray([]),
+                'interfaces': new FormArray([]),
             });
             // generate FormArray control elements
             this.fillFormArray<ClusterSmartNICCondition>('conditions', this['conditions'], ClusterSmartNICCondition);
             // generate FormArray control elements
-            this.fillFormArray<ClusterUplinkStatus>('uplinks', this['uplinks'], ClusterUplinkStatus);
-            // generate FormArray control elements
-            this.fillFormArray<ClusterPFStatus>('pfs', this['pfs'], ClusterPFStatus);
+            this.fillFormArray<ClusterNetworkInterface>('interfaces', this['interfaces'], ClusterNetworkInterface);
         }
         return this._formGroup;
     }
@@ -173,8 +160,7 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
             this._formGroup.controls['primary-mac'].setValue(this['primary-mac']);
             this['ip-config'].setFormGroupValuesToBeModelValues();
             this['system-info'].setFormGroupValuesToBeModelValues();
-            this.fillModelArray<ClusterUplinkStatus>(this, 'uplinks', this['uplinks'], ClusterUplinkStatus);
-            this.fillModelArray<ClusterPFStatus>(this, 'pfs', this['pfs'], ClusterPFStatus);
+            this.fillModelArray<ClusterNetworkInterface>(this, 'interfaces', this['interfaces'], ClusterNetworkInterface);
         }
     }
 }
