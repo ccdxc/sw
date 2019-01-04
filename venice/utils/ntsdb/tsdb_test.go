@@ -18,8 +18,10 @@ import (
 )
 
 const (
-	testSendInterval = 10 * time.Millisecond
-	tableID          = "table-id"
+	testSendInterval  = 10 * time.Millisecond
+	objID             = "obj-id"
+	maxTestCount      = 3
+	maxRetriesPerTest = 10
 )
 
 type testSuite struct {
@@ -41,7 +43,8 @@ type endpoint struct {
 type endpointMetric struct {
 	OutgoingConns api.Counter
 	IncomingConns api.Counter
-	Bandwidth     api.Gauge
+	CPUUsage      api.Gauge
+	Bandwidth     api.PrecisionGauge
 	PacketErrors  api.Counter
 	Violations    api.Counter
 	LinkUp        api.Bool
@@ -84,383 +87,584 @@ func TestSetup(t *testing.T) {
 	Init(ts.context, options)
 }
 
-func TestOMetricsAPI(t *testing.T) {
-	ts.metricServer.ClearMetrics()
+func TestVeniceObj(t *testing.T) {
+	tid := 0
+	for ; tid < maxTestCount; tid++ {
+		ts.metricServer.ClearMetrics()
+		tName := t.Name() + fmt.Sprintf("-%d", tid)
 
-	ep := &endpoint{}
-	ep.TypeMeta.Kind = t.Name()
-	ep.ObjectMeta.Tenant = "test"
-	ep.ObjectMeta.Name = "ucase1"
+		ep := &endpoint{}
+		ep.TypeMeta.Kind = tName
+		ep.ObjectMeta.Tenant = "test"
+		ep.ObjectMeta.Name = "ucase1"
 
-	// Use case 1 - collect various kinds of metrics
-	table, err := NewVeniceObj(ep, &ep.epm, nil)
-	AssertOk(t, err, "unable to create table")
+		// Use case 1 - collect various kinds of metrics
+		obj, err := NewVeniceObj(ep, &ep.epm, nil)
+		AssertOk(t, err, "unable to create obj")
 
-	ep.epm.OutgoingConns.Add(32)
-	ep.epm.IncomingConns.Add(43)
-	ep.epm.Bandwidth.Set(608.2, time.Time{})
-	ep.epm.PacketErrors.Add(12)
-	ep.epm.Violations.Inc()
-	ep.epm.LinkUp.Set(true, time.Time{})
-	ep.epm.WorkloadName.Set("test-workload", time.Time{})
-	ep.epm.RxPacketSize.AddSample(154)
-	ep.epm.TxPacketSize.AddSample(4096)
-	ep.epm.RxBandwidth.AddSample(23.4)
-	ep.epm.TxBandwidth.AddSample(9066.32)
+		timeStamp := time.Now()
+		ep.epm.OutgoingConns.Add(32)
+		ep.epm.IncomingConns.Add(43)
+		ep.epm.CPUUsage.Set(80.9)
+		ep.epm.Bandwidth.Set(608.2, timeStamp)
+		ep.epm.PacketErrors.Add(12)
+		ep.epm.Violations.Inc()
+		ep.epm.LinkUp.Set(true, timeStamp)
+		ep.epm.WorkloadName.Set("test-workload", timeStamp)
+		ep.epm.RxPacketSize.AddSample(154)
+		ep.epm.TxPacketSize.AddSample(4096)
+		ep.epm.RxBandwidth.AddSample(23.4)
+		ep.epm.TxBandwidth.AddSample(9066.32)
 
-	table.Delete()
+		obj.Delete()
 
-	// Use case 2 - another table with same kind/tenant
-	ep.ObjectMeta.Name = "ucase2"
-	epm := &endpointMetric{}
-	table, err = NewVeniceObj(ep, epm, nil)
-	AssertOk(t, err, "unable to create table")
+		// Use case 2 - another obj with same kind/tenant
+		ep.ObjectMeta.Name = "ucase2"
+		epm := &endpointMetric{}
+		obj, err = NewVeniceObj(ep, epm, nil)
+		AssertOk(t, err, "unable to create obj")
 
-	epm.OutgoingConns.Add(7)
-	epm.Violations.Inc()
+		epm.OutgoingConns.Add(7)
+		epm.Violations.Inc()
 
-	table.Delete()
+		obj.Delete()
 
-	// Use case 3 - use freeform apis on Otable
-	ep.ObjectMeta.Name = "ucase3"
-	epm = &endpointMetric{}
-	table, err = NewVeniceObj(ep, epm, nil)
-	AssertOk(t, err, "unable to create table")
+		// Use case 3 - use freeform apis on VeniceObj
+		ep.ObjectMeta.Name = "ucase3"
+		epm = &endpointMetric{}
+		obj, err = NewVeniceObj(ep, epm, nil)
+		AssertOk(t, err, "unable to create obj")
 
-	epm.OutgoingConns.Add(3)
-	epm.OutgoingConns.Inc()
-	epm.OutgoingConns.Dec()
-	epm.OutgoingConns.Inc()
-	epm.OutgoingConns.Sub(20)
-	epm.OutgoingConns.Add(23)
-	table.Counter("OutgoingConns").Inc()
-	epm.IncomingConns.Set(77)
+		epm.OutgoingConns.Add(3)
+		epm.OutgoingConns.Inc()
+		epm.OutgoingConns.Dec()
+		epm.OutgoingConns.Inc()
+		epm.OutgoingConns.Add(29)
+		epm.OutgoingConns.Sub(20)
+		epm.CPUUsage.Set(33.5)
+		obj.Counter("OutgoingConns").Inc()
+		epm.IncomingConns.Set(77)
 
-	time.Sleep(3 * testSendInterval)
-	table.Delete()
+		time.Sleep(3 * testSendInterval)
+		obj.Delete()
 
-	// verify three points
-	tags := []map[string]string{
-		{"Tenant": "test", "Namespace": "", "Kind": t.Name(), "Name": "ucase1"},
-		{"Tenant": "test", "Namespace": "", "Kind": t.Name(), "Name": "ucase2"},
-		{"Tenant": "test", "Namespace": "", "Kind": t.Name(), "Name": "ucase3"},
+		// verify three points
+		tags := []map[string]string{
+			{"Tenant": "test", "Namespace": "", "Kind": tName, "Name": "ucase1"},
+			{"Tenant": "test", "Namespace": "", "Kind": tName, "Name": "ucase2"},
+			{"Tenant": "test", "Namespace": "", "Kind": tName, "Name": "ucase3"},
+		}
+		fields := []map[string]interface{}{
+			{
+				"OutgoingConns": int64(32), "IncomingConns": int64(43),
+				"CPUUsage": float64(80.9), "Bandwidth": float64(608.2),
+				"PacketErrors": int64(12), "Violations": int64(1),
+				"LinkUp": true, "WorkloadName": "test-workload",
+				"RxPacketSize_256": int64(1), "TxPacketSize_16384": int64(1),
+				"RxBandwidth_totalValue": float64(23.4), "RxBandwidth_totalCount": int64(1),
+				"TxBandwidth_totalValue": float64(9066.32), "TxBandwidth_totalCount": int64(1),
+			},
+			{
+				"OutgoingConns": int64(7), "Violations": int64(1),
+			},
+			{
+				"CPUUsage": float64(33.5), "OutgoingConns": int64(14), "IncomingConns": int64(77),
+			},
+		}
+
+		if validateMetrics(t, tName, time.Time{}, tags, fields) {
+			break
+		}
 	}
-	fields := []map[string]interface{}{
-		{
-			"OutgoingConns": int64(32), "IncomingConns": int64(43),
-			"Bandwidth":    float64(608.2),
-			"PacketErrors": int64(12), "Violations": int64(1),
-			"LinkUp": true, "WorkloadName": "test-workload",
-			"RxPacketSize_256": int64(1), "TxPacketSize_16384": int64(1),
-			"RxBandwidth_totalValue": float64(23.4), "RxBandwidth_totalCount": int64(1),
-			"TxBandwidth_totalValue": float64(9066.32), "TxBandwidth_totalCount": int64(1),
-		},
-		{
-			"OutgoingConns": int64(7), "Violations": int64(1),
-		},
-		{
-			"OutgoingConns": int64(8), "IncomingConns": int64(77),
-		},
+	if tid == maxTestCount {
+		t.Fatalf("metrics mismatch: name '%s'", t.Name())
 	}
-
-	AssertEventually(t, func() (bool, interface{}) {
-		return ts.metricServer.Validate(t.Name(), time.Time{}, tags, fields), nil
-	}, "bundle didn't contain some metrics", "100ms", "1s")
 }
 
-func TestMetricsAPI(t *testing.T) {
-	ts.metricServer.ClearMetrics()
+func TestObj(t *testing.T) {
+	tid := 0
+	for ; tid < maxTestCount; tid++ {
+		ts.metricServer.ClearMetrics()
+		tName := t.Name() + fmt.Sprintf("-%d", tid)
 
-	keyTags := map[string]string{tableID: t.Name()}
-	table, err := NewObj(t.Name(), keyTags, nil)
-	AssertOk(t, err, "unable to create table")
-	defer table.Delete()
+		keyTags := map[string]string{objID: tName}
+		obj, err := NewObj(tName, keyTags, nil, nil)
+		AssertOk(t, err, "unable to create obj")
+		defer obj.Delete()
 
-	table.Counter("rxpkts").Inc()
-	table.Counter("txpkts").Add(1)
-	table.Counter("txbytes").Add(12)
-	table.Counter("txbytes").Inc()
-	table.Gauge("bandwidth").Set(76.1, time.Time{})
-	table.String("status").Set("upgrading", time.Time{})
-	table.Bool("powerOn").Set(true, time.Time{})
-	table.Histogram("latency").AddSample(15)
-	table.Histogram("latency").AddSample(3022)
-	table.Histogram("latency").AddSample(12)
-	table.Histogram("latency").AddSample(0)
-	table.Summary("rtt").AddSample(32)
-	table.Summary("rtt").AddSample(13)
-	table.Summary("rtt").AddSample(120)
-	table.Summary("rtt").AddSample(18)
+		timeStamp := time.Now()
+		obj.Counter("rxpkts").Inc()
+		obj.Counter("txpkts").Add(1)
+		obj.Counter("txbytes").Add(12)
+		obj.Counter("txbytes").Inc()
+		obj.PrecisionGauge("bandwidth").Set(76.1, timeStamp)
+		obj.String("status").Set("upgrading", timeStamp)
+		obj.Bool("powerOn").Set(true, timeStamp)
+		obj.Histogram("latency").AddSample(15)
+		obj.Histogram("latency").AddSample(3022)
+		obj.Histogram("latency").AddSample(12)
+		obj.Histogram("latency").AddSample(0)
+		obj.Summary("rtt").AddSample(32)
+		obj.Summary("rtt").AddSample(13)
+		obj.Summary("rtt").AddSample(120)
+		obj.Summary("rtt").AddSample(18)
 
-	tags := []map[string]string{
-		keyTags,
+		tags := []map[string]string{
+			keyTags,
+		}
+		fields := []map[string]interface{}{
+			{
+				"rxpkts": int64(1), "txpkts": int64(1),
+				"txbytes": int64(13), "status": "upgrading", "powerOn": true,
+				"bandwidth": float64(76.1),
+				"latency_4": int64(1), "latency_16": int64(2), "latency_4096": int64(1),
+				"rtt_totalValue": float64(183), "rtt_totalCount": int64(4),
+			},
+		}
+
+		if validateMetrics(t, tName, time.Time{}, tags, fields) {
+			break
+		}
 	}
-	fields := []map[string]interface{}{
-		{
-			"rxpkts": int64(1), "txpkts": int64(1),
-			"txbytes": int64(13), "status": "upgrading", "powerOn": true,
-			"bandwidth": float64(76.1),
-			"latency_4": int64(1), "latency_16": int64(2), "latency_4096": int64(1),
-			"rtt_totalValue": float64(183), "rtt_totalCount": int64(4),
-		},
+	if tid == maxTestCount {
+		t.Fatalf("metrics mismatch: name '%s'", t.Name())
 	}
+}
 
-	AssertEventually(t, func() (bool, interface{}) {
-		return ts.metricServer.Validate(t.Name(), time.Time{}, tags, fields), nil
-	}, "bundle didn't contain some metrics", "100ms", "1s")
+func TestObjWithMetrics(t *testing.T) {
+	tid := 0
+	for ; tid < maxTestCount; tid++ {
+		ts.metricServer.ClearMetrics()
+		tName := t.Name() + fmt.Sprintf("-%d", tid)
+
+		epm := endpointMetric{}
+		keyTags := map[string]string{objID: tName}
+		obj, err := NewObj(tName, keyTags, &epm, nil)
+		AssertOk(t, err, "unable to create obj")
+		defer obj.Delete()
+
+		timeStamp := time.Now()
+		epm.OutgoingConns.Add(32)
+		epm.IncomingConns.Add(43)
+		epm.Bandwidth.Set(608.2, timeStamp)
+		epm.PacketErrors.Add(12)
+		epm.Violations.Inc()
+		epm.LinkUp.Set(true, timeStamp)
+		epm.WorkloadName.Set("test-workload", timeStamp)
+		epm.RxPacketSize.AddSample(154)
+		epm.TxPacketSize.AddSample(4096)
+		epm.RxBandwidth.AddSample(23.4)
+		epm.TxBandwidth.AddSample(9066.32)
+
+		tags := []map[string]string{
+			keyTags,
+		}
+		fields := []map[string]interface{}{
+			{
+				"OutgoingConns": int64(32), "IncomingConns": int64(43),
+				"Bandwidth":    float64(608.2),
+				"PacketErrors": int64(12), "Violations": int64(1),
+				"LinkUp": true, "WorkloadName": "test-workload",
+				"RxPacketSize_256": int64(1), "TxPacketSize_16384": int64(1),
+				"RxBandwidth_totalValue": float64(23.4), "RxBandwidth_totalCount": int64(1),
+				"TxBandwidth_totalValue": float64(9066.32), "TxBandwidth_totalCount": int64(1),
+			},
+		}
+
+		if validateMetrics(t, tName, time.Time{}, tags, fields) {
+			break
+		}
+	}
+	if tid == maxTestCount {
+		t.Fatalf("metrics mismatch: name '%s'", t.Name())
+	}
+}
+
+func TestAtomicAdds(t *testing.T) {
+	tid := 0
+	for ; tid < maxTestCount; tid++ {
+		ts.metricServer.ClearMetrics()
+		tName := t.Name() + fmt.Sprintf("-%d", tid)
+
+		ep := &endpoint{}
+		ep.TypeMeta.Kind = tName
+		ep.ObjectMeta.Tenant = "test"
+		ep.ObjectMeta.Name = "tcase1"
+
+		obj, err := NewVeniceObj(ep, &ep.epm, nil)
+		AssertOk(t, err, "unable to create obj")
+
+		obj.AtomicBegin(time.Now())
+		ep.epm.OutgoingConns.Add(32)
+		ep.epm.IncomingConns.Add(43)
+		ep.epm.Bandwidth.Set(607.2, time.Time{})
+		ep.epm.PacketErrors.Add(112)
+		ep.epm.Violations.Inc()
+		ep.epm.LinkUp.Set(true, time.Time{})
+		ep.epm.WorkloadName.Set("test-workload", time.Time{})
+		ep.epm.RxPacketSize.AddSample(154)
+		ep.epm.TxPacketSize.AddSample(4096)
+		ep.epm.RxBandwidth.AddSample(83.4)
+		ep.epm.TxBandwidth.AddSample(9066.13)
+		obj.AtomicEnd()
+
+		tags := []map[string]string{
+			{"Tenant": "test", "Namespace": "", "Kind": tName, "Name": "tcase1"},
+		}
+		fields := []map[string]interface{}{
+			{
+				"OutgoingConns": int64(32), "IncomingConns": int64(43),
+				"Bandwidth":    float64(607.2),
+				"PacketErrors": int64(112), "Violations": int64(1),
+				"LinkUp": true, "WorkloadName": "test-workload",
+				"RxPacketSize_256": int64(1), "TxPacketSize_16384": int64(1),
+				"RxBandwidth_totalValue": float64(83.4), "RxBandwidth_totalCount": int64(1),
+				"TxBandwidth_totalValue": float64(9066.13), "TxBandwidth_totalCount": int64(1),
+			},
+		}
+
+		if validateMetrics(t, tName, time.Time{}, tags, fields) {
+			break
+		}
+	}
+	if tid == maxTestCount {
+		t.Fatalf("metrics mismatch: name '%s'", t.Name())
+	}
 }
 
 func TestMetricsWithPoints(t *testing.T) {
-	ts.metricServer.ClearMetrics()
+	tid := 0
+	for ; tid < maxTestCount; tid++ {
+		ts.metricServer.ClearMetrics()
+		tName := t.Name() + fmt.Sprintf("-%d", tid)
 
-	keyTags := map[string]string{tableID: t.Name()}
-	table, err := NewObj(t.Name(), keyTags, nil)
-	AssertOk(t, err, "unable to create table")
-	defer table.Delete()
+		keyTags := map[string]string{objID: tName}
+		obj, err := NewObj(tName, keyTags, nil, nil)
+		AssertOk(t, err, "unable to create obj")
+		defer obj.Delete()
 
-	table.Counter("rxpkts").Inc()
-	table.Gauge("bandwidth").Set(76.1, time.Time{})
-	table.Point(
-		map[string]string{"src": "10.1.1.1", "dest": "11.1.1.1", "port": "8080"},
-		map[string]interface{}{"action": "rejected"}, time.Time{})
-	table.Point(
-		map[string]string{"src": "10.1.1.1", "dest": "12.1.1.1", "port": "80"},
-		map[string]interface{}{"action": "permitted"}, time.Time{})
+		obj.Counter("rxpkts").Inc()
+		obj.PrecisionGauge("bandwidth").Set(76.1, time.Time{})
+		obj.Point(
+			map[string]string{"src": "10.1.1.1", "dest": "11.1.1.1", "port": "8080"},
+			map[string]interface{}{"action": "rejected"}, time.Time{})
+		obj.Point(
+			map[string]string{"src": "10.1.1.1", "dest": "12.1.1.1", "port": "80"},
+			map[string]interface{}{"action": "permitted"}, time.Time{})
 
-	tags := []map[string]string{
-		keyTags,
-		{"src": "10.1.1.1", "dest": "11.1.1.1", "port": "8080"},
-		{"src": "10.1.1.1", "dest": "12.1.1.1", "port": "80"},
+		tags := []map[string]string{
+			keyTags,
+			{"src": "10.1.1.1", "dest": "11.1.1.1", "port": "8080"},
+			{"src": "10.1.1.1", "dest": "12.1.1.1", "port": "80"},
+		}
+		fields := []map[string]interface{}{
+			{"rxpkts": int64(1), "bandwidth": float64(76.1)},
+			{"action": "rejected"},
+			{"action": "permitted"},
+		}
+
+		if validateMetrics(t, tName, time.Time{}, tags, fields) {
+			break
+		}
 	}
-	fields := []map[string]interface{}{
-		{"rxpkts": int64(1), "bandwidth": float64(76.1)},
-		{"action": "rejected"},
-		{"action": "permitted"},
+	if tid == maxTestCount {
+		t.Fatalf("metrics mismatch: name '%s'", t.Name())
 	}
-
-	AssertEventually(t, func() (bool, interface{}) {
-		return ts.metricServer.Validate(t.Name(), time.Time{}, tags, fields), nil
-	}, "bundle didn't contain some metrics", "100ms", "1s")
 }
 
 func TestAttributeChangeWithAggregation(t *testing.T) {
-	ts.metricServer.ClearMetrics()
+	tid := 0
+	for ; tid < maxTestCount; tid++ {
+		ts.metricServer.ClearMetrics()
+		tName := t.Name() + fmt.Sprintf("-%d", tid)
 
-	keyTags := map[string]string{tableID: t.Name()}
-	table, err := NewObj(t.Name(), keyTags, nil)
-	AssertOk(t, err, "unable to create table")
+		keyTags := map[string]string{objID: tName}
+		obj, err := NewObj(tName, keyTags, nil, nil)
+		AssertOk(t, err, "unable to create obj")
 
-	table.String("status").Set("upgrading", time.Time{})
-	table.Bool("powerOn").Set(true, time.Time{})
-	table.String("status").Set("upgraded", time.Time{})
-	table.Bool("powerOn").Set(false, time.Time{})
+		timeStamp := time.Now()
+		obj.String("status").Set("upgrading", timeStamp)
+		obj.Bool("powerOn").Set(true, timeStamp)
 
-	table.Delete()
-	time.Sleep(3 * testSendInterval)
+		timeStamp = time.Now()
+		obj.String("status").Set("upgraded", timeStamp)
+		obj.Bool("powerOn").Set(false, timeStamp)
 
-	tags := []map[string]string{
-		keyTags,
-		keyTags,
+		obj.Delete()
+		time.Sleep(3 * testSendInterval)
+
+		tags := []map[string]string{
+			keyTags,
+			keyTags,
+		}
+		fields := []map[string]interface{}{
+			{
+				"status":  "upgrading",
+				"powerOn": true,
+			},
+			{
+				"status":  "upgraded",
+				"powerOn": false,
+			},
+		}
+
+		if validateMetrics(t, tName, time.Time{}, tags, fields) {
+			break
+		}
 	}
-	fields := []map[string]interface{}{
-		{
-			"status":  "upgrading",
-			"powerOn": true,
-		},
-		{
-			"status":  "upgraded",
-			"powerOn": false,
-		},
+	if tid == maxTestCount {
+		t.Fatalf("metrics mismatch: name '%s'", t.Name())
 	}
-
-	AssertEventually(t, func() (bool, interface{}) {
-		return ts.metricServer.Validate(t.Name(), time.Time{}, tags, fields), nil
-	}, "bundle didn't contain some metrics", "100ms", "1s")
 }
 
-func TestHistogramCustomRangeOTable(t *testing.T) {
-	ts.metricServer.ClearMetrics()
+func TestHistogramCustomRangeVeniceObj(t *testing.T) {
+	tid := 0
+	for ; tid < maxTestCount; tid++ {
+		ts.metricServer.ClearMetrics()
+		tName := t.Name() + fmt.Sprintf("-%d", tid)
 
-	ep := &endpoint{}
-	ep.TypeMeta.Kind = t.Name()
-	ep.ObjectMeta.Tenant = "test"
-	ep.ObjectMeta.Name = "tcase1"
+		ep := &endpoint{}
+		ep.TypeMeta.Kind = tName
+		ep.ObjectMeta.Tenant = "test"
+		ep.ObjectMeta.Name = "tcase1"
 
-	epm := &endpointMetric{}
+		epm := &endpointMetric{}
 
-	table, err := NewVeniceObj(ep, epm, nil)
-	AssertOk(t, err, "unable to create table")
+		obj, err := NewVeniceObj(ep, epm, nil)
+		AssertOk(t, err, "unable to create obj")
 
-	ranges := []int64{10, 100, 1000, 10000}
-	epm.RxPacketSize.SetRanges(ranges)
-	epm.TxPacketSize.SetRanges(ranges)
+		ranges := []int64{10, 100, 1000, 10000}
+		epm.RxPacketSize.SetRanges(ranges)
+		epm.TxPacketSize.SetRanges(ranges)
 
-	epm.RxPacketSize.AddSample(154)
-	epm.RxPacketSize.AddSample(192)
-	epm.RxPacketSize.AddSample(5)
+		epm.RxPacketSize.AddSample(154)
+		epm.RxPacketSize.AddSample(192)
+		epm.RxPacketSize.AddSample(5)
 
-	epm.TxPacketSize.AddSample(4096)
-	epm.TxPacketSize.AddSample(2048)
-	epm.TxPacketSize.AddSample(6000)
+		epm.TxPacketSize.AddSample(4096)
+		epm.TxPacketSize.AddSample(2048)
+		epm.TxPacketSize.AddSample(6000)
 
-	time.Sleep(3 * testSendInterval)
+		time.Sleep(3 * testSendInterval)
 
-	tags := []map[string]string{
-		{"Tenant": "test", "Namespace": "", "Kind": t.Name(), "Name": "tcase1"},
+		tags := []map[string]string{
+			{"Tenant": "test", "Namespace": "", "Kind": tName, "Name": "tcase1"},
+		}
+		fields := []map[string]interface{}{
+			{
+				"RxPacketSize_1000":  int64(2),
+				"RxPacketSize_10":    int64(1),
+				"TxPacketSize_10000": int64(3),
+			},
+		}
+
+		if validateMetrics(t, tName, time.Time{}, tags, fields) {
+			break
+		}
+		obj.Delete()
 	}
-	fields := []map[string]interface{}{
-		{
-			"RxPacketSize_1000":  int64(2),
-			"RxPacketSize_10":    int64(1),
-			"TxPacketSize_10000": int64(3),
-		},
-	}
 
-	AssertEventually(t, func() (bool, interface{}) {
-		return ts.metricServer.Validate(t.Name(), time.Time{}, tags, fields), nil
-	}, "bundle didn't contain some metrics", "100ms", "1s")
-
-	table.Delete()
 }
 
 func TestHistogramCustomRange(t *testing.T) {
-	ts.metricServer.ClearMetrics()
+	tid := 0
+	for ; tid < maxTestCount; tid++ {
+		ts.metricServer.ClearMetrics()
+		tName := t.Name() + fmt.Sprintf("-%d", tid)
 
-	keyTags := map[string]string{tableID: t.Name()}
-	table, err := NewObj(t.Name(), keyTags, &TableOpts{})
-	AssertOk(t, err, "unable to create table")
+		keyTags := map[string]string{objID: tName}
+		obj, err := NewObj(tName, keyTags, nil, &ObjOpts{})
+		AssertOk(t, err, "unable to create obj")
 
-	ranges := []int64{10, 100, 1000, 10000}
-	table.Histogram("latency").SetRanges(ranges)
+		ranges := []int64{10, 100, 1000, 10000}
+		obj.Histogram("latency").SetRanges(ranges)
 
-	table.Histogram("latency").AddSample(15)
-	table.Histogram("latency").AddSample(3022)
-	table.Histogram("latency").AddSample(12)
-	table.Histogram("latency").AddSample(0)
+		obj.Histogram("latency").AddSample(15)
+		obj.Histogram("latency").AddSample(3022)
+		obj.Histogram("latency").AddSample(12)
+		obj.Histogram("latency").AddSample(0)
 
-	table.Delete()
-	time.Sleep(3 * testSendInterval)
+		obj.Delete()
+		time.Sleep(3 * testSendInterval)
 
-	tags := []map[string]string{
-		keyTags,
+		tags := []map[string]string{
+			keyTags,
+		}
+		fields := []map[string]interface{}{
+			{
+				"latency_10":    int64(1),
+				"latency_100":   int64(2),
+				"latency_10000": int64(1),
+			},
+		}
+
+		if validateMetrics(t, tName, time.Time{}, tags, fields) {
+			break
+		}
 	}
-	fields := []map[string]interface{}{
-		{
-			"latency_10":    int64(1),
-			"latency_100":   int64(2),
-			"latency_10000": int64(1),
-		},
+	if tid == maxTestCount {
+		t.Fatalf("metrics mismatch: name '%s'", t.Name())
 	}
-
-	AssertEventually(t, func() (bool, interface{}) {
-		return ts.metricServer.Validate(t.Name(), time.Time{}, tags, fields), nil
-	}, "bundle didn't contain some metrics", "100ms", "1s")
 }
 
 func TestMultipleSets(t *testing.T) {
-	ts.metricServer.ClearMetrics()
+	tid := 0
+	for ; tid < maxTestCount; tid++ {
+		ts.metricServer.ClearMetrics()
+		tName := t.Name() + fmt.Sprintf("-%d", tid)
 
-	keyTags := map[string]string{tableID: t.Name()}
-	table, err := NewObj(t.Name(), keyTags, &TableOpts{})
-	AssertOk(t, err, "unable to create table")
-	defer table.Delete()
+		keyTags := map[string]string{objID: tName}
+		obj, err := NewObj(tName, keyTags, nil, &ObjOpts{})
+		AssertOk(t, err, "unable to create obj")
+		defer obj.Delete()
 
-	table.Gauge("bandwidth").Set(8.1, time.Time{})
-	table.Counter("rxpkts").Inc()
-	table.Gauge("bandwidth").Set(0.56, time.Time{})
-	table.Counter("rxpkts").Inc()
-	table.Gauge("bandwidth").Set(2.8, time.Time{})
-	table.Counter("rxpkts").Inc()
+		obj.PrecisionGauge("bandwidth").Set(8.1, time.Time{})
+		obj.Counter("rxpkts").Inc()
+		obj.PrecisionGauge("bandwidth").Set(0.56, time.Time{})
+		obj.Counter("rxpkts").Inc()
+		obj.PrecisionGauge("bandwidth").Set(2.8, time.Time{})
+		obj.Counter("rxpkts").Inc()
 
-	tags := []map[string]string{
-		keyTags,
-		keyTags,
-		keyTags,
+		tags := []map[string]string{
+			keyTags,
+			keyTags,
+			keyTags,
+		}
+		fields := []map[string]interface{}{
+			{"bandwidth": float64(8.1), "rxpkts": int64(1)},
+			{"bandwidth": float64(0.56), "rxpkts": int64(2)},
+			{"bandwidth": float64(2.8), "rxpkts": int64(3)},
+		}
+
+		if validateMetrics(t, tName, time.Time{}, tags, fields) {
+			break
+		}
 	}
-	fields := []map[string]interface{}{
-		{"bandwidth": float64(8.1)},
-		{"bandwidth": float64(0.56)},
-		{"bandwidth": float64(2.8), "rxpkts": int64(3)},
+	if tid == maxTestCount {
+		t.Fatalf("metrics mismatch: name '%s'", t.Name())
 	}
+}
 
-	AssertEventually(t, func() (bool, interface{}) {
-		return ts.metricServer.Validate(t.Name(), time.Time{}, tags, fields), nil
-	}, "bundle didn't contain some metrics", "100ms", "1s")
+func TestPushObj(t *testing.T) {
+	tid := 0
+	for ; tid < maxTestCount; tid++ {
+		ts.metricServer.ClearMetrics()
+		tName := t.Name() + fmt.Sprintf("-%d", tid)
+
+		keyTags := map[string]string{objID: tName}
+		obj, err := NewObj(tName, keyTags, nil, &ObjOpts{})
+		AssertOk(t, err, "unable to create obj")
+		defer obj.Delete()
+
+		obj.Gauge("bandwidth").Set(9.11)
+		obj.Counter("rxpkts").Inc()
+		obj.Push()
+
+		tags := []map[string]string{
+			keyTags,
+		}
+		fields := []map[string]interface{}{
+			{"bandwidth": float64(9.11), "rxpkts": int64(1)},
+		}
+
+		if validateMetrics(t, tName, time.Time{}, tags, fields) {
+			break
+		}
+	}
+	if tid == maxTestCount {
+		t.Fatalf("metrics mismatch: name '%s'", t.Name())
+	}
 }
 
 func TestMultipleSendIntervals(t *testing.T) {
-	ts.metricServer.ClearMetrics()
+	tid := 0
+	for ; tid < maxTestCount; tid++ {
+		ts.metricServer.ClearMetrics()
+		tName := t.Name() + fmt.Sprintf("-%d", tid)
 
-	keyTags := map[string]string{tableID: t.Name()}
-	table, err := NewObj(t.Name(), keyTags, &TableOpts{})
-	AssertOk(t, err, "unable to create table")
-	defer table.Delete()
+		keyTags := map[string]string{objID: tName}
+		obj, err := NewObj(tName, keyTags, nil, &ObjOpts{})
+		AssertOk(t, err, "unable to create obj")
+		defer obj.Delete()
 
-	table.Gauge("bandwidth").Set(88.1, time.Time{})
-	table.Counter("rxpkts").Inc()
-	table.Counter("rxpkts").Inc()
-	table.Counter("rxpkts").Inc()
-	time.Sleep(3 * testSendInterval)
-	table.Gauge("bandwidth").Set(8.56, time.Time{})
-	table.Counter("rxpkts").Inc()
-	table.Counter("rxpkts").Inc()
+		obj.PrecisionGauge("bandwidth").Set(88.1, time.Time{})
+		obj.Counter("rxpkts").Inc()
+		obj.Counter("rxpkts").Inc()
+		obj.Counter("rxpkts").Inc()
+		time.Sleep(5 * testSendInterval)
+		obj.PrecisionGauge("bandwidth").Set(8.56, time.Time{})
+		obj.Counter("rxpkts").Inc()
+		obj.Counter("rxpkts").Inc()
 
-	tags := []map[string]string{
-		keyTags,
-		keyTags,
+		tags := []map[string]string{
+			keyTags,
+			keyTags,
+		}
+		fields := []map[string]interface{}{
+			{"bandwidth": float64(88.1), "rxpkts": int64(3)},
+			{"bandwidth": float64(8.56), "rxpkts": int64(5)},
+		}
+
+		if validateMetrics(t, tName, time.Time{}, tags, fields) {
+			break
+		}
 	}
-	fields := []map[string]interface{}{
-		{"bandwidth": float64(88.1), "rxpkts": int64(3)},
-		{"bandwidth": float64(8.56), "rxpkts": int64(5)},
+	if tid == maxTestCount {
+		t.Fatalf("metrics mismatch: name '%s'", t.Name())
 	}
-
-	AssertEventually(t, func() (bool, interface{}) {
-		return ts.metricServer.Validate(t.Name(), time.Time{}, tags, fields), nil
-	}, "bundle didn't contain some metrics", "200ms", "2s")
 }
 
 func TestUserSuppliedTime(t *testing.T) {
-	ts.metricServer.ClearMetrics()
+	tid := 0
+	for ; tid < maxTestCount; tid++ {
+		ts.metricServer.ClearMetrics()
+		tName := t.Name() + fmt.Sprintf("-%d", tid)
 
-	keyTags := map[string]string{tableID: t.Name()}
-	table, err := NewObj(t.Name(), keyTags, &TableOpts{})
-	AssertOk(t, err, "unable to create table")
-	defer table.Delete()
+		keyTags := map[string]string{objID: tName}
+		obj, err := NewObj(tName, keyTags, nil, &ObjOpts{})
+		AssertOk(t, err, "unable to create obj")
+		defer obj.Delete()
 
-	timeStamp := time.Unix(12345, 67890)
-	table.Gauge("bandwidth").Set(94.3, timeStamp)
-	table.Counter("rxpkts").Inc()
-	table.Counter("rxpkts").Inc()
-	table.Counter("rxpkts").Inc()
+		timeStamp := time.Unix(12345, 67890)
+		obj.PrecisionGauge("bandwidth").Set(94.3, timeStamp)
+		obj.Counter("rxpkts").Inc()
+		obj.Counter("rxpkts").Inc()
+		obj.Counter("rxpkts").Inc()
 
-	tags := []map[string]string{
-		keyTags,
+		tags := []map[string]string{
+			keyTags,
+		}
+		fields := []map[string]interface{}{
+			{"bandwidth": float64(94.3), "rxpkts": int64(3)},
+		}
+
+		if validateMetrics(t, tName, timeStamp, tags, fields) {
+			break
+		}
 	}
-	fields := []map[string]interface{}{
-		{"bandwidth": float64(94.3), "rxpkts": int64(3)},
+	if tid == maxTestCount {
+		t.Fatalf("metrics mismatch: name '%s'", t.Name())
 	}
-
-	AssertEventually(t, func() (bool, interface{}) {
-		return ts.metricServer.Validate(t.Name(), timeStamp, tags, fields), nil
-	}, "bundle didn't contain some metrics", "200ms", "2s")
 }
 
-func TestLocalTable(t *testing.T) {
+func TestLocalObj(t *testing.T) {
 	ts.metricServer.ClearMetrics()
+	tName := t.Name()
 
-	keyTags := map[string]string{tableID: t.Name()}
-	table, err := NewObj(t.Name(), keyTags, &TableOpts{Local: true})
-	AssertOk(t, err, "unable to create table")
-	defer table.Delete()
+	keyTags := map[string]string{objID: tName}
+	obj, err := NewObj(tName, keyTags, nil, &ObjOpts{Local: true})
+	AssertOk(t, err, "unable to create obj")
+	defer obj.Delete()
 
-	table.Counter("rx_ep_create_msg").Inc()
-	table.Counter("rx_ep_create_msg").Inc()
-	table.Counter("rx_ep_create_msg").Inc()
-	table.Counter("peer_disconnects").Inc()
-	table.Counter("peer_rpc_failure").Inc()
-	table.Gauge("cpu_in_use").Set(34.4, time.Time{})
-	table.Gauge("mem_in_use").Set(102, time.Time{})
-	table.String("version").Set("v0.1", time.Time{})
+	timeStamp := time.Now()
+	obj.Counter("rx_ep_create_msg").Inc()
+	obj.Counter("rx_ep_create_msg").Inc()
+	obj.Counter("rx_ep_create_msg").Inc()
+	obj.Counter("peer_disconnects").Inc()
+	obj.Counter("peer_rpc_failure").Inc()
+	obj.PrecisionGauge("cpu_in_use").Set(34.4, timeStamp)
+	obj.PrecisionGauge("mem_in_use").Set(102, timeStamp)
+	obj.String("version").Set("v0.1", timeStamp)
 
 	lms := []LocalMetric{}
 	httpGet(t, fmt.Sprintf("http://localhost:%v", global.opts.LocalPort), &lms)
@@ -473,198 +677,272 @@ func TestLocalTable(t *testing.T) {
 	Assert(t, lms[0].Attributes["version"] == "v0.1", fmt.Sprintf("invalid lms attributes %+v", lms))
 }
 
-func TestLocalTableMultipleRecords(t *testing.T) {
+func TestLocalObjMultipleRecords(t *testing.T) {
 	ts.metricServer.ClearMetrics()
+	tName := t.Name()
 
-	keyTags := map[string]string{tableID: t.Name()}
-	table, err := NewObj(t.Name(), keyTags, &TableOpts{Local: true})
-	AssertOk(t, err, "unable to create table")
-	defer table.Delete()
+	keyTags := map[string]string{objID: tName}
+	obj, err := NewObj(tName, keyTags, nil, &ObjOpts{Local: true})
+	AssertOk(t, err, "unable to create obj")
+	defer obj.Delete()
 
-	table.Counter("counter1").Inc()
-	table.Counter("counter1").Inc()
-	table.Gauge("cpu_in_use").Set(34.4, time.Time{})
-	table.Gauge("cpu_in_use").Set(44.3, time.Time{})
+	obj.Counter("counter1").Inc()
+	obj.Counter("counter1").Inc()
+	obj.PrecisionGauge("cpu_in_use").Set(34.4, time.Time{})
+	obj.PrecisionGauge("cpu_in_use").Set(44.3, time.Time{})
 
 	lms := []LocalMetric{}
-	httpGet(t, fmt.Sprintf("http://localhost:%v", global.opts.LocalPort), &lms)
+	httpGet(t, fmt.Sprintf("http://localhost:%v/%s", global.opts.LocalPort, tName), &lms)
 	Assert(t, len(lms) == 2, fmt.Sprintf("invalid lms attributes %+v", lms))
 	Assert(t, lms[0].Attributes["counter1"] == "2", fmt.Sprintf("invalid lms attributes %+v", lms))
 	Assert(t, lms[0].Attributes["cpu_in_use"] == "34.4", fmt.Sprintf("invalid lms attributes %+v", lms))
 	Assert(t, lms[1].Attributes["cpu_in_use"] == "44.3", fmt.Sprintf("invalid lms attributes %+v", lms))
 }
 
-func TestLocalOneTable(t *testing.T) {
+func TestLocalOneObj(t *testing.T) {
 	ts.metricServer.ClearMetrics()
+	tName := t.Name()
 
-	keyTags := map[string]string{tableID: t.Name()}
-	table, err := NewObj(t.Name(), keyTags, &TableOpts{Local: true})
-	AssertOk(t, err, "unable to create table")
-	defer table.Delete()
+	keyTags := map[string]string{objID: tName}
+	obj, err := NewObj(tName, keyTags, nil, &ObjOpts{Local: true})
+	AssertOk(t, err, "unable to create obj")
+	defer obj.Delete()
 
-	table.Counter("counter1").Inc()
-	table.Counter("counter1").Inc()
-	table.Gauge("cpu_in_use").Set(67.6, time.Time{})
+	obj.Counter("counter1").Inc()
+	obj.Counter("counter1").Inc()
+	obj.PrecisionGauge("cpu_in_use").Set(67.6, time.Time{})
 
-	tableName2 := t.Name() + "_2"
-	keyTags2 := map[string]string{tableID: tableName2}
-	table2, err := NewObj(tableName2, keyTags2, &TableOpts{Local: true})
-	AssertOk(t, err, "unable to create table")
-	defer table2.Delete()
+	objName2 := tName + "_2"
+	keyTags2 := map[string]string{objID: objName2}
+	obj2, err := NewObj(objName2, keyTags2, nil, &ObjOpts{Local: true})
+	AssertOk(t, err, "unable to create obj")
+	defer obj2.Delete()
 
-	table2.Counter("counter4").Inc()
-	table2.Counter("counter5").Inc()
-	table2.Gauge("guage2").Set(23, time.Time{})
+	obj2.Counter("counter4").Inc()
+	obj2.Counter("counter5").Inc()
+	obj2.PrecisionGauge("guage2").Set(23, time.Time{})
 
 	lms := []LocalMetric{}
-	httpGet(t, fmt.Sprintf("http://localhost:%v/%s", global.opts.LocalPort, t.Name()), &lms)
+	httpGet(t, fmt.Sprintf("http://localhost:%v/%s", global.opts.LocalPort, tName), &lms)
 	Assert(t, len(lms) == 1, fmt.Sprintf("invalid lms attributes %+v", lms))
 	Assert(t, len(lms[0].Attributes) == 2, fmt.Sprintf("invalid lms attributes %+v", lms))
 	Assert(t, lms[0].Attributes["counter1"] == "2", fmt.Sprintf("invalid lms attributes %+v", lms))
 	Assert(t, lms[0].Attributes["cpu_in_use"] == "67.6", fmt.Sprintf("invalid lms attributes %+v", lms))
 }
 
-func TestLocalTableAttribute(t *testing.T) {
+func TestLocalObjAttribute(t *testing.T) {
 	ts.metricServer.ClearMetrics()
+	tName := t.Name()
 
-	keyTags := map[string]string{tableID: t.Name()}
-	table, err := NewObj(t.Name(), keyTags, &TableOpts{Local: true})
-	AssertOk(t, err, "unable to create table")
-	defer table.Delete()
+	keyTags := map[string]string{objID: tName}
+	obj, err := NewObj(tName, keyTags, nil, &ObjOpts{Local: true})
+	AssertOk(t, err, "unable to create obj")
+	defer obj.Delete()
 
-	table.Counter("counter1").Inc()
-	table.Counter("counter1").Inc()
-	table.Gauge("cpu_in_use").Set(34.4, time.Time{})
+	obj.Counter("counter1").Inc()
+	obj.Counter("counter1").Inc()
+	obj.PrecisionGauge("cpu_in_use").Set(34.4, time.Time{})
 
 	lms := []LocalMetric{}
-	httpGet(t, fmt.Sprintf("http://localhost:%v/%s/counter1", global.opts.LocalPort, t.Name()), &lms)
+	httpGet(t, fmt.Sprintf("http://localhost:%v/%s/counter1", global.opts.LocalPort, tName), &lms)
 	Assert(t, len(lms) == 1, fmt.Sprintf("invalid lms attributes %+v", lms))
 	Assert(t, len(lms[0].Attributes) == 1, fmt.Sprintf("invalid lms attributes %+v", lms))
 	Assert(t, lms[0].Attributes["counter1"] == "2", fmt.Sprintf("invalid lms attributes %+v", lms))
 }
 
-func TestTableRecreate(t *testing.T) {
-	keyTags := map[string]string{tableID: t.Name()}
-	t1, err := NewObj(t.Name(), keyTags, &TableOpts{})
-	AssertOk(t, err, "unable to create table")
+func TestReadNonLocalObj(t *testing.T) {
+	ts.metricServer.ClearMetrics()
+	tName := t.Name()
+
+	keyTags := map[string]string{objID: tName}
+	obj, err := NewObj(tName, keyTags, nil, nil)
+	AssertOk(t, err, "unable to create obj")
+	defer obj.Delete()
+
+	timeStamp := time.Now()
+	obj.Counter("rxpkts").Set(33)
+	obj.Counter("txbytes").Add(1500)
+	obj.String("linkstatus").Set("up", timeStamp)
+	obj.String("linkstatus").Set("down", timeStamp)
+	obj.String("linkstatus").Set("up", timeStamp)
+	obj.Counter("txbytes").Set(2200)
+
+	lms := []LocalMetric{}
+	httpGet(t, fmt.Sprintf("http://localhost:%v/%s/txbytes", global.opts.LocalPort, tName), &lms)
+	Assert(t, len(lms) == 1, fmt.Sprintf("invalid lms attributes %+v", lms))
+	Assert(t, len(lms[0].Attributes) == 1, fmt.Sprintf("invalid lms attributes %+v", lms))
+	Assert(t, lms[0].Attributes["txbytes"] == "2200", fmt.Sprintf("invalid lms attributes %+v", lms))
+
+	lms = []LocalMetric{}
+	httpGet(t, fmt.Sprintf("http://localhost:%v/%s", global.opts.LocalPort, tName), &lms)
+	Assert(t, len(lms) == 1, fmt.Sprintf("invalid lms attributes %+v", lms))
+	Assert(t, len(lms[0].Attributes) == 3, fmt.Sprintf("invalid lms attributes %+v", lms))
+	Assert(t, lms[0].Attributes["rxpkts"] == "33", fmt.Sprintf("invalid lms attributes %+v", lms))
+	Assert(t, lms[0].Attributes["linkstatus"] == "up", fmt.Sprintf("invalid lms attributes %+v", lms))
+	Assert(t, lms[0].Attributes["txbytes"] == "2200", fmt.Sprintf("invalid lms attributes %+v", lms))
+}
+
+func TestObjRecreate(t *testing.T) {
+	tName := t.Name()
+	keyTags := map[string]string{objID: tName}
+	t1, err := NewObj(tName, keyTags, nil, &ObjOpts{})
+	AssertOk(t, err, "unable to create obj")
 	defer t1.Delete()
 
-	t2, err2 := NewObj(t.Name(), keyTags, &TableOpts{})
-	AssertOk(t, err2, "unable to create table")
-	Assert(t, t1 == t2, "didn't get same table")
+	t2, err2 := NewObj(tName, keyTags, nil, &ObjOpts{})
+	AssertOk(t, err2, "unable to re-obtain obj with same keys")
+	Assert(t, t1 == t2, "did not get the same object back")
 }
 
 func TestInitOptsReset(t *testing.T) {
-	ts.metricServer.ClearMetrics()
+	tid := 0
+	for ; tid < maxTestCount; tid++ {
+		ts.metricServer.ClearMetrics()
+		tName := t.Name() + fmt.Sprintf("-%d", tid)
 
-	keyTags := map[string]string{tableID: t.Name()}
-	table, err := NewObj(t.Name(), keyTags, &TableOpts{})
-	AssertOk(t, err, "unable to create table")
-	defer table.Delete()
+		keyTags := map[string]string{objID: tName}
+		obj, err := NewObj(tName, keyTags, nil, &ObjOpts{})
+		AssertOk(t, err, "unable to create obj")
+		defer obj.Delete()
 
-	for i := 0; i < 100000; i++ {
-		table.Counter("counter1").Inc()
+		for i := 0; i < 3; i++ {
+			obj.PrecisionGauge("RxTstamp").Set(float64(i*2), time.Time{})
+			time.Sleep(testSendInterval)
+		}
+
+		if validateSendInterval(t, testSendInterval) {
+			break
+		}
 	}
-	time.Sleep(testSendInterval)
-
-	Assert(t, ts.metricServer.ValidateSendInterval(testSendInterval), fmt.Sprintf("unable to verify the sendTimer"))
-	ts.metricServer.ClearMetrics()
+	if tid == maxTestCount {
+		t.Fatalf("%s: unable to verify send timer", t.Name())
+	}
 
 	// set the send interval
 	Init(ts.context, &Opts{SendInterval: time.Second})
 
-	keyTags = map[string]string{tableID + "_bigger_timeout": t.Name()}
-	table, err = NewObj(t.Name(), keyTags, &TableOpts{})
-	AssertOk(t, err, "unable to create table")
-	defer table.Delete()
+	tid = 0
+	for ; tid < maxTestCount; tid++ {
+		ts.metricServer.ClearMetrics()
+		tName := t.Name() + fmt.Sprintf("_bigger_timeout-%d", tid)
+		keyTags := map[string]string{objID + "_bigger_timeout": tName}
+		obj, err := NewObj(tName, keyTags, nil, &ObjOpts{})
+		AssertOk(t, err, "unable to create obj")
+		defer obj.Delete()
 
-	for i := 0; i < 1000000; i++ {
-		table.Counter("counter1").Inc()
+		for i := 0; i < 3; i++ {
+			obj.PrecisionGauge("RxTstamp").Set(float64(i*2), time.Time{})
+			time.Sleep(time.Second)
+		}
+
+		if validateSendInterval(t, time.Second) {
+			break
+		}
 	}
-	time.Sleep(time.Second)
-
-	Assert(t, ts.metricServer.ValidateSendInterval(time.Second), fmt.Sprintf("unable to verify the sendTimer"))
+	if tid == maxTestCount {
+		t.Fatalf("%s: unable to verify big timer", t.Name())
+	}
 
 	// reset send interval back
 	Init(ts.context, &Opts{SendInterval: testSendInterval})
 	time.Sleep(time.Second)
 }
 
-func TestOptionTablePrecision(t *testing.T) {
-	ts.metricServer.ClearMetrics()
+func TestOptionObjPrecision(t *testing.T) {
+	tid := 0
+	for ; tid < maxTestCount; tid++ {
+		ts.metricServer.ClearMetrics()
+		tName := t.Name() + fmt.Sprintf("-%d", tid)
 
-	keyTags := map[string]string{tableID: t.Name()}
-	table, err := NewObj(t.Name(), keyTags, &TableOpts{Precision: time.Millisecond})
-	AssertOk(t, err, "unable to create table")
-	defer table.Delete()
+		keyTags := map[string]string{objID: tName}
+		obj, err := NewObj(tName, keyTags, nil, &ObjOpts{Precision: time.Millisecond})
+		AssertOk(t, err, "unable to create obj")
+		defer obj.Delete()
 
-	table.Gauge("cpu_usage").Set(67.6, time.Time{})
-	table.Gauge("disk_usage").Set(31.4, time.Time{})
-	time.Sleep(2 * time.Millisecond)
-	table.Gauge("memory_usage").Set(4.5, time.Time{})
-	time.Sleep(3 * testSendInterval)
+		timeStamp := time.Now()
+		obj.PrecisionGauge("cpu_usage").Set(67.6, timeStamp)
+		obj.PrecisionGauge("disk_usage").Set(31.4, timeStamp)
+		time.Sleep(2 * time.Millisecond)
+		obj.PrecisionGauge("memory_usage").Set(4.5, time.Time{})
+		time.Sleep(3 * testSendInterval)
 
-	tags := []map[string]string{
-		keyTags,
-		keyTags,
+		tags := []map[string]string{
+			keyTags,
+			keyTags,
+		}
+		fields := []map[string]interface{}{
+			{"cpu_usage": float64(67.6), "disk_usage": float64(31.4)},
+			{"memory_usage": float64(4.5)},
+		}
+
+		if validateMetrics(t, tName, time.Time{}, tags, fields) {
+			break
+		}
 	}
-	fields := []map[string]interface{}{
-		{"cpu_usage": float64(67.6), "disk_usage": float64(31.4)},
-		{"memory_usage": float64(4.5)},
+	if tid == maxTestCount {
+		t.Fatalf("metrics mismatch: name '%s'", t.Name())
 	}
-
-	AssertEventually(t, func() (bool, interface{}) {
-		return ts.metricServer.Validate(t.Name(), time.Time{}, tags, fields), nil
-	}, "bundle didn't contain some metrics", "200ms", "2s")
 }
 
-func TestOTablePerf(t *testing.T) {
+func TestVeniceObjPerf(t *testing.T) {
 	ts.metricServer.ClearMetrics()
 
 	time.Sleep(3 * testSendInterval)
 	rand.Seed(102)
 
 	ep := &endpoint{}
-	ep.TypeMeta.Kind = t.Name()
+	tName := t.Name()
+	ep.TypeMeta.Kind = tName
 	ep.ObjectMeta.Tenant = "test"
 	ep.ObjectMeta.Name = "ucase1"
 	epm := &endpointMetric{}
 
 	// increase precision to capture accurate count of exported metrics
-	table, err := NewVeniceObj(ep, epm, &TableOpts{})
-	AssertOk(t, err, "unable to create table")
+	obj, err := NewVeniceObj(ep, epm, &ObjOpts{})
+	AssertOk(t, err, "unable to create obj")
 	epm.RxPacketSize.SetRanges([]int64{10, 100, 1000, 10000})
+	epm.TxPacketSize.SetRanges([]int64{10, 100, 1000, 10000, 100000})
 	intSamples := []int64{9, 99, 999, 9999}
 
 	before := time.Now()
 	nIters := 10000
 	for i := 0; i < nIters; i++ {
-		epm.Bandwidth.Set(float64(i*2), time.Time{})
-		epm.LinkUp.Set(true, time.Time{})
-		epm.WorkloadName.Set(fmt.Sprintf("test-%d", i), time.Time{})
+		timeStamp := time.Now()
 		epm.OutgoingConns.Inc()
+		epm.LinkUp.Set(true, timeStamp)
+		epm.WorkloadName.Set(fmt.Sprintf("test-%d", i), timeStamp)
 		epm.RxPacketSize.AddSample(intSamples[i%4])
+		epm.CPUUsage.Set(float64(i * 2))
+		epm.Bandwidth.Set(float64(i*2), timeStamp)
 		epm.RxBandwidth.AddSample(rand.Float64())
 	}
 	duration := time.Now().Sub(before) / time.Millisecond
-	Assert(t, duration < 100, fmt.Sprintf("took more than 100ms (%v) for 10k updates", duration))
+	Assert(t, duration < 500, fmt.Sprintf("took more than 500ms (%v) for 10k updates", duration))
 	t.Logf("perf: 10k operations took %dms", duration)
 
 	time.Sleep(10 * testSendInterval)
+	numMetrics := nIters
+	intsPerRec := 1    // OutgoingConns - counter
+	intsPerRec++       // IncomingConns - counter
+	floatsPerRec := 1  // CPUUsage - gauge
+	floatsPerRec++     // Bandwidth - precision gauge
+	intsPerRec++       // PacketErrors - counter
+	intsPerRec++       // Violations - counter
+	boolsPerRec := 1   // LinkUp - bool
+	stringsPerRec := 1 // WorkloadName - string
+	intsPerRec += 5    // RxPacketSize - histogram (4 ranges)
+	intsPerRec += 6    // TxPacketSize - histogram (4 ranges)
+	intsPerRec++       // RxBandwidth - summary (count)
+	floatsPerRec++     // RxBandwidth - summary (total)
+	intsPerRec++       // TxBandwidth - summary (count)
+	floatsPerRec++     // TxBandwidth - summary (total)
 
-	totalFloat64s := nIters // Bandwidth
-	totalBools := nIters    // LinkUp
-	totalStrings := nIters  // WorkloadName
-	totalVarInt64s := 1     // OutgoingConns
-	totalVarInt64s += 4     // RxPacketSize (4 ranges)
-	totalVarInt64s++        // RxBandwidth Count
-	totalVarFloat64s := 1   // RxBandwidth Total
-	tags := map[string]string{"Tenant": "test", "Kind": t.Name(), "Name": "ucase1"}
+	tags := map[string]string{"Tenant": "test", "Kind": tName, "Name": "ucase1"}
 	AssertEventually(t, func() (bool, interface{}) {
-		return ts.metricServer.ValidateCount("", tags, totalVarInt64s, totalFloat64s, totalVarFloat64s, totalBools, totalStrings), nil
+		return ts.metricServer.ValidateCount("", tags, numMetrics, intsPerRec, floatsPerRec, boolsPerRec, stringsPerRec), nil
 	}, "bundle didn't contain some metrics", "200ms", "2s")
 
-	table.Delete()
+	obj.Delete()
 
 	ts.metricServer.ClearMetrics()
 }
@@ -682,4 +960,26 @@ func httpGet(t *testing.T, url string, toIf interface{}) {
 	body, err := ioutil.ReadAll(resp.Body)
 	err = json.Unmarshal(body, toIf)
 	AssertOk(t, err, "unable to unmarshal http response")
+}
+
+func validateMetrics(t *testing.T, tName string, timeStamp time.Time, tags []map[string]string, fields []map[string]interface{}) bool {
+	retryID := 0
+	for ; retryID < maxRetriesPerTest; retryID++ {
+		if ts.metricServer.Validate(tName, timeStamp, tags, fields) {
+			break
+		}
+		time.Sleep(testSendInterval)
+	}
+	return retryID != maxRetriesPerTest
+}
+
+func validateSendInterval(t *testing.T, sendInterval time.Duration) bool {
+	retryID := 0
+	for ; retryID < maxRetriesPerTest; retryID++ {
+		if ts.metricServer.ValidateSendInterval(sendInterval) {
+			break
+		}
+		time.Sleep(sendInterval)
+	}
+	return retryID != maxRetriesPerTest
 }

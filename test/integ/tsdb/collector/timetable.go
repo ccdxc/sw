@@ -39,10 +39,10 @@ func (tt *TimeTable) AddRow(ts string, tags map[string]string, fields map[string
 }
 
 // MatchRow checks if r is subset of a row in the table
-func (tt *TimeTable) MatchRow(ts string, r Row) bool {
+func (tt *TimeTable) MatchRow(ts string, r Row) (bool, error) {
 	ref, found := tt.rows[ts]
 	if !found {
-		return false
+		return false, nil
 	}
 
 	// subset is treated as match
@@ -52,11 +52,11 @@ func (tt *TimeTable) MatchRow(ts string, r Row) bool {
 		}
 
 		if ref.columns[k] != v {
-			return false
+			return false, fmt.Errorf("unable to match key '%s' found '%v' expected value '%+v'", k, v, ref.columns[k])
 		}
 	}
 
-	return true
+	return true, nil
 }
 
 // MatchQueryRow checks if the query result row matches the table
@@ -71,8 +71,8 @@ func (tt *TimeTable) MatchQueryRow(qr *models.Row) error {
 
 	for ix, val := range qr.Values {
 		ts, row := parseValues(qr.Columns, val)
-		if !tt.MatchRow(ts, row) {
-			return fmt.Errorf("Row %d ts: %s does not match [%+v]", ix, ts, row)
+		if ok, err := tt.MatchRow(ts, row); !ok {
+			return fmt.Errorf("err %s Row %d ts: %s does not match [%+v]", err, ix, ts, row)
 		}
 	}
 

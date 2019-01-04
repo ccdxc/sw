@@ -49,7 +49,7 @@ func (f *Collector) ValidateSendInterval(expDuration time.Duration) bool {
 	actualDuration := f.lastWrite.Sub(f.prevWrite)
 	deviation := float64(actualDuration) / float64(expDuration)
 
-	if deviation > 4 || deviation < 1 {
+	if deviation > 8 || deviation < 1 {
 		log.Errorf("actualDuration %d expDuration %d deviation %f", actualDuration, expDuration, deviation)
 		return false
 	}
@@ -77,7 +77,11 @@ func (f *Collector) Validate(measurementName string, ts time.Time, tags []map[st
 	}
 
 	if len(f.mb.Metrics) != len(fieldsRanges) || len(f.mb.Metrics) != len(tags) {
-		log.Errorf("mismatching metrics count, received %+v expected %+v", f.mb.Metrics, fieldsRanges)
+		log.Errorf("mismatching metrics count, received %d expected %d tags, %d fields \n", len(f.mb.Metrics), len(fieldsRanges), len(tags))
+		log.Errorf("appends %d tags = %+v\n", f.appends, tags)
+		for ii := range f.mb.Metrics {
+			log.Errorf("Got Metric[%d] %+v\n", ii, f.mb.Metrics[ii])
+		}
 		return false
 	}
 
@@ -113,7 +117,7 @@ func (f *Collector) Validate(measurementName string, ts time.Time, tags []map[st
 				Fields: getMf(fields),
 			}
 
-			if reflect.DeepEqual(mp, emp) {
+			if matchAtLeast(mp, emp) {
 				match = true
 
 				// null out the tags so we never match it again
@@ -123,7 +127,7 @@ func (f *Collector) Validate(measurementName string, ts time.Time, tags []map[st
 			emps = append(emps, emp)
 		}
 		if !match {
-			log.Error("Error finding metrics")
+			log.Error("Mismatching metrics")
 			printMp("Got:", mp)
 			for idx, m := range emps {
 				printMp(fmt.Sprintf("Expected idx %d", idx), m)
@@ -135,8 +139,29 @@ func (f *Collector) Validate(measurementName string, ts time.Time, tags []map[st
 	return true
 }
 
+// matches at least all the fields in emp (expected metric points) to be present in mp (metric points)
+// returns true if it matches
+func matchAtLeast(mp, emp *metric.MetricPoint) bool {
+	if emp.Name != mp.Name {
+		return false
+	}
+	if !reflect.DeepEqual(emp.Tags, mp.Tags) {
+		return false
+	}
+	for ek, ef := range emp.Fields {
+		f, ok := mp.Fields[ek]
+		if !ok {
+			return false
+		}
+		if !reflect.DeepEqual(f, ef) {
+			return false
+		}
+	}
+	return true
+}
+
 // ValidateCount ensures that fake collector has received the specified count of tags/fields over measurement time
-func (f *Collector) ValidateCount(measurementName string, tags map[string]string, totalVarInt64s, totalFloat64s, totalVarFloat64s, totalBools, totalStrings int) bool {
+func (f *Collector) ValidateCount(measurementName string, tags map[string]string, numMetrics, intsPerRec, floatsPerRec, boolsPerRec, stringsPerRec int) bool {
 	if f.mb == nil {
 		log.Errorf("nil metric bundle ")
 		return false
@@ -147,10 +172,11 @@ func (f *Collector) ValidateCount(measurementName string, tags map[string]string
 		return false
 	}
 
-	int64s := 0
-	float64s := 0
-	strings := 0
-	bools := 0
+	if numMetrics > len(f.mb.Metrics) || numMetrics+f.appends < len(f.mb.Metrics) {
+		log.Errorf("#metrics mismatch exp %d got %d appends %d", numMetrics, len(f.mb.Metrics), f.appends)
+		return false
+	}
+	exceptions := 0
 	for _, mp := range f.mb.Metrics {
 		if mp.When == nil {
 			log.Errorf("received time in Metric is nil")
@@ -171,6 +197,10 @@ func (f *Collector) ValidateCount(measurementName string, tags map[string]string
 		}
 		mp.When = nil
 
+		int64s := 0
+		float64s := 0
+		strings := 0
+		bools := 0
 		for _, value := range mp.Fields {
 			v := value.F
 			switch v.(type) {
@@ -179,22 +209,22 @@ func (f *Collector) ValidateCount(measurementName string, tags map[string]string
 			case *metric.Field_Float64:
 				float64s++
 			case *metric.Field_Bool:
-				strings++
-			case *metric.Field_String_:
 				bools++
+			case *metric.Field_String_:
+				strings++
 			default:
 				panic(fmt.Sprintf("unknown type: %+v", v))
 			}
 		}
+		if int64s != intsPerRec || float64s != floatsPerRec || strings != stringsPerRec || bools != boolsPerRec {
+			log.Errorf("invalid recs per metric: ints (got %d exp %d), bools (got %d exp %d), strings (got %d exp %d), floats (got %d exp %d)",
+				int64s, intsPerRec, bools, boolsPerRec, strings, stringsPerRec, float64s, floatsPerRec)
+			log.Errorf("rec %+v", mp.Fields)
+			exceptions++
+		}
 	}
-	totalInt64s := f.appends * totalVarInt64s
-	totalFloat64s += f.appends * totalVarFloat64s
-	if int64s != totalInt64s || float64s != totalFloat64s || bools != totalBools || strings != totalStrings {
-		log.Errorf("appends: %d, totalVarInt64s %d", f.appends, totalInt64s)
-		log.Errorf("int64s got %d expected %d", int64s, totalInt64s)
-		log.Errorf("float64s got %d expected %d", float64s, totalFloat64s)
-		log.Errorf("bools got %d expected %d", bools, totalBools)
-		log.Errorf("strings got %d expected %d", strings, totalStrings)
+	if exceptions > f.appends {
+		log.Errorf("numExceptions: %d appends %d", exceptions, f.appends)
 		return false
 	}
 	f.ClearMetrics()

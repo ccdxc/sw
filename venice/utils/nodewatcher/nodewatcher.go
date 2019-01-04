@@ -46,7 +46,7 @@ type nodeMetrics struct {
 // nodewatcher monitors system resources. It can run on Venice Nodes or on NAPLES.
 type nodewatcher struct {
 	frequency int
-	table     tsdb.Table
+	table     tsdb.Obj
 	metricObj *nodeMetrics
 	logger    log.Logger
 }
@@ -102,19 +102,17 @@ func (w *nodewatcher) periodicUpdate(ctx context.Context) {
 			w.logger.Info("Metrics watcher context cancelled, exiting")
 			return
 		case <-time.After(time.Duration(w.frequency) * time.Second):
-			t := time.Now()
-
 			// memory
 			vmstat, err := mem.VirtualMemory()
 			if err != nil || vmstat == nil {
 				w.logger.Errorf("Node Watcher: failed to read virtual memory info, error: %v", err)
 				continue
 			}
-			w.metricObj.MemAvailable.Set(float64(vmstat.Available>>20), t)
-			w.metricObj.MemFree.Set(float64(vmstat.Free>>20), t)
-			w.metricObj.MemUsed.Set(float64(vmstat.Used>>20), t)
-			w.metricObj.MemTotal.Set(float64(vmstat.Total>>20), t)
-			w.metricObj.MemUsedPercent.Set(math.Floor(vmstat.UsedPercent*100)/100, t)
+			w.metricObj.MemAvailable.Set(float64(vmstat.Available >> 20))
+			w.metricObj.MemFree.Set(float64(vmstat.Free >> 20))
+			w.metricObj.MemUsed.Set(float64(vmstat.Used >> 20))
+			w.metricObj.MemTotal.Set(float64(vmstat.Total >> 20))
+			w.metricObj.MemUsedPercent.Set(math.Floor(vmstat.UsedPercent*100) / 100)
 
 			// cpu
 			cpuPercent, err := cpu.Percent(0, false)
@@ -122,7 +120,7 @@ func (w *nodewatcher) periodicUpdate(ctx context.Context) {
 				w.logger.Errorf("Node Watcher: failed to read cpu percent, error: %v", err)
 				continue
 			}
-			w.metricObj.CPUUsedPercent.Set(math.Ceil(cpuPercent[0]*100)/100, t)
+			w.metricObj.CPUUsedPercent.Set(math.Ceil(cpuPercent[0]*100) / 100)
 			w.logger.Debugf("Node Watcher: recording new metrics, mem used %v%%, cpu used %v%%", vmstat.UsedPercent, cpuPercent[0])
 
 			// disk
@@ -147,11 +145,11 @@ func (w *nodewatcher) periodicUpdate(ctx context.Context) {
 				diskUsed += usage.Used
 				diskTotal += usage.Total
 			}
-			w.metricObj.DiskFree.Set(math.Floor(float64(diskFree>>20)), t)
-			w.metricObj.DiskUsed.Set(math.Ceil(float64(diskUsed>>20)), t)
-			w.metricObj.DiskTotal.Set(math.Floor(float64(diskTotal>>20)), t)
+			w.metricObj.DiskFree.Set(math.Floor(float64(diskFree >> 20)))
+			w.metricObj.DiskUsed.Set(math.Ceil(float64(diskUsed >> 20)))
+			w.metricObj.DiskTotal.Set(math.Floor(float64(diskTotal >> 20)))
 			if diskTotal > 0 {
-				w.metricObj.DiskUsedPercent.Set(math.Ceil(float64(diskUsed*10000)/float64(diskTotal))/100, t)
+				w.metricObj.DiskUsedPercent.Set(math.Ceil(float64(diskUsed*10000)/float64(diskTotal)) / 100)
 			}
 
 			// network
@@ -168,9 +166,9 @@ func (w *nodewatcher) periodicUpdate(ctx context.Context) {
 
 			for _, s := range stat {
 				if _, ok := phyIntf[s.Name]; ok {
-					w.metricObj.InterfaceName.Set(s.Name, t)
-					w.metricObj.InterfaceRxBytes.Set(float64(s.BytesRecv), t)
-					w.metricObj.InterfaceTxBytes.Set(float64(s.BytesSent), t)
+					w.metricObj.InterfaceName.Set(s.Name, time.Time{})
+					w.metricObj.InterfaceRxBytes.Set(float64(s.BytesRecv))
+					w.metricObj.InterfaceTxBytes.Set(float64(s.BytesSent))
 					// fill metrics only for one interface
 					break
 				}

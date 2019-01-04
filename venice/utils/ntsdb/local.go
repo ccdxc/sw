@@ -12,6 +12,14 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
+// Local Metrics
+// local metrics are metrics that a process can collect for itself and not
+// export it to the citadel; these metrics typically represent the internal
+// statistics that could be either verbose and/or not useful for the end user
+// another use case for local metrics is to know the state o a process if it
+// was unable to push the elements to the citadel
+
+// startLocalRESTServer starts a rest server to expose local metrics directly from the process
 func startLocalRESTServer(global *globalInfo) {
 	if global.opts.LocalPort == 0 {
 		global.wg.Done()
@@ -45,10 +53,22 @@ type LocalMetric struct {
 
 // Local metrics serve modules a way to fetch internal metrics gathered using the client lib
 // Supported local URL format (simple two hierarchy system:
-//     / 				- all tables
-//     /<table-name>			- specific table, all attributes
-//     /<table-name>/attribute-name	- specific table, specific attribute
+//     / 				- all objs
+//     /<table-name>			- specific obj, all attributes
+//     /<table-name>/attribute-name	- specific obj, specific attribute
 func localMetricsHandler(w http.ResponseWriter, r *http.Request) {
+	skipObjFn := func(tableName string, obj *iObj) bool {
+		// when displaying all tables, skip non-dirty tables, and skip non local tables
+		if tableName == "" && (!obj.dirty || !obj.opts.Local) {
+			return true
+		}
+		// if tablename is specified then skip on mismatch
+		if tableName != "" && tableName != obj.tableName {
+			return true
+		}
+		return false
+	}
+
 	pathStrings := strings.Split(r.URL.Path, "/")
 
 	tableName := ""
@@ -60,38 +80,40 @@ func localMetricsHandler(w http.ResponseWriter, r *http.Request) {
 		attributeName = pathStrings[2]
 	}
 
-	tables := []*iTable{}
+	objs := []*iObj{}
 	global.Lock()
-	for _, table := range global.tables {
-		if (tableName == "" || tableName == table.name) && table.dirty {
-			tables = append(tables, table)
+	for _, obj := range global.objs {
+		if skipObjFn(tableName, obj) {
+			continue
 		}
+		objs = append(objs, obj)
 	}
-	for _, table := range global.deletedTables {
-		if tableName == "" || tableName == table.name {
-			tables = append(tables, table)
+	for _, obj := range global.deletedObjs {
+		if skipObjFn(tableName, obj) {
+			continue
 		}
+		objs = append(objs, obj)
 	}
 	global.Unlock()
 
-	if len(tables) == 0 {
+	if len(objs) == 0 {
 		var err error
 		if tableName == "" {
-			err = fmt.Errorf("table %s not found", tableName)
+			err = fmt.Errorf("obj %s not found", tableName)
 		} else {
-			err = fmt.Errorf("no tables found")
+			err = fmt.Errorf("no objs found")
 		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	lms := []LocalMetric{}
-	for _, table := range tables {
-		table.Lock()
+	for _, obj := range objs {
+		obj.Lock()
 		mb := &metric.MetricBundle{}
-		table.getMetricBundles(mb)
-		table.Unlock()
-		fetchLms(table.name, attributeName, mb.Metrics, &lms)
+		obj.getMetricBundles(mb)
+		obj.Unlock()
+		fetchLms(obj.tableName, attributeName, mb.Metrics, &lms)
 	}
 
 	lmsData, err := json.Marshal(&lms)
@@ -104,6 +126,8 @@ func localMetricsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(lmsData)
 }
 
+// fetchLms converts metric points to local metric format
+// local metric format is kept simpler for human readability
 func fetchLms(tableName, attributeName string, mps []*metric.MetricPoint, lms *[]LocalMetric) {
 	for _, mp := range mps {
 		lm := LocalMetric{
@@ -121,6 +145,8 @@ func fetchLms(tableName, attributeName string, mps []*metric.MetricPoint, lms *[
 	}
 }
 
+// getString would fetch a string from any metric field, used to display
+// local metrics in a user friendly way
 func getString(mf *metric.Field) string {
 	v := mf.F
 	switch v.(type) {

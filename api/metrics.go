@@ -15,6 +15,11 @@ type Counter interface {
 
 // Gauge implements a changeable metric i.e. can be set to any value
 type Gauge interface {
+	Set(float64)
+}
+
+// PrecisionGauge implements a changeable metric with timestamping of points
+type PrecisionGauge interface {
 	Set(float64, time.Time)
 }
 

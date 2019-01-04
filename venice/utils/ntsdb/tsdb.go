@@ -21,17 +21,18 @@ const (
 	defaultConnectionRetryInterval = 100 * time.Millisecond
 )
 
+// global information is maintained per client during Init time
 type globalInfo struct {
-	opts          Opts                   // user options
-	sync.Mutex                           // global lock
-	wg            sync.WaitGroup         // waitgroup for threads
-	rpcClient     *rpckit.RPCClient      // rpc connection to collector
-	mc            metric.MetricApiClient // metric client object (to write points)
-	context       context.Context        // global context (used for cancellation)
-	tables        map[string]*iTable     // various tables created by user
-	deletedTables []*iTable              // deleted list of tables
-	httpServer    *http.Server           // local http server
-	cancelFunc    context.CancelFunc     // cancel function to initiate internal cleanup
+	opts        Opts                   // user options
+	sync.Mutex                         // global lock
+	wg          sync.WaitGroup         // waitgroup for threads
+	rpcClient   *rpckit.RPCClient      // rpc connection to collector
+	mc          metric.MetricApiClient // metric client object (to write points)
+	context     context.Context        // global context (used for cancellation)
+	objs        map[string]*iObj       // cache for various objs
+	deletedObjs []*iObj                // deleted list of objs
+	httpServer  *http.Server           // local http server
+	cancelFunc  context.CancelFunc     // cancel function to initiate internal cleanup
 }
 
 var global *globalInfo
@@ -63,7 +64,7 @@ func Init(ctx context.Context, opts *Opts) {
 		opts.ConnectionRetryInterval = defaultConnectionRetryInterval
 	}
 
-	global.tables = make(map[string]*iTable)
+	global.objs = make(map[string]*iObj)
 	global.context, global.cancelFunc = context.WithCancel(ctx)
 
 	go periodicTransmit()
@@ -71,14 +72,14 @@ func Init(ctx context.Context, opts *Opts) {
 	go startLocalRESTServer(global)
 }
 
-// Cleanup could be called for ephemeral processes using tsdb
+// Cleanup pushes all pending metrics and frees up resources allocated to the tsdb client
 func Cleanup() {
 	if global == nil {
 		return
 	}
 
 	// flush any metrics that are not yet pushed out
-	sendAllTables()
+	sendAllObjs()
 
 	// cancel the context to stop any running go threads
 	global.cancelFunc()
@@ -88,320 +89,367 @@ func Cleanup() {
 	global = nil
 }
 
-type timeField struct {
-	ts     time.Time
-	field  interface{}
-	subIdx int
-}
-
-// Table represents a measurement
-type Table interface {
+// Obj represents a series within a measurement
+type Obj interface {
 	Delete()
 	Counter(field string) api.Counter
 	Gauge(field string) api.Gauge
+	PrecisionGauge(field string) api.PrecisionGauge
 	String(field string) api.String
 	Bool(field string) api.Bool
 	Histogram(field string) api.Histogram
 	Summary(field string) api.Summary
 	Point(keys map[string]string, fields map[string]interface{}, ts time.Time)
+	AtomicBegin(ts time.Time)
+	AtomicEnd()
+	Push()
 }
 
-// TableOpts specifies options for a specific table
-type TableOpts struct {
+// ObjOpts specifies options for a specific obj
+type ObjOpts struct {
 	Local     bool
 	Precision time.Duration
 }
 
-type iTable struct {
+// implementation of Obj interface
+type iObj struct {
 	sync.Mutex
-	name       string
-	opts       TableOpts
-	keys       map[string]string
-	fields     map[string]interface{}
-	timeFields []*timeField
-	dirty      bool
+	tableName    string
+	opts         ObjOpts
+	keys         map[string]string
+	fields       map[string]interface{}
+	ts           time.Time
+	metricPoints []*metric.MetricPoint
+	atomic       bool
+	dirty        bool
 }
 
 // NewObj creates a metric object that can be used to record arbitrary keys/fields
-func NewObj(tableName string, keys map[string]string, opts *TableOpts) (Table, error) {
+func NewObj(tableName string, keys map[string]string, metrics interface{}, opts *ObjOpts) (Obj, error) {
 	if strings.HasPrefix(tableName, "obj-") {
-		return nil, fmt.Errorf("Table Name starting with 'obj-' is reserved for internal tables")
+		return nil, fmt.Errorf("Obj Name starting with 'obj-' is reserved for internal objs")
 	}
 
 	global.Lock()
 	defer global.Unlock()
-	t, ok := global.tables[tableName]
-	if !ok {
-		t = &iTable{}
-		t.name = tableName
-		t.fields = make(map[string]interface{})
-		t.keys = keys
-		if len(t.keys) == 0 {
-			t.keys = map[string]string{"name": tableName}
-		}
+
+	// objName is uniquely determind from the set of keys
+	// if the keys overlap, then object is considered existing
+	// and an existing value is returned
+	objName := getObjName(keys)
+	obj, ok := global.objs[objName]
+	if ok {
+		return obj, nil
 	}
+
+	obj = &iObj{}
+	obj.tableName = tableName
+	obj.fields = make(map[string]interface{})
+	obj.keys = keys
+	if len(obj.keys) == 0 {
+		obj.keys = map[string]string{"name": tableName}
+	}
+
+	// if metrics are provided during this object creation, fill the fields based on
+	// supplied metrics structure
+	if err := fillFields(obj, metrics); err != nil {
+		return nil, err
+	}
+
 	if opts != nil {
-		t.opts = *opts
+		obj.opts = *opts
 	}
-	if t.opts.Precision == 0 {
-		t.opts.Precision = time.Millisecond
+	if obj.opts.Precision == 0 {
+		obj.opts.Precision = time.Millisecond
 	}
 
-	global.tables[tableName] = t
+	// every object is added to global object's hash based on object's name
+	global.objs[objName] = obj
 
-	return t, nil
+	return obj, nil
 }
 
 // NewVeniceObj creates a metric object for the specified venice object and its metrics
-func NewVeniceObj(obj interface{}, metrics interface{}, opts *TableOpts) (Table, error) {
+func NewVeniceObj(obj interface{}, metrics interface{}, opts *ObjOpts) (Obj, error) {
+	if metrics == nil {
+		return nil, fmt.Errorf("metrics object missing")
+	}
+
 	keys := make(map[string]string)
-	objKind, err := getKeys(obj, keys)
+	tableName, err := getKeys(obj, keys)
 	if err != nil {
 		return nil, err
 	}
 
-	table, err := NewObj(objKind, keys, opts)
-	if err != nil {
-		return nil, err
-	}
-
-	global.Lock()
-	defer global.Unlock()
-
-	t := table.(*iTable)
-	if err := fillFields(t, metrics); err != nil {
-		return nil, err
-	}
-
-	return table, nil
+	return NewObj(tableName, keys, metrics, opts)
 }
 
-// Delete cleans up resources associated with the table
-func (table *iTable) Delete() {
+// Delete cleans up resources associated with the obj
+func (obj *iObj) Delete() {
 	global.Lock()
 	defer global.Unlock()
-	global.deletedTables = append(global.deletedTables, table)
-	delete(global.tables, table.name)
+	global.deletedObjs = append(global.deletedObjs, obj)
+	objName := getObjName(obj.keys)
+	delete(global.objs, objName)
+}
+
+// AtomicBegin marks the start of atomic update on a set of metrics
+func (obj *iObj) AtomicBegin(ts time.Time) {
+	obj.Lock()
+	defer obj.Unlock()
+	if ts.IsZero() {
+		ts = time.Now()
+	}
+	obj.ts = ts
+	obj.atomic = true
+}
+
+// AtomicEnd marks the end of an atomic update
+func (obj *iObj) AtomicEnd() {
+	obj.Lock()
+	defer obj.Unlock()
+	obj.atomic = false
+	obj.dirty = true
 }
 
 // Counter
 type iCounter struct {
-	name    string
-	table   *iTable
-	value   int64
-	nextIdx int
+	name  string
+	obj   *iObj
+	value int64
 }
 
 // Add increments the counter by the specified value
 func (c *iCounter) Add(inc int64) {
-	table := c.table
-	table.Lock()
-	defer table.Unlock()
+	obj := c.obj
+	obj.Lock()
+	defer obj.Unlock()
 
 	c.value += inc
-	tf := &timeField{ts: time.Now(), field: c}
-	table.timeFields = append(table.timeFields, tf)
-	c.nextIdx++
-
-	table.dirty = true
+	obj.dirty = true
 }
 
 // Sub decrements the counter by the specified value
 func (c *iCounter) Sub(inc int64) {
-	table := c.table
-	table.Lock()
-	defer table.Unlock()
+	obj := c.obj
+	obj.Lock()
+	defer obj.Unlock()
 
 	c.value -= inc
-	tf := &timeField{ts: time.Now(), field: c}
-	table.timeFields = append(table.timeFields, tf)
-	c.nextIdx++
-
-	table.dirty = true
+	obj.dirty = true
 }
 
 // Set sets the counter value to a specified value
 func (c *iCounter) Set(val int64) {
-	table := c.table
-	table.Lock()
-	defer table.Unlock()
+	obj := c.obj
+	obj.Lock()
+	defer obj.Unlock()
 
 	c.value = val
-	//	var cntr = (*c)
-	tf := &timeField{ts: time.Now(), field: c /* &cntr */}
-	table.timeFields = append(table.timeFields, tf)
-	c.nextIdx++
-
-	table.dirty = true
+	obj.dirty = true
 }
 
 // Add increments the counter by one
 func (c *iCounter) Inc() {
-	table := c.table
-	table.Lock()
-	defer table.Unlock()
+	obj := c.obj
+	obj.Lock()
+	defer obj.Unlock()
 
 	c.value++
-	tf := &timeField{ts: time.Now(), field: c}
-	table.timeFields = append(table.timeFields, tf)
-	c.nextIdx++
-
-	table.dirty = true
+	obj.dirty = true
 }
 
 // Dec decrements the counter by one
 func (c *iCounter) Dec() {
-	table := c.table
-	table.Lock()
-	defer table.Unlock()
+	obj := c.obj
+	obj.Lock()
+	defer obj.Unlock()
 
 	c.value--
-	tf := &timeField{ts: time.Now(), field: c}
-	table.timeFields = append(table.timeFields, tf)
-	c.nextIdx++
-
-	table.dirty = true
+	obj.dirty = true
 }
 
 // Counter function creates and returns a new counter metric
-func (table *iTable) Counter(name string) api.Counter {
-	table.Lock()
-	defer table.Unlock()
+func (obj *iObj) Counter(name string) api.Counter {
+	obj.Lock()
+	defer obj.Unlock()
 
-	c, ok := table.fields[name].(*iCounter)
+	c, ok := obj.fields[name].(*iCounter)
 	if !ok {
-		c = &iCounter{name: name, table: table}
-		table.fields[name] = c
+		c = &iCounter{name: name, obj: obj}
+		obj.fields[name] = c
 	}
 	return c
 }
 
-// Gauge
+// Gauge - a bounded float value
 type iGauge struct {
-	name    string
-	table   *iTable
-	values  []float64
-	nextIdx int
+	name  string
+	obj   *iObj
+	value float64
 }
 
 // Set registers a value of a guage
-func (g *iGauge) Set(val float64, ts time.Time) {
-	table := g.table
+func (g *iGauge) Set(val float64) {
+	obj := g.obj
 
-	table.Lock()
-	defer table.Unlock()
+	obj.Lock()
+	defer obj.Unlock()
 
-	g.values = append(g.values, val)
+	g.value = val
+	obj.dirty = true
+}
+
+// PrecisionGauge creates a gauge metric
+func (obj *iObj) Gauge(name string) api.Gauge {
+	obj.Lock()
+	defer obj.Unlock()
+
+	g, ok := obj.fields[name].(*iGauge)
+	if !ok {
+		g = &iGauge{name: name, obj: obj}
+		obj.fields[name] = g
+	}
+	return g
+}
+
+// PrecisionGauge - is gauge allowing a point with a timestamp for every value
+type iPrecisionGauge struct {
+	name  string
+	obj   *iObj
+	value float64
+}
+
+// Set registers a value of a guage
+func (g *iPrecisionGauge) Set(val float64, ts time.Time) {
+	obj := g.obj
+
+	obj.Lock()
+	defer obj.Unlock()
+
 	if ts.IsZero() {
 		ts = time.Now()
 	}
-	tf := &timeField{ts: ts, field: g, subIdx: g.nextIdx}
-	table.timeFields = append(table.timeFields, tf)
-	g.nextIdx++
 
-	table.dirty = true
+	createNewMetricPoint(obj, ts)
+
+	g.value = val
+	if !obj.atomic {
+		obj.ts = ts
+	}
+	obj.dirty = true
 }
 
-// Gauge creates a gauge metric
-func (table *iTable) Gauge(name string) api.Gauge {
-	table.Lock()
-	defer table.Unlock()
+// PrecisionGauge creates a gauge metric
+func (obj *iObj) PrecisionGauge(name string) api.PrecisionGauge {
+	obj.Lock()
+	defer obj.Unlock()
 
-	g, ok := table.fields[name].(*iGauge)
+	g, ok := obj.fields[name].(*iPrecisionGauge)
 	if !ok {
-		g = &iGauge{name: name, table: table}
-		table.fields[name] = g
+		g = &iPrecisionGauge{name: name, obj: obj}
+		obj.fields[name] = g
 	}
 	return g
 }
 
 // Bool
 type iBool struct {
-	name    string
-	table   *iTable
-	values  []bool
-	nextIdx int
+	name  string
+	obj   *iObj
+	value bool
 }
 
 // Set registers a value of a bool
 func (b *iBool) Set(val bool, ts time.Time) {
-	table := b.table
-	table.Lock()
-	defer table.Unlock()
+	obj := b.obj
+	obj.Lock()
+	defer obj.Unlock()
 
-	b.values = append(b.values, val)
+	// if the value hasn't change, avoid updating timestamp
+	if b.value == val {
+		return
+	}
+
 	if ts.IsZero() {
 		ts = time.Now()
 	}
-	tf := &timeField{ts: ts, field: b, subIdx: b.nextIdx}
-	table.timeFields = append(table.timeFields, tf)
-	b.nextIdx++
 
-	table.dirty = true
+	createNewMetricPoint(obj, ts)
+
+	b.value = val
+	if !obj.atomic {
+		obj.ts = ts
+	}
+	obj.dirty = true
 }
 
 // Bool creates a boolean metric
-func (table *iTable) Bool(name string) api.Bool {
-	table.Lock()
-	defer table.Unlock()
+func (obj *iObj) Bool(name string) api.Bool {
+	obj.Lock()
+	defer obj.Unlock()
 
-	b, ok := table.fields[name].(*iBool)
+	b, ok := obj.fields[name].(*iBool)
 	if !ok {
-		b = &iBool{name: name, table: table}
-		table.fields[name] = b
+		b = &iBool{name: name, obj: obj}
+		obj.fields[name] = b
 	}
 	return b
 }
 
 // String
 type iString struct {
-	name    string
-	table   *iTable
-	nextIdx int
-	values  []string
+	name  string
+	obj   *iObj
+	value string
 }
 
 // Set registers a value of a bool
 func (s *iString) Set(val string, ts time.Time) {
-	table := s.table
-	table.Lock()
-	defer table.Unlock()
+	obj := s.obj
+	obj.Lock()
+	defer obj.Unlock()
 
-	s.values = append(s.values, val)
+	// if the value hasn't change, avoid updating timestamp
+	if s.value == val {
+		return
+	}
+
 	if ts.IsZero() {
 		ts = time.Now()
 	}
-	tf := &timeField{ts: ts, field: s, subIdx: s.nextIdx}
-	table.timeFields = append(table.timeFields, tf)
-	s.nextIdx++
 
-	table.dirty = true
+	createNewMetricPoint(obj, ts)
+
+	s.value = val
+	if !obj.atomic {
+		obj.ts = ts
+	}
+	obj.dirty = true
 }
 
 // String creates a string metric
-func (table *iTable) String(name string) api.String {
-	table.Lock()
-	defer table.Unlock()
+func (obj *iObj) String(name string) api.String {
+	obj.Lock()
+	defer obj.Unlock()
 
-	s, ok := table.fields[name].(*iString)
+	s, ok := obj.fields[name].(*iString)
 	if !ok {
-		s = &iString{name: name, table: table}
-		table.fields[name] = s
+		s = &iString{name: name, obj: obj}
+		obj.fields[name] = s
 	}
 	return s
 }
 
 // Histogram
 type iHistogram struct {
-	name    string
-	table   *iTable
-	ranges  []int64
-	values  map[int64]int64
-	nextIdx int
-	dirty   map[int64]bool
+	name   string
+	obj    *iObj
+	ranges []int64
+	values map[int64]int64
 }
 
-// SetRanges allows setting ranges for a histogram metric
+// SetRanges allows user to specify ranges for a histogram metric
 func (h *iHistogram) SetRanges(ranges []int64) api.Histogram {
 	if len(ranges) == 0 || len(ranges) >= 24 {
 		panic(fmt.Sprintf("invalid range length: %+v", ranges))
@@ -416,6 +464,8 @@ func (h *iHistogram) SetRanges(ranges []int64) api.Histogram {
 	return h
 }
 
+// setHistogramRange is internal routine to update the histogram ranges
+// from default or user specified
 func (h *iHistogram) setHistogramRange(ranges []int64) {
 	length := len(ranges)
 	h.ranges = make([]int64, length+1)
@@ -423,27 +473,25 @@ func (h *iHistogram) setHistogramRange(ranges []int64) {
 	h.ranges[length] = math.MaxInt64
 
 	h.values = make(map[int64]int64, len(h.ranges))
-	h.dirty = make(map[int64]bool, len(h.ranges))
 	for i := 0; i < len(h.ranges); i++ {
 		key := h.ranges[i]
 		h.values[key] = 0
-		h.dirty[key] = false
 	}
 }
 
 // Histogram creates metric that represent a distribution
-func (table *iTable) Histogram(name string) api.Histogram {
-	table.Lock()
-	defer table.Unlock()
+func (obj *iObj) Histogram(name string) api.Histogram {
+	obj.Lock()
+	defer obj.Unlock()
 
-	h, ok := table.fields[name].(*iHistogram)
+	h, ok := obj.fields[name].(*iHistogram)
 	if !ok {
 		ranges := make([]int64, defaultRanges)
-		h = &iHistogram{name: name, table: table}
+		h = &iHistogram{name: name, obj: obj}
 		for i := 0; i < defaultRanges; i++ {
 			ranges[i] = (int64)(math.Exp2((float64)(2 * (i + 1))))
 		}
-		table.fields[name] = h
+		obj.fields[name] = h
 		h.setHistogramRange(ranges)
 	}
 	return h
@@ -451,9 +499,9 @@ func (table *iTable) Histogram(name string) api.Histogram {
 
 // AddSample adds a new sample to a distribution
 func (h *iHistogram) AddSample(value int64) {
-	table := h.table
-	table.Lock()
-	defer table.Unlock()
+	obj := h.obj
+	obj.Lock()
+	defer obj.Unlock()
 
 	idx := 0
 	for i := 0; i < len(h.ranges); i++ {
@@ -465,71 +513,49 @@ func (h *iHistogram) AddSample(value int64) {
 	key := h.ranges[idx]
 	h.values[key]++
 
-	tf := &timeField{ts: time.Now(), field: h}
-	table.timeFields = append(table.timeFields, tf)
-	h.nextIdx++
-
-	h.dirty[key] = true
-	table.dirty = true
+	obj.dirty = true
 }
 
 // Summary
 type iSummary struct {
 	name       string
-	table      *iTable
+	obj        *iObj
 	totalCount int64
 	totalValue float64
-	nextIdx    int
 }
 
 // Summary creates a metric that tracks averages
-func (table *iTable) Summary(name string) api.Summary {
-	table.Lock()
-	defer table.Unlock()
+func (obj *iObj) Summary(name string) api.Summary {
+	obj.Lock()
+	defer obj.Unlock()
 
-	s, ok := table.fields[name].(*iSummary)
+	s, ok := obj.fields[name].(*iSummary)
 	if !ok {
-		s = &iSummary{name: name, table: table}
-		table.fields[name] = s
+		s = &iSummary{name: name, obj: obj}
+		obj.fields[name] = s
 	}
 	return s
 }
 
 // AddSample adds a new sample to a distribution
 func (s *iSummary) AddSample(value float64) {
-	table := s.table
-	table.Lock()
-	defer table.Unlock()
+	obj := s.obj
+	obj.Lock()
+	defer obj.Unlock()
 
 	s.totalCount++
 	s.totalValue += value
 
-	tf := &timeField{ts: time.Now(), field: s, subIdx: s.nextIdx}
-	table.timeFields = append(table.timeFields, tf)
-	s.nextIdx++
-
-	table.dirty = true
-}
-
-// Point
-type iPoint struct {
-	keys   map[string]string
-	fields map[string]interface{}
-	table  *iTable
+	obj.dirty = true
 }
 
 // Point creates a point with keys/fields in the time series
-func (table *iTable) Point(keys map[string]string, fields map[string]interface{}, ts time.Time) {
-	table.Lock()
-	defer table.Unlock()
-
+func (obj *iObj) Point(keys map[string]string, fields map[string]interface{}, ts time.Time) {
 	if ts.IsZero() {
 		ts = time.Now()
 	}
 
-	p := &iPoint{keys: keys, fields: fields, table: table}
-	tf := &timeField{ts: ts, field: p}
-	table.timeFields = append(table.timeFields, tf)
+	createNewMetricPointFromKeysFields(obj, keys, fields, ts)
 
-	table.dirty = true
+	obj.dirty = true
 }

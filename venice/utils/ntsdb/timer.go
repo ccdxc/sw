@@ -13,6 +13,8 @@ import (
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
+// establishConn connects to citadel instances over grpc and load balancer
+// it would forever keep trying to connect to citadel unless parent context is cancelled
 func establishConn() bool {
 	for {
 		var err error
@@ -40,6 +42,9 @@ func establishConn() bool {
 	return true
 }
 
+// periodicTransmit is responsible for calling the timer based send of all metrics
+// most of the metrics (except precision metrics) are timestamped at the push
+// intervals; this keeps the collection and distribution overhead lower
 func periodicTransmit() {
 	if !establishConn() {
 		return
@@ -50,7 +55,7 @@ func periodicTransmit() {
 	for {
 		select {
 		case <-time.After(global.opts.SendInterval):
-			sendAllTables()
+			sendAllObjs()
 		case <-global.context.Done():
 			log.Infof("aborting tsdb transmit thread: parent context ended")
 			return
@@ -58,31 +63,56 @@ func periodicTransmit() {
 	}
 }
 
-func sendAllTables() {
-	tables := []*iTable{}
+// Push allows user to initiate an immediate push for all the points
+// in a given object
+func (obj *iObj) Push() {
+	dbName := global.opts.DBName
 
-	// fetch dirty tables
+	// create a metric bundle
+	mb := &metric.MetricBundle{DbName: dbName, Reporter: global.opts.ClientName, Metrics: nil}
+	obj.Lock()
+	obj.getMetricBundles(mb)
+	obj.dirty = false
+	obj.Unlock()
+
+	// push metrics to collector
+	if len(mb.Metrics) > 0 {
+		_, err := global.mc.WriteMetrics(global.context, mb)
+		if err != nil {
+			log.Errorf("sendPoints : WriteMetrics failed with err: %s", err)
+		}
+	}
+}
+
+// sendAllObjs collects all objects/metrics collected since last timer expiry
+// it looks for dirty objects (objects that have changed) and deleted objects
+// it creates metric bundles to and use collector library to push metrics to the
+// collector
+func sendAllObjs() {
+	objs := []*iObj{}
+
+	// fetch dirty objs
 	global.Lock()
 	dbName := global.opts.DBName
-	for _, table := range global.tables {
-		if !table.opts.Local && table.dirty {
-			tables = append(tables, table)
+	for _, obj := range global.objs {
+		if !obj.opts.Local && obj.dirty {
+			objs = append(objs, obj)
 		}
 	}
-	for _, table := range global.deletedTables {
-		if !table.opts.Local {
-			tables = append(tables, table)
+	for _, obj := range global.deletedObjs {
+		if !obj.opts.Local && obj.dirty {
+			objs = append(objs, obj)
 		}
 	}
-	global.deletedTables = []*iTable{}
+	global.deletedObjs = []*iObj{}
 	global.Unlock()
 
 	// create metric bundle
 	mb := &metric.MetricBundle{DbName: dbName, Reporter: global.opts.ClientName, Metrics: nil}
-	for _, table := range tables {
-		table.Lock()
-		table.getMetricBundles(mb)
-		table.Unlock()
+	for _, obj := range objs {
+		obj.Lock()
+		obj.getMetricBundles(mb)
+		obj.Unlock()
 	}
 
 	// push metrics to collector
@@ -94,206 +124,114 @@ func sendAllTables() {
 	}
 }
 
-func (table *iTable) getMetricBundles(mb *metric.MetricBundle) {
-	startIdx := 0
+// getMetricBundles would fetch all metrics from an object and save them in
+// the provided metric bundle. It avoids creating points for atomic transactions
+// given that the timer can fire up in between updates of metrics
+func (obj *iObj) getMetricBundles(mb *metric.MetricBundle) {
+	// avoid reaping the latest snapshot if there was no atomic txn going
+	if !obj.atomic {
+		if obj.ts.IsZero() {
+			obj.ts = time.Now()
+		}
+		createNewMetricPoint(obj, time.Time{})
+	}
 
-	for len(table.timeFields) > 0 {
-		fields := make(map[string]*metric.Field)
-		beginTime := table.timeFields[startIdx].ts
-		mp := newMetricPoint(table, beginTime)
+	if len(obj.metricPoints) > 0 {
+		mb.Metrics = append(mb.Metrics, obj.metricPoints...)
+		obj.metricPoints = []*metric.MetricPoint{}
+	}
 
-		visited := make(map[string]bool)
-		idxInc := 0
+	// clear cache if there is no active atomic transaction
+	if !obj.atomic {
+		obj.dirty = false
+		obj.ts = time.Time{}
+	}
+}
 
-	collectMetric:
-		for _, tf := range table.timeFields[startIdx:] {
-			v := tf.field
-			switch v.(type) {
-			case *iCounter:
-				mfCounter(tf, fields)
-			case *iGauge:
-				if tf.ts.Sub(beginTime) > table.opts.Precision {
-					break collectMetric
-				}
-				if skip := mfGauge(tf, visited, fields); skip {
-					break collectMetric
-				}
-			case *iBool:
-				if tf.ts.Sub(beginTime) > table.opts.Precision {
-					break collectMetric
-				}
-				if skip := mfBool(tf, visited, fields); skip {
-					break collectMetric
-				}
-			case *iString:
-				if tf.ts.Sub(beginTime) > table.opts.Precision {
-					break collectMetric
-				}
-				if skip := mfString(tf, visited, fields); skip {
-					break collectMetric
-				}
-			case *iHistogram:
-				mfHistogram(tf, fields)
-			case *iSummary:
-				mfSummary(tf, fields)
-			case *iPoint:
-				mpP := mpPoint(table, tf)
-				mb.Metrics = append(mb.Metrics, mpP)
-			default:
-				panic(fmt.Sprintf("invalid type '%+v' encountered", v))
+// createNewMetricPoint determines if we need to create a new
+// point for a given obj; if it does, it constructs a new metric-point
+// and adds it to the list of metric-points for the obj
+// This function is called within obj lock boundaries
+func createNewMetricPoint(obj *iObj, ts time.Time) {
+	// new metric bundle is not neededis if any of the following is true:
+	// - obj is undergoing an atomic transaction, then we can add all fields as part of a point
+	// - current timestamp for the obj is zero then the point is empty and can be filled in by the field
+	// - if timestamp is same as specified by the caller, then two fields can be part of the same point
+	if obj.atomic || obj.ts.IsZero() || obj.ts == ts {
+		return
+	}
+
+	pbTimestamp, err := protobuf.TimestampProto(obj.ts)
+	if err != nil {
+		log.Errorf("unable to convert timestamp")
+		return
+	}
+
+	mfs := make(map[string]*metric.Field)
+	for key, field := range obj.fields {
+		switch k := field.(type) {
+		case *iCounter:
+			c := field.(*iCounter)
+			mfs[key] = &metric.Field{F: &metric.Field_Int64{Int64: c.value}}
+		case *iGauge:
+			g := field.(*iGauge)
+			mfs[key] = &metric.Field{F: &metric.Field_Float64{Float64: g.value}}
+		case *iPrecisionGauge:
+			g := field.(*iPrecisionGauge)
+			mfs[key] = &metric.Field{F: &metric.Field_Float64{Float64: g.value}}
+		case *iBool:
+			b := field.(*iBool)
+			mfs[key] = &metric.Field{F: &metric.Field_Bool{Bool: b.value}}
+		case *iString:
+			s := field.(*iString)
+			mfs[key] = &metric.Field{F: &metric.Field_String_{String_: s.value}}
+		case *iHistogram:
+			h := field.(*iHistogram)
+			for hKey, hValue := range h.values {
+				mfKey := h.name + fmt.Sprintf("_%d", hKey)
+				mfs[mfKey] = &metric.Field{F: &metric.Field_Int64{Int64: hValue}}
 			}
-			idxInc++
-		}
+		case *iSummary:
+			s := field.(*iSummary)
+			mfs[s.name+"_totalCount"] = &metric.Field{F: &metric.Field_Int64{Int64: s.totalCount}}
+			mfs[s.name+"_totalValue"] = &metric.Field{F: &metric.Field_Float64{Float64: s.totalValue}}
+		default:
+			panic(fmt.Sprintf("unrecognized type %T", k))
 
-		if len(fields) > 0 {
-			mp.Fields = fields
-			mb.Metrics = append(mb.Metrics, mp)
-		}
-
-		if startIdx += idxInc; startIdx >= len(table.timeFields) {
-			break
 		}
 	}
 
-	// clear cache
-	table.timeFields = []*timeField{}
-	table.dirty = false
-}
-
-func newMetricPoint(table *iTable, beginTime time.Time) *metric.MetricPoint {
-	pbTimestamp, err := protobuf.TimestampProto(beginTime)
-	if err != nil {
-		return nil
+	if len(mfs) == 0 {
+		return
 	}
 
 	mp := &metric.MetricPoint{
-		Name: table.name,
-		Tags: table.keys,
+		Name:   obj.tableName,
+		Tags:   obj.keys,
+		Fields: mfs,
 		When: &api.Timestamp{
 			Timestamp: *pbTimestamp,
 		},
 	}
 
-	return mp
+	obj.metricPoints = append(obj.metricPoints, mp)
+
+	// clear the current point's timestamp
+	obj.ts = time.Time{}
 }
 
-func mfCounter(tf *timeField, fields map[string]*metric.Field) {
-	c := tf.field.(*iCounter)
-
-	c.nextIdx--
-	if c.nextIdx == 0 {
-		fields[c.name] = &metric.Field{F: &metric.Field_Int64{Int64: c.value}}
-	} else if c.nextIdx < 0 {
-		panic(fmt.Sprintf("negative index for counter %+v", c))
-	}
-}
-
-func mfGauge(tf *timeField, visited map[string]bool, fields map[string]*metric.Field) bool {
-	g := tf.field.(*iGauge)
-
-	if visitOk, ok := visited[g.name]; ok && visitOk {
-		return true
-	}
-
-	if g.nextIdx--; g.nextIdx < 0 {
-		panic(fmt.Sprintf("negative index for gauge %+v", g))
-	}
-
-	fields[g.name] = &metric.Field{F: &metric.Field_Float64{Float64: g.values[tf.subIdx]}}
-	visited[g.name] = true
-
-	// clean up current readings
-	if g.nextIdx == 0 {
-		g.values = []float64{}
-	}
-
-	return false
-}
-
-func mfBool(tf *timeField, visited map[string]bool, fields map[string]*metric.Field) bool {
-	b := tf.field.(*iBool)
-
-	if visitOk, ok := visited[b.name]; ok && visitOk {
-		return true
-	}
-
-	if b.nextIdx--; b.nextIdx < 0 {
-		panic(fmt.Sprintf("negative index for bool %+v", b))
-	}
-
-	fields[b.name] = &metric.Field{F: &metric.Field_Bool{Bool: b.values[tf.subIdx]}}
-	visited[b.name] = true
-
-	// clean up current readings
-	if b.nextIdx == 0 {
-		b.values = []bool{}
-	}
-
-	return false
-}
-
-func mfString(tf *timeField, visited map[string]bool, fields map[string]*metric.Field) bool {
-	s := tf.field.(*iString)
-
-	if visitOk, ok := visited[s.name]; ok && visitOk {
-		return true
-	}
-
-	if s.nextIdx--; s.nextIdx < 0 {
-		panic(fmt.Sprintf("negative index for %+v", s))
-	}
-
-	fields[s.name] = &metric.Field{F: &metric.Field_String_{String_: s.values[tf.subIdx]}}
-	visited[s.name] = true
-
-	// clean up current readings
-	if s.nextIdx == 0 {
-		s.values = []string{}
-	}
-
-	return false
-}
-
-func mfHistogram(tf *timeField, fields map[string]*metric.Field) {
-	h := tf.field.(*iHistogram)
-
-	h.nextIdx--
-	if h.nextIdx == 0 {
-		for key, value := range h.values {
-			if !h.dirty[key] {
-				continue
-			}
-			h.dirty[key] = false
-			hName := h.name + fmt.Sprintf("_%d", key)
-			fields[hName] = &metric.Field{F: &metric.Field_Int64{Int64: value}}
-		}
-	} else if h.nextIdx < 0 {
-		panic(fmt.Sprintf("negative index for histogram %+v", h))
-	}
-}
-
-func mfSummary(tf *timeField, fields map[string]*metric.Field) {
-	s := tf.field.(*iSummary)
-
-	s.nextIdx--
-	if s.nextIdx == 0 {
-		fields[s.name+"_totalCount"] = &metric.Field{F: &metric.Field_Int64{Int64: s.totalCount}}
-		fields[s.name+"_totalValue"] = &metric.Field{F: &metric.Field_Float64{Float64: s.totalValue}}
-	} else if s.nextIdx < 0 {
-		panic(fmt.Sprintf("going negative index for summary %+v", s))
-	}
-}
-
-func mpPoint(table *iTable, tf *timeField) *metric.MetricPoint {
-	pbTimestamp, err := protobuf.TimestampProto(tf.ts)
+// createNewMetricPointFromKeysFields is the most primitive function to
+// create a point in a time series, it takes keys and fields directly
+// from the user to create a metric point for a specified obj name
+func createNewMetricPointFromKeysFields(obj *iObj, keys map[string]string, fields map[string]interface{}, ts time.Time) {
+	pbTimestamp, err := protobuf.TimestampProto(ts)
 	if err != nil {
-		return nil
+		log.Errorf("unable to convert timestamp")
+		return
 	}
-
-	p := tf.field.(*iPoint)
 
 	mfs := make(map[string]*metric.Field)
-	for key, field := range p.fields {
+	for key, field := range fields {
 		switch k := field.(type) {
 		case int64:
 			v := field.(int64)
@@ -314,15 +252,20 @@ func mpPoint(table *iTable, tf *timeField) *metric.MetricPoint {
 
 	if len(mfs) == 0 {
 		log.Errorf("Bad MP -- no fields")
+		return
 	}
+
+	obj.Lock()
+	defer obj.Unlock()
+
 	mp := &metric.MetricPoint{
-		Name:   table.name,
-		Tags:   p.keys,
+		Name:   obj.tableName,
+		Tags:   keys,
 		Fields: mfs,
 		When: &api.Timestamp{
 			Timestamp: *pbTimestamp,
 		},
 	}
 
-	return mp
+	obj.metricPoints = append(obj.metricPoints, mp)
 }

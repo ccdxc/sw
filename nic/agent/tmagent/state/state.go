@@ -31,7 +31,7 @@ type PolicyState struct {
 	emstore         emstore.Emstore
 	netAgentURL     string
 	fwLogCollectors sync.Map
-	fwTable         ntsdb.Table
+	fwTable         ntsdb.Obj
 	hostName        string
 	appName         string
 	wg              sync.WaitGroup
@@ -60,7 +60,7 @@ func NewTpAgent(ctx context.Context, agentPort string) (*PolicyState, error) {
 
 	//todo: handle host mode
 
-	fwTable, err := ntsdb.NewObj("firewall", map[string]string{}, &ntsdb.TableOpts{})
+	fwTable, err := ntsdb.NewObj("firewall", map[string]string{}, nil, &ntsdb.ObjOpts{})
 	if err != nil {
 		return nil, err
 	}

@@ -32,7 +32,7 @@ func TestGetKeys(t *testing.T) {
 }
 
 func TestFillFields(t *testing.T) {
-	table := &iTable{}
+	table := &iObj{}
 	table.fields = make(map[string]interface{})
 
 	epm := &endpointMetric{}
@@ -50,9 +50,9 @@ func TestFillFields(t *testing.T) {
 	_, ok = epm.IncomingConns.(api.Counter)
 	Assert(t, ok, "unable to find field")
 
-	_, ok = table.fields["Bandwidth"].(api.Gauge)
+	_, ok = table.fields["Bandwidth"].(api.PrecisionGauge)
 	Assert(t, ok, "unable to find field")
-	_, ok = epm.Bandwidth.(api.Gauge)
+	_, ok = epm.Bandwidth.(api.PrecisionGauge)
 	Assert(t, ok, "unable to find field")
 
 	_, ok = table.fields["PacketErrors"].(api.Counter)
