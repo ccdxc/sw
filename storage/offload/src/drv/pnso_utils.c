@@ -469,10 +469,10 @@ putil_put_interm_buf_list(struct service_info *svc_info)
 uint64_t
 svc_poll_expiry_start(const struct service_info *svc_info)
 {
-	const struct batch_info *batch_info =
-		svc_info->si_batch_info.sbi_batch_info;
+	const struct service_chain *chain = svc_info->si_centry->ce_chain_head;
 
-	return batch_info ? batch_info->bi_submit_ts : osal_get_clock_nsec();
+	return chain->sc_batch_info ? chain->sc_batch_info->bi_submit_ts :
+		chain->sc_submit_ts;
 }
 
 bool
@@ -481,7 +481,7 @@ svc_poll_expiry_check(const struct service_info *svc_info,
 		      uint64_t per_svc_timeout)
 {
 	const struct batch_info *batch_info =
-		svc_info->si_batch_info.sbi_batch_info;
+		svc_info->si_centry->ce_chain_head->sc_batch_info;
 	uint64_t timeout = per_svc_timeout;
 
 	if (batch_info)

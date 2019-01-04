@@ -314,15 +314,6 @@ compress_poll(struct service_info *svc_info)
 		goto out;
 	}
   
-	if ((svc_info->si_flags & CHAIN_SFLAG_MODE_POLL) ||
-		(svc_info->si_flags & CHAIN_SFLAG_MODE_ASYNC)) {
-		err = (status_desc->csd_integrity_data ==
-				CPDC_PAD_STATUS_DATA) ? PNSO_OK : EBUSY;
-		OSAL_LOG_DEBUG("cp/pad async/poll mode. transient err: %d",
-				err);
-		goto out;
-	}
-
 	start_ts = svc_poll_expiry_start(svc_info);
 	while (1) {
 		/* poll on padding opaque tag updated by P4+ */
@@ -338,6 +329,13 @@ compress_poll(struct service_info *svc_info)
 					svc_get_type_str(svc_info->si_type),
 					(uint64_t) status_desc, err);
 			break;
+		}
+
+		if (!(svc_info->si_flags & CHAIN_SFLAG_MODE_SYNC)) {
+			err = EBUSY;
+			OSAL_LOG_DEBUG("cp/pad async/poll mode. transient err: %d",
+				       err);
+			goto out;
 		}
 
 		osal_yield();

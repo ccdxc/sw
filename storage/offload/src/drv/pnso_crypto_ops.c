@@ -514,13 +514,6 @@ crypto_poll(struct service_info *svc_info)
 	cpl_data = svc_info->si_type == PNSO_SVC_TYPE_DECRYPT ?
 		CRYPTO_DECRYPT_CPL_DATA : CRYPTO_ENCRYPT_CPL_DATA;
 
-	if ((svc_info->si_flags & CHAIN_SFLAG_MODE_POLL) ||
-		(svc_info->si_flags & CHAIN_SFLAG_MODE_ASYNC)) {
-		err = (status_desc->csd_cpl_data == cpl_data) ? PNSO_OK : EBUSY;
-		OSAL_LOG_DEBUG("transient err: %d", err);
-		goto out;
-	}
-
 	/* sync-mode ... */
 	start_ts = svc_poll_expiry_start(svc_info);
 	while (1) {
@@ -535,6 +528,11 @@ crypto_poll(struct service_info *svc_info)
 					svc_get_type_str(svc_info->si_type),
 					(uint64_t) status_desc, err);
 			break;
+		}
+
+		if (!(svc_info->si_flags & CHAIN_SFLAG_MODE_SYNC)) {
+			OSAL_LOG_DEBUG("transient err: %d", err);
+			goto out;
 		}
 
 		osal_yield();

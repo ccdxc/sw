@@ -44,15 +44,16 @@ pnso_init(struct pnso_init_params *pnso_init)
 {
 	struct lif			*lif = sonic_get_lif();
 	struct per_core_resource	*pcr;
+	uint32_t			num_pc_res;
 	uint32_t			avail_bufs;
 	uint32_t			pc_num_bufs;
 	uint32_t			i;
 	pnso_error_t			err = PNSO_OK;
-	uint32_t			num_pc_res =
-						sonic_get_num_per_core_res(lif);
 
 	if (!sonic_is_accel_dev_ready())
 		return EAGAIN;
+
+	num_pc_res = sonic_get_num_per_core_res(lif);
 
 	if (pnso_initialized) {
 		if (pnso_init->per_core_qdepth >

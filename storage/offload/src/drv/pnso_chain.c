@@ -269,12 +269,13 @@ chn_poller(void *poll_ctx)
 	if (err) {
 		OSAL_LOG_DEBUG("poll failed! chain: 0x" PRIx64 " err: %d",
 				(uint64_t) chain, err);
-		goto out;
+		if (err == EBUSY)
+			goto out;
+		chain->sc_res->err = err; /* ETIMEDOUT most likely */
+	} else {
+		chn_read_write_result(chain);
+		chn_update_overall_result(chain);
 	}
-
-	chn_read_write_result(chain);
-
-	chn_update_overall_result(chain);
 
 	if (chain->sc_req_cb) {
 		OSAL_LOG_DEBUG("invoking caller's cb ctx: 0x" PRIx64 " res: 0x" PRIx64 " err: %d",
@@ -820,6 +821,7 @@ chn_execute_chain(struct service_chain *chain)
 		goto out;
 
 	/* ring 'first' service door bell */
+	chain->sc_submit_ts = osal_get_clock_nsec();
 	chain->sc_flags |= CHAIN_CFLAG_RANG_DB;
 	err = ce_first->ce_svc_info.si_ops.ring_db(&ce_first->ce_svc_info);
 	PAS_START_HW_PERF();

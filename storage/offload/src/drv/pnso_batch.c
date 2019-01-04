@@ -390,6 +390,8 @@ out:
 }
 
 static void read_write_result_all_chains(struct batch_info *batch_info);
+static void read_write_error_result_all_chains(struct batch_info *batch_info,
+					       pnso_error_t err);
 
 pnso_error_t bat_poller(void *pnso_poll_ctx);
 
@@ -413,15 +415,17 @@ bat_poller(void *poll_ctx)
 	if (err) {
 		OSAL_LOG_DEBUG("poll failed! batch_info: 0x" PRIx64 "err: %d",
 			(uint64_t) batch_info, err);
-		goto out;
+		if (err == EBUSY)
+			goto out;
+		read_write_error_result_all_chains(batch_info, err);
+	} else {
+		/*
+		 * on success, read/write result from first to last chain's - first
+		 * to last service - of the entire batch
+		 *
+		 */
+		read_write_result_all_chains(batch_info);
 	}
-
-	/*
-	 * on success, read/write result from first to last chain's - first
-	 * to last service - of the entire batch
-	 *
-	 */
-	read_write_result_all_chains(batch_info);
 
 	if (batch_info->bi_req_cb) {
 		OSAL_LOG_DEBUG("invoking caller's cb ctx: 0x" PRIx64 "err: %d",
@@ -624,6 +628,24 @@ read_write_result_all_chains(struct batch_info *batch_info)
 }
 
 static void
+read_write_error_result_all_chains(struct batch_info *batch_info, pnso_error_t err)
+{
+	struct batch_page *batch_page;
+	struct batch_page_entry *page_entry;
+	int i;
+
+	for (i = 0; i < batch_info->bi_num_entries;  i++) {
+		batch_page = GET_PAGE(batch_info, i);
+		page_entry = GET_PAGE_ENTRY(batch_page, i);
+
+		if (page_entry->bpe_chain) {
+			page_entry->bpe_chain->sc_res->err = err;
+			chn_notify_caller(page_entry->bpe_chain);
+		}
+	}
+}
+
+static void
 set_batch_page_cflag(struct batch_page *bp, uint16_t cflag)
 {
 	struct batch_page_entry *bpe;
@@ -658,11 +680,14 @@ execute_batch(struct batch_info *batch_info)
 	struct service_chain *first_chain, *last_chain;
 	struct chain_entry *first_ce, *last_ce;
 	uint32_t idx;
+	uint32_t num_entries;
+	bool is_sync_mode = (batch_info->bi_flags & BATCH_BFLAG_MODE_SYNC) != 0;
 
 	OSAL_LOG_DEBUG("enter ...");
 
-	idx = 0;
-	while (true) {
+	batch_info->bi_submit_ts = osal_get_clock_nsec();
+	num_entries = batch_info->bi_num_entries;
+	for (idx = 0; idx < num_entries; idx += MAX_PAGE_ENTRIES) {
 		/* get first chain's first service within the mini-batch */
 		first_chain = chn_get_first_service_chain(batch_info, idx);
 		first_ce = chn_get_first_centry(first_chain);
@@ -680,14 +705,9 @@ execute_batch(struct batch_info *batch_info)
 				       first_ce->ce_svc_info.si_type, err);
 			goto out;
 		}
-
-		idx += MAX_PAGE_ENTRIES;
-		if (idx > batch_info->bi_num_entries-1)
-			break;
 	}
 
-	batch_info->bi_submit_ts = osal_get_clock_nsec();
-	if (!(batch_info->bi_flags & BATCH_BFLAG_MODE_SYNC)) {
+	if (!is_sync_mode) {
 		OSAL_LOG_DEBUG("in non-sync mode ...");
 		goto done;
 	}

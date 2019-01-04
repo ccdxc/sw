@@ -53,14 +53,6 @@ cpdc_poll(const struct service_info *svc_info,
 		status_desc =
 			(struct cpdc_status_desc *) svc_info->si_status_desc;
 
-	if ((svc_info->si_flags & CHAIN_SFLAG_MODE_POLL) ||
-		(svc_info->si_flags & CHAIN_SFLAG_MODE_ASYNC)) {
-		err = status_desc->csd_valid ? PNSO_OK : EBUSY;
-		OSAL_LOG_DEBUG("transient err: %d", err);
-		goto out;
-	}
-
-	/* sync-mode ... */
 	start_ts = svc_poll_expiry_start(svc_info);
 	while (1) {
 		err = status_desc->csd_valid ? PNSO_OK : EBUSY;
@@ -76,13 +68,15 @@ cpdc_poll(const struct service_info *svc_info,
 			break;
 		}
 
+		if (!(svc_info->si_flags & CHAIN_SFLAG_MODE_SYNC)) {
+			OSAL_LOG_DEBUG("transient err: %d", err);
+			break;
+		}
+
 		osal_yield();
 	}
 
 	OSAL_LOG_DEBUG("exit! err: %d", err);
-	return err;
-out:
-	OSAL_LOG_DEBUG("exit!");
 	return err;
 }
 

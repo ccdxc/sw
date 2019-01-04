@@ -1743,8 +1743,11 @@ static pnso_error_t run_testcase_batch(struct batch_context *batch_ctx)
 		init_req_context(req_ctx, batch_ctx, svc_chain);
 		err = run_testcase_svc_chain(req_ctx, testcase, svc_chain,
 					     i, batch_ctx->req_count);
-		if (err != PNSO_OK)
+		if (err != PNSO_OK) {
+			PNSO_LOG_INFO("Failed to submit request for req %u/%u, batch_id %u, worker_id %u\n",
+				      i+1, batch_ctx->req_count, batch_ctx->batch_id, batch_ctx->worker_id);
 			goto error;
+		}
 	}
 
 	/* Special handling for SYNC and POLL */
@@ -1917,10 +1920,10 @@ static int worker_loop(void *param)
 				ctx->last_active_ts = cur_ts;
 				is_busy = true;
 			} else {
-				/* error case, call completion handler directly */
-				PNSO_LOG_ERROR("poll_fn returned status %d, call completion_cb directly\n",
+				/* error case, completion handler called by poll_fn */
+				PNSO_LOG_INFO("DEBUG: poll_fn returned status %d\n",
 					       poll_err);
-				batch_completion_cb(batch_ctx, NULL);
+				//batch_completion_cb(batch_ctx, NULL);
 				ctx->last_active_ts = cur_ts;
 				is_busy = true;
 			}

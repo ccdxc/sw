@@ -264,6 +264,7 @@ hash_poll(struct service_info *svc_info)
 
 	st_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 	if (!st_desc) {
+		err = EINVAL;
 		OSAL_LOG_ERROR("invalid hash status desc! err: %d", err);
 		OSAL_ASSERT(!err);
 		return err;
