@@ -34,47 +34,78 @@ unsigned int devcmd_timeout = 30;
 module_param(devcmd_timeout, uint, 0);
 MODULE_PARM_DESC(devcmd_timeout, "Devcmd timeout in seconds (default 30 secs)");
 
+static const char *ionic_opcode_to_str(enum cmd_opcode opcode)
+{
+	switch (opcode) {
+	case CMD_OPCODE_NOP:
+		return "CMD_OPCODE_NOP";
+	case CMD_OPCODE_RESET:
+		return "CMD_OPCODE_RESET";
+	case CMD_OPCODE_IDENTIFY:
+		return "CMD_OPCODE_IDENTIFY";
+	case CMD_OPCODE_LIF_INIT:
+		return "CMD_OPCODE_LIF_INIT";
+	case CMD_OPCODE_LIF_RESET:
+		return "CMD_OPCODE_LIF_RESET";
+	case CMD_OPCODE_ADMINQ_INIT:
+		return "CMD_OPCODE_ADMINQ_INIT";
+	case CMD_OPCODE_TXQ_INIT:
+		return "CMD_OPCODE_TXQ_INIT";
+	case CMD_OPCODE_RXQ_INIT:
+		return "CMD_OPCODE_RXQ_INIT";
+	case CMD_OPCODE_FEATURES:
+		return "CMD_OPCODE_FEATURES";
+	case CMD_OPCODE_HANG_NOTIFY:
+		return "CMD_OPCODE_HANG_NOTIFY";
+	case CMD_OPCODE_Q_ENABLE:
+		return "CMD_OPCODE_Q_ENABLE";
+	case CMD_OPCODE_Q_DISABLE:
+		return "CMD_OPCODE_Q_DISABLE";
+	case CMD_OPCODE_NOTIFYQ_INIT:
+		return "CMD_OPCODE_NOTIFYQ_INIT";
+	case CMD_OPCODE_STATION_MAC_ADDR_GET:
+		return "CMD_OPCODE_STATION_MAC_ADDR_GET";
+	case CMD_OPCODE_MTU_SET:
+		return "CMD_OPCODE_MTU_SET";
+	case CMD_OPCODE_RX_MODE_SET:
+		return "CMD_OPCODE_RX_MODE_SET";
+	case CMD_OPCODE_RX_FILTER_ADD:
+		return "CMD_OPCODE_RX_FILTER_ADD";
+	case CMD_OPCODE_RX_FILTER_DEL:
+		return "CMD_OPCODE_RX_FILTER_DEL";
+	case CMD_OPCODE_LIF_STATS_START:
+		return "CMD_OPCODE_LIF_STATS_START";
+	case CMD_OPCODE_LIF_STATS_STOP:
+		return "CMD_OPCODE_LIF_STATS_STOP";
+	case CMD_OPCODE_DEBUG_Q_DUMP:
+		return "CMD_OPCODE_DEBUG_Q_DUMP";
+	case CMD_OPCODE_RSS_HASH_SET:
+		return "CMD_OPCODE_RSS_HASH_SET";
+	case CMD_OPCODE_RSS_INDIR_SET:
+		return "CMD_OPCODE_RSS_INDIR_SET";
+	case CMD_OPCODE_RDMA_RESET_LIF:
+		return "CMD_OPCODE_RDMA_RESET_LIF";
+	case CMD_OPCODE_RDMA_CREATE_EQ:
+		return "CMD_OPCODE_RDMA_CREATE_EQ";
+	case CMD_OPCODE_RDMA_CREATE_CQ:
+		return "CMD_OPCODE_RDMA_CREATE_CQ";
+	case CMD_OPCODE_RDMA_CREATE_ADMINQ:
+		return "CMD_OPCODE_RDMA_CREATE_ADMINQ";
+	default:
+		return "DEVCMD_UNKNOWN";
+	}
+}
+
 int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx,
 			   bool timeout)
 {
 	struct net_device *netdev = lif->netdev;
-	static struct cmds {
-		unsigned int cmd;
-		char *name;
-	} cmds[] = {
-		{ CMD_OPCODE_TXQ_INIT, "CMD_OPCODE_TXQ_INIT" },
-		{ CMD_OPCODE_RXQ_INIT, "CMD_OPCODE_RXQ_INIT" },
-		{ CMD_OPCODE_FEATURES, "CMD_OPCODE_FEATURES" },
-		{ CMD_OPCODE_Q_ENABLE, "CMD_OPCODE_Q_ENABLE" },
-		{ CMD_OPCODE_Q_DISABLE, "CMD_OPCODE_Q_DISABLE" },
-		{ CMD_OPCODE_NOTIFYQ_INIT, "CMD_OPCODE_NOTIFYQ_INIT" },
-		{ CMD_OPCODE_LIF_RESET, "CMD_OPCODE_LIF_RESET" },
-		{ CMD_OPCODE_SET_NETDEV_INFO, "CMD_OPCODE_SET_NETDEV_INFO" },
-		{ CMD_OPCODE_STATION_MAC_ADDR_GET,
-			"CMD_OPCODE_STATION_MAC_ADDR_GET" },
-		{ CMD_OPCODE_MTU_SET, "CMD_OPCODE_MTU_SET" },
-		{ CMD_OPCODE_RX_MODE_SET, "CMD_OPCODE_RX_MODE_SET" },
-		{ CMD_OPCODE_RX_FILTER_ADD, "CMD_OPCODE_RX_FILTER_ADD" },
-		{ CMD_OPCODE_RX_FILTER_DEL, "CMD_OPCODE_RX_FILTER_DEL" },
-		{ CMD_OPCODE_LIF_STATS_START, "CMD_OPCODE_LIF_STATS_START" },
-		{ CMD_OPCODE_LIF_STATS_STOP, "CMD_OPCODE_LIF_STATS_STOP" },
-		{ CMD_OPCODE_RSS_HASH_SET, "CMD_OPCODE_RSS_HASH_SET" },
-		{ CMD_OPCODE_RSS_INDIR_SET, "CMD_OPCODE_RSS_INDIR_SET" },
-	};
-	int list_len = ARRAY_SIZE(cmds);
-	struct cmds *cmd = cmds;
-	char *name = "UNKNOWN cmd opcode";
-	int i;
+	const char *name;
 
 	if (ctx->comp.comp.status || timeout) {
-		for (i = 0; i < list_len; i++) {
-			if (cmd[i].cmd == ctx->cmd.cmd.opcode) {
-				name = cmd[i].name;
-				break;
-			}
-		}
-		netdev_err(netdev, "(%d) %s failed: %d %s\n",
-			   ctx->cmd.cmd.opcode, name, ctx->comp.comp.status,
+		name = ionic_opcode_to_str(ctx->cmd.cmd.opcode);
+		netdev_err(netdev, "%s (%d) failed: %d %s\n",
+			   name, ctx->cmd.cmd.opcode, ctx->comp.comp.status,
 			   (timeout ? "(timeout)" : ""));
 		return -EIO;
 	}
@@ -84,16 +115,16 @@ int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx,
 
 int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
 {
+	struct net_device *netdev = lif->netdev;
 	unsigned long remaining;
+	const char *name;
 	int err;
 
 	err = ionic_api_adminq_post(lif, ctx);
 	if (err) {
-		struct net_device *netdev = lif->netdev;
-
-		netdev_err(netdev, "adminq_post cmd %d failed: %d\n",
-			   ctx->cmd.cmd.opcode, err);
-
+		name = ionic_opcode_to_str(ctx->cmd.cmd.opcode);
+		netdev_err(netdev, "Posting of %s (%d) failed: %d\n",
+			   name, ctx->cmd.cmd.opcode, err);
 		return err;
 	}
 
@@ -141,7 +172,8 @@ static int ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
 		done = ionic_dev_cmd_done(idev);
 #ifdef HAPS
 		if (done)
-			pr_debug("DEVCMD %d done took %ld secs (%ld jiffies)\n",
+			pr_debug("DEVCMD %s (%d) done took %ld secs (%ld jiffies)\n",
+				 ionic_opcode_to_str(idev->dev_cmd->cmd.cmd.opcode),
 				 idev->dev_cmd->cmd.cmd.opcode,
 				 (jiffies + max_wait - time)/HZ,
 				 jiffies + max_wait - time);
