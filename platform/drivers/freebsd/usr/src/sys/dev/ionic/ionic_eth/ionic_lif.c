@@ -1794,6 +1794,9 @@ static void ionic_lif_rxqs_deinit(struct lif *lif)
 
 static void ionic_lif_deinit(struct lif *lif)
 {
+	if (lif->netdev->if_drv_flags & IFF_DRV_RUNNING)
+		ionic_stop(lif->netdev);
+
 	ionic_lif_stats_dump_stop(lif);
 	ionic_rx_filters_deinit(lif);
 	ionic_lif_rss_teardown(lif);
