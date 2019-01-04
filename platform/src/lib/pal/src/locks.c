@@ -43,21 +43,12 @@ pal_lock_ret_t
 pal_wr_lock(pal_lock_id_t lock_id)
 {
     struct flock lock = {F_WRLCK, 0, SEEK_SET, 0};
-    struct flock get_lock_int;
     int fd = -1;
 
     fd = pal_get_lock_fd(lock_id);
     assert(fd >= 0);
 
-    /* Checks to see if the lock is already with the process */
-    fcntl(fd, F_GETLK, &get_lock_int);  /* Overwrites lock structure with preventors. */
-    if (get_lock_int.l_type == F_WRLCK) {
-        return LCK_FAIL;
-    } else if (get_lock_int.l_type == F_RDLCK) {
-        return LCK_FAIL;
-    }
-
-    if (fcntl(fd, F_SETLK, &lock) == -1) {
+    if (fcntl(fd, F_SETLKW, &lock) == -1) {
         return LCK_FAIL;
     } else {
         return LCK_SUCCESS;
@@ -68,17 +59,10 @@ pal_lock_ret_t
 pal_rd_lock(pal_lock_id_t lock_id)
 {
     struct flock lock = {F_RDLCK, 0, SEEK_SET, 0};
-    struct flock get_lock_int;
     int fd = -1;
 
     fd = pal_get_lock_fd(lock_id);
     assert(fd >= 0);
-
-    /* Checks to see if the lock is already with the process */
-    fcntl(fd, F_GETLK, &get_lock_int);  /* Overwrites lock structure with preventors. */
-    if (get_lock_int.l_type == F_WRLCK) {
-        return LCK_FAIL;
-    }
 
     if (fcntl(fd, F_SETLKW, &lock) == -1) {
         return LCK_FAIL;
@@ -96,7 +80,7 @@ pal_wr_unlock(pal_lock_id_t lock_id)
 
     assert(fd >= 0);
 
-    if (fcntl(fd, F_SETLK, &lock) == -1) {
+    if (fcntl(fd, F_SETLKW, &lock) == -1) {
         return LCK_FAIL;
     } else {
         return LCK_SUCCESS;
@@ -111,7 +95,7 @@ pal_rd_unlock(pal_lock_id_t lock_id)
 
     assert(fd >= 0);
 
-    if (fcntl(fd, F_SETLK, &lock) == -1) {
+    if (fcntl(fd, F_SETLKW, &lock) == -1) {
         return LCK_FAIL;
     } else {
         return LCK_SUCCESS;

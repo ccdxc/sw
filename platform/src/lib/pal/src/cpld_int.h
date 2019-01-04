@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <linux/gpio.h>
 #include <linux/spi/spidev.h>
+#include <errno.h>
 
 #define GPIOHANDLES_MAX 64
 
@@ -44,8 +45,7 @@ static int _e_ioctl(int fd, const char *name, unsigned long req, void *arg)
 {
     int r = ioctl(fd, req, arg);
     if (r < 0) {
-        perror(name);
-        exit(1);
+        return -ENOENT;
     }
     return r;
 }
@@ -55,8 +55,7 @@ static int e_open(const char *path, int flags, int mode)
 {
     int fd = open(path, flags, mode);
     if (fd < 0) {
-        perror(path);
-        exit(1);
+        return -ENOENT;
     }
     return fd;
 }
