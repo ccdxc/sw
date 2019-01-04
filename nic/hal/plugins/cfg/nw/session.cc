@@ -2334,6 +2334,8 @@ tcp_half_close_cb (void *timer, uint32_t timer_id, void *ctxt)
         return;
     }
 
+    session->tcp_cxntrack_timer = NULL;
+
     args.session = session;
     args.session_state = &state;
     pd_func_args.pd_session_get = &args;

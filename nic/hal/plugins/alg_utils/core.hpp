@@ -9,6 +9,7 @@
 #include "nic/fte/fte.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
 #include "nic/hal/plugins/alg_utils/tcp_buffer.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 
 namespace hal {
 namespace plugins {
@@ -28,6 +29,9 @@ namespace alg_utils {
 #define DIR_IFLOW           0
 #define DIR_RFLOW           1
 #define DIR_MAX             2
+#define ALG_EXP_FLOW_TIMER_ID          HAL_TIMER_ID_ALG_MIN
+#define ALG_EXP_FLOW_GRACE_TIMER_ID    HAL_TIMER_ID_ALG_MIN + 1
+#define DNS_ALG_SESS_TIMER_ID          HAL_TIMER_ID_ALG_MIN + 2
 
 /*
  * Function Declarations

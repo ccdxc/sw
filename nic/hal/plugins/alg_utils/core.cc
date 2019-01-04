@@ -11,8 +11,6 @@ namespace hal {
 namespace plugins {
 namespace alg_utils {
 
-#define ALG_EXP_FLOW_TIMER_ID          0xFF
-#define ALG_EXP_FLOW_GRACE_TIMER_ID    0x100
 #define ALG_EXP_FLOW_GRACE_TIME_INTVL  (15 * TIME_MSECS_PER_SEC) // 15 secs
 
 /*
