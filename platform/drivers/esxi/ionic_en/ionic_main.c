@@ -26,8 +26,8 @@
 
 struct ionic_driver ionic_driver;
 
-unsigned int ntxq_descs = 4096;
-unsigned int nrxq_descs = 4096;
+unsigned int ntxq_descs = 512;
+unsigned int nrxq_descs = 512;
 unsigned int ntxqs = 32;
 unsigned int nrxqs = 32;
 unsigned int devcmd_timeout = 30;

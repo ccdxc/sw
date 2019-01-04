@@ -63,7 +63,7 @@ typedef VMK_ReturnStatus
 typedef VMK_ReturnStatus
 (*ionic_en_vlan_bitmap_set_clr) (vmk_VLANBitmap *bitmap,
                                  vmk_VlanID vlanID);
-
+/*
 static vmk_UplinkVLANFilterOps ionic_en_vlan_filter_ops = {
         .enableVLANFilter       = ionic_en_vlan_filter_enable,
         .disableVLANFilter      = ionic_en_vlan_filter_disable,
@@ -71,7 +71,7 @@ static vmk_UplinkVLANFilterOps ionic_en_vlan_filter_ops = {
         .setVLANFilterBitmap    = ionic_en_vlan_filter_bitmap_set,
         .addVLANFilter          = ionic_en_vlan_filter_add,
         .removeVLANFilter       = ionic_en_vlan_filter_remove,
-};
+};*/
 
 static vmk_UplinkMultiQueueOps ionic_en_multi_queue_ops = {
    .queueOps = {
@@ -824,12 +824,12 @@ ionic_en_uplink_associate(vmk_AddrCookie driver_data,             // IN
                                        VMK_UPLINK_CAP_VLAN_TX_INSERT,
                                        NULL);
         VMK_ASSERT(status == VMK_OK);
-*/
+
         status = vmk_UplinkCapRegister(uplink,
                                        VMK_UPLINK_CAP_VLAN_FILTER,
                                        &ionic_en_vlan_filter_ops);
         VMK_ASSERT(status == VMK_OK);
-
+*/
 
         status = vmk_UplinkCapRegister(uplink,
                                        VMK_UPLINK_CAP_MULTI_QUEUE,
@@ -865,7 +865,7 @@ ionic_en_uplink_associate(vmk_AddrCookie driver_data,             // IN
                                        VMK_UPLINK_CAP_COALESCE_PARAMS,
                                        &ionic_en_uplink_coal_params_ops);
         VMK_ASSERT(status == VMK_OK);
-
+/*
         status = vmk_UplinkCapRegister(uplink,
                                        VMK_UPLINK_CAP_SG_TX,
                                        NULL);
@@ -875,7 +875,7 @@ ionic_en_uplink_associate(vmk_AddrCookie driver_data,             // IN
                                        VMK_UPLINK_CAP_MULTI_PAGE_SG,
                                        NULL);
         VMK_ASSERT(status == VMK_OK);
-       
+  */     
 /*
         status = vmk_UplinkCapRegister(uplink_handle->uplink_dev,
                                        VMK_UPLINK_CAP_TRANSCEIVER_TYPE,
@@ -2063,7 +2063,6 @@ ionic_en_vlan_filter_bitmap_set(vmk_AddrCookie driver_data,       // IN
                    sizeof(vmk_VLANBitmap));
 
         vmk_SemaUnlock(&uplink_handle->vlan_filter_binary_sema);
-
 
         return status;
 }

@@ -59,6 +59,7 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
                           comp->comp_index, comp->status, comp->len, (dma_addr_t)desc->addr);
                 // TODO record errors
                 ionic_rx_recycle(q, desc_info, pkt);
+                VMK_ASSERT(0);
                 return;
         }
 
@@ -88,6 +89,7 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
                                  desc->len,
                                  dma_addr);
         if (status != VMK_OK) {
+                VMK_ASSERT(0);
                 return;
         }
 
@@ -211,18 +213,25 @@ ionic_rx_pkt_alloc(struct queue *q,
         struct rx_stats *stats = q_to_rx_stats(q);
         const vmk_SgElem *sge;
         vmk_PktHandle *new_pkt;
+        vmk_Bool is_flat;
 
         priv_data = IONIC_CONTAINER_OF(lif->ionic,
                                        struct ionic_en_priv_data,
                                        ionic);
 
-        status = vmk_PktAlloc(len, &new_pkt);
+//        status = vmk_PktAlloc(len, &new_pkt);
+        status = vmk_PktAllocForDMAEngine(len,
+                                          priv_data->dma_engine_streaming,
+                                          &new_pkt);
         if (VMK_UNLIKELY(status != VMK_OK)) {
                 stats->alloc_err++;
                 return NULL;
         }
 
         /* The pkt should be a flat one! */
+        is_flat = vmk_PktIsFlatBuffer(new_pkt);
+        VMK_ASSERT(is_flat == VMK_TRUE);
+        
         sge = vmk_PktSgElemGet(new_pkt, 0);
         VMK_ASSERT(sge);
 
