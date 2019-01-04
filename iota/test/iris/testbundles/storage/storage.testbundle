@@ -101,6 +101,7 @@ testcases:
 
     -   name    : CompressFail
         testcase: testcases.storage.ymltest2
+        enable      : False
         iterators   :
             type        : nested
             cpus        : [ 2 ]
