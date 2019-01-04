@@ -16,6 +16,7 @@ images:
 setup:
     topology: test/iris/topologies/container/container.topology
     config  :
+        - step : utils.naples_workloads
         - step : config.netagent.hw_push_config
         - step : testcases.drivers.install_iperf
         - step : testcases.security.genpolicy

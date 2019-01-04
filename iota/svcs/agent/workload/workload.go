@@ -88,6 +88,10 @@ func vlanIntf(name string, vlan int) string {
 	return name + "_" + strconv.Itoa(vlan)
 }
 
+func freebsdVlanIntf(name string, vlan int) string {
+	return name + "." + strconv.Itoa(vlan)
+}
+
 func (app *workloadBase) Name() string {
 	return app.name
 }
@@ -215,6 +219,9 @@ func (app *containerWorkload) AddInterface(name string, macAddress string, ipadd
 
 	if vlan != 0 {
 		vlanintf := vlanIntf(name, vlan)
+		delVlanCmd := []string{"ip", "link", "del", vlanintf}
+		//Delete the interface if already exists , ignore the error for now.
+		Utils.Run(delVlanCmd, 0, false, false, nil)
 		addVlanCmd := []string{"ip", "link", "add", "link", name, "name", vlanintf, "type", "vlan", "id", strconv.Itoa(vlan)}
 		if retCode, stdout, _ := Utils.Run(addVlanCmd, 0, false, false, nil); retCode != 0 {
 			return "", errors.Errorf("IP link create to add vlan failed %s:%d, err :%s", name, vlan, stdout)
@@ -337,11 +344,23 @@ func (app *bareMetalWorkload) AddInterface(name string, macAddress string, ipadd
 	intfToAttach := name
 
 	if vlan != 0 {
-		vlanintf := vlanIntf(name, vlan)
-		addVlanCmd := []string{"ip", "link", "add", "link", name, "name", vlanintf, "type", "vlan", "id", strconv.Itoa(vlan)}
+		vlanintf := ""
+		var addVlanCmd []string
+		var delVlanCmd []string
+		if runtime.GOOS == "freebsd" {
+			vlanintf = freebsdVlanIntf(name, vlan)
+			delVlanCmd = []string{"ifconfig", vlanintf, "destroy"}
+			addVlanCmd = []string{"ifconfig", vlanintf, "create", "inet"}
+		} else {
+			vlanintf = vlanIntf(name, vlan)
+			delVlanCmd = []string{"ip", "link", "del", vlanintf}
+			addVlanCmd = []string{"ip", "link", "add", "link", name, "name", vlanintf, "type", "vlan", "id", strconv.Itoa(vlan)}
+		}
+		Utils.Run(delVlanCmd, 0, false, false, nil)
 		if retCode, stdout, _ := Utils.Run(addVlanCmd, 0, false, false, nil); retCode != 0 {
 			return "", errors.Errorf("IP link create to add vlan failed %s:%d, err :%s", name, vlan, stdout)
 		}
+
 		intfToAttach = vlanintf
 	}
 
@@ -364,7 +383,10 @@ func (app *bareMetalWorkload) AddInterface(name string, macAddress string, ipadd
 	}
 
 	if ipv6address != "" {
-		cmd := []string{"ifconfig", intfToAttach, "inet6", "add", ipv6address}
+		//unset ipv6 address first
+		cmd := []string{"ifconfig", intfToAttach, "inet6", "del", ipv6address}
+		Utils.Run(cmd, 0, false, false, nil)
+		cmd = []string{"ifconfig", intfToAttach, "inet6", "add", ipv6address}
 		if retCode, stdout, err := Utils.Run(cmd, 0, false, false, nil); retCode != 0 {
 			return "", errors.Wrap(err, stdout)
 		}

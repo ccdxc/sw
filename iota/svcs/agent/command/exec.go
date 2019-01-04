@@ -39,7 +39,11 @@ func execCmd(cmdArgs []string, runDir string, TimedOut int, background bool, she
 		fullCmd := strings.Join(cmdArgs, " ")
 		if background {
 			shellStdout, shellStderr = getOutFiles()
-			fullCmd = fullCmd + " 2> " + shellStderr + " 1>" + shellStdout
+			if strings.ContainsAny(fullCmd, ">") {
+				fullCmd = fullCmd + " | tee" + shellStdout
+			} else {
+				fullCmd = fullCmd + " 2> " + shellStderr + " 1>" + shellStdout
+			}
 			newCmdArgs := []string{"sh", "-c", fullCmd}
 			process = exec.Command(newCmdArgs[0], newCmdArgs[1:]...)
 		} else {

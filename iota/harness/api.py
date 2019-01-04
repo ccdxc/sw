@@ -60,6 +60,15 @@ def __rpc(req, rpcfn):
         return None
     return resp
 
+def AddNaplesWorkload(type, workload):
+    return store.AddSplWorkload(type, workload)
+
+def GetNaplesWorkloads(type=None):
+    return store.GetSplWorkloadByType(type)
+
+def GetSplWorkload(workload):
+    return store.GetSplWorkload(workload)
+
 def GetTestbedUsername():
     return store.GetTestbed().GetProvisionUsername()
 
@@ -85,13 +94,23 @@ def ReloadNodes(req):
     Logger.debug("Reloading Nodes:")
     return __rpc(req, gl_topo_svc_stub.ReloadNodes)
 
-def AddWorkloads(req):
+def AddWorkloads(req, skip_store=False):
     global gl_topo_svc_stub
     Logger.debug("Add Workloads:")
     resp = __rpc(req, gl_topo_svc_stub.AddWorkloads)
     if IsApiResponseOk(resp):
-        store.AddWorkloads(resp)
+        if not skip_store:
+            store.AddWorkloads(resp)
     return resp
+
+def DeleteWorkloads(req):
+    global gl_topo_svc_stub
+    Logger.debug("Delete Workloads:")
+    resp = __rpc(req, gl_topo_svc_stub.DeleteWorkloads)
+    if IsApiResponseOk(resp):
+        Logger.debug("Delete Workloads:")
+    return resp
+
 
 def DeleteWorkloads(req):
     store.DeleteWorkloads(req)
@@ -264,6 +283,9 @@ def GetNicMode():
 def GetNicType(node_name):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNicType(node_name)
 
+def GetMgmtIPAddress(node_name):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetMgmtIPAddress(node_name)
+
 def IsNaplesNode(node_name):
     return  GetNicType(node_name) == 'pensando'
 
@@ -306,6 +328,9 @@ def Trigger_CreateExecuteCommandsRequest(serial = True):
 def Trigger_AddCommand(req, node_name, entity_name, command,
                        background = False, rundir = "",
                        timeout = DEFAULT_COMMAND_TIMEOUT):
+    spl_workload = store.GetSplWorkload(entity_name)
+    if spl_workload:
+        return spl_workload.AddCommand(req, command, background)
     cmd = req.commands.add()
     cmd.mode = topo_svc.COMMAND_BACKGROUND if background else topo_svc.COMMAND_FOREGROUND
     cmd.entity_name = entity_name

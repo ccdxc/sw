@@ -1,12 +1,14 @@
 #! /usr/bin/python3
 import pdb
 import copy
+from collections import defaultdict
 
 import iota.harness.infra.types as types
 
 __gl_testbed = None
 __gl_topology = None
 __gl_workloads = {}
+__gl_spl_workloads = defaultdict(lambda: dict())
 
 def SetTestbed(tb):
     global __gl_testbed
@@ -31,23 +33,34 @@ def GetTopology():
     return __gl_topology
 
 class Workload:
-    def __init__(self, msg):
-        self.workload_name = msg.workload_name
-        self.node_name = msg.node_name
-        self.encap_vlan = msg.encap_vlan
-        self.ip_prefix = msg.ip_prefix
-        self.ip_address = msg.ip_prefix.split('/')[0]
-        self.ipv6_prefix = msg.ipv6_prefix
-        self.ipv6_address = msg.ipv6_prefix.split('/')[0]
-        self.mac_address = msg.mac_address
-        self.interface = msg.interface
-        self.interface_type = msg.interface_type
-        self.pinned_port = msg.pinned_port
-        self.uplink_vlan = msg.uplink_vlan
+    def __init__(self, msg=None):
+        if msg:
+            self.workload_name = msg.workload_name
+            self.node_name = msg.node_name
+            self.encap_vlan = msg.encap_vlan
+            self.ip_prefix = msg.ip_prefix
+            self.ip_address = msg.ip_prefix.split('/')[0]
+            self.ipv6_prefix = msg.ipv6_prefix
+            self.ipv6_address = msg.ipv6_prefix.split('/')[0]
+            self.mac_address = msg.mac_address
+            self.interface = msg.interface
+            self.interface_type = msg.interface_type
+            self.pinned_port = msg.pinned_port
+            self.uplink_vlan = msg.uplink_vlan
         return
+
+    def init(self, workload_name, node_name, ip_address, interface=None):
+        self.workload_name = workload_name
+        self.node_name = node_name
+        self.interface = interface
+        self.ip_address = ip_address
+        self.skip_node_push = False
 
     def IsNaples(self):
         return GetTestbed().GetCurrentTestsuite().GetTopology().GetNicType(self.node_name) == 'pensando'
+
+    def SkipNodePush(self):
+        return self.skip_node_push
 
 def AddWorkloads(req):
     global __gl_workloads
@@ -59,7 +72,35 @@ def AddWorkloads(req):
 def GetWorkloads():
     global __gl_workloads
     return __gl_workloads.values()
-    
+
+def AddSplWorkload(type, wl):
+    if wl.workload_name in __gl_workloads:
+        assert(0)
+    __gl_spl_workloads[type][wl.workload_name] = wl
+
+def IsSplWorkload(workload_name):
+    for type in  __gl_spl_workloads:
+        if workload_name in __gl_spl_workloads[type]:
+            return True
+    return False
+
+def GetSplWorkload(workload_name):
+    for type in  __gl_spl_workloads:
+        if workload_name in __gl_spl_workloads[type]:
+            return __gl_spl_workloads[type][workload_name]
+    return None
+
+def GetSplWorkloadByType(type=None):
+    wloads = []
+    if type is None:
+        for type in __gl_spl_workloads:
+            for workload_name in __gl_spl_workloads[type]:
+                wloads.append(__gl_spl_workloads[type][workload_name])
+    else:
+        for name in __gl_spl_workloads[type]:
+            wloads.append(__gl_spl_workloads[type][name])
+    return wloads
+
 def DeleteWorkloads(req):
     global __gl_workloads
     for wl in req.workloads:
@@ -99,7 +140,7 @@ def SetVeniceAuthToken(auth_token):
     global __gl_venice_auth_token
     __gl_venice_auth_token = auth_token
     return types.status.SUCCESS
-    
+
 def GetVeniceAuthToken():
     return __gl_venice_auth_token
 

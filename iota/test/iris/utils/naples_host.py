@@ -51,3 +51,10 @@ def GetNaplesInbandInterfaces(node):
     inband_intfs = ['inb_mnic0', 'inb_mnic1']
     return inband_intfs
 
+
+def GetIPAddress(node, interface):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    cmd = "ifconfig " + interface + "   | grep 'inet' | cut -d: -f2 |  awk '{print $1}' "
+    api.Trigger_AddNaplesCommand(req, node, cmd)
+    resp = api.Trigger(req)
+    return resp.commands[0].stdout.strip("\n")

@@ -3,7 +3,7 @@ meta:
     os      : [ linux, freebsd ]
     nics    : [ pensando, intel, mellanox, broadcom ]
     targetcount : 1418
-    
+
 testcases:
     -   name    : UplinkIntf_TX_RING_SIZE
         testcase: testcases.drivers.features
@@ -15,6 +15,7 @@ testcases:
             pktsize            : [ 1024]
             proto              : [ 'udp', 'tcp']
             ipproto            : [ 'v4']
+            vlantag            : ['on', 'off']
         args    :
             test-type         : host
             iperf_threads      : 1
@@ -30,6 +31,7 @@ testcases:
             pktsize            : [ 1024 ]
             proto              : [ 'udp', 'tcp']
             ipproto            : [ 'v4']
+            vlantag            : ['on', 'off']
         args    :
             test-type    : host
             iperf_threads     :  1
@@ -45,6 +47,7 @@ testcases:
             pktsize            : [ 1024 ]
             proto              : ['udp', 'tcp']
             ipproto            : [ 'v4']
+            vlantag            : ['on', 'off']
         args    :
             test-type    : host
             iperf_threads     :  1
@@ -60,6 +63,7 @@ testcases:
             pktsize            : [ 1024 ]
             proto              : ['udp', 'tcp']
             ipproto            : [ 'v4']
+            vlantag            : ['on', 'off']
         args    :
             test-type    : host
             iperf_threads     :  1
@@ -75,6 +79,7 @@ testcases:
             pktsize            : [ 1024 ]
             proto              : ['udp', 'tcp']
             ipproto            : [ 'v4']
+            vlantag            : ['on', 'off']
         args    :
             test-type    : host
             iperf_threads   : 2
@@ -90,6 +95,7 @@ testcases:
             pktsize            : [ 1024 ]
             proto              : ['udp', 'tcp']
             ipproto            : [ 'v4']
+            vlantag            : ['on', 'off']
         args    :
             test-type    : host
             iperf_threads     :  1
@@ -110,6 +116,7 @@ testcases:
             pktsize            : [  8192 ]
             proto              : ['udp', 'tcp']
             ipproto            : [ 'v4']
+            vlantag            : ['on', 'off']
         args    :
             test-type    : host
             iperf_threads     :  1
@@ -130,6 +137,7 @@ testcases:
             pktsize            : [  8192 ]
             proto              : [ 'tcp']
             ipproto            : [ 'v4']
+            vlantag            : ['on', 'off']
         args    :
             test-type    : host
             iperf_threads     :  1
@@ -146,6 +154,37 @@ testcases:
             hkey               : [ 'symmetric']
             indirection_table  : [ 'equal']
             rx-flow-hash       : [ 'tcp4']
+            vlantag            : ['on', 'off']
+        args    :
+            type: host
+            iperf_threads     :  1
+            #capture_pcap : true
+
+    -   name    : VLAN_RX_OFFLOAD
+        testcase: testcases.drivers.features
+        disable : False
+        ignore  : True
+        iterators :
+            type               : nested
+            proto              : [ 'tcp']
+            ipproto            : [ 'v4']
+            rx-vlan-offload    : [ 'on', 'off']
+            vlantag            : [ 'on']
+        args    :
+            type: host
+            iperf_threads     :  1
+            #capture_pcap : true
+
+    -   name    : VLAN_TX_OFFLOAD
+        testcase: testcases.drivers.features
+        disable : False
+        ignore  : True
+        iterators :
+            type               : nested
+            proto              : [ 'tcp']
+            ipproto            : [ 'v4']
+            tx-vlan-offload    : [ 'on', 'off']
+            vlantag            : [ 'on']
         args    :
             type: host
             iperf_threads     :  1

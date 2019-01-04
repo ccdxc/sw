@@ -403,7 +403,90 @@ func (ts *TopologyService) AddWorkloads(ctx context.Context, req *iota.WorkloadM
 func (ts *TopologyService) DeleteWorkloads(ctx context.Context, req *iota.WorkloadMsg) (*iota.WorkloadMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | DeleteWorkloads. Received Request Msg: %v", req)
 
-	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	if req.WorkloadOp != iota.Op_DELETE {
+		log.Errorf("TOPO SVC | DeleteWorkloads | DeleteWorkloads call failed")
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
+		req.ApiResponse.ErrorMsg = fmt.Sprintf("DeleteWorkloads must specify Op_Add for workload op. Found: %v", req.WorkloadOp)
+		return req, nil
+	}
+
+	log.Infof("TOPO SVC | DEBUG | STATE | %v", ts.Nodes)
+
+	workloadNodes := []*testbed.TestNode{}
+	for _, w := range req.Workloads {
+
+		node, ok := ts.ProvisionedNodes[w.NodeName]
+		if !ok {
+			req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
+			req.ApiResponse.ErrorMsg = fmt.Sprintf("DeleteWorkloads found to unprovisioned node : %v", w.NodeName)
+			return req, nil
+		}
+		node.WorkloadInfo.Workloads = append(node.WorkloadInfo.Workloads, w)
+		added := false
+		for _, workloadNode := range workloadNodes {
+			if workloadNode.Node.Name == node.Node.Name {
+				added = true
+				break
+			}
+		}
+		if !added {
+			workloadNodes = append(workloadNodes, node)
+		}
+	}
+
+	// delete workloads
+	deleteWorkloads := func(ctx context.Context) error {
+		pool, ctx := errgroup.WithContext(ctx)
+		for _, node := range workloadNodes {
+			node := node
+			pool.Go(func() error {
+				for _, w := range node.WorkloadInfo.Workloads {
+					if err := node.DeleteWorkload(w); err != nil {
+						return err
+					}
+				}
+				return nil
+
+			})
+
+		}
+		return pool.Wait()
+	}
+
+	resetDeleteWorkloads := func() {
+		for _, node := range workloadNodes {
+			node.WorkloadInfo.Workloads = nil
+			node.WorkloadResp.Workloads = nil
+		}
+	}
+
+	defer resetDeleteWorkloads()
+	err := deleteWorkloads(context.Background())
+	if err != nil {
+		log.Errorf("TOPO SVC | DeleteWorkloads |DeleteWorkloads Call Failed. %v", err)
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+		req.ApiResponse.ErrorMsg = fmt.Sprintf("TOPO SVC | DeleteWorkloads |DeleteWorkloads Call Failed. %v", err)
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+	} else {
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	}
+
+	//Assoicate response
+	for _, node := range workloadNodes {
+		for _, respWload := range node.WorkloadResp.Workloads {
+			for index, reqWload := range req.Workloads {
+				if reqWload.GetNodeName() == node.Node.GetName() && reqWload.WorkloadName == respWload.WorkloadName {
+					req.Workloads[index] = respWload
+					if respWload.WorkloadStatus != nil && respWload.WorkloadStatus.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+						req.ApiResponse.ErrorMsg = respWload.WorkloadStatus.ErrorMsg
+						log.Errorf("TOPO SVC | DeleteWorkloads | Workload add %v failed with  %v", respWload.GetWorkloadName(), req.ApiResponse.ErrorMsg)
+					}
+					break
+				}
+			}
+		}
+
+	}
 	return req, nil
 }
 

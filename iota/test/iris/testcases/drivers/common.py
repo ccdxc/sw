@@ -1,11 +1,12 @@
 #! /usr/bin/python3
 import json
+import time
 import iota.harness.api as api
 import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
 import iota.protos.pygen.types_pb2 as types_pb2
 import iota.test.iris.testcases.drivers.cmd_builder as cmd_builder
 import iota.test.iris.config.netagent.hw_push_config as cfg_api
-import iota.test.iris.utils.naples_host as utils
+import iota.test.iris.config.netagent.hw_push_config as hw_config
 
 feature_cmd_map = {
     "tx_ring_size"       :
@@ -108,22 +109,22 @@ feature_cmd_map = {
 def setup_features(tc):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     driverReloaded = False
-    for intfObj in tc.test_intfs:
-        intf = intfObj.Name()
-        n = intfObj.Node()
+    for wl in tc.workloads:
+        intf = wl.interface
+        n = wl.node_name
         reloadDone = False
         for feature, cmdBuilderDict in feature_cmd_map.items():
             feature_value = getattr(tc.iterators, feature, None)
             if not feature_value:
                 api.Logger.debug("Feature %s not provided, skipping..." % feature)
                 continue
-            os_type = intfObj.OsType()
+            os_type =  api.GetNodeOs(n)
             callback = cmdBuilderDict[os_type]["cmd"]
             cmds = callback(n, intf, feature_value)
             if not isinstance(cmds, list):
                 cmds = [cmds]
             for cmd in cmds:
-                intfObj.AddCommand(req, cmd)
+                api.Trigger_AddCommand(req, n, wl.workload_name, cmd)
             if cmdBuilderDict[os_type].get("reloadCmd"):
                 #Driver reload, just break as no need to setup for each interface.
                 if reloadDone:
@@ -148,9 +149,13 @@ def setup_features(tc):
         api.Logger.info("Success running cmd : %s" % cmd.command)
 
     if driverReloaded:
-        for intfObj in tc.test_intfs:
-            ipproto = getattr(tc.iterators, "ipproto", 'v4')
-            intfObj.ReconfigureInterface(ipproto)
+        nodes = set()
+        for wl in tc.workloads:
+            if api.IsNaplesNode(wl.node_name):
+                nodes.add(wl.node_name)
+        time.sleep(5)
+        for node in nodes:
+            hw_config.ReAddWorkloads(node)
 
     return api.types.status.SUCCESS
 

@@ -308,6 +308,9 @@ class Topology(object):
     def GetMgmtIPAddress(self, node_name):
         return self.__nodes[node_name].MgmtIpAddress()
 
+    def GetMgmtIPAddress(self, node_name):
+         return self.__nodes[node_name].MgmtIpAddress()
+
     def GetNaplesUuidMap(self):
         uuid_map = {}
         for n in self.__nodes.values():
