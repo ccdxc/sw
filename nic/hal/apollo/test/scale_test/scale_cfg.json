@@ -19,8 +19,8 @@
       },
       {
           "kind" : "vnic",
-          "count" : "1024",
-          "vlan-start" : "1024"
+          "count" : "1",
+          "vlan-start" : "1"
       },
       {
           "kind" : "mappings",

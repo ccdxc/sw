@@ -113,7 +113,7 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     vnic_tx_stats_actiondata_t                vnic_tx_stats_data = { 0 };
 
     vnic_info = &obj_ctxt->api_params->vnic_info;
-    subnet = subnet_db()->subnet_find(&vnic_info->subnet_id);
+    subnet = subnet_db()->subnet_find(&vnic_info->subnet);
     if (subnet == NULL) {
         return sdk::SDK_RET_INVALID_ARG;
     }
@@ -204,11 +204,11 @@ vnic_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
     oci_vnic_t                                  *vnic_info;
 
     vnic_info = &obj_ctxt->api_params->vnic_info;
-    vcn = vcn_db()->vcn_find(&vnic_info->vcn_id);
+    vcn = vcn_db()->vcn_find(&vnic_info->vcn);
     if (vcn == NULL) {
         return sdk::SDK_RET_INVALID_ARG;
     }
-    subnet = subnet_db()->subnet_find(&vnic_info->subnet_id);
+    subnet = subnet_db()->subnet_find(&vnic_info->subnet);
     if (subnet == NULL) {
         return sdk::SDK_RET_INVALID_ARG;
     }

@@ -15,6 +15,7 @@
 #include "nic/hal/apollo/include/api/oci_tep.hpp"
 #include "nic/hal/apollo/include/api/oci_vcn.hpp"
 #include "nic/hal/apollo/include/api/oci_subnet.hpp"
+#include "nic/hal/apollo/include/api/oci_vnic.hpp"
 
 using std::string;
 char    *g_cfg_file = NULL;
@@ -34,6 +35,36 @@ protected:
         oci_test_base::SetUpTestCase(false);
     }
 };
+
+static void
+create_vnics(uint32_t num_vcns, uint32_t num_subnets,
+             uint32_t num_vnics, uint16_t vlan_start) {
+    sdk_ret_t     rv;
+    oci_vnic_t    oci_vnic;
+    uint16_t      vnic_key = 1;
+
+    for (uint32_t i = 1; i <= (uint64_t)num_vcns; i++) {
+        for (uint32_t j = 1; j <= num_subnets; j++) {
+            for (uint32_t k = 1; k <= num_vnics; k++) {
+                memset(&oci_vnic, 0, sizeof(oci_vnic));
+                oci_vnic.vcn.id = i;
+                oci_vnic.subnet.vcn_id = i;
+                oci_vnic.subnet.id = j;
+                oci_vnic.key.id = vnic_key;
+                oci_vnic.wire_vlan = vlan_start + vnic_key - 1;
+                oci_vnic.slot = vnic_key;
+                MAC_UINT64_TO_ADDR(oci_vnic.mac_addr,
+                                   ((((uint64_t)i & 0xFFFF) << 40ul) |
+                                    ((j & 0xFF) << 16) | k));
+                oci_vnic.rsc_pool_id = 1;
+                oci_vnic.src_dst_check = (k & 0x1);
+                rv = oci_vnic_create(&oci_vnic);
+                ASSERT_TRUE(rv == SDK_RET_OK);
+                vnic_key++;
+            }
+        }
+    }
+}
 
 static void
 create_subnets(uint32_t vcn_id, uint32_t num_subnets, ip_prefix_t *vcn_pfx) {
@@ -106,8 +137,9 @@ create_switchport_cfg(ipv4_addr_t ipaddr, uint64_t macaddr, ipv4_addr_t gwip) {
 
 static void
 create_objects(void) {
+    uint32_t       num_vcns = 0, num_subnets = 0, num_vnics = 0, num_teps = 0;
+    uint16_t       vlan_start = 1;
     pt::ptree      json_pt;
-    uint32_t       count, num_subnets;
     ip_prefix_t    ippfx;
     string         pfxstr;
 
@@ -129,18 +161,20 @@ create_objects(void) {
                 create_switchport_cfg(ntohl(ipaddr.s_addr), macaddr,
                                       ntohl(gwip.s_addr));
             } else if (kind == "tep") {
-                count = std::stol(obj.second.get<std::string>("count"));
+                num_teps = std::stol(obj.second.get<std::string>("count"));
                 pfxstr = obj.second.get<std::string>("prefix");
                 ASSERT_TRUE(str2ipv4pfx((char *)pfxstr.c_str(), &ippfx) == 0);
-                create_teps(count, &ippfx);
+                create_teps(num_teps, &ippfx);
             } else if (kind == "vcn") {
-                count = std::stol(obj.second.get<std::string>("count"));
+                num_vcns = std::stol(obj.second.get<std::string>("count"));
                 pfxstr = obj.second.get<std::string>("prefix");
                 ASSERT_TRUE(str2ipv4pfx((char *)pfxstr.c_str(), &ippfx) == 0);
                 num_subnets = std::stol(obj.second.get<std::string>("subnets"));
-                create_vcns(count, &ippfx, num_subnets);
+                create_vcns(num_vcns, &ippfx, num_subnets);
             } else if (kind == "vnic") {
-                count = std::stol(obj.second.get<std::string>("count"));
+                num_vnics = std::stol(obj.second.get<std::string>("count"));
+                vlan_start = std::stol(obj.second.get<std::string>("vlan-start"));
+                create_vnics(num_vcns, num_subnets, num_vnics, vlan_start);
             } else if (kind == "mapping") {
             }
         }

@@ -35,17 +35,17 @@ typedef struct oci_vnic_key_s {
  * @brief VNIC
  */
 typedef struct oci_vnic_s {
-    oci_vcn_key_t       vcn_id;                   /**< VCN ID */
-    oci_subnet_key_t    subnet_id;                /**< Subnet ID */
-    oci_vnic_key_t      key;                      /**< VNIC Key */
-    uint16_t            wire_vlan;                /**< VLAN ID */
-    oci_slot_id_t       slot;                     /**< Virtual slot
-                                                       (Encap: MPLS Tag) */
-    mac_addr_t          mac_addr;                 /**< MAC address */
-    oci_rsc_pool_id_t   rsc_pool_id;              /**< Resource pool associated
-                                                       with this VNIC */
-    bool                src_dst_check;            /**< TRUE if source/destination
-                                                       check is enabled */
+    oci_vcn_key_t       vcn;              /**< vcn of this vnic */
+    oci_subnet_key_t    subnet;           /**< subnet of this vnic */
+    oci_vnic_key_t      key;              /**< vnic's Key */
+    uint16_t            wire_vlan;        /**< vlan tag assigned to this vnic */
+    oci_slot_id_t       slot;             /**< virtual slot
+                                               (Encap: MPLS Tag) */
+    mac_addr_t          mac_addr;         /**< vnic's overlay mac mac address */
+    oci_rsc_pool_id_t   rsc_pool_id;      /**< resource pool associated
+                                               with this vnic */
+    bool                src_dst_check;    /**< TRUE if source/destination
+                                               check is enabled */
 } __PACK__ oci_vnic_t;
 
 /**
