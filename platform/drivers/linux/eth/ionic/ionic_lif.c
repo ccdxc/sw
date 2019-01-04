@@ -95,13 +95,13 @@ static int ionic_open(struct net_device *netdev)
 	unsigned int i;
 	int err;
 
-	for (i = 0; i < lif->ntxqcqs; i++) {
+	for (i = 0; i < lif->nxqs; i++) {
 		err = ionic_qcq_enable(lif->txqcqs[i]);
 		if (err)
 			return err;
 	}
 
-	for (i = 0; i < lif->nrxqcqs; i++) {
+	for (i = 0; i < lif->nxqs; i++) {
 		ionic_rx_fill(&lif->rxqcqs[i]->q);
 		err = ionic_qcq_enable(lif->rxqcqs[i]);
 		if (err)
@@ -150,13 +150,13 @@ static int ionic_stop(struct net_device *netdev)
 	if (netif_carrier_ok(netdev))
 		netif_tx_disable(netdev);
 
-	for (i = 0; i < lif->ntxqcqs; i++) {
+	for (i = 0; i < lif->nxqs; i++) {
 		err = ionic_qcq_disable(lif->txqcqs[i]);
 		if (err)
 			return err;
 	}
 
-	for (i = 0; i < lif->nrxqcqs; i++) {
+	for (i = 0; i < lif->nxqs; i++) {
 		err = ionic_qcq_disable(lif->rxqcqs[i]);
 		if (err)
 			return err;
@@ -348,15 +348,12 @@ static struct rtnl_link_stats64 *ionic_get_stats64(struct net_device *netdev,
 	u64 cnt;
 
 	/* use locally counted numbers for byte and packet counts */
-	for (i = 0; i < lif->ntxqcqs; i++) {
+	for (i = 0; i < lif->nxqs; i++) {
 		struct tx_stats *tx_stats = &lif->txqcqs[i]->stats.tx;
+		struct rx_stats *rx_stats = &lif->rxqcqs[i]->stats.rx;
 
 		ns->tx_packets += tx_stats->pkts;
 		ns->tx_bytes += tx_stats->bytes;
-	}
-
-	for (i = 0; i < lif->nrxqcqs; i++) {
-		struct rx_stats *rx_stats = &lif->rxqcqs[i]->stats.rx;
 
 		ns->rx_packets += rx_stats->pkts;
 		ns->rx_bytes += rx_stats->bytes;
@@ -632,7 +629,7 @@ static int ionic_change_mtu(struct net_device *netdev, int new_mtu)
 
 	netdev->mtu = new_mtu;
 
-	for (i = 0; i < lif->nrxqcqs; i++)
+	for (i = 0; i < lif->nxqs; i++)
 		ionic_rx_refill(&lif->rxqcqs[i]->q);
 
 	if (netif_running(netdev))
@@ -901,12 +898,12 @@ static int ionic_qcqs_alloc(struct lif *lif)
 	unsigned int i;
 	int err = -ENOMEM;
 
-	lif->txqcqs = devm_kzalloc(dev, sizeof(*lif->txqcqs) * lif->ntxqcqs,
+	lif->txqcqs = devm_kzalloc(dev, sizeof(*lif->txqcqs) * lif->nxqs,
 				   GFP_KERNEL);
 	if (!lif->txqcqs)
 		return -ENOMEM;
 
-	lif->rxqcqs = devm_kzalloc(dev, sizeof(*lif->rxqcqs) * lif->nrxqcqs,
+	lif->rxqcqs = devm_kzalloc(dev, sizeof(*lif->rxqcqs) * lif->nxqs,
 				   GFP_KERNEL);
 	if (!lif->rxqcqs)
 		return -ENOMEM;
@@ -926,40 +923,47 @@ static int ionic_qcqs_alloc(struct lif *lif)
 				      sizeof(union notifyq_comp),
 				      0, lif->kern_pid, &lif->notifyqcq);
 		if (err)
-			return err;
+			goto err_out_free_adminqcq;
 	}
 
 	flags = QCQ_F_TX_STATS | QCQ_F_INTR | QCQ_F_SG;
-	for (i = 0; i < lif->ntxqcqs; i++) {
+	for (i = 0; i < lif->nxqs; i++) {
 		err = ionic_qcq_alloc(lif, i, "tx", flags, ntxq_descs,
 				      sizeof(struct txq_desc),
 				      sizeof(struct txq_comp),
 				      sizeof(struct txq_sg_desc),
 				      lif->kern_pid, &lif->txqcqs[i]);
 		if (err)
-			goto err_out_free_adminqcq;
+			goto err_out_free_txqcqs;
 	}
 
 	flags = QCQ_F_RX_STATS | QCQ_F_INTR;
-	for (i = 0; i < lif->nrxqcqs; i++) {
+	for (i = 0; i < lif->nxqs; i++) {
 		err = ionic_qcq_alloc(lif, i, "rx", flags, nrxq_descs,
 				      sizeof(struct rxq_desc),
 				      sizeof(struct rxq_comp),
 				      0, lif->kern_pid, &lif->rxqcqs[i]);
 		if (err)
-			goto err_out_free_txqcqs;
+			goto err_out_free_rxqcqs;
 	}
 
 	return 0;
 
+err_out_free_rxqcqs:
+	for (i = 0; i < lif->nxqs; i++)
+		ionic_qcq_free(lif, lif->rxqcqs[i]);
 err_out_free_txqcqs:
-	for (i = 0; i < lif->ntxqcqs; i++)
+	for (i = 0; i < lif->nxqs; i++)
 		ionic_qcq_free(lif, lif->txqcqs[i]);
-	devm_kfree(dev, lif->txqcqs);
-	lif->txqcqs = NULL;
+	ionic_qcq_free(lif, lif->notifyqcq);
+	lif->notifyqcq = NULL;
 err_out_free_adminqcq:
 	ionic_qcq_free(lif, lif->adminqcq);
 	lif->adminqcq = NULL;
+	devm_kfree(dev, lif->txqcqs);
+	lif->txqcqs = NULL;
+	devm_kfree(dev, lif->rxqcqs);
+	lif->rxqcqs = NULL;
 
 	return err;
 }
@@ -968,14 +972,14 @@ static void ionic_qcqs_free(struct lif *lif)
 {
 	unsigned int i;
 
-	for (i = 0; i < lif->nrxqcqs; i++) {
+	for (i = 0; i < lif->nxqs; i++) {
 		ionic_rx_empty(&lif->rxqcqs[i]->q);
 		ionic_qcq_free(lif, lif->rxqcqs[i]);
 	}
 	devm_kfree(lif->ionic->dev, lif->rxqcqs);
 	lif->rxqcqs = NULL;
 
-	for (i = 0; i < lif->ntxqcqs; i++)
+	for (i = 0; i < lif->nxqs; i++)
 		ionic_qcq_free(lif, lif->txqcqs[i]);
 	devm_kfree(lif->ionic->dev, lif->txqcqs);
 	lif->txqcqs = NULL;
@@ -1008,8 +1012,7 @@ static int ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 	lif->ionic = ionic;
 	lif->index = index;
 	lif->neqs = ionic->neqs_per_lif;
-	lif->ntxqcqs = ionic->ntxqs_per_lif;
-	lif->nrxqcqs = ionic->nrxqs_per_lif;
+	lif->nxqs = ionic->ntxqs_per_lif;
 
 	snprintf(lif->name, sizeof(lif->name), "lif%u", index);
 
@@ -1252,7 +1255,7 @@ static int ionic_lif_rss_setup(struct lif *lif)
 	/* Fill indirection table with 'default' values */
 
 	for (i = 0; i < RSS_IND_TBL_SIZE; i++)
-		lif->rss_ind_tbl[i] = i % lif->nrxqcqs;
+		lif->rss_ind_tbl[i] = i % lif->nxqs;
 
 	err = ionic_rss_ind_tbl_set(lif, NULL);
 	if (err)
@@ -1307,7 +1310,7 @@ static void ionic_lif_txqs_deinit(struct lif *lif)
 {
 	unsigned int i;
 
-	for (i = 0; i < lif->ntxqcqs; i++)
+	for (i = 0; i < lif->nxqs; i++)
 		ionic_lif_qcq_deinit(lif, lif->txqcqs[i]);
 }
 
@@ -1315,7 +1318,7 @@ static void ionic_lif_rxqs_deinit(struct lif *lif)
 {
 	unsigned int i;
 
-	for (i = 0; i < lif->nrxqcqs; i++)
+	for (i = 0; i < lif->nxqs; i++)
 		ionic_lif_qcq_deinit(lif, lif->rxqcqs[i]);
 }
 
@@ -1645,7 +1648,7 @@ static int ionic_lif_txqs_init(struct lif *lif)
 	unsigned int i;
 	int err;
 
-	for (i = 0; i < lif->ntxqcqs; i++) {
+	for (i = 0; i < lif->nxqs; i++) {
 		err = ionic_lif_txq_init(lif, lif->txqcqs[i]);
 		if (err)
 			goto err_out;
@@ -1725,7 +1728,7 @@ static int ionic_lif_rxqs_init(struct lif *lif)
 	unsigned int i;
 	int err;
 
-	for (i = 0; i < lif->nrxqcqs; i++) {
+	for (i = 0; i < lif->nxqs; i++) {
 		err = ionic_lif_rxq_init(lif, lif->rxqcqs[i]);
 		if (err)
 			goto err_out;
@@ -2044,21 +2047,22 @@ int ionic_lifs_size(struct ionic *ionic)
 	unsigned int ntxqs_per_lif = ident->dev.tx_qtype.qid_count;
 	unsigned int nrxqs_per_lif = ident->dev.rx_qtype.qid_count;
 	unsigned int nintrs, dev_nintrs = ident->dev.nintrs;
+	unsigned int nxqs;
 	int err;
 
-	ntxqs_per_lif = min(ntxqs_per_lif, num_online_cpus());
-	nrxqs_per_lif = min(nrxqs_per_lif, num_online_cpus());
-
+	/* first make sure ntx == nrx and limit by number of CPUs */
 	if (ntxqs > 0)
 		ntxqs_per_lif = min(ntxqs_per_lif, ntxqs);
 	if (nrxqs > 0)
 		nrxqs_per_lif = min(nrxqs_per_lif, nrxqs);
 
+	nxqs = min(ntxqs_per_lif, nrxqs_per_lif);
+	nxqs = min(nxqs, num_online_cpus());
+
 try_again:
 	nintrs = nlifs * (nnqs_per_lif +
 			  neqs_per_lif +
-			  ntxqs_per_lif +
-			  nrxqs_per_lif +
+			  (nxqs * 2) +
 			  1 /* adminq */);
 
 	if (nintrs > dev_nintrs)
@@ -2076,8 +2080,8 @@ try_again:
 
 	ionic->nnqs_per_lif = nnqs_per_lif;
 	ionic->neqs_per_lif = neqs_per_lif;
-	ionic->ntxqs_per_lif = ntxqs_per_lif;
-	ionic->nrxqs_per_lif = nrxqs_per_lif;
+	ionic->ntxqs_per_lif = nxqs;
+	ionic->nrxqs_per_lif = nxqs;
 	ionic->nintrs = nintrs;
 
 	return ionic_debugfs_add_sizes(ionic);
@@ -2091,10 +2095,8 @@ try_fewer:
 		--neqs_per_lif;
 		goto try_again;
 	}
-	if (ntxqs_per_lif > 1) {
-		/* keep nTx == nRx */
-		--ntxqs_per_lif;
-		--nrxqs_per_lif;
+	if (nxqs > 1) {
+		--nxqs;
 		goto try_again;
 	}
 	return -ENOSPC;

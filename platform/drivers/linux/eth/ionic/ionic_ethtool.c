@@ -188,13 +188,13 @@ static int ionic_set_coalesce(struct net_device *netdev,
 		return -ERANGE;
 
 	if (coalesce->tx_coalesce_usecs != lif->tx_coalesce_usecs) {
-		for (i = 0; i < lif->ntxqcqs; i++)
+		for (i = 0; i < lif->nxqs; i++)
 			ionic_intr_coal_set(&lif->txqcqs[i]->intr, tx_coal);
 		lif->tx_coalesce_usecs = coalesce->tx_coalesce_usecs;
 	}
 
 	if (coalesce->rx_coalesce_usecs != lif->rx_coalesce_usecs) {
-		for (i = 0; i < lif->nrxqcqs; i++)
+		for (i = 0; i < lif->nxqs; i++)
 			ionic_intr_coal_set(&lif->rxqcqs[i]->intr, rx_coal);
 		lif->rx_coalesce_usecs = coalesce->rx_coalesce_usecs;
 	}
@@ -217,12 +217,10 @@ static void ionic_get_channels(struct net_device *netdev,
 	struct lif *lif = netdev_priv(netdev);
 
 	/* report maximum channels */
-	ch->max_tx = lif->ionic->ntxqs_per_lif;
-	ch->max_rx = lif->ionic->nrxqs_per_lif;
+	ch->max_combined = lif->ionic->ntxqs_per_lif;
 
 	/* report current channels */
-	ch->tx_count = lif->ntxqcqs;
-	ch->rx_count = lif->nrxqcqs;
+	ch->combined_count = lif->nxqs;
 }
 
 static int ionic_get_rxnfc(struct net_device *netdev,
@@ -233,7 +231,7 @@ static int ionic_get_rxnfc(struct net_device *netdev,
 
 	switch (info->cmd) {
 	case ETHTOOL_GRXRINGS:
-		info->data = lif->nrxqcqs;
+		info->data = lif->nxqs;
 		break;
 	default:
 		netdev_err(netdev, "Command parameter %d is not supported\n",

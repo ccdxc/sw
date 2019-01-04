@@ -141,8 +141,7 @@ struct lif {
 	struct qcq **rxqcqs;
 	u64 last_eid;
 	unsigned int neqs;
-	unsigned int ntxqcqs;
-	unsigned int nrxqcqs;
+	unsigned int nxqs;
 	unsigned int rx_mode;
 	u32 hw_features;
 	struct ionic_lif_stats *lif_stats;
