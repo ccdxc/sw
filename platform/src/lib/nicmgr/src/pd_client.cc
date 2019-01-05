@@ -200,7 +200,7 @@ void PdClient::rdma_manager_init (void)
     rdma_hbm_base_ = hbm_addr;
     rdma_hbm_allocator_.reset(new sdk::lib::BMAllocator(num_units));
 
-    NIC_FUNC_DEBUG("rdma_hbm_base : {}", rdma_hbm_base_);
+    NIC_FUNC_DEBUG("rdma_hbm_base : {:#x}", rdma_hbm_base_);
 
     hbm_addr = mp_->start_addr(kRdmaHBMBarLabel);
     assert(hbm_addr > 0);
@@ -218,7 +218,7 @@ void PdClient::rdma_manager_init (void)
     rdma_hbm_bar_base_ = hbm_addr;
     rdma_hbm_bar_allocator_.reset(new sdk::lib::BMAllocator(num_units));
 
-    NIC_FUNC_DEBUG("rdma_hbm_bar_base : {}", rdma_hbm_bar_base_);
+    NIC_FUNC_DEBUG("rdma_hbm_bar_base : {:#x}", rdma_hbm_bar_base_);
 
 }
 
@@ -228,11 +228,11 @@ uint64_t PdClient::rdma_mem_alloc (uint32_t size)
 
     alloc_units = (size + kRdmaAllocUnit - 1) & ~(kRdmaAllocUnit-1);
     alloc_units /= kRdmaAllocUnit;
-    uint64_t alloc_offset = rdma_hbm_allocator_->Alloc(alloc_units);
+    int alloc_offset = rdma_hbm_allocator_->Alloc(alloc_units);
 
     if (alloc_offset < 0) {
         NIC_FUNC_ERR("Invalid alloc_offset {}", alloc_offset);
-        return -ENOMEM;
+        return 0;
     }
 
     rdma_allocation_sizes_[alloc_offset] = alloc_units;
@@ -248,11 +248,11 @@ uint64_t PdClient::rdma_mem_bar_alloc (uint32_t size)
 
     alloc_units = (size + kRdmaBarAllocUnit - 1) & ~(kRdmaBarAllocUnit-1);
     alloc_units /= kRdmaBarAllocUnit;
-    uint64_t alloc_offset = rdma_hbm_bar_allocator_->Alloc(alloc_units);
+    int alloc_offset = rdma_hbm_bar_allocator_->Alloc(alloc_units);
 
     if (alloc_offset < 0) {
         NIC_FUNC_ERR("Invalid alloc_offset {}", alloc_offset);
-        return -ENOMEM;
+        return 0;
     }
 
     rdma_bar_allocation_sizes_[alloc_offset] = alloc_units;
@@ -280,7 +280,7 @@ void PdClient::nicmgr_mem_init (void)
     nicmgr_hbm_base_ = hbm_addr;
     nicmgr_hbm_allocator_.reset(new sdk::lib::BMAllocator(num_units));
 
-    NIC_FUNC_DEBUG("nicmgr_hbm_base : {}\n", nicmgr_hbm_base_);
+    NIC_FUNC_DEBUG("nicmgr_hbm_base : {:#x}", nicmgr_hbm_base_);
 }
 
 uint64_t PdClient::nicmgr_mem_alloc(uint32_t size)
@@ -290,11 +290,11 @@ uint64_t PdClient::nicmgr_mem_alloc(uint32_t size)
 
     alloc_units = (size + kNicmgrAllocUnit - 1) & ~(kNicmgrAllocUnit-1);
     alloc_units /= kNicmgrAllocUnit;
-    uint64_t alloc_offset = nicmgr_hbm_allocator_->Alloc(alloc_units);
+    int alloc_offset = nicmgr_hbm_allocator_->Alloc(alloc_units);
 
     if (alloc_offset < 0) {
         NIC_FUNC_ERR("Invalid alloc_offset {}", alloc_offset);
-        return -ENOMEM;
+        return 0;
     }
 
     nicmgr_allocation_sizes_[alloc_offset] = alloc_units;
@@ -328,7 +328,7 @@ void PdClient::devcmd_mem_init (void)
     devcmd_hbm_base_ = hbm_addr;
     devcmd_hbm_allocator_.reset(new sdk::lib::BMAllocator(num_units));
 
-    NIC_FUNC_DEBUG("devcmd_hbm_base : {}\n", devcmd_hbm_base_);
+    NIC_FUNC_DEBUG("devcmd_hbm_base : {:#x}", devcmd_hbm_base_);
 }
 
 uint64_t PdClient::devcmd_mem_alloc(uint32_t size)
@@ -338,11 +338,11 @@ uint64_t PdClient::devcmd_mem_alloc(uint32_t size)
 
     alloc_units = (size + kDevcmdAllocUnit - 1) & ~(kDevcmdAllocUnit - 1);
     alloc_units /= kDevcmdAllocUnit;
-    uint64_t alloc_offset = devcmd_hbm_allocator_->Alloc(alloc_units);
+    int alloc_offset = devcmd_hbm_allocator_->Alloc(alloc_units);
 
     if (alloc_offset < 0) {
         NIC_FUNC_ERR("Invalid alloc_offset {}", alloc_offset);
-        return -ENOMEM;
+        return 0;
     }
 
     devcmd_allocation_sizes_[alloc_offset] = alloc_units;
@@ -355,6 +355,21 @@ uint64_t PdClient::devcmd_mem_alloc(uint32_t size)
     assert((addr & 0xFFF) == 0);
 
     return addr;
+}
+
+int32_t PdClient::intr_alloc(uint32_t count)
+{
+    uint32_t intr_base;
+
+    auto ret = intr_allocator->alloc_block(&intr_base, count);
+    if (ret != sdk::lib::indexer::SUCCESS) {
+        NIC_FUNC_ERR("Failed to allocate interrupts");
+        return -ENOMEM;
+    }
+
+    NIC_FUNC_DEBUG("base {} count {}", intr_base, count);
+
+    return intr_base;
 }
 
 int
@@ -402,7 +417,7 @@ void PdClient::init(void)
     NIC_LOG_DEBUG("Initializing HBM Memory Partitions from: {}...", hal_cfg_path_);
     mp_ = mpartition::factory();
     assert(mp_);
-    NIC_LOG_DEBUG("Initializing NIC LIF Mgr ...");
+    NIC_LOG_DEBUG("Initializing LIF Manager ...");
     lm_ = LIFManager::factory(mp_, NULL, kLif2QstateHBMLabel);
     assert(lm_);
 
@@ -435,13 +450,14 @@ void PdClient::init(void)
     rdma_manager_init();
     nicmgr_mem_init();
     devcmd_mem_init();
+    intr_allocator = sdk::lib::indexer::factory(4096);
+    assert(intr_allocator != NULL);
 }
 
 // called after HAL is UP and running
 void PdClient::update(void)
 {
     set_program_info();
-
 }
 
 PdClient* PdClient::factory(platform_t platform)

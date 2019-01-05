@@ -752,6 +752,7 @@ HalClient::LifCreate(hal_lif_info_t *hal_lif_info)
                  hal_lif_info->enable_rdma);
 
     // Nicmgr should always allocate hw_lif_id and pass to HAL
+    NIC_ASSERT(hal_lif_info->id != 0);
     NIC_ASSERT(hal_lif_info->hw_lif_id != 0);
 
     EthLif *eth_lif = EthLif::Factory(hal_lif_info);
@@ -760,12 +761,13 @@ HalClient::LifCreate(hal_lif_info_t *hal_lif_info)
     eth_lif_map[hal_lif_info->id] = eth_lif;
     // eth_lif_map.insert(std::pair<uint64_t, EthLif*>(lif_id, eth_lif));
 
+    NIC_LOG_DEBUG("hw_lif_id {} id {} eth_lif->id {} ",
+                 hal_lif_info->hw_lif_id,
+                 hal_lif_info->id,
+                 eth_lif->GetLif()->GetHwLifId());
 
     // Passed hw_lif_id should be same as HAL returned
     NIC_ASSERT(hal_lif_info->hw_lif_id == eth_lif->GetLif()->GetHwLifId());
-
-    NIC_LOG_DEBUG("lif-{} Created with id: {}",
-                 hal_lif_info->hw_lif_id, hal_lif_info->id);
 
     return 0;
 }

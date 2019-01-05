@@ -164,15 +164,28 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     lif_init_done = false;
     memset(&info, 0, sizeof(info));
 
-    NIC_LOG_DEBUG("In accel constructor: dol_integ {} intr_base {:#x}",
-                 dol_integ, spec->intr_base);
+    // Allocate lifs
+    lif_base = pd->lm_->LIFRangeAlloc(-1, spec->lif_count);
+    if (lif_base < 0) {
+        NIC_LOG_ERR("{}: Failed to allocate lifs", spec->name);
+        throw;
+    }
+    NIC_LOG_DEBUG("{}: lif_base {} lif_count {}", spec->name, lif_base, spec->lif_count);
+
+    // Allocate interrupts
+    intr_base = pd->intr_alloc(spec->intr_count);
+    if (intr_base < 0) {
+        NIC_LOG_ERR("{}: Failed to allocate interrupts", spec->name);
+        throw;
+    }
+    NIC_LOG_DEBUG("{}: intr_base {} intr_count {}", spec->name, intr_base, spec->intr_count);
 
     // Locate HBM region dedicated to crypto keys
     hbm_addr = pd->mp_->start_addr(CAPRI_BARCO_KEY_DESC);
     hbm_size = pd->mp_->size_kb(CAPRI_BARCO_KEY_DESC);
     if (hbm_addr == INVALID_MEM_ADDRESS || hbm_size == 0) {
         NIC_LOG_ERR("Failed to get HBM base for {}", CAPRI_BARCO_KEY_DESC);
-        return;
+        throw;
     }
 
     // hal/pd/capri/capri_hbm.cc stores size in KB;
@@ -189,7 +202,7 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     if (num_crypto_keys_max < ACCEL_DEV_NUM_CRYPTO_KEYS_MIN) {
         NIC_LOG_ERR("num_crypto_keys_max {} too small, expected at least {}",
                     num_crypto_keys_max, ACCEL_DEV_NUM_CRYPTO_KEYS_MIN);
-        return;
+        throw;
     }
 
     // Locate HBM region dedicated to STORAGE_SEQ_HBM_HANDLE
@@ -199,7 +212,7 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     hbm_size = pd->mp_->size_kb(STORAGE_SEQ_HBM_HANDLE);
     if (hbm_addr == INVALID_MEM_ADDRESS || hbm_size == 0) {
         NIC_LOG_ERR("Failed to get HBM base for {}", STORAGE_SEQ_HBM_HANDLE);
-        return;
+        throw;
     }
 
     hbm_size *= 1024;
@@ -217,8 +230,8 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
 
     pci_resources.cmbpa = hbm_addr;
     pci_resources.cmbsz = hbm_size;
-    NIC_LOG_DEBUG("accel: cmb_addr {:#x} size {} bytes",
-        pci_resources.cmbpa, pci_resources.cmbsz);
+    NIC_LOG_DEBUG("{}: cmb_addr {:#x} size {} bytes",
+        spec->name, pci_resources.cmbpa, pci_resources.cmbsz);
 
     // Allocate & Init Devcmd Region
     pci_resources.devcmdpa = pd->devcmd_mem_alloc(ACCEL_DEV_PAGE_SIZE);
@@ -226,8 +239,8 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     MEM_SET(pci_resources.devcmdpa, 0, ACCEL_DEV_PAGE_SIZE, 0);
     MEM_SET(pci_resources.devcmddbpa, 0, ACCEL_DEV_PAGE_SIZE, 0);
 
-    NIC_LOG_DEBUG("accel: devcmd_addr {:#x} devcmddb_addr {:#x}",
-        pci_resources.devcmdpa, pci_resources.devcmddbpa);
+    NIC_LOG_DEBUG("{}: devcmd_addr {:#x} devcmddb_addr {:#x}",
+        spec->name, pci_resources.devcmdpa, pci_resources.devcmddbpa);
 
     // TODO: mmap instead of calloc after porting to real pal
     devcmd = (dev_cmd_regs_t *)calloc(1, sizeof(dev_cmd_regs_t));
@@ -268,10 +281,10 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
         .qstate = (const char *)blank_qstate,
     };
 
-    spec->seq_created_count = 1 << log_2(spec->seq_queue_count);
+    seq_created_count = 1 << log_2(spec->seq_queue_count);
     info.pushed_to_hal = false;
-    info.id = spec->lif_id;
-    info.hw_lif_id = spec->hw_lif_id;
+    info.id = lif_base;
+    info.hw_lif_id = lif_base;
     info.name = "accel";
     if (dol_integ) {
 #if 0
@@ -304,8 +317,8 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
 
     } else {
 
-        info.id = spec->lif_id;
-        info.hw_lif_id = spec->hw_lif_id;
+        info.id = lif_base;
+        info.hw_lif_id = lif_base;
         info.type = types::LIF_TYPE_NONE;
         info.pinned_uplink = 0;
         info.enable_rdma = false;
@@ -313,12 +326,10 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
                sizeof(info.queue_info));
     }
 
-    name = string_format("accel{}", spec->lif_id);
-
     // Configure PCI resources
     pci_resources.lif_valid = 1;
     pci_resources.lif = info.hw_lif_id;
-    pci_resources.intrb = spec->intr_base;
+    pci_resources.intrb = intr_base;
     pci_resources.intrc = spec->intr_count;
     pci_resources.port = spec->pcie_port;
     pci_resources.npids = 0;
@@ -326,15 +337,15 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     if (spec->pcie_port == 0xff) {
         NIC_LOG_DEBUG("lif{}: Skipped creating PCI device, pcie_port {}", info.hw_lif_id,
             spec->pcie_port);
-        return;
+        throw;
     }
 
     // Create PCI device
     NIC_LOG_DEBUG("lif{}: creating Accel_PF PCI device", info.hw_lif_id);
-    pdev = pciehdev_accel_new(name.c_str(), &pci_resources);
+    pdev = pciehdev_accel_new(spec->name.c_str(), &pci_resources);
     if (pdev == NULL) {
         NIC_LOG_ERR("lif{}: Failed to create Accel_PF PCI device", info.hw_lif_id);
-        return;
+        throw;
     }
     pciehdev_set_priv(pdev, (void *)this);
 
@@ -344,7 +355,7 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
         int ret = pciemgr->add_device(pdev);
         if (ret != 0) {
             NIC_LOG_ERR("lif{}: Failed to add Accel_PF PCI device to topology", info.hw_lif_id);
-            return;
+            throw;
         }
     }
 
@@ -363,7 +374,7 @@ Accel_PF::DelphiDeviceInit(void)
         delphi::objects::AccelPfInfoPtr shared_pf(delphi_pf);
         shared_pf->set_key(std::to_string(info.hw_lif_id));
         shared_pf->set_hwlifid(info.hw_lif_id);
-        shared_pf->set_numseqqueues(spec->seq_created_count);
+        shared_pf->set_numseqqueues(seq_created_count);
         shared_pf->set_cryptokeyidxbase(crypto_key_idx_base);
         shared_pf->set_numcryptokeysmax(num_crypto_keys_max);
         shared_pf->set_intrbase(pci_resources.intrb);
@@ -371,7 +382,7 @@ Accel_PF::DelphiDeviceInit(void)
         g_nicmgr_svc->sdk()->SetObject(shared_pf);
 
         seq_qkey.set_lifid(std::to_string(info.hw_lif_id));
-        for (qid = 0; qid < spec->seq_created_count; qid++) {
+        for (qid = 0; qid < seq_created_count; qid++) {
             seq_qkey.set_qid(std::to_string(qid));
             qmetrics_addr = GetQstateAddr(STORAGE_SEQ_QTYPE_SQ, qid) +
                             offsetof(storage_seq_qstate_t, metrics);
@@ -597,13 +608,13 @@ Accel_PF::_DevcmdIdentify(void *req, void *req_data,
     rsp->dev.lif_tbl[0].num_crypto_keys_max = num_crypto_keys_max;
     rsp->dev.db_pages_per_lif = 1;
     rsp->dev.admin_queues_per_lif = spec->adminq_count;
-    rsp->dev.seq_queues_per_lif = spec->seq_created_count;
+    rsp->dev.seq_queues_per_lif = seq_created_count;
     rsp->dev.num_intrs = spec->intr_count;
     rsp->dev.intr_assert_stride = intr_assert_stride();
     rsp->dev.intr_assert_data = intr_assert_data();
-    rsp->dev.intr_assert_addr = intr_assert_addr(spec->intr_base);
+    rsp->dev.intr_assert_addr = intr_assert_addr(intr_base);
     rsp->dev.cm_base_pa = pci_resources.cmbpa;
-    memcpy(rsp->dev.accel_ring_tbl, spec->accel_ring_tbl,
+    memcpy(rsp->dev.accel_ring_tbl, accel_ring_tbl,
            sizeof(rsp->dev.accel_ring_tbl));
     cpl->ver = IDENTITY_VERSION_1;
 
@@ -627,7 +638,7 @@ Accel_PF::_DevcmdReset(void *req, void *req_data,
     NIC_LOG_INFO("lif-{}: CMD_OPCODE_RESET", info.hw_lif_id);
 
     // Disable all sequencer queues
-    for (qid = 0; qid < spec->seq_created_count; qid++) {
+    for (qid = 0; qid < seq_created_count; qid++) {
         qstate_addr = GetQstateAddr(STORAGE_SEQ_QTYPE_SQ, qid);
         WRITE_MEM(qstate_addr + offsetof(storage_seq_qstate_t, abort),
                   (uint8_t *)&abort, sizeof(abort), 0);
@@ -766,7 +777,7 @@ Accel_PF::_DevcmdAdminQueueInit(void *req, void *req_data,
 
     invalidate_txdma_cacheline(addr);
 
-    cpl->qid = spec->adminq_base + cmd->index;
+    cpl->qid = cmd->index;
     cpl->qtype = STORAGE_SEQ_QTYPE_ADMIN;
     NIC_LOG_DEBUG("lif-{}: qid {} qtype {}",
                  info.hw_lif_id, cpl->qid, cpl->qtype);
@@ -782,7 +793,7 @@ Accel_PF::_DevcmdSeqQueueInit(void *req, void *req_data,
     seq_queue_init_cpl_t    *cpl = (seq_queue_init_cpl_t *)resp;
     uint64_t                qstate_addr;
     uint64_t                next_pc_addr;
-    uint32_t                qid = spec->seq_queue_base + cmd->index;
+    uint32_t                qid = cmd->index;
     storage_seq_qstate_t    seq_qstate = {0};
     const char              *desc0_pgm_name = nullptr;
     const char              *desc1_pgm_name = nullptr;
@@ -816,9 +827,9 @@ Accel_PF::_DevcmdSeqQueueInit(void *req, void *req_data,
         break;
     }
 
-    if (cmd->index >= spec->seq_created_count) {
+    if (cmd->index >= seq_created_count) {
         NIC_LOG_ERR("lif{}: qgroup {} index {} exceeds max {}", info.hw_lif_id,
-            cmd->qgroup, cmd->index, spec->seq_created_count);
+            cmd->qgroup, cmd->index, seq_created_count);
         goto devcmd_done;
     }
 
@@ -911,9 +922,9 @@ Accel_PF::_DevcmdSeqQueueControl(void *req, void *req_data,
     value = enable;
     switch (cmd->qtype) {
     case STORAGE_SEQ_QTYPE_SQ:
-        if (cmd->qid >= spec->seq_created_count) {
+        if (cmd->qid >= seq_created_count) {
             NIC_LOG_ERR("lif{}: qtype {} qid {} exceeds count {}", info.hw_lif_id,
-                cmd->qtype, cmd->qid, spec->seq_created_count);
+                cmd->qtype, cmd->qid, seq_created_count);
             return (DEVCMD_ERROR);
         }
         qstate_addr = GetQstateAddr(cmd->qtype, cmd->qid);
@@ -1037,7 +1048,7 @@ Accel_PF::accel_ring_info_get_all(void)
 
             const accel_rgroup_rinfo_rsp_t& info = iter->second.info;
             if (info.ring_handle < ACCEL_RING_ID_MAX) {
-                accel_ring_t& spec_ring = spec->accel_ring_tbl[info.ring_handle];
+                accel_ring_t& spec_ring = accel_ring_tbl[info.ring_handle];
                 spec_ring.ring_base_pa = info.base_pa;
                 spec_ring.ring_pndx_pa = info.pndx_pa;
                 spec_ring.ring_shadow_pndx_pa = info.shadow_pndx_pa;
@@ -1621,21 +1632,6 @@ Poller::operator()(std::function<int(void)> poll_func)
 
     NIC_LOG_DEBUG("Polling timeout_us {} exceeded - Giving up!", timeout_us);
     return -1;
-}
-
-ostream &operator<<(ostream& os, const Accel_PF& obj) {
-
-    os << "LIF INFO:" << endl;
-    os << "\tlif_id = " << obj.spec->lif_id << endl;
-    os << "\thw_lif_id = " << obj.info.hw_lif_id << endl;
-    os << "\tqstate_addr: " << endl;
-    for (int i = 0; i < STORAGE_SEQ_QTYPE_MAX; i++) {
-        os << "\t\tqtype = " << i
-           << ", qstate = 0x" << hex << obj.info.qstate_addr[i] << resetiosflags(ios::hex)
-           << endl;
-    }
-
-    return os;
 }
 
 void

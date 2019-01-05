@@ -187,9 +187,8 @@ public:
 private:
     /* Static members */
     static sdk::lib::indexer *fltr_allocator;
-    static sdk::lib::indexer *mnic_allocator;
     /* Members */
-    struct eth_devspec *spec;
+    const struct eth_devspec *spec;
     hal_lif_info_t hal_lif_info_;
     /* Mnet Info */
     struct mnet_dev_create_req_t mnet_req;
@@ -204,6 +203,9 @@ private:
     enum lif_state lif_state;
     // Coses
     uint8_t  coses; // {uint8_t CosA:4; uint8_t CosB:4;}
+    // Resources
+    int32_t lif_base;
+    uint32_t intr_base;
     // Stats
     uint64_t stats_mem_addr;
     uint64_t host_stats_mem_addr;
@@ -263,8 +265,6 @@ private:
     enum DevcmdStatus _CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_data);
 
     uint64_t GetQstateAddr(uint8_t qtype, uint32_t qid);
-
-    friend ostream &operator<<(ostream&, const Eth&);
 
     const char *opcode_to_str(enum cmd_opcode opcode);
     const char *lif_state_to_str(enum lif_state state);

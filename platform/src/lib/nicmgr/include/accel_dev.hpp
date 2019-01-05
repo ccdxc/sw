@@ -78,23 +78,15 @@ enum {
  * Accelerator Device Spec
  */
 typedef struct accel_devspec {
+    std::string name;
     // RES
-    uint64_t lif_id;
-    uint32_t hw_lif_id;
-    uint32_t seq_queue_base;
+    uint32_t lif_count;
     uint32_t seq_queue_count;
-    uint32_t seq_created_count;
-    uint32_t adminq_base;
     uint32_t adminq_count;
-    uint32_t intr_base;
     uint32_t intr_count;
     uint32_t pub_intv_frac; // publishing interval in fraction of second
     // PCIe
     uint8_t  pcie_port;
-
-    // HW rings
-    accel_ring_t accel_ring_tbl[ACCEL_RING_ID_MAX];
-
     std::string qos_group;
 } accel_devspec_t;
 
@@ -231,10 +223,14 @@ public:
 private:
 
     /* Members */
-    string                      name;
-    accel_devspec_t             *spec;
+    const accel_devspec_t       *spec;
     ev::timer                   sync_timer;     // timer to sync to hub
     evutil_timer                devcmd_timer;
+
+    uint32_t seq_created_count;
+
+    // HW rings
+    accel_ring_t accel_ring_tbl[ACCEL_RING_ID_MAX];
 
     // Hardware Info
     struct queue_info    qinfo[NUM_QUEUE_TYPES];
@@ -244,13 +240,14 @@ private:
 
     // HAL Info
     HalClient                   *hal;
-    uint64_t                    lif_handle;
     // PCIe info
     pciehdev_t                  *pdev;
     pciehdevice_resources_t     pci_resources;
 
     PdClient *pd;
-
+    // Resources
+    int32_t                     lif_base;
+    uint32_t                    intr_base;
     // Oher states
     uint32_t                    crypto_key_idx_base;
     uint32_t                    num_crypto_keys_max;
@@ -307,7 +304,6 @@ private:
     void seq_queue_info_publish(uint32_t qid,
                                 storage_seq_qgroup_t qgroup,
                                 uint32_t core_id);
-    friend ostream &operator<<(ostream&, const Accel_PF&);
     const char*opcode_to_str(enum cmd_opcode opcode);
 };
 

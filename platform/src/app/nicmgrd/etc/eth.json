@@ -18,6 +18,7 @@
         {
             "name" : "eth0",
             "dev_uuid" : 1,
+            "lif_count" : 1,
             "rxq_count" : 16,
             "txq_count" : 16,
             "eq_count" : 1,

@@ -26,7 +26,6 @@
 
 namespace pt = boost::property_tree;
 
-sdk::lib::indexer *intr_allocator = sdk::lib::indexer::factory(4096);
 DeviceManager *DeviceManager::instance;
 nicmgr_req_qstate_t qstate_req = { 0 };
 nicmgr_resp_qstate_t qstate_resp = { 0 };
@@ -361,7 +360,6 @@ DeviceManager::LoadConfig(string path)
 {
     struct eth_devspec *eth_spec;
     struct accel_devspec *accel_spec;
-    uint32_t intr_base = 0;
     char *system_uuid = getenv("SYSUUID");
     uint64_t sys_mac_base;
 
@@ -377,7 +375,7 @@ DeviceManager::LoadConfig(string path)
     }
 
     NIC_LOG_DEBUG("Entered SysUuid={} SysMacBase={}",
-                 system_uuid, sys_mac_base);
+                 system_uuid == NULL ? "" : system_uuid, sys_mac_base);
 
 
     // Create Network
@@ -405,20 +403,16 @@ DeviceManager::LoadConfig(string path)
 
             auto val = node.second;
 
-            eth_spec->dev_uuid     = val.get<uint64_t>("dev_uuid");
-            eth_spec->rxq_count    = val.get<uint64_t>("rxq_count");
-            eth_spec->txq_count    = val.get<uint64_t>("txq_count");
-            eth_spec->eq_count     = val.get<uint64_t>("eq_count");
+            eth_spec->name = val.get<string>("name");
+            eth_spec->dev_uuid = val.get<uint64_t>("dev_uuid");
+            eth_spec->lif_count = val.get<uint64_t>("lif_count");
+            eth_spec->rxq_count = val.get<uint64_t>("rxq_count");
+            eth_spec->txq_count = val.get<uint64_t>("txq_count");
+            eth_spec->eq_count = val.get<uint64_t>("eq_count");
             eth_spec->adminq_count = val.get<uint64_t>("adminq_count");
-            eth_spec->intr_count   = val.get<uint64_t>("intr_count");
-            if (intr_allocator->alloc_block(&intr_base, eth_spec->intr_count) != sdk::lib::indexer::SUCCESS) {
-                NIC_LOG_ERR("lif{}: Failed to allocate interrupts", hal_lif_info_.hw_lif_id);
-                return -1;
-            }
-            eth_spec->intr_base    = intr_base;
-            eth_spec->mac_addr     = sys_mac_base++;
-            eth_spec->hw_lif_id = pd->lm_->LIFRangeAlloc(-1, 1);
-            eth_spec->lif_id = eth_spec->hw_lif_id;
+            eth_spec->intr_count = val.get<uint64_t>("intr_count");
+            eth_spec->mac_addr = sys_mac_base++;
+
             if (val.get_optional<string>("network")) {
                 eth_spec->uplink_id = val.get<uint64_t>("network.uplink");
                 eth_spec->uplink = uplinks[eth_spec->uplink_id];
@@ -433,14 +427,12 @@ DeviceManager::LoadConfig(string path)
             } else {
                 eth_spec->eth_type = ETH_UNKNOWN;
             }
-            eth_spec->if_name = val.get<string>("name");
+
             eth_spec->qos_group = val.get<string>("qos_group", "DEFAULT");
-            NIC_LOG_DEBUG("Creating mnic device with name: {}, type: {}, lif_id: {}, hw_lif_id: {},"
+            NIC_LOG_DEBUG("Creating mnic device with name: {}, type: {}, "
                          " pinned_uplink: {}, intr_count: {}, qos_group {}",
-                         eth_spec->if_name,
+                         eth_spec->name,
                          eth_dev_type_to_str(eth_spec->eth_type),
-                         eth_spec->lif_id,
-                         eth_spec->hw_lif_id,
                          eth_spec->uplink_id,
                          eth_spec->intr_count,
                          eth_spec->qos_group);
@@ -457,17 +449,14 @@ DeviceManager::LoadConfig(string path)
 
             auto val = node.second;
 
+            eth_spec->name = val.get<string>("name");
             eth_spec->dev_uuid = val.get<uint64_t>("dev_uuid");
+            eth_spec->lif_count = val.get<uint64_t>("lif_count");
             eth_spec->rxq_count = val.get<uint64_t>("rxq_count");
             eth_spec->txq_count = val.get<uint64_t>("txq_count");
             eth_spec->eq_count = val.get<uint64_t>("eq_count");
             eth_spec->adminq_count = val.get<uint64_t>("adminq_count");
             eth_spec->intr_count = val.get<uint64_t>("intr_count");
-            if (intr_allocator->alloc_block(&intr_base, eth_spec->intr_count) != sdk::lib::indexer::SUCCESS) {
-                NIC_LOG_ERR("lif{}: Failed to allocate interrupts", hal_lif_info_.hw_lif_id);
-                return -1;
-            }
-            eth_spec->intr_base = intr_base;
             eth_spec->mac_addr = sys_mac_base++;
 
             if (val.get_optional<string>("rdma")) {
@@ -485,8 +474,6 @@ DeviceManager::LoadConfig(string path)
                 eth_spec->barmap_size = 1;
             }
 
-            eth_spec->hw_lif_id = pd->lm_->LIFRangeAlloc(-1, 1);
-            eth_spec->lif_id = eth_spec->hw_lif_id;
             if (val.get_optional<string>("network")) {
                 eth_spec->uplink_id = val.get<uint64_t>("network.uplink");
                 eth_spec->uplink = uplinks[eth_spec->uplink_id];
@@ -502,14 +489,12 @@ DeviceManager::LoadConfig(string path)
             } else {
                 eth_spec->eth_type = ETH_UNKNOWN;
             }
-            eth_spec->if_name = val.get<string>("name");
+
             eth_spec->qos_group = val.get<string>("qos_group", "DEFAULT");
-            NIC_LOG_DEBUG("Creating eth device with name: {}, type: {}, lif_id: {}, hw_lif_id: {}, "
+            NIC_LOG_DEBUG("Creating eth device with name: {}, type: {}, "
                          "pinned_uplink: {}, qos_group {}",
-                         eth_spec->if_name,
+                         eth_spec->name,
                          eth_dev_type_to_str(eth_spec->eth_type),
-                         eth_spec->lif_id,
-                         eth_spec->hw_lif_id,
                          eth_spec->uplink_id,
                          eth_spec->qos_group);
             AddDevice(ETH, (void *)eth_spec);
@@ -519,28 +504,17 @@ DeviceManager::LoadConfig(string path)
     NIC_HEADER_TRACE("Loading Accel devices");
     // Create Accelerator devices
     if (spec.get_child_optional("accel_dev")) {
-        NIC_LOG_DEBUG("Creating accel device");
         for (const auto &node : spec.get_child("accel_dev")) {
-            NIC_LOG_DEBUG("Creating accel device");
             accel_spec = new struct accel_devspec;
             memset(accel_spec, 0, sizeof(*accel_spec));
 
             auto val = node.second;
 
-            accel_spec->hw_lif_id = pd->lm_->LIFRangeAlloc(-1, 1);
-            if (dol_integ) {
-                    accel_spec->lif_id = STORAGE_SEQ_SW_LIF_ID;
-            } else {
-                accel_spec->lif_id = accel_spec->hw_lif_id;
-            }
+            accel_spec->name = val.get<string>("name");
+            accel_spec->lif_count    = val.get<uint64_t>("lif_count");
             accel_spec->seq_queue_count = val.get<uint32_t>("seq_queue_count");
             accel_spec->adminq_count = val.get<uint32_t>("adminq_count");
             accel_spec->intr_count = val.get<uint32_t>("intr_count");
-            if (intr_allocator->alloc_block(&intr_base, accel_spec->intr_count) != sdk::lib::indexer::SUCCESS) {
-                NIC_LOG_ERR("Accel lif: Failed to allocate interrupts");
-                return -1;
-            }
-            accel_spec->intr_base = intr_base;
 
             accel_spec->pub_intv_frac = ACCEL_DEV_PUB_INTV_FRAC_DFLT;
             if (val.get_optional<string>("publish_interval")) {
@@ -549,10 +523,8 @@ DeviceManager::LoadConfig(string path)
 
             accel_spec->pcie_port = val.get<uint8_t>("pcie.port", 0);
             accel_spec->qos_group = val.get<string>("qos_group", "DEFAULT");
-            NIC_LOG_DEBUG("Creating accel device with lif_id: {}, hw_lif_id: {} "
-                         "qos_group {}",
-                         accel_spec->lif_id,
-                         accel_spec->hw_lif_id,
+            NIC_LOG_DEBUG("Creating accel device with name: {}, qos_group: {}",
+                         accel_spec->name,
                          accel_spec->qos_group);
             AddDevice(ACCEL, (void *)accel_spec);
         }

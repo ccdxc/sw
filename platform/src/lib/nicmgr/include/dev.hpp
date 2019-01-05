@@ -138,17 +138,15 @@ struct eth_devspec {
     uint64_t dev_uuid;
     // FWD
     EthDevType  eth_type;
-    std::string if_name;
+    std::string name;
     uint32_t    uplink_id;
     Uplink      *uplink;
-    uint64_t    lif_id;
-    uint32_t    hw_lif_id;
     // RES
+    uint32_t lif_count;
     uint32_t rxq_count;
     uint32_t txq_count;
     uint32_t eq_count;
     uint32_t adminq_count;
-    uint32_t intr_base;
     uint32_t intr_count;
     uint64_t mac_addr;
     // DEV
