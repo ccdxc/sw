@@ -65,7 +65,7 @@ mapping_impl::destroy(mapping_impl *impl) {
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-mapping_impl::alloc_resources(api_base *api_obj) {
+mapping_impl::reserve_resources(api_base *api_obj) {
 #if 0
     oci_mapping_t    *mapping_info;
 
@@ -90,7 +90,7 @@ mapping_impl::alloc_resources(api_base *api_obj) {
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-mapping_impl::free_resources(api_base *api_obj) {
+mapping_impl::release_resources(api_base *api_obj) {
     return sdk::SDK_RET_INVALID_OP;
 }
 

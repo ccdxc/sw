@@ -72,7 +72,7 @@ tep_entry::destroy(tep_entry *tep) {
     if (tep->impl_) {
         impl_base::destroy(impl::IMPL_OBJ_ID_TEP, tep->impl_);
     }
-    tep->free_resources_();
+    tep->release_resources_();
     tep->~tep_entry();
 }
 
@@ -97,8 +97,8 @@ tep_entry::init_config(api_ctxt_t *api_ctxt) {
 //       2. we don't need an indexer here if we can use directmap here to
 //          "reserve" an index
 sdk_ret_t
-tep_entry::alloc_resources_(void) {
-    return impl_->alloc_resources(this);
+tep_entry::reserve_resources_(void) {
+    return impl_->reserve_resources(this);
 }
 
 /**
@@ -114,7 +114,7 @@ sdk_ret_t
 tep_entry::program_config(obj_ctxt_t *obj_ctxt) {
     sdk_ret_t    ret;
 
-    ret = alloc_resources_();
+    ret = reserve_resources_();
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
     return impl_->program_hw(this, obj_ctxt);
 }
@@ -124,8 +124,8 @@ tep_entry::program_config(obj_ctxt_t *obj_ctxt) {
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-tep_entry::free_resources_(void) {
-    return impl_->free_resources(this);
+tep_entry::release_resources_(void) {
+    return impl_->release_resources(this);
 }
 
 /**

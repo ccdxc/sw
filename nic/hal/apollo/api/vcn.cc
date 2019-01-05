@@ -60,7 +60,7 @@ vcn_entry::~vcn_entry() {
  */
 void
 vcn_entry::destroy(vcn_entry *vcn) {
-    vcn->free_resources_();
+    vcn->release_resources_();
     vcn->~vcn_entry();
 }
 
@@ -82,7 +82,7 @@ vcn_entry::init_config(api_ctxt_t *api_ctxt) {
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-vcn_entry::alloc_resources_(void) {
+vcn_entry::reserve_resources_(void) {
     if (vcn_db()->vcn_idxr()->alloc((uint32_t *)&this->hw_id_) !=
             sdk::lib::indexer::SUCCESS) {
         return sdk::SDK_RET_NO_RESOURCE;
@@ -102,7 +102,7 @@ vcn_entry::program_config(obj_ctxt_t *obj_ctxt) {
      * there is no h/w programming for VCN config but a h/w id is needed so we
      * can use while programming vnics, routes etc.
      */
-    return alloc_resources_();
+    return reserve_resources_();
 }
 
 /**
@@ -110,7 +110,7 @@ vcn_entry::program_config(obj_ctxt_t *obj_ctxt) {
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-vcn_entry::free_resources_(void) {
+vcn_entry::release_resources_(void) {
     if (hw_id_ != 0xFF) {
         vcn_db()->vcn_idxr()->free(hw_id_);
     }

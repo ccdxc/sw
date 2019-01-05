@@ -65,13 +65,13 @@ public:
      * @brief    allocate/reserve h/w resources for this object
      * @return    SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t alloc_resources(api_base *api_obj) override;
+    virtual sdk_ret_t reserve_resources(api_base *api_obj) override;
 
     /**
      * @brief     free h/w resources used by this object, if any
      * @return    SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t free_resources(api_base *api_obj) override;
+    virtual sdk_ret_t release_resources(api_base *api_obj) override;
 
     /**
      * @brief    program all h/w tables relevant to this object except stage 0
