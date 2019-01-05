@@ -21,7 +21,7 @@ venice/utils/apigen/annotations venice/orch \
 venice/cmd/grpc/server/certificates/certapi \
 venice/ctrler/evtsmgr/rpcserver/evtsmgrproto \
 venice/evtsproxy/rpcserver/evtsproxyproto \
-nic/agent/nmd/protos nic/agent/netagent/protos \
+nic/agent/nmd/protos nic/agent/nmd/protos/delphi nic/agent/netagent/protos \
 venice/utils/authn/radius                      \
 venice/ctrler/rollout/rpcserver/protos \
 venice/utils/objstore/client/mock \

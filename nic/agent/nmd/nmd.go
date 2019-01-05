@@ -6,9 +6,11 @@ import (
 	"time"
 
 	"github.com/pensando/sw/nic/agent/nmd/cmdif"
+	delphiProto "github.com/pensando/sw/nic/agent/nmd/protos/delphi"
 	"github.com/pensando/sw/nic/agent/nmd/rolloutif"
 	"github.com/pensando/sw/nic/agent/nmd/state"
 	clientAPI "github.com/pensando/sw/nic/delphi/gosdk/client_api"
+	"github.com/pensando/sw/nic/delphi/proto/delphi"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
@@ -94,6 +96,22 @@ func NewAgent(platform state.PlatformAPI, upgmgr state.UpgMgrAPI,
 	// run delphi event loop in the background
 	if delphiClient != nil {
 		go delphiClient.Run()
+	}
+
+	// TODO Replace this with the real dhcp parsed information
+	naplesStatus := delphiProto.NaplesStatus{
+		Meta: &delphi.ObjectMeta{
+			Kind: "NaplesStatus",
+		},
+		Controllers: []string{"A.B.C.D", "E.F.G.H"},
+	}
+
+	// TODO Remove this check prior to FCS as nmd is always expected to be started with delphi
+	if delphiClient != nil {
+		if err = ag.delphiClient.SetObject(&naplesStatus); err != nil {
+			log.Errorf("Error writing the naples status object. Err: %v", err)
+			return nil, err
+		}
 	}
 
 	return &ag, nil

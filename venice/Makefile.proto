@@ -28,6 +28,7 @@ all: ${DEST}
 		-I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/gogo/protobuf/protobuf \
 		-I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
 		-I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/gogo/protobuf/gogoproto \
+		-I${GOPATH}/src/github.com/pensando/sw/nic/delphi/proto/delphi/ \
 		--gogofast_out=${EXTRA_GOFAST_OUT}Mgoogle/protobuf/descriptor.proto=github.com/gogo/protobuf/protoc-gen-gogo/descriptor,plugins=grpc:. $^
 	goimports -local "github.com/pensando/sw" -l -w $@
 

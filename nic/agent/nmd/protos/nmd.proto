@@ -9,6 +9,7 @@ import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 import "github.com/pensando/sw/api/protos/smartnic.proto";
+import "delphi.proto";
 
 
 // Naples config object
@@ -75,9 +76,14 @@ message NaplesSpec {
 
 // NaplesStatus contains current status of a Naples I/O subsystem
 message NaplesStatus {
+    option (delphi.update_event) = true;
+    delphi.ObjectMeta               Meta    = 1;
 
     // Current phase of the NIC adapter in the system
-    cluster.SmartNICStatus.Phase Phase = 1 [(gogoproto.jsontag) = "phase,omitempty"];
+    cluster.SmartNICStatus.Phase    Phase   = 2 [(gogoproto.jsontag) = "phase,omitempty"];
+
+    // Resolved Controllers/Venice IPs
+    repeated string Controllers             = 3 [(gogoproto.jsontag) = "controllers,omitempty"];
 }
 
 // NaplesCmdExecute contains information on what command to execute
