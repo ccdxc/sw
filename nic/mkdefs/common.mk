@@ -11,6 +11,7 @@ endif
 
 include ${MKDEFS}/pkg.mk
 include ${MKDEFS}/docker.mk
+include ${MKDEFS}/image.mk
 
 export THIRD_PARTY_INCLUDES := \
        ${TOPDIR}/nic/hal/third-party/spdlog/include \
