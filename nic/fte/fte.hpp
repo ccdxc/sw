@@ -24,6 +24,7 @@ typedef std::function<pipeline_action_t(ctx_t &ctx)> exec_handler_t;
 typedef void (*feature_state_init_t)(void *state); // Init calback for feature specific state
 typedef pipeline_action_t (*session_delete_handler_t)(ctx_t &ctx); // Session delete callback
 typedef pipeline_action_t (*session_get_handler_t)(ctx_t &ctx); // Session get callback
+typedef pipeline_action_t (*session_update_handler_t)(ctx_t &ctx); // Session update callback
 
 typedef struct feature_info_s {
     // feature speicific per ctx state (this is not persisited
@@ -32,6 +33,7 @@ typedef struct feature_info_s {
     feature_state_init_t      state_init_fn;
     session_delete_handler_t  sess_del_cb;
     session_get_handler_t     sess_get_cb;
+    session_update_handler_t  sess_upd_cb;
 
     // TODO(goli) need to define these
     // grpc_session_create_handler_t
@@ -61,6 +63,7 @@ hal_ret_t session_get(hal::session_t *session, SessionGetResponse *response);
 hal_ret_t session_delete_in_fte(hal_handle_t session_handle, bool force_delete=false);
 hal_ret_t session_delete(hal::session_t *session, bool force_delete=false);
 hal_ret_t session_delete_async(hal::session_t *session, bool force_delete=false);
+hal_ret_t session_update_async(hal::session_t *session);
 
 // Find if a feature is enabled on a session or not
 bool session_is_feature_enabled(hal::session_t *session, const char *feature);

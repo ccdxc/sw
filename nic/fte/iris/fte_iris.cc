@@ -494,7 +494,7 @@ ctx_t::update_flow_table()
         iflow->to_config(iflow_cfg, iflow_attrs);
         iflow_cfg.role = iflow_attrs.role = hal::FLOW_ROLE_INITIATOR;
 
-        iflow_attrs.vrf_hwid = flow_lkupid_;
+        iflow_attrs.vrf_hwid = (flow_lkupid_)?flow_lkupid_:iflow_attrs.vrf_hwid;
         if (!iflow_attrs.vrf_hwid) {
             if (protobuf_request()) {
                 if (sl2seg_) {
@@ -508,7 +508,7 @@ ctx_t::update_flow_table()
                     hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_VRF_GET_FLOW_LKPID, &pd_func_args);
                    iflow_attrs.vrf_hwid = vrf_args.lkup_id;
                 }
-            } else {
+            } else if (flow_miss()) {
                 iflow_attrs.vrf_hwid = cpu_rxhdr_->lkp_vrf;
             }
         }

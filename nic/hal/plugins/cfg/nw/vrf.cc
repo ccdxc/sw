@@ -987,19 +987,19 @@ vrf_update (VrfSpec& spec, VrfResponse *rsp)
     if (app_ctxt.nwsec_profile_handle == HAL_HANDLE_INVALID) {
         HAL_TRACE_DEBUG("No nwsec prof passed, "
                         "using default security profile");
-        app_ctxt.nwsec_prof = NULL;
+        app_ctxt.nwsec_profile_handle =  
+                    g_hal_state->oper_db()->default_security_profile_hdl();
+    }
+    app_ctxt.nwsec_prof = find_nwsec_profile_by_handle(app_ctxt.nwsec_profile_handle);
+    if (app_ctxt.nwsec_prof == NULL) {
+        HAL_TRACE_ERR("nwsec profile with handle {} not found",
+                 app_ctxt.nwsec_profile_handle);
+        ret = HAL_RET_SECURITY_PROFILE_NOT_FOUND;
+        HAL_API_STATS_INC(HAL_API_VRF_UPDATE_FAIL);
+        goto end;
     } else {
-        app_ctxt.nwsec_prof = find_nwsec_profile_by_handle(app_ctxt.nwsec_profile_handle);
-        if (app_ctxt.nwsec_prof == NULL) {
-            HAL_TRACE_ERR("nwsec profile with handle {} not found",
-                    app_ctxt.nwsec_profile_handle);
-            ret = HAL_RET_SECURITY_PROFILE_NOT_FOUND;
-            HAL_API_STATS_INC(HAL_API_VRF_UPDATE_FAIL);
-            goto end;
-        } else {
-            HAL_TRACE_DEBUG("new nwsec profile id : {}",
-                            app_ctxt.nwsec_prof->profile_id);
-        }
+        HAL_TRACE_DEBUG("new nwsec profile id : {}",
+                         app_ctxt.nwsec_prof->profile_id);
     }
 
     vrf_make_clone(vrf, (vrf_t **)&dhl_entry.cloned_obj);
