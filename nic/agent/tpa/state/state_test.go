@@ -1480,7 +1480,7 @@ func TestMatchRule(t *testing.T) {
 		}
 	}
 
-	s, err := NewTpAgent(na, halMock, dbgSock)
+	s, err := NewTpAgent(na, halMock)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, s)
@@ -2122,7 +2122,7 @@ func TestMatchRule(t *testing.T) {
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create export policy %+v", pol))
 
 	resp := httptest.NewRecorder()
-	s.debug(resp, nil)
+	s.Debug(resp, nil)
 	b, err := ioutil.ReadAll(resp.Body)
 	tu.AssertOk(t, err, "failed to read debug")
 
@@ -2159,7 +2159,7 @@ func TestMatchRule(t *testing.T) {
 	tu.AssertOk(t, err, fmt.Sprintf("failed to delete export policy %+v", pol))
 
 	resp = httptest.NewRecorder()
-	s.debug(resp, nil)
+	s.Debug(resp, nil)
 	b, err = ioutil.ReadAll(resp.Body)
 	tu.AssertOk(t, err, "failed to read debug")
 
