@@ -588,6 +588,7 @@ pt_dump:
 kt_dump:
     KT_BASE_ADDR_GET2(r4, r3)
     add         r3, r0, d.{id_ver}.wx
+    sll         r3, r3, 8
     KEY_ENTRY_ADDR_GET(r4, r4, r3)
     
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_1)

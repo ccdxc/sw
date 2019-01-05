@@ -19,7 +19,11 @@ struct aq_tx_s5_t2_k k;
 #define K_ERR_RETRY_COUNT_VALID CAPRI_KEY_FIELD(IN_TO_S_P, err_retry_count_valid)
 #define K_LOCAL_ACK_TIMEOUT CAPRI_KEY_FIELD(IN_TO_S_P, local_ack_timeout)
 #define K_LOCAL_ACK_TIMEOUT_VALID CAPRI_KEY_FIELD(IN_TO_S_P, local_ack_timeout_valid)
-
+#define K_RNR_RETRY_TIMER_VALID CAPRI_KEY_FIELD(IN_P, rnr_timer_valid) 
+#define K_RNR_RETRY_TIMER  CAPRI_KEY_FIELD(IN_P, rnr_min_timer) 
+#define K_RNR_RETRY_COUNT CAPRI_KEY_RANGE(IN_P, rnr_retry_count_sbit0_ebit1, rnr_retry_count_sbit2_ebit2) 
+#define K_RNR_RETRY_VALID CAPRI_KEY_FIELD(IN_P, rnr_retry_valid) 
+    
 %%
 
     .param      rdma_aq_tx_sqcb0_process
@@ -63,11 +67,20 @@ timeout:
     tblwr       d.local_ack_timeout, K_LOCAL_ACK_TIMEOUT
 
 retry_cnt:
-    bbne        K_ERR_RETRY_COUNT_VALID, 1, setup_sqcb0
+    bbne        K_ERR_RETRY_COUNT_VALID, 1, rnr_retry_count
     nop
 
     tblwr       d.err_retry_ctr, K_ERR_RETRY_COUNT
 
+rnr_retry_count:
+    bbne        K_RNR_RETRY_VALID, 1, setup_sqcb0
+    nop
+
+    //TODO: For now keep default retry count of 7 (infinite retries) until
+    //data path starts supporting.
+
+    //tblwr     d.rnr_retry_ctr, K_RNR_RETRY_COUNT
+    
 setup_sqcb0:
 
     mfspr       r2, spr_tbladdr

@@ -30,6 +30,8 @@ DBG_WR_CTRL='dbg_wr_ctrl'
 DBG_WR_DATA='dbg_wr_data'
 DUMP_DATA='/tmp/hexdump_data'
 
+DMESG_FILE='/tmp/dmesg.txt'
+
 class RdmaAQCB0state(Packet):
     name = "RdmaAQCB0state"
     fields_desc = [
@@ -689,22 +691,23 @@ class RdmaKeyTableEntry(Packet):
     name = "RdmaKeyTableEntry"
     fields_desc = [
         ByteField("user_key", 0),
-        BitField("state", 0, 4),
-        BitField("type", 0, 4),
+        XBitField("state", 0, 4),
+        XBitField("type", 0, 4),
         ByteField("acc_ctrl", 0),
         ByteField("log_page_size", 0),
         IntField("len", 0),
         LongField("base_va", 0),
         IntField("pt_base", 0),
         IntField("pd", 0),
-        BitField("rsvd1", 0, 19),
-        BitField("override_lif_vld", 0, 1),
-        BitField("override_lif", 0, 12),
+        XBitField("host_addr", 0, 1),
+        XBitField("override_lif_vld", 0, 1),
+        XBitField("override_lif", 0, 12),
+        XBitField("rsvd1", 0, 18),
         ByteField("flags", 0),
         X3BytesField("qp", 0),
         IntField("mr_l_key", 0),
         IntField("mr_cookie", 0),
-        BitField("rsvd2", 0, 192)
+        XBitField("rsvd2", 0, 192)
     ]
 
 class RdmaPageTableEntry(Packet):
@@ -775,6 +778,184 @@ class LifStats(Packet):
         BitField("rsvd_rdma_dbg_resp", 0, 128),
     ]
 
+class RdmaAQWqeBase(Packet):
+    name = "RdmaAQWqeBase"
+    fields_desc = [
+        ByteEnumField("op", 0, {0:'NOP', 1:'Create CQ', 2:'Create QP', 3:'Reg MR', 6:'Dereg MR', 9:'Modify QP', 11:'Destroy QP', 12:'Stats Dump'}),
+        ByteField("type_state", 0),
+        XLEShortField("dbid_flags", 0),
+        LEIntField("id_ver", 0),
+    ]
+
+class RdmaAQWqeStats(Packet):
+    name = "RdmaAqWqeStats"
+    fields_desc = [
+        XLELongField("dma_addr", 0),
+        LEIntField("length", 0),
+        XBitField("rsvd", 0, 352),
+    ]
+class RdmaAQWqeAH(Packet):
+    name = "RdmaAqWqeAH"
+    fields_desc = [
+        XLELongField("dma_addr", 0),
+        LEIntField("length", 0),
+        LEIntField("pd_id", 0),
+        XBitField("rsvd", 0, 320),
+    ]
+class RdmaAQWqeMR(Packet):
+    name = "RdmaAqWqeMR"
+    fields_desc = [
+        XLELongField("va", 0),
+        XLELongField("length", 0),
+        LEIntField("pd_id", 0),
+        XBitField("rsvd", 0, 144),
+        ByteField("dir_size_log2", 0),
+        ByteField("page_size_log2", 0),
+        LEIntField("tbl_index", 0),
+        LEIntField("map_count", 0),
+        XLELongField("dma_addr", 0),
+    ]
+class RdmaAQWqeCQ(Packet):
+    name = "RdmaAQWqeCQ"
+    fields_desc = [
+        LEIntField("eq_id", 0),            
+        ByteField("depth_log2", 0),       
+        ByteField("stride_log2", 0),      
+        ByteField("dir_size_log2_rsvd", 0),
+        ByteField("page_size_log2", 0),   
+        XBitField("rsvd", 0, 256),
+        LEIntField("tbl_index", 0),
+        LEIntField("map_count", 0),
+        XLELongField("dma_addr", 0),
+    ]
+
+class RdmaAQWqeCQP(Packet):
+    name = "RdmaAQWqeCQP"
+    fields_desc = [
+        LEIntField("pd_id", 0),               
+        XIntField("priv_flags", 0),          
+        LEIntField("sq_cq_id", 0),            
+        ByteField("sq_depth_log2", 0),       
+        ByteField("sq_stride_log2", 0),      
+        ByteField("sq_dir_size_log2_rsvd", 0),
+        ByteField("sq_page_size_log2", 0),   
+        LEIntField("sq_tbl_index_xrcd_id", 0),
+        LEIntField("sq_map_count", 0),        
+        XLELongField("sq_dma_addr", 0),         
+        LEIntField("rq_cq_id", 0),            
+        ByteField("rq_depth_log2", 0),       
+        ByteField("rq_stride_log2", 0),      
+        ByteField("rq_dir_size_log2_rsvd", 0),
+        ByteField("rq_page_size_log2", 0),   
+        LEIntField("rq_tbl_index_srq_id", 0), 
+        LEIntField("rq_map_count", 0),        
+        XLELongField("rq_dma_addr", 0),         
+    ]
+
+class RdmaAQWqeMQP(Packet):
+    name = "RdmaAQWqeMQP"
+    fields_desc = [
+        XIntField("attr_mask", 0),      
+        XIntField("access_flags", 0),   
+        LEIntField("rq_psn", 0),         
+        LEIntField("sq_psn", 0),         
+        LEIntField("qkey_dest_qpn", 0),  
+        LEIntField("rate_limit_kbps", 0),
+        ByteField("pmtu", 0),           
+        ByteField("retry", 0),          
+        ByteField("rnr_timer", 0),      
+        ByteField("retry_timeout", 0),  
+        ByteField("rsq_depth", 0),      
+        ByteField("rrq_depth", 0),      
+        LEShortField("pkey_id", 0),        
+        LEIntField("ah_id_len", 0),      
+        XBitField("rsvd", 0, 32),        
+        LEIntField("rrq_index", 0),      
+        LEIntField("rsq_index", 0),      
+        XLELongField("dma_addr", 0),       
+    ]
+
+class RdmaAQWqeQuery(Packet):
+    name = "RdmaAQWqeQuery"
+    fields_desc = [
+        XBitField("rsvd", 0, 384),        
+        XLELongField("dma_addr", 0),       
+    ]
+
+bind_layers(RdmaAQWqeBase, RdmaAQWqeStats, op=12)
+bind_layers(RdmaAQWqeBase, RdmaAQWqeAH, op=13)
+bind_layers(RdmaAQWqeBase, RdmaAQWqeMR, op=3)
+bind_layers(RdmaAQWqeBase, RdmaAQWqeCQ, op=1)
+bind_layers(RdmaAQWqeBase, RdmaAQWqeCQP, op=2)
+bind_layers(RdmaAQWqeBase, RdmaAQWqeMQP, op=9)
+bind_layers(RdmaAQWqeBase, RdmaAQWqeQuery, op=10)
+
+class RdmaAqCqe(Packet):
+    name = "RdmaAqCqe"
+    fields_desc = [
+        LEShortField("cmd_idx", 0),
+        ByteField("cmd_op", 0),
+        BitField("rsvd", 0, 136),
+        LEShortField("old_sq_cindex", 0),
+        LEShortField("old_rq_cq_cindex", 0),
+        IntField("status_length", 0),
+        XIntField("qid_type_flags", 0),
+    ]
+
+def parse_dmesg():
+
+    if args.dmesg:
+        os.system("dmesg > {}".format(DMESG_FILE))
+        file_str = DMESG_FILE
+    else:
+        file_str = args.dmesg_file
+
+    with open (file_str) as fp:
+        line = fp.readline()
+        while line:
+            line = line.rstrip()
+            print line
+            if "post admin" in line:
+                tmp_str = ""
+                for i in range(4):
+                    line = fp.readline().rstrip('\n')
+                    print line
+                    m = re.match(r"(.*?wqe\W+\[\w+\])\W+([ A-Fa-f0-9]*)$", line)
+                    if m is not None:
+                        tmp_str = tmp_str + m.group(2)
+                    else:
+                        line = fp.readline().rstrip('\n')
+                        break
+                tmp_str = tmp_str.replace(" ","")
+                if len(tmp_str) == 128:
+                    aq_wqe = RdmaAQWqeBase(binascii.unhexlify(tmp_str))
+                    aq_wqe.show()
+                line = fp.readline()
+            elif "poll cq" in line:
+                line = fp.readline().rstrip('\n')
+                if "poll eq" in line or "eqe" in line:
+                    print line
+                    line = fp.readline().rstrip('\n')
+                if "poll eq" in line or "eqe" in line:
+                    print line
+                    line = fp.readline().rstrip('\n')
+                tmp_str = ""
+                i = 0
+                for i in range(2):
+                    print line
+                    m = re.match(r"(.*?cqe\W+\[\w+\])\W+([ A-Fa-f0-9]*)$", line)
+                    if m is not None:
+                        tmp_str = tmp_str + m.group(2)
+                    else:
+                        line = fp.readline().rstrip('\n')
+                        break
+                    line = fp.readline()
+                tmp_str = tmp_str.replace(" ","")
+                if len(tmp_str) == 64:
+                    aq_cqe = RdmaAqCqe(binascii.unhexlify(tmp_str))
+                    aq_cqe.show()
+            else:
+                line = fp.readline()
 
 def exec_dump_cmd(tbl_type, tbl_index, start_offset, num_bytes):
     cmd_str = CTRL_FMT.format(
@@ -814,6 +995,8 @@ def exec_dump_cmd(tbl_type, tbl_index, start_offset, num_bytes):
 
 
 parser = argparse.ArgumentParser()
+parser.add_argument('--dmesg', help='parse dmesg and parse rdma adminq wqes/cqes', action='store_true')
+parser.add_argument('--dmesg_file', help='parse dmesg from file and parse rdma adminq wqes/cqes')
 parser.add_argument('--lif', help='prints info for given lif', type=int)
 parser.add_argument('--pcie_id', help='prints info for given ionic pcie id')
 grp = parser.add_mutually_exclusive_group()
@@ -840,13 +1023,13 @@ grp.add_argument('--lif_stats', help='prints rdma LIF statistics', type=int, met
 args = parser.parse_args()
 
 #print args
-
-if sys.platform.startswith('freebsd'):
-    if args.lif is None:
-        print 'lif not specified'
-else:
-    if args.lif is None or args.pcie_id is None:
-        print 'lif and/or pcie_id is not specified'
+if args.dmesg is None and args.dmesg_file is None :
+    if sys.platform.startswith('freebsd'):
+        if args.lif is None:
+            print 'lif not specified'
+        else:
+            if args.lif is None or args.pcie_id is None:
+                print 'lif self.assertNotIn(member, container)d/or pcie_id is not specified'
 
 if args.cqcb is not None:
     bin_str = exec_dump_cmd(DUMP_TYPE_CQ, args.cqcb, 0, 64)
@@ -926,3 +1109,9 @@ elif args.lif_stats is not None:
     bin_str = exec_dump_cmd(DUMP_TYPE_LIF, args.lif_stats, 0, 1024)
     lif_stats = LifStats(bin_str)
     lif_stats.show()
+elif args.dmesg is not None:
+    parse_dmesg()
+elif args.dmesg_file is not None:
+    parse_dmesg()
+
+    

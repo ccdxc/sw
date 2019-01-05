@@ -1386,10 +1386,12 @@ struct rdma_aq_feedback_t {
             err_retry_count_valid    :  1;
             tx_psn_valid             :  1;
             tx_psn                   : 24;
+            rnr_retry_count          :  3;
+            rnr_retry_valid          :  1;
             rsq_base_addr            : 32;
             rsq_depth_log2           :  5;
             rsq_valid                :  1;
-            rsvd                     : 20;
+            rsvd                     : 16;
         } modify_qp;
         pad: 176;
     };

@@ -21,6 +21,8 @@ struct aq_rx_s4_t2_k k;
 #define K_ERR_RETRY_COUNT CAPRI_KEY_RANGE(IN_TO_S_P, err_retry_count_sbit0_ebit1, err_retry_count_sbit2_ebit2)
 #define K_ERR_RETRY_COUNT_VALID CAPRI_KEY_FIELD(IN_TO_S_P, err_retry_count_valid)
 #define K_RQ_ID CAPRI_KEY_RANGE(IN_P, rq_id_sbit0_ebit4, rq_id_sbit21_ebit23)    
+#define K_RNR_RETRY_COUNT CAPRI_KEY_FIELD(IN_TO_S_P, rnr_retry_count)
+#define K_RNR_RETRY_COUNT_VALID CAPRI_KEY_FIELD(IN_TO_S_P, rnr_retry_count_valid)
 
 %%
 
@@ -64,10 +66,19 @@ tx_psn:
     tblwr       d.rexmit_psn, K_TX_PSN
 
 retry_cnt:
-    bbne        K_ERR_RETRY_COUNT_VALID, 1, pmtu
+    bbne        K_ERR_RETRY_COUNT_VALID, 1, rnr_retry_count
     nop
 
     tblwr       d.err_retry_count, K_ERR_RETRY_COUNT
+
+rnr_retry_count:
+    bbne        K_RNR_RETRY_COUNT_VALID, 1, pmtu
+    nop
+
+    //TODO: For now keep default retry count of 7 (infinite retries) until
+    //data path starts supporting.
+
+    //tblwr     d.rnr_retry_count, K_RNR_RETRY_COUNT
 
 pmtu:
     bbne        CAPRI_KEY_FIELD(IN_P , pmtu_valid), 1, setup_rqcb_stages

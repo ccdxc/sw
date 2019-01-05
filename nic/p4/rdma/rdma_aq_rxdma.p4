@@ -156,7 +156,9 @@ header_type aq_rx_to_stage_sqcb1_t {
         err_retry_count_valid    :   1;
         tx_psn_valid             :   1;
         tx_psn                   :  24;
-        pad                      :  13;
+        rnr_retry_count          :   3;
+        rnr_retry_count_valid    :   1;
+        pad                      :   9;
     }
 }
 
@@ -420,6 +422,8 @@ action rdma_stage0_aq_feedback_action3 () {
     modify_field(rdma_aq_feedback_mqp_scr.err_retry_count_valid, rdma_aq_feedback_mqp.err_retry_count_valid);
     modify_field(rdma_aq_feedback_mqp_scr.tx_psn_valid, rdma_aq_feedback_mqp.tx_psn_valid);
     modify_field(rdma_aq_feedback_mqp_scr.tx_psn, rdma_aq_feedback_mqp.tx_psn);
+    modify_field(rdma_aq_feedback_mqp_scr.rnr_retry_count, rdma_aq_feedback_mqp.rnr_retry_count);
+    modify_field(rdma_aq_feedback_mqp_scr.rnr_retry_valid, rdma_aq_feedback_mqp.rnr_retry_valid);
     modify_field(rdma_aq_feedback_mqp_scr.pmtu_log2, rdma_aq_feedback_mqp.pmtu_log2);
     modify_field(rdma_aq_feedback_mqp_scr.pmtu_valid, rdma_aq_feedback_mqp.pmtu_valid);
 }
@@ -504,6 +508,8 @@ action rdma_aq_rx_sqcb1_process () {
     modify_field(to_s4_info_scr.rrq_valid, to_s4_info.rrq_valid);
     modify_field(to_s4_info_scr.err_retry_count, to_s4_info.err_retry_count);
     modify_field(to_s4_info_scr.err_retry_count_valid, to_s4_info.err_retry_count_valid);
+    modify_field(to_s4_info_scr.rnr_retry_count, to_s4_info.rnr_retry_count);
+    modify_field(to_s4_info_scr.rnr_retry_count_valid, to_s4_info.rnr_retry_count_valid);
     modify_field(to_s4_info_scr.tx_psn_valid, to_s4_info.tx_psn_valid);
     modify_field(to_s4_info_scr.tx_psn, to_s4_info.tx_psn);
     modify_field(to_s4_info_scr.pad, to_s4_info.pad);
