@@ -73,39 +73,25 @@ action nacl_deny() {
 @pragma stage 4
 table nacl {
     reads {
-        // lkp_vrf identifies a segment and the vni/vlan derive a lkp_vrf.
-        // So these fields are not needed
-        // vxlan.vni                                       : ternary;
-        // vlan_tag.valid                                  : ternary;
-        // vlan_tag.vid                                    : ternary;
-        // Removing tunnel_terminate as transit is not supported
-        // tunnel_metadata.tunnel_terminate                   : ternary;
-        entry_inactive.nacl                                : ternary;
-        control_metadata.from_cpu                          : ternary;
-        flow_lkp_metadata.lkp_dir                          : ternary;
-        flow_lkp_metadata.lkp_type                         : ternary;
-        flow_lkp_metadata.lkp_vrf                          : ternary;
-        flow_lkp_metadata.lkp_src                          : ternary;
-        flow_lkp_metadata.lkp_dst                          : ternary;
-        flow_lkp_metadata.lkp_proto                        : ternary;
-        flow_lkp_metadata.lkp_sport                        : ternary;
-        flow_lkp_metadata.lkp_dport                        : ternary;
-        tcp.flags                                          : ternary;
-        control_metadata.src_lport                         : ternary;
-        control_metadata.dst_lport                         : ternary;
-        control_metadata.flow_miss_ingress                 : ternary;
-        control_metadata.drop_reason                       : ternary;
-        l3_metadata.ip_option_seen                         : ternary;
-        l3_metadata.ip_frag                                : ternary;
-        // Outer mac da for tunnel cases
-        ethernet.dstAddr                                   : ternary;
-        // Removing srcMacAddr to accomodate other fields
-        // flow_lkp_metadata.lkp_srcMacAddr                : ternary;
-        // flow_lkp_metadata.lkp_dstMacAddr                : ternary;
-        // lkp_type and lkp_sport together can be used in
-        // place of lkp_etherType (basiclly outer or inner
-        // based on encap packet or not)
-        // ethernet.etherType                              : ternary;
+        entry_inactive.nacl                 : ternary;
+        control_metadata.nic_mode           : ternary;
+        control_metadata.from_cpu           : ternary;
+        flow_lkp_metadata.lkp_dir           : ternary;
+        flow_lkp_metadata.lkp_type          : ternary;
+        flow_lkp_metadata.lkp_vrf           : ternary;
+        flow_lkp_metadata.lkp_src           : ternary;
+        flow_lkp_metadata.lkp_dst           : ternary;
+        flow_lkp_metadata.lkp_proto         : ternary;
+        flow_lkp_metadata.lkp_sport         : ternary;
+        flow_lkp_metadata.lkp_dport         : ternary;
+        tcp.flags                           : ternary;
+        control_metadata.src_lport          : ternary;
+        control_metadata.dst_lport          : ternary;
+        control_metadata.flow_miss_ingress  : ternary;
+        control_metadata.drop_reason        : ternary;
+        l3_metadata.ip_option_seen          : ternary;
+        l3_metadata.ip_frag                 : ternary;
+        ethernet.dstAddr                    : ternary;
     }
     actions {
         nop;
