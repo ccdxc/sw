@@ -31,12 +31,27 @@
         },
         {
             "name": "local_ip_mapping",
-            "size_kb": 131072,
+            "size_kb": 8192,
+            "cache": "p4ig"
+        },
+        {
+            "name": "remote_vnic_mapping_rx",
+            "size_kb": 65536,
             "cache": "p4ig"
         },
         {
             "name": "flow",
             "size_kb": 1048576,
+            "cache": "p4ig"
+        },
+        {
+            "name": "remote_vnic_mapping_rx_overflow",
+            "size_kb": 16384,
+            "cache": "p4ig"
+        },
+        {
+            "name": "local_ip_mappings_overflow",
+            "size_kb": 1024,
             "cache": "p4ig"
         },
         {
@@ -51,7 +66,12 @@
         },
         {
             "name": "remote_vnic_mapping_tx",
-            "size_kb": 131072,
+            "size_kb": 65536,
+            "cache": "p4eg"
+        },
+        {
+            "name": "remote_vnic_mapping_tx_overflow",
+            "size_kb": 16384,
             "cache": "p4eg"
         },
         {
