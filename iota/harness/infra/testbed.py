@@ -136,7 +136,7 @@ class _Testbed:
         return getattr(resource, "NICType", "pensando-sim")
 
     def __recover_testbed(self):
-        if GlobalOptions.skip_firmware_upgrade or GlobalOptions.dryrun:
+        if GlobalOptions.dryrun:
             return
         proc_hdls = []
         logfiles = []
@@ -168,10 +168,16 @@ class _Testbed:
                     logfile = "%s/%s-%s-reboot.log" % (GlobalOptions.logdir, self.curr_ts.Name(), instance.Name)
                     Logger.info("Rebooting Node %s (logfile = %s)" % (instance.Name, logfile))
                     cmd.extend(["--only-mode-change"])
+                elif GlobalOptions.skip_firmware_upgrade:
+                    logfile = "%s/%s-%s-reinit.log" % (GlobalOptions.logdir, self.curr_ts.Name(), instance.Name)
+                    Logger.info("Reiniting Node %s (logfile = %s)" % (instance.Name, logfile))
+                    cmd.extend(["--only-init"])
                 else:
                     logfile = "%s/%s-firmware-upgrade.log" % (GlobalOptions.logdir, instance.Name)
                     Logger.info("Updating Firmware on %s (logfile = %s)" % (instance.Name, logfile))
             else:
+                if GlobalOptions.skip_firmware_upgrade:
+                    continue
                 cmd.extend([ "%s/iota/scripts/reboot_node.py" % GlobalOptions.topdir ])
                 cmd.extend(["--host-ip", instance.NodeMgmtIP])
                 cmd.extend(["--cimc-ip", instance.NodeCimcIP])

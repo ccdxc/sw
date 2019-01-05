@@ -226,9 +226,11 @@ class HostManagement(EntityManagement):
         nodeinit_args = ""
         if cleanup:
             nodeinit_args = "--cleanup"
-            self.RunSshCmd("rm -rf /naples && mkdir /naples")
+            self.RunSshCmd("%s/nodeinit.sh %s" % (HOST_NAPLES_DIR, nodeinit_args))
 
         if driver_pkg:
+            nodeinit_args = ""
+            self.RunSshCmd("rm -rf /naples && mkdir /naples")
             self.CopyIN("scripts/%s/nodeinit.sh" % GlobalOptions.os, HOST_NAPLES_DIR)
             self.CopyIN(driver_pkg, HOST_NAPLES_DIR)
             self.RunSshCmd("%s/nodeinit.sh %s" % (HOST_NAPLES_DIR, nodeinit_args))
@@ -311,8 +313,8 @@ def Main():
 
 
     if GlobalOptions.only_init == True:
-        # Case 3: Only INIT option. Install drivers and return.
-        host.Init(driver_pkg = GlobalOptions.drivers_pkg)
+        # Case 3: Only INIT option. Unload drivers, Install drivers, Configure Int Mgmt IP,  and return.
+        host.Init(driver_pkg = GlobalOptions.drivers_pkg, cleanup = True)
         return
 
     # Connect to Naples console.
@@ -329,14 +331,14 @@ def Main():
         naples.InitForUpgrade(goldfw = True)
         host.Reboot()
         naples.Close()
-        host.Init(driver_pkg = "/vol/builds/goldfw/latest/drivers-%s.tar.xz" % GlobalOptions.os)
+        host.Init(driver_pkg = "/vol/builds/goldfw/latest/drivers-%s.tar.xz" % GlobalOptions.os, cleanup = False)
         host.InstallMainFirmware()
         # Reboot host again, this will reboot naples also
         host.Reboot()
 
     # Common to Case 2 and Case 1.
     # Initialize the Node, this is needed in all cases.
-    host.Init(driver_pkg = GlobalOptions.drivers_pkg)
+    host.Init(driver_pkg = GlobalOptions.drivers_pkg, cleanup = False)
 
     # Update MainFwB also to same image - TEMP CHANGE
     host.InstallMainFirmware(mount_data = False, copy_fw = False)
