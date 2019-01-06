@@ -51,9 +51,9 @@ chksum_setup(struct service_info *svc_info,
 {
 	pnso_error_t err;
 	struct pnso_checksum_desc *pnso_chksum_desc;
-	struct cpdc_desc *chksum_desc;
+	struct cpdc_desc *chksum_desc, *bof_chksum_desc;
 	struct cpdc_status_desc *status_desc;
-	struct cpdc_sgl *sgl;
+	struct cpdc_sgl *sgl, *bof_sgl;
 	bool per_block;
 	uint32_t num_tags;
 
@@ -62,6 +62,9 @@ chksum_setup(struct service_info *svc_info,
 	pnso_chksum_desc =
 		(struct pnso_checksum_desc *) svc_params->u.sp_chksum_desc;
 	per_block = svc_is_chksum_per_block_enabled(pnso_chksum_desc->flags);
+
+	if (svc_params->sp_bof_blist)
+		svc_info->si_flags |= CHAIN_SFLAG_BYPASS_ONFAIL;
 
 	chksum_desc = cpdc_get_desc(svc_info, per_block);
 	if (!chksum_desc) {
@@ -80,6 +83,15 @@ chksum_setup(struct service_info *svc_info,
 		goto out;
 	}
 	svc_info->si_p4_sgl = sgl;
+
+	bof_sgl = cpdc_get_sgl(svc_info->si_pcr, per_block);
+	if (!bof_sgl) {
+		err = ENOMEM;
+		OSAL_LOG_ERROR("cannot obtain bypass-chksum sgl from pool! err: %d",
+				err);
+		goto out;
+	}
+	svc_info->si_p4_bof_sgl = bof_sgl;
 
 	status_desc = cpdc_get_status_desc(svc_info->si_pcr, per_block);
 	if (!status_desc) {
@@ -100,9 +112,33 @@ chksum_setup(struct service_info *svc_info,
 					fill_chksum_desc);
 		if (num_tags == 0) {
 			err = EINVAL;
-			OSAL_LOG_ERROR("failed to setup chksum per-block! err: %d",
+			OSAL_LOG_ERROR("failed to setup chksum per-block desc! err: %d",
 					err);
 			goto out;
+		}
+
+		if (svc_info->si_flags & CHAIN_SFLAG_BYPASS_ONFAIL) {
+			bof_chksum_desc =
+				(struct cpdc_desc *) ((char *) chksum_desc +
+				((sizeof(struct cpdc_desc) * num_tags)));
+			OSAL_LOG_DEBUG("num_tags: %d chksum_desc: 0x" PRIx64 " bof_chksum_desc: 0x" PRIx64,
+					num_tags, (uint64_t) chksum_desc,
+					(uint64_t) bof_chksum_desc);
+
+			num_tags = cpdc_fill_per_block_desc(
+					pnso_chksum_desc->algo_type,
+					svc_info->si_block_size,
+					svc_info->si_bof_blist.len,
+					&svc_info->si_bof_blist,
+					svc_info->si_p4_bof_sgl,
+					bof_chksum_desc, status_desc,
+					fill_chksum_desc);
+			if (num_tags == 0) {
+				err = EINVAL;
+				OSAL_LOG_ERROR("failed to setup chksum bypass onfail per-block desc! err: %d",
+						err);
+				goto out;
+			}
 		}
 	} else {
 		err = cpdc_update_service_info_sgl(svc_info);
@@ -116,6 +152,28 @@ chksum_setup(struct service_info *svc_info,
 				svc_info->si_src_blist.len,
 				svc_info->si_src_sgl.sgl,
 				chksum_desc, status_desc);
+
+		if (svc_info->si_flags & CHAIN_SFLAG_BYPASS_ONFAIL) {
+			bof_chksum_desc =
+				(struct cpdc_desc *) ((char *) chksum_desc +
+						sizeof(struct cpdc_desc));
+			OSAL_LOG_DEBUG("chksum_desc: 0x" PRIx64 " bof_chksum_desc: 0x" PRIx64,
+					(uint64_t) chksum_desc,
+					(uint64_t) bof_chksum_desc);
+
+			err = cpdc_update_service_info_bof_sgl(svc_info);
+			if (err) {
+				OSAL_LOG_ERROR("cannot obtain chksum src bof sgl from pool! err: %d",
+						err);
+				goto out;
+			}
+
+			fill_chksum_desc(pnso_chksum_desc->algo_type,
+					svc_info->si_bof_blist.len,
+					svc_info->si_bof_sgl.sgl,
+					bof_chksum_desc, status_desc);
+		}
+
 		num_tags = 1;
 	}
 	svc_info->si_num_tags = num_tags;
@@ -252,15 +310,14 @@ chksum_poll(struct service_info *svc_info)
 	st_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 	if (!st_desc) {
 		err = EINVAL;
-		OSAL_LOG_ERROR("invalid hash status desc! err: %d", err);
+		OSAL_LOG_ERROR("invalid chksum status desc! err: %d", err);
 		OSAL_ASSERT(!err);
 		return err;
 	}
 	status_object_size = cpdc_get_status_desc_size();
 
-	if (!svc_info->tags_updated) {
+	if (!svc_info->tags_updated)
 		cpdc_update_tags(svc_info);
-	}
 
 	if (svc_info->si_num_tags > 1) {
 		st_desc = cpdc_get_next_status_desc(st_desc,
@@ -271,7 +328,6 @@ chksum_poll(struct service_info *svc_info)
 
 	return err;
 }
-
 
 static pnso_error_t
 chksum_read_status(struct service_info *svc_info)
@@ -301,9 +357,8 @@ chksum_read_status(struct service_info *svc_info)
 	st_desc = status_desc;
 	status_object_size = cpdc_get_status_desc_size();
 
-	if (!svc_info->tags_updated) {
+	if (!svc_info->tags_updated)
 		cpdc_update_tags(svc_info);
-	}
 
 	for (i = 0; i < svc_info->si_num_tags; i++) {
 
@@ -408,6 +463,7 @@ chksum_teardown(struct service_info *svc_info)
 
 	per_block = svc_is_chksum_per_block_enabled(svc_info->si_desc_flags);
 	if (!per_block) {
+		pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_bof_sgl);
 		pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_dst_sgl);
 		pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_src_sgl);
 	}
@@ -416,6 +472,9 @@ chksum_teardown(struct service_info *svc_info)
 	cpdc_put_status_desc(svc_info->si_pcr, per_block, status_desc);
 
 	sgl = (struct cpdc_sgl *) svc_info->si_p4_sgl;
+	cpdc_put_sgl(svc_info->si_pcr, per_block, sgl);
+
+	sgl = (struct cpdc_sgl *) svc_info->si_p4_bof_sgl;
 	cpdc_put_sgl(svc_info->si_pcr, per_block, sgl);
 
 	chksum_desc = (struct cpdc_desc *) svc_info->si_desc;
