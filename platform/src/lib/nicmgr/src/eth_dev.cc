@@ -806,9 +806,9 @@ Eth::CmdHandler(void *req, void *req_data,
     union dev_cmd_comp *comp = (union dev_cmd_comp *)resp;
     enum DevcmdStatus status;
 
-    NIC_LOG_DEBUG("{}: Handling cmd: {}",
-                 spec->name,
-                 opcode_to_str((enum cmd_opcode)cmd->cmd.opcode));
+    NIC_HEADER_TRACE("Devcmd");
+    NIC_LOG_DEBUG("{}: Handling cmd: {}", spec->name,
+        opcode_to_str((enum cmd_opcode)cmd->cmd.opcode));
 
     switch (cmd->cmd.opcode) {
 
@@ -928,10 +928,8 @@ Eth::CmdHandler(void *req, void *req_data,
 
     comp->comp.status = status;
     comp->comp.rsvd = 0xff;
-    NIC_LOG_DEBUG("{}: Done cmd: {}, status: {}",
-                 spec->name,
-                 opcode_to_str((enum cmd_opcode)cmd->cmd.opcode),
-                 status);
+    NIC_LOG_DEBUG("{}: Done cmd: {}, status: {}", spec->name,
+        opcode_to_str((enum cmd_opcode)cmd->cmd.opcode), status);
 
     return (status);
 }

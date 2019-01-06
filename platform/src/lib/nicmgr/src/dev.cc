@@ -297,8 +297,7 @@ devicemanager_init (void)
 }
 
 DeviceManager::DeviceManager(std::string config_file, enum ForwardingMode fwd_mode,
-                             platform_t platform, bool dol_integ) :
-    dol_integ(dol_integ)
+                             platform_t platform)
 {
     uint64_t    hw_lif_id;
 
@@ -326,33 +325,11 @@ DeviceManager::DeviceManager(std::string config_file, enum ForwardingMode fwd_mo
     hw_lif_id = pd->lm_->LIFRangeAlloc(-1, 1);
     hal_lif_info_.id = hw_lif_id;
     hal_lif_info_.name = "admin";
-    if (dol_integ) {
-        struct lif_info info;
-
-        /*
-         * For DOL integration, allocate nicmgr LIF fully with HAL, i.e.,
-         * complete with qstate initialization by the HAL. Since HAL has
-         * so far kept in lock step with nicmgr regarding hw_lif_id's,
-         * the next id that HAL returns should match.
-         */
-        hal_lif_info_.hw_lif_id = 0;
-        if (hal->LifCreate(hal_lif_info_.id, qinfo, &info,
-                           0, false, 0, 0, 0, 0) == 0) {
-            throw runtime_error("Failed to create HAL nicmgr LIF");
-        }
-        hal_lif_info_.hw_lif_id = info.hw_lif_id;
-    } else {
-        hal_lif_info_.hw_lif_id = hw_lif_id;
-        hal_lif_info_.pinned_uplink = NULL;
-        hal_lif_info_.enable_rdma = false;
-        memcpy(hal_lif_info_.queue_info, qinfo,
-               sizeof(hal_lif_info_.queue_info));
-    }
+    hal_lif_info_.hw_lif_id = hw_lif_id;
+    hal_lif_info_.pinned_uplink = NULL;
+    hal_lif_info_.enable_rdma = false;
+    memcpy(hal_lif_info_.queue_info, qinfo, sizeof(hal_lif_info_.queue_info));
     NIC_LOG_DEBUG("nicmgr lif id:{}, hw_lif_id: {}", hal_lif_info_.id, hal_lif_info_.hw_lif_id);
-}
-
-DeviceManager::~DeviceManager()
-{
 }
 
 int
@@ -366,7 +343,6 @@ DeviceManager::LoadConfig(string path)
     NIC_HEADER_TRACE("Loading Config");
     NIC_LOG_DEBUG("Json: {}", path);
 
-
     boost::property_tree::read_json(path, spec);
     if (!system_uuid || !strcmp(system_uuid, "")) {
         sys_mac_base = 0x00DEADBEEF00llu;
@@ -376,7 +352,6 @@ DeviceManager::LoadConfig(string path)
 
     NIC_LOG_DEBUG("Entered SysUuid={} SysMacBase={}",
                  system_uuid == NULL ? "" : system_uuid, sys_mac_base);
-
 
     // Create Network
     if (spec.get_child_optional("network")) {
@@ -558,9 +533,9 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
         devices[eth_dev->GetHalLifInfo()->hw_lif_id] = (Device *)eth_dev;
         return (Device *)eth_dev;
     case ACCEL:
-        accel_dev = new Accel_PF(hal, dev_spec, &hal_lif_info_, pd, dol_integ);
+        accel_dev = new Accel_PF(hal, dev_spec, &hal_lif_info_, pd);
         accel_dev->SetType(type);
-        devices[accel_dev->info.hw_lif_id] = (Device *)accel_dev;
+        devices[accel_dev->GetHalLifInfo()->hw_lif_id] = (Device *)accel_dev;
         return (Device *)accel_dev;
     case NVME:
         NIC_LOG_ERR("Unsupported Device Type NVME");

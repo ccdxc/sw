@@ -189,7 +189,6 @@ private:
     static sdk::lib::indexer *fltr_allocator;
     /* Members */
     const struct eth_devspec *spec;
-    hal_lif_info_t hal_lif_info_;
     /* Mnet Info */
     struct mnet_dev_create_req_t mnet_req;
     // Hardware Info
@@ -199,7 +198,8 @@ private:
     // HAL Info
     HalClient *hal;
     HalCommonClient *hal_common_client;
-    hal_lif_info_t *nicmgr_lif_info;
+    hal_lif_info_t hal_lif_info_;
+    const hal_lif_info_t *nicmgr_lif_info;
     enum lif_state lif_state;
     // Coses
     uint8_t  coses; // {uint8_t CosA:4; uint8_t CosB:4;}

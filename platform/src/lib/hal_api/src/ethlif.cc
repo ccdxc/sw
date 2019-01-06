@@ -56,18 +56,6 @@ EthLif::Factory(hal_lif_info_t *info)
         }
     }
 
-#if 0
-    // Only for storage lif STORAGE_SEQ_SW_LIF_ID uplink is NULL
-    // if (eth_lif->GetUplink() == NULL) {
-    if (info->id == STORAGE_SEQ_SW_LIF_ID) {
-        NIC_LOG_DEBUG("Storage lif id: {}. Skip fwd entities creation.",
-                     info->id);
-        // NIC_LOG_DEBUG("lif-{}: Uplink is NULL", eth_lif->GetHwLifId());
-        goto end;
-    }
-#endif
-
-
     // Skipping for Internal mgmt mnic
     if (eth_lif->GetUplink()) {
         eth_lif->GetUplink()->IncNumLifs();

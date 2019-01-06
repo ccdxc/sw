@@ -203,16 +203,15 @@ class Accel_PF : public Device {
 public:
     Accel_PF(HalClient *hal_client, void *dev_spec,
              const hal_lif_info_t *nicmgr_lif_info,
-             PdClient *pd_client,
-             bool dol_integ);
+             PdClient *pd_client);
 
     void DevcmdHandler();
     static void DevcmdPoll(void *obj);
     enum DevcmdStatus CmdHandler(void *req, void *req_data,
                                  void *resp, void *resp_data);
     void SetHalClient(HalClient *hal_client);
+    hal_lif_info_t *GetHalLifInfo(void) { return &hal_lif_info_; }
 
-    hal_lif_info_t              info;
     dev_cmd_regs_t              *devcmd;
 
     void LifInit();
@@ -228,23 +227,23 @@ private:
     evutil_timer                devcmd_timer;
 
     uint32_t seq_created_count;
-
     // HW rings
     accel_ring_t accel_ring_tbl[ACCEL_RING_ID_MAX];
-
     // Hardware Info
     struct queue_info    qinfo[NUM_QUEUE_TYPES];
+    // Delphi
     delphi::objects::AccelPfInfoPtr delphi_pf;
     std::vector<delphi::objects::AccelSeqQueueInfoPtr> delphi_qinfo_vec;
     std::vector<delphi::objects::AccelSeqQueueMetricsPtr> delphi_qmetrics_vec;
-
+    // PD Info
+    PdClient *pd;
     // HAL Info
     HalClient                   *hal;
+    hal_lif_info_t              hal_lif_info_;
+    const hal_lif_info_t        *nicmgr_lif_info;
     // PCIe info
     pciehdev_t                  *pdev;
     pciehdevice_resources_t     pci_resources;
-
-    PdClient *pd;
     // Resources
     int32_t                     lif_base;
     uint32_t                    intr_base;
@@ -253,7 +252,6 @@ private:
     uint32_t                    num_crypto_keys_max;
     uint32_t                    seq_qid_init_high;  // highest seq qid initialized
 
-    const hal_lif_info_t        *nicmgr_lif_info;
     bool                        lif_init_done;
     bool                        rgroup_indices_chg;
     bool                        rgroup_metrics_chg;

@@ -28,7 +28,6 @@ pciemgr *pciemgr;
 static string config_file;
 enum ForwardingMode fwd_mode = FWD_MODE_CLASSIC_NIC;
 platform_t platform = PLATFORM_NONE;
-static bool dol_integ;
 bool g_hal_up = false;
 extern void nicmgr_do_client_registration(void);
 
@@ -129,7 +128,7 @@ loop(void)
         pciemgr->initialize();
     }
 
-    devmgr = new DeviceManager(config_file, fwd_mode, platform, dol_integ);
+    devmgr = new DeviceManager(config_file, fwd_mode, platform);
     devmgr->LoadConfig(config_file);
 
     if (pciemgr) {
@@ -150,10 +149,7 @@ int main(int argc, char *argv[])
 {
     int opt;
     sighandler_t osigusr1;
-    const char  *dol_integ_str;
 
-    dol_integ_str = std::getenv("DOL");
-    dol_integ = dol_integ_str ? !!atoi(dol_integ_str) : false;
     while ((opt = getopt(argc, argv, "c:sp:")) != -1) {
         switch (opt) {
         case 'c':
@@ -191,7 +187,7 @@ int main(int argc, char *argv[])
     atexit(atexit_handler);
 
     // instantiate the logger
-    utils::logger::init(dol_integ);
+    utils::logger::init();
     // initialize sdk logger
     sdk_init();
     if (platform_is_hw(platform)) {

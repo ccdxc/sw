@@ -99,11 +99,11 @@ nicmgr_init()
     if (g_fwd_mode == FWD_MODE_CLASSIC_NIC) {
         devmgr =
             new DeviceManager("../platform/src/app/nicmgrd/etc/device.json",
-                              g_fwd_mode, PLATFORM_HW, false);
+                              g_fwd_mode, PLATFORM_HW);
     } else {
         devmgr =
             new DeviceManager("../platform/src/app/nicmgrd/etc/eth-smart.json",
-                              g_fwd_mode, PLATFORM_HW, false);
+                              g_fwd_mode, PLATFORM_HW);
     }
     EXPECT_TRUE(devmgr != NULL);
 
