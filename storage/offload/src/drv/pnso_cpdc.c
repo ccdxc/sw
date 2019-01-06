@@ -17,11 +17,11 @@
  * TODO-cpdc:
  *	- move init/deinit of the following out of CPDC:
  *		MPOOL_TYPE_SERVICE_CHAIN*, MPOOL_TYPE_BATCH_*
+ *	- do not assume max input buffer as 64K and block size as 4K
  *
  */
 #define PNSO_NUM_OBJECTS_IN_OBJECT	16
-
-/* TODO: do not assume max input buffer as 64K and block size as 4K */
+#define PNSO_NUM_BYPASS_OBJECTS		2	/* per desc for non-batch */
 #define PNSO_MAX_NUM_PB_PER_REQUEST	16 /* max # of per-block per request */
 
 static void
@@ -31,6 +31,7 @@ deinit_mpools(struct per_core_resource *pcr)
 			MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS_DESC_VECTOR]);
 	mpool_destroy(&pcr->mpools[MPOOL_TYPE_CPDC_SGL_VECTOR]);
 	mpool_destroy(&pcr->mpools[MPOOL_TYPE_CPDC_STATUS_DESC_VECTOR]);
+	mpool_destroy(&pcr->mpools[MPOOL_TYPE_CPDC_DESC_BO_VECTOR]);
 	mpool_destroy(&pcr->mpools[MPOOL_TYPE_CPDC_DESC_PB_VECTOR]);
 	mpool_destroy(&pcr->mpools[MPOOL_TYPE_CPDC_DESC_VECTOR]);
 	mpool_destroy(&pcr->mpools[MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS_DESC]);
@@ -130,6 +131,13 @@ init_mpools(struct pc_res_init_params *pc_init, struct per_core_resource *pcr)
 	if (err)
 		goto out;
 
+	mpool_type = MPOOL_TYPE_CPDC_DESC_BO_VECTOR;
+	err = mpool_create(mpool_type, num_objects,
+			PNSO_NUM_BYPASS_OBJECTS,
+			sizeof(struct cpdc_desc), PNSO_MEM_ALIGN_DESC,
+			&pcr->mpools[mpool_type]);
+	if (err)
+		goto out;
 
 	mpool_type = MPOOL_TYPE_CPDC_STATUS_DESC_VECTOR;
 	err = mpool_create(mpool_type, num_objects, PNSO_NUM_OBJECTS_IN_OBJECT,
@@ -137,7 +145,6 @@ init_mpools(struct pc_res_init_params *pc_init, struct per_core_resource *pcr)
 			&pcr->mpools[mpool_type]);
 	if (err)
 		goto out;
-
 
 	mpool_type = MPOOL_TYPE_CPDC_SGL_VECTOR;
 	err = mpool_create(mpool_type, num_objects * MAX_CPDC_SGL_VEC_PER_REQ,
@@ -157,6 +164,7 @@ init_mpools(struct pc_res_init_params *pc_init, struct per_core_resource *pcr)
 	MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_CPDC_DESC]);
 	MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_CPDC_DESC_VECTOR]);
 	MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_CPDC_DESC_PB_VECTOR]);
+	MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_CPDC_DESC_BO_VECTOR]);
 	MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_CPDC_SGL]);
 	MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_CPDC_SGL_VECTOR]);
 	MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_CPDC_STATUS_DESC]);
