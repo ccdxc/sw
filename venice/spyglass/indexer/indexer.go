@@ -43,8 +43,9 @@ type Option func(*Indexer)
 type Indexer struct {
 	sync.RWMutex
 	sync.WaitGroup
-	ctx    context.Context
-	logger log.Logger
+	ctx        context.Context
+	cancelFunc context.CancelFunc
+	logger     log.Logger
 
 	// API-server address and API-client object
 	apiServerAddr string
@@ -126,8 +127,10 @@ func NewIndexer(ctx context.Context, apiServerAddr string, rsr resolver.Interfac
 
 	log.Debugf("Creating Indexer, apiserver-addr: %s", apiServerAddr)
 
+	newCtx, cancelFunc := context.WithCancel(ctx)
 	indexer := Indexer{
-		ctx:               ctx,
+		ctx:               newCtx,
+		cancelFunc:        cancelFunc,
 		apiServerAddr:     apiServerAddr,
 		logger:            logger,
 		watchers:          make(map[string]kvstore.Watcher),
@@ -221,15 +224,14 @@ func (idr *Indexer) Start() error {
 
 // Stop stops all the watchers for API-server objects
 func (idr *Indexer) Stop() {
-
 	if idr.GetRunningStatus() == false {
 		return
 	}
 
 	idr.SetRunningStatus(false)
-	idr.stopWatchers()
-	idr.stopWriters()
-	idr.Wait()
+	idr.cancelFunc()
+	idr.Wait()         // wait for all the watchers and writers to stop (<-ctx.Done())
+	close(idr.reqChan) // close the channel where the writers were receiving the request from
 	idr.elasticClient.Close()
 	idr.apiClient.Close()
 	idr.logger.Info("Stopped indexer")

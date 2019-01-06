@@ -280,8 +280,12 @@ func (idr *Indexer) startWatchers() {
 				if idr.GetRunningStatus() == true {
 					idr.stopWatchers()
 					go idr.Start()
+					return
 				}
-				return
+
+				// remove the channel that failed
+				cases = append(cases[:chosen], cases[chosen+1:]...)
+				continue
 			}
 
 			log.Debugf(" Reading from channel %d and received event: {%+v} %s",
@@ -496,13 +500,6 @@ func (idr *Indexer) stopWatchers() {
 	}
 	close(idr.done)
 	idr.logger.Info("Stopped watchers")
-}
-
-// Stop all the Writers
-func (idr *Indexer) stopWriters() {
-
-	close(idr.reqChan)
-	idr.logger.Info("Stopped writers")
 }
 
 // Update the policy cache
