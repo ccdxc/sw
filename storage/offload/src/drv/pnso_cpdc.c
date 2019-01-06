@@ -31,6 +31,7 @@ deinit_mpools(struct per_core_resource *pcr)
 			MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS_DESC_VECTOR]);
 	mpool_destroy(&pcr->mpools[MPOOL_TYPE_CPDC_SGL_VECTOR]);
 	mpool_destroy(&pcr->mpools[MPOOL_TYPE_CPDC_STATUS_DESC_VECTOR]);
+	mpool_destroy(&pcr->mpools[MPOOL_TYPE_CPDC_DESC_BO_PB_VECTOR]);
 	mpool_destroy(&pcr->mpools[MPOOL_TYPE_CPDC_DESC_BO_VECTOR]);
 	mpool_destroy(&pcr->mpools[MPOOL_TYPE_CPDC_DESC_PB_VECTOR]);
 	mpool_destroy(&pcr->mpools[MPOOL_TYPE_CPDC_DESC_VECTOR]);
@@ -139,6 +140,14 @@ init_mpools(struct pc_res_init_params *pc_init, struct per_core_resource *pcr)
 	if (err)
 		goto out;
 
+	mpool_type = MPOOL_TYPE_CPDC_DESC_BO_PB_VECTOR;
+	err = mpool_create(mpool_type, num_objects,
+			PNSO_NUM_BYPASS_OBJECTS * PNSO_NUM_OBJECTS_IN_OBJECT,
+			sizeof(struct cpdc_desc), PNSO_MEM_ALIGN_DESC,
+			&pcr->mpools[mpool_type]);
+	if (err)
+		goto out;
+
 	mpool_type = MPOOL_TYPE_CPDC_STATUS_DESC_VECTOR;
 	err = mpool_create(mpool_type, num_objects, PNSO_NUM_OBJECTS_IN_OBJECT,
 			sizeof(struct cpdc_status_desc), PNSO_MEM_ALIGN_DESC,
@@ -165,6 +174,7 @@ init_mpools(struct pc_res_init_params *pc_init, struct per_core_resource *pcr)
 	MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_CPDC_DESC_VECTOR]);
 	MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_CPDC_DESC_PB_VECTOR]);
 	MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_CPDC_DESC_BO_VECTOR]);
+	MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_CPDC_DESC_BO_PB_VECTOR]);
 	MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_CPDC_SGL]);
 	MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_CPDC_SGL_VECTOR]);
 	MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_CPDC_STATUS_DESC]);
