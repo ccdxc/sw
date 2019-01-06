@@ -161,6 +161,8 @@ message IPSecSADecryptGetSpec {
   uint64                         total_rx_bytes            = 25;
   uint64                         total_rx_drops            = 26;
   kh.VrfKeyHandle                tep_vrf                   = 27; 
+  uint64                         seq_no_bmp                = 28;
+  uint64                         last_replay_seq_no        = 29;
 }
 
 message IPSecGlobalStatisticsGetSpec {

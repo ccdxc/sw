@@ -154,7 +154,6 @@ func ipsecDecryptShowCmdHandler(cmd *cobra.Command, args []string) {
 func showIpsecEncryptSA(resp *halproto.IpsecSAEncryptGetResponse) {
 	spec := resp.GetSpec()
 
-	fmt.Printf("%-30s : %-6d\n", "protocol", spec.Protocol)
 	fmt.Printf("%-30s : %-6d\n", "authentication_algorithm", spec.AuthenticationAlgorithm)
 	fmt.Printf("%-30s : %-6s\n", "authentication_key", spec.GetAuthenticationKey().GetKey())
 	fmt.Printf("%-30s : %-6d\n", "encryption_algorithm", spec.EncryptionAlgorithm)
@@ -162,6 +161,7 @@ func showIpsecEncryptSA(resp *halproto.IpsecSAEncryptGetResponse) {
 	fmt.Printf("%-30s : %-6s\n", "local_gateway_ip", utils.IPAddrToStr(spec.LocalGatewayIp))
 	fmt.Printf("%-30s : %-6s\n", "remote_gateway_ip", utils.IPAddrToStr(spec.RemoteGatewayIp))
 	fmt.Printf("%-30s : %-6d\n", "spi", spec.Spi)
+	fmt.Printf("%-30s : %-6d\n", "tep_vrf", spec.GetTepVrf().GetVrfId())
 	fmt.Printf("%-30s : %-6d\n", "salt", spec.Salt)
 	fmt.Printf("%-30s : %-6d\n", "iv", spec.Iv)
 	fmt.Printf("%-30s : %-6d\n", "key_index", spec.KeyIndex)
@@ -170,13 +170,11 @@ func showIpsecEncryptSA(resp *halproto.IpsecSAEncryptGetResponse) {
 	fmt.Printf("%-30s : %-6d\n", "total_rx_drops", spec.TotalRxDrops)
 	fmt.Printf("%-30s : %-6d\n", "total_pkts", spec.TotalPkts)
 	fmt.Printf("%-30s : %-6d\n", "total_drops", spec.TotalDrops)
-	fmt.Printf("%-30s : %-6d\n", "tep_vrf", spec.GetTepVrf().GetVrfId())
 }
 
 func showIpsecDecryptSA(resp *halproto.IpsecSADecryptGetResponse) {
 	spec := resp.GetSpec()
 
-	fmt.Printf("%-30s : %-6d\n", "protocol", spec.Protocol)
 	fmt.Printf("%-30s : %-6d\n", "authentication_algorithm", spec.AuthenticationAlgorithm)
 	fmt.Printf("%-30s : %-6s\n", "authentication_key", spec.GetAuthenticationKey().GetKey())
 	fmt.Printf("%-30s : %-6d\n", "decryption_algorithm", spec.DecryptionAlgorithm)
@@ -184,18 +182,22 @@ func showIpsecDecryptSA(resp *halproto.IpsecSADecryptGetResponse) {
 	fmt.Printf("%-30s : %-6d\n", "rekey_dec_algorithm", spec.RekeyDecAlgorithm)
 	fmt.Printf("%-30s : %-6s\n", "rekey_decryption_key", spec.GetRekeyDecryptionKey().GetKey())
 	fmt.Printf("%-30s : %-6s\n", "rekey_authentication_key", spec.GetRekeyAuthenticationKey().GetKey())
-	fmt.Printf("%-30s : %-6d\n", "rekey_active", spec.RekeyActive)
 	fmt.Printf("%-30s : %-6d\n", "spi", spec.Spi)
-	fmt.Printf("%-30s : %-6d\n", "rekey_spi", spec.RekeySpi)
-	fmt.Printf("%-30s : %-6d\n", "salt", spec.Salt)
 	fmt.Printf("%-30s : %-6d\n", "key_index", spec.KeyIndex)
-	fmt.Printf("%-30s : %-6d\n", "new_key_index", spec.NewKeyIndex)
-	fmt.Printf("%-30s : %-6d\n", "seq_no", spec.SeqNo)
+	if spec.RekeyActive == 1 {
+		fmt.Printf("%-30s : %-6s\n", "rekey_active", "True")
+		fmt.Printf("%-30s : %-6d\n", "rekey_spi", spec.RekeySpi)
+		fmt.Printf("%-30s : %-6d\n", "new_key_index", spec.NewKeyIndex)
+	} else {
+		fmt.Printf("%-30s : %-6s\n", "rekey_active", "False")
+	}
+	fmt.Printf("%-30s : %-6d\n", "tep_vrf", spec.GetTepVrf().GetVrfId())
+	fmt.Printf("%-30s : %-6d\n", "salt", spec.Salt)
+	fmt.Printf("%-30s : %-6d\n", "expected_seq_no", spec.SeqNo)
 	fmt.Printf("%-30s : %-6d\n", "total_rx_pkts", spec.TotalRxPkts)
 	fmt.Printf("%-30s : %-6d\n", "total_rx_drops", spec.TotalRxDrops)
 	fmt.Printf("%-30s : %-6d\n", "total_pkts", spec.TotalPkts)
 	fmt.Printf("%-30s : %-6d\n", "total_drops", spec.TotalDrops)
-	fmt.Printf("%-30s : %-6d\n", "tep_vrf", spec.GetTepVrf().GetVrfId())
 }
 
 func ipsecGlobalStatisticsShowCmdHandler(cmd *cobra.Command, args []string) {

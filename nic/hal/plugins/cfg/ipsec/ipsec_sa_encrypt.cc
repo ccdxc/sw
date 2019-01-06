@@ -344,7 +344,10 @@ ipsec_saencrypt_get (IpsecSAEncryptGetRequest& req, IpsecSAEncryptGetResponseMsg
 
     // fill config spec of this IPSEC CB
     rsp->mutable_spec()->mutable_key_or_handle()->set_cb_id(ripsec.sa_id);
-
+    if (ripsec.barco_enc_cmd == IPSEC_BARCO_ENCRYPT_AES_GCM_256) {
+        rsp->mutable_spec()->set_authentication_algorithm(ipsec::AUTHENTICATION_AES_GCM);
+        rsp->mutable_spec()->set_encryption_algorithm(ipsec::ENCRYPTION_ALGORITHM_AES_GCM_256);
+    }
     rsp->mutable_spec()->set_salt(ripsec.iv_salt);
     rsp->mutable_spec()->set_iv(ripsec.iv);
     rsp->mutable_spec()->set_spi(ripsec.spi);
@@ -355,6 +358,8 @@ ipsec_saencrypt_get (IpsecSAEncryptGetRequest& req, IpsecSAEncryptGetResponseMsg
     seq_no = seq_no | ripsec.esn_lo;
     rsp->mutable_spec()->set_seq_no(seq_no);
     rsp->mutable_spec()->set_iv(ripsec.iv);
+    rsp->mutable_spec()->set_key_index(ripsec.key_index);
+    rsp->mutable_spec()->mutable_tep_vrf()->set_vrf_id(ripsec.vrf);
     rsp->mutable_spec()->set_total_pkts(ripsec.total_pkts);
     rsp->mutable_spec()->set_total_bytes(ripsec.total_bytes);
     rsp->mutable_spec()->set_total_drops(ripsec.total_drops);
