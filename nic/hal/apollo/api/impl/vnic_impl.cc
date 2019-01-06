@@ -59,7 +59,7 @@ vnic_impl::destroy(vnic_impl *impl) {
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-vnic_impl::alloc_resources(api_base *api_obj) {
+vnic_impl::reserve_resources(api_base *api_obj) {
     /**
      * allocate hw id for this vnic, vnic specific index tables in the p4
      * datapath are indexed by this
@@ -77,7 +77,7 @@ vnic_impl::alloc_resources(api_base *api_obj) {
  */
 #define egress_local_vnic_info_rx_action    action_u.egress_local_vnic_info_rx_egress_local_vnic_info_rx
 sdk_ret_t
-vnic_impl::free_resources(api_base *api_obj) {
+vnic_impl::release_resources(api_base *api_obj) {
     egress_local_vnic_info_rx_actiondata_t    egress_vnic_data = { 0 };
 
     if (hw_id_ != 0xFF) {

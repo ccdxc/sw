@@ -71,7 +71,7 @@ mapping_entry::destroy(mapping_entry *mapping) {
     if (mapping->impl_) {
         impl_base::destroy(impl::IMPL_OBJ_ID_MAPPING, mapping->impl_);
     }
-    mapping->free_resources_();
+    mapping->release_resources_();
     mapping->~mapping_entry();
 }
 
@@ -91,8 +91,8 @@ mapping_entry::init_config(api_ctxt_t *api_ctxt) {
  */
 // TODO: this should ideally go to impl class
 sdk_ret_t
-mapping_entry::alloc_resources_(void) {
-    return impl_->alloc_resources(this);
+mapping_entry::reserve_resources_(void) {
+    return impl_->reserve_resources(this);
 }
 
 /**
@@ -105,7 +105,7 @@ sdk_ret_t
 mapping_entry::program_config(obj_ctxt_t *obj_ctxt) {
     sdk_ret_t    ret;
 
-    alloc_resources_();
+    reserve_resources_();
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
     return impl_->program_hw(this, obj_ctxt);
 }
@@ -115,8 +115,8 @@ mapping_entry::program_config(obj_ctxt_t *obj_ctxt) {
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-mapping_entry::free_resources_(void) {
-    return impl_->free_resources(this);
+mapping_entry::release_resources_(void) {
+    return impl_->release_resources(this);
 }
 
 /**

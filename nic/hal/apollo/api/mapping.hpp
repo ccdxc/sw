@@ -125,13 +125,13 @@ private:
      * @brief    allocate h/w resources for this object
      * @return    SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t alloc_resources_(void);
+    sdk_ret_t reserve_resources_(void);
 
     /**
      * @brief     free h/w resources used by this object, if any
      * @return    SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t free_resources_(void);
+    sdk_ret_t release_resources_(void);
 
 private:
     impl_base        *impl_;      /**< impl object instance */

@@ -29,8 +29,6 @@ exclude folder ../fte/test/
 exclude folder ../fte/oci/
 exclude folder ../hal/src/internal/
 exclude folder ../hal/src/debug/
-exclude folder ../hal/apollo/
-exclude folder ../apollo/
 exclude folder ../hal/plugins/app_redir/
 exclude folder ../hal/plugins/dol/
 exclude folder ../hal/plugins/nat/

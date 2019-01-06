@@ -56,7 +56,7 @@ public:
      * @brief    allocate/reserve h/w resources for this object
      * @return    SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t alloc_resources(api_base *api_obj) {
+    virtual sdk_ret_t reserve_resources(api_base *api_obj) {
         return sdk::SDK_RET_INVALID_OP;
     }
 
@@ -64,7 +64,7 @@ public:
      * @brief     free h/w resources used by this object, if any
      * @return    SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t free_resources(api_base *api_obj) {
+    virtual sdk_ret_t release_resources(api_base *api_obj) {
         return sdk::SDK_RET_INVALID_OP;
     }
 

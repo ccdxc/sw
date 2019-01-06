@@ -65,7 +65,7 @@ subnet_entry::~subnet_entry() {
  */
 void
 subnet_entry::destroy(subnet_entry *subnet) {
-    subnet->free_resources_();
+    subnet->release_resources_();
     subnet->~subnet_entry();
 }
 
@@ -90,7 +90,7 @@ subnet_entry::init_config(api_ctxt_t *api_ctxt) {
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-subnet_entry::alloc_resources_(void) {
+subnet_entry::reserve_resources_(void) {
     if (subnet_db()->subnet_idxr()->alloc((uint32_t *)&this->hw_id_) !=
             sdk::lib::indexer::SUCCESS) {
         return sdk::SDK_RET_NO_RESOURCE;
@@ -110,7 +110,7 @@ subnet_entry::program_config(obj_ctxt_t *obj_ctxt) {
      * there is no h/w programming for subnet config but a h/w id is needed so
      * we can use while programming vnics, routes etc.
      */
-    return alloc_resources_();
+    return reserve_resources_();
 }
 
 /**
@@ -118,7 +118,7 @@ subnet_entry::program_config(obj_ctxt_t *obj_ctxt) {
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-subnet_entry::free_resources_(void) {
+subnet_entry::release_resources_(void) {
     if (hw_id_ != 0xFF) {
         subnet_db()->subnet_idxr()->free(hw_id_);
     }
