@@ -3,7 +3,7 @@
 #include "nic/include/base.hpp"
 #include "nic/fte/acl/ref.hpp"
 
-#define ACL_DEBUG 0
+//#define ACL_DEBUG 0
 namespace acl {
 
 /**

@@ -318,15 +318,28 @@ acl_rule_compare(const acl_rule_t *rule,
     if (rule->data.category_mask != other->data.category_mask ||
         rule->data.priority != other->data.priority ||
         rule->data.userdata != other->data.userdata) {
+#ifdef ACL_DEBUG
+        HAL_TRACE_DEBUG("returning false");
+        HAL_TRACE_DEBUG("cat_mask: {}, {} prio: {}, {} userdata: {:#x}, {:#x}",
+                rule->data.category_mask, other->data.category_mask,
+                rule->data.priority, other->data.priority,
+                (uint64_t) rule->data.userdata, (uint64_t) other->data.userdata);
+#endif
         return false;
     }
 
     for (uint8_t fid = 0; fid < cfg->num_fields; fid++) {
         if (!acl_fld_compare(cfg->defs[fid].size, &rule->field[fid], &other->field[fid])) {
+#ifdef ACL_DEBUG
+            HAL_TRACE_DEBUG("returning false");
+#endif
             return false;
         }
     }
 
+#ifdef ACL_DEBUG
+    HAL_TRACE_DEBUG("returning true");
+#endif
     return true;
 }
 

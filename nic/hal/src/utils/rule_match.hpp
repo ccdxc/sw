@@ -50,8 +50,8 @@ struct ipv4_tuple {
     uint8_t   proto;
     uint32_t  ip_src;
     uint32_t  ip_dst;
-    uint64_t  mac_src;
-    uint64_t  mac_dst;
+    uint32_t  mac_src;
+    uint32_t  mac_dst;
     uint16_t  ethertype;
     uint32_t  port_src;
     uint32_t  port_dst;
@@ -102,7 +102,8 @@ typedef struct rule_ctr_s {
     uint64_t    icmp_hits;
     uint64_t    other_hits;
     ht_ctxt_t   ht_ctxt;
-    rule_cfg_t *rule_cfg;
+    rule_cfg_t  *rule_cfg;
+    rule_data_t *rule_data;
     acl::ref_t  ref_count;
 } rule_ctr_t;
 

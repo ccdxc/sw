@@ -31,6 +31,7 @@ update_flow_from_telemetry_rules (fte::ctx_t& ctx, bool mirror_action)
     export_flowupd.export_info.export_en = 0;
     const char *ctx_name = flowmon_acl_ctx_name(ctx.get_key().svrf_id, mirror_action);
     acl_ctx = acl::acl_get(ctx_name);
+    HAL_TRACE_DEBUG("ctx_name: {} acl_ctx: {:#x}", ctx_name, (uint64_t) acl_ctx);
     if (acl_ctx == NULL) {
         HAL_TRACE_DEBUG("telemetry::No telemetry acl_ctx for vrf {} id {} mirror_action {}",
                          ctx_name, ctx.get_key().svrf_id, mirror_action);

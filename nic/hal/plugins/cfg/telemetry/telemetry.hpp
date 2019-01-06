@@ -240,6 +240,7 @@ flow_monitor_rule_init (flow_monitor_rule_t *rule)
 
     ref_init(&rule->ref_count, [] (const ref_t * ref) {
         flow_monitor_rule_t * rule = container_of(ref, flow_monitor_rule_t, ref_count);
+        HAL_TRACE_DEBUG("Freeing flowmon rule from flowmon_rule_slab!");
         g_hal_state->flowmon_rule_slab()->free(rule);
     });
 
