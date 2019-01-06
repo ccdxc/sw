@@ -159,7 +159,7 @@ drop_reason_codes_to_bitmap (drop_reason_codes_t *codes)
 #endif
 
 static hal_ret_t
-acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update, 
+acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update,
                     bool is_restore, uint32_t restore_tcam_index)
 {
     hal_ret_t                              ret = HAL_RET_OK;
@@ -200,6 +200,18 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update,
     if (copp) {
         copp_index = copp->pd->hw_policer_id;
     }
+
+    /*
+     * Big Assumption: We are using NACLs only in hostpin and
+     *                 only for non-classic packets in hostpin.
+     * Classic Flows in Hostpin:
+     * - OOB Traffic
+     * - Naples and Host Inband Mgmt traffic
+     * - Internal Mgmt. Traffic (Host <-> Naples)
+     * - Snake test traffic
+     */
+    key.control_metadata_nic_mode = NIC_MODE_SMART;
+    mask.control_metadata_nic_mode_mask = 0x1;
 
     // Populate the data
     switch(as->action) {
@@ -484,7 +496,7 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update,
 
     // Insert the entry
     if (is_restore) {
-        ret = acl_tbl->insert_withid(&key, &mask, &data, acl_get_priority(pi_acl), 
+        ret = acl_tbl->insert_withid(&key, &mask, &data, acl_get_priority(pi_acl),
                                      restore_tcam_index, &pd_acl->handle);
     } else if (update) {
         ret = acl_tbl->update(pd_acl->handle, &key, &mask, &data,
@@ -805,7 +817,7 @@ pd_acl_restore (pd_func_args_t *pd_func_args)
 
     // This call will just populate table libs and calls to HW will be
     // a NOOP in p4pd code
-    ret = acl_pd_program_hw(acl_pd, false, 
+    ret = acl_pd_program_hw(acl_pd, false,
                             true, args->acl_status->epd_status().hw_tcam_idx());
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("{}:failed to program hw", __FUNCTION__);
