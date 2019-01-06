@@ -2,7 +2,7 @@
 import time
 import iota.harness.api as api
 import yaml
-import iota.test.iris.config.netagent.cfg_api as netagent_cfg_api
+import iota.test.iris.config.netagent.api as netagent_cfg_api
 
 def Setup(tc):
 #    api.Logger.info("RAMI SETUP")

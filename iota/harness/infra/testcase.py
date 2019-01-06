@@ -91,7 +91,7 @@ class VerifStep:
 
     def PrintResultSummary(self):
         modname = "- %s" % self.__mod.__name__.split('.')[-1]
-        print(types.FORMAT_TESTCASE_SUMMARY % (modname, self.__get_owner(), types.status.str(self.__status).title(), self.__timer.TotalTime()))
+        print(types.FORMAT_TESTCASE_SUMMARY % ("",modname, self.__get_owner(), types.status.str(self.__status).title(), self.__timer.TotalTime()))
         return types.status.SUCCESS
 
 class DebugStep:

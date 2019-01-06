@@ -17,6 +17,7 @@ setup:
     topology: test/iris/topologies/container/container.topology
     config  :
         - step : utils.naples_workloads
+        - step : config.config_link_flap
         - step : config.netagent.hw_push_config
         - step : testcases.drivers.install_iperf
         - step : testcases.security.genpolicy
@@ -24,6 +25,7 @@ setup:
 
 common:
     verifs:
+        -   step    : verif.utils.verify_links
         #-   step    : verif.utils.verify_cores
         #-   step    : verif.utils.verify_topology_health
     debugs:
