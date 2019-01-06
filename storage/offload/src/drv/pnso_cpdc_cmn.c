@@ -33,6 +33,14 @@
  *	- reuse/common code (write_result, read_status, cpdc_setup_batch_desc)
  *
  */
+static inline bool
+is_bulk_desc_in_use(uint8_t flags)
+{
+	return ((flags & CHAIN_SFLAG_IN_BATCH) &&
+			((flags & CHAIN_SFLAG_LONE_SERVICE) ||
+			 (flags & CHAIN_SFLAG_FIRST_SERVICE))) ? true : false;
+}
+
 pnso_error_t
 cpdc_common_chain(struct chain_entry *centry)
 {
@@ -379,7 +387,7 @@ cpdc_get_desc(struct service_info *svc_info, bool per_block)
 	struct cpdc_desc *desc;
 	bool in_batch = false;
 
-	if (cpdc_is_service_in_batch(svc_info->si_flags))
+	if (is_bulk_desc_in_use(svc_info->si_flags))
 		in_batch = true;
 
 	desc = in_batch ? get_batch_desc(svc_info) :
@@ -436,7 +444,7 @@ cpdc_put_desc(const struct service_info *svc_info, bool per_block,
 {
 	bool in_batch = false;
 
-	if (cpdc_is_service_in_batch(svc_info->si_flags))
+	if (is_bulk_desc_in_use(svc_info->si_flags))
 		in_batch = true;
 
 	if (in_batch)
@@ -742,14 +750,6 @@ cpdc_convert_desc_error(int error)
 	}
 }
 
-bool
-cpdc_is_service_in_batch(uint8_t flags)
-{
-	return ((flags & CHAIN_SFLAG_IN_BATCH) &&
-			((flags & CHAIN_SFLAG_LONE_SERVICE) ||
-			 (flags & CHAIN_SFLAG_FIRST_SERVICE))) ? true : false;
-}
-
 static void
 update_batch_tags(struct service_info *svc_info, uint32_t num_tags)
 {
@@ -783,7 +783,7 @@ update_batch_tags(struct service_info *svc_info, uint32_t num_tags)
 void
 cpdc_update_batch_tags(struct service_info *svc_info, uint32_t num_tags)
 {
-	if (!cpdc_is_service_in_batch(svc_info->si_flags))
+	if (!is_bulk_desc_in_use(svc_info->si_flags))
 		return;
 
 	if (svc_info->si_type == PNSO_SVC_TYPE_HASH) {
@@ -812,7 +812,7 @@ cpdc_update_seq_batch_size(const struct service_info *svc_info)
 	struct sequencer_desc *seq_desc;
 	struct sequencer_info *seq_info;
 
-	if (!cpdc_is_service_in_batch(svc_info->si_flags))
+	if (!is_bulk_desc_in_use(svc_info->si_flags))
 		return;
 
 	OSAL_ASSERT((svc_info->si_type == PNSO_SVC_TYPE_HASH) ||
@@ -895,7 +895,7 @@ cpdc_setup_seq_desc(struct service_info *svc_info, struct cpdc_desc *desc,
 	pnso_error_t err = PNSO_OK;
 	uint8_t	flags;
 
-	if (cpdc_is_service_in_batch(svc_info->si_flags)) {
+	if (is_bulk_desc_in_use(svc_info->si_flags)) {
 		err = cpdc_setup_batch_desc(svc_info, desc);
 		if (err)
 			OSAL_LOG_DEBUG("failed to setup batch sequencer desc! err: %d",

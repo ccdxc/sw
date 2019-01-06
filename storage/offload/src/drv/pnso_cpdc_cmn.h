@@ -112,8 +112,6 @@ uint32_t cpdc_fill_per_block_desc(uint32_t algo_type, uint32_t block_size,
 		struct cpdc_status_desc *status_desc,
 		fill_desc_fn_t fill_desc_fn);
 
-bool cpdc_is_service_in_batch(uint8_t flags);
-
 pnso_error_t cpdc_setup_batch_desc(struct service_info *svc_info,
 		struct cpdc_desc *desc);
 
