@@ -1,51 +1,51 @@
 /**
  * Copyright (c) 2018 Pensando Systems, Inc.
  *
- * @file    vnic.hpp
+ * @file    route.hpp
  *
- * @brief   This file deals with vnic functionality
+ * @brief   This file deals with route functionality
  */
 
-#if !defined (__VNIC_HPP__)
-#define __VNIC_HPP__
+#if !defined (__ROUTE_HPP__)
+#define __ROUTE_HPP__
 
 #include "nic/sdk/include/sdk/slab.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"
 #include "nic/hal/apollo/framework/api_base.hpp"
 #include "nic/hal/apollo/framework/impl_base.hpp"
-#include "nic/hal/apollo/include/api/oci_vnic.hpp"
+#include "nic/hal/apollo/include/api/oci_route.hpp"
 
 namespace api {
 
 /**
- * @defgroup OCI_VNIC_ENTRY - vnic functionality
- * @ingroup OCI_VNIC
+ * @defgroup OCI_ROUTE_TABLE - route table functionality
+ * @ingroup OCI_ROUTE
  * @{
  */
 
 /**
- * @brief    vnic entry
+ * @brief    route table
  */
-class vnic_entry : public api_base {
+class route_table : public api_base {
 public:
     /**
-     * @brief    factory method to allocate and initialize a vnic entry
-     * @param[in] oci_vnic    vnic information
-     * @return    new instance of vnic or NULL, in case of error
+     * @brief    factory method to allocate & initialize a route table instance
+     * @param[in] oci_route_table    route table information
+     * @return    new instance of route table or NULL, in case of error
      */
-    static vnic_entry *factory(oci_vnic_t *oci_vnic);
+    static route_table *factory(oci_route_table_t *oci_route_table);
 
     /**
-     * @brief    release all the s/w state associate with the given vnic,
+     * @brief    release all the s/w state associate with the given route table,
      *           if any, and free the memory
-     * @param[in] vnic     vnic to be freed
+     * @param[in] tablec     route table to be freed
      * NOTE: h/w entries should have been cleaned up (by calling
      *       impl->cleanup_hw() before calling this
      */
-    static void destroy(vnic_entry *vnic);
+    static void destroy(route_table *table);
 
     /**
-     * @brief     initialize vnic entry with the given config
+     * @brief     initialize route table instance with the given config
      * @param[in] api_ctxt API context carrying the configuration
      * @return    SDK_RET_OK on success, failure status code on error
      */
@@ -88,13 +88,13 @@ public:
                                       obj_ctxt_t *obj_ctxt) override;
 
     /**
-     * @brief     add given vnic to the database
+     * @brief     add given route table to the database
      * @return   SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t add_to_db(void) override;
 
     /**
-     * @brief     delete given vnic from the database
+     * @brief     delete route table from the database
      * @return   SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t del_from_db(void) override;
@@ -114,51 +114,51 @@ public:
     virtual sdk_ret_t delay_delete(void) override;
 
     /**
-     * @brief     helper function to get key given vnic entry
-     * @param[in] entry    pointer to vnic instance
-     * @return    pointer to the vnic instance's key
+     * @brief     helper function to get key given route table
+     * @param[in] entry    pointer to route table instance
+     * @return    pointer to the route table instance's key
      */
-    static void *vnic_key_func_get(void *entry) {
-        vnic_entry *vnic = (vnic_entry *)entry;
-        return (void *)&(vnic->key_);
+    static void *route_table_key_func_get(void *entry) {
+        route_table *table = (route_table *)entry;
+        return (void *)&(table->key_);
     }
 
     /**
-     * @brief     helper function to compute hash value for given vnic id
-     * @param[in] key        vnic's key
+     * @brief     helper function to compute hash value of route table key
+     * @param[in] key        route table's key
      * @param[in] ht_size    hash table size
      * @return    hash value
      */
-    static uint32_t vnic_hash_func_compute(void *key, uint32_t ht_size) {
-        return hash_algo::fnv_hash(key, sizeof(oci_vnic_key_t)) % ht_size;
+    static uint32_t route_table_hash_func_compute(void *key, uint32_t ht_size) {
+        return hash_algo::fnv_hash(key, sizeof(oci_route_table_key_t)) % ht_size;
     }
 
     /**
-     * @brief     helper function to compare two vnic keys
-     * @param[in] key1        pointer to vnic's key
-     * @param[in] key2        pointer to vnic's key
+     * @brief     helper function to compare two route table keys
+     * @param[in] key1        pointer to route table's key
+     * @param[in] key2        pointer to route table's key
      * @return    0 if keys are same or else non-zero value
      */
-    static bool vnic_key_func_compare(void *key1, void *key2) {
+    static bool route_table_key_func_compare(void *key1, void *key2) {
         SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-        if (!memcmp(key1, key2, sizeof(oci_vnic_key_t))) {
+        if (!memcmp(key1, key2, sizeof(oci_route_table_key_t))) {
             return true;
         }
         return false;
     }
 
     /**
-     * @brief     return impl instance of this vnic object
-     * @return    impl instance of the vnic object
+     * @brief     return impl instance of this route table object
+     * @return    impl instance of the rout table object
      */
     impl_base *impl(void) { return impl_; }
 
 private:
     /**< @brief    constructor */
-    vnic_entry();
+    route_table();
 
     /**< @brief    destructor */
-    ~vnic_entry();
+    ~route_table();
 
     /**
      * @brief    allocate h/w resources for this object
@@ -173,73 +173,69 @@ private:
     sdk_ret_t release_resources_(void);
 
 private:
-    oci_vnic_key_t    key_;        /**< vnic key */
-    ht_ctxt_t         ht_ctxt_;    /**< hash table context */
-    impl_base         *impl_;      /**< impl object instance */
+    oci_route_table_key_t    key_;        /**< route table key */
+    ht_ctxt_t                ht_ctxt_;    /**< hash table context */
+    impl_base                *impl_;      /**< impl object instance */
 } __PACK__;
 
-/** @} */    // end of OCI_VNIC_ENTRY
+/** @} */    // end of OCI_ROUTE_TABLE
 
 /**
- * @defgroup OCI_VNIC_STATE - vnic state functionality
- * @ingroup OCI_VNIC
+ * @defgroup OCI_ROUTE_TABLE_STATE - route table state/db functionality
+ * @ingroup OCI_ROUTE
  * @{
  */
 
 /**
- * @brief    state maintained for VNICs
+ * @brief    state maintained for route tables
  */
-class vnic_state : public obj_base {
+class route_table_state : public obj_base {
 public:
     /**
      * @brief    constructor
      */
-    vnic_state();
+    route_table_state();
 
     /**
      * @brief    destructor
      */
-    ~vnic_state();
+    ~route_table_state();
 
     /**
-     * @brief    allocate memory required for a vnic
-     * @return pointer to the allocated vnic, NULL if no memory
+     * @brief    allocate memory required for a route table instance
+     * @return pointer to the allocated route table instance, NULL if no memory
      */
-    vnic_entry *vnic_alloc(void);
+    route_table *route_table_alloc(void);
 
     /**
-     * @brief      free vnic instance back to slab
-     * @param[in]  vnic   pointer to the allocated vnic
+     * @brief      free route table instance back to slab
+     * @param[in]  route_table   pointer to the allocated route table instance
      */
-    void vnic_free(vnic_entry *vnic);
+    void route_table_free(route_table *table);
 
     /**
-     * @brief     lookup a vnic in database given the key
-     * @param[in] vnic_key vnic key
+     * @brief     lookup a route table in database given the key
+     * @param[in] route_table_key route table key
      */
-    vnic_entry *vnic_find(oci_vnic_key_t *vnic_key) const;
+    route_table *route_table_find(oci_route_table_key_t *route_table_key) const;
 
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 
 private:
-    ht *vnic_ht(void) { return vnic_ht_; }
-    slab *vnic_slab(void) { return vnic_slab_; }
-    friend class vnic_entry;   /**< vnic_entry class is friend of vnic_state */
+    ht *route_table_ht(void) { return route_table_ht_; }
+    slab *rout_table_slab(void) { return route_table_slab_; }
+    friend class route_table;   /**< route_table class is friend of route_table_state */
 
 private:
-    ht              *vnic_ht_;      /**< vnic database
-                                         NOTE: even though VNIC scale is 1K, ids
-                                               can be in the range [0, 4095], so
-                                               to save memory, instead of 4k
-                                               index table, we use hash table */
-    slab            *vnic_slab_;    /**< slab to allocate vnic entry */
+    ht      *route_table_ht_;      /**< route table database */
+    slab    *route_table_slab_;    /**< slab to allocate route table instance */
 };
 
-/** @} */    // end of OCI_VNIC_STATE
+/** @} */    // end of OCI_ROUTE_TABLE_STATE
 
 }    // namespace api
 
-using api::vnic_entry;
-using api::vnic_state;
+using api::route_table;
+using api::route_table_state;
 
-#endif    /** __VNIC_HPP__ */
+#endif    /** __ROUTE_HPP__ */

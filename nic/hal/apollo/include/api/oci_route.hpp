@@ -3,93 +3,88 @@
  *
  * @file    oci_route.hpp
  *
- * @brief   This module defines OCI Route interface
+ * @brief   This module defines route interface
  */
 
-#if !defined (__OCI_ROUTE_H_)
-#define __OCI_ROUTE_H_
+#if !defined (__OCI_ROUTE_HPP__)
+#define __OCI_ROUTE_HPP__
 
+#include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/hal/apollo/include/api/oci.hpp"
 
 /**
- * @defgroup OCI_ROUTE - Route specific API definitions
+ * @defgroup OCI_ROUTE - route specific API definitions
  *
  * @{
  */
 
 /**
- * @brief Nexthop Types
+ * @brief nexthop types
  */
 typedef enum oci_nh_type_e {
-    OCI_NH_TYPE_BLACKHOLE     =  0,    /**< Blackhole/Drop Route */
-    OCI_NH_TYPE_GATEWAY       =  1,    /**< Route to Gateway */
-    OCI_NH_TYPE_REMOTE_EP     =  2,    /**< Remote EPs behind TEPs */
-    OCI_NH_TYPE_REMOTE_TEP    =  3,    /**< Remote Server's Physical IP */
+    OCI_NH_TYPE_BLACKHOLE     =  0,    /**< blackhole/drop route */
+    OCI_NH_TYPE_GATEWAY       =  1,    /**< route to gateway */
+    OCI_NH_TYPE_REMOTE_TEP    =  2,    /**< remote server's physical IP */
 } oci_nh_type_t;
 
 /**
- * @brief Route key
+ * @brief route key
  */
 typedef struct oci_route_key_s {
-    oci_subnet_id_t subnet_id;    /**< Subnet Id */
-    oci_ip_prefix_t dst_pfx;      /**< IP prefix destination */
+    ip_prefix_t    dst_pfx;      /**< IP prefix destination */
 } __PACK__ oci_route_key_t;
 
 /**
- * @brief Route
+ * @brief route
  */
 typedef struct oci_route_s {
-    oci_route_key_t key;      /**< Route key */
-    oci_ip_addr_t nh_ip;      /**< Next hop IP address */
-    oci_nh_type_t nh_type;    /**< Next Hop type */
-    oci_vcn_id_t vcn_id;      /**< Result VCN Id */
+    oci_route_key_t    key;        /**< route key */
+    ip_addr_t          nh_ip;      /**< next hop IP address */
+    oci_nh_type_t      nh_type;    /**< nexthop type */
+    oci_vcn_id_t       vcn_id;     /**< result vcn id */
 } __PACK__ oci_route_t;
 
 /**
- * @brief Route list
+ * @brief route rules
  */
-typedef struct oci_route_list_s {
-    uint32_t count;               /**< Number of routes in the list */
-    oci_route_t route_list[0];    /**< List or routes */
-} __PACK__ oci_route_list_t;
+typedef struct oci_route_rules_s {
+    uint32_t       count;       /**< number of routes in the list */
+    oci_route_t    rules[0];    /**< list or route rules */
+} __PACK__ oci_route_rules_t;
 
 /**
- * @brief Route Group key
+ * @brief route table key
  */
-typedef struct oci_route_grp_key_s {
-    oci_subnet_id_t subnet_id;    /**< Subnet ID */
-} __PACK__ oci_route_grp_key_t;
+typedef struct oci_route_table_key_s {
+    oci_route_table_id_t    table_id;    /**< route table id */
+} __PACK__ oci_route_table_key_t;
 
 /**
- * @brief Route Group
+ * @brief route table
  */
-typedef struct oci_route_grp_s {
-    oci_route_grp_key_t key;        /**< Route group key */
-    oci_route_list_t route_list;    /**< List of routes in the group */
-} __PACK__ oci_route_grp_t;
+typedef struct oci_route_table_s {
+    oci_route_table_key_t    key;           /**< route group key */
+    oci_route_rules_t        route_list;    /**< list of routes in the group */
+} __PACK__ oci_route_table_t;
 
 /**
- * @brief Create route group
+ * @brief create route table
  *
- * @param[in] route_grp Route Group information
- *
+ * @param[in] route_table route table information
  * @return #SDK_RET_OK on success, failure status code on error
  */
-oci_status_t oci_route_grp_create (
-    _In_ oci_route_grp_t *route_grp);
-
+oci_status_t oci_route_table_create(_In_ oci_route_table_t *route_table);
 
 /**
- * @brief Delete route group
+ * @brief delete route table
  *
- * @param[in] route_grp_key Route Group Key
- *
+ * @param[in] route_table_key    route table key
  * @return #SDK_RET_OK on success, failure status code on error
  */
-oci_status_t oci_route_grp_delete (
-    _In_ oci_route_grp_key_t *route_grp_key);
+oci_status_t oci_route_table_delete(_In_ oci_route_table_key_t *route_table_key);
 
 /**
  * @}
  */
-#endif /** __OCI_ROUTE_H_ */
+
+#endif    /** __OCI_ROUTE_HPP__ */

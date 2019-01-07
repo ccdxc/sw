@@ -274,9 +274,15 @@ vnic_state::vnic_find(oci_vnic_key_t *vnic_key) const {
 }    // namespace api
 
 /**
- * @brief Create VNIC
+ * @defgroup OCI_VNIC_API - first level of vnic API handling
+ * @ingroup OCI_VNIC
+ * @{
+ */
+
+/**
+ * @brief create vnic
  *
- * @param[in] vnic VNIC information
+ * @param[in] vnic vnic information
  * @return #SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
@@ -297,9 +303,9 @@ oci_vnic_create (_In_ oci_vnic_t *vnic)
 }
 
 /**
- * @brief Delete VNIC
+ * @brief delete vnic
  *
- * @param[in] vnic_key VNIC key
+ * @param[in] vnic_key vnic key
  * @return #SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
