@@ -101,7 +101,6 @@ testcases:
 
     -   name    : CompressFail
         testcase: testcases.storage.ymltest2
-        enable      : False
         iterators   :
             type        : nested
             cpus        : [ 2 ]
@@ -272,7 +271,7 @@ testcases:
             type        : nested
             cpus        : *CPUS_ITER_LIST_COMBO2
             batch_depth : *BATCH_DEPTH_ITER_LIST_COMBO1
-            mode        : [ sync ]
+            mode        : *MODE_ITER_LIST_COMBO3
         args    :
             wait        : '1.0'
             test        : *DECRYPT_DC_CHAIN_YML
