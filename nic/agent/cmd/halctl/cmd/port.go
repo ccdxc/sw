@@ -251,6 +251,7 @@ func portShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	if cmd.Flags().Changed("yaml") {
 		handlePortDetailShowCmd(cmd, nil)
+		return
 	}
 
 	// Connect to HAL
