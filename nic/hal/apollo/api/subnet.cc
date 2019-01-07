@@ -6,8 +6,9 @@
  * @brief   This file deals with subnet api handling
  */
 
-#include <stdio.h>
 #include "nic/sdk/include/sdk/base.hpp"
+#include "nic/sdk/include/sdk/eth.hpp"
+#include "nic/hal/apollo/core/trace.hpp"
 #include "nic/hal/apollo/core/mem.hpp"
 #include "nic/hal/apollo/api/subnet.hpp"
 #include "nic/hal/apollo/core/oci_state.hpp"
@@ -167,6 +168,12 @@ subnet_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 subnet_entry::activate_config(oci_epoch_t epoch, api_op_t api_op,
                               obj_ctxt_t *obj_ctxt) {
+    /**< there is no h/w programming for subnet config, so nothing to activate */
+    oci_subnet_t *oci_subnet = &obj_ctxt->api_params->subnet_info;
+    OCI_TRACE_DEBUG("Created subnet (vcn %u, subnet %u), pfx %s, vr ip %s, "
+                    "vr_mac %s", oci_subnet->key.vcn_id, oci_subnet->key.id,
+                    ippfx2str(&oci_subnet->pfx), ipaddr2str(&oci_subnet->vr_ip),
+                    macaddr2str(oci_subnet->vr_mac));
     return SDK_RET_OK;
 }
 

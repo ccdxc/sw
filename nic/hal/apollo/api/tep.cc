@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include "nic/hal/apollo/core/mem.hpp"
 #include "nic/hal/apollo/api/tep.hpp"
+#include "nic/hal/apollo/core/trace.hpp"
 #include "nic/hal/apollo/core/oci_state.hpp"
 #include "nic/hal/apollo/framework/api_ctxt.hpp"
 #include "nic/hal/apollo/framework/api_engine.hpp"
@@ -185,6 +186,7 @@ tep_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
  */
 sdk_ret_t
 tep_entry::add_to_db(void) {
+    OCI_TRACE_DEBUG("Adding TEP %s to db", ipv4addr2str(key_.ip_addr));
     return tep_db()->tep_ht()->insert_with_key(&key_, this,
                                                &ht_ctxt_);
 }

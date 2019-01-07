@@ -7,6 +7,7 @@
 #ifndef __SDK_LOGGER_HPP__
 #define __SDK_LOGGER_HPP__
 
+#include <stdio.h>
 #include <stdarg.h>
 
 namespace sdk {
@@ -52,6 +53,7 @@ private:
 }    // namespace sdk
 
 using sdk::lib::sdk_trace_level_e;
+using sdk_logger = sdk::lib::logger;
 
 #define SDK_TRACE_ERR(fmt, ...)   sdk::lib::logger::trace_cb()(                \
                                       sdk::lib::SDK_TRACE_LEVEL_ERR, "[%s:%d] "\

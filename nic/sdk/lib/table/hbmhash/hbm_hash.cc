@@ -752,12 +752,11 @@ HbmHash::alloc_entry_index_(uint32_t *idx)
     // Allocate an index in repl. table
     indexer::status irs = entry_indexer_->alloc((uint32_t *)idx);
     if (irs != indexer::SUCCESS) {
-        SDK_TRACE_DEBUG("HbmHash Entry Capacity reached:%d",
+        SDK_TRACE_DEBUG("HbmHash Entry Capacity reached : %u",
                         entry_indexer_->get_size());
         return SDK_RET_NO_RESOURCE;
     }
-
-    SDK_TRACE_DEBUG("Alloc entry_index:%d", *idx);
+    //SDK_TRACE_DEBUG("Alloc entry_index : %u", *idx);
     return rs;
 }
 
@@ -776,7 +775,7 @@ HbmHash::free_hbm_hash_entry_index_(uint32_t idx)
     if (irs != indexer::SUCCESS) {
         return SDK_RET_ERR;
     }
-    SDK_TRACE_DEBUG("Free entry_index:%d", idx);
+    //SDK_TRACE_DEBUG("Free entry_index : %u", idx);
 
     return rs;
 }
@@ -794,8 +793,7 @@ HbmHash::alloc_collision_index(uint32_t *idx)
     if (irs != indexer::SUCCESS) {
         return SDK_RET_NO_RESOURCE;
     }
-    SDK_TRACE_DEBUG("alloc_coll_indexer:%d", *idx);
-
+    //SDK_TRACE_DEBUG("alloc_coll_indexer : %u", *idx);
     return rs;
 }
 
@@ -815,7 +813,7 @@ HbmHash::free_collision_index(uint32_t idx)
         return SDK_RET_ERR;
     }
 
-    SDK_TRACE_DEBUG("free_coll_indexer:%d", idx);
+    //SDK_TRACE_DEBUG("free_coll_indexer : %u", idx);
     return rs;
 }
 

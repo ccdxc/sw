@@ -12,6 +12,7 @@
 #include "nic/hal/apollo/api/impl/switchport_impl.hpp"    // TODO: think how to accomodate a new impl
 #include "nic/hal/apollo/api/impl/tep_impl.hpp"
 #include "nic/hal/apollo/api/impl/vnic_impl.hpp"
+#include "nic/hal/apollo/api/impl/mapping_impl.hpp"
 
 namespace impl {
 
@@ -56,6 +57,10 @@ impl_base::factory(impl_obj_id_t obj_id, void *args) {
 
     case IMPL_OBJ_ID_VNIC:
         return vnic_impl::factory((oci_vnic_t *)args);
+        break;
+
+    case IMPL_OBJ_ID_MAPPING:
+        return mapping_impl::factory((oci_mapping_t *)args);
         break;
 
     default:

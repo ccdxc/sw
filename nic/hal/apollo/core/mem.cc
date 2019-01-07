@@ -6,6 +6,7 @@
  * @brief   This file contains generic memory handling for OCI
  */
 
+#include "nic/sdk/lib/logger/logger.hpp"
 #include "nic/sdk/lib/periodic/periodic.hpp"
 #include "nic/hal/apollo/core/mem.hpp"
 #include "nic/hal/apollo/core/trace.hpp"
@@ -13,6 +14,8 @@
 #include "nic/hal/apollo/api/subnet.hpp"
 #include "nic/hal/apollo/api/vnic.hpp"
 #include "nic/hal/apollo/core/oci_state.hpp"
+
+sdk_logger::trace_cb_t    g_trace_cb;
 
 // TODO: move all the calls to xxx_free() to inside xxx_entry()::destroy()
 

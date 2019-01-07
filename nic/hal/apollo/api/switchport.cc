@@ -142,8 +142,7 @@ switchport_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 /**< @brief add switchport to database */
 sdk_ret_t
 switchport_entry::add_to_db(void) {
-    /**< this is a singleton obj, so this is no-op */
-    return SDK_RET_OK;
+    return switchport_db()->insert(this);
 }
 
 /**< @brief delete switchport from database */

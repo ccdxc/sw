@@ -235,7 +235,7 @@ HbmHashTableEntry::get_spine_entry_for_new_hg(bool *is_new,
     if (!sp_entry ||
             (sp_entry->get_num_hgs() ==
             hbm_hash_->get_num_hints_per_entry())) {
-        SDK_TRACE_DEBUG("New Spine Entry ...");
+        //SDK_TRACE_DEBUG("New Spine Entry ...");
         *is_new = TRUE;
 
         if (sp_entry) {
@@ -249,8 +249,8 @@ HbmHashTableEntry::get_spine_entry_for_new_hg(bool *is_new,
         if (h_entry->get_recircs() == hbm_hash_->max_recircs()) {
             ret = SDK_RET_HBM_HASH_MAX_RECIRC_EXCEED;
             SDK_TRACE_ERR("Unable to install flow. #recircs "
-                            "exceeds max recircs: %d. ret: %d",
-                            hbm_hash_->max_recircs(), ret);
+                          "exceeds max recircs: %d. ret: %d",
+                          hbm_hash_->max_recircs(), ret);
             return ret;
         }
         new_sp_entry = HbmHashSpineEntry::factory(this);
@@ -282,8 +282,7 @@ HbmHashTableEntry::get_spine_entry_for_new_hg(bool *is_new,
             }
         }
     }
-
-    SDK_TRACE_DEBUG("Spine Entry exist...");
+    //SDK_TRACE_DEBUG("Spine Entry exist...");
     *spine_entry = sp_entry;
     return ret;
 }
@@ -332,9 +331,6 @@ HbmHashTableEntry::get_last_hbm_hash_entry()
     HbmHashSpineEntry *sp_entry = get_last_spine_entry();
     return sp_entry->get_last_hbm_hash_entry();
 }
-
-
-
 
 /*
 // ---------------------------------------------------------------------------

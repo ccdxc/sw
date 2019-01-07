@@ -13,8 +13,6 @@
 #include "nic/sdk/lib/logger/logger.hpp"
 #include "nic/hal/apollo/include/api/oci.hpp"
 
-using sdk_logger = sdk::lib::logger;
-
 /**
  * @defgroup OCI_INIT - initialization and teardown APIs
  *
