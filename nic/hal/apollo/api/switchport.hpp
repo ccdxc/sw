@@ -153,7 +153,9 @@ public:
     /**
      * @brief    constructor
      */
-    switchport_state() {}
+    switchport_state() {
+        switchport_cfg_ = NULL;
+    }
 
     /**
      * @brief    destructor
@@ -165,6 +167,18 @@ public:
      * @return pointer to the allocated switchport, NULL if no memory
      */
     switchport_entry *switchport_alloc(void);
+
+    /**
+     * @brief
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t insert(switchport_entry *switchport) {
+        if (switchport_cfg_) {
+            return sdk::SDK_RET_ENTRY_EXISTS;
+        }
+        switchport_cfg_ = switchport;
+        return SDK_RET_OK;
+    }
 
     /**
      * @brief      free switchport instance back to slab

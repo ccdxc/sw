@@ -157,7 +157,7 @@ linkmgr_cfg_init(void)
 } // namespace linkmgr
 
 static int
-sdk_logger (sdk_trace_level_e tracel_level, const char *format, ...)
+sdk_trace_cb (sdk_trace_level_e tracel_level, const char *format, ...)
 {
     char       logbuf[1024];
     va_list    args;
@@ -203,7 +203,7 @@ main (int argc, char **argv)
                            false, "linkmgr.log",
                            TRACE_FILE_SIZE_DEFAULT, TRACE_NUM_FILES_DEFAULT,
                            ::utils::trace_debug);
-    sdk::lib::logger::init(sdk_logger);
+    sdk::lib::logger::init(sdk_trace_cb);
 
     linkmgr::linkmgr_cfg_init();
 

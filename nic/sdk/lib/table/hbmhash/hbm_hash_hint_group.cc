@@ -180,8 +180,8 @@ HbmHashHintGroup::check_hbm_hash_entry_exists(HbmHashEntry *fe)
             itr != anchor_list_.end(); itr++) {
         tmp_fe = (*itr);
 
-        SDK_TRACE_DEBUG("HbmHashHG:: key1:%#x key2:%#x, key_len:%d",
-                fe->get_key(), tmp_fe->get_key(), tmp_fe->get_key_len());
+        //SDK_TRACE_DEBUG("HbmHashHG:: key1:%#x key2:%#x, key_len:%d",
+                          //fe->get_key(), tmp_fe->get_key(), tmp_fe->get_key_len());
         if ((tmp_fe->get_key_len() == fe->get_key_len()) &&
 
                 (!memcmp(fe->get_key(),
@@ -192,7 +192,6 @@ HbmHashHintGroup::check_hbm_hash_entry_exists(HbmHashEntry *fe)
     }
     return FALSE;
 }
-
 
 void
 HbmHashHintGroup::inter_hg_str(HbmHashEntry *h_entry,

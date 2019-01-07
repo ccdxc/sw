@@ -264,6 +264,8 @@ mapping_state::mapping_find(oci_mapping_key_t *mapping_key) const {
 
 /** @} */    // end of OCI_MAPPING_STATE
 
+}    // namespace api
+
 /**
  * @brief create mapping
  *
@@ -311,5 +313,3 @@ oci_mapping_delete (_In_ oci_mapping_key_t *mapping_key)
 }
 
 /** @} */    // end of OCI_MAPPING_API
-
-}    // namespace api

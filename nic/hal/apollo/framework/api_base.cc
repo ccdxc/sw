@@ -41,6 +41,10 @@ api_base::factory(api_ctxt_t *api_ctxt) {
         obj = vnic_entry::factory(&api_ctxt->api_params->vnic_info);
         return obj;
 
+    case OBJ_ID_MAPPING:
+        obj = mapping_entry::factory(&api_ctxt->api_params->mapping_info);
+        return obj;
+
     case OBJ_ID_ROUTE:
         break;
 
@@ -97,6 +101,10 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
             obj = vnic_db()->vnic_find(&api_ctxt->api_params->vnic_info.key);
         }
         return obj;
+
+    case OBJ_ID_MAPPING:
+        return NULL;
+        break;
 
     case OBJ_ID_ROUTE:
         break;

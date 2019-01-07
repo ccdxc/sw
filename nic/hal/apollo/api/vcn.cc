@@ -8,6 +8,7 @@
 
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/hal/apollo/core/mem.hpp"
+#include "nic/hal/apollo/core/trace.hpp"
 #include "nic/hal/apollo/api/vcn.hpp"
 #include "nic/hal/apollo/core/oci_state.hpp"
 #include "nic/hal/apollo/framework/api_ctxt.hpp"
@@ -154,7 +155,10 @@ vcn_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 vcn_entry::activate_config(oci_epoch_t epoch, api_op_t api_op,
                            obj_ctxt_t *obj_ctxt) {
-    /**< there is no h/w programming for VCN config, so nothing to activate */
+    /**< there is no h/w programming for vcn config, so nothing to activate */
+    oci_vcn_t *oci_vcn = &obj_ctxt->api_params->vcn_info;
+    OCI_TRACE_DEBUG("Created vcn %u, type %u, pfx %s", oci_vcn->key.id,
+                    oci_vcn->type, ippfx2str(&oci_vcn->pfx));
     return SDK_RET_OK;
 }
 

@@ -4092,12 +4092,15 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
         {
 //::            if len(pddict['tables'][table]['hash_overflow_tbl']):
             if (tableid == P4${caps_p4prog}TBL_ID_${caps_tablename}) {
-                b = snprintf(buf, blen, "Table: %s, Index 0x%x\n", "P4TBL_ID_${caps_tablename}", index);
+                b = snprintf(buf, blen, "Table : %s, Index : 0x%x\n",
+                             "P4TBL_ID_${caps_tablename}", index);
             } else {
-                b = snprintf(buf, blen, "Table: %s, Index 0x%x\n", "P4TBL_ID_${caps_tbl_}", index);
+                b = snprintf(buf, blen, "Table : %s, Index : 0x%x\n",
+                             "P4TBL_ID_${caps_tbl_}", index);
             }
 //::            else:
-            b = snprintf(buf, blen, "Table: %s, Index 0x%x\n", "P4TBL_ID_${caps_tablename}", index);
+            b = snprintf(buf, blen, "Table : %s, Index : 0x%x\n",
+                         "P4TBL_ID_${caps_tablename}", index);
 //::            #endif
             buf += b;
             blen -= b;
@@ -4115,7 +4118,8 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
 //::                    actname = actionname.upper()
                 case ${caps_tablename}_${actname}_ID:
                 {
-                    b = snprintf(buf, blen, "Action: %s\n", "${caps_tablename}_${actname}_ID");
+                    b = snprintf(buf, blen, "Action : %s\n",
+                                 "${caps_tablename}_${actname}_ID");
                     buf += b;
                     blen -= b;
                     if (blen <= 0) {
@@ -4124,7 +4128,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
 //::                    for actionfld in actionfldlist:
 //::                        actionfldname, actionfldwidth = actionfld
 //::                        if actionfldwidth <= 32:
-                    b = snprintf(buf, blen, "%s: 0x%x\n", "${actionfldname}",
+                    b = snprintf(buf, blen, "%s : 0x%x\n", "${actionfldname}",
                              actiondata->action_u.\
                              ${table}_${actionname}.${actionfldname});
                     buf += b;
@@ -4134,7 +4138,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
                     }
 //::                        else:
 //::                            p4fldwidth_byte = (actionfldwidth / 8) + (1 if actionfldwidth % 8 else 0)
-                    b = snprintf(buf, blen, "%s: 0x", "${actionfldname}");
+                    b = snprintf(buf, blen, "%s : 0x", "${actionfldname}");
                     buf += b;
                     blen -= b;
                     if (blen <= 0) {
@@ -4169,7 +4173,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
             if (!swkey) {
                 break;
             }
-            b = snprintf(buf, blen, "Key:\n");
+            b = snprintf(buf, blen, "Key :\n");
             buf += b;
             blen -= b;
             if (blen <= 0) {
@@ -4178,7 +4182,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
 //::                for fields in pddict['tables'][table]['keys']:
 //::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                    if (p4fldwidth <= 32):
-            b = snprintf(buf, blen, "%s: 0x%x\n", "${p4fldname}", swkey->${p4fldname});
+            b = snprintf(buf, blen, "%s : 0x%x\n", "${p4fldname}", swkey->${p4fldname});
             buf += b;
             blen -= b;
             if (blen <= 0) {
@@ -4186,7 +4190,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
             }
 //::                    else:
 //::                        p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
-            b = snprintf(buf, blen, "%s: 0x", "${p4fldname}");
+            b = snprintf(buf, blen, "%s : 0x", "${p4fldname}");
             buf += b;
             blen -= b;
             if (blen <= 0) {
@@ -4223,7 +4227,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
 //::                                kbyte = kbit / 8
 //::                                tablebyte = kmbyte
 //::                                if p4fldwidth <= 32:
-            b = snprintf(buf, blen, "%s: 0x%x\n", "${p4fldname}",
+            b = snprintf(buf, blen, "%s : 0x%x\n", "${p4fldname}",
                         (swkey->${ustr}${p4fldname}));
             buf += b;
             blen -= b;
@@ -4231,7 +4235,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
                 return (P4PD_SUCCESS);
             }
 //::                                else:
-            b = snprintf(buf, blen, "%s: 0x", "${p4fldname}");
+            b = snprintf(buf, blen, "%s : 0x", "${p4fldname}");
             buf += b;
             blen -= b;
             if (blen <= 0) {
@@ -4273,7 +4277,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
 //::                                kbyte = kbit / 8
 //::                                tablebyte = kmbyte
 //::                                if p4fldwidth <= 32:
-            b = snprintf(buf, blen, "%s: 0x%x\n", "${p4fldname}",
+            b = snprintf(buf, blen, "%s : 0x%x\n", "${p4fldname}",
                          (swkey->${ustr}${p4fldname}));
             buf += b;
             blen -= b;
@@ -4282,7 +4286,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
             }
 //::                                else:
 //::                                    p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
-            b = snprintf(buf, blen, "%s: ", "${p4fldname}");
+            b = snprintf(buf, blen, "%s : ", "${p4fldname}");
             buf += b;
             blen -= b;
             if (blen <= 0) {
@@ -4317,7 +4321,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
 //::                    actname = actionname.upper()
                 case ${caps_tablename}_${actname}_ID:
                 {
-                    b = snprintf(buf, blen, "Action: %s\n", "${caps_tablename}_${actname}_ID");
+                    b = snprintf(buf, blen, "Action : %s\n", "${caps_tablename}_${actname}_ID");
                     buf += b;
                     blen -= b;
                     if (blen <= 0) {
@@ -4326,7 +4330,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
 //::                    for actionfld in actionfldlist:
 //::                        actionfldname, actionfldwidth = actionfld
 //::                        if actionfldwidth <= 32:
-                    b = snprintf(buf, blen, "%s: 0x%x\n", "${actionfldname}",
+                    b = snprintf(buf, blen, "%s : 0x%x\n", "${actionfldname}",
                              actiondata->action_u.\
                              ${table}_${actionname}.${actionfldname});
                     buf += b;
@@ -4336,7 +4340,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
                     }
 //::                        else:
 //::                            p4fldwidth_byte = (actionfldwidth / 8) + (1 if actionfldwidth % 8 else 0)
-                    b = snprintf(buf, blen, "%s: 0x", "${actionfldname}");
+                    b = snprintf(buf, blen, "%s : 0x", "${actionfldname}");
                     buf += b;
                     blen -= b;
                     if (blen <= 0) {
@@ -4369,7 +4373,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
             ${table}_swkey_t *swkey = (${table}_swkey_t *)sw_key;
             ${table}_swkey_mask_t *swkey_mask = (${table}_swkey_mask_t *)sw_key_mask;
             if (swkey && swkey_mask) {
-                b = snprintf(buf, blen, "Key:\n");
+                b = snprintf(buf, blen, "Key :\n");
                 buf += b;
                 blen -= b;
                 if (blen <= 0) {
@@ -4378,13 +4382,13 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
 //::                for fields in pddict['tables'][table]['keys']:
 //::                    (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                    if (p4fldwidth <= 32):
-                b = snprintf(buf, blen, "%s: 0x%x\n", "${p4fldname}", swkey->${p4fldname});
+                b = snprintf(buf, blen, "%s : 0x%x\n", "${p4fldname}", swkey->${p4fldname});
                 buf += b;
                 blen -= b;
                 if (blen <= 0) {
                     return (P4PD_SUCCESS);
                 }
-                b = snprintf(buf, blen, "%s: 0x%x\n", "${p4fldname}_mask", swkey_mask->${p4fldname}_mask);
+                b = snprintf(buf, blen, "%s : 0x%x\n", "${p4fldname}_mask", swkey_mask->${p4fldname}_mask);
                 buf += b;
                 blen -= b;
                 if (blen <= 0) {
@@ -4392,7 +4396,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
                 }
 //::                    else:
 //::                        p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
-                b = snprintf(buf, blen, "%s: 0x", "${p4fldname}");
+                b = snprintf(buf, blen, "%s : 0x", "${p4fldname}");
                 buf += b;
                 blen -= b;
                 if (blen <= 0) {
@@ -4412,7 +4416,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
                 if (blen <= 0) {
                     return (P4PD_SUCCESS);
                 }
-                b = snprintf(buf, blen, "%s: 0x", "${p4fldname}_mask");
+                b = snprintf(buf, blen, "%s : 0x", "${p4fldname}_mask");
                 buf += b;
                 blen -= b;
                 if (blen <= 0) {
@@ -4449,13 +4453,13 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
 
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if (p4fldwidth <= 32):
-                b = snprintf(buf, blen, "%s: 0x%x\n", "${p4fldname}", swkey->${ustr}${p4fldname});
+                b = snprintf(buf, blen, "%s : 0x%x\n", "${p4fldname}", swkey->${ustr}${p4fldname});
                 buf += b;
                 blen -= b;
                 if (blen <= 0) {
                     return (P4PD_SUCCESS);
                 }
-                b = snprintf(buf, blen, "%s: 0x%x\n", "${p4fldname}_mask", swkey_mask->${ustr_mask}${p4fldname}_mask);
+                b = snprintf(buf, blen, "%s : 0x%x\n", "${p4fldname}_mask", swkey_mask->${ustr_mask}${p4fldname}_mask);
                 buf += b;
                 blen -= b;
                 if (blen <= 0) {
@@ -4463,7 +4467,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
                 }
 //::                        else:
 //::                            p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
-                b = snprintf(buf, blen, "%s: 0x", "${p4fldname}");
+                b = snprintf(buf, blen, "%s : 0x", "${p4fldname}");
                 buf += b;
                 blen -= b;
                 if (blen <= 0) {
@@ -4483,7 +4487,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
                 if (blen <= 0) {
                     return (P4PD_SUCCESS);
                 }
-                b = snprintf(buf, blen, "%s: ", "${p4fldname}_mask");
+                b = snprintf(buf, blen, "%s : ", "${p4fldname}_mask");
                 buf += b;
                 blen -= b;
                 if (blen <= 0) {
@@ -4520,13 +4524,13 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
 //::                    for fields in hdrukeys:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if (p4fldwidth <= 32):
-                b = snprintf(buf, blen, "%s: 0x%x\n", "${p4fldname}", swkey->${ustr}${p4fldname});
+                b = snprintf(buf, blen, "%s : 0x%x\n", "${p4fldname}", swkey->${ustr}${p4fldname});
                 buf += b;
                 blen -= b;
                 if (blen <= 0) {
                     return (P4PD_SUCCESS);
                 }
-                b = snprintf(buf, blen, "%s: 0x%x\n", "${p4fldname}_mask", swkey_mask->${ustr_mask}${p4fldname}_mask);
+                b = snprintf(buf, blen, "%s : 0x%x\n", "${p4fldname}_mask", swkey_mask->${ustr_mask}${p4fldname}_mask);
                 buf += b;
                 blen -= b;
                 if (blen <= 0) {
@@ -4534,7 +4538,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
                 }
 //::                        else:
 //::                            p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
-                b = snprintf(buf, blen, "%s: 0x", "${p4fldname}");
+                b = snprintf(buf, blen, "%s : 0x", "${p4fldname}");
                 buf += b;
                 blen -= b;
                 if (blen <= 0) {
@@ -4554,7 +4558,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
                 if (blen <= 0) {
                     return (P4PD_SUCCESS);
                 }
-                b = snprintf(buf, blen, "%s: 0x", "${p4fldname}_mask");
+                b = snprintf(buf, blen, "%s : 0x", "${p4fldname}_mask");
                 buf += b;
                 blen -= b;
                 if (blen <= 0) {
@@ -4589,7 +4593,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
 //::                    actname = actionname.upper()
                 case ${caps_tablename}_${actname}_ID:
                 {
-                    b = snprintf(buf, blen, "Action: %s\n", "${caps_tablename}_${actname}_ID");
+                    b = snprintf(buf, blen, "Action : %s\n", "${caps_tablename}_${actname}_ID");
                     buf += b;
                     blen -= b;
                     if (blen <= 0) {
@@ -4598,7 +4602,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
 //::                    for actionfld in actionfldlist:
 //::                        actionfldname, actionfldwidth = actionfld
 //::                        if actionfldwidth <= 32:
-                    b = snprintf(buf, blen, "%s: 0x%x\n", "${actionfldname}",
+                    b = snprintf(buf, blen, "%s : 0x%x\n", "${actionfldname}",
                              actiondata->action_u.\
                              ${table}_${actionname}.${actionfldname});
                     buf += b;
@@ -4608,7 +4612,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
                     }
 //::                        else:
 //::                            p4fldwidth_byte = (actionfldwidth / 8) + (1 if actionfldwidth % 8 else 0)
-                    b = snprintf(buf, blen, "%s: 0x", "${actionfldname}");
+                    b = snprintf(buf, blen, "%s : 0x", "${actionfldname}");
                     buf += b;
                     blen -= b;
                     if (blen <= 0) {

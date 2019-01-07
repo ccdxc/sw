@@ -8,6 +8,7 @@
 
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
+#include "nic/hal/apollo/core/trace.hpp"
 #include "nic/hal/apollo/include/api/oci_init.hpp"
 #include "nic/hal/apollo/framework/impl_base.hpp"
 #include "nic/hal/apollo/api/impl/oci_impl_state.hpp"
@@ -81,6 +82,7 @@ oci_init (oci_init_params_t *params)
 
     /**< initializer the logger */
     sdk::lib::logger::init(params->trace_cb);
+    register_trace_cb(params->trace_cb);
 
     // TODO: setup all asic specific config params
     fill_asic_cfg(&asic_cfg);

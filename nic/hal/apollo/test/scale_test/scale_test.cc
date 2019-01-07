@@ -16,10 +16,14 @@
 #include "nic/hal/apollo/include/api/oci_vcn.hpp"
 #include "nic/hal/apollo/include/api/oci_subnet.hpp"
 #include "nic/hal/apollo/include/api/oci_vnic.hpp"
+#include "nic/hal/apollo/include/api/oci_mapping.hpp"
 
 using std::string;
-char    *g_cfg_file = NULL;
 namespace pt = boost::property_tree;
+
+char                *g_cfg_file = NULL;
+ip_prefix_t         g_vcn_ippfx = { 0 };
+oci_switchport_t    g_sw_port = { 0 };
 
 class scale_test : public oci_test_base {
 protected:
@@ -36,6 +40,87 @@ protected:
     }
 };
 
+//------------------------------------------------------------------------------
+// 1. create 1 primary + 32 secondary IP for each of 1K local vnics
+// 2. create 1023 remote mappings per VCN
+//------------------------------------------------------------------------------
+static void
+create_mappings(uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
+                uint32_t num_vnics, uint32_t num_ip_per_vnic,
+                ip_prefix_t *teppfx, ip_prefix_t *natpfx,
+                uint32_t num_remote_mappings) {
+    sdk_ret_t        rv;
+    oci_mapping_t    oci_mapping;
+    uint16_t         vnic_key = 1, ip_base, mac_offset = 1025;
+    uint32_t         ip_offset = 0, remote_slot = 1025, tep_offset = 3;
+
+    return;
+
+    // ensure a max. of 32 IPs per VNIC
+    SDK_ASSERT(num_vcns * num_subnets * num_vnics * num_ip_per_vnic <= (32 * 1024));
+    // create local vnic IP mappings first
+    for (uint32_t i = 1; i <= num_vcns; i++) {
+        for (uint32_t j = 1; j <= num_subnets; j++) {
+            for (uint32_t k = 1; k <= num_vnics; k++) {
+                for (uint32_t l = 1; l <= num_ip_per_vnic; l++) {
+                    memset(&oci_mapping, 0, sizeof(oci_mapping));
+                    oci_mapping.key.vcn.id = i;
+                    oci_mapping.key.ip_addr.af = IP_AF_IPV4;
+                    oci_mapping.key.ip_addr.addr.v4_addr =
+                        (g_vcn_ippfx.addr.addr.v4_addr | ((j - 1) << 14)) |
+                            (((k - 1) * num_ip_per_vnic) + l);
+                    oci_mapping.subnet.vcn_id = i;
+                    oci_mapping.subnet.id = j;
+                    oci_mapping.slot = vnic_key;
+                    oci_mapping.tep.ip_addr = g_sw_port.switch_ip_addr;
+                    MAC_UINT64_TO_ADDR(oci_mapping.overlay_mac,
+                                       ((((uint64_t)i & 0xFFFF) << 40ul) |
+                                        ((j & 0xFF) << 16) | k));
+                    oci_mapping.vnic.id = vnic_key;
+                    if (natpfx) {
+                        oci_mapping.public_ip_valid = true;
+                        oci_mapping.public_ip.addr.v4_addr =
+                            natpfx->addr.addr.v4_addr + ip_offset++;
+                    }
+                    rv = oci_mapping_create(&oci_mapping);
+                    ASSERT_TRUE(rv == SDK_RET_OK);
+                }
+                vnic_key++;
+            }
+        }
+    }
+
+    // create remote mappings
+    SDK_ASSERT(num_vcns * num_remote_mappings <= (1 << 20));
+    for (uint32_t i = 1; i <= num_vcns; i++) {
+        for (uint32_t j = 1; j <= num_subnets; j++) {
+            ip_base = num_vnics * num_ip_per_vnic + 1;
+            for (uint32_t k = 1; k <= num_remote_mappings; k++) {
+                memset(&oci_mapping, 0, sizeof(oci_mapping));
+                oci_mapping.key.vcn.id = i;
+                oci_mapping.key.ip_addr.af = IP_AF_IPV4;
+                oci_mapping.key.ip_addr.addr.v4_addr =
+                    (g_vcn_ippfx.addr.addr.v4_addr | ((j - 1) << 14)) |
+                        ip_base++;
+                oci_mapping.subnet.vcn_id = i;
+                oci_mapping.subnet.id = j;
+                oci_mapping.slot = remote_slot++;
+                oci_mapping.tep.ip_addr = teppfx->addr.addr.v4_addr + tep_offset;
+                tep_offset %= num_teps;
+                if (tep_offset == 0) {
+                    // skip MyTEP and gateway IPs
+                    tep_offset += 3;
+                }
+                MAC_UINT64_TO_ADDR(oci_mapping.overlay_mac,
+                                   ((((uint64_t)i & 0xFFFF) << 40ul) |
+                                    ((j & 0xFF) << 16) | mac_offset++));
+                rv = oci_mapping_create(&oci_mapping);
+                ASSERT_TRUE(rv == SDK_RET_OK);
+            }
+        }
+    }
+}
+
 static void
 create_vnics(uint32_t num_vcns, uint32_t num_subnets,
              uint32_t num_vnics, uint16_t vlan_start) {
@@ -43,6 +128,7 @@ create_vnics(uint32_t num_vcns, uint32_t num_subnets,
     oci_vnic_t    oci_vnic;
     uint16_t      vnic_key = 1;
 
+    SDK_ASSERT(num_vcns * num_subnets * num_vnics <= 1024);
     for (uint32_t i = 1; i <= (uint64_t)num_vcns; i++) {
         for (uint32_t j = 1; j <= num_subnets; j++) {
             for (uint32_t k = 1; k <= num_vnics; k++) {
@@ -66,6 +152,8 @@ create_vnics(uint32_t num_vcns, uint32_t num_subnets,
     }
 }
 
+// VCN prefix is /8, subnet id is encoded in next 10 bits (making it /18 prefix)
+// leaving LSB 14 bits for VNIC IPs
 static void
 create_subnets(uint32_t vcn_id, uint32_t num_subnets, ip_prefix_t *vcn_pfx) {
     sdk_ret_t       rv;
@@ -77,8 +165,8 @@ create_subnets(uint32_t vcn_id, uint32_t num_subnets, ip_prefix_t *vcn_pfx) {
         oci_subnet.key.id = i;
         oci_subnet.pfx = *vcn_pfx;
         oci_subnet.pfx.addr.addr.v4_addr =
-            (oci_subnet.pfx.addr.addr.v4_addr & 0xFFFF0000) | ((i - 1) << 8);
-        oci_subnet.pfx.len = 24;
+            (oci_subnet.pfx.addr.addr.v4_addr) | ((i - 1) << 14);
+        oci_subnet.pfx.len = 18;
         oci_subnet.vr_ip.af = IP_AF_IPV4;
         oci_subnet.vr_ip.addr.v4_addr = oci_subnet.pfx.addr.addr.v4_addr | 0x1;
         MAC_UINT64_TO_ADDR(oci_subnet.vr_mac,
@@ -93,17 +181,18 @@ create_vcns(uint32_t num_vcns, ip_prefix_t *ip_pfx, uint32_t num_subnets) {
     sdk_ret_t    rv;
     oci_vcn_t    oci_vcn;
 
+    SDK_ASSERT(num_vcns <= 1024);
     for (uint32_t i = 1; i <= num_vcns; i++) {
         memset(&oci_vcn, 0, sizeof(oci_vcn));
         oci_vcn.type = OCI_VCN_TYPE_TENANT;
         oci_vcn.key.id = i;
         oci_vcn.pfx = *ip_pfx;
-        oci_vcn.pfx.addr.addr.v4_addr =
-            oci_vcn.pfx.addr.addr.v4_addr | ((i - 1) << 16);
+        oci_vcn.pfx.len = 8;    // fix this to /8
+        oci_vcn.pfx.addr.addr.v4_addr &= 0xFF000000;
         rv = oci_vcn_create(&oci_vcn);
         ASSERT_TRUE(rv == SDK_RET_OK);
         for (uint32_t j = 1; j <= num_subnets; j++) {
-            create_subnets(i, j, ip_pfx);
+            create_subnets(i, j, &oci_vcn.pfx);
         }
     }
 }
@@ -116,7 +205,9 @@ create_teps(uint32_t num_teps, ip_prefix_t *ip_pfx) {
     // leave the 1st IP in this prefix for MyTEP
     for (uint32_t i = 1; i <= num_teps; i++) {
         memset(&oci_tep, 0, sizeof(oci_tep));
-        oci_tep.key.ip_addr = ip_pfx->addr.addr.v4_addr + 1 + i;
+        // 1st IP in the TEP prefix is local TEP, 2nd is gateway IP,
+        // so skip them
+        oci_tep.key.ip_addr = ip_pfx->addr.addr.v4_addr + 2 + i;
         oci_tep.type = OCI_ENCAP_TYPE_IPINIP_GRE;
         rv = oci_tep_create(&oci_tep);
         ASSERT_TRUE(rv == SDK_RET_OK);
@@ -126,21 +217,22 @@ create_teps(uint32_t num_teps, ip_prefix_t *ip_pfx) {
 static void
 create_switchport_cfg(ipv4_addr_t ipaddr, uint64_t macaddr, ipv4_addr_t gwip) {
     sdk_ret_t           rv;
-    oci_switchport_t    sw_port = { 0 };
 
-    sw_port.switch_ip_addr = ipaddr;
-    MAC_UINT64_TO_ADDR(sw_port.switch_mac_addr, macaddr);
-    sw_port.gateway_ip_addr = gwip;
-    rv = oci_switchport_create(&sw_port);
+    memset(&g_sw_port, 0, sizeof(g_sw_port));
+    g_sw_port.switch_ip_addr = ipaddr;
+    MAC_UINT64_TO_ADDR(g_sw_port.switch_mac_addr, macaddr);
+    g_sw_port.gateway_ip_addr = gwip;
+    rv = oci_switchport_create(&g_sw_port);
     ASSERT_TRUE(rv == SDK_RET_OK);
 }
 
 static void
 create_objects(void) {
     uint32_t       num_vcns = 0, num_subnets = 0, num_vnics = 0, num_teps = 0;
+    uint32_t       num_remote_mappings = 0;
     uint16_t       vlan_start = 1;
     pt::ptree      json_pt;
-    ip_prefix_t    ippfx;
+    ip_prefix_t    teppfx, natpfx;
     string         pfxstr;
 
     // parse the config and create objects
@@ -163,19 +255,24 @@ create_objects(void) {
             } else if (kind == "tep") {
                 num_teps = std::stol(obj.second.get<std::string>("count"));
                 pfxstr = obj.second.get<std::string>("prefix");
-                ASSERT_TRUE(str2ipv4pfx((char *)pfxstr.c_str(), &ippfx) == 0);
-                create_teps(num_teps, &ippfx);
+                ASSERT_TRUE(str2ipv4pfx((char *)pfxstr.c_str(), &teppfx) == 0);
+                create_teps(num_teps, &teppfx);
             } else if (kind == "vcn") {
                 num_vcns = std::stol(obj.second.get<std::string>("count"));
                 pfxstr = obj.second.get<std::string>("prefix");
-                ASSERT_TRUE(str2ipv4pfx((char *)pfxstr.c_str(), &ippfx) == 0);
+                ASSERT_TRUE(str2ipv4pfx((char *)pfxstr.c_str(), &g_vcn_ippfx) == 0);
                 num_subnets = std::stol(obj.second.get<std::string>("subnets"));
-                create_vcns(num_vcns, &ippfx, num_subnets);
+                create_vcns(num_vcns, &g_vcn_ippfx, num_subnets);
             } else if (kind == "vnic") {
                 num_vnics = std::stol(obj.second.get<std::string>("count"));
                 vlan_start = std::stol(obj.second.get<std::string>("vlan-start"));
                 create_vnics(num_vcns, num_subnets, num_vnics, vlan_start);
             } else if (kind == "mapping") {
+                pfxstr = obj.second.get<std::string>("nat-prefix");
+                ASSERT_TRUE(str2ipv4pfx((char *)pfxstr.c_str(), &natpfx) == 0);
+                num_remote_mappings = std::stol(obj.second.get<std::string>("count"));
+                create_mappings(num_teps, num_vcns, num_subnets, num_vnics, 32,
+                                &teppfx, &natpfx, num_remote_mappings);
             }
         }
     } catch (std::exception const& e) {

@@ -9,6 +9,7 @@
 #include "nic/hal/apollo/core/mem.hpp"
 #include "nic/hal/apollo/framework/api_engine.hpp"
 #include "nic/hal/apollo/api/mapping.hpp"
+#include "nic/hal/apollo/core/trace.hpp"
 #include "nic/hal/apollo/core/oci_state.hpp"
 #include "nic/hal/apollo/api/impl/tep_impl.hpp"
 #include "nic/hal/apollo/api/impl/vnic_impl.hpp"
@@ -207,6 +208,7 @@ mapping_impl::add_remote_vnic_mapping_rx_entries_(vcn_entry *vcn,
         mapping_info->slot;
     remote_vnic_mapping_rx_key.ipv4_1_srcAddr = mapping_info->tep.ip_addr;
     remote_vnic_mapping_rx_data.vcn_id = vcn->hw_id();
+    // TODO: why do we need subnet id here ??
     remote_vnic_mapping_rx_data.subnet_id = subnet->hw_id();
     memcpy(remote_vnic_mapping_rx_data.overlay_mac,
            mapping_info->overlay_mac, ETH_ADDR_LEN);
@@ -260,6 +262,9 @@ mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     mapping_info = &obj_ctxt->api_params->mapping_info;
     vcn = vcn_db()->vcn_find(&mapping_info->key.vcn);
     subnet = subnet_db()->subnet_find(&mapping_info->subnet);
+    OCI_TRACE_DEBUG("Programming vcn %u, ip %s mapping",
+                    mapping_info->key.vcn.id,
+                    ipaddr2str(&mapping_info->key.ip_addr));
     if (is_local_) {
         /**< allocate NAT table entries */
         ret = add_nat_entries_(mapping_info);

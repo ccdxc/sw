@@ -21,7 +21,7 @@ namespace linkmgr {
 }
 
 int
-sdk_logger (sdk_trace_level_e trace_level, const char *format, ...)
+sdk_trace_cb (sdk_trace_level_e trace_level, const char *format, ...)
 {
     char       logbuf[128];
     va_list    args;
@@ -50,7 +50,7 @@ linkmgr_initialize (const char c_file[])
                            true, "linkmgr_gtest.log",
                            TRACE_FILE_SIZE_DEFAULT, TRACE_NUM_FILES_DEFAULT,
                            ::utils::trace_debug);
-    sdk::lib::logger::init(sdk_logger);
+    sdk::lib::logger::init(sdk_trace_cb);
 
     sdk::lib::thread::control_cores_mask_set(0x1);
 

@@ -669,38 +669,39 @@ hash::generate_hash_(void *key, uint32_t key_len)
     // return crc32((uint32_t)SDK_INTERNAL_MCAST_CRC32_HASH_SEED, (const void *)key,
     //        (uint32_t)key_len) % dleft_capacity_;
 
-    switch(hash_poly_) {
-        case HASH_POLY0:
-            crc_hash = new boost::crc_basic<32>(0x04C11DB7, crc_init_val,
-                                                0x00000000, false, false);
-            crc_hash->process_bytes(key, key_len);
-            hash_val = crc_hash->checksum();
-            break;
-        case HASH_POLY1:
-            crc_hash = new boost::crc_basic<32>(0x1EDC6F41, crc_init_val,
-                                                0x00000000, false, false);
-            crc_hash->process_bytes(key, key_len);
-            hash_val = crc_hash->checksum();
-            break;
-        case HASH_POLY2:
-            crc_hash = new boost::crc_basic<32>(0x741B8CD7, crc_init_val,
-                                                0x00000000, false, false);
-            crc_hash->process_bytes(key, key_len);
-            hash_val = crc_hash->checksum();
-            break;
-        case HASH_POLY3:
-            crc_hash = new boost::crc_basic<32>(0x814141AB, crc_init_val,
-                                                0x00000000, false, false);
-            crc_hash->process_bytes(key, key_len);
-            hash_val = crc_hash->checksum();
-            break;
-        default:
-            SDK_ASSERT_GOTO(0, end);
+    switch (hash_poly_) {
+    case HASH_POLY0:
+        crc_hash = new boost::crc_basic<32>(0x04C11DB7, crc_init_val,
+                                            0x00000000, false, false);
+        crc_hash->process_bytes(key, key_len);
+        hash_val = crc_hash->checksum();
+        break;
+    case HASH_POLY1:
+        crc_hash = new boost::crc_basic<32>(0x1EDC6F41, crc_init_val,
+                                            0x00000000, false, false);
+        crc_hash->process_bytes(key, key_len);
+        hash_val = crc_hash->checksum();
+        break;
+    case HASH_POLY2:
+        crc_hash = new boost::crc_basic<32>(0x741B8CD7, crc_init_val,
+                                            0x00000000, false, false);
+        crc_hash->process_bytes(key, key_len);
+        hash_val = crc_hash->checksum();
+        break;
+    case HASH_POLY3:
+        crc_hash = new boost::crc_basic<32>(0x814141AB, crc_init_val,
+                                            0x00000000, false, false);
+        crc_hash->process_bytes(key, key_len);
+        hash_val = crc_hash->checksum();
+        break;
+    default:
+        SDK_ASSERT_GOTO(0, end);
     }
 
 end:
+
     delete crc_hash;
-    SDK_TRACE_DEBUG("hashVal: 0x%x, Idx: %d", hash_val, hash_val % dleft_capacity_);
+    //SDK_TRACE_DEBUG("hashVal: 0x%x, Idx: %d", hash_val, hash_val % dleft_capacity_);
     return hash_val % dleft_capacity_;
 }
 
@@ -786,47 +787,47 @@ void
 hash::stats_update(hash::api ap, sdk_ret_t rs)
 {
     switch (ap) {
-        case INSERT:
-            if(rs == SDK_RET_OK) stats_incr(STATS_INS_SUCCESS);
-            else if(rs == SDK_RET_HW_PROGRAM_ERR) stats_incr(STATS_INS_FAIL_HW);
-            else if(rs == SDK_RET_NO_RESOURCE) stats_incr(STATS_INS_FAIL_NO_RES);
-            else if(rs == SDK_RET_DUPLICATE_INS) stats_incr(STATS_INS_FAIL_DUP_INS);
-            else SDK_ASSERT(0);
-            break;
-        case INSERT_WITHID:
-            if(rs == SDK_RET_OK) stats_incr(STATS_INS_WITHID_SUCCESS);
-            else if(rs == SDK_RET_HW_PROGRAM_ERR) stats_incr(STATS_INS_WITHID_FAIL_HW);
-            else if(rs == SDK_RET_DUPLICATE_INS) stats_incr(STATS_INS_WITHID_FAIL_DUP_INS);
-            else if(rs == SDK_RET_INVALID_ARG) stats_incr(STATS_INS_WITHID_FAIL_INV_ARG);
-            else SDK_ASSERT(0);
-        case UPDATE:
-            if(rs == SDK_RET_OK) stats_incr(STATS_UPD_SUCCESS);
-            else if(rs == SDK_RET_ENTRY_NOT_FOUND)
-                stats_incr(STATS_UPD_FAIL_ENTRY_NOT_FOUND);
-            else if(rs == SDK_RET_INVALID_ARG) stats_incr(STATS_UPD_FAIL_INV_ARG);
-            else if(rs == SDK_RET_HW_PROGRAM_ERR) stats_incr(STATS_UPD_FAIL_HW);
-            else if(rs == SDK_RET_OOB) stats_incr(STATS_UPD_FAIL_OOB);
-            else SDK_ASSERT(0);
-            break;
-        case REMOVE:
-            if(rs == SDK_RET_OK) stats_incr(STATS_REM_SUCCESS);
-            else if(rs == SDK_RET_ENTRY_NOT_FOUND)
-                stats_incr(STATS_REM_FAIL_ENTRY_NOT_FOUND);
-            else if(rs == SDK_RET_INVALID_ARG) stats_incr(STATS_REM_FAIL_INV_ARG);
-            else if(rs == SDK_RET_HW_PROGRAM_ERR) stats_incr(STATS_REM_FAIL_HW);
-            else if(rs == SDK_RET_OOB) stats_incr(STATS_REM_FAIL_OOB);
-            else SDK_ASSERT(0);
-            break;
-        case RETRIEVE:
-            if(rs == SDK_RET_OK) stats_incr(STATS_REM_SUCCESS);
-            else if(rs == SDK_RET_ENTRY_NOT_FOUND)
-                stats_incr(STATS_REM_FAIL_ENTRY_NOT_FOUND);
-            else if(rs == SDK_RET_INVALID_ARG) stats_incr(STATS_REM_FAIL_INV_ARG);
-            else if(rs == SDK_RET_OOB) stats_incr(STATS_REM_FAIL_OOB);
-            else SDK_ASSERT(0);
-            break;
-        default:
-            SDK_ASSERT(0);
+    case INSERT:
+        if (rs == SDK_RET_OK) stats_incr(STATS_INS_SUCCESS);
+        else if (rs == SDK_RET_HW_PROGRAM_ERR) stats_incr(STATS_INS_FAIL_HW);
+        else if (rs == SDK_RET_NO_RESOURCE) stats_incr(STATS_INS_FAIL_NO_RES);
+        else if (rs == SDK_RET_DUPLICATE_INS) stats_incr(STATS_INS_FAIL_DUP_INS);
+        else SDK_ASSERT(0);
+        break;
+    case INSERT_WITHID:
+        if (rs == SDK_RET_OK) stats_incr(STATS_INS_WITHID_SUCCESS);
+        else if (rs == SDK_RET_HW_PROGRAM_ERR) stats_incr(STATS_INS_WITHID_FAIL_HW);
+        else if (rs == SDK_RET_DUPLICATE_INS) stats_incr(STATS_INS_WITHID_FAIL_DUP_INS);
+        else if (rs == SDK_RET_INVALID_ARG) stats_incr(STATS_INS_WITHID_FAIL_INV_ARG);
+        else SDK_ASSERT(0);
+    case UPDATE:
+        if (rs == SDK_RET_OK) stats_incr(STATS_UPD_SUCCESS);
+        else if (rs == SDK_RET_ENTRY_NOT_FOUND)
+            stats_incr(STATS_UPD_FAIL_ENTRY_NOT_FOUND);
+        else if (rs == SDK_RET_INVALID_ARG) stats_incr(STATS_UPD_FAIL_INV_ARG);
+        else if (rs == SDK_RET_HW_PROGRAM_ERR) stats_incr(STATS_UPD_FAIL_HW);
+        else if (rs == SDK_RET_OOB) stats_incr(STATS_UPD_FAIL_OOB);
+        else SDK_ASSERT(0);
+        break;
+    case REMOVE:
+        if (rs == SDK_RET_OK) stats_incr(STATS_REM_SUCCESS);
+        else if (rs == SDK_RET_ENTRY_NOT_FOUND)
+            stats_incr(STATS_REM_FAIL_ENTRY_NOT_FOUND);
+        else if (rs == SDK_RET_INVALID_ARG) stats_incr(STATS_REM_FAIL_INV_ARG);
+        else if (rs == SDK_RET_HW_PROGRAM_ERR) stats_incr(STATS_REM_FAIL_HW);
+        else if (rs == SDK_RET_OOB) stats_incr(STATS_REM_FAIL_OOB);
+        else SDK_ASSERT(0);
+        break;
+    case RETRIEVE:
+        if (rs == SDK_RET_OK) stats_incr(STATS_REM_SUCCESS);
+        else if (rs == SDK_RET_ENTRY_NOT_FOUND)
+            stats_incr(STATS_REM_FAIL_ENTRY_NOT_FOUND);
+        else if (rs == SDK_RET_INVALID_ARG) stats_incr(STATS_REM_FAIL_INV_ARG);
+        else if (rs == SDK_RET_OOB) stats_incr(STATS_REM_FAIL_OOB);
+        else SDK_ASSERT(0);
+        break;
+    default:
+        SDK_ASSERT(0);
     }
 }
 
@@ -864,7 +865,7 @@ uint32_t
 hash::num_inserts(void)
 {
     return stats_[STATS_INS_SUCCESS] + stats_[STATS_INS_FAIL_DUP_INS] +
-        stats_[STATS_INS_FAIL_NO_RES] + stats_[STATS_INS_FAIL_HW];
+               stats_[STATS_INS_FAIL_NO_RES] + stats_[STATS_INS_FAIL_HW];
 }
 
 // ----------------------------------------------------------------------------
@@ -929,10 +930,10 @@ hash::entry_trace_(hash_entry_t *he)
     p4pd_error_t    p4_err;
 
     p4_err = p4pd_table_ds_decoded_string_get(id_, he->index,
-            he->key, NULL, he->data, buff, sizeof(buff));
+                                              he->key, NULL, he->data, buff,
+                                              sizeof(buff));
     SDK_ASSERT(p4_err == P4PD_SUCCESS);
-
-    SDK_TRACE_DEBUG("%s: Index: %d \n %s", name_, he->index, buff);
+    SDK_TRACE_DEBUG("%s : Index : %d\n%s", name_, he->index, buff);
 
     return SDK_RET_OK;
 }
@@ -956,12 +957,9 @@ hash::entry_to_str(void *key, void *key_mask, void *data, uint32_t index,
                              get_otcam_id_from_hash_idx_(index),
                              buff, buff_size);
     }
-
-    SDK_TRACE_DEBUG("%s: Index: %d \n %s", name_, index, buff);
-
+    SDK_TRACE_DEBUG("%s : Index: %d\n%s", name_, index, buff);
     return SDK_RET_OK;
 }
 
 }    // namespace table
 }    // namespace sdk
-
