@@ -80,8 +80,8 @@ func (e *AlertExporter) Export(destNames []string, alert *monitoring.Alert) erro
 
 		numNotificationsSent := e.export(destName, alert)
 
-		// update the total notifications on alert destionation
-		if err := e.updateAlertDestionation(destName, numNotificationsSent); err != nil {
+		// update the total notifications on alert destination
+		if err := e.updateAlertDestination(destName, numNotificationsSent); err != nil {
 			e.logger.Errorf("failed to update alert destination %v, err: %v", destName, err)
 		}
 	}
@@ -206,8 +206,8 @@ func (e *AlertExporter) watchAlertDestinations() {
 	}
 }
 
-// updateAlertDestionation helper function to update total notifications sent on the alert policy.
-func (e *AlertExporter) updateAlertDestionation(destName string, numNotificationsSent int) error {
+// updateAlertDestination helper function to update total notifications sent on the alert policy.
+func (e *AlertExporter) updateAlertDestination(destName string, numNotificationsSent int) error {
 	if e.apiClient == nil {
 		return fmt.Errorf("could not update alert destination")
 	}

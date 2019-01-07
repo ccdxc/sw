@@ -94,20 +94,22 @@ func TestExporter(t *testing.T) {
 				return
 			case <-time.After(60 * time.Millisecond):
 				ad := memDb.GetAlertDestination(alertDestBSDSyslog.GetObjectMeta().GetName())
-				numTargets := len(ad.Spec.SyslogExport.Targets)
-				go func() {
-					getC := mAlertDestination.EXPECT().Get(context.Background(), alertDestBSDSyslog.GetObjectMeta()).Return(alertDestBSDSyslog, nil).MinTimes(0).MaxTimes(1)
-					mAlertDestination.EXPECT().Update(context.Background(), alertDestBSDSyslog).Return(alertDestBSDSyslog, nil).MinTimes(0).MaxTimes(1).After(getC)
-					mAPI.EXPECT().MonitoringV1().Return(mMonitoring).MinTimes(0).MaxTimes(2)
-				}()
+				if ad != nil && ad.Spec.SyslogExport != nil {
+					numTargets := len(ad.Spec.SyslogExport.Targets)
+					go func() {
+						getC := mAlertDestination.EXPECT().Get(context.Background(), alertDestBSDSyslog.GetObjectMeta()).Return(alertDestBSDSyslog, nil).MinTimes(0).MaxTimes(1)
+						mAlertDestination.EXPECT().Update(context.Background(), alertDestBSDSyslog).Return(alertDestBSDSyslog, nil).MinTimes(0).MaxTimes(1).After(getC)
+						mAPI.EXPECT().MonitoringV1().Return(mMonitoring).MinTimes(0).MaxTimes(2)
+					}()
 
-				if exporter.Export([]string{alertDestUUID}, alert) != nil {
-					continue
+					if exporter.Export([]string{alertDestUUID}, alert) != nil {
+						continue
+					}
+
+					totalExports.Lock()
+					totalExports.count += numTargets
+					totalExports.Unlock()
 				}
-
-				totalExports.Lock()
-				totalExports.count += numTargets
-				totalExports.Unlock()
 			}
 		}
 	}()
