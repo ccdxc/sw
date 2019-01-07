@@ -19,5 +19,5 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_dummy:
     phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_load_barco_req[33:6] 
     phvwr  p.common_te0_phv_table_addr, k.ipsec_to_stage1_barco_desc_addr
     phvwri p.{p4_intr_global_tm_iport...p4_intr_global_tm_oport}, ((TM_OPORT_DMA << 4) | TM_OPORT_P4INGRESS) 
-    phvwri.e p.p4_intr_global_lif, ARM_CPU_LIF
+    phvwri.e p.p4_intr_global_lif, LIF_CPU
     nop

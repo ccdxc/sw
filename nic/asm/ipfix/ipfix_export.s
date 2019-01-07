@@ -34,7 +34,7 @@ ipfix_export_packet:
     // ring doorbell (self-16)
     addi        r1, r0, DB_ADDR_BASE
     or          r1, r1, 0x3, DB_UPD_SHFT
-    or          r1, r1, 1005, DB_LIF_SHFT
+    or          r1, r1, LIF_IPFIX, DB_LIF_SHFT
     sub         r2, k.ipfix_metadata_export_id, IPFIX_EXPORT_ID_MAX
     add         r2, r0, r2, 24
     phvwr       p.ipfix_s5_metadata_doorbell2_data, r2.dx
@@ -50,7 +50,7 @@ ipfix_export_packet:
 ipfix_export_dma_packet:
     phvwr       p.p4_intr_global_tm_iport, TM_PORT_DMA
     phvwr       p.p4_intr_global_tm_oport, TM_PORT_INGRESS
-    phvwr       p.p4_intr_global_lif, 1003
+    phvwr       p.p4_intr_global_lif, LIF_CPU
     phvwri      p.ipfix_app_header_flags, \
                     (P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN | \
                      P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN)
@@ -80,7 +80,7 @@ ipfix_export_packet_exit:
     // disable doorbell (self)
     addi        r1, r0, DB_ADDR_BASE
     or          r1, r1, 0x2, DB_UPD_SHFT
-    or          r1, r1, 1005, DB_LIF_SHFT
+    or          r1, r1, LIF_IPFIX, DB_LIF_SHFT
     add         r2, r0, k.ipfix_metadata_export_id, 24
     phvwr       p.ipfix_s5_metadata_doorbell1_data, r2.dx
     phvwr       p.phv2mem_cmd3_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM

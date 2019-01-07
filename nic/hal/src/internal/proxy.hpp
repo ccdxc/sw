@@ -9,6 +9,7 @@
 #include "nic/include/base.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"
 #include "gen/proto/proxy.pb.h"
+#include "nic/include/globals.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
 #include "gen/proto/tcp_proxy.pb.h"
@@ -34,7 +35,7 @@ namespace hal {
 #define HAL_MAX_PROXY                           7
 #define HAL_MAX_PROXY_FLOWS                     16000
 #define HAL_MAX_QID                             16777215
-#define SERVICE_LIF_START                       1001
+#define SERVICE_LIF_START                       HAL_LIF_ID_SVC_LIF_MIN
 #define HAL_PROXY_MAX_ST_LIF_PER_SVC            5
 #define HAL_PROXY_MAX_QTYPE_PER_LIF             8
 
@@ -43,6 +44,7 @@ enum {
     SERVICE_LIF_TLS_PROXY,
     SERVICE_LIF_CPU,
     SERVICE_LIF_IPSEC_ESP,
+    SERVICE_LIF_IPSEC_AH,
     SERVICE_LIF_IPFIX,
     SERVICE_LIF_APP_REDIR,
     SERVICE_LIF_GC,
@@ -58,9 +60,11 @@ inline uint16_t parse_service_lif(const char *s)
         { "SERVICE_LIF_TLS_PROXY",  SERVICE_LIF_TLS_PROXY},
         { "SERVICE_LIF_CPU"      ,  SERVICE_LIF_CPU},
         { "SERVICE_LIF_IPSEC_ESP",  SERVICE_LIF_IPSEC_ESP},
+        { "SERVICE_LIF_IPSEC_AH",   SERVICE_LIF_IPSEC_AH},
         { "SERVICE_LIF_IPFIX"    ,  SERVICE_LIF_IPFIX},
         { "SERVICE_LIF_APP_REDIR",  SERVICE_LIF_APP_REDIR},
         { "SERVICE_LIF_GC"       ,  SERVICE_LIF_GC},
+        { "SERVICE_LIF_P4PT"     ,  SERVICE_LIF_P4PT},
         { "SERVICE_LIF_CPU_BYPASS", SERVICE_LIF_CPU_BYPASS},
     };
 

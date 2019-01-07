@@ -15,8 +15,8 @@ namespace proxy {
 #define IPSEC_PLUGIN_RFLOW_ACTION_DECRYPT    3
 
 // Will update to global define later.
-#define IPSEC_ARM_LIF 1003
-#define IPSEC_SVC_LIF 1004
+#define IPSEC_ARM_LIF SERVICE_LIF_CPU
+#define IPSEC_SVC_LIF SERVICE_LIF_IPSEC_ESP
 
 typedef struct ipsec_info_s {
     uint32_t vrf;

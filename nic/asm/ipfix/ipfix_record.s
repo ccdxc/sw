@@ -140,7 +140,7 @@ ipfix_header_fixups:
     // disable doorbell (self)
     addi        r1, r0, DB_ADDR_BASE
     or          r1, r1, 0x2, DB_UPD_SHFT
-    or          r1, r1, 1005, DB_LIF_SHFT
+    or          r1, r1, LIF_IPFIX, DB_LIF_SHFT
     add         r2, r0, k.ipfix_metadata_export_id, 24
     phvwr       p.ipfix_s5_metadata_doorbell1_data, r2.dx
     phvwr       p.phv2mem_cmd4_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
@@ -164,7 +164,7 @@ ipfix_header_fixups:
     // ring doorbell (self+16)
     addi        r1, r0, DB_ADDR_BASE
     or          r1, r1, 0x3, DB_UPD_SHFT
-    or          r1, r1, 1005, DB_LIF_SHFT
+    or          r1, r1, LIF_IPFIX, DB_LIF_SHFT
     add         r2, k.ipfix_metadata_export_id, IPFIX_EXPORT_ID_MAX
     add         r2, r0, r2, 24
     phvwr       p.ipfix_s5_metadata_doorbell2_data, r2.dx

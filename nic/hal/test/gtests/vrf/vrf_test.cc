@@ -66,6 +66,8 @@ using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::Status;
 
+uint16_t g_lif_id = 100; // Use LIFs in the host-lif range
+
 void
 svc_reg (const std::string& server_addr,
          hal::hal_feature_set_t feature_set)
@@ -393,7 +395,7 @@ TEST_F(vrf_test, test2)
     uint64_t nw_hdl = nw_rsp.mutable_status()->mutable_key_or_handle()->nw_handle();
 
     // Create a lif
-    lif_spec.mutable_key_or_handle()->set_lif_id(21);
+    lif_spec.mutable_key_or_handle()->set_lif_id(g_lif_id);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
     hal::hal_cfg_db_close();
@@ -424,7 +426,7 @@ TEST_F(vrf_test, test2)
 
     // Create enicif
     enicif_spec.set_type(intf::IF_TYPE_ENIC);
-    enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(21);
+    enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(g_lif_id++);
     enicif_spec.mutable_key_or_handle()->set_interface_id(21);
     enicif_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
     enicif_spec.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(21);
@@ -642,7 +644,7 @@ TEST_F(vrf_test, test4)
     uint64_t nw_hdl = nw_rsp.mutable_status()->mutable_key_or_handle()->nw_handle();
 
     // Create a lif
-    lif_spec.mutable_key_or_handle()->set_lif_id(41);
+    lif_spec.mutable_key_or_handle()->set_lif_id(g_lif_id);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
     hal::hal_cfg_db_close();
@@ -662,7 +664,7 @@ TEST_F(vrf_test, test4)
 
     // Create enicif
     enicif_spec.set_type(intf::IF_TYPE_ENIC);
-    enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(41);
+    enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(g_lif_id++);
     enicif_spec.mutable_key_or_handle()->set_interface_id(41);
     enicif_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
     enicif_spec.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(41);
@@ -770,7 +772,7 @@ TEST_F(vrf_test, test5)
     uint64_t nw_hdl = nw_rsp.mutable_status()->mutable_key_or_handle()->nw_handle();
 
     // Create a lif
-    lif_spec.mutable_key_or_handle()->set_lif_id(51);
+    lif_spec.mutable_key_or_handle()->set_lif_id(g_lif_id);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
     hal::hal_cfg_db_close();
@@ -790,7 +792,7 @@ TEST_F(vrf_test, test5)
 
     // Create enicif
     enicif_spec.set_type(intf::IF_TYPE_ENIC);
-    enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(51);
+    enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(g_lif_id++);
     enicif_spec.mutable_key_or_handle()->set_interface_id(51);
     enicif_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
     enicif_spec.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(51);
@@ -997,7 +999,7 @@ TEST_F(vrf_test, test8)
     uint64_t nw_hdl = nw_rsp.mutable_status()->mutable_key_or_handle()->nw_handle();
 
     // Create a lif
-    lif_spec.mutable_key_or_handle()->set_lif_id(81);
+    lif_spec.mutable_key_or_handle()->set_lif_id(g_lif_id);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
     hal::hal_cfg_db_close();
@@ -1021,7 +1023,7 @@ TEST_F(vrf_test, test8)
 
     // Create enicif
     enicif_spec.set_type(intf::IF_TYPE_ENIC);
-    enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(81);
+    enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(g_lif_id++);
 
 
     for (int i = 0; i < 10; i++) {
@@ -1153,7 +1155,7 @@ TEST_F(vrf_test, test9)
     uint64_t nw_hdl = nw_rsp.mutable_status()->mutable_key_or_handle()->nw_handle();
 
     // Create a lif
-    lif_spec.mutable_key_or_handle()->set_lif_id(91);
+    lif_spec.mutable_key_or_handle()->set_lif_id(g_lif_id);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
     hal::hal_cfg_db_close();
@@ -1187,7 +1189,7 @@ TEST_F(vrf_test, test9)
 
     // Create enicif
     enicif_spec.set_type(intf::IF_TYPE_ENIC);
-    enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(91);
+    enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(g_lif_id);
     enicif_spec.mutable_key_or_handle()->set_interface_id(921);
     enicif_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
     enicif_spec.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(90);
@@ -1254,7 +1256,7 @@ TEST_F(vrf_test, test9)
         }
     }
     // Remove lif, errors out
-    lif_del_req.mutable_key_or_handle()->set_lif_id(91);
+    lif_del_req.mutable_key_or_handle()->set_lif_id(g_lif_id);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_delete(lif_del_req, &lif_del_rsp);
     hal::hal_cfg_db_close();
@@ -1297,7 +1299,7 @@ TEST_F(vrf_test, test9)
     }
 
     // Remove lif
-    lif_del_req.mutable_key_or_handle()->set_lif_id(91);
+    lif_del_req.mutable_key_or_handle()->set_lif_id(g_lif_id++);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_delete(lif_del_req, &lif_del_rsp);
     hal::hal_cfg_db_close();

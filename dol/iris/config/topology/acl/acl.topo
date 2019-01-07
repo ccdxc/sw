@@ -71,4 +71,4 @@ tenants:
 cpu:
     - entry:
         id      : Cpu1 
-        lif_id  : 1003
+        lif_id  : 35

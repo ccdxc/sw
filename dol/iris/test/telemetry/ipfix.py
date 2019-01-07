@@ -18,7 +18,7 @@ def TestCaseTrigger(tc):
     if (GlobalOptions.dryrun):
         return
     upd = 3
-    lif_id = 1005
+    lif_id = 38
     queue_type = 0
     pid = 0
     ring_id = 0

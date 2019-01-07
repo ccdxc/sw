@@ -121,22 +121,22 @@ TEST_F(fte_test, execute_pipeline) {
     register_feature("f3", exec_handler("f3"));
 
     vector<string> features {"f1", "f2", "f3"};
-    lifqid_t lifq = {1001,1,1};
+    lifqid_t lifq = {hal::SERVICE_LIF_TCP_PROXY,1,1};
     register_pipeline("p1", lifq, "SERVICE_LIF_TCP_PROXY", "1", features);
     features = {"f1","f3"};
-    lifq = {1001,1,2};
+    lifq = {hal::SERVICE_LIF_TCP_PROXY,1,2};
     register_pipeline("p2", lifq, "SERVICE_LIF_TCP_PROXY", "2", features);
 
     ctx_t ctx = {};
 
-    ctx.set_arm_lifq({1001,1,1});
+    ctx.set_arm_lifq({hal::SERVICE_LIF_TCP_PROXY,1,1});
     auto rc = execute_pipeline(ctx);
     EXPECT_EQ(rc, HAL_RET_OK);
     EXPECT_EQ(results, vector<string>({"f1", "f2", "f3"}));
 
     results.clear();
 
-    ctx.set_arm_lifq({1001,1,2});
+    ctx.set_arm_lifq({hal::SERVICE_LIF_TCP_PROXY,1,2});
     rc = execute_pipeline(ctx);
     EXPECT_EQ(rc, HAL_RET_OK);
     EXPECT_EQ(results, vector<string>({"f1", "f3"}));
@@ -163,11 +163,11 @@ TEST_F(fte_test, execute_pipeline_end) {
     register_feature("f4", exec_handler("f4", PIPELINE_END));
 
     vector<string> features{"f1", "f2", "f4", "f3"};
-    lifqid_t lifq = {1002,1,1};
+    lifqid_t lifq = {hal::SERVICE_LIF_TLS_PROXY,1,1};
     register_pipeline("p1", lifq, "SERVICE_LIF_TLS_PROXY", "1", features);
 
     ctx_t ctx = {};
-    ctx.set_arm_lifq({1002,1,1});
+    ctx.set_arm_lifq({hal::SERVICE_LIF_TLS_PROXY,1,1});
     auto rc = execute_pipeline(ctx);
     EXPECT_EQ(rc, HAL_RET_OK);
     EXPECT_EQ(results, vector<string>({"f1","f2","f4"}));
@@ -183,33 +183,33 @@ TEST_F(fte_test, execute_pipeline_restart) {
     register_feature("f3", exec_handler("f3"));
 
     // p1 - run f1
-    lifqid_t lifq = {1001,1,1}; 
+    lifqid_t lifq = {hal::SERVICE_LIF_TCP_PROXY,1,1}; 
     vector<string> features{"f1"};
     register_pipeline("p1", lifq, "SERVICE_LIF_TCP_PROXY", "1", features);
 
     // p2 - run f2 and goto p1
     add_feature("restart-p1");
     register_feature("restart-p1",  [](ctx_t &ctx) {
-            ctx.set_arm_lifq({1001,1,1});
+            ctx.set_arm_lifq({hal::SERVICE_LIF_TCP_PROXY,1,1});
             return PIPELINE_RESTART;
         });
     features = {"f2", "restart-p1"};
-    lifq = {1001,1,2};
+    lifq = {hal::SERVICE_LIF_TCP_PROXY,1,2};
     register_pipeline("p2", lifq, "SERVICE_LIF_TCP_PROXY", "2", features);
 
     // p3 - run f3 and goto p2
     add_feature("restart-p2");
     register_feature("restart-p2",  [](ctx_t &ctx) {
-            ctx.set_arm_lifq({1001,1,2});
+            ctx.set_arm_lifq({hal::SERVICE_LIF_TCP_PROXY,1,2});
             return PIPELINE_RESTART;
         });
     features = {"f3", "restart-p2"};
-    lifq = {1001,1,3};
+    lifq = {hal::SERVICE_LIF_TCP_PROXY,1,3};
     register_pipeline("p3", lifq, "SERVICE_LIF_TCP_PROXY", "3", features);
 
     // execute p3
     ctx_t ctx={};
-    ctx.set_arm_lifq({1001, 1, 3});
+    ctx.set_arm_lifq({hal::SERVICE_LIF_TCP_PROXY, 1, 3});
     auto rc = execute_pipeline(ctx);
     EXPECT_EQ(rc, HAL_RET_OK);
     EXPECT_EQ(results, vector<string>({"f3", "f2", "f1"}));
@@ -230,37 +230,37 @@ TEST_F(fte_test, execute_pipeline_wildcard) {
 
     // p1 - {1, 1, 1} f1
     features = {"f1"};
-    lifqid_t lifq = {1001,1,1};
+    lifqid_t lifq = {hal::SERVICE_LIF_TCP_PROXY,1,1};
     register_pipeline("p1", lifq, "SERVICE_LIF_TCP_PROXY", "1", features);
 
     // p2 - {1, 1, *} f2
     features = {"f2"};
-    lifq = {1001,1,0};
+    lifq = {hal::SERVICE_LIF_TCP_PROXY,1,0};
     register_pipeline("p2", lifq, "SERVICE_LIF_TCP_PROXY", "0", features, {}, {0x7FF, 0x7, 0});
 
     // p3 - {1, *, *} f3
     features = {"f3"};
-    lifq = {1001,0,0};
+    lifq = {hal::SERVICE_LIF_TCP_PROXY,0,0};
     register_pipeline("p3", lifq, "SERVICE_LIF_TCP_PROXY", "0", features, {}, {0x7FF, 0, 0});
 
     // p4 - {*, *, *} f4
     features  = {"f4"};
-    lifq = {1001,0,0};
+    lifq = {hal::SERVICE_LIF_TCP_PROXY,0,0};
     register_pipeline("p4", lifq, "", "0", features, {}, {0, 0, 0});
 
     ctx_t ctx={};
 
-    ctx.set_arm_lifq({1001, 1, 1});
+    ctx.set_arm_lifq({hal::SERVICE_LIF_TCP_PROXY, 1, 1});
     execute_pipeline(ctx);
     EXPECT_EQ(results, vector<string>({"f1"}));
     results.clear();
 
-    ctx.set_arm_lifq({1001, 1, 10});
+    ctx.set_arm_lifq({hal::SERVICE_LIF_TCP_PROXY, 1, 10});
     execute_pipeline(ctx);
     EXPECT_EQ(results, vector<string>({"f2"}));
     results.clear();
 
-    ctx.set_arm_lifq({1001, 2, 2});
+    ctx.set_arm_lifq({hal::SERVICE_LIF_TCP_PROXY, 2, 2});
     execute_pipeline(ctx);
     EXPECT_EQ(results, vector<string>({"f3"}));
     results.clear();
@@ -310,7 +310,7 @@ TEST_F(fte_test, ctx_state) {
     register_feature("f2", fn2, info);
 
     vector<string> features{"f1", "f2"};
-    lifqid_t  lifq = {1002,1,1};
+    lifqid_t  lifq = {hal::SERVICE_LIF_TLS_PROXY,1,1};
     register_pipeline("p1", lifq, "SERVICE_LIF_TLS_PROXY", "1", features);
 
 
@@ -319,7 +319,7 @@ TEST_F(fte_test, ctx_state) {
     feature_state_t *st = (feature_state_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_FTE, sz);
 
     test_ctx_t ctx = {};
-    ctx.init({1002,1,1}, st, num_features);
+    ctx.init({hal::SERVICE_LIF_TLS_PROXY,1,1}, st, num_features);
     execute_pipeline(ctx);
     HAL_FREE(hal::HAL_MEM_ALLOC_FTE, st);
 }
