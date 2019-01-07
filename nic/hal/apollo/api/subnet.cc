@@ -111,6 +111,11 @@ subnet_entry::program_config(obj_ctxt_t *obj_ctxt) {
      * there is no h/w programming for subnet config but a h/w id is needed so
      * we can use while programming vnics, routes etc.
      */
+    oci_subnet_t *oci_subnet = &obj_ctxt->api_params->subnet_info;
+    OCI_TRACE_DEBUG("Creating subnet (vcn %u, subnet %u), pfx %s, vr ip %s, "
+                    "vr_mac %s", key_.vcn_id, key_.id,
+                    ippfx2str(&oci_subnet->pfx), ipaddr2str(&oci_subnet->vr_ip),
+                    macaddr2str(oci_subnet->vr_mac));
     return reserve_resources_();
 }
 
@@ -169,11 +174,7 @@ sdk_ret_t
 subnet_entry::activate_config(oci_epoch_t epoch, api_op_t api_op,
                               obj_ctxt_t *obj_ctxt) {
     /**< there is no h/w programming for subnet config, so nothing to activate */
-    oci_subnet_t *oci_subnet = &obj_ctxt->api_params->subnet_info;
-    OCI_TRACE_DEBUG("Created subnet (vcn %u, subnet %u), pfx %s, vr ip %s, "
-                    "vr_mac %s", oci_subnet->key.vcn_id, oci_subnet->key.id,
-                    ippfx2str(&oci_subnet->pfx), ipaddr2str(&oci_subnet->vr_ip),
-                    macaddr2str(oci_subnet->vr_mac));
+    OCI_TRACE_DEBUG("Created subnet (vcn %u, subnet %u)", key_.vcn_id, key_.id);
     return SDK_RET_OK;
 }
 

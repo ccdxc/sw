@@ -117,6 +117,7 @@ tep_entry::program_config(obj_ctxt_t *obj_ctxt) {
 
     ret = reserve_resources_();
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+    OCI_TRACE_DEBUG("Programming TEP %s", ipv4addr2str(key_.ip_addr));
     return impl_->program_hw(this, obj_ctxt);
 }
 
@@ -164,6 +165,7 @@ tep_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 tep_entry::activate_config(oci_epoch_t epoch, api_op_t api_op,
                            obj_ctxt_t *obj_ctxt) {
+    OCI_TRACE_DEBUG("Created TEP %s", ipv4addr2str(key_.ip_addr));
     return SDK_RET_OK;
 }
 
@@ -186,7 +188,6 @@ tep_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
  */
 sdk_ret_t
 tep_entry::add_to_db(void) {
-    OCI_TRACE_DEBUG("Adding TEP %s to db", ipv4addr2str(key_.ip_addr));
     return tep_db()->tep_ht()->insert_with_key(&key_, this,
                                                &ht_ctxt_);
 }

@@ -195,11 +195,10 @@ api_engine::pre_process_api_(api_ctxt_t *api_ctxt) {
              * to support idempotency)
              */
             SDK_ASSERT(api_obj->is_in_dirty_list() == true);
-            obj_ctxt_t& octxt = batch_ctxt_.dirty_objs.find(api_obj)->second;
+            obj_ctxt_t& octxt = batch_ctxt_.dirty_obj_map.find(api_obj)->second;
             SDK_ASSERT((octxt.api_op == API_OP_NONE) ||
                        (octxt.api_op == API_OP_DELETE));
-            octxt.api_op =
-                api_op_(batch_ctxt_.dirty_objs[api_obj].api_op, API_OP_CREATE);
+            octxt.api_op = api_op_(octxt.api_op, API_OP_CREATE);
             SDK_ASSERT(octxt.api_op != API_OP_INVALID);
 
             /**< update the config, by cloning the object, if needed */
@@ -243,10 +242,10 @@ api_engine::pre_process_api_(api_ctxt_t *api_ctxt) {
                  * note that we could have cloned_obj as non-NULL in this case
                  * (e.g., UPD-XXX-DEL), but that doesn't matter here
                  */
-                batch_ctxt_.dirty_objs[api_obj].api_op =
-                    api_op_(batch_ctxt_.dirty_objs[api_obj].api_op,
+                batch_ctxt_.dirty_obj_map[api_obj].api_op =
+                    api_op_(batch_ctxt_.dirty_obj_map[api_obj].api_op,
                             API_OP_DELETE);
-                SDK_ASSERT(batch_ctxt_.dirty_objs[api_obj].api_op !=
+                SDK_ASSERT(batch_ctxt_.dirty_obj_map[api_obj].api_op !=
                            API_OP_INVALID);
             } else {
                 /**< add the object to dirty list */
@@ -264,7 +263,7 @@ api_engine::pre_process_api_(api_ctxt_t *api_ctxt) {
         if (api_obj) {
             if (api_obj->is_in_dirty_list()) {
                 obj_ctxt_t& octxt =
-                    batch_ctxt_.dirty_objs.find(api_obj)->second;
+                    batch_ctxt_.dirty_obj_map.find(api_obj)->second;
                 octxt.api_op = api_op_(octxt.api_op, API_OP_UPDATE);
                 SDK_ASSERT(octxt.api_op != API_OP_INVALID);
                 if (octxt.cloned_obj == NULL) {
@@ -419,8 +418,8 @@ api_engine::program_config_stage_(void) {
 
     /**< walk over all the dirty objects and program hw, if any */
     batch_ctxt_.stage = API_BATCH_STAGE_TABLE_UPDATE;
-    for (auto it = batch_ctxt_.dirty_objs.begin();
-         it != batch_ctxt_.dirty_objs.end(); ++it) {
+    for (auto it = batch_ctxt_.dirty_obj_list.begin();
+         it != batch_ctxt_.dirty_obj_list.end(); ++it) {
         ret = program_config_(it->first, &it->second);
         SDK_ASSERT_GOTO((ret == SDK_RET_OK), error);
     }
@@ -522,12 +521,12 @@ api_engine::activate_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
  */
 sdk_ret_t
 api_engine::activate_config_stage_(void) {
-    sdk_ret_t    ret;
-    unordered_map<api_base *, obj_ctxt_t>::iterator next_it;
+    sdk_ret_t                     ret;
+    dirty_obj_list_t::iterator    next_it;
 
     batch_ctxt_.stage = API_BATCH_STAGE_ACTIVATE_EPOCH;
-    for (auto it = batch_ctxt_.dirty_objs.begin(), next_it = it;
-             it != batch_ctxt_.dirty_objs.end(); it = next_it) {
+    for (auto it = batch_ctxt_.dirty_obj_list.begin(), next_it = it;
+             it != batch_ctxt_.dirty_obj_list.end(); it = next_it) {
         next_it++;
         ret = activate_config_(it->first, &it->second);
         SDK_ASSERT(ret == SDK_RET_OK);
@@ -698,7 +697,8 @@ api_engine::batch_commit(void) {
         }
     }
     batch_ctxt_.api_ctxts.clear();
-    batch_ctxt_.dirty_objs.clear();
+    batch_ctxt_.dirty_obj_map.clear();
+    batch_ctxt_.dirty_obj_list.clear();
     return SDK_RET_OK;
 }
 
@@ -708,14 +708,14 @@ api_engine::batch_commit(void) {
  */
 sdk_ret_t
 api_engine::batch_abort(void) {
-    sdk_ret_t    ret;
-    unordered_map<api_base *, obj_ctxt_t>::iterator next_it;
+    sdk_ret_t                     ret;
+    dirty_obj_list_t::iterator    next_it;
 
     SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_ABORT),
                       sdk::SDK_RET_INVALID_ARG);
 
-    for (auto it = batch_ctxt_.dirty_objs.begin(), next_it = it;
-         it != batch_ctxt_.dirty_objs.end(); it = next_it) {
+    for (auto it = batch_ctxt_.dirty_obj_map.begin(), next_it = it;
+         it != batch_ctxt_.dirty_obj_map.end(); it = next_it) {
         next_it++;
         ret = rollback_config_(it->first, &it->second);
         SDK_ASSERT(ret == SDK_RET_OK);
@@ -731,7 +731,8 @@ api_engine::batch_abort(void) {
         }
     }
     batch_ctxt_.api_ctxts.clear();
-    batch_ctxt_.dirty_objs.clear();
+    batch_ctxt_.dirty_obj_map.clear();
+    batch_ctxt_.dirty_obj_list.clear();
     return SDK_RET_OK;
 }
 
