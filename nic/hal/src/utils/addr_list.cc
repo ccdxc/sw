@@ -411,6 +411,10 @@ hal_ret_t
 mac_addr_elem_add (uint64_t mac_addr, dllist_ctxt_t *head)
 {
     mac_addr_list_elem_t *elem;
+    
+    if (!mac_addr)
+        return HAL_RET_OK;
+
     if ((elem = mac_addr_list_elem_alloc_init()) == NULL) {
         return HAL_RET_OOM;
     }

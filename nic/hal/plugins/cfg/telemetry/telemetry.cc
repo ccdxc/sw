@@ -514,7 +514,6 @@ flow_monitor_rule_create (FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rs
     const acl_ctx_t     *flowmon_acl_ctx = NULL;
     telemetry::RuleAction action;
 
-    HAL_TRACE_DEBUG("PI-FlowMonitorRule create");
     flowmonrule_spec_dump(spec);
     rule_id = spec.key_or_handle().flowmonitorrule_id();
     vrf_id = spec.vrf_key_handle().vrf_id();
@@ -550,8 +549,9 @@ flow_monitor_rule_create (FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rs
         /* Create a new acl context */
         flowmon_acl_ctx = hal::rule_lib_init(flowmon_acl_ctx_name(rule->vrf_id, mirror_action),
                                              &flowmon_rule_config_glbl);
-        HAL_TRACE_DEBUG("Creating new ACL ctx for vrf {} id {}", 
-                         flowmon_acl_ctx_name(rule->vrf_id, mirror_action), rule->vrf_id);
+        HAL_TRACE_DEBUG("Creating new ACL ctx for vrf {} id {} ctx_ptr {:#x}", 
+                         flowmon_acl_ctx_name(rule->vrf_id, mirror_action),
+                         rule->vrf_id, (uint64_t) flowmon_acl_ctx);
     }
     ret = populate_flow_monitor_rule(spec, rule);
     if (ret != HAL_RET_OK) {
@@ -575,7 +575,6 @@ end:
                            flowmon_acl_ctx_name(vrf_id, mirror_action), vrf_id);
             rsp->set_api_status(types::API_STATUS_ERR);
         }
-        acl::acl_deref(flowmon_acl_ctx);
     }
     return ret;
 }
@@ -625,10 +624,18 @@ flow_monitor_rule_delete (FlowMonitorRuleDeleteRequest &req, FlowMonitorRuleDele
         ret = HAL_RET_OK;
         goto end;
     }
-    ret = rule_match_rule_del(&flowmon_acl_ctx, &rule->rule_match, 0, rule_id,
+    HAL_TRACE_DEBUG("Got ctx_name: {} acl_ctx: {:#x}",
+                     flowmon_acl_ctx_name(vrf_id, mirror_action),
+                     (uint64_t) flowmon_acl_ctx);
+    ret = rule_match_rule_del(&flowmon_acl_ctx, &rule->rule_match, rule_id, 0,
                               (void *)&rule->ref_count);
+    if (ret != HAL_RET_OK) {
+        rsp->set_api_status(types::API_STATUS_ERR);
+        HAL_TRACE_ERR("Rule match del failed: ruleid {}", rule_id);
+        goto end;
+    }
     flow_mon_rules[rule_id] = NULL;
-    //flow_monitor_rule_free(rule);
+    flow_monitor_rule_free(rule);
     ret = acl::acl_commit(flowmon_acl_ctx);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("ACL commit fail vrf {} id {}",
@@ -636,7 +643,6 @@ flow_monitor_rule_delete (FlowMonitorRuleDeleteRequest &req, FlowMonitorRuleDele
         rsp->set_api_status(types::API_STATUS_ERR);
         goto end;
     }
-    acl::acl_deref(flowmon_acl_ctx);
     rsp->set_api_status(types::API_STATUS_OK);
 
 end:
