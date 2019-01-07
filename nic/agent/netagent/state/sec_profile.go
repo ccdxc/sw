@@ -103,35 +103,36 @@ func (na *Nagent) ListSecurityProfile() []*netproto.SecurityProfile {
 }
 
 // UpdateSecurityProfile updates a security profile
-func (na *Nagent) UpdateSecurityProfile(sgp *netproto.SecurityProfile) error {
+func (na *Nagent) UpdateSecurityProfile(profile *netproto.SecurityProfile) error {
 	// find the corresponding namespace
-	_, err := na.FindNamespace(sgp.Tenant, sgp.Namespace)
+	_, err := na.FindNamespace(profile.Tenant, profile.Namespace)
 	if err != nil {
-		return err
-	}
-	existingSgp, err := na.FindSecurityProfile(sgp.ObjectMeta)
-	if err != nil {
-		log.Errorf("SecurityProfile %v not found", sgp.ObjectMeta)
 		return err
 	}
 
-	if proto.Equal(sgp, existingSgp) {
+	existingProfile, err := na.FindSecurityProfile(profile.ObjectMeta)
+	if err != nil {
+		log.Errorf("SecurityProfile %v not found", profile.ObjectMeta)
+		return err
+	}
+
+	if proto.Equal(profile, existingProfile) {
 		log.Infof("Nothing to update.")
 		return nil
 	}
 	// Populate the ID from existing security profile to ensure that HAL recognizes this.
-	sgp.Status.SecurityProfileID = existingSgp.Status.SecurityProfileID
+	profile.Status.SecurityProfileID = existingProfile.Status.SecurityProfileID
 
-	err = na.Datapath.UpdateSecurityProfile(sgp)
+	err = na.Datapath.UpdateSecurityProfile(profile)
 	if err != nil {
-		log.Errorf("Error updating the Security Profile {%+v} in datapath. Err: %v", existingSgp, err)
+		log.Errorf("Error updating the Security Profile {%+v} in datapath. Err: %v", existingProfile, err)
 		return err
 	}
-	key := na.Solver.ObjectKey(sgp.ObjectMeta, sgp.TypeMeta)
+	key := na.Solver.ObjectKey(profile.ObjectMeta, profile.TypeMeta)
 	na.Lock()
-	na.SecurityProfileDB[key] = sgp
+	na.SecurityProfileDB[key] = profile
 	na.Unlock()
-	err = na.Store.Write(sgp)
+	err = na.Store.Write(profile)
 	return err
 }
 
