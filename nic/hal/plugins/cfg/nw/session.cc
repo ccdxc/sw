@@ -1666,7 +1666,7 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
                      session_state_t *session_state_p)
 {
     flow_t                                    *iflow, *rflow = NULL;
-    session_state_t                            session_state;
+    session_state_t                            session_state = {0};
     uint64_t                                   session_timeout;
     pd::pd_session_get_args_t                  args;
     SessionSpec                                spec;
@@ -1865,7 +1865,7 @@ build_and_send_tcp_pkt (void *data)
         HAL_TRACE_DEBUG("Sending another tickle and starting timer {} iflow stats: {} rflow stats {}",
                          session->hal_handle, session->iflow->stats.num_tcp_tickles_sent, 
                          (session->rflow)?session->rflow->stats.num_tcp_tickles_sent:0);
-   
+
         /*
          * If Tickles were generated then we increment the tickle count
          * and start a timer waiting for the idle host to respond.
@@ -2021,6 +2021,12 @@ session_age_cb (void *entry, void *ctxt)
                 args->num_ctx[session->fte_id] = 0;
             }
         } else {
+            /* 
+             * Dont delete flows if one flow ages and other remains
+             */
+            if (session->rflow != NULL && retval != SESSION_AGED_BOTH) {
+                return false;
+            }
             //HAL_TRACE_DEBUG("UDP Session: {} num_del_sess: {} session_list: {:p}",
             //         session->hal_handle, args->num_del_sess[session->fte_id],
             //         (void *)args->session_list[session->fte_id]);

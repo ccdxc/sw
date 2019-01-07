@@ -663,6 +663,11 @@ void flow_t::from_config(const hal::flow_cfg_t &flow_cfg,
         valid_.fwding = true;
     }
 
+    if (attrs.vrf_hwid) {
+        lkp_info_.vrf_hwid = attrs.vrf_hwid;
+        valid_.lkp_info = true;
+    }
+
     if (flow_cfg.is_ing_proxy_mirror)
         mirror_info_.proxy_ing_mirror_session = flow_cfg.ing_mirror_session;
     else

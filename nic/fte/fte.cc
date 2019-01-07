@@ -28,6 +28,7 @@ struct feature_s {
     exec_handler_t              exec_handler;   // Feature exec handler
     session_delete_handler_t    sess_del_cb;    // Session delete handler callback
     session_get_handler_t       sess_get_cb;    // Session get handler callback
+    session_update_handler_t    sess_upd_cb;    // Session update handler callback
 };
 
 static std::map<std::string, feature_t*> g_feature_map_;
@@ -196,6 +197,7 @@ hal_ret_t register_feature(const std::string& name,
     feature->state_init_fn = feature_info.state_init_fn;
     feature->sess_del_cb   = feature_info.sess_del_cb;
     feature->sess_get_cb   = feature_info.sess_get_cb;
+    feature->sess_upd_cb   = feature_info.sess_upd_cb;
     feature->registered = true;
 
     return HAL_RET_OK;
@@ -302,6 +304,11 @@ pipeline_invoke_exec_(pipeline_t *pipeline, ctx_t &ctx, uint8_t start,
         case FTE_SESSION_GET:
             if (feature->sess_get_cb) {
                 rc = feature->sess_get_cb(ctx);
+            }
+            break;
+        case FTE_SESSION_UPDATE:
+            if (feature->sess_upd_cb) {
+                rc = feature->sess_upd_cb(ctx);
             }
             break;
         default:
