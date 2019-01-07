@@ -22,7 +22,7 @@ directmap::init(char *name, uint32_t id, uint32_t capacity,
 {
     uint32_t hwkey_len = 0, hwkeymask_len = 0;
 
-    strncpy(name_, name, SDK_MAX_NAME_LEN);
+    strncpy(name_, name, SDK_MAX_NAME_LEN-1);
     id_                  = id;
     capacity_            = capacity;
     swdata_len_          = swdata_len;
@@ -742,7 +742,7 @@ directmap::entry_to_str(void *data, uint32_t index, char *buff,
     p4_err = p4pd_global_table_ds_decoded_string_get(id_, index, NULL, NULL,
                                                      data, buff, buff_size);
     SDK_ASSERT(p4_err == P4PD_SUCCESS);
-    SDK_TRACE_DEBUG("%s : Index: %u\n %s", name_, index, buff);
+    SDK_TRACE_DEBUG("%s : Index: %u\n%s", name_, index, buff);
     return SDK_RET_OK;
 }
 
@@ -757,7 +757,7 @@ directmap::entry_trace_(void *data, uint32_t index)
 
     ret = entry_to_str(data, index, buff, sizeof(buff));
     SDK_ASSERT(ret == SDK_RET_OK);
-    SDK_TRACE_DEBUG("%s : Index: %d \n %s", name_, index, buff);
+    SDK_TRACE_DEBUG("%s : Index: %u\n%s", name_, index, buff);
     return SDK_RET_OK;
 }
 

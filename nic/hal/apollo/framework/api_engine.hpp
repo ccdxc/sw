@@ -11,7 +11,8 @@
 
 #include <vector>
 #include <unordered_map>
-
+#include <list>
+#include <utility>
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/hal/apollo/include/api/oci.hpp"
@@ -23,6 +24,7 @@
 
 using std::vector;
 using std::unordered_map;
+using std::list;
 
 namespace api {
 
@@ -60,16 +62,29 @@ struct obj_ctxt_s {
         cloned_obj = NULL;
         cb_ctxt = NULL;
     }
+
+    bool operator==(const obj_ctxt_s& rhs) const {
+        if (this->api_op == rhs.api_op &&
+            this->api_params == rhs.api_params &&
+            this->cloned_obj == rhs.cloned_obj &&
+            this->cb_ctxt == rhs.cb_ctxt) {
+            return true;
+        }
+        return false;
+    }
 };
+
+typedef unordered_map<api_base *, obj_ctxt_t>      dirty_obj_map_t;
+typedef list<std::pair<api_base *, obj_ctxt_t>>    dirty_obj_list_t;
 
 /**
  * @brief    per batch context which is a list of all API contexts
  */
 typedef struct api_batch_ctxt_s {
-    oci_epoch_t                     epoch;        /**< epoch in progress, passed in
-                                                       oci_batch_begin() */
-    api_batch_stage_t               stage;        /**< phase of the batch processing */
-    vector<api_ctxt_t>              api_ctxts;    /**< API contexts per batch */
+    oci_epoch_t           epoch;           /**< epoch in progress, passed in
+                                                oci_batch_begin() */
+    api_batch_stage_t     stage;           /**< phase of the batch processing */
+    vector<api_ctxt_t>    api_ctxts;       /**< API contexts per batch */
     /**
      * dirty object map is needed because in the same batch we could have
      * multiple modifications of same object, like security rules change and
@@ -77,10 +92,8 @@ typedef struct api_batch_ctxt_s {
      * same batch and we need to activate them in one write (not one after
      * another)
      */
-    // TODO: in addition to map, we should keep list of objects to preserve
-    // order of processing APIs (currently order is decided by the map itself,
-    // which might be incorrect !!!)
-    unordered_map<api_base *, obj_ctxt_t> dirty_objs;  /**< dirty object map */
+    dirty_obj_map_t     dirty_obj_map;     /**< dirty object map */
+    dirty_obj_list_t    dirty_obj_list;    /**< dirty object list */
 } api_batch_ctxt_t;
 
 /**
@@ -193,7 +206,8 @@ private:
      */
     void add_to_dirty_list_(api_base *api_obj, obj_ctxt_t obj_ctxt) {
         api_obj->set_in_dirty_list();
-        batch_ctxt_.dirty_objs[api_obj] = obj_ctxt;
+        batch_ctxt_.dirty_obj_map[api_obj] = obj_ctxt;
+        batch_ctxt_.dirty_obj_list.push_back(std::make_pair(api_obj, obj_ctxt));
     }
 
     /**
@@ -201,7 +215,9 @@ private:
      * @param[in] api_obj    API object being processed
      */
     void del_from_dirty_list_(api_base *api_obj) {
-        batch_ctxt_.dirty_objs.erase(api_obj);
+        batch_ctxt_.dirty_obj_list.remove(
+            std::make_pair(api_obj, batch_ctxt_.dirty_obj_map[api_obj]));
+        batch_ctxt_.dirty_obj_map.erase(api_obj);
         api_obj->clear_in_dirty_list();
     }
 

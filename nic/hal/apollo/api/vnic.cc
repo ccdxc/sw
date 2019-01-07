@@ -7,6 +7,7 @@
  */
 
 #include "nic/sdk/include/sdk/base.hpp"
+#include "nic/hal/apollo/core/trace.hpp"
 #include "nic/hal/apollo/core/mem.hpp"
 #include "nic/hal/apollo/api/vnic.hpp"
 #include "nic/hal/apollo/api/utils.hpp"
@@ -106,10 +107,15 @@ vnic_entry::reserve_resources_(void) {
  */
 sdk_ret_t
 vnic_entry::program_config(obj_ctxt_t *obj_ctxt) {
-    sdk_ret_t    ret;
+    sdk_ret_t     ret;
+    oci_vnic_t    *oci_vnic = &obj_ctxt->api_params->vnic_info;
 
     ret = reserve_resources_();
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+    OCI_TRACE_DEBUG("Programming vnic %u, vcn %u, subnet %u, mac %s, vlan %u, "
+                    "slot %u", key_.id, oci_vnic->vcn.id, oci_vnic->subnet.id,
+                    macaddr2str(oci_vnic->mac_addr), oci_vnic->wire_vlan,
+                    oci_vnic->slot);
     return impl_->program_hw(this, obj_ctxt);
 }
 
@@ -157,6 +163,7 @@ vnic_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 vnic_entry::activate_config(oci_epoch_t epoch, api_op_t api_op,
                            obj_ctxt_t *obj_ctxt) {
+    OCI_TRACE_DEBUG("Activating vnic %u config", key_.id);
     return impl_->activate_hw(this, epoch, api_op, obj_ctxt);
 }
 

@@ -8,6 +8,7 @@
 
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/include/sdk/mem.hpp"
+#include "nic/hal/apollo/core/trace.hpp"
 #include "nic/hal/apollo/core/mem.hpp"
 #include "nic/hal/apollo/framework/impl.hpp"
 #include "nic/hal/apollo/api/switchport.hpp"
@@ -84,6 +85,7 @@ switchport_entry::init_config(api_ctxt_t *api_ctxt) {
  */
 sdk_ret_t
 switchport_entry::program_config(obj_ctxt_t *obj_ctxt) {
+    OCI_TRACE_DEBUG("Programming switchport config");
     return impl_->program_hw(this, obj_ctxt);
 }
 
@@ -123,6 +125,7 @@ sdk_ret_t
 switchport_entry::activate_config(oci_epoch_t epoch, api_op_t api_op,
                                   obj_ctxt_t *obj_ctxt) {
     // there is no stage 0 programming for switchport cfg, so this is a no-op
+    OCI_TRACE_DEBUG("Activated switchport config");
     return SDK_RET_OK;
 }
 
