@@ -54,8 +54,6 @@ create_mappings(uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
     uint16_t         vnic_key = 1, ip_base, mac_offset = 1025;
     uint32_t         ip_offset = 0, remote_slot = 1025, tep_offset = 3;
 
-    return;
-
     // ensure a max. of 32 IPs per VNIC
     SDK_ASSERT(num_vcns * num_subnets * num_vnics * num_ip_per_vnic <= (32 * 1024));
     // create local vnic IP mappings first

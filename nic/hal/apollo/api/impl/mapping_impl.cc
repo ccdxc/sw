@@ -162,7 +162,7 @@ mapping_impl::add_local_ip_mapping_entries_(vcn_entry *vcn,
     ret = mapping_impl_db()->local_ip_mapping_tbl()->insert(
               &local_ip_mapping_key, &local_ip_mapping_data,
               &local_ip_mapping_data_idx1_);
-    if (ret != SDK_RET_OK) {
+    if ((ret != SDK_RET_OK) && (ret != sdk::SDK_RET_HBM_HASH_COLL)) {
         goto error;
     }
 
@@ -179,7 +179,7 @@ mapping_impl::add_local_ip_mapping_entries_(vcn_entry *vcn,
         ret = mapping_impl_db()->local_ip_mapping_tbl()->insert(
                   &local_ip_mapping_key, &local_ip_mapping_data,
                   &local_ip_mapping_data_idx2_);
-        if (ret != SDK_RET_OK) {
+        if ((ret != SDK_RET_OK) && (ret != sdk::SDK_RET_HBM_HASH_COLL)) {
             goto error;
         }
     }
@@ -201,6 +201,7 @@ sdk_ret_t
 mapping_impl::add_remote_vnic_mapping_rx_entries_(vcn_entry *vcn,
                                                   subnet_entry *subnet,
                                                   oci_mapping_t *mapping_info) {
+    sdk_ret_t                         ret;
     remote_vnic_mapping_rx_swkey_t    remote_vnic_mapping_rx_key = { 0 };
     remote_vnic_mapping_rx_data_t     remote_vnic_mapping_rx_data = { 0 };
 
@@ -212,9 +213,13 @@ mapping_impl::add_remote_vnic_mapping_rx_entries_(vcn_entry *vcn,
     remote_vnic_mapping_rx_data.subnet_id = subnet->hw_id();
     memcpy(remote_vnic_mapping_rx_data.overlay_mac,
            mapping_info->overlay_mac, ETH_ADDR_LEN);
-    return mapping_impl_db()->remote_vnic_mapping_rx_tbl()->insert(
+    ret = mapping_impl_db()->remote_vnic_mapping_rx_tbl()->insert(
               &remote_vnic_mapping_rx_key, &remote_vnic_mapping_rx_data,
               &remote_vnic_mapping_rx_idx_);
+    if (ret == SDK_RET_OK || sdk::SDK_RET_HBM_HASH_COLL) {
+        return SDK_RET_OK;
+    }
+    return ret;
 }
 
 /**
@@ -226,6 +231,7 @@ mapping_impl::add_remote_vnic_mapping_rx_entries_(vcn_entry *vcn,
 sdk_ret_t
 mapping_impl::add_remote_vnic_mapping_tx_entries_(vcn_entry *vcn,
                                                   oci_mapping_t *mapping_info) {
+    sdk_ret_t                         ret;
     remote_vnic_mapping_tx_swkey_t    remote_vnic_mapping_tx_key = { 0 };
     remote_vnic_mapping_tx_data_t     remote_vnic_mapping_tx_data = { 0 };
     tep_impl                          *tep_impl_obj;
@@ -238,10 +244,14 @@ mapping_impl::add_remote_vnic_mapping_tx_entries_(vcn_entry *vcn,
            mapping_info->key.ip_addr.addr.v6_addr.addr8, IP6_ADDR8_LEN);
     // TODO: dst_slot_id should come from here, p4 needs to change
     remote_vnic_mapping_tx_data.nexthop_index = tep_impl_obj->nh_id();
-    return mapping_impl_db()->remote_vnic_mapping_tx_tbl()->insert(
+    ret = mapping_impl_db()->remote_vnic_mapping_tx_tbl()->insert(
                &remote_vnic_mapping_tx_key,
                &remote_vnic_mapping_tx_data,
                &remote_vnic_mapping_tx_idx_);
+    if (ret == SDK_RET_OK || sdk::SDK_RET_HBM_HASH_COLL) {
+        return SDK_RET_OK;
+    }
+    return ret;
 }
 
 /**
