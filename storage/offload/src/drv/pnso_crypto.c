@@ -17,11 +17,13 @@
 #define CRYPTO_NUM_DESCS_PER_SGL_VEC	INTERM_BUF_MAX_NUM_BUFS
 
 #define PNSO_NUM_OBJECTS_IN_OBJECT	16
+#define PNSO_NUM_BYPASS_OBJECTS		2	/* per desc for non-batch */
 
 static void
 deinit_mpools(struct per_core_resource *pcr)
 {
 	mpool_destroy(&pcr->mpools[MPOOL_TYPE_CRYPTO_AOL_VECTOR]);
+	mpool_destroy(&pcr->mpools[MPOOL_TYPE_CRYPTO_DESC_BO_VECTOR]);
 	mpool_destroy(&pcr->mpools[MPOOL_TYPE_CRYPTO_DESC_VECTOR]);
 	mpool_destroy(&pcr->mpools[MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS]);
 	mpool_destroy(&pcr->mpools[MPOOL_TYPE_CRYPTO_AOL]);
@@ -84,6 +86,15 @@ init_mpools(struct pc_res_init_params *pc_init,
 	if (err)
 		goto out;
 
+	mpool_type = MPOOL_TYPE_CRYPTO_DESC_BO_VECTOR;
+	err = mpool_create(mpool_type, num_objects *
+			PNSO_NUM_BYPASS_OBJECTS,
+			PNSO_NUM_OBJECTS_IN_OBJECT,
+			sizeof(struct crypto_desc), PNSO_MEM_ALIGN_DESC,
+			&pcr->mpools[mpool_type]);
+	if (err)
+		goto out;
+
 	mpool_type = MPOOL_TYPE_CRYPTO_AOL_VECTOR;
 	err = mpool_create(mpool_type, num_objects * MAX_CRYPTO_SGL_VEC_PER_REQ,
 			CRYPTO_NUM_DESCS_PER_AOL_VEC,
@@ -97,6 +108,7 @@ init_mpools(struct pc_res_init_params *pc_init,
 	MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_CRYPTO_AOL]);
 	MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS]);
 	MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_CRYPTO_DESC_VECTOR]);
+	MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_CRYPTO_DESC_BO_VECTOR]);
 	MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_CRYPTO_AOL_VECTOR]);
 
 	return PNSO_OK;
