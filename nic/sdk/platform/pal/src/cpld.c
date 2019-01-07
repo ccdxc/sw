@@ -68,14 +68,14 @@ static inline int
 cpld_reg_rd(int reg) {
     int cpld_rd_data = 0;
 
-    if (!pal_rd_lock(CPLDLOCK)) {
+    if (!pal_wr_lock(CPLDLOCK)) {
         printf("Could not lock pal.lck\n");
         return CPLD_FAIL;
     }
 
     cpld_rd_data = cpld_read(reg);
 
-    if (!pal_rd_unlock(CPLDLOCK)) {
+    if (!pal_wr_unlock(CPLDLOCK)) {
         printf("Failed to unlock.\n");
     }
 
