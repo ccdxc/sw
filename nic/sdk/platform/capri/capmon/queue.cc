@@ -16,7 +16,7 @@
 #include "cap_top_csr_defines.h"
 #include "cap_wa_c_hdr.h"
 
-#include "platform/src/lib/pal/include/pal.h"
+#include "nic/sdk/platform/pal/include/pal.h"
 
 using namespace std;
 

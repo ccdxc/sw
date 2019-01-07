@@ -17,7 +17,7 @@
 #include "cap_ppa_c_hdr.h"
 #include "cap_top_csr_defines.h"
 
-#include "platform/src/lib/pal/include/pal.h"
+#include "platform/pal/include/pal.h"
 #include "capmon.hpp"
 
 void

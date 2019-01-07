@@ -20,7 +20,7 @@
 #include "cap_top_csr_defines.h"
 #include "capmon.hpp"
 
-#include "platform/src/lib/pal/include/pal.h"
+#include "nic/sdk/platform/pal/include/pal.h"
 
 uint64_t pipe_base[PIPE_CNT] = {[TXDMA] = CAP_ADDR_BASE_PCT_MPU_0_OFFSET,
                                 [RXDMA] = CAP_ADDR_BASE_PCR_MPU_0_OFFSET,

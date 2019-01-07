@@ -12,7 +12,7 @@
 #include <inttypes.h>
 #include <sys/param.h>
 
-#include "platform/src/lib/pal/include/pal.h"
+#include "nic/sdk/platform/pal/include/pal.h"
 
 #include "cap_top_csr_defines.h"
 #include "cap_intr_c_hdr.h"

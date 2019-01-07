@@ -11,7 +11,7 @@
 #include <sys/param.h>
 
 #include "platform/src/lib/misc/include/misc.h"
-#include "platform/src/lib/pal/include/pal.h"
+#include "platform/pal/include/pal.h"
 
 static void
 usage(void)

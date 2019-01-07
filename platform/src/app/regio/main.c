@@ -10,7 +10,7 @@
 #include <unistd.h>
 #include <libgen.h>
 
-#include "platform/src/lib/pal/include/pal.h"
+#include "nic/sdk/platform/pal/include/pal.h"
 
 static const char *progname;
 

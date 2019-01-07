@@ -22,7 +22,7 @@ namespace psp {
 #include "cap_psp_c_hdr.h"
 }
 
-#include "platform/src/lib/pal/include/pal.h"
+#include "platform/pal/include/pal.h"
 #include "capmon.hpp"
 
 static inline void

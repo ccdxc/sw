@@ -8,7 +8,7 @@
 #include <string.h>
 #include <inttypes.h>
 #include <ctype.h>
-#include "platform/src/lib/pal/include/pal.h"
+#include "platform/pal/include/pal.h"
 #include <assert.h>
 
 #define MAXAPPNAME 64

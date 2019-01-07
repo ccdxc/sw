@@ -17,7 +17,7 @@
 #include "cap_pxb_c_hdr.h"
 #include "cap_pp_c_hdr.h"
 
-#include "platform/src/lib/pal/include/pal.h"
+#include "nic/sdk/platform/pal/include/pal.h"
 #include "cmd.h"
 
 extern cmd_t __start_cmdtab[];

@@ -10,7 +10,7 @@
 #include <inttypes.h>
 #include <sys/time.h>
 
-#include "platform/src/lib/pal/include/pal.h"
+#include "nic/sdk/platform/pal/include/pal.h"
 #include "platform/src/lib/pcieport/include/pcieport.h"
 #include "platform/src/lib/pcieport/include/portcfg.h"
 

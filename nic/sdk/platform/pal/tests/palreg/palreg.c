@@ -9,7 +9,7 @@
 #include <inttypes.h>
 #include <assert.h>
 
-#include "platform/src/lib/pal/include/pal.h"
+#include "platform/pal/include/pal.h"
 
 #define pal_readreg32(pr, pa, v) \
     do { *v = pal_reg_rd32(pa); } while (0)
