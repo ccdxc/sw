@@ -3,12 +3,14 @@ package apigwpkg
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"sort"
 	"strings"
 	"sync"
 	"testing"
@@ -22,13 +24,18 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/errors"
+	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/generated/audit"
+	"github.com/pensando/sw/api/generated/auth"
 	evtsapi "github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apiserver"
 	cmdtypes "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
+	auditmgr "github.com/pensando/sw/venice/utils/audit/manager"
 	authnmgr "github.com/pensando/sw/venice/utils/authn/manager"
 	"github.com/pensando/sw/venice/utils/authz"
 	authzmgr "github.com/pensando/sw/venice/utils/authz/manager"
@@ -316,6 +323,7 @@ func TestRunApiGw(t *testing.T) {
 		DebugMode: true,
 		Logger:    l,
 		Resolvers: []string{""},
+		Auditor:   auditmgr.WithAuditors(auditmgr.NewLogAuditor(context.TODO(), l)),
 	}
 	_ = MustGetAPIGateway()
 	a := singletonAPIGw
@@ -409,18 +417,25 @@ func TestHandleRequest(t *testing.T) {
 	_ = MustGetAPIGateway()
 
 	a := singletonAPIGw
+	a.runstate.running = true
+	a.runstate.addr = &mockAddr{}
 	buf := &bytes.Buffer{}
 	logConfig := log.GetDefaultConfig("TestApiGw")
 	l := log.GetNewLogger(logConfig).SetOutput(buf)
 	a.logger = l
 	a.authnMgr = authnmgr.NewMockAuthenticationManager()
 	a.authzMgr = authzmgr.NewAlwaysAllowAuthorizer()
-
 	// create authenticated context
 	ctx := metadata.NewOutgoingContext(context.TODO(), metadata.Pairs(strings.ToLower(fmt.Sprintf("%s%s", runtime.MetadataPrefix, apigw.CookieHeader)), login.SessionID+"=jwt",
 		"req-method", "GET"))
 	// context with authz operations
-	mock.retAuthzCtx = NewContextWithOperations(ctx, nil)
+	mock.retAuthzCtx = NewContextWithOperations(ctx, authz.NewOperation(authz.NewResource(
+		globals.DefaultTenant,
+		string(apiclient.GroupAuth),
+		string(auth.KindUser),
+		globals.DefaultNamespace,
+		""), auth.Permission_Create.String()))
+	a.auditor = auditmgr.NewLogAuditor(ctx, l)
 	out, err := a.HandleRequest(ctx, &input, prof, call)
 	if !reflect.DeepEqual(&input, out) {
 		t.Errorf("returned object does not match [%v]/[%v]", input, out)
@@ -448,16 +463,13 @@ func TestHandleRequest(t *testing.T) {
 		t.Errorf("expecting 1 pre call hooks got %d", len(tc))
 	}
 
-	// Test with the one preAuthn hook returning skip
+	// Test with the one preCall hook returning skip
 	skipfn := func() bool {
 		return mock.preCallCnt == 1
 	}
 	mock.skipCallFn = skipfn
 	mock.preCallCnt, mock.postCallCnt, mock.preAuthNCnt, mock.preAuthZCnt = 0, 0, 0, 0
 	called = 0
-	// create authenticated context
-	ctx = metadata.NewOutgoingContext(context.TODO(), metadata.Pairs(strings.ToLower(fmt.Sprintf("%s%s", runtime.MetadataPrefix, apigw.CookieHeader)), login.SessionID+"=jwt",
-		"req-method", "GET"))
 	out, err = a.HandleRequest(ctx, &input, prof, call)
 	if !reflect.DeepEqual(&input, out) {
 		t.Errorf("returned object does not match [%v]/[%v]", input, out)
@@ -836,4 +848,267 @@ func TestHandleProxyRequest(t *testing.T) {
 	if len(tc) != 1 || mock.postCallCnt != len(tc) {
 		t.Errorf("expecting 1 pre call hooks got %d/%d", len(tc), mock.postCallCnt)
 	}
+}
+
+func TestGetClientIPs(t *testing.T) {
+	tests := []struct {
+		name     string
+		md       metadata.MD
+		expected []string
+	}{
+		{
+			name:     "no metadata in context",
+			md:       nil,
+			expected: nil,
+		},
+		{
+			name:     "no headers in metadata",
+			md:       metadata.Pairs(),
+			expected: nil,
+		},
+		{
+			name:     "X-Forwarded-For header in metadata",
+			md:       metadata.Pairs(apigw.XForwardedFor, "192.168.30.9"),
+			expected: []string{"192.168.30.9"},
+		},
+		{
+			name:     "Forwarded header in metadata",
+			md:       metadata.Pairs(apigw.Forwarded, "for=192.168.30.9"),
+			expected: []string{"192.168.30.9"},
+		},
+		{
+			name:     "Multiple ips in Forwarded header",
+			md:       metadata.Pairs(apigw.Forwarded, "for=192.168.30.9", apigw.Forwarded, "for=192.168.30.10"),
+			expected: []string{"192.168.30.9", "192.168.30.10"},
+		},
+	}
+	for _, test := range tests {
+		ctx := context.TODO()
+		if test.md != nil {
+			ctx = metadata.NewOutgoingContext(ctx, test.md)
+		}
+		clientIPs := getClientIPs(ctx)
+		sort.Strings(test.expected)
+		sort.Strings(clientIPs)
+		Assert(t, reflect.DeepEqual(test.expected, clientIPs), fmt.Sprintf("[%v] test failed", test.name))
+	}
+}
+
+func TestAudit(t *testing.T) {
+	sgPolicy := &security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "policy1",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules: []security.SGRule{
+				{
+					FromIPAddresses: []string{"10.0.0.0/24"},
+					ToIPAddresses:   []string{"11.0.0.0/24"},
+					ProtoPorts: []security.ProtoPort{
+						{
+							Protocol: "tcp",
+							Ports:    "80",
+						},
+					},
+					Action: "PERMIT",
+				},
+			},
+		},
+	}
+	b, _ := json.Marshal(sgPolicy)
+	sgPolicyStr := string(b)
+
+	tests := []struct {
+		name     string
+		user     *auth.User
+		reqObj   interface{}
+		respObj  interface{}
+		ops      []authz.Operation
+		level    audit.Level
+		stage    audit.Stage
+		outcome  audit.Outcome
+		apierr   error
+		eventStr string
+		err      error
+	}{
+		{
+			name:     "nil user",
+			user:     nil,
+			eventStr: "no user to audit",
+			err:      nil,
+		},
+		{
+			name: "nil ops",
+			user: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: "User"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testUser",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "password",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			eventStr: "no operations to audit",
+			err:      nil,
+		},
+		{
+			name: "nil ops",
+			user: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: "User"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testUser",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "password",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			eventStr: "no operations to audit",
+			err:      nil,
+		},
+		{
+			name: "log request obj",
+			user: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: "User"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testUser",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "password",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			reqObj: sgPolicy,
+			ops: []authz.Operation{authz.NewOperation(
+				authz.NewResource(sgPolicy.Tenant, string(apiclient.GroupSecurity), sgPolicy.Kind, sgPolicy.Namespace, sgPolicy.Name),
+				auth.Permission_Create.String())},
+			level:    audit.Level_Request,
+			stage:    audit.Stage_RequestProcessing,
+			outcome:  audit.Outcome_Unknown,
+			apierr:   nil,
+			eventStr: "request-object=\"" + sgPolicyStr + "\"",
+			err:      nil,
+		},
+		{
+			name: "log response obj",
+			user: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: "User"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testUser",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "password",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			respObj: sgPolicy,
+			ops: []authz.Operation{authz.NewOperation(
+				authz.NewResource(sgPolicy.Tenant, string(apiclient.GroupSecurity), sgPolicy.Kind, sgPolicy.Namespace, sgPolicy.Name),
+				auth.Permission_Create.String())},
+			level:    audit.Level_Response,
+			stage:    audit.Stage_RequestCompleted,
+			outcome:  audit.Outcome_Success,
+			apierr:   nil,
+			eventStr: "response-object=\"" + sgPolicyStr + "\"",
+			err:      nil,
+		},
+		{
+			name: "log api error",
+			user: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: "User"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testUser",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "password",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			ops: []authz.Operation{authz.NewOperation(
+				authz.NewResource(sgPolicy.Tenant, string(apiclient.GroupSecurity), sgPolicy.Kind, sgPolicy.Namespace, sgPolicy.Name),
+				auth.Permission_Create.String())},
+			level:    audit.Level_Response,
+			stage:    audit.Stage_RequestCompleted,
+			outcome:  audit.Outcome_Success,
+			apierr:   apierrors.ToGrpcError(errors.New("duplicate policy"), []string{"Operation failed to complete"}, int32(codes.Aborted), "", nil),
+			eventStr: "duplicate policy",
+			err:      nil,
+		},
+		{
+			name: "read operation",
+			user: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: "User"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testUser",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "password",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			reqObj: sgPolicy,
+			ops: []authz.Operation{authz.NewOperation(
+				authz.NewResource(sgPolicy.Tenant, string(apiclient.GroupSecurity), sgPolicy.Kind, sgPolicy.Namespace, sgPolicy.Name),
+				auth.Permission_Read.String())},
+			level:    audit.Level_Request,
+			stage:    audit.Stage_RequestProcessing,
+			outcome:  audit.Outcome_Unknown,
+			apierr:   nil,
+			eventStr: "",
+			err:      nil,
+		},
+	}
+	_ = MustGetAPIGateway()
+
+	a := singletonAPIGw
+	a.runstate.running = true
+	a.runstate.addr = &mockAddr{}
+	for _, test := range tests {
+		buf := &bytes.Buffer{}
+		logConfig := log.GetDefaultConfig("TestApiGw")
+		l := log.GetNewLogger(logConfig).SetOutput(buf)
+		a.logger = l
+		a.auditor = auditmgr.NewLogAuditor(context.TODO(), l)
+		err := a.audit("event1", test.user, test.reqObj, test.respObj, test.ops, test.level, test.stage, test.outcome, test.apierr, nil, "")
+		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed, expected error [%v], got [%v]", test.name, test.err, err))
+		bufStr := buf.String()
+		bufStr = strings.Replace(bufStr, "\\", "", -1)
+		Assert(t, strings.Contains(bufStr, test.eventStr), fmt.Sprintf("[%s] test failed, expected log [%s] to contain [%s]", test.name, bufStr, test.eventStr))
+		if test.eventStr == "" {
+			Assert(t, len(bufStr) == 0, fmt.Sprintf("[%s] test failed, no audit log expected", test.name))
+		}
+	}
+}
+
+type mockAddr struct{}
+
+func (m *mockAddr) Network() string {
+	return "tcp"
+}
+
+func (m *mockAddr) String() string {
+	return "localhost:63000"
 }

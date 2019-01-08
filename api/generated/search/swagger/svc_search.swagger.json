@@ -803,7 +803,8 @@
             "FwlogPolicy",
             "MirrorSession",
             "Workload",
-            "Host"
+            "Host",
+            "AuditEvent"
           ],
           "default": "Cluster",
           "maxLength": 64,

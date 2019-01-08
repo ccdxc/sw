@@ -1,8 +1,6 @@
 package manager
 
 import (
-	"errors"
-
 	k8serrors "k8s.io/apimachinery/pkg/util/errors"
 
 	auditapi "github.com/pensando/sw/api/generated/audit"
@@ -12,13 +10,9 @@ import (
 	"github.com/pensando/sw/venice/utils/resolver"
 )
 
-var (
-	// ErrNoEventToProcess is thrown when nil audit events are passed to auditor
-	ErrNoEventToProcess = errors.New("no audit events to process")
-)
-
 type auditManager struct {
 	auditors []audit.Auditor
+	logger   log.Logger
 }
 
 // NewAuditManager creates audit logs in configured auditor backends. Currently we only support auditor that synchronously
@@ -28,6 +22,7 @@ func NewAuditManager(rslver resolver.Interface, logger log.Logger) audit.Auditor
 		auditors: []audit.Auditor{
 			elastic.NewSynchAuditor("", rslver, logger),
 		},
+		logger: logger,
 	}
 }
 
@@ -47,7 +42,7 @@ func (a *auditManager) ProcessEvents(events ...*auditapi.Event) error {
 		}
 	}
 	if len(nEvents) == 0 {
-		return ErrNoEventToProcess
+		return nil
 	}
 	var errlist []error
 	for _, auditor := range a.auditors {

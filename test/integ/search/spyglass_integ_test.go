@@ -322,7 +322,7 @@ func TestSpyglass(t *testing.T) {
 
 	// Validate the index operations counter
 	expectedCount := uint64(3*objectCount+int64(len(Tenants))) + sgPolicyCount
-	expectedCount += 4 // for cluster, default tenant, auth policy and test user
+	expectedCount += 8 // for cluster, default tenant, auth policy, test user, tesla admin role, audi admin role, default admin role, default admin role binding
 	AssertEventually(t,
 		func() (bool, interface{}) {
 			if tInfo.idr.GetObjectCount() < expectedCount {

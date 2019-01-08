@@ -37,6 +37,7 @@ func (s *sauditAuditBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 
 		"audit.Event":           apisrvpkg.NewMessage("audit.Event"),
 		"audit.EventAttributes": apisrvpkg.NewMessage("audit.EventAttributes"),
+		"audit.EventRequest":    apisrvpkg.NewMessage("audit.EventRequest"),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}

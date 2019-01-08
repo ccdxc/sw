@@ -101,6 +101,20 @@ func (idr *Indexer) createWatchers() error {
 	}
 	idr.channels["AuthenticationPolicy"] = idr.watchers["AuthenticationPolicy"].EventChan()
 
+	idr.watchers["Role"], err = idr.apiClient.AuthV1().Role().Watch(idr.ctx, &opts)
+	if err != nil {
+		idr.logger.Errorf("Error starting watcher for auth.Role object, err: %v", err)
+		return err
+	}
+	idr.channels["Role"] = idr.watchers["Role"].EventChan()
+
+	idr.watchers["RoleBinding"], err = idr.apiClient.AuthV1().RoleBinding().Watch(idr.ctx, &opts)
+	if err != nil {
+		idr.logger.Errorf("Error starting watcher for auth.RoleBinding object, err: %v", err)
+		return err
+	}
+	idr.channels["RoleBinding"] = idr.watchers["RoleBinding"].EventChan()
+
 	idr.watchers["Cluster"], err = idr.apiClient.ClusterV1().Cluster().Watch(idr.ctx, &opts)
 	if err != nil {
 		idr.logger.Errorf("Error starting watcher for cmd.Cluster object, err: %v", err)

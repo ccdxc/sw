@@ -74,7 +74,6 @@ func (a *synchAuditor) ProcessEvents(events ...*auditapi.Event) error {
 				Index:       elastic.GetIndex(globals.AuditLogs, evt.GetTenant()),
 			}
 		}
-
 		if bulkResp, err := a.elasticClient.Bulk(context.Background(), requests); err != nil {
 			a.logger.Errorf("error logging bulk audit events to elastic, err: %v", err)
 			return err
@@ -93,10 +92,10 @@ func (a *synchAuditor) Run(stopCh <-chan struct{}) error {
 			return elastic.NewAuthenticatedClient(a.elasticServer, a.rslver, a.logger)
 		}, a.elasticWaitIntvl, a.maxElasticRetries)
 		if err != nil {
-			a.logger.Errorf("Failed to create elastic client, err: %v", err)
+			a.logger.ErrorLog("method", "Run", "msg", "failed to create elastic client", "error", err)
 			return err
 		}
-		a.logger.Debug("Created Elastic client")
+		a.logger.DebugLog("method", "Run", "msg", "created elastic client")
 		a.elasticClient = result.(elastic.ESClient)
 	}
 	return a.createAuditLogsElasticTemplate()

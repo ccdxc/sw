@@ -13,13 +13,15 @@ import (
 	"github.com/pensando/sw/api/generated/auth"
 	loginctx "github.com/pensando/sw/api/login/context"
 	"github.com/pensando/sw/venice/apigw"
-	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
+	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr"
 	"github.com/pensando/sw/venice/evtsproxy"
 	"github.com/pensando/sw/venice/globals"
 	scache "github.com/pensando/sw/venice/spyglass/cache"
 	"github.com/pensando/sw/venice/spyglass/finder"
 	"github.com/pensando/sw/venice/spyglass/indexer"
+	"github.com/pensando/sw/venice/utils/audit"
+	auditmgr "github.com/pensando/sw/venice/utils/audit/manager"
 	authntestutils "github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/log"
@@ -111,6 +113,11 @@ func GetAuthorizationHeader(apiGwAddr string, creds *auth.PasswordCredential) (s
 
 // StartAPIGateway helper function to start API gateway.
 func StartAPIGateway(serverAddr string, skipAuth bool, backends map[string]string, skipServices []string, resolvers []string, l log.Logger) (apigw.APIGateway, string, error) {
+	return StartAPIGatewayWithAuditor(serverAddr, skipAuth, backends, skipServices, resolvers, l, auditmgr.WithAuditors(auditmgr.NewLogAuditor(context.TODO(), l)))
+}
+
+// StartAPIGatewayWithAuditor helper function to start API Gateway with non default auditor
+func StartAPIGatewayWithAuditor(serverAddr string, skipAuth bool, backends map[string]string, skipServices []string, resolvers []string, l log.Logger, auditor audit.Auditor) (apigw.APIGateway, string, error) {
 	log.Info("starting API gateway ...")
 
 	// Start the API Gateway
@@ -123,6 +130,7 @@ func StartAPIGateway(serverAddr string, skipAuth bool, backends map[string]strin
 		SkipAuth:        skipAuth,
 		SkipAuthz:       skipAuth,
 		SkipBackends:    skipServices,
+		Auditor:         auditor,
 	}
 	// skip services
 	gwConfig.SkipBackends = append(gwConfig.SkipBackends, skipServices...)

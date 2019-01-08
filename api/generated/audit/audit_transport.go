@@ -84,3 +84,37 @@ func EncodeGrpcRespEventAttributes(ctx context.Context, response interface{}) (i
 func DecodeGrpcRespEventAttributes(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
+
+func encodeHTTPEventRequest(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPEventRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req EventRequest
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqEventRequest encodes GRPC request
+func EncodeGrpcReqEventRequest(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*EventRequest)
+	return req, nil
+}
+
+// DecodeGrpcReqEventRequest decodes GRPC request
+func DecodeGrpcReqEventRequest(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*EventRequest)
+	return req, nil
+}
+
+// EncodeGrpcRespEventRequest encodes GRC response
+func EncodeGrpcRespEventRequest(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespEventRequest decodes GRPC response
+func DecodeGrpcRespEventRequest(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}

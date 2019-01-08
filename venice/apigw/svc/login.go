@@ -9,16 +9,20 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/gogo/protobuf/types"
 	"github.com/gorilla/mux"
+	"github.com/satori/go.uuid"
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/apiclient"
+	auditapi "github.com/pensando/sw/api/generated/audit"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apigw"
@@ -26,6 +30,7 @@ import (
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/audit"
 	"github.com/pensando/sw/venice/utils/authn/manager"
 	"github.com/pensando/sw/venice/utils/authz/rbac"
 	"github.com/pensando/sw/venice/utils/balancer"
@@ -158,13 +163,18 @@ func (s *loginV1GwService) CompleteRegistration(ctx context.Context,
 			vErrors.SendInternalError(w, err)
 			return
 		}
-
+		// remove user password
+		user.Spec.Password = ""
+		if err := s.audit(user, getClientIPs(req), req.RequestURI); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			vErrors.SendInternalError(w, err)
+			return
+		}
 		w.Header().Set(apigw.GrpcMDCsrfHeader, csrfToken)
 		// set cookie
 		http.SetCookie(w, createCookie(sessionToken, exp))
 		w.WriteHeader(http.StatusOK)
-		// remove user password
-		user.Spec.Password = ""
+
 		if err := json.NewEncoder(w).Encode(user); err != nil {
 			s.logger.Errorf("failed to send user json: %v", err)
 			return
@@ -292,6 +302,60 @@ func (s *loginV1GwService) updateUserStatus(user *auth.User, password string) (*
 	return user, nil
 }
 
+func (s *loginV1GwService) audit(user *auth.User, clientIPs []string, reqURI string) error {
+	apiGateway := apigwpkg.MustGetAPIGateway()
+	auditor := apiGateway.GetAuditor()
+	eventID := uuid.NewV4().String()
+	creationTime, _ := types.TimestampProto(time.Now())
+	apiGateway.WaitRunning()
+	addr, err := apiGateway.GetAddr()
+	if err != nil {
+		s.logger.ErrorLog("method", "audit", "msg", "error getting API Gateway IP address", "error", err)
+		return err
+	}
+	event := &auditapi.Event{
+		TypeMeta: api.TypeMeta{Kind: auth.Permission_AuditEvent.String()},
+		ObjectMeta: api.ObjectMeta{
+			Name:   eventID,
+			UUID:   eventID,
+			Tenant: user.Tenant,
+			Labels: map[string]string{"_category": globals.Kind2Category["AuditEvent"]},
+			CreationTime: api.Timestamp{
+				Timestamp: *creationTime,
+			},
+			ModTime: api.Timestamp{
+				Timestamp: *creationTime,
+			},
+		},
+		EventAttributes: auditapi.EventAttributes{
+			Level:       auditapi.Level_Response.String(),
+			Stage:       auditapi.Stage_RequestCompleted.String(),
+			User:        &api.ObjectRef{Kind: string(auth.KindUser), Namespace: user.Namespace, Tenant: user.Tenant, Name: user.Name, URI: user.SelfLink},
+			Resource:    &api.ObjectRef{Kind: string(auth.KindUser), Namespace: user.Namespace, Tenant: user.Tenant, Name: user.Name, URI: user.SelfLink},
+			ClientIPs:   clientIPs,
+			Action:      "login",
+			Outcome:     auditapi.Outcome_Success.String(),
+			RequestURI:  reqURI,
+			GatewayNode: os.Getenv("HOSTNAME"),
+			GatewayIP:   addr.String(),
+			Data:        make(map[string]string),
+		},
+	}
+	// policy checker checks whether to log audit event and populates it based on policy
+	ok, err := audit.NewPolicyChecker().PopulateEvent(event, audit.NewResponseObjectPopulator(user, true))
+	if err != nil {
+		s.logger.ErrorLog("method", "audit", "msg", "error populating audit event for user login", "user", user.Name, "tenant", user.Tenant, "error", err)
+		return err
+	}
+	if ok {
+		if err := auditor.ProcessEvents(event); err != nil {
+			s.logger.ErrorLog("method", "audit", "msg", "error generating audit event for user login", "user", user.Name, "tenant", user.Tenant, "error", err)
+			return err
+		}
+	}
+	return nil
+}
+
 func createCookie(token string, expiration time.Time) *http.Cookie {
 	cookie := &http.Cookie{
 		Name:     login.SessionID,
@@ -312,4 +376,23 @@ func createCSRFToken(tokenLen int) (string, error) {
 		return "", err
 	}
 	return base64.URLEncoding.EncodeToString(tok), nil
+}
+
+func getClientIPs(req *http.Request) []string {
+	var clientIPs []string
+	ips, ok := req.Header[apigw.XForwardedFor]
+	if ok {
+		clientIPs = append(clientIPs, ips...)
+	} else {
+		// https://tools.ietf.org/html/rfc7239#section-4
+		ips, ok := req.Header[apigw.Forwarded]
+		if ok {
+			for _, ip := range ips {
+				if strings.HasPrefix(ip, "for=") {
+					clientIPs = append(clientIPs, strings.TrimPrefix(ip, "for="))
+				}
+			}
+		}
+	}
+	return clientIPs
 }

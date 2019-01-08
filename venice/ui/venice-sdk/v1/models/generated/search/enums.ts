@@ -74,6 +74,7 @@ export enum SearchSearchQuery_kinds {
     'MirrorSession' = "MirrorSession",
     'Workload' = "Workload",
     'Host' = "Host",
+    'AuditEvent' = "AuditEvent",
 }
 
 export enum SearchSearchRequest_mode {

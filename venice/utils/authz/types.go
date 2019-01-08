@@ -173,7 +173,7 @@ func (a *AbstractAuthorizer) AllowedTenantKinds(user *auth.User, tenant, namespa
 		}
 	}
 	// add non-api server kinds like events
-	kinds := []string{auth.Permission_Event.String()}
+	kinds := []string{auth.Permission_Event.String(), auth.Permission_AuditEvent.String()}
 	for _, kind := range kinds {
 		resource := NewResource(tenant, "", kind, namespace, "")
 		operation := NewOperation(resource, actionType.String())

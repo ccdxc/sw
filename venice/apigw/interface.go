@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/venice/utils/audit"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
@@ -51,6 +52,8 @@ type APIGateway interface {
 	HandleRequest(ctx context.Context, in interface{}, prof ServiceProfile, call func(ctx context.Context, in interface{}) (interface{}, error)) (interface{}, error)
 	// GetResolver gets the configured resolver
 	GetResolver() resolver.Interface
+	// GetAuditor gets the configured auditor
+	GetAuditor() audit.Auditor
 }
 
 // Config is all config used to start the API Gateway
@@ -73,6 +76,8 @@ type Config struct {
 	SkipAuth bool
 	// SkipAuthz if set to true disables authorization
 	SkipAuthz bool
+	// Auditor if set will be used instead of default. Used for tests only.
+	Auditor audit.Auditor
 }
 
 // Hooks definitions

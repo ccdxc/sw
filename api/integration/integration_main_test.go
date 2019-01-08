@@ -24,6 +24,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/spyglass/finder"
 	"github.com/pensando/sw/venice/utils"
+	auditmgr "github.com/pensando/sw/venice/utils/audit/manager"
 	"github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/elastic"
 	esmock "github.com/pensando/sw/venice/utils/elastic/mock/server"
@@ -197,6 +198,7 @@ func TestMain(m *testing.M) {
 		SkipBackends: []string{
 			"metrics_query",
 		},
+		Auditor: auditmgr.WithAuditors(auditmgr.NewLogAuditor(context.TODO(), l)),
 	}
 	gw := apigwpkg.MustGetAPIGateway()
 	go gw.Run(gwconfig)

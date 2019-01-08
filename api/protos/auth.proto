@@ -222,6 +222,8 @@ message Permission {
         Event            = 2; // ui-hint: Events
         // Metrics
         MetricsQuery     = 3; // ui-hint: MetricsQuery
+        // Audit events
+        AuditEvent       = 4; // ui-hint: AuditEvent
     }
 
     // ActionType is an action on a resource that a permission allows

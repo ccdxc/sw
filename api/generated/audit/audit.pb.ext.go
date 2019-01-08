@@ -79,6 +79,27 @@ func (m *EventAttributes) Defaults(ver string) bool {
 	return ret
 }
 
+// Clone clones the object into into or creates one of into is nil
+func (m *EventRequest) Clone(into interface{}) (interface{}, error) {
+	var out *EventRequest
+	var ok bool
+	if into == nil {
+		out = &EventRequest{}
+	} else {
+		out, ok = into.(*EventRequest)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *EventRequest) Defaults(ver string) bool {
+	return false
+}
+
 // Validators
 
 func (m *Event) Validate(ver, path string, ignoreStatus bool) []error {
@@ -110,6 +131,11 @@ func (m *EventAttributes) Validate(ver, path string, ignoreStatus bool) []error 
 			}
 		}
 	}
+	return ret
+}
+
+func (m *EventRequest) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
 	return ret
 }
 

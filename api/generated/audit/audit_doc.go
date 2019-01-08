@@ -9,6 +9,7 @@ The following Messages are defined.
 
   Event
   EventAttributes
+  EventRequest
 
 The following Services and Methods are defined.
 

@@ -1,6 +1,7 @@
 package mock
 
 import (
+	"context"
 	"net"
 	"os"
 
@@ -19,6 +20,7 @@ import (
 	certsrv "github.com/pensando/sw/venice/cmd/grpc/server/certificates/mock"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
+	auditmgr "github.com/pensando/sw/venice/utils/audit/manager"
 	"github.com/pensando/sw/venice/utils/authn/testutils"
 	esmock "github.com/pensando/sw/venice/utils/elastic/mock/server"
 	"github.com/pensando/sw/venice/utils/events/recorder"
@@ -144,7 +146,9 @@ func Start() *Info {
 			"metrics_query",
 			"search",
 			"events",
+			"audit",
 		},
+		Auditor: auditmgr.WithAuditors(auditmgr.NewLogAuditor(context.TODO(), l)),
 	}
 	tinfo.apigwsvc = apigwpkg.MustGetAPIGateway()
 	go tinfo.apigwsvc.Run(gwconfig)

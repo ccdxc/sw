@@ -78,9 +78,9 @@ message ObjectRef {
   // Namespace of the object, for scoped objects.
   string Namespace  = 2 [(gogoproto.jsontag) = "namespace,omitempty"];
   // Kind represents the type of the API object.
-  string Kind       = 3 [(gogoproto.jsontag) = "kind"];
+  string Kind       = 3 [(gogoproto.jsontag) = "kind,omitempty"];
   // Name of the object, unique within a Namespace for scoped objects.
-  string Name       = 4 [(gogoproto.jsontag) = "name"];
+  string Name       = 4 [(gogoproto.jsontag) = "name,omitempty"];
   // URI is a link to accessing the referenced object.
   string URI        = 5 [(gogoproto.jsontag) = "uri,omitempty"];
 }

@@ -34,8 +34,10 @@ enum Level {
     Basic           = 0;
     // Request logs object from the request in addition to Basic level of audit logging
     Request         = 1;
+    // Response logs object in the response in addition to Basic level of audit logging
+    Response        = 2;
     // RequestResponse logs object from the response in addition to Request level of audit logging
-    RequestResponse = 2;
+    RequestResponse = 3;
 }
 
 // Stage defines the stages in request handling for which audit logs may be generated
@@ -121,3 +123,9 @@ message EventAttributes {
     // JWS compact serialization format in this map. Data in this map will not be signed.
     map<string, string> Data  = 14 [(gogoproto.jsontag) = "data,omitempty"];
 }
+
+// Request for an audit event
+message EventRequest {
+    string UUID   = 1 [(gogoproto.jsontag) = "uuid,omitempty"];
+}
+

@@ -22,6 +22,12 @@ const (
 	// This will be the case when API Gateway sits behind proxy.
 	XForwardedHostHeader = "X-Forwarded-Host"
 
+	// XForwardedFor is X-Forwarded-For header. It is used to get client IPs
+	XForwardedFor = "X-Forwarded-For"
+
+	// Forwarded is Forwarded header used to get client IPs (rfc7239)
+	Forwarded = "Forwarded"
+
 	// GrpcMDCsrfHeader is CSRF Token header name set in http response upon login. Set CSRF token header with grpc metadata header prefix so that grpc gateway
 	// puts it in context in runtime.AnnotateContext()
 	GrpcMDCsrfHeader = runtime.MetadataHeaderPrefix + "Csrf-Token"

@@ -19,6 +19,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/fields"
+	"github.com/pensando/sw/api/generated/audit"
 	"github.com/pensando/sw/api/generated/auth"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	monapi "github.com/pensando/sw/api/generated/monitoring"
@@ -647,6 +648,26 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 							Any: *obj,
 						},
 					}
+				case "AuditEvent":
+					eObj := &audit.Event{}
+					err = json.Unmarshal([]byte(databytes), eObj)
+					if err != nil {
+						fdr.logger.Errorf("Error un-marshalling json data to search result audit event entry : %+v", err)
+						continue
+					}
+					delete(eObj.ObjectMeta.Labels, globals.CategoryLabel)
+					fdr.logger.Debugf("Search hits result - audit event entry: %d {%+v}", i, eObj)
+					robj = eObj
+					obj, err := types.MarshalAny(robj.(proto.Message))
+					if err != nil {
+						fdr.logger.Errorf("Unable to unmarshal audit event object {%+v} (%v) ", obj, err)
+						continue
+					}
+					resp.Entries[i] = &search.Entry{
+						Object: &api.Any{
+							Any: *obj,
+						},
+					}
 				default:
 					cObj := &search.ConfigEntry{}
 					err = json.Unmarshal([]byte(databytes), &cObj)
@@ -780,6 +801,27 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 												obj, err := types.MarshalAny(robj.(proto.Message))
 												if err != nil {
 													fdr.logger.Errorf("Unable to unmarshall alert object {%+v} (%v) ", obj, err)
+													continue
+												}
+												resp.AggregatedEntries.Tenants[tenantBucket.Key.(string)].Categories[categoryBucket.Key.(string)].Kinds[kindBucket.Key.(string)].Entries[i] = &search.Entry{
+													Object: &api.Any{
+														Any: *obj,
+													},
+												}
+
+											case "AuditEvent":
+												eObj := &audit.Event{}
+												err = json.Unmarshal([]byte(databytes), eObj)
+												if err != nil {
+													fdr.logger.Errorf("Error un-marshalling json data to search result audit event entry : %+v", err)
+													continue
+												}
+												delete(eObj.ObjectMeta.Labels, globals.CategoryLabel)
+												fdr.logger.Debugf("Search hits result - audit event entry: %d {%+v}", i, eObj)
+												robj = eObj
+												obj, err := types.MarshalAny(robj.(proto.Message))
+												if err != nil {
+													fdr.logger.Errorf("Unable to unmarshal audit event object {%+v} (%v) ", obj, err)
 													continue
 												}
 												resp.AggregatedEntries.Tenants[tenantBucket.Key.(string)].Categories[categoryBucket.Key.(string)].Kinds[kindBucket.Key.(string)].Entries[i] = &search.Entry{
@@ -926,6 +968,9 @@ func (fdr *Finder) startRPCServer(serverName, listenURL string) error {
 
 	// Register events handler
 	evtsapi.RegisterEventsV1Server(rpcServer.GrpcServer, fdr)
+
+	// Register audit handler
+	audit.RegisterAuditV1Server(rpcServer.GrpcServer, newAuditHandler(fdr))
 
 	rpcServer.Start()
 	fdr.rpcServer = rpcServer

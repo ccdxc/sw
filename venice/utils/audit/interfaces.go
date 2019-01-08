@@ -17,3 +17,12 @@ type Auditor interface {
 	// the stopCh channel passed to the Run method has been closed.
 	Shutdown()
 }
+
+// PolicyChecker checks audit policy to determine if audit event needs to be logged.
+type PolicyChecker interface {
+	// PopulateEvent modifies audit information from audit event based on policy and returns a copy. Returns true if audit event needs to be logged.
+	PopulateEvent(event *audit.Event, populators ...EventPopulator) (bool, error)
+}
+
+// EventPopulator is an abstraction to populate audit event with information from request, response etc.
+type EventPopulator func(*audit.Event) error

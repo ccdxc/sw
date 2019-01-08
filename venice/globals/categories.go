@@ -44,4 +44,5 @@ var Kind2Category = map[string]string{
 	"FlowExportPolicy":        "Monitoring",
 	"FwlogPolicy":             "Monitoring",
 	"MirrorSession":           "Monitoring",
+	"AuditEvent":              "Monitoring",
 }
