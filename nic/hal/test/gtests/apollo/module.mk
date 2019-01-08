@@ -5,7 +5,7 @@ MODULE_TARGET   = apollo_test.gtest
 MODULE_PIPELINE = apollo
 MODULE_SOLIBS   = ${NIC_${PIPELINE}_P4PD_SOLIBS} \
                   ${NIC_HAL_PD_SOLIBS_${ARCH}} \
-                  pal hal_mock halproto \
+                  pal hal_mock \
                   sdkcapri_csrint sdkcapri_asicrw_if \
                   ${NIC_SDK_SOLIBS} \
                   pdcommon core fte_mock agent_api \

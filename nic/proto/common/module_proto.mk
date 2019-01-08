@@ -2,6 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET       = common.proto
+MODULE_PIPELINE     = iris gft
 MODULE_GEN_TYPES    = CC PY DELPHI
 MODULE_INCS         = ${MODULE_DIR} \
                       ${TOPDIR}/nic \

@@ -1,4 +1,5 @@
 #include "nic/include/base.hpp"
+#include "nic/hal/src/internal/crypto_apis.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/capri/capri_barco_asym_apis.hpp"
 #include "nic/hal/pd/capri/capri_barco_sym_apis.hpp"
@@ -211,7 +212,7 @@ static struct st2 {
 
 #define _API_PARAM_DEBUG_
 
-  hal_ret_t capri_barco_sym_hash_sha_test (internal::CryptoApiHashType hash_type, bool generate)
+  hal_ret_t capri_barco_sym_hash_sha_test (CryptoApiHashType hash_type, bool generate)
 {
     hal_ret_t           ret = HAL_RET_OK;
     const uint8_t       *exp_digest;
@@ -226,27 +227,27 @@ static struct st2 {
     memset(digest_output, 0, sizeof(digest_output));
 
     switch (hash_type) {
-    case internal::CRYPTOAPI_HASHTYPE_SHA1:
+    case CRYPTOAPI_HASHTYPE_SHA1:
       exp_digest = sha1_digest;
       exp_digestlen = sizeof(sha1_digest);
       break;
-    case internal::CRYPTOAPI_HASHTYPE_SHA224:
+    case CRYPTOAPI_HASHTYPE_SHA224:
       exp_digest = sha224_digest;
       exp_digestlen = sizeof(sha224_digest);
       break;
-    case internal::CRYPTOAPI_HASHTYPE_SHA256:
+    case CRYPTOAPI_HASHTYPE_SHA256:
       exp_digest = sha256_digest;
       exp_digestlen = sizeof(sha256_digest);
       break;
-    case internal::CRYPTOAPI_HASHTYPE_SHA384:
+    case CRYPTOAPI_HASHTYPE_SHA384:
       exp_digest = sha384_digest;
       exp_digestlen = sizeof(sha384_digest);
       break;
-    case internal::CRYPTOAPI_HASHTYPE_SHA512:
+    case CRYPTOAPI_HASHTYPE_SHA512:
       exp_digest = sha512_digest;
       exp_digestlen = sizeof(sha512_digest);
       break;
-    case internal::CRYPTOAPI_HASHTYPE_HMAC_SHA224:
+    case CRYPTOAPI_HASHTYPE_HMAC_SHA224:
       key = hmac_sha[0].key;
       key_len = hmac_sha[0].key_len;
       input_data = hmac_sha[0].data;
@@ -254,7 +255,7 @@ static struct st2 {
       exp_digest = hmac_sha[0].digest;
       exp_digestlen = sizeof(sha224_digest);
       break;
-    case internal::CRYPTOAPI_HASHTYPE_HMAC_SHA256:
+    case CRYPTOAPI_HASHTYPE_HMAC_SHA256:
       key = hmac_sha[1].key;
       key_len = hmac_sha[1].key_len;
       input_data = hmac_sha[1].data;
@@ -262,7 +263,7 @@ static struct st2 {
       exp_digest = hmac_sha[1].digest;
       exp_digestlen = sizeof(sha256_digest);
       break;
-    case internal::CRYPTOAPI_HASHTYPE_HMAC_SHA384:
+    case CRYPTOAPI_HASHTYPE_HMAC_SHA384:
       key = hmac_sha[2].key;
       key_len = hmac_sha[2].key_len;
       input_data = hmac_sha[2].data;
@@ -270,7 +271,7 @@ static struct st2 {
       exp_digest = hmac_sha[2].digest;
       exp_digestlen = sizeof(sha384_digest);
       break;
-    case internal::CRYPTOAPI_HASHTYPE_HMAC_SHA512:
+    case CRYPTOAPI_HASHTYPE_HMAC_SHA512:
       key = hmac_sha[3].key;
       key_len = hmac_sha[3].key_len;
       input_data = hmac_sha[3].data;
@@ -278,7 +279,7 @@ static struct st2 {
       exp_digest = hmac_sha[3].digest;
       exp_digestlen = sizeof(sha512_digest);
       break;
-    case internal::CRYPTOAPI_HASHTYPE_HMAC_SHA1:
+    case CRYPTOAPI_HASHTYPE_HMAC_SHA1:
       key = hmac_sha[4].key;
       key_len = hmac_sha[4].key_len;
       input_data = hmac_sha[4].data;
@@ -331,29 +332,29 @@ hal_ret_t capri_barco_sym_hash_run_tests (void)
 {
     hal_ret_t       ret = HAL_RET_OK;
 
-    ret = capri_barco_sym_hash_sha_test(internal::CRYPTOAPI_HASHTYPE_SHA1, true);
-    ret = capri_barco_sym_hash_sha_test(internal::CRYPTOAPI_HASHTYPE_SHA224, true);
-    ret = capri_barco_sym_hash_sha_test(internal::CRYPTOAPI_HASHTYPE_SHA256, true);
-    ret = capri_barco_sym_hash_sha_test(internal::CRYPTOAPI_HASHTYPE_SHA384, true);
-    ret = capri_barco_sym_hash_sha_test(internal::CRYPTOAPI_HASHTYPE_SHA512, true);
+    ret = capri_barco_sym_hash_sha_test(CRYPTOAPI_HASHTYPE_SHA1, true);
+    ret = capri_barco_sym_hash_sha_test(CRYPTOAPI_HASHTYPE_SHA224, true);
+    ret = capri_barco_sym_hash_sha_test(CRYPTOAPI_HASHTYPE_SHA256, true);
+    ret = capri_barco_sym_hash_sha_test(CRYPTOAPI_HASHTYPE_SHA384, true);
+    ret = capri_barco_sym_hash_sha_test(CRYPTOAPI_HASHTYPE_SHA512, true);
 
-    ret = capri_barco_sym_hash_sha_test(internal::CRYPTOAPI_HASHTYPE_SHA1, false);
-    ret = capri_barco_sym_hash_sha_test(internal::CRYPTOAPI_HASHTYPE_SHA224, false);
-    ret = capri_barco_sym_hash_sha_test(internal::CRYPTOAPI_HASHTYPE_SHA256, false);
-    ret = capri_barco_sym_hash_sha_test(internal::CRYPTOAPI_HASHTYPE_SHA384, false);
-    ret = capri_barco_sym_hash_sha_test(internal::CRYPTOAPI_HASHTYPE_SHA512, false);
+    ret = capri_barco_sym_hash_sha_test(CRYPTOAPI_HASHTYPE_SHA1, false);
+    ret = capri_barco_sym_hash_sha_test(CRYPTOAPI_HASHTYPE_SHA224, false);
+    ret = capri_barco_sym_hash_sha_test(CRYPTOAPI_HASHTYPE_SHA256, false);
+    ret = capri_barco_sym_hash_sha_test(CRYPTOAPI_HASHTYPE_SHA384, false);
+    ret = capri_barco_sym_hash_sha_test(CRYPTOAPI_HASHTYPE_SHA512, false);
 
-    ret = capri_barco_sym_hash_sha_test(internal::CRYPTOAPI_HASHTYPE_HMAC_SHA224, true);
-    ret = capri_barco_sym_hash_sha_test(internal::CRYPTOAPI_HASHTYPE_HMAC_SHA256, true);
-    ret = capri_barco_sym_hash_sha_test(internal::CRYPTOAPI_HASHTYPE_HMAC_SHA384, true);
-    ret = capri_barco_sym_hash_sha_test(internal::CRYPTOAPI_HASHTYPE_HMAC_SHA512, true);
-    ret = capri_barco_sym_hash_sha_test(internal::CRYPTOAPI_HASHTYPE_HMAC_SHA1, true);
+    ret = capri_barco_sym_hash_sha_test(CRYPTOAPI_HASHTYPE_HMAC_SHA224, true);
+    ret = capri_barco_sym_hash_sha_test(CRYPTOAPI_HASHTYPE_HMAC_SHA256, true);
+    ret = capri_barco_sym_hash_sha_test(CRYPTOAPI_HASHTYPE_HMAC_SHA384, true);
+    ret = capri_barco_sym_hash_sha_test(CRYPTOAPI_HASHTYPE_HMAC_SHA512, true);
+    ret = capri_barco_sym_hash_sha_test(CRYPTOAPI_HASHTYPE_HMAC_SHA1, true);
 
-    ret = capri_barco_sym_hash_sha_test(internal::CRYPTOAPI_HASHTYPE_HMAC_SHA224, false);
-    ret = capri_barco_sym_hash_sha_test(internal::CRYPTOAPI_HASHTYPE_HMAC_SHA256, false);
-    ret = capri_barco_sym_hash_sha_test(internal::CRYPTOAPI_HASHTYPE_HMAC_SHA384, false);
-    ret = capri_barco_sym_hash_sha_test(internal::CRYPTOAPI_HASHTYPE_HMAC_SHA512, false);
-    ret = capri_barco_sym_hash_sha_test(internal::CRYPTOAPI_HASHTYPE_HMAC_SHA1, false);
+    ret = capri_barco_sym_hash_sha_test(CRYPTOAPI_HASHTYPE_HMAC_SHA224, false);
+    ret = capri_barco_sym_hash_sha_test(CRYPTOAPI_HASHTYPE_HMAC_SHA256, false);
+    ret = capri_barco_sym_hash_sha_test(CRYPTOAPI_HASHTYPE_HMAC_SHA384, false);
+    ret = capri_barco_sym_hash_sha_test(CRYPTOAPI_HASHTYPE_HMAC_SHA512, false);
+    ret = capri_barco_sym_hash_sha_test(CRYPTOAPI_HASHTYPE_HMAC_SHA1, false);
 
     uint8_t auth_tag[64], ciphertext[128];
 

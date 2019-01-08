@@ -688,6 +688,7 @@ asic_pd_llc_get (pd_llc_get_args_t *llc_args)
 hal_ret_t
 asic_pd_scheduler_stats_get (pd_scheduler_stats_get_args_t *scheduler_stats_args)
 {
+#if 0
     hal_ret_t ret;
     capri_txs_scheduler_stats_t asic_stats = {};
     debug::SchedulerStatsResponse *response = scheduler_stats_args->response;
@@ -710,6 +711,7 @@ asic_pd_scheduler_stats_get (pd_scheduler_stats_get_args_t *scheduler_stats_args
         cos_entry->set_doorbell_count(asic_stats.cos_stats[i].doorbell_count);
         cos_entry->set_xon_status(asic_stats.cos_stats[i].xon_status);
     }
+#endif
     return HAL_RET_OK;
 }
 

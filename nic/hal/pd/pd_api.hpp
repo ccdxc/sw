@@ -29,6 +29,7 @@
 #include "nic/hal/src/internal/rawccb.hpp"
 #include "nic/hal/src/internal/proxyrcb.hpp"
 #include "nic/hal/src/internal/proxyccb.hpp"
+#include "nic/hal/src/internal/crypto_apis.hpp"
 #include "nic/hal/src/internal/accel_rgroup.hpp"
 #include "nic/hal/plugins/cfg/aclqos/barco_rings.hpp"
 #include "nic/hal/plugins/cfg/gft/gft.hpp"
@@ -36,7 +37,6 @@
 #include "nic/sdk/include/sdk/platform/utils/program.hpp"
 #include "nic/hal/pd/cpupkt_api.hpp"
 #include "nic/hal/pd/asic_pd.hpp"
-#include "gen/proto/internal.grpc.pb.h"
 
 namespace hal {
 namespace pd {
@@ -2737,7 +2737,7 @@ typedef struct pd_capri_barco_asym_rsa2k_sig_verify_args_s {
 } __PACK__ pd_capri_barco_asym_rsa2k_sig_verify_args_t;
 
 typedef struct pd_capri_barco_sym_hash_process_request_args_s {
-    internal::CryptoApiHashType hash_type;
+    CryptoApiHashType hash_type;
     bool generate;
     unsigned char *key;
     int key_len;
