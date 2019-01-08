@@ -166,13 +166,25 @@ find_qos_class_by_key_handle (const QosClassKeyHandle& kh)
 static inline void
 qos_class_cmap_db_add (qos_class_t *qos_class)
 {
-    qos_cmap_t           *cmap = &qos_class->cmap;
+    qos_cmap_t  *cmap = &qos_class->cmap;
+    bool        has_pcp = false;
+    bool        has_dscp = false;
+
+    has_pcp = (cmap->type == QOS_CMAP_TYPE_PCP) ||
+                (cmap->type == QOS_CMAP_TYPE_PCP_DSCP);
+    has_dscp = (cmap->type == QOS_CMAP_TYPE_DSCP) ||
+                (cmap->type == QOS_CMAP_TYPE_PCP_DSCP);
+
     // Update the global bmps for the cmaps
     if (qos_class_is_user_defined(qos_class)) {
-        g_hal_state->qos_cmap_pcp_bmp()->set(cmap->dot1q_pcp);
-        for (unsigned i = 0; i < HAL_ARRAY_SIZE(cmap->ip_dscp); i++) {
-            if (cmap->ip_dscp[i]) {
-                g_hal_state->qos_cmap_dscp_bmp()->set(i);
+        if (has_pcp) {
+            g_hal_state->qos_cmap_pcp_bmp()->set(cmap->dot1q_pcp);
+        }
+        if (has_dscp) {
+            for (unsigned i = 0; i < HAL_ARRAY_SIZE(cmap->ip_dscp); i++) {
+                if (cmap->ip_dscp[i]) {
+                    g_hal_state->qos_cmap_dscp_bmp()->set(i);
+                }
             }
         }
     }
@@ -275,6 +287,7 @@ qos_class_process_get (qos_class_t *qos_class, qos::QosClassGetResponse *rsp)
     spec->set_mtu(qos_class->mtu);
     spec->mutable_pfc()->set_xon_threshold(qos_class->pfc.xon_threshold);
     spec->mutable_pfc()->set_xoff_threshold(qos_class->pfc.xoff_threshold);
+    spec->mutable_pfc()->set_pfc_cos(qos_class->pfc.pfc_cos);
     if (qos_class->sched.type == QOS_SCHED_TYPE_DWRR) {
         spec->mutable_sched()->mutable_dwrr()->set_bw_percentage(qos_class->sched.dwrr.bw);
     } else {
@@ -286,6 +299,20 @@ qos_class_process_get (qos_class_t *qos_class, qos::QosClassGetResponse *rsp)
         }
     }
     spec->mutable_class_map()->set_dot1q_pcp(qos_class->cmap.dot1q_pcp);
+    switch (qos_class->cmap.type) {
+    case QOS_CMAP_TYPE_NONE:
+        spec->mutable_class_map()->set_type(qos::QOS_CLASS_MAP_TYPE_NONE);
+        break;
+    case QOS_CMAP_TYPE_PCP:
+        spec->mutable_class_map()->set_type(qos::QOS_CLASS_MAP_TYPE_PCP);
+        break;
+    case QOS_CMAP_TYPE_DSCP:
+        spec->mutable_class_map()->set_type(qos::QOS_CLASS_MAP_TYPE_DSCP);
+        break;
+    case QOS_CMAP_TYPE_PCP_DSCP:
+        spec->mutable_class_map()->set_type(qos::QOS_CLASS_MAP_TYPE_PCP_DSCP);
+        break;
+    }
     spec->mutable_marking()->set_dot1q_pcp(qos_class->marking.pcp);
     spec->mutable_marking()->set_dot1q_pcp_rewrite_en(qos_class->marking.pcp_rewrite_en);
     spec->mutable_marking()->set_ip_dscp(qos_class->marking.dscp);
@@ -523,6 +550,8 @@ static hal_ret_t
 validate_qos_class_create (QosClassSpec& spec, QosClassResponse *rsp)
 {
     hal_ret_t ret = HAL_RET_OK;
+    bool spec_has_pcp = false;
+    bool spec_has_dscp = false;
     qos_group_t qos_group;
 
     // key-handle field must be set
@@ -550,21 +579,30 @@ validate_qos_class_create (QosClassSpec& spec, QosClassResponse *rsp)
         return ret;
     }
 
+    spec_has_pcp = (spec.class_map().type() == qos::QOS_CLASS_MAP_TYPE_PCP) ||
+                    (spec.class_map().type() == qos::QOS_CLASS_MAP_TYPE_PCP_DSCP);
+    spec_has_dscp = (spec.class_map().type() == qos::QOS_CLASS_MAP_TYPE_DSCP) ||
+                    (spec.class_map().type() == qos::QOS_CLASS_MAP_TYPE_PCP_DSCP);
+
     // Validate the uplink-class-map
     if (qos_group_is_user_defined(qos_group)) {
         // Do validations to check that the dot1q_pcp and ip_dscp are not
         // associated with other classes
-        if (g_hal_state->qos_cmap_pcp_bmp()->is_set(spec.class_map().dot1q_pcp())) {
-            HAL_TRACE_ERR("Dot1q pcp {} is already in use",
-                          spec.class_map().dot1q_pcp());
-            return HAL_RET_INVALID_ARG;
+        if (spec_has_pcp) {
+            if (g_hal_state->qos_cmap_pcp_bmp()->is_set(spec.class_map().dot1q_pcp())) {
+                HAL_TRACE_ERR("Dot1q pcp {} is already in use",
+                              spec.class_map().dot1q_pcp());
+                return HAL_RET_INVALID_ARG;
+            }
         }
 
-        for (int i = 0; i < spec.class_map().ip_dscp_size(); i++) {
-            if (g_hal_state->qos_cmap_dscp_bmp()->is_set(spec.class_map().ip_dscp(i))) {
-                HAL_TRACE_ERR("IP dscp {} is already in use",
-                              spec.class_map().ip_dscp(i));
-                return HAL_RET_INVALID_ARG;
+        if (spec_has_dscp) {
+            for (int i = 0; i < spec.class_map().ip_dscp_size(); i++) {
+                if (g_hal_state->qos_cmap_dscp_bmp()->is_set(spec.class_map().ip_dscp(i))) {
+                    HAL_TRACE_ERR("IP dscp {} is already in use",
+                                  spec.class_map().ip_dscp(i));
+                    return HAL_RET_INVALID_ARG;
+                }
             }
         }
     }
@@ -746,6 +784,7 @@ update_pfc_params (const QosClassSpec& spec, qos_class_t *qos_class)
     if (spec.has_pfc()) {
         qos_class->pfc.xon_threshold =  spec.pfc().xon_threshold();
         qos_class->pfc.xoff_threshold =  spec.pfc().xoff_threshold();
+        qos_class->pfc.pfc_cos =  spec.pfc().pfc_cos();
         qos_class->no_drop = true;
     }
 
@@ -777,7 +816,8 @@ static hal_ret_t
 update_cmap_params (const QosClassSpec& spec, qos_class_t *qos_class)
 {
     qos_cmap_t *cmap = &qos_class->cmap;
-
+    bool spec_has_pcp = false;
+    bool spec_has_dscp = false;
 
     if (!qos_class_is_user_defined(qos_class)) {
         return HAL_RET_OK;
@@ -788,9 +828,25 @@ update_cmap_params (const QosClassSpec& spec, qos_class_t *qos_class)
         return HAL_RET_INVALID_ARG;
     }
 
-    cmap->dot1q_pcp = spec.class_map().dot1q_pcp();
-    for (int i = 0; i < spec.class_map().ip_dscp_size(); i++) {
-        cmap->ip_dscp[spec.class_map().ip_dscp(i)] = true;
+    spec_has_pcp = (spec.class_map().type() == qos::QOS_CLASS_MAP_TYPE_PCP) ||
+                    (spec.class_map().type() == qos::QOS_CLASS_MAP_TYPE_PCP_DSCP);
+    spec_has_dscp = (spec.class_map().type() == qos::QOS_CLASS_MAP_TYPE_DSCP) ||
+                    (spec.class_map().type() == qos::QOS_CLASS_MAP_TYPE_PCP_DSCP);
+
+    if (spec_has_pcp) {
+        cmap->dot1q_pcp = spec.class_map().dot1q_pcp();
+        cmap->type = QOS_CMAP_TYPE_PCP;
+    }
+
+    if (spec_has_dscp) {
+        for (int i = 0; i < spec.class_map().ip_dscp_size(); i++) {
+            cmap->ip_dscp[spec.class_map().ip_dscp(i)] = true;
+        }
+        cmap->type = QOS_CMAP_TYPE_DSCP;
+    }
+
+    if (spec_has_pcp && spec_has_dscp) {
+        cmap->type = QOS_CMAP_TYPE_PCP_DSCP;
     }
 
     return HAL_RET_OK;
@@ -1151,47 +1207,64 @@ qos_class_handle_update (QosClassSpec& spec, qos_class_t *qos_class,
                          qos_class_update_app_ctxt_t *app_ctxt)
 {
     bool ip_dscp_to_rem[HAL_MAX_IP_DSCP_VALS];
+    bool spec_has_pcp = false, spec_has_dscp = false;
+    bool qos_has_pcp = false, qos_has_dscp = false;
+
+    spec_has_pcp = (spec.class_map().type() == qos::QOS_CLASS_MAP_TYPE_PCP) ||
+                    (spec.class_map().type() == qos::QOS_CLASS_MAP_TYPE_PCP_DSCP);
+    spec_has_dscp = (spec.class_map().type() == qos::QOS_CLASS_MAP_TYPE_DSCP) ||
+                    (spec.class_map().type() == qos::QOS_CLASS_MAP_TYPE_PCP_DSCP);
+
+    qos_has_pcp = (qos_class->cmap.type == QOS_CMAP_TYPE_PCP) ||
+                    (qos_class->cmap.type == QOS_CMAP_TYPE_PCP_DSCP);
+    qos_has_dscp = (qos_class->cmap.type == QOS_CMAP_TYPE_DSCP) ||
+                    (qos_class->cmap.type == QOS_CMAP_TYPE_PCP_DSCP);
 
     if (qos_class_is_user_defined(qos_class)) {
         // Do validations to check that the dot1q_pcp and ip_dscp are not
         // associated with other classes
         qos_cmap_t *cmap = &qos_class->cmap;
-        if (spec.class_map().dot1q_pcp() != cmap->dot1q_pcp) {
-            app_ctxt->dot1q_pcp_changed = true;
-            app_ctxt->dot1q_pcp_src = cmap->dot1q_pcp;
-
-            if (g_hal_state->qos_cmap_pcp_bmp()->is_set(spec.class_map().dot1q_pcp())) {
-                HAL_TRACE_ERR("Dot1q pcp {} is already in use",
-                              spec.class_map().dot1q_pcp());
-                return HAL_RET_INVALID_ARG;
-            }
-        }
-
-        memcpy(ip_dscp_to_rem, cmap->ip_dscp, sizeof(ip_dscp_to_rem));
-
-        for (int i = 0; i < spec.class_map().ip_dscp_size(); i++) {
-            ip_dscp_to_rem[spec.class_map().ip_dscp(i)] = false;
-
-            if (!cmap->ip_dscp[spec.class_map().ip_dscp(i)]) {
-
-                app_ctxt->ip_dscp_changed = true;
-
-                if (g_hal_state->qos_cmap_dscp_bmp()->is_set(spec.class_map().ip_dscp(i))) {
-                    HAL_TRACE_ERR("IP dscp {} is already in use",
-                                  spec.class_map().ip_dscp(i));
+        if (qos_has_pcp) {
+            if (spec_has_pcp && (spec.class_map().dot1q_pcp() != cmap->dot1q_pcp)) {
+                app_ctxt->dot1q_pcp_changed = true;
+                app_ctxt->dot1q_pcp_src = cmap->dot1q_pcp;
+                if (g_hal_state->qos_cmap_pcp_bmp()->is_set(spec.class_map().dot1q_pcp())) {
+                    HAL_TRACE_ERR("Dot1q pcp {} is already in use",
+                                  spec.class_map().dot1q_pcp());
                     return HAL_RET_INVALID_ARG;
                 }
+            } else if (!spec_has_pcp) {
+                app_ctxt->dot1q_pcp_changed = true;
+                app_ctxt->dot1q_pcp_src = cmap->dot1q_pcp;
             }
         }
 
-        for (unsigned i = 0; i < HAL_ARRAY_SIZE(ip_dscp_to_rem); i++) {
-            if (ip_dscp_to_rem[i]) {
-                app_ctxt->ip_dscp_changed = true;
-                break;
-            }
-        }
+        if (qos_has_dscp) {
+            memcpy(ip_dscp_to_rem, cmap->ip_dscp, sizeof(ip_dscp_to_rem));
 
-        memcpy(app_ctxt->ip_dscp_remove, ip_dscp_to_rem, sizeof(ip_dscp_to_rem));
+            if (spec_has_dscp) {
+                for (int i = 0; i < spec.class_map().ip_dscp_size(); i++) {
+                    ip_dscp_to_rem[spec.class_map().ip_dscp(i)] = false;
+
+                    if (!cmap->ip_dscp[spec.class_map().ip_dscp(i)]) {
+                        app_ctxt->ip_dscp_changed = true;
+                        if (g_hal_state->qos_cmap_dscp_bmp()->is_set(spec.class_map().ip_dscp(i))) {
+                            HAL_TRACE_ERR("IP dscp {} is already in use",
+                                          spec.class_map().ip_dscp(i));
+                            return HAL_RET_INVALID_ARG;
+                        }
+                    }
+                }
+            }
+
+            for (unsigned i = 0; i < HAL_ARRAY_SIZE(ip_dscp_to_rem); i++) {
+                if (ip_dscp_to_rem[i]) {
+                    app_ctxt->ip_dscp_changed = true;
+                    break;
+                }
+            }
+            memcpy(app_ctxt->ip_dscp_remove, ip_dscp_to_rem, sizeof(ip_dscp_to_rem));
+        }
     }
 
     if (qos_class->no_drop != spec.has_pfc()) {
@@ -1264,7 +1337,8 @@ qosclass_update (QosClassSpec& spec, QosClassResponse *rsp)
     }
 
     if ((qos_class_clone->pfc.xon_threshold != qos_class->pfc.xon_threshold) ||
-        (qos_class_clone->pfc.xoff_threshold != qos_class->pfc.xoff_threshold)) {
+        (qos_class_clone->pfc.xoff_threshold != qos_class->pfc.xoff_threshold) ||
+        (qos_class_clone->pfc.pfc_cos != qos_class->pfc.pfc_cos)) {
         app_ctxt.threshold_changed = true;
     }
 
