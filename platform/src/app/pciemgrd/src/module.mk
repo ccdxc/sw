@@ -1,6 +1,8 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   := pciemgrd.bin
+MODULE_PIPELINE := iris
 MODULE_SOLIBS   := pciemgr_if pciemgr pciemgrutils pciehdevices pcieport pcietlp \
                     intrutils cfgspace pal misc evutils delphisdk sysmgr
 MODULE_INCS     := ${MODULE_SRC_DIR}/../include \

@@ -2,6 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   := nicmgrd.bin
+MODULE_PIPELINE := iris
 MODULE_SOLIBS   := nicmgr nicmgr_sysmgr nicmgr_upgrade hal_api mnet \
                     pciemgr_if pciemgr pciemgrutils pciehdevices pcietlp cfgspace \
                     intrutils pal misc evutils \
