@@ -84,7 +84,7 @@ route_table::init_config(api_ctxt_t *api_ctxt) {
     oci_route_table_t    *oci_route_table;
     
     oci_route_table = &api_ctxt->api_params->route_table_info;
-    memcpy(&this->key_, &oci_route_table->key, sizeof(oci_route_table_t));
+    memcpy(&this->key_, &oci_route_table->key, sizeof(oci_route_table_key_t));
     return SDK_RET_OK;
 }
 
