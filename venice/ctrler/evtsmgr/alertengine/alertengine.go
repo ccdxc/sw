@@ -211,7 +211,7 @@ func (a *alertEngineImpl) createAlert(alertPolicy *monitoring.AlertPolicy, evt *
 		// check there is an existing alert from the same event
 		outstandingAlerts := a.memDb.GetAlerts(
 			memdb.WithTenantFilter(alertPolicy.GetTenant()),
-			memdb.WithAlertStateFilter(monitoring.AlertSpec_AlertState_name[int32(monitoring.AlertSpec_OPEN)]),
+			memdb.WithAlertStateFilter([]monitoring.AlertSpec_AlertState{monitoring.AlertSpec_OPEN}),
 			memdb.WithAlertPolicyIDFilter(alertPolicy.GetUUID()),
 			memdb.WithEventURIFilter(evt.GetSelfLink()))
 		if len(outstandingAlerts) > 0 {
