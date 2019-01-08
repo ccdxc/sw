@@ -24,7 +24,7 @@ flowmonpolicy_template = {
         "format": "IPFIX",
         "exports": [
           {
-            "destination": "192.168.100.102",
+            "destination": "192.168.100.103",
             "transport": "UDP/2055"
           }
         ],
