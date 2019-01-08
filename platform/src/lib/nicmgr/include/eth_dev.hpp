@@ -189,6 +189,7 @@ private:
     static sdk::lib::indexer *fltr_allocator;
     /* Members */
     const struct eth_devspec *spec;
+    enum lif_state lif_state;
     /* Mnet Info */
     struct mnet_dev_create_req_t mnet_req;
     // Hardware Info
@@ -200,9 +201,7 @@ private:
     HalCommonClient *hal_common_client;
     hal_lif_info_t hal_lif_info_;
     const hal_lif_info_t *nicmgr_lif_info;
-    enum lif_state lif_state;
-    // Coses
-    uint8_t  coses; // {uint8_t CosA:4; uint8_t CosB:4;}
+    uint8_t  cosA, cosB;
     // Resources
     int32_t lif_base;
     uint32_t intr_base;
@@ -263,8 +262,6 @@ private:
     enum DevcmdStatus _CmdRDMACreateEQ(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdRDMACreateCQ(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_data);
-
-    uint64_t GetQstateAddr(uint8_t qtype, uint32_t qid);
 
     const char *opcode_to_str(enum cmd_opcode opcode);
     const char *lif_state_to_str(enum lif_state state);

@@ -27,27 +27,17 @@
 namespace pt = boost::property_tree;
 
 DeviceManager *DeviceManager::instance;
-nicmgr_req_qstate_t qstate_req = { 0 };
-nicmgr_resp_qstate_t qstate_resp = { 0 };
 
 struct queue_info DeviceManager::qinfo [NUM_QUEUE_TYPES] = {
     [NICMGR_QTYPE_REQ] = {
-            .type_num = NICMGR_QTYPE_REQ,
-            .size = 2,
-            .entries = 0,
-            .purpose = ::intf::LIF_QUEUE_PURPOSE_ADMIN,
-            .prog = "txdma_stage0.bin",
-            .label = "nicmgr_req_stage0",
-            .qstate = (const char *)&qstate_req
+        .type_num = NICMGR_QTYPE_REQ,
+        .size = 2,
+        .entries = 0,
     },
     [NICMGR_QTYPE_RESP] = {
-            .type_num = NICMGR_QTYPE_RESP,
-            .size = 2,
-            .entries = 0,
-            .purpose = ::intf::LIF_QUEUE_PURPOSE_ADMIN,
-            .prog = "txdma_stage0.bin",
-            .label = "nicmgr_resp_stage0",
-            .qstate = (const char *)&qstate_resp
+        .type_num = NICMGR_QTYPE_RESP,
+        .size = 2,
+        .entries = 0,
     },
 };
 
@@ -191,6 +181,7 @@ void DeviceManager::Update()
 {
     int32_t     cosA = 1;
     int32_t     cosB = 0;
+    uint8_t     off;
 
     if (init_done) {
         return;
@@ -216,35 +207,38 @@ void DeviceManager::Update()
 
     cosB = HalClient::GetTxTrafficClassCos("DEFAULT", 0);
     if (cosB < 0) {
-        NIC_LOG_ERR("Service Lif: Failed to get cosB for group default");
+        NIC_LOG_ERR("lif{}: Failed to get cosB for group default",
+            hal_lif_info_.hw_lif_id);
         throw runtime_error("Failed to get cosB for nicmgr LIF");
     }
     uint8_t coses = (((cosB & 0x0f) << 4) | (cosA & 0x0f));
     pd->program_qstate(qinfo, &hal_lif_info_, coses);
 
     // Init QState
-    // uint64_t hbm_base = NICMGR_BASE;
     uint8_t tmp[sizeof(struct nicmgr_req_desc)] = { 0 };
 
     ring_size = 4096;
     req_ring_base = pd->nicmgr_mem_alloc(sizeof(struct nicmgr_req_desc) * ring_size);
     resp_ring_base = pd->nicmgr_mem_alloc(sizeof(struct nicmgr_resp_desc) * ring_size);
-    // req_ring_base = hbm_base;
-    // resp_ring_base = hbm_base + (sizeof(struct nicmgr_req_desc) * ring_size);
 
     NIC_LOG_DEBUG("nicmgr req qstate address {:#x}", hal_lif_info_.qstate_addr[NICMGR_QTYPE_REQ]);
     NIC_LOG_DEBUG("nicmgr resp qstate address {:#x}", hal_lif_info_.qstate_addr[NICMGR_QTYPE_RESP]);
     NIC_LOG_DEBUG("nicmgr req queue address {:#x}", req_ring_base);
     NIC_LOG_DEBUG("nicmgr resp queue address {:#x}", resp_ring_base);
 
+    // Init Request Queue
+    nicmgr_req_qstate_t qstate_req = {0};
     req_head = ring_size - 1;
     req_tail = 0;
-    resp_head = 0;
-    resp_tail = 0;
 
-    invalidate_txdma_cacheline(hal_lif_info_.qstate_addr[NICMGR_QTYPE_REQ]);
-    READ_MEM(hal_lif_info_.qstate_addr[NICMGR_QTYPE_REQ], (uint8_t *)&qstate_req, sizeof(qstate_req), 0);
-
+    if (pd->lm_->GetPCOffset("p4plus", "txdma_stage0.bin", "nicmgr_req_stage0", &off) < 0) {
+        NIC_LOG_ERR("Failed to get PC offset of program: txdma_stage0.bin label: nicmgr_req_stage0");
+        throw runtime_error("Failed to resolve program/label");
+    }
+    qstate_req.pc_offset = off;
+    qstate_req.cos_sel = 0;
+    qstate_req.cosA = 0;
+    qstate_req.cosB = cosB;
     qstate_req.host = 0;
     qstate_req.total = 1;
     qstate_req.p_index0 = req_head;
@@ -264,10 +258,19 @@ void DeviceManager::Update()
     WRITE_MEM(hal_lif_info_.qstate_addr[NICMGR_QTYPE_REQ], (uint8_t *)&qstate_req, sizeof(qstate_req), 0);
     invalidate_txdma_cacheline(hal_lif_info_.qstate_addr[NICMGR_QTYPE_REQ]);
 
+    // Init Response Queue
+    nicmgr_resp_qstate_t qstate_resp = {0};
+    resp_head = 0;
+    resp_tail = 0;
 
-    invalidate_txdma_cacheline(hal_lif_info_.qstate_addr[NICMGR_QTYPE_RESP]);
-    READ_MEM(hal_lif_info_.qstate_addr[NICMGR_QTYPE_RESP], (uint8_t *)&qstate_resp, sizeof(qstate_resp), 0);
-
+    if (pd->lm_->GetPCOffset("p4plus", "txdma_stage0.bin", "nicmgr_resp_stage0", &off) < 0) {
+        NIC_LOG_ERR("Failed to get PC offset of program: txdma_stage0.bin label: nicmgr_resp_stage0");
+        throw runtime_error("Failed to resolve program/label");
+    }
+    qstate_resp.pc_offset = off;
+    qstate_resp.cos_sel = 0;
+    qstate_resp.cosA = 0;
+    qstate_resp.cosB = cosB;
     qstate_resp.host = 0;
     qstate_resp.total = 1;
     qstate_resp.p_index0 = resp_head;

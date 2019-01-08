@@ -71,18 +71,11 @@ string string_format( const std::string& format, Args ... args )
     return string( buf.get(), buf.get() + size - 1 ); // ignore '\0'
 }
 
-const char qstate[64] = { 0 };
-const char admin_qstate[128] = { 0 };
-const char rdma_qstate_512[512] = { 0 };
-const char rdma_qstate_32[32]     = { 0 };
-const char rdma_qstate_64[32]     = { 0 };
-
 sdk::lib::indexer *Eth::fltr_allocator = sdk::lib::indexer::factory(4096);
 
 void Eth::Update()
 {
-    int32_t     cosA = 1;
-    int32_t     cosB = 0;
+    cosA = 1;
     cosB = HalClient::GetTxTrafficClassCos(spec->qos_group,
                                            spec->uplink ? spec->uplink->GetPortNum() : 0);
     if (cosB < 0) {
@@ -95,7 +88,8 @@ void Eth::Update()
     uint64_t hbm_addr;
     uint32_t hbm_size;
 
-    pd->program_qstate((struct queue_info*)hal_lif_info_.queue_info, &hal_lif_info_, coses);
+    pd->program_qstate((struct queue_info*)hal_lif_info_.queue_info,
+        &hal_lif_info_, coses);
 
     if (spec->enable_rdma) {
 
@@ -113,7 +107,8 @@ void Eth::Update()
         if (hbm_size != 0) {
             pci_resources.cmbpa = hbm_addr;
             pci_resources.cmbsz = hbm_size;
-            NIC_LOG_DEBUG("HBM address for RDMA LLQ memory {:#x} size {} bytes", pci_resources.cmbpa, pci_resources.cmbsz);
+            NIC_LOG_DEBUG("HBM address for RDMA LLQ memory {:#x} size {} bytes",
+                pci_resources.cmbpa, pci_resources.cmbsz);
         }
     }
 }
@@ -152,84 +147,53 @@ Eth::Eth(HalClient *hal_client,
     memset(qinfo, 0, sizeof(qinfo));
 
     qinfo[ETH_QTYPE_RX] = {
-            .type_num = ETH_QTYPE_RX,
-            .size = 1,
-            .entries = (uint32_t)log2(spec->rxq_count),
-            .purpose = ::intf::LIF_QUEUE_PURPOSE_RX,
-            .prog = "rxdma_stage0.bin",
-            .label = "eth_rx_stage0",
-            .qstate = qstate
+        .type_num = ETH_QTYPE_RX,
+        .size = 1,
+        .entries = (uint32_t)log2(spec->rxq_count),
+        .purpose = ::intf::LIF_QUEUE_PURPOSE_RX,
     };
 
     qinfo[ETH_QTYPE_TX] = {
-            .type_num = ETH_QTYPE_TX,
-            .size = 1,
-            .entries = (uint32_t)log2(spec->txq_count),
-            .purpose = ::intf::LIF_QUEUE_PURPOSE_TX,
-            .prog = "txdma_stage0.bin",
-            .label = "eth_tx_stage0",
-            .qstate = qstate
+        .type_num = ETH_QTYPE_TX,
+        .size = 1,
+        .entries = (uint32_t)log2(spec->txq_count),
     };
 
     qinfo[ETH_QTYPE_ADMIN] = {
-            .type_num = ETH_QTYPE_ADMIN,
-            .size = 2,
-            .entries = (uint32_t)log2(spec->adminq_count + spec->rdma_adminq_count),
-            .purpose = ::intf::LIF_QUEUE_PURPOSE_ADMIN,
-            .prog = "txdma_stage0.bin",
-            .label = "adminq_stage0",
-            .qstate = admin_qstate
+        .type_num = ETH_QTYPE_ADMIN,
+        .size = 2,
+        .entries = (uint32_t)log2(spec->adminq_count + spec->rdma_adminq_count),
     };
 
     qinfo[ETH_QTYPE_SQ] = {
-            .type_num = ETH_QTYPE_SQ,
-            .size = 4,
-            .entries = (uint32_t)log2(spec->rdma_sq_count),
-            .purpose = ::intf::LIF_QUEUE_PURPOSE_RDMA_SEND,
-            .prog = "txdma_stage0.bin",
-            .label = "rdma_req_tx_stage0",
-            .qstate = rdma_qstate_512
+        .type_num = ETH_QTYPE_SQ,
+        .size = 4,
+        .entries = (uint32_t)log2(spec->rdma_sq_count),
     };
 
     qinfo[ETH_QTYPE_RQ] = {
-            .type_num = ETH_QTYPE_RQ,
-            .size = 4,
-            .entries = (uint32_t)log2(spec->rdma_rq_count),
-            .purpose = ::intf::LIF_QUEUE_PURPOSE_RDMA_SEND,
-            .prog = "rxdma_stage0.bin",
-            .label = "rdma_resp_rx_stage0",
-            .qstate = rdma_qstate_512
+        .type_num = ETH_QTYPE_RQ,
+        .size = 4,
+        .entries = (uint32_t)log2(spec->rdma_rq_count),
     };
 
     qinfo[ETH_QTYPE_CQ] = {
-            .type_num = ETH_QTYPE_CQ,
-            .size = 1,
-            .entries = (uint32_t)log2(spec->rdma_cq_count),
-            .purpose = ::intf::LIF_QUEUE_PURPOSE_CQ,
-            .prog = "txdma_stage0.bin",
-            .label = "rdma_req_tx_stage0",
-            .qstate = rdma_qstate_64
-        };
+        .type_num = ETH_QTYPE_CQ,
+        .size = 1,
+        .entries = (uint32_t)log2(spec->rdma_cq_count),
+    };
 
     qinfo[ETH_QTYPE_EQ] = {
-            .type_num = ETH_QTYPE_EQ,
-            .size = 1,
-            .entries = (uint32_t)log2(spec->eq_count + spec->rdma_eq_count),
-            .purpose = ::intf::LIF_QUEUE_PURPOSE_EQ,
-            .prog = "txdma_stage0.bin",
-            .label = "rdma_req_tx_stage0",
-            .qstate = rdma_qstate_32
-        };
+        .type_num = ETH_QTYPE_EQ,
+        .size = 1,
+        .entries = (uint32_t)log2(spec->eq_count + spec->rdma_eq_count),
+    };
 
     qinfo[ETH_QTYPE_SVC] = {
-            .type_num = ETH_QTYPE_SVC,
-            .size = 1,
-            .entries = 1,
-            .purpose = ::intf::LIF_QUEUE_PURPOSE_SVC,
-            .prog = "txdma_stage0.bin",
-            .label = "notify_stage0",
-            .qstate = qstate
-        };
+        .type_num = ETH_QTYPE_SVC,
+        .size = 1,
+        .entries = 1,
+    };
 
     memset(&hal_lif_info_, 0, sizeof(hal_lif_info_t));
     hal_lif_info_.id = lif_base;
@@ -437,27 +401,6 @@ Eth::isMnic()
         return true;
     }
     return false;
-}
-
-uint64_t
-Eth::GetQstateAddr(uint8_t qtype, uint32_t qid)
-{
-    uint32_t cnt, sz;
-
-    if (qtype >= NUM_QUEUE_TYPES) {
-        NIC_LOG_ERR("lif-{}: Invalid qtype {}", hal_lif_info_.hw_lif_id, qtype);
-        return 0;
-    }
-
-    cnt = 1 << this->qinfo[qtype].entries;
-    sz = 1 << (5 + this->qinfo[qtype].size);
-
-    if (qid >= cnt) {
-        NIC_LOG_ERR("lif-{}: Invalid qid {}", hal_lif_info_.hw_lif_id, qid);
-        return 0;
-    }
-
-    return hal_lif_info_.qstate_addr[qtype] + (qid * sz);
 }
 
 void
@@ -1089,7 +1032,7 @@ Eth::_CmdReset(void *req, void *req_data, void *resp, void *resp_data)
 enum DevcmdStatus
 Eth::_CmdHangNotify(void *req, void *req_data, void *resp, void *resp_data)
 {
-    uint64_t addr;
+    int64_t addr;
     eth_rx_qstate_t rx_qstate;
     eth_tx_qstate_t tx_qstate;
     admin_qstate_t adminq_qstate;
@@ -1098,8 +1041,8 @@ Eth::_CmdHangNotify(void *req, void *req_data, void *resp, void *resp_data)
     NIC_LOG_DEBUG("lif-{}: CMD_OPCODE_HANG_NOTIFY", hal_lif_info_.hw_lif_id);
 
     for (uint32_t qid = 0; qid < spec->rxq_count; qid++) {
-        addr = GetQstateAddr(ETH_QTYPE_RX, qid);
-        if (addr == 0) {
+        addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_RX, qid);
+        if (addr < 0) {
             NIC_LOG_ERR("lif-{}: Failed to get qstate address for RX qid {}",
                 hal_lif_info_.hw_lif_id, qid);
             return (DEVCMD_ERROR);
@@ -1112,8 +1055,8 @@ Eth::_CmdHangNotify(void *req, void *req_data, void *resp, void *resp_data)
     }
 
     for (uint32_t qid = 0; qid < spec->txq_count; qid++) {
-        addr = GetQstateAddr(ETH_QTYPE_TX, qid);
-        if (addr == 0) {
+        addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_TX, qid);
+        if (addr < 0) {
             NIC_LOG_ERR("lif-{}: Failed to get qstate address for TX qid {}",
                 hal_lif_info_.hw_lif_id, qid);
             return (DEVCMD_ERROR);
@@ -1126,8 +1069,8 @@ Eth::_CmdHangNotify(void *req, void *req_data, void *resp, void *resp_data)
     }
 
     for (uint32_t qid = 0; qid < spec->adminq_count; qid++) {
-        addr = GetQstateAddr(ETH_QTYPE_ADMIN, qid);
-        if (addr == 0) {
+        addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_ADMIN, qid);
+        if (addr < 0) {
             NIC_LOG_ERR("lif-{}: Failed to get qstate address for ADMIN qid {}",
                 hal_lif_info_.hw_lif_id, qid);
             return (DEVCMD_ERROR);
@@ -1156,7 +1099,7 @@ enum DevcmdStatus
 Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct lif_init_cmd *cmd = (struct lif_init_cmd *)req;
-    uint64_t addr;
+    int64_t addr;
     edma_qstate_t qstate;
 
     lif_state = LIF_STATE_INITING;
@@ -1178,8 +1121,8 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
 
     // Clear all non-intrinsic fields
     for (uint32_t qid = 0; qid < spec->rxq_count; qid++) {
-        addr = GetQstateAddr(ETH_QTYPE_RX, qid);
-        if (addr == 0) {
+        addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_RX, qid);
+        if (addr < 0) {
             NIC_LOG_ERR("lif-{}: Failed to get qstate address for RX qid {}",
                 hal_lif_info_.hw_lif_id, qid);
             return (DEVCMD_ERROR);
@@ -1191,8 +1134,8 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
     }
 
     for (uint32_t qid = 0; qid < spec->txq_count; qid++) {
-        addr = GetQstateAddr(ETH_QTYPE_TX, qid);
-        if (addr == 0) {
+        addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_TX, qid);
+        if (addr < 0) {
             NIC_LOG_ERR("lif-{}: Failed to get qstate address for TX qid {}",
                 hal_lif_info_.hw_lif_id, qid);
             return (DEVCMD_ERROR);
@@ -1204,8 +1147,8 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
     }
 
     for (uint32_t qid = 0; qid < spec->adminq_count; qid++) {
-        addr = GetQstateAddr(ETH_QTYPE_ADMIN, qid);
-        if (addr == 0) {
+        addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_ADMIN, qid);
+        if (addr < 0) {
             NIC_LOG_ERR("lif-{}: Failed to get qstate address for ADMIN qid {}",
                 hal_lif_info_.hw_lif_id, qid);
             return (DEVCMD_ERROR);
@@ -1216,8 +1159,8 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
         invalidate_txdma_cacheline(addr);
     }
 
-    addr = GetQstateAddr(ETH_QTYPE_SVC, ETH_EDMAQ_ID);
-    if (addr == 0) {
+    addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_SVC, ETH_EDMAQ_ID);
+    if (addr < 0) {
         NIC_LOG_ERR("lif-{}: Failed to get qstate address for SVC qid {}",
             hal_lif_info_.hw_lif_id, ETH_EDMAQ_ID);
         return (DEVCMD_ERROR);
@@ -1232,12 +1175,15 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
     edma_exp_color = 1;
 
     // Initialize the EDMA queue
-    READ_MEM(addr, (uint8_t *)&qstate, sizeof(qstate), 0);
     uint8_t off;
-    pd->lm_->GetPCOffset("p4plus", "txdma_stage0.bin", "edma_stage0", &off);
+    if (pd->lm_->GetPCOffset("p4plus", "txdma_stage0.bin", "edma_stage0", &off) < 0) {
+        NIC_LOG_ERR("Failed to get PC offset of program: txdma_stage0.bin label: edma_stage0");
+        return (DEVCMD_ERROR);
+    }
     qstate.pc_offset = off;
+    qstate.cos_sel = 0;
     qstate.cosA = 0;
-    qstate.cosB = 0;
+    qstate.cosB = cosB;
     qstate.host = 0;
     qstate.total = 1;
     qstate.pid = 0;
@@ -1263,10 +1209,10 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
 enum DevcmdStatus
 Eth::_CmdAdminQInit(void *req, void *req_data, void *resp, void *resp_data)
 {
-    uint64_t addr;
+    int64_t addr;
     struct adminq_init_cmd *cmd = (struct adminq_init_cmd *)req;
     struct adminq_init_comp *comp = (struct adminq_init_comp *)resp;
-    admin_qstate_t admin_qstate;
+    admin_qstate_t qstate;
 
     NIC_LOG_DEBUG("lif-{}: CMD_OPCODE_ADMINQ_INIT: "
         "queue_index {} ring_base {} ring_size {} intr_index {}",
@@ -1291,39 +1237,44 @@ Eth::_CmdAdminQInit(void *req, void *req_data, void *resp, void *resp_data)
         return (DEVCMD_ERROR);
     }
 
-    addr = GetQstateAddr(ETH_QTYPE_ADMIN, cmd->index);
-    if (addr == 0) {
+    addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_ADMIN, cmd->index);
+    if (addr < 0) {
         NIC_LOG_ERR("lif-{}: Failed to get qstate address for ADMIN qid {}",
             hal_lif_info_.hw_lif_id, cmd->index);
         return (DEVCMD_ERROR);
     }
 
-    READ_MEM(addr, (uint8_t *)&admin_qstate, sizeof(admin_qstate), 0);
-    //NOTE: admin_qstate.cosA is ignored for Admin Queues. Db should ring on cosB.
-    admin_qstate.cosA = 0;
-    //NOTE: admin_qstate.cosB is set by HAL Lif create
-    admin_qstate.host = 1;
-    admin_qstate.total = 1;
-    admin_qstate.pid = cmd->pid;
-    admin_qstate.p_index0 = 0;
-    admin_qstate.c_index0 = 0;
-    admin_qstate.comp_index = 0;
-    admin_qstate.ci_fetch = 0;
-    admin_qstate.sta.color = 1;
-    admin_qstate.cfg.enable = 1;
-    admin_qstate.cfg.host_queue = spec->host_dev;
-    admin_qstate.cfg.intr_enable = 1;
-    if (spec->host_dev)
-        admin_qstate.ring_base = (1ULL << 63) | (hal_lif_info_.hw_lif_id << 52) | cmd->ring_base;
-    else
-        admin_qstate.ring_base = cmd->ring_base;
-    admin_qstate.ring_size = cmd->ring_size;
-    admin_qstate.cq_ring_base = roundup(admin_qstate.ring_base + (sizeof(union adminq_cmd) << cmd->ring_size), 4096);
-    admin_qstate.intr_assert_index = pci_resources.intrb + cmd->intr_index;
-    if (nicmgr_lif_info) {
-        admin_qstate.nicmgr_qstate_addr = nicmgr_lif_info->qstate_addr[NICMGR_QTYPE_REQ];
+    uint8_t off;
+    if (pd->lm_->GetPCOffset("p4plus", "txdma_stage0.bin", "adminq_stage0", &off) < 0) {
+        NIC_LOG_ERR("Failed to get PC offset of program: txdma_stage0.bin label: adminq_stage0");
+        return (DEVCMD_ERROR);
     }
-    WRITE_MEM(addr, (uint8_t *)&admin_qstate, sizeof(admin_qstate), 0);
+    qstate.pc_offset = off;
+    qstate.cos_sel = 0;
+    qstate.cosA = 0;
+    qstate.cosB = cosB;
+    qstate.host = 1;
+    qstate.total = 1;
+    qstate.pid = cmd->pid;
+    qstate.p_index0 = 0;
+    qstate.c_index0 = 0;
+    qstate.comp_index = 0;
+    qstate.ci_fetch = 0;
+    qstate.sta.color = 1;
+    qstate.cfg.enable = 1;
+    qstate.cfg.host_queue = spec->host_dev;
+    qstate.cfg.intr_enable = 1;
+    if (spec->host_dev)
+        qstate.ring_base = (1ULL << 63) | (hal_lif_info_.hw_lif_id << 52) | cmd->ring_base;
+    else
+        qstate.ring_base = cmd->ring_base;
+    qstate.ring_size = cmd->ring_size;
+    qstate.cq_ring_base = roundup(qstate.ring_base + (sizeof(union adminq_cmd) << cmd->ring_size), 4096);
+    qstate.intr_assert_index = pci_resources.intrb + cmd->intr_index;
+    if (nicmgr_lif_info) {
+        qstate.nicmgr_qstate_addr = nicmgr_lif_info->qstate_addr[NICMGR_QTYPE_REQ];
+    }
+    WRITE_MEM(addr, (uint8_t *)&qstate, sizeof(qstate), 0);
 
     invalidate_txdma_cacheline(addr);
 
@@ -1338,10 +1289,10 @@ Eth::_CmdAdminQInit(void *req, void *req_data, void *resp, void *resp_data)
 enum DevcmdStatus
 Eth::_CmdTxQInit(void *req, void *req_data, void *resp, void *resp_data)
 {
-    uint64_t addr;
+    int64_t addr;
     struct txq_init_cmd *cmd = (struct txq_init_cmd *)req;
     struct txq_init_comp *comp = (struct txq_init_comp *)resp;
-    eth_tx_qstate_t tx_qstate;
+    eth_tx_qstate_t qstate;
 
     NIC_LOG_DEBUG("lif-{}: CMD_OPCODE_TXQ_INIT: "
         "queue_index {} cos {} ring_base {} ring_size {} intr_index {} {}{}",
@@ -1369,39 +1320,45 @@ Eth::_CmdTxQInit(void *req, void *req_data, void *resp, void *resp_data)
         return (DEVCMD_ERROR);
     }
 
-    addr = GetQstateAddr(ETH_QTYPE_TX, cmd->index);
-    if (addr == 0) {
+    addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_TX, cmd->index);
+    if (addr < 0) {
         NIC_LOG_ERR("lif-{}: Failed to get qstate address for TX qid {}",
             hal_lif_info_.hw_lif_id, cmd->index);
         return (DEVCMD_ERROR);
     }
 
-    READ_MEM(addr, (uint8_t *)&tx_qstate, sizeof(tx_qstate), 0);
-    tx_qstate.cosA = cmd->cos;
-    //NOTE: tx_qstate.cosB is ignored for TX queues.
-    tx_qstate.host = 1;
-    tx_qstate.total = 1;
-    tx_qstate.pid = cmd->pid;
-    tx_qstate.p_index0 = 0;
-    tx_qstate.c_index0 = 0;
-    tx_qstate.comp_index = 0;
-    tx_qstate.ci_fetch = 0;
-    tx_qstate.ci_miss = 0;
-    tx_qstate.sta.color = 1;
-    tx_qstate.sta.spec_miss = 0;
-    tx_qstate.cfg.enable = cmd->E;
-    tx_qstate.cfg.host_queue = spec->host_dev;
-    tx_qstate.cfg.intr_enable = cmd->E;
+    uint8_t off;
+    if (pd->lm_->GetPCOffset("p4plus", "txdma_stage0.bin", "eth_tx_stage0", &off) < 0) {
+        NIC_LOG_ERR("Failed to get PC offset of program: txdma_stage0.bin label: eth_tx_stage0");
+        return (DEVCMD_ERROR);
+    }
+    qstate.pc_offset = off;
+    qstate.cos_sel = 0;
+    qstate.cosA = 0;
+    qstate.cosB = cmd->cos;
+    qstate.host = 1;
+    qstate.total = 1;
+    qstate.pid = cmd->pid;
+    qstate.p_index0 = 0;
+    qstate.c_index0 = 0;
+    qstate.comp_index = 0;
+    qstate.ci_fetch = 0;
+    qstate.ci_miss = 0;
+    qstate.sta.color = 1;
+    qstate.sta.spec_miss = 0;
+    qstate.cfg.enable = cmd->E;
+    qstate.cfg.host_queue = spec->host_dev;
+    qstate.cfg.intr_enable = cmd->E;
     if (spec->host_dev)
-        tx_qstate.ring_base = (1ULL << 63) | (hal_lif_info_.hw_lif_id << 52) | cmd->ring_base;
+        qstate.ring_base = (1ULL << 63) | (hal_lif_info_.hw_lif_id << 52) | cmd->ring_base;
     else
-        tx_qstate.ring_base = cmd->ring_base;
-    tx_qstate.ring_size = cmd->ring_size;
-    tx_qstate.cq_ring_base = roundup(tx_qstate.ring_base + (sizeof(struct txq_desc) << cmd->ring_size), 4096);
-    tx_qstate.intr_assert_index = pci_resources.intrb + cmd->intr_index;
-    tx_qstate.sg_ring_base = roundup(tx_qstate.cq_ring_base + (sizeof(struct txq_comp) << cmd->ring_size), 4096);
-    tx_qstate.spurious_db_cnt = 0;
-    WRITE_MEM(addr, (uint8_t *)&tx_qstate, sizeof(tx_qstate), 0);
+        qstate.ring_base = cmd->ring_base;
+    qstate.ring_size = cmd->ring_size;
+    qstate.cq_ring_base = roundup(qstate.ring_base + (sizeof(struct txq_desc) << cmd->ring_size), 4096);
+    qstate.intr_assert_index = pci_resources.intrb + cmd->intr_index;
+    qstate.sg_ring_base = roundup(qstate.cq_ring_base + (sizeof(struct txq_comp) << cmd->ring_size), 4096);
+    qstate.spurious_db_cnt = 0;
+    WRITE_MEM(addr, (uint8_t *)&qstate, sizeof(qstate), 0);
 
     invalidate_txdma_cacheline(addr);
 
@@ -1416,10 +1373,10 @@ Eth::_CmdTxQInit(void *req, void *req_data, void *resp, void *resp_data)
 enum DevcmdStatus
 Eth::_CmdRxQInit(void *req, void *req_data, void *resp, void *resp_data)
 {
-    uint64_t addr;
+    int64_t addr;
     struct rxq_init_cmd *cmd = (struct rxq_init_cmd *)req;
     struct rxq_init_comp *comp = (struct rxq_init_comp *)resp;
-    eth_rx_qstate_t rx_qstate;
+    eth_rx_qstate_t qstate;
 
     NIC_LOG_DEBUG("lif-{}: CMD_OPCODE_RXQ_INIT: "
         "queue_index {} ring_base {} ring_size {} intr_index {} {}{}",
@@ -1446,34 +1403,40 @@ Eth::_CmdRxQInit(void *req, void *req_data, void *resp, void *resp_data)
         return (DEVCMD_ERROR);
     }
 
-    addr = GetQstateAddr(ETH_QTYPE_RX, cmd->index);
-    if (addr == 0) {
+    addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_RX, cmd->index);
+    if (addr < 0) {
         NIC_LOG_ERR("lif-{}: Failed to get qstate address for RX qid {}",
             hal_lif_info_.hw_lif_id, cmd->index);
         return (DEVCMD_ERROR);
     }
 
-    READ_MEM(addr, (uint8_t *)&rx_qstate, sizeof(rx_qstate), 0);
-    rx_qstate.cosA = 0;
-    rx_qstate.cosB = 0;
-    rx_qstate.host = 1;
-    rx_qstate.total = 1;
-    rx_qstate.pid = cmd->pid;
-    rx_qstate.p_index0 = 0;
-    rx_qstate.c_index0 = 0;
-    rx_qstate.comp_index = 0;
-    rx_qstate.sta.color = 1;
-    rx_qstate.cfg.enable = cmd->E;
-    rx_qstate.cfg.host_queue = spec->host_dev;
-    rx_qstate.cfg.intr_enable = cmd->E;
+    uint8_t off;
+    if (pd->lm_->GetPCOffset("p4plus", "rxdma_stage0.bin", "eth_rx_stage0", &off) < 0) {
+        NIC_LOG_ERR("Failed to get PC offset of program: rxdma_stage0.bin label: eth_rx_stage0");
+        return (DEVCMD_ERROR);
+    }
+    qstate.pc_offset = off;
+    qstate.cos_sel = 0;
+    qstate.cosA = 0;
+    qstate.cosB = 0;
+    qstate.host = 1;
+    qstate.total = 1;
+    qstate.pid = cmd->pid;
+    qstate.p_index0 = 0;
+    qstate.c_index0 = 0;
+    qstate.comp_index = 0;
+    qstate.sta.color = 1;
+    qstate.cfg.enable = cmd->E;
+    qstate.cfg.host_queue = spec->host_dev;
+    qstate.cfg.intr_enable = cmd->E;
     if (spec->host_dev)
-        rx_qstate.ring_base = (1ULL << 63) | (hal_lif_info_.hw_lif_id << 52) | cmd->ring_base;
+        qstate.ring_base = (1ULL << 63) | (hal_lif_info_.hw_lif_id << 52) | cmd->ring_base;
     else
-        rx_qstate.ring_base = cmd->ring_base;
-    rx_qstate.ring_size = cmd->ring_size;
-    rx_qstate.cq_ring_base = roundup(rx_qstate.ring_base + (sizeof(struct rxq_desc) << cmd->ring_size), 4096);
-    rx_qstate.intr_assert_index = pci_resources.intrb + cmd->intr_index;
-    WRITE_MEM(addr, (uint8_t *)&rx_qstate, sizeof(rx_qstate), 0);
+        qstate.ring_base = cmd->ring_base;
+    qstate.ring_size = cmd->ring_size;
+    qstate.cq_ring_base = roundup(qstate.ring_base + (sizeof(struct rxq_desc) << cmd->ring_size), 4096);
+    qstate.intr_assert_index = pci_resources.intrb + cmd->intr_index;
+    WRITE_MEM(addr, (uint8_t *)&qstate, sizeof(qstate), 0);
 
     invalidate_rxdma_cacheline(addr);
 
@@ -1488,7 +1451,8 @@ Eth::_CmdRxQInit(void *req, void *req_data, void *resp, void *resp_data)
 enum DevcmdStatus
 Eth::_CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
 {
-    uint64_t addr, host_ring_base;
+    int64_t addr;
+    uint64_t host_ring_base;
     notify_qstate_t qstate;
     struct notifyq_init_cmd *cmd = (struct notifyq_init_cmd *)req;
     struct notifyq_init_comp *comp = (struct notifyq_init_comp *)resp;
@@ -1517,8 +1481,8 @@ Eth::_CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
         return (DEVCMD_ERROR);
     }
 
-    addr = GetQstateAddr(ETH_QTYPE_SVC, cmd->index);
-    if (addr == 0) {
+    addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_SVC, cmd->index);
+    if (addr < 0) {
         NIC_LOG_ERR("lif-{}: Failed to get qstate address for SVC qid {}",
             hal_lif_info_.hw_lif_id, cmd->index);
         return (DEVCMD_ERROR);
@@ -1526,9 +1490,15 @@ Eth::_CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
 
     notify_ring_head = 0;
 
-    READ_MEM(addr, (uint8_t *)&qstate, sizeof(qstate), 0);
+    uint8_t off;
+    if (pd->lm_->GetPCOffset("p4plus", "txdma_stage0.bin", "notify_stage0", &off) < 0) {
+        NIC_LOG_ERR("Failed to resolve program: txdma_stage0.bin label: notify_stage0");
+        return (DEVCMD_ERROR);
+    }
+    qstate.pc_offset = off;
+    qstate.cos_sel = 0;
     qstate.cosA = 0;
-    qstate.cosB = 0;
+    qstate.cosB = cosB;
     qstate.host = 0;
     qstate.total = 1;
     qstate.pid = cmd->pid;
@@ -1636,7 +1606,7 @@ Eth::_CmdFeatures(void *req, void *req_data, void *resp, void *resp_data)
 enum DevcmdStatus
 Eth::_CmdQEnable(void *req, void *req_data, void *resp, void *resp_data)
 {
-    uint64_t addr;
+    int64_t addr;
     struct q_enable_cmd *cmd = (struct q_enable_cmd *)req;
     // q_enable_comp *comp = (q_enable_comp *)resp;
     struct eth_rx_cfg_qstate rx_cfg = {0};
@@ -1659,8 +1629,8 @@ Eth::_CmdQEnable(void *req, void *req_data, void *resp, void *resp_data)
             hal_lif_info_.hw_lif_id, cmd->qid);
             return (DEVCMD_ERROR);
         }
-        addr = GetQstateAddr(ETH_QTYPE_RX, cmd->qid);
-        if (addr == 0) {
+        addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, cmd->qtype, cmd->qid);
+        if (addr < 0) {
             NIC_LOG_ERR("lif-{}: Failed to get qstate address for RX qid {}",
                 hal_lif_info_.hw_lif_id, cmd->qid);
             return (DEVCMD_ERROR);
@@ -1677,8 +1647,8 @@ Eth::_CmdQEnable(void *req, void *req_data, void *resp, void *resp_data)
                    hal_lif_info_.hw_lif_id, cmd->qid);
             return (DEVCMD_ERROR);
         }
-        addr = GetQstateAddr(ETH_QTYPE_TX, cmd->qid);
-        if (addr == 0) {
+        addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, cmd->qtype, cmd->qid);
+        if (addr < 0) {
             NIC_LOG_ERR("lif-{}: Failed to get qstate address for TX qid {}",
                 hal_lif_info_.hw_lif_id, cmd->qid);
             return (DEVCMD_ERROR);
@@ -1695,8 +1665,8 @@ Eth::_CmdQEnable(void *req, void *req_data, void *resp, void *resp_data)
                    hal_lif_info_.hw_lif_id, cmd->qid);
             return (DEVCMD_ERROR);
         }
-        addr = GetQstateAddr(ETH_QTYPE_ADMIN, cmd->qid);
-        if (addr == 0) {
+        addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, cmd->qtype, cmd->qid);
+        if (addr < 0) {
             NIC_LOG_ERR("lif-{}: Failed to get qstate address for ADMIN qid {}",
                 hal_lif_info_.hw_lif_id, cmd->qid);
             return (DEVCMD_ERROR);
@@ -1718,7 +1688,7 @@ Eth::_CmdQEnable(void *req, void *req_data, void *resp, void *resp_data)
 enum DevcmdStatus
 Eth::_CmdQDisable(void *req, void *req_data, void *resp, void *resp_data)
 {
-    uint64_t addr;
+    int64_t addr;
     struct q_disable_cmd *cmd = (struct q_disable_cmd *)req;
     // q_disable_comp *comp = (q_disable_comp *)resp;
     struct eth_rx_cfg_qstate rx_cfg = {0};
@@ -1741,8 +1711,8 @@ Eth::_CmdQDisable(void *req, void *req_data, void *resp, void *resp_data)
             hal_lif_info_.hw_lif_id, cmd->qid);
             return (DEVCMD_ERROR);
         }
-        addr = GetQstateAddr(ETH_QTYPE_RX, cmd->qid);
-        if (addr == 0) {
+        addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, cmd->qtype, cmd->qid);
+        if (addr < 0) {
             NIC_LOG_ERR("lif-{}: Failed to get qstate address for RX qid {}",
                 hal_lif_info_.hw_lif_id, cmd->qid);
             return (DEVCMD_ERROR);
@@ -1759,8 +1729,8 @@ Eth::_CmdQDisable(void *req, void *req_data, void *resp, void *resp_data)
                    hal_lif_info_.hw_lif_id, cmd->qid);
             return (DEVCMD_ERROR);
         }
-        addr = GetQstateAddr(ETH_QTYPE_TX, cmd->qid);
-        if (addr == 0) {
+        addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, cmd->qtype, cmd->qid);
+        if (addr < 0) {
             NIC_LOG_ERR("lif-{}: Failed to get qstate address for TX qid {}",
                 hal_lif_info_.hw_lif_id, cmd->qid);
             return (DEVCMD_ERROR);
@@ -1777,8 +1747,8 @@ Eth::_CmdQDisable(void *req, void *req_data, void *resp, void *resp_data)
                    hal_lif_info_.hw_lif_id, cmd->qid);
             return (DEVCMD_ERROR);
         }
-        addr = GetQstateAddr(ETH_QTYPE_ADMIN, cmd->qid);
-        if (addr == 0) {
+        addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, cmd->qtype, cmd->qid);
+        if (addr < 0) {
             NIC_LOG_ERR("lif-{}: Failed to get qstate address for ADMIN qid {}",
                 hal_lif_info_.hw_lif_id, cmd->qid);
             return (DEVCMD_ERROR);
@@ -2059,8 +2029,8 @@ enum DevcmdStatus
 Eth::_CmdRDMACreateEQ(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct rdma_queue_cmd  *cmd = (struct rdma_queue_cmd  *) req;
-    eqcb_t       eqcb;
-    uint64_t addr;
+    eqcb_t      eqcb;
+    int64_t     addr;
 
     NIC_LOG_DEBUG("lif-{}: CMD_OPCODE_RDMA_CREATE_EQ "
                  "qid {} depth_log2 {} "
@@ -2084,13 +2054,8 @@ Eth::_CmdRDMACreateEQ(void *req, void *req_data, void *resp, void *resp_data)
 
     memrev((uint8_t*)&eqcb, sizeof(eqcb_t));
 
-    addr = GetQstateAddr(ETH_QTYPE_EQ, cmd->qid_ver);
-    NIC_LOG_DEBUG("lif-{}: CMD_OPCODE_RDMA_CREATE_EQ "
-                 "QstateAddr = {:#x}",
-                 hal_lif_info_.hw_lif_id + cmd->lif_id,
-                 addr);
-
-    if (addr == 0) {
+    addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_EQ, cmd->qid_ver);
+    if (addr < 0) {
         NIC_LOG_ERR("lif-{}: Failed to get qstate address for EQ qid {}",
                     hal_lif_info_.hw_lif_id+ cmd->lif_id, cmd->qid_ver);
         return (DEVCMD_ERROR);
@@ -2110,6 +2075,7 @@ Eth::_CmdRDMACreateCQ(void *req, void *req_data, void *resp, void *resp_data)
     cqcb_t                 cqcb;
     uint8_t                offset;
     int                    ret;
+    int64_t                addr;
 
 #if 0
     hal->RDMACreateCQ(hal_lif_info_.hw_lif_id + cmd->lif_id,
@@ -2118,12 +2084,9 @@ Eth::_CmdRDMACreateCQ(void *req, void *req_data, void *resp, void *resp_data)
                       cmd->dma_addr, cmd->cid);
 #endif
 
-    NIC_LOG_DEBUG("--------------------- API Start ------------------------");
-    NIC_LOG_DEBUG("PI-LIF:{}: RDMA CQ Create for lif {}", __FUNCTION__, lif);
-
-    NIC_LOG_DEBUG("{}: Inputs: cq_num: {} cq_wqe_size: {} num_cq_wqes: {} "
+    NIC_LOG_DEBUG("lif-{}: RDMA_CREATE_CQ: cq_num: {} cq_wqe_size: {} num_cq_wqes: {} "
                   "eq_id: {} hostmem_pg_size: {} ",
-                  __FUNCTION__, cmd->qid_ver,
+                  lif, cmd->qid_ver,
                   1u << cmd->stride_log2, 1u << cmd->depth_log2,
                   cmd->cid, 1ull << (cmd->stride_log2 + cmd->depth_log2));
 
@@ -2156,7 +2119,8 @@ Eth::_CmdRDMACreateCQ(void *req, void *req_data, void *resp, void *resp_data)
     cqcb.pt_next_pg_index = 0x1FF;
 
     int log_num_pages = cqcb.log_num_wqes + cqcb.log_wqe_size - cqcb.log_cq_page_size;
-    NIC_LOG_DEBUG("{}: LIF: {}: pt_pa: {:#x}: pt_next_pa: {:#x}: pt_pa_index: {}: pt_next_pa_index: {}: log_num_pages: {}", __FUNCTION__, lif, cqcb.pt_pa, cqcb.pt_next_pa, cqcb.pt_pg_index, cqcb.pt_next_pg_index, log_num_pages);
+    NIC_LOG_DEBUG("lif-{}: pt_pa: {:#x}: pt_next_pa: {:#x}: pt_pa_index: {}: pt_next_pa_index: {}: log_num_pages: {}",
+        lif, cqcb.pt_pa, cqcb.pt_next_pa, cqcb.pt_pg_index, cqcb.pt_next_pg_index, log_num_pages);
 
     /* store  pt_pa & pt_next_pa in little endian. So need an extra memrev */
     memrev((uint8_t*)&cqcb.pt_pa, sizeof(uint64_t));
@@ -2164,21 +2128,20 @@ Eth::_CmdRDMACreateCQ(void *req, void *req_data, void *resp, void *resp_data)
     ret = pd->lm_->GetPCOffset("p4plus", "rxdma_stage0.bin", "rdma_cq_rx_stage0", &offset);
     if (ret < 0) {
         NIC_LOG_ERR("Failed to get PC offset : {} for prog: {}, label: {}", ret, "rxdma_stage0.bin", "rdma_cq_rx_stage0");
-        return DEVCMD_ERROR;
+        return (DEVCMD_ERROR);
     }
 
     cqcb.ring_header.pc = offset;
 
     // write to hardware
-    NIC_LOG_DEBUG("{}: LIF: {}: Writting initial CQCB State, "
+    NIC_LOG_DEBUG("lif-{}: Writting initial CQCB State, "
                   "CQCB->PT: {:#x} cqcb_size: {}",
-                  __FUNCTION__, lif, cqcb.pt_base_addr, sizeof(cqcb_t));
+                  lif, cqcb.pt_base_addr, sizeof(cqcb_t));
     // Convert data before writting to HBM
     memrev((uint8_t*)&cqcb, sizeof(cqcb_t));
 
-    uint64_t addr = GetQstateAddr(ETH_QTYPE_CQ, cmd->qid_ver);;
-    NIC_LOG_DEBUG("{}: QstateAddr = {:#x}", __FUNCTION__, addr);
-    if (addr == 0) {
+    addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_CQ, cmd->qid_ver);
+    if (addr < 0) {
         NIC_LOG_ERR("lif-{}: Failed to get qstate address for CQ qid {}",
                     lif, cmd->qid_ver);
         return DEVCMD_ERROR;
@@ -2194,8 +2157,6 @@ Eth::_CmdRDMACreateCQ(void *req, void *req_data, void *resp, void *resp_data)
     invalidate_rxdma_cacheline(pt_table_addr);
     invalidate_txdma_cacheline(pt_table_addr);
 
-    NIC_LOG_DEBUG("----------------------- API End ------------------------");
-
     return (DEVCMD_SUCCESS);
 }
 
@@ -2203,16 +2164,16 @@ enum DevcmdStatus
 Eth::_CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct rdma_queue_cmd  *cmd = (struct rdma_queue_cmd  *) req;
-    int                    ret;
-    uint32_t     lif = hal_lif_info_.hw_lif_id + cmd->lif_id;
-    aqcb_t       aqcb;
-    uint8_t     offset;
+    int                     ret;
+    uint32_t                lif = hal_lif_info_.hw_lif_id + cmd->lif_id;
+    aqcb_t                  aqcb;
+    uint8_t                 offset;
+    int64_t                 addr;
 
-    NIC_LOG_DEBUG("--------------------- API Start ------------------------");
-    NIC_LOG_DEBUG("PI-LIF:{}: RDMA AQ Create for lif {}", __FUNCTION__, lif);
-    NIC_LOG_DEBUG("{}: Inputs: aq_num: {} aq_log_wqe_size: {} "
+    NIC_LOG_DEBUG("lif-{}: RDMA_CREATE_ADMINQ aq_num: {} aq_log_wqe_size: {} "
                     "aq_log_num_wqes: {} "
-                    "cq_num: {} phy_base_addr: {}", __FUNCTION__, cmd->qid_ver,
+                    "cq_num: {} phy_base_addr: {}",
+                    lif, cmd->qid_ver,
                     cmd->stride_log2, cmd->depth_log2, cmd->cid,
                     cmd->dma_addr);
 
@@ -2225,7 +2186,13 @@ Eth::_CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_data
     aqcb.aqcb0.aq_id = cmd->qid_ver;
     aqcb.aqcb0.phy_base_addr = cmd->dma_addr | (1UL << 63) | ((uint64_t)lif << 52);
     aqcb.aqcb0.cq_id = cmd->cid;
-    aqcb.aqcb0.cqcb_addr = GetQstateAddr(ETH_QTYPE_CQ, cmd->cid);
+    addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_CQ, cmd->cid);
+    if (addr < 0) {
+        NIC_LOG_ERR("lif-{}: Failed to get qstate address for CQ qid {}",
+                    lif, cmd->cid);
+        return DEVCMD_ERROR;
+    }
+    aqcb.aqcb0.cqcb_addr = addr;
 
     aqcb.aqcb0.first_pass = 1;
 
@@ -2238,25 +2205,23 @@ Eth::_CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_data
     aqcb.aqcb0.ring_header.pc = offset;
 
     // write to hardware
-    NIC_LOG_DEBUG("{}: LIF: {}: Writting initial AQCB State, "
+    NIC_LOG_DEBUG("lif-{}: Writting initial AQCB State, "
                     "AQCB->phy_addr: {:#x} "
                     "aqcb_size: {}",
-                    __FUNCTION__, lif, aqcb.aqcb0.phy_base_addr, sizeof(aqcb_t));
+                    lif, aqcb.aqcb0.phy_base_addr, sizeof(aqcb_t));
 
     // Convert data before writting to HBM
     memrev((uint8_t*)&aqcb.aqcb0, sizeof(aqcb0_t));
     memrev((uint8_t*)&aqcb.aqcb1, sizeof(aqcb1_t));
 
-    uint64_t addr = GetQstateAddr(ETH_QTYPE_ADMIN, cmd->qid_ver);;
-    NIC_LOG_DEBUG("{}: QstateAddr = {:#x}", __FUNCTION__, addr);
-    if (addr == 0) {
-        NIC_LOG_ERR("lif-{}: Failed to get qstate address for CQ qid {}",
+    addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_ADMIN, cmd->qid_ver);;
+    if (addr < 0) {
+        NIC_LOG_ERR("lif-{}: Failed to get qstate address for AQ qid {}",
                     lif, cmd->qid_ver);
         return DEVCMD_ERROR;
     }
     WRITE_MEM(addr, (uint8_t *)&aqcb, sizeof(aqcb), 0);
 
-    NIC_LOG_DEBUG("----------------------- API End ------------------------");
     return (DEVCMD_SUCCESS);
 }
 

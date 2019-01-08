@@ -57,11 +57,6 @@ string string_format( const std::string& format, Args ... args )
     return string( buf.get(), buf.get() + size - 1 ); // ignore '\0'
 }
 
-/*
- * blank_qstate, used only during LIF creation and device reset.
- */
-const uint8_t   blank_qstate[STORAGE_SEQ_CB_SIZE] = { 0 };
-
 static types::CryptoKeyType crypto_key_type_tbl[] = {
     [CMD_CRYPTO_KEY_TYPE_AES128] = types::CRYPTO_KEY_TYPE_AES128,
     [CMD_CRYPTO_KEY_TYPE_AES256] = types::CRYPTO_KEY_TYPE_AES256,
@@ -253,30 +248,18 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
         .type_num = STORAGE_SEQ_QTYPE_SQ,
         .size = HW_CB_MULTIPLE(STORAGE_SEQ_CB_SIZE_SHFT),
         .entries = log_2(spec->seq_queue_count),   // modified at runtime
-        .purpose = ::intf::LIF_QUEUE_PURPOSE_STORAGE,
-        .prog = "txdma_stage0.bin",
-        .label = "storage_seq_stage0",
-        .qstate = (const char *)blank_qstate,
     };
 
     qinfo[STORAGE_SEQ_QTYPE_UNUSED] = {
         .type_num = STORAGE_SEQ_QTYPE_UNUSED,
         .size = HW_CB_MIN_MULTIPLE,
         .entries = 0,
-        .purpose = ::intf::LIF_QUEUE_PURPOSE_ADMIN,
-        .prog = "txdma_stage0.bin",
-        .label = "adminq_stage0",
-        .qstate = (const char *)blank_qstate,
     };
 
     qinfo[STORAGE_SEQ_QTYPE_ADMIN] = {
         .type_num = STORAGE_SEQ_QTYPE_ADMIN,
         .size = HW_CB_MULTIPLE(ADMIN_QSTATE_SIZE_SHFT),
         .entries = 0,
-        .purpose = ::intf::LIF_QUEUE_PURPOSE_ADMIN,
-        .prog = "txdma_stage0.bin",
-        .label = "adminq_stage0",
-        .qstate = (const char *)blank_qstate,
     };
 
     memset(&hal_lif_info_, 0, sizeof(hal_lif_info_));
@@ -333,6 +316,7 @@ Accel_PF::DelphiDeviceInit(void)
     accel_metrics::AccelSeqQueueKey     seq_qkey;
     uint64_t                            qmetrics_addr;
     uint32_t                            qid;
+    int64_t                             addr;
 
     if (g_nicmgr_svc) {
         delphi_pf = make_shared<delphi::objects::AccelPfInfo>();
@@ -349,7 +333,15 @@ Accel_PF::DelphiDeviceInit(void)
         seq_qkey.set_lifid(std::to_string(hal_lif_info_.hw_lif_id));
         for (qid = 0; qid < seq_created_count; qid++) {
             seq_qkey.set_qid(std::to_string(qid));
-            qmetrics_addr = GetQstateAddr(STORAGE_SEQ_QTYPE_SQ, qid) +
+
+            addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, STORAGE_SEQ_QTYPE_SQ, qid);
+            if (addr < 0) {
+                NIC_LOG_ERR("lif-{}: Failed to get qstate address for SEQ qid {}",
+                    hal_lif_info_.hw_lif_id, qid);
+                return -1;
+            }
+
+            qmetrics_addr = addr +
                             offsetof(storage_seq_qstate_t, metrics);
             auto qmetrics = delphi::objects::AccelSeqQueueMetrics::
                             NewAccelSeqQueueMetrics(seq_qkey, qmetrics_addr);
@@ -362,28 +354,13 @@ Accel_PF::DelphiDeviceInit(void)
             auto qinfo = make_shared<delphi::objects::AccelSeqQueueInfo>();
             qinfo->mutable_key()->set_lifid(std::to_string(hal_lif_info_.hw_lif_id));
             qinfo->mutable_key()->set_qid(std::to_string(qid));
-            qinfo->set_qstateaddr(GetQstateAddr(STORAGE_SEQ_QTYPE_SQ, qid));
+            qinfo->set_qstateaddr(addr);
             delphi_qinfo_vec.push_back(std::move(qinfo));
             seq_queue_info_publish(qid, STORAGE_SEQ_QGROUP_CPDC, 0);
         }
     }
 
     return 0;
-}
-
-uint64_t
-Accel_PF::GetQstateAddr(uint8_t qtype, uint32_t qid)
-{
-    uint32_t cnt, sz;
-
-    assert(qtype < STORAGE_SEQ_QTYPE_MAX);
-
-    cnt = 1 << this->qinfo[qtype].entries;
-    sz = 1 << (5 + this->qinfo[qtype].size);
-
-    assert(qid < cnt);
-
-    return hal_lif_info_.qstate_addr[qtype] + (qid * sz);
 }
 
 void
@@ -612,7 +589,7 @@ enum DevcmdStatus
 Accel_PF::_DevcmdReset(void *req, void *req_data,
                        void *resp, void *resp_data)
 {
-    uint64_t                qstate_addr;
+    int64_t                 qstate_addr;
     uint32_t                qid;
     uint8_t                 enable = 0;
     uint8_t                 abort = 1;
@@ -621,7 +598,12 @@ Accel_PF::_DevcmdReset(void *req, void *req_data,
 
     // Disable all sequencer queues
     for (qid = 0; qid < seq_created_count; qid++) {
-        qstate_addr = GetQstateAddr(STORAGE_SEQ_QTYPE_SQ, qid);
+        qstate_addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, STORAGE_SEQ_QTYPE_SQ, qid);
+        if (qstate_addr < 0) {
+            NIC_LOG_ERR("lif-{}: Failed to get qstate address for SEQ qid {}",
+                hal_lif_info_.hw_lif_id, qid);
+            return (DEVCMD_ERROR);
+        }
         WRITE_MEM(qstate_addr + offsetof(storage_seq_qstate_t, abort),
                   (uint8_t *)&abort, sizeof(abort), 0);
         WRITE_MEM(qstate_addr + offsetof(storage_seq_qstate_t, enable),
@@ -629,11 +611,16 @@ Accel_PF::_DevcmdReset(void *req, void *req_data,
         invalidate_txdma_cacheline(qstate_addr);
     }
 
+    // Disable all adminq
     for (qid = 0; qid < spec->adminq_count; qid++) {
-        qstate_addr = GetQstateAddr(STORAGE_SEQ_QTYPE_ADMIN, qid);
-        WRITE_MEM(qstate_addr + offsetof(admin_qstate_t, p_index0),
-                  (uint8_t *)blank_qstate + offsetof(admin_qstate_t, p_index0),
-                  sizeof(blank_qstate) - offsetof(admin_qstate_t, p_index0), 0);
+        qstate_addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, STORAGE_SEQ_QTYPE_ADMIN, qid);
+        if (qstate_addr < 0) {
+            NIC_LOG_ERR("lif-{}: Failed to get qstate address for SEQ qid {}",
+                hal_lif_info_.hw_lif_id, qid);
+            return (DEVCMD_ERROR);
+        }
+        MEM_SET(qstate_addr + offsetof(admin_qstate_t, p_index0), 0,
+                sizeof(admin_qstate_t) - offsetof(admin_qstate_t, p_index0), 0);
         invalidate_txdma_cacheline(qstate_addr);
     }
 
@@ -645,11 +632,16 @@ Accel_PF::_DevcmdReset(void *req, void *req_data,
 
     auto seq_queues_quiesce_check = [this, &qid] () -> int
     {
-        uint64_t                qstate_addr;
+        int64_t                 qstate_addr;
         storage_seq_qstate_t    seq_qstate;
 
         while (seq_qid_init_high && (qid <= seq_qid_init_high)) {
-            qstate_addr = GetQstateAddr(STORAGE_SEQ_QTYPE_SQ, qid);
+            qstate_addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, STORAGE_SEQ_QTYPE_SQ, qid);
+            if (qstate_addr < 0) {
+                NIC_LOG_ERR("lif-{}: Failed to get qstate address for SEQ qid {}",
+                    hal_lif_info_.hw_lif_id, qid);
+                return (DEVCMD_ERROR);
+            }
             READ_MEM(qstate_addr + offsetof(storage_seq_qstate_t, p_ndx),
                      (uint8_t *)&seq_qstate.p_ndx,
                      (offsetof(storage_seq_qstate_t, abort) -
@@ -699,8 +691,8 @@ Accel_PF::_DevcmdAdminQueueInit(void *req, void *req_data,
 {
     adminq_init_cmd_t           *cmd = (adminq_init_cmd_t *)req;
     adminq_init_cpl_t           *cpl = (adminq_init_cpl_t *)resp;
-    admin_qstate_t              admin_qstate;
-    uint64_t                    addr;
+    admin_qstate_t              qstate;
+    int64_t                     addr;
 
     NIC_LOG_DEBUG("lif{}: CMD_OPCODE_ADMINQ_INIT: "
                  "queue_index {} ring_base {:#x} ring_size {} intr_index {}",
@@ -726,36 +718,46 @@ Accel_PF::_DevcmdAdminQueueInit(void *req, void *req_data,
         return (DEVCMD_ERROR);
     }
 
-    addr = GetQstateAddr(STORAGE_SEQ_QTYPE_ADMIN, cmd->index);
+    addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, STORAGE_SEQ_QTYPE_ADMIN, cmd->index);
+    if (addr < 0) {
+        NIC_LOG_ERR("lif-{}: Failed to get qstate address for SEQ qid {}",
+            hal_lif_info_.hw_lif_id, cmd->index);
+        return (DEVCMD_ERROR);
+    }
 
-    READ_MEM(addr, (uint8_t *)&admin_qstate, sizeof(admin_qstate), 0);
-    //NOTE: admin_qstate.cosA is ignored for Admin Queues. Db should ring on cosB.
-    admin_qstate.cosA = 0;
-    //NOTE: admin_qstate.cosB is set by HAL LifCreate
-    admin_qstate.host = 1;
-    admin_qstate.total = 1;
-    admin_qstate.pid = cmd->pid;
-    admin_qstate.p_index0 = 0;
-    admin_qstate.c_index0 = 0;
-    admin_qstate.comp_index = 0;
-    admin_qstate.ci_fetch = 0;
-    admin_qstate.sta.color = 1;
-    admin_qstate.cfg.enable = 1;
-    admin_qstate.cfg.host_queue = ACCEL_PHYS_ADDR_HOST_GET(cmd->ring_base);
-    admin_qstate.cfg.intr_enable = 1;
-    admin_qstate.ring_base = cmd->ring_base;
-    if (admin_qstate.cfg.host_queue && !ACCEL_PHYS_ADDR_LIF_GET(cmd->ring_base)) {
-        admin_qstate.ring_base |= ACCEL_PHYS_ADDR_LIF_SET(hal_lif_info_.hw_lif_id);
+    uint8_t off;
+    if (pd->lm_->GetPCOffset("p4plus", "txdma_stage0.bin", "adminq_stage0", &off) < 0) {
+        NIC_LOG_ERR("Failed to get PC offset of program: txdma_stage0.bin label: adminq_stage0");
+        return (DEVCMD_ERROR);
     }
-    admin_qstate.ring_size = cmd->ring_size;
-    admin_qstate.cq_ring_base = roundup(admin_qstate.ring_base + (64 << cmd->ring_size), 4096);
-    admin_qstate.intr_assert_index = pci_resources.intrb + cmd->intr_index;
+    qstate.pc_offset = off;
+    qstate.cos_sel = 0;
+    qstate.cosA = 0;
+    qstate.cosB = cosB;
+    qstate.host = 1;
+    qstate.total = 1;
+    qstate.pid = cmd->pid;
+    qstate.p_index0 = 0;
+    qstate.c_index0 = 0;
+    qstate.comp_index = 0;
+    qstate.ci_fetch = 0;
+    qstate.sta.color = 1;
+    qstate.cfg.enable = 1;
+    qstate.cfg.host_queue = ACCEL_PHYS_ADDR_HOST_GET(cmd->ring_base);
+    qstate.cfg.intr_enable = 1;
+    qstate.ring_base = cmd->ring_base;
+    if (qstate.cfg.host_queue && !ACCEL_PHYS_ADDR_LIF_GET(cmd->ring_base)) {
+        qstate.ring_base |= ACCEL_PHYS_ADDR_LIF_SET(hal_lif_info_.hw_lif_id);
+    }
+    qstate.ring_size = cmd->ring_size;
+    qstate.cq_ring_base = roundup(qstate.ring_base + (64 << cmd->ring_size), 4096);
+    qstate.intr_assert_index = pci_resources.intrb + cmd->intr_index;
     if (nicmgr_lif_info) {
-        admin_qstate.nicmgr_qstate_addr = nicmgr_lif_info->qstate_addr[NICMGR_QTYPE_REQ];
-        NIC_LOG_DEBUG("lif{}: nicmgr_qstate_addr RX {:#x}", hal_lif_info_.hw_lif_id,
-            admin_qstate.nicmgr_qstate_addr);
+        qstate.nicmgr_qstate_addr = nicmgr_lif_info->qstate_addr[NICMGR_QTYPE_REQ];
+        NIC_LOG_DEBUG("lif{}: nicmgr_qstate_addr {:#x}", hal_lif_info_.hw_lif_id,
+            qstate.nicmgr_qstate_addr);
     }
-    WRITE_MEM(addr, (uint8_t *)&admin_qstate, sizeof(admin_qstate), 0);
+    WRITE_MEM(addr, (uint8_t *)&qstate, sizeof(qstate), 0);
 
     invalidate_txdma_cacheline(addr);
 
@@ -774,7 +776,7 @@ Accel_PF::_DevcmdSeqQueueSingleInit(const seq_queue_init_cmd_t *cmd)
     uint64_t                desc0_pgm_pc = 0;
     uint64_t                desc1_pgm_pc = 0;
     uint32_t                qid = cmd->index;
-    storage_seq_qstate_t    seq_qstate = {0};
+    storage_seq_qstate_t    qstate = {0};
     const char              *desc0_pgm_name = nullptr;
     const char              *desc1_pgm_name = nullptr;
     uint64_t                wring_base = 0;
@@ -809,9 +811,9 @@ Accel_PF::_DevcmdSeqQueueSingleInit(const seq_queue_init_cmd_t *cmd)
         return (DEVCMD_ERROR);
     }
 
-    qstate_addr = GetQstateAddr(STORAGE_SEQ_QTYPE_SQ, qid);
-    if (qstate_addr == 0) {
-        NIC_LOG_ERR("lif-{}: Failed to get qstate address for SQ qid {}",
+    qstate_addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, STORAGE_SEQ_QTYPE_SQ, qid);
+    if (qstate_addr < 0) {
+        NIC_LOG_ERR("lif-{}: Failed to get qstate address for SEQ qid {}",
             hal_lif_info_.hw_lif_id, cmd->index);
         return (DEVCMD_ERROR);
     }
@@ -833,35 +835,47 @@ Accel_PF::_DevcmdSeqQueueSingleInit(const seq_queue_init_cmd_t *cmd)
     }
 
     seq_qid_init_high = std::max(seq_qid_init_high, qid);
-    READ_MEM(qstate_addr, (uint8_t *)&seq_qstate, sizeof(seq_qstate), 0);
 
-    seq_qstate.cosA = cmd->cos;
-    seq_qstate.cosB = 0;
-    seq_qstate.host_wrings = cmd->host_wrings;
-    seq_qstate.total_wrings = cmd->total_wrings;
-    seq_qstate.pid = cmd->pid;
-    seq_qstate.p_ndx = 0;
-    seq_qstate.c_ndx = 0;
-    seq_qstate.enable = cmd->enable;
-    seq_qstate.abort = 0;
-    seq_qstate.wring_base = htonll(wring_base);
-    seq_qstate.wring_size = htons(cmd->wring_size);
-    seq_qstate.entry_size = htons(cmd->entry_size);
+    uint8_t off;
+    if (pd->lm_->GetPCOffset("p4plus", "txdma_stage0.bin", "storage_seq_stage0", &off) < 0) {
+        NIC_LOG_ERR("Failed to get PC offset of program: txdma_stage0.bin label: storage_seq_stage0");
+        return (DEVCMD_ERROR);
+    }
+    qstate.pc_offset = off;
+    qstate.cos_sel = 0;
+    qstate.cosA = 0;
+    qstate.cosB = cmd->cos;
+    qstate.host_wrings = cmd->host_wrings;
+    qstate.total_wrings = cmd->total_wrings;
+    qstate.pid = cmd->pid;
+    qstate.p_ndx = 0;
+    qstate.c_ndx = 0;
+    qstate.enable = cmd->enable;
+    qstate.abort = 0;
+    qstate.wring_base = htonll(wring_base);
+    qstate.wring_size = htons(cmd->wring_size);
+    qstate.entry_size = htons(cmd->entry_size);
 
     if (desc0_pgm_name) {
-        seq_qstate.desc0_next_pc = htonl(desc0_pgm_pc >> 6);
+        qstate.desc0_next_pc = htonl(desc0_pgm_pc >> 6);
     }
 
     if (desc1_pgm_name) {
-        seq_qstate.desc1_next_pc = htonl(desc1_pgm_pc >> 6);
-        seq_qstate.desc1_next_pc_valid = 1;
+        qstate.desc1_next_pc = htonl(desc1_pgm_pc >> 6);
+        qstate.desc1_next_pc_valid = 1;
     }
 
-    seq_qstate.qgroup = cmd->qgroup;
-    seq_qstate.core_id = cmd->core_id;
+    qstate.qgroup = cmd->qgroup;
+    qstate.core_id = cmd->core_id;
 
-    WRITE_MEM(qstate_addr, (uint8_t *)&seq_qstate, sizeof(seq_qstate), 0);
+    WRITE_MEM(qstate_addr, (uint8_t *)&qstate, sizeof(qstate), 0);
     invalidate_txdma_cacheline(qstate_addr);
+
+    NIC_LOG_DEBUG("lif{}: qid {} qgroup {} core_id {} wring_base {:#x} "
+                 "wring_size {} entry_size {}",
+                 hal_lif_info_.hw_lif_id,
+                 qid, cmd->qgroup, cmd->core_id, qstate.wring_base,
+                 cmd->wring_size, cmd->entry_size);
 
     seq_queue_info_publish(qid, cmd->qgroup, cmd->core_id);
     return (DEVCMD_SUCCESS);
@@ -945,7 +959,7 @@ enum DevcmdStatus
 Accel_PF::_DevcmdSeqQueueSingleControl(const seq_queue_control_cmd_t *cmd,
                                        bool enable)
 {
-    uint64_t                qstate_addr;
+    int64_t                 qstate_addr;
     uint8_t                 value;
     struct admin_cfg_qstate admin_cfg = {0};
 
@@ -963,7 +977,12 @@ Accel_PF::_DevcmdSeqQueueSingleControl(const seq_queue_control_cmd_t *cmd,
                         seq_created_count);
             return (DEVCMD_ERROR);
         }
-        qstate_addr = GetQstateAddr(cmd->qtype, cmd->qid);
+        qstate_addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, cmd->qtype, cmd->qid);
+        if (qstate_addr < 0) {
+            NIC_LOG_ERR("lif-{}: Failed to get qstate address for ADMIN qid {}",
+                hal_lif_info_.hw_lif_id, cmd->qid);
+            return (DEVCMD_ERROR);
+        }
         WRITE_MEM(qstate_addr + offsetof(storage_seq_qstate_t, enable),
                   (uint8_t *)&value, sizeof(value), 0);
         invalidate_txdma_cacheline(qstate_addr);
@@ -975,7 +994,12 @@ Accel_PF::_DevcmdSeqQueueSingleControl(const seq_queue_control_cmd_t *cmd,
                         spec->adminq_count);
             return (DEVCMD_ERROR);
         }
-        qstate_addr = GetQstateAddr(cmd->qtype, cmd->qid);
+        qstate_addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, cmd->qtype, cmd->qid);
+        if (qstate_addr < 0) {
+            NIC_LOG_ERR("lif-{}: Failed to get qstate address for ADMIN qid {}",
+                hal_lif_info_.hw_lif_id, cmd->qid);
+            return (DEVCMD_ERROR);
+        }
         admin_cfg.enable = enable;
         admin_cfg.host_queue = 0x1;
         WRITE_MEM(qstate_addr + offsetof(admin_qstate_t, cfg), (uint8_t *)&admin_cfg,
@@ -1644,8 +1668,8 @@ crypto_key_accum_del(uint32_t key_index)
 void
 Accel_PF::LifInit()
 {
-    uint8_t cosA = 1;
-    uint8_t cosB = 0;
+    cosA = 1;
+    cosB = 0;
     uint8_t coses = (((cosB & 0x0f) << 4) | (cosA & 0x0f));
 
     if (get_lif_init_done()) {

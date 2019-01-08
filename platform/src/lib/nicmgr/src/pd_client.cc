@@ -561,44 +561,26 @@ PdClient::lif_qstate_map_init(uint64_t hw_lif_id,
 int
 PdClient::lif_qstate_init(uint64_t hw_lif_id, struct queue_info* queue_info)
 {
-    uint32_t total_queues = 0;
-    std::unique_ptr<uint8_t[]> buf;
+    uint8_t bzero64[64] = {0};
 
-    for (uint32_t i = 0; i < NUM_QUEUE_TYPES; i++) {
-        auto & qinfo = queue_info[i];
+    NIC_FUNC_INFO("lif{}: Started initializing Qstate", hw_lif_id);
+
+    for (uint32_t qtype = 0; qtype < NUM_QUEUE_TYPES; qtype++) {
+        auto & qinfo = queue_info[qtype];
         if (qinfo.size < 1) continue;
 
         for (uint32_t qid = 0; qid < (uint32_t) pow(2, qinfo.entries); qid++) {
-            uint8_t *state = (uint8_t *) qinfo.qstate;
-            uint32_t state_sz = (uint32_t) pow(2, qinfo.size + 5);
-            if (qinfo.label) {
-                uint8_t off = 0;
-                int ret = lm_->GetPCOffset("p4plus", qinfo.prog, qinfo.label, &off);
-                if (ret < 0) {
-                    NIC_LOG_ERR("Failed to get PC offset : {} for prog: {}, label: {}", ret, qinfo.prog, qinfo.label);
-                    return -1;
-                }
-                if (state_sz != 0) {
-                    buf.reset(new uint8_t[state_sz]);
-                    bcopy(qinfo.qstate, buf.get(), state_sz);
-                    buf.get()[0] = off;
-                    state = buf.get();
-                } else {
-                    NIC_LOG_DEBUG("qstate size{}", state_sz);
-                }
-            }
-
-            int ret = lm_->WriteQState(hw_lif_id, qinfo.type_num, qid, state, state_sz);
+            int ret = lm_->WriteQState(hw_lif_id, qtype, qid, bzero64,
+                sizeof(bzero64));
             if (ret < 0) {
                 NIC_LOG_ERR("Failed to set LIFQState : {}", ret);
                 return -1;
             }
         }
-
-        total_queues++;
     }
 
-    NIC_LOG_DEBUG("# Queues: {}", total_queues);
+    NIC_FUNC_INFO("lif{}: Finished initializing Qstate", hw_lif_id);
+
     return 0;
 }
 
@@ -612,10 +594,10 @@ int PdClient::program_qstate(struct queue_info* queue_info,
 
     // init queue state map
     ret = lif_qstate_map_init(lif_info->hw_lif_id, queue_info, coses);
-
     if (ret != 0) {
         return -1;
     }
+
     // init queues
     ret = lif_qstate_init(lif_info->hw_lif_id, queue_info);
     if (ret != 0) {

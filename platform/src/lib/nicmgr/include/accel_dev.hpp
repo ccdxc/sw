@@ -248,13 +248,14 @@ private:
     HalClient                   *hal;
     hal_lif_info_t              hal_lif_info_;
     const hal_lif_info_t        *nicmgr_lif_info;
+    uint8_t cosA, cosB;
     // PCIe info
     pciehdev_t                  *pdev;
     pciehdevice_resources_t     pci_resources;
     // Resources
     int32_t                     lif_base;
     uint32_t                    intr_base;
-    // Oher states
+    // Other state
     uint32_t                    crypto_key_idx_base;
     uint32_t                    num_crypto_keys_max;
     uint32_t                    seq_qid_init_high;  // highest seq qid initialized
@@ -295,7 +296,6 @@ private:
                                                    bool enable);
 
     int DelphiDeviceInit(void);
-    uint64_t GetQstateAddr(uint8_t qtype, uint32_t qid);
 
     int accel_ring_info_get_all(void);
     int accel_ring_reset_all(void);
