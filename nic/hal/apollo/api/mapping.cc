@@ -177,7 +177,7 @@ mapping_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 
 /**
  * @brief add mapping to database
- * @param[in] mapping mapping
+ * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
 mapping_entry::add_to_db(void) {
@@ -187,7 +187,7 @@ mapping_entry::add_to_db(void) {
 
 /**
  * @brief delete mapping from database
- * @param[in] mapping_key mapping key
+ * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
 mapping_entry::del_from_db(void) {

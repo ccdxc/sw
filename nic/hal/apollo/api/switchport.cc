@@ -142,13 +142,19 @@ switchport_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
-/**< @brief add switchport to database */
+/**
+ * @brief add switchport to database
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
 sdk_ret_t
 switchport_entry::add_to_db(void) {
     return switchport_db()->insert(this);
 }
 
-/**< @brief delete switchport from database */
+/**
+ * @brief delete switchport from database
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
 sdk_ret_t
 switchport_entry::del_from_db(void) {
     /**< this is a singleton obj, so this is no-op */

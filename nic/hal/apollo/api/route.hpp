@@ -38,7 +38,7 @@ public:
     /**
      * @brief    release all the s/w state associate with the given route table,
      *           if any, and free the memory
-     * @param[in] tablec     route table to be freed
+     * @param[in] rtable     route table to be freed
      * NOTE: h/w entries should have been cleaned up (by calling
      *       impl->cleanup_hw() before calling this
      */

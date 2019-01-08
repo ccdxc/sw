@@ -18,6 +18,9 @@
  * @{
  */
 
+// TODO: should be same as OCI_MAX_SUBNET
+#define OCI_MAX_ROUTE_TABLE        (5 * OCI_MAX_VCN)
+
 /**
  * @brief nexthop types
  */
@@ -48,7 +51,7 @@ typedef struct oci_route_s {
  * @brief route rules
  */
 typedef struct oci_route_rules_s {
-    uint32_t       count;       /**< number of routes in the list */
+    uint32_t       num_rules;   /**< number of routes in the list */
     oci_route_t    rules[0];    /**< list or route rules */
 } __PACK__ oci_route_rules_t;
 
@@ -56,7 +59,7 @@ typedef struct oci_route_rules_s {
  * @brief route table key
  */
 typedef struct oci_route_table_key_s {
-    oci_route_table_id_t    table_id;    /**< route table id */
+    oci_route_table_id_t    id;    /**< route table id */
 } __PACK__ oci_route_table_key_t;
 
 /**

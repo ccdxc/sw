@@ -183,8 +183,7 @@ tep_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 
 /**
  * @brief add tep to database
- *
- * @param[in] tep tep
+ * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
 tep_entry::add_to_db(void) {
@@ -194,8 +193,7 @@ tep_entry::add_to_db(void) {
 
 /**
  * @brief delete tep from database
- *
- * @param[in] tep_key tep key
+ * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
 tep_entry::del_from_db(void) {

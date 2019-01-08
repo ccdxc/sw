@@ -16,6 +16,7 @@
 #include "nic/hal/apollo/api/subnet.hpp"
 #include "nic/hal/apollo/api/vnic.hpp"
 #include "nic/hal/apollo/api/mapping.hpp"
+#include "nic/hal/apollo/api/route.hpp"
 
 namespace api {
 
@@ -34,14 +35,16 @@ public:
     subnet_state *subnet_db(void) { return &subnet_db_; }
     vnic_state *vnic_db(void) { return &vnic_db_ ; }
     mapping_state *mapping_db(void) { return &mapping_db_; }
+    route_table_state *route_table_db(void) { return &route_table_db_; }
 
 private:
-    switchport_state    switchport_db_;
-    tep_state           tep_db_;
-    vcn_state           vcn_db_;
-    subnet_state        subnet_db_;
-    vnic_state          vnic_db_;
-    mapping_state       mapping_db_;
+    switchport_state     switchport_db_;
+    tep_state            tep_db_;
+    vcn_state            vcn_db_;
+    subnet_state         subnet_db_;
+    vnic_state           vnic_db_;
+    mapping_state        mapping_db_;
+    route_table_state    route_table_db_;
 };
 extern oci_state g_oci_state;
 
@@ -83,6 +86,12 @@ static inline mapping_state *
 mapping_db (void)
 {
     return api::g_oci_state.mapping_db();
+}
+
+static inline route_table_state *
+route_table_db (void)
+{
+    return api::g_oci_state.route_table_db();
 }
 
 #endif    /** __OCI_STATE_HPP__ */
