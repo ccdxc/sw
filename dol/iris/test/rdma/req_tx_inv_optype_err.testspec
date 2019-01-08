@@ -1,0 +1,83 @@
+# Test Spec
+selectors:
+#    src:
+#        tenant      : filter://overlay=VLAN,type=TENANT
+#        segment     : filter://any
+#        endpoint    : filter://remote=False
+#        interface   : filter://any
+#    dst:
+#        tenant      : filter://overlay=VLAN,type=TENANT
+#        segment     : filter://any
+#        endpoint    : filter://remote=True
+#        interface   : filter://any
+#    flow            : filter://fwtype=L2,type=IPV4,dport=4791,proto=UDP,label=RDMA
+    rdmasession     :
+        lqp         : filter://svc=0
+        rqp         : filter://svc=0
+        base        : filter://any
+#    maxflows    : 1
+#    maxrdmasessions     : 1
+
+descriptors:
+    - descriptor:
+        id      : DESC
+        template: ref://factory/templates/id=DESC_RDMA_SQ
+        fields:
+            op_type : 13  # Invalid Optype
+            wrid    : ref://testcase/pvtdata/wrid
+
+
+    - descriptor:
+        id      : EXP_CQ_DESC
+        template: ref://factory/templates/id=DESC_RDMA_CQ_SEND
+        fields:
+            wrid   :  ref://testcase/pvtdata/wrid
+            qid    : ref://testcase/config/rdmasession/lqp/id
+            status : 2  # CQ_STATUS_LOCAL_QP_OPER_ERR
+            color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=0
+            error  : 1
+            type   : 3 #CQE_TYPE_SEND_NPG
+
+    - descriptor:
+        id      : EXP_RQ_FLUSH_CQ_DESC
+        template: ref://factory/templates/id=DESC_RDMA_CQ_RECV
+        fields:
+            wrid   : 0
+            qid: ref://testcase/config/rdmasession/lqp/id
+            status : 4  # CQ_STATUS_WQE_FLUSHED_ERR
+            color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=1
+            error  : 1
+            smac: callback://rdma/rdma/GetZeroMAC
+session:
+    - step:
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC
+                    ring    : ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ
+
+            doorbell:
+                object: ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ/doorbell
+                fields:
+                    upd : 0x9 # PI from DB data and DB_SCHED_EVAL
+
+        expect:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_CQ_DESC
+                    ring    : ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ
+
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_RQ_FLUSH_CQ_DESC
+                    ring    : ref://testcase/config/rdmasession/lqp/rq_cq/rings/id=CQ
+
+    #set CI for CQ ring to that of proxy CI in DB data
+    - step:
+
+        trigger:
+            doorbell:
+                object: ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ/doorbell
+                fields:
+                    upd : 0x4 #Set CI
+
+        expect:

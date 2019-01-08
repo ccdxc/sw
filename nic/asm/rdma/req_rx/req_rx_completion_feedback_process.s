@@ -11,6 +11,8 @@ struct sqcb1_t d;
 #define IN_P t2_s2s_sqcb1_to_compl_feedback_info
 
 #define K_STATUS CAPRI_KEY_FIELD(IN_P, status)
+#define K_ERR_QP_INSTANTLY CAPRI_KEY_FIELD(IN_P, err_qp_instantly)
+
 #define TO_S6_P to_s6_cq_info
 #define TO_S7_P to_s7_stats_info
 
@@ -54,6 +56,18 @@ rc_err_completion:
     sub            r1, d.max_ssn, 1
     mincr          r1, 24, r0
     seq            c1, d.msn, r1
+
+    // if qp should be err disabled instantly without waiting for any responses,
+    // which will be the case if its err in bktracking etc, then post
+    // err completion for next expected msn
+    bbne           K_ERR_QP_INSTANTLY, 1, update_state
+    add            r2, d.msn, 1
+    mincr          r2, 24, r0
+    phvwr          p.cqe.send.msn, r2
+    phvwr          CAPRI_PHV_FIELD(RRQWQE_TO_CQ_P, cqe_type), CQE_TYPE_SEND_MSN
+    setcf          c1, [c0]
+
+update_state:
     cmov           r1, c1, QP_STATE_ERR, QP_STATE_SQD_ON_ERR
     tblwr          d.state, r1
     phvwr          CAPRI_PHV_FIELD(TO_S6_P, state), r1

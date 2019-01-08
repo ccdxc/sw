@@ -396,6 +396,7 @@ header_type req_rx_sqcb1_to_timer_expiry_info_t {
 header_type req_rx_sqcb1_to_compl_feedback_info_t {
     fields {
         status                           : 8;
+        err_qp_instantly                 : 1;
     }
 }
 
@@ -1170,6 +1171,7 @@ action rdma_stage0_completion_feedback_action () {
     modify_field(rdma_completion_feedback_scr.wrid, rdma_completion_feedback.wrid);
     modify_field(rdma_completion_feedback_scr.status, rdma_completion_feedback.status);
     modify_field(rdma_completion_feedback_scr.error, rdma_completion_feedback.error);
+    modify_field(rdma_completion_feedback_scr.err_qp_instantly, rdma_completion_feedback.err_qp_instantly);
     modify_field(rdma_completion_feedback_scr.lif_cqe_error_id_vld, rdma_completion_feedback.lif_cqe_error_id_vld);
     modify_field(rdma_completion_feedback_scr.lif_error_id_vld, rdma_completion_feedback.lif_error_id_vld);
     modify_field(rdma_completion_feedback_scr.lif_error_id, rdma_completion_feedback.lif_error_id);
@@ -1505,6 +1507,7 @@ action req_rx_completion_feedback_process () {
 
     // stage to stage
     modify_field(t2_s2s_sqcb1_to_compl_feedback_info_scr.status, t2_s2s_sqcb1_to_compl_feedback_info.status);
+    modify_field(t2_s2s_sqcb1_to_compl_feedback_info_scr.err_qp_instantly, t2_s2s_sqcb1_to_compl_feedback_info.err_qp_instantly);
 
 }
 

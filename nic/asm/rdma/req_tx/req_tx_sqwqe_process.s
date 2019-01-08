@@ -120,24 +120,24 @@ skip_fence_check:
         nop             //Branch Delay slot
       
     .brcase OP_TYPE_SEND_INV_IMM
-        nop.e
-        nop
+        b               invalid_optype
+        nop             // Branch Delay Slot
 
     .brcase OP_TYPE_FRMR
-        nop.e
-        nop
+        b               invalid_optype
+        nop             // Branch Delay Slot
 
     .brcase 13
-        nop.e
-        nop
+        b               invalid_optype
+        nop             // Branch Delay Slot
 
     .brcase 14
-        nop.e
-        nop
+        b               invalid_optype
+        nop             // Branch Delay Slot
 
     .brcase 15
-        nop.e
-        nop
+        b               invalid_optype
+        nop             // Branch Delay Slot
 
     .brend
 
@@ -443,23 +443,24 @@ ud_error_pmtu:
     b              ud_error
     phvwrpair      CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_disabled), 1, \
                    CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_ud_pmtu), 1 //BD Slot
+
+invalid_optype:
+    b              ud_error
+    phvwrpair      CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_inv_optype), 1 // BD Slot
     
 ud_error:
     // Any error should move Qstate to SQ_ERR and halt SQ processing
     phvwrpair      p.{rdma_feedback.completion.status, rdma_feedback.completion.error}, (CQ_STATUS_LOCAL_QP_OPER_ERR << 1 | 1), \
                    p.{rdma_feedback.completion.lif_cqe_error_id_vld, rdma_feedback.completion.lif_error_id_vld, rdma_feedback.completion.lif_error_id}, \
                        ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_TX_LOCAL_OPER_ERR_OFFSET))
-    phvwr.e        CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp), 1
-    CAPRI_SET_TABLE_0_1_VALID(0, 0)
+    b              trigger_dcqcn
+    phvwr          CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp), 1 // Branch Delay Slot
 
 clear_poll_in_progress:
     CAPRI_RESET_TABLE_2_ARG()
+    b              trigger_dcqcn
     phvwr CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, poll_failed), 1
-
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r2)
-    CAPRI_SET_TABLE_0_1_VALID(0, 0)
-    nop.e
-    nop
 
 skip_npg_wqe:
     CAPRI_RESET_TABLE_2_ARG()
@@ -471,6 +472,9 @@ skip_npg_wqe:
     // Drop the phv as there is no completion to be posted for NPG
     // wqes on retransmission
     phvwr      p.common.p4_intr_global_drop, 1
+    // fall through
+
+trigger_dcqcn:
     CAPRI_SET_TABLE_0_1_VALID(0, 0)
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r2)
 
@@ -487,8 +491,6 @@ table_error:
     phvwr.c2       CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_table_error), 1
     phvwr.c3       CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_phv_intrinsic_error), 1
     phvwr.c7       CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, qp_err_dis_table_resp_error), 1
-    phvwr          p.common.p4_intr_global_drop, 1
 
-    CAPRI_SET_TABLE_0_VALID(0)
-    // load dcqcn as mpu only
-    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r0)
+    b              trigger_dcqcn
+    phvwr          p.common.p4_intr_global_drop, 1

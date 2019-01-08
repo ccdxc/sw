@@ -293,7 +293,8 @@ struct sqcb4_t {
     qp_err_dis_table_error                   : 1;
     qp_err_dis_phv_intrinsic_error           : 1;
     qp_err_dis_table_resp_error              : 1;
-    qp_err_dis_rsvd                          : 30;
+    qp_err_dis_inv_optype                    : 1;
+    qp_err_dis_rsvd                          : 29;
     pad: 48;
 };
 

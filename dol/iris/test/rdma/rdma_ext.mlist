@@ -395,6 +395,14 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_TX_INV_OPTYPE_ERR
+        enable  : True
+        package : test.rdma
+        module  : req_tx_inv_optype_err
+        spec    : req_tx_inv_optype_err.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_RX_SEND_FIRST_LAST
         enable  : True
         package : test.rdma

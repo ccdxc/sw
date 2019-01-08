@@ -8,7 +8,7 @@ struct sqcb1_t d;
 #define IN_P t2_s2s_sqcb1_to_sq_drain_feedback_info
 #define RRQWQE_TO_CQ_P t2_s2s_rrqwqe_to_cq_info
 
-#define K_SSN CAPRI_KEY_RANGE(IN_P, ssn_sbit0_ebit7, ssn_sbit8_ebit23)
+#define K_SSN CAPRI_KEY_RANGE(IN_P, ssn_sbit0_ebit7, ssn_sbit16_ebit23)
 #define TO_S6_P to_s6_cq_info
 
 %%

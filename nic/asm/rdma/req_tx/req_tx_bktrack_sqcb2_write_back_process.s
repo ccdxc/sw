@@ -16,7 +16,7 @@ struct sqcb2_t d;
 #define K_OP_TYPE         CAPRI_KEY_FIELD(IN_P, op_type)
 #define K_SQ_C_INDEX      CAPRI_KEY_RANGE(IN_P, sq_cindex_sbit0_ebit2, sq_cindex_sbit11_ebit15)
 #define K_BKTRACK_IN_PROGRESS CAPRI_KEY_FIELD(IN_P, bktrack_in_progress)
-#define K_WQE_START_PSN   CAPRI_KEY_FIELD(IN_TO_S_P, wqe_start_psn)
+#define K_WQE_START_PSN   CAPRI_KEY_RANGE(IN_TO_S_P, wqe_start_psn_sbit0_ebit7, wqe_start_psn_sbit8_ebit23)
 %%
 
 .align

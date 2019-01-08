@@ -369,7 +369,8 @@ completion_feedback:
     phvwrpair      p.cqe.status[7:0], CAPRI_COMPLETION_FEEDBACK_STATUS, p.cqe.error, CAPRI_COMPLETION_FEEDBACK_ERROR //BD Slot
 
 process_err_feedback:
-    phvwr          CAPRI_PHV_FIELD(SQCB1_TO_COMPL_FEEDBACK_P, status), CAPRI_COMPLETION_FEEDBACK_STATUS
+    phvwrpair      CAPRI_PHV_FIELD(SQCB1_TO_COMPL_FEEDBACK_P, status), CAPRI_COMPLETION_FEEDBACK_STATUS, \
+                   CAPRI_PHV_FIELD(SQCB1_TO_COMPL_FEEDBACK_P, err_qp_instantly), CAPRI_COMPLETION_FEEDBACK_ERR_QP_INSTANTLY
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_completion_feedback_process, r0)
 
 set_cqcb_arg:

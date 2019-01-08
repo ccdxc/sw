@@ -262,6 +262,7 @@ header_type rdma_completion_feedback_header_t {
         wrid                : 64;
         status              : 8;
         error               : 1;
+        err_qp_instantly    : 1;
         lif_cqe_error_id_vld: 1;
         lif_error_id_vld    : 1;
         lif_error_id        : 4;

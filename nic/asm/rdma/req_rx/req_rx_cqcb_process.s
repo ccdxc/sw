@@ -34,7 +34,7 @@ struct cqcb_t d;
 #define K_ASYNC_EVENT CAPRI_KEY_FIELD(IN_TO_S_P, async_event)
 #define K_QP_STATE CAPRI_KEY_RANGE(IN_TO_S_P, state_sbit0_ebit0, state_sbit1_ebit2)
 
-#define K_CQ_ID CAPRI_KEY_RANGE(IN_P, cq_id_sbit0_ebit7, cq_id_sbit8_ebit23)
+#define K_CQ_ID CAPRI_KEY_RANGE(IN_P, cq_id_sbit0_ebit7, cq_id_sbit16_ebit23)
 #define K_CQE_TYPE CAPRI_KEY_FIELD(IN_P, cqe_type)
     
 %%
