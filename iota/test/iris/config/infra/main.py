@@ -90,7 +90,7 @@ def _hw_rest_api_handler(node_ip, url, json_data = None, oper = CfgOper.ADD):
             os.system("cat temp_config.json")
 
         #os.system("sshpass -p %s scp temp_config.json %s@%s:~" % (api.GetTestbedPassword(), api.GetTestbedUsername(), node_ip))
-        os.system("sshpass -p %s scp temp_config.json %s@%s:~" % ("vm", "vm", node_ip))
+        os.system("sshpass -p %s scp \"StrictHostKeyChecking=no\"  temp_config.json %s@%s:~" % ("vm", "vm", node_ip))
     if oper == CfgOper.DELETE:
         oper = "DELETE"
     elif oper == CfgOper.ADD:
@@ -104,11 +104,11 @@ def _hw_rest_api_handler(node_ip, url, json_data = None, oper = CfgOper.ADD):
         assert(0)
     if GlobalOptions.debug:
         api.Logger.info("Url : %s" % url)
-    #cmd = ("sshpass -p %s ssh %s@%s curl -X %s -d @temp_config.json -H \"Content-Type:application/json\" %s" %
+        #cmd = ("sshpass -p %s ssh %s@%s curl -X %s -d @temp_config.json -H \"Content-Type:application/json\" %s" %
     #                (api.GetTestbedPassword(), api.GetTestbedUsername(), node_ip, oper, url))
     #cmd = ["sshpass", "-p", api.GetTestbedPassword(), "ssh", api.GetTestbedUsername() + "@" + node_ip, "curl", "-X", oper, "-d", "@temp_config.json", "-H", "\"Content-Type:application/json\"",
     #        url]
-    cmd = ["sshpass", "-p", "vm", "ssh", "vm" + "@" + node_ip, "curl", "-X", oper, "-d", "@temp_config.json", "-H", "\"Content-Type:application/json\"",
+    cmd = ["sshpass", "-p", "vm", "ssh",  "-o", "StrictHostKeyChecking=no" , "vm" + "@" + node_ip, "curl", "-X", oper, "-d", "@temp_config.json", "-H", "\"Content-Type:application/json\"",
             url]
     if GlobalOptions.debug:
         print (" ".join(cmd))

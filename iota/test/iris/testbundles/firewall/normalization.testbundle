@@ -1,6 +1,7 @@
 meta:
     name    : normalization
     nics    : [ pensando, intel, mellanox, broadcom ]
+    os      : [ linux, esx ]
     targetcount : 1
 
 testcases:

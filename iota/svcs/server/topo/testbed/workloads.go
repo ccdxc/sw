@@ -3,6 +3,7 @@ package testbed
 import (
 	"context"
 	"fmt"
+	"time"
 
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/venice/utils/log"
@@ -11,7 +12,9 @@ import (
 // AddWorkload adds a workload on the node
 func (n *TestNode) AddWorkload(w *iota.Workload) error {
 	log.Infof("TOPO SVC | DEBUG | STATE | WORKLOAD: %v", w)
-	resp, err := n.AgentClient.AddWorkload(context.Background(), w)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+	defer cancel()
+	resp, err := n.AgentClient.AddWorkload(ctx, w)
 	log.Infof("TOPO SVC | DEBUG | AddWorkload Agent . Received Response Msg: %v", resp)
 
 	if err != nil {

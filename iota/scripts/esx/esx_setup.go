@@ -104,7 +104,7 @@ func waitForNodeUp(ip string, timeout time.Duration) error {
 
 func downloadControlVMImage() (string, error) {
 
-	ctrlVMDir := constants.ControlVMImageDirectory + "/" + constants.EsxControlVMImage
+	ctrlVMDir := constants.ControlVMImageDirectory + "/" + constants.EsxControlVMImage + "_" + esxHost
 	imageName := constants.EsxControlVMImage + ".ova"
 	cwd, _ := os.Getwd()
 	mkdir := []string{"mkdir", "-p", ctrlVMDir}
@@ -226,10 +226,12 @@ func provideNaplesEsxPersonality(client iota.IotaAgentApiClient) error {
 	resp, err := client.AddNode(context.Background(), req)
 	if err != nil {
 		log.Errorf("Failed add not grpc messeage ")
+		return err
 	}
 
 	if resp.NodeStatus.GetApiStatus() != iota.APIResponseType_API_STATUS_OK {
 		log.Errorf("Failed to add naples esx personality %v", resp.NodeStatus.GetErrorMsg())
+		return err
 	}
 
 	log.Printf("Add naples personality..")
@@ -266,7 +268,8 @@ var RootCmd = &cobra.Command{
 		}
 
 		if err := provideNaplesEsxPersonality(client); err != nil {
-			log.Error("Failed to proved naples personality")
+			log.Error("Failed to provide naples personality")
+			return err
 		}
 
 		setUPOut := &EsxSetup{CtrlVMIP: ip, CtrlVMUsername: ctrlVMUsername, CtrlVMPassword: ctrlVMPassword}

@@ -53,6 +53,7 @@ func (vm *vmESXWorkload) downloadDataVMImage(image string) (string, error) {
 		return "", errors.Wrap(err, string(stdout))
 	}
 
+	vm.logger.Info("Download complete for VM image")
 	tarCmd := []string{"tar", "-xvf", imageName}
 	if stdout, err := exec.Command(tarCmd[0], tarCmd[1:]...).CombinedOutput(); err != nil {
 		return "", errors.Wrap(err, string(stdout))
@@ -105,16 +106,19 @@ func (vm *vmESXWorkload) BringUp(args ...string) error {
 
 	host.DestoryVM(vm.vmName)
 
+	vm.logger.Info("Deploying VM...")
 	vmInfo, err := host.DeployVM(vm.vmName, constants.EsxControlVMCpus, constants.EsxControlVMMemory, constants.EsxDataVMNetworks, dataVMDir)
 	if err != nil {
 		return errors.Wrap(err, "Deploy VM failed")
 	}
 
+	vm.logger.Info("Deploying VM Complete...")
 	vm.ip = vmInfo.IP
 	if err = vm.waitForVMUp(restartTimeout); err != nil {
 		return errors.Wrap(err, "SSH connection failed")
 	}
 
+	vm.logger.Info("VM is up now..")
 	vm.host = host
 	vm.vm, err = host.NewVM(vm.vmName)
 	if err != nil {
@@ -142,10 +146,31 @@ func (vm *vmESXWorkload) AddInterface(name string, macAddress string, ipaddress 
 		//return "", errors.Wrap(err, "Error in creating network")
 	}
 
+	/*
+		if err := vm.host.PowerOffVM(vm.vmName); err != nil {
+			return "", errors.Wrap(err, "Failed to power off VM")
+		}
+	*/
 	if err := vm.vm.ReconfigureNetwork(constants.EsxVMNetwork, nwName); err != nil {
 		return "", errors.Wrap(err, "Error in Reconfiguring VM network")
 	}
 
+	/*
+		if _, err := vm.host.BootVM(vm.vmName); err != nil {
+			return "", errors.Wrap(err, "Failed to power off VM")
+		}
+
+		if err := vm.waitForVMUp(restartTimeout); err != nil {
+			return "", errors.Wrap(err, "VM did not come up after reconfiguration.")
+		}
+
+		//CAll remote workload bring up to set up SSH handles
+		err := vm.remoteWorkload.BringUp(vm.ip, strconv.Itoa(sshPort), constants.EsxDataVMUsername, constants.EsxDataVMPassword)
+		if err != nil {
+			return "", errors.Wrap(err, "Remote workload bring up failed after reconfiguration")
+		}
+
+	*/
 	if err := Utils.DisableDhcpOnInterfaceRemote(vm.sshHandle, constants.EsxDataVMInterface); err != nil {
 		return "", errors.Wrap(err, "Disabling DHCP on interface failed")
 	}

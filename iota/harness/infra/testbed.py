@@ -141,15 +141,15 @@ class _Testbed:
         proc_hdls = []
         logfiles = []
         for instance in self.__tbspec.Instances:
-            cmd = ["timeout", "1800"]
+            cmd = ["timeout", "2100"]
             if not hasattr(instance, "NicMgmtIP") or instance.NicMgmtIP is None or instance.NicMgmtIP == '':
                 instance.NicMgmtIP = getattr(instance, "NicIntMgmtIP", "169.254.0.1")
 
             if self.__get_instance_nic_type(instance) == "pensando":
-                if instance.NodeOs == "esx":
-                    cmd.extend([ "%s/iota/scripts/boot_naples.py" % GlobalOptions.topdir ])
-                else:
-                    cmd.extend([ "%s/iota/scripts/boot_naples_v2.py" % GlobalOptions.topdir ])
+                #if instance.NodeOs == "esx":
+                #    cmd.extend([ "%s/iota/scripts/boot_naples.py" % GlobalOptions.topdir ])
+                #else:
+                cmd.extend([ "%s/iota/scripts/boot_naples_v2.py" % GlobalOptions.topdir ])
                 cmd.extend(["--console-ip", instance.NicConsoleIP])
                 cmd.extend(["--mnic-ip", instance.NicMgmtIP])
                 cmd.extend(["--console-port", instance.NicConsolePort])
@@ -162,6 +162,7 @@ class _Testbed:
                     cmd.extend(["--host-username", instance.EsxUsername])
                     cmd.extend(["--host-password", instance.EsxPassword])
                 cmd.extend(["--drivers-pkg", "%s/platform/gen/drivers-%s.tar.xz" % (GlobalOptions.topdir, instance.NodeOs)])
+                cmd.extend(["--gold-drivers-pkg", "%s/platform/hosttools/x86_64/%s/goldfw/drivers-%s.tar.xz" % (GlobalOptions.topdir, instance.NodeOs, instance.NodeOs)])
                 cmd.extend(["--uuid", "%s" % instance.Resource.NICUuid])
                 cmd.extend(["--os", "%s" % instance.NodeOs])
                 if self.__fw_upgrade_done or GlobalOptions.only_reboot:

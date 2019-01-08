@@ -20,7 +20,7 @@
                    "SwitchUsername"     : "admin"
                }
             ],
-            "NodeMgmtIP"    : "192.168.69.181",
+            "NodeMgmtIP"    : "192.168.69.145",
             "NodeCimcIP"    : "lab-bm4-30-cimc",
             "NodeOs"        : "esx",
             "NicConsoleIP"  : "chamber-ts3",
@@ -53,7 +53,7 @@
                    "SwitchUsername"     : "admin"
                }
             ],
-            "NodeMgmtIP"    : "192.168.68.126",
+            "NodeMgmtIP"    : "192.168.69.139",
             "NodeCimcIP"    : "lab-bm4-31-cimc",
             "NodeOs"        : "esx",
             "NicConsoleIP"  : "chamber-ts3",

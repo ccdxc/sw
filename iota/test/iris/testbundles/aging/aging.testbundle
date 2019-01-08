@@ -1,6 +1,7 @@
 meta:
     name    : aging
     nics    : [ pensando, intel, mellanox, broadcom ]
+    os      : [ linux, esx ]
     targetcount : 20 
 
 testcases:

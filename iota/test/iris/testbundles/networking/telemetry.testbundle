@@ -1,7 +1,7 @@
 meta:
     name    : telemetry
     nics    : [ pensando, mellanox, intel, broadcom ]
-    os      : [ linux ]
+    os      : [ linux, esx ]
     targetcount : 800
 
 testcases:

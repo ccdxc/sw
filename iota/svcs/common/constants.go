@@ -136,6 +136,7 @@ var (
 		`sudo systemctl restart docker`,
 		//Delete all sub interfaces
 		`sudo ip link | grep "_" | grep @ | cut -d'@' -f1  | cut -d':' -f2 |  awk  '{print $2}' |  xargs -I {} sudo ip link del {}`,
+		`sudo ifconfig | grep \": flags\" | cut -d':' -f1 | sed -n 's/\([.]\)/./p' | xargs -I {} sudo ifconfig {} destroy`,
 	}
 
 	EsxControlVMNetworks = []string{"VM Network", EsxDefaultNetwork, EsxDefaultNetwork, EsxDefaultNetwork}

@@ -362,6 +362,70 @@ func (h *Host) boot(name string, ncpus uint, memory uint, finder *find.Finder) (
 	return &VMInfo{Name: name, IP: ip}, nil // first arg is string, second is net.IP.
 }
 
+func (h *Host) BootVM(name string) (*VMInfo, error) {
+	ds, err := h.Datastore("datastore1")
+
+	if err != nil {
+		return nil, err
+	}
+
+	finder, _, err := ds.client.finder()
+	if err != nil {
+		return nil, err
+	}
+
+	vm, err := finder.VirtualMachine(h.context.context, name)
+
+	if err != nil {
+		return nil, err
+	}
+	task, err := vm.PowerOn(h.context.context)
+	if err != nil {
+		return nil, err
+	}
+	err = task.Wait(h.context.context)
+	if err != nil {
+		return nil, err
+	}
+
+	var ip string
+	ip, err = vm.WaitForIP(h.context.context)
+	if err != nil {
+		return nil, err
+	}
+
+	return &VMInfo{Name: name, IP: ip}, nil // first arg is string, second is net.IP.
+}
+
+func (h *Host) PowerOffVM(name string) error {
+	ds, err := h.Datastore("datastore1")
+
+	if err != nil {
+		return err
+	}
+
+	finder, _, err := ds.client.finder()
+	if err != nil {
+		return err
+	}
+
+	vm, err := finder.VirtualMachine(h.context.context, name)
+
+	if err != nil {
+		return err
+	}
+	task, err := vm.PowerOff(h.context.context)
+	if err != nil {
+		return err
+	}
+	err = task.Wait(h.context.context)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (h *Host) GetVMIP(name string) (string, error) {
 
 	finder, _, err := h.client.finder()
@@ -560,7 +624,7 @@ func (h *Host) reconfigureVM(vm *object.VirtualMachine, ncpus uint, memory uint)
 }
 
 func (h *Host) importVapp(dir string, spec *types.OvfCreateImportSpecResult, finder *find.Finder) (retErr error) {
-	ctx, cancel := context.WithTimeout(h.context.context, 10*time.Minute)
+	ctx, cancel := context.WithTimeout(h.context.context, 30*time.Minute)
 	defer cancel()
 
 	host, err := finder.DefaultHostSystem(ctx)

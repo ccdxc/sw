@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 
 	"golang.org/x/crypto/ssh"
 
@@ -62,6 +63,29 @@ func (n *TestNode) cleanupEsxNode() error {
 		if err != nil {
 			log.Errorf("TOPO SVC | CleanTestBed | Destroy vm node failed %v", err.Error())
 		}
+	}
+
+	/* Delete all invalid VMS too */
+	cfg := &ssh.ClientConfig{
+		User: n.Node.EsxConfig.Username,
+		Auth: []ssh.AuthMethod{
+			ssh.Password(n.Node.EsxConfig.Password),
+		},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+	}
+	runner := runner.NewRunner(cfg)
+	addr := fmt.Sprintf("%s:%d", n.Node.EsxConfig.IpAddress, constants.SSHPort)
+	cmd := `vim-cmd /vmsvc/getallvm  2>&1 >/dev/null  | cut -d' ' -f 4`
+	output, err := runner.RunWithOutput(addr, cmd, constants.RunCommandForeground)
+	log.Infof("Invalid VMS out %v", output)
+	if err != nil {
+		log.Errorf("TOPO SVC | CleanTestBed | Failed to find invalid VMs %v", err.Error())
+		return err
+	}
+	for _, vmID := range strings.Split(output, "\n") {
+		cmd = "vim-cmd /vmsvc/unregister " + strings.Replace(vmID, "'", "", -1)
+		log.Infof("Running Delete Invalid Command : %v", cmd)
+		runner.Run(addr, cmd, constants.RunCommandForeground)
 	}
 
 	if nws, err := host.ListNetworks(); err == nil {

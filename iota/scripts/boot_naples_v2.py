@@ -10,6 +10,7 @@ import requests
 import subprocess
 import json
 import atexit
+import paramiko
 
 HOST_NAPLES_DIR                 = "/naples"
 HOST_ESX_NAPLES_IMAGES_DIR      = "/home/vm"
@@ -41,6 +42,8 @@ parser.add_argument('--image', dest='image',
                     default=None, help='Naples Image.')
 parser.add_argument('--drivers-pkg', dest='drivers_pkg',
                     default=None, help='Driver Package.')
+parser.add_argument('--gold-drivers-pkg', dest='gold_drivers_pkg',
+                    default=None, help='Gold Driver Package.')
 parser.add_argument('--host-username', dest='host_username',
                     default="root", help='Host Username')
 parser.add_argument('--host-password', dest='host_password',
@@ -66,6 +69,14 @@ parser.add_argument('--skip-driver-install', dest='skip_driver_install',
                     action='store_true', help='Skips host driver install')
 parser.add_argument('--esx-script', dest='esx_script',
                     default="", help='ESX start up script')
+parser.add_argument('--esx-bld-vm-username', dest='esx_bld_vm_username',
+                    default="root", help='esx build vm username')
+parser.add_argument('--esx-bld-vm-password', dest='esx_bld_vm_password',
+                    default="vmware", help='esx build vm password')
+parser.add_argument('--esx-bld-vm', dest='esx_bld_vm',
+                    default="esx-vib-wb1", help='esx build vm')
+
+
 
 GlobalOptions = parser.parse_args()
 GlobalOptions.console_port = int(GlobalOptions.console_port)
@@ -191,7 +202,7 @@ class NaplesManagement(EntityManagement):
         # Got capri login prompt, send username/password.
         self.SendlineExpect(GlobalOptions.username, "Password:")
         ret = self.SendlineExpect(GlobalOptions.password, ["#", pexpect.TIMEOUT], timeout = 3)
-        if ret == 1: SendlineExpect("", "#")
+        if ret == 1: self.SendlineExpect("", "#")
 
     def InitForUpgrade(self, goldfw = True, mode = True, uuid = True):
         if goldfw:
@@ -283,6 +294,250 @@ class HostManagement(EntityManagement):
         self.RunNaplesCmd("/nic/tools/fwupdate -l")
         return
 
+    def InitForUpgrade(self):
+        pass
+
+    def InitForReboot(self):
+        pass
+
+class EsxHostManagement(HostManagement):
+    def __init__(self, ipaddr):
+        HostManagement.__init__(self, ipaddr)
+        ssh=paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(GlobalOptions.esx_bld_vm,  '22', GlobalOptions.esx_bld_vm_username,GlobalOptions.esx_bld_vm_password)
+        self.__bld_vm_ssh_handle = ssh
+        self.__bld_vm_ssh_host = "%s@%s" % (GlobalOptions.esx_bld_vm_username, GlobalOptions.esx_bld_vm)
+        self.__bld_vm_scp_pfx = "sshpass -p %s scp -o StrictHostKeyChecking=no " % GlobalOptions.esx_bld_vm_password
+        self.__bld_vm_ssh_pfx = "sshpass -p %s ssh -o StrictHostKeyChecking=no " % GlobalOptions.esx_bld_vm_password
+        return
+
+    def ctrl_vm_copyin(self, src_filename, host_dir, naples_dir = None):
+        dest_filename = host_dir + "/" + os.path.basename(src_filename)
+        cmd = "%s %s %s:%s" % (self.__ctr_vm_scp_pfx, src_filename,
+                               self.__ctr_vm_ssh_host, dest_filename)
+        print(cmd)
+        ret = os.system(cmd)
+        assert(ret == 0)
+
+        self.ctrl_vm_run("sync")
+        ret = self.ctrl_vm_run("ls -l %s" % dest_filename)
+        assert(ret == 0)
+
+        if naples_dir:
+            naples_dest_filename = naples_dir + "/" + os.path.basename(src_filename)
+            ret = self.ctrl_vm_run("sshpass -p %s scp -o StrictHostKeyChecking=no %s root@%s:%s" %\
+                           (GlobalOptions.password, dest_filename, GlobalOptions.mnic_ip, naples_dest_filename))
+            assert(ret == 0)
+
+        return 0
+
+    def RunNaplesCmd(self, command, ignore_failure = False):
+        assert(ignore_failure == True or ignore_failure == False)
+        full_command = "sshpass -p %s ssh -o StrictHostKeyChecking=no root@%s %s" %\
+                       (GlobalOptions.password, GlobalOptions.mnic_ip, command)
+        return self.ctrl_vm_run(full_command, ignore_failure)
+
+    def ctrl_vm_run(self, command, background = False, ignore_result = False):
+        if background:
+            cmd = "%s -f %s \"%s\"" % (self.__ctr_vm_ssh_pfx, self.__ctr_vm_ssh_host, command)
+        else:
+            cmd = "%s %s \"%s\"" % (self.__ctr_vm_ssh_pfx, self.__ctr_vm_ssh_host, command)
+        print(cmd)
+        retcode = os.system(cmd)
+        if not ignore_result:
+            assert(retcode == 0)
+        return retcode
+
+    def bld_vm_copyin(self, src_filename, dst_dir):
+        dest_filename = dst_dir + "/" + os.path.basename(src_filename)
+        cmd = "%s %s %s:%s" % (self.__bld_vm_scp_pfx, src_filename,
+                               self.__bld_vm_ssh_host, dest_filename)
+        print(cmd)
+        ret = os.system(cmd)
+        assert(ret == 0)
+
+        self.bld_vm_run("sync")
+        ret = self.bld_vm_run("ls -l %s" % dest_filename)
+        assert(ret == 0)
+        return 0
+
+    def bld_vm_copyout(self, src_filename, dst_dir):
+        dest_filename = dst_dir + "/" + os.path.basename(src_filename)
+        cmd = "%s %s:%s %s" % (self.__bld_vm_scp_pfx, self.__bld_vm_ssh_host, src_filename,
+                            dst_dir)
+        print(cmd)
+        ret = os.system(cmd)
+        assert(ret == 0)
+        return 0
+
+    def bld_vm_run(self, command, background = False, ignore_result = False):
+        if background:
+            cmd = "%s -f %s \"%s\"" % (self.__bld_vm_ssh_pfx, self.__bld_vm_ssh_host, command)
+        else:
+            cmd = "%s %s \"%s\"" % (self.__bld_vm_ssh_pfx, self.__bld_vm_ssh_host, command)
+        print(cmd)
+        retcode = os.system(cmd)
+        if not ignore_result:
+            assert(retcode == 0)
+        return retcode
+
+    def __check_naples_deivce(self):
+        assert(self.RunSshCmd("lspci | grep Pensando") == 0)
+
+    def __esx_host_init(self):
+        outFile = "/tmp/esx_" +  GlobalOptions.host_ip + ".json"
+        self.WaitForSsh(port=443)
+        time.sleep(30)
+        esx_startup_cmd = ["timeout", "1200"]
+        esx_startup_cmd.extend([GlobalOptions.esx_script])
+        esx_startup_cmd.extend(["--esx-host", GlobalOptions.host_ip])
+        esx_startup_cmd.extend(["--esx-username", GlobalOptions.host_username])
+        esx_startup_cmd.extend(["--esx-password", GlobalOptions.host_password])
+        esx_startup_cmd.extend(["--esx-outfile", outFile])
+        proc_hdl = subprocess.Popen(esx_startup_cmd)
+        while proc_hdl.poll() is None:
+            time.sleep(5)
+            continue
+        assert(proc_hdl.returncode == 0)
+        with open(outFile) as f:
+            data = json.load(f)
+            self.__esx_ctrl_vm_ip = data["ctrlVMIP"]
+            self.__esx_ctrl_vm_username = data["ctrlVMUsername"]
+            self.__esx_ctrl_vm_password = data["ctrlVMPassword"]
+
+    def Init(self, driver_pkg = None, cleanup = True):
+        self.WaitForSsh()
+        os.system("date")
+        self.__check_naples_deivce()
+        self.__esx_host_init()
+        self.__ctr_vm_ssh_host = "%s@%s" % (self.__esx_ctrl_vm_username, self.__esx_ctrl_vm_ip)
+        self.__ctr_vm_scp_pfx = "sshpass -p %s scp -o StrictHostKeyChecking=no " % self.__esx_ctrl_vm_password
+        self.__ctr_vm_ssh_pfx = "sshpass -p %s ssh -o StrictHostKeyChecking=no " % self.__esx_ctrl_vm_password
+
+    def __install_drivers(self, pkg):
+        pkg = self.__build_drivers(pkg)
+        # Install IONIC driver package.
+        #ESX removes folder after reboot, add it again
+        self.RunSshCmd("rm -rf %s" % HOST_NAPLES_DIR)
+        self.RunSshCmd("mkdir -p %s" % HOST_NAPLES_DIR)
+
+        self.CopyIN(pkg, HOST_NAPLES_DIR)
+        assert(self.RunSshCmd("cd %s && tar xf %s" %\
+                 (HOST_NAPLES_DIR, os.path.basename(pkg))) == 0)
+        install_success = False
+        self.__host_connect()
+        for _ in range(0, 5):
+
+            stdin, stdout, stderr  = self.__ssh_handle.exec_command("cd %s/drivers-esx/ && chmod +x ./build.sh && ./build.sh --install" % HOST_NAPLES_DIR)
+            #ret = self.run("cd %s/drivers-esx/ && chmod +x ./build.sh && ./build.sh" % HOST_NAPLES_DRIVERS_DIR, ignore_result = True)
+            exit_status = stdout.channel.recv_exit_status()
+            outlines=stdout.readlines()
+            print (''.join(outlines))
+            if  exit_status == 0:
+            #if ret == 0:
+                install_success = True
+                break
+            print("Installed failed , trying again..")
+            time.sleep(5)
+            #self._connect()
+            self.__host_connect()
+        assert(install_success)
+        #After installing drivers, no need to do esx startup as we are done installing firmware and driver
+        self.__check_naples_deivce()
+        #Sleep for some time to get all other services up
+        time.sleep(30)
+
+    def InstallMainFirmware(self, mount_data = True, copy_fw = True):
+        if mount_data:
+            self.RunNaplesCmd("/nic/tools/fwupdate -r | grep goldfw")
+            self.RunNaplesCmd("mkdir -p /data && sync")
+            self.RunNaplesCmd("mount /dev/mmcblk0p10 /data/")
+
+        #Ctrl VM reboot might have removed the image
+        self.ctrl_vm_copyin(GlobalOptions.image,
+                    host_dir = HOST_ESX_NAPLES_IMAGES_DIR,
+                    naples_dir = "/tmp")
+
+        self.RunNaplesCmd("/nic/tools/sysupdate.sh -p /tmp/naples_fw.tar")
+        if mount_data:
+            self.RunNaplesCmd("sync && sync && sync")
+            self.RunNaplesCmd("umount /data/")
+
+        self.RunNaplesCmd("/nic/tools/fwupdate -l")
+        return
+
+    def InitForUpgrade(self):
+        self.__install_drivers(GlobalOptions.gold_drivers_pkg)
+
+    def InitForReboot(self):
+        self.__install_drivers(GlobalOptions.drivers_pkg)
+
+    def __host_connect(self):
+        ip=GlobalOptions.host_ip
+        port='22'
+        username='root'
+        password=GlobalOptions.host_password
+        ssh=paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(ip,port,username,password)
+        self.__ssh_handle = ssh
+
+
+    def __build_drivers(self, pkg):
+        #First copy the driver to tmp location
+        tmp_driver = "/tmp/" + os.path.basename(pkg) + "_" + GlobalOptions.host_ip
+        cp_driver_cmd = ["cp", pkg, tmp_driver]
+        proc_hdl = subprocess.Popen(cp_driver_cmd)
+        proc_hdl.wait()
+        assert(proc_hdl.returncode == 0)
+        stdin, stdout, stderr  = self.__bld_vm_ssh_handle.exec_command("find  /opt/vmware/  -type d  -name   nativeddk-6.5*")
+        exit_status = stdout.channel.recv_exit_status()
+        outlines=stdout.readlines()
+        if exit_status != 0 or len(outlines) != 1:
+            print ("Invalid output when discovering native ddk", outlines)
+            sys.exit(1)
+        dst_dir = outlines[0].strip("\n") + "/src/" + os.path.basename(tmp_driver) + "_dir"
+
+        self.__bld_vm_ssh_handle.exec_command("rm -f " + dst_dir)
+        self.__bld_vm_ssh_handle.exec_command("mkdir " + dst_dir)
+        # Copy the driver package
+        self.bld_vm_copyin(tmp_driver, dst_dir = dst_dir)
+        stdin, stdout, stderr  = self.__bld_vm_ssh_handle.exec_command("cd " + dst_dir + " && tar -xvf " + os.path.basename(tmp_driver))
+        exit_status = stdout.channel.recv_exit_status()
+        outlines=stdout.readlines()
+        if exit_status != 0:
+            print ("Failed to extract drivers", outlines)
+            sys.exit(1)
+
+        stdin, stdout, stderr  = self.__bld_vm_ssh_handle.exec_command("cd " + dst_dir + "/drivers-esx && ./build.sh" )
+        exit_status = stdout.channel.recv_exit_status()
+        outlines=stdout.readlines()
+        if exit_status != 0:
+            print ("Driver build failed ", ''.join(outlines))
+            sys.exit(1)
+
+        stdin, stdout, stderr  = self.__bld_vm_ssh_handle.exec_command("cd " + dst_dir + " && tar -cJf " + os.path.basename(tmp_driver) + " drivers-esx")
+        exit_status = stdout.channel.recv_exit_status()
+        outlines=stdout.readlines()
+        if exit_status != 0:
+            print ("Failed to create tar file ", outlines)
+            sys.exit(1)
+
+        dst_file = dst_dir + "/" + os.path.basename(tmp_driver)
+        self.bld_vm_copyout(dst_file, dst_dir = os.path.dirname(tmp_driver))
+        return tmp_driver
+
+    def Reboot(self, dryrun = False):
+        os.system("date")
+        self.RunSshCmd("sync")
+        self.RunSshCmd("uptime")
+        if dryrun == False:
+            self.RunSshCmd("reboot", ignore_failure = True)
+        time.sleep(60)
+        print("Rebooting Host : %s" % GlobalOptions.host_ip)
+        return
+
 def AtExitCleanup():
     global naples
     naples.Close()
@@ -309,6 +564,11 @@ def Main():
 
     global host
     host = HostManagement(GlobalOptions.host_ip)
+    if GlobalOptions.os == 'esx':
+        host = EsxHostManagement(GlobalOptions.host_ip)
+    else:
+        host = HostManagement(GlobalOptions.host_ip)
+
     host.WaitForSsh()
 
 
@@ -324,18 +584,23 @@ def Main():
     if GlobalOptions.only_mode_change:
         # Case 2: Only change mode, reboot and install drivers
         naples.InitForUpgrade(goldfw = False)
-        host.Reboot()
         naples.Close()
     else:
         # Case 1: Main firmware upgrade.
         naples.InitForUpgrade(goldfw = True)
+        host.InitForUpgrade()
         host.Reboot()
         naples.Close()
-        host.Init(driver_pkg = "/vol/builds/goldfw/latest/drivers-%s.tar.xz" % GlobalOptions.os, cleanup = False)
+        host.Init(driver_pkg =  GlobalOptions.gold_drivers_pkg, cleanup = False)
         host.InstallMainFirmware()
-        # Reboot host again, this will reboot naples also
-        host.Reboot()
 
+    #Script that might have to run just before reboot
+    # ESX would require drivers to be installed here to avoid
+    # onr more reboot
+    host.InitForReboot()
+    #Reboot is common for both mode change and upgrade
+    # Reboot host again, this will reboot naples also
+    host.Reboot()
     # Common to Case 2 and Case 1.
     # Initialize the Node, this is needed in all cases.
     host.Init(driver_pkg = GlobalOptions.drivers_pkg, cleanup = False)

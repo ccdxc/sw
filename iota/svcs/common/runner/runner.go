@@ -25,18 +25,18 @@ func NewRunner(c *ssh.ClientConfig) *Runner {
 }
 
 // Run runs a command either in foreground on on background
-func (r *Runner) Run(ipPort, command string, cmdMode int) error {
+func (r *Runner) run(ipPort, command string, cmdMode int) (string, error) {
 	client, err := ssh.Dial("tcp", ipPort, r.SSHClientConfig)
 	if client == nil || err != nil {
 		log.Errorf("Runner | Run on node %v failed, Err: %v", ipPort, err)
-		return err
+		return "", err
 	}
 	defer client.Close()
 
 	session, err := client.NewSession()
 	if session == nil || err != nil {
 		log.Errorf("Runner | Run on node %v failed, Err: %v", ipPort, err)
-		return err
+		return "", err
 	}
 	defer session.Close()
 
@@ -48,20 +48,28 @@ func (r *Runner) Run(ipPort, command string, cmdMode int) error {
 
 	if err := session.RequestPty("xterm", 80, 40, ptyModes); err != nil {
 		log.Errorf("Runner | Run on node %v failed to get a pseudo TTY, Err: %v", ipPort, err)
-		return err
+		return "", err
 	}
 
 	stdoutBuffer := bytes.Buffer{}
-	stdoutWriter := io.Writer(&stdoutBuffer)
+	stdoutWriter := io.MultiWriter(&stdoutBuffer)
 
 	//Pipe stdout and stderr
 	stdout, err := session.StdoutPipe()
 	if err != nil {
 		log.Errorf("Runner | Run on node %v failed to get a stdout, Err: %v", ipPort, err)
-		return fmt.Errorf("could not capture stdout. %v", err)
+		return "", fmt.Errorf("could not capture stdout. %v", err)
 	}
-	go io.Copy(stdoutWriter, stdout)
+	ioDone := make(chan bool)
+	ioStart := make(chan bool)
 
+	go func() {
+		ioStart <- true
+		io.Copy(stdoutWriter, stdout)
+		ioDone <- true
+	}()
+
+	<-ioStart
 	if cmdMode == constants.RunCommandBackground {
 		log.Infof("Runner | Running command %v in background...", command)
 		command = "nohup sh -c  \"" + command + " 2>&1 >/dev/null </dev/null & \""
@@ -71,7 +79,20 @@ func (r *Runner) Run(ipPort, command string, cmdMode int) error {
 
 	if err := session.Run(command); err != nil {
 		log.Errorf("Runner | Command %v failed on node %v Err: %v", command, ipPort, err)
-		return err
+		return "", err
 	}
-	return nil
+
+	<-ioDone
+	return stdoutBuffer.String(), nil
+}
+
+// RunWithOutput runs a command either in foreground on on background with stdout
+func (r *Runner) RunWithOutput(ipPort, command string, cmdMode int) (string, error) {
+	return r.run(ipPort, command, cmdMode)
+}
+
+// Run runs a command either in foreground on on background
+func (r *Runner) Run(ipPort, command string, cmdMode int) error {
+	_, err := r.run(ipPort, command, cmdMode)
+	return err
 }

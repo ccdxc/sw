@@ -39,8 +39,9 @@ func (n *TestNode) AddNode() error {
 	}
 
 	n.SSHClient = sshclient
-
-	resp, err := n.AgentClient.AddNode(context.Background(), n.Node)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+	defer cancel()
+	resp, err := n.AgentClient.AddNode(ctx, n.Node)
 	n.RespNode = resp
 	log.Infof("TOPO SVC | DEBUG | AddNode Agent . Received Response Msg: %v", resp)
 
@@ -186,7 +187,9 @@ func (n *TestNode) ReloadNode() error {
 	}
 
 	n.AgentClient = iota.NewIotaAgentApiClient(c.Client)
-	resp, err = n.AgentClient.ReloadNode(context.Background(), n.Node)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+	defer cancel()
+	resp, err = n.AgentClient.ReloadNode(ctx, n.Node)
 	n.RespNode = resp
 	log.Infof("TOPO SVC | ReloadNode | ReloadNode Agent . Received Response Msg: %v", resp)
 	if err != nil {

@@ -2,13 +2,13 @@
 third_party_libs 1.1.86
 lkl_libs 1.1.8
 openssl_libs 1.1.0
-platform_libs 0.0.25
+platform_libs 0.0.26
 storage_libs 0.0.1
 asic_libs 8949262c5c04cade6d2369d0aa5eebfa722b653e
 ncc_tools 8949262c5c04cade6d2369d0aa5eebfa722b653e
 pbc_config 8949262c5c04cade6d2369d0aa5eebfa722b653e
 upgrade 1.0.3
 iota 1.0.2
-host_tools 1.0.3
+host_tools 1.0.4
 delphi_lib 1.0.3
 buildroot 0.0.1

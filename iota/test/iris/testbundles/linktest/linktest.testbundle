@@ -1,6 +1,6 @@
 meta:
     name    : linkstress 
-    os      : [ linux ]
+    os      : [ linux, esx ]
 
 testcases:
     -   name    : link_up_down_status

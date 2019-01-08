@@ -45,6 +45,7 @@ PIP3_PACKAGES = %w[
   pyyaml
   docker
   pexpect
+  paramiko
 ]
 
 PACKAGES = %w[
@@ -300,7 +301,7 @@ workdir "/sw/nic"
 entrypoint []
 cmd "bash"
 
-tag "pensando/nic:1.31"
+tag "pensando/nic:1.32"
 
 run "rm -rf #{BASE_BUILD_DIR}" # this has no effect on size until the flatten is processed
 
