@@ -541,7 +541,7 @@ void ionic_set_multi(struct lif* lif)
 		return;
 
 	// Newly added MC addresses
-	new_mc_addrs = kzalloc(sizeof(struct ionic_mc_addr) * max_maddrs, GFP_KERNEL);
+	new_mc_addrs = malloc(sizeof(struct ionic_mc_addr) * max_maddrs, M_IONIC, M_NOWAIT | M_ZERO);
 	num_new_mc_addrs = 0;
 
 	IONIC_RX_FILTER_LOCK(&lif->rx_filters);
@@ -1364,7 +1364,7 @@ static int ionic_qcqs_alloc(struct lif *lif)
 	unsigned int i;
 	int err = ENOMEM;
 
-	lif->txqs = kzalloc(sizeof(*lif->txqs) * lif->ntxqs, GFP_KERNEL);
+	lif->txqs = malloc(sizeof(*lif->txqs) * lif->ntxqs, M_IONIC, M_ZERO | M_NOWAIT);
 	if (!lif->txqs)
 		return ENOMEM;
 
@@ -1410,6 +1410,9 @@ err_out_free_notifyq:
 err_out_free_adminq:
 	ionic_adminq_free(lif, lif->adminq);
 
+	free(lif->rxqs, M_IONIC);
+	free(lif->txqs, M_IONIC);
+
 	return err;
 }
 
@@ -1433,6 +1436,9 @@ static void ionic_qcqs_free(struct lif *lif)
 		ionic_notifyq_free(lif, lif->notifyq);
 	if (lif->adminq)
 		ionic_adminq_free(lif, lif->adminq);
+
+	free(lif->rxqs, M_IONIC);
+	free(lif->txqs, M_IONIC);
 }
 
 static void
@@ -1485,7 +1491,7 @@ static int ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 	lif->nrxqs = ionic->nrxqs_per_lif;
 	lif->nnqs = ionic->nnqs_per_lif;
 
-	lif->mc_addrs = kzalloc(sizeof(struct ionic_mc_addr) * ionic->ident->dev.nmcasts_per_lif, GFP_KERNEL);
+	lif->mc_addrs = malloc(sizeof(struct ionic_mc_addr) * ionic->ident->dev.nmcasts_per_lif, M_IONIC, M_NOWAIT | M_ZERO);
 
 	if (ntxq_descs > IONIX_TX_MAX_DESC) {
 		dev_err(dev, "num of tx descriptors > %d\n", IONIX_TX_MAX_DESC);

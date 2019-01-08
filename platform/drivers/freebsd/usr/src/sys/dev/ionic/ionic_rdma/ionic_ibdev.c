@@ -158,6 +158,20 @@ static struct workqueue_struct *ionic_evt_workq;
 /* access single-threaded thru ionic_dev_workq */
 static LIST_HEAD(ionic_ibdev_list);
 
+/* XXX linuxkpi kmalloc is not phys contiguous.  use this to alloc bufs. */
+static void *contig_kmalloc(size_t size, gfp_t gfp)
+{
+	return contigmalloc(size, M_KMALLOC, linux_check_m_flags(gfp),
+			    0, ~0ull, PAGE_SIZE, 0);
+}
+
+/* XXX use this to free bufs allocated above. */
+static void contig_kfree(void *ptr, size_t size)
+{
+	if (ptr)
+		contigfree(ptr, size, M_KMALLOC);
+}
+
 static void ionic_xxx_resid_skip(struct resid_bits *bits)
 {
 	int i = ionic_xxx_qid_skip - 1;
@@ -540,7 +554,7 @@ static int ionic_pgtbl_init(struct ionic_ibdev *dev, struct ionic_tbl_res *res,
 
 	if (limit > 1) {
 		buf->tbl_size = buf->tbl_limit * sizeof(*buf->tbl_buf);
-		buf->tbl_buf = kmalloc(buf->tbl_size, GFP_KERNEL);
+		buf->tbl_buf = contig_kmalloc(buf->tbl_size, GFP_KERNEL);
 		if (!buf->tbl_buf) {
 			rc = -ENOMEM;
 			goto err_buf;
@@ -575,7 +589,7 @@ err_umem:
 		dma_unmap_single(dev->hwdev, buf->tbl_dma, buf->tbl_size,
 				 DMA_FROM_DEVICE);
 err_dma:
-		kfree(buf->tbl_buf);
+		contig_kfree(buf->tbl_buf, buf->tbl_size);
 	}
 err_buf:
 	ionic_put_res(dev, res);
@@ -592,7 +606,7 @@ static void ionic_pgtbl_unbuf(struct ionic_ibdev *dev,
 	if (buf->tbl_buf) {
 		dma_unmap_single(dev->hwdev, buf->tbl_dma, buf->tbl_size,
 				 DMA_FROM_DEVICE);
-		kfree(buf->tbl_buf);
+		contig_kfree(buf->tbl_buf, buf->tbl_size);
 	}
 
 	buf->tbl_buf = NULL;
@@ -1021,7 +1035,7 @@ static int ionic_init_hw_stats(struct ionic_ibdev *dev)
 		goto err_hdrs;
 	}
 
-	dev->stats_buf = kmalloc(dev->stats_size, GFP_KERNEL);
+	dev->stats_buf = contig_kmalloc(dev->stats_size, GFP_KERNEL);
 	if (!dev->stats_buf) {
 		rc = -ENOMEM;
 		goto err_buf;
@@ -1065,7 +1079,7 @@ err_cmd:
 	dma_unmap_single(dev->hwdev, stats_dma, dev->stats_size,
 			 DMA_FROM_DEVICE);
 err_dma:
-	kfree(dev->stats_buf);
+	contig_kfree(dev->stats_buf, dev->stats_size);
 	dev->stats_buf = NULL;
 err_buf:
 	kfree(dev->stats_hdrs);
@@ -1105,7 +1119,7 @@ static int ionic_get_hw_stats(struct ib_device *ibdev,
 		return -EINVAL;
 
 	stats_vec_size = dev->stats_count * sizeof(*stats_vec);
-	stats_vec = kmalloc(stats_vec_size, GFP_KERNEL);
+	stats_vec = contig_kmalloc(stats_vec_size, GFP_KERNEL);
 	if (!stats_vec) {
 		rc = -ENOMEM;
 		goto err_vec;
@@ -1127,7 +1141,7 @@ static int ionic_get_hw_stats(struct ib_device *ibdev,
 	for (stat_i = 0; stat_i < dev->stats_count; ++stat_i)
 		stats->value[stat_i] = be64_to_cpu(stats_vec[stat_i]);
 
-	kfree(stats_vec);
+	contig_kfree(stats_vec, stats_vec_size);
 
 	return stat_i;
 
@@ -1603,7 +1617,7 @@ static int ionic_v1_create_ah_cmd(struct ionic_ibdev *dev,
 	if (rc)
 		goto err_buf;
 
-	hdr_buf = kmalloc(PAGE_SIZE, GFP_ATOMIC);
+	hdr_buf = contig_kmalloc(PAGE_SIZE, GFP_ATOMIC);
 	if (!hdr_buf) {
 		rc = -ENOMEM;
 		goto err_buf;
@@ -1651,7 +1665,7 @@ static int ionic_v1_create_ah_cmd(struct ionic_ibdev *dev,
 	dma_unmap_single(dev->hwdev, hdr_dma, hdr_len,
 			 DMA_TO_DEVICE);
 err_dma:
-	kfree(hdr_buf);
+	contig_kfree(hdr_buf, PAGE_SIZE);
 err_buf:
 	kfree(hdr);
 err_hdr:
@@ -3287,7 +3301,7 @@ static int ionic_v1_modify_qp_cmd(struct ionic_ibdev *dev,
 		if (rc)
 			goto err_buf;
 
-		hdr_buf = kmalloc(PAGE_SIZE, GFP_KERNEL);
+		hdr_buf = contig_kmalloc(PAGE_SIZE, GFP_KERNEL);
 		if (!hdr_buf) {
 			rc = -ENOMEM;
 			goto err_buf;
@@ -3339,7 +3353,7 @@ static int ionic_v1_modify_qp_cmd(struct ionic_ibdev *dev,
 				 DMA_TO_DEVICE);
 err_dma:
 	if (mask & IB_QP_AV)
-		kfree(hdr_buf);
+		contig_kfree(hdr_buf, PAGE_SIZE);
 err_buf:
 	if (mask & IB_QP_AV)
 		kfree(hdr);
@@ -4150,7 +4164,7 @@ static int ionic_v1_query_qp_cmd(struct ionic_ibdev *dev,
 	attr->cap.max_inline_data =
 		ionic_v1_send_wqe_max_data(qp->sq.stride_log2);
 
-	query_buf = kmalloc(sizeof(*query_buf), GFP_KERNEL);
+	query_buf = contig_kmalloc(sizeof(*query_buf), GFP_KERNEL);
 	if (!query_buf) {
 		rc = -ENOMEM;
 		goto err_buf;
@@ -4210,7 +4224,7 @@ static int ionic_v1_query_qp_cmd(struct ionic_ibdev *dev,
 	attr->alt_timeout = 0;
 
 err_dma:
-	kfree(query_buf);
+	contig_kfree(query_buf, sizeof(*query_buf));
 err_buf:
 	return rc;
 }
@@ -5913,7 +5927,7 @@ static void ionic_destroy_ibdev(struct ionic_ibdev *dev)
 
 	ionic_destroy_rdma_admin(dev);
 
-	kfree(dev->stats_buf);
+	contig_kfree(dev->stats_buf, dev->stats_size);
 	kfree(dev->stats_hdrs);
 
 	ionic_dbgfs_rm_dev(dev);
@@ -6309,7 +6323,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 err_register:
 	ionic_kill_rdma_admin(dev);
 	ionic_destroy_rdma_admin(dev);
-	kfree(dev->stats_buf);
+	contig_kfree(dev->stats_buf, dev->stats_size);
 	kfree(dev->stats_hdrs);
 err_reset:
 	ionic_dbgfs_rm_dev(dev);
