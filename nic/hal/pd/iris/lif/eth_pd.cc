@@ -115,14 +115,14 @@ p4pd_common_p4plus_rxdma_rss_indir_table_entry_add(
 
     tbl_index = (hw_lif_id * ETH_RSS_LIF_INDIR_TBL_SZ) +
                 (index * ETH_RSS_LIF_INDIR_TBL_ENTRY_SZ);
-    tbl_base = get_start_offset(CAPRI_HBM_REG_RSS_INDIR_TABLE);
+    tbl_base = get_mem_addr(CAPRI_HBM_REG_RSS_INDIR_TABLE);
     tbl_base = (tbl_base + ETH_RSS_INDIR_TBL_SZ) & ~(ETH_RSS_INDIR_TBL_SZ - 1);
     addr = tbl_base + tbl_index;
 
     HAL_TRACE_DEBUG("{}: hw_lif_id : {}, index : {}, addr : {:x}, enable : {}, qid : {}",
                     __FUNCTION__, hw_lif_id, index, addr, enable, qid);
 
-    capri_hbm_write_mem(addr,
+    sdk::asic::asic_mem_write(addr,
             (uint8_t *)&data.action_u,
             sizeof(data.action_u));
     p4plus_invalidate_cache(addr, sizeof(data.action_u),
@@ -148,11 +148,11 @@ p4pd_common_p4plus_rxdma_rss_indir_table_entry_get(
 
     tbl_index = (hw_lif_id * ETH_RSS_LIF_INDIR_TBL_SZ) +
                 (index * ETH_RSS_LIF_INDIR_TBL_ENTRY_SZ);
-    tbl_base = get_start_offset(CAPRI_HBM_REG_RSS_INDIR_TABLE);
+    tbl_base = get_mem_addr(CAPRI_HBM_REG_RSS_INDIR_TABLE);
     tbl_base = (tbl_base + ETH_RSS_INDIR_TBL_SZ) & ~(ETH_RSS_INDIR_TBL_SZ - 1);
     addr = tbl_base + tbl_index;
 
-    capri_hbm_read_mem(addr,
+    sdk::asic::asic_mem_read(addr,
             (uint8_t *)&data->action_u,
              sizeof(data->action_u));
 

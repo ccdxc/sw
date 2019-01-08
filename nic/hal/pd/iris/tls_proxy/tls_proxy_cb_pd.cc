@@ -52,7 +52,7 @@ p4pd_get_tls_tx_s0_t0_read_tls_stg0_entry(pd_tls_proxy_cb_t* tls_proxy_cb_pd)
     tls_proxy_cb_hw_id_t hwid = tls_proxy_cb_pd->hw_id +
         (P4PD_TLSCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TLS_TX_S0_T0_READ_TLS_STG0);
 
-    if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to get tx: s0_t0_read_tls_stg0 entry for TLS CB");
         return HAL_RET_HW_FAIL;
     }
@@ -90,7 +90,7 @@ p4pd_get_tls_tx_s1_t0_read_tls_stg1_7_entry(pd_tls_proxy_cb_t* tls_proxy_cb_pd)
     tls_proxy_cb_hw_id_t hwid = tls_proxy_cb_pd->hw_id +
         (P4PD_TLSCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TLS_TX_S1_T0_READ_TLS_ST1_7);
 
-    if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to create tx: s1_t0_read_tls_stg1_7 entry for TLS CB");
         return HAL_RET_HW_FAIL;
     }
@@ -112,7 +112,7 @@ p4pd_get_tls_tx_s6_t0_pre_crypto_stats_entry(pd_tls_proxy_cb_t* tls_proxy_cb_pd)
     tls_proxy_cb_hw_id_t hwid = tls_proxy_cb_pd->hw_id +
         (P4PD_TLSCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TLS_TX_PRE_CRYPTO_STATS_U16);
 
-    if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to create tx: s6_t0_pre_crypto_stats_entry for TLS CB");
         return HAL_RET_HW_FAIL;
     }
@@ -145,7 +145,7 @@ p4pd_get_tls_tx_config_entry(pd_tls_proxy_cb_t* tls_proxy_cb_pd)
     tls_proxy_cb_hw_id_t hwid = tls_proxy_cb_pd->hw_id +
         (P4PD_TLSCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TLS_TX_CONFIG);
 
-    if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to get tx: config entry for TLS CB");
         return HAL_RET_HW_FAIL;
     }

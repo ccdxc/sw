@@ -4,8 +4,8 @@
 // Implementation of CAPRI LIF Manager.
 //-----------------------------------------------------------------------------
 
-#ifndef _LIF_MANAGER_HPP_
-#define _LIF_MANAGER_HPP_
+#ifndef __LIF_MANAGER_HPP__
+#define __LIF_MANAGER_HPP__
 
 #include <memory>
 #include <map>

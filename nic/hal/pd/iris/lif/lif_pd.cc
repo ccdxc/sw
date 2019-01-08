@@ -816,7 +816,7 @@ lif_pd_stats_read (intf::LifRxStats *rx_stats,
     delphi::objects::lifmetrics_t   lif_metrics = {0};
 
     sdk::types::mem_addr_t stats_mem_addr =
-        get_start_offset(CAPRI_HBM_REG_LIF_STATS);
+        get_mem_addr(CAPRI_HBM_REG_LIF_STATS);
 
     stats_mem_addr += pd_lif->hw_lif_id << LIF_STATS_SIZE_SHIFT;
 

@@ -309,7 +309,7 @@ p4pd_get_ipsec_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd)
 
     HAL_TRACE_DEBUG("Getting from hw-id {:#x}", hwid);
 
-    if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to get rx: stage0 entry for IPSEC CB");
         return HAL_RET_HW_FAIL;
     }
@@ -349,7 +349,7 @@ p4pd_get_ipsec_rx_stage0_entry_part2(pd_ipsec_t* ipsec_sa_pd)
     ipsec_sa_hw_id_t hwid = ipsec_sa_pd->hw_id +
         (P4PD_IPSECCB_STAGE_ENTRY_OFFSET * P4PD_HWID_IPSEC_ETH_IP_HDR);
 
-    if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to get rx: stage0 entry for IPSEC CB");
         return HAL_RET_HW_FAIL;
     }
@@ -369,7 +369,7 @@ p4pd_get_ipsec_sa_encrypt_stats(pd_ipsec_t* ipsec_sa_pd)
     ipsec_sa_hw_id_t hwid = ipsec_sa_pd->hw_id +
         (P4PD_IPSECCB_STAGE_ENTRY_OFFSET * P4PD_HWID_IPSEC_ENCRYPT_STATS);
 
-    if(!p4plus_hbm_read(hwid,  (uint8_t *)&stats_data, sizeof(stats_data))){
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&stats_data, sizeof(stats_data))){
         HAL_TRACE_ERR("Failed to get Stats: entry for IPSEC CB");
         return HAL_RET_HW_FAIL;
     }
@@ -636,13 +636,13 @@ pd_ipsec_global_stats_get (pd_func_args_t *pd_func_args)
     hal_ret_t                  ret;
     pd_ipsec_global_stats_get_args_t *args = pd_func_args->pd_ipsec_global_stats_get;
     ipsec_global_stats_cb_t *stats = args->stats_cb;
-    uint64_t hwid =  get_start_offset(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS);
+    uint64_t hwid =  get_mem_addr(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS);
   
     if (args == NULL) {
         return HAL_RET_HW_FAIL;
     }
     HAL_TRACE_DEBUG("IPSEC Global Stats");
-    if(!p4plus_hbm_read(hwid,  (uint8_t *)stats, sizeof(ipsec_global_stats_cb_t))){
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)stats, sizeof(ipsec_global_stats_cb_t))){
         HAL_TRACE_ERR("Failed to get rx: stage0 entry for IPSEC CB");
         return HAL_RET_HW_FAIL;
     }

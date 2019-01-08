@@ -242,8 +242,8 @@ hal_ret_t capri_barco_res_allocator_init(void)
                        HAL_RET_OOM);
 
     for (idx = CRYPTO_BARCO_RES_MIN; idx < CRYPTO_BARCO_RES_MAX; idx++) {
-        region = get_start_offset(capri_barco_resources[idx].hbm_region_name);
-        if (!region) {
+        region = get_mem_addr(capri_barco_resources[idx].hbm_region_name);
+        if (region == INVALID_MEM_ADDRESS) {
             HAL_TRACE_ERR("Failed to retrieve {} memory region",
                     capri_barco_resources[idx].allocator_name);
             return HAL_RET_ERR;
@@ -255,7 +255,7 @@ hal_ret_t capri_barco_res_allocator_init(void)
             return HAL_RET_ERR;
         }
 
-        region_size = get_size_kb(capri_barco_resources[idx].hbm_region_name) * 1024;
+        region_size = get_mem_size_kb(capri_barco_resources[idx].hbm_region_name) * 1024;
         if ((region_size/capri_barco_resources[idx].obj_size)
                 < capri_barco_resources[idx].obj_count) {
             HAL_TRACE_ERR("Memory region not large enough for {}, got {}, required {}",

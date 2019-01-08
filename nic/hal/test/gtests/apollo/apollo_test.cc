@@ -234,14 +234,14 @@ static void
 init_service_lif() {
     LIFQState qstate = { 0 };
     qstate.lif_id = APOLLO_SERVICE_LIF;
-    qstate.hbm_address = get_start_offset(JLIFQSTATE);
+    qstate.hbm_address = get_mem_addr(JLIFQSTATE);
     qstate.params_in.type[0].entries = 1;
     qstate.params_in.type[0].size = 1; // 64B
     push_qstate_to_capri(&qstate, 0);
 
     lif_qstate_t lif_qstate = { 0 };
-    lif_qstate.ring0_base = get_start_offset(JPKTBUFFER);
-    lif_qstate.ring0_size = log2(get_size_kb(JPKTBUFFER) / 10);
+    lif_qstate.ring0_base = get_mem_addr(JPKTBUFFER);
+    lif_qstate.ring0_size = log2(get_mem_size_kb(JPKTBUFFER) / 10);
     lif_qstate.total_rings = 1;
     write_qstate(qstate.hbm_address, (uint8_t *)&lif_qstate,
                  sizeof(lif_qstate));
@@ -249,8 +249,8 @@ init_service_lif() {
     txdma_qstate_t txdma_qstate = { 0 };
     txdma_qstate.rxdma_cindex_addr =
         qstate.hbm_address + offsetof(lif_qstate_t, sw_cindex);
-    txdma_qstate.ring_base = get_start_offset(JPKTBUFFER);
-    txdma_qstate.ring_size = log2(get_size_kb(JPKTBUFFER) / 10);
+    txdma_qstate.ring_base = get_mem_addr(JPKTBUFFER);
+    txdma_qstate.ring_size = log2(get_mem_size_kb(JPKTBUFFER) / 10);
     txdma_qstate.total_rings = 1;
     write_qstate(qstate.hbm_address + sizeof(lif_qstate_t),
                  (uint8_t *)&txdma_qstate, sizeof(txdma_qstate));
@@ -421,12 +421,12 @@ vnic_tx_init() {
     local_vnic_info->local_vnic_tag = g_local_vnic_tag;
     local_vnic_info->skip_src_dst_check = true;
     memcpy(local_vnic_info->overlay_mac, &g_layer1_smac, 6);
-    slacl_hbm_addr = get_start_offset(JSLACLBASE);
+    slacl_hbm_addr = get_mem_addr(JSLACLBASE);
     memcpy(local_vnic_info->slacl_addr_1, &slacl_hbm_addr,
            sizeof(local_vnic_info->slacl_addr_1));
     memcpy(local_vnic_info->slacl_addr_2, &slacl_hbm_addr,
            sizeof(local_vnic_info->slacl_addr_2));
-    lpm_hbm_addr = get_start_offset(JLPMBASE);
+    lpm_hbm_addr = get_mem_addr(JLPMBASE);
     memcpy(local_vnic_info->lpm_addr_1, &lpm_hbm_addr,
            sizeof(local_vnic_info->lpm_addr_1));
     memcpy(local_vnic_info->lpm_addr_2, &lpm_hbm_addr,
@@ -450,7 +450,7 @@ vnic_rx_init() {
     data.action_id = LOCAL_VNIC_BY_SLOT_RX_LOCAL_VNIC_INFO_RX_ID;
     local_vnic_info->local_vnic_tag = g_local_vnic_tag;
     local_vnic_info->skip_src_dst_check = true;
-    slacl_hbm_addr = get_start_offset(JSLACLBASE);
+    slacl_hbm_addr = get_mem_addr(JSLACLBASE);
     memcpy(local_vnic_info->slacl_addr_1, &slacl_hbm_addr,
            sizeof(local_vnic_info->slacl_addr_1));
     memcpy(local_vnic_info->slacl_addr_2, &slacl_hbm_addr,
@@ -536,7 +536,7 @@ flow_tx_info_init() {
 
     memset(&data, 0, sizeof(data));
     data.action_id = FLOW_INFO_FLOW_INFO_ID;
-    flow_stats_addr = get_start_offset(JFLOWSTATSBASE) + g_flow_index * 64;
+    flow_stats_addr = get_mem_addr(JFLOWSTATSBASE) + g_flow_index * 64;
     flow_stats_addr -= ((uint64_t)1 << 31);
     memcpy(flow_info->flow_stats_addr, &flow_stats_addr,
            sizeof(flow_info->flow_stats_addr));
@@ -577,7 +577,7 @@ flow_rx_info_init() {
 
     memset(&data, 0, sizeof(data));
     data.action_id = FLOW_INFO_FLOW_INFO_ID;
-    flow_stats_addr = get_start_offset(JFLOWSTATSBASE) + (g_flow_index+1) * 64;
+    flow_stats_addr = get_mem_addr(JFLOWSTATSBASE) + (g_flow_index+1) * 64;
     flow_stats_addr -= ((uint64_t)1 << 31);
     memcpy(flow_info->flow_stats_addr, &flow_stats_addr,
            sizeof(flow_info->flow_stats_addr));
@@ -658,12 +658,12 @@ trie_mem_init(void) {
     uint64_t data[8];
 
     memset(data, 0xFF, sizeof(data));
-    uint64_t lpm_hbm_addr = get_start_offset(JLPMBASE);
+    uint64_t lpm_hbm_addr = get_mem_addr(JLPMBASE);
     for (uint32_t i = 0; i < ROUTE_LPM_MEM_SIZE; i += sizeof(data)) {
         sdk::asic::asic_mem_write(lpm_hbm_addr+i, (uint8_t*)data, sizeof(data));
     }
 
-    uint64_t slacl_hbm_addr = get_start_offset(JSLACLBASE);
+    uint64_t slacl_hbm_addr = get_mem_addr(JSLACLBASE);
     for (uint32_t i = 0; i < SLACL_LPM_MEM_SIZE; i += sizeof(data)) {
         sdk::asic::asic_mem_write(slacl_hbm_addr+i, (uint8_t*)data, sizeof(data));
     }
@@ -672,7 +672,7 @@ trie_mem_init(void) {
 static void
 route_init (void) {
     uint64_t data;
-    uint64_t lpm_base_addr = get_start_offset(JLPMBASE);
+    uint64_t lpm_base_addr = get_mem_addr(JLPMBASE);
     uint16_t offset = 64 + (16 * 64);
 
     data = 0xFFFF;
@@ -686,7 +686,7 @@ slacl_init (void) {
     uint64_t data;
     uint8_t c_data[64];
     uint16_t start_bit;
-    uint64_t slacl_base_addr = get_start_offset(JSLACLBASE);
+    uint64_t slacl_base_addr = get_mem_addr(JSLACLBASE);
 
     uint64_t slacl_ip_addr =
         slacl_base_addr + SLACL_IPV4_TABLE_OFFSET + (64 + (16 * 64));

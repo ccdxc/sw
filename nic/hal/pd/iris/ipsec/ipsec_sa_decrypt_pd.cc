@@ -99,7 +99,7 @@ p4pd_add_or_del_ipsec_decrypt_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
         HAL_TRACE_DEBUG("HW- key_index {}, new_key_index {}", data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.key_index, data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.new_key_index);
         HAL_TRACE_DEBUG("key_index {}, new_key_index {}", ipsec_sa_pd->ipsec_sa->key_index, ipsec_sa_pd->ipsec_sa->new_key_index);
         // the below may have to use a different range for the reverse direction
-        ipsec_cb_ring_base = get_start_offset(CAPRI_HBM_REG_IPSECCB);
+        ipsec_cb_ring_base = get_mem_addr(CAPRI_HBM_REG_IPSECCB);
         ipsec_cb_ring_addr = (ipsec_cb_ring_base+(ipsec_sa_pd->ipsec_sa->sa_id * IPSEC_CB_RING_ENTRY_SIZE));
 #endif
 
@@ -203,7 +203,7 @@ p4pd_get_ipsec_decrypt_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd)
     ipsec_sa_hw_id_t hwid = ipsec_sa_pd->hw_id +
         (P4PD_IPSECCB_STAGE_ENTRY_OFFSET * P4PD_HWID_IPSEC_QSTATE1);
 
-    if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to get rx: stage0 entry for IPSEC CB");
         return HAL_RET_HW_FAIL;
     }
@@ -248,7 +248,7 @@ p4pd_get_ipsec_decrypt_rx_stage0_entry_part2(pd_ipsec_t* ipsec_sa_pd)
 
     ipsec_sa_hw_id_t hwid = ipsec_sa_pd->hw_id +
         (P4PD_IPSECCB_STAGE_ENTRY_OFFSET * P4PD_HWID_IPSEC_QSTATE2);
-    if(!p4plus_hbm_read(hwid,  (uint8_t *)&decrypt_part2, sizeof(decrypt_part2))){
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&decrypt_part2, sizeof(decrypt_part2))){
         HAL_TRACE_ERR("Failed to get rx: stage0 entry for IPSEC CB");
         return HAL_RET_HW_FAIL;
     }
@@ -266,7 +266,7 @@ p4pd_get_ipsec_sa_decrypt_stats(pd_ipsec_t* ipsec_sa_pd)
     ipsec_sa_hw_id_t hwid = ipsec_sa_pd->hw_id +
         (P4PD_IPSECCB_STAGE_ENTRY_OFFSET * P4PD_HWID_IPSEC_DECRYPT_STATS);
 
-    if(!p4plus_hbm_read(hwid,  (uint8_t *)&stats_data, sizeof(stats_data))){
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&stats_data, sizeof(stats_data))){
         HAL_TRACE_ERR("Failed to get Stats: entry for IPSEC CB");
         return HAL_RET_HW_FAIL;
     }

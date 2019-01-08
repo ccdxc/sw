@@ -1,3 +1,4 @@
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 /*
  * capri_tbl_rw.hpp
  * Mahesh Shirshyad (Pensando Systems)

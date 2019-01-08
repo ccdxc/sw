@@ -8,7 +8,8 @@
 #include "platform/capri/capri_lif_manager.hpp"
 #include "nic/sdk/include/sdk/base.hpp"
 #include "platform/capri/capri_tbl_rw.hpp"
-#include "platform/capri/capri_hbm_rw.hpp"
+#include "platform/utils/mpartition.hpp"
+#include "asic/rw/asicrw.hpp"
 
 #if 0
 void push_qstate_to_capri(hal::LIFQState *qstate);
@@ -106,7 +107,7 @@ int32_t LIFManager::WriteQStateImpl(
     p4plus_cache_action_t action = P4PLUS_CACHE_ACTION_NONE;
     mpartition_region_t *reg = NULL;
 
-    capri_hbm_write_mem(q_addr, buf, q_size);
+    sdk::asic::asic_mem_write(q_addr, (uint8_t *)buf, q_size);
 
     reg = mp_->region_by_address(q_addr);
     SDK_ASSERT(reg != NULL);

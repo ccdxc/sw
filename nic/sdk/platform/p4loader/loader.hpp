@@ -6,8 +6,8 @@
  * loader.hpp: API definitions for invoking MPU program loader
  */
 
-#ifndef _SDK_P4_LOADER_HPP_
-#define _SDK_P4_LOADER_HPP_
+#ifndef __SDK_P4_LOADER_HPP__
+#define __SDK_P4_LOADER_HPP__
 
 #include <stdio.h>
 #include <stdlib.h>

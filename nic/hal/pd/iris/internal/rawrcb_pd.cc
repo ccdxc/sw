@@ -269,7 +269,7 @@ p4pd_get_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd)
     // hardware index for this entry
     rawrcb_hw_addr_t hw_addr = rawrcb_pd->hw_addr;
 
-    if(!p4plus_hbm_read(hw_addr, (uint8_t *)&data, sizeof(data))){
+    if(sdk::asic::asic_mem_read(hw_addr, (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to get rx: stage0 entry for RAWRCB");
         return HAL_RET_HW_FAIL;
     }
@@ -303,7 +303,7 @@ p4pd_get_rawr_stats_entry(pd_rawrcb_t* rawrcb_pd)
     rawrcb_hw_addr_t hw_addr = rawrcb_pd->hw_addr +
                                RAWRCB_TABLE_STATS_OFFSET;
 
-    if(!p4plus_hbm_read(hw_addr, (uint8_t *)&data, sizeof(data))){
+    if(sdk::asic::asic_mem_read(hw_addr, (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to get stats entry for RAWRCB");
         return HAL_RET_HW_FAIL;
     }

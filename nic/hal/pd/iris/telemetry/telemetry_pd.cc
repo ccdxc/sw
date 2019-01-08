@@ -175,7 +175,7 @@ hal_ret_t
 telemetry_export_dest_init(telemetry_export_dest_t *d)
 {
     HAL_TRACE_DEBUG("{}: Export Destination Init {}", __FUNCTION__, d->id);
-    uint64_t hbm_start = get_start_offset(JP4_IPFIX);
+    uint64_t hbm_start = get_mem_addr(JP4_IPFIX);
     d->base_addr = hbm_start + (d->id * TELEMETRY_IPFIX_BUFSIZE);
     d->buf_hdr.packet_start = sizeof(telemetry_pd_export_buf_header_t);
     d->buf_hdr.payload_start = sizeof(telemetry_pd_export_buf_header_t) + sizeof(telemetry_pd_ipfix_header_t);

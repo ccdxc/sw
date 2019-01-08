@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #ifndef __CAPRI_QUIESCE_H__
 #define __CAPRI_QUIESCE_H__
 

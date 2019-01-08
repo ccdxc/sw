@@ -24,7 +24,7 @@ p4pd_get_tls_tx_s5_t0_post_crypto_stats_entry(pd_tlscb_t* tlscb_pd)
     tlscb_hw_id_t hwid = tlscb_pd->hw_id + 
         (P4PD_TLSCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TLS_TX_POST_CRYPTO_STATS_U16);
     
-    if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to read tx: s5_t0_post_crypto_stats_entry for TLS CB");
         return HAL_RET_HW_FAIL;
     }

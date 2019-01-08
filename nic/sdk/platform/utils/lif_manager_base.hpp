@@ -2,8 +2,8 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 
-#ifndef _LIF_MANAGER_BASE_HPP_
-#define _LIF_MANAGER_BASE_HPP_
+#ifndef __LIF_MANAGER_BASE_HPP__
+#define __LIF_MANAGER_BASE_HPP__
 
 #include "lib/bm_allocator/bm_allocator.hpp"
 

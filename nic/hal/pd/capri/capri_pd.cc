@@ -25,7 +25,7 @@ hal_ret_t
 pd_get_start_offset (pd_func_args_t *pd_func_args)
 {
     pd_get_start_offset_args_t *args = pd_func_args->pd_get_start_offset;
-    args->offset = get_start_offset(args->reg_name);
+    args->offset = get_mem_addr(args->reg_name);
     return HAL_RET_OK;
 }
 
@@ -33,7 +33,7 @@ hal_ret_t
 pd_get_size_kb (pd_func_args_t *pd_func_args)
 {
     pd_get_size_kb_args_t *args = pd_func_args->pd_get_size_kb;
-    args->size = get_size_kb(args->reg_name);
+    args->size = get_mem_size_kb(args->reg_name);
     return HAL_RET_OK;
 }
 
@@ -77,7 +77,7 @@ hal_ret_t
 pd_capri_hbm_read_mem (pd_func_args_t *pd_func_args)
 {
     pd_capri_hbm_read_mem_args_t *args = pd_func_args->pd_capri_hbm_read_mem;
-    capri_hbm_read_mem(args->addr, args->buf, args->size);
+    sdk::asic::asic_mem_read(args->addr, args->buf, args->size);
     return HAL_RET_OK;
 }
 
@@ -87,7 +87,7 @@ pd_capri_hbm_write_mem (pd_func_args_t *pd_func_args)
     mpartition_region_t *reg = NULL;
     p4plus_cache_action_t action = P4PLUS_CACHE_ACTION_NONE;
     pd_capri_hbm_write_mem_args_t *args = pd_func_args->pd_capri_hbm_write_mem;
-    capri_hbm_write_mem(args->addr, args->buf, args->size);
+    sdk::asic::asic_mem_write(args->addr, (uint8_t *)args->buf, args->size);
 
     reg = get_hbm_region_by_address(args->addr);
     HAL_ASSERT(reg != NULL);

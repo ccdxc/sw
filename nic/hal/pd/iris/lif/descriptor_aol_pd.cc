@@ -17,7 +17,7 @@ pd_descriptor_aol_get(pd_func_args_t *pd_func_args)
     pd_descr_aol_t *dst = args->dst;
 
     /* TODO: Validate the src address range */
-    if (!p4plus_hbm_read((uint64_t)src, (uint8_t*)dst, sizeof(pd_descr_aol_t))) {
+    if (sdk::asic::asic_mem_read((uint64_t)src, (uint8_t*)dst, sizeof(pd_descr_aol_t))) {
         HAL_TRACE_ERR("Failed to read descriptor @ {}", (uint64_t) src);
     }
     return ret;

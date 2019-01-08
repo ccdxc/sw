@@ -31,11 +31,4 @@ p4plus_hbm_write(uint64_t addr, uint8_t* data, uint32_t size_in_bytes,
     return rv == SDK_RET_OK ? true : false;
 }
 
-static inline bool
-p4plus_hbm_read(uint64_t addr, uint8_t* data, uint32_t size_in_bytes)
-{
-    sdk_ret_t rv = sdk::asic::asic_mem_read(addr, data, size_in_bytes);
-    return rv == SDK_RET_OK ? true : false;
-}
-
 #endif    // __P4PLUS_PD_API_H__

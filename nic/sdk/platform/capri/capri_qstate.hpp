@@ -1,5 +1,7 @@
-#ifndef _CAPRI_QSTATE_HPP_
-#define _CAPRI_QSTATE_HPP_
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
+#ifndef __CAPRI_QSTATE_HPP__
+#define __CAPRI_QSTATE_HPP__
 
 #include "platform/utils/lif_manager_base.hpp"
 #include "platform/utils/program.hpp"
