@@ -75,12 +75,17 @@ struct deferred {
 #define LIF_F_INITED		BIT(0)
 
 #define LIF_NAME_MAX_SZ		(32)
+#define LIF_SEQ_Q_BATCH_HT_ORDER (4)
+#define LIF_SEQ_Q_BATCH_HT_SZ	(1 << LIF_SEQ_Q_BATCH_HT_ORDER)
 struct lif {
 	char name[LIF_NAME_MAX_SZ];
 	struct list_head list;
+	DECLARE_HASHTABLE(seq_q_batch_ht, LIF_SEQ_Q_BATCH_HT_ORDER);
+	struct seq_queue_batch *curr_seq_q_batch;
 	struct net_device dummy_netdev;
 	struct sonic *sonic;
 	bool registered;
+	unsigned int num_seq_q_batches;
 	unsigned int index;
 	unsigned int seq_q_index;
 	spinlock_t adminq_lock;
@@ -122,12 +127,12 @@ int sonic_lifs_size(struct sonic *sonic);
 int sonic_intr_alloc(struct lif *lif, struct intr *intr);
 void sonic_intr_free(struct lif *lif, struct intr *intr);
 
-int sonic_lif_cpdc_seq_qs_init(struct per_core_resource *res);
-int sonic_lif_crypto_seq_qs_init(struct per_core_resource *res);
+int sonic_lif_cpdc_seq_qs_legacy_init(struct per_core_resource *res);
+int sonic_lif_crypto_seq_qs_legacy_init(struct per_core_resource *res);
 
-int sonic_lif_cpdc_seq_qs_control(struct per_core_resource *res,
+int sonic_lif_cpdc_seq_qs_legacy_control(struct per_core_resource *res,
 		uint16_t opcode);
-int sonic_lif_crypto_seq_qs_control(struct per_core_resource *res,
+int sonic_lif_crypto_seq_qs_legacy_control(struct per_core_resource *res,
 		uint16_t opcode);
 
 int sonic_get_per_core_seq_sq(struct per_core_resource *res,

@@ -452,6 +452,9 @@ Accel_PF::opcode_to_str(enum cmd_opcode opcode)
         CASE(CMD_OPCODE_CRYPTO_KEY_UPDATE);
         CASE(CMD_OPCODE_HANG_NOTIFY);
         CASE(CMD_OPCODE_SEQ_QUEUE_DUMP);
+        CASE(CMD_OPCODE_SEQ_QUEUE_BATCH_INIT);
+        CASE(CMD_OPCODE_SEQ_QUEUE_BATCH_ENABLE);
+        CASE(CMD_OPCODE_SEQ_QUEUE_BATCH_DISABLE);
         default: return "DEVCMD_UNKNOWN";
     }
 }
@@ -494,6 +497,10 @@ Accel_PF::CmdHandler(void *req, void *req_data,
         status = this->_DevcmdSeqQueueInit(req, req_data, resp, resp_data);
         break;
 
+    case CMD_OPCODE_SEQ_QUEUE_BATCH_INIT:
+        status = this->_DevcmdSeqQueueBatchInit(req, req_data, resp, resp_data);
+        break;
+
     case CMD_OPCODE_CRYPTO_KEY_UPDATE:
         status = this->_DevcmdCryptoKeyUpdate(req, req_data, resp, resp_data);
         break;
@@ -508,6 +515,14 @@ Accel_PF::CmdHandler(void *req, void *req_data,
 
     case CMD_OPCODE_SEQ_QUEUE_DISABLE:
         status = this->_DevcmdSeqQueueControl(req, req_data, resp, resp_data, false);
+        break;
+
+    case CMD_OPCODE_SEQ_QUEUE_BATCH_ENABLE:
+        status = this->_DevcmdSeqQueueBatchControl(req, req_data, resp, resp_data, true);
+        break;
+
+    case CMD_OPCODE_SEQ_QUEUE_BATCH_DISABLE:
+        status = this->_DevcmdSeqQueueBatchControl(req, req_data, resp, resp_data, false);
         break;
 
     case CMD_OPCODE_SEQ_QUEUE_DUMP:
@@ -753,11 +768,8 @@ Accel_PF::_DevcmdAdminQueueInit(void *req, void *req_data,
 }
 
 enum DevcmdStatus
-Accel_PF::_DevcmdSeqQueueInit(void *req, void *req_data,
-                              void *resp, void *resp_data)
+Accel_PF::_DevcmdSeqQueueSingleInit(const seq_queue_init_cmd_t *cmd)
 {
-    seq_queue_init_cmd_t    *cmd = (seq_queue_init_cmd_t *)req;
-    seq_queue_init_cpl_t    *cpl = (seq_queue_init_cpl_t *)resp;
     uint64_t                qstate_addr;
     uint64_t                desc0_pgm_pc = 0;
     uint64_t                desc1_pgm_pc = 0;
@@ -766,10 +778,6 @@ Accel_PF::_DevcmdSeqQueueInit(void *req, void *req_data,
     const char              *desc0_pgm_name = nullptr;
     const char              *desc1_pgm_name = nullptr;
     uint64_t                wring_base = 0;
-
-    NIC_LOG_DEBUG("lif-{} CMD_OPCODE_SEQ_QUEUE_INIT: "
-                 "qgroup {} index {}",
-                 hal_lif_info_.hw_lif_id, cmd->qgroup, cmd->index);
 
     switch (cmd->qgroup) {
 
@@ -797,7 +805,7 @@ Accel_PF::_DevcmdSeqQueueInit(void *req, void *req_data,
 
     if (cmd->index >= seq_created_count) {
         NIC_LOG_ERR("lif{}: qgroup {} index {} exceeds max {}", hal_lif_info_.hw_lif_id,
-            cmd->qgroup, cmd->index, seq_created_count);
+                    cmd->qgroup, cmd->index, seq_created_count);
         return (DEVCMD_ERROR);
     }
 
@@ -862,9 +870,126 @@ Accel_PF::_DevcmdSeqQueueInit(void *req, void *req_data,
                  cmd->wring_size, cmd->entry_size);
 
     seq_queue_info_publish(qid, cmd->qgroup, cmd->core_id);
+    return (DEVCMD_SUCCESS);
+}
 
-    cpl->qid = qid;
+enum DevcmdStatus
+Accel_PF::_DevcmdSeqQueueInit(void *req, void *req_data,
+                              void *resp, void *resp_data)
+{
+    seq_queue_init_cmd_t    *cmd = (seq_queue_init_cmd_t *)req;
+    seq_queue_init_cpl_t    *cpl = (seq_queue_init_cpl_t *)resp;
+    enum DevcmdStatus       status;
+
+    NIC_LOG_DEBUG("lif-{} CMD_OPCODE_SEQ_QUEUE_INIT: "
+                  "qid {} qgroup {} core_id {} wring_base {:#x} "
+                  "wring_size {} entry_size {}", info.hw_lif_id, cmd->index,
+                  cmd->qgroup, cmd->core_id, cmd->wring_base,
+                  cmd->wring_size, cmd->entry_size);
+    status = _DevcmdSeqQueueSingleInit(cmd);
+
+    cpl->qid = cmd->index;
     cpl->qtype = STORAGE_SEQ_QTYPE_SQ;
+
+    /*
+     * Special support for Storage DOL
+     */
+    if (cmd->dol_req_devcmd_done) {
+        _PostDevcmdDone(status);
+    }
+    return status;
+>>>>>>> - Implement seq_queue_batch as a way to bulk allocate space for sequencer queues. Batch properties include the qgroup, desc size and num_descs. Queues having the same properties can belong to the same batch which would eventually (during post_init) facilitate batch init submission to firmware.
+}
+
+enum DevcmdStatus
+Accel_PF::_DevcmdSeqQueueBatchInit(void *req, void *req_data,
+                                   void *resp, void *resp_data)
+{
+    seq_queue_batch_init_cmd_t *batch_cmd = (seq_queue_batch_init_cmd_t *)req;
+    seq_queue_init_cmd_t       cmd = {0};
+    enum DevcmdStatus          status = DEVCMD_SUCCESS;
+    uint64_t                   seq_q_size;
+    uint32_t                   i;
+
+    NIC_LOG_DEBUG("lif-{} CMD_OPCODE_SEQ_QUEUE_BATCH_INIT: "
+                  "qid {} qgroup {} num_queues {} wring_base {:#x} "
+                  "wring_size {} entry_size {}", info.hw_lif_id, batch_cmd->index,
+                  batch_cmd->qgroup, batch_cmd->num_queues, batch_cmd->wring_base,
+                  batch_cmd->wring_size, batch_cmd->entry_size);
+    cmd.opcode = CMD_OPCODE_SEQ_QUEUE_INIT;
+    cmd.index = batch_cmd->index;
+    cmd.pid = batch_cmd->pid;
+    cmd.qgroup = batch_cmd->qgroup;
+    cmd.enable = batch_cmd->enable;
+    cmd.cos = batch_cmd->cos;
+    cmd.total_wrings = batch_cmd->total_wrings;
+    cmd.host_wrings = batch_cmd->host_wrings;
+    cmd.entry_size = batch_cmd->entry_size;
+    cmd.wring_size = batch_cmd->wring_size;
+    cmd.wring_base = batch_cmd->wring_base;
+
+    seq_q_size = (uint64_t)batch_cmd->entry_size * batch_cmd->wring_size;
+    for (i = 0; i < batch_cmd->num_queues; i++) {
+        status = _DevcmdSeqQueueSingleInit(&cmd);
+        if (status != DEVCMD_SUCCESS) {
+            break;
+        }
+        cmd.index++;
+        cmd.wring_base += seq_q_size;
+    }
+
+    /*
+     * Special support for Storage DOL
+     */
+    if (batch_cmd->dol_req_devcmd_done) {
+        _PostDevcmdDone(status);
+    }
+    return status;
+}
+
+enum DevcmdStatus
+Accel_PF::_DevcmdSeqQueueSingleControl(const seq_queue_control_cmd_t *cmd,
+                                       bool enable)
+{
+    uint64_t                qstate_addr;
+    uint8_t                 value;
+    struct admin_cfg_qstate admin_cfg = {0};
+
+    if (cmd->qtype >= STORAGE_SEQ_QTYPE_MAX) {
+        NIC_LOG_ERR("lif{}: bad qtype {}", hal_lif_info_.hw_lif_id, cmd->qtype);
+        return (DEVCMD_ERROR);
+    }
+
+    value = enable;
+    switch (cmd->qtype) {
+    case STORAGE_SEQ_QTYPE_SQ:
+        if (cmd->qid >= seq_created_count) {
+            NIC_LOG_ERR("lif{}: qtype {} qid {} exceeds count {}", hal_lif_info_.hw_lif_id,
+                        cmd->qtype, cmd->qid, seq_created_count);
+            return (DEVCMD_ERROR);
+        }
+        qstate_addr = GetQstateAddr(cmd->qtype, cmd->qid);
+        WRITE_MEM(qstate_addr + offsetof(storage_seq_qstate_t, enable),
+                  (uint8_t *)&value, sizeof(value), 0);
+        invalidate_txdma_cacheline(qstate_addr);
+        break;
+    case STORAGE_SEQ_QTYPE_ADMIN:
+        if (cmd->qid >= spec->adminq_count) {
+            NIC_LOG_ERR("lif{}: qtype {} qid {} exceeds count {}", hal_lif_info_.hw_lif_id,
+                        cmd->qtype, cmd->qid, spec->adminq_count);
+            return (DEVCMD_ERROR);
+        }
+        qstate_addr = GetQstateAddr(cmd->qtype, cmd->qid);
+        admin_cfg.enable = enable;
+        admin_cfg.host_queue = 0x1;
+        WRITE_MEM(qstate_addr + offsetof(admin_qstate_t, cfg), (uint8_t *)&admin_cfg,
+                  sizeof(admin_cfg), 0);
+        invalidate_txdma_cacheline(qstate_addr);
+        break;
+    default:
+        return (DEVCMD_ERROR);
+        break;
+    }
 
     return (DEVCMD_SUCCESS);
 }
@@ -875,52 +1000,37 @@ Accel_PF::_DevcmdSeqQueueControl(void *req, void *req_data,
                                  bool enable)
 {
     seq_queue_control_cmd_t *cmd = (seq_queue_control_cmd_t *)req;
-    uint64_t                qstate_addr;
-    uint8_t                 value;
-    struct admin_cfg_qstate admin_cfg = {0};
 
-    if (cmd->qtype >= STORAGE_SEQ_QTYPE_MAX) {
-        NIC_LOG_ERR("lif{}: bad qtype {}", hal_lif_info_.hw_lif_id, cmd->qtype);
-        return (DEVCMD_ERROR);
+    NIC_LOG_DEBUG(" lif{}: qtype {} qid {} enable {}", info.hw_lif_id,
+                  cmd->qtype, cmd->qid, enable);
+    return _DevcmdSeqQueueSingleControl(cmd, enable);
+}
+
+enum DevcmdStatus
+Accel_PF::_DevcmdSeqQueueBatchControl(void *req, void *req_data,
+                                      void *resp, void *resp_data,
+                                      bool enable)
+{
+    seq_queue_batch_control_cmd_t *batch_cmd = (seq_queue_batch_control_cmd_t *)req;
+    seq_queue_control_cmd_t       cmd = {0};
+    enum DevcmdStatus             status = DEVCMD_SUCCESS;
+    uint32_t                      i;
+
+    NIC_LOG_DEBUG(" lif{}: qtype {} qid {} mum_queues {} enable {}", info.hw_lif_id,
+                  batch_cmd->qtype, batch_cmd->qid, batch_cmd->num_queues, enable);
+    cmd.opcode = enable ? CMD_OPCODE_SEQ_QUEUE_ENABLE : CMD_OPCODE_SEQ_QUEUE_DISABLE;
+    cmd.qid = batch_cmd->qid;
+    cmd.qtype = batch_cmd->qtype;
+
+    for (i = 0; i < batch_cmd->num_queues; i++) {
+        status = _DevcmdSeqQueueSingleControl(&cmd, enable);
+        if (status != DEVCMD_SUCCESS) {
+            break;
+        }
+        cmd.qid++;
     }
 
-    NIC_LOG_DEBUG(" lif{}: qtype {} qid {} enable {}", hal_lif_info_.hw_lif_id,
-        cmd->qtype, cmd->qid, enable);
-
-    value = enable;
-    switch (cmd->qtype) {
-    case STORAGE_SEQ_QTYPE_SQ:
-        if (cmd->qid >= seq_created_count) {
-            NIC_LOG_ERR("lif{}: qtype {} qid {} exceeds count {}",
-                hal_lif_info_.hw_lif_id,
-                cmd->qtype, cmd->qid, seq_created_count);
-            return (DEVCMD_ERROR);
-        }
-        qstate_addr = GetQstateAddr(cmd->qtype, cmd->qid);
-        WRITE_MEM(qstate_addr + offsetof(storage_seq_qstate_t, enable),
-                  (uint8_t *)&value, sizeof(value), 0);
-        invalidate_txdma_cacheline(qstate_addr);
-        break;
-    case STORAGE_SEQ_QTYPE_ADMIN:
-        if (cmd->qid >= spec->adminq_count) {
-            NIC_LOG_ERR("lif{}: qtype {} qid {} exceeds count {}",
-                hal_lif_info_.hw_lif_id,
-                cmd->qtype, cmd->qid, spec->adminq_count);
-            return (DEVCMD_ERROR);
-        }
-        qstate_addr = GetQstateAddr(cmd->qtype, cmd->qid);
-        admin_cfg.enable = enable;
-        admin_cfg.host_queue = 0x1;
-        WRITE_MEM(qstate_addr + offsetof(admin_qstate_t, cfg), (uint8_t *)&admin_cfg,
-            sizeof(admin_cfg), 0);
-        invalidate_txdma_cacheline(qstate_addr);
-        break;
-    default:
-        return (DEVCMD_ERROR);
-        break;
-    }
-
-    return (DEVCMD_SUCCESS);
+    return status;
 }
 
 enum DevcmdStatus

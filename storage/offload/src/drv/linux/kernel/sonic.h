@@ -7,6 +7,9 @@
 #ifndef _SONIC_H_
 #define _SONIC_H_
 
+#include <linux/types.h>
+#include <linux/jhash.h>
+#include <linux/hashtable.h>
 #include "osal.h"
 #include "sonic_dev.h"
 #include "sonic_debugfs.h"

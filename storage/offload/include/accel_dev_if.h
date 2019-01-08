@@ -40,9 +40,26 @@ enum cmd_opcode {
 	CMD_OPCODE_SEQ_QUEUE_DISABLE    = 7,
 	CMD_OPCODE_CRYPTO_KEY_UPDATE    = 8,
 	CMD_OPCODE_HANG_NOTIFY		= 9,
+	CMD_OPCODE_SEQ_QUEUE_BATCH_INIT	= 10,
+	CMD_OPCODE_SEQ_QUEUE_BATCH_ENABLE = 11,
+	CMD_OPCODE_SEQ_QUEUE_BATCH_DISABLE = 12,
 
 	CMD_OPCODE_SEQ_QUEUE_DUMP	= 0xf0,
 };
+
+#ifndef __DEV_HPP__
+
+/**
+ * Devcmd Status codes
+ */
+enum DevcmdStatus
+{
+    DEVCMD_SUCCESS,
+    DEVCMD_BUSY,
+    DEVCMD_ERROR,
+    DEVCMD_UNKNOWN,
+};
+#endif
 
 #pragma pack(push, 1)
 
@@ -318,10 +335,6 @@ enum txq_type {
  * seq_queue_init_cmd_t - Sequencer queue init command
  * @opcode:     opcode = 5
  * @pid:        Process ID
- * @intr_index: Interrupt control register index
- * @type:       Select the transmit queue type.
- *                 0 = Ethernet
- *              All other values of @type are reserved.
  * @index:      LIF-relative Sequencer queue index
  * @cos:        Class of service for this queue.
  * @wring_size: Work ring size, encoded as a log2(size),
@@ -371,6 +384,50 @@ typedef struct seq_queue_init_cpl {
 	uint32_t    rsvd2;
 	uint32_t    rsvd3;
 } seq_queue_init_cpl_t;
+
+/**
+ * seq_queue_batch_init_cmd_t - Sequencer queue batch init command
+ * @opcode:     opcode = 10
+ * @pid:        Process ID
+ * @index:      LIF-relative Sequencer starting queue index
+ * @num_queues: number of queues to initialize
+ * @cos:        Class of service for the queues.
+ * @wring_size: Work ring size, encoded as a log2(size),
+ *              in number of descriptors.
+ * @wring_base: Work Queue ring starting base address.
+ * @dol_req_devcmd_done: for DOL use only.
+ */
+typedef struct seq_queue_batch_init_cmd {
+	uint16_t                opcode;
+	uint16_t                pid;
+	uint32_t                index;
+	uint32_t                num_queues;
+	storage_seq_qgroup_t    qgroup;
+	uint8_t                 enable;
+	uint8_t                 cos;
+	uint8_t                 total_wrings;
+	uint8_t                 host_wrings;
+	uint8_t                 entry_size;
+	uint8_t                 wring_size;
+	dma_addr_t              wring_base;
+	uint8_t                 dol_req_devcmd_done;
+} seq_queue_batch_init_cmd_t;
+
+/**
+ * seq_queue_batch_init_cpl_t - Sequencer queue batch init command completion
+ * @status:     The status of the command.  Values for status are:
+ *                 0 = Successful completion
+ * @cpl_index:  The index in the descriptor ring for which this
+ *              is the completion.
+ */
+typedef struct seq_queue_batch_init_cpl {
+	uint32_t    status  :8,
+	            rsvd    :8,
+	            cpl_index:16;
+	uint32_t    rsvd1;
+	uint32_t    rsvd2;
+	uint32_t    rsvd3;
+} seq_queue_batch_init_cpl_t;
 
 /**
  * crypto_key_update_cmd_t - Crypto key update command
@@ -464,6 +521,24 @@ typedef struct seq_queue_control_cmd {
 typedef admin_cpl_t seq_queue_control_cpl_t;
 
 /**
+ * seq_queue_batch_control_cmd_t - Sequencer Queue batch control command
+ * @opcode:     opcode = 9
+ * @qid:        Starting queue ID
+ * @qtype:      Queue type
+ * @num_queues: Number of queues in batch
+ */
+typedef struct seq_queue_batch_control_cmd {
+	uint16_t    opcode;
+	uint16_t    rsvd;
+	uint32_t    qid     :24,
+	            qtype   :8;
+	uint32_t    num_queues;
+	uint32_t    rsvd2[13];
+} seq_queue_batch_control_cmd_t;
+
+typedef admin_cpl_t seq_queue_batch_control_cpl_t;
+
+/**
  * seq_queue_dump_cmd_t - Debug Sequencer queue dump command
  * @opcode:     opcode = 0xf0
  * @qid:        Queue ID
@@ -506,6 +581,8 @@ typedef union adminq_cmd {
 	seq_queue_control_cmd_t seq_queue_control;
 	seq_queue_dump_cmd_t    seq_queue_dump;
 	crypto_key_update_cmd_t crypto_key_update;
+	seq_queue_batch_init_cmd_t seq_queue_batch_init;
+	seq_queue_batch_control_cmd_t seq_queue_batch_control;
 } adminq_cmd_t;
 
 typedef union adminq_cpl {

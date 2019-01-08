@@ -115,7 +115,9 @@ typedef union dev_cmd {
     lif_init_cmd_t              lif_init;
     adminq_init_cmd_t           adminq_init;
     seq_queue_init_cmd_t        seq_q_init;
+    seq_queue_batch_init_cmd_t  seq_q_batch_init;
     seq_queue_control_cmd_t     q_control;
+    seq_queue_batch_control_cmd_t q_batch_control;
 } dev_cmd_t;
 
 typedef union dev_cmd_cpl {
@@ -128,7 +130,9 @@ typedef union dev_cmd_cpl {
     lif_init_cpl_t              lif_init;
     adminq_init_cpl_t           adminq_init;
     seq_queue_init_cpl_t        seq_q_init;
+    seq_queue_batch_init_cpl_t  seq_q_batch_init;
     seq_queue_control_cpl_t     q_control;
+    seq_queue_batch_control_cpl_t q_batch_control;
 } dev_cmd_cpl_t;
 #pragma pack(pop)
 
@@ -195,6 +199,9 @@ public:
 private:
   uint64_t  timeout_us;
 };
+
+typedef struct seq_queue_init_cmd seq_queue_init_cmd_t;
+typedef struct seq_queue_control_cmd seq_queue_control_cmd_t;
 
 /**
  * Accelerator PF Device
@@ -273,11 +280,19 @@ private:
                                             void *resp, void *resp_data);
     enum DevcmdStatus _DevcmdSeqQueueInit(void *req, void *req_data,
                                           void *resp, void *resp_data);
+    enum DevcmdStatus _DevcmdSeqQueueBatchInit(void *req, void *req_data,
+                                               void *resp, void *resp_data);
     enum DevcmdStatus _DevcmdSeqQueueControl(void *req, void *req_data,
                                              void *resp, void *resp_data,
                                              bool enable);
+    enum DevcmdStatus _DevcmdSeqQueueBatchControl(void *req, void *req_data,
+                                                  void *resp, void *resp_data,
+                                                  bool enable);
     enum DevcmdStatus _DevcmdCryptoKeyUpdate(void *req, void *req_data,
                                              void *resp, void *resp_data);
+    enum DevcmdStatus _DevcmdSeqQueueSingleInit(const seq_queue_init_cmd_t *cmd);
+    enum DevcmdStatus _DevcmdSeqQueueSingleControl(const seq_queue_control_cmd_t *cmd,
+                                                   bool enable);
 
     int DelphiDeviceInit(void);
     uint64_t GetQstateAddr(uint8_t qtype, uint32_t qid);

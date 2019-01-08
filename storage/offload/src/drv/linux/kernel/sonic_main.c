@@ -61,18 +61,25 @@ int sonic_adminq_check_err(struct lif *lif, struct sonic_admin_ctx *ctx)
 		{ CMD_OPCODE_SEQ_QUEUE_DUMP, "CMD_OPCODE_SEQ_QUEUE_DUMP" },
 		{ CMD_OPCODE_CRYPTO_KEY_UPDATE,
 			"CMD_OPCODE_CRYPTO_KEY_UPDATE" },
+		{ CMD_OPCODE_SEQ_QUEUE_BATCH_INIT, "CMD_OPCODE_SEQ_QUEUE_BATCH_INIT" },
+		{ CMD_OPCODE_SEQ_QUEUE_BATCH_ENABLE, "CMD_OPCODE_SEQ_QUEUE_BATCH_ENABLE" },
+		{ CMD_OPCODE_SEQ_QUEUE_BATCH_DISABLE, "CMD_OPCODE_SEQ_QUEUE_BATCH_DISABLE" },
 		{ 0, 0 }, /* keep last */
 	};
 	struct cmds *cmd = cmds;
 	char *name = "UNKNOWN";
 
 	if (ctx->comp.cpl.status) {
-		while ((cmd++)->cmd)
-			if (cmd->cmd == ctx->cmd.cmd.opcode)
+		while (cmd->cmd) {
+			if (cmd->cmd == ctx->cmd.cmd.opcode) {
 				name = cmd->name;
+				break;
+			}
+			cmd++;
+		}
 		OSAL_LOG_ERROR("(%d) %s failed: %d",
 			ctx->cmd.cmd.opcode, name, ctx->comp.cpl.status);
-		return -EIO;
+		return ctx->comp.cpl.status == DEVCMD_UNKNOWN ? -EBADRQC : -EIO;
 	}
 
 	return 0;
@@ -467,7 +474,7 @@ static void __exit sonic_cleanup_module(void)
 	sonic_debugfs_destroy();
 }
 
-static void sonic_api_adminq_cb(struct queue *q, struct desc_info *desc_info,
+static void sonic_api_adminq_cb(struct queue *q, struct admin_desc_info *desc_info,
 				struct cq_info *cq_info, void *cb_arg)
 {
 	struct sonic_admin_ctx *ctx = cb_arg;
@@ -514,7 +521,7 @@ int sonic_api_adminq_post(struct lif *lif, struct sonic_admin_ctx *ctx)
 		goto err_out;
 	}
 
-	memcpy(adminq->head->desc, &ctx->cmd, sizeof(ctx->cmd));
+	memcpy(adminq->admin_head->desc, &ctx->cmd, sizeof(ctx->cmd));
 
 	OSAL_LOG_DEBUG("post admin queue command:");
 	if (g_osal_log_level >= OSAL_LOG_LEVEL_DEBUG) {

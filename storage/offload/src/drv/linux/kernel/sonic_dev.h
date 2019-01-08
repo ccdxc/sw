@@ -239,18 +239,18 @@ struct cq_info {
 };
 
 struct queue;
-struct desc_info;
+struct admin_desc_info;
 struct sonic_ev_list;
 
-typedef void (*desc_cb)(struct queue *q, struct desc_info *desc_info,
+typedef void (*admin_desc_cb)(struct queue *q, struct admin_desc_info *desc_info,
 			struct cq_info *cq_info, void *cb_arg);
 
-struct desc_info {
+struct admin_desc_info {
 	void *desc;
-	struct desc_info *next;
+	struct admin_desc_info *next;
 	unsigned int index;
 	unsigned int left;
-	desc_cb cb;
+	admin_desc_cb cb;
 	void *cb_arg;
 };
 
@@ -261,19 +261,18 @@ struct queue {
 	struct sonic_dev *idev;
 	struct lif *lif;
 	struct per_core_resource *pc_res;
-	unsigned int index;
+	unsigned int qid;
 	unsigned int total_size;
 	void *base;
 	dma_addr_t base_pa;
-	struct desc_info *info;
-	struct desc_info *tail;
-	struct desc_info *head;
+	struct admin_desc_info *admin_info;
+	struct admin_desc_info *admin_tail;
+	struct admin_desc_info *admin_head;
 	unsigned int num_descs;
 	unsigned int desc_size;
 	struct doorbell __iomem *db;
-	void *nop_desc;
+	unsigned int pindex;
 	unsigned int pid;
-	unsigned int qid;
 	unsigned int qpos;
 	unsigned int qtype;
 	storage_seq_qgroup_t qgroup;
@@ -285,26 +284,28 @@ struct queue {
 	osal_atomic_int_t descs_inuse;
 };
 
-#if 0
-struct seq_queue {
-	char name[QUEUE_NAME_MAX_SZ];
-	struct sonic_dev *idev;
-	struct per_core_resource *pc_res;
+struct seq_q_desc_info {
 	unsigned int index;
-	int free_count;
-	void *base;
-	dma_addr_t base_pa;
-	unsigned int num_descs;
-	unsigned int desc_size;
-	struct doorbell __iomem *db;
-	void *nop_desc;
+};
+
+struct seq_queue_batch {
+	struct hlist_node node;
+	struct lif *lif;
 	unsigned int pid;
-	unsigned int qid;
-	unsigned int qtype;
+	unsigned int base_qid;
+	unsigned int curr_qid;
+	unsigned int num_queues;
+	unsigned int base_alloc_size;
+	unsigned int curr_alloc_size;
+	unsigned int per_q_num_descs;
+	unsigned int per_q_desc_size;
+	dma_addr_t base_pa;
+	void *base_va;
 	storage_seq_qgroup_t qgroup;
 };
-#endif
 
+#define MAX_PER_CORE_CPDC_QUEUES 2
+#define MAX_PER_CORE_CRYPTO_QUEUES 2
 #define MAX_PER_QUEUE_STATUS_ENTRIES 2
 #define MAX_PER_QUEUE_SQ_ENTRIES 512
 #define MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES MAX_PER_QUEUE_SQ_ENTRIES
@@ -406,9 +407,9 @@ int sonic_q_init(struct lif *lif, struct sonic_dev *idev, struct queue *q,
 		 unsigned int index, const char *base, unsigned int num_descs,
 		 size_t desc_size, unsigned int pid);
 void sonic_q_map(struct queue *q, void *base, dma_addr_t base_pa);
-void sonic_q_post(struct queue *q, bool ring_doorbell, desc_cb cb,
+void sonic_q_post(struct queue *q, bool ring_doorbell, admin_desc_cb cb,
 		  void *cb_arg);
-void sonic_q_rewind(struct queue *q, struct desc_info *start);
+void sonic_q_rewind(struct queue *q, struct admin_desc_info *start);
 unsigned int sonic_q_space_avail(struct queue *q);
 bool sonic_q_has_space(struct queue *q, unsigned int want);
 void sonic_q_service(struct queue *q, struct cq_info *cq_info,

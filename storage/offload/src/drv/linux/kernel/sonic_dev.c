@@ -142,7 +142,7 @@ void sonic_dev_cmd_adminq_init(struct sonic_dev *idev, struct queue *adminq,
 {
 	union dev_cmd cmd = {
 		.adminq_init.opcode = CMD_OPCODE_ADMINQ_INIT,
-		.adminq_init.index = adminq->index,
+		.adminq_init.index = adminq->qid,
 		.adminq_init.pid = adminq->pid,
 		.adminq_init.intr_index = intr_index,
 		.adminq_init.lif_index = lif_index,
@@ -312,7 +312,7 @@ int sonic_q_init(struct lif *lif, struct sonic_dev *idev, struct queue *q,
 		 unsigned int index, const char *base, unsigned int num_descs,
 		 size_t desc_size, unsigned int pid)
 {
-	struct desc_info *cur;
+	struct admin_desc_info *cur;
 	unsigned int ring_size;
 	unsigned int i;
 
@@ -323,28 +323,28 @@ int sonic_q_init(struct lif *lif, struct sonic_dev *idev, struct queue *q,
 	if (ring_size < 1 || ring_size > 16)
 		return -EINVAL;
 
-	if (!q->info)
+	if (!q->admin_info)
 		return -EINVAL;
 
 	q->lif = lif;
 	q->idev = idev;
-	q->index = index;
+	q->qid = index;
 	q->num_descs = num_descs;
 	q->desc_size = desc_size;
-	q->head = q->tail = q->info;
+	q->admin_head = q->admin_tail = q->admin_info;
 	q->pid = pid;
 	osal_atomic_init(&q->descs_inuse, 0);
 
 	OSAL_LOG_INFO("sonic_q_init q: " PRIx64 " q->head " PRIx64 " index %d",
-			(u64) q, (u64) q->head, index);
+			(u64) q, (u64) q->admin_head, index);
 
 	snprintf(q->name, sizeof(q->name), "%s%u", base, index);
 
-	cur = q->info;
+	cur = q->admin_info;
 
 	for (i = 0; i < num_descs; i++) {
 		if (i + 1 == num_descs)
-			cur->next = q->info;
+			cur->next = q->admin_info;
 		else
 			cur->next = cur + 1;
 		cur->index = i;
@@ -357,7 +357,7 @@ int sonic_q_init(struct lif *lif, struct sonic_dev *idev, struct queue *q,
 
 void sonic_q_map(struct queue *q, void *base, dma_addr_t base_pa)
 {
-	struct desc_info *cur;
+	struct admin_desc_info *cur;
 	unsigned int i;
 
 	q->base = base;
@@ -366,42 +366,42 @@ void sonic_q_map(struct queue *q, void *base, dma_addr_t base_pa)
 	OSAL_LOG_INFO("sonic_q_map base " PRIx64 " base_pa " PRIx64,
 			(u64) base, (u64) base_pa);
 
-	for (i = 0, cur = q->info; i < q->num_descs; i++, cur++)
+	for (i = 0, cur = q->admin_info; i < q->num_descs; i++, cur++)
 		cur->desc = base + (i * q->desc_size);
 }
 
-void sonic_q_post(struct queue *q, bool ring_doorbell, desc_cb cb,
+void sonic_q_post(struct queue *q, bool ring_doorbell, admin_desc_cb cb,
 		  void *cb_arg)
 {
-	q->head->cb = cb;
-	q->head->cb_arg = cb_arg;
-	q->head = q->head->next;
+	q->admin_head->cb = cb;
+	q->admin_head->cb_arg = cb_arg;
+	q->admin_head = q->admin_head->next;
 
 	if (ring_doorbell)
-		sonic_q_ringdb(q, q->head->index);
+		sonic_q_ringdb(q, q->admin_head->index);
 }
 
-void sonic_q_rewind(struct queue *q, struct desc_info *start)
+void sonic_q_rewind(struct queue *q, struct admin_desc_info *start)
 {
-	struct desc_info *cur = start;
+	struct admin_desc_info *cur = start;
 
-	while (cur != q->head) {
+	while (cur != q->admin_head) {
 		if (cur->cb)
 			cur->cb(q, cur, NULL, cur->cb_arg);
 		cur = cur->next;
 	}
 
-	q->head = start;
+	q->admin_head = start;
 }
 
 unsigned int sonic_q_space_avail(struct queue *q)
 {
-	unsigned int avail = q->tail->index;
+	unsigned int avail = q->admin_tail->index;
 
-	if (q->head->index >= avail)
-		avail += q->head->left - 1;
+	if (q->admin_head->index >= avail)
+		avail += q->admin_head->left - 1;
 	else
-		avail -= q->head->index + 1;
+		avail -= q->admin_head->index + 1;
 
 	return avail;
 }
@@ -468,7 +468,7 @@ static int sonic_seq_q_take(struct queue *q, uint32_t count)
 void sonic_q_service(struct queue *q, struct cq_info *cq_info,
 		     unsigned int stop_index)
 {
-	struct desc_info *desc_info;
+	struct admin_desc_info *desc_info;
 
 	if (q->qtype == STORAGE_SEQ_QTYPE_SQ) {
 		/* stop_index actually contains a count here */
@@ -477,11 +477,11 @@ void sonic_q_service(struct queue *q, struct cq_info *cq_info,
 	}
 
 	do {
-		desc_info = q->tail;
+		desc_info = q->admin_tail;
 		if (desc_info->cb)
 			desc_info->cb(q, desc_info, cq_info,
 				      desc_info->cb_arg);
-		q->tail = q->tail->next;
+		q->admin_tail = q->admin_tail->next;
 	} while (desc_info->index != stop_index);
 }
 
@@ -505,17 +505,23 @@ int sonic_q_unconsume(struct queue *q, uint32_t count)
 		err = sonic_seq_q_give(q, count);
 		if (err)
 			goto out;
+		if (q->pindex >= count) {
+			q->pindex -= count;
+		} else {
+			q->pindex = (q->num_descs + q->pindex) - count;
+		}
+		goto out;
 	}
 
 	/* rewind the head pointer */
-	index = q->head->index;
+	index = q->admin_head->index;
 	if (index >= count) {
 		index -= count;
 	} else {
 		count -= index;
 		index = q->num_descs - count;
 	}
-	q->head = q->info + index;
+	q->admin_head = q->admin_info + index;
 
 out:
 	return err;
@@ -528,11 +534,15 @@ void *sonic_q_consume_entry(struct queue *q, uint32_t *index)
 	if (q->qtype == STORAGE_SEQ_QTYPE_SQ) {
 		if (sonic_seq_q_take(q, 1))
 			return NULL;
+		ptr = q->base + (q->pindex * q->desc_size);
+		q->pindex = (q->pindex + 1) % q->num_descs;
+		*index = q->pindex;
+		return ptr;
 	}
 
-	ptr = q->head->desc;
-	q->head = q->head->next;
-	*index = q->head->index;
+	ptr = q->admin_head->desc;
+	q->admin_head = q->admin_head->next;
+	*index = q->admin_head->index;
 	return ptr;
 }
 

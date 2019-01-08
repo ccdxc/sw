@@ -24,6 +24,18 @@
 
 #include "pnso_init.h"
 
+#define LIF_FOR_EACH_PC_RES(lif, idx, res)      				\
+	for (idx = 0; idx < lif->sonic->num_per_core_resources; idx++)		\
+		if ((res = lif->res.pc_res[i]) != NULL)				\
+
+
+static int
+sonic_lif_seq_q_batch_init(struct seq_queue_batch *batch);
+
+static int
+sonic_lif_seq_q_batch_control(struct seq_queue_batch *batch,
+			      uint16_t opcode);
+
 static bool sonic_adminq_service(struct cq *cq, struct cq_info *cq_info,
 				 void *cb_arg)
 {
@@ -84,11 +96,218 @@ void sonic_intr_free(struct lif *lif, struct intr *intr)
 		clear_bit(intr->index, lif->sonic->intrs);
 }
 
+void *
+sonic_desc_mem_zalloc(struct device *dev,
+		      uint32_t *total_size,
+		      uint32_t min_size,
+		      dma_addr_t *base_pa)
+{
+	void *base_va = NULL;
+	uint32_t alloc_size = *total_size;
+
+	OSAL_ASSERT(alloc_size && min_size);
+	while (alloc_size >= min_size) {
+		base_va = dma_zalloc_coherent(dev, alloc_size,
+					      base_pa, GFP_KERNEL);
+		if (base_va) {
+			OSAL_LOG_DEBUG("requested %u bytes allocated %u bytes",
+				       *total_size, alloc_size); 
+			break;
+		}
+		alloc_size >>= 1;
+	}
+
+	*total_size = alloc_size;
+	return base_va;
+}
+
+void
+sonic_desc_mem_free(struct device *dev,
+		    size_t size,
+		    void *base_va,
+		    dma_addr_t base_pa)
+{
+	dma_free_coherent(dev, size, base_va, base_pa);
+}
+
+static inline uint32_t
+sonic_seq_q_batch_hash_key(const struct queue *q)
+{
+	return jhash_3words(q->qgroup, q->num_descs, q->desc_size, 0);
+}
+
+static inline bool
+sonic_seq_q_batch_key_eq(const struct seq_queue_batch *batch,
+			 const struct queue *q)
+{
+	return ((batch->qgroup == q->qgroup) &&
+		(batch->per_q_num_descs == q->num_descs) &&
+		(batch->per_q_desc_size == q->desc_size));
+}
+
+static uint32_t
+sonic_seq_q_batch_multiple(const struct queue *q)
+{
+        const struct per_core_resource *res = q->pc_res;
+	uint32_t multiple = q->lif->sonic->num_per_core_resources;
+
+	switch (q->qgroup) {
+
+        case STORAGE_SEQ_QGROUP_CPDC:
+		multiple *= MAX_PER_CORE_CPDC_QUEUES;
+		break;
+
+	case STORAGE_SEQ_QGROUP_CRYPTO:
+		multiple *= MAX_PER_CORE_CRYPTO_QUEUES;
+		break;
+
+	case STORAGE_SEQ_QGROUP_CPDC_STATUS:
+		multiple *= res->num_cpdc_status_qs;
+		break;
+
+	case STORAGE_SEQ_QGROUP_CRYPTO_STATUS:
+		multiple *= res->num_crypto_status_qs;
+		break;
+
+	default:
+		multiple = 0;
+		break;
+	}
+
+	OSAL_ASSERT(multiple);
+	return multiple;
+}
+
+struct seq_queue_batch *
+sonic_seq_q_batch_alloc(struct queue *q)
+{
+	struct lif *lif = q->lif;
+	struct device *dev = lif->sonic->dev;
+	struct seq_queue_batch *batch;
+	struct seq_queue_batch *head_node;
+	uint32_t key;
+
+	batch = devm_kzalloc(dev, sizeof(*batch), GFP_KERNEL);
+	if (!batch)
+		goto error;
+
+	batch->lif = lif;
+	batch->base_qid = q->qid;
+	batch->curr_qid = q->qid;
+	batch->qgroup = q->qgroup;
+	batch->per_q_num_descs = q->num_descs;
+	batch->per_q_desc_size = q->desc_size;
+	batch->base_alloc_size =
+		ALIGN(q->total_size * sonic_seq_q_batch_multiple(q), PAGE_SIZE);
+	batch->base_va = sonic_desc_mem_zalloc(dev, &batch->base_alloc_size,
+					       ALIGN(q->total_size, PAGE_SIZE),
+					       &batch->base_pa);
+	if (!batch->base_va)
+		goto error;
+	/*
+	 * Implementation becomes simpler when new element is known to have
+	 * been added to the head of the hash bucket.
+	 */
+	key = sonic_seq_q_batch_hash_key(q);
+	hash_add(lif->seq_q_batch_ht, &batch->node, key);
+        hash_for_each_possible(lif->seq_q_batch_ht, head_node, node, key) {
+		OSAL_ASSERT(head_node == batch);
+		break;
+	}
+	lif->curr_seq_q_batch = batch;
+	lif->num_seq_q_batches++;
+	return batch;
+
+error:
+	if (batch)
+		devm_kfree(dev, batch);
+	return NULL;
+}
+
+void
+sonic_seq_q_batch_free(struct seq_queue_batch *batch)
+{
+	struct device *dev = batch->lif->sonic->dev;
+
+	if (batch) {
+		OSAL_ASSERT(hash_hashed(&batch->node));
+		hash_del(&batch->node);
+		sonic_desc_mem_free(dev, batch->base_alloc_size,
+				    batch->base_va, batch->base_pa);
+		devm_kfree(dev, batch);
+	}
+}
+
+static struct seq_queue_batch *
+sonic_seq_q_batch_find(struct queue *q)
+{
+	struct lif *lif = q->lif;
+	struct seq_queue_batch *batch;
+	uint32_t key;
+
+	batch = lif->curr_seq_q_batch;
+	if (!batch ||
+	    !sonic_seq_q_batch_key_eq(batch, q)) {
+		key = sonic_seq_q_batch_hash_key(q);
+		hash_for_each_possible(lif->seq_q_batch_ht, batch, node, key) {
+			if (sonic_seq_q_batch_key_eq(batch, q)) {
+				lif->curr_seq_q_batch = batch;
+				break;
+			}
+		}
+	}
+	if (!batch)
+		batch = sonic_seq_q_batch_alloc(q);
+
+	return batch;
+}
+
+static int
+sonic_seq_q_alloc_from_batch(struct queue *q)
+{
+	struct seq_queue_batch *batch;
+	int err = -ENOMEM;
+
+	batch = sonic_seq_q_batch_find(q);
+	while (batch) {
+		OSAL_ASSERT(q->total_size <= batch->base_alloc_size);
+		OSAL_ASSERT(batch->curr_alloc_size <= batch->base_alloc_size);
+		if (q->total_size <= (batch->base_alloc_size - batch->curr_alloc_size)) {
+
+			/*
+			 * qid is expected to be contiguous for batching to work
+			 */
+			OSAL_ASSERT((q->qid - batch->curr_qid) <= 1);
+			OSAL_ASSERT((batch->pid == 0) || (batch->pid == q->pid));
+			batch->pid = q->pid;
+			batch->curr_qid = q->qid;
+			batch->num_queues++;
+			q->base = batch->base_va + batch->curr_alloc_size;
+			q->base_pa = batch->base_pa + batch->curr_alloc_size;
+			batch->curr_alloc_size += q->total_size;
+			err = 0;
+			break;
+		}
+		batch = sonic_seq_q_batch_alloc(q);
+	}
+
+	return err;
+}
+
+void
+sonic_seq_q_free(struct queue *q)
+{
+	/*
+	 * Seq queues are freed via their corresponding batch
+	 * so nothing to do.
+	 */
+}
+
 void sonic_q_free(struct lif *lif, struct queue *q)
 {
-	if (q->info) {
-		devm_kfree(lif->sonic->dev, q->info);
-		q->info = NULL;
+	if (q->admin_info) {
+		devm_kfree(lif->sonic->dev, q->admin_info);
+		q->admin_info = NULL;
 	}
 	if (q->base) {
 		dma_free_coherent(lif->sonic->dev, q->total_size, q->base,
@@ -100,9 +319,9 @@ void sonic_q_free(struct lif *lif, struct queue *q)
 int sonic_q_alloc(struct lif *lif, struct queue *q,
 	unsigned int num_descs, unsigned int desc_size, bool do_alloc_descs)
 {
-	q->info = devm_kzalloc(lif->sonic->dev, sizeof(*q->info) * num_descs,
+	q->admin_info = devm_kzalloc(lif->sonic->dev, sizeof(*q->admin_info) * num_descs,
 			       GFP_KERNEL);
-	if (!q->info)
+	if (!q->admin_info)
 		return -ENOMEM;
 
 	if (do_alloc_descs) {
@@ -245,6 +464,13 @@ static void sonic_qcqs_free(struct lif *lif)
 	sonic_qcq_free(lif, lif->adminqcq);
 }
 
+static int
+sonic_lif_per_core_seq_q_count(struct lif *lif)
+{
+	int q_count = lif->sonic->ident->dev.seq_queues_per_lif;
+	return q_count / lif->sonic->num_per_core_resources;
+}
+
 static int sonic_lif_per_core_resources_alloc(struct lif *lif)
 {
 	int err = -ENOMEM;
@@ -252,12 +478,16 @@ static int sonic_lif_per_core_resources_alloc(struct lif *lif)
 #ifndef __FreeBSD__
 	struct device *dev = lif->sonic->dev;
 #endif
+        struct per_core_resource *res;
 
 	for (i = 0; i < lif->sonic->num_per_core_resources; i++) {
-		lif->res.pc_res[i] = devm_kzalloc(dev,
-				sizeof(*lif->res.pc_res[0]), GFP_KERNEL);
-		if (!lif->res.pc_res[i])
+		res = devm_kzalloc(dev,	sizeof(*res), GFP_KERNEL);
+		if (!res)
 			goto err_out_cleanup;
+		lif->res.pc_res[i] = res;
+		res->idx = i;
+		res->core_id = -1;
+                spin_lock_init(&res->seq_statusq_lock);
 	}
 
 	return 0;
@@ -294,6 +524,7 @@ static int sonic_lif_alloc(struct sonic *sonic, unsigned int index)
 	INIT_LIST_HEAD(&lif->deferred.list);
 	INIT_WORK(&lif->deferred.work, sonic_lif_deferred_work);
 #endif
+	hash_init(lif->seq_q_batch_ht);
 
 	err = sonic_qcqs_alloc(lif);
 	if (err)
@@ -373,28 +604,13 @@ static void sonic_lif_qcq_deinit(struct lif *lif, struct qcq *qcq)
 
 static void sonic_cpdc_qs_deinit(struct per_core_resource *res)
 {
-	int i;
 
-	/* Free status queues */
-	for (i = 0; i < res->num_cpdc_status_qs; i++)
-		sonic_q_free(res->lif, &res->cpdc_seq_status_qs[i]);
-
-	/* Free submission queues */
-	sonic_q_free(res->lif, &res->dc_seq_q);
-	sonic_q_free(res->lif, &res->cp_seq_q);
+	/* CPDC queues are freed through their corresponding batches */
 }
 
 static void sonic_crypto_qs_deinit(struct per_core_resource *res)
 {
-	int i;
-
-	/* Free status queues */
-	for (i = 0; i < res->num_crypto_status_qs; i++)
-		sonic_q_free(res->lif, &res->crypto_seq_status_qs[i]);
-
-	/* Free submission queues */
-	sonic_q_free(res->lif, &res->crypto_dec_seq_q);
-	sonic_q_free(res->lif, &res->crypto_enc_seq_q);
+	/* Crypto queues are freed through their corresponding batches */
 }
 
 static void sonic_ev_intr_deinit(struct per_core_resource *res)
@@ -423,18 +639,27 @@ static void sonic_lif_per_core_resource_deinit(struct per_core_resource *res)
 
 static void sonic_lif_per_core_resources_deinit(struct lif *lif)
 {
+	struct per_core_resource *res;
 	int i;
 
 	pnso_deinit();
-	for (i = 0; i < lif->sonic->num_per_core_resources; i++) {
-		sonic_lif_per_core_resource_deinit(lif->res.pc_res[i]);
+	LIF_FOR_EACH_PC_RES(lif, i, res) {
+		sonic_lif_per_core_resource_deinit(res);
 	}
 }
 
 static void sonic_lif_deinit(struct lif *lif)
 {
+	struct seq_queue_batch *batch;
+	struct hlist_node *next;
+	int i;
+
 	sonic_lif_qcq_deinit(lif, lif->adminqcq);
 	sonic_lif_per_core_resources_deinit(lif);
+
+	hash_for_each_safe(lif->seq_q_batch_ht, i, next, batch, node) {
+		sonic_seq_q_batch_free(batch);
+	}
 }
 
 /*
@@ -521,205 +746,238 @@ static int sonic_lif_adminq_init(struct lif *lif)
 	return sonic_debugfs_add_qcq(lif, qcq);
 }
 
-static int sonic_cpdc_q_init(struct per_core_resource *res, struct queue *q,
-		unsigned int qpos, int qgroup, uint32_t num_descs,
-		uint16_t desc_size)
+static int
+sonic_seq_q_init(struct per_core_resource *res,
+		 struct queue *q,
+		 const char *name,
+		 unsigned int qpos,
+		 storage_seq_qgroup_t qgroup,
+		 uint16_t desc_size)
 {
-	int err;
-	unsigned int pid;
+	unsigned int ring_size;
+	int err = -EINVAL;
 
-	pid = sonic_pid_get(res->lif, 0);
+	if (desc_size == 0 || !is_power_of_2(q->num_descs))
+		goto done;
 
-	err = sonic_q_alloc(res->lif, q, num_descs, desc_size, true);
-	if (err)
-		return err;
+	ring_size = ilog2(q->num_descs);
+	if (ring_size < 1 || ring_size > 16)
+		goto done;
 
-	err = sonic_q_init(res->lif, &res->lif->sonic->idev, q,
-			   res->lif->seq_q_index++, "cpdc",
-			   num_descs, desc_size, pid);
-	if (err) {
-		sonic_q_free(res->lif, q);
-		return err;
-	}
 	q->pc_res = res;
+	q->lif = res->lif;
+	q->idev = &res->lif->sonic->idev;
+	q->pid = sonic_pid_get(res->lif, 0);
+	q->qid = res->lif->seq_q_index++;
 	q->qpos = qpos;
 	q->qtype = STORAGE_SEQ_QTYPE_SQ;
 	q->qgroup = qgroup;
-	sonic_q_map(q, q->base, q->base_pa);
+	q->desc_size = desc_size;
+	q->total_size = q->num_descs * desc_size;
+	q->pindex = 0;
+	q->db = sonic_db_map(q->idev, q);
+	osal_atomic_init(&q->descs_inuse, 0);
 
+	err = sonic_seq_q_alloc_from_batch(q);
+	if (err)
+		goto done;
+
+	snprintf(q->name, sizeof(q->name), "%s%u", name, q->qid);
+	OSAL_LOG_INFO("sonic_seq_q_init q: " PRIx64 " %s",
+			(u64)q, q->name);
+	OSAL_LOG_INFO("seq_q->qtype %d", q->qtype);
+	OSAL_LOG_INFO("seq_q->db " PRIx64, (u64)q->db);
+done:
 	return err;
 }
 
-static int get_seq_q_desc_count(uint32_t status_q_count,
-				struct per_core_resource *res,
-				uint32_t ring_id, uint32_t *desc_count)
+static int
+get_seq_q_desc_count(struct queue *q,
+		     uint32_t ring_id)
 {
+	struct sonic_accel_ring *ring;
 	int err = -EINVAL;
-	struct accel_ring *ring;
 
-	if (ring_id >= ACCEL_RING_ID_MAX)
+	ring = sonic_get_accel_ring(ring_id);
+	if (!ring)
 		goto done;
 
-	ring = &res->lif->sonic->ident->dev.accel_ring_tbl[ring_id];
-
-	OSAL_LOG_DEBUG("get_seq_q_desc_count: hw ring %u: size=%u, desc_size=%u.",
-		ring_id, ring->ring_size, ring->ring_desc_size);
+	OSAL_LOG_DEBUG("get_seq_q_desc_count: hw ring %s: size=%u, desc_size=%u",
+		       ring->name, ring->accel_ring.ring_size,
+                       ring->accel_ring.ring_desc_size);
 
 	/*
 	 * Reserve a fixed number of descriptors per sequencer queue and rely
 	 * on separate queue accounting to prevent overflow.
 	 */
-	*desc_count = min(ring->ring_size, (uint32_t)MAX_PER_QUEUE_SQ_ENTRIES);
-	if (*desc_count == 0) {
-		OSAL_LOG_ERROR("No descs available for hw ring %d, ring_size=%u.",
-			ring_id, ring->ring_size);
+	q->num_descs = min(ring->accel_ring.ring_size,
+	 		   (uint32_t)MAX_PER_QUEUE_SQ_ENTRIES);
+	if (q->num_descs == 0) {
+		OSAL_LOG_ERROR("No descs available for hw ring %s, ring_size=%u",
+			       ring->name, ring->accel_ring.ring_size);
 		goto done;
 	}
 
-	OSAL_LOG_INFO("get_seq_q_desc_count: hw ring %u: q_entries_per_core=%u.",
-		 ring_id, *desc_count);
-
+	OSAL_LOG_INFO("get_seq_q_desc_count: hw ring %s: num_descs=%u",
+		      ring->name, q->num_descs);
 	err = 0;
-
 done:
 	return err;
 }
 
-static int sonic_cpdc_qs_init(struct per_core_resource *res,
+static int
+get_seq_statusq_desc_count(struct queue *q,
+			   storage_seq_qgroup_t qgroup)
+{
+	q->num_descs = MAX_PER_QUEUE_STATUS_ENTRIES;
+	return 0;
+}
+
+static int
+sonic_cpdc_statusq_count_init(struct per_core_resource *res,
 			      int q_count)
 {
-	int err;
-	int i;
 	uint32_t status_q_count;
-	uint32_t desc_count;
 
 	if (q_count < 4)
 		return -EINVAL;
 
-	/* Calculate status_q_count */
 	status_q_count = q_count - 2;
 	if (status_q_count > MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES)
 		status_q_count = MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES;
 	res->num_cpdc_status_qs = status_q_count;
+	return 0;
+}
+
+static int
+sonic_cpdc_qs_init(struct per_core_resource *res)
+{
+	int err;
 
 	/* CP queue init */
-	err = get_seq_q_desc_count(status_q_count, res,
-			ACCEL_RING_CP, &desc_count);
+	err = get_seq_q_desc_count(&res->cp_seq_q, ACCEL_RING_CP);
 	if (err)
 		goto done;
-	err = sonic_cpdc_q_init(res, &res->cp_seq_q, 0, STORAGE_SEQ_QGROUP_CPDC,
-				desc_count, SONIC_SEQ_Q_DESC_SIZE);
+	err = sonic_seq_q_init(res, &res->cp_seq_q, "cp",
+			       0, STORAGE_SEQ_QGROUP_CPDC,
+			       SONIC_SEQ_Q_DESC_SIZE);
 	if (err) {
-		OSAL_LOG_ERROR("sonic_cpdc_q_init failed for CP, err=%d", err);
+		OSAL_LOG_ERROR("sonic_seq_q_init failed for CP, err=%d", err);
 		goto done;
 	}
 
 	/* DC queue init */
-	err = get_seq_q_desc_count(status_q_count, res,
-			ACCEL_RING_DC, &desc_count);
+	err = get_seq_q_desc_count(&res->dc_seq_q, ACCEL_RING_DC);
 	if (err)
 		goto done;
-	err = sonic_cpdc_q_init(res, &res->dc_seq_q, 0, STORAGE_SEQ_QGROUP_CPDC,
-				desc_count, SONIC_SEQ_Q_DESC_SIZE);
+	err = sonic_seq_q_init(res, &res->dc_seq_q, "dc",
+			       0, STORAGE_SEQ_QGROUP_CPDC,
+			       SONIC_SEQ_Q_DESC_SIZE);
 	if (err) {
-		OSAL_LOG_ERROR("sonic_cpdc_q_init failed for DC, err=%d", err);
+		OSAL_LOG_ERROR("sonic_seq_q_init failed for DC, err=%d", err);
 		goto done;
-	}
-
-	/* Status queues init */
-	for (i = 0; i < status_q_count; i++) {
-		err = sonic_cpdc_q_init(res, &res->cpdc_seq_status_qs[i], i,
-					STORAGE_SEQ_QGROUP_CPDC_STATUS,
-					MAX_PER_QUEUE_STATUS_ENTRIES,
-					SONIC_SEQ_STATUS_Q_DESC_SIZE);
-		if (err) {
-			OSAL_LOG_ERROR("sonic_cpdc_q_init failed for CPDC status queue %d, err=%d",
-				i, err);
-			goto done;
-		}
 	}
 done:
 	return err;
 }
 
-static int sonic_crypto_q_init(struct per_core_resource *res,
-			       struct queue *q, unsigned int qpos, int qgroup,
-			       uint32_t num_descs, uint16_t desc_size)
+static int
+sonic_cpdc_statusqs_init(struct per_core_resource *res)
 {
-	int err;
-	unsigned int pid;
+	int err = 0;
+	int i;
 
-	pid = sonic_pid_get(res->lif, 0);
-
-	err = sonic_q_alloc(res->lif, q, num_descs, desc_size, true);
-	if (err)
-		return err;
-	err = sonic_q_init(res->lif, &res->lif->sonic->idev, q,
-			   res->lif->seq_q_index++, "crypto",
-			   num_descs, desc_size, pid);
-	if (err) {
-		sonic_q_free(res->lif, q);
-		return err;
+	for (i = 0; i < res->num_cpdc_status_qs; i++) {
+		err = get_seq_statusq_desc_count(&res->cpdc_seq_status_qs[i],
+					STORAGE_SEQ_QGROUP_CPDC_STATUS);
+		if (err)
+			break;
+                err = sonic_seq_q_init(res, &res->cpdc_seq_status_qs[i],
+                                       "cpdc_status",
+                                       i, STORAGE_SEQ_QGROUP_CPDC_STATUS,
+                                       SONIC_SEQ_STATUS_Q_DESC_SIZE);
+		if (err) {
+			OSAL_LOG_ERROR("sonic_seq_q_init failed for CPDC "
+				       "status queue %d, err=%d", i, err);
+			break;
+		}
 	}
-	q->pc_res = res;
-	q->qpos = qpos;
-	q->qtype = STORAGE_SEQ_QTYPE_SQ;
-	q->qgroup = qgroup;
-	sonic_q_map(q, q->base, q->base_pa);
 
 	return err;
 }
 
-static int sonic_crypto_qs_init(struct per_core_resource *res,
+static int
+sonic_crypto_statusq_count_init(struct per_core_resource *res,
 				int q_count)
 {
-	int err;
-	int i;
 	uint32_t status_q_count;
-	uint32_t desc_count;
 
 	if (q_count < 4)
 		return -EINVAL;
 
-	/* Calculate status_q_count */
 	status_q_count = q_count - 2;
 	if (status_q_count > MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES)
 		status_q_count = MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES;
 	res->num_crypto_status_qs = status_q_count;
+	return 0;
+}
+
+static int
+sonic_crypto_qs_init(struct per_core_resource *res)
+{
+	int err;
 
 	/* Encryption queue init */
-	err = get_seq_q_desc_count(status_q_count, res,
-			ACCEL_RING_XTS0, &desc_count);
+	err = get_seq_q_desc_count(&res->crypto_enc_seq_q, ACCEL_RING_XTS0);
 	if (err)
 		goto done;
-	err = sonic_crypto_q_init(res, &res->crypto_enc_seq_q, 0,
-				  STORAGE_SEQ_QGROUP_CRYPTO,
-				  desc_count, SONIC_SEQ_Q_DESC_SIZE);
-	if (err)
+	err = sonic_seq_q_init(res, &res->crypto_enc_seq_q, "crypto_enc",
+			       0, STORAGE_SEQ_QGROUP_CRYPTO,
+			       SONIC_SEQ_Q_DESC_SIZE);
+	if (err) {
+		OSAL_LOG_ERROR("sonic_seq_q_init failed for crypto_enc, "
+			       "err=%d", err);
 		goto done;
-
-	/* Decryption queue init */
-	err = get_seq_q_desc_count(status_q_count, res,
-			ACCEL_RING_XTS1, &desc_count);
-	if (err)
-		goto done;
-	err = sonic_crypto_q_init(res, &res->crypto_dec_seq_q, 0,
-				  STORAGE_SEQ_QGROUP_CRYPTO,
-				  desc_count, SONIC_SEQ_Q_DESC_SIZE);
-	if (err)
-		goto done;
-
-	/* Status queues init */
-	for (i = 0; i < status_q_count; i++) {
-		err = sonic_crypto_q_init(res, &res->crypto_seq_status_qs[i], i,
-					  STORAGE_SEQ_QGROUP_CRYPTO_STATUS,
-					  MAX_PER_QUEUE_STATUS_ENTRIES,
-					  SONIC_SEQ_STATUS_Q_DESC_SIZE);
-		if (err)
-			goto done;
 	}
 
+	/* Decryption queue init */
+	err = get_seq_q_desc_count(&res->crypto_dec_seq_q, ACCEL_RING_XTS1);
+	if (err)
+		goto done;
+	err = sonic_seq_q_init(res, &res->crypto_dec_seq_q, "crypto_dec",
+			       0, STORAGE_SEQ_QGROUP_CRYPTO,
+			       SONIC_SEQ_Q_DESC_SIZE);
+	if (err) {
+		OSAL_LOG_ERROR("sonic_seq_q_init failed for crypto_dec, "
+			       "err=%d", err);
+		goto done;
+	}
 done:
+	return err;
+}
+
+static int
+sonic_crypto_statusqs_init(struct per_core_resource *res)
+{
+	int err = 0;
+	int i;
+
+	for (i = 0; i < res->num_crypto_status_qs; i++) {
+		err = get_seq_statusq_desc_count(&res->crypto_seq_status_qs[i],
+					STORAGE_SEQ_QGROUP_CRYPTO_STATUS);
+		if (err)
+			break;
+                err = sonic_seq_q_init(res, &res->crypto_seq_status_qs[i],
+                                       "crypto_status",
+                                       i, STORAGE_SEQ_QGROUP_CRYPTO_STATUS,
+                                       SONIC_SEQ_STATUS_Q_DESC_SIZE);
+		if (err) {
+			OSAL_LOG_ERROR("sonic_seq_q_init failed for crypto "
+				       "status queue %d, err=%d", i, err);
+			break;
+		}
+	}
+
 	return err;
 }
 
@@ -781,83 +1039,132 @@ done:
 	return err;
 }
 
-static int sonic_lif_per_core_resource_init(struct lif *lif,
-					    struct per_core_resource *res,
-					    int seq_q_count)
+static int
+sonic_lif_per_core_resources_init(struct lif *lif)
 {
-	int err;
+	struct per_core_resource *res;
+	int err = 0;
+	int i;
+	int pc_q_count = sonic_lif_per_core_seq_q_count(lif);
 
-	/* Initialize local driver structures */
-	res->lif = lif;
-	res->core_id = -1; /* determined later */
-	spin_lock_init(&res->seq_statusq_lock);
+	OSAL_LOG_INFO("Init per-core-resources, %u seq_queues_per_lif, "
+		 "%u num_per_core_resources, %u pc_q_count",
+		 lif->sonic->ident->dev.seq_queues_per_lif,
+		 lif->sonic->num_per_core_resources, pc_q_count);
 
-	err = sonic_cpdc_qs_init(res, seq_q_count / 2);
-	if (err)
-		goto done;
+	spin_lock_init(&lif->res.lock);
+	for (i = 0; i < OSAL_MAX_CORES; i++)
+		lif->res.core_to_res_map[i] = -1;
 
-	err = sonic_crypto_qs_init(res, seq_q_count / 2);
-	if (err)
-		goto done;
+	/*
+	 * Allocate per-core queues of the same qgroup horizontally
+	 * across cores to ensure they get contiguous queue IDs.
+	 */
+	LIF_FOR_EACH_PC_RES(lif, i, res) {
+                res->lif = lif;
+		err = sonic_cpdc_statusq_count_init(res, pc_q_count / 2);
+		if (err)
+			goto done;
+		err = sonic_cpdc_qs_init(res);
+		if (err)
+			goto done;
+	}
 
-	/* Send commands to initialize/enable hw queues. TODO: move to pnso_init */
-	err = sonic_lif_cpdc_seq_qs_init(res);
-	if (err)
-		goto done;
+	LIF_FOR_EACH_PC_RES(lif, i, res) {
+		err = sonic_crypto_statusq_count_init(res, pc_q_count / 2);
+		if (err)
+			goto done;
+		err = sonic_crypto_qs_init(res);
+		if (err)
+			goto done;
+	}
 
-	err = sonic_lif_crypto_seq_qs_init(res);
-	if (err)
-		goto done;
+	/*
+	 * Now do the same horizontal queue allocations for status queues
+	 */
+	LIF_FOR_EACH_PC_RES(lif, i, res) {
+		err = sonic_cpdc_statusqs_init(res);
+		if (err)
+			goto done;
+	}
 
-#if 0
-	err = sonic_lif_cpdc_seq_qs_control(res, CMD_OPCODE_SEQ_QUEUE_ENABLE);
-	if (err)
-		goto done;
-
-	err = sonic_lif_crypto_seq_qs_control(res, CMD_OPCODE_SEQ_QUEUE_ENABLE);
-	if (err)
-		goto done;
-#endif
-
-	err = sonic_ev_intr_init(res, seq_q_count);
-	if (err)
-		goto done;
-
-	OSAL_LOG_NOTICE("Successully initialized per_core_resource");
-
-	res->initialized = true;
-	sonic_intr_mask(&res->intr, false);
+	LIF_FOR_EACH_PC_RES(lif, i, res) {
+		err = sonic_crypto_statusqs_init(res);
+		if (err)
+			goto done;
+	}
 done:
 	return err;
 }
 
 static int
-sonic_lif_per_core_resources_init(struct lif *lif)
+sonic_lif_per_core_resources_legacy_post_init(struct lif *lif)
 {
+	struct per_core_resource *res;
+	int pc_q_count = sonic_lif_per_core_seq_q_count(lif);
 	int err = 0;
 	int i;
-	int q_count = lif->sonic->ident->dev.seq_queues_per_lif;
 
-	OSAL_LOG_INFO("Init per-core-resources, %u seq_queues_per_lif, %u num_per_core_resources.",
-		 lif->sonic->ident->dev.seq_queues_per_lif,
-		 lif->sonic->num_per_core_resources);
+	LIF_FOR_EACH_PC_RES(lif, i, res) {
+		err = sonic_lif_cpdc_seq_qs_legacy_init(res);
+		if (err)
+			goto done;
+		err = sonic_lif_crypto_seq_qs_legacy_init(res);
+		if (err)
+			goto done;
+#if 0
+		err = sonic_lif_cpdc_seq_qs_legacy_control(res,
+						CMD_OPCODE_SEQ_QUEUE_ENABLE);
+		if (err)
+			goto done;
 
-	for (i = 0; i < OSAL_MAX_CORES; i++)
-		lif->res.core_to_res_map[i] = -1;
+		err = sonic_lif_crypto_seq_qs_legacy_control(res,
+						CMD_OPCODE_SEQ_QUEUE_ENABLE);
+		if (err)
+			goto done;
+#endif
+		err = sonic_ev_intr_init(res, pc_q_count);
+		if (err)
+			goto done;
 
-	for (i = 0; i < lif->sonic->num_per_core_resources; i++) {
-		if (lif->res.pc_res[i]) {
-			lif->res.pc_res[i]->idx = i;
-			err = sonic_lif_per_core_resource_init(lif,
-				lif->res.pc_res[i],
-				q_count / lif->sonic->num_per_core_resources);
-			if (err)
-				break;
-		}
+		res->initialized = true;
+		sonic_intr_mask(&res->intr, false);
+	}
+done:
+	return err;
+}
+
+static int
+sonic_lif_per_core_resources_post_init(struct lif *lif)
+{
+	struct per_core_resource *res;
+	struct seq_queue_batch *batch;
+	int pc_q_count = sonic_lif_per_core_seq_q_count(lif);
+	int err = 0;
+	int i;
+
+	OSAL_LOG_DEBUG("num_seq_q_batches %u", lif->num_seq_q_batches);
+	hash_for_each(lif->seq_q_batch_ht, i, batch, node) {
+		err = sonic_lif_seq_q_batch_init(batch);
+		if (err)
+			goto done;
+	}
+	hash_for_each(lif->seq_q_batch_ht, i, batch, node) {
+		err = sonic_lif_seq_q_batch_control(batch,
+				CMD_OPCODE_SEQ_QUEUE_BATCH_ENABLE);
+		if (err)
+			goto done;
 	}
 
-	spin_lock_init(&lif->res.lock);
+	LIF_FOR_EACH_PC_RES(lif, i, res) {
+		err = sonic_ev_intr_init(res, pc_q_count);
+		if (err)
+			goto done;
 
+		res->initialized = true;
+		sonic_intr_mask(&res->intr, false);
+	}
+done:
 	return err;
 }
 
@@ -880,6 +1187,12 @@ static int sonic_lif_init(struct lif *lif)
 		goto err_out_adminq_deinit;
 
 	err = sonic_lif_per_core_resources_init(lif);
+	if (err)
+		goto err_out_per_core_res_deinit;
+
+	err = sonic_lif_per_core_resources_post_init(lif);
+	if (err == -EBADRQC)
+		err = sonic_lif_per_core_resources_legacy_post_init(lif);
 	if (err)
 		goto err_out_per_core_res_deinit;
 
@@ -1202,14 +1515,14 @@ struct sonic_dev *sonic_get_idev(void)
 	       &sonic_glif->sonic->idev : NULL;
 }
 
-static int sonic_lif_seq_q_init(struct queue *q)
+static int sonic_lif_seq_q_legacy_init(struct queue *q)
 {
 	struct lif *lif = q->lif;
 	struct sonic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.seq_queue_init = {
 			.opcode = CMD_OPCODE_SEQ_QUEUE_INIT,
-			.index = q->index,
+			.index = q->qid,
 			.pid = q->pid,
 			.qgroup = q->qgroup,
 			.cos = 0,
@@ -1252,25 +1565,25 @@ static int sonic_lif_seq_q_init(struct queue *q)
 	return err;
 }
 
-static void sonic_lif_seq_q_deinit(struct queue *q)
+static void sonic_lif_seq_q_legacy_deinit(struct queue *q)
 {
-	/* TODO */
+	/* Nothing to do */
 }
 
-int sonic_lif_cpdc_seq_qs_init(struct per_core_resource *res)
+int sonic_lif_cpdc_seq_qs_legacy_init(struct per_core_resource *res)
 {
 	unsigned int i = 0;
 	int err;
 
 	/* Initalize cpdc queues */
-	err = sonic_lif_seq_q_init(&res->cp_seq_q);
+	err = sonic_lif_seq_q_legacy_init(&res->cp_seq_q);
 	if (err)
 		goto done;
-	err = sonic_lif_seq_q_init(&res->dc_seq_q);
+	err = sonic_lif_seq_q_legacy_init(&res->dc_seq_q);
 	if (err)
 		goto err_out_dc;
 	for (i = 0; i < res->num_cpdc_status_qs; i++) {
-		err = sonic_lif_seq_q_init(&res->cpdc_seq_status_qs[i]);
+		err = sonic_lif_seq_q_legacy_init(&res->cpdc_seq_status_qs[i]);
 		if (err)
 			goto err_out_cpdc_status;
 	}
@@ -1279,28 +1592,28 @@ done:
 
 err_out_cpdc_status:
 	for (; i > 0; i--)
-		sonic_lif_seq_q_deinit(&res->cpdc_seq_status_qs[i-1]);
-	sonic_lif_seq_q_deinit(&res->dc_seq_q);
+		sonic_lif_seq_q_legacy_deinit(&res->cpdc_seq_status_qs[i-1]);
+	sonic_lif_seq_q_legacy_deinit(&res->dc_seq_q);
 err_out_dc:
-	sonic_lif_seq_q_deinit(&res->cp_seq_q);
+	sonic_lif_seq_q_legacy_deinit(&res->cp_seq_q);
 
 	return err;
 }
 
-int sonic_lif_crypto_seq_qs_init(struct per_core_resource *res)
+int sonic_lif_crypto_seq_qs_legacy_init(struct per_core_resource *res)
 {
 	unsigned int i = 0;
 	int err;
 
 	/* Initalize crypto queues */
-	err = sonic_lif_seq_q_init(&res->crypto_enc_seq_q);
+	err = sonic_lif_seq_q_legacy_init(&res->crypto_enc_seq_q);
 	if (err)
 		goto done;
-	err = sonic_lif_seq_q_init(&res->crypto_dec_seq_q);
+	err = sonic_lif_seq_q_legacy_init(&res->crypto_dec_seq_q);
 	if (err)
 		goto err_out_crypto_dec;
 	for (i = 0; i < res->num_crypto_status_qs; i++) {
-		err = sonic_lif_seq_q_init(&res->crypto_seq_status_qs[i]);
+		err = sonic_lif_seq_q_legacy_init(&res->crypto_seq_status_qs[i]);
 		if (err)
 			goto err_out_crypto_status;
 	}
@@ -1310,16 +1623,16 @@ done:
 
 err_out_crypto_status:
 	for (; i > 0; i--)
-		sonic_lif_seq_q_deinit(&res->crypto_seq_status_qs[i-1]);
-	sonic_lif_seq_q_deinit(&res->crypto_dec_seq_q);
+		sonic_lif_seq_q_legacy_deinit(&res->crypto_seq_status_qs[i-1]);
+	sonic_lif_seq_q_legacy_deinit(&res->crypto_dec_seq_q);
 err_out_crypto_dec:
-	sonic_lif_seq_q_deinit(&res->crypto_enc_seq_q);
+	sonic_lif_seq_q_legacy_deinit(&res->crypto_enc_seq_q);
 
 	return err;
 }
 
 static int
-sonic_lif_seq_q_control(struct queue *q, uint16_t opcode)
+sonic_lif_seq_q_legacy_control(struct queue *q, uint16_t opcode)
 {
 	struct lif *lif = q->lif;
 	struct sonic_admin_ctx ctx = {
@@ -1332,8 +1645,8 @@ sonic_lif_seq_q_control(struct queue *q, uint16_t opcode)
 	};
 	int err;
 
-	BUG_ON(opcode != CMD_OPCODE_SEQ_QUEUE_ENABLE &&
-	       opcode != CMD_OPCODE_SEQ_QUEUE_DISABLE);
+	OSAL_ASSERT((opcode == CMD_OPCODE_SEQ_QUEUE_BATCH_ENABLE) ||
+		    (opcode == CMD_OPCODE_SEQ_QUEUE_BATCH_DISABLE));
 
 	OSAL_LOG_INFO("seq_q_control.qid %d",
 			ctx.cmd.seq_queue_control.qid);
@@ -1351,21 +1664,57 @@ sonic_lif_seq_q_control(struct queue *q, uint16_t opcode)
 	return err;
 }
 
+static int
+sonic_lif_seq_q_batch_control(struct seq_queue_batch *batch,
+			      uint16_t opcode)
+{
+	struct sonic_admin_ctx ctx = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
+		.cmd.seq_queue_batch_control = {
+			.opcode = opcode,
+			.qid = batch->base_qid,
+			.qtype = STORAGE_SEQ_QTYPE_SQ,
+			.num_queues = batch->num_queues,
+		},
+	};
+	int err;
+
+	OSAL_ASSERT((opcode == CMD_OPCODE_SEQ_QUEUE_BATCH_ENABLE) ||
+		    (opcode == CMD_OPCODE_SEQ_QUEUE_BATCH_DISABLE));
+
+	OSAL_LOG_INFO("seq_q_batch_control.qid %d",
+			ctx.cmd.seq_queue_batch_control.qid);
+	OSAL_LOG_INFO("seq_q_batch_control.num_queues %d",
+			ctx.cmd.seq_queue_batch_control.num_queues);
+	OSAL_LOG_INFO("seq_q_control.opcode %d",
+			ctx.cmd.seq_queue_batch_control.opcode);
+
+	err = sonic_adminq_post_wait(batch->lif, &ctx);
+	if (err) {
+		OSAL_LOG_ERROR("seq_q_batch_control failed");
+		return err;
+	}
+
+	OSAL_LOG_INFO("seq_q_batch_control successful");
+
+	return err;
+}
+
 int
-sonic_lif_cpdc_seq_qs_control(struct per_core_resource *res, uint16_t opcode)
+sonic_lif_cpdc_seq_qs_legacy_control(struct per_core_resource *res, uint16_t opcode)
 {
 	unsigned int i = 0;
 	int err;
 
 	/* Control cpdc queues */
-	err = sonic_lif_seq_q_control(&res->cp_seq_q, opcode);
+	err = sonic_lif_seq_q_legacy_control(&res->cp_seq_q, opcode);
 	if (err)
 		goto done;
-	err = sonic_lif_seq_q_control(&res->dc_seq_q, opcode);
+	err = sonic_lif_seq_q_legacy_control(&res->dc_seq_q, opcode);
 	if (err)
 		goto done;
 	for (i = 0; i < res->num_cpdc_status_qs; i++) {
-		err = sonic_lif_seq_q_control(&res->cpdc_seq_status_qs[i],
+		err = sonic_lif_seq_q_legacy_control(&res->cpdc_seq_status_qs[i],
 				opcode);
 		if (err)
 			goto done;
@@ -1375,26 +1724,67 @@ done:
 }
 
 int
-sonic_lif_crypto_seq_qs_control(struct per_core_resource *res, uint16_t opcode)
+sonic_lif_crypto_seq_qs_legacy_control(struct per_core_resource *res, uint16_t opcode)
 {
 	unsigned int i = 0;
 	int err;
 
 	/* Control crypto queues */
-	err = sonic_lif_seq_q_control(&res->crypto_enc_seq_q, opcode);
+	err = sonic_lif_seq_q_legacy_control(&res->crypto_enc_seq_q, opcode);
 	if (err)
 		goto done;
-	err = sonic_lif_seq_q_control(&res->crypto_dec_seq_q, opcode);
+	err = sonic_lif_seq_q_legacy_control(&res->crypto_dec_seq_q, opcode);
 	if (err)
 		goto done;
 	for (i = 0; i < res->num_crypto_status_qs; i++) {
-		err = sonic_lif_seq_q_control(&res->crypto_seq_status_qs[i],
+		err = sonic_lif_seq_q_legacy_control(&res->crypto_seq_status_qs[i],
 				opcode);
 		if (err)
 			goto done;
 	}
 
 done:
+	return err;
+}
+
+static int
+sonic_lif_seq_q_batch_init(struct seq_queue_batch *batch)
+{
+	struct sonic_admin_ctx ctx = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
+		.cmd.seq_queue_batch_init = {
+			.opcode = CMD_OPCODE_SEQ_QUEUE_BATCH_INIT,
+			.index = batch->base_qid,
+			.num_queues = batch->num_queues,
+			.pid = batch->pid,
+			.qgroup = batch->qgroup,
+			.cos = 0,
+			.enable = false,
+			.total_wrings = 1,
+			.host_wrings = 1,
+			.entry_size = ilog2(batch->per_q_desc_size),
+			.wring_size = ilog2(batch->per_q_num_descs),
+			.wring_base = (dma_addr_t)
+				sonic_hostpa_to_devpa((uint64_t) batch->base_pa),
+		},
+	};
+	int err;
+
+	OSAL_LOG_INFO("seq_q_init.pid %d", ctx.cmd.seq_queue_batch_init.pid);
+	OSAL_LOG_INFO("seq_q_init.index %d", ctx.cmd.seq_queue_batch_init.index);
+	OSAL_LOG_INFO("seq_q_init.num_queues %d",
+		      ctx.cmd.seq_queue_batch_init.num_queues);
+	OSAL_LOG_INFO("seq_q_init.qgroup %d",
+		      ctx.cmd.seq_queue_batch_init.qgroup);
+	OSAL_LOG_INFO("seq_q_init.wring_base 0x" PRIx64,
+		      ctx.cmd.seq_queue_batch_init.wring_base);
+	OSAL_LOG_INFO("seq_q_init.wring_size %d",
+		      ctx.cmd.seq_queue_batch_init.wring_size);
+
+	err = sonic_adminq_post_wait(batch->lif, &ctx);
+	if (err)
+		return err;
+
 	return err;
 }
 
