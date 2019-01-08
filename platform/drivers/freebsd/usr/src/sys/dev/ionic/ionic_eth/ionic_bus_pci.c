@@ -205,7 +205,7 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 	struct ionic *ionic;
 	int err;
 
-	ionic = kzalloc(sizeof(*ionic), GFP_KERNEL);
+	ionic = malloc(sizeof(*ionic), M_IONIC, M_WAITOK | M_ZERO);
 	if (!ionic)
 		return -ENOMEM;
 
@@ -283,7 +283,7 @@ err_out_unmap_bars:
 	ionic_pci_deinit(pdev);
 	pci_set_drvdata(pdev, NULL);
 
-	kfree(ionic);
+	free(ionic, M_IONIC);
 
 	return err;
 }
@@ -305,7 +305,7 @@ static void ionic_remove(struct pci_dev *pdev)
 	ionic_pci_deinit(pdev);
 	pci_set_drvdata(pdev, NULL);
 
-	kfree(ionic);
+	free(ionic, M_IONIC);
 }
 
 static void ionic_shutdown(struct pci_dev *pdev)

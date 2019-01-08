@@ -117,6 +117,7 @@ struct adminq {
 	dma_addr_t cmd_ring_pa;
 
 	struct mtx mtx;
+	char mtx_name[QUEUE_NAME_MAX_SZ];
 	int head_index;						/* Index for buffer and command descriptors. */
 	int tail_index;
 	int comp_index;						/* Index for completion descriptors. */
@@ -148,6 +149,7 @@ struct notifyq {
 	dma_addr_t cmd_ring_pa;
 
 	struct mtx mtx;
+	char mtx_name[QUEUE_NAME_MAX_SZ];
 	int comp_index;						/* Index for completion descriptors. */
 
 	struct intr intr;
@@ -177,6 +179,7 @@ struct rxque {
 	dma_addr_t cmd_ring_pa;	
 
 	struct mtx rx_mtx;
+	char mtx_name[QUEUE_NAME_MAX_SZ];
 
 	int head_index;
 	int tail_index;
@@ -215,6 +218,7 @@ struct txque {
 	dma_addr_t cmd_ring_pa;
 
 	struct mtx tx_mtx;
+	char mtx_name[QUEUE_NAME_MAX_SZ];
 	int head_index;					/* Index for buffer and command descriptors. */
 	int tail_index;
 	int comp_index;					/* Index for completion descriptors. */
@@ -332,33 +336,33 @@ struct lif {
 /* lif lock. */
 #define IONIC_CORE_LOCK_INIT(x) 	mtx_init(&(x)->mtx, (x)->name, NULL, MTX_DEF)
 #define IONIC_CORE_LOCK_DESTROY(x)	mtx_destroy(&(x)->tx_mtx)
-#define IONIC_CORE_LOCK(x)			mtx_lock(&(x)->mtx)
+#define IONIC_CORE_LOCK(x)		mtx_lock(&(x)->mtx)
 #define IONIC_CORE_UNLOCK(x)		mtx_unlock(&(x)->mtx)
 #define IONIC_CORE_LOCK_OWNED(x)	mtx_owned(&(x)->mtx)
 
-#define IONIC_ADMIN_LOCK_INIT(x) 	mtx_init(&(x)->mtx, (x)->name, NULL, MTX_DEF)
+#define IONIC_ADMIN_LOCK_INIT(x) 	mtx_init(&(x)->mtx, (x)->mtx_name, NULL, MTX_DEF)
 #define IONIC_ADMIN_LOCK_DESTROY(x)	mtx_destroy(&(x)->mtx)
-#define IONIC_ADMIN_LOCK(x)			mtx_lock(&(x)->mtx);
+#define IONIC_ADMIN_LOCK(x)		mtx_lock(&(x)->mtx);
 #define IONIC_ADMIN_UNLOCK(x)		mtx_unlock(&(x)->mtx);
 #define IONIC_ADMIN_LOCK_OWNED(x) 	mtx_owned(&(x)->mtx)
 
-#define IONIC_NOTIFYQ_LOCK_INIT(x) 		mtx_init(&(x)->mtx, (x)->name, NULL, MTX_DEF)
+#define IONIC_NOTIFYQ_LOCK_INIT(x) 	mtx_init(&(x)->mtx, (x)->mtx_name, NULL, MTX_DEF)
 #define IONIC_NOTIFYQ_LOCK_DESTROY(x)	mtx_destroy(&(x)->mtx)
-#define IONIC_NOTIFYQ_LOCK(x)			mtx_lock(&(x)->mtx);
-#define IONIC_NOTIFYQ_UNLOCK(x)			mtx_unlock(&(x)->mtx);
+#define IONIC_NOTIFYQ_LOCK(x)		mtx_lock(&(x)->mtx);
+#define IONIC_NOTIFYQ_UNLOCK(x)		mtx_unlock(&(x)->mtx);
 #define IONIC_NOTIFYQ_LOCK_OWNED(x) 	mtx_owned(&(x)->mtx)
 
-#define IONIC_TX_LOCK_INIT(x)		mtx_init(&(x)->tx_mtx, (x)->name, NULL, MTX_DEF)
+#define IONIC_TX_LOCK_INIT(x)		mtx_init(&(x)->tx_mtx, (x)->mtx_name, NULL, MTX_DEF)
 #define IONIC_TX_LOCK_DESTROY(x) 	mtx_destroy(&(x)->tx_mtx)
-#define IONIC_TX_LOCK(x)			mtx_lock(&(x)->tx_mtx)
-#define IONIC_TX_TRYLOCK(x)			mtx_trylock(&(x)->tx_mtx)
-#define IONIC_TX_UNLOCK(x)			mtx_unlock(&(x)->tx_mtx)
-//#define IONIC_TX_LOCK_OWNED(x)	mtx_owned(&(x)->tx_mtx)
+#define IONIC_TX_LOCK(x)		mtx_lock(&(x)->tx_mtx)
+#define IONIC_TX_TRYLOCK(x)		mtx_trylock(&(x)->tx_mtx)
+#define IONIC_TX_UNLOCK(x)		mtx_unlock(&(x)->tx_mtx)
+#define IONIC_TX_LOCK_OWNED(x)		mtx_owned(&(x)->tx_mtx)
 
-#define IONIC_RX_LOCK_INIT(x)		mtx_init(&(x)->rx_mtx, (x)->name, NULL, MTX_DEF)
+#define IONIC_RX_LOCK_INIT(x)		mtx_init(&(x)->rx_mtx, (x)->mtx_name, NULL, MTX_DEF)
 #define IONIC_RX_LOCK_DESTROY(x)	mtx_destroy(&(x)->rx_mtx)
-#define IONIC_RX_LOCK(x)			mtx_lock(&(x)->rx_mtx)
-#define IONIC_RX_UNLOCK(x)			mtx_unlock(&(x)->rx_mtx)
+#define IONIC_RX_LOCK(x)		mtx_lock(&(x)->rx_mtx)
+#define IONIC_RX_UNLOCK(x)		mtx_unlock(&(x)->rx_mtx)
 #define IONIC_RX_LOCK_OWNED(x)		mtx_owned(&(x)->rx_mtx)
 
 void ionic_open(void *arg);

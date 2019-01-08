@@ -90,6 +90,42 @@ static int ionic_q_enable_disable(struct lif* lif, unsigned int qid, unsigned in
 	return err;
 }
 
+static void ionic_rxq_enable(struct rxque *rxq)
+{
+	int err;
+
+	err = ionic_q_enable_disable(rxq->lif, rxq->qid, rxq->qtype, true /* enable */);
+	if (err)
+		IONIC_QUE_WARN(rxq, "failed to enabled, err: %d\n", err);
+}
+
+static void ionic_rxq_disable(struct rxque *rxq)
+{
+	int err;
+
+	err = ionic_q_enable_disable(rxq->lif, rxq->qid, rxq->qtype, false /* disable */);
+	if (err)
+		IONIC_QUE_WARN(rxq, "failed to dsable, err: %d\n", err);
+}
+
+static void ionic_txq_enable(struct txque *txq)
+{
+	int err;
+
+	err = ionic_q_enable_disable(txq->lif, txq->qid, txq->qtype, true /* enable */);
+	if (err)
+		IONIC_QUE_WARN(txq, "failed to enabled, err: %d\n", err);
+}
+
+static void ionic_txq_disable(struct txque *txq)
+{
+	int err;
+
+	err = ionic_q_enable_disable(txq->lif, txq->qid, txq->qtype, false /* disable */);
+	if (err)
+		IONIC_QUE_WARN(txq, "failed to dsable, err: %d\n", err);
+}
+
 /* Calculate mbuf pool size based on MTU. */
 static void ionic_calc_rx_size(struct lif *lif)
 {
@@ -142,7 +178,6 @@ void ionic_open(void *arg)
 	struct rxque *rxq;
 	struct txque *txq;
 	unsigned int i;
-	int err;
 
 	KASSERT(lif, ("lif is NULL"));
 	IONIC_NETDEV_INFO(lif->netdev, "starting interface\n");
@@ -154,8 +189,7 @@ void ionic_open(void *arg)
 		rxq = lif->rxqs[i];
 		IONIC_RX_LOCK(rxq);
 		ionic_rx_fill(rxq);
-		err = ionic_q_enable_disable(lif, rxq->qid, rxq->qtype, true /* enable */);
-		WARN_ON(err);
+		ionic_rxq_enable(rxq);
 		ionic_intr_mask(&rxq->intr, false);
 		IONIC_RX_UNLOCK(rxq);
 	}
@@ -163,8 +197,7 @@ void ionic_open(void *arg)
 	for (i = 0; i < lif->ntxqs; i++) {
 		txq = lif->txqs[i];
 		IONIC_TX_LOCK(txq);
-		err = ionic_q_enable_disable(lif, txq->qid, txq->qtype, true /* enable */);
-		WARN_ON(err);
+		ionic_txq_enable(txq);
 #ifdef IONIC_SEPERATE_TX_INTR
 		ionic_intr_mask(&txq->intr, false);
 #endif
@@ -185,7 +218,6 @@ int ionic_stop(struct net_device *netdev)
 	struct rxque* rxq;
 	struct txque* txq;
 	unsigned int i;
-	int err;
 
 	IONIC_NETDEV_INFO(netdev, "stopping interface\n");
 	KASSERT(lif, ("lif is NULL"));
@@ -196,8 +228,7 @@ int ionic_stop(struct net_device *netdev)
 	for (i = 0; i < lif->nrxqs; i++) {
 		rxq = lif->rxqs[i];
 		IONIC_RX_LOCK(rxq);
-		err = ionic_q_enable_disable(lif, rxq->qid, rxq->qtype, false /* disable */);
-		WARN_ON(err);
+		ionic_rxq_disable(rxq);
 		ionic_intr_mask(&rxq->intr, true);
 		IONIC_RX_UNLOCK(rxq);
 	}
@@ -205,8 +236,7 @@ int ionic_stop(struct net_device *netdev)
 	for (i = 0; i < lif->ntxqs; i++) {
 		txq = lif->txqs[i];
 		IONIC_TX_LOCK(txq);
-		err = ionic_q_enable_disable(lif, txq->qid, txq->qtype, false /* disable */);
-		WARN_ON(err);
+		ionic_txq_disable(txq);
 #ifdef IONIC_SEPERATE_TX_INTR
 		ionic_intr_mask(&txq->intr, true);
 #endif
@@ -380,7 +410,7 @@ static void ionic_lif_addr_work(struct work_struct *work)
 	else
 		_ionic_lif_addr_del(w->lif, w->addr);
 
-	kfree(w);
+	free(w, M_IONIC);
 }
 
 static int ionic_lif_addr(struct lif *lif, const u8 *addr, bool add)
@@ -392,7 +422,7 @@ static int ionic_lif_addr(struct lif *lif, const u8 *addr, bool add)
 	 * not right. So disabling it for now.
 	 */
 	if (false) {
-		work = kmalloc(sizeof(*work), GFP_ATOMIC);
+		work = malloc(sizeof(*work), M_IONIC, M_NOWAIT | M_ZERO);
 		if (!work) {
 			IONIC_NETDEV_ERROR(lif->netdev, "failed to allocate memory for address work.\n");
 			return ENOMEM;
@@ -464,7 +494,7 @@ static void ionic_lif_rx_mode_work(struct work_struct *work)
 	struct rx_mode_work *w  = container_of(work, struct rx_mode_work, work);
 
 	_ionic_lif_rx_mode(w->lif, w->rx_mode);
-	kfree(w);
+	free(w, M_IONIC);
 }
 
 static void ionic_lif_rx_mode(struct lif *lif, unsigned int rx_mode)
@@ -474,7 +504,7 @@ static void ionic_lif_rx_mode(struct lif *lif, unsigned int rx_mode)
 	IONIC_DEV_INFO(lif->ionic->dev, "%#x\n", rx_mode);
 
 	if (true) {
-		work = kmalloc(sizeof(*work), GFP_ATOMIC);
+		work = malloc(sizeof(*work), M_IONIC, M_NOWAIT | M_ZERO);
 		if (!work) {
 			IONIC_NETDEV_ERROR(lif->netdev, "failed to allocate for rx_mode\n");
 			return;
@@ -883,6 +913,7 @@ static int ionic_adminq_alloc(struct lif *lif, unsigned int qnum,
 	}
 
 	snprintf(adminq->name, sizeof(adminq->name) - 1, "aq%d", qnum);
+	snprintf(adminq->mtx_name, sizeof(adminq->mtx_name) - 1, "aq%d_mtx", qnum);
 	adminq->lif = lif;
 	adminq->index = qnum;
 	adminq->num_descs = num_descs;
@@ -954,6 +985,7 @@ static int ionic_notifyq_alloc(struct lif *lif, unsigned int qnum,
 	}
 
 	snprintf(notifyq->name, sizeof(notifyq->name) - 1, "nq%d", qnum);
+	snprintf(notifyq->mtx_name, sizeof(notifyq->mtx_name) - 1, "nq%d_mtx", qnum);
 	notifyq->lif = lif;
 	notifyq->index = qnum;
 	notifyq->num_descs = num_descs;
@@ -1022,6 +1054,7 @@ static int ionic_rxque_alloc(struct lif *lif, unsigned int qnum,
 	}
 
 	snprintf(rxq->name, sizeof(rxq->name) - 1, "rxq%d", qnum);
+	snprintf(rxq->mtx_name, sizeof(rxq->mtx_name) - 1, "rxq%d_mtx", qnum);
 	rxq->lif = lif;
 	rxq->index = qnum;
 	rxq->num_descs = num_descs;
@@ -1140,6 +1173,7 @@ static int ionic_txque_alloc(struct lif *lif, unsigned int qnum,
 	}
 
 	snprintf(txq->name, sizeof(txq->name) - 1, "txq%d", qnum);
+	snprintf(txq->mtx_name, sizeof(txq->mtx_name) - 1, "tx%d_mtx", qnum);
 	txq->lif = lif;
 	txq->index = qnum;
 	txq->num_descs = num_descs;
@@ -1263,6 +1297,7 @@ static void ionic_rxq_free(struct lif *lif, struct rxque *rxq)
 
 	IONIC_RX_LOCK(rxq);
 
+	tcp_lro_free(&rxq->lro);
 	free(rxq->rxbuf, M_IONIC);
 
 	if (rxq->cmd_ring) {
@@ -1348,17 +1383,6 @@ static void ionic_notifyq_free(struct lif *lif, struct notifyq *notifyq)
 	free(notifyq, M_IONIC);
 }
 
-#if 0
-static unsigned int ionic_pid_get(struct lif *lif, unsigned int page)
-{
-	unsigned int ndbpgs_per_lif = lif->ionic->ident->dev.ndbpgs_per_lif;
-
-	BUG_ON(ndbpgs_per_lif < page + 1);
-
-	return lif->index * ndbpgs_per_lif + page;
-}
-#endif
-
 static int ionic_qcqs_alloc(struct lif *lif)
 {
 	unsigned int i;
@@ -1368,7 +1392,7 @@ static int ionic_qcqs_alloc(struct lif *lif)
 	if (!lif->txqs)
 		return ENOMEM;
 
-	lif->rxqs = kzalloc(sizeof(*lif->rxqs) * lif->nrxqs, GFP_KERNEL);
+	lif->rxqs = malloc(sizeof(*lif->rxqs) * lif->nrxqs, M_IONIC, M_ZERO | M_NOWAIT);
 	if (!lif->rxqs) {
 		free(lif->txqs, M_IONIC);
 		lif->txqs = NULL;
@@ -1477,7 +1501,7 @@ static int ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 	struct lif *lif;
 	int err, dbpage_num;
 
-	lif = kzalloc(sizeof(*lif), GFP_KERNEL);
+	lif = malloc(sizeof(*lif), M_IONIC, M_NOWAIT | M_ZERO);
 	if (!lif) {
 		dev_err(dev, "Cannot allocate lif, aborting\n");
 		return ENOMEM;
@@ -1519,8 +1543,8 @@ static int ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 		goto err_out_free_netdev;
 	}
 
-	lif->dbid_inuse = kzalloc(BITS_TO_LONGS(lif->dbid_count) * sizeof(long),
-				  GFP_KERNEL);
+	lif->dbid_inuse = malloc(BITS_TO_LONGS(lif->dbid_count) * sizeof(long),
+				  M_IONIC, M_NOWAIT | M_ZERO);
 	if (!lif->dbid_inuse) {
 		dev_err(dev, "Failed alloc doorbell id bitmap, aborting\n");
 		err = -ENOMEM;
@@ -1556,10 +1580,10 @@ static int ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 err_out_unmap_dbell:
 	ionic_bus_unmap_dbpage(ionic, lif->kern_dbpage);
 err_out_free_dbid:
-	kfree(lif->dbid_inuse);
+	free(lif->dbid_inuse, M_IONIC);
 err_out_free_netdev:
 	ionic_lif_netdev_free(lif);
-	kfree(lif);
+	free(lif, M_IONIC);
 
 	return err;
 }
@@ -1601,8 +1625,8 @@ void ionic_lifs_free(struct ionic *ionic)
 		}
 
 		ionic_bus_unmap_dbpage(lif->ionic, lif->kern_dbpage);
-		kfree(lif->dbid_inuse);
-		kfree(lif);
+		free(lif->dbid_inuse, M_IONIC);
+		free(lif, M_IONIC);
 	}
 }
 
@@ -1727,6 +1751,7 @@ static void ionic_lif_adminq_deinit(struct lif *lif)
 {
 	struct adminq *adminq = lif->adminq;
 
+	ionic_q_enable_disable(lif, adminq->qid, adminq->qtype, false /* disable */);
 	ionic_intr_mask(&adminq->intr, true);
 	if (adminq->intr.vector)
 		free_irq(adminq->intr.vector, adminq);
@@ -1741,6 +1766,7 @@ static void ionic_lif_notifyq_deinit(struct lif *lif)
 	if (notifyq == NULL)
 		return;
 
+	ionic_q_enable_disable(lif, notifyq->qid, notifyq->qtype, false /* disable */);
 	ionic_intr_mask(&notifyq->intr, true);
 
 	if (notifyq->intr.vector)
@@ -1757,6 +1783,7 @@ static void ionic_lif_txqs_deinit(struct lif *lif)
 		txq = lif->txqs[i];
 
 		IONIC_TX_LOCK(txq);
+		ionic_txq_disable(txq);
 #ifdef IONIC_SEPERATE_TX_INTR
 		ionic_intr_mask(&txq->intr, true);
 		if (txq->intr.vector) {
@@ -1783,7 +1810,7 @@ static void ionic_lif_rxqs_deinit(struct lif *lif)
 		IONIC_RX_LOCK(rxq);
 
 		ionic_intr_mask(&rxq->intr, true);
-		tcp_lro_free(&rxq->lro);
+		ionic_rxq_disable(rxq);
 
 		if (rxq->intr.vector) {
 			free_irq(rxq->intr.vector, rxq);
@@ -1800,8 +1827,6 @@ static void ionic_lif_rxqs_deinit(struct lif *lif)
 
 static void ionic_lif_deinit(struct lif *lif)
 {
-	if (lif->netdev->if_drv_flags & IFF_DRV_RUNNING)
-		ionic_stop(lif->netdev);
 
 	ionic_lif_stats_dump_stop(lif);
 	ionic_rx_filters_deinit(lif);
@@ -2126,6 +2151,7 @@ int ionic_tx_clean(struct txque* txq , int tx_limit)
 	int comp_index, processed, cmd_stop_index, batch = 0;
 	struct tx_stats * stats = &txq->stats;
 
+	KASSERT(IONIC_TX_LOCK_OWNED(txq), ("%s is not locked", txq->name));
 	stats->clean++;
 
 	bus_dmamap_sync(txq->cmd_dma.dma_tag, txq->cmd_dma.dma_map,
@@ -2168,10 +2194,6 @@ int ionic_tx_clean(struct txque* txq , int tx_limit)
 	}
 
 	//KASSERT(processed, ("%s tx_clean didn't processed any packet", txq->name));
-#ifdef IONIC_SEPERATE_TX_INTR
-	if (txq->taskq && (comp->color == txq->done_color))
-		taskqueue_enqueue(txq->taskq, &txq->task);
-#endif
 
 	return (processed);
 }
@@ -2960,7 +2982,6 @@ try_again:
 
 	dev_info(ionic->dev, "intrs: %d/%d, Tx/Rx Qs: %d, NQs: %d, EQs: %d\n",
 				dev_nintrs, nintrs, nqs, nnqs, neqs);
-	ionic_max_queues = nqs;
 
 	return 0;
 try_fewer:

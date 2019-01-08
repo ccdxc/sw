@@ -400,7 +400,7 @@ void ionic_rx_destroy_map(struct rxque *rxq, struct ionic_rx_buf *rxbuf)
 static irqreturn_t ionic_rx_isr(int irq, void *data)
 {
 	struct rxque* rxq = data;
-#ifdef IONIC_SEPERATE_TX_INTR
+#ifndef IONIC_SEPERATE_TX_INTR
 	struct txque* txq = rxq->lif->txqs[rxq->index];
 #endif
 	struct ifnet *ifp = rxq->lif->netdev;
@@ -433,11 +433,10 @@ static irqreturn_t ionic_rx_isr(int irq, void *data)
 		work_done, rxq->intr.ctrl->int_credits);
 
 	ionic_intr_return_credits(&rxq->intr, work_done, 0, false);
-	IONIC_RX_UNLOCK(rxq);
-	
 	taskqueue_enqueue(rxq->taskq, &rxq->task);
+	IONIC_RX_UNLOCK(rxq);
 
-#ifdef IONIC_SEPERATE_TX_INTR
+#ifndef IONIC_SEPERATE_TX_INTR
 	IONIC_TX_LOCK(txq);
 	work_done = ionic_tx_clean(txq, ionic_tx_clean_threshold);
 	IONIC_TX_TRACE(txq, "processed: %d packets\n", work_done);
@@ -500,7 +499,7 @@ int ionic_setup_rx_intr(struct rxque* rxq)
 #endif
 
 	TASK_INIT(&rxq->task, 0, ionic_rx_task_handler, rxq);
-    rxq->taskq = taskqueue_create(rxq->intr.name, M_NOWAIT,
+    	rxq->taskq = taskqueue_create(rxq->intr.name, M_NOWAIT,
 	    taskqueue_thread_enqueue, &rxq->taskq);
 
 #ifdef RSS

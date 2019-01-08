@@ -96,8 +96,8 @@ int ionic_dev_setup(struct ionic_dev *idev, struct ionic_dev_bar bars[],
 
 	idev->phy_cmb_pages = bar->bus_addr;
 	idev->cmb_npages = bar->len / PAGE_SIZE;
-	idev->cmb_inuse = kzalloc(BITS_TO_LONGS(idev->cmb_npages) * sizeof(long),
-				  GFP_KERNEL);
+	idev->cmb_inuse = malloc(BITS_TO_LONGS(idev->cmb_npages) * sizeof(long),
+				  M_IONIC, M_WAITOK | M_ZERO);
 	if (!idev->cmb_inuse) {
 		idev->phy_cmb_pages = 0;
 		idev->cmb_npages = 0;
