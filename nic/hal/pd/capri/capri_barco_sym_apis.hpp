@@ -2,7 +2,6 @@
 #define __CAPRI_BARCO_SYM_APIS_H__
 
 #include "nic/hal/pd/capri/capri_barco_crypto.hpp"
-#include "gen/proto/internal.pb.h"
 
 namespace hal {
 namespace pd {
@@ -110,7 +109,7 @@ barco_symm_err_status_str (uint64_t status)
   }
 }
 
-hal_ret_t capri_barco_sym_hash_process_request(internal::CryptoApiHashType hash_type, bool generate,
+hal_ret_t capri_barco_sym_hash_process_request(hal::CryptoApiHashType hash_type, bool generate,
 					       unsigned char *key, int key_len,
 					       unsigned char *data, int data_len,
 					       uint8_t *output_digest, int digest_len);

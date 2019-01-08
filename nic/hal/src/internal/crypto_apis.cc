@@ -871,7 +871,7 @@ hal_ret_t crypto_symm_api_hash_request(internal::CryptoApiRequest &req,
 	return HAL_RET_INVALID_ARG;
     }
 
-    args.hash_type = hashtype;
+    args.hash_type = (CryptoApiHashType) hashtype;
     args.generate = generate;
     args.key = generate ? (uint8_t *)req.hash_generate().key().data() : (uint8_t *)req.hash_verify().key().data();
     args.key_len = generate ? (uint32_t)req.hash_generate().key_len() : (uint32_t)req.hash_verify().key_len();
