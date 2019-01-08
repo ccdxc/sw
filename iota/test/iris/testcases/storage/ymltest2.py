@@ -37,7 +37,7 @@ def Trigger(tc):
             for c in range(1, 5):
                 api.Trigger_AddHostCommand(req, n, "cat /sys/module/pencake/status/%d" % c)
         else: 
-            #api.Trigger_AddHostCommand(req, n, "cat /dev/pencake")
+            # api.Trigger_AddHostCommand(req, n, "cat /dev/pencake")
             api.Trigger_AddHostCommand(req, n, "dmesg")
         api.Trigger_AddHostCommand(req, n, "dmesg > dmesg.log")
         api.Logger.info("Running PNSO test %s" % cmd)
