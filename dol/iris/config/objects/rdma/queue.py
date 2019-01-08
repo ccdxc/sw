@@ -179,7 +179,9 @@ class RdmaRQstate(Packet):
         LEShortField("spec_cindex", 0),
 
         X3BytesField("e_psn", 0),
-        ByteField("rqcb1_rsvd3", 0),
+        BitField("next_op_type", 0, 2),
+        BitField("next_pkt_type", 0, 1),
+        BitField("rqcb1_rsvd3", 0, 5),
 
         X3BytesField("msn", 0),
         ByteField("header_template_size", 0),

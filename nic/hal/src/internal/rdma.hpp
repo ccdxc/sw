@@ -1262,7 +1262,9 @@ typedef struct rqcb1_s {
     uint32_t    bt_in_progress : 8;
     uint32_t    header_template_size : 8;
     uint32_t    msn : 24;
-    uint32_t    rsvd3 : 8;
+    uint32_t    rsvd3 : 5;
+    uint32_t    next_pkt_type: 1;
+    uint32_t    next_op_type: 2;
     uint32_t    e_psn : 24;
     uint16_t    spec_cindex;
     uint8_t     rsvd2 : 7;

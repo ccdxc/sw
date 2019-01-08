@@ -60,4 +60,16 @@ def TestCaseVerify(tc):
 
 def TestCaseTeardown(tc):
     logger.info("RDMA TestCaseTeardown() Implementation.")
+
+    # Write last with immediate will result in RNR, 
+    # but op_type will be set to WRITE and pkt_type
+    # will be set to MID_OR_LAST
+    # This will cause the subsequent test to fail. 
+    # So reset next_op_type and next_pkt_type here
+    rs = tc.config.rdmasession
+    rs.lqp.rq.qstate.Read()
+    rs.lqp.rq.qstate.data.next_op_type = 0
+    rs.lqp.rq.qstate.data.next_pkt_type = 0
+    rs.lqp.rq.qstate.WriteWithDelay()
+
     return

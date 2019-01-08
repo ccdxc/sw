@@ -132,6 +132,8 @@ def ResetErrQState(tc):
     rs.lqp.rq.qstate.data.error_disable_qp = 0
     rs.lqp.rq.qstate.data.work_not_done_recirc_cnt = 0
     rs.lqp.rq.qstate.data.max_recirc_cnt_err = 0
+    rs.lqp.rq.qstate.data.next_op_type = 0
+    rs.lqp.rq.qstate.data.next_pkt_type = 0
     rs.lqp.rq.qstate.WriteWithDelay()
 
     return

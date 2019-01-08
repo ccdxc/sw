@@ -182,10 +182,17 @@ process_send_write_fml:
      
 /****** Fast path: WRITE FIRST/MIDDLE/LAST ******/
 process_write:
+    // check expected op type and pkt type for write packets 
+    seq.c1      c7, d.{next_op_type...next_pkt_type}, (NEXT_OP_TYPE_ANY << 1)|NEXT_PKT_TYPE_FIRST_ONLY
+    seq.!c1     c7, d.{next_op_type...next_pkt_type}, (NEXT_OP_TYPE_WRITE << 1)|NEXT_PKT_TYPE_MID_LAST
+    bcf         [!c7], inv_req_nak
+
+    // populate PD in rkey's to_stage
+    CAPRI_SET_FIELD2(TO_S_RKEY_P, pd, d.pd) // BD Slot
+
     // increment e_psn
     tblmincri   d.e_psn, 24, 1
-    // populate PD in rkey's to_stage
-    CAPRI_SET_FIELD2(TO_S_RKEY_P, pd, d.pd)
+
     // check if rnr case for Write Last with Immdt
     seq        c7, SPEC_RQ_C_INDEX, PROXY_RQ_P_INDEX
     bcf.c7      [c6 & c3], process_rnr
@@ -193,6 +200,10 @@ process_write:
     // load rqcb3
     add     r5, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 3) //BD Slot
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_write_dummy_process, r5)
+
+    // update the next op_type and pkt_type expected
+    tblwr.c3    d.{next_op_type...next_pkt_type}, (NEXT_OP_TYPE_ANY << 1)|NEXT_PKT_TYPE_FIRST_ONLY
+    tblwr.!c3   d.{next_op_type...next_pkt_type}, (NEXT_OP_TYPE_WRITE << 1)|NEXT_PKT_TYPE_MID_LAST
 
     // only first packet has reth header
     CAPRI_RESET_TABLE_1_ARG()
@@ -253,8 +264,20 @@ process_send:
     nop //BD Slot
 
 skip_token_id_check:
+    // check expected op type and pkt type for send packets 
+    seq.c1      c7, d.{next_op_type...next_pkt_type}, (NEXT_OP_TYPE_ANY << 1)|NEXT_PKT_TYPE_FIRST_ONLY
+    seq.!c1     c7, d.{next_op_type...next_pkt_type}, (NEXT_OP_TYPE_SEND << 1)|NEXT_PKT_TYPE_MID_LAST
+    bcf         [!c7], inv_req_nak
+
+    // check if rnr case for Send First
+    seq         c7, SPEC_RQ_C_INDEX, PROXY_RQ_P_INDEX // BD Slot
+    bcf.c7      [c1], process_rnr
     // increment e_psn
-    tblmincri   d.e_psn, 24, 1
+    tblmincri    d.e_psn, 24, 1 // BD Slot
+
+    // update the next op_type and pkt_type expected
+    tblwr.c3    d.{next_op_type...next_pkt_type}, (NEXT_OP_TYPE_ANY << 1)|NEXT_PKT_TYPE_FIRST_ONLY
+    tblwr.!c3   d.{next_op_type...next_pkt_type}, (NEXT_OP_TYPE_SEND << 1)|NEXT_PKT_TYPE_MID_LAST
 
     bcf         [!c4], send_sge_non_opt
     tblmincri.c4    d.send_info.spec_psn, 24, 1 // BD Slot
@@ -267,10 +290,6 @@ skip_token_id_check:
     tblwr.c1    d.send_info.spec_psn, 0 // BD Slot
 
 send_sge_non_opt:
-    // check if rnr case for Send First
-    seq         c7, SPEC_RQ_C_INDEX, PROXY_RQ_P_INDEX
-    bcf.c7      [c1], process_rnr
-
     // populate PD in lkey's to_stage
     CAPRI_SET_FIELD2(TO_S_LKEY_P, pd, d.pd)
     phvwr       p.cqe.recv.op_type, OP_TYPE_SEND_RCVD
@@ -340,6 +359,11 @@ send_in_progress:
 
 /******  Common logic for ONLY packets (send/write) ******/
 process_only_rd_atomic:
+    // check expected op type and pkt type for only packets 
+    seq         c1, d.{next_op_type...next_pkt_type}, (NEXT_OP_TYPE_ANY << 1)|NEXT_PKT_TYPE_FIRST_ONLY
+    bcf         [!c1], inv_req_nak
+    nop // BD Slot
+
     bcf         [c6 | c5 | c3], process_read_atomic
     phvwr       p.s1.ack_info.psn, d.e_psn // BD Slot
 
@@ -356,13 +380,13 @@ process_only_rd_atomic:
 // branch to rc_checkout and load rqpt_process
 // or dummy_rqpt
 process_send_only:
-send_sge_opt:
     // check if rnr case for Send Only
     seq        c7, SPEC_RQ_C_INDEX, PROXY_RQ_P_INDEX
     bcf        [c7], process_rnr
 
+send_sge_opt:
     // populate PD in lkey's to_stage
-    CAPRI_SET_FIELD2(TO_S_LKEY_P, pd, d.pd) // BD Slot
+    CAPRI_SET_FIELD2(TO_S_LKEY_P, pd, d.pd) // BD Slot in straight path
     phvwrpair   CAPRI_PHV_FIELD(TO_S_WQE_P, spec_psn), d.send_info.spec_psn, \
                 CAPRI_PHV_FIELD(TO_S_WQE_P, priv_oper_enable), d.priv_oper_enable
 
@@ -739,7 +763,7 @@ wr_only_zero_len_inv_req_nak:
     //revert the e_psn
     sub         r1, 0, 1
     // flush the last tblwr in this path
-    tblmincr.f  d.e_psn, 24, r1
+    tblmincr.f  d.e_psn, 24, r1 // BD Slot
     //fall thru to inv_req_nak
 
 inv_req_nak:

@@ -1609,4 +1609,14 @@ struct aqwqe_t {
 
 #define AQ_WQE_T_LOG_SIZE_BYTES 6
 
+// 2-bit flag to indicate which opcode type to expect next
+#define NEXT_OP_TYPE_ANY            0x0 // send/write/read/atomic
+#define NEXT_OP_TYPE_SEND           0x1 // send
+#define NEXT_OP_TYPE_WRITE          0x2 // write
+#define NEXT_OP_TYPE_INVALID        0x3 // invalid
+
+// 1-bit flag to indicate which packet type to expect next
+#define NEXT_PKT_TYPE_FIRST_ONLY    0x0
+#define NEXT_PKT_TYPE_MID_LAST      0x1
+
 #endif //__TYPES_H

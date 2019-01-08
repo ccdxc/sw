@@ -1167,3 +1167,35 @@ modules:
         spec    : resp_rx_send_inv_mw_cnt.testspec
         ignore  : False
 
+    - module:
+        name    : RDMA_RX_SEND_FML_INVALID_OPCODE_MID
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_fml_invalid_opcode_mid
+        spec    : resp_rx_send_fml_invalid_opcode_mid.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_FML_INVALID_OPCODE_FIRST
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_fml_invalid_opcode_first
+        spec    : resp_rx_send_fml_invalid_opcode_first.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_WRITE_FML_INVALID_OPCODE_MID
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_write_fml_invalid_opcode_mid
+        spec    : resp_rx_write_fml_invalid_opcode_mid.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_WRITE_ONLY_INVALID_OPCODE
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_write_only_invalid_opcode
+        spec    : resp_rx_write_only_invalid_opcode.testspec
+        ignore  : False
+
