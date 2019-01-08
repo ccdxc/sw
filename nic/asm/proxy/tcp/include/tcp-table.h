@@ -6,7 +6,7 @@
 #define TCP_TCB_TABLE_ENTRY_SIZE_SHFT   10  /* 1024B */
 
 // NOTE : ** These offsets need to match the offsets in 
-// tcp_proxy_api.h **
+// p4pd_tcp_proxy_api.h **
 #define TCP_TCB_RX2TX_SHARED_OFFSET     0
 
 #define TCP_TCB_RX2TX_TX_CI_OFFSET \

@@ -273,38 +273,6 @@ p4pd_add_or_del_tcpcb_write_serq(pd_tcpcb_t* tcpcb_pd, bool del)
 }
 
 hal_ret_t
-p4pd_add_or_del_tcpcb_write_l7q_entry(pd_tcpcb_t* tcpcb_pd, bool del)
-{
-    hal_ret_t   ret = HAL_RET_OK;
-    s6_t2_tcp_rx_d data = { 0 };
-
-    tcpcb_hw_id_t hwid = tcpcb_pd->hw_id +
-        (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_WRITE_L7Q);
-
-    if(!del) {
-        // Get L7Q address
-        wring_hw_id_t  q_base;
-        uint32_t proxyrcb_id = tcpcb_pd->tcpcb->cb_id;
-
-        ret = wring_pd_get_base_addr(types::WRING_TYPE_APP_REDIR_PROXYR,
-                                     proxyrcb_id, &q_base);
-        if(ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Failed to receive l7q base for proxyrcb_id: {}",
-                    proxyrcb_id);
-        } else {
-            HAL_TRACE_DEBUG("l7q id: {:#x}, base: {:#x}", proxyrcb_id, q_base);
-            data.u.write_l7q_d.l7q_base = q_base;
-        }
-    }
-    if(!p4plus_hbm_write(hwid, (uint8_t *)&data, sizeof(s6_t2_tcp_rx_d),
-                P4PLUS_CACHE_INVALIDATE_BOTH)) {
-        HAL_TRACE_ERR("Failed to create rx: write_serq entry for TCP CB");
-        return HAL_RET_HW_FAIL;
-    }
-    return HAL_RET_OK;
-}
-
-hal_ret_t
 p4pd_add_or_del_tcpcb_rxdma_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 {
     hal_ret_t   ret = HAL_RET_OK;
@@ -330,11 +298,6 @@ p4pd_add_or_del_tcpcb_rxdma_entry(pd_tcpcb_t* tcpcb_pd, bool del)
     }
 
     ret = p4pd_add_or_del_tcpcb_write_serq(tcpcb_pd, del);
-    if(ret != HAL_RET_OK) {
-        goto cleanup;
-    }
-
-    ret = p4pd_add_or_del_tcpcb_write_l7q_entry(tcpcb_pd, del);
     if(ret != HAL_RET_OK) {
         goto cleanup;
     }
