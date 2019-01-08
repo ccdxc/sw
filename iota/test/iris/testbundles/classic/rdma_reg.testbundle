@@ -47,7 +47,7 @@ testcases:
         stress  : True
         iterators :
             type     : nested
-            num_qp   : [1]
+            num_qp   : [1, 8]
             rdma_cm  : [ 'no']
             server   : [ 'yes', 'no']
             #mtu      : [512, 1024, 2048, 4096]
@@ -75,7 +75,7 @@ testcases:
         stress  : True
         iterators :
             type     : nested
-            num_qp   : [1]
+            num_qp   : [1, 8]
             rdma_cm  : [ 'no']
             server   : [ 'yes', 'no']
             #mtu      : [512, 1024, 2048, 4096]
