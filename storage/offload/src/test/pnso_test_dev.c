@@ -128,8 +128,8 @@ pnso_test_read(struct cdev *dev __unused, struct uio *uio, int ioflag __unused)
 	 * or as big as the remaining data.  Note that the 'input_len' does not
 	 * include the trailing null character.
 	 */
-	amt = MIN(uio->uio_resid, uio->uio_offset >= pnso_test_softc.output_len + 1 ? 0 :
-	    pnso_test_softc.output_len + 1 - uio->uio_offset);
+	amt = MIN(uio->uio_resid, uio->uio_offset >= pnso_test_softc.output_len ? 0 :
+	    pnso_test_softc.output_len - uio->uio_offset);
 
 	error = uiomove(pnso_test_softc.output + uio->uio_offset, amt, uio);
 
