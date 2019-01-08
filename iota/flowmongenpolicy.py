@@ -210,8 +210,8 @@ def Main():
                         rule = get_rule(EP[j], EP[i], protocol, k, action)
                         match_rules.append(rule)
                         verif.append(get_verif(EP[j], EP[i], protocol, k, action))
-    json.dump(verif, open(GlobalOptions.topology_dir +"/{}/mirror_mixed_verif.json".format('mixed'), "w"), indent=4)
-    json.dump(mirrorpolicy, open(GlobalOptions.topology_dir + "/{}/mirror_mixed_policy.json".format('mixed'), "w"), indent=4)
+    json.dump(verif, open(GlobalOptions.topology_dir +"/{}/flowmon_mixed_verif.json".format('mixed'), "w"), indent=4)
+    json.dump(mirrorpolicy, open(GlobalOptions.topology_dir + "/{}/flowmon_mixed_policy.json".format('mixed'), "w"), indent=4)
 
 if __name__ == '__main__':
     Main()
