@@ -1,6 +1,6 @@
 meta:
     name    : rdma_reg
-    os      : [ linux ]
+    os      : [ linux, freebsd ]
     nics    : [ pensando, mellanox ]
     targetcount : 300
 
@@ -26,15 +26,15 @@ testcases:
     #=======================================
     # Ping Pong
     #=======================================
-    -   name    : Rc_PingPong
-        testcase: testcases.rdma.rc_pingpong
-        args    :
-            type: remote_only
+    #-   name    : Rc_PingPong
+    #    testcase: testcases.rdma.rc_pingpong
+    #    args    :
+    #        type: remote_only
 
-    -   name    : Ud_PingPong
-        testcase: testcases.rdma.ud_pingpong
-        args    :
-            type: remote_only
+    #-   name    : Ud_PingPong
+    #    testcase: testcases.rdma.ud_pingpong
+    #    args    :
+    #        type: remote_only
 
     #=======================================
     # Packet Sweep
@@ -44,10 +44,12 @@ testcases:
     #=======================================
     -   name    : RC_TCPCM_Packet_Sweep
         testcase: testcases.rdma.packet_sweep
+        stress  : True
         iterators :
             type     : nested
             num_qp   : [1]
             rdma_cm  : [ 'no']
+            server   : [ 'yes', 'no']
             #mtu      : [512, 1024, 2048, 4096]
             mtu      : [1024, 4096]
             transport: ['RC']
@@ -56,10 +58,12 @@ testcases:
 
     -   name    : RC_RDMACM_Packet_Sweep
         testcase: testcases.rdma.packet_sweep
+        stress  : True
         iterators :
             type     : nested
             num_qp   : [1]
             rdma_cm  : [ 'yes']
+            server   : [ 'yes', 'no']
             #mtu      : [512, 1024, 2048, 4096]
             mtu      : [1024, 4096]
             transport: ['RC']
@@ -68,10 +72,12 @@ testcases:
 
     -   name    : UD_TCPCM_Packet_Sweep
         testcase: testcases.rdma.packet_sweep
+        stress  : True
         iterators :
             type     : nested
             num_qp   : [1]
             rdma_cm  : [ 'no']
+            server   : [ 'yes', 'no']
             #mtu      : [512, 1024, 2048, 4096]
             mtu      : [1024, 4096]
             transport: ['UD']
@@ -79,10 +85,12 @@ testcases:
 
     -   name    : UD_RDMACM_Packet_Sweep
         testcase: testcases.rdma.packet_sweep
+        stress  : True
         iterators :
             type     : nested
             num_qp   : [1]
             rdma_cm  : [ 'yes']
+            server   : [ 'yes', 'no']
             #mtu      : [512, 1024, 2048, 4096]
             mtu      : [1024, 4096]
             transport: ['UD']

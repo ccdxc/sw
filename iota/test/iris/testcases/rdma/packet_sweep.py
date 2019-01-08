@@ -52,8 +52,14 @@ def Trigger(tc):
     else:
         transport_opt = " "
 
-    i = 0
-    while (i < 2):
+    if tc.iterators.server == 'yes':
+        i = 0
+        k = 1
+    else :
+        i = 1
+        k = 2
+
+    while ((i < 2) and (i < k)):
         j = (i + 1) % 2
         w1 = tc.w[i]
         w2 = tc.w[j]
@@ -69,7 +75,7 @@ def Trigger(tc):
                                w1.node_name, 
                                w1.workload_name,
                                tc.ib_prefix[i] + cmd,
-                               background = True, timeout=600)
+                               background = True, timeout=120)
 
         # On Naples-Mellanox setups, with Mellanox as server, it takes a few seconds before the server
         # starts listening. So sleep for a few seconds before trying to start the client
@@ -84,7 +90,7 @@ def Trigger(tc):
         api.Trigger_AddCommand(req, 
                                w2.node_name, 
                                w2.workload_name,
-                               tc.ib_prefix[j] + cmd, timeout=600)
+                               tc.ib_prefix[j] + cmd, timeout=120)
 
         i = i + 1
     # end while
