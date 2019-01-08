@@ -94,6 +94,18 @@ func WithObjectRefFilter(objRef *api.ObjectRef) FilterFn {
 	}
 }
 
+// WithEventURIFilter returns a fn() which returns true if the alert object matches the given event URI
+// * applicable only for alert object *
+func WithEventURIFilter(eventURI string) FilterFn {
+	return func(obj runtime.Object) bool {
+		switch obj.(type) {
+		case *monitoring.Alert:
+			return obj.(*monitoring.Alert).Status.GetEventURI() == eventURI
+		}
+		return false
+	}
+}
+
 // GetAlertPolicies returns the list of alert policies that matches all the given filters
 func (m *MemDb) GetAlertPolicies(filters ...FilterFn) []*monitoring.AlertPolicy {
 	var alertPolicies []*monitoring.AlertPolicy

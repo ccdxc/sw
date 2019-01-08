@@ -951,8 +951,7 @@ func TestEventsAlertEngine(t *testing.T) {
 	// policy - 1
 	alertPolicy1 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, uuid.NewV1().String(), "Event", evtsapi.SeverityLevel_CRITICAL, "alerts from events", []*fields.Requirement{
 		{Key: "type", Operator: "in", Values: []string{eventType1, eventType2, eventType3}},
-		{Key: "count", Operator: "gt", Values: []string{"10"}},
-		{Key: "count", Operator: "lt", Values: []string{"16"}},
+		{Key: "count", Operator: "gte", Values: []string{"15"}},
 		{Key: "source.node-name", Operator: "equals", Values: []string{"test-node"}},
 	}, []string{})
 
@@ -1127,8 +1126,8 @@ func TestEventsAlertEngine(t *testing.T) {
 		openAlerts         int32
 		acknowledgedAlerts int32
 	}{
-		{policyMeta: alertPolicy1.GetObjectMeta(), totalHits: 8, openAlerts: 8, acknowledgedAlerts: 0},
-		{policyMeta: alertPolicy2.GetObjectMeta(), totalHits: 8, openAlerts: 5, acknowledgedAlerts: 0},
+		{policyMeta: alertPolicy1.GetObjectMeta(), totalHits: 8, openAlerts: 4, acknowledgedAlerts: 0},
+		{policyMeta: alertPolicy2.GetObjectMeta(), totalHits: 8, openAlerts: 4, acknowledgedAlerts: 0},
 		{policyMeta: alertPolicy3.GetObjectMeta(), totalHits: 0, openAlerts: 0, acknowledgedAlerts: 0}, // no reqs so, there should be no alerts
 	}
 	for _, as := range expectedAlertStatus {

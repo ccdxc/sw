@@ -208,14 +208,26 @@ func (a *alertEngineImpl) createAlert(alertPolicy *monitoring.AlertPolicy, evt *
 	alert.SelfLink = alert.MakeURI("configs", "v1", "monitoring")
 
 	alertCreated, err := utils.ExecuteWithRetry(func() (interface{}, error) {
+		// check there is an existing alert from the same event
+		outstandingAlerts := a.memDb.GetAlerts(
+			memdb.WithTenantFilter(alertPolicy.GetTenant()),
+			memdb.WithAlertStateFilter(monitoring.AlertSpec_AlertState_name[int32(monitoring.AlertSpec_OPEN)]),
+			memdb.WithAlertPolicyIDFilter(alertPolicy.GetUUID()),
+			memdb.WithEventURIFilter(evt.GetSelfLink()))
+		if len(outstandingAlerts) > 0 {
+			a.logger.Debug("outstanding alert found that matches the event URI and policy")
+			return false, nil
+		}
+
+		// if there is no alert from the same event, check if there is an alert from some other event.
 		if evt.GetObjectRef() != nil {
-			outstandingAlerts := a.memDb.GetAlerts(
+			outstandingAlerts = a.memDb.GetAlerts(
 				memdb.WithTenantFilter(alertPolicy.GetTenant()),
 				memdb.WithAlertStateFilter(monitoring.AlertSpec_AlertState_name[int32(monitoring.AlertSpec_OPEN)]),
 				memdb.WithAlertPolicyIDFilter(alertPolicy.GetUUID()),
 				memdb.WithObjectRefFilter(evt.GetObjectRef()))
 			if len(outstandingAlerts) >= 1 { // there should be exactly one outstanding alert; not more than that
-				a.logger.Debug("alert exists already or more than 1 outstanding alert found")
+				a.logger.Debug("1 or more outstanding alert found that matches the object ref. and policy")
 				return false, nil
 			}
 		}
