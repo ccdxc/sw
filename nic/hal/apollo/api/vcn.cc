@@ -178,8 +178,7 @@ vcn_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 
 /**
  * @brief add vcn to database
- *
- * @param[in] vcn vcn
+ * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
 vcn_entry::add_to_db(void) {
@@ -189,8 +188,7 @@ vcn_entry::add_to_db(void) {
 
 /**
  * @brief delete vcn from database
- *
- * @param[in] vcn_key vcn key
+ * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
 vcn_entry::del_from_db(void) {

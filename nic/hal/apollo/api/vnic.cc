@@ -50,7 +50,6 @@ vnic_entry::factory(oci_vnic_t *oci_vnic) {
         }
     }
     return vnic;
-
 }
 
 /**< @brief    destructor */
@@ -181,8 +180,7 @@ vnic_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 
 /**
  * @brief add vnic to database
- *
- * @param[in] vnic vnic
+ * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
 vnic_entry::add_to_db(void) {
@@ -192,8 +190,7 @@ vnic_entry::add_to_db(void) {
 
 /**
  * @brief delete vnic from database
- *
- * @param[in] vnic_key vnic key
+ * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
 vnic_entry::del_from_db(void) {

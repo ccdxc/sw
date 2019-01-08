@@ -45,7 +45,8 @@ api_base::factory(api_ctxt_t *api_ctxt) {
         obj = mapping_entry::factory(&api_ctxt->api_params->mapping_info);
         return obj;
 
-    case OBJ_ID_ROUTE:
+    case OBJ_ID_ROUTE_TABLE:
+        obj = route_table::factory(&api_ctxt->api_params->route_table_info);
         break;
 
     case OBJ_ID_SECURITY_RULES:
@@ -106,7 +107,12 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
         return NULL;
         break;
 
-    case OBJ_ID_ROUTE:
+    case OBJ_ID_ROUTE_TABLE:
+        if (api_ctxt->api_op == API_OP_DELETE) {
+            obj = route_table_db()->route_table_find(&api_ctxt->api_params->route_table_key);
+        } else {
+            obj = route_table_db()->route_table_find(&api_ctxt->api_params->route_table_info.key);
+        }
         break;
 
     case OBJ_ID_SECURITY_RULES:

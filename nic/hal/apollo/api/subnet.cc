@@ -225,8 +225,7 @@ subnet_entry::abort(api_ctxt_t *api_ctxt) {
 
 /**
  * @brief add subnet to database
- *
- * @param[in] subnet subnet
+ * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
 subnet_entry::add_to_db(void) {
@@ -236,8 +235,7 @@ subnet_entry::add_to_db(void) {
 
 /**
  * @brief delete subnet from database
- *
- * @param[in] subnet_key subnet key
+ * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
 subnet_entry::del_from_db(void) {
