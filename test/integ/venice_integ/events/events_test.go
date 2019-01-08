@@ -949,7 +949,7 @@ func TestEventsAlertEngine(t *testing.T) {
 
 	// add event based alert policies
 	// policy - 1
-	alertPolicy1 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, uuid.NewV1().String(), "Event", evtsapi.SeverityLevel_CRITICAL, "alerts from events", []*fields.Requirement{
+	alertPolicy1 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, "ap1", "Event", evtsapi.SeverityLevel_CRITICAL, "alerts from events", []*fields.Requirement{
 		{Key: "type", Operator: "in", Values: []string{eventType1, eventType2, eventType3}},
 		{Key: "count", Operator: "gte", Values: []string{"15"}},
 		{Key: "source.node-name", Operator: "equals", Values: []string{"test-node"}},
@@ -959,7 +959,8 @@ func TestEventsAlertEngine(t *testing.T) {
 	AssertOk(t, err, "failed to add alert policy, err: %v", err)
 
 	// policy - 2
-	alertPolicy2 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, uuid.NewV1().String(), "Event", evtsapi.SeverityLevel_WARNING, "alerts from events", []*fields.Requirement{
+	alertPolicy2 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, "ap2", "Event", evtsapi.SeverityLevel_WARNING, "alerts from events", []*fields.Requirement{
+		{Key: "count", Operator: "gte", Values: []string{"5"}},
 		{Key: "count", Operator: "lt", Values: []string{"7"}},
 		{Key: "severity", Operator: "equals", Values: []string{evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)]}},
 		{Key: "type", Operator: "in", Values: []string{eventType1, eventType2, eventType3}},
@@ -968,7 +969,7 @@ func TestEventsAlertEngine(t *testing.T) {
 	alertPolicy2, err = apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy2)
 	AssertOk(t, err, "failed to add alert policy, err: %v", err)
 
-	alertPolicy3 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, uuid.NewV1().String(), "Event", evtsapi.SeverityLevel_WARNING,
+	alertPolicy3 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, "ap3", "Event", evtsapi.SeverityLevel_WARNING,
 		"policy with no reqs", []*fields.Requirement{}, []string{})
 	alertPolicy3, err = apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy3)
 	AssertOk(t, err, "failed to add alert policy, err: %v", err)
