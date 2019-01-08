@@ -59,7 +59,6 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
                           comp->comp_index, comp->status, comp->len, (dma_addr_t)desc->addr);
                 // TODO record errors
                 ionic_rx_recycle(q, desc_info, pkt);
-                VMK_ASSERT(0);
                 return;
         }
 
@@ -78,17 +77,19 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 #endif
         
         // TODO add copybreak to avoid allocating a new skb for small receive
-
         dma_addr = (dma_addr_t)desc->addr;
 
         priv_data = IONIC_CONTAINER_OF(q->lif->ionic,
                                        struct ionic_en_priv_data,
                                        ionic);
+
         status = ionic_dma_unmap(priv_data->dma_engine_streaming,
                                  VMK_DMA_DIRECTION_TO_MEMORY,
                                  desc->len,
                                  dma_addr);
+
         if (status != VMK_OK) {
+                ionic_err("rx clean, ionic_dma_unmap() failed");
                 VMK_ASSERT(0);
                 return;
         }
@@ -181,8 +182,6 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
         } else {
                 ionic_en_pkt_release(pkt, NULL);
         }
-
-        pkt = NULL;
 }
 
 static bool
@@ -224,6 +223,8 @@ ionic_rx_pkt_alloc(struct queue *q,
                                           priv_data->dma_engine_streaming,
                                           &new_pkt);
         if (VMK_UNLIKELY(status != VMK_OK)) {
+                ionic_err("vmk_PktAllocForDMAEngine() failed, status: %s",
+                          vmk_StatusToString(status));
                 stats->alloc_err++;
                 return NULL;
         }
@@ -267,11 +268,8 @@ ionic_rx_pkt_free(struct queue *q,
                                  VMK_DMA_DIRECTION_TO_MEMORY,
                                  len,
                                  dma_addr);
-        if (status == VMK_OK && pkt) {
-                if (VMK_LIKELY(vmk_PktFrameLenGet(pkt))) {
-                        ionic_en_pkt_release(pkt, NULL);
-                        pkt = NULL;
-                }
+        if (status == VMK_OK) {
+                ionic_en_pkt_release(pkt, NULL);
         }
 }
 
@@ -312,12 +310,14 @@ ionic_rx_fill(struct queue *q)
 #endif
 
         num_q_avail = ionic_q_space_avail(q);
+
         for (i = num_q_avail; i; i--) {
 
                 pkt = ionic_rx_pkt_alloc(q, len, &dma_addr);
                 if (VMK_UNLIKELY(!pkt)) {
-                        ionic_err("num_q_avail: %d", num_q_avail);
-                        return;
+                        ionic_err("Queue index: %d, num_q_avail: %d",
+                                  q->index, num_q_avail);
+                        break;
                 }
 #if 0
                 vmk_PktListAppendPkt(rx_ring->pkt_list,
@@ -356,11 +356,12 @@ void ionic_rx_refill(struct queue *q)
 
                 desc = cur->desc;
 
-                //ionic_rx_pkt_free(q, cur->cb_arg, desc->len, desc->addr);
+                ionic_rx_pkt_free(q, cur->cb_arg, desc->len, desc->addr);
                 pkt = ionic_rx_pkt_alloc(q, len, &dma_addr);
                 if (VMK_UNLIKELY(!pkt)) {
-                        ionic_err("ionic_rx_pkt_alloc() failed");
-                        return;
+                        ionic_err("Queue index: %d, ionic_rx_pkt_alloc()"
+                                  "failed", q->index);
+                        break;
                 }
 
                 cur->cb_arg = pkt;
@@ -388,6 +389,8 @@ void ionic_rx_flush(struct cq *cq)
         unsigned int work_done;
 
         work_done = ionic_cq_service(cq, -1, ionic_rx_service, NULL);
+
+        ionic_info("ionic_rx_flush() called, work_done: %d", work_done);
 
         if (work_done > 0)
                 ionic_intr_return_credits(cq->bound_intr, work_done, 0, VMK_TRUE);
@@ -559,6 +562,7 @@ ionic_rx_netpoll(vmk_AddrCookie priv,
                 ionic_rx_fill(cq->bound_q);
                 poll_again = VMK_FALSE;
         }
+
 
         return poll_again;
 }
@@ -1416,7 +1420,7 @@ ionic_en_rx_ring_deinit(vmk_uint32 ring_idx,
 
         VMK_ASSERT(rx_ring->is_init == VMK_TRUE);
 
-        vmk_NetPollFlushRx(rx_ring->netpoll);
+//        vmk_NetPollFlushRx(rx_ring->netpoll);
 
         rx_ring->is_init           = VMK_FALSE;
         rx_ring->is_actived        = VMK_FALSE;
@@ -1491,7 +1495,7 @@ ionic_en_rx_rss_ring_init(vmk_uint32 ring_idx,
                                                    uplink_handle->uplink_dev,
                                                    netpoll_name,
                                                    VMK_TRUE);
-//                VMK_ASSERT(status == VMK_OK);
+                VMK_ASSERT(status == VMK_OK);
                 if (status != VMK_OK) {
                         ionic_err("vmk_NetPollRegisterUplink() failed, status: %s",
                                   vmk_StatusToString(status));

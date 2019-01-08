@@ -129,8 +129,12 @@ ionic_qcq_enable(struct qcq *qcq)
                 goto netpoll_act_err;
         }
 */
+        vmk_NetPollInterruptSet(qcq->netpoll,
+                                qcq->intr.cookie);
         vmk_NetPollEnable(qcq->netpoll);
-	ionic_intr_mask(&qcq->intr, VMK_FALSE);
+        vmk_IntrEnable(qcq->intr.cookie);
+
+        ionic_intr_mask(&qcq->intr, VMK_FALSE);
         return status;
 /*
 netpoll_act_err:
@@ -177,18 +181,25 @@ ionic_qcq_disable(struct qcq *qcq)
 	ionic_info("q_disable.qid %d\n", ctx.cmd.q_disable.qid);
 	ionic_info("q_disable.qtype %d\n", ctx.cmd.q_disable.qtype);
 
-	ionic_intr_mask(&qcq->intr, VMK_TRUE);
+        ionic_intr_mask(&qcq->intr, VMK_TRUE);
+
+        vmk_IntrDisable(qcq->intr.cookie);
+        vmk_IntrSync(qcq->intr.cookie);
+        vmk_NetPollDisable(qcq->netpoll);
+        vmk_NetPollFlushRx(qcq->netpoll);
+
 //	synchronize_irq(qcq->intr.vector);
 //	napi_disable(&qcq->napi);
-        vmk_IntrSync(qcq->intr.cookie);
-//        vmk_NetPollDisable(qcq->netpoll);
 
-	status = ionic_adminq_post_wait(lif, &ctx);
+        vmk_NetPollInterruptUnSet(qcq->netpoll);
+
+        status = ionic_adminq_post_wait(lif, &ctx);
         ionic_completion_destroy(&ctx.work);
         if (status != VMK_OK) {
                 ionic_err("ionic_adminq_post_wait() failed, status: %s",
                           vmk_StatusToString(status));
         }
+
 
         return status;
 }
@@ -245,8 +256,9 @@ ionic_stop(struct lif *lif)
 
 //	netif_carrier_off(netdev);
 //	netif_tx_disable(netdev);
-	for (i = 0; i < lif->nrxqcqs; i++) {
-		status = ionic_qcq_disable(lif->rxqcqs[i]);
+
+        for (i = 0; i < lif->nrxqcqs; i++) {
+                status = ionic_qcq_disable(lif->rxqcqs[i]);
 		if (status != VMK_OK) {
                         ionic_err("ionic_qcq_disable() failed, status: %s",
                                   vmk_StatusToString(status));
@@ -271,14 +283,6 @@ ionic_stop(struct lif *lif)
 
         for (i = 0; i < lif->nrxqcqs; i++) {
                 ionic_rx_flush(&lif->rxqcqs[i]->cq);
-        }
-
-        for (i = 0; i < lif->nrxqcqs; i++) {
-                vmk_NetPollDisable(lif->rxqcqs[i]->netpoll);
-        }
-
-        for (i = 0; i < lif->ntxqcqs; i++) {
-                vmk_NetPollDisable(lif->txqcqs[i]->netpoll);
         }
 
 	return status1;
@@ -1643,8 +1647,8 @@ static void ionic_lif_qcq_deinit(struct qcq *qcq)
 		return;
 	ionic_intr_mask(&qcq->intr, VMK_TRUE);
 //	devm_free_irq(dev, qcq->intr.vector, &qcq->napi);
-        vmk_IntrSync(qcq->intr.cookie);
-        vmk_NetPollInterruptUnSet(qcq->netpoll);
+//        vmk_IntrSync(qcq->intr.cookie);
+//        vmk_NetPollInterruptUnSet(qcq->netpoll);
 //	netif_napi_del(&qcq->napi);
         vmk_NetPollDestroy(qcq->netpoll); 
 	qcq->flags &= ~QCQ_F_INITED;
@@ -1713,8 +1717,9 @@ ionic_request_irq(struct lif *lif, struct qcq *qcq)
 //return devm_request_irq(dev, intr->vector, ionic_isr,
 //				0, intr->name, napi);
 
-        status = vmk_NetPollInterruptSet(qcq->netpoll,
-                                         qcq->intr.cookie);
+        status = VMK_OK; 
+//                vmk_NetPollInterruptSet(qcq->netpoll,
+//                                         qcq->intr.cookie);
         if (status != VMK_OK) {
                 ionic_err("vmk_NetPollInterruptSet() failed, status: %s",
                           vmk_StatusToString(status));

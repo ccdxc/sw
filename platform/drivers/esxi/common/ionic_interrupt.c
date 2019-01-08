@@ -121,13 +121,6 @@ ionic_int_register(vmk_ModuleID module_id,                        // IN
                 return status;
         }
 
-        status = vmk_IntrEnable(intr_cookie);
-        if (status != VMK_OK) {
-                ionic_err("vmk_IntrEnable() for interrupt cookie "
-                          "0x%x \"%s\" failed, status: %s",
-                          intr_cookie, name, vmk_StatusToString(status));
-        }
-
         return status;
 }
 
@@ -159,20 +152,6 @@ ionic_int_unregister(vmk_ModuleID module_id,                      // IN
                      void *handler_data)                          // IN
 {
         VMK_ReturnStatus status;
-
-        status = vmk_IntrDisable(intr_cookie);
-        if (status != VMK_OK) {
-                ionic_err("vmk_IntrDisable() for interrupt cookie "
-                          "0x%x failed, status: %s",
-                          intr_cookie, vmk_StatusToString(status));
-        }
-
-        status = vmk_IntrSync(intr_cookie);
-        if (status != VMK_OK) {
-                ionic_err("vmk_IntrSync() for interrupt cookie "
-                          "0x%x failed, status: %s",
-                          intr_cookie, vmk_StatusToString(status));
-        }
 
         status = vmk_IntrUnregister(module_id,
                                     intr_cookie,

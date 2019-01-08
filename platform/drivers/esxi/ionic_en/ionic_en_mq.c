@@ -1712,10 +1712,10 @@ ionic_en_rx_filter_register(struct ionic_en_priv_data *priv_data,      // IN
                 ionic_err("Unsupported class type: %d", filter_info->filter_class);
         }
 
-        vmk_SpinlockLock(priv_data->ionic.lifs_lock);
+//        vmk_SpinlockLock(priv_data->ionic.lifs_lock);
         lif = VMK_LIST_ENTRY(vmk_ListFirst(&priv_data->ionic.lifs),
                              struct lif, list);
-        vmk_SpinlockLock(priv_data->ionic.lifs_lock);
+//        vmk_SpinlockLock(priv_data->ionic.lifs_lock);
 
         if (filter_info->filter_class == VMK_UPLINK_QUEUE_FILTER_CLASS_MAC_ONLY) {
 
@@ -1790,10 +1790,10 @@ ionic_en_rx_filter_unregister(struct ionic_en_priv_data *priv_data,       // IN
                 ionic_err("Unsupported class type: %d", filter_info->filter_class);
         }
 
-        vmk_SpinlockLock(priv_data->ionic.lifs_lock);
+//        vmk_SpinlockLock(priv_data->ionic.lifs_lock);
         lif = VMK_LIST_ENTRY(vmk_ListFirst(&priv_data->ionic.lifs),
                              struct lif, list);
-        vmk_SpinlockLock(priv_data->ionic.lifs_lock);
+//        vmk_SpinlockLock(priv_data->ionic.lifs_lock);
 
         if (filter_info->filter_class == VMK_UPLINK_QUEUE_FILTER_CLASS_MAC_ONLY) {
 

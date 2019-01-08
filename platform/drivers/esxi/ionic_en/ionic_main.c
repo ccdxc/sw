@@ -26,8 +26,8 @@
 
 struct ionic_driver ionic_driver;
 
-unsigned int ntxq_descs = 512;
-unsigned int nrxq_descs = 512;
+unsigned int ntxq_descs = 1024;
+unsigned int nrxq_descs = 1024;
 unsigned int ntxqs = 32;
 unsigned int nrxqs = 32;
 unsigned int devcmd_timeout = 30;
@@ -148,6 +148,10 @@ int ionic_netpoll(int budget, ionic_cq_cb cb,
                                           VMK_TRUE);
 
         if (work_done < budget) {
+/*                ionic_intr_return_credits(cq->bound_intr,
+                                          0,
+                                          VMK_TRUE,
+                                          VMK_TRUE);*/
                 ionic_intr_mask(cq->bound_intr, VMK_FALSE);
         }
 

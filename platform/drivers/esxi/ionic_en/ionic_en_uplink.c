@@ -1269,14 +1269,14 @@ ionic_en_uplink_quiesce_io(vmk_AddrCookie driver_data)            // IN
         lif = VMK_LIST_ENTRY(vmk_ListFirst(&priv_data->ionic.lifs),
                              struct lif, list);
 
+        ionic_io_rings_deinit(priv_data, lif);
+
         status = ionic_stop(lif);
         //vmk_SpinlockLock(priv_data->ionic.lifs_lock);
         if (status != VMK_OK) {
                 ionic_err("ionic_stop() failed, status: %s",
                           vmk_StatusToString(status));
         }
-
-        ionic_io_rings_deinit(priv_data, lif);
 
         uplink_handle->is_started = VMK_FALSE;
 

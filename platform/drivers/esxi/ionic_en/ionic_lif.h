@@ -54,6 +54,7 @@ struct rx_stats {
 
 struct qcq {
         vmk_uint32 ring_idx;
+
         /* tx/rx_ring that associates with this qcq */
         void *ring;
 
