@@ -54,8 +54,6 @@
 #include "gen/hal/svc/multicast_svc_gen.hpp"
 #include "gen/hal/svc/gft_svc_gen.hpp"
 #include "gen/hal/svc/l4lb_svc_gen.hpp"
-#include "nic/hal/lkl/lklshim.hpp"
-#include "nic/hal/lkl/lkl_api.hpp"
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -251,16 +249,6 @@ main (int argc, char **argv)
     if (hal::hal_init(&hal::g_hal_cfg) != HAL_RET_OK) {
         fprintf(stderr, "HAL initialization failed, quitting ...\n");
         return 1;
-    }
-
-    if ((hal::g_hal_cfg.features == hal::HAL_FEATURE_SET_IRIS) &&
-        ((hal::g_hal_cfg.forwarding_mode == hal::HAL_FORWARDING_MODE_SMART_HOST_PINNED) ||
-         (hal::g_hal_cfg.forwarding_mode == hal::HAL_FORWARDING_MODE_SMART_SWITCH))) {
-        HAL_TRACE_DEBUG("lkl init");
-        if (hal::pd::lkl_init() != HAL_RET_OK) {
-            fprintf(stderr, "LKL initialization failed, quitting ...\n");
-            return 1;
-        }
     }
 
     // register for all gRPC services

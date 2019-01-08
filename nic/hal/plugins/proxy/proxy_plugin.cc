@@ -3,6 +3,9 @@
 //-----------------------------------------------------------------------------
 
 #include "proxy_plugin.hpp"
+#include "nic/hal/pd/pd_api.hpp"
+#include "nic/hal/lkl/lklshim.hpp"
+#include "nic/hal/lkl/lkl_api.hpp"
 
 namespace hal {
 namespace proxy {
@@ -25,6 +28,18 @@ extern "C" hal_ret_t proxy_plugin_init(hal_cfg_t *hal_cfg) {
 
     fte::register_feature(FTE_FEATURE_IPSEC, ipsec_exec, ipsec_info);
     fte::register_feature(FTE_FEATURE_P4PT, p4pt_exec);
+
+    /*
+     * Initialize the LKL for user-space TCP stack for TCP-proxy feature.
+     */
+    if (hal::g_hal_cfg.features == hal::HAL_FEATURE_SET_IRIS) {
+        HAL_TRACE_DEBUG("lkl init");
+        if (hal::pd::lkl_init() != HAL_RET_OK) {
+            fprintf(stderr, "LKL initialization failed, quitting ...\n");
+            return HAL_RET_ERR;
+        }
+    }
+
     return HAL_RET_OK;
 }
 
