@@ -45,6 +45,17 @@ static struct {
 static struct cdev *pnso_test_dev;
 static osal_atomic_int_t ctl_state;
 
+static void
+pnso_test_cdev_clear(void)
+{
+	pnso_test_softc.input_len = 0;
+	pnso_test_softc.output_len = 0;
+	if (pnso_test_softc.input)
+		pnso_test_softc.input[0] = 0;
+	if (pnso_test_softc.output)
+		pnso_test_softc.output[0] = 0;
+}
+
 int
 pnso_test_cdev_init(void)
 {
@@ -56,9 +67,10 @@ pnso_test_cdev_init(void)
         pnso_test_softc.input = TEST_ALLOC(pnso_test_softc.input_max + 1);
         pnso_test_softc.output = TEST_ALLOC(pnso_test_softc.output_max + 1);
 	if ((pnso_test_softc.input == NULL) || (pnso_test_softc.output == NULL)) {
-		PNSO_LOG_ERROR("Opened device pnso_test alloc failed\n");
+		PNSO_LOG_ERROR("Init device pnso_test alloc failed\n");
 		return (EINVAL);
 	}
+	pnso_test_cdev_clear();
 
 	return make_dev_p(MAKEDEV_CHECKNAME | MAKEDEV_WAITOK,
 	    &pnso_test_dev,
@@ -73,6 +85,7 @@ pnso_test_cdev_init(void)
 void
 pnso_test_cdev_deinit(void)
 {
+	PNSO_LOG_DEBUG("Deinit device pnso_test\n");
 	
 	destroy_dev(pnso_test_dev);
 	
@@ -88,7 +101,6 @@ static int
 pnso_test_open(struct cdev *dev __unused, int oflags __unused, int devtype __unused,
     struct thread *td __unused)
 {
-
 	PNSO_LOG_DEBUG("Opened device pnso_test successfully.\n");
 	return (0);
 }
@@ -119,10 +131,12 @@ pnso_test_read(struct cdev *dev __unused, struct uio *uio, int ioflag __unused)
 	amt = MIN(uio->uio_resid, uio->uio_offset >= pnso_test_softc.output_len + 1 ? 0 :
 	    pnso_test_softc.output_len + 1 - uio->uio_offset);
 
-	if ((error = uiomove(pnso_test_softc.output, amt, uio)) != 0)
-		PNSO_LOG_ERROR("uiomove failed!\n");
+	error = uiomove(pnso_test_softc.output + uio->uio_offset, amt, uio);
 
 	mtx_unlock(&pnso_test_softc.mtx);
+	if (error != 0)
+		PNSO_LOG_ERROR("uiomove failed!\n");
+
 	return (error);
 }
 
@@ -135,19 +149,22 @@ pnso_test_write(struct cdev *dev __unused, struct uio *uio, int ioflag __unused)
 	PNSO_LOG_DEBUG("Writing to device pnso_test.\n");
 	if ((pnso_test_softc.input == NULL) || (pnso_test_softc.output == NULL))
 		return (ENXIO);
+
+	mtx_lock(&pnso_test_softc.mtx);
 	
 	/*
 	 * We either write from the beginning or are appending -- do
 	 * not allow random access.
 	 */
-	if (uio->uio_offset != 0 && (uio->uio_offset != pnso_test_softc.input_len))
+	if (uio->uio_offset != 0 && (uio->uio_offset != pnso_test_softc.input_len)) {
+		mtx_unlock(&pnso_test_softc.mtx);
+		PNSO_LOG_ERROR("Invalid uio_offset %lu\n", uio->uio_offset);
 		return (EINVAL);
+	}
 
-	mtx_lock(&pnso_test_softc.mtx);
 	/* This is a new message, reset length */
 	if (uio->uio_offset == 0) {
-		pnso_test_softc.input_len = 0;
-		pnso_test_softc.output_len = 0;
+		pnso_test_cdev_clear();
 	}
 
 	/* Copy the string in from user memory to kernel memory */
@@ -159,15 +176,15 @@ pnso_test_write(struct cdev *dev __unused, struct uio *uio, int ioflag __unused)
 	pnso_test_softc.input_len = uio->uio_offset;
 	pnso_test_softc.input[pnso_test_softc.input_len] = 0;
 
-	if (error != 0)
-		PNSO_LOG_ERROR("Write failed: bad address!\n");
-
 	mtx_unlock(&pnso_test_softc.mtx);
-	/* Start the test. */
-	osal_atomic_set(&ctl_state, CTL_STATE_START);
-	
-	PNSO_LOG_DEBUG("Writing to device pnso_test done.\n");
-	
+	if (error != 0) {
+		PNSO_LOG_ERROR("Write failed: bad address!\n");
+	} else {
+		PNSO_LOG_DEBUG("Writing to device pnso_test done.\n");
+		/* Start the test. */
+		osal_atomic_set(&ctl_state, CTL_STATE_START);
+	}
+
 	return (error);
 }
 
@@ -181,16 +198,15 @@ char *pnso_test_sysfs_alloc_and_get_cfg(void)
 	
 	PNSO_LOG_DEBUG("Sending pnso_test buffer for test.\n");
 
-	len = pnso_test_softc.input_len;
-	buf = TEST_ALLOC(len + 1);
-
+	buf = TEST_ALLOC(pnso_test_softc.input_max + 1);
 	if (buf == NULL)
 		return (NULL);
 
 	mtx_lock(&pnso_test_softc.mtx);
+	len = pnso_test_softc.input_len;
 	memcpy(buf, pnso_test_softc.input, len);
 	mtx_unlock(&pnso_test_softc.mtx);
-	
+
 	buf[len] = 0;
 	return (buf);
 }

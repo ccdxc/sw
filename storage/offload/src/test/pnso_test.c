@@ -792,6 +792,32 @@ static void batch_ctx_p2v(struct batch_context *batch_ctx)
 	}
 }
 
+static uint32_t get_svc_status_data_len(const struct pnso_service_status *svc_status)
+{
+	uint32_t ret = 0;
+
+	switch (svc_status->svc_type) {
+	case PNSO_SVC_TYPE_HASH:
+		ret = svc_status->u.hash.num_tags *
+			sizeof(struct pnso_hash_tag);
+		break;
+	case PNSO_SVC_TYPE_CHKSUM:
+		ret = svc_status->u.chksum.num_tags *
+			sizeof(struct pnso_chksum_tag);
+		break;
+	case PNSO_SVC_TYPE_ENCRYPT:
+	case PNSO_SVC_TYPE_DECRYPT:
+	case PNSO_SVC_TYPE_COMPRESS:
+	case PNSO_SVC_TYPE_DECOMPRESS:
+		ret = svc_status->u.dst.data_len;
+		break;
+	default:
+		break;
+	}
+
+	return ret;
+}
+
 static void output_results(struct request_context *req_ctx,
 			   const struct test_svc_chain *svc_chain)
 {
@@ -828,15 +854,10 @@ static void output_results(struct request_context *req_ctx,
 						struct pnso_buffer_list bl;
 						struct pnso_flat_buffer b;
 					} buflist;
-					size_t tag_size = sizeof(struct pnso_hash_tag);
 
-					if (svc_status->svc_type == PNSO_SVC_TYPE_CHKSUM) {
-						tag_size = sizeof(struct pnso_chksum_tag);
-					}
 					buflist.bl.count = 1;
 					buflist.b.buf = (uint64_t) svc_status->u.hash.tags;
-					buflist.b.len = svc_status->u.hash.num_tags *
-							tag_size;
+					buflist.b.len = get_svc_status_data_len(svc_status);
 					file_size = buflist.b.len;
 					if (!testcase->turbo) {
 						checksum = compute_checksum(NULL,
@@ -852,7 +873,7 @@ static void output_results(struct request_context *req_ctx,
 						&buflist.bl);
 				}
 			} else if (svc_status->u.dst.sgl) {
-				file_size = svc_status->u.dst.data_len;
+				file_size = get_svc_status_data_len(svc_status);
 				if (!testcase->turbo) {
 					checksum = compute_checksum(svc_status->u.dst.sgl,
 								    NULL, file_size);
@@ -860,8 +881,7 @@ static void output_results(struct request_context *req_ctx,
 				if (svc->svc.svc_type == PNSO_SVC_TYPE_COMPRESS &&
 				    (svc->svc.u.cp_desc.flags & PNSO_CP_DFLAG_ZERO_PAD)) {
 					/* Round up */
-					padded_size = ((file_size + blk_sz - 1) /
-						       blk_sz) * blk_sz;
+					padded_size = roundup_len(file_size, blk_sz);
 					if (!testcase->turbo) {
 						padded_checksum = compute_checksum(
 							svc_status->u.dst.sgl,
@@ -1418,6 +1438,33 @@ static bool is_compare_true(uint16_t cmp_type, int cmp)
 	return success;
 }
 
+static bool validation_is_per_req(const struct test_validation *validation)
+{
+	return (validation->type == VALIDATION_RETCODE_COMPARE) ||
+		(validation->type == VALIDATION_DATA_LEN_COMPARE);
+}
+
+static void update_validation_stats(struct testcase_context *test_ctx,
+				    struct test_validation *validation,
+				    int cmp,
+				    pnso_error_t err)
+{
+	osal_atomic_lock(&test_ctx->stats_lock);
+	if (err == PNSO_OK) {
+		if (is_compare_true(validation->cmp_type, cmp)) {
+			validation->rt_success_count++;
+			test_ctx->stats.agg_stats.validation_successes++;
+		} else {
+			validation->rt_failure_count++;
+			test_ctx->stats.agg_stats.validation_failures++;
+		}
+	} else {
+		validation->rt_failure_count++;
+		test_ctx->stats.agg_stats.validation_failures++;
+	}
+	osal_atomic_unlock(&test_ctx->stats_lock);
+}
+
 static pnso_error_t run_data_validation(struct batch_context *ctx,
 					const struct test_testcase *testcase,
 					struct test_validation *validation)
@@ -1549,20 +1596,7 @@ static pnso_error_t run_data_validation(struct batch_context *ctx,
 	}
 
 done:
-	osal_atomic_lock(&test_ctx->stats_lock);
-	if (err == PNSO_OK) {
-		if (is_compare_true(validation->cmp_type, cmp)) {
-			validation->rt_success_count++;
-			test_ctx->stats.agg_stats.validation_successes++;
-		} else {
-			validation->rt_failure_count++;
-			test_ctx->stats.agg_stats.validation_failures++;
-		}
-	} else {
-		validation->rt_failure_count++;
-		test_ctx->stats.agg_stats.validation_failures++;
-	}
-	osal_atomic_unlock(&test_ctx->stats_lock);
+	update_validation_stats(test_ctx, validation, cmp, err);
 	return err;
 }
 
@@ -1600,20 +1634,52 @@ static pnso_error_t run_retcode_validation(struct request_context *req_ctx,
 	}
 
 done:
-	osal_atomic_lock(&test_ctx->stats_lock);
-	if (err == PNSO_OK) {
-		if (is_compare_true(validation->cmp_type, cmp)) {
-			validation->rt_success_count++;
-			test_ctx->stats.agg_stats.validation_successes++;
-		} else {
-			validation->rt_failure_count++;
-			test_ctx->stats.agg_stats.validation_failures++;
-		}
-	} else {
-		validation->rt_failure_count++;
-		test_ctx->stats.agg_stats.validation_failures++;
+	update_validation_stats(test_ctx, validation, cmp, err);
+	return err;
+}
+
+static pnso_error_t run_data_len_validation(struct request_context *req_ctx,
+					    const struct test_testcase *testcase,
+					    struct test_validation *validation)
+{
+	pnso_error_t err = PNSO_OK;
+	size_t i;
+	int cmp = 0;
+	int total_len = 0;
+	struct batch_context *batch_ctx = req_ctx->batch_ctx;
+	struct testcase_context *test_ctx = batch_ctx->test_ctx;
+
+	if (batch_ctx->req_rc != PNSO_OK) {
+		err = batch_ctx->req_rc;
+		goto done;
 	}
-	osal_atomic_unlock(&test_ctx->stats_lock);
+
+	if (validation->len) {
+		/* get total len */
+		for (i = 0; i < req_ctx->svc_res.num_services; i++)
+			total_len += get_svc_status_data_len(&req_ctx->svc_res.svc[i]);
+
+		cmp = (int) total_len - (int) validation->len;
+		if (cmp != 0) {
+			goto done;
+		}
+	}
+
+	if (req_ctx->svc_res.num_services < validation->svc_count) {
+		err = EINVAL;
+		goto done;
+	}
+
+	for (i = 0; i < validation->svc_count; i++) {
+		cmp = (int) get_svc_status_data_len(&req_ctx->svc_res.svc[i]) -
+			(int) validation->svc_retcodes[i];
+		if (cmp != 0) {
+			break;
+		}
+	}
+
+done:
+	update_validation_stats(test_ctx, validation, cmp, err);
 	return err;
 }
 
@@ -1639,11 +1705,24 @@ static pnso_error_t run_req_validation(struct request_context *req_ctx)
 	FOR_EACH_NODE(testcase->validations) {
 		struct test_validation *validation =
 			(struct test_validation *) node;
-		if (validation->type ==	VALIDATION_RETCODE_COMPARE &&
-		    (validation->svc_chain_idx == 0 ||
-		     validation->svc_chain_idx == req_ctx->svc_chain->node.idx)) {
-			run_retcode_validation(req_ctx, testcase, validation);
+
+		if (!validation_is_per_req(validation) ||
+		    (validation->svc_chain_idx &&
+		     validation->svc_chain_idx != req_ctx->svc_chain->node.idx)) {
+			continue;
 		}
+		switch (validation->type) {
+		case VALIDATION_RETCODE_COMPARE:
+			run_retcode_validation(req_ctx, testcase, validation);
+			break;
+		case VALIDATION_DATA_LEN_COMPARE:
+			run_data_len_validation(req_ctx, testcase, validation);
+			break;
+		default:
+			PNSO_LOG_ERROR("Unknown validation type %u\n", validation->type);
+			break;
+		}
+
 	}
 
 	return PNSO_OK;
@@ -1670,7 +1749,8 @@ static pnso_error_t run_batch_validation(struct batch_context *batch_ctx)
 	FOR_EACH_NODE(testcase->validations) {
 		struct test_validation *validation =
 				(struct test_validation *) node;
-		if (validation->type != VALIDATION_RETCODE_COMPARE) {
+
+		if (!validation_is_per_req(validation)) {
 			if (testcase->turbo &&
 			    validation->type == VALIDATION_DATA_COMPARE)
 				continue;

@@ -273,9 +273,9 @@ static const unsigned char *default_feature_yaml_list[PNSO_SVC_TYPE_MAX] = {
 "            idx: 1\n"
 "            retcode: 0\n"
 "            svc_retcodes: 0\n"
-"        - size_compare:\n"
+"        - data_len_compare:\n"
 "            idx: 2\n"
-"            file1: 'encrypted.bin'\n"
+"            #file1: 'encrypted.bin'\n"
 "            val: 4096\n",
 
 	[PNSO_SVC_TYPE_DECRYPT] =
@@ -339,9 +339,9 @@ static const unsigned char *default_feature_yaml_list[PNSO_SVC_TYPE_MAX] = {
 "            idx: 1\n"
 "            retcode: 0\n"
 "            svc_retcodes: 0\n"
-"        - size_compare:\n"
+"        - data_len_compare:\n"
 "            idx: 2\n"
-"            file1: 'decompressed.bin'\n"
+"            #file1: 'decompressed.bin'\n"
 "            val: '$default_len'\n"
 "        - data_compare:\n"
 "            idx: 3\n"

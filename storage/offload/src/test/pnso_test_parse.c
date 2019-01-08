@@ -1543,6 +1543,9 @@ static void construct_validation_name(struct test_validation *validation)
 	case VALIDATION_RETCODE_COMPARE:
 		strcpy(name, "retcode");
 		break;
+	case VALIDATION_DATA_LEN_COMPARE:
+		strcpy(name, "data_len");
+		break;
 	default:
 		strcpy(name, "unknown");
 		break;
@@ -1776,6 +1779,7 @@ CHILD_NODE_DESC(tests_test, validations, NULL, NULL, NULL) \
 CHILD_NODE_DESC(tests_test_validations, data_compare,    test_create_validation, NULL, (void*)VALIDATION_DATA_COMPARE) \
 CHILD_NODE_DESC(tests_test_validations, size_compare,    test_create_validation, NULL, (void*)VALIDATION_SIZE_COMPARE) \
 CHILD_NODE_DESC(tests_test_validations, retcode_compare, test_create_validation, NULL, (void*)VALIDATION_RETCODE_COMPARE) \
+CHILD_NODE_DESC(tests_test_validations, data_len_compare, test_create_validation, NULL, (void*)VALIDATION_DATA_LEN_COMPARE) \
 \
 CHILD_NODE_DESC(tests_test_validations_data_compare, idx,          NULL, test_set_idx, NULL) \
 CHILD_NODE_DESC(tests_test_validations_data_compare, type,         NULL, test_set_compare_type, NULL) \
@@ -1797,6 +1801,12 @@ CHILD_NODE_DESC(tests_test_validations_retcode_compare, svc_chain,    NULL, test
 CHILD_NODE_DESC(tests_test_validations_retcode_compare, retcode,      NULL, test_set_validation_retcode, NULL) \
 CHILD_NODE_DESC(tests_test_validations_retcode_compare, req_retcode,  NULL, test_set_validation_req_retcode, NULL) \
 CHILD_NODE_DESC(tests_test_validations_retcode_compare, svc_retcodes, NULL, test_set_validation_svc_retcodes, NULL) \
+\
+CHILD_NODE_DESC(tests_test_validations_data_len_compare, idx,          NULL, test_set_idx, NULL) \
+CHILD_NODE_DESC(tests_test_validations_data_len_compare, type,         NULL, test_set_compare_type, NULL) \
+CHILD_NODE_DESC(tests_test_validations_data_len_compare, svc_chain,    NULL, test_set_validation_svc_chain, NULL) \
+CHILD_NODE_DESC(tests_test_validations_data_len_compare, val,          NULL, test_set_validation_data_len, NULL) \
+CHILD_NODE_DESC(tests_test_validations_data_len_compare, svc_vals,     NULL, test_set_validation_svc_retcodes, NULL) \
 \
 CHILD_NODE_DESC(cp_hdr_formats, format,        test_create_cp_hdr_format, NULL, NULL) \
 CHILD_NODE_DESC(cp_hdr_formats_format, idx,           NULL,  test_set_idx, NULL) \
