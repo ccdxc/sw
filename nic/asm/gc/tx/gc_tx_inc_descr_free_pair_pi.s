@@ -50,7 +50,7 @@ dma_rnmdr_alloc_pair_ci:
     phvwr           p.ci_1_index, r2.wx
     addi            r3, r0, CAPRI_SEM_RNMDPR_BIG_ALLOC_CI_RAW_ADDR
     CAPRI_DMA_CMD_PHV2MEM_SETUP(ci_1_dma_dma_cmd, r3, ci_1_index, ci_1_index)
-    CAPRI_DMA_CMD_STOP(ci_1_dma_dma_cmd)
+    CAPRI_DMA_CMD_STOP_FENCE(ci_1_dma_dma_cmd)
     phvwri.e        p.app_header_table0_valid, 0;
     nop
 
@@ -122,7 +122,7 @@ dma_tnmdr_alloc_pair_ci:
     phvwr           p.ci_1_index, r2.wx
     addi            r3, r0, CAPRI_SEM_TNMDPR_BIG_ALLOC_CI_RAW_ADDR
     CAPRI_DMA_CMD_PHV2MEM_SETUP(ci_1_dma_dma_cmd, r3, ci_1_index, ci_1_index)
-    CAPRI_DMA_CMD_STOP(ci_1_dma_dma_cmd)
+    CAPRI_DMA_CMD_STOP_FENCE(ci_1_dma_dma_cmd)
     phvwri.e        p.app_header_table0_valid, 0;
     nop
 

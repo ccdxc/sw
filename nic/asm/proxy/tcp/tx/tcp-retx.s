@@ -20,7 +20,6 @@ struct s3_t0_tcp_tx_retx_d d;
     .align
     .param          tcp_cc_and_fra_process_start
     .param          tcp_tx_read_nmdr_gc_idx_start
-    .param          tcp_retx_reschedule_tx
 
 tcp_retx_process_start:
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
@@ -48,7 +47,7 @@ tcp_retx_enqueue:
 
     // If sending RST, reschedule to cleanup retx queue
     seq             c1, k.common_phv_rst, 1
-    j.c1            tcp_retx_reschedule_tx
+    b.c1            tcp_retx_reschedule_tx
     tblwr.c1        d.tx_rst_sent, 1
 
     nop.e
@@ -58,6 +57,15 @@ tcp_retx_retransmit:
     phvwr           p.t0_s2s_snd_nxt, d.retx_snd_una
     phvwri          p.to_s6_pending_tso_data, 1
     nop.e
+    nop
+
+tcp_retx_reschedule_tx:
+    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC,
+                        DB_SCHED_UPD_EVAL, 0, LIF_TCP)
+    /* data will be in r3 */
+    CAPRI_RING_DOORBELL_DATA(0, k.common_phv_fid,
+                        TCP_SCHED_RING_CLEAN_RETX, 0)
+    memwr.dx.e      r4, r3
     nop
 
 tcp_retx_ack_send:

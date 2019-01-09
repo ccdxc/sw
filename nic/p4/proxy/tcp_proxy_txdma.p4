@@ -481,8 +481,11 @@ header_type txdma_max_options_t {
 }
 @pragma dont_trim
 metadata txdma_max_options_t tcp_header_options;
+
+@pragma pa_align 64
 @pragma dont_trim
 metadata ring_entry_t ring_entry1;
+
 @pragma dont_trim
 metadata ring_entry_t ring_entry2;
 @pragma dont_trim

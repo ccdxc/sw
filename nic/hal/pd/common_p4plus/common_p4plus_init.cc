@@ -413,9 +413,9 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     symbols[i].name = "gc_tx_inc_descr_free_pair_pi.bin";
     symbols[i].num_params = 2;
     symbols[i].params[0].name = RNMDPR_BIG_TABLE_BASE;
-    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDPR_BIG_RX);
     symbols[i].params[1].name = TNMDPR_BIG_TABLE_BASE;
-    symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_NMDR_TX);
+    symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_NMDPR_BIG_TX);
     i++;
 
     /*

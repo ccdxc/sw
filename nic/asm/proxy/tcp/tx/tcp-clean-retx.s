@@ -299,13 +299,3 @@ tcp_retx_remove_barrier_and_end_program:
     // remove barrier
     memwr.b.e       r1, 0
     nop
-
-tcp_retx_reschedule_tx:
-    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC,
-                        DB_SCHED_UPD_EVAL, 0, LIF_TCP)
-    /* data will be in r3 */
-    CAPRI_RING_DOORBELL_DATA(0, k.common_phv_fid,
-                        TCP_SCHED_RING_CLEAN_RETX, 0)
-    memwr.dx.e      r4, r3
-    b               free_descriptor
-    nop

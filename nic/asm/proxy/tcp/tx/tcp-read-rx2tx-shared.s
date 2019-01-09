@@ -292,9 +292,9 @@ pending_rx2tx_clean_asesq:
     sub             r3, d.{sesq_base}.wx, CAPRI_SESQ_RING_SLOTS, NIC_SESQ_ENTRY_SIZE_SHIFT
     add             r3, r3, d.asesq_retx_ci, NIC_SESQ_ENTRY_SIZE_SHIFT
 
-    // pkts to free = min(ci-retx_ci, distance to end of sesq ring)
+    // pkts to free = min(ci-retx_ci, distance to end of asesq ring)
     sub             r1, d.{ci_4}.hx, d.asesq_retx_ci
-    sub             r2, CAPRI_ASESQ_RING_SLOTS, d.{ci_4}.hx
+    sub             r2, CAPRI_ASESQ_RING_SLOTS, d.asesq_retx_ci
     slt             c1, r2, r1[CAPRI_ASESQ_RING_SLOTS_SHIFT-1:0]
     add.c1          r1, r0, r2
     phvwr           p.to_s1_num_retx_pkts, r1[CAPRI_ASESQ_RING_SLOTS_SHIFT-1:0]
@@ -317,7 +317,7 @@ pending_rx2tx_clean_sesq:
 
     // pkts to free = min(ci-retx_ci, distance to end of sesq ring)
     sub             r1, d.{ci_0}.hx, d.sesq_retx_ci
-    sub             r2, CAPRI_SESQ_RING_SLOTS, d.{ci_0}.hx
+    sub             r2, CAPRI_SESQ_RING_SLOTS, d.sesq_retx_ci
     slt             c1, r2, r1[CAPRI_SESQ_RING_SLOTS_SHIFT-1:0]
     add.c1          r1, r0, r2
     phvwr           p.to_s1_num_retx_pkts, r1[CAPRI_SESQ_RING_SLOTS_SHIFT-1:0]
