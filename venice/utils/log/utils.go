@@ -105,19 +105,6 @@ func newLogger(config *Config) *kitLogger {
 
 	// Configure log filter
 	l = kitlevel.NewFilter(l, getFilterOption(config.Filter))
-
-	if config.LogToFile == true {
-		err := config.LogtoFileHandler()
-		if err != nil {
-			panic(fmt.Sprintf("Failed to open logfile: %s err: %v", config.FileCfg.Filename, err))
-		}
-	} else if config.LogToStdout == true {
-		err := config.LogtoStdoutHandler()
-		if err != nil {
-			panic(fmt.Sprintf("Failed to write to stdout: %s err", err))
-		}
-	}
-
 	return &kitLogger{logger: l, config: *config}
 }
 

@@ -59,20 +59,6 @@ func SetConfig(config *Config) Logger {
 		createSingleton()
 	})
 	singleton = newLogger(config)
-
-	if config.LogToFile == true {
-		err := config.LogtoFileHandler()
-		if err != nil {
-			panic(fmt.Sprintf("Failed to open logfile: %s err: %v", config.FileCfg.Filename, err))
-		}
-
-	} else if config.LogToStdout == true {
-		err := config.LogtoStdoutHandler()
-		if err != nil {
-			panic(fmt.Sprintf("Failed to write to stdout: %s err", err))
-		}
-	}
-
 	return singleton
 }
 
