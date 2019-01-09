@@ -1,179 +1,202 @@
-import { Component, OnChanges, OnDestroy, OnInit } from '@angular/core';
-import { MockDataUtil } from '@app/common/MockDataUtil';
+import { Component, Input, OnInit, ViewEncapsulation } from '@angular/core';
+import { OnChanges } from '@angular/core/src/metadata/lifecycle_hooks';
+import { Router } from '@angular/router';
+import { Animations } from '@app/animations';
 import { Utility } from '@app/common/Utility';
+import { LineGraphStat, LinegraphComponent } from '@app/components/shared/linegraph/linegraph.component';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
+import { ChartOptions } from 'chart.js';
+import { StatArrowDirection, CardStates, Stat } from '@app/components/shared/basecard/basecard.component';
+import { FlipState, FlipComponent } from '@app/components/shared/flip/flip.component';
 
 @Component({
-  selector: 'app-dsbdpolicyhealthwidget',
+  selector: 'app-dsbdpolicyhealth',
   templateUrl: './policyhealth.component.html',
-  styleUrls: ['./policyhealth.component.scss']
+  styleUrls: ['./policyhealth.component.scss'],
+  animations: [Animations],
+  encapsulation: ViewEncapsulation.None
 })
-export class PolicyhealthComponent implements OnInit, OnDestroy, OnChanges {
-  _background_img: any;
-  id: string;
+export class PolicyhealthComponent implements OnInit, OnChanges {
+  hasHover: boolean = false;
+  cardStates = CardStates;
 
-  title = 'Policies Health';
-  content = 'Policies Health';
-  last_update: string = 'Last Updated: ' + Utility.getPastDate(3).toLocaleDateString();
-  background_img: any = {
-    url: 'policy-health'
+  title: string = 'Security Policies';
+  firstStat: Stat = {
+    value: '90%',
+    description: 'ACTIVE FLOWS',
+    arrowDirection: StatArrowDirection.UP,
+    statColor: '#61b3a0'
+  };
+  secondStat: Stat = {
+    value: '5%',
+    description: 'DENIED',
+    arrowDirection: StatArrowDirection.UP,
+    statColor: '#97b8df'
+  };
+  thirdStat: Stat = {
+    value: '5%',
+    description: 'REJECTED',
+    arrowDirection: StatArrowDirection.UP,
+    statColor: '#97b8df'
   };
 
-  menuItems: any[] = [
-    { text: 'Trend line' },
-    { text: 'Trouble shooting' },
-    { text: 'Search Policies' }
+
+  activeFlows: LineGraphStat = {
+    title: 'ACTIVE FLOWS',
+    data: [],
+    statColor: '#61b3a0',
+    gradientStart: 'rgba(97, 179, 160, 1)',
+    gradientStop: 'rgba(97, 179, 160, 0)',
+    graphId: 'dsbdpolicyhealth-activeFlows',
+    defaultValue: 10,
+    defaultDescription: 'Avg',
+    hoverDescription: '',
+    isPercentage: false,
+    valueFormatter: LinegraphComponent.percentFormatter
+  };
+
+  deniedFlows: LineGraphStat = {
+    title: 'DENIED FLOWS',
+    data: [],
+    statColor: '#97b8df',
+    gradientStart: 'rgba(151, 184, 223, 1)',
+    gradientStop: 'rgba(151, 184, 223, 0)',
+    graphId: 'dsbdpolicyhealth-deniedFlows',
+    defaultValue: 10,
+    defaultDescription: 'Avg',
+    hoverDescription: '',
+    isPercentage: false,
+    valueFormatter: LinegraphComponent.percentFormatter
+  };
+
+  rejectedFlows: LineGraphStat = {
+    title: 'REJECTED FLOWS',
+    data: [],
+    statColor: '#97b8df',
+    gradientStart: 'rgba(151, 184, 223, 1)',
+    gradientStop: 'rgba(151, 184, 223, 0)',
+    graphId: 'dsbdpolicyhealth-rejectedFlows',
+    defaultValue: 10,
+    defaultDescription: 'Avg',
+    hoverDescription: '',
+    isPercentage: false,
+    valueFormatter: LinegraphComponent.percentFormatter
+  };
+
+  linegraphStats: LineGraphStat[] = [
+    this.activeFlows,
+    this.deniedFlows,
+    this.rejectedFlows
   ];
+
+  themeColor: string = '#61b3a0';
+  backgroundIcon: Icon = {
+    svgIcon: 'security',
+    margin: {}
+  };
   icon: Icon = {
     margin: {
-      top: '8px',
+      top: '10px',
       left: '10px'
     },
-    svgIcon: 'policy-health'
+    svgIcon: 'security'
   };
-  veniceTotalPolicies: number;
-  veniceTotalViolatedPolicies: number;
-  veniceTotalOkPolicies: number;
-  topViolatedPolicies: number;
-  topMostAppliedPolicies: number;
-  data: any;
-  options: any;
+  @Input() lastUpdateTime: string;
+  @Input() timeRange: string;
+  // When set to true, card contents will fade into view
+  @Input() cardState: CardStates = CardStates.READY;
 
-  constructor() {
+  flipState: FlipState = FlipState.front;
+
+
+  menuItems = [
+    {
+      text: 'Flip card', onClick: () => {
+        this.toggleFlip();
+      }
+    },
+  ];
+
+
+  showGraph: boolean = false;
+
+
+  dataset = [];
+  activePercent = 90;
+  rejectPercent = 5;
+  denyPercent = 5;
+
+  dataDoughnut = {
+    labels: ['active', 'rejected', 'denied'],
+    datasets: [
+      {
+        data: [this.activePercent, this.rejectPercent, this.denyPercent],
+        backgroundColor: [
+          '#61b3a0',
+          '#97b8df',
+          'rgba 151 184 223, 0.5'
+        ],
+        /* hoverBackgroundColor: [
+          '#a3cbf6',
+          '#36A2EB'
+        ] */
+      }
+    ]
+  };
+
+  options: ChartOptions = {
+    tooltips: {
+      enabled: true,
+      displayColors: false,
+      titleFontFamily: 'Fira Sans Condensed',
+      titleFontSize: 14,
+      bodyFontFamily: 'Fira Sans Condensed',
+      bodyFontSize: 14,
+      callbacks: {
+        label: function(tooltipItem, data) {
+          const dataset = data.datasets[tooltipItem.datasetIndex];
+          const label = data.labels[tooltipItem.index];
+          const val = dataset.data[tooltipItem.index];
+          return val + '% ' + label + ' flows';
+        }
+      }
+    },
+    title: {
+      display: false
+    },
+    legend: {
+      display: false
+    },
+    cutoutPercentage: 0,
+    circumference: 2 * Math.PI,
+    rotation: (1.0 + this.rejectPercent / 100) * Math.PI, // work
+
+    plugins: {
+    },
+    animation: {
+      duration: 0,
+    }
+  };
+
+  constructor(private router: Router) { }
+
+  toggleFlip() {
+    this.flipState = FlipComponent.toggleState(this.flipState);
+  }
+
+  ngOnChanges(changes) {
   }
 
   ngOnInit() {
-    this.id = 'policyhealth-' + Utility.s4();
-    this.generateData();
-    this._background_img = this.setBackgroundImg();
-  }
-
-  menuselect(obj) {
-    console.log('policyhealth menuselect()', obj);
-  }
-
-  generateData() {
-    const totalPolicies = Utility.getRandomInt(2000, 5000);
-    const goodPercent = Utility.getRandomInt(80, 95);
-    const badPercent = 100 - goodPercent;
-    const goodPolicies = Math.floor(totalPolicies * goodPercent / 100);
-    const badPolicies = Math.floor(totalPolicies * badPercent / 100);
-
-    this.veniceTotalPolicies = totalPolicies;
-    this.veniceTotalViolatedPolicies = badPolicies;
-    this.veniceTotalOkPolicies = goodPolicies;
-    this.topViolatedPolicies = MockDataUtil.getTopPolicyHealthRecords(10, 50, 100, 'policy-id ', 'policy-name ');
-    this.topMostAppliedPolicies = MockDataUtil.getTopPolicyHealthRecords(10, 500, 1000, 'policy-id ', 'policy-name ');
-
-    this.data = {
-      labels: ['Healthy', 'Violated'],
-      datasets: [
-        {
-          data: [goodPercent, badPercent],
-          backgroundColor: [
-            '#a3cbf6',
-            '#d66340'
-          ],
-          /* hoverBackgroundColor: [
-            '#a3cbf6',
-            '#36A2EB'
-          ] */
-        }
-      ]
-    };
-    this.options = {
-      tooltips: {
-        enabled: false
-      },
-      title: {
-        display: false
-      },
-      legend: {
-        display: false
-      },
-      circumference: 2 * Math.PI,
-      rotation: (1.0 + badPercent / 100) * Math.PI, // work
-
-      plugins: {
-        datalabels: {
-          backgroundColor: function(context) {
-            return context.dataset.backgroundColor;
-          },
-          borderColor: 'white',
-          borderRadius: 25,
-          borderWidth: 2,
-          color: 'white',
-          display: function(context) {
-            // print bad % only
-            return context.dataIndex > 0;
-          },
-          font: {
-            weight: 'bold',
-            family: 'Fira Sans Condensed'
-          },
-          formatter: Math.round
-        }
-      },
-      animation: {
-        onComplete: function() {
-          //
-          // see. dashboard.component.html <ng-template #dashboardPolicyHealth . There is a <canvas id="policy_health_text"
-          // we employ the chart.js onComplete() to draw "8%" to the center of donut chart
-          //
-          const total = badPercent + '%';
-          const $ = Utility.getJQuery();
-          const element = $('#policy_health_text').get(0);
-          if (element) {
-            const textCtx = element.getContext('2d');
-            textCtx.textAlign = 'center';
-            textCtx.textBaseline = 'middle';
-            textCtx.font = '36px Fira Sans Condensed';
-            textCtx.fillText(total, 190, 95);
-          }
-        }
+    const chartData = [this.activeFlows, this.rejectedFlows, this.deniedFlows];
+    chartData.forEach((chart) => {
+      const data = [];
+      const oneDayAgo = new Date(new Date().getTime() - (24 * 60 * 60 * 1000));
+      for (let index = 0; index < 48; index++) {
+        data.push({ t: new Date(oneDayAgo.getTime() + (index * 30 * 60 * 1000)), y: Utility.getRandomInt(0, 20) });
       }
-    };
-  }
-
-  setBackgroundImg() {
-    const styles = {
-      'background-image': 'url(' + this.background_img.url + ')',
-    };
-    return styles;
-  }
-
-  ngOnDestroy() {
-  }
-
-  ngOnChanges() {
-  }
-
-  itemClick($event) {
-    const obj = {
-      id: this.id,
-      event: $event
-    };
-    console.log('id', obj);
-  }
-
-  onTopViolatePolicyClick($event, policy) {
-    const obj = {
-      id: this.id,
-      event: $event,
-      policy: policy,
-      selectType: 'violation'
-    };
-    console.log('id', obj);
-  }
-
-  onTopAppliedPolicyClick($event, policy) {
-    const obj = {
-      id: this.id,
-      event: $event,
-      policy: policy,
-      selectType: 'applied'
-    };
-    console.log('id', obj);
+      chart.data = data;
+    });
   }
 
 }

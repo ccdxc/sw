@@ -1,73 +1,56 @@
 @import 'src/global-mixins';
 
-.naples-container {
-  @include primary-font();
-  height: 100%;
-  width: 100%;
+.dsbdnaples-stat-arrow {
+  font-size: 16px;
+  height: 16px;
+  width: 16px;
 }
 
-.naples-left {
-  background-repeat: no-repeat;
-  background-position: center center;
-  margin-top: -35px;
+.dsbdnaples-stat-value {
+  font-size: 30px;
 }
 
-.naples-right {
-  background-repeat: no-repeat;
-  background-position: center;
-  margin-top: -35px;
-}
-
-.naples-nodecount {
-  text-align: right;
-  font-size: 54px;
-  font-stretch: condensed;
-  line-height: 1;
-  color: #ffc430;
-}
-
-.naples-discover-count {
-  font-size: 64px;
-  text-align: center;
-  font-stretch: condensed;
-  line-height: 0;
-  color: #b592e3;
-  margin-right: 50px;
-}
-
-.naples-note-label {
-  font-size: 18px;
-  font-weight: normal;
-  font-style: normal;
-  font-stretch: condensed;
-  line-height: normal;
-  letter-spacing: normal;
+.dsbdnaples-stat-description {
+  white-space: nowrap;
+  @include primary-font(14px);
   color: #676763;
 }
 
-.naples-total-label {
-  text-align: right;
+.dsbdnaples-stat-left {
+  margin-left: 20px;
 }
 
-.naples-discover-label {
-  text-align: center;
-  line-height: 0;
-  margin-right: 50px;
-  margin-top: -10px;
+.dsbdnaples-stat-right {
+  margin-right: 10px;
 }
 
-.naples-label-canvas{
-  z-index: -1;
-  position: absolute;
-  left: 0px;
-  top: 0px;
-  height:225px;
-  width:450px;
-  margin-left: -50px;
-}
-
-.naples-chart-div {
+.dsbdnaples-card-right {
   position: relative;
+}
+
+.dsbdnaples-label-canvas {
+  width: 224px;
+  height: 173px;
+  @include primary-font(14px);
+}
+
+.dsbdnaples-percent {
+  @include primary-font(32px);
+}
+
+.dsbdnaples-label-canvas,
+.dsbdnaples-doughnut {
+  position: absolute;
+  top: -6px;
+}
+
+.dsbdnaples-card {
+  position: relative;
+  margin: 10px;
   width: 450px;
-  margin-left: -50px;
+  height: 240px;
+}
+
+.dsbdnaples-card-back {
+  margin-bottom: 5px;
 }

@@ -2,7 +2,8 @@ import { IMetrics_queryQuerySpec, Metrics_queryQuerySpec_function, Metrics_query
 import { Utility } from './Utility';
 import { IMetrics_queryQueryResponse, IMetrics_queryQueryResult } from '@sdk/v1/models/metrics_query';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
-import { HeroCardOptions, CardStates } from '@app/components/shared/herocard/herocard.component';
+import { HeroCardOptions } from '@app/components/shared/herocard/herocard.component';
+import { CardStates, StatArrowDirection } from '@app/components/shared/basecard/basecard.component';
 
 /**
  * serverData is in the following form:
@@ -98,6 +99,16 @@ import { HeroCardOptions, CardStates } from '@app/components/shared/herocard/her
   */
 export class MetricsUtility {
 
+  public static getStatArrowDirection(prev: number, curr: number): StatArrowDirection {
+    if (prev < curr) {
+      return StatArrowDirection.UP;
+    } else if (prev > curr) {
+      return StatArrowDirection.DOWN;
+    } else {
+      return StatArrowDirection.HIDDEN;
+    }
+  }
+
   public static timeSeriesQuery(kind: string, selector: ILabelsSelector = null): Metrics_queryQuerySpec {
     const timeSeriesQuery: IMetrics_queryQuerySpec = {
       'kind': kind,
@@ -117,7 +128,7 @@ export class MetricsUtility {
   }
 
   // Since we are averaging over 5 min buckets, we always query from the last 5 min window increment
-  public static timeSeriesQueryUpdate(queryBody) {
+  public static timeSeriesQueryUpdate(queryBody: IMetrics_queryQuerySpec) {
     queryBody['start-time'] = queryBody['end-time'];
     queryBody['end-time'] = Utility.roundDownTime(5).toISOString() as any;
   }
@@ -167,8 +178,31 @@ export class MetricsUtility {
   }
 
   public static pastFiveMinQueryUpdate(queryBody: IMetrics_queryQuerySpec) {
-    queryBody['start-time'] = 'now() - 24h' as any;
+    queryBody['start-time'] = 'now() - 5m' as any;
     queryBody['end-time'] = 'now()' as any;
+  }
+
+  public static intervalAverageQuery(kind: string, startTime, endTime, selector: ILabelsSelector = null): Metrics_queryQuerySpec {
+    const avgQuery: IMetrics_queryQuerySpec = {
+      'kind': kind,
+      'selector': selector,
+      function: Metrics_queryQuerySpec_function.MEAN,
+      // We don't specify the fields we need, as specifying more than one field
+      // while using the average function isn't supported by the backend.
+      // Instead we leave blank and get all fields
+      fields: [],
+      'start-time': startTime,
+      'end-time': endTime
+    };
+
+    return new Metrics_queryQuerySpec(avgQuery);
+  }
+
+  public static genIntervalAverageQueryUpdate(startTime, endTime) {
+    return (queryBody: IMetrics_queryQuerySpec) => {
+      queryBody['start-time'] = startTime;
+      queryBody['end-time'] = endTime;
+    };
   }
 
 

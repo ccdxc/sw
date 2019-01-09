@@ -1,5 +1,6 @@
 import { Observable, Subscription, BehaviorSubject, timer } from 'rxjs';
 import { Utility } from '@app/common/Utility';
+import { Metrics_queryQueryResponse } from '@sdk/v1/models/metrics_query';
 
 /**
  * To allow for multiple components to perform polls with different bodies,
@@ -93,7 +94,7 @@ export class PollUtility {
     const bodyPoll = poll.body;
     if (!Utility.getLodash().isEqual(body, bodyPoll)) {
       // stop current poll and start again with new body.
-      poll.handler.next([]);
+      poll.handler.next(defaultValue);
       this.terminatePolling(key, false);
       const pollingTimerSource = timer(initialDelay, interval);
       const pollingTimerSubscription =

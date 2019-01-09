@@ -17,12 +17,12 @@
     <div *ngIf="!hasUpdateString && timeRange != null" fxFlex="nogrow" fxLayout="column" class="dsbd-widgetheader-update-text">
         {{ timeRange}}
     </div>    
-    <div fxFlex="36px" class="dsbd-widgetheader-info" *ngIf="items.length>0">
+    <div fxFlex="36px" class="dsbd-widgetheader-info" *ngIf="menuItems.length>0">
         <mat-icon class="dsbd-widgetheader-morevert" [matMenuTriggerFor]="menu" aria-label="Open basic menu">
             more_vert 
         </mat-icon>
         <mat-menu #menu="matMenu">
-            <button mat-menu-item *ngFor="let item of items" (click)="menuSelect(item)" [disabled]="item.disabled">
+            <button mat-menu-item *ngFor="let item of menuItems" (click)="item.onClick()" [disabled]="item.disabled" [disableRipple]="true">
               {{ item.text }}
             </button>
           </mat-menu>

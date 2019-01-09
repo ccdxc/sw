@@ -6,6 +6,11 @@ import { BaseComponent } from '@components/base/base.component';
 
 import { ControllerService } from '../../services/controller.service';
 import { MessageService } from 'primeng/primeng';
+import { MetricsqueryService, MetricsPollingQueries, MetricsPollingQuery, MetricsPollingOptions } from '@app/services/metricsquery.service';
+import { Metrics_queryQuerySpec } from '@sdk/v1/models/generated/metrics_query';
+import { MetricsUtility } from '@app/common/MetricsUtility';
+import { IMetrics_queryQueryResponse, IMetrics_queryQueryResult } from '@sdk/v1/models/metrics_query';
+import { CardStates } from '../shared/basecard/basecard.component';
 
 /**
  * This is Dashboard Component for VeniceUI
@@ -34,6 +39,7 @@ import { MessageService } from 'primeng/primeng';
   encapsulation: ViewEncapsulation.None
 })
 export class DashboardComponent extends BaseComponent implements OnInit, OnDestroy {
+  subscriptions = [];
   gridsterOptions: any = {
     gridType: 'fixed',
     fixedRowHeight: 275,
@@ -52,10 +58,21 @@ export class DashboardComponent extends BaseComponent implements OnInit, OnDestr
   widgets: DashboardWidgetData[];
   pinnedWidgets: PinnedDashboardWidgetData[];
 
+
+  timeSeriesData: IMetrics_queryQueryResult;
+  currentData: IMetrics_queryQueryResult;
+  prevData: IMetrics_queryQueryResult;
+  avgDayData: IMetrics_queryQueryResult;
+
+  systemCapacity = {
+    cardState: CardStates.LOADING
+  };
+
   @ViewChildren('pinnedGridster') pinnedGridster: QueryList<any>;
 
   constructor(protected _controllerService: ControllerService,
-    protected messageService: MessageService
+    protected messageService: MessageService,
+    protected metricsqueryService: MetricsqueryService,
   ) {
     super(_controllerService, messageService);
   }
@@ -67,34 +84,36 @@ export class DashboardComponent extends BaseComponent implements OnInit, OnDestr
     this._controllerService.publish(Eventtypes.COMPONENT_INIT, { 'component': 'DashboardComponent', 'state': Eventtypes.COMPONENT_INIT });
     this._controllerService.setToolbarData({
       buttons: [
-        {
-          cssClass: 'global-button-primary dbsd-refresh-button',
-          text: 'Help',
-          callback: () => {
-            console.log(this.getClassName() + 'toolbar button help call()');
-          }
-        }
+        // Commenting out for now as they are not hooked up
+        // {
+        //   cssClass: 'global-button-primary dbsd-refresh-button',
+        //   text: 'Help',
+        //   callback: () => {
+        //     console.log(this.getClassName() + 'toolbar button help call()');
+        //   }
+        // }
       ],
       splitbuttons: [
-        {
-          text: 'Refresh',
-          icon: 'pi pi-refresh',
-          callback: (event, sbutton) => {
-            console.log('dashboard toolbar splitbutton refresh');
-          },
-          items: [
-            {
-label: '5 days', icon: 'pi pi-cog', command: () => {
-                console.log('dashboard toolbar menuitem 5-days');
-              }
-            },
-            {
-              label: '10 days', icon: 'pi pi-times', command: () => {
-                console.log('dashboard toolbar menuitem 10-days');
-              }
-            }
-          ]
-        }
+        // Commenting out for now as they are not hooked up
+        // {
+        //   text: 'Refresh',
+        //   icon: 'pi pi-refresh',
+        //   callback: (event, sbutton) => {
+        //     console.log('dashboard toolbar splitbutton refresh');
+        //   },
+        //   items: [
+        //     {
+        //       label: '5 days', icon: 'pi pi-cog', command: () => {
+        //         console.log('dashboard toolbar menuitem 5-days');
+        //       }
+        //     },
+        //     {
+        //       label: '10 days', icon: 'pi pi-times', command: () => {
+        //         console.log('dashboard toolbar menuitem 10-days');
+        //       }
+        //     }
+        //   ]
+        // }
       ],
       breadcrumb: [{ label: 'Dashboard - Currently using mock data', url: Utility.getBaseUIUrl() + 'dashboard' }]
     });
@@ -104,6 +123,8 @@ label: '5 days', icon: 'pi pi-cog', command: () => {
 
     this.getDefaultDashboardWidgets();
     this.getPinnedData();
+
+    this.getSystemCapacityMetrics();
   }
 
   /**
@@ -120,6 +141,81 @@ label: '5 days', icon: 'pi pi-cog', command: () => {
   ngOnDestroy() {
     // publish event that AppComponent is about to exist
     this._controllerService.publish(Eventtypes.COMPONENT_DESTROY, { 'component': 'dashboardComponent', 'state': Eventtypes.COMPONENT_DESTROY });
+    this.subscriptions.forEach(subscription => {
+      subscription.unsubscribe();
+    });
+  }
+
+  timeSeriesQuery(): MetricsPollingQuery {
+    const query: Metrics_queryQuerySpec = MetricsUtility.timeSeriesQuery('Node');
+    const pollOptions: MetricsPollingOptions = {
+      timeUpdater: MetricsUtility.timeSeriesQueryUpdate,
+      mergeFunction: MetricsUtility.timeSeriesQueryMerge
+    };
+    return { query: query, pollingOptions: pollOptions };
+  }
+
+  currentQuery(): MetricsPollingQuery {
+    const query: Metrics_queryQuerySpec = MetricsUtility.pastFiveMinAverageQuery('Node');
+    const pollOptions: MetricsPollingOptions = {
+      timeUpdater: MetricsUtility.pastFiveMinQueryUpdate,
+    };
+
+    return { query: query, pollingOptions: pollOptions };
+  }
+
+  // Gets between 10 to 5 min ago
+  prevQuery(): MetricsPollingQuery {
+    const start = 'now() - 10m';
+    const end = 'now() - 5m';
+    const query: Metrics_queryQuerySpec = MetricsUtility.intervalAverageQuery('Node', start, end);
+    const pollOptions: MetricsPollingOptions = {
+      timeUpdater: MetricsUtility.genIntervalAverageQueryUpdate(start, end),
+    };
+
+    return { query: query, pollingOptions: pollOptions };
+  }
+
+  avgDayQuery(): MetricsPollingQuery {
+    const query: Metrics_queryQuerySpec = MetricsUtility.pastDayAverageQuery('Node');
+    const pollOptions: MetricsPollingOptions = {
+      timeUpdater: MetricsUtility.pastDayAverageQueryUpdate,
+    };
+    return { query: query, pollingOptions: pollOptions };
+  }
+
+  getSystemCapacityMetrics() {
+    const queryList: MetricsPollingQueries = {
+      queries: [],
+      tenant: Utility.getInstance().getTenant()
+    };
+    queryList.queries.push(this.timeSeriesQuery());
+    queryList.queries.push(this.currentQuery());
+    queryList.queries.push(this.prevQuery());
+    queryList.queries.push(this.avgDayQuery());
+    const sub = this.metricsqueryService.pollMetrics('dsbdCards', queryList).subscribe(
+      (data: IMetrics_queryQueryResponse) => {
+        if (data && data.results && data.results.length === queryList.queries.length) {
+          this.timeSeriesData = data.results[0];
+          this.currentData = data.results[1];
+          this.prevData = data.results[2];
+          this.avgDayData = data.results[3];
+          this.enableSystemCapacityCard();
+        }
+      },
+      (err) => {
+        this.setSystemCapacityErrorState();
+      }
+    );
+    this.subscriptions.push(sub);
+  }
+
+  enableSystemCapacityCard() {
+    this.systemCapacity.cardState = CardStates.READY;
+  }
+
+  setSystemCapacityErrorState() {
+    this.systemCapacity.cardState = CardStates.FAILED;
   }
 
   /**

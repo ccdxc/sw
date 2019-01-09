@@ -1,4 +1,16 @@
-<div class="dsbd-main-gridster-content">
+<div fxLayout="column" fxLayoutGap="10px">
+  <div fxFlex="none" fxLayout="row" fxLayoutGap="10px">
+    <app-dsbdsystemcapacitywidget fxFlex="none" [cardState]="systemCapacity.cardState" [currentData]="currentData" [prevData]="prevData" [timeSeriesData]="timeSeriesData" [avgDayData]="avgDayData"></app-dsbdsystemcapacitywidget>
+    <app-dsbdnapleswidget fxFlex="none"></app-dsbdnapleswidget>
+  </div>
+  <div fxFlex="none" fxLayout="row" fxLayoutGap="10px">
+    <app-dsbdworkloads fxFlex="none"></app-dsbdworkloads>
+    <app-dsbdpolicyhealth fxFlex="none"></app-dsbdpolicyhealth>
+  </div>
+</div>
+
+<!-- Previous dashboard -->
+<!-- <div class="dsbd-main-gridster-content">
   <gridster class="dsbd-gridster" [options]="gridsterOptions" #gridster>
     <gridster-item class="dsbd-gridster-item" *ngFor="let widget of widgets" [item]="widget" [ngSwitch]="widget.id">
       <div class="dsbd-item-div" *ngSwitchCase="'system_capacity'">
@@ -71,4 +83,4 @@
       <p>{{ item.content }}</p>
     </div>
   </div>
-</ng-template>
+</ng-template> -->

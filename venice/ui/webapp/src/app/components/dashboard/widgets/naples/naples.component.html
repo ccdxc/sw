@@ -1,25 +1,72 @@
-<div fxLayout="column" class="naples-container">
-  <app-dsbdwidgetheader fxFlex="36px" fxLayout="row" [title]="title" 
-    [icon]="icon" [id]="id + '_header'" [menuItems]="menuItems" (widgetMenuSelect)="menuselect($event)">
-  </app-dsbdwidgetheader>
-  <div fxFlex fxLayout="row" class="naples-body">
-    <div [ngStyle]="_background_img_left" fxFlex=30 fxLayout="column" fxLayoutAlign="center" class="naples-left">
-      <div fxFlex=20 class="naples-nodecount">
-        {{venice_naples_count | number}}
+<div class="dsbdnaples-card">
+  <app-flip [flipState]="flipState">
+    <ng-container flip-front *ngTemplateOutlet="cardFront"></ng-container>
+    <ng-container flip-back *ngTemplateOutlet="cardBack"></ng-container>
+  </app-flip>
+</div>
+
+<ng-template #cardFront>
+  <app-basecard [title]="title" 
+                [backgroundIcon]="backgroundIcon"
+                [themeColor]="themeColor"
+                [icon]="icon"
+                [timeRange]="'Past 24 hours'"
+                [cardState]="cardState"
+                [menuItems]="menuItems"
+                >
+  <div fxFlex="100%" fxLayout="row">
+    <div [@fade] *ngIf="cardState === cardStates.READY" fxFlex="50%" fxLayout="row" fxLayoutAlign="space-between stretch">
+      <div fxFlex="nogrow" fxLayout="column" class="dsbdnaples-stat-left">
+        <ng-container *ngTemplateOutlet="stat; context: {statData: firstStat}"></ng-container>
+        <ng-container *ngTemplateOutlet="stat; context: {statData: secondStat}"></ng-container>
       </div>
-      <div class="naples-note-label naples-total-label">NAPLES</div>
+      <div fxFlex="nogrow" fxLayout="column" class="dsbdnaples-stat-right">
+        <ng-container *ngTemplateOutlet="stat; context: {statData: thirdStat}"></ng-container>
+        <ng-container *ngTemplateOutlet="stat; context: {statData: fourthStat}"></ng-container>
+      </div>
     </div>
-    <div fxFlex=40 class="naples-center">
-      <div class="naples-chart-div">
-        <canvas id="naples_text" class="naples-label-canvas"></canvas>
-        <p-chart type="doughnut" [data]="data" [options]="options" (onDataSelect)="itemClick($event)"></p-chart>
-      </div>
-    </div>
-    <div [ngStyle]="_background_img_right" fxFlex=30 fxLayout="column" fxLayoutAlign="center" class="naples-right">
-      <div fxFlex=20 class="naples-discover-count">
-        {{venice_naples_discovered_count|number}}
-      </div>
-      <div class="naples-note-label  naples-discover-label">DISCOVERED</div>
+    <div [@fade] *ngIf="cardState === cardStates.READY" fxFlex="50%" fxLayout="row" fxLayoutAlign="start start" class="dsbdnaples-card-right">
+      <ng-container *ngTemplateOutlet="piechart"></ng-container>
     </div>
   </div>
-</div>
+  </app-basecard>
+</ng-template>
+
+
+<ng-template #stat let-statData="statData">
+  <ng-container *ngIf="statData != null && statData.value != null">
+    <div fxFlex="autp" fxLayout="column" fxLayoutAlign="start start" class="dsbdnaples-stat" 
+          [matTooltip]="statData.tooltip"
+          [style.cursor]="statData.url != null ? 'pointer' : 'auto'" 
+          (click)="statData.onClick()"
+          >
+      <div fxFlex="nogrow" fxLayout="row">
+        <mat-icon fxFlex="none" *ngIf="statData.arrowDirection==='UP'" [style.color]="statData.statColor" fxFlex="none" class="dsbdnaples-stat-arrow">arrow_upward</mat-icon>
+        <mat-icon fxFlex="none" *ngIf="statData.arrowDirection==='DOWN'" [style.color]="statData.statColor" fxFlex="none" class="dsbdnaples-stat-arrow">arrow_downward</mat-icon>
+        <div fxFlex="nogrow" [style.color]="statData.statColor" class="dsbdnaples-stat-value">{{ statData.value }}</div>
+      </div>
+      <div fxFlex="nogrow" class="dsbdnaples-stat-description">{{ statData.description }}</div>
+    </div>
+  </ng-container>
+</ng-template>
+
+<ng-template #piechart>
+    <div class="dsbdnaples-label-canvas" fxLayout="column" fxLayoutAlign="center center" >
+      <div fxFlex="none" class="dsbdnaples-percent">10%</div>
+      <div fxFlex="none">UNHEALTHY</div>
+    </div>
+    <p-chart type="doughnut" [data]="dataDoughnut" width="224px" class="dsbdnaples-doughnut" height="173px" [options]="options"></p-chart>
+</ng-template>
+
+<ng-template #cardBack>
+  <app-basecard [title]="title" 
+              [backgroundIcon]="backgroundIcon"
+              [themeColor]="themeColor"
+              [icon]="icon"
+              [timeRange]="'Past 24 hours'"
+              [cardState]="cardState"
+              [menuItems]="menuItems"
+              >
+    <app-linegraph [@fade] *ngIf="cardState === cardStates.READY" fxFlex="100%" fxLayout="row" class="dsbdnaples-card-back" [stats]="linegraphStats"></app-linegraph>
+  </app-basecard>
+</ng-template>

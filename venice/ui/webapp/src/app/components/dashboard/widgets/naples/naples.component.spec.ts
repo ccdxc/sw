@@ -1,11 +1,12 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { WidgetsModule } from 'web-app-framework';
 import { PrimengModule } from '@app/lib/primeng.module';
 
 import { NaplesComponent } from './naples.component';
-import { DsbdwidgetheaderComponent } from '@app/components/shared/dsbdwidgetheader/dsbdwidgetheader.component';
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
-import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
+import { RouterTestingModule } from '@angular/router/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { SharedModule } from '@app/components/shared/shared.module';
 
 describe('NaplesComponent', () => {
   let component: NaplesComponent;
@@ -13,12 +14,15 @@ describe('NaplesComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [NaplesComponent, DsbdwidgetheaderComponent, PrettyDatePipe],
+      declarations: [NaplesComponent],
       imports: [
-        WidgetsModule,
         PrimengModule,
-        MaterialdesignModule
-      ]
+        RouterTestingModule,
+        HttpClientTestingModule,
+        MaterialdesignModule,
+        NoopAnimationsModule,
+        SharedModule
+      ],
     })
       .compileComponents();
   }));
@@ -26,13 +30,6 @@ describe('NaplesComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(NaplesComponent);
     component = fixture.componentInstance;
-    component.id = 'test_id';
-    component.background_img_left = {
-      url: 'test.com'
-    };
-    component.background_img_right = {
-      url: 'test.com'
-    };
     fixture.detectChanges();
   });
 

@@ -1,0 +1,77 @@
+<div class="dsbdworkloads-card">
+  <app-flip [flipState]="flipState">
+    <ng-container flip-front *ngTemplateOutlet="cardFront"></ng-container>
+    <ng-container flip-back *ngTemplateOutlet="cardBack"></ng-container>
+  </app-flip>
+</div>
+  
+<ng-template #cardFront>
+  <app-basecard [title]="title" 
+                [backgroundIcon]="backgroundIcon"
+                [themeColor]="themeColor"
+                [icon]="icon"
+                [timeRange]="'Past 24 hours'"
+                [cardState]="cardState"
+                [menuItems]="menuItems"
+                >
+  <div fxFlex="100%" fxLayout="column">
+    <div [@fade] *ngIf="cardState === cardStates.READY" fxFlex="50%" fxLayout="row" fxLayoutAlign="space-around stretch">
+      <div fxFlex="nogrow">
+        <ng-container *ngTemplateOutlet="stat; context: {statData: firstStat}"></ng-container>
+      </div>
+      <div fxFlex="nogrow">
+        <ng-container *ngTemplateOutlet="stat; context: {statData: secondStat}"></ng-container>
+      </div>
+    </div>
+    <div [@fade] *ngIf="cardState === cardStates.READY" fxFlex="50%" fxLayout="column" class="dsbdworkloads-small-stats" fxLayoutAlign="center stretch" fxLayoutGap="5px">
+      <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="space-between stretch">
+        <div fxFlex="nogrow" class="dsbdworkloads-stat-description">
+          Average number of workloads per host:
+        </div>
+        <div fxFlex="nogrow" [style.color]="themeColor" class="dsbdworkloads-stat-value-small">
+          240
+        </div>
+      </div>
+      <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="space-between stretch">
+        <div fxFlex="nogrow" class="dsbdworkloads-stat-description">
+          Workload with most traffic:
+        </div>
+        <div fxFlex="nogrow" [style.color]="themeColor" class="dsbdworkloads-stat-value-small">
+          Workload_10
+        </div>
+      </div>
+    </div>
+  </div>
+  </app-basecard>
+</ng-template>
+  
+<ng-template #stat let-statData="statData">
+  <ng-container *ngIf="statData != null && statData.value != null">
+    <div fxFlex="autp" fxLayout="column" fxLayoutAlign="start start" class="dsbdworkloads-stat" 
+          [matTooltip]="statData.tooltip"
+          [style.cursor]="statData.url != null ? 'pointer' : 'auto'" 
+          (click)="statData.onClick()"
+          >
+      <div fxFlex="nogrow" fxLayout="row">
+        <mat-icon fxFlex="none" *ngIf="statData.arrowDirection==='UP'" [style.color]="statData.statColor" fxFlex="none" class="dsbdworkloads-stat-arrow">arrow_upward</mat-icon>
+        <mat-icon fxFlex="none" *ngIf="statData.arrowDirection==='DOWN'" [style.color]="statData.statColor" fxFlex="none" class="dsbdworkloads-stat-arrow">arrow_downward</mat-icon>
+        <div fxFlex="nogrow" [style.color]="statData.statColor" class="dsbdworkloads-stat-value">{{ statData.value }}</div>
+      </div>
+      <div fxFlex="nogrow" class="dsbdworkloads-stat-description">{{ statData.description }}</div>
+    </div>
+  </ng-container>
+</ng-template>
+
+<ng-template #cardBack>
+  <app-basecard [title]="title" 
+              [backgroundIcon]="backgroundIcon"
+              [themeColor]="themeColor"
+              [icon]="icon"
+              [timeRange]="'Past 24 hours'"
+              [cardState]="cardState"
+              [menuItems]="menuItems"
+              >
+  <app-linegraph [@fade] *ngIf="cardState === cardStates.READY" fxFlex="100%" fxLayout="row" class="dsbdworkloads-card-back" [stats]="linegraphStats" [statSpace]="'120px'"></app-linegraph>
+</app-basecard>
+  
+</ng-template>

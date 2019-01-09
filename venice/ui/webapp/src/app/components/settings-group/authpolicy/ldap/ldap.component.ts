@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewEncapsulation, Output, EventEmitter, Input, ViewChild, ViewChildren, SimpleChanges, OnChanges , AfterViewInit, AfterContentInit} from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, Output, EventEmitter, Input, ViewChild, ViewChildren, SimpleChanges, OnChanges, AfterViewInit, AfterContentInit } from '@angular/core';
 import { AuthpolicybaseComponent } from '@app/components/settings-group/authpolicy/authpolicybase/authpolicybase.component';
 import { Animations } from '@app/animations';
 import { AuthLdap, AuthLdapServer, AuthAuthenticationPolicy } from '@sdk/v1/models/generated/auth';
@@ -30,7 +30,7 @@ import { ControllerService } from '@app/services/controller.service';
   },
   animations: [Animations]
 })
-export class LdapComponent extends AuthpolicybaseComponent implements OnInit, OnChanges , AfterContentInit{
+export class LdapComponent extends AuthpolicybaseComponent implements OnInit, OnChanges, AfterContentInit {
   isHover: boolean = false;
   LDAPEditMode: boolean = false;
   inCreateMode: boolean = false;
@@ -185,15 +185,15 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
 
   isAllInputsValid(authLDAP: AuthLdap): boolean {
     const ldap = authLDAP.getFormGroupValues();
-    if (    Utility.isEmpty(ldap['base-dn'] )
-         || Utility.isEmpty(ldap['bind-dn'])
-         || Utility.isEmpty(ldap['bind-password'])) {
-           return false;
-         }
+    if (Utility.isEmpty(ldap['base-dn'])
+      || Utility.isEmpty(ldap['bind-dn'])
+      || Utility.isEmpty(ldap['bind-password'])) {
+      return false;
+    }
     if (ldap.servers.length < 1) {
       return false;
     } else {
-      for (let i = 0; i < ldap.servers.length; i++ ) {
+      for (let i = 0; i < ldap.servers.length; i++) {
         const server = ldap.servers[i];
         if (!this.isServerValid(server)) {
           return false;
@@ -203,12 +203,12 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
     return true;
   }
   isServerValid(server: AuthLdapServer): boolean {
-    if (       Utility.isEmpty(server.url)
-            || Utility.isEmpty(server['tls-options']['server-name'])
-            || (Utility.isEmpty(server['tls-options']['trusted-certs']) && server['tls-options']['skip-server-cert-verification'] === true)
-        ) {
-            return false;
-          }
+    if (Utility.isEmpty(server.url)
+      || Utility.isEmpty(server['tls-options']['server-name'])
+      || (Utility.isEmpty(server['tls-options']['trusted-certs']) && server['tls-options']['skip-server-cert-verification'] === true)
+    ) {
+      return false;
+    }
     return true;
   }
 

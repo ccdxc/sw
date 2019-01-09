@@ -1,7 +1,45 @@
-import { Component, OnChanges, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, Input, OnChanges, OnDestroy, OnInit, ViewChild, ViewEncapsulation, AfterViewInit } from '@angular/core';
 import { Animations } from '@app/animations';
+import { MetricsUtility } from '@app/common/MetricsUtility';
 import { Utility } from '@app/common/Utility';
+import { CardStates, StatArrowDirection } from '@app/components/shared/basecard/basecard.component';
+import { LinegraphComponent, LineGraphStat } from '@app/components/shared/linegraph/linegraph.component';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
+import { IMetrics_queryQueryResult } from '@sdk/v1/models/metrics_query';
+import { Chart, ChartData } from 'chart.js';
+import { HttpEventUtility } from '@app/common/HttpEventUtility';
+import { ClusterNode } from '@sdk/v1/models/generated/cluster';
+import { ClusterService } from '@app/services/generated/cluster.service';
+import { Subscription } from 'rxjs';
+import { ControllerService } from '@app/services/controller.service';
+import { FlipState, FlipComponent } from '@app/components/shared/flip/flip.component';
+
+interface BarGraphStat {
+  percent: number;
+  hoverText?: string;
+  arrowDirection?: StatArrowDirection;
+  statColor: string;
+}
+
+interface GraphStat {
+  title: string;
+  lineGraphStat: LineGraphStat;
+  barGraphStat: BarGraphStat;
+  fieldName: string;
+  barChart: Chart;
+  id: string;
+}
+
+interface NetworkGraphStat {
+  lineGraphStat: LineGraphStat;
+  currentValue: {
+    arrowDirection: StatArrowDirection,
+    value: string,
+    description: string,
+    statColor: string
+  };
+  fieldNames: string[];
+}
 
 @Component({
   selector: 'app-dsbdsystemcapacitywidget',
@@ -10,7 +48,9 @@ import { Icon } from '@app/models/frontend/shared/icon.interface';
   animations: [Animations],
   encapsulation: ViewEncapsulation.None
 })
-export class SystemcapacitywidgetComponent implements OnInit, OnDestroy, OnChanges {
+export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges {
+  @ViewChild('lineGraph') lineGraphComponent: LinegraphComponent;
+  viewInitialized: boolean = false;
   _background_img: any;
   dataset: any;
   layout_use: any;
@@ -22,45 +62,183 @@ export class SystemcapacitywidgetComponent implements OnInit, OnDestroy, OnChang
   trendline: any;
   options: any;
   layout: any;
-  data: any;
+  data: ChartData;
 
-  venice_node_count = 5;
-  title = 'Venice System Capacity';
+  title = 'Cluster';
   last_update: string = 'Last Updated: ' + Utility.getPastDate(3).toLocaleDateString();
   icon: Icon = {
     margin: {
       top: '8px',
       left: '10px'
     },
-    svgIcon: 'venice'
+    svgIcon: 'cluster'
   };
   background_img: any = {
     url: 'assets/images/dashboard/venice.svg'
   };
-  menuItems: any[] = [
-    { text: 'Toggle Trend Line' },
-    { text: 'Trouble shooting' }
+  menuItems = [
+    {
+      text: 'Flip card', onClick: () => {
+        this.toggleFlip();
+      }
+    },
   ];
-  content: 'Venice System Capacity';
+  flipState: FlipState = FlipState.front;
 
-  constructor() {
+  cpuLineGraphStat: LineGraphStat = {
+    title: 'CPU',
+    data: [],
+    statColor: '#b592e3',
+    gradientStart: 'rgba(181,146, 227,1)',
+    gradientStop: 'rgba(181,146, 227,0)',
+    graphId: 'systemcapacity-cpu',
+    defaultValue: null,
+    defaultDescription: 'Avg',
+    hoverDescription: '',
+    isPercentage: true,
+    valueFormatter: LinegraphComponent.percentFormatter
+  };
+  memLineGraphStat: LineGraphStat = {
+    title: 'MEMORY',
+    data: [],
+    statColor: '#b592e3',
+    gradientStart: 'rgba(181,146, 227,1)',
+    gradientStop: 'rgba(181,146, 227,0)',
+    graphId: 'systemcapacity-memory',
+    defaultValue: null,
+    defaultDescription: 'Avg',
+    hoverDescription: '',
+    isPercentage: true,
+    valueFormatter: LinegraphComponent.percentFormatter
+  };
+  storageLineGraphStat: LineGraphStat = {
+    title: 'STORAGE',
+    data: [],
+    statColor: '#b592e3',
+    gradientStart: 'rgba(181,146, 227,1)',
+    gradientStop: 'rgba(181,146, 227,0)',
+    graphId: 'systemcapacity-storageStat',
+    defaultValue: null,
+    defaultDescription: 'Avg',
+    hoverDescription: '',
+    isPercentage: true,
+    valueFormatter: LinegraphComponent.percentFormatter
+  };
+  networkLineGraphStat: LineGraphStat = {
+    title: 'NETWORK',
+    data: [],
+    statColor: '#b592e3',
+    gradientStart: 'rgba(181,146, 227,1)',
+    gradientStop: 'rgba(181,146, 227,0)',
+    graphId: 'systemcapacity-network',
+    defaultValue: null,
+    defaultDescription: 'Avg',
+    hoverDescription: '',
+    isPercentage: false,
+    valueFormatter: (val) => {
+      if (val) {
+        return Utility.formatBytes(val, 2, 3);
+      }
+      return '';
+    }
+  };
+
+  cpuGraphStat: GraphStat = {
+    title: 'CPU',
+    lineGraphStat: this.cpuLineGraphStat,
+    barGraphStat: {
+      percent: 0,
+      statColor: '#b592e3',
+    },
+    fieldName: 'mean_CPUUsedPercent',
+    barChart: null,
+    id: 'systemcapacity-bargraph-cpu'
+  };
+
+  memGraphStat: GraphStat = {
+    title: 'MEMORY',
+    lineGraphStat: this.memLineGraphStat,
+    barGraphStat: {
+      percent: 0,
+      statColor: '#b592e3',
+    },
+    fieldName: 'mean_MemUsedPercent',
+    barChart: null,
+    id: 'systemcapacity-bargraph-memory'
+  };
+
+  storageGraphStat: GraphStat = {
+    title: 'STORAGE',
+    lineGraphStat: this.storageLineGraphStat,
+    barGraphStat: {
+      percent: 0,
+      statColor: '#b592e3',
+    },
+    fieldName: 'mean_DiskUsedPercent',
+    barChart: null,
+    id: 'systemcapacity-bargraph-storage'
+  };
+
+  networkGraphStat: NetworkGraphStat = {
+    lineGraphStat: this.networkLineGraphStat,
+    fieldNames: ['mean_InterfaceRxBytes', 'mean_InterfaceTxBytes'],
+    currentValue: {
+      arrowDirection: StatArrowDirection.HIDDEN,
+      value: '10.6 Mb',
+      description: '',
+      statColor: '#b592e3',
+    }
+  };
+
+  barGraphDrawn: boolean = false;
+
+  cpuChart: Chart;
+  memChart: Chart;
+  storageChart: Chart;
+
+  themeColor: string = '#b592e3';
+  statColor: string = '#77a746';
+  @Input() currentData: IMetrics_queryQueryResult;
+  @Input() prevData: IMetrics_queryQueryResult;
+  @Input() timeSeriesData: IMetrics_queryQueryResult;
+  @Input() avgDayData: IMetrics_queryQueryResult;
+
+  @Input() lastUpdateTime: string;
+  @Input() timeRange: string;
+  // When set to true, card contents will fade into view
+  @Input() cardState: CardStates = CardStates.READY;
+
+  linegraphStats: LineGraphStat[] = [
+    this.cpuLineGraphStat,
+    this.memLineGraphStat,
+    this.storageLineGraphStat,
+    this.networkLineGraphStat
+  ];
+
+  graphStats: GraphStat[] = [
+    this.cpuGraphStat,
+    this.memGraphStat,
+    this.storageGraphStat,
+  ];
+
+  cardStates = CardStates;
+
+  nodeEventUtility: HttpEventUtility<ClusterNode>;
+  nodes: ReadonlyArray<ClusterNode> = [];
+
+  subscriptions: Subscription[] = [];
+
+  constructor(protected controllerService: ControllerService,
+    protected clusterService: ClusterService) {
+  }
+
+  toggleFlip() {
+    this.flipState = FlipComponent.toggleState(this.flipState);
   }
 
   ngOnInit() {
-    // if (!this.item.id) {
-    this.id = 'systemcapacity-' + Utility.s4();
-    // }
-    this.setGraphOptions();
+    this.getNodes();
     this._background_img = this.setBackgroundImg();
-  }
-
-  menuselect(obj) {
-    if (obj.menu.text === 'Toggle Trend Line') {
-      this.menuItems[0] = { text: 'Toggle Bar Chart' };
-    } else if (obj.menu.text === 'Toggle Bar Chart') {
-      this.menuItems[0] = { text: 'Toggle Trend Line' };
-    }
-    console.log('workload menuselect()', obj);
   }
 
   setBackgroundImg() {
@@ -70,249 +248,263 @@ export class SystemcapacitywidgetComponent implements OnInit, OnDestroy, OnChang
     return styles;
   }
 
-  /**
-   * Compute whether to show System-Capacity snapshop Chart tooltip when mouse is over the chart
-   * @param tooltipItem
-   * @param data
-   */
-  isToShowSystemCapacityBarChartTooltip(tooltipItem, data): boolean {
-
-    if (tooltipItem.datasetIndex === 1) {
-      return false;
-    }
-    return true;
+  getNodes() {
+    this.nodeEventUtility = new HttpEventUtility<ClusterNode>(ClusterNode);
+    this.nodes = this.nodeEventUtility.array;
+    const subscription = this.clusterService.WatchNode().subscribe(
+      response => {
+        this.nodeEventUtility.processEvents(response);
+      },
+      this.controllerService.restErrorHandler('Failed to get Node info')
+    );
+    this.subscriptions.push(subscription);
   }
 
   ngOnDestroy() {
+    this.subscriptions.forEach(subscription => {
+      subscription.unsubscribe();
+    });
   }
 
   ngOnChanges() {
+    this.setupData();
   }
 
-  itemClick($event, datsetType) {
-    const obj = {
-      event: $event,
-      dataset: datsetType
-    };
-    console.log('systemcapacity click', obj);
+  ngAfterViewInit() {
+    // We wait for the view to be initialized as we need the linegraph charts
+    // to be ready in the dom.
+    this.viewInitialized = true;
+    this.setupData();
   }
 
-  setGraphOptions() {
-    const dataList = Utility.getRandomIntList(4, 10, 50);
-    const labels = ['Storage', 'CPU', 'Memory', 'Nework'];
-    const maxNum = 50;
-    const dataMaxList = [maxNum, maxNum, maxNum, maxNum];
+  setupData() {
+    if (this.cardState === CardStates.READY && this.viewInitialized) {
+      this.graphStats.forEach((entry) => {
+        const lineGraph = entry.lineGraphStat;
+        const barGraph = entry.barGraphStat;
+        const fieldName = entry.fieldName;
 
-    this.layout = {
-      annotations: [{
-        x: 'Storage',
-        xanchor: 'center',
-        y: 120,
-        yanchor: 'top',
-        showarrow: false,
-        text: 'Hello'
-      }, {
-        x: 'Storage',
-        xanchor: 'center',
-        y: 22,
-        yanchor: 'top',
-        text: 'Y axis label',
-        showarrow: false
-      }]
-    };
+        // TimeSeries data
+        if (MetricsUtility.resultHasData(this.timeSeriesData)) {
+          const index = this.timeSeriesData.series[0].columns.indexOf(fieldName);
+          const data = Utility.transformToChartjsTimeSeries(this.timeSeriesData.series[0].values, 0, index);
+          lineGraph.data = data;
+        }
+
+        // day average data
+        if (MetricsUtility.resultHasData(this.avgDayData)) {
+          const index = this.avgDayData.series[0].columns.indexOf(fieldName);
+          lineGraph.defaultValue = Math.round(this.avgDayData.series[0].values[0][index]);
+        }
+
+        // currentData
+        if (MetricsUtility.resultHasData(this.currentData)) {
+          let index = this.currentData.series[0].columns.indexOf(fieldName);
+          barGraph.percent = this.currentData.series[0].values[0][index];
+          index = this.prevData.series[0].columns.indexOf(fieldName);
+          const prev = this.prevData.series[0].values[0][index];
+          barGraph.arrowDirection = MetricsUtility.getStatArrowDirection(prev, barGraph.percent);
+        }
+      });
+
+      // Network handled separately as we have to add rx and tx
+      // TimeSeries data
+      const fieldName1 = this.networkGraphStat.fieldNames[0];
+      const fieldName2 = this.networkGraphStat.fieldNames[1];
+      if (MetricsUtility.resultHasData(this.timeSeriesData)) {
+        const index1 = this.timeSeriesData.series[0].columns.indexOf(fieldName1);
+        const data1 = Utility.transformToChartjsTimeSeries(this.timeSeriesData.series[0].values, 0, index1);
+        const index2 = this.timeSeriesData.series[0].columns.indexOf(fieldName2);
+        const data2 = Utility.transformToChartjsTimeSeries(this.timeSeriesData.series[0].values, 0, index2);
+
+        for (let index = 0; index < data1.length; index++) {
+          data1[index].y = data1[index].y + data2[index].y;
+        }
+        this.networkGraphStat.lineGraphStat.data = data1;
+
+        const lastItem = data1[data1.length - 1];
+        const secondToLastItem = data1[data1.length - 2];
+        const thirdToLastItem = data1[data1.length - 3];
+        const currentRate = lastItem.y - secondToLastItem.y;
+        const previousRate = secondToLastItem.y - thirdToLastItem.y;
+
+        this.networkGraphStat.currentValue.value = Utility.formatBytes(currentRate, 2, 3);
+        this.networkGraphStat.currentValue.arrowDirection = MetricsUtility.getStatArrowDirection(previousRate, currentRate);
+      }
+
+      // day average data
+      if (MetricsUtility.resultHasData(this.avgDayData)) {
+        const index1 = this.avgDayData.series[0].columns.indexOf(fieldName1);
+        const index2 = this.avgDayData.series[0].columns.indexOf(fieldName2);
+
+        const data1 = Math.round(this.avgDayData.series[0].values[0][index1]);
+        const data2 = Math.round(this.avgDayData.series[0].values[0][index2]);
+
+        this.networkGraphStat.lineGraphStat.defaultValue = data1 + data2;
+      }
+
+      if (this.barGraphDrawn) {
+        this.graphStats.forEach((entry) => {
+          this.updateBarGraph(entry.barChart, entry.barGraphStat);
+        });
+        // Manually calling setup charts to redraw as default
+        // change detection will not trigger when the data changes
+        this.lineGraphComponent.setupCharts();
+      } else {
+        this.barGraphDrawn = true;
+        // In case we just switched from loading state to ready state,
+        // we need to wait for dom to render the canvas
+        setTimeout(() => {
+          this.graphStats.forEach((entry) => {
+            entry.barChart = this.setBarGraphOptions(entry.barGraphStat, entry.id);
+          });
+          // change detection will not trigger when the data changes
+          this.lineGraphComponent.setupCharts();
+        }, 0);
+      }
+    }
+  }
+
+  updateBarGraph(chart: Chart, barGraphStat: BarGraphStat) {
+    if (chart == null || barGraphStat == null) {
+      return;
+    }
+    const percent = barGraphStat.percent;
+    chart.data.datasets[0].data = [percent];
+    chart.data.datasets[1].data = [100 - percent];
+    chart.update();
+  }
+
+  setBarGraphOptions(graphData: BarGraphStat, id: string): Chart {
+    const dataList = [graphData.percent];
+    const labels = [''];
+    // compliment of the percentages
+    // in order to make outer bar
+    const dataMaxList = [100 - graphData.percent];
+
+    this.layout = {};
 
     this.data = {
       labels: labels,
       datasets: [
         {
-          backgroundColor: ['#E1D4F0', '#CBB2EE', '#E1D4F0', '#CBB2EE'],
-          borderColor: ['#CBB2EE', '#B594E1', '#CBB2EE', '#B594E1'],
+          backgroundColor: ['#CBB2EE'],
+
+          borderColor: ['#CBB2EE'],
+          hoverBackgroundColor: ['#b592e3'],
           borderWidth: 1,
-          data: dataList, // [15, 25, 27, 34],
-          datalabels: {
-            align: 'end',
-            color: function(context) {
-              return context.dataset.borderColor;
-            },
-            font: {
-              size: 12,
-              weight: 'bold'
-            },
-            formatter: function(value, context) {
-              return (context.dataIndex % 2 === 0) ? value + ' GB' : value;
-            },
-            offset: -20 // put he lable inside the red bar areas.
-          }
+          data: dataList,
         },
         {
           backgroundColor: '#eee',
           borderColor: '#aaa',
+          hoverBackgroundColor: '#d6d6d6',
           borderWidth: 1,
-          data: dataMaxList, // [50, 50, 50, 50],
-          datalabels: {
-            align: 'start',
-            color: '#666',
-            font: {
-              size: 12,
-              weight: 500
-            },
-            formatter: function(value, context) {
-              const ds0 = context.chart.data.datasets[0];
-              const idx = context.dataIndex;
-              const v0 = ds0.data[idx];
-
-              return Math.round(100 * v0 / value) + '%';
-            },
-            offset: 0
-          }
+          data: dataMaxList,
         }
       ]
-    },
+    };
 
-      this.options = {
-        maintainAspectRatio: true, // important to set chart height
-        responsive: false,
-        legend: false,
-        tooltips: {
-          enabled: true,
-          filter: (tooltipItem, data) => {
-            return this.isToShowSystemCapacityBarChartTooltip(tooltipItem, data);
-          },
-          callbacks: {
-            title: function(tooltipItem, data) {
-              return (tooltipItem.length > 0) ? data['labels'][tooltipItem[0]['index']] : null;
-            },
-            label: function(tooltipItem, data) {
-              return (tooltipItem) ? data['datasets'][tooltipItem.datasetIndex].data[tooltipItem.index] : null;
-            },
-
-
-          }
-        },
-        layout: {
-          padding: {
-            left: 0,
-            right: 0,
-            top: 0,
-            bottom: 0
-          }
-        },
-        scales: {
-          xAxes: [{
-            stacked: true,
-            gridLines: false,
-            ticks: {
-              padding: 5,
-              fontSize: 12 // x-axis label (storage, CPU) font size
-            },
-            categoryPercentage: 1.0, // distance between two bars
-          }],
-          yAxes: [{
-            display: false,
-            ticks: {
-              min: 0,
-              max: maxNum + 10
-            }
-          }]
-        },
-        plugins: {
-          datalabels: {
-            anchor: 'end',
-            offset: 2,
-            font: {
-              family: 'Fira Sans'
-            }
-          }
+    this.options = {
+      maintainAspectRatio: true, // important to set chart height
+      responsive: false,
+      legend: false,
+      tooltips: {
+        enabled: false,
+        mode: 'index',
+        intersect: false,
+        position: 'nearest',
+        custom: this.createCustomTooltip(id + '-tooltip')
+      },
+      layout: {
+        padding: {
+          left: 2,
+          right: 2,
+          top: 2,
+          bottom: 2
         }
       },
-
-      this.trendline = {
-        data: {
-          labels: ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7'],
-          datasets: [
-            {
-              lineTension: 0,
-              label: 'Storage',
-              data: Utility.getRandomIntList(7, 23, 40), // 25, 29, 30, 23, 26, 36, 30],
-              fill: false,
-              borderColor: '#4bc0c0'
-            },
-            {
-              lineTension: 0,
-              label: 'CPU',
-              data: Utility.getRandomIntList(7, 18, 40), // [28, 38, 40, 19, 36, 27, 40],
-              fill: false,
-              borderColor: '#565656'
-            },
-            {
-              lineTension: 0,
-              label: 'Memory',
-              data: Utility.getRandomIntList(7, 32, 60), // [35, 49, 50, 41, 56, 55, 40],
-              fill: false,
-              borderColor: '#97b8df'
-            },
-            {
-              lineTension: 0,
-              label: 'Network',
-              data: Utility.getRandomIntList(7, 20, 45), // [25, 49, 23, 43, 36, 35, 33],
-              fill: false,
-              borderColor: '#e57553'
-            },
-          ]
-        },
-        options: {
-          title: {
+      scales: {
+        xAxes: [{
+          stacked: true,
+          gridLines: false,
+          display: false,
+          ticks: {
             display: false
           },
-          elements: {
-            point: {
-              radius: 2,
-              hitRadius: 10,
-              hoverRadius: 5,
-            }
-          },
-          plugins: {
-            datalabels: {
-              display: false
-            }
-          },
-          tooltips: {
-            enabled: true,
-            mode: 'dataset',
-            position: 'nearest',
-            intersect: false,
-            // yAlign:'top'
-          },
-          legend: {
-            display: true,
-            position: 'right',
-            labels: {
-              usePointStyle: true,
-              fontSize: 9
-            }
-          },
-          responsive: true,
-          scales: {
-            xAxes: [{
-              display: true,
-              gridLines: {
-                display: true,
-                drawBorder: false
-              }
+          barPercentage: 1
+        }],
+        yAxes: [{
+          barThickness: 20,
+          stacked: true,
+          gridLines: false,
+          display: false,
+        }]
+      },
+      hover: {
+        mode: 'index',
+        intersect: false,
+      },
+      plugins: {
+        datalabels: {
+          display: false,
+        },
+      }
+    };
 
-            }],
-            yAxes: [{
-              display: true,
-              gridLines: {
-                display: true,
-                drawBorder: false
-              },
-              ticks: { min: 15 }
-            }]
-          }
-        }
-      };
+    const canvas: any = document.getElementById(id);
 
+    return new Chart(canvas, {
+      type: 'horizontalBar',
+      data: this.data,
+      options: this.options,
+    });
 
+  }
+
+  /**
+   * Returns a function to be passed to chartjs for creating tooltips.
+   * This function creates tooltips on the DOM instead of the canvas so that
+   * it won't be clipped by the size of the canvas.
+   */
+  createCustomTooltip(chartTooltipId) {
+    return function(tooltip) {
+      // This function will be called in the context of the chart
+      const chartThis: any = this;
+      // Tooltip Element
+      let tooltipEl = document.getElementById(chartTooltipId);
+      if (!tooltipEl) {
+        tooltipEl = document.createElement('div');
+        tooltipEl.id = chartTooltipId;
+        tooltipEl.classList.add('global-chartjs-tooltip');
+        chartThis._chart.canvas.parentNode.appendChild(tooltipEl);
+      }
+      // Hide if no tooltip
+      if (tooltip.opacity === 0) {
+        tooltipEl.style.opacity = '0';
+        return;
+      }
+      // Set caret Position
+      tooltipEl.classList.remove('above', 'below', 'no-transform');
+      if (tooltip.yAlign) {
+        tooltipEl.classList.add(tooltip.yAlign);
+      } else {
+        tooltipEl.classList.add('no-transform');
+      }
+      // Set Text
+      if (tooltip.body) {
+        tooltipEl.innerHTML = tooltip.dataPoints[0].xLabel.toFixed(1) + ' %';
+      }
+      const positionY = chartThis._chart.canvas.offsetTop;
+      const positionX = chartThis._chart.canvas.offsetLeft;
+      // Display, position, and set styles for font
+      tooltipEl.style.opacity = '1';
+      tooltipEl.style.left = positionX + 130 + 'px';
+      tooltipEl.style.top = positionY + tooltip.caretY + 'px';
+      tooltipEl.style.fontFamily = tooltip._bodyFontFamily;
+      tooltipEl.style.fontSize = tooltip.bodyFontSize + 'px';
+      tooltipEl.style.fontStyle = tooltip._bodyFontStyle;
+      tooltipEl.style.padding = tooltip.yPadding + 'px ' + tooltip.xPadding + 'px';
+    };
   }
 }

@@ -103,9 +103,9 @@ export class GenServiceUtility {
         this.urlWsMap[url] = observer;
       }
       return this.urlWsMap[url];
-    } 
+    }
 
-    // Watch 
+    // Watch
     if (this.urlServiceMap[url] == null) {
       // Creating cold observer that emits events when oboe receives new data
       const oboeObserver: Observable<any> = Observable.create(this.oboeObserverCreate(url, payload, eventPayload));

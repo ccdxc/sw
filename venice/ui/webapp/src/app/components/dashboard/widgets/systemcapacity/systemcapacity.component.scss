@@ -1,24 +1,107 @@
 @import 'src/global-mixins';
 
-.systemCapacity-container {
+.systemcapacity-container {
   @include primary-font();
 }
 
-.systemCapacity-nodecount {
-  @include primary-font(14px, #b592e3);
+.systemcapacity-image-text-container {
+  position: relative;
   text-align: center;
-  font-size: 100px;
 }
 
-.systemCapacity-left {
+.systemcapacity-nodecount {
+    @include primary-font(100px, #b592e3);
+    position: absolute;
+    top: -10px;
+    left: 0;
+    right: 0;
+}
+
+.systemcapacity-image-text {
+    @include primary-font(14px);
+    position: absolute;
+    top: 135px;
+    left: 0;
+    right: 0;
+}
+
+.systemcapacity-background {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+}
+
+.systemcapacity-foreground {
+  z-index: 10;
+}
+
+.systemcapacity-graph-label {
+  @include primary-font(16px);
+  margin-right: 5px;
+}
+
+.systemcapacity-graph-stat {
+  @include primary-font(20px);
+  margin-right: 5px;
+}
+
+.systemcapacity-left {
+  position: relative;
+}
+
+.systemcapacity-venice-image {
+  position: absolute;
   background-repeat: no-repeat;
   background-position: center;
-  background-size: fit;
+  height: 100%;
+  width: 100%;
+  top: -25px;
 }
 
-.systemCapacity-right{
-  padding-top:20px;
-  overflow: hidden;
-  height:250px;
-  width:335px;
+.systemcapacity-right{
+  margin-right: 10px;
+}
+
+.systemcapacity-linegraph {
+  height: calc(100% + 10px);
+  width: 100%;
+  position: absolute;
+  top: -20px;
+}
+
+.systemcapacity-card {
+  position: relative;
+  margin: 10px;
+  width: 600px;
+  height: 240px;
+}
+
+.systemcapacity-stat-arrow {
+  $size: 16px;
+
+  font-size: $size;
+  height: $size;
+  width: $size;
+  margin-left: 5px;
+}
+
+.systemcapacity-bargraph-stat-arrow {
+  $size: 12px;
+
+  font-size: $size;
+  height: $size;
+  width: $size;
+  margin-left: 5px;
+}
+
+.systemcapacity-stat-value {
+  font-size: 30px;
+}
+
+.systemcapacity-stat-description {
+  white-space: nowrap;
+  @include primary-font(14px);
+  color: #676763;
+  margin-top: 16px;
+  margin-left: 10px;
 }

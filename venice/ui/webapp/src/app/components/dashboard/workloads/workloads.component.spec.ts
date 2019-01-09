@@ -1,25 +1,25 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { PrimengModule } from '@app/lib/primeng.module';
 
-import { PolicyhealthComponent } from './policyhealth.component';
+import { WorkloadsComponent } from './workloads.component';
+import { PrimengModule } from '@app/lib/primeng.module';
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { SharedModule } from '@app/components/shared/shared.module';
 import { RouterTestingModule } from '@angular/router/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { SharedModule } from '@app/components/shared/shared.module';
 
-describe('PolicyhealthComponent', () => {
-  let component: PolicyhealthComponent;
-  let fixture: ComponentFixture<PolicyhealthComponent>;
+describe('WorkloadsComponent', () => {
+  let component: WorkloadsComponent;
+  let fixture: ComponentFixture<WorkloadsComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [PolicyhealthComponent],
+      declarations: [WorkloadsComponent],
       imports: [
         PrimengModule,
+        MaterialdesignModule,
         RouterTestingModule,
         HttpClientTestingModule,
-        MaterialdesignModule,
         NoopAnimationsModule,
         SharedModule
       ],
@@ -28,7 +28,7 @@ describe('PolicyhealthComponent', () => {
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(PolicyhealthComponent);
+    fixture = TestBed.createComponent(WorkloadsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

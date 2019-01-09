@@ -21,6 +21,7 @@ import { PolicyhealthComponent } from './widgets/policyhealth/policyhealth.compo
 import { SoftwareversionComponent } from './widgets/softwareversion/softwareversion.component';
 import { NaplesComponent } from './widgets/naples/naples.component';
 import { SharedModule } from '@app/components/shared/shared.module';
+import { WorkloadsComponent } from './workloads/workloads.component';
 
 @NgModule({
   id: 'dashboardModule',
@@ -37,6 +38,6 @@ import { SharedModule } from '@app/components/shared/shared.module';
     dashboardRouter,
     SharedModule
   ],
-  declarations: [DashboardComponent, SystemcapacitywidgetComponent, DsbdworkloadComponent, PolicyhealthComponent, SoftwareversionComponent, NaplesComponent]
+  declarations: [DashboardComponent, SystemcapacitywidgetComponent, DsbdworkloadComponent, PolicyhealthComponent, SoftwareversionComponent, NaplesComponent, WorkloadsComponent]
 })
 export class DashboardModule { }

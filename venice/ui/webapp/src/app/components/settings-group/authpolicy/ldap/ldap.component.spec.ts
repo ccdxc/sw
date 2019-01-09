@@ -14,7 +14,7 @@ import { By } from '@angular/platform-browser';
 import { MessageService } from 'primeng/primeng';
 import { PrimengModule } from '@app/lib/primeng.module';
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
-import { AuthLdap} from '@sdk/v1/models/generated/auth';
+import { AuthLdap } from '@sdk/v1/models/generated/auth';
 
 import { LdapComponent } from './ldap.component';
 
@@ -76,16 +76,16 @@ describe('LdapComponent', () => {
      // Clicking create button
      createButton.nativeElement.click();
      fixture.detectChanges();
- 
+
      // should be in edit mode
      const saveButton = fixture.debugElement.query(By.css('.authpolicy-save'));
      expect(saveButton).toBeTruthy();
      const cancelButton = fixture.debugElement.query(By.css('.authpolicy-cancel'));
      expect(cancelButton).toBeTruthy();
- 
+
      // Canceling the create form goes back to create new
      cancelButton.nativeElement.click();
- 
+
      overlay = fixture.debugElement.query(By.css('.ldap-overlay'));
      expect(overlay).toBeDefined();
      createButton = fixture.debugElement.query(By.css('.ldap-create'));

@@ -1,0 +1,50 @@
+@import 'src/global-mixins';
+
+.basecard-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  margin: 10px;
+  background: #ffffff;
+}
+
+.basecard-background {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+}
+
+.basecard-background-icon {
+  opacity: 0.1;
+  width: 150px;
+  height: 150px;
+  margin: 25px;
+}
+
+.basecard-background-mat-icon {
+  opacity: 0.1;
+  width: 175px;
+  height: 175px;
+  font-size: 175px;
+}
+
+.basecard-foreground {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+}
+
+.basecard-foreground-content {
+  position: relative;
+}
+
+.basecard-failed-icon {
+  color: #e57553;
+  font-size: 36px;
+  margin-bottom: 13px;
+}
+
+.basecard-failed-text {
+  @include primary-font(26px);
+}
+

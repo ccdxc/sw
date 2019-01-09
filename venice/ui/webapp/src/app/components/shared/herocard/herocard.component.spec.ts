@@ -1,6 +1,6 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { HerocardComponent, StatArrowDirection, CardStates } from './herocard.component';
+import { HerocardComponent } from './herocard.component';
 import { WidgetsModule } from 'web-app-framework';
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
 import { DsbdwidgetheaderComponent } from '@app/components/shared/dsbdwidgetheader/dsbdwidgetheader.component';
@@ -9,6 +9,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SpinnerComponent } from '../spinner/spinner.component';
 import { By } from '@angular/platform-browser';
 import { Router } from '@angular/router';
+import { CardStates, StatArrowDirection, BasecardComponent } from '../basecard/basecard.component';
 
 const mockRouter = {
   navigateByUrl: jasmine.createSpy('navigateByUrl')
@@ -26,6 +27,7 @@ describe('HerocardComponent', () => {
         DsbdwidgetheaderComponent,
         PrettyDatePipe,
         SpinnerComponent,
+        BasecardComponent
       ],
       imports: [
         WidgetsModule,

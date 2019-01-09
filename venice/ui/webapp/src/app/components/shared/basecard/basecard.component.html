@@ -1,0 +1,30 @@
+
+<div [style.box-shadow]="'0 0 3px 0 ' + themeColor" 
+      [style.border]="hasHover ? 'solid 1px ' + themeColor : 'solid 1px #cec5bd'"
+      (mouseenter)="hasHover = true"
+      (mouseleave)="hasHover = false"
+      class="basecard-container">
+  <div [@fade] *ngIf="backgroundIcon" class="basecard-background" fxLayout="row" fxLayoutAlign="start center">
+    <mat-icon fxFlex="none" *ngIf="backgroundIcon.svgIcon" [style.color]="themeColor" [svgIcon]="backgroundIcon.svgIcon" class="basecard-background-icon">
+    </mat-icon>
+    <mat-icon fxFlex="none" *ngIf="backgroundIcon.matIcon"
+    [style.color]="themeColor" class="basecard-background-mat-icon">
+        {{backgroundIcon.matIcon}}
+    </mat-icon>
+  </div>
+  <div [@loaded]="cardState === cardStates.READY" class="basecard-foreground" fxLayout="column">
+    <!-- Icon bar -->
+    <app-dsbdwidgetheader fxFlex="45px" fxLayout="row" [title]="title" [iconFillColor]="themeColor" [lastUpdateTime]="lastUpdateTime" [timeRange]='timeRange' [icon]="icon" [menuItems]="menuItems"></app-dsbdwidgetheader>
+    <div class="basecard-foreground-content" fxFlex fxLayout="row" >
+      <ng-content fxFlex="100%"></ng-content>
+    </div>
+  </div>
+  <div [@fade] *ngIf="cardState === cardStates.LOADING || cardState === cardStates.FAILED" class="basecard-foreground">
+      <!-- Failed state -->
+      <div *ngIf="cardState === cardStates.FAILED" fxFlex fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="20px">
+        <mat-icon fxFlex="nogrow" class="basecard-failed-icon">error_outline</mat-icon>
+        <div fxFlex="nogrow" class="basecard-failed-text">Failed to get metric data</div>
+      </div>
+    <app-spinner *ngIf="cardState === cardStates.LOADING"></app-spinner>
+  </div>
+</div>

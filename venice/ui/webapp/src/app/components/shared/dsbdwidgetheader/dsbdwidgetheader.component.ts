@@ -2,6 +2,11 @@ import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, V
 import { Utility } from '@app/common/Utility';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 
+export interface MenuItems {
+  text: string;
+  onClick: () => void;
+}
+
 /**
  * Component for creating the heading of dashboard widgets
  * Should be used by all dashboard widgets for a standard look.
@@ -26,16 +31,8 @@ export class DsbdwidgetheaderComponent implements OnInit, OnDestroy, OnChanges {
   @Input() lastUpdateTime: string = '2018-08-23T17:35:08.534909931Z';
   @Input() timeRange: string;
   @Input() id: String;
-  @Input() menuItems: [any];
+  @Input() menuItems: MenuItems[] = [];
 
-  @Output() widgetHeaderClick: EventEmitter<any> = new EventEmitter();
-  @Output() widgetMenuSelect: EventEmitter<any> = new EventEmitter();
-
-  items = [
-    { text: 'Refresh' },
-    { text: 'Export data' },
-    { text: 'Go to detail page' }
-  ];
 
   constructor() {
   }
@@ -64,20 +61,6 @@ export class DsbdwidgetheaderComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   ngOnChanges() {
-    if (this.menuItems) {
-      this.items = this.menuItems;
-    }
   }
 
-  itemClick($event) {
-    this.widgetHeaderClick.emit(this.id);
-  }
-
-  menuSelect(item) {
-    const obj = {
-      id: this.id,
-      menu: item
-    };
-    this.widgetMenuSelect.emit(obj);
-  }
 }

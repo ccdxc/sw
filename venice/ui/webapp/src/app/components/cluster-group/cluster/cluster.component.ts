@@ -3,7 +3,7 @@ import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { MetricsUtility } from '@app/common/MetricsUtility';
 import { Utility } from '@app/common/Utility';
 import { BaseComponent } from '@app/components/base/base.component';
-import { HeroCardOptions, StatArrowDirection, CardStates } from '@app/components/shared/herocard/herocard.component';
+import { HeroCardOptions } from '@app/components/shared/herocard/herocard.component';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
@@ -13,6 +13,7 @@ import { Metrics_queryQuerySpec } from '@sdk/v1/models/generated/metrics_query';
 import { IMetrics_queryQueryResponse, IMetrics_queryQueryResult } from '@sdk/v1/models/metrics_query';
 import { MessageService } from 'primeng/primeng';
 import { Subscription } from 'rxjs';
+import { StatArrowDirection, CardStates } from '@app/components/shared/basecard/basecard.component';
 
 @Component({
   selector: 'app-cluster',
@@ -235,13 +236,13 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
       heroCard.data = data;
     }
 
-    // Current stat calculation - we take the last point
+    // current avg
     if (MetricsUtility.resultHasData(this.avgData)) {
       const index = this.avgData.series[0].columns.indexOf(fieldName);
       heroCard.firstStat.value = Math.round(this.avgData.series[0].values[0][index]) + '%';
     }
 
-    // Avg
+    // Avg day
     const avgDayData = this.avgDayData;
     if (avgDayData.series[0].values.length !== 0) {
       const index = this.avgDayData.series[0].columns.indexOf(fieldName);

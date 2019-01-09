@@ -24,6 +24,10 @@ import { DsbdworkloadComponent } from './widgets/dsbdworkload/dsbdworkload.compo
 
 import { MatIconRegistry } from '@angular/material';
 import { MessageService } from 'primeng/primeng';
+import { WorkloadsComponent } from './workloads/workloads.component';
+import { MetricsqueryService } from '@app/services/metricsquery.service';
+import { ClusterService } from '@app/services/generated/cluster.service';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 @Component({
   template: ''
@@ -36,13 +40,16 @@ describe('DashboardComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [DashboardComponent,
+      declarations: [
+        DashboardComponent,
         SystemcapacitywidgetComponent,
         SoftwareversionComponent,
         NaplesComponent,
         PolicyhealthComponent,
         DsbdworkloadComponent,
-        DummyComponent],
+        DummyComponent,
+        WorkloadsComponent,
+      ],
       imports: [
 
         RouterTestingModule.withRoutes([
@@ -54,6 +61,7 @@ describe('DashboardComponent', () => {
         WidgetsModule,
         PrimengModule,
         MaterialdesignModule,
+        NoopAnimationsModule,
         SharedModule
       ],
       providers: [
@@ -61,7 +69,9 @@ describe('DashboardComponent', () => {
         MatIconRegistry,
         LogService,
         LogPublishersService,
-        MessageService
+        MessageService,
+        MetricsqueryService,
+        ClusterService
       ]
     })
       .compileComponents();

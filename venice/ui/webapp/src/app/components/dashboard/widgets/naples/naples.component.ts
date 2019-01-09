@@ -1,204 +1,223 @@
-import { Component, OnChanges, OnDestroy, OnInit } from '@angular/core';
+import { Component, Input, OnInit, ViewEncapsulation } from '@angular/core';
+import { OnChanges } from '@angular/core/src/metadata/lifecycle_hooks';
+import { Router } from '@angular/router';
+import { Animations } from '@app/animations';
 import { Utility } from '@app/common/Utility';
+import { LineGraphStat } from '@app/components/shared/linegraph/linegraph.component';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
+import { ChartOptions } from 'chart.js';
+import { StatArrowDirection, CardStates, Stat } from '@app/components/shared/basecard/basecard.component';
+import { FlipState, FlipComponent } from '@app/components/shared/flip/flip.component';
 
 @Component({
   selector: 'app-dsbdnapleswidget',
   templateUrl: './naples.component.html',
-  styleUrls: ['./naples.component.scss']
+  styleUrls: ['./naples.component.scss'],
+  animations: [Animations],
+  encapsulation: ViewEncapsulation.None
 })
-export class NaplesComponent implements OnInit, OnDestroy, OnChanges {
-  _background_img_left: any;
-  _background_img_right: any;
-  id: string;
+export class NaplesComponent implements OnInit, OnChanges {
+  hasHover: boolean = false;
+  cardStates = CardStates;
 
-  title = 'Naples';
-  content = 'Naples';
-  last_update: string = 'Last Updated: ' + Utility.getPastDate(3).toLocaleDateString();
-  background_img_left: any = {
-    url: 'assets/images/dashboard/ico-naples-yellow.svg'
+  title: string = 'Naples ';
+  firstStat: Stat = {
+    value: '1,244',
+    description: 'TOTAL NAPLES',
+    arrowDirection: StatArrowDirection.UP,
+    statColor: '#b592e3'
   };
-  background_img_right: any = {
-    url: 'assets/images/dashboard/ico-magnifying-glass-color.svg'
+  secondStat: Stat = {
+    value: '1,207',
+    description: 'ADMITTED',
+    arrowDirection: StatArrowDirection.UP,
+    statColor: '#b592e3'
   };
-  menuItems: any[] = [
-    { text: 'Trend line' },
-    { text: 'Trouble shooting' },
-    { text: 'Search Workload' }
+  thirdStat: Stat = {
+    value: '13',
+    description: 'REJECTED',
+    arrowDirection: StatArrowDirection.UP,
+    statColor: '#e57553'
+  };
+  fourthStat: Stat = {
+    value: '24',
+    description: 'PENDING',
+    arrowDirection: StatArrowDirection.UP,
+    statColor: '#97b8df'
+  };
+
+
+  totalNaplesStat: LineGraphStat = {
+    title: 'TOTAL NAPLES',
+    data: [],
+    statColor: '#b592e3',
+    gradientStart: 'rgba(181,146, 227,1)',
+    gradientStop: 'rgba(181,146, 227,0)',
+    graphId: 'dsbdnaples-totalNaples',
+    defaultValue: 600,
+    defaultDescription: 'Avg',
+    hoverDescription: 'Naples',
+    isPercentage: false
+  };
+  rejectedNaplesStat: LineGraphStat = {
+    title: 'REJECTED NAPLES',
+    data: [],
+    statColor: '#e57553',
+    gradientStart: 'rgba(229, 117, 83, 1)',
+    gradientStop: 'rgba(229, 117, 83, 0)',
+    graphId: 'dsbdnaples-rejectedNaples',
+    defaultValue: 10,
+    defaultDescription: 'Avg',
+    hoverDescription: 'Naples',
+    isPercentage: false
+  };
+  pendingNaplesStat: LineGraphStat = {
+    title: 'PENDING NAPLES',
+    data: [],
+    statColor: '#97b8df',
+    gradientStart: 'rgba(151, 184, 223, 1)',
+    gradientStop: 'rgba(151, 184, 223, 0)',
+    graphId: 'dsbdnaples-pendingNaples',
+    defaultValue: 10,
+    defaultDescription: 'Avg',
+    hoverDescription: 'Naples',
+    isPercentage: false
+  };
+
+  linegraphStats: LineGraphStat[] = [
+    this.totalNaplesStat,
+    this.rejectedNaplesStat,
+    this.pendingNaplesStat
   ];
 
-  venice_naples_count: number;
-  venice_naples_discovered_count: number = Utility.getRandomInt(10, 30);
+  themeColor: string = '#b592e3';
+  backgroundIcon: Icon = {
+    svgIcon: 'naples',
+    margin: {}
+  };
   icon: Icon = {
     margin: {
-      top: '8px',
+      top: '10px',
       left: '10px'
     },
-    svgIcon: 'workloads-unprotected'
+    svgIcon: 'naples'
   };
-  data: any;
-  options: any;
+  @Input() lastUpdateTime: string;
+  @Input() timeRange: string;
+  // When set to true, card contents will fade into view
+  @Input() cardState: CardStates = CardStates.READY;
 
-  constructor() {
+  flipState: FlipState = FlipState.front;
+
+
+  menuItems = [
+    {
+      text: 'Flip card', onClick: () => {
+        this.toggleFlip();
+      }
+    },
+  ];
+
+
+  showGraph: boolean = false;
+
+
+  dataset = [];
+  healthyPercent = 90;
+  unhealthyPercent = 10;
+
+  dataDoughnut = {
+    labels: ['Healthy', 'Unhealthy'],
+    datasets: [
+      {
+        data: [this.healthyPercent, this.unhealthyPercent],
+        backgroundColor: [
+          '#97b8df',
+          '#e57553'
+        ],
+        /* hoverBackgroundColor: [
+          '#a3cbf6',
+          '#36A2EB'
+        ] */
+      }
+    ]
+  };
+
+  options: ChartOptions = {
+    tooltips: {
+      enabled: true,
+      displayColors: false,
+      titleFontFamily: 'Fira Sans Condensed',
+      titleFontSize: 14,
+      bodyFontFamily: 'Fira Sans Condensed',
+      bodyFontSize: 14,
+      callbacks: {
+        label: function(tooltipItem, data) {
+          const dataset = data.datasets[tooltipItem.datasetIndex];
+          const label = data.labels[tooltipItem.index];
+          const val = dataset.data[tooltipItem.index];
+          if (label === 'Healthy') {
+            return val + '% of Naples are healthy';
+          } else {
+            return val + '% of Naples have critical errors';
+          }
+        }
+      }
+    },
+    title: {
+      display: false
+    },
+    legend: {
+      display: false
+    },
+    cutoutPercentage: 60,
+    circumference: 2 * Math.PI,
+    rotation: (1.0 + this.unhealthyPercent / 100) * Math.PI, // work
+
+    plugins: {
+      datalabels: {
+        backgroundColor: function(context) {
+          return context.dataset.backgroundColor;
+        },
+        borderColor: 'white',
+        borderRadius: 25,
+        borderWidth: 2,
+        color: 'white',
+        display: function(context) {
+          // print bad % only
+          return context.dataIndex > 0;
+        },
+        font: {
+          weight: 'bold',
+          family: 'Fira Sans Condensed'
+        },
+        formatter: Math.round
+      }
+    },
+    animation: {
+      duration: 0,
+    }
+  };
+
+  constructor(private router: Router) { }
+
+  toggleFlip() {
+    this.flipState = FlipComponent.toggleState(this.flipState);
+  }
+
+  ngOnChanges(changes) {
   }
 
   ngOnInit() {
-    if (!this.id) {
-      this.id = 'naples-' + Utility.s4();
-    }
-    this.generateData();
-
-    this._background_img_left = this.setLeftBackgroundImg();
-    this._background_img_right = this.setRightBackgroundImg();
-  }
-
-  private _getNaplesNumbers(): any {
-    const pct = Utility.getRandomInt(60, 97);
-    const total = Utility.getRandomInt(1000, 3000);
-    const goodNum = Math.floor(total * pct / 100);
-    const badNum = total - goodNum;
-    const obj = {};
-    obj['total'] = total;
-    obj['goodNum'] = goodNum;
-    obj['badNum'] = badNum;
-    obj['goodLabel'] = 'Good';
-    obj['badLabel'] = 'Bad';
-    obj['percent'] = pct + '%';
-    return obj;
-  }
-
-  menuselect(item) {
-    console.log('naples menuselect()', item);
-  }
-
-  isToShowNapleChartTooltip(tooltipItem, data): boolean {
-    if (tooltipItem.datasetIndex === 0 && tooltipItem.index === 1) {
-      return false;
-    }
-    if (tooltipItem.datasetIndex === 1 && tooltipItem.index === 1) {
-      return false;
-    }
-    return true;
-  }
-
-  generateData() {
-    const obj = this._getNaplesNumbers();
-    const badLabel = obj['badLabel'];
-    const goodLabel = obj['goodLabel'];
-    const badNum: Number = obj['badNum'];
-    const goodNum: Number = obj['goodNum'];
-    const numPercent = obj['percent'];
-
-    this.venice_naples_count = obj['total'];
-    this.data = {
-      labels: [goodLabel, badLabel],
-      datasets: [
-        {
-          data: [goodNum, badNum],
-          backgroundColor: [
-            '#88b358',
-            '#eeeeee'
-          ]
-        },
-        {
-          data: [badNum, goodNum],
-          backgroundColor: [
-            '#e57553',
-            '#eeeeee'
-          ]
-        }
-      ]
-    },
-      this.options = {
-        circumference: 1.8 * Math.PI,
-        rotation: -1.4 * Math.PI,
-        cutoutPercentage: 70,
-        title: {
-          display: false
-        },
-        legend: {
-          display: false
-        },
-        plugins: {
-          datalabels: {
-            display: false
-          }
-        },
-        tooltips: {
-          enabled: true,
-          filter: (tooltipItem, data) => {
-            return this.isToShowNapleChartTooltip(tooltipItem, data);
-          },
-          callbacks: {
-
-            title: function(tooltipItem, data) {
-              return (tooltipItem.length > 0) ? data['labels'][tooltipItem[0]['datasetIndex']] : null;
-            },
-            label: function(tooltipItem, data) {
-              return (tooltipItem) ? data['datasets'][tooltipItem.index].data[tooltipItem.datasetIndex] : null;
-            },
-
-
-          }
-        },
-        animation: {
-          onComplete: function() {
-            //
-            // see. dashboard.component.html <ng-template #dashboardPolicyHealth . There is a <canvas id="policy_health_text"
-            // we use the chart.js onComplete() to draw labels to the center of donut chart
-            //
-            const mainLabel = numPercent;
-            const $ = Utility.getJQuery();
-            const element = $('#naples_text').get(0);
-            const tag = (goodNum > badNum) ? 'Good' : 'Bad';
-            if (element) {
-              const textCtx = element.getContext('2d');
-              textCtx.textAlign = 'center';
-              textCtx.textBaseline = 'middle';
-              textCtx.font = '36px Fira Sans Condensed';
-              textCtx.fillStyle = '#88b358';
-              textCtx.fillText(mainLabel, 185, 80);
-              textCtx.font = '10px Fira Sans Condensed';
-              textCtx.fillStyle = '#676763';
-              textCtx.fillText(tag, 185, 100);
-              textCtx.font = '10px Fira Sans Condensed';
-              textCtx.fillStyle = '#e57553';
-              textCtx.fillText(badNum, 185, 130);
-              textCtx.font = '12px Fira Sans Condensed';
-              textCtx.fillStyle = '#88b358';
-              textCtx.fillText(goodNum, 185, 145);
-            }
-          }
-        }
-      };
-  }
-
-  setLeftBackgroundImg() {
-    const styles = {
-      'background-image': 'url(' + this.background_img_left.url + ')',
-    };
-    return styles;
-  }
-
-  setRightBackgroundImg() {
-    const styles = {
-      'background-image': 'url(' + this.background_img_right.url + ')',
-    };
-    return styles;
-  }
-
-  ngOnDestroy() {
-  }
-
-  ngOnChanges() {
-  }
-
-  itemClick($event) {
-    const obj = {
-      id: this.id,
-      event: $event
-    };
-    console.log(this.id, obj);
+    const chartData = [this.totalNaplesStat, this.rejectedNaplesStat, this.pendingNaplesStat];
+    chartData.forEach((chart) => {
+      const data = [];
+      const oneDayAgo = new Date(new Date().getTime() - (24 * 60 * 60 * 1000));
+      for (let index = 0; index < 48; index++) {
+        data.push({ t: new Date(oneDayAgo.getTime() + (index * 30 * 60 * 1000)), y: Utility.getRandomInt(0, 20) });
+      }
+      chart.data = data;
+    });
   }
 
 }

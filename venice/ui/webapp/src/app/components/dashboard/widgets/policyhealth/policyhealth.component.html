@@ -1,51 +1,71 @@
-<div fxLayout="column" class="policyhealth-container">
-  <!-- Header -->
-  <app-dsbdwidgetheader fxFlex="36px" fxLayout="row" [title]="title" 
-    [icon]="icon" [menuItems]="menuItems" (widgetMenuSelect)="menuselect($event)">
-  </app-dsbdwidgetheader>
-  <!-- Body -->
-  <div fxFlex fxLayout="row">
-    <div fxFlex=40 fxLayout="row" fxLayoutAlign="center" class="policyhealth-left">
-      <!-- Policy Health donut chart -->
-      <div class="policyhealth-content-div" fxLayout="column" fxLayoutAlign="center">
-        <div class="policyhealth-chart-div">
-          <canvas id="policy_health_text" class="policyhealt-label-canvas"></canvas>
-          <p-chart type="doughnut" [data]="data" [options]="options" (onDataSelect)="itemClick($event)"></p-chart>
-        </div>
-
-        <div class="policyhealth-total-count-label-div">Total 
-          <span class="policyhealth-total-count-label-span">{{veniceTotalPolicies|number}} </span> 
-          Policies
-        </div>
-
-        <div class="policyhealth-category-labels-div">
-            <span class="policyhealth-category-labels-span policyhealth-category-labels-vio-span">{{veniceTotalViolatedPolicies|number}} VIO</span>
-            <span class="policyhealth-category-labels-span policyhealth-category-labels-ok-span">{{veniceTotalOkPolicies|number}} OK</span>
-        </div>
+<div class="dsbdpolicyhealth-card">
+  <app-flip [flipState]="flipState">
+    <ng-container flip-front *ngTemplateOutlet="cardFront"></ng-container>
+    <ng-container flip-back *ngTemplateOutlet="cardBack"></ng-container>
+  </app-flip>
+</div>
+  
+<ng-template #cardFront>
+  <app-basecard [title]="title" 
+                [backgroundIcon]="backgroundIcon"
+                [themeColor]="themeColor"
+                [icon]="icon"
+                [timeRange]="'Past 24 hours'"
+                [cardState]="cardState"
+                [menuItems]="menuItems"
+                >
+  <div fxFlex="100%" fxLayout="row">
+    <div [@fade] *ngIf="cardState === cardStates.READY" fxFlex="40%" fxLayout="row" fxLayoutAlign="space-between stretch" class="dsbdpolicyhealth-stats">
+      <div fxFlex="nogrow" fxLayout="column">
+        <ng-container *ngTemplateOutlet="stat; context: {statData: firstStat}"></ng-container>
+        <ng-container *ngTemplateOutlet="stat; context: {statData: secondStat}"></ng-container>
+        <ng-container *ngTemplateOutlet="stat; context: {statData: thirdStat}"></ng-container>
       </div>
     </div>
-    <!-- Top 10 violations -->
-    <div fxFlex=30 class="policyhealth-right policyhealth-right-most-violate-div" >
-      <div class="policyhealth-right-top-label policyhealth-right-top-violation-label">Top 10 Violations</div>
-      <div *ngFor="let policy of topViolatedPolicies" >
-          <a (click)="onTopViolatePolicyClick($event, policy)">
-            <img src="/assets/images/dashboard/ico-policy-violate.svg"> 
-            <span class="policyhealth-right-top-policy-label policyhealth-right-top-violation-policy-label"
-              title="Violated {{policy.times}} times">{{policy.name}}</span>
-          </a>
-      </div>
-    </div>
-    <!-- Top 10 most applied -->
-    <div fxFlex=30 class="policyhealth-right policyhealth-right-most-apply-div" >
-        <div class="policyhealth-right-top-label policyhealth-right-top-applied-label">Top 10 Most Applied</div>
-        <div *ngFor="let policy of topMostAppliedPolicies" class="policyhealth-right-top-policy-div">
-            <img src="/assets/images/dashboard/ico-policy-applied.svg"> 
-          <a (click)="onTopAppliedPolicyClick($event, policy)" >
-              <span class="policyhealth-right-top-policy-label policyhealth-right-top-applied-policy-label"
-                title="Applied {{policy.times}} times">{{policy.name}}
-            </span>
-          </a>
-        </div>
+
+    <div [@fade] *ngIf="cardState === cardStates.READY" fxFlex fxLayout="row" fxLayoutAlign="start start" class="dsbdpolicyhealth-card-right">
+      <ng-container *ngTemplateOutlet="piechart"></ng-container>
     </div>
   </div>
-</div>
+  </app-basecard>
+</ng-template>
+
+
+<ng-template #stat let-statData="statData">
+  <ng-container *ngIf="statData != null && statData.value != null">
+    <div fxFlex="autp" fxLayout="row" fxLayoutAlign="start start" class="dsbdpolicyhealth-stat" 
+          [matTooltip]="statData.tooltip"
+          [style.cursor]="statData.url != null ? 'pointer' : 'auto'" 
+          (click)="statData.onClick()"
+          >
+      <div fxFlex="85px" fxLayout="row" fxLayoutAlign="end stretch">
+        <mat-icon fxFlex="none" *ngIf="statData.arrowDirection==='UP'" [style.color]="statData.statColor" fxFlex="none" class="dsbdpolicyhealth-stat-arrow">arrow_upward</mat-icon>
+        <mat-icon fxFlex="none" *ngIf="statData.arrowDirection==='DOWN'" [style.color]="statData.statColor" fxFlex="none" class="dsbdpolicyhealth-stat-arrow">arrow_downward</mat-icon>
+        <div fxFlex="nogrow" [style.color]="statData.statColor" class="dsbdpolicyhealth-stat-value">{{ statData.value }}</div>
+      </div>
+      <div fxFlex="nogrow" class="dsbdpolicyhealth-stat-description">{{ statData.description }}</div>
+    </div>
+  </ng-container>
+</ng-template>
+
+<ng-template #piechart>
+  <div fxFlex="auto" fxLayout="column" fxLayoutAlign="start center">
+    <p-chart fxFlex="none" type="doughnut" [data]="dataDoughnut" width="125px" class="dsbdpolicyhealth-doughnut" height="125px" [options]="options"></p-chart>
+    <div fxFlex="none" [style.color]="themeColor" class="dsbdpolicyhealth-pie-value">10,000,000</div>
+    <div fxFlex="none" class="dsbdpolicyhealth-pie-description">Total Flows</div>
+  </div>
+</ng-template>
+
+<ng-template #cardBack>
+  <app-basecard [title]="title" 
+              [backgroundIcon]="backgroundIcon"
+              [themeColor]="themeColor"
+              [icon]="icon"
+              [timeRange]="'Past 24 hours'"
+              [cardState]="cardState"
+              [menuItems]="menuItems"
+              >
+  <app-linegraph [@fade] *ngIf="cardState === cardStates.READY" fxFlex="100%" fxLayout="row" class="dsbdpolicyhealth-card-back" [stats]="linegraphStats"></app-linegraph>
+</app-basecard>
+  
+</ng-template>

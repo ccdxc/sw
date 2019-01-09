@@ -1,0 +1,8 @@
+<div class="flip-container" [ngClass]="flipState === 'active' ? 'flip-active': '' ">
+  <div class="flip-card-side flip-front">
+    <ng-content select="[flip-front]"></ng-content>
+  </div>
+  <div class="flip-card-side flip-back">
+    <ng-content select="[flip-back]"></ng-content>
+  </div>
+</div>

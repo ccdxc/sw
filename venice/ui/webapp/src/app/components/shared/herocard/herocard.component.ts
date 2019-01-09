@@ -3,6 +3,7 @@ import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { Animations } from '@app/animations';
 import { OnChanges } from '@angular/core/src/metadata/lifecycle_hooks';
 import { Router } from '@angular/router';
+import { StatArrowDirection, CardStates } from '../basecard/basecard.component';
 
 export interface Stat {
   value: any;
@@ -16,17 +17,7 @@ interface Data {
   y: Array<any>;
 }
 
-export enum StatArrowDirection {
-  UP = 'UP',
-  DOWN = 'DOWN',
-  HIDDEN = 'HIDDEN'
-}
 
-export enum CardStates {
-  READY = 'READY',
-  LOADING = 'LOADING',
-  FAILED = 'FAILED'
-}
 
 export interface HeroCardOptions {
   title: string;

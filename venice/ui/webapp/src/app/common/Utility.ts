@@ -119,7 +119,7 @@ export class Utility {
   }
 
   static getMacAddress(): string {
-    return 'XX:XX:XX:XX:XX:XX'.replace(/X/g, function () {
+    return 'XX:XX:XX:XX:XX:XX'.replace(/X/g, function() {
       return '0123456789ABCDEF'.charAt(Math.floor(Math.random() * 16));
     });
   }
@@ -241,7 +241,7 @@ export class Utility {
 
   // encode(decode) html text into html entity
   static decodeHtmlEntity(str: string) {
-    return str.replace(/&#(\d+);/g, function (match, dec) {
+    return str.replace(/&#(\d+);/g, function(match, dec) {
       return String.fromCharCode(dec);
     });
   }
@@ -255,7 +255,7 @@ export class Utility {
   }
 
   static escape(s): any {
-    return s.replace(/[&"<>]/g, function (c) {
+    return s.replace(/[&"<>]/g, function(c) {
       return {
         '&': '&amp;',
         '"': '&quot;',
@@ -604,14 +604,14 @@ export class Utility {
   public static stringInject(str, data): string {
     if (typeof str === 'string' && (data instanceof Array)) {
 
-      return str.replace(/({\d})/g, function (i) {
+      return str.replace(/({\d})/g, function(i) {
         return data[i.replace(/{/, '').replace(/}/, '')];
       });
     } else if (typeof str === 'string' && (data instanceof Object)) {
 
       for (const key in data) {
         if (data.hasOwnProperty(key)) {
-          return str.replace(/({([^}]+)})/g, function (i) {
+          return str.replace(/({([^}]+)})/g, function(i) {
             i.replace(/{/, '').replace(/}/, '');
             if (!data[key]) {
               return i;
@@ -722,7 +722,7 @@ export class Utility {
    */
   public static isObjectSelfLinkHasUILink(kind: any, name: string): boolean {
     const route = this.genSelfLinkUIRoute(kind, name);
-     return (route != null);
+    return (route != null);
   }
 
   /**
@@ -755,7 +755,7 @@ export class Utility {
       case 'SGPolicy':
         return 'security/sgpolicies';
       default:
-        return  (!isToUseDefault) ? null : cat + '/' + pluralize.plural(kind.toLowerCase()) + '/' + name;
+        return (!isToUseDefault) ? null : cat + '/' + pluralize.plural(kind.toLowerCase()) + '/' + name;
     }
   }
 
@@ -776,6 +776,46 @@ export class Utility {
       y.push(item[yFieldIndex]);
     });
     return { x: x, y: y };
+  }
+
+  public static transformToChartjsTimeSeries(data, xFieldIndex, yFieldIndex) {
+    const retData = [];
+    data.forEach((item) => {
+      retData.push({ t: new Date(item[xFieldIndex]), y: item[yFieldIndex] });
+    });
+    return retData;
+  }
+
+  /**
+   * @param bytes amount in bytes to format
+   * @param decimals number of decimal places
+   * @param maxLength max length of string ('.' is not counted)
+   */
+  public static formatBytes(bytes: number, decimals = 2, maxLength = 10) {
+    if (maxLength < 3) {
+      // if we have 800 kb, we need at least 3 digits
+      // to show it. We could format that as 0.8 MB, but
+      // the logic for that isn't here yet, and there isn't
+      // a use case for it yet.
+      console.error('max length must be at least three');
+      maxLength = 10;
+    }
+    if (bytes === 0) { return '0 Bytes'; }
+    const k = 1024,
+      dm = decimals <= 0 ? 0 : decimals || 2,
+      sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
+      i = Math.floor(Math.log(bytes) / Math.log(k));
+    const val = parseFloat((bytes / Math.pow(k, i)).toFixed(dm));
+
+    let valStr = val.toString();
+    // not counting . for length
+    while (valStr.replace('.', '').length > maxLength) {
+      valStr = valStr.slice(0, valStr.length - 1);
+    }
+    if (valStr.endsWith('.')) {
+      valStr = valStr.slice(0, valStr.length - 1);
+    }
+    return valStr + ' ' + sizes[i];
   }
 
   public static average(arr) {
@@ -855,7 +895,7 @@ export class Utility {
       if (errorReponse.status === 401 && !isLoginURL) {  // 401 is authentication error
         const r = confirm('Authentication credentials are no longer valid. Please login again.');
         if (r === true && this.getControllerService()) {
-            this.getControllerService().publish(Eventtypes.LOGOUT, {});
+          this.getControllerService().publish(Eventtypes.LOGOUT, {});
         } else {
           return;
         }

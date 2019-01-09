@@ -1,82 +1,68 @@
 
-<div [style.box-shadow]="'0 0 3px 0 ' + themeColor" 
-      [style.border]="hasHover ? 'solid 1px ' + themeColor : 'solid 1px #cec5bd'"
-      (mouseenter)="hasHover = true"
-      (mouseleave)="hasHover = false"
-      class="herocard-container">
-  <div [@fade] class="herocard-background" fxLayout="row" fxLayoutAlign="start center">
-    <mat-icon fxFlex="none" *ngIf="backgroundIcon && backgroundIcon.svgIcon" [style.color]="themeColor" [svgIcon]="backgroundIcon.svgIcon" class="herocard-background-icon">
-    </mat-icon>
-    <mat-icon fxFlex="none" *ngIf="backgroundIcon && backgroundIcon.matIcon"
-    [style.color]="themeColor" class="herocard-background-mat-icon">
-        {{backgroundIcon.matIcon}}
-    </mat-icon>
-  </div>
-  <div [@loaded]="cardState === cardStates.READY" class="herocard-foreground" fxLayout="column">
-    <!-- Icon bar -->
-    <app-dsbdwidgetheader fxFlex="45px" fxLayout="row" [title]="title" [iconFillColor]="themeColor" [lastUpdateTime]="lastUpdateTime" [timeRange]='timeRange' [icon]="icon"></app-dsbdwidgetheader>
-    <div class="herocard-foreground-content" fxFlex fxLayout="row" fxLayoutAlign="start start">
-      <!-- First stat -->
-      <div [@fade] *ngIf="cardState === cardStates.READY" fxFlex="40%" fxLayout="row" fxLayoutAlign="start start">
-        <div fxFlex="28px"></div>
-        <ng-container *ngIf="firstStat != null && firstStat.value != null">
-          <mat-icon *ngIf="arrowDirection==='UP'" [style.color]="statColor" fxFlex="none" class="herocard-stat-arrow">arrow_upward</mat-icon>
-          <mat-icon *ngIf="arrowDirection==='DOWN'" [style.color]="statColor" fxFlex="none" class="herocard-stat-arrow">arrow_downward</mat-icon>
-          <div fxFlex fxLayout="column" class="herocard-first-stat" 
-                [matTooltip]="firstStat.tooltip"
-                [style.cursor]="firstStat.url != null ? 'pointer' : 'auto'" 
-                (click)="firstStatClick()"
-                >
-            <div fxFlex="nogrow" [style.color]="statColor" class="herocard-first-stat-value">{{ firstStat.value }}</div>
-            <div fxFlex="nogrow" class="herocard-first-stat-description">{{ firstStat.description }}</div>
-          </div>
-        </ng-container>
-      </div>
-      <!-- Second stat -->
-      <div [@fade] *ngIf="cardState === cardStates.READY" fxFlex="20%" fxLayout="row" fxLayoutAlign="start start">
-        <div fxFlex fxLayout="column" class="herocard-second-stat">
-          <div fxFlex fxLayout="column" *ngIf="secondStat != null && secondStat.value != null" 
-                [matTooltip]="secondStat.tooltip" 
-                [style.cursor]="secondStat.url != null ? 'pointer' : 'auto'" 
-                (click)="secondStatClick()"
-                >
-            <div fxFlex="nogrow" [style.color]="themeColor" class="herocard-second-stat-value">{{ secondStat.value}}</div>
-            <div fxFlex="nogrow" class="herocard-second-stat-description">{{ secondStat.description }}</div>
-          </div>
+<div class="herocard-container">
+<app-basecard [title]="title" 
+              [backgroundIcon]="backgroundIcon"
+              [themeColor]="themeColor"
+              [icon]="icon"
+              [timeRange]="'Past 24 hours'"
+              [cardState]="cardState"
+              >
+<div fxFlex fxLayout="column">
+  <div class="herocard-foreground-content" fxFlex fxLayout="row" fxLayoutAlign="start start">
+    <!-- First stat -->
+    <div [@fade] *ngIf="cardState === cardStates.READY" fxFlex="40%" fxLayout="row" fxLayoutAlign="start start">
+      <div fxFlex="28px"></div>
+      <ng-container *ngIf="firstStat != null && firstStat.value != null">
+        <mat-icon *ngIf="arrowDirection==='UP'" [style.color]="statColor" fxFlex="none" class="herocard-stat-arrow">arrow_upward</mat-icon>
+        <mat-icon *ngIf="arrowDirection==='DOWN'" [style.color]="statColor" fxFlex="none" class="herocard-stat-arrow">arrow_downward</mat-icon>
+        <div fxFlex fxLayout="column" class="herocard-first-stat" 
+              [matTooltip]="firstStat.tooltip"
+              [style.cursor]="firstStat.url != null ? 'pointer' : 'auto'" 
+              (click)="firstStatClick()"
+              >
+          <div fxFlex="nogrow" [style.color]="statColor" class="herocard-first-stat-value">{{ firstStat.value }}</div>
+          <div fxFlex="nogrow" class="herocard-first-stat-description">{{ firstStat.description }}</div>
         </div>
-      </div>
-      <!-- Third stat -->
-      <div [@fade] *ngIf="cardState === cardStates.READY" fxFlex fxLayout="row" fxLayoutAlign="start start">
-        <div fxFlex fxLayout="column" class="herocard-third-stat">
-          <div fxFlex fxLayout="column" *ngIf="thirdStat != null && thirdStat.value != null" 
-                [matTooltip]="thirdStat.tooltip" 
-                [style.cursor]="thirdStat.url != null ? 'pointer' : 'auto'" 
-                (click)="thirdStatClick()"
-                >
-            <div fxFlex [style.color]="themeColor" class="herocard-third-stat-value">{{ thirdStat.value }}</div>
-            <div fxFlex class="herocard-third-stat-description">{{ thirdStat.description }}</div>
-          </div>
+      </ng-container>
+    </div>
+    <!-- Second stat -->
+    <div [@fade] *ngIf="cardState === cardStates.READY" fxFlex="20%" fxLayout="row" fxLayoutAlign="start start">
+      <div fxFlex fxLayout="column" class="herocard-second-stat">
+        <div fxFlex fxLayout="column" *ngIf="secondStat != null && secondStat.value != null" 
+              [matTooltip]="secondStat.tooltip" 
+              [style.cursor]="secondStat.url != null ? 'pointer' : 'auto'" 
+              (click)="secondStatClick()"
+              >
+          <div fxFlex="nogrow" [style.color]="themeColor" class="herocard-second-stat-value">{{ secondStat.value}}</div>
+          <div fxFlex="nogrow" class="herocard-second-stat-description">{{ secondStat.description }}</div>
         </div>
       </div>
     </div>
-    <div fxFlex="75px" fxLayout="row" class="herocard-south">
-      <div [@fade] fxFlex fxLayout="row" fxLayoutAlign="center center" 
-            *ngIf="cardState === cardStates.READY && showGraph" class="herocard-chart">
-        <pw-plotly-chart fxFlex="none"
-          [data]="dataset"
-          [options]="options"
-          [layout]="layout"
-        >
-        </pw-plotly-chart>
+    <!-- Third stat -->
+    <div [@fade] *ngIf="cardState === cardStates.READY" fxFlex fxLayout="row" fxLayoutAlign="start start">
+      <div fxFlex fxLayout="column" class="herocard-third-stat">
+        <div fxFlex fxLayout="column" *ngIf="thirdStat != null && thirdStat.value != null" 
+              [matTooltip]="thirdStat.tooltip" 
+              [style.cursor]="thirdStat.url != null ? 'pointer' : 'auto'" 
+              (click)="thirdStatClick()"
+              >
+          <div fxFlex [style.color]="themeColor" class="herocard-third-stat-value">{{ thirdStat.value }}</div>
+          <div fxFlex class="herocard-third-stat-description">{{ thirdStat.description }}</div>
+        </div>
       </div>
     </div>
   </div>
-  <div [@fade] *ngIf="cardState === cardStates.LOADING || cardState === cardStates.FAILED" class="herocard-foreground">
-      <!-- Failed state -->
-      <div *ngIf="cardState === cardStates.FAILED" fxFlex fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="20px">
-        <mat-icon fxFlex="nogrow" class="herocard-failed-icon">error_outline</mat-icon>
-        <div fxFlex="nogrow" class="herocard-failed-text">Failed to get metric data</div>
-      </div>
-    <app-spinner *ngIf="cardState === cardStates.LOADING"></app-spinner>
+  <div fxFlex="75px" fxLayout="row" class="herocard-south">
+    <div [@fade] fxFlex fxLayout="row" fxLayoutAlign="center center" 
+          *ngIf="cardState === cardStates.READY && showGraph" class="herocard-chart">
+      <pw-plotly-chart fxFlex="none"
+        [data]="dataset"
+        [options]="options"
+        [layout]="layout"
+      >
+      </pw-plotly-chart>
+    </div>
   </div>
+</div>
+</app-basecard>
 </div>

@@ -4,7 +4,7 @@ import { Utility } from '@app/common/Utility';
 import { ControllerService } from '@app/services/controller.service';
 import { MetricsqueryService as MetricsqueryGenService } from '@app/services/generated/metricsquery.service';
 import { PollingInstance, PollUtility } from '@app/services/PollUtility';
-import { IMetrics_queryQuerySpec, Metrics_queryQuerySpec, Metrics_queryQueryList, Metrics_queryQueryResult } from '@sdk/v1/models/generated/metrics_query';
+import { IMetrics_queryQuerySpec, Metrics_queryQuerySpec, Metrics_queryQueryList, Metrics_queryQueryResult, IMetrics_queryQueryList } from '@sdk/v1/models/generated/metrics_query';
 
 import { IMetrics_queryQueryResponse, Metrics_queryQueryResponse, IMetrics_queryQueryResult } from '@sdk/v1/models/metrics_query';
 
@@ -65,8 +65,10 @@ export class MetricsqueryService extends MetricsqueryGenService {
    * Called when the timer ticks to fetch data
    */
   protected pollingFetchData(key, body: MetricsPollingQueries, useRealData): void {
+    const _ = Utility.getLodash();
+
     const queries: Metrics_queryQuerySpec[] = [];
-    const pollingOptions = [];
+    const pollingOptions: MetricsPollingOptions[] = [];
     body.queries.forEach((query) => {
       queries.push(new Metrics_queryQuerySpec(query.query));
       const pollOptions = query.pollingOptions || {};
@@ -78,48 +80,49 @@ export class MetricsqueryService extends MetricsqueryGenService {
       (resp) => {
         const respBody = new Metrics_queryQueryResponse(resp.body as any);
         const poll = this.pollingUtility.pollingHandlerMap[key];
+        const pollBody: MetricsPollingQueries = poll.body;
         if (poll == null) {
-          return false;
+          return;
         }
         this.processData(respBody);
+        const currVal: IMetrics_queryQueryResponse = poll.handler.value;
+        const resValue: IMetrics_queryQueryResponse = _.cloneDeep(currVal);
+
         respBody.results.forEach((r, i) => {
           const options = pollingOptions[i];
           if (poll.isFirstPoll) {
             // Don't append data
-            this.pollingUtility.pollingHandlerMap[key].handler.next(respBody);
+            resValue.results[i] = respBody.results[i];
             poll.isFirstPoll = false;
             // Modify time selector
             if (options.timeUpdater != null) {
-              options.timeUpdater(poll.body);
+              options.timeUpdater(pollBody.queries[i].query);
             }
           } else {
-            const _ = Utility.getLodash();
             // We assume that the incoming poll is only for new data
-            const currVal = poll.handler.value;
-            let resValue = _.cloneDeep(currVal);
 
             // If no merge function is specified, we only
             // pass in the new data into the handler.
             if (options.mergeFunction != null) {
-              resValue = options.mergeFunction(resValue, respBody);
-              this.pollingUtility.pollingHandlerMap[key].handler.next(resValue);
+              resValue.results[i] = options.mergeFunction(resValue.results[i], respBody.results[i]);
             } else {
-              this.pollingUtility.pollingHandlerMap[key].handler.next(respBody);
+              resValue.results[i] = respBody.results[i];
             }
 
             if (options.timeUpdater != null) {
-              options.timeUpdater(poll.body);
+              options.timeUpdater(pollBody.queries[i].query);
             }
           }
-
         });
+
+        this.pollingUtility.pollingHandlerMap[key].handler.next(resValue);
 
       },
       (error) => {
         console.error('Polling for metrics failed', error);
         const poll = this.pollingUtility.pollingHandlerMap[key];
-        if (poll == null) {
-          return false;
+        if (poll == null || poll.handler == null) {
+          return;
         }
         poll.handler.error('Metrics query failed');
       }

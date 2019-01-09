@@ -239,6 +239,29 @@
   .global-column-date {
     width: 10%;
   }
+
+  button.mat-menu-item {
+    height: 25px;
+    @include primary-font(14px);
+    line-height: 14px;
+    outline: none !important;
+  }
+
+  .global-chartjs-tooltip {
+    @include primary-font(14px);
+    opacity: 1;
+    position: absolute;
+    background: rgba(0, 0, 0, .7);
+    color: white;
+    border-radius: 3px;
+    -webkit-transition: all .1s ease;
+    transition: all .1s ease;
+    pointer-events: none;
+    -webkit-transform: translate(-50%, 0);
+    transform: translate(-50%, 0);
+    z-index: 100;
+    white-space: nowrap;
+  }
 }
 
 

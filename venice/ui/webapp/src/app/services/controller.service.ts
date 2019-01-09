@@ -100,6 +100,7 @@ export class ControllerService {
     this.matIconRegistry.addSvgIcon('policy-health', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/icon-policyhealth.svg'));
     this.matIconRegistry.addSvgIcon('policy', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/ico-policy.svg'));
     this.matIconRegistry.addSvgIcon('security-policy', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/icon-security-policy.svg'));
+    this.matIconRegistry.addSvgIcon('security', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/security/ico-security.svg'));
 
     // network icons
     this.matIconRegistry.addSvgIcon('network-network', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/network/ico-network-network.svg'));

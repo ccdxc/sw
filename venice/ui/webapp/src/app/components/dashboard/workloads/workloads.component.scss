@@ -1,0 +1,60 @@
+@import 'src/global-mixins';
+
+.dsbdworkloads-stat-arrow {
+  font-size: 20px;
+  height: 20px;
+  width: 20px;
+}
+
+.dsbdworkloads-stat-value {
+  font-size: 45px;
+}
+
+.dsbdworkloads-stat-value-small {
+  @include primary-font(16px);
+}
+
+.dsbdworkloads-stat-description {
+  white-space: nowrap;
+  @include primary-font(14px);
+  color: #676763;
+}
+
+.dsbdworkloads-small-stats {
+  margin-left: 30px;
+  margin-right: 70px;
+}
+
+.dsbdworkloads-stat-left {
+  margin-left: 20px;
+}
+
+.dsbdworkloads-stat-right {
+  margin-right: 10px;
+}
+
+.dsbdworkloads-card-right {
+  position: relative;
+}
+
+.dsbdworkloads-label-canvas {
+  width: 224px;
+  height: 173px;
+  @include primary-font(14px);
+}
+
+.dsbdworkloads-percent {
+  @include primary-font(32px);
+}
+
+.dsbdworkloads-card {
+  position: relative;
+  margin: 10px;
+  width: 450px;
+  height: 240px;
+}
+
+.dsbdworkloads-card-back {
+  margin-top: 15px;
+  margin-bottom: 25px;
+}

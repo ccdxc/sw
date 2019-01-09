@@ -1,0 +1,48 @@
+@import 'src/global-mixins';
+
+.linegraph-graph {
+  position: absolute;
+}
+
+.linegraph-graph-text {
+  // minus 10 for margin and 4 for chart padding
+  width: calc(100% - 14px);
+  padding-top: 2px;
+  padding-bottom: 1px;
+  height: 18px;
+  border-top: solid 1px #979797;
+  margin-left: 10px;
+  margin-right: 4px;
+  @include primary-font(12px);
+  position: absolute;
+  bottom: 0px;
+  pointer-events: none
+}
+
+.linegraph-graph-stat-value {
+  font-size: 24px;
+}
+
+.linegraph-graph-stat-description {
+  @include primary-font(14px);
+  margin-bottom: 8px;
+  margin-left: 8px;
+  margin-right: 20px;
+  margin-top: 12px;
+}
+
+.linegraph-tooltip {
+  @include primary-font(14px);
+  opacity: 1;
+  position: absolute;
+  background: rgba(0, 0, 0, .7);
+  color: white;
+  border-radius: 3px;
+  -webkit-transition: all .1s ease;
+  transition: all .1s ease;
+  pointer-events: none;
+  -webkit-transform: translate(-50%, 0);
+  transform: translate(-50%, 0);
+  z-index: 100;
+  white-space: nowrap;
+}

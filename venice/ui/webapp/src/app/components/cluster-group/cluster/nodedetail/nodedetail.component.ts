@@ -9,14 +9,14 @@ import { Utility } from '@app/common/Utility';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
-import { HeroCardOptions, StatArrowDirection, CardStates } from '@app/components/shared/herocard/herocard.component';
+import { HeroCardOptions } from '@app/components/shared/herocard/herocard.component';
 import { IMetrics_queryQueryResponse, IMetrics_queryQueryResult } from '@sdk/v1/models/metrics_query';
 import { Metrics_queryQuerySpec, IMetrics_queryQuerySpec, Metrics_queryQuerySpec_function } from '@sdk/v1/models/generated/metrics_query';
 import { MetricsUtility } from '@app/common/MetricsUtility';
 import { MetricsPollingOptions, MetricsqueryService, MetricsPollingQueries, MetricsPollingQuery } from '@app/services/metricsquery.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { AlertsEventsSelector } from '@app/components/shared/alertsevents/alertsevents.component';
-import { map } from 'rxjs/internal/operators';
+import { StatArrowDirection, CardStates } from '@app/components/shared/basecard/basecard.component';
 
 /**
  * If a user navigates to a node that doesn't exist

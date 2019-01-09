@@ -1,117 +1,63 @@
 @import 'src/global-mixins';
 
-.policyhealth-container {
-  @include primary-font();
-  height: 300px;
+.dsbdpolicyhealth-stat-arrow {
+  font-size: 16px;
+  height: 16px;
+  width: 16px;
 }
 
-.policyhealth-left {
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: fit;
+.dsbdpolicyhealth-stat-value {
+  font-size: 34px;
 }
 
-.policyhealth-right {
-  padding-left: 15px;
+.dsbdpolicyhealth-stat-description {
+  white-space: nowrap;
+  @include primary-font(14px);
+  color: #676763;
+  margin-top: 17px;
+  margin-left: 22px;
 }
 
-.policyhealth-right-most-apply-div{
-    padding-left: 10px;
+.dsbdpolicyhealth-pie-value {
+  font-size: 30px;
 }
 
-.policyhealth-content-div {
-  margin-top: -35px;
+.dsbdpolicyhealth-pie-description {
+  white-space: nowrap;
+  @include primary-font(14px);
+  color: #676763;
 }
 
-.policyhealth-count-label {
-  text-align: right;
+.dsbdpolicyhealth-stats {
+  margin-bottom: 25px;
+  margin-left: 25px;
 }
 
-.policyhealt-label-canvas {
-  z-index: -1;
-  position: absolute;
-  left: 0px;
-  top: 0px;
+.dsbdpolicyhealth-stat-left {
+  margin-left: 20px;
 }
 
-.policyhealth-chart-div {
+.dsbdpolicyhealth-card-right {
   position: relative;
-  width: 380px;
-  margin-left: -70px;
 }
 
-.policyhealth-right-top-label {
-  font-size: 12px;
-  font-weight: normal;
-  font-style: normal;
-  font-stretch: condensed;
-  line-height: normal;
-  letter-spacing: normal;
-  text-align: left;
-  color: #676763;
-  margin-bottom: 10px;
+.dsbdpolicyhealth-label-canvas {
+  width: 224px;
+  height: 173px;
+  @include primary-font(14px);
 }
 
-.policyhealth-right-top-policy-label {
-  font-size: 14px;
-  font-weight: normal;
-  font-style: normal;
-  font-stretch: condensed;
-  line-height: normal;
-  letter-spacing: normal;
-  text-align: left;
-  color: #6ba0e5;
-  cursor: pointer;
+.dsbdpolicyhealth-percent {
+  @include primary-font(32px);
 }
 
-.policyhealth-right-top-violation-policy-label{
-    color: #d66340;;
+.dsbdpolicyhealth-card {
+  position: relative;
+  margin: 10px;
+  width: 450px;
+  height: 240px;
 }
 
-.policyhealth-category-labels-div {
-  text-align: center;
-  font-size: 12px;
-  font-weight: normal;
-  font-style: normal;
-  font-stretch: condensed;
-  line-height: normal;
-  letter-spacing: normal;
-  text-align: center;
-  color: #676763;
-  padding-left: 30px;
-}
-
-.policyhealth-total-count-label-div {
-  text-align: center;
-  font-size: 12px;
-  font-weight: normal;
-  font-style: normal;
-  font-stretch: condensed;
-  line-height: normal;
-  letter-spacing: normal;
-  margin: 2px auto;
-  color: #676763;
-  padding-left: 30px;
-}
-
-.policyhealth-total-count-label-span {
-  font-weight: bold;
-}
-
-.policyhealth-category-labels-span {
-  display: inline-block;
-  width: 79.2px;
-  height: 20px;
-  border-radius: 2px;
-  text-align: center;
-  color: #fff;
-  line-height: 20px;
-}
-
-.policyhealth-category-labels-vio-span {
-  background-color: #d66340;
-}
-
-.policyhealth-category-labels-ok-span {
-  background-color: #a3cbf6;
+.dsbdpolicyhealth-card-back {
+  margin-bottom: 5px;
 }

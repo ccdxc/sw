@@ -3,7 +3,7 @@ import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { MetricsUtility } from '@app/common/MetricsUtility';
 import { Utility } from '@app/common/Utility';
 import { BaseComponent } from '@app/components/base/base.component';
-import { HeroCardOptions, StatArrowDirection, CardStates } from '@app/components/shared/herocard/herocard.component';
+import { HeroCardOptions } from '@app/components/shared/herocard/herocard.component';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
@@ -14,6 +14,7 @@ import { MessageService } from 'primeng/primeng';
 import { Table } from 'primeng/table';
 import { Subscription } from 'rxjs';
 import { IMetrics_queryQueryResponse, IMetrics_queryQueryResult } from '@sdk/v1/models/metrics_query';
+import { StatArrowDirection, CardStates } from '@app/components/shared/basecard/basecard.component';
 
 @Component({
   selector: 'app-naples',

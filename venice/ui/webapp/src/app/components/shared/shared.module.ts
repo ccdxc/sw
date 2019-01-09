@@ -22,6 +22,9 @@ import { FieldselectorComponent } from './fieldselector/fieldselector.component'
 import { HerocardComponent } from './herocard/herocard.component';
 import { WidgetsModule } from 'web-app-framework';
 import { SorticonComponent } from './sorticon/sorticon.component';
+import { BasecardComponent } from './basecard/basecard.component';
+import { LinegraphComponent } from './linegraph/linegraph.component';
+import { FlipComponent } from './flip/flip.component';
 
 @NgModule({
   imports: [
@@ -50,6 +53,9 @@ import { SorticonComponent } from './sorticon/sorticon.component';
     FieldselectorComponent,
     HerocardComponent,
     SorticonComponent,
+    BasecardComponent,
+    LinegraphComponent,
+    FlipComponent,
   ],
   exports: [
     PagebodyComponent,
@@ -67,7 +73,10 @@ import { SorticonComponent } from './sorticon/sorticon.component';
     WhitespaceTrimDirective,
     FieldselectorComponent,
     HerocardComponent,
-    SorticonComponent
+    SorticonComponent,
+    BasecardComponent,
+    LinegraphComponent,
+    FlipComponent,
   ],
 })
 export class SharedModule { }

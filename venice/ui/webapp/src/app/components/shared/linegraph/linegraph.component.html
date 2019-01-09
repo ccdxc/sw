@@ -1,0 +1,26 @@
+<div fxFlex="100%" fxLayout="row">
+  <div fxFlex='auto' fxLayout="column" fxLayoutAlign="space-between stretch" class="linegraph-graph-container" (mouseleave)="resetSelectedPoint()">
+    <div *ngFor="let stat of stats"
+        [fxFlex]="100 / stats.length" [style.position]="'relative'" [id]="stat.graphId + '-container'" >
+      <canvas class="linegraph-graph" [id]="stat.graphId" width="300px"></canvas>
+      <div class="linegraph-graph-text">{{ stat.title }}</div>
+    </div>
+  </div>
+  <div [fxFlex]="statSpace" fxLayout="row" fxLayoutAlign="center stretch">
+    <div fxFlex="nogrow" fxLayout="column" fxLayoutAlign="space-between center">
+      <div *ngFor="let stat of stats" [fxFlex]="100 / stats.length" fxLayout="column" fxLayoutAlign="center stretch" [style.color]="stat.statColor">
+        <div class="linegraph-graph-stat-value" fxFlex="nogrow">
+          {{ statValues[stat.graphId].value }}
+        </div>
+      </div>
+    </div>
+
+    <div fxFlex="nogrow" fxLayout="column" fxLayoutAlign="space-between center">
+      <div *ngFor="let stat of stats" [fxFlex]="100 / stats.length" fxLayout="column" fxLayoutAlign="center stretch" [style.color]="stat.statColor">
+        <div class="linegraph-graph-stat-description" fxFlex="nogrow">
+          {{ statValues[stat.graphId].description }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

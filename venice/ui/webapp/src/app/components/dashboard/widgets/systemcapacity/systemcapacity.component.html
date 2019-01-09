@@ -1,22 +1,86 @@
-<div style="height:100%;width:100%;" class="systemCapacity-container" fxLayout="column">
-  <!-- Header -->
-  <app-dsbdwidgetheader fxFlex="36px" fxLayout="row" [title]="title" [icon]="icon"
-    [id]="id + '_header'" [menuItems]="menuItems" (widgetMenuSelect)="menuselect($event)">
-  </app-dsbdwidgetheader>
-  <!-- Body -->
-  <div fxFlex fxLayout="row">
-    <div [ngStyle]="_background_img" fxFlex=40 fxLayout="row" fxLayoutAlign="center" class="systemCapacity-left">
-      <div fxFlex=20 class="systemCapacity-nodecount">
-        {{venice_node_count}}
-      </div>
-    </div>
-    <div  *ngIf="menuItems[0]?.text == 'Toggle Trend Line'" fxFlex class="systemCapacity-right">
-      <p-chart type="bar" [data]="data" [options]="options" (onDataSelect)="itemClick($event, 'snapshot')" ></p-chart>
-    </div>
-    <div  *ngIf="menuItems[0]?.text == 'Toggle Bar Chart'" fxFlex class="systemCapacity-right">
-      <p-chart type="line" [data]="trendline?.data"  [options]="trendline?.options" (onDataSelect)="itemClick($event, 'trendline')"></p-chart>
-    </div>
-  </div>
+<div class="systemcapacity-card">
+  <app-flip [flipState]="flipState">
+    <ng-container flip-front *ngTemplateOutlet="cardFront"></ng-container>
+    <ng-container flip-back *ngTemplateOutlet="cardBack"></ng-container>
+  </app-flip>
 </div>
 
+<ng-template #cardFront>
+  <app-basecard [title]="title" 
+                [backgroundIcon]="backgroundIcon"
+                [themeColor]="themeColor"
+                [icon]="icon"
+                [timeRange]="'Past 24 hours'"
+                [cardState]="cardState"
+                [menuItems]="menuItems"
+                >
+  
+  <ng-container *ngTemplateOutlet="background"></ng-container>
+  <div fxFlex="100%" class="systemcapacity-foreground" fxLayout="row" fxLayoutAlign="end stretch">
+    <div [@fade] *ngIf="cardState === cardStates.READY" fxFlex="nogrow" fxLayout="column" fxLayoutAlign="start stretch" fxLayoutGap="12px" class="systemcapacity-right">
+      <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="end center" *ngFor="let graphStat of graphStats" [id]="graphStat.id + '-container'">
+        <div class="systemcapacity-graph-label" fxFlex="none">{{ graphStat.title }}</div>
+        <div fxFlex="280px" [style.height]="'34px'" fxLayout="row" fxLayoutAlign="space-between center">
+          <div fxFlex="nogrow" [matTooltip]="'Averaged over past 5 min'">
+            <mat-icon fxFlex="none" *ngIf="graphStat.barGraphStat.arrowDirection==='UP'" [style.color]="graphStat.barGraphStat.statColor" fxFlex="none" class="systemcapacity-bargraph-stat-arrow">arrow_upward</mat-icon>
+            <mat-icon fxFlex="none" *ngIf="graphStat.barGraphStat.arrowDirection==='DOWN'" [style.color]="graphStat.barGraphStat.statColor" fxFlex="none" class="systemcapacity-bargraph-stat-arrow">arrow_downward</mat-icon>
+            <div fxFlex="16px" *ngIf="graphStat.barGraphStat.arrowDirection === 'HIDDEN'"></div>
 
+            <div *ngIf="graphStat.barGraphStat.percent" class="systemcapacity-graph-stat" [style.color]="graphStat.barGraphStat.statColor" fxFlex="nogrow">{{ graphStat.barGraphStat.percent.toFixed(0) + '%' }}</div>
+          </div>
+          <div *ngIf="graphStat.barGraphStat.percent == null" class="systemcapacity-graph-label" [style.color]="graphStat.barGraphStat.statColor" fxFlex="40px">--</div>
+          <canvas fxFlex="none" [id]="graphStat.id" width="220px" height="34px"></canvas>
+        </div>
+      </div>
+
+      <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="end center">
+        <div class="systemcapacity-graph-label" fxFlex="none">NETWORK</div>
+        <div fxFlex="280px" [style.height]="'34px'" fxLayout="row">
+          <mat-icon fxFlex="none" *ngIf="networkGraphStat.currentValue.arrowDirection==='UP'" [style.color]="networkGraphStat.currentValue.statColor" fxFlex="none" class="systemcapacity-stat-arrow">arrow_upward</mat-icon>
+          <mat-icon fxFlex="none" *ngIf="networkGraphStat.currentValue.arrowDirection==='DOWN'" [style.color]="networkGraphStat.currentValue.statColor" fxFlex="none" class="systemcapacity-stat-arrow">arrow_downward</mat-icon>
+          <div fxFlex="nogrow" [style.color]="networkGraphStat.currentValue.statColor" class="systemcapacity-stat-value">{{ networkGraphStat.currentValue.value }}</div>
+          <div fxFlex="nogrow" class="systemcapacity-stat-description">sent in the past 5 min</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </app-basecard>
+  </ng-template>
+  
+  <ng-template #cardBack>
+    <app-basecard [title]="title" 
+                [backgroundIcon]="backgroundIcon"
+                [themeColor]="themeColor"
+                [icon]="icon"
+                [timeRange]="'Past 24 hours'"
+                [cardState]="cardState"
+                [menuItems]="menuItems"
+                >
+  <ng-container *ngTemplateOutlet="background"></ng-container>
+  <div fxFlex="100%" fxLayout="row" fxLayoutAlign="end stretch">
+    <div fxFlex="60%" [style.position]="'relative'">
+      <app-linegraph #lineGraph class="systemcapacity-linegraph" fxLayout="row" [stats]="linegraphStats" [statSpace]="'145px'"></app-linegraph>
+    </div>
+  </div>
+
+  </app-basecard>
+    
+</ng-template>
+
+<ng-template #background>
+  <div class="systemcapacity-background">
+    <div fxFlex="100%" fxLayout="row">
+      <div fxFlex='45%' class="systemcapacity-left">
+        <div [ngStyle]="_background_img" class="systemcapacity-venice-image">
+          <div *ngIf="cardState === cardStates.READY" class="systemcapacity-image-text-container">
+            <div class="systemcapacity-nodecount">
+              {{nodes.length}}
+            </div>
+            <div *ngIf="nodes.length !== 1" class="systemcapacity-image-text">Nodes</div>
+            <div *ngIf="nodes.length === 1" class="systemcapacity-image-text">Node</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-template>

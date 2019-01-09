@@ -2024,6 +2024,11 @@
         }
       }
     },
+    "@types/chart.js": {
+      "version": "2.7.41",
+      "resolved": "https://registry.npmjs.org/@types/chart.js/-/chart.js-2.7.41.tgz",
+      "integrity": "sha512-AkxGv6oqAfd93sv2B2uAOm6z/elj/O62p8WZCPr9EStr85ykcw7bETVMaK0+4XLuHhGui7Fdm+tfQk0EatRFKA=="
+    },
     "@types/d3": {
       "version": "4.12.0",
       "resolved": "https://registry.npmjs.org/@types/d3/-/d3-4.12.0.tgz",
