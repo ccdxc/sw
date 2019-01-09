@@ -212,7 +212,7 @@ func (a *alertEngineImpl) createAlert(alertPolicy *monitoring.AlertPolicy, evt *
 		outstandingAlerts := a.memDb.GetAlerts(
 			memdb.WithTenantFilter(alertPolicy.GetTenant()),
 			memdb.WithAlertStateFilter([]monitoring.AlertSpec_AlertState{monitoring.AlertSpec_OPEN}),
-			memdb.WithAlertPolicyIDFilter(alertPolicy.GetUUID()),
+			memdb.WithAlertPolicyIDFilter(alertPolicy.GetName()),
 			memdb.WithEventURIFilter(evt.GetSelfLink()))
 		if len(outstandingAlerts) > 0 {
 			a.logger.Debug("outstanding alert found that matches the event URI and policy")

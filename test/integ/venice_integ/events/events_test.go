@@ -969,30 +969,37 @@ func TestEventsAlertEngine(t *testing.T) {
 
 	// add event based alert policies
 	// policy - 1
-	alertPolicy1 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, "ap1", "Event", evtsapi.SeverityLevel_CRITICAL, "alerts from events", []*fields.Requirement{
-		{Key: "type", Operator: "in", Values: []string{eventType1, eventType2, eventType3}},
-		{Key: "count", Operator: "gte", Values: []string{"15"}},
-		{Key: "source.node-name", Operator: "equals", Values: []string{"test-node"}},
-	}, []string{})
+	alertPolicy1 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, fmt.Sprintf("ap1-%s", uuid.NewV4().String()),
+		"Event", evtsapi.SeverityLevel_CRITICAL, "alerts from events",
+		[]*fields.Requirement{
+			{Key: "type", Operator: "in", Values: []string{eventType1, eventType2, eventType3}},
+			{Key: "count", Operator: "gte", Values: []string{"15"}},
+			{Key: "source.node-name", Operator: "equals", Values: []string{"test-node"}},
+		}, []string{})
 
 	alertPolicy1, err = apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy1)
 	AssertOk(t, err, "failed to add alert policy, err: %v", err)
+	defer apiClient.MonitoringV1().AlertPolicy().Delete(context.Background(), alertPolicy1.GetObjectMeta())
 
 	// policy - 2
-	alertPolicy2 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, "ap2", "Event", evtsapi.SeverityLevel_WARNING, "alerts from events", []*fields.Requirement{
-		{Key: "count", Operator: "gte", Values: []string{"5"}},
-		{Key: "count", Operator: "lt", Values: []string{"7"}},
-		{Key: "severity", Operator: "equals", Values: []string{evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)]}},
-		{Key: "type", Operator: "in", Values: []string{eventType1, eventType2, eventType3}},
-	}, []string{})
+	alertPolicy2 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, fmt.Sprintf("ap2-%s", uuid.NewV4().String()),
+		"Event", evtsapi.SeverityLevel_WARNING, "alerts from events",
+		[]*fields.Requirement{
+			{Key: "count", Operator: "gte", Values: []string{"5"}},
+			{Key: "count", Operator: "lt", Values: []string{"7"}},
+			{Key: "severity", Operator: "equals", Values: []string{evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)]}},
+			{Key: "type", Operator: "in", Values: []string{eventType1, eventType2, eventType3}},
+		}, []string{})
 
 	alertPolicy2, err = apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy2)
 	AssertOk(t, err, "failed to add alert policy, err: %v", err)
+	defer apiClient.MonitoringV1().AlertPolicy().Delete(context.Background(), alertPolicy2.GetObjectMeta())
 
-	alertPolicy3 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, "ap3", "Event", evtsapi.SeverityLevel_WARNING,
-		"policy with no reqs", []*fields.Requirement{}, []string{})
+	alertPolicy3 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, fmt.Sprintf("ap3-%s", uuid.NewV4().String()),
+		"Event", evtsapi.SeverityLevel_WARNING, "policy with no reqs", []*fields.Requirement{}, []string{})
 	alertPolicy3, err = apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy3)
 	AssertOk(t, err, "failed to add alert policy, err: %v", err)
+	defer apiClient.MonitoringV1().AlertPolicy().Delete(context.Background(), alertPolicy3.GetObjectMeta())
 
 	// generate events
 	// define list of events to be recorded
@@ -1177,7 +1184,11 @@ func TestEventsAlertEngine(t *testing.T) {
 
 	// resolve or acknowledge alerts
 	alerts, err := apiClient.MonitoringV1().Alert().List(context.Background(),
-		&api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}})
+		&api.ListWatchOptions{
+			ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant},
+			FieldSelector: fmt.Sprintf("status.reason.alert-policy-id in (%s,%s,%s)",
+				alertPolicy1.GetName(), alertPolicy2.GetName(), alertPolicy3.GetName()),
+		})
 	AssertOk(t, err, "failed to list alerts, err: %v", err)
 	Assert(t, len(alerts) > 2, "expected more than 2 alerts, got: %v", len(alerts))
 
