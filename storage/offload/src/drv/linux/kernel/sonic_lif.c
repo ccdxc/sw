@@ -150,7 +150,7 @@ sonic_seq_q_batch_hash_idx(uint32_t hash)
 }
 
 static bool
-sonic_seq_q_batch_key_eq(struct seq_queue_batch *batch,
+sonic_seq_q_batch_key_eq(const struct seq_queue_batch *batch,
 			 const struct queue *q)
 {
 	return (batch->qgroup == q->qgroup) &&
@@ -389,11 +389,14 @@ sonic_seq_q_batch_find(struct queue *q)
 
 		find_arg.q = q;
 		find_arg.ret_batch = NULL;
+		batch = NULL;
 		hash = sonic_seq_q_batch_hash(q);
 		err = sonic_seq_q_batch_ht_for_each(lif, hash,
 				    sonic_seq_q_batch_key_find, &find_arg);
-		if (err == SONIC_SEQ_Q_BATCH_KEY_EXIST)
-			lif->curr_seq_q_batch = find_arg.ret_batch;
+		if (err == SONIC_SEQ_Q_BATCH_KEY_EXIST) {
+			batch = find_arg.ret_batch;
+			lif->curr_seq_q_batch = batch;
+		}
 	}
 	if (!batch)
 		batch = sonic_seq_q_batch_alloc(q);

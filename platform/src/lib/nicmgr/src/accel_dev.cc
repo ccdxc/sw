@@ -863,12 +863,6 @@ Accel_PF::_DevcmdSeqQueueSingleInit(const seq_queue_init_cmd_t *cmd)
     WRITE_MEM(qstate_addr, (uint8_t *)&seq_qstate, sizeof(seq_qstate), 0);
     invalidate_txdma_cacheline(qstate_addr);
 
-    NIC_LOG_DEBUG("lif{}: qid {} qgroup {} core_id {} wring_base {:#x} "
-                 "wring_size {} entry_size {}",
-                 hal_lif_info_.hw_lif_id,
-                 qid, cmd->qgroup, cmd->core_id, seq_qstate.wring_base,
-                 cmd->wring_size, cmd->entry_size);
-
     seq_queue_info_publish(qid, cmd->qgroup, cmd->core_id);
     return (DEVCMD_SUCCESS);
 }
@@ -883,8 +877,8 @@ Accel_PF::_DevcmdSeqQueueInit(void *req, void *req_data,
 
     NIC_LOG_DEBUG("lif-{} CMD_OPCODE_SEQ_QUEUE_INIT: "
                   "qid {} qgroup {} core_id {} wring_base {:#x} "
-                  "wring_size {} entry_size {}", info.hw_lif_id, cmd->index,
-                  cmd->qgroup, cmd->core_id, cmd->wring_base,
+                  "wring_size {} entry_size {}", hal_lif_info_.hw_lif_id,
+                  cmd->index, cmd->qgroup, cmd->core_id, cmd->wring_base,
                   cmd->wring_size, cmd->entry_size);
     status = _DevcmdSeqQueueSingleInit(cmd);
 
@@ -898,7 +892,6 @@ Accel_PF::_DevcmdSeqQueueInit(void *req, void *req_data,
         _PostDevcmdDone(status);
     }
     return status;
->>>>>>> - Implement seq_queue_batch as a way to bulk allocate space for sequencer queues. Batch properties include the qgroup, desc size and num_descs. Queues having the same properties can belong to the same batch which would eventually (during post_init) facilitate batch init submission to firmware.
 }
 
 enum DevcmdStatus
@@ -913,9 +906,9 @@ Accel_PF::_DevcmdSeqQueueBatchInit(void *req, void *req_data,
 
     NIC_LOG_DEBUG("lif-{} CMD_OPCODE_SEQ_QUEUE_BATCH_INIT: "
                   "qid {} qgroup {} num_queues {} wring_base {:#x} "
-                  "wring_size {} entry_size {}", info.hw_lif_id, batch_cmd->index,
-                  batch_cmd->qgroup, batch_cmd->num_queues, batch_cmd->wring_base,
-                  batch_cmd->wring_size, batch_cmd->entry_size);
+                  "wring_size {} entry_size {}", hal_lif_info_.hw_lif_id,
+                  batch_cmd->index, batch_cmd->qgroup, batch_cmd->num_queues,
+                  batch_cmd->wring_base, batch_cmd->wring_size, batch_cmd->entry_size);
     cmd.opcode = CMD_OPCODE_SEQ_QUEUE_INIT;
     cmd.index = batch_cmd->index;
     cmd.pid = batch_cmd->pid;
@@ -965,8 +958,9 @@ Accel_PF::_DevcmdSeqQueueSingleControl(const seq_queue_control_cmd_t *cmd,
     switch (cmd->qtype) {
     case STORAGE_SEQ_QTYPE_SQ:
         if (cmd->qid >= seq_created_count) {
-            NIC_LOG_ERR("lif{}: qtype {} qid {} exceeds count {}", hal_lif_info_.hw_lif_id,
-                        cmd->qtype, cmd->qid, seq_created_count);
+            NIC_LOG_ERR("lif{}: qtype {} qid {} exceeds count {}",
+                        hal_lif_info_.hw_lif_id, cmd->qtype, cmd->qid,
+                        seq_created_count);
             return (DEVCMD_ERROR);
         }
         qstate_addr = GetQstateAddr(cmd->qtype, cmd->qid);
@@ -976,8 +970,9 @@ Accel_PF::_DevcmdSeqQueueSingleControl(const seq_queue_control_cmd_t *cmd,
         break;
     case STORAGE_SEQ_QTYPE_ADMIN:
         if (cmd->qid >= spec->adminq_count) {
-            NIC_LOG_ERR("lif{}: qtype {} qid {} exceeds count {}", hal_lif_info_.hw_lif_id,
-                        cmd->qtype, cmd->qid, spec->adminq_count);
+            NIC_LOG_ERR("lif{}: qtype {} qid {} exceeds count {}",
+                        hal_lif_info_.hw_lif_id, cmd->qtype, cmd->qid,
+                        spec->adminq_count);
             return (DEVCMD_ERROR);
         }
         qstate_addr = GetQstateAddr(cmd->qtype, cmd->qid);
@@ -1002,7 +997,7 @@ Accel_PF::_DevcmdSeqQueueControl(void *req, void *req_data,
 {
     seq_queue_control_cmd_t *cmd = (seq_queue_control_cmd_t *)req;
 
-    NIC_LOG_DEBUG(" lif{}: qtype {} qid {} enable {}", info.hw_lif_id,
+    NIC_LOG_DEBUG(" lif{}: qtype {} qid {} enable {}", hal_lif_info_.hw_lif_id,
                   cmd->qtype, cmd->qid, enable);
     return _DevcmdSeqQueueSingleControl(cmd, enable);
 }
@@ -1017,8 +1012,9 @@ Accel_PF::_DevcmdSeqQueueBatchControl(void *req, void *req_data,
     enum DevcmdStatus             status = DEVCMD_SUCCESS;
     uint32_t                      i;
 
-    NIC_LOG_DEBUG(" lif{}: qtype {} qid {} mum_queues {} enable {}", info.hw_lif_id,
-                  batch_cmd->qtype, batch_cmd->qid, batch_cmd->num_queues, enable);
+    NIC_LOG_DEBUG(" lif{}: qtype {} qid {} mum_queues {} enable {}",
+                  hal_lif_info_.hw_lif_id, batch_cmd->qtype,
+                  batch_cmd->qid, batch_cmd->num_queues, enable);
     cmd.opcode = enable ? CMD_OPCODE_SEQ_QUEUE_ENABLE : CMD_OPCODE_SEQ_QUEUE_DISABLE;
     cmd.qid = batch_cmd->qid;
     cmd.qtype = batch_cmd->qtype;
