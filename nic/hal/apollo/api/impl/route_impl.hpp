@@ -1,46 +1,47 @@
 /**
  * Copyright (c) 2018 Pensando Systems, Inc.
  *
- * @file    vnic_impl.hpp
+ * @file    route_impl.hpp
  *
- * @brief   VNIC implementation in the p4/hw
+ * @brief   route table implementation in the p4/hw
  */
-#if !defined (__VNIC_IMPL_HPP__)
-#define __VNIC_IMPL_HPP__
+#if !defined (__ROUTE_IMPL_HPP__)
+#define __ROUTE_IMPL_HPP__
 
 #include "nic/hal/apollo/framework/api.hpp"
 #include "nic/hal/apollo/framework/api_base.hpp"
 #include "nic/hal/apollo/framework/impl_base.hpp"
-#include "nic/hal/apollo/include/api/oci_vnic.hpp"
+#include "nic/hal/apollo/include/api/oci_route.hpp"
 
 namespace impl {
 
 /**
- * @defgroup OCI_VNIC_IMPL - vnic functionality
- * @ingroup OCI_VNIC
+ * @defgroup OCI_ROUTE_TABLE_IMPL - route table functionality
+ * @ingroup OCI_ROUTE
  * @{
  */
 
 /**
- * @brief    VNIC implementation
+ * @brief    route table implementation
  */
-class vnic_impl : public impl_base {
+class route_table_impl : public impl_base {
 public:
     /**
-     * @brief    factory method to allocate & initialize vnic impl instance
-     * @param[in] oci_vnic    vnic information
-     * @return    new instance of vnic or NULL, in case of error
+     * @brief    factory method to allocate & initialize
+     *           route table impl instance
+     * @param[in] oci_route_table    route table information
+     * @return    new instance of route table or NULL, in case of error
      */
-    static vnic_impl *factory(oci_vnic_t *oci_vnic);
+    static route_table_impl *factory(oci_route_table_t *oci_route_table);
 
     /**
-     * @brief    release all the s/w state associated with the given vnic,
-     *           if any, and free the memory
-     * @param[in] impl     vnic impl instance to be freed
+     * @brief    release all the s/w state associated with the given
+     *           route table instance, if any, and free the memory
+     * @param[in] impl route table impl instance to be freed
      * NOTE: h/w entries should have been cleaned up (by calling
      *       impl->cleanup_hw() before calling this
      */
-    static void destroy(vnic_impl *impl);
+    static void destroy(route_table_impl *impl);
 
     /**
      * @brief    allocate/reserve h/w resources for this object
@@ -95,27 +96,24 @@ public:
                                   api_op_t api_op,
                                   obj_ctxt_t *obj_ctxt) override;
 
-    uint16_t hw_id(void) { return hw_id_; }
+    uint16_t lpm_root_addr(void) { return lpm_root_addr_; }
 
 private:
     /**< @brief    constructor */
-    vnic_impl() {
-        hw_id_ = 0xFFFF;
-        vnic_by_slot_hash_idx_ = 0xFFFF;
+    route_table_impl() {
+        lpm_root_addr_ = 0xFFFFFFFFFFFFFFFFUL;
     }
 
     /**< @brief    destructor */
-    ~vnic_impl() {}
+    ~route_table_impl() {}
 
 private:
     /**< P4 datapath specific state */
-    uint16_t          hw_id_;      /**< hardware id */
-    // TODO: if we have remove(key) API, we don't need to store this
-    uint16_t          vnic_by_slot_hash_idx_;
+    mem_addr_t    lpm_root_addr_;      /**< LPM tree's root node address */
 } __PACK__;
 
-/** @} */    // end of OCI_VNIC_IMPL
+/** @} */    // end of OCI_ROUTE_TABLE_IMPL
 
 }    // namespace impl
 
-#endif    /** __VNIC_IMPL_HPP__ */
+#endif    /** __ROUTE_IMPL_HPP__ */

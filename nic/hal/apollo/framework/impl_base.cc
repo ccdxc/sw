@@ -13,6 +13,7 @@
 #include "nic/hal/apollo/api/impl/tep_impl.hpp"
 #include "nic/hal/apollo/api/impl/vnic_impl.hpp"
 #include "nic/hal/apollo/api/impl/mapping_impl.hpp"
+#include "nic/hal/apollo/api/impl/route_impl.hpp"
 
 namespace impl {
 
@@ -63,6 +64,10 @@ impl_base::factory(impl_obj_id_t obj_id, void *args) {
         return mapping_impl::factory((oci_mapping_t *)args);
         break;
 
+    case IMPL_OBJ_ID_ROUTE_TABLE:
+        return route_table_impl::factory((oci_route_table_t *)args);
+        break;
+
     default:
         break;
     }
@@ -85,6 +90,12 @@ impl_base::destroy(impl_obj_id_t obj_id, impl_base *impl) {
 
     case IMPL_OBJ_ID_VNIC:
         return vnic_impl::destroy((vnic_impl *)impl);
+
+    case IMPL_OBJ_ID_MAPPING:
+        return mapping_impl::destroy((mapping_impl *)impl);
+
+    case IMPL_OBJ_ID_ROUTE_TABLE:
+        return route_table_impl::destroy((route_table_impl *)impl);
 
     default:
         break;

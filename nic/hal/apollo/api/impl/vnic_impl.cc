@@ -279,7 +279,6 @@ vnic_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
 
 error:
 
-    // we can undo (makes rollback easy) things right here !!
     SDK_ASSERT(FALSE);
     return ret;
 }

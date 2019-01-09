@@ -20,6 +20,7 @@
 
 // TODO: should be same as OCI_MAX_SUBNET
 #define OCI_MAX_ROUTE_TABLE        (5 * OCI_MAX_VCN)
+#define OCI_MAX_ROUTE_PER_TABLE    1024
 
 /**
  * @brief nexthop types
