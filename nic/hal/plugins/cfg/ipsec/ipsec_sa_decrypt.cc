@@ -303,7 +303,7 @@ ipsec_sadecrypt_get (IpsecSADecryptGetRequest& req, IpsecSADecryptGetResponseMsg
     // fill config spec of this IPSEC CB
     rsp->mutable_spec()->mutable_key_or_handle()->set_cb_id(ripsec.sa_id);
 
-    if (ripsec.barco_enc_cmd == IPSEC_BARCO_ENCRYPT_AES_GCM_256) {
+    if (ripsec.barco_enc_cmd == IPSEC_BARCO_DECRYPT_AES_GCM_256) {
         rsp->mutable_spec()->set_authentication_algorithm(ipsec::AUTHENTICATION_AES_GCM);
         rsp->mutable_spec()->set_decryption_algorithm(ipsec::ENCRYPTION_ALGORITHM_AES_GCM_256);
         rsp->mutable_spec()->set_rekey_dec_algorithm(ipsec::ENCRYPTION_ALGORITHM_AES_GCM_256);
@@ -311,6 +311,10 @@ ipsec_sadecrypt_get (IpsecSADecryptGetRequest& req, IpsecSADecryptGetResponseMsg
 
     rsp->mutable_spec()->set_key_index(ripsec.key_index);
     rsp->mutable_spec()->set_new_key_index(ripsec.new_key_index);
+    rsp->mutable_spec()->mutable_rekey_decryption_key()->set_key(ripsec.new_key, 32);
+    rsp->mutable_spec()->mutable_rekey_authentication_key()->set_key(ripsec.new_key, 32);
+    rsp->mutable_spec()->mutable_decryption_key()->set_key(ripsec.key, 32);
+    rsp->mutable_spec()->mutable_authentication_key()->set_key(ripsec.key, 32);
     if (ripsec.new_key_index != 0) {
         rsp->mutable_spec()->set_rekey_active(1);
     }

@@ -190,7 +190,8 @@ hal_ret_t capri_barco_read_key(uint32_t key_idx, types::CryptoKeyType *key_type,
         return HAL_RET_INVALID_ARG;
     }
 
-    cbkey_type = ntohl(key_desc.key_type);
+    cbkey_type = key_desc.key_type;
+    HAL_TRACE_DEBUG("cbkey_type: {}", cbkey_type);
     switch (cbkey_type) {
         case CAPRI_BARCO_KEYTYPE_AES128:
             *key_type = types::CRYPTO_KEY_TYPE_AES128;
@@ -227,7 +228,7 @@ hal_ret_t capri_barco_read_key(uint32_t key_idx, types::CryptoKeyType *key_type,
             break;
     }
 
-    key_addr = ntohll(key_desc.key_address);
+    key_addr = key_desc.key_address;
     if (capri_hbm_read_mem(key_addr, key, *key_size)) {
         HAL_TRACE_ERR("Failed to read key @ {:x}", (uint64_t) key_addr); 
         return HAL_RET_INVALID_ARG;

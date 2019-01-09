@@ -612,7 +612,7 @@ pd_ipsec_decrypt_get (pd_func_args_t *pd_func_args)
     pd_func_args1.pd_crypto_read_key = &read_key;
     ret = pd_crypto_read_key(&pd_func_args1);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Get request failed for key_index: {}", ipsec_sa_pd.ipsec_sa->key_index);
+        HAL_TRACE_ERR("Get request failed for key_index: {} ret{}", ipsec_sa_pd.ipsec_sa->key_index, ret);
         //return ret;
         ret = HAL_RET_OK;
     }
@@ -620,6 +620,23 @@ pd_ipsec_decrypt_get (pd_func_args_t *pd_func_args)
     HAL_TRACE_DEBUG("IPSEC SA key_type, key_size : {}, {}", read_key.key->key_type, read_key.key->key_size);
     if ((read_key.key->key_size > 0) && (read_key.key->key_size <= 32)) {
         memcpy(ipsec_sa_pd.ipsec_sa->key, read_key.key->key, read_key.key->key_size);
+    }
+
+    read_key.key_idx = ipsec_sa_pd.ipsec_sa->new_key_index;
+    memset(&key, 0, sizeof(crypto_key_t));
+    read_key.key = &key;
+
+    pd_func_args1.pd_crypto_read_key = &read_key;
+    ret = pd_crypto_read_key(&pd_func_args1);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Get request failed for new_key_index: {} ret{}", ipsec_sa_pd.ipsec_sa->new_key_index, ret);
+        //return ret;
+        ret = HAL_RET_OK;
+    }
+    HAL_TRACE_DEBUG("IPSEC SA pd get new_key_index for id: {}", args->ipsec_sa->new_key_index);
+    HAL_TRACE_DEBUG("IPSEC SA key_type, key_size : {}, {}", read_key.key->key_type, read_key.key->key_size);
+    if ((read_key.key->key_size > 0) && (read_key.key->key_size <= 32)) {
+        memcpy(ipsec_sa_pd.ipsec_sa->new_key, read_key.key->key, read_key.key->key_size);
     }
 
     return ret;

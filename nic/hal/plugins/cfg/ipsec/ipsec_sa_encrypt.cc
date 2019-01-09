@@ -359,6 +359,8 @@ ipsec_saencrypt_get (IpsecSAEncryptGetRequest& req, IpsecSAEncryptGetResponseMsg
     rsp->mutable_spec()->set_seq_no(seq_no);
     rsp->mutable_spec()->set_iv(ripsec.iv);
     rsp->mutable_spec()->set_key_index(ripsec.key_index);
+    rsp->mutable_spec()->mutable_encryption_key()->set_key(ripsec.key, 32);
+    rsp->mutable_spec()->mutable_authentication_key()->set_key(ripsec.key, 32);
     rsp->mutable_spec()->mutable_tep_vrf()->set_vrf_id(ripsec.vrf);
     rsp->mutable_spec()->set_total_pkts(ripsec.total_pkts);
     rsp->mutable_spec()->set_total_bytes(ripsec.total_bytes);
