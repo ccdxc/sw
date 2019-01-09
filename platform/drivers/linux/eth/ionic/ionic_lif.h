@@ -142,6 +142,8 @@ struct lif {
 	u64 last_eid;
 	unsigned int neqs;
 	unsigned int nxqs;
+	unsigned int ntxq_descs;
+	unsigned int nrxq_descs;
 	unsigned int rx_mode;
 	u32 hw_features;
 	struct ionic_lif_stats *lif_stats;
@@ -180,6 +182,8 @@ int ionic_lifs_size(struct ionic *ionic);
 
 int ionic_intr_alloc(struct lif *lif, struct intr *intr);
 void ionic_intr_free(struct lif *lif, struct intr *intr);
+int ionic_open(struct net_device *netdev);
+int ionic_stop(struct net_device *netdev);
 
 struct lif *ionic_netdev_lif(struct net_device *netdev);
 

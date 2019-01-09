@@ -21,7 +21,6 @@ static void ionic_link_status_check(struct lif *lif);
 
 static int ionic_txrx_alloc(struct lif *lif);
 static int ionic_txrx_init(struct lif *lif);
-static int ionic_stop(struct net_device *netdev);
 static void ionic_lif_qcq_deinit(struct lif *lif, struct qcq *qcq);
 static void ionic_lif_rss_teardown(struct lif *lif);
 static void ionic_qcq_free(struct lif *lif, struct qcq *qcq);
@@ -103,7 +102,7 @@ static int ionic_qcq_enable(struct qcq *qcq)
 	return 0;
 }
 
-static int ionic_open(struct net_device *netdev)
+int ionic_open(struct net_device *netdev)
 {
 	struct lif *lif = netdev_priv(netdev);
 	unsigned int i;
@@ -169,7 +168,7 @@ static int ionic_qcq_disable(struct qcq *qcq)
 	return ionic_adminq_post_wait(lif, &ctx);
 }
 
-static int ionic_stop(struct net_device *netdev)
+int ionic_stop(struct net_device *netdev)
 {
 	struct lif *lif = netdev_priv(netdev);
 	unsigned int i;
@@ -953,7 +952,7 @@ static int ionic_txrx_alloc(struct lif *lif)
 
 	flags = QCQ_F_TX_STATS | QCQ_F_SG;
 	for (i = 0; i < lif->nxqs; i++) {
-		err = ionic_qcq_alloc(lif, i, "tx", flags, ntxq_descs,
+		err = ionic_qcq_alloc(lif, i, "tx", flags, lif->ntxq_descs,
 				      sizeof(struct txq_desc),
 				      sizeof(struct txq_comp),
 				      sizeof(struct txq_sg_desc),
@@ -964,7 +963,7 @@ static int ionic_txrx_alloc(struct lif *lif)
 
 	flags = QCQ_F_RX_STATS | QCQ_F_INTR;
 	for (i = 0; i < lif->nxqs; i++) {
-		err = ionic_qcq_alloc(lif, i, "rx", flags, nrxq_descs,
+		err = ionic_qcq_alloc(lif, i, "rx", flags, lif->nrxq_descs,
 				      sizeof(struct rxq_desc),
 				      sizeof(struct rxq_comp),
 				      0, lif->kern_pid, &lif->rxqcqs[i]);
@@ -1071,6 +1070,8 @@ static int ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 	lif->index = index;
 	lif->neqs = ionic->neqs_per_lif;
 	lif->nxqs = ionic->ntxqs_per_lif;
+	lif->ntxq_descs = IONIC_DEF_TXRX_DESC;
+	lif->nrxq_descs = IONIC_DEF_TXRX_DESC;
 
 	snprintf(lif->name, sizeof(lif->name), "lif%u", index);
 

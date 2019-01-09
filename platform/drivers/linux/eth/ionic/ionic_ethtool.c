@@ -205,10 +205,58 @@ static int ionic_set_coalesce(struct net_device *netdev,
 static void ionic_get_ringparam(struct net_device *netdev,
 				struct ethtool_ringparam *ring)
 {
-	ring->tx_max_pending = 1 << 16;
-	ring->tx_pending = ntxq_descs;
-	ring->rx_max_pending = 1 << 16;
-	ring->rx_pending = nrxq_descs;
+	struct lif *lif = netdev_priv(netdev);
+
+	ring->tx_max_pending = IONIC_MAX_TXRX_DESC;
+	ring->tx_pending = lif->ntxq_descs;
+	ring->rx_max_pending = IONIC_MAX_TXRX_DESC;
+	ring->rx_pending = lif->nrxq_descs;
+}
+
+static int ionic_set_ringparam(struct net_device *netdev,
+			       struct ethtool_ringparam *ring)
+{
+	struct lif *lif = netdev_priv(netdev);
+	bool running;
+	int i, j;
+
+	if ((ring->rx_mini_pending) || (ring->rx_jumbo_pending)) {
+		netdev_info(netdev, "Changing jumbo or mini descriptors not supported\n");
+		return -EINVAL;
+	}
+
+	i = ring->tx_pending & (ring->tx_pending - 1);
+	j = ring->rx_pending & (ring->rx_pending - 1);
+	if (i || j) {
+		netdev_info(netdev, "Descriptor count must be a power of 2\n");
+		return -EINVAL;
+	}
+
+	if (ring->tx_pending > IONIC_MAX_TXRX_DESC ||
+	    ring->tx_pending < IONIC_MIN_TXRX_DESC ||
+	    ring->rx_pending > IONIC_MAX_TXRX_DESC ||
+	    ring->rx_pending < IONIC_MIN_TXRX_DESC) {
+		netdev_info(netdev, "Descriptors count must be in the range [%d-%d]\n",
+			    IONIC_MIN_TXRX_DESC, IONIC_MAX_TXRX_DESC);
+		return -EINVAL;
+	}
+
+	/* if nothing to do return success */
+	if ((ring->tx_pending == lif->ntxq_descs) &&
+	    (ring->rx_pending == lif->nrxq_descs))
+		return 0;
+
+	running = test_bit(LIF_UP, lif->state);
+	if (running)
+		ionic_stop(netdev);
+
+	lif->ntxq_descs = ring->tx_pending;
+	lif->nrxq_descs = ring->rx_pending;
+
+	if (running)
+		ionic_open(netdev);
+
+	return 0;
 }
 
 static void ionic_get_channels(struct net_device *netdev,
@@ -410,6 +458,7 @@ static const struct ethtool_ops ionic_ethtool_ops = {
 	.get_coalesce		= ionic_get_coalesce,
 	.set_coalesce		= ionic_set_coalesce,
 	.get_ringparam		= ionic_get_ringparam,
+	.set_ringparam		= ionic_set_ringparam,
 	.get_channels		= ionic_get_channels,
 	.get_strings		= ionic_get_strings,
 	.get_ethtool_stats	= ionic_get_stats,

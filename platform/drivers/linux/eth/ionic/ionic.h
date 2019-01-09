@@ -13,8 +13,6 @@
 #define DRV_DESCRIPTION		"Pensando Ethernet NIC Driver"
 #define DRV_VERSION		"0.2.0"
 
-extern unsigned int ntxq_descs;
-extern unsigned int nrxq_descs;
 extern unsigned int ntxqs;
 extern unsigned int nrxqs;
 extern unsigned int devcmd_timeout;
