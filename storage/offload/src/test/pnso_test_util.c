@@ -128,6 +128,33 @@ uint32_t safe_itoa(char *dst, uint32_t dst_len, uint64_t val)
 	return ret;
 }
 
+#define SAFE_C2HEX(x) ((x) < 10 ? (x) + '0' : (x) - 10 + 'a')
+
+/* convert binary string to hex, returning number of src bytes consumed */
+uint32_t safe_bintohex(char *dst, uint32_t dst_len,
+		       const uint8_t *src, uint32_t src_len)
+{
+	uint32_t src_offset, dst_offset;
+	uint8_t c;
+
+	if (dst == NULL || dst_len == 0)
+		return 0;
+	dst[0] = '\0';
+	if (src == NULL || src_len == 0)
+		return 0;
+
+	dst_offset = 0;
+	for (src_offset = 0; src_offset < src_len && dst_offset+1 < dst_len;
+	     src_offset++) {
+		c = src[src_offset];
+		dst[dst_offset++] = SAFE_C2HEX(c >> 4);
+		dst[dst_offset++] = SAFE_C2HEX(c & 0x0f);
+	}
+
+	dst[dst_offset] = '\0';
+	return src_offset;
+}
+
 uint32_t safe_strcpy_tolower(char *dst, const char *src, uint32_t max_len)
 {
 	uint32_t len;

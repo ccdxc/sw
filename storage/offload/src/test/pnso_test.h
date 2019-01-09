@@ -81,6 +81,8 @@ uint32_t safe_strcpy(char *dst, const char *src, uint32_t max_len);
 int safe_strcmp(const char *str1, const char *str2);
 int safe_strncmp(const char *str1, const char *str2, uint32_t len);
 unsigned long long safe_strtoll(const char *val);
+uint32_t safe_bintohex(char *dst, uint32_t dst_len,
+		       const uint8_t *src, uint32_t src_len);
 
 void *pnso_test_alloc(size_t sz);
 void *pnso_test_alloc_aligned(size_t alignment, size_t sz);

@@ -239,16 +239,21 @@ static int test_cmp_pattern(const struct pnso_buffer_list *buflist,
 	size_t i, j, pat_i;
 	size_t total_len = 0;
 	const struct pnso_flat_buffer *buf;
+	const uint8_t *pat_data;
 	uint8_t *dst;
 	uint8_t hex_pat[TEST_MAX_PATTERN_LEN];
 
 	if (pat_len > TEST_MAX_PATTERN_LEN)
 		pat_len = TEST_MAX_PATTERN_LEN;
-	pat = (const char *) get_normalized_pattern(pat, hex_pat, &pat_len);
+	pat_data = get_normalized_pattern(pat, hex_pat, &pat_len);
+
+	if (!len)
+		len = pbuf_get_buffer_list_len(buflist);
 
 	pat_i = 0;
 	for (i = 0; i < buflist->count && total_len < (offset+len); i++) {
 		buf = &buflist->buffers[i];
+
 		if (!buf->len) {
 			continue;
 		}
@@ -267,7 +272,7 @@ static int test_cmp_pattern(const struct pnso_buffer_list *buflist,
 
 		dst = (uint8_t *) buflist->buffers[i].buf;
 		for (; j < buf->len && total_len < (offset+len); j++) {
-			ret = (int) dst[j] - (int) pat[pat_i % pat_len];
+			ret = (int) (dst[j] - pat_data[pat_i % pat_len]);
 			pat_i++;
 			total_len++;
 			if (ret)
@@ -542,6 +547,24 @@ static int cmp_file_node_data(struct test_node_file *fnode1, struct test_node_fi
 	}
 
 	return ret;
+}
+
+static void pprint_file_node(struct test_node_file *fnode)
+{
+	struct test_node_file fnode_dup;
+	char hexstr[129] = "";
+
+	if (g_osal_log_level < OSAL_LOG_LEVEL_DEBUG)
+		return;
+
+	osal_atomic_lock(&fnode->lock);
+	fnode_dup = *fnode;
+	safe_bintohex(hexstr, 128, fnode->data, fnode->file_size);
+	osal_atomic_unlock(&fnode->lock);
+
+	OSAL_LOG_DEBUG("File node: name %s, size %u, padded_size %u, data:\n",
+		       fnode_dup.filename, fnode_dup.file_size, fnode_dup.padded_size);
+	OSAL_LOG_DEBUG("0x%s\n", hexstr);
 }
 
 static struct test_node_file *lookup_file_node(struct test_file_table *table,
@@ -1471,7 +1494,7 @@ static pnso_error_t run_data_validation(struct batch_context *ctx,
 {
 	pnso_error_t err = PNSO_OK;
 	struct testcase_context *test_ctx = ctx->test_ctx;
-	struct test_node_file *fnode1, *fnode2;
+	struct test_node_file *fnode1 = NULL, *fnode2;
 	char path1[TEST_MAX_FULL_PATH_LEN] = "";
 	char path2[TEST_MAX_FULL_PATH_LEN] = "";
 	int cmp = 0;
@@ -1551,6 +1574,9 @@ static pnso_error_t run_data_validation(struct batch_context *ctx,
 						       offset, len,
 						       pat, pat_len);
 				osal_atomic_unlock(&fnode1->lock);
+				if (cmp) {
+					pprint_file_node(fnode1);
+				}
 			} else {
 				cmp = -1;
 			}
@@ -1784,7 +1810,7 @@ static pnso_error_t run_testcase_batch(struct batch_context *batch_ctx)
 	struct request_context *req_ctx = NULL;
 	struct worker_context *worker_ctx = batch_get_worker_ctx(batch_ctx);
 	const struct test_testcase *testcase = batch_ctx->test_ctx->testcase;
-	uint32_t i, chain_i;
+	uint32_t i, chain_i, chain_idx;
 
 	PNSO_LOG_DEBUG("enter run_testcase_batch ...\n");
 
@@ -1796,10 +1822,12 @@ static pnso_error_t run_testcase_batch(struct batch_context *batch_ctx)
 	batch_ctx->vars[TEST_VAR_ID] = testcase->node.idx;
 
 	/* Run each request, alternating svc_chain */
-	chain_i = 0;
+	chain_i = batch_ctx->batch_id * testcase->batch_depth;
 	for (i = 0; i < batch_ctx->req_count; i++) {
 		/* get svc_chain */
-		NODE_FIND_ID(batch_ctx->desc->svc_chains, testcase->svc_chains[chain_i]);
+		chain_idx = testcase->svc_chains[chain_i %
+						 testcase->svc_chain_count];
+		NODE_FIND_ID(batch_ctx->desc->svc_chains, chain_idx);
 		svc_chain = (struct test_svc_chain *) node;
 		if (!svc_chain) {
 			PNSO_LOG_ERROR("Svc_chain %u not found for testcase %u\n",
@@ -1807,9 +1835,7 @@ static pnso_error_t run_testcase_batch(struct batch_context *batch_ctx)
 			err = EINVAL;
 			goto error;
 		}
-		if (++chain_i >= testcase->svc_chain_count) {
-			chain_i = 0;
-		}
+		chain_i++;
 		batch_ctx->vars[TEST_VAR_CHAIN] = svc_chain->node.idx;
 
 		req_ctx = batch_ctx->req_ctxs[i];
