@@ -47,6 +47,7 @@ testbundles:
         - mnic/mnic_hostpin_naples_only.testbundle
         - cruds/cruds.testbundle
         - penctl/penctl_hostpin.testbundle
+        - post_diag/post_diag.testbundle
 
     regression:
         - firewall/policy_scale.testbundle

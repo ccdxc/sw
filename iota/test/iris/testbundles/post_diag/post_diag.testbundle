@@ -1,0 +1,28 @@
+meta:
+    name    : post_diag_check
+    os      : [ linux, freebsd ]
+    nics    : [ pensando, intel, mellanox, broadcom ]
+    targetcount : 3
+
+testcases:
+
+    -   name    : check_post_result
+        testcase: testcases.post_diag.post_check
+        ignore: False
+        verifs:
+            #-   step    : verif.operstate.verify_stats_agent
+            #-   step    : verif.operstate.verify_stats_hw
+
+    -   name    : offline_diag_test
+        testcase: testcases.post_diag.offline_diag_test
+        ignore: False
+        verifs:
+            #-   step    : verif.operstate.verify_stats_agent
+            #-   step    : verif.operstate.verify_stats_hw
+
+    -   name    : online_diag_test
+        testcase: testcases.post_diag.online_diag_test
+        ignore: False
+        verifs:
+            #-   step    : verif.operstate.verify_stats_agent
+            #-   step    : verif.operstate.verify_stats_hw

@@ -40,7 +40,7 @@ testbundles:
         - multicast/multicast.testbundle
         - classic/rdma.testbundle
         - linktest/linktest.testbundle
-        #- mnic/mnic_classic.testbundle
+        - mnic/mnic_classic.testbundle
         - linktest/linktest.testbundle
         #- classic/driver-features-int_mgmt-sanity.testbundle
         - linktest/linktest.testbundle
@@ -50,6 +50,7 @@ testbundles:
         - linktest/linktest.testbundle
         - storage/storage.testbundle
         - penctl/penctl_classic.testbundle
+        - post_diag/post_diag.testbundle
 
     regression:
         # Relative paths from iota/test/iris/testbundles/
