@@ -486,8 +486,10 @@ def GetHostPTEntriesDMAData(testcase, descriptor, args):
     if (GlobalOptions.dryrun): return
 
     slab = testcase.buffers.Get(args.id).slab_id
-    # 1KB can hold 128 PT entries. Should be good-enough for DOL testing.
-    mem_handle = resmgr.HostMemoryAllocator.get(1024)
+    if (len(slab.phy_address) ==  1): 
+        return int.from_bytes(slab.phy_address[0].to_bytes(8,'little'), 'big', signed=False)
+
+    mem_handle = resmgr.HostMemoryAllocator.get(len(slab.phy_address) * 8)
     assert(mem_handle != None)
     src_dma_phy_addr = resmgr.HostMemoryAllocator.v2p(mem_handle.va)
 

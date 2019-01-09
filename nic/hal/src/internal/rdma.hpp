@@ -942,13 +942,14 @@ typedef enum rdma_qp_state_e {
 #define RRQ_RING_ID     (MAX_SQ_RINGS - 1)
 
 typedef struct sqcb0_s {
-    uint8_t rsvd2: 8;
+    uint8_t rsvd2: 7;
+    uint8_t   frpmr_in_progress: 1;
 
     uint16_t busy: 1;        //tx
     uint16_t li_fence:1;
     uint16_t fence:1;
     uint16_t color: 1;
-    uint16_t frpmr_in_progress: 1;
+    uint16_t frpmr_dma_done: 1;
     uint16_t bktrack_in_progress:1;
     uint8_t  in_progress: 1;
     uint16_t priv_oper_enable: 1; //tx

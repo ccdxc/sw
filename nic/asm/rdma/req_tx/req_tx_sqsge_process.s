@@ -146,6 +146,7 @@ sge_loop:
     // Pass packet_len to dcqcn_enforce and to add_headers_2 for padding and to stats_process
     phvwr          CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, packet_len), r5
     phvwr          CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, packet_len), r5
+    phvwr          p.common.p4_intr_packet_len, r5
     phvwr          CAPRI_PHV_FIELD(TO_S7_STATS_INFO_P, pyld_bytes), r5
 
     // if (index == num_valid_sges)

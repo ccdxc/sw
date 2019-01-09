@@ -44,34 +44,59 @@ req_tx_frpmr_write_back_process:
     // 1 DMA MR PT-entries from host to HBM.
 
     // 1.1 PT-Table host-dma-src-addr
-    sll          r7, K_DMA_SIZE, CAPRI_LOG_SIZEOF_U64 //BD-Slot
 
-    seq          c1, r7, 1 << CAPRI_LOG_SIZEOF_U64
+    sll          r7, K_DMA_SIZE, CAPRI_LOG_SIZEOF_U64 
+    sub          r7, r7, d.frpmr_map_count_completed, CAPRI_LOG_SIZEOF_U64    
+    beqi         r7, 0, dma_complete_drop
+    sle          c2, r7, FRPMR_DMA_MAX_DATA_SIZE  // BD-Slot
+    add.!c2      r7, r0, FRPMR_DMA_MAX_DATA_SIZE
+
+
+    seq          c1, K_DMA_SIZE, 1 
     add          r5, K_WQE_ADDR, FRPMR_DMA_ADDR_OFFSET
-
-    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_FRPMR_PT_TABLE_SRC_ADDR)
-    DMA_HOST_MEM2MEM_SRC_SETUP_C(DMA_CMD_BASE, r7, r5, K_DMA_SRC_ADDR, c1)
-
-    // 1.2 PT-Table hbm-dst-addr
+    seq          c3, d.sq_in_hbm, 1 
+    bcf          [c1 & c3], dma_from_hbm
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_FRPMR_PT_TABLE_SRC_ADDR) // BD-Slot
+    add          r4, K_DMA_SRC_ADDR, d.frpmr_map_count_completed, CAPRI_LOG_SIZEOF_U64
+    DMA_HOST_MEM2MEM_SRC_SETUP_C(DMA_CMD_BASE, r7, r5, r4, c1)
+    b            dma_dst_setup
     PT_BASE_ADDR_GET2(r4)
-    add          r3, r4, K_PT_BASE, CAPRI_LOG_SIZEOF_U64 
+
+
+dma_from_hbm:
+    DMA_HBM_MEM2MEM_SRC_SETUP(DMA_CMD_BASE, r7, r5)
+    PT_BASE_ADDR_GET2(r4) //BD-slot
+
+dma_dst_setup:
+    // 1.2 PT-Table hbm-dst-addr
+    add          r3, r4, K_PT_BASE, CAPRI_LOG_SIZEOF_U64
+    add          r3, r3, d.frpmr_map_count_completed, CAPRI_LOG_SIZEOF_U64
+    
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_FRPMR_PT_TABLE_DST_ADDR)
     DMA_HBM_MEM2MEM_DST_SETUP(DMA_CMD_BASE, r7, r3)
-    
-    // 2. Set frpmr_in_progress flag in sqcb0_t and set write-fence
+    // Set EOC if there are more pt-entries to DMA
+    DMA_SET_END_OF_CMDS_C(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE, !c2)
+    bcf          [!c2], skip_frpmr_done
+
+    // 2. Set frpmr_dma_done flag in sqcb0_t and set write-fence
     // TODO: Update needs_credits flag in cb1_byte. All other flags can be reset to zero.
-    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_SET_FRPMR_IN_PROGRESS)
-    SQCB0_ADDR_GET(r2)
+    SQCB0_ADDR_GET(r2) // BD-slot
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_SET_FRPMR_DMA_DONE)
     add            r3, r2, FIELD_OFFSET(sqcb0_t, state_flags)
     phvwr          p.sqcb0_state_flags, d.state_flags
-    phvwrmi        p.sqcb0_state_flags, (1 << SQCB0_FRPMR_IN_PROGRESS_BIT_OFFSET), \
-                   (1 << SQCB0_FRPMR_IN_PROGRESS_BIT_OFFSET)
+    phvwrmi        p.sqcb0_state_flags, (1 << SQCB0_FRPMR_DMA_DONE_BIT_OFFSET), \
+                   (1 << SQCB0_FRPMR_DMA_DONE_BIT_OFFSET)
     DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, sqcb0_state_flags, sqcb0_state_flags, r3)
-    DMA_SET_WR_FENCE_END_OF_CMDS_E(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
-    // Update curr_wqe_ptr for second pass.
-    tblwr          d.curr_wqe_ptr, K_WQE_ADDR //BD-slot
+    DMA_SET_WR_FENCE_END_OF_CMDS(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
+
+skip_frpmr_done:
+    srl            r3, r7, CAPRI_LOG_SIZEOF_U64
+    tbladd         d.frpmr_map_count_completed, r3
+    tblwr.e        d.frpmr_in_progress, 1
+    tblwr          d.curr_wqe_ptr, K_WQE_ADDR
 
 spec_fail:
+dma_complete_drop:
     phvwr.e   p.common.p4_intr_global_drop, 1
     nop
 

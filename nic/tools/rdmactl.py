@@ -225,16 +225,18 @@ class RdmaSQCB0state(Packet):
 
         BitField("sqcb0_sq_drained", 0, 1),
         BitField("rsvd_state_flags", 0, 7),
+
         BitField("priv_oper_enable", 0, 1),
         BitField("in_progress", 0, 1),
         BitField("sqcb0_bktrack_in_progress", 0, 1),
-        BitField("frpmr_in_progress", 0, 1),
+        BitField("frpmr_dma_done", 0, 1),
         BitField("color", 0, 1),
         BitField("fence", 0, 1),
         BitField("li_fence", 0, 1),
         BitField("busy", 0, 1),
 
-        BitField("sqcb0_rsvd2", 0, 8),
+        BitField("sqcb0_frpmr_in_progress", 0, 1),
+        BitField("sqcb0_rsvd2", 0, 7),
     ]
         
 class RdmaSQCB1state(Packet):

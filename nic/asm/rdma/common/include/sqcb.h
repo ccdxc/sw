@@ -56,7 +56,7 @@
 #define SQCB_CURR_WQE_PTR_OFFSET     FIELD_OFFSET(sqcb0_t, curr_wqe_ptr)
 #define SQCB_CURRENT_SGE_OFFSET      FIELD_OFFSET(sqcb0_t, current_sge_offset)
 
-#define SQCB0_FRPMR_IN_PROGRESS_BIT_OFFSET   4
+#define SQCB0_FRPMR_DMA_DONE_BIT_OFFSET      4
 #define SQCB0_FLUSH_RQ_BIT_OFFSET            3
 
 struct sqcb0_t {
@@ -102,6 +102,7 @@ struct sqcb0_t {
     union {
         current_sge_offset        : 32; // WO S5, RO S0
         read_req_adjust           : 32; // RO S0
+        frpmr_map_count_completed : 32; // RW S6
     };
     current_sge_id                : 8;  // WO S5, RO S0
     num_sges                      : 8;  // WO S5, RO S0
@@ -115,15 +116,15 @@ struct sqcb0_t {
             priv_oper_enable      : 1;  // RO
             in_progress           : 1;  // WO S5, RO S0
             bktrack_in_progress   : 1;  // RW S5, RW S0
-            frpmr_in_progress     : 1;  // RW S0
+            frpmr_dma_done        : 1;  // RW S0
             color                 : 1;  // WO S5, R0 S0
             fence                 : 1;  // WO S5, RO S0
             li_fence              : 1;  // WO S5, RO S0
             busy                  : 1;
         };
     };
-
-    rsvd2                         : 8;
+    frpmr_in_progress             : 1; // RW S6
+    rsvd2                         : 7;
 
 };
 

@@ -101,7 +101,6 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'frpmr_dma_done', 0):
             return False
 
-
         # validate cqcb pindex and color
         if not ValidateReqRxCQChecks(tc, 'EXP_CQ_DESC'):
             return False

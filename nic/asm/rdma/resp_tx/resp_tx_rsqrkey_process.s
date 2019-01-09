@@ -192,6 +192,7 @@ add_headers:
     DMA_PHV2PKT_SETUP(DMA_CMD_BASE, aeth, aeth)
 
 invoke_dcqcn:
+    phvwr          p.common.p4_intr_packet_len, K_XFER_BYTES
     // Note: Next stage(DCQCN) does not use stage-to-stage keys. So this will be passed to write-back stage untouched!
     CAPRI_RESET_TABLE_1_ARG()
     seq         c1, CAPRI_KEY_FIELD(IN_P, last_or_only), 1
