@@ -5,10 +5,14 @@ def GetHostMgmtInterface(node):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
     if api.GetNodeOs(node) == "linux":
+        #Added just for debug
+        cmd = "ip -o -4 route show to default"
+        api.Trigger_AddHostCommand(req, node, cmd)
         cmd = "ip -o -4 route show to default | awk '{print $5}'"
         api.Trigger_AddHostCommand(req, node, cmd)
         resp = api.Trigger(req)
-        mgmt_intf = resp.commands[0].stdout.strip().split("\n")
+        #ToDo Change after fixing debug knob
+        mgmt_intf = resp.commands[1].stdout.strip().split("\n")
         return mgmt_intf[0]
     elif api.GetNodeOs(node) == "freebsd":
         return "ix0"

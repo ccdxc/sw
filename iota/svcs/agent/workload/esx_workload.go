@@ -198,7 +198,7 @@ func (vm *vmESXWorkload) AddInterface(name string, macAddress string, ipaddress 
 		}
 	}
 
-	return "", nil
+	return constants.EsxDataVMInterface, nil
 }
 
 func (vm *vmESXWorkload) MoveInterface(name string) error {

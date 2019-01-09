@@ -206,10 +206,12 @@ class NaplesWorkload(store.Workload):
 def AddMgmtWorkloads(node_if_info):
     for intf in node_if_info.HostMgmtIntfs():
         ip = intf.GetIP()
-        assert(ip)
+        if not ip:
+            return api.types.status.FAILURE
         wl = NaplesWorkload(__MGMT_WORKLOAD_TYPE, intf)
         wl.skip_node_push = True
         api.AddNaplesWorkload(wl.GetType(), wl)
+    return api.types.status.SUCCESS
 
 
 def AddNaplesWorkloads(node_if_info):
@@ -258,7 +260,9 @@ def Main(tc):
     nodes = api.GetWorkloadNodeHostnames()
     for node in nodes:
         node_if_info = GetNodeInterface(node)
-        AddMgmtWorkloads(node_if_info)
+        ret = AddMgmtWorkloads(node_if_info)
+        if ret != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
         if api.IsNaplesNode(node):
             AddNaplesWorkloads(node_if_info)
     return api.types.status.SUCCESS
