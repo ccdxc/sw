@@ -6,9 +6,7 @@ package cmd
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -39,6 +37,7 @@ type clusterAddresses []string
 
 var controllers []string
 var mode string
+var networkMode string
 var priMac string
 var hostname string
 var mgmtIP string
@@ -50,7 +49,8 @@ func init() {
 	showCmd.AddCommand(modeManagedShowCmd)
 
 	modeManagedCmd.Flags().StringSliceVarP(&controllers, "controllers", "c", make([]string, 0), "List of controller IP addresses or hostnames")
-	modeManagedCmd.Flags().StringVarP(&mode, "operational-mode", "o", "network", "host or network managed")
+	modeManagedCmd.Flags().StringVarP(&mode, "management-mode", "o", "network", "host or network managed")
+	modeManagedCmd.Flags().StringVarP(&networkMode, "network-mode", "k", "oob", "oob or inband")
 	modeManagedCmd.Flags().StringVarP(&priMac, "primary-mac", "p", "", "Primary mac")
 	modeManagedCmd.Flags().StringVarP(&hostname, "hostname", "n", "", "Host name")
 	modeManagedCmd.Flags().StringVarP(&mgmtIP, "mgmt-ip", "m", "", "Management IP in CIDR format")
@@ -61,43 +61,53 @@ func init() {
 func modeManagedCmdArgsValidator(cmd *cobra.Command, args []string) error {
 	for _, cluster := range controllers {
 		ep := strings.Split(cluster, ":")
+		if len(ep) > 1 {
+			return fmt.Errorf("only hostnames need to be specified as controllers: '%s'", cluster)
+		}
 		if vldtor.HostAddr(ep[0]) != true {
-			str := "Not valid hostaddr: " + ep[0]
-			return errors.New(str)
-		}
-		if _, err := strconv.Atoi(ep[1]); err != nil {
-			str := "Not valid port number: " + ep[1]
-			return errors.New(str)
+			return fmt.Errorf("Not valid hostaddr: %s", ep[0])
 		}
 	}
-	if strings.Compare(mode, "network") != 0 && strings.Compare(mode, "host") != 0 {
-		str := "Not valid mode: " + mode
-		return errors.New(str)
+	if mode != "network" && mode != "host" {
+		return fmt.Errorf("Not valid mode: %s - must be '%s' or '%s'", mode, "network", "host")
 	}
-	if !vldtor.CIDR(mgmtIP) {
-		return errors.New("Not valid mgmt-ip")
+	if mode == "network" && networkMode == "" {
+		return fmt.Errorf("Network-Mode must be specified if Management-Mode is 'network'")
 	}
-	if !vldtor.HostAddr(hostname) {
-		return errors.New("Not valid host name")
+	if mode == "host" && networkMode != "" {
+		return fmt.Errorf("Network-Mode is not applicable if Management-Mode is 'host'")
 	}
-	if !vldtor.MacAddr(priMac) {
-		return errors.New("Not valid mac address")
+	if networkMode != "oob" && networkMode != "inband" {
+		return fmt.Errorf("Invalid network mode '%s', must be 'oob' for out of band or 'inband' for inband network management", networkMode)
+	}
+	if mgmtIP != "" && !vldtor.CIDR(mgmtIP) {
+		return fmt.Errorf("Not valid mgmt-ip")
+	}
+	if hostname != "" && !vldtor.HostAddr(hostname) {
+		return fmt.Errorf("Not valid host name")
+	}
+	if priMac != "" && !vldtor.MacAddr(priMac) {
+		return fmt.Errorf("Not valid mac address")
 	}
 	return nil
 }
 
 func modeManagedCmdHandler(cmd *cobra.Command, args []string) error {
-	var modeVal nmd.MgmtMode
+	modeVal := nmd.MgmtMode_HOST
 	if mode == "managed" {
 		modeVal = nmd.MgmtMode_NETWORK
-	} else {
-		modeVal = nmd.MgmtMode_HOST
+	}
+
+	networkModeVal := nmd.NetworkMode_OOB
+	if networkMode == "inband" {
+		networkModeVal = nmd.NetworkMode_INBAND
 	}
 	naplesCfg := &nmd.Naples{
 		TypeMeta:   api.TypeMeta{Kind: "Naples"},
 		ObjectMeta: api.ObjectMeta{Name: "NaplesConfig"},
 		Spec: nmd.NaplesSpec{
 			Mode:        modeVal,
+			NetworkMode: networkModeVal,
 			Hostname:    hostname,
 			Controllers: controllers,
 			IPConfig: &cluster.IPConfig{
