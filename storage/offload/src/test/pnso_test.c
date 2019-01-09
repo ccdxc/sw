@@ -1329,6 +1329,7 @@ static void calculate_completion_stats(struct batch_context *batch_ctx)
 {
 	uint32_t i, j;
 	struct request_context *req_ctx;
+	struct pnso_service *req_svc;
 	struct pnso_service_status *svc_status;
 	struct testcase_io_stats *stats = &batch_ctx->stats.io_stats[1];
 
@@ -1345,16 +1346,20 @@ static void calculate_completion_stats(struct batch_context *batch_ctx)
 		if (req_ctx->svc_res.num_services != req_ctx->svc_req.num_services)
 			goto error;
 		for (j = 0; j < req_ctx->svc_res.num_services; j++) {
+			req_svc = &req_ctx->svc_req.svc[j];
 			svc_status = &req_ctx->svc_res.svc[j];
 			stats->svcs += 1;
 			if (pnso_svc_type_is_data(svc_status->svc_type)) {
-				stats->bytes += svc_status->u.dst.data_len;
+				if (svc_status->u.dst.sgl)
+					stats->bytes += svc_status->u.dst.data_len;
 			} else if (svc_status->svc_type == PNSO_SVC_TYPE_CHKSUM) {
-				stats->bytes += svc_status->u.chksum.num_tags *
-					pnso_get_chksum_algo_size(req_ctx->svc_req.svc[j].u.chksum_desc.algo_type);
+				if (svc_status->u.chksum.tags)
+					stats->bytes += svc_status->u.chksum.num_tags *
+						pnso_get_chksum_algo_size(req_svc->u.chksum_desc.algo_type);
 			} else if (svc_status->svc_type == PNSO_SVC_TYPE_HASH) {
-				stats->bytes += svc_status->u.hash.num_tags *
-					pnso_get_hash_algo_size(req_ctx->svc_req.svc[j].u.hash_desc.algo_type);
+				if (svc_status->u.hash.tags)
+					stats->bytes += svc_status->u.hash.num_tags *
+						pnso_get_hash_algo_size(req_svc->u.hash_desc.algo_type);
 			} else {
 				goto error;
 			}
