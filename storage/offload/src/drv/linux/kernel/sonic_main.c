@@ -79,7 +79,8 @@ int sonic_adminq_check_err(struct lif *lif, struct sonic_admin_ctx *ctx)
 		}
 		OSAL_LOG_ERROR("(%d) %s failed: %d",
 			ctx->cmd.cmd.opcode, name, ctx->comp.cpl.status);
-		return ctx->comp.cpl.status == DEVCMD_UNKNOWN ? -EBADRQC : -EIO;
+		return ctx->comp.cpl.status == DEVCMD_UNKNOWN ? 
+		       SONIC_DEVCMD_UNKNOWN : SONIC_DEVCMD_ERROR;
 	}
 
 	return 0;

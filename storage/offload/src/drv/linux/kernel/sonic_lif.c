@@ -24,17 +24,24 @@
 
 #include "pnso_init.h"
 
-#define LIF_FOR_EACH_PC_RES(lif, idx, res)      				\
+#define LIF_FOR_EACH_PC_RES(lif, idx, res)					\
 	for (idx = 0; idx < lif->sonic->num_per_core_resources; idx++)		\
 		if ((res = lif->res.pc_res[i]) != NULL)				\
 
 
+#define LIF_FOR_EACH_SEQ_Q_BATCH_LIST(lif, list)				\
+	for (list = &lif->seq_q_batch_ht[0];					\
+	     list < &lif->seq_q_batch_ht[LIF_SEQ_Q_BATCH_HT_SZ];		\
+	     list++)								\
+
+
 static int
-sonic_lif_seq_q_batch_init(struct seq_queue_batch *batch);
+sonic_lif_seq_q_batch_init(struct seq_queue_batch *batch,
+			   void *cb_arg);
 
 static int
 sonic_lif_seq_q_batch_control(struct seq_queue_batch *batch,
-			      uint16_t opcode);
+			      void *cb_arg);
 
 static bool sonic_adminq_service(struct cq *cq, struct cq_info *cq_info,
 				 void *cb_arg)
@@ -96,7 +103,7 @@ void sonic_intr_free(struct lif *lif, struct intr *intr)
 		clear_bit(intr->index, lif->sonic->intrs);
 }
 
-void *
+static void *
 sonic_desc_mem_zalloc(struct device *dev,
 		      uint32_t *total_size,
 		      uint32_t min_size,
@@ -121,7 +128,7 @@ sonic_desc_mem_zalloc(struct device *dev,
 	return base_va;
 }
 
-void
+static void
 sonic_desc_mem_free(struct device *dev,
 		    size_t size,
 		    void *base_va,
@@ -131,18 +138,131 @@ sonic_desc_mem_free(struct device *dev,
 }
 
 static inline uint32_t
-sonic_seq_q_batch_hash_key(const struct queue *q)
+sonic_seq_q_batch_hash(const struct queue *q)
 {
 	return jhash_3words(q->qgroup, q->num_descs, q->desc_size, 0);
 }
 
-static inline bool
-sonic_seq_q_batch_key_eq(const struct seq_queue_batch *batch,
+static inline uint32_t
+sonic_seq_q_batch_hash_idx(uint32_t hash)
+{
+	return hash & (LIF_SEQ_Q_BATCH_HT_SZ - 1);
+}
+
+static bool
+sonic_seq_q_batch_key_eq(struct seq_queue_batch *batch,
 			 const struct queue *q)
 {
-	return ((batch->qgroup == q->qgroup) &&
-		(batch->per_q_num_descs == q->num_descs) &&
-		(batch->per_q_desc_size == q->desc_size));
+	return (batch->qgroup == q->qgroup) &&
+	       (batch->per_q_num_descs == q->num_descs) &&
+	       (batch->per_q_desc_size == q->desc_size);
+}
+
+/*
+ * Freebsd does not support linux/hashtable.h so we roll our own.
+ */
+static void
+sonic_seq_q_batch_ht_init(struct lif *lif)
+{
+	struct hlist_head *list;
+
+	LIF_FOR_EACH_SEQ_Q_BATCH_LIST(lif, list) {
+		INIT_HLIST_HEAD(list);
+        }
+}
+
+static void
+sonic_seq_q_batch_ht_add_head(struct lif *lif,
+			      struct seq_queue_batch *batch,
+			      uint32_t hash)
+{
+	hlist_add_head(&batch->node,
+		       &lif->seq_q_batch_ht[sonic_seq_q_batch_hash_idx(hash)]);
+}
+
+static void
+sonic_seq_q_batch_ht_del( struct seq_queue_batch *batch)
+{
+	hlist_del_init(&batch->node);
+}
+
+static int
+sonic_seq_q_batch_ht_for_each(struct lif *lif,
+			      uint32_t hash,
+			      seq_q_batch_ht_cb cb,
+			      void *cb_arg)
+{
+	struct seq_queue_batch *batch;
+	int err = 0;
+
+	hlist_for_each_entry(batch, 
+		&lif->seq_q_batch_ht[sonic_seq_q_batch_hash_idx(hash)], node) {
+
+		err = cb(batch, cb_arg);
+		if (err)
+			break;
+	}
+
+	return err;
+}
+
+static int
+sonic_seq_q_batch_ht_for_each_safe(struct lif *lif,
+				   uint32_t hash,
+				   seq_q_batch_ht_cb cb,
+				   void *cb_arg)
+{
+	struct seq_queue_batch *batch;
+	struct hlist_node *next;
+	int err = 0;
+
+	hlist_for_each_entry_safe(batch, next,
+		&lif->seq_q_batch_ht[sonic_seq_q_batch_hash_idx(hash)], node) {
+
+		err = cb(batch, cb_arg);
+		if (err)
+			break;
+	}
+
+	return err;
+}
+
+static int
+sonic_seq_q_batch_ht_for_all(struct lif *lif,
+			     seq_q_batch_ht_cb cb,
+			     void *cb_arg)
+{
+	struct hlist_head *list;
+	uint32_t hash = 0;
+	int err = 0;
+
+	LIF_FOR_EACH_SEQ_Q_BATCH_LIST(lif, list) {
+		err = sonic_seq_q_batch_ht_for_each(lif, hash, cb, cb_arg);
+		if (err)
+			break;
+		hash++;
+	}
+
+	return err;
+}
+
+static int
+sonic_seq_q_batch_ht_for_all_safe(struct lif *lif,
+				  seq_q_batch_ht_cb cb,
+				  void *cb_arg)
+{
+	struct hlist_head *list;
+	uint32_t hash = 0;
+	int err = 0;
+
+	LIF_FOR_EACH_SEQ_Q_BATCH_LIST(lif, list) {
+		err = sonic_seq_q_batch_ht_for_each_safe(lif, hash, cb, cb_arg);
+		if (err)
+			break;
+		hash++;
+	}
+
+	return err;
 }
 
 static uint32_t
@@ -178,14 +298,13 @@ sonic_seq_q_batch_multiple(const struct queue *q)
 	return multiple;
 }
 
-struct seq_queue_batch *
+static struct seq_queue_batch *
 sonic_seq_q_batch_alloc(struct queue *q)
 {
 	struct lif *lif = q->lif;
 	struct device *dev = lif->sonic->dev;
 	struct seq_queue_batch *batch;
-	struct seq_queue_batch *head_node;
-	uint32_t key;
+	uint32_t hash;
 
 	batch = devm_kzalloc(dev, sizeof(*batch), GFP_KERNEL);
 	if (!batch)
@@ -204,16 +323,9 @@ sonic_seq_q_batch_alloc(struct queue *q)
 					       &batch->base_pa);
 	if (!batch->base_va)
 		goto error;
-	/*
-	 * Implementation becomes simpler when new element is known to have
-	 * been added to the head of the hash bucket.
-	 */
-	key = sonic_seq_q_batch_hash_key(q);
-	hash_add(lif->seq_q_batch_ht, &batch->node, key);
-        hash_for_each_possible(lif->seq_q_batch_ht, head_node, node, key) {
-		OSAL_ASSERT(head_node == batch);
-		break;
-	}
+
+	hash = sonic_seq_q_batch_hash(q);
+	sonic_seq_q_batch_ht_add_head(lif, batch, hash);
 	lif->curr_seq_q_batch = batch;
 	lif->num_seq_q_batches++;
 	return batch;
@@ -224,18 +336,42 @@ error:
 	return NULL;
 }
 
-void
-sonic_seq_q_batch_free(struct seq_queue_batch *batch)
+static int
+sonic_seq_q_batch_free(struct seq_queue_batch *batch,
+		       void *cb_arg)
 {
-	struct device *dev = batch->lif->sonic->dev;
+	struct lif *lif = cb_arg;
+	struct device *dev = lif->sonic->dev;
 
 	if (batch) {
-		OSAL_ASSERT(hash_hashed(&batch->node));
-		hash_del(&batch->node);
+		sonic_seq_q_batch_ht_del(batch);
 		sonic_desc_mem_free(dev, batch->base_alloc_size,
 				    batch->base_va, batch->base_pa);
 		devm_kfree(dev, batch);
 	}
+
+	return 0;
+}
+
+struct seq_q_key_find_arg
+{
+	const struct queue *q;
+	struct seq_queue_batch *ret_batch;
+};
+
+static int
+sonic_seq_q_batch_key_find(struct seq_queue_batch *batch,
+			   void *cb_arg)
+{
+	struct seq_q_key_find_arg *arg = cb_arg;
+
+        arg->ret_batch = NULL;
+	if (sonic_seq_q_batch_key_eq(batch, arg->q)) {
+		arg->ret_batch = batch;
+		return SONIC_SEQ_Q_BATCH_KEY_EXIST;
+	}
+
+        return 0;
 }
 
 static struct seq_queue_batch *
@@ -243,18 +379,21 @@ sonic_seq_q_batch_find(struct queue *q)
 {
 	struct lif *lif = q->lif;
 	struct seq_queue_batch *batch;
-	uint32_t key;
+	struct seq_q_key_find_arg find_arg;
+	uint32_t hash;
+	int err;
 
 	batch = lif->curr_seq_q_batch;
 	if (!batch ||
 	    !sonic_seq_q_batch_key_eq(batch, q)) {
-		key = sonic_seq_q_batch_hash_key(q);
-		hash_for_each_possible(lif->seq_q_batch_ht, batch, node, key) {
-			if (sonic_seq_q_batch_key_eq(batch, q)) {
-				lif->curr_seq_q_batch = batch;
-				break;
-			}
-		}
+
+		find_arg.q = q;
+		find_arg.ret_batch = NULL;
+		hash = sonic_seq_q_batch_hash(q);
+		err = sonic_seq_q_batch_ht_for_each(lif, hash,
+				    sonic_seq_q_batch_key_find, &find_arg);
+		if (err == SONIC_SEQ_Q_BATCH_KEY_EXIST)
+			lif->curr_seq_q_batch = find_arg.ret_batch;
 	}
 	if (!batch)
 		batch = sonic_seq_q_batch_alloc(q);
@@ -292,15 +431,6 @@ sonic_seq_q_alloc_from_batch(struct queue *q)
 	}
 
 	return err;
-}
-
-void
-sonic_seq_q_free(struct queue *q)
-{
-	/*
-	 * Seq queues are freed via their corresponding batch
-	 * so nothing to do.
-	 */
 }
 
 void sonic_q_free(struct lif *lif, struct queue *q)
@@ -524,7 +654,7 @@ static int sonic_lif_alloc(struct sonic *sonic, unsigned int index)
 	INIT_LIST_HEAD(&lif->deferred.list);
 	INIT_WORK(&lif->deferred.work, sonic_lif_deferred_work);
 #endif
-	hash_init(lif->seq_q_batch_ht);
+	sonic_seq_q_batch_ht_init(lif);
 
 	err = sonic_qcqs_alloc(lif);
 	if (err)
@@ -650,16 +780,9 @@ static void sonic_lif_per_core_resources_deinit(struct lif *lif)
 
 static void sonic_lif_deinit(struct lif *lif)
 {
-	struct seq_queue_batch *batch;
-	struct hlist_node *next;
-	int i;
-
 	sonic_lif_qcq_deinit(lif, lif->adminqcq);
 	sonic_lif_per_core_resources_deinit(lif);
-
-	hash_for_each_safe(lif->seq_q_batch_ht, i, next, batch, node) {
-		sonic_seq_q_batch_free(batch);
-	}
+	sonic_seq_q_batch_ht_for_all_safe(lif, sonic_seq_q_batch_free, lif);
 }
 
 /*
@@ -1138,23 +1261,21 @@ static int
 sonic_lif_per_core_resources_post_init(struct lif *lif)
 {
 	struct per_core_resource *res;
-	struct seq_queue_batch *batch;
 	int pc_q_count = sonic_lif_per_core_seq_q_count(lif);
+	enum cmd_opcode opcode;
 	int err = 0;
 	int i;
 
 	OSAL_LOG_DEBUG("num_seq_q_batches %u", lif->num_seq_q_batches);
-	hash_for_each(lif->seq_q_batch_ht, i, batch, node) {
-		err = sonic_lif_seq_q_batch_init(batch);
-		if (err)
-			goto done;
-	}
-	hash_for_each(lif->seq_q_batch_ht, i, batch, node) {
-		err = sonic_lif_seq_q_batch_control(batch,
-				CMD_OPCODE_SEQ_QUEUE_BATCH_ENABLE);
-		if (err)
-			goto done;
-	}
+	err = sonic_seq_q_batch_ht_for_all(lif, sonic_lif_seq_q_batch_init, NULL);
+	if (err)
+		goto done;
+
+	opcode = CMD_OPCODE_SEQ_QUEUE_BATCH_ENABLE;
+	err = sonic_seq_q_batch_ht_for_all(lif, sonic_lif_seq_q_batch_control,
+					   &opcode);
+	if (err)
+		goto done;
 
 	LIF_FOR_EACH_PC_RES(lif, i, res) {
 		err = sonic_ev_intr_init(res, pc_q_count);
@@ -1191,7 +1312,7 @@ static int sonic_lif_init(struct lif *lif)
 		goto err_out_per_core_res_deinit;
 
 	err = sonic_lif_per_core_resources_post_init(lif);
-	if (err == -EBADRQC)
+	if (err == SONIC_DEVCMD_UNKNOWN)
 		err = sonic_lif_per_core_resources_legacy_post_init(lif);
 	if (err)
 		goto err_out_per_core_res_deinit;
@@ -1666,8 +1787,9 @@ sonic_lif_seq_q_legacy_control(struct queue *q, uint16_t opcode)
 
 static int
 sonic_lif_seq_q_batch_control(struct seq_queue_batch *batch,
-			      uint16_t opcode)
+			      void *cb_arg)
 {
+	enum cmd_opcode opcode = *((enum cmd_opcode *)cb_arg);
 	struct sonic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.seq_queue_batch_control = {
@@ -1748,7 +1870,8 @@ done:
 }
 
 static int
-sonic_lif_seq_q_batch_init(struct seq_queue_batch *batch)
+sonic_lif_seq_q_batch_init(struct seq_queue_batch *batch,
+			   void *cb_arg)
 {
 	struct sonic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),

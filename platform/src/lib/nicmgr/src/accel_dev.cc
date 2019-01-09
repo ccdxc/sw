@@ -928,7 +928,8 @@ Accel_PF::_DevcmdSeqQueueBatchInit(void *req, void *req_data,
     cmd.wring_size = batch_cmd->wring_size;
     cmd.wring_base = batch_cmd->wring_base;
 
-    seq_q_size = (uint64_t)batch_cmd->entry_size * batch_cmd->wring_size;
+    seq_q_size = (1ULL << batch_cmd->entry_size) *
+                 (1ULL << batch_cmd->wring_size);
     for (i = 0; i < batch_cmd->num_queues; i++) {
         status = _DevcmdSeqQueueSingleInit(&cmd);
         if (status != DEVCMD_SUCCESS) {

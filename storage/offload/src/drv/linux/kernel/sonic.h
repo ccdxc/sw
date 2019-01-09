@@ -7,9 +7,7 @@
 #ifndef _SONIC_H_
 #define _SONIC_H_
 
-#include <linux/types.h>
 #include <linux/jhash.h>
-#include <linux/hashtable.h>
 #include "osal.h"
 #include "sonic_dev.h"
 #include "sonic_debugfs.h"
@@ -20,6 +18,13 @@
 #define DRV_NAME		"sonic"
 #define DRV_DESCRIPTION		"Pensando Offload Driver"
 #define DRV_VERSION		"0.1"
+
+/*
+ * Special error codes for certain well known sonic utility functions
+ */
+#define SONIC_DEVCMD_UNKNOWN		(-ENOENT)
+#define SONIC_DEVCMD_ERROR		(-EIO)
+#define SONIC_SEQ_Q_BATCH_KEY_EXIST	(-EEXIST)
 
 extern unsigned int devcmd_timeout;
 extern unsigned int core_count;

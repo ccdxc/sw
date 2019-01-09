@@ -77,10 +77,13 @@ struct deferred {
 #define LIF_NAME_MAX_SZ		(32)
 #define LIF_SEQ_Q_BATCH_HT_ORDER (4)
 #define LIF_SEQ_Q_BATCH_HT_SZ	(1 << LIF_SEQ_Q_BATCH_HT_ORDER)
+
+typedef int (*seq_q_batch_ht_cb)(struct seq_queue_batch *batch,
+				 void *cb_arg);
 struct lif {
 	char name[LIF_NAME_MAX_SZ];
 	struct list_head list;
-	DECLARE_HASHTABLE(seq_q_batch_ht, LIF_SEQ_Q_BATCH_HT_ORDER);
+	struct hlist_head seq_q_batch_ht[LIF_SEQ_Q_BATCH_HT_SZ];
 	struct seq_queue_batch *curr_seq_q_batch;
 	struct net_device dummy_netdev;
 	struct sonic *sonic;

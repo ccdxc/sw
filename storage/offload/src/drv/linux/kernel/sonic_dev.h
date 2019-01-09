@@ -9,6 +9,10 @@
 
 #define static_assert(...)
 #include <linux/spinlock.h>
+#include <linux/types.h>
+#ifdef __FreeBSD__
+#include <linux/list.h>
+#endif
 #include "osal_sys.h"
 #include "accel_ring.h"
 #include "storage_seq_common.h"
@@ -284,10 +288,6 @@ struct queue {
 	osal_atomic_int_t descs_inuse;
 };
 
-struct seq_q_desc_info {
-	unsigned int index;
-};
-
 struct seq_queue_batch {
 	struct hlist_node node;
 	struct lif *lif;
@@ -332,7 +332,7 @@ struct per_core_resource {
 	struct queue crypto_seq_status_qs[MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES];
 	spinlock_t seq_statusq_lock;
 
-	struct intr intr;
+  	struct intr intr;
 	struct sonic_event_list *evl; /* top half event list */
 
 	struct mem_pool *mpools[MPOOL_TYPE_MAX];
