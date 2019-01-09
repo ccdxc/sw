@@ -21,7 +21,11 @@ namespace impl {
  * @brief    constructor
  */
 route_table_impl_state::route_table_impl_state() {
-    route_table_idxr_ = indexer::factory(OCI_MAX_ROUTE_PER_TABLE);
+    /**< we need max + 1 blocks, extra 1 block for processing updates for
+     *   routing table (with the assumption that more than one routing table
+     *   is not updated in any given batch
+     */
+    route_table_idxr_ = indexer::factory(OCI_MAX_ROUTE_PER_TABLE + 1);
     SDK_ASSERT(route_table_idxr_ != NULL);
 }
 

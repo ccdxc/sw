@@ -310,7 +310,7 @@ static inline bool
 ip_addr_is_zero (const ip_addr_t *addr)
 {
     return (addr->af == IP_AF_IPV4) ? addr->addr.v4_addr == 0 :
-        (addr->addr.v6_addr.addr64[0] & addr->addr.v6_addr.addr64[1]) == 0;
+        (addr->addr.v6_addr.addr64[0] && addr->addr.v6_addr.addr64[1]) == 0;
 }
 
 static inline bool
@@ -322,7 +322,6 @@ ip_prefix_is_equal (ip_prefix_t *ip_prefix1, ip_prefix_t *ip_prefix2)
 
     return std::memcmp(ip_prefix1, ip_prefix2, sizeof(ip_prefix_t)) ? false : true;
 }
-
 
 static inline ipv4_addr_t
 ipv4_prefix_len_to_mask (uint8_t len)
@@ -341,9 +340,8 @@ ipv4_mask_to_prefix_len (ipv4_addr_t v4_addr)
     if (!v4_addr) {
         return 0;
     }
-    // Check to see that set/reset bits are together (it is a power2 - 1)
+    // check to see that set/reset bits are together (it is a power2 - 1)
     if (iv4_addr & (iv4_addr + 1)) {
-        // Error
         return -1;
     }
 
@@ -360,10 +358,10 @@ ipv6_prefix_len_to_mask (ipv6_addr_t *v6_addr, uint8_t len)
     if (len > 128) {
         return;
     }
-    // Using addr32/addr64 is tricky here because the v6 addresses
+    // using addr32/addr64 is tricky here because the v6 addresses
     // are stored in big-endian format. So for example, for prefix len of 20
     // the mask should be 0xff 0xff 0xf0 0x00 ...
-    // If read it as addr32 it translates to 0x00f0ffff . Forming this is tricky
+    // if read it as addr32 it translates to 0x00f0ffff, forming this is tricky
     while (len) {
         v6_addr->addr8[wp++] = (len >= 8) ? 0xff: (0xff & (~((1<<(8-len))-1)));
         len = (len >= 8) ? len-8 : 0;
@@ -401,6 +399,57 @@ ipv6_mask_to_prefix_len (ipv6_addr_t *v6_addr)
     return prefix_len;
 }
 
+// given an IP prefix, return the lowest IP in the range
+static inline void
+ip_prefix_ip_low (ip_prefix_t *pfx, ip_addr_t *ipaddr)
+{
+    *ipaddr = pfx->addr;
+    if (ipaddr->af == IP_AF_IPV4) {
+        ipaddr->addr.v4_addr &= ipv4_prefix_len_to_mask(pfx->len);
+    } else if (ipaddr->af == IP_AF_IPV6) {
+        ipv6_addr_t    v6_mask;
+        ipv6_prefix_len_to_mask(&v6_mask, pfx->len);
+        for (uint8_t i = 0; i < IP6_ADDR32_LEN; i++) {
+            ipaddr->addr.v6_addr.addr32[i] &= v6_mask.addr32[i];
+        }
+    }
+}
+
+// given an IP prefix, return the highest IP in the range
+static inline void
+ip_prefix_ip_high (ip_prefix_t *pfx, ip_addr_t *ipaddr)
+{
+    *ipaddr = pfx->addr;
+    if (ipaddr->af == IP_AF_IPV4) {
+        ipaddr->addr.v4_addr |= ~ipv4_prefix_len_to_mask(pfx->len);
+    } else if (ipaddr->af == IP_AF_IPV6) {
+        ipv6_addr_t    v6_mask;
+        ipv6_prefix_len_to_mask(&v6_mask, pfx->len);
+        for (uint8_t i = 0; i < IP6_ADDR32_LEN; i++) {
+            ipaddr->addr.v6_addr.addr32[i] |= v6_mask.addr32[i];
+        }
+    }
+}
+
+// given an IP prefix, return the IP address next to the highest IP in the range
+static inline void
+ip_prefix_ip_next (ip_prefix_t *pfx, ip_addr_t *ipaddr)
+{
+    // compute the higest IP address in this prefix/range
+    ip_prefix_ip_high(pfx, ipaddr);
+    // now add 1 to it
+    if (ipaddr->af == IP_AF_IPV4) {
+        ipaddr->addr.v4_addr += 1;
+    } else if (ipaddr->af == IP_AF_IPV6) {
+        for (uint8_t i = 0; i < IP6_ADDR8_LEN; i++) {
+            // keep adding one until there is no rollover
+            if ((++(ipaddr->addr.v6_addr.addr8[i]))) {
+                break;
+            }
+        }
+    }
+}
+
 static inline bool
 ipv4_addr_is_multicast (ipv4_addr_t *ipv4_addr)
 {
@@ -424,4 +473,3 @@ ip_addr_is_multicast (ip_addr_t *ip_addr)
 }
 
 #endif    // __IP_HPP__
-
