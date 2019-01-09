@@ -111,6 +111,7 @@ nic/build/aarch64/iris/bin/fte_test                                 /nic/bin/
 nic/build/aarch64/iris/bin/network_test                             /nic/bin/
 
 #p4ctl binary
-nic/debug_cli/images/aarch64/iris/p4ctl                            /nic/bin
+nic/debug_cli/images/aarch64/iris/p4ctl                             /nic/bin
 
-
+#process memory scripts
+nic/tools/run_mem_check.sh                                          /nic/tools/ 

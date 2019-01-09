@@ -80,3 +80,7 @@ nic/build/$ARCH/$PIPELINE/gen/p4gen/common_txdma_actions/p4pd/capri_p4_table_map
 nic/sdk/third-party/googletest-release-1.8.0/googletest/make/$ARCH/libgtest.so /platform/lib/
 nic/sdk/third-party/googletest-release-1.8.0/googletest/make/$ARCH/libgtest_without_main.so /platform/lib/
 nic/debug_cli/images/$ARCH/$PIPELINE/p4ctl                        /nic/bin
+
+#process memory scripts
+nic/tools/run_mem_check.sh                                          /nic/tools/
+

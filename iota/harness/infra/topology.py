@@ -43,8 +43,6 @@ class Node(object):
         self.__os = getattr(self.__inst, "NodeOs", "linux")
         self.__nic_mgmt_ip = getattr(self.__inst, "NicMgmtIP", None)
         self.__nic_int_mgmt_ip = getattr(self.__inst, "NicIntMgmtIP", "169.254.0.1")
-        if self.__nic_mgmt_ip is None or self.__nic_mgmt_ip == "" :
-            self.__nic_mgmt_ip = self.__nic_int_mgmt_ip
 
         self.__role = self.__get_instance_role(spec.role)
 
@@ -81,6 +79,9 @@ class Node(object):
 
     def GetNicMgmtIP(self):
         return self.__nic_mgmt_ip
+
+    def GetNicIntMgmtIP(self):
+        return self.__nic_int_mgmt_ip
 
     def Name(self):
         return self.__name
@@ -363,6 +364,9 @@ class Topology(object):
 
     def GetNicMgmtIP(self, node_name):
         return self.__nodes[node_name].GetNicMgmtIP()
+
+    def GetNicIntMgmtIP(self, node_name):
+        return self.__nodes[node_name].GetNicIntMgmtIP()
 
     def GetNicType(self, node_name):
         return self.__nodes[node_name].GetNicType()

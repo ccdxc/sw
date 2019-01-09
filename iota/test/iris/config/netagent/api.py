@@ -37,7 +37,7 @@ def __get_agent_ips(node_names = None):
         ip = api.GetNaplesMgmtIpAddress(node_name)
         if not ip:
             assert(0)
-        nic_ip = api.GetNicMgmtIP(node_name)
+        nic_ip = api.GetNicIntMgmtIP(node_name)
         agent_ips.append((ip, nic_ip))
     return agent_ips
 

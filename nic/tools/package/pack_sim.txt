@@ -164,3 +164,6 @@ platform/src/app/nicmgrd/etc/*.json                              /platform/etc/n
 # nic/gen/common_rxdma_actions/cli/common_rxdma_actions_backend.py  /nic/cli/
 # nic/gen/common_rxdma_actions/cli/common_rxdma_actions.py          /nic/cli/
 # nic/gen/common_rxdma_actions/cli/_common_rxdma_actions.so         /nic/cli/
+
+#process mem scripts
+nic/tools/run_mem_check.sh                                          /nic/tools/

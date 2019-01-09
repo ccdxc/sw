@@ -76,7 +76,7 @@ class Command(object):
         return self.out
 
 def GetSecurityPolicy(workload):
-    mnicIP = api.GetNicMgmtIP(workload.node_name)
+    mnicIP = api.GetNicIntMgmtIP(workload.node_name)
 
     cmd = 'sshpass -p vm ssh vm@{} curl -X GET -H "Content-Type:application/json" http://{}:9007/api/security/policies/'.format(workload.workload_name,mnicIP)
     return Command(cmd).run()
