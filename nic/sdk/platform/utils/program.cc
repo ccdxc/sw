@@ -1,6 +1,6 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
-#include "nic/sdk/include/sdk/platform/utils/program.hpp"
+#include "platform/utils/program.hpp"
 
 #define JSON_KEY_PROGRAMS        "programs"
 #define JSON_KEY_SYMBOLS         "symbols"

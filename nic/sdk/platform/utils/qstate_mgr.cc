@@ -1,7 +1,7 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 #include "include/sdk/types.hpp"
-#include "include/sdk/platform/utils/qstate_mgr.hpp"
+#include "platform/utils/qstate_mgr.hpp"
 
 #define JSON_KEY_LIFS            "lifs"
 #define JSON_KEY_LIF_ID          "lif_id"

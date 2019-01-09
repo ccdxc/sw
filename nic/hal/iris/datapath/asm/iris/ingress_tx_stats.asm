@@ -1,6 +1,6 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
-#include "nic/sdk/include/sdk/platform/capri/capri_common.hpp"
+#include "platform/capri/capri_common.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 
 struct ingress_tx_stats_k k;

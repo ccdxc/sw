@@ -3,7 +3,7 @@
 #include "nic/hal/plugins/cfg/lif/lif.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/src/internal/p4pt.hpp"
-#include "nic/sdk/include/sdk/platform/capri/capri_lif_manager.hpp"
+#include "platform/capri/capri_lif_manager.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 
 namespace hal {

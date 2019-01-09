@@ -1,24 +1,18 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
-#include "nic/include/base.hpp"
-#include "nic/include/hal_mem.hpp"
-#include "nic/hal/iris/include/hal_state.hpp"
-#include "include/sdk/platform/capri/capri_cfg.hpp"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
-#include "nic/hal/pd/capri/capri_config.hpp"
-#include "nic/hal/pd/capri/capri_tbl_rw.hpp"
-#include "include/sdk/platform/capri/capri_tm_rw.hpp"
-#include "include/sdk/platform/capri/capri_txs_scheduler.hpp"
-#include "nic/include/hal.hpp"
-#include "nic/hal/svc/hal_ext.hpp"
-#include "nic/include/asic_pd.hpp"
+#include "platform/capri/capri_cfg.hpp"
+#include "platform/capri/capri_tm_rw.hpp"
+#include "platform/capri/capri_txs_scheduler.hpp"
+#include "platform/capri/capri_quiesce.hpp"
 #include "nic/sdk/asic/rw/asicrw.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
-#include "include/sdk/platform/capri/capri_pxb_pcie.hpp"
-#include "include/sdk/platform/capri/capri_state.hpp"
-#include "nic/hal/pd/capri/capri_sw_phv.hpp"
-#include "nic/hal/pd/capri/capri_barco_crypto.hpp"
-#include "include/sdk/platform/capri/capri_common.hpp"
+#include "include/sdk/mem.hpp"
+#include "platform/capri/capri_pxb_pcie.hpp"
+#include "platform/capri/capri_state.hpp"
+#include "platform/capri/capri_common.hpp"
+#include "platform/capri/capri_hbm_rw.hpp"
+#include "platform/capri/capri_tbl_rw.hpp"
+#include "gen/platform/mem_regions.hpp"
 #include "nic/asic/capri/verif/apis/cap_npv_api.h"
 #include "nic/asic/capri/verif/apis/cap_dpa_api.h"
 #include "nic/asic/capri/verif/apis/cap_pics_api.h"
@@ -29,24 +23,22 @@
 #include "nic/asic/capri/verif/apis/cap_ptd_api.h"
 #include "nic/asic/capri/verif/apis/cap_stg_api.h"
 #include "nic/asic/capri/verif/apis/cap_wa_api.h"
-#include "nic/hal/pd/capri/capri_quiesce.hpp"
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
 #include "nic/asic/capri/model/cap_prd/cap_prd_csr.h"
 #include "nic/asic/capri/model/utils/cap_csr_py_if.h"
 
-uint64_t capri_hbm_base;
-uint64_t hbm_repl_table_offset;
-uint32_t capri_coreclk_freq; //Mhz
+namespace sdk {
+namespace platform {
+namespace capri {
 
-using namespace sdk::platform::capri;
-
+class capri_state_pd *g_capri_state_pd;
 /* capri_default_config_init
  * Load any bin files needed for initializing default configs
  */
-static hal_ret_t
+static sdk_ret_t
 capri_default_config_init (capri_cfg_t *cfg)
 {
-    hal_ret_t   ret = HAL_RET_OK;
+    sdk_ret_t   ret = SDK_RET_OK;
     std::string hbm_full_path;
     std::string full_path;
     int         num_phases = 2;
@@ -56,16 +48,16 @@ capri_default_config_init (capri_cfg_t *cfg)
         full_path =  std::string(cfg->cfg_path) + "/init_bins/" + cfg->default_config_dir + "/init_" +
                                             std::to_string(i) + "_bin";
 
-        HAL_TRACE_DEBUG("Init phase {} Binaries dir: {}", i, full_path.c_str());
+        SDK_TRACE_DEBUG("Init phase %d Binaries dir: %s", i, full_path.c_str());
 
         // Check if directory is present
         if (access(full_path.c_str(), R_OK) < 0) {
-            HAL_TRACE_DEBUG("Skipping init binaries");
-            return HAL_RET_OK;
+            SDK_TRACE_DEBUG("Skipping init binaries");
+            return SDK_RET_OK;
         }
 
         ret = capri_load_config((char *)full_path.c_str());
-        HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+        SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                                 "Error loading init phase {} binaries ret {}",
                                 i, ret);
 
@@ -76,16 +68,16 @@ capri_default_config_init (capri_cfg_t *cfg)
     return ret;
 }
 
-static hal_ret_t
+static sdk_ret_t
 capri_timer_hbm_init (void)
 {
-    hal_ret_t ret = HAL_RET_OK;
+    sdk_ret_t ret = SDK_RET_OK;
     uint64_t timer_key_hbm_base_addr;
     uint64_t timer_key_hbm_addr;
     uint64_t zero_data[8] = { 0 };
 
-    timer_key_hbm_base_addr = (uint64_t)get_start_offset((char *)JTIMERS);
-    HAL_TRACE_DEBUG("HBM timer key base addr {:#x}", timer_key_hbm_base_addr);
+    timer_key_hbm_base_addr = get_start_offset(MEM_REGION_TIMERS_NAME);
+    SDK_TRACE_DEBUG("HBM timer key base addr %lx", timer_key_hbm_base_addr);
     timer_key_hbm_addr = timer_key_hbm_base_addr;
     while (timer_key_hbm_addr < timer_key_hbm_base_addr +
                                 CAPRI_TIMER_HBM_KEY_SPACE) {
@@ -98,39 +90,38 @@ capri_timer_hbm_init (void)
     return ret;
 }
 
-static hal_ret_t
+static sdk_ret_t
 capri_pgm_init (capri_cfg_t *cfg)
 {
-    hal_ret_t      ret;
+    sdk_ret_t      ret;
     std::string    full_path;
 
     for (uint8_t i = 0; i < cfg->num_pgm_cfgs; i++) {
         full_path =  std::string(cfg->cfg_path) + "/" + cfg->pgm_name +
             "/" + cfg->pgm_cfg[i].path;
-        HAL_TRACE_DEBUG("Loading programs from dir {}", full_path.c_str());
+        SDK_TRACE_DEBUG("Loading programs from dir %s", full_path.c_str());
 
         // check if directory is present
         if (access(full_path.c_str(), R_OK) < 0) {
-            HAL_TRACE_ERR("{} not present/no read permissions",
+            SDK_TRACE_ERR("%s not present/no read permissions",
                           full_path.c_str());
-            return HAL_RET_ERR;
+            return SDK_RET_ERR;
         }
         ret = capri_load_config((char *)full_path.c_str());
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Failed to load config {}", full_path);
+        if (ret != SDK_RET_OK) {
+            SDK_TRACE_ERR("Failed to load config %s", full_path);
             return ret;
         }
     }
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-static hal_ret_t
+static sdk_ret_t
 capri_asm_init (capri_cfg_t *cfg)
 {
     int             iret = 0;
     uint64_t        base_addr;
-    hal_ret_t       ret = HAL_RET_OK;
     std::string     full_path;
     uint32_t num_symbols = 0;
     sdk::platform::p4_prog_param_info_t *symbols = NULL;
@@ -138,13 +129,13 @@ capri_asm_init (capri_cfg_t *cfg)
     for (uint8_t i = 0; i < cfg->num_asm_cfgs; i++) {
         full_path =  std::string(cfg->cfg_path) + "/" + cfg->pgm_name +
             "/" + cfg->asm_cfg[i].path;
-        HAL_TRACE_DEBUG("Loading ASM binaries from dir {}", full_path.c_str());
+        SDK_TRACE_DEBUG("Loading ASM binaries from dir %s", full_path.c_str());
 
 	// Check if directory is present
 	if (access(full_path.c_str(), R_OK) < 0) {
-            HAL_TRACE_ERR("{} not_present/no_read_permissions",
+            SDK_TRACE_ERR("%s not_present/no_read_permissions",
                 full_path.c_str());
-            return HAL_RET_ERR;
+            return SDK_RET_ERR;
         }
 
         symbols = NULL;
@@ -153,7 +144,7 @@ capri_asm_init (capri_cfg_t *cfg)
         }
 
         base_addr = get_start_offset(cfg->asm_cfg[i].base_addr.c_str());
-        HAL_TRACE_DEBUG("base addr {:#x}", base_addr);
+        SDK_TRACE_DEBUG("base addr 0x%llx", base_addr);
         iret = sdk::platform::p4_load_mpu_programs(cfg->asm_cfg[i].name.c_str(),
            (char *)full_path.c_str(),
            base_addr,
@@ -162,33 +153,33 @@ capri_asm_init (capri_cfg_t *cfg)
            cfg->asm_cfg[i].sort_func);
 
        if(symbols)
-           HAL_FREE(hal::HAL_MEM_ALLOC_PD, symbols);
+           SDK_FREE(SDK_MEM_ALLOC_PD, symbols);
 
        if (iret != 0) {
-          HAL_TRACE_ERR("Failed to load program {}", full_path);
-          return HAL_RET_ERR;
+          SDK_TRACE_ERR("Failed to load program %s", full_path);
+          return SDK_RET_ERR;
        }
    }
-   return HAL_RET_OK;
+   return SDK_RET_OK;
 }
 
-static hal_ret_t
+static sdk_ret_t
 capri_hbm_regions_init (capri_cfg_t *cfg)
 {
-    hal_ret_t           ret = HAL_RET_OK;
+    sdk_ret_t           ret = SDK_RET_OK;
 
     ret = capri_asm_init(cfg);
-    if (ret != HAL_RET_OK) {
+    if (ret != SDK_RET_OK) {
         return ret;
     }
 
     ret = capri_pgm_init(cfg);
-    if (ret != HAL_RET_OK) {
+    if (ret != SDK_RET_OK) {
         return ret;
     }
 
     ret = capri_timer_hbm_init();
-    if (ret != HAL_RET_OK) {
+    if (ret != SDK_RET_OK) {
         return ret;
     }
 
@@ -198,20 +189,20 @@ capri_hbm_regions_init (capri_cfg_t *cfg)
     return ret;
 }
 
-static hal_ret_t
+static sdk_ret_t
 capri_cache_init (capri_cfg_t *cfg)
 {
-    hal_ret_t   ret = HAL_RET_OK;
+    sdk_ret_t   ret = SDK_RET_OK;
 
     // Program Global parameters of the cache.
     ret = capri_hbm_cache_init(cfg);
-    if (ret != HAL_RET_OK) {
+    if (ret != SDK_RET_OK) {
         return ret;
     }
 
     // Process all the regions.
     ret = capri_hbm_cache_regions_init();
-    if (ret != HAL_RET_OK) {
+    if (ret != SDK_RET_OK) {
         return ret;
     }
     return ret;
@@ -222,10 +213,10 @@ capri_cache_init (capri_cfg_t *cfg)
  * ASIC teams wants to disable Error recovery of Seq ID check pRDMA,
  * as this recovery path is not tested thoroughly, and we might be
  * runing into for an outstanding issue is suspicion.
- * Disabling from HAL for now, but Helen will commit this
- * into prd_asic_init api called from HAL, then this will be removed
+ * Disabling from SDK for now, but Helen will commit this
+ * into prd_asic_init api called from SDK, then this will be removed
  */
-static hal_ret_t
+static sdk_ret_t
 capri_prd_init()
 {
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
@@ -234,22 +225,22 @@ capri_prd_init()
     pr_csr.prd.cfg_ctrl.read();
     pr_csr.prd.cfg_ctrl.pkt_phv_sync_err_recovery_en(0);
     pr_csr.prd.cfg_ctrl.write();
-    HAL_TRACE_DEBUG("Disabled pkt_phv_sync_err_recovery_en in pr_prd_cfg_ctrl");
-    return HAL_RET_OK;
+    SDK_TRACE_DEBUG("Disabled pkt_phv_sync_err_recovery_en in pr_prd_cfg_ctrl");
+    return SDK_RET_OK;
 }
 
 
-static hal_ret_t
+static sdk_ret_t
 capri_repl_init (capri_cfg_t *cfg)
 {
-    capri_hbm_base = get_hbm_base();
-    hbm_repl_table_offset = get_hbm_offset(JP4_REPL);
+#ifdef MEM_REGION_MCAST_REPL_NAME
+    uint64_t hbm_repl_table_offset = get_hbm_offset(MEM_REGION_MCAST_REPL_NAME);
     if (hbm_repl_table_offset != INVALID_MEM_ADDRESS) {
         capri_tm_repl_table_base_addr_set(hbm_repl_table_offset / CAPRI_REPL_ENTRY_WIDTH);
         capri_tm_repl_table_token_size_set(cfg->repl_entry_width * 8);
     }
-
-    return HAL_RET_OK;
+#endif
+    return SDK_RET_OK;
 }
 
 typedef struct block_info_s {
@@ -322,10 +313,10 @@ capri_block_info_init(void)
 //------------------------------------------------------------------------------
 // Reset all the capri blocks
 //------------------------------------------------------------------------------
-static hal_ret_t
+static sdk_ret_t
 capri_block_reset(capri_cfg_t *cfg)
 {
-    hal_ret_t    ret         = HAL_RET_OK;
+    sdk_ret_t    ret         = SDK_RET_OK;
     int          chip_id     = 0;
     block_info_t *block_info = NULL;
 
@@ -343,10 +334,10 @@ capri_block_reset(capri_cfg_t *cfg)
 //------------------------------------------------------------------------------
 // Start the init of blocks
 //------------------------------------------------------------------------------
-static hal_ret_t
+static sdk_ret_t
 capri_block_init_start(capri_cfg_t *cfg)
 {
-    hal_ret_t    ret         = HAL_RET_OK;
+    sdk_ret_t    ret         = SDK_RET_OK;
     int          chip_id     = 0;
     block_info_t *block_info = NULL;
 
@@ -364,10 +355,10 @@ capri_block_init_start(capri_cfg_t *cfg)
 //------------------------------------------------------------------------------
 // Wait for the blocks to initialize
 //------------------------------------------------------------------------------
-static hal_ret_t
+static sdk_ret_t
 capri_block_init_done(capri_cfg_t *cfg)
 {
-    hal_ret_t    ret         = HAL_RET_OK;
+    sdk_ret_t    ret         = SDK_RET_OK;
     int          chip_id     = 0;
     block_info_t *block_info = NULL;
 
@@ -383,31 +374,31 @@ capri_block_init_done(capri_cfg_t *cfg)
 }
 
 //------------------------------------------------------------------------------
-// Init all the capri blocks owned by HAL
+// Init all the capri blocks owned by SDK
 //------------------------------------------------------------------------------
-hal_ret_t
+sdk_ret_t
 capri_block_init(capri_cfg_t *cfg)
 {
-    hal_ret_t           ret = HAL_RET_OK;
+    sdk_ret_t           ret = SDK_RET_OK;
 
     // initialize block info
     capri_block_info_init();
 
     // soft reset
     ret = capri_block_reset(cfg);
-    if (ret != HAL_RET_OK) {
+    if (ret != SDK_RET_OK) {
         return ret;
     }
 
     // init blocks
     ret = capri_block_init_start(cfg);
-    if (ret != HAL_RET_OK) {
+    if (ret != SDK_RET_OK) {
         return ret;
     }
 
     // wait for blocks to be inited
     ret = capri_block_init_done(cfg);
-    if (ret != HAL_RET_OK) {
+    if (ret != SDK_RET_OK) {
         return ret;
     }
 
@@ -421,107 +412,96 @@ capri_block_init(capri_cfg_t *cfg)
 // - do all the parser/deparser related register programming
 // - do all the table configuration related register programming
 //------------------------------------------------------------------------------
-static hal_ret_t
+static sdk_ret_t
 capri_init (capri_cfg_t *cfg)
 {
-    hal_ret_t    ret;
-    sdk_ret_t    sdk_ret;
+    sdk_ret_t    ret;
 
-    HAL_ASSERT_TRACE_RETURN((cfg != NULL), HAL_RET_INVALID_ARG, "Invalid cfg");
-    HAL_TRACE_DEBUG("Initializing Capri");
+    SDK_ASSERT_TRACE_RETURN((cfg != NULL), SDK_RET_INVALID_ARG, "Invalid cfg");
+    SDK_TRACE_DEBUG("Initializing Capri");
 
     ret = capri_hbm_parse(cfg->cfg_path, cfg->pgm_name);
-    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
-                            "Capri HBM parse init failure, err : {}", ret);
+    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "Capri HBM parse init failure, err : %d", ret);
 
     g_capri_state_pd = sdk::platform::capri::capri_state_pd::factory();
-    HAL_ASSERT_TRACE_RETURN((g_capri_state_pd != NULL), HAL_RET_INVALID_ARG,
+    SDK_ASSERT_TRACE_RETURN((g_capri_state_pd != NULL), SDK_RET_INVALID_ARG,
                             "Failed to instantiate Capri PD");
 
     g_capri_state_pd->set_cfg_path(cfg->cfg_path);
     if (capri_table_rw_init(cfg) != CAPRI_OK) {
-        return HAL_RET_ERR;
+        return SDK_RET_ERR;
     }
 
     ret = capri_hbm_regions_init(cfg);
-    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
-                            "Capri HBM region init failure, err : {}", ret);
+    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "Capri HBM region init failure, err : %d", ret);
 
     ret = capri_block_init(cfg);
-    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
-                            "Capri block region init failure, err : {}", ret);
+    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "Capri block region init failure, err : %d", ret);
 
     ret = capri_cache_init(cfg);
-    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
-                            "Capri cache init failure, err : {}", ret);
+    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "Capri cache init failure, err : %d", ret);
 
     // do asic init before overwriting with the default configs
-    sdk_ret = capri_tm_asic_init();
-    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
-                            "Capri TM ASIC init failure, err : {}", ret);
+    ret = capri_tm_asic_init();
+    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "Capri TM ASIC init failure, err : %d", ret);
 
     if (!cfg->catalog->qos_sw_init_enabled()) {
         ret = capri_default_config_init(cfg);
-        HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
-                                "Capri default config init failure, err : {}",
-                                ret);
+        SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                        "Capri default config init failure, err : %d", ret);
     }
 
-    sdk_ret = capri_txs_scheduler_init(cfg->admin_cos, cfg);
-    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
-                            "Capri scheduler init failure, err : {}", ret);
+    ret = capri_txs_scheduler_init(cfg->admin_cos, cfg);
+    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "Capri scheduler init failure, err : %d", ret);
 
     // Call PXB/PCIE init only in MODEL and RTL simulation
     // This will be done by PCIe manager for the actual chip
     if (cfg->platform == platform_type_t::PLATFORM_TYPE_SIM ||
         cfg->platform == platform_type_t::PLATFORM_TYPE_RTL) {
-        sdk_ret_t sret = capri_pxb_pcie_init();
-        ret = hal_sdk_ret_to_hal_ret(sret);
-        HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
-                                "PXB/PCIE init failure, err : {}", ret);
+        ret = capri_pxb_pcie_init();
+        SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                                "PXB/PCIE init failure, err : %d", ret);
     }
 
-    sdk_ret = capri_tm_init(cfg->catalog);
-    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
-                            "Capri TM init failure, err : {}", ret);
+    ret = capri_tm_init(cfg->catalog);
+    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "Capri TM init failure, err : %d", ret);
 
     ret = capri_repl_init(cfg);
-    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
-                            "Capri replication init failure, err : {}", ret);
-
-    ret = hal::pd::capri_sw_phv_init();
-    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
-                            "Capri s/w phv init failure, err : {}", ret);
+    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "Capri replication init failure, err : %d", ret);
 
     if (!cfg->loader_info_file.empty()) {
         sdk::platform::p4_list_program_addr(
             cfg->cfg_path.c_str(), cfg->loader_info_file.c_str());
     }
 
-    ret = hal::pd::capri_barco_crypto_init(cfg);
-    if (ret != HAL_RET_OK) {
-        // GFT always fails here !!!
-        HAL_TRACE_ERR("Failed to inic barco_crypto. err: {}", ret);
-        return ret;
-    }
-
-    ret = hal::pd::capri_quiesce_init();
-    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
-                            "Capri quiesce init failure, err : {}", ret);
+    ret = capri_quiesce_init();
+    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "Capri quiesce init failure, err : %d", ret);
 
     ret = capri_prd_init();
-    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
-                            "Capri PRD init failure, err : {}", ret);
-    hal::svc::set_hal_status(hal::HAL_STATUS_ASIC_INIT_DONE);
+    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "Capri PRD init failure, err : %d", ret);
+    if (cfg->completion_func) {
+        cfg->completion_func(sdk::SDK_STATUS_ASIC_INIT_DONE);
+    }
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-namespace hal {
-namespace pd {
+} // namespace capri
+} // namespace platform
+} // namespace sdk
+
+namespace sdk {
+namespace asic {
 
 //------------------------------------------------------------------------------
 // perform all the CAPRI specific initialization
@@ -529,11 +509,9 @@ namespace pd {
 sdk_ret_t
 asic_init (asic_cfg_t *cfg)
 {
-    hal_ret_t      ret;
     capri_cfg_t    capri_cfg;
 
-    HAL_ASSERT(cfg != NULL);
-
+    SDK_ASSERT(cfg != NULL);
     capri_cfg.loader_info_file = cfg->loader_info_file;
     capri_cfg.default_config_dir = cfg->default_config_dir;
     capri_cfg.cfg_path = cfg->cfg_path;
@@ -559,12 +537,8 @@ asic_init (asic_cfg_t *cfg)
             cfg->asm_cfg[i].sort_func;
     }
     capri_cfg.completion_func = cfg->completion_func;
-    ret = capri_init(&capri_cfg);
-    if (ret == HAL_RET_OK) {
-        return SDK_RET_OK;
-    }
-    return SDK_RET_ERR;
+    return capri_init(&capri_cfg);
 }
 
-}    // namespace pd
-}    // namespace hal
+} // namespace asic
+} // namespace sdk

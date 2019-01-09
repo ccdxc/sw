@@ -7,7 +7,7 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/include/sdk/catalog.hpp"
-#include "nic/sdk/include/sdk/platform/p4loader/loader.hpp"
+#include "platform/p4loader/loader.hpp"
 
 namespace sdk {
 namespace asic {
@@ -51,6 +51,32 @@ typedef struct asic_cfg_s {
     completion_cb_t      completion_func;
 } asic_cfg_t;
 
+// initialize the asic
+sdk_ret_t asic_init(asic_cfg_t *asic_cfg);
+
+
+typedef enum asic_block_e {
+    ASIC_BLOCK_PACKET_BUFFER,
+    ASIC_BLOCK_TXDMA,
+    ASIC_BLOCK_RXDMA,
+    ASIC_BLOCK_MS,
+    ASIC_BLOCK_PCIE,
+    ASIC_BLOCK_MAX
+} asic_block_t;
+
+typedef struct asic_bw_s {
+    double read;
+    double write;
+} asic_bw_t;
+
+typedef struct asic_hbm_bw_s {
+    asic_block_t type;
+    uint64_t clk_diff;
+    asic_bw_t max;
+    asic_bw_t avg;
+} asic_hbm_bw_t;
+
+
 }    // namespace asic
 }    // namespace sdk
 
@@ -58,5 +84,8 @@ using sdk::asic::asic_type_t;
 using sdk::asic::asic_pgm_cfg_t;
 using sdk::asic::asic_asm_cfg_t;
 using sdk::asic::asic_cfg_t;
+using sdk::asic::asic_block_t;
+using sdk::asic::asic_bw_t;
+using sdk::asic::asic_hbm_bw_t;
 
 #endif    // __SDK_ASIC_HPP__

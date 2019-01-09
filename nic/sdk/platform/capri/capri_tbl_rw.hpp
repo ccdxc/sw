@@ -11,8 +11,12 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include "nic/include/base.hpp"
-#include "include/sdk/platform/capri/capri_cfg.hpp"
+#include "include/sdk/base.hpp"
+#include "platform/capri/capri_cfg.hpp"
+
+namespace sdk {
+namespace platform {
+namespace capri {
 
 #define CAPRI_P4_NUM_STAGES     6
 #define CAPRI_P4PLUS_NUM_STAGES 8
@@ -164,4 +168,17 @@ uint8_t capri_get_action_pc(uint32_t tableid, uint8_t actionid);
 
 bool p4plus_invalidate_cache(uint64_t addr, uint32_t size_in_bytes,
                              p4plus_cache_action_t action);
+
+
+} // namespace capri
+} // namespace platform
+} // namespace sdk
+
+using sdk::platform::capri::p4plus_cache_action_t;
+using sdk::platform::capri::capri_table_mem_layout_t;
+using sdk::platform::capri::p4plus_cache_action_t::P4PLUS_CACHE_ACTION_NONE;
+using sdk::platform::capri::p4plus_cache_action_t::P4PLUS_CACHE_INVALIDATE_RXDMA;
+using sdk::platform::capri::p4plus_cache_action_t::P4PLUS_CACHE_INVALIDATE_TXDMA;
+using sdk::platform::capri::p4plus_cache_action_t::P4PLUS_CACHE_INVALIDATE_BOTH;
+ 
 #endif

@@ -7,7 +7,7 @@ MODULE_NCC_OPTS = --asm-out --gen-dir ${BLD_P4GEN_DIR} \
                   --cfg-dir ${BLD_PGMBIN_DIR} \
                   --phv-flits 12 --i2e-user --single-pipe \
                   --pipeline ${PIPELINE} \
-                  --fe-flags="-I${TOPDIR}"
+                  --fe-flags="-I${TOPDIR} -I${SDKDIR}"
 MODULE_DEPS     = $(shell find ${MODULE_DIR} -name '*.p4' -o -name '*.h') \
                   $(shell find ${MODULE_DIR}/../include -name '*')
 MODULE_POSTGEN_MK = module_p4pd.mk

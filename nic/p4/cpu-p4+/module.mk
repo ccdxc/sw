@@ -5,7 +5,7 @@ MODULE_PIPELINE = iris gft
 MODULE_SRCS     = ${MODULE_SRC_DIR}/cpu_rxdma.p4 \
                   ${MODULE_SRC_DIR}/cpu_txdma.p4
 MODULE_NCC_OPTS = --p4-plus --pd-gen --asm-out --no-ohi \
-                  --two-byte-profile --fe-flags="-I${TOPDIR}" \
+                  --two-byte-profile --fe-flags="-I${TOPDIR} -I${SDKDIR}" \
 				  --gen-dir ${BLD_P4GEN_DIR}
 MODULE_DEPS     = $(shell find ${MODULE_DIR} -name '*.p4' -o -name '*.h') \
                   $(shell find ${MODULE_DIR}/../include -name '*') \

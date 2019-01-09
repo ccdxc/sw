@@ -7,14 +7,16 @@
  */
 
 #include <assert.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <boost/unordered_map.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include "include/sdk/platform/p4loader/loader.hpp"
+#include "platform/p4loader/loader.hpp"
 #include "nic/asic/capri/model/capsim-master/lib/libcapisa/include/libcapisa.h"
 #include "nic/asic/capri/model/capsim-master/lib/libmpuobj/include/libmpuobj.h"
 #include "nic/sdk/asic/rw/asicrw.hpp"
-#include "nic/include/asic_pd.hpp"
 
 namespace sdk {
 namespace platform {

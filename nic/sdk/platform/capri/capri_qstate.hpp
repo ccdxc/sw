@@ -1,8 +1,8 @@
 #ifndef _CAPRI_QSTATE_HPP_
 #define _CAPRI_QSTATE_HPP_
 
-#include "nic/sdk/include/sdk/platform/utils/lif_manager_base.hpp"
-#include "nic/sdk/include/sdk/platform/utils/program.hpp"
+#include "platform/utils/lif_manager_base.hpp"
+#include "platform/utils/program.hpp"
 
 namespace sdk {
 namespace platform {

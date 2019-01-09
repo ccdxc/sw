@@ -1,11 +1,11 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include "nic/sdk/include/sdk/platform/capri/capri_lif_manager.hpp"
+#include "platform/capri/capri_lif_manager.hpp"
 #include "nic/hal/svc/interface_svc.hpp"
 #include "nic/hal/plugins/cfg/lif/lif.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/include/hal_cfg.hpp"
-#include "include/sdk/platform/capri/capri_common.hpp"
+#include "platform/capri/capri_common.hpp"
 
 using grpc::Server;
 using grpc::ServerBuilder;

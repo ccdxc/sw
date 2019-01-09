@@ -11,7 +11,7 @@
 #include "include/sdk/base.hpp"
 #include "include/sdk/types.hpp"
 #include "include/sdk/shmmgr.hpp"
-#include "include/sdk/platform/utils/mcache_pipe.hpp"
+#include "platform/utils/mcache_pipe.hpp"
 
 namespace sdk {
 namespace platform {

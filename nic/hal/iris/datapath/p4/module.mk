@@ -8,9 +8,9 @@ MODULE_NCC_OPTS     = --asm-out --pd-gen --gen-dir ${BLD_P4GEN_DIR} \
                       --split-deparse-only-headers \
                       --pipeline ${PIPELINE}
 ifeq ($(PLATFORM),haps)
-MODULE_NCC_OPTS     += --fe-flags="-DPLATFORM_HAPS -I${TOPDIR}"
+MODULE_NCC_OPTS     += --fe-flags="-DPLATFORM_HAPS -I${TOPDIR} -I${SDKDIR}"
 else
-MODULE_NCC_OPTS     += --fe-flags="-I${TOPDIR}"
+MODULE_NCC_OPTS     += --fe-flags="-I${TOPDIR} -I${SDKDIR}"
 endif
 
 MODULE_DEPS         = $(shell find ${MODULE_DIR} -name '*.p4' -o -name '*.h')

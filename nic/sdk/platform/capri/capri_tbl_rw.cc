@@ -1,26 +1,19 @@
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+
 /*
  * capri_tbl_rw.cc
  * Mahesh Shirshyad (Pensando Systems)
  */
-
-#include <stdio.h>
-#include <string>
-#include <errno.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <inttypes.h>
 #include <map>
-#include "include/sdk/platform/capri/capri_common.hpp"
-
+#include "platform/capri/capri_common.hpp"
 #include "gen/p4gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
-#include "nic/hal/pd/capri/capri_tbl_rw.hpp"
-#include "include/sdk/platform/capri/capri_tm_rw.hpp"
-#include "nic/include/hal.hpp"
+#include "platform/capri/capri_tbl_rw.hpp"
+#include "platform/capri/capri_hbm_rw.hpp"
+#include "platform/capri/capri_tm_rw.hpp"
+#include "platform/capri/capri_txs_scheduler.hpp"
 #include "nic/asic/capri/model/utils/cap_csr_py_if.h"
 #include "nic/sdk/asic/rw/asicrw.hpp"
-#include "nic/include/asic_pd.hpp"
-#include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
 #include "nic/asic/capri/model/cap_pic/cap_pict_csr.h"
@@ -29,9 +22,14 @@
 #include "nic/asic/ip/verif/pcpp/cpp_int_helper.h"
 #include "nic/asic/capri/verif/apis/cap_pics_api.h"
 #include "nic/asic/capri/verif/apis/cap_pict_api.h"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/sdk/platform/capri/csr/asicrw_if.hpp"
-#include "include/sdk/platform/capri/capri_txs_scheduler.hpp"
+#include "gen/platform/mem_regions.hpp"
+
+extern pen_csr_base *get_csr_base_from_path(string);
+
+namespace sdk {
+namespace platform {
+namespace capri {
 
 /* When ready to use unified memory mgmt library, change CALLOC and FREE then */
 #define CAPRI_CALLOC  calloc
@@ -147,18 +145,18 @@ get_sram_shadow_for_table (uint32_t tableid, int gress)
 {
     if ((tableid >= p4pd_tableid_min_get()) &&
         (tableid <= p4pd_tableid_max_get())) {
-        HAL_TRACE_DEBUG("Working with p4 sram shadow for table {}", tableid);
+        SDK_TRACE_DEBUG("Working with p4 sram shadow for table %u", tableid);
         return (g_shadow_sram_p4[gress]);
     } else if ((tableid >= p4pd_rxdma_tableid_min_get()) &&
                (tableid <= p4pd_rxdma_tableid_max_get())) {
-        HAL_TRACE_DEBUG("Working with rxdma shadow for table {}", tableid);
+        SDK_TRACE_DEBUG("Working with rxdma shadow for table %u", tableid);
         return (g_shadow_sram_rxdma);
     } else if ((tableid >= p4pd_txdma_tableid_min_get()) &&
                (tableid <= p4pd_txdma_tableid_max_get())) {
-        HAL_TRACE_DEBUG("Working with txdma shadow for table {}", tableid);
+        SDK_TRACE_DEBUG("Working with txdma shadow for table %u", tableid);
         return (g_shadow_sram_txdma);
     } else {
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
     }
     return NULL;
 }
@@ -189,7 +187,7 @@ capri_program_table_mpu_pc (int tableid, bool ingress, int stage,
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
     assert(stage_tableid < 16);
-    HAL_TRACE_DEBUG("====Stage: {} Tbl_id: {}, Stg_Tbl_id {}, Tbl base: {:#x}==",
+    SDK_TRACE_DEBUG("====Stage: %d Tbl_id: %u, Stg_Tbl_id %u, Tbl base: 0x%lx==",
                     stage, tableid, stage_tableid, capri_table_asm_base);
     if (ingress) {
         cap_te_csr_t &te_csr = cap0.sgi.te[stage];
@@ -218,15 +216,17 @@ capri_program_hbm_table_base_addr (int stage_tableid, char *tablename,
 {
     hbm_addr_t start_offset;
 
-    if (strcmp(tablename, CAPRI_HBM_REG_RSS_INDIR_TABLE) == 0) {
+#ifdef MEM_REGION_RSS_INDIR_TABLE_NAME
+    if (strcmp(tablename, MEM_REGION_RSS_INDIR_TABLE_NAME) == 0) {
         // TODO: Work with Neel to clean capri_toeplitz_init
         return;
     }
+#endif
 
     assert(stage_tableid < 16);
     start_offset = get_start_offset(tablename);
-    HAL_TRACE_DEBUG("===HBM Tbl Name: {}, Stage: {}, StageTblID: {}, "
-                    "Addr: {:#x}===",
+    SDK_TRACE_DEBUG("===HBM Tbl Name: %s, Stage: %d, StageTblID: %u, "
+                    "Addr: 0x%lx}===",
                     tablename, stage, stage_tableid, start_offset);
     if (start_offset == INVALID_MEM_ADDRESS) {
         return;
@@ -255,7 +255,7 @@ capri_program_hbm_table_base_addr (int stage_tableid, char *tablename,
         te_csr.cfg_table_property[stage_tableid].addr_base(start_offset);
         te_csr.cfg_table_property[stage_tableid].write();
     } else {
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
     }
 }
 
@@ -305,8 +305,8 @@ capri_program_p4plus_sram_table_mpu_pc (int tableid, int stage_tbl_id,
     if (pc == 0) {
         return;
     }
-    HAL_TRACE_DEBUG("====Pipe: {} Stage: {} Tbl_id: {}, Stg_Tbl_id {}, "
-                    "Tbl base: {:#x}====", ((pipe_rxdma) ? "RxDMA" : "TxDMA"),
+    SDK_TRACE_DEBUG("====Pipe: %s Stage: %d Tbl_id: %u, Stg_Tbl_id %u, "
+                    "Tbl base: 0x%lx====", ((pipe_rxdma) ? "RxDMA" : "TxDMA"),
                     stage, tableid, stage_tbl_id, pc);
     te_csr->cfg_table_property[stage_tbl_id].read();
     te_csr->cfg_table_property[stage_tbl_id].mpu_pc(pc >> 6);
@@ -342,12 +342,12 @@ capri_toeplitz_init (int stage, int stage_tableid)
     if (sdk::platform::p4_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
                                    (char *) ETH_RSS_INDIR_PROGRAM,
                                    &pc) != 0) {
-        HAL_TRACE_DEBUG("Could not resolve handle {} program {}",
+        SDK_TRACE_DEBUG("Could not resolve handle %s program %s",
                         (char *) CAPRI_P4PLUS_HANDLE,
                         (char *) ETH_RSS_INDIR_PROGRAM);
         return CAPRI_FAIL;
     }
-    HAL_TRACE_DEBUG("Resolved handle {} program {} to PC {:#x}",
+    SDK_TRACE_DEBUG("Resolved handle %s program %s to PC 0x%lx",
                     (char *) CAPRI_P4PLUS_HANDLE,
                     (char *) ETH_RSS_INDIR_PROGRAM,
                     pc);
@@ -357,13 +357,17 @@ capri_toeplitz_init (int stage, int stage_tableid)
 
     tbl_id = stage_tableid;
 
-    tbl_base = get_start_offset(CAPRI_HBM_REG_RSS_INDIR_TABLE);
-    HAL_ASSERT(tbl_base > 0);
+#ifdef MEM_REGION_RSS_INDIR_TABLE_NAME
+    tbl_base = get_start_offset(MEM_REGION_RSS_INDIR_TABLE_NAME);
+    SDK_ASSERT(tbl_base > 0);
+#else
+    SDK_ASSERT(0);
+#endif
     // Align the table address because while calculating the read address TE shifts the LIF
     // value by LOG2 of size of the per lif indirection table.
     tbl_base = (tbl_base + ETH_RSS_INDIR_TBL_SZ) & ~(ETH_RSS_INDIR_TBL_SZ - 1);
 
-    HAL_TRACE_DEBUG("rss_indir_table id {} table_base {}\n", tbl_id, tbl_base);
+    SDK_TRACE_DEBUG("rss_indir_table id %u table_base %llx\n", tbl_id, tbl_base);
 
     te_csr->cfg_table_property[tbl_id].read();
     te_csr->cfg_table_property[tbl_id].mpu_pc(pc >> 6);
@@ -408,12 +412,12 @@ capri_p4plus_table_init (platform_type_t platform_type,
     if (sdk::platform::p4_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
                                    (char *) CAPRI_P4PLUS_RXDMA_PROG,
                                    &capri_action_p4plus_asm_base) != 0) {
-        HAL_TRACE_DEBUG("Could not resolve handle {} program {}",
+        SDK_TRACE_DEBUG("Could not resolve handle %s program %s",
                         (char *) CAPRI_P4PLUS_HANDLE,
                         (char *) CAPRI_P4PLUS_RXDMA_PROG);
         return CAPRI_FAIL;
     }
-    HAL_TRACE_DEBUG("Resolved handle {} program {} to PC {:#x}",
+    SDK_TRACE_DEBUG("Resolved handle %s program %s to PC 0x%lx",
                     (char *) CAPRI_P4PLUS_HANDLE,
                     (char *) CAPRI_P4PLUS_RXDMA_PROG,
                     capri_action_p4plus_asm_base);
@@ -436,12 +440,12 @@ capri_p4plus_table_init (platform_type_t platform_type,
     if (sdk::platform::p4_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
                                    (char *) CAPRI_P4PLUS_RXDMA_EXT_PROG,
                                    &capri_action_p4plus_asm_base) != 0) {
-        HAL_TRACE_DEBUG("Could not resolve handle {} program {}",
+        SDK_TRACE_DEBUG("Could not resolve handle %s program %s",
                         (char *) CAPRI_P4PLUS_HANDLE,
                         (char *) CAPRI_P4PLUS_RXDMA_EXT_PROG);
         return CAPRI_FAIL;
     }
-    HAL_TRACE_DEBUG("Resolved handle {} program {} to PC {:#x}",
+    SDK_TRACE_DEBUG("Resolved handle %s program %s to PC %llx",
                     (char *) CAPRI_P4PLUS_HANDLE,
                     (char *) CAPRI_P4PLUS_RXDMA_EXT_PROG,
                     capri_action_p4plus_asm_base);
@@ -463,12 +467,12 @@ capri_p4plus_table_init (platform_type_t platform_type,
     if (sdk::platform::p4_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
                                    (char *) CAPRI_P4PLUS_TXDMA_PROG,
                                    &capri_action_p4plus_asm_base) != 0) {
-        HAL_TRACE_DEBUG("Could not resolve handle {} program {}",
+        SDK_TRACE_DEBUG("Could not resolve handle %s program %s",
                         (char *) CAPRI_P4PLUS_HANDLE,
                         (char *) CAPRI_P4PLUS_TXDMA_PROG);
         return CAPRI_FAIL;
     }
-    HAL_TRACE_DEBUG("Resolved handle {} program {} to PC {:#x}",
+    SDK_TRACE_DEBUG("Resolved handle %s program %s to PC 0x%lx",
                     (char *) CAPRI_P4PLUS_HANDLE,
                     (char *) CAPRI_P4PLUS_TXDMA_PROG,
                     capri_action_p4plus_asm_base);
@@ -490,12 +494,12 @@ capri_p4plus_table_init (platform_type_t platform_type,
     if (sdk::platform::p4_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
                                    (char *) CAPRI_P4PLUS_TXDMA_EXT_PROG,
                                    &capri_action_p4plus_asm_base) != 0) {
-        HAL_TRACE_DEBUG("Could not resolve handle {} program {}",
+        SDK_TRACE_DEBUG("Could not resolve handle %s program %s",
                         (char *) CAPRI_P4PLUS_HANDLE,
                         (char *) CAPRI_P4PLUS_TXDMA_EXT_PROG);
         return CAPRI_FAIL;
     }
-    HAL_TRACE_DEBUG("Resolved handle {} program {} to PC {:#x}",
+    SDK_TRACE_DEBUG("Resolved handle %s program %s to PC 0x%lx",
                     (char *) CAPRI_P4PLUS_HANDLE,
                     (char *) CAPRI_P4PLUS_TXDMA_EXT_PROG,
                     capri_action_p4plus_asm_base);
@@ -541,12 +545,12 @@ capri_timer_init_helper (uint32_t key_lines)
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_txs_csr_t *txs_csr = &cap0.txs.txs;
 
-    timer_key_hbm_base_addr = (uint64_t)get_start_offset((char *)JTIMERS);
+    timer_key_hbm_base_addr = get_start_offset(MEM_REGION_TIMERS_NAME);
 
     txs_csr->cfg_timer_static.read();
-    HAL_TRACE_DEBUG("hbm_base {#x}", (uint64_t)txs_csr->cfg_timer_static.hbm_base());
-    HAL_TRACE_DEBUG("timer hash depth {}", txs_csr->cfg_timer_static.tmr_hsh_depth());
-    HAL_TRACE_DEBUG("timer wheel depth {}", txs_csr->cfg_timer_static.tmr_wheel_depth());
+    SDK_TRACE_DEBUG("hbm_base %llx", (uint64_t)txs_csr->cfg_timer_static.hbm_base());
+    SDK_TRACE_DEBUG("timer hash depth %u", txs_csr->cfg_timer_static.tmr_hsh_depth());
+    SDK_TRACE_DEBUG("timer wheel depth %u", txs_csr->cfg_timer_static.tmr_wheel_depth());
     txs_csr->cfg_timer_static.hbm_base(timer_key_hbm_base_addr);
     txs_csr->cfg_timer_static.tmr_hsh_depth(key_lines - 1);
     txs_csr->cfg_timer_static.tmr_wheel_depth(CAPRI_TIMER_WHEEL_DEPTH - 1);
@@ -562,15 +566,15 @@ capri_timer_init_helper (uint32_t key_lines)
 
     // TODO:remove
     txs_csr->cfg_timer_static.read();
-    HAL_TRACE_DEBUG("hbm_base {#x}", (uint64_t)txs_csr->cfg_timer_static.hbm_base());
-    HAL_TRACE_DEBUG("timer hash depth {}", txs_csr->cfg_timer_static.tmr_hsh_depth());
-    HAL_TRACE_DEBUG("timer wheel depth {}", txs_csr->cfg_timer_static.tmr_wheel_depth());
+    SDK_TRACE_DEBUG("hbm_base %llx", (uint64_t)txs_csr->cfg_timer_static.hbm_base());
+    SDK_TRACE_DEBUG("timer hash depth %u", txs_csr->cfg_timer_static.tmr_hsh_depth());
+    SDK_TRACE_DEBUG("timer wheel depth %u", txs_csr->cfg_timer_static.tmr_wheel_depth());
 
     // initialize timer wheel to 0
 #if 0
-    HAL_TRACE_DEBUG("Initializing timer wheel...");
+    SDK_TRACE_DEBUG("Initializing timer wheel...");
     for (int i = 0; i <= CAPRI_TIMER_WHEEL_DEPTH; i++) {
-        HAL_TRACE_DEBUG("timer wheel index {}", i);
+        SDK_TRACE_DEBUG("timer wheel index {}", i);
         txs_csr->dhs_tmr_cnt_sram.entry[i].read();
         txs_csr->dhs_tmr_cnt_sram.entry[i].slow_bcnt(0);
         txs_csr->dhs_tmr_cnt_sram.entry[i].slow_lcnt(0);
@@ -579,7 +583,7 @@ capri_timer_init_helper (uint32_t key_lines)
         txs_csr->dhs_tmr_cnt_sram.entry[i].write();
     }
 #endif
-    HAL_TRACE_DEBUG("Done initializing timer wheel");
+    SDK_TRACE_DEBUG("Done initializing timer wheel");
 }
 
 void
@@ -617,12 +621,12 @@ p4plus_invalidate_cache_aligned(uint64_t addr, uint32_t size_in_bytes,
     assert ((addr & ~CACHE_LINE_SIZE_MASK) == addr);
 
     while ((int)size_in_bytes > 0) {
-        if (action & P4PLUS_CACHE_INVALIDATE_RXDMA) {
+        if (action & p4plus_cache_action_t::P4PLUS_CACHE_INVALIDATE_RXDMA) {
             cap_pics_csr_t & pics_csr = cap0.rpc.pics;
             pics_csr.picc.dhs_cache_invalidate.entry.addr(addr >> CACHE_LINE_SIZE_SHIFT);
             pics_csr.picc.dhs_cache_invalidate.entry.write();
         }
-        if (action & P4PLUS_CACHE_INVALIDATE_TXDMA) {
+        if (action & p4plus_cache_action_t::P4PLUS_CACHE_INVALIDATE_TXDMA) {
             cap_pics_csr_t & pics_csr = cap0.tpc.pics;
             pics_csr.picc.dhs_cache_invalidate.entry.addr(addr >> CACHE_LINE_SIZE_SHIFT);
             pics_csr.picc.dhs_cache_invalidate.entry.write();
@@ -831,7 +835,7 @@ capri_table_rw_init (capri_cfg_t *capri_cfg)
     /* Initialize stage id registers for p4p */
     capri_p4p_stage_id_init();
 
-    hbm_mem_base_addr = (uint64_t)get_start_offset((char*)JP4_PRGM);
+    hbm_mem_base_addr = get_start_offset(MEM_REGION_P4_PROGRAM_NAME);
 
     capri_mpu_icache_invalidate();
     capri_debug_hbm_reset();
@@ -885,7 +889,7 @@ capri_get_action_pc (uint32_t tableid, uint8_t actionid)
         uint32_t lcl_tableid = tableid - p4pd_txdma_tableid_min_get();
         return ((uint8_t)capri_action_txdma_asm_base[lcl_tableid][actionid]);
     } else {
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
     }
 }
 
@@ -964,7 +968,7 @@ capri_global_pics_get (uint32_t tableid)
                (tableid <= p4pd_txdma_tableid_max_get())) {
         return &cap0.tpc.pics;
     } else {
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
     }
     return ((cap_pics_csr_t*)nullptr);
 }
@@ -1033,10 +1037,10 @@ capri_table_entry_write (uint32_t tableid,
     if (hwentry_mask) {
         /* If mask is specified, it should encompass the entire macros currently */
         if ((entry_start_word != 0) || (tbl_info.entry_width % CAPRI_SRAM_WORDS_PER_BLOCK)) {
-            HAL_TRACE_ERR("Masked write with entry_start_word {} and width {} "
+            SDK_TRACE_ERR("Masked write with entry_start_word %u and width %u "
                           "not supported",
                           entry_start_word, tbl_info.entry_width);
-            return HAL_RET_INVALID_ARG;
+            return SDK_RET_INVALID_ARG;
         }
     }
 
@@ -1686,6 +1690,7 @@ capri_set_table_txdma_asm_base (int tableid,
     return;
 }
 
+#if 0
 static void
 capri_debug_hbm_read (void)
 {
@@ -1695,20 +1700,21 @@ capri_debug_hbm_read (void)
     uint64_t addr;
     uint64_t data;
 
-    HAL_TRACE_DEBUG("------------------ READ HBM START -----------");
+    SDK_TRACE_DEBUG("------------------ READ HBM START -----------");
     for (uint64_t i = 0; i < count; i++) {
         addr = (start_addr + (i<<3)) & 0xffffffff8;
         ret = sdk::asic::asic_mem_read(addr, (uint8_t *)&data, sizeof(data));
         if (ret != sdk::SDK_RET_OK) {
-            HAL_TRACE_DEBUG("ERROR reading {:#x} ret {} ", i, ret);
+            SDK_TRACE_DEBUG("ERROR reading {:#x} ret {} ", i, ret);
             continue;
         }
         if (data != 0xabababababababab) {
-            HAL_TRACE_DEBUG("addr {:#x}, data {:#x}", i, data);
+            SDK_TRACE_DEBUG("addr {:#x}, data {:#x}", i, data);
         }
     }
-    HAL_TRACE_DEBUG("------------------ READ HBM END -----------");
+    SDK_TRACE_DEBUG("------------------ READ HBM END -----------");
 }
+#endif
 
 static void
 capri_debug_hbm_reset (void)
@@ -1719,25 +1725,21 @@ capri_debug_hbm_reset (void)
     uint64_t addr;
     uint64_t data = 0xabababababababab;
 
-    HAL_ASSERT(start_addr == get_start_offset("mpu-debug"));
+    SDK_ASSERT(start_addr == get_start_offset("mpu-debug"));
 
-    HAL_TRACE_DEBUG("------------------ RESET HBM START -----------");
+    SDK_TRACE_DEBUG("------------------ RESET HBM START -----------");
     for (uint64_t i = 0; i < count; i++) {
         addr = (start_addr + (i<<3)) & 0xffffffff8;
         ret = sdk::asic::asic_mem_write(addr, (uint8_t *)&data, sizeof(data));
         if (ret != sdk::SDK_RET_OK) {
-            HAL_TRACE_DEBUG("ERROR writing {:#x} ret {} ", i, ret);
+            SDK_TRACE_DEBUG("ERROR writing %llx ret %d ", i, ret);
             continue;
         }
-        HAL_TRACE_DEBUG("addr {:#x}, data {:#x}", i, data);
+        SDK_TRACE_DEBUG("addr %llx, data %llx", i, data);
     }
-    HAL_TRACE_DEBUG("------------------ RESET HBM END -----------");
+    SDK_TRACE_DEBUG("------------------ RESET HBM END -----------");
 }
 
-extern pen_csr_base *get_csr_base_from_path(string);
-
-namespace hal {
-namespace pd {
 
 vector < tuple < string, string, string >>
 asic_csr_dump_reg (char *block_name, bool exclude_mem)
@@ -1745,7 +1747,7 @@ asic_csr_dump_reg (char *block_name, bool exclude_mem)
 
     typedef vector< tuple< std::string, std::string, std::string> > reg_data;
     pen_csr_base *objP = get_csr_base_from_path(block_name);
-    if (objP == 0) { HAL_TRACE_DEBUG("invalid reg name"); return reg_data(); };
+    if (objP == 0) { SDK_TRACE_DEBUG("invalid reg name"); return reg_data(); };
     vector<pen_csr_base *> cap_child_base = objP->get_children(-1);
     reg_data data_tl;
     for (auto itr : cap_child_base) {
@@ -1787,34 +1789,6 @@ asic_csr_list_get (string path, int level)
     return block_name;
 }
 
-}
-}
-
-//extern void capri_tm_dump_debug_regs(void);
-//extern void capri_tm_dump_config_regs(void);
-
-#if 0
-std::string
-hal::pd::asic_csr_dump (char *csr_str)
-{
-    HAL_TRACE_DEBUG("{} csr_str print: {}", __FUNCTION__, csr_str);
-    std::string val = "";
-
-    if (!strcmp(csr_str, "pbc_debug")) {
-        sdk::platform::capri::capri_tm_dump_debug_regs();
-    } else if (!strcmp(csr_str, "pbc_config")) {
-        sdk::platform::capri::capri_tm_dump_config_regs();
-    } else if (!strcmp(csr_str, "mpu_debug")) {
-        capri_debug_hbm_read();
-    } else if (!strcmp(csr_str, "mpu_reset")) {
-        capri_debug_hbm_reset();
-    } else {
-        val = csr_read(std::string(csr_str));
-        uint64_t offset = csr_get_offset(std::string(csr_str));
-        HAL_TRACE_DEBUG("{}, csr: {}, offset: {#x}, value: {}",
-                        __FUNCTION__, csr_str, offset, val);
-        csr_show(std::string(csr_str), -1);
-    }
-    return val;
-}
-#endif
+} // namespace capri
+} // namespace platform
+} // namespace sdk

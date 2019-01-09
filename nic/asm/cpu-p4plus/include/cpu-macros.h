@@ -5,7 +5,7 @@
 #define __CPU_MACROS_H__
 
 #include "capri-macros.h"
-#include "nic/sdk/include/sdk/platform/capri/capri_common.hpp"
+#include "platform/capri/capri_common.hpp"
 
 #define CPU_PIDX_SIZE                       16
 #define CPU_PIDX_SHIFT                      4

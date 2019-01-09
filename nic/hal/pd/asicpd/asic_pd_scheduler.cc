@@ -1,6 +1,6 @@
 #include "nic/include/base.hpp"
 #include "nic/include/pd.hpp"
-#include "include/sdk/platform/capri/capri_txs_scheduler.hpp"
+#include "platform/capri/capri_txs_scheduler.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_scheduler.hpp"
 #include "nic/sdk/include/sdk/utils.hpp"
 

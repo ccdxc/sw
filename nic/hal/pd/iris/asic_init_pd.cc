@@ -4,6 +4,8 @@
 #include "gen/p4gen/p4/include/p4pd.h"
 #include "nic/hal/pd/common_p4plus/common_p4plus.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/hal/pd/capri/capri_barco_crypto.hpp"
+#include "nic/hal/pd/capri/capri_sw_phv.hpp"
 
 namespace hal {
 namespace pd {
@@ -12,6 +14,7 @@ hal_ret_t
 pd_asic_init (pd_func_args_t *pd_func_args)
 {
     sdk_ret_t              sdk_ret;
+    hal_ret_t              ret;
     pd_asic_init_args_t    *args = pd_func_args->pd_asic_init;
 
     args->cfg->repl_entry_width = P4_REPL_ENTRY_WIDTH;
@@ -35,9 +38,19 @@ pd_asic_init (pd_func_args_t *pd_func_args)
 
     args->cfg->completion_func = asiccfg_init_completion_event;
 
-    sdk_ret = asic_init(args->cfg);
+    sdk_ret = sdk::asic::asic_init(args->cfg);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+                            "Asic init failure, err : {}", ret);
 
-    return hal_sdk_ret_to_hal_ret(sdk_ret);
+    ret = capri_sw_phv_init();
+    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+                            "Capri s/w phv init failure, err : {}", ret);
+
+    ret = capri_barco_crypto_init(args->cfg->platform);
+    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+                            "Capri barco crypto init failure, err : {}", ret);
+    return HAL_RET_OK;
 }
 
 }    // namespace pd

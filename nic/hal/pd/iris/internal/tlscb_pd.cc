@@ -8,10 +8,10 @@
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/hal.hpp"
-#include "nic/sdk/include/sdk/platform/capri/capri_lif_manager.hpp"
+#include "platform/capri/capri_lif_manager.hpp"
 #include "gen/p4gen/tls_txdma_pre_crypto_enc/include/tls_txdma_pre_crypto_enc_p4plus_ingress.h"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
-#include "include/sdk/platform/capri/capri_common.hpp"
+#include "platform/capri/capri_common.hpp"
 #include "nic/include/tcp_common.h"
 #include "nic/include/app_redir_shared.h"
 

@@ -1,19 +1,12 @@
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+
 /*
  * capri_pxb_pcie.cc
  * Madhava Cheethirala (Pensando Systems)
  */
 
-
-#include <stdio.h>
-#include <string>
-#include <errno.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <map>
-#include <cmath>
-
 #include "include/sdk/base.hpp"
-#include "include/sdk/platform/capri/capri_pxb_pcie.hpp"
+#include "platform/capri/capri_pxb_pcie.hpp"
 
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"

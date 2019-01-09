@@ -7,12 +7,12 @@
 #include <cstring>
 
 #include "nic/include/adminq.h"
-#include "include/sdk/platform/capri/capri_common.hpp"
+#include "platform/capri/capri_common.hpp"
 #include "nic/include/edma.hpp"
 #include "nic/include/eth_common.h"
 #include "nic/include/notify.hpp"
 #include "nic/sdk/include/sdk/pal.hpp"
-#include "nic/sdk/include/sdk/platform/utils/mpartition.hpp"
+#include "platform/utils/mpartition.hpp"
 
 #include "nic/asic/capri/model/cap_top/cap_top_csr_defines.h"
 #include "nic/asic/capri/model/cap_top/csr_defines/cap_wa_c_hdr.h"

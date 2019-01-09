@@ -1,22 +1,26 @@
-#include "nic/include/base.hpp"
-#include "nic/hal/pd/capri/capri_config.hpp"
-#include "nic/include/asic_pd.hpp"
-#include "nic/sdk/asic/rw/asicrw.hpp"
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 #include <stdint.h>
 #include <sys/types.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include "platform/capri/capri_cfg.hpp"
+#include "nic/sdk/asic/rw/asicrw.hpp"
+
+namespace sdk {
+namespace platform {
+namespace capri {
 
 typedef struct addr_data_ {
     uint32_t   addr;
     uint32_t   data;
 } addr_data_t;
 
-hal_ret_t
+sdk_ret_t
 capri_load_config (char *config_dir)
 {
-    hal_ret_t          ret = HAL_RET_OK;
+    sdk_ret_t          ret = SDK_RET_OK;
     DIR                *dirp;
     struct dirent      *file;
     int                fd, rs;
@@ -26,15 +30,15 @@ capri_load_config (char *config_dir)
 
     dirp = opendir(config_dir);
     if (dirp == NULL) {
-        HAL_TRACE_ERR("{} not_present/no_read_permissions", config_dir);
-        HAL_ASSERT_RETURN(0, HAL_RET_ERR);
+        SDK_TRACE_ERR("%s not_present/no_read_permissions", config_dir);
+        SDK_ASSERT_RETURN(0, SDK_RET_ERR);
     }
     while ((file = readdir(dirp))) {
         if (!strcmp(file->d_name,".") || !strcmp(file->d_name, "..")) {
             continue;
         }
 
-        HAL_TRACE_DEBUG("Processing config file {}", file->d_name);
+        SDK_TRACE_DEBUG("Processing config file %s", file->d_name);
         cfg_fname = std::string(config_dir) + "/" + std::string(file->d_name);
         fd = open(cfg_fname.c_str(), O_RDONLY);
         if (fd == -1) {
@@ -50,7 +54,7 @@ capri_load_config (char *config_dir)
         }
         rs = close(fd);
         if (rs) {
-            HAL_TRACE_ERR("Unable to close file: {}, err: {}",
+            SDK_TRACE_ERR("Unable to close file: %s, err: %d",
                           file->d_name, rs);
             continue;
         }
@@ -61,10 +65,10 @@ capri_load_config (char *config_dir)
     return ret;
 }
 
-hal_ret_t
+sdk_ret_t
 capri_verify_config (char *config_dir)
 {
-    hal_ret_t          ret = HAL_RET_OK;
+    sdk_ret_t          ret = SDK_RET_OK;
     DIR                *dirp;
     struct dirent      *file;
     int                fd, rs;
@@ -75,15 +79,15 @@ capri_verify_config (char *config_dir)
 
     dirp = opendir(config_dir);
     if (dirp == NULL) {
-        HAL_TRACE_ERR("{} not_present/no_read_permissions", config_dir);
-        HAL_ASSERT_RETURN(0, HAL_RET_ERR);
+        SDK_TRACE_ERR("%s not_present/no_read_permissions", config_dir);
+        SDK_ASSERT_RETURN(0, SDK_RET_ERR);
     }
     while ((file = readdir(dirp))) {
         if (!strcmp(file->d_name,".") || !strcmp(file->d_name, "..")) {
             continue;
         }
 
-        HAL_TRACE_DEBUG("Processing config file {}", file->d_name);
+        SDK_TRACE_DEBUG("Processing config file %s", file->d_name);
         cfg_fname = std::string(config_dir) + "/" + std::string(file->d_name);
         fd = open(cfg_fname.c_str(), O_RDONLY);
         if (fd == -1) {
@@ -95,15 +99,15 @@ capri_verify_config (char *config_dir)
             for (int i = 0; i < nelems; i++) {
                 sdk::asic::asic_reg_read(buff[i].addr, &data, 1, true);
                 if (data != buff[i].data) {
-                    HAL_TRACE_DEBUG("Reg config does not match addr {:#x} "
-                                    "data {:#x} expected {:#x}",
+                    SDK_TRACE_DEBUG("Reg config does not match addr 0x%x"
+                                    "data 0x%x expected 0x%x",
                                     buff[i].addr, data, buff[i].data);
                 }
             }
         }
         rs = close(fd);
         if (rs) {
-            HAL_TRACE_ERR("Unable to close file: {}, err: {}",
+            SDK_TRACE_ERR("Unable to close file: %s, err: %d",
                           file->d_name, rs);
             continue;
         }
@@ -113,3 +117,7 @@ capri_verify_config (char *config_dir)
 
     return ret;
 }
+
+} // namespace capri
+} // namespace platform
+} // namespace sdk

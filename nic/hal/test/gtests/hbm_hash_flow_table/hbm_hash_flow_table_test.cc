@@ -8,7 +8,7 @@
 #include "nic/sdk/include/sdk/pal.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/include/sdk/hbm_hash.hpp"
-#include "nic/hal/pd/capri/capri_tbl_rw.hpp"
+#include "platform/capri/capri_tbl_rw.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "gen/p4gen/p4/include/p4pd.h"
 #include <boost/multiprecision/cpp_int.hpp>
@@ -1446,7 +1446,7 @@ int main(int argc, char **argv) {
         .cfg_path            = std::getenv("HAL_CONFIG_PATH"),
     };
     p4pd_init(&p4pd_cfg);
-    assert(capri_table_rw_init(NULL) != -1);
+    assert(sdk::platform::capri::capri_table_rw_init(NULL) != -1);
 
     // testing::GTEST_FLAG(filter) = "-*test18*";
     int res = RUN_ALL_TESTS();

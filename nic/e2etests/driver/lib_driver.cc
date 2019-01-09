@@ -13,7 +13,7 @@
 #include "nic/model_sim/include/buf_hdr.h"
 #include "nic/model_sim/include/lib_model_client.h"
 #include "nic/utils/host_mem/host_mem.hpp"
-#include "nic/sdk/include/sdk/platform/utils/qstate_mgr.hpp"
+#include "platform/utils/qstate_mgr.hpp"
 
 using grpc::Channel;
 using grpc::ClientContext;

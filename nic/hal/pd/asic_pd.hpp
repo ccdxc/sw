@@ -19,9 +19,6 @@ typedef struct pd_asic_init_args_s {
 //------------------------------------------------------------------------------
 sdk_ret_t asic_step_cpu_pkt(const uint8_t* pkt, size_t pkt_len);
 
-// initialize the asic
-sdk_ret_t asic_init(asic_cfg_t *asic_cfg);
-
 // check if the current thread is hal-control thread or not
 bool is_hal_ctrl_thread(void);
 

@@ -2,7 +2,8 @@
 #define __CAPRI_BARCO_CRYPTO_HPP__
 
 #include "gen/proto/types.pb.h"
-#include "include/sdk/platform/capri/capri_cfg.hpp"
+#include "nic/include/base.hpp"
+#include "platform/capri/capri_cfg.hpp"
 
 namespace hal {
 namespace pd {
@@ -51,7 +52,7 @@ namespace pd {
 
 hal_ret_t capri_barco_rings_init(sdk::types::platform_type_t platform);
 hal_ret_t capri_barco_res_allocator_init(void);
-hal_ret_t capri_barco_crypto_init(capri_cfg_t *capri_cfg);
+hal_ret_t capri_barco_crypto_init(sdk::types::platform_type_t platform);
 hal_ret_t capri_barco_init_key(uint32_t key_idx, uint64_t key_addr);
 hal_ret_t capri_barco_setup_key(uint32_t key_idx, types::CryptoKeyType key_type, uint8_t *key,
         uint32_t key_size);

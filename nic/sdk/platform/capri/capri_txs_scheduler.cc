@@ -1,22 +1,16 @@
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+
 /*
  * capri_txs_scheduler.cc
  * Vishwas Danivas (Pensando Systems)
  */
 
-
-#include <stdio.h>
-#include <string>
-#include <errno.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <map>
-#include <cmath>
-#include "include/sdk/platform/capri/capri_txs_scheduler.hpp"
-#include "include/sdk/platform/capri/capri_common.hpp"
-#include "include/sdk/platform//capri/capri_cfg.hpp"
-#include "include/sdk/platform/capri/capri_state.hpp"
+#include "platform/capri/capri_txs_scheduler.hpp"
+#include "platform/capri/capri_common.hpp"
+#include "platform//capri/capri_cfg.hpp"
+#include "platform/capri/capri_state.hpp"
 #include "nic/sdk/include/sdk/utils.hpp"
-#include "include/sdk/platform/utils/mpartition.hpp"
+#include "platform/utils/mpartition.hpp"
 #include "gen/platform/mem_regions.hpp"
 
 #include "nic/asic/capri/model/cap_psp/cap_psp_csr.h"
@@ -33,7 +27,7 @@ namespace capri {
 #define CHECK_BIT(var,pos) ((var) & (1 << (pos)))
 #define DTDM_CALENDAR_SIZE 64
 
-class capri_state_pd *g_capri_state_pd;
+extern class capri_state_pd *g_capri_state_pd;
 
 uint32_t
 capri_get_coreclk_freq(platform_type_t platform_type)

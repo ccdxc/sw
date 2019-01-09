@@ -6,7 +6,7 @@
 #include "nic/sdk/asic/asic.hpp"
 #include "nic/sdk/include/sdk/catalog.hpp"
 #include "include/sdk/bm_allocator.hpp"
-#include "include/sdk/platform/p4loader/loader.hpp"
+#include "platform/p4loader/loader.hpp"
 
 namespace sdk {
 namespace platform {
@@ -48,6 +48,9 @@ typedef struct capri_cfg_s {
     sdk::types::platform_type_t platform;
     sdk::asic::completion_cb_t completion_func;
 } capri_cfg_t;
+
+sdk_ret_t capri_load_config(char *pathname);
+sdk_ret_t capri_verify_config(char *config_dir);
 
 } // namespace capri
 } // namespace platform

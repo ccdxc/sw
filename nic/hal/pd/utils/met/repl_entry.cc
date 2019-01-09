@@ -10,6 +10,11 @@
 using hal::pd::utils::ReplEntry;
 using hal::pd::utils::ReplEntryHw;
 
+/*  base address in System memory map; Cached once at the init time */
+extern uint64_t repl_table_mem_addr;
+extern uint64_t repl_table_mem_offset;
+
+
 //---------------------------------------------------------------------------
 // Factory method to instantiate the class
 //---------------------------------------------------------------------------
@@ -102,19 +107,15 @@ ReplEntry::trace_repl_entry()
     return ret;
 }
 
-/* HBM base address in System memory map; Cached once at the init time */
-extern uint64_t capri_hbm_base;
-extern uint64_t hbm_repl_table_offset;
-
 hal_ret_t
 ReplEntryHw::read(uint32_t index)
 {
     uint64_t entry_offset = index * P4PD_REPL_ENTRY_WIDTH;
-    uint64_t base_in_entry_units = hbm_repl_table_offset / P4PD_REPL_ENTRY_WIDTH;
+    uint64_t base_in_entry_units = repl_table_mem_offset / P4PD_REPL_ENTRY_WIDTH;
 
     HAL_ASSERT(index < P4PD_REPL_TABLE_DEPTH);
 
-    sdk::asic::asic_mem_read(capri_hbm_base + hbm_repl_table_offset + entry_offset,
+    sdk::asic::asic_mem_read(repl_table_mem_addr + entry_offset,
                              (uint8_t *)this, P4PD_REPL_ENTRY_WIDTH);
 
     if (get_last_entry() == 0) {
@@ -128,7 +129,7 @@ hal_ret_t
 ReplEntryHw::write(uint32_t index)
 {
     uint64_t entry_offset = index * P4PD_REPL_ENTRY_WIDTH;
-    uint64_t base_in_entry_units = hbm_repl_table_offset / P4PD_REPL_ENTRY_WIDTH;
+    uint64_t base_in_entry_units = repl_table_mem_offset / P4PD_REPL_ENTRY_WIDTH;
 
     HAL_ASSERT(index < P4PD_REPL_TABLE_DEPTH);
 
@@ -136,7 +137,7 @@ ReplEntryHw::write(uint32_t index)
         set_next_ptr(get_next_ptr() + base_in_entry_units);
     }
 
-    sdk::asic::asic_mem_write(capri_hbm_base + hbm_repl_table_offset + entry_offset,
+    sdk::asic::asic_mem_write(repl_table_mem_addr + entry_offset,
                               (uint8_t *)this, P4PD_REPL_ENTRY_WIDTH);
 
     if (get_last_entry() == 0) {

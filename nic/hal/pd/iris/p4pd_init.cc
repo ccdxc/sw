@@ -15,7 +15,7 @@
 #include "nic/hal/pd/iris/nw/rw_pd.hpp"
 #include "nic/hal/pd/iris/nw/tnnl_rw_pd.hpp"
 #include "nic/hal/pd/iris/p4pd_defaults.hpp"
-#include "nic/hal/pd/capri/capri_tbl_rw.hpp"
+#include "platform/capri/capri_tbl_rw.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "gen/proto/types.pb.h"
 #include "nic/hal/pd/iris/aclqos/acl_pd.hpp"
@@ -1459,7 +1459,7 @@ p4pd_forwarding_mode_init (p4pd_def_cfg_t *p4pd_def_cfg)
     uint64_t val, nic_mode = NIC_MODE_SMART;
     p4pd_table_properties_t       tbl_ctx;
     p4pd_table_properties_get(P4TBL_ID_INPUT_PROPERTIES, &tbl_ctx);
-    capri_table_constant_read(&val, tbl_ctx.stage, tbl_ctx.stage_tableid,
+    sdk::platform::capri::capri_table_constant_read(&val, tbl_ctx.stage, tbl_ctx.stage_tableid,
                               (tbl_ctx.gress == P4_GRESS_INGRESS));
     val = be64toh(val);
 
@@ -1482,7 +1482,7 @@ p4pd_forwarding_mode_init (p4pd_def_cfg_t *p4pd_def_cfg)
     HAL_TRACE_DEBUG("Nic specific forwarding mode: {}",
                     p4pd_def_cfg->hal_cfg->forwarding_mode);
     val = htobe64(val);
-    capri_table_constant_write(val, tbl_ctx.stage, tbl_ctx.stage_tableid,
+    sdk::platform::capri::capri_table_constant_write(val, tbl_ctx.stage, tbl_ctx.stage_tableid,
                                (tbl_ctx.gress == P4_GRESS_INGRESS));
 
     // Flow_info table is split into multiple threads in Capri so that
@@ -1501,7 +1501,7 @@ p4pd_forwarding_mode_init (p4pd_def_cfg_t *p4pd_def_cfg)
         } else {
             tid = tbl_ctx.stage_tableid;
         }
-        capri_table_constant_write(i, tbl_ctx.stage, tid,
+        sdk::platform::capri::capri_table_constant_write(i, tbl_ctx.stage, tid,
                                    (tbl_ctx.gress == P4_GRESS_INGRESS));
         HAL_TRACE_DEBUG("setting flow_info table constant, tid = {}, constant = {}",
                         tid, i);

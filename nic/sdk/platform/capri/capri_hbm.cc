@@ -1,14 +1,10 @@
-#include "nic/include/base.hpp"
-#include "nic/sdk/include/sdk/base.hpp"
-#include "include/sdk/platform/capri/capri_common.hpp"
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 #include <unistd.h>
 #include <iostream>
-#include "nic/hal/pd/capri/capri_hbm.hpp"
-#include "nic/include/hal_mem.hpp"
-#include "nic/include/asic_pd.hpp"
+#include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/asic/rw/asicrw.hpp"
-#include <arpa/inet.h>
-#include "nic/include/hal.hpp"
+#include "platform/capri/capri_hbm_rw.hpp"
+#include "platform/capri/capri_common.hpp"
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
 #include "nic/asic/capri/model/cap_pic/cap_pics_csr.h"
 #include "nic/asic/capri/model/cap_wa/cap_wa_csr.h"
@@ -20,18 +16,20 @@
 #include "nic/asic/capri/model/cap_ms/cap_ms_csr.h"
 #include "nic/asic/capri/model/cap_pcie/cap_pxb_csr.h"
 
+namespace sdk {
+namespace platform {
+namespace capri {
+
 static uint32_t capri_freq = 0;
 static sdk::platform::utils::mpartition *mpart = NULL;
 
-static inline hal_ret_t
+static inline sdk_ret_t
 cap_nx_block_write(uint32_t chip, uint64_t addr, int size,
                    uint32_t *data_in , bool no_zero_time,
                    uint32_t flags)
 {
-    sdk_ret_t    sdk_ret;
-    sdk_ret = sdk::asic::asic_reg_write(addr, data_in, 1,
+    return sdk::asic::asic_reg_write(addr, data_in, 1,
                                         ASIC_WRITE_MODE_BLOCKING);
-    return hal_sdk_ret_to_hal_ret(sdk_ret);
 }
 
 static inline uint32_t
@@ -41,7 +39,7 @@ cap_nx_block_read(uint32_t chip, uint64_t addr, int size,
     uint32_t data = 0x0;
     if (sdk::asic::asic_reg_read(addr, &data, 1, false /*read_thru*/) !=
                                  SDK_RET_OK) {
-        HAL_TRACE_ERR("NX read failed. addr: {}", addr);
+        SDK_TRACE_ERR("NX read failed. addr: %llx", addr);
     }
     return data;
 }
@@ -59,14 +57,14 @@ cap_nx_read_pb_axi_cnt(int rd) { // 1=>rd , 0=> wr
     }
 }
 
-hal_ret_t
+sdk_ret_t
 capri_hbm_parse (std::string cfg_path, std::string pgm_name)
 {
     mpart = sdk::platform::utils::mpartition::factory();
     if (!mpart) {
-        return HAL_RET_ERR;
+        return SDK_RET_ERR;
     }
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
 hbm_addr_t
@@ -120,7 +118,7 @@ reset_hbm_regions (capri_cfg_t *capri_cfg)
             if (reg->reset) {
                 if (capri_cfg->platform == platform_type_t::PLATFORM_TYPE_HAPS) {
                     // Reset only for haps
-                    HAL_TRACE_DEBUG("Resetting {} hbm region", reg->mem_reg_name);
+                    SDK_TRACE_DEBUG("Resetting %s hbm region", reg->mem_reg_name);
                     sdk::asic::asic_mem_write(mpart->addr(reg->start_offset),
                                               NULL, reg->size_kb * 1024);
                 } else if (capri_cfg->platform == platform_type_t::PLATFORM_TYPE_HW) {
@@ -135,9 +133,9 @@ reset_hbm_regions (capri_cfg_t *capri_cfg)
                         for (uint64_t j = 0; j < reg->size_kb; j++) {
                             sdk::asic::asic_mem_read(addr, tmp, 1024, true);
                             if (memcmp(tmp, zeros, 1024)) {
-                                HAL_TRACE_ERR("Fatal: HBM region {} has non-zero bytes.",
+                                SDK_TRACE_ERR("Fatal: HBM region %s has non-zero bytes.",
                                               reg->mem_reg_name);
-                                HAL_ASSERT(0);
+                                SDK_ASSERT(0);
                             }
                             addr += 1024;
                         }
@@ -167,27 +165,27 @@ capri_hbm_write_mem (uint64_t addr, const uint8_t *buf, uint32_t size)
     return (rc == SDK_RET_OK) ? 0 : -EIO;
 }
 
-static hal_ret_t
+static sdk_ret_t
 capri_hbm_llc_cache_init (capri_cfg_t *cfg)
 {
     if (cfg == NULL || cfg->llc_cache == true) {
-        HAL_TRACE_DEBUG("Enabling HBM LLC cache.");
+        SDK_TRACE_DEBUG("Enabling HBM LLC cache.");
         //cap_nx_cache_enable();
     } else {
-        HAL_TRACE_DEBUG("Disabling HBM LLC cache.");
+        SDK_TRACE_DEBUG("Disabling HBM LLC cache.");
         //cap_nx_cache_disable();
     }
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-static hal_ret_t
+static sdk_ret_t
 capri_hbm_p4_cache_init (capri_cfg_t *cfg)
 {
     uint32_t global_bypass = 0;
 
     if (cfg == NULL || cfg->p4_cache == false) {
-        HAL_TRACE_DEBUG("Disabling HBM P4 cache based on HAL config.");
+        SDK_TRACE_DEBUG("Disabling HBM P4 cache based on HAL config.");
         global_bypass = 1;
     }
 
@@ -203,16 +201,16 @@ capri_hbm_p4_cache_init (capri_cfg_t *cfg)
     eg_pics_csr.picc.cfg_cache_global.hash_mode(0);
     eg_pics_csr.picc.cfg_cache_global.write();
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-static hal_ret_t
+static sdk_ret_t
 capri_hbm_p4plus_cache_init (capri_cfg_t *cfg)
 {
     uint32_t global_bypass = 0;
 
     if (cfg == NULL || cfg->p4plus_cache == false) {
-        HAL_TRACE_DEBUG("Disabling HBM P4Plus cache based on HAL config.");
+        SDK_TRACE_DEBUG("Disabling HBM P4Plus cache based on HAL config.");
         global_bypass = 1;
     }
 
@@ -228,27 +226,27 @@ capri_hbm_p4plus_cache_init (capri_cfg_t *cfg)
     txdma_pics_csr.picc.cfg_cache_global.hash_mode(0);
     txdma_pics_csr.picc.cfg_cache_global.write();
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 capri_hbm_cache_init (capri_cfg_t *cfg)
 {
-    hal_ret_t   ret;
+    sdk_ret_t   ret;
 
     ret = capri_hbm_llc_cache_init(cfg);
-    assert(ret == HAL_RET_OK);
+    assert(ret == SDK_RET_OK);
 
     ret = capri_hbm_p4_cache_init(cfg);
-    assert(ret == HAL_RET_OK);
+    assert(ret == SDK_RET_OK);
 
     ret = capri_hbm_p4plus_cache_init(cfg);
-    assert(ret == HAL_RET_OK);
+    assert(ret == SDK_RET_OK);
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 capri_hbm_cache_program_region (mpartition_region_t *reg,
                                 uint32_t inst_id,
                                 uint32_t filter_idx,
@@ -288,10 +286,10 @@ capri_hbm_cache_program_region (mpartition_region_t *reg,
         pics_csr.picc.filter_addr_ctl_m.value[filter_idx].write();
     }
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 capri_hbm_cache_program_db (mpartition_region_t *reg,
                             uint32_t filter_idx)
 {
@@ -311,10 +309,10 @@ capri_hbm_cache_program_db (mpartition_region_t *reg,
     wa_csr.filter_addr_ctl.value[filter_idx].value(0xd);
     wa_csr.filter_addr_ctl.value[filter_idx].write();
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 capri_hbm_cache_program_pcie (mpartition_region_t *reg,
                             uint32_t filter_idx)
 {
@@ -334,10 +332,10 @@ capri_hbm_cache_program_pcie (mpartition_region_t *reg,
     pxb_csr.filter_addr_ctl.value[filter_idx].value(0xd);
     pxb_csr.filter_addr_ctl.value[filter_idx].write();
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 capri_hbm_cache_regions_init (void)
 {
     mpartition_region_t *reg;
@@ -355,53 +353,53 @@ capri_hbm_cache_regions_init (void)
         }
 
         if (is_region_cache_pipe_p4_ig(reg)) {
-            HAL_TRACE_DEBUG("Programming {} to P4IG cache(region 1), "
-                            "start={} size={} index={}", reg->mem_reg_name,
+            SDK_TRACE_DEBUG("Programming %s to P4IG cache(region 1), "
+                            "start=%lx size=%u index=%u", reg->mem_reg_name,
                             mpart->addr(reg->start_offset), reg->size_kb, p4ig_filter_idx);
             capri_hbm_cache_program_region(reg, 1, p4ig_filter_idx, 1, 0);
             p4ig_filter_idx++;
         }
 
         if (is_region_cache_pipe_p4_eg(reg)) {
-            HAL_TRACE_DEBUG("Programming {} to P4EG cache(region 2), "
-                            "start={} size={} index={}", reg->mem_reg_name,
+            SDK_TRACE_DEBUG("Programming %s to P4EG cache(region 2), "
+                            "start=%lx size=%u index=%u", reg->mem_reg_name,
                             mpart->addr(reg->start_offset), reg->size_kb, p4eg_filter_idx);
             capri_hbm_cache_program_region(reg, 2, p4eg_filter_idx, 1, 0);
             p4eg_filter_idx++;
         }
 
         if (is_region_cache_pipe_p4plus_txdma(reg)) {
-            HAL_TRACE_DEBUG("Programming {} to P4PLUS TXDMA cache(region 3), "
-                            "start={} size={} index={}", reg->mem_reg_name,
+            SDK_TRACE_DEBUG("Programming %s to P4PLUS TXDMA cache(region 3), "
+                            "start=%lx size=%u index=%u", reg->mem_reg_name,
                             mpart->addr(reg->start_offset), reg->size_kb, p4plus_txdma_filter_idx);
             capri_hbm_cache_program_region(reg, 3, p4plus_txdma_filter_idx, 1, 1);
             p4plus_txdma_filter_idx++;
         }
 
         if (is_region_cache_pipe_p4plus_rxdma(reg)) {
-            HAL_TRACE_DEBUG("Programming {} to P4PLUS RXDMA cache(region 0), "
-                            "start={} size={} index={}", reg->mem_reg_name,
+            SDK_TRACE_DEBUG("Programming %s to P4PLUS RXDMA cache(region 0), "
+                            "start=%lx size=%u index=%u", reg->mem_reg_name,
                             mpart->addr(reg->start_offset), reg->size_kb, p4plus_rxdma_filter_idx);
             capri_hbm_cache_program_region(reg, 0, p4plus_rxdma_filter_idx, 1, 1);
             p4plus_rxdma_filter_idx++;
         }
 
         if (is_region_cache_pipe_p4plus_pciedb(reg)) {
-            HAL_TRACE_DEBUG("Programming {} to PCIE, "
-                            "start={} size={} index={}", reg->mem_reg_name,
+            SDK_TRACE_DEBUG("Programming %s to PCIE, "
+                            "start=%lx size=%u index=%u", reg->mem_reg_name,
                             mpart->addr(reg->start_offset), reg->size_kb, p4plus_pcie_filter_idx);
             capri_hbm_cache_program_pcie(reg, p4plus_pcie_filter_idx);
             p4plus_pcie_filter_idx++;
 
-            HAL_TRACE_DEBUG("Programming {} to Doorbell, "
-                            "start={} size={} index={}", reg->mem_reg_name,
+            SDK_TRACE_DEBUG("Programming %s to Doorbell, "
+                            "start=%lx size=%u index=%u", reg->mem_reg_name,
                             mpart->addr(reg->start_offset), reg->size_kb, p4plus_db_filter_idx);
             capri_hbm_cache_program_db(reg, p4plus_db_filter_idx);
             p4plus_db_filter_idx++;
         }
     }
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
 uint64_t
@@ -415,7 +413,7 @@ capri_hbm_timestamp_get (void)
     return pbc_csr.hbm.sta_hbm_timestamp.all().convert_to<uint64_t>();
 }
 
-hal_ret_t
+sdk_ret_t
 capri_tpc_bw_mon_rd_get (uint64_t *maxv, uint64_t *avrg)
 {
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
@@ -426,12 +424,12 @@ capri_tpc_bw_mon_rd_get (uint64_t *maxv, uint64_t *avrg)
     *maxv = pics_csr.sta_axi_bw_mon_rd_bandwidth.maxv().convert_to<uint64_t>();
     *avrg = pics_csr.sta_axi_bw_mon_rd_bandwidth.avrg().convert_to<uint64_t>();
 
-    HAL_TRACE_DEBUG("TXDMA AVG_RD: {}, MAX_RD: {}", *avrg, *maxv);
+    SDK_TRACE_DEBUG("TXDMA AVG_RD: %llu, MAX_RD: %llu", *avrg, *maxv);
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 capri_tpc_bw_mon_wr_get (uint64_t *maxv, uint64_t *avrg)
 {
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
@@ -442,12 +440,12 @@ capri_tpc_bw_mon_wr_get (uint64_t *maxv, uint64_t *avrg)
     *maxv = pics_csr.sta_axi_bw_mon_wr_bandwidth.maxv().convert_to<uint64_t>();
     *avrg = pics_csr.sta_axi_bw_mon_wr_bandwidth.avrg().convert_to<uint64_t>();
 
-    HAL_TRACE_DEBUG("TXDMA AVG_WR: {}, MAX_WR: {}", *avrg, *maxv);
+    SDK_TRACE_DEBUG("TXDMA AVG_WR: %llu, MAX_WR: %llu", *avrg, *maxv);
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 capri_rpc_bw_mon_rd_get (uint64_t *maxv, uint64_t *avrg)
 {
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
@@ -458,12 +456,12 @@ capri_rpc_bw_mon_rd_get (uint64_t *maxv, uint64_t *avrg)
     *maxv = pics_csr.sta_axi_bw_mon_rd_bandwidth.maxv().convert_to<uint64_t>();
     *avrg = pics_csr.sta_axi_bw_mon_rd_bandwidth.avrg().convert_to<uint64_t>();
 
-    HAL_TRACE_DEBUG("RXDMA AVG_RD: {}, MAX_RD: {}", *avrg, *maxv);
+    SDK_TRACE_DEBUG("RXDMA AVG_RD: %llu, MAX_RD: %llu", *avrg, *maxv);
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 capri_rpc_bw_mon_wr_get (uint64_t *maxv, uint64_t *avrg)
 {
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
@@ -474,12 +472,12 @@ capri_rpc_bw_mon_wr_get (uint64_t *maxv, uint64_t *avrg)
     *maxv = pics_csr.sta_axi_bw_mon_wr_bandwidth.maxv().convert_to<uint64_t>();
     *avrg = pics_csr.sta_axi_bw_mon_wr_bandwidth.avrg().convert_to<uint64_t>();
 
-    HAL_TRACE_DEBUG("RXDMA AVG_WR: {}, MAX_WR: {}", *avrg, *maxv);
+    SDK_TRACE_DEBUG("RXDMA AVG_WR: %llu, MAX_WR: %llu", *avrg, *maxv);
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 capri_ms_bw_mon_rd_get (uint64_t *maxv, uint64_t *avrg)
 {
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
@@ -490,10 +488,10 @@ capri_ms_bw_mon_rd_get (uint64_t *maxv, uint64_t *avrg)
     *maxv = ms_csr.sta_axi_bw_mon_rd_bandwidth.maxv().convert_to<uint64_t>();
     *avrg = ms_csr.sta_axi_bw_mon_rd_bandwidth.avrg().convert_to<uint64_t>();
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 capri_ms_bw_mon_wr_get (uint64_t *maxv, uint64_t *avrg)
 {
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
@@ -504,10 +502,10 @@ capri_ms_bw_mon_wr_get (uint64_t *maxv, uint64_t *avrg)
     *maxv = ms_csr.sta_axi_bw_mon_wr_bandwidth.maxv().convert_to<uint64_t>();
     *avrg = ms_csr.sta_axi_bw_mon_wr_bandwidth.avrg().convert_to<uint64_t>();
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 capri_pxb_bw_mon_rd_get (uint64_t *maxv, uint64_t *avrg)
 {
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
@@ -518,10 +516,10 @@ capri_pxb_bw_mon_rd_get (uint64_t *maxv, uint64_t *avrg)
     *maxv = pxb_csr.sta_axi_bw_mon_rd_bandwidth.maxv().convert_to<uint64_t>();
     *avrg = pxb_csr.sta_axi_bw_mon_rd_bandwidth.avrg().convert_to<uint64_t>();
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 capri_pxb_bw_mon_wr_get (uint64_t *maxv, uint64_t *avrg)
 {
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
@@ -532,7 +530,7 @@ capri_pxb_bw_mon_wr_get (uint64_t *maxv, uint64_t *avrg)
     *maxv = pxb_csr.sta_axi_bw_mon_wr_bandwidth.maxv().convert_to<uint64_t>();
     *avrg = pxb_csr.sta_axi_bw_mon_wr_bandwidth.avrg().convert_to<uint64_t>();
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
 static inline void
@@ -546,8 +544,8 @@ populate_hbm_bw (uint64_t max_rd, uint64_t max_wr,
     hbm_bw->avg.read  = (avg_rd * (num_bits * capri_freq)/1000.0f) / window_size;
     hbm_bw->avg.write = (avg_wr * (num_bits * capri_freq)/1000.0f) / window_size;
 
-    HAL_TRACE_DEBUG("AVG_RD: {}, AVG_WR: {}, "
-                    "MAX_RD: {}, MAX_WR: {}",
+    SDK_TRACE_DEBUG("AVG_RD: %llu, AVG_WR: %llu, "
+                    "MAX_RD: %llu, MAX_WR: %llu",
                     hbm_bw->avg.read, hbm_bw->avg.write,
                     hbm_bw->max.read, hbm_bw->max.write);
 }
@@ -581,7 +579,7 @@ capri_pb_axi_read_cnt (void)
            + pbc_csr.hbm.cnt_hbm_axi_ctrl.all().convert_to<uint64_t>();
 }
 
-static hal_ret_t
+static sdk_ret_t
 capri_clear_hbm_bw (int val)
 {
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
@@ -606,10 +604,10 @@ capri_clear_hbm_bw (int val)
     pxb_csr.cfg_axi_bw_mon.alpha(val);
     pxb_csr.cfg_axi_bw_mon.write();
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-static hal_ret_t
+static sdk_ret_t
 capri_set_hbm_bw_window (uint32_t val)
 {
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
@@ -634,10 +632,10 @@ capri_set_hbm_bw_window (uint32_t val)
     pxb_csr.cfg_axi_bw_mon.cycle(val);
     pxb_csr.cfg_axi_bw_mon.write();
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 capri_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
               asic_hbm_bw_t *hbm_bw_arr)
 {
@@ -661,8 +659,8 @@ capri_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
     if (capri_freq == 0) {
         capri_freq = capri_freq_get();
         capri_set_hbm_bw_window(window_size);
-        HAL_TRACE_DEBUG("HBM BW mon window size set to: {:#x}", window_size);
-        HAL_TRACE_DEBUG("capri freq: {}", capri_freq);
+        SDK_TRACE_DEBUG("HBM BW mon window size set to: 0x%x", window_size);
+        SDK_TRACE_DEBUG("capri freq: %u", capri_freq);
     }
 
     capri_clear_hbm_bw(0);
@@ -680,52 +678,52 @@ capri_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
         clk_diff = cur_ts - prev_ts;
 
         hbm_bw = &hbm_bw_arr[index++];
-        hbm_bw->type = hal::pd::ASIC_BLOCK_TXD;
+        hbm_bw->type = asic_block_t::ASIC_BLOCK_TXDMA;
         hbm_bw->clk_diff = clk_diff;
         capri_tpc_bw_mon_rd_get(&max_rd, &avg_rd);
         capri_tpc_bw_mon_wr_get(&max_wr, &avg_wr);
-        HAL_TRACE_DEBUG("CLK_DIFF: {}, TXDMA BW "
-                        "AVG_RD: {}, AVG_WR: {}, "
-                        "MAX_RD: {}, MAX_WR: {}",
+        SDK_TRACE_DEBUG("CLK_DIFF: %llu, TXDMA BW "
+                        "AVG_RD: %llu, AVG_WR: %llu, "
+                        "MAX_RD: %llu, MAX_WR: %llu",
                         clk_diff,
                         avg_rd, avg_wr,
                         max_rd, max_wr);
         populate_hbm_bw(max_rd, max_wr, avg_rd, avg_wr, hbm_bw, num_bits, window_size);
 
         hbm_bw = &hbm_bw_arr[index++];
-        hbm_bw->type = hal::pd::ASIC_BLOCK_RXD;
+        hbm_bw->type = asic_block_t::ASIC_BLOCK_RXDMA;
         hbm_bw->clk_diff = clk_diff;
         capri_rpc_bw_mon_rd_get(&max_rd, &avg_rd);
         capri_rpc_bw_mon_wr_get(&max_wr, &avg_wr);
-        HAL_TRACE_DEBUG("CLK_DIFF: {}, RXDMA BW "
-                        "AVG_RD: {}, AVG_WR: {}, "
-                        "MAX_RD: {}, MAX_WR: {}",
+        SDK_TRACE_DEBUG("CLK_DIFF: %llu, RXDMA BW "
+                        "AVG_RD: %llu, AVG_WR: %llu, "
+                        "MAX_RD: %llu, MAX_WR: %llu",
                         clk_diff,
                         avg_rd, avg_wr,
                         max_rd, max_wr);
         populate_hbm_bw(max_rd, max_wr, avg_rd, avg_wr, hbm_bw, num_bits, window_size);
 
         hbm_bw = &hbm_bw_arr[index++];
-        hbm_bw->type = hal::pd::ASIC_BLOCK_MS;
+        hbm_bw->type = asic_block_t::ASIC_BLOCK_MS;
         hbm_bw->clk_diff = clk_diff;
         capri_ms_bw_mon_rd_get(&max_rd, &avg_rd);
         capri_ms_bw_mon_wr_get(&max_wr, &avg_wr);
-        HAL_TRACE_DEBUG("CLK_DIFF: {}, MS BW "
-                        "AVG_RD: {}, AVG_WR: {}, "
-                        "MAX_RD: {}, MAX_WR: {}",
+        SDK_TRACE_DEBUG("CLK_DIFF: %llu, MS BW "
+                        "AVG_RD: %llu, AVG_WR: %llu, "
+                        "MAX_RD: %llu, MAX_WR: %llu",
                         clk_diff,
                         avg_rd, avg_wr,
                         max_rd, max_wr);
         populate_hbm_bw(max_rd, max_wr, avg_rd, avg_wr, hbm_bw, num_bits, window_size);
 
         hbm_bw = &hbm_bw_arr[index++];
-        hbm_bw->type = hal::pd::ASIC_BLOCK_PCIE;
+        hbm_bw->type = asic_block_t::ASIC_BLOCK_PCIE;
         hbm_bw->clk_diff = clk_diff;
         capri_pxb_bw_mon_rd_get(&max_rd, &avg_rd);
         capri_pxb_bw_mon_wr_get(&max_wr, &avg_wr);
-        HAL_TRACE_DEBUG("CLK_DIFF: {}, PCIE BW "
-                        "AVG_RD: {}, AVG_WR: {}, "
-                        "MAX_RD: {}, MAX_WR: {}",
+        SDK_TRACE_DEBUG("CLK_DIFF: %llu, PCIE BW "
+                        "AVG_RD: %llu, AVG_WR: %llu, "
+                        "MAX_RD: %llu, MAX_WR: %llu",
                         clk_diff,
                         avg_rd, avg_wr,
                         max_rd, max_wr);
@@ -736,7 +734,7 @@ capri_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
         }
 
         hbm_bw = &hbm_bw_arr[index++];
-        hbm_bw->type = hal::pd::ASIC_BLOCK_PB;
+        hbm_bw->type = asic_block_t::ASIC_BLOCK_PACKET_BUFFER;
         hbm_bw->clk_diff = clk_diff;
         rd_cnt = capri_pb_axi_read_cnt();
         wr_cnt = cap_nx_read_pb_axi_cnt(0);
@@ -749,8 +747,8 @@ capri_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
 
         hbm_bw->avg.read  = avg_rd;
         hbm_bw->avg.write = avg_wr;
-        HAL_TRACE_DEBUG("CLK_DIFF: {}, PB BW "
-                        "AVG_RD: {}, AVG_WR: {}",
+        SDK_TRACE_DEBUG("CLK_DIFF: %llu, PB BW "
+                        "AVG_RD: %llu, AVG_WR: %llu",
                         clk_diff,
                         avg_rd, avg_wr);
 
@@ -759,10 +757,10 @@ capri_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
         prev_ts     = cur_ts;
     }
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 capri_nx_set_llc_counters (uint32_t *data)
 {
     for (int i = 0; i < 16; ++i) {
@@ -834,10 +832,10 @@ capri_nx_set_llc_counters (uint32_t *data)
         }
     }
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 capri_nx_get_llc_counters (uint32_t *rd_data)
 {
     for (int i = 0; i < 16; ++i) {
@@ -909,10 +907,10 @@ capri_nx_get_llc_counters (uint32_t *rd_data)
         }
     }
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 capri_nx_setup_llc_counters (uint32_t mask)
 {
     /*
@@ -933,7 +931,7 @@ capri_nx_setup_llc_counters (uint32_t mask)
 
     if (mask == 0xffffffff) {
         capri_nx_set_llc_counters(&reset);
-        return HAL_RET_OK;
+        return SDK_RET_OK;
     }
 
     cap_nx_block_write(0,
@@ -969,5 +967,9 @@ capri_nx_setup_llc_counters (uint32_t mask)
     cap_nx_block_write(0,
                 RBM_AGENT_(CCC9_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
 
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
+
+} // namespace capri
+} // namespace platform
+} // namespace sdk

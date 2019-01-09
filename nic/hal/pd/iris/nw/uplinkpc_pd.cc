@@ -5,7 +5,7 @@
 #include "nic/hal/pd/iris/nw/if_pd.hpp"
 #include "nic/hal/pd/iris/nw/uplinkpc_pd.hpp"
 #include "nic/hal/pd/iris/nw/uplinkif_pd.hpp"
-#include "include/sdk/platform/capri/capri_tm_rw.hpp"
+#include "platform/capri/capri_tm_rw.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/hal/pd/iris/nw/l2seg_pd.hpp"
 

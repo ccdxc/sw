@@ -5,9 +5,9 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_barco_crypto.hpp"
-#include "include/sdk/platform/capri/capri_pxb_pcie.hpp"
-#include "include/sdk/platform/capri/capri_txs_scheduler.hpp"
-#include "include/sdk/platform/capri/capri_common.hpp"
+#include "platform/capri/capri_pxb_pcie.hpp"
+#include "platform/capri/capri_txs_scheduler.hpp"
+#include "platform/capri/capri_common.hpp"
 
 namespace hal {
 namespace pd {
