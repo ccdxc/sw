@@ -179,18 +179,43 @@ add_common_doorbell_bar(pciehbars_t *pbars,
     pciehbarreg_t preg;
     pciehbar_t pbar;
     prt_t prt;
-    u_int32_t npids;
+    u_int32_t nlifs, nlifs2, npids, npids2;
+    int bitb, bitc;
 
     /*****************
      * doorbell bar - mem64
      */
     memset(&pbar, 0, sizeof(pbar));
 
-    /* at least 1 pid even if none specified */
+    /*
+     * At least 1 lif even if none specified.
+     * Then we roundup to a power-of-2 because we are using an
+     * adjacent group of db bar address bits for this field.
+     * If nlifs is not an even power-of-2 then we'll reduce
+     * nlifs2 until lower than nlifs.  We don't want to be able
+     * to access more than the provisioned number of lifs through this
+     * bar so if lifs is not an even power-of-2 we'll (silently)
+     * reduce.  XXX assert?
+     */
+    nlifs = MAX(pres->nlifs, 1);
+    nlifs2 = roundup_power2(nlifs);
+    /*assert(nlifs2 == nlifs);*/
+    while (nlifs2 > nlifs) nlifs2 >>= 1;
+
+    /*
+     * At least 1 pid even if none specified.
+     * Then we roundup to a power-of-2 because we are using an
+     * adjacent group of db bar address bits for this field.
+     * It is ok to roundup above "npids"--we'll consume more
+     * bar space, but if the doorbell is using pidcheck then
+     * we won't be able to access the doorbell from the
+     * unconfigured pids.
+     */
     npids = MAX(pres->npids, 1);
+    npids2 = roundup_power2(npids);
 
     pbar.type = PCIEHBARTYPE_MEM64;
-    pbar.size = 0x1000 * roundup_power2(npids);
+    pbar.size = 0x1000 * nlifs2 * npids2;
     pbar.cfgidx = 2;
 
     memset(&preg, 0, sizeof(preg));
@@ -201,6 +226,14 @@ add_common_doorbell_bar(pciehbars_t *pbars,
                 pbar.size,  /* prtsize */
                 PMT_BARF_WR);
     pmt_bar_set_qtype(&preg.pmt, 3, 0x7);
+
+    /*
+     * Default page size 4k=1<<12, then
+     * lif bits start above pid bits.
+     */
+    bitb = 12 + ffs(npids2) - 1;
+    bitc = ffs(nlifs2) - 1;
+    pmt_bar_setr_lif(&preg.pmt, bitb, bitc);
 
     prt_db64_enc(&prt, pres->lif, upd);
     pciehbarreg_add_prt(&preg, &prt);

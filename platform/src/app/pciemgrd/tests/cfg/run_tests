@@ -8,11 +8,11 @@ for tc in testcases/*.in; do
     ../testtools/genrun pciemgrd < $tc > /dev/null
     ../testtools/genrun lspci -nvvvxxxx > $tb.out
     if ! cmp -s $tb.exp $tb.out; then
-	printf "%-30s FAILED ***\n" $tc
+	printf "%-40s FAILED ***\n" $tc
 	diff $tb.exp $tb.out
 	nfail=`expr $nfail + 1`
     else
-	printf "%-30s passed\n" $tc
+	printf "%-40s passed\n" $tc
 	rm $tb.out
 	npass=`expr $npass + 1`
     fi
