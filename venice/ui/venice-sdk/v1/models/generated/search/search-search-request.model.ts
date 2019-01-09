@@ -146,8 +146,8 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'query-string': new FormControl(this['query-string'], [Validators.maxLength(256), ]),
-                'from': new FormControl(this['from'], [maxValueValidator(1023), ]),
-                'max-results': new FormControl(this['max-results'], [maxValueValidator(8192), ]),
+                'from': new FormControl(this['from'], [Validators.max(1023), ]),
+                'max-results': new FormControl(this['max-results'], [Validators.max(8192), ]),
                 'sort-by': new FormControl(this['sort-by'], [Validators.maxLength(256), ]),
                 'mode': new FormControl(this['mode'], [enumValidator(SearchSearchRequest_mode), ]),
                 'query': this['query'].$formGroup,

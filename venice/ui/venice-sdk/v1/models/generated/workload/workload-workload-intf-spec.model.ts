@@ -98,8 +98,8 @@ export class WorkloadWorkloadIntfSpec extends BaseModel implements IWorkloadWork
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'mac-address': new FormControl(this['mac-address']),
-                'micro-seg-vlan': new FormControl(this['micro-seg-vlan'], [minValueValidator(1), maxValueValidator(4095), ]),
-                'external-vlan': new FormControl(this['external-vlan'], [minValueValidator(1), maxValueValidator(4095), ]),
+                'micro-seg-vlan': new FormControl(this['micro-seg-vlan'], [Validators.required, Validators.min(1), Validators.max(4095), ]),
+                'external-vlan': new FormControl(this['external-vlan'], [Validators.required, Validators.min(1), Validators.max(4095), ]),
                 'ip-addresses': new FormControl(this['ip-addresses']),
             });
         }

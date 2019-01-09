@@ -135,7 +135,7 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
                 'ip-config': this['ip-config'].$formGroup,
                 'mgmt-mode': new FormControl(this['mgmt-mode'], [enumValidator(ClusterSmartNICSpec_mgmt_mode), ]),
                 'network-mode': new FormControl(this['network-mode'], [enumValidator(ClusterSmartNICSpec_network_mode), ]),
-                'mgmt-vlan': new FormControl(this['mgmt-vlan'], [maxValueValidator(4095), ]),
+                'mgmt-vlan': new FormControl(this['mgmt-vlan'], [Validators.max(4095), ]),
                 'controllers': new FormControl(this['controllers']),
             });
         }
