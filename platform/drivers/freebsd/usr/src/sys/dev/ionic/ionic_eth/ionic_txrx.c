@@ -1306,6 +1306,14 @@ ionic_tx_qflush(struct ifnet *ifp)
 	}
 }
 
+static void
+ionic_if_init(void *arg)
+{
+	struct lif *lif = arg;
+
+	ionic_open_or_stop(lif);
+}
+
 int
 ionic_lif_netdev_alloc(struct lif* lif, int ndescs)
 {
@@ -1323,7 +1331,7 @@ ionic_lif_netdev_alloc(struct lif* lif, int ndescs)
 
 	ifp->if_softc = lif;
 	ifp->if_mtu = ETHERMTU;
-	ifp->if_init = ionic_open;
+	ifp->if_init = ionic_if_init;
 	ifp->if_flags = IFF_BROADCAST | IFF_SIMPLEX | IFF_MULTICAST;
 	ifp->if_ioctl = ionic_ioctl;
 	ifp->if_transmit = ionic_start_xmit;
@@ -2004,18 +2012,11 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 	case SIOCSIFFLAGS:
 		IONIC_NETDEV_INFO(ifp, "ioctl: SIOCSIFFLAGS (Set interface flags)\n");
 		IONIC_CORE_LOCK(lif);
+		ionic_open_or_stop(lif);
 		if (ifp->if_flags & IFF_UP) {
-			if ((ifp->if_drv_flags & IFF_DRV_RUNNING) == 0) {
-				/* if the lif is stopped then open it */
-				ionic_open(lif);
-			}
 			ionic_set_rx_mode(lif->netdev);
 			ionic_set_mac(lif->netdev);
 		} else { /* If not up. */
-			if (ifp->if_drv_flags & IFF_DRV_RUNNING) {
-				/* if the lif is open then stop it */
-				ionic_stop(ifp);
-			}
 			ionic_clear_rx_mode(lif->netdev);
 		}
 		IONIC_CORE_UNLOCK(lif);
@@ -2138,28 +2139,3 @@ void ionic_lif_rss_teardown(struct lif *lif)
 
 	lif->rss_ind_tbl = NULL;
 }
-
-
-#if 0
-void ionic_down_link(struct net_device *netdev)
-{
-#ifdef __FreeBSD__
-	if_link_state_change(netdev, LINK_STATE_DOWN);
-	netdev->if_drv_flags &= ~IFF_DRV_RUNNING;
-#else
-	netif_carrier_off(netdev);
-	netif_tx_disable(netdev);
-#endif
-}
-
-void ionic_up_link(struct net_device *netdev)
-{
-#ifdef __FreeBSD__
-	if_link_state_change(netdev, LINK_STATE_UP);
-	netdev->if_drv_flags |= IFF_DRV_RUNNING;
-#else
-	netif_carrier_off(netdev);
-	netif_tx_disable(netdev);
-#endif
-}
-#endif

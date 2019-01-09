@@ -365,8 +365,8 @@ struct lif {
 #define IONIC_RX_UNLOCK(x)		mtx_unlock(&(x)->rx_mtx)
 #define IONIC_RX_LOCK_OWNED(x)		mtx_owned(&(x)->rx_mtx)
 
-void ionic_open(void *arg);
 int ionic_stop(struct net_device *netdev);
+void ionic_open_or_stop(struct lif *lif);
 
 int ionic_lifs_alloc(struct ionic *ionic);
 void ionic_lifs_free(struct ionic *ionic);

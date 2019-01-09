@@ -171,15 +171,19 @@ static void ionic_read_notify_block(struct lif* lif)
 #endif
 }
 
-void ionic_open(void *arg)
+static void ionic_open(struct lif *lif)
 {
-	struct lif *lif = arg;
 	struct ifnet  *ifp = lif->netdev;
 	struct rxque *rxq;
 	struct txque *txq;
 	unsigned int i;
 
 	KASSERT(lif, ("lif is NULL"));
+
+	/* already running? */
+	if (ifp->if_drv_flags & IFF_DRV_RUNNING)
+		return;
+
 	IONIC_NETDEV_INFO(lif->netdev, "starting interface\n");
 
 	ionic_calc_rx_size(lif);
@@ -204,12 +208,8 @@ void ionic_open(void *arg)
 		IONIC_TX_UNLOCK(txq);
 	}
 
-	if (lif->link_up) {
-		ifp->if_drv_flags |= IFF_DRV_RUNNING;
-		if_link_state_change(ifp, LINK_STATE_UP);
-	} else {
-		if_link_state_change(ifp, LINK_STATE_DOWN);
-	}
+	ifp->if_drv_flags |= IFF_DRV_RUNNING;
+	if_link_state_change(ifp, LINK_STATE_UP);
 }
 
 int ionic_stop(struct net_device *netdev)
@@ -219,11 +219,17 @@ int ionic_stop(struct net_device *netdev)
 	struct txque* txq;
 	unsigned int i;
 
-	IONIC_NETDEV_INFO(netdev, "stopping interface\n");
 	KASSERT(lif, ("lif is NULL"));
 	KASSERT(IONIC_CORE_LOCK_OWNED(lif), ("%s is not locked", lif->name));
 
+	/* already stopped? */
+	if (!(netdev->if_drv_flags & IFF_DRV_RUNNING))
+		return 0;
+
+	IONIC_NETDEV_INFO(netdev, "stopping interface\n");
+
 	lif->netdev->if_drv_flags &= ~IFF_DRV_RUNNING;
+	if_link_state_change(lif->netdev, LINK_STATE_DOWN);
 
 	for (i = 0; i < lif->nrxqs; i++) {
 		rxq = lif->rxqs[i];
@@ -256,6 +262,14 @@ int ionic_stop(struct net_device *netdev)
 	}
 
 	return (0);
+}
+
+void ionic_open_or_stop(struct lif *lif)
+{
+	if (lif->netdev->if_flags & IFF_UP && lif->link_up)
+		ionic_open(lif);
+	else
+		ionic_stop(lif->netdev);
 }
 
 /******************* AdminQ ******************************/
@@ -643,7 +657,7 @@ int ionic_change_mtu(struct net_device *netdev, int new_mtu)
 	struct rxque *rxq;
 	unsigned int i;
 	int err;
-	bool is_up, mbuf_size_changed;
+	bool mbuf_size_changed;
 	uint32_t old_mbuf_size;
 
 	struct ionic_admin_ctx ctx = {
@@ -677,10 +691,7 @@ int ionic_change_mtu(struct net_device *netdev, int new_mtu)
 	/* if mbuf size has not changed then there is no need to reprogram queues.
 	*/
 	if (mbuf_size_changed) {
-		is_up = (netdev->if_drv_flags & IFF_DRV_RUNNING);
-
-		if (is_up)
-			ionic_stop(netdev);
+		ionic_stop(netdev);
 
 		for (i = 0; i < lif->nrxqs; i++) {
 			rxq = lif->rxqs[i];
@@ -689,8 +700,7 @@ int ionic_change_mtu(struct net_device *netdev, int new_mtu)
 			IONIC_RX_UNLOCK(rxq);
 		}
 
-		if (is_up)
-			ionic_open(lif);
+		ionic_open_or_stop(lif);
 	}
 
 	IONIC_NETDEV_INFO(netdev, "Changed MTU %d > %d MBUF %d > %d\n",
@@ -1827,7 +1837,6 @@ static void ionic_lif_rxqs_deinit(struct lif *lif)
 
 static void ionic_lif_deinit(struct lif *lif)
 {
-
 	ionic_lif_stats_dump_stop(lif);
 	ionic_rx_filters_deinit(lif);
 	ionic_lif_rss_teardown(lif);
@@ -1923,7 +1932,6 @@ static void ionic_process_event(struct notifyq* notifyq, union notifyq_comp *com
 {
 	struct lif *lif = notifyq->lif;
 	struct ifnet *ifp = lif->netdev;
-	bool admin_up, running;
 
 	switch (comp->event.ecode) {
 	case EVENT_OPCODE_LINK_CHANGE:
@@ -1947,18 +1955,8 @@ static void ionic_process_event(struct notifyq* notifyq, union notifyq_comp *com
 		}
 
 		IONIC_CORE_LOCK(lif);
-		if (lif->link_up)
-			if_link_state_change(ifp, LINK_STATE_UP);
-		else
-			if_link_state_change(ifp, LINK_STATE_DOWN);
 
-		admin_up = ifp->if_flags & IFF_UP;
-		running = ifp->if_drv_flags & IFF_DRV_RUNNING;
-
-		if (lif->link_up && admin_up && !running)
-			ionic_open(lif);
-		else if ((!lif->link_up || !admin_up) && running)
-			ionic_stop(lif->netdev);
+		ionic_open_or_stop(lif);
 
 		IONIC_CORE_UNLOCK(lif);
 		if_printf(ifp, "[eid:%ld]link status: %s speed: %d\n",
@@ -2506,10 +2504,8 @@ ionic_media_status(struct ifnet *ifp, struct ifmediareq *ifmr)
 	ifmr->ifm_status = IFM_AVALID;
 	ifmr->ifm_active = IFM_ETHER;
 
-	if (lif->link_up)
-		if_link_state_change(ifp, LINK_STATE_UP);
-	else
-		if_link_state_change(ifp, LINK_STATE_DOWN);
+	/* link_up may have changed due to reading notify block */
+	ionic_open_or_stop(lif);
 
 	if (!lif->link_up) {
 		IONIC_NOTIFYQ_UNLOCK(lif);
