@@ -52,6 +52,7 @@ TEST_F(qos_class_test, test1)
     spec.mutable_class_map()->set_dot1q_pcp(3);
     spec.mutable_class_map()->add_ip_dscp(3);
     spec.mutable_class_map()->add_ip_dscp(5);
+    spec.mutable_class_map()->set_type(qos::QOS_CLASS_MAP_TYPE_PCP_DSCP);
     spec.mutable_marking()->set_dot1q_pcp_rewrite_en(true);
     spec.mutable_marking()->set_dot1q_pcp(3);
 
@@ -68,7 +69,7 @@ TEST_F(qos_class_test, test1)
     spec.mutable_class_map()->set_dot1q_pcp(5);
     spec.mutable_class_map()->add_ip_dscp(3);
     spec.mutable_class_map()->add_ip_dscp(2);
-
+    spec.mutable_class_map()->set_type(qos::QOS_CLASS_MAP_TYPE_PCP_DSCP);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::qosclass_create(spec, &rsp);
     hal::hal_cfg_db_close();
@@ -82,6 +83,7 @@ TEST_F(qos_class_test, test1)
     spec.mutable_class_map()->set_dot1q_pcp(4);
     spec.mutable_class_map()->add_ip_dscp(4);
     spec.mutable_class_map()->add_ip_dscp(5);
+    spec.mutable_class_map()->set_type(qos::QOS_CLASS_MAP_TYPE_PCP_DSCP);
     spec.mutable_marking()->set_dot1q_pcp_rewrite_en(true);
     spec.mutable_marking()->set_dot1q_pcp(3);
 
@@ -99,6 +101,7 @@ TEST_F(qos_class_test, test1)
     spec.mutable_class_map()->set_dot1q_pcp(5);
     spec.mutable_class_map()->add_ip_dscp(3);
     spec.mutable_class_map()->add_ip_dscp(2);
+    spec.mutable_class_map()->set_type(qos::QOS_CLASS_MAP_TYPE_PCP_DSCP);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::qosclass_create(spec, &rsp);
@@ -113,6 +116,7 @@ TEST_F(qos_class_test, test1)
     spec.mutable_class_map()->set_dot1q_pcp(5);
     spec.mutable_class_map()->add_ip_dscp(4);
     spec.mutable_class_map()->add_ip_dscp(5);
+    spec.mutable_class_map()->set_type(qos::QOS_CLASS_MAP_TYPE_PCP_DSCP);
     spec.mutable_marking()->set_dot1q_pcp_rewrite_en(true);
     spec.mutable_marking()->set_dot1q_pcp(3);
 

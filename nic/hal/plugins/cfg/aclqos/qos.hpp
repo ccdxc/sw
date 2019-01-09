@@ -88,6 +88,7 @@ inline std::ostream& operator<<(std::ostream& os, const qos_class_key_t& s)
 typedef struct qos_pfc_s {
     uint32_t xon_threshold;       // Threshold at which to send xon (2-4 MTUs)
     uint32_t xoff_threshold;      // Free buffer threshold at which to send xoff (2-8MTUs)
+    uint32_t pfc_cos;             // PFC cos
 } __PACK__   qos_pfc_t;
 
 #define QOS_SCHED_TYPES(ENTRY)                       \
@@ -109,9 +110,19 @@ typedef struct qos_sched_s {
     } __PACK__;
 } __PACK__ qos_sched_t;
 
+#define QOS_CMAP_TYPES(ENTRY)                     \
+    ENTRY(QOS_CMAP_TYPE_NONE,         0, "none")  \
+    ENTRY(QOS_CMAP_TYPE_PCP,          1, "pcp")   \
+    ENTRY(QOS_CMAP_TYPE_DSCP,         2, "dscp")  \
+    ENTRY(QOS_CMAP_TYPE_PCP_DSCP,     3, "pcp-dscp")
+
+DEFINE_ENUM(qos_cmap_type_e, QOS_CMAP_TYPES);
+#undef QOS_CMAP_TYPES
+
 typedef struct qos_cmap_s {
-    uint32_t    dot1q_pcp;
-    bool        ip_dscp[HAL_MAX_IP_DSCP_VALS];
+    qos_cmap_type_e type;
+    uint32_t        dot1q_pcp;
+    bool            ip_dscp[HAL_MAX_IP_DSCP_VALS];
 } __PACK__ qos_cmap_t;
 
 typedef struct qos_marking_action_s {

@@ -54,6 +54,7 @@ message PolicerStats {
 message QosPFC {
   uint32 xon_threshold  = 1 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:3000-36864}"];    // Threshold at which to send xon (2-4 MTUs)
   uint32 xoff_threshold = 2 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:3000-73728}"];    // Free buffer threshold at which to send xoff (2-8MTUs)
+  uint32 pfc_cos        = 3 [(gogoproto.moretags) = "venice:constraints={range:0-7}"];
 }
 
 // QosSched specifies the QosClass scheduling configuration
@@ -74,11 +75,19 @@ message QosSched {
   }
 }
 
+enum QosClassMapType {
+  QOS_CLASS_MAP_TYPE_NONE       = 0;
+  QOS_CLASS_MAP_TYPE_PCP        = 1;
+  QOS_CLASS_MAP_TYPE_DSCP       = 2;
+  QOS_CLASS_MAP_TYPE_PCP_DSCP   = 3;
+}
+
 // QosClassMap specifies the policy with which traffic from network
 // is classified
 message QosClassMap {
-  uint32          dot1q_pcp = 1 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:0-7}"];    // Classify based on this outer qtag pcp value
-  repeated uint32 ip_dscp   = 2 [(gogoproto.moretags) = "venice:constraints={range:0-63}"];    // Classify based on these ipv4/v6 dscp values
+  QosClassMapType type      = 1;
+  uint32          dot1q_pcp = 2 [(gogoproto.moretags) = "venice:constraints={range:0-7}"];     // Classify based on outer qtag pcp value
+  repeated uint32 ip_dscp   = 3 [(gogoproto.moretags) = "venice:constraints={range:0-63}"];    // Classify based on ipv4/v6 dscp values
 }
 
 // QosMarking specifies the policy to mark the host-to-network traffic

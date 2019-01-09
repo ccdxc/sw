@@ -14,15 +14,16 @@ import (
 )
 
 var (
-	qosGroup string
-	qosMtu   uint32
-	qosPcp   uint32
-	qosDscp  string
-	qosXon   uint32
-	qosXoff  uint32
-	qosBw    uint32
-	qosBps   uint32
-	qosPfc   bool
+	qosGroup  string
+	qosMtu    uint32
+	qosPcp    uint32
+	qosDscp   string
+	qosXon    uint32
+	qosXoff   uint32
+	qosBw     uint32
+	qosBps    uint32
+	qosPfc    bool
+	qosPfcCos uint32
 )
 
 var qosClassShowCmd = &cobra.Command{
@@ -69,8 +70,6 @@ func init() {
 	qosClassCreateCmd.Flags().BoolVar(&qosPfc, "pfc-enable", false, "Enable PFC with default values")
 	qosClassCreateCmd.MarkFlagRequired("qosgroup")
 	qosClassCreateCmd.MarkFlagRequired("mtu")
-	qosClassCreateCmd.MarkFlagRequired("dot1q-pcp")
-	qosClassCreateCmd.MarkFlagRequired("dscp")
 
 	updateCmd.AddCommand(qosClassUpdateCmd)
 	qosClassUpdateCmd.Flags().StringVar(&qosGroup, "qosgroup", "user-defined-1", "Specify qos group. Valid groups: default,user-defined-1,user-defined-2,user-defined-3,user-defined-4,user-defined-5,user-defined-6")
@@ -83,9 +82,6 @@ func init() {
 	qosClassUpdateCmd.Flags().Uint32Var(&qosXoff, "xoff-threshold", 0, "Specify xoff threshold (2 * mtu to 8 * mtu)")
 	qosClassUpdateCmd.Flags().BoolVar(&qosPfc, "pfc-enable", false, "Enable PFC with default values")
 	qosClassUpdateCmd.MarkFlagRequired("qosgroup")
-	qosClassUpdateCmd.MarkFlagRequired("mtu")
-	qosClassUpdateCmd.MarkFlagRequired("dot1q-pcp")
-	qosClassUpdateCmd.MarkFlagRequired("dscp")
 
 	deleteCmd.AddCommand(qosClassDeleteCmd)
 	qosClassDeleteCmd.Flags().StringVar(&qosGroup, "qosgroup", "user-defined-1", "Specify qos group. Valid groups: user-defined-1,user-defined-2,user-defined-3,user-defined-4,user-defined-5,user-defined-6")
@@ -152,13 +148,14 @@ func qosClassDeleteCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func handleQosClassCreateUpdate(cmd *cobra.Command, args []string, update bool) {
-	if cmd.Flags().Changed("dwrr-bw") == false && cmd.Flags().Changed("strict-priority-rate") == false {
-		fmt.Printf("One of dwrr-bw and strict-priority-rate needs to be set. Refer to help string for more details\n")
+	if cmd.Flags().Changed("xon-threshold") != cmd.Flags().Changed("xoff-threshold") {
+		fmt.Printf("Cannot specify only one of xon and xoff thresholds\n")
 		return
 	}
 
-	if cmd.Flags().Changed("xon-threshold") != cmd.Flags().Changed("xoff-threshold") {
-		fmt.Printf("Cannot specify only one of xon and xoff thresholds\n")
+	if cmd.Flags().Changed("dscp") == false &&
+		cmd.Flags().Changed("dot1q-pcp") == false {
+		fmt.Printf("At least one of dscp or dot1q-pcp needs to be specified\n")
 		return
 	}
 
@@ -167,23 +164,51 @@ func handleQosClassCreateUpdate(cmd *cobra.Command, args []string, update bool) 
 	if update == true {
 		halctlStr += "update qos-class "
 	} else {
+		if cmd.Flags().Changed("dwrr-bw") == false && cmd.Flags().Changed("strict-priority-rate") == false {
+			fmt.Printf("One of dwrr-bw and strict-priority-rate needs to be set. Refer to help string for more details\n")
+			return
+		}
+		if cmd.Flags().Changed("dscp") == false && cmd.Flags().Changed("dot1q-pcp") == false {
+			fmt.Printf("At least one of dscp or dot1q-pcp needs to be specified\n")
+			return
+		}
 		halctlStr += "create qos-class "
 	}
 
-	halctlStr += ("--qosgroup " + qosGroup + " --mtu " + fmt.Sprint(qosMtu))
+	halctlStr += ("--qosgroup " + qosGroup)
 
-	halctlStr += (" --dot1q-pcp " + fmt.Sprint(qosPcp) + " --dscp " + fmt.Sprint(qosDscp))
+	if cmd.Flags().Changed("mtu") == true {
+		halctlStr += (" --mtu " + fmt.Sprint(qosMtu))
+	}
 
-	if cmd.Flags().Changed("dwrr-bw") {
+	if cmd.Flags().Changed("dot1q-pcp") == true {
+		halctlStr += (" --dot1q-pcp " + fmt.Sprint(qosPcp))
+	}
+
+	if cmd.Flags().Changed("dscp") == true {
+		halctlStr += (" --dscp " + fmt.Sprint(qosDscp))
+	}
+
+	if cmd.Flags().Changed("dwrr-bw") == true {
 		halctlStr += (" --dwrr-bw " + fmt.Sprint(qosBw))
-	} else {
+	} else if cmd.Flags().Changed("strict-priority-rate") == true {
 		halctlStr += (" --strict-priority-rate " + fmt.Sprint(qosBps))
 	}
 
 	if cmd.Flags().Changed("xon-threshold") && cmd.Flags().Changed("xoff-threshold") {
+		if cmd.Flags().Changed("pfc-cos") == false {
+			fmt.Printf("PFC cos needs to be specified\n")
+			return
+		}
 		halctlStr += (" --xon-threshold " + fmt.Sprint(qosXon) + " --xoff-threshold " + fmt.Sprint(qosXoff))
+		halctlStr += (" --pfc-cos " + fmt.Sprint(qosPfcCos))
 	} else if cmd.Flags().Changed("pfc-enable") {
+		if cmd.Flags().Changed("pfc-cos") == false {
+			fmt.Printf("PFC cos needs to be specified\n")
+			return
+		}
 		halctlStr += " --pfc-enable"
+		halctlStr += (" --pfc-cos " + fmt.Sprint(qosPfcCos))
 	}
 
 	execCmd := strings.Fields(halctlStr)

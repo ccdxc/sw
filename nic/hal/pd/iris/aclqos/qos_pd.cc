@@ -375,6 +375,8 @@ qos_class_pd_program_uplink_iq_map (pd_qos_class_t *pd_qos_class)
     sdk_ret_t                  sdk_ret;
     tm_port_t                  port;
     qos_class_t                *qos_class = pd_qos_class->pi_qos_class;
+    bool                       has_pcp = false;
+    bool                       has_dscp = false;
     tm_q_t                     iq;
     tm_uplink_input_dscp_map_t dscp_map = {0};
 
@@ -383,6 +385,11 @@ qos_class_pd_program_uplink_iq_map (pd_qos_class_t *pd_qos_class)
         return HAL_RET_OK;
     }
 
+    has_dscp = (qos_class->cmap.type == QOS_CMAP_TYPE_DSCP) ||
+                (qos_class->cmap.type == QOS_CMAP_TYPE_PCP_DSCP);
+    has_pcp = (qos_class->cmap.type == QOS_CMAP_TYPE_PCP) ||
+                (qos_class->cmap.type == QOS_CMAP_TYPE_PCP_DSCP);
+ 
     HAL_ASSERT(sizeof(qos_class->cmap.ip_dscp) ==
                sizeof(dscp_map.ip_dscp));
     memcpy(dscp_map.ip_dscp, qos_class->cmap.ip_dscp,
@@ -390,26 +397,30 @@ qos_class_pd_program_uplink_iq_map (pd_qos_class_t *pd_qos_class)
     dscp_map.dot1q_pcp = qos_class->cmap.dot1q_pcp;
 
     for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
-        sdk_ret = capri_tm_uplink_input_map_update(port,
-                                               qos_class->cmap.dot1q_pcp,
-                                               iq);
-        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Error programming the uplink map for "
-                          "Qos-class {} on port {} ret {}",
-                          qos_class->key, port, ret);
-            return ret;
+        if (has_pcp) {
+            sdk_ret = capri_tm_uplink_input_map_update(port,
+                                                   qos_class->cmap.dot1q_pcp,
+                                                   iq);
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Error programming the uplink map for "
+                              "Qos-class {} on port {} ret {}",
+                              qos_class->key, port, ret);
+                return ret;
+            }
         }
-
-        sdk_ret = capri_tm_uplink_input_dscp_map_update(port, &dscp_map);
-        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Error programming the uplink dscp map for "
-                          "Qos-class {} on port {} ret {}",
-                          qos_class->key, port, ret);
-            return ret;
+        if (has_dscp) {
+            sdk_ret = capri_tm_uplink_input_dscp_map_update(port, &dscp_map);
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Error programming the uplink dscp map for "
+                              "Qos-class {} on port {} ret {}",
+                              qos_class->key, port, ret);
+                return ret;
+            }
         }
     }
+
     return HAL_RET_OK;
 }
 
@@ -478,7 +489,7 @@ qos_class_pd_program_uplink_xoff (pd_qos_class_t *pd_qos_class)
 
     for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
         sdk_ret = capri_tm_uplink_oq_update(port, pd_qos_class->dest_oq,
-                                        qos_class->no_drop, qos_class->cmap.dot1q_pcp);
+                                        qos_class->no_drop, qos_class->pfc.pfc_cos);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Error programming the xoff params for "

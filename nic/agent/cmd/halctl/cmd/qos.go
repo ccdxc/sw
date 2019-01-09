@@ -31,6 +31,7 @@ var (
 	qosBw          uint32
 	qosBps         uint32
 	qosPfc         bool
+	qosPfcCos      uint32
 )
 
 var qosShowCmd = &cobra.Command{
@@ -114,10 +115,9 @@ func init() {
 	qosClassCreateCmd.Flags().Uint32Var(&qosXon, "xon-threshold", 0, "Specify xon threshold (2 * mtu to 4 * mtu)")
 	qosClassCreateCmd.Flags().Uint32Var(&qosXoff, "xoff-threshold", 0, "Specify xoff threshold (2 * mtu to 8 * mtu)")
 	qosClassCreateCmd.Flags().BoolVar(&qosPfc, "pfc-enable", false, "Enable PFC with default values")
+	qosClassCreateCmd.Flags().Uint32Var(&qosPfcCos, "pfc-cos", 0, "Specify COS value for PFC")
 	qosClassCreateCmd.MarkFlagRequired("qosgroup")
 	qosClassCreateCmd.MarkFlagRequired("mtu")
-	qosClassCreateCmd.MarkFlagRequired("dot1q-pcp")
-	qosClassCreateCmd.MarkFlagRequired("dscp")
 
 	debugDeleteCmd.AddCommand(qosClassDeleteCmd)
 	qosClassDeleteCmd.Flags().StringVar(&qosGroup, "qosgroup", "user-defined-1", "Specify qos group. Valid groups: user-defined-1,user-defined-2,user-defined-3,user-defined-4,user-defined-5,user-defined-6")
@@ -133,10 +133,8 @@ func init() {
 	qosClassUpdateCmd.Flags().Uint32Var(&qosXon, "xon-threshold", 0, "Specify xon threshold (2 * mtu to 4 * mtu)")
 	qosClassUpdateCmd.Flags().Uint32Var(&qosXoff, "xoff-threshold", 0, "Specify xoff threshold (2 * mtu to 8 * mtu)")
 	qosClassUpdateCmd.Flags().BoolVar(&qosPfc, "pfc-enable", false, "Enable PFC with default values")
+	qosClassUpdateCmd.Flags().Uint32Var(&qosPfcCos, "pfc-cos", 0, "Specify COS value for PFC")
 	qosClassUpdateCmd.MarkFlagRequired("qosgroup")
-	qosClassUpdateCmd.MarkFlagRequired("mtu")
-	qosClassUpdateCmd.MarkFlagRequired("dot1q-pcp")
-	qosClassUpdateCmd.MarkFlagRequired("dscp")
 }
 
 func qosClassDeleteCmdHandler(cmd *cobra.Command, args []string) {
@@ -188,7 +186,7 @@ func qosClassDeleteCmdHandler(cmd *cobra.Command, args []string) {
 	}
 }
 
-func handleQosClassCreateUpdate(cmd *cobra.Command, args []string, update bool) {
+func qosClassCreateCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
@@ -196,6 +194,11 @@ func handleQosClassCreateUpdate(cmd *cobra.Command, args []string, update bool) 
 		os.Exit(1)
 	}
 	defer c.Close()
+
+	if isQosGroupValid(qosGroup) == false || strings.Contains(qosGroup, "user") == false {
+		fmt.Printf("Invalid qos-group specified. Valid groups: user-defined-1,user-defined-2,user-defined-3,user-defined-4,user-defined-5,user-defined-6\n")
+		return
+	}
 
 	if cmd.Flags().Changed("dwrr-bw") == false && cmd.Flags().Changed("strict-priority-rate") == false {
 		fmt.Printf("One of dwrr-bw and strict-priority-rate needs to be set. Refer to help string for more details\n")
@@ -207,11 +210,19 @@ func handleQosClassCreateUpdate(cmd *cobra.Command, args []string, update bool) 
 		return
 	}
 
+	if cmd.Flags().Changed("dscp") == false &&
+		cmd.Flags().Changed("dot1q-pcp") == false {
+		fmt.Printf("At least one of dscp or dot1q-pcp needs to be specified\n")
+		return
+	}
+
 	client := halproto.NewQOSClient(c.ClientConn)
 
 	var dscp []uint32
 	var req *halproto.QosClassSpec
 	var sched *halproto.QosSched
+	qosClassMapType := halproto.QosClassMapType_QOS_CLASS_MAP_TYPE_DSCP
+
 	if cmd.Flags().Changed("dwrr-bw") {
 		sched = &halproto.QosSched{
 			SchedType: &halproto.QosSched_Dwrr{
@@ -230,11 +241,32 @@ func handleQosClassCreateUpdate(cmd *cobra.Command, args []string, update bool) 
 		}
 	}
 
-	dscp = stringToDscpArray(qosDscp)
+	if cmd.Flags().Changed("dscp") == true {
+		dscp = stringToDscpArray(qosDscp)
+		qosClassMapType = halproto.QosClassMapType_QOS_CLASS_MAP_TYPE_DSCP
+	}
+
+	if cmd.Flags().Changed("dot1q-pcp") == true {
+		qosClassMapType = halproto.QosClassMapType_QOS_CLASS_MAP_TYPE_PCP
+	}
+
+	if cmd.Flags().Changed("dscp") == true &&
+		cmd.Flags().Changed("dot1q-pcp") == true {
+		qosClassMapType = halproto.QosClassMapType_QOS_CLASS_MAP_TYPE_PCP_DSCP
+	}
+
 	pfc := false
 	if cmd.Flags().Changed("xon-threshold") && cmd.Flags().Changed("xoff-threshold") {
+		if cmd.Flags().Changed("pfc-cos") == false {
+			fmt.Printf("PFC cos needs to be specified\n")
+			return
+		}
 		pfc = true
 	} else if cmd.Flags().Changed("pfc-enable") {
+		if cmd.Flags().Changed("pfc-cos") == false {
+			fmt.Printf("PFC cos needs to be specified\n")
+			return
+		}
 		pfc = true
 		qosXon = 2 * qosMtu
 		qosXoff = 8 * qosMtu
@@ -252,11 +284,13 @@ func handleQosClassCreateUpdate(cmd *cobra.Command, args []string, update bool) 
 			ClassMap: &halproto.QosClassMap{
 				Dot1QPcp: qosPcp,
 				IpDscp:   dscp,
+				Type:     qosClassMapType,
 			},
 			Sched: sched,
 			Pfc: &halproto.QosPFC{
 				XonThreshold:  qosXon,
 				XoffThreshold: qosXoff,
+				PfcCos:        qosPfcCos,
 			},
 		}
 	} else {
@@ -270,6 +304,7 @@ func handleQosClassCreateUpdate(cmd *cobra.Command, args []string, update bool) 
 			ClassMap: &halproto.QosClassMap{
 				Dot1QPcp: qosPcp,
 				IpDscp:   dscp,
+				Type:     qosClassMapType,
 			},
 			Sched: sched,
 		}
@@ -280,7 +315,227 @@ func handleQosClassCreateUpdate(cmd *cobra.Command, args []string, update bool) 
 	}
 
 	// HAL call
-	if update == true {
+	respMsg, err := client.QosClassCreate(context.Background(), reqMsg)
+	if err != nil {
+		fmt.Printf("Create qos class failed. %v\n", err)
+		return
+	}
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			continue
+		}
+		fmt.Printf("Create qos class succeeded\n")
+	}
+}
+
+func qosClassUpdateCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	defer c.Close()
+
+	if isQosGroupValid(qosGroup) == false || (strings.Contains(qosGroup, "user") == false && strings.Contains(qosGroup, "default") == false) {
+		fmt.Printf("Invalid qos-group specified. Valid groups: default,user-defined-1,user-defined-2,user-defined-3,user-defined-4,user-defined-5,user-defined-6\n")
+		return
+	}
+
+	if cmd.Flags().Changed("xon-threshold") != cmd.Flags().Changed("xoff-threshold") {
+		fmt.Printf("Cannot specify only one of xon and xoff thresholds\n")
+		return
+	}
+
+	client := halproto.NewQOSClient(c.ClientConn)
+
+	var dscp []uint32
+	var req *halproto.QosClassSpec
+	var sched *halproto.QosSched
+	var pfc *halproto.QosPFC
+	qosClassMapType := halproto.QosClassMapType_QOS_CLASS_MAP_TYPE_DSCP
+	internal := false
+
+	if strings.Contains(qosGroup, "user") == false {
+		internal = true
+	}
+
+	// Get specific qos class
+	getReq := &halproto.QosClassGetRequest{
+		KeyOrHandle: &halproto.QosClassKeyHandle{
+			KeyOrHandle: &halproto.QosClassKeyHandle_QosGroup{
+				QosGroup: inputToQosGroup(qosGroup),
+			},
+		},
+	}
+
+	qosGetReqMsg := &halproto.QosClassGetRequestMsg{
+		Request: []*halproto.QosClassGetRequest{getReq},
+	}
+
+	// HAL call
+	respMsg, err := client.QosClassGet(context.Background(), qosGetReqMsg)
+	if err != nil {
+		fmt.Printf("Getting qos class failed. %v\n", err)
+		return
+	}
+
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			continue
+		}
+
+		if cmd.Flags().Changed("dscp") == true {
+			if internal == true {
+				fmt.Printf("Internal qos-classes cannot have class-map\n")
+				return
+			}
+			dscp = stringToDscpArray(qosDscp)
+			qosClassMapType = halproto.QosClassMapType_QOS_CLASS_MAP_TYPE_DSCP
+		} else {
+			dscp = resp.GetSpec().GetClassMap().GetIpDscp()
+		}
+
+		if cmd.Flags().Changed("dot1q-pcp") == true {
+			if internal == true {
+				fmt.Printf("Internal qos-classes cannot have class-map\n")
+				return
+			}
+			qosClassMapType = halproto.QosClassMapType_QOS_CLASS_MAP_TYPE_PCP
+		} else {
+			qosPcp = resp.GetSpec().GetClassMap().GetDot1QPcp()
+		}
+
+		if cmd.Flags().Changed("dscp") == true &&
+			cmd.Flags().Changed("dot1q-pcp") == true {
+			qosClassMapType = halproto.QosClassMapType_QOS_CLASS_MAP_TYPE_PCP_DSCP
+		}
+
+		if cmd.Flags().Changed("dscp") == false &&
+			cmd.Flags().Changed("dot1q-pcp") == false {
+			qosClassMapType = resp.GetSpec().GetClassMap().GetType()
+		}
+
+		if cmd.Flags().Changed("mtu") == false {
+			qosMtu = resp.GetSpec().GetMtu()
+		}
+
+		if cmd.Flags().Changed("xon-threshold") && cmd.Flags().Changed("xoff-threshold") {
+			if cmd.Flags().Changed("pfc-cos") == false {
+				fmt.Printf("PFC cos needs to be specified\n")
+				return
+			}
+			pfc = &halproto.QosPFC{
+				XonThreshold:  qosXon,
+				XoffThreshold: qosXoff,
+				PfcCos:        qosPfcCos,
+			}
+		} else if cmd.Flags().Changed("pfc-enable") {
+			if cmd.Flags().Changed("pfc-cos") == false {
+				fmt.Printf("PFC cos needs to be specified\n")
+				return
+			}
+			qosXon = 2 * qosMtu
+			qosXoff = 8 * qosMtu
+			pfc = &halproto.QosPFC{
+				XonThreshold:  qosXon,
+				XoffThreshold: qosXoff,
+				PfcCos:        qosPfcCos,
+			}
+			fmt.Printf("Xon default threshold: %d, Xoff default threshold: %d\n", qosXon, qosXoff)
+		} else {
+			if resp.GetSpec().GetPfc().GetXonThreshold() == 0 {
+				pfc = nil
+			} else {
+				pfc = resp.GetSpec().GetPfc()
+			}
+		}
+
+		if cmd.Flags().Changed("dwrr-bw") {
+			sched = &halproto.QosSched{
+				SchedType: &halproto.QosSched_Dwrr{
+					Dwrr: &halproto.QosSched_DWRRInfo{
+						BwPercentage: qosBw,
+					},
+				},
+			}
+		} else if cmd.Flags().Changed("strict-priority-rate") {
+			sched = &halproto.QosSched{
+				SchedType: &halproto.QosSched_Strict{
+					Strict: &halproto.QosSched_StrictPriorityInfo{
+						Bps: qosBps,
+					},
+				},
+			}
+		} else {
+			sched = resp.GetSpec().GetSched()
+		}
+
+		if internal == false {
+			if pfc == nil {
+				req = &halproto.QosClassSpec{
+					KeyOrHandle: &halproto.QosClassKeyHandle{
+						KeyOrHandle: &halproto.QosClassKeyHandle_QosGroup{
+							QosGroup: inputToQosGroup(qosGroup),
+						},
+					},
+					Mtu: qosMtu,
+					ClassMap: &halproto.QosClassMap{
+						Type:     qosClassMapType,
+						Dot1QPcp: qosPcp,
+						IpDscp:   dscp,
+					},
+					Sched: sched,
+				}
+			} else {
+				req = &halproto.QosClassSpec{
+					KeyOrHandle: &halproto.QosClassKeyHandle{
+						KeyOrHandle: &halproto.QosClassKeyHandle_QosGroup{
+							QosGroup: inputToQosGroup(qosGroup),
+						},
+					},
+					Mtu: qosMtu,
+					ClassMap: &halproto.QosClassMap{
+						Type:     qosClassMapType,
+						Dot1QPcp: qosPcp,
+						IpDscp:   dscp,
+					},
+					Sched: sched,
+					Pfc:   pfc,
+				}
+			}
+		} else {
+			if pfc == nil {
+				req = &halproto.QosClassSpec{
+					KeyOrHandle: &halproto.QosClassKeyHandle{
+						KeyOrHandle: &halproto.QosClassKeyHandle_QosGroup{
+							QosGroup: inputToQosGroup(qosGroup),
+						},
+					},
+					Mtu:   qosMtu,
+					Sched: sched,
+				}
+			} else {
+				req = &halproto.QosClassSpec{
+					KeyOrHandle: &halproto.QosClassKeyHandle{
+						KeyOrHandle: &halproto.QosClassKeyHandle_QosGroup{
+							QosGroup: inputToQosGroup(qosGroup),
+						},
+					},
+					Mtu:   qosMtu,
+					Sched: sched,
+					Pfc:   pfc,
+				}
+			}
+		}
+
+		reqMsg := &halproto.QosClassRequestMsg{
+			Request: []*halproto.QosClassSpec{req},
+		}
+
+		// HAL call
 		respMsg, err := client.QosClassUpdate(context.Background(), reqMsg)
 		if err != nil {
 			fmt.Printf("Update qos class failed. %v\n", err)
@@ -293,36 +548,7 @@ func handleQosClassCreateUpdate(cmd *cobra.Command, args []string, update bool) 
 			}
 			fmt.Printf("Update qos class succeeded\n")
 		}
-	} else {
-		respMsg, err := client.QosClassCreate(context.Background(), reqMsg)
-		if err != nil {
-			fmt.Printf("Create qos class failed. %v\n", err)
-			return
-		}
-		for _, resp := range respMsg.Response {
-			if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-				fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
-				continue
-			}
-			fmt.Printf("Create qos class succeeded\n")
-		}
 	}
-}
-
-func qosClassCreateCmdHandler(cmd *cobra.Command, args []string) {
-	if isQosGroupValid(qosGroup) == false || strings.Contains(qosGroup, "user") == false {
-		fmt.Printf("Invalid qos-group specified. Valid groups: user-defined-1,user-defined-2,user-defined-3,user-defined-4,user-defined-5,user-defined-6\n")
-		return
-	}
-	handleQosClassCreateUpdate(cmd, args, false)
-}
-
-func qosClassUpdateCmdHandler(cmd *cobra.Command, args []string) {
-	if isQosGroupValid(qosGroup) == false || (strings.Contains(qosGroup, "user") == false && strings.Contains(qosGroup, "default") == false) {
-		fmt.Printf("Invalid qos-group specified. Valid groups: default,user-defined-1,user-defined-2,user-defined-3,user-defined-4,user-defined-5,user-defined-6\n")
-		return
-	}
-	handleQosClassCreateUpdate(cmd, args, true)
 }
 
 func stringToDscpArray(qosDscp string) []uint32 {
@@ -691,11 +917,11 @@ func qosShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func qosClassHeaderPrint() {
-	hdrLine := strings.Repeat("-", 80)
+	hdrLine := strings.Repeat("-", 100)
 	fmt.Printf("PFC: Xon/Xoff\n")
 	fmt.Println(hdrLine)
-	fmt.Printf("%-30s%-6s%-12s%-10s%-10s%-10s\n",
-		"QoS-Group", "MTU", "PFC", "QoS-Sched", "Dot1q-PCP", "DSCP")
+	fmt.Printf("%-30s%-6s%-14s%-8s%-18s%-10s%-10s\n",
+		"QoS-Group", "MTU", "PFC", "PFC-Cos", "QoS-Sched", "Dot1q-PCP", "DSCP")
 	fmt.Println(hdrLine)
 }
 
@@ -719,8 +945,8 @@ func qosClassPrintOne(resp *halproto.QosClassSpec) {
 		dscpStr = strings.Replace(dscpStr, " ", ",", -1)
 	}
 
-	fmt.Printf("%-30s%-6d%-12s%-10s%-10d%-10s\n",
-		qosGroup, resp.GetMtu(), pfcStr,
+	fmt.Printf("%-30s%-6d%-14s%-8d%-18s%-10d%-10s\n",
+		qosGroup, resp.GetMtu(), pfcStr, resp.GetPfc().GetPfcCos(),
 		scheduleStr, resp.GetClassMap().GetDot1QPcp(),
 		dscpStr)
 }
