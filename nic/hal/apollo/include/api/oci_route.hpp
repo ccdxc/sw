@@ -35,7 +35,7 @@ typedef enum oci_nh_type_e {
  * @brief route key
  */
 typedef struct oci_route_key_s {
-    ip_prefix_t    dst_pfx;      /**< IP prefix destination */
+    ip_prefix_t    prefix;      /**< IP prefix destination */
 } __PACK__ oci_route_key_t;
 
 /**
