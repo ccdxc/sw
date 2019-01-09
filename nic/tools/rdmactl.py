@@ -4,8 +4,12 @@ import os
 import argparse
 from scapy.all import *
 from subprocess import call
+import subprocess
 import binascii
 import time
+
+pcie_id=None
+lif_id=0
 
 CMD_FMT='tbl {tbl} idx {idx} post'
 CTRL_FMT=None
@@ -963,7 +967,7 @@ def parse_dmesg():
 
 def exec_dump_cmd(tbl_type, tbl_index, start_offset, num_bytes):
     cmd_str = CTRL_FMT.format(
-            lif = args.lif, pci = args.pcie_id,
+            lif = lif_id, pci = pcie_id,
             tbl = tbl_type, idx = tbl_index)
 
     #print cmd_str
@@ -972,7 +976,7 @@ def exec_dump_cmd(tbl_type, tbl_index, start_offset, num_bytes):
     #time.sleep(1)
 
     cmd2_str = DATA_FMT.format(
-            lif = args.lif, pci = args.pcie_id,
+            lif = lif_id, pci = pcie_id,
             out = DUMP_DATA)
 
     #print cmd2_str
@@ -999,10 +1003,9 @@ def exec_dump_cmd(tbl_type, tbl_index, start_offset, num_bytes):
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--dmesg', help='parse dmesg and parse rdma adminq wqes/cqes', action='store_true')
+parser.add_argument('--dmesg', help='parse dmesg and parse rdma adminq wqes/cqes', action='store_true', default=False)
 parser.add_argument('--dmesg_file', help='parse dmesg from file and parse rdma adminq wqes/cqes')
-parser.add_argument('--lif', help='prints info for given lif', type=int)
-parser.add_argument('--pcie_id', help='prints info for given ionic pcie id')
+parser.add_argument('--DEVNAME', help='prints info for given rdma device')
 grp = parser.add_mutually_exclusive_group()
 grp.add_argument('--sqcb0', help='prints sqcb0 state given qid', type=int, metavar='qid')
 grp.add_argument('--sqcb1', help='prints sqcb1 state given qid', type=int, metavar='qid')
@@ -1022,18 +1025,35 @@ grp.add_argument('--resp_tx_stats', help='prints resp_tx stats given qid', type=
 grp.add_argument('--resp_rx_stats', help='prints resp_rx stats given qid', type=int, metavar='qid')
 grp.add_argument('--kt_entry', help='prints key table entry given key id', type=int, metavar='key_id')
 grp.add_argument('--pt_entry', help='print page table entry given pt offset', type=int, metavar='pt_offset')
-grp.add_argument('--lif_stats', help='prints rdma LIF statistics', type=int, metavar='lif-id')
+grp.add_argument('--lif_stats', help='prints rdma LIF statistics', action='store_true', default=False)
+grp.add_argument('--q_stats', help='prints rdma per queue statistics', type=int, metavar='qid')
 
 args = parser.parse_args()
 
 #print args
-if args.dmesg is None and args.dmesg_file is None :
-    if sys.platform.startswith('freebsd'):
-        if args.lif is None:
-            print 'lif not specified'
+if args.dmesg is False and args.dmesg_file is None :
+    if args.DEVNAME is None:
+        print 'device not specified'
+    else:
+        if sys.platform.startswith('freebsd'):
+            cmd = "ifconfig " + args.DEVNAME
+            if os.system(cmd + "> /dev/null 2>&1") is not 0:
+                print "invalid device " + args.DEVNAME + " specified. please check and try again"
+                exit()
+            tmp, lif_id = args.DEVNAME.split("ionic")
+            #print "derived " + lif_id + " as device id for device" + args.DEVNAME
         else:
-            if args.lif is None or args.pcie_id is None:
-                print 'lif self.assertNotIn(member, container)d/or pcie_id is not specified'
+            cmd = "ethtool -i " + args.DEVNAME + " | grep bus-info"
+            if os.system(cmd + "> /dev/null 2>&1") is not 0:
+                print "invalid device " + args.DEVNAME + " specified. please check and try again"
+                exit()
+            bus_info = subprocess.check_output(cmd, shell=True)
+            if bus_info is None:
+                print "invalid device " + args.DEVNAME + " specified. please check and try again"
+            tmp, pcie_id = bus_info.split(": ")
+            pcie_id, tmp = pcie_id.split(pcie_id[-1])
+            #print "derived " + pcie_id + " as pcie id for device " + args.DEVNAME
+        
 
 if args.cqcb is not None:
     bin_str = exec_dump_cmd(DUMP_TYPE_CQ, args.cqcb, 0, 64)
@@ -1109,11 +1129,24 @@ elif args.pt_entry is not None:
     bin_str = exec_dump_cmd(DUMP_TYPE_PT, args.pt_entry, 0, 64)
     pt_entry = RdmaPageTableEntry(bin_str)
     pt_entry.show()
-elif args.lif_stats is not None:
-    bin_str = exec_dump_cmd(DUMP_TYPE_LIF, args.lif_stats, 0, 1024)
+elif args.lif_stats is True:
+    bin_str = exec_dump_cmd(DUMP_TYPE_LIF, 0, 0, 1024)
     lif_stats = LifStats(bin_str)
     lif_stats.show()
-elif args.dmesg is not None:
+elif args.q_stats is not None:
+    bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.q_stats, 256, 64)
+    req_tx_stats = RdmaReqTxStats(bin_str)
+    req_tx_stats.show()
+    bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.q_stats, 320, 64)
+    req_rx_stats = RdmaReqRxStats(bin_str)
+    req_rx_stats.show()
+    bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.q_stats, 512+256, 64)
+    resp_tx_stats = RdmaRespTxStats(bin_str)
+    resp_tx_stats.show()
+    bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.q_stats, 512+320, 64)
+    resp_rx_stats = RdmaRespRxStats(bin_str)
+    resp_rx_stats.show()
+elif args.dmesg is True:
     parse_dmesg()
 elif args.dmesg_file is not None:
     parse_dmesg()
