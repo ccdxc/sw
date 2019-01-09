@@ -256,6 +256,9 @@ func NaplesFileUploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Write([]byte("File Copied Successfully\n"))
+	if r.MultipartForm != nil {
+		r.MultipartForm.RemoveAll()
+	}
 }
 
 func renderError(w http.ResponseWriter, message string, statusCode int) {

@@ -299,23 +299,5 @@ func setFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 		fmt.Println("Startup image set to altfw")
 	}
 
-	v = &nmd.NaplesCmdExecute{
-		Executable: "rm",
-		Opts:       strings.Join([]string{"-rf ", "/tmp/multipart-*", "/tmp/update*"}, ""),
-	}
-
-	resp, err = restGetWithBody(v, revProxyPort, "cmd/v1/naples/")
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	if len(resp) > 3 {
-		s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
-		fmt.Printf("%s", s)
-	}
-	if verbose {
-		fmt.Println(string(resp))
-	}
-
 	return nil
 }
