@@ -29,8 +29,8 @@ def Setup(tc):
         tc.devices.append(api.GetTestsuiteAttr(tc.w[i].ip_address+'_device'))
         tc.gid.append(api.GetTestsuiteAttr(tc.w[i].ip_address+'_gid'))
 
-        # skip, until rdma_krping is installed
-        if not tc.w[i].IsNaples() or not api.GetNodeOs(tc.w[i].node_name) == 'linux':
+        # skip, until rdma_krping is installed on Mellanox sanity/regression servers
+        if not tc.w[i].IsNaples():
             return api.types.status.IGNORED
 
     return api.types.status.SUCCESS
@@ -53,7 +53,12 @@ def Trigger(tc):
     api.Logger.info("Starting krping_rdma test from %s" % (tc.cmd_descr))
 
     # cmd for server
-    cmd = "echo -n 'server,port=9999,addr=" + w1.ip_address + "' > /proc/krping"
+    if api.GetNodeOs(w1.node_name) == 'linux':
+        krpfile = " /proc/krping "
+    else:
+        krpfile = " /dev/krping "
+        
+    cmd = "sudo echo -n 'server,port=9999,addr=" + w1.ip_address + ",verbose,validate,count=100 ' > " + krpfile
     api.Trigger_AddCommand(req, 
                            w1.node_name, 
                            w1.workload_name,
@@ -69,7 +74,7 @@ def Trigger(tc):
                            cmd)
 
     # cmd for client
-    cmd = "echo -n 'client,port=9999,addr=" + w1.ip_address + ",count=100' > /proc/krping"
+    cmd = "sudo echo -n 'client,port=9999,addr=" + w1.ip_address + ",verbose,validate,count=100 ' > " + krpfile
     api.Trigger_AddCommand(req, 
                            w2.node_name, 
                            w2.workload_name,

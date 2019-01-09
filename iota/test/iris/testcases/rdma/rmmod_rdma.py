@@ -23,8 +23,10 @@ def Trigger(tc):
     for n in tc.nodes:
         if tc.os == 'linux':
             api.Trigger_AddHostCommand(req, n, "rmmod ionic_rdma")
+            api.Trigger_AddHostCommand(req, n, "rmmod rdma_krping")
         else:
             api.Trigger_AddHostCommand(req, n, "kldunload ionic_rdma")
+            api.Trigger_AddHostCommand(req, n, "kldunload krping")
 
     tc.resp = api.Trigger(req)
 

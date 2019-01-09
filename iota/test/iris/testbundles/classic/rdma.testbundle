@@ -292,10 +292,10 @@ testcases:
     #=======================================
     # KRping
     #=======================================
-    #-   name    : KRping
-    #    testcase: testcases.rdma.krping
-    #    args    :
-    #        type: remote_only
+    -   name    : KRping
+        testcase: testcases.rdma.krping
+        args    :
+            type: remote_only
 
     #=======================================
     # Teardown

@@ -75,6 +75,8 @@ def Trigger(tc):
                                    timeout = 60)
             api.Trigger_AddHostCommand(req, n, "cd drivers-freebsd && kldload sys/modules/ionic_rdma/ionic_rdma.ko",
                                        rundir = 'rdma-drivers')
+            api.Trigger_AddHostCommand(req, n, "kldload krping",
+                                       rundir = 'rdma-drivers')
 
             api.Trigger_AddHostCommand(req, n, "cp -r drivers-freebsd %s" % api.GetHostToolsDir(),
                                        rundir = 'rdma-drivers')
