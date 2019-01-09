@@ -4,6 +4,7 @@
 #include <sys/conf.h>   /* cdevsw struct */
 #include <sys/uio.h>    /* uio struct */
 #include <sys/malloc.h>
+#include <sys/fcntl.h>
 #include "pnso_test.h"
 #include "pnso_test_ctx.h"
 #include "pnso_test_sysfs.h"
@@ -98,18 +99,30 @@ pnso_test_cdev_deinit(void)
 }
 
 static int
-pnso_test_open(struct cdev *dev __unused, int oflags __unused, int devtype __unused,
+pnso_test_open(struct cdev *dev __unused, int oflags, int devtype __unused,
     struct thread *td __unused)
 {
-	PNSO_LOG_DEBUG("Opened device pnso_test successfully.\n");
+	if (oflags & FWRITE) {
+		PNSO_LOG_DEBUG("Opened write device pnso_test successfully.\n");
+	} else {
+		PNSO_LOG_DEBUG("Opened read device pnso_test successfully.\n");
+	}
+
 	return (0);
 }
 
 static int
-pnso_test_close(struct cdev *dev __unused, int fflag __unused, int devtype __unused,
+pnso_test_close(struct cdev *dev __unused, int fflag, int devtype __unused,
     struct thread *td __unused)
 {
-	PNSO_LOG_DEBUG("Closing device pnso_test.\n");
+	if (fflag & FWRITE) {
+		PNSO_LOG_DEBUG("Closing write device pnso_test.\n");
+		/* Start the test. */
+		osal_atomic_set(&ctl_state, CTL_STATE_START);
+	} else {
+		PNSO_LOG_DEBUG("Closing read device pnso_test.\n");
+	}
+
 	return (0);
 }
 
@@ -118,6 +131,9 @@ pnso_test_read(struct cdev *dev __unused, struct uio *uio, int ioflag __unused)
 {
 	size_t amt;
 	int error;
+
+	PNSO_LOG_DEBUG("Reading from device pnso_test, offset %lu, len %lu.\n",
+		       uio->uio_offset, uio->uio_resid);
 
 	if ((pnso_test_softc.input == NULL) || (pnso_test_softc.output == NULL))
 		return (ENXIO);
@@ -146,7 +162,8 @@ pnso_test_write(struct cdev *dev __unused, struct uio *uio, int ioflag __unused)
 	size_t amt;
 	int error;
 
-	PNSO_LOG_DEBUG("Writing to device pnso_test.\n");
+	PNSO_LOG_DEBUG("Writing to device pnso_test, offset %lu, len %lu.\n",
+		       uio->uio_offset, uio->uio_resid);
 	if ((pnso_test_softc.input == NULL) || (pnso_test_softc.output == NULL))
 		return (ENXIO);
 
@@ -181,8 +198,6 @@ pnso_test_write(struct cdev *dev __unused, struct uio *uio, int ioflag __unused)
 		PNSO_LOG_ERROR("Write failed: bad address!\n");
 	} else {
 		PNSO_LOG_DEBUG("Writing to device pnso_test done.\n");
-		/* Start the test. */
-		osal_atomic_set(&ctl_state, CTL_STATE_START);
 	}
 
 	return (error);
