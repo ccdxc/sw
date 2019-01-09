@@ -99,7 +99,7 @@ TEST_F(fte_test, register_pipeline_dup) {
     lifqid_t lifq = {1,1,1};
     auto rc = register_pipeline("p1", lifq, "1", "1", {});
     rc = register_pipeline("p2", lifq, "1", "1", {});
-    EXPECT_EQ(rc, HAL_RET_DUP_INS_FAIL);
+    EXPECT_EQ(rc, HAL_RET_ENTRY_EXISTS);
 }
 
 // Register pipeline wih Unknown feature

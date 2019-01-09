@@ -425,7 +425,7 @@ HbmHash::insert (void *key, void *data, uint32_t *index)
         // TODO: No need to send coll return status
         if (rs == SDK_RET_OK) {
             SDK_TRACE_DEBUG("Setting collision return code");
-            rs = SDK_RET_HBM_HASH_COLL;
+            rs = SDK_RET_COLLISION;
         }
 
     } else {
@@ -442,7 +442,7 @@ HbmHash::insert (void *key, void *data, uint32_t *index)
         }
     }
 
-    if (rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL) {
+    if (rs == SDK_RET_OK || rs == SDK_RET_COLLISION) {
         // insert into entry indexer map ... For retrieval
         // entry_map_[fe_idx] = entry;
         insert_entry(fe_idx, entry);
@@ -523,7 +523,7 @@ HbmHash::insert_with_hash(void *key, void *data, uint32_t *index, uint32_t hash_
         // TODO: No need to send flow coll return status
         if (rs == SDK_RET_OK) {
             SDK_TRACE_DEBUG("Setting collision return code");
-            rs = SDK_RET_HBM_HASH_COLL;
+            rs = SDK_RET_COLLISION;
         }
 
     } else {
@@ -541,7 +541,7 @@ HbmHash::insert_with_hash(void *key, void *data, uint32_t *index, uint32_t hash_
         }
     }
 
-    if (rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL) {
+    if (rs == SDK_RET_OK || rs == SDK_RET_COLLISION) {
         // insert into flow entry indexer map ... For retrieval
         // entry_map_[fe_idx] = entry;
         insert_entry(fe_idx, entry);
@@ -900,8 +900,8 @@ HbmHash::stats_update(HbmHash::api ap, sdk_ret_t rs)
     switch (ap) {
         case INSERT:
             if(rs == SDK_RET_OK) stats_incr(STATS_INS_SUCCESS);
-            else if (rs == SDK_RET_HBM_HASH_COLL) stats_incr(STATS_INS_HBM_HASH_COLL);
-            else if (rs == SDK_RET_DUPLICATE_INS) stats_incr(STATS_INS_FAIL_DUP_INS);
+            else if (rs == SDK_RET_COLLISION) stats_incr(STATS_INS_HBM_HASH_COLL);
+            else if (rs == SDK_RET_ENTRY_EXISTS) stats_incr(STATS_INS_FAIL_DUP_INS);
             else if(rs == SDK_RET_HW_PROGRAM_ERR) stats_incr(STATS_INS_FAIL_HW);
             else if(rs == SDK_RET_NO_RESOURCE) stats_incr(STATS_INS_FAIL_NO_RES);
             else SDK_ASSERT(0);

@@ -91,7 +91,7 @@ HbmHashTableEntry::insert(HbmHashEntry *h_entry)
 
         if(fh_grp->check_hbm_hash_entry_exists(h_entry)) {
             SDK_TRACE_DEBUG("Duplicate Insert");
-            return SDK_RET_DUPLICATE_INS;
+            return SDK_RET_ENTRY_EXISTS;
         }
 
         rs = get_spine_entry_for_hg(fh_grp, h_entry, &is_new_fse, &fse);
@@ -247,7 +247,7 @@ HbmHashTableEntry::get_spine_entry_for_new_hg(bool *is_new,
         }
 
         if (h_entry->get_recircs() == hbm_hash_->max_recircs()) {
-            ret = SDK_RET_HBM_HASH_MAX_RECIRC_EXCEED;
+            ret = SDK_RET_MAX_RECIRC_EXCEED;
             SDK_TRACE_ERR("Unable to install flow. #recircs "
                           "exceeds max recircs: %d. ret: %d",
                           hbm_hash_->max_recircs(), ret);
@@ -274,7 +274,7 @@ HbmHashTableEntry::get_spine_entry_for_new_hg(bool *is_new,
             // Case 2:
             h_entry->inc_recircs();
             if (h_entry->get_recircs() == hbm_hash_->max_recircs()) {
-                ret = SDK_RET_HBM_HASH_MAX_RECIRC_EXCEED;
+                ret = SDK_RET_MAX_RECIRC_EXCEED;
                 SDK_TRACE_ERR("Unable to install flow. #recircs "
                               "exceeds max recircs: %d. ret: %d",
                               hbm_hash_->max_recircs(), ret);

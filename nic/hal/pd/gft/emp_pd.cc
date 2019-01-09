@@ -398,7 +398,7 @@ end:
     sdk_ret = key_tbl->insert(&rx_key ## TBL_ID, &rx_key ## TBL_ID ## _mask,\
                               &rx_key ## TBL_ID ##_action, &tcam_idx);      \
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);                                  \
-    if (ret == HAL_RET_DUP_INS_FAIL) {                                      \
+    if (ret == HAL_RET_ENTRY_EXISTS) {                                      \
         HAL_TRACE_ERR("Duplicate insert failure for rx_key ## TBL_ID ## "); \
         goto end;                                                           \
     } else if (ret != HAL_RET_OK) {                                         \
@@ -612,7 +612,7 @@ end:
     sdk_ret = key_tbl->insert(&tx_key ## TBL_ID, &tx_key ## TBL_ID ## _mask,\
                               &tx_key ## TBL_ID ##_action, &tcam_idx);      \
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);                                  \
-    if (ret == HAL_RET_DUP_INS_FAIL) {                                      \
+    if (ret == HAL_RET_ENTRY_EXISTS) {                                      \
         HAL_TRACE_ERR("Duplicate insert failure for tx_key ## TBL_ID ## "); \
         goto end;                                                           \
     } else if (ret != HAL_RET_OK) {                                         \

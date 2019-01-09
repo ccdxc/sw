@@ -202,7 +202,7 @@ HbmHashEntry::insert(HbmHashHintGroup *hg, HbmHashSpineEntry *fse)
                           "exceeds max recircs: %d. ret: %d",
                           fse->get_ht_entry()->
                           get_hbm_hash()->max_recircs());
-            rs = SDK_RET_HBM_HASH_MAX_RECIRC_EXCEED;
+            rs = SDK_RET_MAX_RECIRC_EXCEED;
             return rs;
         }
 

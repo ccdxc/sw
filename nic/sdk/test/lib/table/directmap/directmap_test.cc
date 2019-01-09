@@ -435,7 +435,7 @@ TEST_F(dm_test, test8) {
     ASSERT_TRUE(rt == SDK_RET_OK);
 
     rt = test_dm->insert_withid(&dm, index+1);
-    ASSERT_TRUE(rt == SDK_RET_DUPLICATE_INS);
+    ASSERT_TRUE(rt == SDK_RET_ENTRY_EXISTS);
 
     rt = test_dm->remove(index);
     ASSERT_TRUE(rt == SDK_RET_OK);
@@ -487,7 +487,7 @@ TEST_F(dm_test, test9) {
     ASSERT_TRUE(rt == SDK_RET_OK);
 
     rt = test_dm->insert_withid(&dm, index);
-    ASSERT_TRUE(rt == SDK_RET_DUPLICATE_INS);
+    ASSERT_TRUE(rt == SDK_RET_ENTRY_EXISTS);
 
     rt = test_dm->insert_withid(&dm, 1000);
     ASSERT_TRUE(rt == SDK_RET_OOB);

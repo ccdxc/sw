@@ -381,7 +381,7 @@ register_pipeline(const std::string& name, lifqid_t& lifq,
     if ((pipeline = pipeline_lookup_(lifq)) != nullptr) {
         HAL_TRACE_ERR("fte: skipping duplicate pipline {} lifq={} old-name={}",
                       name, lifq, pipeline->name);
-        return HAL_RET_DUP_INS_FAIL;
+        return HAL_RET_ENTRY_EXISTS;
     }
 
     pipeline = pipeline_alloc_(features_outbound.size()+features_inbound.size());

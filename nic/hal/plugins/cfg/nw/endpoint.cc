@@ -1066,7 +1066,7 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     tmp_ep = find_ep_by_l2_key(ep->l2_key.l2_segid, ep->l2_key.mac_addr);
     if (tmp_ep) {
         HAL_TRACE_ERR("EP Create failed. EP with Mac already present.");
-        ret = HAL_RET_DUP_INS_FAIL;
+        ret = HAL_RET_ENTRY_EXISTS;
         goto end;
     }
 

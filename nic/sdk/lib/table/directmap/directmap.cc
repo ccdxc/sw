@@ -528,7 +528,7 @@ directmap::alloc_index_withid_(uint32_t idx)
     // allocate an index
     indexer::status irs = indexer_->alloc_withid(idx);
     if (irs != indexer::SUCCESS) {
-        rs = (irs == indexer::DUPLICATE_ALLOC) ? SDK_RET_DUPLICATE_INS : SDK_RET_OOB;
+        rs = (irs == indexer::DUPLICATE_ALLOC) ? SDK_RET_ENTRY_EXISTS : SDK_RET_OOB;
     }
 
     return rs;
@@ -586,7 +586,7 @@ directmap::stats_update(directmap::api ap, sdk_ret_t rs)
     case INSERT_WITHID:
         if (rs == SDK_RET_OK) stats_incr(STATS_INS_WITHID_SUCCESS);
         else if (rs == SDK_RET_HW_PROGRAM_ERR) stats_incr(STATS_INS_WITHID_FAIL_HW);
-        else if (rs == SDK_RET_DUPLICATE_INS) stats_incr(STATS_INS_WITHID_FAIL_DUP_INS);
+        else if (rs == SDK_RET_ENTRY_EXISTS) stats_incr(STATS_INS_WITHID_FAIL_DUP_INS);
         else if (rs == SDK_RET_OOB) stats_incr(STATS_INS_WITHID_FAIL_OOB);
         else SDK_ASSERT(0);
         break;

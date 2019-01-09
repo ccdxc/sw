@@ -613,7 +613,7 @@ p4pd_add_flow_hash_table_entry (flow_key_t *flow_key, uint32_t lkp_vrf,
     }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     // TODO: Cleanup. Dont return flow coll from lib.
-    if (ret != HAL_RET_OK && ret != HAL_RET_COLL) {
+    if (ret != HAL_RET_OK && ret != HAL_RET_COLLISION) {
         HAL_TRACE_ERR("flow table insert failed, err : {}", ret);
         return ret;
     }
@@ -659,7 +659,7 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
         if (args->rsp) {
             args->rsp->mutable_status()->mutable_rflow_status()->set_flow_hash(flow_hash);
         }
-        if (ret == HAL_RET_COLL) {
+        if (ret == HAL_RET_COLLISION) {
             if (args->rsp) {
                 args->rsp->mutable_status()->mutable_rflow_status()->set_flow_coll(true);
             }
@@ -682,7 +682,7 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
             if (args->rsp) {
                 args->rsp->mutable_status()->mutable_rflow_status()->set_flow_hash(flow_hash);
             }
-            if (ret == HAL_RET_COLL) {
+            if (ret == HAL_RET_COLLISION) {
                 if (args->rsp) {
                     args->rsp->mutable_status()->mutable_rflow_status()->set_flow_coll(true);
                 }
@@ -707,7 +707,7 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
         if (args->rsp) {
             args->rsp->mutable_status()->mutable_iflow_status()->set_flow_hash(flow_hash);
         }
-        if (ret == HAL_RET_COLL) {
+        if (ret == HAL_RET_COLLISION) {
             if (args->rsp) {
                 args->rsp->mutable_status()->mutable_iflow_status()->set_flow_coll(true);
             }
@@ -736,7 +736,7 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
         if (args->rsp) {
             args->rsp->mutable_status()->mutable_iflow_status()->set_flow_hash(flow_hash);
         }
-        if (ret == HAL_RET_COLL) {
+        if (ret == HAL_RET_COLLISION) {
             if (args->rsp) {
                 args->rsp->mutable_status()->mutable_iflow_status()->set_flow_coll(true);
             }

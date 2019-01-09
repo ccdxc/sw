@@ -301,7 +301,7 @@ TEST_F(hash_test, test2) {
     sent_set.insert(InputPropertiesHashEntry(key,data));
 
     rs = test_hash->insert((void *)&key, (void *)&data,  &hash_idx, FALSE);
-    ASSERT_TRUE(rs == sdk::SDK_RET_DUPLICATE_INS);
+    ASSERT_TRUE(rs == sdk::SDK_RET_ENTRY_EXISTS);
 
     rs = test_hash->iterate(populate_ip_fn, &hash_set, sdk::table::hash::BOTH);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
@@ -452,7 +452,7 @@ TEST_F(hash_test, test5) {
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 
     rs = test_hash->insert((void *)&key, (void *)&data,  &hash_idx, FALSE);
-    ASSERT_TRUE(rs == sdk::SDK_RET_DUPLICATE_INS);
+    ASSERT_TRUE(rs == sdk::SDK_RET_ENTRY_EXISTS);
 
     data.actionid = 3;
     rs = test_hash->update(hash_idx, &data);
@@ -570,7 +570,7 @@ TEST_F(hash_test, test7) {
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 
     rs = test_hash->insert((void *)&key, (void *)&data,  &hash_idx, FALSE);
-    ASSERT_TRUE(rs == sdk::SDK_RET_DUPLICATE_INS);
+    ASSERT_TRUE(rs == sdk::SDK_RET_ENTRY_EXISTS);
 
     rs = test_hash->remove(hash_idx);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);

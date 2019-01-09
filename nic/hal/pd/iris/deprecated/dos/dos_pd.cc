@@ -159,7 +159,7 @@ dos_pd_program_ddos_src_vf_tcam (uint16_t slport, int actionid,
                      __FUNCTION__, actionid, policer_idx, slport);
     sdk_ret = tcam->insert(&key, &mask, &data, &ret_idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-    if (ret == HAL_RET_DUP_INS_FAIL) {
+    if (ret == HAL_RET_ENTRY_EXISTS) {
         /* Entry already exists. Can be skipped */
         *idx = -1;
     } else {
@@ -230,7 +230,7 @@ dos_pd_program_ddos_service_tcam (ip_addr_t *ip_addr, bool is_icmp,
 
     sdk_ret = tcam->insert(&key, &mask, &data, &ret_idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-    if (ret == HAL_RET_DUP_INS_FAIL) {
+    if (ret == HAL_RET_ENTRY_EXISTS) {
         /* Entry already exists. Can be skipped */
         *idx = -1;
     } else {
@@ -338,7 +338,7 @@ dos_pd_program_ddos_src_dst_tcam (ip_addr_t *src_ip_addr,
                      dst_pfxlen, dport, proto, vrf, actionid, policer_idx);
     sdk_ret = tcam->insert(&key, &mask, &data, &ret_idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-    if (ret == HAL_RET_DUP_INS_FAIL) {
+    if (ret == HAL_RET_ENTRY_EXISTS) {
         /* Entry already exists. Can be skipped */
         *idx = -1;
     } else {

@@ -162,7 +162,7 @@ mapping_impl::add_local_ip_mapping_entries_(vcn_entry *vcn,
     ret = mapping_impl_db()->local_ip_mapping_tbl()->insert(
               &local_ip_mapping_key, &local_ip_mapping_data,
               &local_ip_mapping_data_idx1_);
-    if ((ret != SDK_RET_OK) && (ret != sdk::SDK_RET_HBM_HASH_COLL)) {
+    if ((ret != SDK_RET_OK) && (ret != sdk::SDK_RET_COLLISION)) {
         goto error;
     }
 
@@ -179,7 +179,7 @@ mapping_impl::add_local_ip_mapping_entries_(vcn_entry *vcn,
         ret = mapping_impl_db()->local_ip_mapping_tbl()->insert(
                   &local_ip_mapping_key, &local_ip_mapping_data,
                   &local_ip_mapping_data_idx2_);
-        if ((ret != SDK_RET_OK) && (ret != sdk::SDK_RET_HBM_HASH_COLL)) {
+        if ((ret != SDK_RET_OK) && (ret != sdk::SDK_RET_COLLISION)) {
             goto error;
         }
     }
@@ -216,7 +216,7 @@ mapping_impl::add_remote_vnic_mapping_rx_entries_(vcn_entry *vcn,
     ret = mapping_impl_db()->remote_vnic_mapping_rx_tbl()->insert(
               &remote_vnic_mapping_rx_key, &remote_vnic_mapping_rx_data,
               &remote_vnic_mapping_rx_idx_);
-    if (ret == SDK_RET_OK || sdk::SDK_RET_HBM_HASH_COLL) {
+    if (ret == SDK_RET_OK || sdk::SDK_RET_COLLISION) {
         return SDK_RET_OK;
     }
     return ret;
@@ -248,7 +248,7 @@ mapping_impl::add_remote_vnic_mapping_tx_entries_(vcn_entry *vcn,
                &remote_vnic_mapping_tx_key,
                &remote_vnic_mapping_tx_data,
                &remote_vnic_mapping_tx_idx_);
-    if (ret == SDK_RET_OK || sdk::SDK_RET_HBM_HASH_COLL) {
+    if (ret == SDK_RET_OK || sdk::SDK_RET_COLLISION) {
         return SDK_RET_OK;
     }
     return ret;

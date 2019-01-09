@@ -133,7 +133,7 @@ tcam::insert(void *key, void *key_mask, void *data,
         if (!allow_dup_insert_) {
             SDK_TRACE_DEBUG("TCAM table %s entry already exists at %d return err\n",
                             name_, te->index);
-            return SDK_RET_DUPLICATE_INS;
+            return SDK_RET_ENTRY_EXISTS;
         } else {
             // if entry exists, then increment ref-count and return the index
             SDK_TRACE_DEBUG("TCAM table %s entry exists at %d refcount %d\n",
@@ -186,7 +186,7 @@ tcam::insert_withid(void *key, void *key_mask, void *data, uint32_t index)
         if (!allow_dup_insert_) {
             SDK_TRACE_DEBUG("TCAM table : %s Entry exists at %d return err\n",
                              name_, index);
-            return SDK_RET_DUPLICATE_INS;
+            return SDK_RET_ENTRY_EXISTS;
         } else {
             // if entry exisits, then increment ref-count and return the index
             SDK_TRACE_DEBUG("TCAM table : %s Entry exists at %d refcount %d\n",
@@ -648,7 +648,7 @@ tcam::alloc_index_withid_(uint32_t idx)
 
     indexer::status irs = indexer_->alloc_withid(idx);
     if (irs != indexer::SUCCESS) {
-        rs = (irs == indexer::DUPLICATE_ALLOC) ? SDK_RET_DUPLICATE_INS :
+        rs = (irs == indexer::DUPLICATE_ALLOC) ? SDK_RET_ENTRY_EXISTS :
 			SDK_RET_OOB;
     }
 
@@ -665,7 +665,7 @@ tcam::free_index_(uint32_t idx)
 
     indexer::status irs = indexer_->free(idx);
     if (irs == indexer::DUPLICATE_FREE) {
-        return SDK_RET_DUPLICATE_INS;
+        return SDK_RET_ENTRY_EXISTS;
     }
     if (irs != indexer::SUCCESS) {
         return SDK_RET_ERR;
@@ -718,7 +718,7 @@ tcam::stats_update_(tcam::api ap, sdk_ret_t rs)
             stats_incr_(STATS_INS_WITHID_SUCCESS);
         } else if (rs == SDK_RET_HW_PROGRAM_ERR) {
             stats_incr_(STATS_INS_WITHID_FAIL_HW);
-        } else if (rs == SDK_RET_DUPLICATE_INS) {
+        } else if (rs == SDK_RET_ENTRY_EXISTS) {
             stats_incr_(STATS_INS_WITHID_FAIL_DUP_INS);
         } else if (rs == SDK_RET_OOB) {
             stats_incr_(STATS_INS_WITHID_FAIL_OOB);

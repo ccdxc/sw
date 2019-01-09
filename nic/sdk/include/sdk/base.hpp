@@ -153,14 +153,14 @@ do {                                                       \
     ENTRY(SDK_RET_ENTRY_EXISTS,               5,    "already present")                      \
     ENTRY(SDK_RET_NO_RESOURCE,                6,    "resource exhaustion")                  \
     ENTRY(SDK_RET_TABLE_FULL,                 7,    "hw table full")                        \
-    ENTRY(SDK_RET_DUPLICATE_INS,              8,    "duplicate insert fail")                \
-    ENTRY(SDK_RET_OOB,                        9,    "out-of-bound error")                   \
-    ENTRY(SDK_RET_HW_PROGRAM_ERR,             10,   "h/w programming error")                \
-    ENTRY(SDK_RET_RETRY,                      11,   "retry the operation")                  \
-    ENTRY(SDK_RET_NOOP,                       12,   "No operation performed")               \
-    ENTRY(SDK_RET_DUPLICATE_FREE,             13,   "duplicate free")                       \
-    ENTRY(SDK_RET_HBM_HASH_COLL,              14,   "hbm hash table collision")             \
-    ENTRY(SDK_RET_HBM_HASH_MAX_RECIRC_EXCEED, 15,   "hbm hash maximum recirc exceeded")     \
+    ENTRY(SDK_RET_OOB,                        8,    "out-of-bound error")                   \
+    ENTRY(SDK_RET_HW_PROGRAM_ERR,             9,    "h/w programming error")                \
+    ENTRY(SDK_RET_RETRY,                      10,   "retry the operation")                  \
+    ENTRY(SDK_RET_NOOP,                       11,   "No operation performed")               \
+    ENTRY(SDK_RET_DUPLICATE_FREE,             12,   "duplicate free")                       \
+    ENTRY(SDK_RET_COLLISION,                  13,   "collision detected")                   \
+    ENTRY(SDK_RET_MAX_RECIRC_EXCEED,          14,   "maximum recirc exceeded")              \
+    ENTRY(SDK_RET_HW_READ_ERR,                15,   "h/w read error")                       \
     ENTRY(SDK_RET_MAX,                        16,   "max return value")                     \
     ENTRY(SDK_RET_ERR,                        255,  "catch all generic error")
 

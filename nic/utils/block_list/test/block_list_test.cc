@@ -46,7 +46,7 @@ TEST_F(block_list_test, test1) {
     hdl_id = 0;
     for (uint32_t i = 0; i < 20; i++) {
         ret = test_block_list->insert(&hdl_id);
-        ASSERT_TRUE(ret == HAL_RET_DUP_INS_FAIL);
+        ASSERT_TRUE(ret == HAL_RET_ENTRY_EXISTS);
         hdl_id++;
     }
 

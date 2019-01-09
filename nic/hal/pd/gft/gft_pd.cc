@@ -476,7 +476,7 @@ pd_gft_exact_match_profile_create (pd_gft_exact_match_profile_args_t *gft_args)
     sdk_ret = key_tbl->insert(&rx_key1, &rx_key1_mask,
                               &rx_key1_action, &tcam_idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-    if (ret == HAL_RET_DUP_INS_FAIL) {
+    if (ret == HAL_RET_ENTRY_EXISTS) {
         goto end;
     } else if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to insert into rx key1 tcam table, err : {}",
@@ -488,7 +488,7 @@ pd_gft_exact_match_profile_create (pd_gft_exact_match_profile_args_t *gft_args)
     sdk_ret = key_tbl->insert(&rx_key2, &rx_key2_mask,
                               &rx_key2_action, &tcam_idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-    if (ret == HAL_RET_DUP_INS_FAIL) {
+    if (ret == HAL_RET_ENTRY_EXISTS) {
     } else if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to insert into rx key2 tcam table, err : {}",
                       ret);
@@ -499,7 +499,7 @@ pd_gft_exact_match_profile_create (pd_gft_exact_match_profile_args_t *gft_args)
     sdk_ret = key_tbl->insert(&rx_key3, &rx_key3_mask,
                               &rx_key3_action, &tcam_idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-    if (ret == HAL_RET_DUP_INS_FAIL) {
+    if (ret == HAL_RET_ENTRY_EXISTS) {
     } else if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to insert into rx key3 tcam table, err : {}",
                       ret);
@@ -510,7 +510,7 @@ pd_gft_exact_match_profile_create (pd_gft_exact_match_profile_args_t *gft_args)
     sdk_ret = key_tbl->insert(&rx_key4, &rx_key4_mask,
                               &rx_key4_action, &tcam_idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-    if (ret == HAL_RET_DUP_INS_FAIL) {
+    if (ret == HAL_RET_ENTRY_EXISTS) {
     } else if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to insert into rx key4 tcam table, err : {}",
                       ret);

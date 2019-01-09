@@ -494,7 +494,7 @@ pd_vrf_program_input_mapping_table(ip_prefix_t *ip_prefix,
         sdk_ret       = tcam->insert(&key, &mask, &data, idx);
     }
     ret           = hal_sdk_ret_to_hal_ret(sdk_ret);
-    if (ret == HAL_RET_DUP_INS_FAIL) {
+    if (ret == HAL_RET_ENTRY_EXISTS) {
         /* Entry already exists. Can be skipped */
         *idx = INVALID_INDEXER_INDEX;
     } else {
@@ -591,7 +591,7 @@ vrf_pd_program_gipo_prefix(pd_vrf_t *vrf_pd,
                                              P4TBL_ID_INPUT_MAPPING_NATIVE,
                                              &vrf_pd->gipo_imn_idx[0],
                                              is_upgrade);
-    if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
+    if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS))
         goto fail_flag;
     /* Entry 2 */
     ret = pd_vrf_program_input_mapping_table(gipo_prefix,
@@ -601,7 +601,7 @@ vrf_pd_program_gipo_prefix(pd_vrf_t *vrf_pd,
                                              P4TBL_ID_INPUT_MAPPING_NATIVE,
                                              &vrf_pd->gipo_imn_idx[1],
                                              is_upgrade);
-    if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
+    if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS))
         goto fail_flag;
     /* Entry 3 */
     ret = pd_vrf_program_input_mapping_table(gipo_prefix,
@@ -611,7 +611,7 @@ vrf_pd_program_gipo_prefix(pd_vrf_t *vrf_pd,
                                              P4TBL_ID_INPUT_MAPPING_NATIVE,
                                              &vrf_pd->gipo_imn_idx[2],
                                              is_upgrade);
-    if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
+    if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS))
         goto fail_flag;
 
     /* We program 3 entries in the INPUT_MAPPING_TUNNELED Table for the GIPo Entry */
@@ -623,7 +623,7 @@ vrf_pd_program_gipo_prefix(pd_vrf_t *vrf_pd,
                                              P4TBL_ID_INPUT_MAPPING_TUNNELED,
                                              &vrf_pd->gipo_imt_idx[0],
                                              is_upgrade);
-    if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
+    if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS))
         goto fail_flag;
     /* Entry 2 */
     ret = pd_vrf_program_input_mapping_table(gipo_prefix,
@@ -633,7 +633,7 @@ vrf_pd_program_gipo_prefix(pd_vrf_t *vrf_pd,
                                     P4TBL_ID_INPUT_MAPPING_TUNNELED,
                                     &vrf_pd->gipo_imt_idx[1],
                                     is_upgrade);
-    if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
+    if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS))
         goto fail_flag;
     /* Entry 3 */
     ret = pd_vrf_program_input_mapping_table(gipo_prefix,
@@ -643,7 +643,7 @@ vrf_pd_program_gipo_prefix(pd_vrf_t *vrf_pd,
                                     P4TBL_ID_INPUT_MAPPING_TUNNELED,
                                     &vrf_pd->gipo_imt_idx[2],
                                     is_upgrade);
-    if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
+    if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS))
         goto fail_flag;
 
     return HAL_RET_OK;

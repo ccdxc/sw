@@ -752,4 +752,94 @@ p4pd_global_table_ds_decoded_string_get(uint32_t   tableid,
 p4pd_error_t
 p4pd_global_table_properties_get(uint32_t tableid, void *tbl_ctx);
 
+/*
+ * Functions to read/modify Mem Hash entries.
+ */
+p4pd_error_t
+p4pd_mem_hash_entry_set_key(uint32_t table_id,
+                            uint8_t *swkey,
+                            uint8_t *key);
+
+p4pd_error_t
+p4pd_mem_hash_entry_clear_key(uint32_t table_id,
+                              uint8_t *swkey);
+
+p4pd_error_t
+p4pd_mem_hash_entry_set_action_id(uint32_t table_id,
+                                  uint8_t *swdata,
+                                  uint32_t action_id);
+
+p4pd_error_t
+p4pd_mem_hash_entry_set_entry_valid(uint32_t table_id,
+                                    uint8_t *swdata,
+                                    uint8_t entry_valid);
+
+p4pd_error_t
+p4pd_mem_hash_entry_set_data(uint32_t table_id,
+                             uint8_t *swdata,
+                             uint8_t *data);
+
+p4pd_error_t
+p4pd_mem_hash_entry_clear_data(uint32_t table_id,
+                               uint8_t *swdata);
+
+p4pd_error_t
+p4pd_mem_hash_entry_set_hint(uint32_t table_id,
+                             uint8_t *swdata,
+                             uint32_t hint,
+                             uint32_t slot);
+
+p4pd_error_t
+p4pd_mem_hash_entry_set_hash(uint32_t table_id,
+                             uint8_t *swdata,
+                             uint32_t hash,
+                             uint32_t slot);
+
+p4pd_error_t
+p4pd_mem_hash_entry_set_more_hints(uint32_t table_id,
+                                   uint8_t *swdata,
+                                   uint8_t more_hints);
+
+p4pd_error_t
+p4pd_mem_hash_entry_set_more_hashs(uint32_t table_id,
+                                   uint8_t *swdata,
+                                   uint32_t more_hashs);
+
+uint32_t
+p4pd_mem_hash_entry_get_hash(uint32_t table_id,
+                             uint8_t *swdata,
+                             uint32_t slot);
+
+uint32_t
+p4pd_mem_hash_entry_get_hint(uint32_t table_id,
+                             uint8_t *swdata,
+                             uint32_t slot);
+
+uint8_t
+p4pd_mem_hash_entry_get_more_hashs(uint32_t table_id,
+                                   uint8_t *swdata);
+
+uint32_t
+p4pd_mem_hash_entry_get_more_hints(uint32_t table_id,
+                                   uint8_t *swdata);
+
+bool
+p4pd_mem_hash_entry_compare_key(uint32_t table_id,
+                                uint8_t *swdata,
+                                uint8_t *data);
+
+uint8_t *
+p4pd_mem_hash_entry_key_str(uint32_t table_id,
+                            void *key);
+
+uint8_t *
+p4pd_mem_hash_entry_data_str(uint32_t table_id,
+                             void *data);
+
+uint8_t *
+p4pd_mem_hash_entry_swdata_str(uint32_t table_id,
+                             void *data);
+
+uint8_t
+p4pd_mem_hash_entry_get_num_hints(uint32_t table_id);
 #endif    // __P4_API_H__

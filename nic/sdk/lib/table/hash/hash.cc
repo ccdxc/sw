@@ -140,7 +140,7 @@ hash::~hash()
 //
 // Return Code:
 //      SDK_RET_OK              : Successfull
-//      SDK_RET_DUPLICATE_INS   : Duplicate Insert
+//      SDK_RET_ENTRY_EXISTS   : Duplicate Insert
 //      SDK_RET_NO_RESOURCE     : Capacity reached
 //
 // ---------------------------------------------------------------------------
@@ -196,14 +196,14 @@ hash::insert(void *key, void *data, uint32_t *index, void *key_mask,
     } else {
         SDK_TRACE_DEBUG("hash::%s: otcam Insert ", __FUNCTION__);
         if (he != NULL && !std::memcmp(he->key, key, swkey_len_)) {
-            rs = SDK_RET_DUPLICATE_INS;
+            rs = SDK_RET_ENTRY_EXISTS;
             goto end;
         }
 #if 0
         he = itr->second;
         if (itr != hash_entry_map_.end() &&
             !std::memcmp(he->get_key(), key, swkey_len_)) {
-            rs = SDK_RET_DUPLICATE_INS;
+            rs = SDK_RET_ENTRY_EXISTS;
             goto end;
         }
 #endif
@@ -246,7 +246,7 @@ end:
 //
 // Return Code:
 //      SDK_RET_OK              : Successfull
-//      SDK_RET_DUPLICATE_INS   : Duplicate Insert
+//      SDK_RET_ENTRY_EXISTS   : Duplicate Insert
 //
 // ---------------------------------------------------------------------------
 sdk_ret_t
@@ -273,7 +273,7 @@ hash::insert_withid(void *key, void *data, uint32_t index, void *key_mask)
         // check if entry exists
         he = (hash_entry_t *)entry_ht_->lookup(&dleft_id);
         if (he != NULL) {
-            rs = SDK_RET_DUPLICATE_INS;
+            rs = SDK_RET_ENTRY_EXISTS;
             goto end;
         }
 
@@ -791,13 +791,13 @@ hash::stats_update(hash::api ap, sdk_ret_t rs)
         if (rs == SDK_RET_OK) stats_incr(STATS_INS_SUCCESS);
         else if (rs == SDK_RET_HW_PROGRAM_ERR) stats_incr(STATS_INS_FAIL_HW);
         else if (rs == SDK_RET_NO_RESOURCE) stats_incr(STATS_INS_FAIL_NO_RES);
-        else if (rs == SDK_RET_DUPLICATE_INS) stats_incr(STATS_INS_FAIL_DUP_INS);
+        else if (rs == SDK_RET_ENTRY_EXISTS) stats_incr(STATS_INS_FAIL_DUP_INS);
         else SDK_ASSERT(0);
         break;
     case INSERT_WITHID:
         if (rs == SDK_RET_OK) stats_incr(STATS_INS_WITHID_SUCCESS);
         else if (rs == SDK_RET_HW_PROGRAM_ERR) stats_incr(STATS_INS_WITHID_FAIL_HW);
-        else if (rs == SDK_RET_DUPLICATE_INS) stats_incr(STATS_INS_WITHID_FAIL_DUP_INS);
+        else if (rs == SDK_RET_ENTRY_EXISTS) stats_incr(STATS_INS_WITHID_FAIL_DUP_INS);
         else if (rs == SDK_RET_INVALID_ARG) stats_incr(STATS_INS_WITHID_FAIL_INV_ARG);
         else SDK_ASSERT(0);
     case UPDATE:

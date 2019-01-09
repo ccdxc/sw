@@ -321,11 +321,11 @@ TEST_F(tcam_test, test2) {
 
     rs = test_tcam->insert((void *)&key, (void *)&key_mask,
             (void *)&data, &tcam_idx2);
-    ASSERT_TRUE(rs == SDK_RET_DUPLICATE_INS);
+    ASSERT_TRUE(rs == SDK_RET_ENTRY_EXISTS);
 
     rs = test_tcam->insert((void *)&key, (void *)&key_mask,
             (void *)&data, &tcam_idx2);
-    ASSERT_TRUE(rs == SDK_RET_DUPLICATE_INS);
+    ASSERT_TRUE(rs == SDK_RET_ENTRY_EXISTS);
 
 
     rs = test_tcam->remove(tcam_idx);
@@ -590,7 +590,7 @@ TEST_F(tcam_test, test7) {
     // insert again
     rs = test_tcam->insert((void *)&key, (void *)&key_mask,
                           (void *)&data, &tcam_idx);
-    ASSERT_TRUE(rs == SDK_RET_DUPLICATE_INS);
+    ASSERT_TRUE(rs == SDK_RET_ENTRY_EXISTS);
 
     // remove
     rs = test_tcam->remove(tcam_idx);
@@ -898,12 +898,12 @@ TEST_F(tcam_test, test12) {
     // insert with same key
     rs = test_tcam->insert((void *)&key, (void *)&key_mask,
                           (void *)&data, &tcam_idx);
-    ASSERT_TRUE(rs == SDK_RET_DUPLICATE_INS);
+    ASSERT_TRUE(rs == SDK_RET_ENTRY_EXISTS);
 
     // insert with same key
     rs = test_tcam->insert_withid((void *)&key, (void *)&key_mask,
                           (void *)&data, tcam_idx);
-    ASSERT_TRUE(rs == SDK_RET_DUPLICATE_INS);
+    ASSERT_TRUE(rs == SDK_RET_ENTRY_EXISTS);
 
     // remove 0th entry
     rs = test_tcam->remove(tcam_idx);

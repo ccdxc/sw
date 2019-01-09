@@ -134,7 +134,7 @@ block_list::insert(void *elem)
 
     if (this->is_present(elem)) {
         // element already present
-        ret = HAL_RET_DUP_INS_FAIL;
+        ret = HAL_RET_ENTRY_EXISTS;
         goto end;
     }
 
