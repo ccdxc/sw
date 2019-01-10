@@ -525,7 +525,7 @@ class DeParserCalField:
             self.payload_hdr_type = ''
             self.phdr_fields = None
             self.payload_update_len_field = ''
-            if self.no_phdr_in_checksum and 'checksum' in \
+            if 'checksum' in \
                 self.P4FieldListCalculation._parsed_pragmas.keys():
                 if 'update_len' in \
                     self.P4FieldListCalculation._parsed_pragmas['checksum']:
