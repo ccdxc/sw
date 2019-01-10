@@ -118,7 +118,7 @@
         {
             "name" : "accel",
             "lif_count" : 1,
-            "seq_queue_count" : 8192,
+            "seq_queue_count" : 24576,
             "adminq_count" : 1,
             "intr_count" : 64,
             "publish_interval" : {

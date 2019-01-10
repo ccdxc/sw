@@ -2,7 +2,7 @@
     "accel_dev" : [
         {
             "name" : "accel",
-            "seq_queue_count" : 8192,
+            "seq_queue_count" : 24576,
             "seq_created_count" : 0,
             "adminq_count" : 1,
             "intr_count" : 64,
