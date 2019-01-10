@@ -26,11 +26,11 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     HAL_TRACE_DEBUG("Capri core clock freq is {} Mhz", capri_coreclk_freq);
 
 
-    *p4plus_symbols = (sdk::platform::p4_prog_param_info_t *)
+    *p4plus_symbols = (sdk::p4::p4_prog_param_info_t *)
         HAL_CALLOC(hal::HAL_MEM_ALLOC_PD,
-                   P4PLUS_SYMBOLS_MAX * sizeof(sdk::platform::p4_prog_param_info_t));
-    sdk::platform::p4_prog_param_info_t *symbols =
-        (sdk::platform::p4_prog_param_info_t *)(*p4plus_symbols);
+                   P4PLUS_SYMBOLS_MAX * sizeof(sdk::p4::p4_prog_param_info_t));
+    sdk::p4::p4_prog_param_info_t *symbols =
+        (sdk::p4::p4_prog_param_info_t *)(*p4plus_symbols);
 
     symbols[i].name = "tcp-read-rnmdr-alloc-idx.bin";
     symbols[i].num_params = 2;
@@ -413,9 +413,9 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     symbols[i].name = "gc_tx_inc_descr_free_pair_pi.bin";
     symbols[i].num_params = 2;
     symbols[i].params[0].name = RNMDPR_BIG_TABLE_BASE;
-    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDPR_BIG_RX);
+    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDPR_BIG_RX);
     symbols[i].params[1].name = TNMDPR_BIG_TABLE_BASE;
-    symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_NMDPR_BIG_TX);
+    symbols[i].params[1].val = get_mem_addr(CAPRI_HBM_REG_NMDPR_BIG_TX);
     i++;
 
     /*

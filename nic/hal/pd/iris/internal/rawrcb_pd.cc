@@ -59,7 +59,7 @@ p4pd_get_rawr_rx_stage0_prog_addr(uint64_t* offset)
     char progname[] = "rxdma_stage0.bin";
     char labelname[]= "rawr_rx_stage0";
 
-    int ret = sdk::platform::p4_program_label_to_offset("p4plus",
+    int ret = sdk::p4::p4_program_label_to_offset("p4plus",
                                             progname,
                                             labelname,
                                             offset);

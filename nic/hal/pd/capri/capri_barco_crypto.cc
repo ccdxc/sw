@@ -229,7 +229,7 @@ hal_ret_t capri_barco_read_key(uint32_t key_idx, types::CryptoKeyType *key_type,
     }
 
     key_addr = key_desc.key_address;
-    if (capri_hbm_read_mem(key_addr, key, *key_size)) {
+    if (sdk::asic::asic_mem_read(key_addr, key, *key_size)) {
         HAL_TRACE_ERR("Failed to read key @ {:x}", (uint64_t) key_addr); 
         return HAL_RET_INVALID_ARG;
     }

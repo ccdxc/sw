@@ -23,7 +23,7 @@
 #include "include/sdk/base.hpp"
 
 namespace sdk {
-namespace platform {
+namespace p4 {
 
 #define LDD_INFO_FILE_RPATH    "gen" //Relative path from main
 #define LDD_INFO_FILE_NAME    "mpu_prog_info.json"
@@ -128,10 +128,10 @@ sdk_ret_t p4_program_to_base_addr(const char *handle,
  */
 sdk_ret_t p4_list_program_addr(const char *cfg_path, const char *filename);
 
-}    // namespace platform
+}    // namespace p4
 }    // namnespace sdk
 
-using sdk::platform::mpu_pgm_sort_t;
-using sdk::platform::mpu_pgm_symbols_t;
+using sdk::p4::mpu_pgm_sort_t;
+using sdk::p4::mpu_pgm_symbols_t;
 
 #endif   // _SDK_P4_LOADER_HPP_

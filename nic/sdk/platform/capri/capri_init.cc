@@ -124,7 +124,7 @@ capri_asm_init (capri_cfg_t *cfg)
     uint64_t        base_addr;
     std::string     full_path;
     uint32_t num_symbols = 0;
-    sdk::platform::p4_prog_param_info_t *symbols = NULL;
+    sdk::p4::p4_prog_param_info_t *symbols = NULL;
 
     for (uint8_t i = 0; i < cfg->num_asm_cfgs; i++) {
         full_path =  std::string(cfg->cfg_path) + "/" + cfg->pgm_name +
@@ -145,7 +145,7 @@ capri_asm_init (capri_cfg_t *cfg)
 
         base_addr = get_mem_addr(cfg->asm_cfg[i].base_addr.c_str());
         SDK_TRACE_DEBUG("base addr 0x%llx", base_addr);
-        iret = sdk::platform::p4_load_mpu_programs(cfg->asm_cfg[i].name.c_str(),
+        iret = sdk::p4::p4_load_mpu_programs(cfg->asm_cfg[i].name.c_str(),
            (char *)full_path.c_str(),
            base_addr,
            symbols,
@@ -478,7 +478,7 @@ capri_init (capri_cfg_t *cfg)
                             "Capri replication init failure, err : %d", ret);
 
     if (!cfg->loader_info_file.empty()) {
-        sdk::platform::p4_list_program_addr(
+        sdk::p4::p4_list_program_addr(
             cfg->cfg_path.c_str(), cfg->loader_info_file.c_str());
     }
 

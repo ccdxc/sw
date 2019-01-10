@@ -5,7 +5,7 @@
 
 #include "platform/capri/capri_cfg.hpp"
 #include "platform/utils/mpartition.hpp"
-#include "platform/p4loader/loader.hpp"
+#include "p4/loader/loader.hpp"
 #include "asic/asic.hpp"
 
 namespace sdk {
