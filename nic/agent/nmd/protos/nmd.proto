@@ -77,6 +77,7 @@ message NaplesSpec {
 // NaplesStatus contains current status of a Naples I/O subsystem
 message NaplesStatus {
     option (delphi.update_event) = true;
+    option (delphi.singleton) = true;
     delphi.ObjectMeta               Meta    = 1;
 
     // Current phase of the NIC adapter in the system

@@ -7,8 +7,6 @@ import (
 
 	"github.com/prometheus/common/log"
 
-	"github.com/golang/mock/gomock"
-
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
@@ -20,8 +18,7 @@ import (
 
 // Dpagent is an agent instance
 type Dpagent struct {
-	datapath *datapath.Datapath
-	nagent   *netagent.Agent
+	nagent *netagent.Agent
 }
 
 // objKey returns endpoint key
@@ -36,20 +33,8 @@ func (it *integTestSuite) pollTimeout() string {
 
 // CreateAgent creates an instance of agent
 func CreateAgent(kind datapath.Kind, srvURL string, resolver resolver.Interface) (*Dpagent, error) {
-	// mock datapath
-	dp, err := datapath.NewHalDatapath(kind)
-	if err != nil {
-		log.Errorf("Error creating hal datapath. Err: %v", err)
-		return nil, err
-	}
-
-	// set tenant create expectations for mock clients
-	if kind.String() == "mock" {
-		dp.Hal.MockClients.MockTnclient.EXPECT().VrfCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
-	}
-
 	// create new network agent
-	nagent, err := netagent.NewAgent(dp, "", srvURL, resolver, state.AgentMode_MANAGED)
+	nagent, err := netagent.NewAgent(kind.String(), "", srvURL, resolver, state.AgentMode_MANAGED)
 	if err != nil {
 		log.Errorf("Error creating network agent. Err: %v", err)
 		return nil, err
@@ -60,8 +45,7 @@ func CreateAgent(kind datapath.Kind, srvURL string, resolver resolver.Interface)
 
 	// create an agent instance
 	ag := Dpagent{
-		datapath: dp,
-		nagent:   nagent,
+		nagent: nagent,
 	}
 
 	return &ag, nil

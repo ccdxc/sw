@@ -17,29 +17,19 @@ import (
 )
 
 //--------------------- Happy Path Tests ---------------------//
-func TestDelphiMount(t *testing.T) {
-	// start the fake delphi hub
-	hub := gosdk.NewFakeHub()
-	hub.Start()
-
-	// create delphi datapath
-	dp, err := NewDelphiDatapath()
-	AssertOk(t, err, "Error creating delphi datapath")
-
-	// verify we receive mount complete callback
-	AssertEventually(t, func() (bool, interface{}) {
-		return dp.IsMountComplete(), dp
-	}, "Mounting delphi failed")
-
-	// stop the client and hub
-	dp.delphiClient.Close()
-	hub.Stop()
-	time.Sleep(time.Millisecond)
-}
-
 type delphidpTestSuite struct {
 	hub      gosdk.Hub
 	datapath *DelphiDatapath
+}
+
+// OnMountComplete gets called after all the objectes are mounted
+func (ds *delphidpTestSuite) OnMountComplete() {
+	log.Infof("On mount complete got called")
+}
+
+// Name returns the name of the service
+func (ds *delphidpTestSuite) Name() string {
+	return "Delphi Unit Tests"
 }
 
 // Hook up gocheck into the "go test" runner.
@@ -56,15 +46,17 @@ func (ds *delphidpTestSuite) SetUpSuite(c *C) {
 	ds.hub = gosdk.NewFakeHub()
 	ds.hub.Start()
 
+	// start the fake delphi client
+	cl, err := gosdk.NewClient(ds)
+	if err != nil {
+		log.Fatalf("Error creating delphi client. Err: %v", err)
+	}
+	go cl.Run()
+
 	// create delphi datapath
-	dp, err := NewDelphiDatapath()
+	dp, err := NewDelphiDatapath(cl)
 	AssertOk(c, err, "Error creating delphi datapath")
 	ds.datapath = dp
-
-	// verify we receive mount complete callback
-	AssertEventually(c, func() (bool, interface{}) {
-		return dp.IsMountComplete(), dp
-	}, "Mounting delphi failed")
 }
 
 func (ds *delphidpTestSuite) TearDownSuite(c *C) {

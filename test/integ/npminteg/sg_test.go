@@ -22,9 +22,8 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 	// verify all agents have the security group
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			return len(ag.datapath.DB.SgDB) == 1, nil
+			return len(ag.nagent.NetworkAgent.ListSecurityGroup()) == 1, nil
 		}, "Sg not found on agent", "10ms", it.pollTimeout())
-		c.Assert(len(ag.datapath.DB.SgDB[fmt.Sprintf("%s|%s", "default", "testsg")].Request), Equals, 1)
 	}
 
 	// incoming rule
@@ -59,7 +58,7 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 				return false, nil
 			}
 			return true, nil
-		}, fmt.Sprintf("Sg rules not found on agent. DB: %v", ag.datapath.DB.SgPolicyDB), "10ms", it.pollTimeout())
+		}, fmt.Sprintf("Sg rules not found on agent. DB: %v", ag.nagent.NetworkAgent.ListSGPolicy()), "10ms", it.pollTimeout())
 	}
 
 	// delete the sg policy
@@ -83,7 +82,7 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 	// verify sg is removed from datapath
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			return (len(ag.datapath.DB.SgDB) == 0), nil
+			return len(ag.nagent.NetworkAgent.ListSGPolicy()) == 0, nil
 		}, "Sg still found on agent", "10ms", it.pollTimeout())
 	}
 }
@@ -112,13 +111,10 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	// verify endpoint is present in all agents
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			return (len(ag.datapath.DB.EndpointDB) == 1), nil
+			return len(ag.nagent.NetworkAgent.ListEndpoint()) == 1, nil
 		}, "endpoint not found on agent", "10ms", it.pollTimeout())
-		ep, ok := ag.datapath.DB.EndpointDB[fmt.Sprintf("%s|%s", "default", "testEndpoint1")]
-		c.Assert(ok, Equals, true)
-		c.Assert(len(ep.Request), Equals, 1)
-		c.Assert(len(ep.Request[0].EndpointAttrs.SgKeyHandle), Equals, 1)
-		c.Assert(ep.Request[0].EndpointAttrs.UsegVlan, Equals, uint32(2))
+		_, err := ag.nagent.NetworkAgent.FindEndpoint("default", "default", "testEndpoint1")
+		c.Assert(err, Equals, nil)
 	}
 
 	// create second endpoint
@@ -128,13 +124,8 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	// verify new endpoint is present in all agents
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			return (len(ag.datapath.DB.EndpointDB) == 2), nil
+			return len(ag.nagent.NetworkAgent.ListEndpoint()) == 2, nil
 		}, "endpoint not found on agent", "10ms", it.pollTimeout())
-		ep, ok := ag.datapath.DB.EndpointDB[fmt.Sprintf("%s|%s", "default", "testEndpoint2")]
-		c.Assert(ok, Equals, true)
-		c.Assert(len(ep.Request), Equals, 1)
-		c.Assert(len(ep.Request[0].EndpointAttrs.SgKeyHandle), Equals, 1)
-		c.Assert(ep.Request[0].EndpointAttrs.UsegVlan, Equals, uint32(3))
 	}
 
 	// delete the second endpoint
@@ -142,7 +133,7 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	c.Assert(err, IsNil)
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			return (len(ag.datapath.DB.EndpointDB) == 1), nil
+			return len(ag.nagent.NetworkAgent.ListEndpoint()) == 1, nil
 		}, "endpoint still found on agent", "10ms", it.pollTimeout())
 	}
 
@@ -153,11 +144,16 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	// verify sg is removed from the endpoint
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			ep, ok := ag.datapath.DB.EndpointUpdateDB[fmt.Sprintf("%s|%s", "default", "testEndpoint1")]
-			if ok && len(ep.Request) == 1 && len(ep.Request[0].EndpointAttrs.SgKeyHandle) == 0 {
-				return true, nil
+			ep, err := ag.nagent.NetworkAgent.FindEndpoint("default", "default", "testEndpoint1")
+			if err != nil {
+				return false, nil
 			}
-			return false, nil
+			for _, sgName := range ep.Spec.SecurityGroups {
+				if sgName == "testsg" {
+					return false, nil
+				}
+			}
+			return true, nil
 		}, "endpoint still found on agent", "10ms", it.pollTimeout())
 	}
 
@@ -166,7 +162,7 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	c.Assert(err, IsNil)
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			return (len(ag.datapath.DB.EndpointDB) == 0), nil
+			return len(ag.nagent.NetworkAgent.ListEndpoint()) == 0, nil
 		}, "endpoint still found on agent", "10ms", it.pollTimeout())
 	}
 

@@ -44,6 +44,7 @@ func (h *hub) Start() {
 }
 
 func (h *hub) Stop() {
+	h.listener.Close()
 	h.quit <- struct{}{}
 }
 

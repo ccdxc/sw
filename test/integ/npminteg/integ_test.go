@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pensando/sw/nic/delphi/gosdk"
+
 	log "github.com/sirupsen/logrus"
 
 	"github.com/pensando/sw/api"
@@ -44,6 +46,7 @@ type integTestSuite struct {
 	numAgents    int
 	resolverSrv  *rpckit.RPCServer
 	resolverCli  resolver.Interface
+	hub          gosdk.Hub
 }
 
 // test args
@@ -60,6 +63,10 @@ func TestNpmInteg(t *testing.T) {
 }
 
 func (it *integTestSuite) SetUpSuite(c *C) {
+	// start hub
+	it.hub = gosdk.NewFakeHub()
+	it.hub.Start()
+
 	// test parameters
 	it.numAgents = *numAgents
 	it.datapathKind = datapath.Kind(*datapathKind)
@@ -122,6 +129,9 @@ func (it *integTestSuite) TearDownTest(c *C) {
 }
 
 func (it *integTestSuite) TearDownSuite(c *C) {
+	// stop delphi hub
+	it.hub.Stop()
+
 	// stop the agents
 	for _, ag := range it.agents {
 		ag.nagent.Stop()
@@ -216,8 +226,8 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 			}
 
 			// verify endpoint was added to datapath
-			eps, cerr := ag.datapath.FindEndpoint(objKey(ep.ObjectMeta))
-			if cerr != nil || len(eps.Request) != 1 {
+			_, cerr = ag.nagent.NetworkAgent.FindEndpoint("default", "default", epname)
+			if cerr != nil {
 				waitCh <- fmt.Errorf("Endpoint not found in datapath")
 				return
 			}
@@ -234,7 +244,7 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 	for _, ag := range it.agents {
 		go func(ag *Dpagent) {
 			found := CheckEventually(func() (bool, interface{}) {
-				return (ag.datapath.GetEndpointCount() == it.numAgents), nil
+				return len(ag.nagent.NetworkAgent.ListEndpoint()) == it.numAgents, nil
 			}, "10ms", it.pollTimeout())
 			if !found {
 				waitCh <- fmt.Errorf("Endpoint count incorrect in datapath")
@@ -242,8 +252,8 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 			}
 			for i := range it.agents {
 				epname := fmt.Sprintf("testEndpoint-%d", i)
-				eps, perr := ag.datapath.FindEndpoint(fmt.Sprintf("%s|%s", "default", epname))
-				if perr != nil || len(eps.Request) != 1 {
+				_, perr := ag.nagent.NetworkAgent.FindEndpoint("default", "default", epname)
+				if perr != nil {
 					waitCh <- fmt.Errorf("Endpoint not found in datapath")
 					return
 				}
@@ -265,15 +275,15 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 			hostName := fmt.Sprintf("testHost-%d", i)
 
 			// make the call
-			ep, cerr := ag.deleteEndpointReq("default", "testNetwork", epname, hostName)
+			_, cerr := ag.deleteEndpointReq("default", "testNetwork", epname, hostName)
 			if cerr != nil && cerr != state.ErrEndpointNotFound {
 				waitCh <- fmt.Errorf("Endpoint delete failed: %v", err)
 				return
 			}
 
 			// verify endpoint was deleted from datapath
-			eps, cerr := ag.datapath.FindEndpointDel(objKey(ep.ObjectMeta))
-			if cerr != nil || len(eps.Request) != 1 {
+			eps, cerr := ag.nagent.NetworkAgent.FindEndpoint("default", "default", epname)
+			if eps != nil || cerr == nil {
 				waitCh <- fmt.Errorf("Endpoint was not deleted from datapath")
 				return
 			}
@@ -290,7 +300,7 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 	for _, ag := range it.agents {
 		go func(ag *Dpagent) {
 			if !CheckEventually(func() (bool, interface{}) {
-				return (ag.datapath.GetEndpointCount() == 0), nil
+				return len(ag.nagent.NetworkAgent.ListEndpoint()) == 0, nil
 			}, "10ms", it.pollTimeout()) {
 				waitCh <- fmt.Errorf("Endpoint was not deleted from datapath")
 				return

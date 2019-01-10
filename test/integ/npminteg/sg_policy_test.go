@@ -55,7 +55,7 @@ func (it *integTestSuite) TestNpmSgPolicy(c *C) {
 				return false, gsgp
 			}
 			return true, nil
-		}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.datapath.DB.SgPolicyDB), "10ms", it.pollTimeout())
+		}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListSGPolicy()), "10ms", it.pollTimeout())
 	}
 
 	// verify sgpolicy status reflects propagation status
@@ -101,7 +101,7 @@ func (it *integTestSuite) TestNpmSgPolicy(c *C) {
 				return false, gsgp
 			}
 			return true, nil
-		}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.datapath.DB.SgPolicyDB), "10ms", it.pollTimeout())
+		}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListSGPolicy()), "10ms", it.pollTimeout())
 	}
 
 	// verify sgpolicy status reflects propagation status

@@ -11,7 +11,6 @@ import (
 
 	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
-	"github.com/pensando/sw/nic/agent/netagent/datapath"
 	"github.com/pensando/sw/nic/agent/netagent/protos"
 	"github.com/pensando/sw/nic/agent/plugins/k8s/cni"
 	"github.com/pensando/sw/venice/globals"
@@ -73,17 +72,12 @@ func main() {
 		log.Infof("Error initializing the tsdb transmitter. Err: %v", err)
 	}
 
-	// create a network datapath
-	dp, err := datapath.NewHalDatapath("mock")
-	if err != nil {
-		log.Fatalf("Error creating fake datapath. Err: %v", err)
-	}
-
 	// create the new NetAgent
-	ag, err := netagent.NewAgent(dp, *agentDbPath, *npmURL, resolverClient, state.AgentMode_MANAGED)
+	ag, err := netagent.NewAgent("mock", *agentDbPath, *npmURL, resolverClient, state.AgentMode_MANAGED)
 	if err != nil {
 		log.Fatalf("Error creating network agent. Err: %v", err)
 	}
+
 	restServer, err := restapi.NewRestServer(ag.NetworkAgent, nil, nil, ":"+globals.AgentRESTPort)
 	ag.RestServer = restServer
 	log.Printf("%s {%+v} is running", globals.Netagent, ag)

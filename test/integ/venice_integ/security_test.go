@@ -12,7 +12,6 @@ import (
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/nic/agent/netagent"
-	"github.com/pensando/sw/nic/agent/netagent/datapath"
 	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -212,10 +211,10 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 	}
 
 	// wait for all endpoints to be propagated to other agents
-	for i, ag := range it.agents {
-		go func(ag *netagent.Agent, dp *datapath.Datapath) {
+	for _, ag := range it.agents {
+		go func(ag *netagent.Agent) {
 			found := CheckEventually(func() (bool, interface{}) {
-				return ((dp.GetEndpointCount() == it.config.NumHosts) && (len(ag.NetworkAgent.ListEndpoint()) == it.config.NumHosts)), nil
+				return len(ag.NetworkAgent.ListEndpoint()) == it.config.NumHosts, nil
 			}, "10ms", it.pollTimeout())
 			if !found {
 				waitCh <- fmt.Errorf("Endpoint count incorrect in datapath")
@@ -224,8 +223,8 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 			foundLocal := false
 			for i := range it.agents {
 				epname := fmt.Sprintf("testWorkload%d-00:01:02:03:04:%02d", i, i)
-				eps, perr := dp.FindEndpoint(fmt.Sprintf("%s|%s", "default", epname))
-				if perr != nil || len(eps.Request) != 1 {
+				eps, perr := ag.NetworkAgent.FindEndpoint("default", "default", epname)
+				if perr != nil {
 					waitCh <- fmt.Errorf("Endpoint %s not found in datapath, eps=%+v, err=%v", epname, eps, perr)
 					return
 				}
@@ -247,7 +246,7 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 				return
 			}
 			waitCh <- nil
-		}(ag, it.datapaths[i])
+		}(ag)
 	}
 
 	// wait for all goroutines to complete
@@ -272,8 +271,8 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 	}, "security group still found in agent", "100ms", it.pollTimeout())
 
 	// verify SG to endpoint association is removed
-	for i, ag := range it.agents {
-		go func(ag *netagent.Agent, dp *datapath.Datapath) {
+	for _, ag := range it.agents {
+		go func(ag *netagent.Agent) {
 			found := CheckEventually(func() (bool, interface{}) {
 				for i := range it.agents {
 					epname := fmt.Sprintf("testWorkload%d-00:01:02:03:04:%02d", i, i)
@@ -307,7 +306,7 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 			}
 
 			waitCh <- nil
-		}(ag, it.datapaths[i])
+		}(ag)
 	}
 
 	// wait for all goroutines to complete
@@ -322,17 +321,17 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 	}
 
 	// verify all endpoints are gone
-	for i, ag := range it.agents {
-		go func(ag *netagent.Agent, dp *datapath.Datapath) {
+	for _, ag := range it.agents {
+		go func(ag *netagent.Agent) {
 			if !CheckEventually(func() (bool, interface{}) {
-				return (dp.GetEndpointCount() == 0), nil
+				return len(ag.NetworkAgent.ListEndpoint()) == 0, nil
 			}, "10ms", it.pollTimeout()) {
 				waitCh <- fmt.Errorf("Endpoint was not deleted from datapath")
 				return
 			}
 
 			waitCh <- nil
-		}(ag, it.datapaths[i])
+		}(ag)
 	}
 
 	// wait for all goroutines to complete

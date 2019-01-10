@@ -56,7 +56,7 @@ func (it *integTestSuite) TestNpmWorkloadCreateDelete(c *C) {
 	for _, ag := range it.agents {
 		go func(ag *Dpagent) {
 			found := CheckEventually(func() (bool, interface{}) {
-				return (ag.datapath.GetEndpointCount() == it.numAgents), nil
+				return len(ag.nagent.NetworkAgent.ListEndpoint()) == it.numAgents, nil
 			}, "10ms", it.pollTimeout())
 			if !found {
 				waitCh <- fmt.Errorf("Endpoint count incorrect in datapath")
@@ -65,8 +65,8 @@ func (it *integTestSuite) TestNpmWorkloadCreateDelete(c *C) {
 			foundLocal := false
 			for _, nag := range it.agents {
 				epname := fmt.Sprintf("testWorkload-%s-%s", nag.nagent.NetworkAgent.NodeUUID, nag.nagent.NetworkAgent.NodeUUID)
-				eps, perr := ag.datapath.FindEndpoint(fmt.Sprintf("%s|%s", "default", epname))
-				if perr != nil || len(eps.Request) != 1 {
+				eps, perr := ag.nagent.NetworkAgent.FindEndpoint("default", "default", epname)
+				if perr != nil {
 					waitCh <- fmt.Errorf("Endpoint %s not found in datapath, eps=%+v, err=%v", epname, eps, perr)
 					return
 				}
@@ -102,7 +102,7 @@ func (it *integTestSuite) TestNpmWorkloadCreateDelete(c *C) {
 	for _, ag := range it.agents {
 		go func(ag *Dpagent) {
 			if !CheckEventually(func() (bool, interface{}) {
-				return (ag.datapath.GetEndpointCount() == 0), nil
+				return len(ag.nagent.NetworkAgent.ListEndpoint()) == 0, nil
 			}, "10ms", it.pollTimeout()) {
 				waitCh <- fmt.Errorf("Endpoint was not deleted from datapath")
 				return

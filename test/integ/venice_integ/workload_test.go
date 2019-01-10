@@ -10,7 +10,6 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/nic/agent/netagent"
-	"github.com/pensando/sw/nic/agent/netagent/datapath"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -67,11 +66,12 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 	}
 
 	// wait for all endpoints to be propagated to other agents
-	for i, ag := range it.agents {
-		go func(ag *netagent.Agent, dp *datapath.Datapath) {
+	for _, ag := range it.agents {
+		go func(ag *netagent.Agent) {
 			found := CheckEventually(func() (bool, interface{}) {
-				return ((dp.GetEndpointCount() == it.config.NumHosts) && (len(ag.NetworkAgent.ListEndpoint()) == it.config.NumHosts)), nil
+				return len(ag.NetworkAgent.ListEndpoint()) == it.config.NumHosts, nil
 			}, "10ms", it.pollTimeout())
+			fmt.Println(found)
 			if !found {
 				waitCh <- fmt.Errorf("Endpoint count incorrect in datapath")
 				return
@@ -79,11 +79,6 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 			foundLocal := false
 			for _, nag := range it.agents {
 				epname := fmt.Sprintf("testWorkload-%s-%s", nag.NetworkAgent.NodeUUID, nag.NetworkAgent.NodeUUID)
-				eps, perr := dp.FindEndpoint(fmt.Sprintf("%s|%s", "default", epname))
-				if perr != nil || len(eps.Request) != 1 {
-					waitCh <- fmt.Errorf("Endpoint %s not found in datapath, eps=%+v, err=%v", epname, eps, perr)
-					return
-				}
 				sep, perr := ag.NetworkAgent.FindEndpoint("default", "default", epname)
 				if perr != nil {
 					waitCh <- fmt.Errorf("Endpoint %s not found in netagent(%v), err=%v, db: %+v", epname, ag.NetworkAgent.NodeUUID, perr, ag.NetworkAgent.EndpointDB)
@@ -101,7 +96,7 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 			}
 
 			waitCh <- nil
-		}(ag, it.datapaths[i])
+		}(ag)
 	}
 
 	// wait for all goroutines to complete
@@ -116,17 +111,17 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 	}
 
 	// verify all endpoints are gone
-	for i, ag := range it.agents {
-		go func(ag *netagent.Agent, dp *datapath.Datapath) {
+	for _, ag := range it.agents {
+		go func(ag *netagent.Agent) {
 			if !CheckEventually(func() (bool, interface{}) {
-				return (dp.GetEndpointCount() == 0), nil
+				return len(ag.NetworkAgent.ListEndpoint()) == 0, nil
 			}, "10ms", it.pollTimeout()) {
 				waitCh <- fmt.Errorf("Endpoint was not deleted from datapath")
 				return
 			}
 
 			waitCh <- nil
-		}(ag, it.datapaths[i])
+		}(ag)
 	}
 
 	// wait for all goroutines to complete

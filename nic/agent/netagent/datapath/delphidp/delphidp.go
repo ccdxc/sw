@@ -8,77 +8,36 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/datapath/delphidp/halproto"
 	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
-	"github.com/pensando/sw/nic/delphi/gosdk"
 	"github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/nic/delphi/proto/delphi"
-	genproto "github.com/pensando/sw/nic/delphi/proto/goproto"
-	sysmgr "github.com/pensando/sw/nic/sysmgr/golib"
-	"github.com/pensando/sw/venice/utils/log"
 )
 
 // DelphiDatapath contains internal state of delphi datapath
 type DelphiDatapath struct {
 	sync.Mutex
-	name          string
-	agent         types.DatapathIntf
-	delphiClient  clientApi.Client
-	sysmgrClient  *sysmgr.Client
-	mountComplete bool
-	eventStats    map[string]int
+	agent        types.DatapathIntf
+	delphiClient clientApi.Client
+	eventStats   map[string]int
 }
 
 // NewDelphiDatapath creates a new delphi datapath service
-func NewDelphiDatapath() (*DelphiDatapath, error) {
+func NewDelphiDatapath(delphiClient clientApi.Client) (*DelphiDatapath, error) {
 	// create delphi datapath service
 	dp := DelphiDatapath{
-		name:       "netagent",
-		eventStats: make(map[string]int),
+		eventStats:   make(map[string]int),
+		delphiClient: delphiClient,
 	}
-
-	// create delphi client
-	cl, err := gosdk.NewClient(&dp)
-	if err != nil {
-		log.Fatalf("Error creating delphi client. Err: %v", err)
-	}
-
-	// create sysmgr client
-	dp.sysmgrClient = sysmgr.NewClient(cl, "netagent")
-
-	dp.delphiClient = cl
 
 	// mount objects
-	halproto.InterfaceSpecMount(cl, delphi.MountMode_ReadWriteMode)
-	halproto.InterfaceStatusMount(cl, delphi.MountMode_ReadMode)
-	halproto.LifSpecMount(cl, delphi.MountMode_ReadWriteMode)
-	halproto.LifStatusMount(cl, delphi.MountMode_ReadMode)
+	halproto.InterfaceSpecMount(dp.delphiClient, delphi.MountMode_ReadWriteMode)
+	halproto.InterfaceStatusMount(dp.delphiClient, delphi.MountMode_ReadMode)
+	halproto.LifSpecMount(dp.delphiClient, delphi.MountMode_ReadWriteMode)
+	halproto.LifStatusMount(dp.delphiClient, delphi.MountMode_ReadMode)
 
 	// setup watches
-	halproto.InterfaceStatusWatch(cl, &dp)
-
-	// connect to delphi hub
-	go cl.Run()
+	halproto.InterfaceStatusWatch(dp.delphiClient, &dp)
 
 	return &dp, nil
-}
-
-// OnMountComplete gets called after all the objectes are mounted
-func (dp *DelphiDatapath) OnMountComplete() {
-	log.Infof("On mount complete got called")
-
-	// let sysmgr know init completed
-	dp.sysmgrClient.InitDone()
-
-	// dummy code to test cgo
-	genproto.NewExampleMetricsIterator()
-
-	dp.Lock()
-	defer dp.Unlock()
-	dp.mountComplete = true
-}
-
-// Name returns the name of the service
-func (dp *DelphiDatapath) Name() string {
-	return dp.name
 }
 
 func (dp *DelphiDatapath) incrEventStats(evtName string) {
@@ -89,13 +48,6 @@ func (dp *DelphiDatapath) incrEventStats(evtName string) {
 	} else {
 		dp.eventStats[evtName] = 1
 	}
-}
-
-// IsMountComplete returns true if delphi on mount complete callback is completed
-func (dp *DelphiDatapath) IsMountComplete() bool {
-	dp.Lock()
-	defer dp.Unlock()
-	return dp.mountComplete
 }
 
 // SetAgent sets the agent

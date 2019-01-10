@@ -10,7 +10,6 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/security"
-	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -655,24 +654,21 @@ func (it *veniceIntegSuite) TestFirewallFtp(c *C) {
 
 	// verify datapath has the sg policy
 	AssertEventually(c, func() (bool, interface{}) {
-		for _, dp := range it.datapaths {
-			nsgp, cerr := dp.FindSGPolicy(sgp.ObjectMeta)
+		for _, ag := range it.agents {
+			nsgp, cerr := ag.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
 			if cerr != nil {
 				return false, nil
 			}
-			for _, req := range nsgp.Request {
-				if len(req.Rule) != len(sgp.Spec.Rules) {
-					return false, req
-				}
-				found := false
-				for _, rule := range req.Rule {
-					// FIXME: we need to validate rules more
-					if rule.Match.Protocol == halproto.IPProtocol_IPPROTO_TCP {
-						found = true
+			if len(sgp.Spec.Rules) != len(nsgp.Spec.Rules) {
+				return false, nsgp.Spec.Rules
+			}
+
+			for _, veniceRule := range sgp.Spec.Rules {
+				for _, naplesRule := range nsgp.Spec.Rules {
+					if veniceRule.Action != naplesRule.Action {
+						// FIXME: we need to validate rules more add unit tests around conversion routines
+						return false, naplesRule
 					}
-				}
-				if !found {
-					return false, req
 				}
 			}
 		}

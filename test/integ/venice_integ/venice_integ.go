@@ -9,9 +9,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"golang.org/x/net/context"
-	check "gopkg.in/check.v1"
+	"gopkg.in/check.v1"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
@@ -22,7 +21,7 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
-	state "github.com/pensando/sw/nic/agent/netagent/protos"
+	"github.com/pensando/sw/nic/agent/netagent/protos"
 	"github.com/pensando/sw/nic/agent/nmd"
 	"github.com/pensando/sw/nic/agent/nmd/platform"
 	nmdproto "github.com/pensando/sw/nic/agent/nmd/protos"
@@ -30,6 +29,7 @@ import (
 	"github.com/pensando/sw/nic/agent/tpa"
 	"github.com/pensando/sw/nic/agent/troubleshooting"
 	tshal "github.com/pensando/sw/nic/agent/troubleshooting/datapath/hal"
+	"github.com/pensando/sw/nic/delphi/gosdk"
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apiserver"
@@ -37,7 +37,7 @@ import (
 	"github.com/pensando/sw/venice/citadel/collector"
 	"github.com/pensando/sw/venice/citadel/collector/rpcserver"
 	"github.com/pensando/sw/venice/citadel/data"
-	httpserver "github.com/pensando/sw/venice/citadel/http"
+	"github.com/pensando/sw/venice/citadel/http"
 	"github.com/pensando/sw/venice/citadel/meta"
 	"github.com/pensando/sw/venice/citadel/query"
 	"github.com/pensando/sw/venice/citadel/watcher"
@@ -48,7 +48,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
 	"github.com/pensando/sw/venice/cmd/grpc/service"
 	"github.com/pensando/sw/venice/cmd/services/mock"
-	types "github.com/pensando/sw/venice/cmd/types/protos"
+	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr"
 	"github.com/pensando/sw/venice/ctrler/npm"
 	"github.com/pensando/sw/venice/ctrler/rollout"
@@ -146,7 +146,6 @@ type veniceIntegSuite struct {
 	tsCtrler            *tsm.TsCtrler
 	agents              []*netagent.Agent
 	tsAgents            []*troubleshooting.Agent
-	datapaths           []*datapath.Datapath
 	nmds                []*nmd.Agent
 	restClient          apiclient.Services
 	apisrvClient        apiclient.Services
@@ -176,6 +175,7 @@ type veniceIntegSuite struct {
 	dedupInterval       time.Duration // events dedup interval
 	batchInterval       time.Duration // events batch interval
 	pcache              pcache.Interface
+	hub                 gosdk.Hub
 }
 
 // VeniceSuite is an interface implemented by venice integ test suite
@@ -559,18 +559,12 @@ func (it *veniceIntegSuite) startEventsAndSearch() {
 
 func (it *veniceIntegSuite) startAgent() {
 	// create agents
+	// Start DelphiHub
+	it.hub = gosdk.NewFakeHub()
+	it.hub.Start()
 	for i := 0; i < it.config.NumHosts; i++ {
 		// mock datapath
-		dp, aerr := datapath.NewHalDatapath(datapath.Kind(it.config.DatapathKind))
-		if aerr != nil {
-			log.Fatalf("Error creating HAL datapath. Err: %v", aerr)
-		}
-		it.datapaths = append(it.datapaths, dp)
-
-		// set tenant create expectations for mock clients
-		if it.config.DatapathKind == "mock" {
-			dp.Hal.MockClients.MockTnclient.EXPECT().VrfCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
-		}
+		datapathKind := datapath.Kind(it.config.DatapathKind)
 
 		tmpfile, aerr := ioutil.TempFile("", "nicagent_db")
 		if aerr != nil {
@@ -582,7 +576,7 @@ func (it *veniceIntegSuite) startAgent() {
 
 		// Create netagent
 		rc := it.resolverClient
-		agent, aerr := netagent.NewAgent(dp, n, globals.Npm, rc, state.AgentMode_MANAGED)
+		agent, aerr := netagent.NewAgent(datapathKind.String(), n, globals.Npm, rc, state.AgentMode_MANAGED)
 		if aerr != nil {
 			log.Fatalf("Error creating netagent. Err: %v", aerr)
 		}
@@ -810,6 +804,8 @@ func (it *veniceIntegSuite) TearDownTest(c *check.C) {
 }
 
 func (it *veniceIntegSuite) TearDownSuite(c *check.C) {
+	// stop delphi hub
+	it.hub.Stop()
 	// stop the agents
 	for i, ag := range it.agents {
 		ag.Stop()
@@ -832,7 +828,6 @@ func (it *veniceIntegSuite) TearDownSuite(c *check.C) {
 	it.epsDir = ""
 	it.agents = []*netagent.Agent{}
 	it.tsAgents = []*troubleshooting.Agent{}
-	it.datapaths = []*datapath.Datapath{}
 
 	// stop server and client
 	log.Infof("Stop all Test Controllers")

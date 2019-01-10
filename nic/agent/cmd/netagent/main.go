@@ -17,10 +17,7 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/revproxy"
-	hal "github.com/pensando/sw/nic/agent/netagent/datapath"
-	"github.com/pensando/sw/nic/agent/netagent/datapath/delphidp"
 	protos "github.com/pensando/sw/nic/agent/netagent/protos"
-	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/nic/agent/tpa"
 	"github.com/pensando/sw/nic/agent/troubleshooting"
 	tshal "github.com/pensando/sw/nic/agent/troubleshooting/datapath/hal"
@@ -86,25 +83,6 @@ func main() {
 		hostIfMAC = macAddr.String()
 	}
 
-	var dp types.NetDatapathAPI
-	// ToDo Remove mock hal datapath prior to FCS
-	if *datapath == "hal" {
-		dp, err = hal.NewHalDatapath("hal")
-		if err != nil {
-			log.Fatalf("Error creating hal datapath. Err: %v", err)
-		}
-	} else if *datapath == "delphi" {
-		dp, err = delphidp.NewDelphiDatapath()
-		if err != nil {
-			log.Fatalf("Error creating delphi datapath. Err: %v", err)
-		}
-	} else {
-		// Set expectations to allow mock testing
-		dp, err = hal.NewHalDatapath("mock")
-		if err != nil {
-			log.Fatalf("Error creating mock datapath. Err: %v", err)
-		}
-	}
 	var agMode protos.AgentMode
 	var resolverClient resolver.Interface
 
@@ -126,7 +104,7 @@ func main() {
 	}
 
 	// create the new NetAgent
-	ag, err := netagent.NewAgent(dp, *agentDbPath, *npmURL, resolverClient, agMode)
+	ag, err := netagent.NewAgent(*datapath, *agentDbPath, *npmURL, resolverClient, agMode)
 	if err != nil {
 		log.Fatalf("Error creating Naples NetAgent. Err: %v", err)
 	}
@@ -198,7 +176,6 @@ func main() {
 		ag.NetworkAgent.NodeUUID = hostIfMAC
 	}
 
-	log.Infof("%s is running {%+v}", globals.Netagent, ag)
 	log.Infof("%s is running {%+v}.  With UUID: %v", globals.Netagent, ag, ag.NetworkAgent.NodeUUID)
 
 	// wait forever
