@@ -57,6 +57,8 @@ package-storage-offload:
 package-ionic:
 	@echo "Building IONIC driver package."
 	${TOPDIR}/platform/tools/drivers-linux.sh
+	@echo "Building IONIC driver package (Ethernet Only)."
+	${TOPDIR}/platform/tools/drivers-linux-eth.sh
 
 .PHONY: package-esx
 package-esx:
