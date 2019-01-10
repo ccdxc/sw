@@ -1029,13 +1029,11 @@ typedef struct admin_comp lif_reset_comp;
  * @nd_name:	The netdev name string, 0 terminated
  * @dev_name:	The bus info, e.g. PCI slot-device-function, 0 terminated
  */
-#ifndef IFNAMSIZ
-#define	IFNAMSIZ	16
-#endif
+#define IONIC_IFNAMSIZ  16
 struct set_netdev_info_cmd {
 	u16 opcode;
-	char nd_name[IFNAMSIZ];
-	char dev_name[IFNAMSIZ];
+	char nd_name[IONIC_IFNAMSIZ];
+	char dev_name[IONIC_IFNAMSIZ];
 	u16 rsvd[15];
 };
 
