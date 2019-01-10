@@ -468,7 +468,7 @@ end:
 sdk_ret_t
 directmap::iterate(direct_map_iterate_func_t iterate_func, const void *cb_data)
 {
-    p4pd_error_t    pd_err;
+    p4pd_error_t    pd_err = P4PD_SUCCESS;
     sdk_ret_t       rs = SDK_RET_OK;
     void            *tmp_data;
 

@@ -112,11 +112,13 @@ PdClient::p4plus_rxdma_init_tables()
 
         switch (tinfo.table_type) {
             case P4_TBL_TYPE_INDEX:
-                p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN] =
+                if (tinfo.tabledepth) {
+                    p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN] =
                         directmap::factory(tinfo.tablename, tid, tinfo.tabledepth, tinfo.actiondata_struct_size,
                                            false, ENTRY_TRACE_EN, table_health_monitor);
-                assert(p4plus_rxdma_dm_tables_
-                [tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN] != NULL);
+                    assert(p4plus_rxdma_dm_tables_
+                           [tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN] != NULL);
+                }
                 break;
 
             case P4_TBL_TYPE_MPU:
@@ -167,10 +169,12 @@ PdClient::p4plus_txdma_init_tables()
 
         switch (tinfo.table_type) {
         case P4_TBL_TYPE_INDEX:
-            p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN] =
-                directmap::factory(tinfo.tablename, tid, tinfo.tabledepth, tinfo.actiondata_struct_size,
-                                   false, ENTRY_TRACE_EN, table_health_monitor);
-            assert(p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN] != NULL);
+            if (tinfo.tabledepth) {
+                p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN] =
+                    directmap::factory(tinfo.tablename, tid, tinfo.tabledepth, tinfo.actiondata_struct_size,
+                                       false, ENTRY_TRACE_EN, table_health_monitor);
+                assert(p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN] != NULL);
+            }
             break;
 
         case P4_TBL_TYPE_MPU:

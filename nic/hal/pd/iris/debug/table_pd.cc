@@ -43,6 +43,48 @@ pd_table_metadata_get (pd_func_args_t *pd_func_args)
         dm_meta->set_num_delete_failures(dm->num_delete_errors());
     }
 
+    // DirectMap - RXDMA
+    for (int i = P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN; i <= P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MAX; i++) {
+        dm = g_hal_state_pd->p4plus_rxdma_dm_table(i);
+        if (dm == NULL) {
+            continue;
+        }
+        auto table_meta = rsp_msg->add_table_meta();
+        table_meta->set_table_id(i);
+        table_meta->set_kind(table::TABLE_INDEX);
+        table_meta->set_table_name(dm->name());
+        auto dm_meta = table_meta->mutable_index_meta();
+        dm_meta->set_capacity(dm->capacity());
+        dm_meta->set_usage(dm->num_entries_in_use());
+        dm_meta->set_num_inserts(dm->num_inserts());
+        dm_meta->set_num_insert_failures(dm->num_insert_errors());
+        dm_meta->set_num_updates(dm->num_updates());
+        dm_meta->set_num_update_failures(dm->num_update_errors());
+        dm_meta->set_num_deletes(dm->num_deletes());
+        dm_meta->set_num_delete_failures(dm->num_delete_errors());
+    }
+
+    // DirectMap - TXDMA
+    for (int i = P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN; i <= P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MAX; i++) {
+        dm = g_hal_state_pd->p4plus_txdma_dm_table(i);
+        if (dm == NULL) {
+            continue;
+        }
+        auto table_meta = rsp_msg->add_table_meta();
+        table_meta->set_table_id(i);
+        table_meta->set_kind(table::TABLE_INDEX);
+        table_meta->set_table_name(dm->name());
+        auto dm_meta = table_meta->mutable_index_meta();
+        dm_meta->set_capacity(dm->capacity());
+        dm_meta->set_usage(dm->num_entries_in_use());
+        dm_meta->set_num_inserts(dm->num_inserts());
+        dm_meta->set_num_insert_failures(dm->num_insert_errors());
+        dm_meta->set_num_updates(dm->num_updates());
+        dm_meta->set_num_update_failures(dm->num_update_errors());
+        dm_meta->set_num_deletes(dm->num_deletes());
+        dm_meta->set_num_delete_failures(dm->num_delete_errors());
+    }
+
     // Tcam
     for (int i = P4TBL_ID_TCAM_MIN; i <= P4TBL_ID_TCAM_MAX; i++) {
         tm = g_hal_state_pd->tcam_table(i);
@@ -135,6 +177,16 @@ pd_table_kind_get_from_id (uint32_t table_id, table::TableKind *kind)
         return ret;
     }
 
+    if (table_id >= P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN && table_id <= P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MAX) {
+        *kind = table::TABLE_INDEX;
+        return ret;
+    }
+
+    if (table_id >= P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN && table_id <= P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MAX) {
+        *kind = table::TABLE_INDEX;
+        return ret;
+    }
+
     if (table_id >= P4TBL_ID_TCAM_MIN && table_id <= P4TBL_ID_TCAM_MAX) {
         *kind = table::TABLE_TCAM;
         return ret;
@@ -184,11 +236,25 @@ pd_table_index_get_entries (uint32_t table_id, TableResponse *rsp)
     directmap_entry_cb_t cb = {0};
     TableIndexMsg *msg = rsp->mutable_index_table();
 
-    cb.dm = g_hal_state_pd->dm_table(table_id);
-    HAL_ASSERT_RETURN((cb.dm != NULL), HAL_RET_ERR);
+    HAL_TRACE_DEBUG("Entry: {}", table_id);
+
+    if (table_id >= P4TBL_ID_INDEX_MIN && table_id <= P4TBL_ID_INDEX_MAX) {
+        cb.dm = g_hal_state_pd->dm_table(table_id);
+    } else if (table_id >= P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN && table_id <= P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MAX) {
+        cb.dm = g_hal_state_pd->p4plus_rxdma_dm_table(table_id);
+        HAL_TRACE_DEBUG("Rxdma: {}", table_id);
+    } else if (table_id >= P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN && table_id <= P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MAX) {
+        cb.dm = g_hal_state_pd->p4plus_txdma_dm_table(table_id);
+    }
+    if (!cb.dm) {
+        return  ret;
+    }
+
     cb.msg = msg;
 
     cb.dm->iterate(pd_table_directmap_entry, &cb);
+
+    HAL_TRACE_DEBUG("Exit: {}", table_id);
 
     return ret;
 }

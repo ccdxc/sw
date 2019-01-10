@@ -983,10 +983,12 @@ hal_state_pd::p4plus_rxdma_init_tables(pd_mem_init_args_t *args)
 
         switch (tinfo.table_type) {
         case P4_TBL_TYPE_INDEX:
-            p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN] =
-                directmap::factory(tinfo.tablename, tid, tinfo.tabledepth, tinfo.actiondata_struct_size,
-                                   false, ENTRY_TRACE_EN, table_health_monitor);
-            HAL_ASSERT(p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN] != NULL);
+            if (tinfo.tabledepth) {
+                p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN] =
+                    directmap::factory(tinfo.tablename, tid, tinfo.tabledepth, tinfo.actiondata_struct_size,
+                                       false, ENTRY_TRACE_EN, table_health_monitor);
+                HAL_ASSERT(p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN] != NULL);
+            }
             break;
 
         case P4_TBL_TYPE_MPU:
@@ -1040,10 +1042,12 @@ hal_state_pd::p4plus_txdma_init_tables(pd_mem_init_args_t *args)
 
         switch (tinfo.table_type) {
         case P4_TBL_TYPE_INDEX:
-            p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN] =
-                directmap::factory(tinfo.tablename, tid, tinfo.tabledepth, tinfo.actiondata_struct_size,
-                                   false, ENTRY_TRACE_EN, table_health_monitor);
-            HAL_ASSERT(p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN] != NULL);
+            if (tinfo.tabledepth) {
+                p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN] =
+                    directmap::factory(tinfo.tablename, tid, tinfo.tabledepth, tinfo.actiondata_struct_size,
+                                       false, ENTRY_TRACE_EN, table_health_monitor);
+                HAL_ASSERT(p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN] != NULL);
+            }
             break;
 
         case P4_TBL_TYPE_MPU:
