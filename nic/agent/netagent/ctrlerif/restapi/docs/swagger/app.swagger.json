@@ -377,13 +377,19 @@
           "$ref": "#/definitions/netprotoSIP"
         },
         "sunrpc": {
-          "$ref": "#/definitions/netprotoRPC"
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoRPC"
+          }
         },
         "ftp": {
           "$ref": "#/definitions/netprotoFTP"
         },
         "msrpc": {
-          "$ref": "#/definitions/netprotoRPC"
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoRPC"
+          }
         },
         "tftp": {
           "$ref": "#/definitions/netprotoTFTP"
@@ -561,6 +567,10 @@
           "type": "integer",
           "format": "int64",
           "title": "RPC Program identifier"
+        },
+        "program-id-timeout": {
+          "type": "string",
+          "title": "Timeout is the timeout for the specific program-id"
         }
       },
       "title": "RPC ALG configuration for MSRPC and SunRPC"

@@ -8,30 +8,30 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, PropInfoItem } from './base-model';
 
 
-export interface ISecuritySunrpcAlg {
-    'program-id'?: string;
+export interface ISecurityFtp {
+    'allow-mismatch-ip-address'?: boolean;
 }
 
 
-export class SecuritySunrpcAlg extends BaseModel implements ISecuritySunrpcAlg {
-    'program-id': string = null;
+export class SecurityFtp extends BaseModel implements ISecurityFtp {
+    'allow-mismatch-ip-address': boolean = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'program-id': {
-            type: 'string'
+        'allow-mismatch-ip-address': {
+            type: 'boolean'
         },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return SecuritySunrpcAlg.propInfo[propName];
+        return SecurityFtp.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (SecuritySunrpcAlg.propInfo[prop] != null &&
-                        SecuritySunrpcAlg.propInfo[prop].default != null &&
-                        SecuritySunrpcAlg.propInfo[prop].default != '');
+        return (SecurityFtp.propInfo[prop] != null &&
+                        SecurityFtp.propInfo[prop].default != null &&
+                        SecurityFtp.propInfo[prop].default != '');
     }
 
     /**
@@ -48,10 +48,10 @@ export class SecuritySunrpcAlg extends BaseModel implements ISecuritySunrpcAlg {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values && values['program-id'] != null) {
-            this['program-id'] = values['program-id'];
-        } else if (fillDefaults && SecuritySunrpcAlg.hasDefaultValue('program-id')) {
-            this['program-id'] = SecuritySunrpcAlg.propInfo['program-id'].default;
+        if (values && values['allow-mismatch-ip-address'] != null) {
+            this['allow-mismatch-ip-address'] = values['allow-mismatch-ip-address'];
+        } else if (fillDefaults && SecurityFtp.hasDefaultValue('allow-mismatch-ip-address')) {
+            this['allow-mismatch-ip-address'] = SecurityFtp.propInfo['allow-mismatch-ip-address'].default;
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -60,7 +60,7 @@ export class SecuritySunrpcAlg extends BaseModel implements ISecuritySunrpcAlg {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'program-id': new FormControl(this['program-id']),
+                'allow-mismatch-ip-address': new FormControl(this['allow-mismatch-ip-address']),
             });
         }
         return this._formGroup;
@@ -72,7 +72,7 @@ export class SecuritySunrpcAlg extends BaseModel implements ISecuritySunrpcAlg {
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this._formGroup.controls['program-id'].setValue(this['program-id']);
+            this._formGroup.controls['allow-mismatch-ip-address'].setValue(this['allow-mismatch-ip-address']);
         }
     }
 }

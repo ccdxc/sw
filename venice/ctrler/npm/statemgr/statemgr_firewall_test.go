@@ -237,8 +237,7 @@ func TestFirewallProfile(t *testing.T) {
 			Tenant:    "testTenant",
 		},
 		Spec: security.FirewallProfileSpec{
-			SessionIdleTimeout:    "3m",
-			IPNormalizationEnable: true,
+			SessionIdleTimeout: "3m",
 		},
 	}
 
@@ -287,7 +286,7 @@ func TestAlgPolicy(t *testing.T) {
 			Timeout: "5m",
 			ALG: &security.ALG{
 				Type: "FTP",
-				FtpAlg: &security.FtpAlg{
+				Ftp: &security.Ftp{
 					AllowMismatchIPAddress: true,
 				},
 			},

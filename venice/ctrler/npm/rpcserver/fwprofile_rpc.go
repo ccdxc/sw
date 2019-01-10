@@ -40,10 +40,6 @@ func convertFirewallProfile(fps *statemgr.FirewallProfileState) *netproto.Securi
 				ICMP:               fps.Spec.IcmpTimeout,
 				ICMPDrop:           fps.Spec.ICMPDropTimeout,
 			},
-			EnableConnectionTracking: !fps.Spec.DisableConnTrack,
-			EnableTCPNormalization:   fps.Spec.TCPNormalizationEnable,
-			EnableIPNormalization:    fps.Spec.IPNormalizationEnable,
-			EnableICMPNormalization:  fps.Spec.ICMPNormalizationEnable,
 		},
 	}
 

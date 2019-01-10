@@ -20,15 +20,15 @@ var typesMapApp = map[string]*api.Struct{
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{ID: "type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"IcmpAlg": api.Field{Name: "IcmpAlg", CLITag: api.CLIInfo{ID: "icmp", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "icmp", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.IcmpAlg"},
+			"Icmp": api.Field{Name: "Icmp", CLITag: api.CLIInfo{ID: "icmp", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "icmp", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.Icmp"},
 
-			"DnsAlg": api.Field{Name: "DnsAlg", CLITag: api.CLIInfo{ID: "dns", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "dns", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.DnsAlg"},
+			"Dns": api.Field{Name: "Dns", CLITag: api.CLIInfo{ID: "dns", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "dns", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.Dns"},
 
-			"FtpAlg": api.Field{Name: "FtpAlg", CLITag: api.CLIInfo{ID: "ftp", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ftp", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.FtpAlg"},
+			"Ftp": api.Field{Name: "Ftp", CLITag: api.CLIInfo{ID: "ftp", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ftp", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.Ftp"},
 
-			"SunrpcAlg": api.Field{Name: "SunrpcAlg", CLITag: api.CLIInfo{ID: "sunrpc", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "sunrpc", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.SunrpcAlg"},
+			"Sunrpc": api.Field{Name: "Sunrpc", CLITag: api.CLIInfo{ID: "sunrpc", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "sunrpc", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.Sunrpc"},
 
-			"MsrpcAlg": api.Field{Name: "MsrpcAlg", CLITag: api.CLIInfo{ID: "msrpc", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "msrpc", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.MsrpcAlg"},
+			"Msrpc": api.Field{Name: "Msrpc", CLITag: api.CLIInfo{ID: "msrpc", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "msrpc", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.Msrpc"},
 		},
 	},
 	"security.App": &api.Struct{
@@ -68,28 +68,27 @@ var typesMapApp = map[string]*api.Struct{
 		},
 
 		CLITags: map[string]api.CLIInfo{
-			"allow-mismatch-ip-address":      api.CLIInfo{Path: "Spec.ALG.FtpAlg.AllowMismatchIPAddress", Skip: false, Insert: "", Help: ""},
+			"allow-mismatch-ip-address":      api.CLIInfo{Path: "Spec.ALG.Ftp.AllowMismatchIPAddress", Skip: false, Insert: "", Help: ""},
 			"api-version":                    api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
 			"attached-policies":              api.CLIInfo{Path: "Status.AttachedPolicies", Skip: false, Insert: "", Help: ""},
-			"code":                           api.CLIInfo{Path: "Spec.ALG.IcmpAlg.Code", Skip: false, Insert: "", Help: ""},
-			"drop-large-domain-name-packets": api.CLIInfo{Path: "Spec.ALG.DnsAlg.DropLargeDomainNamePackets", Skip: false, Insert: "", Help: ""},
-			"drop-long-label-packets":        api.CLIInfo{Path: "Spec.ALG.DnsAlg.DropLongLabelPackets", Skip: false, Insert: "", Help: ""},
-			"drop-multi-question-packets":    api.CLIInfo{Path: "Spec.ALG.DnsAlg.DropMultiQuestionPackets", Skip: false, Insert: "", Help: ""},
-			"drop-multi-zone-packets":        api.CLIInfo{Path: "Spec.ALG.DnsAlg.DropMultiZonePackets", Skip: false, Insert: "", Help: ""},
+			"code":                           api.CLIInfo{Path: "Spec.ALG.Icmp.Code", Skip: false, Insert: "", Help: ""},
+			"drop-large-domain-name-packets": api.CLIInfo{Path: "Spec.ALG.Dns.DropLargeDomainNamePackets", Skip: false, Insert: "", Help: ""},
+			"drop-long-label-packets":        api.CLIInfo{Path: "Spec.ALG.Dns.DropLongLabelPackets", Skip: false, Insert: "", Help: ""},
+			"drop-multi-question-packets":    api.CLIInfo{Path: "Spec.ALG.Dns.DropMultiQuestionPackets", Skip: false, Insert: "", Help: ""},
 			"generation-id":                  api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"kind":                           api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"labels":                         api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
-			"max-message-length":             api.CLIInfo{Path: "Spec.ALG.DnsAlg.MaxMessageLength", Skip: false, Insert: "", Help: ""},
+			"max-message-length":             api.CLIInfo{Path: "Spec.ALG.Dns.MaxMessageLength", Skip: false, Insert: "", Help: ""},
 			"name":                           api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
 			"namespace":                      api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
-			"program-id":                     api.CLIInfo{Path: "Spec.ALG.SunrpcAlg.ProgramID", Skip: false, Insert: "", Help: ""},
-			"program-uuid":                   api.CLIInfo{Path: "Spec.ALG.MsrpcAlg.ProgramUUID", Skip: false, Insert: "", Help: ""},
-			"query-response-timeout":         api.CLIInfo{Path: "Spec.ALG.DnsAlg.QueryResponseTimeout", Skip: false, Insert: "", Help: ""},
+			"program-id":                     api.CLIInfo{Path: "Spec.ALG.Sunrpc[].ProgramID", Skip: false, Insert: "", Help: ""},
+			"program-uuid":                   api.CLIInfo{Path: "Spec.ALG.Msrpc[].ProgramUUID", Skip: false, Insert: "", Help: ""},
+			"query-response-timeout":         api.CLIInfo{Path: "Spec.ALG.Dns.QueryResponseTimeout", Skip: false, Insert: "", Help: ""},
 			"resource-version":               api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
 			"self-link":                      api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
 			"tenant":                         api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
-			"timeout":                        api.CLIInfo{Path: "Spec.Timeout", Skip: false, Insert: "", Help: ""},
-			"type":                           api.CLIInfo{Path: "Spec.ALG.IcmpAlg.Type", Skip: false, Insert: "", Help: ""},
+			"timeout":                        api.CLIInfo{Path: "Spec.ALG.Msrpc[].Timeout", Skip: false, Insert: "", Help: ""},
+			"type":                           api.CLIInfo{Path: "Spec.ALG.Icmp.Type", Skip: false, Insert: "", Help: ""},
 			"uuid":                           api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
 		},
 	},
@@ -109,8 +108,8 @@ var typesMapApp = map[string]*api.Struct{
 			"AttachedPolicies": api.Field{Name: "AttachedPolicies", CLITag: api.CLIInfo{ID: "attached-policies", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "attached-policies", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
-	"security.DnsAlg": &api.Struct{
-		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(DnsAlg{}) },
+	"security.Dns": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(Dns{}) },
 		Fields: map[string]api.Field{
 			"DropMultiQuestionPackets": api.Field{Name: "DropMultiQuestionPackets", CLITag: api.CLIInfo{ID: "drop-multi-question-packets", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "drop-multi-question-packets", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 
@@ -118,37 +117,39 @@ var typesMapApp = map[string]*api.Struct{
 
 			"DropLongLabelPackets": api.Field{Name: "DropLongLabelPackets", CLITag: api.CLIInfo{ID: "drop-long-label-packets", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "drop-long-label-packets", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 
-			"DropMultiZonePackets": api.Field{Name: "DropMultiZonePackets", CLITag: api.CLIInfo{ID: "drop-multi-zone-packets", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "drop-multi-zone-packets", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
-
 			"MaxMessageLength": api.Field{Name: "MaxMessageLength", CLITag: api.CLIInfo{ID: "max-message-length", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "max-message-length", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 
 			"QueryResponseTimeout": api.Field{Name: "QueryResponseTimeout", CLITag: api.CLIInfo{ID: "query-response-timeout", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "query-response-timeout", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
-	"security.FtpAlg": &api.Struct{
-		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(FtpAlg{}) },
+	"security.Ftp": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(Ftp{}) },
 		Fields: map[string]api.Field{
 			"AllowMismatchIPAddress": api.Field{Name: "AllowMismatchIPAddress", CLITag: api.CLIInfo{ID: "allow-mismatch-ip-address", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "allow-mismatch-ip-address", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 		},
 	},
-	"security.IcmpAlg": &api.Struct{
-		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(IcmpAlg{}) },
+	"security.Icmp": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(Icmp{}) },
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{ID: "type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Code": api.Field{Name: "Code", CLITag: api.CLIInfo{ID: "code", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "code", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
-	"security.MsrpcAlg": &api.Struct{
-		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(MsrpcAlg{}) },
+	"security.Msrpc": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(Msrpc{}) },
 		Fields: map[string]api.Field{
 			"ProgramUUID": api.Field{Name: "ProgramUUID", CLITag: api.CLIInfo{ID: "program-uuid", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "program-uuid", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Timeout": api.Field{Name: "Timeout", CLITag: api.CLIInfo{ID: "timeout", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "timeout", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
-	"security.SunrpcAlg": &api.Struct{
-		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(SunrpcAlg{}) },
+	"security.Sunrpc": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(Sunrpc{}) },
 		Fields: map[string]api.Field{
 			"ProgramID": api.Field{Name: "ProgramID", CLITag: api.CLIInfo{ID: "program-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "program-id", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Timeout": api.Field{Name: "Timeout", CLITag: api.CLIInfo{ID: "timeout", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "timeout", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 }

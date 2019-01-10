@@ -270,11 +270,11 @@ func (s *ssecurityAppBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) 
 
 		"security.AppSpec":   apisrvpkg.NewMessage("security.AppSpec"),
 		"security.AppStatus": apisrvpkg.NewMessage("security.AppStatus"),
-		"security.DnsAlg":    apisrvpkg.NewMessage("security.DnsAlg"),
-		"security.FtpAlg":    apisrvpkg.NewMessage("security.FtpAlg"),
-		"security.IcmpAlg":   apisrvpkg.NewMessage("security.IcmpAlg"),
-		"security.MsrpcAlg":  apisrvpkg.NewMessage("security.MsrpcAlg"),
-		"security.SunrpcAlg": apisrvpkg.NewMessage("security.SunrpcAlg"),
+		"security.Dns":       apisrvpkg.NewMessage("security.Dns"),
+		"security.Ftp":       apisrvpkg.NewMessage("security.Ftp"),
+		"security.Icmp":      apisrvpkg.NewMessage("security.Icmp"),
+		"security.Msrpc":     apisrvpkg.NewMessage("security.Msrpc"),
+		"security.Sunrpc":    apisrvpkg.NewMessage("security.Sunrpc"),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}

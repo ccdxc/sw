@@ -61,10 +61,6 @@ func TestSecurityProfilePost(t *testing.T) {
 				ICMP:               "100ms",
 				ICMPDrop:           "1h10m15s",
 			},
-			EnableConnectionTracking: true,
-			EnableICMPNormalization:  true,
-			EnableIPNormalization:    true,
-			EnableTCPNormalization:   true,
 		},
 	}
 	err := netutils.HTTPPost("http://"+agentRestURL+"/api/security/profiles/", &postData, &resp)
@@ -110,10 +106,6 @@ func TestSecurityProfileDelete(t *testing.T) {
 				ICMP:               "100ms",
 				ICMPDrop:           "1h10m15s",
 			},
-			EnableConnectionTracking: true,
-			EnableICMPNormalization:  true,
-			EnableIPNormalization:    true,
-			EnableTCPNormalization:   true,
 		},
 	}
 	postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/security/profiles/", &deleteData, &resp)
@@ -142,7 +134,9 @@ func TestSecurityProfileUpdate(t *testing.T) {
 
 	var actualSecurityProfileSpec netproto.SecurityProfileSpec
 	updatedSecurityProfileSpec := netproto.SecurityProfileSpec{
-		EnableIPNormalization: true,
+		Timeouts: &netproto.Timeouts{
+			SessionIdle: "20s",
+		},
 	}
 	putData := netproto.SecurityProfile{
 		TypeMeta: api.TypeMeta{Kind: "SecurityProfile"},

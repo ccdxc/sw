@@ -8,29 +8,29 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecurityALG_type,  } from './enums';
-import { SecurityIcmpAlg, ISecurityIcmpAlg } from './security-icmp-alg.model';
-import { SecurityDnsAlg, ISecurityDnsAlg } from './security-dns-alg.model';
-import { SecurityFtpAlg, ISecurityFtpAlg } from './security-ftp-alg.model';
-import { SecuritySunrpcAlg, ISecuritySunrpcAlg } from './security-sunrpc-alg.model';
-import { SecurityMsrpcAlg, ISecurityMsrpcAlg } from './security-msrpc-alg.model';
+import { SecurityIcmp, ISecurityIcmp } from './security-icmp.model';
+import { SecurityDns, ISecurityDns } from './security-dns.model';
+import { SecurityFtp, ISecurityFtp } from './security-ftp.model';
+import { SecuritySunrpc, ISecuritySunrpc } from './security-sunrpc.model';
+import { SecurityMsrpc, ISecurityMsrpc } from './security-msrpc.model';
 
 export interface ISecurityALG {
     'type'?: SecurityALG_type;
-    'icmp'?: ISecurityIcmpAlg;
-    'dns'?: ISecurityDnsAlg;
-    'ftp'?: ISecurityFtpAlg;
-    'sunrpc'?: ISecuritySunrpcAlg;
-    'msrpc'?: ISecurityMsrpcAlg;
+    'icmp'?: ISecurityIcmp;
+    'dns'?: ISecurityDns;
+    'ftp'?: ISecurityFtp;
+    'sunrpc'?: Array<ISecuritySunrpc>;
+    'msrpc'?: Array<ISecurityMsrpc>;
 }
 
 
 export class SecurityALG extends BaseModel implements ISecurityALG {
     'type': SecurityALG_type = null;
-    'icmp': SecurityIcmpAlg = null;
-    'dns': SecurityDnsAlg = null;
-    'ftp': SecurityFtpAlg = null;
-    'sunrpc': SecuritySunrpcAlg = null;
-    'msrpc': SecurityMsrpcAlg = null;
+    'icmp': SecurityIcmp = null;
+    'dns': SecurityDns = null;
+    'ftp': SecurityFtp = null;
+    'sunrpc': Array<SecuritySunrpc> = null;
+    'msrpc': Array<SecurityMsrpc> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'type': {
             enum: SecurityALG_type,
@@ -73,11 +73,11 @@ export class SecurityALG extends BaseModel implements ISecurityALG {
     */
     constructor(values?: any) {
         super();
-        this['icmp'] = new SecurityIcmpAlg();
-        this['dns'] = new SecurityDnsAlg();
-        this['ftp'] = new SecurityFtpAlg();
-        this['sunrpc'] = new SecuritySunrpcAlg();
-        this['msrpc'] = new SecurityMsrpcAlg();
+        this['icmp'] = new SecurityIcmp();
+        this['dns'] = new SecurityDns();
+        this['ftp'] = new SecurityFtp();
+        this['sunrpc'] = new Array<SecuritySunrpc>();
+        this['msrpc'] = new Array<SecurityMsrpc>();
         this.setValues(values);
     }
 
@@ -101,10 +101,10 @@ export class SecurityALG extends BaseModel implements ISecurityALG {
             this['ftp'].setValues(values['ftp']);
         }
         if (values) {
-            this['sunrpc'].setValues(values['sunrpc']);
+            this.fillModelArray<SecuritySunrpc>(this, 'sunrpc', values['sunrpc'], SecuritySunrpc);
         }
         if (values) {
-            this['msrpc'].setValues(values['msrpc']);
+            this.fillModelArray<SecurityMsrpc>(this, 'msrpc', values['msrpc'], SecurityMsrpc);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -117,9 +117,13 @@ export class SecurityALG extends BaseModel implements ISecurityALG {
                 'icmp': this['icmp'].$formGroup,
                 'dns': this['dns'].$formGroup,
                 'ftp': this['ftp'].$formGroup,
-                'sunrpc': this['sunrpc'].$formGroup,
-                'msrpc': this['msrpc'].$formGroup,
+                'sunrpc': new FormArray([]),
+                'msrpc': new FormArray([]),
             });
+            // generate FormArray control elements
+            this.fillFormArray<SecuritySunrpc>('sunrpc', this['sunrpc'], SecuritySunrpc);
+            // generate FormArray control elements
+            this.fillFormArray<SecurityMsrpc>('msrpc', this['msrpc'], SecurityMsrpc);
         }
         return this._formGroup;
     }
@@ -134,8 +138,8 @@ export class SecurityALG extends BaseModel implements ISecurityALG {
             this['icmp'].setFormGroupValuesToBeModelValues();
             this['dns'].setFormGroupValuesToBeModelValues();
             this['ftp'].setFormGroupValuesToBeModelValues();
-            this['sunrpc'].setFormGroupValuesToBeModelValues();
-            this['msrpc'].setFormGroupValuesToBeModelValues();
+            this.fillModelArray<SecuritySunrpc>(this, 'sunrpc', this['sunrpc'], SecuritySunrpc);
+            this.fillModelArray<SecurityMsrpc>(this, 'msrpc', this['msrpc'], SecurityMsrpc);
         }
     }
 }

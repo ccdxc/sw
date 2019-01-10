@@ -53,13 +53,10 @@ var typesMapFwprofile = map[string]*api.Struct{
 
 		CLITags: map[string]api.CLIInfo{
 			"api-version":                  api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
-			"disable-conn-track":           api.CLIInfo{Path: "Spec.DisableConnTrack", Skip: false, Insert: "", Help: ""},
 			"drop-timeout":                 api.CLIInfo{Path: "Spec.DropTimeout", Skip: false, Insert: "", Help: ""},
 			"generation-id":                api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"icmp-drop-timeout":            api.CLIInfo{Path: "Spec.ICMPDropTimeout", Skip: false, Insert: "", Help: ""},
-			"icmp-normalization-enable":    api.CLIInfo{Path: "Spec.ICMPNormalizationEnable", Skip: false, Insert: "", Help: ""},
 			"icmp-timeout":                 api.CLIInfo{Path: "Spec.IcmpTimeout", Skip: false, Insert: "", Help: ""},
-			"ip-normalization-enable":      api.CLIInfo{Path: "Spec.IPNormalizationEnable", Skip: false, Insert: "", Help: ""},
 			"kind":                         api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"labels":                       api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
 			"name":                         api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
@@ -71,11 +68,9 @@ var typesMapFwprofile = map[string]*api.Struct{
 			"tcp-connection-setup-timeout": api.CLIInfo{Path: "Spec.TCPConnectionSetupTimeout", Skip: false, Insert: "", Help: ""},
 			"tcp-drop-timeout":             api.CLIInfo{Path: "Spec.TCPDropTimeout", Skip: false, Insert: "", Help: ""},
 			"tcp-half-closed-timeout":      api.CLIInfo{Path: "Spec.TCPHalfClosedTimeout", Skip: false, Insert: "", Help: ""},
-			"tcp-normalization-enable":     api.CLIInfo{Path: "Spec.TCPNormalizationEnable", Skip: false, Insert: "", Help: ""},
 			"tcp-timeout":                  api.CLIInfo{Path: "Spec.TcpTimeout", Skip: false, Insert: "", Help: ""},
 			"tenant":                       api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
 			"udp-drop-timeout":             api.CLIInfo{Path: "Spec.UDPDropTimeout", Skip: false, Insert: "", Help: ""},
-			"udp-normalization-enable":     api.CLIInfo{Path: "Spec.UDPNormalizationEnable", Skip: false, Insert: "", Help: ""},
 			"udp-timeout":                  api.CLIInfo{Path: "Spec.UdpTimeout", Skip: false, Insert: "", Help: ""},
 			"uuid":                         api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
 		},
@@ -104,16 +99,6 @@ var typesMapFwprofile = map[string]*api.Struct{
 			"UdpTimeout": api.Field{Name: "UdpTimeout", CLITag: api.CLIInfo{ID: "udp-timeout", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "udp-timeout", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"IcmpTimeout": api.Field{Name: "IcmpTimeout", CLITag: api.CLIInfo{ID: "icmp-timeout", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "icmp-timeout", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"DisableConnTrack": api.Field{Name: "DisableConnTrack", CLITag: api.CLIInfo{ID: "disable-conn-track", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "disable-conn-track", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
-
-			"IPNormalizationEnable": api.Field{Name: "IPNormalizationEnable", CLITag: api.CLIInfo{ID: "ip-normalization-enable", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ip-normalization-enable", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
-
-			"TCPNormalizationEnable": api.Field{Name: "TCPNormalizationEnable", CLITag: api.CLIInfo{ID: "tcp-normalization-enable", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tcp-normalization-enable", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
-
-			"UDPNormalizationEnable": api.Field{Name: "UDPNormalizationEnable", CLITag: api.CLIInfo{ID: "udp-normalization-enable", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "udp-normalization-enable", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
-
-			"ICMPNormalizationEnable": api.Field{Name: "ICMPNormalizationEnable", CLITag: api.CLIInfo{ID: "icmp-normalization-enable", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "icmp-normalization-enable", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 		},
 	},
 	"security.FirewallProfileStatus": &api.Struct{

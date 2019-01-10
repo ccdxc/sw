@@ -35,16 +35,6 @@ message FirewallProfileSpec {
     string UdpTimeout                   = 10 [(gogoproto.jsontag) = "udp-timeout,omitempty", (venice.check) = "Duration()"];
     // Icmp Timeout is the period for which a ICMP session is kept alive during inactivity
     string IcmpTimeout                  = 11 [(gogoproto.jsontag) = "icmp-timeout,omitempty", (venice.check) = "Duration()"];
-    // Disable Connection tracking, default false
-    bool DisableConnTrack             = 12 [(gogoproto.jsontag) = "disable-conn-track,omitempty"];
-    // IP Normalization Enable, when set checks for IP header field correctness; default false
-    bool IPNormalizationEnable        = 13 [(gogoproto.jsontag) = "ip-normalization-enable,omitempty"];
-    // TCP Normalization Enable, when set checks for TCP header field correctness; default false
-    bool TCPNormalizationEnable       = 14 [(gogoproto.jsontag) = "tcp-normalization-enable,omitempty"];
-    // UDP Normalization Enable, when set checks for UDP header field correctness; default false
-    bool UDPNormalizationEnable       = 15 [(gogoproto.jsontag) = "udp-normalization-enable,omitempty"];
-    // ICMP Normalization Enable, when set checks for ICMP header field correctness; default false
-    bool ICMPNormalizationEnable      = 16 [(gogoproto.jsontag) = "icmp-normalization-enable,omitempty"];
 }
 
 

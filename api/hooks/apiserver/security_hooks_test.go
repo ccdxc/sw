@@ -1285,7 +1285,7 @@ func TestAppAlgConfig(t *testing.T) {
 			},
 			ALG: &security.ALG{
 				Type: "FTP",
-				FtpAlg: &security.FtpAlg{
+				Ftp: &security.Ftp{
 					AllowMismatchIPAddress: true,
 				},
 			},
@@ -1325,7 +1325,7 @@ func TestAppAlgConfig(t *testing.T) {
 			},
 			ALG: &security.ALG{
 				Type: "ICMP",
-				IcmpAlg: &security.IcmpAlg{
+				Icmp: &security.Icmp{
 					Type: "1",
 					Code: "0",
 				},
@@ -1375,7 +1375,7 @@ func TestAppAlgConfig(t *testing.T) {
 			},
 			ALG: &security.ALG{
 				Type: "DNS",
-				DnsAlg: &security.DnsAlg{
+				Dns: &security.Dns{
 					DropMultiQuestionPackets: true,
 				},
 			},
@@ -1385,7 +1385,7 @@ func TestAppAlgConfig(t *testing.T) {
 	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
 	AssertOk(t, err, "failed to create app with DNS ALG config. Error: %v", err)
 
-	// SunrpcAlg ALG
+	// Sunrpc ALG
 	app = security.App{
 		TypeMeta: api.TypeMeta{Kind: "App"},
 		ObjectMeta: api.ObjectMeta{
@@ -1401,17 +1401,20 @@ func TestAppAlgConfig(t *testing.T) {
 			},
 			ALG: &security.ALG{
 				Type: "SunRPC",
-				SunrpcAlg: &security.SunrpcAlg{
-					ProgramID: "1",
+				Sunrpc: []*security.Sunrpc{
+					&security.Sunrpc{
+						ProgramID: "1",
+						Timeout:   "2s",
+					},
 				},
 			},
 		},
 	}
 
 	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
-	AssertOk(t, err, "failed to create app with SunrpcAlg ALG config. Error: %v", err)
+	AssertOk(t, err, "failed to create app with Sunrpc ALG config. Error: %v", err)
 
-	// MsrpcAlg ALG
+	// Msrpc ALG
 	app = security.App{
 		TypeMeta: api.TypeMeta{Kind: "App"},
 		ObjectMeta: api.ObjectMeta{
@@ -1427,15 +1430,18 @@ func TestAppAlgConfig(t *testing.T) {
 			},
 			ALG: &security.ALG{
 				Type: "MSRPC",
-				MsrpcAlg: &security.MsrpcAlg{
-					ProgramUUID: "1",
+				Msrpc: []*security.Msrpc{
+					&security.Msrpc{
+						ProgramUUID: "1",
+						Timeout:     "2s",
+					},
 				},
 			},
 		},
 	}
 
 	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
-	AssertOk(t, err, "failed to create app with MsrpcAlg ALG config. Error: %v", err)
+	AssertOk(t, err, "failed to create app with Msrpc ALG config. Error: %v", err)
 
 	// invalid ALG type
 	app = security.App{
@@ -1471,7 +1477,7 @@ func TestAppAlgConfig(t *testing.T) {
 			},
 			ALG: &security.ALG{
 				Type: "ICMP",
-				IcmpAlg: &security.IcmpAlg{
+				Icmp: &security.Icmp{
 					Type: "foo",
 					Code: "0",
 				},
@@ -1498,7 +1504,7 @@ func TestAppAlgConfig(t *testing.T) {
 			},
 			ALG: &security.ALG{
 				Type: "ICMP",
-				IcmpAlg: &security.IcmpAlg{
+				Icmp: &security.Icmp{
 					Type: "300",
 					Code: "0",
 				},
@@ -1525,7 +1531,7 @@ func TestAppAlgConfig(t *testing.T) {
 			},
 			ALG: &security.ALG{
 				Type: "ICMP",
-				IcmpAlg: &security.IcmpAlg{
+				Icmp: &security.Icmp{
 					Type: "1",
 					Code: "foo",
 				},
@@ -1552,7 +1558,7 @@ func TestAppAlgConfig(t *testing.T) {
 			},
 			ALG: &security.ALG{
 				Type: "ICMP",
-				IcmpAlg: &security.IcmpAlg{
+				Icmp: &security.Icmp{
 					Type: "1",
 					Code: "20",
 				},
@@ -1579,7 +1585,7 @@ func TestAppAlgConfig(t *testing.T) {
 			},
 			ALG: &security.ALG{
 				Type: "ICMP",
-				FtpAlg: &security.FtpAlg{
+				Ftp: &security.Ftp{
 					AllowMismatchIPAddress: true,
 				},
 			},
@@ -1605,7 +1611,7 @@ func TestAppAlgConfig(t *testing.T) {
 			},
 			ALG: &security.ALG{
 				Type: "FTP",
-				IcmpAlg: &security.IcmpAlg{
+				Icmp: &security.Icmp{
 					Type: "1",
 					Code: "0",
 				},
@@ -1614,7 +1620,7 @@ func TestAppAlgConfig(t *testing.T) {
 	}
 
 	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
-	Assert(t, err != nil, "FTP Alg with ICMP config must fail.  Error: %v", err)
+	Assert(t, err != nil, "FTP  with ICMP config must fail.  Error: %v", err)
 
 	// DNS ALG with Icmp config
 	app = security.App{
@@ -1632,7 +1638,7 @@ func TestAppAlgConfig(t *testing.T) {
 			},
 			ALG: &security.ALG{
 				Type: "DNS",
-				IcmpAlg: &security.IcmpAlg{
+				Icmp: &security.Icmp{
 					Type: "1",
 					Code: "0",
 				},
@@ -1641,7 +1647,30 @@ func TestAppAlgConfig(t *testing.T) {
 	}
 
 	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
-	Assert(t, err != nil, "FTP Alg with ICMP config must fail.  Error: %v", err)
+	Assert(t, err != nil, "FTP  with ICMP config must fail.  Error: %v", err)
+
+	// DNS ALG with TCP proto config
+	app = security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+				},
+			},
+			ALG: &security.ALG{
+				Type: "DNS",
+			},
+		},
+	}
+
+	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
+	Assert(t, err != nil, "TCP on DNS ALG must not be allowed. Error: %v", err)
 
 	// SunRPC LG with Icmp config
 	app = security.App{
@@ -1659,7 +1688,7 @@ func TestAppAlgConfig(t *testing.T) {
 			},
 			ALG: &security.ALG{
 				Type: "SunRPC",
-				IcmpAlg: &security.IcmpAlg{
+				Icmp: &security.Icmp{
 					Type: "1",
 					Code: "0",
 				},
@@ -1668,7 +1697,7 @@ func TestAppAlgConfig(t *testing.T) {
 	}
 
 	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
-	Assert(t, err != nil, "SunRPC Alg with ICMP config must fail.  Error: %v", err)
+	Assert(t, err != nil, "SunRPC  with ICMP config must fail.  Error: %v", err)
 
 	// MSRPC LG with Icmp config
 	app = security.App{
@@ -1686,7 +1715,7 @@ func TestAppAlgConfig(t *testing.T) {
 			},
 			ALG: &security.ALG{
 				Type: "MSRPC",
-				IcmpAlg: &security.IcmpAlg{
+				Icmp: &security.Icmp{
 					Type: "1",
 					Code: "0",
 				},
@@ -1695,7 +1724,7 @@ func TestAppAlgConfig(t *testing.T) {
 	}
 
 	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
-	Assert(t, err != nil, "MSRPC Alg with ICMP config must fail.  Error: %v", err)
+	Assert(t, err != nil, "MSRPC  with ICMP config must fail.  Error: %v", err)
 
 	// TFTP LG with Icmp config
 	app = security.App{
@@ -1713,7 +1742,7 @@ func TestAppAlgConfig(t *testing.T) {
 			},
 			ALG: &security.ALG{
 				Type: "TFTP",
-				IcmpAlg: &security.IcmpAlg{
+				Icmp: &security.Icmp{
 					Type: "1",
 					Code: "0",
 				},
@@ -1722,7 +1751,7 @@ func TestAppAlgConfig(t *testing.T) {
 	}
 
 	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
-	Assert(t, err != nil, "TFTP Alg with ICMP config must fail.  Error: %v", err)
+	Assert(t, err != nil, "TFTP  with ICMP config must fail.  Error: %v", err)
 
 	// RSTP LG with Icmp config
 	app = security.App{
@@ -1740,7 +1769,7 @@ func TestAppAlgConfig(t *testing.T) {
 			},
 			ALG: &security.ALG{
 				Type: "RTSP",
-				IcmpAlg: &security.IcmpAlg{
+				Icmp: &security.Icmp{
 					Type: "1",
 					Code: "0",
 				},
@@ -1749,5 +1778,5 @@ func TestAppAlgConfig(t *testing.T) {
 	}
 
 	_, _, err = s.validateApp(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
-	Assert(t, err != nil, "RSTP Alg with ICMP config must fail.  Error: %v", err)
+	Assert(t, err != nil, "RSTP  with ICMP config must fail.  Error: %v", err)
 }

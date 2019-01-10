@@ -182,11 +182,25 @@ func (s *securityHooks) validateIPAddresses(addresses []string) error {
 
 // validateApp validates contents of app
 func (s *securityHooks) validateApp(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryRun bool, in interface{}) (interface{}, bool, error) {
+	protocolNameValidate := func(protoNames []string, checkProto string, matchType string) bool {
+		switch matchType {
+		case "mustMatchAll":
+			for _, protoName := range protoNames {
+				if protoName != checkProto {
+					return false
+				}
+			}
+		default:
+		}
+		return true
+	}
+
 	app, ok := in.(security.App)
 	if !ok {
 		return in, false, fmt.Errorf("invalid input type")
 	}
 
+	appProtos := []string{}
 	for _, pp := range app.Spec.ProtoPorts {
 		protoNum, err := strconv.Atoi(pp.Protocol)
 		if err == nil {
@@ -207,6 +221,7 @@ func (s *securityHooks) validateApp(ctx context.Context, kv kvstore.Interface, t
 				return in, false, fmt.Errorf("invalid protocol %v", pp.Protocol)
 			}
 		}
+		appProtos = append(appProtos, pp.Protocol)
 
 		if len(pp.Ports) != 0 {
 			portRanges := strings.Split(pp.Ports, ",")
@@ -239,74 +254,77 @@ func (s *securityHooks) validateApp(ctx context.Context, kv kvstore.Interface, t
 
 		switch app.Spec.ALG.Type {
 		case "ICMP":
-			if (app.Spec.ALG.DnsAlg != nil) ||
-				(app.Spec.ALG.FtpAlg != nil) ||
-				(app.Spec.ALG.SunrpcAlg != nil) ||
-				(app.Spec.ALG.MsrpcAlg != nil) {
+			if (app.Spec.ALG.Dns != nil) ||
+				(app.Spec.ALG.Ftp != nil) ||
+				(app.Spec.ALG.Sunrpc != nil) ||
+				(app.Spec.ALG.Msrpc != nil) {
 				return in, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
 			}
 
 			// validate ICMP type
-			if app.Spec.ALG.IcmpAlg != nil && app.Spec.ALG.IcmpAlg.Type != "" {
-				i, err := strconv.Atoi(app.Spec.ALG.IcmpAlg.Type)
+			if app.Spec.ALG.Icmp != nil && app.Spec.ALG.Icmp.Type != "" {
+				i, err := strconv.Atoi(app.Spec.ALG.Icmp.Type)
 				if err != nil {
-					return in, false, fmt.Errorf("ICMP Type %v must be an integer value", app.Spec.ALG.IcmpAlg.Type)
+					return in, false, fmt.Errorf("ICMP Type %v must be an integer value", app.Spec.ALG.Icmp.Type)
 				}
 				if 0 > i || i > 255 {
-					return in, false, fmt.Errorf("ICMP Type %v outside range", app.Spec.ALG.IcmpAlg.Type)
+					return in, false, fmt.Errorf("ICMP Type %v outside range", app.Spec.ALG.Icmp.Type)
 				}
 			}
-			if app.Spec.ALG.IcmpAlg != nil && app.Spec.ALG.IcmpAlg.Code != "" {
-				i, err := strconv.Atoi(app.Spec.ALG.IcmpAlg.Code)
+			if app.Spec.ALG.Icmp != nil && app.Spec.ALG.Icmp.Code != "" {
+				i, err := strconv.Atoi(app.Spec.ALG.Icmp.Code)
 				if err != nil {
-					return in, false, fmt.Errorf("ICMP Code %v must be an integer value", app.Spec.ALG.IcmpAlg.Code)
+					return in, false, fmt.Errorf("ICMP Code %v must be an integer value", app.Spec.ALG.Icmp.Code)
 				}
 				if 0 > i || i > 18 {
-					return in, false, fmt.Errorf("ICMP Code %v outside range", app.Spec.ALG.IcmpAlg.Code)
+					return in, false, fmt.Errorf("ICMP Code %v outside range", app.Spec.ALG.Icmp.Code)
 				}
 			}
 		case "DNS":
-			if (app.Spec.ALG.IcmpAlg != nil) ||
-				(app.Spec.ALG.FtpAlg != nil) ||
-				(app.Spec.ALG.SunrpcAlg != nil) ||
-				(app.Spec.ALG.MsrpcAlg != nil) {
+			if (app.Spec.ALG.Icmp != nil) ||
+				(app.Spec.ALG.Ftp != nil) ||
+				(app.Spec.ALG.Sunrpc != nil) ||
+				(app.Spec.ALG.Msrpc != nil) {
 				return in, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
 			}
+			if !protocolNameValidate(appProtos, "udp", "mustMatchAll") {
+				return in, false, fmt.Errorf("Protocol(s) %v is not allowed with DNS ALG", appProtos)
+			}
 		case "FTP":
-			if (app.Spec.ALG.IcmpAlg != nil) ||
-				(app.Spec.ALG.DnsAlg != nil) ||
-				(app.Spec.ALG.SunrpcAlg != nil) ||
-				(app.Spec.ALG.MsrpcAlg != nil) {
+			if (app.Spec.ALG.Icmp != nil) ||
+				(app.Spec.ALG.Dns != nil) ||
+				(app.Spec.ALG.Sunrpc != nil) ||
+				(app.Spec.ALG.Msrpc != nil) {
 				return in, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
 			}
 		case "SunRPC":
-			if (app.Spec.ALG.IcmpAlg != nil) ||
-				(app.Spec.ALG.DnsAlg != nil) ||
-				(app.Spec.ALG.FtpAlg != nil) ||
-				(app.Spec.ALG.MsrpcAlg != nil) {
+			if (app.Spec.ALG.Icmp != nil) ||
+				(app.Spec.ALG.Dns != nil) ||
+				(app.Spec.ALG.Ftp != nil) ||
+				(app.Spec.ALG.Msrpc != nil) {
 				return in, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
 			}
 		case "MSRPC":
-			if (app.Spec.ALG.IcmpAlg != nil) ||
-				(app.Spec.ALG.DnsAlg != nil) ||
-				(app.Spec.ALG.FtpAlg != nil) ||
-				(app.Spec.ALG.SunrpcAlg != nil) {
+			if (app.Spec.ALG.Icmp != nil) ||
+				(app.Spec.ALG.Dns != nil) ||
+				(app.Spec.ALG.Ftp != nil) ||
+				(app.Spec.ALG.Sunrpc != nil) {
 				return in, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
 			}
 		case "TFTP":
-			if (app.Spec.ALG.IcmpAlg != nil) ||
-				(app.Spec.ALG.DnsAlg != nil) ||
-				(app.Spec.ALG.FtpAlg != nil) ||
-				(app.Spec.ALG.SunrpcAlg != nil) ||
-				(app.Spec.ALG.MsrpcAlg != nil) {
+			if (app.Spec.ALG.Icmp != nil) ||
+				(app.Spec.ALG.Dns != nil) ||
+				(app.Spec.ALG.Ftp != nil) ||
+				(app.Spec.ALG.Sunrpc != nil) ||
+				(app.Spec.ALG.Msrpc != nil) {
 				return in, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
 			}
 		case "RTSP":
-			if (app.Spec.ALG.IcmpAlg != nil) ||
-				(app.Spec.ALG.DnsAlg != nil) ||
-				(app.Spec.ALG.FtpAlg != nil) ||
-				(app.Spec.ALG.SunrpcAlg != nil) ||
-				(app.Spec.ALG.MsrpcAlg != nil) {
+			if (app.Spec.ALG.Icmp != nil) ||
+				(app.Spec.ALG.Dns != nil) ||
+				(app.Spec.ALG.Ftp != nil) ||
+				(app.Spec.ALG.Sunrpc != nil) ||
+				(app.Spec.ALG.Msrpc != nil) {
 				return in, false, fmt.Errorf("Only %v params can be specified for ALG type: %v", app.Spec.ALG.Type, app.Spec.ALG.Type)
 			}
 		default:

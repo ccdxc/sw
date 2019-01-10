@@ -8,35 +8,39 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, PropInfoItem } from './base-model';
 
 
-export interface ISecurityIcmpAlg {
-    'type'?: string;
-    'code'?: string;
+export interface ISecuritySunrpc {
+    'program-id'?: string;
+    'timeout'?: string;
 }
 
 
-export class SecurityIcmpAlg extends BaseModel implements ISecurityIcmpAlg {
-    'type': string = null;
-    'code': string = null;
+export class SecuritySunrpc extends BaseModel implements ISecuritySunrpc {
+    'program-id': string = null;
+    /** should be a valid time duration
+     */
+    'timeout': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'type': {
+        'program-id': {
             type: 'string'
         },
-        'code': {
+        'timeout': {
+            description:  'should be a valid time duration ',
+            hint:  '2h',
             type: 'string'
         },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return SecurityIcmpAlg.propInfo[propName];
+        return SecuritySunrpc.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (SecurityIcmpAlg.propInfo[prop] != null &&
-                        SecurityIcmpAlg.propInfo[prop].default != null &&
-                        SecurityIcmpAlg.propInfo[prop].default != '');
+        return (SecuritySunrpc.propInfo[prop] != null &&
+                        SecuritySunrpc.propInfo[prop].default != null &&
+                        SecuritySunrpc.propInfo[prop].default != '');
     }
 
     /**
@@ -53,15 +57,15 @@ export class SecurityIcmpAlg extends BaseModel implements ISecurityIcmpAlg {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values && values['type'] != null) {
-            this['type'] = values['type'];
-        } else if (fillDefaults && SecurityIcmpAlg.hasDefaultValue('type')) {
-            this['type'] = SecurityIcmpAlg.propInfo['type'].default;
+        if (values && values['program-id'] != null) {
+            this['program-id'] = values['program-id'];
+        } else if (fillDefaults && SecuritySunrpc.hasDefaultValue('program-id')) {
+            this['program-id'] = SecuritySunrpc.propInfo['program-id'].default;
         }
-        if (values && values['code'] != null) {
-            this['code'] = values['code'];
-        } else if (fillDefaults && SecurityIcmpAlg.hasDefaultValue('code')) {
-            this['code'] = SecurityIcmpAlg.propInfo['code'].default;
+        if (values && values['timeout'] != null) {
+            this['timeout'] = values['timeout'];
+        } else if (fillDefaults && SecuritySunrpc.hasDefaultValue('timeout')) {
+            this['timeout'] = SecuritySunrpc.propInfo['timeout'].default;
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -70,8 +74,8 @@ export class SecurityIcmpAlg extends BaseModel implements ISecurityIcmpAlg {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type': new FormControl(this['type']),
-                'code': new FormControl(this['code']),
+                'program-id': new FormControl(this['program-id']),
+                'timeout': new FormControl(this['timeout']),
             });
         }
         return this._formGroup;
@@ -83,8 +87,8 @@ export class SecurityIcmpAlg extends BaseModel implements ISecurityIcmpAlg {
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this._formGroup.controls['type'].setValue(this['type']);
-            this._formGroup.controls['code'].setValue(this['code']);
+            this._formGroup.controls['program-id'].setValue(this['program-id']);
+            this._formGroup.controls['timeout'].setValue(this['timeout']);
         }
     }
 }

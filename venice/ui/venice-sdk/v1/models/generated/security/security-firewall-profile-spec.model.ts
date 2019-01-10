@@ -20,11 +20,6 @@ export interface ISecurityFirewallProfileSpec {
     'tcp-timeout'?: string;
     'udp-timeout'?: string;
     'icmp-timeout'?: string;
-    'disable-conn-track'?: boolean;
-    'ip-normalization-enable'?: boolean;
-    'tcp-normalization-enable'?: boolean;
-    'udp-normalization-enable'?: boolean;
-    'icmp-normalization-enable'?: boolean;
 }
 
 
@@ -62,11 +57,6 @@ export class SecurityFirewallProfileSpec extends BaseModel implements ISecurityF
     /** should be a valid time duration
      */
     'icmp-timeout': string = null;
-    'disable-conn-track': boolean = null;
-    'ip-normalization-enable': boolean = null;
-    'tcp-normalization-enable': boolean = null;
-    'udp-normalization-enable': boolean = null;
-    'icmp-normalization-enable': boolean = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'session-idle-timeout': {
             description:  'should be a valid time duration ',
@@ -122,21 +112,6 @@ export class SecurityFirewallProfileSpec extends BaseModel implements ISecurityF
             description:  'should be a valid time duration ',
             hint:  '2h',
             type: 'string'
-        },
-        'disable-conn-track': {
-            type: 'boolean'
-        },
-        'ip-normalization-enable': {
-            type: 'boolean'
-        },
-        'tcp-normalization-enable': {
-            type: 'boolean'
-        },
-        'udp-normalization-enable': {
-            type: 'boolean'
-        },
-        'icmp-normalization-enable': {
-            type: 'boolean'
         },
     }
 
@@ -222,31 +197,6 @@ export class SecurityFirewallProfileSpec extends BaseModel implements ISecurityF
         } else if (fillDefaults && SecurityFirewallProfileSpec.hasDefaultValue('icmp-timeout')) {
             this['icmp-timeout'] = SecurityFirewallProfileSpec.propInfo['icmp-timeout'].default;
         }
-        if (values && values['disable-conn-track'] != null) {
-            this['disable-conn-track'] = values['disable-conn-track'];
-        } else if (fillDefaults && SecurityFirewallProfileSpec.hasDefaultValue('disable-conn-track')) {
-            this['disable-conn-track'] = SecurityFirewallProfileSpec.propInfo['disable-conn-track'].default;
-        }
-        if (values && values['ip-normalization-enable'] != null) {
-            this['ip-normalization-enable'] = values['ip-normalization-enable'];
-        } else if (fillDefaults && SecurityFirewallProfileSpec.hasDefaultValue('ip-normalization-enable')) {
-            this['ip-normalization-enable'] = SecurityFirewallProfileSpec.propInfo['ip-normalization-enable'].default;
-        }
-        if (values && values['tcp-normalization-enable'] != null) {
-            this['tcp-normalization-enable'] = values['tcp-normalization-enable'];
-        } else if (fillDefaults && SecurityFirewallProfileSpec.hasDefaultValue('tcp-normalization-enable')) {
-            this['tcp-normalization-enable'] = SecurityFirewallProfileSpec.propInfo['tcp-normalization-enable'].default;
-        }
-        if (values && values['udp-normalization-enable'] != null) {
-            this['udp-normalization-enable'] = values['udp-normalization-enable'];
-        } else if (fillDefaults && SecurityFirewallProfileSpec.hasDefaultValue('udp-normalization-enable')) {
-            this['udp-normalization-enable'] = SecurityFirewallProfileSpec.propInfo['udp-normalization-enable'].default;
-        }
-        if (values && values['icmp-normalization-enable'] != null) {
-            this['icmp-normalization-enable'] = values['icmp-normalization-enable'];
-        } else if (fillDefaults && SecurityFirewallProfileSpec.hasDefaultValue('icmp-normalization-enable')) {
-            this['icmp-normalization-enable'] = SecurityFirewallProfileSpec.propInfo['icmp-normalization-enable'].default;
-        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -265,11 +215,6 @@ export class SecurityFirewallProfileSpec extends BaseModel implements ISecurityF
                 'tcp-timeout': new FormControl(this['tcp-timeout']),
                 'udp-timeout': new FormControl(this['udp-timeout']),
                 'icmp-timeout': new FormControl(this['icmp-timeout']),
-                'disable-conn-track': new FormControl(this['disable-conn-track']),
-                'ip-normalization-enable': new FormControl(this['ip-normalization-enable']),
-                'tcp-normalization-enable': new FormControl(this['tcp-normalization-enable']),
-                'udp-normalization-enable': new FormControl(this['udp-normalization-enable']),
-                'icmp-normalization-enable': new FormControl(this['icmp-normalization-enable']),
             });
         }
         return this._formGroup;
@@ -292,11 +237,6 @@ export class SecurityFirewallProfileSpec extends BaseModel implements ISecurityF
             this._formGroup.controls['tcp-timeout'].setValue(this['tcp-timeout']);
             this._formGroup.controls['udp-timeout'].setValue(this['udp-timeout']);
             this._formGroup.controls['icmp-timeout'].setValue(this['icmp-timeout']);
-            this._formGroup.controls['disable-conn-track'].setValue(this['disable-conn-track']);
-            this._formGroup.controls['ip-normalization-enable'].setValue(this['ip-normalization-enable']);
-            this._formGroup.controls['tcp-normalization-enable'].setValue(this['tcp-normalization-enable']);
-            this._formGroup.controls['udp-normalization-enable'].setValue(this['udp-normalization-enable']);
-            this._formGroup.controls['icmp-normalization-enable'].setValue(this['icmp-normalization-enable']);
         }
     }
 }

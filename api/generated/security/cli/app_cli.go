@@ -50,13 +50,6 @@ var CreateAppFlags = []gen.CliFlag{
 		Insert: "",
 	},
 	{
-		ID:     "drop-multi-zone-packets",
-		Type:   "Bool",
-		Help:   "",
-		Skip:   false,
-		Insert: "",
-	},
-	{
 		ID:     "max-message-length",
 		Type:   "String",
 		Help:   "",
@@ -65,14 +58,14 @@ var CreateAppFlags = []gen.CliFlag{
 	},
 	{
 		ID:     "program-id",
-		Type:   "String",
+		Type:   "StringSlice",
 		Help:   "",
 		Skip:   false,
 		Insert: "",
 	},
 	{
 		ID:     "program-uuid",
-		Type:   "String",
+		Type:   "StringSlice",
 		Help:   "",
 		Skip:   false,
 		Insert: "",
@@ -86,7 +79,7 @@ var CreateAppFlags = []gen.CliFlag{
 	},
 	{
 		ID:     "timeout",
-		Type:   "String",
+		Type:   "StringSlice",
 		Help:   "",
 		Skip:   false,
 		Insert: "",

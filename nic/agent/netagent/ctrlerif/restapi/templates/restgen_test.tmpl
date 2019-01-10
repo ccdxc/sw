@@ -231,10 +231,6 @@ import (
                                                               				ICMP: "100ms",
                                                               				ICMPDrop: "1h10m15s",
                                                               			},
-                                                              			EnableConnectionTracking: true,
-                                                              			EnableICMPNormalization: true,
-                                                              			EnableIPNormalization: true,
-                                                              			EnableTCPNormalization: true,
                                                               		},
                                                             }
                                     err := netutils.HTTPPost("http://"+agentRestURL+"/api/security/profiles/", &{{lower .}}Data, &resp)
@@ -774,7 +770,9 @@ import (
 
                                         var actual{{title $crudObject}}Spec netproto.{{title $crudObject}}Spec
                                         updated{{title $crudObject}}Spec := netproto.{{title $crudObject}}Spec{
-                                                                               EnableIPNormalization: true,
+					                                      Timeouts: &netproto.Timeouts{
+                                                                                  SessionIdle: "20s",
+                                                                              },
                                                                             }
                                         {{lower .}}Data := netproto.{{title $crudObject}}{
                                             TypeMeta: api.TypeMeta{Kind: "{{title $crudObject}}"},
@@ -1172,10 +1170,6 @@ import (
                           				ICMP: "100ms",
                           				ICMPDrop: "1h10m15s",
                           			},
-                          			EnableConnectionTracking: true,
-                          			EnableICMPNormalization: true,
-                          			EnableIPNormalization: true,
-                          			EnableTCPNormalization: true,
                           		},
                         }
                         postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/security/profiles/", &{{lower .}}Data, &resp)

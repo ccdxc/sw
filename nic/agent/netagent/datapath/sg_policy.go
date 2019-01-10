@@ -314,11 +314,14 @@ func convertALG(app *netproto.App) (*halproto.AppData, error) {
 	// MSRPC
 	if algSpec.MSRPC != nil {
 		appData.Alg = halproto.ALGName_APP_SVC_MSFT_RPC
-		appData.AppOptions = &halproto.AppData_MsrpcOptionInfo{
-			MsrpcOptionInfo: &halproto.AppData_MSRPCOptions{
-				Uuid: algSpec.MSRPC.ProgramID,
-			},
-		}
+		/*
+				TBD: this needs to be coordinated with an array of (program-id, timeout) tuples
+			appData.AppOptions = &halproto.AppData_MsrpcOptionInfo{
+				MsrpcOptionInfo: &halproto.AppData_MSRPCOptions{
+					Uuid: algSpec.MSRPC.ProgramID,
+				},
+			}
+		*/
 		return &appData, nil
 	}
 
@@ -400,11 +403,14 @@ func convertALG(app *netproto.App) (*halproto.AppData, error) {
 	// SunRPC
 	if algSpec.SUNRPC != nil {
 		appData.Alg = halproto.ALGName_APP_SVC_SUN_RPC
-		appData.AppOptions = &halproto.AppData_SunRpcOptionInfo{
-			SunRpcOptionInfo: &halproto.AppData_SunRPCOptions{
-				ProgramNumber: algSpec.SUNRPC.ProgramID,
-			},
-		}
+		/*
+			TBD: this needs to be coordinated with an array of (program-id, timeout) tuples
+			appData.AppOptions = &halproto.AppData_SunRpcOptionInfo{
+				SunRpcOptionInfo: &halproto.AppData_SunRPCOptions{
+					ProgramNumber: algSpec.SUNRPC.ProgramID,
+				},
+			}
+		*/
 		return &appData, nil
 	}
 

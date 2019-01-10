@@ -8,30 +8,35 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, PropInfoItem } from './base-model';
 
 
-export interface ISecurityMsrpcAlg {
-    'program-uuid'?: string;
+export interface ISecurityIcmp {
+    'type'?: string;
+    'code'?: string;
 }
 
 
-export class SecurityMsrpcAlg extends BaseModel implements ISecurityMsrpcAlg {
-    'program-uuid': string = null;
+export class SecurityIcmp extends BaseModel implements ISecurityIcmp {
+    'type': string = null;
+    'code': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'program-uuid': {
+        'type': {
+            type: 'string'
+        },
+        'code': {
             type: 'string'
         },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return SecurityMsrpcAlg.propInfo[propName];
+        return SecurityIcmp.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (SecurityMsrpcAlg.propInfo[prop] != null &&
-                        SecurityMsrpcAlg.propInfo[prop].default != null &&
-                        SecurityMsrpcAlg.propInfo[prop].default != '');
+        return (SecurityIcmp.propInfo[prop] != null &&
+                        SecurityIcmp.propInfo[prop].default != null &&
+                        SecurityIcmp.propInfo[prop].default != '');
     }
 
     /**
@@ -48,10 +53,15 @@ export class SecurityMsrpcAlg extends BaseModel implements ISecurityMsrpcAlg {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values && values['program-uuid'] != null) {
-            this['program-uuid'] = values['program-uuid'];
-        } else if (fillDefaults && SecurityMsrpcAlg.hasDefaultValue('program-uuid')) {
-            this['program-uuid'] = SecurityMsrpcAlg.propInfo['program-uuid'].default;
+        if (values && values['type'] != null) {
+            this['type'] = values['type'];
+        } else if (fillDefaults && SecurityIcmp.hasDefaultValue('type')) {
+            this['type'] = SecurityIcmp.propInfo['type'].default;
+        }
+        if (values && values['code'] != null) {
+            this['code'] = values['code'];
+        } else if (fillDefaults && SecurityIcmp.hasDefaultValue('code')) {
+            this['code'] = SecurityIcmp.propInfo['code'].default;
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -60,7 +70,8 @@ export class SecurityMsrpcAlg extends BaseModel implements ISecurityMsrpcAlg {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'program-uuid': new FormControl(this['program-uuid']),
+                'type': new FormControl(this['type']),
+                'code': new FormControl(this['code']),
             });
         }
         return this._formGroup;
@@ -72,7 +83,8 @@ export class SecurityMsrpcAlg extends BaseModel implements ISecurityMsrpcAlg {
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this._formGroup.controls['program-uuid'].setValue(this['program-uuid']);
+            this._formGroup.controls['type'].setValue(this['type']);
+            this._formGroup.controls['code'].setValue(this['code']);
         }
     }
 }

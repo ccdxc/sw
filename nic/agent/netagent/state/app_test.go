@@ -258,8 +258,11 @@ func TestAppMultipleALGConfig_ThreeALG(t *testing.T) {
 				FTP: &netproto.FTP{
 					AllowMismatchIPAddresses: true,
 				},
-				SUNRPC: &netproto.RPC{
-					ProgramID: 42,
+				SUNRPC: []*netproto.RPC{
+					&netproto.RPC{
+						ProgramID:        42,
+						ProgramIDTimeout: "2s",
+					},
 				},
 			},
 		},

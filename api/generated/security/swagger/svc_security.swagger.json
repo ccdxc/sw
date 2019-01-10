@@ -416,14 +416,6 @@
             "format": "boolean"
           },
           {
-            "name": "dns.drop-multi-zone-packets",
-            "description": "Drop if number of zones in the request is more tha one.",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          },
-          {
             "name": "dns.max-message-length",
             "description": "Maximum message length, default value is 512, maximum specified user value is 8129.",
             "in": "query",
@@ -445,20 +437,6 @@
             "required": false,
             "type": "boolean",
             "format": "boolean"
-          },
-          {
-            "name": "sunrpc.program-id",
-            "description": "RPC Program identifier.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "msrpc.program-uuid",
-            "description": "MSRPC Program identifier.",
-            "in": "query",
-            "required": false,
-            "type": "string"
           },
           {
             "name": "status.attached-policies",
@@ -1554,46 +1532,6 @@
             "in": "query",
             "required": false,
             "type": "string"
-          },
-          {
-            "name": "spec.disable-conn-track",
-            "description": "Disable Connection tracking, default false.",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          },
-          {
-            "name": "spec.ip-normalization-enable",
-            "description": "IP Normalization Enable, when set checks for IP header field correctness; default false.",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          },
-          {
-            "name": "spec.tcp-normalization-enable",
-            "description": "TCP Normalization Enable, when set checks for TCP header field correctness; default false.",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          },
-          {
-            "name": "spec.udp-normalization-enable",
-            "description": "UDP Normalization Enable, when set checks for UDP header field correctness; default false.",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          },
-          {
-            "name": "spec.icmp-normalization-enable",
-            "description": "ICMP Normalization Enable, when set checks for ICMP header field correctness; default false.",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
           }
         ],
         "tags": [
@@ -3179,14 +3117,6 @@
             "format": "boolean"
           },
           {
-            "name": "dns.drop-multi-zone-packets",
-            "description": "Drop if number of zones in the request is more tha one.",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          },
-          {
             "name": "dns.max-message-length",
             "description": "Maximum message length, default value is 512, maximum specified user value is 8129.",
             "in": "query",
@@ -3208,20 +3138,6 @@
             "required": false,
             "type": "boolean",
             "format": "boolean"
-          },
-          {
-            "name": "sunrpc.program-id",
-            "description": "RPC Program identifier.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "msrpc.program-uuid",
-            "description": "MSRPC Program identifier.",
-            "in": "query",
-            "required": false,
-            "type": "string"
           },
           {
             "name": "status.attached-policies",
@@ -4349,46 +4265,6 @@
             "in": "query",
             "required": false,
             "type": "string"
-          },
-          {
-            "name": "spec.disable-conn-track",
-            "description": "Disable Connection tracking, default false.",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          },
-          {
-            "name": "spec.ip-normalization-enable",
-            "description": "IP Normalization Enable, when set checks for IP header field correctness; default false.",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          },
-          {
-            "name": "spec.tcp-normalization-enable",
-            "description": "TCP Normalization Enable, when set checks for TCP header field correctness; default false.",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          },
-          {
-            "name": "spec.udp-normalization-enable",
-            "description": "UDP Normalization Enable, when set checks for UDP header field correctness; default false.",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          },
-          {
-            "name": "spec.icmp-normalization-enable",
-            "description": "ICMP Normalization Enable, when set checks for ICMP header field correctness; default false.",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
           }
         ],
         "tags": [
@@ -8596,19 +8472,25 @@
           "default": "ICMP"
         },
         "icmp": {
-          "$ref": "#/definitions/securityIcmpAlg"
+          "$ref": "#/definitions/securityIcmp"
         },
         "dns": {
-          "$ref": "#/definitions/securityDnsAlg"
+          "$ref": "#/definitions/securityDns"
         },
         "ftp": {
-          "$ref": "#/definitions/securityFtpAlg"
+          "$ref": "#/definitions/securityFtp"
         },
         "sunrpc": {
-          "$ref": "#/definitions/securitySunrpcAlg"
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/securitySunrpc"
+          }
         },
         "msrpc": {
-          "$ref": "#/definitions/securityMsrpcAlg"
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/securityMsrpc"
+          }
         }
       },
       "description": "ALG specifies the application specific configuration for the list of applications mentioned below."
@@ -8927,7 +8809,7 @@
         }
       }
     },
-    "securityDnsAlg": {
+    "securityDns": {
       "type": "object",
       "properties": {
         "drop-multi-question-packets": {
@@ -8944,11 +8826,6 @@
           "type": "boolean",
           "format": "boolean",
           "title": "Drop if label length is 64 bytes or higher"
-        },
-        "drop-multi-zone-packets": {
-          "type": "boolean",
-          "format": "boolean",
-          "title": "Drop if number of zones in the request is more tha one"
         },
         "max-message-length": {
           "type": "integer",
@@ -9073,31 +8950,6 @@
           "example": "2h",
           "description": "should be a valid time duration\n",
           "title": "Icmp Timeout is the period for which a ICMP session is kept alive during inactivity"
-        },
-        "disable-conn-track": {
-          "type": "boolean",
-          "format": "boolean",
-          "title": "Disable Connection tracking, default false"
-        },
-        "ip-normalization-enable": {
-          "type": "boolean",
-          "format": "boolean",
-          "title": "IP Normalization Enable, when set checks for IP header field correctness; default false"
-        },
-        "tcp-normalization-enable": {
-          "type": "boolean",
-          "format": "boolean",
-          "title": "TCP Normalization Enable, when set checks for TCP header field correctness; default false"
-        },
-        "udp-normalization-enable": {
-          "type": "boolean",
-          "format": "boolean",
-          "title": "UDP Normalization Enable, when set checks for UDP header field correctness; default false"
-        },
-        "icmp-normalization-enable": {
-          "type": "boolean",
-          "format": "boolean",
-          "title": "ICMP Normalization Enable, when set checks for ICMP header field correctness; default false"
         }
       },
       "title": "FirewallProfileSpec - spec part of FirewallProfile object"
@@ -9106,7 +8958,7 @@
       "type": "object",
       "title": "FirewallProfileStatus - status part of FirewallProfile object"
     },
-    "securityFtpAlg": {
+    "securityFtp": {
       "type": "object",
       "properties": {
         "allow-mismatch-ip-address": {
@@ -9130,7 +8982,7 @@
         }
       }
     },
-    "securityIcmpAlg": {
+    "securityIcmp": {
       "type": "object",
       "properties": {
         "type": {
@@ -9144,12 +8996,18 @@
       },
       "title": "ICMP ALG configuration"
     },
-    "securityMsrpcAlg": {
+    "securityMsrpc": {
       "type": "object",
       "properties": {
         "program-uuid": {
           "type": "string",
           "title": "MSRPC Program identifier"
+        },
+        "timeout": {
+          "type": "string",
+          "example": "2h",
+          "description": "should be a valid time duration\n",
+          "title": "Timeout for this program id"
         }
       },
       "title": "MSRPC ALG configuration"
@@ -9414,12 +9272,18 @@
       },
       "title": "security group status"
     },
-    "securitySunrpcAlg": {
+    "securitySunrpc": {
       "type": "object",
       "properties": {
         "program-id": {
           "type": "string",
           "title": "RPC Program identifier"
+        },
+        "timeout": {
+          "type": "string",
+          "example": "2h",
+          "description": "should be a valid time duration\n",
+          "title": "Timeout for this program id"
         }
       },
       "title": "SunRPC ALG configuration"

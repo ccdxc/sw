@@ -39,10 +39,6 @@ func (it *veniceIntegSuite) TestFirewallProfile(c *C) {
 			TcpTimeout:                "3m",
 			UdpTimeout:                "3m",
 			IcmpTimeout:               "3m",
-
-			IPNormalizationEnable:   true,
-			TCPNormalizationEnable:  true,
-			ICMPNormalizationEnable: true,
 		},
 	}
 
@@ -76,14 +72,9 @@ func (it *veniceIntegSuite) TestFirewallProfile(c *C) {
 		AssertEquals(c, secp.Spec.Timeouts.UDPDrop, fwp.Spec.UDPDropTimeout, "incorrect params")
 		AssertEquals(c, secp.Spec.Timeouts.ICMP, fwp.Spec.IcmpTimeout, "incorrect params")
 		AssertEquals(c, secp.Spec.Timeouts.ICMPDrop, fwp.Spec.ICMPDropTimeout, "incorrect params")
-		AssertEquals(c, secp.Spec.EnableConnectionTracking, true, "incorrect params")
-		AssertEquals(c, secp.Spec.EnableTCPNormalization, fwp.Spec.TCPNormalizationEnable, "incorrect params")
-		AssertEquals(c, secp.Spec.EnableIPNormalization, fwp.Spec.IPNormalizationEnable, "incorrect params")
-		AssertEquals(c, secp.Spec.EnableICMPNormalization, fwp.Spec.ICMPNormalizationEnable, "incorrect params")
 	}
 
 	// change conn track and session timeout
-	fwp.Spec.DisableConnTrack = true
 	fwp.Spec.SessionIdleTimeout = "5m"
 	_, err = it.restClient.SecurityV1().FirewallProfile().Update(ctx, &fwp)
 	AssertOk(c, err, "Error updating firewall profile")
@@ -92,8 +83,7 @@ func (it *veniceIntegSuite) TestFirewallProfile(c *C) {
 	AssertEventually(c, func() (bool, interface{}) {
 		for _, ag := range it.agents {
 			secp, cerr := ag.NetworkAgent.FindSecurityProfile(fwp.ObjectMeta)
-			if (cerr != nil) || (secp.Spec.EnableConnectionTracking != false) ||
-				(secp.Spec.Timeouts.SessionIdle != fwp.Spec.SessionIdleTimeout) {
+			if (cerr != nil) || (secp.Spec.Timeouts.SessionIdle != fwp.Spec.SessionIdleTimeout) {
 				return false, secp
 			}
 		}
@@ -137,7 +127,7 @@ func (it *veniceIntegSuite) TestIcmpApp(c *C) {
 			Timeout: "5m",
 			ALG: &security.ALG{
 				Type: "ICMP",
-				IcmpAlg: &security.IcmpAlg{
+				Icmp: &security.Icmp{
 					Type: "1",
 					Code: "2",
 				},
@@ -166,8 +156,8 @@ func (it *veniceIntegSuite) TestIcmpApp(c *C) {
 		AssertOk(c, cerr, "App not found in agent")
 		AssertEquals(c, napp.Spec.AppIdleTimeout, icmpApp.Spec.Timeout, "invalid alg params")
 		AssertEquals(c, napp.Spec.ALGType, icmpApp.Spec.ALG.Type, "invalid alg params")
-		AssertEquals(c, fmt.Sprintf("%d", napp.Spec.ALG.ICMP.Type), icmpApp.Spec.ALG.IcmpAlg.Type, "invalid alg params")
-		AssertEquals(c, fmt.Sprintf("%d", napp.Spec.ALG.ICMP.Code), icmpApp.Spec.ALG.IcmpAlg.Code, "invalid alg params")
+		AssertEquals(c, fmt.Sprintf("%d", napp.Spec.ALG.ICMP.Type), icmpApp.Spec.ALG.Icmp.Type, "invalid alg params")
+		AssertEquals(c, fmt.Sprintf("%d", napp.Spec.ALG.ICMP.Code), icmpApp.Spec.ALG.Icmp.Code, "invalid alg params")
 
 	}
 
@@ -331,11 +321,10 @@ func (it *veniceIntegSuite) TestDnsApp(c *C) {
 			Timeout: "5m",
 			ALG: &security.ALG{
 				Type: "DNS",
-				DnsAlg: &security.DnsAlg{
+				Dns: &security.Dns{
 					DropMultiQuestionPackets:   true,
 					DropLargeDomainNamePackets: true,
 					DropLongLabelPackets:       true,
-					DropMultiZonePackets:       true,
 					MaxMessageLength:           100,
 					QueryResponseTimeout:       "60s",
 				},
@@ -364,12 +353,11 @@ func (it *veniceIntegSuite) TestDnsApp(c *C) {
 		AssertOk(c, cerr, "App not found in agent")
 		AssertEquals(c, napp.Spec.AppIdleTimeout, app.Spec.Timeout, "invalid alg params")
 		AssertEquals(c, napp.Spec.ALGType, app.Spec.ALG.Type, "invalid alg params")
-		AssertEquals(c, napp.Spec.ALG.DNS.DropMultiQuestionPackets, app.Spec.ALG.DnsAlg.DropMultiQuestionPackets, "invalid alg params")
-		AssertEquals(c, napp.Spec.ALG.DNS.DropLargeDomainPackets, app.Spec.ALG.DnsAlg.DropLargeDomainNamePackets, "invalid alg params")
-		AssertEquals(c, napp.Spec.ALG.DNS.DropLongLabelPackets, app.Spec.ALG.DnsAlg.DropLongLabelPackets, "invalid alg params")
-		AssertEquals(c, napp.Spec.ALG.DNS.DropMultiZonePackets, app.Spec.ALG.DnsAlg.DropMultiZonePackets, "invalid alg params")
-		AssertEquals(c, napp.Spec.ALG.DNS.MaxMessageLength, app.Spec.ALG.DnsAlg.MaxMessageLength, "invalid alg params")
-		AssertEquals(c, napp.Spec.ALG.DNS.QueryResponseTimeout, app.Spec.ALG.DnsAlg.QueryResponseTimeout, "invalid alg params")
+		AssertEquals(c, napp.Spec.ALG.DNS.DropMultiQuestionPackets, app.Spec.ALG.Dns.DropMultiQuestionPackets, "invalid alg params")
+		AssertEquals(c, napp.Spec.ALG.DNS.DropLargeDomainPackets, app.Spec.ALG.Dns.DropLargeDomainNamePackets, "invalid alg params")
+		AssertEquals(c, napp.Spec.ALG.DNS.DropLongLabelPackets, app.Spec.ALG.Dns.DropLongLabelPackets, "invalid alg params")
+		AssertEquals(c, napp.Spec.ALG.DNS.MaxMessageLength, app.Spec.ALG.Dns.MaxMessageLength, "invalid alg params")
+		AssertEquals(c, napp.Spec.ALG.DNS.QueryResponseTimeout, app.Spec.ALG.Dns.QueryResponseTimeout, "invalid alg params")
 	}
 
 	// delete app
@@ -410,7 +398,7 @@ func (it *veniceIntegSuite) TestFtpApp(c *C) {
 			Timeout: "5m",
 			ALG: &security.ALG{
 				Type: "FTP",
-				FtpAlg: &security.FtpAlg{
+				Ftp: &security.Ftp{
 					AllowMismatchIPAddress: true,
 				},
 			},
@@ -438,7 +426,7 @@ func (it *veniceIntegSuite) TestFtpApp(c *C) {
 		AssertOk(c, cerr, "App not found in agent")
 		AssertEquals(c, napp.Spec.AppIdleTimeout, app.Spec.Timeout, "invalid alg params")
 		AssertEquals(c, napp.Spec.ALGType, app.Spec.ALG.Type, "invalid alg params")
-		AssertEquals(c, napp.Spec.ALG.FTP.AllowMismatchIPAddresses, app.Spec.ALG.FtpAlg.AllowMismatchIPAddress, "invalid alg params")
+		AssertEquals(c, napp.Spec.ALG.FTP.AllowMismatchIPAddresses, app.Spec.ALG.Ftp.AllowMismatchIPAddress, "invalid alg params")
 	}
 
 	// delete app
@@ -480,8 +468,11 @@ func (it *veniceIntegSuite) TestRPCApp(c *C) {
 			Timeout: "5m",
 			ALG: &security.ALG{
 				Type: "SunRPC",
-				SunrpcAlg: &security.SunrpcAlg{
-					ProgramID: fmt.Sprintf("%d", pgmID),
+				Sunrpc: []*security.Sunrpc{
+					&security.Sunrpc{
+						ProgramID: fmt.Sprintf("%d", pgmID),
+						Timeout:   "2s",
+					},
 				},
 			},
 		},
@@ -503,8 +494,11 @@ func (it *veniceIntegSuite) TestRPCApp(c *C) {
 			Timeout: "5m",
 			ALG: &security.ALG{
 				Type: "MSRPC",
-				MsrpcAlg: &security.MsrpcAlg{
-					ProgramUUID: fmt.Sprintf("%d", pgmID),
+				Msrpc: []*security.Msrpc{
+					&security.Msrpc{
+						ProgramUUID: fmt.Sprintf("%d", pgmID),
+						Timeout:     "2s",
+					},
 				},
 			},
 		},
@@ -537,13 +531,13 @@ func (it *veniceIntegSuite) TestRPCApp(c *C) {
 		AssertOk(c, cerr, "App not found in agent")
 		AssertEquals(c, napp.Spec.AppIdleTimeout, sunapp.Spec.Timeout, "invalid alg params")
 		AssertEquals(c, napp.Spec.ALGType, sunapp.Spec.ALG.Type, "invalid alg params")
-		AssertEquals(c, napp.Spec.ALG.SUNRPC.ProgramID, uint32(pgmID), "invalid alg params")
+		AssertEquals(c, napp.Spec.ALG.SUNRPC[0].ProgramID, uint32(pgmID), "invalid alg params")
 
 		napp, cerr = ag.NetworkAgent.FindApp(msapp.ObjectMeta)
 		AssertOk(c, cerr, "App not found in agent")
 		AssertEquals(c, napp.Spec.AppIdleTimeout, msapp.Spec.Timeout, "invalid alg params")
 		AssertEquals(c, napp.Spec.ALGType, msapp.Spec.ALG.Type, "invalid alg params")
-		AssertEquals(c, napp.Spec.ALG.MSRPC.ProgramID, uint32(pgmID), "invalid alg params")
+		AssertEquals(c, napp.Spec.ALG.MSRPC[0].ProgramID, uint32(pgmID), "invalid alg params")
 	}
 
 	// delete app
@@ -568,9 +562,9 @@ func (it *veniceIntegSuite) TestRPCApp(c *C) {
 	}, "App still found in agent after deleting", "100ms", it.pollTimeout())
 }
 
-// TestFirewallFtpAlg validates FTP alg operations
+// TestFirewallFtp validates FTP alg operations
 // FIXME: revisit this once netagent datapath can fully handle app object
-func (it *veniceIntegSuite) TestFirewallFtpAlg(c *C) {
+func (it *veniceIntegSuite) TestFirewallFtp(c *C) {
 	ctx, err := it.loggedInCtx()
 	AssertOk(c, err, "Error creating logged in context")
 
@@ -592,7 +586,7 @@ func (it *veniceIntegSuite) TestFirewallFtpAlg(c *C) {
 			Timeout: "5m",
 			ALG: &security.ALG{
 				Type: "FTP",
-				FtpAlg: &security.FtpAlg{
+				Ftp: &security.Ftp{
 					AllowMismatchIPAddress: true,
 				},
 			},

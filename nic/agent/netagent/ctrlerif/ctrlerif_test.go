@@ -1179,7 +1179,9 @@ func TestSecurityProfileWatch(t *testing.T) {
 			Name:   "testsecp",
 		},
 		Spec: netproto.SecurityProfileSpec{
-			EnableConnectionTracking: true,
+			Timeouts: &netproto.Timeouts{
+				SessionIdle: "10s",
+			},
 		},
 	}
 	srv.secpdb["testsecp"] = &sp

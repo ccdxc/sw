@@ -42,18 +42,6 @@ message SecurityProfile {
 message SecurityProfileSpec {
     // Timeouts for the security profile
     Timeouts    Timeouts                    = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "timeouts,omitempty"];
-
-    // Enable Connection Tracking
-    bool        EnableConnectionTracking    = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "enable-connection-tracking,omitempty"];
-
-    // Enable TCP Normalization
-    bool        EnableTCPNormalization      = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "enable-tcp-normalization,omitempty"];
-
-    // Enable IP Normalization
-    bool        EnableIPNormalization       = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "enable-ip-normalization,omitempty"];
-
-    // Enable ICMP Normalization
-    bool        EnableICMPNormalization     = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "enable-icmp-normalization,omitempty"];
 }
 
 

@@ -515,10 +515,6 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 				ICMP:               "100ms",
 				ICMPDrop:           "1h10m15s",
 			},
-			EnableConnectionTracking: true,
-			EnableICMPNormalization:  true,
-			EnableIPNormalization:    true,
-			EnableTCPNormalization:   true,
 		},
 	}
 

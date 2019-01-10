@@ -8,21 +8,19 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, PropInfoItem } from './base-model';
 
 
-export interface ISecurityDnsAlg {
+export interface ISecurityDns {
     'drop-multi-question-packets'?: boolean;
     'drop-large-domain-name-packets'?: boolean;
     'drop-long-label-packets'?: boolean;
-    'drop-multi-zone-packets'?: boolean;
     'max-message-length'?: number;
     'query-response-timeout'?: string;
 }
 
 
-export class SecurityDnsAlg extends BaseModel implements ISecurityDnsAlg {
+export class SecurityDns extends BaseModel implements ISecurityDns {
     'drop-multi-question-packets': boolean = null;
     'drop-large-domain-name-packets': boolean = null;
     'drop-long-label-packets': boolean = null;
-    'drop-multi-zone-packets': boolean = null;
     'max-message-length': number = null;
     'query-response-timeout': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
@@ -35,9 +33,6 @@ export class SecurityDnsAlg extends BaseModel implements ISecurityDnsAlg {
         'drop-long-label-packets': {
             type: 'boolean'
         },
-        'drop-multi-zone-packets': {
-            type: 'boolean'
-        },
         'max-message-length': {
             type: 'number'
         },
@@ -47,16 +42,16 @@ export class SecurityDnsAlg extends BaseModel implements ISecurityDnsAlg {
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return SecurityDnsAlg.propInfo[propName];
+        return SecurityDns.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (SecurityDnsAlg.propInfo[prop] != null &&
-                        SecurityDnsAlg.propInfo[prop].default != null &&
-                        SecurityDnsAlg.propInfo[prop].default != '');
+        return (SecurityDns.propInfo[prop] != null &&
+                        SecurityDns.propInfo[prop].default != null &&
+                        SecurityDns.propInfo[prop].default != '');
     }
 
     /**
@@ -75,33 +70,28 @@ export class SecurityDnsAlg extends BaseModel implements ISecurityDnsAlg {
     setValues(values: any, fillDefaults = true): void {
         if (values && values['drop-multi-question-packets'] != null) {
             this['drop-multi-question-packets'] = values['drop-multi-question-packets'];
-        } else if (fillDefaults && SecurityDnsAlg.hasDefaultValue('drop-multi-question-packets')) {
-            this['drop-multi-question-packets'] = SecurityDnsAlg.propInfo['drop-multi-question-packets'].default;
+        } else if (fillDefaults && SecurityDns.hasDefaultValue('drop-multi-question-packets')) {
+            this['drop-multi-question-packets'] = SecurityDns.propInfo['drop-multi-question-packets'].default;
         }
         if (values && values['drop-large-domain-name-packets'] != null) {
             this['drop-large-domain-name-packets'] = values['drop-large-domain-name-packets'];
-        } else if (fillDefaults && SecurityDnsAlg.hasDefaultValue('drop-large-domain-name-packets')) {
-            this['drop-large-domain-name-packets'] = SecurityDnsAlg.propInfo['drop-large-domain-name-packets'].default;
+        } else if (fillDefaults && SecurityDns.hasDefaultValue('drop-large-domain-name-packets')) {
+            this['drop-large-domain-name-packets'] = SecurityDns.propInfo['drop-large-domain-name-packets'].default;
         }
         if (values && values['drop-long-label-packets'] != null) {
             this['drop-long-label-packets'] = values['drop-long-label-packets'];
-        } else if (fillDefaults && SecurityDnsAlg.hasDefaultValue('drop-long-label-packets')) {
-            this['drop-long-label-packets'] = SecurityDnsAlg.propInfo['drop-long-label-packets'].default;
-        }
-        if (values && values['drop-multi-zone-packets'] != null) {
-            this['drop-multi-zone-packets'] = values['drop-multi-zone-packets'];
-        } else if (fillDefaults && SecurityDnsAlg.hasDefaultValue('drop-multi-zone-packets')) {
-            this['drop-multi-zone-packets'] = SecurityDnsAlg.propInfo['drop-multi-zone-packets'].default;
+        } else if (fillDefaults && SecurityDns.hasDefaultValue('drop-long-label-packets')) {
+            this['drop-long-label-packets'] = SecurityDns.propInfo['drop-long-label-packets'].default;
         }
         if (values && values['max-message-length'] != null) {
             this['max-message-length'] = values['max-message-length'];
-        } else if (fillDefaults && SecurityDnsAlg.hasDefaultValue('max-message-length')) {
-            this['max-message-length'] = SecurityDnsAlg.propInfo['max-message-length'].default;
+        } else if (fillDefaults && SecurityDns.hasDefaultValue('max-message-length')) {
+            this['max-message-length'] = SecurityDns.propInfo['max-message-length'].default;
         }
         if (values && values['query-response-timeout'] != null) {
             this['query-response-timeout'] = values['query-response-timeout'];
-        } else if (fillDefaults && SecurityDnsAlg.hasDefaultValue('query-response-timeout')) {
-            this['query-response-timeout'] = SecurityDnsAlg.propInfo['query-response-timeout'].default;
+        } else if (fillDefaults && SecurityDns.hasDefaultValue('query-response-timeout')) {
+            this['query-response-timeout'] = SecurityDns.propInfo['query-response-timeout'].default;
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -113,7 +103,6 @@ export class SecurityDnsAlg extends BaseModel implements ISecurityDnsAlg {
                 'drop-multi-question-packets': new FormControl(this['drop-multi-question-packets']),
                 'drop-large-domain-name-packets': new FormControl(this['drop-large-domain-name-packets']),
                 'drop-long-label-packets': new FormControl(this['drop-long-label-packets']),
-                'drop-multi-zone-packets': new FormControl(this['drop-multi-zone-packets']),
                 'max-message-length': new FormControl(this['max-message-length']),
                 'query-response-timeout': new FormControl(this['query-response-timeout']),
             });
@@ -130,7 +119,6 @@ export class SecurityDnsAlg extends BaseModel implements ISecurityDnsAlg {
             this._formGroup.controls['drop-multi-question-packets'].setValue(this['drop-multi-question-packets']);
             this._formGroup.controls['drop-large-domain-name-packets'].setValue(this['drop-large-domain-name-packets']);
             this._formGroup.controls['drop-long-label-packets'].setValue(this['drop-long-label-packets']);
-            this._formGroup.controls['drop-multi-zone-packets'].setValue(this['drop-multi-zone-packets']);
             this._formGroup.controls['max-message-length'].setValue(this['max-message-length']);
             this._formGroup.controls['query-response-timeout'].setValue(this['query-response-timeout']);
         }

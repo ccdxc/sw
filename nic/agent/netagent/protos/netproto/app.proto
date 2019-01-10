@@ -48,14 +48,14 @@ message AppSpec {
 }
 
 message ALG {
-    DNS     DNS     = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "dns,omitempty"];
-    SIP     SIP     = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "sip,omitempty"];
-    RPC     SUNRPC  = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "sunrpc,omitempty"];
-    FTP     FTP     = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ftp,omitempty"];
-    RPC     MSRPC   = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "msrpc,omitempty"];
-    TFTP    TFTP    = 6 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "tftp,omitempty"];
-    RTSP    RTSP    = 7 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "rtsp,omitempty"];
-    ICMP    ICMP    = 8 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "icmp,omitempty"];
+    DNS     DNS              = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "dns,omitempty"];
+    SIP     SIP              = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "sip,omitempty"];
+    repeated RPC     SUNRPC  = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "sunrpc,omitempty"];
+    FTP     FTP              = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ftp,omitempty"];
+    repeated RPC     MSRPC   = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "msrpc,omitempty"];
+    TFTP    TFTP             = 6 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "tftp,omitempty"];
+    RTSP    RTSP             = 7 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "rtsp,omitempty"];
+    ICMP    ICMP             = 8 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "icmp,omitempty"];
 }
 
 // DNS ALG configuration
@@ -105,6 +105,9 @@ message SIP {
 message RPC {
     // RPC Program identifier
     uint32 ProgramID        = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "program-id,omitempty"];
+    // Timeout is the timeout for the specific program-id
+    string ProgramIDTimeout = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "program-id-timeout,omitempty"];
+
 }
 
 // FTP ALG configuration

@@ -11,11 +11,11 @@ The following Messages are defined.
   App
   AppSpec
   AppStatus
-  DnsAlg
-  FtpAlg
-  IcmpAlg
-  MsrpcAlg
-  SunrpcAlg
+  Dns
+  Ftp
+  Icmp
+  Msrpc
+  Sunrpc
 
 The following Services and Methods are defined.
 

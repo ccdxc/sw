@@ -36,10 +36,6 @@ func TestSecurityProfileCreateDelete(t *testing.T) {
 				ICMP:               "100ms",
 				ICMPDrop:           "1h10m15s",
 			},
-			EnableConnectionTracking: true,
-			EnableICMPNormalization:  true,
-			EnableIPNormalization:    true,
-			EnableTCPNormalization:   true,
 		},
 	}
 
@@ -96,10 +92,6 @@ func TestSecurityProfileUpdate(t *testing.T) {
 				ICMP:               "100ms",
 				ICMPDrop:           "1h10m15s",
 			},
-			EnableConnectionTracking: true,
-			EnableICMPNormalization:  true,
-			EnableIPNormalization:    true,
-			EnableTCPNormalization:   true,
 		},
 	}
 
@@ -111,7 +103,9 @@ func TestSecurityProfileUpdate(t *testing.T) {
 	Assert(t, sgp.Name == "testSecurityProfileUpdate", "Nat Pool names did not match", sgp)
 
 	profileSpec := netproto.SecurityProfileSpec{
-		EnableConnectionTracking: false,
+		Timeouts: &netproto.Timeouts{
+			SessionIdle: "20s",
+		},
 	}
 
 	profile.Spec = profileSpec
@@ -149,10 +143,6 @@ func TestSecurityProfileInvalidSessionIdleTimeOut(t *testing.T) {
 				ICMP:               "100ms",
 				ICMPDrop:           "1h10m15s",
 			},
-			EnableConnectionTracking: true,
-			EnableICMPNormalization:  true,
-			EnableIPNormalization:    true,
-			EnableTCPNormalization:   true,
 		},
 	}
 
@@ -188,10 +178,6 @@ func TestSecurityProfileInvalidTCPTimeOut(t *testing.T) {
 				ICMP:               "100ms",
 				ICMPDrop:           "1h10m15s",
 			},
-			EnableConnectionTracking: true,
-			EnableICMPNormalization:  true,
-			EnableIPNormalization:    true,
-			EnableTCPNormalization:   true,
 		},
 	}
 
@@ -227,10 +213,6 @@ func TestSecurityProfileInvalidTCPDropTimeOut(t *testing.T) {
 				ICMP:               "100ms",
 				ICMPDrop:           "1h10m15s",
 			},
-			EnableConnectionTracking: true,
-			EnableICMPNormalization:  true,
-			EnableIPNormalization:    true,
-			EnableTCPNormalization:   true,
 		},
 	}
 
@@ -266,10 +248,6 @@ func TestSecurityProfileInvalidTCPConnectionSetupTimeOut(t *testing.T) {
 				ICMP:               "100ms",
 				ICMPDrop:           "1h10m15s",
 			},
-			EnableConnectionTracking: true,
-			EnableICMPNormalization:  true,
-			EnableIPNormalization:    true,
-			EnableTCPNormalization:   true,
 		},
 	}
 
@@ -305,10 +283,6 @@ func TestSecurityProfileInvalidTCPCloseTimeOut(t *testing.T) {
 				ICMP:               "100ms",
 				ICMPDrop:           "1h10m15s",
 			},
-			EnableConnectionTracking: true,
-			EnableICMPNormalization:  true,
-			EnableIPNormalization:    true,
-			EnableTCPNormalization:   true,
 		},
 	}
 
@@ -344,10 +318,6 @@ func TestSecurityProfileInvalidDropTimeOut(t *testing.T) {
 				ICMP:               "100ms",
 				ICMPDrop:           "1h10m15s",
 			},
-			EnableConnectionTracking: true,
-			EnableICMPNormalization:  true,
-			EnableIPNormalization:    true,
-			EnableTCPNormalization:   true,
 		},
 	}
 
@@ -383,10 +353,6 @@ func TestSecurityProfileInvalidUDPTimeOut(t *testing.T) {
 				ICMP:               "100ms",
 				ICMPDrop:           "1h10m15s",
 			},
-			EnableConnectionTracking: true,
-			EnableICMPNormalization:  true,
-			EnableIPNormalization:    true,
-			EnableTCPNormalization:   true,
 		},
 	}
 
@@ -422,10 +388,6 @@ func TestSecurityProfileUDPDropTimeOut(t *testing.T) {
 				ICMP:               "100ms",
 				ICMPDrop:           "1h10m15s",
 			},
-			EnableConnectionTracking: true,
-			EnableICMPNormalization:  true,
-			EnableIPNormalization:    true,
-			EnableTCPNormalization:   true,
 		},
 	}
 
@@ -461,10 +423,6 @@ func TestSecurityProfileInvalidICMPTimeOut(t *testing.T) {
 				ICMP:               "bad timeout",
 				ICMPDrop:           "1h10m15s",
 			},
-			EnableConnectionTracking: true,
-			EnableICMPNormalization:  true,
-			EnableIPNormalization:    true,
-			EnableTCPNormalization:   true,
 		},
 	}
 
@@ -500,10 +458,6 @@ func TestSecurityProfileICMPDropTimeOut(t *testing.T) {
 				ICMP:               "100ms",
 				ICMPDrop:           "bad timeout",
 			},
-			EnableConnectionTracking: true,
-			EnableICMPNormalization:  true,
-			EnableIPNormalization:    true,
-			EnableTCPNormalization:   true,
 		},
 	}
 

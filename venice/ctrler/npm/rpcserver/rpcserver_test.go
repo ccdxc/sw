@@ -589,8 +589,7 @@ func TestFirewallProfileRPC(t *testing.T) {
 			Tenant:    "default",
 		},
 		Spec: security.FirewallProfileSpec{
-			SessionIdleTimeout:    "3m",
-			IPNormalizationEnable: true,
+			SessionIdleTimeout: "3m",
 		},
 	}
 	err := stateMgr.FirewallProfileReactor().CreateFirewallProfile(fwp)
@@ -624,8 +623,7 @@ func TestFirewallProfileRPC(t *testing.T) {
 			Tenant:    "default",
 		},
 		Spec: security.FirewallProfileSpec{
-			SessionIdleTimeout:    "3m",
-			IPNormalizationEnable: true,
+			SessionIdleTimeout: "3m",
 		},
 	}
 	err = stateMgr.FirewallProfileReactor().CreateFirewallProfile(fwp2)
@@ -680,7 +678,7 @@ func TestAppRPC(t *testing.T) {
 			Timeout: "5m",
 			ALG: &security.ALG{
 				Type: "FTP",
-				FtpAlg: &security.FtpAlg{
+				Ftp: &security.Ftp{
 					AllowMismatchIPAddress: true,
 				},
 			},
@@ -726,7 +724,7 @@ func TestAppRPC(t *testing.T) {
 			Timeout: "5m",
 			ALG: &security.ALG{
 				Type: "FTP",
-				FtpAlg: &security.FtpAlg{
+				Ftp: &security.Ftp{
 					AllowMismatchIPAddress: true,
 				},
 			},
@@ -786,13 +784,13 @@ func TestAppConvert(t *testing.T) {
 				Timeout: "5m",
 				ALG: &security.ALG{
 					Type: "FTP",
-					FtpAlg: &security.FtpAlg{
+					Ftp: &security.Ftp{
 						AllowMismatchIPAddress: true,
 					},
 				},
 			},
 		},
-		{ // App with FTP Alg but no ALG-Specific params
+		{ // App with FTP  but no ALG-Specific params
 			TypeMeta: api.TypeMeta{Kind: "App"},
 			ObjectMeta: api.ObjectMeta{
 				Name:      "testApp2",
@@ -853,7 +851,7 @@ func TestAppConvert(t *testing.T) {
 			Spec: security.AppSpec{
 				ALG: &security.ALG{
 					Type: "ICMP",
-					IcmpAlg: &security.IcmpAlg{
+					Icmp: &security.Icmp{
 						Type: "8",
 					},
 				},
@@ -882,7 +880,7 @@ func TestAppConvert(t *testing.T) {
 			Spec: security.AppSpec{
 				ALG: &security.ALG{
 					Type: "DNS",
-					DnsAlg: &security.DnsAlg{
+					Dns: &security.Dns{
 						DropLargeDomainNamePackets: true,
 					},
 				},
@@ -911,8 +909,11 @@ func TestAppConvert(t *testing.T) {
 			Spec: security.AppSpec{
 				ALG: &security.ALG{
 					Type: "SunRPC",
-					SunrpcAlg: &security.SunrpcAlg{
-						ProgramID: "1",
+					Sunrpc: []*security.Sunrpc{
+						&security.Sunrpc{
+							ProgramID: "1",
+							Timeout:   "2s",
+						},
 					},
 				},
 			},
@@ -940,8 +941,11 @@ func TestAppConvert(t *testing.T) {
 			Spec: security.AppSpec{
 				ALG: &security.ALG{
 					Type: "MSRPC",
-					MsrpcAlg: &security.MsrpcAlg{
-						ProgramUUID: "1",
+					Msrpc: []*security.Msrpc{
+						&security.Msrpc{
+							ProgramUUID: "1",
+							Timeout:     "2s",
+						},
 					},
 				},
 			},

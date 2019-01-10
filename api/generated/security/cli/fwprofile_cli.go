@@ -15,13 +15,6 @@ import (
 // CreateFirewallProfileFlags specifies flags for FirewallProfile create operation
 var CreateFirewallProfileFlags = []gen.CliFlag{
 	{
-		ID:     "disable-conn-track",
-		Type:   "Bool",
-		Help:   "",
-		Skip:   false,
-		Insert: "",
-	},
-	{
 		ID:     "drop-timeout",
 		Type:   "String",
 		Help:   "",
@@ -36,22 +29,8 @@ var CreateFirewallProfileFlags = []gen.CliFlag{
 		Insert: "",
 	},
 	{
-		ID:     "icmp-normalization-enable",
-		Type:   "Bool",
-		Help:   "",
-		Skip:   false,
-		Insert: "",
-	},
-	{
 		ID:     "icmp-timeout",
 		Type:   "String",
-		Help:   "",
-		Skip:   false,
-		Insert: "",
-	},
-	{
-		ID:     "ip-normalization-enable",
-		Type:   "Bool",
 		Help:   "",
 		Skip:   false,
 		Insert: "",
@@ -92,13 +71,6 @@ var CreateFirewallProfileFlags = []gen.CliFlag{
 		Insert: "",
 	},
 	{
-		ID:     "tcp-normalization-enable",
-		Type:   "Bool",
-		Help:   "",
-		Skip:   false,
-		Insert: "",
-	},
-	{
 		ID:     "tcp-timeout",
 		Type:   "String",
 		Help:   "",
@@ -108,13 +80,6 @@ var CreateFirewallProfileFlags = []gen.CliFlag{
 	{
 		ID:     "udp-drop-timeout",
 		Type:   "String",
-		Help:   "",
-		Skip:   false,
-		Insert: "",
-	},
-	{
-		ID:     "udp-normalization-enable",
-		Type:   "Bool",
 		Help:   "",
 		Skip:   false,
 		Insert: "",

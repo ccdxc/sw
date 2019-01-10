@@ -168,12 +168,6 @@ func (hd *Datapath) CreateSecurityProfile(profile *netproto.SecurityProfile, vrf
 						ProfileId: uint32(profile.Status.SecurityProfileID),
 					},
 				},
-				// User Specified Enable values.
-				CnxnTrackingEn:      profile.Spec.EnableConnectionTracking,
-				TcpNormalizationEn:  profile.Spec.EnableTCPNormalization,
-				IpNormalizationEn:   profile.Spec.EnableIPNormalization,
-				IcmpNormalizationEn: profile.Spec.EnableICMPNormalization,
-
 				// User Specified timeout values
 				SessionIdleTimeout:   sessionIdleTimeout,
 				TcpTimeout:           tcpTimeout,
@@ -394,11 +388,6 @@ func (hd *Datapath) UpdateSecurityProfile(profile *netproto.SecurityProfile) err
 						ProfileId: uint32(profile.Status.SecurityProfileID),
 					},
 				},
-				// User Specified Enable values.
-				CnxnTrackingEn:      profile.Spec.EnableConnectionTracking,
-				TcpNormalizationEn:  profile.Spec.EnableTCPNormalization,
-				IpNormalizationEn:   profile.Spec.EnableIPNormalization,
-				IcmpNormalizationEn: profile.Spec.EnableICMPNormalization,
 
 				// User Specified timeout values
 				SessionIdleTimeout:   sessionIdleTimeout,

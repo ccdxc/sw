@@ -57,6 +57,18 @@ func (m *ALG) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *ALG) Defaults(ver string) bool {
 	var ret bool
+	for k := range m.Msrpc {
+		if m.Msrpc[k] != nil {
+			i := m.Msrpc[k]
+			ret = i.Defaults(ver) || ret
+		}
+	}
+	for k := range m.Sunrpc {
+		if m.Sunrpc[k] != nil {
+			i := m.Sunrpc[k]
+			ret = i.Defaults(ver) || ret
+		}
+	}
 	ret = true
 	switch ver {
 	default:
@@ -137,13 +149,13 @@ func (m *AppStatus) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *DnsAlg) Clone(into interface{}) (interface{}, error) {
-	var out *DnsAlg
+func (m *Dns) Clone(into interface{}) (interface{}, error) {
+	var out *Dns
 	var ok bool
 	if into == nil {
-		out = &DnsAlg{}
+		out = &Dns{}
 	} else {
-		out, ok = into.(*DnsAlg)
+		out, ok = into.(*Dns)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -153,18 +165,18 @@ func (m *DnsAlg) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *DnsAlg) Defaults(ver string) bool {
+func (m *Dns) Defaults(ver string) bool {
 	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *FtpAlg) Clone(into interface{}) (interface{}, error) {
-	var out *FtpAlg
+func (m *Ftp) Clone(into interface{}) (interface{}, error) {
+	var out *Ftp
 	var ok bool
 	if into == nil {
-		out = &FtpAlg{}
+		out = &Ftp{}
 	} else {
-		out, ok = into.(*FtpAlg)
+		out, ok = into.(*Ftp)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -174,18 +186,18 @@ func (m *FtpAlg) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *FtpAlg) Defaults(ver string) bool {
+func (m *Ftp) Defaults(ver string) bool {
 	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *IcmpAlg) Clone(into interface{}) (interface{}, error) {
-	var out *IcmpAlg
+func (m *Icmp) Clone(into interface{}) (interface{}, error) {
+	var out *Icmp
 	var ok bool
 	if into == nil {
-		out = &IcmpAlg{}
+		out = &Icmp{}
 	} else {
-		out, ok = into.(*IcmpAlg)
+		out, ok = into.(*Icmp)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -195,18 +207,18 @@ func (m *IcmpAlg) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *IcmpAlg) Defaults(ver string) bool {
+func (m *Icmp) Defaults(ver string) bool {
 	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *MsrpcAlg) Clone(into interface{}) (interface{}, error) {
-	var out *MsrpcAlg
+func (m *Msrpc) Clone(into interface{}) (interface{}, error) {
+	var out *Msrpc
 	var ok bool
 	if into == nil {
-		out = &MsrpcAlg{}
+		out = &Msrpc{}
 	} else {
-		out, ok = into.(*MsrpcAlg)
+		out, ok = into.(*Msrpc)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -216,18 +228,19 @@ func (m *MsrpcAlg) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *MsrpcAlg) Defaults(ver string) bool {
-	return false
+func (m *Msrpc) Defaults(ver string) bool {
+	var ret bool
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *SunrpcAlg) Clone(into interface{}) (interface{}, error) {
-	var out *SunrpcAlg
+func (m *Sunrpc) Clone(into interface{}) (interface{}, error) {
+	var out *Sunrpc
 	var ok bool
 	if into == nil {
-		out = &SunrpcAlg{}
+		out = &Sunrpc{}
 	} else {
-		out, ok = into.(*SunrpcAlg)
+		out, ok = into.(*Sunrpc)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -237,14 +250,35 @@ func (m *SunrpcAlg) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *SunrpcAlg) Defaults(ver string) bool {
-	return false
+func (m *Sunrpc) Defaults(ver string) bool {
+	var ret bool
+	return ret
 }
 
 // Validators
 
 func (m *ALG) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	for k, v := range m.Msrpc {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sMsrpc[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	for k, v := range m.Sunrpc {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sSunrpc[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	if vs, ok := validatorMapApp["ALG"][ver]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
@@ -315,28 +349,54 @@ func (m *AppStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
-func (m *DnsAlg) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Dns) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
-func (m *FtpAlg) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Ftp) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
-func (m *IcmpAlg) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Icmp) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
-func (m *MsrpcAlg) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Msrpc) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	if vs, ok := validatorMapApp["Msrpc"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapApp["Msrpc"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
 	return ret
 }
 
-func (m *SunrpcAlg) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Sunrpc) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	if vs, ok := validatorMapApp["Sunrpc"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapApp["Sunrpc"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
 	return ret
 }
 
@@ -364,6 +424,26 @@ func init() {
 
 	validatorMapApp["AppSpec"]["all"] = append(validatorMapApp["AppSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*AppSpec)
+		if !validators.Duration(m.Timeout) {
+			return fmt.Errorf("%v validation failed", path+"."+"Timeout")
+		}
+		return nil
+	})
+
+	validatorMapApp["Msrpc"] = make(map[string][]func(string, interface{}) error)
+
+	validatorMapApp["Msrpc"]["all"] = append(validatorMapApp["Msrpc"]["all"], func(path string, i interface{}) error {
+		m := i.(*Msrpc)
+		if !validators.Duration(m.Timeout) {
+			return fmt.Errorf("%v validation failed", path+"."+"Timeout")
+		}
+		return nil
+	})
+
+	validatorMapApp["Sunrpc"] = make(map[string][]func(string, interface{}) error)
+
+	validatorMapApp["Sunrpc"]["all"] = append(validatorMapApp["Sunrpc"]["all"], func(path string, i interface{}) error {
+		m := i.(*Sunrpc)
 		if !validators.Duration(m.Timeout) {
 			return fmt.Errorf("%v validation failed", path+"."+"Timeout")
 		}

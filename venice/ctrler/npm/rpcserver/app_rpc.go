@@ -46,55 +46,54 @@ func convertApp(aps *statemgr.AppState) *netproto.App {
 
 		switch aps.Spec.ALG.Type {
 		case "ICMP":
-			icmpAlg := security.IcmpAlg{}
-			if aps.Spec.ALG.IcmpAlg != nil {
-				icmpAlg = *aps.Spec.ALG.IcmpAlg
+			icmp := security.Icmp{}
+			if aps.Spec.ALG.Icmp != nil {
+				icmp = *aps.Spec.ALG.Icmp
 			}
-			ictype, _ := strconv.Atoi(icmpAlg.Type)
-			icode, _ := strconv.Atoi(icmpAlg.Code)
+			ictype, _ := strconv.Atoi(icmp.Type)
+			icode, _ := strconv.Atoi(icmp.Code)
 
 			app.Spec.ALG.ICMP = &netproto.ICMP{
 				Type: uint32(ictype),
 				Code: uint32(icode),
 			}
 		case "DNS":
-			dnsAlg := security.DnsAlg{}
-			if aps.Spec.ALG.DnsAlg != nil {
-				dnsAlg = *aps.Spec.ALG.DnsAlg
+			dns := security.Dns{}
+			if aps.Spec.ALG.Dns != nil {
+				dns = *aps.Spec.ALG.Dns
 			}
 			app.Spec.ALG.DNS = &netproto.DNS{
-				DropMultiQuestionPackets: dnsAlg.DropMultiQuestionPackets,
-				DropLargeDomainPackets:   dnsAlg.DropLargeDomainNamePackets,
-				DropLongLabelPackets:     dnsAlg.DropLongLabelPackets,
-				DropMultiZonePackets:     dnsAlg.DropMultiZonePackets,
-				MaxMessageLength:         dnsAlg.MaxMessageLength,
-				QueryResponseTimeout:     dnsAlg.QueryResponseTimeout,
+				DropMultiQuestionPackets: dns.DropMultiQuestionPackets,
+				DropLargeDomainPackets:   dns.DropLargeDomainNamePackets,
+				DropLongLabelPackets:     dns.DropLongLabelPackets,
+				MaxMessageLength:         dns.MaxMessageLength,
+				QueryResponseTimeout:     dns.QueryResponseTimeout,
 			}
 		case "FTP":
-			ftpAlg := security.FtpAlg{}
-			if aps.Spec.ALG.FtpAlg != nil {
-				ftpAlg = *aps.Spec.ALG.FtpAlg
+			ftp := security.Ftp{}
+			if aps.Spec.ALG.Ftp != nil {
+				ftp = *aps.Spec.ALG.Ftp
 			}
 			app.Spec.ALG.FTP = &netproto.FTP{
-				AllowMismatchIPAddresses: ftpAlg.AllowMismatchIPAddress,
+				AllowMismatchIPAddresses: ftp.AllowMismatchIPAddress,
 			}
 		case "SunRPC":
-			sunrpcAlg := security.SunrpcAlg{}
-			if aps.Spec.ALG.SunrpcAlg != nil {
-				sunrpcAlg = *aps.Spec.ALG.SunrpcAlg
-			}
-			pgmID, _ := strconv.Atoi(sunrpcAlg.ProgramID)
-			app.Spec.ALG.SUNRPC = &netproto.RPC{
-				ProgramID: uint32(pgmID),
+			for _, sunrpc := range aps.Spec.ALG.Sunrpc {
+				pgmID, _ := strconv.Atoi(sunrpc.ProgramID)
+				app.Spec.ALG.SUNRPC = append(app.Spec.ALG.SUNRPC,
+					&netproto.RPC{
+						ProgramID:        uint32(pgmID),
+						ProgramIDTimeout: sunrpc.Timeout,
+					})
 			}
 		case "MSRPC":
-			msrpcAlg := security.MsrpcAlg{}
-			if aps.Spec.ALG.MsrpcAlg != nil {
-				msrpcAlg = *aps.Spec.ALG.MsrpcAlg
-			}
-			pgmID, _ := strconv.Atoi(msrpcAlg.ProgramUUID)
-			app.Spec.ALG.MSRPC = &netproto.RPC{
-				ProgramID: uint32(pgmID),
+			for _, msrpc := range aps.Spec.ALG.Msrpc {
+				pgmID, _ := strconv.Atoi(msrpc.ProgramUUID)
+				app.Spec.ALG.MSRPC = append(app.Spec.ALG.MSRPC,
+					&netproto.RPC{
+						ProgramID:        uint32(pgmID),
+						ProgramIDTimeout: msrpc.Timeout,
+					})
 			}
 		case "TFTP":
 		case "RTSP":

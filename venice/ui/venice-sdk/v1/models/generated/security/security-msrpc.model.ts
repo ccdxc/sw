@@ -8,30 +8,39 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, PropInfoItem } from './base-model';
 
 
-export interface ISecurityFtpAlg {
-    'allow-mismatch-ip-address'?: boolean;
+export interface ISecurityMsrpc {
+    'program-uuid'?: string;
+    'timeout'?: string;
 }
 
 
-export class SecurityFtpAlg extends BaseModel implements ISecurityFtpAlg {
-    'allow-mismatch-ip-address': boolean = null;
+export class SecurityMsrpc extends BaseModel implements ISecurityMsrpc {
+    'program-uuid': string = null;
+    /** should be a valid time duration
+     */
+    'timeout': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'allow-mismatch-ip-address': {
-            type: 'boolean'
+        'program-uuid': {
+            type: 'string'
+        },
+        'timeout': {
+            description:  'should be a valid time duration ',
+            hint:  '2h',
+            type: 'string'
         },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return SecurityFtpAlg.propInfo[propName];
+        return SecurityMsrpc.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (SecurityFtpAlg.propInfo[prop] != null &&
-                        SecurityFtpAlg.propInfo[prop].default != null &&
-                        SecurityFtpAlg.propInfo[prop].default != '');
+        return (SecurityMsrpc.propInfo[prop] != null &&
+                        SecurityMsrpc.propInfo[prop].default != null &&
+                        SecurityMsrpc.propInfo[prop].default != '');
     }
 
     /**
@@ -48,10 +57,15 @@ export class SecurityFtpAlg extends BaseModel implements ISecurityFtpAlg {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values && values['allow-mismatch-ip-address'] != null) {
-            this['allow-mismatch-ip-address'] = values['allow-mismatch-ip-address'];
-        } else if (fillDefaults && SecurityFtpAlg.hasDefaultValue('allow-mismatch-ip-address')) {
-            this['allow-mismatch-ip-address'] = SecurityFtpAlg.propInfo['allow-mismatch-ip-address'].default;
+        if (values && values['program-uuid'] != null) {
+            this['program-uuid'] = values['program-uuid'];
+        } else if (fillDefaults && SecurityMsrpc.hasDefaultValue('program-uuid')) {
+            this['program-uuid'] = SecurityMsrpc.propInfo['program-uuid'].default;
+        }
+        if (values && values['timeout'] != null) {
+            this['timeout'] = values['timeout'];
+        } else if (fillDefaults && SecurityMsrpc.hasDefaultValue('timeout')) {
+            this['timeout'] = SecurityMsrpc.propInfo['timeout'].default;
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -60,7 +74,8 @@ export class SecurityFtpAlg extends BaseModel implements ISecurityFtpAlg {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'allow-mismatch-ip-address': new FormControl(this['allow-mismatch-ip-address']),
+                'program-uuid': new FormControl(this['program-uuid']),
+                'timeout': new FormControl(this['timeout']),
             });
         }
         return this._formGroup;
@@ -72,7 +87,8 @@ export class SecurityFtpAlg extends BaseModel implements ISecurityFtpAlg {
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this._formGroup.controls['allow-mismatch-ip-address'].setValue(this['allow-mismatch-ip-address']);
+            this._formGroup.controls['program-uuid'].setValue(this['program-uuid']);
+            this._formGroup.controls['timeout'].setValue(this['timeout']);
         }
     }
 }

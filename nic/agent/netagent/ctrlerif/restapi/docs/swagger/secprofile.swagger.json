@@ -434,26 +434,6 @@
         "timeouts": {
           "$ref": "#/definitions/netprotoTimeouts",
           "title": "Timeouts for the security profile"
-        },
-        "enable-connection-tracking": {
-          "type": "boolean",
-          "format": "boolean",
-          "title": "Enable Connection Tracking"
-        },
-        "enable-tcp-normalization": {
-          "type": "boolean",
-          "format": "boolean",
-          "title": "Enable TCP Normalization"
-        },
-        "enable-ip-normalization": {
-          "type": "boolean",
-          "format": "boolean",
-          "title": "Enable IP Normalization"
-        },
-        "enable-icmp-normalization": {
-          "type": "boolean",
-          "format": "boolean",
-          "title": "Enable ICMP Normalization"
         }
       },
       "title": "SecurityProfileSpec captures all the security profile configuration"
