@@ -29,7 +29,7 @@ protected:
     uint32_t                table_size_;
     uint32_t                num_table_index_bits_;
     mem_hash_table_bucket  *buckets_;
-    
+
 protected:
     sdk_ret_t   init_(uint32_t id, uint32_t size);
 
@@ -48,7 +48,7 @@ public:
 
 private:
     uint32_t            num_hash_bits_;
-    
+
 private:
     sdk_ret_t   init_(uint32_t id, uint32_t size);
     sdk_ret_t   initctx_(mem_hash_api_context *ctx);
@@ -75,7 +75,7 @@ private:
 
 private:
     sdk_ret_t   alloc_(mem_hash_api_context *ctx);
-    sdk_ret_t   free_(mem_hash_api_context *ctx);
+    sdk_ret_t   dealloc_(mem_hash_api_context *ctx);
     sdk_ret_t   init_(uint32_t id, uint32_t size);
     sdk_ret_t   initctx_(mem_hash_api_context *ctx);
     sdk_ret_t   insert_(mem_hash_api_context *ctx);
@@ -83,6 +83,8 @@ private:
     sdk_ret_t   find_(mem_hash_api_context *ctx,
                       mem_hash_api_context **retctx);
     sdk_ret_t   defragment_(mem_hash_api_context *ctx);
+    sdk_ret_t   tail_(mem_hash_api_context *ctx,
+                      mem_hash_api_context **retctx);
 
 public:
     static mem_hash_hint_table* factory(uint32_t id, uint32_t size);

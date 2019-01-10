@@ -23,7 +23,7 @@ mem_hash_base_table::init_(uint32_t id, uint32_t size) {
     num_table_index_bits_ = log2(size);
     assert(floor(num_table_index_bits_) == ceil(num_table_index_bits_));
 
-    mem = SDK_CALLOC(SDK_MEM_ALLOC_MEM_HASH_TABLE_BUCKETS, 
+    mem = SDK_CALLOC(SDK_MEM_ALLOC_MEM_HASH_TABLE_BUCKETS,
                      table_size_ * bucket_size);
     if (mem == NULL) {
         return SDK_RET_OOM;

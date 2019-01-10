@@ -5,14 +5,12 @@
 #include "lib/p4/p4_api.hpp"
 
 #include "mem_hash.hpp"
-#include "mem_hash_types.hpp"
+#include "mem_hash_utils.hpp"
 #include "mem_hash_table_bucket.hpp"
+#include "mem_hash_api_context.hpp"
 
 using sdk::table::memhash::mem_hash_table_bucket;
 using sdk::table::memhash::mem_hash_api_context;
-
-#define CTX_IS_SLOT_MATCH(_ctx) \
-        ((_ctx)->hint_slot != HINT_SLOT_FREE && (_ctx)->hint_slot != HINT_SLOT_MORE)
 
 #define FOREACH_HINT(__tid) \
         for (uint32_t i = 1; i <= p4pd_mem_hash_entry_get_num_hints((__tid)); i++)
@@ -20,43 +18,48 @@ using sdk::table::memhash::mem_hash_api_context;
         for (i = p4pd_mem_hash_entry_get_num_hints(__tid); i > 0; i--)
 
 //---------------------------------------------------------------------------
-// mem_hash_table_bucket read_
+// mem_hash_table_bucket read_ : Read entry from the hardware
 //---------------------------------------------------------------------------
 sdk_ret_t
-mem_hash_table_bucket::read_(mem_hash_api_context *ctx) {   
+mem_hash_table_bucket::read_(mem_hash_api_context *ctx) {
     p4pd_error_t    pdret = 0;
 
-    assert(ctx->table_id);
-    assert(ctx->table_index);
+    if (ctx->sw_valid) {
+        return SDK_RET_OK;
+    }
+
+    SDK_ASSERT(ctx->table_id && ctx->table_index);
 
     pdret = p4pd_entry_read(ctx->table_id, ctx->table_index,
                             ctx->swkey, NULL, ctx->swdata);
+    SDK_ASSERT_RETURN(pdret == P4PD_SUCCESS, SDK_RET_HW_READ_ERR);
+
     SDK_TRACE_DEBUG("%s: HW Read: TableID:%d TableIndex:%d", ctx->idstr(),
                     ctx->table_id, ctx->table_index);
-    SDK_TRACE_DEBUG("- Key:[%s]", ctx->swkey_str());
-    SDK_TRACE_DEBUG("- Data:[%s]", ctx->swdata_str());
+    ctx->printsw();
 
-    return (pdret != P4PD_SUCCESS) ? SDK_RET_HW_READ_ERR : SDK_RET_OK;
+    ctx->sw_valid = true;
+
+    return SDK_RET_OK;
 }
 
 //---------------------------------------------------------------------------
 // mem_hash_table_bucket write_
 //---------------------------------------------------------------------------
 sdk_ret_t
-mem_hash_table_bucket::write_(mem_hash_api_context *ctx) {   
+mem_hash_table_bucket::write_(mem_hash_api_context *ctx) {
     p4pd_error_t    pdret = 0;
 
     if (ctx->write_pending == false) {
         return SDK_RET_OK;
     }
 
-    assert(ctx->table_id);
-    assert(ctx->table_index);
-    
+    SDK_ASSERT(ctx->sw_valid && ctx->table_id && ctx->table_index);
+
     p4pd_mem_hash_entry_set_entry_valid(ctx->table_id, ctx->swdata, valid_);
 
-    if (ctx->hint != HINT_INDEX_INVALID) {
-        if (ctx->hint_slot == HINT_SLOT_MORE) {
+    if (ctx->is_hint_valid()) {
+        if (HINT_SLOT_IS_MORE(ctx->hint_slot)) {
             p4pd_mem_hash_entry_set_more_hashs(ctx->table_id, ctx->swdata, 1);
             p4pd_mem_hash_entry_set_more_hints(ctx->table_id, ctx->swdata,
                                                ctx->hint);
@@ -70,15 +73,14 @@ mem_hash_table_bucket::write_(mem_hash_api_context *ctx) {
 
     SDK_TRACE_DEBUG("%s: HW Write: TableID:%d TableIndex:%d", ctx->idstr(),
                     ctx->table_id, ctx->table_index);
-    SDK_TRACE_DEBUG("- Key:[%s]", ctx->swkey_str());
-    SDK_TRACE_DEBUG("- Data:[%s]", ctx->swdata_str());
+    ctx->printsw();
 
     pdret = p4pd_entry_write(ctx->table_id, ctx->table_index,
                              ctx->swkey, NULL, ctx->swdata);
     if (pdret != P4PD_SUCCESS) {
         SDK_TRACE_ERR("HW write: ret:%d", pdret);
         // Write failure is fatal
-        assert(0);
+        SDK_ASSERT(0);
         return SDK_RET_HW_PROGRAM_ERR;
     }
 
@@ -115,20 +117,21 @@ sdk_ret_t
 mem_hash_table_bucket::create_(mem_hash_api_context *ctx) {
     //uint32_t    i = 0;
     sdk_ret_t   ret = SDK_RET_OK;
-    
+
     SDK_TRACE_DEBUG("%s: Creating new bucket.", ctx->idstr());
     SDK_TRACE_DEBUG("- Meta: [%s]", ctx->metastr());
-    
+
     // This is a new entry, key is present with the entry.
     ret = set_key_(ctx);
-    assert(ret == SDK_RET_OK);
-    
+    SDK_ASSERT(ret == SDK_RET_OK);
+
     // Fill common data
     ret = set_data_(ctx);
-    assert(ret == SDK_RET_OK);
+    SDK_ASSERT(ret == SDK_RET_OK);
 
     // Update the bucket meta data
     valid_ = true;
+#if 0
     if (ctx->ismain()) {
         SDK_TRACE_DEBUG("- Type = SPINE");
         type_ = bucket_type::BUCKET_TYPE_SPINE;
@@ -141,11 +144,12 @@ mem_hash_table_bucket::create_(mem_hash_api_context *ctx) {
             type_ = bucket_type::BUCKET_TYPE_CHAIN;
         }
     }
+#endif
 
     // New entry, write required.
     ctx->write_pending = true;
+    ctx->sw_valid = true;
 
-    // Write to hardware
     return ret;
 }
 
@@ -153,7 +157,7 @@ sdk_ret_t
 mem_hash_table_bucket::compare_(mem_hash_api_context *ctx) {
     uint32_t    hashX = 0;
     uint32_t    hintX = 0;
-    
+
     // There are 3 possible cases from here
     // 1) There is a matching 'hash' with a valid 'hint' (non-zero hint)
     // 2) There is free 'hash' slot, 'hint' needs to be allocated.
@@ -163,34 +167,33 @@ mem_hash_table_bucket::compare_(mem_hash_api_context *ctx) {
     FOREACH_HINT(ctx->table_id) {
         hashX = p4pd_mem_hash_entry_get_hash(ctx->table_id, ctx->swdata, i);
         hintX = p4pd_mem_hash_entry_get_hint(ctx->table_id, ctx->swdata, i);
-        if (hashX == ctx->hash && hintX != HINT_INDEX_INVALID) {
+        if (hashX == ctx->hash && HINT_IS_VALID(hintX)) {
             ctx->hint_slot = i;
             ctx->hint = hintX;
             SDK_TRACE_DEBUG("%s: Match: Hash:%x Slot:%d Hint:%d",
                             ctx->idstr(), hashX, i, hintX);
             break;
-        } else if (hintX == HINT_INDEX_INVALID &&
-                   ctx->hint_slot == HINT_SLOT_FREE) {
+        } else if (!HINT_IS_VALID(hintX) && HINT_SLOT_IS_INVALID(ctx->hint_slot)) {
             // CASE 2: Save the firstfree slots
             SDK_TRACE_DEBUG("%s: FreeSlot: Hash:%x Slot:%d Hint:%d",
                             ctx->idstr(), hashX, i, hintX);
             ctx->hint_slot = i;
-            ctx->hint = HINT_INDEX_INVALID;
+            HINT_SET_INVALID(ctx->hint);
             // DO NOT BREAK HERE:
-            // We have to match all the slots to see if any hash matches, 
+            // We have to match all the slots to see if any hash matches,
             // if not, then use the empty slot to create a new hint chain.
             // This approach allows us to have holes in the slots. REVISIT TODO
         }
     }
 
-    if (ctx->hint_slot != HINT_SLOT_FREE) {
+    if (!HINT_SLOT_IS_INVALID(ctx->hint_slot)) {
         // We have hit Case1 or Case2.
         return SDK_RET_COLLISION;
     }
 
     ctx->more_hashs = p4pd_mem_hash_entry_get_more_hashs(ctx->table_id, ctx->swdata);
     ctx->hint = p4pd_mem_hash_entry_get_more_hints(ctx->table_id, ctx->swdata);
-       
+
     return SDK_RET_COLLISION;
 }
 
@@ -209,11 +212,11 @@ mem_hash_table_bucket::append_(mem_hash_api_context *ctx) {
         SDK_ASSERT(ctx->match_type);
         SDK_TRACE_DEBUG("- PostMeta(find_): [%s]", ctx->metastr());
         // CASE: Either a exact match (EXM) or a hint matched
-        if (ctx->match_type == mem_hash_api_context::match_type::MATCH_TYPE_EXM) {
+        if (ctx->is_exact_match()) {
             // CASE: if exact match, then its a duplicate insert
             SDK_TRACE_DEBUG("%s: Entry already exists.", ctx->idstr());
             return SDK_RET_ENTRY_EXISTS;
-        } else if (ctx->match_type == mem_hash_api_context::match_type::MATCH_TYPE_HINT) {
+        } else if (ctx->is_hint_match()) {
             // CASE: if hint match, then its a collision, new entry should be
             // appended to the hint chain
             return SDK_RET_COLLISION;
@@ -251,21 +254,22 @@ mem_hash_table_bucket::find_first_free_hint_(mem_hash_api_context *ctx) {
 
     FOREACH_HINT(ctx->table_id) {
         hintX = p4pd_mem_hash_entry_get_hint(ctx->table_id, ctx->swdata, i);
-        if (hintX == HINT_INDEX_INVALID) {
+        if (!HINT_IS_VALID(hintX)) {
             ctx->hint_slot = i;
             ctx->hint = hintX;
             break;
         }
     }
 
-    if (ctx->hint_slot != HINT_SLOT_FREE) {
+    if (!HINT_SLOT_IS_INVALID(ctx->hint_slot)) {
         // We have found a valid hint slot.
-        SDK_TRACE_ERR("free hint slot found");
+        SDK_TRACE_ERR("hint slot %d is free", ctx->hint_slot);
     } else {
         ctx->more_hashs = p4pd_mem_hash_entry_get_more_hashs(ctx->table_id, ctx->swdata);
         if (ctx->more_hashs == 0) {
+            SDK_TRACE_ERR("more_hashs slot is free");
             ctx->hint = p4pd_mem_hash_entry_get_more_hints(ctx->table_id, ctx->swdata);
-            ctx->hint_slot = HINT_SLOT_MORE;
+            HINT_SLOT_SET_MORE(ctx->hint_slot);
         } else {
             SDK_TRACE_ERR("all hint slots are full");
             ret = SDK_RET_NO_RESOURCE;
@@ -284,19 +288,22 @@ sdk_ret_t
 mem_hash_table_bucket::find_last_hint_(mem_hash_api_context *ctx) {
     uint32_t    i = 0;
     uint32_t    hintX = 0;
+    uint32_t    hashX = 0;
+
     FOREACH_HINT_REVERSE(ctx->table_id) {
         hintX = p4pd_mem_hash_entry_get_hint(ctx->table_id, ctx->swdata, i);
-        if (hintX != HINT_INDEX_INVALID) {
+        hashX = p4pd_mem_hash_entry_get_hash(ctx->table_id, ctx->swdata, i);
+        if (HINT_IS_VALID(hintX)) {
             ctx->hint_slot = i;
             ctx->hint = hintX;
-            ctx->match_type = mem_hash_api_context::match_type::MATCH_TYPE_HINT;
+            ctx->hash = hashX;
             SDK_TRACE_DEBUG("LastValidHint: Slot:%d Hint:%d",
                             ctx->hint_slot, ctx->hint);
             break;
         }
     }
 
-    if (ctx->hint_slot == HINT_SLOT_FREE) {
+    if (HINT_SLOT_IS_INVALID(ctx->hint_slot)) {
         SDK_TRACE_DEBUG("- No Valid Hint Found");
         return SDK_RET_ENTRY_NOT_FOUND;
     }
@@ -314,15 +321,15 @@ sdk_ret_t
 mem_hash_table_bucket::find_hint_(mem_hash_api_context *ctx) {
     uint32_t    hashX = 0;
     uint32_t    hintX = 0;
-    
+
     // Find a free hint slot in the bucket entry
     FOREACH_HINT(ctx->table_id) {
         hashX = p4pd_mem_hash_entry_get_hash(ctx->table_id, ctx->swdata, i);
         hintX = p4pd_mem_hash_entry_get_hint(ctx->table_id, ctx->swdata, i);
-        if (hashX == ctx->hash && hintX != HINT_INDEX_INVALID) {
+        if (hashX == ctx->hash && HINT_IS_VALID(hintX)) {
             ctx->hint_slot = i;
             ctx->hint = hintX;
-            ctx->match_type = mem_hash_api_context::match_type::MATCH_TYPE_HINT;
+            ctx->set_hint_match();
             SDK_TRACE_DEBUG("HintMatch: Hash:%x Slot:%d Hint:%d",
                             hashX, i, hintX);
             return SDK_RET_OK;
@@ -332,14 +339,14 @@ mem_hash_table_bucket::find_hint_(mem_hash_api_context *ctx) {
     ctx->more_hashs = p4pd_mem_hash_entry_get_more_hashs(ctx->table_id, ctx->swdata);
     if (ctx->more_hashs) {
         // If more_hashs is set, then it is still a match at this level, if we
-        // dont treat this as a match, then it will try to allocate a hint at 
+        // dont treat this as a match, then it will try to allocate a hint at
         // this level, which is not correct.
         ctx->hint = p4pd_mem_hash_entry_get_more_hints(ctx->table_id, ctx->swdata);
-        ctx->hint_slot = HINT_SLOT_MORE;
-        ctx->match_type = mem_hash_api_context::match_type::MATCH_TYPE_HINT;
+        HINT_SLOT_SET_MORE(ctx->hint_slot);
+        ctx->set_hint_match();
         return SDK_RET_OK;
     }
-        
+
     SDK_TRACE_DEBUG("- No matching hint found.");
     return SDK_RET_ENTRY_NOT_FOUND;
 }
@@ -379,27 +386,49 @@ mem_hash_table_bucket::clear_data_(mem_hash_api_context *ctx) {
 //---------------------------------------------------------------------------
 sdk_ret_t
 mem_hash_table_bucket::find_(mem_hash_api_context *ctx) {
-    sdk_ret_t   ret = SDK_RET_OK;
     bool        match = false;
-
-    // First read from hardware
-    ret = read_(ctx);
-    if (ret != SDK_RET_OK) {
-        SDK_TRACE_ERR("%s: HW read entry. Ctx:[%s]",
-                      ctx->idstr(), ctx->metastr());
-        return ret;
-    }
 
     // Compare the Key portion, if it matches, then we have to re-align
     // the entries.
-    match = p4pd_mem_hash_entry_compare_key(ctx->table_id, ctx->swkey, 
+    match = p4pd_mem_hash_entry_compare_key(ctx->table_id, ctx->swkey,
                                             (uint8_t*)ctx->key);
     if (match) {
-        ctx->match_type = mem_hash_api_context::match_type::MATCH_TYPE_EXM;
+        ctx->set_exact_match();
         return SDK_RET_OK;
     }
 
     return find_hint_(ctx);
+}
+
+//---------------------------------------------------------------------------
+// mem_hash_table_bucket clear_hint_: Clear hint and hash
+//---------------------------------------------------------------------------
+sdk_ret_t
+mem_hash_table_bucket::clear_hint_(mem_hash_api_context *ctx) {
+    p4pd_error_t    p4pdret = P4PD_SUCCESS;
+
+    if (HINT_SLOT_IS_MORE(ctx->hint_slot)) {
+        p4pdret = p4pd_mem_hash_entry_set_more_hints(ctx->table_id,
+                                                     ctx->swdata, 0);
+        SDK_ASSERT(p4pdret == P4PD_SUCCESS);
+
+        p4pdret = p4pd_mem_hash_entry_set_more_hashs(ctx->table_id,
+                                                     ctx->swdata, 0);
+        SDK_ASSERT(p4pdret == P4PD_SUCCESS);
+    } else {
+        p4pdret = p4pd_mem_hash_entry_set_hint(ctx->table_id, ctx->swdata,
+                                               0, ctx->hint_slot);
+        SDK_ASSERT(p4pdret == P4PD_SUCCESS);
+
+        p4pdret = p4pd_mem_hash_entry_set_hash(ctx->table_id, ctx->swdata,
+                                               0, ctx->hint_slot);
+        SDK_ASSERT(p4pdret == P4PD_SUCCESS);
+    }
+
+    HINT_SET_INVALID(ctx->hint);
+    ctx->write_pending = true;
+
+    return SDK_RET_OK;
 }
 
 //---------------------------------------------------------------------------
@@ -418,26 +447,151 @@ mem_hash_table_bucket::remove_(mem_hash_api_context *ctx) {
         SDK_TRACE_ERR("Failed to find match. ret:%d", ret);
         return ret;
     }
+    SDK_TRACE_DEBUG("%s: find_ result ret:%d Ctx: [%s]", ctx->idstr(), ret,
+                    ctx->metastr());
 
-    if (ctx->match_type == mem_hash_api_context::match_type::MATCH_TYPE_EXM) {
-        clear_key_(ctx);
-        clear_data_(ctx);
-        // find the last valid hint to move it to key slot
-        ret = find_last_hint_(ctx);
-        if (ret == SDK_RET_ENTRY_NOT_FOUND) {
-            // This bucket has no hints, we can now write to HW and
-            // finish the remove processing.
-            valid_ = false;
-            ret = write_(ctx);
-            if (ret != SDK_RET_OK) {
-                SDK_TRACE_ERR("HW write failed. ret:%d", ret);
-                return ret;
-            }
-            ret = SDK_RET_OK;
-        } else if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("find_last_hint_ failed. ret:%d", ret);
+    // If it is not an exact match, then no further processing is required
+    // at this stage.
+    if (! ctx->is_exact_match()) {
+        return ret;
+    }
+
+    // This is an exact match entry, clear the key and data fields.
+    clear_key_(ctx);
+    clear_data_(ctx);
+
+    // find the last valid hint for defragmentation
+    ret = find_last_hint_(ctx);
+    if (ret == SDK_RET_ENTRY_NOT_FOUND) {
+        // This bucket has no hints, we can now write to HW and
+        // finish the remove processing.
+        valid_ = false;
+        ret = write_(ctx);
+        if (ret != SDK_RET_OK) {
+            SDK_TRACE_ERR("HW write failed. ret:%d", ret);
+            return ret;
         }
+        ret = SDK_RET_OK;
+    } else if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("find_last_hint_ failed. ret:%d", ret);
     }
 
     return ret;
+}
+
+//---------------------------------------------------------------------------
+// mem_hash_table_bucket mvkey_: Move key+data from src bucket to dst bucket
+//---------------------------------------------------------------------------
+sdk_ret_t
+mem_hash_table_bucket::move_(mem_hash_api_context *dst,
+                             mem_hash_api_context *src) {
+    p4pd_error_t            p4pdret = P4PD_SUCCESS;
+    mem_hash_table_bucket   *sbkt = NULL;
+
+    sbkt = static_cast<mem_hash_table_bucket *>(src->bucket);
+
+    // copy the key
+    p4pdret = p4pd_mem_hash_entry_set_key(dst->table_id, dst->swkey,
+                                          src->swkey);
+    SDK_ASSERT(p4pdret == P4PD_SUCCESS);
+
+    // Zero out src key
+    p4pdret = p4pd_mem_hash_entry_clear_key(src->table_id, src->swkey);
+    SDK_ASSERT(p4pdret == P4PD_SUCCESS);
+
+    // copy the data
+    p4pdret = p4pd_mem_hash_entry_set_data(dst->table_id, dst->swdata,
+                                           src->swdata);
+    SDK_ASSERT(p4pdret == P4PD_SUCCESS);
+
+    // Zero out src data
+    p4pdret = p4pd_mem_hash_entry_clear_data(src->table_id, src->swdata);
+    SDK_ASSERT(p4pdret == P4PD_SUCCESS);
+
+    SDK_TRACE_DEBUG("- moved key and data");
+    // dst node is now dirty, set write pending
+    dst->write_pending = true;
+    dst->print("MOVE-DST");
+
+    // Source bucket is now ready to be deleted
+    SDK_TRACE_DEBUG("- invalidate tail node");
+    sbkt->valid_ = false;
+    src->write_pending = true;
+    src->print("MOVE-SRC");
+
+    return SDK_RET_OK;
+}
+
+//---------------------------------------------------------------------------
+// mem_hash_table_bucket mvkey_: Move key from src bucket to dst bucket
+//---------------------------------------------------------------------------
+sdk_ret_t
+mem_hash_table_bucket::delink_(mem_hash_api_context *ctx) {
+    sdk_ret_t   ret = SDK_RET_OK;
+
+    // Clear the hint linkage from the parent context
+    SDK_ASSERT(ctx);
+    ret = clear_hint_(ctx);
+    SDK_ASSERT(ret == SDK_RET_OK);
+    SDK_TRACE_DEBUG("- cleared tail node hint link from parent node");
+    ctx->print("DELINK");
+    return ret;
+}
+
+//---------------------------------------------------------------------------
+// mem_hash_table_bucket defragment_: Defragment the bucket
+// Special cases:
+//  - If the chain is only 1 level, then ectx == pctx
+//  - If we are deleting tail, then ectx == tctx
+//
+// Steps:
+// 1) Find 'tctx' and it will give 'pctx'
+// 2) Move tail node key and data to 'ectx'
+// 3) Write 'ectx' (make before break)
+// 4) Delete link from 'pctx' to 'tctx'
+// 5) Write 'pctx' (make before break)
+// 6) Write all zeros to 'tctx' (delete)
+//---------------------------------------------------------------------------
+sdk_ret_t
+mem_hash_table_bucket::defragment_(mem_hash_api_context *ectx,
+                                   mem_hash_api_context *tctx) {
+
+    sdk_ret_t               ret = SDK_RET_OK;
+    mem_hash_api_context    *pctx; // Parent context
+
+    // Get parent context from the tail node context
+    pctx = tctx->pctx;
+    SDK_ASSERT(pctx);
+
+    ectx->print("ECTX");
+    tctx->print("TCTX");
+    pctx->print("PCTX");
+
+    // STEP 2: Move tctx key+data to ectx key+data
+    if (ectx != tctx) {
+        // Need to check because, we can be deleting a tail node itself
+        // in that case ectx == tctx, so nothing to move.
+        ret = move_(ectx, tctx);
+        SDK_ASSERT(ret == SDK_RET_OK);
+    }
+
+    // STEP 3: Write ectx to HW
+    ret = write_(ectx);
+    SDK_ASSERT(ret == SDK_RET_OK);
+
+    // STEP 4: Delink parent node
+    ret = delink_(pctx);
+    SDK_ASSERT(ret == SDK_RET_OK);
+
+    // STEP 5: Write pctx to HW
+    ret = write_(pctx);
+    SDK_ASSERT(ret == SDK_RET_OK);
+
+    if (ectx != tctx) {
+        // STEP 6: Write tctx to HW
+        ret = write_(tctx);
+        SDK_ASSERT(ret == SDK_RET_OK);
+    }
+
+    return SDK_RET_OK;
 }

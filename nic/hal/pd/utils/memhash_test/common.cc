@@ -21,8 +21,11 @@ using boost::multiprecision::uint512_t;
 using boost::multiprecision::uint128_t;
 using namespace std::chrono;
 
+memhash_entry_t     gl_cache[MAX_FLOWS];
+uint32_t            gl_cache_index = 0;
+
 uint32_t
-gencrc32(bool nextindex, bool nexthint)
+gencrc32 (bool nextindex, bool nexthint)
 {
     static uint32_t index = 1;
     static uint32_t hint = 1;
@@ -38,7 +41,7 @@ gencrc32(bool nextindex, bool nexthint)
 }
 
 void*
-genkey()
+genkey ()
 {
     static flow_hash_swkey key;
     static uint16_t sport = 1;
@@ -70,7 +73,7 @@ genkey()
 }
 
 void*
-gendata()
+gendata ()
 {
     static uint32_t flow_index = 1;
     static flow_hash_actiondata_t data;
@@ -80,4 +83,52 @@ gendata()
     data.action_u.flow_hash_flow_hash_info.flow_index = flow_index++;
 
     return (void *)&data;
+}
+
+static memhash_entry_t*
+alloc_entry()
+{
+    return &gl_cache[gl_cache_index++];
+}
+
+memhash_entry_t*
+gen_cache_entry (crc32_t *crc32)
+{
+    void            *key = NULL;
+    void            *data = NULL;
+    memhash_entry_t *entry = alloc_entry();
+
+    key = genkey();
+    memcpy(&entry->key, key, sizeof(entry->key));
+
+    data = gendata();
+    memcpy(&entry->data, data, sizeof(entry->data));
+
+    if (crc32) {
+        entry->crc32 = *crc32;
+    } else {
+        entry->crc32.val = gencrc32();
+    }
+
+    return entry;
+}
+
+uint32_t
+get_cache_count ()
+{
+    return gl_cache_index;
+}
+
+memhash_entry_t *
+get_cache_entry (uint32_t index)
+{
+    return &gl_cache[index];
+}
+
+void
+reset_cache()
+{
+    gl_cache_index = 0;
+    //bzero(gl_cache, sizeof(gl_cache));
+    return;
 }

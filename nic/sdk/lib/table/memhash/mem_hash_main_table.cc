@@ -46,12 +46,12 @@ mem_hash_main_table::init_(uint32_t id, uint32_t size) {
     sdk_ret_t   ret = SDK_RET_OK;
 
     ret = mem_hash_base_table::init_(id, size);
- 
+
     num_hash_bits_ = 32 - num_table_index_bits_;
     SDK_TRACE_DEBUG("MainTable: Created mem_hash_main_table "
                     "TableID:%d TableSize:%d NumTableIndexBits:%d NumHashBits:%d",
                     table_id_, table_size_, num_table_index_bits_, num_hash_bits_);
-   
+
     return ret;
 }
 
@@ -72,7 +72,7 @@ mem_hash_main_table::initctx_(mem_hash_api_context *ctx) {
     assert(ctx->crc32_valid);
 
     ctx->table_id = table_id_;
-    
+
     // Derive the table_index
     ctx->table_index = ctx->crc32 % table_size_;
     ctx->hash = (ctx->crc32 >> num_table_index_bits_) & MASK(num_hash_bits_);
@@ -82,7 +82,7 @@ mem_hash_main_table::initctx_(mem_hash_api_context *ctx) {
     SDK_TRACE_DEBUG("MainTable: TableID:%d Index:%d",
                     ctx->table_id, ctx->table_index);
 
-    return SDK_RET_OK;
+    return static_cast<mem_hash_table_bucket*>(ctx->bucket)->read_(ctx);
 }
 
 //---------------------------------------------------------------------------
@@ -94,14 +94,14 @@ mem_hash_main_table::insert_(mem_hash_api_context *ctx) {
 
     assert(initctx_(ctx) == SDK_RET_OK);
     ret = static_cast<mem_hash_table_bucket*>(ctx->bucket)->insert_(ctx);
-    
+
     if (ret == SDK_RET_OK) {
         // Write to HW only if this is a terminal node.
-        // In case of collision, write will be called after 
+        // In case of collision, write will be called after
         // the downstream nodes are written.
         ret = static_cast<mem_hash_table_bucket*>(ctx->bucket)->write_(ctx);
     }
-    
+
     return ret;
 }
 
@@ -110,19 +110,6 @@ mem_hash_main_table::insert_(mem_hash_api_context *ctx) {
 //---------------------------------------------------------------------------
 sdk_ret_t
 mem_hash_main_table::remove_(mem_hash_api_context *ctx) {
-    //sdk_ret_t   ret = SDK_RET_OK;
-
     assert(initctx_(ctx) == SDK_RET_OK);
     return static_cast<mem_hash_table_bucket*>(ctx->bucket)->remove_(ctx);
-    
-    /*
-    if (ctx->write_pending) {
-        // Write to HW only if this is a terminal node.
-        // In case of collision, write will be called after 
-        // the downstream nodes are written.
-        ret = static_cast<mem_hash_table_bucket*>(ctx->bucket)->write_(ctx);
-    }
-
-    return ret;
-    */
 }

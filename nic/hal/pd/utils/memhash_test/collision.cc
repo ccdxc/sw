@@ -35,45 +35,84 @@ protected:
     }
     virtual void TearDown() {
         mem_hash::destroy(table);
+        reset_cache();
     }
 };
 
 TEST_F(collision, insert_full_mesh) {
-    sdk_ret_t   rs;
-    crc32_t     crc32;;
-    uint32_t    i = 0;
-    uint32_t    h = 0;
+    sdk_ret_t           rs;
+    crc32_t             crc32;;
+    uint32_t            i = 0;
+    uint32_t            h = 0;
+    memhash_entry_t     *entry = NULL;
     
     crc32.val = gencrc32();
+    entry = gen_cache_entry(&crc32);
 
-    rs = table->insert(genkey(), gendata(), crc32.val);
+    rs = table->insert(&entry->key, &entry->data, entry->crc32.val);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 
     for (h = 0; h < MAX_HINTS; h++) {
         crc32.hint += 1;
         for (i = 0; i < MAX_RECIRCS - 1; i++) {
-            rs = table->insert(genkey(), gendata(), crc32.val);
+            entry = gen_cache_entry(&crc32);
+            rs = table->insert(&entry->key, &entry->data, entry->crc32.val);
             ASSERT_TRUE(rs == sdk::SDK_RET_OK);
         }
     }
 }
 
-TEST_F(collision, insert_full_mesh_more_hashs) {
-    sdk_ret_t   rs;
-    crc32_t     crc32;;
-    uint32_t    i = 0;
-    uint32_t    h = 0;
+TEST_F(collision, insert_remove_full_mesh) {
+    sdk_ret_t           rs;
+    crc32_t             crc32;;
+    uint32_t            i = 0;
+    uint32_t            h = 0;
+    memhash_entry_t     *entry = NULL;
     
     crc32.val = gencrc32();
+    entry = gen_cache_entry(&crc32);
 
-    rs = table->insert(genkey(), gendata(), crc32.val);
+    rs = table->insert(&entry->key, &entry->data, entry->crc32.val);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 
-    for (h = 0; h < 2*MAX_HINTS; h++) {
+    for (h = 0; h < MAX_HINTS; h++) {
         crc32.hint += 1;
         for (i = 0; i < MAX_RECIRCS - 1; i++) {
-            rs = table->insert(genkey(), gendata(), crc32.val);
+            entry = gen_cache_entry(&crc32);
+            rs = table->insert(&entry->key, &entry->data, entry->crc32.val);
             ASSERT_TRUE(rs == sdk::SDK_RET_OK);
+        }
+    }
+
+    for (i = 0; i < get_cache_count(); i++) {
+        entry = get_cache_entry(i);
+        rs = table->remove(&entry->key, entry->crc32.val);
+        ASSERT_TRUE(rs == sdk::SDK_RET_OK);
+    }
+}
+
+TEST_F(collision, insert_full_mesh_more_hashs) {
+    sdk_ret_t           rs;
+    crc32_t             crc32;
+    uint32_t            i = 0;
+    uint32_t            h = 0;
+    uint32_t            ml = 0;
+    memhash_entry_t     *entry = NULL;
+    
+    crc32.val = gencrc32();
+    entry = gen_cache_entry(&crc32);
+
+    rs = table->insert(&entry->key, &entry->data, entry->crc32.val);
+    ASSERT_TRUE(rs == sdk::SDK_RET_OK);
+
+    for (ml = 1; ml < MAX_RECIRCS; ml++) {
+        for (h = 0; h < MAX_HINTS; h++) {
+            crc32.hint += 1;
+            for (i = 0; i < MAX_RECIRCS - ml; i++) {
+                entry = gen_cache_entry(&crc32);
+                rs = table->insert(&entry->key, &entry->data, entry->crc32.val);
+                ASSERT_TRUE(rs == sdk::SDK_RET_OK);
+            }
         }
     }
 }

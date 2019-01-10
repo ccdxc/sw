@@ -13,6 +13,7 @@
 #include "include/sdk/table_monitor.hpp"
 #include "include/sdk/slab.hpp"
 
+#include "mem_hash_stats.hpp"
 #include "mem_hash_api_context.hpp"
 
 using namespace std;
@@ -21,6 +22,8 @@ namespace sdk {
 namespace table {
 
 using sdk::table::memhash::mem_hash_api_context;
+using sdk::table::memhash::mem_hash_api_stats;
+using sdk::table::memhash::mem_hash_table_stats;
 
 typedef bool (*mem_hash_iterate_func_t)(uint32_t gl_index, const void *cb_data);
 
@@ -61,8 +64,10 @@ private:
     uint32_t                    key_len_;
     uint32_t                    data_len_;
     uint32_t                    max_recircs_;
-    mem_hash::HashPoly           hash_poly_;
+    mem_hash::HashPoly          hash_poly_;
     table_health_monitor_func_t health_monitor_func_;
+    mem_hash_api_stats          api_stats;
+    mem_hash_table_stats        table_stats;
 
 private:
     sdk_ret_t   init_(uint32_t table_id,
@@ -81,7 +86,7 @@ public:
 
     mem_hash() {
     }
-    
+
     ~mem_hash() {
     }
 

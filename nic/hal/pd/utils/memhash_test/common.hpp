@@ -27,6 +27,7 @@ using namespace std::chrono;
 #define MAX_RECIRCS     8
 #define NUM_INDEX_BITS  21
 #define NUM_HINT_BITS   11
+#define MAX_FLOWS       16*1024*1024
 
 typedef union crc32_s {
     struct {
@@ -36,11 +37,20 @@ typedef union crc32_s {
     uint32_t val;
 } crc32_t;
 
-uint32_t
-gencrc32(bool nextindex = true, bool nexthint = true);
+typedef struct memhash_entry_s {
+    flow_hash_swkey             key;
+    flow_hash_actiondata_t      data;
+    crc32_t                     crc32;
+} memhash_entry_t;
 
-void* genkey();
+uint32_t    gencrc32(bool nextindex = true,
+                     bool nexthint = true);
+void*       genkey();
+void*       gendata();
+uint32_t    get_cache_count();
+void        reset_cache();
 
-void* gendata();
+memhash_entry_t*    get_cache_entry(uint32_t index);
+memhash_entry_t*    gen_cache_entry(crc32_t *crc32);
 
 #endif // __COMMON_HPP__

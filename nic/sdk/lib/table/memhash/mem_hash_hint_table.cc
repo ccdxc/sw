@@ -55,7 +55,7 @@ mem_hash_hint_table::init_(uint32_t id, uint32_t size) {
     if (indexer_ == NULL) {
         return SDK_RET_OOM;
     }
- 
+
     SDK_TRACE_DEBUG("Created mem_hash_main_table TableID:%d TableSize:%d "
                     "NumTableIndexBits:%d",
                     table_id_, table_size_, num_table_index_bits_);
@@ -73,35 +73,42 @@ mem_hash_hint_table::destroy_(mem_hash_hint_table *table)
 }
 
 //---------------------------------------------------------------------------
-// mem_hash_main_table alloc_: Allocate a free table index (bucket)
+// mem_hash_main_table alloc_: Allocate a hint (bucket)
 //---------------------------------------------------------------------------
 sdk_ret_t
 mem_hash_hint_table::alloc_(mem_hash_api_context *ctx) {
-    indexer::status irs = indexer_->alloc(&(ctx->table_index));
+    indexer::status irs = indexer_->alloc(&(ctx->hint));
     if (irs != indexer::SUCCESS) {
         SDK_TRACE_DEBUG("HintTable: capacity reached: %d",
                         indexer_->get_size());
         return SDK_RET_NO_RESOURCE;
     }
-    SDK_TRACE_DEBUG("HintTable: Allocated index:%d", ctx->table_index);
+    SDK_TRACE_DEBUG("%s: Allocated index:%d", ctx->idstr(), ctx->hint);
+
+    // Set write pending
+    ctx->write_pending = true;
     return SDK_RET_OK;
-}    
+}
 
 //---------------------------------------------------------------------------
-// mem_hash_main_table free_: Free a table index (bucket)
+// mem_hash_main_table dealloc_: De-Allocate a hint (bucket)
 //---------------------------------------------------------------------------
 sdk_ret_t
-mem_hash_hint_table::free_(mem_hash_api_context *ctx) {
-    indexer::status irs = indexer_->free(ctx->table_index);
+mem_hash_hint_table::dealloc_(mem_hash_api_context *ctx) {
+    indexer::status irs = indexer_->free(ctx->hint);
     if (irs == indexer::DUPLICATE_FREE) {
         // TODO: Why do we need to special case duplicate free ?
-        assert(0);
+        SDK_ASSERT(0);
         return SDK_RET_DUPLICATE_FREE;
     }
     if (irs != indexer::SUCCESS) {
         return SDK_RET_ERR;
     }
-    SDK_TRACE_DEBUG("HintTable: Freed index:%d", ctx->table_index);
+    SDK_TRACE_DEBUG("HintTable: Freed index:%d", ctx->hint);
+
+    // Clear the hint and set write pending
+    HINT_SET_INVALID(ctx->hint);
+    ctx->write_pending = true;
     return SDK_RET_OK;
 }
 
@@ -110,39 +117,21 @@ mem_hash_hint_table::free_(mem_hash_api_context *ctx) {
 //---------------------------------------------------------------------------
 sdk_ret_t
 mem_hash_hint_table::initctx_(mem_hash_api_context *ctx) {
-    sdk_ret_t   ret = SDK_RET_OK;
-
     // All HintTable api contexts must have parent api context.
-    assert(ctx->pctx);
+    SDK_ASSERT(ctx->pctx);
 
-    // 2 cases here:
-    // Case1: Hash Match in main table
-    // Case2: Hit a free slot in main table
-    if (ctx->pctx->hint == mem_hash_table_bucket::hint_index::HINT_INDEX_INVALID) {
-        // Case 2:
-        // Allocate a new hint.
-        ret = alloc_(ctx);
-        if (ret != SDK_RET_OK) {
-            return ret;
-        }
-
-        // Save the hint in parent api context
-        // REVISIT TODO:
-        ctx->pctx->hint = ctx->table_index;
-        ctx->pctx->write_pending = true;
-    } else {
-        // Derive the table_index from parent api context
-        ctx->table_index = ctx->pctx->hint;
-    }
+    // Make the hint from parent context as table_index
+    ctx->table_index = ctx->pctx->hint;
     // Save the table_id
     ctx->table_id = table_id_;
-    
-    SDK_TRACE_DEBUG("HintTable: TableID:%d Index:%d", ctx->table_id, ctx->table_index);
+
+    SDK_TRACE_DEBUG("%s: TableID:%d Index:%d", ctx->idstr(),
+                    ctx->table_id, ctx->table_index);
 
     ctx->bucket = &buckets_[ctx->table_index];
-    assert(ctx->bucket);
+    SDK_ASSERT(ctx->bucket);
 
-    return SDK_RET_OK;
+    return static_cast<mem_hash_table_bucket*>(ctx->bucket)->read_(ctx);
 }
 
 //---------------------------------------------------------------------------
@@ -151,23 +140,33 @@ mem_hash_hint_table::initctx_(mem_hash_api_context *ctx) {
 //---------------------------------------------------------------------------
 sdk_ret_t
 mem_hash_hint_table::insert_(mem_hash_api_context *pctx) {
-    sdk_ret_t           ret = SDK_RET_COLLISION;
-    mem_hash_api_context   *hctx = NULL;
+    sdk_ret_t               ret = SDK_RET_COLLISION;
+    mem_hash_api_context    *hctx = NULL;
 
     if ((pctx->level + 1) >= pctx->max_recircs) {
         SDK_TRACE_ERR("Max Recirc levels reached.");
         return SDK_RET_MAX_RECIRC_EXCEED;
     }
 
+    // If the hint is invalid, allocate a new hint
+    if (!HINT_IS_VALID(pctx->hint)) {
+        ret = alloc_(pctx);
+        if (ret != SDK_RET_OK) {
+            SDK_TRACE_ERR("Failed to allocate hint. ret:%d", ret);
+            return ret;
+        }
+    }
+
+    // Create a new context for this entry from parent context
     hctx = mem_hash_api_context::factory(pctx);
     if (hctx == NULL) {
         SDK_TRACE_ERR("Failed to create api context");
         return SDK_RET_OOM;
     }
-    
+
     // Initialize the context
     SDK_ASSERT_RETURN(initctx_(hctx) == SDK_RET_OK, SDK_RET_ERR);
-    
+
     // Insert entry to the bucket
     ret = static_cast<mem_hash_table_bucket*>(hctx->bucket)->insert_(hctx);
     if (ret == SDK_RET_COLLISION) {
@@ -179,63 +178,119 @@ mem_hash_hint_table::insert_(mem_hash_api_context *pctx) {
     if (ret == SDK_RET_OK) {
         ret = static_cast<mem_hash_table_bucket*>(hctx->bucket)->write_(hctx);
     }
-    
+
     mem_hash_api_context::destroy(hctx);
 
     return ret;
 }
 
 //---------------------------------------------------------------------------
-// mem_hash_hint_table find_: Find the entry in hint table and return ctx
+// mem_hash_hint_table tail_: Finds the tail node of a hint chain
+//                            and return the context
 //---------------------------------------------------------------------------
 sdk_ret_t
-mem_hash_hint_table::find_(mem_hash_api_context *ctx,
+mem_hash_hint_table::tail_(mem_hash_api_context *ctx,
                            mem_hash_api_context **retctx) {
-    sdk_ret_t           ret = SDK_RET_ENTRY_NOT_FOUND;
-    mem_hash_api_context   *hctx = NULL;
+    sdk_ret_t               ret = SDK_RET_ENTRY_NOT_FOUND;
+    mem_hash_api_context    *tctx = NULL;
 
-    hctx = mem_hash_api_context::factory(ctx);
-    if (hctx == NULL) {
+    if (!HINT_IS_VALID(ctx->hint)) {
+        SDK_TRACE_DEBUG("No hints, setting TAIL = EXACT.");
+        *retctx = ctx;
+        return SDK_RET_OK;
+    }
+
+    tctx = mem_hash_api_context::factory(ctx);
+    if (tctx == NULL) {
         SDK_TRACE_ERR("Failed to create api context");
         return SDK_RET_OOM;
     }
 
     // Initialize the context
-    SDK_ASSERT_RETURN(initctx_(hctx) == SDK_RET_OK, SDK_RET_ERR);
+    SDK_ASSERT_RETURN(initctx_(tctx) == SDK_RET_OK, SDK_RET_ERR);
 
-    ret = static_cast<mem_hash_table_bucket*>(hctx->bucket)->find_(hctx);
+    ret = static_cast<mem_hash_table_bucket*>(tctx->bucket)->find_last_hint_(tctx);
     if (ret == SDK_RET_OK) {
-        // We have found a match, return this hint bucket ctx
-        *retctx = hctx;
-        return ret;
+        SDK_TRACE_DEBUG("%s: find_last_hint_ Ctx: [%s]", tctx->idstr(),
+                        tctx->metastr(), ret);
+        // We have found a valid hint, recursively find the tail of this node
+        ret = tail_(tctx, retctx);;
+        // NOTE: We are not freeing any context right now, as it gets
+        // very complicated especially for smaller chains.
+        // Instead it can be freed cleanly by traversing in reverse from the
+        // tail context after the processing is done.
     } else if (ret == SDK_RET_ENTRY_NOT_FOUND) {
-        if (hctx->hint_slot == mem_hash_table_bucket::hint_slot::HINT_SLOT_FREE) {
-            mem_hash_api_context::destroy(hctx);
-            return SDK_RET_ENTRY_NOT_FOUND;
-        }
-        // Recursively find the entry.
-        ret = find_(hctx, retctx);
+        // No valid hint in this bucket, this itself is the tail
+        *retctx = tctx;
+        ret = SDK_RET_OK;
+    } else {
+        *retctx = NULL;
+        SDK_TRACE_ERR("%s: find_last_hint_ failed ret:%d", tctx->idstr(), ret);
+        // failure case: destroy the context
+        mem_hash_api_context::destroy(tctx);
     }
-    
-    mem_hash_api_context::destroy(hctx);
+
     return ret;
 }
 
 //---------------------------------------------------------------------------
-// mem_hash_hint_table defragment_: Defragment the bucket
-// - Find the last matching entry in the hint chain
-// - Move the last entry to 'ctx' bucket's key and data slots
+// mem_hash_hint_table defragment_: Defragment the hint chain
 //---------------------------------------------------------------------------
 sdk_ret_t
-mem_hash_hint_table::defragment_(mem_hash_api_context *ctx) {
-    sdk_ret_t   ret = SDK_RET_OK;
+mem_hash_hint_table::defragment_(mem_hash_api_context *ectx) {
+    sdk_ret_t               ret = SDK_RET_OK;
+    mem_hash_api_context    *tctx = NULL;
+    mem_hash_api_context    *pctx = NULL;
 
-    //TODO: Find the last entry in the chain.
-    return ret;
+    // Defragmentation Sequence
+    // vars used in this function:
+    //  - ectx: exact match context
+    //  - tctx: tail node context
+    //  - pctx: parent node context (parent of tail node)
+    //
+    // Special cases:
+    //  - If the chain is only 1 level, then ectx == pctx
+    //  - If we are deleting tail, then ectx == tctx
+    //
+    // Steps:
+    // 1) Find 'tctx' and it will give 'pctx'
+    // 2) Copy the tail node key and data to 'ectx'
+    // 3) Write 'ectx' (make before break)
+    // 4) Delete link from 'pctx' to 'tctx'
+    // 5) Write 'pctx' (make before break)
+    // 6) Delete 'tctx'
+
+    SDK_TRACE_DEBUG("%s: Starting defragmentation, Ctx: [%s]",
+                    ectx->idstr(), ectx->metastr());
+    // Get tail node context
+    ret = tail_(ectx, &tctx);
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("defragment_ failed ret:%d", ret);
+        return ret;
+    }
+
+    ret = static_cast<mem_hash_table_bucket*>(ectx->bucket)->defragment_(ectx, tctx);
+    SDK_ASSERT(ret == SDK_RET_OK);
+
+    // Destroy the all the api contexts of this chain
+    if (tctx != ectx) {
+        // We have to destroy only the chain built by the tail traversal
+        // when etcx == tctx, all the parent contexts will be freed when
+        // the recursive stack unwinds.
+        pctx = tctx->pctx;
+        mem_hash_api_context::destroy(tctx);
+        while (pctx && pctx != ectx) {
+            tctx = pctx;
+            mem_hash_api_context::destroy(tctx);
+            pctx = pctx->pctx;
+        }
+    }
+
+    return SDK_RET_OK;
 }
 
 //---------------------------------------------------------------------------
-// mem_hash_hint_table remove_: Remove entry from main table
+// mem_hash_hint_table remove_: Remove entry from hint table
 //---------------------------------------------------------------------------
 sdk_ret_t
 mem_hash_hint_table::remove_(mem_hash_api_context *ctx) {
@@ -247,10 +302,10 @@ mem_hash_hint_table::remove_(mem_hash_api_context *ctx) {
         SDK_TRACE_ERR("Failed to create api context");
         return SDK_RET_OOM;
     }
-    
+
     // Initialize the context
     SDK_ASSERT_RETURN(initctx_(hctx) == SDK_RET_OK, SDK_RET_ERR);
-    
+
     // Remove entry from the bucket
     ret = static_cast<mem_hash_table_bucket*>(hctx->bucket)->remove_(hctx);
     if (ret != SDK_RET_OK) {
@@ -259,16 +314,15 @@ mem_hash_hint_table::remove_(mem_hash_api_context *ctx) {
         return ret;
     }
 
-    SDK_ASSERT(hctx->match_type);
-    if (hctx->match_type == mem_hash_api_context::match_type::MATCH_TYPE_EXM) {
-        // This means there was an exact match in the main table and 
+    if (hctx->is_exact_match()) {
+        // This means there was an exact match in the main table and
         // it was removed. Check and defragment the hints if required.
         ret = defragment_(hctx);
     } else {
         // We only found a matching hint, so remove the entry recursively
         ret = remove_(hctx);
     }
-    
-    mem_hash_api_context::destroy(ctx);
+
+    mem_hash_api_context::destroy(hctx);
     return ret;
 }
