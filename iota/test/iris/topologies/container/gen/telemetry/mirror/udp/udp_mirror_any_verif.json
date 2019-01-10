@@ -17,34 +17,6 @@
         "src_ip": "192.168.100.101", 
         "dst_ip": "any", 
         "protocol": "udp", 
-        "port": "550", 
-        "result": "mirror"
-    }, 
-    {
-        "src_ip": "any", 
-        "dst_ip": "192.168.100.101", 
-        "protocol": "udp", 
-        "port": "550", 
-        "result": "mirror"
-    }, 
-    {
-        "src_ip": "192.168.100.101", 
-        "dst_ip": "any", 
-        "protocol": "udp", 
-        "port": "65535", 
-        "result": "mirror"
-    }, 
-    {
-        "src_ip": "any", 
-        "dst_ip": "192.168.100.101", 
-        "protocol": "udp", 
-        "port": "65535", 
-        "result": "mirror"
-    }, 
-    {
-        "src_ip": "192.168.100.101", 
-        "dst_ip": "any", 
-        "protocol": "udp", 
         "port": "any", 
         "result": "mirror"
     }, 
@@ -73,34 +45,6 @@
         "src_ip": "192.168.100.102", 
         "dst_ip": "any", 
         "protocol": "udp", 
-        "port": "550", 
-        "result": "mirror"
-    }, 
-    {
-        "src_ip": "any", 
-        "dst_ip": "192.168.100.102", 
-        "protocol": "udp", 
-        "port": "550", 
-        "result": "mirror"
-    }, 
-    {
-        "src_ip": "192.168.100.102", 
-        "dst_ip": "any", 
-        "protocol": "udp", 
-        "port": "65535", 
-        "result": "mirror"
-    }, 
-    {
-        "src_ip": "any", 
-        "dst_ip": "192.168.100.102", 
-        "protocol": "udp", 
-        "port": "65535", 
-        "result": "mirror"
-    }, 
-    {
-        "src_ip": "192.168.100.102", 
-        "dst_ip": "any", 
-        "protocol": "udp", 
         "port": "any", 
         "result": "mirror"
     }, 
@@ -129,34 +73,6 @@
         "src_ip": "192.168.100.103", 
         "dst_ip": "any", 
         "protocol": "udp", 
-        "port": "550", 
-        "result": "mirror"
-    }, 
-    {
-        "src_ip": "any", 
-        "dst_ip": "192.168.100.103", 
-        "protocol": "udp", 
-        "port": "550", 
-        "result": "mirror"
-    }, 
-    {
-        "src_ip": "192.168.100.103", 
-        "dst_ip": "any", 
-        "protocol": "udp", 
-        "port": "65535", 
-        "result": "mirror"
-    }, 
-    {
-        "src_ip": "any", 
-        "dst_ip": "192.168.100.103", 
-        "protocol": "udp", 
-        "port": "65535", 
-        "result": "mirror"
-    }, 
-    {
-        "src_ip": "192.168.100.103", 
-        "dst_ip": "any", 
-        "protocol": "udp", 
         "port": "any", 
         "result": "mirror"
     }, 
@@ -179,34 +95,6 @@
         "dst_ip": "192.168.100.104", 
         "protocol": "udp", 
         "port": "120", 
-        "result": "mirror"
-    }, 
-    {
-        "src_ip": "192.168.100.104", 
-        "dst_ip": "any", 
-        "protocol": "udp", 
-        "port": "550", 
-        "result": "mirror"
-    }, 
-    {
-        "src_ip": "any", 
-        "dst_ip": "192.168.100.104", 
-        "protocol": "udp", 
-        "port": "550", 
-        "result": "mirror"
-    }, 
-    {
-        "src_ip": "192.168.100.104", 
-        "dst_ip": "any", 
-        "protocol": "udp", 
-        "port": "65535", 
-        "result": "mirror"
-    }, 
-    {
-        "src_ip": "any", 
-        "dst_ip": "192.168.100.104", 
-        "protocol": "udp", 
-        "port": "65535", 
         "result": "mirror"
     }, 
     {

@@ -14,34 +14,6 @@
         "result": "flowmon"
     }, 
     {
-        "src_ip": "192.168.100.101", 
-        "dst_ip": "192.168.100.0/24", 
-        "protocol": "udp", 
-        "port": "550", 
-        "result": "flowmon"
-    }, 
-    {
-        "src_ip": "192.168.100.0/24", 
-        "dst_ip": "192.168.100.101", 
-        "protocol": "udp", 
-        "port": "550", 
-        "result": "flowmon"
-    }, 
-    {
-        "src_ip": "192.168.100.101", 
-        "dst_ip": "192.168.100.0/24", 
-        "protocol": "udp", 
-        "port": "65535", 
-        "result": "flowmon"
-    }, 
-    {
-        "src_ip": "192.168.100.0/24", 
-        "dst_ip": "192.168.100.101", 
-        "protocol": "udp", 
-        "port": "65535", 
-        "result": "flowmon"
-    }, 
-    {
         "src_ip": "192.168.100.102", 
         "dst_ip": "192.168.100.0/24", 
         "protocol": "udp", 
@@ -53,34 +25,6 @@
         "dst_ip": "192.168.100.102", 
         "protocol": "udp", 
         "port": "120", 
-        "result": "flowmon"
-    }, 
-    {
-        "src_ip": "192.168.100.102", 
-        "dst_ip": "192.168.100.0/24", 
-        "protocol": "udp", 
-        "port": "550", 
-        "result": "flowmon"
-    }, 
-    {
-        "src_ip": "192.168.100.0/24", 
-        "dst_ip": "192.168.100.102", 
-        "protocol": "udp", 
-        "port": "550", 
-        "result": "flowmon"
-    }, 
-    {
-        "src_ip": "192.168.100.102", 
-        "dst_ip": "192.168.100.0/24", 
-        "protocol": "udp", 
-        "port": "65535", 
-        "result": "flowmon"
-    }, 
-    {
-        "src_ip": "192.168.100.0/24", 
-        "dst_ip": "192.168.100.102", 
-        "protocol": "udp", 
-        "port": "65535", 
         "result": "flowmon"
     }, 
     {
@@ -98,34 +42,6 @@
         "result": "flowmon"
     }, 
     {
-        "src_ip": "192.168.100.103", 
-        "dst_ip": "192.168.100.0/24", 
-        "protocol": "udp", 
-        "port": "550", 
-        "result": "flowmon"
-    }, 
-    {
-        "src_ip": "192.168.100.0/24", 
-        "dst_ip": "192.168.100.103", 
-        "protocol": "udp", 
-        "port": "550", 
-        "result": "flowmon"
-    }, 
-    {
-        "src_ip": "192.168.100.103", 
-        "dst_ip": "192.168.100.0/24", 
-        "protocol": "udp", 
-        "port": "65535", 
-        "result": "flowmon"
-    }, 
-    {
-        "src_ip": "192.168.100.0/24", 
-        "dst_ip": "192.168.100.103", 
-        "protocol": "udp", 
-        "port": "65535", 
-        "result": "flowmon"
-    }, 
-    {
         "src_ip": "192.168.100.104", 
         "dst_ip": "192.168.100.0/24", 
         "protocol": "udp", 
@@ -137,34 +53,6 @@
         "dst_ip": "192.168.100.104", 
         "protocol": "udp", 
         "port": "120", 
-        "result": "flowmon"
-    }, 
-    {
-        "src_ip": "192.168.100.104", 
-        "dst_ip": "192.168.100.0/24", 
-        "protocol": "udp", 
-        "port": "550", 
-        "result": "flowmon"
-    }, 
-    {
-        "src_ip": "192.168.100.0/24", 
-        "dst_ip": "192.168.100.104", 
-        "protocol": "udp", 
-        "port": "550", 
-        "result": "flowmon"
-    }, 
-    {
-        "src_ip": "192.168.100.104", 
-        "dst_ip": "192.168.100.0/24", 
-        "protocol": "udp", 
-        "port": "65535", 
-        "result": "flowmon"
-    }, 
-    {
-        "src_ip": "192.168.100.0/24", 
-        "dst_ip": "192.168.100.104", 
-        "protocol": "udp", 
-        "port": "65535", 
         "result": "flowmon"
     }
 ]

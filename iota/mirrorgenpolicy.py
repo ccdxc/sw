@@ -104,7 +104,7 @@ GlobalOptions.endpoint_file = GlobalOptions.topology_dir + "/endpoints.json"
 GlobalOptions.protocols = ["udp", "tcp", "icmp"]
 GlobalOptions.directories = ["udp", "tcp", "icmp", "mixed"]
 #GlobalOptions.ports = ["10", "22", "24", "30", "50-100", "101-200", "201-250, 251-290", "10000-20000", "65535"]
-GlobalOptions.ports = ["120", "550", "65535"]
+GlobalOptions.ports = ["120"]
 GlobalOptions.actions = ["mirror"]
 
 def StripIpMask(ip_address):
