@@ -27,6 +27,8 @@ bool svc_is_hash_desc_valid(const struct pnso_hash_desc *desc);
 bool svc_is_chksum_desc_valid(const struct pnso_checksum_desc *desc);
 
 /* service descriptor flag support outines */
+bool svc_is_bypass_onfail_enabled(const struct pnso_service *pnso_svc);
+
 bool svc_is_hash_per_block_enabled(uint16_t flags);
 
 bool svc_is_chksum_per_block_enabled(uint16_t flags);

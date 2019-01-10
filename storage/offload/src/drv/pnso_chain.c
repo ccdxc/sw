@@ -12,6 +12,7 @@
 #include "pnso_mpool.h"
 #include "pnso_pbuf.h"
 #include "pnso_chain.h"
+#include "pnso_svc.h"
 #include "pnso_cpdc.h"
 #include "pnso_cpdc_cmn.h"
 #include "pnso_stats.h"
@@ -152,8 +153,16 @@ chn_pprint_chain(const struct service_chain *chain)
 	OSAL_LOG_DEBUG("%30s: %d", "chain->sc_num_services",
 			chain->sc_num_services);
 	OSAL_LOG_DEBUG("%30s: %d", "chain->sc_flags", chain->sc_flags);
+
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "chain->sc_req",
+			(uint64_t) chain->sc_req);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "chain->sc_res",
+			(uint64_t) chain->sc_res);
+
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "chain->sc_pcr",
 			(uint64_t) chain->sc_pcr);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "chain->sc_batch_info",
+			(uint64_t) chain->sc_batch_info);
 
 	i = 0;
 	sc_entry = chain->sc_entry;
@@ -178,6 +187,8 @@ chn_pprint_chain(const struct service_chain *chain)
 
 		sc_entry = sc_entry->ce_next;
 	}
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "chain->sc_last_entry",
+			(uint64_t) chain->sc_last_entry);
 
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "chain->sc_req_cb",
 			(uint64_t) chain->sc_req_cb);
@@ -640,7 +651,7 @@ chn_create_chain(struct request_params *req_params)
 	struct chain_entry *centry = NULL;
 	struct chain_entry *centry_prev = NULL;
 	struct service_info *svc_info = NULL;
-	struct service_params svc_params;
+	struct service_params svc_params = { 0 };
 	struct service_buf_list interm_blist;
 	uint32_t i;
 
@@ -672,6 +683,8 @@ chn_create_chain(struct request_params *req_params)
 
 	chain->sc_num_services = req->num_services;
 	chain->sc_entry = NULL;
+
+	chain->sc_req = req;
 	chain->sc_res = res;
 
 	chain->sc_pcr = pcr;
@@ -808,17 +821,27 @@ chn_notify_caller(struct service_chain *chain)
 void
 chn_update_overall_result(struct service_chain *chain)
 {
+	struct pnso_service_request *req;
 	struct pnso_service_result *res;
 	uint32_t i;
 
 	OSAL_ASSERT(chain);
 
+	req = chain->sc_req;
 	res = chain->sc_res;
-	OSAL_ASSERT(res);
 
 	res->err = PNSO_OK;
 	for (i = 0; i < res->num_services; i++) {
 		if (res->svc[i].err) {
+			if (res->num_services > 1 &&
+				svc_is_bypass_onfail_enabled(&req->svc[i])) {
+				OSAL_LOG_DEBUG("skip updating overall error for cp svc_type: %d num_services: %d err: %d",
+						req->svc[i].svc_type,
+						res->num_services,
+						res->svc[i].err);
+				continue;
+			}
+
 			res->err = res->svc[i].err;
 			break;
 		}

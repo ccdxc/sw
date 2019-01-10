@@ -133,6 +133,21 @@ svc_is_cp_desc_valid(const struct pnso_compression_desc *desc)
 	return PNSO_OK;
 }
 
+static inline bool
+is_bypass_onfail_enabled(const struct pnso_compression_desc *desc)
+{
+	return (desc->flags & PNSO_CP_DFLAG_BYPASS_ONFAIL) ? true : false;
+}
+
+bool
+svc_is_bypass_onfail_enabled(const struct pnso_service *pnso_svc)
+{
+	if (pnso_svc->svc_type != PNSO_SVC_TYPE_COMPRESS)
+		return false;
+
+	return is_bypass_onfail_enabled(&pnso_svc->u.cp_desc);
+}
+
 /* -------------------------------------------------------------------------- */
 static inline bool
 is_dc_algo_type_valid(uint16_t algo_type)
