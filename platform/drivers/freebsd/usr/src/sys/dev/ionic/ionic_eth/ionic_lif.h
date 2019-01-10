@@ -46,7 +46,7 @@ struct tx_stats {
 	u64 pkts;
 	u64 bytes;
 	u64 clean;
-	u64 retry;
+	u64 re_queue;
 	u64 linearize;
 	u64 linearize_err;
 	u64 no_descs;

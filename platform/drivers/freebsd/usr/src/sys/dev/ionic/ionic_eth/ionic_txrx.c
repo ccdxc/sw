@@ -135,12 +135,6 @@ TUNABLE_INT("hw.ionic.rx_coalesce_usecs", &ionic_rx_coalesce_usecs);
 SYSCTL_INT(_hw_ionic, OID_AUTO, rx_coalesce_usecs, CTLFLAG_RWTUN,
     &ionic_rx_coalesce_usecs, 0, "Rx coal in usescs.");
 
-/* XXX: To deal with TSO/SG list bug. */
-u32 ionic_max_sg = 0;
-TUNABLE_INT("hw.ionic.max_sg", &ionic_max_sg);
-SYSCTL_INT(_hw_ionic, OID_AUTO, max_sg, CTLFLAG_RWTUN,
-    &ionic_max_sg, 0, "Maximum number of scatter gather list");
-
 static void ionic_dump_mbuf(struct mbuf* m)
 {
 	IONIC_INFO("len %u\n", m->m_len);
@@ -812,53 +806,6 @@ ionic_get_header_size(struct txque *txq, struct mbuf *mb, uint16_t *eth_type,
 	return (0);
 }
 
-/* XXX: Not required. */
-static int ionic_load_mbuf_sg(struct txque *txq, bus_dmamap_t dma_map, 
-	struct mbuf **m, bus_dma_segment_t  *seg, int *nsegs)
-{
-	int error, max_sg;
-	struct mbuf* newm;
-	struct tx_stats *stats = &txq->stats;
- 	bus_dma_tag_t buf_tag = txq->buf_tag;
-
-	error = bus_dmamap_load_mbuf_sg(buf_tag, dma_map, *m, seg, nsegs, BUS_DMA_NOWAIT);
-	if (error) {
-		IONIC_QUE_ERROR(txq, "failed to dma map, error: %d\n", error);
-		stats->dma_map_err++;
-		return (error);
-	}
-
-	max_sg = IONIC_TX_MAX_SG_ELEMS + 1;
-	max_sg = ionic_max_sg ? min(max_sg, ionic_max_sg) : max_sg;
-
-	if (*nsegs <= max_sg)
-		return (0);
-
-	stats->linearize++;
-
-	/* XXX: use m_collapse for sg > 1 */
-	newm = m_defrag(*m, M_NOWAIT);
-	if (newm == NULL) {
-		IONIC_QUE_ERROR(txq, "failed to defrag\n");
-		stats->linearize_err++;
-		return (ENOMEM);
-	}
-
-	/* Old mbuf was released by collapse. */
-	*m = newm;
-	
-	error = bus_dmamap_load_mbuf_sg(buf_tag, dma_map, *m, seg, nsegs, BUS_DMA_NOWAIT);
-	if (error) {
-		IONIC_QUE_ERROR(txq, "failed to dma map, error: %d\n", error);
-		stats->dma_map_err++;
-		return (error);
-	}
-
-	KASSERT((*nsegs <= max_sg), ("%s segment more than %d > %d", txq->name, *nsegs, max_sg));
-
-	return (0);
-}
-
 static int ionic_tx_setup(struct txque *txq, struct mbuf *m)
 {
 	struct txq_desc *desc;
@@ -881,8 +828,28 @@ static int ionic_tx_setup(struct txque *txq, struct mbuf *m)
 	stats->pkts++;
 	stats->bytes += m->m_len;
 
-	error = ionic_load_mbuf_sg(txq, txbuf->dma_map, &m, seg, &nsegs);
+	error = bus_dmamap_load_mbuf_sg(txq->buf_tag, txbuf->dma_map, m,
+		seg, &nsegs, BUS_DMA_NOWAIT);
+	if (error == EFBIG) {
+		struct mbuf *newm;
+
+		stats->linearize++;
+		newm = m_defrag(m, M_NOWAIT);
+		if (newm == NULL) {
+			stats->linearize_err++;
+			m_freem(m);
+			m = NULL;
+			IONIC_QUE_ERROR(txq, "failed to linearize\n");
+			return (ENOBUFS);
+		}
+		m = newm;
+		error = bus_dmamap_load_mbuf_sg(txq->buf_tag, txbuf->dma_map, m,
+			seg, &nsegs, BUS_DMA_NOWAIT);
+	}
 	if (error) {
+		m_freem(m);
+		m = NULL;
+		stats->dma_map_err++;
 		IONIC_QUE_ERROR(txq, "setting up dma map failed, error: %d\n", error);
 		return (error);
 	}
@@ -892,7 +859,7 @@ static int ionic_tx_setup(struct txque *txq, struct mbuf *m)
 		bus_dmamap_unload(txq->buf_tag, txbuf->dma_map);
 		IONIC_TX_TRACE(txq, "No space available, head: %u tail: %u nsegs :%d\n",
 			txq->head_index, txq->tail_index, nsegs);
-		return (ENOBUFS);
+		return (ENOSPC);
 	}
 
 	bus_dmamap_sync(txq->buf_tag, txbuf->dma_map, BUS_DMASYNC_PREWRITE);
@@ -1025,9 +992,27 @@ static int ionic_tx_tso_setup(struct txque *txq, struct mbuf *m)
 
 	error = bus_dmamap_load_mbuf_sg(txq->buf_tag, first_txbuf->dma_map, m,
 		seg, &nsegs, BUS_DMA_NOWAIT);
-	if (error || (nsegs <= 0)) {
-		IONIC_QUE_ERROR(txq, "failed to map TSO xmit, error: %d\n", error);
+	if (error == EFBIG) {
+		struct mbuf *newm;
+
+		stats->linearize++;
+		newm = m_defrag(m, M_NOWAIT);
+		if (newm == NULL) {
+			stats->linearize_err++;
+			m_freem(m);
+			m = NULL;
+			IONIC_QUE_ERROR(txq, "failed to linearize\n");
+			return (ENOBUFS);
+		}
+		m = newm;
+		error = bus_dmamap_load_mbuf_sg(txq->buf_tag, first_txbuf->dma_map, m,
+			seg, &nsegs, BUS_DMA_NOWAIT);
+	}
+	if (error) {
+		m_freem(m);
+		m = NULL;
 		stats->dma_map_err++;
+		IONIC_QUE_ERROR(txq, "setting up dma map failed, error: %d\n", error);
 		return (error);
 	}
 
@@ -1143,17 +1128,15 @@ static int ionic_tx_tso_setup(struct txque *txq, struct mbuf *m)
 }
 
 
-static int ionic_xmit(struct ifnet* ifp, struct txque* txq, struct mbuf **head)
+static int ionic_xmit(struct ifnet* ifp, struct txque* txq, struct mbuf *m)
 {
 	struct tx_stats *stats;
 	int err;
-	struct mbuf* m;
 
 	if ((ifp->if_drv_flags & IFF_DRV_RUNNING) == 0)
 	    return (ENETDOWN);
 
 	stats = &txq->stats;
-	m = *head;
 
 	/* Send a copy of the frame to the BPF listener */
 	ETHER_BPF_MTAP(ifp, m);
@@ -1164,7 +1147,6 @@ static int ionic_xmit(struct ifnet* ifp, struct txque* txq, struct mbuf **head)
 		err = ionic_tx_setup(txq, m);
 
 	if (err) {
-		stats->retry++;
 		return (err);
 	}
 
@@ -1172,18 +1154,23 @@ static int ionic_xmit(struct ifnet* ifp, struct txque* txq, struct mbuf **head)
 }
 
 int
-ionic_start_xmit_locked(struct ifnet* ifp, 	struct txque* txq)
+ionic_start_xmit_locked(struct ifnet* ifp, struct txque* txq)
 {
 	struct mbuf *m;
+	struct tx_stats *stats;
 	int err, work_done;
 
+	stats = &txq->stats;
 	work_done = ionic_tx_clean(txq, txq->num_descs);
 #ifdef IONIC_SEPERATE_TX_INTR
 	ionic_intr_return_credits(&txq->intr, work_done, 0, false);
 #endif
 	while ((m = drbr_peek(ifp, txq->br)) != NULL) {
-		if ((err = ionic_xmit(ifp, txq, &m)) != 0) {
-			if (err) {
+		if ((err = ionic_xmit(ifp, txq, m)) != 0) {
+			if (m == NULL) {
+				drbr_advance(ifp, txq->br);
+			} else {
+				stats->re_queue++;
 				drbr_putback(ifp, txq->br, m);
 			}
 			break;
@@ -1504,8 +1491,8 @@ ionic_lif_add_txtstat(struct txque *txq, struct sysctl_ctx_list *ctx,
 					 &txstat->comp_err, "Completion with error");
 	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "tx_clean", CTLFLAG_RD,
 					 &txstat->clean, "Tx clean");
-	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "pkts_retry", CTLFLAG_RD,
-					 &txstat->retry, "Packets were retried");
+	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "tx_requeued", CTLFLAG_RD,
+					 &txstat->re_queue, "Packets were requeued");
 	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "no_descs", CTLFLAG_RD,
 					 &txstat->no_descs, "Descriptors not available");
 	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "linearize", CTLFLAG_RD,
