@@ -4,9 +4,9 @@ lkl_libs 1.1.8
 openssl_libs 1.1.0
 platform_libs 0.0.26
 storage_libs 0.0.1
-asic_libs 8949262c5c04cade6d2369d0aa5eebfa722b653e
-ncc_tools 8949262c5c04cade6d2369d0aa5eebfa722b653e
-pbc_config 8949262c5c04cade6d2369d0aa5eebfa722b653e
+asic_libs 2aee5d8743f9e7889b6f0948d432b92d8f93bd24
+ncc_tools 2aee5d8743f9e7889b6f0948d432b92d8f93bd24
+pbc_config 2aee5d8743f9e7889b6f0948d432b92d8f93bd24
 upgrade 1.0.3
 iota 1.0.2
 host_tools 1.0.4

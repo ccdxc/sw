@@ -15,7 +15,7 @@
 #include <sys/types.h>
 #include "nic/sdk/include/sdk/pal.hpp"
 
-#define SLEEP(t) usleep(t)
+//#define SLEEP(t) usleep(t)
 #define sleep(t) usleep(t)
 
 static inline void cap_sw_writereg(uint64_t addr, uint32_t data)
