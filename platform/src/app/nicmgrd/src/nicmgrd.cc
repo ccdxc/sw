@@ -11,7 +11,6 @@
 #include <getopt.h>
 #include <sys/time.h>
 
-#include "lib/thread/thread.hpp"
 #include "platform/src/lib/evutils/include/evutils.h"
 #include "platform/src/lib/nicmgr/include/dev.hpp"
 #include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
@@ -70,57 +69,6 @@ atexit_handler (void)
 }
 
 static void
-nicmgrd_poll(void *arg)
-{
-    if (g_hal_up) {
-        devmgr->AdminQPoll();
-    }
-
-    if (utils::logger::logger()) {
-        utils::logger::logger()->flush();
-    }
-}
-
-void *nicmgrd_create_mnets(void *ctxt)
-{
-    // Walk through mnets and do create_mnet
-    cout << "Creating mnets ..." << endl;
-    devmgr->CreateMnets();
-    cout << "Successfully created mnets!!" << endl;
-
-    return NULL;
-}
-
-
-#define NICMGRD_THREAD_ID_MNET 0
-void
-nicmgrd_mnet_thread_init(void)
-{
-#ifdef __aarch64__
-     sdk::lib::thread    *mnet_thread = NULL;
-
-     sdk::lib::thread::control_cores_mask_set(0x8);
-
-     mnet_thread = sdk::lib::thread::factory(std::string("mnet-thread").c_str(),
-                                             NICMGRD_THREAD_ID_MNET,
-                                             sdk::lib::THREAD_ROLE_CONTROL,
-                                             0x8,
-                                             nicmgrd_create_mnets,
-                                             sched_get_priority_max(SCHED_OTHER),
-                                             SCHED_OTHER,
-                                             false); // yield
-     if (mnet_thread == NULL) {
-         cerr << "Unable to start mnet thread. Exiting!!" << endl;
-         exit(1);
-     }
-
-     cout << "Starting mnet thread ... " << endl;
-     // Starting mnet thread
-     mnet_thread->start(mnet_thread);
-#endif
-}
-
-static void
 loop(void)
 {
     if (platform_is_hw(platform)) {
@@ -134,9 +82,6 @@ loop(void)
     if (pciemgr) {
         pciemgr->finalize();
     }
-
-    evutil_timer timer;
-    evutil_timer_start(&timer, nicmgrd_poll, NULL, 0.01, 0.01);
 
     evutil_run();
     /* NOTREACHED */

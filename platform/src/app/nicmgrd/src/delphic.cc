@@ -21,8 +21,6 @@ using dobj::HalStatus;
 using sdk::types::port_oper_status_t;
 
 extern DeviceManager *devmgr;
-extern DeviceManager *devices[];
-extern bool g_hal_up;
 
 namespace nicmgr {
 
@@ -155,39 +153,22 @@ Status init_hal_status_handler (delphi::SdkPtr sdk) {
     return Status::OK;
 }
 
-// helper function to handle HalStatus update event
-void
-handle_hal_up (void)
-{
-    NIC_LOG_DEBUG("Rcvd HAL_STATUS_UP notification");
-    devicemanager_init();
-    // spawn thread to create mnets
-    nicmgrd_mnet_thread_init();
-    g_hal_up = true;
-}
-
 // OnHalStatusCreate gets called when HalStatus object is created
 error hal_status_handler::OnHalStatusCreate(HalStatusPtr halStatus) {
     NIC_LOG_DEBUG("Rcvd OnHalStatusCreate notification for {}", halStatus->ShortDebugString());
-
-    if (halStatus->state() == ::hal::HAL_STATE_UP) {
-        handle_hal_up();
-    }
+    devmgr->HalEventHandler(halStatus->state() == ::hal::HAL_STATE_UP);
     return error::OK();
 }
 
 // OnHalStatusUpdate gets called when HalStatus object is updated
 error hal_status_handler::OnHalStatusUpdate(HalStatusPtr halStatus) {
     NIC_LOG_DEBUG("Rcvd OnHalStatusUpdate notification for {}", halStatus->ShortDebugString());
-
-    if (halStatus->state() == ::hal::HAL_STATE_UP) {
-        handle_hal_up();
-    }
+    devmgr->HalEventHandler(halStatus->state() == ::hal::HAL_STATE_UP);
     return error::OK();
 }
 
 // init_accel_objects mounts accelerator objects
-Status init_accel_objects (delphi::SdkPtr sdk) {
+Status init_accel_objects(delphi::SdkPtr sdk) {
     dobj::AccelPfInfo::Mount(sdk, delphi::ReadWriteMode);
     dobj::AccelSeqQueueInfo::Mount(sdk, delphi::ReadWriteMode);
     dobj::AccelHwRingInfo::Mount(sdk, delphi::ReadWriteMode);

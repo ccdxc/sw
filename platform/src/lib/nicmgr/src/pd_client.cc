@@ -989,7 +989,7 @@ PdClient::rdma_get_ah_base_addr (uint32_t lif)
 int
 PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
                          uint32_t max_ahs, uint32_t max_ptes,
-                         uint64_t *hbm_bar_addr, uint32_t *hbm_bar_size)
+                         uint64_t mem_bar_addr, uint32_t mem_bar_size)
 {
     sram_lif_entry_t    sram_lif_entry;
     uint32_t            pt_size, key_table_size, ah_table_size;
@@ -1108,42 +1108,13 @@ PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
     //Controller Memory Buffer
     //meant for SQ/RQ in HBM for good performance
     //Allocated in units of 8MB
-    if (*hbm_bar_size != 0) {
-
-        uint64_t hbm_addr = 0;
-        uint32_t hbm_size = 0;
-
-        hbm_size = *hbm_bar_size;
-
-        assert(hbm_size <= (8 * 1024 * 1024));
-
-        hbm_addr = rdma_mem_bar_alloc(hbm_size);
-
-        NIC_FUNC_DEBUG("lif-{}: hbm_bar_addr: {:#x}, hbm_size: {}, ",
-                        lif, hbm_addr, hbm_size);
-
-        if (hbm_addr == 0) {
-            *hbm_bar_addr = 0;
-            *hbm_bar_size = 0;
-        } else {
-            //must be aligned to hbm_size
-            assert((hbm_addr % hbm_size) == 0);
-            *hbm_bar_addr = hbm_addr;
-            *hbm_bar_size = hbm_size;
-        }
-
-//In units of 8MB
-#define HBM_BARMAP_BASE_SHIFT 23
-//In units of 8MB
-#define HBM_BARMAP_SIZE_SHIFT 23
-
-        sram_lif_entry.barmap_base_addr  = (*hbm_bar_addr) >> HBM_BARMAP_BASE_SHIFT;
-        sram_lif_entry.barmap_size  = (*hbm_bar_size) >> HBM_BARMAP_SIZE_SHIFT;
+    if (mem_bar_size != 0) {
+        sram_lif_entry.barmap_base_addr = mem_bar_addr >> MEM_BARMAP_SIZE_SHIFT;
+        sram_lif_entry.barmap_size = mem_bar_size >> MEM_BARMAP_SIZE_SHIFT;
     } else {
-        sram_lif_entry.barmap_base_addr  = 0;
-        sram_lif_entry.barmap_size  = 0;
+        sram_lif_entry.barmap_base_addr = 0;
+        sram_lif_entry.barmap_size = 0;
     }
-
 
     rc = p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_add(
                             lif,

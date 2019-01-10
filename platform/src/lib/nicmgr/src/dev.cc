@@ -97,55 +97,6 @@ invalidate_txdma_cacheline(uint64_t addr)
               ((addr >> 6) << 1));
 }
 
-int
-DeviceManager::lifs_reservation(platform_t platform)
-{
-    int ret;
-
-    // Reserve hw_lif_id for uplinks which HAL will use from 1 - 32.
-    NIC_LOG_DEBUG("Reserving 1-{} hw_lif_ids for HAL(uplinks) to use. Nicmgr will start from {}.",
-                 (HAL_LIF_ID_NICMGR_MIN - 1),
-                 HAL_LIF_ID_NICMGR_MIN);
-    ret = pd->lm_->LIFRangeAlloc(1, (HAL_LIF_ID_NICMGR_MIN - 1));
-    if (ret <= 0) {
-        NIC_LOG_ERR("Unable to reserve 1-32 lifs for uplinks");
-        return -1;
-    }
-
-    /*
-     * Even though (HAL_LIF_ID_NICMGR_MIN - 1)  IDs were reserved locally above,
-     * HAL in DOL mode only does the same when platform is HW/HAPS.
-     * So to ensure the nicmgr LIF is assigned the correct hw_lif_id,
-     * we need to create a bunch of throw aways HAL LIFs in the DOL case.
-     */
-    if (platform_is_hw(platform)) {
-        return 0;
-    }
-
-    for (uint32_t i = 1; i < HAL_LIF_ID_NICMGR_MIN; i++) {
-#if 0
-        if (lif_allocator->alloc(&lif_id) != sdk::lib::indexer::SUCCESS) {
-            NIC_LOG_ERR("Failed to allocate reserved lif_id");
-            return -1;
-        }
-#endif
-
-
-        // TODO: Fix for storage test cases
-#if 0
-        struct lif_info linfo;
-        memset(&linfo, 0, sizeof(linfo));
-        linfo.hw_lif_id = i;
-        linfo.lif_id = info.hw_lif_id;
-        if (hal->LifCreate(lif_id,  NULL, empty_qinfo, &linfo)) {
-            NIC_LOG_ERR("Failed to reserve LIF {} thru HAL LifCreate", lif_id);
-            return -1;
-        }
-#endif
-    }
-    return 0;
-}
-
 void DeviceManager::CreateUplinkVRFs()
 {
     Uplink *uplink = NULL;
@@ -161,24 +112,32 @@ DeviceManager::SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_clie
 {
     Device *dev = NULL;
     Eth *eth_dev = NULL;
-    Accel_PF *acc_dev = NULL;
+    Accel_PF *accel_dev = NULL;
 
     for (auto it = devices.cbegin(); it != devices.cend(); it++) {
         dev = (Device *)(it->second);
         if (dev->GetType() == ETH) {
             eth_dev = (Eth *)dev;
             eth_dev->SetHalClient(hal_client, hal_cmn_client);
+            eth_dev->HalEventHandler(true);
         }
         if (dev->GetType() == ACCEL) {
-            acc_dev = (Accel_PF *)dev;
-            acc_dev->SetHalClient(hal_client);
-            acc_dev->LifInit();
+            accel_dev = (Accel_PF *)dev;
+            accel_dev->SetHalClient(hal_client, hal_cmn_client);
+            accel_dev->HalEventHandler(true);
         }
     }
 }
 
-void DeviceManager::Update()
+void DeviceManager::HalEventHandler(bool is_up)
 {
+    if (!is_up) {
+        NIC_LOG_INFO("HAL is {} UP", is_up ? "" : "not");
+        return;
+    }
+
+    NIC_HEADER_TRACE("HAL Event");
+
     int32_t     cosA = 1;
     int32_t     cosB = 0;
     uint8_t     off;
@@ -191,9 +150,6 @@ void DeviceManager::Update()
     hal = new HalClient(fwd_mode);
     hal_common_client = HalGRPCClient::Factory((HalForwardingMode)fwd_mode);
     pd->update();
-
-    // Setting hal clients in all devices
-    SetHalClient(hal, hal_common_client);
 
     // Create VRFs for uplinks
     NIC_LOG_DEBUG("Creating VRFs for uplinks");
@@ -290,13 +246,12 @@ void DeviceManager::Update()
 
     invalidate_txdma_cacheline(hal_lif_info_.qstate_addr[NICMGR_QTYPE_RESP]);
 
-    init_done = true;
-}
+    // Setting hal clients in all devices
+    SetHalClient(hal, hal_common_client);
 
-void
-devicemanager_init (void)
-{
-    DeviceManager::GetInstance()->Update();
+    evutil_timer_start(&adminq_timer, DeviceManager::AdminQPoll, this, 0.01, 0.01);
+
+    init_done = true;
 }
 
 DeviceManager::DeviceManager(std::string config_file, enum ForwardingMode fwd_mode,
@@ -319,8 +274,11 @@ DeviceManager::DeviceManager(std::string config_file, enum ForwardingMode fwd_mo
     pd = PdClient::factory(platform);
     assert(pd);
 
-    if (lifs_reservation(platform)) {
-        throw runtime_error("Failed to reserve LIFs");
+    // Reserve all the LIF ids used by HAL
+    NIC_LOG_DEBUG("Reserving HAL lifs {}-{}", HAL_LIF_ID_MIN, HAL_LIF_ID_MAX);
+    int ret = pd->lm_->LIFRangeAlloc(HAL_LIF_ID_MIN, HAL_LIF_ID_MAX);
+    if (ret < 0) {
+        throw runtime_error("Failed to reserve HAL LIFs");
     }
 
     NIC_HEADER_TRACE("Admin Lif creation");
@@ -554,28 +512,12 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
 }
 
 void
-DeviceManager::CreateMnets()
-{
-    Device *dev = NULL;
-    Eth *eth_dev = NULL;
-
-    for (auto it = devices.cbegin(); it != devices.cend(); it++) {
-        dev = (Device *)(it->second);
-        if (dev->GetType() == ETH) {
-            eth_dev = (Eth *)dev;
-            if (eth_dev->isMnic()) {
-                eth_dev->CreateMnet();
-            }
-        }
-    }
-}
-
-void
 DeviceManager::LinkEventHandler(port_status_t *evd)
 {
     Device *dev;
     Eth *eth_dev;
 
+    NIC_HEADER_TRACE("Link Event");
     for (auto it = devices.cbegin(); it != devices.cend(); it++) {
         dev = it->second;
         if (dev->GetType() == ETH) {
@@ -586,8 +528,9 @@ DeviceManager::LinkEventHandler(port_status_t *evd)
 }
 
 void
-DeviceManager::AdminQPoll()
+DeviceManager::AdminQPoll(void *obj)
 {
+    DeviceManager *devmgr = (DeviceManager *)obj;
     Device *dev = NULL;
     bool req_error = false;
 
@@ -599,27 +542,16 @@ DeviceManager::AdminQPoll()
     struct nicmgr_resp_desc resp_desc = { 0 };
     uint8_t resp_data[4096] = { 0 };
 
-    uint64_t req_qstate_addr = hal_lif_info_.qstate_addr[NICMGR_QTYPE_REQ];
+    uint64_t req_qstate_addr = devmgr->hal_lif_info_.qstate_addr[NICMGR_QTYPE_REQ];
     uint64_t req_db_addr =
 #ifdef __aarch64__
                 CAP_ADDR_BASE_DB_WA_OFFSET +
 #endif
                 CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS +
                 (0b1000 /* PI_UPD + NO_SCHED */ << 17) +
-                (hal_lif_info_.hw_lif_id << 6) +
+                (devmgr->hal_lif_info_.hw_lif_id << 6) +
                 (NICMGR_QTYPE_REQ << 3);
     uint64_t req_db_data = 0x0;
-
-    uint64_t resp_qstate_addr = hal_lif_info_.qstate_addr[NICMGR_QTYPE_RESP];
-    uint64_t resp_db_addr =
-#ifdef __aarch64__
-                CAP_ADDR_BASE_DB_WA_OFFSET +
-#endif
-                CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS +
-                (0b1011 /* PI_UPD + SCHED_SET */ << 17) +
-                (hal_lif_info_.hw_lif_id << 6) +
-                (NICMGR_QTYPE_RESP << 3);
-    uint64_t resp_db_data = 0x0;
 
     invalidate_txdma_cacheline(req_qstate_addr);
 
@@ -629,13 +561,15 @@ DeviceManager::AdminQPoll()
     READ_MEM(req_qstate_addr + offsetof(admin_qstate_t, c_index0),
              (uint8_t *)&c_index0, sizeof(c_index0), 0);
 
-    if (req_tail != c_index0) {
+    if (devmgr->req_tail != c_index0) {
+
+        NIC_HEADER_TRACE("AdminCmd");
 
         NIC_LOG_DEBUG("request: PRE: p_index0 {}, c_index0 {}, head {}, tail {}",
-               p_index0, c_index0, req_head, req_tail);
+               p_index0, c_index0, devmgr->req_head, devmgr->req_tail);
 
         // Read nicmgr request descriptor
-        req_desc_addr = req_ring_base + (sizeof(req_desc) * req_tail);
+        req_desc_addr = devmgr->req_ring_base + (sizeof(req_desc) * devmgr->req_tail);
         READ_MEM(req_desc_addr, (uint8_t *)&req_desc, sizeof(req_desc), 0);
 
         NIC_LOG_DEBUG("request: lif {} qtype {} qid {} comp_index {}"
@@ -645,21 +579,21 @@ DeviceManager::AdminQPoll()
                req_desc_addr);
 
         // Process devcmd
-        if (devices.find(req_desc.lif) == devices.cend()) {
+        if (devmgr->devices.find(req_desc.lif) == devmgr->devices.cend()) {
             req_error = true;
             NIC_LOG_ERR("Invalid AdminQ request! lif {} qtype {} qid {}",
                 req_desc.lif, req_desc.qtype, req_desc.qid);
         } else {
             req_error = false;
-            dev = devices[req_desc.lif];
+            dev = devmgr->devices[req_desc.lif];
             dev->CmdHandler(&req_desc.cmd, (void *)&req_data,
                 &resp_desc.comp, (void *)&resp_data);
         }
 
         // Ring doorbell to update the PI
-        req_head = (req_head + 1) & (ring_size - 1);
-        req_tail = (req_tail + 1) & (ring_size - 1);
-        req_db_data = req_head;
+        devmgr->req_head = (devmgr->req_head + 1) & (devmgr->ring_size - 1);
+        devmgr->req_tail = (devmgr->req_tail + 1) & (devmgr->ring_size - 1);
+        req_db_data = devmgr->req_head;
         NIC_LOG_DEBUG("req_db_addr {:#x} req_db_data {:#x}", req_db_addr, req_db_data);
         WRITE_DB64(req_db_addr, req_db_data);
 
@@ -672,9 +606,21 @@ DeviceManager::AdminQPoll()
                  (uint8_t *)&c_index0, sizeof(c_index0), 0);
 
         NIC_LOG_DEBUG("request: POST: p_index0 {}, c_index0 {}, head {}, tail {}",
-               p_index0, c_index0, req_head, req_tail);
+               p_index0, c_index0, devmgr->req_head, devmgr->req_tail);
 
         if (!req_error) {
+
+            uint64_t resp_qstate_addr = devmgr->hal_lif_info_.qstate_addr[NICMGR_QTYPE_RESP];
+            uint64_t resp_db_addr =
+        #ifdef __aarch64__
+                        CAP_ADDR_BASE_DB_WA_OFFSET +
+        #endif
+                        CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS +
+                        (0b1011 /* PI_UPD + SCHED_SET */ << 17) +
+                        (devmgr->hal_lif_info_.hw_lif_id << 6) +
+                        (NICMGR_QTYPE_RESP << 3);
+            uint64_t resp_db_data = 0x0;
+
             invalidate_txdma_cacheline(resp_qstate_addr);
 
             // Write nicmgr response descriptor
@@ -685,9 +631,9 @@ DeviceManager::AdminQPoll()
                     (uint8_t *)&c_index0, sizeof(c_index0), 0);
 
             NIC_LOG_DEBUG("response: PRE: p_index0 {}, c_index0 {}, head {}, tail {}",
-                p_index0, c_index0, resp_head, resp_tail);
+                p_index0, c_index0, devmgr->resp_head, devmgr->resp_tail);
 
-            resp_desc_addr = resp_ring_base + (sizeof(resp_desc) * resp_tail);
+            resp_desc_addr = devmgr->resp_ring_base + (sizeof(resp_desc) * devmgr->resp_tail);
 
             resp_desc.lif = req_desc.lif;
             resp_desc.qtype = req_desc.qtype;
@@ -704,8 +650,8 @@ DeviceManager::AdminQPoll()
             WRITE_MEM(resp_desc_addr, (uint8_t *)&resp_desc, sizeof(resp_desc), 0);
 
             // Ring doorbell to update the PI and run nicmgr response program
-            resp_tail = (resp_tail + 1) & (ring_size - 1);
-            resp_db_data = resp_tail;
+            devmgr->resp_tail = (devmgr->resp_tail + 1) & (devmgr->ring_size - 1);
+            resp_db_data = devmgr->resp_tail;
             NIC_LOG_DEBUG("resp_db_addr {:#x} resp_db_data {:#x}", resp_db_addr, resp_db_data);
             WRITE_DB64(resp_db_addr, resp_db_data);
 
@@ -718,7 +664,7 @@ DeviceManager::AdminQPoll()
                     (uint8_t *)&c_index0, sizeof(c_index0), 0);
 
             NIC_LOG_DEBUG("response: POST: p_index0 {}, c_index0 {}, head {}, tail {}",
-                p_index0, c_index0, resp_head, resp_tail);
+                p_index0, c_index0, devmgr->resp_head, devmgr->resp_tail);
         }
     }
 }

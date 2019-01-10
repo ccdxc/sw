@@ -9,18 +9,17 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-#include "cap_top_csr_defines.h"
-#include "cap_pics_c_hdr.h"
-#include "cap_wa_c_hdr.h"
-
-#include "dev.hpp"
 #include "nic/include/notify.hpp"
 #include "nic/include/edma.hpp"
 #include "nic/include/eth_common.h"
-#include "lib/indexer/indexer.hpp"
+
+#include "nic/sdk/lib/indexer/indexer.hpp"
+
 #include "platform/src/lib/hal_api/include/hal_types.hpp"
-#include "platform/src/lib/mnet/include/mnet.h"
 #include "platform/src/lib/evutils/include/evutils.h"
+#include "platform/src/lib/mnet/include/mnet.h"
+
+#include "dev.hpp"
 
 /* Supply these for ionic_if.h */
 #define BIT(n)                  (1 << n)
@@ -32,7 +31,6 @@
 #define dma_addr_t uint64_t
 
 #include "platform/drivers/common/ionic_if.h"
-
 
 
 namespace pt = boost::property_tree;
@@ -163,36 +161,24 @@ public:
         PdClient *pd_client);
 
     struct dev_cmd_regs *devcmd;
-    struct notify_block *notify_block;
-
-    static void DevcmdPoll(void *obj);
 
     void DevcmdHandler();
-    void DevObjSave();
-    void LinkEventHandler(port_status_t *evd);
-    enum DevcmdStatus CmdHandler(void *req, void *req_data, void *resp, void *resp_data);
+    enum DevcmdStatus CmdHandler(void *req, void *req_data,
+                                 void *resp, void *resp_data);
 
-    int GenerateQstateInfoJson(pt::ptree &lifs);
-    bool isMnic();
-    bool isHostManagement();
-    bool isHost();
-    void CreateMnet();
-    void Update();
+    void LinkEventHandler(port_status_t *evd);
+
+    void HalEventHandler(bool status);
     hal_lif_info_t *GetHalLifInfo(void) { return &hal_lif_info_; }
     void SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client);
-    void FreeUpMacFilters();
-    void FreeUpVlanFilters();
-    void FreeUpMacVlanFilters();
+
+    void DevObjSave();
+    int GenerateQstateInfoJson(pt::ptree &lifs);
 
 private:
-    /* Static members */
     static sdk::lib::indexer *fltr_allocator;
-    /* Members */
+    // Device Spec
     const struct eth_devspec *spec;
-    enum lif_state lif_state;
-    /* Mnet Info */
-    struct mnet_dev_create_req_t mnet_req;
-    // Hardware Info
     struct queue_info qinfo[NUM_QUEUE_TYPES];
     // PD Info
     PdClient *pd;
@@ -201,14 +187,24 @@ private:
     HalCommonClient *hal_common_client;
     hal_lif_info_t hal_lif_info_;
     const hal_lif_info_t *nicmgr_lif_info;
-    uint8_t  cosA, cosB;
+    // Device state
+    std::string nd_name, dev_name;
+    uint8_t cosA, cosB;
+    enum lif_state lif_state;
     // Resources
     int32_t lif_base;
     uint32_t intr_base;
+    // Devcmd
+    uint64_t devcmd_mem_addr;
+    uint64_t devcmddb_mem_addr;
+    // CMB
+    uint64_t cmb_mem_addr;
+    uint32_t cmb_mem_size;
     // Stats
     uint64_t stats_mem_addr;
     uint64_t host_stats_mem_addr;
     // NotifyQ
+    struct notify_block *notify_block;
     uint16_t notify_ring_head;
     uint64_t notify_ring_base;
     uint64_t notify_block_addr;
@@ -225,7 +221,6 @@ private:
     uint8_t  rss_indir[RSS_IND_TBL_SIZE]; // 128B
     // PCIe info
     pciehdev_t *pdev;
-    pciehdevice_resources_t pci_resources;
     // Network info
     map<uint64_t, uint64_t> mac_addrs;
     map<uint64_t, uint16_t> vlans;
@@ -236,8 +231,12 @@ private:
     // Callbacks
     static void StatsUpdate(void *obj);
     static void NotifyBlockUpdate(void *arg);
+    // Device Constructors
+    bool CreateHostDevice();
+    bool CreateLocalDevice();
 
     /* Command Handlers */
+    static void DevcmdPoll(void *obj);
     enum DevcmdStatus _CmdReset(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdHangNotify(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdIdentify(void *req, void *req_data, void *resp, void *resp_data);
@@ -247,6 +246,7 @@ private:
     enum DevcmdStatus _CmdRxQInit(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdFeatures(void *req, void *req_data, void *resp, void *resp_data);
+    enum DevcmdStatus _CmdSetNetdevInfo(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdQEnable(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdQDisable(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdSetMode(void *req, void *req_data, void *resp, void *resp_data);
@@ -267,6 +267,10 @@ private:
     const char *lif_state_to_str(enum lif_state state);
 
     types::LifType ConvertDevTypeToLifType(EthDevType dev_type);
+
+    void FreeUpMacFilters();
+    void FreeUpVlanFilters();
+    void FreeUpMacVlanFilters();
 };
 
 #endif

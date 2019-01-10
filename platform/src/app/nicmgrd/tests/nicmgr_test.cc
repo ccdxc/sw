@@ -119,9 +119,7 @@ nicmgr_init()
         devmgr->LoadConfig("../platform/src/app/nicmgrd/etc/eth-smart.json");
     }
 
-    // nicmgr::handle_hal_up();
-    devicemanager_init();
-
+    devmgr->HalEventHandler(true);
 }
 
 static int

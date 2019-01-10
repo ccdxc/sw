@@ -34,6 +34,8 @@
 #define MAX_LIFS                            (2048)
 // Size of the entire LIF indirection table
 #define ETH_RSS_INDIR_TBL_SZ                (MAX_LIFS * ETH_RSS_LIF_INDIR_TBL_SZ)
+// Memory bar should be multiple of 8 MB
+#define MEM_BARMAP_SIZE_SHIFT               (23)
 
 class PdClient {
 public:
@@ -87,7 +89,7 @@ public:
 /* RDMA routines */
     int rdma_lif_init(uint32_t lif, uint32_t max_keys,
                       uint32_t max_ahs, uint32_t max_ptes,
-                      uint64_t *hbm_bar_address, uint32_t *hbm_bar_size);
+                      uint64_t mem_bar_addr, uint32_t mem_bar_size);
 
     int p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_add(
         uint32_t idx,

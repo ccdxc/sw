@@ -28,8 +28,6 @@ EthLif::Factory(hal_lif_info_t *info)
     HalL2Segment *native_l2seg;
     HalVrf       *vrf;
 
-    api_trace("EthLif Create");
-
     if (info->hw_lif_id != 0) {
         if (ethlif_db.find(info->hw_lif_id) != ethlif_db.end()) {
             NIC_LOG_WARN("Duplicate Create of EthLif with id: {}",

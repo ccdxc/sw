@@ -10,32 +10,32 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
+#include <pthread.h>
 
 #include "mnet.h"
+
+static pthread_mutex_t mnet_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 int
 create_mnet(struct mnet_dev_create_req_t *req)
 {
     int ret, fd;
-    char* dev_node = MNET_DEVICE_FILE;
 
-    fd = open(dev_node, O_RDWR);
-
-    if(fd < 0)
-    {
-        fprintf(stderr, "Error: %s %s\n", dev_node, strerror(errno));
+    fd = open(MNET_DEVICE_FILE, O_RDWR);
+    if (fd < 0) {
+        fprintf(stderr, "Error: %s %s\n", MNET_DEVICE_FILE, strerror(errno));
         return fd;
     }
 
+    pthread_mutex_lock(&mnet_mutex);
     ret = ioctl(fd, MNET_CREATE_DEV, req);
+    pthread_mutex_unlock(&mnet_mutex);
+    close(fd);
 
-    if (ret)
-    {
+    if (ret) {
         fprintf(stderr, "Error: %s %s\n", "MNET_CREATE_DEV", strerror(errno));
         return ret;
     }
-
-    close(fd);
 
     return 0;
 }
@@ -44,25 +44,22 @@ int
 remove_mnet(const char* if_name)
 {
     int ret, fd;
-    char* dev_node = MNET_DEVICE_FILE;
 
-    fd = open(dev_node, O_RDWR);
-
-    if(fd < 0)
-    {
-        fprintf(stderr, "Error: %s %s\n", dev_node, strerror(errno));
+    fd = open(MNET_DEVICE_FILE, O_RDWR);
+    if (fd < 0) {
+        fprintf(stderr, "Error: %s %s\n", MNET_DEVICE_FILE, strerror(errno));
         return fd;
     }
 
+    pthread_mutex_lock(&mnet_mutex);
     ret = ioctl(fd, MNET_DESTROY_DEV, if_name);
+    pthread_mutex_unlock(&mnet_mutex);
+    close(fd);
 
-    if (ret)
-    {
+    if (ret) {
         fprintf(stderr, "Error: %s %s\n", "MNET_DESTROY_DEV", strerror(errno));
         return ret;
     }
-
-    close(fd);
 
     return 0;
 }

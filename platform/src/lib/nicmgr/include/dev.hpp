@@ -9,16 +9,17 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-#include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/include/globals.hpp"
 #include "nic/include/adminq.h"
 #include "nic/include/notify.hpp"
+
+#include "nic/sdk/lib/pal/pal.hpp"
+
+#include "platform/src/lib/evutils/include/evutils.h"
 #include "platform/src/lib/hal_api/include/hal_common_client.hpp"
 #include "platform/src/lib/hal_api/include/hal_grpc_client.hpp"
 
 #include "hal_client.hpp"
-
-#define HAL_HW_LIF_ID_MAX (HAL_LIF_ID_NICMGR_MIN - 1)
 
 #ifdef __x86_64__
 
@@ -197,7 +198,6 @@ class PdClient;
  */
 class Device {
 public:
-    virtual void DevcmdHandler() = 0;
     virtual enum DevcmdStatus CmdHandler(
         void *req, void *req_data,
         void *resp, void *resp_data) = 0;
@@ -219,11 +219,10 @@ public:
     Device *AddDevice(enum DeviceType type, void *dev_spec);
     static DeviceManager *GetInstance() { return instance; }
 
-    void Update();
-    void CreateMnets();
-
-    void AdminQPoll();
+    void HalEventHandler(bool is_up);
     void LinkEventHandler(port_status_t *evd);
+
+    static void AdminQPoll(void *obj);
 
     Device *GetDevice(uint64_t id);
     void CreateUplinkVRFs();
@@ -232,7 +231,6 @@ public:
 
 private:
     static DeviceManager *instance;
-    int lifs_reservation(platform_t platform);
 
     boost::property_tree::ptree spec;
     std::map<uint64_t, Device*> devices; // lif -> device
@@ -246,14 +244,13 @@ private:
     // HAL Info
     HalClient *hal;
     HalCommonClient *hal_common_client;
-    uint32_t lif_id;
-    bool dol_integ;
+    PdClient *pd;
+
     bool init_done;
     std::string config_file;
 
-    PdClient *pd;
-
     // AdminQ
+    evutil_timer adminq_timer;
     uint64_t req_ring_base;
     uint64_t resp_ring_base;
     uint16_t ring_size;

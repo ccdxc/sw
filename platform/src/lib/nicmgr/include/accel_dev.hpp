@@ -3,14 +3,16 @@
 #define __ACCEL_DEV_HPP__
 
 #include <map>
-#include <unordered_map>
 #include <ev++.h>
+
+#include "nic/include/accel_ring.h"
+#include "nic/include/storage_seq_common.h"
+
+#include "platform/src/lib/hal_api/include/hal_types.hpp"
+#include "platform/src/lib/evutils/include/evutils.h"
 
 #include "dev.hpp"
 #include "hal_client.hpp"
-#include "nic/include/accel_ring.h"
-#include "nic/include/storage_seq_common.h"
-#include "platform/src/lib/evutils/include/evutils.h"
 
 
 #define ACCEL_DEV_PAGE_SIZE             4096
@@ -213,31 +215,19 @@ public:
              PdClient *pd_client);
 
     void DevcmdHandler();
-    static void DevcmdPoll(void *obj);
     enum DevcmdStatus CmdHandler(void *req, void *req_data,
                                  void *resp, void *resp_data);
-    void SetHalClient(HalClient *hal_client);
+
+    void HalEventHandler(bool status);
+    void SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client);
     hal_lif_info_t *GetHalLifInfo(void) { return &hal_lif_info_; }
 
     dev_cmd_regs_t              *devcmd;
 
-    void LifInit();
-    void set_lif_init_done(bool done) { lif_init_done = done; }
-    bool get_lif_init_done() { return lif_init_done; }
-
-
 private:
-
-    /* Members */
+    // Device Spec
     const accel_devspec_t       *spec;
-    ev::timer                   sync_timer;     // timer to sync to hub
-    evutil_timer                devcmd_timer;
-
-    uint32_t seq_created_count;
-    // HW rings
-    accel_ring_t accel_ring_tbl[ACCEL_RING_ID_MAX];
-    // Hardware Info
-    struct queue_info    qinfo[NUM_QUEUE_TYPES];
+    struct queue_info           qinfo[NUM_QUEUE_TYPES];
     // Delphi
     delphi::objects::AccelPfInfoPtr delphi_pf;
     std::vector<delphi::objects::AccelSeqQueueInfoPtr> delphi_qinfo_vec;
@@ -246,31 +236,40 @@ private:
     PdClient *pd;
     // HAL Info
     HalClient                   *hal;
+    HalCommonClient             *hal_common_client;
     hal_lif_info_t              hal_lif_info_;
     const hal_lif_info_t        *nicmgr_lif_info;
     uint8_t cosA, cosB;
     // PCIe info
     pciehdev_t                  *pdev;
-    pciehdevice_resources_t     pci_resources;
     // Resources
     int32_t                     lif_base;
     uint32_t                    intr_base;
+    // Devcmd
+    uint64_t                    devcmd_mem_addr;
+    uint64_t                    devcmddb_mem_addr;
+    // CMB
+    uint64_t                    cmb_mem_addr;
+    uint32_t                    cmb_mem_size;
     // Other state
     uint32_t                    crypto_key_idx_base;
     uint32_t                    num_crypto_keys_max;
-    uint32_t                    seq_qid_init_high;  // highest seq qid initialized
-
-    bool                        lif_init_done;
+    uint32_t                    seq_created_count;
+    uint32_t                    seq_qid_init_high;
     bool                        rgroup_indices_chg;
     bool                        rgroup_metrics_chg;
+    // HW rings
+    accel_ring_t                accel_ring_tbl[ACCEL_RING_ID_MAX];
 
     friend void accel_rgroup_rindices_rsp_cb(void *user_ctx,
                              const accel_rgroup_rindices_rsp_t& indices);
     friend void accel_rgroup_rmetrics_rsp_cb(void *user_ctx,
                              const accel_rgroup_rmetrics_rsp_t& metrics);
 
+    bool CreateHostDevice();
+
     /* Methods */
-    void _PostDevcmdDone(enum DevcmdStatus status);
+    static void DevcmdPoll(void *obj);
     enum DevcmdStatus _DevcmdReset(void *req, void *req_data,
                                    void *resp, void *resp_data);
     enum DevcmdStatus _DevcmdIdentify(void *req, void *req_data,
@@ -294,6 +293,10 @@ private:
     enum DevcmdStatus _DevcmdSeqQueueSingleInit(const seq_queue_init_cmd_t *cmd);
     enum DevcmdStatus _DevcmdSeqQueueSingleControl(const seq_queue_control_cmd_t *cmd,
                                                    bool enable);
+
+    // Tasks
+    ev::timer                   sync_timer;     // timer to sync to hub
+    evutil_timer                devcmd_timer;
 
     int DelphiDeviceInit(void);
 
