@@ -291,4 +291,4 @@ jobd/iota/base: ${JOBD_PREREQS}
 	${MAKE} release
 	${MAKE} -C ${TOPDIR} venice-image
 	${MAKE} -j 1 -C ${GOPATH}/src/github.com/pensando/sw/iota
-	cd ${IOTADIR} && ./iota.py --testsuite venice --skip-firmware-upgrade 
+	cd ${IOTADIR} && ./iota.py --testsuite venice --skip-firmware-upgrade
