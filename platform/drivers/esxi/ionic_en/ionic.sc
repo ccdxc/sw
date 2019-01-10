@@ -25,7 +25,7 @@ driverSummary       = "Pensando Systems Native Ethernet Driver"
 driverDescription   = "Pensando Systems Native Ethernet Driver"
 vendorName          = "Pensando Systems"
 vendorMailingList   = "jingyiz@pensando.io"
-vendorCode          = "PNSD"
+vendorCode          = "PEN"
 moreCCFlags         = ""
 
 
