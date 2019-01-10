@@ -76,17 +76,24 @@ def parse_file():
         for e in data['regions']:
             print >> fd, ""
             n = e['name']
-            s1024 = long(0)
-            if 'size_kb' in e:
-                s1024 = long(e['size_kb'])
-            s64 = long(0)
-            if 'size_64b' in e:
-                s64 = long(e['size_64b'])
-            s = long(0)
-            if s1024 != 0:
-                s = s1024 * 1024
+            mf = long(1)
+            mv = long(0)
+            mem_type = e['size']
+            if "G" in mem_type:
+                mf = 1024 * 1024 * 1024
+            elif "M" in mem_type:
+                mf = 1024 * 1024
+            elif "K" in mem_type:
+                mf = 1024
+            elif "B" in mem_type:
+                mf = 1
             else:
-                s = s64 * 64 
+                exit(-1)
+            value = mem_type[:-1]
+            if value.isdecimal():
+                mv = long(mem_type[:-1])
+      
+            s = mf * mv 
             # Derive the basename for the macros 
             nbase = name + (re.sub("[ -]", "_", n)).upper() + "_"
 
@@ -96,10 +103,7 @@ def parse_file():
 
             # Update start offset
             print >> fd, "#define %-60s 0x%lxUL" %(nbase + "START_OFFSET", off);
-            if s1024 != 0:
-                off = long(off) + s1024 * 1024
-            else:
-                off = long(off) + s64 * 64 
+            off = long(off) + s
 
             # Update cache pipe
             cv = "MEM_REGION_CACHE_PIPE_NONE"

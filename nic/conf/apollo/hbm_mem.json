@@ -3,123 +3,123 @@
         {
             "_comment" : "memtun address is hardcoded to HBM base + 64MB(above cc regions)",
              "name": "memtun",
-             "size_kb": 256
+             "size": "256K"
         },
         {
             "name": "lif2qstate_map",
-            "size_kb": 131072,
+            "size": "131072K",
             "cache": "p4plus-all"
         },
         {
             "name": "p4_program",
-            "size_kb": 1024
+            "size": "1024K"
         },
         {
             "name": "rxdma_program",
-            "size_kb": 1024,
+            "size": "1024K",
             "cache": "p4plus-rxdma"
         },
         {
             "name": "txdma_program",
-            "size_kb": 1024,
+            "size": "1024K",
             "cache": "p4plus-txdma"
         },
         {
             "name": "rxdma_to_txdma_buf",
-            "size_kb": 163840,
+            "size": "163840K",
             "_comment": "160MB (16K buffers of size 10K)"
         },
         {
             "name": "local_ip_mapping",
-            "size_kb": 8192,
+            "size": "8192K",
             "cache": "p4ig"
         },
         {
             "name": "remote_vnic_mapping_rx",
-            "size_kb": 65536,
+            "size": "65536K",
             "cache": "p4ig"
         },
         {
             "name": "flow",
-            "size_kb": 1048576,
+            "size": "1048576K",
             "cache": "p4ig"
         },
         {
             "name": "remote_vnic_mapping_rx_overflow",
-            "size_kb": 16384,
+            "size": "16384K",
             "cache": "p4ig"
         },
         {
             "name": "local_ip_mappings_overflow",
-            "size_kb": 1024,
+            "size": "1024K",
             "cache": "p4ig"
         },
         {
             "name": "flow_info",
-            "size_kb": 524288,
+            "size": "524288K",
             "cache": "p4ig"
         },
         {
             "name": "flow_stats",
-            "size_kb": 524288,
+            "size": "524288K",
             "cache": "p4ig"
         },
         {
             "name": "remote_vnic_mapping_tx",
-            "size_kb": 65536,
+            "size": "65536K",
             "cache": "p4eg"
         },
         {
             "name": "remote_vnic_mapping_tx_overflow",
-            "size_kb": 16384,
+            "size": "16384K",
             "cache": "p4eg"
         },
         {
             "name": "nat",
-            "size_kb": 131072,
+            "size": "131072K",
             "cache": "p4eg"
         },
         {
             "name": "slacl",
-            "size_kb": 264,
+            "size": "264K",
             "cache": "p4plus-rxdma"
         },
         {
             "name": "lpm",
-            "size_kb": 18,
+            "size": "18K",
             "cache": "p4plus-txdma"
         },
         {
             "name": "udp_flow_overflow0",
-            "size_kb": 64
+            "size": "64K"
         },
         {
             "name": "udp_flow_overflow1",
-            "size_kb": 64
+            "size": "64K"
         },
         {
             "name": "udp_flow_overflow2",
-            "size_kb": 64
+            "size": "64K"
         },
         {
             "name": "udp_flow_overflow3",
-            "size_kb": 64
+            "size": "64K"
         },
         {
             "name": "udp_flow_qid_update_virtual",
-            "size_kb": 64
+            "size": "64K"
         },
         {
             "name": "udp_flow_qid_update",
-            "size_kb": 64
+            "size": "64K"
         },
         {
             "name": "qos-hbm-fifo",
-            "size_kb": 262144
+            "size": "262144K"
         },
         {
             "name": "tx-scheduler",
-            "size_kb": 2048
+            "size": "2048K"
         },
         {
             "_comment": "hash depth = 1024",
@@ -127,19 +127,19 @@
             "_comment1": "key space = 1024 * 64 = 64K",
             "_comment2": "Num timers = hash depth * 16 * 12 = 196608",
             "name": "timers",
-            "size_kb": 1088
+            "size": "1088K"
         },
         {
             "name": "pciemgr",
-            "size_kb" : 32768
+            "size": "32768K"
         },
         {
             "name": "devcmd",
-            "size_kb": 32768
+            "size": "32768K"
         },
         {
             "name": "mpu-trace",
-            "size_kb": 224
+            "size": "224K"
         }
     ]
 }
