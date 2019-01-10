@@ -112,6 +112,11 @@ nic/build/aarch64/iris/bin/network_test                             /nic/bin/
 
 #p4ctl binary
 nic/debug_cli/images/aarch64/iris/p4ctl                             /nic/bin
+#locale
+nic/sdk/third-party/locale/aarch64/bin/locale                       /usr/bin/
+nic/sdk/third-party/locale/aarch64/bin/localedef                    /usr/bin/
+nic/sdk/third-party/locale/aarch64/locale.tar                       /usr/share/i18n/
+
 
 #process memory scripts
 nic/tools/run_mem_check.sh                                          /nic/tools/ 
