@@ -206,7 +206,7 @@ main(int argc, char *argv[])
 
     p->strict_crs = 1;
     p->fake_bios_scan = 1;
-    p->subdeviceid = PCI_SUBDEVICE_ID_PENSANDO_NAPLES100;
+    p->subdeviceid = PCI_SUBDEVICE_ID_PENSANDO_NAPLES100_4GB;
 
     /*
      * For x86_64 we want to FORCE_INIT to reinitialize hw/shmem on startup.

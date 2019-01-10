@@ -1,4 +1,4 @@
-00:00.0 0604: 1dd8:1000
+00:00.0 0604: 1dd8:1008
 	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
 	Bus: primary=00, secondary=01, subordinate=00, sec-latency=0
@@ -48,7 +48,7 @@
 	Capabilities: [180 v1] #19
 	Capabilities: [1c0 v1] #26
 	Capabilities: [260 v1] #27
-00: d8 1d 00 10 00 00 10 00 00 00 04 06 00 00 01 00
+00: d8 1d 08 10 00 00 10 00 00 00 04 06 00 00 01 00
 10: 00 00 00 00 00 00 00 00 00 01 00 00 01 01 00 00
 20: 00 00 00 00 01 00 01 00 00 00 00 00 00 00 00 00
 30: 00 00 00 00 40 00 00 00 00 00 00 00 00 00 00 00

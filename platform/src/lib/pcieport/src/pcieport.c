@@ -205,7 +205,7 @@ pcieport_hostconfig(const int port, const pciehdev_params_t *params)
         p->subvendorid = PCI_VENDOR_ID_PENSANDO;
     }
     if (p->subdeviceid == 0) {
-        p->subdeviceid = PCI_SUBDEVICE_ID_PENSANDO_NAPLES100;
+        p->subdeviceid = PCI_SUBDEVICE_ID_PENSANDO_NAPLES100_4GB;
     }
 
     /*

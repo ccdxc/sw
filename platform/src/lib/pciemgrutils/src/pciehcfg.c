@@ -221,7 +221,7 @@ pciehcfg_setconf_defaults(pciehcfg_t *pcfg)
     pcfg->cap_width = default_width;
     pcfg->vendorid = PCI_VENDOR_ID_PENSANDO;
     pcfg->subvendorid = pcfg->vendorid;
-    pcfg->subdeviceid = PCI_SUBDEVICE_ID_PENSANDO_NAPLES100;
+    pcfg->subdeviceid = PCI_SUBDEVICE_ID_PENSANDO_NAPLES100_4GB;
     pcfg->flr = 1;
     pcfg->exttag = 1;
     pcfg->exttag_en = 1;
