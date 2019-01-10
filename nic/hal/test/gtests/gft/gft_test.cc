@@ -13,6 +13,7 @@
 #include "gen/p4gen/gft/include/p4pd.h"
 #include "nic/p4/gft/include/defines.h"
 #include "platform/capri/capri_tm_rw.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 #include "nic/hal/pd/asic_pd.hpp"
 
@@ -1474,13 +1475,13 @@ TEST_F(gft_test, test1) {
     ret = p4pd_init(&p4pd_cfg);
     ASSERT_EQ(ret, HAL_RET_OK);
     ASSERT_EQ(ret, HAL_RET_OK);
-    ret = hal::pd::asicpd_table_mpu_base_init(&p4pd_cfg);
+    ret = sdk::asic::pd::asicpd_table_mpu_base_init(&p4pd_cfg);
     ASSERT_EQ(ret, SDK_RET_OK);
-    ret = hal::pd::asicpd_program_table_mpu_pc();
+    ret = sdk::asic::pd::asicpd_program_table_mpu_pc();
     ASSERT_EQ(ret, SDK_RET_OK);
-    ret = hal::pd::asicpd_deparser_init();
+    ret = sdk::asic::pd::asicpd_deparser_init();
     ASSERT_EQ(ret, SDK_RET_OK);
-    ret = hal::pd::asicpd_program_hbm_table_base_addr();
+    ret = sdk::asic::pd::asicpd_program_hbm_table_base_addr();
     ASSERT_EQ(ret, SDK_RET_OK);
 
     config_done();

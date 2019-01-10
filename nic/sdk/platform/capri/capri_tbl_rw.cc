@@ -14,6 +14,7 @@
 #include "platform/capri/capri_txs_scheduler.hpp"
 #include "nic/asic/capri/model/utils/cap_csr_py_if.h"
 #include "nic/sdk/asic/rw/asicrw.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
 #include "nic/asic/capri/model/cap_pic/cap_pict_csr.h"
@@ -979,7 +980,7 @@ capri_table_entry_write (uint32_t tableid,
                          uint8_t  *hwentry,
                          uint8_t  *hwentry_mask,
                          uint16_t hwentry_bit_len,
-                         capri_table_mem_layout_t &tbl_info, int gress,
+                         p4_table_mem_layout_t &tbl_info, int gress,
                          bool is_oflow_table, bool ingress,
                          uint32_t ofl_parent_tbl_depth)
 {
@@ -1110,7 +1111,7 @@ capri_table_entry_read (uint32_t tableid,
                         uint32_t index,
                         uint8_t  *hwentry,
                         uint16_t *hwentry_bit_len,
-                        capri_table_mem_layout_t &tbl_info, int gress,
+                        p4_table_mem_layout_t &tbl_info, int gress,
                         bool is_oflow_table,
                         uint32_t ofl_parent_tbl_depth)
 {
@@ -1179,7 +1180,7 @@ capri_table_hw_entry_read (uint32_t tableid,
                            uint32_t index,
                            uint8_t  *hwentry,
                            uint16_t *hwentry_bit_len,
-                           capri_table_mem_layout_t &tbl_info, int gress,
+                           p4_table_mem_layout_t &tbl_info, int gress,
                            bool is_oflow_table, bool ingress,
                            uint32_t ofl_parent_tbl_depth)
 {
@@ -1303,7 +1304,7 @@ capri_tcam_table_entry_write (uint32_t tableid,
                               uint8_t  *trit_x,
                               uint8_t  *trit_y,
                               uint16_t hwentry_bit_len,
-                              capri_table_mem_layout_t &tbl_info,
+                              p4_table_mem_layout_t &tbl_info,
                               int gress, bool ingress)
 {
     /* 1. When a Memory line is shared by multiple tables, only tableid's
@@ -1417,7 +1418,7 @@ capri_tcam_table_entry_read (uint32_t tableid,
                              uint8_t  *trit_x,
                              uint8_t  *trit_y,
                              uint16_t *hwentry_bit_len,
-                             capri_table_mem_layout_t &tbl_info,
+                             p4_table_mem_layout_t &tbl_info,
                              int gress)
 {
     int tcam_row, entry_start_block, entry_end_block;
@@ -1483,7 +1484,7 @@ capri_tcam_table_hw_entry_read (uint32_t tableid,
                                 uint8_t  *trit_x,
                                 uint8_t  *trit_y,
                                 uint16_t *hwentry_bit_len,
-                                capri_table_mem_layout_t &tbl_info,
+                                p4_table_mem_layout_t &tbl_info,
                                 bool ingress)
 {
     int tcam_row, entry_start_block, entry_end_block;
@@ -1560,7 +1561,7 @@ capri_hbm_table_entry_write (uint32_t tableid,
                              uint32_t index,
                              uint8_t *hwentry,
                              uint16_t entry_size,
-                             capri_table_mem_layout_t &tbl_info)
+                             p4_table_mem_layout_t &tbl_info)
 {
     assert((entry_size >> 3) <= tbl_info.entry_width);
     assert(index < tbl_info.tabledepth);
@@ -1574,7 +1575,7 @@ capri_hbm_table_entry_write (uint32_t tableid,
 int
 capri_hbm_table_entry_cache_invalidate (bool ingress,
                                         uint64_t entry_addr,
-                                        capri_table_mem_layout_t &tbl_info)
+                                        p4_table_mem_layout_t &tbl_info)
 {
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
@@ -1599,7 +1600,7 @@ capri_hbm_table_entry_read (uint32_t tableid,
                             uint32_t index,
                             uint8_t *hwentry,
                             uint16_t *entry_size,
-                            capri_table_mem_layout_t &tbl_info)
+                            p4_table_mem_layout_t &tbl_info)
 {
     assert(index < tbl_info.tabledepth);
     uint64_t entry_start_addr = (index * tbl_info.entry_width);

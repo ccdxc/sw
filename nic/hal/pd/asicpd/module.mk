@@ -2,6 +2,6 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libasicpd.so
-#MODULE_PIPELINE = iris gft
+MODULE_PIPELINE = iris gft
 MODULE_SOLIBS   = haltrace
 include ${MKDEFS}/post.mk

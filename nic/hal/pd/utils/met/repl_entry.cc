@@ -4,7 +4,7 @@
 #include "nic/include/asic_pd.hpp"
 #include "nic/sdk/asic/rw/asicrw.hpp"
 
-#define HAL_LOG_TBL_UPDATES
+#define SDK_LOG_TABLE_WRITE
 
 
 using hal::pd::utils::ReplEntry;

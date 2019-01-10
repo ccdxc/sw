@@ -67,56 +67,11 @@
 #include <assert.h>
 #include "gen/p4gen/${hdrdir}/include/${p4prog}p4pd.h"
 #include "nic/sdk/lib/p4/p4_utils.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
 
 char ${prefix}_tbl_names[__P4${caps_p4prog}TBL_ID_TBLMAX][P4${caps_p4prog}TBL_NAME_MAX_LEN];
 uint16_t ${prefix}_tbl_swkey_size[__P4${caps_p4prog}TBL_ID_TBLMAX];
 uint16_t ${prefix}_tbl_sw_action_data_size[__P4${caps_p4prog}TBL_ID_TBLMAX];
-
-namespace hal {
-namespace pd {
-extern int asicpd_table_entry_write(uint32_t tableid,
-                                    uint32_t index,
-                                    uint8_t  *hwentry,
-                                    uint16_t hwentry_bit_len,
-                                    uint8_t  *hwentry_mask);
-extern int asicpd_table_entry_read(uint32_t  tableid,
-                                   uint32_t  index,
-                                   uint8_t   *hwentry,
-                                   uint16_t  *hwentry_bit_len);
-extern int asicpd_table_hw_entry_read(uint32_t  tableid,
-                                     uint32_t  index,
-                                     uint8_t   *hwentry,
-                                     uint16_t  *hwentry_bit_len);
-extern int asicpd_tcam_table_entry_write(uint32_t tableid,
-                                        uint32_t index,
-                                        uint8_t  *trit_x,
-                                        uint8_t  *trit_y,
-                                        uint16_t hwentry_bit_len);
-extern int asicpd_tcam_table_entry_read(uint32_t tableid,
-                                       uint32_t index,
-                                       uint8_t  *trit_x,
-                                       uint8_t  *trit_y,
-                                       uint16_t *hwentry_bit_len);
-extern int asicpd_tcam_table_hw_entry_read(uint32_t tableid,
-                                          uint32_t index,
-                                          uint8_t  *trit_x,
-                                          uint8_t  *trit_y,
-                                          uint16_t *hwentry_bit_len);
-extern int asicpd_hbm_table_entry_write(uint32_t tableid,
-                                       uint32_t index,
-                                       uint8_t *hwentry,
-                                       uint16_t entry_size);
-extern int asicpd_hbm_table_entry_read(uint32_t tableid,
-                                      uint32_t index,
-                                      uint8_t *hwentry,
-                                      uint16_t *entry_size);
-extern uint8_t asicpd_get_action_pc(uint32_t tableid,
-                                   uint8_t actionid);
-extern uint8_t asicpd_get_action_id(uint32_t tableid,
-                                   uint8_t actionpc);
-}
-}
-
 
 #define P4PD_LOG_TABLE_UPDATES   /* Disable this once no more table
                                   * writes logging is needed
@@ -1477,7 +1432,7 @@ ${table}_entry_write(uint32_t tableid,
 //::                add_action_pc = False
 //::            #endif
 //::            if add_action_pc:
-    action_pc = hal::pd::asicpd_get_action_pc(tableid, actiondata->action_id);
+    action_pc = sdk::asic::pd::asicpd_get_action_pc(tableid, actiondata->action_id);
 //::            else:
     action_pc = 0xff;
 //::            #endif
@@ -1515,7 +1470,9 @@ ${table}_entry_write(uint32_t tableid,
     // Write to SRAM  area that is associated with TCAM. This SRAM area is
     // in the bottom portion of hash-table's sram area.
     // Hence increment index by size of hash table.
-    hal::pd::asicpd_table_entry_write(tableid, index + ${pddict['tables'][table]['parent_hash_table_size']}, _sram_entry, entry_size, NULL);
+    sdk::asic::pd::asicpd_table_entry_write(tableid,
+                       index + ${pddict['tables'][table]['parent_hash_table_size']},
+                       _sram_entry, entry_size, NULL);
 
     // Install Key in TCAM
     // Swizzle Key installed in TCAM before writing to TCAM memory
@@ -1524,7 +1481,8 @@ ${table}_entry_write(uint32_t tableid,
     p4pd_utils_swizzle_bytes(hwkey, hwkey_len);
     p4pd_utils_swizzle_bytes(hwkey_y, hwkeymask_len);
     int pad = (hwkey_len % 16) ? (16 - (hwkey_len % 16)) : 0;
-    hal::pd::asicpd_tcam_table_entry_write(tableid, index, hwkey, hwkey_y, hwkey_len + pad);
+    sdk::asic::pd::asicpd_tcam_table_entry_write(tableid, index, hwkey,
+                                                 hwkey_y, hwkey_len + pad);
 
     return (P4PD_SUCCESS);
 }
@@ -1552,7 +1510,7 @@ ${table}_entry_write(uint32_t tableid,
 //::                add_action_pc = False
 //::            #endif
 //::            if add_action_pc:
-    action_pc = hal::pd::asicpd_get_action_pc(tableid, actiondata->action_id);
+    action_pc = sdk::asic::pd::asicpd_get_action_pc(tableid, actiondata->action_id);
 //::            else:
     action_pc = 0xff;
 //::            #endif
@@ -1565,7 +1523,8 @@ ${table}_entry_write(uint32_t tableid,
                                             packed_actiondata,
                                             actiondatalen);
     p4pd_utils_swizzle_bytes(sram_hwentry, entry_size);
-    hal::pd::asicpd_table_entry_write(tableid, index, sram_hwentry, entry_size, NULL);
+    sdk::asic::pd::asicpd_table_entry_write(tableid, index, sram_hwentry,
+                                            entry_size, NULL);
 
     // Install Key in TCAM
     tcam_${table}_hwkey_len(tableid, &hwkey_len, &hwkeymask_len);
@@ -1575,7 +1534,8 @@ ${table}_entry_write(uint32_t tableid,
     p4pd_utils_swizzle_bytes(hwkey, hwkey_len);
     p4pd_utils_swizzle_bytes(hwkey_y, hwkeymask_len);
     int pad = (hwkey_len % 16) ? (16 - (hwkey_len % 16)) : 0;
-    hal::pd::asicpd_tcam_table_entry_write(tableid, index, hwkey, hwkey_y, hwkey_len + pad);
+    sdk::asic::pd::asicpd_tcam_table_entry_write(tableid, index, hwkey,
+                                                 hwkey_y, hwkey_len + pad);
 
     return (P4PD_SUCCESS);
 }
@@ -1601,7 +1561,7 @@ ${table}_entry_write(uint32_t tableid,
 //::                add_action_pc = False
 //::            #endif
 //::            if add_action_pc:
-    action_pc = hal::pd::asicpd_get_action_pc(tableid, actiondata->action_id);
+    action_pc = sdk::asic::pd::asicpd_get_action_pc(tableid, actiondata->action_id);
 //::            else:
     action_pc = 0xff;
 //::            #endif
@@ -1624,14 +1584,16 @@ ${table}_entry_write(uint32_t tableid,
                                             packed_actiondata,
                                             actiondatalen);
 //::            if pddict['tables'][table]['location'] == 'HBM':
-    hal::pd::asicpd_hbm_table_entry_write(tableid, index, hwentry, entry_size);
+    sdk::asic::pd::asicpd_hbm_table_entry_write(tableid, index,
+                                                hwentry, entry_size);
 //::            else:
     p4pd_utils_swizzle_bytes(hwentry, entry_size);
     if (actiondata_mask) {
         p4pd_utils_swizzle_bytes(hwentry_mask, entry_size);
         _hwentry_mask = hwentry_mask;
     }
-    hal::pd::asicpd_table_entry_write(tableid, index, hwentry, entry_size, _hwentry_mask);
+    sdk::asic::pd::asicpd_table_entry_write(tableid, index, hwentry,
+                                            entry_size, _hwentry_mask);
 //::            #endif
     return (P4PD_SUCCESS);
 }
@@ -1674,7 +1636,7 @@ ${table}_entry_write(uint32_t tableid,
 //::                add_action_pc = False
 //::            #endif
 //::            if add_action_pc:
-    action_pc = hal::pd::asicpd_get_action_pc(tableid, actiondata->action_id);
+    action_pc = sdk::asic::pd::asicpd_get_action_pc(tableid, actiondata->action_id);
 //::            else:
     action_pc = 0xff;
 //::            #endif
@@ -1727,10 +1689,12 @@ ${table}_entry_write(uint32_t tableid,
 //::            #endif
 
 //::            if pddict['tables'][table]['location'] == 'HBM':
-    hal::pd::asicpd_hbm_table_entry_write(tableid, hashindex, _hwentry, entry_size);
+    sdk::asic::pd::asicpd_hbm_table_entry_write(tableid, hashindex,
+                                                _hwentry, entry_size);
 //::            else:
     p4pd_utils_swizzle_bytes(_hwentry, entry_size);
-    hal::pd::asicpd_table_entry_write(tableid, hashindex, _hwentry, entry_size, NULL);
+    sdk::asic::pd::asicpd_table_entry_write(tableid, hashindex, _hwentry,
+                                            entry_size, NULL);
 //::            #endif
 
     return (P4PD_SUCCESS);
@@ -2596,8 +2560,8 @@ ${table}_entry_read(uint32_t tableid,
     uint8_t  hwentry[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint16_t hwentry_bit_len;
 
-    hal::pd::asicpd_tcam_table_hw_entry_read(tableid, index, hwentry_x, hwentry_y,
-                                   &hwentry_bit_len);
+    sdk::asic::pd::asicpd_tcam_table_hw_entry_read(tableid, index, hwentry_x,
+                                                   hwentry_y, &hwentry_bit_len);
     if (!hwentry_bit_len) {
         return (P4PD_FAIL);
     }
@@ -2606,7 +2570,9 @@ ${table}_entry_read(uint32_t tableid,
     p4pd_utils_swizzle_bytes(hwentry_y, hwentry_bit_len + pad);
     ${table}_hwkey_hwmask_unbuild(tableid, hwentry_x, hwentry_y, hwentry_bit_len,
                                   swkey, swkey_mask);
-    hal::pd::asicpd_table_hw_entry_read(tableid, index + ${pddict['tables'][table]['parent_hash_table_size']}, hwentry, &hwentry_bit_len);
+    sdk::asic::pd::asicpd_table_hw_entry_read(tableid,
+                       index + ${pddict['tables'][table]['parent_hash_table_size']},
+                       hwentry, &hwentry_bit_len);
     if (!hwentry_bit_len) {
         return (P4PD_SUCCESS);
     }
@@ -2619,7 +2585,7 @@ ${table}_entry_read(uint32_t tableid,
 //::            #endif
 //::            if action_pc_added:
     uint8_t actionpc = hwentry[0]; // First byte is always action-pc
-    actiondata->action_id = hal::pd::asicpd_get_action_id(tableid, actionpc);
+    actiondata->action_id = sdk::asic::pd::asicpd_get_action_id(tableid, actionpc);
     int adatabyte = 1;
 //::            else:
     actiondata->action_id = 0;
@@ -2642,8 +2608,8 @@ ${table}_entry_read(uint32_t tableid,
     uint8_t  hwentry[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint16_t hwentry_bit_len;
 
-    hal::pd::asicpd_tcam_table_hw_entry_read(tableid, index, hwentry_x, hwentry_y,
-                                   &hwentry_bit_len);
+    sdk::asic::pd::asicpd_tcam_table_hw_entry_read(tableid, index, hwentry_x,
+                                                   hwentry_y, &hwentry_bit_len);
     if (!hwentry_bit_len) {
         return (P4PD_FAIL);
     }
@@ -2652,7 +2618,8 @@ ${table}_entry_read(uint32_t tableid,
     p4pd_utils_swizzle_bytes(hwentry_y, hwentry_bit_len + pad);
     ${table}_hwkey_hwmask_unbuild(tableid, hwentry_x, hwentry_y, hwentry_bit_len,
                                   swkey, swkey_mask);
-    hal::pd::asicpd_table_hw_entry_read(tableid, index, hwentry, &hwentry_bit_len);
+    sdk::asic::pd::asicpd_table_hw_entry_read(tableid, index,
+                                              hwentry, &hwentry_bit_len);
     if (!hwentry_bit_len) {
         return (P4PD_SUCCESS);
     }
@@ -2665,7 +2632,7 @@ ${table}_entry_read(uint32_t tableid,
 //::            #endif
 //::            if action_pc_added:
     uint8_t actionpc = hwentry[0]; // First byte is always action-pc
-    actiondata->action_id = hal::pd::asicpd_get_action_id(tableid, actionpc);
+    actiondata->action_id = sdk::asic::pd::asicpd_get_action_id(tableid, actionpc);
     int adatabyte = 1;
 //::            else:
     actiondata->action_id = 0;
@@ -2691,9 +2658,11 @@ ${table}_entry_read(uint32_t tableid,
     (void)key_bit_len;
 
 //::            if pddict['tables'][table]['location'] == 'HBM':
-    hal::pd::asicpd_hbm_table_entry_read(tableid, index, hwentry, &hwentry_bit_len);
+    sdk::asic::pd::asicpd_hbm_table_entry_read(tableid, index,
+                                               hwentry, &hwentry_bit_len);
 //::            else:
-    hal::pd::asicpd_table_hw_entry_read(tableid, index, hwentry, &hwentry_bit_len);
+    sdk::asic::pd::asicpd_table_hw_entry_read(tableid, index,
+                                              hwentry, &hwentry_bit_len);
     p4pd_utils_swizzle_bytes(hwentry, hwentry_bit_len);
 //::            #endif
 
@@ -2708,7 +2677,7 @@ ${table}_entry_read(uint32_t tableid,
 //::            #endif
 //::            if action_pc_added:
     uint8_t actionpc = hwentry[0]; // First byte is always action-pc
-    actiondata->action_id = hal::pd::asicpd_get_action_id(tableid, actionpc);
+    actiondata->action_id = sdk::asic::pd::asicpd_get_action_id(tableid, actionpc);
     int adatabyte = 1;
 //::            else:
     actiondata->action_id = 0;
@@ -2739,9 +2708,11 @@ ${table}_entry_read(uint32_t tableid,
 
     (void)key_bit_len;
 //::            if pddict['tables'][table]['location'] == 'HBM':
-    hal::pd::asicpd_hbm_table_entry_read(tableid, hashindex, hwentry, &hwentry_bit_len);
+    sdk::asic::pd::asicpd_hbm_table_entry_read(tableid, hashindex,
+                                               hwentry, &hwentry_bit_len);
 //::            else:
-    hal::pd::asicpd_table_hw_entry_read(tableid, hashindex, hwentry, &hwentry_bit_len);
+    sdk::asic::pd::asicpd_table_hw_entry_read(tableid, hashindex,
+                                              hwentry, &hwentry_bit_len);
     p4pd_utils_swizzle_bytes(hwentry, hwentry_bit_len);
 //::            #endif
     if (!hwentry_bit_len) {
@@ -2771,7 +2742,7 @@ ${table}_entry_read(uint32_t tableid,
 //::            if action_pc_added:
 //::                delta_bits = mat_key_start_bit - (max_actionfld_len - spilled_adata_bits) - 8 if max_actionfld_len < mat_key_start_bit else 0
     uint8_t actionpc = hwentry[0]; // First byte is always action-pc
-    actiondata->action_id = hal::pd::asicpd_get_action_id(tableid, actionpc);
+    actiondata->action_id = sdk::asic::pd::asicpd_get_action_id(tableid, actionpc);
     int adatabyte = 1;
 //::            else:
 //::                delta_bits = mat_key_start_bit - (max_actionfld_len - spilled_adata_bits) if max_actionfld_len < mat_key_start_bit else 0
@@ -2847,7 +2818,7 @@ ${table}_entry_decode(uint32_t tableid,
 //::            #endif
 //::            if action_pc_added:
     uint8_t actionpc = hwentry[0]; // First byte is always action-pc
-    actiondata->action_id = hal::pd::asicpd_get_action_id(tableid, actionpc);
+    actiondata->action_id = sdk::asic::pd::asicpd_get_action_id(tableid, actionpc);
     int adatabyte = 1;
 //::            else:
     actiondata->action_id = 0;
@@ -2890,7 +2861,7 @@ ${table}_entry_decode(uint32_t tableid,
 //::            if action_pc_added:
 //::                delta_bits = mat_key_start_bit - (max_actionfld_len - spilled_adata_bits) - 8 if max_actionfld_len < mat_key_start_bit else 0
     uint8_t actionpc = hwentry[0]; // First byte is always action-pc
-    actiondata->action_id = hal::pd::asicpd_get_action_id(tableid, actionpc);
+    actiondata->action_id = sdk::asic::pd::asicpd_get_action_id(tableid, actionpc);
     int adatabyte = 1;
 //::            else:
 //::                delta_bits = mat_key_start_bit - (max_actionfld_len - spilled_adata_bits) if max_actionfld_len < mat_key_start_bit else 0
@@ -3958,7 +3929,7 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
                     return (P4PD_SUCCESS);
                 }
                 ${table}_actiondata_t actiondata;
-                actiondata.action_id = hal::pd::asicpd_get_action_id(tableid, _hwentry[0]);
+                actiondata.action_id = sdk::asic::pd::asicpd_get_action_id(tableid, _hwentry[0]);
                 ${table}_unpack_action_data(tableid, actiondata.action_id, _hwentry+1,
                                             &actiondata);
                 switch(actiondata.action_id) {

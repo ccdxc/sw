@@ -8,9 +8,9 @@ MODULE_SOLIBS   = pal ociframework ocicore ociapi ociapi_impl ocitestutils \
                   ${NIC_${PIPELINE}_P4PD_SOLIBS} \
                   ${NIC_SDK_SOLIBS} \
                   sdkp4 sdkp4utils sdkcapri_csrint sdkcapri_asicrw_if sdkcapri \
-				  sdkplatformutils sdkxcvrdriver \
+				  sdkplatformutils sdkxcvrdriver sdkasicpd \
                   p4pd_common_p4plus_rxdma p4pd_common_p4plus_txdma \
-                  asicpd pdcapri bm_allocator hal_mock mtrack
+                  bm_allocator mtrack
 MODULE_LDLIBS   =  ${NIC_COMMON_LDLIBS} \
 				   ${NIC_CAPSIM_LDLIBS} \
 				   ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \

@@ -10,8 +10,7 @@
 #include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/hal/apollo/api/impl/apollo_impl.hpp"
-// TODO: vijay, please clean this up along with asicpd move to sdk
-#include "nic/hal/pd/asicpd/asic_pd_common.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
 
 namespace impl {
 
@@ -89,17 +88,15 @@ apollo_impl::pipeline_init(void) {
     p4pd_ret = p4pluspd_txdma_init(&p4pd_txdma_cfg);
     SDK_ASSERT(p4pd_ret == P4PD_SUCCESS);
 
-    // TODO: vijay, please clean this up along with asicpd move to sdk
-    //       (we shouldn't be using hal::pd::)
-    ret = hal::pd::asicpd_p4plus_table_mpu_base_init(&p4pd_cfg);
+    ret = sdk::asic::pd::asicpd_p4plus_table_mpu_base_init(&p4pd_cfg);
     SDK_ASSERT(ret == SDK_RET_OK);
-    ret = hal::pd::asicpd_table_mpu_base_init(&p4pd_cfg);
+    ret = sdk::asic::pd::asicpd_table_mpu_base_init(&p4pd_cfg);
     SDK_ASSERT(ret == SDK_RET_OK);
-    ret = hal::pd::asicpd_program_table_mpu_pc();
+    ret = sdk::asic::pd::asicpd_program_table_mpu_pc();
     SDK_ASSERT(ret == SDK_RET_OK);
-    ret = hal::pd::asicpd_deparser_init();
+    ret = sdk::asic::pd::asicpd_deparser_init();
     SDK_ASSERT(ret == SDK_RET_OK);
-    ret = hal::pd::asicpd_program_hbm_table_base_addr();
+    ret = sdk::asic::pd::asicpd_program_hbm_table_base_addr();
     SDK_ASSERT(ret == SDK_RET_OK);
 
     return SDK_RET_OK;

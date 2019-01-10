@@ -76,7 +76,6 @@ typedef struct asic_hbm_bw_s {
     asic_bw_t avg;
 } asic_hbm_bw_t;
 
-
 }    // namespace asic
 }    // namespace sdk
 

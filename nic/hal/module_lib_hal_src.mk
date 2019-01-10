@@ -2,7 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libhal_src.so
-#MODULE_PIPELINE = iris gft
+MODULE_PIPELINE = iris gft
 MODULE_SRCS     = ${MODULE_SRC_DIR}/hal.cc \
                   ${MODULE_SRC_DIR}/hal_state.cc \
                   ${MODULE_SRC_DIR}/hal_obj.cc \

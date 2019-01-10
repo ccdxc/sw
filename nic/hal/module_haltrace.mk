@@ -2,6 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libhaltrace.so
+MODULE_PIPELINE = iris gft
 MODULE_SRCS     = ${MODULE_SRC_DIR}/hal_trace.cc
 MODULE_SOLIBS   = trace
 include ${MKDEFS}/post.mk

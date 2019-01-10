@@ -2,6 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET       = asicerrord.proto
+MODULE_PIPELINE     = iris gft
 MODULE_GEN_TYPES    = CC PY DELPHI GOMETRICS PENMETRICS
 MODULE_INCS         = ${MODULE_DIR} \
                       ${TOPDIR}/nic \
