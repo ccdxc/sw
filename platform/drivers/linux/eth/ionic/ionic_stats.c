@@ -221,6 +221,9 @@ static void ionic_sw_stats_get_values(struct lif *lif, u64 **buf)
 	struct qcq *txqcq, *rxqcq;
 	int i, q_num;
 
+	if (!test_bit(LIF_UP, lif->state))
+		return;
+
 	ionic_get_lif_stats(lif, &lif_stats);
 
 	for (i = 0; i < IONIC_NUM_LIF_STATS; i++) {

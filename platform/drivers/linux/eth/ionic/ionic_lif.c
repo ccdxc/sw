@@ -393,47 +393,26 @@ static struct rtnl_link_stats64 *ionic_get_stats64(struct net_device *netdev,
 {
 	struct lif *lif = netdev_priv(netdev);
 	struct ionic_lif_stats *ls = lif->lif_stats;
-	struct device *dev = lif->ionic->dev;
-	unsigned int i;
-	u64 cnt;
 
 	if (!test_bit(LIF_UP, lif->state))
 		return;
 
-	/* use locally counted numbers for byte and packet counts */
-	for (i = 0; i < lif->nxqs; i++) {
-		struct tx_stats *tx_stats = &lif->txqcqs[i]->stats.tx;
-		struct rx_stats *rx_stats = &lif->rxqcqs[i]->stats.rx;
+	ns->rx_packets = ls->rx_ucast_packets +
+			 ls->rx_mcast_packets +
+			 ls->rx_bcast_packets;
 
-		ns->tx_packets += tx_stats->pkts;
-		ns->tx_bytes += tx_stats->bytes;
+	ns->tx_packets = ls->tx_ucast_packets +
+			 ls->tx_mcast_packets +
+			 ls->tx_bcast_packets;
 
-		ns->rx_packets += rx_stats->pkts;
-		ns->rx_bytes += rx_stats->bytes;
-	}
+	ns->rx_bytes = ls->rx_ucast_bytes +
+		       ls->rx_mcast_bytes +
+		       ls->rx_bcast_bytes;
 
-	/* double check stats counters against hw counts */
-	cnt = ls->rx_ucast_packets + ls->rx_mcast_packets + ls->rx_bcast_packets;
-	if (ns->rx_packets != cnt)
-		dev_warn(dev, "rx_packets mismatch: sw=%llu nic=%llu\n",
-			 ns->rx_packets, cnt);
+	ns->tx_bytes = ls->tx_ucast_bytes +
+		       ls->tx_mcast_bytes +
+		       ls->tx_bcast_bytes;
 
-	cnt = ls->tx_ucast_packets + ls->tx_mcast_packets + ls->tx_bcast_packets;
-	if (ns->tx_packets != cnt)
-		dev_warn(dev, "tx_packets mismatch: sw=%llu nic=%llu\n",
-			 ns->tx_packets, cnt);
-
-	cnt = ls->rx_ucast_bytes + ls->rx_mcast_bytes + ls->rx_bcast_bytes;
-	if (ns->rx_bytes != cnt)
-		dev_warn(dev, "rx_bytes mismatch: sw=%llu nic=%llu\n",
-			 ns->rx_bytes, cnt);
-
-	cnt = ls->tx_ucast_bytes + ls->tx_mcast_bytes + ls->tx_bcast_bytes;
-	if (ns->tx_bytes != cnt)
-		dev_warn(dev, "tx_bytes mismatch: sw=%llu nic=%llu\n",
-			 ns->tx_bytes, cnt);
-
-	/* report hw error counters */
 	ns->rx_dropped = ls->rx_ucast_drop_packets +
 			 ls->rx_mcast_drop_packets +
 			 ls->rx_bcast_drop_packets;
@@ -448,13 +427,11 @@ static struct rtnl_link_stats64 *ionic_get_stats64(struct net_device *netdev,
 
 	ns->rx_missed_errors = ls->rx_dma_error +
 			       ls->rx_queue_disabled_drop +
-			       ls->rx_queue_scheduled +
 			       ls->rx_desc_fetch_error +
 			       ls->rx_desc_data_error;
 
 	ns->tx_aborted_errors = ls->tx_dma_error +
 				ls->tx_queue_disabled +
-				ls->tx_queue_scheduled +
 				ls->tx_desc_fetch_error +
 				ls->tx_desc_data_error;
 
