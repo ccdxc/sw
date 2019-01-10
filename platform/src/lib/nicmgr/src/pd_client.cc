@@ -191,10 +191,10 @@ void PdClient::rdma_manager_init (void)
     uint64_t hbm_addr = mp_->start_addr(kRdmaHBMLabel);
     assert(hbm_addr > 0);
 
-    uint32_t size = mp_->size_kb(kRdmaHBMLabel);
+    uint32_t size = mp_->size(kRdmaHBMLabel);
     assert(size != 0);
 
-    uint32_t num_units = (size * 1024) / kRdmaAllocUnit;
+    uint32_t num_units = size / kRdmaAllocUnit;
     if (hbm_addr & 0xFFF) {
         // Not 4K aligned.
         hbm_addr = (hbm_addr + 0xFFF) & ~0xFFFULL;
@@ -209,10 +209,10 @@ void PdClient::rdma_manager_init (void)
     hbm_addr = mp_->start_addr(kRdmaHBMBarLabel);
     assert(hbm_addr > 0);
 
-    size = mp_->size_kb(kRdmaHBMBarLabel);
+    size = mp_->size(kRdmaHBMBarLabel);
     assert(size != 0);
 
-    num_units = (size * 1024) / kRdmaBarAllocUnit;
+    num_units = size / kRdmaBarAllocUnit;
     if (hbm_addr & 0x7FFFFF) {
         // Not 4K aligned.
         hbm_addr = (hbm_addr + 0x7FFFFF) & ~0x7FFFFFULL;
@@ -271,10 +271,10 @@ void PdClient::nicmgr_mem_init (void)
     uint64_t hbm_addr = mp_->start_addr(kNicmgrHBMLabel);
     assert(hbm_addr > 0);
 
-    uint32_t size = mp_->size_kb(kNicmgrHBMLabel);
+    uint32_t size = mp_->size(kNicmgrHBMLabel);
     assert(size != 0);
 
-    uint32_t num_units = (size * 1024) / kNicmgrAllocUnit;
+    uint32_t num_units = size / kNicmgrAllocUnit;
     if (hbm_addr & 0xFFF) {
         // Not 4K aligned.
         hbm_addr = (hbm_addr + 0xFFF) & ~0xFFFULL;
@@ -319,10 +319,10 @@ void PdClient::devcmd_mem_init (void)
     uint64_t hbm_addr = mp_->start_addr(kDevcmdHBMLabel);
     assert(hbm_addr > 0);
 
-    uint32_t size = mp_->size_kb(kDevcmdHBMLabel);
+    uint32_t size = mp_->size(kDevcmdHBMLabel);
     assert(size != 0);
 
-    uint32_t num_units = (size * 1024) / kDevcmdAllocUnit;
+    uint32_t num_units = size / kDevcmdAllocUnit;
     if (hbm_addr & 0xFFF) {
         // Not 4K aligned.
         hbm_addr = (hbm_addr + 0xFFF) & ~0xFFFULL;

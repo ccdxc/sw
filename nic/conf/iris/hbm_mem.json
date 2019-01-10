@@ -495,6 +495,10 @@
         {
             "name": "tcp_ooo_descr_queue",
             "size_kb": 8192
+        },
+        {
+            "name": "64b_test",
+            "size_64b": 64 
         }
     ]
 }

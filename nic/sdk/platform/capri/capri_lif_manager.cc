@@ -47,8 +47,8 @@ LIFManager* LIFManager::factory(mpartition *mp,
     uint64_t hbm_addr = lm->mp_->start_addr(kHBMLabel);
     assert(hbm_addr > 0);
 
-    uint32_t size = lm->mp_->size_kb(kHBMLabel);
-    uint32_t num_units = (size * 1024) / kAllocUnit;
+    uint32_t size = lm->mp_->size(kHBMLabel);
+    uint32_t num_units = (size) / kAllocUnit;
     if (hbm_addr & 0xFFF) {
         // Not 4K aligned.
         hbm_addr = (hbm_addr + 0xFFFull) & ~0xFFFull;

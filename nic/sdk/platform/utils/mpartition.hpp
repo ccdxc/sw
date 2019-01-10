@@ -26,7 +26,7 @@ namespace utils {
  */
 typedef struct mpartition_region_s {
     char                    mem_reg_name[MEM_REG_NAME_MAX_LEN];   /**< Name */
-    uint32_t                size_kb;        /**< Size */
+    uint32_t                size;        /**< Size */
     mem_addr_t              start_offset;   /**< Start address offset */
     cache_pipe_t            cache_pipe;     /**< Cached pipe */
     bool                    reset;          /**< True to bzero this region during init */
@@ -93,7 +93,7 @@ public:
      *
      * @return #Memory mpartition region size in kilobytes
      */
-    uint32_t size_kb(const char *reg_name);
+    uint32_t size(const char *reg_name);
 
     /** 
      * @brief Get memory partition region info

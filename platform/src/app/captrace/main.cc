@@ -22,7 +22,7 @@ using debug::Debug;
 
 #define TRACE_BASE  roundup(MEM_REGION_ADDR(MPU_TRACE), 4096)
 #define TRACE_END  (MEM_REGION_ADDR(MPU_TRACE) + \
-     MEM_REGION_MPU_TRACE_SIZE_KB * 1024)
+     MEM_REGION_MPU_TRACE_SIZE )
 #define TRACE_ENTRY_SIZE    (64)
 
 std::string svc_endpoint = "localhost:50054";

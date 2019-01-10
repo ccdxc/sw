@@ -2577,7 +2577,7 @@ populate_cfg_profile (capri_tm_cfg_profile_t *tm_cfg_profile,
     tm_cfg_profile->sw_init_enabled = qos_profile->sw_init_enable;
     tm_cfg_profile->sw_cfg_write_enabled = qos_profile->sw_cfg_write_enable;
     tm_cfg_profile->hbm_fifo_base = mpart->start_addr(MEM_REGION_QOS_HBM_FIFO_NAME);
-    tm_cfg_profile->hbm_fifo_size = mpart->size_kb(MEM_REGION_QOS_HBM_FIFO_NAME) << 10;
+    tm_cfg_profile->hbm_fifo_size = mpart->size(MEM_REGION_QOS_HBM_FIFO_NAME);
     tm_cfg_profile->num_active_uplink_ports = catalog->num_uplink_ports();
     if (tm_cfg_profile->num_active_uplink_ports <= 1) {
         tm_cfg_profile->num_active_uplink_ports = 1;

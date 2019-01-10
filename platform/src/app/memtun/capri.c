@@ -117,7 +117,7 @@ main(int argc, char *argv[])
     progname = argv[0];
 
     phys = MEM_REGION_ADDR(MEMTUN);
-#if MEM_REGION_MEMTUN_SIZE_KB < 256
+#if MEM_REGION_MEMTUN_SIZE < 256 * 1024
 #   error "MEM_REGION_MEMTUN_SIZE < (256 * 1024)"
 #endif
 

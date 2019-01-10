@@ -76,18 +76,30 @@ def parse_file():
         for e in data['regions']:
             print >> fd, ""
             n = e['name']
-            s = long(e['size_kb'])
-
+            s1024 = long(0)
+            if 'size_kb' in e:
+                s1024 = long(e['size_kb'])
+            s64 = long(0)
+            if 'size_64b' in e:
+                s64 = long(e['size_64b'])
+            s = long(0)
+            if s1024 != 0:
+                s = s1024 * 1024
+            else:
+                s = s64 * 64 
             # Derive the basename for the macros 
             nbase = name + (re.sub("[ -]", "_", n)).upper() + "_"
 
             # Update name and size
             print >> fd, "#define %-60s \"%s\"" %(nbase + "NAME", n)
-            print >> fd, "#define %-60s %ld" %(nbase + "SIZE_KB", s)
+            print >> fd, "#define %-60s %ld" %(nbase + "SIZE", s)
 
             # Update start offset
             print >> fd, "#define %-60s 0x%lxUL" %(nbase + "START_OFFSET", off);
-            off = long(off) + s * 1024
+            if s1024 != 0:
+                off = long(off) + s1024 * 1024
+            else:
+                off = long(off) + s64 * 64 
 
             # Update cache pipe
             cv = "MEM_REGION_CACHE_PIPE_NONE"
@@ -110,7 +122,7 @@ def parse_file():
 
             nlist = nlist + "\n    " + nbase + "NAME, \\"
             olist = olist + "\n    " + nbase + "START_OFFSET, \\"
-            slist = slist + "\n    " + nbase + "SIZE_KB, \\"
+            slist = slist + "\n    " + nbase + "SIZE, \\"
             clist = clist + "\n    " + nbase + "CACHE_PIPE, \\"
             rlist = rlist + "\n    " + nbase + "RESET, \\"
 

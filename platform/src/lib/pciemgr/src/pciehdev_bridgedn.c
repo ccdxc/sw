@@ -19,7 +19,7 @@ init_memtun_bar(const int port, pciehbars_t *pbars)
     const char *memtun_addr_env = getenv("MEMTUN_ADDR");
     const char *memtun_size_env = getenv("MEMTUN_SIZE");
     u_int64_t memtun_pa = MEM_REGION_ADDR(MEMTUN);
-    u_int64_t memtun_sz = MEM_REGION_MEMTUN_SIZE_KB * 1024;
+    u_int64_t memtun_sz = MEM_REGION_MEMTUN_SIZE;
     pciehbarreg_t preg;
     pciehbar_t pbar;
     prt_t prt;

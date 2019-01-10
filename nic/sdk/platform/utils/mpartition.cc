@@ -34,16 +34,16 @@ mpartition::region_init(shmmgr *mmgr)
     mpartition_region_t *reg = regions_;
     for(int idx = 0; idx < MEM_REGION_COUNT; idx++) {
         std::strcpy(reg->mem_reg_name, nlist[idx]);
-        reg->size_kb =  slist[idx];
+        reg->size =  slist[idx];
         reg->start_offset =  olist[idx];
         reg->cache_pipe =  clist[idx];
         reg->reset =  rlist[idx];
 
         SDK_TRACE_DEBUG("region : %s, size : %dkb, reset : %d, "
                         "start : 0x%" PRIx64 ", end : 0x%" PRIx64 "",
-                        reg->mem_reg_name, reg->size_kb, reg->reset,
+                        reg->mem_reg_name, reg->size, reg->reset,
                         addr(reg->start_offset),
-                        addr(reg->start_offset + reg->size_kb * 1024));
+                        addr(reg->start_offset + reg->size));
         reg++;
     }
 
@@ -126,10 +126,10 @@ mpartition::start_addr (const char *reg_name)
 }
 
 uint32_t
-mpartition::size_kb (const char *reg_name)
+mpartition::size (const char *reg_name)
 {
     mpartition_region_t *reg = region(reg_name);
-    return reg ? reg->size_kb : 0;
+    return reg ? reg->size : 0;
 }
 
 mpartition_region_t *
@@ -156,13 +156,13 @@ mpartition::region_by_address (uint64_t addr)
 
         /*
         SDK_TRACE_DEBUG("Region: {}, Size_KB: {}, Start:{:#x} End:{:#x}, addr: {:#x}",
-                        reg->mem_reg_name, reg->size_kb,
+                        reg->mem_reg_name, reg->size,
                         offset(reg->start_offset),
-                        offset(reg->start_offset + reg->size_kb * 1024), addr);
+                        offset(reg->start_offset + reg->size * 1024), addr);
         */
 
         if ((addr >= this->addr(reg->start_offset)) &&
-            (addr < this->addr(reg->start_offset + (reg->size_kb * 1024)))) {
+            (addr < this->addr(reg->start_offset + (reg->size)))) {
             return reg;
         }
     }

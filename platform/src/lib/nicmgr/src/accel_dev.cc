@@ -180,7 +180,7 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
 
     // Locate HBM region dedicated to crypto keys
     hbm_addr = pd->mp_->start_addr(CAPRI_BARCO_KEY_DESC);
-    hbm_size = pd->mp_->size_kb(CAPRI_BARCO_KEY_DESC);
+    hbm_size = pd->mp_->size(CAPRI_BARCO_KEY_DESC);
     if (hbm_addr == INVALID_MEM_ADDRESS || hbm_size == 0) {
         NIC_LOG_ERR("Failed to get HBM base for {}", CAPRI_BARCO_KEY_DESC);
         throw;
@@ -188,7 +188,6 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
 
     // hal/pd/capri/capri_hbm.cc stores size in KB;
     // split the key region and use the second half for accel device.
-    hbm_size *= 1024;
     num_keys_max = std::min(hbm_size / (CMD_CRYPTO_KEY_PART_SIZE *
                                         CMD_CRYPTO_KEY_PART_MAX),
                             (uint32_t)CRYPTO_KEY_COUNT_MAX);
@@ -207,13 +206,12 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     memset(&pci_resources, 0, sizeof(pci_resources));
 
     hbm_addr = pd->mp_->start_addr(STORAGE_SEQ_HBM_HANDLE);
-    hbm_size = pd->mp_->size_kb(STORAGE_SEQ_HBM_HANDLE);
+    hbm_size = pd->mp_->size(STORAGE_SEQ_HBM_HANDLE);
     if (hbm_addr == INVALID_MEM_ADDRESS || hbm_size == 0) {
         NIC_LOG_ERR("Failed to get HBM base for {}", STORAGE_SEQ_HBM_HANDLE);
         throw;
     }
 
-    hbm_size *= 1024;
 
     // First, ensure size is a power of 2, then per PCIe BAR mapping
     // requirement, align the region on its natural boundary, i.e.,

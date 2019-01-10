@@ -29,7 +29,7 @@ extern sdk::platform::capri::LIFManager *lif_manager();
 RDMAManager::RDMAManager() {
   sdk::platform::utils::mpartition *mp = lif_manager()->get_mpartition();
   uint64_t hbm_addr = mp->start_addr("rdma");
-  uint32_t kHBMSizeKB = mp->size_kb("rdma");
+  uint32_t kHBMSizeKB = mp->size("rdma") >> 10;
   uint32_t num_units = (kHBMSizeKB * 1024) / kAllocUnit;
 
   // Minimum 128 MB

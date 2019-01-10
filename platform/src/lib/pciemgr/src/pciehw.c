@@ -247,7 +247,7 @@ pciehw_memmap_hwmem(const pciehdev_initmode_t initmode)
         pciesys_loginfo("$PCIEHW_ADDR override 0x%"PRIx64"\n", pciehw_pa);
     }
 
-    assert((MEM_REGION_ADDR(PCIEMGR) + MEM_REGION_PCIEMGR_SIZE_KB * 1024 -
+    assert((MEM_REGION_ADDR(PCIEMGR) + MEM_REGION_PCIEMGR_SIZE -
            pciehw_pa) >= sizeof(pciehw_mem_t));
 
     pciehwmem = pal_mem_map(pciehw_pa, sizeof(pciehw_mem_t), MATTR_UNCACHED);
