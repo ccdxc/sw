@@ -4,6 +4,7 @@
 
 #include <assert.h>
 #include <sys/types.h>
+#include <sys/param.h>
 
 #include "platform/src/lib/cfgspace/include/cfgspace.h"
 
@@ -258,6 +259,22 @@ cfgspace_set_bars(cfgspace_t *cs, const cfgspace_bar_t *bars, const int nbars)
 }
 
 static void
+cfgspace_set_rombar(cfgspace_t *cs, const cfgspace_bar_t *rombar)
+{
+    u_int32_t m;
+
+    if (rombar->size == 0) return;
+
+    /* rombar must not be greater than 16 MB. */
+    assert(rombar->size <= 16 * 1024 * 1024);
+
+    /* min rombar size is 2048 */
+    m = ~(MAX(rombar->size, 2048) - 1);
+    m |= 0x1; /* rom enable */
+    cfgspace_setdm(cs, 0x30, 0, m);
+}
+
+static void
 cfgspace_sethdr_cmn_pf(cfgspace_t *cs, const cfgspace_header_params_t *p)
 {
     u_int16_t m;
@@ -281,6 +298,7 @@ cfgspace_sethdr_cmn_pf(cfgspace_t *cs, const cfgspace_header_params_t *p)
     cfgspace_set_intpin(cs, p->intpin);
 
     cfgspace_set_bars(cs, p->bars, p->nbars);
+    cfgspace_set_rombar(cs, &p->rombar);
 }
 
 static void

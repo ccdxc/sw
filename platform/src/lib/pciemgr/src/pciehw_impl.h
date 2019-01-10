@@ -34,6 +34,7 @@ enum pciehw_cfghnd_e {
     PCIEHW_CFGHND_NONE,
     PCIEHW_CFGHND_CMD,
     PCIEHW_CFGHND_BARS,
+    PCIEHW_CFGHND_ROMBAR,
     PCIEHW_CFGHND_MSIX,
 };
 typedef enum pciehw_cfghnd_e pciehw_cfghnd_t;
@@ -76,6 +77,7 @@ typedef struct pciehwdev_s {
     u_int8_t romsksel[PCIEHW_ROMSKSZ];  /* cfg read-only mask selectors */
     u_int8_t cfghnd[PCIEHW_CFGHNDSZ];   /* cfg indirect/notify handlers */
     pciehwbar_t bar[PCIEHW_NBAR];
+    pciehwbar_t rombar;                 /* option rom bar */
 } pciehwdev_t;
 
 typedef struct pciehw_port_s {

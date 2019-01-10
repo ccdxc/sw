@@ -240,3 +240,34 @@ add_common_cmb_bar(pciehbars_t *pbars,
         pciehbars_add_bar(pbars, &pbar);
     }
 }
+
+void
+add_common_rom_bar(pciehbars_t *pbars,
+                   const pciehdevice_resources_t *pres)
+{
+    pciehbarreg_t preg;
+    pciehbar_t pbar;
+    prt_t prt;
+
+    /*****************
+     * optional oprom bar
+     */
+    if (pres->romsz) {
+        memset(&pbar, 0, sizeof(pbar));
+        pbar.type = PCIEHBARTYPE_MEM;
+        pbar.size = roundup_power2(pres->romsz);
+
+        memset(&preg, 0, sizeof(preg));
+        pmt_bar_enc(&preg.pmt,
+                    pres->port,
+                    PMT_TYPE_MEM,
+                    pbar.size,  /* pmtsize */
+                    pbar.size,  /* prtsize */
+                    PMT_BARF_RD);
+
+        prt_res_enc(&prt, pres->rompa, pres->romsz, PRT_RESF_PMVDIS);
+        pciehbarreg_add_prt(&preg, &prt);
+        pciehbar_add_reg(&pbar, &preg);
+        pciehbars_add_rombar(pbars, &pbar);
+    }
+}

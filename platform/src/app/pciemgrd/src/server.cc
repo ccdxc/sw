@@ -75,8 +75,9 @@ do_dev_add(pmmsg_t *m)
     pciehdev_t *pdev = pciehdev_new("", NULL);
     pciehcfg_t *pcfg = pciehcfg_new();
     pciehbars_t *pbars = pciehbars_new();
+    pciehbar_t *pbar = NULL;
     char *mp;
-    int b, r, p, nbars;
+    int b, r, p;
 
     if (m->hdr.msglen < (sizeof(pmmsg_dev_add_t) +
                          sizeof(pciehdev_t) +
@@ -112,29 +113,14 @@ do_dev_add(pmmsg_t *m)
     memcpy(pbars, mp, sizeof(pciehbars_t));
     mp += sizeof(pciehbars_t);
 
-    nbars = pbars->nbars;
-    pbars->nbars = 0;
-    pbars->bars = NULL;
-    pbars->rombar = NULL;
+    pbar = pbars->bars;
+    for (b = 0; b < PCIEHBAR_NBARS; b++, pbar++) {
 
-    for (b = 0; b < nbars; b++) {
-        pciehbar_t bar;
-        int nregs;
+        if (pbar->size == 0) continue;
 
-        if (msgdata_left(m, mp) < sizeof(pciehbar_t)) {
-            pciesys_logerror("malformed dev_add msg, %s bar %d len %ld\n",
-                             pciehdev_get_name(pdev),
-                             b, msgdata_left(m, mp));
-            goto out;
-        }
-
-        /* bar */
-        memcpy(&bar, mp, sizeof(pciehbar_t));
-        mp += sizeof(pciehbar_t);
-
-        nregs = bar.nregs;
-        bar.nregs = 0;
-        bar.regs = NULL;
+        int nregs = pbar->nregs;
+        pbar->nregs = 0;
+        pbar->regs = NULL;
 
         for (r = 0; r < nregs; r++) {
             pciehbarreg_t reg;
@@ -164,23 +150,83 @@ do_dev_add(pmmsg_t *m)
                 goto out;
             }
             for (p = 0; p < nprts; p++) {
-                pciehbarreg_add_prt(&reg, (prt_t *)mp);
+                prt_t prt;
+                memcpy(&prt, mp, sizeof(prt_t));
+                pciehbarreg_add_prt(&reg, &prt);
                 mp += sizeof(prt_t);
             }
-            pciehbar_add_reg(&bar, &reg);
+            pciehbar_add_reg(pbar, &reg);
         }
-        pciehbars_add_bar(pbars, &bar);
+        pciehbars_add_bar(pbars, pbar);
+    }
+
+    /* rombar */
+    pbar = &pbars->rombar;
+    if (pbar->size) {
+        int nregs = pbar->nregs;
+        pbar->nregs = 0;
+        pbar->regs = NULL;
+
+        for (r = 0; r < nregs; r++) {
+            pciehbarreg_t reg;
+            int nprts;
+
+            /* reg */
+            if (msgdata_left(m, mp) < sizeof(pciehbarreg_t)) {
+                pciesys_logerror("malformed dev_add msg, "
+                                 "%s bar %d reg %d len %ld\n",
+                                 pciehdev_get_name(pdev),
+                                 b, r, msgdata_left(m, mp));
+                goto out;
+            }
+            memcpy(&reg, mp, sizeof(pciehbarreg_t));
+            mp += sizeof(pciehbarreg_t);
+
+            /* prts */
+            nprts = reg.nprts;
+            reg.nprts = 0;
+            reg.prts = NULL;
+
+            if (msgdata_left(m, mp) < sizeof(prt_t) * nprts) {
+                pciesys_logerror("malformed dev_add msg, "
+                                 "%s bar %d reg %d nprts %d len %ld\n",
+                                 pciehdev_get_name(pdev),
+                                 b, r, nprts, msgdata_left(m, mp));
+                goto out;
+            }
+            for (p = 0; p < nprts; p++) {
+                prt_t prt;
+                memcpy(&prt, mp, sizeof(prt_t));
+                pciehbarreg_add_prt(&reg, &prt);
+                mp += sizeof(prt_t);
+            }
+            pciehbar_add_reg(pbar, &reg);
+        }
+        pciehbars_add_rombar(pbars, pbar);
     }
 
     pciehdev_set_bars(pdev, pbars);
     pbars = NULL; /* now owned by dev */
 
+    /* log what we got */
     {
         pciehbar_t *pbar = pdev->pbars->bars;
         pciesys_loginfo("dev_add: port %d %s lif %d\n",
                         pdev->port, pdev->name, pdev->lif);
-        for (b = 0; b < pdev->pbars->nbars; b++, pbar++) {
+        for (b = 0; b < PCIEHBAR_NBARS; b++, pbar++) {
+            if (pbar->size == 0) continue;
             pciesys_logdebug("  bar %d nregs %d\n", b, pbar->nregs);
+            pciehbarreg_t *preg = pbar->regs;
+            for (r = 0; r < pbar->nregs; r++, preg++) {
+                pciesys_logdebug("    reg %d baroff 0x%09" PRIx64 
+                                 " nprts %d\n",
+                                 r, preg->baroff,
+                                 preg->nprts);
+            }
+        }
+        pbar = &pdev->pbars->rombar;
+        if (pbar->size) {
+            pciesys_logdebug("  rom   nregs %d\n", pbar->nregs);
             pciehbarreg_t *preg = pbar->regs;
             for (r = 0; r < pbar->nregs; r++, preg++) {
                 pciesys_logdebug("    reg %d baroff 0x%09" PRIx64 

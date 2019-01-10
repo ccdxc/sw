@@ -70,30 +70,20 @@ pciehbars_new(void)
 void
 pciehbars_delete(pciehbars_t *pbars)
 {
-    pciehbar_t *b;
-    int i;
-
-    if (pbars == NULL) return;
-
-    for (b = pbars->bars, i = 0; i < pbars->nbars; i++, b++) {
-        pciehbar_delete(b);
-    }
-
-    pciesys_free(pbars->bars);
     pciesys_free(pbars);
 }
 
 void
 pciehbars_add_bar(pciehbars_t *pbars, const pciehbar_t *pnewbar)
 {
-    pciehbar_t *pbar;
+    assert(pnewbar->cfgidx >= 0 && pnewbar->cfgidx < PCIEHBAR_NBARS);
+    pbars->bars[pnewbar->cfgidx] = *pnewbar;
+}
 
-    assert(pbars->nbars < 6);
-
-    pbars->bars = pciesys_realloc(pbars->bars,
-                                  (pbars->nbars + 1) * sizeof(*pbar));
-    pbar = &pbars->bars[pbars->nbars++];
-    *pbar = *pnewbar;
+void
+pciehbars_add_rombar(pciehbars_t *pbars, const pciehbar_t *prombar)
+{
+    pbars->rombar = *prombar;
 }
 
 void
@@ -152,13 +142,32 @@ pciehbars_get_msix_pbaoff(pciehbars_t *pbars)
 pciehbar_t *
 pciehbars_get_first(pciehbars_t *pbars)
 {
-    return (pbars && pbars->nbars > 0) ? pbars->bars : NULL;
+    return pciehbars_get_next(pbars, NULL);
 }
 
 pciehbar_t *
-pciehbars_get_next(pciehbars_t *pbars, pciehbar_t *pbar)
+pciehbars_get_next(pciehbars_t *pbars, pciehbar_t *pcurbar)
 {
-    const int baridx = pbar - pbars->bars;
-    assert(pbars->bars <= pbar && pbar < &pbars->bars[pbars->nbars]);
-    return baridx + 1 < pbars->nbars ? pbar + 1 : NULL;
+    pciehbar_t *pbar;
+
+    if (pbars == NULL) return NULL;
+
+    /* if we have pcurbar, make sure it is within our range */
+    assert(pcurbar == NULL ||
+           (pbars->bars <= pcurbar && pcurbar < &pbars->bars[PCIEHBAR_NBARS]));
+
+    /* search the list for the next non-zero size */
+    pbar = pcurbar ? pcurbar + 1 : pbars->bars;
+    for ( ; pbar < &pbars->bars[PCIEHBAR_NBARS]; pbar++) {
+        if (pbar->size) {
+            return pbar;
+        }
+    }
+    return NULL;
+}
+
+pciehbar_t *
+pciehbars_get_rombar(pciehbars_t *pbars)
+{
+    return pbars && pbars->rombar.size ? &pbars->rombar : NULL;
 }

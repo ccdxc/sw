@@ -18,9 +18,9 @@ struct pmt_s; typedef struct pmt_s pmt_t;
 
 typedef struct pciehbarreg_s {
     u_int64_t baroff;           /* offset from beginning of bar */
-    pmt_t pmt;
-    u_int8_t nprts;
-    prt_t *prts;
+    pmt_t pmt;                  /* pmt describing this region */
+    u_int8_t nprts;             /* number of entries in prts[] */
+    prt_t *prts;                /* prt table */
 } pciehbarreg_t;
 
 typedef enum pciehbartype_e {
@@ -46,6 +46,7 @@ void pciehbar_delete(pciehbar_t *pbar);
 pciehbars_t *pciehbars_new(void);
 void pciehbars_delete(pciehbars_t *pbars);
 void pciehbars_add_bar(pciehbars_t *pbars, const pciehbar_t *pbar);
+void pciehbars_add_rombar(pciehbars_t *pbars, const pciehbar_t *prombar);
 void pciehbars_finalize(pciehbars_t *pbars);
 void pciehbars_set_msix_tbl(pciehbars_t *pbars, const int bir, const int off);
 u_int8_t  pciehbars_get_msix_tblbir(pciehbars_t *pbars);
@@ -55,6 +56,7 @@ u_int8_t  pciehbars_get_msix_pbabir(pciehbars_t *pbars);
 u_int32_t pciehbars_get_msix_pbaoff(pciehbars_t *pbars);
 pciehbar_t *pciehbars_get_first(pciehbars_t *pbars);
 pciehbar_t *pciehbars_get_next(pciehbars_t *pbars, pciehbar_t *pbar);
+pciehbar_t *pciehbars_get_rombar(pciehbars_t *pbars);
 
 #ifdef __cplusplus
 }

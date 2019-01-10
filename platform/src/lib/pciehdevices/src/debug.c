@@ -12,6 +12,7 @@
 #include "platform/src/lib/misc/include/misc.h"
 #include "platform/src/lib/pciemgrutils/include/pciemgrutils.h"
 #include "pciehdevices.h"
+#include "pciehdevices_impl.h"
 
 #define PCI_DEVICE_ID_PENSANDO_DEBUG 0x8000
 
@@ -70,6 +71,9 @@ init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
             pciehbars_add_bar(pbars, &pbar);
         }
     }
+
+    /* just in case we want to test rom bar on this device */
+    add_common_rom_bar(pbars, pres);
 }
 
 static void

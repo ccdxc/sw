@@ -122,6 +122,10 @@ pciehw_bars_finalize(pciehdev_t *pdev)
         phwbar = &phwdev->bar[bar->cfgidx];
         bar_finalize(phwdev, bar, phwbar);
     }
+    bar = pciehbars_get_rombar(pbars);
+    if (bar != NULL) {
+        bar_finalize(phwdev, bar, &phwdev->rombar);
+    }
     return 0;
 }
 
@@ -578,7 +582,7 @@ bar_address_format(const pmt_t *pmt)
 }
 
 static void
-bar_show_pmt(const int cfgidx, const pciehwbar_t *phwbar, const int pmti)
+bar_show_pmt(const char *label, const pciehwbar_t *phwbar, const int pmti)
 {
     pciehw_shmem_t *pshmem = pciehw_get_shmem();
     pciehw_spmt_t *spmt = &pshmem->spmt[pmti];
@@ -610,10 +614,10 @@ bar_show_pmt(const int cfgidx, const pciehwbar_t *phwbar, const int pmti)
                     "SIZE", "BAR ADDR", "P:BB:DD.F", "TID",
                     "VF");
 
-    pciesys_loginfo("%-3d %-4d %-5s %c%c%c   "
+    pciesys_loginfo("%-3s %-4d %-5s %c%c%c   "
                     "%-5s 0x%013"PRIx64" %1d:%s %-3d "
                     "%d-%d\n",
-                    cfgidx,
+                    label,
                     pmti,
                     bar_type_str(dm.data.bar.type),
                     pmt_bar_allows_rd(pmt) ? 'r' : '-',
@@ -632,9 +636,9 @@ bar_show_pmt(const int cfgidx, const pciehwbar_t *phwbar, const int pmti)
                     "BAR", "PMT", "TYPE", "FLAGS",
                     "SIZE", "BAR ADDR", "P:BB:DD.F", "TID");
 
-    pciesys_loginfo("%-3d %-4d %-5s %c%c%c   "
+    pciesys_loginfo("%-3s %-4d %-5s %c%c%c   "
                     "%-5s 0x%013"PRIx64" %1d:%s %-3d\n",
-                    cfgidx,
+                    label,
                     pmti,
                     bar_type_str(dm.data.bar.type),
                     pmt_bar_allows_rd(pmt) ? 'r' : '-',
@@ -651,13 +655,13 @@ bar_show_pmt(const int cfgidx, const pciehwbar_t *phwbar, const int pmti)
 }
 
 static void
-bar_show_bar(const int cfgidx, const pciehwbar_t *phwbar)
+bar_show_bar(const char *label, const pciehwbar_t *phwbar)
 {
     int i, pmti;
 
     pmti = phwbar->pmtb;
     for (i = 0; i < phwbar->pmtc; i++, pmti++) {
-        bar_show_pmt(cfgidx, phwbar, pmti);
+        bar_show_pmt(label, phwbar, pmti);
     }
 }
 
@@ -666,6 +670,7 @@ bar_show_dev(pciehwdev_t *phwdev)
 {
     pciehwbar_t *phwbar;
     int i, header;
+    char label[4];
 
     header = 0;
     for (phwbar = phwdev->bar, i = 0; i < PCIEHW_NBAR; i++, phwbar++) {
@@ -674,8 +679,12 @@ bar_show_dev(pciehwdev_t *phwdev)
                 pciesys_loginfo("%s:\n", pciehwdev_get_name(phwdev));
                 header = 1;
             }
-            bar_show_bar(i, phwbar);
+            snprintf(label, sizeof(label), "%d", i);
+            bar_show_bar(label, phwbar);
         }
+    }
+    if (phwdev->rombar.valid) {
+        bar_show_bar("rom", phwbar);
     }
     if (header) pciesys_loginfo("\n");
 }

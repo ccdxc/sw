@@ -78,6 +78,8 @@ main(int argc, char *argv[])
     p.lif_valid = 1;
     p.intrb = 0;
     p.intrc = 4;
+    p.romsz = 4096;
+    p.rompa = 0x13f000000;
     pciehdev_t *pdev = pciehdev_eth_new("eth", &p);
     printf("adding pdev %p\n", pdev);
     pciemgr->add_device(pdev);

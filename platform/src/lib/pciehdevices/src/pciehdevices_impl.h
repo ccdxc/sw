@@ -23,4 +23,8 @@ void
 add_common_cmb_bar(pciehbars_t *pbars,
                    const pciehdevice_resources_t *pres);
 
+void
+add_common_rom_bar(pciehbars_t *pbars,
+                   const pciehdevice_resources_t *pres);
+
 #endif /* __PCIEHDEVICES_IMPL_H__ */

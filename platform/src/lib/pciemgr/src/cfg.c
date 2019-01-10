@@ -59,6 +59,10 @@ pciehw_cfg_set_handlers(pciehwdev_t *phwdev)
         }
     }
 
+    if (phwdev->rombar.valid) {
+        pciehw_set_cfghnd(phwdev, PCI_ROM_ADDRESS, PCIEHW_CFGHND_ROMBAR);
+    }
+
     msixcap = cfgspace_findcap(&cs, PCI_CAP_ID_MSIX);
     if (msixcap) {
         /* MSIX message control */
@@ -216,6 +220,20 @@ pciehw_cfg_io_enable(pciehwdev_t *phwdev, const int on)
     }
 }
 
+/*
+ * rombar is enabled iff CMD.memory_space_en && ROMBAR.en.
+ */
+static void
+pciehw_cfg_rombar_enable(pciehwbar_t *phwbar, cfgspace_t *cs)
+{
+    if (phwbar->valid) {
+        const int mem_en = cfgspace_readw(cs, PCI_COMMAND) & 0x2;
+        const int rom_en = cfgspace_readd(cs, PCI_ROM_ADDRESS) & 0x1;
+
+        pciehw_bar_enable(phwbar, mem_en && rom_en);
+    }
+}
+
 static void
 pciehw_cfgwr_cmd(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
 {
@@ -234,6 +252,9 @@ pciehw_cfgwr_cmd(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
     /* bar control */
     pciehw_cfg_io_enable(phwdev, (cmd & 0x1) != 0);
     pciehw_cfg_mem_enable(phwdev, (cmd & 0x2) != 0);
+
+    /* cmd mem_enable might have enabled rombar */
+    pciehw_cfg_rombar_enable(&phwdev->rombar, &cs);
 
     /* intx_disable */
     if ((msixctl & PCI_MSIX_FLAGS_ENABLE) == 0) {
@@ -273,6 +294,23 @@ pciehw_cfgwr_bars(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
             cfgoff += barlen;
         }
     }
+}
+
+static void
+pciehw_cfgwr_rombar(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
+{
+    pciehwbar_t *phwbar;
+    cfgspace_t cs;
+    u_int32_t baraddr;
+
+    pciehwdev_get_cfgspace(phwdev, &cs);
+
+    phwbar = &phwdev->rombar;
+    baraddr = cfgspace_readd(&cs, PCI_ROM_ADDRESS);
+    baraddr &= ~0x1; /* mask enable bit */
+    pciehw_bar_setaddr(phwbar, baraddr);
+
+    pciehw_cfg_rombar_enable(phwbar, &cs);
 }
 
 static void
@@ -323,6 +361,9 @@ pciehw_cfgwr_notify(pciehwdev_t *phwdev,
         break;
     case PCIEHW_CFGHND_BARS:
         pciehw_cfgwr_bars(phwdev, stlp);
+        break;
+    case PCIEHW_CFGHND_ROMBAR:
+        pciehw_cfgwr_rombar(phwdev, stlp);
         break;
     case PCIEHW_CFGHND_MSIX:
         pciehw_cfgwr_msix(phwdev, stlp);

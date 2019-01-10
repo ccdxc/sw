@@ -117,6 +117,7 @@ typedef struct cfgspace_header_params_s {
     u_int8_t intpin;            /* legacy int pin IntA|B|C|D = 1|2|3|4 */
     u_int8_t nbars;             /* number of valid entries in bars[] */
     cfgspace_bar_t bars[6];     /* cfg space bar properties */
+    cfgspace_bar_t rombar;      /* option rom bar */
 } cfgspace_header_params_t;
 
 void cfgspace_sethdr_type0(cfgspace_t *cs, const cfgspace_header_params_t *p);

@@ -302,6 +302,11 @@ pciehcfg_get_cfgspace_header_params(pciehcfg_t *pcfg,
         cpb->size = b->size;
         cpb->cfgidx = b->cfgidx;
     }
+    b = pciehbars_get_rombar(pbars);
+    if (b != NULL) {
+        cp->rombar.type = bartype_to_cfgbartype(b->type);
+        cp->rombar.size = b->size;
+    }
 }
 
 static void

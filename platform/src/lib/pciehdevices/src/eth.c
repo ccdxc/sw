@@ -37,6 +37,7 @@ enet_initialize_bars(pciehdev_t *pdev, const pciehdevice_resources_t *pres)
     add_common_resource_bar(pbars, pres);
     add_common_doorbell_bar(pbars, pres, upd);
     add_common_cmb_bar(pbars, pres);
+    add_common_rom_bar(pbars, pres);
 
     pciehdev_set_bars(pdev, pbars);
 }

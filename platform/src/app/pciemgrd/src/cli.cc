@@ -213,7 +213,7 @@ cmd_add(int argc, char *argv[])
     bi = 0;
 
     getopt_reset(4, 2);
-    while ((opt = getopt(argc, argv, "b:B:c:C:d:D:I:L:i:n:p:P:")) != -1) {
+    while ((opt = getopt(argc, argv, "b:B:c:C:d:D:I:L:i:n:p:P:r:R:")) != -1) {
         switch (opt) {
         case 'b':
             r.debugbar[bi].barpa = strtoull(optarg, NULL, 0);
@@ -252,6 +252,12 @@ cmd_add(int argc, char *argv[])
             break;
         case 'P':
             r.npids = strtoul(optarg, NULL, 0);
+            break;
+        case 'r':
+            r.romsz = strtoull(optarg, NULL, 0);
+            break;
+        case 'R':
+            r.rompa = strtoull(optarg, NULL, 0);
             break;
         default:
             printf("bad argument: %c\n", opt);

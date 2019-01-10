@@ -96,13 +96,21 @@ pciemgr::add_device(pciehdev_t *pdev)
             nprts += preg->nprts;
         }
     }
+    pbar = &pbars->rombar;
+    if (pbar->size) {
+        nregs += pbar->nregs;
+
+        preg = pbar->regs;
+        for (int r = 0; r < pbar->nregs; r++, preg++) {
+            nprts += preg->nprts;
+        }
+    }
 
     size_t msglen = (sizeof(pmmsg_dev_add_t) +
                      sizeof(pciehdev_t) +
                      sizeof(pciehcfg_t) +
                      PCIEHCFGSZ * 2 +
                      sizeof(pciehbars_t) +
-                     sizeof(pciehbar_t) * pbars->nbars +
                      sizeof(pciehbarreg_t) * nregs +
                      sizeof(prt_t) * nprts);
     pciemgrc_msgalloc(&m, msglen);
@@ -138,30 +146,35 @@ pciemgr::add_device(pciehdev_t *pdev)
     memcpy(mp, pbars, sizeof(pciehbars_t));
     mp += sizeof(pciehbars_t);
 
-    pciehbar_t *msgbar;
-    pciehbarreg_t *msgreg;
-    prt_t *msgprt;
-
-    msgbar = (pciehbar_t *)mp;
     for (pbar = pciehbars_get_first(pbars);
          pbar != NULL;
          pbar = pciehbars_get_next(pbars, pbar)) {
 
         // bar
-        memcpy(msgbar, pbar, sizeof(*pbar));
-        msgreg = (pciehbarreg_t *)(msgbar + 1);
         preg = pbar->regs;
         for (int r = 0; r < pbar->nregs; r++, preg++) {
             // region
-            memcpy(msgreg, preg, sizeof(*preg));
+            memcpy(mp, preg, sizeof(*preg));
+            mp += sizeof(*preg);
             // prts
-            msgprt = (prt_t *)(msgreg + 1);
-            memcpy(msgprt, preg->prts, sizeof(*msgprt) * preg->nprts);
-            msgreg = (pciehbarreg_t *)&msgprt[preg->nprts];
+            memcpy(mp, preg->prts, sizeof(prt_t) * preg->nprts);
+            mp += sizeof(prt_t) * preg->nprts;
         }
-        msgbar = (pciehbar_t *)msgreg;
     }
-    mp = (char *)msgbar;
+
+    // rom bar
+    pbar = pciehbars_get_rombar(pbars);
+    if (pbar) {
+        preg = pbar->regs;
+        for (int r = 0; r < pbar->nregs; r++, preg++) {
+            // region
+            memcpy(mp, preg, sizeof(*preg));
+            mp += sizeof(*preg);
+            // prts
+            memcpy(mp, preg->prts, sizeof(prt_t) * preg->nprts);
+            mp += sizeof(prt_t) * preg->nprts;
+        }
+    }
 
     // msg complete - send it
     pciemgrc_msgsend(m);
