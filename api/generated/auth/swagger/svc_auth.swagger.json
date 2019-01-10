@@ -5615,8 +5615,8 @@
         },
         "resource-namespace": {
           "type": "string",
-          "default": "default",
-          "description": "ResourceNamespace is a namespace to which a resource (API Server object) belongs. Default value is \"default\". Specifying \"_All_\"\nwill match all namespaces."
+          "default": "_All_",
+          "description": "ResourceNamespace is a namespace to which a resource (API Server object) belongs. Default value is \"_All_\" which matches all namespaces."
         },
         "resource-names": {
           "type": "array",

@@ -409,7 +409,7 @@ func (m *Permission) Defaults(ver string) bool {
 		for k := range m.Actions {
 			m.Actions[k] = "AllActions"
 		}
-		m.ResourceNamespace = "default"
+		m.ResourceNamespace = "_All_"
 		m.ResourceTenant = "default"
 	}
 	return ret

@@ -253,9 +253,8 @@ message Permission {
     // ResrcKind enum. Specifying "_All_" will match all resource kinds.
     string ResourceKind           = 3 [(gogoproto.jsontag) = "resource-kind,omitempty"];
 
-    // ResourceNamespace is a namespace to which a resource (API Server object) belongs. Default value is "default". Specifying "_All_"
-    // will match all namespaces.
-    string ResourceNamespace      = 4 [(venice.default) = "default", (gogoproto.jsontag) = "resource-namespace,omitempty"];
+    // ResourceNamespace is a namespace to which a resource (API Server object) belongs. Default value is "_All_" which matches all namespaces.
+    string ResourceNamespace      = 4 [(venice.default) = "_All_", (gogoproto.jsontag) = "resource-namespace,omitempty"];
 
     // ResourceNames identify specific objects on which this permission applies. If resource name is not specified in permission then
     // it implies all resources of the specified kind

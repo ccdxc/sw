@@ -30,8 +30,7 @@ export class AuthPermission extends BaseModel implements IAuthPermission {
     /** ResourceKind is a resource kind for which permission is defined. It can be an API Server object kind or kinds defined in
     ResrcKind enum. Specifying "_All_" will match all resource kinds. */
     'resource-kind': string = null;
-    /** ResourceNamespace is a namespace to which a resource (API Server object) belongs. Default value is "default". Specifying "_All_"
-    will match all namespaces. */
+    /** ResourceNamespace is a namespace to which a resource (API Server object) belongs. Default value is "_All_" which matches all namespaces. */
     'resource-namespace': string = null;
     'resource-names': Array<string> = null;
     'actions': Array<AuthPermission_actions> = null;
@@ -50,8 +49,8 @@ export class AuthPermission extends BaseModel implements IAuthPermission {
             type: 'string'
         },
         'resource-namespace': {
-            default: 'default',
-            description:  'ResourceNamespace is a namespace to which a resource (API Server object) belongs. Default value is &quot;default&quot;. Specifying &quot;_All_&quot; will match all namespaces.',
+            default: '_All_',
+            description:  'ResourceNamespace is a namespace to which a resource (API Server object) belongs. Default value is &quot;_All_&quot; which matches all namespaces.',
             type: 'string'
         },
         'resource-names': {
