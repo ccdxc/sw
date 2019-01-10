@@ -11,7 +11,7 @@
 #include <getopt.h>
 #include <sys/time.h>
 
-#include "nic/sdk/include/sdk/thread.hpp"
+#include "lib/thread/thread.hpp"
 #include "platform/src/lib/evutils/include/evutils.h"
 #include "platform/src/lib/nicmgr/include/dev.hpp"
 #include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"

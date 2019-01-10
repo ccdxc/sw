@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include "nic/utils/fsm/fsm.hpp"
 #include <map>
-#include "nic/sdk/include/sdk/twheel.hpp"
+#include "lib/twheel/twheel.hpp"
 #include "nic/hal/test/utils/hal_test_utils.hpp"
 #include <vector>
 

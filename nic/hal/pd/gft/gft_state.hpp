@@ -3,20 +3,20 @@
 #ifndef __HAL_STATE_PD_HPP__
 #define __HAL_STATE_PD_HPP__
 
-#include "nic/sdk/include/sdk/indexer.hpp"
-#include "nic/sdk/include/sdk/slab.hpp"
-#include "nic/sdk/include/sdk/ht.hpp"
-#include "nic/sdk/include/sdk/directmap.hpp"
-#include "nic/sdk/include/sdk/hash.hpp"
-#include "nic/sdk/include/sdk/tcam.hpp"
-#include "nic/sdk/include/sdk/hbm_hash.hpp"
+#include "lib/indexer/indexer.hpp"
+#include "lib/slab/slab.hpp"
+#include "lib/ht/ht.hpp"
+#include "lib/table/directmap/directmap.hpp"
+#include "lib/table/hash/hash.hpp"
+#include "lib/table/tcam/tcam.hpp"
+#include "lib/table/hbmhash/hbm_hash.hpp"
 #include "gen/p4gen/gft/include/p4pd_table.h"
 #include "gen/p4gen/common_txdma_actions/include/common_txdma_actions_p4pd_table.h"
 #include "gen/p4gen/common_rxdma_actions/include/common_rxdma_actions_p4pd_table.h"
 #include "gen/p4gen/common_txdma_actions/include/common_txdma_actions_p4pd.h"
 #include "gen/p4gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 #include "gen/p4gen/gft/include/p4pd.h"
-#include "include/sdk/bm_allocator.hpp"
+#include "lib/bm_allocator/bm_allocator.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 
 using sdk::lib::slab;

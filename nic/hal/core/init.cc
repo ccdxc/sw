@@ -8,7 +8,7 @@
 #include "nic/sdk/include/sdk/utils.hpp"
 #include "nic/hal/core/core.hpp"
 #include "nic/hal/core/plugins.hpp"
-#include "nic/sdk/include/sdk/periodic.hpp"
+#include "lib/periodic/periodic.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 #include "nic/linkmgr/linkmgr.hpp"
 

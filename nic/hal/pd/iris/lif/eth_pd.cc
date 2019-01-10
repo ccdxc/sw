@@ -6,7 +6,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/base.hpp"
-#include "nic/sdk/include/sdk/directmap.hpp"
+#include "lib/table/directmap/directmap.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/iris/lif/eth_pd.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"

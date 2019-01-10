@@ -4,7 +4,7 @@
 #define __HAL_PD_EVENT_HPP__
 
 #include "nic/include/base.hpp"
-#include "include/sdk/table_monitor.hpp"
+#include "lib/table/common/table.hpp"
 
 using sdk::table::table_health_state_t;
 

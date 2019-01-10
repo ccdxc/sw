@@ -2,7 +2,7 @@
 #include "nic/fte/acl/acl_ctx.hpp"
 #include "nic/fte/acl/acl_list.hpp"
 #include "nic/fte/acl/acl_itree.hpp"
-#include "nic/sdk/include/sdk/slab.hpp"
+#include "lib/slab/slab.hpp"
 #include "nic/include/hal_mem.hpp"
 
 namespace acl {

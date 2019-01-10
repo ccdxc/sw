@@ -1,5 +1,5 @@
 #include "nic/sdk/include/sdk/pal.hpp"
-#include "nic/sdk/include/sdk/thread.hpp"
+#include "lib/thread/thread.hpp"
 #include "asicerrord.h"
 
 delphi::objects::dppintcreditmetrics_t                  dppintcreditmetrics[2];

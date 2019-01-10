@@ -20,7 +20,7 @@
 #include "include/sdk/lock.hpp"
 #include "platform/capri/capri_p4.hpp"
 #include "platform/capri/capri_tm_rw.hpp"
-#include "nic/sdk/include/sdk/bitmap.hpp"
+#include "lib/bitmap/bitmap.hpp"
 #include "platform/utils/mpartition.hpp"
 #include "gen/platform/mem_regions.hpp"
 

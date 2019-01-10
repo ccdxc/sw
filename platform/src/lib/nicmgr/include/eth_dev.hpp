@@ -17,7 +17,7 @@
 #include "nic/include/notify.hpp"
 #include "nic/include/edma.hpp"
 #include "nic/include/eth_common.h"
-#include "nic/sdk/include/sdk/indexer.hpp"
+#include "lib/indexer/indexer.hpp"
 #include "platform/src/lib/hal_api/include/hal_types.hpp"
 #include "platform/src/lib/mnet/include/mnet.h"
 #include "platform/src/lib/evutils/include/evutils.h"

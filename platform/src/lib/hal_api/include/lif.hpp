@@ -4,7 +4,7 @@
 
 #include <vector>
 
-#include "nic/sdk/include/sdk/indexer.hpp"
+#include "lib/indexer/indexer.hpp"
 
 #include "hal.hpp"
 #include "hal_types.hpp"

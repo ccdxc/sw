@@ -5,7 +5,7 @@
 #ifndef __UTILS_HPP__
 #define __UTILS_HPP__
 
-#include "nic/sdk/include/sdk/list.hpp"
+#include "lib/list/list.hpp"
 #include "nic/utils/block_list/block_list.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 

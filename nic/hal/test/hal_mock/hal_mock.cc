@@ -1,5 +1,5 @@
 #include "nic/include/base.hpp"
-#include "nic/sdk/include/sdk/thread.hpp"
+#include "lib/thread/thread.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/include/hal_mem.hpp"

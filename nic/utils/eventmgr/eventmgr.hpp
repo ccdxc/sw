@@ -5,9 +5,9 @@
 
 #include "nic/include/base.hpp"
 #include "nic/include/hal_lock.hpp"
-#include "nic/sdk/include/sdk/slab.hpp"
-#include "nic/sdk/include/sdk/ht.hpp"
-#include "nic/sdk/include/sdk/list.hpp"
+#include "lib/slab/slab.hpp"
+#include "lib/ht/ht.hpp"
+#include "lib/list/list.hpp"
 
 using sdk::lib::ht;
 using sdk::lib::slab;

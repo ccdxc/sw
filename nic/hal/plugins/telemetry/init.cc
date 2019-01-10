@@ -3,7 +3,7 @@
 //-----------------------------------------------------------------------------
 
 #include "core.hpp"
-#include "nic/sdk/include/sdk/slab.hpp"
+#include "lib/slab/slab.hpp"
 #include "nic/include/hal_mem.hpp"
 
 namespace hal {

@@ -9,7 +9,7 @@
 #define __MAPPING_IMPL_STATEHPP__
 
 #include "nic/hal/apollo/framework/api_base.hpp"
-#include "nic/sdk/include/sdk/hbm_hash.hpp"
+#include "lib/table/hbmhash/hbm_hash.hpp"
 
 namespace impl {
 

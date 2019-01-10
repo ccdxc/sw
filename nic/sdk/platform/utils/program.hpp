@@ -7,7 +7,7 @@
 #include <map>
 #include "include/sdk/base.hpp"
 #include "include/sdk/mem.hpp"
-#include "include/sdk/shmmgr.hpp"
+#include "lib/shmmgr/shmmgr.hpp"
 #include "include/sdk/types.hpp"
 #include "boost/foreach.hpp"
 #include "boost/optional.hpp"

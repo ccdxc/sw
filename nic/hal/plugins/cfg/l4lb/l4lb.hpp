@@ -6,10 +6,10 @@
 #define __L4LB_HPP__
 
 #include "nic/include/base.hpp"
-#include "nic/sdk/include/sdk/list.hpp"
+#include "lib/list/list.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
-#include "nic/sdk/include/sdk/ht.hpp"
+#include "lib/ht/ht.hpp"
 #include "gen/proto/l4lb.pb.h"
 #include <netinet/ether.h>
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"

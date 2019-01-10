@@ -1,7 +1,7 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
-#include "include/sdk/thread.hpp"
-#include "include/sdk/periodic.hpp"
+#include "lib/thread/thread.hpp"
+#include "lib/periodic/periodic.hpp"
 #include "include/sdk/linkmgr.hpp"
 #include "platform/drivers/xcvr.hpp"
 #include "platform/drivers/xcvr_qsfp.hpp"

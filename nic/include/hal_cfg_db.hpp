@@ -4,7 +4,7 @@
 #define __HAL_CFG_DB_HPP__
 
 #include "nic/include/base.hpp"
-#include "nic/sdk/include/sdk/list.hpp"
+#include "lib/list/list.hpp"
 
 using sdk::lib::dllist_ctxt_t;
 

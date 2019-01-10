@@ -5,7 +5,7 @@
 #ifndef __HAL_PD_L2SEG_HPP__
 #define __HAL_PD_L2SEG_HPP__
 
-#include "nic/sdk/include/sdk/ht.hpp"
+#include "lib/ht/ht.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/base.hpp"
 #include "nic/hal/pd/pd_api.hpp"

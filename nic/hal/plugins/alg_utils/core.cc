@@ -5,7 +5,7 @@
 #include "alg_db.hpp"
 #include "nic/include/hal_mem.hpp"
 #include "nic/hal/plugins/alg_utils/core.hpp"
-#include "nic/sdk/include/sdk/list.hpp"
+#include "lib/list/list.hpp"
 
 namespace hal {
 namespace plugins {

@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "nic/sdk/include/sdk/twheel.hpp"
+#include "lib/twheel/twheel.hpp"
 
 
 #include "nic/hal/plugins/eplearn/data_pkt/dpkt_learn.hpp"

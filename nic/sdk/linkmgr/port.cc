@@ -6,7 +6,7 @@
 #include "linkmgr_internal.hpp"
 #include "linkmgr_types.hpp"
 #include "timer_cb.hpp"
-#include "include/sdk/periodic.hpp"
+#include "lib/periodic/periodic.hpp"
 #include "include/sdk/asic/capri/cap_mx_api.h"
 #include "platform/drivers/xcvr.hpp"
 #include "lib/pal/pal.hpp"

@@ -7,7 +7,7 @@
 #include "nic/hal/pd/gft/gft_pd.hpp"
 #include "nic/hal/pd/gft/gft_state.hpp"
 #include "nic/p4/gft/include/defines.h"
-#include "nic/sdk/include/sdk/tcam.hpp"
+#include "lib/table/tcam/tcam.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/common_p4plus/common_p4plus.hpp"
 

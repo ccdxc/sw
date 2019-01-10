@@ -17,9 +17,9 @@
 
 #include "include/sdk/mem.hpp"
 #include "include/sdk/base.hpp"
-#include "include/sdk/indexer.hpp"
-#include "include/sdk/table_monitor.hpp"
-#include "include/sdk/ht.hpp"
+#include "lib/indexer/indexer.hpp"
+#include "lib/table/common/table.hpp"
+#include "lib/ht/ht.hpp"
 
 using sdk::lib::indexer;
 using sdk::lib::ht;

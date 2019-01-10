@@ -1,7 +1,7 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 #include "nic/sdk/include/sdk/base.hpp"
-#include "nic/sdk/include/sdk/thread.hpp"
+#include "lib/thread/thread.hpp"
 #include "nic/hal/pd/asic_pd.hpp"
 #include "nic/sdk/include/sdk/pal.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"

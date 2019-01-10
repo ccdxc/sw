@@ -8,7 +8,7 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include <cstring>
-#include "include/sdk/bitmap.hpp"
+#include "lib/bitmap/bitmap.hpp"
 #include "include/sdk/eth.hpp"
 
 //------------------------------------------------------------------------------

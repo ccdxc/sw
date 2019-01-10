@@ -3,7 +3,7 @@
 //-----------------------------------------------------------------------------
 
 #include "nic/include/hal.hpp"
-#include "nic/sdk/include/sdk/periodic.hpp"
+#include "lib/periodic/periodic.hpp"
 #include "nic/hal/third-party/snort3/export/include/snort_api.h"
 #include "nic/hal/third-party/snort3/export/include/application_ids.h"
 #include "app_redir_scanner.hpp"

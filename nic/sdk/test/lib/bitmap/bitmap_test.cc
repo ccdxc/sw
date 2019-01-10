@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <stdio.h>
-#include "include/sdk/bitmap.hpp"
+#include "lib/bitmap/bitmap.hpp"
 #include "include/sdk/base.hpp"
 
 

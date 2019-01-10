@@ -9,9 +9,9 @@
 #if !defined (__VCN_HPP__)
 #define __VCN_HPP__
 
-#include "nic/sdk/include/sdk/slab.hpp"
-#include "nic/sdk/include/sdk/indexer.hpp"
-#include "nic/sdk/include/sdk/ht.hpp"
+#include "lib/slab/slab.hpp"
+#include "lib/indexer/indexer.hpp"
+#include "lib/ht/ht.hpp"
 #include "nic/hal/apollo/framework/api_base.hpp"
 #include "nic/hal/apollo/include/api/oci_vcn.hpp"
 

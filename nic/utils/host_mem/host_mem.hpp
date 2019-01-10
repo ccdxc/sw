@@ -2,7 +2,7 @@
 #define __HOSTMEM_HPP__
 
 // TODO Need to move bm_allocator to utils.
-#include "include/sdk/bm_allocator.hpp"
+#include "lib/bm_allocator/bm_allocator.hpp"
 
 #include "nic/utils/host_mem/params.hpp"
 

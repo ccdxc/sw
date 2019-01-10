@@ -3,7 +3,7 @@
 //------------------------------------------------------------------------------
 
 #include <cstring>
-#include "include/sdk/tcam.hpp"
+#include "lib/table/tcam/tcam.hpp"
 #include "lib/p4/p4_api.hpp"
 #include "hash.hpp"
 

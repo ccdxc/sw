@@ -44,9 +44,9 @@
 #include "nic/hal/src/utils/port_list.hpp"
 #include "nic/hal/src/utils/rule_match.hpp"
 #include "nic/hal/plugins/cfg/nat/nat.hpp"
-#include "nic/sdk/include/sdk/periodic.hpp"
-#include "nic/sdk/include/sdk/twheel.hpp"
-#include "nic/sdk/include/sdk/shmmgr.hpp"
+#include "lib/periodic/periodic.hpp"
+#include "lib/twheel/twheel.hpp"
+#include "nic/sdk/lib/shmmgr/shmmgr.hpp"
 #include "nic/hal/plugins/cfg/ipsec/ipsec.hpp"
 #include "nic/hal/plugins/cfg/tcp_proxy/tcp_proxy.hpp"
 

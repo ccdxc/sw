@@ -3,14 +3,14 @@
 #ifndef  __HAL_STATE_HPP__
 #define  __HAL_STATE_HPP__
 
-#include "nic/sdk/include/sdk/list.hpp"
+#include "lib/list/list.hpp"
 #include "nic/sdk/include/sdk/catalog.hpp"
-#include "nic/sdk/include/sdk/slab.hpp"
-#include "nic/sdk/include/sdk/indexer.hpp"
-#include "nic/sdk/include/sdk/ht.hpp"
+#include "lib/slab/slab.hpp"
+#include "lib/indexer/indexer.hpp"
+#include "lib/ht/ht.hpp"
 #include "nic/sdk/include/sdk/timestamp.hpp"
-#include "nic/sdk/include/sdk/shmmgr.hpp"
-#include "nic/sdk/include/sdk/bitmap.hpp"
+#include "nic/sdk/lib/shmmgr/shmmgr.hpp"
+#include "lib/bitmap/bitmap.hpp"
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/include/eventmgr.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
@@ -18,7 +18,7 @@
 #include "nic/include/hal_cfg.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/include/hal_mem.hpp"
-#include "nic/sdk/include/sdk/periodic.hpp"
+#include "lib/periodic/periodic.hpp"
 #include "nic/fte/acl/acl.hpp"
 #include "nic/hal/src/debug/debug.hpp"
 

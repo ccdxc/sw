@@ -2,7 +2,7 @@
 #define __HAL_PD_RAWRCB_HPP__
 
 #include "nic/include/base.hpp"
-#include "nic/sdk/include/sdk/ht.hpp"
+#include "lib/ht/ht.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/include/app_redir_shared.h"
 

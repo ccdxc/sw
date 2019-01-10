@@ -11,7 +11,7 @@
 #include <arpa/inet.h>
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_pd.hpp"
-#include "nic/sdk/include/sdk/periodic.hpp"
+#include "lib/periodic/periodic.hpp"
 #include "platform/capri/capri_lif_manager.hpp"
 #include "nic/hal/src/internal/rdma.hpp"
 #include "nic/hal/src/internal/tcp_proxy_cb.hpp"
@@ -20,7 +20,7 @@
 #include "nic/hal/core/plugins.hpp"
 #include "nic/hal/src/utils/utils.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
-#include "nic/sdk/include/sdk/logger.hpp"
+#include "lib/logger/logger.hpp"
 #include "nic/sdk/include/sdk/utils.hpp"
 #include "nic/linkmgr/linkmgr.hpp"
 #include "nic/hal/lib/hal_handle.hpp"

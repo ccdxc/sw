@@ -7,8 +7,8 @@
 #define __SESSION_HPP__
 
 #include "nic/include/base.hpp"
-#include "nic/sdk/include/sdk/list.hpp"
-#include "nic/sdk/include/sdk/ht.hpp"
+#include "lib/list/list.hpp"
+#include "lib/ht/ht.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/hal/plugins/cfg/nw/l2segment.hpp"

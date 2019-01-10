@@ -9,9 +9,9 @@
 
 #include "platform/capri/capri_lif_manager.hpp"
 #include "platform/utils/mpartition.hpp"
-#include "nic/sdk/include/sdk/directmap.hpp"
-#include "nic/sdk/include/sdk/table_monitor.hpp"
-#include "nic/sdk/include/sdk/bm_allocator.hpp"
+#include "lib/table/directmap/directmap.hpp"
+#include "lib/table/common/table.hpp"
+#include "lib/bm_allocator/bm_allocator.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "platform/capri/capri_common.hpp"
 #include "platform/capri/capri_tbl_rw.hpp"

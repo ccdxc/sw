@@ -3,7 +3,7 @@
 //-----------------------------------------------------------------------------
 
 #include "core.hpp"
-#include "nic/sdk/include/sdk/list.hpp"
+#include "lib/list/list.hpp"
 #include "nic/hal/plugins/sfw/core.hpp"
 #include "nic/hal/plugins/alg_utils/core.hpp"
 

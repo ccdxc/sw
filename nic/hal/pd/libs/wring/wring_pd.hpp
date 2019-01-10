@@ -5,7 +5,7 @@
 #include "gen/proto/internal.pb.h"
 #include "nic/hal/src/internal/wring.hpp"
 #include "nic/include/base.hpp"
-#include "nic/sdk/include/sdk/ht.hpp"
+#include "lib/ht/ht.hpp"
 //#include "nic/hal/pd/iris/hal_state_pd.hpp"
 
 using sdk::lib::ht_ctxt_t;

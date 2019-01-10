@@ -14,8 +14,8 @@
 #include <map>
 #include "nic/include/base.hpp"
 #include "nic/include/hal_mem.hpp"
-#include "nic/sdk/include/sdk/indexer.hpp"
-#include "nic/sdk/include/sdk/table_monitor.hpp"
+#include "lib/indexer/indexer.hpp"
+#include "lib/table/common/table.hpp"
 
 using sdk::lib::indexer;
 using sdk::table::table_health_state_t;

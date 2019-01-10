@@ -3,7 +3,7 @@
  */
 #include "sysmond.h"
 #include "nic/sdk/include/sdk/pal.hpp"
-#include "nic/sdk/include/sdk/thread.hpp"
+#include "lib/thread/thread.hpp"
 
 ::utils::log *g_trace_logger;
 

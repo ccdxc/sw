@@ -9,7 +9,7 @@
 #if !defined (__MAPPING_HPP__)
 #define __MAPPING_HPP__
 
-#include "nic/sdk/include/sdk/slab.hpp"
+#include "lib/slab/slab.hpp"
 #include "nic/hal/apollo/framework/api_base.hpp"
 #include "nic/hal/apollo/framework/impl_base.hpp"
 #include "nic/hal/apollo/include/api/oci_mapping.hpp"

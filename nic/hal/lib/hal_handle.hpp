@@ -9,9 +9,9 @@
 #include "nic/include/base.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/include/hal_cfg_db.hpp"
-#include "nic/sdk/include/sdk/list.hpp"
-#include "nic/sdk/include/sdk/ht.hpp"
-#include "nic/sdk/include/sdk/slab.hpp"
+#include "lib/list/list.hpp"
+#include "lib/ht/ht.hpp"
+#include "lib/slab/slab.hpp"
 
 using sdk::lib::ht_ctxt_t;
 using sdk::lib::dllist_ctxt_t;

@@ -13,7 +13,7 @@
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/iris/datapath/p4/include/table_sizes.h"
 #include "nic/hal/pd/cpupkt_api.hpp"
-#include "nic/sdk/include/sdk/periodic.hpp"
+#include "lib/periodic/periodic.hpp"
 
 namespace hal {
 namespace pd {

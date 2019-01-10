@@ -6,7 +6,7 @@
 #include <cstring>
 #include "include/sdk/base.hpp"
 #include "include/sdk/mem.hpp"
-#include "include/sdk/thread.hpp"
+#include "lib/thread/thread.hpp"
 #include <sys/sysinfo.h>
 
 namespace sdk {

@@ -1,6 +1,6 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include "nic/sdk/include/sdk/thread.hpp"
+#include "lib/thread/thread.hpp"
 #include "nic/sdk/include/sdk/pal.hpp"
 #include "nic/sdk/asic/rw/asicrw.hpp"
 
