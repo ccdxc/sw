@@ -186,13 +186,26 @@ func TestBrokerKstoreBasic(t *testing.T) {
 			Assert(t, err == nil, msg, err)
 		}
 	}
-	err = brokers[0].WriteKvs(context.Background(), "table0", []*tproto.KeyValue{})
+
+	kvs := []*tproto.KeyValue{
+		{
+			Key:   []byte(fmt.Sprintf("testKey0-%d", 0)),
+			Value: []byte(fmt.Sprintf("testKey0-%d", 0)),
+		},
+	}
+	keys := []*tproto.Key{
+		{Key: []byte(fmt.Sprintf("testKey0-%d", 0))},
+	}
+
+	err = brokers[0].WriteKvs(context.Background(), "table0", kvs)
 	validateError(err, "writing keys suceeded while cluster is not ready")
-	_, err = brokers[0].ReadKvs(context.Background(), "table0", []*tproto.Key{})
+	_, err = brokers[0].ReadKvs(context.Background(), "table0", keys)
 	validateError(err, "reading keys suceeded while cluster is not ready")
-	_, err = brokers[0].ListKvs(context.Background(), "table0")
-	validateError(err, "listing keys suceeded while cluster is not ready")
-	err = brokers[0].DeleteKvs(context.Background(), "table0", []*tproto.Key{})
+	listKeys, err := brokers[0].ListKvs(context.Background(), "table0")
+	if err == nil && len(listKeys) > 0 {
+		log.Fatalf("listing keys suceeded while cluster is not ready, %v", listKeys)
+	}
+	err = brokers[0].DeleteKvs(context.Background(), "table0", keys)
 	validateError(err, "deleting keys suceeded while cluster is not ready")
 
 	// wait till all the shards are created
@@ -275,7 +288,7 @@ func TestBrokerKstoreBasic(t *testing.T) {
 	meta.SetErrorRet(nil)
 	err = brokers[0].WriteKvs(context.Background(), "table0", kvsA)
 	Assert(t, (err == nil), "Write failed expected success")
-	keys := []*tproto.Key{
+	keys = []*tproto.Key{
 		{Key: []byte("key11")},
 	}
 	meta.SetErrorRet(fmt.Errorf("Fakest fake error"))
