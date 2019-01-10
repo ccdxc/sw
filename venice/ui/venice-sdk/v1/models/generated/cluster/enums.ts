@@ -12,26 +12,6 @@ export enum ClusterMemInfo_type {
     'DDR' = "DDR",
 }
 
-export enum ClusterNetworkInterfaceSpec_admin_status {
-    'NONE' = "NONE",
-    'UP' = "UP",
-    'DOWN' = "DOWN",
-}
-
-export enum ClusterNetworkInterfaceStatus_type {
-    'NONE' = "NONE",
-    'HOST_PF' = "HOST_PF",
-    'HOST_VF' = "HOST_VF",
-    'UPLINK_ETH' = "UPLINK_ETH",
-    'UPLINK_MGMT' = "UPLINK_MGMT",
-}
-
-export enum ClusterNetworkInterfaceStatus_oper_status {
-    'NONE' = "NONE",
-    'UP' = "UP",
-    'DOWN' = "DOWN",
-}
-
 export enum ClusterNodeCondition_type {
     'LEADER' = "LEADER",
 }
@@ -157,9 +137,6 @@ export class AllEnums {
     }
 
     ClusterMemInfo_type = ClusterMemInfo_type;
-    ClusterNetworkInterfaceSpec_admin_status = ClusterNetworkInterfaceSpec_admin_status;
-    ClusterNetworkInterfaceStatus_type = ClusterNetworkInterfaceStatus_type;
-    ClusterNetworkInterfaceStatus_oper_status = ClusterNetworkInterfaceStatus_oper_status;
     ClusterNodeCondition_type = ClusterNodeCondition_type;
     ClusterNodeCondition_status = ClusterNodeCondition_status;
     ClusterNodeStatus_phase = ClusterNodeStatus_phase;

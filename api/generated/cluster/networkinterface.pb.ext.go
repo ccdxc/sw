@@ -59,7 +59,6 @@ func (m *NetworkInterface) Defaults(ver string) bool {
 	m.Kind = "NetworkInterface"
 	m.Tenant, m.Namespace = "", ""
 	var ret bool
-	ret = m.Spec.Defaults(ver) || ret
 	ret = m.Status.Defaults(ver) || ret
 	return ret
 }
@@ -103,13 +102,7 @@ func (m *NetworkInterfaceSpec) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *NetworkInterfaceSpec) Defaults(ver string) bool {
-	var ret bool
-	ret = true
-	switch ver {
-	default:
-		m.AdminStatus = "NONE"
-	}
-	return ret
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -134,7 +127,7 @@ func (m *NetworkInterfaceStatus) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.OperStatus = "NONE"
+		m.OperStatus = "UP"
 		m.Type = "NONE"
 	}
 	return ret
@@ -175,15 +168,6 @@ func (m *NetworkInterface) Validate(ver, path string, ignoreStatus bool) []error
 	if m.Tenant != "" {
 		ret = append(ret, errors.New("Tenant not allowed for NetworkInterface"))
 	}
-
-	dlmtr := "."
-	if path == "" {
-		dlmtr = ""
-	}
-	npath := path + dlmtr + "Spec"
-	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
-		ret = append(ret, errs...)
-	}
 	if !ignoreStatus {
 
 		dlmtr := "."
@@ -205,19 +189,6 @@ func (m *NetworkInterfaceHostStatus) Validate(ver, path string, ignoreStatus boo
 
 func (m *NetworkInterfaceSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
-	if vs, ok := validatorMapNetworkinterface["NetworkInterfaceSpec"][ver]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	} else if vs, ok := validatorMapNetworkinterface["NetworkInterfaceSpec"]["all"]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	}
 	return ret
 }
 
@@ -254,21 +225,11 @@ func init() {
 
 	validatorMapNetworkinterface = make(map[string]map[string][]func(string, interface{}) error)
 
-	validatorMapNetworkinterface["NetworkInterfaceSpec"] = make(map[string][]func(string, interface{}) error)
-	validatorMapNetworkinterface["NetworkInterfaceSpec"]["all"] = append(validatorMapNetworkinterface["NetworkInterfaceSpec"]["all"], func(path string, i interface{}) error {
-		m := i.(*NetworkInterfaceSpec)
-
-		if _, ok := NetworkInterfaceSpec_IFStatus_value[m.AdminStatus]; !ok {
-			return errors.New("NetworkInterfaceSpec.AdminStatus did not match allowed strings")
-		}
-		return nil
-	})
-
 	validatorMapNetworkinterface["NetworkInterfaceStatus"] = make(map[string][]func(string, interface{}) error)
 	validatorMapNetworkinterface["NetworkInterfaceStatus"]["all"] = append(validatorMapNetworkinterface["NetworkInterfaceStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*NetworkInterfaceStatus)
 
-		if _, ok := NetworkInterfaceSpec_IFStatus_value[m.OperStatus]; !ok {
+		if _, ok := NetworkInterfaceStatus_IFStatus_value[m.OperStatus]; !ok {
 			return errors.New("NetworkInterfaceStatus.OperStatus did not match allowed strings")
 		}
 		return nil

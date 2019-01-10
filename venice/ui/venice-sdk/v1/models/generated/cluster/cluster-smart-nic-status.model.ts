@@ -11,7 +11,6 @@ import { ClusterSmartNICStatus_admission_phase,  ClusterSmartNICStatus_admission
 import { ClusterSmartNICCondition, IClusterSmartNICCondition } from './cluster-smart-nic-condition.model';
 import { ClusterIPConfig, IClusterIPConfig } from './cluster-ip-config.model';
 import { ClusterSmartNICInfo, IClusterSmartNICInfo } from './cluster-smart-nic-info.model';
-import { ClusterNetworkInterface, IClusterNetworkInterface } from './cluster-network-interface.model';
 
 export interface IClusterSmartNICStatus {
     'admission-phase'?: ClusterSmartNICStatus_admission_phase;
@@ -20,7 +19,7 @@ export interface IClusterSmartNICStatus {
     'primary-mac'?: string;
     'ip-config'?: IClusterIPConfig;
     'system-info'?: IClusterSmartNICInfo;
-    'interfaces'?: Array<IClusterNetworkInterface>;
+    'interfaces'?: Array<string>;
 }
 
 
@@ -39,7 +38,7 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
     'primary-mac': string = null;
     'ip-config': ClusterIPConfig = null;
     'system-info': ClusterSmartNICInfo = null;
-    'interfaces': Array<ClusterNetworkInterface> = null;
+    'interfaces': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'admission-phase': {
             enum: ClusterSmartNICStatus_admission_phase_uihint,
@@ -63,7 +62,7 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
             type: 'object'
         },
         'interfaces': {
-            type: 'object'
+            type: 'Array<string>'
         },
     }
 
@@ -89,7 +88,7 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
         this['conditions'] = new Array<ClusterSmartNICCondition>();
         this['ip-config'] = new ClusterIPConfig();
         this['system-info'] = new ClusterSmartNICInfo();
-        this['interfaces'] = new Array<ClusterNetworkInterface>();
+        this['interfaces'] = new Array<string>();
         this.setValues(values);
     }
 
@@ -122,8 +121,10 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
         if (values) {
             this['system-info'].setValues(values['system-info']);
         }
-        if (values) {
-            this.fillModelArray<ClusterNetworkInterface>(this, 'interfaces', values['interfaces'], ClusterNetworkInterface);
+        if (values && values['interfaces'] != null) {
+            this['interfaces'] = values['interfaces'];
+        } else if (fillDefaults && ClusterSmartNICStatus.hasDefaultValue('interfaces')) {
+            this['interfaces'] = [ ClusterSmartNICStatus.propInfo['interfaces'].default];
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -138,12 +139,10 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
                 'primary-mac': new FormControl(this['primary-mac']),
                 'ip-config': this['ip-config'].$formGroup,
                 'system-info': this['system-info'].$formGroup,
-                'interfaces': new FormArray([]),
+                'interfaces': new FormControl(this['interfaces']),
             });
             // generate FormArray control elements
             this.fillFormArray<ClusterSmartNICCondition>('conditions', this['conditions'], ClusterSmartNICCondition);
-            // generate FormArray control elements
-            this.fillFormArray<ClusterNetworkInterface>('interfaces', this['interfaces'], ClusterNetworkInterface);
         }
         return this._formGroup;
     }
@@ -160,7 +159,7 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
             this._formGroup.controls['primary-mac'].setValue(this['primary-mac']);
             this['ip-config'].setFormGroupValuesToBeModelValues();
             this['system-info'].setFormGroupValuesToBeModelValues();
-            this.fillModelArray<ClusterNetworkInterface>(this, 'interfaces', this['interfaces'], ClusterNetworkInterface);
+            this._formGroup.controls['interfaces'].setValue(this['interfaces']);
         }
     }
 }

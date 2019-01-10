@@ -52,7 +52,6 @@ var typesMapNetworkinterface = map[string]*api.Struct{
 		},
 
 		CLITags: map[string]api.CLIInfo{
-			"admin-status":     api.CLIInfo{Path: "Spec.AdminStatus", Skip: false, Insert: "", Help: ""},
 			"api-version":      api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
 			"generation-id":    api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"host-ifname":      api.CLIInfo{Path: "Status.IFHostStatus.HostIfName", Skip: false, Insert: "", Help: ""},
@@ -79,11 +78,7 @@ var typesMapNetworkinterface = map[string]*api.Struct{
 	},
 	"cluster.NetworkInterfaceSpec": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(NetworkInterfaceSpec{}) },
-		Fields: map[string]api.Field{
-			"AdminStatus": api.Field{Name: "AdminStatus", CLITag: api.CLIInfo{ID: "admin-status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "admin-status", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"LinkSpeed": api.Field{Name: "LinkSpeed", CLITag: api.CLIInfo{ID: "link-speed", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "link-speed", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-		},
+		Fields: map[string]api.Field{},
 	},
 	"cluster.NetworkInterfaceStatus": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(NetworkInterfaceStatus{}) },

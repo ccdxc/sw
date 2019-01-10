@@ -92,6 +92,7 @@ var typesMapSmartnic = map[string]*api.Struct{
 			"fw-minor-ver":         api.CLIInfo{Path: "Status.SystemInfo.BiosInfo.FwMinorVersion", Skip: false, Insert: "", Help: ""},
 			"generation-id":        api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"hostname":             api.CLIInfo{Path: "Spec.Hostname", Skip: false, Insert: "", Help: ""},
+			"interfaces":           api.CLIInfo{Path: "Status.Interfaces", Skip: false, Insert: "", Help: ""},
 			"ip-address":           api.CLIInfo{Path: "Status.IPConfig.IPAddress", Skip: false, Insert: "", Help: ""},
 			"kind":                 api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"labels":               api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
@@ -176,7 +177,7 @@ var typesMapSmartnic = map[string]*api.Struct{
 
 			"SystemInfo": api.Field{Name: "SystemInfo", CLITag: api.CLIInfo{ID: "system-info", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "system-info", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.SmartNICInfo"},
 
-			"Interfaces": api.Field{Name: "Interfaces", CLITag: api.CLIInfo{ID: "interfaces", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "interfaces", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.NetworkInterface"},
+			"Interfaces": api.Field{Name: "Interfaces", CLITag: api.CLIInfo{ID: "interfaces", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "interfaces", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 }

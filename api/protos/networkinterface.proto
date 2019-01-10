@@ -39,35 +39,30 @@ message NetworkInterface {
 
 // NetworkInterfaceSpec
 message NetworkInterfaceSpec {
-    enum IFStatus {
-        NONE              = 0;
-        UP                = 1;
-        DOWN              = 2;
-    }
-    // shut or no-shut
-    string AdminStatus      = 1 [(venice.check) = "StrEnum(NetworkInterfaceSpec.IFStatus)",
-                                (gogoproto.jsontag) = "admin-status,omitempty"];
-    // Should we allow manual configuration of the link speed, or only through a profile
-    string LinkSpeed        = 2 [(gogoproto.jsontag) = "link-speed,omitempty"];
-
+    // Future: Admin Status up/down
+    // Future: Link Speed
     // Future: Breakout Config, CDP, LLDP, LACP, configuration would come here
     // Future: A lot of above configuration would be driven by profile when available
 }
 
 // NetworkInterfaceStatus
 message NetworkInterfaceStatus {
+    enum IFStatus {
+        UP                = 0;
+        DOWN              = 1;
+    }
     enum IFType {
         NONE              = 0;
         HOST_PF           = 1;
-        HOST_VF           = 2;
         UPLINK_ETH        = 3;
         UPLINK_MGMT       = 4;
+        // TB Added for SR-IOV: HOST_VF
     }
 
     string SmartNIC                             = 1 [(gogoproto.jsontag) = "smart-nic,omitempty"];
     string Type                                 = 2 [(venice.check) = "StrEnum(NetworkInterfaceStatus.IFType)",
                                                    (gogoproto.jsontag) = "type,omitempty"];
-    string OperStatus                           = 3 [(venice.check) = "StrEnum(NetworkInterfaceSpec.IFStatus)",
+    string OperStatus                           = 3 [(venice.check) = "StrEnum(NetworkInterfaceStatus.IFStatus)",
                                                    (gogoproto.jsontag) = "oper-status,omitempty"];
     string PrimaryMac                           = 4 [(venice.check) = "MacAddr()",
                                                    (gogoproto.jsontag) = "primary-mac,omitempty"];

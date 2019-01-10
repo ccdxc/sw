@@ -364,16 +364,6 @@ func (m *SmartNICStatus) Validate(ver, path string, ignoreStatus bool) []error {
 			ret = append(ret, errs...)
 		}
 	}
-	for k, v := range m.Interfaces {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := fmt.Sprintf("%s%sInterfaces[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
-		}
-	}
 	if m.SystemInfo != nil {
 		dlmtr := "."
 		if path == "" {
