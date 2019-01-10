@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"syscall"
@@ -105,6 +106,21 @@ func newLogger(config *Config) *kitLogger {
 
 	// Configure log filter
 	l = kitlevel.NewFilter(l, getFilterOption(config.Filter))
+
+	// Some iota test code assumes that logfile is created as soon as the process starts.
+	// Hence create it
+	if config.LogToFile {
+		if err := os.MkdirAll(filepath.Dir(config.FileCfg.Filename), os.ModePerm); err != nil {
+			fmt.Printf("Failed to create directory %s for logfile %s err: %v", filepath.Dir(config.FileCfg.Filename), config.FileCfg.Filename, err)
+		} else {
+			logFile, err := os.OpenFile(config.FileCfg.Filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+			if err != nil {
+				fmt.Printf("Failed to open logfile: %s err: %v", config.FileCfg.Filename, err)
+			} else {
+				logFile.Close()
+			}
+		}
+	}
 	return &kitLogger{logger: l, config: *config}
 }
 
