@@ -49,8 +49,8 @@
 #define HAPS
 #define IONIC_DRV_NAME        "ionic_en"
 #define DRV_DESCRIPTION       "Pensando Ethernet NIC Driver"
-#define DRV_VERSION           "0.1"
-#define DRV_REL_DATE          "Dec-01-2018"
+#define DRV_VERSION           "0.2"
+#define DRV_REL_DATE          "Jan-31-2018"
 
 /* In bytes */
 #define MEMPOOL_INIT_SIZE     (16 * 1024)

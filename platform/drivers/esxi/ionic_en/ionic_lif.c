@@ -554,7 +554,6 @@ ionic_set_rx_mode(struct lif *lif,
 {
 //	union identity *ident = lif->ionic->ident;
 	unsigned int rx_mode;
-
 	rx_mode = RX_MODE_F_UNICAST;
 
         if (new_state & VMK_UPLINK_STATE_DISABLED) {
@@ -677,7 +676,6 @@ ionic_vlan_rx_add_vid(struct lif *lif,
 
 	ionic_info("rx_filter add VLAN %d (id %d)\n", vid,
 		    ctx.comp.rx_filter_add.filter_id);
-        VMK_ASSERT(0);
 
 	return ionic_rx_filter_save(lif, 0, RXQ_INDEX_ANY, 0, &ctx);
 }

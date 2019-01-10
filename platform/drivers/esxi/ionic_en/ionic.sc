@@ -20,12 +20,12 @@
 
 
 driverName          = "ionic_en"
-driverVersion       = "0.1"
+driverVersion       = "0.2"
 driverSummary       = "Pensando Systems Native Ethernet Driver"
 driverDescription   = "Pensando Systems Native Ethernet Driver"
-vendorName          = "VMware"
-vendorMailingList   = "support@vmware.com"
-vendorCode          = "VMW"
+vendorName          = "Pensando Systems"
+vendorMailingList   = "jingyiz@pensando.io"
+vendorCode          = "PNSD"
 moreCCFlags         = ""
 
 
@@ -59,8 +59,8 @@ ionic_en_identification = {
    "summary"         : driverSummary,
    "description"     : driverDescription,
    "version"         : driverVersion,
-   "version_bump"    : 1,
-   "license"         : VMK_MODULE_LICENSE_BSD,
+#   "version_bump"    : 1, 
+   "license"         : VMK_MODULE_LICENSE_GPLV2,
    "vendor"          : vendorName,
    "vendor_code"     : vendorCode,
    "vendor_email"    : vendorMailingList,
@@ -132,7 +132,10 @@ ionic_en_vib_def = {
                          ionic_en_device_def,
                        ],
    "vib properties"  : {
-      "provides"                : [ ],
+      "provides"                : [
+                                        {'name': '1OEM'}
+      
+                                  ],
       "depends"                 : [ ],
       "conflicts"               : [ ],
       "replaces"                : [ ],

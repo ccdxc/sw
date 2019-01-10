@@ -359,8 +359,8 @@ void ionic_rx_refill(struct queue *q)
                 ionic_rx_pkt_free(q, cur->cb_arg, desc->len, desc->addr);
                 pkt = ionic_rx_pkt_alloc(q, len, &dma_addr);
                 if (VMK_UNLIKELY(!pkt)) {
-                        ionic_err("Queue index: %d, ionic_rx_pkt_alloc()"
-                                  "failed", q->index);
+                        ionic_warn("Queue index: %d, ionic_rx_pkt_alloc()"
+                                   "failed", q->index);
                         break;
                 }
 
@@ -389,8 +389,6 @@ void ionic_rx_flush(struct cq *cq)
         unsigned int work_done;
 
         work_done = ionic_cq_service(cq, -1, ionic_rx_service, NULL);
-
-        ionic_info("ionic_rx_flush() called, work_done: %d", work_done);
 
         if (work_done > 0)
                 ionic_intr_return_credits(cq->bound_intr, work_done, 0, VMK_TRUE);
@@ -862,7 +860,8 @@ ionic_tx_calc_csum(struct queue *q,
                 return VMK_DMA_MAPPING_FAILED;
         }
 
-        is_insert_vlan = (ctx->offload_flags & IONIC_TX_VLAN);
+        is_insert_vlan = (ctx->offload_flags & IONIC_TX_VLAN) > 0?
+                         VMK_TRUE : VMK_FALSE;
 
         desc->opcode = TXQ_DESC_OPCODE_CALC_CSUM_TCPUDP;
         desc->num_sg_elems = 0;//ctx->nr_frags - 1;
@@ -905,7 +904,8 @@ ionic_tx_calc_no_csum(struct queue *q,
                 return VMK_DMA_MAPPING_FAILED;
         }
 
-        is_insert_vlan = (ctx->offload_flags & IONIC_TX_VLAN);
+        is_insert_vlan = (ctx->offload_flags & IONIC_TX_VLAN) > 0 ?
+                         VMK_TRUE : VMK_FALSE;
 
         desc->opcode = TXQ_DESC_OPCODE_CALC_NO_CSUM;
         desc->num_sg_elems = ctx->nr_frags - 1;
@@ -1221,9 +1221,6 @@ ionic_start_xmit(vmk_PktHandle *pkt,
         ctx.priority   = vmk_PktPriorityGet(pkt);
         ctx.vlan_id    = vmk_PktVlanIDGet(pkt);
         ctx.mapped_len = vmk_PktFrameMappedLenGet(pkt);
-
-//        ionic_err("is_vlan: %d, vlan_id: %d",
-//                  (ctx.offload_flags & IONIC_TX_VLAN), ctx.vlan_id);
 
         if (ctx.is_tso_needed) {
                 status = ionic_tx_tso(q, pkt, &ctx);

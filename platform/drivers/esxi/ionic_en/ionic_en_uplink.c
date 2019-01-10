@@ -71,7 +71,8 @@ static vmk_UplinkVLANFilterOps ionic_en_vlan_filter_ops = {
         .setVLANFilterBitmap    = ionic_en_vlan_filter_bitmap_set,
         .addVLANFilter          = ionic_en_vlan_filter_add,
         .removeVLANFilter       = ionic_en_vlan_filter_remove,
-};*/
+};
+*/
 
 static vmk_UplinkMultiQueueOps ionic_en_multi_queue_ops = {
    .queueOps = {
@@ -814,6 +815,7 @@ ionic_en_uplink_associate(vmk_AddrCookie driver_data,             // IN
                           vmk_StatusToString(status));
                 return status;
         }
+
 /*
         status = vmk_UplinkCapRegister(uplink,
                                        VMK_UPLINK_CAP_VLAN_RX_STRIP,
@@ -830,7 +832,6 @@ ionic_en_uplink_associate(vmk_AddrCookie driver_data,             // IN
                                        &ionic_en_vlan_filter_ops);
         VMK_ASSERT(status == VMK_OK);
 */
-
         status = vmk_UplinkCapRegister(uplink,
                                        VMK_UPLINK_CAP_MULTI_QUEUE,
                                        &ionic_en_multi_queue_ops);
@@ -2041,7 +2042,6 @@ ionic_en_vlan_filter_bitmap_set(vmk_AddrCookie driver_data,       // IN
 
                 ionic_info("con1: %d, con2: %d, vlanid: %d",
                            cond1, cond2, vlan_id);
-                VMK_ASSERT(0);
 
                 if (cond1 == cond2) {
                         continue;
