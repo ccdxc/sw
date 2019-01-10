@@ -1,6 +1,8 @@
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+
 #include "gen/proto/types.pb.h"
 #include "nic/hal/pd/capri/capri_barco_rings.hpp"
-#include "nic/hal/pd/capri/capri_accel_rgroup.hpp"
+#include "nic/hal/pd/capri/accel/accel_rgroup.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
 

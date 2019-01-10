@@ -1,5 +1,7 @@
-#ifndef __CAPRI_ACCEL_RGROUP_HPP__
-#define __CAPRI_ACCEL_RGROUP_HPP__
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+
+#ifndef __PD_ACCEL_RGROUP_HPP__
+#define __PD_ACCEL_RGROUP_HPP__
 
 /*
  * Operations on user selected group of Accelerator rings and sub-rings.
@@ -9,7 +11,7 @@
 #include <unordered_map>
 #include "nic/include/accel_ring.h"
 #include "gen/proto/types.pb.h"
-#include "nic/hal/src/internal/accel_rgroup.hpp"
+#include "nic/hal/plugins/cfg/accel/accel_rgroup.hpp"
 
 namespace hal {
 namespace pd {
@@ -227,4 +229,4 @@ hal_ret_t accel_rgroup_metrics_get(const char *rgroup_name,
 }    // namespace pd
 }    // namespace hal
 
-#endif /*  __CAPRI_ACCEL_RGROUP_HPP__ */
+#endif /*  __PD_ACCEL_RGROUP_HPP__ */

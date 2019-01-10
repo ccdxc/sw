@@ -42,6 +42,16 @@
             "exit_func" : "mcast_exit",
             "auto_load" : "true",
             "deps"      : ["pensando.io/nw"]
+        },
+        {
+            "name"      : "accelcfg",
+            "provider"  : "pensando.io",
+            "lib"       : "libcfg_plugin_accel.so",
+            "init_func" : "accelcfg_init",
+            "exit_func" : "accelcfg_exit",
+            "auto_load" : "true",
+            "deps"      : [],
+            "features"  : ["accel_rgroup"]
         }
     ],
     "pipelines": [

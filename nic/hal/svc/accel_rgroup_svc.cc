@@ -1,7 +1,7 @@
 #include "nic/include/base.hpp"
 #include "nic/hal/hal_trace.hpp"
 #include "nic/hal/svc/accel_rgroup_svc.hpp"
-#include "nic/hal/src/internal/accel_rgroup.hpp"
+#include "nic/hal/plugins/cfg/accel/accel_rgroup.hpp"
 
 Status 
 AccelRGroupServiceImpl::AccelRGroupAdd(ServerContext* context,
@@ -15,7 +15,7 @@ AccelRGroupServiceImpl::AccelRGroupAdd(ServerContext* context,
     for (i = 0; i < nreqs; i++) {
         auto rsp = response->add_response();
         auto req = request->request(i);
-        hal::AccelRGroupAdd(req, rsp);
+        hal::accel_rgroup_add(req, rsp);
 
     }
     return Status::OK;
@@ -33,7 +33,7 @@ AccelRGroupServiceImpl::AccelRGroupDel(ServerContext *context,
     for (i = 0; i < nreqs; i++) {
         auto rsp = response->add_response();
         auto req = request->request(i);
-        hal::AccelRGroupDel(req, rsp);
+        hal::accel_rgroup_del(req, rsp);
     }
     return Status::OK;
 }
@@ -50,7 +50,7 @@ AccelRGroupServiceImpl::AccelRGroupRingAdd(ServerContext *context,
     for (i = 0; i < nreqs; i++) {
         auto rsp = response->add_response();
         auto req = request->request(i);
-        hal::AccelRGroupRingAdd(req, rsp);
+        hal::accel_rgroup_ring_add(req, rsp);
     }
     return Status::OK;
 }
@@ -67,7 +67,7 @@ AccelRGroupServiceImpl::AccelRGroupRingDel(ServerContext *context,
     for (i = 0; i < nreqs; i++) {
         auto rsp = response->add_response();
         auto req = request->request(i);
-        hal::AccelRGroupRingDel(req, rsp);
+        hal::accel_rgroup_ring_del(req, rsp);
     }
     return Status::OK;
 }
@@ -85,7 +85,7 @@ AccelRGroupServiceImpl::AccelRGroupResetSet(ServerContext *context,
     for (i = 0; i < nreqs; i++) {
         auto rsp = response->add_response();
         auto req = request->request(i);
-        hal::AccelRGroupResetSet(req, rsp);
+        hal::accel_rgroup_reset_set(req, rsp);
     }
     return Status::OK;
 }
@@ -102,7 +102,7 @@ AccelRGroupServiceImpl::AccelRGroupEnableSet(ServerContext *context,
     for (i = 0; i < nreqs; i++) {
         auto rsp = response->add_response();
         auto req = request->request(i);
-        hal::AccelRGroupEnableSet(req, rsp);
+        hal::accel_rgroup_enable_set(req, rsp);
     }
     return Status::OK;
 }
@@ -119,7 +119,7 @@ AccelRGroupServiceImpl::AccelRGroupPndxSet(ServerContext *context,
     for (i = 0; i < nreqs; i++) {
         auto rsp = response->add_response();
         auto req = request->request(i);
-        hal::AccelRGroupPndxSet(req, rsp);
+        hal::accel_rgroup_pndx_set(req, rsp);
     }
     return Status::OK;
 }
@@ -136,7 +136,7 @@ AccelRGroupServiceImpl::AccelRGroupInfoGet(ServerContext *context,
     for (i = 0; i < nreqs; i++) {
         auto rsp = response->add_response();
         auto req = request->request(i);
-        hal::AccelRGroupInfoGet(req, rsp);
+        hal::accel_rgroup_info_get(req, rsp);
     }
     return Status::OK;
 }
@@ -152,7 +152,7 @@ AccelRGroupServiceImpl::AccelRGroupIndicesGet(ServerContext *context,
     for (i = 0; i < nreqs; i++) {
         auto rsp = response->add_response();
         auto req = request->request(i);
-        hal::AccelRGroupIndicesGet(req, rsp);
+        hal::accel_rgroup_indices_get(req, rsp);
     }
     return Status::OK;
 }
@@ -168,7 +168,7 @@ AccelRGroupServiceImpl::AccelRGroupMetricsGet(ServerContext *context,
     for (i = 0; i < nreqs; i++) {
         auto rsp = response->add_response();
         auto req = request->request(i);
-        hal::AccelRGroupMetricsGet(req, rsp);
+        hal::accel_rgroup_metrics_get(req, rsp);
     }
     return Status::OK;
 }

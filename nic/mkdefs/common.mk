@@ -84,6 +84,7 @@ export NIC_HAL_DLOPEN_SOLIBS := cfg_plugin_nw \
                                 cfg_plugin_telemetry \
                                 cfg_plugin_l4lb \
                                 cfg_plugin_lif \
+                                cfg_plugin_accel \
                                 plugin_network \
                                 plugin_alg_utils \
                                 plugin_sfw \
@@ -115,7 +116,7 @@ export NIC_HAL_PD_SOLIBS_x86_64 := model_client
 export NIC_HAL_PD_SOLIBS_aarch64 :=
 export NIC_HAL_PD_SOLIBS := sdkcapri_csrint \
        sdkcapri_asicrw_if pdcapri pdcommon sdkp4 \
-       pd_${PIPELINE} sdkasicpd asicpd pd_acl_tcam pd_met \
+       pd_${PIPELINE} sdkasicpd asicpd pd_acl_tcam pd_met pdaccel \
        ${NIC_HAL_PD_SOLIBS_${ARCH}}
 export NIC_CAPSIM_LDLIBS := mpuobj capisa isa sknobs
 

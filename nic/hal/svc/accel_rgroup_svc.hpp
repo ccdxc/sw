@@ -2,6 +2,7 @@
 #define __ACCEL_RGROUP_SVC_HPP__
 
 #include "nic/include/base.hpp"
+#include "gen/hal/include/hal_api_stats.hpp"
 #include "grpc++/grpc++.h"
 #include "gen/proto/types.pb.h"
 #include "gen/proto/accel_rgroup.grpc.pb.h"

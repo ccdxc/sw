@@ -32,7 +32,6 @@
 #include "nic/hal/svc/rdma_svc.hpp"
 #include "nic/hal/svc/event_svc.hpp"
 #include "nic/hal/svc/system_svc.hpp"
-#include "nic/hal/svc/accel_rgroup_svc.hpp"
 #include "nic/hal/svc/proxy_svc.hpp"
 #include "nic/hal/svc/nic_svc.hpp"
 
@@ -88,7 +87,6 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
     CpuCbServiceImpl         cpucb_svc;
     TcpProxyServiceImpl      tcp_proxy_svc;
     EventServiceImpl         event_svc;
-    AccelRGroupServiceImpl   accel_rgroup_svc;
     MulticastServiceImpl     multicast_svc;
     GftServiceImpl           gft_svc;
     SystemServiceImpl        system_svc;
@@ -109,7 +107,6 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
         server_builder->RegisterService(&cpucb_svc);
         server_builder->RegisterService(&tcp_proxy_svc);
         server_builder->RegisterService(&event_svc);
-        server_builder->RegisterService(&accel_rgroup_svc);
         server_builder->RegisterService(&system_svc);
         server_builder->RegisterService(&swphv_svc);
     } else if (hal_cfg->features == hal::HAL_FEATURE_SET_GFT) {

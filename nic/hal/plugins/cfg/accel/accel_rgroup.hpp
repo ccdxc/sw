@@ -80,26 +80,26 @@ typedef void (*accel_rgroup_ring_metrics_cb_t)(void *user_ctx,
                                                const accel_rgroup_ring_metrics_t& metrics);
 
 
-hal_ret_t AccelRGroupAdd(const AccelRGroupAddRequest& request,
-                         AccelRGroupAddResponse *response);
-hal_ret_t AccelRGroupDel(const AccelRGroupDelRequest& request,
-                         AccelRGroupDelResponse *response);
-hal_ret_t AccelRGroupRingAdd(const AccelRGroupRingAddRequest& request,
-                             AccelRGroupRingAddResponse *response);
-hal_ret_t AccelRGroupRingDel(const AccelRGroupRingDelRequest& request,
-                             AccelRGroupRingDelResponse *response);
-hal_ret_t AccelRGroupResetSet(const AccelRGroupResetSetRequest& request,
-                              AccelRGroupResetSetResponse *response);
-hal_ret_t AccelRGroupEnableSet(const AccelRGroupEnableSetRequest& request,
-                               AccelRGroupEnableSetResponse *response);
-hal_ret_t AccelRGroupPndxSet(const AccelRGroupPndxSetRequest& request,
-                             AccelRGroupPndxSetResponse *response);
-hal_ret_t AccelRGroupInfoGet(const AccelRGroupInfoGetRequest& request,
-                             AccelRGroupInfoGetResponse *response);
-hal_ret_t AccelRGroupIndicesGet(const AccelRGroupIndicesGetRequest& request,
-                                AccelRGroupIndicesGetResponse *response);
-hal_ret_t AccelRGroupMetricsGet(const AccelRGroupMetricsGetRequest& request,
-                                AccelRGroupMetricsGetResponse *response);
+hal_ret_t accel_rgroup_add(const AccelRGroupAddRequest& request,
+                           AccelRGroupAddResponse *response);
+hal_ret_t accel_rgroup_del(const AccelRGroupDelRequest& request,
+                           AccelRGroupDelResponse *response);
+hal_ret_t accel_rgroup_ring_add(const AccelRGroupRingAddRequest& request,
+                                AccelRGroupRingAddResponse *response);
+hal_ret_t accel_rgroup_ring_del(const AccelRGroupRingDelRequest& request,
+                                AccelRGroupRingDelResponse *response);
+hal_ret_t accel_rgroup_reset_set(const AccelRGroupResetSetRequest& request,
+                                 AccelRGroupResetSetResponse *response);
+hal_ret_t accel_rgroup_enable_set(const AccelRGroupEnableSetRequest& request,
+                                  AccelRGroupEnableSetResponse *response);
+hal_ret_t accel_rgroup_pndx_set(const AccelRGroupPndxSetRequest& request,
+                                AccelRGroupPndxSetResponse *response);
+hal_ret_t accel_rgroup_info_get(const AccelRGroupInfoGetRequest& request,
+                                AccelRGroupInfoGetResponse *response);
+hal_ret_t accel_rgroup_indices_get(const AccelRGroupIndicesGetRequest& request,
+                                   AccelRGroupIndicesGetResponse *response);
+hal_ret_t accel_rgroup_metrics_get(const AccelRGroupMetricsGetRequest& request,
+                                   AccelRGroupMetricsGetResponse *response);
 }    // namespace hal
 
 #endif // __ACCEL_RGROUP_HPP__

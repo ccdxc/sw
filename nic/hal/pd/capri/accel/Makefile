@@ -1,0 +1,40 @@
+TOPDIR = ../../..
+SHAREDLIBRARY = libcapri.so
+
+CAPTOP = $(TOPDIR)/asic/capri/model
+CAPMODS = $(wildcard $(CAPTOP)/cap_*)
+CAPMODS += $(CAPTOP)/utils
+CAPMODS += $(CAPTOP)/cap_he/readonly
+CAPMODS += $(TOPDIR)/asic/ip/verif/pcpp
+CAPINC = $(patsubst %, -I%, $(CAPMODS))
+
+LCXXFLAGS = \
+			-I. \
+			-I./csr \
+			-I../.. \
+			-I../../src \
+			-I../../../include \
+			-I../../../third-party/spdlog/include \
+			-I/usr/local/include \
+			-I../../../asic/capri/model/capsim-master/lib/libmpuobj/include \
+			-I../../../asic/capri/model/capsim-master/lib/libcapisa/include \
+			-I../../../model_sim/include \
+            -I../../../gen/common_rxdma_actions/include \
+            -I../../../gen/common_txdma_actions/include \
+			-I../../../hal/pd \
+			-I../../../hal/src \
+			-I../../../gen/protobuf \
+			$(CAPINC) \
+			-g \
+			-Wno-maybe-uninitialized \
+			$(NULL)
+
+SLFLAGS = \
+		  -Wl,-rpath $(TOPDIR)/asic/capri/model/capsim-gen/lib $(TOPDIR)/asic/capri/model/capsim-gen/lib/libmpuobj.so $(TOPDIR)/asic/capri/model/capsim-gen/lib/libcapisa.so $(TOPDIR)/asic/capri/model/capsim-gen/lib/libisa.so \
+		  -L$(TOPDIR)/model_sim/build -L/usr/local/lib -L$(TOPDIR)/obj -lmodelclient -lzmq -lcapricsr
+SOURCES = \
+		  accel_pd.cc \
+		  accel_rgroup.cc \
+		  $(NULL)
+
+include $(TOPDIR)/make/Makefile.inc
