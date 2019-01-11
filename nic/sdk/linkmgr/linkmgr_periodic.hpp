@@ -6,7 +6,7 @@
 #ifndef __SDK_LINKMGR_PERIODIC_HPP__
 #define __SDK_LINKMGR_PERIODIC_HPP__
 
-#include "include/sdk/twheel.hpp"
+#include "lib/twheel/twheel.hpp"
 
 namespace sdk {
 namespace linkmgr {

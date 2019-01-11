@@ -6,7 +6,7 @@
 
 #include <stdio.h>
 #include "gtest/gtest.h"
-#include "include/sdk/indexer.hpp"
+#include "lib/indexer/indexer.hpp"
 
 using sdk::lib::indexer;
 

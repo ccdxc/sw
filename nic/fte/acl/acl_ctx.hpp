@@ -2,8 +2,8 @@
 
 #include "nic/fte/acl/acl.hpp"
 #include "nic/include/hal_mem.hpp"
-#include "nic/sdk/include/sdk/slab.hpp"
-#include "nic/sdk/include/sdk/ht.hpp"
+#include "lib/slab/slab.hpp"
+#include "lib/ht/ht.hpp"
 
 namespace acl {
 

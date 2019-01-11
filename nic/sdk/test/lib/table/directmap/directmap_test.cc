@@ -6,9 +6,9 @@
 
 #include "gtest/gtest.h"
 #include <stdio.h>
-#include "include/sdk/directmap.hpp"
+#include "lib/table/directmap/directmap.hpp"
 #include "include/sdk/base.hpp"
-#include "include/sdk/table_monitor.hpp"
+#include "lib/table/common/table.hpp"
 
 
 using sdk::table::directmap;

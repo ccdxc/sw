@@ -9,8 +9,8 @@
 #if !defined (__VNIC_HPP__)
 #define __VNIC_HPP__
 
-#include "nic/sdk/include/sdk/slab.hpp"
-#include "nic/sdk/include/sdk/ht.hpp"
+#include "lib/slab/slab.hpp"
+#include "lib/ht/ht.hpp"
 #include "nic/hal/apollo/framework/api_base.hpp"
 #include "nic/hal/apollo/framework/impl_base.hpp"
 #include "nic/hal/apollo/include/api/oci_vnic.hpp"

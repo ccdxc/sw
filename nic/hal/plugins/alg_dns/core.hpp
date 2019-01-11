@@ -5,7 +5,7 @@
 #pragma once
 
 #include "nic/include/fte.hpp"
-#include "nic/sdk/include/sdk/list.hpp"
+#include "lib/list/list.hpp"
 #include "nic/hal/plugins/alg_utils/core.hpp"
 
 namespace hal {

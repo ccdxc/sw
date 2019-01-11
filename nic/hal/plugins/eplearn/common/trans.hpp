@@ -8,7 +8,7 @@
 #include "nic/hal/iris/include/hal_state.hpp"
 #include <netinet/if_ether.h>
 #include "nic/utils/fsm/fsm.hpp"
-#include "nic/sdk/include/sdk/periodic.hpp"
+#include "lib/periodic/periodic.hpp"
 
 using hal::utils::fsm_state_machine_t;
 using hal::utils::fsm_state_machine_def_t;

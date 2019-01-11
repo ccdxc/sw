@@ -9,7 +9,7 @@
 #include <errno.h>
 #include "nic/utils/ipc/ipc.hpp"
 #include "nic/utils/ipc/constants.h"
-#include "nic/sdk/include/sdk/logger.hpp"
+#include "lib/logger/logger.hpp"
 
 #define __STDC_FORMAT_MACROS
 #define ALIGN_64_MASK 0xfffffffffffffff8

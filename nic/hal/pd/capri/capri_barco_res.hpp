@@ -1,9 +1,9 @@
 #ifndef __CAPRI_BARCO_RES_HPP__
 #define __CAPRI_BARCO_RES_HPP__
 
-#include "nic/sdk/include/sdk/indexer.hpp"
-#include "nic/sdk/include/sdk/list.hpp"
-#include "nic/sdk/include/sdk/slab.hpp"
+#include "lib/indexer/indexer.hpp"
+#include "lib/list/list.hpp"
+#include "lib/slab/slab.hpp"
 
 using sdk::lib::indexer;
 using sdk::lib::dllist_ctxt_t;

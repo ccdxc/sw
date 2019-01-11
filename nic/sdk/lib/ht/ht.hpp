@@ -42,7 +42,7 @@
 
 #include "include/sdk/base.hpp"
 #include "include/sdk/lock.hpp"
-#include "include/sdk/shmmgr.hpp"
+#include "lib/shmmgr/shmmgr.hpp"
 
 namespace sdk {
 namespace lib {

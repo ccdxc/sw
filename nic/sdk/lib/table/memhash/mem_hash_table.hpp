@@ -5,7 +5,7 @@
 #define __MEM_HASH_TABLE_HPP__
 
 #include "include/sdk/mem.hpp"
-#include "include/sdk/indexer.hpp"
+#include "lib/indexer/indexer.hpp"
 
 #include "mem_hash.hpp"
 #include "mem_hash_table_bucket.hpp"

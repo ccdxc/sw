@@ -10,7 +10,7 @@
 #include "nic/hal/pd/gft/enicif_pd.hpp"
 #include "nic/p4/gft/include/defines.h"
 #include "nic/hal/pd/gft/pd_utils.hpp"
-#include "nic/sdk/include/sdk/tcam.hpp"
+#include "lib/table/tcam/tcam.hpp"
 
 namespace hal {
 namespace pd {

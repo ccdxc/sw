@@ -2,7 +2,7 @@
 #include "nic/hal/plugins/cfg/nw/nw.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec.hpp"
 #include "nic/hal/hal.hpp"
-#include "nic/sdk/include/sdk/list.hpp"
+#include "lib/list/list.hpp"
 #include "gen/proto/interface.pb.h"
 #include "gen/proto/l2segment.pb.h"
 #include "gen/proto/vrf.pb.h"

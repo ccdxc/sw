@@ -3,8 +3,8 @@
 
 #include "nic/include/base.hpp"
 #include "nic/sdk/include/sdk/encap.hpp"
-#include "nic/sdk/include/sdk/list.hpp"
-#include "nic/sdk/include/sdk/ht.hpp"
+#include "lib/list/list.hpp"
+#include "lib/ht/ht.hpp"
 #include "gen/proto/tcp_proxy.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"

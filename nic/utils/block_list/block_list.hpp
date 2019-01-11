@@ -10,8 +10,8 @@
 #define __BLOCK_LIST_HPP__
 
 #include "nic/include/base.hpp"
-#include "nic/sdk/include/sdk/list.hpp"
-#include "nic/sdk/include/sdk/shmmgr.hpp"
+#include "lib/list/list.hpp"
+#include "nic/sdk/lib/shmmgr/shmmgr.hpp"
 #include "nic/utils/iterator/iterator_tpl.h"
 
 using sdk::lib::dllist_ctxt_t;

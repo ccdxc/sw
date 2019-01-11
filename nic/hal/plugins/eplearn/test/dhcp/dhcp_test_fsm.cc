@@ -1,6 +1,6 @@
 #include <arpa/inet.h>
 #include <gtest/gtest.h>
-#include "nic/sdk/include/sdk/twheel.hpp"
+#include "lib/twheel/twheel.hpp"
 // clang-format off
 #include "nic/hal/plugins/eplearn/dhcp/dhcp_packet.hpp"
 #include "nic/hal/plugins/eplearn/dhcp/dhcp_learn.hpp"

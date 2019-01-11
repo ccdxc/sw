@@ -6,7 +6,7 @@
 #include "nic/hal/pd/hal_pd.hpp"
 #include "nic/hal/pd/gft/efe_pd.hpp"
 #include "nic/hal/pd/gft/p4pd_defaults.hpp"
-#include "nic/sdk/include/sdk/tcam.hpp"
+#include "lib/table/tcam/tcam.hpp"
 #include "nic/p4/rdma/include/rdma_defines.h"
 #include "nic/p4/common/defines.h"
 #include "nic/p4/gft/include/defines.h"

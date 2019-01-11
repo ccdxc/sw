@@ -8,7 +8,7 @@
 #include <time.h>
 #include "include/sdk/base.hpp"
 #include "include/sdk/lock.hpp"
-#include "include/sdk/slab.hpp"
+#include "lib/slab/slab.hpp"
 #include "include/sdk/timestamp.hpp"
 
 using sdk::lib::slab;

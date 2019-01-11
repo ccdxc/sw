@@ -5,7 +5,7 @@
 #ifndef _LIF_MANAGER_BASE_HPP_
 #define _LIF_MANAGER_BASE_HPP_
 
-#include "include/sdk/bm_allocator.hpp"
+#include "lib/bm_allocator/bm_allocator.hpp"
 
 #include <set>
 #include <map>

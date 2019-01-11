@@ -7,9 +7,9 @@
 
 #include "nic/include/base.hpp"
 #include "nic/sdk/include/sdk/encap.hpp"
-#include "nic/sdk/include/sdk/list.hpp"
+#include "lib/list/list.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
-#include "nic/sdk/include/sdk/ht.hpp"
+#include "lib/ht/ht.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/hal/src/utils/utils.hpp"
 

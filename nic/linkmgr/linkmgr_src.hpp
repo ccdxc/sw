@@ -3,10 +3,10 @@
 #ifndef __LINKMGR_SRC_HPP__
 #define __LINKMGR_SRC_HPP__
 
-#include "nic/sdk/include/sdk/ht.hpp"
+#include "lib/ht/ht.hpp"
 #include "nic/sdk/include/sdk/linkmgr.hpp"
-#include "nic/sdk/include/sdk/thread.hpp"
-#include "nic/sdk/include/sdk/list.hpp"
+#include "lib/thread/thread.hpp"
+#include "lib/list/list.hpp"
 #include "linkmgr.hpp"
 #include "linkmgr_svc.hpp"
 #include "linkmgr_debug_svc.hpp"

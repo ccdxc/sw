@@ -1,6 +1,6 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/hal/iris/datapath/p4/include/table_sizes.h"
-#include "nic/sdk/include/sdk/tcam.hpp"
+#include "lib/table/tcam/tcam.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/iris/internal/system_pd.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"

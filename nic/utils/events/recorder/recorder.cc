@@ -2,7 +2,7 @@
 #include "nic/utils/events/recorder/constants.h"
 #include "nic/utils/events/queue/queue.hpp"
 #include "gen/proto/events.pb.h"
-#include "nic/sdk/include/sdk/logger.hpp"
+#include "lib/logger/logger.hpp"
 #include <google/protobuf/any.h>
 #include <google/protobuf/generated_enum_reflection.h>
 #include <stdio.h>

@@ -4,7 +4,7 @@
 #define __SDK_LINKMGR_INTERNAL_HPP__
 
 #include <atomic>
-#include "include/sdk/thread.hpp"
+#include "lib/thread/thread.hpp"
 #include "port.hpp"
 
 namespace sdk {

@@ -10,7 +10,7 @@
 #include "linkmgr_state.hpp"
 #include "nic/linkmgr/utils.hpp"
 #include "linkmgr_utils.hpp"
-#include "nic/sdk/include/sdk/periodic.hpp"
+#include "lib/periodic/periodic.hpp"
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
 #include "nic/asic/capri/model/utils/cap_csr_py_if.h"
 #include "nic/sdk/platform/capri/csr/asicrw_if.hpp"

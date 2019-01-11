@@ -24,7 +24,7 @@
 #include "nic/hal/svc/hal_ext.hpp"
 #include "gen/p4gen/p4/include/p4pd.h"
 #include "nic/include/hal_pd.hpp"
-#include "nic/sdk/include/sdk/periodic.hpp"
+#include "lib/periodic/periodic.hpp"
 #include "nic/include/asic_pd.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/hal/pd/iris/internal/tlscb_pd.hpp"

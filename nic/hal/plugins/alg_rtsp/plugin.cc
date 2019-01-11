@@ -3,7 +3,7 @@
 //-----------------------------------------------------------------------------
 
 #include "core.hpp"
-#include "nic/sdk/include/sdk/slab.hpp"
+#include "lib/slab/slab.hpp"
 #include "nic/hal/plugins/alg_utils/core.hpp"
 #include "nic/include/hal_mem.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"

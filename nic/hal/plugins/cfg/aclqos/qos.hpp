@@ -6,8 +6,8 @@
 #define __QOS_HPP__
 
 #include "nic/include/base.hpp"
-#include "nic/sdk/include/sdk/ht.hpp"
-#include "nic/sdk/include/sdk/bitmap.hpp"
+#include "lib/ht/ht.hpp"
+#include "lib/bitmap/bitmap.hpp"
 #include "gen/proto/qos.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal_lock.hpp"

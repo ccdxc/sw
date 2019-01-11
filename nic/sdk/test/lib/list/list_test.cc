@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-#include "include/sdk/list.hpp"
+#include "lib/list/list.hpp"
 
 using namespace std;
 using namespace sdk::lib;

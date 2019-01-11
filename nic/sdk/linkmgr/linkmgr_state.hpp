@@ -3,7 +3,7 @@
 #ifndef __SDK_LINKMGR_STATE_HPP__
 #define __SDK_LINKMGR_STATE_HPP__
 
-#include "include/sdk/slab.hpp"
+#include "lib/slab/slab.hpp"
 #include "port.hpp"
 
 using sdk::lib::slab;

@@ -1,6 +1,6 @@
 #include <arpa/inet.h>
 #include <gtest/gtest.h>
-#include "nic/sdk/include/sdk/twheel.hpp"
+#include "lib/twheel/twheel.hpp"
 
 #include "nic/hal/plugins/eplearn/arp/arp_learn.hpp"
 #include "nic/hal/plugins/eplearn/arp/ndp_learn.hpp"

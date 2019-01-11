@@ -5,7 +5,7 @@
 
 #include "nic/sdk/asic/asic.hpp"
 #include "nic/sdk/include/sdk/catalog.hpp"
-#include "include/sdk/bm_allocator.hpp"
+#include "lib/bm_allocator/bm_allocator.hpp"
 #include "platform/p4loader/loader.hpp"
 
 namespace sdk {

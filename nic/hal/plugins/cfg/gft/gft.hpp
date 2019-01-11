@@ -6,8 +6,8 @@
 #define __GFT_HPP__
 
 #include "nic/include/base.hpp"
-#include "nic/sdk/include/sdk/list.hpp"
-#include "nic/sdk/include/sdk/ht.hpp"
+#include "lib/list/list.hpp"
+#include "lib/ht/ht.hpp"
 #include "nic/utils/block_list/block_list.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/hal/iris/include/hal_state.hpp" // TODO Cleanup needed

@@ -1,6 +1,6 @@
 #include "asicerrord.h"
 #include "nic/sdk/include/sdk/pal.hpp"
-#include "nic/sdk/include/sdk/thread.hpp"
+#include "lib/thread/thread.hpp"
 
 CAPRI_INTR_KIND_BEGIN(dppintcredit, 9, DppintcreditMetrics)
     CAPRI_INTR_KIND_FIELD(ptr_credit_ovflow, 0, FATAL)

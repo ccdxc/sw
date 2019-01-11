@@ -6,7 +6,7 @@
 
 #include "nic/include/base.hpp"
 #include "nic/include/hal_lock.hpp"
-#include "nic/sdk/include/sdk/bitmap.hpp"
+#include "lib/bitmap/bitmap.hpp"
 #include "nic/utils/nat/addr_db.hpp"
 
 #ifndef __NAT_POOL_HPP__

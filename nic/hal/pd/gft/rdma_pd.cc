@@ -3,7 +3,7 @@
 #include "nic/hal/pd/gft/rdma_pd.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/base.hpp"
-#include "nic/sdk/include/sdk/directmap.hpp"
+#include "lib/table/directmap/directmap.hpp"
 #include "if_pd.hpp"
 #include "nic/hal/pd/gft/gft_state.hpp"
 

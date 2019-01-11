@@ -5,7 +5,7 @@
 #include "nic/include/hal_mem.hpp"
 #include "nic/include/base.hpp"
 #include "nic/utils/mtrack/mtrack.hpp"
-#include "nic/sdk/include/sdk/slab.hpp"
+#include "lib/slab/slab.hpp"
 
 using hal::hal_slab_t;
 using sdk::lib::slab_id_t;

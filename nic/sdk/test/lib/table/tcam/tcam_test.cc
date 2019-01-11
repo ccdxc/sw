@@ -6,7 +6,7 @@
 
 #include "gtest/gtest.h"
 #include <stdio.h>
-#include "include/sdk/tcam.hpp"
+#include "lib/table/tcam/tcam.hpp"
 #include "include/sdk/base.hpp"
 
 using sdk::table::tcam;

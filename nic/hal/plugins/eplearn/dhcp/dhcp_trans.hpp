@@ -12,8 +12,8 @@
 #include "nic/fte/fte.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/plugins/cfg/nw/endpoint.hpp"
-#include "nic/sdk/include/sdk/ht.hpp"
-#include "nic/sdk/include/sdk/twheel.hpp"
+#include "lib/ht/ht.hpp"
+#include "lib/twheel/twheel.hpp"
 #include "../common/trans.hpp"
 
 #define HAL_MAX_DHCP_TRANS 512

@@ -3,15 +3,15 @@
 //------------------------------------------------------------------------------
 
 #include "nic/include/base.hpp"
-#include "nic/sdk/include/sdk/logger.hpp"
-#include "nic/sdk/include/sdk/thread.hpp"
+#include "lib/logger/logger.hpp"
+#include "lib/thread/thread.hpp"
 #include "nic/sdk/include/sdk/linkmgr.hpp"
 #include "nic/hal/core/core.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/hal/apollo2/hal_state.hpp"
 #include "nic/hal/core/plugins.hpp"
 #include "nic/fte/fte_core.hpp"
-#include "nic/sdk/include/sdk/periodic.hpp"
+#include "lib/periodic/periodic.hpp"
 
 extern "C" void __gcov_flush(void);
 

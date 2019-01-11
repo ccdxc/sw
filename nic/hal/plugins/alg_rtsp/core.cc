@@ -8,7 +8,7 @@
 #include "rtsp_parse.hpp"
 #include "nic/hal/plugins/sfw/core.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
-#include "nic/sdk/include/sdk/list.hpp"
+#include "lib/list/list.hpp"
 
 namespace hal {
 namespace plugins {

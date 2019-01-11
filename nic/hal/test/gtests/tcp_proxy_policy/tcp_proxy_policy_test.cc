@@ -1,6 +1,6 @@
 #include "nic/hal/plugins/cfg/tcp_proxy/tcp_proxy.hpp"
 #include "nic/hal/hal.hpp"
-#include "nic/sdk/include/sdk/list.hpp"
+#include "lib/list/list.hpp"
 #include "gen/proto/vrf.pb.h"
 #include "gen/proto/tcp_proxy.pb.h"
 #include "nic/hal/hal.hpp"

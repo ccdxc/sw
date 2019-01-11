@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <string.h>
-#include "include/sdk/thread.hpp"
+#include "lib/thread/thread.hpp"
 #include "include/sdk/timerfd.hpp"
 #include "lib/periodic/periodic.hpp"
 

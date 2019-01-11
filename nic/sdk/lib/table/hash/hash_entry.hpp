@@ -9,7 +9,7 @@
 #define __SDK_HASH_ENTRY_HPP__
 
 #include "include/sdk/base.hpp"
-#include "include/sdk/ht.hpp"
+#include "lib/ht/ht.hpp"
 
 using sdk::lib::ht_ctxt_t;
 

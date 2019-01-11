@@ -14,7 +14,7 @@
 #include <boost/crc.hpp>
 #include "include/sdk/mem.hpp"
 #include "include/sdk/base.hpp"
-#include "include/sdk/table_monitor.hpp"
+#include "lib/table/common/table.hpp"
 #include "lib/table/hash/hash_entry.hpp"
 
 using namespace std;

@@ -2,10 +2,10 @@
 #define _LKLSHIM_HPP_
 
 #include "nic/include/base.hpp"
-#include "nic/sdk/include/sdk/slab.hpp"
-#include "nic/sdk/include/sdk/list.hpp"
+#include "lib/slab/slab.hpp"
+#include "lib/list/list.hpp"
 #include "nic/hal/hal.hpp"
-#include "nic/sdk/include/sdk/ht.hpp"
+#include "lib/ht/ht.hpp"
 #include "nic/include/fte.hpp"
 #include "nic/include/cpupkt_headers.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"

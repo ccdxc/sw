@@ -3,8 +3,8 @@
 #include <unistd.h>
 #include "include/sdk/timerfd.hpp"
 #include "include/sdk/linkmgr.hpp"
-#include "include/sdk/twheel.hpp"
-#include "include/sdk/thread.hpp"
+#include "lib/twheel/twheel.hpp"
+#include "lib/thread/thread.hpp"
 
 namespace sdk {
 namespace linkmgr {

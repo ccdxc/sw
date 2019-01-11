@@ -5,7 +5,7 @@
 #include "gen/p4gen/p4/include/p4pd.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/hal/pd/pd_api.hpp"
-#include "nic/sdk/include/sdk/tcam.hpp"
+#include "lib/table/tcam/tcam.hpp"
 #include "nic/hal/pd/utils/acl_tcam/acl_tcam.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"

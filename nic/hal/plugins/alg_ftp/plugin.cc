@@ -4,7 +4,7 @@
 
 #include "core.hpp"
 #include "utils.hpp"
-#include "nic/sdk/include/sdk/slab.hpp"
+#include "lib/slab/slab.hpp"
 #include "nic/include/hal_mem.hpp"
 #include "nic/hal/iris/include/hal_state.hpp" 
 

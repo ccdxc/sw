@@ -10,9 +10,9 @@
 #include "nic/utils/fsm/fsm.hpp"
 #include "nic/fte/fte.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
-#include "nic/sdk/include/sdk/ht.hpp"
-#include "nic/sdk/include/sdk/twheel.hpp"
-#include "nic/sdk/include/sdk/periodic.hpp"
+#include "lib/ht/ht.hpp"
+#include "lib/twheel/twheel.hpp"
+#include "lib/periodic/periodic.hpp"
 #include "nic/hal/plugins/eplearn/common/trans.hpp"
 
 #define HAL_MAX_DPKT_LEARN_TRANS 512

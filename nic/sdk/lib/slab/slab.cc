@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "include/sdk/mem.hpp"
-#include "include/sdk/mmgr.hpp"
+#include "lib/mmgr/mmgr.hpp"
 #include "lib/slab/slab.hpp"
 
 

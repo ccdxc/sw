@@ -50,12 +50,12 @@
 #include <string>
 #include <map>
 #include <queue>
-#include "include/sdk/indexer.hpp"
+#include "lib/indexer/indexer.hpp"
 #include "include/sdk/mem.hpp"
-#include "include/sdk/crc_fast.hpp"
-#include "include/sdk/table_monitor.hpp"
+#include "lib/utils/crc_fast.hpp"
+#include "lib/table/common/table.hpp"
 #include "hbm_hash_mem_types.hpp"
-#include "include/sdk/slab.hpp"
+#include "lib/slab/slab.hpp"
 
 using namespace std;
 using sdk::lib::indexer;

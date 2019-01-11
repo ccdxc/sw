@@ -1,6 +1,6 @@
 #include "nic/hal/plugins/cfg/ipsec/ipsec.hpp"
 #include "nic/hal/hal.hpp"
-#include "nic/sdk/include/sdk/list.hpp"
+#include "lib/list/list.hpp"
 #include "gen/proto/vrf.pb.h"
 #include "gen/proto/ipsec.pb.h"
 #include "nic/hal/hal.hpp"

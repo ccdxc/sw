@@ -11,7 +11,7 @@
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "gen/proto/rdma.pb.h"
 // #include "rdma_svc.hpp"
-#include "include/sdk/bm_allocator.hpp"
+#include "lib/bm_allocator/bm_allocator.hpp"
 
 using rdma::RdmaServiceType;
 using rdma::RdmaQpSpec;
