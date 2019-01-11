@@ -91,8 +91,8 @@ def __add_config_worklads(req, target_node = None):
             api.Logger.info("Skipping add workload for node %s" % node_name)
             continue
         if not api.IsNaplesNode(node_name):
-            if api.GetNicMode() == 'hostpin' and third_party_workload_count > 0:
-                continue
+            #if api.GetNicMode() == 'hostpin' and third_party_workload_count > 0:
+            #    continue
             third_party_workload_count += 1
         req.workload_op = topo_svc.ADD
         wl_msg = req.workloads.add()

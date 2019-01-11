@@ -199,7 +199,7 @@ class Node(object):
             if GlobalOptions.dryrun:
                 self.__host_intfs = []
             else:
-                self.__host_intfs.append(resp.intel_config.host_intfs[0])
+                self.__host_intfs = resp.intel_config.host_intfs
         Logger.info("Node: %s Host Interfaces: %s" % (self.__name, self.__host_intfs))
 
         if len(self.__host_intfs) == 0 and  not self.IsVenice():
