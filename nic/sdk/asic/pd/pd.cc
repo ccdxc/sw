@@ -1,7 +1,9 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 #include "nic/sdk/platform/capri/capri_p4.hpp"
+#include "nic/sdk/platform/capri/capri_hbm_rw.hpp"
 #include "nic/sdk/platform/capri/capri_tbl_rw.hpp"
+#include "nic/sdk/platform/capri/capri_txs_scheduler.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
 
 using namespace sdk::platform::capri;
@@ -540,6 +542,62 @@ asicpd_hbm_table_entry_read (uint32_t tableid,
     ret = capri_hbm_table_entry_read(tableid, index, hwentry,
                                      entry_size, cap_tbl_info);
     return ret;
+}
+
+sdk_ret_t
+asicpd_p4plus_recirc_init (void)
+{
+    capri_p4plus_recirc_init();
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+asic_pd_hbm_bw_get (hbm_bw_samples_t *hbm_bw_samples)
+{
+    return capri_hbm_bw(hbm_bw_samples->num_samples,
+                        hbm_bw_samples->sleep_interval,
+                        true,
+                        hbm_bw_samples->hbm_bw);
+}
+
+sdk_ret_t
+asic_pd_llc_setup (llc_counters_t *llc)
+{
+    return capri_nx_setup_llc_counters(llc->mask);
+}
+
+sdk_ret_t
+asic_pd_llc_get (llc_counters_t *llc)
+{
+    return capri_nx_get_llc_counters(llc->data);
+}
+
+sdk_ret_t
+asic_pd_scheduler_stats_get (scheduler_stats_t *sch_stats)
+{
+    sdk_ret_t ret;
+    capri_txs_scheduler_stats_t asic_stats = {};
+
+    ret = capri_txs_scheduler_stats_get(&asic_stats);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    if (SDK_ARRAY_SIZE(asic_stats.cos_stats) > ASIC_NUM_MAX_COSES) {
+        return SDK_RET_ERR;
+    }
+    sch_stats->num_coses = SDK_ARRAY_SIZE(asic_stats.cos_stats);
+    sch_stats->doorbell_set_count = asic_stats.doorbell_set_count;
+    sch_stats->doorbell_clear_count = asic_stats.doorbell_clear_count;
+    sch_stats->ratelimit_start_count = asic_stats.ratelimit_start_count;
+    sch_stats->ratelimit_stop_count = asic_stats.ratelimit_stop_count;
+    for (unsigned i = 0; i < SDK_ARRAY_SIZE(asic_stats.cos_stats); i++) {
+        sch_stats->cos_stats[i].cos = asic_stats.cos_stats[i].cos;
+        sch_stats->cos_stats[i].doorbell_count =
+            asic_stats.cos_stats[i].doorbell_count;
+        sch_stats->cos_stats[i].xon_status =
+            asic_stats.cos_stats[i].xon_status;
+    }
+    return SDK_RET_OK;
 }
 
 

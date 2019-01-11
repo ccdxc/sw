@@ -2527,16 +2527,6 @@ typedef struct pd_rss_indir_table_entry_add_args_s {
 } __PACK__ pd_rss_indir_table_entry_add_args_t;
 
 // capri
-typedef struct pd_get_start_offset_args_s {
-    const char *reg_name;
-    uint64_t offset;
-} __PACK__ pd_get_start_offset_args_t;
-
-typedef struct pd_get_size_kb_args_s {
-    const char *reg_name;
-    uint32_t size;
-} __PACK__ pd_get_size_kb_args_t;
-
 typedef struct pd_push_qstate_to_capri_args_s {
     LIFQState *qstate;
     uint32_t       cos;
@@ -3585,8 +3575,6 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_table_properties_get);
 
         // capri
-        PD_UNION_ARGS_FIELD(pd_get_start_offset);
-        PD_UNION_ARGS_FIELD(pd_get_size_kb);
         PD_UNION_ARGS_FIELD(pd_push_qstate_to_capri);
         PD_UNION_ARGS_FIELD(pd_clear_qstate);
         PD_UNION_ARGS_FIELD(pd_read_qstate);

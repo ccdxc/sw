@@ -1,47 +1,44 @@
-#include "nic/include/base.hpp"
-#include "nic/include/pd.hpp"
-#include "platform/capri/capri_txs_scheduler.hpp"
-#include "nic/hal/pd/asicpd/asic_pd_scheduler.hpp"
+#include "nic/sdk/platform/capri/capri_txs_scheduler.hpp"
+#include "nic/sdk/asic/pd/scheduler.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
 
-namespace hal {
+namespace sdk {
+namespace asic {
 namespace pd {
 
-hal_ret_t
-asicpd_scheduler_tx_pd_alloc (asicpd_scheduler_lif_params_t *lif)
+sdk_ret_t
+asicpd_tx_scheduler_map_alloc (asicpd_scheduler_lif_params_t *lif)
 {
-    hal_ret_t     ret = HAL_RET_OK;
-    sdk_ret_t     sdk_ret;
+    sdk_ret_t     ret;
     uint32_t      alloc_offset = INVALID_INDEXER_INDEX;
     uint32_t      alloc_units = 0;
     capri_txs_sched_lif_params_t params;
 
     if (lif->tx_sched_table_offset != INVALID_INDEXER_INDEX) {
-        HAL_TRACE_DEBUG("Scheduler resource already allocated for"
-                        ":lif_id:{},at offset:{} and num-of-entries {}",
+        SDK_TRACE_DEBUG("Scheduler resource already allocated for"
+                        "lif_id : %u,at offset : %u and num-of-entries : %u",
                         lif->lif_id,
-                        lif->tx_sched_num_table_entries,
-                        lif->tx_sched_table_offset);
+                        lif->tx_sched_table_offset,
+                        lif->tx_sched_num_table_entries);
         goto end;
     }
-    
+
     // Allocate txs scheduler resource for this lif.
     // Sched table can hold 8K queues per index and mandates new index for each cos.
     params.total_qcount = lif->total_qcount;
     params.cos_bmp = lif->cos_bmp;
-    sdk_ret = capri_txs_scheduler_tx_alloc(&params, &alloc_offset, &alloc_units);
-    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-    if (ret != HAL_RET_OK) {    
-        HAL_TRACE_ERR("lif_id:{},failed to alloc txs sched res",
+    ret = capri_txs_scheduler_tx_alloc(&params, &alloc_offset, &alloc_units);
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("lif_id : %u,failed to alloc txs sched res",
                        lif->lif_id);
         lif->tx_sched_table_offset = INVALID_INDEXER_INDEX;
         lif->tx_sched_num_table_entries = 0;
-        ret = HAL_RET_NO_RESOURCE;
-        goto end; 
+        ret = SDK_RET_NO_RESOURCE;
+        goto end;
     }
     lif->tx_sched_table_offset      = alloc_offset;
     lif->tx_sched_num_table_entries = alloc_units;
-    HAL_TRACE_DEBUG("lif_id: {},allocated :{} scheduler resource at offset:{}",
+    SDK_TRACE_DEBUG("lif_id : %u,allocated : %u scheduler resource at offset : %u",
                     lif->lif_id,
                     lif->tx_sched_num_table_entries,
                     lif->tx_sched_table_offset);
@@ -49,20 +46,18 @@ end:
     return ret;
 }
 
-hal_ret_t
-asicpd_scheduler_tx_pd_dealloc (asicpd_scheduler_lif_params_t *lif) 
+sdk_ret_t
+asicpd_tx_scheduler_map_free (asicpd_scheduler_lif_params_t *lif)
 {
-    hal_ret_t      ret = HAL_RET_OK;
-    sdk_ret_t     sdk_ret;
+    sdk_ret_t      ret = SDK_RET_OK;
 
     if (!lif) {
         goto end;
     }
     //Free the scheduler table indices.
-    sdk_ret = capri_txs_scheduler_tx_dealloc(lif->tx_sched_table_offset,
+    ret = capri_txs_scheduler_tx_dealloc(lif->tx_sched_table_offset,
                                          lif->tx_sched_num_table_entries);
-    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-    if (ret != HAL_RET_OK) {
+    if (ret != SDK_RET_OK) {
         goto end;
     }
     lif->tx_sched_table_offset      = INVALID_INDEXER_INDEX;
@@ -71,13 +66,12 @@ end:
     return ret;
 }
 
-hal_ret_t
-asicpd_scheduler_tx_pd_program_hw (asicpd_scheduler_lif_params_t *lif) 
+sdk_ret_t
+asicpd_tx_scheduler_map_program (asicpd_scheduler_lif_params_t *lif)
 {
-    hal_ret_t                    ret = HAL_RET_OK;
+    sdk_ret_t                    ret = SDK_RET_OK;
     uint32_t                     num_cos_values = 0;
     capri_txs_sched_lif_params_t txs_hw_params = {0};
-    sdk_ret_t     sdk_ret;
 
     if (!lif) {
         goto end;
@@ -87,10 +81,9 @@ asicpd_scheduler_tx_pd_program_hw (asicpd_scheduler_lif_params_t *lif)
         txs_hw_params.sched_table_offset  = lif->tx_sched_table_offset;
         txs_hw_params.num_entries_per_cos = (lif->tx_sched_num_table_entries / num_cos_values);
         txs_hw_params.cos_bmp             = lif->cos_bmp;
-        sdk_ret = capri_txs_scheduler_lif_params_update(lif->hw_lif_id, &txs_hw_params);
-        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("lif_id:{},failed to program tx sched lif params in hw",
+        ret = capri_txs_scheduler_lif_params_update(lif->hw_lif_id, &txs_hw_params);
+        if (ret != SDK_RET_OK) {
+            SDK_TRACE_ERR("lif_id : %u,failed to program tx sched lif params in hw",
                            lif->lif_id);
         }
     }
@@ -98,12 +91,11 @@ end:
     return ret;
 }
 
-hal_ret_t
-asicpd_scheduler_tx_pd_deprogram_hw (asicpd_scheduler_lif_params_t *lif) 
+sdk_ret_t
+asicpd_tx_scheduler_map_cleanup (asicpd_scheduler_lif_params_t *lif)
 {   
-    hal_ret_t                    ret = HAL_RET_OK;
+    sdk_ret_t                    ret = SDK_RET_OK;
     capri_txs_sched_lif_params_t txs_hw_params = {0};
-    sdk_ret_t     sdk_ret;
 
     if (!lif) {
         goto end;
@@ -111,23 +103,21 @@ asicpd_scheduler_tx_pd_deprogram_hw (asicpd_scheduler_lif_params_t *lif)
     // Pass txs params for delete case.               
     txs_hw_params.num_entries_per_cos = 0;
     txs_hw_params.cos_bmp             = 0x0;
-    sdk_ret = capri_txs_scheduler_lif_params_update(lif->hw_lif_id, &txs_hw_params);
-    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("lif_id:{},failed to program tx sched lif params in hw",
+    ret = capri_txs_scheduler_lif_params_update(lif->hw_lif_id, &txs_hw_params);
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("lif_id : %u,failed to program tx sched lif params in hw",
                        lif->lif_id);
     }
 end:
     return ret;     
 }
 
-hal_ret_t
-asicpd_policer_tx_pd_program_hw (asicpd_scheduler_lif_params_t *lif) 
+sdk_ret_t
+asicpd_tx_policer_program (asicpd_scheduler_lif_params_t *lif)
 {
-    hal_ret_t                         ret = HAL_RET_OK;
+    sdk_ret_t                         ret = SDK_RET_OK;
     uint32_t                          num_cos_values = 0;
     capri_txs_policer_lif_params_t    txs_hw_params = {0};
-    sdk_ret_t     sdk_ret;
 
 
     if (!lif) {
@@ -138,10 +128,9 @@ asicpd_policer_tx_pd_program_hw (asicpd_scheduler_lif_params_t *lif)
         txs_hw_params.sched_table_start_offset  = lif->tx_sched_table_offset;
         txs_hw_params.sched_table_end_offset = (lif->tx_sched_table_offset + lif->tx_sched_num_table_entries - 1);
 
-        sdk_ret = capri_txs_policer_lif_params_update(lif->hw_lif_id, &txs_hw_params);
-        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("lif_id:{},failed to program tx policer lif params in hw",
+        ret = capri_txs_policer_lif_params_update(lif->hw_lif_id, &txs_hw_params);
+        if (ret != SDK_RET_OK) {
+            SDK_TRACE_ERR("lif_id : %u,failed to program tx policer lif params in hw",
                            lif->lif_id);
         }
     }
@@ -150,5 +139,5 @@ end:
 }
 
 }    // namespace pd
-}    // namespace hal
-
+}    // namespace asic
+}    // namespace sdk

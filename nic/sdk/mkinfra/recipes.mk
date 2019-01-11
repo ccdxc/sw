@@ -53,7 +53,7 @@ define ADD_RECIPE_FOR_MEMRGNS
 $${${1}_MKTARGET}: $${${1}_DEPS}
 	${AT}mkdir -p $$(dir $$@)
 	${NAT}${AT}echo ${NAME_MEMRGNS} $$(notdir $$@) "=>" $$(call CANPATH,$$@_build.log)
-	${AT} $${${1}_BASECMD} $${${1}_ARGS} > $$(call CANPATH,$$@_build.log) || (echo "MEMRGNS failed $$?"; exit 1)
+	${AT} $${${1}_BASECMD} $${${1}_ARGS} $${PIPELINE} > $$(call CANPATH,$$@_build.log) || (echo "MEMRGNS failed $$?"; exit 1)
 	${AT}touch $$@
 endef
 

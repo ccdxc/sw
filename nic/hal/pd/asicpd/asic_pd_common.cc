@@ -73,13 +73,6 @@ asicpd_p4plus_table_init (hal::hal_cfg_t *hal_cfg)
 }
 
 hal_ret_t
-asicpd_p4plus_recirc_init (void)
-{
-    capri_p4plus_recirc_init();
-    return HAL_RET_OK;
-}
-
-hal_ret_t
 asicpd_stats_addr_get (int tblid, uint32_t index,
                        asicpd_stats_region_info_t *region_arr, int arrlen,
                        hbm_addr_t *stats_addr_p)
@@ -152,61 +145,6 @@ hal_ret_t
 asicpd_sw_phv_get (asicpd_swphv_type_t type, uint8_t prof_num,
 	asicpd_sw_phv_state_t *state) {
     return capri_sw_phv_get(type, prof_num, state);
-}
-
-hal_ret_t
-asic_pd_hbm_bw_get (pd_hbm_bw_get_args_t *hbm_bw_args)
-{
-    sdk_ret_t sdk_ret;
-    sdk_ret = capri_hbm_bw(hbm_bw_args->num_samples,
-                        hbm_bw_args->sleep_interval,
-                        true,
-                        hbm_bw_args->hbm_bw);
-    return hal_sdk_ret_to_hal_ret(sdk_ret);
-}
-
-hal_ret_t
-asic_pd_llc_setup (pd_llc_get_args_t *llc_args)
-{
-    sdk_ret_t sdk_ret;
-    sdk_ret = capri_nx_setup_llc_counters(llc_args->mask);
-    return hal_sdk_ret_to_hal_ret(sdk_ret);
-}
-
-hal_ret_t
-asic_pd_llc_get (pd_llc_get_args_t *llc_args)
-{
-    sdk_ret_t sdk_ret;
-    sdk_ret = capri_nx_get_llc_counters(llc_args->data);
-    return hal_sdk_ret_to_hal_ret(sdk_ret);
-}
-
-hal_ret_t
-asic_pd_scheduler_stats_get (pd_scheduler_stats_get_args_t *scheduler_stats_args)
-{
-    hal_ret_t ret;
-    capri_txs_scheduler_stats_t asic_stats = {};
-    sdk_ret_t     sdk_ret;
-
-
-    sdk_ret = capri_txs_scheduler_stats_get(&asic_stats);
-    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-    if (ret != HAL_RET_OK) {
-        return ret;
-    }
-
-    scheduler_stats_args->doorbell_set_count = asic_stats.doorbell_set_count;
-    scheduler_stats_args->doorbell_clear_count = asic_stats.doorbell_clear_count;
-    scheduler_stats_args->ratelimit_start_count = asic_stats.ratelimit_start_count;
-    scheduler_stats_args->ratelimit_stop_count = asic_stats.ratelimit_stop_count;
-    for (unsigned i = 0; i < SDK_ARRAY_SIZE(asic_stats.cos_stats); i++) {
-        auto cos_entry = &scheduler_stats_args->cos_stats[i];
-        cos_entry->cos = asic_stats.cos_stats[i].cos;
-        cos_entry->doorbell_count = asic_stats.cos_stats[i].doorbell_count;
-        cos_entry->xon_status = asic_stats.cos_stats[i].xon_status;
-    }
-
-    return HAL_RET_OK;
 }
 
 hal_ret_t

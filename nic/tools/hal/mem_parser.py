@@ -6,17 +6,6 @@ import os
 import re
 import pdb
 
-# Input file name
-fname_in = sys.argv[1]
-
-# Output file name
-fname_out = sys.argv[2]
-try:
-    d = os.path.dirname(fname_out)
-    os.makedirs(d)
-except:
-    pass
-
 # Name header
 name = "MEM_REGION_"
 
@@ -54,11 +43,8 @@ cache_pipes = {
     'p4plus-rxdma': "MEM_REGION_CACHE_PIPE_P4PLUS_RXDMA",
     'p4plus-all': "MEM_REGION_CACHE_PIPE_P4PLUS_ALL" }
 
-try:
-    fd = open(fname_out, "w+")
-except:
-    print "File open failed : " + fname_out
-    exit(-1)
+fd = sys.stdout
+pipeline = None
 
 def size_str_to_bytes(size_str):
     if "G" in size_str:
@@ -78,6 +64,50 @@ def size_str_to_bytes(size_str):
     else:
         return -1
     return mf * mv
+
+def parse_inputs():
+    global fd
+    global pipeline
+
+    if len(sys.argv) != 4:
+        print "Usage : mem_parser.py <json-input> <out-file> <pipeline>"
+        return -1;
+    # Input file name
+    fname_in = sys.argv[1]
+
+    # Output file name
+    fname_out = sys.argv[2]
+    try:
+        d = os.path.dirname(fname_out)
+        os.makedirs(d)
+    except:
+        pass
+
+    try:
+        fd = open(fname_out, "w+")
+    except:
+        print "File open failed : " + fname_out
+        return -1
+
+    pipeline = sys.argv[3]
+    return 0
+
+def check_max_usage(sz):
+    if True:
+        if pipeline == "iris":
+            if sz > (2 << 30): # 2 Gigabyte
+                return -1
+    return 0
+
+def convert_size(sz):
+    munits = [[30, 'G'], [20, 'M'], [10, 'K'], [0, 'B']]
+    v = ""
+    for b, u in munits:
+        res = sz / (1 << b)
+        sz = sz - (res * (1 << b))
+        if res > 0:
+            v = v + "%d%s " %(res, u)
+    return v[:-1]
 
 def parse_file():
 
@@ -102,13 +132,13 @@ def parse_file():
             s = size_str_to_bytes(mem_type)
             if s == -1:
                 print('Invalid size specified for region %s', n)
-                exit(-1)
+                return -1
             if e.get('element_size') is None:
                 es = -1
             else:
                 es = size_str_to_bytes(e['element_size'])
 
-            # Derive the basename for the macros 
+            # Derive the basename for the macros
             nbase = name + (re.sub("[ -]", "_", n)).upper() + "_"
 
             # Update name and size
@@ -128,7 +158,7 @@ def parse_file():
                     cv = str(cache_pipes[v])
                 else:
                     print "Invalid cache pipe speciciation : " + v
-                    exit(-1)
+                    return -1
             print >> fd, "#define %-60s %s" %(nbase + "CACHE_PIPE", cv)
 
             # Update reset
@@ -152,6 +182,14 @@ def parse_file():
    # Total regions count
     print >> fd, "#define %-60s %d" %(name + "COUNT" , idx)
 
+    # Max memory used
+    print >> fd, "#define %-60s %ld" %("MAX_MEMORY_USED_IN_BYTES" , off)
+    print >> fd, "#define %-60s \"%s\"" %("MAX_MEMORY_USED_IN_UNITS" , convert_size(off))
+
+    if check_max_usage(off) != 0:
+        print "Max memory usage exceeded for pipeline : " + pipeline
+        return -1
+
     print >> fd, "\n/////////////////////////////////////////////////////////\n"
 
     # Dump the list of value for name , size etc
@@ -163,13 +201,20 @@ def parse_file():
     print >> fd, "\n#define %s {   \\%s }" %(name + "RESET_LIST", rlist[:-3])
 
     print >> fd, "\n/////////////////////////////////////////////////////////\n"
+    return 0
 
-try:
-    print >> fd, hdr
-    parse_file()
-    print >> fd, ftr
-    exit(0)
-except Exception,e:
-    print "Error in opening the file, "  + sys.argv[1]
-    print e
-    exit(-1)
+def main():
+    try:
+        if parse_inputs() != 0:
+            return -1
+        print >> fd, hdr
+        rv = parse_file()
+        print >> fd, ftr
+        return rv
+    except Exception,e:
+        print "Error in opening the file, "  + sys.argv[1]
+        print e
+        return -1
+
+if __name__ == '__main__':
+    exit(main())

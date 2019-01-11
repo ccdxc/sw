@@ -22,22 +22,6 @@ namespace hal {
 namespace pd {
 
 hal_ret_t
-pd_get_start_offset (pd_func_args_t *pd_func_args)
-{
-    pd_get_start_offset_args_t *args = pd_func_args->pd_get_start_offset;
-    args->offset = get_mem_addr(args->reg_name);
-    return HAL_RET_OK;
-}
-
-hal_ret_t
-pd_get_size_kb (pd_func_args_t *pd_func_args)
-{
-    pd_get_size_kb_args_t *args = pd_func_args->pd_get_size_kb;
-    args->size = get_mem_size_kb(args->reg_name);
-    return HAL_RET_OK;
-}
-
-hal_ret_t
 pd_push_qstate_to_capri (pd_func_args_t *pd_func_args)
 {
     pd_push_qstate_to_capri_args_t *args = pd_func_args->pd_push_qstate_to_capri;

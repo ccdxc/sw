@@ -12,6 +12,7 @@
 #include "nic/hal/src/utils/utils.hpp"
 #include "nic/hal/src/utils/if_utils.hpp"
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
+#include "nic/hal/plugins/proxy/proxy_plugin.hpp"
 
 using intf::Interface;
 using intf::LifSpec;
@@ -81,28 +82,26 @@ void getprogram_address(const internal::ProgramAddressReq &req,
 
 void allochbm_address(const internal::HbmAddressReq &req,
                       internal::HbmAddressResp *resp) {
-    pd::pd_get_start_offset_args_t args;
-    pd::pd_func_args_t          pd_func_args = {0};
-    args.reg_name = req.handle().c_str();
-    pd_func_args.pd_get_start_offset = &args;
-    pd::hal_pd_call(pd::PD_FUNC_ID_GET_START_OFFSET, &pd_func_args);
-    uint64_t addr = args.offset;
-
-    pd::pd_get_size_kb_args_t size_args;
-    size_args.reg_name = req.handle().c_str();
-    pd_func_args.pd_get_size_kb = &size_args;
-    pd::hal_pd_call(pd::PD_FUNC_ID_GET_REG_SIZE, &pd_func_args);
-    uint32_t size = size_args.size;
-
-
+    mem_addr_t addr = 0ULL;
+    uint32_t size_kb;
+    const char *region = req.handle().c_str();
+    sdk::platform::utils::mpartition *mpart = NULL;
+    mpart = sdk::platform::utils::mpartition::get_instance();
+    if (mpart) {
+        addr = mpart->start_addr(region);
+        if (addr == INVALID_MEM_ADDRESS) {
+            addr = 0ULL;
+        }
+        size_kb = mpart->size(region) >> 10;
+    }
     HAL_TRACE_DEBUG("pi-internal:{}: Allocated HBM Address {:#x} Size {}",
-                    __FUNCTION__, addr, size);
+                    __FUNCTION__, addr, size_kb);
     if (addr == 0) {
         resp->set_addr(0xFFFFFFFFFFFFFFFFULL);
         resp->set_size(0);
     } else {
         resp->set_addr(addr);
-        resp->set_size(size);
+        resp->set_size(size_kb);
     }
 }
 

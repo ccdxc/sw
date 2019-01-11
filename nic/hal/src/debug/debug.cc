@@ -11,6 +11,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/sdk/include/sdk/timestamp.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
 
 using sdk::lib::slab;
 
@@ -807,9 +808,10 @@ hal_ret_t
 hbm_bw_get(const HbmBwGetRequest *req, HbmBwGetResponseMsg *rsp)
 {
     hal_ret_t   ret = HAL_RET_OK;
-    pd::pd_hbm_bw_get_args_t hbm_bw_args;
+    hbm_bw_samples_t hbm_bw_args;
+    sdk_ret_t sdk_ret;
 
-    memset(&hbm_bw_args, 0, sizeof(pd::pd_hbm_bw_get_args_t));
+    memset(&hbm_bw_args, 0, sizeof(hbm_bw_samples_t));
     hbm_bw_args.num_samples = req->num_samples();
     hbm_bw_args.sleep_interval = req->sleep_interval();
 
@@ -819,7 +821,8 @@ hbm_bw_get(const HbmBwGetRequest *req, HbmBwGetResponseMsg *rsp)
                                     * asic_block_t::ASIC_BLOCK_MAX
                                     * sizeof(asic_hbm_bw_t));
 
-    ret = pd::asic_pd_hbm_bw_get(&hbm_bw_args);
+    sdk_ret = sdk::asic::pd::asic_pd_hbm_bw_get(&hbm_bw_args);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_FREE(HAL_MEM_ALLOC_DEBUG_CLI, hbm_bw_args.hbm_bw);
         return ret;
@@ -845,12 +848,14 @@ hal_ret_t
 llc_clear (void)
 {
     hal_ret_t ret = HAL_RET_OK;
-    pd::pd_llc_get_args_t llc_args;
+    sdk_ret_t sdk_ret;
+    llc_counters_t llc_args;
 
-    memset (&llc_args, 0, sizeof(pd::pd_llc_get_args_t));
+    memset (&llc_args, 0, sizeof(llc_counters_t));
     llc_args.mask = 0xffffffff;
 
-    ret = pd::asic_pd_llc_setup(&llc_args);
+    sdk_ret = sdk::asic::pd::asic_pd_llc_setup(&llc_args);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     return ret;
 }
 
@@ -858,14 +863,16 @@ hal_ret_t
 llc_setup(const LlcSetupRequest *req, LlcSetupResponse *rsp)
 {
     hal_ret_t ret = HAL_RET_OK;
-    pd::pd_llc_get_args_t llc_args;
+    sdk_ret_t sdk_ret;
+    llc_counters_t llc_args;
 
-    memset (&llc_args, 0, sizeof(pd::pd_llc_get_args_t));
+    memset (&llc_args, 0, sizeof(llc_counters_t));
     if (req->type()) {
         llc_args.mask = (1 << (req->type() - 1)); // Req Type starts at 1 so we need to subtract 1
     }
 
-    ret = pd::asic_pd_llc_setup(&llc_args);
+    sdk_ret = sdk::asic::pd::asic_pd_llc_setup(&llc_args);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret == HAL_RET_OK) {
         rsp->set_api_status(types::API_STATUS_OK);
     } else {
@@ -879,11 +886,13 @@ hal_ret_t
 llc_get(LlcGetResponse *rsp)
 {
     hal_ret_t ret = HAL_RET_OK;
-    pd::pd_llc_get_args_t llc_args;
+    sdk_ret_t sdk_ret;
+    llc_counters_t llc_args;
 
-    memset (&llc_args, 0, sizeof(pd::pd_llc_get_args_t));
+    memset (&llc_args, 0, sizeof(llc_counters_t));
 
-    ret = pd::asic_pd_llc_get(&llc_args);
+    sdk_ret = sdk::asic::pd::asic_pd_llc_get(&llc_args);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         rsp->set_api_status(types::API_STATUS_ERR);
         return ret;
@@ -911,24 +920,28 @@ hal_ret_t
 scheduler_stats_get(debug::SchedulerStatsResponse *rsp)
 {
     hal_ret_t ret = HAL_RET_OK;
-    pd::pd_scheduler_stats_get_args_t scheduler_stats_args;
+    sdk_ret_t sdk_ret;
 
-    ret = pd::asic_pd_scheduler_stats_get(&scheduler_stats_args);
+    scheduler_stats_t sch_stats;
+
+    sdk_ret = sdk::asic::pd::asic_pd_scheduler_stats_get(&sch_stats);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         rsp->set_api_status(types::API_STATUS_ERR);
         return ret;
     }
 
-    rsp->set_doorbell_set_count(scheduler_stats_args.doorbell_set_count);
-    rsp->set_doorbell_clear_count(scheduler_stats_args.doorbell_clear_count);
-    rsp->set_ratelimit_start_count(scheduler_stats_args.ratelimit_start_count);
-    rsp->set_ratelimit_stop_count(scheduler_stats_args.ratelimit_stop_count);
-    for (unsigned i = 0; i < SDK_ARRAY_SIZE(scheduler_stats_args.cos_stats); i++) {
+    rsp->set_doorbell_set_count(sch_stats.doorbell_set_count);
+    rsp->set_doorbell_clear_count(sch_stats.doorbell_clear_count);
+    rsp->set_ratelimit_start_count(sch_stats.ratelimit_start_count);
+    rsp->set_ratelimit_stop_count(sch_stats.ratelimit_stop_count);
+    for (unsigned i = 0; i < sch_stats.num_coses; i++) {
         auto cos_entry = rsp->add_cos_entry();
-        cos_entry->set_cos(scheduler_stats_args.cos_stats[i].cos);
-        cos_entry->set_doorbell_count(scheduler_stats_args.cos_stats[i].doorbell_count);
-        cos_entry->set_xon_status(scheduler_stats_args.cos_stats[i].xon_status);
+        cos_entry->set_cos(sch_stats.cos_stats[i].cos);
+        cos_entry->set_doorbell_count(sch_stats.cos_stats[i].doorbell_count);
+        cos_entry->set_xon_status(sch_stats.cos_stats[i].xon_status);
     }
+
     rsp->set_api_status(types::API_STATUS_OK);
 
     return ret;

@@ -397,8 +397,6 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_TABLE_PROPERTIES_GET, pd_table_properties_get);
 
     // capri
-    PD_FUNC_LOAD(PD_FUNC_ID_GET_START_OFFSET, pd_get_start_offset);
-    PD_FUNC_LOAD(PD_FUNC_ID_GET_REG_SIZE, pd_get_size_kb);
     PD_FUNC_LOAD(PD_FUNC_ID_PUSH_QSTATE, pd_push_qstate_to_capri);
     PD_FUNC_LOAD(PD_FUNC_ID_CLEAR_QSTATE, pd_clear_qstate);
     PD_FUNC_LOAD(PD_FUNC_ID_READ_QSTATE, pd_read_qstate);
