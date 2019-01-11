@@ -1,3 +1,4 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 #ifndef __CAPRI_COMMON_HPP_
 #define __CAPRI_COMMON_HPP_
 

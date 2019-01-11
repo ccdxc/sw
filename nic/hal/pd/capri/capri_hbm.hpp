@@ -2,6 +2,7 @@
 #define __CAPRI_HBM_HPP__
 
 #include "platform/capri/capri_hbm_rw.hpp"
+#include "asic/rw/asicrw.hpp"
 
 #define JP4_PRGM                 "p4_program"
 #define JP4PLUS_PRGM             "p4plus_program"

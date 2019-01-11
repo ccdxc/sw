@@ -52,7 +52,7 @@ p4pd_get_ipsec_rx_stage0_prog_addr(uint64_t* offset)
     char progname[] = "rxdma_stage0.bin";
     char labelname[]= "ipsec_rx_stage0";
 
-    int ret = sdk::platform::p4_program_label_to_offset("p4plus",
+    int ret = sdk::p4::p4_program_label_to_offset("p4plus",
                                             progname,
                                             labelname,
                                             offset);
@@ -117,7 +117,7 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
         HAL_TRACE_DEBUG("CB Ring Addr {:#x}", ipsec_cb_ring_addr);
 
 #if 0
-        ipsec_cb_ring_base = get_start_offset(CAPRI_HBM_REG_IPSECCB);
+        ipsec_cb_ring_base = get_mem_addr(CAPRI_HBM_REG_IPSECCB);
         ipsec_cb_ring_addr = (ipsec_cb_ring_base+(ipseccb_pd->ipseccb->cb_id * IPSEC_CB_RING_ENTRY_SIZE));
         //ipsec_cb_ring_addr = htonll(ipsec_cb_ring_addr);
 #endif
@@ -136,7 +136,7 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
         HAL_TRACE_DEBUG("Barco Ring Addr {:#x}", ipsec_barco_ring_addr);
 #if 0
 
-        ipsec_barco_ring_base = get_start_offset(CAPRI_HBM_REG_IPSECCB_BARCO);
+        ipsec_barco_ring_base = get_mem_addr(CAPRI_HBM_REG_IPSECCB_BARCO);
         ipsec_barco_ring_addr = (ipsec_barco_ring_base+(ipseccb_pd->ipseccb->cb_id * IPSEC_BARCO_RING_ENTRY_SIZE));
         ipsec_barco_ring_addr = htonl(ipsec_barco_ring_addr);
 #endif
@@ -313,7 +313,7 @@ p4pd_get_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd)
     ipseccb_hw_id_t hwid = ipseccb_pd->hw_id +
         (P4PD_IPSECCB_STAGE_ENTRY_OFFSET * P4PD_HWID_IPSEC_RX_STAGE0);
 
-    if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to get rx: stage0 entry for IPSEC CB");
         return HAL_RET_HW_FAIL;
     }
@@ -355,7 +355,7 @@ p4pd_get_ipsec_cb_stats(pd_ipseccb_encrypt_t* ipseccb_pd)
     ipseccb_hw_id_t hwid = ipseccb_pd->hw_id +
         (P4PD_IPSECCB_STAGE_ENTRY_OFFSET * P4PD_HWID_IPSEC_STATS);
 
-    if(!p4plus_hbm_read(hwid,  (uint8_t *)&stats_data, sizeof(stats_data))){
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&stats_data, sizeof(stats_data))){
         HAL_TRACE_ERR("Failed to get Stats: entry for IPSEC CB");
         return HAL_RET_HW_FAIL;
     }
@@ -404,7 +404,7 @@ p4pd_get_ipsec_tx_stage0_prog_addr(uint64_t* offset)
     char progname[] = "txdma_stage0.bin";
     char labelname[]= "ipsec_tx_stage0";
 
-    int ret = sdk::platform::p4_program_label_to_offset("p4plus",
+    int ret = sdk::p4::p4_program_label_to_offset("p4plus",
                                             progname,
                                             labelname,
                                             offset);

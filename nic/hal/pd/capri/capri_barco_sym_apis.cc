@@ -114,7 +114,7 @@ hal_ret_t capri_barco_sym_hash_process_request (CryptoApiHashType hash_type, boo
     /* Copy the data input to the ilist memory */
     curr_ptr = ilist_mem_addr;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)data, data_len)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)data, data_len)) {
         HAL_TRACE_ERR("SYM Hash {}-{}: Failed to write data bytes into ilist memory @ {:x}",
 		      CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
 		      (uint64_t) curr_ptr);
@@ -136,7 +136,7 @@ hal_ret_t capri_barco_sym_hash_process_request (CryptoApiHashType hash_type, boo
     ilist_msg_descr.next_address = 0;
     ilist_msg_descr.reserved = 0;
 
-    if (capri_hbm_write_mem(ilist_msg_descr_addr, (uint8_t*)&ilist_msg_descr,
+    if (sdk::asic::asic_mem_write(ilist_msg_descr_addr, (uint8_t*)&ilist_msg_descr,
 			    sizeof(ilist_msg_descr))) {
         HAL_TRACE_ERR("SYM Hash {}-{}: Failed to write ilist MSG Descr @ {:x}",
 		      CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
@@ -150,7 +150,7 @@ hal_ret_t capri_barco_sym_hash_process_request (CryptoApiHashType hash_type, boo
      * auth-tag-addr for barco to read.
      */
     if (!generate) {
-        if (capri_hbm_write_mem(auth_tag_mem_addr, (uint8_t*)digest,
+        if (sdk::asic::asic_mem_write(auth_tag_mem_addr, (uint8_t*)digest,
 				digest_len)) {
 	    HAL_TRACE_ERR("SYM Hash {}-{}: Failed to write input digest @ {:x}",
 			  CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
@@ -162,7 +162,7 @@ hal_ret_t capri_barco_sym_hash_process_request (CryptoApiHashType hash_type, boo
 	/*
 	 * Also initialize status to 0 at the status-address before we invoke barco.
 	 */
-        if (capri_hbm_write_mem(status_addr, (uint8_t*)&status,
+        if (sdk::asic::asic_mem_write(status_addr, (uint8_t*)&status,
 				sizeof(status))) {
 	    HAL_TRACE_ERR("SYM Hash {}-{}: Failed to initialize status value @ {:x}",
 			  CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
@@ -260,7 +260,7 @@ hal_ret_t capri_barco_sym_hash_process_request (CryptoApiHashType hash_type, boo
 
     /* Copy out the results */
     if (generate) {
-        if (capri_hbm_read_mem(auth_tag_mem_addr, (uint8_t*)digest, digest_len)) {
+        if (sdk::asic::asic_mem_read(auth_tag_mem_addr, (uint8_t*)digest, digest_len)) {
 	    HAL_TRACE_ERR("SYM Hash {}-{}: Failed to read output digest at Auth-tag addr @ {:x}",
 			  CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
 			  (uint64_t) auth_tag_mem_addr);
@@ -268,7 +268,7 @@ hal_ret_t capri_barco_sym_hash_process_request (CryptoApiHashType hash_type, boo
 	    goto cleanup;
 	}
     } else {
-        if (capri_hbm_read_mem(status_addr, (uint8_t*)&status, sizeof(uint64_t))){
+        if (sdk::asic::asic_mem_read(status_addr, (uint8_t*)&status, sizeof(uint64_t))){
 	    HAL_TRACE_ERR("SYM Hash {}-{}: Failed to read status at Status addr @ {:x}",
 			  CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
 			  (uint64_t) status_addr);
@@ -494,7 +494,7 @@ hal_ret_t capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_
 	ptr += header_len;
         *ptr = 0;  // 1-byte zero pad
 
-	if (capri_hbm_write_mem(curr_ptr, (uint8_t*)ccm_header, sizeof(ccm_header))) {
+	if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)ccm_header, sizeof(ccm_header))) {
             HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to write header bytes into ilist memory @ {:x}",
 			  capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
 			  (uint64_t) curr_ptr);
@@ -504,7 +504,7 @@ hal_ret_t capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_
         header_len = TLS_AES_CCM_HEADER_SIZE;
     } else {
 
-        if (capri_hbm_write_mem(curr_ptr, (uint8_t*)header, header_len)) {
+        if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)header, header_len)) {
 	    HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to write header bytes into ilist memory @ {:x}",
 			  capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
 			  (uint64_t) curr_ptr);
@@ -516,7 +516,7 @@ hal_ret_t capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_
     curr_ptr +=  header_len;
 
     if (encrypt) {
-        if (capri_hbm_write_mem(curr_ptr, (uint8_t*)plaintext, plaintext_len)) {
+        if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)plaintext, plaintext_len)) {
 	    HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to write plaintext bytes into ilist memory @ {:x}",
 			  capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
 			  (uint64_t) curr_ptr);
@@ -524,7 +524,7 @@ hal_ret_t capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_
 	    goto cleanup;
 	}
     } else {
-        if (capri_hbm_write_mem(curr_ptr, (uint8_t*)ciphertext, ciphertext_len)) {
+        if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)ciphertext, ciphertext_len)) {
 	    HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to write ciphertext bytes into ilist memory @ {:x}",
 			  capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
 			  (uint64_t) curr_ptr);
@@ -534,7 +534,7 @@ hal_ret_t capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_
     }
 
     /* Copy the IV content */
-    if (capri_hbm_write_mem(iv_addr, (uint8_t*)iv, iv_len)) {
+    if (sdk::asic::asic_mem_write(iv_addr, (uint8_t*)iv, iv_len)) {
         HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to write IV bytes into ilist memory @ {:x}",
 		      capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
 		      (uint64_t) curr_ptr);
@@ -556,7 +556,7 @@ hal_ret_t capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_
     ilist_msg_descr.next_address = 0;
     ilist_msg_descr.reserved = 0;
 
-    if (capri_hbm_write_mem(ilist_msg_descr_addr, (uint8_t*)&ilist_msg_descr,
+    if (sdk::asic::asic_mem_write(ilist_msg_descr_addr, (uint8_t*)&ilist_msg_descr,
 			    sizeof(ilist_msg_descr))) {
         HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to write ilist MSG Descr @ {:x}",
 		      capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
@@ -579,7 +579,7 @@ hal_ret_t capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_
     olist_msg_descr.next_address = 0;
     olist_msg_descr.reserved = 0;
 
-    if (capri_hbm_write_mem(olist_msg_descr_addr, (uint8_t*)&olist_msg_descr,
+    if (sdk::asic::asic_mem_write(olist_msg_descr_addr, (uint8_t*)&olist_msg_descr,
 			    sizeof(olist_msg_descr))) {
         HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to write olist MSG Descr @ {:x}",
 		      capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
@@ -593,7 +593,7 @@ hal_ret_t capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_
      * auth-tag-addr for barco to read.
      */
     if (!encrypt) {
-        if (capri_hbm_write_mem(auth_tag_mem_addr, (uint8_t*)auth_tag,
+        if (sdk::asic::asic_mem_write(auth_tag_mem_addr, (uint8_t*)auth_tag,
 				auth_tag_len)) {
 	    HAL_TRACE_ERR("SYMM Decrypt {}-{}: Failed to write input auth-tag @ {:x}",
 			  capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
@@ -605,7 +605,7 @@ hal_ret_t capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_
 	/*
 	 * Also initialize status to 0 at the status-address before we invoke barco.
 	 */
-        if (capri_hbm_write_mem(status_addr, (uint8_t*)&status,
+        if (sdk::asic::asic_mem_write(status_addr, (uint8_t*)&status,
 				sizeof(status))) {
 	    HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to write ilist MSG Descr @ {:x}",
 			  capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
@@ -734,7 +734,7 @@ hal_ret_t capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_
 
     /* Copy out the results */
     if (encrypt) {
-        if (capri_hbm_read_mem(auth_tag_mem_addr, (uint8_t*)auth_tag, auth_tag_len)) {
+        if (sdk::asic::asic_mem_read(auth_tag_mem_addr, (uint8_t*)auth_tag, auth_tag_len)) {
 	    HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to read output Auth-tag at addr @ {:x}",
 			  capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
 			  (uint64_t) auth_tag_mem_addr);
@@ -742,7 +742,7 @@ hal_ret_t capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_
 	    goto cleanup;
 	}
 
-        if (capri_hbm_read_mem(olist_mem_addr + header_len, (uint8_t*)ciphertext, ciphertext_len)) {
+        if (sdk::asic::asic_mem_read(olist_mem_addr + header_len, (uint8_t*)ciphertext, ciphertext_len)) {
 	    HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to read output ciphertext at addr @ {:x}",
 			  capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
 			  (uint64_t) olist_mem_addr);
@@ -751,7 +751,7 @@ hal_ret_t capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_
 	}
 
     } else {
-        if (capri_hbm_read_mem(status_addr, (uint8_t*)&status, sizeof(uint64_t))){
+        if (sdk::asic::asic_mem_read(status_addr, (uint8_t*)&status, sizeof(uint64_t))){
 	    HAL_TRACE_ERR("SYMM Decrypt {}-{}: Failed to read status at Status addr @ {:x}",
 			  capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
 			  (uint64_t) status_addr);
@@ -762,7 +762,7 @@ hal_ret_t capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_
 			capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
 			status, barco_symm_err_status_str(status));
 
-        if (capri_hbm_read_mem(olist_mem_addr + header_len, (uint8_t*)plaintext, plaintext_len)) {
+        if (sdk::asic::asic_mem_read(olist_mem_addr + header_len, (uint8_t*)plaintext, plaintext_len)) {
 	    HAL_TRACE_ERR("SYMM Decrypt {}-{}: Failed to read output decrypted plaintext @ {:x}",
 			  capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
 			  (uint64_t) (olist_mem_addr + header_len));

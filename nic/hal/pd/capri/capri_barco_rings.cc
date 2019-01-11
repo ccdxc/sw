@@ -318,8 +318,8 @@ hal_ret_t capri_barco_ring_common_init(capri_barco_ring_t *barco_ring)
     uint64_t                            ring_base = 0;
     uint32_t                            ring_size = 0;
 
-    ring_base = get_start_offset(barco_ring->hbm_region);
-    if (!ring_base) {
+    ring_base = get_mem_addr(barco_ring->hbm_region);
+    if (ring_base == INVALID_MEM_ADDRESS) {
         HAL_TRACE_ERR("Failed to retrieve Barco Ring memory region for {}", barco_ring->ring_name);
         return HAL_RET_ERR;
     }
@@ -329,7 +329,7 @@ hal_ret_t capri_barco_ring_common_init(capri_barco_ring_t *barco_ring)
         return HAL_RET_ERR;
     }
 
-    ring_size = get_size_kb(barco_ring->hbm_region) * 1024;
+    ring_size = get_mem_size_kb(barco_ring->hbm_region) * 1024;
     if (ring_size < (uint32_t)(barco_ring->ring_size * barco_ring->descriptor_size)) {
         HAL_TRACE_ERR("Not enough memory for Barco Ring memory region {}", barco_ring->ring_name);
         return HAL_RET_ERR;
@@ -440,7 +440,7 @@ bool capri_barco_asym_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
     uint32_t                            curr_opaque_tag = 0;
 
     /* The opaque tag address is used as the CI address for the Asym ring */
-    if (capri_hbm_read_mem(barco_ring->opaque_tag_addr, (uint8_t*)&curr_opaque_tag, sizeof(curr_opaque_tag))) {
+    if (sdk::asic::asic_mem_read(barco_ring->opaque_tag_addr, (uint8_t*)&curr_opaque_tag, sizeof(curr_opaque_tag))) {
         HAL_TRACE_ERR("Poll:{}: Failed to retrieve current opaque tag value @ {:x}",
                 barco_ring->ring_name, (uint64_t) barco_ring->opaque_tag_addr);
         return FALSE;
@@ -470,7 +470,7 @@ hal_ret_t capri_barco_asym_queue_request(struct capri_barco_ring_s *barco_ring,
 
     slot_addr = barco_ring->ring_base + (barco_ring->producer_idx * barco_ring->descriptor_size);
 
-    if (capri_hbm_write_mem(slot_addr, (uint8_t*)req, barco_ring->descriptor_size)) {
+    if (sdk::asic::asic_mem_write(slot_addr, (uint8_t*)req, barco_ring->descriptor_size)) {
         HAL_TRACE_ERR("Failed to write descriptor entry for {}  @ {:x}",
                 barco_ring->ring_name,
                 (uint64_t) slot_addr);
@@ -504,12 +504,13 @@ hal_ret_t capri_barco_xts0_key_array_init(void)
 
     // Currently sharing the same key descriptor array as GCM
     // Eventually all symmetric protocols will share one large key array
-    key_array_base = get_start_offset(key_desc_array);
+    key_array_base = get_mem_addr(key_desc_array);
+    HAL_ASSERT(key_array_base != INVALID_MEM_ADDRESS);
     /* All regions in hbm_mem.json are in multiples of 1kb and hence should already be aligned to 16byte
      * but confirm
      */
     assert((key_array_base & (BARCO_CRYPTO_KEY_DESC_ALIGN_BYTES - 1)) == 0);
-    region_sz = get_size_kb(key_desc_array) * 1024;
+    region_sz = get_mem_size_kb(key_desc_array) * 1024;
     key_array_key_count = region_sz / BARCO_CRYPTO_KEY_DESC_SZ;
 
     hese.dhs_crypto_ctl.xts_enc_key_array_base_w0.fld(key_array_base & 0xffffffff);
@@ -589,12 +590,13 @@ hal_ret_t capri_barco_xts1_key_array_init(void)
 
     // Currently sharing the same key descriptor array as GCM
     // Eventually all symmetric protocols will share one large key array
-    key_array_base = get_start_offset(key_desc_array);
+    key_array_base = get_mem_addr(key_desc_array);
+    HAL_ASSERT(key_array_base != INVALID_MEM_ADDRESS);
     /* All regions in hbm_mem.json are in multiples of 1kb and hence should already be aligned to 16byte
      * but confirm
      */
     assert((key_array_base & (BARCO_CRYPTO_KEY_DESC_ALIGN_BYTES - 1)) == 0);
-    region_sz = get_size_kb(key_desc_array) * 1024;
+    region_sz = get_mem_size_kb(key_desc_array) * 1024;
     key_array_key_count = region_sz / BARCO_CRYPTO_KEY_DESC_SZ;
 
     hese.dhs_crypto_ctl.xts_key_array_base_w0.fld(key_array_base & 0xffffffff);
@@ -674,12 +676,13 @@ hal_ret_t capri_barco_mpp0_key_array_init(void)
 
     // Currently sharing the same key descriptor array as GCM
     // Eventually all symmetric protocols will share one large key array
-    key_array_base = get_start_offset(key_desc_array);
+    key_array_base = get_mem_addr(key_desc_array);
+    HAL_ASSERT(key_array_base != INVALID_MEM_ADDRESS);
     /* All regions in hbm_mem.json are in multiples of 1kb and hence should already be aligned to 16byte
      * but confirm
      */
     assert((key_array_base & (BARCO_CRYPTO_KEY_DESC_ALIGN_BYTES - 1)) == 0);
-    region_sz = get_size_kb(key_desc_array) * 1024;
+    region_sz = get_mem_size_kb(key_desc_array) * 1024;
     key_array_key_count = region_sz / BARCO_CRYPTO_KEY_DESC_SZ;
 
     mpse.dhs_crypto_ctl.mpp0_key_array_base_w0.fld(key_array_base & 0xffffffff);
@@ -758,7 +761,7 @@ bool capri_barco_mpp_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
     bool                                ret = FALSE;
     uint32_t                            curr_opaque_tag = 0;
 
-    if (capri_hbm_read_mem(barco_ring->opaque_tag_addr, (uint8_t*)&curr_opaque_tag,
+    if (sdk::asic::asic_mem_read(barco_ring->opaque_tag_addr, (uint8_t*)&curr_opaque_tag,
 			   sizeof(curr_opaque_tag))) {
         HAL_TRACE_ERR("Poll:{}: Failed to retrieve current opaque tag value @ {:x}",
                 barco_ring->ring_name, (uint64_t) barco_ring->opaque_tag_addr);
@@ -817,7 +820,7 @@ hal_ret_t capri_barco_mpp_queue_request(struct capri_barco_ring_s *barco_ring, v
 
     slot_addr = barco_ring->ring_base + (barco_ring->producer_idx * barco_ring->descriptor_size);
 
-    if (capri_hbm_write_mem(slot_addr, (uint8_t*)req, barco_ring->descriptor_size)) {
+    if (sdk::asic::asic_mem_write(slot_addr, (uint8_t*)req, barco_ring->descriptor_size)) {
         HAL_TRACE_ERR("Failed to write MPP Req descriptor entry for {}  @ {:x}",
                 barco_ring->ring_name,
                 (uint64_t) slot_addr);
@@ -848,12 +851,13 @@ hal_ret_t capri_barco_mpp1_key_array_init(void)
 
     // Currently sharing the same key descriptor array as GCM
     // Eventually all symmetric protocols will share one large key array
-    key_array_base = get_start_offset(key_desc_array);
+    key_array_base = get_mem_addr(key_desc_array);
+    HAL_ASSERT(key_array_base != INVALID_MEM_ADDRESS);
     /* All regions in hbm_mem.json are in multiples of 1kb and hence should already be aligned to 16byte
      * but confirm
      */
     assert((key_array_base & (BARCO_CRYPTO_KEY_DESC_ALIGN_BYTES - 1)) == 0);
-    region_sz = get_size_kb(key_desc_array) * 1024;
+    region_sz = get_mem_size_kb(key_desc_array) * 1024;
     key_array_key_count = region_sz / BARCO_CRYPTO_KEY_DESC_SZ;
 
     mpse.dhs_crypto_ctl.mpp1_key_array_base_w0.fld(key_array_base & 0xffffffff);
@@ -939,12 +943,13 @@ hal_ret_t capri_barco_mpp2_key_array_init(void)
 
     // Currently sharing the same key descriptor array as GCM
     // Eventually all symmetric protocols will share one large key array
-    key_array_base = get_start_offset(key_desc_array);
+    key_array_base = get_mem_addr(key_desc_array);
+    HAL_ASSERT(key_array_base != INVALID_MEM_ADDRESS);
     /* All regions in hbm_mem.json are in multiples of 1kb and hence should already be aligned to 16byte
      * but confirm
      */
     assert((key_array_base & (BARCO_CRYPTO_KEY_DESC_ALIGN_BYTES - 1)) == 0);
-    region_sz = get_size_kb(key_desc_array) * 1024;
+    region_sz = get_mem_size_kb(key_desc_array) * 1024;
     key_array_key_count = region_sz / BARCO_CRYPTO_KEY_DESC_SZ;
 
     mpse.dhs_crypto_ctl.mpp2_key_array_base_w0.fld(key_array_base & 0xffffffff);
@@ -1030,12 +1035,13 @@ hal_ret_t capri_barco_mpp3_key_array_init(void)
 
     // Currently sharing the same key descriptor array as GCM
     // Eventually all symmetric protocols will share one large key array
-    key_array_base = get_start_offset(key_desc_array);
+    key_array_base = get_mem_addr(key_desc_array);
+    HAL_ASSERT(key_array_base != INVALID_MEM_ADDRESS);
     /* All regions in hbm_mem.json are in multiples of 1kb and hence should already be aligned to 16byte
      * but confirm
      */
     assert((key_array_base & (BARCO_CRYPTO_KEY_DESC_ALIGN_BYTES - 1)) == 0);
-    region_sz = get_size_kb(key_desc_array) * 1024;
+    region_sz = get_mem_size_kb(key_desc_array) * 1024;
     key_array_key_count = region_sz / BARCO_CRYPTO_KEY_DESC_SZ;
 
     mpse.dhs_crypto_ctl.mpp3_key_array_base_w0.fld(key_array_base & 0xffffffff);
@@ -1121,12 +1127,13 @@ hal_ret_t capri_barco_gcm0_key_array_init(void)
 
     // Currently sharing the same key descriptor array as GCM
     // Eventually all symmetric protocols will share one large key array
-    key_array_base = get_start_offset(key_desc_array);
+    key_array_base = get_mem_addr(key_desc_array);
+    HAL_ASSERT(key_array_base != INVALID_MEM_ADDRESS);
     /* All regions in hbm_mem.json are in multiples of 1kb and hence should already be aligned to 16byte
      * but confirm
      */
     assert((key_array_base & (BARCO_CRYPTO_KEY_DESC_ALIGN_BYTES - 1)) == 0);
-    region_sz = get_size_kb(key_desc_array) * 1024;
+    region_sz = get_mem_size_kb(key_desc_array) * 1024;
     key_array_key_count = region_sz / BARCO_CRYPTO_KEY_DESC_SZ;
     /* Sanity check that we have enough memory to support the keys scale needed */
     assert(key_array_key_count >= CRYPTO_KEY_COUNT_MAX);
@@ -1205,7 +1212,7 @@ bool capri_barco_gcm0_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
     bool                                ret = FALSE;
     uint32_t                            curr_opaque_tag = 0;
 
-    if (capri_hbm_read_mem(barco_ring->opaque_tag_addr, (uint8_t*)&curr_opaque_tag,
+    if (sdk::asic::asic_mem_read(barco_ring->opaque_tag_addr, (uint8_t*)&curr_opaque_tag,
 			   sizeof(curr_opaque_tag))) {
         HAL_TRACE_ERR("Poll:{}: Failed to retrieve current opaque tag value @ {:x}",
                 barco_ring->ring_name, (uint64_t) barco_ring->opaque_tag_addr);
@@ -1264,7 +1271,7 @@ hal_ret_t capri_barco_gcm0_queue_request(struct capri_barco_ring_s *barco_ring, 
 
     slot_addr = barco_ring->ring_base + (barco_ring->producer_idx * barco_ring->descriptor_size);
 
-    if (capri_hbm_write_mem(slot_addr, (uint8_t*)req, barco_ring->descriptor_size)) {
+    if (sdk::asic::asic_mem_write(slot_addr, (uint8_t*)req, barco_ring->descriptor_size)) {
         HAL_TRACE_ERR("Failed to write MPP Req descriptor entry for {}  @ {:x}",
                 barco_ring->ring_name,
                 (uint64_t) slot_addr);
@@ -1296,12 +1303,13 @@ hal_ret_t capri_barco_gcm1_key_array_init(void)
 
     // Currently sharing the same key descriptor array as GCM
     // Eventually all symmetric protocols will share one large key array
-    key_array_base = get_start_offset(key_desc_array);
+    key_array_base = get_mem_addr(key_desc_array);
+    HAL_ASSERT(key_array_base != INVALID_MEM_ADDRESS);
     /* All regions in hbm_mem.json are in multiples of 1kb and hence should already be aligned to 16byte
      * but confirm
      */
     assert((key_array_base & (BARCO_CRYPTO_KEY_DESC_ALIGN_BYTES - 1)) == 0);
-    region_sz = get_size_kb(key_desc_array) * 1024;
+    region_sz = get_mem_size_kb(key_desc_array) * 1024;
     key_array_key_count = region_sz / BARCO_CRYPTO_KEY_DESC_SZ;
     /* Sanity check that we have enough memory to support the keys scale needed */
     assert(key_array_key_count >= CRYPTO_KEY_COUNT_MAX);
@@ -1638,7 +1646,7 @@ bool capri_barco_gcm1_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
     bool                                ret = FALSE;
     uint32_t                            curr_opaque_tag = 0;
 
-    if (capri_hbm_read_mem(barco_ring->opaque_tag_addr, (uint8_t*)&curr_opaque_tag,
+    if (sdk::asic::asic_mem_read(barco_ring->opaque_tag_addr, (uint8_t*)&curr_opaque_tag,
 			   sizeof(curr_opaque_tag))) {
         HAL_TRACE_ERR("Poll:{}: Failed to retrieve current opaque tag value @ {:x}",
                 barco_ring->ring_name, (uint64_t) barco_ring->opaque_tag_addr);
@@ -1697,7 +1705,7 @@ hal_ret_t capri_barco_gcm1_queue_request(struct capri_barco_ring_s *barco_ring, 
 
     slot_addr = barco_ring->ring_base + (barco_ring->producer_idx * barco_ring->descriptor_size);
 
-    if (capri_hbm_write_mem(slot_addr, (uint8_t*)req, barco_ring->descriptor_size)) {
+    if (sdk::asic::asic_mem_write(slot_addr, (uint8_t*)req, barco_ring->descriptor_size)) {
         HAL_TRACE_ERR("Failed to write MPP Req descriptor entry for {}  @ {:x}",
                 barco_ring->ring_name,
                 (uint64_t) slot_addr);
@@ -1783,7 +1791,7 @@ hal_ret_t capri_barco_rings_init(sdk::types::platform_type_t platform)
             }
             HAL_TRACE_DEBUG("Ring: {}: Allocated opaque tag @ {:x}",
                 barco_rings[idx].ring_name, opa_tag_addr);
-            if(capri_hbm_write_mem(opa_tag_addr, (uint8_t *)&opa_tag_def_val, sizeof(opa_tag_def_val))) {
+            if(sdk::asic::asic_mem_write(opa_tag_addr, (uint8_t *)&opa_tag_def_val, sizeof(opa_tag_def_val))) {
                 HAL_TRACE_ERR("Ring: {}: Failed to initialized opaque tag @ {:x}",
                     barco_rings[idx].ring_name, opa_tag_addr);
                 return HAL_RET_HW_FAIL;
@@ -1802,7 +1810,7 @@ hal_ret_t capri_barco_rings_init(sdk::types::platform_type_t platform)
                 return HAL_RET_HW_FAIL;
             }
             barco_rings[idx].shadow_pndx_addr = shadow_pndx_addr;
-            if(capri_hbm_write_mem(shadow_pndx_addr, (uint8_t *)&shadow_pndx_def_val,
+            if(sdk::asic::asic_mem_write(shadow_pndx_addr, (uint8_t *)&shadow_pndx_def_val,
                                    shadow_pndx_size)) {
                 HAL_TRACE_ERR("Ring: {}: Failed to initialize shadow pndx @ {:x}",
                               barco_rings[idx].ring_name, shadow_pndx_addr);
@@ -1883,7 +1891,7 @@ hal_ret_t capri_barco_symm_req_descr_get(types::BarcoRings ring_type, uint32_t s
             barco_ring->ring_base, (uint64_t) slot_addr,
 		    barco_ring->descriptor_size);
 
-    if (capri_hbm_read_mem(slot_addr, value, sizeof(value))) {
+    if (sdk::asic::asic_mem_read(slot_addr, value, sizeof(value))) {
         HAL_TRACE_ERR("{}@{:x}: Failed to read Symmetric request descriptor entry",
                 barco_ring->ring_name,
                 (uint64_t) slot_addr);
@@ -1907,13 +1915,13 @@ hal_ret_t capri_barco_symm_req_descr_get(types::BarcoRings ring_type, uint32_t s
     /* IV is not directly located in the ring, hence dereference it */
 
     if (req_descr->iv_address) {
-        if(capri_hbm_read_mem(req_descr->iv_address,
+        if(sdk::asic::asic_mem_read(req_descr->iv_address,
 	    		   (uint8_t*)&symm_req_descr->salt,
 	    		   sizeof(symm_req_descr->salt))) {
            HAL_TRACE_ERR("{}@{:x}: Failed to read the Salt information from HBM",
 	    	     barco_ring->ring_name, (uint64_t) req_descr->iv_address);
         }
-        if(capri_hbm_read_mem(req_descr->iv_address + 4,
+        if(sdk::asic::asic_mem_read(req_descr->iv_address + 4,
 	    		   (uint8_t*)&symm_req_descr->explicit_iv,
 	    		   sizeof(symm_req_descr->explicit_iv))) {
             HAL_TRACE_ERR("{}@{:x}: Failed to read the explicit IV information from HBM",
@@ -1921,7 +1929,7 @@ hal_ret_t capri_barco_symm_req_descr_get(types::BarcoRings ring_type, uint32_t s
         }
     }
     if (req_descr->status_addr) {
-        if(capri_hbm_read_mem(req_descr->status_addr,
+        if(sdk::asic::asic_mem_read(req_descr->status_addr,
 	    		   (uint8_t*)&symm_req_descr->barco_status,
 	   		   sizeof(symm_req_descr->barco_status))) {
            HAL_TRACE_ERR("{}@{:x}: Failed to read the Barco Status information from HBM",

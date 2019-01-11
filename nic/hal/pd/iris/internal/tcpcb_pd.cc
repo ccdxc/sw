@@ -70,7 +70,7 @@ p4pd_get_tcp_rx_stage0_prog_addr(uint64_t* offset)
     char progname[] = "rxdma_stage0.bin";
     char labelname[]= "tcp_rx_stage0";
 
-    int ret = sdk::platform::p4_program_label_to_offset("p4plus",
+    int ret = sdk::p4::p4_program_label_to_offset("p4plus",
                                             progname,
                                             labelname,
                                             offset);
@@ -330,7 +330,7 @@ p4pd_get_tcp_rx_read_tx2rx_entry(pd_tcpcb_t* tcpcb_pd)
     tcpcb_hw_id_t hwid = tcpcb_pd->hw_id +
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_READ_TX2RX);
 
-    if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to get rx: read_tx2rx entry for TCP CB");
         return HAL_RET_HW_FAIL;
     }
@@ -355,7 +355,7 @@ p4pd_get_tcp_rx_tcp_rx_entry(pd_tcpcb_t* tcpcb_pd)
     tcpcb_hw_id_t hwid = tcpcb_pd->hw_id +
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_TCP_RX);
 
-    if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to get rx: tcp_rx entry for TCP CB");
         return HAL_RET_HW_FAIL;
     }
@@ -391,7 +391,7 @@ p4pd_get_tcp_rx_tcp_fc_entry(pd_tcpcb_t* tcpcb_pd)
     tcpcb_hw_id_t hwid = tcpcb_pd->hw_id +
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_TCP_FC);
 
-    if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to create rx: tcp_fc entry for TCP CB");
         return HAL_RET_HW_FAIL;
     }
@@ -411,7 +411,7 @@ p4pd_get_tcp_rx_write_serq_entry(pd_tcpcb_t* tcpcb_pd)
     tcpcb_hw_id_t hwid = tcpcb_pd->hw_id +
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_WRITE_SERQ);
 
-    if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to read rx: write_serq entry for TCP CB");
         return HAL_RET_HW_FAIL;
     }
@@ -467,21 +467,21 @@ p4pd_get_tcpcb_rxdma_stats(pd_tcpcb_t* tcpcb_pd)
 
     hwid = tcpcb_pd->hw_id +
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_TCP_RX);
-    if(!p4plus_hbm_read(hwid,  (uint8_t *)&tcp_rx_d, sizeof(tcp_rx_d))) {
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&tcp_rx_d, sizeof(tcp_rx_d))) {
         HAL_TRACE_ERR("Failed to get rx: tcp_rx entry for TCP CB");
         return HAL_RET_HW_FAIL;
      }
 
     hwid = tcpcb_pd->hw_id +
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_WRITE_SERQ);
-    if(!p4plus_hbm_read(hwid,  (uint8_t *)&write_serq_d, sizeof(write_serq_d))) {
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&write_serq_d, sizeof(write_serq_d))) {
         HAL_TRACE_ERR("Failed to get rx: write_serq entry for TCP CB");
         return HAL_RET_HW_FAIL;
     }
 
     hwid = tcpcb_pd->hw_id +
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_STATS);
-    if(!p4plus_hbm_read(hwid,  (uint8_t *)&stats, sizeof(stats))) {
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&stats, sizeof(stats))) {
         HAL_TRACE_ERR("Failed to get rx: stats entry for TCP CB");
         return HAL_RET_HW_FAIL;
     }
@@ -538,21 +538,21 @@ p4pd_get_tcpcb_txdma_stats(pd_tcpcb_t* tcpcb_pd)
 
     hwid = tcpcb_pd->hw_id +
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_READ_RX2TX);
-    if(!p4plus_hbm_read(hwid,  (uint8_t *)&rx2tx_d, sizeof(rx2tx_d))) {
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&rx2tx_d, sizeof(rx2tx_d))) {
         HAL_TRACE_ERR("Failed to get rx: rx2tx entry for TCP CB");
         return HAL_RET_HW_FAIL;
      }
 
     hwid = tcpcb_pd->hw_id +
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_TCP_TSO);
-    if(!p4plus_hbm_read(hwid,  (uint8_t *)&tso_d, sizeof(tso_d))) {
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&tso_d, sizeof(tso_d))) {
         HAL_TRACE_ERR("Failed to get rx: tso entry for TCP CB");
         return HAL_RET_HW_FAIL;
      }
 
     hwid = tcpcb_pd->hw_id +
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_STATS);
-    if(!p4plus_hbm_read(hwid,  (uint8_t *)&stats, sizeof(stats))) {
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&stats, sizeof(stats))) {
         HAL_TRACE_ERR("Failed to get rx: stats entry for TCP CB");
         return HAL_RET_HW_FAIL;
     }
@@ -596,7 +596,7 @@ p4pd_get_tcp_tx_stage0_prog_addr(uint64_t* offset)
     char progname[] = "txdma_stage0.bin";
     char labelname[]= "tcp_tx_stage0";
 
-    int ret = sdk::platform::p4_program_label_to_offset("p4plus",
+    int ret = sdk::p4::p4_program_label_to_offset("p4plus",
                                             progname,
                                             labelname,
                                             offset);
@@ -618,7 +618,7 @@ debug_dol_init_timer_full_area(int state)
     uint8_t byte;
     uint64_t data[DEBUG_DOL_TEST_TIMER_NUM_KEY_LINES * 2 * 8];
 
-    timer_key_hbm_base_addr = (uint64_t)get_start_offset((char *)JTIMERS);
+    timer_key_hbm_base_addr = (uint64_t)get_mem_addr((char *)JTIMERS);
     timer_key_hbm_base_addr += (DEBUG_DOL_TEST_TIMER_NUM_KEY_LINES *
                     CAPRI_TIMER_NUM_KEY_PER_CACHE_LINE * 64);
 
@@ -957,7 +957,7 @@ p4pd_get_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd)
     tcpcb_hw_id_t hwid = tcpcb_pd->hw_id +
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_READ_RX2TX);
 
-    if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to get tx: read_rx2tx entry for TCP CB");
         return HAL_RET_HW_FAIL;
     }
@@ -969,7 +969,7 @@ p4pd_get_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd)
         HAL_TRACE_DEBUG("reading rx2tx at an offset {}",
                 TCP_DDOL_TBLADDR_SHIFT_OFFSET);
         hwid += TCP_DDOL_TBLADDR_SHIFT_OFFSET;
-        if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
+        if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&data, sizeof(data))){
             HAL_TRACE_ERR("Failed to get tx: read_rx2tx entry for TCP CB");
             return HAL_RET_HW_FAIL;
         }
@@ -1010,7 +1010,7 @@ p4pd_get_tcp_tx_read_rx2tx_extra_entry(pd_tcpcb_t* tcpcb_pd)
     tcpcb_hw_id_t hwid = tcpcb_pd->hw_id +
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_READ_RX2TX_EXTRA);
 
-    if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to get tx: read_rx2tx entry for TCP CB");
         return HAL_RET_HW_FAIL;
     }
@@ -1031,7 +1031,7 @@ p4pd_get_tcp_tx_tcp_retx_entry(pd_tcpcb_t* tcpcb_pd)
     tcpcb_hw_id_t hwid = tcpcb_pd->hw_id +
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_TCP_RETX);
 
-    if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to create rx: tcp_cc entry for TCP CB");
         return HAL_RET_HW_FAIL;
     }
@@ -1052,7 +1052,7 @@ p4pd_get_tcp_tx_cc_and_fra_entry(pd_tcpcb_t* tcpcb_pd)
     tcpcb_hw_id_t hwid = tcpcb_pd->hw_id +
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_TCP_CC_AND_FRA);
 
-    if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to get tx: read_rx2tx entry for TCP CB");
         return HAL_RET_HW_FAIL;
     }
@@ -1075,7 +1075,7 @@ p4pd_get_tcp_tx_xmit_entry(pd_tcpcb_t* tcpcb_pd)
     tcpcb_hw_id_t hwid = tcpcb_pd->hw_id +
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_TCP_XMIT);
 
-    if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to get tx: read_rx2tx entry for TCP CB");
         return HAL_RET_HW_FAIL;
     }
@@ -1099,7 +1099,7 @@ p4pd_get_tcp_tx_tso_entry(pd_tcpcb_t* tcpcb_pd)
     tcpcb_hw_id_t hwid = tcpcb_pd->hw_id +
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_TCP_TSO);
 
-    if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to get tx: read_rx2tx entry for TCP CB");
         return HAL_RET_HW_FAIL;
     }
@@ -1126,7 +1126,7 @@ p4pd_get_tcp_tx_header_template_entry(pd_tcpcb_t* tcpcb_pd)
     tcpcb_hw_id_t hwid = tcpcb_pd->hw_id +
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_HEADER_TEMPLATE);
 
-    if(!p4plus_hbm_read(hwid,  (uint8_t *)data, P4PD_TCPCB_STAGE_ENTRY_OFFSET)){
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)data, P4PD_TCPCB_STAGE_ENTRY_OFFSET)){
         HAL_TRACE_ERR("Failed to create tx: read_rx2tx entry for TCP CB");
         return HAL_RET_HW_FAIL;
     }
@@ -1396,7 +1396,7 @@ pd_tcp_global_stats_get (pd_func_args_t *pd_func_args)
     sdk_ret_t ret;
 
     sdk::types::mem_addr_t stats_mem_addr =
-        get_start_offset(TCP_PROXY_STATS);
+        get_mem_addr(TCP_PROXY_STATS);
     HAL_TRACE_DEBUG("TCP global stats mem_addr: {:x}", stats_mem_addr);
 
     pd_tcp_global_stats_get_args_t *args = pd_func_args->pd_tcp_global_stats_get;

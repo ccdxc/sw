@@ -6,7 +6,7 @@
 #include "nic/sdk/asic/asic.hpp"
 #include "nic/sdk/include/sdk/catalog.hpp"
 #include "lib/bm_allocator/bm_allocator.hpp"
-#include "platform/p4loader/loader.hpp"
+#include "p4/loader/loader.hpp"
 
 namespace sdk {
 namespace platform {
@@ -26,8 +26,8 @@ typedef struct capri_asm_cfg_s {
     std::string                 name;
     std::string                 path;
     std::string                 base_addr;
-    sdk::platform::mpu_pgm_sort_t              sort_func;
-    sdk::platform::mpu_pgm_symbols_t           symbols_func;
+    mpu_pgm_sort_t              sort_func;
+    mpu_pgm_symbols_t           symbols_func;
 } capri_asm_cfg_t;
 
 typedef struct capri_cfg_s {

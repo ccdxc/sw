@@ -58,7 +58,7 @@ p4pd_get_proxyc_tx_stage0_prog_addr(uint64_t* offset)
     char progname[] = "txdma_stage0.bin";
     char labelname[]= "proxyc_tx_stage0";
 
-    int ret = sdk::platform::p4_program_label_to_offset("p4plus",
+    int ret = sdk::p4::p4_program_label_to_offset("p4plus",
                                             progname,
                                             labelname,
                                             offset);
@@ -253,7 +253,7 @@ p4pd_get_proxyccb_tx_stage0_entry(pd_proxyccb_t* proxyccb_pd)
     // hardware index for this entry
     proxyccb_hw_addr_t    hw_addr = proxyccb_pd->hw_addr;
 
-    if(!p4plus_hbm_read(hw_addr,  (uint8_t *)&data, sizeof(data))){
+    if(sdk::asic::asic_mem_read(hw_addr,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to get tx: stage0 entry for PROXYCCB");
         return HAL_RET_HW_FAIL;
     }
@@ -292,7 +292,7 @@ p4pd_get_proxyc_stats_entry(pd_proxyccb_t* proxyccb_pd)
     proxyccb_hw_addr_t hw_addr = proxyccb_pd->hw_addr +
                                  PROXYCCB_TABLE_STATS_OFFSET;
 
-    if(!p4plus_hbm_read(hw_addr, (uint8_t *)&data, sizeof(data))){
+    if(sdk::asic::asic_mem_read(hw_addr, (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to get stats entry for PROXYCCB");
         return HAL_RET_HW_FAIL;
     }

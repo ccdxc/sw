@@ -165,49 +165,49 @@ hal_ret_t capri_barco_asym_ecc_point_mul_p256(uint8_t *p, uint8_t *n,
     /* Copy the input to the ilist memory */
     curr_ptr = ilist_mem_addr;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)p, 32)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)p, 32)) {
         HAL_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param p into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)n, 32)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)n, 32)) {
         HAL_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param n into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)a, 32)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)a, 32)) {
         HAL_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param a into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)b, 32)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)b, 32)) {
         HAL_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param b into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)x1, 32)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)x1, 32)) {
         HAL_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param x1 into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)y1, 32)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)y1, 32)) {
         HAL_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param y1 into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)k, 32)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)k, 32)) {
         HAL_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param k into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
@@ -224,7 +224,7 @@ hal_ret_t capri_barco_asym_ecc_point_mul_p256(uint8_t *p, uint8_t *n,
     ilist_dma_descr.realign = 1;
     ilist_dma_descr.cst_addr = 0;
     ilist_dma_descr.length = (curr_ptr - ilist_mem_addr);
-    if (capri_hbm_write_mem(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
+    if (sdk::asic::asic_mem_write(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
                 sizeof(ilist_dma_descr))) {
         HAL_TRACE_ERR("ECC Point Mul P256: Failed to write ilist DMA Descr @ {:x}",
                 (uint64_t) ilist_dma_descr_addr);
@@ -242,7 +242,7 @@ hal_ret_t capri_barco_asym_ecc_point_mul_p256(uint8_t *p, uint8_t *n,
     olist_dma_descr.realign = 1;
     olist_dma_descr.cst_addr = 0;
     olist_dma_descr.length = (2 * 32 ); /* Outputs: x3, y3 */
-    if (capri_hbm_write_mem(olist_dma_descr_addr, (uint8_t*)&olist_dma_descr,
+    if (sdk::asic::asic_mem_write(olist_dma_descr_addr, (uint8_t*)&olist_dma_descr,
                 sizeof(olist_dma_descr))) {
         HAL_TRACE_ERR("ECC Point Mul P256: Failed to write olist DMA Descr @ {:x}",
                 (uint64_t) olist_dma_descr_addr);
@@ -273,13 +273,13 @@ hal_ret_t capri_barco_asym_ecc_point_mul_p256(uint8_t *p, uint8_t *n,
 
 
     /* Copy out the results */
-    if (capri_hbm_read_mem(olist_mem_addr, (uint8_t*)x3, 32)) {
+    if (sdk::asic::asic_mem_read(olist_mem_addr, (uint8_t*)x3, 32)) {
         HAL_TRACE_ERR("ECC Point Mul P256: Failed to read x3 output from memory @ {:x}",
                 (uint64_t) olist_mem_addr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
-    if (capri_hbm_read_mem(olist_mem_addr + 32, (uint8_t*)y3, 32)) {
+    if (sdk::asic::asic_mem_read(olist_mem_addr + 32, (uint8_t*)y3, 32)) {
         HAL_TRACE_ERR("ECC Point Mul P256: Failed to read y3 output from memory @ {:x}",
                 (uint64_t) (olist_mem_addr + 32));
         ret = HAL_RET_INVALID_ARG;
@@ -378,49 +378,49 @@ capri_barco_asym_ecdsa_p256_setup_priv_key(uint8_t *p, uint8_t *n,
 
     curr_ptr = key_param_addr;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)p, 32)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)p, 32)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param p into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)n, 32)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)n, 32)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param n into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)xg, 32)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)xg, 32)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param xg into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)yg, 32)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)yg, 32)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param yg into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)a, 32)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)a, 32)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param a into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)b, 32)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)b, 32)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param b into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)da, 32)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)da, 32)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param da into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
@@ -445,7 +445,7 @@ capri_barco_asym_ecdsa_p256_setup_priv_key(uint8_t *p, uint8_t *n,
     key_dma_descr.realign = 1;
     key_dma_descr.cst_addr = 0;
     key_dma_descr.length = (curr_ptr - key_param_addr);
-    if (capri_hbm_write_mem(key_dma_descr_addr, (uint8_t*)&key_dma_descr,
+    if (sdk::asic::asic_mem_write(key_dma_descr_addr, (uint8_t*)&key_dma_descr,
                 sizeof(key_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ {:x}",
                 (uint64_t) key_dma_descr_addr);
@@ -582,14 +582,14 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_gen(int32_t key_idx, uint8_t *p, uint8
     /* Copy the input to the ilist memory */
     curr_ptr = ilist_mem_addr;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)k, 32)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)k, 32)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param k into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)h, 32)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)h, 32)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param h into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
@@ -606,7 +606,7 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_gen(int32_t key_idx, uint8_t *p, uint8
     ilist_dma_descr.realign = 1;
     ilist_dma_descr.cst_addr = 0;
     ilist_dma_descr.length = (curr_ptr - ilist_mem_addr);
-    if (capri_hbm_write_mem(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
+    if (sdk::asic::asic_mem_write(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
                 sizeof(ilist_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ilist DMA Descr @ {:x}",
                 (uint64_t) ilist_dma_descr_addr);
@@ -624,7 +624,7 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_gen(int32_t key_idx, uint8_t *p, uint8
     olist_dma_descr.realign = 1;
     olist_dma_descr.cst_addr = 0;
     olist_dma_descr.length = (2 * 32 ); /* Outputs: r, s */
-    if (capri_hbm_write_mem(olist_dma_descr_addr, (uint8_t*)&olist_dma_descr,
+    if (sdk::asic::asic_mem_write(olist_dma_descr_addr, (uint8_t*)&olist_dma_descr,
                 sizeof(olist_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write olist DMA Descr @ {:x}",
                 (uint64_t) olist_dma_descr_addr);
@@ -652,7 +652,7 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_gen(int32_t key_idx, uint8_t *p, uint8
     // Wait for operation to be completed
     capri_barco_wait_for_resp(req_tag, async_args);
 
-    if (capri_hbm_read_mem(asym_req_descr.status_addr, (uint8_t*)&status, sizeof(status))) {
+    if (sdk::asic::asic_mem_read(asym_req_descr.status_addr, (uint8_t*)&status, sizeof(status))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ {:x}",
                 (uint64_t) asym_req_descr.status_addr);
         ret = HAL_RET_ERR;
@@ -666,13 +666,13 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_gen(int32_t key_idx, uint8_t *p, uint8
     }
 
     /* Copy out the results */
-    if (capri_hbm_read_mem(olist_mem_addr, (uint8_t*)r, 32)) {
+    if (sdk::asic::asic_mem_read(olist_mem_addr, (uint8_t*)r, 32)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to read r output from memory @ {:x}",
                 (uint64_t) olist_mem_addr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
-    if (capri_hbm_read_mem(olist_mem_addr + 32, (uint8_t*)s, 32)) {
+    if (sdk::asic::asic_mem_read(olist_mem_addr + 32, (uint8_t*)s, 32)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to read s output from memory @ {:x}",
                 (uint64_t) (olist_mem_addr + 32));
         ret = HAL_RET_INVALID_ARG;
@@ -767,56 +767,56 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_verify(uint8_t *p, uint8_t *n,
 
     curr_ptr = key_param_addr;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)p, 32)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)p, 32)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param p into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)n, 32)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)n, 32)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param n into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)xg, 32)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)xg, 32)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param xg into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)yg, 32)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)yg, 32)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param yg into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)a, 32)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)a, 32)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param a into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)b, 32)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)b, 32)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param b into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)xq, 32)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)xq, 32)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param xq into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)yq, 32)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)yq, 32)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param yq into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
@@ -841,7 +841,7 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_verify(uint8_t *p, uint8_t *n,
     key_dma_descr.realign = 1;
     key_dma_descr.cst_addr = 0;
     key_dma_descr.length = (curr_ptr - key_param_addr);
-    if (capri_hbm_write_mem(key_dma_descr_addr, (uint8_t*)&key_dma_descr,
+    if (sdk::asic::asic_mem_write(key_dma_descr_addr, (uint8_t*)&key_dma_descr,
                 sizeof(key_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ {:x}",
                 (uint64_t) key_dma_descr_addr);
@@ -905,21 +905,21 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_verify(uint8_t *p, uint8_t *n,
     /* Copy the input to the ilist memory */
     curr_ptr = ilist_mem_addr;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)r, 32)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)r, 32)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param r into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)s, 32)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)s, 32)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param s into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)h, 32)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)h, 32)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param h into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
@@ -936,7 +936,7 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_verify(uint8_t *p, uint8_t *n,
     ilist_dma_descr.realign = 1;
     ilist_dma_descr.cst_addr = 0;
     ilist_dma_descr.length = (curr_ptr - ilist_mem_addr);
-    if (capri_hbm_write_mem(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
+    if (sdk::asic::asic_mem_write(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
                 sizeof(ilist_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ilist DMA Descr @ {:x}",
                 (uint64_t) ilist_dma_descr_addr);
@@ -964,7 +964,7 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_verify(uint8_t *p, uint8_t *n,
     // Wait for operation to be completed
     capri_barco_wait_for_resp(req_tag, async_args);
 
-    if (capri_hbm_read_mem(asym_req_descr.status_addr, (uint8_t*)&status, sizeof(status))) {
+    if (sdk::asic::asic_mem_read(asym_req_descr.status_addr, (uint8_t*)&status, sizeof(status))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ {:x}",
                 (uint64_t) asym_req_descr.status_addr);
         ret = HAL_RET_ERR;
@@ -1072,14 +1072,14 @@ hal_ret_t capri_barco_asym_rsa2k_setup_sig_gen_priv_key(uint8_t *n, uint8_t *d,
 
     curr_ptr = key_param_addr;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)n, 256)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)n, 256)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param n into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 256;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)d, 256)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)d, 256)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param d into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
@@ -1104,7 +1104,7 @@ hal_ret_t capri_barco_asym_rsa2k_setup_sig_gen_priv_key(uint8_t *n, uint8_t *d,
     key_dma_descr.realign = 1;
     key_dma_descr.cst_addr = 0;
     key_dma_descr.length = (curr_ptr - key_param_addr);
-    if (capri_hbm_write_mem(key_dma_descr_addr, (uint8_t*)&key_dma_descr,
+    if (sdk::asic::asic_mem_write(key_dma_descr_addr, (uint8_t*)&key_dma_descr,
                 sizeof(key_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ {:x}",
                 (uint64_t) key_dma_descr_addr);
@@ -1205,14 +1205,14 @@ hal_ret_t capri_barco_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e,
 
     curr_ptr = key_param_addr;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)n, 256)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)n, 256)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param n into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 256;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)e, 256)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)e, 256)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param e into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
@@ -1237,7 +1237,7 @@ hal_ret_t capri_barco_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e,
     key_dma_descr.realign = 1;
     key_dma_descr.cst_addr = 0;
     key_dma_descr.length = (curr_ptr - key_param_addr);
-    if (capri_hbm_write_mem(key_dma_descr_addr, (uint8_t*)&key_dma_descr,
+    if (sdk::asic::asic_mem_write(key_dma_descr_addr, (uint8_t*)&key_dma_descr,
                 sizeof(key_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ {:x}",
                 (uint64_t) key_dma_descr_addr);
@@ -1309,7 +1309,7 @@ hal_ret_t capri_barco_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e,
     /* Copy the input to the ilist memory */
     curr_ptr = ilist_mem_addr;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)m, 256)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)m, 256)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param m into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
@@ -1326,7 +1326,7 @@ hal_ret_t capri_barco_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e,
     ilist_dma_descr.realign = 1;
     ilist_dma_descr.cst_addr = 0;
     ilist_dma_descr.length = (curr_ptr - ilist_mem_addr);
-    if (capri_hbm_write_mem(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
+    if (sdk::asic::asic_mem_write(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
                 sizeof(ilist_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ilist DMA Descr @ {:x}",
                 (uint64_t) ilist_dma_descr_addr);
@@ -1344,7 +1344,7 @@ hal_ret_t capri_barco_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e,
     olist_dma_descr.realign = 1;
     olist_dma_descr.cst_addr = 0;
     olist_dma_descr.length = (1 * 256); /* cipher text */
-    if (capri_hbm_write_mem(olist_dma_descr_addr, (uint8_t*)&olist_dma_descr,
+    if (sdk::asic::asic_mem_write(olist_dma_descr_addr, (uint8_t*)&olist_dma_descr,
                 sizeof(olist_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write olist DMA Descr @ {:x}",
                 (uint64_t) olist_dma_descr_addr);
@@ -1372,7 +1372,7 @@ hal_ret_t capri_barco_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e,
     // Wait for operation to be completed
     capri_barco_wait_for_resp(req_tag, async_args);
 
-    if (capri_hbm_read_mem(asym_req_descr.status_addr, (uint8_t*)&status, sizeof(status))) {
+    if (sdk::asic::asic_mem_read(asym_req_descr.status_addr, (uint8_t*)&status, sizeof(status))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ {:x}",
                 (uint64_t) asym_req_descr.status_addr);
         ret = HAL_RET_ERR;
@@ -1386,7 +1386,7 @@ hal_ret_t capri_barco_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e,
     }
     else {
         /* Copy out the results */
-        if (capri_hbm_read_mem(olist_mem_addr, (uint8_t*)c, 256)) {
+        if (sdk::asic::asic_mem_read(olist_mem_addr, (uint8_t*)c, 256)) {
             HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to read output c from memory @ {:x}",
                     (uint64_t) olist_mem_addr);
             ret = HAL_RET_INVALID_ARG;
@@ -1499,14 +1499,14 @@ hal_ret_t capri_barco_asym_rsa2k_decrypt(uint8_t *n, uint8_t *d,
 
     curr_ptr = key_param_addr;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)n, 256)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)n, 256)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param n into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 256;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)d, 256)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)d, 256)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param d into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
@@ -1531,7 +1531,7 @@ hal_ret_t capri_barco_asym_rsa2k_decrypt(uint8_t *n, uint8_t *d,
     key_dma_descr.realign = 1;
     key_dma_descr.cst_addr = 0;
     key_dma_descr.length = (curr_ptr - key_param_addr);
-    if (capri_hbm_write_mem(key_dma_descr_addr, (uint8_t*)&key_dma_descr,
+    if (sdk::asic::asic_mem_write(key_dma_descr_addr, (uint8_t*)&key_dma_descr,
                 sizeof(key_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ {:x}",
                 (uint64_t) key_dma_descr_addr);
@@ -1603,7 +1603,7 @@ hal_ret_t capri_barco_asym_rsa2k_decrypt(uint8_t *n, uint8_t *d,
     /* Copy the input to the ilist memory */
     curr_ptr = ilist_mem_addr;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)c, 256)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)c, 256)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param c into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
@@ -1620,7 +1620,7 @@ hal_ret_t capri_barco_asym_rsa2k_decrypt(uint8_t *n, uint8_t *d,
     ilist_dma_descr.realign = 1;
     ilist_dma_descr.cst_addr = 0;
     ilist_dma_descr.length = (curr_ptr - ilist_mem_addr);
-    if (capri_hbm_write_mem(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
+    if (sdk::asic::asic_mem_write(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
                 sizeof(ilist_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ilist DMA Descr @ {:x}",
                 (uint64_t) ilist_dma_descr_addr);
@@ -1638,7 +1638,7 @@ hal_ret_t capri_barco_asym_rsa2k_decrypt(uint8_t *n, uint8_t *d,
     olist_dma_descr.realign = 1;
     olist_dma_descr.cst_addr = 0;
     olist_dma_descr.length = (1 * 256); /* plain text */
-    if (capri_hbm_write_mem(olist_dma_descr_addr, (uint8_t*)&olist_dma_descr,
+    if (sdk::asic::asic_mem_write(olist_dma_descr_addr, (uint8_t*)&olist_dma_descr,
                 sizeof(olist_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write olist DMA Descr @ {:x}",
                 (uint64_t) olist_dma_descr_addr);
@@ -1666,7 +1666,7 @@ hal_ret_t capri_barco_asym_rsa2k_decrypt(uint8_t *n, uint8_t *d,
     while (capri_barco_ring_poll(types::BARCO_RING_ASYM, req_tag) != TRUE) {
         //HAL_TRACE_DEBUG("ECC Point Mul P256: Waiting for Barco completion...");
     }
-    if (capri_hbm_read_mem(asym_req_descr.status_addr, (uint8_t*)&status, sizeof(status))) {
+    if (sdk::asic::asic_mem_read(asym_req_descr.status_addr, (uint8_t*)&status, sizeof(status))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ {:x}",
                 (uint64_t) asym_req_descr.status_addr);
         ret = HAL_RET_ERR;
@@ -1680,7 +1680,7 @@ hal_ret_t capri_barco_asym_rsa2k_decrypt(uint8_t *n, uint8_t *d,
     }
     else {
         /* Copy out the results */
-        if (capri_hbm_read_mem(olist_mem_addr, (uint8_t*)m, 256)) {
+        if (sdk::asic::asic_mem_read(olist_mem_addr, (uint8_t*)m, 256)) {
             HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to read output m from memory @ {:x}",
                     (uint64_t) olist_mem_addr);
             ret = HAL_RET_INVALID_ARG;
@@ -1836,14 +1836,14 @@ capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(uint8_t *p, uint8_t *q, uint8_
     /* Setup params in the key memory 1 */
     curr_ptr = key_param_addr1;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)p, 256)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)p, 256)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param p into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 256;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)q, 256)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)q, 256)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param q into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
@@ -1859,7 +1859,7 @@ capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(uint8_t *p, uint8_t *q, uint8_
     key_dma_descr.realign = 0;
     key_dma_descr.cst_addr = 0;
     key_dma_descr.length = (curr_ptr - key_param_addr1);
-    if (capri_hbm_write_mem(key_dma_descr_addr1, (uint8_t*)&key_dma_descr,
+    if (sdk::asic::asic_mem_write(key_dma_descr_addr1, (uint8_t*)&key_dma_descr,
                 sizeof(key_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ {:x}",
                 (uint64_t) key_dma_descr_addr1);
@@ -1870,14 +1870,14 @@ capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(uint8_t *p, uint8_t *q, uint8_
     /* Setup params in the key memory 2 */
     curr_ptr = key_param_addr2;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)dp, 256)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)dp, 256)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param dp into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 256;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)dq, 256)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)dq, 256)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param dq into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
@@ -1894,7 +1894,7 @@ capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(uint8_t *p, uint8_t *q, uint8_
     key_dma_descr.realign = 0;
     key_dma_descr.cst_addr = 0;
     key_dma_descr.length = (curr_ptr - key_param_addr2);
-    if (capri_hbm_write_mem(key_dma_descr_addr2, (uint8_t*)&key_dma_descr,
+    if (sdk::asic::asic_mem_write(key_dma_descr_addr2, (uint8_t*)&key_dma_descr,
                 sizeof(key_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ {:x}",
                 (uint64_t) key_dma_descr_addr2);
@@ -1905,7 +1905,7 @@ capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(uint8_t *p, uint8_t *q, uint8_
     /* Setup params in the key memory 3 */
     curr_ptr = key_param_addr3;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)qinv, 256)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)qinv, 256)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param qinv into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
@@ -1922,7 +1922,7 @@ capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(uint8_t *p, uint8_t *q, uint8_
     key_dma_descr.realign = 1;
     key_dma_descr.cst_addr = 0;
     key_dma_descr.length = (curr_ptr - key_param_addr3);
-    if (capri_hbm_write_mem(key_dma_descr_addr3, (uint8_t*)&key_dma_descr,
+    if (sdk::asic::asic_mem_write(key_dma_descr_addr3, (uint8_t*)&key_dma_descr,
                 sizeof(key_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ {:x}",
                 (uint64_t) key_dma_descr_addr3);
@@ -2093,7 +2093,7 @@ hal_ret_t capri_barco_asym_rsa2k_crt_decrypt(int32_t key_idx, uint8_t *p, uint8_
     /* Copy the input to the ilist memory */
     curr_ptr = ilist_mem_addr;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)c, 256)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)c, 256)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param c into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
@@ -2110,7 +2110,7 @@ hal_ret_t capri_barco_asym_rsa2k_crt_decrypt(int32_t key_idx, uint8_t *p, uint8_
     ilist_dma_descr.realign = 1;
     ilist_dma_descr.cst_addr = 0;
     ilist_dma_descr.length = (curr_ptr - ilist_mem_addr);
-    if (capri_hbm_write_mem(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
+    if (sdk::asic::asic_mem_write(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
                 sizeof(ilist_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ilist DMA Descr @ {:x}",
                 (uint64_t) ilist_dma_descr_addr);
@@ -2128,7 +2128,7 @@ hal_ret_t capri_barco_asym_rsa2k_crt_decrypt(int32_t key_idx, uint8_t *p, uint8_
     olist_dma_descr.realign = 1;
     olist_dma_descr.cst_addr = 0;
     olist_dma_descr.length = (1 * 256); /* plain text */
-    if (capri_hbm_write_mem(olist_dma_descr_addr, (uint8_t*)&olist_dma_descr,
+    if (sdk::asic::asic_mem_write(olist_dma_descr_addr, (uint8_t*)&olist_dma_descr,
                 sizeof(olist_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write olist DMA Descr @ {:x}",
                 (uint64_t) olist_dma_descr_addr);
@@ -2155,7 +2155,7 @@ hal_ret_t capri_barco_asym_rsa2k_crt_decrypt(int32_t key_idx, uint8_t *p, uint8_
     // Wait for operation to be completed
     capri_barco_wait_for_resp(req_tag, async_args);
 
-    if (capri_hbm_read_mem(asym_req_descr.status_addr, (uint8_t*)&status, sizeof(status))) {
+    if (sdk::asic::asic_mem_read(asym_req_descr.status_addr, (uint8_t*)&status, sizeof(status))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ {:x}",
                 (uint64_t) asym_req_descr.status_addr);
         ret = HAL_RET_ERR;
@@ -2169,7 +2169,7 @@ hal_ret_t capri_barco_asym_rsa2k_crt_decrypt(int32_t key_idx, uint8_t *p, uint8_
     }
     else {
         /* Copy out the results */
-        if (capri_hbm_read_mem(olist_mem_addr, (uint8_t*)m, 256)) {
+        if (sdk::asic::asic_mem_read(olist_mem_addr, (uint8_t*)m, 256)) {
             HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to read output m from memory @ {:x}",
                     (uint64_t) olist_mem_addr);
             ret = HAL_RET_INVALID_ARG;
@@ -2288,7 +2288,7 @@ hal_ret_t capri_barco_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n, uint8_t *d
     /* Copy the input to the ilist memory */
     curr_ptr = ilist_mem_addr;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)h, 256)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)h, 256)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param h into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
@@ -2305,7 +2305,7 @@ hal_ret_t capri_barco_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n, uint8_t *d
     ilist_dma_descr.realign = 1;
     ilist_dma_descr.cst_addr = 0;
     ilist_dma_descr.length = (curr_ptr - ilist_mem_addr);
-    if (capri_hbm_write_mem(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
+    if (sdk::asic::asic_mem_write(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
                 sizeof(ilist_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ilist DMA Descr @ {:x}",
                 (uint64_t) ilist_dma_descr_addr);
@@ -2323,7 +2323,7 @@ hal_ret_t capri_barco_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n, uint8_t *d
     olist_dma_descr.realign = 1;
     olist_dma_descr.cst_addr = 0;
     olist_dma_descr.length = (1 * 256); /* sig */
-    if (capri_hbm_write_mem(olist_dma_descr_addr, (uint8_t*)&olist_dma_descr,
+    if (sdk::asic::asic_mem_write(olist_dma_descr_addr, (uint8_t*)&olist_dma_descr,
                 sizeof(olist_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write olist DMA Descr @ {:x}",
                 (uint64_t) olist_dma_descr_addr);
@@ -2351,7 +2351,7 @@ hal_ret_t capri_barco_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n, uint8_t *d
     // Wait for operation to be completed
     capri_barco_wait_for_resp(req_tag, async_args);
 
-    if (capri_hbm_read_mem(asym_req_descr.status_addr, (uint8_t*)&status, sizeof(status))) {
+    if (sdk::asic::asic_mem_read(asym_req_descr.status_addr, (uint8_t*)&status, sizeof(status))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ {:x}",
                 (uint64_t) asym_req_descr.status_addr);
         ret = HAL_RET_ERR;
@@ -2365,7 +2365,7 @@ hal_ret_t capri_barco_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n, uint8_t *d
     }
     else {
         /* Copy out the results */
-        if (capri_hbm_read_mem(olist_mem_addr, (uint8_t*)s, 256)) {
+        if (sdk::asic::asic_mem_read(olist_mem_addr, (uint8_t*)s, 256)) {
             HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to read output s from memory @ {:x}",
                     (uint64_t) olist_mem_addr);
             ret = HAL_RET_INVALID_ARG;
@@ -2452,14 +2452,14 @@ hal_ret_t capri_barco_asym_rsa2k_sig_verify(uint8_t *n, uint8_t *e,
 
     curr_ptr = key_param_addr;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)n, 256)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)n, 256)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param n into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 256;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)e, 256)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)e, 256)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param e into key memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
@@ -2484,7 +2484,7 @@ hal_ret_t capri_barco_asym_rsa2k_sig_verify(uint8_t *n, uint8_t *e,
     key_dma_descr.realign = 1;
     key_dma_descr.cst_addr = 0;
     key_dma_descr.length = (curr_ptr - key_param_addr);
-    if (capri_hbm_write_mem(key_dma_descr_addr, (uint8_t*)&key_dma_descr,
+    if (sdk::asic::asic_mem_write(key_dma_descr_addr, (uint8_t*)&key_dma_descr,
                 sizeof(key_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ {:x}",
                 (uint64_t) key_dma_descr_addr);
@@ -2548,14 +2548,14 @@ hal_ret_t capri_barco_asym_rsa2k_sig_verify(uint8_t *n, uint8_t *e,
     /* Copy the input to the ilist memory */
     curr_ptr = ilist_mem_addr;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)s, 256)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)s, 256)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param s into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 256;
 
-    if (capri_hbm_write_mem(curr_ptr, (uint8_t*)h, 256)) {
+    if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)h, 256)) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param h into ilist memory @ {:x}", (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
@@ -2572,7 +2572,7 @@ hal_ret_t capri_barco_asym_rsa2k_sig_verify(uint8_t *n, uint8_t *e,
     ilist_dma_descr.realign = 1;
     ilist_dma_descr.cst_addr = 0;
     ilist_dma_descr.length = (curr_ptr - ilist_mem_addr);
-    if (capri_hbm_write_mem(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
+    if (sdk::asic::asic_mem_write(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
                 sizeof(ilist_dma_descr))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ilist DMA Descr @ {:x}",
                 (uint64_t) ilist_dma_descr_addr);
@@ -2600,7 +2600,7 @@ hal_ret_t capri_barco_asym_rsa2k_sig_verify(uint8_t *n, uint8_t *e,
     while (capri_barco_ring_poll(types::BARCO_RING_ASYM, req_tag) != TRUE) {
         //HAL_TRACE_DEBUG("ECC Point Mul P256: Waiting for Barco completion...");
     }
-    if (capri_hbm_read_mem(asym_req_descr.status_addr, (uint8_t*)&status, sizeof(status))) {
+    if (sdk::asic::asic_mem_read(asym_req_descr.status_addr, (uint8_t*)&status, sizeof(status))) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ {:x}",
                 (uint64_t) asym_req_descr.status_addr);
         ret = HAL_RET_ERR;

@@ -27,7 +27,7 @@ p4pd_get_gc_tx_stage0_prog_offset(int qtype, uint64_t* offset)
     };
     HAL_ABORT(qtype < CAPRI_HBM_GC_NUM_QTYPE);
 
-    int ret = sdk::platform::p4_program_label_to_offset("p4plus",
+    int ret = sdk::p4::p4_program_label_to_offset("p4plus",
                                             progname,
                                             (char *)labelname[qtype],
                                             offset);

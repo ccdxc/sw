@@ -182,7 +182,7 @@ hal_ret_t pd_crypto_asym_write_key(pd_func_args_t *pd_func_args)
     key_desc.key_param_list = key->key_param_list;
     key_desc.command_reg = key->command_reg;
 
-    if (capri_hbm_write_mem(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
+    if (sdk::asic::asic_mem_write(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
         HAL_TRACE_ERR("Failed to write Barco Asym key descriptor @ {:x}", (uint64_t) key_desc_addr);
         return HAL_RET_INVALID_ARG;
     }
@@ -207,7 +207,7 @@ hal_ret_t pd_crypto_asym_read_key(pd_func_args_t *pd_func_args)
         return ret;
     }
 
-    if (capri_hbm_read_mem(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
+    if (sdk::asic::asic_mem_read(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
         HAL_TRACE_ERR("Failed to read Barco Asym key descriptor from {:x}", (uint64_t) key_desc_addr);
         return HAL_RET_INVALID_ARG;
     }
@@ -230,8 +230,8 @@ crypto_init_ipsec_pad_table(void)
         ipsec_pad_bytes[i] = i+1;
     }
 
-    ipsec_pad_base_addr = get_start_offset(CAPRI_HBM_REG_IPSEC_PAD_TABLE);
-    if (ipsec_pad_base_addr) {
+    ipsec_pad_base_addr = get_mem_addr(CAPRI_HBM_REG_IPSEC_PAD_TABLE);
+    if (ipsec_pad_base_addr != INVALID_MEM_ADDRESS) {
         p4plus_hbm_write(ipsec_pad_base_addr, ipsec_pad_bytes, MAX_IPSEC_PAD_SIZE,
                 P4PLUS_CACHE_ACTION_NONE);
     }
@@ -243,8 +243,8 @@ hal_ret_t crypto_pd_init(void)
     hal_ret_t           ret = HAL_RET_OK;
     uint32_t            region_sz = 0;
 
-    key_mem_base = get_start_offset(key_mem);
-    region_sz = get_size_kb(key_mem) * 1024;
+    key_mem_base = get_mem_addr(key_mem);
+    region_sz = get_mem_size_kb(key_mem) * 1024;
     key_mem_size = region_sz / CRYPTO_KEY_SIZE_MAX;
     assert(key_mem_size >= CRYPTO_KEY_COUNT_MAX);
 

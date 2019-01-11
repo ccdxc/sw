@@ -67,26 +67,26 @@ capri_hbm_parse (std::string cfg_path, std::string pgm_name)
     return SDK_RET_OK;
 }
 
-hbm_addr_t
-get_hbm_base (void)
+mem_addr_t
+get_mem_base (void)
 {
     return mpart->base();
 }
 
-hbm_addr_t
-get_hbm_offset (const char *reg_name)
+mem_addr_t
+get_mem_offset (const char *reg_name)
 {
     return mpart->start_offset(reg_name);
 }
 
-hbm_addr_t
-get_start_offset (const char *reg_name)
+mem_addr_t
+get_mem_addr (const char *reg_name)
 {
     return mpart->start_addr(reg_name);
 }
 
 uint32_t
-get_size_kb (const char *reg_name)
+get_mem_size_kb (const char *reg_name)
 {
     return (mpart->size(reg_name) >> 10 );
 }
@@ -144,25 +144,6 @@ reset_hbm_regions (capri_cfg_t *capri_cfg)
             }
         }
     }
-}
-
-int32_t
-capri_hbm_read_mem (uint64_t addr, uint8_t *buf, uint32_t size)
-{
-    sdk_ret_t rc;
-
-    rc = sdk::asic::asic_mem_read(addr, buf, size);
-    return (rc == SDK_RET_OK) ? 0 : -EIO;
-}
-
-int32_t
-capri_hbm_write_mem (uint64_t addr, const uint8_t *buf, uint32_t size)
-{
-    sdk_ret_t rc;
-
-    rc = sdk::asic::asic_mem_write(addr, (uint8_t *)buf, size,
-                                   ASIC_WRITE_MODE_BLOCKING);
-    return (rc == SDK_RET_OK) ? 0 : -EIO;
 }
 
 static sdk_ret_t

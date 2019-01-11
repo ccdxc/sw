@@ -477,7 +477,7 @@ rdma_key_entry_read (uint16_t lif, uint32_t key, key_entry_t *entry_p)
     key_table_base_addr = pt_table_base_addr + (sizeof(uint64_t) << sram_lif_entry.log_num_pt_entries);
 
 #if 0
-    capri_hbm_read_mem((uint64_t)(((key_entry_t *) key_table_base_addr) + key),
+    sdk::asic::asic_mem_read((uint64_t)(((key_entry_t *) key_table_base_addr) + key),
                        (uint8_t*)entry_p, sizeof(key_entry_t));
 #endif
     pd::pd_capri_hbm_read_mem_args_t args = {0};

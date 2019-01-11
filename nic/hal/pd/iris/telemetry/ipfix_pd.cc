@@ -126,7 +126,7 @@ ipfix_test_init(uint32_t sindex, uint32_t eindex, uint16_t export_id) {
                          &stats_data);
 
         // atomic add region
-        uint64_t base_addr = get_start_offset(CAPRI_HBM_REG_P4_ATOMIC_STATS) +
+        uint64_t base_addr = get_mem_addr(CAPRI_HBM_REG_P4_ATOMIC_STATS) +
             ((flow_index+i) * 32);
         p4plus_hbm_write(base_addr, (uint8_t *)&permit_bytes,
                          sizeof(permit_bytes), P4PLUS_CACHE_ACTION_NONE);

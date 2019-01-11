@@ -1,9 +1,11 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #ifndef __CAPRI_HBM_RW_HPP__
 #define __CAPRI_HBM_RW_HPP__
 
 #include "platform/capri/capri_cfg.hpp"
 #include "platform/utils/mpartition.hpp"
-#include "platform/p4loader/loader.hpp"
+#include "p4/loader/loader.hpp"
 #include "asic/asic.hpp"
 
 namespace sdk {
@@ -24,14 +26,13 @@ using sdk::platform::utils::mpartition_region_t;
 
 
 sdk_ret_t capri_hbm_parse(std::string cfg_path, std::string pgm_name);
-mpartition_region_t *get_hbm_region(char *name);
-uint64_t get_hbm_base(void);
-uint64_t get_hbm_offset(const char *reg_name);
-uint64_t get_start_offset(const char *reg_name);
-uint32_t get_size_kb(const char *reg_name);
 void reset_hbm_regions(capri_cfg_t *cfg);
-int32_t capri_hbm_read_mem(uint64_t addr, uint8_t *buf, uint32_t size);
-int32_t capri_hbm_write_mem(uint64_t addr, const uint8_t *buf, uint32_t size);
+
+mpartition_region_t *get_mem_region(char *name);
+uint64_t get_mem_base(void);
+uint64_t get_mem_offset(const char *reg_name);
+uint64_t get_mem_addr(const char *reg_name);
+uint32_t get_mem_size_kb(const char *reg_name);
 
 
 
@@ -84,8 +85,6 @@ get_hbm_region_by_address(uint64_t addr);
 } // namespace sdk
 
 
-using sdk::platform::capri::get_start_offset;
-using sdk::platform::capri::get_size_kb;
-using sdk::platform::capri::capri_hbm_write_mem;
-using sdk::platform::capri::capri_hbm_read_mem;
+using sdk::platform::capri::get_mem_addr;
+using sdk::platform::capri::get_mem_size_kb;
 #endif    // __CAPRI_HBM_RW_HPP__

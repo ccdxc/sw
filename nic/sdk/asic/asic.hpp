@@ -7,7 +7,7 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/include/sdk/catalog.hpp"
-#include "platform/p4loader/loader.hpp"
+#include "p4/loader/loader.hpp"
 
 namespace sdk {
 namespace asic {

@@ -157,7 +157,7 @@ accel_shadow_pndx_write(types::BarcoRings ring_type,
                                      &opaque_tag_size);
     if (shadow_pndx_size) {
         assert(shadow_pndx_size <= sizeof(val));
-        if (capri_hbm_write_mem(shadow_pndx_pa, (uint8_t *)&val,
+        if (sdk::asic::asic_mem_write(shadow_pndx_pa, (uint8_t *)&val,
                                 shadow_pndx_size)) {
             HAL_TRACE_ERR("Failed to write shadow pndx @ {:x} size {}",
                           shadow_pndx_pa, shadow_pndx_size);

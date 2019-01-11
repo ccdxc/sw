@@ -46,7 +46,7 @@ hal_ret_t capri_barco_crypto_init(platform_type_t platform)
     hens.cfg_he_ctl.sw_rst(0);
     hens.cfg_he_ctl.write();
 
-    key_desc_array_base = get_start_offset(key_desc_array);
+    key_desc_array_base = get_mem_addr(key_desc_array);
     if (key_desc_array_base == INVALID_MEM_ADDRESS) {
         /* For non IRIS scenarios, the region may not be defined
          * in that case bail out silently
@@ -110,7 +110,7 @@ hal_ret_t capri_barco_init_key(uint32_t key_idx, uint64_t key_addr)
     key_desc_addr = key_desc_array_base + (key_idx * BARCO_CRYPTO_KEY_DESC_SZ);
     memset(&key_desc, 0, sizeof(capri_barco_key_desc_t));
     key_desc.key_address = key_addr;
-    if (capri_hbm_write_mem(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
+    if (sdk::asic::asic_mem_write(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
         HAL_TRACE_ERR("Failed to write Barco descriptor @ {:x}", (uint64_t) key_desc_addr); 
         return HAL_RET_INVALID_ARG;
     }
@@ -128,7 +128,7 @@ hal_ret_t capri_barco_setup_key(uint32_t key_idx, types::CryptoKeyType key_type,
 
     key_desc_addr = key_desc_array_base + (key_idx * BARCO_CRYPTO_KEY_DESC_SZ);
     HAL_TRACE_DEBUG("capri_barco_setup_key: key_desc_addr={} key_idx={}", key_desc_addr, key_idx);
-    if (capri_hbm_read_mem(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
+    if (sdk::asic::asic_mem_read(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
         HAL_TRACE_ERR("Failed to read Barco descriptor @ {:x}", (uint64_t) key_desc_addr); 
         return HAL_RET_INVALID_ARG;
     }
@@ -163,13 +163,13 @@ hal_ret_t capri_barco_setup_key(uint32_t key_idx, types::CryptoKeyType key_type,
     key_addr = key_desc.key_address;
     HAL_TRACE_DEBUG("capri_barco_setup_key key_addr={:x}", (uint64_t)key_addr);
     /* Write back key descriptor */
-    if (capri_hbm_write_mem(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
+    if (sdk::asic::asic_mem_write(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
         HAL_TRACE_ERR("Failed to write Barco descriptor @ {:x}", (uint64_t) key_desc_addr); 
         return HAL_RET_INVALID_ARG;
     }
     HAL_TRACE_DEBUG("capri_barco_setup_key key={}", barco_hex_dump(key,key_size));
     /* Write key memory */
-    if (capri_hbm_write_mem(key_addr, key, key_size)) {
+    if (sdk::asic::asic_mem_write(key_addr, key, key_size)) {
         HAL_TRACE_ERR("Failed to write key @ {:x}", (uint64_t) key_addr); 
         return HAL_RET_INVALID_ARG;
     }
@@ -185,7 +185,7 @@ hal_ret_t capri_barco_read_key(uint32_t key_idx, types::CryptoKeyType *key_type,
     uint32_t                cbkey_type;
 
     key_desc_addr = key_desc_array_base + (key_idx * BARCO_CRYPTO_KEY_DESC_SZ);
-    if (capri_hbm_read_mem(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
+    if (sdk::asic::asic_mem_read(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
         HAL_TRACE_ERR("Failed to read Barco descriptor @ {:x}", (uint64_t) key_desc_addr); 
         return HAL_RET_INVALID_ARG;
     }
@@ -229,7 +229,7 @@ hal_ret_t capri_barco_read_key(uint32_t key_idx, types::CryptoKeyType *key_type,
     }
 
     key_addr = key_desc.key_address;
-    if (capri_hbm_read_mem(key_addr, key, *key_size)) {
+    if (sdk::asic::asic_mem_read(key_addr, key, *key_size)) {
         HAL_TRACE_ERR("Failed to read key @ {:x}", (uint64_t) key_addr); 
         return HAL_RET_INVALID_ARG;
     }
@@ -240,7 +240,7 @@ hal_ret_t capri_barco_read_key(uint32_t key_idx, types::CryptoKeyType *key_type,
 hal_ret_t
 capri_barco_crypto_init_tls_pad_table(void)
 {
-    uint8_t  tls_pad_bytes[get_size_kb(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) * 1024], i, j;
+    uint8_t  tls_pad_bytes[get_mem_size_kb(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) * 1024], i, j;
     uint64_t tls_pad_base_addr = 0;
 
     HAL_TRACE_DEBUG("Initializing TLS-proxy Pad Bytes table of size {:x}", sizeof(tls_pad_bytes));
@@ -257,9 +257,9 @@ capri_barco_crypto_init_tls_pad_table(void)
         }
     }
 
-    tls_pad_base_addr = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE);
-    if (tls_pad_base_addr) {
-        capri_hbm_write_mem(tls_pad_base_addr, tls_pad_bytes, sizeof(tls_pad_bytes));
+    tls_pad_base_addr = get_mem_addr(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE);
+    if (tls_pad_base_addr != INVALID_MEM_ADDRESS) {
+        sdk::asic::asic_mem_write(tls_pad_base_addr, tls_pad_bytes, sizeof(tls_pad_bytes));
     }
     return HAL_RET_OK;
 }

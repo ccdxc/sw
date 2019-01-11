@@ -93,7 +93,7 @@ asicpd_p4plus_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
          i < p4pd_rxdma_tableid_max_get(); i++) {
         snprintf(progname, P4ACTION_NAME_MAX_LEN, "%s%s",
                  p4pd_rxdma_tbl_names[i], ".bin");
-        ret = sdk::platform::p4_program_to_base_addr(p4pd_cfg->p4pd_rxdma_pgm_name,
+        ret = sdk::p4::p4_program_to_base_addr(p4pd_cfg->p4pd_rxdma_pgm_name,
                                                      progname,
                                                      &capri_table_rxdma_asm_base);
         if (ret != SDK_RET_OK) {
@@ -103,7 +103,7 @@ asicpd_p4plus_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
         for (int j = 0; j < p4pd_rxdma_get_max_action_id(i); j++) {
             p4pd_rxdma_get_action_name(i, j, action_name);
             capri_action_rxdma_asm_base = 0;
-            sdk::platform::p4_program_label_to_offset(p4pd_cfg->p4pd_rxdma_pgm_name,
+            sdk::p4::p4_program_label_to_offset(p4pd_cfg->p4pd_rxdma_pgm_name,
                                           progname, action_name,
                                           &capri_action_rxdma_asm_base);
             // action base is in byte and 64B aligned
@@ -118,7 +118,7 @@ asicpd_p4plus_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
          i < p4pd_txdma_tableid_max_get(); i++) {
         snprintf(progname, P4ACTION_NAME_MAX_LEN, "%s%s",
                  p4pd_txdma_tbl_names[i], ".bin");
-        ret = sdk::platform::p4_program_to_base_addr(p4pd_cfg->p4pd_txdma_pgm_name,
+        ret = sdk::p4::p4_program_to_base_addr(p4pd_cfg->p4pd_txdma_pgm_name,
                                                      progname,
                                                      &capri_table_txdma_asm_base);
         if (ret != SDK_RET_OK) {
@@ -128,7 +128,7 @@ asicpd_p4plus_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
         for (int j = 0; j < p4pd_txdma_get_max_action_id(i); j++) {
             p4pd_txdma_get_action_name(i, j, action_name);
             capri_action_txdma_asm_base = 0;
-            sdk::platform::p4_program_label_to_offset(p4pd_cfg->p4pd_txdma_pgm_name,
+            sdk::p4::p4_program_label_to_offset(p4pd_cfg->p4pd_txdma_pgm_name,
                                           progname, action_name,
                                           &capri_action_txdma_asm_base);
             /* Action base is in byte and 64B aligned... */
@@ -168,12 +168,12 @@ asicpd_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
 
     for (uint32_t i = p4pd_tableid_min_get(); i < p4pd_tableid_max_get(); i++) {
         snprintf(progname, P4ACTION_NAME_MAX_LEN, "%s%s", p4pd_tbl_names[i], ".bin");
-        sdk::platform::p4_program_to_base_addr(p4pd_cfg->p4pd_pgm_name, progname,
+        sdk::p4::p4_program_to_base_addr(p4pd_cfg->p4pd_pgm_name, progname,
                                    &capri_table_asm_base[i]);
         for (int j = 0; j < p4pd_get_max_action_id(i); j++) {
             p4pd_get_action_name(i, j, action_name);
             capri_action_asm_base = 0;
-            sdk::platform::p4_program_label_to_offset(p4pd_cfg->p4pd_pgm_name, progname,
+            sdk::p4::p4_program_label_to_offset(p4pd_cfg->p4pd_pgm_name, progname,
                                           action_name, &capri_action_asm_base);
             // action base is in byte and 64B aligned
             SDK_ASSERT((capri_action_asm_base & 0x3f) == 0);
@@ -186,7 +186,7 @@ asicpd_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
         // compute error program offset for each table
         snprintf(action_name, P4ACTION_NAME_MAX_LEN, "%s_error",
                  p4pd_tbl_names[i]);
-        sdk::platform::p4_program_label_to_offset(p4pd_cfg->p4pd_pgm_name, progname,
+        sdk::p4::p4_program_label_to_offset(p4pd_cfg->p4pd_pgm_name, progname,
                                       action_name,
                                       &capri_table_asm_err_offset[i]);
         SDK_ASSERT((capri_table_asm_err_offset[i] & 0x3f) == 0);

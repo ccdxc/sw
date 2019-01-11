@@ -49,7 +49,7 @@ p4pd_get_cpu_rx_stage0_prog_addr(uint64_t* offset)
     char progname[] = "rxdma_stage0.bin";
     char labelname[]= "cpu_rx_stage0";
 
-    int ret = sdk::platform::p4_program_label_to_offset("p4plus",
+    int ret = sdk::p4::p4_program_label_to_offset("p4plus",
                                             progname,
                                             labelname,
                                             offset);
@@ -121,7 +121,7 @@ p4pd_get_cpu_rx_stage0_entry(pd_cpucb_t* cpucb_pd)
     cpucb_hw_id_t hwid = cpucb_pd->hw_id +
         (P4PD_CPUCB_STAGE_ENTRY_OFFSET * P4PD_HWID_CPU_RX_STAGE0);
 
-    if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to get rx: stage0 entry for CPU CB");
         return HAL_RET_HW_FAIL;
     }
@@ -159,7 +159,7 @@ p4pd_get_cpu_tx_stage0_prog_addr(uint64_t* offset)
     char progname[] = "txdma_stage0.bin";
     char labelname[]= "cpu_tx_stage0";
 
-    int ret = sdk::platform::p4_program_label_to_offset("p4plus",
+    int ret = sdk::p4::p4_program_label_to_offset("p4plus",
                                             progname,
                                             labelname,
                                             offset);
@@ -235,7 +235,7 @@ p4pd_get_cpu_tx_stage0_entry(pd_cpucb_t* cpucb_pd)
     cpucb_hw_id_t hwid = cpucb_pd->hw_id +
         (P4PD_CPUCB_STAGE_ENTRY_OFFSET * P4PD_HWID_CPU_TX_STAGE0);
 
-    if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to get rx: stage0 entry for CPU CB");
         return HAL_RET_HW_FAIL;
     }

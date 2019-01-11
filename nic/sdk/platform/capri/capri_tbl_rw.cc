@@ -225,7 +225,7 @@ capri_program_hbm_table_base_addr (int stage_tableid, char *tablename,
 #endif
 
     assert(stage_tableid < 16);
-    start_offset = get_start_offset(tablename);
+    start_offset = get_mem_addr(tablename);
     SDK_TRACE_DEBUG("===HBM Tbl Name: %s, Stage: %d, StageTblID: %u, "
                     "Addr: 0x%lx}===",
                     tablename, stage, stage_tableid, start_offset);
@@ -340,7 +340,7 @@ capri_toeplitz_init (int stage, int stage_tableid)
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_te_csr_t *te_csr = NULL;
 
-    if (sdk::platform::p4_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
+    if (sdk::p4::p4_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
                                    (char *) ETH_RSS_INDIR_PROGRAM,
                                    &pc) != 0) {
         SDK_TRACE_DEBUG("Could not resolve handle %s program %s",
@@ -359,8 +359,8 @@ capri_toeplitz_init (int stage, int stage_tableid)
     tbl_id = stage_tableid;
 
 #ifdef MEM_REGION_RSS_INDIR_TABLE_NAME
-    tbl_base = get_start_offset(MEM_REGION_RSS_INDIR_TABLE_NAME);
-    SDK_ASSERT(tbl_base > 0);
+    tbl_base = get_mem_addr(MEM_REGION_RSS_INDIR_TABLE_NAME);
+    SDK_ASSERT(tbl_base != INVALID_MEM_ADDRESS);
 #else
     SDK_ASSERT(0);
 #endif
@@ -410,7 +410,7 @@ capri_p4plus_table_init (platform_type_t platform_type,
     uint64_t capri_action_p4plus_asm_base;
 
     // Resolve the p4plus rxdma stage 0 program to its action pc
-    if (sdk::platform::p4_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
+    if (sdk::p4::p4_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
                                    (char *) CAPRI_P4PLUS_RXDMA_PROG,
                                    &capri_action_p4plus_asm_base) != 0) {
         SDK_TRACE_DEBUG("Could not resolve handle %s program %s",
@@ -438,7 +438,7 @@ capri_p4plus_table_init (platform_type_t platform_type,
 
 
     // Resolve the p4plus rxdma stage 0 "ext" program to its action pc
-    if (sdk::platform::p4_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
+    if (sdk::p4::p4_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
                                    (char *) CAPRI_P4PLUS_RXDMA_EXT_PROG,
                                    &capri_action_p4plus_asm_base) != 0) {
         SDK_TRACE_DEBUG("Could not resolve handle %s program %s",
@@ -465,7 +465,7 @@ capri_p4plus_table_init (platform_type_t platform_type,
             CAPRI_P4PLUS_RX_STAGE0_QSTATE_OFFSET_64);
 
     // Resolve the p4plus txdma stage 0 program to its action pc
-    if (sdk::platform::p4_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
+    if (sdk::p4::p4_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
                                    (char *) CAPRI_P4PLUS_TXDMA_PROG,
                                    &capri_action_p4plus_asm_base) != 0) {
         SDK_TRACE_DEBUG("Could not resolve handle %s program %s",
@@ -492,7 +492,7 @@ capri_p4plus_table_init (platform_type_t platform_type,
     }
 
     // Resolve the p4plus txdma stage 0 "ext" program to its action pc
-    if (sdk::platform::p4_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
+    if (sdk::p4::p4_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
                                    (char *) CAPRI_P4PLUS_TXDMA_EXT_PROG,
                                    &capri_action_p4plus_asm_base) != 0) {
         SDK_TRACE_DEBUG("Could not resolve handle %s program %s",
@@ -546,7 +546,7 @@ capri_timer_init_helper (uint32_t key_lines)
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_txs_csr_t *txs_csr = &cap0.txs.txs;
 
-    timer_key_hbm_base_addr = get_start_offset(MEM_REGION_TIMERS_NAME);
+    timer_key_hbm_base_addr = get_mem_addr(MEM_REGION_TIMERS_NAME);
 
     txs_csr->cfg_timer_static.read();
     SDK_TRACE_DEBUG("hbm_base %llx", (uint64_t)txs_csr->cfg_timer_static.hbm_base());
@@ -836,7 +836,7 @@ capri_table_rw_init (capri_cfg_t *capri_cfg)
     /* Initialize stage id registers for p4p */
     capri_p4p_stage_id_init();
 
-    hbm_mem_base_addr = get_start_offset(MEM_REGION_P4_PROGRAM_NAME);
+    hbm_mem_base_addr = get_mem_addr(MEM_REGION_P4_PROGRAM_NAME);
 
     capri_mpu_icache_invalidate();
     capri_debug_hbm_reset();
@@ -1567,7 +1567,7 @@ capri_hbm_table_entry_write (uint32_t tableid,
     assert(index < tbl_info.tabledepth);
     uint64_t entry_start_addr = (index * tbl_info.entry_width);
 
-    sdk::asic::asic_mem_write(get_start_offset(tbl_info.tablename) + entry_start_addr,
+    sdk::asic::asic_mem_write(get_mem_addr(tbl_info.tablename) + entry_start_addr,
                               hwentry, (entry_size >> 3));
     return CAPRI_OK;
 }
@@ -1582,12 +1582,12 @@ capri_hbm_table_entry_cache_invalidate (bool ingress,
     if (ingress) {
         cap_pics_csr_t & pics_csr = cap0.ssi.pics;
         // write upper 28b of 34b hbm addr.
-        pics_csr.picc.dhs_cache_invalidate.entry.addr((get_start_offset(tbl_info.tablename) + entry_addr) >> 6);
+        pics_csr.picc.dhs_cache_invalidate.entry.addr((get_mem_addr(tbl_info.tablename) + entry_addr) >> 6);
         pics_csr.picc.dhs_cache_invalidate.entry.write();
     } else {
         cap_pics_csr_t & pics_csr = cap0.sse.pics;
         // write upper 28b of 34b hbm addr.
-        pics_csr.picc.dhs_cache_invalidate.entry.addr((get_start_offset(tbl_info.tablename) + entry_addr) >> 6);
+        pics_csr.picc.dhs_cache_invalidate.entry.addr((get_mem_addr(tbl_info.tablename) + entry_addr) >> 6);
         pics_csr.picc.dhs_cache_invalidate.entry.write();
     }
 
@@ -1605,7 +1605,7 @@ capri_hbm_table_entry_read (uint32_t tableid,
     assert(index < tbl_info.tabledepth);
     uint64_t entry_start_addr = (index * tbl_info.entry_width);
 
-    sdk::asic::asic_mem_read(get_start_offset(tbl_info.tablename) + entry_start_addr,
+    sdk::asic::asic_mem_read(get_mem_addr(tbl_info.tablename) + entry_start_addr,
                              hwentry, tbl_info.entry_width);
     *entry_size = tbl_info.entry_width;
     return CAPRI_OK;
@@ -1696,8 +1696,8 @@ static void
 capri_debug_hbm_read (void)
 {
     sdk_ret_t ret = sdk::SDK_RET_OK;
-    uint64_t start_addr = get_start_offset("mpu-debug");
-    uint64_t count = (get_size_kb("mpu-debug") << 10) >> 3;
+    uint64_t start_addr = get_mem_addr("mpu-debug");
+    uint64_t count = (get_mem_size_kb("mpu-debug") << 10) >> 3;
     uint64_t addr;
     uint64_t data;
 
@@ -1721,12 +1721,12 @@ static void
 capri_debug_hbm_reset (void)
 {
     sdk_ret_t ret = sdk::SDK_RET_OK;
-    uint64_t start_addr = get_start_offset("mpu-debug");
-    uint64_t count = (get_size_kb("mpu-debug") << 10) >> 3;
+    uint64_t start_addr = get_mem_addr("mpu-debug");
+    uint64_t count = (get_mem_size_kb("mpu-debug") << 10) >> 3;
     uint64_t addr;
     uint64_t data = 0xabababababababab;
 
-    SDK_ASSERT(start_addr == get_start_offset("mpu-debug"));
+    SDK_ASSERT(start_addr == get_mem_addr("mpu-debug"));
 
     SDK_TRACE_DEBUG("------------------ RESET HBM START -----------");
     for (uint64_t i = 0; i < count; i++) {

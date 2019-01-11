@@ -76,7 +76,7 @@ capri_timer_hbm_init (void)
     uint64_t timer_key_hbm_addr;
     uint64_t zero_data[8] = { 0 };
 
-    timer_key_hbm_base_addr = get_start_offset(MEM_REGION_TIMERS_NAME);
+    timer_key_hbm_base_addr = get_mem_addr(MEM_REGION_TIMERS_NAME);
     SDK_TRACE_DEBUG("HBM timer key base addr %lx", timer_key_hbm_base_addr);
     timer_key_hbm_addr = timer_key_hbm_base_addr;
     while (timer_key_hbm_addr < timer_key_hbm_base_addr +
@@ -124,7 +124,7 @@ capri_asm_init (capri_cfg_t *cfg)
     uint64_t        base_addr;
     std::string     full_path;
     uint32_t num_symbols = 0;
-    sdk::platform::p4_prog_param_info_t *symbols = NULL;
+    sdk::p4::p4_prog_param_info_t *symbols = NULL;
 
     for (uint8_t i = 0; i < cfg->num_asm_cfgs; i++) {
         full_path =  std::string(cfg->cfg_path) + "/" + cfg->pgm_name +
@@ -143,9 +143,9 @@ capri_asm_init (capri_cfg_t *cfg)
             num_symbols = cfg->asm_cfg[i].symbols_func((void **)&symbols, cfg->platform);
         }
 
-        base_addr = get_start_offset(cfg->asm_cfg[i].base_addr.c_str());
+        base_addr = get_mem_addr(cfg->asm_cfg[i].base_addr.c_str());
         SDK_TRACE_DEBUG("base addr 0x%llx", base_addr);
-        iret = sdk::platform::p4_load_mpu_programs(cfg->asm_cfg[i].name.c_str(),
+        iret = sdk::p4::p4_load_mpu_programs(cfg->asm_cfg[i].name.c_str(),
            (char *)full_path.c_str(),
            base_addr,
            symbols,
@@ -234,7 +234,7 @@ static sdk_ret_t
 capri_repl_init (capri_cfg_t *cfg)
 {
 #ifdef MEM_REGION_MCAST_REPL_NAME
-    uint64_t hbm_repl_table_offset = get_hbm_offset(MEM_REGION_MCAST_REPL_NAME);
+    uint64_t hbm_repl_table_offset = get_mem_offset(MEM_REGION_MCAST_REPL_NAME);
     if (hbm_repl_table_offset != INVALID_MEM_ADDRESS) {
         capri_tm_repl_table_base_addr_set(hbm_repl_table_offset / CAPRI_REPL_ENTRY_WIDTH);
         capri_tm_repl_table_token_size_set(cfg->repl_entry_width * 8);
@@ -478,7 +478,7 @@ capri_init (capri_cfg_t *cfg)
                             "Capri replication init failure, err : %d", ret);
 
     if (!cfg->loader_info_file.empty()) {
-        sdk::platform::p4_list_program_addr(
+        sdk::p4::p4_list_program_addr(
             cfg->cfg_path.c_str(), cfg->loader_info_file.c_str());
     }
 

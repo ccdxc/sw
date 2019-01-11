@@ -288,8 +288,8 @@ get_default_slot_value(types::WRingType type, uint32_t index, uint8_t* value)
     if(strlen(meta->obj_hbm_reg_name) <= 0) {
         memset(value, 0, meta->slot_size_in_bytes);
     } else {
-        wring_hw_id_t obj_addr_base = get_start_offset(meta->obj_hbm_reg_name);
-        if(obj_addr_base == 0) {
+        wring_hw_id_t obj_addr_base = get_mem_addr(meta->obj_hbm_reg_name);
+        if(obj_addr_base == INVALID_MEM_ADDRESS) {
             HAL_TRACE_ERR("Failed to get the addr for the object");
             memset(value, 0, meta->slot_size_in_bytes);
             return HAL_RET_ENTRY_NOT_FOUND;
@@ -308,8 +308,8 @@ wring_pd_get_base_addr(types::WRingType type, uint32_t wring_id, wring_hw_id_t* 
     pd_wring_meta_t     *meta = &g_meta[type];
     wring_hw_id_t       addr = 0;
 
-    addr = get_start_offset(meta->hbm_reg_name);
-    if(!addr) {
+    addr = get_mem_addr(meta->hbm_reg_name);
+    if(addr == INVALID_MEM_ADDRESS) {
         HAL_TRACE_ERR("Could not find addr for {} region", meta->hbm_reg_name);
         return HAL_RET_ERR;
     }
@@ -340,7 +340,7 @@ wring_pd_table_init(types::WRingType type, uint32_t wring_id)
         return ret;
     }
 
-    uint32_t reg_size = get_size_kb(meta->hbm_reg_name);
+    uint32_t reg_size = get_mem_size_kb(meta->hbm_reg_name);
     if(!reg_size) {
         HAL_TRACE_ERR("Could not find size for {} region", meta->hbm_reg_name);
         return HAL_RET_ERR;
@@ -420,12 +420,12 @@ hal_ret_t brq_gcm_slot_parser(pd_wring_meta_t *meta, wring_t *wring, uint8_t *sl
     /* IV is not directly located in the ring, hence dereference it */
 
     if (gcm_desc->iv_address) {
-        if(!p4plus_hbm_read(gcm_desc->iv_address,
+        if(sdk::asic::asic_mem_read(gcm_desc->iv_address,
                             (uint8_t*)&wring->slot_info.gcm_desc.salt,
                             sizeof(wring->slot_info.gcm_desc.salt))) {
             HAL_TRACE_ERR("Failed to read the Salt information from HBM");
         }
-        if(!p4plus_hbm_read(gcm_desc->iv_address + 4,
+        if(sdk::asic::asic_mem_read(gcm_desc->iv_address + 4,
                             (uint8_t*)&wring->slot_info.gcm_desc.explicit_iv,
                             sizeof(wring->slot_info.gcm_desc.explicit_iv))) {
             HAL_TRACE_ERR("Failed to read the explicit IV information from HBM");
@@ -435,7 +435,7 @@ hal_ret_t brq_gcm_slot_parser(pd_wring_meta_t *meta, wring_t *wring, uint8_t *sl
             wring->slot_info.gcm_desc.explicit_iv = 0;
     }
     if (gcm_desc->status_address) {
-        if(!p4plus_hbm_read(gcm_desc->status_address,
+        if(sdk::asic::asic_mem_read(gcm_desc->status_address,
                             (uint8_t*)&wring->slot_info.gcm_desc.barco_status,
                             sizeof(wring->slot_info.gcm_desc.barco_status))) {
             HAL_TRACE_ERR("Failed to read the Barco Status information from HBM");
@@ -480,7 +480,7 @@ p4pd_wring_get_entry(pd_wring_t* wring_pd)
     uint8_t value[meta->slot_size_in_bytes];
     uint64_t *value64 = (uint64_t*)value;
 
-    if(!p4plus_hbm_read(slot_addr,
+    if(sdk::asic::asic_mem_read(slot_addr,
                         value,
                         meta->slot_size_in_bytes)) {
         HAL_TRACE_ERR("Failed to read the data from the hw)");

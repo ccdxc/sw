@@ -1067,7 +1067,7 @@ hal_pd_lif_stats_region_init (void)
     p4pd_error_t                rc;
     uint64_t                    stats_base_addr;
 
-    stats_base_addr = get_start_offset(CAPRI_HBM_REG_LIF_STATS);
+    stats_base_addr = get_mem_addr(CAPRI_HBM_REG_LIF_STATS);
     // reset bit 31 (saves one ASM instruction)
     stats_base_addr &= ~((uint64_t)1 << 31);
 
