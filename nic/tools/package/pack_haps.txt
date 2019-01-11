@@ -185,10 +185,12 @@ nic/tools/fwupdate                                                  /nic/tools/
 
 nic/sdk/third-party/googletest-release-1.8.0/googletest/make/aarch64/libgtest.so /platform/lib/
 nic/sdk/third-party/googletest-release-1.8.0/googletest/make/aarch64/libgtest_without_main.so /platform/lib/
-#p4ctl binary
-nic/debug_cli/images/aarch64/iris/p4ctl                            /nic/bin
-nic/tools/p4ctl.sh                                                 /nic/tools/
 
 #process mem scripts
 nic/tools/run_mem_check.sh                                         /nic/tools
 
+
+#locale
+nic/sdk/third-party/locale/aarch64/bin/locale                       /usr/bin/
+nic/sdk/third-party/locale/aarch64/bin/localedef                    /usr/bin/
+nic/sdk/third-party/locale/aarch64/locale.tar                       /usr/share/i18n/

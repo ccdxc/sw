@@ -1,0 +1,15 @@
+#!/bin/sh
+
+if ! [ -x "$(command -v locale)" ]; then
+  echo 'Error: locale is not installed. Please follow the p4ctl README ' >&2
+  exit 1
+fi
+
+localedef -i en_US -f UTF-8 en_US.UTF-8
+export LC_ALL="en_US.UTF-8"
+export LANG="en_US.UTF-8"
+export LD_LIBRARY_PATH=/nic/lib:/platform/lib:/nic/cli
+export HAL_CONFIG_PATH=/nic/conf
+if [ "$1" = "iris" ] || [ "$1" = "" ]; then
+	python3 /nic/cli/debug_cli_iris.py repl
+fi

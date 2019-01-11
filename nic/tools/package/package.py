@@ -87,10 +87,12 @@ elif args.target == 'zebu':
 elif args.target == 'arm-dev':
     print ("Packaging for arm-dev")
     files.append('nic/tools/package/pack_arm_dev.txt')
+    files.append('nic/tools/package/pack_debug.txt')
 elif args.target == 'haps-dbg':
     print ("Packaging for haps-dbg")
     files.append('nic/tools/package/pack_haps.txt')
     files.append('nic/tools/package/pack_haps_dbg.txt')
+    files.append('nic/tools/package/pack_debug.txt')
 elif args.target == 'host':
     print ("Packaging for host")
     arm_pkg     = 0
@@ -114,7 +116,6 @@ elif args.target == 'debug' or args.target == 'debug-arm':
     tar_name    = 'debug_' + arch + '_' +  args.pipeline
     files = []
     files.append('nic/tools/package/pack_debug.txt')
-    process_files(files, arch, args.pipeline)
 else:
     print ("Packaging for haps")
     files.append('nic/tools/package/pack_platform.txt')
@@ -122,6 +123,9 @@ else:
         files.append('nic/tools/package/pack_apollo.txt')
     else:
         files.append('nic/tools/package/pack_haps.txt')
+    files.append('nic/tools/package/pack_debug.txt')
+        
+    
 
 if args.no_strip == True:
     strip_target = 0
@@ -151,7 +155,6 @@ for input_file in files:
         items[0] = items[0].replace("$ARCH", arch)
         items[0] = items[0].replace("$PIPELINE", args.pipeline)
         items[1] = items[1].replace("$PIPELINE", args.pipeline)
-        print items[0]
         directory = output_dir + '/' + items[1]
         if items[1][-1] == '/':
             if not os.path.exists(directory):
@@ -163,9 +166,13 @@ for input_file in files:
             cmd = 'cp -rL ' + items[0] + '/* ' + directory
             call(cmd, shell=True)
         else:
-            cmd = 'cp ' + items[0] + ' ' + directory
-            print (cmd)
-            call(cmd, shell=True)
+            if not 'dummy' in items[0]:
+                if '.tar' in items[0]:
+                    cmd = 'tar -xvf' + items[0] + ' -C ' + directory
+                else:
+                    cmd = 'cp ' + items[0] + ' ' + directory
+                print (cmd)
+                call(cmd, shell=True)
 
 ###################################
 ##### strip libs and binaries #####
