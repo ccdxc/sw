@@ -7,6 +7,8 @@
 #include "platform/src/app/nicmgrd/src/delphic.hpp"
 #include <grpc++/grpc++.h>
 #include "gen/proto/interface.grpc.pb.h"
+#include <boost/multiprecision/cpp_int.hpp>
+#include <chrono>
 // #include "logger.hpp"
 
 using grpc::Channel;
@@ -17,6 +19,9 @@ using intf::InterfaceSpec;
 using intf::InterfaceRequestMsg;
 using intf::InterfaceResponse;
 using intf::InterfaceResponseMsg;
+using boost::multiprecision::uint512_t;
+using boost::multiprecision::uint128_t;
+using namespace std::chrono;
 
 using namespace std;
 
@@ -178,31 +183,6 @@ uint8_t *memrev(uint8_t *block, size_t elnum)
 
 TEST_F(nicmgr_test, test1)
 {
-#if 0
-    DeviceManager *devmgr;
-
-    if (g_fwd_mode == FWD_MODE_CLASSIC_NIC) {
-        devmgr =
-            new DeviceManager("../platform/src/app/nicmgrd/etc/device.json",
-                              g_fwd_mode, PLATFORM_HW, false);
-    } else {
-        devmgr =
-            new DeviceManager("../platform/src/app/nicmgrd/etc/eth-smart.json",
-                              g_fwd_mode, PLATFORM_HW, false);
-    }
-    EXPECT_TRUE(devmgr != NULL);
-
-    // load config
-    if (g_fwd_mode == FWD_MODE_CLASSIC_NIC) {
-        devmgr->LoadConfig("../platform/src/app/nicmgrd/etc/device.json");
-    } else {
-        devmgr->LoadConfig("../platform/src/app/nicmgrd/etc/eth-smart.json");
-    }
-
-    // nicmgr::handle_hal_up();
-    devicemanager_init();
-#endif
-
     // Get eth device
     // 66: OOB Lif
     Eth *eth_dev = (Eth *)devmgr->GetDevice(66); // for hw_lif_id of 1
@@ -260,16 +240,6 @@ TEST_F(nicmgr_test, test1)
     memcpy(&d_cmd, &init_cmd, sizeof(init_cmd));
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
-    // Vlan Filter
-    // struct rx_filter_add_comp rx_comp;
-    rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
-    rx_cmd.match = RX_FILTER_MATCH_VLAN;
-    rx_cmd.vlan.vlan = 10;
-    // printf("opcode: %d rx_cmd_size: %d\n", d_cmd.cmd.opcode, sizeof(rx_cmd));
-    memcpy(&d_cmd, &rx_cmd, sizeof(rx_cmd));
-    // memcpy(&d_comp, &rx_comp, sizeof(rx_comp));
-    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
-
     // Mac Filter
     rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
     rx_cmd.match = RX_FILTER_MATCH_MAC;
@@ -278,6 +248,25 @@ TEST_F(nicmgr_test, test1)
     memrev(rx_cmd.mac.addr, 6);
     memcpy(&d_cmd, &rx_cmd, sizeof(rx_cmd));
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+
+
+    int num_vlan_filters = 2048;
+    high_resolution_clock::time_point t1 = high_resolution_clock::now();
+    for (int i = 1; i < num_vlan_filters; i++) {
+        // Vlan Filter
+        rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
+        rx_cmd.match = RX_FILTER_MATCH_VLAN;
+        rx_cmd.vlan.vlan = i;
+        // printf("opcode: %d rx_cmd_size: %d\n", d_cmd.cmd.opcode, sizeof(rx_cmd));
+        memcpy(&d_cmd, &rx_cmd, sizeof(rx_cmd));
+        // memcpy(&d_comp, &rx_comp, sizeof(rx_comp));
+        eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+    }
+    high_resolution_clock::time_point t2 = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>( t2 - t1 ).count();
+    auto duration_secs = duration_cast<seconds>( t2 - t1 ).count();
+    printf("Time taken to install %d vlan filters: %lu us, %lu secs\n",
+           num_vlan_filters, duration, duration_secs);
 
      // Set modes
      rx_mode_cmd.opcode = CMD_OPCODE_RX_MODE_SET;
