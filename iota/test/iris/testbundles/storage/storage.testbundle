@@ -259,7 +259,7 @@ testcases:
             type        : nested
             cpus        : *CPUS_ITER_LIST_COMBO2
             batch_depth : *BATCH_DEPTH_ITER_LIST_COMBO1
-            mode        : *MODE_ITER_LIST_COMBO1
+            mode        : *MODE_ITER_LIST_COMBO3
         args    :
             wait        : '1.0'
             test        : *CP_BOF_CHKSUM_CHAIN_YML
@@ -281,7 +281,7 @@ testcases:
             type        : nested
             cpus        : *CPUS_ITER_LIST_COMBO2
             batch_depth : *BATCH_DEPTH_ITER_LIST_COMBO1
-            mode        : *MODE_ITER_LIST_COMBO1
+            mode        : *MODE_ITER_LIST_COMBO3
         args    :
             wait        : '1.0'
             test        : *CP_BOF_HASH_CHAIN_YML
