@@ -25,6 +25,7 @@ aliases:
     - &HASH_TEST_YML hash.yml
     - &CHKSUM_TEST_YML chksum.yml
     - &CP_CHKSUM_CHAIN_YML cp_chksum_chain.yml
+    - &CP_BOF_CHKSUM_CHAIN_YML cp_bof_chksum_chain.yml
     - &CP_HASH_CHAIN_YML cp_hash_chain.yml
     - &CP_BOF_HASH_CHAIN_YML cp_bof_hash_chain.yml
     - &DECRYPT_DC_CHAIN_YML decrypt_dc_chain.yml
@@ -251,6 +252,17 @@ testcases:
         args    :
             wait        : '1.0'
             test        : *CP_CHKSUM_CHAIN_YML
+
+    -   name        : CpBofCsumChain
+        testcase    : testcases.storage.ymltest2
+        iterators   :
+            type        : nested
+            cpus        : *CPUS_ITER_LIST_COMBO2
+            batch_depth : *BATCH_DEPTH_ITER_LIST_COMBO1
+            mode        : *MODE_ITER_LIST_COMBO1
+        args    :
+            wait        : '1.0'
+            test        : *CP_BOF_CHKSUM_CHAIN_YML
 
     -   name        : CpHashChain
         testcase    : testcases.storage.ymltest2
