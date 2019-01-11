@@ -496,6 +496,19 @@ class capri_parse_state:
                 ncc_assert(self.active_lkp_lfs[rid] == lf )# duplicate assignment
                 return rid
 
+    def active_reg_alloc_for_saved_lkp(self, lf):
+        # just look for a register from back of the list
+        # hoping that the free register is also free in all states that need to access the saved reg
+        # if register is not free, then we are out of registers anyway
+        for i in range(len(self.active_lkp_lfs)-1, -1, -1):
+            if self.active_lkp_lfs[i] == None:
+                self.active_lkp_lfs[i] = lf
+                self.parser.logger.debug("%s:state %s:Assign Stored LF %s reg %d" % \
+                            (self.parser.d.name, self.name, lf.hfname, i))
+                return i
+        ncc_assert(0, "%s:state %s:Ran out of lookup registers" %  (self.parser.d.name, self.name))
+        return None
+
     def lkp_reg_alloc(self):
         for i,lr in enumerate(self.lkp_regs):
             if lr.type == lkp_reg_type.LKP_REG_NONE:
@@ -2228,10 +2241,15 @@ class capri_parser:
             for cs in self.states:
                 if not hdr_found and hdr not in cs.headers:
                     continue
-                if not hdr_found:
-                    hdr_found = True
-                    self.saved_lkp_scope[cf].start_cs = cs
+                # allow multiple states to load a given value in a saved register
+                if hdr in cs.headers:
                     cs.load_saved_lkp.append(cf)
+                    if hdr_found:
+                        # also add to saved lkp list for states between scope start and end
+                        cs.saved_lkp.append(cf)
+                    else:
+                        self.saved_lkp_scope[cf].start_cs = cs
+                        hdr_found = True;
                 else:
                     cs.saved_lkp.append(cf)
 
@@ -2344,9 +2362,6 @@ class capri_parser:
             self.logger.debug("%s:Local variable allocation on path[%d]" % \
                 (self.d.name, pnum))
             paths_traversed += 1
-            if self.d == xgress.EGRESS and cs.name == 'parse_udp':
-                self.logger.debug("%s:Local variable allocation on path[%d] - %s" % \
-                    (self.d.name, pnum, path))
             path_lfs = OrderedDict()
             for cs in reversed(path):
                 if cs.deparse_only or cs.name == '__END' or cs.is_virtual:
@@ -2410,7 +2425,6 @@ class capri_parser:
                     continue
                 downstream_lfs = cs_lfs[cs][0]
                 # take the reg assignments from upstream node for local and downstream lfs
-                #if cs.name == 'parse_inner_ipv6': pdb.set_trace()
                 for lf,r in upstream_lfs.items():
                     if r == None:
                         ncc_assert(0)
@@ -2585,10 +2599,16 @@ class capri_parser:
             rid, sr = self.saved_lkp_reg_find(cf)
             ncc_assert(cs.lkp_regs[rid].type == lkp_reg_type.LKP_REG_NONE, \
                 "Lkp register is double-booked")
+            if cf in cs.load_saved_lkp:
+                cs.lkp_regs[rid].type = lkp_reg_type.LKP_REG_LOAD
+                cs.lkp_regs[rid].store_en = True
+                continue
+
             cs.lkp_regs[rid].type = lkp_reg_type.LKP_REG_STORED
             # create lkp_fld - used for l2p key mapping
             lkp_fld = capri_lkp_fld(cf, lkp_fld_type.FLD_SAVED_REG)
             lkp_fld.reg_id = rid
+
             cs.lkp_flds[cf.hfname] = lkp_fld
             if cf.is_meta:
                 roff = cs.lkp_regs[rid].size - cf.width
@@ -2599,10 +2619,15 @@ class capri_parser:
             cs.lkp_regs[rid].flds[roff] = (lkp_fld, 0, cf.width)
 
         for sf in cs.load_saved_lkp:
-            rid = cs.active_reg_alloc(sf)
+            # allow multiple states to save the same value. This happens when a given
+            # header is extracted in multiple states
+            if sf in cs.saved_lkp:
+                rid, _ = self.saved_lkp_reg_find(sf)
+            else:
+                rid = cs.active_reg_alloc_for_saved_lkp(sf)
+                self.saved_lkp_reg_alloc(sf, rid)
             cs.lkp_regs[rid].type = lkp_reg_type.LKP_REG_LOAD
             cs.lkp_regs[rid].store_en = True
-            self.saved_lkp_reg_alloc(sf, rid)
             # create lkp_fld - used for l2p key mapping
             if sf.is_meta:
                 lkp_fld = capri_lkp_fld(sf, lkp_fld_type.FLD_LOCAL)
