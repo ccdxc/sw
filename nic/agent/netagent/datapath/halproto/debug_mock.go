@@ -591,6 +591,60 @@ func (mr *MockDebugClientMockRecorder) FteSpanUpdate(ctx, in interface{}, opts .
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FteSpanUpdate", reflect.TypeOf((*MockDebugClient)(nil).FteSpanUpdate), varargs...)
 }
 
+// SnakeTestCreate mocks base method
+func (m *MockDebugClient) SnakeTestCreate(ctx context.Context, in *SnakeTestRequestMsg, opts ...grpc.CallOption) (*SnakeTestResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "SnakeTestCreate", varargs...)
+	ret0, _ := ret[0].(*SnakeTestResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SnakeTestCreate indicates an expected call of SnakeTestCreate
+func (mr *MockDebugClientMockRecorder) SnakeTestCreate(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SnakeTestCreate", reflect.TypeOf((*MockDebugClient)(nil).SnakeTestCreate), varargs...)
+}
+
+// SnakeTestDelete mocks base method
+func (m *MockDebugClient) SnakeTestDelete(ctx context.Context, in *SnakeTestDeleteRequestMsg, opts ...grpc.CallOption) (*SnakeTestDeleteResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "SnakeTestDelete", varargs...)
+	ret0, _ := ret[0].(*SnakeTestDeleteResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SnakeTestDelete indicates an expected call of SnakeTestDelete
+func (mr *MockDebugClientMockRecorder) SnakeTestDelete(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SnakeTestDelete", reflect.TypeOf((*MockDebugClient)(nil).SnakeTestDelete), varargs...)
+}
+
+// SnakeTestGet mocks base method
+func (m *MockDebugClient) SnakeTestGet(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*SnakeTestResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "SnakeTestGet", varargs...)
+	ret0, _ := ret[0].(*SnakeTestResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SnakeTestGet indicates an expected call of SnakeTestGet
+func (mr *MockDebugClientMockRecorder) SnakeTestGet(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SnakeTestGet", reflect.TypeOf((*MockDebugClient)(nil).SnakeTestGet), varargs...)
+}
+
 // HbmBwGet mocks base method
 func (m *MockDebugClient) HbmBwGet(ctx context.Context, in *HbmBwGetRequestMsg, opts ...grpc.CallOption) (*HbmBwGetResponseMsg, error) {
 	varargs := []interface{}{ctx, in}
@@ -1026,6 +1080,45 @@ func (m *MockDebugServer) FteSpanUpdate(arg0 context.Context, arg1 *FteSpanReque
 // FteSpanUpdate indicates an expected call of FteSpanUpdate
 func (mr *MockDebugServerMockRecorder) FteSpanUpdate(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FteSpanUpdate", reflect.TypeOf((*MockDebugServer)(nil).FteSpanUpdate), arg0, arg1)
+}
+
+// SnakeTestCreate mocks base method
+func (m *MockDebugServer) SnakeTestCreate(arg0 context.Context, arg1 *SnakeTestRequestMsg) (*SnakeTestResponseMsg, error) {
+	ret := m.ctrl.Call(m, "SnakeTestCreate", arg0, arg1)
+	ret0, _ := ret[0].(*SnakeTestResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SnakeTestCreate indicates an expected call of SnakeTestCreate
+func (mr *MockDebugServerMockRecorder) SnakeTestCreate(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SnakeTestCreate", reflect.TypeOf((*MockDebugServer)(nil).SnakeTestCreate), arg0, arg1)
+}
+
+// SnakeTestDelete mocks base method
+func (m *MockDebugServer) SnakeTestDelete(arg0 context.Context, arg1 *SnakeTestDeleteRequestMsg) (*SnakeTestDeleteResponseMsg, error) {
+	ret := m.ctrl.Call(m, "SnakeTestDelete", arg0, arg1)
+	ret0, _ := ret[0].(*SnakeTestDeleteResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SnakeTestDelete indicates an expected call of SnakeTestDelete
+func (mr *MockDebugServerMockRecorder) SnakeTestDelete(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SnakeTestDelete", reflect.TypeOf((*MockDebugServer)(nil).SnakeTestDelete), arg0, arg1)
+}
+
+// SnakeTestGet mocks base method
+func (m *MockDebugServer) SnakeTestGet(arg0 context.Context, arg1 *Empty) (*SnakeTestResponseMsg, error) {
+	ret := m.ctrl.Call(m, "SnakeTestGet", arg0, arg1)
+	ret0, _ := ret[0].(*SnakeTestResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SnakeTestGet indicates an expected call of SnakeTestGet
+func (mr *MockDebugServerMockRecorder) SnakeTestGet(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SnakeTestGet", reflect.TypeOf((*MockDebugServer)(nil).SnakeTestGet), arg0, arg1)
 }
 
 // HbmBwGet mocks base method

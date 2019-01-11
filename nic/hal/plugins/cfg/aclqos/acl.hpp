@@ -54,6 +54,8 @@ namespace hal {
 #define ACL_QUIESCE_ENTRY_PRIORITY             2
 #define ACL_EPLEARN_ENTRY_PRIORITY_BEGIN       3
 #define ACL_EPLEARN_ENTRY_PRIORITY_END         7
+#define ACL_SNAKE_TEST_PRIORITY_BEGIN          8
+#define ACL_SNAKE_TEST_PRIORITY_END            23
 
 
 typedef struct acl_eth_match_spec_s {

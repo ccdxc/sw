@@ -10,6 +10,8 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/debug/debug.hpp"
 #include "nic/sdk/asic/rw/asicrw.hpp"
+#include "nic/hal/src/debug/snake.hpp"
+#include "nic/include/asic_pd.hpp"
 #include "nic/linkmgr/linkmgr_debug.hpp"
 
 // TODO: we don't seem to be using these ??
@@ -542,5 +544,57 @@ DebugServiceImpl::XcvrValidCheckDisable(ServerContext *context,
 {
     HAL_TRACE_DEBUG("Received transceiver valid check disable Request");
     hal::xcvr_valid_check_enable(false);
+    return Status::OK;
+}
+
+Status
+DebugServiceImpl::SnakeTestCreate(ServerContext *context,
+                                  const SnakeTestRequestMsg *req_msg,
+                                  SnakeTestResponseMsg *rsp_msg)
+{
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    for (int i = 0; i < req_msg->request_size(); ++i) {
+        debug::SnakeTestRequest req = req_msg->request(i);
+        debug::SnakeTestResponse *rsp = rsp_msg->add_response();
+        hal::snake_test_create(req, rsp);
+    }
+
+    hal::hal_cfg_db_close();
+    return Status::OK;
+}
+
+Status
+DebugServiceImpl::SnakeTestDelete(ServerContext *context,
+                                  const SnakeTestDeleteRequestMsg *req_msg,
+                                  SnakeTestDeleteResponseMsg *rsp_msg)
+{
+    uint32_t     i, nreqs = req_msg->request_size();
+    SnakeTestDeleteResponse     *response;
+
+    HAL_TRACE_DEBUG("Received snake test delete");
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    for (i = 0; i < nreqs; i++) {
+        response = rsp_msg->add_response();
+        auto spec = req_msg->request(i);
+        hal::snake_test_delete(spec, response);
+    }
+    hal::hal_cfg_db_close();
+    return Status::OK;
+}
+
+Status
+DebugServiceImpl::SnakeTestGet(ServerContext *context,
+                               const Empty *req,
+                               SnakeTestResponseMsg *rsp_msg)
+{
+    HAL_TRACE_DEBUG("Received snake test get");
+
+    hal::hal_cfg_db_open(hal::CFG_OP_READ);
+    hal::snake_test_get(rsp_msg);
+    hal::hal_cfg_db_close();
     return Status::OK;
 }

@@ -52,6 +52,7 @@
 #include "nic/hal/pd/iris/ipsec/ipsec_pd.hpp"
 #include "nic/hal/pd/iris/event/hal_event_pd.hpp"
 #include "nic/hal/pd/iris/debug/debug_pd.hpp"
+#include "nic/hal/pd/iris/debug/snake_pd.hpp"
 
 namespace hal {
 namespace pd {
@@ -514,6 +515,21 @@ hal_state_pd::init(void)
                       sizeof(hal::pd::pd_fte_span_t), 8,
                       false, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_FTE_SPAN_PD)] != NULL),
+                      false);
+
+    // initialize snake test pd related data structures
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_SNAKE_TEST_PD)] =
+        slab::factory("snake_test_pd", HAL_SLAB_SNAKE_TEST_PD,
+                      sizeof(hal::pd::pd_snake_test_t), 8,
+                      false, true, true);
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_SNAKE_TEST_PD)] != NULL),
+                      false);
+
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_SNAKE_TEST_IF_PD)] =
+        slab::factory("snake_test_pd", HAL_SLAB_SNAKE_TEST_IF_PD,
+                      sizeof(hal::pd::pd_snake_test_if_t), 8,
+                      false, true, true);
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_SNAKE_TEST_IF_PD)] != NULL),
                       false);
 
     dm_tables_ = NULL;
@@ -1351,6 +1367,14 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_FTE_SPAN_PD:
         g_hal_state_pd->fte_span_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_SNAKE_TEST_PD:
+        g_hal_state_pd->snake_test_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_SNAKE_TEST_IF_PD:
+        g_hal_state_pd->snake_test_if_slab()->free(elem);
         break;
 
     default:

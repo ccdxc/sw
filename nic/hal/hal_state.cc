@@ -39,6 +39,7 @@
 #include "nic/hal/src/internal/proxyrcb.hpp"
 #include "nic/hal/src/internal/proxyccb.hpp"
 #include "nic/hal/src/internal/crypto_cert_store.hpp"
+#include "nic/hal/src/debug/snake.hpp"
 #include "nic/hal/plugins/cfg/gft/gft.hpp"
 #include "nic/hal/src/utils/addr_list.hpp"
 #include "nic/hal/src/utils/port_list.hpp"
@@ -445,6 +446,13 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
     slab = register_slab(HAL_SLAB_FTE_SPAN,
                          slab_args={.name="fte_span",
                         .size=sizeof(hal::fte_span_t), .num_elements=16,
+                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+    HAL_ASSERT_RETURN((slab != NULL), false);
+
+    // initialize snake test slab
+    slab = register_slab(HAL_SLAB_SNAKE_TEST,
+                         slab_args={.name="snake_test",
+                        .size=sizeof(hal::snake_test_t), .num_elements=2,
                        .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
     HAL_ASSERT_RETURN((slab != NULL), false);
 
@@ -1296,6 +1304,7 @@ hal_oper_db::hal_oper_db()
     event_mgr_ = NULL;
     memset(&mytep_ip_, 0, sizeof(mytep_ip_));
     fte_span_ = NULL;
+    snake_test_ = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -2040,6 +2049,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_FTE_SPAN:
         g_hal_state->fte_span_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_SNAKE_TEST:
+        g_hal_state->snake_test_slab()->free(elem);
         break;
 
     default:

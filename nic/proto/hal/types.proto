@@ -134,6 +134,12 @@ message EncapInfo {
   uint32           encap_value = 2;    // encap value (vlan/vnid etc.)
 }
 
+enum SnakeTestType {
+    SNAKE_TEST_TYPE_NONE        = 0;
+    SNAKE_TEST_TYPE_ARM_TO_ARM  = 1;
+    SNAKE_TEST_TYPE_LOOP        = 2;
+}
+
 // IP address families
 enum IPAddressFamily {
   IP_AF_NONE     = 0;

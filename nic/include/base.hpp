@@ -298,6 +298,7 @@ do {                                                       \
     ENTRY(HAL_RET_FILTER_NOT_FOUND,           81,  "filter not found")                  \
     ENTRY(HAL_RET_INVALID_CTRL_SESSION_OP,    82,  "Invalid op on ALG control session") \
     ENTRY(HAL_RET_FTE_SPAN,                   83,  "fte span packet")                   \
+    ENTRY(HAL_RET_SNAKE_TEST_NOT_FOUND,       84,  "snake test not found ")             \
                                                                                         \
     ENTRY(HAL_RET_ERR,                        255, "catch all generic error")
 
