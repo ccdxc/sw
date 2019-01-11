@@ -14,7 +14,7 @@ def Trigger(tc):
 
     req = api.Trigger_CreateExecuteCommandsRequest()
     for n in tc.Nodes:
-        common.AddPenctlCommand(req, n, "show logs -m %s | tail -n 20" % (tc.iterators.option))
+        common.AddPenctlCommand(req, n, "show logs -m %s  2>&1 | tail -n 2" % (tc.iterators.option))
 
     tc.resp = api.Trigger(req)
 

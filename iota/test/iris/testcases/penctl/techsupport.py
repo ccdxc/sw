@@ -145,7 +145,7 @@ def Verify(tc):
     def check_log_files():
         req = api.Trigger_CreateExecuteCommandsRequest()
         for n in tc.Nodes:
-            api.Trigger_AddHostCommand(req, n, "ls %s/%s" % (supportDir[n], "logs"))
+            api.Trigger_AddHostCommand(req, n, "ls %s/%s %s/%s" % (supportDir[n], "logs/pensando", supportDir[n], "logs"))
         resp = api.Trigger(req)
         for cmd in resp.commands:
             api.PrintCommandResults(cmd)

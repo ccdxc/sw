@@ -15,7 +15,6 @@ testcases:
         testcase: testcases.penctl.events
 
     -   name    : CHECK_CORES
-        ignore  : True
         testcase: testcases.penctl.cores
 
     -   name    : CHECK_FIRMWARE
@@ -35,7 +34,6 @@ testcases:
         testcase: testcases.penctl.diag
 
     -   name    : CHECK_TECH_SUPPORT
-        ignore  : True
         testcase: testcases.penctl.techsupport
 
     -   name    : CHECK_TECH_SUPPORT_COLL
