@@ -11,8 +11,9 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include "include/sdk/base.hpp"
-#include "platform/capri/capri_cfg.hpp"
+#include "nic/sdk/include/sdk/base.hpp"
+#include "nic/sdk/platform/capri/capri_cfg.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
 
 namespace sdk {
 namespace platform {
@@ -32,23 +33,6 @@ typedef enum {
                                       P4PLUS_CACHE_INVALIDATE_TXDMA
 } p4plus_cache_action_t;
 
-typedef struct capri_table_mem_layout_ {
-    uint16_t    entry_width;    /* In units of memory words.. 16b  in case of PIPE tables */
-                                /* In units of bytes in case of HBM table */
-    uint16_t    entry_width_bits;
-    uint32_t    start_index;
-    uint32_t    end_index;
-    uint16_t    top_left_x;
-    uint16_t    top_left_y;
-    uint8_t     top_left_block;
-    uint16_t    btm_right_x;
-    uint16_t    btm_right_y;
-    uint8_t     btm_right_block;
-    uint8_t     num_buckets;
-    uint32_t    tabledepth;
-    char        *tablename;
-} capri_table_mem_layout_t;
-
 int capri_table_rw_init(capri_cfg_t *capri_cfg);
 int capri_p4plus_table_rw_init(void);
 
@@ -59,7 +43,7 @@ int capri_table_entry_write(uint32_t tableid,
                             uint8_t  *hwentry,
                             uint8_t  *hwentry_mask,
                             uint16_t hwentry_bit_len,
-                            capri_table_mem_layout_t &tbl_info, int gress,
+                            p4_table_mem_layout_t &tbl_info, int gress,
                             bool is_oflow_table, bool ingress,
                             uint32_t ofl_parent_tbl_depth);
 
@@ -67,7 +51,7 @@ int capri_table_entry_read(uint32_t tableid,
                            uint32_t index,
                            uint8_t  *hwentry,
                            uint16_t *hwentry_bit_len,
-                           capri_table_mem_layout_t &tbl_info, int gress,
+                           p4_table_mem_layout_t &tbl_info, int gress,
                            bool is_oflow_table,
                            uint32_t ofl_parent_tbl_depth);
 
@@ -75,7 +59,7 @@ int capri_table_hw_entry_read(uint32_t tableid,
                               uint32_t index,
                               uint8_t  *hwentry,
                               uint16_t *hwentry_bit_len,
-                              capri_table_mem_layout_t &tbl_info, int gress,
+                              p4_table_mem_layout_t &tbl_info, int gress,
                               bool is_oflow_table, bool ingress,
                               uint32_t ofl_parent_tbl_depth);
 
@@ -84,7 +68,7 @@ int capri_tcam_table_entry_write (uint32_t tableid,
                                   uint8_t  *trit_x,
                                   uint8_t  *trit_y,
                                   uint16_t hwentry_bit_len,
-                                  capri_table_mem_layout_t &tbl_info,
+                                  p4_table_mem_layout_t &tbl_info,
                                   int gress, bool ingress);
 
 int capri_tcam_table_entry_read(uint32_t tableid,
@@ -92,7 +76,7 @@ int capri_tcam_table_entry_read(uint32_t tableid,
                                 uint8_t  *trit_x,
                                 uint8_t  *trit_y,
                                 uint16_t *hwentry_bit_len,
-                                capri_table_mem_layout_t &tbl_info,
+                                p4_table_mem_layout_t &tbl_info,
                                 int gress);
 
 int capri_tcam_table_hw_entry_read(uint32_t tableid,
@@ -100,24 +84,24 @@ int capri_tcam_table_hw_entry_read(uint32_t tableid,
                                    uint8_t  *trit_x,
                                    uint8_t  *trit_y,
                                    uint16_t *hwentry_bit_len,
-                                   capri_table_mem_layout_t &tbl_info,
+                                   p4_table_mem_layout_t &tbl_info,
                                    bool ingress);
 
 int capri_hbm_table_entry_write(uint32_t tableid,
                                 uint32_t index,
                                 uint8_t *hwentry,
                                 uint16_t entry_size,
-                                capri_table_mem_layout_t &tbl_info);
+                                p4_table_mem_layout_t &tbl_info);
 
 int capri_hbm_table_entry_cache_invalidate (bool ingress,
                                             uint64_t entry_addr,
-                                            capri_table_mem_layout_t &tbl_info);
+                                            p4_table_mem_layout_t &tbl_info);
 
 int capri_hbm_table_entry_read(uint32_t tableid,
                                uint32_t index,
                                uint8_t *hwentry,
                                uint16_t *entry_size,
-                                capri_table_mem_layout_t &tbl_info);
+                                p4_table_mem_layout_t &tbl_info);
 
 int capri_table_constant_write(uint64_t val, uint32_t stage,
                                uint32_t stage_tableid, bool ingress);
@@ -175,7 +159,6 @@ bool p4plus_invalidate_cache(uint64_t addr, uint32_t size_in_bytes,
 } // namespace sdk
 
 using sdk::platform::capri::p4plus_cache_action_t;
-using sdk::platform::capri::capri_table_mem_layout_t;
 using sdk::platform::capri::p4plus_cache_action_t::P4PLUS_CACHE_ACTION_NONE;
 using sdk::platform::capri::p4plus_cache_action_t::P4PLUS_CACHE_INVALIDATE_RXDMA;
 using sdk::platform::capri::p4plus_cache_action_t::P4PLUS_CACHE_INVALIDATE_TXDMA;

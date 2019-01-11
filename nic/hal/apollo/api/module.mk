@@ -12,5 +12,4 @@ MODULE_SRCS     = ${MODULE_SRC_DIR}/init.cc \
                   ${MODULE_SRC_DIR}/mapping.cc \
                   ${MODULE_SRC_DIR}/route.cc \
                   ${MODULE_SRC_DIR}/batch.cc
-MODULE_SOLIBS   = ociframework ociapi_impl
 include ${MKDEFS}/post.mk

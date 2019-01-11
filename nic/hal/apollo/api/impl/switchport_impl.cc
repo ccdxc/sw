@@ -6,6 +6,8 @@
  * @brief   datapath implementation of switchport
  */
 
+#include "nic/sdk/include/sdk/base.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/hal/apollo/core/mem.hpp"
 #include "nic/hal/apollo/api/switchport.hpp"
 #include "nic/hal/apollo/api/impl/switchport_impl.hpp"
@@ -55,12 +57,12 @@ sdk_ret_t
 switchport_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     switchport_entry *switchport = (switchport_entry *)api_obj;
 
-    hal::pd::asicpd_program_table_constant(P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX,
-                                           switchport->ip_addr());
-    hal::pd::asicpd_program_table_constant(P4TBL_ID_NEXTHOP_TX,
-                                           switchport->ip_addr());
-    hal::pd::asicpd_program_table_constant(P4TBL_ID_TEP_TX,
-                                           MAC_TO_UINT64(switchport->mac_addr()));
+    sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX,
+                                                 switchport->ip_addr());
+    sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_NEXTHOP_TX,
+                                                 switchport->ip_addr());
+    sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_TEP_TX,
+                                                 MAC_TO_UINT64(switchport->mac_addr()));
     return SDK_RET_OK;
 }
 
@@ -72,9 +74,9 @@ switchport_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
  */
 sdk_ret_t
 switchport_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    hal::pd::asicpd_program_table_constant(P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX, 0);
-    hal::pd::asicpd_program_table_constant(P4TBL_ID_NEXTHOP_TX, 0);
-    hal::pd::asicpd_program_table_constant(P4TBL_ID_TEP_TX, 0);
+    sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX, 0);
+    sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_NEXTHOP_TX, 0);
+    sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_TEP_TX, 0);
     return SDK_RET_OK;
 }
 
@@ -91,12 +93,12 @@ switchport_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
                            obj_ctxt_t *obj_ctxt) {
     switchport_entry *switchport = (switchport_entry *)curr_obj;
 
-    hal::pd::asicpd_program_table_constant(P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX,
-                                           switchport->ip_addr());
-    hal::pd::asicpd_program_table_constant(P4TBL_ID_NEXTHOP_TX,
-                                           switchport->ip_addr());
-    hal::pd::asicpd_program_table_constant(P4TBL_ID_TEP_TX,
-                                           MAC_TO_UINT64(switchport->mac_addr()));
+    sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX,
+                                                 switchport->ip_addr());
+    sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_NEXTHOP_TX,
+                                                 switchport->ip_addr());
+    sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_TEP_TX,
+                                                 MAC_TO_UINT64(switchport->mac_addr()));
     return SDK_RET_OK;
 }
 

@@ -35,4 +35,3 @@ ifeq "$(suffix ${MODULE_TARGET})" ".export"
         MODULE_EXPORT_BINS = $(wildcard ${MODULE_EXPORT_DIR}/bin/*)
     endif
 endif
-

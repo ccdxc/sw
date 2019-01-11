@@ -911,6 +911,8 @@ hal_ret_t
 scheduler_stats_get(debug::SchedulerStatsResponse *rsp)
 {
     hal_ret_t ret = HAL_RET_OK;
+
+#if 0
     pd::pd_scheduler_stats_get_args_t scheduler_stats_args;
 
     scheduler_stats_args.response = rsp;
@@ -920,8 +922,8 @@ scheduler_stats_get(debug::SchedulerStatsResponse *rsp)
         rsp->set_api_status(types::API_STATUS_ERR);
         return ret;
     }
-
     rsp->set_api_status(types::API_STATUS_OK);
+#endif
 
     return ret;
 }

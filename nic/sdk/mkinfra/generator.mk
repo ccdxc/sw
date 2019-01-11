@@ -115,7 +115,7 @@ define INCLUDE_MODULEMK
     $${TGID}_LDPATHS        := $$(addprefix -L,$${MODULE_LDPATHS}) \
                                $$(addprefix $${RPATH_PREFIX},$${MODULE_LDPATHS}) ${CONFIG_LDPATHS}
     $${TGID}_LDFLAGS        := $${MODULE_LDFLAGS} ${CMD_LINKER_FLAGS}
-    $${TGID}_PIPELINE       := $$(findstring ${PIPELINE},$${MODULE_PIPELINE})
+    $${TGID}_PIPELINE       := $$(findstring $${PIPELINE},$${MODULE_PIPELINE})
     $${TGID}_ARCH           := $$(findstring ${ARCH},$${MODULE_ARCH})
     $${TGID}_DEPS           := $${MODULE_DEPS}
     $${TGID}_PREREQS        := $$(join $$(addprefix ${BLD_OUT_DIR}/,$$(subst .,_,$${MODULE_PREREQS})),\
@@ -124,13 +124,13 @@ define INCLUDE_MODULEMK
 
     $${TGID}_EXCLUDE_FLAGS       := $${MODULE_EXCLUDE_FLAGS}
 
-	ifeq "$${MODULE_SKIP_COVERAGE}" "1"
-		$${TGID}_CMD_GCC := ${CMD_GCC_NO_COV}
-		$${TGID}_CMD_GXX := ${CMD_GXX_NO_COV}
-	else
-		$${TGID}_CMD_GCC := ${CMD_GCC}
-		$${TGID}_CMD_GXX := ${CMD_GXX}
-	endif
+    ifeq "$${MODULE_SKIP_COVERAGE}" "1"
+        $${TGID}_CMD_GCC := ${CMD_GCC_NO_COV}
+        $${TGID}_CMD_GXX := ${CMD_GXX_NO_COV}
+    else
+        $${TGID}_CMD_GCC := ${CMD_GCC}
+        $${TGID}_CMD_GXX := ${CMD_GXX}
+    endif
 
     # Set the common flags based on the target type
     $${TGID}_FLAGS := $${MODULE_FLAGS}
@@ -187,9 +187,11 @@ define INCLUDE_MODULEMK
         $${TGID}_EXPORT_DIR         := $${MODULE_EXPORT_DIR}
         $${TGID}_EXPORT_LIBS        := $$(strip $$(call CANPATH,$${MODULE_EXPORT_LIBS}))
         $${TGID}_EXPORT_BINS        := $$(strip $$(call CANPATH,$${MODULE_EXPORT_BINS}))
-        EXPORT_PREREQS              += $$(join $$(addprefix ${BLD_OUT_DIR}/,$$(subst .,_,$${MODULE_TARGET})),\
+        ifeq "$${$${TGID}_PIPELINE}" "${PIPELINE}"
+            EXPORT_PREREQS              += $$(join $$(addprefix ${BLD_OUT_DIR}/,$$(subst .,_,$${MODULE_TARGET})),\
                                                $$(addprefix /,$${MODULE_TARGET}))
-        EXPORT_TARGETIDS            += $${TGID}
+            EXPORT_TARGETIDS            += $${TGID}
+        endif
     else ifeq "$$(suffix $${MODULE_TARGET})" ".tenjin"
         $${TGID}_BASECMD            := $${MODULE_BASECMD}
         $${TGID}_GENERATOR          := $${MODULE_GENERATOR}

@@ -10,7 +10,7 @@ MODULE_SOLIBS   := nicmgr nicmgr_sysmgr nicmgr_upgrade hal_api mnet \
                     commonproto nicmgrproto halproto \
                     delphisdk upgrade upgrade_app upgradeutils sysmgr \
                     sdkcapri_csrint sdkcapri_asicrw_if \
-                    pdcapri pdcommon hal_mock \
+                    sdkasicpd pdcapri pdcommon hal_mock \
                     sdkp4 sdkp4utils p4pd_common_p4plus_rxdma sdkxcvrdriver \
                     p4pd_common_p4plus_txdma p4pd_${PIPELINE} \
                     asicpd ${NIC_HAL_PD_SOLIBS_${ARCH}}

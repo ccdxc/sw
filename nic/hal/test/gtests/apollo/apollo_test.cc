@@ -10,6 +10,7 @@
 #include "nic/sdk/include/sdk/pal.hpp"
 #include "nic/sdk/include/sdk/utils.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
 #include "platform/utils/lif_manager_base.hpp"
 #include "platform/capri/capri_qstate.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
@@ -265,6 +266,43 @@ memrev(uint8_t *block, size_t elnum) {
         *t = tmp;
     }
     return block;
+}
+
+static int
+sdk_trace_cb (sdk_trace_level_e trace_level, const char *format, ...)
+{
+    char       logbuf[1024];
+    va_list    args;
+
+    switch (trace_level) {
+    case sdk::lib::SDK_TRACE_LEVEL_NONE:
+        return 0;
+        break;
+    case sdk::lib::SDK_TRACE_LEVEL_ERR:
+        printf("[E] ");
+        break;
+    case sdk::lib::SDK_TRACE_LEVEL_WARN:
+        printf("[W] ");
+        break;
+    case sdk::lib::SDK_TRACE_LEVEL_INFO:
+        printf("[I] ");
+        break;
+    case sdk::lib::SDK_TRACE_LEVEL_DEBUG:
+        printf("[D] ");
+        break;
+    case sdk::lib::SDK_TRACE_LEVEL_VERBOSE:
+        printf("[V] ");
+        break;
+    default:
+        break;
+    }
+    va_start(args, format);
+    vsnprintf(logbuf, sizeof(logbuf), format, args);
+    printf(logbuf);
+    printf("\n");
+    va_end(args);
+
+    return 0;
 }
 
 static uint32_t
@@ -606,10 +644,10 @@ rewrite_init(void) {
     uint64_t mytep_mac = 0x00AABBCCDDEE;
 
     // Program the table constants
-    hal::pd::asicpd_program_table_constant(P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX,
-                                           mytep_ip);
-    hal::pd::asicpd_program_table_constant(P4TBL_ID_NEXTHOP_TX, mytep_ip);
-    hal::pd::asicpd_program_table_constant(P4TBL_ID_TEP_TX, mytep_mac);
+    sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX,
+                                                 mytep_ip);
+    sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_NEXTHOP_TX, mytep_ip);
+    sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_TEP_TX, mytep_mac);
 
     nexthop_tx_init();
     tep_tx_init(true);
@@ -774,10 +812,7 @@ TEST_F(apollo_test, test1) {
     cfg.pgm_name = std::string("apollo");
 
     printf("Connecting to ASIC\n");
-    hal::hal_sdk_init();
-    hal::utils::trace_init("hal", 0, true, "hal.log",
-                           TRACE_FILE_SIZE_DEFAULT, TRACE_NUM_FILES_DEFAULT,
-                           ::utils::trace_debug);
+    sdk::lib::logger::init(sdk_trace_cb);
 #ifdef HW
     ret = sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_HW);
 #else
@@ -818,19 +853,19 @@ TEST_F(apollo_test, test1) {
     ret = p4pluspd_txdma_init(&p4pd_txdma_cfg);
     ASSERT_EQ(ret, HAL_RET_OK);
     printf("Doing p4+ mpu init ...\n");
-    ret = hal::pd::asicpd_p4plus_table_mpu_base_init(&p4pd_cfg);
+    ret = sdk::asic::pd::asicpd_p4plus_table_mpu_base_init(&p4pd_cfg);
     ASSERT_EQ(ret, SDK_RET_OK);
     printf("Doing p4 mpu init ...\n");
-    ret = hal::pd::asicpd_table_mpu_base_init(&p4pd_cfg);
+    ret = sdk::asic::pd::asicpd_table_mpu_base_init(&p4pd_cfg);
     ASSERT_EQ(ret, SDK_RET_OK);
     printf("Programming mpu PC ...\n");
-    ret = hal::pd::asicpd_program_table_mpu_pc();
+    ret = sdk::asic::pd::asicpd_program_table_mpu_pc();
     ASSERT_EQ(ret, SDK_RET_OK);
     printf("Doing deparser init ...\n");
-    ret = hal::pd::asicpd_deparser_init();
+    ret = sdk::asic::pd::asicpd_deparser_init();
     ASSERT_EQ(ret, SDK_RET_OK);
     printf("Programming HBM table base addresses ...\n");
-    ret = hal::pd::asicpd_program_hbm_table_base_addr();
+    ret = sdk::asic::pd::asicpd_program_hbm_table_base_addr();
     ASSERT_EQ(ret, SDK_RET_OK);
 
     trie_mem_init();

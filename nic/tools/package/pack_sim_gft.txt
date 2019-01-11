@@ -51,6 +51,7 @@ nic/build/x86_64/gft/lib/libsdkp4utils.so                       /nic/lib/
 nic/build/x86_64/apollo/lib/libsdkp4.so                         /nic/lib/
 nic/build/x86_64/gft/lib/libasicpd.so                           /nic/lib/
 nic/build/x86_64/gft/lib/libsdkasicrw.so                        /nic/lib/
+nic/build/x86_64/gft/lib/libsdkasicpd.so                        /nic/lib/
 nic/build/x86_64/gft/lib/libhal_lib.so                          /nic/lib/
 nic/build/x86_64/gft/lib/liblinkmgr_libsrc.so                   /nic/lib/
 nic/build/x86_64/gft/lib/libsdklinkmgr.so                       /nic/lib/
