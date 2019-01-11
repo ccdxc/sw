@@ -958,6 +958,44 @@ out:
 	return err;
 }
 
+void
+cpdc_update_bof_interrupt_params(struct service_info *svc_info)
+{
+	struct cpdc_desc *desc, *bof_desc;
+
+	if (!(svc_info->si_flags & CHAIN_SFLAG_BYPASS_ONFAIL))
+		return;
+
+	OSAL_ASSERT((svc_info->si_type == PNSO_SVC_TYPE_HASH) ||
+		(svc_info->si_type == PNSO_SVC_TYPE_CHKSUM));
+
+	desc = (struct cpdc_desc *) svc_info->si_desc;
+	if (svc_info->si_flags & CHAIN_SFLAG_PER_BLOCK) {
+		bof_desc = (struct cpdc_desc *) ((char *) desc +
+			((sizeof(struct cpdc_desc) * svc_info->si_num_tags)));
+	} else {
+		bof_desc = (struct cpdc_desc *) ((char *) desc +
+				sizeof(struct cpdc_desc));
+	}
+	if (!desc || !bof_desc)
+		return;
+
+	OSAL_LOG_DEBUG("update hash/chksum bof/desc. desc: 0x" PRIx64 " bof_desc: 0x" PRIx64 " num_tags: %d",
+			(uint64_t) desc, (uint64_t) bof_desc,
+			svc_info->si_num_tags);
+
+	bof_desc->u.cd_bits.cc_otag_on = desc->u.cd_bits.cc_otag_on;
+	bof_desc->u.cd_bits.cc_db_on = desc->u.cd_bits.cc_db_on;
+
+	bof_desc->cd_db_addr = desc->cd_db_addr;
+	bof_desc->cd_db_data = desc->cd_db_data;
+	bof_desc->cd_otag_addr = desc->cd_otag_addr;
+	bof_desc->cd_otag_data = desc->cd_otag_data;
+
+	// CPDC_PPRINT_DESC(desc);
+	// CPDC_PPRINT_DESC(bof_desc);
+}
+
 pnso_error_t
 cpdc_setup_interrupt_params(struct service_info *svc_info, void *poll_ctx)
 {

@@ -122,6 +122,9 @@ pnso_error_t cpdc_setup_seq_desc(struct service_info *svc_info,
 
 pnso_error_t cpdc_setup_interrupt_params(struct service_info *svc_info,
 		void *poll_ctx);
+
+void cpdc_update_bof_interrupt_params(struct service_info *svc_info);
+
 void cpdc_cleanup_interrupt_params(struct service_info *svc_info);
 
 void cpdc_update_batch_tags(struct service_info *svc_info,

@@ -72,6 +72,9 @@ hash_setup(struct service_info *svc_info,
 	if (svc_params->sp_bof_blist)
 		svc_info->si_flags |= CHAIN_SFLAG_BYPASS_ONFAIL;
 
+	if (per_block)
+		svc_info->si_flags |= CHAIN_SFLAG_PER_BLOCK;
+
 	hash_desc = cpdc_get_desc(svc_info, per_block);
 	if (!hash_desc) {
 		err = ENOMEM;
@@ -270,7 +273,18 @@ hash_sub_chain_from_crypto(struct service_info *svc_info,
 static pnso_error_t
 hash_enable_interrupt(struct service_info *svc_info, void *poll_ctx)
 {
-	return cpdc_setup_interrupt_params(svc_info, poll_ctx);
+	pnso_error_t err;
+
+	err = cpdc_setup_interrupt_params(svc_info, poll_ctx);
+	if (err) {
+		OSAL_LOG_ERROR("failed to setup hash interrupt params! err: %d",
+				err);
+		goto out;
+	}
+
+	cpdc_update_bof_interrupt_params(svc_info);
+out:
+	return err;
 }
 
 static void
