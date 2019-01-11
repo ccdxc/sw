@@ -189,6 +189,9 @@ func (hd *Datapath) CreateSecurityProfile(profile *netproto.SecurityProfile, vrf
 				MulticastSrcDrop:       true,
 				IcmpDeprecatedMsgsDrop: true,
 				IcmpRedirectMsgDrop:    true,
+				CnxnTrackingEn:         true,
+				TcpNormalizationEn:     true,
+				IpNormalizationEn:      true,
 
 				// Default Normalization action allow
 				IpDfAction:            constants.IPDFAction,
