@@ -1,0 +1,73 @@
+alias_group5:
+  - alias: 'chksum_algo=madler32'
+svc_chains:
+  - svc_chain:
+      idx: 1
+      #description: "Read path- Decompression (flags - header_present)"
+      input:
+        pattern: ababababababababababababababababababababababababababababababababababababab1234
+        len: 8192
+      ops:
+        - compress:
+            flags: 'zero_pad,insert_header'
+            hdr_fmt_idx: 1
+            threshold_delta: 8
+            output_file: '%test_id%_compressed.bin'
+  - svc_chain:
+      idx: 2
+      #description: "cp(flags zero_pad, insert_hdr, bypass_on_fail, cp_hdr no cksum) + chksum (algo - madler32, flags - per_block)"
+      input:
+        file: '1_compressed.bin'
+      ops:
+        - decompress:
+            flags: 'header_present'
+            hdr_fmt_idx: 1
+            output_file: '%chain_id%_decompressed.bin'
+tests:
+  - test:
+      name: 'CP-CHAIN-1'
+      idx: 1
+      svc_chains: 1
+      turbo: 0
+      batch_depth: 1
+      repeat: 1
+      mode: 'sync'
+      validations:
+        - retcode_compare:
+            idx: 1
+            retcode: 0
+            svc_retcodes: 0
+        - size_compare:
+            idx: 2
+            type: lt
+            file1: '1_compressed.bin'
+            val: 8192 
+        - data_compare:
+            idx: 3
+            file1: '1_compressed.bin'
+            pattern: 0x00
+            offset: eof
+            len: eob
+  - test:
+      name: 'DC-CHAIN-2'
+      idx: 2
+      svc_chains: 2
+      turbo: 0
+      batch_depth: 1
+      repeat: 1
+      mode: 'sync'
+      validations:
+        - retcode_compare:
+            idx: 1
+            retcode: 0
+            svc_retcodes: 0
+        - data_compare:
+            idx: 2
+            file1: '2_decompressed.bin'
+            pattern: ababababababababababababababababababababababababababababababababababababab1234
+            len: 8192
+        - size_compare:
+            idx: 3
+            type: gt
+            file1: '2_decompressed.bin'
+            val: 4

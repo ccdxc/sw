@@ -1,0 +1,48 @@
+alias_group5:
+  - alias: 'chksum_algo=madler32'
+svc_chains:
+  - svc_chain:
+      idx: 1
+      #description: "chksum (algo- madler32, flags- per_block) + cp(flags zero_pad) chaining"
+      input:
+        pattern: ababababababababababababababababababababababababababababababababababababab1234
+        len: 8192
+      ops:
+        - chksum:
+            algo_type: 'madler32'
+            flags: 'per_block'
+            output_file: '%test_id%_cksum_per_block.bin'
+        - compress:
+            flags: 'zero_pad,insert_header'
+            hdr_fmt_idx: 1
+            threshold_delta: 8
+            output_file: '%test_id%_compressed.bin'
+tests:
+  - test:
+      name: 'Chksum-CP-CHAIN-1'
+      idx: 1
+      svc_chains: 1
+      turbo: 0
+      batch_depth: 1 
+      repeat: 1 
+      mode: 'sync'
+      validations:
+        - retcode_compare:
+            idx: 1
+            retcode: 0
+            svc_retcodes: 0,0
+        - size_compare:
+            idx: 2
+            file1: '1_cksum_per_block.bin'
+            val: 8
+        - size_compare:
+            idx: 3
+            type: lt
+            file1: '1_compressed.bin'
+            val: '$size'
+        - data_compare:
+            idx: 4
+            file1: '1_compressed.bin'
+            pattern: 0x00
+            offset: eof
+            len: eob
