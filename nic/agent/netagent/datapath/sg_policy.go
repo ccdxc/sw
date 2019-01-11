@@ -224,18 +224,16 @@ func convertRuleAction(ruleID uint64, ruleIDAppLUT *sync.Map, action string) (*h
 	obj, ok := ruleIDAppLUT.Load(ruleID)
 	// Rule has a corresponding ALG information
 	if ok {
-		apps, ok := obj.([]*netproto.App)
+		app, ok := obj.(*netproto.App)
 		if !ok {
 			log.Errorf("failed to cast App object. %v", obj)
 			return nil, fmt.Errorf("failed to cast App object. %v", obj)
 		}
-		for _, app := range apps {
-			alg, err := convertALG(app)
-			if err != nil {
-				log.Errorf("failed to convert alg data. Err: %v, App: %v", err, app)
-			}
-			appData = append(appData, alg)
+		alg, err := convertALG(app)
+		if err != nil {
+			log.Errorf("failed to convert alg data. Err: %v, App: %v", err, app)
 		}
+		appData = append(appData, alg)
 
 		ruleAction.AppData = appData
 	}
