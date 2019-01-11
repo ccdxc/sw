@@ -26,6 +26,7 @@ aliases:
     - &CHKSUM_TEST_YML chksum.yml
     - &CP_CHKSUM_CHAIN_YML cp_chksum_chain.yml
     - &CP_HASH_CHAIN_YML cp_hash_chain.yml
+    - &CP_BOF_HASH_CHAIN_YML cp_bof_hash_chain.yml
     - &DECRYPT_DC_CHAIN_YML decrypt_dc_chain.yml
     - &CPFLAGS_DEFAULT 0
     - &DCFLAGS_DEFAULT 0
@@ -156,7 +157,6 @@ testcases:
             algo        : 'sha2_256'
             test        : *HASH_TEST_YML
 
-
     -   name        : Hash16K32KSha2_256
         testcase    : testcases.storage.ymltest2
         iterators   :
@@ -185,7 +185,6 @@ testcases:
             algo        : 'sha2_256'
             test        : *HASH_TEST_YML
 
-
     -   name        : Csum4K8KCrc32c
         testcase    : testcases.storage.ymltest2
         iterators   :
@@ -213,7 +212,6 @@ testcases:
             algo        : 'crc32c'
             flags       : 'per_block'
             test        : *CHKSUM_TEST_YML
-
 
     -   name        : Csum16K32KCrc32c
         testcase    : testcases.storage.ymltest2
@@ -264,6 +262,17 @@ testcases:
         args    :
             wait        : '1.0'
             test        : *CP_HASH_CHAIN_YML
+
+    -   name        : CpBofHashPbChain
+        testcase    : testcases.storage.ymltest2
+        iterators   :
+            type        : nested
+            cpus        : *CPUS_ITER_LIST_COMBO2
+            batch_depth : *BATCH_DEPTH_ITER_LIST_COMBO1
+            mode        : *MODE_ITER_LIST_COMBO1
+        args    :
+            wait        : '1.0'
+            test        : *CP_BOF_HASH_CHAIN_YML
 
     -   name        : DecryptDcChain
         testcase    : testcases.storage.ymltest2

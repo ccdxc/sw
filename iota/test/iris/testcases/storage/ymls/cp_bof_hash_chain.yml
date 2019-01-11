@@ -1,0 +1,36 @@
+alias_group5:
+  - alias: 'hash_algo=sha2_256'
+svc_chains:
+  - svc_chain:
+      idx: 1
+      #description: "Compress+Hash with bypass onfail chaining 8K"
+      input:
+        pattern: ababababababababababababababababababababababababababababababababababababab1234
+        len: 8192
+      ops:
+        - compress:
+            flags: 'zero_pad,insert_header,bypass_onfail'
+            hdr_fmt_idx: 1
+            #threshold_delta: 8
+            threshold_delta: 7168
+            output_file: '%test_id%_compressed.bin'
+        - hash:
+            algo_type: '$hash_algo'
+            flags: 'per_block'
+            output_file: '%test_id%_hash_per_block.bin'
+tests:
+  - test:
+      idx: 1
+      svc_chains: 1
+      repeat: 'param::repeat'
+      batch_depth: 'param::batch_depth'
+      mode: 'param::mode'
+      validations:
+        - retcode_compare:
+            idx: 1
+            retcode: 0
+            svc_retcodes: 20004,0
+        - size_compare:
+            idx: 1
+            file1: '1_hash_per_block.bin'
+            val: 128
