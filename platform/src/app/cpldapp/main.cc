@@ -5,7 +5,7 @@
 
 #include <iostream>
 
-#include "nic/sdk/include/sdk/pal.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
 
 int
 main(int argc, char *argv[])

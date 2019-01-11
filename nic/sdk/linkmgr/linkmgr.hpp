@@ -5,7 +5,7 @@
 
 #include "include/sdk/base.hpp"
 #include "include/sdk/types.hpp"
-#include "include/sdk/catalog.hpp"
+#include "nic/sdk/lib/catalog/catalog.hpp"
 
 namespace sdk {
 namespace linkmgr {

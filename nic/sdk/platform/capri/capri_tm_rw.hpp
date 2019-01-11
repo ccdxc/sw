@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "include/sdk/base.hpp"
-#include "nic/sdk/include/sdk/catalog.hpp"
+#include "nic/sdk/lib/catalog/catalog.hpp"
 
 namespace sdk {
 namespace platform {

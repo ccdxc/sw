@@ -21,7 +21,7 @@
 #include "nic/hal/src/utils/utils.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
 #include "lib/logger/logger.hpp"
-#include "nic/sdk/include/sdk/utils.hpp"
+#include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/linkmgr/linkmgr.hpp"
 #include "nic/hal/lib/hal_handle.hpp"
 #include "nic/hal/src/internal/proxy.hpp"

@@ -4,7 +4,7 @@
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 #include <string.h>
-#include "include/sdk/pal.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
 #include "include/sdk/types.hpp"
 #include "include/sdk/timestamp.hpp"
 

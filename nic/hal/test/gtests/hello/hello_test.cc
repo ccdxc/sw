@@ -6,8 +6,8 @@
 #include <boost/crc.hpp>
 #include "boost/property_tree/json_parser.hpp"
 #include "nic/model_sim/include/lib_model_client.h"
-#include "nic/sdk/include/sdk/pal.hpp"
-#include "nic/sdk/include/sdk/utils.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
+#include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
 #include "platform/utils/lif_manager_base.hpp"
 #include "platform/capri/capri_qstate.hpp"

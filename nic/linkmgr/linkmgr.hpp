@@ -7,7 +7,7 @@
 #ifndef __LINKMGR_HPP__
 #define __LINKMGR_HPP__
 
-#include "nic/sdk/include/sdk/linkmgr.hpp"
+#include "nic/sdk/linkmgr/linkmgr.hpp"
 #include "nic/include/base.hpp"
 
 using sdk::linkmgr::port_args_t;

@@ -1,7 +1,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 #include "lib/thread/thread.hpp"
-#include "nic/sdk/include/sdk/pal.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/sdk/asic/rw/asicrw.hpp"
 
 using sdk::lib::pal_ret_t;

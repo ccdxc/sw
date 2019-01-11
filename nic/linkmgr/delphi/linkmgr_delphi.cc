@@ -10,7 +10,7 @@
 #include "nic/include/base.hpp"
 #include "nic/hal/hal_trace.hpp"
 #include "nic/include/hal.hpp"
-#include "nic/sdk/include/sdk/port_mac.hpp"
+#include "nic/sdk/linkmgr/port_mac.hpp"
 #include "nic/linkmgr/linkmgr_utils.hpp"
 #include "nic/utils/events/recorder/recorder.hpp"
 #include "gen/proto/port.pb.h"

@@ -5,7 +5,7 @@
 #include "nic/include/base.hpp"
 #include "lib/logger/logger.hpp"
 #include "lib/thread/thread.hpp"
-#include "nic/sdk/include/sdk/linkmgr.hpp"
+#include "nic/sdk/linkmgr/linkmgr.hpp"
 #include "nic/hal/core/core.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/hal/apollo2/hal_state.hpp"

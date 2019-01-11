@@ -10,7 +10,7 @@
 #include "gen/proto/debug.grpc.pb.h"
 
 #include "nic/include/mpu_trace.hpp"
-#include "nic/sdk/include/sdk/pal.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
 #include "gen/platform/mem_regions.hpp"
 
 using grpc::Channel;

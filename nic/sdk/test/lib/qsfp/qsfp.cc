@@ -5,7 +5,7 @@
 //------------------------------------------------------------------------------
 
 #include <gtest/gtest.h>
-#include "nic/sdk/include/sdk/pal.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
 
 using namespace std;
 #define QSFP_READ_SIZE  10

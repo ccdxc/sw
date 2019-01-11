@@ -20,7 +20,7 @@
 #include "gen/proto/gft.grpc.pb.h"
 #include "gen/proto/telemetry.grpc.pb.h"
 #include "gen/proto/qos.grpc.pb.h"
-#include "nic/sdk/include/sdk/pal.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
 #include "gen/proto/proxy.grpc.pb.h"
 #include "gen/proto/internal.grpc.pb.h"

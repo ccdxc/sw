@@ -3,7 +3,7 @@
 #include "grpc++/grpc++.h"
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/json_parser.hpp"
-#include "nic/sdk/include/sdk/pal.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
 #include "linkmgr_src.hpp"
 #include "linkmgr_svc.hpp"
 #include "linkmgr_debug_svc.hpp"

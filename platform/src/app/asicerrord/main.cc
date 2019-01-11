@@ -1,4 +1,4 @@
-#include "nic/sdk/include/sdk/pal.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
 #include "lib/thread/thread.hpp"
 #include "asicerrord.h"
 

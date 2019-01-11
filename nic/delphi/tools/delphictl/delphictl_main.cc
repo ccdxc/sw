@@ -6,7 +6,7 @@
 #include "nic/delphi/shm/delphi_metrics.hpp"
 #include "argh/argh.h"
 #include "gen/proto/delphi_objects.hpp"
-#include "nic/sdk/include/sdk/pal.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
 
 using namespace delphi;
 

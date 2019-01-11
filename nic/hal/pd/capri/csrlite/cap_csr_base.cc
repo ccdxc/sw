@@ -1,5 +1,5 @@
 #include "nic/sdk/include/sdk/asic/capri/csrlite/cap_csr_base.hpp"
-#include "nic/sdk/include/sdk/pal.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
 
 namespace sdk {
 namespace lib {

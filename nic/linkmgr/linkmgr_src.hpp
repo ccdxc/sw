@@ -4,7 +4,7 @@
 #define __LINKMGR_SRC_HPP__
 
 #include "lib/ht/ht.hpp"
-#include "nic/sdk/include/sdk/linkmgr.hpp"
+#include "nic/sdk/linkmgr/linkmgr.hpp"
 #include "lib/thread/thread.hpp"
 #include "lib/list/list.hpp"
 #include "linkmgr.hpp"

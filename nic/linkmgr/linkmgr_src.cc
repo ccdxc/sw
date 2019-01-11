@@ -4,8 +4,8 @@
 // PI implementation for port service
 //----------------------------------------------------------------------------
 
-#include "nic/sdk/include/sdk/port_mac.hpp"
-#include "nic/sdk/include/sdk/port_serdes.hpp"
+#include "nic/sdk/linkmgr/port_mac.hpp"
+#include "nic/sdk/linkmgr/port_serdes.hpp"
 #include "linkmgr_src.hpp"
 #include "nic/linkmgr/utils.hpp"
 #include "nic/linkmgr/linkmgr_utils.hpp"

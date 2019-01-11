@@ -11,7 +11,7 @@
 #include "nic/include/edma.hpp"
 #include "nic/include/eth_common.h"
 #include "nic/include/notify.hpp"
-#include "nic/sdk/include/sdk/pal.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
 #include "platform/utils/mpartition.hpp"
 
 #include "nic/asic/capri/model/cap_top/cap_top_csr_defines.h"

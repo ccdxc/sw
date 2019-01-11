@@ -2,7 +2,7 @@
 
 #include "nic/include/hal.hpp"
 #include "nic/hal/pd/asic_pd.hpp"
-#include "nic/sdk/include/sdk/pal.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
 
 namespace hal {
 namespace pd {

@@ -4,7 +4,7 @@
 #define  __HAL_STATE_HPP__
 
 #include "lib/list/list.hpp"
-#include "nic/sdk/include/sdk/catalog.hpp"
+#include "nic/sdk/lib/catalog/catalog.hpp"
 #include "lib/slab/slab.hpp"
 #include "lib/indexer/indexer.hpp"
 #include "lib/ht/ht.hpp"

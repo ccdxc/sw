@@ -9,7 +9,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-#include "nic/sdk/include/sdk/pal.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/include/globals.hpp"
 #include "nic/include/adminq.h"
 #include "nic/include/notify.hpp"

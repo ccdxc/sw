@@ -6,7 +6,7 @@
 #include "gtest/gtest.h"
 
 #include "nic/delphi/shm/delphi_metrics.hpp"
-#include "nic/sdk/include/sdk/pal.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
 
 namespace {
 using namespace std;

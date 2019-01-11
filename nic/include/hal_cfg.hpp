@@ -4,7 +4,7 @@
 #define __HAL_CFG_HPP__
 
 #include "nic/include/base.hpp"
-#include "nic/sdk/include/sdk/catalog.hpp"
+#include "nic/sdk/lib/catalog/catalog.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
 
 namespace hal {

@@ -11,7 +11,7 @@ var (
 #include "nic/delphi/shm/delphi_metrics.hpp"
 #include "{{.FilePrefix}}.pb.h"
 #include <google/protobuf/text_format.h>
-#include "nic/sdk/include/sdk/pal.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
 
 namespace delphi {
 namespace objects {

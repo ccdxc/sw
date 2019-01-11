@@ -13,7 +13,7 @@
 #include "nic/delphi/shm/delphi_metrics.hpp"
 #ifdef __x86_64__
 #elif __aarch64__
-#include "nic/sdk/include/sdk/pal.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
 #endif
 
 using namespace delphi::shm;

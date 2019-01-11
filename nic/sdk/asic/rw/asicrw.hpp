@@ -3,7 +3,7 @@
 #ifndef __SDK_ASICRW_HPP__
 #define __SDK_ASICRW_HPP__
 
-#include "nic/sdk/include/sdk/catalog.hpp"
+#include "nic/sdk/lib/catalog/catalog.hpp"
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
 

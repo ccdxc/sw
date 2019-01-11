@@ -2,7 +2,7 @@
 
 #include <cstdint>
 #include "nic/sdk/include/sdk/types.hpp"
-#include "nic/sdk/include/sdk/catalog.hpp"
+#include "nic/sdk/lib/catalog/catalog.hpp"
 #include "nic/sdk/include/sdk/asic/capri/cap_mx_api.h"
 #include "nic/asic/capri/model/cap_mx/cap_mx_csr.h"
 #include "nic/asic/capri/model/cap_bx/cap_bx_csr.h"

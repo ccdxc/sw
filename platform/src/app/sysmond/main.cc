@@ -2,7 +2,7 @@
  * Copyright (c) 2018, Pensando Systems Inc.
  */
 #include "sysmond.h"
-#include "nic/sdk/include/sdk/pal.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
 #include "lib/thread/thread.hpp"
 
 ::utils::log *g_trace_logger;

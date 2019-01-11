@@ -4,7 +4,7 @@
 #include <libgen.h>
 #include "lib/catalog/catalog.hpp"
 #include "include/sdk/mem.hpp"
-#include "include/sdk/utils.hpp"
+#include "nic/sdk/lib/utils/utils.hpp"
 
 namespace sdk {
 namespace lib {

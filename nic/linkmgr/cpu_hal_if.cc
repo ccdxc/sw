@@ -1,7 +1,7 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 #include "cpu_hal_if.h"
-#include "nic/sdk/include/sdk/pal.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
 
 uint32_t
 cpu_hal_if::read(uint32_t chip, uint64_t addr,

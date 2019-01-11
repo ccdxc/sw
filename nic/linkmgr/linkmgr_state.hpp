@@ -6,7 +6,7 @@
 #include "nic/hal/lib/hal_handle.hpp"
 #include "lib/slab/slab.hpp"
 #include "lib/ht/ht.hpp"
-#include "nic/sdk/include/sdk/catalog.hpp"
+#include "nic/sdk/lib/catalog/catalog.hpp"
 
 using sdk::lib::slab;
 using sdk::lib::ht;

@@ -6,7 +6,7 @@
 #include "nic/include/mtrack.hpp"
 #include "nic/hal/src/debug/debug.hpp"
 #include "lib/slab/slab.hpp"
-#include "nic/sdk/include/sdk/catalog.hpp"
+#include "nic/sdk/lib/catalog/catalog.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/sdk/include/sdk/timestamp.hpp"

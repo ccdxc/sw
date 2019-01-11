@@ -9,7 +9,7 @@
 #include "platform/capri/capri_common.hpp"
 #include "platform//capri/capri_cfg.hpp"
 #include "platform/capri/capri_state.hpp"
-#include "nic/sdk/include/sdk/utils.hpp"
+#include "nic/sdk/lib/utils/utils.hpp"
 #include "platform/utils/mpartition.hpp"
 #include "gen/platform/mem_regions.hpp"
 

@@ -13,7 +13,7 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <sys/types.h>
-#include "nic/sdk/include/sdk/pal.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
 
 //#define SLEEP(t) usleep(t)
 #define sleep(t) usleep(t)

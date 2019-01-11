@@ -5,7 +5,7 @@
 #include <iostream>
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/json_parser.hpp"
-#include "nic/sdk/include/sdk/utils.hpp"
+#include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/hal/core/core.hpp"
 #include "nic/hal/core/plugins.hpp"
 #include "lib/periodic/periodic.hpp"

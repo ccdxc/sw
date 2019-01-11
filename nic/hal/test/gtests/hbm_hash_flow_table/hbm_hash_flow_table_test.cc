@@ -5,7 +5,7 @@
 #include <gtest/gtest.h>
 #include <stdio.h>
 #include "nic/sdk/include/sdk/base.hpp"
-#include "nic/sdk/include/sdk/pal.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
 #include "lib/table/hbmhash/hbm_hash.hpp"
 #include "platform/capri/capri_tbl_rw.hpp"

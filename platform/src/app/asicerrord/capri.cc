@@ -1,5 +1,5 @@
 #include "asicerrord.h"
-#include "nic/sdk/include/sdk/pal.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
 #include "lib/thread/thread.hpp"
 
 CAPRI_INTR_KIND_BEGIN(dppintcredit, 9, DppintcreditMetrics)

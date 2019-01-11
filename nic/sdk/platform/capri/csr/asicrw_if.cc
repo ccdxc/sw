@@ -1,4 +1,4 @@
-#include "nic/sdk/include/sdk/pal.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/sdk/platform/capri/csr/asicrw_if.hpp"
 
 uint32_t
