@@ -297,14 +297,27 @@ static inline std::ostream& operator<<(std::ostream& os, const ipv6_addr_t& ip)
 }
 
 #define IPADDR_EQ(ipaddr1, ipaddr2) !memcmp(ipaddr1, ipaddr2, sizeof(ip_addr_t))
+
 #define IPADDR_LT(ipaddr1, ipaddr2)                                            \
     ((ipaddr1)->af == IP_AF_IPV4) ?                                            \
         (((ipaddr1)->addr.v4_addr < (ipaddr2)->addr.v4_addr) ? true : false) : \
-        ((((ipaddr1)->addr.v6_addr.addr64[1] <=                                \
-           (ipaddr2)->addr.v6_addr.addr64[1]) &&                               \
-          ((ipaddr1)->addr.v6_addr.addr64[0] <                                 \
-           (ipaddr2)->addr.v6_addr.addr64[0])) ? true : false)
-#define IPADDR_GT(ipaddr1, ipaddr2)    false
+        ((((ipaddr1)->addr.v6_addr.addr64[1] <                                 \
+           (ipaddr2)->addr.v6_addr.addr64[1]) ||                               \
+          (((ipaddr1)->addr.v6_addr.addr64[1] ==                               \
+            (ipaddr1)->addr.v6_addr.addr64[1]) &&                              \
+           ((ipaddr1)->addr.v6_addr.addr64[0] <                                \
+            (ipaddr2)->addr.v6_addr.addr64[0]))) ? true : false)
+
+#define IPADDR_GT(ipaddr1, ipaddr2)                                            \
+    ((ipaddr1)->af == IP_AF_IPV4) ?                                            \
+        (((ipaddr1)->addr.v4_addr > (ipaddr2)->addr.v4_addr) ? true : false) : \
+        ((((ipaddr1)->addr.v6_addr.addr64[1] >                                 \
+           (ipaddr2)->addr.v6_addr.addr64[1]) ||                               \
+          (((ipaddr1)->addr.v6_addr.addr64[1] ==                               \
+            (ipaddr1)->addr.v6_addr.addr64[1]) &&                              \
+           ((ipaddr1)->addr.v6_addr.addr64[0] >                                \
+            (ipaddr2)->addr.v6_addr.addr64[0]))) ? true : false)
+
 
 static inline bool
 ip_addr_is_zero (const ip_addr_t *addr)

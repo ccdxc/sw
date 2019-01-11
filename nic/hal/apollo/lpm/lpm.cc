@@ -12,17 +12,55 @@
 
 using std::stack;
 
+/**< invalid nexthop */
 #define LPM_NEXTHOP_INVALID            -1
-typedef struct lpm_itree_node_s {
-    ip_addr_t     ipaddr;
-    uint16_t      nhid;
-} lpm_itree_node_t;
 
-/**< temporary stack elements maintained while building the interval tree */
-typedef struct itree_stack_elem_s {
-    lpm_itree_node_t    interval;
-    uint16_t            fallback_nhid;
-} itree_stack_elem_t;
+/**< LPM interval tree node */
+typedef struct lpm_inode_s {
+    ip_addr_t    ipaddr;
+    uint16_t     nhid;
+} lpm_inode_t;
+
+/**< LPM interval node table */
+typedef struct lpm_itable_s {
+    uint32_t       num_intervals;    /**< number of entries in interval table */
+    lpm_inode_t    *nodes;           /**< interval table nodes */
+} lpm_itable_t;
+
+/**< temporary stack elements maintained while building the interval table */
+typedef struct itable_stack_elem_s {
+    lpm_inode_t    interval;         /**< interval table node (to be emitted) */
+    uint16_t       fallback_nhid;    /**< fallback nexthop */
+} itable_stack_elem_t;
+
+/**< each LPM table is 64 bytes (512 bits/flit) */
+#define LPM_TABLE_SIZE                 64    /**< same as CACHE_LINE_SIZE */
+/**
+ * key size is 4 bytes for IPv4 and 8 bytes (assuming max prefix length of 64)
+ * for IPv6
+ */
+#define LPM_ENTRY_KEY_SIZE(ip_af)      (((ip_af) == IP_AF_IPV4) ? 4 : 8)
+
+/**
+ * number of keys per table is CACHE_LINE_SIZE/(sizeof(ipv4_addr_t) = 16 for
+ * IPv4 and CACHE_LINE_SIZE/8 = 8 for IPv6 (assuming max prefix length of 64)
+ */
+#define LPM_KEYS_PER_TABLE(ip_af)      (((ip_af) == IP_AF_IPV4) ? 16 : 8)
+
+/**< LPM table is set of sorted keys packed together */
+typedef struct lpm_table_s {
+    uint32_t    *keys;
+} lpm_table_t;
+
+/**< each LPM stage consists of a set of LPM index tables */
+typedef struct lpm_stage_s {
+    lpm_table_t *tables;
+} lpm_stage_t;
+
+/**< LPM interval tree consists of multiple stages */
+typedef struct lpm_itree_s {
+    lpm_stage_t *stages;
+} lpm_itree_t;
 
 /**
  * @brief    compute the number of stages needed for LPM lookup given the
@@ -38,7 +76,7 @@ typedef struct itree_stack_elem_s {
  *     log4(2 * num_routes)
  */
 static inline uint32_t
-compute_lpm_stages (uint8_t ip_af, uint32_t num_routes)
+lpm_stages (uint8_t ip_af, uint32_t num_routes)
 {
     if (ip_af == IP_AF_IPV4) {
         return (uint32_t)ceil(log2f((float)(1 << num_routes)/4.0));
@@ -104,12 +142,12 @@ compute_intervals (uint32_t num_routes)
  * @param[out]   itable         interval node table
  * @return    number of intervals created
  */
-static inline uint32_t
-lpm_build_interval_table (route_table_t *route_table, lpm_itree_node_t *itable)
+static inline sdk_ret_t
+lpm_build_interval_table (route_table_t *route_table, lpm_itable_t *itable)
 {
-    stack<itree_stack_elem_t>    s;
-    itree_stack_elem_t           elem, end;
-    uint32_t                     num_intervals = 0;
+    stack<itable_stack_elem_t>    s;
+    itable_stack_elem_t           elem, end;
+    uint32_t                      num_intervals = 0;
 
     /**< initialize the stack with highest prefix & invalid nh at the bottom */
     end.fallback_nhid = LPM_NEXTHOP_INVALID;
@@ -140,13 +178,14 @@ lpm_build_interval_table (route_table_t *route_table, lpm_itree_node_t *itable)
              * with fallback nexthop
              * pop the stack and emit the interval
              */
-            itable[num_intervals++] = s.top().interval;
+            itable->nodes[num_intervals++] = s.top().interval;
             s.pop();
         }
 
         /**< start address of prefix is always emitted to the interval table */
         if ((num_intervals > 0) &&
-            IPADDR_EQ(&itable[num_intervals-1].ipaddr, &elem.interval.ipaddr)) {
+            IPADDR_EQ(&itable->nodes[num_intervals-1].ipaddr,
+                      &elem.interval.ipaddr)) {
             /**
              * overwrite the previous itable entry with this more specific
              * route, we hit this case when the current route is starting
@@ -156,9 +195,9 @@ lpm_build_interval_table (route_table_t *route_table, lpm_itree_node_t *itable)
              * table, but we should overwrite that with more specific route2's
              * nexthop
              */
-            itable[num_intervals-1] = elem.interval;
+            itable->nodes[num_intervals-1] = elem.interval;
         } else {
-            itable[num_intervals++] = elem.interval;
+            itable->nodes[num_intervals++] = elem.interval;
         }
 
         /**
@@ -175,7 +214,8 @@ lpm_build_interval_table (route_table_t *route_table, lpm_itree_node_t *itable)
         }
 
         /**< add node corresponding to the IP after the end of route prefix */
-        ip_prefix_ip_next(&route_table->routes[i].prefix, &elem.interval.ipaddr);
+        ip_prefix_ip_next(&route_table->routes[i].prefix,
+                          &elem.interval.ipaddr);
         /**< nexthop id for the IP beyond this prefix is the fallback nexthop */
         elem.interval.nhid = s.top().fallback_nhid;
         /**
@@ -203,10 +243,11 @@ lpm_build_interval_table (route_table_t *route_table, lpm_itree_node_t *itable)
 
     /**< emit whatever is remaining on the stack now */
     while (IPADDR_LT(&s.top().interval.ipaddr, &end.interval.ipaddr)) {
-        itable[num_intervals++] = s.top().interval;
+        itable->nodes[num_intervals++] = s.top().interval;
         s.pop();
     }
-    return num_intervals;
+    itable->num_intervals = num_intervals;
+    return SDK_RET_OK;
 }
 
 /**
@@ -218,9 +259,18 @@ lpm_build_interval_table (route_table_t *route_table, lpm_itree_node_t *itable)
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-lpm_build_tree (lpm_itree_node_t *itable, uint32_t num_intervals,
+lpm_build_tree (route_table_t *route_table, lpm_itable_t *itable,
                 mem_addr_t lpm_tree_root_addr)
 {
+    //lpm_itree_t    lpm_itree = { 0 };
+    uint32_t       num_stages;
+
+    num_stages = lpm_stages(route_table->af, route_table->num_routes);
+    //lpm_itree.stages = (lpm_stage_t *)calloc(1, sizeof(lpm_stage_t));
+
+    /**< start assigning stage pointers */
+    for (uint32_t i = 0; i < num_stages; i++) {
+    }
     return SDK_RET_OK;
 }
 
@@ -240,8 +290,8 @@ sdk_ret_t
 lpm_tree_create (route_table_t *route_table,
                  mem_addr_t lpm_tree_root_addr, uint32_t lpm_mem_size)
 {
-    uint32_t            num_intervals;
-    lpm_itree_node_t    *itable;
+    sdk_ret_t       ret;
+    lpm_itable_t    itable = { 0 };
 
     if (route_table->num_routes == 0) {
         return sdk::SDK_RET_INVALID_ARG;
@@ -251,15 +301,16 @@ lpm_tree_create (route_table_t *route_table,
           sizeof(route_t), route_compare_cb);
     /**< allocate memory for creating all interval tree nodes */
     //num_intervals = compute_intervals(route_table->num_routes);
-    itable = (lpm_itree_node_t *)
-                 malloc(sizeof(lpm_itree_node_t) *
-                        (1 << route_table->num_routes));
-    if (itable == NULL) {
+    itable.nodes =
+        (lpm_inode_t *) malloc(sizeof(lpm_inode_t) *
+                               (1 << route_table->num_routes));
+    if (itable.nodes == NULL) {
         return sdk::SDK_RET_OOM;
     }
-    num_intervals = lpm_build_interval_table(route_table, itable);
-    lpm_build_tree(itable, num_intervals, lpm_tree_root_addr);
-    free(itable);
+    ret = lpm_build_interval_table(route_table, &itable);
+    SDK_ASSERT(ret == SDK_RET_OK);
+    lpm_build_tree(route_table, &itable, lpm_tree_root_addr);
+    free(itable.nodes);
 
     return SDK_RET_OK;
 }
