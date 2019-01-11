@@ -58,7 +58,8 @@ hash_setup(struct service_info *svc_info,
 {
 	pnso_error_t err;
 	struct pnso_hash_desc *pnso_hash_desc;
-	struct cpdc_desc *hash_desc, *bof_hash_desc;
+	struct cpdc_desc *hash_desc;
+	// struct cpdc_desc *hash_desc, *bof_hash_desc;
 	struct cpdc_status_desc *status_desc;
 	struct cpdc_sgl *sgl, *bof_sgl;
 	bool per_block;
@@ -113,6 +114,7 @@ hash_setup(struct service_info *svc_info,
 	}
 	svc_info->si_status_desc = status_desc;
 
+#if 0
 	if (per_block) {
 		num_tags = cpdc_fill_per_block_desc(pnso_hash_desc->algo_type,
 				svc_info->si_block_size,
@@ -187,6 +189,16 @@ hash_setup(struct service_info *svc_info,
 	}
 	svc_info->si_num_tags = num_tags;
 	cpdc_update_batch_tags(svc_info, num_tags);
+#else
+	err = cpdc_setup_desc_blocks(svc_info, pnso_hash_desc->algo_type,
+			fill_hash_desc);
+	if (err) {
+		OSAL_LOG_ERROR("failed to setup hash desc block(s)! err: %d",
+				err);
+		goto out;
+	}
+	num_tags = svc_info->si_num_tags;
+#endif
 
 	chn_service_hw_ring_take_set(svc_info, num_tags);
 

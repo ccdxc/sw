@@ -694,6 +694,100 @@ out:
 }
 
 pnso_error_t
+cpdc_setup_desc_blocks(struct service_info *svc_info, uint32_t algo_type,
+		fill_desc_fn_t fill_desc_fn)
+{
+	pnso_error_t err;
+	struct cpdc_desc *desc, *bof_desc;
+	uint32_t num_tags;
+
+	OSAL_LOG_DEBUG("enter ...");
+
+	desc = svc_info->si_desc;
+	if (svc_info->si_flags & CHAIN_SFLAG_PER_BLOCK) {
+		num_tags = cpdc_fill_per_block_desc(algo_type,
+				svc_info->si_block_size,
+				svc_info->si_src_blist.len,
+				&svc_info->si_src_blist, svc_info->si_p4_sgl,
+				svc_info->si_desc, svc_info->si_status_desc,
+				fill_desc_fn);
+		if (num_tags == 0) {
+			err = EINVAL;
+			OSAL_LOG_ERROR("failed to setup per-block desc! svc_type: %d err: %d",
+					svc_info->si_type, err);
+			goto out;
+		}
+
+		if (svc_info->si_flags & CHAIN_SFLAG_BYPASS_ONFAIL) {
+			bof_desc =
+				(struct cpdc_desc *) ((char *) desc +
+				((sizeof(struct cpdc_desc) * num_tags)));
+			OSAL_LOG_DEBUG("svc_type: %d num_tags: %d desc: 0x" PRIx64 " bof_desc: 0x" PRIx64,
+					svc_info->si_type, num_tags,
+					(uint64_t) desc, (uint64_t) bof_desc);
+
+			num_tags = cpdc_fill_per_block_desc(
+					algo_type,
+					svc_info->si_block_size,
+					svc_info->si_bof_blist.len,
+					&svc_info->si_bof_blist,
+					svc_info->si_p4_bof_sgl,
+					bof_desc, svc_info->si_status_desc,
+					fill_desc_fn);
+			if (num_tags == 0) {
+				err = EINVAL;
+				OSAL_LOG_ERROR("failed to setup bypass onfail per-block desc! svc_type: %d num_tags: %d desc: 0x" PRIx64 " bof_desc: 0x" PRIx64 " err: %d",
+					svc_info->si_type, num_tags,
+					(uint64_t) desc, (uint64_t) bof_desc,
+					err);
+				goto out;
+			}
+		}
+	} else {
+		err = cpdc_update_service_info_sgl(svc_info);
+		if (err) {
+			OSAL_LOG_ERROR("cannot obtain src sgl from pool! svc_type: %d err: %d",
+					svc_info->si_type, err);
+			goto out;
+		}
+
+		fill_desc_fn(algo_type, svc_info->si_src_blist.len,
+				svc_info->si_src_sgl.sgl,
+				svc_info->si_desc, svc_info->si_status_desc);
+
+		if (svc_info->si_flags & CHAIN_SFLAG_BYPASS_ONFAIL) {
+			bof_desc = (struct cpdc_desc *) ((char *) desc +
+					sizeof(struct cpdc_desc));
+			OSAL_LOG_DEBUG("svc_type: %d desc: 0x" PRIx64 " bof_desc: 0x" PRIx64,
+					svc_info->si_type,
+					(uint64_t) desc, (uint64_t) bof_desc);
+
+			err = cpdc_update_service_info_bof_sgl(svc_info);
+			if (err) {
+				OSAL_LOG_ERROR("cannot obtain src bof sgl from pool! svc_type: %d err: %d",
+						svc_info->si_type, err);
+				goto out;
+			}
+
+			fill_desc_fn(algo_type, svc_info->si_bof_blist.len,
+					svc_info->si_bof_sgl.sgl, bof_desc,
+					svc_info->si_status_desc);
+		}
+
+		num_tags = 1;
+	}
+	svc_info->si_num_tags = num_tags;
+	cpdc_update_batch_tags(svc_info, num_tags);
+
+	err = PNSO_OK;
+	OSAL_LOG_DEBUG("exit!");
+	return err;
+out:
+	OSAL_LOG_ERROR("exit! err: %d", err);
+	return err;
+}
+
+pnso_error_t
 cpdc_update_service_info_sgls(struct service_info *svc_info)
 {
 	pnso_error_t err;
