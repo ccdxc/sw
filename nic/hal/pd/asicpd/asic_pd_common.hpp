@@ -7,7 +7,6 @@
 #include "nic/include/hal.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "platform/capri/capri_hbm_rw.hpp"
-//#include "gen/proto/debug.pb.h"
 
 typedef struct asicpd_stats_region_info_t_ {
     int tblid;
@@ -45,14 +44,22 @@ typedef struct pd_llc_get_args_s {
     uint32_t data[16];
 } pd_llc_get_args_t;
 
-#if 0
+typedef struct scheduler_cos_stats_s {
+    uint32_t cos;
+    bool xon_status;
+    uint32_t doorbell_count;
+} scheduler_cos_stats_t;
+
 typedef struct pd_scheduler_stats_get_args_s {
-    debug::SchedulerStatsResponse *response;
+    uint32_t doorbell_set_count;
+    uint32_t doorbell_clear_count;
+    uint32_t ratelimit_start_count;
+    uint32_t ratelimit_stop_count;
+    scheduler_cos_stats_t cos_stats[16];
 } pd_scheduler_stats_get_args_t;
 
 hal_ret_t
 asic_pd_scheduler_stats_get (pd_scheduler_stats_get_args_t *scheduler_stats_args);
-#endif
 
 hal_ret_t asicpd_toeplitz_init(void);
 hal_ret_t asicpd_p4plus_table_init(hal::hal_cfg_t *hal_cfg);

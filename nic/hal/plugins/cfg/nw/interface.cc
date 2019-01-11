@@ -120,7 +120,7 @@ if_init (if_t *hal_if)
     sdk::lib::dllist_reset(&hal_if->l2seg_list_clsc_head);
     sdk::lib::dllist_reset(&hal_if->mc_entry_list_head);
 
-    for (unsigned i = 0; i < HAL_ARRAY_SIZE(hal_if->acl_list); i++) {
+    for (unsigned i = 0; i < SDK_ARRAY_SIZE(hal_if->acl_list); i++) {
         hal_if->acl_list[i]= block_list::factory(sizeof(hal_handle_t));
     }
 
@@ -150,7 +150,7 @@ if_cleanup (if_t *hal_if)
     block_list::destroy(hal_if->enicif_list);
     block_list::destroy(hal_if->nh_list);
     block_list::destroy(hal_if->ep_list);
-    for (unsigned i = 0; i < HAL_ARRAY_SIZE(hal_if->acl_list); i++) {
+    for (unsigned i = 0; i < SDK_ARRAY_SIZE(hal_if->acl_list); i++) {
         block_list::destroy(hal_if->acl_list[i]);
     }
     return if_free(hal_if);
@@ -3577,7 +3577,7 @@ validate_if_delete (if_t *hal_if)
     }
 
     for (unsigned i = 0;
-         (ret == HAL_RET_OK) && i < HAL_ARRAY_SIZE(hal_if->acl_list); i++) {
+         (ret == HAL_RET_OK) && i < SDK_ARRAY_SIZE(hal_if->acl_list); i++) {
         if (hal_if->acl_list[i]->num_elems()) {
             ret = HAL_RET_OBJECT_IN_USE;
             HAL_TRACE_ERR("If delete failure, acls still referring {}:",

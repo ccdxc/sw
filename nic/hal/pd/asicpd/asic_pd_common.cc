@@ -181,13 +181,11 @@ asic_pd_llc_get (pd_llc_get_args_t *llc_args)
     return hal_sdk_ret_to_hal_ret(sdk_ret);
 }
 
-#if 0
 hal_ret_t
 asic_pd_scheduler_stats_get (pd_scheduler_stats_get_args_t *scheduler_stats_args)
 {
     hal_ret_t ret;
     capri_txs_scheduler_stats_t asic_stats = {};
-    debug::SchedulerStatsResponse *response = scheduler_stats_args->response;
     sdk_ret_t     sdk_ret;
 
 
@@ -197,19 +195,19 @@ asic_pd_scheduler_stats_get (pd_scheduler_stats_get_args_t *scheduler_stats_args
         return ret;
     }
 
-    response->set_doorbell_set_count(asic_stats.doorbell_set_count);
-    response->set_doorbell_clear_count(asic_stats.doorbell_clear_count);
-    response->set_ratelimit_start_count(asic_stats.ratelimit_start_count);
-    response->set_ratelimit_stop_count(asic_stats.ratelimit_stop_count);
-    for (unsigned i = 0; i < HAL_ARRAY_SIZE(asic_stats.cos_stats); i++) {
-        auto cos_entry = response->add_cos_entry();
-        cos_entry->set_cos(asic_stats.cos_stats[i].cos);
-        cos_entry->set_doorbell_count(asic_stats.cos_stats[i].doorbell_count);
-        cos_entry->set_xon_status(asic_stats.cos_stats[i].xon_status);
+    scheduler_stats_args->doorbell_set_count = asic_stats.doorbell_set_count;
+    scheduler_stats_args->doorbell_clear_count = asic_stats.doorbell_clear_count;
+    scheduler_stats_args->ratelimit_start_count = asic_stats.ratelimit_start_count;
+    scheduler_stats_args->ratelimit_stop_count = asic_stats.ratelimit_stop_count;
+    for (unsigned i = 0; i < SDK_ARRAY_SIZE(asic_stats.cos_stats); i++) {
+        auto cos_entry = &scheduler_stats_args->cos_stats[i];
+        cos_entry->cos = asic_stats.cos_stats[i].cos;
+        cos_entry->doorbell_count = asic_stats.cos_stats[i].doorbell_count;
+        cos_entry->xon_status = asic_stats.cos_stats[i].xon_status;
     }
+
     return HAL_RET_OK;
 }
-#endif
 
 hal_ret_t
 xcvr_valid_check_enable (bool enable)

@@ -239,7 +239,7 @@ qos_class_pd_dealloc_res (pd_qos_class_t *pd_qos_class)
     if (capri_tm_q_valid(pd_qos_class->uplink.iq)) {
         g_hal_state_pd->qos_uplink_iq_idxr()->free(pd_qos_class->uplink.iq);
     }
-    for (unsigned i = 0; i < HAL_ARRAY_SIZE(pd_qos_class->txdma); i++) {
+    for (unsigned i = 0; i < SDK_ARRAY_SIZE(pd_qos_class->txdma); i++) {
         if (capri_tm_q_valid(pd_qos_class->txdma[i].iq)) {
             g_hal_state_pd->qos_txdma_iq_idxr()->free(pd_qos_class->txdma[i].iq);
         }
@@ -444,7 +444,7 @@ qos_class_pd_update_uplink_iq_map_remove (bool dot1q_remove, uint32_t dot1q_pcp,
         default_qos_class_iq = default_qos_class->pd->uplink.iq;
     }
 
-    HAL_ASSERT(cnt_ip_dscp == HAL_ARRAY_SIZE(dscp_map.ip_dscp));
+    HAL_ASSERT(cnt_ip_dscp == SDK_ARRAY_SIZE(dscp_map.ip_dscp));
     memcpy(dscp_map.ip_dscp, ip_dscp_vals, sizeof(dscp_map.ip_dscp));
     dscp_map.dot1q_pcp = default_qos_class_dot1q_pcp;
 
@@ -510,7 +510,7 @@ qos_class_pd_program_scheduler (pd_qos_class_t *pd_qos_class)
     tm_q_t               oq;
 
     port = TM_PORT_INGRESS;
-    for (unsigned i = 0; i < HAL_ARRAY_SIZE(pd_qos_class->p4_ig_q); i++) {
+    for (unsigned i = 0; i < SDK_ARRAY_SIZE(pd_qos_class->p4_ig_q); i++) {
         oq = pd_qos_class->p4_ig_q[i];
         ret = program_oq(port, oq, qos_class);
         if (ret != HAL_RET_OK) {
@@ -522,7 +522,7 @@ qos_class_pd_program_scheduler (pd_qos_class_t *pd_qos_class)
     }
 
     port = TM_PORT_EGRESS;
-    for (unsigned i = 0; i < HAL_ARRAY_SIZE(pd_qos_class->p4_eg_q); i++) {
+    for (unsigned i = 0; i < SDK_ARRAY_SIZE(pd_qos_class->p4_eg_q); i++) {
         oq = pd_qos_class->p4_eg_q[i];
         ret = program_oq(port, oq, qos_class);
         if (ret != HAL_RET_OK) {
@@ -573,7 +573,7 @@ qos_class_pd_program_qos_table (pd_qos_class_t *pd_qos_class)
     qos_tbl = g_hal_state_pd->dm_table(P4TBL_ID_QOS);
     HAL_ASSERT_RETURN(qos_tbl != NULL, HAL_RET_ERR);
 
-    for (unsigned i = 0; i < HAL_ARRAY_SIZE(pd_qos_class->p4_ig_q); i++) {
+    for (unsigned i = 0; i < SDK_ARRAY_SIZE(pd_qos_class->p4_ig_q); i++) {
         if (!capri_tm_q_valid(pd_qos_class->p4_ig_q[i])) {
             continue;
         }
@@ -704,7 +704,7 @@ qos_class_pd_get_all_queues (pd_qos_class_t *qos_class_pd,
     for (port = TM_DMA_PORT_BEGIN; port <= TM_DMA_PORT_END; port++) {
         iq_idx = 0;
         oq_idx = 0;
-        for (unsigned i = 0; i < HAL_ARRAY_SIZE(qos_class_pd->txdma); i++) {
+        for (unsigned i = 0; i < SDK_ARRAY_SIZE(qos_class_pd->txdma); i++) {
             if (capri_tm_q_valid(qos_class_pd->txdma[i].iq)) {
                 HAL_ASSERT(iq_idx < iq_cnt);
                 input_queue = &iqs[port][iq_idx++];
@@ -725,7 +725,7 @@ qos_class_pd_get_all_queues (pd_qos_class_t *qos_class_pd,
     port = TM_PORT_INGRESS;
     iq_idx = 0;
     oq_idx = 0;
-    for (unsigned i = 0; i < HAL_ARRAY_SIZE(qos_class_pd->p4_ig_q); i++) {
+    for (unsigned i = 0; i < SDK_ARRAY_SIZE(qos_class_pd->p4_ig_q); i++) {
         if (capri_tm_q_valid(qos_class_pd->p4_ig_q[i])) {
             HAL_ASSERT(iq_idx < iq_cnt);
             input_queue = &iqs[port][iq_idx++];
@@ -743,7 +743,7 @@ qos_class_pd_get_all_queues (pd_qos_class_t *qos_class_pd,
     port = TM_PORT_EGRESS;
     iq_idx = 0;
     oq_idx = 0;
-    for (unsigned i = 0; i < HAL_ARRAY_SIZE(qos_class_pd->p4_eg_q); i++) {
+    for (unsigned i = 0; i < SDK_ARRAY_SIZE(qos_class_pd->p4_eg_q); i++) {
         if (capri_tm_q_valid(qos_class_pd->p4_eg_q[i])) {
             HAL_ASSERT(iq_idx < iq_cnt);
             input_queue = &iqs[port][iq_idx++];
@@ -767,8 +767,8 @@ qos_class_pd_reset_stats (pd_qos_class_t *qos_class_pd)
     qos_class_pd_get_all_queues(qos_class_pd,
                                 iqs, oqs);
 
-    for (unsigned port = 0; port < HAL_ARRAY_SIZE(iqs); port++) {
-        for (unsigned i = 0; i < HAL_ARRAY_SIZE(iqs[0]); i++) {
+    for (unsigned port = 0; port < SDK_ARRAY_SIZE(iqs); port++) {
+        for (unsigned i = 0; i < SDK_ARRAY_SIZE(iqs[0]); i++) {
             if (iqs[port][i].valid) {
                 capri_tm_reset_iq_stats(port, iqs[port][i].iq);
             }
@@ -871,7 +871,7 @@ pd_qos_class_update (pd_func_args_t *pd_func_args)
         ret = qos_class_pd_update_uplink_iq_map_remove(args->dot1q_pcp_changed,
                                                        args->dot1q_pcp_src,
                                                        args->ip_dscp_remove,
-                                                       HAL_ARRAY_SIZE(args->ip_dscp_remove));
+                                                       SDK_ARRAY_SIZE(args->ip_dscp_remove));
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Error removing uplink iq map for "
                           "Qos-class {} ret {}",
@@ -977,22 +977,22 @@ qos_class_pd_populate_status (pd_qos_class_t *qos_class_pd, QosClassStatusEpd *e
     qos_class_pd_get_all_queues(qos_class_pd,
                                 iqs, oqs);
 
-    for (unsigned port = 0; port < HAL_ARRAY_SIZE(iqs); port++) {
+    for (unsigned port = 0; port < SDK_ARRAY_SIZE(iqs); port++) {
         auto port_status = epd_status->add_port_status();
         qos_class_pd_port_to_packet_buffer_port(port,
                                                 port_status->mutable_packet_buffer_port());
-        for (unsigned i = 0; i < HAL_ARRAY_SIZE(iqs[0]); i++) {
+        for (unsigned i = 0; i < SDK_ARRAY_SIZE(iqs[0]); i++) {
             if (iqs[port][i].valid) {
                 port_status->add_input_queues(iqs[port][i].iq);
             }
         }
-        for (unsigned i = 0; i < HAL_ARRAY_SIZE(oqs[0]); i++) {
+        for (unsigned i = 0; i < SDK_ARRAY_SIZE(oqs[0]); i++) {
             if (oqs[port][i].valid) {
                 port_status->add_output_queues(oqs[port][i].oq);
             }
         }
     }
-    for (unsigned i = 0; i < HAL_ARRAY_SIZE(qos_class_pd->txdma); i++) {
+    for (unsigned i = 0; i < SDK_ARRAY_SIZE(qos_class_pd->txdma); i++) {
         if (capri_tm_q_valid(qos_class_pd->txdma[i].iq)) {
             epd_status->add_tx_traffic_class_coses(qos_class_pd->txdma[i].iq);
         }
@@ -1070,7 +1070,7 @@ qos_class_pd_populate_stats (pd_qos_class_t *qos_class_pd, QosClassStats *stats)
     // Update the stats now
     pd_qos_class_periodic_stats_update(NULL);
 
-    for (unsigned port = 0; port < HAL_ARRAY_SIZE(iqs); port++) {
+    for (unsigned port = 0; port < SDK_ARRAY_SIZE(iqs); port++) {
         auto port_stats = stats->add_port_stats();
         qos_class_pd_port_to_packet_buffer_port(port,
                                                 port_stats->mutable_packet_buffer_port());

@@ -911,19 +911,25 @@ hal_ret_t
 scheduler_stats_get(debug::SchedulerStatsResponse *rsp)
 {
     hal_ret_t ret = HAL_RET_OK;
-
-#if 0
     pd::pd_scheduler_stats_get_args_t scheduler_stats_args;
-
-    scheduler_stats_args.response = rsp;
 
     ret = pd::asic_pd_scheduler_stats_get(&scheduler_stats_args);
     if (ret != HAL_RET_OK) {
         rsp->set_api_status(types::API_STATUS_ERR);
         return ret;
     }
+
+    rsp->set_doorbell_set_count(scheduler_stats_args.doorbell_set_count);
+    rsp->set_doorbell_clear_count(scheduler_stats_args.doorbell_clear_count);
+    rsp->set_ratelimit_start_count(scheduler_stats_args.ratelimit_start_count);
+    rsp->set_ratelimit_stop_count(scheduler_stats_args.ratelimit_stop_count);
+    for (unsigned i = 0; i < SDK_ARRAY_SIZE(scheduler_stats_args.cos_stats); i++) {
+        auto cos_entry = rsp->add_cos_entry();
+        cos_entry->set_cos(scheduler_stats_args.cos_stats[i].cos);
+        cos_entry->set_doorbell_count(scheduler_stats_args.cos_stats[i].doorbell_count);
+        cos_entry->set_xon_status(scheduler_stats_args.cos_stats[i].xon_status);
+    }
     rsp->set_api_status(types::API_STATUS_OK);
-#endif
 
     return ret;
 }
