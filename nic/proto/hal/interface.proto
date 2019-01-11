@@ -464,9 +464,10 @@ message IfUplinkPCInfo {
 // set.
 //------------------------------------------------------------------------------
 enum IfTunnelEncapType {
-  IF_TUNNEL_ENCAP_TYPE_NONE     = 0;
-  IF_TUNNEL_ENCAP_TYPE_VXLAN    = 1;
-  IF_TUNNEL_ENCAP_TYPE_GRE      = 2;
+  IF_TUNNEL_ENCAP_TYPE_NONE                 = 0;
+  IF_TUNNEL_ENCAP_TYPE_VXLAN                = 1;
+  IF_TUNNEL_ENCAP_TYPE_GRE                  = 2;
+  IF_TUNNEL_ENCAP_TYPE_PROPRIETARY_MPLS     = 3; // MPLS over UDP encap
 }
 
 message IfTunnelVxlanInfo {
@@ -481,13 +482,25 @@ message IfTunnelGREInfo {
   uint32            ttl             = 4;
 }
 
+message IfTunnelProprietaryMpls {
+  types.IPAddress              substrate_ip     = 1 [(gogoproto.moretags) = "venice:mandatory"]; // Substrate/tunnel outer dest. ip-address (incoming)
+  repeated types.IPAddress     overlay_ip       = 2 [(gogoproto.moretags) = "venice:mandatory"]; // Overlay/inner dest. ip-address (incoming)
+  repeated types.MplsTag       mpls_if          = 3 [(gogoproto.moretags) = "venice:mandatory"]; // MPLS tag information (incoming)
+  types.IPAddress              tunnel_dest_ip   = 4 [(gogoproto.moretags) = "venice:mandatory"]; // Tunnel/outer dest. ip-address (outgoing)
+  types.MplsTag                mpls_tag         = 5 [(gogoproto.moretags) = "venice:mandatory"]; // MPLS tag information (outgoing)
+  types.Address                source_gw        = 6 [(gogoproto.moretags) = "venice:mandatory"]; // Source gateway ip-address (can be prefix or range)
+  uint32                       ingress_bw       = 7 [(gogoproto.moretags) = "venice:mandatory"]; // Ingress BW (in KBytes/sec)
+  uint32                       egress_bw        = 8 [(gogoproto.moretags) = "venice:mandatory"]; // Egress BW (in KBytes/sec)
+}
+
 message IfTunnelInfo {
-  IfTunnelEncapType     encap_type      = 1;
+  IfTunnelEncapType         encap_type      = 1;
   oneof encap_info {
-    IfTunnelVxlanInfo   vxlan_info      = 2 [(gogoproto.moretags) = "venice:constraints={intf.IfTunnelInfo.encap_type==interface_pb2.IF_TUNNEL_ENCAP_TYPE_VXLAN}"];
-    IfTunnelGREInfo     gre_info        = 3 [(gogoproto.moretags) = "venice:constraints={intf.IfTunnelInfo.encap_type==interface_pb2.IF_TUNNEL_ENCAP_TYPE_GRE}"];
+    IfTunnelVxlanInfo       vxlan_info      = 2 [(gogoproto.moretags) = "venice:constraints={intf.IfTunnelInfo.encap_type==interface_pb2.IF_TUNNEL_ENCAP_TYPE_VXLAN}"];
+    IfTunnelGREInfo         gre_info        = 3 [(gogoproto.moretags) = "venice:constraints={intf.IfTunnelInfo.encap_type==interface_pb2.IF_TUNNEL_ENCAP_TYPE_GRE}"];
+    IfTunnelProprietaryMpls prop_mpls_info  = 4 [(gogoproto.moretags) = "venice:constraints={intf.IfTunnelInfo.encap_type==interface_pb2.IF_TUNNEL_ENCAP_TYPE_PROPRIETARY_MPLS}"];
   }
-  kh.VrfKeyHandle       vrf_key_handle  = 4 [(gogoproto.moretags) = "venice:ref"];
+  kh.VrfKeyHandle           vrf_key_handle  = 5 [(gogoproto.moretags) = "venice:ref"];
 }
 
 // attributes for CPU If

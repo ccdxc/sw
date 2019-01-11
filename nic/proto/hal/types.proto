@@ -111,6 +111,13 @@ enum L2SegmentType {
   L2_SEGMENT_ISOLATED    = 2;    // isolated VLAN of PVLAN
 }
 
+// Captures the MPLS tag information
+message MplsTag {
+  uint32           label = 1 [(gogoproto.moretags) = "venice:mandatory"];    // mpls label value
+  uint32           exp   = 2 [(gogoproto.moretags) = "venice:default=0"];    // mpls experimental bits value
+  uint32           ttl   = 3 [(gogoproto.moretags) = "venice:default=64"];   // mpls ttl value
+}
+
 // Supported wire encaps for the L2 segments
 enum encapType {
   ENCAP_TYPE_NONE               = 0;
