@@ -120,8 +120,6 @@ poll_fail:
 
 credit_check_fail:
 rate_enforce_fail:
-    bbeq        d.dcqcn_rl_failure, 1, drop_phv
-    nop // BD-slot
     tblwr       d.dcqcn_rl_failure, 1
     tblwr       d.busy, 0
     // fall-through
