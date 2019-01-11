@@ -851,6 +851,27 @@ static void ionic_admin_wait(struct ionic_ibdev *dev,
 	if (timeout)
 		return;
 
+	/* XXX bug in linuxkpi wait_for_completion_timeout?
+	 *
+	 * Seen some times that complete_all is called, but some time later
+	 * wait_for_completion_timeout returns zero indicating that it timed
+	 * out.  Also, the actual time waited when seeing this issue can be
+	 * longer than IONIC_ADMIN_TIMEOUT.
+	 *
+	 * To work around, check for completion_done here.  At least this will
+	 * let the system continue without an error.  It should survive, but
+	 * waiting longer than IONIC_ADMIN_TIMEOUT for recovery is not great.
+	 *
+	 * Considered waiting for a shorter period in a loop, to try to catch
+	 * this early.  Since the wait time seems not to be actually bounded by
+	 * the timeout given, wonder if waiting in a loop will have the
+	 * mitigating effect or if it could possibly make things worse.
+	 */
+	if (completion_done(&wr->work)) {
+		dev_warn(&dev->ibdev.dev, "BUG wait_for_competion_timeout\n");
+		return;
+	}
+
 	/* did not complete before timeout */
 	ionic_admin_timedout(dev, wr);
 	wait_for_completion(&wr->work);
