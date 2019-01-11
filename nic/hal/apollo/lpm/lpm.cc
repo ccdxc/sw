@@ -51,16 +51,27 @@ typedef struct itable_stack_elem_s {
  */
 #define LPM_KEYS_PER_TABLE(ip_af)      (((ip_af) == IP_AF_IPV4) ? 16 : 8)
 
+#define LPM_MAX_STAGES    8    /**< 8 stages can serve more than 1M v6 routes */
+
 /**
  * each LPM stage consists of a set of LPM index tables and this stage meta
  * contains temporary state we maintain while building the table
  */
+
+typedef struct lpm_stage_info_s {
+    mem_addr_t    stage_addr;       /**< pointer to start of the stage tables */
+    mem_addr_t    curr_table_addr;  /**< current table address */
+    uint32_t      curr_entry;       /**< current entry (key/key+nh) being populated */
+    uint32_t      curr_tbl;         /**< current table being populated */
+} lpm_stage_info_t;
+
 typedef struct lpm_stage_meta_s {
-    mem_addr_t    stage_addr;    /**< pointer to start of the stage tables */
-    uint32_t      curr_entry;    /**< current entry (key/key+nh) being populated */
-    uint32_t      curr_tbl;      /**< current table being populated */
+    uint32_t            key_sz;          /**< key size for the tree */
+    uint32_t            keys_per_table;  /**< no. of keys per table is same in
+                                              all stages except last stage */
+    /**< per stage info */
+    lpm_stage_info_t    stage_info[LPM_MAX_STAGES];
 } lpm_stage_meta_t;
-#define LPM_MAX_STAGES    8    /**< 8 stages can serve more than 1M v6 routes */
 
 /**
  * @brief    compute the number of stages needed for LPM lookup given the
@@ -251,9 +262,36 @@ lpm_build_interval_table (route_table_t *route_table, lpm_itable_t *itable)
 }
 
 static inline void
-lpm_promote_route (lpm_inode_t *inode, uint32_t stage_num,
-                   lpm_stage_meta_t *stage_meta)
+lpm_promote_route (lpm_inode_t *inode, uint32_t stage, lpm_stage_meta_t *smeta)
 {
+    sdk_ret_t           ret;
+    mem_addr_t          addr;
+    lpm_stage_info_t    *curr_stage;
+
+    SDK_ASSERT(stage < LPM_MAX_STAGES);
+    curr_stage = &smeta->stage_info[stage];
+    if (curr_stage->curr_entry == smeta->keys_per_table) {
+        /**< we can't propogate up beyond stage 0 */
+        SDK_ASSERT(stage != 0);
+        /**< time to promote this to previous stage */
+        lpm_promote_route(inode, stage - 1, smeta);
+        /**< update this stage meta for next time */
+        curr_stage->curr_tbl++;
+        curr_stage->curr_table_addr =
+            curr_stage->stage_addr + (curr_stage->curr_tbl * LPM_TABLE_SIZE);
+        curr_stage->curr_entry = 0;
+        return;
+    }
+
+    /**< we need to save this node in this stage */
+    addr = curr_stage->curr_table_addr + (curr_stage->curr_entry * smeta->key_sz);
+    ret = asic_mem_write(addr,
+              (inode->ipaddr.af == IP_AF_IPV4) ?
+                  (uint8_t *)&inode->ipaddr.addr.v4_addr :
+                  (uint8_t *)&inode->ipaddr.addr.v6_addr.addr64[0],
+                  smeta->key_sz, ASIC_WRITE_MODE_WRITE_THRU);
+    SDK_ASSERT(ret == SDK_RET_OK);
+    curr_stage->curr_entry++;
 }
 
 /**
@@ -269,51 +307,58 @@ static inline sdk_ret_t
 lpm_build_tree (route_table_t *route_table, lpm_itable_t *itable,
                 mem_addr_t lpm_tree_root_addr, uint32_t lpm_mem_size)
 {
-    uint32_t            nstages, nkeys_per_table;
-    uint32_t            key_sz, entry_sz;
-    mem_addr_t          addr, table_addr;
-    lpm_stage_meta_t    stage_meta[LPM_MAX_STAGES] = { 0 }, *last_stage;
+    sdk_ret_t           ret;
+    mem_addr_t          addr;
+    uint32_t            nstages, nkeys_per_table, entry_sz;
+    lpm_stage_info_t    *last_stage;
+    lpm_stage_meta_t    smeta = { 0 };
 
     nstages = lpm_stages(route_table->af, route_table->num_routes);
     SDK_ASSERT(nstages <= LPM_MAX_STAGES);
 
     /**< initialize all the stage meta */
-    nkeys_per_table = LPM_KEYS_PER_TABLE(route_table->af);
+    smeta.key_sz = LPM_ENTRY_KEY_SIZE(route_table->af);
+    smeta.keys_per_table = LPM_KEYS_PER_TABLE(route_table->af);
     addr = lpm_tree_root_addr;
     for (uint32_t i = 0, ntables = 1; i < nstages; i++) {
-        stage_meta[i].stage_addr = addr;
+        smeta.stage_info[i].stage_addr = addr;
+        smeta.stage_info[i].curr_table_addr = addr;
         addr += ntables * LPM_TABLE_SIZE;
-        ntables = nkeys_per_table * ntables;
+        ntables = smeta.keys_per_table * ntables;
     }
     SDK_ASSERT(addr <= lpm_tree_root_addr + lpm_mem_size);
 
     /**< walk all the interval tree nodes & from the interval tree bottom up */
-    key_sz = LPM_ENTRY_KEY_SIZE(route_table->af);
-    entry_sz = key_sz + LPM_NEXTHOP_SIZE;
+    entry_sz = smeta.key_sz + LPM_NEXTHOP_SIZE;
     // TODO: compute the number of keys per table in the last stage
     //       fix it for now (this has to be some formula)
     nkeys_per_table = (route_table->af == IP_AF_IPV4) ? 8 : 4;
-    last_stage = &stage_meta[nstages-1];
-    table_addr = last_stage->stage_addr;
+    last_stage = &smeta.stage_info[nstages-1];
     for (uint32_t i = 0; i < itable->num_intervals; i++) {
-        addr = table_addr + (last_stage->curr_entry * entry_sz);
-        asic_mem_write(addr,
-            (route_table->af == IP_AF_IPV4) ?
-                (uint8_t *)&itable->nodes[i].ipaddr.addr.v4_addr :
-                (uint8_t *)&itable->nodes[i].ipaddr.addr.v6_addr.addr64[0],
-            key_sz, ASIC_WRITE_MODE_WRITE_THRU);
-        addr += key_sz;
-        asic_mem_write(addr, (uint8_t *)&itable->nodes[i].nhid,
-                       LPM_NEXTHOP_SIZE, ASIC_WRITE_MODE_WRITE_THRU);
+        addr = last_stage->curr_table_addr +
+                   (last_stage->curr_entry * entry_sz);
+        ret =
+            asic_mem_write(addr,
+                (route_table->af == IP_AF_IPV4) ?
+                    (uint8_t *)&itable->nodes[i].ipaddr.addr.v4_addr :
+                    (uint8_t *)&itable->nodes[i].ipaddr.addr.v6_addr.addr64[0],
+                    smeta.key_sz, ASIC_WRITE_MODE_WRITE_THRU);
+        SDK_ASSERT(ret == SDK_RET_OK);
+        addr += smeta.key_sz;
+        ret = asic_mem_write(addr, (uint8_t *)&itable->nodes[i].nhid,
+                             LPM_NEXTHOP_SIZE, ASIC_WRITE_MODE_WRITE_THRU);
+        SDK_ASSERT(ret == SDK_RET_OK);
         last_stage->curr_entry++;
         if (last_stage->curr_entry == nkeys_per_table) {
             i++;
             if (i < itable->num_intervals) {
-                lpm_promote_route(&itable->nodes[i], nstages-2, stage_meta);
+                /**< propogate this node to one of the previous stages */
+                lpm_promote_route(&itable->nodes[i], nstages - 2, &smeta);
                 last_stage->curr_tbl++;
+                last_stage->curr_table_addr =
+                    last_stage->stage_addr +
+                        (last_stage->curr_tbl * LPM_TABLE_SIZE);
                 last_stage->curr_entry = 0;
-                table_addr = last_stage->stage_addr +
-                                 (last_stage->curr_tbl * LPM_TABLE_SIZE);
             }
         }
     }
