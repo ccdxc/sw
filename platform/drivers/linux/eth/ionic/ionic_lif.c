@@ -1061,20 +1061,22 @@ static int ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 		goto err_out_free_dbid;
 	}
 
-	/* notify block shared with NIC */
-	lif->notifyblock_sz = ALIGN(sizeof(*lif->notifyblock), PAGE_SIZE);
-	lif->notifyblock = devm_kzalloc(dev, lif->notifyblock_sz,
-					GFP_KERNEL | GFP_DMA);
-	if (!lif->notifyblock) {
-		err = -ENOMEM;
-		goto err_out_unmap_dbell;
-	}
-	lif->notifyblock_pa = dma_map_single(dev, lif->notifyblock,
-					     lif->notifyblock_sz,
-					     DMA_BIDIRECTIONAL);
-	if (dma_mapping_error(dev, lif->notifyblock_pa)) {
-		err = -EIO;
-		goto err_out_free_notify;
+	if (lif->ionic->nnqs_per_lif) {
+		lif->notifyblock_sz = ALIGN(sizeof(*lif->notifyblock),
+					    PAGE_SIZE);
+		lif->notifyblock = devm_kzalloc(dev, lif->notifyblock_sz,
+						GFP_KERNEL | GFP_DMA);
+		if (!lif->notifyblock) {
+			err = -ENOMEM;
+			goto err_out_unmap_dbell;
+		}
+		lif->notifyblock_pa = dma_map_single(dev, lif->notifyblock,
+						     lif->notifyblock_sz,
+						     DMA_BIDIRECTIONAL);
+		if (dma_mapping_error(dev, lif->notifyblock_pa)) {
+			err = -EIO;
+			goto err_out_free_notify;
+		}
 	}
 
 	err = ionic_qcqs_alloc(lif);
@@ -1086,12 +1088,16 @@ static int ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 	return 0;
 
 err_out_unmap_notify:
-	dma_unmap_single(dev, lif->notifyblock_pa, lif->notifyblock_sz,
-			 DMA_BIDIRECTIONAL);
-	lif->notifyblock_pa = 0;
+	if (lif->notifyblock_pa) {
+		dma_unmap_single(dev, lif->notifyblock_pa, lif->notifyblock_sz,
+				 DMA_BIDIRECTIONAL);
+		lif->notifyblock_pa = 0;
+	}
 err_out_free_notify:
-	devm_kfree(dev, lif->notifyblock);
-	lif->notifyblock = NULL;
+	if (lif->notifyblock) {
+		devm_kfree(dev, lif->notifyblock);
+		lif->notifyblock = NULL;
+	}
 err_out_unmap_dbell:
 	ionic_bus_unmap_dbpage(ionic, lif->kern_dbpage);
 	lif->kern_dbpage = NULL;
