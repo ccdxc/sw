@@ -51,7 +51,7 @@ chksum_setup(struct service_info *svc_info,
 {
 	pnso_error_t err;
 	struct pnso_checksum_desc *pnso_chksum_desc;
-	struct cpdc_desc *chksum_desc, *bof_chksum_desc;
+	struct cpdc_desc *chksum_desc;
 	struct cpdc_status_desc *status_desc;
 	struct cpdc_sgl *sgl, *bof_sgl;
 	bool per_block;
@@ -107,82 +107,14 @@ chksum_setup(struct service_info *svc_info,
 	}
 	svc_info->si_status_desc = status_desc;
 
-	if (per_block) {
-		num_tags =
-			cpdc_fill_per_block_desc(pnso_chksum_desc->algo_type,
-					svc_info->si_block_size,
-					svc_info->si_src_blist.len,
-					&svc_info->si_src_blist, sgl,
-					chksum_desc, status_desc,
-					fill_chksum_desc);
-		if (num_tags == 0) {
-			err = EINVAL;
-			OSAL_LOG_ERROR("failed to setup chksum per-block desc! err: %d",
-					err);
-			goto out;
-		}
-
-		if (svc_info->si_flags & CHAIN_SFLAG_BYPASS_ONFAIL) {
-			bof_chksum_desc =
-				(struct cpdc_desc *) ((char *) chksum_desc +
-				((sizeof(struct cpdc_desc) * num_tags)));
-			OSAL_LOG_DEBUG("num_tags: %d chksum_desc: 0x" PRIx64 " bof_chksum_desc: 0x" PRIx64,
-					num_tags, (uint64_t) chksum_desc,
-					(uint64_t) bof_chksum_desc);
-
-			num_tags = cpdc_fill_per_block_desc(
-					pnso_chksum_desc->algo_type,
-					svc_info->si_block_size,
-					svc_info->si_bof_blist.len,
-					&svc_info->si_bof_blist,
-					svc_info->si_p4_bof_sgl,
-					bof_chksum_desc, status_desc,
-					fill_chksum_desc);
-			if (num_tags == 0) {
-				err = EINVAL;
-				OSAL_LOG_ERROR("failed to setup chksum bypass onfail per-block desc! err: %d",
-						err);
-				goto out;
-			}
-		}
-	} else {
-		err = cpdc_update_service_info_sgl(svc_info);
-		if (err) {
-			OSAL_LOG_ERROR("cannot obtain chksum src sgl from pool! err: %d",
-					err);
-			goto out;
-		}
-
-		fill_chksum_desc(pnso_chksum_desc->algo_type,
-				svc_info->si_src_blist.len,
-				svc_info->si_src_sgl.sgl,
-				chksum_desc, status_desc);
-
-		if (svc_info->si_flags & CHAIN_SFLAG_BYPASS_ONFAIL) {
-			bof_chksum_desc =
-				(struct cpdc_desc *) ((char *) chksum_desc +
-						sizeof(struct cpdc_desc));
-			OSAL_LOG_DEBUG("chksum_desc: 0x" PRIx64 " bof_chksum_desc: 0x" PRIx64,
-					(uint64_t) chksum_desc,
-					(uint64_t) bof_chksum_desc);
-
-			err = cpdc_update_service_info_bof_sgl(svc_info);
-			if (err) {
-				OSAL_LOG_ERROR("cannot obtain chksum src bof sgl from pool! err: %d",
-						err);
-				goto out;
-			}
-
-			fill_chksum_desc(pnso_chksum_desc->algo_type,
-					svc_info->si_bof_blist.len,
-					svc_info->si_bof_sgl.sgl,
-					bof_chksum_desc, status_desc);
-		}
-
-		num_tags = 1;
+	err = cpdc_setup_desc_blocks(svc_info, pnso_chksum_desc->algo_type,
+			fill_chksum_desc);
+	if (err) {
+		OSAL_LOG_ERROR("failed to setup chksum desc block(s)! err: %d",
+				err);
+		goto out;
 	}
-	svc_info->si_num_tags = num_tags;
-	cpdc_update_batch_tags(svc_info, num_tags);
+	num_tags = svc_info->si_num_tags;
 
 	chn_service_hw_ring_take_set(svc_info, num_tags);
 

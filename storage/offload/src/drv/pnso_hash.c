@@ -114,82 +114,6 @@ hash_setup(struct service_info *svc_info,
 	}
 	svc_info->si_status_desc = status_desc;
 
-#if 0
-	if (per_block) {
-		num_tags = cpdc_fill_per_block_desc(pnso_hash_desc->algo_type,
-				svc_info->si_block_size,
-				svc_info->si_src_blist.len,
-				&svc_info->si_src_blist, sgl,
-				hash_desc, status_desc, fill_hash_desc);
-		if (num_tags == 0) {
-			err = EINVAL;
-			OSAL_LOG_ERROR("failed to setup hash per-block desc! err: %d",
-					err);
-			goto out;
-		}
-
-		if (svc_info->si_flags & CHAIN_SFLAG_BYPASS_ONFAIL) {
-			bof_hash_desc =
-				(struct cpdc_desc *) ((char *) hash_desc +
-				((sizeof(struct cpdc_desc) * num_tags)));
-			OSAL_LOG_DEBUG("num_tags: %d hash_desc: 0x" PRIx64 " bof_hash_desc: 0x" PRIx64,
-					num_tags, (uint64_t) hash_desc,
-					(uint64_t) bof_hash_desc);
-
-			num_tags = cpdc_fill_per_block_desc(
-					pnso_hash_desc->algo_type,
-					svc_info->si_block_size,
-					svc_info->si_bof_blist.len,
-					&svc_info->si_bof_blist,
-					svc_info->si_p4_bof_sgl,
-					bof_hash_desc, status_desc,
-					fill_hash_desc);
-			if (num_tags == 0) {
-				err = EINVAL;
-				OSAL_LOG_ERROR("failed to setup hash bypass onfail per-block desc! err: %d",
-						err);
-				goto out;
-			}
-		}
-	} else {
-		err = cpdc_update_service_info_sgl(svc_info);
-		if (err) {
-			OSAL_LOG_ERROR("cannot obtain hash src sgl from pool! err: %d",
-					err);
-			goto out;
-		}
-
-		fill_hash_desc(pnso_hash_desc->algo_type,
-				svc_info->si_src_blist.len,
-				svc_info->si_src_sgl.sgl,
-				hash_desc, status_desc);
-
-		if (svc_info->si_flags & CHAIN_SFLAG_BYPASS_ONFAIL) {
-			bof_hash_desc =
-				(struct cpdc_desc *) ((char *) hash_desc +
-						sizeof(struct cpdc_desc));
-			OSAL_LOG_DEBUG("hash_desc: 0x" PRIx64 " bof_hash_desc: 0x" PRIx64,
-					(uint64_t) hash_desc,
-					(uint64_t) bof_hash_desc);
-
-			err = cpdc_update_service_info_bof_sgl(svc_info);
-			if (err) {
-				OSAL_LOG_ERROR("cannot obtain hash src bof sgl from pool! err: %d",
-						err);
-				goto out;
-			}
-
-			fill_hash_desc(pnso_hash_desc->algo_type,
-					svc_info->si_bof_blist.len,
-					svc_info->si_bof_sgl.sgl,
-					bof_hash_desc, status_desc);
-		}
-
-		num_tags = 1;
-	}
-	svc_info->si_num_tags = num_tags;
-	cpdc_update_batch_tags(svc_info, num_tags);
-#else
 	err = cpdc_setup_desc_blocks(svc_info, pnso_hash_desc->algo_type,
 			fill_hash_desc);
 	if (err) {
@@ -198,7 +122,6 @@ hash_setup(struct service_info *svc_info,
 		goto out;
 	}
 	num_tags = svc_info->si_num_tags;
-#endif
 
 	chn_service_hw_ring_take_set(svc_info, num_tags);
 
