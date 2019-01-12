@@ -368,6 +368,7 @@ It has these top-level messages:
 	IfUplinkPCInfo
 	IfTunnelVxlanInfo
 	IfTunnelGREInfo
+	IfTunnelProprietaryMpls
 	IfTunnelInfo
 	IfCPUInfo
 	IfAppRedirInfo
@@ -1272,6 +1273,7 @@ It has these top-level messages:
 	MirrorSessionGetResponse
 	MirrorSessionGetResponseMsg
 	ObjectMeta
+	MplsTag
 	EncapInfo
 	IPAddress
 	IPRange
