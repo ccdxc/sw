@@ -145,7 +145,8 @@ poll_for_work:
         sll            r2, r1, d.log_wqe_size // Branch Delay Slot
         add            r2, r2, d.hbm_sq_base_addr, HBM_SQ_BASE_ADDR_SHIFT
         // Prefetch wqe addr so that its in cache by stage 2
-        cpref          r2
+        //cpref          r2
+        nop
         // remaining_payload_bytes = (1 << sqcb0_p->log_pmtu), to start with
         sll            r4, 1, d.log_pmtu
         

@@ -34,7 +34,8 @@ resp_rx_launch_rqpt_process:
     CAPRI_RESET_TABLE_0_ARG()   //BD Slot
 
     CQCB_ADDR_GET(CQCB_ADDR, K_CQ_ID, K_CQCB_BASE_ADDR_HI)
-    cpref       CQCB_ADDR
+    //cpref       CQCB_ADDR
+    nop
 
 skip_cqcb_prefetch:
     bbne        K_RQ_IN_HBM, 1, host_q_process
@@ -50,7 +51,8 @@ hbm_q_process:
     sll         r3, r1, K_LOG_WQE_SIZE
     add         r3, r3, K_PT_BASE_ADDR, HBM_SQ_BASE_ADDR_SHIFT
     // r3 now has next hbm_wqe addr, prefetch it
-    cpref       r3
+    //cpref       r3
+    nop
     
     phvwrpair   CAPRI_PHV_FIELD(OUT_P, hbm_wqe_ptr), r2, \
                 CAPRI_PHV_FIELD(OUT_P, rq_in_hbm), K_RQ_IN_HBM
