@@ -7,7 +7,7 @@
         },
         {
             "name": "lif2qstate_map",
-            "size": "131072K",
+            "size": "4K",
             "cache": "p4plus-all"
         },
         {
