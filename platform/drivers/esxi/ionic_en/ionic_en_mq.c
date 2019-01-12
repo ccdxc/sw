@@ -2006,7 +2006,7 @@ ionic_en_queue_apply_filter(vmk_AddrCookie driver_data,           // IN
                            VMK_ETH_ADDR_FMT_ARGS(filter_info.mac_filter_info->mac));
         } else if (class == VMK_UPLINK_QUEUE_FILTER_CLASS_VLAN_ONLY) {
                 ionic_info("VLAN RX filter (class %u) at index %u is applied on "
-                           "%s ring %u, VLAN ID: 0x%x",
+                           "%s ring %u, VLAN ID: %d",
                            class,
                            filter_idx,
                            ionic_en_get_ring_type(priv_data, shared_queue_data_idx),
@@ -2168,7 +2168,7 @@ ionic_en_queue_remove_filter(vmk_AddrCookie driver_data,          // IN
                            VMK_ETH_ADDR_FMT_ARGS(filter_info.mac_filter_info->mac));
         } else if (filter_info.filter_class == VMK_UPLINK_QUEUE_FILTER_CLASS_VLAN_ONLY) {
                 ionic_info("VLAN RX filter (class %u) at index %u is removed from "
-                           "%s ring %u, VLAN ID: 0x%x",
+                           "%s ring %u, VLAN ID: %d",
                            filter_info.filter_class,
                            filter_idx,
                            ionic_en_get_ring_type(priv_data, shared_queue_data_idx),

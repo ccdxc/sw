@@ -25,45 +25,68 @@
 void
 ionic_rx_filter_free(struct rx_filter *f)
 {
-//        struct device *dev = lif->ionic->dev;
-
-//        hlist_del(&f->by_id);
-//        hlist_del(&f->by_hash);
-//        devm_kfree(dev, f);
         ionic_heap_free(ionic_driver.heap_id, f);
 }
 
 
-static inline vmk_HashKeyIteratorCmd
-ionic_hash_table_free_filter_iterator(vmk_HashTable hash_table,
-                                      vmk_HashKey key,
-                                      vmk_HashValue value,
-                                      vmk_AddrCookie addr_cookie)
+VMK_ReturnStatus
+ionic_rx_filter_del(struct lif *lif, struct rx_filter *f)
 {
-        vmk_uint32 *cnt = (vmk_uint32 *) addr_cookie.ptr;
-
-        ionic_rx_filter_free((struct rx_filter *) value);
-
-        (*cnt)++; 
-
-        return VMK_HASH_KEY_ITER_CMD_CONTINUE;
-}
-
-
-#if 0
-int ionic_rx_filter_del(struct lif *lif, struct rx_filter *f)
-{
+        VMK_ReturnStatus status;
         struct ionic_admin_ctx ctx = {
-                .work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
+//                .work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
                 .cmd.rx_filter_del = {
                         .opcode = CMD_OPCODE_RX_FILTER_DEL,
                         .filter_id = f->filter_id,
                 },
         };
 
-        return ionic_api_adminq_post(lif, &ctx);
+        status = ionic_completion_create(ionic_driver.module_id,
+					 ionic_driver.heap_id,
+					 ionic_driver.lock_domain,
+					 "ionic_admin_ctx.work",
+					 &ctx.work);
+	if (status != VMK_OK) {
+		ionic_err("ionic_completion_create() failed, status: %s",
+			  vmk_StatusToString(status));
+		return status;
+	}
+
+        status  = ionic_adminq_post_wait(lif, &ctx);
+        ionic_completion_destroy(&ctx.work);
+	if (status != VMK_OK) {
+                ionic_err("ionic_adminq_post_wait() failed, status: %s",
+                          vmk_StatusToString(status));
+                return status;
+        }
+
+	ionic_info("rx_filter del (id %d)\n",
+		   ctx.cmd.rx_filter_del.filter_id);
+
+        return status;
 }
-#endif
+
+        
+static inline vmk_HashKeyIteratorCmd
+ionic_hash_table_free_filter_iterator(vmk_HashTable hash_table,
+                                      vmk_HashKey key,
+                                      vmk_HashValue value,
+                                      vmk_AddrCookie addr_cookie)
+{
+//        VMK_ReturnStatus status;
+        vmk_uint32 *cnt = (vmk_uint32 *) addr_cookie.ptr;
+        struct rx_filter *f = (struct rx_filter *) value;
+
+//        status = ionic_rx_filter_del(f->lif, f);
+//        VMK_ASSERT(status == VMK_OK);
+
+        ionic_rx_filter_free(f);
+
+        (*cnt)++; 
+
+        return VMK_HASH_KEY_ITER_CMD_CONTINUE;
+}
+
 
 VMK_ReturnStatus
 ionic_rx_filters_init(struct lif *lif)
@@ -174,7 +197,7 @@ void ionic_rx_filters_deinit(struct lif *lif)
 
         addr_cookie.ptr = &cnt;
 
-        status = vmk_HashKeyIterate(lif->rx_filters.by_id,
+        status = vmk_HashKeyIterate(lif->rx_filters.by_hash,
                                     ionic_hash_table_free_filter_iterator,
                                     addr_cookie);
         if (status == VMK_OK) {
@@ -223,6 +246,7 @@ ionic_rx_filter_save(struct lif *lif, u32 flow_id, u16 rxq_index,
         f->flow_id = flow_id;
         f->filter_id = ctx->comp.rx_filter_add.filter_id;
         f->rxq_index = rxq_index;
+        f->lif = lif;
         vmk_Memcpy(&f->cmd, &ctx->cmd, sizeof(f->cmd));
 
 //        INIT_HLIST_NODE(&f->by_hash);
@@ -289,9 +313,9 @@ struct rx_filter *ionic_rx_filter_by_vlan(struct lif *lif, u16 vid)
 //        struct hlist_head *head = &lif->rx_filters.by_hash[key];
         struct rx_filter *f = NULL;
 
-        status = vmk_HashKeyFind(lif->rx_filters.by_hash,
-                                 (vmk_HashKey) (vmk_uint64) key,
-                                 (vmk_HashValue *) &f);
+        status = vmk_HashKeyDelete(lif->rx_filters.by_hash,
+                                   (vmk_HashKey) (vmk_uint64) key,
+                                   (vmk_HashValue *) &f);
         if (status == VMK_OK) {
                 return f;
         } else {
@@ -315,9 +339,9 @@ struct rx_filter *ionic_rx_filter_by_addr(struct lif *lif, const u8 *addr)
 //        struct hlist_head *head = &lif->rx_filters.by_hash[key];
         struct rx_filter *f = NULL;
 
-        status = vmk_HashKeyFind(lif->rx_filters.by_hash,
-                                 (vmk_HashKey) (vmk_uint64) key,
-                                 (vmk_HashValue *) &f); 
+        status = vmk_HashKeyDelete(lif->rx_filters.by_hash,
+                                   (vmk_HashKey) (vmk_uint64) key,
+                                   (vmk_HashValue *) &f); 
         if (status == VMK_OK) {
                 return f;
         } else {

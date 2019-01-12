@@ -1865,7 +1865,6 @@ ionic_en_vlan_filter_enable_disable(vmk_AddrCookie driver_data,             // I
         for (vlan_id = 0; vlan_id < IONIC_VLAN_FILTER_SIZE; vlan_id++) {
                 if (vmk_VLANBitmapGet(&uplink_handle->vlan_filter_bitmap,
                                       vlan_id)) {
-                        VMK_ASSERT(0);
                         status = vlan_op(lif, vlan_id);
                         VMK_ASSERT(status == VMK_OK);
                 }

@@ -200,6 +200,7 @@ ionic_qcq_disable(struct qcq *qcq)
                           vmk_StatusToString(status));
         }
 
+        vmk_WorldSleep(3000);
 
         return status;
 }
@@ -1682,11 +1683,12 @@ static void ionic_lif_deinit(struct lif *lif)
         }
 
 //	ionic_lif_stats_dump_stop(lif);
-	ionic_rx_filters_deinit(lif);
 	ionic_lif_rss_teardown(lif);
 	ionic_lif_qcq_deinit(lif->adminqcq);
 	ionic_lif_txqs_deinit(lif);
 	ionic_lif_rxqs_deinit(lif);
+	ionic_rx_filters_deinit(lif);
+
         lif->flags &= ~LIF_F_INITED;
 }
 

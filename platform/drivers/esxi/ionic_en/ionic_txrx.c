@@ -223,8 +223,6 @@ ionic_rx_pkt_alloc(struct queue *q,
                                           priv_data->dma_engine_streaming,
                                           &new_pkt);
         if (VMK_UNLIKELY(status != VMK_OK)) {
-                ionic_err("vmk_PktAllocForDMAEngine() failed, status: %s",
-                          vmk_StatusToString(status));
                 stats->alloc_err++;
                 return NULL;
         }
