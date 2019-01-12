@@ -138,6 +138,10 @@ def RunAll(collector_w, verif_json, tc, feature):
             continue
         if dest_w == None:
             continue
+        # If both workload nodes are not naples, continue
+        if not src_w.IsNaples():
+            if not dest_w.IsNaples():
+                continue
         dest_port = GetDestPort(verif[i]['port'])
         action = verif[i]['result']
         res = RunCmd(src_w, protocol, dest_w.ip_address, dest_port, collector_w, action, feature)
