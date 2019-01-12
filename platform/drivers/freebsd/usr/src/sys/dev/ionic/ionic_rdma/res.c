@@ -36,6 +36,15 @@
 
 #include "res.h"
 
+#ifndef ORDER_PER_LONG
+/* Order of bits per long for 64 bit (2^6 is 64).
+ *
+ * On 32 bit, order should actually be 5, but here is still using the value 6.
+ * This leads to a corner case that is not optmized, but has correct behavior.
+ */
+#define ORDER_PER_LONG 6
+#endif
+
 int resid_init(struct resid_bits *resid, int size)
 {
 	int size_bytes = sizeof(long) * BITS_TO_LONGS(size);
@@ -136,14 +145,14 @@ int buddy_get(struct buddy_bits *buddy, int order)
 	next_long = BIT_WORD(pos + BIT(order));
 
 	/* any smaller order after this starts at next_long */
-	if (rc >= 0) {
+	if (order >= ORDER_PER_LONG && rc >= 0) {
 		for (i = 0; i < order; ++i) {
 			if (buddy->order_next[i] >= first_long)
 				buddy->order_next[i] = next_long;
 		}
 	}
 
-	/* any lager order before this starts at later alignment */
+	/* any larger order before this starts at later alignment */
 	for (i = order; i <= buddy->order_max; ++i) {
 		if (buddy->order_next[i] <= first_long) {
 			/* min alignment of 1, align to order i */
@@ -170,11 +179,13 @@ void buddy_put(struct buddy_bits *buddy, int pos, int order)
 			buddy->order_next[i] = first_long;
 	}
 
-	/* any lager order starts at earlier alignment */
+	/* any larger order starts at earlier alignment */
 	for (i = order; i <= buddy->order_max; ++i) {
-		/* min alignment of 1, align to order i, and mask */
-		mask_longs = ~((BIT_WORD(BIT(i)) ?: 1) - 1);
-		/* start at first_long aligned down to order i */
-		buddy->order_next[i] = first_long & mask_longs;
+		if (buddy->order_next[i] >= first_long) {
+			/* min alignment of 1, align to order i, and mask */
+			mask_longs = ~((BIT_WORD(BIT(i)) ?: 1) - 1);
+			/* start at first_long aligned down to order i */
+			buddy->order_next[i] = first_long & mask_longs;
+		}
 	}
 }
