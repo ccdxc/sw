@@ -10,6 +10,8 @@ namespace sdk {
 namespace asic {
 namespace pd {
 
+#define SDK_LOG_TABLE_WRITE 1
+
 // TODO: please move this to sdk/lib/p4 later !!
 typedef struct p4_table_mem_layout_ {
     uint16_t    entry_width;    /* In units of memory words.. 16b  in case of PIPE tables */
