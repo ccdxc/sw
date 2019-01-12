@@ -2906,6 +2906,20 @@ ${table}_entry_decode(uint32_t tableid,
 //::        else:
 //::            api_prefix = 'p4pd'
 //::        #endif
+//::        genhwfields_actiondata_api = False
+//::        for table, tid in tabledict.items():
+//::            if pddict['tables'][table]['hwfields']:
+//::                genhwfields_actiondata_api = True
+//::                break
+//::            #endif
+//::        #endfor
+//::        genappdatafield_api = False
+//::        for table, tid in tabledict.items():
+//::            if pddict['tables'][table]['appdatafields']:
+//::                genappdatafield_api = True
+//::                break
+//::            #endif
+//::        #endfor
 
 
 /* Query key details for p4-table
@@ -4623,9 +4637,270 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
     return (P4PD_SUCCESS);
 }
 
+//::        if genappdatafield_api:
+p4pd_error_t
+${api_prefix}_actiondata_appdata_set(uint32_t   tableid,
+                            uint8_t    actionid,
+                            void       *appdata,
+                            void       *actiondata)
+{
+    switch (tableid) {
+//::            for table, tid in tabledict.items():
+//::                if pddict['tables'][table]['appdatafields']:
+//::                    caps_tablename = table.upper()
+        case P4${caps_p4prog}TBL_ID_${caps_tablename}: /* p4-table '${table}' */
+            switch (actionid) {
+//::                    for action in pddict['tables'][table]['actions']:
+//::                        actionname, _ = action
+//::                        caps_actname = actionname.upper()
+//::                        fieldlist = pddict['tables'][table]['appdatafields'][actionname]
+//::                        if len(fieldlist):
+                case ${caps_tablename}_${caps_actname}_ID:
+//::                            for fieldname, fieldwidth in fieldlist:
+                ((${table}_actiondata_t*)actiondata)->action_u.${table}_${actionname}.${fieldname} = ((${table}_appdata_t*)appdata)->${fieldname};
+//::                            #endfor
+                break;
+//::                        #endif
+//::                    #endfor
+                default:
+                    // Invalid action
+                    return (P4PD_FAIL);
+                break;
+            }
+        break;
+//::                #else:
+//::                    continue
+//::                #endif
+//::            #endfor
+        default:
+            // Invalid tableid
+            return (P4PD_FAIL);
+        break;
+    }
+    return (P4PD_SUCCESS);
+}
+
+p4pd_error_t
+${api_prefix}_actiondata_appdata_get(uint32_t   tableid,
+                            uint8_t    actionid,
+                            void       *appdata,
+                            void       *actiondata)
+{
+    switch (tableid) {
+//::            for table, tid in tabledict.items():
+//::                if pddict['tables'][table]['appdatafields']:
+//::                    caps_tablename = table.upper()
+        case P4${caps_p4prog}TBL_ID_${caps_tablename}: /* p4-table '${table}' */
+            switch (actionid) {
+//::                    for action in pddict['tables'][table]['actions']:
+//::                        actionname, _ = action
+//::                        caps_actname = actionname.upper()
+//::                        fieldlist = pddict['tables'][table]['appdatafields'][actionname]
+//::                        if len(fieldlist):
+                case ${caps_tablename}_${caps_actname}_ID:
+//::                            for fieldname, fieldwidth in fieldlist:
+                ((${table}_appdata_t*)appdata)->${fieldname} = ((${table}_actiondata_t*)actiondata)->action_u.${table}_${actionname}.${fieldname};
+//::                            #endfor
+                break;
+//::                        #endif
+//::                    #endfor
+                default:
+                    // Invalid action
+                    return (P4PD_FAIL);
+                break;
+            }
+        break;
+//::                #else:
+//::                    continue
+//::                #endif
+//::            #endfor
+        default:
+            // Invalid tableid
+            return (P4PD_FAIL);
+        break;
+    }
+    return (P4PD_SUCCESS);
+}
+
+//::        #endif
+
+//::        if genhwfields_actiondata_api:
+uint32_t
+${api_prefix}_actiondata_hwfields_count_get(uint32_t tableid, uint8_t actionid)
+{
+    switch (tableid) {
+//::            for table, tid in tabledict.items():
+//::                if pddict['tables'][table]['hwfields']:
+//::                    caps_tablename = table.upper()
+        case P4${caps_p4prog}TBL_ID_${caps_tablename}: /* p4-table '${table}' */
+            switch (actionid) {
+//::                    for action in pddict['tables'][table]['actions']:
+//::                        actionname, _ = action
+//::                        caps_actname = actionname.upper()
+//::                        fieldlist = pddict['tables'][table]['appdatafields'][actionname]
+//::                        if len(fieldlist):
+                case ${caps_tablename}_${caps_actname}_ID:
+//::                    argc = len(pddict['tables'][table]['hwfields'][actionname])
+                    return (${argc});
+                break;
+//::                        #endif
+//::                    #endfor
+                default:
+                    // Invalid action
+                    return (0);
+                break;
+            }
+        break;
+//::                #else:
+//::                    continue
+//::                #endif
+//::            #endfor
+        default:
+            return (0);
+        break;
+    }
+    return (0);
+}
+
+p4pd_error_t
+${api_prefix}_actiondata_hwfield_set(uint32_t   tableid,
+                            uint8_t    actionid,
+                            uint32_t   argument_slotid,
+                            uint8_t    *argumentvalue,
+                            void       *actiondata)
+{
+    switch (tableid) {
+//::            for table, tid in tabledict.items():
+//::                if pddict['tables'][table]['hwfields']:
+//::                    caps_tablename = table.upper()
+        case P4${caps_p4prog}TBL_ID_${caps_tablename}: /* p4-table '${table}' */
+            ((${table}_actiondata_t*)actiondata)->action_id = actionid;
+            switch (actionid) {
+//::                    for action in pddict['tables'][table]['actions']:
+//::                        actionname, _ = action
+//::                        caps_actname = actionname.upper()
+//::                        hwfieldlist = pddict['tables'][table]['hwfields'][actionname]
+//::                        if len(hwfieldlist):
+                case ${caps_tablename}_${caps_actname}_ID:
+                    {
+//::                            argc = len(pddict['tables'][table]['hwfields'][actionname])
+                        if (argument_slotid >= ${argc}) {
+                            return (P4PD_FAIL);
+                        }
+                        uint32_t argument_offsets[] = {
+//::                            for fieldname, _   in hwfieldlist:
+                            offsetof(${table}_${actionname}_t, ${fieldname}),
+//::                            #endfor
+                        };
+                        uint32_t argument_byte_width[] = {
+//::                            for fieldname, fieldwidth  in hwfieldlist:
+//::                                if (fieldwidth <= 8):
+                            sizeof(uint8_t),
+//::                                elif (fieldwidth <= 16):
+                            sizeof(uint16_t),
+//::                                elif (fieldwidth <= 32):
+                            sizeof(uint32_t),
+//::                                else:
+//::                                    byte_fldwidth = (fieldwidth + 7) >> 3
+                            ${byte_fldwidth},
+//::                                #endif
+//::                            #endfor
+                        };
+                        uint8_t* structbase = (uint8_t*)&(((${table}_actiondata_t*)actiondata)->action_u);
+                        memcpy((structbase + argument_offsets[argument_slotid]),
+                                argumentvalue, argument_byte_width[argument_slotid]);
+                    }
+                break;
+//::                        #endif
+//::                    #endfor
+                default:
+                    // Invalid action
+                    return (P4PD_FAIL);
+                break;
+            }
+//::                #else:
+//::                    continue
+//::                #endif
+//::            #endfor
+        default:
+            // Invalid tableid
+            return (P4PD_FAIL);
+        break;
+    }
+    return (P4PD_SUCCESS);
+}
+
+p4pd_error_t
+${api_prefix}_actiondata_hwfield_get(uint32_t   tableid,
+                            uint8_t    actionid,
+                            uint32_t   argument_slotid,
+                            uint8_t    *argumentvalue,
+                            void       *actiondata)
+{
+    switch (tableid) {
+//::            for table, tid in tabledict.items():
+//::                if pddict['tables'][table]['hwfields']:
+//::                    caps_tablename = table.upper()
+        case P4${caps_p4prog}TBL_ID_${caps_tablename}: /* p4-table '${table}' */
+            switch (actionid) {
+//::                    for action in pddict['tables'][table]['actions']:
+//::                        actionname, _ = action
+//::                        caps_actname = actionname.upper()
+//::                        hwfieldlist = pddict['tables'][table]['hwfields'][actionname]
+//::                        if len(hwfieldlist):
+                case ${caps_tablename}_${caps_actname}_ID:
+                    {
+//::                            argc = len(pddict['tables'][table]['hwfields'][actionname])
+                        if (argument_slotid >= ${argc}) {
+                            return (P4PD_FAIL);
+                        }
+                        uint32_t argument_offsets[] = {
+//::                            for fieldname, _  in hwfieldlist:
+                            offsetof(${table}_${actionname}_t, ${fieldname}),
+//::                            #endfor
+                        };
+                        uint32_t argument_byte_width[] = {
+//::                            for fieldname, fieldwidth  in hwfieldlist:
+//::                                if (fieldwidth <= 8):
+                            sizeof(uint8_t),
+//::                                elif (fieldwidth <= 16):
+                            sizeof(uint16_t),
+//::                                elif (fieldwidth <= 32):
+                            sizeof(uint32_t),
+//::                                else:
+//::                                    byte_fldwidth = (fieldwidth + 7) >> 3
+                            ${byte_fldwidth},
+//::                                #endif
+//::                            #endfor
+                        };
+                        uint8_t* structbase = (uint8_t*)&(((${table}_actiondata_t*)actiondata)->action_u);
+                        memcpy(argumentvalue, (structbase + argument_offsets[argument_slotid]),
+                               argument_byte_width[argument_slotid]);
+                    }
+                break;
+//::                        #endif
+//::                    #endfor
+                default:
+                    // Invalid action
+                    return (P4PD_FAIL);
+                break;
+            }
+//::                #else:
+//::                    continue
+//::                #endif
+//::            #endfor
+        default:
+            // Invalid tableid
+            return (P4PD_FAIL);
+        break;
+    }
+    return (P4PD_SUCCESS);
+}
+
+//::        #endif
 
 //::    #endif
-//
+
 //::    if len(tabledict):
 
 void ${api_prefix}_prep_p4tbl_names()

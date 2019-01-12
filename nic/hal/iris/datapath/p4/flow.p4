@@ -291,6 +291,8 @@ table flow_info {
     size : FLOW_TABLE_SIZE;
 }
 
+@pragma capi appdatafields flow_index export_en
+@pragma capi hwfields_access_api
 action flow_hash_info(entry_valid, export_en,
                       flow_index, hash1, hint1, hash2, hint2, hash3, hint3,
                       hash4, hint4, hash5, hint5,
