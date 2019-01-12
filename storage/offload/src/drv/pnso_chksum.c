@@ -87,14 +87,16 @@ chksum_setup(struct service_info *svc_info,
 	}
 	svc_info->si_p4_sgl = sgl;
 
-	bof_sgl = cpdc_get_sgl(svc_info->si_pcr, per_block);
-	if (!bof_sgl) {
-		err = ENOMEM;
-		OSAL_LOG_ERROR("cannot obtain bypass-chksum sgl from pool! err: %d",
-				err);
-		goto out;
+	if (svc_info->si_flags & CHAIN_SFLAG_PER_BLOCK) {
+		bof_sgl = cpdc_get_sgl(svc_info->si_pcr, per_block);
+		if (!bof_sgl) {
+			err = ENOMEM;
+			OSAL_LOG_ERROR("cannot obtain bypass-chksum sgl from pool! err: %d",
+					err);
+			goto out;
+		}
+		svc_info->si_p4_bof_sgl = bof_sgl;
 	}
-	svc_info->si_p4_bof_sgl = bof_sgl;
 
 	status_desc = cpdc_get_status_desc(svc_info->si_pcr, per_block);
 	if (!status_desc) {
@@ -488,8 +490,10 @@ chksum_teardown(struct service_info *svc_info)
 	sgl = (struct cpdc_sgl *) svc_info->si_p4_sgl;
 	cpdc_put_sgl(svc_info->si_pcr, per_block, sgl);
 
-	sgl = (struct cpdc_sgl *) svc_info->si_p4_bof_sgl;
-	cpdc_put_sgl(svc_info->si_pcr, per_block, sgl);
+	if (svc_info->si_flags & CHAIN_SFLAG_PER_BLOCK) {
+		sgl = (struct cpdc_sgl *) svc_info->si_p4_bof_sgl;
+		cpdc_put_sgl(svc_info->si_pcr, per_block, sgl);
+	}
 
 	chksum_desc = (struct cpdc_desc *) svc_info->si_desc;
 	cpdc_put_desc(svc_info, per_block, chksum_desc);

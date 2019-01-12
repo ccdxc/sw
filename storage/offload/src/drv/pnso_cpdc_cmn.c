@@ -33,7 +33,7 @@
  *
  */
 static inline bool
-is_bulk_desc_in_use(uint8_t flags)
+is_bulk_desc_in_use(uint16_t flags)
 {
 	return ((flags & CHAIN_SFLAG_IN_BATCH) &&
 			((flags & CHAIN_SFLAG_LONE_SERVICE) ||
