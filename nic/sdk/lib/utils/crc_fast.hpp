@@ -13,9 +13,17 @@ typedef uint32_t crc;
 
 class crcFast {
 public:
-    static crcFast *factory(uint8_t num_polys, bool thread_safe=false);
+    enum crc32_polynomial_type_ {
+        // CRC_32,
+        CRC32_POLYNOMIAL_TYPE_CRC32     = 0,
+        CRC32_POLYNOMIAL_TYPE_CRC32C    = 1,
+        CRC32_POLYNOMIAL_TYPE_CRC32K    = 2,
+        CRC32_POLYNOMIAL_TYPE_CRC32Q    = 3,
+        CRC32_POLYNOMIAL_TYPE_MAX,
+    } crc32_polynomial_type_t;
+
+    static crcFast *factory(bool thread_safe=false);
     static void destroy(crcFast *crc);
-    sdk_ret_t init_poly(uint8_t poly_index, uint32_t poly);
     crc compute_crc(uint8_t const message[], int nBytes,
                     uint8_t poly_index);
 
@@ -28,7 +36,8 @@ private:
 
     crcFast() {};
     ~crcFast();
-    sdk_ret_t init(uint8_t num_polys, bool thread_safe);
+    sdk_ret_t init_(bool thread_safe);
+    sdk_ret_t init_poly_(uint8_t poly_index, uint32_t poly);
 
     void lock_(void) {
         if (thread_safe_) {

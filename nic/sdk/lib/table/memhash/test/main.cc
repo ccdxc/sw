@@ -2,22 +2,27 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
 #include <gtest/gtest.h>
+#include <arpa/inet.h>
 #include <stdio.h>
-#include "nic/sdk/lib/table/memhash/mem_hash.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
-#include "gen/p4gen/p4/include/p4pd.h"
-#include <boost/multiprecision/cpp_int.hpp>
-#include <chrono>
-#include <fstream>
-#include "nic/hal/pd/utils/flow/test/jenkins_spooky/spooky.h"
 #include "include/sdk/base.hpp"
 #include "nic/include/hal_mem.hpp"
-#include <arpa/inet.h>
 
+#ifdef IRIS
+#include "gen/p4gen/p4/include/p4pd.h"
+#endif
+
+#ifdef APOLLO
+#include "gen/p4gen/apollo/include/p4pd.h"
+#endif
+
+#ifdef GFT
+#include "gen/p4gen/gft/include/p4pd.h"
+#endif
+
+#include "nic/sdk/lib/table/memhash/mem_hash.hpp"
+#include "nic/sdk/lib/table/memhash/test/p4pd_mock/mem_hash_p4pd_mock.hpp"
 using sdk::table::mem_hash;
-using boost::multiprecision::uint512_t;
-using boost::multiprecision::uint128_t;
-using namespace std::chrono;
 
 static int
 memhash_debug_logger (sdk_trace_level_e trace_level, const char *format, ...)
@@ -56,6 +61,7 @@ main(int argc, char **argv)
                            TRACE_NUM_FILES_DEFAULT,
                            ::utils::trace_debug);
 
+    mem_hash_mock_init();
     memhash_sdk_init();
 
     HAL_TRACE_DEBUG("Starting Main ... ");

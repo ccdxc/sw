@@ -155,14 +155,10 @@ HbmHash::init()
     initialize_slabs();
 
     // Initialize CRC Fast
-    crc_ = crcFast::factory(HASH_POLY_MAX + 1);
+    crc_ = crcFast::factory();
     if (crc_ == NULL) {
         return SDK_RET_OOM;
     }
-    crc_->init_poly(HASH_POLY0, 0x04C11DB7);
-    crc_->init_poly(HASH_POLY1, 0x1EDC6F41);
-    crc_->init_poly(HASH_POLY2, 0x741B8CD7);
-    crc_->init_poly(HASH_POLY3, 0x814141AB);
 
     return SDK_RET_OK;
 }

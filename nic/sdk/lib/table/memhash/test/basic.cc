@@ -3,23 +3,14 @@
 //------------------------------------------------------------------------------
 #include <gtest/gtest.h>
 #include <stdio.h>
-#include "nic/sdk/lib/table/memhash/mem_hash.hpp"
-#include "nic/sdk/lib/p4/p4_api.hpp"
-#include "gen/p4gen/p4/include/p4pd.h"
-#include <boost/multiprecision/cpp_int.hpp>
-#include <chrono>
-#include <fstream>
-#include "nic/hal/pd/utils/flow/test/jenkins_spooky/spooky.h"
+
 #include "include/sdk/base.hpp"
-#include "nic/include/hal_mem.hpp"
-#include <arpa/inet.h>
+#include "nic/sdk/lib/table/memhash/mem_hash.hpp"
+#include "nic/sdk/lib/table/memhash/test/p4pd_mock/mem_hash_p4pd_mock.hpp"
 
 #include "common.hpp"
 
 using sdk::table::mem_hash;
-using boost::multiprecision::uint512_t;
-using boost::multiprecision::uint128_t;
-using namespace std::chrono;
 
 #define BASIC_TEST_COUNT 64
 
@@ -32,7 +23,8 @@ protected:
     virtual ~basic() {}
     
     virtual void SetUp() {
-        table = mem_hash::factory(P4TBL_ID_FLOW_HASH, MAX_RECIRCS, NULL);
+        table = mem_hash::factory(MEM_HASH_P4TBL_ID_H5, MAX_RECIRCS, 
+                                  NULL, h5_key2str, h5_data2str);
         assert(table);
     }
     virtual void TearDown() {
@@ -46,7 +38,7 @@ TEST_F(basic, insert)
     uint32_t    i = 0;
     
     for (i = 0; i < BASIC_TEST_COUNT; i++) {
-        rs = table->insert(genkey(), gendata(), gencrc32());
+        rs = table->insert(h5_genkey(), h5_gendata(), h5_gencrc32());
         ASSERT_TRUE(rs == sdk::SDK_RET_OK);
     }
 }
@@ -60,9 +52,9 @@ TEST_F(basic, insert_duplicate)
     uint32_t    crc32 = 0;
     
     for (i = 0; i < BASIC_TEST_COUNT; i++) {
-        key = genkey();
-        data = gendata();
-        crc32 = gencrc32();
+        key = h5_genkey();
+        data = h5_gendata();
+        crc32 = h5_gencrc32();
         rs = table->insert(key, data, crc32);
         ASSERT_TRUE(rs == sdk::SDK_RET_OK);
         
@@ -80,9 +72,9 @@ TEST_F(basic, insert_remove)
     uint32_t    crc32 = 0;
     
     for (i = 0; i < BASIC_TEST_COUNT; i++) {
-        key = genkey();
-        data = gendata();
-        crc32 = gencrc32();
+        key = h5_genkey();
+        data = h5_gendata();
+        crc32 = h5_gencrc32();
         rs = table->insert(key, data, crc32);
         ASSERT_TRUE(rs == sdk::SDK_RET_OK);
         
@@ -100,9 +92,9 @@ TEST_F(basic, duplicate_remove)
     uint32_t    crc32 = 0;
     
     for (i = 0; i < BASIC_TEST_COUNT; i++) {
-        key = genkey();
-        data = gendata();
-        crc32 = gencrc32();
+        key = h5_genkey();
+        data = h5_gendata();
+        crc32 = h5_gencrc32();
         rs = table->insert(key, data, crc32);
         ASSERT_TRUE(rs == sdk::SDK_RET_OK);
         
@@ -121,7 +113,7 @@ TEST_F(basic, remove_not_found)
     uint32_t    i = 0;
     
     for (i = 0; i < BASIC_TEST_COUNT; i++) {
-        rs = table->remove(genkey(), gencrc32());
+        rs = table->remove(h5_genkey(), h5_gencrc32());
         ASSERT_TRUE(rs == sdk::SDK_RET_ENTRY_NOT_FOUND);
     }
 }

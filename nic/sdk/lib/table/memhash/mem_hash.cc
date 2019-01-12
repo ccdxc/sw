@@ -3,6 +3,7 @@
 //-----------------------------------------------------------------------------
 #include "include/sdk/base.hpp"
 #include "lib/p4/p4_api.hpp"
+#include "lib/utils/crc_fast.hpp"
 
 #include "mem_hash.hpp"
 #include "mem_hash_api_context.hpp"
@@ -25,7 +26,9 @@ uint32_t mem_hash_api_context::numctx_ = 0;
 mem_hash *
 mem_hash::factory(uint32_t table_id,
                   uint32_t max_recircs,
-                  table_health_monitor_func_t health_monitor_func) {
+                  table_health_monitor_func_t health_monitor_func,
+                  key2str_t key2str,
+                  data2str_t data2str) {
     void                    *mem = NULL;
     mem_hash                 *memhash = NULL;
     sdk_ret_t               ret = SDK_RET_OK;
@@ -34,7 +37,8 @@ mem_hash::factory(uint32_t table_id,
     mem = (mem_hash *) SDK_CALLOC(SDK_MEM_ALLOC_MEM_HASH, sizeof(mem_hash));
     if (mem) {
         memhash = new (mem) mem_hash();
-        ret = memhash->init_(table_id, max_recircs, health_monitor_func);
+        ret = memhash->init_(table_id, max_recircs, health_monitor_func,
+                             key2str, data2str);
         if (ret != SDK_RET_OK) {
             memhash->~mem_hash();
             SDK_FREE(SDK_MEM_ALLOC_MEM_HASH, mem);
@@ -48,13 +52,17 @@ mem_hash::factory(uint32_t table_id,
 sdk_ret_t
 mem_hash::init_(uint32_t table_id,
                 uint32_t max_recircs,
-                table_health_monitor_func_t health_monitor_func) {
+                table_health_monitor_func_t health_monitor_func,
+                key2str_t key2str,
+                data2str_t data2str) {
     p4pd_error_t            p4pdret;
     p4pd_table_properties_t tinfo, ctinfo;
 
     main_table_id_ = table_id;
     max_recircs_ = max_recircs;
     health_monitor_func_ = health_monitor_func;
+    key2str_ = key2str;
+    data2str_ = data2str;
 
     p4pdret = p4pd_table_properties_get(main_table_id_, &tinfo);
     SDK_ASSERT_RETURN(p4pdret == P4PD_SUCCESS, SDK_RET_ERR);
@@ -69,7 +77,12 @@ mem_hash::init_(uint32_t table_id,
     data_len_ = tinfo.actiondata_struct_size;
     SDK_ASSERT(data_len_);
 
-    hash_poly_ = static_cast<HashPoly>(tinfo.hash_type);
+    hash_poly_ = tinfo.hash_type;
+    // Initialize CRC Fast
+    crc32gen_ = crcFast::factory();
+    if (crc32gen_ == NULL) {
+        return SDK_RET_OOM;
+    }
 
     hint_table_id_ = tinfo.oflow_table_id;
     SDK_ASSERT(hint_table_id_);
@@ -133,13 +146,10 @@ mem_hash::insert(void *key, void *data, uint32_t crc32) {
     MEM_HASH_TRACE_API_BEGIN();
 
     SDK_TRACE_DEBUG("Memhash inserting entry, Crc32:%#x", crc32);
-    SDK_TRACE_DEBUG("- Key:[%s]",
-                    p4pd_mem_hash_entry_key_str(main_table_id_, key));
-    SDK_TRACE_DEBUG("- Data:[%s]",
-                    p4pd_mem_hash_entry_swdata_str(main_table_id_, data));
-
+    SDK_TRACE_DEBUG("- Key:[%s]", key2str_ ? key2str_(key) : "NA");
+    SDK_TRACE_DEBUG("- Data:[%s]", data2str_ ? data2str_(data) : "NA");
     mctx = mem_hash_api_context::factory(key, key_len_, data, data_len_,
-                                         max_recircs_, crc32);
+                                         max_recircs_, crc32, key2str_, data2str_);
     if (!mctx) {
         SDK_TRACE_ERR("MainTable: create api context failed ret:%d", ret);
         ret = SDK_RET_OOM;
@@ -207,11 +217,10 @@ mem_hash::remove(void *key, uint32_t crc32) {
     MEM_HASH_TRACE_API_BEGIN();
 
     SDK_TRACE_DEBUG("Memhash removing entry, Crc32:%#x", crc32);
-    SDK_TRACE_DEBUG("- Key:[%s]",
-                    p4pd_mem_hash_entry_key_str(main_table_id_, key));
+    SDK_TRACE_DEBUG("- Key:[%s]", key2str_ ? key2str_(key) : "NA");
 
     mctx = mem_hash_api_context::factory(key, key_len_, NULL, data_len_,
-                                      max_recircs_, crc32);
+                                         max_recircs_, crc32, key2str_, data2str_);
     if (!mctx) {
         SDK_TRACE_ERR("MainTable: create api context failed ret:%d", ret);
         ret = SDK_RET_OOM;

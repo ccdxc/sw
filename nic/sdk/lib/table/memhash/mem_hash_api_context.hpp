@@ -104,6 +104,8 @@ public:
     bool        crc32_valid;
     uint32_t    crc32;
     void        *cookie; // Callback cookie for iteratin
+    key2str_t   key2str;
+    data2str_t  data2str;
     //mem_hash_iterate_func_t iterfunc;
 
     // Derived fields from input
@@ -123,7 +125,7 @@ public:
     uint32_t    table_index;
     uint8_t     hint_slot;
     uint32_t    hint;
-    bool        more_hashs;
+    bool        more_hashes;
     bool        write_pending;
     uint32_t    match_type;
     void        *bucket;
@@ -179,7 +181,7 @@ public:
         sprintf(str, "id:%d,idx:%d,slot:%d,hint:%d,"
                 "more:%d,pending:%d,hash:%d,match_type:%d",
                 table_id, table_index, hint_slot,
-                hint, more_hashs, write_pending, hash, match_type);
+                hint, more_hashes, write_pending, hash, match_type);
         return str;
     }
 
@@ -193,10 +195,12 @@ public:
     }
 
     void printsw() {
-        SDK_TRACE_DEBUG("- Key:[%s]",
-                        p4pd_mem_hash_entry_key_str(table_id, swkey));
-        SDK_TRACE_DEBUG("- Data:[%s]",
-                        p4pd_mem_hash_entry_data_str(table_id, swdata));
+        if (key2str) {
+            SDK_TRACE_DEBUG("- Key:[%s]", key2str(swkey));
+        }
+        if (data2str) {
+            SDK_TRACE_DEBUG("- Data:[%s]", data2str(swdata));
+        }
     }
 
     void print(const char *name) {
@@ -225,7 +229,8 @@ public:
 
     static mem_hash_api_context* factory(void *key, uint32_t key_len,
                                          void *data, uint32_t data_len,
-                                         uint32_t max_recircs, uint32_t crc32) {
+                                         uint32_t max_recircs, uint32_t crc32,
+                                         key2str_t key2str, data2str_t data2str) {
         mem_hash_api_context *ctx = alloc_(key_len, data_len);
         if (!ctx) {
             return NULL;
@@ -258,6 +263,10 @@ public:
 
     static uint32_t count() {
         return numctx_;
+    }
+
+    bool is_max_recircs() {
+        return (level >= max_recircs);
     }
 };
 

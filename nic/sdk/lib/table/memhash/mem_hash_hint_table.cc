@@ -206,6 +206,13 @@ mem_hash_hint_table::tail_(mem_hash_api_context *ctx,
         return SDK_RET_OOM;
     }
 
+    if (tctx->is_max_recircs()) {
+        SDK_TRACE_ERR("Max Recirc levels reached.");
+        // We should have caught this in insert.
+        SDK_ASSERT(0);
+        return SDK_RET_MAX_RECIRC_EXCEED;
+    }
+
     // Initialize the context
     SDK_ASSERT_RETURN(initctx_(tctx) == SDK_RET_OK, SDK_RET_ERR);
 

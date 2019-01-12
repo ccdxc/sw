@@ -7,51 +7,25 @@
 #include <string>
 
 #include "include/sdk/base.hpp"
-#include "lib/indexer/indexer.hpp"
 #include "include/sdk/mem.hpp"
-#include "lib/utils/crc_fast.hpp"
 #include "lib/table/common/table.hpp"
-#include "lib/slab/slab.hpp"
+#include "lib/utils/crc_fast.hpp"
 
 #include "mem_hash_stats.hpp"
-#include "mem_hash_api_context.hpp"
 
 using namespace std;
 
 namespace sdk {
 namespace table {
+typedef bool (*iterate_t)(void *key, void *data, const void *cb_data);
+typedef char* (*key2str_t)(void *key);
+typedef char* (*data2str_t)(void *data);
 
-using sdk::table::memhash::mem_hash_api_context;
+using sdk::utils::crcFast;
 using sdk::table::memhash::mem_hash_api_stats;
 using sdk::table::memhash::mem_hash_table_stats;
 
-typedef bool (*mem_hash_iterate_func_t)(uint32_t gl_index, const void *cb_data);
-
 class mem_hash {
-public:
-    enum HashPoly {
-        // CRC_32,
-        HASH_POLY0,
-        HASH_POLY1,
-        HASH_POLY2,
-        HASH_POLY3,
-        HASH_POLY_MAX = HASH_POLY3
-    };
-
-    enum stats {
-        STATS_INS_SUCCESS,
-        STATS_INS_MEM_HASH_COLL, // STATS_INS_SUCCESS will not be incr.
-        STATS_INS_FAIL_DUP_INS,
-        STATS_INS_FAIL_NO_RES,
-        STATS_INS_FAIL_HW,
-        STATS_UPD_SUCCESS,
-        STATS_UPD_FAIL_ENTRY_NOT_FOUND,
-        STATS_REM_SUCCESS,
-        STATS_REM_FAIL_ENTRY_NOT_FOUND,
-        STATS_REM_FAIL_HW,
-        STATS_MAX
-    };
-
 private:
     // Private Data
     std::string                 name_;          // Name
@@ -64,23 +38,28 @@ private:
     uint32_t                    key_len_;
     uint32_t                    data_len_;
     uint32_t                    max_recircs_;
-    mem_hash::HashPoly          hash_poly_;
+    uint32_t                    hash_poly_;
+    crcFast                     *crc32gen_;
     table_health_monitor_func_t health_monitor_func_;
-    mem_hash_api_stats          api_stats;
-    mem_hash_table_stats        table_stats;
+    key2str_t                   key2str_;
+    data2str_t                  data2str_;
+    mem_hash_api_stats          api_stats_;
+    mem_hash_table_stats        table_stats_;
 
 private:
     sdk_ret_t   init_(uint32_t table_id,
                       uint32_t max_recircs,
-                      table_health_monitor_func_t health_monitor_func);
+                      table_health_monitor_func_t health_monitor_func,
+                      key2str_t key2str, data2str_t data2str);
 
     uint32_t    genhash_(void *key);
-    sdk_ret_t   defragment_(mem_hash_api_context *ctx);
 
 public:
     static mem_hash *factory(uint32_t table_id,
                             uint32_t max_recircs = 8,
-                            table_health_monitor_func_t health_monitor_func = NULL);
+                            table_health_monitor_func_t health_monitor_func = NULL,
+                            key2str_t key2str = NULL, 
+                            data2str_t data2str = NULL);
 
     static void destroy(mem_hash *memhash);
 
@@ -96,6 +75,7 @@ public:
     sdk_ret_t   update(void *key, void *data, uint32_t crc32);
     sdk_ret_t   remove(void *key);
     sdk_ret_t   remove(void *key, uint32_t crc32);
+    sdk_ret_t   getstats();
 };
 
 }   // namespace table

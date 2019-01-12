@@ -801,9 +801,9 @@ p4pd_mem_hash_entry_set_more_hints(uint32_t table_id,
                                    uint8_t more_hints);
 
 p4pd_error_t
-p4pd_mem_hash_entry_set_more_hashs(uint32_t table_id,
+p4pd_mem_hash_entry_set_more_hashes(uint32_t table_id,
                                    uint8_t *swdata,
-                                   uint32_t more_hashs);
+                                   uint32_t more_hashes);
 
 uint32_t
 p4pd_mem_hash_entry_get_hash(uint32_t table_id,
@@ -816,7 +816,7 @@ p4pd_mem_hash_entry_get_hint(uint32_t table_id,
                              uint32_t slot);
 
 uint8_t
-p4pd_mem_hash_entry_get_more_hashs(uint32_t table_id,
+p4pd_mem_hash_entry_get_more_hashes(uint32_t table_id,
                                    uint8_t *swdata);
 
 uint32_t

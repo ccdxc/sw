@@ -9,32 +9,42 @@ namespace utils {
 #define WIDTH           (8 * sizeof(crc))
 #define TOPBIT          (1 << (WIDTH - 1))
 
+using sdk::utils::crcFast;
+
+uint32_t g_crc32_polynomials[] = {
+    [crcFast::CRC32_POLYNOMIAL_TYPE_CRC32]  = 0x04C11DB7,
+    [crcFast::CRC32_POLYNOMIAL_TYPE_CRC32C] = 0x1EDC6F41,
+    [crcFast::CRC32_POLYNOMIAL_TYPE_CRC32K] = 0x741B8CD7,
+    [crcFast::CRC32_POLYNOMIAL_TYPE_CRC32Q] = 0x814141AB,
+};
+
 //------------------------------------------------------------------------------
 // initialize an instance of bitmap class
 //------------------------------------------------------------------------------
 sdk_ret_t
-crcFast::init(uint8_t num_polys, bool thread_safe)
+crcFast::init_(bool thread_safe)
 {
     thread_safe_ = thread_safe;
     if (thread_safe_) {
         SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
     }
 
-    num_polys_ = num_polys;
+    num_polys_ = CRC32_POLYNOMIAL_TYPE_MAX;
 
     // allocate memory for crc Table
     crcTable_ = (uint32_t **)SDK_CALLOC(SDK_MEM_ALLOC_LIB_CRCFAST,
-                                        num_polys * sizeof(uint32_t *));
+                                        num_polys_ * sizeof(uint32_t *));
     if (crcTable_ == NULL) {
         return SDK_RET_OOM;
     }
     // for (int i = 0; i < CRC_POLY_MAX; i++) {
-    for (int i = 0; i < num_polys; i++) {
+    for (int i = 0; i < num_polys_; i++) {
         crcTable_[i] = (uint32_t *)SDK_CALLOC(SDK_MEM_ALLOC_LIB_CRCFAST,
                                               256 * sizeof(crc));
         if (crcTable_[i] == NULL) {
             return SDK_RET_OOM;
         }
+        init_poly_(i, g_crc32_polynomials[i]);
     }
 
     return SDK_RET_OK;
@@ -44,7 +54,7 @@ crcFast::init(uint8_t num_polys, bool thread_safe)
 // factory method for this class
 //------------------------------------------------------------------------------
 crcFast *
-crcFast::factory(uint8_t num_polys, bool thread_safe)
+crcFast::factory(bool thread_safe)
 {
     sdk_ret_t    ret;
     void         *mem;
@@ -56,7 +66,7 @@ crcFast::factory(uint8_t num_polys, bool thread_safe)
     }
     new_crc = new (mem) crcFast();
 
-    ret = new_crc->init(num_polys, thread_safe);
+    ret = new_crc->init_(thread_safe);
     if (ret != SDK_RET_OK) {
         new_crc->~crcFast();
         SDK_FREE(SDK_MEM_ALLOC_LIB_CRCFAST, mem);
@@ -86,7 +96,7 @@ crcFast::~crcFast()
 // initialize the polynomial
 //------------------------------------------------------------------------------
 sdk_ret_t
-crcFast::init_poly(uint8_t poly_index, uint32_t poly)
+crcFast::init_poly_(uint8_t poly_index, uint32_t poly)
 {
     crc  remainder;
 

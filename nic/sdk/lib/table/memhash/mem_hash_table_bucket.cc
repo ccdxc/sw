@@ -60,7 +60,7 @@ mem_hash_table_bucket::write_(mem_hash_api_context *ctx) {
 
     if (ctx->is_hint_valid()) {
         if (HINT_SLOT_IS_MORE(ctx->hint_slot)) {
-            p4pd_mem_hash_entry_set_more_hashs(ctx->table_id, ctx->swdata, 1);
+            p4pd_mem_hash_entry_set_more_hashes(ctx->table_id, ctx->swdata, 1);
             p4pd_mem_hash_entry_set_more_hints(ctx->table_id, ctx->swdata,
                                                ctx->hint);
         } else {
@@ -191,7 +191,7 @@ mem_hash_table_bucket::compare_(mem_hash_api_context *ctx) {
         return SDK_RET_COLLISION;
     }
 
-    ctx->more_hashs = p4pd_mem_hash_entry_get_more_hashs(ctx->table_id, ctx->swdata);
+    ctx->more_hashes = p4pd_mem_hash_entry_get_more_hashes(ctx->table_id, ctx->swdata);
     ctx->hint = p4pd_mem_hash_entry_get_more_hints(ctx->table_id, ctx->swdata);
 
     return SDK_RET_COLLISION;
@@ -265,9 +265,9 @@ mem_hash_table_bucket::find_first_free_hint_(mem_hash_api_context *ctx) {
         // We have found a valid hint slot.
         SDK_TRACE_ERR("hint slot %d is free", ctx->hint_slot);
     } else {
-        ctx->more_hashs = p4pd_mem_hash_entry_get_more_hashs(ctx->table_id, ctx->swdata);
-        if (ctx->more_hashs == 0) {
-            SDK_TRACE_ERR("more_hashs slot is free");
+        ctx->more_hashes = p4pd_mem_hash_entry_get_more_hashes(ctx->table_id, ctx->swdata);
+        if (ctx->more_hashes == 0) {
+            SDK_TRACE_ERR("more_hashes slot is free");
             ctx->hint = p4pd_mem_hash_entry_get_more_hints(ctx->table_id, ctx->swdata);
             HINT_SLOT_SET_MORE(ctx->hint_slot);
         } else {
@@ -277,7 +277,7 @@ mem_hash_table_bucket::find_first_free_hint_(mem_hash_api_context *ctx) {
     }
 
     SDK_TRACE_DEBUG("%s: FirstFreeHint: Slot:%d Hint:%d More:%d",
-                    ctx->idstr(), ctx->hint_slot, ctx->hint, ctx->more_hashs);
+                    ctx->idstr(), ctx->hint_slot, ctx->hint, ctx->more_hashes);
     return ret;
 }
 
@@ -336,9 +336,9 @@ mem_hash_table_bucket::find_hint_(mem_hash_api_context *ctx) {
         }
     }
 
-    ctx->more_hashs = p4pd_mem_hash_entry_get_more_hashs(ctx->table_id, ctx->swdata);
-    if (ctx->more_hashs) {
-        // If more_hashs is set, then it is still a match at this level, if we
+    ctx->more_hashes = p4pd_mem_hash_entry_get_more_hashes(ctx->table_id, ctx->swdata);
+    if (ctx->more_hashes) {
+        // If more_hashes is set, then it is still a match at this level, if we
         // dont treat this as a match, then it will try to allocate a hint at
         // this level, which is not correct.
         ctx->hint = p4pd_mem_hash_entry_get_more_hints(ctx->table_id, ctx->swdata);
@@ -412,7 +412,7 @@ mem_hash_table_bucket::clear_hint_(mem_hash_api_context *ctx) {
                                                      ctx->swdata, 0);
         SDK_ASSERT(p4pdret == P4PD_SUCCESS);
 
-        p4pdret = p4pd_mem_hash_entry_set_more_hashs(ctx->table_id,
+        p4pdret = p4pd_mem_hash_entry_set_more_hashes(ctx->table_id,
                                                      ctx->swdata, 0);
         SDK_ASSERT(p4pdret == P4PD_SUCCESS);
     } else {
