@@ -204,6 +204,7 @@ hal_init (hal_cfg_t *hal_cfg)
     catalog = sdk::lib::catalog::factory(hal_cfg->catalog_file);
     HAL_ASSERT_TRACE_RETURN(catalog != NULL, HAL_RET_ERR, "Catalog file error");
     hal_cfg->catalog = catalog;
+    hal_cfg->mempartition = sdk::platform::utils::mpartition::factory();
 
     // validate control/data cores against catalog
     ret = hal_cores_validate(catalog->cores_mask(),

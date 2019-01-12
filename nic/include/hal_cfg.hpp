@@ -4,8 +4,9 @@
 #define __HAL_CFG_HPP__
 
 #include "nic/include/base.hpp"
-#include "nic/sdk/lib/catalog/catalog.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
+#include "nic/sdk/lib/catalog/catalog.hpp"
+#include "nic/sdk/platform/utils/mpartition.hpp"
 
 namespace hal {
 
@@ -51,7 +52,7 @@ typedef enum hal_feature_set_s {
 
 typedef struct hal_cfg_s {
     void                     *server_builder;    // grpc server builder
-    sdk::types::platform_type_t platform;
+    platform_type_t          platform;
     char                     asic_name[HAL_MAX_NAME_STR];
     std::string              grpc_port;
     std::string              loader_info_file;
@@ -62,6 +63,7 @@ typedef struct hal_cfg_s {
     std::string              cfg_path;                  // full HAL config path
     std::string              catalog_file;              // full path of catalog file
     sdk::lib::catalog        *catalog;
+    mpartition               *mempartition;
     std::string              default_config_dir;        // TODO: remove this !!
     uint16_t                 num_control_threads;
     uint16_t                 num_data_threads;

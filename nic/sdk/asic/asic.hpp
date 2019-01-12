@@ -7,6 +7,7 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/lib/catalog/catalog.hpp"
+#include "nic/sdk/platform/utils/mpartition.hpp"
 #include "p4/loader/loader.hpp"
 
 namespace sdk {
@@ -47,6 +48,7 @@ typedef struct asic_cfg_s {
     asic_pgm_cfg_t       pgm_cfg[SDK_ASIC_PGM_CFG_MAX];
     asic_asm_cfg_t       asm_cfg[SDK_ASIC_ASM_CFG_MAX];
     sdk::lib::catalog    *catalog;
+    mpartition           *mempartition;
     platform_type_t      platform;
     completion_cb_t      completion_func;
 } asic_cfg_t;

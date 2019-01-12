@@ -420,15 +420,10 @@ capri_init (capri_cfg_t *cfg)
     SDK_ASSERT_TRACE_RETURN((cfg != NULL), SDK_RET_INVALID_ARG, "Invalid cfg");
     SDK_TRACE_DEBUG("Initializing Capri");
 
-    ret = capri_hbm_parse(cfg->cfg_path, cfg->pgm_name);
-    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
-                            "Capri HBM parse init failure, err : %d", ret);
-
-    g_capri_state_pd = sdk::platform::capri::capri_state_pd::factory();
+    g_capri_state_pd = sdk::platform::capri::capri_state_pd::factory(cfg);
     SDK_ASSERT_TRACE_RETURN((g_capri_state_pd != NULL), SDK_RET_INVALID_ARG,
                             "Failed to instantiate Capri PD");
 
-    g_capri_state_pd->set_cfg_path(cfg->cfg_path);
     if (capri_table_rw_init(cfg) != CAPRI_OK) {
         return SDK_RET_ERR;
     }
@@ -518,6 +513,7 @@ asic_init (asic_cfg_t *cfg)
     capri_cfg.admin_cos = cfg->admin_cos;
     capri_cfg.repl_entry_width = cfg->repl_entry_width;
     capri_cfg.catalog = cfg->catalog;
+    capri_cfg.mempartition = cfg->mempartition;
     capri_cfg.p4_cache = true;
     capri_cfg.p4plus_cache = true;
     capri_cfg.llc_cache = true;

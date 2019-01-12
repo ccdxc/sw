@@ -53,16 +53,14 @@ route_table_impl::destroy(route_table_impl *impl) {
  */
 sdk_ret_t
 route_table_impl::reserve_resources(api_base *api_obj) {
-    //uint32_t    lpm_block_id;
+    uint32_t    lpm_block_id;
 
-#if 0
     /**< allocate free lpm slab for this route table */
     if (route_table_impl_db()->route_table_idxr()->alloc(&lpm_block_id) !=
             sdk::lib::indexer::SUCCESS) {
         return sdk::SDK_RET_NO_RESOURCE;
     }
-    lpm_root_addr_ = lpm_mem_base_ + (lpm_table_sz_ * lpm_block_id);
-#endif
+    //lpm_root_addr_ = lpm_mem_base_ + (lpm_table_sz_ * lpm_block_id);
     return SDK_RET_OK;
 }
 

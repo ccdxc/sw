@@ -15,6 +15,7 @@ namespace capri {
 capri_state_pd::capri_state_pd()
 {
     txs_scheduler_map_idxr_ = NULL;
+    mempartition_ = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -26,36 +27,38 @@ capri_state_pd::~capri_state_pd()
 }
 
 //------------------------------------------------------------------------------
+// init() function to instantiate the state
+//------------------------------------------------------------------------------
+bool
+capri_state_pd::init(capri_cfg_t *cfg)
+{
+    // BMAllocator based bmp range allocator to manage txs scheduler mapping
+    txs_scheduler_map_idxr_ = 
+                    new sdk::lib::BMAllocator(CAPRI_TXS_SCHEDULER_MAP_MAX_ENTRIES);
+    SDK_ASSERT_RETURN((txs_scheduler_map_idxr_ != NULL), false);
+    mempartition_ = cfg->mempartition;
+    cfg_path_ = cfg->cfg_path;
+
+    return true;
+}
+
+//------------------------------------------------------------------------------
 // factory method
 //------------------------------------------------------------------------------
 capri_state_pd *
-capri_state_pd::factory(void)
+capri_state_pd::factory(capri_cfg_t *cfg)
 {
     capri_state_pd *state;
 
     state = new capri_state_pd();
     SDK_ASSERT_RETURN((state != NULL), NULL);
-    if (state->init() == false) {
+    if (state->init(cfg) == false) {
         delete state;
         return NULL;
     }
     return state;
 }
 
-//------------------------------------------------------------------------------
-// init() function to instantiate the state
-//------------------------------------------------------------------------------
-bool
-capri_state_pd::init(void)
-{
-    // BMAllocator based bmp range allocator to manage txs scheduler mapping
-    txs_scheduler_map_idxr_ = 
-                    new sdk::lib::BMAllocator(CAPRI_TXS_SCHEDULER_MAP_MAX_ENTRIES);
-    SDK_ASSERT_RETURN((txs_scheduler_map_idxr_ != NULL), false);
-
-    return true;
-}
-
-} // namespace capri
-} // namespace platform
-} // namespace sdk
+}    // namespace capri
+}    // namespace platform
+}    // namespace sdk

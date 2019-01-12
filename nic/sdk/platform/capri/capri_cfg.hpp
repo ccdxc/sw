@@ -5,6 +5,7 @@
 
 #include "nic/sdk/asic/asic.hpp"
 #include "nic/sdk/lib/catalog/catalog.hpp"
+#include "nic/sdk/platform/utils/mpartition.hpp"
 #include "lib/bm_allocator/bm_allocator.hpp"
 #include "p4/loader/loader.hpp"
 
@@ -45,6 +46,7 @@ typedef struct capri_cfg_s {
     capri_asm_cfg_t             asm_cfg[CAPRI_ASM_CFG_MAX];
     std::string                 cfg_path;
     sdk::lib::catalog           *catalog;
+    mpartition                  *mempartition;
     sdk::types::platform_type_t platform;
     sdk::asic::completion_cb_t completion_func;
 } capri_cfg_t;
