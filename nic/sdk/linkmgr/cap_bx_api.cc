@@ -22,7 +22,7 @@ void cap_bx_apb_write(int chip_id, int inst_id, int addr, int data) {
  cap_bx_csr_t & bx_csr = CAP_BLK_REG_MODEL_ACCESS(cap_bx_csr_t, chip_id, inst_id);
     bx_csr.dhs_apb.entry[addr].data(data);
     bx_csr.dhs_apb.entry[addr].write();
-    bx_csr.dhs_apb.entry[addr].show();
+    // bx_csr.dhs_apb.entry[addr].show();
 }
 
 void cap_bx_set_ch_enable(int chip_id, int inst_id, int value) { 
@@ -89,7 +89,7 @@ void cap_bx_set_pause(int chip_id , int inst_id, int pri_vec, int legacy) {
    bx_csr.cfg_mac_xoff.ff_txfcxoff_i(txfcxoff_enable);
    bx_csr.cfg_mac_xoff.ff_txpfcxoff_i(txpfcxoff_enable);
    bx_csr.cfg_mac_xoff.write();
-   bx_csr.cfg_mac_xoff.show();
+   // bx_csr.cfg_mac_xoff.show();
 }
 
 void cap_bx_init_start(int chip_id, int inst_id) {

@@ -42,10 +42,6 @@ extern "C" void __gcov_flush(void);
 
 namespace hal {
 
-// process globals
-// TODO: clean this up
-extern bool      gl_super_user;
-
 //------------------------------------------------------------------------------
 // handler invoked during normal termnination of HAL (e.g., gtests)
 //------------------------------------------------------------------------------
@@ -166,13 +162,13 @@ hal_delphi_thread_init (hal_cfg_t *hal_cfg)
     delphi::SetLogger(std::shared_ptr<logger>(utils::hal_logger()));
     hal_thread =
         hal_thread_create(std::string("delphic").c_str(),
-                          HAL_THREAD_ID_DELPHI_CLIENT,
-                          sdk::lib::THREAD_ROLE_CONTROL,
-                          0x0,    // use all control cores
-                          svc::delphi_client_start,
-                          hal_thread_priority(sdk::lib::THREAD_ROLE_CONTROL),
-                          hal_thread_sched_policy(sdk::lib::THREAD_ROLE_CONTROL),
-                          NULL);
+            HAL_THREAD_ID_DELPHI_CLIENT,
+            sdk::lib::THREAD_ROLE_CONTROL,
+            0x0,    // use all control cores
+            svc::delphi_client_start,
+            sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+            sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+            NULL);
     HAL_ASSERT_TRACE_RETURN((hal_thread != NULL), HAL_RET_ERR,
                             "Failed to spawn delphic thread");
     hal_thread->start(hal_thread);
@@ -186,16 +182,8 @@ hal_ret_t
 hal_init (hal_cfg_t *hal_cfg)
 {
     int                tid;
-    char               *user    = NULL;
     sdk::lib::catalog  *catalog = NULL;
     hal_ret_t          ret      = HAL_RET_OK;
-
-    // check to see if HAL is running with root permissions
-    user = getenv("USER");
-    if (user && !strcmp(user, "root")) {
-        gl_super_user = true;
-    }
-    //gl_super_user = false;    // TODO: temporary until bringup issues are resolved
 
     // do SDK initialization, if any
     hal_sdk_init();
@@ -220,9 +208,6 @@ hal_init (hal_cfg_t *hal_cfg)
     HAL_TRACE_DEBUG("Initializing HAL ...");
     if (!getenv("DISABLE_LOGGING") && hal_logger_init(hal_cfg) != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to initialize HAL logger, ignoring ...");
-    }
-    if (gl_super_user) {
-        HAL_TRACE_DEBUG("Running as superuser ...");
     }
 
     // instantiate delphi thread

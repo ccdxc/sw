@@ -11,22 +11,9 @@ namespace hal {
 
 uint64_t               hal_handle = 1;
 thread                 *g_hal_threads[HAL_THREAD_ID_MAX];
-bool                   gl_super_user = false;
 thread_local thread    *t_curr_thread;
 hal_state              *g_hal_state;
 bool                    g_delay_delete = false;
-
-int
-hal_thread_sched_policy (sdk::lib::thread_role_t thread_role)
-{
-    return SCHED_OTHER;
-}
-
-int
-hal_thread_priority (sdk::lib::thread_role_t role)
-{
-    return 0;
-}
 
 sdk::lib::thread *
 hal_get_thread (uint32_t thread_id)

@@ -9,7 +9,7 @@ MODULE_SOLIBS = pal sdkfru linkmgr_test_utils bm_allocator linkmgrdelphi \
                 hal_lib agent_api block_list \
                 list shmmgr slab ht timerfd periodic halproto delphisdk \
                 linkmgr_src sdklinkmgr haltrace \
-                linkmgr_libsrc linkmgrcsr \
+                linkmgr_libsrc sdklinkmgrcsr \
                 sdkcapri_csrint \
                 logger thread twheel sdkpal catalog utils mtrack trace
 MODULE_LDLIBS = ${NIC_HAL_ALL_LDLIBS}

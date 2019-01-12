@@ -6,8 +6,6 @@
 
 namespace hal {
 
-bool gl_super_user = false;
-
 void
 hal_cfg_db_open(cfg_op_t cfg_op)
 {

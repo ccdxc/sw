@@ -137,7 +137,7 @@ nic/build/aarch64/iris/lib/libsdkcapri_csrint.so                    /nic/lib/
 
 # linkmgr
 nic/build/aarch64/iris/bin/port_client                              /nic/bin
-nic/build/aarch64/iris/lib/liblinkmgrcsr.so                         /nic/lib/
+nic/build/aarch64/iris/lib/libsdklinkmgrcsr.so                      /nic/lib/
 nic/build/aarch64/iris/lib/liblinkmgr_libsrc.so                     /nic/lib/
 nic/build/aarch64/iris/lib/liblinkmgr_src.so                        /nic/lib/
 nic/build/aarch64/iris/lib/liblinkmgrdelphi.so                      /nic/lib/

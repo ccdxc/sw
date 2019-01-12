@@ -138,9 +138,7 @@ linkmgr_logger_init (void)
     return logger;
 }
 
-void linkmgr_log(std::string log_type,
-                 const char *buf,
-                 int len)
+void linkmgr_log(sdk::lib::sdk_trace_level_e trace_level, const char *buf)
 {
     linkmgr_logger->logger()->debug("{}", buf);
     linkmgr_logger->logger()->flush();

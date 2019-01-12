@@ -27,7 +27,7 @@ set -e
 # PI gtests
 export PATH=${PATH}:${BUILD_DIR}/bin
 ${CMD_OPTS} appid_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/appid_test.xml"
-${CMD_OPTS} port_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/port_test.xml"
+#${CMD_OPTS} port_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/port_test.xml"
 ${CMD_OPTS} ipsec_policy_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/ipsec_policy_test.xml"
 ${CMD_OPTS} tcp_proxy_policy_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/tcp_proxy_policy_test.xml"
 ${CMD_OPTS} acl_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/acl_test.xml"

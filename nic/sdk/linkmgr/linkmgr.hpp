@@ -17,9 +17,8 @@ typedef void (*port_event_notify_t)(uint32_t port_num,
                                     port_event_t port_event,
                                     port_speed_t port_speed);
 
-typedef void (*port_log_fn_t)(std::string log_type,
-                              const char *buf,
-                              int len);
+typedef void (*port_log_fn_t)(sdk_trace_level_e trace_level,
+                              const char *msg);
 
 typedef void (*xcvr_event_notify_t)(xcvr_event_info_t *xcvr_event_info);
 
@@ -74,13 +73,13 @@ typedef struct port_args_s {
     uint32_t              sbus_addr[MAX_PORT_LANES];  // set the sbus addr for each lane
 } __PACK__ port_args_t;
 
-sdk_ret_t linkmgr_init  (linkmgr_cfg_t *cfg);
-void      *port_create  (port_args_t *port_args);
-sdk_ret_t port_update   (void *port, port_args_t *port_args);
-sdk_ret_t port_delete   (void *port);
-sdk_ret_t port_get      (void *port, port_args_t *port_args);
+sdk_ret_t linkmgr_init(linkmgr_cfg_t *cfg);
+void *port_create(port_args_t *port_args);
+sdk_ret_t port_update(void *port, port_args_t *port_args);
+sdk_ret_t port_delete(void *port);
+sdk_ret_t port_get(void *port, port_args_t *port_args);
 void linkmgr_start (void);
-void linkmgr_set_link_poll_enable (bool enable);
+void linkmgr_set_link_poll_enable(bool enable);
 
 static inline void
 port_args_init (port_args_t *args)
@@ -90,5 +89,7 @@ port_args_init (port_args_t *args)
 
 }    // namespace linkmgr
 }    // namespace sdk
+
+using sdk::linkmgr::linkmgr_cfg_t;
 
 #endif    // __SDK_LINKMGR_HPP__

@@ -12,6 +12,7 @@
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/sdk/lib/thread/thread.hpp"
+#include "nic/sdk/lib/periodic/periodic.hpp"
 #include "nic/hal/apollo/core/trace.hpp"
 #include "nic/hal/apollo/core/core.hpp"
 
@@ -19,6 +20,8 @@ using boost::property_tree::ptree;
 using std::string;
 
 namespace core {
+
+thread *g_thread_store[THREAD_ID_MAX];
 
 static sdk_ret_t
 parse_cores_config (ptree &pt, oci_state *state)
@@ -73,7 +76,7 @@ parse_global_config (string cfg_file, oci_state *state)
 
     /**< make sure global config file exists */
     if (access(cfg_file.c_str(), R_OK) < 0) {
-        fprintf(stderr, "HAL config file %s doesn't exist or not accessible\n",
+        fprintf(stderr, "Config file %s doesn't exist or not accessible\n",
                 cfg_file.c_str());
         return SDK_RET_ERR;
     }
@@ -98,6 +101,66 @@ parse_global_config (string cfg_file, oci_state *state)
         std::cerr << e.what() << std::endl;
         return sdk::SDK_RET_INVALID_ARG;
     }
+    return SDK_RET_OK;
+}
+
+/**
+ * starting point for the periodic thread loop
+ */
+static void *
+periodic_thread_start (void *ctxt)
+{
+    /**< initialize timer wheel */
+    sdk::lib::periodic_thread_init(ctxt);
+    /**< run main loop */
+    sdk::lib::periodic_thread_run(ctxt);
+
+    return NULL;
+}
+
+/**
+ * wrapper API to create all threads
+ */
+static sdk::lib::thread *
+thread_create (const char *name, uint32_t thread_id,
+               sdk::lib::thread_role_t thread_role,
+               uint64_t cores_mask,
+               sdk::lib::thread_entry_func_t entry_func,
+               uint32_t thread_prio, int sched_policy, void *data)
+{
+    g_thread_store[thread_id] =
+        sdk::lib::thread::factory(name, thread_id, thread_role, cores_mask,
+                                  entry_func, thread_prio, sched_policy,
+                                  (thread_role == sdk::lib::THREAD_ROLE_DATA) ?
+                                       false : true);
+    if (g_thread_store[thread_id]) {
+        g_thread_store[thread_id]->set_data(data);
+    }
+
+    return g_thread_store[thread_id];
+}
+
+/**
+ * spawn all the necessary threads
+ */
+sdk_ret_t
+thread_spawn (oci_state *state)
+{
+    sdk::lib::thread    *new_thread;
+
+    /**< spawn periodic thread that does background tasks */
+    new_thread = 
+        thread_create(std::string("periodic").c_str(),
+            THREAD_ID_PERIODIC,
+            sdk::lib::THREAD_ROLE_CONTROL,
+            0x0,    // use all control cores
+            periodic_thread_start,
+            sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+            sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+            NULL);
+    SDK_ASSERT_TRACE_RETURN((new_thread != NULL), SDK_RET_ERR,
+                            "Periodic thread create failure");
+    new_thread->start(new_thread);
     return SDK_RET_OK;
 }
 

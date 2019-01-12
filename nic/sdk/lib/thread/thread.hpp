@@ -87,6 +87,24 @@ public:
     static uint64_t get_cpu_mask(cpu_set_t cpu_set);
     static uint64_t control_cores_mask(void) { return control_cores_mask_; }
     static uint64_t data_cores_mask(void) { return data_cores_mask_; }
+    static int sched_policy_by_role(thread_role_t role) {
+        if (super_user_ == false) {
+            return SCHED_OTHER;
+        } else if (role == THREAD_ROLE_DATA) {
+            return SCHED_FIFO;
+        }
+        return SCHED_OTHER;
+    }
+    static int priority_by_role(thread_role_t role) {
+        int    prio, sched_policy;
+
+        sched_policy = sched_policy_by_role(role);
+        prio = sched_get_priority_max(sched_policy);
+        if (sched_policy == SCHED_FIFO) {
+            prio = 50;    // don't consume 100%
+        }
+        return prio;
+    }
 
 private:
     char                       name_[SDK_MAX_THREAD_NAME_LEN];
@@ -106,6 +124,7 @@ private:
     static uint64_t            control_cores_mask_;
     static uint64_t            data_cores_free_;
     static uint64_t            data_cores_mask_;
+    static bool                super_user_;
 
 private:
     thread() {};
@@ -114,7 +133,6 @@ private:
              thread_role_t thread_role, uint64_t cores_mask,
              thread_entry_func_t entry_func,
              uint32_t prio, int sched_policy, bool can_yield);
-
     static sdk_ret_t cores_mask_validate(thread_role_t thread_role,
                                          uint64_t mask);
 };
