@@ -219,7 +219,6 @@ func (hd *Datapath) DeleteSGPolicy(sgp *netproto.SGPolicy, vrfID uint64) error {
 
 func convertRuleAction(ruleID uint64, ruleIDAppLUT *sync.Map, action string) (*halproto.SecurityRuleAction, error) {
 	var ruleAction halproto.SecurityRuleAction
-	var appData []*halproto.AppData
 
 	obj, ok := ruleIDAppLUT.Load(ruleID)
 	// Rule has a corresponding ALG information
@@ -233,9 +232,7 @@ func convertRuleAction(ruleID uint64, ruleIDAppLUT *sync.Map, action string) (*h
 		if err != nil {
 			log.Errorf("failed to convert alg data. Err: %v, App: %v", err, app)
 		}
-		appData = append(appData, alg)
-
-		ruleAction.AppData = appData
+		ruleAction.AppData = alg
 	}
 	switch action {
 	case "PERMIT":

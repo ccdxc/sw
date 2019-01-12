@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 #include "nic/fte/test/fte_base_test.hpp"
+#include "nic/hal/plugins/sfw/cfg/nwsec_group.hpp"
 
 #define MSRPC_PORT 135
 #define SUNRPC_PORT 111
@@ -32,6 +33,9 @@ protected:
         server_eph = add_endpoint(l2segh, intfh2, 0x0A000002 , 0xAABB0A000002, 0);
         s_e2e_eph = add_endpoint(l2segh, intfh1, 0x40000001 , 0xEEBB0D000001, 0, true);
         c_e2e_eph = add_endpoint(l2segh, intfh2, 0x40000002 , 0xEEBB0D000002, 0, true);
+        hal::rpc_programid_t programids[] = { { "10000", 120 },
+                                              { "10024", 100 },
+                                              { "10023", 300 } };
 
         // firewall rules
         std::vector<v4_rule_t> rules = {
@@ -40,19 +44,24 @@ protected:
                         to: {},
                         app: { proto:IPPROTO_TCP,
                                dport_low: SUNRPC_PORT, dport_high: SUNRPC_PORT,
-                               alg: nwsec::APP_SVC_SUN_RPC } },
+                               alg: nwsec::APP_SVC_SUN_RPC,
+                               } },
             v4_rule_t { action: nwsec::SECURITY_RULE_ACTION_ALLOW,
                         from: {},
                         to: {},
                         app: { proto:IPPROTO_UDP,
                                dport_low: SUNRPC_PORT, dport_high: SUNRPC_PORT,
-                               alg: nwsec::APP_SVC_SUN_RPC } },
+                               alg: nwsec::APP_SVC_SUN_RPC,
+                               has_alg_opts: true,
+                               alg_opt: { opt: { sunrpc_opts: { programid_sz: 3, program_ids: programids }, }, },
+                               } },
             v4_rule_t { action: nwsec::SECURITY_RULE_ACTION_ALLOW,
                         from: {},
                         to: {},
                         app: { proto:IPPROTO_TCP,
                                dport_low: MSRPC_PORT, dport_high: MSRPC_PORT,
-                               alg: nwsec::APP_SVC_MSFT_RPC } },
+                               alg: nwsec::APP_SVC_MSFT_RPC,
+                               } },
             v4_rule_t { action: nwsec::SECURITY_RULE_ACTION_DENY,
                         from: {},
                         to: {},

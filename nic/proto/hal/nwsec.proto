@@ -554,11 +554,15 @@ message AppData {
     uint32    max_msg_length                    = 5; // default 512 (max. 8192) bytes
     uint32    query_response_timeout            = 6; // default 60 secs
   }
+  message RPCData {
+    string program_id                    = 1;
+    uint32 idle_timeout                  = 2;
+  }
   message MSRPCOptions {
-    uint32 uuid                          = 1;
+    repeated RPCData   data              = 1;
   }
   message SunRPCOptions {
-    uint32 program_number                = 1;
+    repeated RPCData   data              = 1;
   }
   message SIPOptions {
     uint32 ctimeout                      = 1;
@@ -569,15 +573,14 @@ message AppData {
     uint32 t4_timer_value                = 6;
   }
   oneof AppOptions {
-    FTPOptions    ftp_option_info        = 2;
-    DNSOptions    dns_option_info        = 3;
-    MSRPCOptions  msrpc_option_info      = 4;
-    SunRPCOptions sun_rpc_option_info    = 5;
-    SIPOptions    sip_options            = 6;
+    FTPOptions             ftp_option_info        = 2;
+    DNSOptions             dns_option_info        = 3;
+    MSRPCOptions           msrpc_option_info      = 4;
+    SunRPCOptions          sun_rpc_option_info    = 5;
+    SIPOptions             sip_options            = 6;
   }
   uint32            idle_timeout         = 7;
   TraceOptions      trace_opts           = 8;
-  bool              conn_track_en        = 9;   // Enable connection tracking
 }
 
 // Action to be takn on hitting a rule
@@ -598,7 +601,7 @@ enum LogAction {
 message SecurityRuleAction {
   SecurityAction       sec_action = 1;  // Identifies the security action related to the rule
   LogAction            log_action = 2;  // Identifies log actions related to the rule
-  repeated AppData     app_data   = 3;  // Contains app related data - data for ALG.
+  AppData              app_data   = 3;  // Contains app related data - data for ALG.
 }
 
 message SecurityRule {

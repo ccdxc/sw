@@ -27,7 +27,7 @@ class SvcObject(base.ConfigObjectBase):
             dst_port_range.port_high= self.dst_port
 
         if self.alg is not "None":
-            app_data = req_spec.action.app_data.add();
+            app_data = req_spec.action.app_data;
             alg_name = "APP_SVC_" + self.alg
             app_data.alg = haldefs.nwsec.ALGName.Value(alg_name)
             if (alg_name == "APP_SVC_FTP"):

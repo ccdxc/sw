@@ -665,7 +665,7 @@ hal_ret_t alg_sunrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
             }
 
             reset_rpc_info(rpc_info);
-            rpc_info->map_entry_timeout = sfw_info->alg_opts.opt.sunrpc_opts.map_entry_timeout;
+            rpc_info->map_entry_timeout = sfw_info->idle_timeout;
 
             // Register completion handler and feature session state
             ctx.register_completion_handler(sunrpc_completion_hdlr);

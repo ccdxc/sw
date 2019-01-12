@@ -626,6 +626,18 @@ nwsec_rule_init (nwsec_rule_t *rule)
     ref_init(&rule->ref_count, [] (const ref_t * ref) {
         nwsec_rule_t * rule = container_of(ref, nwsec_rule_t, ref_count);
         HAL_TRACE_DEBUG("Calling rule free");
+        if (rule->fw_rule_action.alg == nwsec::APP_SVC_SUN_RPC || 
+            rule->fw_rule_action.alg == nwsec::APP_SVC_MSFT_RPC) {
+            union hal::alg_options::opt_ *opt = &rule->fw_rule_action.app_options.opt;
+           
+            if (opt->sunrpc_opts.program_ids) {
+                HAL_FREE(HAL_MEM_ALLOC_SFW, opt->sunrpc_opts.program_ids);
+            }
+
+            if (opt->msrpc_opts.uuids) {
+                HAL_FREE(HAL_MEM_ALLOC_SFW, opt->msrpc_opts.uuids);
+            }
+        }
         g_hal_state->nwsec_rule_slab()->free(rule);
     });
     rule_match_init(&rule->fw_rule_match);
@@ -986,33 +998,48 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRule spec, nwsec_rule_t *rule)
 
     // Parse APPs (set alg name only for now)
     rule->fw_rule_action.alg = nwsec::APP_SVC_NONE;
-    int app_sz = spec.action().app_data_size();
-    if (app_sz > 0) {
-        auto app = spec.action().app_data(0);
-        rule->fw_rule_action.alg = app.alg();
-        union hal::alg_options::opt_ *opt = &rule->fw_rule_action.app_options.opt;
-        if (app.AppOptions_case() == AppData::kFtpOptionInfo) {
-            HAL_TRACE_DEBUG("FTP options set");
-            opt->ftp_opts.allow_mismatch_ip_address = app.ftp_option_info().allow_mismatch_ip_address(); 
-        } else if (app.AppOptions_case() == AppData::kDnsOptionInfo) {
-            opt->dns_opts.drop_multi_question_packets = app.dns_option_info().drop_multi_question_packets();
-            opt->dns_opts.drop_large_domain_name_packets = app.dns_option_info().drop_large_domain_name_packets();
-            opt->dns_opts.drop_long_label_packets = app.dns_option_info().drop_long_label_packets();
-            opt->dns_opts.drop_multizone_packets = app.dns_option_info().drop_multizone_packets();
-            opt->dns_opts.max_msg_length = app.dns_option_info().max_msg_length();
-            opt->dns_opts.query_response_timeout = app.dns_option_info().query_response_timeout();
-        } else if (app.AppOptions_case() == AppData::kMsrpcOptionInfo) {
-            opt->msrpc_opts.map_entry_timeout = app.idle_timeout();
-        } else if (app.AppOptions_case() == AppData::kSunRpcOptionInfo) {
-            opt->sunrpc_opts.map_entry_timeout = app.idle_timeout();
-        } else if (app.AppOptions_case() == AppData::kSipOptions) {
-            opt->sip_opts.ctimeout = app.sip_options().ctimeout();
-            opt->sip_opts.dscp_code_point = app.sip_options().dscp_code_point();
-            opt->sip_opts.media_inactivity_timeout = app.sip_options().media_inactivity_timeout();
-            opt->sip_opts.max_call_duration = app.sip_options().max_call_duration();
-            opt->sip_opts.t1_timer_value = app.sip_options().t1_timer_value();
-            opt->sip_opts.t4_timer_value = app.sip_options().t4_timer_value();
+    auto app = spec.action().app_data();
+    rule->fw_rule_action.alg = app.alg();
+    rule->fw_rule_action.idle_timeout = app.idle_timeout();
+    union hal::alg_options::opt_ *opt = &rule->fw_rule_action.app_options.opt;
+    if (app.AppOptions_case() == AppData::kFtpOptionInfo) {
+        opt->ftp_opts.allow_mismatch_ip_address = app.ftp_option_info().allow_mismatch_ip_address(); 
+    } else if (app.AppOptions_case() == AppData::kDnsOptionInfo) {
+        opt->dns_opts.drop_multi_question_packets = app.dns_option_info().drop_multi_question_packets();
+        opt->dns_opts.drop_large_domain_name_packets = app.dns_option_info().drop_large_domain_name_packets();
+        opt->dns_opts.drop_long_label_packets = app.dns_option_info().drop_long_label_packets();
+        opt->dns_opts.drop_multizone_packets = app.dns_option_info().drop_multizone_packets();
+        opt->dns_opts.max_msg_length = app.dns_option_info().max_msg_length();
+        opt->dns_opts.query_response_timeout = app.dns_option_info().query_response_timeout();
+    } else if (app.AppOptions_case() == AppData::kMsrpcOptionInfo) {
+        if (app.msrpc_option_info().data_size()) {
+            opt->msrpc_opts.uuids = (rpc_programid_t *)HAL_CALLOC(HAL_MEM_ALLOC_SFW,
+                                        (sizeof(rpc_programid_t)*app.msrpc_option_info().data_size()));
+            HAL_ASSERT(opt->msrpc_opts.uuids != NULL);
+            for (int idx=0; idx<app.msrpc_option_info().data_size(); idx++) {
+                 memcpy(opt->msrpc_opts.uuids[idx].program_id, 
+                        (void *)app.msrpc_option_info().data(idx).program_id().c_str(), MAX_UUID_SZ);
+                 opt->msrpc_opts.uuids[idx].timeout = app.msrpc_option_info().data(idx).idle_timeout();
+            }
         }
+    } else if (app.AppOptions_case() == AppData::kSunRpcOptionInfo) {
+        if (app.sun_rpc_option_info().data_size()) {
+            opt->sunrpc_opts.program_ids = (rpc_programid_t *)HAL_CALLOC(HAL_MEM_ALLOC_SFW,
+                                        (sizeof(rpc_programid_t)*app.sun_rpc_option_info().data_size()));
+            HAL_ASSERT(opt->sunrpc_opts.program_ids != NULL);
+            for (int idx=0; idx<app.sun_rpc_option_info().data_size(); idx++) {
+                 memcpy(opt->sunrpc_opts.program_ids[idx].program_id, 
+                        (void *)app.sun_rpc_option_info().data(idx).program_id().c_str(), MAX_UUID_SZ);
+                 opt->sunrpc_opts.program_ids[idx].timeout = app.sun_rpc_option_info().data(idx).idle_timeout();
+            }
+        }
+    } else if (app.AppOptions_case() == AppData::kSipOptions) {
+        opt->sip_opts.ctimeout = app.sip_options().ctimeout();
+        opt->sip_opts.dscp_code_point = app.sip_options().dscp_code_point();
+        opt->sip_opts.media_inactivity_timeout = app.sip_options().media_inactivity_timeout();
+        opt->sip_opts.max_call_duration = app.sip_options().max_call_duration();
+        opt->sip_opts.t1_timer_value = app.sip_options().t1_timer_value();
+        opt->sip_opts.t4_timer_value = app.sip_options().t4_timer_value();
     }
 
     ret = rule_match_spec_extract(spec.match(), &rule->fw_rule_match);
