@@ -9,7 +9,6 @@
 #include "platform/capri/capri_hbm_rw.hpp"
 //#include "gen/proto/debug.pb.h"
 
-#define SDK_LOG_TABLE_WRITE 1
 typedef struct asicpd_stats_region_info_t_ {
     int tblid;
     int tbldepthshift;
