@@ -30,7 +30,7 @@ unsigned int ntxq_descs = 1024;
 unsigned int nrxq_descs = 1024;
 unsigned int ntxqs = 32;
 unsigned int nrxqs = 32;
-unsigned int devcmd_timeout = 30;
+unsigned int devcmd_timeout = 50;
 
 VMK_MODPARAM(ntxq_descs,
              uint,
@@ -204,7 +204,7 @@ ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
                         return VMK_OK;
                 }
 
-                status = vmk_WorldSleep(100);
+                status = vmk_WorldSleep(50);
                 if (status != VMK_OK) {
                         ionic_err("vmk_WorldSleep() returns: %s",
                                   vmk_StatusToString(status));

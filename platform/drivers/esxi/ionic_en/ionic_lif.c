@@ -200,8 +200,6 @@ ionic_qcq_disable(struct qcq *qcq)
                           vmk_StatusToString(status));
         }
 
-        vmk_WorldSleep(3000);
-
         return status;
 }
 

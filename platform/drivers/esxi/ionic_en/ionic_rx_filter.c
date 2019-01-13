@@ -73,7 +73,6 @@ ionic_hash_table_free_filter_iterator(vmk_HashTable hash_table,
                                       vmk_HashValue value,
                                       vmk_AddrCookie addr_cookie)
 {
-//        VMK_ReturnStatus status;
         vmk_uint32 *cnt = (vmk_uint32 *) addr_cookie.ptr;
         struct rx_filter *f = (struct rx_filter *) value;
 
