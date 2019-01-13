@@ -20,8 +20,8 @@
 #include "include/sdk/lock.hpp"
 #include "platform/capri/capri_p4.hpp"
 #include "platform/capri/capri_tm_rw.hpp"
+#include "platform/capri/capri_state.hpp"
 #include "lib/bitmap/bitmap.hpp"
-#include "platform/utils/mpartition.hpp"
 #include "gen/platform/mem_regions.hpp"
 
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
@@ -2248,8 +2248,6 @@ capri_tm_init_hbm (capri_tm_buf_cfg_t *buf_cfg)
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
     cap_pbchbm_csr_t &hbm_csr = pbc_csr.hbm;
-    sdk::platform::utils::mpartition *mpart;
-    
 
     ret = capri_tm_alloc_hbm_buffers(buf_cfg);
     if (ret != sdk::SDK_RET_OK) {
@@ -2272,8 +2270,6 @@ capri_tm_init_hbm (capri_tm_buf_cfg_t *buf_cfg)
                       ret);
         return ret;
     }
-    mpart = sdk::platform::utils::mpartition::get_instance();
-    SDK_ASSERT(mpart != NULL);
 
     uint32_t rate_limiter;
     stringstream data;
@@ -2326,7 +2322,7 @@ capri_tm_init_hbm (capri_tm_buf_cfg_t *buf_cfg)
 
     // AXI Base Address
     pbc_csr.cfg_axi.read();
-    pbc_csr.cfg_axi.base_addr(mpart->base());
+    pbc_csr.cfg_axi.base_addr(g_capri_state_pd->mempartition()->base());
     ${trace_register("pbc_csr.cfg_axi")}
     pbc_csr.cfg_axi.write();
 
@@ -2564,20 +2560,19 @@ populate_cfg_profile (capri_tm_cfg_profile_t *tm_cfg_profile,
 {
     const sdk::lib::qos_profile_t *qos_profile;
     uint32_t interpipe_mtu;
-    sdk::platform::utils::mpartition *mpart;
 
     qos_profile = catalog->qos_profile();
     if (!qos_profile) {
         SDK_TRACE_ERR("QOS asic profile does not exist in the catalog");
         return sdk::SDK_RET_INVALID_ARG;
     }
-    mpart = sdk::platform::utils::mpartition::get_instance();
-    SDK_ASSERT(mpart != NULL);
 
     tm_cfg_profile->sw_init_enabled = qos_profile->sw_init_enable;
     tm_cfg_profile->sw_cfg_write_enabled = qos_profile->sw_cfg_write_enable;
-    tm_cfg_profile->hbm_fifo_base = mpart->start_addr(MEM_REGION_QOS_HBM_FIFO_NAME);
-    tm_cfg_profile->hbm_fifo_size = mpart->size(MEM_REGION_QOS_HBM_FIFO_NAME);
+    tm_cfg_profile->hbm_fifo_base =
+        g_capri_state_pd->mempartition()->start_addr(MEM_REGION_QOS_HBM_FIFO_NAME);
+    tm_cfg_profile->hbm_fifo_size =
+        g_capri_state_pd->mempartition()->size(MEM_REGION_QOS_HBM_FIFO_NAME);
     tm_cfg_profile->num_active_uplink_ports = catalog->num_uplink_ports();
     if (tm_cfg_profile->num_active_uplink_ports <= 1) {
         tm_cfg_profile->num_active_uplink_ports = 1;

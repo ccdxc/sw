@@ -612,10 +612,10 @@ hal_pd_init (hal_cfg_t *hal_cfg)
     // do asic initialization
     asic_cfg.loader_info_file = hal_cfg->loader_info_file;
     asic_cfg.default_config_dir = hal_cfg->default_config_dir;
-
     asic_cfg.admin_cos = 1;
     asic_cfg.cfg_path = hal_cfg->cfg_path;
     asic_cfg.catalog = hal_cfg->catalog;
+    asic_cfg.mempartition = hal_cfg->mempartition;
     asic_cfg.platform = hal_cfg->platform;
     args.cfg = &asic_cfg;
     pd_func_args.pd_asic_init = &args;

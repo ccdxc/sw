@@ -1434,6 +1434,7 @@ TEST_F(gft_test, test1) {
     }
     ASSERT_TRUE(catalog != NULL);
     cfg.catalog = catalog;
+    cfg.mempartition = sdk::platform::utils::mpartition::factory();
 
     std::ifstream json_cfg(hal_conf_file);
     ptree hal_conf;

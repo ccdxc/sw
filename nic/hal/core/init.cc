@@ -352,7 +352,7 @@ hal_thread_init (hal_cfg_t *hal_cfg)
 }
 
 static hal_ret_t
-hal_parse_thread_cfg (ptree &pt, hal_cfg_t *hal_cfg)
+hal_parse_cores_cfg (ptree &pt, hal_cfg_t *hal_cfg)
 {
     std::string str = "";
 
@@ -444,11 +444,11 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
             HAL_TRACE_ERR("Unknown feature set {}", sparam.c_str());
         }
         strncpy(hal_cfg->feature_set, sparam.c_str(), HAL_MAX_NAME_STR);
-        // Used to enable IPC logger
+        // used to enable IPC logger
         hal_cfg->shm_mode = pt.get<bool>("sw.shm", false);
 
-        // parse threads config
-        hal_parse_thread_cfg(pt, hal_cfg);
+        // parse (control & data) core config
+        hal_parse_cores_cfg(pt, hal_cfg);
     } catch (std::exception const& e) {
         std::cerr << e.what() << std::endl;
         return HAL_RET_INVALID_ARG;

@@ -491,8 +491,6 @@ TEST_F(apollo_test, test1) {
     ASSERT_NE(ret, -1);
     cfg.cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
     cfg.pgm_name = "apollo";
-    ret = capri_hbm_parse(&cfg);
-    ASSERT_NE(ret, -1);
     if (getenv("HAL_PLATFORM_MODE_RTL")) {
         hal_conf_file = "conf/hal_apollo_rtl.json";
     }

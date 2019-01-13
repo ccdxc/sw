@@ -6,6 +6,7 @@
 #include "lib/logger/logger.hpp"
 #include "lib/thread/thread.hpp"
 #include "nic/sdk/linkmgr/linkmgr.hpp"
+#include "nic/sdk/platform/utils/mpartition.hpp"
 #include "nic/hal/core/core.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/hal/apollo2/hal_state.hpp"
@@ -85,6 +86,7 @@ hal_init (hal_cfg_t *hal_cfg)
     catalog = sdk::lib::catalog::factory(hal_cfg->catalog_file);
     HAL_ASSERT(catalog != NULL);
     hal_cfg->catalog = catalog;
+    hal_cfg->mempartition = sdk::platform::utils::mpartition::factory();
 
     // validate control/data cores against catalog
     HAL_ABORT(hal_cores_validate(catalog->cores_mask(),

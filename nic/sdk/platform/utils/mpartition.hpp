@@ -195,4 +195,6 @@ is_region_cache_pipe_p4plus_all(mpartition_region_t *reg)
 }   // namespace platform
 }   // namespace sdk
 
+using sdk::platform::utils::mpartition;
+
 #endif    // __SDK_PLATFORM_MPARTITION_HPP__

@@ -27,8 +27,6 @@ namespace capri {
 #define CHECK_BIT(var,pos) ((var) & (1 << (pos)))
 #define DTDM_CALENDAR_SIZE 64
 
-extern class capri_state_pd *g_capri_state_pd;
-
 uint32_t
 capri_get_coreclk_freq(platform_type_t platform_type)
 {
@@ -51,17 +49,14 @@ capri_get_coreclk_freq(platform_type_t platform_type)
 }
 
 void
-capri_txs_timer_init_hsh_depth(uint32_t key_lines)
+capri_txs_timer_init_hsh_depth (uint32_t key_lines)
 {
     uint64_t timer_key_hbm_base_addr;
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_txs_csr_t *txs_csr = &cap0.txs.txs;
-    sdk::platform::utils::mpartition *mpart = NULL;
 
-    mpart = sdk::platform::utils::mpartition::get_instance();
-    SDK_ASSERT(mpart != NULL);
-
-    timer_key_hbm_base_addr = mpart->start_addr(MEM_REGION_TIMERS_NAME);
+    timer_key_hbm_base_addr =
+        g_capri_state_pd->mempartition()->start_addr(MEM_REGION_TIMERS_NAME);
 
     txs_csr->cfg_timer_static.read();
     SDK_TRACE_DEBUG("hbm_base 0x%llx", (uint64_t)txs_csr->cfg_timer_static.hbm_base());
@@ -170,8 +165,6 @@ capri_txs_scheduler_init (uint32_t admin_cos, capri_cfg_t *capri_cfg)
     uint64_t            txs_sched_hbm_base_addr;
     uint16_t            dtdm_lo_map, dtdm_hi_map;
     uint32_t            control_cos;
-    sdk::platform::utils::mpartition *mpart = NULL;
-    //sdk_ret_t            ret = SDK_RET_OK;
 
     txs_csr.cfw_timer_glb.read();
     txs_csr.cfw_timer_glb.ftmr_enable(0);
@@ -190,16 +183,14 @@ capri_txs_scheduler_init (uint32_t admin_cos, capri_cfg_t *capri_cfg)
     txs_csr.cfg_sch.enable(0);
     txs_csr.cfg_sch.write();
 
-    mpart = sdk::platform::utils::mpartition::get_instance();
-    SDK_ASSERT(mpart != NULL);
-
     cap_wa_csr_cfg_wa_sched_hint_t   &wa_sched_hint_csr = cap0.db.wa.cfg_wa_sched_hint;
     wa_sched_hint_csr.read();
     /* 5 bit value: bit 0=host, 1=local, 2=32b, 3=timer, 4=arm4kremap" */
     wa_sched_hint_csr.enable_src_mask(0x0);
     wa_sched_hint_csr.write();
 
-    txs_sched_hbm_base_addr = mpart->start_addr(MEM_REGION_TX_SCHEDULER_NAME);
+    txs_sched_hbm_base_addr =
+        g_capri_state_pd->mempartition()->start_addr(MEM_REGION_TX_SCHEDULER_NAME);
 
     // Update HBM base addr.
     txs_csr.cfw_scheduler_static.read();
@@ -507,6 +498,6 @@ capri_txs_scheduler_stats_get (capri_txs_scheduler_stats_t *scheduler_stats)
     return SDK_RET_OK;
 }
 
-} // namespace capri
-} // namespace platform
-} // namespace sdk
+}    // namespace capri
+}    // namespace platform
+}    // namespace sdk

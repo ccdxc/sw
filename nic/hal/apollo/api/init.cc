@@ -41,6 +41,7 @@ fill_asic_cfg (asic_cfg_t *asic_cfg) {
         asic_cfg->cfg_path += "/";
     }
     asic_cfg->catalog = sdk::lib::catalog::factory(asic_cfg->cfg_path + "catalog.json");
+    asic_cfg->mempartition = sdk::platform::utils::mpartition::factory();
     asic_cfg->loader_info_file = "capri_loader.conf";
     asic_cfg->default_config_dir = "2x100_hbm";
     asic_cfg->platform = platform_type_t::PLATFORM_TYPE_SIM;
