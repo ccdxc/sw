@@ -42,6 +42,11 @@ service Debug {
   rpc FteSpanGet    (types.Empty) returns (FteSpanResponseMsg) {}
   rpc FteSpanUpdate (FteSpanRequestMsg) returns (FteSpanResponseMsg) {}
 
+  // Snake Test
+  rpc SnakeTestCreate (SnakeTestRequestMsg) returns (SnakeTestResponseMsg) {}
+  rpc SnakeTestDelete (SnakeTestDeleteRequestMsg) returns (SnakeTestDeleteResponseMsg) {}
+  rpc SnakeTestGet    (types.Empty) returns (SnakeTestResponseMsg) {}
+
   rpc HbmBwGet (HbmBwGetRequestMsg) returns (HbmBwGetResponseMsg) {}
   rpc LlcClear (types.Empty) returns (types.Empty) {}
   rpc LlcSetup (LlcSetupRequestMsg) returns (LlcSetupResponseMsg) {}
@@ -91,6 +96,39 @@ message FteSpanResponseMsg {
     repeated FteSpanResponse response = 1;
 }
 
+// Snake Test
+message SnakeTestRequest {
+    types.SnakeTestType type = 1; // Type of Snake Test
+    uint32 vlan              = 2; // Vlan
+}
+message SnakeTestRequestMsg {
+    repeated SnakeTestRequest request = 1;
+}
+
+message SnakeTestResponse {
+    types.ApiStatus  api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+    SnakeTestRequest request    = 2;
+}
+
+message SnakeTestResponseMsg {
+    repeated SnakeTestResponse response = 1;
+}
+
+message SnakeTestDeleteRequest {
+    types.SnakeTestType type = 1; // Type of Snake Test
+}
+
+message SnakeTestDeleteRequestMsg {
+    repeated SnakeTestDeleteRequest request = 1;
+}
+
+message SnakeTestDeleteResponse {
+    types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"];
+}
+
+message SnakeTestDeleteResponseMsg {
+    repeated SnakeTestDeleteResponse response = 1;
+}
 
 // -----------------------------------------------
 // Generic debug operation messages

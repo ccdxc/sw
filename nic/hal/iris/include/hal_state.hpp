@@ -21,6 +21,7 @@
 #include "lib/periodic/periodic.hpp"
 #include "nic/fte/acl/acl.hpp"
 #include "nic/hal/src/debug/debug.hpp"
+#include "nic/hal/src/debug/snake.hpp"
 
 #ifdef SHM
 #define slab_ptr_t        offset_ptr<slab>
@@ -169,6 +170,7 @@ public:
     slab *proxy_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_PROXY]); }
     slab *proxy_flow_info_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_PROXY_FLOW_INFO]); }
     slab *fte_span_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_FTE_SPAN]); }
+    slab *snake_test_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_SNAKE_TEST]); }
 
     slab *v4addr_list_elem_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_V4ADDR_LIST_ELEM]); }
     slab *v6addr_list_elem_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_V6ADDR_LIST_ELEM]); }
@@ -333,6 +335,9 @@ public:
     void set_fte_span(fte_span_t *span) { fte_span_ = span; }
     fte_span_t *fte_span(void) const { return fte_span_; }
 
+    void set_snake_test(snake_test_t *snake) { snake_test_ = snake; }
+    snake_test_t *snake_test(void) const { return snake_test_; }
+
 private:
     // following can come from shared memory or non-linux HBM memory
     // NOTE: strictly shmnot required as we can rebuild this from slab elements,
@@ -396,6 +401,7 @@ private:
     uint8_t                 max_data_threads_;
     hal_handle_t            default_securityprof_hdl_;
     fte_span_t              *fte_span_;
+    snake_test_t            *snake_test_;
 
     // Classic Mode:
     //  - Ucast packet from host, registered mac will be a MISS.
@@ -568,6 +574,9 @@ public:
     slab *proxy_slab(void) const { return cfg_db_->proxy_slab(); }
     slab *proxy_flow_info_slab(void) const { return cfg_db_->proxy_flow_info_slab(); }
     slab *fte_span_slab(void) const { return cfg_db_->fte_span_slab(); }
+
+    slab *snake_test_slab(void) const { return cfg_db_->snake_test_slab(); }
+
     ht *proxy_type_ht(void) const { return oper_db_->proxy_type_ht(); }
 
     // get API for infra VRF
@@ -593,7 +602,7 @@ public:
     }
     lif_id_t mnic_internal_mgmt_lif_id(void) const { return oper_db_->mnic_internal_mgmt_lif_id(); }
     void set_mnic_internal_mgmt_lif_id(lif_id_t id) {
-        oper_db_->set_app_redir_if_id(id);
+        oper_db_->set_mnic_internal_mgmt_lif_id(id);
     }
 
     // get APIs for Raw Chain CB state
@@ -703,8 +712,12 @@ public:
 
     void set_fte_span(fte_span_t *span) { oper_db_->set_fte_span(span); }
     fte_span_t *fte_span(void) const { return oper_db_->fte_span(); }
+
+    void set_snake_test(snake_test_t *snake) { oper_db_->set_snake_test(snake); }
+    snake_test_t *snake_test(void) const { return oper_db_->snake_test(); }
+
     slab_ptr_t register_slab(hal_slab_t slab_id, hal_slab_args_t& slab_args) {
-        return (cfg_db_->register_slab(slab_id, slab_args)); 
+        return (cfg_db_->register_slab(slab_id, slab_args));
     }
 
     sdk::types::platform_type_t platform_type() { return platform_; }

@@ -51,6 +51,12 @@ using debug::FteSpanRequestMsg;
 using debug::FteSpanResponseMsg;
 using debug::FteSpanRequest;
 using debug::FteSpanResponse;
+using debug::SnakeTestRequestMsg;
+using debug::SnakeTestResponseMsg;
+using debug::SnakeTestRequest;
+using debug::SnakeTestResponse;
+using debug::SnakeTestDeleteRequestMsg;
+using debug::SnakeTestDeleteResponseMsg;
 using debug::ClockResponse;
 using debug::HbmBwGetRequest;
 using debug::HbmBwGetRequestMsg;
@@ -153,6 +159,15 @@ public:
     Status XcvrValidCheckDisable(ServerContext *context,
                                  const Empty *req,
                                  Empty *rsp);
+    Status SnakeTestCreate(ServerContext *context,
+                           const SnakeTestRequestMsg *req_msg,
+                           SnakeTestResponseMsg *rsp_msg);
+    Status SnakeTestDelete(ServerContext *context,
+                           const SnakeTestDeleteRequestMsg *req_msg,
+                           SnakeTestDeleteResponseMsg *rsp_msg);
+    Status SnakeTestGet(ServerContext *context,
+                        const Empty *req,
+                        SnakeTestResponseMsg *rsp_msg) override;
 };
 
 #endif  // __DEBUG_SVC_HPP__

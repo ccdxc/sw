@@ -7,6 +7,7 @@
 #include "nic/hal/plugins/sfw/cfg/nwsec_group_api.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/hal/plugins/cfg/nw/nw.hpp"
+#include "nic/hal/src/debug/snake.hpp"
 #include "nic/hal/src/debug/table.hpp"
 #include "nic/hal/plugins/cfg/mcast/multicast.hpp"
 #include "nic/hal/plugins/cfg/mcast/oif_list_api.hpp"
@@ -2941,6 +2942,14 @@ typedef struct pd_fte_span_make_clone_args_s {
     fte_span_t               *clone;
 } __PACK__ pd_fte_span_make_clone_args_t;
 
+typedef struct pd_snake_test_create_args_s {
+    snake_test_t *snake;
+} __PACK__ pd_snake_test_create_args_t;
+
+typedef struct pd_snake_test_delete_args_s {
+    snake_test_t *snake;
+} __PACK__ pd_snake_test_delete_args_t;
+
 typedef struct pd_tcp_global_stats_get_args_s {
     uint64_t rnmdr_full;
     uint64_t invalid_sesq_descr;
@@ -3243,7 +3252,9 @@ typedef struct pd_tcp_global_stats_get_args_s {
     ENTRY(PD_FUNC_ID_PACKET_BUFFER_UPDATE,     288, "PD_FUNC_ID_PACKET_BUFFER_UPDATE") \
     ENTRY(PD_FUNC_ID_REG_WRITE,                289, "PD_FUNC_ID_REG_WRITE")\
     ENTRY(PD_FUNC_ID_IPSEC_GLOBAL_STATS_GET,   290, "PD_FUNC_ID_IPSEC_GLOBAL_STATS_GET") \
-    ENTRY(PD_FUNC_ID_MAX,                      291, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_SNAKE_TEST_CREATE,        291, "PD_FUNC_ID_SNAKE_TEST_CREATE") \
+    ENTRY(PD_FUNC_ID_SNAKE_TEST_DELETE,        292, "PD_FUNC_ID_SNAKE_TEST_DELETE") \
+    ENTRY(PD_FUNC_ID_MAX,                      293, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3657,8 +3668,12 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_fte_span_make_clone);
         PD_UNION_ARGS_FIELD(pd_fte_span_get);
 
-	//TCP global stats
+        //TCP global stats
         PD_UNION_ARGS_FIELD(pd_tcp_global_stats_get);
+
+        // Snake tests
+        PD_UNION_ARGS_FIELD(pd_snake_test_create);
+        PD_UNION_ARGS_FIELD(pd_snake_test_delete);
     };
 } pd_func_args_t;
 
@@ -4096,6 +4111,10 @@ PD_FUNCP_TYPEDEF(pd_fte_span_get);
 
 // tcp global stats
 PD_FUNCP_TYPEDEF(pd_tcp_global_stats_get);
+
+// snake tests
+PD_FUNCP_TYPEDEF(pd_snake_test_create);
+PD_FUNCP_TYPEDEF(pd_snake_test_delete);
 
 hal_ret_t hal_pd_call(pd_func_id_t pd_func_id, pd_func_args_t *args);
 

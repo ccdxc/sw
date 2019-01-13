@@ -2,5 +2,5 @@
 -I ../../../../nic/sdk
 -I ../../../../nic/sdk/include
 -I ../../../hal/third-party/spdlog/include
--I ../../../build/x86_64/iris
+-I ../../../build/aarch64/iris
 -std=c++11

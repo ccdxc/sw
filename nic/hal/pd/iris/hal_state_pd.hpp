@@ -116,6 +116,8 @@ public:
     slab *copp_pd_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_COPP_PD)]; }
     slab *app_redir_if_pd_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_APP_REDIR_IF_PD)]; }
     slab *fte_span_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_FTE_SPAN_PD)]; }
+    slab *snake_test_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_SNAKE_TEST_PD)]; }
+    slab *snake_test_if_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_SNAKE_TEST_IF_PD)]; }
 
     // get hts
     ht *flow_lkupid_ht(void) const { return flow_lkupid_ht_; }

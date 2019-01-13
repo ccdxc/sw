@@ -481,6 +481,10 @@ hal_pd_load_symbols (void)
     // tcp global stats
     PD_FUNC_LOAD(PD_FUNC_ID_TCP_GLOBAL_STATS_GET, pd_tcp_global_stats_get);
 
+    // snake tests
+    PD_FUNC_LOAD(PD_FUNC_ID_SNAKE_TEST_CREATE, pd_snake_test_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_SNAKE_TEST_DELETE, pd_snake_test_delete);
+
     return ret;
 }
 

@@ -128,6 +128,14 @@ It has these top-level messages:
 	FteSpanRequestMsg
 	FteSpanResponse
 	FteSpanResponseMsg
+	SnakeTestRequest
+	SnakeTestRequestMsg
+	SnakeTestResponse
+	SnakeTestResponseMsg
+	SnakeTestDeleteRequest
+	SnakeTestDeleteRequestMsg
+	SnakeTestDeleteResponse
+	SnakeTestDeleteResponseMsg
 	GenericOpnRequest
 	GenericOpnRequestMsg
 	GenericOpnStatus
