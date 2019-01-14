@@ -504,9 +504,6 @@ cpdc_setup_status_desc(struct service_info *svc_info,
 				svc_info->si_type, per_block, err);
 		goto out;
 	}
-	memset(svc_info->si_status_desc.desc, 0,
-	       svc_info->si_status_desc.num_elems *
-	       svc_info->si_status_desc.elem_size);
 out:
 	return err;
 }

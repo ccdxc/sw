@@ -45,13 +45,11 @@ fill_chksum_desc(struct service_info *svc_info,
 	 * See comments in chksum_setup() and chksum_chain() regarding
 	 * how chksum makes use of rmem status.
 	 */
+	err = svc_status_desc_addr_get(&svc_info->si_status_desc, block_no,
+			&desc->cd_status_addr, CPDC_STATUS_MIN_CLEAR_SZ);
 	if (chn_service_has_interm_status(svc_info) && (block_no == 0)) {
 		err = svc_status_desc_addr_get(&svc_info->si_istatus_desc, block_no,
 			&desc->cd_status_addr, CPDC_STATUS_MIN_CLEAR_SZ);
-	} else {
-		/* non-rmem status already cleared during cpdc_setup_status_desc() */
-		err = svc_status_desc_addr_get(&svc_info->si_status_desc, block_no,
-					       &desc->cd_status_addr, 0);
 	}
 
 	desc->cd_status_data = CPDC_CHKSUM_STATUS_DATA;

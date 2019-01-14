@@ -110,14 +110,14 @@ crypto_desc_fill(struct service_info *svc_info,
 	 * when chaining or async mode is involved, cd_db_addr/cd_db_data
 	 * may later be modified with other types of context data.
 	 */
+	err = svc_status_desc_addr_get(&svc_info->si_status_desc, 0,
+			&crypto_desc->cd_status_addr,
+			sizeof(struct crypto_status_desc));
 	if (chn_service_has_interm_status(svc_info)) {
 		err = svc_status_desc_addr_get(&svc_info->si_istatus_desc, 0,
-			&crypto_desc->cd_status_addr, sizeof(struct crypto_status_desc));
-        } else {
-		/* non-rmem status already cleared during crypto_status_desc_setup() */
-		err = svc_status_desc_addr_get(&svc_info->si_status_desc, 0,
-			&crypto_desc->cd_status_addr, 0);
-	}
+                                               &crypto_desc->cd_status_addr,
+                                               sizeof(struct crypto_status_desc));
+        }
 
 	crypto_desc->cd_db_addr = crypto_desc->cd_status_addr +
 				  offsetof(struct crypto_status_desc, csd_cpl_data);
@@ -145,7 +145,9 @@ crypto_dst_blist_setup(struct service_info *svc_info,
 			return err;
 		}
 
-		err = crypto_rmem_status_desc_setup(svc_info);
+		err = pc_res_svc_status_get(svc_info->si_pcr,
+				MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS,
+				&svc_info->si_istatus_desc);
 		if (err) {
 			OSAL_LOG_ERROR("failed to obtain intermediate status_desc");
 			return err;
@@ -237,7 +239,6 @@ static pnso_error_t
 crypto_setup(struct service_info *svc_info,
 	     const struct service_params *svc_params)
 {
-	const struct per_core_resource	*pcr;
 	pnso_error_t			err;
 
 	err = crypto_validate_input(svc_info, svc_params);
@@ -248,8 +249,9 @@ crypto_setup(struct service_info *svc_info,
 	if (!svc_info->si_desc)
 		return ENOMEM;
 
-	pcr = svc_info->si_pcr;
-	err = crypto_status_desc_setup(svc_info);
+	err = pc_res_svc_status_get(svc_info->si_pcr,
+				    MPOOL_TYPE_CRYPTO_STATUS_DESC,
+				    &svc_info->si_status_desc);
 	if (err)
 		return err;
 
@@ -621,12 +623,12 @@ crypto_teardown(struct service_info *svc_info)
 	seq_cleanup_crypto_chain(svc_info);
 	seq_cleanup_desc(svc_info);
 
-	crypto_status_desc_teardown(svc_info);
+	pc_res_svc_status_put(svc_info->si_pcr,	&svc_info->si_status_desc);
 	crypto_put_desc(svc_info, false, svc_info->si_desc);
 
 	putil_put_interm_buf_list(svc_info);
 
-	crypto_rmem_status_desc_teardown(svc_info);
+	pc_res_svc_status_put(svc_info->si_pcr,	&svc_info->si_istatus_desc);
 	pc_res_sgl_pdma_put(pcr, svc_info->si_sgl_pdma);
 	pc_res_sgl_put(pcr, &svc_info->si_src_sgl);
 

@@ -59,9 +59,4 @@ void crypto_put_desc(const struct service_info *svc_info,
 pnso_error_t crypto_setup_seq_desc(struct service_info *svc_info,
 		struct crypto_desc *desc);
 
-pnso_error_t crypto_status_desc_setup(struct service_info *svc_info);
-void crypto_status_desc_teardown(struct service_info *svc_info);
-pnso_error_t crypto_rmem_status_desc_setup(struct service_info *svc_info);
-void crypto_rmem_status_desc_teardown(struct service_info *svc_info);
-
 #endif /* __PNSO_CRYPTO_CMN_H__ */
