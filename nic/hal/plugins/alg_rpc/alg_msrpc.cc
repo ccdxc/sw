@@ -714,6 +714,16 @@ size_t process_msrpc_data_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
     return ret;
 }
 
+static inline int get_is_uuid_allowed(rpc_info_t *rpc_info) {
+    for (uint8_t idx=0; idx<rpc_info->pgmid_sz; idx++) {
+        HAL_TRACE_DEBUG("RPC Program num: {} program_id: {}", rpc_info->uuid, rpc_info->pgm_ids[idx].program_id);
+        if (memcmp(rpc_info->uuid, rpc_info->pgm_ids[idx].program_id, sizeof(rpc_info->uuid))) {
+            return rpc_info->pgm_ids[idx].timeout;
+        }
+    }
+    return -1;
+}
+
 /*
  * Initialize RPC Info
  */
@@ -877,9 +887,10 @@ size_t parse_msrpc_cn_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
                 if (!rpc_info->ip.v4_addr)
                     rpc_info->ip.v4_addr = ctx->key().sip.v4_addr; 
 
-                if (g_rpc_state && rpc_info->dport)
+                int timeout = get_is_uuid_allowed(rpc_info);
+                if (g_rpc_state && rpc_info->dport && timeout != -1)
                     insert_rpc_expflow(*ctx, l4_sess, process_msrpc_data_flow,
-                                              rpc_info->map_entry_timeout);
+                                              (uint32_t)timeout);
 
                 rpc_info->pkt_type = PDU_NONE;
             }
@@ -926,6 +937,10 @@ size_t parse_msrpc_dg_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
             memcpy(&rpc_info->act_id, &rpc_hdr.act_id, UUID_BYTES);
             memcpy(&rpc_info->uuid, &rpc_hdr.if_id, UUID_BYTES);
             ctx->set_valid_rflow(false);
+          
+            // Register completion handler and feature session state
+            ctx->register_completion_handler(msrpc_completion_hdlr);
+            ctx->register_feature_session_state(&exp_flow->fte_feature_state);
         }
     } else {
         rpc_info = (rpc_info_t *)exp_flow->info;
@@ -996,10 +1011,8 @@ hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
                 l4_sess->info = rpc_info;
             }
             reset_rpc_info(rpc_info);
-            rpc_info->map_entry_timeout = sfw_info->idle_timeout;
-
-            // Register completion handler and feature session state
-            ctx.register_completion_handler(msrpc_completion_hdlr);
+            copy_sfw_info(sfw_info, rpc_info);
+            //Register feature session state
             ctx.register_feature_session_state(&l4_sess->fte_feature_state);
 
             /*
@@ -1029,6 +1042,8 @@ hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
                                               htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1,
                                               NULL, parse_msrpc_cn_control_flow);
                 } 
+                // Register completion handler
+                ctx.register_completion_handler(msrpc_completion_hdlr);
             }
         } else if (ctx.key().proto == IP_PROTO_TCP) {
             /*
