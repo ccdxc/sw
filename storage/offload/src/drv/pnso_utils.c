@@ -672,7 +672,7 @@ pprint_chain_sgl_pdma(uint64_t sgl_pa)
 }
 
 bool
-putil_is_service_in_batch(uint8_t flags)
+putil_is_bulk_desc_in_use(uint16_t flags)
 {
 	return ((flags & CHAIN_SFLAG_IN_BATCH) &&
 			((flags & CHAIN_SFLAG_LONE_SERVICE) ||

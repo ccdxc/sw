@@ -32,14 +32,6 @@
  *	- reuse/common code (write_result, read_status, cpdc_setup_batch_desc)
  *
  */
-static inline bool
-is_bulk_desc_in_use(uint16_t flags)
-{
-	return ((flags & CHAIN_SFLAG_IN_BATCH) &&
-			((flags & CHAIN_SFLAG_LONE_SERVICE) ||
-			 (flags & CHAIN_SFLAG_FIRST_SERVICE))) ? true : false;
-}
-
 pnso_error_t
 cpdc_common_chain(struct chain_entry *centry)
 {
@@ -395,7 +387,7 @@ get_batch_desc(struct service_info *svc_info)
 struct cpdc_desc *
 cpdc_get_desc(struct service_info *svc_info, bool per_block)
 {
-	if (is_bulk_desc_in_use(svc_info->si_flags))
+	if (putil_is_bulk_desc_in_use(svc_info->si_flags))
 		return get_batch_desc(svc_info);
 
 	return (svc_info->si_flags & CHAIN_SFLAG_BYPASS_ONFAIL) ?
@@ -461,7 +453,7 @@ void
 cpdc_put_desc(const struct service_info *svc_info, bool per_block,
 		struct cpdc_desc *desc)
 {
-	if (is_bulk_desc_in_use(svc_info->si_flags)) {
+	if (putil_is_bulk_desc_in_use(svc_info->si_flags)) {
 		put_batch_desc(svc_info, desc);
 		return;
 	}
@@ -898,7 +890,7 @@ update_batch_tags(struct service_info *svc_info, uint32_t num_tags)
 void
 cpdc_update_batch_tags(struct service_info *svc_info, uint32_t num_tags)
 {
-	if (!is_bulk_desc_in_use(svc_info->si_flags))
+	if (!putil_is_bulk_desc_in_use(svc_info->si_flags))
 		return;
 
 	if (svc_info->si_type == PNSO_SVC_TYPE_HASH) {
@@ -927,7 +919,7 @@ cpdc_update_seq_batch_size(const struct service_info *svc_info)
 	struct sequencer_desc *seq_desc;
 	struct sequencer_info *seq_info;
 
-	if (!is_bulk_desc_in_use(svc_info->si_flags))
+	if (!putil_is_bulk_desc_in_use(svc_info->si_flags))
 		return;
 
 	OSAL_ASSERT((svc_info->si_type == PNSO_SVC_TYPE_HASH) ||
@@ -1010,7 +1002,7 @@ cpdc_setup_seq_desc(struct service_info *svc_info, struct cpdc_desc *desc,
 	pnso_error_t err = PNSO_OK;
 	uint8_t	flags;
 
-	if (is_bulk_desc_in_use(svc_info->si_flags)) {
+	if (putil_is_bulk_desc_in_use(svc_info->si_flags)) {
 		err = cpdc_setup_batch_desc(svc_info, desc);
 		if (err)
 			OSAL_LOG_DEBUG("failed to setup batch sequencer desc! err: %d",

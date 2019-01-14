@@ -409,7 +409,7 @@ crypto_get_desc(struct service_info *svc_info, bool per_block)
 	struct crypto_desc *desc;
 	bool in_batch = false;
 
-	if (putil_is_service_in_batch(svc_info->si_flags))
+	if (putil_is_bulk_desc_in_use(svc_info->si_flags))
 		in_batch = true;
 
 	desc = in_batch ? get_batch_desc(svc_info) :
@@ -469,7 +469,7 @@ crypto_put_desc(const struct service_info *svc_info, bool per_block,
 {
 	bool in_batch = false;
 
-	if (putil_is_service_in_batch(svc_info->si_flags))
+	if (putil_is_bulk_desc_in_use(svc_info->si_flags))
 		in_batch = true;
 
 	if (in_batch)
@@ -490,7 +490,7 @@ crypto_setup_seq_desc(struct service_info *svc_info, struct crypto_desc *desc)
 {
 	pnso_error_t err = PNSO_OK;
 
-	if (putil_is_service_in_batch(svc_info->si_flags)) {
+	if (putil_is_bulk_desc_in_use(svc_info->si_flags)) {
 		err = crypto_setup_batch_desc(svc_info, desc);
 		if (err)
 			OSAL_LOG_ERROR("failed to setup batch sequencer desc! err: %d",
