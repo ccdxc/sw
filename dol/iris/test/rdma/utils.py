@@ -117,6 +117,20 @@ def ResetErrQState(tc):
     rs.lqp.sq.qstate.data.sq_cindex = rs.lqp.sq.qstate.data.spec_sq_cindex = rs.lqp.sq.qstate.data.c_index0 = rs.lqp.sq.qstate.data.p_index0;
     rs.lqp.sq.qstate.data.c_index1 = rs.lqp.sq.qstate.data.p_index1;
     rs.lqp.sq.qstate.data.c_index3 = rs.lqp.sq.qstate.data.p_index3;
+    rs.lqp.sq.qstate.data.c_index4 = rs.lqp.sq.qstate.data.p_index4
+    rs.lqp.sq.qstate.data.sqcb2_c_index4 = rs.lqp.sq.qstate.data.p_index4
+    rs.lqp.sq.qstate.data.rrq_spec_cindex = rs.lqp.sq.qstate.data.p_index4
+    rs.lqp.sq.qstate.data.rexmit_psn = rs.lqp.sq.qstate.data.tx_psn
+    rs.lqp.sq.qstate.data.max_tx_psn = rs.lqp.sq.qstate.data.tx_psn
+    rs.lqp.sq.qstate.data.sqcb1_tx_psn = rs.lqp.sq.qstate.data.tx_psn
+    rs.lqp.sq.qstate.data.sqcb2_rexmit_psn = rs.lqp.sq.qstate.data.tx_psn
+    rs.lqp.sq.qstate.data.msg_psn = 0
+    rs.lqp.sq.qstate.data.rrqwqe_num_sges = 0
+    rs.lqp.sq.qstate.data.rrqwqe_cur_sge_id = 0
+    rs.lqp.sq.qstate.data.rrqwqe_cur_sge_offset = 0
+    rs.lqp.sq.qstate.data.msn = ((rs.lqp.sq.qstate.data.ssn - 1) & 0xFFFFFF)
+    rs.lqp.sq.qstate.data.max_ssn = rs.lqp.sq.qstate.data.ssn
+    rs.lqp.sq.qstate.data.timer_on = 0
     rs.lqp.sq.qstate.WriteWithDelay()
 
     #Reset Rq

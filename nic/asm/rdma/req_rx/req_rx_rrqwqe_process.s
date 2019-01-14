@@ -210,15 +210,10 @@ read_or_atomic:
     // else
     //     min(rrqwqe_p->msn, sqcb1_to_rrqwqe_info_p->msn)
     add            r1, d.msn, 0 // Branch Delay Slot
-    mincr.c3       r1, 24, -1
-    scwle24        c2, r1, K_AETH_MSN
-    cmov           r1, c2, r1, K_AETH_MSN
 
     phvwr          p.cqe.send.msn, r1
     add            r6, K_BTH_PSN, 1
     phvwr          p.rexmit_psn, r6
-    // If its mid packet, retain the msg msn stored in rrqwqe
-    add.!c4        r1, d.msn, 0
     
     seq            c2, d.read_rsp_or_atomic, RRQ_OP_TYPE_READ
     bcf            [!c2], atomic

@@ -83,7 +83,7 @@ req_tx_add_headers_process:
     bbne           d.need_credits, 1, add_headers
     cmov           r2, c2, K_OP_TYPE, d.curr_op_type // Branch Delay Slot
 
-check_credits:
+check_credit_update:
     scwlt24        c5, d.lsn_rx, d.ssn
     sne.c5         c5, d.rexmit_psn, d.tx_psn
     bcf            [c5], credit_check_fail
@@ -267,8 +267,6 @@ add_headers:
         
         .brcase RDMA_PKT_LAST
             phvwr          BTH_ACK_REQ, 1
-            // check_credits = TRUE; inc_lsn = TRUE
-            crestore       [c5, c4], 0x30, 0x30
 
             phvwrpair      CAPRI_PHV_FIELD(phv_global_common, _write),  1, \
                            CAPRI_PHV_FIELD(phv_global_common, _last),  1
@@ -276,6 +274,9 @@ add_headers:
             add            r2, RDMA_PKT_OPC_RDMA_WRITE_LAST, d.service, RDMA_OPC_SERV_TYPE_SHIFT // Branch Delay Slot
         
         .brcase RDMA_PKT_FIRST
+            // inc_lsn = TRUE
+            crestore       [c4], 0x10, 0x10
+
             // dma_cmd[2] - RETH hdr, num addrs 2 (bth, reth)
             DMA_PHV2PKT_SETUP_CMDSIZE(r6, 2)
             DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, reth, reth, 1)
@@ -287,8 +288,8 @@ add_headers:
         
         .brcase RDMA_PKT_ONLY
             phvwr          BTH_ACK_REQ, 1
-            // check_credits = TRUE; inc_lsn = TRUE
-            crestore       [c5, c4], 0x30, 0x30
+            // inc_lsn = TRUE
+            crestore       [c4], 0x10, 0x10
 
             // dma_cmd[2] - RETH hdr, num addrs 2 (bth, reth)
             DMA_PHV2PKT_SETUP_CMDSIZE(r6, 2)
@@ -422,13 +423,37 @@ op_type_end:
     // store wqe_start_psn for backtrack from middle of multi-packet msg
     tblwr.c2       d.wqe_start_psn, d.tx_psn
 
-    b.!c6          inc_psn
     // phv_p->bth.psn = sqcb1_p->tx_psn
     phvwrpair      BTH_OPCODE, r2, BTH_PSN, d.tx_psn // Branch Delay Slot
 
+check_credits:
+    // set check_credits to false if credit check is disabled
+    sne.c5         c5, d.disable_credits, 1
+    bcf            [!c5], adjust_psn
+    // inc lsn for read, atomic, write (without imm)
+    tblmincri.c4   d.lsn, 24, 1
+
+    // if (check_credits && (sqcb1_p->ssn > sqcb1_p->lsn))
+    //     phv_p->bth.a = 1
+    //     write_back_info_p->set_credits = TRUE
+    sne            c5, d.lsn_rx, d.lsn_tx
+    tblwr.c5       d.lsn, d.lsn_rx
+    tblwr.c5       d.lsn_tx, d.lsn_rx
+
+    scwlt24        c5, d.lsn, d.ssn
+    bcf            [!c5], adjust_psn
+    phvwr.c5       BTH_ACK_REQ, 1
+    // Disable TX scheduler for this QP until ack is received with credits to
+    // send subsequent packets
+#if !(defined(HAPS) || defined(HW))
+    DOORBELL_NO_UPDATE_DISABLE_SCHEDULER(K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, SQ_RING_ID, r3, r5) // Branch Delay Slot
+#endif
+
+adjust_psn:
+    b.!c6          inc_psn_ssn
     // if (adjust_psn)
     // tx_psn = read_len >> log_pmtu
-    srl            r3, K_RD_READ_LEN, K_RD_LOG_PMTU
+    srl            r3, K_RD_READ_LEN, K_RD_LOG_PMTU // Branch Delay Slot
     tblmincr       d.tx_psn, 24, r3
 
     // if read_len is < pmtu, then increment tx_psn by 1
@@ -443,7 +468,7 @@ op_type_end:
     mincr.c6       r3, K_RD_LOG_PMTU, r0
     sle.c6         c6, r3, r0
 
-inc_psn:
+inc_psn_ssn:
     // exp_rsp_psn is the psn for which ack_req bit is set or psn of last read
     // rsp packet of read_req or psn of rsp packet of atomic_req
     add.!c6        r7, d.tx_psn, r0
@@ -460,28 +485,6 @@ inc_psn:
     // memwr to sqcb1 - tx_psn[63:40], ssn[39:16], rsvd2[15:0]
     add            r3, r0, d.{tx_psn, ssn}, 16
     memwr.d        r2, r3
-
-    // set check_credits to false if credit check is disabled
-    bbeq           d.disable_credits, 1, rrq_p_index_chk
-    setcf          c5, [!c0] // Branch Delay Slot
-
-    // if (check_credits && (sqcb1_p->ssn > sqcb1_p->lsn))
-    //     phv_p->bth.a = 1
-    //     write_back_info_p->set_credits = TRUE
-    sne            c5, d.lsn_rx, d.lsn_tx
-    tblwr.c5       d.lsn, d.lsn_rx
-    tblwr.c5       d.lsn_tx, d.lsn_rx
-    // inc lsn for read, atomic, write (without imm)
-    tblmincri.c4   d.lsn, 24, 1
-
-    scwlt24        c5, d.lsn, d.ssn
-    bcf            [!c5], rrq_p_index_chk
-    phvwr.c5       BTH_ACK_REQ, 1
-    // Disable TX scheduler for this QP until ack is received with credits to
-    // send subsequent packets
-#if !(defined(HAPS) || defined(HW))
-    DOORBELL_NO_UPDATE_DISABLE_SCHEDULER(K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, SQ_RING_ID, r3, r5) // Branch Delay Slot
-#endif
 
 rrq_p_index_chk:
     // do we need to increment rrq_pindex ?

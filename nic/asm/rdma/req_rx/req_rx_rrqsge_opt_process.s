@@ -193,6 +193,7 @@ insufficient_resources:
 table_error:
     // set err_dis_qp
     phvwr          CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp), 1
+    phvwr          CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_cq), 1
 
     phvwrpair      p.cqe.status, CQ_STATUS_LOCAL_QP_OPER_ERR, p.cqe.error, 1
     phvwr          CAPRI_PHV_RANGE(TO_S7_P, lif_cqe_error_id_vld, lif_error_id), \

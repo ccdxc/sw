@@ -18,6 +18,7 @@ struct key_entry_aligned_t d;
 
 #define LKEY_TO_PTSEG_T struct req_rx_rrqlkey_to_ptseg_info_t
 #define RRQSGE_TO_LKEY_P t0_s2s_rrqsge_to_lkey_info
+#define SQCB1_WRITE_BACK_P t2_s2s_sqcb1_write_back_info
 
 #define TO_S7_P to_s7_stats_info
 
@@ -155,4 +156,4 @@ error_completion:
     CAPRI_SET_TABLE_I_VALID(r1, 0)
 
     phvwr.e        CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp),  1
-    nop
+    phvwr          CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_cq), 1

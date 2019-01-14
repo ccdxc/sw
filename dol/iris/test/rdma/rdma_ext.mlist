@@ -403,6 +403,70 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_REQ_RX_READ_ONLY_LKEY_PD_ERR
+        enable  : True
+        package : test.rdma
+        module  : req_rx_read_only_lkey_pd_err
+        spec    : req_rx_read_only_lkey_pd_err.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_REQ_RX_READ_ONLY_LKEY_STATE_ERR
+        enable  : True
+        package : test.rdma
+        module  : req_rx_read_only_lkey_state_err
+        spec    : req_rx_read_only_lkey_state_err.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_REQ_RX_READ_ONLY_LKEY_ACC_ERR
+        enable  : True
+        package : test.rdma
+        module  : req_rx_read_only_lkey_acc_err
+        spec    : req_rx_read_only_lkey_acc_err.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_REQ_RX_READ_ONLY_LKEY_LEN_ERR
+        enable  : True
+        package : test.rdma
+        module  : req_rx_read_only_lkey_len_err
+        spec    : req_rx_read_only_lkey_len_err.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_REQ_RX_READ_FIRST_LKEY_PD_ERR
+        enable  : True
+        package : test.rdma
+        module  : req_rx_read_first_lkey_pd_err
+        spec    : req_rx_read_first_lkey_pd_err.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_REQ_RX_READ_MID_LKEY_PD_ERR
+        enable  : True
+        package : test.rdma
+        module  : req_rx_read_mid_lkey_pd_err
+        spec    : req_rx_read_mid_lkey_pd_err.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_REQ_RX_READ_LAST_LKEY_PD_ERR
+        enable  : True
+        package : test.rdma
+        module  : req_rx_read_last_lkey_pd_err
+        spec    : req_rx_read_last_lkey_pd_err.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_REQ_RX_ATOMIC_LKEY_PD_ERR
+        enable  : True
+        package : test.rdma
+        module  : req_rx_atomic_lkey_pd_err
+        spec    : req_rx_atomic_lkey_pd_err.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_RX_SEND_FIRST_LAST
         enable  : True
         package : test.rdma

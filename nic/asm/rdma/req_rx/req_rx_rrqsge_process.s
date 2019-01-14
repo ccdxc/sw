@@ -153,6 +153,7 @@ sge_loop:
     IS_ANY_FLAG_SET(c5, r7, REQ_RX_FLAG_LAST|REQ_RX_FLAG_ONLY)
 
     bcf            [!c5], set_arg
+    nop            // Branch Delay Slot
     // current_sge_id = 0
     add             r1, r0, r0
     // currrent_sge_offset = 0
@@ -199,6 +200,7 @@ err_no_dma_cmds:
 table_error:
     // set err_dis_qp
     phvwr          CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp), 1
+    phvwr          CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_cq), 1
 
     phvwrpair      p.cqe.status, CQ_STATUS_LOCAL_QP_OPER_ERR, p.cqe.error, 1
     phvwr          CAPRI_PHV_RANGE(TO_S7_P, lif_cqe_error_id_vld, lif_error_id), \

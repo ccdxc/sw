@@ -167,7 +167,7 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify that lsn is incremented by 128 credits
-        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'lsn', 128):
+        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'lsn', tc.pvtdata.sq_post_qstate, 'lsn'):
             return False
 
         # verify that lsn_rx is updated by 64 credits
@@ -175,7 +175,7 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify that lsn_tx is incremented by 128 credits
-        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'lsn_tx', 128):
+        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'lsn_tx', tc.pvtdata.sq_post_qstate, 'lsn_tx'):
             return False
 
         # verify that busy is 0
