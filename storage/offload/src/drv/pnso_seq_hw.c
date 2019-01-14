@@ -730,8 +730,6 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 	chain_params->ccp_cmd.ccpc_next_db_action_ring_push = 1;
 	chain_params->ccp_cmd.ccpc_stop_chain_on_error = 1;
 
-	chain_params->ccp_status_addr_0 =
-		sonic_virt_to_phy((void *) status_desc);
 	chain_params->ccp_pad_buf_addr = pad_buffer;
 	chain_params->ccp_pad_boundary_shift =
 		(uint8_t) ilog2(PNSO_MEM_ALIGN_PAGE);
@@ -750,10 +748,14 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 			SGL_PDMA_PPRINT(chain_params->ccp_aol_dst_vec_addr);
 		}
 
-		chain_params->ccp_status_addr_0 = (uint64_t)
-			svc_info->si_istatus_desc;	/* rmem */
-		chain_params->ccp_status_addr_1 =
-			sonic_virt_to_phy(svc_info->si_status_desc);
+		err = svc_status_desc_addr_get(&svc_info->si_istatus_desc, 0,
+				&chain_params->ccp_status_addr_0, 0);
+		if (err)
+			goto out;
+		err = svc_status_desc_addr_get(&svc_info->si_status_desc, 0,
+				&chain_params->ccp_status_addr_1, 0);
+		if (err)
+			goto out;
 		chain_params->ccp_status_len = sizeof(struct cpdc_status_desc);
 
 		chain_params->ccp_cmd.ccpc_status_dma_en = 1;
@@ -779,6 +781,58 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
+}
+
+/*
+ * This function is similar to hw_setup_cp_chain_params(), except
+ * it assumes the caller has already made all the necessary modifications
+ * to the service's chain parameters template.
+ */
+static pnso_error_t
+hw_setup_cpdc_chain(struct service_info *svc_info,
+		    struct cpdc_desc *desc)
+{
+	struct sequencer_info *seq_info;
+	struct sequencer_spec *seq_spec;
+	struct lif *lif;
+	uint32_t statusq_index;
+	pnso_error_t err;
+
+	seq_spec = &svc_info->si_cpdc_chain.ccp_seq_spec;
+	seq_info = &svc_info->si_seq_info;
+	lif = sonic_get_lif();
+	if (!lif) {
+		OSAL_LOG_ERROR("failed to obtain LIF");
+		return EPERM;
+	}
+
+	err = sonic_get_seq_statusq(lif, seq_info->sqi_status_qtype,
+				    &seq_spec->sqs_seq_status_q);
+	if (err)
+		return err;
+
+	seq_info->sqi_status_desc =
+		(uint8_t *)sonic_q_consume_entry(seq_spec->sqs_seq_status_q,
+						 &statusq_index);
+	if (!seq_info->sqi_status_desc) {
+		OSAL_LOG_ERROR("failed to obtain cpdc sequencer statusq desc");
+		return EPERM;
+	}
+	svc_info->si_seq_info.sqi_status_total_takes++;
+	desc->cd_db_addr = sonic_get_lif_local_dbaddr();
+	desc->cd_db_data =
+		sonic_q_ringdb_data(seq_spec->sqs_seq_status_q, statusq_index);
+	desc->u.cd_bits.cc_db_on = 1;
+
+	OSAL_LOG_DEBUG("ring: %s index: %u desc: 0x"PRIx64,
+		       seq_info->sqi_ring->name, statusq_index, (uint64_t)desc);
+	fill_cpdc_seq_status_desc(&svc_info->si_cpdc_chain,
+				  seq_info->sqi_status_desc);
+
+	PPRINT_SEQUENCER_INFO(seq_info);
+	PPRINT_CPDC_CHAIN_PARAMS(&svc_info->si_cpdc_chain);
+
+	return PNSO_OK;
 }
 
 static pnso_error_t
@@ -858,17 +912,19 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 	chain_params->ccp_cmd.ccpc_sgl_pad_en = 1;
 	chain_params->ccp_cmd.ccpc_sgl_pdma_pad_only = 1;
 
-	chain_params->ccp_status_addr_0 =
-		sonic_virt_to_phy((void *) status_desc);
 	chain_params->ccp_pad_buf_addr = pad_buffer;
 	chain_params->ccp_pad_boundary_shift =
 			(uint8_t) ilog2(PNSO_MEM_ALIGN_PAGE);
 
-	if (svc_info->si_istatus_desc) {
-		chain_params->ccp_status_addr_0 = (uint64_t)
-			svc_info->si_istatus_desc;	/* rmem */
-		chain_params->ccp_status_addr_1 =
-			sonic_virt_to_phy(svc_info->si_status_desc);
+	if (chn_service_has_interm_status(svc_info)) {
+                err = svc_status_desc_addr_get(&svc_info->si_istatus_desc, 0,
+                                &chain_params->ccp_status_addr_0, 0);
+                if (err)
+                        goto out;
+                err = svc_status_desc_addr_get(&svc_info->si_status_desc, 0,
+                                &chain_params->ccp_status_addr_1, 0);
+                if (err)
+                        goto out;
 		chain_params->ccp_status_len = sizeof(struct cpdc_status_desc);
 
 		chain_params->ccp_cmd.ccpc_status_dma_en = 1;
@@ -1067,6 +1123,7 @@ const struct sequencer_ops hw_seq_ops = {
 	.cleanup_desc = hw_cleanup_desc,
 	.ring_db = hw_ring_db,
 	.setup_cp_chain_params = hw_setup_cp_chain_params,
+	.setup_cpdc_chain = hw_setup_cpdc_chain,
 	.setup_cp_pad_chain_params = hw_setup_cp_pad_chain_params,
 	.setup_hash_chain_params = hw_setup_hashorchksum_chain_params,
 	.setup_chksum_chain_params = hw_setup_hashorchksum_chain_params,

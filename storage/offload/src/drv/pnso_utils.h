@@ -67,6 +67,18 @@ pc_res_sgl_pdma_packed_get(const struct per_core_resource *pcr,
 			   const struct service_buf_list *svc_blist);
 void pc_res_sgl_pdma_put(const struct per_core_resource *pcr,
 			 struct chain_sgl_pdma *sgl_pdma);
+pnso_error_t
+pc_res_svc_status_get(const struct per_core_resource *pcr,
+		      enum mem_pool_type mpool_type,
+		      struct service_status_desc *svc_status);
+void
+pc_res_svc_status_put(const struct per_core_resource *pcr,
+		      struct service_status_desc *svc_status);
+pnso_error_t
+svc_status_desc_addr_get(struct service_status_desc *svc_status,
+			 uint32_t elem_idx,
+			 uint64_t *ret_addr,
+			 uint32_t clear_size);
 struct buffer_list_iter *
 buffer_list_iter_init(struct buffer_list_iter *iter,
 		      const struct service_buf_list *svc_blist,
@@ -99,7 +111,8 @@ void *pc_res_mpool_object_get_with_size(const struct per_core_resource *pcr,
 					uint32_t *ret_size);
 void *pc_res_mpool_object_get_with_num_vec_elems(const struct per_core_resource *pcr,
 						 enum mem_pool_type type,
-						 uint32_t *ret_num_vec_elems);
+						 uint32_t *ret_num_vec_elems,
+						 uint32_t *ret_elem_size);
 void pc_res_mpool_object_put(const struct per_core_resource *pcr,
 			     enum mem_pool_type type,
 			     void *obj);

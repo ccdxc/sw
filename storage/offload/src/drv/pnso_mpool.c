@@ -66,15 +66,16 @@ is_pool_valid(struct mem_pool *mpool)
 static inline void __attribute__ ((unused))
 validate_object(struct mem_pool *mpool, void *object)
 {
-	uint32_t pool_size, obj_size;
+	uint32_t total_num, obj_size;
 	bool in_range;
 
 	obj_size = mpool->mp_config.mpc_object_size +
-		 mpool->mp_config.mpc_pad_size;
-	pool_size = mpool->mp_config.mpc_pool_size;
+		   mpool->mp_config.mpc_pad_size;
+	total_num = mpool->mp_config.mpc_num_objects *
+		    mpool->mp_config.mpc_num_vec_elems;
 
 	in_range = ((((char *) object - (char *) mpool->mp_objects) /
-				obj_size) < pool_size);
+				obj_size) < total_num);
 	OSAL_ASSERT(in_range);
 }
 
@@ -284,12 +285,11 @@ mpool_create(enum mem_pool_type mpool_type, uint32_t num_objects,
 
 	/* compute pad and total pool size */
 	mpool->mp_config.mpc_object_size = object_size;
-	mpool->mp_config.mpc_vec_elem_size = object_size * num_vec_elems;
-	mpool->mp_config.mpc_pad_size =
-		mpool_get_pad_size(mpool->mp_config.mpc_vec_elem_size,
-				align_size);
-	mpool->mp_config.mpc_pool_size = ((mpool->mp_config.mpc_vec_elem_size +
-				mpool->mp_config.mpc_pad_size) * num_objects);
+	mpool->mp_config.mpc_pad_size = mpool_get_pad_size(object_size, align_size);
+	mpool->mp_config.mpc_vec_elem_size = 
+		(object_size + mpool->mp_config.mpc_pad_size) * num_vec_elems;
+	mpool->mp_config.mpc_pool_size =
+		mpool->mp_config.mpc_vec_elem_size * num_objects;
 
 	mpool->mp_objects = mpool_type_is_rmem(mpool_type) ?
 			    mpool_create_rmem_objects(mpool) :
@@ -323,8 +323,7 @@ mpool_create(enum mem_pool_type mpool_type, uint32_t num_objects,
 			       mpool->mp_config.mpc_vec_elem_size,
 			       mpool->mp_config.mpc_pad_size, align_size);
 
-		obj += (mpool->mp_config.mpc_vec_elem_size +
-				mpool->mp_config.mpc_pad_size);
+		obj += mpool->mp_config.mpc_vec_elem_size;
 	}
 	mpool->mp_stack.mps_top = mpool->mp_config.mpc_num_objects;
 

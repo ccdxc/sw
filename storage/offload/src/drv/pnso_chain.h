@@ -211,6 +211,14 @@ struct interm_buf_list {
 	};
 };
 
+struct service_status_desc {
+	void			*desc;
+	uint64_t		status_addr;
+	uint32_t		elem_size;
+	uint32_t		num_elems;
+	enum mem_pool_type	mpool_type;
+};
+
 struct service_cpdc_sgl {
 	struct cpdc_sgl    *sgl;
 	enum mem_pool_type mpool_type;
@@ -231,8 +239,8 @@ struct service_info {
 	uint32_t si_num_tags;		/* for tracking # of hash or checksum */
 
 	void *si_desc;			/* desc of cp/dc/encrypt/etc. */
-	void *si_status_desc;		/* status desc of cp/dc/encrypt/etc. */
-	void *si_istatus_desc;		/* intermediate status desc */
+	struct service_status_desc si_status_desc;	/* status desc of cp/dc/encrypt/etc. */
+	struct service_status_desc si_istatus_desc;	/* intermediate status desc */
 	void *si_bof_desc;		/* bypass onfail desc for hash/chksum */
 
 	struct service_cpdc_sgl	si_src_sgl;	/* src input buffer converted to sgl */
@@ -375,6 +383,45 @@ static inline bool
 chn_service_has_interm_blist(const struct service_info *svc_info)
 {
 	return !!svc_info->si_iblist.blist.count;
+}
+
+static inline bool
+chn_service_has_interm_status(const struct service_info *svc_info)
+{
+	return !!svc_info->si_istatus_desc.desc;
+}
+
+static inline bool
+chn_service_type_is_cpdc(const struct service_info *svc_info)
+{
+	return (svc_info->si_type == PNSO_SVC_TYPE_COMPRESS) ||
+	       (svc_info->si_type == PNSO_SVC_TYPE_DECOMPRESS);
+}
+
+static inline bool
+chn_service_type_is_hashchksum(const struct service_info *svc_info)
+{
+	return (svc_info->si_type == PNSO_SVC_TYPE_HASH) ||
+	       (svc_info->si_type == PNSO_SVC_TYPE_CHKSUM);
+}
+
+static inline bool
+chn_service_type_is_encrypt(const struct service_info *svc_info)
+{
+	return svc_info->si_type == PNSO_SVC_TYPE_ENCRYPT;
+}
+
+static inline bool
+chn_service_type_is_decrypt(const struct service_info *svc_info)
+{
+	return svc_info->si_type == PNSO_SVC_TYPE_DECRYPT;
+}
+
+static inline bool
+chn_service_type_is_crypto(const struct service_info *svc_info)
+{
+	return chn_service_type_is_encrypt(svc_info) ||
+	       chn_service_type_is_decrypt(svc_info);
 }
 
 static inline void

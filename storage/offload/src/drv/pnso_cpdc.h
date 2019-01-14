@@ -196,6 +196,8 @@ struct cpdc_desc {
  * hash algorithm specified in 'cpdc_desc'.
  *
  */
+#define CPDC_STATUS_MIN_CLEAR_SZ	8
+
 struct cpdc_status_desc {
 	uint16_t csd_rsvd:12;
 	uint16_t csd_err:3;

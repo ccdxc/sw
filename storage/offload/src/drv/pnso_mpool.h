@@ -245,6 +245,12 @@ mpool_get_object_size(const struct mem_pool *mpool)
 	return mpool->mp_config.mpc_vec_elem_size;
 }
 
+static inline uint32_t
+mpool_get_object_base_size(const struct mem_pool *mpool)
+{
+	return mpool->mp_config.mpc_object_size;
+}
+
 static inline void
 mpool_clear_object(const struct mem_pool *mpool,
 		   void *object)
@@ -266,6 +272,12 @@ static inline uint32_t
 mpool_get_object_page_size(const struct mem_pool *mpool)
 {
 	return mpool->mp_config.mpc_page_size;
+}
+
+static inline uint32_t
+mpool_get_object_align_size(const struct mem_pool *mpool)
+{
+	return mpool->mp_config.mpc_align_size;
 }
 
 static inline uint32_t

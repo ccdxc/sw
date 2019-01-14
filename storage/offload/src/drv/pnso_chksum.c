@@ -17,12 +17,15 @@
 #include "pnso_seq.h"
 #include "pnso_utils.h"
 
-static void
-fill_chksum_desc(uint32_t algo_type, uint32_t buf_len, void *src_buf,
-		struct cpdc_desc *desc, struct cpdc_status_desc *status_desc)
+static int
+fill_chksum_desc(struct service_info *svc_info,
+		uint32_t algo_type, uint32_t buf_len,
+		bool void *src_buf,
+		struct cpdc_desc *desc, uint32_t block_no)
 {
+	pnso_error_t err;
+
 	memset(desc, 0, sizeof(*desc));
-	memset(status_desc, 0, sizeof(*status_desc));
 
 	desc->cd_src = (uint64_t) sonic_virt_to_phy(src_buf);
 
@@ -38,11 +41,23 @@ fill_chksum_desc(uint32_t algo_type, uint32_t buf_len, void *src_buf,
 
 	desc->cd_datain_len =
 		cpdc_desc_data_len_set_eval(PNSO_SVC_TYPE_CHKSUM, buf_len);
+	/*
+	 * See comments in chksum_setup() and chksum_chain() regarding
+	 * how chksum makes use of rmem status.
+	 */
+	if (chn_service_has_interm_status(svc_info) && (block_no == 0)) {
+		err = svc_status_desc_addr_get(&svc_info->si_istatus_desc, block_no,
+			&desc->cd_status_addr, CPDC_STATUS_MIN_CLEAR_SZ);
+	} else {
+		/* non-rmem status already cleared during cpdc_setup_status_desc() */
+		err = svc_status_desc_addr_get(&svc_info->si_status_desc, block_no,
+					       &desc->cd_status_addr, 0);
+	}
 
-	desc->cd_status_addr = (uint64_t) sonic_virt_to_phy(status_desc);
 	desc->cd_status_data = CPDC_CHKSUM_STATUS_DATA;
 
 	CPDC_PPRINT_DESC(desc);
+	return err;
 }
 
 static pnso_error_t
@@ -52,7 +67,6 @@ chksum_setup(struct service_info *svc_info,
 	pnso_error_t err;
 	struct pnso_checksum_desc *pnso_chksum_desc;
 	struct cpdc_desc *chksum_desc;
-	struct cpdc_status_desc *status_desc;
 	struct cpdc_sgl *sgl, *bof_sgl;
 	bool per_block;
 	uint32_t num_tags;
@@ -98,14 +112,26 @@ chksum_setup(struct service_info *svc_info,
 		svc_info->si_p4_bof_sgl = bof_sgl;
 	}
 
-	status_desc = cpdc_get_status_desc(svc_info->si_pcr, per_block);
-	if (!status_desc) {
-		err = ENOMEM;
+	err = cpdc_setup_status_desc(svc_info, per_block);
+	if (err) {
 		OSAL_LOG_ERROR("cannot obtain chksum status desc from pool! err: %d",
 				err);
 		goto out;
 	}
-	svc_info->si_status_desc = status_desc;
+
+	/*
+	 * NOTE: when chksum has a subchain, rmem status will be used but
+	 * only for the 1st chksum, hence the per-block flag is forced to
+	 * to false below.
+	 * 
+	 * See additional comments in chksum_chain().
+	 */
+	err = cpdc_setup_rmem_status_desc(svc_info, false);
+	if (err) {
+		OSAL_LOG_ERROR("cannot obtain cp rmem status desc from pool! err: %d",
+				err);
+		goto out;
+	}
 
 	err = cpdc_setup_desc_blocks(svc_info, pnso_chksum_desc->algo_type,
 			fill_chksum_desc);
@@ -137,20 +163,51 @@ out:
 static pnso_error_t
 chksum_chain(struct chain_entry *centry)
 {
-	pnso_error_t err;
+	struct service_info		*svc_info = &centry->ce_svc_info;
+	struct cpdc_chain_params	*cpdc_chain = &svc_info->si_cpdc_chain;
+	struct service_info		*svc_next;
+	pnso_error_t			err = PNSO_OK;
 
-	OSAL_LOG_DEBUG("enter ...");
+	if (chn_service_has_sub_chain(svc_info)) {
 
-	OSAL_ASSERT(centry);
+		/*
+		 * If chksum_setup() had created any rmem status, it would have
+		 * done so for only the 1st chksum operation.
+		 */
+		err = svc_status_desc_addr_get(&svc_info->si_istatus_desc, 0,
+				&cpdc_chain->ccp_status_addr_0, 0);
+		if (err)
+			goto out;
+		err = svc_status_desc_addr_get(&svc_info->si_status_desc, 0,
+				&cpdc_chain->ccp_status_addr_1, 0);
+		if (err)
+			goto out;
+		cpdc_chain->ccp_status_len = sizeof(struct cpdc_status_desc);
 
-	err = cpdc_common_chain(centry);
-	if (err) {
-		OSAL_LOG_ERROR("failed to chain err: %d", err);
-		goto out;
+		/*
+		 * Chksum does not produce any data output for consumption by
+		 * the next service in the chain so we leave
+		 * ccpc_stop_chain_on_error at 0. Besides, P4+ chainer would only
+		 * examine status for one block (i.e., one operation result).
+		 */
+		cpdc_chain->ccp_cmd.ccpc_status_dma_en = true;
+
+		svc_next = chn_service_next_svc_get(svc_info);
+		OSAL_ASSERT(svc_next);
+		err = svc_next->si_ops.sub_chain_from_cpdc(svc_next,
+				cpdc_chain);
+		/*
+		 * Similarly, completion of the 1st chksum should kick
+		 * off the next service.
+		 */
+		if (!err)
+			err = seq_setup_cpdc_chain(svc_info,
+					svc_info->si_desc);
 	}
-
 out:
-	OSAL_LOG_DEBUG("exit!");
+	if (err)
+		OSAL_LOG_ERROR("failed seq_setup_cpdc_chain: err %d", err);
+
 	return err;
 }
 
@@ -186,10 +243,11 @@ static pnso_error_t
 chksum_sub_chain_from_crypto(struct service_info *svc_info,
 			     struct crypto_chain_params *crypto_chain)
 {
-	/*
-	 * This is supportable when there's a valid use case.
-	 */
-	return EOPNOTSUPP;
+	crypto_chain->ccp_cmd.ccpc_next_doorbell_en = true;
+	crypto_chain->ccp_cmd.ccpc_next_db_action_ring_push = true;
+	return ring_spec_info_fill(svc_info->si_seq_info.sqi_ring,
+				   &crypto_chain->ccp_ring_spec,
+				   svc_info->si_desc, svc_info->si_num_tags);
 }
 
 static pnso_error_t
@@ -255,7 +313,7 @@ chksum_poll(struct service_info *svc_info)
 	if (err != PNSO_OK)
 		return err;
 
-	st_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
+	st_desc = (struct cpdc_status_desc *) svc_info->si_status_desc.desc;
 	if (!st_desc) {
 		err = EINVAL;
 		OSAL_LOG_ERROR("invalid chksum status desc! err: %d", err);
@@ -296,7 +354,7 @@ chksum_read_status(struct service_info *svc_info)
 		goto out;
 	}
 
-	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
+	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc.desc;
 	if (!status_desc) {
 		OSAL_LOG_ERROR("invalid chksum status desc! err: %d", err);
 		OSAL_ASSERT(!err);
@@ -352,7 +410,7 @@ chksum_write_result(struct service_info *svc_info)
 	OSAL_ASSERT(svc_info);
 
 	svc_status = svc_info->si_svc_status;
-	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
+	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc.desc;
 	if (!status_desc) {
 		OSAL_LOG_ERROR("invalid chksum status desc! err: %d", err);
 		OSAL_ASSERT(!err);
@@ -393,7 +451,6 @@ static void
 chksum_teardown(struct service_info *svc_info)
 {
 	struct cpdc_desc *chksum_desc;
-	struct cpdc_status_desc *status_desc;
 	struct cpdc_sgl *sgl;
 	bool per_block;
 
@@ -407,6 +464,7 @@ chksum_teardown(struct service_info *svc_info)
 	 */
 	CPDC_PPRINT_DESC(svc_info->si_desc);
 
+	seq_cleanup_cpdc_chain(svc_info);
 	seq_cleanup_desc(svc_info);
 
 	per_block = svc_is_chksum_per_block_enabled(svc_info->si_desc_flags);
@@ -416,8 +474,8 @@ chksum_teardown(struct service_info *svc_info)
 		pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_src_sgl);
 	}
 
-	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
-	cpdc_put_status_desc(svc_info->si_pcr, per_block, status_desc);
+	cpdc_teardown_rmem_status_desc(svc_info);
+	cpdc_teardown_status_desc(svc_info);
 
 	sgl = (struct cpdc_sgl *) svc_info->si_p4_sgl;
 	cpdc_put_sgl(svc_info->si_pcr, per_block, sgl);

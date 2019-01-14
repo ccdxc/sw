@@ -158,6 +158,7 @@ pc_res_sgl_vec_packed_get(const struct per_core_resource *pcr,
 	struct buffer_addr_len addr_len;
 	uint32_t total_len;
 	uint32_t num_vec_elems;
+	uint32_t elem_size;
 	uint32_t cur_count;
 	pnso_error_t err;
 
@@ -171,7 +172,7 @@ pc_res_sgl_vec_packed_get(const struct per_core_resource *pcr,
 	svc_sgl->mpool_type = vec_type;
 	svc_sgl->sgl =
 		pc_res_mpool_object_get_with_num_vec_elems(pcr, vec_type,
-				&num_vec_elems);
+				&num_vec_elems, &elem_size);
 	if (!svc_sgl->sgl) {
 		err = ENOMEM;
 		OSAL_LOG_ERROR("cannot obtain sgl_vec from pool %s err: %d",
@@ -290,6 +291,76 @@ pc_res_sgl_pdma_put(const struct per_core_resource *pcr,
 		    struct chain_sgl_pdma *sgl_pdma)
 {
 	pc_res_mpool_object_put(pcr, MPOOL_TYPE_CHAIN_SGL_PDMA, sgl_pdma);
+}
+
+pnso_error_t
+pc_res_svc_status_get(const struct per_core_resource *pcr,
+		      enum mem_pool_type mpool_type,
+		      struct service_status_desc *svc_status)
+{
+	pnso_error_t err = ENOMEM;
+
+	svc_status->desc = pc_res_mpool_object_get_with_num_vec_elems(pcr,
+					mpool_type, &svc_status->num_elems,
+					&svc_status->elem_size);
+	if (!svc_status->desc) {
+		OSAL_LOG_ERROR("cannot obtain service_status from pool %s: err: %d",
+			       mpool_get_type_str(mpool_type), err);
+		goto out;
+	}
+	svc_status->mpool_type = mpool_type;
+	svc_status->status_addr = mpool_get_object_phy_addr(mpool_type,
+					svc_status->desc);
+	err = PNSO_OK;
+out:
+	return err;
+}
+
+void
+pc_res_svc_status_put(const struct per_core_resource *pcr,
+		      struct service_status_desc *svc_status)
+{
+	if (svc_status->desc) {
+		pc_res_mpool_object_put(pcr, svc_status->mpool_type,
+					svc_status->desc);
+		svc_status->desc = NULL;
+	}
+}
+
+pnso_error_t
+svc_status_desc_addr_get(struct service_status_desc *svc_status,
+			 uint32_t elem_idx,
+			 uint64_t *ret_addr,
+			 uint32_t clear_size)
+{
+	pnso_error_t err = EINVAL;
+	uint32_t offset;
+
+	*ret_addr = 0;
+	if (!svc_status->desc) {
+		OSAL_LOG_ERROR("empty service_status_desc: err: %d", err);
+		goto out;
+	}
+	if (elem_idx >= svc_status->num_elems) {
+		OSAL_LOG_ERROR("elem_idx %u exceeds num_elems %u: err: %d",
+			       elem_idx, svc_status->num_elems, err);
+		goto out;
+	}
+
+	offset = elem_idx * svc_status->elem_size;
+	*ret_addr = svc_status->status_addr + offset;
+	if (clear_size) {
+		clear_size = min(svc_status->elem_size, clear_size);
+		if (mpool_type_is_rmem(svc_status->mpool_type))
+			osal_rmem_set(*ret_addr, 0, clear_size);
+		else
+			memset((char *)svc_status->desc + offset, 0,
+			       clear_size);
+        }
+
+	err = PNSO_OK;
+out:
+	return err;
 }
 
 struct buffer_list_iter *
@@ -545,7 +616,8 @@ pc_res_mpool_object_get_with_size(const struct per_core_resource *pcr,
 void *
 pc_res_mpool_object_get_with_num_vec_elems(const struct per_core_resource *pcr,
 					   enum mem_pool_type type,
-					   uint32_t *ret_num_vec_elems)
+					   uint32_t *ret_num_vec_elems,
+					   uint32_t *ret_elem_size)
 {
 	struct mem_pool *mpool;
 	void *obj = NULL;
@@ -554,6 +626,8 @@ pc_res_mpool_object_get_with_num_vec_elems(const struct per_core_resource *pcr,
 	mpool = pc_res_mpool_get(pcr, type);
 	if (mpool) {
 		*ret_num_vec_elems = mpool_get_object_num_vec_elems(mpool);
+		*ret_elem_size = mpool_get_object_base_size(mpool) +
+				 mpool_get_object_pad_size(mpool);
 		obj = mpool_get_object(mpool);
 		if (!obj)
 			OSAL_LOG_ERROR("cannot obtain pcr object from pool %s",

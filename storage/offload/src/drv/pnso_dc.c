@@ -24,15 +24,14 @@ clear_dc_header_present(uint16_t flags, struct cpdc_desc *desc)
 		desc->u.cd_bits.cc_header_present = 0;
 }
 
-static void
+static int
 fill_dc_desc(struct service_info *svc_info, struct cpdc_desc *desc)
 {
-	struct cpdc_status_desc *status_desc = svc_info->si_status_desc;
 	uint32_t src_buf_len = svc_info->si_src_blist.len;
 	uint32_t dst_buf_len = svc_info->si_dst_blist.len;
+	pnso_error_t err;
 
 	memset(desc, 0, sizeof(*desc));
-	memset(status_desc, 0, sizeof(*status_desc));
 
 	desc->cd_src = (uint64_t) sonic_virt_to_phy(svc_info->si_src_sgl.sgl);
 	desc->cd_dst = (uint64_t) sonic_virt_to_phy(svc_info->si_dst_sgl.sgl);
@@ -47,20 +46,19 @@ fill_dc_desc(struct service_info *svc_info, struct cpdc_desc *desc)
 							  src_buf_len);
 	desc->cd_threshold_len = cpdc_desc_data_len_set_eval(svc_info->si_type,
 							     dst_buf_len);
-
-	if (svc_info->si_istatus_desc) {
-		desc->cd_status_addr = mpool_get_object_phy_addr(
-				MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS_DESC,
-				svc_info->si_istatus_desc);
-		osal_rmem_set(desc->cd_status_addr, 0,
-				min(sizeof(*status_desc), (size_t) 8));
-	} else
-		desc->cd_status_addr = (uint64_t)
-			sonic_virt_to_phy(status_desc);
+	if (chn_service_has_interm_status(svc_info)) {
+		err = svc_status_desc_addr_get(&svc_info->si_istatus_desc, 0,
+			&desc->cd_status_addr, CPDC_STATUS_MIN_CLEAR_SZ);
+	} else {
+		/* non-rmem status already cleared during cpdc_setup_status_desc() */
+		err = svc_status_desc_addr_get(&svc_info->si_status_desc, 0,
+			&desc->cd_status_addr, 0);
+	}
 
 	desc->cd_status_data = CPDC_DC_STATUS_DATA;
 
 	CPDC_PPRINT_DESC(desc);
+	return err;
 }
 
 static pnso_error_t
@@ -69,7 +67,6 @@ decompress_setup(struct service_info *svc_info,
 {
 	pnso_error_t err;
 	struct cpdc_desc *dc_desc;
-	struct cpdc_status_desc *status_desc;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -81,14 +78,12 @@ decompress_setup(struct service_info *svc_info,
 	}
 	svc_info->si_desc = dc_desc;
 
-	status_desc = cpdc_get_status_desc(svc_info->si_pcr, false);
-	if (!status_desc) {
-		err = ENOMEM;
+	err = cpdc_setup_status_desc(svc_info, false);
+	if (err) {
 		OSAL_LOG_ERROR("cannot obtain dc status desc from pool! err: %d",
 				err);
 		goto out;
 	}
-	svc_info->si_status_desc = status_desc;
 
 	err = cpdc_setup_rmem_status_desc(svc_info, false);
 	if (err) {
@@ -111,7 +106,11 @@ decompress_setup(struct service_info *svc_info,
 		goto out;
 	}
 
-	fill_dc_desc(svc_info, dc_desc);
+	err = fill_dc_desc(svc_info, dc_desc);
+	if (err) {
+		OSAL_LOG_ERROR("cannot fill_dc_desc! err: %d", err);
+		goto out;
+        }
 	clear_dc_header_present(svc_info->si_desc_flags, dc_desc);
 
 	err = cpdc_setup_seq_desc(svc_info, dc_desc, 0);
@@ -237,7 +236,7 @@ decompress_read_status(struct service_info *svc_info)
 	OSAL_ASSERT(svc_info);
 
 	dc_desc = (struct cpdc_desc *) svc_info->si_desc;
-	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
+	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc.desc;
 
 	err = cpdc_common_read_status(dc_desc, status_desc);
 	if (err)
@@ -269,7 +268,7 @@ decompress_write_result(struct service_info *svc_info)
 		goto out;
 	}
 
-	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
+	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc.desc;
 	if (!status_desc) {
 		OSAL_LOG_ERROR("invalid dc status desc! err: %d", err);
 		OSAL_ASSERT(err);
@@ -306,7 +305,6 @@ static void
 decompress_teardown(struct service_info *svc_info)
 {
 	struct cpdc_desc *dc_desc;
-	struct cpdc_status_desc *status_desc;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -325,10 +323,9 @@ decompress_teardown(struct service_info *svc_info)
 	pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_src_sgl);
 
 	cpdc_teardown_rmem_dst_blist(svc_info);
-	cpdc_teardown_rmem_status_desc(svc_info, false);
+	cpdc_teardown_rmem_status_desc(svc_info);
 
-	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
-	cpdc_put_status_desc(svc_info->si_pcr, false, status_desc);
+	cpdc_teardown_status_desc(svc_info);
 
 	dc_desc = (struct cpdc_desc *) svc_info->si_desc;
 	cpdc_put_desc(svc_info, false, dc_desc);

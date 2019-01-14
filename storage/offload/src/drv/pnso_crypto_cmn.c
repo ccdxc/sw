@@ -194,6 +194,7 @@ crypto_aol_vec_sparse_get(const struct per_core_resource *pcr,
 	struct crypto_aol *aol_vec;
 	struct buffer_addr_len addr_len;
 	uint32_t num_vec_elems;
+	uint32_t elem_size;
 	uint32_t cur_count;
 	uint32_t total_len;
 	pnso_error_t err = ENOMEM;
@@ -201,7 +202,7 @@ crypto_aol_vec_sparse_get(const struct per_core_resource *pcr,
 	OSAL_ASSERT(is_power_of_2(block_size));
 	svc_aol->mpool_type = MPOOL_TYPE_CRYPTO_AOL_VECTOR;
 	svc_aol->aol = pc_res_mpool_object_get_with_num_vec_elems(pcr,
-				svc_aol->mpool_type, &num_vec_elems);
+				svc_aol->mpool_type, &num_vec_elems, &elem_size);
 	if (!svc_aol->aol) {
 		OSAL_LOG_ERROR("cannot obtain crypto aol_vec from pool");
 		goto out;
@@ -510,4 +511,56 @@ crypto_setup_seq_desc(struct service_info *svc_info, struct crypto_desc *desc)
 
 out:
 	return err;
+}
+
+pnso_error_t
+crypto_status_desc_setup(struct service_info *svc_info)
+{
+	pnso_error_t err = PNSO_OK;
+
+	err = pc_res_svc_status_get(svc_info->si_pcr,
+		MPOOL_TYPE_CRYPTO_STATUS_DESC, &svc_info->si_status_desc);
+	if (err) {
+		OSAL_LOG_ERROR("cannot obtain status desc! err: %d", err);
+		goto out;
+	}
+	memset(svc_info->si_status_desc.desc, 0,
+	       svc_info->si_status_desc.num_elems *
+	       svc_info->si_status_desc.elem_size);
+out:
+	return err;
+}
+
+void
+crypto_status_desc_teardown(struct service_info *svc_info)
+{
+	pc_res_svc_status_put(svc_info->si_pcr,	&svc_info->si_status_desc);
+}
+
+pnso_error_t
+crypto_rmem_status_desc_setup(struct service_info *svc_info)
+{
+	pnso_error_t err = PNSO_OK;
+
+	if (chn_service_has_sub_chain(svc_info)) {
+
+		/*
+		 * Note: for rmem status, the responsibility of clearing
+		 * rests with the caller.
+		 */
+		err = pc_res_svc_status_get(svc_info->si_pcr,
+				MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS,
+				&svc_info->si_istatus_desc);
+		if (err) {
+			OSAL_LOG_ERROR("cannot obtain rmem status desc! "
+					"err: %d", err);
+		}
+	}
+	return err;
+}
+
+void
+crypto_rmem_status_desc_teardown(struct service_info *svc_info)
+{
+	pc_res_svc_status_put(svc_info->si_pcr,	&svc_info->si_istatus_desc);
 }

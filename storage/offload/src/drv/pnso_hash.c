@@ -23,12 +23,15 @@ is_dflag_pblock_enabled(uint16_t flags)
 	return (flags & PNSO_HASH_DFLAG_PER_BLOCK) ? true : false;
 }
 
-static void
-fill_hash_desc(uint32_t algo_type, uint32_t buf_len, void *src_buf,
-		struct cpdc_desc *desc, struct cpdc_status_desc *status_desc)
+static int
+fill_hash_desc(struct service_info *svc_info,
+		uint32_t algo_type, uint32_t buf_len,
+		void *src_buf,
+		struct cpdc_desc *desc, uint32_t block_no)
 {
+	pnso_error_t err;
+
 	memset(desc, 0, sizeof(*desc));
-	memset(status_desc, 0, sizeof(*status_desc));
 
 	desc->cd_src = (uint64_t) sonic_virt_to_phy(src_buf);
 
@@ -46,10 +49,13 @@ fill_hash_desc(uint32_t algo_type, uint32_t buf_len, void *src_buf,
 	desc->cd_datain_len = 
 		cpdc_desc_data_len_set_eval(PNSO_SVC_TYPE_HASH, buf_len);
 
-	desc->cd_status_addr = (uint64_t) sonic_virt_to_phy(status_desc);
+        /* non-rmem status already cleared during cpdc_setup_status_desc() */
+	err = svc_status_desc_addr_get(&svc_info->si_status_desc, block_no,
+				       &desc->cd_status_addr, 0);
 	desc->cd_status_data = CPDC_HASH_STATUS_DATA;
 
 	CPDC_PPRINT_DESC(desc);
+	return err;
 }
 
 static pnso_error_t
@@ -60,7 +66,6 @@ hash_setup(struct service_info *svc_info,
 	struct pnso_hash_desc *pnso_hash_desc;
 	struct cpdc_desc *hash_desc;
 	// struct cpdc_desc *hash_desc, *bof_hash_desc;
-	struct cpdc_status_desc *status_desc;
 	struct cpdc_sgl *sgl, *bof_sgl;
 	bool per_block;
 	uint32_t num_tags;
@@ -105,14 +110,12 @@ hash_setup(struct service_info *svc_info,
 		svc_info->si_p4_bof_sgl = bof_sgl;
 	}
 
-	status_desc = cpdc_get_status_desc(svc_info->si_pcr, per_block);
-	if (!status_desc) {
-		err = ENOMEM;
+	err = cpdc_setup_status_desc(svc_info, per_block);
+	if (err) {
 		OSAL_LOG_ERROR("cannot obtain hash status desc from pool! err: %d",
 				err);
 		goto out;
 	}
-	svc_info->si_status_desc = status_desc;
 
 	err = cpdc_setup_desc_blocks(svc_info, pnso_hash_desc->algo_type,
 			fill_hash_desc);
@@ -270,7 +273,7 @@ hash_poll(struct service_info *svc_info)
 	if (err != PNSO_OK)
 		return err;
 
-	st_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
+	st_desc = (struct cpdc_status_desc *) svc_info->si_status_desc.desc;
 	if (!st_desc) {
 		err = EINVAL;
 		OSAL_LOG_ERROR("invalid hash status desc! err: %d", err);
@@ -311,7 +314,7 @@ hash_read_status(struct service_info *svc_info)
 		goto out;
 	}
 
-	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
+	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc.desc;
 	if (!status_desc) {
 		OSAL_LOG_ERROR("invalid hash status desc! err: %d", err);
 		OSAL_ASSERT(!err);
@@ -368,7 +371,7 @@ hash_write_result(struct service_info *svc_info)
 	OSAL_ASSERT(svc_info);
 
 	svc_status = svc_info->si_svc_status;
-	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
+	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc.desc;
 	if (!status_desc) {
 		OSAL_LOG_ERROR("invalid hash status desc! err: %d", err);
 		OSAL_ASSERT(!err);
@@ -409,7 +412,6 @@ static void
 hash_teardown(struct service_info *svc_info)
 {
 	struct cpdc_desc *hash_desc;
-	struct cpdc_status_desc *status_desc;
 	struct cpdc_sgl *sgl;
 	bool per_block;
 
@@ -432,8 +434,7 @@ hash_teardown(struct service_info *svc_info)
 		pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_src_sgl);
 	}
 
-	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
-	cpdc_put_status_desc(svc_info->si_pcr, per_block, status_desc);
+	cpdc_teardown_status_desc(svc_info);
 
 	sgl = (struct cpdc_sgl *) svc_info->si_p4_sgl;
 	cpdc_put_sgl(svc_info->si_pcr, per_block, sgl);

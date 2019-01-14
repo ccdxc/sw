@@ -61,23 +61,16 @@ pnso_error_t cpdc_update_service_info_bof_sgl(struct service_info *svc_info);
 struct cpdc_status_desc *cpdc_get_status_desc(struct per_core_resource *pcr,
 		bool per_block);
 
-void cpdc_put_status_desc(struct per_core_resource *pcr,
-		bool per_block, struct cpdc_status_desc *desc);
-
 pnso_error_t cpdc_setup_status_desc(struct service_info *svc_info,
 		bool per_block);
 
-struct cpdc_status_desc *cpdc_get_rmem_status_desc(
-		struct per_core_resource *pcr, bool per_block);
+void cpdc_teardown_status_desc(struct service_info *svc_info);
 
-void cpdc_put_rmem_status_desc(struct per_core_resource *pcr, bool per_block,
-		struct cpdc_status_desc *desc);
+pnso_error_t
+cpdc_setup_rmem_status_desc(struct service_info *svc_info,
+			    bool per_block);
 
-pnso_error_t cpdc_setup_rmem_status_desc(struct service_info *svc_info,
-		bool per_block);
-
-void cpdc_teardown_rmem_status_desc(struct service_info *svc_info,
-		bool per_block);
+void cpdc_teardown_rmem_status_desc(struct service_info *svc_info);
 
 struct cpdc_sgl *cpdc_get_sgl(struct per_core_resource *pcr, bool per_block);
 
@@ -104,14 +97,15 @@ uint32_t cpdc_sgl_total_len_get(const struct service_cpdc_sgl *svc_sgl);
 struct cpdc_status_desc *cpdc_get_next_status_desc(
 		struct cpdc_status_desc *desc, uint32_t object_size);
 
-typedef void (*fill_desc_fn_t) (uint32_t algo_type, uint32_t buf_len,
-		void *src_buf, struct cpdc_desc *desc,
-		struct cpdc_status_desc *status_desc);
+typedef int (*fill_desc_fn_t) (struct service_info *svc_info,
+		uint32_t algo_type,
+		uint32_t buf_len, void *src_buf,
+		struct cpdc_desc *desc, uint32_t block_no);
 
-uint32_t cpdc_fill_per_block_desc(uint32_t algo_type, uint32_t block_size,
+uint32_t cpdc_fill_per_block_desc(struct service_info *svc_info,
+		uint32_t algo_type, uint32_t block_size,
 		uint32_t src_buf_len, struct service_buf_list *svc_src_blist,
 		struct cpdc_sgl *sgl, struct cpdc_desc *desc,
-		struct cpdc_status_desc *status_desc,
 		fill_desc_fn_t fill_desc_fn);
 
 pnso_error_t

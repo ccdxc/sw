@@ -35,14 +35,13 @@ is_dflag_bypass_onfail_enabled(uint16_t flags)
 	return (flags & PNSO_CP_DFLAG_BYPASS_ONFAIL) ? true : false;
 }
 
-static void
+static int
 fill_cp_desc(struct service_info *svc_info, struct cpdc_desc *desc,
 		uint32_t threshold_len)
 {
-	struct cpdc_status_desc *status_desc = svc_info->si_status_desc;
+	pnso_error_t err;
 
 	memset(desc, 0, sizeof(*desc));
-	memset(status_desc, 0, sizeof(*status_desc));
 
 	desc->cd_src = (uint64_t) sonic_virt_to_phy(svc_info->si_src_sgl.sgl);
 	desc->cd_dst = (uint64_t) sonic_virt_to_phy(svc_info->si_dst_sgl.sgl);
@@ -60,17 +59,17 @@ fill_cp_desc(struct service_info *svc_info, struct cpdc_desc *desc,
 	desc->cd_threshold_len = cpdc_desc_data_len_set_eval(svc_info->si_type,
 					threshold_len);
 
-	if (svc_info->si_istatus_desc) {
-		desc->cd_status_addr = mpool_get_object_phy_addr(
-				MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS_DESC,
-				svc_info->si_istatus_desc);
-		osal_rmem_set(desc->cd_status_addr, 0,
-				min(sizeof(*status_desc), (size_t) 8));
-	} else
-		desc->cd_status_addr = (uint64_t)
-			sonic_virt_to_phy(status_desc);
+	if (chn_service_has_interm_status(svc_info)) {
+		err = svc_status_desc_addr_get(&svc_info->si_istatus_desc, 0,
+			&desc->cd_status_addr, CPDC_STATUS_MIN_CLEAR_SZ);
+	} else {
+		/* non-rmem status already cleared during cpdc_setup_status_desc() */
+		err = svc_status_desc_addr_get(&svc_info->si_status_desc, 0,
+					       &desc->cd_status_addr, 0);
+	}
 
 	desc->cd_status_data = CPDC_CP_STATUS_DATA;
+	return err;
 }
 
 static pnso_error_t
@@ -80,7 +79,6 @@ compress_setup(struct service_info *svc_info,
 	pnso_error_t err;
 	struct pnso_compression_desc *pnso_cp_desc;
 	struct cpdc_desc *cp_desc;
-	struct cpdc_status_desc *status_desc;
 	uint32_t threshold_len;
 
 	OSAL_LOG_DEBUG("enter ...");
@@ -98,14 +96,12 @@ compress_setup(struct service_info *svc_info,
 	}
 	svc_info->si_desc = cp_desc;
 
-	status_desc = cpdc_get_status_desc(svc_info->si_pcr, false);
-	if (!status_desc) {
-		err = ENOMEM;
+	err = cpdc_setup_status_desc(svc_info, false);
+	if (err) {
 		OSAL_LOG_ERROR("cannot obtain cp status desc from pool! err: %d",
 				err);
 		goto out;
 	}
-	svc_info->si_status_desc = status_desc;
 
 	err = cpdc_setup_rmem_status_desc(svc_info, false);
 	if (err) {
@@ -128,7 +124,11 @@ compress_setup(struct service_info *svc_info,
 		goto out;
 	}
 
-	fill_cp_desc(svc_info, cp_desc, threshold_len);
+	err = fill_cp_desc(svc_info, cp_desc, threshold_len);
+	if (err) {
+		OSAL_LOG_ERROR("cannot fill_cp_desc! err: %d", err);
+		goto out;
+        }
 
 	err = cpdc_setup_seq_desc(svc_info, cp_desc, 0);
 	if (err) {
@@ -164,7 +164,7 @@ compress_chain(struct chain_entry *centry)
 
 	svc_info = &centry->ce_svc_info;
 	cp_desc = (struct cpdc_desc *) svc_info->si_desc;
-	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
+	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc.desc;
 
 	if ((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
 		(svc_info->si_flags & CHAIN_SFLAG_LAST_SERVICE)) {
@@ -226,20 +226,24 @@ static pnso_error_t
 compress_sub_chain_from_cpdc(struct service_info *svc_info,
 			     struct cpdc_chain_params *cpdc_chain)
 {
-	/*
-	 * This is supportable when there's a valid use case.
-	 */
-	return EOPNOTSUPP;
+	cpdc_chain->ccp_cmd.ccpc_next_doorbell_en = true;
+	cpdc_chain->ccp_cmd.ccpc_next_db_action_ring_push = true;
+
+	return ring_spec_info_fill(svc_info->si_seq_info.sqi_ring,
+				   &cpdc_chain->ccp_ring_spec,
+				   svc_info->si_desc, 1);
 }
 
 static pnso_error_t
 compress_sub_chain_from_crypto(struct service_info *svc_info,
 			       struct crypto_chain_params *crypto_chain)
 {
-	/*
-	 * This is supportable when there's a valid use case.
-	 */
-	return EOPNOTSUPP;
+	crypto_chain->ccp_cmd.ccpc_next_doorbell_en = true;
+	crypto_chain->ccp_cmd.ccpc_next_db_action_ring_push = true;
+
+	return ring_spec_info_fill(svc_info->si_seq_info.sqi_ring,
+				   &crypto_chain->ccp_ring_spec,
+				   svc_info->si_desc, 1);
 }
 
 static pnso_error_t
@@ -308,7 +312,7 @@ compress_poll(struct service_info *svc_info)
 
 	OSAL_LOG_DEBUG("cp/pad lone or last service in chain");
 
-	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
+	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc.desc;
 	if(status_desc->csd_err) {
 		OSAL_LOG_DEBUG("cp failed - no need to wait for pad result");
 		goto out;
@@ -365,7 +369,7 @@ compress_read_status(struct service_info *svc_info)
 	OSAL_ASSERT(svc_info);
 
 	cp_desc = (struct cpdc_desc *) svc_info->si_desc;
-	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
+	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc.desc;
 
 	OSAL_LOG_DEBUG("sbi_num_entries: %d sbi_bulk_desc_idx: %d sbi_desc_idx: %d",
 			svc_info->si_batch_info.sbi_num_entries,
@@ -462,7 +466,7 @@ compress_write_result(struct service_info *svc_info)
 		goto out;
 	}
 
-	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
+	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc.desc;
 	if (!status_desc) {
 		OSAL_LOG_ERROR("invalid cp status desc! err: %d", err);
 		OSAL_ASSERT(err);
@@ -503,7 +507,6 @@ static void
 compress_teardown(struct service_info *svc_info)
 {
 	struct cpdc_desc *cp_desc;
-	struct cpdc_status_desc *status_desc;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -521,10 +524,9 @@ compress_teardown(struct service_info *svc_info)
 	pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_src_sgl);
 
 	cpdc_teardown_rmem_dst_blist(svc_info);
-	cpdc_teardown_rmem_status_desc(svc_info, false);
+	cpdc_teardown_rmem_status_desc(svc_info);
 
-	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
-	cpdc_put_status_desc(svc_info->si_pcr, false, status_desc);
+	cpdc_teardown_status_desc(svc_info);
 
 	cp_desc = (struct cpdc_desc *) svc_info->si_desc;
 	cpdc_put_desc(svc_info, false, cp_desc);

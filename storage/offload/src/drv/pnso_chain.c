@@ -54,9 +54,9 @@ pprint_service_info(const struct service_info *svc_info)
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_desc",
 			(uint64_t) svc_info->si_desc);
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_status_desc",
-			(uint64_t) svc_info->si_status_desc);
+			(uint64_t) svc_info->si_status_desc.desc);
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_istatus_desc",
-			(uint64_t) svc_info->si_istatus_desc);
+			(uint64_t) svc_info->si_istatus_desc.desc);
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_bof_desc",
 			(uint64_t) svc_info->si_bof_desc);
 
@@ -258,7 +258,7 @@ chn_poll_all_services(struct service_chain *chain)
 			OSAL_LOG_DEBUG("poll failed! svc_type: %d desc 0x" PRIx64 " status_desc: 0x" PRIx64 " err: %d",
 				svc_info->si_type,
 				(uint64_t) svc_info->si_desc,
-				(uint64_t) svc_info->si_status_desc,
+				(uint64_t) svc_info->si_status_desc.desc,
 				err);
 			break;
 		}
@@ -389,28 +389,31 @@ init_service_batch_params(struct batch_info *batch_info,
 }
 
 static pnso_error_t
-setup_service_param_buffers(struct pnso_service *pnso_svc,
-		struct service_params *svc_params,
-		struct service_info *svc_info,
-		struct service_buf_list *interm_blist)
+setup_service_param_buffers(struct service_info *svc_info,
+		struct service_info *svc_prev)
 {
-	switch (pnso_svc->svc_type) {
-	case PNSO_SVC_TYPE_ENCRYPT:
-	case PNSO_SVC_TYPE_DECRYPT:
-	case PNSO_SVC_TYPE_COMPRESS:
-	case PNSO_SVC_TYPE_DECOMPRESS:
-	case PNSO_SVC_TYPE_HASH:
-	case PNSO_SVC_TYPE_CHKSUM:
-		if (chn_service_is_in_chain(svc_info) &&
-				!chn_service_is_first(svc_info))
-			svc_info->si_src_blist = *interm_blist;
-		break;
-	case PNSO_SVC_TYPE_DECOMPACT:
-	case PNSO_SVC_TYPE_NONE:
-	default:
-		OSAL_ASSERT(0);
-		return EINVAL;
-	}
+	if (svc_prev) {
+		switch (svc_prev->si_type) {
+
+                case PNSO_SVC_TYPE_ENCRYPT:
+		case PNSO_SVC_TYPE_DECRYPT:
+		case PNSO_SVC_TYPE_COMPRESS:
+		case PNSO_SVC_TYPE_DECOMPRESS:
+			svc_info->si_src_blist = svc_prev->si_dst_blist;
+			break;
+
+		case PNSO_SVC_TYPE_HASH:
+		case PNSO_SVC_TYPE_CHKSUM:
+			svc_info->si_src_blist = svc_prev->si_src_blist;
+			break;
+
+                case PNSO_SVC_TYPE_DECOMPACT:
+		case PNSO_SVC_TYPE_NONE:
+		default:
+			OSAL_ASSERT(0);
+			return EINVAL;
+		}
+        }
 
 	/*
 	 * Pre-set the "service dependency" data length...As HW operation
@@ -652,7 +655,7 @@ chn_create_chain(struct request_params *req_params)
 	struct chain_entry *centry_prev = NULL;
 	struct service_info *svc_info = NULL;
 	struct service_params svc_params = { 0 };
-	struct service_buf_list interm_blist;
+	struct service_info *svc_prev = NULL;
 	uint32_t i;
 
 	OSAL_LOG_DEBUG("enter ...");
@@ -755,8 +758,7 @@ chn_create_chain(struct request_params *req_params)
 		svc_info->si_pcr = chain->sc_pcr;
 		svc_info->si_centry = centry;
 
-		setup_service_param_buffers(&req->svc[i], &svc_params,
-					svc_info, &interm_blist);
+		setup_service_param_buffers(svc_info, svc_prev);
 
 		err = svc_info->si_ops.setup(svc_info, &svc_params);
 		if (err)
@@ -768,7 +770,7 @@ chn_create_chain(struct request_params *req_params)
 
 		PPRINT_SERVICE_INFO(svc_info);
 
-		interm_blist = svc_info->si_dst_blist;
+		svc_prev = svc_info;
 		PAS_INC_NUM_SERVICES(pcr);
 	}
 	chain->sc_req_id = osal_atomic_fetch_add(&g_req_id, 1);
@@ -947,9 +949,8 @@ chn_service_deps_data_len_get(struct service_info *svc_info)
 	struct cpdc_status_desc *status_desc;
 	uint32_t len;
 
-	if ((svc_info->si_type == PNSO_SVC_TYPE_COMPRESS) ||
-		(svc_info->si_type == PNSO_SVC_TYPE_DECOMPRESS)) {
-		status_desc = svc_info->si_status_desc;
+	if (chn_service_type_is_cpdc(svc_info)) {
+		status_desc = svc_info->si_status_desc.desc;
 		len = cpdc_desc_data_len_get_eval(svc_info->si_type,
 				status_desc->csd_output_data_len);
 		chn_service_deps_data_len_set(svc_info, len);

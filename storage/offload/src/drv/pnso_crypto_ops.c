@@ -17,6 +17,7 @@
 #include "pnso_crypto.h"
 #include "pnso_crypto_cmn.h"
 #include "pnso_cpdc.h"
+#include "pnso_cpdc_cmn.h"
 #include "pnso_seq.h"
 #include "pnso_utils.h"
 #include "sonic_api_int.h"
@@ -78,24 +79,14 @@ crypto_validate_input(struct service_info *svc_info,
 	return PNSO_OK;
 }
 
-static inline void
+static inline int
 crypto_desc_fill(struct service_info *svc_info,
 		 struct pnso_crypto_desc *pnso_crypto_desc)
 {
 	struct crypto_desc *crypto_desc = svc_info->si_desc;
-	struct crypto_status_desc *status_desc = svc_info->si_status_desc;
+	pnso_error_t err;
 
 	memset(crypto_desc, 0, sizeof(*crypto_desc));
-	memset(status_desc, 0, sizeof(*status_desc));
-	if (svc_info->si_istatus_desc) {
-		crypto_desc->cd_status_addr = mpool_get_object_phy_addr(
-				MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS,
-				svc_info->si_istatus_desc);
-		osal_rmem_set(crypto_desc->cd_status_addr, 0,
-				sizeof(*status_desc));
-	} else
-		crypto_desc->cd_status_addr = sonic_virt_to_phy(status_desc);
-
 	crypto_desc->cd_in_aol = sonic_virt_to_phy(svc_info->si_src_aol.aol);
 	crypto_desc->cd_out_aol = sonic_virt_to_phy(svc_info->si_dst_aol.aol);
 
@@ -119,10 +110,20 @@ crypto_desc_fill(struct service_info *svc_info,
 	 * when chaining or async mode is involved, cd_db_addr/cd_db_data
 	 * may later be modified with other types of context data.
 	 */
+	if (chn_service_has_interm_status(svc_info)) {
+		err = svc_status_desc_addr_get(&svc_info->si_istatus_desc, 0,
+			&crypto_desc->cd_status_addr, sizeof(struct crypto_status_desc));
+        } else {
+		/* non-rmem status already cleared during crypto_status_desc_setup() */
+		err = svc_status_desc_addr_get(&svc_info->si_status_desc, 0,
+			&crypto_desc->cd_status_addr, 0);
+	}
+
 	crypto_desc->cd_db_addr = crypto_desc->cd_status_addr +
-				  sizeof(status_desc->csd_err);
+				  offsetof(struct crypto_status_desc, csd_cpl_data);
 
 	CRYPTO_PPRINT_DESC(crypto_desc);
+	return err;
 }
 
 static inline pnso_error_t
@@ -144,12 +145,10 @@ crypto_dst_blist_setup(struct service_info *svc_info,
 			return err;
 		}
 
-		svc_info->si_istatus_desc =
-		    pc_res_mpool_object_get(pcr,
-				    MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS);
-		if (!svc_info->si_istatus_desc) {
+		err = crypto_rmem_status_desc_setup(svc_info);
+		if (err) {
 			OSAL_LOG_ERROR("failed to obtain intermediate status_desc");
-			return ENOMEM;
+			return err;
 		}
 
 		if (chn_service_has_interm_blist(svc_info) &&
@@ -250,10 +249,9 @@ crypto_setup(struct service_info *svc_info,
 		return ENOMEM;
 
 	pcr = svc_info->si_pcr;
-	svc_info->si_status_desc = pc_res_mpool_object_get(pcr,
-					  MPOOL_TYPE_CRYPTO_STATUS_DESC);
-	if (!svc_info->si_status_desc)
-		return ENOMEM;
+	err = crypto_status_desc_setup(svc_info);
+	if (err)
+		return err;
 
 	err = crypto_dst_blist_setup(svc_info, svc_params);
 	if (err)
@@ -309,19 +307,26 @@ crypto_chain(struct chain_entry *centry)
 			}
 		}
 
-		crypto_chain->ccp_status_addr_0 = mpool_get_object_phy_addr(
-					MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS,
-					svc_info->si_istatus_desc);
-
-		crypto_chain->ccp_status_addr_1 =
-			sonic_virt_to_phy(svc_info->si_status_desc);
+		err = svc_status_desc_addr_get(&svc_info->si_istatus_desc, 0,
+				&crypto_chain->ccp_status_addr_0, 0);
+		if (err)
+			goto out;
+		err = svc_status_desc_addr_get(&svc_info->si_status_desc, 0,
+				&crypto_chain->ccp_status_addr_1, 0);
+		if (err)
+			goto out;
 		crypto_chain->ccp_status_len =
 			sizeof(struct crypto_status_desc);
 
 		crypto_chain->ccp_cmd.ccpc_status_dma_en = true;
 		crypto_chain->ccp_cmd.ccpc_stop_chain_on_error = true;
 
-		if (svc_info->si_type == PNSO_SVC_TYPE_DECRYPT) {
+		svc_next = chn_service_next_svc_get(svc_info);
+		OSAL_ASSERT(svc_next);
+
+		if (chn_service_type_is_decrypt(svc_info) &&
+		    chn_service_type_is_cpdc(svc_next)) {
+
 			err = pc_res_sgl_vec_packed_get(svc_info->si_pcr,
 				    &svc_info->si_dst_blist,
 				    svc_info->si_block_size,
@@ -341,16 +346,13 @@ crypto_chain(struct chain_entry *centry)
 				sonic_virt_to_phy(svc_info->si_src_sgl.sgl);
 		}
 
-
-		svc_next = chn_service_next_svc_get(svc_info);
-		OSAL_ASSERT(svc_next);
 		err = svc_next->si_ops.sub_chain_from_crypto(svc_next,
 				crypto_chain);
 		if (!err)
 			err = seq_setup_crypto_chain(svc_info,
 					svc_info->si_desc);
 	}
-
+out:
 	if (err)
 		OSAL_LOG_ERROR("failed seq_setup_crypto_chain: err %d", err);
 
@@ -509,10 +511,10 @@ crypto_poll(struct service_info *svc_info)
 			crypto_chain->ccp_cmd.ccpc_intr_en)
 		goto out;
 
-	status_desc = svc_info->si_status_desc;
+	status_desc = svc_info->si_status_desc.desc;
 
-	cpl_data = svc_info->si_type == PNSO_SVC_TYPE_DECRYPT ?
-		CRYPTO_DECRYPT_CPL_DATA : CRYPTO_ENCRYPT_CPL_DATA;
+	cpl_data = chn_service_type_is_decrypt(svc_info) ?
+		   CRYPTO_DECRYPT_CPL_DATA : CRYPTO_ENCRYPT_CPL_DATA;
 
 	/* sync-mode ... */
 	start_ts = svc_poll_expiry_start(svc_info);
@@ -553,7 +555,7 @@ crypto_read_status(struct service_info *svc_info)
 	pnso_error_t err;
 
 	svc_status = svc_info->si_svc_status;
-	status_desc = svc_info->si_status_desc;
+	status_desc = svc_info->si_status_desc.desc;
 	err = status_desc->csd_err;
 	if (err) {
 		OSAL_LOG_ERROR("hw error reported: %d", err);
@@ -619,15 +621,12 @@ crypto_teardown(struct service_info *svc_info)
 	seq_cleanup_crypto_chain(svc_info);
 	seq_cleanup_desc(svc_info);
 
-	pc_res_mpool_object_put(pcr, MPOOL_TYPE_CRYPTO_STATUS_DESC,
-				svc_info->si_status_desc);
-
+	crypto_status_desc_teardown(svc_info);
 	crypto_put_desc(svc_info, false, svc_info->si_desc);
 
 	putil_put_interm_buf_list(svc_info);
 
-	pc_res_mpool_object_put(pcr, MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS,
-				svc_info->si_istatus_desc);
+	crypto_rmem_status_desc_teardown(svc_info);
 	pc_res_sgl_pdma_put(pcr, svc_info->si_sgl_pdma);
 	pc_res_sgl_put(pcr, &svc_info->si_src_sgl);
 

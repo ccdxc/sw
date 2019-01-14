@@ -58,7 +58,7 @@ cpdc_poll(const struct service_info *svc_info,
 
 	if (status_desc == NULL)
 		status_desc =
-			(struct cpdc_status_desc *) svc_info->si_status_desc;
+			(struct cpdc_status_desc *) svc_info->si_status_desc.desc;
 
 	start_ts = svc_poll_expiry_start(svc_info);
 	while (1) {
@@ -479,89 +479,84 @@ cpdc_put_batch_bulk_desc(struct mem_pool *mpool, struct cpdc_desc *desc)
 	mpool_put_object(mpool, desc);
 }
 
-struct cpdc_status_desc *
-cpdc_get_status_desc(struct per_core_resource *pcr, bool per_block)
+static inline enum mem_pool_type
+cpdc_get_status_type(bool per_block)
 {
-	struct mem_pool *mpool;
-
-	mpool = per_block ? pcr->mpools[MPOOL_TYPE_CPDC_STATUS_DESC_VECTOR] :
-		pcr->mpools[MPOOL_TYPE_CPDC_STATUS_DESC];
-
-	return (struct cpdc_status_desc *) mpool_get_object(mpool);
-}
-
-void
-cpdc_put_status_desc(struct per_core_resource *pcr, bool per_block,
-		struct cpdc_status_desc *desc)
-{
-	struct mem_pool *mpool;
-
-	mpool = per_block ? pcr->mpools[MPOOL_TYPE_CPDC_STATUS_DESC_VECTOR] :
-		pcr->mpools[MPOOL_TYPE_CPDC_STATUS_DESC];
-
-	mpool_put_object(mpool, desc);
-}
-
-struct cpdc_status_desc *
-cpdc_get_rmem_status_desc(struct per_core_resource *pcr, bool per_block)
-{
-	struct mem_pool *mpool;
-
-	mpool = per_block ?
-		pcr->mpools[MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS_DESC_VECTOR] :
-		pcr->mpools[MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS_DESC];
-
-	return (struct cpdc_status_desc *) mpool_get_object(mpool);
-}
-
-void
-cpdc_put_rmem_status_desc(struct per_core_resource *pcr, bool per_block,
-		struct cpdc_status_desc *desc)
-{
-	struct mem_pool *mpool;
-
-	mpool = per_block ?
-		pcr->mpools[MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS_DESC_VECTOR] :
-		pcr->mpools[MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS_DESC];
-
-	mpool_put_object(mpool, desc);
-}
-
-void
-cpdc_teardown_rmem_status_desc(struct service_info *svc_info, bool per_block)
-{
-	struct per_core_resource *pcr;
-
-	pcr = svc_info->si_pcr;
-	if ((chn_service_has_sub_chain(svc_info) ||
-		((svc_info->si_type == PNSO_SVC_TYPE_COMPRESS) &&
-		 (svc_info->si_desc_flags & PNSO_CP_DFLAG_ZERO_PAD))))
-		cpdc_put_rmem_status_desc(pcr, per_block,
-				svc_info->si_istatus_desc);
+	return per_block ?
+		MPOOL_TYPE_CPDC_STATUS_DESC_VECTOR :
+		MPOOL_TYPE_CPDC_STATUS_DESC;
 }
 
 pnso_error_t
-cpdc_setup_rmem_status_desc(struct service_info *svc_info, bool per_block)
+cpdc_setup_status_desc(struct service_info *svc_info,
+		       bool per_block)
 {
-	pnso_error_t err;
+	pnso_error_t err = PNSO_OK;
 	struct per_core_resource *pcr;
-	struct cpdc_status_desc *status_desc;
+
+	pcr = svc_info->si_pcr;
+	err = pc_res_svc_status_get(pcr,
+			cpdc_get_status_type(per_block),
+			&svc_info->si_status_desc);
+	if (err) {
+		OSAL_LOG_ERROR("cannot obtain status desc! "
+				"svc_type: %d per_block: %d err: %d",
+				svc_info->si_type, per_block, err);
+		goto out;
+	}
+	memset(svc_info->si_status_desc.desc, 0,
+	       svc_info->si_status_desc.num_elems *
+	       svc_info->si_status_desc.elem_size);
+out:
+	return err;
+}
+
+void
+cpdc_teardown_status_desc(struct service_info *svc_info)
+{
+	pc_res_svc_status_put(svc_info->si_pcr,
+			&svc_info->si_status_desc);
+}
+
+static inline enum mem_pool_type
+cpdc_get_rmem_status_type(bool per_block)
+{
+	return per_block ?
+		MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS_DESC_VECTOR :
+		MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS_DESC;
+}
+
+void
+cpdc_teardown_rmem_status_desc(struct service_info *svc_info)
+{
+	pc_res_svc_status_put(svc_info->si_pcr,	&svc_info->si_istatus_desc);
+}
+
+pnso_error_t
+cpdc_setup_rmem_status_desc(struct service_info *svc_info,
+			    bool per_block)
+{
+	pnso_error_t err = PNSO_OK;
+	struct per_core_resource *pcr;
 
 	pcr = svc_info->si_pcr;
 	if (chn_service_has_sub_chain(svc_info) ||
-		((svc_info->si_type == PNSO_SVC_TYPE_COMPRESS) &&
-		 (svc_info->si_desc_flags & PNSO_CP_DFLAG_ZERO_PAD))) {
-		status_desc = cpdc_get_rmem_status_desc(pcr, per_block);
-		if (!status_desc) {
-			err = ENOMEM;
-			OSAL_LOG_ERROR("cannot obtain rmem status desc! svc_type: %d per_block: %d err: %d",
+	    chn_service_is_padding_applic(svc_info)) {
+
+		/*
+		 * Note: for rmem status, the responsibility of clearing
+		 * rests with the caller.
+		 */
+		err = pc_res_svc_status_get(pcr,
+				cpdc_get_rmem_status_type(per_block),
+				&svc_info->si_istatus_desc);
+		if (err) {
+			OSAL_LOG_ERROR("cannot obtain rmem status desc! "
+					"svc_type: %d per_block: %d err: %d",
 					svc_info->si_type, per_block, err);
 			goto out;
 		}
-		svc_info->si_istatus_desc = status_desc;
 	}
-
-	return PNSO_OK;
 out:
 	return err;
 }
@@ -618,29 +613,27 @@ cpdc_update_service_info_bof_sgl(struct service_info *svc_info)
 }
 
 uint32_t
-cpdc_fill_per_block_desc(uint32_t algo_type, uint32_t block_size,
+cpdc_fill_per_block_desc(struct service_info *svc_info,
+		uint32_t algo_type, uint32_t block_size,
 		uint32_t src_buf_len, struct service_buf_list *svc_blist,
 		struct cpdc_sgl *sgl, struct cpdc_desc *desc,
-		struct cpdc_status_desc *status_desc,
 		fill_desc_fn_t fill_desc_fn)
 {
 	pnso_error_t err;
 	struct cpdc_desc *pb_desc;
-	struct cpdc_status_desc *pb_status_desc;
 	struct cpdc_sgl *pb_sgl;
-	uint32_t desc_object_size, status_object_size, sgl_object_size;
+	uint32_t desc_object_size, sgl_object_size;
 	uint32_t block_cnt, pb_len, total_len, i = 0;
 	struct buffer_list_iter buffer_list_iter;
 	struct buffer_list_iter *iter;
 	struct buffer_addr_len addr_len;
+	pnso_error_t err;
 
 	block_cnt = REQ_SZ_TO_NUM_BLKS(svc_blist->len, block_size);
 	pb_desc = desc;
-	pb_status_desc = status_desc;
 	pb_sgl = sgl;
 
        desc_object_size = cpdc_get_desc_size();
-       status_object_size = cpdc_get_status_desc_size();
        sgl_object_size = cpdc_get_sgl_size();
 
        total_len = svc_blist->len;
@@ -678,13 +671,13 @@ cpdc_fill_per_block_desc(uint32_t algo_type, uint32_t block_size,
 		       goto out;
 	       }
 
-	       fill_desc_fn(algo_type, pb_len, pb_sgl, pb_desc, pb_status_desc);
-
+	       err = fill_desc_fn(svc_info, algo_type, pb_len, pb_sgl, pb_desc, i);
+	       if (err) {
+			OSAL_LOG_ERROR("fill_desc_fn block %u err: %d",
+					i, err);
+			goto out;
+	       }
 	       pb_desc = get_next_desc(pb_desc, desc_object_size);
-
-	       pb_status_desc = cpdc_get_next_status_desc(pb_status_desc,
-			       status_object_size);
-
 	       pb_sgl = get_next_sgl(pb_sgl, sgl_object_size);
        }
 
@@ -705,11 +698,11 @@ cpdc_setup_desc_blocks(struct service_info *svc_info, uint32_t algo_type,
 
 	desc = svc_info->si_desc;
 	if (svc_info->si_flags & CHAIN_SFLAG_PER_BLOCK) {
-		num_tags = cpdc_fill_per_block_desc(algo_type,
+		num_tags = cpdc_fill_per_block_desc(svc_info, algo_type,
 				svc_info->si_block_size,
 				svc_info->si_src_blist.len,
 				&svc_info->si_src_blist, svc_info->si_p4_sgl,
-				svc_info->si_desc, svc_info->si_status_desc,
+				svc_info->si_desc,
 				fill_desc_fn);
 		if (num_tags == 0) {
 			err = EINVAL;
@@ -726,13 +719,12 @@ cpdc_setup_desc_blocks(struct service_info *svc_info, uint32_t algo_type,
 					svc_info->si_type, num_tags,
 					(uint64_t) desc, (uint64_t) bof_desc);
 
-			num_tags = cpdc_fill_per_block_desc(
+			num_tags = cpdc_fill_per_block_desc(svc_info,
 					algo_type,
 					svc_info->si_block_size,
 					svc_info->si_bof_blist.len,
 					&svc_info->si_bof_blist,
 					svc_info->si_p4_bof_sgl,
-					bof_desc, svc_info->si_status_desc,
 					fill_desc_fn);
 			if (num_tags == 0) {
 				err = EINVAL;
@@ -751,9 +743,9 @@ cpdc_setup_desc_blocks(struct service_info *svc_info, uint32_t algo_type,
 			goto out;
 		}
 
-		fill_desc_fn(algo_type, svc_info->si_src_blist.len,
+		fill_desc_fn(svc_info, algo_type, svc_info->si_src_blist.len,
 				svc_info->si_src_sgl.sgl,
-				svc_info->si_desc, svc_info->si_status_desc);
+				svc_info->si_desc, 0);
 
 		if (svc_info->si_flags & CHAIN_SFLAG_BYPASS_ONFAIL) {
 			bof_desc = (struct cpdc_desc *) ((char *) desc +
@@ -769,9 +761,8 @@ cpdc_setup_desc_blocks(struct service_info *svc_info, uint32_t algo_type,
 				goto out;
 			}
 
-			fill_desc_fn(algo_type, svc_info->si_bof_blist.len,
-					svc_info->si_bof_sgl.sgl, bof_desc,
-					svc_info->si_status_desc);
+			fill_desc_fn(svc_info, algo_type, svc_info->si_bof_blist.len,
+					svc_info->si_bof_sgl.sgl, bof_desc, 0);
 		}
 
 		num_tags = 1;
