@@ -38,9 +38,7 @@ public:
     virtual sdk_ret_t asic_init(void) override;
 
 private:
-    capri_impl() {
-        catalog_ = NULL;
-    }
+    capri_impl() {}
 
     ~capri_impl() {}
 
@@ -52,7 +50,6 @@ private:
     sdk_ret_t init_(asic_cfg_t *asic_cfg);
 
 private:
-    sdk::lib::catalog    *catalog_;
     asic_cfg_t           asic_cfg_;
 };
 
