@@ -624,7 +624,6 @@ cpdc_fill_per_block_desc(struct service_info *svc_info,
 	struct buffer_list_iter buffer_list_iter;
 	struct buffer_list_iter *iter;
 	struct buffer_addr_len addr_len;
-	pnso_error_t err;
 
 	block_cnt = REQ_SZ_TO_NUM_BLKS(svc_blist->len, block_size);
 	pb_desc = desc;
@@ -722,6 +721,7 @@ cpdc_setup_desc_blocks(struct service_info *svc_info, uint32_t algo_type,
 					svc_info->si_bof_blist.len,
 					&svc_info->si_bof_blist,
 					svc_info->si_p4_bof_sgl,
+					bof_desc,
 					fill_desc_fn);
 			if (num_tags == 0) {
 				err = EINVAL;

@@ -34,7 +34,7 @@ tests:
         - size_compare:
             idx: 2
             file1: '1_cksum_per_block.bin'
-            val: 8
+            val: 16
         - size_compare:
             idx: 3
             type: lt

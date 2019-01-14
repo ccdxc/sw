@@ -37,7 +37,7 @@ tests:
         - size_compare:
             idx: 2
             file1: '1_cksum_full.bin'
-            val: 4
+            val: 8
         - size_compare:
             idx: 3
             type: lt

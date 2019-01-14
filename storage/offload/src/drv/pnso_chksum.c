@@ -20,7 +20,7 @@
 static int
 fill_chksum_desc(struct service_info *svc_info,
 		uint32_t algo_type, uint32_t buf_len,
-		bool void *src_buf,
+		void *src_buf,
 		struct cpdc_desc *desc, uint32_t block_no)
 {
 	pnso_error_t err;

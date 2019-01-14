@@ -11,7 +11,7 @@ svc_chains:
         - chksum:
             algo_type: 'madler32'
             flags: 'per_block' #Not sure about plain chksum per NetApp
-            output_file: '%test_id%_cksum_per_block.bin'
+            output_file: '%test_id%_chksum_per_block.bin'
         - encrypt:
             key_idx: 1
             iv_data: 000102030405060708090a0b0c0d0e0f
@@ -19,7 +19,7 @@ svc_chains:
         - chksum:
             algo_type: 'madler32'
             flags: 'per_block' #How to add Cipher chksum per NetApp
-            output_file: '%test_id%_cksum_per_block1.bin'
+            output_file: '%test_id%_chksum_per_block1.bin'
 
 tests:
   - test:
@@ -38,8 +38,8 @@ tests:
         - size_compare:
             idx: 2
             file1: '1_chksum_per_block.bin'
-            val: 8
+            val: 16
         - size_compare:
             idx: 1
             file1: '1_chksum_per_block1.bin'
-            val: 4
+            val: 16

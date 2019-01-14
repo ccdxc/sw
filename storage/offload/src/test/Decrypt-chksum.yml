@@ -26,7 +26,7 @@ svc_chains:
         - chksum:
             algo_type: 'madler32'
             flags: 'per_block'
-            output_file: '%test_id%_cksum_per_block.bin'
+            output_file: '%test_id%_chksum_per_block.bin'
 
 tests:
   - test:
@@ -72,9 +72,9 @@ tests:
         - size_compare:
             idx: 2
             type: eq
-            file1: '1_decrypted.bin'
+            file1: '2_decrypted.bin'
             val: 8192
         - size_compare:
             idx: 3
-            file1: '1_chksum_per_block.bin'
-            val: 8
+            file1: '2_chksum_per_block.bin'
+            val: 16

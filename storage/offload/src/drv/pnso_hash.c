@@ -49,9 +49,8 @@ fill_hash_desc(struct service_info *svc_info,
 	desc->cd_datain_len = 
 		cpdc_desc_data_len_set_eval(PNSO_SVC_TYPE_HASH, buf_len);
 
-        /* non-rmem status already cleared during cpdc_setup_status_desc() */
 	err = svc_status_desc_addr_get(&svc_info->si_status_desc, block_no,
-				       &desc->cd_status_addr, 0);
+			       &desc->cd_status_addr, CPDC_STATUS_MIN_CLEAR_SZ);
 	desc->cd_status_data = CPDC_HASH_STATUS_DATA;
 
 	CPDC_PPRINT_DESC(desc);
