@@ -10,7 +10,7 @@
 #include "nic/hal/apollo/api/impl/mapping_impl.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
-#include "nic/p4/apollo/include/defines.h"
+#include "nic/apollo/p4/include/defines.h"
 
 #include "nic/sdk/lib/table/memhash/mem_hash.hpp"
 

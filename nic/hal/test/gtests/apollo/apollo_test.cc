@@ -20,9 +20,9 @@
 #include "nic/sdk/asic/rw/asicrw.hpp"
 #include "nic/utils/pack_bytes/pack_bytes.hpp"
 #include "nic/hal/pd/globalpd/gpd_utils.hpp"
-#include "nic/p4/apollo/include/defines.h"
-#include "nic/p4/apollo/include/table_sizes.h"
-#include "nic/p4/apollo/include/slacl_defines.h"
+#include "nic/apollo/p4/include/defines.h"
+#include "nic/apollo/p4/include/table_sizes.h"
+#include "nic/apollo/p4/include/slacl_defines.h"
 #include "gen/p4gen/apollo/include/p4pd.h"
 #include "nic/utils/pack_bytes/pack_bytes.hpp"
 

@@ -1,7 +1,7 @@
 #include "apollo_rxdma.h"
 #include "INGRESS_p.h"
 #include "ingress.h"
-#include "../../../p4/apollo/include/slacl_defines.h"
+#include "../../p4/include/slacl_defines.h"
 
 struct phv_                 p;
 struct slacl_sport_lpm_s0_k k;
