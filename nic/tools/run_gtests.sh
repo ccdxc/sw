@@ -59,6 +59,7 @@ ${CMD_OPTS} nwsec_prof_upgrade_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/
 ${CMD_OPTS} vrf_upgrade_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/vrf_upgrade_test.xml"
 ${CMD_OPTS} filter_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/filter_test.xml"
 ${CMD_OPTS} mgmt_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/mgmt_test.xml"
+${CMD_OPTS} snake_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/snake_test.xml"
 
 #${CMD_OPTS} fmiss_learn_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/fmiss_learn_test.xml"
 #${CMD_OPTS} arp_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/arp_test.xml"
