@@ -487,7 +487,7 @@ compress_write_result(struct service_info *svc_info)
 
 		/* propagate error code; for perf, keep log level higher */
 		OSAL_LOG_DEBUG("hw error reported! csd_err: %d err: %d",
-				status_desc->csd_err, err);
+				status_desc->csd_err, svc_status->err);
 		goto pass_err;
 	}
 
