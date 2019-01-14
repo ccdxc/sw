@@ -87,7 +87,7 @@ chksum_setup(struct service_info *svc_info,
 	}
 	svc_info->si_p4_sgl = sgl;
 
-	if (svc_info->si_flags & CHAIN_SFLAG_PER_BLOCK) {
+	if (svc_info->si_flags & CHAIN_SFLAG_BYPASS_ONFAIL) {
 		bof_sgl = cpdc_get_sgl(svc_info->si_pcr, per_block);
 		if (!bof_sgl) {
 			err = ENOMEM;
@@ -422,7 +422,7 @@ chksum_teardown(struct service_info *svc_info)
 	sgl = (struct cpdc_sgl *) svc_info->si_p4_sgl;
 	cpdc_put_sgl(svc_info->si_pcr, per_block, sgl);
 
-	if (svc_info->si_flags & CHAIN_SFLAG_PER_BLOCK) {
+	if (svc_info->si_flags & CHAIN_SFLAG_BYPASS_ONFAIL) {
 		sgl = (struct cpdc_sgl *) svc_info->si_p4_bof_sgl;
 		cpdc_put_sgl(svc_info->si_pcr, per_block, sgl);
 	}
