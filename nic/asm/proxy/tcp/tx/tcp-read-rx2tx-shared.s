@@ -35,29 +35,30 @@ tcp_tx_read_rx2tx_shared_process:
     .brbegin
         // priorities are 0 (highest) to 7 (lowest)
         // The rightmost value specifies the priority of r7[0]
-        // tx ring (5) is highest priority so that we finish pending activity
-        brpri        r7[7:0], [1,3,0,5,7,6,4,2]
+        // fast timer ring is set to highest priority so we handle timer
+        // in all cases (example window full also)
+        brpri        r7[7:0], [1,4,2,6,7,0,5,3]
         nop
             .brcase 0
-                b tcp_tx_launch_sesq            // prio 2
+                b tcp_tx_launch_sesq            // prio 3
                 nop
             .brcase 1
-                b tcp_tx_send_ack               // prio 4
+                b tcp_tx_send_ack               // prio 5
                 nop
             .brcase 2
-                b tcp_tx_ft_expired             // prio 6
+                b tcp_tx_ft_expired             // prio 0
                 nop
             .brcase 3
                 b tcp_tx_del_ack                // prio 7
                 nop
             .brcase 4
-                b tcp_tx_launch_asesq           // prio 5
+                b tcp_tx_launch_asesq           // prio 6
                 nop
             .brcase 5
-                b tcp_tx_launch_pending_tx      // prio 0
+                b tcp_tx_launch_pending_tx      // prio 2
                 nop
             .brcase 6
-                b tcp_tx_fast_retrans           // prio 3
+                b tcp_tx_fast_retrans           // prio 4
                 nop
             .brcase 7
                 b tcp_tx_clean_retx             // prio 1
@@ -196,14 +197,20 @@ tcp_tx_launch_asesq_end:
  *****************************************************************************/
 tcp_tx_launch_pending_tx:
     // if sesq_tx_ci is invalid, quit
-    bbeq            d.sesq_tx_ci[15], 1, tcp_tx_abort
+    bbeq            d.sesq_tx_ci[15], 1, tcp_tx_launch_pending_abort
 
+    phvwr           p.to_s5_window_open, 1
     tblwr           d.{ci_0}.hx, d.sesq_tx_ci
     tblwr           d.sesq_tx_ci, TCP_TX_INVALID_SESQ_TX_CI
-    phvwr           p.to_s5_window_open, 1
     b               tcp_tx_launch_sesq
+ tcp_tx_launch_pending_abort:
     tblwr           d.{ci_5}.hx, d.{pi_5}.hx
 
+    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
+    /* data will be in r3 */
+    CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid)
+    phvwri.e        p.p4_intr_global_drop, 1
+    memwr.dx        r4, r3
 
 /******************************************************************************
  * tcp_tx_send_ack
@@ -405,8 +412,8 @@ tcp_tx_fast_retrans:
  * tcp_tx_ft_expired
  *****************************************************************************/
 tcp_tx_ft_expired:
-    seq             c1, d.rto, 0
-    seq             c2, d.ato, 0
+    seq             c1, d.rto_deadline, 0
+    seq             c2, d.ato_deadline, 0
     bcf             [c1 & c2], tcp_tx_stop_perpetual_timer_and_exit
     nop
 #ifdef HW
@@ -415,7 +422,7 @@ tcp_tx_ft_expired:
     // Don't restart perpetual timer in simulation unless testing retx timer
     // and rto is non-zero
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_START_RETX_TIMER, TCP_TX_DDOL_START_RETX_TIMER
-    sne.c1          c1, d.rto, 0
+    sne.c1          c1, d.rto_deadline, 0
     bal.c1          r7, tcp_tx_start_perpetual_timer
 #endif
     /*
@@ -431,16 +438,16 @@ tcp_tx_ft_expired:
      * Check if rto-- == 1
      * If TRUE, we want to do timeout handling
      */
-    seq             c1, d.rto, 1
-    tblssub         d.rto, 1
+    seq             c1, d.rto_deadline, 1
+    tblssub         d.rto_deadline, 1
 
     /*
      * Check if ato-- == 1
      * If TRUE, we want to do delack handling
      */
-    seq             c2, d.ato, 1
+    seq             c2, d.ato_deadline, 1
     setcf           c3, [c1 & c2]
-    tblssub.!c3     d.ato, 1
+    tblssub.!c3     d.ato_deadline, 1
     tbladd.f        d.{ci_2}.hx, 1
 
     // Ring doorbell to clear scheduler if necessary

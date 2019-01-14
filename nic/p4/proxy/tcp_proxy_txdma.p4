@@ -7,7 +7,7 @@
 
 /******************************************************************************
  * Table names
- * 
+ *
  * Table names have to alphabetically be in chronological order (to match with
  * common program table names), so they need * to be prefixed by stage# and
  * table#
@@ -122,10 +122,10 @@ header_type rx2tx_d_t {
         debug_dol_tblsetaddr : 8;
 
         // delayed ack timeout decremented on every timer tick
-        ato : 16;               // offset 48 (TCP_TCB_RX2TX_ATO_OFFSET)
+        ato_deadline : 16;      // offset 48 (TCP_TCB_RX2TX_ATO_OFFSET)
 
         // retransmission timeout decremented on every timer tick
-        rto : 16;               // offset 50 (TCP_TCB_RX2TX_RTO_OFFSET)
+        rto_deadline : 16;      // offset 50 (TCP_TCB_RX2TX_RTO_OFFSET)
 
         debug_dol_tx : 16;
 
@@ -532,7 +532,8 @@ metadata dma_cmd_phv2mem_t tx2rx_dma;        // dma cmd 8
 rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0,ci_0, pi_1, ci_1,\
 pi_2, ci_2, pi_3, ci_3, pi_4, ci_4, pi_5, ci_5, pi_6, ci_6,\
 pi_7, ci_7, sesq_tx_ci, sesq_retx_ci, asesq_retx_ci, clean_retx_pending,\
-debug_dol_tblsetaddr, ato, rto, debug_dol_tx, sesq_base, perpetual_timer_started
+debug_dol_tblsetaddr, ato_deadline, rto_deadline, debug_dol_tx, sesq_base,\
+perpetual_timer_started
 
 #define GENERATE_RX2TX_D                                                                               \
     modify_field(rx2tx_d.rsvd, rsvd);                                                                  \
@@ -564,8 +565,8 @@ debug_dol_tblsetaddr, ato, rto, debug_dol_tx, sesq_base, perpetual_timer_started
     modify_field(rx2tx_d.asesq_retx_ci, asesq_retx_ci);                                                \
     modify_field(rx2tx_d.clean_retx_pending, clean_retx_pending);                                      \
     modify_field(rx2tx_d.debug_dol_tblsetaddr, debug_dol_tblsetaddr);                                  \
-    modify_field(rx2tx_d.ato, ato);                                                                    \
-    modify_field(rx2tx_d.rto, rto);                                                                    \
+    modify_field(rx2tx_d.ato_deadline, ato_deadline);                                                  \
+    modify_field(rx2tx_d.rto_deadline, rto_deadline);                                                  \
     modify_field(rx2tx_d.debug_dol_tx, debug_dol_tx);                                                  \
     modify_field(rx2tx_d.sesq_base, sesq_base);                                                        \
     modify_field(rx2tx_d.perpetual_timer_started, perpetual_timer_started);                            \
@@ -611,7 +612,7 @@ action read_rx2tx(RX2TX_PARAMS) {
  * Stage 1 table 0 action
  */
 action read_rx2tx_extra(
-       rcv_nxt, snd_wnd, rcv_wnd, rto, ato_deadline, snd_una, rcv_tsval, srtt_us,
+       rcv_nxt, snd_wnd, rcv_wnd, rto, snd_una, rcv_tsval, srtt_us,
        prior_ssthresh, high_seq, ooo_datalen,
        reordering, undo_retrans, snd_ssthresh, loss_cwnd,
        write_seq, rcv_mss, state, ca_state, ecn_flags, num_sacks,
@@ -637,7 +638,6 @@ action read_rx2tx_extra(
     modify_field(rx2tx_extra_d.snd_wnd, snd_wnd);
     modify_field(rx2tx_extra_d.rcv_wnd, rcv_wnd);
     modify_field(rx2tx_extra_d.rto, rto);
-    modify_field(rx2tx_extra_d.ato_deadline, ato_deadline);
     modify_field(rx2tx_extra_d.snd_una, snd_una);
     modify_field(rx2tx_extra_d.rcv_tsval, rcv_tsval);
     modify_field(rx2tx_extra_d.srtt_us, srtt_us);

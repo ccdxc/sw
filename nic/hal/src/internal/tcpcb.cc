@@ -517,6 +517,8 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_stats()->set_sesq_tx_ci(rtcpcb.sesq_tx_ci);
     rsp->mutable_stats()->set_tx_ring_pi(rtcpcb.tx_ring_pi);
     rsp->mutable_stats()->set_partial_ack_cnt(rtcpcb.partial_ack_cnt);
+    rsp->mutable_stats()->set_rto_deadline(rtcpcb.rto_deadline);
+    rsp->mutable_stats()->set_ato_deadline(rtcpcb.ato_deadline);
 
     rsp->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;

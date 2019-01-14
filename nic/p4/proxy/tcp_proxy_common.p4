@@ -49,7 +49,6 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         snd_wnd                         : 16                    ;\
         rcv_wnd                         : 16                    ;\
         rto                             : 16                    ;\
-        ato_deadline                    : TS_WIDTH              ;\
         snd_una                         : SEQ_NUMBER_WIDTH      ;\
         rcv_tsval                       : TS_WIDTH              ;\
         srtt_us                         : TS_WIDTH              ;\

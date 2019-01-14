@@ -989,6 +989,8 @@ p4pd_get_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd)
 
     tcpcb_pd->tcpcb->debug_dol_tblsetaddr = data.u.read_rx2tx_d.debug_dol_tblsetaddr;
     tcpcb_pd->tcpcb->fast_timer_ci = data.u.read_rx2tx_d.ci_2;
+    tcpcb_pd->tcpcb->rto_deadline = ntohs(data.u.read_rx2tx_d.rto_deadline);
+    tcpcb_pd->tcpcb->ato_deadline = ntohs(data.u.read_rx2tx_d.ato_deadline);
 
     HAL_TRACE_DEBUG("Received sesq_base: {:#x}", tcpcb_pd->tcpcb->sesq_base);
     HAL_TRACE_DEBUG("Received sesq_pi: {:#x}", tcpcb_pd->tcpcb->sesq_pi);

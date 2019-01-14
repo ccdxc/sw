@@ -506,6 +506,8 @@ message TcpCbStats {
   uint32                asesq_retx_ci              = 10024;
   uint32                tx_ring_pi                 = 10025;
   uint32                partial_ack_cnt            = 10026;
+  uint32                ato_deadline               = 10027;
+  uint32                rto_deadline               = 10028;
 }
 
 // TcpCbGetResponse captures all the information about a tcpcb

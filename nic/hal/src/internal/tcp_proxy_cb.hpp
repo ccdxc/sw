@@ -131,6 +131,8 @@ typedef struct tcpcb_s {
     uint32_t              partial_ack_cnt;
     bool                  delay_ack;
     uint32_t              ato;
+    uint32_t              ato_deadline;
+    uint32_t              rto_deadline;
 
     // PD state
     void                  *pd;                     // all PD specific state

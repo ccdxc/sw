@@ -343,4 +343,6 @@ func showTCPStats(resp *halproto.TcpCbGetResponse) {
 	fmt.Printf("%-30s : %-6d\n", "packets_out", stats.PacketsOut)
 	fmt.Printf("%-30s : %-6d\n", "tx_ring_pi", stats.TxRingPi)
 	fmt.Printf("%-30s : %-6d\n", "partial_ack_cnt", stats.PartialAckCnt)
+	fmt.Printf("%-30s : %-6d\n", "rto_deadline", stats.RtoDeadline)
+	fmt.Printf("%-30s : %-6d\n", "ato_deadline", stats.AtoDeadline)
 }
