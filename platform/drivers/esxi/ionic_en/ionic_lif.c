@@ -2229,8 +2229,8 @@ ionic_lif_init(struct lif *lif)
 */
         init_state = VMK_UPLINK_STATE_ENABLED |
                      VMK_UPLINK_STATE_BROADCAST_OK |
-                     VMK_UPLINK_STATE_MULTICAST_OK;// |
-//                     VMK_UPLINK_STATE_PROMISC;
+                     VMK_UPLINK_STATE_MULTICAST_OK |
+                     VMK_UPLINK_STATE_PROMISC;
 
         ionic_set_rx_mode(lif, init_state);
 
