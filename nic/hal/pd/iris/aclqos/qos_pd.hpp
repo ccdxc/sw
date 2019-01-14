@@ -73,13 +73,13 @@ inline std::ostream& operator<<(std::ostream& os, const struct pd_qos_class_s& s
 {
     os << fmt::format("{{");
     os << fmt::format("uplink iq {} ", s.uplink.iq);
-    for (unsigned i = 0; i < HAL_ARRAY_SIZE(s.txdma); i++) {
+    for (unsigned i = 0; i < SDK_ARRAY_SIZE(s.txdma); i++) {
         os << fmt::format("txdma iq {} ", s.txdma[i].iq);
     }
-    for (unsigned i = 0; i < HAL_ARRAY_SIZE(s.p4_ig_q); i++) {
+    for (unsigned i = 0; i < SDK_ARRAY_SIZE(s.p4_ig_q); i++) {
         os << fmt::format("p4_ig_q iq {} ", s.p4_ig_q[i]);
     }
-    for (unsigned i = 0; i < HAL_ARRAY_SIZE(s.p4_eg_q); i++) {
+    for (unsigned i = 0; i < SDK_ARRAY_SIZE(s.p4_eg_q); i++) {
         os << fmt::format("p4_eg_q iq {} ", s.p4_eg_q[i]);
     }
     os << fmt::format("dest_oq_type {} dest_oq {} pcie_oq {} ",
@@ -113,13 +113,13 @@ qos_class_pd_init (pd_qos_class_t *qos_class)
 
     // Set here if you want to initialize any fields
     qos_class->uplink.iq = CAPRI_TM_INVALID_Q;
-    for (unsigned i = 0; i < HAL_ARRAY_SIZE(qos_class->p4_ig_q); i++) {
+    for (unsigned i = 0; i < SDK_ARRAY_SIZE(qos_class->p4_ig_q); i++) {
         qos_class->p4_ig_q[i] = CAPRI_TM_INVALID_Q;
     }
-    for (unsigned i = 0; i < HAL_ARRAY_SIZE(qos_class->p4_eg_q); i++) {
+    for (unsigned i = 0; i < SDK_ARRAY_SIZE(qos_class->p4_eg_q); i++) {
         qos_class->p4_eg_q[i] = CAPRI_TM_INVALID_Q;
     }
-    for (unsigned i = 0; i < HAL_ARRAY_SIZE(qos_class->txdma); i++) {
+    for (unsigned i = 0; i < SDK_ARRAY_SIZE(qos_class->txdma); i++) {
         qos_class->txdma[i].iq = CAPRI_TM_INVALID_Q;
     }
     qos_class->dest_oq = CAPRI_TM_INVALID_Q;

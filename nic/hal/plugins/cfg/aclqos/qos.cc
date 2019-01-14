@@ -181,7 +181,7 @@ qos_class_cmap_db_add (qos_class_t *qos_class)
             g_hal_state->qos_cmap_pcp_bmp()->set(cmap->dot1q_pcp);
         }
         if (has_dscp) {
-            for (unsigned i = 0; i < HAL_ARRAY_SIZE(cmap->ip_dscp); i++) {
+            for (unsigned i = 0; i < SDK_ARRAY_SIZE(cmap->ip_dscp); i++) {
                 if (cmap->ip_dscp[i]) {
                     g_hal_state->qos_cmap_dscp_bmp()->set(i);
                 }
@@ -197,7 +197,7 @@ qos_class_cmap_db_delete (qos_class_t *qos_class)
     // Update the global bmps for the cmaps
     if (qos_class_is_user_defined(qos_class)) {
         g_hal_state->qos_cmap_pcp_bmp()->clear(cmap->dot1q_pcp);
-        for (unsigned i = 0; i < HAL_ARRAY_SIZE(cmap->ip_dscp); i++) {
+        for (unsigned i = 0; i < SDK_ARRAY_SIZE(cmap->ip_dscp); i++) {
             if (cmap->ip_dscp[i]) {
                 g_hal_state->qos_cmap_dscp_bmp()->clear(i);
             }
@@ -293,7 +293,7 @@ qos_class_process_get (qos_class_t *qos_class, qos::QosClassGetResponse *rsp)
     } else {
         spec->mutable_sched()->mutable_strict()->set_bps(qos_class->sched.strict.bps);
     }
-    for (uint32_t i = 0; i < HAL_ARRAY_SIZE(qos_class->cmap.ip_dscp); i ++) {
+    for (uint32_t i = 0; i < SDK_ARRAY_SIZE(qos_class->cmap.ip_dscp); i ++) {
         if (qos_class->cmap.ip_dscp[i]) {
             spec->mutable_class_map()->add_ip_dscp(i);
         }
@@ -1257,7 +1257,7 @@ qos_class_handle_update (QosClassSpec& spec, qos_class_t *qos_class,
                 }
             }
 
-            for (unsigned i = 0; i < HAL_ARRAY_SIZE(ip_dscp_to_rem); i++) {
+            for (unsigned i = 0; i < SDK_ARRAY_SIZE(ip_dscp_to_rem); i++) {
                 if (ip_dscp_to_rem[i]) {
                     app_ctxt->ip_dscp_changed = true;
                     break;

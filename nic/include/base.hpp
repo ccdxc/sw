@@ -207,8 +207,6 @@ do {                                                       \
         return "unknown";                                                \
     }                                                                   \
 
-#define HAL_ARRAY_SIZE(arr)                (sizeof((arr))/sizeof((arr)[0]))
-
 //------------------------------------------------------------------------------
 // HAL return codes
 // NOTE: please number these enums properly for easier troubleshooting
