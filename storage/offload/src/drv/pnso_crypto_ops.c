@@ -84,6 +84,7 @@ crypto_desc_fill(struct service_info *svc_info,
 		 struct pnso_crypto_desc *pnso_crypto_desc)
 {
 	struct crypto_desc *crypto_desc = svc_info->si_desc;
+	uint64_t aligned_addr;
 	pnso_error_t err;
 
 	memset(crypto_desc, 0, sizeof(*crypto_desc));
@@ -111,18 +112,22 @@ crypto_desc_fill(struct service_info *svc_info,
 	 * may later be modified with other types of context data.
 	 */
 	err = svc_status_desc_addr_get(&svc_info->si_status_desc, 0,
-			&crypto_desc->cd_status_addr,
-			sizeof(struct crypto_status_desc));
+			&aligned_addr, sizeof(struct crypto_status_desc));
+	crypto_desc->cd_status_addr = aligned_addr;
+	if (err)
+		goto out;
+
 	if (chn_service_has_interm_status(svc_info)) {
 		err = svc_status_desc_addr_get(&svc_info->si_istatus_desc, 0,
-                                               &crypto_desc->cd_status_addr,
-                                               sizeof(struct crypto_status_desc));
+				&aligned_addr, sizeof(struct crypto_status_desc));
+		crypto_desc->cd_status_addr = aligned_addr;
         }
 
 	crypto_desc->cd_db_addr = crypto_desc->cd_status_addr +
 				  offsetof(struct crypto_status_desc, csd_cpl_data);
 
 	CRYPTO_PPRINT_DESC(crypto_desc);
+out:
 	return err;
 }
 

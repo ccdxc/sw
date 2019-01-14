@@ -39,6 +39,7 @@ static int
 fill_cp_desc(struct service_info *svc_info, struct cpdc_desc *desc,
 		uint32_t threshold_len)
 {
+	uint64_t aligned_addr;
 	pnso_error_t err;
 
 	memset(desc, 0, sizeof(*desc));
@@ -59,13 +60,19 @@ fill_cp_desc(struct service_info *svc_info, struct cpdc_desc *desc,
 	desc->cd_threshold_len = cpdc_desc_data_len_set_eval(svc_info->si_type,
 					threshold_len);
 	err = svc_status_desc_addr_get(&svc_info->si_status_desc, 0,
-			&desc->cd_status_addr, CPDC_STATUS_MIN_CLEAR_SZ);
+			&aligned_addr, CPDC_STATUS_MIN_CLEAR_SZ);
+	desc->cd_status_addr = aligned_addr;
+	if (err)
+		goto out;
+
 	if (chn_service_has_interm_status(svc_info)) {
 		err = svc_status_desc_addr_get(&svc_info->si_istatus_desc, 0,
-			&desc->cd_status_addr, CPDC_STATUS_MIN_CLEAR_SZ);
+			&aligned_addr, CPDC_STATUS_MIN_CLEAR_SZ);
+		desc->cd_status_addr = aligned_addr;
 	}
 
 	desc->cd_status_data = CPDC_CP_STATUS_DATA;
+out:
 	return err;
 }
 
