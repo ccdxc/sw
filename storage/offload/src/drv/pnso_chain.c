@@ -951,10 +951,17 @@ chn_service_deps_data_len_get(struct service_info *svc_info)
 
 	if (chn_service_type_is_cpdc(svc_info)) {
 		status_desc = svc_info->si_status_desc.desc;
+		if (status_desc->csd_err) {
+			/* to handle the case where BOF is enabled in a chain */
+			OSAL_LOG_DEBUG("bail out to rely on original len for bof");
+			goto out;
+		}
+
 		len = cpdc_desc_data_len_get_eval(svc_info->si_type,
 				status_desc->csd_output_data_len);
 		chn_service_deps_data_len_set(svc_info, len);
 	}
 
+out:
 	return svc_info->si_svc_deps.sd_data_len;
 }

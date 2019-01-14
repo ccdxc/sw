@@ -1245,9 +1245,6 @@ cpdc_update_tags(struct service_info *svc_info)
 {
 	uint32_t orig_num_tags;
 
-	if (svc_info->si_flags & CHAIN_SFLAG_BYPASS_ONFAIL)
-		goto out;
-
 	if (chn_service_deps_data_len_set_from_parent(svc_info)) {
 		/*
 		 * In debug mode, verify the padding adjustment in the dst SGL.
@@ -1275,6 +1272,5 @@ cpdc_update_tags(struct service_info *svc_info)
 			svc_info->si_block_size,
 			svc_info->si_num_tags, orig_num_tags);
 
-out:
 	svc_info->tags_updated = true;
 }
