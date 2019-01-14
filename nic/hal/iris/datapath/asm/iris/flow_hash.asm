@@ -10,6 +10,7 @@ struct phv_        p;
 %%
 
 flow_hash_info:
+  bbne        k.control_metadata_nic_mode, NIC_MODE_SMART, flow_hash_exit
   phvwr       p.rewrite_metadata_entropy_hash, r1
   or          r7, k.flow_lkp_metadata_lkp_type, k.flow_lkp_metadata_lkp_inst, CPU_LKP_FLAGS_LKP_INST
   or          r7, r7, k.flow_lkp_metadata_lkp_dir, CPU_LKP_FLAGS_LKP_DIR
@@ -80,6 +81,10 @@ flow_hash_recirc:
                     p.recirc_header_overflow_entry_index, r2
   phvwrpair     p.capri_intrinsic_tm_oport, TM_PORT_INGRESS, \
                 p.capri_intrinsic_tm_iq, k.qos_metadata_qos_class_id[4:0]
+
+flow_hash_exit:
+  nop.e
+  nop
 
 /*****************************************************************************/
 /* error function                                                            */

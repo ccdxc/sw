@@ -8,8 +8,7 @@ f_p4plus_to_p4_1:
   bbne        k.p4plus_to_p4_update_ip_len, TRUE, p4plus_to_p4_1_upd_tcp_seq
   seq         c2, k.vlan_tag_valid, TRUE
   cmov        r1, c2, 18, 14
-  sub         r1, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
-                capri_p4_intrinsic_packet_len_sbit6_ebit13}, r1
+  sub         r1, k.capri_p4_intrinsic_packet_len, r1
   seq         c3, k.ipv4_valid, TRUE
   sub.c3      r2, r1, k.ipv4_ihl, 2
   phvwr.c3    p.ipv4_totalLen, r1
@@ -24,8 +23,7 @@ f_p4plus_to_p4_1:
 p4plus_to_p4_1_upd_tcp_seq:
   // update TCP sequence number
   seq         c2, k.p4plus_to_p4_update_tcp_seq_no, TRUE
-  add         r1, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, \
-                  k.p4plus_to_p4_tcp_seq_delta
+  add         r1, k.tcp_seqNo, k.p4plus_to_p4_tcp_seq_delta
   phvwr.c2    p.tcp_seqNo, r1
 
   // update from CPU flag
@@ -47,11 +45,10 @@ p4plus_to_p4_1_insert_vlan_tag:
   // insert vlan tag
   seq         c2, k.p4plus_to_p4_insert_vlan_tag, TRUE
   nop.!c2.e
-  add         r1, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
-                     capri_p4_intrinsic_packet_len_sbit6_ebit13}, 4
+  add         r1, k.capri_p4_intrinsic_packet_len, 4
   phvwr       p.vlan_tag_valid, TRUE
   phvwrpair   p.{vlan_tag_pcp...vlan_tag_vid}, \
-                k.{p4plus_to_p4_vlan_pcp...p4plus_to_p4_vlan_vid_sbit4_ebit11}, \
+                k.{p4plus_to_p4_vlan_pcp...p4plus_to_p4_vlan_vid}, \
                 p.vlan_tag_etherType, k.ethernet_etherType
   phvwr.e     p.ethernet_etherType, ETHERTYPE_VLAN
   phvwr       p.capri_p4_intrinsic_packet_len, r1

@@ -8,9 +8,11 @@ header_type rewrite_metadata_t {
         tunnel_vnid          : 24;
         entropy_hash         : 32;
         flags                : 8;
+        tunnel_ip            : 32;
     }
 }
 
+@pragma pa_field_union xgress rewrite_metadata.tunnel_ip nat_metadata.nat_ip
 metadata rewrite_metadata_t rewrite_metadata;
 
 action rewrite(mac_sa, mac_da) {

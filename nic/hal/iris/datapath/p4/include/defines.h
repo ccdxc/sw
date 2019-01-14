@@ -116,11 +116,13 @@
 #define DROP_TCP_INVALID_RESPONDER_FIRST_PKT    22
 #define DROP_TCP_UNEXPECTED_PKT                 23
 #define DROP_SRC_LIF_MISMATCH                   24
+#define DROP_VF_IP_LABEL_MISMATCH               25
+#define DROP_VF_BAD_RR_DST_IP                   26
 #define DROP_MIN                                DROP_MALFORMED_PKT
 /*****************************************************************************/
 /* Note: After adding a new drop code, update the system.proto file as well. */
 /*****************************************************************************/
-#define DROP_MAX                                DROP_SRC_LIF_MISMATCH
+#define DROP_MAX                                DROP_VF_BAD_RR_DST_IP
 
 /*****************************************************************************/
 /* egress drop reasons - these are bit positions to be used in ASM           */

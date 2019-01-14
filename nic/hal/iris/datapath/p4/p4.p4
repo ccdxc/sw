@@ -91,6 +91,9 @@ header_type control_metadata_t {
         rdma_enabled                   : 1;
         src_lport                      : 11;
         dst_lport                      : 11;
+        vf_id                          : 10;
+        src_class_e                    : 1;
+        dst_class_e                    : 1;
         clear_promiscuous_repl         : 1;
         i2e_flags                      : 8;
         flow_miss_ingress              : 1;  // workaround for predication
@@ -115,6 +118,8 @@ header_type control_metadata_t {
         i2e_pad0                       : 16;
         i2e_pad1                       : 16;
         i2e_pad2                       : 8;
+        record_route_dst_ip            : 32;
+        record_route_inner_dst_ip      : 32;
     }
 }
 
@@ -230,6 +235,14 @@ header_type scratch_metadata_t {
         mac                   : 48;
         vlan_valid            : 1;
         vlan_id               : 12;
+
+        ipv4_mask             : 32;
+        ipv4_prefix           : 32;
+        ipv4_prefix_len       : 8;
+        mpls_label1           : 20;
+        mpls_label2           : 20;
+        overlay_ip1           : 32;
+        overlay_ip2           : 32;
 
         // flow state
         // initiator flow's TCP state

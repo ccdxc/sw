@@ -20,16 +20,18 @@ input_properties:
                     k.capri_intrinsic_lif_sbit0_ebit2, 8
   or            r1, d.input_properties_d.flow_miss_idx, r1, 16
   phvwr         p.{control_metadata_src_lif,control_metadata_flow_miss_idx}, r1
-
-  or            r1, d.input_properties_d.allow_flood, \
-                    d.input_properties_d.clear_promiscuous_repl, 1
-  or            r1, r1, d.input_properties_d.mdest_flow_miss_action, 2
-  phvwr         p.{control_metadata_mdest_flow_miss_action, \
-                   control_metadata_clear_promiscuous_repl, \
-                   control_metadata_allow_flood}, r1
+  or            r1, d.input_properties_d.clear_promiscuous_repl, \
+                    d.input_properties_d.mdest_flow_miss_action, 3
+  phvwrm        p.{control_metadata_mdest_flow_miss_action, \
+                   control_metadata_src_class_e, \
+                   control_metadata_dst_class_e, \
+                   control_metadata_clear_promiscuous_repl}, r1, 0x19
   phvwr         p.control_metadata_ipsg_enable, d.input_properties_d.ipsg_enable
-  phvwr         p.control_metadata_flow_miss_qos_class_id, \
-                    d.input_properties_d.flow_miss_qos_class_id
+  or            r1, d.input_properties_d.allow_flood, \
+                    d.input_properties_d.flow_miss_qos_class_id, 10
+  phvwrm        p.{control_metadata_flow_miss_qos_class_id, \
+                   l3_metadata_inner_ip_frag, l3_metadata_inner_ipv6_ulp, \
+                   control_metadata_allow_flood}, r1, 0x7C01
   phvwr         p.flow_miss_metadata_tunnel_vnid, \
                     d.input_properties_d.bounce_vnid
   phvwr         p.{control_metadata_mirror_on_drop_en, \

@@ -1,9 +1,10 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
+#include "INGRESS_p4plus_to_p4_2_k.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 
-struct p4plus_to_p4_2_k k;
-struct phv_             p;
+struct p4plus_to_p4_2_k_ k;
+struct phv_ p;
 
 %%
 

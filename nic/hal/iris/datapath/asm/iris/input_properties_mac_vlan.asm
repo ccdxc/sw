@@ -39,24 +39,25 @@ input_properties_mac_vlan:
   phvwr         p.{control_metadata_src_lif,control_metadata_flow_miss_idx}, r1
   phvwr         p.flow_miss_metadata_tunnel_originate, \
                     d.input_properties_mac_vlan_d.tunnel_originate
-  phvwr         p.flow_miss_metadata_tunnel_rewrite_index, \
-                    d.input_properties_mac_vlan_d.tunnel_rewrite_index
-  phvwr         p.flow_miss_metadata_tunnel_vnid, \
-                    d.input_properties_mac_vlan_d.tunnel_vnid
+  phvwr         p.flow_miss_metadata_rewrite_index, \
+                    d.input_properties_mac_vlan_d.rewrite_index
+  or            r1, d.input_properties_mac_vlan_d.tunnel_vnid, \
+                    d.input_properties_mac_vlan_d.tunnel_rewrite_index, 30
+  phvwr         p.{flow_miss_metadata_tunnel_rewrite_index, \
+                    _flit_pad__898, \
+                    flow_miss_metadata_tunnel_vnid}, r1
   or            r1, d.input_properties_mac_vlan_d.src_lport, \
                     d.input_properties_mac_vlan_d.dst_lport, 16
   phvwrpair     p.{control_metadata_dst_lport,control_metadata_src_lport}, r1, \
                     p.flow_lkp_metadata_lkp_vrf, \
                     d.input_properties_mac_vlan_d.vrf
+  phvwr         p.control_metadata_mdest_flow_miss_action, \
+                    d.input_properties_mac_vlan_d.mdest_flow_miss_action
   or            r1, d.input_properties_mac_vlan_d.allow_flood, \
-                    d.input_properties_mac_vlan_d.mdest_flow_miss_action, 2
-  or            r1, r1, d.input_properties_mac_vlan_d.rewrite_index, 4
-  phvwr         p.{flow_miss_metadata_rewrite_index, \
-                    control_metadata_mdest_flow_miss_action, \
-                    control_metadata_clear_promiscuous_repl, \
-                    control_metadata_allow_flood}, r1
-  phvwr         p.control_metadata_flow_miss_qos_class_id, \
-                    d.input_properties_mac_vlan_d.flow_miss_qos_class_id
+                    d.input_properties_mac_vlan_d.flow_miss_qos_class_id, 10
+  phvwrm        p.{control_metadata_flow_miss_qos_class_id, \
+                   l3_metadata_inner_ip_frag, l3_metadata_inner_ipv6_ulp, \
+                   control_metadata_allow_flood}, r1, 0x7C01
   phvwr         p.control_metadata_ipsg_enable, \
                     d.input_properties_mac_vlan_d.ipsg_enable
   phvwr         p.{control_metadata_mirror_on_drop_en, \

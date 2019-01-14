@@ -28,19 +28,22 @@ flow_info:
                        u.flow_info_d.multicast_en}
   phvwr         p.control_metadata_dst_lport, d.u.flow_info_d.dst_lport
 
-  /* rewrite and info */
+  /* rewrite info */
   phvwr         p.tunnel_metadata_tunnel_originate[0], \
                     d.u.flow_info_d.tunnel_originate
-  phvwrpair     p.rewrite_metadata_tunnel_vnid, d.u.flow_info_d.tunnel_vnid, \
-                    p.rewrite_metadata_flags, d.u.flow_info_d.rewrite_flags
-  or            r1, d.u.flow_info_d.tunnel_rewrite_index, \
-                    d.u.flow_info_d.rewrite_index, 16
-  phvwr.e       p.{rewrite_metadata_rewrite_index, \
-                    rewrite_metadata_tunnel_rewrite_index}, r1
+  or            r1, d.u.flow_info_d.tunnel_vnid, \
+                    d.u.flow_info_d.tunnel_rewrite_index, 24
+  phvwr         p.{rewrite_metadata_tunnel_rewrite_index, \
+                   rewrite_metadata_tunnel_vnid}, r1
+  or            r1, d.u.flow_info_d.rewrite_flags, \
+                    d.u.flow_info_d.rewrite_index, 8
+  phvwr         p.{rewrite_metadata_rewrite_index, \
+                   rewrite_metadata_flags}, r1
 
-  // rewrite info
-  phvwr.f       p.{nat_metadata_nat_ip...nat_metadata_twice_nat_idx}, \
-                    d.{u.flow_info_d.nat_ip...u.flow_info_d.twice_nat_idx}
+  // nat info
+  phvwr.e       p.{nat_metadata_nat_l4_port,nat_metadata_twice_nat_idx}, \
+                    d.{u.flow_info_d.nat_l4_port,u.flow_info_d.twice_nat_idx}
+  phvwr.f       p.nat_metadata_nat_ip, d.u.flow_info_d.nat_ip
 
 f_flow_info_thread_1:
   /* qos class selection */

@@ -37,8 +37,8 @@ encap_vxlan:
 
   // set inner_ethernet_valid, vxlan_valid and udp_valid
   .assert(offsetof(p, inner_ethernet_valid) - offsetof(p, vxlan_valid) == 1)
-  .assert(offsetof(p, vxlan_valid) - offsetof(p, udp_valid) == 3)
-  phvwrmi     p.{inner_ethernet_valid...udp_valid}, 0x1F, 0x19
+  .assert(offsetof(p, vxlan_valid) - offsetof(p, udp_valid) == 4)
+  phvwrmi     p.{inner_ethernet_valid...udp_valid}, 0x3F, 0x31
 
   seq         c1, d.u.encap_vxlan_d.ip_type, IP_HEADER_TYPE_IPV4
   cmov        r6, c1, ETHERTYPE_IPV4, ETHERTYPE_IPV6
@@ -76,7 +76,11 @@ encap_vlan:
   phvwr       p.ethernet_etherType, ETHERTYPE_VLAN
 
 .align
-.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+encap_mpls_udp:
+  nop.e
+  nop
+
+.align
 encap_erspan:
   phvwr       p.{inner_ethernet_dstAddr...inner_ethernet_etherType}, \
                   k.{ethernet_dstAddr...ethernet_etherType}

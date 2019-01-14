@@ -472,20 +472,12 @@ pd_vrf_program_input_mapping_table(ip_prefix_t *ip_prefix,
 
     if (ip_prefix->addr.af == IP_AF_IPV4) {
         key.ipv4_valid = 1;
-        key.input_mapping_native_u1.ipv4_dstAddr = ip_prefix->addr.addr.v4_addr;
+        key.ipv4_dstAddr = ip_prefix->addr.addr.v4_addr;
         mask.ipv4_valid_mask = 0xFF;
-        mask.input_mapping_native_mask_u1.ipv4_dstAddr_mask =
-                ipv4_prefix_len_to_mask(ip_prefix->len);
+        mask.ipv4_dstAddr_mask = ipv4_prefix_len_to_mask(ip_prefix->len);
     } else {
-        key.ipv6_valid = 1;
-        memcpy(key.input_mapping_native_u1.ipv6_dstAddr,
-               ip_prefix->addr.addr.v6_addr.addr8, IP6_ADDR8_LEN);
-        memrev(key.input_mapping_native_u1.ipv6_dstAddr, IP6_ADDR8_LEN);
-        mask.ipv6_valid_mask = 0xFF;
-        ipv6_prefix_len_to_mask(
-                (ipv6_addr_t*)(mask.input_mapping_native_mask_u1.ipv6_dstAddr_mask),
-                ip_prefix->len);
-        memrev(mask.input_mapping_native_mask_u1.ipv6_dstAddr_mask, IP6_ADDR8_LEN);
+        HAL_TRACE_ERR("IPv6 TEP is not supprted");
+        return HAL_RET_NOT_SUPPORTED;
     }
     data.action_id = actionid;
     if (is_upgrade) {

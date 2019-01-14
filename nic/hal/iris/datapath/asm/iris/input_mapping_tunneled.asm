@@ -1,23 +1,22 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
+#include "INGRESS_input_mapping_tunneled_k.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nw.h"
 
-struct input_mapping_tunneled_k k;
-struct phv_                     p;
+struct input_mapping_tunneled_k_ k;
+struct input_mapping_tunneled_d d;
+struct phv_ p;
 
 %%
 
 nop:
-  K_DBG_WR(0x20)
-  DBG_WR(0x28, 0x28)
-  phvwrm.e.f p[1:0], r0, 0
+  phvwrm.e.f    p[1:0], r0, 0
   nop
 
 .align
 tunneled_ipv4_packet:
-  K_DBG_WR(0x20)
-  DBG_WR(0x29, 0x29)
+  phvwr         p.control_metadata_vf_id, d.u.tunneled_ipv4_packet_d.vf_id
   bbeq          k.inner_ethernet_dstAddr[40], 0, tunneled_ipv4_packet_common
   phvwr         p.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
   xor           r6, -1, r0
@@ -34,25 +33,27 @@ tunneled_ipv4_packet_common:
   phvwrpair     p.flow_lkp_metadata_lkp_dst[31:0], k.inner_ipv4_dstAddr, \
                     p.flow_lkp_metadata_lkp_src[31:0], k.inner_ipv4_srcAddr
 
-  or            r1, k.inner_ipv4_ttl, k.inner_ipv4_flags, 9
-  phvwrm        p.{flow_lkp_metadata_ipv4_flags, \
-                    flow_miss_metadata_tunnel_originate, \
-                    flow_lkp_metadata_ip_ttl}, r1, 0xEFF
+  or            r1, k.inner_ipv4_flags, k.inner_ethernet_srcAddr, 3
+  or            r1, r1, k.inner_ipv4_ihl, 51
+  phvwr         p.{flow_lkp_metadata_ipv4_hlen, \
+                   flow_lkp_metadata_lkp_srcMacAddr, \
+                   flow_lkp_metadata_ipv4_flags}, r1
+
   phvwr         p.flow_lkp_metadata_lkp_dstMacAddr, k.inner_ethernet_dstAddr
+  phvwr         p.flow_lkp_metadata_ip_ttl, k.inner_ipv4_ttl
   phvwr         p.flow_lkp_metadata_ipv4_hlen, k.inner_ipv4_ihl
   phvwrpair     p.l3_metadata_ip_frag, k.l3_metadata_inner_ip_frag, \
                      p.l3_metadata_ip_option_seen, k.l3_metadata_inner_ip_option_seen
-
+  seq           c1, k.inner_ipv4_srcAddr[31:28], 0xF
+  phvwr.c1      p.control_metadata_src_class_e, TRUE
   seq           c1, k.roce_bth_valid, TRUE
   phvwr.c1      p.flow_lkp_metadata_lkp_sport, r0
-  phvwr         p.flow_lkp_metadata_lkp_proto, k.inner_ipv4_protocol
-  phvwr.e       p.flow_lkp_metadata_lkp_srcMacAddr, k.inner_ethernet_srcAddr
+  phvwr.e       p.flow_lkp_metadata_lkp_proto, k.inner_ipv4_protocol
   phvwr.f       p.tunnel_metadata_tunnel_terminate, 1
 
 .align
 tunneled_ipv6_packet:
-  K_DBG_WR(0x20)
-  DBG_WR(0x2a, 0x2a)
+  phvwr         p.control_metadata_vf_id, d.u.tunneled_ipv6_packet_d.vf_id
   bbeq          k.inner_ethernet_dstAddr[40], 0, tunneled_ipv6_packet_common
   phvwr         p.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
   xor           r6, -1, r0
@@ -77,8 +78,7 @@ tunneled_ipv6_packet_common:
 
 .align
 tunneled_non_ip_packet:
-  K_DBG_WR(0x20)
-  DBG_WR(0x2b, 0x2b)
+  phvwr         p.control_metadata_vf_id, d.u.tunneled_non_ip_packet_d.vf_id
   bbeq          k.inner_ethernet_dstAddr[40], 0, tunneled_non_ip_packet_common
   phvwr         p.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
   xor           r6, -1, r0
@@ -94,14 +94,6 @@ tunneled_non_ip_packet_common:
   phvwr         p.flow_lkp_metadata_lkp_dport, k.inner_ethernet_etherType
   phvwr.e       p.flow_lkp_metadata_lkp_srcMacAddr, k.inner_ethernet_srcAddr
   phvwr.f       p.flow_lkp_metadata_lkp_dstMacAddr, k.inner_ethernet_dstAddr
-
-.align
-.assert $ < ASM_INSTRUCTION_OFFSET_MAX
-tunneled_vm_bounce_packet:
-  K_DBG_WR(0x20)
-  DBG_WR(0x2c, 0x2c)
-  nop.e
-  nop
 
 /*****************************************************************************/
 /* error function                                                            */

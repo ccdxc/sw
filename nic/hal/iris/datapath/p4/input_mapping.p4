@@ -11,7 +11,7 @@ action set_packet_type(mac_da) {
     }
 }
 
-action tunneled_ipv4_packet() {
+action tunneled_ipv4_packet(vf_id) {
     modify_field(flow_lkp_metadata.lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4);
     modify_field(flow_lkp_metadata.lkp_src, inner_ipv4.srcAddr);
     modify_field(flow_lkp_metadata.lkp_dst, inner_ipv4.dstAddr);
@@ -30,9 +30,14 @@ action tunneled_ipv4_packet() {
         modify_field(flow_lkp_metadata.lkp_sport, 0);
     }
     set_packet_type(inner_ethernet.dstAddr);
+
+    modify_field(control_metadata.vf_id, vf_id);
+    if ((inner_ipv4.srcAddr & 0xF0000000) == 0xF0000000) {
+        modify_field(control_metadata.src_class_e, TRUE);
+    }
 }
 
-action tunneled_ipv6_packet() {
+action tunneled_ipv6_packet(vf_id) {
     modify_field(flow_lkp_metadata.lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV6);
     modify_field(flow_lkp_metadata.lkp_proto, l3_metadata.inner_ipv6_ulp);
     modify_field(flow_lkp_metadata.ip_ttl, inner_ipv6.hopLimit);
@@ -46,9 +51,10 @@ action tunneled_ipv6_packet() {
         modify_field(flow_lkp_metadata.lkp_sport, 0);
     }
     set_packet_type(inner_ethernet.dstAddr);
+    modify_field(control_metadata.vf_id, vf_id);
 }
 
-action tunneled_non_ip_packet() {
+action tunneled_non_ip_packet(vf_id) {
     modify_field(flow_lkp_metadata.lkp_type, FLOW_KEY_LOOKUP_TYPE_MAC);
     modify_field(flow_lkp_metadata.lkp_src, inner_ethernet.srcAddr);
     modify_field(flow_lkp_metadata.lkp_dst, inner_ethernet.dstAddr);
@@ -60,18 +66,7 @@ action tunneled_non_ip_packet() {
     modify_field(flow_lkp_metadata.ip_ttl, 0);
     modify_field(tunnel_metadata.tunnel_terminate, TRUE);
     set_packet_type(inner_ethernet.dstAddr);
-}
-
-action tunneled_vm_bounce_packet() {
-    // if OAM bit is set, packet to destined to a VM otherwise packet is from
-    // a VM
-    if (vxlan_gpe.flags == 0x08) {
-        modify_field(flow_lkp_metadata.lkp_type, FLOW_KEY_LOOKUP_TYPE_TO_VM_BOUNCE);
-        modify_field(flow_lkp_metadata.lkp_dst, inner_ethernet.dstAddr);
-    } else {
-        modify_field(flow_lkp_metadata.lkp_type, FLOW_KEY_LOOKUP_TYPE_FROM_VM_BOUNCE);
-        modify_field(flow_lkp_metadata.lkp_src, inner_ethernet.srcAddr);
-    }
+    modify_field(control_metadata.vf_id, vf_id);
 }
 
 action native_ipv4_packet() {
@@ -100,14 +95,16 @@ action native_ipv4_packet() {
     }
     set_packet_type(ethernet.dstAddr);
 
+    modify_field(control_metadata.vf_id, capri_intrinsic.lif);
     modify_field(tunnel_metadata.tunnel_type, 0);
     modify_field(tunnel_metadata.tunnel_vni, 0);
+    if ((ipv4.dstAddr & 0xF0000000) == 0xF0000000) {
+        modify_field(control_metadata.dst_class_e, TRUE);
+    }
 }
 
 action native_ipv6_packet() {
     modify_field(flow_lkp_metadata.lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV6);
-    modify_field(flow_lkp_metadata.lkp_src, ipv6.srcAddr);
-    modify_field(flow_lkp_metadata.lkp_dst, ipv6.dstAddr);
     modify_field(flow_lkp_metadata.lkp_proto, l3_metadata.ipv6_ulp);
     modify_field(flow_lkp_metadata.ip_ttl, ipv6.hopLimit);
     modify_field(flow_lkp_metadata.lkp_srcMacAddr, ethernet.srcAddr);
@@ -124,8 +121,16 @@ action native_ipv6_packet() {
     }
     set_packet_type(ethernet.dstAddr);
 
+    modify_field(control_metadata.vf_id, capri_intrinsic.lif);
     modify_field(tunnel_metadata.tunnel_type, 0);
     modify_field(tunnel_metadata.tunnel_vni, 0);
+}
+
+action native_ipv6_packet2() {
+    if (tunnel_metadata.tunnel_terminate == FALSE) {
+        modify_field(flow_lkp_metadata.lkp_src, ipv6.srcAddr);
+        modify_field(flow_lkp_metadata.lkp_dst, ipv6.dstAddr);
+    }
 }
 
 action native_non_ip_packet() {
@@ -144,6 +149,7 @@ action native_non_ip_packet() {
     modify_field(flow_lkp_metadata.ip_ttl, 0);
     set_packet_type(ethernet.dstAddr);
 
+    modify_field(control_metadata.vf_id, capri_intrinsic.lif);
     modify_field(tunnel_metadata.tunnel_type, 0);
     modify_field(tunnel_metadata.tunnel_vni, 0);
 }
@@ -164,13 +170,11 @@ table input_mapping_tunneled {
         inner_ipv4.valid             : ternary;
         inner_ipv6.valid             : ternary;
         ipv4.dstAddr                 : ternary;
-        ipv6.dstAddr                 : ternary;
     }
     actions {
         tunneled_ipv4_packet;
         tunneled_ipv6_packet;
         tunneled_non_ip_packet;
-        tunneled_vm_bounce_packet;
         nop;
     }
     default_action : nop;
@@ -188,7 +192,6 @@ table input_mapping_native {
         inner_ipv4.valid             : ternary;
         inner_ipv6.valid             : ternary;
         ipv4.dstAddr                 : ternary;
-        ipv6.dstAddr                 : ternary;
     }
     actions {
         native_ipv4_packet;
@@ -201,6 +204,13 @@ table input_mapping_native {
     size : INPUT_MAPPING_TABLE_SIZE;
 }
 
+@pragma stage 1
+table input_mapping_native2 {
+    actions {
+        native_ipv6_packet2;
+    }
+    default_action : native_ipv6_packet2;
+}
 
 // bounce_vnid: vnid of the incoming l2 segment used when packets
 //              are vxlan encaped and sent to the node where the
@@ -360,10 +370,80 @@ table input_properties_mac_vlan {
     size : INPUT_PROPERTIES_MAC_VLAN_TABLE_SIZE;
 }
 
+action vf_properties(overlay_ip1, overlay_ip2, mpls_in1, mpls_in2,
+                     gw_prefix, gw_prefix_len, tunnel_originate,
+                     tunnel_rewrite_index, mpls_out) {
+    modify_field(scratch_metadata.overlay_ip1, overlay_ip1);
+    modify_field(scratch_metadata.overlay_ip2, overlay_ip2);
+    modify_field(scratch_metadata.mpls_label1, mpls_in1);
+    modify_field(scratch_metadata.mpls_label2, mpls_in2);
+    modify_field(scratch_metadata.ipv4_prefix, gw_prefix);
+    modify_field(scratch_metadata.ipv4_prefix_len, gw_prefix_len);
+    modify_field(scratch_metadata.ipv4_mask,
+                 (1 << scratch_metadata.ipv4_prefix_len) - 1);
+
+    if (control_metadata.uplink == TRUE) {
+        if (((mpls[0].label != scratch_metadata.mpls_label1) or
+             (inner_ipv4.dstAddr != scratch_metadata.overlay_ip1)) and
+            ((mpls[0].label != scratch_metadata.mpls_label2) or
+             (inner_ipv4.dstAddr != scratch_metadata.overlay_ip2))) {
+            modify_field(control_metadata.drop_reason,
+                         DROP_VF_IP_LABEL_MISMATCH);
+            drop_packet();
+        }
+        if (control_metadata.src_class_e == TRUE) {
+            if ((control_metadata.record_route_inner_dst_ip == 0) or
+                ((control_metadata.record_route_inner_dst_ip & 0xF0000000) == 0xF0000000) or
+                ((control_metadata.record_route_inner_dst_ip & scratch_metadata.ipv4_mask) !=
+                 (scratch_metadata.ipv4_prefix & scratch_metadata.ipv4_mask))) {
+                modify_field(control_metadata.drop_reason, DROP_VF_BAD_RR_DST_IP);
+                drop_packet();
+            }
+        }
+    } else {
+        if (tunnel_originate == TRUE) {
+            modify_field(scratch_metadata.mpls_label1, mpls_out);
+            modify_field(scratch_metadata.flag, tunnel_originate);
+            modify_field(tunnel_metadata.tunnel_originate, scratch_metadata.flag);
+            modify_field(tunnel_metadata.tunnel_vni, scratch_metadata.mpls_label1);
+            modify_field(rewrite_metadata.tunnel_rewrite_index, tunnel_rewrite_index);
+        }
+        if (control_metadata.dst_class_e == TRUE) {
+            if ((control_metadata.record_route_dst_ip == 0) or
+                ((control_metadata.record_route_dst_ip & 0xF0000000) == 0xF0000000) or
+                ((control_metadata.record_route_dst_ip & scratch_metadata.ipv4_mask) !=
+                 (scratch_metadata.ipv4_prefix & scratch_metadata.ipv4_mask))) {
+                modify_field(control_metadata.drop_reason, DROP_VF_BAD_RR_DST_IP);
+                drop_packet();
+            } else {
+                modify_field(nat_metadata.nat_ip,
+                             control_metadata.record_route_dst_ip << 96);
+            }
+        }
+    }
+}
+
+@pragma stage 1
+table vf_properties {
+    reads {
+        control_metadata.vf_id      : exact;
+    }
+    actions {
+        nop;
+        vf_properties;
+    }
+    default_action : nop;
+    size : VF_PROPERTIES_TABLE_SIZE;
+}
+
 control process_input_mapping {
     apply(input_mapping_tunneled);
     apply(input_mapping_native);
+    if (ipv6.valid == TRUE) {
+        apply(input_mapping_native2);
+    }
     apply(input_properties);
     apply(input_properties_otcam);
     apply(input_properties_mac_vlan);
+    apply(vf_properties);
 }

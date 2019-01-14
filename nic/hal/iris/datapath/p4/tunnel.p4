@@ -94,7 +94,6 @@ action copy_inner_eth_ipv6_other() {
 }
 
 action copy_inner_eth_non_ip() {
-
     copy_header(ethernet, inner_ethernet);
     remove_header(inner_ethernet);
     remove_header(udp);
@@ -144,12 +143,15 @@ action remove_tunnel_hdrs() {
     if (nvgre.valid == TRUE) {
         add_to_field(capri_p4_intrinsic.packet_len, -4);
     }
+    if (mpls[0].valid == TRUE) {
+        add_to_field(capri_p4_intrinsic.packet_len, -4);
+    }
     remove_header(vxlan);
     remove_header(genv);
     remove_header(nvgre);
     remove_header(gre);
-#ifdef PHASE2
     remove_header(mpls[0]);
+#ifdef PHASE2
     remove_header(mpls[1]);
     remove_header(mpls[2]);
 #endif
@@ -217,6 +219,50 @@ action encap_vxlan(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) {
         add_to_field(capri_p4_intrinsic.packet_len, 70);
 #endif /* PHASE2 */
     }
+    if (vlan_valid == TRUE) {
+        f_encap_vlan(vlan_id, scratch_metadata.ethtype);
+        add_to_field(capri_p4_intrinsic.packet_len, 4);
+    } else {
+        modify_field(ethernet.etherType, scratch_metadata.ethtype);
+    }
+
+    // dummy ops to keep compiler happy
+    modify_field(scratch_metadata.vlan_valid, vlan_valid);
+    modify_field(scratch_metadata.vlan_id, vlan_id);
+    modify_field(scratch_metadata.flag, ip_type);
+}
+
+/*****************************************************************************/
+/* MPLSoUDP tunnel encap actions                                             */
+/*****************************************************************************/
+action encap_mpls_udp(mac_sa, mac_da, ip_sa, ip_da, ip_type,
+                      vlan_valid, vlan_id) {
+    add_header(udp);
+    add_header(mpls[0]);
+    modify_field(mpls[0].label, rewrite_metadata.tunnel_vnid);
+    modify_field(mpls[0].exp, 0);
+    modify_field(mpls[0].bos, 1);
+    modify_field(mpls[0].ttl, 64);
+
+    modify_field(ethernet.srcAddr, mac_sa);
+    modify_field(ethernet.dstAddr, mac_da);
+    modify_field(udp.srcPort, rewrite_metadata.entropy_hash);
+    modify_field(udp.dstPort, UDP_PORT_MPLS);
+    modify_field(udp.checksum, 0);
+    add(udp.len, capri_p4_intrinsic.packet_len, -2);
+
+    if (ip_type == IP_HEADER_TYPE_IPV4) {
+        if (rewrite_metadata.tunnel_ip == 0) {
+            f_insert_ipv4_header(ip_sa, ip_da, IP_PROTO_UDP);
+        } else {
+            f_insert_ipv4_header(ip_sa, rewrite_metadata.tunnel_ip,
+                                 IP_PROTO_UDP);
+        }
+        add(ipv4.totalLen, capri_p4_intrinsic.packet_len, 18);
+        modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV4);
+        add_to_field(capri_p4_intrinsic.packet_len, 32);
+    }
+
     if (vlan_valid == TRUE) {
         f_encap_vlan(vlan_id, scratch_metadata.ethtype);
         add_to_field(capri_p4_intrinsic.packet_len, 4);
@@ -622,6 +668,7 @@ table tunnel_rewrite {
         encap_vxlan;
         encap_erspan;
         encap_vlan;
+        encap_mpls_udp;
 #ifdef PHASE2
         encap_ipsec;
         encap_nvgre;

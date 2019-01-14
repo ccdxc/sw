@@ -129,8 +129,7 @@ lb_tcp_rsvd_flags:
 
 // C2 has lb_tcp_unexpected_mss_action == ALLOW
 lb_tcp_unexpected_mss:
-  or          r1, k.l4_metadata_tcp_unexpected_win_scale_action_sbit1_ebit1, \
-                  k.l4_metadata_tcp_unexpected_win_scale_action_sbit0_ebit0, 1
+  or          r1, r0, k.l4_metadata_tcp_unexpected_win_scale_action
   b.c2        lb_tcp_unexpected_win_scale
   seq         c2, r1, NORMALIZATION_ACTION_ALLOW
   smneb       c3, k.tcp_flags, TCP_FLAG_SYN, TCP_FLAG_SYN
@@ -178,8 +177,7 @@ lb_tcp_unexpected_sack_perm:
 
 lb_tcp_urg_flag_not_set:
   b.c2        lb_tcp_urg_payload_missing
-  seq         c2, k.{l4_metadata_tcp_urg_payload_missing_action_sbit0_ebit0, \
-                     l4_metadata_tcp_urg_payload_missing_action_sbit1_ebit1}, \
+  seq         c2, k.l4_metadata_tcp_urg_payload_missing_action, \
                      NORMALIZATION_ACTION_ALLOW
   smneb       c3, k.tcp_flags, TCP_FLAG_URG, TCP_FLAG_URG
   sne         c4, k.tcp_urgentPtr, r0
@@ -200,8 +198,7 @@ lb_tcp_urg_payload_missing:
   sne         c4, k.tcp_urgentPtr, r0
   seq         c5, k.l4_metadata_tcp_data_len, r0
   bcf         ![c3 & c4 & c5], lb_tcp_urg_ptr_not_set
-  seq         c3, k.{l4_metadata_tcp_urg_payload_missing_action_sbit0_ebit0, \
-                     l4_metadata_tcp_urg_payload_missing_action_sbit1_ebit1}, \
+  seq         c3, k.l4_metadata_tcp_urg_payload_missing_action, \
                      NORMALIZATION_ACTION_DROP
   phvwr.c3.e  p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr.c3    p.capri_intrinsic_drop, 1
@@ -239,7 +236,7 @@ lb_tcp_rst_with_data:
   phvwr.c3    p.capri_intrinsic_drop, 1
   // Edit option - We will strip the packet so that the tcp_data_len is zero
   add          r1, k.l4_metadata_tcp_data_len, r0 // we need to subtract tcp_data_len
-  sub          r5, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, capri_p4_intrinsic_packet_len_sbit6_ebit13}, r1 // r5 = k.capri_p4_intrinsic_packet_len - r1
+  sub          r5, k.capri_p4_intrinsic_packet_len, r1 // r5 = k.capri_p4_intrinsic_packet_len - r1
   phvwr        p.capri_p4_intrinsic_packet_len, r5
   phvwr        p.capri_deparser_len_trunc_pkt_len, r0 // Zero out the tcp payload
   sub          r5, k.ipv4_totalLen, r1   // r5 = k.ipv4_totalLen - r1
@@ -253,7 +250,7 @@ lb_tcp_rst_with_data:
   // connection tracking code
   phvwr        p.l4_metadata_tcp_data_len, r0
   phvwr        p.capri_intrinsic_payload, 0
-  phvwr        p.capri_deparser_len_trunc, 1 
+  phvwr        p.capri_deparser_len_trunc, 1
   phvwrmi      p.control_metadata_checksum_ctl, CHECKSUM_L3_L4_UPDATE_MASK, CHECKSUM_L3_L4_UPDATE_MASK
   // Edit option: TBD
   // 1. Change the l4_metadata.tcp_data_len to zero

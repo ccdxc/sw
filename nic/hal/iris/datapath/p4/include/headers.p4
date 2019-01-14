@@ -55,69 +55,33 @@ header_type mpls_t {
     }
 }
 
-// End of Option List
-#define IPV4_OPTION_EOL_VALUE 0x00
-header_type ipv4_option_EOL_t {
+header_type ipv4_option_eol_t {
     fields {
         eol_value : 8;
     }
 }
 
-// No operation
-#define IPV4_OPTION_NOP_VALUE 0x01
-header_type ipv4_option_NOP_t {
+header_type ipv4_option_nop_t {
     fields {
         nop_value : 8;
     }
 }
 
-#define IPV4_OPTION_SECURITY_VALUE 0x82
-header_type ipv4_option_security_t {
-    fields {
-        security_value : 8;
-        len : 8;
-        security : 72;
-    }
-}
-
-#define IPV4_OPTION_TIMESTAMP_VALUE 0x44
-header_type ipv4_option_timestamp_t {
-    fields {
-        timestamp_value : 8;
-        len : 8;
-        data : *;
-    }
-    length : len;
-    max_length : 40;
-}
-
-#define IPV4_OPTION_LOOSE_SOURCE_ROUTE_VALUE 0x83
-header_type ipv4_option_lsr_t {
-    fields {
-        lsr_value : 8;
-        len : 8;
-        data : *;
-    }
-    length : len;
-    max_length : 40;
-}
-
-#define IPV4_OPTION_STRICT_SOURCE_ROUTE_VALUE 0x89
-header_type ipv4_option_ssr_t {
-    fields {
-        ssr_value : 8;
-        len : 8;
-        data : *;
-    }
-    length : len;
-    max_length : 40;
-}
-
-#define IPV4_OPTION_RECORD_ROUTE_VALUE 0x7
 header_type ipv4_option_rr_t {
     fields {
-        rr_value : 8;
+        type_ : 8;
         len : 8;
+        ptr : 8;
+        pad : 64;
+        src_ip : 32;
+        dst_ip : 32;
+    }
+}
+
+header_type ipv4_option_generic_t {
+    fields {
+        opt_val : 8;
+        len  : 8;
         data : *;
     }
     length : len;
@@ -158,7 +122,7 @@ header_type ipv4_options_blob_t {
         hdr_len : 8;
         data : *;
     }
-    length : (hdr_len << 2) - 20;
+    length : hdr_len;
     max_length : 40;
 }
 

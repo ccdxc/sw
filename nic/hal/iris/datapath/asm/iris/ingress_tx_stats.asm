@@ -1,10 +1,11 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
+#include "INGRESS_ingress_tx_stats_k.h"
 #include "platform/capri/capri_common.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 
-struct ingress_tx_stats_k k;
-struct phv_               p;
+struct ingress_tx_stats_k_ k;
+struct phv_                p;
 
 #define DROP_(pkt_type)     ((1 << 2) | pkt_type)
 
@@ -26,8 +27,7 @@ ingress_tx_stats:
     setcf       c2, [c2 & !c3]
     phvwr.c2    p.control_metadata_dst_lport, 0
 
-    add         r7, r0, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
-                    capri_p4_intrinsic_packet_len_sbit6_ebit13}
+    add         r7, r0, k.capri_p4_intrinsic_packet_len
     addi        r6, r0, 0x1000001
     or          r7, r7, r6, 32
 

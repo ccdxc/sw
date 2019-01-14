@@ -1,10 +1,11 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
+#include "INGRESS_input_mapping_native_k.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nw.h"
 
-struct input_mapping_native_k k;
-struct phv_                   p;
+struct input_mapping_native_k_ k;
+struct phv_ p;
 
 %%
 
@@ -19,6 +20,7 @@ nop:
 
 .align
 native_ipv4_packet:
+  phvwr         p.control_metadata_vf_id, k.capri_intrinsic_lif
   bbeq          k.ethernet_dstAddr[40], 0, native_ipv4_packet_common
   phvwr         p.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
   xor           r6, -1, r0
@@ -46,6 +48,8 @@ native_ipv4_packet_common:
   bbeq          k.esp_valid, TRUE, native_ipv4_esp_packet
   phvwr         p.{tunnel_metadata_tunnel_type,tunnel_metadata_tunnel_vni}, r0
 
+  seq           c1, k.ipv4_dstAddr[31:28], 0xF
+  phvwr.c1      p.control_metadata_dst_class_e, TRUE
   seq           c1, k.roce_bth_valid, TRUE
   cmov          r1, c1, r0, k.udp_srcPort
   or            r1, r1, k.udp_dstPort, 16
@@ -60,6 +64,7 @@ native_ipv4_esp_packet:
 
 .align
 native_ipv6_packet:
+  phvwr         p.control_metadata_vf_id, k.capri_intrinsic_lif
   bbeq          k.ethernet_dstAddr[40], 0, native_ipv6_packet_common
   phvwr         p.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
   xor           r6, -1, r0
@@ -77,12 +82,6 @@ native_ipv6_packet_common:
   or            r1, r1, k.udp_dstPort, 16
   seq           c1, k.l3_metadata_ipv6_ulp, IP_PROTO_UDP
   phvwr.c1      p.{flow_lkp_metadata_lkp_dport,flow_lkp_metadata_lkp_sport}, r1
-
-  phvwr         p.flow_lkp_metadata_lkp_src, k.{ipv6_srcAddr_sbit0_ebit31, \
-                                                ipv6_srcAddr_sbit32_ebit127}
-  phvwr         p.flow_lkp_metadata_lkp_dst, k.{ipv6_dstAddr_sbit0_ebit31, \
-                                               ipv6_dstAddr_sbit32_ebit127}
-
   phvwr         p.flow_lkp_metadata_lkp_proto, k.l3_metadata_ipv6_ulp
   phvwr         p.flow_lkp_metadata_lkp_srcMacAddr, k.ethernet_srcAddr
   phvwr         p.flow_lkp_metadata_lkp_dstMacAddr, k.ethernet_dstAddr
@@ -90,8 +89,8 @@ native_ipv6_packet_common:
   phvwr.f       p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV6
 
 .align
-.assert $ < ASM_INSTRUCTION_OFFSET_MAX
 native_non_ip_packet:
+  phvwr         p.control_metadata_vf_id, k.capri_intrinsic_lif
   bbeq          k.ethernet_dstAddr[40], 0, native_non_ip_packet_common
   phvwr         p.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
   xor           r6, -1, r0
