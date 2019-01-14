@@ -220,7 +220,8 @@ read:
     phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, op_type), r1, CAPRI_PHV_FIELD(SQCB_WRITE_BACK_RD_P, op_rd_read_len), r5
     // leave rest of variables to FALSE
 
-    phvwr CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, read_req_adjust), K_READ_REQ_ADJUST
+    srl            r3, K_READ_REQ_ADJUST, K_LOG_PMTU
+    phvwr CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, read_req_adjust), r3
 
     add            r2, AH_ENTRY_T_SIZE_BYTES, K_HEADER_TEMPLATE_ADDR, HDR_TEMP_ADDR_SHIFT
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r2)

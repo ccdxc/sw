@@ -242,8 +242,7 @@ add_headers:
         sll            r3, d.rrq_base_addr, RRQ_BASE_ADDR_SHIFT
         add            r3, r3, d.rrq_pindex, LOG_RRQ_WQE_SIZE
         
-        srl            r5, K_READ_REQ_ADJUST, K_RD_LOG_PMTU
-        sub            r5, d.tx_psn, r5
+        sub            r5, d.tx_psn, K_READ_REQ_ADJUST
         mincr          r5, 24, r0
         phvwrpair      p.rrqwqe.psn, r5, p.rrqwqe.msn, d.ssn
         

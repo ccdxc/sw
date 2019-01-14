@@ -173,6 +173,7 @@ sqcb_writeback:
     phvwrpair CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, tx_psn), r3, CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, sq_cindex), K_SQ_C_INDEX
     phvwrpair CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, ssn), K_SSN, \
               CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, imm_data_or_inv_key), K_IMM_DATA
+    phvwr     CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, op_type), CAPRI_KEY_FIELD(IN_P, op_type)
     phvwr.c6  CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, bktrack_in_progress), 1
 
     SQCB2_ADDR_GET(r5)
