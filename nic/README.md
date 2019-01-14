@@ -21,8 +21,7 @@
    * same goes with direct usage of new, ideally we should do HAL_MALLOC and
      use inplace constructor instead
    * refer to hal.hpp file
-* Use `HAL_ASSERT_XXX()` macros defined in hal.hpp instead of directly using
-  assert()
+* Use `SDK_ASSERT_XXX()` macros instead of directly using assert()
 * For protobuf, use 2 space indentation (not 4 space)
 * For C/C++, use 4 space indentation
 * No tabs (except probably Makefile)
@@ -47,6 +46,21 @@
   file should include all header files it depends on. Ensure there are no
   circular dependencies
 * please use C++ commenting style instead of C commenting style
+* Function declarations
+   - return type and rest of the declaration should be on same line
+   - no space required after the function name
+   - if declaration exceeds 80 chars, next function parameter should
+     be in next line aligned with 1st parameter
+   - if function doesn't take any args, use 'void' explicity
+* Function definitions
+  - C++ class methods don't need space between function name and arguments
+  - C++ class methods needs { in same line as last parameter
+  - C function definitions need space between function name and arguments
+  - C function definitions need { in separate line
+  - return type must be in separate line
+  - if parameters are spread across multiple lines, parameters from 2nd line
+    onwards must be aligned with 1st parameter (not 4 space indentantion from
+    start of the next line)
 
 ## Building and making sure HAL build is fine
 1. Under sw/, do "make pull-assets"
