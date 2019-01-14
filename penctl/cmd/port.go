@@ -30,6 +30,13 @@ var portShowCmd = &cobra.Command{
 	Run:   portShowCmdHandler,
 }
 
+var portStatusShowCmd = &cobra.Command{
+	Use:   "status",
+	Short: "show port object status",
+	Long:  "show port object status",
+	Run:   portStatusShowCmdHandler,
+}
+
 var portCmd = &cobra.Command{
 	Use:   "port",
 	Short: "update port object",
@@ -48,11 +55,38 @@ func init() {
 	portCmd.Flags().Uint32Var(&portMtu, "mtu", 0, "Specify port MTU")
 
 	showCmd.AddCommand(portShowCmd)
-	portShowCmd.Flags().Uint32Var(&portNum, "port", 1, "Specify port number")
+	portShowCmd.AddCommand(portStatusShowCmd)
+	portShowCmd.PersistentFlags().Uint32Var(&portNum, "port", 1, "Specify port number")
 }
 
 func portShowCmdHandler(cmd *cobra.Command, args []string) {
 	halctlStr := "/nic/bin/halctl show port "
+	if cmd.Flags().Changed("port") {
+		halctlStr += ("--port " + fmt.Sprint(portNum))
+	}
+
+	execCmd := strings.Fields(halctlStr)
+	v := &nmd.NaplesCmdExecute{
+		Executable: execCmd[0],
+		Opts:       strings.Join(execCmd[1:], " "),
+	}
+
+	resp, err := restGetWithBody(v, revProxyPort, "cmd/v1/naples/")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	if len(resp) > 3 {
+		s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
+		fmt.Printf("%s", s)
+	}
+
+	return
+}
+
+func portStatusShowCmdHandler(cmd *cobra.Command, args []string) {
+	halctlStr := "/nic/bin/halctl show port status "
 	if cmd.Flags().Changed("port") {
 		halctlStr += ("--port " + fmt.Sprint(portNum))
 	}
