@@ -226,6 +226,25 @@ func (hd *Datapath) createUpdateMirrorSession(mirrorSessionKey string, vrfID uin
 		return nil, nil, ErrMirrorCreate
 	}
 	if mirrorReqMsg != nil {
+		if update {
+			// delete and create again
+			delReq := &halproto.MirrorSessionDeleteRequestMsg{}
+
+			// build del request
+			for _, msg := range mirrorReqMsg.Request {
+				delReq.Request = append(delReq.Request, &halproto.MirrorSessionDeleteRequest{
+					KeyOrHandle: msg.KeyOrHandle,
+				})
+			}
+
+			log.Infof("delete mirror session %+v", mirrorReqMsg)
+			_, err := hd.Hal.TeleClient.MirrorSessionDelete(context.Background(), delReq)
+			if err != nil {
+				log.Errorf("Error deleteing mirror session. Err: %v", err)
+				return []uint64{}, []uint64{}, err
+			}
+		}
+
 		resp, err := hd.Hal.TeleClient.MirrorSessionCreate(context.Background(), mirrorReqMsg)
 		if err != nil {
 			log.Errorf("Error creating mirror session. Err: %v", err)
@@ -367,7 +386,7 @@ func (hd *Datapath) CreatePacketCaptureSession(mirrorSessionKey string, vrfID ui
 	mirrorReqMsg *halproto.MirrorSessionRequestMsg,
 	flowRuleReqMsgList []*halproto.FlowMonitorRuleRequestMsg,
 	dropRuleReqMsgList []*halproto.DropMonitorRuleRequestMsg) error {
-	log.Debugf("Packet capture session create request sent to Hal {%+v}, {%+v}, {%+v}", mirrorReqMsg,
+	log.Infof("Packet capture session create request sent to Hal {%+v}, {%+v}, {%+v}", mirrorReqMsg,
 		flowRuleReqMsgList, dropRuleReqMsgList)
 	_, _, err := hd.createUpdateMirrorSession(mirrorSessionKey, vrfID, false, db, mirrorReqMsg,
 		flowRuleReqMsgList, dropRuleReqMsgList)
@@ -379,7 +398,7 @@ func (hd *Datapath) UpdatePacketCaptureSession(mirrorSessionKey string, vrfID ui
 	mirrorReqMsg *halproto.MirrorSessionRequestMsg,
 	flowRuleReqMsgList []*halproto.FlowMonitorRuleRequestMsg,
 	dropRuleReqMsgList []*halproto.DropMonitorRuleRequestMsg) ([]uint64, []uint64, error) {
-	log.Debugf("Update packet capture session request being sent to Hal {%+v}", mirrorSessionKey)
+	log.Infof("Update packet capture session request being sent to Hal {%+v}", mirrorSessionKey)
 	return hd.createUpdateMirrorSession(mirrorSessionKey, vrfID, true, db, mirrorReqMsg,
 		flowRuleReqMsgList, dropRuleReqMsgList)
 }
