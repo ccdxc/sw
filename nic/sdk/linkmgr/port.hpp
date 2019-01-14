@@ -94,6 +94,11 @@ public:
         this->auto_neg_enable_ = auto_neg_enable;
     }
 
+    bool auto_neg_cfg(void) const { return this->auto_neg_cfg_; }
+    void set_auto_neg_cfg(bool auto_neg_cfg) {
+        this->auto_neg_cfg_ = auto_neg_cfg;
+    }
+
     port_pause_type_t pause(void) const { return this->pause_; }
     void set_pause(port_pause_type_t pause) {
         this->pause_ = pause;
@@ -309,6 +314,7 @@ private:
     port_fec_type_t       fec_type_;                  // FEC type
     port_pause_type_t     pause_;                     // Enable MAC pause
     bool                  auto_neg_enable_;           // Enable AutoNeg
+    bool                  auto_neg_cfg_;              // user configured AutoNeg
     void                  *link_bring_up_timer_;      // port link bring up timer
     void                  *link_debounce_timer_;      // port link debounce timer
     uint32_t              mac_id_;                    // mac instance for this port

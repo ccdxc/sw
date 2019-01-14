@@ -44,6 +44,7 @@ typedef struct xcvr_s {
     uint8_t        sprom_read_count;
     bool           debounce;
     port_an_args_t port_an_args;
+    port_speed_t   cable_speed;     // speed of inserted xcvr
     uint8_t        cache[XCVR_SPROM_CACHE_SIZE];
 } __PACK__ xcvr_t;
 
@@ -164,6 +165,18 @@ static inline void
 xcvr_set_valid_check (bool enable)
 {
     xcvr_valid_enable = enable;
+}
+
+inline port_speed_t
+cable_speed (int port)
+{
+    return g_xcvr[port].cable_speed;
+}
+
+inline void
+xcvr_set_cable_speed (int port, port_speed_t speed)
+{
+    g_xcvr[port].cable_speed = speed;
 }
 
 } // namespace platform

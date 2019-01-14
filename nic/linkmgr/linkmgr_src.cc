@@ -197,11 +197,14 @@ xcvr_event_port_get_ht_cb (void *ht_entry, void *ctxt)
         sdk::lib::catalog::port_num_to_qsfp_port(port_args.port_num);
 
     HAL_TRACE_DEBUG("port: {}, xcvr_port: {}, xcvr_event_port: {}, "
-                    "xcvr_state: {}, user_admin: {}, admin: {}",
+                    "xcvr_state: {}, user_admin: {}, admin: {}, "
+                    "AN_cfg: {}, AN_enable: {}",
                     port_args.port_num, xcvr_port, xcvr_event_info->port_num,
                     static_cast<uint32_t>(xcvr_event_info->state),
                     static_cast<uint32_t>(port_args.user_admin_state),
-                    static_cast<uint32_t>(port_args.admin_state));
+                    static_cast<uint32_t>(port_args.admin_state),
+                    port_args.auto_neg_cfg,
+                    port_args.auto_neg_enable);
 
     if (xcvr_port == -1 || xcvr_port != (int)xcvr_event_info->port_num) {
         return false;
@@ -220,10 +223,17 @@ xcvr_event_port_get_ht_cb (void *ht_entry, void *ctxt)
                         port_args.port_an_args->fec_ability,
                         port_args.port_an_args->fec_request);
 
+        // set admin_state based on user configured value
         if (port_args.user_admin_state ==
                 port_admin_state_t::PORT_ADMIN_STATE_UP) {
             port_args.admin_state = port_admin_state_t::PORT_ADMIN_STATE_UP;
         }
+
+        // set AN based on user configured value
+        port_args.auto_neg_enable = port_args.auto_neg_cfg;
+
+        // update port_args based on the xcvr state
+        sdk::linkmgr::port_args_set_by_xcvr_state(&port_args);
 
         sdk_ret = sdk::linkmgr::port_update(port->pd_p, &port_args);
 
@@ -583,8 +593,15 @@ port_create (port_args_t *port_args, hal_handle_t *hal_handle)
 
     pi_p->port_num = port_args->port_num;
 
-    // For config push, user_admin_state = admin_state
+    // store user configured admin_state in another variable to be used
+    // during xcvr insert/remove events
     port_args->user_admin_state = port_args->admin_state;
+
+    // store user configured AN in another variable to be used
+    // during xcvr insert/remove events
+    port_args->auto_neg_cfg     = port_args->auto_neg_enable;
+
+    // update port_args based on the xcvr state
     sdk::linkmgr::port_args_set_by_xcvr_state(port_args);
 
     dhl_entry.handle  = pi_p->hal_handle_id;
@@ -796,8 +813,15 @@ port_update (port_args_t *port_args)
 
     HAL_TRACE_DEBUG("port update for port: {}", port_args->port_num);
 
-    // For config push, user_admin_state = admin_state
+    // store user configured admin_state in another variable to be used
+    // during xcvr insert/remove events
     port_args->user_admin_state = port_args->admin_state;
+
+    // store user configured AN in another variable to be used
+    // during xcvr insert/remove events
+    port_args->auto_neg_cfg     = port_args->auto_neg_enable;
+
+    // update port_args based on the xcvr state
     sdk::linkmgr::port_args_set_by_xcvr_state(port_args);
 
     // form ctxt and call infra update object

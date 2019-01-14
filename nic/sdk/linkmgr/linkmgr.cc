@@ -649,6 +649,7 @@ port_args_set_by_xcvr_state (port_args_t *port_args)
         sdk::lib::catalog::port_num_to_qsfp_port(port_args->port_num);
 
     port::xcvr_port_mac_addr(xcvr_port, port_args->mac_addr);
+
     // default cable type is CU
     port_args->cable_type = cable_type_t::CABLE_TYPE_CU;
 
@@ -661,6 +662,7 @@ port_args_set_by_xcvr_state (port_args_t *port_args)
             if (port_args->cable_type == cable_type_t::CABLE_TYPE_NONE) {
                 port_args->cable_type = cable_type_t::CABLE_TYPE_CU;
             }
+
             port_args->port_an_args =
                             sdk::platform::xcvr_get_an_args(xcvr_port - 1);
 
@@ -674,7 +676,18 @@ port_args_set_by_xcvr_state (port_args_t *port_args)
 
             switch (port_args->cable_type) {
             case cable_type_t::CABLE_TYPE_FIBER:
-                // port_args->auto_neg_enable = false;
+                if (port_args->auto_neg_enable == true) {
+                    port_args->auto_neg_enable = false;
+                    port_args->port_speed =
+                                sdk::platform::cable_speed(xcvr_port-1);
+
+                    // TODO force FEC for 100G/40G
+                    if (port_args->port_speed == port_speed_t::PORT_SPEED_100G) {
+                        port_args->fec_type = port_fec_type_t::PORT_FEC_TYPE_RS;
+                    } else if (port_args->port_speed == port_speed_t::PORT_SPEED_40G) {
+                        port_args->fec_type = port_fec_type_t::PORT_FEC_TYPE_NONE;
+                    }
+                }
                 break;
 
             default:
@@ -748,6 +761,9 @@ port_create (port_args_t *args)
 
     // store the user configured admin state
     port_p->set_user_admin_state(args->user_admin_state);
+
+    // store the user configured AN
+    port_p->set_auto_neg_cfg(args->auto_neg_cfg);
 
     port_p->set_mac_fns(&mac_fns);
     port_p->set_serdes_fns(&serdes_fns);
@@ -829,6 +845,13 @@ port_update (void *pd_p, port_args_t *args)
         args->port_speed != port_p->port_speed()) {
         SDK_TRACE_DEBUG("speed updated. new: %d, old: %d",
                         args->port_speed, port_p->port_speed());
+
+        // TODO when to reset mac config?
+        if (port_p->port_speed() == port_speed_t::PORT_SPEED_100G ||
+            port_p->port_speed() == port_speed_t::PORT_SPEED_40G) {
+            port_p->port_deinit();
+        }
+
         port_p->set_port_speed(args->port_speed);
         configured = true;
     }
@@ -886,6 +909,13 @@ port_update (void *pd_p, port_args_t *args)
         SDK_TRACE_DEBUG("AN updated. new: %d, old: %d",
                         args->auto_neg_enable, port_p->auto_neg_enable());
         port_p->set_auto_neg_enable(args->auto_neg_enable);
+        configured = true;
+    }
+
+    if (args->auto_neg_cfg != port_p->auto_neg_cfg()) {
+        SDK_TRACE_DEBUG("AN cfg updated. new: %d, old: %d",
+                        args->auto_neg_cfg, port_p->auto_neg_cfg());
+        port_p->set_auto_neg_cfg(args->auto_neg_cfg);
         configured = true;
     }
 
@@ -992,6 +1022,7 @@ port_get (void *pd_p, port_args_t *args)
     args->mtu         = port_p->mtu();
     args->debounce_time    = port_p->debounce_time();
     args->auto_neg_enable  = port_p->auto_neg_enable();
+    args->auto_neg_cfg     = port_p->auto_neg_cfg();
     args->user_admin_state = port_p->user_admin_state();
     args->pause       = port_p->pause();
     args->link_sm     = port_p->port_link_sm();

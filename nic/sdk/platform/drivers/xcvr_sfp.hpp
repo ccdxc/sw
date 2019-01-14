@@ -30,18 +30,22 @@ sfp_sprom_parse (int port, uint8_t *data)
             // 10G Base SR
             xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_10GBASE_SR);
             set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
+            xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_10G);
         } else if (data[3] & ( 1 << 5)) {
             // 10G Base LR
             xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_10GBASE_LR);
             set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
+            xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_10G);
         } else if (data[3] & ( 1 << 6)) {
             // 10G Base LRM
             xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_10GBASE_LRM);
             set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
+            xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_10G);
         } else if (data[3] & ( 1 << 7)) {
             // 10G Base ER
             xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_10GBASE_ER);
             set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
+            xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_10G);
         }
 
         return sdk_ret;
@@ -56,18 +60,21 @@ sfp_sprom_parse (int port, uint8_t *data)
         // 25GBASE-SR
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_25GBASE_SR);
         set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
+        xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_25G);
         break;
 
     case 0x3:
         // 25GBASE-LR
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_25GBASE_LR);
         set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
+        xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_25G);
         break;
 
     case 0x4:
         // 25GBASE-ER
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_25GBASE_ER);
         set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
+        xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_25G);
         break;
 
     case 0x8:
@@ -81,6 +88,7 @@ sfp_sprom_parse (int port, uint8_t *data)
                          AN_USER_CAP_25GBKRCR_S | AN_USER_CAP_25GBKRCR,
                          true,
                          AN_FEC_REQ_25GB_RSFEC | AN_FEC_REQ_25GB_FCFEC);
+        xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_25G);
         break;
 
     case 0xc:
@@ -90,6 +98,7 @@ sfp_sprom_parse (int port, uint8_t *data)
                          AN_USER_CAP_25GBKRCR_S | AN_USER_CAP_25GBKRCR,
                          true,
                          AN_FEC_REQ_25GB_RSFEC | AN_FEC_REQ_25GB_FCFEC);
+        xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_25G);
         break;
 
     case 0xd:
@@ -99,6 +108,7 @@ sfp_sprom_parse (int port, uint8_t *data)
                          AN_USER_CAP_25GBKRCR_S | AN_USER_CAP_25GBKRCR,
                          true,
                          AN_FEC_REQ_25GB_RSFEC | AN_FEC_REQ_25GB_FCFEC);
+        xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_25G);
         break;
 
     case 0x16:
