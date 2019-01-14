@@ -89,7 +89,7 @@ DEFINE_ENUM(if_acl_ref_type_t, IF_ACL_REF_TYPE)
 
 // Interface strucutre
 typedef struct if_s {
-    hal_spinlock_t      slock;                      // lock to protect this structure
+    sdk_spinlock_t      slock;                      // lock to protect this structure
     if_id_t             if_id;                      // interface id
     IfType              if_type;                    // interface type
     IfStatus            if_admin_status;            // admin status
@@ -250,7 +250,7 @@ if_lock (if_t *hal_if, const char *fname, int lineno, const char *fxname)
 {
     HAL_TRACE_DEBUG("operlock:locking if:{} from {}:{}:{}",
                     hal_if->if_id, fname, lineno, fxname);
-    HAL_SPINLOCK_LOCK(&hal_if->slock);
+    SDK_SPINLOCK_LOCK(&hal_if->slock);
 }
 
 static inline void
@@ -258,7 +258,7 @@ if_unlock (if_t *hal_if, const char *fname, int lineno, const char *fxname)
 {
     HAL_TRACE_DEBUG("operlock:unlocking if:{} from {}:{}:{}",
                     hal_if->if_id, fname, lineno, fxname);
-    HAL_SPINLOCK_UNLOCK(&hal_if->slock);
+    SDK_SPINLOCK_UNLOCK(&hal_if->slock);
 }
 
 static inline bool

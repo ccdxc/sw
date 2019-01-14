@@ -35,7 +35,7 @@ using internal::TcpCbGetResponseMsg;
 namespace hal {
 
 typedef struct tcpcb_s {
-    hal_spinlock_t        slock;                   // lock to protect this structure
+    sdk_spinlock_t        slock;                   // lock to protect this structure
     tcpcb_id_t            cb_id;                   // TCP CB id
     uint32_t              rcv_nxt;
     uint32_t              snd_nxt;
@@ -165,7 +165,7 @@ tcpcb_init (tcpcb_t *tcpcb)
     if (!tcpcb) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&tcpcb->slock, PTHREAD_PROCESS_PRIVATE);
+    SDK_SPINLOCK_INIT(&tcpcb->slock, PTHREAD_PROCESS_PRIVATE);
 
     // initialize the operational state
     tcpcb->pd = NULL;
@@ -187,7 +187,7 @@ tcpcb_alloc_init (void)
 static inline hal_ret_t
 tcpcb_free (tcpcb_t *tcpcb)
 {
-    HAL_SPINLOCK_DESTROY(&tcpcb->slock);
+    SDK_SPINLOCK_DESTROY(&tcpcb->slock);
     hal::delay_delete_to_slab(HAL_SLAB_TCPCB, tcpcb);
     return HAL_RET_OK;
 }

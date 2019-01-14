@@ -1,4 +1,4 @@
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/iris/internal/copp_pd.hpp"
 #include "nic/hal/pd/iris/aclqos/qos_pd.hpp"

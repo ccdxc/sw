@@ -43,7 +43,7 @@ using debug::SchedulerStatsResponse;
 namespace hal {
 
 typedef struct fte_span_s {
-    hal_spinlock_t              slock;
+    sdk_spinlock_t              slock;
     // types::FTESpanMatchSelector sel;
     uint32_t                    sel;
     types::IPAddressFamily      ip_family;

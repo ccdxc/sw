@@ -39,7 +39,7 @@ typedef struct crypto_key_pub_info_s {
 } crypto_key_pub_info_t;
 
 typedef struct crypto_cert_s {
-    hal_spinlock_t          slock;       // lock to protect this structure
+    sdk_spinlock_t          slock;       // lock to protect this structure
     crypto_cert_id_t        cert_id;     // id
     X509                    *x509_cert;  // x509 encoded certificate
     crypto_cert_id_t        next_cert_id; // Next certificate in the chain
@@ -66,7 +66,7 @@ crypto_cert_init(crypto_cert_t *cert)
     if(!cert) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&cert->slock, PTHREAD_PROCESS_PRIVATE);
+    SDK_SPINLOCK_INIT(&cert->slock, PTHREAD_PROCESS_PRIVATE);
     cert->ht_ctxt.reset();
     return cert;
 }
@@ -80,7 +80,7 @@ crypto_cert_alloc_init(void)
 static inline hal_ret_t
 crypto_cert_free(crypto_cert_t *cert)
 {
-    HAL_SPINLOCK_DESTROY(&cert->slock);
+    SDK_SPINLOCK_DESTROY(&cert->slock);
     hal::delay_delete_to_slab(HAL_SLAB_CRYPTO_CERT_STORE, cert);
     return HAL_RET_OK;
 }

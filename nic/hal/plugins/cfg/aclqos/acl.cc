@@ -135,7 +135,7 @@ acl_free (acl_t *acl, bool free_pd)
             return ret;
         }
     }
-    HAL_SPINLOCK_DESTROY(&acl->slock);
+    SDK_SPINLOCK_DESTROY(&acl->slock);
     hal::delay_delete_to_slab(HAL_SLAB_ACL, acl);
     return ret;
 }

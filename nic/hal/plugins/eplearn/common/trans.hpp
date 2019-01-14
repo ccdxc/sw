@@ -30,19 +30,19 @@ typedef struct trans_ip_entry_key_s {
 
 class trans_t {
 private:
-    hal_spinlock_t slock_;  // lock to protect this structure
+    sdk_spinlock_t slock_;  // lock to protect this structure
     bool marked_for_delete_;
     trans_ip_entry_key_t ip_entry_key_;
 
 public:
     fsm_state_machine_t *sm_;
     trans_t() {
-        HAL_SPINLOCK_INIT(&this->slock_, PTHREAD_PROCESS_PRIVATE);
+        SDK_SPINLOCK_INIT(&this->slock_, PTHREAD_PROCESS_PRIVATE);
         marked_for_delete_ = false;
         sm_= nullptr;
     }
     virtual ~trans_t() {
-        HAL_SPINLOCK_DESTROY(&this->slock_);
+        SDK_SPINLOCK_DESTROY(&this->slock_);
     }
 
     virtual void log_error(const char *message)  {}
@@ -93,7 +93,7 @@ public:
         if (trans->marked_for_delete_) {
             return;
         }
-        HAL_SPINLOCK_LOCK(&trans->slock_);
+        SDK_SPINLOCK_LOCK(&trans->slock_);
         if (!trans->marked_for_delete_) {
             trans->sm_->process_event(event, data);
             if (trans->sm_->state_machine_competed()) {
@@ -105,7 +105,7 @@ public:
         } else {
             trans->log_error("Transaction in marked for delete state, skipping processing");
         }
-        HAL_SPINLOCK_UNLOCK(&trans->slock_);
+        SDK_SPINLOCK_UNLOCK(&trans->slock_);
     }
 
     static void process_learning_transaction(trans_t *trans, fte::ctx_t &ctx, uint32_t event,

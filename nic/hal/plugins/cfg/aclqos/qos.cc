@@ -18,14 +18,14 @@ static inline void
 qos_class_lock (qos_class_t *qos_class,
                 const char *fname, int lineno, const char *fxname)
 {
-    HAL_SPINLOCK_LOCK(&qos_class->slock);
+    SDK_SPINLOCK_LOCK(&qos_class->slock);
 }
 
 static inline void
 qos_class_unlock (qos_class_t *qos_class,
                   const char *fname, int lineno, const char *fxname)
 {
-    HAL_SPINLOCK_UNLOCK(&qos_class->slock);
+    SDK_SPINLOCK_UNLOCK(&qos_class->slock);
 }
 
 // ----------------------------------------------------------------------------
@@ -90,7 +90,7 @@ qos_class_init (qos_class_t *qos_class)
     if (!qos_class) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&qos_class->slock, PTHREAD_PROCESS_SHARED);
+    SDK_SPINLOCK_INIT(&qos_class->slock, PTHREAD_PROCESS_SHARED);
 
     // initialize the operational state
     qos_class->hal_handle   = HAL_HANDLE_INVALID;
@@ -402,7 +402,7 @@ qos_class_free (qos_class_t *qos_class, bool free_pd)
         }
     }
 
-    HAL_SPINLOCK_DESTROY(&qos_class->slock);
+    SDK_SPINLOCK_DESTROY(&qos_class->slock);
     hal::delay_delete_to_slab(HAL_SLAB_QOS_CLASS, qos_class);
     return ret;
 }
@@ -1851,14 +1851,14 @@ static inline void
 copp_lock (copp_t *copp,
            const char *fname, int lineno, const char *fxname)
 {
-    HAL_SPINLOCK_LOCK(&copp->slock);
+    SDK_SPINLOCK_LOCK(&copp->slock);
 }
 
 static inline void
 copp_unlock (copp_t *copp,
              const char *fname, int lineno, const char *fxname)
 {
-    HAL_SPINLOCK_UNLOCK(&copp->slock);
+    SDK_SPINLOCK_UNLOCK(&copp->slock);
 }
 
 // ----------------------------------------------------------------------------
@@ -1923,7 +1923,7 @@ copp_init (copp_t *copp)
     if (!copp) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&copp->slock, PTHREAD_PROCESS_SHARED);
+    SDK_SPINLOCK_INIT(&copp->slock, PTHREAD_PROCESS_SHARED);
 
     // initialize the operational state
     copp->hal_handle   = HAL_HANDLE_INVALID;
@@ -2071,7 +2071,7 @@ copp_free (copp_t *copp, bool free_pd)
             return ret;
         }
     }
-    HAL_SPINLOCK_DESTROY(&copp->slock);
+    SDK_SPINLOCK_DESTROY(&copp->slock);
     hal::delay_delete_to_slab(HAL_SLAB_COPP, copp);
     return ret;
 }
@@ -2387,7 +2387,7 @@ copp_create (CoppSpec& spec, CoppResponse *rsp)
     }
 
     // initialize the copp record
-    HAL_SPINLOCK_INIT(&copp->slock, PTHREAD_PROCESS_SHARED);
+    SDK_SPINLOCK_INIT(&copp->slock, PTHREAD_PROCESS_SHARED);
 
     // populate from the spec
     ret = copp_init_from_spec(copp, spec);

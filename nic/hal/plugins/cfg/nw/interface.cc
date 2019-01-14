@@ -98,7 +98,7 @@ if_init (if_t *hal_if)
         return NULL;
     }
     memset(hal_if, 0, sizeof(if_t));
-    HAL_SPINLOCK_INIT(&hal_if->slock, PTHREAD_PROCESS_SHARED);
+    SDK_SPINLOCK_INIT(&hal_if->slock, PTHREAD_PROCESS_SHARED);
 
     // initialize the operational state
     hal_if->num_ep            = 0;
@@ -137,7 +137,7 @@ if_alloc_init (void)
 static inline hal_ret_t
 if_free (if_t *hal_if)
 {
-    HAL_SPINLOCK_DESTROY(&hal_if->slock);
+    SDK_SPINLOCK_DESTROY(&hal_if->slock);
     hal::delay_delete_to_slab(HAL_SLAB_IF, hal_if);
     return HAL_RET_OK;
 }

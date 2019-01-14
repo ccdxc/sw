@@ -94,7 +94,7 @@ typedef struct nat_cfg_pol_s {
     dllist_ctxt_t        rule_list;
 
     // operational
-    hal_spinlock_t       slock;
+    sdk_spinlock_t       slock;
     hal_handle_t         hal_hdl;
 } nat_cfg_pol_t;
 

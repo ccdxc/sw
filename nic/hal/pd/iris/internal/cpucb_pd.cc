@@ -1,6 +1,6 @@
 #include "nic/include/base.hpp"
 #include <arpa/inet.h>
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/internal/cpucb_pd.hpp"
 #include "nic/hal/pd/iris/internal/gccb_pd.hpp"

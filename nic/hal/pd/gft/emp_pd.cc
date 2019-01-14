@@ -3,7 +3,7 @@
 #include "nic/hal/src/internal/eth.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/hal/pd/gft/emp_pd.hpp"
 #include "nic/hal/pd/gft/pd_utils.hpp"
 #include "nic/hal/pd/gft/gft_state.hpp"

@@ -7,7 +7,7 @@
 
 #include "nic/include/base.hpp"
 #include "nic/sdk/include/sdk/encap.hpp"
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 #include "lib/list/list.hpp"
 #include "lib/ht/ht.hpp"
 #include "gen/proto/internal.pb.h"
@@ -34,7 +34,7 @@ namespace hal {
 
 
 typedef struct rawrcb_s {
-    hal_spinlock_t        slock;                   // lock to protect this structure
+    sdk_spinlock_t        slock;                   // lock to protect this structure
     rawrcb_id_t           cb_id;
 
     /*

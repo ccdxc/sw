@@ -77,7 +77,7 @@ lif_init (lif_t *lif)
     if (!lif) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&lif->slock, PTHREAD_PROCESS_SHARED);
+    SDK_SPINLOCK_INIT(&lif->slock, PTHREAD_PROCESS_SHARED);
 
     // initialize the operational state
     lif->hal_handle    = HAL_HANDLE_INVALID;
@@ -100,7 +100,7 @@ lif_alloc_init (void)
 static inline hal_ret_t
 lif_free (lif_t *lif)
 {
-    HAL_SPINLOCK_DESTROY(&lif->slock);
+    SDK_SPINLOCK_DESTROY(&lif->slock);
     hal::delay_delete_to_slab(HAL_SLAB_LIF, lif);
     return HAL_RET_OK;
 }

@@ -31,7 +31,7 @@ typedef struct route_key_s {
 
 // route object
 typedef struct route_s {
-    hal_spinlock_t    slock;                // lock to protect this structure
+    sdk_spinlock_t    slock;                // lock to protect this structure
     route_key_t       key;                  // route key
     route_acl_rule_t *route_rule;           // rule in route ACL. Used during delete
     hal_handle_t      hal_handle;           // HAL allocated handle
@@ -59,7 +59,7 @@ route_lock (route_t *route, const char *fname, int lineno,
     HAL_TRACE_DEBUG("Locking route : {} from {} : {} : {}",
                     route_to_str(route),
                     fname, lineno, fxname);
-    HAL_SPINLOCK_LOCK(&route->slock);
+    SDK_SPINLOCK_LOCK(&route->slock);
 }
 
 static inline void
@@ -69,7 +69,7 @@ route_unlock (route_t *route, const char *fname, int lineno,
     HAL_TRACE_DEBUG("Unlocking route : {} from {} : {} : {}",
                     route_to_str(route),
                     fname, lineno, fxname);
-    HAL_SPINLOCK_UNLOCK(&route->slock);
+    SDK_SPINLOCK_UNLOCK(&route->slock);
 }
 
 // allocate a route instance
@@ -92,7 +92,7 @@ route_init (route_t *route)
     if (!route) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&route->slock, PTHREAD_PROCESS_SHARED);
+    SDK_SPINLOCK_INIT(&route->slock, PTHREAD_PROCESS_SHARED);
 
     route->route_rule = NULL;
     route->hal_handle = HAL_HANDLE_INVALID;
@@ -112,7 +112,7 @@ route_alloc_init (void)
 static inline hal_ret_t
 route_free (route_t *route)
 {
-    HAL_SPINLOCK_DESTROY(&route->slock);
+    SDK_SPINLOCK_DESTROY(&route->slock);
     hal::delay_delete_to_slab(HAL_SLAB_ROUTE, route);
     return HAL_RET_OK;
 }

@@ -710,7 +710,7 @@ filter_init (filter_t *filter)
     if (!filter) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&filter->slock, PTHREAD_PROCESS_SHARED);
+    SDK_SPINLOCK_INIT(&filter->slock, PTHREAD_PROCESS_SHARED);
 
     // initialize the operational state
     filter->hal_handle   = HAL_HANDLE_INVALID;
@@ -734,7 +734,7 @@ filter_alloc_init (void)
 static inline hal_ret_t
 filter_free (filter_t *filter)
 {
-    HAL_SPINLOCK_DESTROY(&filter->slock);
+    SDK_SPINLOCK_DESTROY(&filter->slock);
     hal::delay_delete_to_slab(HAL_SLAB_FILTER, filter);
     return HAL_RET_OK;
 }

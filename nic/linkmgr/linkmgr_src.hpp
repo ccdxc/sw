@@ -44,7 +44,7 @@ typedef struct linkmgr_cfg_s {
 } linkmgr_cfg_t;
 
 typedef struct port_s {
-    hal_spinlock_t                 slock;            // lock to protect this structure
+    sdk_spinlock_t                 slock;            // lock to protect this structure
 
     port_num_t                     port_num;         // uplink port number
 
@@ -63,7 +63,7 @@ port_lock(port_t *pi_p, const char *fname, int lineno, const char *fxname)
     HAL_TRACE_DEBUG("operlock:locking port:{} from {}:{}:{}", 
                      pi_p-> port_num,
                     fname, lineno, fxname);
-    HAL_SPINLOCK_LOCK(&pi_p->slock);
+    SDK_SPINLOCK_LOCK(&pi_p->slock);
 }
 
 static inline void
@@ -72,7 +72,7 @@ port_unlock(port_t *pi_p, const char *fname, int lineno, const char *fxname)
     HAL_TRACE_DEBUG("operlock:unlocking port:{} from {}:{}:{}", 
                      pi_p->port_num,
                     fname, lineno, fxname);
-    HAL_SPINLOCK_UNLOCK(&pi_p->slock);
+    SDK_SPINLOCK_UNLOCK(&pi_p->slock);
 }
 
 // allocate a port instance
@@ -89,7 +89,7 @@ port_init (port_t *pi_p)
     if (!pi_p) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&pi_p->slock, PTHREAD_PROCESS_PRIVATE);
+    SDK_SPINLOCK_INIT(&pi_p->slock, PTHREAD_PROCESS_PRIVATE);
 
     // initialize the operational state
     pi_p->pd_p = NULL;
@@ -107,7 +107,7 @@ port_alloc_init (void)
 static inline hal_ret_t
 port_free (port_t *pi_p)
 {
-    HAL_SPINLOCK_DESTROY(&pi_p->slock);
+    SDK_SPINLOCK_DESTROY(&pi_p->slock);
     g_linkmgr_state->port_slab()->free(pi_p);
     return HAL_RET_OK;
 }

@@ -246,7 +246,7 @@ typedef struct flow_stats_s {
 
 // flow state
 struct flow_s {
-    hal_spinlock_t        slock;               // lock to protect this structure
+    sdk_spinlock_t        slock;               // lock to protect this structure
     bool                  is_aug_flow;         // is an augment flow
 
     flow_cfg_t            config;              // flow config
@@ -363,7 +363,7 @@ typedef struct session_args_s {
 // session consists of only single flow
 //------------------------------------------------------------------------------
 struct session_s {
-    hal_spinlock_t      slock;                    // lock to protect this structure
+    sdk_spinlock_t      slock;                    // lock to protect this structure
     uint8_t             fte_id:4;                 // FTE that created this session
     uint8_t             conn_track_en:1;          // enable connection tracking
     flow_t              *iflow;                   // initiator flow

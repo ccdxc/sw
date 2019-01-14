@@ -4,7 +4,7 @@
 #define __HAL_MTRACK_HPP__
 
 #include "nic/include/base.hpp"
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/include/hal_mem.hpp"
 
 namespace hal {
@@ -21,7 +21,7 @@ typedef std::map<uint32_t, mtrack_info_t *>::iterator mtrack_map_it_t;
 class mem_mgr {
 public:
     mem_mgr() : mtrack_map_() {
-        HAL_SPINLOCK_INIT(&mtrack_map_slock_, PTHREAD_PROCESS_PRIVATE);
+        SDK_SPINLOCK_INIT(&mtrack_map_slock_, PTHREAD_PROCESS_PRIVATE);
         enabled_ = true;
     }
 
@@ -59,7 +59,7 @@ public:
             return mem;
         }
 
-        HAL_SPINLOCK_LOCK(&mtrack_map_slock_);
+        SDK_SPINLOCK_LOCK(&mtrack_map_slock_);
         it = mtrack_map_.find(alloc_id);
         if (it != mtrack_map_.end()) {
             it->second->num_allocs++;
@@ -74,7 +74,7 @@ public:
                 mtrack_map_[alloc_id] = mtrack_info;
             }
         }
-        HAL_SPINLOCK_UNLOCK(&mtrack_map_slock_);
+        SDK_SPINLOCK_UNLOCK(&mtrack_map_slock_);
 
         if (free_mem) {
             free(mem);
@@ -99,7 +99,7 @@ public:
             return;
         }
 
-        HAL_SPINLOCK_LOCK(&mtrack_map_slock_);
+        SDK_SPINLOCK_LOCK(&mtrack_map_slock_);
         it = mtrack_map_.find(alloc_id);
         if (it != mtrack_map_.end()) {
             it->second->num_frees++;
@@ -117,7 +117,7 @@ public:
             HAL_TRACE_ERR("Freed mem {:#x} with alloc id {} without mtrack info",
                           ptr, alloc_id);
         }
-        HAL_SPINLOCK_UNLOCK(&mtrack_map_slock_);
+        SDK_SPINLOCK_UNLOCK(&mtrack_map_slock_);
 
         if (free_mem) {
             free(mtrack_info);
@@ -130,19 +130,19 @@ public:
     void walk(void *ctxt, walk_cb_t walk_cb) {
         mtrack_map_it_t     it;
 
-        HAL_SPINLOCK_LOCK(&mtrack_map_slock_);
+        SDK_SPINLOCK_LOCK(&mtrack_map_slock_);
         for (it = mtrack_map_.begin(); it != mtrack_map_.end(); ++it) {
             if (!walk_cb(ctxt, it->first, it->second)) {
                 // if callback returns false, stop iterating
                 break;
             }
         }
-        HAL_SPINLOCK_UNLOCK(&mtrack_map_slock_);
+        SDK_SPINLOCK_UNLOCK(&mtrack_map_slock_);
     }
 
 private:
     mtrack_map_t      mtrack_map_;
-    hal_spinlock_t    mtrack_map_slock_;
+    sdk_spinlock_t    mtrack_map_slock_;
     bool              enabled_;
 };
 

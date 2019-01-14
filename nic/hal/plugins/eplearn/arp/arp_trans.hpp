@@ -140,7 +140,7 @@ private:
         if (!arp_trans) {
             return NULL;
         }
-        //HAL_SPINLOCK_INIT(&arp_trans->slock_, PTHREAD_PROCESS_PRIVATE);
+        //SDK_SPINLOCK_INIT(&arp_trans->slock_, PTHREAD_PROCESS_PRIVATE);
 
         // initialize meta information
         arp_trans->ht_ctxt_.reset();
@@ -154,7 +154,7 @@ private:
     }
 
     static hal_ret_t arp_trans_free(arp_trans_t *arp_trans) {
-        //HAL_SPINLOCK_DESTROY(&arp_trans->slock_);
+        //SDK_SPINLOCK_DESTROY(&arp_trans->slock_);
         arplearn_slab_->free(arp_trans);
         return HAL_RET_OK;
     }

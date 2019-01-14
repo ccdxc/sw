@@ -162,7 +162,7 @@ drop_reason_spec_to_codes (const types::DropReasons &spec,
 }
 
 typedef struct drop_monitor_rule_s {
-    hal_spinlock_t slock;
+    sdk_spinlock_t slock;
     uint32_t rule_id;
     drop_reason_codes_t codes;
     bool mirror_destinations[MAX_MIRROR_SESSION_DEST];
@@ -177,7 +177,7 @@ typedef struct flow_monitor_rule_action_s {
 } __PACK__ flow_monitor_rule_action_t;
 
 typedef struct flow_monitor_rule_s {
-    hal_spinlock_t  slock;
+    sdk_spinlock_t  slock;
     uint64_t        vrf_id;
     uint32_t        rule_id;
     rule_match_t    rule_match;
@@ -187,7 +187,7 @@ typedef struct flow_monitor_rule_s {
 } flow_monitor_rule_t;
 
 typedef struct mirror_session_s {
-    hal_spinlock_t slock;
+    sdk_spinlock_t slock;
     mirror_session_id_t id;
     mirror_desttype_en type;
     uint32_t truncate_len;

@@ -177,7 +177,7 @@ eventmgr::event_state_alloc_init_(event_id_t event_id)
         return NULL;
     }
     event_state->event_id = event_id;
-    HAL_SPINLOCK_INIT(&event_state->slock, PTHREAD_PROCESS_PRIVATE);
+    SDK_SPINLOCK_INIT(&event_state->slock, PTHREAD_PROCESS_PRIVATE);
     dllist_reset(&event_state->lctxt_head);
     event_state->ht_ctxt.reset();
 
@@ -328,11 +328,11 @@ eventmgr::subscribe(event_id_t event_id, void *lctxt)
         }
     }
 
-    HAL_SPINLOCK_LOCK(&event_state->slock);
+    SDK_SPINLOCK_LOCK(&event_state->slock);
     event_lstate = add_listener_to_event_state_(event_state, listener_state);
     if (event_lstate == NULL) {
         ret = HAL_RET_OOM;
-        HAL_SPINLOCK_UNLOCK(&event_state->slock);
+        SDK_SPINLOCK_UNLOCK(&event_state->slock);
         goto error;
     }
 
@@ -341,7 +341,7 @@ eventmgr::subscribe(event_id_t event_id, void *lctxt)
         ret = add_eventmap_entry_(event_state);
         if (ret != HAL_RET_OK) {
             del_event_listener_(event_lstate);
-            HAL_SPINLOCK_UNLOCK(&event_state->slock);
+            SDK_SPINLOCK_UNLOCK(&event_state->slock);
             goto error;
         }
     }
@@ -353,12 +353,12 @@ eventmgr::subscribe(event_id_t event_id, void *lctxt)
             if (new_event_state) {
                 del_eventmap_entry_(event_state);
             }
-            HAL_SPINLOCK_UNLOCK(&event_state->slock);
+            SDK_SPINLOCK_UNLOCK(&event_state->slock);
             goto error;
         }
     }
     listener_state->event_bmap |= (1 << event_id);
-    HAL_SPINLOCK_UNLOCK(&event_state->slock);
+    SDK_SPINLOCK_UNLOCK(&event_state->slock);
     HAL_TRACE_DEBUG("Listener {} successfully registered for event {}",
                     lctxt, event_id);
 
@@ -430,9 +430,9 @@ eventmgr::unsubscribe(event_id_t event_id, void *lctxt)
 
     HAL_TRACE_DEBUG("Unsubscribing listener {} from event {}",
                     listener_state->lctxt, event_state->event_id);
-    HAL_SPINLOCK_LOCK(&event_state->slock);
+    SDK_SPINLOCK_LOCK(&event_state->slock);
     unsubscribe_(event_state, listener_state);
-    HAL_SPINLOCK_UNLOCK(&event_state->slock);
+    SDK_SPINLOCK_UNLOCK(&event_state->slock);
 
     return HAL_RET_OK;
 }
@@ -484,9 +484,9 @@ eventmgr::unsubscribe_listener(void *lctxt)
 
         HAL_TRACE_DEBUG("Unsubscribing listener {} from event {}",
                         listener_state->lctxt, event_state->event_id);
-        HAL_SPINLOCK_LOCK(&event_state->slock);
+        SDK_SPINLOCK_LOCK(&event_state->slock);
         unsubscribe_(event_state, listener_state);
-        HAL_SPINLOCK_UNLOCK(&event_state->slock);
+        SDK_SPINLOCK_UNLOCK(&event_state->slock);
 
         event_bmap >>= 1;
         event_id++;
@@ -508,16 +508,16 @@ eventmgr::walk_listeners(event_id_t event_id, void *event_ctxt,
     if (event_state == NULL) {
         return HAL_RET_ENTRY_NOT_FOUND;
     }
-    HAL_SPINLOCK_LOCK(&event_state->slock);
+    SDK_SPINLOCK_LOCK(&event_state->slock);
     dllist_for_each_safe(curr, next, &event_state->lctxt_head) {
         lstate = dllist_entry(curr, event_listener_state_t, lentry);
         if (!walk_cb(event_id, event_ctxt, lstate->lctxt)) {
-            HAL_SPINLOCK_UNLOCK(&event_state->slock);
+            SDK_SPINLOCK_UNLOCK(&event_state->slock);
             unsubscribe_listener(lstate->lctxt);
-            HAL_SPINLOCK_LOCK(&event_state->slock);
+            SDK_SPINLOCK_LOCK(&event_state->slock);
         }
     }
-    HAL_SPINLOCK_UNLOCK(&event_state->slock);
+    SDK_SPINLOCK_UNLOCK(&event_state->slock);
 
     return HAL_RET_OK;
 }

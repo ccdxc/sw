@@ -366,13 +366,13 @@ hal_ret_t alg_state::alloc_and_insert_exp_flow(app_session_t *app_sess,
         return HAL_RET_OOM;
     }
 
-    HAL_SPINLOCK_LOCK(&app_sess->slock);
+    SDK_SPINLOCK_LOCK(&app_sess->slock);
     exp_flow->app_session = app_sess;
     SET_EXP_FLOW_KEY(exp_flow->entry.key, key);
     insert_expected_flow(&exp_flow->entry);
     dllist_reset(&exp_flow->exp_flow_lentry);
     dllist_add(&app_sess->exp_flow_lhead, &exp_flow->exp_flow_lentry);
-    HAL_SPINLOCK_UNLOCK(&app_sess->slock);
+    SDK_SPINLOCK_UNLOCK(&app_sess->slock);
 
     if (enable_timer == true) {
         HAL_TRACE_DEBUG("Starting timer for expected flow with key: {} exp_flow {:p}", 
@@ -400,11 +400,11 @@ hal_ret_t alg_state::alloc_and_insert_l4_sess(app_session_t *app_sess,
         return HAL_RET_OOM;
     }
 
-    HAL_SPINLOCK_LOCK(&app_sess->slock);
+    SDK_SPINLOCK_LOCK(&app_sess->slock);
     alg_status->app_session = app_sess;
     dllist_reset(&alg_status->l4_sess_lentry);
     dllist_add(&app_sess->l4_sess_lhead, &alg_status->l4_sess_lentry);
-    HAL_SPINLOCK_UNLOCK(&app_sess->slock);
+    SDK_SPINLOCK_UNLOCK(&app_sess->slock);
 
     *l4_sess = alg_status;
 
@@ -426,9 +426,9 @@ hal_ret_t alg_state::insert_app_sess (app_session_t *app_session,
     hal_ret_t rc;
 
     if (ctrl_app_sess)
-        HAL_SPINLOCK_LOCK(&ctrl_app_sess->slock);
+        SDK_SPINLOCK_LOCK(&ctrl_app_sess->slock);
 
-    HAL_SPINLOCK_INIT(&app_session->slock, PTHREAD_PROCESS_PRIVATE);
+    SDK_SPINLOCK_INIT(&app_session->slock, PTHREAD_PROCESS_PRIVATE);
 
     ret = app_sess_ht()->insert(app_session, &app_session->app_sess_ht_ctxt);
     rc = hal_sdk_ret_to_hal_ret(ret);
@@ -443,7 +443,7 @@ end:
     if (ctrl_app_sess) {
         // Link this app session to the control app session
         dllist_add(&ctrl_app_sess->app_sess_lentry, &app_session->app_sess_lentry);
-        HAL_SPINLOCK_UNLOCK(&ctrl_app_sess->slock);
+        SDK_SPINLOCK_UNLOCK(&ctrl_app_sess->slock);
     }
 
     return rc;
@@ -471,12 +471,12 @@ void alg_state::move_expflow_to_l4sess(app_session_t *app_sess,
                                             l4_alg_status_t *exp_flow) {
     remove_expected_flow(exp_flow->entry.key);
 
-    HAL_SPINLOCK_LOCK(&app_sess->slock);
+    SDK_SPINLOCK_LOCK(&app_sess->slock);
     dllist_del(&exp_flow->exp_flow_lentry);
     dllist_reset(&exp_flow->l4_sess_lentry);
     dllist_add(&app_sess->l4_sess_lhead, &exp_flow->l4_sess_lentry);
     exp_flow->alg = nwsec::APP_SVC_NONE;
-    HAL_SPINLOCK_UNLOCK(&app_sess->slock);
+    SDK_SPINLOCK_UNLOCK(&app_sess->slock);
 }
 
 /*
@@ -485,7 +485,7 @@ void alg_state::move_expflow_to_l4sess(app_session_t *app_sess,
 l4_alg_status_t *alg_state::get_next_expflow(app_session_t *app_sess) {
     sdk::lib::dllist_ctxt_t   *lentry, *next;
 
-    HAL_SPINLOCK_LOCK(&app_sess->slock);
+    SDK_SPINLOCK_LOCK(&app_sess->slock);
     dllist_for_each_safe(lentry, next, &app_sess->exp_flow_lhead)
     {
         l4_alg_status_t *exp_flow = dllist_entry(lentry,
@@ -493,7 +493,7 @@ l4_alg_status_t *alg_state::get_next_expflow(app_session_t *app_sess) {
         HAL_ASSERT(exp_flow != NULL);
         return exp_flow;
     }
-    HAL_SPINLOCK_UNLOCK(&app_sess->slock);
+    SDK_SPINLOCK_UNLOCK(&app_sess->slock);
 
     return NULL;
 }
@@ -504,18 +504,18 @@ l4_alg_status_t *alg_state::get_next_expflow(app_session_t *app_sess) {
 l4_alg_status_t *alg_state::get_ctrl_l4sess(app_session_t *app_sess) {
     sdk::lib::dllist_ctxt_t   *lentry, *next;
 
-    HAL_SPINLOCK_LOCK(&app_sess->slock);
+    SDK_SPINLOCK_LOCK(&app_sess->slock);
     dllist_for_each_safe(lentry, next, &app_sess->l4_sess_lhead)
     {
         l4_alg_status_t *l4_sess = dllist_entry(lentry,
                                   l4_alg_status_t, l4_sess_lentry);
         HAL_ASSERT(l4_sess != NULL);
         if (l4_sess->isCtrl == true) {
-            HAL_SPINLOCK_UNLOCK(&app_sess->slock);
+            SDK_SPINLOCK_UNLOCK(&app_sess->slock);
             return l4_sess;
         }
     }
-    HAL_SPINLOCK_UNLOCK(&app_sess->slock);
+    SDK_SPINLOCK_UNLOCK(&app_sess->slock);
 
     return NULL;
 }
@@ -540,7 +540,7 @@ void alg_state::cleanup_app_session(app_session_t *app_sess) {
     bool             app_cleanup = true;
 
     // Take the lock
-    HAL_SPINLOCK_LOCK(&app_sess->slock);
+    SDK_SPINLOCK_LOCK(&app_sess->slock);
 
     app_sess_ht()->remove((void *)&app_sess->key);
 
@@ -577,7 +577,7 @@ void alg_state::cleanup_app_session(app_session_t *app_sess) {
     // We want to hold on to the app session
     // until the L4 sessions are cleanup
     if (app_cleanup == false) {
-        HAL_SPINLOCK_UNLOCK(&app_sess->slock);
+        SDK_SPINLOCK_UNLOCK(&app_sess->slock);
         return;
     }
 
@@ -589,9 +589,9 @@ void alg_state::cleanup_app_session(app_session_t *app_sess) {
     if (!dllist_empty(&app_sess->app_sess_lentry))
         dllist_del(&app_sess->app_sess_lentry);
 
-    HAL_SPINLOCK_UNLOCK(&app_sess->slock);
+    SDK_SPINLOCK_UNLOCK(&app_sess->slock);
 
-    HAL_SPINLOCK_DESTROY(&app_sess->slock);
+    SDK_SPINLOCK_DESTROY(&app_sess->slock);
 
     app_sess_slab()->free(app_sess);
     HAL_TRACE_DEBUG("Cleaned up ALG App session");

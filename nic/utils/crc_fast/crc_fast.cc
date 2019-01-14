@@ -18,7 +18,7 @@ crcFast::init(uint8_t num_polys, bool thread_safe)
 {
     thread_safe_ = thread_safe;
     if (thread_safe_) {
-        HAL_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
+        SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
     }
 
     num_polys_ = num_polys;
@@ -72,13 +72,13 @@ crcFast::factory(uint8_t num_polys, bool thread_safe)
 crcFast::~crcFast()
 {
     if (thread_safe_) {
-        HAL_SPINLOCK_LOCK(&slock_);
+        SDK_SPINLOCK_LOCK(&slock_);
     }
     if (crcTable_) {
         HAL_FREE(HAL_MEM_ALLOC_LIB_CRCFAST, crcTable_);
     }
     if (thread_safe_) {
-        HAL_SPINLOCK_DESTROY(&slock_);
+        SDK_SPINLOCK_DESTROY(&slock_);
     }
 }
 

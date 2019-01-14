@@ -4,7 +4,7 @@
 
 #include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "gen/hal/include/hal_api_stats.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec.hpp"
@@ -84,7 +84,7 @@ nwsec_profile_init (nwsec_profile_t *sec_prof)
     memset(sec_prof, 0, sizeof(nwsec_profile_t));
 
 
-    HAL_SPINLOCK_INIT(&sec_prof->slock, PTHREAD_PROCESS_SHARED);
+    SDK_SPINLOCK_INIT(&sec_prof->slock, PTHREAD_PROCESS_SHARED);
 
     // initialize the operational state
     sdk::lib::dllist_reset(&sec_prof->vrf_list_head);
@@ -107,7 +107,7 @@ nwsec_profile_alloc_init (void)
 static inline hal_ret_t
 nwsec_profile_free (nwsec_profile_t *sec_prof)
 {
-    HAL_SPINLOCK_DESTROY(&sec_prof->slock);
+    SDK_SPINLOCK_DESTROY(&sec_prof->slock);
     hal::delay_delete_to_slab(HAL_SLAB_SECURITY_PROFILE, sec_prof);
     return HAL_RET_OK;
 }

@@ -39,7 +39,7 @@ nat_cfg_pol_free (nat_cfg_pol_t *pol)
 static inline void
 nat_cfg_pol_init (nat_cfg_pol_t *pol)
 {
-    HAL_SPINLOCK_INIT(&pol->slock, PTHREAD_PROCESS_SHARED);
+    SDK_SPINLOCK_INIT(&pol->slock, PTHREAD_PROCESS_SHARED);
     dllist_reset(&pol->rule_list);
     pol->hal_hdl = HAL_HANDLE_INVALID;
 }
@@ -47,7 +47,7 @@ nat_cfg_pol_init (nat_cfg_pol_t *pol)
 static inline void
 nat_cfg_pol_uninit (nat_cfg_pol_t *pol)
 {
-    HAL_SPINLOCK_DESTROY(&pol->slock);
+    SDK_SPINLOCK_DESTROY(&pol->slock);
 }
 
 static inline nat_cfg_pol_t *

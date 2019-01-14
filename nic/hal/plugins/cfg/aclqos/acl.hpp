@@ -193,7 +193,7 @@ inline std::ostream& operator<<(std::ostream& os, const acl_key_t& s)
 
 // Acl structure
 typedef struct acl_s {
-    hal_spinlock_t    slock;         // lock to protect this structure
+    sdk_spinlock_t    slock;         // lock to protect this structure
     acl_key_t         key;           // acl key information
 
     uint32_t          priority;
@@ -232,7 +232,7 @@ acl_init (acl_t *acl)
     if (!acl) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&acl->slock, PTHREAD_PROCESS_PRIVATE);
+    SDK_SPINLOCK_INIT(&acl->slock, PTHREAD_PROCESS_PRIVATE);
 
     return acl;
 }

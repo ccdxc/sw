@@ -10,7 +10,7 @@
 #include "lib/bitmap/bitmap.hpp"
 #include "gen/proto/qos.pb.h"
 #include "nic/include/pd.hpp"
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/utils/block_list/block_list.hpp"
 
 using sdk::lib::ht_ctxt_t;
@@ -134,7 +134,7 @@ typedef struct qos_marking_action_s {
 
 // QosClass structure
 typedef struct qos_class_s {
-    hal_spinlock_t       slock;          // lock to protect this structure
+    sdk_spinlock_t       slock;          // lock to protect this structure
     qos_class_key_t      key;            // QOS group information
 
     uint32_t             mtu;            // MTU of the packets in bytes
@@ -374,7 +374,7 @@ inline std::ostream& operator<<(std::ostream& os, const copp_key_t& s)
 }
 
 typedef struct copp_s {
-    hal_spinlock_t slock;         // lock to protect this structure
+    sdk_spinlock_t slock;         // lock to protect this structure
     copp_key_t     key;           // copp key information
     policer_t      policer;       // policer values
     // operational state of copp

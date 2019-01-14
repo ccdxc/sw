@@ -168,7 +168,7 @@ inline uint64_t __pack_uint64(const uint8_t *buf, uint32_t *idx,
 // L4 session and multiple data sessions.
 //------------------------------------------------------------------------------
 typedef struct app_session_s {
-    hal_spinlock_t       slock;                     // lock to protect this structure
+    sdk_spinlock_t       slock;                     // lock to protect this structure
     hal::flow_key_t      key;                       // Key for app session hash table
     bool                 isCtrl;                    // Is this a control APP session (RTSP/SIP)
     void                *oper;                      // per-ALG app session operational status
@@ -265,7 +265,7 @@ public:
     l4_alg_status_t *get_ctrl_l4sess(app_session_t *app_sess);
 
 private:
-    wp_rwlock                      rwlock_;                   // Read-write lock to alg_state
+    sdk::wp_rwlock                 rwlock_;                   // Read-write lock to alg_state
     const char                    *feature_;                  // Feature name for this instance
     slab                          *app_sess_slab_;            // Slab to allocate memory from for app_sess
     slab                          *l4_sess_slab_;             // L4 Session slab to allocate memory from

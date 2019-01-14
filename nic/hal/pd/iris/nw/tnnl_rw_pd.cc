@@ -1,5 +1,5 @@
 #include "nic/include/base.hpp"
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 #include "gen/p4gen/p4/include/p4pd.h"
 #include "nic/hal/pd/iris/nw/tnnl_rw_pd.hpp"
 #include "nic/hal/pd/iris/nw/if_pd_utils.hpp"

@@ -32,7 +32,7 @@ using internal::IpsecCbGetResponseMsg;
 namespace hal {
 
 typedef struct ipseccb_s {
-    hal_spinlock_t        slock;                   // lock to protect this structure
+    sdk_spinlock_t        slock;                   // lock to protect this structure
     ipseccb_id_t          cb_id;                   // CB id
     uint16_t              pi;
     uint16_t              ci;
@@ -111,7 +111,7 @@ ipseccb_init (ipseccb_t *ipseccb)
     if (!ipseccb) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&ipseccb->slock, PTHREAD_PROCESS_PRIVATE);
+    SDK_SPINLOCK_INIT(&ipseccb->slock, PTHREAD_PROCESS_PRIVATE);
 
     // initialize the operational state
     ipseccb->pd = NULL;
@@ -133,7 +133,7 @@ ipseccb_alloc_init (void)
 static inline hal_ret_t
 ipseccb_free (ipseccb_t *ipseccb)
 {
-    HAL_SPINLOCK_DESTROY(&ipseccb->slock);
+    SDK_SPINLOCK_DESTROY(&ipseccb->slock);
     hal::delay_delete_to_slab(HAL_SLAB_IPSECCB, ipseccb);
     return HAL_RET_OK;
 }

@@ -58,7 +58,7 @@ typedef struct mc_entry_s {
     oif_list_id_t         oif_list;                // outgoing interface list
 
     // operational state of L2 segment
-    hal_spinlock_t        slock;                   // lock to protect this structure
+    sdk_spinlock_t        slock;                   // lock to protect this structure
     hal_handle_t          hal_handle;              // HAL allocated handle
     dllist_ctxt_t         if_list_head;            // interface list
 
@@ -76,7 +76,7 @@ static inline void multicast_entry_lock(mc_entry_t *mc_entry, const char *fname,
 {
     HAL_TRACE_DEBUG("{}:operlock:locking multicast_entry:{} from {}:{}:{}",
                     __FUNCTION__, mc_entry->hal_handle, fname, lineno, fxname);
-    HAL_SPINLOCK_LOCK(&mc_entry->slock);
+    SDK_SPINLOCK_LOCK(&mc_entry->slock);
 }
 
 static inline void multicast_entry_unlock(mc_entry_t *mc_entry, const char *fname,
@@ -84,7 +84,7 @@ static inline void multicast_entry_unlock(mc_entry_t *mc_entry, const char *fnam
 {
     HAL_TRACE_DEBUG("{}:operlock:unlocking multicast_entry:{} from {}:{}:{}",
                     __FUNCTION__, mc_entry->hal_handle, fname, lineno, fxname);
-    HAL_SPINLOCK_UNLOCK(&mc_entry->slock);
+    SDK_SPINLOCK_UNLOCK(&mc_entry->slock);
 }
 
 // allocate a multicast entry instance
@@ -100,7 +100,7 @@ static inline mc_entry_t *mc_entry_init (mc_entry_t *mc_entry)
         return NULL;
     }
 
-    HAL_SPINLOCK_INIT(&mc_entry->slock, PTHREAD_PROCESS_SHARED);
+    SDK_SPINLOCK_INIT(&mc_entry->slock, PTHREAD_PROCESS_SHARED);
 
     // initialize the operational state
     mc_entry->pd = NULL;
@@ -119,7 +119,7 @@ static inline mc_entry_t *mc_entry_alloc_init (void)
 
 static inline hal_ret_t mc_entry_free (mc_entry_t *mc_entry)
 {
-    HAL_SPINLOCK_DESTROY(&mc_entry->slock);
+    SDK_SPINLOCK_DESTROY(&mc_entry->slock);
     return hal::delay_delete_to_slab(HAL_SLAB_MC_ENTRY, mc_entry);
 }
 

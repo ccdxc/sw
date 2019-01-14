@@ -49,7 +49,7 @@ private:
 
 private:
     ht           *port_id_ht_;
-    wp_rwlock    rwlock_;
+    sdk::wp_rwlock  rwlock_;
 
     typedef struct obj_meta_s {
         uint32_t        obj_sz;

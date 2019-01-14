@@ -72,7 +72,7 @@ typedef struct lif_queue_info_s {
 
 // LIF structure
 typedef struct lif_s {
-    hal_spinlock_t      slock;           // lock to protect this structure
+    sdk_spinlock_t      slock;           // lock to protect this structure
     lif_id_t            lif_id;          // lif id assigned
     char                name[LIF_NAME_LEN]; // LIF's name
     types::LifType      type;            // lif type
@@ -151,7 +151,7 @@ lif_lock (lif_t *lif, const char *fname,
     HAL_TRACE_DEBUG("{}:operlock:locking lif:{} from {}:{}:{}",
                     __FUNCTION__, lif->lif_id,
                     fname, lineno, fxname);
-    HAL_SPINLOCK_LOCK(&lif->slock);
+    SDK_SPINLOCK_LOCK(&lif->slock);
 }
 
 static inline void
@@ -161,7 +161,7 @@ lif_unlock (lif_t *lif, const char *fname,
     HAL_TRACE_DEBUG("{}:operlock:unlocking lif:{} from {}:{}:{}",
                     __FUNCTION__, lif->lif_id,
                     fname, lineno, fxname);
-    HAL_SPINLOCK_UNLOCK(&lif->slock);
+    SDK_SPINLOCK_UNLOCK(&lif->slock);
 }
 
 extern sdk::platform::capri::LIFManager *lif_manager();

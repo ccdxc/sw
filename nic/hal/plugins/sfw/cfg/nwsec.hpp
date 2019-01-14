@@ -8,7 +8,7 @@
 #include "nic/include/base.hpp"
 #include "lib/list/list.hpp"
 #include "lib/ht/ht.hpp"
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/hal/lib/hal_handle.hpp"
 #include "nic/include/pd.hpp"
 
@@ -42,7 +42,7 @@ using nwsec::SecurityFlowGateDeleteResponseMsg;
 namespace hal {
 
 typedef struct nwsec_profile_s {
-    hal_spinlock_t        slock;                  // lock to protect this structure
+    sdk_spinlock_t        slock;                  // lock to protect this structure
     nwsec_profile_id_t    profile_id;             // profile id
 
     uint32_t              session_idle_timeout;
@@ -168,14 +168,14 @@ static inline void
 nwsec_profile_lock(nwsec_profile_t *nwsec_profile, const char *fname,
                    int lineno, const char *fxname)
 {
-    HAL_SPINLOCK_LOCK(&nwsec_profile->slock);
+    SDK_SPINLOCK_LOCK(&nwsec_profile->slock);
 }
 
 static inline void
 nwsec_profile_unlock(nwsec_profile_t *nwsec_profile, const char *fname,
                      int lineno, const char *fxname)
 {
-    HAL_SPINLOCK_UNLOCK(&nwsec_profile->slock);
+    SDK_SPINLOCK_UNLOCK(&nwsec_profile->slock);
 }
 
 extern nwsec_profile_t *find_nwsec_profile_by_id(nwsec_profile_id_t profile_id);

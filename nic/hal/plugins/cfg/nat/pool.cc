@@ -31,7 +31,7 @@ nat_pool_address_alloc (nat_pool_t *pool, ip_addr_t *nat_addr)
         return HAL_RET_NO_RESOURCE;
     }
 
-    HAL_SPINLOCK_LOCK(&pool->slock);
+    SDK_SPINLOCK_LOCK(&pool->slock);
     sret = pool->addr_bmap->first_free(&free_idx);
     ret = hal_sdk_ret_to_hal_ret(sret);
     if (ret != HAL_RET_OK) {
@@ -84,7 +84,7 @@ nat_pool_address_alloc (nat_pool_t *pool, ip_addr_t *nat_addr)
 
 error:
 
-    HAL_SPINLOCK_UNLOCK(&pool->slock);
+    SDK_SPINLOCK_UNLOCK(&pool->slock);
     return ret;
 }
 

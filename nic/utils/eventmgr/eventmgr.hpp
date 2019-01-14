@@ -4,7 +4,7 @@
 #define __EVENTMGR_HPP__
 
 #include "nic/include/base.hpp"
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 #include "lib/slab/slab.hpp"
 #include "lib/ht/ht.hpp"
 #include "lib/list/list.hpp"
@@ -31,7 +31,7 @@ typedef struct event_listener_state_s {
 // and is used to walk when a event needs to be notified
 typedef struct event_state_s {
     event_id_t        event_id;
-    hal_spinlock_t    slock;
+    sdk_spinlock_t    slock;
     dllist_ctxt_t     lctxt_head;
     ht_ctxt_t         ht_ctxt;
 } __PACK__ event_state_t;

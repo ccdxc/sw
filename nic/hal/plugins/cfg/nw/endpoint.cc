@@ -117,7 +117,7 @@ ep_init (ep_t *ep)
         return NULL;
     }
     memset(ep, 0, sizeof(ep_t));
-    HAL_SPINLOCK_INIT(&ep->slock, PTHREAD_PROCESS_SHARED);
+    SDK_SPINLOCK_INIT(&ep->slock, PTHREAD_PROCESS_SHARED);
 
     sdk::lib::dllist_reset(&ep->ip_list_head);
     sdk::lib::dllist_reset(&ep->session_list_head);
@@ -144,7 +144,7 @@ ep_alloc_init (void)
 static inline hal_ret_t
 ep_free (ep_t *ep)
 {
-    HAL_SPINLOCK_DESTROY(&ep->slock);
+    SDK_SPINLOCK_DESTROY(&ep->slock);
 
     // TODO: may have to free list of ip entries
     hal::delay_delete_to_slab(HAL_SLAB_EP, ep);

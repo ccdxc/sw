@@ -55,7 +55,7 @@ typedef union wring_slot_info_u {
 } wring_slot_info_t;
 
 typedef struct wring_s {
-    hal_spinlock_t        slock;                   // lock to protect this structure
+    sdk_spinlock_t        slock;                   // lock to protect this structure
     wring_id_t            wring_id;                // WRing id
     types::WRingType      wring_type;              // Wring Type
     uint64_t              slot_index;              // PI/CI for the request
@@ -96,7 +96,7 @@ wring_init (wring_t *wring)
     if (!wring) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&wring->slock, PTHREAD_PROCESS_PRIVATE);
+    SDK_SPINLOCK_INIT(&wring->slock, PTHREAD_PROCESS_PRIVATE);
 
     // initialize the operational state
     wring->pd = NULL;
@@ -118,7 +118,7 @@ wring_alloc_init (void)
 static inline hal_ret_t
 wring_free (wring_t *wring)
 {
-    HAL_SPINLOCK_DESTROY(&wring->slock);
+    SDK_SPINLOCK_DESTROY(&wring->slock);
     hal::delay_delete_to_slab(HAL_SLAB_WRING, wring);
     return HAL_RET_OK;
 }

@@ -42,7 +42,7 @@ typedef struct filter_key_s {
 } __PACK__ filter_key_t;
 
 typedef struct filter_s {
-    hal_spinlock_t  slock;   // lock to protect this structure
+    sdk_spinlock_t  slock;   // lock to protect this structure
     filter_key_t    key;
 
     hal_handle_t hal_handle;

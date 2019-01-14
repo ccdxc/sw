@@ -2,7 +2,7 @@
 
 #include "nic/hal/src/internal/eth.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/hal/pd/gft/efe_pd.hpp"
 #include "nic/hal/pd/gft/pd_utils.hpp"
 #include "nic/hal/pd/gft/p4pd_defaults.hpp"

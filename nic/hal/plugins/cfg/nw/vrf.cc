@@ -7,7 +7,7 @@
 #include <google/protobuf/util/json_util.h>
 #include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "gen/hal/include/hal_api_stats.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
@@ -86,7 +86,7 @@ vrf_init (vrf_t *vrf)
     if (!vrf) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&vrf->slock, PTHREAD_PROCESS_SHARED);
+    SDK_SPINLOCK_INIT(&vrf->slock, PTHREAD_PROCESS_SHARED);
 
     // initialize the operational state
     vrf->hal_handle   = HAL_HANDLE_INVALID;
@@ -119,7 +119,7 @@ vrf_alloc_init (void)
 static inline hal_ret_t
 vrf_free (vrf_t *vrf)
 {
-    HAL_SPINLOCK_DESTROY(&vrf->slock);
+    SDK_SPINLOCK_DESTROY(&vrf->slock);
     hal::delay_delete_to_slab(HAL_SLAB_VRF, vrf);
     return HAL_RET_OK;
 }
