@@ -68,6 +68,7 @@ func init() {
 	qosClassCreateCmd.Flags().Uint32Var(&qosXon, "xon-threshold", 0, "Specify xon threshold (2 * mtu to 4 * mtu)")
 	qosClassCreateCmd.Flags().Uint32Var(&qosXoff, "xoff-threshold", 0, "Specify xoff threshold (2 * mtu to 8 * mtu)")
 	qosClassCreateCmd.Flags().BoolVar(&qosPfc, "pfc-enable", false, "Enable PFC with default values")
+	qosClassCreateCmd.Flags().Uint32Var(&qosPfcCos, "pfc-cos", 0, "Specify COS value for PFC")
 	qosClassCreateCmd.MarkFlagRequired("qosgroup")
 	qosClassCreateCmd.MarkFlagRequired("mtu")
 
@@ -81,6 +82,7 @@ func init() {
 	qosClassUpdateCmd.Flags().Uint32Var(&qosXon, "xon-threshold", 0, "Specify xon threshold (2 * mtu to 4 * mtu)")
 	qosClassUpdateCmd.Flags().Uint32Var(&qosXoff, "xoff-threshold", 0, "Specify xoff threshold (2 * mtu to 8 * mtu)")
 	qosClassUpdateCmd.Flags().BoolVar(&qosPfc, "pfc-enable", false, "Enable PFC with default values")
+	qosClassUpdateCmd.Flags().Uint32Var(&qosPfcCos, "pfc-cos", 0, "Specify COS value for PFC")
 	qosClassUpdateCmd.MarkFlagRequired("qosgroup")
 
 	deleteCmd.AddCommand(qosClassDeleteCmd)
