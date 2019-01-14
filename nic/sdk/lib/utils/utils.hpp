@@ -11,7 +11,7 @@ namespace lib {
 #define NUM_BITS_IN_BYTE  8
 
 static inline uint16_t
-set_bits_count (uint64_t mask)
+count_bits_set (uint64_t mask)
 {
     uint16_t count = 0;
     while (mask != 0) {

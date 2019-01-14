@@ -360,13 +360,13 @@ hal_parse_cores_cfg (ptree &pt, hal_cfg_t *hal_cfg)
     hal_cfg->control_cores_mask = std::stoul(str, nullptr, 16);
     sdk::lib::thread::control_cores_mask_set(hal_cfg->control_cores_mask);
     hal_cfg->num_control_threads =
-                    sdk::lib::set_bits_count(hal_cfg->control_cores_mask);
+                    sdk::lib::count_bits_set(hal_cfg->control_cores_mask);
 
     str = pt.get<std::string>("sw.data_cores_mask");
     hal_cfg->data_cores_mask = std::stoul(str, nullptr, 16);
     sdk::lib::thread::data_cores_mask_set(hal_cfg->data_cores_mask);
     hal_cfg->num_data_threads =
-                    sdk::lib::set_bits_count(hal_cfg->data_cores_mask);
+                    sdk::lib::count_bits_set(hal_cfg->data_cores_mask);
 
     return HAL_RET_OK;
 }

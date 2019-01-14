@@ -36,7 +36,10 @@ typedef enum oci_init_mode_e {
 typedef struct oci_init_params_s {
     oci_init_mode_t           init_mode;   /**< mode of initialization */
     sdk_logger::trace_cb_t    trace_cb;    /**< callback for trace msgs */
-    std::string               cfg_file;    /**< config file path */
+    std::string               cfg_file;    /**< absolute path to directory where
+                                                all config files are present,
+                                                files under <cfg_path>/pipeline/
+                                                are picked by the software */
 } oci_init_params_t;
 
 /**

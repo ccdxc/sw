@@ -28,19 +28,6 @@ namespace impl {
 sdk_ret_t
 capri_impl::init_(asic_cfg_t *asic_cfg) {
     asic_cfg_ = *asic_cfg;
-    if (asic_cfg->platform == platform_type_t::PLATFORM_TYPE_HW) {
-        catalog_ =
-            sdk::lib::catalog::factory(asic_cfg->cfg_path + "/catalog_hw.json");
-    } else if (asic_cfg->platform == platform_type_t::PLATFORM_TYPE_RTL) {
-        catalog_ =
-            sdk::lib::catalog::factory(asic_cfg->cfg_path + "/catalog_rtl.json");
-    } else if (asic_cfg->platform == platform_type_t::PLATFORM_TYPE_SIM) {
-        catalog_ =
-            sdk::lib::catalog::factory(asic_cfg->cfg_path + "/catalog.json");
-    }
-    if (catalog_ == NULL) {
-        return sdk::SDK_RET_ERR;
-    }
     return SDK_RET_OK;
 }
 

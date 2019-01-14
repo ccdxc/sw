@@ -396,7 +396,7 @@ capri_txs_scheduler_tx_alloc (capri_txs_sched_lif_params_t *tx_params,
     total_qcount = tx_params->total_qcount;
     *alloc_units  =  (total_qcount / CAPRI_TXS_SCHEDULER_NUM_QUEUES_PER_ENTRY);
     *alloc_units += ((total_qcount % CAPRI_TXS_SCHEDULER_NUM_QUEUES_PER_ENTRY) ? 1 : 0);
-    *alloc_units *=   sdk::lib::set_bits_count(tx_params->cos_bmp);
+    *alloc_units *=   sdk::lib::count_bits_set(tx_params->cos_bmp);
 
     if (*alloc_units > 0) {
         //Allocate consecutive alloc_unit num of entries in sched table.

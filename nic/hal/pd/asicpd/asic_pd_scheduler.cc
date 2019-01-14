@@ -82,7 +82,7 @@ asicpd_scheduler_tx_pd_program_hw (asicpd_scheduler_lif_params_t *lif)
     if (!lif) {
         goto end;
     }
-    num_cos_values = sdk::lib::set_bits_count(lif->cos_bmp);
+    num_cos_values = sdk::lib::count_bits_set(lif->cos_bmp);
     if (num_cos_values && lif->tx_sched_num_table_entries) {
         txs_hw_params.sched_table_offset  = lif->tx_sched_table_offset;
         txs_hw_params.num_entries_per_cos = (lif->tx_sched_num_table_entries / num_cos_values);
@@ -133,7 +133,7 @@ asicpd_policer_tx_pd_program_hw (asicpd_scheduler_lif_params_t *lif)
     if (!lif) {
         goto end;
     }
-    num_cos_values = sdk::lib::set_bits_count(lif->cos_bmp);
+    num_cos_values = sdk::lib::count_bits_set(lif->cos_bmp);
     if (num_cos_values && lif->tx_sched_num_table_entries) {
         txs_hw_params.sched_table_start_offset  = lif->tx_sched_table_offset;
         txs_hw_params.sched_table_end_offset = (lif->tx_sched_table_offset + lif->tx_sched_num_table_entries - 1);

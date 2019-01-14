@@ -21,6 +21,7 @@
 using std::string;
 namespace pt = boost::property_tree;
 
+char                *g_input_cfg_file = NULL;
 char                *g_cfg_file = NULL;
 ip_prefix_t         g_vcn_ippfx = { 0 };
 oci_switchport_t    g_sw_port = { 0 };
@@ -36,7 +37,7 @@ protected:
     /**< called at the beginning of all test cases in this class */
     static void SetUpTestCase() {
         /**< call base class function */
-        oci_test_base::SetUpTestCase(false);
+        oci_test_base::SetUpTestCase(g_cfg_file, false);
     }
 };
 
@@ -45,10 +46,11 @@ protected:
 // 2. create 1023 remote mappings per VCN
 //------------------------------------------------------------------------------
 static void
-create_mappings(uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
-                uint32_t num_vnics, uint32_t num_ip_per_vnic,
-                ip_prefix_t *teppfx, ip_prefix_t *natpfx,
-                uint32_t num_remote_mappings) {
+create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
+                 uint32_t num_vnics, uint32_t num_ip_per_vnic,
+                 ip_prefix_t *teppfx, ip_prefix_t *natpfx,
+                 uint32_t num_remote_mappings)
+{
     sdk_ret_t        rv;
     oci_mapping_t    oci_mapping;
     uint16_t         vnic_key = 1, ip_base, mac_offset = 1025;
@@ -120,8 +122,9 @@ create_mappings(uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
 }
 
 static void
-create_vnics(uint32_t num_vcns, uint32_t num_subnets,
-             uint32_t num_vnics, uint16_t vlan_start) {
+create_vnics (uint32_t num_vcns, uint32_t num_subnets,
+              uint32_t num_vnics, uint16_t vlan_start)
+{
     sdk_ret_t     rv;
     oci_vnic_t    oci_vnic;
     uint16_t      vnic_key = 1;
@@ -153,7 +156,8 @@ create_vnics(uint32_t num_vcns, uint32_t num_subnets,
 // VCN prefix is /8, subnet id is encoded in next 10 bits (making it /18 prefix)
 // leaving LSB 14 bits for VNIC IPs
 static void
-create_subnets(uint32_t vcn_id, uint32_t num_subnets, ip_prefix_t *vcn_pfx) {
+create_subnets (uint32_t vcn_id, uint32_t num_subnets, ip_prefix_t *vcn_pfx)
+{
     sdk_ret_t       rv;
     oci_subnet_t    oci_subnet;
 
@@ -175,7 +179,8 @@ create_subnets(uint32_t vcn_id, uint32_t num_subnets, ip_prefix_t *vcn_pfx) {
 }
 
 static void
-create_vcns(uint32_t num_vcns, ip_prefix_t *ip_pfx, uint32_t num_subnets) {
+create_vcns (uint32_t num_vcns, ip_prefix_t *ip_pfx, uint32_t num_subnets)
+{
     sdk_ret_t    rv;
     oci_vcn_t    oci_vcn;
 
@@ -196,7 +201,8 @@ create_vcns(uint32_t num_vcns, ip_prefix_t *ip_pfx, uint32_t num_subnets) {
 }
 
 static void
-create_teps(uint32_t num_teps, ip_prefix_t *ip_pfx) {
+create_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
+{
     sdk_ret_t    rv;
     oci_tep_t    oci_tep;
 
@@ -213,7 +219,8 @@ create_teps(uint32_t num_teps, ip_prefix_t *ip_pfx) {
 }
 
 static void
-create_switchport_cfg(ipv4_addr_t ipaddr, uint64_t macaddr, ipv4_addr_t gwip) {
+create_switchport_cfg (ipv4_addr_t ipaddr, uint64_t macaddr, ipv4_addr_t gwip)
+{
     sdk_ret_t           rv;
 
     memset(&g_sw_port, 0, sizeof(g_sw_port));
@@ -225,7 +232,8 @@ create_switchport_cfg(ipv4_addr_t ipaddr, uint64_t macaddr, ipv4_addr_t gwip) {
 }
 
 static void
-create_objects(void) {
+create_objects (void)
+{
     uint32_t       num_vcns = 0, num_subnets = 0, num_vnics = 0, num_teps = 0;
     uint32_t       num_remote_mappings = 0;
     uint16_t       vlan_start = 1;
@@ -234,7 +242,7 @@ create_objects(void) {
     string         pfxstr;
 
     // parse the config and create objects
-    std::ifstream json_cfg(g_cfg_file);
+    std::ifstream json_cfg(g_input_cfg_file);
     read_json(json_cfg, json_pt);
     try {
         BOOST_FOREACH(pt::ptree::value_type& obj, json_pt.get_child("objects")) {
@@ -295,10 +303,13 @@ TEST_F(scale_test, scale_test_create) {
 static void inline
 print_usage (char **argv)
 {
-    fprintf(stdout, "Usage : %s -c|--config <cfg.json>\n", argv[0]);
+    fprintf(stdout,
+            "Usage : %s -c <hal.json> -i <object-config.json>\n", argv[0]);
 }
 
-int main(int argc, char **argv) {
+int
+main (int argc, char **argv)
+{
     int               oc;
     struct option longopts[] = {
        { "config",    required_argument, NULL, 'c' },
@@ -307,12 +318,21 @@ int main(int argc, char **argv) {
     };
 
     // parse CLI options
-    while ((oc = getopt_long(argc, argv, ":hc:W;", longopts, NULL)) != -1) {
+    while ((oc = getopt_long(argc, argv, ":hc:i:W;", longopts, NULL)) != -1) {
         switch (oc) {
         case 'c':
             g_cfg_file = optarg;
             if (!g_cfg_file) {
-                fprintf(stderr, "config file is not specified\n");
+                fprintf(stderr, "HAL config file is not specified\n");
+                print_usage(argv);
+                exit(1);
+            }
+            break;
+
+        case 'i':
+            g_input_cfg_file = optarg;
+            if (!g_input_cfg_file) {
+                fprintf(stderr, "object config file is not specified\n");
                 print_usage(argv);
                 exit(1);
             }
@@ -324,10 +344,10 @@ int main(int argc, char **argv) {
         }
     }
 
-    // make sure cfg file exists
-    if (access(g_cfg_file, R_OK) < 0) {
+    // make sure cfg files exist
+    if (access(g_input_cfg_file, R_OK) < 0) {
         fprintf(stderr, "Config file %s doesn't exist or not accessible\n",
-                g_cfg_file);
+                g_input_cfg_file);
         exit(1);
     }
 
