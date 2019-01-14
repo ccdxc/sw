@@ -11,17 +11,50 @@ svc_chains:
         - compress:
             flags: 'zero_pad,insert_header,bypass_onfail'
             hdr_fmt_idx: 1
-            #threshold_delta: 8
+            threshold_delta: 7168
+            output_file: '%test_id%_compressed.bin'
+        - chksum:
+            algo_type: 'madler32'
+            output_file: '%test_id%_cksum_full.bin'
+
+svc_chains:
+  - svc_chain:
+      idx: 2
+      #description: "Compress+Checksum with bypass onfail chaining 8K"
+      input:
+        pattern: ababababababababababababababababababababababababababababababababababababab1234
+        len: 8192
+      ops:
+        - compress:
+            flags: 'zero_pad,insert_header,bypass_onfail'
+            hdr_fmt_idx: 1
             threshold_delta: 7168
             output_file: '%test_id%_compressed.bin'
         - chksum:
             algo_type: 'madler32'
             flags: 'per_block'
             output_file: '%test_id%_cksum_per_block.bin'
+
 tests:
   - test:
       idx: 1
       svc_chains: 1
+      repeat: 'param::repeat'
+      batch_depth: 'param::batch_depth'
+      mode: 'param::mode'
+      validations:
+        - retcode_compare:
+            idx: 1
+            retcode: 0
+            svc_retcodes: 20004,0
+        - size_compare:
+            idx: 1
+            file1: '1_cksum_full.bin'
+            val:  8
+
+  - test:
+      idx: 1
+      svc_chains: 2
       repeat: 'param::repeat'
       batch_depth: 'param::batch_depth'
       mode: 'param::mode'
