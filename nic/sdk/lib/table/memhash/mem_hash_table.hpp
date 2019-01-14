@@ -19,6 +19,9 @@ using sdk::lib::indexer;
 using sdk::table::memhash::mem_hash_table_bucket;
 using sdk::table::mem_hash;
 
+class mem_hash_hint_table;
+class mem_hash_main_table;
+
 class mem_hash_base_table {
 public:
     friend mem_hash;
@@ -41,33 +44,10 @@ public:
     }
 };
 
-class mem_hash_main_table : public mem_hash_base_table {
-public:
-    friend mem_hash;
-    static void destroy_(mem_hash_main_table *table);
-
-private:
-    uint32_t            num_hash_bits_;
-
-private:
-    sdk_ret_t   init_(uint32_t id, uint32_t size);
-    sdk_ret_t   initctx_(mem_hash_api_context *ctx);
-    sdk_ret_t   insert_(mem_hash_api_context *ctx);
-    sdk_ret_t   remove_(mem_hash_api_context *ctx);
-
-public:
-    static mem_hash_main_table* factory(uint32_t id, uint32_t size);
-
-    mem_hash_main_table() {
-    }
-
-    ~mem_hash_main_table() {
-    }
-};
-
 class mem_hash_hint_table: public mem_hash_base_table {
 public:
     friend mem_hash;
+    friend mem_hash_main_table;
     static void destroy_(mem_hash_hint_table *table);
 
 private:
@@ -92,6 +72,36 @@ public:
     }
 
     ~mem_hash_hint_table() {
+    }
+};
+
+class mem_hash_main_table : public mem_hash_base_table {
+public:
+    friend mem_hash;
+    static void destroy_(mem_hash_main_table *table);
+
+private:
+    mem_hash_hint_table *hint_table_;
+    uint32_t num_hash_bits_;
+
+private:
+    sdk_ret_t   init_(uint32_t id, uint32_t size,
+                      void *hint_table);
+    sdk_ret_t   initctx_(mem_hash_api_context *ctx);
+    sdk_ret_t   insert_(mem_hash_api_context *ctx);
+    sdk_ret_t   remove_(mem_hash_api_context *ctx);
+    sdk_ret_t   update_(mem_hash_api_context *ctx);
+    sdk_ret_t   find_(mem_hash_api_context *ctx,
+                      mem_hash_api_context **retctx);
+
+public:
+    static mem_hash_main_table* factory(uint32_t id, uint32_t size,
+                                        void *hint_table);
+
+    mem_hash_main_table() {
+    }
+
+    ~mem_hash_main_table() {
     }
 };
 

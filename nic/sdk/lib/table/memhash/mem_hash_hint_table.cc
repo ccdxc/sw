@@ -18,9 +18,9 @@ using sdk::table::memhash::mem_hash_table_bucket;
 //---------------------------------------------------------------------------
 mem_hash_hint_table *
 mem_hash_hint_table::factory(uint32_t id, uint32_t size) {
-    void                *mem = NULL;
-    mem_hash_hint_table    *table = NULL;
-    sdk_ret_t           ret = SDK_RET_OK;
+    void *mem = NULL;
+    mem_hash_hint_table *table = NULL;
+    sdk_ret_t ret = SDK_RET_OK;
 
     mem = (mem_hash_hint_table *) SDK_CALLOC(SDK_MEM_ALLOC_MEM_HASH_HINT_TABLE,
                                           sizeof(mem_hash_hint_table));
@@ -44,7 +44,7 @@ mem_hash_hint_table::factory(uint32_t id, uint32_t size) {
 //---------------------------------------------------------------------------
 sdk_ret_t
 mem_hash_hint_table::init_(uint32_t id, uint32_t size) {
-    sdk_ret_t   ret = SDK_RET_OK;
+    sdk_ret_t ret = SDK_RET_OK;
 
     ret = mem_hash_base_table::init_(id, size);
     if (ret != SDK_RET_OK) {
@@ -140,8 +140,8 @@ mem_hash_hint_table::initctx_(mem_hash_api_context *ctx) {
 //---------------------------------------------------------------------------
 sdk_ret_t
 mem_hash_hint_table::insert_(mem_hash_api_context *pctx) {
-    sdk_ret_t               ret = SDK_RET_COLLISION;
-    mem_hash_api_context    *hctx = NULL;
+    sdk_ret_t ret = SDK_RET_COLLISION;
+    mem_hash_api_context *hctx = NULL;
 
     if ((pctx->level + 1) >= pctx->max_recircs) {
         SDK_TRACE_ERR("Max Recirc levels reached.");
@@ -191,8 +191,8 @@ mem_hash_hint_table::insert_(mem_hash_api_context *pctx) {
 sdk_ret_t
 mem_hash_hint_table::tail_(mem_hash_api_context *ctx,
                            mem_hash_api_context **retctx) {
-    sdk_ret_t               ret = SDK_RET_ENTRY_NOT_FOUND;
-    mem_hash_api_context    *tctx = NULL;
+    sdk_ret_t ret = SDK_RET_ENTRY_NOT_FOUND;
+    mem_hash_api_context *tctx = NULL;
 
     if (!HINT_IS_VALID(ctx->hint)) {
         SDK_TRACE_DEBUG("No hints, setting TAIL = EXACT.");
@@ -245,9 +245,9 @@ mem_hash_hint_table::tail_(mem_hash_api_context *ctx,
 //---------------------------------------------------------------------------
 sdk_ret_t
 mem_hash_hint_table::defragment_(mem_hash_api_context *ectx) {
-    sdk_ret_t               ret = SDK_RET_OK;
-    mem_hash_api_context    *tctx = NULL;
-    mem_hash_api_context    *pctx = NULL;
+    sdk_ret_t ret = SDK_RET_OK;
+    mem_hash_api_context *tctx = NULL;
+    mem_hash_api_context *pctx = NULL;
 
     // Defragmentation Sequence
     // vars used in this function:
@@ -301,8 +301,8 @@ mem_hash_hint_table::defragment_(mem_hash_api_context *ectx) {
 //---------------------------------------------------------------------------
 sdk_ret_t
 mem_hash_hint_table::remove_(mem_hash_api_context *ctx) {
-    sdk_ret_t           ret = SDK_RET_OK;
-    mem_hash_api_context   *hctx = NULL;
+    sdk_ret_t ret = SDK_RET_OK;
+    mem_hash_api_context *hctx = NULL;
 
     hctx = mem_hash_api_context::factory(ctx);
     if (hctx == NULL) {
@@ -322,7 +322,7 @@ mem_hash_hint_table::remove_(mem_hash_api_context *ctx) {
     }
 
     if (hctx->is_exact_match()) {
-        // This means there was an exact match in the main table and
+        // This means there was an exact match in the hint table and
         // it was removed. Check and defragment the hints if required.
         ret = defragment_(hctx);
     } else {
@@ -330,6 +330,46 @@ mem_hash_hint_table::remove_(mem_hash_api_context *ctx) {
         ret = remove_(hctx);
     }
 
+    mem_hash_api_context::destroy(hctx);
+    return ret;
+}
+
+//---------------------------------------------------------------------------
+// mem_hash_hint_table remove_: Remove entry from hint table
+//---------------------------------------------------------------------------
+sdk_ret_t
+mem_hash_hint_table::find_(mem_hash_api_context *ctx,
+                           mem_hash_api_context **match_ctx) {
+    sdk_ret_t ret = SDK_RET_OK;
+    mem_hash_api_context *hctx = NULL;
+
+    hctx = mem_hash_api_context::factory(ctx);
+    if (hctx == NULL) {
+        SDK_TRACE_ERR("Failed to create api context");
+        return SDK_RET_OOM;
+    }
+
+    // Initialize the context
+    SDK_ASSERT_RETURN(initctx_(hctx) == SDK_RET_OK, SDK_RET_ERR);
+
+    // Remove entry from the bucket
+    ret = static_cast<mem_hash_table_bucket*>(hctx->bucket)->find_(hctx);
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("find_ failed. ret:%d", ret);
+        mem_hash_api_context::destroy(hctx);
+        return ret;
+    }
+
+    if (hctx->is_exact_match()) {
+        // This means there was an exact match in the hint table
+        *match_ctx = hctx;
+        return SDK_RET_OK;
+    } else {
+        // We only found a matching hint, so find the entry recursively
+        ret = find_(hctx, match_ctx);
+    }
+
+    SDK_ASSERT(*match_ctx != hctx);
     mem_hash_api_context::destroy(hctx);
     return ret;
 }

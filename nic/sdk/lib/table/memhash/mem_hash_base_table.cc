@@ -14,9 +14,8 @@ using sdk::table::memhash::mem_hash_base_table;
 //---------------------------------------------------------------------------
 sdk_ret_t
 mem_hash_base_table::init_(uint32_t id, uint32_t size) {
-    //uint32_t    i = 0;
-    void        *mem;
-    uint32_t    bucket_size = sizeof(mem_hash_table_bucket);
+    void *mem;
+    uint32_t bucket_size = sizeof(mem_hash_table_bucket);
 
     table_id_ = id;
     table_size_ = size;
@@ -30,10 +29,6 @@ mem_hash_base_table::init_(uint32_t id, uint32_t size) {
     }
 
     buckets_ = (mem_hash_table_bucket *) new(mem) mem_hash_table_bucket[table_size_];
-    //for (i = 0; i < table_size_; i++) {
-    //    buckets_[i] = new (mem + bucket_size) mem_hash_table_bucket();
-    //}
-
     return SDK_RET_OK;
 }
 

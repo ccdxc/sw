@@ -11,6 +11,8 @@
 #include "common.hpp"
 
 using sdk::table::mem_hash;
+using sdk::table::mem_hash_api_params_t;
+using sdk::table::mem_hash_factory_params_t;
 
 #define BASIC_TEST_COUNT 64
 
@@ -23,85 +25,169 @@ protected:
     virtual ~basic() {}
     
     virtual void SetUp() {
-        table = mem_hash::factory(MEM_HASH_P4TBL_ID_H5, MAX_RECIRCS, 
-                                  NULL, h5_key2str, h5_data2str);
+        mem_hash_factory_params_t   params = { 0 };
+        params.table_id = MEM_HASH_P4TBL_ID_H5;
+        params.num_hints = 5;
+        params.max_recircs = MAX_RECIRCS;
+        params.key2str = h5_key2str;
+        params.appdata2str = h5_appdata2str;
+        table = mem_hash::factory(&params);
         assert(table);
+        mem_hash_mock_init();
     }
     virtual void TearDown() {
         mem_hash::destroy(table);
+        h5_reset_cache();
+        mem_hash_mock_cleanup();
     }
 };
 
 TEST_F(basic, insert)
 {
-    sdk_ret_t   rs;
-    uint32_t    i = 0;
+    sdk_ret_t rs;
+    uint32_t i = 0;
+    mem_hash_api_params_t params = { 0 };
     
     for (i = 0; i < BASIC_TEST_COUNT; i++) {
-        rs = table->insert(h5_genkey(), h5_gendata(), h5_gencrc32());
+        params.key = h5_genkey();
+        params.appdata = h5_gendata();
+        params.hash_32b = h5_gencrc32();
+        params.hash_valid = true;
+
+        rs = table->insert(&params);
         ASSERT_TRUE(rs == sdk::SDK_RET_OK);
     }
 }
 
-TEST_F(basic, insert_duplicate) 
+TEST_F(basic, update)
 {
-    sdk_ret_t   rs;
-    uint32_t    i = 0;
-    void        *key = NULL;
-    void        *data = NULL;
-    uint32_t    crc32 = 0;
+    sdk_ret_t rs;
+    uint32_t i = 0;
+    mem_hash_api_params_t params = { 0 };
     
     for (i = 0; i < BASIC_TEST_COUNT; i++) {
-        key = h5_genkey();
-        data = h5_gendata();
-        crc32 = h5_gencrc32();
-        rs = table->insert(key, data, crc32);
+        params.key = h5_genkey();
+        params.appdata = h5_gendata();
+        params.hash_32b = h5_gencrc32();
+        params.hash_valid = true;
+
+        rs = table->insert(&params);
         ASSERT_TRUE(rs == sdk::SDK_RET_OK);
         
-        rs = table->insert(key, data, crc32);
+        params.appdata = h5_gendata();
+        rs = table->update(&params);
+        ASSERT_TRUE(rs == sdk::SDK_RET_OK);
+    }
+}
+
+TEST_F(basic, repeated_update)
+{
+    sdk_ret_t rs;
+    uint32_t i = 0;
+    mem_hash_api_params_t params = { 0 };
+    
+    for (i = 0; i < BASIC_TEST_COUNT; i++) {
+        params.key = h5_genkey();
+        params.appdata = h5_gendata();
+        params.hash_32b = h5_gencrc32();
+        params.hash_valid = true;
+
+        rs = table->insert(&params);
+        ASSERT_TRUE(rs == sdk::SDK_RET_OK);
+        
+        for (uint32_t j = 0; j < 5; j++) {
+            params.appdata = h5_gendata();
+            rs = table->update(&params);
+            ASSERT_TRUE(rs == sdk::SDK_RET_OK);
+        }
+    }
+}
+
+
+TEST_F(basic, insert_duplicate) 
+{
+    sdk_ret_t rs;
+    uint32_t i = 0;
+    mem_hash_api_params_t params = { 0 };
+    
+    for (i = 0; i < BASIC_TEST_COUNT; i++) {
+        params.key = h5_genkey();
+        params.appdata = h5_gendata();
+        params.hash_32b = h5_gencrc32();
+        params.hash_valid = true;
+
+        rs = table->insert(&params);
+        ASSERT_TRUE(rs == sdk::SDK_RET_OK);
+        
+        rs = table->insert(&params);
         ASSERT_TRUE(rs == sdk::SDK_RET_ENTRY_EXISTS);
     }
 }
 
 TEST_F(basic, insert_remove) 
 {
-    sdk_ret_t   rs;
-    uint32_t    i = 0;
-    void        *key = NULL;
-    void        *data = NULL;
-    uint32_t    crc32 = 0;
+    sdk_ret_t rs;
+    uint32_t i = 0;
+    mem_hash_api_params_t params = { 0 };
     
     for (i = 0; i < BASIC_TEST_COUNT; i++) {
-        key = h5_genkey();
-        data = h5_gendata();
-        crc32 = h5_gencrc32();
-        rs = table->insert(key, data, crc32);
+        params.key = h5_genkey();
+        params.appdata = h5_gendata();
+        params.hash_32b = h5_gencrc32();
+        params.hash_valid = true;
+        
+        rs = table->insert(&params);
         ASSERT_TRUE(rs == sdk::SDK_RET_OK);
         
-        rs = table->remove(key, crc32);
+        rs = table->remove(&params);
         ASSERT_TRUE(rs == sdk::SDK_RET_OK);
     }
 }
 
-TEST_F(basic, duplicate_remove) 
+TEST_F(basic, insert_update_remove) 
 {
-    sdk_ret_t   rs;
-    uint32_t    i = 0;
-    void        *key = NULL;
-    void        *data = NULL;
-    uint32_t    crc32 = 0;
+    sdk_ret_t rs;
+    uint32_t i = 0;
+    mem_hash_api_params_t params = { 0 };
     
     for (i = 0; i < BASIC_TEST_COUNT; i++) {
-        key = h5_genkey();
-        data = h5_gendata();
-        crc32 = h5_gencrc32();
-        rs = table->insert(key, data, crc32);
+        params.key = h5_genkey();
+        params.appdata = h5_gendata();
+        params.hash_32b = h5_gencrc32();
+        params.hash_valid = true;
+        
+        rs = table->insert(&params);
         ASSERT_TRUE(rs == sdk::SDK_RET_OK);
         
-        rs = table->remove(key, crc32);
+        params.appdata = h5_gendata();
+        rs = table->update(&params);
+        ASSERT_TRUE(rs == sdk::SDK_RET_OK);
+
+        rs = table->remove(&params);
+        ASSERT_TRUE(rs == sdk::SDK_RET_OK);
+    }
+}
+
+
+TEST_F(basic, duplicate_remove) 
+{
+    sdk_ret_t rs;
+    uint32_t i = 0;
+    mem_hash_api_params_t params = { 0 };
+    
+    for (i = 0; i < BASIC_TEST_COUNT; i++) {
+        params.key = h5_genkey();
+        params.appdata = h5_gendata();
+        params.hash_32b = h5_gencrc32();
+        params.hash_valid = true;
+        
+        rs = table->insert(&params);
         ASSERT_TRUE(rs == sdk::SDK_RET_OK);
         
-        rs = table->remove(key, crc32);
+        rs = table->remove(&params);
+        ASSERT_TRUE(rs == sdk::SDK_RET_OK);
+        
+        rs = table->remove(&params);
         ASSERT_TRUE(rs == sdk::SDK_RET_ENTRY_NOT_FOUND);
     }
 }
@@ -109,11 +195,17 @@ TEST_F(basic, duplicate_remove)
 
 TEST_F(basic, remove_not_found) 
 {
-    sdk_ret_t   rs;
-    uint32_t    i = 0;
+    sdk_ret_t rs;
+    uint32_t i = 0;
+    mem_hash_api_params_t params = { 0 };
     
     for (i = 0; i < BASIC_TEST_COUNT; i++) {
-        rs = table->remove(h5_genkey(), h5_gencrc32());
+        params.key = h5_genkey();
+        params.appdata = h5_gendata();
+        params.hash_32b = h5_gencrc32();
+        params.hash_valid = true;
+
+        rs = table->remove(&params);
         ASSERT_TRUE(rs == sdk::SDK_RET_ENTRY_NOT_FOUND);
     }
 }

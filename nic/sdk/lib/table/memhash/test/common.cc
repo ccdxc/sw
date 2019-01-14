@@ -77,13 +77,21 @@ void*
 h5_gendata ()
 {
     static uint32_t index = 1;
-    static mem_hash_h5_actiondata_t data;
+    static mem_hash_h5_appdata_t data;
 
-    data.action_id = 0;
-    data.action_u.info.d2 = 1;
-    data.action_u.info.d1 = index++;
+    data.d2 = 1;
+    data.d1 = index++;
 
     return (void *)&data;
+}
+
+char*
+h5_appdata2str(void *data)
+{
+    static char str[512];
+    mem_hash_h5_appdata_t *appdata = (mem_hash_h5_appdata_t*)data;
+    sprintf(str, "D1:%d D2:%d", appdata->d1, appdata->d2);
+    return str;
 }
 
 char*
@@ -95,8 +103,8 @@ h5_data2str(void *data)
 
     len += sprintf(str, "Valid:%d D1:%d D2:%d",
                    acdata->action_u.info.entry_valid, 
-                   acdata->action_u.info.d1,
-                   acdata->action_u.info.d2);
+                   acdata->action_u.info.appdata.d1,
+                   acdata->action_u.info.appdata.d2);
 
     if (acdata->action_u.info.hint1) {
         len += sprintf(str + len, "Hash1:%#x Hint1:%d ",
@@ -139,7 +147,7 @@ h5_alloc_entry()
 }
 
 h5_entry_t*
-h5_gen_cache_entry (h5_crc32_t *crc32)
+h5_gen_cache_entry (h5_crc32_t *crc32, mem_hash_api_params_t *params)
 {
     void *key = NULL;
     void *data = NULL;
@@ -149,7 +157,7 @@ h5_gen_cache_entry (h5_crc32_t *crc32)
     memcpy(&entry->key, key, sizeof(entry->key));
 
     data = h5_gendata();
-    memcpy(&entry->data, data, sizeof(entry->data));
+    memcpy(&entry->appdata, data, sizeof(entry->appdata));
 
     if (crc32) {
         entry->crc32 = *crc32;
@@ -157,6 +165,11 @@ h5_gen_cache_entry (h5_crc32_t *crc32)
         entry->crc32.val = h5_gencrc32();
     }
 
+    params->key = &entry->key;
+    params->appdata = &entry->appdata;
+    params->hash_32b = entry->crc32.val;
+    params->hash_valid = true;
+ 
     return entry;
 }
 
@@ -167,9 +180,29 @@ h5_get_cache_count ()
 }
 
 h5_entry_t *
-h5_get_cache_entry (uint32_t index)
+h5_get_cache_entry (uint32_t index, mem_hash_api_params_t *params)
 {
-    return &g_h5_cache[index];
+    h5_entry_t *entry = &g_h5_cache[index];
+    
+    params->key = &entry->key;
+    params->appdata = &entry->appdata;
+    params->hash_32b = entry->crc32.val;
+    params->hash_valid = true;
+
+    return entry;
+}
+
+h5_entry_t *
+h5_get_updated_cache_entry (uint32_t index, mem_hash_api_params_t *params)
+{
+    h5_entry_t *entry = h5_get_cache_entry(index, params);
+    void *data = NULL;
+    
+    data = h5_gendata();
+    memcpy(&entry->appdata, data, sizeof(entry->appdata));
+    params->appdata = &entry->appdata;
+
+    return entry;
 }
 
 void

@@ -13,12 +13,16 @@ typedef struct __attribute__((__packed__)) __mem_hash_h10_key {
     uint32_t k1;
 } mem_hash_h10_key_t;
 
-typedef struct __attribute__((__packed__)) __mem_hash_h10_data {
-    uint8_t entry_valid;
+typedef struct __attribute__((__packed__)) __mem_hash_h10_appdata {
     uint16_t d1;
     uint8_t d2;
     uint32_t d3;
     uint8_t d4;
+} mem_hash_h10_appdata_t;
+
+typedef struct __attribute__((__packed__)) __mem_hash_h10_info {
+    mem_hash_h10_appdata_t appdata;
+    uint8_t entry_valid;
     uint16_t hash1;
     uint16_t hint1;
     uint16_t hash2;
@@ -52,11 +56,6 @@ typedef struct __attribute__((__packed__)) __mem_hash_h10_actiondata {
     mem_hash_h10_action_union_t action_u;
 } mem_hash_h10_actiondata_t;
 
-typedef struct __attribute__((__packed__)) __mem_hash_h10_entry {
-    mem_hash_h10_key_t key;
-    mem_hash_h10_actiondata_t actiondata;
-} mem_hash_h10_entry_t;
-
 typedef struct __attribute__((__packed__)) __mem_hash_h5_key {
     uint8_t type;
     uint16_t sport;
@@ -67,10 +66,14 @@ typedef struct __attribute__((__packed__)) __mem_hash_h5_key {
     uint8_t dst[16];
 } mem_hash_h5_key_t;
 
-typedef struct __attribute__((__packed__)) __mem_hash_h5_data {
-    uint8_t entry_valid;
+typedef struct __attribute__((__packed__)) __mem_hash_h5_appdata {
     uint32_t d1;
     uint8_t d2;
+} mem_hash_h5_appdata_t;
+
+typedef struct __attribute__((__packed__)) __mem_hash_h5_info {
+    mem_hash_h5_appdata_t appdata;
+    uint8_t entry_valid;
     uint8_t hash1;
     uint32_t hint1;
     uint8_t hash2;
@@ -94,11 +97,6 @@ typedef struct __attribute__((__packed__)) __mem_hash_h5_actiondata {
     mem_hash_h5_action_union_t action_u;
 } mem_hash_h5_actiondata_t;
 
-typedef struct __attribute__((__packed__)) __mem_hash_h5_entry {
-    mem_hash_h5_key_t key;
-    mem_hash_h5_actiondata_t actiondata;
-} mem_hash_h5_entry_t;
-
 typedef enum mem_hash_p4pd_table_ids_ {
     MEM_HASH_P4TBL_ID_NONE       = 0,
     MEM_HASH_P4TBL_ID_H10        = 1,
@@ -111,5 +109,7 @@ typedef enum mem_hash_p4pd_table_ids_ {
 int
 mem_hash_mock_init ();
 
+int
+mem_hash_mock_cleanup ();
 
 #endif

@@ -24,21 +24,16 @@ uint32_t mem_hash_api_context::numctx_ = 0;
 // Factory method to instantiate the class
 //---------------------------------------------------------------------------
 mem_hash *
-mem_hash::factory(uint32_t table_id,
-                  uint32_t max_recircs,
-                  table_health_monitor_func_t health_monitor_func,
-                  key2str_t key2str,
-                  data2str_t data2str) {
-    void                    *mem = NULL;
-    mem_hash                 *memhash = NULL;
-    sdk_ret_t               ret = SDK_RET_OK;
+mem_hash::factory(mem_hash_factory_params_t *params) {
+    void *mem = NULL;
+    mem_hash *memhash = NULL;
+    sdk_ret_t ret = SDK_RET_OK;
 
     MEM_HASH_TRACE_API_BEGIN();
     mem = (mem_hash *) SDK_CALLOC(SDK_MEM_ALLOC_MEM_HASH, sizeof(mem_hash));
     if (mem) {
         memhash = new (mem) mem_hash();
-        ret = memhash->init_(table_id, max_recircs, health_monitor_func,
-                             key2str, data2str);
+        ret = memhash->init_(params);
         if (ret != SDK_RET_OK) {
             memhash->~mem_hash();
             SDK_FREE(SDK_MEM_ALLOC_MEM_HASH, mem);
@@ -50,64 +45,76 @@ mem_hash::factory(uint32_t table_id,
 }
 
 sdk_ret_t
-mem_hash::init_(uint32_t table_id,
-                uint32_t max_recircs,
-                table_health_monitor_func_t health_monitor_func,
-                key2str_t key2str,
-                data2str_t data2str) {
-    p4pd_error_t            p4pdret;
+mem_hash::init_(mem_hash_factory_params_t *params) {
+    p4pd_error_t p4pdret;
     p4pd_table_properties_t tinfo, ctinfo;
 
-    main_table_id_ = table_id;
-    max_recircs_ = max_recircs;
-    health_monitor_func_ = health_monitor_func;
-    key2str_ = key2str;
-    data2str_ = data2str;
-
-    p4pdret = p4pd_table_properties_get(main_table_id_, &tinfo);
-    SDK_ASSERT_RETURN(p4pdret == P4PD_SUCCESS, SDK_RET_ERR);
-
-    name_ = tinfo.tablename;
-
-    main_table_size_ = tinfo.tabledepth;
-    SDK_ASSERT(main_table_size_);
-
-    key_len_ = tinfo.key_struct_size;
-    SDK_ASSERT(key_len_);
-    data_len_ = tinfo.actiondata_struct_size;
-    SDK_ASSERT(data_len_);
-
-    hash_poly_ = tinfo.hash_type;
-    // Initialize CRC Fast
-    crc32gen_ = crcFast::factory();
-    if (crc32gen_ == NULL) {
+    props_ = (mem_hash_properties_t *)SDK_CALLOC(SDK_MEM_ALLOC_MEM_HASH_PROPERTIES,
+                                                 sizeof(mem_hash_properties_t));
+    if (props_ == NULL) {
         return SDK_RET_OOM;
     }
 
-    hint_table_id_ = tinfo.oflow_table_id;
-    SDK_ASSERT(hint_table_id_);
+    props_->main_table_id = params->table_id;
+    props_->num_hints = params->num_hints;
+    props_->max_recircs = params->max_recircs;
+    props_->health_monitor_func = params->health_monitor_func;
+    props_->key2str = params->key2str;
+    props_->appdata2str = params->appdata2str;
+
+    p4pdret = p4pd_table_properties_get(props_->main_table_id, &tinfo);
+    SDK_ASSERT_RETURN(p4pdret == P4PD_SUCCESS, SDK_RET_ERR);
+
+    props_->name = tinfo.tablename;
+
+    props_->main_table_size = tinfo.tabledepth;
+    SDK_ASSERT(props_->main_table_size);
+
+    props_->key_len = tinfo.key_struct_size;
+    SDK_ASSERT(props_->key_len);
+    props_->data_len = tinfo.actiondata_struct_size;
+    SDK_ASSERT(props_->data_len);
+    props_->appdata_len = tinfo.appdata_struct_size;
+    SDK_ASSERT(props_->appdata_len);
+
+    props_->hash_poly = tinfo.hash_type;
+
+    // Initialize CRC Fast
+    crc32gen_ = crcFast::factory();
+    SDK_ASSERT(crc32gen_);
+
+    props_->hint_table_id = tinfo.oflow_table_id;
+    SDK_ASSERT(props_->hint_table_id);
 
     // Assumption: All mem_hash tables will have a HINT table
     SDK_ASSERT(tinfo.has_oflow_table);
 
-    p4pdret = p4pd_table_properties_get(hint_table_id_, &ctinfo);
+    p4pdret = p4pd_table_properties_get(props_->hint_table_id, &ctinfo);
     SDK_ASSERT_RETURN(p4pdret == P4PD_SUCCESS, SDK_RET_ERR);
 
-    hint_table_size_ = ctinfo.tabledepth;
-    SDK_ASSERT(hint_table_size_);
+    props_->hint_table_size = ctinfo.tabledepth;
+    SDK_ASSERT(props_->hint_table_size);
 
-    main_table_ = mem_hash_main_table::factory(main_table_id_, main_table_size_);
-    SDK_ASSERT_RETURN(main_table_, SDK_RET_OOM);
-
-    hint_table_ = mem_hash_hint_table::factory(hint_table_id_, hint_table_size_);
+    hint_table_ = mem_hash_hint_table::factory(props_->hint_table_id,
+                                               props_->hint_table_size);
     SDK_ASSERT_RETURN(hint_table_, SDK_RET_OOM);
 
-    SDK_TRACE_DEBUG("Creating mem_hash:%s main_table_id:%d main_table_size:%d "
-                    "hint_table_id:%d hint_table_size:%d key_len:%dB "
-                    "data_len:%dB max_recircs:%d hash_poly:%d",
-                    name_.c_str(), main_table_id_, main_table_size_,
-                    hint_table_id_, hint_table_size_, key_len_, data_len_,
-                    max_recircs, hash_poly_);
+    main_table_ = mem_hash_main_table::factory(props_->main_table_id,
+                                               props_->main_table_size,
+                                               hint_table_);
+    SDK_ASSERT_RETURN(main_table_, SDK_RET_OOM);
+
+
+    SDK_TRACE_DEBUG("Creating mem_hash:%s table.", props_->name.c_str());
+    SDK_TRACE_DEBUG("- main_table_id:%d main_table_size:%d ",
+                    props_->main_table_id, props_->main_table_size);
+    SDK_TRACE_DEBUG("- hint_table_id:%d hint_table_size:%d ",
+                    props_->hint_table_id, props_->hint_table_size);
+    SDK_TRACE_DEBUG("- key_len:%dB data_len:%dB appdata_len:%dB ",
+                    props_->key_len, props_->data_len,
+                    props_->appdata_len);
+    SDK_TRACE_DEBUG("- num_hints:%d max_recircs:%d hash_poly:%d",
+                    props_->num_hints, props_->max_recircs, props_->hash_poly);
 
     return SDK_RET_OK;
 }
@@ -130,26 +137,35 @@ mem_hash::destroy(mem_hash *table) {
 //---------------------------------------------------------------------------
 // mem_hash Insert entry with hash value
 //---------------------------------------------------------------------------
-uint32_t
-mem_hash::genhash_(void *key) {
-    return 0;
+sdk_ret_t
+mem_hash::genhash_(mem_hash_api_params_t *params) {
+    if (params->hash_valid) {
+        // Hash is already valid for this params.
+        return SDK_RET_OK;
+    }
+    return SDK_RET_OK;
 }
 
 //---------------------------------------------------------------------------
 // mem_hash Insert entry with hash value
 //---------------------------------------------------------------------------
 sdk_ret_t
-mem_hash::insert(void *key, void *data, uint32_t crc32) {
-    sdk_ret_t               ret = SDK_RET_OK;
-    mem_hash_api_context    *mctx = NULL;   // Main Table Context
+mem_hash::insert(mem_hash_api_params_t *params) {
+    sdk_ret_t ret = SDK_RET_OK;
+    mem_hash_api_context *mctx = NULL;   // Main Table Context
 
     MEM_HASH_TRACE_API_BEGIN();
 
-    SDK_TRACE_DEBUG("Memhash inserting entry, Crc32:%#x", crc32);
-    SDK_TRACE_DEBUG("- Key:[%s]", key2str_ ? key2str_(key) : "NA");
-    SDK_TRACE_DEBUG("- Data:[%s]", data2str_ ? data2str_(data) : "NA");
-    mctx = mem_hash_api_context::factory(key, key_len_, data, data_len_,
-                                         max_recircs_, crc32, key2str_, data2str_);
+    ret = genhash_(params);
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("Failed to generate hash, ret:%d", ret);
+        return ret;
+    }
+
+    SDK_TRACE_DEBUG("Memhash inserting entry, Hash32bits:%#x", params->hash_32b);
+    SDK_TRACE_DEBUG("- Key:[%s]", props_->key2str(params->key));
+    SDK_TRACE_DEBUG("- AppData:[%s]", props_->appdata2str(params->appdata));
+    mctx = mem_hash_api_context::factory(params, props_);
     if (!mctx) {
         SDK_TRACE_ERR("MainTable: create api context failed ret:%d", ret);
         ret = SDK_RET_OOM;
@@ -189,38 +205,64 @@ insert_return:
     return ret;
 }
 
-//---------------------------------------------------------------------------
-// mem_hash Insert entry without hash value
-//---------------------------------------------------------------------------
-inline sdk_ret_t
-mem_hash::insert(void *key, void *data) {
-    return insert(key, data, genhash_(key));
-}
-
 sdk_ret_t
-mem_hash::update(void *key, void *data, uint32_t crc32) {
+mem_hash::update(mem_hash_api_params_t *params) {
+    sdk_ret_t ret = SDK_RET_OK;
+    mem_hash_api_context *mctx = NULL;   // Main Table Context
+
     MEM_HASH_TRACE_API_BEGIN();
+
+    SDK_TRACE_DEBUG("Memhash updating entry, Hash32bits:%#x", params->hash_32b);
+    SDK_ASSERT(params->key);
+    SDK_TRACE_DEBUG("- Key:[%s]", props_->key2str(params->key));
+    SDK_ASSERT(params->appdata);
+    SDK_TRACE_DEBUG("- AppData:[%s]", props_->appdata2str(params->appdata));
+
+    ret = genhash_(params);
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("Failed to generate hash, ret:%d", ret);
+        return ret;
+    }
+
+    mctx = mem_hash_api_context::factory(params, props_);
+    if (!mctx) {
+        SDK_TRACE_ERR("MainTable: create api context failed ret:%d", ret);
+        ret = SDK_RET_OOM;
+        goto update_return;
+    }
+
+    ret = static_cast<mem_hash_main_table*>(main_table_)->update_(mctx);
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("update_ failed. ret:%d", ret);
+        mem_hash_api_context::destroy(mctx);
+        goto update_return;
+    }
+
+    mem_hash_api_context::destroy(mctx);
+
+update_return:
     MEM_HASH_TRACE_API_END();
-    return SDK_RET_OK;
+    return ret;
 }
 
 sdk_ret_t
-mem_hash::update(void *key, void *data) {
-    return update(key, data, genhash_(key));
-}
-
-sdk_ret_t
-mem_hash::remove(void *key, uint32_t crc32) {
-    sdk_ret_t               ret = SDK_RET_OK;
-    mem_hash_api_context    *mctx = NULL;   // Main Table Context
+mem_hash::remove(mem_hash_api_params_t *params) {
+    sdk_ret_t ret = SDK_RET_OK;
+    mem_hash_api_context *mctx = NULL;   // Main Table Context
 
     MEM_HASH_TRACE_API_BEGIN();
 
-    SDK_TRACE_DEBUG("Memhash removing entry, Crc32:%#x", crc32);
-    SDK_TRACE_DEBUG("- Key:[%s]", key2str_ ? key2str_(key) : "NA");
+    SDK_TRACE_DEBUG("Memhash removing entry, Hash32bits:%#x", params->hash_32b);
+    SDK_TRACE_DEBUG("- Key:[%s]", props_->key2str(params->key));
+    SDK_ASSERT(params->key);
 
-    mctx = mem_hash_api_context::factory(key, key_len_, NULL, data_len_,
-                                         max_recircs_, crc32, key2str_, data2str_);
+    ret = genhash_(params);
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("Failed to generate hash, ret:%d", ret);
+        return ret;
+    }
+
+    mctx = mem_hash_api_context::factory(params, props_);
     if (!mctx) {
         SDK_TRACE_ERR("MainTable: create api context failed ret:%d", ret);
         ret = SDK_RET_OOM;
@@ -258,9 +300,4 @@ mem_hash::remove(void *key, uint32_t crc32) {
 remove_return:
     MEM_HASH_TRACE_API_END();
     return ret;
-}
-
-sdk_ret_t
-mem_hash::remove(void *key) {
-    return remove(key, genhash_(key));
 }

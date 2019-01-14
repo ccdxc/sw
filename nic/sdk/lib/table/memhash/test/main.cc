@@ -29,9 +29,9 @@ memhash_debug_logger (sdk_trace_level_e trace_level, const char *format, ...)
 {
     char       logbuf[1024];
     va_list    args;
-
     va_start(args, format);
     vsnprintf(logbuf, sizeof(logbuf), format, args);
+    //printf("%s\n", logbuf);
     HAL_TRACE_DEBUG_NO_META("{}", logbuf);
     va_end(args);
 
@@ -61,7 +61,6 @@ main(int argc, char **argv)
                            TRACE_NUM_FILES_DEFAULT,
                            ::utils::trace_debug);
 
-    mem_hash_mock_init();
     memhash_sdk_init();
 
     HAL_TRACE_DEBUG("Starting Main ... ");

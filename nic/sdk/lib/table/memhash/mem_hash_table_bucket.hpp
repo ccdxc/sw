@@ -43,13 +43,16 @@ private:
 
 private:
     sdk_ret_t insert_(mem_hash_api_context *ctx);
+    sdk_ret_t update_(mem_hash_api_context *ctx);
     sdk_ret_t remove_(mem_hash_api_context *ctx);
     sdk_ret_t read_(mem_hash_api_context *ctx);
     sdk_ret_t write_(mem_hash_api_context *ctx);
-    sdk_ret_t set_key_(mem_hash_api_context *ctx);
-    sdk_ret_t set_data_(mem_hash_api_context *ctx);
-    sdk_ret_t clear_key_(mem_hash_api_context *ctx);
-    sdk_ret_t clear_data_(mem_hash_api_context *ctx);
+    sdk_ret_t set_hwkey_(mem_hash_api_context *ctx, void *key);
+    sdk_ret_t clear_hwkey_(mem_hash_api_context *ctx);
+    sdk_ret_t set_hwdata_appdata_(mem_hash_api_context *ctx, void *appdata);
+    sdk_ret_t clear_hwdata_appdata_(mem_hash_api_context *ctx);
+    sdk_ret_t set_hwdata_(mem_hash_api_context *ctx, void *key);
+    sdk_ret_t clear_hwdata_(mem_hash_api_context *ctx);
     sdk_ret_t compare_(mem_hash_api_context *ctx);
     sdk_ret_t append_(mem_hash_api_context *ctx);
     sdk_ret_t create_(mem_hash_api_context *ctx);

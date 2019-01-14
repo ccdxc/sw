@@ -21,10 +21,11 @@
 #endif
 
 typedef struct mem_hash_mock_table_size_ {
-    const char  *name; // Name
-    uint32_t    ksize; // Keysize
-    uint32_t    dsize; // Datasize
-    uint32_t    tsize; // Tablesize
+    const char *name; // Name
+    uint32_t ksize; // Keysize
+    uint32_t dsize; // Datasize
+    uint32_t asize; // Datasize
+    uint32_t tsize; // Tablesize
 } mem_hash_mock_table_size_t;
 
 mem_hash_mock_table_size_t mem_hash_mock_table_sizes[] = {
@@ -33,6 +34,7 @@ mem_hash_mock_table_size_t mem_hash_mock_table_sizes[] = {
         .name = "NONE",
         .ksize = 0,
         .dsize = 0,
+        .asize = 0,
         .tsize = 0,
     },
     {
@@ -40,6 +42,7 @@ mem_hash_mock_table_size_t mem_hash_mock_table_sizes[] = {
         .name = "MEM_HASH_P4TBL_ID_H10",
         .ksize = sizeof(mem_hash_h10_key_t), 
         .dsize = sizeof(mem_hash_h10_info_t),
+        .asize = sizeof(mem_hash_h10_appdata_t),
         .tsize = 256*1024,
     },
     {
@@ -47,6 +50,7 @@ mem_hash_mock_table_size_t mem_hash_mock_table_sizes[] = {
         .name = "MEM_HASH_P4TBL_ID_H10_OHASH",
         .ksize = sizeof(mem_hash_h10_key_t), 
         .dsize = sizeof(mem_hash_h10_info_t),
+        .asize = sizeof(mem_hash_h10_appdata_t),
         .tsize = 64*1024,
     },
     {
@@ -54,6 +58,7 @@ mem_hash_mock_table_size_t mem_hash_mock_table_sizes[] = {
         .name = "MEM_HASH_P4TBL_ID_H5",
         .ksize = sizeof(mem_hash_h5_key_t), 
         .dsize = sizeof(mem_hash_h5_info_t),
+        .asize = sizeof(mem_hash_h5_appdata_t),
         .tsize = 16*1024*1024,
     },
     {
@@ -61,6 +66,7 @@ mem_hash_mock_table_size_t mem_hash_mock_table_sizes[] = {
         .name = "MEM_HASH_P4TBL_ID_H5_OHASH",
         .ksize = sizeof(mem_hash_h5_key_t), 
         .dsize = sizeof(mem_hash_h5_info_t),
+        .asize = sizeof(mem_hash_h5_appdata_t),
         .tsize = 2*1024*1024,
     },
 };
@@ -111,6 +117,21 @@ mem_hash_mock_init ()
     return 0;
 }
 
+int
+mem_hash_mock_cleanup ()
+{
+    uint32_t tid = 0;
+
+    for (tid = 1; tid < MEM_HASH_P4TBL_ID_MAX; tid++) {
+        free(mocktables[tid].klist);
+        mocktables[tid].klist = NULL;
+
+        free(mocktables[tid].dlist);
+        mocktables[tid].dlist = NULL;
+    }
+    return 0;
+}
+
 int 
 p4pd_entry_write (unsigned int table_id, unsigned int index, unsigned char *hwkey,
                   unsigned char *hwkey_y, void *actiondata)
@@ -142,8 +163,7 @@ p4pd_entry_write (unsigned int table_id, unsigned int index, unsigned char *hwke
     default:
         assert(0);
     }
-
-
+    
     return 0;
 }
 
@@ -198,6 +218,7 @@ p4pd_table_properties_get (uint32_t table_id, p4pd_table_properties_t *props)
     props->tablename = (char *) "MemHashMainTable";
     props->key_struct_size = sizeinfo->ksize;
     props->actiondata_struct_size = sizeinfo->dsize;
+    props->appdata_struct_size = sizeinfo->asize;
     props->hash_type = 0;
     props->tabledepth = sizeinfo->tsize;
     
@@ -212,40 +233,20 @@ p4pd_table_properties_get (uint32_t table_id, p4pd_table_properties_t *props)
     return 0;
 }
 
-p4pd_error_t
-p4pd_mem_hash_entry_set_key(uint32_t table_id,
-                            uint8_t *swkey,
-                            uint8_t *key)
-{
-    uint32_t ksize = 0;
-    get_key_data_sizes_(table_id, &ksize, NULL);
-    memcpy(swkey, key, ksize);
-    return 0;
-}
-
-p4pd_error_t
-p4pd_mem_hash_entry_clear_key(uint32_t table_id,
-                              uint8_t *swkey)
-{
-    uint32_t ksize = 0;
-    get_key_data_sizes_(table_id, &ksize, NULL);
-    memset(swkey, 0, ksize);
-    return 0;
-}
-
+// ===================== NEW FUNCTIONS =======================
 p4pd_error_t
 p4pd_mem_hash_entry_set_action_id(uint32_t table_id,
-                                  uint8_t *swdata,
+                                  void *data,
                                   uint32_t action_id)
 {
     switch (table_id) {
     case MEM_HASH_P4TBL_ID_H10:
     case MEM_HASH_P4TBL_ID_H10_OHASH:
-        ((mem_hash_h10_actiondata_t *)swdata)->action_id = action_id;
+        ((mem_hash_h10_actiondata_t *)data)->action_id = action_id;
         break;
     case MEM_HASH_P4TBL_ID_H5:
     case MEM_HASH_P4TBL_ID_H5_OHASH:
-        ((mem_hash_h5_actiondata_t *)swdata)->action_id = action_id;
+        ((mem_hash_h5_actiondata_t *)data)->action_id = action_id;
         break;
     default:
         assert(0);
@@ -255,17 +256,17 @@ p4pd_mem_hash_entry_set_action_id(uint32_t table_id,
 
 p4pd_error_t
 p4pd_mem_hash_entry_set_entry_valid(uint32_t table_id,
-                                    uint8_t *swdata,
+                                    void *data,
                                     uint8_t entry_valid)
 {
     switch (table_id) {
     case MEM_HASH_P4TBL_ID_H10:
     case MEM_HASH_P4TBL_ID_H10_OHASH:
-        ((mem_hash_h10_actiondata_t *)swdata)->action_u.info.entry_valid = entry_valid;
+        ((mem_hash_h10_actiondata_t *)data)->action_u.info.entry_valid = entry_valid;
         break;
     case MEM_HASH_P4TBL_ID_H5:
     case MEM_HASH_P4TBL_ID_H5_OHASH:
-        ((mem_hash_h5_actiondata_t *)swdata)->action_u.info.entry_valid = entry_valid;
+        ((mem_hash_h5_actiondata_t *)data)->action_u.info.entry_valid = entry_valid;
         break;
     default:
         assert(0);
@@ -273,62 +274,19 @@ p4pd_mem_hash_entry_set_entry_valid(uint32_t table_id,
     return 0;
 }
 
-p4pd_error_t
-p4pd_mem_hash_entry_set_data(uint32_t table_id,
-                             uint8_t *swdata,
-                             uint8_t *data)
+uint8_t
+p4pd_mem_hash_entry_get_entry_valid(uint32_t table_id,
+                                    void *data)
 {
     switch (table_id) {
     case MEM_HASH_P4TBL_ID_H10:
     case MEM_HASH_P4TBL_ID_H10_OHASH:
-    {
-        mem_hash_h10_actiondata_t   *src = (mem_hash_h10_actiondata_t *)data;
-        mem_hash_h10_actiondata_t   *dst = (mem_hash_h10_actiondata_t *)swdata;
-        dst->action_u.info.d1 = src->action_u.info.d1;
-        dst->action_u.info.d2 = src->action_u.info.d2;
-        dst->action_u.info.d3 = src->action_u.info.d3;
-        dst->action_u.info.d4 = src->action_u.info.d4;
+        return ((mem_hash_h10_actiondata_t *)data)->action_u.info.entry_valid;
         break;
-    }
     case MEM_HASH_P4TBL_ID_H5:
     case MEM_HASH_P4TBL_ID_H5_OHASH:
-    {
-        mem_hash_h10_actiondata_t   *src = (mem_hash_h10_actiondata_t *)data;
-        mem_hash_h10_actiondata_t   *dst = (mem_hash_h10_actiondata_t *)swdata;
-        dst->action_u.info.d1 = src->action_u.info.d1;
-        dst->action_u.info.d2 = src->action_u.info.d2;
+        return ((mem_hash_h5_actiondata_t *)data)->action_u.info.entry_valid;
         break;
-    }
-    default:
-        assert(0);
-    }
-
-    return 0;
-}
-
-p4pd_error_t
-p4pd_mem_hash_entry_clear_data(uint32_t table_id,
-                               uint8_t *swdata)
-{
-    switch (table_id) {
-    case MEM_HASH_P4TBL_ID_H10:
-    case MEM_HASH_P4TBL_ID_H10_OHASH:
-    {
-        mem_hash_h10_actiondata_t   *dst = (mem_hash_h10_actiondata_t *)swdata;
-        dst->action_u.info.d1 = 0;
-        dst->action_u.info.d2 = 0;
-        dst->action_u.info.d3 = 0;
-        dst->action_u.info.d4 = 0;
-        break;
-    }
-    case MEM_HASH_P4TBL_ID_H5:
-    case MEM_HASH_P4TBL_ID_H5_OHASH:
-    {
-        mem_hash_h10_actiondata_t   *dst = (mem_hash_h10_actiondata_t *)swdata;
-        dst->action_u.info.d1 = 0;
-        dst->action_u.info.d2 = 0;
-        break;
-    }
     default:
         assert(0);
     }
@@ -337,7 +295,7 @@ p4pd_mem_hash_entry_clear_data(uint32_t table_id,
 
 p4pd_error_t
 p4pd_mem_hash_entry_set_hint(uint32_t table_id,
-                             uint8_t *swdata,
+                             void *data,
                              uint32_t hint,
                              uint32_t slot)
 {
@@ -345,7 +303,7 @@ p4pd_mem_hash_entry_set_hint(uint32_t table_id,
     case MEM_HASH_P4TBL_ID_H10:
     case MEM_HASH_P4TBL_ID_H10_OHASH:
     {
-        mem_hash_h10_actiondata_t *dst = (mem_hash_h10_actiondata_t *)swdata;
+        mem_hash_h10_actiondata_t *dst = (mem_hash_h10_actiondata_t *)data;
         if (slot == 1) { dst->action_u.info.hint1 = hint; } 
         else if (slot == 2) { dst->action_u.info.hint2 = hint; } 
         else if (slot == 3) { dst->action_u.info.hint3 = hint; }
@@ -362,7 +320,7 @@ p4pd_mem_hash_entry_set_hint(uint32_t table_id,
     case MEM_HASH_P4TBL_ID_H5:
     case MEM_HASH_P4TBL_ID_H5_OHASH:
     {
-        mem_hash_h10_actiondata_t *dst = (mem_hash_h10_actiondata_t *)swdata;
+        mem_hash_h5_actiondata_t *dst = (mem_hash_h5_actiondata_t *)data;
         if (slot == 1) { dst->action_u.info.hint1 = hint; }
         else if (slot == 2) { dst->action_u.info.hint2 = hint; }
         else if (slot == 3) { dst->action_u.info.hint3 = hint; }
@@ -378,8 +336,35 @@ p4pd_mem_hash_entry_set_hint(uint32_t table_id,
 }
 
 p4pd_error_t
+p4pd_mem_hash_entry_set_hash5(uint32_t table_id,
+                            void *data,
+                             uint32_t hash10)
+{
+    switch (table_id) {
+    case MEM_HASH_P4TBL_ID_H10:
+    case MEM_HASH_P4TBL_ID_H10_OHASH:
+    {
+        mem_hash_h10_actiondata_t   *dst = (mem_hash_h10_actiondata_t *)data;
+        dst->action_u.info.hash10 = hash10;
+        break;
+    }
+    case MEM_HASH_P4TBL_ID_H5:
+    case MEM_HASH_P4TBL_ID_H5_OHASH:
+    {
+        break;
+    }
+
+    default:
+        assert(0);
+    }
+    return 0;
+}
+
+
+
+p4pd_error_t
 p4pd_mem_hash_entry_set_hash(uint32_t table_id,
-                             uint8_t *swdata,
+                             void *data,
                              uint32_t hash,
                              uint32_t slot)
 {
@@ -387,7 +372,7 @@ p4pd_mem_hash_entry_set_hash(uint32_t table_id,
     case MEM_HASH_P4TBL_ID_H10:
     case MEM_HASH_P4TBL_ID_H10_OHASH:
     {
-        mem_hash_h10_actiondata_t   *dst = (mem_hash_h10_actiondata_t *)swdata;
+        mem_hash_h10_actiondata_t   *dst = (mem_hash_h10_actiondata_t *)data;
         if (slot == 1) { dst->action_u.info.hash1 = hash; }
         else if (slot == 2) { dst->action_u.info.hash2 = hash; }
         else if (slot == 3) { dst->action_u.info.hash3 = hash; }
@@ -404,7 +389,7 @@ p4pd_mem_hash_entry_set_hash(uint32_t table_id,
     case MEM_HASH_P4TBL_ID_H5:
     case MEM_HASH_P4TBL_ID_H5_OHASH:
     {
-        mem_hash_h10_actiondata_t   *dst = (mem_hash_h10_actiondata_t *)swdata;
+        mem_hash_h5_actiondata_t   *dst = (mem_hash_h5_actiondata_t *)data;
         if (slot == 1) { dst->action_u.info.hash1 = hash; }
         else if (slot == 2) { dst->action_u.info.hash2 = hash; }
         else if (slot == 3) { dst->action_u.info.hash3 = hash; }
@@ -421,21 +406,21 @@ p4pd_mem_hash_entry_set_hash(uint32_t table_id,
 
 p4pd_error_t
 p4pd_mem_hash_entry_set_more_hints(uint32_t table_id,
-                                   uint8_t *swdata,
+                                   void *data,
                                    uint8_t more_hints)
 {
     switch (table_id) {
     case MEM_HASH_P4TBL_ID_H10:
     case MEM_HASH_P4TBL_ID_H10_OHASH:
     {
-        mem_hash_h10_actiondata_t *dst = (mem_hash_h10_actiondata_t *)swdata;
+        mem_hash_h10_actiondata_t *dst = (mem_hash_h10_actiondata_t *)data;
         dst->action_u.info.more_hints = more_hints;
         break;
     }
     case MEM_HASH_P4TBL_ID_H5:
     case MEM_HASH_P4TBL_ID_H5_OHASH:
     {
-        mem_hash_h10_actiondata_t *dst = (mem_hash_h10_actiondata_t *)swdata;
+        mem_hash_h5_actiondata_t *dst = (mem_hash_h5_actiondata_t *)data;
         dst->action_u.info.more_hints = more_hints;
         break;
     }
@@ -447,20 +432,20 @@ p4pd_mem_hash_entry_set_more_hints(uint32_t table_id,
 
 uint32_t
 p4pd_mem_hash_entry_get_more_hints(uint32_t table_id,
-                                   uint8_t *swdata)
+                                   void *data)
 {
     switch (table_id) {
     case MEM_HASH_P4TBL_ID_H10:
     case MEM_HASH_P4TBL_ID_H10_OHASH:
     {
-        mem_hash_h10_actiondata_t *dst = (mem_hash_h10_actiondata_t *)swdata;
+        mem_hash_h10_actiondata_t *dst = (mem_hash_h10_actiondata_t *)data;
         return dst->action_u.info.more_hints;
         break;
     }
     case MEM_HASH_P4TBL_ID_H5:
     case MEM_HASH_P4TBL_ID_H5_OHASH:
     {
-        mem_hash_h10_actiondata_t *dst = (mem_hash_h10_actiondata_t *)swdata;
+        mem_hash_h5_actiondata_t *dst = (mem_hash_h5_actiondata_t *)data;
         return dst->action_u.info.more_hints;
         break;
     }
@@ -474,21 +459,21 @@ p4pd_mem_hash_entry_get_more_hints(uint32_t table_id,
 
 p4pd_error_t
 p4pd_mem_hash_entry_set_more_hashes(uint32_t table_id,
-                                   uint8_t *swdata,
+                                   void *data,
                                    uint32_t more_hashes)
 {
     switch (table_id) {
     case MEM_HASH_P4TBL_ID_H10:
     case MEM_HASH_P4TBL_ID_H10_OHASH:
     {
-        mem_hash_h10_actiondata_t *dst = (mem_hash_h10_actiondata_t *)swdata;
+        mem_hash_h10_actiondata_t *dst = (mem_hash_h10_actiondata_t *)data;
         dst->action_u.info.more_hashes = more_hashes;
         break;
     }
     case MEM_HASH_P4TBL_ID_H5:
     case MEM_HASH_P4TBL_ID_H5_OHASH:
     {
-        mem_hash_h10_actiondata_t *dst = (mem_hash_h10_actiondata_t *)swdata;
+        mem_hash_h5_actiondata_t *dst = (mem_hash_h5_actiondata_t *)data;
         dst->action_u.info.more_hashes = more_hashes;
         break;
     }
@@ -500,20 +485,20 @@ p4pd_mem_hash_entry_set_more_hashes(uint32_t table_id,
 
 uint8_t
 p4pd_mem_hash_entry_get_more_hashes(uint32_t table_id,
-                                   uint8_t *swdata)
+                                   void *data)
 {
     switch (table_id) {
     case MEM_HASH_P4TBL_ID_H10:
     case MEM_HASH_P4TBL_ID_H10_OHASH:
     {
-        mem_hash_h10_actiondata_t *dst = (mem_hash_h10_actiondata_t *)swdata;
+        mem_hash_h10_actiondata_t *dst = (mem_hash_h10_actiondata_t *)data;
         return dst->action_u.info.more_hashes;
         break;
     }
     case MEM_HASH_P4TBL_ID_H5:
     case MEM_HASH_P4TBL_ID_H5_OHASH:
     {
-        mem_hash_h10_actiondata_t *dst = (mem_hash_h10_actiondata_t *)swdata;
+        mem_hash_h5_actiondata_t *dst = (mem_hash_h5_actiondata_t *)data;
         return dst->action_u.info.more_hashes;
         break;
     }
@@ -525,14 +510,14 @@ p4pd_mem_hash_entry_get_more_hashes(uint32_t table_id,
 
 uint32_t
 p4pd_mem_hash_entry_get_hash(uint32_t table_id,
-                             uint8_t *swdata,
+                             void *data,
                              uint32_t slot)
 {
     switch (table_id) {
     case MEM_HASH_P4TBL_ID_H10:
     case MEM_HASH_P4TBL_ID_H10_OHASH:
     {
-        mem_hash_h10_actiondata_t   *dst = (mem_hash_h10_actiondata_t *)swdata;
+        mem_hash_h10_actiondata_t   *dst = (mem_hash_h10_actiondata_t *)data;
         if (slot == 1) { return dst->action_u.info.hash1; }
         else if (slot == 2) { return dst->action_u.info.hash2; }
         else if (slot == 3) { return dst->action_u.info.hash3; }
@@ -549,7 +534,7 @@ p4pd_mem_hash_entry_get_hash(uint32_t table_id,
     case MEM_HASH_P4TBL_ID_H5:
     case MEM_HASH_P4TBL_ID_H5_OHASH:
     {
-        mem_hash_h10_actiondata_t   *dst = (mem_hash_h10_actiondata_t *)swdata;
+        mem_hash_h5_actiondata_t   *dst = (mem_hash_h5_actiondata_t *)data;
         if (slot == 1) { return dst->action_u.info.hash1; }
         else if (slot == 2) { return dst->action_u.info.hash2; }
         else if (slot == 3) { return dst->action_u.info.hash3; }
@@ -566,14 +551,14 @@ p4pd_mem_hash_entry_get_hash(uint32_t table_id,
 
 uint32_t
 p4pd_mem_hash_entry_get_hint(uint32_t table_id,
-                             uint8_t *swdata,
+                             void *data,
                              uint32_t slot)
 {
     switch (table_id) {
     case MEM_HASH_P4TBL_ID_H10:
     case MEM_HASH_P4TBL_ID_H10_OHASH:
     {
-        mem_hash_h10_actiondata_t   *dst = (mem_hash_h10_actiondata_t *)swdata;
+        mem_hash_h10_actiondata_t   *dst = (mem_hash_h10_actiondata_t *)data;
         if (slot == 1) { return dst->action_u.info.hint1; }
         else if (slot == 2) { return dst->action_u.info.hint2; }
         else if (slot == 3) { return dst->action_u.info.hint3; }
@@ -590,7 +575,7 @@ p4pd_mem_hash_entry_get_hint(uint32_t table_id,
     case MEM_HASH_P4TBL_ID_H5:
     case MEM_HASH_P4TBL_ID_H5_OHASH:
     {
-        mem_hash_h10_actiondata_t   *dst = (mem_hash_h10_actiondata_t *)swdata;
+        mem_hash_h5_actiondata_t   *dst = (mem_hash_h5_actiondata_t *)data;
         if (slot == 1) { return dst->action_u.info.hint1; }
         else if (slot == 2) { return dst->action_u.info.hint2; }
         else if (slot == 3) { return dst->action_u.info.hint3; }
@@ -603,16 +588,6 @@ p4pd_mem_hash_entry_get_hint(uint32_t table_id,
         assert(0);
     }
     return 0;
-}
-
-bool
-p4pd_mem_hash_entry_compare_key(uint32_t table_id,
-                                uint8_t *swkey,
-                                uint8_t *key)
-{
-    uint32_t ksize = 0;
-    get_key_data_sizes_(table_id, &ksize, NULL);
-    return !memcmp(swkey, key, ksize);
 }
 
 uint8_t

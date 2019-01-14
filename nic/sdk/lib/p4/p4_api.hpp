@@ -110,6 +110,7 @@ typedef struct p4pd_table_properties_ {
     bool                    is_oflow_table;
     uint16_t                key_struct_size; /* SW Key struct size in bytes */
     uint16_t                actiondata_struct_size; /* SW action data struct size in bytes */
+    uint16_t                appdata_struct_size; /* SW app info struct size in bytes */
     uint32_t                tabledepth; /* Number of entries */
     uint8_t                 stage; /* Stage # in pipeline */
     uint8_t                 oflow_table_id; /* if has_otcam is True */
@@ -756,90 +757,57 @@ p4pd_global_table_properties_get(uint32_t tableid, void *tbl_ctx);
  * Functions to read/modify Mem Hash entries.
  */
 p4pd_error_t
-p4pd_mem_hash_entry_set_key(uint32_t table_id,
-                            uint8_t *swkey,
-                            uint8_t *key);
-
-p4pd_error_t
-p4pd_mem_hash_entry_clear_key(uint32_t table_id,
-                              uint8_t *swkey);
-
-p4pd_error_t
 p4pd_mem_hash_entry_set_action_id(uint32_t table_id,
-                                  uint8_t *swdata,
+                                  void *data,
                                   uint32_t action_id);
 
 p4pd_error_t
 p4pd_mem_hash_entry_set_entry_valid(uint32_t table_id,
-                                    uint8_t *swdata,
+                                    void *data,
                                     uint8_t entry_valid);
 
-p4pd_error_t
-p4pd_mem_hash_entry_set_data(uint32_t table_id,
-                             uint8_t *swdata,
-                             uint8_t *data);
-
-p4pd_error_t
-p4pd_mem_hash_entry_clear_data(uint32_t table_id,
-                               uint8_t *swdata);
+uint8_t
+p4pd_mem_hash_entry_get_entry_valid(uint32_t table_id,
+                                    void *data);
 
 p4pd_error_t
 p4pd_mem_hash_entry_set_hint(uint32_t table_id,
-                             uint8_t *swdata,
+                             void *swdata,
                              uint32_t hint,
                              uint32_t slot);
 
 p4pd_error_t
 p4pd_mem_hash_entry_set_hash(uint32_t table_id,
-                             uint8_t *swdata,
+                             void *swdata,
                              uint32_t hash,
                              uint32_t slot);
 
 p4pd_error_t
 p4pd_mem_hash_entry_set_more_hints(uint32_t table_id,
-                                   uint8_t *swdata,
+                                   void *swdata,
                                    uint8_t more_hints);
 
 p4pd_error_t
 p4pd_mem_hash_entry_set_more_hashes(uint32_t table_id,
-                                   uint8_t *swdata,
-                                   uint32_t more_hashes);
+                                    void *swdata,
+                                    uint32_t more_hashes);
 
 uint32_t
 p4pd_mem_hash_entry_get_hash(uint32_t table_id,
-                             uint8_t *swdata,
+                             void *swdata,
                              uint32_t slot);
 
 uint32_t
 p4pd_mem_hash_entry_get_hint(uint32_t table_id,
-                             uint8_t *swdata,
+                             void *swdata,
                              uint32_t slot);
 
 uint8_t
 p4pd_mem_hash_entry_get_more_hashes(uint32_t table_id,
-                                   uint8_t *swdata);
+                                    void *swdata);
 
 uint32_t
 p4pd_mem_hash_entry_get_more_hints(uint32_t table_id,
-                                   uint8_t *swdata);
+                                   void *swdata);
 
-bool
-p4pd_mem_hash_entry_compare_key(uint32_t table_id,
-                                uint8_t *swdata,
-                                uint8_t *data);
-
-uint8_t *
-p4pd_mem_hash_entry_key_str(uint32_t table_id,
-                            void *key);
-
-uint8_t *
-p4pd_mem_hash_entry_data_str(uint32_t table_id,
-                             void *data);
-
-uint8_t *
-p4pd_mem_hash_entry_swdata_str(uint32_t table_id,
-                             void *data);
-
-uint8_t
-p4pd_mem_hash_entry_get_num_hints(uint32_t table_id);
 #endif    // __P4_API_H__
