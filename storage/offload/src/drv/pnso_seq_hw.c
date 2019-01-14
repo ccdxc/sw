@@ -980,11 +980,7 @@ hw_setup_hashorchksum_chain_params(struct cpdc_chain_params *chain_params,
 	ring_spec->rs_ring_size = (uint8_t) ilog2(ring->accel_ring.ring_size);
 	ring_spec->rs_num_descs = num_blks;
 
-	chain_params->ccp_sgl_vec_addr =
-		(chain_params->ccp_cmd.ccpc_chain_alt_desc_on_error &&
-		 !chain_params->ccp_cmd.ccpc_stop_chain_on_error) ?
-		sonic_virt_to_phy((void *) svc_info->si_p4_bof_sgl) :
-		sonic_virt_to_phy((void *) sgl);
+	chain_params->ccp_sgl_vec_addr = sonic_virt_to_phy((void *) sgl);
 
 	chain_params->ccp_cmd.ccpc_sgl_pad_en = 1;
 	chain_params->ccp_cmd.ccpc_sgl_sparse_format_en = 1;

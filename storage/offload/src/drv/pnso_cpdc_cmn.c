@@ -579,7 +579,7 @@ cpdc_update_service_info_sgl(struct service_info *svc_info)
 	pnso_error_t err;
 
 	err = pc_res_sgl_packed_get(svc_info->si_pcr, &svc_info->si_src_blist,
-			CPDC_SGL_TUPLE_LEN_MAX, MPOOL_TYPE_CPDC_SGL,
+			svc_info->si_block_size, MPOOL_TYPE_CPDC_SGL,
 			&svc_info->si_src_sgl);
 	if (err)
 		OSAL_LOG_ERROR("cannot obtain src sgl from pool! err: %d", err);
@@ -593,7 +593,7 @@ cpdc_update_service_info_bof_sgl(struct service_info *svc_info)
 	pnso_error_t err;
 
 	err = pc_res_sgl_packed_get(svc_info->si_pcr, &svc_info->si_bof_blist,
-			CPDC_SGL_TUPLE_LEN_MAX, MPOOL_TYPE_CPDC_SGL,
+			svc_info->si_block_size, MPOOL_TYPE_CPDC_SGL,
 			&svc_info->si_bof_sgl);
 	if (err)
 		OSAL_LOG_ERROR("cannot obtain bof sgl from pool! err: %d", err);
@@ -1043,17 +1043,11 @@ cpdc_update_bof_interrupt_params(struct service_info *svc_info)
 	OSAL_ASSERT((svc_info->si_type == PNSO_SVC_TYPE_HASH) ||
 		(svc_info->si_type == PNSO_SVC_TYPE_CHKSUM));
 
-	desc = (struct cpdc_desc *) svc_info->si_desc;
-	if (svc_info->si_flags & CHAIN_SFLAG_PER_BLOCK) {
-		bof_desc = (struct cpdc_desc *) ((char *) desc +
-			((sizeof(struct cpdc_desc) * svc_info->si_num_tags)));
-	} else {
-		bof_desc = (struct cpdc_desc *) ((char *) desc +
-				sizeof(struct cpdc_desc));
-	}
-	if (!desc || !bof_desc)
+	desc = svc_info->si_desc;
+	if (!desc)
 		return;
 
+	bof_desc = &desc[svc_info->si_num_tags];
 	OSAL_LOG_DEBUG("update hash/chksum bof/desc. desc: 0x" PRIx64 " bof_desc: 0x" PRIx64 " num_tags: %d",
 			(uint64_t) desc, (uint64_t) bof_desc,
 			svc_info->si_num_tags);

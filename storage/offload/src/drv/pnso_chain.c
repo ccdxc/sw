@@ -551,12 +551,8 @@ init_service_info(enum pnso_service_type svc_type,
 	svc_info->si_dst_blist.len =
 		pbuf_get_buffer_list_len(svc_params->sp_dst_blist);
 
-	if (svc_params->sp_bof_blist) {
-		svc_info->si_bof_blist.type = SERVICE_BUF_LIST_TYPE_DFLT;
-		svc_info->si_bof_blist.blist = svc_params->sp_src_blist;
-		svc_info->si_bof_blist.len =
-			pbuf_get_buffer_list_len(svc_params->sp_src_blist);
-	}
+	if (svc_params->sp_bof_blist)
+		svc_info->si_bof_blist = svc_info->si_src_blist;
 
 	return PNSO_OK;
 }
