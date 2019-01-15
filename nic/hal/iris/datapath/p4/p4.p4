@@ -32,8 +32,9 @@ header_type capri_deparser_len_t {
         l4_payload_len          : 16;
         inner_l4_payload_len    : 16;
         icrc_payload_len        : 16;
-        udp_opt_l2_checksum_len : 16;  // This is overloaded.
-        //udp_opt_len             : 16;
+        udp_opt_l2_checksum_len : 16;
+        ipv4_hdr_len            : 16;
+        inner_ipv4_hdr_len      : 16;
     }
 }
 

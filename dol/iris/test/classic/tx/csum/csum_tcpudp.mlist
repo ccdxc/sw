@@ -49,3 +49,29 @@ modules:
               segment   : filter://native=False
             - flow      : filter://type=IPV6,proto=TCP,label=CLASSIC
               segment   : filter://native=False
+
+    - module:
+        name    : IPV4_OPTS
+        iterate:
+            - flow      : filter://type=IPV4,proto=ICMP,label=CLASSIC
+              segment   : filter://native=True
+              ipopts    : ROUTERALERT,RR,EOL
+            - flow      : filter://type=IPV4,proto=UDP,label=CLASSIC
+              segment   : filter://native=True
+              ipopts    : ROUTERALERT,RR,EOL
+            - flow      : filter://type=IPV4,proto=TCP,label=CLASSIC
+              segment   : filter://native=True
+              ipopts    : ROUTERALERT,RR,EOL
+
+    - module:
+        name    : IPV4_OPTS_QTAG
+        iterate:
+            - flow      : filter://type=IPV4,proto=ICMP,label=CLASSIC
+              segment   : filter://native=False
+              ipopts    : ROUTERALERT,RR,EOL
+            - flow      : filter://type=IPV4,proto=UDP,label=CLASSIC
+              segment   : filter://native=False
+              ipopts    : ROUTERALERT,RR,EOL
+            - flow      : filter://type=IPV4,proto=TCP,label=CLASSIC
+              segment   : filter://native=False
+              ipopts    : ROUTERALERT,RR,EOL

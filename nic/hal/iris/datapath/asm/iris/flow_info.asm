@@ -33,12 +33,11 @@ flow_info:
                     d.u.flow_info_d.tunnel_originate
   or            r1, d.u.flow_info_d.tunnel_vnid, \
                     d.u.flow_info_d.tunnel_rewrite_index, 24
-  phvwr         p.{rewrite_metadata_tunnel_rewrite_index, \
-                   rewrite_metadata_tunnel_vnid}, r1
-  or            r1, d.u.flow_info_d.rewrite_flags, \
-                    d.u.flow_info_d.rewrite_index, 8
+  or            r1, r1, d.u.flow_info_d.rewrite_index, 40
   phvwr         p.{rewrite_metadata_rewrite_index, \
-                   rewrite_metadata_flags}, r1
+                   rewrite_metadata_tunnel_rewrite_index, \
+                   rewrite_metadata_tunnel_vnid}, r1
+  phvwr         p.rewrite_metadata_flags, d.u.flow_info_d.rewrite_flags
 
   // nat info
   phvwr.e       p.{nat_metadata_nat_l4_port,nat_metadata_twice_nat_idx}, \

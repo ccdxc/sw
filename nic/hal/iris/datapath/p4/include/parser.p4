@@ -583,6 +583,7 @@ field_list ipv4_checksum_list {
 
 @pragma checksum hdr_len_expr ohi.ipv4_options_blob___hdr_len + 20
 @pragma checksum verify_len ohi.l4_len
+@pragma checksum update_len capri_deparser_len.ipv4_hdr_len
 field_list_calculation ipv4_checksum {
     input {
         ipv4_checksum_list;
@@ -1512,6 +1513,7 @@ field_list inner_ipv4_checksum_list {
 
 @pragma checksum hdr_len_expr ohi.inner_ipv4_options_blob___hdr_len + 20
 @pragma checksum verify_len ohi.inner_l4_len
+@pragma checksum update_len capri_deparser_len.inner_ipv4_hdr_len
 field_list_calculation inner_ipv4_checksum {
     input {
         inner_ipv4_checksum_list;

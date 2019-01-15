@@ -16,7 +16,11 @@ def Verify(infra, module):
 
 def TestCaseSetup(tc):
     modcbs.TestCaseSetup(tc)
-    
+
+    iterelem = tc.module.iterator.Get()
+    if iterelem is not None:
+        tc.pvtdata.count = getattr(iterelem, 'count', 1)
+
     if not tc.config.flow.IsMulticast():
         return
 
