@@ -25,11 +25,7 @@ __json_template = { "security-profiles" : [
           "udp-drop": "",
           "icmp": "",
           "icmp-drop": ""
-        },
-        "enable-connection-tracking": "true",
-        "enable-tcp-normalization": "true",
-        "enable-ip-normalization": "true",
-        "enable-icmp-normalization": "true"
+        }
     },
     "status"                : {}
     }

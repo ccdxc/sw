@@ -240,7 +240,7 @@ conntrack_exec(fte::ctx_t& ctx)
             return fte::PIPELINE_CONTINUE;
         }
 
-        if (ctx.flow_miss()) {
+        if (ctx.flow_miss() && !ctx.drop()) {
             process_tcp_syn(ctx);
         }
         if (ctx.protobuf_request()) {

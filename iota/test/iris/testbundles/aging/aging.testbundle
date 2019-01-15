@@ -7,38 +7,49 @@ meta:
 testcases:
     -   name    : AgingICMPSessions
         testcase: testcases.aging.ping
+        iterators:
+            type              : simple
+            timeout           : [10s, 30s, 100s]
         args    :
             type: remote_only
 
-    -   name    : AgingTcpUdpSessions
-        testcase: testcases.aging.iperf
+    -   name    : AgingUdpSessions
+        testcase: testcases.aging.udp
         iterators:
-            type      : simple
-            proto     : [ udp, tcp ]
+            type              : simple 
+            timeout           : [20s, 30s, 100s]
+        args    :
+            type: local_only
+
+    -   name    : AgingTcpSessions
+        testcase: testcases.aging.tcp
+        iterators:
+            type              : simple
+            timeout           : [10s, 30s, 100s]
         args    :
             type: local_only
 
     -   name    : ConnSetupTimeout
         testcase: testcases.aging.tcp_conn_setup_timeout
-        #iterators:
-        #    type   : simple
-        #    values : [0, 30, 120]
+        iterators:
+            type   : simple
+            timeout : [1s, 45s, 2m0s]
         args    :
-            type: local_only
+           type: local_only
 
     -   name    : HalfCloseTimeout
         testcase: testcases.aging.tcp_half_closed_timeout
-        #iterators:
-        #    type   : simple
-        #    values : [0, 200, 1000]
+        iterators:
+            type    : simple
+            timeout : [1s, 3m20s, 2m]
         args    :
             type: local_only
    
     -   name    : CloseTimeout
         testcase: testcases.aging.tcp_close_timeout
-        #iterators:
-        #    type   : simple
-        #    values : [0, 100, 330]
+        iterators:
+            type    : simple
+            timeout : [0s, 1m40s, 45s]
         args    :
             type: local_only 
 
@@ -53,16 +64,22 @@ testcases:
 
     -   name    : TCPTickleTimeout
         testcase: testcases.aging.tcp_timeout_tickle
-        #iterators:
-        #    type   : simple
-        #    values : [0, 100, 330]
+        iterators:
+            type    : simple
+            timeout : [80s, 1m20s, 1m35s]
         args    :
             type: local_only
 
     -   name    : AgingDropFlows
         testcase: testcases.aging.drop_flow_aging
         iterators:
-            type      : simple
+            type      : nested 
             proto     : [ udp, tcp ]
+            timeout   : [10s, 15s, 90s]
         args    :
             type: local_only
+
+    -   name    : UDPSingleFlowAging
+        testcase: testcases.aging.udp_single_flow_aging
+        args    :
+           type: local_only

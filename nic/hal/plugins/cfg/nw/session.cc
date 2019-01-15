@@ -1722,8 +1722,8 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
     //HAL_TRACE_DEBUG("session_age_cb: last pkt ts: {} ctime_ns: {} session_timeout: {}",
     //                session_state.iflow_state.last_pkt_ts, ctime_ns, session_timeout);
     if ((tcp_session && (session_state.iflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED) &&
-        TIME_DIFF(ctime_ns, session_state.rflow_state.last_pkt_ts) >= session_timeout) ||
-        (TIME_DIFF(ctime_ns, session_state.rflow_state.last_pkt_ts) >= session_timeout)) {
+        TIME_DIFF(ctime_ns, session_state.iflow_state.last_pkt_ts) >= session_timeout) ||
+        (TIME_DIFF(ctime_ns, session_state.iflow_state.last_pkt_ts) >= session_timeout)) {
         // session hasn't aged yet, move on
         retval = SESSION_AGED_IFLOW;
     }
@@ -1731,7 +1731,7 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
     if (session->rflow) {
         //check responder flow. Check for session state as we dont want to age half-closed
         //connections if half-closed timeout is disabled.
-        if ((tcp_session && (session_state.iflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED) &&
+        if ((tcp_session && (session_state.rflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED) &&
             TIME_DIFF(ctime_ns, session_state.rflow_state.last_pkt_ts) >= session_timeout) ||
             (TIME_DIFF(ctime_ns, session_state.rflow_state.last_pkt_ts) >= session_timeout)) {
             // responder flow seems to be active still
@@ -2027,6 +2027,7 @@ session_age_cb (void *entry, void *ctxt)
             if (session->rflow != NULL && retval != SESSION_AGED_BOTH) {
                 return false;
             }
+
             //HAL_TRACE_DEBUG("UDP Session: {} num_del_sess: {} session_list: {:p}",
             //         session->hal_handle, args->num_del_sess[session->fte_id],
             //         (void *)args->session_list[session->fte_id]);
