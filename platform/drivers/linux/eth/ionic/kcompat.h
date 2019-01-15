@@ -5275,14 +5275,6 @@ extern unsigned int __kc_eth_get_headlen(unsigned char *data, unsigned int max_l
 #if ( LINUX_VERSION_CODE < KERNEL_VERSION(3,19,0) )
 /* netdev_phys_port_id renamed to netdev_phys_item_id */
 #define netdev_phys_item_id netdev_phys_port_id
-
-static inline bool _kc_napi_complete_done(struct napi_struct *napi,
-					  int __always_unused work_done) {
-	napi_complete(napi);
-	return true;
-}
-#define napi_complete_done _kc_napi_complete_done
-
 extern int _kc_bitmap_print_to_pagebuf(bool list, char *buf,
 					const unsigned long *maskp,
 					int nmaskbits);
@@ -5786,6 +5778,14 @@ pci_release_mem_regions(struct pci_dev *pdev)
 
 /*****************************************************************************/
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(4,10,0))
+
+static inline bool _kc_napi_complete_done(struct napi_struct *napi,
+					  int __always_unused work_done) {
+	napi_complete(napi);
+	return true;
+}
+#define napi_complete_done _kc_napi_complete_done
+
 #if (RHEL_RELEASE_CODE && (RHEL_RELEASE_CODE >= RHEL_RELEASE_VERSION(7,4)))
 #define HAVE_DEV_WALK_API
 #endif
