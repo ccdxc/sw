@@ -23,7 +23,7 @@ namespace impl {
 /**
  * @brief    constructor
  */
-mapping_impl_state::mapping_impl_state() {
+mapping_impl_state::mapping_impl_state(oci_state *state) {
     p4pd_table_properties_t    tinfo, ctinfo;
 
     /**< instantiate P4 tables for bookkeeping */

@@ -8,9 +8,10 @@
 #if !defined (__VNIC_IMPL_STATE_HPP__)
 #define __VNIC_IMPL_STATEHPP__
 
-#include "nic/hal/apollo/framework/api_base.hpp"
 #include "nic/sdk/lib/table/directmap/directmap.hpp"
 #include "nic/sdk/lib/table/hash/hash.hpp"
+#include "nic/hal/apollo/framework/api_base.hpp"
+#include "nic/hal/apollo/core/oci_state.hpp"
 
 namespace impl {
 
@@ -28,14 +29,10 @@ class vnic_impl;
  */
 class vnic_impl_state : public obj_base {
 public:
-    /**
-     * @brief    constructor
-     */
-    vnic_impl_state();
+    /**< @brief    constructor */
+    vnic_impl_state(oci_state *state);
 
-    /**
-     * @brief    destructor
-     */
+    /**< @brief    destructor */
     ~vnic_impl_state();
 
 private:

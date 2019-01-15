@@ -31,7 +31,7 @@ namespace impl {
 /**
  * @brief    constructor
  */
-vnic_impl_state::vnic_impl_state() {
+vnic_impl_state::vnic_impl_state(oci_state *state) {
     p4pd_table_properties_t    tinfo, oflow_tinfo;
 
     vnic_idxr_ = indexer::factory(OCI_MAX_VNIC);

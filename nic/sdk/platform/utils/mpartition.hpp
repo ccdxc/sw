@@ -18,18 +18,18 @@ namespace platform {
 namespace utils {
 
 #define MEM_REG_NAME_MAX_LEN    80
-
 #define INVALID_MEM_ADDRESS     0xFFFFFFFFFFFFFFFF
 
 /**
  * @brief Memory mpartition region
  */
 typedef struct mpartition_region_s {
-    char                    mem_reg_name[MEM_REG_NAME_MAX_LEN];   /**< Name */
-    uint32_t                size;        /**< Size */
-    mem_addr_t              start_offset;   /**< Start address offset */
-    cache_pipe_t            cache_pipe;     /**< Cached pipe */
-    bool                    reset;          /**< True to bzero this region during init */
+    char            mem_reg_name[MEM_REG_NAME_MAX_LEN];   /**< Name */
+    uint32_t        size;           /**< Size */
+    uint32_t        elem_size;      /**< Size of each element, if exists */
+    mem_addr_t      start_offset;   /**< Start address offset */
+    cache_pipe_t    cache_pipe;     /**< Cached pipe */
+    bool            reset;          /**< True to bzero this region during init */
 } mpartition_region_t;
 
 class mpartition {
@@ -62,6 +62,7 @@ public:
      * @return #Memory base address
      */
     mem_addr_t base(void) { return base_addr_; }
+
     /**
      * @brief Convert memory offset to address
      *
@@ -70,30 +71,42 @@ public:
      * @return #Memory address
      */
     mem_addr_t addr(mem_addr_t offset) { return base_addr_ + offset; }
+
     /** 
      * @brief Get memory partition region start offset 
      *
-     * @param[in] reg_name Name of memory partition region
+     * @param[in] name Name of memory partition region
      *
      * @return #Start offset of memory partition region
      */
-    mem_addr_t start_offset(const char *reg_name);
+    mem_addr_t start_offset(const char *name);
+
     /** 
      * @brief Get memory partition region start address 
      *
-     * @param[in] reg_name Name of memory partition region
+     * @param[in] name Name of memory partition region
      *
      * @return #Start address of memory partition region
      */
-    mem_addr_t start_addr(const char *reg_name);
+    mem_addr_t start_addr(const char *name);
+
     /** 
      * @brief Get memory partition region size 
      *
-     * @param[in] reg_name Name of memory partition region
+     * @param[in] name Name of memory partition region
      *
      * @return #Memory mpartition region size in kilobytes
      */
-    uint32_t size(const char *reg_name);
+    uint32_t size(const char *name);
+
+    /** 
+     * @brief Get size of each element in mpartition region
+     *
+     * @param[in] name Name of memory partition region
+     *
+     * @return #Memory size of each element in mpartition region
+     */
+    uint32_t element_size(const char *name);
 
     /** 
      * @brief Get memory partition region info
@@ -147,7 +160,7 @@ private:
     sdk_ret_t region_init(shmmgr *mmgr = NULL);
 };
 
-// Functions to check the cache_pipe type
+// functions to check the cache_pipe type
 static inline bool
 is_region_cache_pipe_none(mpartition_region_t *reg)
 {
@@ -191,9 +204,9 @@ is_region_cache_pipe_p4plus_all(mpartition_region_t *reg)
            cache_pipe_t::MEM_REGION_CACHE_PIPE_P4PLUS_ALL;
 }
 
-}   // namespace utils
-}   // namespace platform
-}   // namespace sdk
+}    // namespace utils
+}    // namespace platform
+}    // namespace sdk
 
 using sdk::platform::utils::mpartition;
 

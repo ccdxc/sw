@@ -18,11 +18,11 @@ oci_impl_state g_oci_impl_state;
  * @{
  */
 sdk_ret_t
-oci_impl_state::init(void) {
-    tep_impl_db_ = new tep_impl_state();
-    vnic_impl_db_ = new vnic_impl_state();
-    mapping_impl_db_ = new mapping_impl_state();
-    route_table_impl_db_ = new route_table_impl_state();
+oci_impl_state::init(oci_state *state) {
+    tep_impl_db_ = new tep_impl_state(state);
+    vnic_impl_db_ = new vnic_impl_state(state);
+    mapping_impl_db_ = new mapping_impl_state(state);
+    route_table_impl_db_ = new route_table_impl_state(state);
 
     return SDK_RET_OK;
 }

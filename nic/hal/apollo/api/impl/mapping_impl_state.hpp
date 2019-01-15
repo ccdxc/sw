@@ -8,8 +8,9 @@
 #if !defined (__MAPPING_IMPL_STATE_HPP__)
 #define __MAPPING_IMPL_STATEHPP__
 
+#include "nic/sdk/lib/table/hbmhash/hbm_hash.hpp"
 #include "nic/hal/apollo/framework/api_base.hpp"
-#include "lib/table/hbmhash/hbm_hash.hpp"
+#include "nic/hal/apollo/core/oci_state.hpp"
 
 namespace impl {
 
@@ -27,14 +28,10 @@ class mapping_impl;
  */
 class mapping_impl_state : public obj_base {
 public:
-    /**
-     * @brief    constructor
-     */
-    mapping_impl_state();
+    /**< @brief    constructor */
+    mapping_impl_state(oci_state *state);
 
-    /**
-     * @brief    destructor
-     */
+    /**< @brief    destructor */
     ~mapping_impl_state();
 
 private:

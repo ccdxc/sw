@@ -35,7 +35,7 @@ enum {
 
 class oci_impl_state {
 public:
-    sdk_ret_t init(void);
+    sdk_ret_t init(oci_state *state);
     oci_impl_state();
     ~oci_impl_state();
     tep_impl_state *tep_impl_db(void) { return tep_impl_db_; }

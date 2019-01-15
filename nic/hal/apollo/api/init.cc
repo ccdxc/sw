@@ -167,7 +167,7 @@ oci_init (oci_init_params_t *params)
     /**< setup all asic specific config params */
     api::asic_config_init(&asic_cfg);
     SDK_ASSERT(impl_base::init(&asic_cfg) == SDK_RET_OK);
-    impl::g_oci_impl_state.init();
+    impl::g_oci_impl_state.init(&api::g_oci_state);
 
     /**< spin all necessary threads in the system */
     core::thread_spawn(&api::g_oci_state);
