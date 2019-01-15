@@ -8,7 +8,7 @@ testcases:
     -   name    : Oob1G_TX_CHECKSUM
         testcase: testcases.drivers.features
         disable : False
-        ignore: True
+        ignore: False
         iterators :
             type               : nested
             tx_check_sum       : [ 'off', 'on']
@@ -23,7 +23,7 @@ testcases:
     -   name    : Oob1G_RX_CHECKSUM
         testcase: testcases.drivers.features
         disable : False
-        ignore: True
+        ignore: False
         iterators :
             type               : nested
             rx_check_sum       : [ 'off', 'on']
@@ -38,7 +38,7 @@ testcases:
     -   name    : Oob1G_TSO
         testcase: testcases.drivers.features
         disable : False
-        ignore: True
+        ignore: False
         iterators :
             type               : nested
             mtu                : [ '8192']

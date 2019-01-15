@@ -14,14 +14,21 @@ def Trigger(tc):
             (w1.workload_name, w1.ip_address, w2.workload_name, w2.ip_address)
     api.Logger.info("Starting POST check for %s" % (tc.cmd_descr))
 
-    cmd = "grep FAIL /var/log/post_report*.txt"
+    #ignore RTC and Local temperature as of now until DavidV fix the i2c bus issue
+    cmd = "! grep FAIL /var/log/post_report*.txt | grep -v Local | grep -v RTC"
+    cmd1 = "grep PASS /var/log/post_report*.txt"
+    cmd2 = "cat /var/log/post.*.log"
 
     if w1.IsNaples() or w2.IsNaples():
         if w1.IsNaples():
             api.Trigger_AddNaplesCommand(req, w1.node_name, cmd)
+            api.Trigger_AddNaplesCommand(req, w1.node_name, cmd1)
+            api.Trigger_AddNaplesCommand(req, w1.node_name, cmd2)
 
         if w2.IsNaples():
             api.Trigger_AddNaplesCommand(req, w2.node_name, cmd)
+            api.Trigger_AddNaplesCommand(req, w2.node_name, cmd1)
+            api.Trigger_AddNaplesCommand(req, w2.node_name, cmd2)
 
         tc.resp = api.Trigger(req)
     else:
@@ -36,7 +43,7 @@ def Verify(tc):
 
     for cmd in tc.resp.commands:
         api.PrintCommandResults(cmd)
-        if cmd.exit_code == 0 and not api.Trigger_IsBackgroundCommand(cmd):
+        if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):
             result = api.types.status.FAILURE
     return result
 

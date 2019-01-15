@@ -15,16 +15,23 @@ def Trigger(tc):
     api.Logger.info("Starting Online Diags for %s" % (tc.cmd_descr))
 
     cmd1 = "LD_LIBRARY_PATH=/platform/lib:/nic/lib /nic/bin/diag_test online &> /var/log/online_diags_report.txt"
-    cmd2 = "! grep FAIL /var/log/online_diags_report.txt"
+    #ignore RTC and Local temperature as of now until DavidV fix the i2c bus issue
+    cmd2 = "! grep FAIL /var/log/online_diags_report.txt | grep -v Local | grep -v RTC"
+    cmd3 = "grep PASS /var/log/online_diags_report.txt"
+    cmd4 = "cat /var/log/online-diags.*.log"
 
     if w1.IsNaples() or w2.IsNaples():
         if w1.IsNaples():
             api.Trigger_AddNaplesCommand(req, w1.node_name, cmd1)
             api.Trigger_AddNaplesCommand(req, w1.node_name, cmd2)
+            api.Trigger_AddNaplesCommand(req, w1.node_name, cmd3)
+            api.Trigger_AddNaplesCommand(req, w1.node_name, cmd4)
 
         if w2.IsNaples():
             api.Trigger_AddNaplesCommand(req, w2.node_name, cmd1)
             api.Trigger_AddNaplesCommand(req, w2.node_name, cmd2)
+            api.Trigger_AddNaplesCommand(req, w2.node_name, cmd3)
+            api.Trigger_AddNaplesCommand(req, w2.node_name, cmd4)
 
         tc.resp = api.Trigger(req)
     else:
