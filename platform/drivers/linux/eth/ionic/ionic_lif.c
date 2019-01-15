@@ -1970,6 +1970,9 @@ static void ionic_lif_set_netdev_info(struct ionic *ionic, struct lif *lif)
 		},
 	};
 
+#if 0
+// this code is disabled until the NIC FW supports it,
+// so that we don't complain about unknown DEV_CMD errors
 	strlcpy(ctx.cmd.netdev_info.nd_name, lif->netdev->name,
 		sizeof(ctx.cmd.netdev_info.nd_name));
 	strlcpy(ctx.cmd.netdev_info.dev_name, ionic_bus_info(ionic),
@@ -1979,6 +1982,7 @@ static void ionic_lif_set_netdev_info(struct ionic *ionic, struct lif *lif)
 		ctx.cmd.netdev_info.nd_name, ctx.cmd.netdev_info.dev_name);
 
 	ionic_adminq_post_wait(lif, &ctx);
+#endif
 }
 #endif /* NETDEV_CHANGELOWERSTATE */
 
