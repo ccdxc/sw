@@ -170,6 +170,16 @@ typedef struct ip_prefix_s {
 } __PACK__ ip_prefix_t;
 
 //------------------------------------------------------------------------------
+// MPLS tag
+//------------------------------------------------------------------------------
+typedef struct mpls_tag_s {
+    uint32_t    label : 20; // Label
+    uint32_t    exp   : 3;  // Experimental bits
+    uint32_t    bos   : 1;  // Bottom of Stack bit
+    uint32_t    ttl   : 8;  // Time To Live (TTL)
+} __PACK__ mpls_tag_t;
+
+//------------------------------------------------------------------------------
 // thread safe helper to stringify IPv4 address
 // NOTE: IP address is expected to be in host order
 //------------------------------------------------------------------------------

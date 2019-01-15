@@ -3405,6 +3405,16 @@ tunnel_if_get_remote_tep_ep(if_t *pi_if)
     return remote_tep_ep;
 }
 
+static void
+populate_mpls_tag_info (const types::MplsTag &mpls_tag_in, mpls_tag_t *mpls_tag_out)
+{
+    mpls_tag_out->label = mpls_tag_in.label();
+    mpls_tag_out->exp   = mpls_tag_in.exp();
+    mpls_tag_out->ttl   = mpls_tag_in.ttl();
+    mpls_tag_out->bos   = 1;
+    return;
+}
+
 //------------------------------------------------------------------------------
 // Tunnel If Create
 //------------------------------------------------------------------------------
@@ -3420,21 +3430,30 @@ tunnel_if_create (const InterfaceSpec& spec, if_t *hal_if)
     hal_if->tid = if_tunnel_info.vrf_key_handle().vrf_id();
     hal_if->encap_type = if_tunnel_info.encap_type();
     /* Both source addr and dest addr have to be v4 or v6 */
-    if ((if_tunnel_info.vxlan_info().local_tep().v4_addr() &&
-         !if_tunnel_info.vxlan_info().remote_tep().v4_addr()) ||
-        (!if_tunnel_info.vxlan_info().local_tep().v4_addr() &&
-         if_tunnel_info.vxlan_info().remote_tep().v4_addr())) {
-        ret = HAL_RET_IF_INFO_INVALID;
-        // rsp->mutable_status()->set_if_status(hal_if->if_admin_status);
-        // rsp->set_api_status(types::API_STATUS_IF_INFO_INVALID);
-        goto end;
-    } else if ((if_tunnel_info.gre_info().source().v4_addr() &&
-                !if_tunnel_info.gre_info().destination().v4_addr()) ||
-               (!if_tunnel_info.gre_info().source().v4_addr() &&
-                if_tunnel_info.gre_info().destination().v4_addr())) {
-        ret = HAL_RET_IF_INFO_INVALID;
-        goto end;
+    if (hal_if->encap_type ==
+            TNNL_ENC_TYPE::IF_TUNNEL_ENCAP_TYPE_VXLAN) {
+        if ((if_tunnel_info.vxlan_info().local_tep().v4_addr() &&
+             !if_tunnel_info.vxlan_info().remote_tep().v4_addr()) ||
+            (!if_tunnel_info.vxlan_info().local_tep().v4_addr() &&
+             if_tunnel_info.vxlan_info().remote_tep().v4_addr())) {
+            ret = HAL_RET_IF_INFO_INVALID;
+            // rsp->mutable_status()->set_if_status(hal_if->if_admin_status);
+            // rsp->set_api_status(types::API_STATUS_IF_INFO_INVALID);
+            goto end;
+        }
     }
+    /* Both source addr and dest addr have to be v4 or v6 */
+    if (hal_if->encap_type ==
+               TNNL_ENC_TYPE::IF_TUNNEL_ENCAP_TYPE_GRE) {
+        if ((if_tunnel_info.gre_info().source().v4_addr() &&
+                    !if_tunnel_info.gre_info().destination().v4_addr()) ||
+                   (!if_tunnel_info.gre_info().source().v4_addr() &&
+                    if_tunnel_info.gre_info().destination().v4_addr())) {
+            ret = HAL_RET_IF_INFO_INVALID;
+            goto end;
+        }
+    }
+    /* Populate the interface structures */
     if (hal_if->encap_type ==
             TNNL_ENC_TYPE::IF_TUNNEL_ENCAP_TYPE_VXLAN) {
         ip_addr_spec_to_ip_addr(&hal_if->vxlan_ltep,
@@ -3449,6 +3468,35 @@ tunnel_if_create (const InterfaceSpec& spec, if_t *hal_if)
                                 if_tunnel_info.gre_info().destination());
         hal_if->gre_mtu = if_tunnel_info.gre_info().mtu();
         hal_if->gre_ttl = if_tunnel_info.gre_info().ttl();
+    } else if (hal_if->encap_type ==
+               TNNL_ENC_TYPE::IF_TUNNEL_ENCAP_TYPE_PROPRIETARY_MPLS) {
+        ip_addr_spec_to_ip_addr(&hal_if->substrate_ip,
+                                if_tunnel_info.prop_mpls_info().substrate_ip());
+        int n = if_tunnel_info.prop_mpls_info().overlay_ip_size();
+        if (if_tunnel_info.prop_mpls_info().mpls_if_size() != n) {
+            ret = HAL_RET_IF_INFO_INVALID;
+            HAL_TRACE_ERR("Num overlay_ip and mpls_if size mismatch!");
+            goto end;
+        }
+        hal_if->num_overlay_ip = hal_if->num_mpls_if = n;
+        for (int i = 0; i < n; i++) {
+            populate_mpls_tag_info(if_tunnel_info.prop_mpls_info().mpls_if(i),
+                                   &hal_if->mpls_if[i]);
+            ip_addr_spec_to_ip_addr(&hal_if->overlay_ip[i],
+                                    if_tunnel_info.prop_mpls_info().overlay_ip(i));
+        }
+        populate_mpls_tag_info(if_tunnel_info.prop_mpls_info().mpls_tag(),
+                               &hal_if->mpls_tag);
+        hal_if->ingress_bw = if_tunnel_info.prop_mpls_info().ingress_bw();
+        hal_if->egress_bw = if_tunnel_info.prop_mpls_info().egress_bw();
+        addr_list_elem_t    *addr_range;
+        addr_range = addr_list_elem_address_spec_handle(
+                                if_tunnel_info.prop_mpls_info().source_gw(),
+                                &hal_if->source_gw);
+        if (!addr_range) {
+            addr_list_cleanup(&hal_if->source_gw);
+            return HAL_RET_OOM;
+        }
     } else {
         ret = HAL_RET_IF_INFO_INVALID;
         HAL_TRACE_ERR("Unsupported encap type : {}", hal_if->encap_type);
