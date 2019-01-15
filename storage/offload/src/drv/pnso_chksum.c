@@ -222,12 +222,16 @@ chksum_sub_chain_from_cpdc(struct service_info *svc_info,
 {
 	pnso_error_t err;
 	struct cpdc_desc *chksum_desc;
+	struct cpdc_sgl *sgl;
 
 	OSAL_LOG_DEBUG("enter ...");
 
 	chksum_desc = (struct cpdc_desc *) svc_info->si_desc;
+	sgl = (svc_info->si_flags & CHAIN_SFLAG_PER_BLOCK) ?
+		svc_info->si_p4_sgl : svc_info->si_src_sgl.sgl;
+
 	err = seq_setup_chksum_chain_params(cpdc_chain, svc_info, chksum_desc,
-			svc_info->si_p4_sgl, svc_info->si_num_tags);
+			sgl, svc_info->si_num_tags);
 	if (err) {
 		OSAL_LOG_ERROR("failed to setup checksum in chain! err: %d",
 				err);
@@ -485,10 +489,8 @@ chksum_teardown(struct service_info *svc_info)
 	sgl = (struct cpdc_sgl *) svc_info->si_p4_sgl;
 	cpdc_put_sgl(svc_info->si_pcr, per_block, sgl);
 
-	if (svc_info->si_flags & CHAIN_SFLAG_BYPASS_ONFAIL) {
-		sgl = (struct cpdc_sgl *) svc_info->si_p4_bof_sgl;
-		cpdc_put_sgl(svc_info->si_pcr, per_block, sgl);
-	}
+	sgl = (struct cpdc_sgl *) svc_info->si_p4_bof_sgl;
+	cpdc_put_sgl(svc_info->si_pcr, per_block, sgl);
 
 	chksum_desc = (struct cpdc_desc *) svc_info->si_desc;
 	cpdc_put_desc(svc_info, per_block, chksum_desc);

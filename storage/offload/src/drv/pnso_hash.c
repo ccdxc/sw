@@ -66,7 +66,6 @@ hash_setup(struct service_info *svc_info,
 	pnso_error_t err;
 	struct pnso_hash_desc *pnso_hash_desc;
 	struct cpdc_desc *hash_desc;
-	// struct cpdc_desc *hash_desc, *bof_hash_desc;
 	struct cpdc_sgl *sgl, *bof_sgl;
 	bool per_block;
 	uint32_t num_tags;
@@ -180,12 +179,16 @@ hash_sub_chain_from_cpdc(struct service_info *svc_info,
 {
 	pnso_error_t err;
 	struct cpdc_desc *hash_desc;
+	struct cpdc_sgl *sgl;
 
 	OSAL_LOG_DEBUG("enter ...");
 
 	hash_desc = (struct cpdc_desc *) svc_info->si_desc;
+	sgl = (svc_info->si_flags & CHAIN_SFLAG_PER_BLOCK) ?
+		svc_info->si_p4_sgl : svc_info->si_src_sgl.sgl;
+
 	err = seq_setup_hash_chain_params(cpdc_chain, svc_info, hash_desc,
-			svc_info->si_p4_sgl, svc_info->si_num_tags);
+			sgl, svc_info->si_num_tags);
 	if (err) {
 		OSAL_LOG_ERROR("failed to setup hash in chain! err: %d", err);
 		goto out;
@@ -440,10 +443,8 @@ hash_teardown(struct service_info *svc_info)
 	sgl = (struct cpdc_sgl *) svc_info->si_p4_sgl;
 	cpdc_put_sgl(svc_info->si_pcr, per_block, sgl);
 
-	if (svc_info->si_flags & CHAIN_SFLAG_BYPASS_ONFAIL) {
-		sgl = (struct cpdc_sgl *) svc_info->si_p4_bof_sgl;
-		cpdc_put_sgl(svc_info->si_pcr, per_block, sgl);
-	}
+	sgl = (struct cpdc_sgl *) svc_info->si_p4_bof_sgl;
+	cpdc_put_sgl(svc_info->si_pcr, per_block, sgl);
 
 	hash_desc = (struct cpdc_desc *) svc_info->si_desc;
 	cpdc_put_desc(svc_info, per_block, hash_desc);
