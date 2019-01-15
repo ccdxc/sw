@@ -89,7 +89,15 @@ def TestCaseStepVerify(tc, step):
         # verify that max_pkts_in_any_msg is 1
         if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'max_pkts_in_any_msg', max([1, tc.pvtdata.rq_pre_qstate.max_pkts_in_any_msg])):
             return False
-    
+
+        #verify that qp_err_disabled is set to 1
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'qp_err_disabled', 1):
+            return False
+
+        #verify that lkey_state_err is set to 1
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'qp_err_dis_key_state_err', 1):
+            return False
+   
         ############     CQ VALIDATIONS #################
         if not ValidateCQCompletions(tc, 1, 1):
             return False

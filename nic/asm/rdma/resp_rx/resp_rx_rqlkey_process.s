@@ -43,17 +43,17 @@ struct key_entry_aligned_t d;
 resp_rx_rqlkey_process:
 
     //If Reserved LKEY is used, but QP doesn't have privileged operations enabled
-    bbeq        CAPRI_KEY_FIELD(IN_P, rsvd_key_err), 1, error_completion
+    bbeq        CAPRI_KEY_FIELD(IN_P, rsvd_key_err), 1, rsvd_lkey_err
 
     // access is allowed only in valid state
     seq         c1, d.state, KEY_STATE_VALID //BD Slot
     // check pd for MR lkey
     seq         c2, d.pd, CAPRI_KEY_FIELD(IN_TO_S_P, pd) 
-    bcf         [!c1 | !c2], error_completion
+    bcf         [!c1 | !c2], lkey_state_pd_err
 
     //ARE_ALL_FLAGS_SET_B(c1, r1, ACC_CTRL_LOCAL_WRITE)
-    smeqb       c1, d.acc_ctrl, ACC_CTRL_LOCAL_WRITE, ACC_CTRL_LOCAL_WRITE // BD Slot
-    bcf         [!c1], error_completion
+    smeqb       c4, d.acc_ctrl, ACC_CTRL_LOCAL_WRITE, ACC_CTRL_LOCAL_WRITE // BD Slot
+    bcf         [!c4], lkey_acc_ctrl_err
 
     add         ABS_VA, K_VA, r0 // BD Slot
     IS_ANY_FLAG_SET_B(c1, d.acc_ctrl, ACC_CTRL_ZERO_BASED)
@@ -67,7 +67,7 @@ resp_rx_rqlkey_process:
     //add         r2, k.args.va, k.args.len
     //slt         c2, r1, r2
     sslt        c2, r1, ABS_VA, K_LEN
-    bcf         [c1 | c2], error_completion
+    bcf         [c1 | c2], lkey_va_err
     
     CAPRI_SET_TABLE_1_VALID_C(c1, 0)    //BD Slot
 
@@ -161,6 +161,28 @@ check_write_back:
 exit:
     nop.e
     nop
+
+rsvd_lkey_err:
+    b           error_completion
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_rsvd_key_err), 1 // BD Slot
+
+lkey_state_pd_err:
+    phvwrpair.!c2   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                    CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_key_pd_mismatch), 1
+    b           error_completion
+    phvwrpair.!c1   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                    CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_key_state_err), 1 // BD Slot
+
+lkey_acc_ctrl_err:
+    b           error_completion
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_key_acc_ctrl_err), 1 // BD Slot
+
+lkey_va_err:
+    b           error_completion
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_key_va_err), 1 // BD Slot
 
 error_completion:
     add         GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS

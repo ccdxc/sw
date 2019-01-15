@@ -272,17 +272,47 @@ struct rqcb5_t {
     num_dup_rd_atomic_bt_pkts: 16;
     num_dup_rd_atomic_drop_pkts: 16;
     // errors
-    qp_err_dis_table_error: 1;
-    qp_err_dis_phv_intrinsic_error: 1;
-    qp_err_dis_table_resp_error: 1;
+    qp_err_disabled                     :    1;
+    // stage 0 errors
+    qp_err_dis_svc_type_err             :    1;
+    qp_err_dis_pyld_len_err             :    1;
+    qp_err_dis_last_pkt_len_err         :    1;
+    qp_err_dis_pmtu_err                 :    1;
+    qp_err_dis_opcode_err               :    1;
+    qp_err_dis_wr_only_zero_len_err     :    1;
+    qp_err_dis_unaligned_atomic_va_err  :    1;
+    // rqwqe errors
+    qp_err_dis_insuff_sge_err           :    1;
+    qp_err_dis_max_sge_err              :    1;
+    // rqlkey & rqrkey errors
+    qp_err_dis_rsvd_key_err             :    1;
+    qp_err_dis_key_state_err            :    1;
+    qp_err_dis_key_pd_mismatch          :    1;
+    qp_err_dis_key_acc_ctrl_err         :    1;
+    qp_err_dis_key_va_err               :    1;
+    // inv_rkey_validate_process
+    qp_err_dis_inv_rkey_rsvd_key_err    :    1; 
+    qp_err_dis_ineligible_mr_err        :    1; 
+    qp_err_dis_inv_rkey_state_err       :    1; 
+    qp_err_dis_type1_mw_inv_err         :    1; 
+    qp_err_dis_type2a_mw_qp_mismatch    :    1; 
+    qp_err_dis_mr_mw_pd_mismatch        :    1;
+    // rqlkey_mr_cookie_process
+    qp_err_dis_mr_state_invalid         :    1;
+    qp_err_dis_mr_cookie_mismatch       :    1;
+    // table errors
+    qp_err_dis_table_error              :    1;
+    qp_err_dis_phv_intrinsic_error      :    1;
+    qp_err_dis_table_resp_error         :    1;
+    qp_err_dis_rsvd                     :    6;
     //a packet which went thru too many recirculations had to be terminated and qp had to 
     //be put into error disabled state. The recirc reason, opcode, the psn of the packet etc.
     //are remembered for further debugging.
-    max_recirc_cnt_err: 1;
-    recirc_reason: 4;
-    recirc_bth_opcode: 8;
     recirc_bth_psn: 24;
-    pad: 104;
+    recirc_bth_opcode: 8;
+    recirc_reason: 4;
+    max_recirc_cnt_err: 1;
+    pad: 75;
 };
 
 struct rqcb_t {

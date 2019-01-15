@@ -224,6 +224,8 @@ nak:
 
     phvwr          CAPRI_PHV_RANGE(TO_S_STATS_INFO_P, lif_cqe_error_id_vld, lif_error_id), \
                     ((1<< 5) | (1 << 4) | LIF_STATS_RDMA_RESP_STAT(LIF_STATS_RESP_RX_LOCAL_LEN_ERR_OFFSET))
+    phvwrpair      CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_insuff_sge_err), 1
 
     // turn on ACK req bit
     // set err_dis_qp and completion flags

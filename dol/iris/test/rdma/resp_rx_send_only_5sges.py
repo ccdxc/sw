@@ -95,6 +95,15 @@ def TestCaseStepVerify(tc, step):
         if not VerifyErrQState(tc):
             return False
 
+        ############     STATS VALIDATIONS #################
+        #verify that qp_err_disabled is set to 1
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'qp_err_disabled', 1):
+            return False
+
+        #verify that max_sge_err is set to 1
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'qp_err_dis_max_sge_err', 1):
+            return False
+
         ############     CQ VALIDATIONS #################
         if not ValidateCQCompletions(tc, 1, 1):
             return False

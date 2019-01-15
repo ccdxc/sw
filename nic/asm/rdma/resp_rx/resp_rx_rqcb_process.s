@@ -150,11 +150,11 @@ skip_cnp_receive:
     bcf         [!c7], seq_err_or_duplicate
 
     seq         c7, CAPRI_APP_DATA_BTH_OPCODE[7:5], d.serv_type //BD Slot
-    bcf         [!c7], inv_req_nak
+    bcf         [!c7], inv_req_nak_serv_type
 
     // check if payload_len is <= pmtu
     sll         r3, 1, d.log_pmtu  //BD Slot
-    blt         r3, REM_PYLD_BYTES, inv_req_nak
+    blt         r3, REM_PYLD_BYTES, inv_req_nak_pyld_len_err
     // c7 is used in process_write_only down the path. Pls do not touch.
     crestore    [c7], r7, (RESP_RX_FLAG_IMMDT)  //BD Slot
 
@@ -168,12 +168,12 @@ process_send_write_fml:
     //  using c5 in below code, make sure its not used
     
     // last packet should be at least 1 byte
-    beq.c3      REM_PYLD_BYTES, r0, inv_req_nak
+    beq.c3      REM_PYLD_BYTES, r0, inv_req_nak_last_pkt_len_err
     nop // BD Slot
 
     // first/middle packets should be of pmtu size
     sne         c7, r3, REM_PYLD_BYTES
-    bcf.c7      [c1|c2], inv_req_nak
+    bcf.c7      [c1|c2], inv_req_nak_pmtu_err
 
     phvwr       p.s1.ack_info.psn, d.e_psn // BD Slot
 
@@ -185,7 +185,7 @@ process_write:
     // check expected op type and pkt type for write packets 
     seq.c1      c7, d.{next_op_type...next_pkt_type}, (NEXT_OP_TYPE_ANY << 1)|NEXT_PKT_TYPE_FIRST_ONLY
     seq.!c1     c7, d.{next_op_type...next_pkt_type}, (NEXT_OP_TYPE_WRITE << 1)|NEXT_PKT_TYPE_MID_LAST
-    bcf         [!c7], inv_req_nak
+    bcf         [!c7], inv_req_nak_opcode_err
 
     // populate PD in rkey's to_stage
     CAPRI_SET_FIELD2(TO_S_RKEY_P, pd, d.pd) // BD Slot
@@ -267,7 +267,7 @@ skip_token_id_check:
     // check expected op type and pkt type for send packets 
     seq.c1      c7, d.{next_op_type...next_pkt_type}, (NEXT_OP_TYPE_ANY << 1)|NEXT_PKT_TYPE_FIRST_ONLY
     seq.!c1     c7, d.{next_op_type...next_pkt_type}, (NEXT_OP_TYPE_SEND << 1)|NEXT_PKT_TYPE_MID_LAST
-    bcf         [!c7], inv_req_nak
+    bcf         [!c7], inv_req_nak_opcode_err
 
     // check if rnr case for Send First
     seq         c7, SPEC_RQ_C_INDEX, PROXY_RQ_P_INDEX // BD Slot
@@ -361,7 +361,7 @@ send_in_progress:
 process_only_rd_atomic:
     // check expected op type and pkt type for only packets 
     seq         c1, d.{next_op_type...next_pkt_type}, (NEXT_OP_TYPE_ANY << 1)|NEXT_PKT_TYPE_FIRST_ONLY
-    bcf         [!c1], inv_req_nak
+    bcf         [!c1], inv_req_nak_opcode_err
     nop // BD Slot
 
     bcf         [c6 | c5 | c3], process_read_atomic
@@ -586,7 +586,7 @@ process_atomic:
     // Lower order 3 bits should be 0 for 8-byte alignment
     // va & 0x7 != 0, error
     smneb          c1, CAPRI_RXDMA_RETH_VA, 0x7, 0
-    bcf            [c1], inv_req_nak
+    bcf            [c1], inv_req_nak_atomic_va_err
     CAPRI_SET_FIELD2(RQCB_TO_RD_ATOMIC_P, read_or_atomic, RSQ_OP_TYPE_ATOMIC) // BD Slot
 
 //#if 0
@@ -759,11 +759,43 @@ drop_duplicate_rd_atomic:
 
 
 /****** Logic for NAKs ******/
+inv_req_nak_serv_type:
+    b           inv_req_nak
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_svc_type_err), 1 // BD Slot
+
+inv_req_nak_pyld_len_err:
+    b           inv_req_nak
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_pyld_len_err), 1 // BD Slot
+
+inv_req_nak_last_pkt_len_err:
+    b           inv_req_nak
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_last_pkt_len_err), 1 // BD Slot
+
+inv_req_nak_pmtu_err:
+    b           inv_req_nak
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_pmtu_err), 1 // BD Slot
+
+inv_req_nak_opcode_err:
+    b           inv_req_nak
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_opcode_err), 1 // BD Slot
+
+inv_req_nak_atomic_va_err:
+    b           inv_req_nak
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_unaligned_atomic_va_err), 1 // BD Slot
+
 wr_only_zero_len_inv_req_nak:
     //revert the e_psn
     sub         r1, 0, 1
     // flush the last tblwr in this path
     tblmincr.f  d.e_psn, 24, r1 // BD Slot
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_wr_only_zero_len_err), 1
     //fall thru to inv_req_nak
 
 inv_req_nak:

@@ -57,6 +57,15 @@ def TestCaseStepVerify(tc, step):
         if not VerifyErrQState(tc):
             return False
 
+        ############     STATS VALIDATIONS #################
+        #verify that qp_err_disabled is set to 1
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'qp_err_disabled', 1):
+            return False
+
+        #verify that inv_rkey_rsvd_key_err is set to 1
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'qp_err_dis_inv_rkey_rsvd_key_err', 1):
+            return False
+
     elif step.step_id == 1:
 
         if not ValidatePostSyncCQChecks(tc):

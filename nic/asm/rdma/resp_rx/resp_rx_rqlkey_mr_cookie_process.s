@@ -49,6 +49,10 @@ exit:
     nop
 
 error_completion:
+    phvwrpair.!c2   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                    CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_mr_cookie_mismatch), 1
+    phvwrpair.!c1   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                    CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_mr_state_invalid), 1
     add         GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS
     IS_ANY_FLAG_SET(c1, GLOBAL_FLAGS, RESP_RX_FLAG_COMPLETION)
     IS_ANY_FLAG_SET(c2, GLOBAL_FLAGS, RESP_RX_FLAG_READ_REQ|RESP_RX_FLAG_ATOMIC_FNA|RESP_RX_FLAG_ATOMIC_CSWAP)

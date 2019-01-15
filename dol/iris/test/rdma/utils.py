@@ -148,6 +148,29 @@ def ResetErrQState(tc):
     rs.lqp.rq.qstate.data.max_recirc_cnt_err = 0
     rs.lqp.rq.qstate.data.next_op_type = 0
     rs.lqp.rq.qstate.data.next_pkt_type = 0
+    rs.lqp.rq.qstate.data.qp_err_disabled = 0
+    rs.lqp.rq.qstate.data.qp_err_dis_svc_type_err = 0
+    rs.lqp.rq.qstate.data.qp_err_dis_pyld_len_err = 0
+    rs.lqp.rq.qstate.data.qp_err_dis_last_pkt_len_err = 0
+    rs.lqp.rq.qstate.data.qp_err_dis_pmtu_err = 0
+    rs.lqp.rq.qstate.data.qp_err_dis_opcode_err = 0
+    rs.lqp.rq.qstate.data.qp_err_dis_wr_only_zero_len_err = 0
+    rs.lqp.rq.qstate.data.qp_err_dis_unaligned_atomic_va_err = 0
+    rs.lqp.rq.qstate.data.qp_err_dis_insuff_sge_err = 0
+    rs.lqp.rq.qstate.data.qp_err_dis_max_sge_err = 0
+    rs.lqp.rq.qstate.data.qp_err_dis_rsvd_key_err = 0
+    rs.lqp.rq.qstate.data.qp_err_dis_key_state_err = 0
+    rs.lqp.rq.qstate.data.qp_err_dis_key_pd_mismatch = 0
+    rs.lqp.rq.qstate.data.qp_err_dis_key_acc_ctrl_err = 0
+    rs.lqp.rq.qstate.data.qp_err_dis_key_va_err = 0
+    rs.lqp.rq.qstate.data.qp_err_dis_inv_rkey_rsvd_key_err = 0
+    rs.lqp.rq.qstate.data.qp_err_dis_ineligible_mr_err = 0
+    rs.lqp.rq.qstate.data.qp_err_dis_inv_rkey_state_err = 0
+    rs.lqp.rq.qstate.data.qp_err_dis_type1_mw_inv_err = 0
+    rs.lqp.rq.qstate.data.qp_err_dis_type2a_mw_qp_mismatch = 0
+    rs.lqp.rq.qstate.data.qp_err_dis_mr_mw_pd_mismatch = 0
+    rs.lqp.rq.qstate.data.qp_err_dis_mr_state_invalid = 0
+    rs.lqp.rq.qstate.data.qp_err_dis_mr_cookie_mismatch = 0
     rs.lqp.rq.qstate.WriteWithDelay()
 
     return

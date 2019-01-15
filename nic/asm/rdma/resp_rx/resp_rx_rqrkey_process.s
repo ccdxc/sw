@@ -43,12 +43,12 @@ struct key_entry_aligned_t d;
 resp_rx_rqrkey_process:
 
     // check if invalidate is attempted on rsvd_key value
-    bbeq        CAPRI_KEY_FIELD(IN_P, rsvd_key_err), 1, error_completion
+    bbeq        CAPRI_KEY_FIELD(IN_P, rsvd_key_err), 1, rsvd_rkey_err
 
     //ARE_ALL_FLAGS_SET_B(c1, r1, ACC_CTRL_LOCAL_WRITE)
     and         r1, d.acc_ctrl, K_ACC_CTRL // BD Slot
     seq         c1, r1, K_ACC_CTRL
-    bcf         [!c1], error_completion
+    bcf         [!c1], rkey_acc_ctrl_err
 
     add         ABS_VA, K_VA, r0 // BD Slot
     IS_ANY_FLAG_SET_B(c1, d.acc_ctrl, ACC_CTRL_ZERO_BASED)
@@ -62,7 +62,7 @@ resp_rx_rqrkey_process:
     //add         r2, k.args.va, k.args.len
     //slt         c2, r1, r2
     sslt        c2, r1, ABS_VA, CAPRI_KEY_FIELD(IN_P, len)
-    bcf         [c1 | c2], error_completion
+    bcf         [c1 | c2], rkey_va_err
     
     // check if state is valid (same for MR and MW)
     // if MR or MW and type 1, check PD
@@ -70,7 +70,7 @@ resp_rx_rqrkey_process:
 
     // access is allowed only in valid state
     seq         c1, d.state, KEY_STATE_VALID // BD Slot
-    bcf         [!c1], error_completion
+    bcf         [!c1], rkey_state_err
 
     // check PD if MR
     seq         c5, d.type, MR_TYPE_MR // BD Slot
@@ -84,11 +84,11 @@ resp_rx_rqrkey_process:
     bcf         [c3], cookie_check
     nop // BD Slot
 
-    b           error_completion
+    b           rkey_qp_err
 
 check_pd:
     seq         c4, d.pd, CAPRI_KEY_FIELD(IN_TO_S_P, pd) // BD slot
-    bcf         [!c4], error_completion
+    bcf         [!c4], rkey_pd_err
     nop         // BD Slot
 
 cookie_check:
@@ -183,6 +183,36 @@ skip_pt:
 write_back:
     // invoke mpu only program since we are in stage 2, and wb is loaded in stage 5
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)
+
+rsvd_rkey_err:
+    b           error_completion
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_rsvd_key_err), 1 // BD Slot
+
+rkey_pd_err:
+    b           error_completion
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_key_pd_mismatch), 1 // BD Slot
+
+rkey_qp_err:
+    b           error_completion
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_type2a_mw_qp_mismatch), 1 // BD Slot
+
+rkey_state_err:
+    b           error_completion
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_key_state_err), 1 // BD Slot
+
+rkey_acc_ctrl_err:
+    b           error_completion
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_key_acc_ctrl_err), 1 // BD Slot
+
+rkey_va_err:
+    b           error_completion
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_key_va_err), 1 // BD Slot
 
 error_completion:
     add         GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS

@@ -28,7 +28,7 @@ resp_rx_inv_rkey_validate_process:
 
     // this program is loaded only for send with invalidate
 
-    bbeq        CAPRI_KEY_FIELD(IN_TO_S_P, rsvd_key_err), 1, error_completion
+    bbeq        CAPRI_KEY_FIELD(IN_TO_S_P, rsvd_key_err), 1, rsvd_key_err
     add         GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS // BD Slot
 
     /*  check if MR is eligible for invalidation
@@ -47,7 +47,7 @@ resp_rx_inv_rkey_validate_process:
     seq         c2, d.state, KEY_STATE_INVALID
     // invalidation is not allowed for type 1 MW
     seq         c3, d.type, MR_TYPE_MW_TYPE_1 
-    bcf         [c1 | c2 | c3], error_completion
+    bcf         [c1 | c2 | c3], flag_state_type_err
 
     // check PD if MR
     seq         c1, d.type, MR_TYPE_MR // BD Slot
@@ -63,11 +63,11 @@ resp_rx_inv_rkey_validate_process:
     bcf         [c3], update_state
     nop // BD Slot
 
-    b           error_completion
+    b           qp_mismatch
 
 check_pd:
     seq         c2, d.pd, CAPRI_KEY_FIELD(IN_TO_S_P, pd) // BD Slot
-    bcf         [!c2], error_completion
+    bcf         [!c2], pd_mismatch
     nop // BD Slot
 
 update_state:
@@ -79,6 +79,30 @@ update_state:
 exit:
     CAPRI_SET_TABLE_3_VALID_CE(c0, 0)
     nop // Exit Slot
+
+rsvd_key_err:
+    b           error_completion
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_inv_rkey_rsvd_key_err), 1 // BD Slot
+
+flag_state_type_err:
+    phvwrpair.c2   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_inv_rkey_state_err), 1
+    phvwrpair.c3   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_type1_mw_inv_err), 1
+    b           error_completion
+    phvwrpair.c1   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_ineligible_mr_err), 1 // BD Slot
+
+pd_mismatch:
+    b           error_completion
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_mr_mw_pd_mismatch), 1 // BD Slot
+
+qp_mismatch:
+    b           error_completion
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_type2a_mw_qp_mismatch), 1 // BD Slot
 
 error_completion:
     // As per standard, NAK is NOT required to be generated when an

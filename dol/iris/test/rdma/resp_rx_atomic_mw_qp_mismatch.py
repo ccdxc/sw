@@ -90,8 +90,12 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'num_bytes', 0):
             return False
 
-        # verify that state is now moved to ERR (2)
-        if not VerifyErrQState(tc):
+        #verify that qp_err_disabled is set to 1
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'qp_err_disabled', 1):
+            return False
+
+        #verify that type2a_mw_qp_mismatch is set to 1
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'qp_err_dis_type2a_mw_qp_mismatch', 1):
             return False
 
         # TODO check this

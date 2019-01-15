@@ -58,6 +58,15 @@ def TestCaseVerify(tc):
     if not VerifyErrQState(tc):
         return False
 
+    ############     STATS VALIDATIONS #################
+    #verify that qp_err_disabled is set to 1
+    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'qp_err_disabled', 1):
+        return False
+
+    #verify that unaligned_atomic_va_err is set to 1
+    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'qp_err_dis_unaligned_atomic_va_err', 1):
+        return False
+
     return True
 
 def TestCaseTeardown(tc):
