@@ -19,7 +19,6 @@ typedef struct route_s {
 
 typedef struct route_table_s {
     uint8_t     af;            /**< address family */
-    uint32_t    vrf;           /**< vcn/vpc/subnet etc. */
     uint32_t    num_routes;    /**< number of routes */
     route_t     routes[0];     /**< route list */
 } route_table_t;
@@ -36,7 +35,8 @@ typedef struct route_table_s {
  * NOTE: route_table will be modified internally as the library does
  *       in-place sorting on the given routing table
  */
-sdk_ret_t lpm_create(route_table_t *route_table, mem_addr_t lpm_tree_root_addr,
-                     uint32_t lpm_mem_size);
+sdk_ret_t lpm_tree_create(route_table_t *route_table,
+                          mem_addr_t lpm_tree_root_addr,
+                          uint32_t lpm_mem_size);
 
 #endif    /** __LPM_HPP__ */

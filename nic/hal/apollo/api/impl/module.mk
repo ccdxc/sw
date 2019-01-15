@@ -3,4 +3,5 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libociapi_impl.so
 MODULE_PIPELINE = apollo
+MODULE_SOLIBS   = lpmitree
 include ${MKDEFS}/post.mk

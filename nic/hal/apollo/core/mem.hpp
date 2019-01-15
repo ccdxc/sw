@@ -29,6 +29,7 @@ enum {
 
 enum {
     OCI_MEM_ALLOC_SWITCHPORT,
+    OCI_MEM_ALLOC_ROUTE_TABLE,
     OCI_MEM_ALLOC_MAX = 16383,
 };
 
