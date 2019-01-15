@@ -72,12 +72,13 @@ route_table_impl::reserve_resources(api_base *api_obj) {
  */
 sdk_ret_t
 route_table_impl::release_resources(api_base *api_obj) {
-#if 0
+    uint32_t    lpm_block_id;
+
     if (lpm_root_addr_ != 0xFFFFFFFFFFFFFFFFUL) {
-        lpm_block_id = (lpm_root_addr_ - lpm_mem_base_)/lpm_table_sz_;
+        lpm_block_id =
+            (lpm_root_addr_ - route_table_impl_db()->lpm_region_addr())/route_table_impl_db()->lpm_table_size();
         route_table_impl_db()->route_table_idxr()->free(lpm_block_id);
     }
-#endif
     return SDK_RET_OK;
 }
 
@@ -87,7 +88,6 @@ route_table_impl::release_resources(api_base *api_obj) {
  * @param[in] obj_ctxt    transient state associated with this API
  * @return   SDK_RET_OK on success, failure status code on error
  */
-// TODO: undo stuff if something goes wrong here !!
 sdk_ret_t
 route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     return SDK_RET_OK;
