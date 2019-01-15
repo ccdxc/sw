@@ -1,10 +1,11 @@
 #include "egress.h"
 #include "EGRESS_p.h"
+#include "EGRESS_tunnel_rewrite_k.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 
-struct tunnel_rewrite_k k;
-struct tunnel_rewrite_d d;
-struct phv_             p;
+struct tunnel_rewrite_k_ k;
+struct tunnel_rewrite_d  d;
+struct phv_              p;
 
 %%
 
@@ -15,14 +16,14 @@ nop:
 .align
 encap_vxlan:
   // r5 : k.capri_p4_intrinsic_packet_len
-  or          r5, k.capri_p4_intrinsic_packet_len_sbit6_ebit13, \
-                  k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8
+  or          r5, r0, k.capri_p4_intrinsic_packet_len
+  add         r7, r5, 16
+
+  // ethernet headers
   phvwr       p.{inner_ethernet_dstAddr...inner_ethernet_etherType}, \
                   k.{ethernet_dstAddr...ethernet_etherType}
   phvwrpair   p.ethernet_dstAddr, d.u.encap_vxlan_d.mac_da, \
                 p.ethernet_srcAddr, d.u.encap_vxlan_d.mac_sa
-
-  add         r7, r5, 16
 
   // vxlan header (flags, vni)
   add         r1, r0, 0x08, 56
@@ -40,6 +41,7 @@ encap_vxlan:
   .assert(offsetof(p, vxlan_valid) - offsetof(p, udp_valid) == 4)
   phvwrmi     p.{inner_ethernet_valid...udp_valid}, 0x3F, 0x31
 
+  // vlan header
   seq         c1, d.u.encap_vxlan_d.ip_type, IP_HEADER_TYPE_IPV4
   cmov        r6, c1, ETHERTYPE_IPV4, ETHERTYPE_IPV6
   seq         c2, d.u.encap_vxlan_d.vlan_valid, 1
@@ -64,8 +66,7 @@ encap_vxlan:
 
 .align
 encap_vlan:
-  or          r5, k.capri_p4_intrinsic_packet_len_sbit6_ebit13, \
-                  k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8
+  or          r5, r0, k.capri_p4_intrinsic_packet_len
   add         r1, r5, 4
   phvwr       p.capri_p4_intrinsic_packet_len, r1
   phvwr       p.vlan_tag_etherType, k.ethernet_etherType
@@ -77,8 +78,36 @@ encap_vlan:
 
 .align
 encap_mpls_udp:
-  nop.e
-  nop
+  or          r5, r0, k.capri_p4_intrinsic_packet_len
+  add         r7, r5, -2
+  // ethernet header
+  phvwrpair   p.ethernet_dstAddr, d.u.encap_mpls_udp_d.mac_da, \
+                p.ethernet_srcAddr, d.u.encap_mpls_udp_d.mac_sa
+  // udp header
+  add         r1, r0, k.rewrite_metadata_entropy_hash, 48
+  or          r1, r1, UDP_PORT_MPLS, 32
+  or          r1, r1, r7, 16
+  phvwr       p.{udp_srcPort...udp_checksum}, r1
+  // mpls header
+  or          r1, 0x120, k.rewrite_metadata_tunnel_vnid, 12
+  phvwr       p.{mpls_0_label,mpls_0_exp,mpls_0_bos,mpls_0_ttl}, r1
+  // set header valid bits
+  phvwr       p.{mpls_0_valid,udp_valid}, 0x3
+  // vlan header
+  seq         c1, d.u.encap_vxlan_d.ip_type, IP_HEADER_TYPE_IPV4
+  cmov        r6, c1, ETHERTYPE_IPV4, ETHERTYPE_IPV6
+  seq         c2, d.u.encap_vxlan_d.vlan_valid, 1
+  bal.c2      r1, f_encap_vlan
+  phvwr.!c2   p.ethernet_etherType, r6
+  // update capri_p4_intrinsic_packet_len
+  add         r1, r5, 32
+  add.c2      r1, r1, 4
+  phvwr       p.capri_p4_intrinsic_packet_len, r1
+  // ip header
+  sne         c1, k.rewrite_metadata_tunnel_ip, r0
+  tblwr.c1.l  d.u.encap_mpls_udp_d.ip_da, k.rewrite_metadata_tunnel_ip
+  b           f_insert_ipv4_header
+  add         r6, r0, 0x4011
 
 .align
 encap_erspan:
@@ -108,8 +137,7 @@ encap_erspan:
   bal.c2      r1, f_encap_vlan
   phvwr.!c2   p.ethernet_etherType, r6
 
-  or          r5, k.capri_p4_intrinsic_packet_len_sbit6_ebit13, \
-                  k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8
+  or          r5, r0, k.capri_p4_intrinsic_packet_len
   add         r7, r5, 16
 
   // update capri_p4_intrinsic_packet_len
@@ -171,8 +199,7 @@ encap_vxlan_gpe:
   phvwr       p.udp_srcPort, k.rewrite_metadata_entropy_hash
   phvwr       p.udp_dstPort, UDP_PORT_VXLAN_GPE
   phvwr       p.udp_checksum, 0
-  or          r5, k.capri_p4_intrinsic_packet_len_sbit6_ebit13, \
-                  k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8
+  or          r5, r0, k.capri_p4_intrinsic_packet_len
   add         r7, r5, 16
   phvwr       p.udp_len, r7
 
@@ -211,8 +238,7 @@ encap_genv:
   phvwr       p.udp_srcPort, k.rewrite_metadata_entropy_hash
   phvwr       p.udp_dstPort, UDP_PORT_GENV
   phvwr       p.udp_checksum, 0
-  or          r5, k.capri_p4_intrinsic_packet_len_sbit6_ebit13, \
-                  k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8
+  or          r5, r0, k.capri_p4_intrinsic_packet_len
   add         r7, r5, 16
   phvwr       p.udp_len, r7
 
@@ -262,8 +288,7 @@ encap_nvgre:
   bal.c2      r1, f_encap_vlan
   phvwr.!c2   p.ethernet_etherType, r6
 
-  or          r5, k.capri_p4_intrinsic_packet_len_sbit6_ebit13, \
-                  k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8
+  or          r5, r0, k.capri_p4_intrinsic_packet_len
   add         r7, r5, 8
 
   // update capri_p4_intrinsic_packet_len
@@ -292,8 +317,7 @@ encap_gre:
   bal.c2      r1, f_encap_vlan
   phvwr.!c2   p.ethernet_etherType, r6
 
-  or          r5, k.capri_p4_intrinsic_packet_len_sbit6_ebit13, \
-                  k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8
+  or          r5, r0, k.capri_p4_intrinsic_packet_len
   add         r7, r5, 4
 
   // update capri_p4_intrinsic_packet_len
@@ -315,8 +339,7 @@ encap_ip:
   bal.c2      r1, f_encap_vlan
   phvwr.!c2   p.ethernet_etherType, r6
 
-  or          r5, k.capri_p4_intrinsic_packet_len_sbit6_ebit13, \
-                  k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8
+  or          r5, r0, k.capri_p4_intrinsic_packet_len
   sub         r7, r5, 14
 
   // update capri_p4_intrinsic_packet_len
